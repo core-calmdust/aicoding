@@ -54,6 +54,8 @@
     skip: 'ck\\b|\\.ck|slab|\\.die|cube|dst|glow|lbl|dice3d|arrows|frame',
     start(lv, side, mode) {
       if (typeof openNewDialog !== 'function' || typeof draft !== 'object' || typeof segSync !== 'function' || !document.getElementById('btnStart')) return null;
+      // the portal's card: straight to the puzzles / the lessons / the online match search (backgammon/app.js AtlasDeep, 2026-11-14)
+      if (/^(puzzle|lesson|online)$/.test(mode)) { if (!window.AtlasDeep) return null; const q = new URLSearchParams(location.search); return AtlasDeep(mode, q.get('sub')); }
       openNewDialog();
       draft.mode = mode === 'pvp' ? 'pvp' : 'ai';
       if (lv >= 1 && lv <= 10) draft.level = lv;

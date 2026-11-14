@@ -3316,3 +3316,20 @@ window.__bg = {
   BG, startNewMatch, humanRoll, commitTurn, undoStep, viewAt, latestIdx, encodeMatch, loadText, stateAt, curState, legalNow, doStep: s => (turn && !turn.locked ? doStep(s, false) : false), runReview,
   get busy() { return thinking >= 0 || busyRolling || !!(turn && turn.locked); }, dailyPick, setSeed: s => { pendingSeed = s; },
 };
+// the portal's card (2026-11-14): open a part of the page directly — puzzles (cont: the next one · d1: today's), lessons (open: the
+// openings), the online match search. null = not ready yet (the caller tries again).
+window.AtlasDeep = function (mode, sub) {
+  if (typeof openPuzzles !== 'function' || !$('#btnStart')) return null;
+  const click = (sel, n = 0) => { const b = document.querySelector(sel); if (b) b.click(); else if (n < 30) setTimeout(() => click(sel, n + 1), 150); };
+  if (mode === 'puzzle') { Promise.resolve(openPuzzles()).then(() => { if (sub === 'd1') click('#pzLevels [data-pbh-daily]'); else if (sub === 'cont') click('#pzLevels [data-pbh-cont]'); }); return true; }
+  if (mode === 'lesson') { if (sub === 'open' && window.OPH) Promise.resolve(lessonsReady).then(() => OPH.open()); else openLessons(); return true; }
+  if (mode === 'online') { if (typeof window.olStartSearch !== 'function') return null; window.olStartSearch(); return true; }
+  return false;
+};
+{ const q = new URLSearchParams(location.search), m = q.get('mode');
+  if (m && /^(puzzle|lesson|online)$/.test(m) && q.get('skin') !== 'atlas') {   // the plain 2D page opened at a part of it
+    let n = 0; const go = () => { const r = window.AtlasDeep(m, q.get('sub')); if (r === null && ++n < 60) return setTimeout(go, 200);
+      ['mode', 'sub', 'tc'].forEach(k => q.delete(k)); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); };
+    if (document.readyState === 'complete') setTimeout(go, 1200); else addEventListener('load', () => setTimeout(go, 1200));
+  }
+}

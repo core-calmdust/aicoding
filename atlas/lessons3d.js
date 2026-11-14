@@ -78,7 +78,7 @@
   let autoCssDone = false;
   function autoCss() {   // the auto-advance meter: a bar filling the 次へ button (shared/cardbar.js .cb-auto)
     if (autoCssDone) return; autoCssDone = true; const st = document.createElement('style');
-    st.textContent = `.ls-spot{display:inline-block;width:.78em;height:.78em;border-radius:50%;vertical-align:-.06em;margin:0 .12em;box-shadow:0 0 0 2px rgba(255,255,255,.9),0 0 6px currentColor}.ls-spot.ok{background:#2fd17a;color:#2fd17a}.ls-spot.ng{background:#e0301e;color:#e0301e}.ls-spot.hl{background:#ffb21a;color:#ffb21a}.lsg [data-a=next].ls-auto{position:relative;overflow:hidden}.lsg [data-a=next].ls-auto::after{content:'';position:absolute;inset-inline-start:0;bottom:0;height:4px;width:100%;background:currentColor;opacity:.55;transform-origin:left;animation:lsAuto var(--ls-auto-ms,2400ms) linear forwards}html[dir=rtl] .lsg [data-a=next].ls-auto::after{transform-origin:right}@keyframes lsAuto{from{transform:scaleX(0)}to{transform:scaleX(1)}}`;
+    st.textContent = `.bgch{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}.bgch[hidden]{display:none}.bgch .btn{flex:1 1 auto;min-width:0;padding:7px 10px;font-size:13px;background:#fff;color:#2b3044;border:2px solid #e2d6bf;box-shadow:none}.bgch .btn.ok{background:#1ea36c;color:#fff;border-color:#1ea36c}.bgch .btn.ng{background:#ff5d5d;color:#fff;border-color:#ff5d5d}.ls-spot{display:inline-block;width:.78em;height:.78em;border-radius:50%;vertical-align:-.06em;margin:0 .12em;box-shadow:0 0 0 2px rgba(255,255,255,.9),0 0 6px currentColor}.ls-spot.ok{background:#2fd17a;color:#2fd17a}.ls-spot.ng{background:#e0301e;color:#e0301e}.ls-spot.hl{background:#ffb21a;color:#ffb21a}.lsg [data-a=next].ls-auto{position:relative;overflow:hidden}.lsg [data-a=next].ls-auto::after{content:'';position:absolute;inset-inline-start:0;bottom:0;height:4px;width:100%;background:currentColor;opacity:.55;transform-origin:left;animation:lsAuto var(--ls-auto-ms,2400ms) linear forwards}html[dir=rtl] .lsg [data-a=next].ls-auto::after{transform-origin:right}@keyframes lsAuto{from{transform:scaleX(0)}to{transform:scaleX(1)}}`;
     document.head.appendChild(st);
   }
   // the lesson's / opening's topic, said as a sentence: [lesson, opening]
@@ -97,6 +97,22 @@
      (VOICE; other languages: the plain lines above). The lesson texts themselves come from the full games' data, written
      politely (です・ます): in Japanese the guide says them in plain, friendly speech (casualJa). */
   const VOICE = {
+    backgammon: {
+      ja: { hi: 'ワン！ ダイスンだよ。いっしょにバックギャモンのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'おしい！ 緑の矢印が正解だよ。', hintSay: 'ヒント：青い輪の駒を動かしてみて。' },
+      en: { hi: "Woof! Dicepup here. Let's study backgammon together.", partial: 'A nice play! But the green arrows are the best.', wrong: 'So close! The green arrows are the answer.', hintSay: 'Psst — move the checkers with the blue rings.' },
+      zh: { hi: '汪！我是骰子汪。一起来学双陆棋吧。', partial: '好棋！不过最好的是绿色箭头。', wrong: '差一点！绿色箭头才是正解。', hintSay: '提示：动一动蓝色圈住的棋子。' },
+      'zh-TW': { hi: '汪！我是骰子汪。一起來學雙陸棋吧。', partial: '好棋！不過最好的是綠色箭頭。', wrong: '差一點！綠色箭頭才是正解。', hintSay: '提示：動一動藍色圈住的棋子。' },
+      ko: { hi: '멍! 다이슨이야. 같이 백개먼을 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 화살표야.', wrong: '아깝다! 정답은 초록 화살표야.', hintSay: '힌트: 파란 고리의 말을 움직여 봐.' },
+      es: { hi: '¡Guau! Soy Dicepup. Estudiemos backgammon juntos.', partial: '¡Buena jugada! Pero lo mejor son las flechas verdes.', wrong: '¡Casi! Las flechas verdes son la respuesta.', hintSay: 'Pista: mueve las fichas con aros azules.' },
+      fr: { hi: 'Ouaf ! C’est Dicepup. Étudions le backgammon ensemble.', partial: 'Joli coup ! Mais le meilleur, ce sont les flèches vertes.', wrong: 'Presque ! La réponse, ce sont les flèches vertes.', hintSay: 'Indice : bouge les pions aux anneaux bleus.' },
+      pt: { hi: 'Au! Aqui é o Dicepup. Vamos estudar gamão juntos.', partial: 'Boa jogada! Mas a melhor são as setas verdes.', wrong: 'Quase! A resposta são as setas verdes.', hintSay: 'Dica: mova as peças com anéis azuis.' },
+      de: { hi: 'Wuff! Hier ist Dicepup. Lernen wir zusammen Backgammon.', partial: 'Schöner Zug! Aber am besten sind die grünen Pfeile.', wrong: 'Knapp! Die grünen Pfeile sind die Lösung.', hintSay: 'Tipp: Zieh die Steine mit den blauen Ringen.' },
+      ru: { hi: 'Гав! Это Дайспап. Давайте изучать нарды вместе.', partial: 'Хороший ход! Но лучший — зелёные стрелки.', wrong: 'Почти! Ответ — зелёные стрелки.', hintSay: 'Подсказка: ходи шашками с синими кольцами.' },
+      tr: { hi: 'Hav! Ben Dicepup. Birlikte tavla çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil oklar.', wrong: 'Az kaldı! Cevap yeşil oklar.', hintSay: 'İpucu: mavi halkalı pulları oynat.' },
+      id: { hi: 'Guk! Aku Dicepup. Ayo belajar backgammon bersama.', partial: 'Langkah bagus! Tapi yang terbaik panah hijau.', wrong: 'Hampir! Jawabannya panah hijau.', hintSay: 'Petunjuk: gerakkan bidak bercincin biru.' },
+      hi: { hi: 'भौं! मैं डाइसपप हूँ। चलो साथ में बैकगैमन सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छे हरे तीर हैं।', wrong: 'बस ज़रा सा! हरे तीर सही जवाब हैं।', hintSay: 'संकेत: नीले घेरे वाली गोटियाँ चलाओ।' },
+      ar: { hi: 'هاو! أنا دايس باب. لنتعلم الطاولة معًا.', partial: 'نقلة جيدة! لكن الأفضل هي الأسهم الخضراء.', wrong: 'اقتربت! الجواب هو الأسهم الخضراء.', hintSay: 'تلميح: حرّك القطع ذات الحلقات الزرقاء.' },
+    },
     xiangqi: {
       ja: { hi: 'ショウギツネだよ！ いっしょにシャンチーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'おしい！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
       en: { hi: "Shogitsune here! Let's study xiangqi together.", partial: 'A nice move! But the green arrow is the best.', wrong: 'So close! The green arrow is the answer.', hintSay: 'Psst — look at the pieces in the gold rings!', opGoal: 'What is the best next move here?' },
@@ -648,7 +664,95 @@
       return null;
     },
   };
-  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI };
+
+  /* backgammon (2026-11-14): the lessons (backgammon/lessons.json: 23 steps in 7 categories, 5 problems each — a play for a roll, scored
+     by the rank of the play among the engine's candidates (= backgammon/app.js problemPoints), or a question with choices) and the
+     openings (openings.json: the 15 opening rolls and the replies; a line's decision is the problem — right when it is within the
+     table's tolerance of the best rolled-out play, as backgammon/op.js opSubmit). Progress = the full game's
+     ('aicoding-backgammon-v2-lessons' { id: { best, pass } }, '…-open' { id: { pass, best } }). Texts: the game's i18n*.js. You always
+     play the near side: a problem for the far side is turned round (the position's halves swapped). Positions here are
+     { bg: { pos: 52 hex digits, dice } } (atlas/games/backgammon.js pz); plays are the json's letter pairs, decoded with window.BG. */
+  const bgPos = (pos, side) => side === 1 ? String(pos).slice(26) + String(pos).slice(0, 26) : String(pos);
+  const bgDecP = s0 => { const q = new Int8Array(52); for (let i = 0; i < 52; i++) q[i] = parseInt(String(s0)[i], 16) || 0; return q; };
+  const bgCodes = (pos, m) => { const q = bgDecP(pos), out = []; for (let i = 0; i + 1 < m.length; i += 2) out.push(BG.apply(q, 0, m.charCodeAt(i) - 65, m.charCodeAt(i + 1) - 65)); return { moves: out, key: BG.key(q) }; };
+  const bgCkOf = () => { let ck = ['gold', 'black']; try { const st = (JSON.parse(localStorage.getItem('aicoding-backgammon-v2') || '{}') || {}).settings || {}; if (st.ck && st.ck[0] && st.ck[1] && st.ck[0] !== st.ck[1]) ck = st.ck.slice(); } catch (e) {} return ck; };
+  const BACKGAMMON = {
+    LKEY: 'aicoding-backgammon-v2-lessons', OKEY: 'aicoding-backgammon-v2-open', data: null, I: null,
+    load() {
+      if (this.p) return this.p;
+      const tx = window.AtlasBgTexts ? AtlasBgTexts() : Promise.resolve({});
+      const bg = window.BG && BG.genPlays ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = '../backgammon/bg.js?v=20261111c1'; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); });   // (the rules: the same file and cache key as the table, atlas/games/backgammon.js)
+      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=20261021pz'), getJ('../backgammon/openings.json?v=20261021op'), tx, bg])
+        .then(([ls, op, I]) => { this.I = I || {}; this.data = { ls, op }; return this; })
+        .catch(e => { this.p = null; throw e; }));
+    },
+    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]); if (x === undefined) return ''; return v && typeof x === 'string' ? fill(x, v) : x; },
+    names(lang) { const ck = bgCkOf(); return { c: this.tx('ng.' + ck[0], lang) || ck[0], o: this.tx('ng.' + ck[1], lang) || ck[1] }; },
+    mini: (pos, dice) => window.AtlasMini && AtlasMini.backgammon ? AtlasMini.backgammon({ pos, dice }) : '',
+    course(id) { const c = (this.data.ls.cats || []).find(x => x.steps.includes(id)); return c ? c.id : 'rules'; },
+    opItems() { const op = this.data.op; return op.cats.flatMap(c => c.items.map(id => ({ c: c.id, it: op.items[id] }))).filter(x => x.it); },
+    // an opening's decisions: for a reply, the opponent's opening is already on the board (you are the near side, they the far one)
+    opDecs(it) {
+      return it.lines.map(ln => {
+        const seq = ln.seq || [{ r: 0, d: it.d, m: ln.m }], k = it.kind === 'open' ? 0 : seq.length - 1, x = seq[k];
+        let p = '0000005030000500000000002000000050300005000000000020'.split('').join('');   // (the starting position, as the json writes it)
+        if (k > 0 && window.BG) { const q = bgDecP(p); for (let i = 0; i < k; i++) { const st = seq[i], sd = st.r === seq[k].r ? 0 : 1; for (let j = 0; j + 1 < st.m.length; j += 2) BG.apply(q, sd, st.m.charCodeAt(j) - 65, st.m.charCodeAt(j + 1) - 65); } p = Array.from(q).map(v => v.toString(16)).join(''); }
+        return { ln, pos: p, d: x.d, plays: ln.plays || it.plays };
+      });
+    },
+    list(kind, lang) {
+      const D = this.data;
+      if (kind === 'open') { const pr = J(this.OKEY, {}); return this.opItems().map(({ c, it }) => { const d0 = window.BG ? this.opDecs(it)[0] : null;
+        return { key: it.id, cat: c, catName: this.tx('op.cat.' + c, lang), title: this.tx('op.i.' + it.id + '.t', lang) || it.id, sub: this.tx('op.i.' + it.id + '.k', lang), svg: d0 ? this.mini(d0.pos, d0.d) : this.mini('0000005030000500000000002000000050300005000000000020', it.d || null), st: pr[it.id] ? (pr[it.id].pass ? 'pass' : 'try') : '', full: false }; }); }
+      const pr = J(this.LKEY, {});
+      return D.ls.steps.map((s, i) => { const P0 = (s.problems || [])[0] || {}, f = s.diagram || (s.figs && s.figs[0]) || P0;
+        return { key: String(i), cat: this.course(s.id), catName: this.tx('lx.c.' + this.course(s.id), lang), title: this.tx('ls.' + s.id + '.title', lang), sub: this.tx('ls.' + s.id + '.sub', lang), svg: f.pos ? this.mini(bgPos(f.pos, f.side || 0), f.dice || null) : '', st: pr[s.id] ? (pr[s.id].pass ? 'pass' : 'try') : '', full: false }; });
+    },
+    play(P, pos, ask, hintTx, lang) {   // a play problem: the roll on the board, its candidate plays
+      return { pos: { bg: { pos, dice: P.dice.slice() } }, kind: 'bgplay', P, bgPos: pos, ask, hintTx, ans: [{ froms: P.plays[0][0], cls: 'ring' }],
+        best: () => P.plays[0][0] };
+    },
+    lesson(key, lang) {
+      const s = this.data.ls.steps[+key]; if (!s) return null;
+      const N = this.names(lang), T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, Object.assign({}, N, v || {}));
+      const intro = String(T('intro', { fig0: '', fig1: '', fig2: '' }) || '').replace(/\{fig\d\}/g, '');
+      return { id: s.id, title: T('title'), intro,
+        probs: (s.problems || []).map(P => {
+          const pos = bgPos(P.pos, P.side), ask = this.tx('ls.turn', lang, { c: '<b>' + N.c + '</b>' }) + ' ';
+          if (P.kind === 'play') return this.play(P, pos, ask + T('goal', { d: P.dice.join('-') }), T('hint'), lang);
+          const qv = Object.assign({}, N, P.qv || {}); if (P.q === 'shots') qv.m = this.tx('ls.why.shotsD', lang, { d: (P.qv || {}).d });
+          return { pos: { bg: { pos, dice: null } }, kind: 'choice', P, ask: this.tx('ls.q.' + P.q, lang, qv), hintTx: P.q === 'take' ? this.tx('ls.takepoint.hint', lang) : P.q === 'double' ? this.tx('ls.racecube.hint', lang) : T('hint'), ans: [],
+            marks: (P.mk || []).map(([sd, pt, c]) => ({ pt: (sd ^ P.side) === 0 ? pt : 25 - pt, cls: c === 'ok' ? 'ok' : 'hl' })),
+            choices: P.opts.map(o => { const [ok, on] = Array.isArray(o) ? o : [o]; return this.tx('ls.opt.' + ok, lang, Object.assign({}, qv, { n: on })) || ok; }), right: P.ans,
+            why: this.tx('ls.why.' + (P.why || P.q), lang, qv) };
+        }),
+        save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.LKEY, pr); return pass; } };
+    },
+    opening(key, lang) {
+      const it = this.data.op.items[key]; if (!it || !window.BG) return null;
+      const T = f => this.tx('op.i.' + it.id + '.' + f, lang), N = this.names(lang);
+      const decs = this.opDecs(it);
+      return { id: it.id, title: T('t') || it.id, intro: [T('d'), T('a')].filter(Boolean).join('<br>'), start: null, steps: [], notes: {},
+        probs: decs.map(x => { const tol = this.data.op.tol || .02, R = x.plays.map(y => ({ m: y[0], e: y[3] != null ? y[3] : y[1], ro: y[3] != null, ply: y[2] })), rolled = R.some(y => y.ro), best = R.filter(y => !rolled || y.ro).reduce((a, b) => b.e > a.e ? b : a);
+          const P = { dice: x.d, plays: R.map(y => [y.m, y.e]), opTol: tol, opOk: R.filter(y => (rolled ? y.ro : y.ply === 2) && best.e - y.e <= tol + 1e-9).map(y => y.m), best: best.m };
+          const ask = this.tx('op.drillTurn', lang, { c: '<b>' + N.c + '</b>', d: x.d.join('') });
+          return Object.assign(this.play(P, x.pos, ask, this.tx('op.hint', lang) || '', lang), { ans: [{ froms: best.m, cls: 'ring' }], best: () => best.m }); }),
+        save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[it.id] || {}, pass = pts >= max; pr[it.id] = Object.assign({}, o, { pass: !!o.pass || pass, best: Math.max(o.best || 0, max ? pts / max : 0) }); put(this.OKEY, pr); return pass; } };
+    },
+    points(P, u, p) {   // = backgammon/app.js problemPoints (lessons) · op.js opSubmit (openings: right within the tolerance, else nothing)
+      const mine = u && u.key, L = P.plays.map(([m, e]) => Object.assign(bgCodes(p.bgPos, m), { m, e }));
+      if (P.opOk) { const x = L.find(y => y.key === mine); return x && P.opOk.includes(x.m) ? 20 : 0; }
+      let rank = L.findIndex(y => y.key === mine); if (rank < 0) rank = L.length - 1;
+      const eff = L.filter(y => y.e > L[rank].e + 0.004).length, n = L.length;
+      return n <= 1 || eff === 0 ? 20 : Math.max(0, Math.round(20 * (n - 1 - eff) / (n - 1)));
+    },
+    introPos(c) {   // while the intro is read: the lesson's own picture (its diagram, the play's arrows), for looking only
+      const s = this.data.ls.steps.find(x => x.id === c.id), f = s && (s.diagram || (s.figs && s.figs[0])); if (!f || !f.pos) return null;
+      const sd = f.side || 0;
+      return { pos: { bg: { pos: bgPos(f.pos, sd), dice: f.dice || null, lock: true } }, marks: f.play ? [{ m: f.play, cls: 'ok' }] : (f.marks || []).map(x => Array.isArray(x) ? { pt: (x[0] ^ sd) === 0 ? x[1] : 25 - x[1], cls: 'hl' } : null).filter(Boolean) };
+    },
+  };
+  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -740,6 +844,7 @@
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
         else if (G && (id === 'checkers' || id === 'xiangqi')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && id === 'backgammon') pz().load(G.bg);
         else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
         else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
         else if (id === 'shogi') pz().load(pos, sol || [], { lock: !!lock });
@@ -828,7 +933,7 @@
     function open(key) {
       const L2 = ctx.kind === 'open' ? D.opening(key, ctx.lang) : D.lesson(key, ctx.lang, X);
       if (!L2) { say(X.drill); act(X.full, {}); $('[data-a=next]').onclick = () => ctx.onFull && ctx.onFull(ctx.kind, key); return; }
-      cur = Object.assign(ncApply(id, L2), { key, k: 0, res: [], si: 0 }); head(cur.title);
+      cur = Object.assign(ncApply(id, L2), { key, k: 0, res: [], si: 0 }); head(cur.title); choices(null);
       phase = 'intro'; dots();
       say(`${fill((TOPIC[ctx.lang] || TOPIC.en)[ctx.kind === 'open' ? 1 : 0], { t: `<b>${cur.title}</b>` })}<br>${cur.intro || ''}`);   // (「今日は『ルーク』について学ぶよ！」 — not the bare title, 2026-11-14)
       // (2026-11-14) while the introduction is read, the board shows the lesson's own picture (its diagram) for looking only — never the
@@ -875,10 +980,14 @@
       say(sideLine(p) + (p.ask || X.opGoal));
       await board(p.pos, p.sol); if (stopped || cur.probs[cur.k] !== p) return;
       onMoved = (u, info) => moved(p, u, info);
-      pz().wait(); act(X.next, { hint: true, nextOn: false });
+      if (p.marks && p.marks.length && pz().mark) pz().mark(p.marks);
+      choices(p);
+      if (!p.choices) pz().wait(); act(X.next, { hint: true, nextOn: false });
       $('[data-a=next]').onclick = () => { cur.k++; if (cur.k < cur.probs.length) prob(); else finish(); };
       $('[data-a=hint]').onclick = () => { if (p.ans == null || p.ans < 0 || p.ans === '' || p.done) return; p.hinted = true;
         if (p.hint && p.hint.length) { pz().mark(p.hint.map(q => [q, 'ring'])); say(p.hintTx || X.hintSay); return; }   // (gomoku: the lesson's own hint points and words)
+        if (p.kind === 'bgplay') { pz().reset(); pz().mark(p.ans); pz().wait(); say((p.hintTx ? p.hintTx + '<br>' : '') + X.hintSay); return; }   // (backgammon: back to the roll's start, rings on the checkers the best play moves)
+        if (p.kind === 'choice') { say(p.hintTx || X.hintSay); return; }
         pz().mark(p.ans); say(p.hintTx || X.hintSay); };
     }
     async function moved(p, u, info) {
@@ -894,7 +1003,7 @@
         await sleep(120); await pz().play(reply); if (stopped) return;
         pz().wait(); return;
       }
-      scored(p, D.points(p.P, u), undefined, u);
+      scored(p, D.points(p.P, u, p), undefined, u);
     }
     // (2026-11-12) a partial or wrong answer names the best move in words too (not only the glowing squares)
     const ANSM = { ja: '正解は盤に印を付けた手です。', en: 'The best move is marked on the board.', zh: '正解已在棋盘上标出。', 'zh-TW': '正解已在棋盤上標出。', ko: '정답은 판에 표시한 수입니다.', es: 'La mejor jugada está marcada en el tablero.', fr: 'Le meilleur coup est marqué sur le plateau.', pt: 'O melhor lance está marcado no tabuleiro.', de: 'Der beste Zug ist auf dem Brett markiert.', ru: 'Лучший ход отмечен на доске.', tr: 'En iyi hamle tahtada işaretli.', id: 'Langkah terbaik ditandai di papan.', hi: 'सबसे अच्छी चाल बोर्ड पर चिह्नित है।', ar: 'أفضل نقلة مُعلَّمة على اللوح.' };
@@ -918,8 +1027,27 @@
       }
       return '';
     }
+    // a question with choices (backgammon: race / shots / cube): the buttons under the guide's words
+    function choices(p) {
+      let box = $('.lsch'); if (!box) { box = document.createElement('div'); box.className = 'lsch bgch'; $('.bub').insertBefore(box, $('.cnt')); }
+      if (!p || !p.choices) { box.innerHTML = ''; box.hidden = true; return; }
+      box.hidden = false; box.innerHTML = p.choices.map((c, i) => `<button type="button" class="btn sm" data-ci="${i}">${c}</button>`).join('');
+      box.onclick = e => { const b = e.target.closest('[data-ci]'); if (!b || p.done || cur.probs[cur.k] !== p) return; const i = +b.dataset.ci, ok = i === p.right;
+        box.querySelectorAll('button').forEach((x, k) => { x.disabled = true; x.classList.toggle('ok', k === p.right); x.classList.toggle('ng', k === i && !ok); });
+        scored(p, ok ? PTS : 0); };
+    }
     function scored(p, pts, msg, u) {
       p.done = true; const n = Math.max(0, pts - (p.hinted && pts > 0 ? HINT_PEN : 0)); cur.res[cur.k] = n; dots();
+      if (id === 'backgammon') {   // (the best play's arrows green, yours red, from the roll's start; a question: its explanation)
+        const right = pts >= 16, k = cur.k;
+        if (p.kind === 'bgplay' && u && u.steps) { const best = p.best(); later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().reset(); pz().mark([{ m: best, cls: 'ok' }, ...(right && pts >= 20 ? [] : [{ play: u.steps, cls: 'ng' }])]); }, 700); }
+        const nm = p.kind === 'bgplay' && window.BG ? `<bdi class="mv">${BG.notation(bgCodes(p.bgPos, p.best()).moves)}</bdi>` : '';
+        say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.kind === 'bgplay' && pts < 20 && nm ? '<br>' + D.tx('fb.answerIs', ctx.lang, { m: nm }) : '') + (p.why ? '<br>' + p.why : ''));
+        try { chime(right); } catch (e) {}
+        act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
+        if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
+        return;
+      }
       if ((id === 'checkers' || id === 'xiangqi') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;
         say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
@@ -947,7 +1075,7 @@
       if (pts >= 16 && cur.k + 1 < cur.probs.length) { const k = cur.k; autoGo(2400, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); }); }   // (right: the next problem by itself, the meter on 次へ)
     }
     function finish() {
-      phase = 'done'; dots();
+      phase = 'done'; dots(); choices(null);
       const max = cur.probs.length * PTS, pts = cur.res.reduce((a, b) => a + (b || 0), 0), q = Math.ceil(max * PASS), pass = cur.save(pts, max);
       say(pass ? fill(X.pass, { p: pts, m: max }) : fill(X.fail, { p: pts, m: max, q }));
       if (pass && window.AtlasConfetti) try { AtlasConfetti(70); } catch (e) {}
