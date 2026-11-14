@@ -369,7 +369,7 @@ class Table3D {
     this.build(mobile);
     this.scene.traverse(o => { if (o.isLight) o.layers.enable(1); });   // (the overlay pass draws layer 1 only: the lights must reach it)
     this.resize();
-    this._ro = new ResizeObserver(() => this.resize());
+    this._ro = new ResizeObserver(() => { this.resize(); try { this._syncInst(); this.renderer.render(this.scene, this.camera); } catch (e) {} });   // (drawn at once: a resized canvas is blank until drawn)
     this._ro.observe(host);
     this._loop = this._loop.bind(this);
     requestAnimationFrame(this._loop);
@@ -1221,9 +1221,14 @@ class Table3D {
     // frame pacing while things move (consecutive frames only): slow → a lower drawing ratio, quick again → back up
     { const P = this._pace || (this._pace = { last: 0, ema: 16, t: 0 }), dt = now - P.last; P.last = now;
       if (dt > 0 && dt < 120) { P.ema += (dt - P.ema) * .08;
-        if (now - P.t > 1200) { P.t = now; const d0 = this.dyn || 1;
-          if (P.ema > 28 && d0 > .8) this.dyn = d0 * .9; else if (P.ema < 18 && d0 < 1) this.dyn = Math.min(1, d0 * 1.08);
-          if (this.dyn !== d0) this.resize(); } } }
+        // (2026-11-15, ユーザー「定期的に画面が一瞬黒くなる」: a new canvas size clears the canvas, and it was shown cleared until the
+        // next frame drawn — now the frame is drawn again at once; and the ratio no longer goes up and down every second: it comes
+        // back up only after 6 s of quick frames)
+        if (now - P.t > 1200) { const d0 = this.dyn || 1;
+          if (P.ema > 28 && d0 > .8) { this.dyn = d0 * .9; P.t = now; P.up = now; }
+          else if (P.ema < 18 && d0 < 1 && now - (P.up || 0) > 6000) { this.dyn = Math.min(1, d0 * 1.08); P.t = now; P.up = now; }
+          else P.t = now;
+          if (this.dyn !== d0) { this.resize(); this._syncInst(); this.renderer.render(this.scene, this.camera); } } } }
     if (this._dbg) this._dbgPaint(now);
   }
   // screen position of a seat's area (for placing HTML badges)
