@@ -960,7 +960,8 @@ async function onEvent(ev, d) {
       await cutin(d.seat, 'skill', d);
       refreshTable(); renderBadges();
       if (d.seat === ME) {
-        if (d.info.peek || d.info.read) showIntel(d.info);
+        if (d.info.peek) await peekPop(d.info.peek);   // (ユーザー 2026-11-15: shown once, mid-screen — remembered, not kept in the box)
+        if (d.info.read) showIntel({ read: d.info.read });
         if (d.info.to != null) renderHand(d.info.to);
       }
       break;
@@ -1249,6 +1250,19 @@ function askDealSkill(o, res) {
 }
 
 // ---------------------------------------------------------------- intel (peek / mind read)
+// 先読み: the next three draws shown once in the middle of the screen; a click / tap or a key closes it and they are gone
+function peekPop(ids) {
+  return new Promise(done => {
+    const w = document.createElement('div'); w.className = 'peekpop';
+    w.innerHTML = `<div class="pk-box"><small>${esc(t('peekT'))}</small><div class="pk-t">${ids.map((id, i) => `<span style="--i:${i}">${tileHTML(id)}</span>`).join('')}</div><em>${esc(t('peekClose'))}</em></div>`;
+    $('#game').appendChild(w); void w.offsetWidth; w.classList.add('show');
+    let shut = false;
+    const close = e => { if (shut) return; if (e) { e.preventDefault(); e.stopPropagation(); } shut = true; removeEventListener('keydown', key, true);
+      w.classList.remove('show'); setTimeout(() => w.remove(), 260); done(); };
+    const key = e => { if (['Enter', ' ', 'Escape'].includes(e.key)) close(e); };
+    setTimeout(() => { w.addEventListener('pointerdown', close); addEventListener('keydown', key, true); }, 450);   // (not closed by the click that used the skill)
+  });
+}
 function showIntel(info) {
   const el = $('#intel');
   let h = '';
@@ -1566,5 +1580,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop };
 })();

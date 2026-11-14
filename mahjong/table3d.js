@@ -1112,13 +1112,16 @@ class Table3D {
       : a >= 0.8 ? { fov: 42, elev: 66, fitX: 10.8, tz: 0.4 }
       : { fov: 46, elev: 78, fitX: 7.5, tz: -1.8 };
     const V = P.fov * PI / 180, hf = 2 * Math.atan(Math.tan(V / 2) * a);
-    const d = P.fitX / Math.tan(hf / 2);
+    let d = P.fitX / Math.tan(hf / 2);
     const e = P.elev * PI / 180;
     this.camera.fov = P.fov;
     this.lookAt = new THREE.Vector3(0, 0, P.tz);
-    this.camera.position.set(0, d * Math.sin(e), P.tz + d * Math.cos(e));
-    this.camera.updateProjectionMatrix();
-    this.camera.lookAt(this.lookAt);
+    const put = () => { this.camera.position.set(0, d * Math.sin(e), P.tz + d * Math.cos(e)); this.camera.updateProjectionMatrix(); this.camera.lookAt(this.lookAt); this.camera.updateMatrixWorld(); };
+    put();
+    // (2026-11-15) on a very wide screen fitting the width left the far side above the top edge (the far hand and melds cut off):
+    // the camera also backs off until the far player's melds (along the far rail) and the tops of her standing tiles are in view
+    const far = new THREE.Vector3(), top = 1 - 2 * 6 / h;   // (6 px below the top edge)
+    for (let k = 0; k < 40; k++) { far.set(0, H + .1, -9.3).project(this.camera); if (far.y <= top) break; d *= 1.025; put(); }
     this.dirty = true;
   }
   // quality: 'high' | 'lite'. Lite drops shadows and renders at 1x pixel ratio.
