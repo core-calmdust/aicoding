@@ -9,7 +9,8 @@ const FAST = /[?&]fast/.test(location.search) ? 0.12 : 1;
 // waits that stand still while the window is not in front (shared/focusgate.js stops performance.now() then): the game does not
 // go on behind another window (common rule; ユーザー 2026-11-14)
 const frozen = () => !!(window.__focusGate && window.__focusGate.frozen);
-const sleep = ms => new Promise(r => { const end = performance.now() + ms * FAST;
+const PACE = .8;   // the game's waits (and with them the cut-ins and result screens) run this much of their written length (ユーザー 2026-11-14: a little quicker)
+const sleep = ms => new Promise(r => { const end = performance.now() + ms * FAST * PACE;
   (function tick() { const left = end - performance.now(); if (left <= 0 && !frozen()) return r(); setTimeout(tick, Math.max(16, Math.min(left, 150))); })(); });
 const ASSETS = window.JANKA_ASSETS || '../images/mahjong/';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -487,6 +488,7 @@ let UIS = null;        // ui state for the game screen
 const ME = 0;
 
 class Human {
+  get interactive() { return true; }   // (game.js asks the BOTs first and skips the player's call offer when a BOT rons)
   dealSkill(g, s, o) { return new Promise(res => askDealSkill(o, res)); }
   turn(g, s, o) { return new Promise(res => myTurn(o, res)); }
   react(g, s, o) { return new Promise(res => myCall(o, res)); }
@@ -519,6 +521,7 @@ async function startGame() {
   const agents = [auto ? new AutoMe(DB.set.lv) : new Human(), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv)];
   G = new MJGame({ agents, chars, rules: { length: DB.set.len, skills: DB.set.skills }, ui: onEvent });
   UIS.game = G;
+  TB.setSleeves(chars.map(c => c.color));   // (each seat's sleeve in her sisters' colour)
   $('#gSnd').innerHTML = DB.set.snd ? IC.snd : IC.mute; $('#gExit').innerHTML = IC.exit;
   $('#khelp').innerHTML = t('keys');
   sndIcons();
@@ -630,7 +633,9 @@ function refreshTable() {
   // (ユーザー 2026-11-14: the box shows the dora, and under it the pot and the counters as stick × n — the round and the tiles
   // left are on the score unit in the middle of the table)
   const ky = Math.round(g.kyotaku / 100) / 10;
-  $('#rbox').innerHTML = `<div class="rd"><small>${t('dora')}</small>${[0, 1, 2, 3, 4].map(i => i < inds.length ? typeHTML(inds[i], 'xs') : backHTML('xs')).join('')}</div>
+  // (the dora indicators as the 3D tiles of the table — TB.tileShot; no label)
+  const shot = (id, bk) => `<span class="t3"><img src="${TB.tileShot(id, bk)}" alt="" draggable="false"></span>`;
+  $('#rbox').innerHTML = `<div class="rd" title="${esc(t('dora'))}">${[0, 1, 2, 3, 4].map(i => i < inds.length ? shot(inds[i] * 4 + (inds[i] === 4 || inds[i] === 13 || inds[i] === 22 ? 1 : 0)) : shot(0, true)).join('')}</div>
     <div class="rs"><span title="${esc(t('kyotakuT'))}">${STICK1000}<b>×${ky}</b></span><span title="${esc(t('honbaT'))}">${STICK100}<b>×${g.honba}</b></span></div>`;
 }
 const STICK1000 = '<svg class="stk" viewBox="0 0 64 10"><rect x="1" y="1" width="62" height="8" rx="4" fill="#f4f1ea" stroke="#9aa0b0" stroke-width=".8"/><circle cx="32" cy="5" r="2.6" fill="#d8283c"/></svg>';
