@@ -112,5 +112,6 @@
   add('f.tiles', '{n}枚', '{n} tiles', '{n}张', '{n}張', '{n}개', '{n} fichas', '{n} tuiles', '{n} peças', '{n} Steine', '{n} костей', '{n} taş', '{n} ubin', '{n} टाइलें', '{n} قطعة');
   add('msg.noShufD', 'この難易度ではシャッフルできません', 'No shuffles at this level', '此难度不能洗牌', '此難度不能洗牌', '이 난이도에서는 셔플할 수 없어요', 'En esta dificultad no se baraja', 'Pas de mélange à ce niveau', 'Sem embaralhar nesta dificuldade', 'Auf dieser Stufe kein Mischen', 'На этой сложности нельзя перемешивать', 'Bu zorlukta karıştırma yok', 'Tidak bisa mengacak di tingkat ini', 'इस कठिनाई में फेंटना नहीं', 'لا خلط في هذه الصعوبة');
   add('msg.noHintD', 'この難易度ではヒントは使えません', 'No hints at this level', '此难度不能用提示', '此難度不能用提示', '이 난이도에서는 힌트를 쓸 수 없어요', 'En esta dificultad no hay pistas', 'Pas d’indice à ce niveau', 'Sem dicas nesta dificuldade', 'Auf dieser Stufe keine Tipps', 'На этой сложности без подсказок', 'Bu zorlukta ipucu yok', 'Tidak ada petunjuk di tingkat ini', 'इस कठिनाई में संकेत नहीं', 'لا تلميحات في هذه الصعوبة');
+  add('rec', 'せいせき：', 'Record: ', '成绩：', '成績：', '기록: ', 'Récord: ', 'Record : ', 'Recorde: ', 'Ergebnis: ', 'Рекорд: ', 'Kayıt: ', 'Rekor: ', 'रिकॉर्ड: ', 'السجل: ');
   window.SHANGHAI_I18N = D;
 })();

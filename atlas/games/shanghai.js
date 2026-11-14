@@ -102,10 +102,12 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .gf{position:absolute;z-index:2;width:calc(var(--nd) * 1.3);height:auto;margin-top:calc(var(--nd) * -1.8 + 10px);transform:translateX(-50%);pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));animation:shgfb 2.4s ease-in-out infinite}
 .shmap .gf.got{opacity:.55;animation:none;filter:grayscale(.2) drop-shadow(0 3px 6px rgba(0,0,0,.5))}
 .shmap .nd .gft{position:absolute;right:-8px;top:-6px;font-style:normal;font-size:15px;line-height:1;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#ffd76a;color:#241a05;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.5)}
-@keyframes shgfb{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+@keyframes shgfb{0%,100%{transform:translateX(-50%) scale(var(--iz,1)) translateY(0)}50%{transform:translateX(-50%) scale(var(--iz,1)) translateY(-5px)}}
+.shmap .gf{transform-origin:50% calc(var(--nd) * 1.8 - 10px)}
 .shmap .ar .agf{width:26px;height:26px;margin:-6px -6px -6px 6px;vertical-align:middle}
 .shmap .sh .gfl{display:flex;align-items:center;gap:8px;margin-top:8px;padding:4px 12px 4px 4px;border-radius:14px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-weight:800;color:#ffe7a0;font-size:15.5px}.shmap .sh .gfl img{width:44px;height:44px;flex:none}.shmap .sh .gfl.got{opacity:.7}
 .shmap .sh .rs{color:#ffd76a;letter-spacing:1px}.shmap .sh .rb{color:#9fe8ff;font-weight:800;margin-inline-start:6px}
+.shmap .sh .recs{margin-top:10px}.shmap .sh .recs .rs{margin-inline-start:2px}
 .shmap .sh .rw{display:inline-block;margin-top:2px;font-weight:800;color:#ffd76a}
 .shmap .ars{position:relative;display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}.shmap .ars::-webkit-scrollbar{display:none}
 .shmap .ar{flex:none;font:inherit;font-size:15px;font-weight:700;padding:9px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#dfe3ff;cursor:pointer;white-space:nowrap}
@@ -120,7 +122,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .wld .pn.on{fill:rgba(255,226,150,.22)}
 .shmap .zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px;z-index:3}
 .shmap .zoom button{font:inherit;font-size:22px;font-weight:900;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(16,20,52,.7);color:#fff;cursor:pointer;line-height:1}
-.shmap .nd{position:absolute;transform:translate(-50%,-50%);width:var(--nd);height:var(--nd);border-radius:50%;border:2px solid rgba(255,255,255,.35);background:radial-gradient(circle at 40% 35%,#3a4580,#141a40);color:#fff;font:inherit;font-weight:900;font-size:calc(var(--nd) * .36);cursor:pointer;display:grid;place-items:center;padding:0}
+.shmap .nd{position:absolute;transform:translate(-50%,-50%) scale(var(--iz,1));width:var(--nd);height:var(--nd);border-radius:50%;border:2px solid rgba(255,255,255,.35);background:radial-gradient(circle at 40% 35%,#3a4580,#141a40);color:#fff;font:inherit;font-weight:900;font-size:calc(var(--nd) * .36);cursor:pointer;display:grid;place-items:center;padding:0}
 .shmap .nd.ok{background:radial-gradient(circle at 40% 35%,#fff6c8,#f2c24a 55%,#b9851a);color:#3a2604;border-color:#fff3b0;box-shadow:0 0 18px 4px rgba(255,214,106,.55)}
 .shmap .nd.cur{border-color:#9fe8ff;box-shadow:0 0 0 0 rgba(159,232,255,.7);animation:shpulse 1.6s infinite}
 .shmap .nd.lk{opacity:.4;cursor:default}
@@ -714,7 +716,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       tx = w + 2 * m <= vw ? (vw - w) / 2 : Math.min(m, Math.max(vw - w - m, tx));
       ty = h <= vh ? (vh - h) / 2 : Math.min(20, Math.max(vh - h - 20, ty));
     }
-    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; track(); }
+    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; wld.style.setProperty('--iz', Math.max(1, Math.min(3, .72 / z)).toFixed(3)); track(); }   // (2026-11-14 --iz: zoomed out, the stage buttons keep ~72 % of their size on screen — the picture shrinks, the buttons do not)
     const centerOf = a => (a * PW + 8 + 50) * u;   // the middle of constellation a, in sky px at z = 1
     function aim(a, smooth) {
       const ttx = vp.clientWidth / 2 - centerOf(a) * z;
@@ -792,7 +794,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     }
     function sheet() {
       const s = pick, st = K.stage(s), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s];
-      $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + (sr ? `<br><span class="rs">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` + (bt != null ? ` <span class="rb">${esc(TX('r.best', lang, { t: mmss(bt) }))}</span>` : '') : '') : esc(TX('st.lock', lang))}<br><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span>${giftLine(s)}</div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
+      $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + '' : esc(TX('st.lock', lang))}<div class="recs"><div>${esc(TX('rec', lang))}${sr ? `<span class="rs">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` + (bt != null ? ` <span class="rb">${esc(TX('r.best', lang, { t: mmss(bt) }))}</span>` : '') : '<span class="rb">—</span>'}</div><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span></div>${giftLine(s)}</div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
       $('.go').onclick = () => { if (!ul) return; close(); o.play(s); };
       requestAnimationFrame(onFit);
     }
