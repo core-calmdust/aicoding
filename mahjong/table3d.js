@@ -166,6 +166,10 @@ function buildHand(env) {
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
   g.setIndex(new THREE.BufferAttribute(new Uint16Array(b64(Hd.i).buffer), 1));
   if (Hd.n) { const nb = new Int8Array(b64(Hd.n).buffer), nr = new Float32Array(Hd.nv * 3); for (let i = 0; i < nr.length; i++) nr[i] = nb[i] / 127; g.setAttribute('normal', new THREE.BufferAttribute(nr, 3)); } else g.computeVertexNormals();
+  // the second pose (pinching: the thumb under the tile, the forefinger on its face — ユーザー 2026-11-14) as a morph target
+  if (Hd.mi) { const mi = new Uint16Array(b64(Hd.mi).buffer), mp = new Uint16Array(b64(Hd.mp).buffer), mn = new Int8Array(b64(Hd.mn).buffer), p2 = pos.slice(), n2 = g.attributes.normal.array.slice();
+    for (let k = 0; k < mi.length; k++) for (let c = 0; c < 3; c++) { p2[mi[k] * 3 + c] = Hd.lo[c] + mp[k * 3 + c] / 65535 * (Hd.hi[c] - Hd.lo[c]); n2[mi[k] * 3 + c] = mn[k * 3 + c] / 127; }
+    g.morphAttributes.position = [new THREE.BufferAttribute(p2, 3)]; g.morphAttributes.normal = [new THREE.BufferAttribute(n2, 3)]; }
   g.addGroup(0, Hd.nail * 3, 0); g.addGroup(Hd.nail * 3, (Hd.nt - Hd.nail) * 3, 1);
   // skin (ユーザー 2026-11-14: it read as polygons — the mesh is now rounded finer and coloured unevenly as skin is, by the generator):
   // soft and matt; where the light turns to shade the flesh glows a little red (light passing through it), and a thin warm rim at grazing angles
@@ -174,7 +178,7 @@ function buildHand(env) {
     { vec3 sL = normalize((viewMatrix * vec4(.2, 1., .3, 0.)).xyz); float sn = dot(normalize(vNormal), sL), sv = 1. - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0., 1.);
       totalEmissiveRadiance += diffuseColor.rgb * vec3(1., .3, .2) * (smoothstep(-.55, .05, sn) * (1. - smoothstep(.0, .6, sn)) * .34 + sv * sv * sv * .16); }`); };
   const nail = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .22, clearcoat: 1, clearcoatRoughness: .08, envMap: env, envMapIntensity: .7, emissive: new THREE.Color(0x40141c), emissiveIntensity: .35 });
-  const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; rig.add(hand);
+  const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; hand.frustumCulled = false; rig.add(hand); if (Hd.mi) hand.morphTargetInfluences = [0];
   // the sleeve (ユーザー 2026-11-14: only a glimpse of the wrist, the sleeve long; a pattern as on a Chinese dress): crimson silk
   // brocade — gold flower roundels and cloud scrolls woven in — closing just above the wrist in a black band between two gold pipings.
   const bc = document.createElement('canvas'); bc.width = bc.height = 512; const g2 = bc.getContext('2d');
@@ -201,6 +205,9 @@ function buildHand(env) {
     const bg = new THREE.CylinderGeometry(r0 + .02, r0 - .02, .34, 28, 1, true); bg.rotateX(PI / 2); bg.translate(0, 0, .17); const bm = new THREE.Mesh(bg, band); bm.scale.set(1, SY, 1); sl.add(bm);
     for (const z of [0, .34]) { const cuff = new THREE.Mesh(new THREE.TorusGeometry(r0 + (z ? .02 : -.02), .045, 8, 32), gold); cuff.position.z = z; cuff.scale.set(1, SY, 1); cuff.castShadow = true; sl.add(cuff); }
     const cap = new THREE.Mesh(new THREE.CircleGeometry(r0 - .04, 24), band); cap.scale.set(1, SY, 1); cap.rotation.y = PI; cap.position.z = .06; sl.add(cap); }
+  // (the sleeve follows the wrist between the two poses)
+  if (Hd.wristA) { const X = new THREE.Vector3(1, 0, 0), Z = new THREE.Vector3(0, 0, 1), qB = new THREE.Quaternion().setFromAxisAngle(X, Hd.pitch), qA = new THREE.Quaternion().setFromAxisAngle(Z, Hd.rollA).multiply(new THREE.Quaternion().setFromAxisAngle(X, Math.min(Hd.dpA + Hd.pitch, -.12)))   /* (pinching, the hand dips at the wrist; the forearm stays level — it must not go down into the table) */, pB = new THREE.Vector3().fromArray(Hd.wrist), pA = new THREE.Vector3().fromArray(Hd.wristA);
+    buildHand.K = { pB, pA, qB, qA }; }
   rig.scale.setScalar(.84);   // (a little under life size against the tiles: it must not hide the table)
   return rig;
 }
@@ -411,9 +418,14 @@ class Table3D {
     else if (anim) { this.tween(g, to, anim.dur || 260, anim.from, anim.hand); const tw = this.tweens[this.tweens.length - 1]; tw.t0 += anim.delay || 0; tw.level = !!anim.level; }
     else { if (this.tweens.length) this.tweens = this.tweens.filter(t => t.g !== g || !t.level); g.position.set(to.x, to.y, to.z); g.rotation.set(rx, yaw, rz); g.userData.target = to; this.dirty = true; }
   }
+  _drop(g, keep) {   // end the tile's movements; a hand that was carrying it (other than `keep`) lets go and draws back
+    if (!this.tweens.some(t => t.g === g)) return;
+    for (const t of this.tweens) if (t.g === g && t.hand != null && t.hand !== keep) this._handBack(t.hand);
+    this.tweens = this.tweens.filter(t => t.g !== g);
+  }
   tween(g, to, dur, from, hand, after) {   // hand: the seat whose hand carries the tile (it lets go and draws back when the tile is down)
     const f = from || { x: g.position.x, y: g.position.y, z: g.position.z, rx: g.rotation.x, ry: g.rotation.y, rz: g.rotation.z };
-    this.tweens = this.tweens.filter(t => t.g !== g);
+    this._drop(g, hand);
     this.tweens.push({ g, from: f, to, t0: performance.now(), dur, hand: hand == null ? null : hand, after });
     if (hand != null) { const rig = this.hand(hand); this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(f.x, f.y + this._top(f.rx), f.z); }
     g.userData.target = to;
@@ -476,12 +488,15 @@ class Table3D {
     const pos = cam.position.clone().addScaledVector(q, d / q.dot(fwd)), e = new THREE.Euler().setFromQuaternion(cam.quaternion, 'YXZ');
     return { x: pos.x, y: pos.y, z: pos.z, rx: e.x, ry: e.y, rz: e.z, page: true };
   }
+  // the hand's pose: 0 = laying (fingers on the tile, the thumb beside it), 1 = pinching (the thumb under the tile, the forefinger on its face)
+  pinch(rig, k) { const K = buildHand.K; if (!K || rig.userData.pinch === k) return; rig.userData.pinch = k; const m = rig.children[0], sl = rig.children[1];
+    m.morphTargetInfluences[0] = k; sl.position.lerpVectors(K.pB, K.pA, k); sl.quaternion.copy(K.qB).slerp(K.qA, k); this.dirty = true; }
   _top(rx) { const c = Math.cos(rx); return D / 2 + (H / 2 - D / 2) * c * c; }   // how far the tile's top is above its centre (standing: H/2, lying: D/2)
   // a discard (ユーザー 2026-11-14: the hand takes the tile out of the owner's own hand and puts it out): the hand comes in over
   // the hand tiles, down onto the tile where it stands (from: its pose there; null = where it is now), lifts it and lays it at `to`.
   reach(g, seat, from, to) {
     const f = from || { x: g.position.x, y: g.position.y, z: g.position.z, rx: g.rotation.x, ry: g.rotation.y, rz: g.rotation.z }, rig = this.hand(seat);
-    this.tweens = this.tweens.filter(t => t.g !== g);
+    this._drop(g, seat);
     g.visible = true; g.position.set(f.x, f.y, f.z); g.rotation.set(f.rx, f.ry, f.rz); g.userData.target = to;
     const out = this.local(seat, 0, 3.4), r = { x: f.x + out.x, y: f.y + 2.6, z: f.z + out.z };   // from behind and above the tile
     if (f.page) { g.traverse(o => o.layers.enable(1)); rig.traverse(o => o.layers.enable(1)); this._ov = { g, rig }; }   // (the tile of the page's hand row: drawn over the page too)
@@ -493,13 +508,16 @@ class Table3D {
     // where it stands in the row, lifts it straight up out of the row, then carries it to the river; the row closes afterwards.)
     const go = () => { if (g.userData.target !== to) return this._handBack(seat);
       if (f.page) return this.tween(g, to, 440, f, seat);
-      const up = { x: f.x, y: f.y + 0.95, z: f.z, rx: f.rx, ry: f.ry, rz: f.rz };
-      this.tween(g, up, 190, f, seat, () => { if (g.userData.target === to) { this.tween(g, to, 400, up, seat); this.tweens[this.tweens.length - 1].arc = 0.35; } }); this.tweens[this.tweens.length - 1].level = true; g.userData.target = to; };
+      // (ユーザー 2026-11-14: pinched between the thumb and the forefinger — as the tile comes up out of the row it is turned flat,
+      // the thumb going under it and the forefinger lying on its face; so it is carried, and the thumb slips out as it is laid down)
+      const up = { x: f.x, y: f.y + 0.95, z: f.z, rx: to.rx, ry: f.ry, rz: to.rz };
+      this.tween(g, up, 250, f, seat, () => { if (g.userData.target === to) { this.tween(g, to, 460, up, seat); this.tweens[this.tweens.length - 1].grip = 'held'; } else this._handBack(seat); });
+      const tw = this.tweens[this.tweens.length - 1]; tw.level = true; tw.grip = 'take'; g.userData.target = to; };
     this.handFx.push({ rig, from: r, to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: performance.now(), dur: f.page ? 380 : 280, then: go });
     this.dirty = true;
   }
   _handRest(seat) { const p = this.local(seat, 0, 12.5); return { x: p.x, y: 3.2, z: p.z }; }   // off the table, on the owner's side
-  _handBack(seat) { const rig = this.hand(seat), f = { x: rig.position.x, y: rig.position.y, z: rig.position.z }, d = this.local(seat, 0, 6.5);
+  _handBack(seat) { const rig = this.hand(seat); this.pinch(rig, 0); const f = { x: rig.position.x, y: rig.position.y, z: rig.position.z }, d = this.local(seat, 0, 6.5);
     this.handFx = this.handFx.filter(h => h.rig !== rig);
     this.handFx.push({ rig, from: f, to: { x: f.x + d.x, y: f.y + 2.2, z: f.z + d.z }, t0: performance.now(), dur: 340, hide: true }); }
   tilePose(id) { const g = this.tiles.get(id); if (!g) return null; const t = g.userData.target || {}; return { x: g.position.x, y: g.position.y, z: g.position.z, rx: g.rotation.x, ry: g.rotation.y, rz: g.rotation.z, seen: g.visible, to: t }; }
@@ -512,11 +530,11 @@ class Table3D {
     if (!to) return;
     const done = shown ? null : () => { g.visible = false; };
     if (!from) { g.visible = true; this.tween(g, to, 320, this.handOrigin(seat), seat, done); return; }
-    g.visible = true; this.tweens = this.tweens.filter(t => t.g !== g);
+    g.visible = true; this._drop(g, seat);
     g.position.set(from.x, from.y, from.z); g.rotation.set(from.rx, from.ry, from.rz);
     const r = this._handRest(seat);
     this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(r.x, r.y, r.z);
-    this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 240, then: () => this.tween(g, to, 320, from, seat, done) });
+    this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 240, then: () => this.tween(g, to, 420, from, seat, done) });
     this.dirty = true;
   }
   hideAll() { for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this._ov) { this._ov.g.traverse(o => o.layers.disable(1)); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
@@ -747,11 +765,14 @@ class Table3D {
         let k = Math.max(0, Math.min(1, (now - tw.t0) / tw.dur));
         const e = 1 - Math.pow(1 - k, 3);
         const f = tw.from, t = tw.to, g = tw.g;
-        const arc = tw.level ? 0 : Math.sin(k * PI) * (tw.arc == null ? 0.6 : tw.arc);
+        const arc = tw.level ? 0 : Math.sin(k * PI) * 0.6;
         g.position.set(f.x + (t.x - f.x) * e, f.y + (t.y - f.y) * e + arc, f.z + (t.z - f.z) * e);
         g.rotation.set(f.rx + (t.rx - f.rx) * e, f.ry + (t.ry - f.ry) * e, f.rz + (t.rz - f.rz) * e);
-        if (tw.hand != null) { const rig = this.hand(tw.hand); rig.position.set(g.position.x, g.position.y + this._top(g.rotation.x), g.position.z); }   // the hand holds the tile
-        if (k >= 1) { if (tw.hand != null) this._handBack(tw.hand); if (tw.after) ends.push(tw.after); }
+        if (tw.hand != null) { const rig = this.hand(tw.hand); rig.position.set(g.position.x, g.position.y + this._top(g.rotation.x), g.position.z);   // the hand holds the tile
+          const ss = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a))); return u * u * (3 - 2 * u); }, sn = Math.sin(g.rotation.x), flat = sn * sn;
+          // (pinched only while the tile is in the air and lying flat: the thumb goes under as it leaves the row or the table, and is out again before it lands)
+          this.pinch(rig, flat * flat * (tw.grip === 'take' ? ss(0, .85, k) : (tw.grip === 'held' ? 1 : ss(.1, .38, k)) * (1 - ss(.5, .8, k)))); }
+        if (k >= 1) { if (tw.hand != null && tw.grip !== 'take') this._handBack(tw.hand); if (tw.after) ends.push(tw.after); }
         return k < 1;
       });
       for (const f of ends) f();
