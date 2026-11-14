@@ -169,8 +169,11 @@ function skillBlock(key) {
 }
 
 // ---------------------------------------------------------------- tile html
+// a dora (the tiles the indicators point at, and the red fives): it glints, in the hand and on the table (ユーザー 2026-11-14)
+function isDora(id) { try { if (id === 16 || id === 52 || id === 88) return true; if (!G || !G.doraInds) return false; const t = T(id); return G.doraInds().some(i => MJ.doraOf(i) === t); } catch (e) { return false; } }
 function tileHTML(id, cls = '', extra = '') {
   const red = id === 16 || id === 52 || id === 88;
+  if (isDora(id)) cls += ' dora';
   return `<span class="tl ${cls}" data-id="${id}" ${extra}><img src="${MJTiles.url(T(id), red)}" alt="" draggable="false"></span>`;
 }
 function typeHTML(type, cls = '') { return `<span class="tl ${cls}"><img src="${MJTiles.url(type, false)}" alt="" draggable="false"></span>`; }
@@ -412,7 +415,7 @@ const AUTO = /[?&]auto/.test(location.search);
 async function startGame() {
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
-  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); }
+  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; }
   TB.resume();
   TB.hideAll();
   const me = seatChar(MJChars.get(DB.sel), useKey(DB.sel));
@@ -479,12 +482,16 @@ async function onEvent(ev, d) {
     case 'call': {
       SND.call();
       await callout(d.seat, d.type === 'chi' ? t('chi') : d.type === 'pon' ? t('pon') : t('kan'));
+      // the caller's hand takes the tile (チー・ポン・明槓: from the river where it lies; 暗槓・加槓: from the caller's own hand)
+      const cid = d.called != null ? d.called : d.added != null ? d.added : d.tiles[0], was = d.called != null ? TB.tilePose(cid) : null;
       layoutAll();
+      TB.carry(d.seat, cid, was && was.seen ? was : null);
+      await sleep(d.called != null ? 620 : 380);
       if (d.seat === ME) renderHand();
       renderBadges();
       break;
     }
-    case 'dora': refreshTable(); break;
+    case 'dora': refreshTable(); renderHand(); TB.dirty = true; break;
     case 'skill': {
       await cutin(d.seat, 'skill', d);
       refreshTable(); renderBadges();
@@ -915,6 +922,8 @@ function moveCursor(d) {
   UIS.picked = ids[i]; SND.pick(); renderHand(); TB.highlightType(T(UIS.picked));
 }
 document.addEventListener('keydown', e => {
+  // I: the 3D table's debug readout (polygons, draw calls, textures)
+  if ((e.key === 'i' || e.key === 'I') && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target.closest && e.target.closest('input,textarea,select')) && TB && TB.toggleDebug) { TB.toggleDebug(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'select' || tag === 'textarea') return;

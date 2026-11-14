@@ -78,7 +78,7 @@
   let autoCssDone = false;
   function autoCss() {   // the auto-advance meter: a bar filling the 次へ button (shared/cardbar.js .cb-auto)
     if (autoCssDone) return; autoCssDone = true; const st = document.createElement('style');
-    st.textContent = `.lsg [data-a=next].ls-auto{position:relative;overflow:hidden}.lsg [data-a=next].ls-auto::after{content:'';position:absolute;inset-inline-start:0;bottom:0;height:4px;width:100%;background:currentColor;opacity:.55;transform-origin:left;animation:lsAuto var(--ls-auto-ms,2400ms) linear forwards}html[dir=rtl] .lsg [data-a=next].ls-auto::after{transform-origin:right}@keyframes lsAuto{from{transform:scaleX(0)}to{transform:scaleX(1)}}`;
+    st.textContent = `.ls-spot{display:inline-block;width:.78em;height:.78em;border-radius:50%;vertical-align:-.06em;margin:0 .12em;box-shadow:0 0 0 2px rgba(255,255,255,.9),0 0 6px currentColor}.ls-spot.ok{background:#2fd17a;color:#2fd17a}.ls-spot.ng{background:#e0301e;color:#e0301e}.ls-spot.hl{background:#ffb21a;color:#ffb21a}.lsg [data-a=next].ls-auto{position:relative;overflow:hidden}.lsg [data-a=next].ls-auto::after{content:'';position:absolute;inset-inline-start:0;bottom:0;height:4px;width:100%;background:currentColor;opacity:.55;transform-origin:left;animation:lsAuto var(--ls-auto-ms,2400ms) linear forwards}html[dir=rtl] .lsg [data-a=next].ls-auto::after{transform-origin:right}@keyframes lsAuto{from{transform:scaleX(0)}to{transform:scaleX(1)}}`;
     document.head.appendChild(st);
   }
   // the lesson's / opening's topic, said as a sentence: [lesson, opening]
@@ -179,7 +179,7 @@
     },
     list(kind, lang) {
       const D = this.data;
-      if (kind === 'open') { const pr = J(this.OKEY, {}); return D.sets.map(s => ({ key: s.id, cat: s.cat, catName: (OPCAT[lang] || OPCAT.en)[s.cat] || s.cat, title: L(s.title, lang), sub: L(s.short, lang), st: pr[s.id] ? (pr[s.id].pass ? 'pass' : 'try') : '' })); }
+      if (kind === 'open') { const pr = J(this.OKEY, {}); return D.sets.map(s => ({ key: s.id, cat: s.cat, catName: (OPCAT[lang] || OPCAT.en)[s.cat] || s.cat, title: L(s.title, lang), sub: L((NC.shogi || {})['op:' + s.id + '/short'] || s.short, lang), st: pr[s.id] ? (pr[s.id].pass ? 'pass' : 'try') : '' })); }
       const pr = J(this.LKEY, {});
       return D.ls.grades.map((g, i) => ({ key: String(i), cat: g.rules ? 'rules' : 'lesson', catName: '', title: `${L(g.grade, lang)} · ${L(g.title, lang)}`, sub: L(g.short, lang), st: pr[g.id] ? (pr[g.id].pass ? 'pass' : 'try') : '' }));
     },
@@ -189,13 +189,14 @@
       const probs = g.rules ? pool : shuffle(pool).slice(0, 5);
       return { id: g.id, title: `${L(g.grade, lang)} · ${L(g.title, lang)}`, intro: (L(g.intro, lang) || []).join('<br>'),
         probs: probs.map(p => ({ pos: p.sfen, kind: p.kind === 'tsume' ? 'tsume' : 'best', n: p.n, sol: p.sol, P: p,
-          ask: L(p.q, lang) || (p.kind === 'tsume' ? fill(X.tsume, { n: p.n }) : L(g.prompt, lang)), why: L(p.expl, lang), ans: p.sol ? p.sol[0] : (p.accept || p.pv || [])[0] })),
+          ask: L(p.q, lang) || (p.kind === 'tsume' ? fill(X.tsume, { n: p.n }) : L(g.prompt, lang)), why: L((NC.shogi || {})[g.id + '/p' + g.problems.indexOf(p) + '/expl'] || p.expl, lang), ans: p.sol ? p.sol[0] : (p.accept || p.pv || [])[0] })),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[g.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
       const s = this.data.sets.find(x => x.id === key); if (!s) return null;
       const probs = (s.problems || []).length ? (s.handi ? s.problems.map((p, i) => i) : shuffle(s.problems.map((p, i) => i))).slice(0, 5).sort((a, b) => s.handi ? a - b : 0).map(i => s.problems[i]) : [];
-      return { id: s.id, title: L(s.title, lang), intro: L(s.short, lang), start: s.study && s.study.start, steps: (s.study && s.study.steps || []).map(x => x[0]), notes: s.study && s.study.notes || {},
+      const nc = NC.shogi || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the notes without coordinates)
+      return { id: s.id, title: L(s.title, lang), intro: L(nc['op:' + s.id + '/short'] || s.short, lang), start: s.study && s.study.start, steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
         probs: probs.map(p => ({ pos: p.sfen, kind: 'best', P: p, ans: (p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] })),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[s.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
@@ -223,7 +224,7 @@
     list(kind, lang) {
       const D = this.data;
       const mini = f => f && window.AtlasMini ? AtlasMini.chess(f) : '';
-      if (kind === 'open') { const pr = J(this.OKEY, {}); return D.op.sets.map(s => ({ key: s.id, cat: 'open', catName: '', title: L(s.title, lang), sub: L(s.short, lang), svg: mini(((s.problems || [])[0] || {}).fen), st: pr[s.id] ? (pr[s.id].pass ? 'pass' : 'try') : '' })); }
+      if (kind === 'open') { const pr = J(this.OKEY, {}); return D.op.sets.map(s => ({ key: s.id, cat: 'open', catName: '', title: L(s.title, lang), sub: L((NC.chess || {})['op:' + s.id + '/short'] || s.short, lang), svg: mini(((s.problems || [])[0] || {}).fen), st: pr[s.id] ? (pr[s.id].pass ? 'pass' : 'try') : '' })); }
       const pr = J(this.LKEY, {});
       return D.ls.steps.map((s, i) => ({ key: String(i), cat: s.course || 'tactics', catName: this.tx('course.' + (s.course || 'tactics'), lang), title: this.tx('ls.' + s.id + '.title', lang) || s.id, sub: this.tx('ls.' + s.id + '.sub', lang), svg: mini((s.diagram && s.diagram.fen) || ((s.problems || [])[0] || {}).fen || ((s.stages || [])[0] || {}).fen),
         st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '', full: false }));   // (the beginner drills play on the 3D table too, 2026-11-13)
@@ -246,8 +247,10 @@
     opening(key, lang) {
       const s = this.data.op.sets.find(x => x.id === key); if (!s) return null;
       const probs = shuffle(s.problems || []).slice(0, 5);
-      return { id: s.id, title: L(s.title, lang), intro: (L(s.intro, lang) || []).join ? L(s.intro, lang).join('<br>') : L(s.intro, lang), start: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-        steps: (s.study && s.study.steps || []).map(x => x[0]), notes: s.study && s.study.notes || {},
+      const nc = NC.chess || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the texts without coordinates)
+      const IN = nc['op:' + s.id + '/intro'] || s.intro;
+      return { id: s.id, title: L(s.title, lang), intro: (L(IN, lang) || []).join ? L(IN, lang).join('<br>') : L(IN, lang), start: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+        steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
         probs: probs.map(p => ({ pos: p.fen, kind: 'best', P: p, ans: p.cand && p.cand[0][0] })),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
@@ -314,8 +317,8 @@
       const parent = this.data.steps.filter(x => x.ln.moves.length < key.length && key.startsWith(x.ln.moves)).reduce((a, x) => !a || x.ln.moves.length > a.length ? x.ln.moves : a, '');
       const d = parent ? parent.length / 2 : 1, c = []; for (let k = Math.max(1, d - 4); k < n; k++) c.push(k);
       const ks = c.length <= 5 ? c : [...new Set([0, 1, 2, 3, 4].map(j => c[Math.round(j * (c.length - 1) / 4)]))];
-      const info = L(ln.info, lang).replace(/【[^】]+】|\[[\p{L}\p{M}]{1,16}\]/gu, ' ').trim();
-      return { id: 'opl:' + key, title: L(ln.name, lang), intro: `<b>${L(ln.aim, lang)}</b><br>${mv.map((m, i) => `${i + 1}.${m}`).join(' ')}`, start: rvAfter(''),
+      const info = L((NC.reversi || {})['op:' + ln.moves + '/info'] || ln.info, lang).replace(/【[^】]+】|\[[\p{L}\p{M}]{1,16}\]/gu, ' ').trim();
+      return { id: 'opl:' + key, title: L(ln.name, lang), intro: `<b>${L(ln.aim, lang)}</b>`,   // (no move list in coordinates: the line is played on the board next) start: rvAfter(''),
         steps: mv.map(rvSq), notes: info ? { [String(n - 1)]: info } : {},
         probs: ks.map(k => { const pre = mv.slice(0, k).join(''); return { pos: rvAfter(pre), kind: 'best', ask: fill(RV_ASK[lang] || RV_ASK.en, { n: L(ln.name, lang) }), P: { rv: 'op', ans: rvSq(mv[k]), ev: ev[pre] || null }, ans: String(rvSq(mv[k])) }; }),
         save: (pts, max) => this.save('opl:' + key, pts, max) };
@@ -337,6 +340,25 @@
      AI's values and notes, then 5 practice positions scored by the stored values). Progress = the full game's ('aicoding-gomoku-lessons'
      { id: { best, clear } }, 'aicoding-gomoku-open' { id: { best, pass } }). Texts: gomoku/i18n.js, read into a sandbox. A position here is
      { start: { b, w, side }, rule, me, last, pick, noForbid } (cells: row × 15 + column, a1 = 0). */
+  /* (2026-11-14) no board coordinates (e10, D4, f5 …) in what the guide says — the 3D boards have none. A point is named by its mark
+     on the board: ja 「緑に光っている点」, other languages a small dot of the mark's colour. ('\u0001…\u0002' = a ja phrase: say() drops the
+     spaces the templates had around the coordinate.) */
+  const SPJ = { ok: '緑に光っている点', ng: '赤い印の点', hl: 'オレンジの印の点', here: 'そこ', arrow: '矢印の手', mark: '盤に印を付けた手' };
+  const SP = (k, lang) => lang === 'ja' ? '\u0001' + SPJ[k] + '\u0002' : k === 'arrow' ? '<b>➜</b>' : k === 'mark' ? '<i class="ls-spot hl"></i>' : `<i class="ls-spot ${k === 'here' ? 'ok' : k}"></i>`;
+  const GO_RX = /(?:<bdi>)?\b([A-HJ-T](?:1[0-9]|[1-9]))\b(?:<\/bdi>)?/g;
+  function goSpots(txt, N, ok, u, right, lang, hl) {   // go's own texts: each point named by its mark (the answer green, the player's move red, any other orange)
+    return String(txt || '').replace(GO_RX, (a, c) => { const q = goPc(c, N); if (q == null || q < 0) return a;
+      if (ok.includes(q)) return SP(right && q === u ? 'here' : 'ok', lang); if (q === u) return SP(right ? 'here' : 'ng', lang); if (!hl.includes(q)) hl.push(q); return SP('hl', lang); });
+  }
+  /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
+     (the full games keep their own texts: their boards show coordinates) */
+  const NC = {};
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=14').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  function ncApply(id, L2) {
+    const T = NC[id] || {}; if (!L2 || !L2.ramp) return L2;
+    L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v) o[f] = v; }); return o; });
+    return L2;
+  }
   const GSQ = x => typeof x === 'number' ? x : (+String(x).slice(1) - 1) * 15 + String(x).charCodeAt(0) - 97;
   const GNM = m => 'abcdefghijklmno'[m % 15] + (Math.floor(m / 15) + 1);
   const gCells = a => (Array.isArray(a) ? a : String(a || '').split(/\s+/)).filter(Boolean).map(GSQ);
@@ -364,13 +386,13 @@
       const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), RU = (k, v) => fill(L((this.data.ls.rampUi || {})[k], lang), v || {});
       return { id: s.id, title: T('title'), intro: T('intro'), ramp: s.ramp && s.ramp.length ? s.ramp : null, RU,
         probs: (s.problems || []).map(P => { const ok = gCells(P.ok || []), pick = P.kind === 'pick';
-          return { pos: gPos(P, { pick, noForbid: !!(s.hideForbid || pick) }), kind: 'best', P: { ok }, ask: T('goal'), ans: ok[0], why: '', ng: (u) => T('ng', { m: ok.slice(0, 4).map(GNM).join(' / '), x: GNM(u) }), good: u => T('why', { m: GNM(u), n: ok.length }), hintTx: T('hint'), hint: P.hint ? gCells(P.hint) : null }; }),
+          return { pos: gPos(P, { pick, noForbid: !!(s.hideForbid || pick) }), kind: 'best', P: { ok }, ask: T('goal'), ans: ok[0], why: '', ng: () => T('ng', { m: SP('ok', lang), x: SP('ng', lang) }), good: () => T('why', { m: SP('here', lang), n: ok.length }), hintTx: T('hint'), hint: P.hint ? gCells(P.hint) : null }; }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
       const g = this.data.op.sets.find(x => x.id === key); if (!g) return null;
       const steps = g.study.map(x => GSQ(x[0])), notes = {};
-      g.study.forEach((x, i) => { const v = x[1], n = x[2]; let t = `<b>${i + 1}. ${this.tx(i % 2 ? 'p2' : 'p1', lang)} ${GNM(GSQ(x[0]))}</b>`;   // (every move: its number, colour and point)
+      g.study.forEach((x, i) => { const v = x[1], n = x[2]; let t = `<b>${i + 1}. ${this.tx(i % 2 ? 'p2' : 'p1', lang)}</b>`;   // (every move: its number and colour — the point is the one just played, no coordinate)
         if (i === 2) t += '<br>' + this.tx('op.ev.' + g.ev, lang);
         if (n) t += '<br>' + (String(n).startsWith('op.n.') ? this.tx(n, lang, { c: this.tx(v > 0 ? 'p1' : 'p2', lang) }) : L(n, lang));
         notes[String(i)] = t; });
@@ -422,7 +444,7 @@
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=20261113'), getJ('../go/openings.json?v=3'), goRules()]).then(([ls, op]) => { this.data = { ls, op }; return this; }).catch(e => { this.p = null; throw e; }));
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=20261113'), getJ('../go/openings.json?v=4'), goRules()]).then(([ls, op]) => { this.data = { ls, op }; return this; }).catch(e => { this.p = null; throw e; }));
     },
     mini: (sp, view) => window.AtlasMini && AtlasMini.go ? AtlasMini.go(sp, view) : '',
     opStart: g => goSpec(g.start ? Object.assign({ n: g.n || 19 }, g.start) : { n: g.n || 19 }),
@@ -441,19 +463,19 @@
       return { id: s.id, title: L(s.title, lang), intro: L(s.intro, lang), ramp: s.ramp && s.ramp.length ? s.ramp : null, RU,
         probs: (s.problems || []).map(P => { const sp = goSpec(P.s), N = sp.n, ok = goPcs(P.ok, N);
           return { pos: { spec: sp, me: sp.turn || 1, view: P.view || goCrop(sp, ok) }, kind: 'best', P: { ok, good: goPcs(P.good, N), half: goPcs(P.half, N) }, ask: L(s.goal, lang), ans: ok[0], line: goPcs(P.line, N), N,
-            good: () => L(P.why, lang), ng: () => L(P.ng, lang) || L(P.why, lang), hintTx: L(s.hint, lang), hint: ok.length ? [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([dx, dy]) => { const x = ok[0] % N + dx, y = Math.floor(ok[0] / N) + dy; return x >= 0 && y >= 0 && x < N && y < N && sp.stones[y * N + x] === '.' ? y * N + x : -1; }).filter(q => q >= 0) : null }; }),
+            good(u) { this._hl = []; return goSpots(L(P.why, lang), N, ok, u, true, lang, this._hl); }, ng(u) { this._hl = []; return goSpots(L(P.ng, lang) || L(P.why, lang), N, ok, u, false, lang, this._hl); }, hintTx: L(s.hint, lang), hint: ok.length ? [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([dx, dy]) => { const x = ok[0] % N + dx, y = Math.floor(ok[0] / N) + dy; return x >= 0 && y >= 0 && x < N && y < N && sp.stones[y * N + x] === '.' ? y * N + x : -1; }).filter(q => q >= 0) : null }; }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
       const g = this.data.op.sets.find(x => x.id === key); if (!g) return null;
       const N = g.n || 19, st = this.opStart(g), line = this.opLine(g), notes = {};
       line.forEach((m, i) => { const side = i % 2 ? 3 - (st.turn || 1) : st.turn || 1, ev = g.evals && g.evals[i] != null ? ` <small>(${(g.evals[i] >= 0 ? '+' : '') + g.evals[i]})</small>` : '';
-        notes[String(i)] = `<b>${i + 1}. ${side === 1 ? '●' : '○'} ${goNm(m, N)}</b>${ev}` + ((g.notes || {})[String(i + 1)] ? '<br>' + L(g.notes[String(i + 1)], lang) : ''); });
+        notes[String(i)] = `<b>${i + 1}. ${side === 1 ? '●' : '○'}</b>${ev}` + ((g.notes || {})[String(i + 1)] ? '<br>' + L((NC.go || {})['op:' + g.id + '/n' + (i + 1)] || g.notes[String(i + 1)], lang) : ''); });   // (3D: the notes without coordinates)
       const self = this, probs = shuffle(g.problems || []).slice(0, 5).sort((a, b) => a.at - b.at).map(P => { const ok = goPcs(P.ok, N);
         const o = { kind: 'best', P: { ok, good: goPcs(P.good, N), half: goPcs(P.half, N) }, ask: L(self.data.op.goal || null, lang) || '', ans: ok[0], N };
         Object.defineProperty(o, 'pos', { get() { const sp = self.after(st, line.slice(0, P.at)); return { spec: sp, me: sp.turn || 1, view: g.view || null }; } });   // (the position after `at` moves: the rules are loaded by then)
         return o; });
-      return { id: g.id, title: L(g.title, lang), intro: L(g.story, lang) || L(g.short, lang), start: { spec: st, me: g.side || st.turn || 1, view: g.view || null }, steps: line, notes, probs,
+      return { id: g.id, title: L(g.title, lang), intro: L((NC.go || {})['op:' + g.id + '/story'] || g.story, lang) || L(g.short, lang), start: { spec: st, me: g.side || st.turn || 1, view: g.view || null }, steps: line, notes, probs,
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= max * .75; pr[g.id] = Object.assign(o, { best: Math.max(o.best || 0, pts), pass: o.pass || pass, seen: true }); put(this.OKEY, pr); return pass; } };
     },
     points: (P, u) => (P.ok || []).includes(u) ? 20 : (P.good || []).includes(u) ? 16 : (P.half || []).includes(u) ? 10 : 0,   // = go/learn.js problemPoints
@@ -468,7 +490,7 @@
   };
   const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO };
 
-  function list(id, kind, lang) { const D = DATA[id]; return D.load().then(() => D.list(kind, lang)); }
+  function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
 
   function start(ctx) {
@@ -482,7 +504,7 @@
     const el = document.createElement('div'); el.className = 'rgd pzg lsg';
     el.innerHTML = `<div class="rgd-in"><div class="pic"><img src="${GD.guide || ''}" alt=""></div><div class="bub"><div class="nm">${(GD.name && (GD.name[ctx.lang] || GD.name.en)) || ''}<span class="pg"></span></div><div class="tx"></div><div class="cnt"></div></div></div>
       <div class="rgd-act"><button type="button" class="btn ghost sm ic" data-a="hint" aria-label="${X.hint}" title="${X.hint}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><small>${X.hint}</small></button><button type="button" class="btn ghost sm ic" data-a="again" aria-label="${X.again}" title="${X.again}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><small>${X.again}</small></button>${ctx.onList ? `<button type="button" class="btn ghost sm ic" data-a="list" aria-label="${ctx.t ? ctx.t('bv.list') : ''}" title="${ctx.t ? ctx.t('bv.list') : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>${ctx.t ? ctx.t('bv.list') : ''}</small></button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
-    ctx.panel.appendChild(el);
+    ctx.panel.appendChild(el); autoCss();
     const $ = s => el.querySelector(s);
     el.addEventListener('click', e => { if (more.length && e.target.closest('[data-a=next]')) { e.stopImmediatePropagation(); e.preventDefault(); if (typing) $('.tx').onclick(); else turn(); } }, true);
     // a long text is said a little at a time, like the rules guide (2026-11-11): pages of a sentence or two; 次へ (or a tap on
@@ -520,6 +542,7 @@
     }
     function turn() { show(more.shift()); apply(); }
     function say(html) {
+      html = String(html || '').replace(/[ \u00a0]*\u0001/g, '').replace(/\u0002[ \u00a0]*/g, '');   // (ja mark phrases: SP)
       html = voice(String(html || '').replace(/<p[^>]*>/g, '').replace(/<\/p>\s*/g, '<br>').replace(/(<br>\s*)+$/, ''));   // (the chess texts come as <p> paragraphs)
       if (!greeted && X.hi && html !== X.loading) { greeted = true; html = X.hi + '<br>' + html; }
       const P = pages(html); more = P.slice(1); show(P[0]); apply();
@@ -578,12 +601,12 @@
         if (D.rampMarks) {   // gomoku: marks on points
           if (rh === 1) { say(L(it.h, ctx.lang)); pz().mark(D.rampMarks(it)); }
           else if (rh === 2) { say(L(it.h, ctx.lang) + '<br>' + RU('look')); pz().mark(D.rampMarks(it).concat(D.rampLook(it))); }
-          else { const a = D.rampAns(it); say(RU('ans', { m: D.nm(a, it) })); pz().mark(D.rampMarks(it).concat([[a, 'ok']])); }
+          else { const a = D.rampAns(it); say(RU('ans', { m: SP('ok', ctx.lang) })); pz().mark(D.rampMarks(it).concat([[a, 'ok']])); }
           return;
         }
         if (rh === 1) { say(L(it.h, ctx.lang)); pz().annot && pz().annot(null); }
         else if (rh === 2) { say(L(it.h, ctx.lang) + '<br>' + RU('look')); pz().annot && pz().annot((it.look || []).map(q => ({ at: q, cls: 'ok' }))); }
-        else { say(RU('ans', { m: moveName(it.fen, it.ok[0]) || it.ok[0] })); pz().annot && pz().annot([{ arrow: [it.ok[0].slice(0, 2), it.ok[0].slice(2, 4)], cls: '' }, { at: it.ok[0].slice(0, 2), cls: 'ok' }]); }
+        else { say(RU('ans', { m: SP(pz().annot ? 'arrow' : 'mark', ctx.lang) })); if (pz().annot) pz().annot([{ arrow: [it.ok[0].slice(0, 2), it.ok[0].slice(2, 4)], cls: '' }, { at: it.ok[0].slice(0, 2), cls: 'ok' }]); else if (pz().mark) pz().mark(it.ok[0]); }
       };
       await board(D.rampPos ? D.rampPos(it) : it.fen); if (stopped || phase !== 'ramp' || cur.ri !== i) return;
       const marks0 = () => { if (D.rampMarks) pz().mark(D.rampMarks(it)); else if (pz().annot) pz().annot(it.k === 'explain' ? rmk(it) : null); };
@@ -643,7 +666,7 @@
     function open(key) {
       const L2 = ctx.kind === 'open' ? D.opening(key, ctx.lang) : D.lesson(key, ctx.lang, X);
       if (!L2) { say(X.drill); act(X.full, {}); $('[data-a=next]').onclick = () => ctx.onFull && ctx.onFull(ctx.kind, key); return; }
-      cur = Object.assign(L2, { key, k: 0, res: [], si: 0 }); head(cur.title);
+      cur = Object.assign(ncApply(id, L2), { key, k: 0, res: [], si: 0 }); head(cur.title);
       phase = 'intro'; dots();
       say(`${fill((TOPIC[ctx.lang] || TOPIC.en)[ctx.kind === 'open' ? 1 : 0], { t: `<b>${cur.title}</b>` })}<br>${cur.intro || ''}`);   // (「今日は『ルーク』について学ぶよ！」 — not the bare title, 2026-11-14)
       // (2026-11-14) while the introduction is read, the board shows the lesson's own picture (its diagram) for looking only — never the
@@ -711,6 +734,7 @@
       scored(p, D.points(p.P, u), undefined, u);
     }
     // (2026-11-12) a partial or wrong answer names the best move in words too (not only the glowing squares)
+    const ANSM = { ja: '正解は盤に印を付けた手です。', en: 'The best move is marked on the board.', zh: '正解已在棋盘上标出。', 'zh-TW': '正解已在棋盤上標出。', ko: '정답은 판에 표시한 수입니다.', es: 'La mejor jugada está marcada en el tablero.', fr: 'Le meilleur coup est marqué sur le plateau.', pt: 'O melhor lance está marcado no tabuleiro.', de: 'Der beste Zug ist auf dem Brett markiert.', ru: 'Лучший ход отмечен на доске.', tr: 'En iyi hamle tahtada işaretli.', id: 'Langkah terbaik ditandai di papan.', hi: 'सबसे अच्छी चाल बोर्ड पर चिह्नित है।', ar: 'أفضل نقلة مُعلَّمة على اللوح.' };
     const ANSW = { ja: '正解は {m}', en: 'Best move: {m}', zh: '正解：{m}', 'zh-TW': '正解：{m}', ko: '정답: {m}', es: 'Mejor jugada: {m}', fr: 'Meilleur coup : {m}', pt: 'Melhor lance: {m}', de: 'Bester Zug: {m}', ru: 'Лучший ход: {m}', tr: 'En iyi hamle: {m}', id: 'Langkah terbaik: {m}', hi: 'सबसे अच्छी चाल: {m}', ar: 'أفضل نقلة: {m}' };
     function moveName(pos, u) {
       if (!pos || !u || typeof u !== 'string') return '';
@@ -735,8 +759,9 @@
       p.done = true; const n = Math.max(0, pts - (p.hinted && pts > 0 ? HINT_PEN : 0)); cur.res[cur.k] = n; dots();
       if ((id === 'gomoku' || id === 'go') && typeof u === 'number') {   // (gomoku: the lesson's own words — why it wins / which points were right; the points marked)
         const okA = (p.P.ok && p.P.ok.length ? p.P.ok : [p.ans]).filter(q => q >= 0);
-        if (pts < 16 || !p.good) pz().mark([...okA.filter(q => q !== u).slice(0, 4).map(q => [q, 'ok']), [u, pts >= 16 ? 'ok' : 'ng']]);
-        say(`${pts >= 16 ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (pts >= 16 ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: id === 'go' ? goNm(p.ans, p.N || 19) : GNM(p.ans) })) + (id === 'go' && pts < 20 && p.ans >= 0 ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: goNm(p.ans, p.N || 19) }) : ''));
+        const said = pts >= 16 ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) });   // (no coordinates: the points are named by their marks)
+        pz().mark([...okA.filter(q => q !== u).slice(0, 4).map(q => [q, 'ok']), [u, pts >= 16 ? 'ok' : 'ng'], ...(p._hl || []).filter(q => q !== u && !okA.includes(q)).map(q => [q, 'hl'])]);
+        say(`${pts >= 16 ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + said + (id === 'go' && pts < 20 && p.ans >= 0 && !said.includes(SP('ok', ctx.lang)) ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) }) : ''));
         if (id === 'go' && p.line && p.line.length > 1) { const k = cur.k; later(async () => { if (!cur || cur.k !== k || phase !== 'prob') return; pz().undo(9); for (const q of p.line) { await sleep(700); if (!cur || cur.k !== k || phase !== 'prob' || stopped) return; await pz().play(q); } }, 900); }   // (go: the right line played out, as the full game)
         try { chime(pts >= 16); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
@@ -744,7 +769,7 @@
         return;
       }
       if (pts >= 16) say(`${line('solved') || pick(X.good)} <b>${fill(X.pts, { n })}</b>${p.why ? '<br>' + p.why : ''}`);
-      else { if (p.ans) pz().mark(p.ans); const nm = p.kind !== 'tsume' && moveName(p.pos, p.ans); say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: `<b>${nm}</b>` }) : ''}${p.why ? '<br>' + p.why : ''}`); }
+      else { if (p.ans) pz().mark(p.ans); const nm = p.kind !== 'tsume' && p.ans; say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (ANSM[ctx.lang] || ANSM.en) : ''}${p.why ? '<br>' + p.why : ''}`); }   // (the move is shown on the board, not named: no coordinates, 2026-11-14)
       try { chime(pts >= 16); } catch (e) {}
       act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
       if (pts >= 16 && cur.k + 1 < cur.probs.length) { const k = cur.k; autoGo(2400, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); }); }   // (right: the next problem by itself, the meter on 次へ)
@@ -798,7 +823,7 @@
     if ($('[data-a=list]')) $('[data-a=list]').onclick = () => ctx.onList(ctx.kind);   // 一覧 (the portal's list sheet)
     requestAnimationFrame(() => el.classList.add('on'));
     say(X.loading); act(X.next, { nextOn: false });
-    D.load().then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
+    Promise.all([D.load(), ncLoad(id)]).then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
     const dbg = { state: () => cur && { key: cur.key, phase, k: cur.k, si: cur.si, res: cur.res.slice(), ans: cur.probs[cur.k] && cur.probs[cur.k].ans, say: $('.tx').textContent },
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return; u = u || p.ans; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook)
     window.__atlasLs = dbg;

@@ -47,6 +47,29 @@
     if (cssDone) return; cssDone = true;
     const s = document.createElement('style');
     s.textContent = `
+/* 縦横切り替え (phones): the button sits left of やめる; turned = the camera is rolled 90° and the page's UI turns with it (#bv.land.shl, html.sh-land) */
+.shlb{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));inset-inline-end:calc(22px + var(--shq,96px));display:none;width:var(--hudh,45px);height:var(--hudh,45px);padding:0;align-items:center;justify-content:center;border-radius:50%;border:0;cursor:pointer;background:#fffdf7;color:#2b3044;box-shadow:0 4px 0 #eadfc6,0 10px 18px -10px rgba(0,0,0,.5)}
+.shlb svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.bv.playing .shlb.can{display:inline-flex}
+.bv.playing.shb:not(.land) .hud{max-width:calc(100% - 50px - var(--shq,96px) - var(--hudh,45px) - env(safe-area-inset-left) - env(safe-area-inset-right))!important}   /* (the HUD stops short of the 縦横 button: a long one is scaled down by the portal) */.shlb.on{background:#ffcc33;box-shadow:0 4px 0 #e0a416,0 10px 18px -10px rgba(0,0,0,.5)}
+.shlb.pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:3px solid #ffcc33;animation:shlp 1.1s ease-out infinite;pointer-events:none}
+@keyframes shlp{0%{opacity:.95;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
+.bv.land.shl .hud{left:calc(100% - 10px - env(safe-area-inset-right))!important;right:auto!important;top:calc(12px + env(safe-area-inset-top))!important;bottom:auto!important;transform-origin:0 0!important;transform:rotate(90deg)!important;max-width:calc(100vh - 230px)!important;zoom:1!important;white-space:nowrap}
+.bv.land.shl .quit{inset-inline:auto!important;left:calc(100% - 10px - env(safe-area-inset-right))!important;top:calc(100% - 12px - env(safe-area-inset-bottom))!important;transform-origin:0 0;transform:rotate(90deg) translateX(-100%)}
+.bv.land.shl .shlb{inset-inline:auto;left:calc(100% - 10px - env(safe-area-inset-right));top:calc(100% - 12px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translateX(calc(-100% - var(--shq,96px) - 8px))}
+.bv.land.shl .endc{transform:translate(-50%,-50%) rotate(90deg);max-width:calc(100vh - 150px)}
+.bv.land.shl .endc.on{animation:shpopl .4s cubic-bezier(.3,1.5,.5,1)}
+@keyframes shpopl{from{transform:translate(-50%,-50%) rotate(90deg) scale(.85);opacity:0}}
+html.sh-land .shtoast{left:calc(16px + env(safe-area-inset-left));bottom:auto;top:50%;transform-origin:0 0;transform:rotate(90deg) translate(-50%,-100%);max-width:min(70vh,560px);white-space:nowrap}
+html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
+.shrot{position:fixed;inset:0;z-index:96;display:grid;place-items:center;pointer-events:none;opacity:1;transition:opacity .4s}.shrot.off{opacity:0}
+.shrot>div{display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 26px;border-radius:24px;background:rgba(16,22,40,.86);color:#fff;font-weight:800;font-size:18px;text-align:center;transform:rotate(90deg);white-space:nowrap}
+.shrot svg{width:92px;height:92px;fill:none;stroke:#ffd76a;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.shrot .ph{transform-origin:50% 50%;animation:shrotp 1.3s ease-in-out infinite alternate}
+@keyframes shrotp{0%,20%{transform:rotate(90deg)}80%,100%{transform:rotate(0)}}
+.shgift{position:fixed;left:50%;top:calc(18px + env(safe-area-inset-top));z-index:130;display:flex;align-items:center;gap:12px;padding:10px 18px 10px 10px;border-radius:22px;background:#fffdf7;color:#1d2433;box-shadow:0 14px 34px -12px rgba(0,0,0,.55);transform:translate(-50%,-140%);opacity:0;transition:transform .45s cubic-bezier(.3,1.4,.5,1),opacity .3s;max-width:min(94vw,520px);cursor:pointer}
+.shgift.on{transform:translate(-50%,0);opacity:1}.shgift img{width:68px;height:68px;flex:none}.shgift b{display:block;font-size:17px;line-height:1.35}.shgift small{display:flex;align-items:center;gap:8px;font-size:14.5px;opacity:.85;margin-top:3px}
+.shgift .sr{font-style:normal;font-weight:900;font-size:12px;padding:2px 7px;border-radius:7px;color:#fff;background:#8a94a8}.shgift .sr.r1{background:#3f8ae0}.shgift .sr.r2{background:#a35ad8}.shgift .sr.r3{background:linear-gradient(135deg,#f2b63a,#e0567a)}
 .shtoast{position:fixed;left:50%;bottom:calc(var(--tbclear,18px) + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 20px;border-radius:99px;background:#163a2e;color:#fff;font-weight:700;font-size:16px;text-align:center;box-shadow:0 10px 24px -10px rgba(0,0,0,.5);pointer-events:none}
 .shask{position:fixed;inset:0;z-index:95;display:grid;place-items:center;background:rgba(10,14,24,.35)}
 .shask>div{background:#fffdf7;color:#1d2433;border-radius:20px;padding:22px 24px 18px;width:min(88vw,420px);box-shadow:0 24px 60px -20px rgba(0,0,0,.6);text-align:center}
@@ -58,6 +81,11 @@
 .shstg .nx{font-size:15px;opacity:.8}
 .shstg .mapb{display:flex;align-items:center;justify-content:center;gap:10px;font:inherit;font-weight:800;font-size:18px;padding:14px;border-radius:16px;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#1b2350,#3a2a6e 60%,#5a3a8a);box-shadow:0 8px 20px -10px rgba(30,20,80,.8);white-space:nowrap}
 .shstg .mapb i{font-style:normal;font-size:22px}
+.shstg .stbox{display:flex;flex-direction:column;gap:10px}
+/* phones: the card's boxes are the size of the other games' (ユーザー 2026-11-14) — one 38px line (next stage · progress) and a 44px map button */
+@media (max-width:819px){.shstg{gap:14px;align-items:stretch!important;flex-wrap:nowrap!important}.shstg > *{align-self:stretch;width:100%;box-sizing:border-box;flex:none!important}.shstg .stbox{flex-direction:row-reverse;align-items:center;justify-content:space-between;gap:8px;min-height:38px;box-sizing:border-box;padding:0 12px;border:2px solid var(--line,#eadfc6);border-radius:12px;background:#fffdf7}
+.shstg .stbox .nx{flex:1 1 auto;min-width:0;font-size:12.5px;font-weight:800;opacity:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shstg .stbox .pg{flex:none;font-size:11.5px;font-weight:800;color:#9a8762;white-space:nowrap}
+.shstg .mapb{min-height:44px;padding:4px 14px;font-size:16px;border-radius:14px;gap:8px}.shstg .mapb i{font-size:18px}}
 .shbest{display:flex;align-items:baseline;gap:10px;margin-top:6px;font-size:16px}.shbest b{font-size:22px;color:#b3222c}.shbest small{opacity:.7}
 .shmap{position:fixed;inset:0;z-index:120;color:#eef0ff;display:flex;flex-direction:column;font-family:inherit;opacity:0;transition:opacity .25s;background:#070a1c}
 .shmap.on{opacity:1}
@@ -67,6 +95,8 @@
 .shmap .hd h2{margin:0;font-size:22px;letter-spacing:.04em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shmap .hd .tot{font-size:17px;font-weight:800;color:#ffd76a;white-space:nowrap}
 .shmap .x{font:inherit;font-size:22px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+.shmap .gift{position:relative;align-self:center;display:flex;align-items:center;gap:8px;margin:0 16px 2px;padding:4px 14px 4px 4px;border-radius:99px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-size:15px;font-weight:800;color:#ffe7a0;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}.shmap .gift img{width:38px;height:38px;flex:none}
+.shmap .sh .rw{display:inline-block;margin-top:2px;font-weight:800;color:#ffd76a}
 .shmap .ars{position:relative;display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}.shmap .ars::-webkit-scrollbar{display:none}
 .shmap .ar{flex:none;font:inherit;font-size:15px;font-weight:700;padding:9px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#dfe3ff;cursor:pointer;white-space:nowrap}
 .shmap .ar.on{background:#ffd76a;color:#241a05;border-color:#ffd76a}.shmap .ar.lk{opacity:.45}
@@ -125,6 +155,39 @@
   const parOf = st => st.limit ? Math.round(st.limit * .75) : st.par;
   function starsText(st, lang) { return TX('star2', lang, { t: mmss(parOf(st)) }) + ' · ' + TX('star3', lang); }
 
+  /* ---------- rewards (2026-11-14, ユーザー: ルールコース・ヒストリア・ステージの報酬をほかのゲームとそろえ、新しいアトラモを報酬に) ----------
+     · Coins: every ★ won on a stage pays ¢10 (a cleared stage ¢10–30). The portal's purse is derived (shared/atlas.js coins():
+       achievements + bonus + Shanghai's stars × COIN_STAR − spent), so nothing is paid twice and it follows the synced record.
+     · クジャクパイ (av-peacock-0..3, not in the gacha or the shop): N the rules course (atlas/rules/shanghai.js), R the first
+       constellation (10 stages), SR 60 stages, SSR all 120. Granted once each into the portal's wallet (Atlas.load / save). */
+  const COIN_STAR = 10, GIFT_AT = [0, 10, 60, 120];
+  const Reward = {
+    COIN_STAR, GIFT_AT,
+    has(t) { try { return !!(window.Atlas && Atlas.load && Atlas.load().owned.includes('av-peacock-' + t)); } catch (e) { return false; } },
+    // give tier t (once): true when it is new
+    grant(t, lang) {
+      try {
+        if (!window.Atlas || !Atlas.load) return false;
+        const W = Atlas.load(), id = 'av-peacock-' + t; if (!W || W.owned.includes(id)) return false;
+        W.owned.push(id); Atlas.save(W); giftToast(t, lang); return true;
+      } catch (e) { return false; }
+    },
+    // after a stage: the tiers the number of cleared stages has reached
+    check(lang) { const c = Object.keys(prog().st).filter(s => prog().st[s] > 0).length; let got = -1; for (let t = 1; t < 4; t++) if (c >= GIFT_AT[t] && Reward.grant(t, lang)) got = t; return got; },
+    // the next tier still to win by stages: { t, left } or null
+    next() { const c = Object.keys(prog().st).filter(s => prog().st[s] > 0).length; for (let t = 1; t < 4; t++) if (!Reward.has(t) && c < GIFT_AT[t]) return { t, left: GIFT_AT[t] - c }; return null; },
+  };
+  window.ShanghaiReward = Reward;
+  function giftToast(t, lang) {
+    css(); const R = ['N', 'R', 'SR', 'SSR'][t], it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? (it.name[lang] || it.name.en) : 'Peacotile';
+    const el = document.createElement('div'); el.className = 'shgift'; el.setAttribute('role', 'status');
+    el.innerHTML = `<img src="../images/atlas/av/peacock-${t}.webp" alt=""><div><b>🎁 ${esc(TX('rw.got', lang, { name: nm }))}</b><small><span class="sr r${t}">${R}</span>${esc(TX('rw.dress', lang))}</small></div>`;
+    const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 500); };
+    el.onclick = close; document.body.appendChild(el); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
+    setTimeout(close, 6500);
+    try { if (window.SFX && SFX.win) SFX.win(); } catch (e) {}
+  }
+
   /* ---------- the game on the table ---------- */
   function start(ctx) {
     const T3 = ctx.Table3D, TH3 = window.THREE, M3 = T3.shanghai, lang = ctx.lang, tx = (k, v) => TX(k, lang, v), K = C();
@@ -138,12 +201,13 @@
     let face = dl.face.slice(), alive = new Array(n).fill(1), plan = dl.order.map(p => p.slice());
     const gold = new Set(ST && ST.type === 'gold' ? K.goldTiles(dl, ST.gold) : []);
     let sel = -1, busy = true, over = false, stopped = false, ply = 0, hist = [], hints = 0, shufs = 0, got = 0, goldGot = 0, hintPair = null;
-    let t0 = 0, tEnd = 0, clockT = 0, toastEl = null, toastT = 0, askEl = null;
+    let t0 = 0, tEnd = 0, pen = 0, clockT = 0, toastEl = null, toastT = 0, askEl = null;
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const kick = ms => { if (T3.kick) T3.kick(ms || 150); };
     const anim = (dur, f, done) => { const a0 = performance.now(); (function s(now) { if (stopped) return; const k = Math.min(1, Math.max(0, (now - a0) / dur)); f(k); kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(a0); };
     const left = () => alive.reduce((s, v) => s + v, 0);
-    const elapsed = () => t0 ? ((tEnd || performance.now()) - t0) / 1000 : 0;
+    const SHUF_PEN = 10;   // a shuffle costs time: +10 s on the clock each (ユーザー 2026-11-14). It stays even if the shuffle is undone.
+    const elapsed = () => t0 ? ((tEnd || performance.now()) - t0) / 1000 + pen : 0;
 
     /* the board: the mat and the tiles (one InstancedMesh) */
     const TW = M3.TW, TD = M3.TD, THh = M3.TH;
@@ -163,7 +227,7 @@
       const on = alive[i] && S.s > .5 && S.dy < .05, sp = 1 + Math.min(.6, S.lift * 1.2);
       o4.position.set(x + .05, y + .003, z + .07); o4.scale.setScalar(on && S.lift < .45 ? sp : .0001); o4.updateMatrix(); shm.setMatrixAt(k, o4.matrix); shm.instanceMatrix.needsUpdate = true; }
     function tint(i) {
-      const fr = alive[i] && K.isFree(G, alive, i);
+      const fr = st8[i].fly || (alive[i] && K.isFree(G, alive, i));   // (a tile in the air keeps its bright face until it is gone)
       let r = 1, gg = 1, b = 1;
       if (gold.has(i) && alive[i]) { r = 1.05; gg = .86; b = .46; }
       if (i === sel) { r *= 1.04; gg *= .93; b *= .66; }
@@ -175,17 +239,75 @@
     function faces() { for (let i = 0; i < n; i++) im.userData.setFace(i, face[i]); }
     faces();
     g.userData = { top: base + THh * (zMax + 1), _rb: Math.max(W, D) / 2 };
+    /* a stage is played on its constellation's night sky (ユーザー 2026-11-14: the background follows the theme): a cloth on the
+       table under the mat — a deep sky in the constellation's own hue, a field of stars, and the constellation itself drawn
+       above, below and beside the mat (so it shows in portrait, in landscape and on a wide screen). Free play keeps the table. */
+    let sky = null;
+    if (ST) {
+      const ai = Math.floor(ST.s / 10), con = CON[K.AREAS[ai]], S = Math.max(W, D) * 3 + 16, CS = innerWidth < 700 ? 1024 : 2048, cv = document.createElement('canvas'); cv.width = cv.height = CS;
+      const c = cv.getContext('2d'), R = K.rng ? K.rng(977 + ST.s * 13) : Math.random, u = CS / S, hue = (205 + ai * 30) % 360;
+      const bg = c.createRadialGradient(CS / 2, CS / 2, 0, CS / 2, CS / 2, CS * .62); bg.addColorStop(0, `hsl(${hue},52%,27%)`); bg.addColorStop(.45, `hsl(${(hue + 14) % 360},56%,17%)`); bg.addColorStop(1, `hsl(${(hue + 30) % 360},60%,8%)`);
+      c.fillStyle = bg; c.fillRect(0, 0, CS, CS);
+      for (let i = 0; i < 9; i++) { const x = R() * CS, y = R() * CS, r = CS * (.1 + R() * .16), ng = c.createRadialGradient(x, y, 0, x, y, r); ng.addColorStop(0, `hsla(${(hue + 40 + R() * 80) % 360},70%,60%,.13)`); ng.addColorStop(1, 'hsla(0,0%,0%,0)'); c.fillStyle = ng; c.fillRect(x - r, y - r, 2 * r, 2 * r); }
+      for (let i = 0; i < (CS > 1024 ? 1500 : 800); i++) { const x = R() * CS, y = R() * CS, r = (.5 + R() * R() * 1.5) * CS / 1024; c.fillStyle = `rgba(255,${235 + R() * 20 | 0},${200 + R() * 55 | 0},${.3 + R() * .6})`; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
+      const fw = Math.max(3.2, Math.min(W * .95, 6.5)), fs = fw / 100, fh = 64 * fs, ed = edges(K.AREAS[ai]);
+      const fig = (cx, cz) => {
+        const X = q => (cx + (q[0] - 50) * fs + S / 2) * u, Y = q => (cz + (q[1] - 32) * fs + S / 2) * u;
+        c.strokeStyle = 'rgba(255,224,150,.6)'; c.lineWidth = Math.max(1.5, .035 * u); c.lineCap = 'round'; c.beginPath(); ed.forEach(e => { c.moveTo(X(con.p[e[0]]), Y(con.p[e[0]])); c.lineTo(X(con.p[e[1]]), Y(con.p[e[1]])); }); c.stroke();
+        con.p.forEach(q => { const x = X(q), y = Y(q), r = .2 * u, gl = c.createRadialGradient(x, y, 0, x, y, r); gl.addColorStop(0, 'rgba(255,244,200,.95)'); gl.addColorStop(.25, 'rgba(255,220,130,.55)'); gl.addColorStop(1, 'rgba(255,220,130,0)'); c.fillStyle = gl; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.fillStyle = '#fffbe8'; c.beginPath(); c.arc(x, y, .055 * u, 0, 7); c.fill(); });
+      };
+      const gz = D / 2 + .9 + fh / 2, gx = W / 2 + .9 + fw / 2;
+      fig(0, -gz); fig(0, gz); fig(-gx, 0); fig(gx, 0);
+      const tex = new TH3.CanvasTexture(cv); if ('colorSpace' in tex) tex.colorSpace = 'srgb'; else if (TH3.sRGBEncoding) tex.encoding = TH3.sRGBEncoding; tex.anisotropy = 4;
+      const pg = new TH3.PlaneGeometry(S, S); pg.rotateX(-Math.PI / 2);
+      sky = new TH3.Mesh(pg, new TH3.MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0 })); sky.position.y = .006; sky.receiveShadow = true; g.add(sky);
+    }
     T3.show('shanghai', g);
-    const tall = innerHeight > innerWidth * 1.15;
-    if (T3.fit) T3.fit(tall ? { w: W + 1.1, d: D + 1.6, y: base + THh, pitch: 1.28 } : { w: W + 1.0, d: D + 1.1, y: base + THh, pitch: 1.12 });   // (a little room round the mat: never touching the edges)
+    /* 縦横切り替え (phones, ユーザー 2026-11-14): with the phone's rotation locked the game can still be played sideways — the camera
+       rolls 90° (the layout gets the long side of the screen) and the page's UI turns with it; a short guide says to hold the
+       phone sideways. The choice is remembered (atlas-shanghai-land). Only where it means something: a touch screen held upright. */
+    const bvEl = ctx.el.parentNode, mqC = matchMedia('(pointer: coarse)'), mqP = matchMedia('(orientation: portrait)');
+    let landOn = false, turnedNow = false, topOn = false; try { topOn = localStorage.getItem('atlas-shanghai-top') === '1'; } catch (e) {}   // (真上から見る: remembered)
+    try { landOn = localStorage.getItem('atlas-shanghai-land') === '1'; } catch (e) {}
+    css();
+    const lb = document.createElement('button'); lb.type = 'button'; lb.className = 'shlb'; lb.title = tx('b.land'); lb.setAttribute('aria-label', tx('b.land'));
+    lb.innerHTML = '<svg viewBox="0 0 24 24"><rect x="3.5" y="2.5" width="8" height="13" rx="1.8"/><rect x="8.5" y="13.5" width="13" height="8" rx="1.8" stroke-dasharray="2.4 2.2"/><path d="M15 4.5a5.5 5.5 0 0 1 5.5 5.5"/><path d="M22.4 8 20.5 10.2 18.3 8.4"/></svg>';
+    if (bvEl) bvEl.appendChild(lb);
+    function guide() {
+      const el = document.createElement('div'); el.className = 'shrot';
+      el.innerHTML = `<div><svg viewBox="0 0 48 48"><g class="ph"><rect x="15" y="6" width="18" height="36" rx="3.5"/><path d="M21.5 37.5h5"/></g></svg><span>${esc(tx('msg.hold'))}</span></div>`;
+      document.body.appendChild(el); setTimeout(() => el.classList.add('off'), 2300); setTimeout(() => el.remove(), 2750);
+    }
+    let framed = false;
+    function frame() {
+      const can = mqC.matches && mqP.matches, tn = landOn && can;
+      lb.classList.toggle('can', can); lb.classList.toggle('on', tn); if (bvEl) bvEl.classList.toggle('shb', can);
+      if (bvEl) { bvEl.classList.toggle('land', tn); bvEl.classList.toggle('shl', tn); const q = document.getElementById('bvQuit'); if (q && q.offsetWidth) bvEl.style.setProperty('--shq', q.offsetWidth + 'px'); }
+      document.documentElement.classList.toggle('sh-land', tn);
+      const tall = innerHeight > innerWidth * 1.15;
+      // 真上から見る (the bar's button right of 待った, ユーザー 2026-11-14): the camera looks straight down — every layer's faces are square on
+      const F = tn ? { w: W + 1.2, d: D + 1.6, y: base + THh, pitch: 1.12, roll: 1 }
+        : tall ? { w: W + 1.1, d: D + 1.6, y: base + THh, pitch: 1.28 } : { w: W + 1.0, d: D + 1.1, y: base + THh, pitch: 1.12 };   // (a little room round the mat: never touching the edges)
+      if (topOn) F.pitch = 1.56;
+      if (framed) F.ease = true;   // (a switch glides; the first framing is set at once)
+      if (T3.fit) T3.fit(F); framed = true;
+      try { if (window.__tbar) window.__tbar.place(); } catch (e) {}
+      if (tn && !turnedNow) guide();
+      turnedNow = tn; kick(400);
+    }
+    lb.onclick = e => { e.stopPropagation(); landOn = !landOn; try { localStorage.setItem('atlas-shanghai-land', landOn ? '1' : '0'); } catch (x) {} lb.classList.remove('pulse'); frame(); };
+    const onRs = () => { if (!stopped) frame(); };
+    addEventListener('resize', onRs); (mqP.addEventListener ? mqP.addEventListener('change', onRs) : mqP.addListener(onRs));
+    frame(); setTimeout(() => { if (!stopped) { frame(); hud(); } }, 300);
+    if (!landOn && mqC.matches && mqP.matches) { lb.classList.add('pulse'); setTimeout(() => lb.classList.remove('pulse'), 4500); }   // (it is there: a few rings on the first look)
 
     /* the HUD: tiles left · the mission / pairs open · the clock */
     function hud() {
-      const nl = left(), mv = K.moves(G, alive, face).length, tt = elapsed();
-      let mid = tx('h.pairs', { n: mv });
+      const nl = left(), tt = elapsed();
+      let mid = '';   // (free play: no "pairs open" count — ユーザー 2026-11-14; the HUD is 残り · タイム)
       if (ST) { mid = ST.type === 'pairs' ? tx('h.got', { a: got, b: ST.goal }) : ST.type === 'gold' ? tx('h.gold', { a: goldGot, b: ST.gold }) : missionText(ST, lang); }
       const clk = ST && ST.limit ? `<span class="hs${ST.limit - tt <= 10 ? ' on' : ''}">${esc(tx('h.limit'))} <b>${mmss(ST.limit - tt)}</b></span>` : `<span class="hs">${esc(tx('h.time'))} <b>${mmss(tt)}</b></span>`;
-      ctx.hud(`<span class="hs on"><b>${nl}</b>${esc(tx('h.left'))}</span><span class="hm">${esc(mid)}</span>${clk}`);
+      ctx.hud(`<span class="hs on"><b>${nl}</b>${esc(tx('h.left'))}</span>${mid ? `<span class="hm">${esc(mid)}</span>` : ''}${clk}`);
     }
     function clock() { clearInterval(clockT); clockT = setInterval(() => { if (stopped || over) { clearInterval(clockT); return; } hud(); if (ST && ST.limit && elapsed() >= ST.limit) fail('timeup'); }, 500); }
     function toast(msg, ms) {
@@ -221,7 +343,7 @@
       }
       return -1;
     }
-    function lift(i, h, ms) { const S = st8[i], h0 = S.lift; anim(ms || 120, k => { S.lift = h0 + (h - h0) * io(k); place(i); im.instanceMatrix.needsUpdate = true; }); }
+    function lift(i, h, ms) { const S = st8[i], h0 = S.lift; anim(ms || 120, k => { if (!alive[i]) return; S.lift = h0 + (h - h0) * io(k); place(i); im.instanceMatrix.needsUpdate = true; }); }
     function wiggle(i) { const S = st8[i]; anim(260, k => { S.rz = Math.sin(k * Math.PI * 4) * .06 * (1 - k); place(i); im.instanceMatrix.needsUpdate = true; }, () => { S.rz = 0; place(i); im.instanceMatrix.needsUpdate = true; }); }
     function onClick(e) {
       if (busy || over || (T3.wasDrag && T3.wasDrag())) return;
@@ -235,24 +357,30 @@
     }
     ctx.el.addEventListener('click', onClick);
 
-    /* ---------- taking a pair: both lift, glide together and vanish ---------- */
+    /* ---------- taking a pair: both lift, glide together and vanish ----------
+       The game is a race against the clock (ユーザー 2026-11-14), so the board never waits for the flourish: the pair is out of the
+       game the moment it is tapped (the tiles under it are free at once, the next pair can be tapped while this one is still in
+       the air) and the flight itself is short (TAKE_MS). Each flying tile carries a ticket (st8.fly); an undo that puts the tile
+       back tears the ticket up, so a flight still in the air leaves the restored tile alone. */
+    const TAKE_MS = 200;
+    let flyN = 0;
     function take(a, b, own) {
-      busy = true; sel = -1; hintPair = null; ply++;
+      sel = -1; hintPair = null; ply++;
       alive[a] = alive[b] = 0; hist.push({ t: 'p', a, b });
       if (plan) plan = K.patch(plan, a, b);
       got++; if (gold.has(a)) goldGot++; if (gold.has(b)) goldGot++;
       SFX.pair();
       const A = st8[a], B = st8[b], ax = pos[a], bx = pos[b], mx = (ax[0] + bx[0]) / 2, mz = (ax[2] + bx[2]) / 2, my = Math.max(ax[1], bx[1]) + 1.1;
-      const la = A.lift, lb = B.lift;
-      anim(460, k => {
-        const q = io(k);
-        A.lift = la + (my - ax[1] - la) * Math.min(1, k * 1.6); B.lift = lb + (my - bx[1] - lb) * Math.min(1, k * 1.6);
-        const m = Math.max(0, (k - .35) / .65); A.dx = (mx - ax[0]) * io(m) * .7; A.dz = (mz - ax[2]) * io(m) * .7; B.dx = (mx - bx[0]) * io(m) * .7; B.dz = (mz - bx[2]) * io(m) * .7;
-        const s = 1 - Math.max(0, (k - .6) / .4); A.s = B.s = Math.max(.001, s); A.rz = q * .4; B.rz = -q * .4;
-        place(a); place(b); im.instanceMatrix.needsUpdate = true;
-      }, () => { A.lift = B.lift = 0; A.dx = A.dz = B.dx = B.dz = 0; A.rz = B.rz = 0; A.s = B.s = .001; place(a); place(b); for (let i = 0; i < n; i++) tint(i); im.instanceColor.needsUpdate = true; im.instanceMatrix.needsUpdate = true; kick(); after(); });
+      const la = A.lift, lb = B.lift, tk = ++flyN; A.fly = B.fly = tk;
+      const end = (S, i) => { if (S.fly !== tk) return; S.fly = 0; S.lift = 0; S.dx = S.dz = 0; S.rz = 0; S.s = .001; place(i); };
+      anim(TAKE_MS, k => {
+        const q = io(k), m = Math.max(0, (k - .25) / .75), s = Math.max(.001, 1 - Math.max(0, (k - .5) / .5));
+        if (A.fly === tk) { A.lift = la + (my - ax[1] - la) * Math.min(1, k * 1.8); A.dx = (mx - ax[0]) * io(m) * .7; A.dz = (mz - ax[2]) * io(m) * .7; A.s = s; A.rz = q * .4; place(a); }
+        if (B.fly === tk) { B.lift = lb + (my - bx[1] - lb) * Math.min(1, k * 1.8); B.dx = (mx - bx[0]) * io(m) * .7; B.dz = (mz - bx[2]) * io(m) * .7; B.s = s; B.rz = -q * .4; place(b); }
+        im.instanceMatrix.needsUpdate = true;
+      }, () => { end(A, a); end(B, b); im.instanceMatrix.needsUpdate = true; kick(); });
       for (let i = 0; i < n; i++) tint(i); im.instanceColor.needsUpdate = true;
-      hud();
+      after();
     }
     function after() {
       busy = false; hud(); turn();
@@ -270,7 +398,7 @@
       css(); if (askEl) askEl.remove();
       const el = askEl = document.createElement('div'); el.className = 'shask';
       const lbl = ST ? tx('msg.shufLeft', { n: SHUF_MAX - shufs }) : tx('b.shuffle');
-      el.innerHTML = `<div><b>${esc(tx('r.stuck'))}</b><p>${esc(tx('msg.stuck'))}</p><div class="r"><button class="n">${esc(tx('b.later'))}</button><button class="y">${esc(lbl)}</button></div></div>`;
+      el.innerHTML = `<div><b>${esc(tx('r.stuck'))}</b><p>${esc(tx('msg.stuck'))}<br><small style="opacity:.8">${esc(tx('msg.shufPen', { n: SHUF_PEN }))}</small></p><div class="r"><button class="n">${esc(tx('b.later'))}</button><button class="y">${esc(lbl)}</button></div></div>`;
       document.body.appendChild(el);
       el.querySelector('.n').onclick = () => { el.remove(); askEl = null; };
       el.querySelector('.y').onclick = () => { el.remove(); askEl = null; shuffle(); };
@@ -279,7 +407,7 @@
       if (busy || over) return;
       if (ST && (ST.type === 'pure' || shufs >= SHUF_MAX)) { toast(tx('msg.noshuf')); return; }
       const r = K.reshuffle(G, alive, face); if (!r) return;
-      busy = true; shufs++; ply++; hist.push({ t: 's', face: face.slice() }); SFX.shuf();
+      busy = true; shufs++; pen += SHUF_PEN; ply++; hist.push({ t: 's', face: face.slice() }); SFX.shuf(); toast(tx('msg.shufPen', { n: SHUF_PEN }), 2200); hud();
       if (sel >= 0) { st8[sel].lift = 0; sel = -1; } hintPair = null;
       const idx = []; alive.forEach((v, i) => { if (v) idx.push(i); });
       anim(520, k => { const h = Math.sin(k * Math.PI) * .45; idx.forEach((i, j) => { st8[i].lift = h; st8[i].rz = Math.sin(k * Math.PI * 2 + j) * .08 * Math.sin(k * Math.PI); place(i); }); im.instanceMatrix.needsUpdate = true;
@@ -302,12 +430,16 @@
       }
       let stars = 1; if (tt <= parOf(ST)) { stars = 2; if (!hints && !shufs) stars = 3; }
       const S = d.st = d.st || {}, B = d.bt = d.bt || {}, s = ST.s, nb = B[s] === undefined || tt < B[s];
-      S[s] = Math.max(S[s] || 0, stars); if (nb) B[s] = tt; save(d);
+      const was = S[s] || 0;
+      S[s] = Math.max(was, stars); if (nb) B[s] = tt; save(d);
+      const coin = (S[s] - was) * COIN_STAR;   // (the ★ won for the first time pay ¢10 each — the purse itself is derived from the stars)
+      later(() => Reward.check(lang), 1900);
       const nx = s + 1 < 120 ? s + 1 : null;
       later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0,
         title: tx('r.stage') + ' ' + '★'.repeat(stars) + '☆'.repeat(3 - stars), score: stageName(s, lang) + ' · ' + tx('r.time', { t: mmss(tt) }),
-        best: (nb && S[s] ? tx('r.best', { t: mmss(B[s]) }) : tx('r.best', { t: mmss(B[s]) })) + ' · ' + '★'.repeat(S[s]),
+        best: tx('r.best', { t: mmss(B[s]) }) + ' · ' + '★'.repeat(S[s]) + (coin ? ' · ' + tx('rw.coin', { n: coin }) : ''),
         opp: stageName(s, lang), key: 'st' + s, why: tx('r.stage') + ' ' + stars + '★',
+        again: { label: tx('b.toMap'), go: restart => stageMap({ lang, play: p => restart(() => { AD.pending = p; AD.last = p; }) }) },   // (a cleared stage: マップへ instead of もう一局 — back to the course, ユーザー 2026-11-14)
         next: nx != null ? { label: tx('b.next'), go: () => { AD.pending = nx; AD.last = nx; } } : null }), 800);
     }
     function fail(why) {
@@ -327,7 +459,7 @@
       undo() {
         if (!api.canUndo()) return; const h = hist.pop(); ply++; hintPair = null;
         if (sel >= 0) { st8[sel].lift = 0; sel = -1; }
-        if (h.t === 'p') { alive[h.a] = alive[h.b] = 1; st8[h.a].s = st8[h.b].s = 1; got--; if (gold.has(h.a)) goldGot--; if (gold.has(h.b)) goldGot--; }
+        if (h.t === 'p') { alive[h.a] = alive[h.b] = 1; [h.a, h.b].forEach(i => { const S = st8[i]; S.fly = 0; S.lift = 0; S.dx = S.dz = 0; S.rz = 0; S.s = 1; }); got--; if (gold.has(h.a)) goldGot--; if (gold.has(h.b)) goldGot--; }
         else { face = h.face; faces(); }
         plan = null; paintAll(); hud(); turn(); SFX.tap();
       },
@@ -340,16 +472,23 @@
         hints++; plan = h.plan; hintPair = h.pair;
         if (sel >= 0 && !h.pair.includes(sel)) { st8[sel].lift = 0; place(sel); sel = -1; }
         for (let i = 0; i < n; i++) tint(i); im.instanceColor.needsUpdate = true; im.instanceMatrix.needsUpdate = true;
-        h.pair.forEach(i => { const S = st8[i]; anim(900, k => { S.lift = Math.sin(k * Math.PI * 3) * .1 * (1 - k * .6); place(i); im.instanceMatrix.needsUpdate = true; }, () => { S.lift = i === sel ? .14 : 0; place(i); im.instanceMatrix.needsUpdate = true; }); });
+        h.pair.forEach(i => { const S = st8[i]; anim(900, k => { if (!alive[i]) return; S.lift = Math.sin(k * Math.PI * 3) * .1 * (1 - k * .6); place(i); im.instanceMatrix.needsUpdate = true; }, () => { if (!alive[i]) return; S.lift = i === sel ? .14 : 0; place(i); im.instanceMatrix.needsUpdate = true; }); });
         if (!h.safe) toast(tx('msg.unsafe'), 3600);
         return Promise.resolve(true);
       },
       canDraw: () => false, canResign: () => false, resign() {}, timeout() {},
+      view: { icon: '<svg viewBox="0 0 24 24"><rect x="5" y="13.5" width="14" height="7.5" rx="1.6"/><path d="M12 3v7"/><path d="M8.6 6.8 12 10.2l3.4-3.4"/></svg>', label: () => tx('b.top'), on: () => topOn,
+        toggle() { topOn = !topOn; try { localStorage.setItem('atlas-shanghai-top', topOn ? '1' : '0'); } catch (e) {} frame(); } },
       stop() {
         stopped = true; clearInterval(clockT); timers.forEach(clearTimeout); clearTimeout(toastT);
         if (toastEl) toastEl.remove(); if (askEl) askEl.remove();
         ctx.el.removeEventListener('click', onClick);
         if (im.userData.dispose) im.userData.dispose(); if (shm.userData.dispose) shm.userData.dispose();
+        if (sky) { sky.geometry.dispose(); sky.material.map.dispose(); sky.material.dispose(); }
+        removeEventListener('resize', onRs); (mqP.removeEventListener ? mqP.removeEventListener('change', onRs) : mqP.removeListener(onRs));
+        lb.remove(); if (bvEl) { bvEl.classList.remove('land', 'shl', 'shb'); } document.documentElement.classList.remove('sh-land');
+        document.querySelectorAll('.shrot').forEach(e => e.remove());
+        try { if (window.__tbar) window.__tbar.place(); } catch (e) {}
         if (window.__shPlay === dbg) delete window.__shPlay;
       },
     };
@@ -367,7 +506,7 @@
   }
   function stagePanel(lang) {
     css(); const P = prog(), c = Object.keys(P.st).filter(s => P.st[s] > 0).length, s = Object.values(P.st).reduce((a, v) => a + v, 0), nx = nextStage(P);
-    return `<div class="pg">${esc(TX('st.progress', lang, { c, n: 120, s, t: 360 }))}</div><div class="nx">${esc(TX('st.next', lang, { s: stageName(nx, lang) + ' ' + TX('ar.' + C().AREAS[Math.floor(nx / 10)], lang) }))}</div><button type="button" class="mapb" data-shmap><i>✦</i>${esc(TX('b.map', lang))}</button>`;
+    return `<div class="stbox"><div class="pg">${esc(TX('st.progress', lang, { c, n: 120, s, t: 360 }))}</div><div class="nx">${esc(TX('st.next', lang, { s: stageName(nx, lang) + ' ' + TX('ar.' + C().AREAS[Math.floor(nx / 10)], lang) }))}</div></div><button type="button" class="mapb" data-shmap><i>✦</i>${esc(TX('b.map', lang))}</button>`;
   }
   function stageBind(host, lang, play) {
     host.addEventListener('click', e => { if (e.target.closest('[data-shmap]')) stageMap({ lang, play }); });
@@ -383,7 +522,7 @@
     css(); const lang = o.lang, K = C(), AR = K.AREAS;
     let P = prog(), area = Math.floor(nextStage(P) / 10), pick = nextStage(P);
     const el = document.createElement('div'); el.className = 'shmap';
-    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}">✕</button></div><div class="ars"></div><div class="fld"><button type="button" class="nav l">‹</button><div class="cst"></div><button type="button" class="nav r">›</button></div><div class="sh"></div>`;
+    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}">✕</button></div><div class="ars"></div><div class="gift"></div><div class="fld"><button type="button" class="nav l">‹</button><div class="cst"></div><button type="button" class="nav r">›</button></div><div class="sh"></div>`;
     document.body.appendChild(el); requestAnimationFrame(() => { el.classList.add('on'); stars(el.querySelector('canvas')); });
     const $ = q => el.querySelector(q);
     const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); };
@@ -395,6 +534,9 @@
     function paint() {
       const tot = Object.values(P.st).reduce((a, v) => a + v, 0);
       $('h2').textContent = TX('st.title', lang); $('.tot').textContent = '★ ' + tot + ' / 360';
+      const nx = Reward.next(), it = nx && window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + nx.t);
+      $('.gift').innerHTML = nx ? `<img src="../images/atlas/av/peacock-${nx.t}.webp" alt=""><span>${esc(TX('rw.next', lang, { n: nx.left, name: it ? it.name[lang] || it.name.en : 'Peacotile' }))}</span>` : '';
+      $('.gift').style.display = nx ? '' : 'none';
       $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(TX('ar.' + a, lang))}<em>★${st}</em></button>`; }).join('');
       const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
       // a tall screen (phones): the figure turned a quarter (x ↔ y) so it fills the height rather than a thin strip
@@ -409,7 +551,7 @@
     }
     function sheet() {
       const s = pick, st = K.stage(s), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s];
-      $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + (sr ? '<br>' + '★'.repeat(sr) + '☆'.repeat(3 - sr) + (bt != null ? ' · ' + esc(TX('r.best', lang, { t: mmss(bt) })) : '') : '') : esc(TX('st.lock', lang))}</div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
+      $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + (sr ? '<br>' + '★'.repeat(sr) + '☆'.repeat(3 - sr) + (bt != null ? ' · ' + esc(TX('r.best', lang, { t: mmss(bt) })) : '') : '') : esc(TX('st.lock', lang))}<br><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span></div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
       $('.go').onclick = () => { if (!ul) return; close(); o.play(s); };
     }
     el.addEventListener('click', e => {

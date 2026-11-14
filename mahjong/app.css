@@ -151,15 +151,28 @@ svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 .rl{font-size:12px;color:var(--muted);font-weight:700}
 .tbtns{position:absolute;top:max(10px,var(--st));right:max(10px,var(--sr));display:flex;gap:6px}
 /* tiles in html */
-.tl{position:relative;display:inline-block;width:var(--tw);aspect-ratio:3/4;border-radius:calc(var(--tw)*.12);background:#f6f0e0;flex:none;
-  box-shadow:inset 0 -4px 0 #ddd3bb,0 calc(var(--tw)*.1) 0 #6b3fc4,0 calc(var(--tw)*.1 + 2px) 0 #3c2077,0 8px 14px rgba(0,0,0,.35);transition:transform .12s, filter .12s;margin-bottom:calc(var(--tw)*.1)}
-.tl img{position:absolute;inset:4%;width:92%;height:88%;border-radius:calc(var(--tw)*.08);display:block;pointer-events:none}
-.tl.back{background:linear-gradient(180deg,#8a5ce0,#5b34b0);box-shadow:inset 0 0 0 2px rgba(255,255,255,.15),0 3px 0 #f6f0e0,0 5px 8px rgba(0,0,0,.3)}
-.tl.xs{--tw:22px;box-shadow:0 2px 0 #6b3fc4,0 3px 5px rgba(0,0,0,.3);margin:0}
-.tl.sm{--tw:34px;box-shadow:0 3px 0 #6b3fc4,0 4px 8px rgba(0,0,0,.3);margin:0}
-.tl.md{--tw:40px;box-shadow:0 4px 0 #6b3fc4,0 6px 10px rgba(0,0,0,.3);margin:0}
+/* (2026-11-14, ユーザー: the shading made the corners look too round) — a real tile seen square on: a flat white face with small
+   corners, a crisp light along the top edge and a thin shade along the bottom one. The picture covers the whole face (its own
+   white is the face's white, so no inner box shows); the sheen and the edge lines lie over it in ::after. */
+.tl{position:relative;display:inline-block;width:var(--tw);aspect-ratio:3/4;border-radius:calc(var(--tw)*.085);background:#fafaf6;flex:none;
+  box-shadow:0 calc(var(--tw)*.1) 0 #5a3787,0 calc(var(--tw)*.1 + 2px) 0 #3a2260,0 8px 14px rgba(0,0,0,.35);transition:transform .12s, filter .12s;margin-bottom:calc(var(--tw)*.1)}
+.tl img{position:absolute;inset:2.5%;width:95%;height:95%;border-radius:calc(var(--tw)*.06);display:block;pointer-events:none}
+.tl:not(.back)::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(166deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 34%,rgba(120,108,84,0) 62%,rgba(120,108,84,.07) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1.5px 0 rgba(128,112,82,.42),inset 0 -3px 2px rgba(128,112,82,.12),inset 1px 0 0 rgba(255,255,255,.5),inset -1px 0 0 rgba(128,112,82,.14)}
+/* dora (2026-11-14): a soft gold edge and a band of gold light that crosses the tile now and then, a small star at the corner */
+.tl.dora::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;
+  background:radial-gradient(circle at 80% 16%,rgba(255,236,160,.95) 0,rgba(255,214,110,.5) 5%,transparent 11%),linear-gradient(112deg,transparent 42%,rgba(255,214,110,.5) 49%,rgba(255,240,180,.62) 51%,transparent 58%);
+  background-size:100% 100%,320% 100%;background-position:0 0,130% 0;background-repeat:no-repeat;
+  box-shadow:inset 0 0 0 calc(var(--tw)*.028) rgba(255,196,70,.78),inset 0 0 calc(var(--tw)*.1) rgba(255,190,60,.4);
+  animation:doraGlint 3.3s ease-in-out infinite}
+@keyframes doraGlint{0%{background-position:0 0,130% 0;background-size:0% 0%,320% 100%}6%{background-size:100% 100%,320% 100%}27%{background-position:0 0,-30% 0;background-size:100% 100%,320% 100%}34%,100%{background-position:0 0,-30% 0;background-size:0% 0%,320% 100%}}
+.tl.back{background:radial-gradient(120% 80% at 30% 20%,rgba(220,200,250,.18),transparent 55%),linear-gradient(135deg,transparent 40%,rgba(220,205,245,.12) 46%,transparent 52%),linear-gradient(160deg,#66408f,#55337f 55%,#5f3a8c);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35),0 3px 0 #fafaf6,0 5px 8px rgba(0,0,0,.3)}   /* (pale polished lavender stone, as the 3D tile backs, 2026-11-14) */
+.tl.xs{--tw:22px;box-shadow:0 2px 0 #5a3787,0 3px 5px rgba(0,0,0,.3);margin:0}
+.tl.sm{--tw:34px;box-shadow:0 3px 0 #5a3787,0 4px 8px rgba(0,0,0,.3);margin:0}
+.tl.md{--tw:40px;box-shadow:0 4px 0 #5a3787,0 6px 10px rgba(0,0,0,.3);margin:0}
 .tl.side{transform:rotate(-90deg);margin:0 calc(var(--tw)*.17)}
-.tl.win{box-shadow:0 0 0 3px #ffd24a,0 4px 0 #6b3fc4,0 0 20px rgba(255,210,74,.7)}
+.tl.win{box-shadow:0 0 0 3px #ffd24a,0 4px 0 #5a3787,0 0 20px rgba(255,210,74,.7)}
 .tl.hl{box-shadow:0 0 0 2px #ffd24a,0 2px 0 #6b3fc4}
 .hand{position:absolute;left:0;right:0;bottom:max(8px,var(--sb));display:flex;align-items:flex-end;justify-content:center;gap:18px;padding:0 12px;pointer-events:none}
 .hand .hrow{display:flex;align-items:flex-end;gap:2px;pointer-events:auto}
@@ -392,7 +405,7 @@ html[lang=en] .ci-word{font-family:'Cinzel',serif;font-weight:800;font-size:min(
 #game{--th:min(calc((var(--W) - 90px) / 15.6), calc(calc(var(--H) * 0.16) * .75), 86px);--bf:66px}
 #game .hand .tl:not(.sm):not(.xs){--tw:var(--th)}
 #game .hand .melds .tl.sm{--tw:calc(var(--th) * .7)}
-#game .hand .tl{box-shadow:inset 0 -3px 0 #ddd3bb,0 calc(var(--tw)*.12) 0 #6b3fc4,0 calc(var(--tw)*.12 + 2px) 0 #3c2077,0 10px 18px rgba(0,0,0,.45)}
+#game .hand .tl{box-shadow:0 calc(var(--tw)*.12) 0 #5a3787,0 calc(var(--tw)*.12 + 2px) 0 #3c2077,0 10px 18px rgba(0,0,0,.45)}
 #game .hand.active .tl.can:hover,#game .hand .tl.up{transform:translateY(calc(var(--th) * -.24))}
 #game .hand{bottom:max(6px,var(--sb));gap:calc(var(--th) * .3)}
 #game .hand .hrow{gap:1px}
@@ -868,7 +881,7 @@ html.ds #game .rbox{padding:10px 14px;gap:7px}
 html.ds #game .rk b{font-size:22px}
 html.ds #game .rk span,html.ds #game .rl{font-size:13px}
 html.ds #game .rd small{font-size:13px}
-html.ds #game .rd .tl.xs{--tw:clamp(30px, calc(var(--GH) * .05), 42px);box-shadow:0 3px 0 #6b3fc4,0 4px 8px rgba(0,0,0,.4)}
+html.ds #game .rd .tl.xs{--tw:clamp(30px, calc(var(--GH) * .05), 42px);box-shadow:0 3px 0 #5a3787,0 4px 8px rgba(0,0,0,.4)}
 html.ds .khelp{left:calc(max(10px,var(--sl)) + 262px)}
 
 /* ================= PC: pull the UI in from the window edges ================= */

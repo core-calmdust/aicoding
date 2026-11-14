@@ -490,6 +490,10 @@
     [[784, 0, .07], [880, .075, .07], [988, .15, .07], [1047, .225, .09], [880, .39, .08], [1047, .475, .62]].forEach(([f, d, len]) => { note(f, d, len, v * .45); note(f, d, len, v * .35, 'triangle'); });
     [523, 659, 784].forEach(f => note(f, .475, .62, v * .4, 'triangle'));
   }
+  /* (2026-11-14) no board coordinates in what the guide says (the 3D boards have none): a point is named by its mark — ja 「緑に光っている点」,
+     other languages a small dot of the mark's colour ('\u0001…\u0002' = a ja phrase; say() drops the spaces around it) */
+  const SPJ = { ok: '緑に光っている点', ng: '赤い印の点' };
+  const SP = (k, lang) => lang === 'ja' ? '\u0001' + SPJ[k] + '\u0002' : `<i class="ls-spot ${k}"></i>`;
   function chime(ok) {
     const C = ac(); if (!C) return; if (ok) return clearJingle(C, .09); const t = C.currentTime, F = ok ? [523, 659, 784, 1047] : [392, 330];
     F.forEach((f, i) => { const o = C.createOscillator(), g = C.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t + i * .09); g.gain.linearRampToValueAtTime(.09, t + i * .09 + .01); g.gain.exponentialRampToValueAtTime(.001, t + i * .09 + .35); o.connect(g).connect(C.destination); o.start(t + i * .09); o.stop(t + i * .09 + .4); });
@@ -504,7 +508,7 @@
   function css() {
     if (cssDone) return; cssDone = true;
     const s = document.createElement('style');
-    s.textContent = `.rgd.pzg .rgd-act{gap:8px}.rgd.pzg .rgd-act .sp{flex:1}
+    s.textContent = `.ls-spot{display:inline-block;width:.78em;height:.78em;border-radius:50%;vertical-align:-.06em;margin:0 .12em;box-shadow:0 0 0 2px rgba(255,255,255,.9),0 0 6px currentColor}.ls-spot.ok{background:#2fd17a;color:#2fd17a}.ls-spot.ng{background:#e0301e;color:#e0301e}.ls-spot.hl{background:#ffb21a;color:#ffb21a}.rgd.pzg .rgd-act{gap:8px}.rgd.pzg .rgd-act .sp{flex:1}
 .rgd.pzg .nm .pg{font-weight:800}
 .rgd.pzg .cnt{display:flex;align-items:center;gap:2px;min-height:0}
 .pzst{width:22px;height:22px;fill:#e6dccb;stroke:none}.pzst.on{fill:#ffb81c;filter:drop-shadow(0 1px 0 #c98400)}
@@ -550,6 +554,7 @@
     ctx.panel.appendChild(el);
     const $ = s => el.querySelector(s);
     function say(html) {   // typed speech; a tap on the bubble shows it all
+      html = String(html).replace(/[ \u00a0]*\u0001/g, '').replace(/\u0002[ \u00a0]*/g, '');   // (ja mark phrases: SP)
       const tx = $('.tx'); tx.innerHTML = html; clearInterval(typeT);
       const nodes = []; (function walk(n) { n.childNodes.forEach(c => { if (c.nodeType === 3) nodes.push([c, c.textContent]); else walk(c); }); })(tx);
       nodes.forEach(([n]) => { n.textContent = ''; });
@@ -728,7 +733,7 @@
         const best = (list || []).filter(x => x.need && x.need <= left).sort((a, b) => a.need - b.need);
         p.failed = true; streak = 0; chime(false); await sleep(450); if (p !== cur) return;
         pz().undo(1); p.used--; pz().mark([...best.slice(0, 3).map(g => [g.m, 'ok']), [m, 'ng']]);
-        p.state = 'fail'; say(B.tx('pz.failWhy', ctx.lang, { m: nm, b: best.length ? pz().name(best[0].m) : '—', n: left }) + ' ' + (line('retry') || X.retry)); buttons(); return;
+        p.state = 'fail'; say(B.tx('pz.failWhy', ctx.lang, { m: SP('ng', ctx.lang), b: best.length ? SP('ok', ctx.lang) : '—', n: left }) + ' ' + (line('retry') || X.retry)); buttons(); return;
       }
       if (good && e.need === 1) return solved(p);
       if (!good) p.off = true;
@@ -753,7 +758,7 @@
     function gmOut(p) {
       p.failed = true; p.state = 'fail'; streak = 0; chime(false);
       const pv = String(p.P.pv || p.P.a || '').split(/\s+/).filter(Boolean);
-      say(fill(GA.out, { n: p.n }) + (pv.length ? ' ' + B.tx('pz.outAns', ctx.lang, { b: '<b>' + pv[0] + '</b>' }) : '') + ' ' + (line('retry') || X.retry)); buttons();
+      say(fill(GA.out, { n: p.n }) + ' ' + (line('retry') || X.retry));   // (the first move is not named in coordinates: 答え plays the line) buttons();
     }
     function gmWait(p) { pz().wait(); }
     async function gmAuto(p) {   // 答え: the stored solution line, played out (the defender's replies included)
@@ -775,7 +780,7 @@
       if (p !== cur) return;
       const e = (list || []).find(x => x.m === m), good = (list || []).filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need);
       const back = async html => { p.failed = true; streak = 0; chime(false); await sleep(450); if (p !== cur) return; pz().undo(1); p.used--; pz().mark([...(good[0] ? [[good[0].m, 'ok']] : []), ...(m >= 0 ? [[m, 'ng']] : [])]); p.state = 'fail'; say(html + ' ' + (line('retry') || X.retry)); buttons(); };
-      const bn = q => '<b>' + pz().name(q) + '</b>';
+      const bn = () => SP('ok', ctx.lang);   // (marked on the board by back())
       if (!e || !(e.need > 0) || e.need > left) {
         if (left <= 1) return back(good.length ? B.tx('pz.failWhy', ctx.lang, { b: bn(good[0].m) }) : fill(GO.out, { n: p.n }));
         const region = new Set(p.Pi.region);
@@ -797,7 +802,7 @@
       if (p !== cur) return;
       say(fill(GO.mid, { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons();
     }
-    function goOut(p) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(fill(GO.out, { n: p.n }) + (p.Pi.answer != null ? ' ' + B.tx('pz.failWhy', ctx.lang, { b: '<b>' + pz().name(p.Pi.answer) + '</b>' }) : '') + ' ' + (line('retry') || X.retry)); buttons(); }
+    function goOut(p) { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(fill(GO.out, { n: p.n }) + ' ' + (line('retry') || X.retry)); buttons(); }   // (the answer is not named in coordinates: 答え plays it)
     async function goAuto(p) {   // 答え: the stored solution line played out
       p.state = 'busy'; buttons(); say(B.tx('pz.showing', ctx.lang));
       const ln = p.Pi.line.length ? p.Pi.line : [p.Pi.answer];

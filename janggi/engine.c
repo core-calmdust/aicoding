@@ -23,6 +23,9 @@
 #define TLS
 #endif
 typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8; typedef int16_t i16; typedef uint16_t u16; typedef uint64_t u64; typedef int64_t i64;
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+#endif
 #ifdef NATIVE
 #include <stdio.h>
 #include <stdlib.h>
@@ -140,6 +143,9 @@ static void initGeo(void) {
 // ---------------------------------------------------------------- position (one global board, make / unmake)
 static TLS u8 B[90];
 static TLS int side;
+#define XQ_ST 400
+static TLS int xqOn = 0, xqTop = 0;         // NNUE (see below): on, accumulator stack top
+static TLS u8 xqOk[XQ_ST];
 static TLS int KSQ[2];
 static TLS u64 KEY;
 // the points of each colour's pieces as a 90-bit set (BB[c][0]: points 0..63, BB[c][1]: 64..89), kept with B; walked in
@@ -157,6 +163,7 @@ static u64 hashBoard(void) { u64 k = 0; for (int s = 0; s < 90; s++) if (B[s]) k
 static void findKings(void) {   // also rebuilds BB from B
   KSQ[0] = KSQ[1] = -1; BB[0][0] = BB[0][1] = BB[1][0] = BB[1][1] = 0;
   for (int s = 0; s < 90; s++) if (B[s]) { BBFLIP(COLOR(B[s]), s); if (TYPE(B[s]) == KING) KSQ[COLOR(B[s])] = s; }
+  xqTop = 0; xqOk[0] = 0;
 }
 
 // is the general of colour c attacked?
@@ -179,11 +186,97 @@ static int attackedKing(int c) {
   for (int i = 0; i < PANUM[o][k]; i++) if (B[(int)PATT[o][k][i]] == oP) return 1;
   return 0;
 }
+// ---------------------------------------------------------------- NNUE evaluation (optional; tools/nnue/, claude/janggi-spec.md「NNUE」)
+// (2026-11-14: xiangqi/engine.c's, the same network shape and file; a pass keeps the accumulator.)
+// (1260 -> 256) x 2 perspectives -> 1, SCReLU, int16 weights (x127), output x64. Inputs per perspective c: (own / opponent x 7
+// types) x 90 points, the board turned 180 degrees for Han (colour 1). The output is the logit of the expected score (win 1).
+// Accumulators are updated lazily: makeMove only records the move; evaluate() brings the newest accumulator up to date from the
+// nearest computed one below it (or recomputes it from the board).
+#define XQ_IN 1260
+#ifndef XQ_H
+#define XQ_H 256   /* hidden size; engine_simd512.wasm is built with -DXQ_H=512 */
+#endif
+#define XQ_QA 127
+#define XQ_QB 64
+#define XQ_K 220                       // engine points per logit unit (fitted to the linear evaluation's scale)
+static i16 xqW1[XQ_IN * XQ_H], xqW2[2 * XQ_H];
+static i32 xqB1[XQ_H], xqB2;
+static TLS i16 xqAcc[XQ_ST + 1][2][XQ_H];   // (slot XQ_ST: scratch for positions deeper than the stack)
+static TLS u8 xqMv[XQ_ST][4];              // from, to, piece, captured
+static inline int xqF(int c, int p, int s) { return ((COLOR(p) != c) * 7 + TYPE(p) - 1) * 90 + (c ? 89 - s : s); }
+static inline void xqAdd(i16 *a, int f) { const i16 *w = xqW1 + f * XQ_H; for (int j = 0; j < XQ_H; j++) a[j] += w[j]; }
+static inline void xqSub(i16 *a, int f) { const i16 *w = xqW1 + f * XQ_H; for (int j = 0; j < XQ_H; j++) a[j] -= w[j]; }
+static void xqRefresh(int k) {
+  for (int c = 0; c < 2; c++) {
+    i16 *a = xqAcc[k][c]; for (int j = 0; j < XQ_H; j++) a[j] = (i16)xqB1[j];
+    FOR_BITS(BB[0][0] | BB[1][0], BB[0][1] | BB[1][1], s) xqAdd(a, xqF(c, B[s], s)); END_BITS
+  }
+  if (k < XQ_ST) xqOk[k] = 1;
+}
+static inline void xqPush(int f, int t, u8 p, u8 cap) {
+  xqTop++;
+  if (xqTop < XQ_ST) { xqOk[xqTop] = 0; xqMv[xqTop][0] = (u8)f; xqMv[xqTop][1] = (u8)t; xqMv[xqTop][2] = p; xqMv[xqTop][3] = cap; }
+}
+static int xqEval(void) {
+  int k = xqTop;
+  if (k >= XQ_ST) { k = XQ_ST; xqRefresh(k); }       // deeper than the stack: recompute in the scratch slot
+  else if (!xqOk[k]) {
+    int b = k; while (b > 0 && !xqOk[b]) b--;
+    if (!xqOk[b] || k - b > 6) xqRefresh(k);
+    else {
+      for (int i = b + 1; i <= k; i++) {
+        int f = xqMv[i][0], t = xqMv[i][1]; u8 p = xqMv[i][2], cap = xqMv[i][3];
+        if (f == t) { memcpy(xqAcc[i], xqAcc[i - 1], sizeof xqAcc[i]); xqOk[i] = 1; continue; }   // a pass
+        for (int c = 0; c < 2; c++) {
+          /* child = parent - from + to (- captured), one pass */
+          i16 *a = xqAcc[i][c]; const i16 *o = xqAcc[i - 1][c];
+          const i16 *wf = xqW1 + xqF(c, p, f) * XQ_H, *wt = xqW1 + xqF(c, p, t) * XQ_H;
+          if (cap) { const i16 *wc = xqW1 + xqF(c, cap, t) * XQ_H; for (int j = 0; j < XQ_H; j++) a[j] = (i16)(o[j] - wf[j] + wt[j] - wc[j]); }
+          else for (int j = 0; j < XQ_H; j++) a[j] = (i16)(o[j] - wf[j] + wt[j]);
+        }
+        xqOk[i] = 1;
+      }
+    }
+  }
+  const i16 *a = xqAcc[k][side], *b = xqAcc[k][side ^ 1];
+  i64 sum = 0;
+#ifdef __wasm_simd128__
+  /* the same sums (32 products per block in int32, wrapping alike), 8 lanes at a time */
+  {
+    const v128_t lo = wasm_i16x8_splat(0), hi = wasm_i16x8_splat(XQ_QA);
+    for (int i0 = 0; i0 < XQ_H; i0 += 16) {
+      v128_t xa0 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(a + i0), lo), hi), xa1 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(a + i0 + 8), lo), hi);
+      v128_t xb0 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(b + i0), lo), hi), xb1 = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(b + i0 + 8), lo), hi);
+      v128_t v = wasm_i32x4_add(wasm_i32x4_add(wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xa0, xa0), wasm_v128_load(xqW2 + i0)), wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xa1, xa1), wasm_v128_load(xqW2 + i0 + 8))),
+                                 wasm_i32x4_add(wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xb0, xb0), wasm_v128_load(xqW2 + XQ_H + i0)), wasm_i32x4_dot_i16x8(wasm_i16x8_mul(xb1, xb1), wasm_v128_load(xqW2 + XQ_H + i0 + 8))));
+      sum += (i32)((u32)wasm_i32x4_extract_lane(v, 0) + (u32)wasm_i32x4_extract_lane(v, 1) + (u32)wasm_i32x4_extract_lane(v, 2) + (u32)wasm_i32x4_extract_lane(v, 3));
+    }
+  }
+  if (0)
+#endif
+  for (int i0 = 0; i0 < XQ_H; i0 += 16) {
+    i32 part = 0;
+    for (int i = i0; i < i0 + 16; i++) { i32 x = a[i] < 0 ? 0 : a[i] > XQ_QA ? XQ_QA : a[i]; part += x * x * xqW2[i]; }
+    for (int i = i0; i < i0 + 16; i++) { i32 x = b[i] < 0 ? 0 : b[i] > XQ_QA ? XQ_QA : b[i]; part += x * x * xqW2[XQ_H + i]; }
+    sum += part;
+  }
+  i64 v = sum / XQ_QA + xqB2;
+  v = v * XQ_K / (XQ_QA * XQ_QB);
+  return (int)(v > 20000 ? 20000 : v < -20000 ? -20000 : v);
+}
+EXPORT(xq_w1_ptr) i16 *xq_w1_ptr(void) { return xqW1; }
+EXPORT(xq_h) int xq_h(void) { return XQ_H; }
+EXPORT(xq_w2_ptr) i16 *xq_w2_ptr(void) { return xqW2; }
+EXPORT(xq_b1_ptr) i32 *xq_b1_ptr(void) { return xqB1; }
+EXPORT(xq_set_b2) void xq_set_b2(i32 b) { xqB2 = b; }
+EXPORT(xq_nnue) void xq_nnue(int on) { xqOn = on; xqTop = 0; xqOk[0] = 0; }
+
 static inline u8 makeMove(Move m) {
   int f = MF(m), t = MT(m);
-  if (f == t) { KEY ^= ZSIDE; side ^= 1; return 0; }   // pass
+  if (f == t) { KEY ^= ZSIDE; side ^= 1; if (xqOn) xqPush(f, t, 0, 0); return 0; }   // pass
   u8 p = B[f], cap = B[t];
   KEY ^= ZOB[p][f] ^ ZOB[p][t] ^ ZSIDE; if (cap) KEY ^= ZOB[cap][t];
+  if (xqOn) xqPush(f, t, p, cap);
   B[t] = p; B[f] = 0;
   BBFLIP(COLOR(p), f); BBFLIP(COLOR(p), t); if (cap) BBFLIP(COLOR(cap), t);
   if (TYPE(p) == KING) KSQ[COLOR(p)] = t;
@@ -193,6 +286,7 @@ static inline u8 makeMove(Move m) {
 }
 static inline void unmakeMove(Move m, u8 cap) {
   int f = MF(m), t = MT(m);
+  if (xqOn) xqTop--;
   if (f == t) { side ^= 1; KEY ^= ZSIDE; return; }
   u8 p = B[t];
   side ^= 1;
@@ -271,7 +365,7 @@ static int evaluateCho(void) {
   }
   return sc[0] - sc[1];
 }
-static int evaluate(void) { int v = evaluateCho(); return (side ? -v : v) + 12; }
+static int evaluate(void) { if (xqOn) return xqEval(); int v = evaluateCho(); return (side ? -v : v) + 12; }
 static int noAttackers(void) { return 0; }
 
 // ---------------------------------------------------------------- transposition table
@@ -332,7 +426,7 @@ static void ttStore(u64 key, int d, int flag, int v, Move m, int ply) {
 #define SP_MV 128
 #define SP_HK 192
 #define PL_SP_FIELDS \
-  int inChk; u64 key, bb[2][2]; int side, hn, hirr, ksq[2]; \
+  int inChk, nnue; u64 key, bb[2][2]; int side, hn, hirr, ksq[2]; \
   u8 lg[SP_MV], gc[SP_MV];   /* the moves' place (LMR, futility) and gives check */ \
   u8 B[90]; u8 hc[SP_HK]; u64 hk[SP_HK];   /* the board, the repetition history since the last capture */
 #include "../shared/praline/praline.h"
@@ -382,12 +476,14 @@ static int spFillPos(SPt *s) {   // the owner: this node's position
   if (hn - hirr > SP_HK || hirr < 0) return 0;
   memcpy(s->B, B, 90); s->side = side; s->key = KEY; memcpy(s->bb, BB, sizeof(BB)); s->ksq[0] = KSQ[0]; s->ksq[1] = KSQ[1];
   s->hn = hn; s->hirr = hirr; memcpy(s->hk, HK + hirr, 8 * (hn - hirr)); memcpy(s->hc, HC + hirr, hn - hirr);
+  s->nnue = xqOn;
   return 1;
 }
-static void spLoadPos(const SPt *s, int top, int fresh) {   // a thread joining s 
+static void spLoadPos(const SPt *s, int top, int fresh) {   // a thread joining s (fresh: the NNUE accumulator at slot top anew)
   memcpy(B, s->B, 90); side = s->side; KEY = s->key; memcpy(BB, s->bb, sizeof(BB)); KSQ[0] = s->ksq[0]; KSQ[1] = s->ksq[1];
   hn = s->hn; hirr = s->hirr; memcpy(HK + hirr, s->hk, 8 * (hn - hirr)); memcpy(HC + hirr, s->hc, hn - hirr);
-  (void)top; (void)fresh;
+  xqOn = s->nnue; xqTop = top;
+  if (fresh && xqOn && top < XQ_ST) xqRefresh(top);
 }
 #else
 static inline int timeUp(void) {
@@ -731,7 +827,7 @@ static void spCutoff(const SPt *s, int i) {
   i32 *h = &hist[side][MF(m)][MT(m)]; *h += s->depth * s->depth;
   if (*h > (1 << 24)) for (int x = 0; x < 2; x++) for (int y = 0; y < 90; y++) for (int q = 0; q < 90; q++) hist[x][y][q] >>= 1;
 }
-static inline int spTop(void) { return 0; }   // (no incremental evaluation stack)
+static inline int spTop(void) { return xqTop; }   // (the NNUE accumulator's slot: a thread helping below its own split point uses the next one)
 static void waitCheck(void) { SIM_IDLE(); mtCheck(); }
 static void spIdleReset(int fresh) {   // mt_idle: a helper's search state (fresh: a new job, as beginSearch)
   nodes = 0; tEnd = 0; nodeLimitOn = 0; rootK = 0;
