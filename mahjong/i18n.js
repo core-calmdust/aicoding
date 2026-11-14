@@ -19,6 +19,11 @@ const S = {
     you: 'あなた', yourTurn: 'あなたの番', noArt: 'イラスト準備中', collection: 'コレクション', owned: '所持', close: '閉じる',
     rotate: '横向きにすると遊びやすくなります', landTitle: 'このゲームは横画面で遊びます', landSub: 'スマホを横向きにしてください。\n横にすると対局が始まります。', landNote: '対局はスマホを横向きにして遊びます', loading: '読み込み中…', guide: 'タップで選択、もう一度タップで捨てる',
     timing_deal: '配牌時', timing_turn: '手番で', costLine: '1回目 無料 ・ 2回目 {n}点 ・ 以降は倍', setPartner: 'パートナーにする', isPartner: 'パートナー', notOwned: '未解放：ガチャで解放されます', lockedT: '未解放', lockedS: 'ガチャで{r}キャラとして登場します', toGacha: 'ガチャを引く', keys: '<b>1〜0 - ^ ¥</b> 手牌を左から切る　<b>Space</b> ツモ切り<br><b>Enter</b> アガリ　<b>X</b> リーチ　<b>C</b> チー　<b>V</b> ポン　<b>B</b> カン<br><b>Esc / Space</b> スキップ　<b>S</b> スキル', liteOn: '軽量モード：オン（影・常時アニメを止めて描画を軽く）', liteOff: '軽量モード：オフ',
+    stats: 'スタッツ', psAll: 'すべて', psGame: 'この対局', psGames: '対局数', psGamesN: '{n}戦', psHands: '局数', psNow: '現在の順位', psAvgRank: '平均順位', psWin: '和了率', psDealin: '放銃率',
+    psTop: 'トップ率', psRentai: '連対率', psLastAvoid: 'ラス回避率', psAvgScore: '平均持ち点', psBust: 'トビ率', psRiichi: '立直率', psCall: '副露率', psTsumo: 'ツモ率', psRiichiWin: '立直後の和了率',
+    psAvgWin: '平均打点', psAvgDeal: '平均放銃点', psDrawTen: '流局時の聴牌率', psSkill: 'スキル使用（1戦あたり）', psSkillN: 'スキル使用回数', psYakuman: '役満',
+    psRanks: '順位の分布', psMaxWin: '最高打点', psYaku: 'よく和了る役', psChars: 'よく使うキャラ', psEmpty: 'まだ記録がありません。対局を最後まで打つと記録されます。', psEmptyG: 'この対局はまだ始まったばかりです。',
+    psNoData: '記録を読み込めませんでした。', psNote: '記録はこのブラウザに保存されます（最後まで打った対局のみ）。', psBotNote: 'BOTはこの対局の成績を表示しています。',
     lineH: '台詞', dealQ: 'この局で「{name}」を使いますか？', use: '使う', notUse: '使わない', dealOnly: '配牌時に選択', tapChange: 'タップでキャラ変更', back: '戻る', riichiNo: 'リーチ不可', useThis: 'この対局で使うスキルを選ぶ', ownedSkills: '所持スキル', newSkill: '新スキル!', charRates: 'キャラ', skillRates: 'スキル', tenth: '10連の10回目はSR以上のキャラ確定。持っているキャラが出ると新しいスキルを覚えます', sisters: '姉妹', riichiWhy_sealed: '他家の「封じ」で、この局はリーチできません', riichiWhy_points: '持ち点が1000点未満なのでリーチできません', riichiWhy_wall: '山の残りが4枚未満なのでリーチできません',
   },
   en: {
@@ -38,6 +43,11 @@ const S = {
     you: 'You', yourTurn: 'Your turn', noArt: 'Art coming soon', collection: 'Collection', owned: 'Owned', close: 'Close',
     rotate: 'Landscape is easier to play', landTitle: 'This game is played in landscape', landSub: 'Turn your phone sideways.\nThe game starts when you do.', landNote: 'Games are played with the phone held sideways', loading: 'Loading…', guide: 'Tap to pick, tap again to discard',
     timing_deal: 'At the deal', timing_turn: 'On your turn', costLine: '1st use free · 2nd {n} pts · doubles after', setPartner: 'Make partner', isPartner: 'Partner', notOwned: 'Locked: unlock her from the gacha', lockedT: 'Locked', lockedS: 'Appears in the gacha as a {r} character', toGacha: 'Open gacha', keys: '<b>1…0 - ^ ¥</b> discard left to right　<b>Space</b> tsumogiri<br><b>Enter</b> win　<b>X</b> riichi　<b>C</b> chi　<b>V</b> pon　<b>B</b> kan<br><b>Esc / Space</b> skip　<b>S</b> skill', liteOn: 'Light mode on (no shadows or looping effects)', liteOff: 'Light mode off',
+    stats: 'Stats', psAll: 'All', psGame: 'This game', psGames: 'Games', psGamesN: '{n} games', psHands: 'Hands', psNow: 'Place now', psAvgRank: 'Avg. place', psWin: 'Win rate', psDealin: 'Deal-in rate',
+    psTop: '1st place', psRentai: 'Top two', psLastAvoid: 'Avoid 4th', psAvgScore: 'Avg. final score', psBust: 'Busted', psRiichi: 'Riichi rate', psCall: 'Call rate', psTsumo: 'Tsumo share', psRiichiWin: 'Win after riichi',
+    psAvgWin: 'Avg. win', psAvgDeal: 'Avg. deal-in', psDrawTen: 'Tenpai at draws', psSkill: 'Skills per game', psSkillN: 'Skills used', psYakuman: 'Yakuman',
+    psRanks: 'Places', psMaxWin: 'Biggest win', psYaku: 'Favourite yaku', psChars: 'Most played', psEmpty: 'No games yet. A game is recorded when it is played to the end.', psEmptyG: 'This game has only just started.',
+    psNoData: 'The record could not be loaded.', psNote: 'Your record is kept in this browser (finished games only).', psBotNote: 'BOTs show this game only.',
     lineH: 'Lines', dealQ: 'Use “{name}” this hand?', use: 'Use', notUse: 'Skip', dealOnly: 'Chosen at the deal', tapChange: 'Tap to change', back: 'Back', riichiNo: 'No riichi', useThis: 'Pick the skill for this game', ownedSkills: 'Skills', newSkill: 'New skill!', charRates: 'Characters', skillRates: 'Skills', tenth: '10th pull of ×10: SR or better character. A character you already have learns a new skill', sisters: 'Sisters', riichiWhy_sealed: 'An opponent used Seal: no riichi this hand', riichiWhy_points: 'You need at least 1000 points to riichi', riichiWhy_wall: 'Fewer than 4 tiles left: no riichi',
   },
 };

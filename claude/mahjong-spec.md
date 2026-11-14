@@ -68,9 +68,17 @@
 - 流局：テンパイ料3000点、九種九牌、四開槓、三家和。フリテン、カンドラ即めくり、暗槓後のリーチ可
 - 役満：国士（13面ダブル）、四暗刻（単騎ダブル）、大三元、小四喜、大四喜（ダブル）、字一色、緑一色、清老頭、九蓮（純正ダブル）、四槓子
 
+## スタッツ（pstats.js、2026-11-14）
+- キャラをクリックでそのプレイヤーのスタッツ：ホームはパートナー欄の［スタッツ］、対局中は各席の顔（相手・自分）、最終結果の各行
+- 画面：左に選択中キャラの立ち絵（約1/3、レア度フレーム）、右に名前・スキル・タブ・数値。Esc／×／外側クリックで閉じる
+- タブ：自分は すべて／スキル戦／標準戦（＋対局中は「この対局」）。BOTは「この対局」の成績のみ
+- 項目：対局数・平均順位・和了率・放銃率（大）、順位分布バー、トップ率・連対率・ラス回避率・平均持ち点・トビ率・立直率・副露率・ツモ率・立直後の和了率・平均打点・平均放銃点・流局時の聴牌率・スキル使用・役満、最高打点、よく和了る役（上位5）、よく使うキャラ（すべてタブ）
+- データ：`MJStats.Tracker` が対局のイベントから4席分の生カウンタを集計（席の種類に依存しない）。最後まで打った対局だけ保存 `janka-v1.pstats = { skill, std, chars:{id:{g,r[4]}}, old }`（old＝スタッツ導入前の対局数・順位のみ）
+- オンライン下準備：席は `UIS.players[s] = {kind:'me'|'bot'|'online', uid, name}`。online は `MJStats.remote(uid)` が同じ生カウンタ `{ raw:{skill,std} }` を返す想定（サーバーは同じ形で加算すればよい）
+
 ## ファイル
 - `engine.js` 牌・向聴数・待ち・役・符・点数（skillFu 対応）／`game.js` 局の進行・スキル効果（tier の値を使う）／`ai.js` BOT
-- `skills.js`（timing・cost・P[tier]・desc(v)・VALUE・TIERS）、`chars.js`（FAMILIES・ROSTER）、`tiles.js`、`table3d.js`、`app.js`／`app.css`／`i18n.js`
+- `skills.js`（timing・cost・P[tier]・desc(v)・VALUE・TIERS）、`chars.js`（FAMILIES・ROSTER）、`pstats.js`（スタッツ）、`tiles.js`、`table3d.js`、`app.js`／`app.css`／`i18n.js`
 - テスト：`tools/test-engine.js`、`tools/test-shanten.js`、`tools/sim.js`、`tools/skill-value.js`
 - アーティファクト：`python3 mahjong/tools/build-artifact.py OUT_DIR`
 - デバッグ：`?auto`（自分の席もBOT）、`?fast`（演出短縮）
