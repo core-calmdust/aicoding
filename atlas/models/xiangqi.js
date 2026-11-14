@@ -36,9 +36,9 @@
   const RW = 8 * u + 2 * MG, RD = 9 * u + 2 * MG, W = RW + 2 * FR, D = RD + 2 * FR, HF = H - REC;
   const KAI = '"STKaiti","KaiTi","Kaiti SC","Kaiti TC","BiauKai","AR PL UKai CN","Noto Serif SC","Noto Serif CJK SC","Noto Serif CJK JP","Shippori Mincho B1","Songti SC",serif';
   const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } } };
-  const LOOKS = ['kaya', 'walnut', 'hongmu', 'raden', 'lacquer', 'jade'];
+  const LOOKS = ['lacquer', 'kaya', 'walnut', 'hongmu', 'raden', 'jade'];
   const SETS = ['boxwood', 'brass', 'ebony', 'urushi', 'jade', 'porcelain'];
-  const lookOf = k => LOOKS.includes(k) ? k : (X.BOARDS && X.BOARDS.xiangqi ? X.BOARDS.xiangqi.get() : (LOOKS.includes(ls.get('atlas-xiangqi-board3')) ? ls.get('atlas-xiangqi-board3') : 'kaya'));
+  const lookOf = k => LOOKS.includes(k) ? k : (X.BOARDS && X.BOARDS.xiangqi ? X.BOARDS.xiangqi.get() : (LOOKS.includes(ls.get('atlas-xiangqi-board3')) ? ls.get('atlas-xiangqi-board3') : 'lacquer'));
   const pcSet = () => { const v = ls.get('atlas-xiangqi-pc3'); return SETS.includes(v) ? v : 'boxwood'; };
   const setOf = s => SETS.includes(s) ? s : pcSet();
 
@@ -78,7 +78,7 @@
           const x = o[0] * (hac - d) + e[0] * s, z = o[2] * (hac - d) + e[2] * s;
           P.push(x, y, z); N.push(-o[0] * nd, ny, -o[2] * nd);
           if (uvMode === 'plan') UV.push((x + A) / (2 * A), 1 - (z + B) / (2 * B));
-          else if (uvMode === 'side') UV.push((s + hal) / (2 * hal), 1 - (arc[arc.length - 1] - arc[i]) / SIDE_H);
+          else if (uvMode === 'side') UV.push((s + hal) / (2 * hal), 1 - (si + Math.min(1, (arc[arc.length - 1] - arc[i]) / SIDE_H)) / 4);   // the four faces stacked in one picture (far, right, near, left)
           else UV.push((s + hal) / (2 * Math.max(A, B)) * .9 + si * .23, arc[i] * .35 + si * .19);
         }
       });
@@ -252,7 +252,7 @@
      G roughness, B metalness — gold and brass inlays are true metal set flush in the ground, the grooves cut by the bump,
      the shell (metalness .35) shifts its colour with the angle you look at it from ---------- */
   const XQ3 = (() => { try { return new URL('../../images/atlas/xiangqi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/xiangqi3d/'; } })();
-  const XQ3V = '?v=1';
+  const XQ3V = '?v=2';
   const texs = {};
   function imgTex(name, srgb = true, aniso = 8) {
     if (texs[name]) return texs[name];
@@ -266,12 +266,12 @@
       #ifdef USE_METALNESSMAP
       { float mb = texture2D( metalnessMap, vMetalnessMapUv ).b; float shl = smoothstep( .22, .3, mb ) * ( 1. - smoothstep( .42, .5, mb ) );
         if ( shl > 0. ) { float vd = dot( normal, normalize( -vViewPosition ) ); float lum = dot( diffuseColor.rgb, vec3( .3, .5, .2 ) );
-          float ph = fract( vd * 3.2 + lum * 2.2 + vMetalnessMapUv.x * 6. + vMetalnessMapUv.y * 3. );
+          float ph = fract( vd * 4.5 + lum * 2.2 + vMetalnessMapUv.x * 6. + vMetalnessMapUv.y * 3. );
           vec3 rb = .55 + .45 * cos( 6.2832 * ( ph + vec3( 0., .33, .67 ) ) );
-          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * .62 + rb * lum * .55, shl * .8 ); } }
+          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * .4 + rb * lum * .95, shl ); } }
       #endif`);
     };
-    m.customProgramCacheKey = () => 'xqNacre1';
+    m.customProgramCacheKey = () => 'xqNacre2';
     return m;
   }
   const LK = {
@@ -296,7 +296,7 @@
     const add = (geo, m, cast = true) => { const x = new TT.Mesh(geo, m); x.castShadow = cast; x.receiveShadow = true; base.add(x); return x; };
     // the block: straight sides, a small round over into the top; the long sides and the ends each their own picture
     const prof = [[0, 0], [0, HB - e]]; for (let i = 1; i <= (LO() ? 2 : 4); i++) { const a = i / (LO() ? 2 : 4) * Math.PI / 2; prof.push([e - Math.cos(a) * e, HB - e + Math.sin(a) * e]); }
-    add(sweep(A, B, prof, 'side'), [faceMat(look, 'end'), faceMat(look, 'side')]);
+    add(sweep(A, B, prof, 'side'), faceMat(look, 'side'));
     const fg = new TT.PlaneGeometry(W - 2 * e, D - 2 * e); fg.rotateX(-Math.PI / 2);
     { const P = fg.attributes.position, UV = fg.attributes.uv; for (let i = 0; i < UV.count; i++) UV.setXY(i, (P.getX(i) + A) / W, 1 - (P.getZ(i) + B) / D); }
     const fm = add(fg, faceMat(look, 'top'), false); fm.position.y = HB;

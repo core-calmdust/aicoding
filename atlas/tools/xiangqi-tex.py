@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from xqtex_lib import vnoise, fbm, smooth, mixc, save
 from xqtex_wood import wood
 from xqtex_glyph import glyph
+from xqtex_field import wood3, jade3, perimeter, n3, f3
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 OUT = os.path.join(ROOT, 'images', 'atlas', 'xiangqi3d')
 # the board (atlas/models/xiangqi.js)
@@ -110,7 +111,6 @@ def kaya_top():
     INK = np.array([24, 14, 8], np.float32)
     col = col * (1 - np.clip(ink * .94 + bleed * .3, 0, 1)[..., None]) + INK * (ink * .94)[..., None]
     rough = rough * (1 - ink) + .3 * ink; hgt += blur(ink, .8) * .12   # 盛り上げ: the lacquer stands a little
-    vg = vignette(h, w, .12); col *= vg[..., None]
     return col, mmap(h, rough, metal, hgt)
 def vignette(h, w, k):
     X, Y = np.meshgrid(np.linspace(-1, 1, w), np.linspace(-1, 1, h)); r = np.sqrt(X ** 2 + Y ** 2) / math.sqrt(2)
@@ -144,7 +144,7 @@ def planked(sp, planks, X, Y, Z, h, w, seed, along='y', end=False, joint=True, a
 
 def walnut_top():
     X, Y = coords(); h, w = X.shape
-    col = planked('walnut', WAL_PL, X, Y, np.zeros_like(X), h, w, 100)
+    col = wood3(X, Y, np.zeros_like(X), 'walnut', WALP, 100)
     rough = np.full((h, w), .5, np.float32) + (vnoise(h, w, 400, 400, 7) - .5) * .1; metal = np.zeros((h, w), np.float32); hgt = np.zeros((h, w), np.float32)
     # V grooves: a soft V in the height, the floor darker (cut fibres, shadow, old wax)
     L = lines_mask(.05, [(.14, .04)]); Wd = words_mask('楚河漢界', 'kai', .58, 7)
@@ -157,7 +157,6 @@ def walnut_top():
     for a, b in rect_segments(.42): seg(d, a, b, .065)
     for a, _ in rect_segments(.42): r = .0325 * PX * SS; x, y = P(*a); d.rectangle([x - r, y - r, x + r, y + r], fill=255)
     inlay(col, rough, metal, hgt, done(im), BRASS, .32, 11)
-    col *= vignette(h, w, .1)[..., None]
     return col, mmap(h, rough, metal, hgt)
 def wood_sides(sp, planks, seed=300, sidepl=None, endpl=None):
     """long side (left / right; length D) and end (near / far; length W) for a board whose grain runs along D"""
@@ -177,11 +176,10 @@ def side_m(img, rough, end=False):
 # ---------- 紅木 ----------
 def hongmu_top():
     X, Y = coords(); h, w = X.shape
-    col = planked('hongmu', HM_PL, X, Y, np.zeros_like(X), h, w, 200)
+    col = wood3(X, Y, np.zeros_like(X), 'hongmu', HMP, 200)
     rough = np.full((h, w), .3, np.float32); metal = np.zeros((h, w), np.float32); hgt = np.zeros((h, w), np.float32)
     L = lines_mask(.024, [(.13, .05), (.2, .016)]); Wd = words_mask('楚河汉界', 'kai', .62)
     inlay(col, rough, metal, hgt, np.clip(L + Wd, 0, 1), GOLD, .26, 21, .7)
-    col *= vignette(h, w, .12)[..., None]
     return col, mmap(h, rough, metal, hgt)
 
 # ---------- 翡翠 ----------
@@ -203,11 +201,10 @@ def jade_field(h, w, seed, dark=False):
     return col
 def jade_top():
     h, w = CH, CW
-    col = jade_field(h, w, 400)
+    X, Y = coords(); col = jade3(X, Y, np.zeros_like(X), 400)
     rough = np.full((h, w), .1, np.float32); metal = np.zeros((h, w), np.float32); hgt = (blur(fbm(h, w, 200, 200, 409, 3), 2) - .5) * .05
     L = lines_mask(.024, [(.13, .05), (.2, .016)]); Wd = words_mask('楚河漢界', 'kai', .62)
     inlay(col, rough, metal, hgt, np.clip(L + Wd, 0, 1), GOLD, .24, 41, .75)
-    col *= vignette(h, w, .1)[..., None]
     return col, mmap(h, rough, metal, hgt)
 
 # ---------- 螺鈿 ----------
@@ -218,8 +215,8 @@ def shell_field(h, w, seed):
     hue = fbm(h, w, 90, 90, seed + 7, 4) * 3 + q
     rb = np.stack([.5 + .5 * np.cos(2 * math.pi * (hue + o)) for o in (0, .33, .67)], -1)
     base = np.array([214, 220, 222], np.float32)
-    sheen = smooth(.35, .8, fbm(h, w, 60, 60, seed + 11, 3))[..., None]   # where the colour shows at all
-    col = base * (.72 + .28 * layers[..., None]) * (1 - sheen * .22 + sheen * .22 * rb) + np.array([0, 6, 10], np.float32)
+    sheen = (.35 + .65 * smooth(.3, .75, fbm(h, w, 60, 60, seed + 11, 3)))[..., None]   # where the colour shows at all
+    col = base * (.72 + .28 * layers[..., None]) * (1 - sheen * .5 + sheen * .5 * rb) + np.array([0, 6, 10], np.float32)
     return np.clip(col, 0, 255)
 def chips(mask, seed, size=14):
     """break a shell area into chips: each its own brightness and hue, dark hairline cracks between them"""
@@ -243,7 +240,7 @@ def raden_top():
     L = lines_mask(.042, [(.13, .06), (.21, .022)])
     seg_id = segment_ids(h, w, 520)
     lab, crack = chips(L, 530, 60)   # a strip is long: chips along it
-    Wd = words_mask('楚河漢界', 'kai', .62, 7); labW, crW = chips(Wd, 540, 12)
+    Wd = words_mask('楚河漢界', 'mingb', .64); labW, crW = chips(Wd, 540, 12)
     Fl = flowers_mask(); labF, crF = chips(Fl, 550, 10)
     S = np.clip(L + Wd + Fl, 0, 1)
     labs = lab + (labW + 5000) * (Wd > .3) + (labF + 9000) * (Fl > .3)
@@ -310,14 +307,67 @@ def jade_sides():
         col = jade_field(h, w, 700 + len(name)); out[name] = (col, mmap(h, np.full((h, w), .1, np.float32), np.zeros((h, w), np.float32)))
     return out
 
+# ---------- the four faces as one picture (2026-11-14 v3): far / right / near / left strips, top → bottom; see xqtex_field.perimeter ----------
+WALP = dict(cx=5.4, cz=-4.4, tx=.02, tz=.05, wob=.5)
+HMP = dict(cx=3.6, cz=-5, tx=-.04, wob=.5)
+E_RO = .06
+def perim():
+    return perimeter(W, D, E_RO, SH, 246)
+def m_side(col, rough, endk, met=None, hgt=None):
+    h, w, _ = col.shape
+    hg = (blur(col.mean(-1), .8) / 255 - .5) * (.1 + .08 * endk) if hgt is None else hgt
+    return mmap(h, rough + .12 * endk, met if met is not None else np.zeros((h, w), np.float32), hg)
+def wood_perim(sp, P, seed, rough):
+    X, Y, Z, Ek = perim(); col = wood3(X, Y, Z, sp, P, seed, Ek)
+    return {'side': (col, m_side(col, np.full(X.shape, rough, np.float32), Ek))}
+def kaya_perim():
+    """the top is the picture: the ends carry its edge rows down (柾目: the rings stand upright, so the lines run straight on down);
+       the long sides: the field's tangential face, its tone matched to the picture's edge, the round-over taken from the picture"""
+    top, _ = kaya_top(); X, Y, Z, Ek = perim(); h, w = X.shape
+    col = wood3(X, Y, Z, 'kaya', dict(cx=-24, cz=-.26, wob=.12, rwarp=.02), 31, Ek)
+    ix = np.clip((X * PX).astype(int), 0, CW - 1); iy = np.clip((Y * PX).astype(int), 0, CH - 1)
+    edgeR = {0: top[2:10].mean(0), 2: top[-10:-2].mean(0)}; edgeC = {1: top[:, -10:-2].mean(1), 3: top[:, 2:10].mean(1)}
+    hs = h // 4; dist = np.meshgrid(np.arange(w), (np.arange(h) % hs + .5) / 246)[1]
+    ro = smooth(E_RO * 1.6, E_RO * .4, dist)   # 1 on the round-over, fading out below it
+    out = col.copy()
+    for k in range(4):
+        sl = slice(k * hs, (k + 1) * hs)
+        if k in (0, 2):   # the ends: the edge row's columns, a little wobble, the end grain's dots, a shade darker
+            jit = ((n3(X[sl], Y[sl], Z[sl], .05, 1, .08, 41 + k) - .5) * 3 * PX / PX).astype(int)
+            c = edgeR[k][np.clip(ix[sl] + jit, 0, CW - 1)]
+            dots = (n3(X[sl], Y[sl] + 3, Z[sl], .006, .006, .006, 47) - .5) * .12
+            out[sl] = c * (1 + dots[..., None]) * (1 - Ek[sl][..., None] * .12)
+        else:   # the long sides: the field, scaled to the picture's tone, the picture itself on the round-over
+            ref = edgeC[k][iy[sl]]; Xs, Ys, Zs = X[sl], Y[sl], Z[sl]
+            # 柾目's long side is the tangential face of one or two rings: fibres and long soft bands along it, no figure
+            sh = 1 + (n3(Xs, Ys, Zs, .3, .5, .006, 51) - .5) * .14 + (f3(Xs, Ys, Zs, .5, 3, .05, 53, 3) - .5) * .22 + (n3(Xs, Ys, Zs, .3, 1.6, .02, 55) - .5) * .12
+            c = ref.reshape(-1, 3).mean(0) * sh[..., None]
+            out[sl] = c * (1 - ro[sl][..., None]) + ref * ro[sl][..., None]
+    return {'side': (out, m_side(out, np.full(X.shape, .5, np.float32), Ek))}
+def jade_perim():
+    X, Y, Z, Ek = perim(); col = jade3(X, Y, Z, 400)
+    return {'side': (col, mmap(X.shape[0], np.full(X.shape, .1, np.float32), np.zeros(X.shape, np.float32)))}
+def raden_perim():
+    X, Y, Z, Ek = perim(); h, w = X.shape
+    col = np.ones((h, w, 3), np.float32) * np.array([16, 12, 11], np.float32) * (.85 + .3 * f3(X, Y, Z, 1, 1, .3, 600, 3))[..., None]
+    rough = np.full((h, w), .12, np.float32); metal = np.zeros((h, w), np.float32)
+    m = ((np.abs(Z + .14) < .013) | (np.abs(Z + .4) < .013)).astype(np.float32); m = blur(m, .6)
+    sh = shell_field(h, w, 610)
+    a = X + Y   # the strips run on round the corners: a piece every ~.45
+    lab = (a / .45).astype(np.int32); R = np.random.default_rng(620); k = R.uniform(.75, 1.15, lab.max() + 2)[lab]
+    joint = np.exp(-(((a / .45) % 1) * .45 * 246) ** 2 / 1.5)
+    shc = sh * k[..., None] * (1 - joint[..., None] * .6)
+    col = col * (1 - m[..., None]) + shc * m[..., None]; rough = rough * (1 - m) + .18 * m; metal = metal * (1 - m) + .35 * m
+    return {'side': (col, mmap(h, rough, metal))}
+
 BOARDS = {}
 def board(name, top, sides):
     BOARDS[name] = (top, sides)
-board('kaya', kaya_top, lambda: {k: (v, side_m(v, .5, k == 'end')) for k, v in wood_sides('kaya', None, sidepl=dict(cx=-.45, cz=-.26, tz=0, tx=.03), endpl=dict(cx=-7, cz=-.2)).items()})
-board('walnut', walnut_top, lambda: {k: (v, side_m(v, .5, k == 'end')) for k, v in wood_sides('walnut', WAL_PL).items()})
-board('hongmu', hongmu_top, lambda: {k: (v, side_m(v, .3, k == 'end')) for k, v in wood_sides('hongmu', HM_PL).items()})
-board('raden', raden_top, raden_sides)
-board('jade', jade_top, jade_sides)
+board('kaya', kaya_top, kaya_perim)
+board('walnut', walnut_top, lambda: wood_perim('walnut', WALP, 100, .5))
+board('hongmu', hongmu_top, lambda: wood_perim('hongmu', HMP, 200, .3))
+board('raden', raden_top, raden_perim)
+board('jade', jade_top, jade_perim)
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)

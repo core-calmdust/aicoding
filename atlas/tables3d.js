@@ -203,8 +203,8 @@
       set: k => { try { const o = JSON.parse(ls.get('aicoding-peg') || '{}') || {}; o.settings = o.settings || {}; o.settings.bd = k; ls.set('aicoding-peg', JSON.stringify(o)); } catch (e) {} } },
     // shogi (atlas/models/shogi.js LOOK, 2026-11-11): 'atlas-shogi-look' — 本榧 (the default) · 蒔絵 · 新榧 · 漆黒 · 寄木細工 · 山桜
     shogi: { list: ['kaya', 'makie', 'grain', 'ink', 'yosegi', 'sakura'], get: () => { const v = ls.get('atlas-shogi-look'); return ['makie', 'grain', 'ink', 'yosegi', 'sakura'].includes(v) ? v : 'kaya'; }, set: k => ls.set('atlas-shogi-look', k) },
-    // xiangqi (atlas/models/xiangqi.js, 2026-11-14): 'atlas-xiangqi-board3' — 本榧 (the default) · ウォルナットと真鍮 · 紅木と金線 · 黒檀と螺鈿 · 朱漆と雷文 · 翡翠と金
-    xiangqi: { list: ['kaya', 'walnut', 'hongmu', 'raden', 'lacquer', 'jade'], get: () => { const v = ls.get('atlas-xiangqi-board3'); return BOARDS.xiangqi.list.includes(v) ? v : 'kaya'; }, set: k => ls.set('atlas-xiangqi-board3', k) },
+    // xiangqi (atlas/models/xiangqi.js, 2026-11-14): 'atlas-xiangqi-board3' — 朱漆と雷文 (the default) · 本榧 · ウォルナットと真鍮 · 紅木と金線 · 黒漆と螺鈿 · 翡翠と金
+    xiangqi: { list: ['lacquer', 'kaya', 'walnut', 'hongmu', 'raden', 'jade'], get: () => { const v = ls.get('atlas-xiangqi-board3'); return BOARDS.xiangqi.list.includes(v) ? v : 'lacquer'; }, set: k => ls.set('atlas-xiangqi-board3', k) },
     // checkers (atlas/models/checkers.js, 2026-11-14): 'atlas-checkers-look' — 赤と黒の大理石 (the default) · 黒漆 · アールデコ · ラピスラズリ · 金箔押しの革 · ブール象嵌
     checkers: { list: ['marble', 'lacquer', 'deco', 'lapis', 'leather', 'boulle'], get: () => { const v = ls.get('atlas-checkers-look'); return BOARDS.checkers.list.includes(v) ? v : 'marble'; }, set: k => ls.set('atlas-checkers-look', k) },
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
@@ -290,8 +290,8 @@
   } };
   X.boardName = (k, lang, id) => { const g = id && NG[id] && NG[id][k]; if (g) return g[lang] || g.en; const o = N3[k]; if (!o) return k; const n = o[lang] || o.en, c = n.replace(/\s*(?:3D|ثلاثي(?: الأبعاد)?)$/, '').trim(); return c || n; };   // (2026-11-10: the boards' names without '3D')
   // the full games' 「3D盤」 tiles: the board alone, from straight above, no room (atlas/tools/boardicon.html, 2026-11-09)
-  X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 2 : 1), ME).href;
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 2 : 1), ME).href;
+  X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   // 駒: the games whose 3D figures come in sets (the board view's panel shows them as a row under 盤; the full game's 「3D駒」 too)
@@ -299,7 +299,7 @@
   const PIECES = {
     // xiangqi (atlas/models/xiangqi.js SETS, 2026-11-14): 'atlas-xiangqi-pc3'
     xiangqi: { list: ['boxwood', 'brass', 'ebony', 'urushi', 'jade', 'porcelain'], get: () => { const v = ls.get('atlas-xiangqi-pc3'); return PIECES.xiangqi.list.includes(v) ? v : 'boxwood'; }, set: k => ls.set('atlas-xiangqi-pc3', k),
-      thumb: k => new URL('img/pc3-xiangqi-' + k + '.webp?v=2', ME).href,
+      thumb: k => new URL('img/pc3-xiangqi-' + k + '.webp?v=3', ME).href,
       names: {
         boxwood: { ja: '黄楊（つげ）', en: 'Boxwood', zh: '黄杨木', 'zh-TW': '黃楊木', ko: '회양목', es: 'Boj', fr: 'Buis', pt: 'Buxo', de: 'Buchsbaum', ru: 'Самшит', tr: 'Şimşir', id: 'Kayu boks', hi: 'बॉक्सवुड', ar: 'خشب البقس' },
         brass: { ja: '真鍮縁', en: 'Brass-rimmed', zh: '黄铜边', 'zh-TW': '黃銅邊', ko: '황동 테두리', es: 'Con aro de latón', fr: 'Cerclé de laiton', pt: 'Aro de latão', de: 'Messingrand', ru: 'В латунной оправе', tr: 'Pirinç çerçeveli', id: 'Bingkai kuningan', hi: 'पीतल की किनारी', ar: 'بإطار نحاسي' },
