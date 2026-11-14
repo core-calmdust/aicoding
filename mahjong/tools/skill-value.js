@@ -19,7 +19,7 @@ async function hand(id, seed, use) {
   bots[0].policy = use ? policy : 'never';
   for (let k = 1; k < 4; k++) bots[k].policy = 'never';
   const g = new MJGame({ agents: bots, chars: [{ skill: id }, null, null, null], rules: { skills: true }, seed });
-  g.kyoku = (r() * 4) | 0;
+  g.kyoku = 0; g.oya0 = (r() * 4) | 0;   // (a random dealer)
   g.honba = r() < .25 ? 1 : 0;
   g.kyotaku = r() < .3 ? 1000 * (1 + ((r() * 2) | 0)) : 0;
   let fired = false;

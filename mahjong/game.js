@@ -28,7 +28,9 @@ class MJGame {
     this.rand = rng(o.seed == null ? (Math.random() * 2 ** 32) >>> 0 : o.seed);
     this.scores = [0, 1, 2, 3].map(() => this.rules.start);
     this.round = 0;          // 0 East, 1 South, 2 West
-    this.kyoku = 0;          // dealer seat
+    this.kyoku = 0;          // the hand within the round (0-3)
+    // 起家 (the first dealer): drawn at random (ユーザー 2026-11-14: the player does not always start as East); o.oya fixes it
+    this.oya0 = o.oya != null ? o.oya : Math.floor(Math.random() * 4);
     this.honba = 0;
     this.kyotaku = 0;        // points on the table (riichi sticks, skill costs)
     this.skillUses = [0, 0, 0, 0];
@@ -39,9 +41,10 @@ class MJGame {
   }
 
   // ---------------------------------------------------------------- helpers
-  seatWind(s) { return WIND[(s - this.kyoku + 4) % 4]; }
+  get dealer() { return (this.oya0 + this.kyoku) % 4; }   // the dealer's seat
+  seatWind(s) { return WIND[(s - this.dealer + 4) % 4]; }
   roundWind() { return WIND[this.round]; }
-  isDealer(s) { return s === this.kyoku; }
+  isDealer(s) { return s === this.dealer; }
   liveLeft() { return this.liveEnd - this.livePos; }
   // first use in a game is free; later uses cost the skill's base, doubling each time (paid into the pot)
   skillCost(s) {
@@ -89,7 +92,7 @@ class MJGame {
     await this.emit('game-end', { scores: this.scores.slice(), rank: this.ranking() });
     return this.ranking();
   }
-  ranking() { return [0, 1, 2, 3].sort((a, b) => this.scores[b] - this.scores[a] || a - b); }
+  ranking() { const o = s => (s - this.oya0 + 4) % 4; return [0, 1, 2, 3].sort((a, b) => this.scores[b] - this.scores[a] || o(a) - o(b)); }   // (ties: the nearer to 起家 first)
 
   checkEnd() {
     if (this.scores.some(s => s < 0)) { this.over = true; return; }
@@ -133,16 +136,16 @@ class MJGame {
       seat: s, hand: [], melds: [], river: [], riichi: false, dblRiichi: false, ippatsu: false, riichiTurn: -1,
       furitenTemp: false, furitenRiichi: false, discards: new Set(), skillUsed: false, fx: {}, firstTurn: true,
     }));
-    for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) { const s = (this.kyoku + k) % 4; for (let n = 0; n < 4; n++) this.P[s].hand.push(this.draw()); }
-    for (let k = 0; k < 4; k++) { const s = (this.kyoku + k) % 4; this.P[s].hand.push(this.draw()); }
+    for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) { const s = (this.dealer + k) % 4; for (let n = 0; n < 4; n++) this.P[s].hand.push(this.draw()); }
+    for (let k = 0; k < 4; k++) { const s = (this.dealer + k) % 4; this.P[s].hand.push(this.draw()); }
     for (const p of this.P) p.hand.sort((a, b) => a - b);
     await this.emit('hand-start', { round: this.round, kyoku: this.kyoku, honba: this.honba, kyotaku: this.kyotaku, scores: this.scores.slice() });
 
-    let cur = this.kyoku;
+    let cur = this.dealer;
     // deal-time skills: each player with one decides now, in turn order from the dealer
     if (this.rules.skills) {
       for (let k = 0; k < 4; k++) {
-        const s = (this.kyoku + k) % 4;
+        const s = (this.dealer + k) % 4;
         if (!this.canSkill(s, 'deal')) continue;
         const ag = this.agents[s];
         const yes = ag.dealSkill ? await ag.dealSkill(this, s, { cost: this.skillCost(s), skill: this.skillOf(s).id, tier: this.chars[s].tier | 0 }) : false;
@@ -186,7 +189,7 @@ class MJGame {
       if (this.liveLeft() === 0) { await this.exhaustive(); return; }
       if (this.kans >= 4 && this.kanSeats.size > 1) { await this.abort('suukaikan'); return; }
       cur = (cur + 1) % 4;
-      if (cur === this.kyoku) this.firstGo = false;
+      if (cur === this.dealer) this.firstGo = false;
       drawn = this.drawFor(cur);
       this.P[cur].hand.push(drawn);
       await this.emit('draw', { seat: cur, id: drawn });
@@ -583,7 +586,7 @@ class MJGame {
       results.push({ seat: w, from, tsumo, res, moves, hand, melds: p.melds.map(m => Object.assign({}, m)), winId, ura: this.uraInds() });
     }
     for (let i = 0; i < 4; i++) delta[i] = this.scores[i] - before[i];
-    const dealerWon = winners.includes(this.kyoku);
+    const dealerWon = winners.includes(this.dealer);
     this.lastResult = { type: 'agari', renchan: dealerWon };
     if (dealerWon) this.honba++; else this.honba = 0;
     await this.emit('agari', { results, delta, scores: this.scores.slice(), dora: this.doraInds(), ura: this.uraInds() });
@@ -599,7 +602,7 @@ class MJGame {
       for (let a = 0; a < 4; a++) if (!tenpai[a]) for (let b = 0; b < 4; b++) if (tenpai[b]) this.pay(a, b, give / n);
     }
     const delta = this.scores.map((v, i) => v - before[i]);
-    const renchan = tenpai[this.kyoku];
+    const renchan = tenpai[this.dealer];
     this.lastResult = { type: 'ryuukyoku', renchan };
     this.honba++;
     await this.emit('ryuukyoku', { tenpai, delta, scores: this.scores.slice(), hands: this.P.map(p => p.hand.slice()) });
