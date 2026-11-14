@@ -220,4 +220,4 @@ Lv.9 対 Lv.10 は4勝16分0敗（Lv.9から見て）で、ほぼ互角でした
 - Lv.10 の手（データ内のランダムな局面 各300）：勝ちは最短（z 最小）、引き分けは引き分けを保つ、負けは最長、ナイン・トゥエルブとも全部。
 - トゥエルブは同じ序盤の2局がほぼ必ず先後で1勝1敗になる（引き分け9%）ため、400局でも幅が大きい。点推定は −7 だが誤差の範囲で、データは終盤の手を正しくするだけ（データ内では探索より悪い手にならない）なので、ナインと同じく採用した。
 - 対局全体の差は小さい（強いレベルどうしは引き分けが多く、駒8個以下まで進む対局が少ないため）が弱くはならず、終盤は完全になるので採用。盤上9個以上（4対5 など）は 1バイトのままだと wasm のメモリが 50MB を超えるので入れていない。
-- バージョン：`engine_simd.wasm?v=3`・`engine.wasm?v=20261114eg`（`engine.js`）、`engine_mt.wasm?v=8`、`perfect.js?v=2`、`engine.js?v=20261114eg`（`index.html`・`bench.html`・`atlas/games/morris.js`・`atlas/rules/morris.js`）、`atlas/lazy.js` の games/rules `morris.js` と `lazy.js?v=275`。
+- バージョン：`engine_simd.wasm?v=3`・`engine.wasm?v=20261114eg`（`engine.js`）、`engine_mt.wasm?v=8`、`perfect.js?v=2`、`engine.js?v=20261114eg`（`index.html`・`bench.html`・`atlas/games/morris.js`・`atlas/rules/morris.js`）、`atlas/lazy.js` の games/rules `morris.js` と `lazy.js?v=276`。
