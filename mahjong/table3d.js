@@ -153,10 +153,10 @@ function tileGeos(w, h, d, r, b, backT) {
   return { front, back: make(bk, true) };
 }
 // ---- a hand (2026-11-14, ユーザー: a slender woman's hand lays the tile down — for discards, and for chi / pon / kan; very real) ----
-// The mesh is grown offline (mahjong/tools/hand-gen.py → hand.js): flesh blended smoothly over the bones — the back of the hand,
-// the knuckles, three-jointed fingers with their webbing, nails, the narrow wrist — posed to lay a tile (index and middle
-// finger on it, the thumb at its side). Here it gets its skin (vertex colours: warmer at the fingertips), glossy nails, and a
-// dark sleeve with a gold cuff over the forearm. The rig's origin is the point the fingertips hold (the top of the tile);
+// The mesh is the "generic-hand" model of WebXR Input Profiles (MIT License, Copyright (c) 2019 Amazon — ユーザー: MIT with a credit
+// is fine), posed offline to lay a tile and baked (mahjong/tools/hand-gen.py → hand.js; the licence text is in hand.js and
+// tools/hand-src/). Here it gets its skin (vertex colours: warmer at the fingertips), glossy nails, and the sleeve of a Chinese
+// dress closing just above the wrist. The rig's origin is the point the fingertips hold (the top of the tile);
 // −z points away from the owner, +z up the arm.
 function buildHand(env) {
   const Hd = window.JANKA_HAND, rig = new THREE.Group(); if (!Hd) return rig;
@@ -164,7 +164,8 @@ function buildHand(env) {
   const q = new Uint16Array(b64(Hd.p).buffer), pos = new Float32Array(Hd.nv * 3), cb = b64(Hd.c), col = new Float32Array(Hd.nv * 3), lin = v => Math.pow(v / 255, 2.2);
   for (let i = 0; i < Hd.nv * 3; i++) { const k = i % 3; pos[i] = Hd.lo[k] + q[i] / 65535 * (Hd.hi[k] - Hd.lo[k]); col[i] = lin(cb[i]); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  g.setIndex(new THREE.BufferAttribute(new Uint16Array(b64(Hd.i).buffer), 1)); g.computeVertexNormals();
+  g.setIndex(new THREE.BufferAttribute(new Uint16Array(b64(Hd.i).buffer), 1));
+  if (Hd.n) { const nb = new Int8Array(b64(Hd.n).buffer), nr = new Float32Array(Hd.nv * 3); for (let i = 0; i < nr.length; i++) nr[i] = nb[i] / 127; g.setAttribute('normal', new THREE.BufferAttribute(nr, 3)); } else g.computeVertexNormals();
   g.addGroup(0, Hd.nail * 3, 0); g.addGroup(Hd.nail * 3, (Hd.nt - Hd.nail) * 3, 1);
   // skin: soft, with a little warmth from within (a thin red glow stands in for light passing through the flesh); nails: lacquered
   const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .56, metalness: 0, sheen: .18, sheenRoughness: .6, sheenColor: new THREE.Color(0xffd9cc), emissive: new THREE.Color(0x3a0f08), emissiveIntensity: .18, envMap: env, envMapIntensity: .2 });
@@ -191,7 +192,7 @@ function buildHand(env) {
   const band = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x14080c).convertSRGBToLinear(), roughness: .6 });
   const gold = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd9b062).convertSRGBToLinear(), roughness: .32, metalness: .85, envMap: env, envMapIntensity: .9 });
   const sl = new THREE.Group(); sl.position.set(Hd.wrist[0], Hd.wrist[1], Hd.wrist[2]); sl.rotation.x = Hd.pitch; rig.add(sl);   // from just above the wrist on up the arm
-  { const SY = .8, r0 = .8, r1 = 1.75, Ls = 15;
+  { const r0 = Hd.wr ? Hd.wr[0] * 1.1 : .8, SY = Hd.wr ? Math.min(1, Hd.wr[1] * 1.16 / r0) : .8, r1 = r0 + .95, Ls = 15;   // (the cuff fits the wrist of the model)
     const cg = new THREE.CylinderGeometry(r1, r0, Ls, 28, 1, true); cg.rotateX(PI / 2); cg.translate(0, 0, Ls / 2 + .34); const m = new THREE.Mesh(cg, cloth); m.scale.set(1, SY, 1); m.castShadow = true; sl.add(m);
     const bg = new THREE.CylinderGeometry(r0 + .02, r0 - .02, .34, 28, 1, true); bg.rotateX(PI / 2); bg.translate(0, 0, .17); const bm = new THREE.Mesh(bg, band); bm.scale.set(1, SY, 1); sl.add(bm);
     for (const z of [0, .34]) { const cuff = new THREE.Mesh(new THREE.TorusGeometry(r0 + (z ? .02 : -.02), .045, 8, 32), gold); cuff.position.z = z; cuff.scale.set(1, SY, 1); cuff.castShadow = true; sl.add(cuff); }
