@@ -806,7 +806,12 @@ async function maybeAI(tok) {
   if (tok !== busyToken) return;
   thinking = 0;
   if (res.move === undefined || res.move < 0) { renderInfo(); return; }
-  if (typeof res.v === 'number') { aiVals[cur] = res.v; }
+  if (typeof res.v === 'number') {
+    aiVals[cur] = res.v;
+    // AI同士: the analysis worker is starved while both AIs think in turn, so the playing AI's own value is the 形勢 of the
+    // position when the analysis has not given one (2026-11-14)
+    if (settings.mode === 'watch' && !evals[cur]) { const ev = evalFromList([{ v: res.v }], p); if (ev) { evals[cur] = ev; renderInfo(); } }
+  }
   if (settings.mode === 'ai' && aiResigns(p)) return;
   playMove(res.move);
   if (settings.mode === 'ai') aiMaybeOfferDraw(p);

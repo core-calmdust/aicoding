@@ -517,7 +517,7 @@ function playerName(p) {
   if (lesson) return '';
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p))}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p), p)}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
   return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
 }
@@ -741,7 +741,7 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now(), shown = moves.slice(0, cur);
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p)) });
+  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p), p) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const prevDur = cur > 0 ? moveDur(moves[cur - 1], posAt(cur - 1).pos) : 0;
   const wait = (settings.mode === 'watch' ? Math.max(700, prevDur + 120) : animating ? prevDur : 0) - (Date.now() - t0);   // AIの着手は即時：前の手のアニメが終わるのを待つだけ（観戦だけ間を取る）
@@ -749,7 +749,12 @@ async function maybeAI(tok) {
   if (tok !== busyToken) return;
   thinking = 0;
   if (!res.move) { renderInfo(); return; }
-  if (typeof res.v === 'number') { aiVals[cur] = res.v; }
+  if (typeof res.v === 'number') {
+    aiVals[cur] = res.v;
+    // AI同士: the analysis worker is starved while both AIs think in turn, so the playing AI's own value is the 形勢 of the
+    // position when the analysis has not given one (2026-11-14, as amazons)
+    if (settings.mode === 'watch' && !evals[cur]) { const ev = evalFromList([{ v: res.v }], p); if (ev) { evals[cur] = ev; renderInfo(); } }
+  }
   if (settings.mode === 'ai' && aiResigns(p)) return;
   playMove(res.move);
   if (settings.mode === 'ai') aiMaybeOfferDraw(p);
@@ -1254,8 +1259,13 @@ var PRO = PRO_L ? ProSet.init({ game: GID, lang: () => LANG, level: () => draft.
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.defThreads() : 1 }) : PRO_L.defaults,
   params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
-function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {}) : null; }
-function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
+// AI同士: the second AI has a PRO of its own beside its level (#fLevel2), as reversi / shogi (2026-11-14)
+var PRO2 = PRO_L ? ProSet.init({ game: GID + '-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
+  store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } },
+  defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.defThreads() : 1 }) : PRO_L.defaults,
+  params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
+function proCfg(lv, p) { const PRO = settings.mode === 'watch' && p !== undefined && p !== P1 && window.PRO2 ? window.PRO2 : window.PRO; if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {}) : null; }
+function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {

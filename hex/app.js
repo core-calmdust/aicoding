@@ -454,7 +454,7 @@ function playerName(p) {
   if (lesson) return '';
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p))}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p), p)}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
   return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
 }
@@ -636,14 +636,19 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now(), shown = moves.slice(0, cur);
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p)) });
+  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p), p) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const wait = (settings.mode === 'watch' ? Math.max(700, moveDur() + 120) : animating ? moveDur() : 0) - (Date.now() - t0);   // AIの着手は即時：前の手のアニメが終わるのを待つだけ（観戦だけ間を取る）
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   if (tok !== busyToken) return;
   thinking = 0;
   if (res.move === undefined || res.move < 0) { renderInfo(); return; }
-  if (typeof res.v === 'number') { aiVals[cur] = res.v; }
+  if (typeof res.v === 'number') {
+    aiVals[cur] = res.v;
+    // AI同士: the analysis worker is starved while both AIs think in turn, so the playing AI's own value is the 形勢 of the
+    // position when the analysis has not given one (2026-11-14, as amazons)
+    if (settings.mode === 'watch' && !evals[cur]) { const ev = evalFromList([{ v: res.v }], p); if (ev) { evals[cur] = ev; renderInfo(); } }
+  }
   if (settings.mode === 'ai' && aiResigns(p)) return;
   if (res.move === SWAP) toast(t('swap.aiDid'), 1800);
   playMove(res.move);
@@ -1057,10 +1062,15 @@ var PRO = window.ProSet ? ProSet.init({ game: 'hex', lang: () => LANG, level: ()
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[10]; return { limit: L.po ? { k: 'nodes', v: L.po } : { k: 'time', v: L.ms / 1000 }, threads: mtLevel(lv) ? ProSet.maxThreads() : 1, book: !!L.book, var: L.rnd ? 2 : L.temp ? 1 : 0, resign: lv >= 6 }; },   // (threads: every thread for the levels with a time limit, else one)
   params: [{ key: 'limit', kinds: { time: [0.1, 30], nodes: [10, 2000000] }, klabel: { nodes: { ja: 'プレイアウト', en: 'Playouts', zh: '模拟次数', 'zh-TW': '模擬次數', ko: '플레이아웃', es: 'Simulaciones', fr: 'Simulations', pt: 'Simulações', de: 'Simulationen', ru: 'Симуляции', tr: 'Simülasyon', id: 'Simulasi', hi: 'सिमुलेशन', ar: 'المحاكاة' } }, kunit: { nodes: { ja: '回', en: 'playouts', zh: '次', 'zh-TW': '次', ko: '회', es: 'sim.', fr: 'sim.', pt: 'sim.', de: 'Sim.', ru: 'сим.', tr: 'sim.', id: 'sim.', hi: 'बार', ar: 'مرة' } } }, { key: 'threads' }, { key: 'book' }, { key: 'var' }, { key: 'resign' }] }) : null;
-function proGet(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
-function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
-function proCfg(lv) {
-  const e = proGet(lv); if (!e) return null;
+// AI同士: the second AI has a PRO of its own beside its level (#fLevel2), as reversi / shogi (2026-11-14)
+var PRO2 = window.ProSet ? ProSet.init({ game: 'hex-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
+  store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } },
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[10]; return { limit: L.po ? { k: 'nodes', v: L.po } : { k: 'time', v: L.ms / 1000 }, threads: mtLevel(lv) ? ProSet.maxThreads() : 1, book: !!L.book, var: L.rnd ? 2 : L.temp ? 1 : 0, resign: lv >= 6 }; },   // (threads: every thread for the levels with a time limit, else one)
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], nodes: [10, 2000000] }, klabel: { nodes: { ja: 'プレイアウト', en: 'Playouts', zh: '模拟次数', 'zh-TW': '模擬次數', ko: '플레이아웃', es: 'Simulaciones', fr: 'Simulations', pt: 'Simulações', de: 'Simulationen', ru: 'Симуляции', tr: 'Simülasyon', id: 'Simulasi', hi: 'सिमुलेशन', ar: 'المحاكاة' } }, kunit: { nodes: { ja: '回', en: 'playouts', zh: '次', 'zh-TW': '次', ko: '회', es: 'sim.', fr: 'sim.', pt: 'sim.', de: 'Sim.', ru: 'сим.', tr: 'sim.', id: 'sim.', hi: 'बार', ar: 'مرة' } } }, { key: 'threads' }, { key: 'book' }, { key: 'var' }, { key: 'resign' }] }) : null;
+function proGet(lv, PRO = window.PRO) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
+function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
+function proCfg(lv, p) {
+  const e = proGet(lv, settings.mode === 'watch' && p !== undefined && p !== P1 && window.PRO2 ? window.PRO2 : window.PRO); if (!e) return null;
   const L = E.LEVELS[lv] || E.LEVELS[10], c = { must: L.must || 0 };
   if (e.limit.k === 'nodes') c.po = e.limit.v; else c.ms = Math.round(e.limit.v * 1000);
   if (e.book) c.book = 1;

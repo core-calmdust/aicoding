@@ -467,7 +467,7 @@ function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
   if (lesson || settings.mode === 'pvp') return '';
   if (settings.mode === 'online') { const g = net && net.game; return !g ? '' : !net.spectate && p === net.me ? t('you') : p === P1 ? g.wn : g.bn; }
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proCfg(levelFor(p)) ? ' PRO' : ''}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proCfg(levelFor(p), p) ? ' PRO' : ''}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
   return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proCfg(settings.level) ? ' PRO' : ''}`;
 }
@@ -501,7 +501,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   renderReview(); rvbRender();
   if (window.ChessCoach) ChessCoach.render();
-  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : proCfg(levelFor(0)) ? ' · PRO' : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
+  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : proCfg(levelFor(0), 0) ? ' · PRO' : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
 }
 // PC header bar: side to move, move number, evaluation (hidden in rated / online games), opening name
 let HB = null;   // set at boot (shared/headerbar.js)
@@ -733,7 +733,7 @@ async function maybeAI(tok) {
     const u = styleMove(E.uciSeq(moves.slice(0, cur)));
     if (u) { const pos = E.replay(null, moves.slice(0, cur)).pos; res = { move: pos.fromUci(u), book: true }; }
   }
-  if (!res) res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: levelFor(p), cfg: proCfg(levelFor(p)) });
+  if (!res) res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: levelFor(p), cfg: proCfg(levelFor(p), p) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const wait = (settings.mode === 'watch' ? 650 : animating ? moveDur() : 0) - (Date.now() - t0);   // AIの着手は即時：前の手のアニメが終わるのを待つだけ（定跡・作戦の手も同じ。観戦だけ間を取る）
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
@@ -744,6 +744,7 @@ async function maybeAI(tok) {
     if (loser) { thinking = 0; watchResign(loser); return; }
   }
   thinking = 0;
+  if (settings.mode === 'watch' && res && typeof res.v === 'number' && !evals[cur]) { const ev = evalFromList([{ v: res.v }], p); if (ev) { evals[cur] = ev; renderInfo(); } }   // AI同士: the AI's own value as the 形勢 when the analysis gave none (2026-11-14)
   if (!res.move) { renderInfo(); return; }
   aiReply = res.reply ? { key: keyOf(cur) + (cur ? ',' : '') + res.move, reply: res.reply } : null;
   playMove(res.move);
@@ -1165,8 +1166,13 @@ var PRO = window.ProSet ? ProSet.init({ game: 'chess', lang: () => LANG, level: 
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
   params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [1000, 1e8] } }, { key: 'threads' }, { key: 'ponder' },
     { key: 'book' }, { key: 'var' }, { key: 'eval' }] }) : null;
+// AI同士: the second AI has a PRO of its own beside its level (#fLevel2), as reversi / shogi (2026-11-14)
+var PRO2 = window.ProSet ? ProSet.init({ game: 'chess-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
+  store: { get: () => settings.pro, set: v => { settings.pro2 = v; } }, defaults: PRO_DEF,
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [1000, 1e8] } }, { key: 'threads' }, { key: 'ponder' },
+    { key: 'book' }, { key: 'var' }, { key: 'eval' }] }) : null;
 // the PRO level for an AI side (null: the level as it is; never in rated / online games)
-function proCfg(lv) {
+function proCfg(lv, p) { const PRO = settings.mode === 'watch' && p !== undefined && p !== P1 && window.PRO2 ? window.PRO2 : window.PRO;
   if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
   const e = PRO.get(lv); if (!e) return null;
   const L = E.LEVELS[lv] || E.LEVELS[12], c = { book: !!e.book, d: 64 };
