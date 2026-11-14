@@ -172,6 +172,66 @@ X.themes = themes;
 X.hitPips = hitPips;
 X.danceP = danceP;
 
+// ------------------------------------------------------------------ teaching commentary (2026-11-15): what the best play is FOR
+// (the plan, in strategic terms) and what a different play gives up. Language independent: [{k, a}] with template keys
+// tc.* (the plan) / tv.* (versus your play); a point is passed as a.P (the mover's own numbering) and named by the page
+// (tn.* — "the golden point", "the third point from the right of your home board", … — no point numbers needed on the board).
+const KEYPTS = [7, 6, 5, 4, 3, 8, 9];
+function nextPts(q, s) {   // rolls (of 36) on which s, on roll from q, can make a new point among the useful blocking points
+  if (!BG.contact(q)) return 0;
+  const m = s * 26, have = new Set(); for (const i of KEYPTS) if (q[m + i] >= 2) have.add(i);
+  let n = 0;
+  for (let a = 1; a <= 6; a++) for (let b = a; b <= 6; b++) {
+    const plays = BG.genPlays(q, s, a, b);
+    if (plays.some(pl => KEYPTS.some(i => !have.has(i) && pl.pos[m + i] >= 2))) n += a === b ? 1 : 2;
+  }
+  return n;
+}
+X.nextPts = nextPts;
+function teach(p, s, best, mine) {
+  const f0 = feat(p, s), FB = feat(best.pos, s), plan = [], vs = [];
+  const add = (L, k, a, w) => L.push({ k, a: a || {}, w: w || 1 });
+  const hB = hitPips(best.moves), SB = FB.contact ? shots(best.pos, s) : 0;
+  const lead = FB.opip - FB.pip;
+  if (f0.bar > 0 && FB.bar < f0.bar) add(plan, 'tc.enter', { h: f0.ohome }, 3);
+  if (hB.k) { add(plan, hB.k >= 2 ? 'tc.hit2' : 'tc.hit', { n: hB.n, k: hB.k }, 5 + hB.n / 10); if (FB.home >= 3) add(plan, 'tc.dance', { h: FB.home, d: pct(danceP(FB.home)) }, 2.6); }
+  const newPts = FB.made.filter(i => !f0.made.includes(i));
+  let bp = 0, bv = -1; for (const i of newPts) { const v = PT_VALUE[i] || 1; if (v > bv) { bv = v; bp = i; } }
+  if (bp) add(plan, bp === 5 ? 'tc.pt5' : bp === 7 ? 'tc.pt7' : bp === 4 || bp === 6 ? 'tc.ptHome' : bp <= 3 ? 'tc.ptDeep' : bp <= 12 ? 'tc.ptOuter' : bp === 20 ? 'tc.anchor20' : bp >= 19 ? 'tc.anchor' : 'tc.ptMid', { P: bp }, 3 + bv / 3);
+  if (FB.prime.len >= 3 && FB.prime.len > f0.prime.len) add(plan, FB.prime.len >= 6 ? 'tc.prime6' : 'tc.prime', { n: FB.prime.len, t: FB.trapped }, FB.prime.len);
+  if (!hB.k && f0.contact && FB.back < f0.back) add(plan, 'tc.escape', { n: f0.back - FB.back }, 3);
+  if (f0.contact && !FB.contact) add(plan, lead >= 0 ? 'tc.raceA' : 'tc.raceB', { n: Math.abs(lead) }, 4);
+  if (!f0.contact) {
+    if (FB.off > f0.off) add(plan, 'tc.off', { n: FB.off - f0.off }, 3);
+    else add(plan, 'tc.raceMove', { n: Math.abs(lead) }, 1.5);
+    if (BG.BO && BG.isBearoffPos && BG.isBearoffPos(best.pos)) { try { add(plan, 'tc.boRolls', { a: BG.boExpected(best.pos, s).toFixed(1) }, .5); } catch (e) {} }
+  }
+  if (FB.contact) {
+    if (SB === 0 && (f0.blots.length || shots(p, s) > 0 || hB.k)) add(plan, 'tc.safe0', {}, 2);
+    else if (SB >= 10) add(plan, 'tc.bold', { a: SB, ap: pct(SB / 36) }, 1.5);
+    const nb = nextPts(best.pos, s); if (nb >= 14 && !bp) add(plan, 'tc.build', { a: nb }, 1.8);
+  }
+  if (f0.maxStack >= 5 && FB.maxStack <= f0.maxStack - 2) add(plan, 'tc.unstack', {}, 1);
+  plan.sort((a, b) => b.w - a.w);
+  if (!plan.length) add(plan, 'tc.quiet', {}, 0);
+  if (mine && mine.pos && BG.key(mine.pos) !== BG.key(best.pos)) {
+    const FM = feat(mine.pos, s), hM = hitPips(mine.moves), SM = FM.contact ? shots(mine.pos, s) : 0;
+    if (hB.k > hM.k) add(vs, 'tv.noHit', {}, 5);
+    if (bp && !(FM.made.includes(bp))) add(vs, 'tv.noPoint', { P: bp }, 4);
+    const lost = f0.made.filter(i => !FM.made.includes(i) && FB.made.includes(i) && (PT_VALUE[i] || 0) >= 4);
+    if (lost.length) add(vs, 'tv.broke', { P: lost[0] }, 3.5);
+    if (FM.contact && SM - SB >= 3) add(vs, SB === 0 ? 'tv.shots0' : 'tv.shots', { a: SM, b: SB, ap: pct(SM / 36), bp: pct(SB / 36) }, 3 + (SM - SB) / 4);
+    if (f0.contact && FB.back < FM.back && !hB.k) add(vs, 'tv.stuck', {}, 2.5);
+    if (FM.contact && FB.contact) { const nb = nextPts(best.pos, s), nm = nextPts(mine.pos, s); if (nb - nm >= 5) add(vs, 'tv.build', { a: nb, b: nm }, 2); }
+    if (FM.maxStack >= 6 && FB.maxStack < FM.maxStack) add(vs, 'tv.stack', { n: FM.maxStack }, 1.5);
+    if (!FB.contact && FB.off > FM.off) add(vs, 'tv.off', { n: FB.off - FM.off }, 2);
+    vs.sort((a, b) => b.w - a.w);
+    if (!vs.length) add(vs, 'tv.close', {}, 0);
+  }
+  return { plan: plan.slice(0, 3), vs: vs.slice(0, 2), sit: situation(p, s) };
+}
+X.teach = teach;
+
 if (typeof module !== 'undefined' && module.exports) module.exports = X;
 root.BGX = X;
 })(typeof self !== 'undefined' ? self : this);

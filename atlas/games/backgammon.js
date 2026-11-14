@@ -15,7 +15,7 @@
 (function () {
   'use strict';
   /* ================= table play (ちゃぶ台で遊ぶ) ================= */
-  const BASE = '../backgammon/', BV = '20261111c1';   // same files (and cache keys) as the full game
+  const BASE = '../backgammon/', BV = '20261115p';   // same files (and cache keys) as the full game
   let bgLoad = null;
   function loadBG() {   // the game's rules on the main thread (legal moves, pips, winner) — window.BG
     if (window.BG && window.BG.genPlays) return Promise.resolve();
@@ -54,6 +54,7 @@
     const L = Object.assign({}, TX.en, TX[ctx.lang] || {}, PV.en, PV[ctx.lang] || {}, { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') });
     const SFX = (window.AtlasRules && AtlasRules.backgammon && AtlasRules.backgammon.SFX) || NOSFX;
     const level = Math.max(1, Math.min(10, +ctx.level || 6)), PVP = ctx.mode === 'pvp';   // pvp: two players on this device (no AI)
+    const PZ = ctx.pz || null;   // a puzzle / lesson position driven by atlas/puzzles.js · lessons3d.js (no AI, no roll: the dice are given; ctx.pz.step / moved judge)
     // the game's saved look and checker colours (backgammon/app.js settings, the skin's board-design choice)
     let look = 'marq', ck = ['gold', 'black'];
     try {
@@ -276,6 +277,11 @@
     }
     function afterStep() {
       if (stopped || !T) return;
+      if (PZ && T.steps.length && T.pzReport !== T.steps.length) {   // (puzzles / lessons: each step goes to the caller — an obvious mistake stops the play there)
+        T.pzReport = T.steps.length; pzClear();
+        if (PZ.step && PZ.step({ pos: T.pos.slice(), left: T.left.slice(), steps: T.steps.map(x => x.code), used: T.steps.length, dice: T.dice.slice(), side: T.side }) === false) { phase = 'lock'; clearMarks(); return; }
+      }
+      if (PZ && !legalNow().length) { const T0 = T; phase = 'lock'; clearMarks(); later(() => { if (T === T0 && PZ.moved) PZ.moved({ key: BG.key(T0.pos), steps: T0.steps.map(x => x.code), pos: T0.pos.slice() }); }, 260); return; }
       const srcs = legalNow().length ? showSources() : (clearMarks(), []);
       if (!srcs.length) { hud(); return; }
       if (srcs.length === 1) select(srcs[0]); else say(L.tapCk);
@@ -422,7 +428,7 @@
     }
     const placeLater = () => { placeBub(); placeBB(); later(() => { placeBub(); placeBB(); }, 520); };
     addEventListener('resize', placeLater);
-    function say(m) { msg = m || ''; hud(); }
+    function say(m) { msg = PZ ? '' : m || ''; hud(); }
     function hud() {
       if (stopped) return;
       const P = T ? T.pos : pos, pips = s => P && window.BG ? BG.pips(P, s) : 167;
@@ -495,12 +501,13 @@
 
     /* ---------- go ---------- */
     ready = true;
-    setBoard();
+    if (!PZ) setBoard();
     const cube = M3.cube(64); cube.position.set(g.BX + g.B / 2 - W2, M3.FY + M3.RH + .43, 0); cube.rotation.y = .1; board.add(cube); T3.kick(400);   // decoration: no doubling in table play
     say('');
     (async () => {
       try { await loadBG(); } catch (e) { say('…'); return; }
       if (stopped) return;
+      if (PZ) { pzBoot(); return; }
       if (!PVP) ask({ type: 'eval', pos: Array.from(BG.initial()), side: 0 });   // starts the worker now: nets + bear-off database load while you roll
       pos = BG.initial(); seed = BG.randomSeed(); stream = new BG.DiceStream(seed, 0); hud();
       await sleep(900 + 30 * 14);
@@ -543,8 +550,88 @@
       if (PVP) { const wt = L.winC.replace('{c}', cname(w)); say(wt); return ctx.onEnd({ win: false, draw: false, level, score: t('act.pvpEnd', { p: cname(loser), r, w: wt }) + ' · ' + kt, pvp: true, winnerText: wt }); }
       say(L.lose + ' · ' + r); ctx.onEnd({ win: false, draw: false, level, score: r + ' · ' + kt });
     }
+
+    /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-14): a position and a roll from backgammon/puzzles.json · lessons.json ·
+       openings.json; you play side 0 (the caller turns a side-1 problem round). Each step goes to ctx.pz.step (return false: an
+       obvious mistake — the play stops there); the finished play to ctx.pz.moved({ key, steps, pos }). No AI, no roll button.
+       Marks: rings on the checkers to move, arrows of a play (codes as backgammon/bg.js apply() returns them) from the start. ---------- */
+    const decPos = str => { const q = new Int8Array(52); for (let i = 0; i < 52; i++) q[i] = parseInt(String(str)[i], 16) || 0; return q; };
+    let pzJob = 0;
+    const pzMk = new TH.Group(); board.add(pzMk);
+    const PZC = { ok: 0x2fd17a, ng: 0xff3b30, hl: 0xffb21a, ring: 0x2fa8ff };   // (the hint's rings blue: the movable checkers already wear gold ones)
+    function pzClear() { pzMk.children.slice().forEach(o => { if (o.geometry && o.userData.own) o.geometry.dispose(); pzMk.remove(o); }); T3.kick(150); }
+    function pzLoad(o) {
+      o = o || {}; PZ.cur = o; const j = ++pzJob;
+      timers.forEach(clearTimeout); timers = []; hintPlay = null; hintJ++; drop(); clearMarks(); pzClear(); clearDice(); busy = false; over = false; sel = null; dests = null;
+      pos = typeof o.pos === 'string' ? decPos(o.pos) : Int8Array.from(o.pos || BG.initial()); T = null; phase = 'lock'; toMove = 0;
+      rebuildCks();
+      const d = o.dice && o.dice.length === 2 ? o.dice.slice() : null;
+      (async () => {
+        if (d) { await rollFor(0, d); if (stopped || j !== pzJob) return;
+          T = { side: 0, dice: d, left: d[0] === d[1] ? [d[0], d[0], d[0], d[0]] : d.slice(), steps: [], pos: pos.slice(), start: pos.slice(), plays: BG.genPlays(pos, 0, d[0], d[1]) }; }
+        else { await sleep(300); if (stopped || j !== pzJob) return; }   // (no roll: still after the caller has set itself up)
+        hud(); if (PZ.ready) PZ.ready();
+      })();
+    }
+    function pzWait() { if (!T || PZ.cur && PZ.cur.lock) return; T.pzReport = T.steps.length; phase = 'move'; afterStep(); }
+    function pzReset() {   // back to the start of the roll (the checkers as they were, every die unused)
+      if (!T) return; hintJ++; drop(); clearMarks();
+      pos = T.start.slice(); T.pos = T.start.slice(); T.steps = []; T.left = T.dice[0] === T.dice[1] ? [T.dice[0], T.dice[0], T.dice[0], T.dice[0]] : T.dice.slice(); T.pzReport = 0;
+      rebuildCks(); dimDice(T.left); phase = 'lock'; T3.kick(300);
+    }
+    async function pzPlay(codes) {   // a play shown for you (the answer, a study line): one checker after another
+      if (!T) return false; phase = 'lock'; busy = true; drop(); clearMarks();
+      for (const c of codes) {
+        if (stopped || !T) return false;
+        const from = BG.mvFrom(c), to = BG.mvTo(c), die = from - to;
+        await stepAnim(0, from, to, false); if (stopped || !T) return false;
+        const q = T.pos.slice(), code = BG.apply(q, 0, from, to); T.pos = q; T.steps.push({ code, die, from, to, hit: BG.mvHit(code) });
+        let i = T.left.indexOf(die); if (i < 0) i = T.left.indexOf(Math.min(...T.left.filter(v => v > die))); if (i >= 0) T.left.splice(i, 1);
+        dimDice(T.left); await sleep(180);
+      }
+      busy = false; T.pzReport = T.steps.length; pos = T.pos.slice(); return true;
+    }
+    function ptXZ(p, q) {   // where engine point p (side 0) is on the board: the middle of its stack (the bar, the tray too)
+      const at = locOf(0, p); if (p === 25) return [g.BX + g.B / 2 - W2, g.MID - 1.6 - H2];
+      if (p === 0) return [g.TX + g.TW / 2 - W2, g.BOT - 1.4 - H2];
+      const n = Math.max(1, (q || pos)[p] || 1), [x, z] = stackXZ(at, Math.min(n - 1, 2), Math.max(n, 3)); return [x, z];
+    }
+    function pzArrow(a, b, col, lift) {
+      const mat = new TH.MeshBasicMaterial({ color: col, transparent: true, opacity: .92, toneMapped: false, depthWrite: false });
+      const [ax, az] = a, [bx, bz] = b, dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz); if (len < .05) return;
+      const ang = Math.atan2(dx, dz), head = .5, L = Math.max(.05, len - head - .1), y = Y + M3.CK_H * 3 + .06 + (lift || 0);
+      const sg = new TH.BoxGeometry(.18, .012, L), sh = new TH.Mesh(sg, mat); sh.userData.own = true; sh.position.set(ax + Math.sin(ang) * L / 2, y, az + Math.cos(ang) * L / 2); sh.rotation.y = ang; sh.renderOrder = 6; pzMk.add(sh);
+      const tri = new TH.Shape(); tri.moveTo(-.3, 0); tri.lineTo(.3, 0); tri.lineTo(0, head); tri.lineTo(-.3, 0);
+      const hg = new TH.ShapeGeometry(tri); hg.rotateX(-Math.PI / 2); hg.rotateY(Math.PI);
+      const hm = new TH.Mesh(hg, mat); hm.userData.own = true; hm.position.set(ax + Math.sin(ang) * L, y + .004, az + Math.cos(ang) * L); hm.rotation.y = ang; hm.renderOrder = 6; pzMk.add(hm);
+    }
+    // marks: null clears · [{ from: point, cls }] rings on the checkers to move · { play: [codes], cls: 'ok' | 'ng' } a play's arrows ·
+    // { pt: point, cls } a point lit
+    function pzMark0(e) { const c = topOf(0, locOf(0, e.from)); if (c) { const r = ring(c.m.position.x, c.m.position.y + M3.CK_H + .04, c.m.position.z, PZC[e.cls] != null ? PZC[e.cls] : PZC.ring); pzMk.add(r); popIn(r, 1.25); } }   // (in the puzzle's own group: the play's rings and glows come and go without them)
+    function pzMark(list) {
+      pzClear(); if (!list) return;
+      const start = T ? T.start : pos;
+      const dec = m => { const q = start.slice(), out = []; for (let i = 0; i + 1 < m.length; i += 2) out.push(BG.apply(q, 0, m.charCodeAt(i) - 65, m.charCodeAt(i + 1) - 65)); return out; };   // (a play as the json writes it: letter pairs from → to)
+      for (let e of [].concat(list)) {
+        if (!e) continue;
+        if (typeof e.m === 'string') e = Object.assign({}, e, { play: dec(e.m) });
+        if (typeof e.froms === 'string') { [...new Set(dec(e.froms).map(c => BG.mvFrom(c)))].forEach(f => pzMark0({ from: f, cls: e.cls })); continue; }
+        const col = PZC[e.cls] != null ? PZC[e.cls] : PZC.ring;
+        if (e.play) { const q = start.slice(); e.play.forEach((c, i) => { const f = BG.mvFrom(c), t2 = BG.mvTo(c), a = ptXZ(f, q); BG.apply(q, 0, f, t2); pzArrow(a, ptXZ(t2, q), col, (e.cls === 'ng' ? .03 : 0) + i * .004); }); continue; }
+        if (e.from != null) { pzMark0(e); continue; }
+        if (e.pt != null && e.pt > 0 && e.pt < 25) pzMk.add(glowPt(locOf(0, e.pt), col, .5));
+      }
+      T3.kick(400);
+    }
+    function pzBoot() { if (PZ.bg) pzLoad(PZ.bg); else { pos = BG.initial(); rebuildCks(); hud(); if (PZ.ready) PZ.ready(); } }
+    const pzApi = {
+      load: o => pzLoad(o), wait: pzWait, lock() { phase = 'lock'; clearMarks(); }, reset: pzReset, play: pzPlay, mark: pzMark,
+      pos: () => (T ? T.pos : pos) ? Array.from(T ? T.pos : pos) : null, start: () => T ? Array.from(T.start) : pos ? Array.from(pos) : null,
+      turn: () => T ? { dice: T.dice.slice(), left: T.left.slice(), steps: T.steps.map(x => x.code) } : null,
+      moves: () => T ? T.steps.map(x => x.code) : [], undo: () => pzReset(), state: () => ({ over: false, n: T ? T.steps.length : 0 }),
+    };
     const api = {
-      human: 0,
+      human: 0, pz: PZ ? pzApi : null,
       // 待った (the bar): when it is your turn to roll, the whole last turn pair (yours + the AI's) goes back; you play that roll again
       // (also right after a roll, before any step: one more turn pair back)
       canUndo: () => !stopped && !over && !busy && (PVP || toMove === 0) && (phase === 'roll' ? hist.length > 0 : phase === 'move' && !!T && !T.steps.length && hist.length > 1),

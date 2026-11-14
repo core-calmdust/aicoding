@@ -85,7 +85,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | チェッカー（`checkers/`） | C（wasm、NNUE・終盤DB） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
 | タフル（`tafl/`） | C（wasm、NNUE） | **YBW**（3、busy marks なし） | mtengine・**praline（移行済み）**・proset・ponder |
 | モリス（`morris/`） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
-| ファノロナ（`fanorona/`、アルケルケは1スレッド） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
+| ファノロナ（`fanorona/`、アルケルケも 2026-11-14 から） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
 | リバーシ（`reversi/`） | C（wasm）＋JS | **YBW**（中盤は深さ5、読み切りは12マス）＋10スレッドより先は Lazy SMP（2026-11-13、v5。busy marks は入れたが効かず既定でなし）。v6（同日）：表で ALL 節と分かる中盤の節（残り深さ7以上）は最初の手を待たずに分ける | mtengine・**praline（2026-11-13、分割点256個・`PL_NO_VALS`・`PL_MT_SPLIT`）**・proset・ponder |
 | 将棋（`shogi/`） | C（wasm、NNUE） | **YBW**（4）＋busy marks＋10スレッドより先は Lazy SMP（`YBW_MAX`） | mtengine・**praline（移行済み、`PL_VAL` double・読み筋・`PL_IDLE_HOOK`）**・proset・ponder |
 | チェス（`chess/`） | C（wasm、NNUE） | **YBW**（6、予想カット節も）＋busy marks＋10スレッドより先は Lazy SMP（2026-11-12、v3。前は YBW 1＋Lazy SMP） | mtengine・**praline（移行済み、読み筋・カットの印・`PL_MT_SPLIT`）**・proset・ponder |
@@ -95,7 +95,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | ウゴルキ（`ugolki/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
 | アゴン（`agon/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
 | コナネ（`konane/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
-| マンカラ | **C（wasm、2026-11-11）**：探索・評価・置換表（`engine.c`、SIMD 版となし版） | 各 Worker が自分の置換表でルートの手と本筋を分担（YBW。C では Lazy SMP は使わない） | mtsplit・proset（`claude/mancala-spec.md`） |
+| マンカラ（`mancala/`） | **C（wasm、2026-11-11）**：探索・評価・置換表（`engine.c`） | **YBW**（3、2026-11-14 から `engine_mt.wasm`・共有の置換表。分離できないページは mtsplit） | mtengine・**praline（2026-11-14）**・mtsplit・proset |
 | コネクトフォー | JS | 列ごとの完全読み（共有の置換表） | mtsplit＋`connect4/mt.js` |
 | ドット＆ボックス | JS＋wasm（5×5） | 手の分担（共有の置換表）・補助 Worker | mtworkers（共有モード）・wasm `dots5mt.wasm` |
 | ウル（`ur/`） | **C（wasm、2026-11-11）**：期待値の探索と評価ネット（`engine.c`、SIMD 版となし版） | 独立な仕事の配り分け（手 × 出目、全コア。各 Worker が C） | mtworkers（`claude/ur-spec.md`） |
@@ -377,17 +377,42 @@ Many cores (nuts) held together by shared memory (caramel).
 - 決めること：初期局面の作り方（ゲームごと）、1局の時間か局面数か（端末の速さに左右されない局面数が基本）、結果の書式（MODEL_CARD にそのまま貼れる形）。
 - 外部の強いソフトを物差しにするとき（リバーシは Edax、将棋は Gikou、シャンチーは Pikafish）は、作業機で使うだけでサイトには入れない（ライセンス）。
 
+- **（2026-11-14 実装）`shared/tools/match.js`**：設定 A 対 B を局面数の予算で、乱数の序盤（弱いレベルで4〜8手）を先後入れ替えて2局ずつ。B の勝敗・得点率・Elo と95%区間、MODEL_CARD／spec に貼る1行（表の行）を出す。`--a <nk>[@フォルダ]`・`--b …`：フォルダ（`git worktree` で作った前のコミットなど）を変えると、同じ予算でエンジンの変更（評価・探索）を比べられる。対応：ugolki・agon・konane・fanorona・alquerque・mancala（`--rule`）。ゲームは adapter（load(フォルダ)→think(局面, nk)、open／over／play）を足して増やす。`shared/tools/nodematch.js` は前のまま（ugolki・agon・konane の最上位レベルの刻みを測った道具）。
+
 ### ② 「黙って無効になる」事故の検出
 - リバーシで、初期化の順番の間違い（定数を使う場所より後ろで宣言）が `catch` に飲まれ、**wasm が黙って無効になり JavaScript の探索に落ちていた**。画面は普通に動くので気づきにくい（気づいたのは「終局まで読む」が発動しないテスト）。
 - 同じ形（`try { wasm の用意 } catch { 使わない }`）は各ゲームの `engine.js`・`shared/mtengine.js` にある。**「wasm が有効か」「マルチスレッドが有効か（分離・スレッド数）」を1か所で確かめられる**ようにする。
   - 案：各エンジンが状態（wasm の有無・スレッド数・落ちた理由）を返す共通の口を持ち、`bench.html`／`bench-all.html` と headless Chrome の確認（§5）でそれを見る。落ちた理由は `console.warn` に出す（握りつぶさない）。
   - §5 の「headless Chrome で確認」に「wasm とスレッドが有効なこと」を加える。
 
+- **（2026-11-14 実装）マルチスレッドの組**：`shared/mtengine.js` の組が失敗した理由（wasm の読み込み・lead／helper の起動・止まらない helper など）を覚え、`MTEngine.status(true)`（分離・スレッドのオン／オフ・各組の動作と理由、まだ作っていない組は作って待つ）で返す。分離されたページは外から読めないので、同じオリジンからの `postMessage({ type: 'mtengine-status' })` にも答える。点検ページ **`engine-health.html`**（リポジトリ直下、noindex）：mtengine.js を使う20ゲームのページを1つずつ裏の iframe で開き、分離・スレッド・組（wasm）・スレッド数・失敗の理由を一覧にする。headless Chrome（作業機2コア）で20ゲームすべて「分離○・オン・組が動作」（dots・connect4 は mtsplit のみで組なし）。
+- **（2026-11-15 実装）1スレッドの Worker のコア**：エンジンは変えずに外から見る形にした。`?health=1` のページでだけ、`shared/mtengine.js` がページの Worker（`&mt=1`・`mt-helper` 以外、同じオリジンのクラシック Worker）を **`shared/corestat.js?u=<エンジン>`** 経由で起動する。corestat.js は `location`・相対の `fetch`／`importScripts` をエンジンの場所に合わせてからエンジンを読み込み、作られた WebAssembly のモジュール（元の .wasm の名前・共有メモリか）と失敗（例外・読み込みエラー）を BroadcastChannel `corestat` でページに知らせる。`MTEngine.status()` の `workers` に入り、`engine-health.html` の「1スレッドの worker（コア）」列に「wasm（ファイル名）／JS（wasm 失敗）＋理由／JS（wasm を読まない／まだ）」で出る。headless Chrome（2026-11-15）：20ゲームとも本体の Worker は wasm（SIMD 版のあるゲームは SIMD 版）。JS のままなのは wasm を持たない connect4、dots の初回に読まない Worker、リバーシの mt-worker.js（mtsplit の補助）。
+
 ### ③ 時間を区切った追加の読み切り（共通の型）
 - リバーシの `tryMs`：通常の読みが終わった後、**決めた時間の中だけ**一段深い読み切りを試し、間に合わなければ結果を捨てて通常の手を使う。端末ごとの上限（遅い端末では試さない）つき。考える時間の上限は変えない（「強化で思考時間を増やさない」の約束を守る形）。
 - 同じ型が使えそうな所：将棋・チェスの詰み探索、チェッカー・モリス・ファノロナの終盤の読み切り。
 - 共通にするなら `shared/proset.js`（思考の制限）か `shared/mtengine.js` の `run` のまわりに「時間つきの試し読み（中止できる・結果は捨てられる）」を置く。マルチスレッドでは、試し読みを補助スレッドに回して主スレッドの結果を待たせない形も考えられる。
 
+- **（2026-11-15 検討、見送り）チェッカー・モリス・ファノロナ**：3つとも終盤の表（チェッカー `egdb4`、モリス `perfect.js`／engine.c の表、ファノロナ `egdb.bin`）を探索の中で引き、勝ち負けの決まった値（`WINT` を超える値）も通常の反復深化で出る。リバーシのように「通常の読み（深さで止まる）と別の、ずっと速い読み切り」がないので、追加の読み切りは同じ探索をもう一段深く読むのと同じになる。上位レベル（四段・五段）はもともと時間いっぱいまで反復深化するので、時間を増やさずに足す余地がない。局面数で決める初段〜三段は時間の上限まで余るが、そこで読み足すとレベルの強さの刻み（`MODEL_CARD.md`「レベルの測り直し」）が崩れる。よって入れない（強さを上げるなら、終盤の表を大きくするか評価を良くする方が筋）。
+
 ### 流用しなかったもの（記録）
 - 置換表のバケット化（4項目）、読み切りの手の並べ方、評価の先後の偏りの調査は、リバーシの中身なので共通化の対象外。
 - マルチスレッド版の置換表を大きくしても局面数は減らなかった（リバーシ、`TT_LOG_MAX` 22 は不採用）。ほかのゲームで置換表を大きくするときも、先に局面数で確かめる。
+
+## Zobrist の鍵（2026-11-14、全ゲームの点検）
+- **問題**：多くのゲームが鍵を「xorshift32 の出力を2つずつ（Z1, Z2）」で作っていた。xorshift は GF(2) 上の線形写像なので Z2 = M·Z1（M は固定の行列）になり、64ビットの鍵 (h1, h2) は h1 だけで決まる＝**実質32ビット**（500項目の鍵の GF(2) の階数が 32。fmix をかけると 64）。置換表の添字は h1 の下位ビットなので、添字の一致した別の局面が鍵まで一致する確率が 2^-(32−添字ビット)（例：2^21 項目で 1/2048）。マンカラでは1局面の読み切りで別局面の同じ鍵が約150回、読み切りの値が狂った（`claude/mancala-spec.md`）。
+- **直し**：xorshift の出力に murmur3 の fmix32 をかける（種・順は同じ）。JS と C が同じ鍵を使うゲームは両方。
+  - 本番の探索の置換表がこの鍵だったもの：マンカラ（2026-11-14 #2295）、モリス（`engine.c` の `rnd`＝C の置換表、`engine.js` も）、アマゾンズ（`core.c` の `ZR`、`engine.js` も）、ウゴルキ・アゴン・コナネ（`engine.js` の鍵を `core.c` に渡す）、五目並べ（`engine.js` の鍵と VCF の表のタグを `core.c` に渡す）。将棋（2026-11-14、別の作業で splitmix64）、ドット＆ボックス（splitmix32）は対応済みだった。
+  - JS で読むとき・mtsplit の共有の表・繰り返しの判定だけで使う鍵（C のエンジンは自分の64ビットの鍵）：チェス・チェッカー・シャンチー・チャンギ・タフルの `engine.js` も同じ直し。
+  - 対象外：64ビットの状態の生成器（xorshift64・xorshift64*・splitmix64）で鍵を作る C のエンジン（チェス・チェッカー・シャンチー・チャンギ・タフル・ファノロナ・リバーシ・ヘックス）。
+  - 新しいエンジンの鍵は splitmix64 か、xorshift なら出力に fmix をかける（生の xorshift32 の出力2つで64ビットの鍵を作らない）。
+- **確認**：アマゾンズ・アゴンの `tools/check_wasm.js`（JS と wasm）は差 0 のまま、ウゴルキ・コナネの差は直す前と同じ件数（前からある時間で決まるレベルの差）。モリスは `engine.wasm` と `engine_simd.wasm` の結果の md5 が一致。強さ：ウゴルキの前の版との対戦（3万局面同士 120局）−35 Elo（95%: −96〜+24、差なし）。深さ・局面数で決めるレベルの手は表の当たり方が変わるので、まれに前と違う手になる。各ゲームの `engine.js?v=…-zf1`・wasm・`atlas/lazy.js` の版を上げた。
+
+## 1スレッドの wasm の SIMD 版（2026-11-15、測って決めた）
+- SIMD 版がなかったウゴルキ・アゴン・コナネを -msimd128 で作り、同じ局面数の探索（Lv.17・18、12局面、交互に6回）の時間で比べた：コナネ ×1.11〜1.18（採用、`claude/konane-spec.md`）、ウゴルキ ×1.04〜1.06、アゴン ×0.99（不採用：SIMD なし版も持つと読み込みが2倍になる割に効果が小さい）。結果（手・値・局面数）はどれも SIMD あり／なしで同じ。リバーシ（`engine.wasm`）・アマゾンズ（`AMZ_WASM`）は前から SIMD。
+
+## 共有の置換表を共通部品に（2026-11-15、`shared/praline/praline_tt.h`）
+- §「共通にしなかったもの」④の残り。各ゲームが 2026-11-09 の点検のあと別々に書いた「バケット＋XOR 照合（lockless）」の表を1つのヘッダにした。ヘッダは**見つける・書く場所を選ぶ・書く**だけ：`plttFind(key, idx, &w, &c)`（項目の語を返す）、`plttSlot(key, idx, &hit, &w, &c)`（同じ鍵の項目、なければ `PL_TT_SCORE` のいちばん低い項目）、`plttWrite(e, key, w, c)`（`e[0] = key ^ w (^ c)` を最後に）。詰め方（値・手・深さ・境界・年齢）と置き換えの点数はゲームが `PL_TT_USED(w, c)`・`PL_TT_SCORE(w, c)` で決める。各語は1回だけ読み（`PL_TT_RD`）1回だけ書く（`PL_TT_WR`）ので、`tools/mtsim/gen.py` はこの2つを同時実行のシミュレーションの共有の読み書きに置き換える（ゲームごとの `bk[…]` の書き換えはやめた。シャンチー・チェス・タフルで生成・コンパイル・実行を確認。将棋の gen.py は前から別の所で止まる）。項目は2語（`{ key ^ w, w }`）か3語（`{ key ^ w ^ c, w, c }`、`PL_TT_WORDS 3`）、バケットの項目数 `PL_TT_WAYS`（既定4）、鍵と添字は別（モリス・将棋は鍵の片方で引く）。
+- 移したもの（`-DMT` の部分だけ）：シャンチー・チャンギ・タフル・モリス・チェス・将棋（2語×4）、ファノロナ（3語×4）、チェッカー（3語×2）。**照合**：各ゲームの engine.c を同じ clang で前後とも作り、`engine_mt.wasm` を Node で1スレッド（主スレッドだけ、共有メモリ）にして、局面数で決める探索を自己対局で 40〜104 回続けた全出力（手・値・深さ・局面数）の md5 が前後で一致。wasm のバイト列は少し変わる（関数の形が変わるため）が、探索は同じ。
+- サイトの `engine_mt.wasm` は作り直していない（中身が同じなので、次にそのゲームの wasm を作るときに新しいソースから作られる）。
+- 移していないもの：リバーシ（16ビットの照合の別の形）、マンカラ（1項目の組 `{k, w}`、32ビットの鍵）、アマゾンズ・五目並べ・ヘックス（それぞれ別の形）、ウゴルキ・アゴン・コナネ（JS 側の鍵と別の表）。新しいエンジンは `praline_tt.h` を使う。

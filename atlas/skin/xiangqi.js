@@ -29,7 +29,8 @@
   let bd3 = true, pc3 = true;
   try { const v = localStorage.getItem(LK); if (v === '2d') bd3 = pc3 = false; else if (v === '3d2') pc3 = false; } catch (e) {}
 
-  const root = T3.MODELS.xiangqi(true), U = root.userData, Y = U.top, u = U.u;
+  let root = T3.MODELS.xiangqi(true), U = root.userData, Y = U.top;   // (a new board when the 3D look changes: rebuild3())
+  const u = U.u;
   const RD = 10 * u, OUT = U.D / RD;   // the field = the DOM board (9 × 10 cells); the whole board is OUT times its height
 
   // skin styles (after AtlasSkin's light-theme conversion, so they stay as written)
@@ -58,6 +59,12 @@ html.atlas-xiangqi .bdrow{grid-template-columns:repeat(6,minmax(0,1fr))!importan
 html.atlas-xiangqi .bdrow.pcrow{grid-template-columns:repeat(5,minmax(0,1fr))!important}
 html.atlas-xiangqi .bdrow button:disabled{opacity:.4;cursor:default}
 html.atlas-xiangqi .side{align-self:start!important}
+html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f6f1e4;border:2px solid #e2cf9e}
+html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#7a5a1c;margin:0 0 8px}
+html.atlas-skin #f3D > label.pc3l{margin-top:12px}
+html.atlas-skin #f3D .bdrow{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:8px}
+html.atlas-skin #f3D .bdrow.pc3 button img{aspect-ratio:3/2;background:radial-gradient(80% 80% at 50% 40%,#6a5e52,#2a231d);padding:4%;box-sizing:border-box}
 @media (max-width: 520px){html.atlas-xiangqi .bdrow{gap:3px!important}html.atlas-xiangqi .bdrow button{font-size:9.5px!important}}`;
   document.head.appendChild(css);
 
@@ -71,8 +78,10 @@ html.atlas-xiangqi .side{align-self:start!important}
     skip: '\\.pc|\\.ch|\\.ic|lines|fnum|reserve|\\.rv|sqfx|dest|\\.hov|\\.mark|fxsvg|hintlbl|frame',
     start(lv, side, mode) {
       if (typeof openNewDialog !== 'function' || typeof draft !== 'object' || typeof segSync !== 'function' || !document.getElementById('btnStart')) return null;
+      // the portal's card: straight to the puzzles / the lessons / the online match search (xiangqi/app.js AtlasDeep, 2026-11-14)
+      if (/^(puzzle|lesson|online)$/.test(mode)) { if (!window.AtlasDeep) return null; const q = new URLSearchParams(location.search); return AtlasDeep(mode, q.get('sub'), q.get('tc')); }
       openNewDialog();
-      draft.mode = mode === 'pvp' ? 'pvp' : 'ai';
+      draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (side === 1 || side === 2) draft.color = side;
       if (lv >= 1 && lv <= 20) draft.level = lv;
       segSync(); document.getElementById('btnStart').click();
@@ -90,6 +99,17 @@ html.atlas-xiangqi .side{align-self:start!important}
 
   /* ---------- 3D pieces mirrored from the page's piece elements ---------- */
   const group = new THREE.Group(); root.add(group);
+  // a new 3D look (the board) or set (the pieces): the board is built again, the pieces made again in the chosen set
+  function rebuild3() {
+    const look = T3.BOARDS && T3.BOARDS.xiangqi ? T3.BOARDS.xiangqi.get() : null;
+    if (look && look !== U.look) {
+      root.remove(group); root = T3.MODELS.xiangqi(true, look); U = root.userData; Y = U.top; root.add(group);
+      T3.show('xiangqi', root, { still: true }); skin.alignTo(RD, Y); dispatchEvent(new Event('resize'));
+    }
+    for (const [, o] of map) drop(o); map.clear();
+    try { mirror(); } catch (e) {}
+    T3.kick(600);
+  }
   const map = new Map();   // DOM piece element → { g, code, i, f }
   const H = u * .27;       // disc height
   const isFlip = () => { try { return !!flip; } catch (e) { return false; } };
@@ -163,8 +183,8 @@ html.atlas-xiangqi .side{align-self:start!important}
 
   /* ---------- the design rows: "3D" for the board and for the pieces + the game's own 2D designs ---------- */
   const LBL = {
-    bd: { ja: '漆塗り3D', en: 'Lacquer 3D', zh: '漆盘3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي', ru: 'Лак 3D', 'zh-TW': '漆器3D', id: '3D pernis', tr: 'Lake 3D' },
-    pc: { ja: '黄楊3D', en: 'Boxwood 3D', zh: '黄杨3D', ko: '회양목 3D', es: 'Boj 3D', fr: 'Buis 3D', pt: 'Buxo 3D', de: 'Buchs 3D', hi: 'बॉक्सवुड 3D', ar: 'بقس ثلاثي', ru: 'Самшит 3D', 'zh-TW': '黃楊木3D', id: '3D boxwood', tr: 'Şimşir 3D' },
+    bd: { ja: '3D盤', en: '3D board', zh: '3D棋盘', ko: '3D 판', es: 'Tablero 3D', fr: 'Plateau 3D', pt: 'Tabuleiro 3D', de: '3D-Brett', hi: '3D बोर्ड', ar: 'رقعة ثلاثية', ru: '3D-доска', 'zh-TW': '3D棋盤', id: 'Papan 3D', tr: '3D tahta' },
+    pc: { ja: '3D駒', en: '3D pieces', zh: '3D棋子', ko: '3D 말', es: 'Piezas 3D', fr: 'Pièces 3D', pt: 'Peças 3D', de: '3D-Steine', hi: '3D मोहरे', ar: 'قطع ثلاثية', ru: '3D-фигуры', 'zh-TW': '3D棋子', id: 'Bidak 3D', tr: '3D taşlar' },
   };
   const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
   const vbOf = row => { const s = row && row.querySelector('button svg'); return (s && s.getAttribute('viewBox')) || '0 0 9 6'; };
@@ -213,6 +233,39 @@ html.atlas-xiangqi .side{align-self:start!important}
   const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintRows, 30));
   if (skin.view) V = skin.view({ key: 'atlas-xiangqi-view', init: bd3, cls: ['atlas-xiangqi'], on() { setTimeout(() => {  dispatchEvent(new Event('resize')); }, 0); } });
   look();
+
+  /* ---------- 「3D盤」 (six boards) and 「3D駒」 (six sets) under the game's own designs (2026-11-14, as checkers) ---------- */
+  const T3L = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد', ru: '3D-доски', 'zh-TW': '3D棋盤', id: 'Papan 3D', tr: '3D tahtalar' };
+  const P3L = { ja: '3D駒', en: '3D pieces', zh: '3D棋子', ko: '3D 말', es: 'Piezas 3D', fr: 'Pièces 3D', pt: 'Peças 3D', de: '3D-Steine', hi: '3D मोहरे', ar: 'قطع ثلاثية الأبعاد', ru: '3D-фигуры', 'zh-TW': '3D棋子', id: 'Bidak 3D', tr: '3D taşlar' };
+  const lng = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))(lang());
+  let f3 = null;
+  function paint3() {
+    const B = T3.BOARDS && T3.BOARDS.xiangqi, P = T3.PIECES && T3.PIECES.xiangqi; if (!f3 || !B || !P) return;
+    const l = lng(), cur = B.get(), cs = P.get();
+    const [lb, lp] = f3.querySelectorAll('label'); lb.textContent = T3L[l] || T3L.en; lp.textContent = P3L[l] || P3L.en;
+    const [row, prow] = f3.querySelectorAll('.bdrow');
+    if (!row.children.length) B.list.forEach(k => {
+      const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.look = k;
+      const im = document.createElement('img'); im.src = T3.boardIcon ? T3.boardIcon('xiangqi', k) : ''; im.alt = ''; im.draggable = false;
+      bt.append(im, document.createElement('span')); bt.onclick = () => { if (T3.setBoard) T3.setBoard('xiangqi', k); else B.set(k); bd3 = true; look(); rebuild3(); paint3(); }; row.appendChild(bt);
+    });
+    if (!prow.children.length) P.list.forEach(k => {
+      const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.set = k;
+      const im = document.createElement('img'); im.src = P.thumb(k); im.alt = ''; im.draggable = false;
+      bt.append(im, document.createElement('span')); bt.onclick = () => { if (T3.setPieces) T3.setPieces('xiangqi', k); else P.set(k); bd3 = true; pc3 = true; look(); rebuild3(); paint3(); }; prow.appendChild(bt);
+    });
+    row.querySelectorAll('button').forEach(bt => { const k = bt.dataset.look, sel = bd3 && cur === k; bt.querySelector('span').textContent = T3.boardName ? T3.boardName(k, l, 'xiangqi') : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+    prow.querySelectorAll('button').forEach(bt => { const k = bt.dataset.set, sel = bd3 && pc3 && cs === k; bt.querySelector('span').textContent = T3.pieceName ? T3.pieceName('xiangqi', k, l) : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+  }
+  const fd = document.getElementById('fDesign');
+  if (fd) {
+    f3 = document.createElement('div'); f3.id = 'f3D';
+    f3.innerHTML = '<label></label><div class="bdrow"></div><label class="pc3l"></label><div class="bdrow pc3"></div>'; fd.appendChild(f3);
+    paint3(); if (ls) ls.addEventListener('change', () => setTimeout(paint3, 30));
+    [r1, r2].forEach(r => { if (r) r.addEventListener('click', () => setTimeout(paint3, 0)); });
+    if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paint3(); } catch (e) {} return r; }; }
+  }
+  addEventListener('storage', e => { if (e.key === 'atlas-xiangqi-board3' || e.key === 'atlas-xiangqi-pc3') { rebuild3(); paint3(); } });
 
   // test hooks (Playwright)
   window.__xqSkin = { pieces: () => map.size, look: () => (bd3 ? (pc3 ? '3d' : '3d2') : '2d'), at: i => { const [x, z] = xz(i); return T3.project(x, z, Y + H); } };

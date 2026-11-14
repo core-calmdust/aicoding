@@ -762,9 +762,12 @@ const fastSolvers = {};
 function fastSolverFor(G) { const k = G.R + 'x' + G.C; if (!fastSolvers[k]) { const s = new Solver(G, 22); s.prune = true; fastSolvers[k] = s; } return fastSolvers[k]; }
 function smallSolverFor(G) { const k = G.R + 'x' + G.C; const s = smallSolvers[k] || (smallSolvers[k] = new Solver(G, 17)); s.used.fill(0); return s; }
 
+// (2026-11-15) the page's PRO mode: values on top of the level's for the current 'move' message (ms: the thinking time)
+let OVER = null;
+const lvCfg = level => OVER ? Object.assign({}, LEVELS[level] || LEVELS[8], OVER) : LEVELS[level] || LEVELS[8];
 function chooseMove(p, level, rand, lead, hist) {
   rand = rand || Math.random;
-  const cfg = LEVELS[level] || LEVELS[8];
+  const cfg = lvCfg(level);
   const legal = p.legal();
   if (legal.length === 1) return { move: legal[0], exact: false };
   if (cfg.kind === 'random') return { move: pick(legal, rand) };
@@ -1055,7 +1058,7 @@ function helperTask(d) {
 // Lv9+ with helper workers. pool: { size, run(i, msg) -> Promise<result|null> }. Falls back to chooseMove without one.
 async function chooseMoveAsync(p, level, rand, pool, lead, hist) {
   rand = rand || Math.random;
-  const cfg = LEVELS[level] || LEVELS[8];
+  const cfg = lvCfg(level);
   if (cfg.kind === 'v2' && p.G.R === 4 && p.G.C === 4) { const rd = x4Ready(); if (rd && rd.then) await rd; if (X4.st === 2) return chooseMove(p, level, rand, lead, hist); }
   if (cfg.kind !== 'v2' || !pool || !pool.size) return chooseMove(p, level, rand, lead, hist);
   if (pool.ready) await pool.ready(1500);   // (new helpers start only while this worker is free)
@@ -1645,7 +1648,7 @@ function candLine(p, first, plies, ms) {
   }
   return line;
 }
-return { x5mReady, x5mHelper, useX5M, X5M, mjWork, allSharedW, bestSharedW, chooseW5Shared, allShare, allShared, analyzeShared, SharedSolver, candLine, x5Ready, setX5, X5, ponderStart, ponderStep, ponderStop, chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
+return { setOver: o => { OVER = o; }, x5mReady, x5mHelper, useX5M, X5M, mjWork, allSharedW, bestSharedW, chooseW5Shared, allShare, allShared, analyzeShared, SharedSolver, candLine, x5Ready, setX5, X5, ponderStart, ponderStep, ponderStop, chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
 })();
 
 // ---------------------------------------------------------------- worker glue
@@ -1722,7 +1725,8 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
       if (d.type === 'move' || d.type === 'analyze' || d.type === 'cands') DotsEngine.useX5M(m5);
       if (d.type === 'move') {
         const t0 = Date.now();
-        const r = (DotsEngine.LEVELS[d.level] || {}).kind === 'v2' ? await DotsEngine.chooseMoveAsync(p, d.level, null, getPool(d.mt), d.lead, d.edges) : DotsEngine.chooseMove(p, d.level);
+        DotsEngine.setOver(d.cfg || null);   // (PRO mode)
+        let r; try { r = (DotsEngine.LEVELS[d.level] || {}).kind === 'v2' ? await DotsEngine.chooseMoveAsync(p, d.level, null, getPool(d.mt), d.lead, d.edges) : DotsEngine.chooseMove(p, d.level); } finally { DotsEngine.setOver(null); }
         self.postMessage({ type: 'move', id: d.id, move: r.move, value: r.value, exact: !!r.exact, ms: Date.now() - t0, stat: r.stat, outcome: r.outcome });
         if (d.level >= 9 && d.R === 5 && d.C === 5 && d.ponder !== false) {
           const k = p.play(r.move);

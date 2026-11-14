@@ -34,7 +34,7 @@ function applyI18n() {
 
 // ====================================================================== settings / state
 const STORE = 'aicoding-backgammon-v2';
-const settings = { mode: 'ai', color: 0, ck: ['gold', 'black'], skin: 'classic', level: 6, level2: 6, matchLen: 0, cube: true, eval: true, forced: true, autoRoll: true, coach: true, anim: true, sound: true, hint: false, lang: '' };
+const settings = { pro: null, pro2: null, mode: 'ai', color: 0, ck: ['gold', 'black'], skin: 'classic', level: 6, level2: 6, matchLen: 0, cube: true, eval: true, forced: true, autoRoll: true, coach: true, anim: true, sound: true, hint: false, lang: '' };
 const $ = s => document.querySelector(s);
 // the game's own animation setting is the only switch (the OS "reduce motion" preference is not used: the user
 // asked for dice / checker animations to play regardless)
@@ -117,8 +117,8 @@ function playerName(s) {
   if (puzzle || lesson) return s === (lesson || puzzle).side ? t('you') : '';
   if (settings.mode === 'pvp') return '';
   if (settings.mode === 'online') return window.olPlayerName ? olPlayerName(s) : '';
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(s))}`;
-  return s === humanSide ? t('you') : `${AIW()} ${LV(settings.level)}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(s))}${proTag(s)}`;
+  return s === humanSide ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(s)}`;
 }
 
 // ====================================================================== storage
@@ -154,7 +154,7 @@ function load() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261111c1');
+  const w = new Worker('engine.js?v=20261115p');
   w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; w.jobs.delete(m.id); if (m.error) console.warn(m.error); j.resolve(m); };
   w.onerror = e => console.warn('worker error', e.message);
@@ -378,7 +378,7 @@ function dieHTML(s, v, x, y, used, size, yaw) {
   // yaw: the angle a thrown die came to rest at; the drop shadow is turned back so it still falls straight down
   const rot = yaw ? `transform:rotate(${yaw.toFixed(4)}rad);--sx:${(0.08 * Math.sin(yaw)).toFixed(4)};--sy:${(0.08 * Math.cos(yaw)).toFixed(4)};` : '';
   let h = `<div class="die p${s}${used ? ' used' : ''}" style="left:${U(MX(x))};top:${U(MY(y))};${size ? `--ds:${size};` : ''}${rot}">`;
-  for (let i = 0; i < 9; i++) h += `<i class="${on.has(i) ? 'on' : ''}"></i>`;
+  for (let i = 0; i < 9; i++) h += `<i class="${on.has(i) ? (+v === 1 ? 'on ace' : 'on') : ''}"></i>`;   // (the ace in red, 2026-11-15)
   return h + '</div>';
 }
 // dice of side s: values, which are used
@@ -932,7 +932,7 @@ async function doRoll(g, opening) {
     renderDice(s, dice, dice[0] === dice[1] ? 0 : [false, false]);
     thinking = s; renderInfo();
     const t0 = Date.now();
-    const r = await request('ai', { type: 'move', pos: st.pos, side: s, dice, level: levelFor(s), tag: match.seed + g + ':' + k });
+    const r = await request('ai', { type: 'move', pos: st.pos, side: s, dice, level: levelFor(s), cfg: proCfg(s), tag: match.seed + g + ':' + k });
     if (tok !== busyToken || !r) { if (tok === busyToken) { thinking = -1; renderInfo(); } return; }
     const wait = (settings.mode === 'watch' ? 500 : 0) - (Date.now() - t0);   // AIの着手は即時：さいころはもう止まっている（観戦だけ間を取る）
     if (wait > 0) await sleep(wait);
@@ -1021,7 +1021,7 @@ function recordGame(g, st) {
   const acts = match.games[g].actions;
   if (st.resigned && !acts.some((a, i) => a.t === 'r' && actorOf(g, i) === humanSide)) return;   // resigned before playing a move
   const why = st.dropped ? t('res.drop') : st.kind >= 3 ? t('res.bg') : st.kind === 2 ? t('res.gammon') : st.resigned ? t('res.resign') : t('res.single');
-  GameRecord.add({ mode: 'ai', res: st.winner === humanSide ? 'w' : 'l', side: humanSide, opp: 'AI Lv.' + settings.level + ' ' + LV(settings.level), key: 'ai:' + settings.level, n: acts.filter(a => a.t === 'r').length, why: why + ' · ' + st.points + t('pt') });
+  GameRecord.add({ mode: 'ai', res: st.winner === humanSide ? 'w' : 'l', side: humanSide, opp: 'AI Lv.' + settings.level + ' ' + LV(settings.level) + proTag(1 - humanSide), key: (proFor(1 - humanSide) ? 'ai:pro' : 'ai:') + settings.level, n: acts.filter(a => a.t === 'r').length, why: why + ' · ' + st.points + t('pt') });
 }
 function nextGame() {
   hideOverlay('#resultOverlay');
@@ -1763,6 +1763,29 @@ $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { dr
 $('#segMatch').onclick = e => { const b = e.target.closest('button'); if (b) { draft.matchLen = +b.dataset.v; segSync(); } };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」, 2026-11-15): beside the level — vs the AI / AI vs AI. 読みの深さ
+// (0-ply = the evaluator, 1-ply = level 8's search, 2-ply = level 10's — the threads read it as for level 10) and 手のばらつき
+// (noise on the equities, bg.js NOISE). The doubling cube stays the level's. bg.js aiChoosePlay(…, cfg).
+const PRO_NOISE = [0, 0.06, 0.25];   // 手のばらつき なし／小（≈ Lv.5）／大（≈ Lv.3）
+const PRO_UNIT = { depth: { ja: '手先（ply）', en: 'ply', zh: '层（ply）', 'zh-TW': '層（ply）', ko: '수 앞(ply)', es: 'ply', fr: 'ply', pt: 'ply', de: 'Ply', ru: 'ply', tr: 'ply', id: 'ply', hi: 'ply', ar: 'ply' } };
+const proPly = lv => lv >= 9 ? 2 : lv >= 8 ? 1 : 0;
+const proDefaults = lv => { const n = lv <= 1 ? 1 : BG.NOISE[lv] || 0; return { limit: { k: 'depth', v: proPly(lv) }, var: n >= 0.12 ? 2 : n > 0 ? 1 : 0 }; };
+const proParams = () => [{ key: 'limit', kinds: { depth: [0, 2] }, kunit: PRO_UNIT }, { key: 'var' }];
+var PRO = window.ProSet ? ProSet.init({ game: 'backgammon', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
+  store: { get: () => settings.pro, set: v => { settings.pro = v; save(); } }, defaults: proDefaults, params: proParams() }) : null;
+var PRO2 = window.ProSet ? ProSet.init({ game: 'backgammon-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
+  store: { get: () => settings.pro2, set: v => { settings.pro2 = v; save(); } }, defaults: proDefaults, params: proParams() }) : null;
+function proFor(side) {
+  if (lesson || puzzle || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  const P = settings.mode === 'watch' && side === 1 ? window.PRO2 : window.PRO;
+  return P ? P.get(levelFor(side)) : null;
+}
+function proCfg(side) {
+  const e = proFor(side); if (!e) return null;
+  const lv = levelFor(side), ply = e.limit.v;
+  return { ply, noise: e.changed.includes('var') ? PRO_NOISE[e.var] : lv <= 1 ? 1 : BG.NOISE[lv] || 0, fast: ply === 0 && lv < 7 && !e.changed.includes('limit') };
+}
+function proTag(side) { return proFor(side) ? ' PRO' : ''; }
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
@@ -2337,7 +2360,7 @@ async function bgDiagram(mode) {
       const ds = P * 0.7, cx = st.lastSide === 0 ? ox + half + bar + half / 2 : ox + half / 2, cy = oy + H / 2;
       st.dice.forEach((d, k) => { const x = cx + (k ? 4 : -ds - 4), y = cy - ds / 2; gg.fillStyle = col(st.lastSide); gg.strokeStyle = ink; gg.lineWidth = 1.4; gg.beginPath(); gg.roundRect(x, y, ds, ds, 5); gg.fill(); gg.stroke();
         const pip = [[], [[.5, .5]], [[.25, .25], [.75, .75]], [[.25, .25], [.5, .5], [.75, .75]], [[.25, .25], [.75, .25], [.25, .75], [.75, .75]], [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], [[.25, .22], [.75, .22], [.25, .5], [.75, .5], [.25, .78], [.75, .78]]][d];
-        gg.fillStyle = st.lastSide ? '#fff' : ink; for (const [u, v] of pip) { gg.beginPath(); gg.arc(x + u * ds, y + v * ds, ds * 0.085, 0, 7); gg.fill(); } });
+        gg.fillStyle = d === 1 ? '#d0121c' : st.lastSide ? '#fff' : ink; for (const [u, v] of pip) { gg.beginPath(); gg.arc(x + u * ds, y + v * ds, ds * (d === 1 ? 0.11 : 0.085), 0, 7); gg.fill(); } });
     }
   } });
 }
@@ -2809,6 +2832,7 @@ function openIntro(i) {
   let body = t('ls.' + s.id + '.intro', { c: pname(0), o: pname(1), fig0: '{fig0}', fig1: '{fig1}' });
   if (s.figs) body = body.replace(/\{fig(\d)\}/g, (_, i) => s.figs[+i] ? lsFigHTML(s.figs[+i], t('ls.' + s.id + '.cap' + i)) : '');
   else body = dia + body;
+  if (window.BGLsKeys) body += BGLsKeys(s.id, t);   // (2026-11-15: three principles for the step)
   // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · how to think · trivia — as much as shogi's page
   if (window.LuxIntro) {
     const THK = s.figs ? body : body.replace(dia, ''), FG = s.figs ? '' : dia || lsThumb(s);   // (no diagram: the first problem's position)
@@ -2944,16 +2968,12 @@ function renderLessonFb() {
   $('#lsFb').innerHTML = h;
 }
 // why the best play is better (computed features -> the same templates as the review), plus what kind of position it is
-function lsWhyHTML(P, F) {
-  if (!window.BGX || !F.plays || F.plays.length < 2) return '';
+function lsWhyHTML(P, F) {   // (2026-11-15) what the best play is for and what the chosen play gives up (explain.js teach), then the kind of position
+  if (!window.BGX || !F.plays || !F.plays.length) return '';
   try {
-    const p = decPos(P.pos), mineBest = F.mine === 0 || F.pts === 20, alt = mineBest ? F.plays[1] : F.plays[F.mine];
-    if (!alt) return '';
-    const x = BGX.compare(p, P.side, F.plays[0], alt);
-    const NEG = ['x.shots', 'x.shots0', 'x.win', 'x.stack', 'x.noHit', 'x.subtle'];
-    const r = x.r.filter(z => !(mineBest && NEG.includes(z.k)) && z.k !== 'x.win');
-    const li = r.map(z => `<li>${t(z.k, z.a)}</li>`).join('');
-    return `<div class="ls-why">${li ? `<ul>${li}</ul>` : ''}<div class="sit"><b>${t('rv.sitLbl')}</b>${t(x.sit.k, x.sit.a)}</div></div>`;
+    const p = decPos(P.pos), mineBest = F.mine === 0 || F.pts === 20;
+    const T = BGX.teach(p, P.side, F.plays[0], mineBest ? null : F.plays[F.mine]), x = BGX.situation(p, P.side);
+    return (window.BGTeachHTML ? BGTeachHTML(T, t, true) : '') + `<div class="ls-why"><div class="sit"><b>${t('rv.sitLbl')}</b>${t(x.k, x.a)}</div></div>`;
   } catch (e) { return ''; }
 }
 function tagText(P) { return P.tags && P.tags.length ? P.tags.map(tg => t('tag.' + tg[0], { n: tg[1] })).join(' ') : ''; }
@@ -3126,13 +3146,14 @@ function pzExplainHTML(mine) {
   let h = '<div class="ls-why pz-why">';
   if (P.sit) h += `<div class="sit" style="margin:0 0 6px"><b>${t('rv.sitLbl')}</b>${t(P.sit[0], P.sit[1])}</div>`;
   if (P.cx) h += `<ul>${P.cx.map(r => `<li>${t(r[0], r[1])}</li>`).join('')}</ul>`;
+  if (plays && window.BGX && BGX.teach && window.BGTeachHTML) { try { const mi = mine > 0 && mine < plays.length ? mine : -1; h += BGTeachHTML(BGX.teach(decPos(P.pos), P.side, plays[0], mi > 0 ? plays[mi] : null), t, true); } catch (e) {} }
   if (plays && P.r) {
     const alt = mine > 0 && mine < plays.length ? mine : (P.alt || 1), altP = plays[alt];
     const rs = (alt === (P.alt || 1) ? P.r : null);
     if (altP) h += `<div class="pz-alt">${t('pz.altIs', { m: mvb(BG.notation(altP.moves)), d: (plays[0].e - altP.e).toFixed(3) })}</div>`;
     let list = rs;
     if (!list && window.BGX) { try { list = BGX.compare(decPos(P.pos), P.side, plays[0], altP).r.map(z => [z.k, z.a]); } catch (e) { list = P.r; } }
-    if (list && list.length) h += `<ul>${list.map(r => `<li class="${r[0] === 'x.win' ? 'num' : ''}">${t(r[0], r[1])}</li>`).join('')}</ul>`;
+    if (list && list.length && !(window.BGX && BGX.teach && window.BGTeachHTML)) h += `<ul>${list.map(r => `<li class="${r[0] === 'x.win' ? 'num' : ''}">${t(r[0], r[1])}</li>`).join('')}</ul>`;   // (the old feature list: only without the teaching comment below)
   }
   return h + '</div>';
 }
@@ -3316,3 +3337,20 @@ window.__bg = {
   BG, startNewMatch, humanRoll, commitTurn, undoStep, viewAt, latestIdx, encodeMatch, loadText, stateAt, curState, legalNow, doStep: s => (turn && !turn.locked ? doStep(s, false) : false), runReview,
   get busy() { return thinking >= 0 || busyRolling || !!(turn && turn.locked); }, dailyPick, setSeed: s => { pendingSeed = s; },
 };
+// the portal's card (2026-11-14): open a part of the page directly — puzzles (cont: the next one · d1: today's), lessons (open: the
+// openings), the online match search. null = not ready yet (the caller tries again).
+window.AtlasDeep = function (mode, sub) {
+  if (typeof openPuzzles !== 'function' || !$('#btnStart')) return null;
+  const click = (sel, n = 0) => { const b = document.querySelector(sel); if (b) b.click(); else if (n < 30) setTimeout(() => click(sel, n + 1), 150); };
+  if (mode === 'puzzle') { Promise.resolve(openPuzzles()).then(() => { if (sub === 'd1') click('#pzLevels [data-pbh-daily]'); else if (sub === 'cont') click('#pzLevels [data-pbh-cont]'); }); return true; }
+  if (mode === 'lesson') { if (sub === 'open' && window.OPH) Promise.resolve(lessonsReady).then(() => OPH.open()); else openLessons(); return true; }
+  if (mode === 'online') { if (typeof window.olStartSearch !== 'function') return null; window.olStartSearch(); return true; }
+  return false;
+};
+{ const q = new URLSearchParams(location.search), m = q.get('mode');
+  if (m && /^(puzzle|lesson|online)$/.test(m) && q.get('skin') !== 'atlas') {   // the plain 2D page opened at a part of it
+    let n = 0; const go = () => { const r = window.AtlasDeep(m, q.get('sub')); if (r === null && ++n < 60) return setTimeout(go, 200);
+      ['mode', 'sub', 'tc'].forEach(k => q.delete(k)); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); };
+    if (document.readyState === 'complete') setTimeout(go, 1200); else addEventListener('load', () => setTimeout(go, 1200));
+  }
+}

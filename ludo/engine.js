@@ -378,8 +378,9 @@
   /* ---------- AI ---------- */
   // level 1..20: mistakes rate (random legal move), and from 9 on a look at the next throw when the move earns one.
   const LEVELS = Array.from({ length: 20 }, (_, i) => { const l = i + 1; return { rand: Math.max(0, .62 - l * .042), noise: Math.max(0, 9 - l * .5), deep: l >= 9 }; });
-  function think(s, t, level = 10, rng = Math.random) {
-    const L = LEVELS[Math.max(1, Math.min(20, level)) - 1], moves = legalMoves(s, t);
+  // cfg (2026-11-15): the page's PRO mode — { rand, noise, deep } on top of the level's
+  function think(s, t, level = 10, rng = Math.random, cfg = null) {
+    const L0 = LEVELS[Math.max(1, Math.min(20, level)) - 1], L = cfg ? Object.assign({}, L0, cfg) : L0, moves = legalMoves(s, t);
     if (moves.length <= 1) return { move: moves[0] || null, scores: [] };
     const team = s.team[s.turn];
     const real = moves.filter(m => !m.pass);

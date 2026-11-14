@@ -3,8 +3,8 @@
 'use strict';
 const S = {
   ja: {
-    title: '雀華', sub: '〜姫たちの麻雀〜', series: 'CALMDUST COLLECTION',
-    play: '対局', bot: 'BOT戦', rated: 'レート戦', lesson: 'レッスン', rules: 'ルール', soon: '準備中',
+    title: '雀華', sub: '〜艶やかなる姫君の雀宴〜', series: 'CALMDUST COLLECTION',
+    play: '対局', bot: 'BOT戦', rated: '段位戦', freePlay: 'フリー対局', fsEnter: 'フルスクリーン', fsExit: 'フルスクリーン解除', record: '戦績', rkLadder: '段位表', history: '対局履歴', rkLocked: '段位戦で「{r}」に到達すると仲間に', rkNext: '次の「{r}」まで あと {n} pt', rkTop: '最高位に到達', rkGain: '段位 +{n} pt', rkUp: '昇段！', rkGames: '{n} 戦', rkNextGift: '次の報酬キャラ', rkGiftAt: '「{r}」で獲得・あと {n} pt', rkPl: '位', rkRule: 'スキルあり。相手は段位が上がるにつれて強くなります。ポイントは減りません。2段階上がるごとに報酬キャラ', rkGiftGet: '報酬キャラ獲得！', lesson: 'レッスン', rules: 'ルール', soon: '準備中',
     east: '東風戦', south: '半荘戦', skillOn: 'スキル戦', skillOff: '標準戦', strength: 'BOTの強さ',
     lv: ['入門', '初級', '中級', '上級', '達人'], start: '対局開始', gacha: 'ガチャ', chars: 'キャラ', coins: 'コイン',
     skill: 'スキル', free: '無料', cost: '{n}点', used: '使用済み', partner: 'パートナー', select: 'えらぶ', selected: '選択中',
@@ -18,8 +18,8 @@ const S = {
     peekT: '次の3回のツモ', mindT: '他家の手', shanten: '{n}向聴', waitsOn: '待ち', abort: { kyuushu: '九種九牌', sanchahou: '三家和', suukaikan: '四開槓' },
     you: 'あなた', yourTurn: 'あなたの番', noArt: 'イラスト準備中', collection: 'コレクション', owned: '所持', close: '閉じる',
     rotate: '横向きにすると遊びやすくなります', landTitle: 'このゲームは横画面で遊びます', landSub: 'スマホを横向きにしてください。\n横にすると対局が始まります。', landNote: '対局はスマホを横向きにして遊びます', loading: '読み込み中…', guide: 'タップで選択、もう一度タップで捨てる',
-    timing_deal: '配牌時', timing_turn: '手番で', costLine: '1回目 無料 ・ 2回目 {n}点 ・ 以降は倍', setPartner: 'パートナーにする', isPartner: 'パートナー', notOwned: '未解放：ガチャで解放されます', lockedT: '未解放', lockedS: 'ガチャで{r}キャラとして登場します', toGacha: 'ガチャを引く', keys: '<b>1〜0 - ^ ¥</b> 手牌を左から切る　<b>Space</b> ツモ切り<br><b>Enter</b> アガリ　<b>X</b> リーチ　<b>C</b> チー　<b>V</b> ポン　<b>B</b> カン<br><b>Esc / Space</b> スキップ　<b>S</b> スキル', liteOn: '軽量モード：オン（影・常時アニメを止めて描画を軽く）', liteOff: '軽量モード：オフ',
-    keysT: 'キー操作', settings: '設定', language: '言語', sound: 'サウンド', lite: '軽量モード', on: 'オン', off: 'オフ', liteNote: '軽量モード：影や常時アニメを止めて描画を軽くします',
+    timing_deal: '配牌時', timing_turn: '手番で', costLine: '1回目 無料 ・ 2回目 {n}点 ・ 以降は倍', setPartner: 'パートナーにする', isPartner: 'パートナー', notOwned: '未解放：ガチャで解放されます', lockedT: '未解放', mystery: 'このキャラは謎に満ちている', rkVeil: 'この上には何が……？', lockedS: 'ガチャで{r}キャラとして登場します', toGacha: 'ガチャを引く', keys: '<b>1〜0 - ^ ¥</b> 手牌を左から切る　<b>Space</b> ツモ切り<br><b>Enter</b> アガリ　<b>X</b> リーチ　<b>C</b> チー　<b>V</b> ポン　<b>B</b> カン<br><b>Esc / Space</b> スキップ　<b>S</b> スキル', liteOn: '軽量モード：オン（影・常時アニメを止めて描画を軽く）', liteOff: '軽量モード：オフ',
+    keysT: 'キー操作', settings: '設定', language: '言語', sound: 'サウンド', se: '効果音', music: '音楽', mute: 'ミュート', lite: '軽量モード', on: 'オン', off: 'オフ', liteNote: '軽量モード：影や常時アニメを止めて描画を軽くします',
     kyotakuT: '供託（1000点棒の本数）', honbaT: '積み棒（本場）',
     stats: 'スタッツ', psAll: 'すべて', psGame: 'この対局', psGames: '対局数', psGamesN: '{n}戦', psHands: '局数', psNow: '現在の順位', psAvgRank: '平均順位', psWin: '和了率', psDealin: '放銃率',
     psTop: 'トップ率', psRentai: '連対率', psLastAvoid: 'ラス回避率', psAvgScore: '平均持ち点', psBust: 'トビ率', psRiichi: '立直率', psCall: '副露率', psTsumo: 'ツモ率', psRiichiWin: '立直後の和了率',
@@ -29,8 +29,8 @@ const S = {
     lineH: '台詞', dealQ: 'この局で「{name}」を使いますか？', use: '使う', notUse: '使わない', dealOnly: '配牌時に選択', tapChange: 'タップでキャラ変更', back: '戻る', riichiNo: 'リーチ不可', useThis: 'この対局で使うスキルを選ぶ', ownedSkills: '所持スキル', newSkill: '新スキル!', charRates: 'キャラ', skillRates: 'スキル', tenth: '10連の10回目はSR以上のキャラ確定。持っているキャラが出ると新しいスキルを覚えます', sisters: '姉妹', riichiWhy_sealed: '他家の「封じ」で、この局はリーチできません', riichiWhy_points: '持ち点が1000点未満なのでリーチできません', riichiWhy_wall: '山の残りが4枚未満なのでリーチできません',
   },
   en: {
-    title: 'JANKA', sub: 'Mahjong of the Princesses', series: 'CALMDUST COLLECTION',
-    play: 'Play', bot: 'vs BOT', rated: 'Rated', lesson: 'Lessons', rules: 'Rules', soon: 'Soon',
+    title: 'JANKA', sub: 'The Princesses\' Mahjong Banquet', series: 'CALMDUST COLLECTION',
+    play: 'Play', bot: 'vs BOT', rated: 'Ranked', freePlay: 'Free play', fsEnter: 'Full screen', fsExit: 'Exit full screen', record: 'Record', rkLadder: 'Ladder', history: 'Game log', rkLocked: 'Joins you when you reach “{r}” in Ranked', rkNext: '{n} pt to “{r}”', rkTop: 'Top rank reached', rkGain: 'Rank +{n} pt', rkUp: 'Promoted!', rkGames: '{n} games', rkNextGift: 'Next reward', rkGiftAt: 'At “{r}” · {n} pt to go', rkPl: '', rkRule: 'Skills on. Your opponents grow stronger as you climb. Points never go down. A reward character every second rank.', rkGiftGet: 'Reward character!', lesson: 'Lessons', rules: 'Rules', soon: 'Soon',
     east: 'East only', south: 'Half game', skillOn: 'Skills', skillOff: 'Standard', strength: 'BOT strength',
     lv: ['Novice', 'Easy', 'Normal', 'Hard', 'Master'], start: 'Start', gacha: 'Gacha', chars: 'Characters', coins: 'Coins',
     skill: 'Skill', free: 'Free', cost: '{n} pts', used: 'Used', partner: 'Partner', select: 'Select', selected: 'Selected',
@@ -44,8 +44,8 @@ const S = {
     peekT: 'Your next 3 draws', mindT: 'Opponents', shanten: '{n} away', waitsOn: 'Waits', abort: { kyuushu: 'Nine terminals', sanchahou: 'Triple ron', suukaikan: 'Four kans' },
     you: 'You', yourTurn: 'Your turn', noArt: 'Art coming soon', collection: 'Collection', owned: 'Owned', close: 'Close',
     rotate: 'Landscape is easier to play', landTitle: 'This game is played in landscape', landSub: 'Turn your phone sideways.\nThe game starts when you do.', landNote: 'Games are played with the phone held sideways', loading: 'Loading…', guide: 'Tap to pick, tap again to discard',
-    timing_deal: 'At the deal', timing_turn: 'On your turn', costLine: '1st use free · 2nd {n} pts · doubles after', setPartner: 'Make partner', isPartner: 'Partner', notOwned: 'Locked: unlock her from the gacha', lockedT: 'Locked', lockedS: 'Appears in the gacha as a {r} character', toGacha: 'Open gacha', keys: '<b>1…0 - ^ ¥</b> discard left to right　<b>Space</b> tsumogiri<br><b>Enter</b> win　<b>X</b> riichi　<b>C</b> chi　<b>V</b> pon　<b>B</b> kan<br><b>Esc / Space</b> skip　<b>S</b> skill', liteOn: 'Light mode on (no shadows or looping effects)', liteOff: 'Light mode off',
-    keysT: 'Keyboard controls', settings: 'Settings', language: 'Language', sound: 'Sound', lite: 'Light mode', on: 'On', off: 'Off', liteNote: 'Light mode turns off shadows and looping effects for smoother play',
+    timing_deal: 'At the deal', timing_turn: 'On your turn', costLine: '1st use free · 2nd {n} pts · doubles after', setPartner: 'Make partner', isPartner: 'Partner', notOwned: 'Locked: unlock her from the gacha', lockedT: 'Locked', mystery: 'This character is shrouded in mystery', rkVeil: 'What lies beyond…?', lockedS: 'Appears in the gacha as a {r} character', toGacha: 'Open gacha', keys: '<b>1…0 - ^ ¥</b> discard left to right　<b>Space</b> tsumogiri<br><b>Enter</b> win　<b>X</b> riichi　<b>C</b> chi　<b>V</b> pon　<b>B</b> kan<br><b>Esc / Space</b> skip　<b>S</b> skill', liteOn: 'Light mode on (no shadows or looping effects)', liteOff: 'Light mode off',
+    keysT: 'Keyboard controls', settings: 'Settings', language: 'Language', sound: 'Sound', se: 'Sound effects', music: 'Music', mute: 'Mute', lite: 'Light mode', on: 'On', off: 'Off', liteNote: 'Light mode turns off shadows and looping effects for smoother play',
     kyotakuT: 'Riichi sticks in the pot (1000 pts each)', honbaT: 'Counters (honba)',
     stats: 'Stats', psAll: 'All', psGame: 'This game', psGames: 'Games', psGamesN: '{n} games', psHands: 'Hands', psNow: 'Place now', psAvgRank: 'Avg. place', psWin: 'Win rate', psDealin: 'Deal-in rate',
     psTop: '1st place', psRentai: 'Top two', psLastAvoid: 'Avoid 4th', psAvgScore: 'Avg. final score', psBust: 'Busted', psRiichi: 'Riichi rate', psCall: 'Call rate', psTsumo: 'Tsumo share', psRiichiWin: 'Win after riichi',

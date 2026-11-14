@@ -280,10 +280,10 @@
         const sh = Math.min(1.04, 0.5 + 0.5 * lam / top);
         ctx.fillStyle = `rgb(${col.face.map(v => Math.round(Math.min(255, v * sh))).join(',')})`;
         rrect(ctx, 0.17); ctx.fill();
-        ctx.fillStyle = col.pip; ctx.globalAlpha = 0.55 + 0.45 * Math.min(1, sh);
+        ctx.fillStyle = F.v === 1 ? '#d0121c' : col.pip; ctx.globalAlpha = 0.55 + 0.45 * Math.min(1, sh);
         for (const cell of PIPS[F.v]) {
           const cx = 0.12 + ((cell % 3) + 0.5) * (0.76 / 3), cy = 0.12 + (Math.floor(cell / 3) + 0.5) * (0.76 / 3);
-          ctx.beginPath(); ctx.arc(cx, cy, 0.092, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(cx, cy, F.v === 1 ? 0.12 : 0.092, 0, Math.PI * 2); ctx.fill();
         }
         ctx.globalAlpha = 1;
       }

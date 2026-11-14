@@ -119,6 +119,7 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .badge.update{background:var(--sky);box-shadow:0 2px 0 var(--sky2)}
 html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 .badge.beta{background:var(--grape);box-shadow:0 2px 0 var(--grape2)}
+.badge.alpha{background:#1fb597;box-shadow:0 2px 0 #13856e}
 .badge.original{background:#f5891f;box-shadow:0 2px 0 #c4650e}
 .tags{display:flex;flex-wrap:wrap;gap:5px}
 .tag{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px 0 6px;border-radius:99px;font-size:12px;font-weight:700;background:#fff;border:1.5px solid color-mix(in srgb,var(--c) 45%,#fff);color:color-mix(in srgb,var(--c) 85%,#000)}
@@ -1982,7 +1983,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .lvpick,.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) #bvRtRec{box-sizing:border-box;height:var(--bh)}
 .bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .rtnow2{box-sizing:border-box;height:var(--bh);padding-block:0;overflow:hidden}
 .bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .vopts{align-items:center}
-.bvi .vopts.rtonly{margin:0;min-height:var(--bh,48px)}.bvi .vopts.rtonly .rtnow2{flex:1 1 100%}
+.bvi .vopts.rtonly{margin:0;min-height:var(--bh,48px)}.bvi .vopts > #bvRtRec.rtrec{flex:none;align-self:stretch;height:auto;min-height:var(--bh,48px)}.bvi .vopts > #bvRtRec[hidden]{display:none}.bvi .vopts:has(> #bvRtRec:not([hidden])) .rtnow2 small{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.bvi .vopts:has(> #bvRtRec:not([hidden])) .rtnow2 b{flex:none}.bvi .vopts:not(.rtonly):has(> #bvRtRec:not([hidden])) .rtnow2{flex:0 1 auto;justify-content:center}.bvi .vopts:not(.rtonly):has(> #bvRtRec:not([hidden])) .rtnow2 small{display:none}.bvi .vopts.rtonly .rtnow2{flex:1 1 100%}
 .vcard .vrt{align-self:flex-start;margin:0 4px;padding:2px 8px;border-radius:999px;background:#eef6ff;color:#2a5a9a;font-size:11.5px;font-weight:900}
 .lvs-l.vgrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px;padding:6px 14px 10px}
 .lvs-l .vcard{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px 8px 10px;border-radius:18px;box-shadow:0 3px 0 var(--line);transition:transform .12s}
@@ -2227,16 +2228,16 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=15"><\/script>');
 else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
 <script src="texgen.js?v=2"></script>
-<script src="npc/roster.js?v=8"></script>
-<script src="art.js?v=13"></script>
-<script src="../shared/atlas.js?v=20261115amz2"></script>
+<script src="npc/roster.js?v=9"></script>
+<script src="art.js?v=17"></script>
+<script src="../shared/atlas.js?v=20261115alamz"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
-<script src="i18n/v.js?v=76pg"></script>
+<script src="i18n/v.js?v=78bt"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=76pg', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=78bt', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -2244,13 +2245,13 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
   L.forEach(function (x) { document.write('<script src="i18n/' + x + '.js?v=' + v + '"><\/script>'); });
 })();
 </script>
-<script src="gamelist-i18n.js?v=14pgs"></script>
+<script src="gamelist-i18n.js?v=15bt"></script>
 <script src="img/tex/baked.js?v=2"></script>
-<script src="table3d.js?v=168"></script>
+<script src="table3d.js?v=170"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=123', k = 0, p = null;
+  var SRC = 'tables3d.js?v=127', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2258,7 +2259,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 })();
 </script>
 <script src="models/cardtables.js?v=4"></script>
-<script src="icons3d.js?v=41"></script>
+<script src="icons3d.js?v=42"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
   if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
@@ -2270,13 +2271,13 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=267"></script>
+<script src="lazy.js?v=293"></script>
 <script src="puzzle-lines.js?v=1"></script>
-<script src="puzzles.js?v=28"></script>
-<script src="lessons3d.js?v=37"></script>
+<script src="puzzles.js?v=33"></script>
+<script src="lessons3d.js?v=43"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
-<script src="historia.js?v=42"></script>
+<script src="historia.js?v=43"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=5"></script>
 <script src="gacha3d.js?v=7"></script>
@@ -2287,12 +2288,12 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 .rsg-ov.draw .rsg-flag{color:#b8862a!important}</style>
 <script src="../shared/resign.js?v=3"></script><script src="../shared/drawoffer.js?v=1"></script>
 <script src="../shared/tick.js?v=2"></script>
-<script src="gamelist.js?v=37"></script>
+<script src="gamelist.js?v=38"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
-<script src="worldmap.js?v=35"></script>
-<script src="npc/npc.js?v=34"></script>
+<script src="worldmap.js?v=36"></script>
+<script src="npc/npc.js?v=35"></script>
 <script src="avtalk.js?v=3"></script>
-<script src="app.js?v=364"></script>
+<script src="app.js?v=369"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>

@@ -4,6 +4,15 @@
 (function (root) {
 'use strict';
 const W = 1, H = 1.36, D = 0.78;
+// ---- baked textures (2026-11-14, optimisation): the slow procedural pictures — the felt (~0.5 s), the walnut and its height map
+// (~0.9 s), the stone of the backs (~0.1 s) — ship as images made from the very same code (tools/bake-tex.py). They are fetched as
+// the page opens; if one is not there in time (or ?nobake), the code below draws it as before. Every drawn one is kept in
+// JANKA_TEXGEN for the baking tool.
+const BAKE_V = 1, BAKED = {};
+if (!/[?&]nobake\b/.test(location.search)) for (const n of ['felt', 'wood', 'woodb', 'stone']) { const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + n + '.webp?v=' + BAKE_V; BAKED[n] = im; }
+function bakedCanvas(name) { const im = BAKED[name]; if (!im || !im.complete || !im.naturalWidth) return null;
+  const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); return c; }
+const keepGen = (name, c) => { (root.JANKA_TEXGEN = root.JANKA_TEXGEN || {})[name] = c; };
 // ---- the table's own materials (2026-11-14, ユーザー: a more real automatic table — a quieter felt, real wood with rounded
 // edges, the lift seams of an automatic table, a real score unit) ----
 // periodic fractal noise (several octaves of smooth value noise; wraps at 1)
@@ -25,24 +34,60 @@ function napTex() {
     for (const [ox, oy] of [[0, 0], [S, 0], [-S, 0], [0, S], [0, -S]]) { g.moveTo(x + ox, y + oy); g.lineTo(x + ox + Math.cos(a) * l, y + oy + Math.sin(a) * l); } g.stroke(); }
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(26, 26); return t;
 }
-// walnut, lacquered: long streaks, the rings' figure folded by the grain, pores. u runs along the grain and wraps.
+// the sleeve's weave (ユーザー 2026-11-14: cloth, not a slick, shiny skin): a tiling twill height map — over-under threads in a diagonal
+// rhythm plus a little slub — for the bump, so the light breaks up on the threads instead of sliding over a smooth surface
+function weaveTex() {
+  const S = 128, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), im = g.createImageData(S, S), N = mkNoise(53), T = 4;
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const cx = (x % T) / T, cy = (y % T) / T, warp = ((Math.floor(x / T) + Math.floor(y / T)) % 4) < 2;   // a 2/2 twill
+    const v = warp ? Math.sin(cy * Math.PI) * (.6 + .4 * Math.sin(cx * Math.PI)) : Math.sin(cx * Math.PI) * (.6 + .4 * Math.sin(cy * Math.PI));
+    const k = Math.max(0, Math.min(255, 70 + v * 150 + (N.R() - .5) * 40)), i = (y * S + x) * 4; im.data[i] = im.data[i + 1] = im.data[i + 2] = k; im.data[i + 3] = 255; }
+  g.putImageData(im, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 10); return t;
+}
+// walnut, lacquered (ユーザー 2026-11-14: a more real grain, and a gloss): a flat-sawn board — the growth rings cut at a slant
+// show as long bands that open into flame-like arches (cathedrals) and close again, each ring a pale early wood fading into a dark,
+// sharp late-wood edge; open pores as fine dark dashes along the grain (thick in the early wood), a few darker mineral streaks,
+// and a slow shift of colour from honey to chocolate along the board. A matching height map (the pores and the late wood a hair
+// lower) gives the lacquer something to catch on. u runs along the grain and wraps.
 function woodTex() {
-  const Wd = 1024, Hd = 256, c = document.createElement('canvas'); c.width = Wd; c.height = Hd; const g = c.getContext('2d'), im = g.createImageData(Wd, Hd), o = im.data, N = mkNoise(53);
-  const A = N.oct([4, 8, 16, 32]), B = N.oct([2, 4, 8]), Cn = N.oct([8, 16, 32, 64]);
-  const mix = (a, b, t) => a + (b - a) * t;
+  const tex = cv => { const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t; };
+  { const bm = bakedCanvas('wood'), bb = bakedCanvas('woodb'); if (bm && bb) { const map = tex(bm); map.encoding = THREE.sRGBEncoding; return { map, bump: tex(bb) }; } }
+  const Wd = 4096, Hd = 384, N = mkNoise(53);   // (one whole rail along u: nothing repeats along a rail — ユーザー 2026-11-14)
+  const c = document.createElement('canvas'); c.width = Wd; c.height = Hd; const g = c.getContext('2d'), im = g.createImageData(Wd, Hd), o = im.data;
+  const cb = document.createElement('canvas'); cb.width = Wd; cb.height = Hd; const gb = cb.getContext('2d'), ib = gb.createImageData(Wd, Hd), ob = ib.data;
+  const A = N.oct([5, 11, 23]), B = N.oct([3, 7]), Cn = N.oct([40, 83, 167]), Dn = N.oct([5, 13]), Pn = N.oct([512, 257]), E = N.oct([7, 17]);
+  const mix = (a, b, t) => a + (b - a) * t, sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const H = new Float32Array(Wd * Hd);
   for (let y = 0; y < Hd; y++) for (let x = 0; x < Wd; x++) {
     const u = x / Wd, v = y / Hd;
-    const fold = N.fbm(B, u, v) - .5;                                   // the board's slow wander
-    const ring = v * 7 + fold * 3.2 + (N.fbm(A, u, v * 3) - .5) * .8;      // growth rings, cut along the length: long figure
-    const fig = Math.pow(.5 + .5 * Math.sin(ring * 6.2832), 2.2);         // dark late wood in narrow bands
-    const streak = N.fbm(Cn, u, v * 6) - .5;                             // fine streaks along the grain
-    let t = .42 + fig * .34 + streak * .5 + fold * .25; t = Math.min(1, Math.max(0, t));
-    const d = (N.R() - .5) * 3, p = (y * Wd + x) * 4;
-    o[p] = mix(54, 142, t) + d; o[p + 1] = mix(30, 88, t) + d; o[p + 2] = mix(16, 50, t) + d; o[p + 3] = 255;
+    const warp = N.fbm(B, u, v) - .5, slow = N.fbm(Dn, u, v * .5);
+    // the cathedrals: the ring index bends into arches along the board (two arches per wrap), their tips wandering
+    // (ユーザー 2026-11-14: no knots or closed rings — a table like this is cut clear of them: the grain runs as long, uneven
+    // lines.) The ring index climbs steadily across the board (it never turns back, so no line closes on itself); it drifts
+    // a little along the length, and the years are of uneven width.
+    const ring = (v + (N.fbm(B, u, v) - .5) * .09 + (N.fbm(Dn, u, v) - .5) * .05) * 10 + (N.fbm(A, u, v) - .5) * .35;   // (every term wraps with v: no seam round the rail)
+    const f = ring - Math.floor(ring);
+    const yr = Math.floor(ring), hsh = Math.abs(Math.sin(yr * 12.9898 + 4.1) * 43758.5453) % 1;   // this year's own width of late wood
+    const late = sstep(.5 + hsh * .3, .9, f) * (1 - sstep(.93, 1, f)) * (.55 + hsh * .45);               // early wood pale, darkening into a sharp late-wood edge
+    const streak = N.fbm(Cn, u, v * 5) - .5;                               // fine streaks along the grain
+    const mineral = Math.max(0, N.fbm(Dn, u + .37, v * 4) - .64) * 3;   // the odd darker streak
+    let t = .64 - late * .34 + streak * .3 - mineral * .35 + (slow - .5) * .3; t = Math.min(1, Math.max(0, t));
+    // pores: short dark dashes along the grain (high-frequency noise squeezed along u), more of them in the early wood
+    const pn = N.fbm(Pn, u, v * 6);
+    const pore = sstep(.66 - (1 - late) * .04, .76, pn);
+    const warm = slow;                                                       // honey ↔ chocolate along the board
+    const d = (N.R() - .5) * 2.5, p = (y * Wd + x) * 4;
+    let r = mix(mix(46, 58, warm), mix(150, 170, warm), t), gg = mix(mix(24, 30, warm), mix(92, 104, warm), t), bb = mix(mix(12, 14, warm), mix(50, 52, warm), t);
+    r *= 1 - pore * .3; gg *= 1 - pore * .34; bb *= 1 - pore * .34;
+    o[p] = r + d; o[p + 1] = gg + d; o[p + 2] = bb + d; o[p + 3] = 255;
+    const h = .6 - late * .25 - pore * .28 + streak * .1; H[y * Wd + x] = h;
+    const k = Math.max(0, Math.min(255, h * 255)); ob[p] = ob[p + 1] = ob[p + 2] = k; ob[p + 3] = 255;
   }
-  g.putImageData(im, 0, 0);
-  for (let i = 0; i < 1500; i++) { const x = N.R() * Wd, y = N.R() * Hd, l = 6 + N.R() * 26; g.strokeStyle = `rgba(24,10,4,${.1 + N.R() * .16})`; g.lineWidth = .6 + N.R() * .5; g.beginPath(); g.moveTo(x, y); g.lineTo(x + l, y + (N.R() - .5) * 1.2); g.stroke(); }   // pores
-  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t;
+  g.putImageData(im, 0, 0); gb.putImageData(ib, 0, 0); keepGen('wood', c); keepGen('woodb', cb);
+  const tex_ = cv => { const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t; };
+  void tex_; const map = tex(c); map.encoding = THREE.sRGBEncoding;
+  return { map, bump: tex(cb) };
 }
 // a seven-segment digit (the score unit's LED): the lit segments in `col`, the unlit ones as a ghost when `ghost` is given
 const SEG = { '0': 'abcdef', '1': 'bc', '2': 'abged', '3': 'abgcd', '4': 'fgbc', '5': 'afgcd', '6': 'afgedc', '7': 'abc', '8': 'abcdefg', '9': 'abcdfg', '-': 'g', ' ': '' };
@@ -65,6 +110,7 @@ function seg7(g, x, y, w, h, ch, col, ghost) {
 // a few soft pale veins that follow the same flow. It stays as faint as before (clouds ±3%, veins +5%), it wraps (the four
 // backs take different pieces of it), and a little dither keeps the dark purple from banding into steps.
 function stoneTex() {
+  { const b = bakedCanvas('stone'); if (b) { const t = new THREE.CanvasTexture(b); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t; } }
   const S = 512, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), im = g.createImageData(S, S), o = im.data;
   let seed = 7; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const grid = P => { const a = new Float32Array(P * P); for (let i = 0; i < P * P; i++) a[i] = R(); return a; };
@@ -83,6 +129,7 @@ function stoneTex() {
     o[p] = Math.min(255, br * f + vn * 5 + d); o[p + 1] = Math.min(255, bg * f + vn * 4 + d); o[p + 2] = Math.min(255, bb * f + vn * 6 + d); o[p + 3] = 255;
   }
   g.putImageData(im, 0, 0);
+  keepGen('stone', c);
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
 }
 // a small studio around the table for the polished surfaces to reflect: a soft ceiling light, a window strip, dark walls
@@ -186,7 +233,7 @@ function brocadeTex(base) {
 // octagonal guls on the red field with small branch motifs between, a border of stepped motifs between dark bands. Low in
 // contrast, and lit only a little: it is barely there in the dark room, just enough to read. 2048 px over the whole rug.
 function rugTex() {
-  const S = 2048, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+  const S = 2048, c = document.createElement('canvas'); c.width = c.height = S / 2; const g = c.getContext('2d'); g.scale(.5, .5);   // (drawn at half size: it lies dim and far — 2026-11-14, optimisation)
   let sd = 21; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
   const red = '#5c171b', red2 = '#4a1215', dark = 'rgba(28,6,8,.92)', dark2 = 'rgba(28,6,8,.6)';
   g.fillStyle = red; g.fillRect(0, 0, S, S);
@@ -235,15 +282,47 @@ function buildHand(env) {
   // (ユーザー 2026-11-14: the hand looked dark in the shade — fair and clean like a hand model's: lighter skin that glows a little from within
   // (so the shaded side stays rosy, never grey), and casts no shadow on itself)
   const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: new THREE.Color(0xf6e6de).convertSRGBToLinear(), roughness: .5, metalness: 0, sheen: .35, sheenRoughness: .5, sheenColor: new THREE.Color(0xffe0d4), emissive: new THREE.Color(0xc98a78), emissiveIntensity: .32, envMap: env, envMapIntensity: .35 });
-  skin.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+  // (ユーザー 2026-11-14: a feel of skin — a fine texture on the hand.) The mesh has no uv, so the detail is solid noise in the hand's own
+  // space, worked into the normal as a bump: pores (a fine pitted grain), the faint diamond lines of skin, and a slow unevenness; the
+  // same noise makes the gloss uneven (the pores matt, the skin between a little sheen) and the colour very slightly blotchy.
+  skin.onBeforeCompile = sh => {
+    sh.vertexShader = 'varying vec3 vSkP;\n' + sh.vertexShader.replace('#include <morphtarget_vertex>', '#include <morphtarget_vertex>\n vSkP = transformed;');
+    sh.fragmentShader = `varying vec3 vSkP;
+      float skH(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+      float skN(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
+        return mix(mix(mix(skH(i), skH(i + vec3(1,0,0)), f.x), mix(skH(i + vec3(0,1,0)), skH(i + vec3(1,1,0)), f.x), f.y),
+                   mix(mix(skH(i + vec3(0,0,1)), skH(i + vec3(1,0,1)), f.x), mix(skH(i + vec3(0,1,1)), skH(i + vec3(1,1,1)), f.x), f.y), f.z); }
+      float skHeight(vec3 p){
+        float pore = smoothstep(.62, .82, skN(p * 46.)) ;                                  // pits
+        float lines = abs(sin(dot(p, vec3(31., 9., 23.)) + skN(p * 7.) * 3.)) * abs(sin(dot(p, vec3(-11., 27., 19.)) + skN(p * 6.) * 3.));   // the skin's criss-cross lines
+        return -pore * .6 + (1. - smoothstep(0., .25, lines)) * -.35 + skN(p * 9.) * .4; }
+      vec3 skPerturb(vec3 surf_pos, vec3 n, vec2 dH, float fd){ vec3 sx = dFdx(surf_pos), sy = dFdy(surf_pos), r1 = cross(sy, n), r2 = cross(n, sx);
+        float det = dot(sx, r1) * fd; vec3 g = sign(det) * (dH.x * r1 + dH.y * r2); return normalize(abs(det) * n - g); }
+    ` + sh.fragmentShader
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        { float hh = skHeight(vSkP) * .0016; normal = skPerturb(-vViewPosition, normal, vec2(dFdx(hh), dFdy(hh)), faceDirection); }`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor = clamp(roughnessFactor * (.9 + .25 * smoothstep(.55, .85, skN(vSkP * 46.))), .05, 1.);`)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        diffuseColor.rgb *= .97 + .06 * skN(vSkP * 4.5);`)
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
     { vec3 sL = normalize((viewMatrix * vec4(.2, 1., .3, 0.)).xyz); float sn = dot(normalize(vNormal), sL), sv = 1. - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0., 1.);
       totalEmissiveRadiance += diffuseColor.rgb * vec3(1., .3, .2) * (smoothstep(-.55, .05, sn) * (1. - smoothstep(.0, .6, sn)) * .34 + sv * sv * sv * .16); }`); };
-  const nail = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .22, clearcoat: 1, clearcoatRoughness: .08, envMap: env, envMapIntensity: .7, emissive: new THREE.Color(0x40141c), emissiveIntensity: .35 });
+  const nail = new THREE.MeshPhysicalMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: .22, clearcoat: 1, clearcoatRoughness: .05, envMap: env, envMapIntensity: .9,   // (long nails: a thin shell, seen from both sides — ユーザー 2026-11-14)
+    emissive: new THREE.Color(0x40141c), emissiveIntensity: .35 });
+  // the nails (ユーザー 2026-11-14, a picture of long coffin nails): a sheer nude pink under a high gloss, with fine glitter in it —
+  // tiny flecks that flash as the hand turns
+  nail.onBeforeCompile = sh => {
+    sh.vertexShader = 'varying vec3 vNkP;\n' + sh.vertexShader.replace('#include <morphtarget_vertex>', '#include <morphtarget_vertex>\n vNkP = transformed;');
+    sh.fragmentShader = 'varying vec3 vNkP;\nfloat nkH(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+      { vec3 c = floor(vNkP * 90.), f = fract(vNkP * 90.) - .5; float r = nkH(c);
+        if (r > .78) { vec3 fn = normalize(vec3(nkH(c + 1.), nkH(c + 2.), nkH(c + 3.)) - .5); float sp = pow(max(0., dot(reflect(normalize(vViewPosition), normalize(vNormal)), fn)), 6.);
+          totalEmissiveRadiance += vec3(1., .95, .97) * sp * smoothstep(.45, .1, length(f)) * 2.2; } }`); };
   const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; hand.frustumCulled = false; rig.add(hand); if (Hd.mi) hand.morphTargetInfluences = [0];
   // the sleeve (ユーザー 2026-11-14: only a glimpse of the wrist, the sleeve long; a pattern as on a Chinese dress): crimson silk
   // brocade — gold flower roundels and cloud scrolls woven in — closing just above the wrist in a black band between two gold pipings.
   const bro = brocadeTex('#8c1626');
-  const cloth = new THREE.MeshPhysicalMaterial({ map: bro, roughness: .5, metalness: 0, sheen: .8, sheenRoughness: .35, sheenColor: new THREE.Color(0xffb0a0), envMap: env, envMapIntensity: .3 });
+  const cloth = new THREE.MeshPhysicalMaterial({ map: bro, roughness: .93, metalness: 0, sheen: .3, sheenRoughness: .9, sheenColor: new THREE.Color(0xb08078), envMap: env, envMapIntensity: .04, bumpMap: weaveTex(), bumpScale: 1.2 });   // (ユーザー 2026-11-14: woven cloth — matt, a soft fuzz at the edges, no reflections)
   const band = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x14080c).convertSRGBToLinear(), roughness: .6 });
   rig.clothMat = cloth;   // (not in userData: clone() copies that through JSON)
   const gold = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd9b062).convertSRGBToLinear(), roughness: .32, metalness: .85, envMap: env, envMapIntensity: .9 });
@@ -260,6 +339,9 @@ function buildHand(env) {
   return rig;
 }
 const ROW = 6;
+// the opponents' hand rows stand inside the slot the automatic table raises them from (ユーザー 2026-11-15) — the slot pressed into
+// the felt runs x −7.3…7.3, z 7.42…8.40 from its owner's side: the row starts at its left end and stands on its middle line
+const HX0 = -7.27, HZ = 7.91, HGAP = 0.25;
 const SPD = 1.6;   // every movement on the table runs this much faster than its written duration (ユーザー 2026-11-14: a little quicker overall)
 const PI = Math.PI;
 
@@ -268,14 +350,14 @@ function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcT
 class Table3D {
   constructor(host) {
     this.host = host;
-    const r = this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+    const r = this.renderer = new THREE.WebGLRenderer({ antialias: (window.devicePixelRatio || 1) < 1.5, alpha: true, powerPreference: 'high-performance' });   // (2026-11-14, optimisation: a high-density screen is already sharp — no multisampling on top; and the faster GPU when there are two)
     const mobile = matchMedia('(pointer: coarse)').matches;
     this.mobile = mobile;
-    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5));
+    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5)); this.prMax = mobile ? 1.25 : 1.5; this.dyn = 1;
     r.outputEncoding = THREE.sRGBEncoding;
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFShadowMap;
-    r.shadowMap.autoUpdate = true;
+    r.shadowMap.autoUpdate = false;   // (redrawn only when something moved — not for the dora's glint: _loop)
     host.appendChild(r.domElement);
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(36, 1, 0.5, 200);
@@ -287,7 +369,7 @@ class Table3D {
     this.build(mobile);
     this.scene.traverse(o => { if (o.isLight) o.layers.enable(1); });   // (the overlay pass draws layer 1 only: the lights must reach it)
     this.resize();
-    this._ro = new ResizeObserver(() => this.resize());
+    this._ro = new ResizeObserver(() => { this.resize(); try { this._syncInst(); this.renderer.render(this.scene, this.camera); } catch (e) {} });   // (drawn at once: a resized canvas is blank until drawn)
     this._ro.observe(host);
     this._loop = this._loop.bind(this);
     requestAnimationFrame(this._loop);
@@ -300,9 +382,9 @@ class Table3D {
     // light on the middle of the table, the rim a tone lower. So the fill and the key are a little under what a flat light would
     // need, and a wide, fully soft spot from above the middle adds the rest: brightest at the score unit, easing off to the rails
     // (no edge to the pool — penumbra 1). It is light, not paint: the cloth's own texture stays even, so a new skin gets the same mood.
-    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x141a30, 0.3));
-    const pool = new THREE.SpotLight(0xfff3e2, 1.45, 0, 0.34, 1, 1); pool.position.set(0, 24, 1.5); pool.target.position.set(0, 0, 0.6); s.add(pool); s.add(pool.target);
-    const key = new THREE.DirectionalLight(0xffffff, 0.4);
+    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x141a30, 0.22));
+    const pool = new THREE.SpotLight(0xfff3e2, 0.7, 0, 0.46, 1, 1); pool.position.set(0, 24, 1.5); pool.target.position.set(0, 0, 0.6); s.add(pool); s.add(pool.target);
+    const key = new THREE.DirectionalLight(0xffffff, 0.3);
     key.position.set(-6, 22, 10);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -316,7 +398,8 @@ class Table3D {
     // table pressed into it — the centre lift panel round the score unit, the four flaps that swallow the tiles (the square
     // with its diagonals, as on a real table) and the four slots the walls rise from.
     const U = 2048 / 21.2;                       // texture px per world unit
-    const fc = document.createElement('canvas'); fc.width = fc.height = 2048;
+    let fc = bakedCanvas('felt');
+    if (!fc) { fc = document.createElement('canvas'); fc.width = fc.height = 2048;
     const g = fc.getContext('2d');
     { const N = mkNoise(11), A = N.oct([6, 12, 24, 48, 96]), img = g.createImageData(2048, 2048), d = img.data;
       for (let y = 0; y < 2048; y++) for (let x = 0; x < 2048; x++) {
@@ -338,6 +421,7 @@ class Table3D {
     // the dark well the score unit stands in (its shadow on the cloth)
     { const sh = g.createRadialGradient(0, 0, 1.5 * U, 0, 0, 2.6 * U); sh.addColorStop(0, 'rgba(4,8,18,.6)'); sh.addColorStop(.75, 'rgba(4,8,18,.3)'); sh.addColorStop(1, 'rgba(4,8,18,0)'); g.fillStyle = sh; g.fillRect(-2.7 * U, -2.7 * U, 5.4 * U, 5.4 * U); }
     g.setTransform(1, 0, 0, 1, 0, 0);
+    keepGen('felt', fc); }
     const felt = new THREE.CanvasTexture(fc); felt.encoding = THREE.sRGBEncoding; felt.anisotropy = 8;
     const table = new THREE.Mesh(new THREE.PlaneGeometry(21.2, 21.2), new THREE.MeshStandardMaterial({ map: felt, roughness: 1, metalness: 0, bumpMap: napTex(), bumpScale: .012 }));
     table.rotation.x = -PI / 2; table.receiveShadow = true; s.add(table);
@@ -349,7 +433,9 @@ class Table3D {
 
     // ---- the frame: four walnut rails with rounded edges and four rounded corner blocks, lacquered; a black lip round the cloth
     const wood = woodTex(); this.envTex = this.envTex || studioEnv();
-    const rimMat = new THREE.MeshPhysicalMaterial({ map: wood, roughness: .42, metalness: 0, clearcoat: .55, clearcoatRoughness: .22, envMap: this.envTex, envMapIntensity: .5 });
+    // (ユーザー 2026-11-14: glossy — a deep lacquer over the open-pored wood: the coat is near mirror-smooth and shows the room's lights
+    // as long highlights along the rails, the wood under it stays satin, the pores read through the coat as a fine texture)
+    const rimMat = new THREE.MeshStandardMaterial({ map: wood.map, bumpMap: wood.bump, bumpScale: .45, roughness: .18, metalness: 0, envMap: this.envTex, envMapIntensity: 1.25 });   // (2026-11-14, optimisation: the lacquer's gloss in one smooth layer instead of a clear coat over a satin wood)
     const lipMat = new THREE.MeshStandardMaterial({ color: 0x0d0d10, roughness: .45, metalness: .2 });
     const RW = 1.75, RH0 = -0.28, RH1 = 0.92, RR = 0.26, RL = 21.1, RC = 10.55 + RW / 2;   // rail: width, bottom, top, edge radius, length, centre line
     { const sh = new THREE.Shape(), x0 = -RW / 2, x1 = RW / 2;
@@ -357,20 +443,23 @@ class Table3D {
       sh.lineTo(x0 + RR, RH1); sh.quadraticCurveTo(x0, RH1, x0, RH1 - RR); sh.lineTo(x0, RH0 + RR); sh.quadraticCurveTo(x0, RH0, x0 + RR, RH0);
       const rg = new THREE.ExtrudeGeometry(sh, { depth: RL, bevelEnabled: false, curveSegments: 5 }); rg.translate(0, 0, -RL / 2);
       const P = rg.attributes.position, UV = rg.attributes.uv, cy = (RH0 + RH1) / 2;
-      for (let i = 0; i < P.count; i++) UV.setXY(i, P.getZ(i) / 7.5, Math.atan2(P.getX(i), P.getY(i) - cy) / (2 * PI) * 1.15 + .5);   // the grain runs along the rail and wraps round its section (the join is underneath)
+      for (let i = 0; i < P.count; i++) UV.setXY(i, P.getZ(i) / RL + .5, Math.atan2(P.getX(i), P.getY(i) - cy) / (2 * PI) * 1.15 + .5);   // (the whole board along the rail, once)   // the grain runs along the rail and wraps round its section (the join is underneath)
       rg.rotateY(PI / 2);
-      for (let k = 0; k < 4; k++) { const a = k * PI / 2, b = new THREE.Mesh(rg, rimMat); b.position.set(Math.sin(a) * RC, 0, Math.cos(a) * RC); b.rotation.y = a; b.castShadow = b.receiveShadow = true; s.add(b);
+      // (each rail its own cut of the board — another stretch, other rings: the same texture, its uv shifted per rail)
+      const shifted = (geo, du, dv) => { const q = geo.clone(), U = q.attributes.uv; for (let i = 0; i < U.count; i++) U.setXY(i, U.getX(i) + du, U.getY(i) + dv); return q; };
+      for (let k = 0; k < 4; k++) { const a = k * PI / 2, b = new THREE.Mesh(shifted(rg, k * .37, k * .29), rimMat); b.position.set(Math.sin(a) * RC, 0, Math.cos(a) * RC); b.rotation.y = a; b.castShadow = b.receiveShadow = true; s.add(b);
         const lip = new THREE.Mesh(new THREE.BoxGeometry(21.2, 0.2, 0.12), lipMat); lip.position.set(Math.sin(a) * 10.56, 0.1, Math.cos(a) * 10.56); lip.rotation.y = a; s.add(lip); } }
     { const E = RW + .06, cr = 1.15, bv = .2, sh = new THREE.Shape();   // corner block: a square whose outer corner is rounded, its top edge rounded like the rails'
       sh.moveTo(0, 0); sh.lineTo(E, 0); sh.lineTo(E, E - cr); sh.quadraticCurveTo(E, E, E - cr, E); sh.lineTo(0, E); sh.closePath();
       const cg = new THREE.ExtrudeGeometry(sh, { depth: RH1 - RH0 - bv, bevelEnabled: true, bevelThickness: bv, bevelSize: bv, bevelOffset: -bv, bevelSegments: 4, curveSegments: 8 });
       cg.rotateX(-PI / 2); cg.translate(0, RH0, 0);   // (shape x → x, shape y → −z, height → y)
       const P = cg.attributes.position, UV = cg.attributes.uv;
-      for (let i = 0; i < P.count; i++) UV.setXY(i, (P.getX(i) + P.getZ(i)) / 7.5 + .31, (P.getX(i) - P.getZ(i)) / 3.4 + P.getY(i) * .25);   // grain across the corner
-      for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(cg, rimMat); m.rotation.y = k * PI / 2; const q = this.local(k, 10.53, -10.53 + 0); m.position.set(0, 0, 0);
+      for (let i = 0; i < P.count; i++) UV.setXY(i, (P.getX(i) + P.getZ(i)) / RL + .31, (P.getX(i) - P.getZ(i)) / 3.4 + P.getY(i) * .25);   // grain across the corner
+      for (let k = 0; k < 4; k++) { const cq = cg.clone(), U = cq.attributes.uv; for (let i = 0; i < U.count; i++) U.setXY(i, U.getX(i) + .13 + k * .23, U.getY(i) + .61 + k * .17);
+        const m = new THREE.Mesh(cq, rimMat); m.rotation.y = k * PI / 2; const q = this.local(k, 10.53, -10.53 + 0); m.position.set(0, 0, 0);
         // the block's own corner sits at the cloth's corner (+x, −z in its own frame), turned round the table's centre
         const piv = new THREE.Group(); piv.rotation.y = k * PI / 2; m.rotation.y = 0; m.position.set(10.53, 0, -10.53); piv.add(m); m.castShadow = m.receiveShadow = true; s.add(piv); void q; } }
-    const under = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshStandardMaterial({ color: 0x0c0a14, roughness: 1 }));
+    const under = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x05040a).convertSRGBToLinear() }));   // (the floor beyond the rug: the same dark as the page round the table — ユーザー 2026-11-14: a lighter band showed at the top)
     under.rotation.x = -PI / 2; under.position.y = -0.4; s.add(under);
 
     // ---- the score unit (the centre of an automatic table): a rounded panel under a clear cover, standing on a narrower
@@ -383,7 +472,7 @@ class Table3D {
     const rsq = (h, r) => { const p = new THREE.Shape(); p.moveTo(-h + r, -h); p.lineTo(h - r, -h); p.quadraticCurveTo(h, -h, h, -h + r); p.lineTo(h, h - r); p.quadraticCurveTo(h, h, h - r, h); p.lineTo(-h + r, h); p.quadraticCurveTo(-h, h, -h, h - r); p.lineTo(-h, -h + r); p.quadraticCurveTo(-h, -h, -h + r, -h); return p; };
     const cgeo = new THREE.ExtrudeGeometry(rsq(CH - .07, CR), { depth: 0.12, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.07, bevelSegments: 3, curveSegments: 6 });
     for (const t of [this.conTex, this.conETex]) { t.repeat.set(1 / (CH * 2), 1 / (CH * 2)); t.offset.set(.5, .5); }
-    const conTop = new THREE.MeshPhysicalMaterial({ map: this.conTex, roughness: .34, metalness: .25, clearcoat: 1, clearcoatRoughness: .08, envMap: this.envTex, envMapIntensity: .55, emissive: 0xffffff, emissiveMap: this.conETex, emissiveIntensity: .95 });
+    const conTop = new THREE.MeshStandardMaterial({ map: this.conTex, roughness: .14, metalness: .25, envMap: this.envTex, envMapIntensity: .7, emissive: 0xffffff, emissiveMap: this.conETex, emissiveIntensity: .95 });
     const conSide = new THREE.MeshStandardMaterial({ color: 0x9aa0aa, roughness: .28, metalness: .9, envMap: this.envTex, envMapIntensity: .8 });   // a bright metal trim round the panel
     const con = new THREE.Mesh(cgeo, [conTop, conSide]);
     con.rotation.x = -PI / 2; con.position.y = 0.36; con.castShadow = true; con.receiveShadow = true; s.add(con);
@@ -405,14 +494,14 @@ class Table3D {
     // shared tile geometry/materials
     // the tiles (2026-11-14, as 上海's): rounded white blocks with a purple back — corners and edges rounded, the face
     // carved (normal map from tiles.js). One shared geometry for the white part and one for the back.
-    { const tg = tileGeos(W, H, D, 0.16, 0.15, 0.28, 0.15), tb = tileGeos(W, H, D, 0.16, 0.05, 0.28, 0.05); this.geoFront = tg.front; this.geoBack = tb.back; }   // (ユーザー 2026-11-14: the face keeps its full round edge; the purple back has the crisper edge of the tiles in the dora box — the two meet on the straight side, same outline)   // (one rounded block, split where the white meets the purple)
-    this.matIvory = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xf7f7f3).convertSRGBToLinear(), roughness: .38, metalness: 0 });
+    { const tg = tileGeos(W, H, D, 0.16, 0.1, 0.28, 0.1), tb = tileGeos(W, H, D, 0.16, 0.05, 0.28, 0.05); this.geoFront = tg.front; this.geoBack = tb.back; }   // (ユーザー 2026-11-14: the face keeps its full round edge; the purple back has the crisper edge of the tiles in the dora box — the two meet on the straight side, same outline)   // (one rounded block, split where the white meets the purple)
+    this.matIvory = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xe6e5df).convertSRGBToLinear(), roughness: .38, metalness: 0 });
     // the back (2026-11-14, ユーザー：紫をもう少し淡く、高級石を磨いたような質感): a pale lavender stone with soft veins, polished
     // (a clear coat over it, a little studio light reflected in it) — four cuts of the same slab so neighbours don't match
     this.envTex = this.envTex || studioEnv();
     const stone = stoneTex();
     this.matBacks = [0, 1, 2, 3].map(k => { const t = stone.clone(); t.needsUpdate = true; t.offset.set(k * .27, k * .41);
-      return new THREE.MeshPhysicalMaterial({ map: t, roughness: .3, metalness: 0, ior: 2.1, clearcoat: .8, clearcoatRoughness: .32, envMap: this.envTex, envMapIntensity: 1 }); });   // (2026-11-14, ユーザー: a little more sheen — stone polished by hand, not a gloss coat: a denser stone (ior 2.1: it gives back about three times the light of the plain 1.5) under a soft coat, both rough enough that the room shows as a broad glow, never as a mirror image)
+      return new THREE.MeshStandardMaterial({ map: t, roughness: .26, metalness: 0, envMap: this.envTex, envMapIntensity: 1.35 }); });   // (2026-11-14, optimisation: the same polished look without the clear-coat layer — the light it reflected is put into a smoother, brighter-reflecting surface)   // (2026-11-14, ユーザー: a little more sheen — stone polished by hand, not a gloss coat: a denser stone (ior 2.1: it gives back about three times the light of the plain 1.5) under a soft coat, both rough enough that the room shows as a broad glow, never as a mirror image)
     this.matBack = this.matBacks[0];
     this.matHi = new THREE.MeshStandardMaterial({ color: 0xfff1b8, roughness: .35, emissive: 0x6a5208, emissiveIntensity: .45 });
     this.setInfo({ round: 0, kyoku: 0, honba: 0, kyotaku: 0, left: 70, scores: [25000, 25000, 25000, 25000], dealer: 0, turn: -1 });
@@ -426,7 +515,7 @@ class Table3D {
       const tex = new THREE.CanvasTexture(MJTiles.canvas(t, red));
       tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
       const nrm = MJTiles.sheets() ? new THREE.CanvasTexture(MJTiles.normal(t, red)) : null; if (nrm) nrm.anisotropy = 8;
-      m = { normal: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38 }), hi: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, emissive: 0xffd36a, emissiveIntensity: .28 }), dim: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, color: 0x9c9c9c }) };
+      m = { normal: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, color: 0xe4e2dc }), hi: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, emissive: 0xffd36a, emissiveIntensity: .28 }), dim: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, color: 0x9c9c9c }) };
       this.faceTex.set(k, m);
     }
     return m;
@@ -434,14 +523,10 @@ class Table3D {
   tile(id) {
     let g = this.tiles.get(id);
     if (g) return g;
-    g = new THREE.Group();
-    const fm = this.faceMat(id);
-    const front = new THREE.Mesh(this.geoFront, [fm.normal, this.matIvory]);   // (group 0: the face cap, 1: the rest)
-    const back = new THREE.Mesh(this.geoBack, this.matBacks[id % 4]);
-    front.castShadow = back.castShadow = true; front.receiveShadow = true;
-    g.add(front, back);
+    g = new THREE.Group();   // (an empty frame: the tile itself is drawn by the instanced meshes, _inst / _syncInst)
+    this._inst();
     g.rotation.order = 'YXZ';
-    g.userData = { id, front, fm };
+    g.userData = { id, look: 'normal' };
     g.visible = false;
     this.scene.add(g);
     this.tiles.set(id, g);
@@ -482,8 +567,83 @@ class Table3D {
     return url;
   }
   setTileLook(g, look) {
-    const fm = g.userData.fm;
-    g.userData.front.material[0] = look === 'hi' ? fm.hi : look === 'dim' ? fm.dim : fm.normal;
+    if (g.userData.look !== look) { g.userData.look = look; this.dirty = true; }
+    const so = g.userData.solo; if (so) { const fm = this.faceMat(g.userData.id); so[0].material[0] = look === 'hi' ? fm.hi : look === 'dim' ? fm.dim : fm.normal; }
+  }
+  // ---- the tiles in three draws (2026-11-14, optimisation — ユーザー: as light as it can be): every tile on the table is one
+  // instance of three InstancedMeshes — the faces (all the pictures in one atlas, each instance pointing at its cell), the white
+  // body and the purple back (four cuts of the stone, an offset per instance). Before each frame the tiles' frames (the groups
+  // the rest of the code moves) are copied in. ~180 draw calls (and as many again for the shadows) become 3.
+  _atlas() {
+    if (this.A && (this.A.sheets || !MJTiles.sheets())) return this.A;
+    const FW = MJTiles.FW, FH = MJTiles.FH, pad = 8, cw = FW + pad * 2, ch = FH + pad * 2, cols = 8, rows = 5;
+    const mk = () => { const c = document.createElement('canvas'); c.width = cols * cw; c.height = rows * ch; return c; };
+    const cv = mk(), cn = MJTiles.sheets() ? mk() : null, g = cv.getContext('2d'), gn = cn && cn.getContext('2d');
+    const cells = {}; let k = 0;
+    const put = (gg, src, x, y) => { gg.drawImage(src, x - pad, y - pad, FW + pad * 2, FH + pad * 2); gg.drawImage(src, x, y, FW, FH); };   // (the picture's edge stretched into the padding: no bleeding from the neighbours)
+    for (let t = 0; t < 34; t++) for (const red of t === 4 || t === 13 || t === 22 ? [false, true] : [false]) {
+      const col = k % cols, row = (k / cols) | 0, x = col * cw + pad, y = row * ch + pad;
+      put(g, MJTiles.canvas(t, red), x, y); if (gn) put(gn, MJTiles.normal(t, red), x, y);
+      cells[t + (red ? 'r' : '')] = [col, rows - 1 - row]; k++; }
+    const tex = c => { const t = new THREE.CanvasTexture(c); t.anisotropy = 8; return t; };
+    const map = tex(cv); map.encoding = THREE.sRGBEncoding;
+    const A = { map, nrm: cn ? tex(cn) : null, cells, sheets: !!cn, cell: new THREE.Vector4(cw / cv.width, ch / cv.height, FW / cv.width, FH / cv.height), pad: new THREE.Vector2(pad / cv.width, pad / cv.height) };
+    if (this.A && this.I) { const m = this.I.face.material; m.map = A.map; m.normalMap = A.nrm; m.needsUpdate = true; }
+    return (this.A = A);
+  }
+  _inst() {
+    if (this.I) return this.I;
+    const N = 136, F = this.geoFront, nf = F.groups[0].count, A = this._atlas();
+    const sub = (geo, st, n) => { const o = new THREE.BufferGeometry(); for (const k of ['position', 'normal', 'uv']) { const a = geo.attributes[k]; o.setAttribute(k, new THREE.BufferAttribute(a.array.slice(st * a.itemSize, (st + n) * a.itemSize), a.itemSize)); } return o; };
+    const gFace = sub(F, 0, nf), gBody = sub(F, nf, F.groups[1].count), gBack = this.geoBack.clone();
+    const aCell = new THREE.InstancedBufferAttribute(new Float32Array(N * 3), 3); aCell.setUsage(THREE.DynamicDrawUsage); gFace.setAttribute('aCell', aCell);
+    const aOff = new THREE.InstancedBufferAttribute(new Float32Array(N * 2), 2); aOff.setUsage(THREE.DynamicDrawUsage); gBack.setAttribute('aOff', aOff);
+    const faceMat = new THREE.MeshStandardMaterial({ map: A.map, normalMap: A.nrm, roughness: .38, color: 0xe4e2dc });
+    faceMat.onBeforeCompile = sh => {
+      sh.uniforms.uCell = { value: this.A.cell }; sh.uniforms.uPad = { value: this.A.pad };
+      sh.vertexShader = 'attribute vec3 aCell;\nvarying vec3 vCell;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vCell = aCell;');
+      sh.fragmentShader = 'uniform vec4 uCell; uniform vec2 uPad; varying vec3 vCell;\nvec2 atlasUV(vec2 u){ return vCell.xy * uCell.xy + uPad + clamp(u, 0., 1.) * uCell.zw; }\n' + sh.fragmentShader
+        .replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment.split('vMapUv').join('atlasUV(vMapUv)'))   // (the chunks are opened here: their texture reads go through the atlas)
+        .replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.split('vNormalMapUv').join('atlasUV(vNormalMapUv)'))
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += vec3(1., .66, .15) * .28 * vCell.z;');   // (a highlighted tile: a soft gold glow)
+    };
+    const backMat = this.matBacks[0].clone(); backMat.map = this.matBacks[0].map;
+    backMat.onBeforeCompile = sh => {
+      sh.vertexShader = 'attribute vec2 aOff;\nvarying vec2 vOff;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vOff = aOff;');
+      sh.fragmentShader = 'varying vec2 vOff;\n' + sh.fragmentShader.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment.split('vMapUv').join('(vMapUv + vOff)'));
+    };
+    const mk = (geo, mat, recv) => { const m = new THREE.InstancedMesh(geo, mat, N); m.count = 0; m.frustumCulled = false; m.castShadow = true; m.receiveShadow = recv; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); this.scene.add(m); return m; };
+    const face = mk(gFace, faceMat, true), body = mk(gBody, this.matIvory, true), back = mk(gBack, backMat, false);
+    face.setColorAt(0, new THREE.Color(1, 1, 1)); face.instanceColor.setUsage(THREE.DynamicDrawUsage);
+    return (this.I = { face, body, back, aCell, aOff, N });
+  }
+  _syncInst() {
+    const I = this.I; if (!I) return;
+    const A = this._atlas(), dimC = new THREE.Color(.68, .68, .68), one = new THREE.Color(1, 1, 1);
+    let n = 0;
+    for (const g of this.tiles.values()) {
+      if (!g.visible) continue;
+      g.updateMatrix();
+      I.face.setMatrixAt(n, g.matrix); I.body.setMatrixAt(n, g.matrix); I.back.setMatrixAt(n, g.matrix);
+      const id = g.userData.id, t = id >> 2, red = id === 16 || id === 52 || id === 88, c = A.cells[t + (red ? 'r' : '')], look = g.userData.look;
+      I.aCell.setXYZ(n, c[0], c[1], look === 'hi' ? 1 : 0); I.face.setColorAt(n, look === 'dim' ? dimC : one);
+      I.aOff.setXY(n, (id % 4) * .27, (id % 4) * .41);
+      if (++n >= I.N) break;
+    }
+    for (const m of [I.face, I.body, I.back]) { m.count = n; m.instanceMatrix.needsUpdate = true; }
+    I.aCell.needsUpdate = true; I.aOff.needsUpdate = true; I.face.instanceColor.needsUpdate = true;
+  }
+  // the player's own discard is also drawn over the page (layer 1): for that moment the tile gets real meshes of its own, on layer 1 only
+  _solo(g, on) {
+    if (on) {
+      if (!g.userData.solo) { const fm = this.faceMat(g.userData.id), lk = g.userData.look;
+        const f = new THREE.Mesh(this.geoFront, [lk === 'hi' ? fm.hi : lk === 'dim' ? fm.dim : fm.normal, this.matIvory]), b = new THREE.Mesh(this.geoBack, this.matBacks[g.userData.id % 4]);
+        g.add(f, b); g.userData.solo = [f, b]; }
+      g.traverse(o => o.layers.enable(1)); for (const m of g.userData.solo) m.layers.set(1);
+    } else {
+      g.traverse(o => o.layers.disable(1));
+      if (g.userData.solo) { for (const m of g.userData.solo) g.remove(m); g.userData.solo = null; }
+    }
   }
 
   // local (lx right of seat, lz toward seat) -> world
@@ -542,7 +702,20 @@ class Table3D {
   // the dora's glow lies on the face itself (ユーザー 2026-11-14: not a flat pane over the tile, like a case): the face's own
   // triangles (the flat and the start of the round-over) lifted a hair along their normals, uv 0..1 over that area
   _doraMake() { this.doraGeo = this._tileSkin();
-          this.doraMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: -1 } },
+    this.doraMat = this._glowMat('1.0, .42, .68', '1.0, .92, .96');
+    // (ユーザー 2026-11-15) the tile that can be called (pon, chi, ron) wears the same glow in yellow
+    this.callMat = this._glowMat('1.0, .74, .08', '1.0, .97, .78'); }
+  // the call glow: on one tile (by id) or none; its light runs round without a pause while it is on
+  markCall(id) {
+    const old = this._callG; if (old && old.userData.callFx) old.userData.callFx.visible = false;
+    this._callG = null;
+    const g = id == null ? null : this.tiles.get(id);
+    if (g) { if (!this.callMat) this._doraMake();
+      let o = g.userData.callFx; if (!o) { o = g.userData.callFx = new THREE.Mesh(this.doraGeo, this.callMat); o.renderOrder = 4; g.add(o); }
+      o.visible = true; this._callG = g; }
+    this.dirty = true;
+  }
+  _glowMat(c0, c1) { return new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: -1 } },
             vertexShader: `varying vec3 vP; varying vec3 vN; varying vec3 vV; varying float vF;
               void main(){ vP = position; vF = normal.z; vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
             fragmentShader: `varying vec3 vP; varying vec3 vN; varying vec3 vV; varying float vF; uniform float uT;
@@ -559,7 +732,7 @@ class Table3D {
                 float sw = uT < 0.0 ? 0.0 : clamp(uT * 1.25, 0.0, 1.0), bp = p.x * .4 + p.y * .5 - mix(-1.3, 1.3, sw);
                 float band = uT < 0.0 ? 0.0 : (exp(-bp * bp / .006) * .85 + exp(-bp * bp / .05) * .25) * sin(sw * 3.14159) * 1.35;   // a band of light sweeps across the tile
                 float a = clamp(.15 + rim * .6 + run * 1.2 + st + band, 0.0, .96);
-                gl_FragColor = vec4(mix(vec3(1.0, .42, .68), vec3(1.0, .92, .96), clamp(run * 1.4 + st + band * 1.2, 0.0, 1.0)), a); }` }); }
+                gl_FragColor = vec4(mix(vec3(${c0}), vec3(${c1}), clamp(run * 1.4 + st + band * 1.2, 0.0, 1.0)), a); }` }); }
   // compile the shaders ahead of time (ユーザー 2026-11-14: no hitch the first time a dora or a new look shows mid-game)
   warm() { try { if (!this.doraMat) this._doraMake(); const m = new THREE.Mesh(this.doraGeo, this.doraMat); m.frustumCulled = false; this.scene.add(m); this.renderer.compile(this.scene, this.camera); this.scene.remove(m); } catch (e) {} }
   _tileSkin() {   // the whole tile (white part and back), lifted a hair along the normals
@@ -593,8 +766,17 @@ class Table3D {
     let m = this.sleeveMats.get(col);
     if (!m) { const c = new THREE.Color(col), hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, Math.min(1, hsl.s * .9), hsl.l > .78 ? hsl.l * .9 : hsl.l * .52);
       const base = '#' + c.getHexString(), proto = this.handProto.clothMat;
-      m = proto.clone(); m.map = brocadeTex(base); m.sheenColor = new THREE.Color(col).lerp(new THREE.Color(0xffffff), .45); this.sleeveMats.set(col, m); }
+      m = proto.clone(); m.map = brocadeTex(base); m.sheenColor = new THREE.Color(col).lerp(new THREE.Color(0xffffff), .2).multiplyScalar(.6); this.sleeveMats.set(col, m); }
     rig.traverse(o => { if (o.userData && o.userData.sleeve) o.material = m; });
+    // (ユーザー 2026-11-14: the nails in her colour too, like the sleeve) — a glossy polish of the sisters' colour, a little lighter,
+    // the glitter in it as before (the same shader: the clone keeps onBeforeCompile)
+    this.nailMats = this.nailMats || new Map();
+    let nm = this.nailMats.get(col);
+    if (!nm) { rig.traverse(o => { if (!nm && o.isMesh && Array.isArray(o.material) && o.material[1]) { const b = this.nailBase || (this.nailBase = o.material[1]);
+        nm = b.clone(); nm.onBeforeCompile = b.onBeforeCompile; nm.vertexColors = false;
+        const c = new THREE.Color(col), hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, Math.min(1, hsl.s * .85), Math.min(.72, Math.max(.42, hsl.l)));
+        nm.color = c.convertSRGBToLinear(); this.nailMats.set(col, nm); } }); }
+    if (nm) rig.traverse(o => { if (o.isMesh && Array.isArray(o.material) && o.material[1]) o.material = [o.material[0], nm]; });
   }
   _over2() {   // the overlay's renderer (made on the first use; no shadows)
     if (this.r2) return this.r2;
@@ -626,7 +808,7 @@ class Table3D {
     this._drop(g, seat);
     g.visible = true; g.position.set(f.x, f.y, f.z); g.rotation.set(f.rx, f.ry, f.rz); g.userData.target = to;
     const out = this.local(seat, 0, 3.4), r = { x: f.x + out.x, y: f.y + 2.6, z: f.z + out.z };   // from behind and above the tile
-    if (f.page) { g.traverse(o => o.layers.enable(1)); rig.traverse(o => o.layers.enable(1)); this._ov = { g, rig }; }   // (the tile of the page's hand row: drawn over the page too)
+    if (f.page) { this._solo(g, true); rig.traverse(o => o.layers.enable(1)); this._ov = { g, rig }; }   // (the tile of the page's hand row: drawn over the page too)
     this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(r.x, r.y, r.z);
     // (the first frame of the overlay uploads its textures and builds its shaders: draw it once before the clock starts, or
     // that pause would eat the movement — it is timed, not counted in frames. The player's own discard is also a little slower, to be seen.)
@@ -663,7 +845,7 @@ class Table3D {
     this.tweens = this.tweens.filter(t => t.sort !== seat);
     if (S.ran) { const rig = this.hand(seat); this.handFx = this.handFx.filter(h => h.rig !== rig); if (rig.visible) this._handBack(seat); }
   }
-  _slot(seat, i) { const p = this.local(seat, -6.6 + i * (W + 0.02) + W / 2, 8.45); return { x: p.x, y: H / 2, z: p.z, rx: 0, ry: seat * PI / 2, rz: 0 }; }
+  _slot(seat, i) { const p = this.local(seat, HX0 + i * (W + 0.02) + W / 2, HZ); return { x: p.x, y: H / 2, z: p.z, rx: 0, ry: seat * PI / 2, rz: 0 }; }
   _pose(g) { return { x: g.position.x, y: g.position.y, z: g.position.z, rx: g.rotation.x, ry: g.rotation.y, rz: g.rotation.z }; }
   _runSort(S) {
     if (!this._sortLive(S) || S.ran) return;
@@ -726,7 +908,7 @@ class Table3D {
     this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 240, then: () => this.tween(g, to, 420, from, seat, landed) });
     this.dirty = true;
   }
-  hideAll() { if (this.sorting) for (const S of this.sorting) if (S) clearTimeout(S.timer); this.sorting = []; for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this._ov) { this._ov.g.traverse(o => o.layers.disable(1)); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
+  hideAll() { if (this._callG) this.markCall(null); if (this.sorting) for (const S of this.sorting) if (S) clearTimeout(S.timer); this.sorting = []; for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this._ov) { this._solo(this._ov.g, false); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
 
   layoutRiver(seat, river, animLast, fromLx) {   // fromLx: where the player's own discard stood — a pose from screenPose() (the tile of the page's hand row), or a place along the near edge
     // (ユーザー 2026-11-14: the far seat's discards looked stuck to each other — a little air between the tiles. The row is
@@ -760,6 +942,10 @@ class Table3D {
       shift[rw] = found[0]; back[rw] = acc = found[1];
     }
     for (const it of items) {
+      // a called tile is no longer the river's: it lies in the caller's meld (or the player's hand row) — leave it where that put it.
+      // (ユーザー 2026-11-14: a pon sometimes showed only two tiles — when the caller's melds were laid out before the discarder's
+      // river, the river took its tile back and hid it)
+      if (it.r.taken) continue;
       const g = this.tile(it.r.id), lx = it.lx + shift[it.row], lz = it.lz + back[it.row], last = animLast && it.i === river.length - 1;
       const anim = last ? { reach: seat, from: g.visible && g.userData.pose === 'stand' ? null : fromLx && typeof fromLx === 'object' ? fromLx : this.handOrigin(seat, fromLx) }   // (the hand takes the tile out of the owner's hand)
         : (g.visible && g.userData.rseat === seat && g.userData.target && Math.hypot(g.userData.target.x - this.local(seat, lx, lz).x, g.userData.target.z - this.local(seat, lx, lz).z) > .01 ? { dur: 240, level: true } : null);   // (a row moved aside slides there)
@@ -775,7 +961,7 @@ class Table3D {
     return seat % 2 ? { x: p.x, z: p.z, hx: hz, hz: hx } : { x: p.x, z: p.z, hx, hz };
   }
   handOrigin(seat, lx) {   // a tile standing in the owner's hand (the row the opponents' tiles stand in; the player's own is at the near edge)
-    const p = this.local(seat, lx || 0, seat === 0 ? 9.9 : 8.45);
+    const p = this.local(seat, lx || 0, seat === 0 ? 9.9 : HZ);
     return { x: p.x, y: H / 2, z: p.z, rx: 0, ry: seat * PI / 2, rz: 0 };
   }
   layoutHand(seat, ids, drawn, open, slide) {   // slide: after a discard — the tiles wait a moment, then slide together
@@ -783,12 +969,12 @@ class Table3D {
     if (S) { if (!open && drawn == null && ids.length === S.ids.length && ids.every((id, i) => id === S.ids[i])) return; this._cancelSort(seat); }   // (a 理牌 under way over the same tiles places them itself)
     // opponents: standing tiles; open = lay face up (end of hand)
     const n = ids.length + (drawn != null ? 1 : 0);
-    let x = -6.6;
-    const lz = 8.45;
+    let x = HX0;
+    const lz = HZ;
     const all = drawn != null ? ids.concat([drawn]) : ids;
     all.forEach((id, i) => {
       const g = this.tile(id);
-      if (drawn != null && i === all.length - 1) x += 0.3;
+      if (drawn != null && i === all.length - 1) x += HGAP;
       this.place(g, seat, x + W / 2, open ? lz - 0.2 : lz, open ? 'flat' : 'stand', open && g.visible && g.userData.pose === 'stand' ? { dur: 300 + i * 12 } : slide && g.visible && g.userData.pose === 'stand' ? { dur: 240, delay: 620, level: true } : null);   // (opened: each tile falls forward where it stands — テンパイ / 和了)
       this.setTileLook(g, 'normal');
       x += W + 0.02;
@@ -906,8 +1092,14 @@ class Table3D {
   }
 
   // ---------------------------------------------------------------- camera / loop
+  // (ユーザー 2026-11-14: full screen on a Mac dropped frames) the drawing resolution has a budget of pixels: a big window (a Retina
+  // screen in full screen is ~4–5 million at 1.5×) is drawn at a lower ratio and scaled up, and if frames still come slowly while
+  // things move, the ratio steps down a little more (and back up when there is room). `prMax`: the quality's ceiling.
+  _pr() { const w = this.host.clientWidth || 1, h = this.host.clientHeight || 1, BUDGET = this.lite ? 2e6 : 3.8e6;
+    return Math.max(.75, Math.min(window.devicePixelRatio || 1, this.prMax || 1.5, Math.sqrt(BUDGET / (w * h))) * (this.dyn || 1)); }
   resize() {
     const w = this.host.clientWidth || 1, h = this.host.clientHeight || 1;
+    const pr = this._pr(); if (Math.abs(this.renderer.getPixelRatio() - pr) > .01) this.renderer.setPixelRatio(pr);
     this.renderer.setSize(w, h, false);
     this.renderer.domElement.style.width = w + 'px'; this.renderer.domElement.style.height = h + 'px';
     if (this.r2) { this.r2.setPixelRatio(this.renderer.getPixelRatio()); this.r2.setSize(w, h, false); }
@@ -931,8 +1123,9 @@ class Table3D {
   }
   // quality: 'high' | 'lite'. Lite drops shadows and renders at 1x pixel ratio.
   setQuality(q) {
-    const lite = q === 'lite';
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lite ? 1 : this.mobile ? 1.25 : 1.5));
+    const lite = q === 'lite'; this.lite = lite;
+    this.prMax = lite ? 1 : this.mobile ? 1.25 : 1.5; this.dyn = 1;
+    this.renderer.setPixelRatio(this._pr());
     if (this.r2) { this.r2.setPixelRatio(this.renderer.getPixelRatio()); this.r2.setSize(this.host.clientWidth || 1, this.host.clientHeight || 1, false); }
     this.renderer.shadowMap.enabled = !lite;
     this.key.castShadow = !lite;
@@ -1001,13 +1194,21 @@ class Table3D {
         if (k < 1) this.handFx.push(h); else { if (h.hide) h.rig.visible = false; if (h.then) h.then(); } }
       this.dirty = true;
     }
+    const moved = this.dirty;   // (anything moved or changed this frame: the shadows are redrawn too)
     // the dora's glint: a light runs round the rim of every dora that lies face up and two small stars twinkle, about once in three seconds
-    if (this._doraN) { const ph = now % 2600, on = ph < 1300;
-      if (on) { this.doraMat.uniforms.uT.value = ph / 1300; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
+    // (at ~30 frames a second when it is the only thing changing: the whole table is redrawn for it)
+    // (`quiet`: a full-screen result is over the table — nothing behind it needs to move, so the glint waits: 2026-11-14, optimisation)
+    // (2026-11-15, ユーザー: for phones' batteries) on a touch screen the glint comes every ~4 s and is drawn at 20 frames a second
+    const MOB = this._mob ?? (this._mob = matchMedia('(pointer: coarse)').matches), GSTEP = MOB ? 50 : 32;
+    if (this._doraN && !this.quiet) { const ph = now % (MOB ? 4200 : 2600), on = ph < 1300;
+      if (on && (moved || now - (this._glT || 0) > GSTEP)) { this._glT = now; this.doraMat.uniforms.uT.value = ph / 1300; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
       this._doraOn = on; }
+    if (this._callG && this._callG.visible && this.callMat && (moved || now - (this._clT || 0) > GSTEP)) { this._clT = now; this.callMat.uniforms.uT.value = (now % 1400) / 1400; this.dirty = true; }
     if (this._ov) this.dirty = true;
     if (!this.dirty || document.hidden) return;
     this.dirty = false;
+    if (moved || this._ov) this.renderer.shadowMap.needsUpdate = true;
+    this._syncInst();
     this._doraSync();
     // the player's own discard: the hand and the tile are also drawn over the page (the hand row is HTML, above the table's
     // canvas). A second, small renderer on a canvas over the page draws only those two (layer 1) with the same camera and lights.
@@ -1016,9 +1217,20 @@ class Table3D {
     if (this._ov) {
       const R2 = this._over2(), O = this._ov;
       this.camera.layers.set(1); R2.render(this.scene, this.camera); this.camera.layers.set(0);
-      if (!O.rig.visible && !this.tweens.some(t => t.g === O.g) && !this.handFx.some(h => h.rig === O.rig)) { R2.clear(); O.g.traverse(o => o.layers.disable(1)); O.rig.traverse(o => o.layers.disable(1)); this._ov = null; }
+      if (!O.rig.visible && !this.tweens.some(t => t.g === O.g) && !this.handFx.some(h => h.rig === O.rig)) { R2.clear(); this._solo(O.g, false); O.rig.traverse(o => o.layers.disable(1)); this._ov = null; }
     }
     this.renderer.render(this.scene, this.camera);
+    // frame pacing while things move (consecutive frames only): slow → a lower drawing ratio, quick again → back up
+    { const P = this._pace || (this._pace = { last: 0, ema: 16, t: 0 }), dt = now - P.last; P.last = now;
+      if (dt > 0 && dt < 120) { P.ema += (dt - P.ema) * .08;
+        // (2026-11-15, ユーザー「定期的に画面が一瞬黒くなる」: a new canvas size clears the canvas, and it was shown cleared until the
+        // next frame drawn — now the frame is drawn again at once; and the ratio no longer goes up and down every second: it comes
+        // back up only after 6 s of quick frames)
+        if (now - P.t > 1200) { const d0 = this.dyn || 1;
+          if (P.ema > 28 && d0 > .8) { this.dyn = d0 * .9; P.t = now; P.up = now; }
+          else if (P.ema < 18 && d0 < 1 && now - (P.up || 0) > 6000) { this.dyn = Math.min(1, d0 * 1.08); P.t = now; P.up = now; }
+          else P.t = now;
+          if (this.dyn !== d0) { this.resize(); this._syncInst(); this.renderer.render(this.scene, this.camera); } } } }
     if (this._dbg) this._dbgPaint(now);
   }
   // screen position of a seat's area (for placing HTML badges)

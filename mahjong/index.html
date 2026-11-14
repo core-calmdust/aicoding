@@ -7,9 +7,9 @@
 <script src="../shared/focusgate.js?v=4ol"></script>
 <script src="../shared/phonesnd.js?v=2"></script>
 <meta name="theme-color" content="#120d22">
-<title>雀華 〜姫たちの麻雀〜</title>
+<title>雀華 〜艶やかなる姫君の雀宴〜</title>
 <meta name="description" content="キャラクターごとの特殊スキルで点数がふくらむ、3Dの4人打ちリーチ麻雀。BOT戦、スキル戦と標準戦、ガチャでキャラを集めよう。">
-<meta property="og:title" content="雀華 〜姫たちの麻雀〜">
+<meta property="og:title" content="雀華 〜艶やかなる姫君の雀宴〜">
 <meta property="og:description" content="スキルで点数がふくらむ3D麻雀。BOT戦、ガチャ、キャラごとのカットイン演出。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://core-calmdust.github.io/aicoding/mahjong/">
@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Cinzel:wght@600;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=58">
+<link rel="stylesheet" href="app.css?v=82">
 </head>
 <body>
 <div id="root">
@@ -33,6 +33,7 @@
       <button class="aa-prof" id="aaProf"></button>
       <span class="sp"></span>
       <div class="coins" id="coinBox"><i class="coin"></i><b id="coinN">0</b></div>
+      <button class="ib fsb" id="btnFs"></button>
       <button class="ib" id="btnSet" data-tt="settings"></button>
       <a class="ib" href="../" id="btnPortal" title="CALMDUST COLLECTION"></a>
     </header>
@@ -46,7 +47,7 @@
       <button class="lm" id="btnGacha"></button>
       <button class="lm" id="btnColl"></button>
       <button class="lm" id="btnStats"></button>
-      <button class="lm soon" data-soon="rated"></button>
+      <button class="lm" id="btnRated"></button>
       <button class="lm soon" data-soon="lesson"></button>
       <button class="lm soon" data-soon="rules"></button>
     </nav>
@@ -54,10 +55,12 @@
     <div class="aa-say" id="aaSay" hidden></div>
     <button class="aa-banner" id="aaBanner"></button>
     <div class="aa-play">
+      <div class="ap-tabs" id="optMode"></div>
       <div class="ap-opts">
         <div class="seg" id="optLen"></div>
         <div class="seg" id="optSkill"></div>
         <div class="seg lv" id="optLv"></div>
+        <div class="ap-rank" id="optRank" hidden></div>
       </div>
       <button class="go aa-go" id="btnStart"><span class="ag-k" data-t="start"></span><small class="ag-s" id="aaGoSub"></small></button>
     </div>
@@ -92,6 +95,7 @@
     <div class="rbox" id="rbox"></div>
     <div class="khelp" id="khelp"></div>
     <div class="tbtns">
+      <button class="ib fsb" id="gFs"></button>
       <button class="ib keyb" id="gKeys" aria-expanded="false"></button>
       <button class="ib snd" id="gSnd"></button>
       <button class="ib" id="gExit"></button>
@@ -118,19 +122,19 @@
 <script>/* three.js r186 + compatibility layer by default; ?three=128 = the old version (2026-11-13) */
 if (/[?&]three=128\b/.test(location.search)) document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
 else document.write('<script src="../atlas/vendor/three-r186.min.js?v=1"><\/script><script src="../atlas/vendor/three-compat.js?v=15"><\/script>');</script>
-<script src="i18n.js?v=16"></script>
+<script src="i18n.js?v=23"></script>
 <script src="engine.js?v=2"></script>
 <script src="skills.js?v=8"></script>
-<script src="game.js?v=8"></script>
+<script src="game.js?v=9"></script>
 <script src="pstats.js?v=1"></script>
-<script src="ai.js?v=6"></script>
+<script src="rank.js?v=5"></script>
+<script src="ai.js?v=8"></script>
 <script src="tiles.js?v=11"></script>
-<script src="chars.js?v=3"></script>
-<script src="img/tex/baked.js?v=2"></script>
-<script src="hand.js?v=6"></script>
-<script src="table3d.js?v=51"></script>
-<script src="framefx.js?v=12"></script>
+<script src="chars.js?v=4"></script>
+<script src="hand.js?v=9"></script>
+<script src="table3d.js?v=73"></script>
+<script src="framefx.js?v=14"></script>
 <script src="../shared/record.js?v=16"></script>
-<script src="app.js?v=58"></script>
+<script src="app.js?v=87"></script>
 </body>
 </html>

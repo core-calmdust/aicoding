@@ -1,6 +1,6 @@
 # 上海（麻雀牌のひとり遊び）仕様 — 大百科の3D専用（atlas/#games/shanghai）
 
-2026-11-13 BETA公開。2Dページなし（ペグソリテールと同じ3D専用フォーマット、`only3d`）。大百科のカテゴリはパズル（cat: puzzle、定番タグ）。テーマ色 #1f6a4c（翡翠）。
+2026-11-13 BETA公開→2026-11-14 正式リリース（BETA 表記を外した）。2Dページなし（ペグソリテールと同じ3D専用フォーマット、`only3d`）。大百科のカテゴリはパズル（cat: puzzle、定番タグ）。テーマ色 #1f6a4c（翡翠）。
 
 ## ルール（atlas/games/shanghai-core.js、DOMなし・node でも動く）
 - 取れる牌：上に何も載っておらず、左か右の少なくとも片方が空いている牌。同じ絵柄の2枚を取る。花（梅蘭菊竹）は花どうし、季節（春夏秋冬）は季節どうしなら絵柄が違っても組になる。
@@ -32,7 +32,7 @@
 - 保存：'aicoding-shanghai' { settings, free: { 配置: { best, n, date } }, st: { s: 星 }, bt: { s: 秒 } }。大百科の進み具合は st の数（total pz 120）。
 
 ## 大百科・トップページ
-- shared/atlas.js（GAMES：beta・only3d、READ.shanghai）、atlas/lazy.js（G：core・i18n・model・game、rules はまだ false）、i18n.js（about／hist）、gamelist-i18n.js、gamelist.js（SHOTS）、app.js（R3）、icons3d.js（ICONS.shanghai：フェルトの角に牌の山と持ち上がる「中」）、images/atlas/shanghai.webp、images/shanghai.webp（ダイニング卓のプレイ画面）、atlas/shots/shanghai.webp、images/icons/shanghai.svg、index.html（key shh）。
+- shared/atlas.js（GAMES：only3d（beta は 2026-11-14 に外した）、READ.shanghai）、atlas/lazy.js（G：core・i18n・model・game、rules はまだ false）、i18n.js（about／hist）、gamelist-i18n.js、gamelist.js（SHOTS）、app.js（R3）、icons3d.js（ICONS.shanghai：フェルトの角に牌の山と持ち上がる「中」）、images/atlas/shanghai.webp、images/shanghai.webp（ダイニング卓のプレイ画面）、atlas/shots/shanghai.webp、images/icons/shanghai.svg、index.html（key shh）。
 - 文言は atlas/games/shanghai-i18n.js（14言語）。
 
 ## まだのこと
@@ -109,10 +109,43 @@
 
 ### コース・本日の上海（2026-11-14）
 - ステージは 星座（12星座×10、既存）＋ 10コース（各6エリア×10）＝ 720ステージ。コース：森のおさんぽ・おかしの国（base0）、海辺の町・虹のお城（1）、お祭りの日・紅葉の山（2）、雪とオーロラ（3）、砂漠の旅（4）、おもちゃと本の部屋（5）、宇宙旅行（6）。難しさの段階は base＋エリア番号（最大11、shanghai-core courseStage）。
-- 星座マップと同じテンプレ（stageMap(o.course)）：シーンコースは images/atlas/bg のシーン画像をエリアごとのパネルにし、10個の星を波打つ道に配置（cPts）。周りはその画像をぼかして全面に。プレイ中のマットの周りもそのエリアの画像。
+- 星座マップと同じテンプレ（stageMap(o.course)）。シーンコースの絵は `atlas/games/shanghai-scenes.js` で1から描いたベクター（画像は使わない・どの拡大でもくっきり）：コース全体が1枚の続いた風景（空はエリアごとに昼→夕→夜へ連続して変わる、遠い丘・近い丘、全ステージを通る1本の道）。道の脇にコースごとの小物（木・家・お菓子・城・屋台と提灯・紅葉・雪だるまとペンギン・ピラミッドとサボテン・積み木と本棚・惑星とロケット など）、各エリアに目印2つ。雲が流れる・星がまたたく・観覧車が回る・オーロラが揺れる・花火・落ち葉などの動き。確認ページ `atlas/tools/scenes-preview.html`。
+- 同じ絵をSVGのデータURLにして、ヘッダーの小さな絵・周りのぼかし背景・プレイ中のマットの周り・コース一覧のカード・下枠の絵に使う。
 - 記録：星座は st / bt（従来）、他は cs[<id>] = { st, bt }。★1つ¢10は全コース共通（shared/atlas.js、総数 720）。クジャクパイは星座コースのみ。
 - カードのステージタブ：「クリア n / 720 ★n」「マップで待ってるアトラモ：n」、［コース一覧］［続きから（最後に遊んだコース）］、［本日の上海］［本日の上海 HARD］。スタートは最後のコースの次のステージ。
 - コース一覧・盤の種類はポータルの一覧シート（AtlasUI.bookSheet、問題一覧と同じ見た目：ヒーロー・タブ・カード）。コース一覧は はじめて／ふつう／むずかしい のタブ。盤の種類は盤の絵・★・枚数・選択中のモード×難易度のベスト。
 - 本日の上海：日付の種で全員同じ配り。通常は中くらいの盤で初級のルール、HARDは大きな盤で達人のルール＋制限時間（1組4.2秒）。記録 dy = { date, n, h }。
 - モード選択もボタン直下のプルダウン（data-pick="drop"）。
 - (2026-11-14) ステージタブ：スタートボタンは出さない（各ボタンから始める）。並びは［コース一覧］［続きから］→［本日の上海］［本日の上海 HARD］→ 集計（クリア数・★・待ってるアトラモ）。色は紺（主ボタン・アイコン金）と白カード（HARDは赤い小バッジ）に統一。
+- (2026-11-14 ユーザー: ループ感が強い→先に進む楽しみ) 各コースの6エリアをそれぞれ別の場所（章）に：エリアごとに地面・丘の色、道の脇の小物、目印2つが変わり、ところどころ川を橋で渡る。各エリアの入口に番号の立て札、最後のエリアにゴールの大きな目印（森＝ツリーハウス、お菓子＝ケーキの城、海＝帆船、虹＝大きなお城、お祭り＝花火のステージ、紅葉＝鳥居と温泉、雪＝天文台、砂漠＝スフィンクス、おもちゃ＝積み木の城、宇宙＝星の宮殿）とチェッカーフラッグ。データは shanghai-scenes.js の CH。
+- (2026-11-14) PCのカード：ステージタブのパネルは本文とスタート（非表示）の場所に重ねて置き、フリーとステージでカードの高さが同じ。フリーのスタート上の空きなし。紹介文は要点だけの短い文に。
+- (2026-11-14 スマホで重い) シーンコースの絵は一度ビットマップ（JPEG・エリアごと）にして使う：スマホのマップ・下枠の絵・コース一覧のカード・ヘッダー。1枚ずつ順番に作り、Cache Storage（aicoding-shanghai-scn）に保存して次回から即表示。できるまでは空白（重いベクターは出さない）。PCのマップは動きのあるベクターのまま。スマホの周りのぼかし背景は無し（グラデーション）。カードの高さそろえはスマホにも適用。
+
+## フリーの報酬：牌の子たち（2026-11-14）
+- 盤ごとにルール付きでアトラモがもらえる（ShanghaiReward.BOARD）。三元牌の三兄弟：ハクパイ（白・背は青）／ハツパイ（發・背は橙）／チュンパイ（中・背は緑）。atlas/avatars/sp-e.js の tileAv、画像 images/atlas/av/<sp>-0..3.webp、art.js の EARN。
+- はじめの一歩：ハクN クリア／ハクSSR 達人で0:50以内　ふたご島：ハクR 中級以上　ピラミッド：ハクSR 1:40以内
+- 塔：ハツN 中級以上　十字路：ハツR 3:00以内　石橋：ハツSR 上級以上　竜：ハツSSR 達人
+- 城塞：チュンN クリア／チュンR 上級以上　蝶：チュンSR 上級以上で7:00以内　亀：チュンSSR 達人
+- モードは問わない（勝てばよい）。フリーのカードのベスト欄の下に、その盤でまだもらっていない報酬の条件を1行。盤の種類のリストには各盤の報酬アイコン（未入手は薄く）。
+
+## コースのマップ（2026-11-14 追記）
+- ドラッグは左右だけ。ホイールは星座以外では拡大せず、左右に動かす。上下に動くのは拡大して空が画面より高くなった時だけ（星座も同じ）。
+- 多重スクロール：シーンのコースは、遠景（雲・鳥／宇宙は星くず・遠い惑星／おもちゃはしゃぼん玉）を×0.5、手前の地面の帯（草・お菓子・雪だまり・岩・つみき等）を×1.35で動かす（ShanghaiScenes.plx、コースの範囲で切り抜く）。
+- 各エリアに名前をつけた（an.<course>.<0..5>、例：森＝花の小道・りんごの林・せせらぎの沢・きのこ村・針葉樹の深い森・ツリーハウス）。タブ・マップの見出し・下の箱に出す。
+- 上下のすりガラス（シーンのコース）：全エリアの絵を横に並べた帯をぼかして敷き、マップと一緒に動かす（スクロールに合わせて随時変わる。スマホでも出す）。
+
+## コースの報酬：コースの仲間たち（2026-11-14）
+- シーンのコースの仲間たち10種（atlas/avatars/sp-f.js、画像 images/atlas/av/<sp>-0..3.webp、art.js の EARN）：森＝キノコッコ、おかし＝マカロンちゃん、海＝タコマル、お城＝ユニポニー、お祭り＝キンギョン、秋＝モミジギツネ、雪＝ユキダルン、砂漠＝サボテンくん、おもちゃ＝ブリキロボ、宇宙＝ホシッピ。
+- 各コースで4種類ずつ（ステージ2-5／3-10／5-5／6-10）。むずかしいコースほどいいランク（ShanghaiReward.CG）。どの仲間もN・R・SR・SSRが別々のコースでもらえる：
+  - forest: kinokoN、macaronN、takoN、uniponyN
+  - sweets: kingyoN、momijiN、yukidaruN、macaronR
+  - sea: sabotenN、burikiN、takoR、kingyoR
+  - castle: hoshippiN、uniponyR、momijiR、yukidaruR
+  - festival: sabotenR、burikiR、hoshippiR、kingyoSR
+  - autumn: kinokoR、momijiSR、yukidaruSR、sabotenSR
+  - snow: burikiSR、hoshippiSR、kinokoSR、yukidaruSSR
+  - desert: macaronSR、takoSR、uniponySR、sabotenSSR
+  - toys: burikiSSR、kinokoSSR、macaronSSR、takoSSR
+  - space: hoshippiSSR、uniponySSR、kingyoSSR、momijiSSR
+- ステージでもらえるものはマップのそのステージにアイコン（星座と同じ）。マップ下の行に次の報酬（あと何ステージ）。コース一覧の各カードに報酬アイコン（未入手は薄く）。ステージタブの「マップで待ってるアトラモ」は全コースの合計。
+- 本日の上海は「本日の上海 EASY」（緑のEASYバッジ）と「本日の上海 HARD」の2つ（2026-11-14）。

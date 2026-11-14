@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>思考エンジンの点検（WebAssembly・マルチスレッド）</title>
+<style>
+:root{--bg:#f6f1e7;--fg:#2a2118;--mut:#7a6a58;--card:#fffaf0;--line:#e2d6c2;--acc:#a8562a;--ok:#2f7d4a;--ng:#b23b2e}
+@media (prefers-color-scheme:dark){:root{--bg:#1d1915;--fg:#efe6d8;--mut:#a89884;--card:#28221c;--line:#3d342a;--acc:#e08a55;--ok:#6cc58a;--ng:#ef7b6c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:980px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 16px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 14px}
+button{font:inherit;padding:8px 16px;border-radius:999px;border:0;background:var(--acc);color:#fff;font-weight:600;cursor:pointer}
+button:disabled{opacity:.45;cursor:default}
+#st{font-size:13px;color:var(--mut);min-height:1.5em;margin-top:8px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:12px;white-space:nowrap}
+.y{color:var(--ok);font-weight:600}.n{color:var(--ng);font-weight:600}.m{color:var(--mut)}
+td small{color:var(--mut);word-break:break-all}
+iframe{position:fixed;left:-4000px;top:0;width:1280px;height:800px;border:0}
+</style>
+</head>
+<body>
+<main>
+<h1>思考エンジンの点検</h1>
+<p class="sub">各ゲームのページを1つずつ裏で開き、ページの分離（共有メモリ）・マルチスレッドの組（shared/mtengine.js）が動いたか、動かなかったときの理由を一覧にします。読み込みの失敗が握りつぶされて黙って1スレッド（や JavaScript の探索）に落ちる事故を見つけるためのページです（claude/praline-spec.md §10 ②）。Chrome / Edge の PC で開いてください。</p>
+<div class="card">
+  <button id="go">点検する</button>
+  <div id="st"></div>
+</div>
+<div class="card tw">
+  <table><thead><tr><th>ゲーム</th><th>分離</th><th>スレッド</th><th>組（wasm）</th><th>スレッド数</th><th>1スレッドのworker（コア）</th><th>理由・警告</th></tr></thead><tbody id="tb"></tbody></table>
+</div>
+</main>
+<script>
+// the games whose pages use shared/mtengine.js (2026-11-14)
+const GAMES = ['reversi', 'shogi', 'chess', 'checkers', 'xiangqi', 'janggi', 'tafl', 'go', 'gomoku', 'hex', 'morris', 'fanorona', 'alquerque', 'ugolki', 'agon', 'konane', 'amazons', 'mancala', 'dots', 'connect4'];
+const $ = s => document.querySelector(s), esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const yn = (v, a, b) => v ? `<span class="y">${a || '○'}</span>` : `<span class="n">${b || '×'}</span>`;
+// (2026-11-15) the core of each one-thread worker (shared/corestat.js): the wasm modules it made on its own memory, or JavaScript
+function core(w) {
+  const own = (w.mods || []).filter(m => !m.sh), name = (w.url || '').replace(/^.*\//, '').replace(/\?.*$/, '');
+  let c;
+  if (own.length) c = `<span class="y">wasm</span> <small>${esc([...new Set(own.map(m => m.src))].join(', '))}</small>`;
+  else if ((w.files || []).length || (w.errs || []).length) c = `<span class="n">JS（wasm 失敗）</span>`;
+  else c = '<span class="m">JS（wasm を読まない／まだ）</span>';
+  const er = (w.errs || []).length ? `<br><small>${esc(w.errs.join(' / '))}</small>` : '';
+  return `<small>${esc(name)}</small> ${c}${er}`;
+}
+const cores = ws => (ws || []).length ? ws.map(core).join('<br>') : '<span class="m">-</span>';
+function check(game) {
+  return new Promise(res => {
+    const f = document.createElement('iframe');
+    let settled = false; const done = r => { if (settled) return; settled = true; f.remove(); res(r); };
+    const timer = setTimeout(() => done({ error: '45秒たっても返事がありません（mtengine.js が古い、またはページが読み込めない）' }), 45000);
+    // (an isolated page cannot be read from this one: it answers shared/mtengine.js's 'mtengine-status' message)
+    const onMsg = e => { if (e.source === f.contentWindow && e.data && e.data.type === 'mtengine-status-r') { removeEventListener('message', onMsg); clearTimeout(timer); done(e.data.st ? { s: e.data.st } : { error: e.data.error }); } };
+    addEventListener('message', onMsg);
+    f.onload = () => { const w = f.contentWindow; setTimeout(() => { if (!settled && f.contentWindow === w) w.postMessage({ type: 'mtengine-status' }, location.origin); }, 3500); };
+    f.src = game + '/?health=1';
+    document.body.appendChild(f);
+  });
+}
+$('#go').onclick = async () => {
+  $('#go').disabled = true; $('#tb').innerHTML = '';
+  let ng = 0;
+  for (let i = 0; i < GAMES.length; i++) {
+    const g = GAMES[i]; $('#st').textContent = `${i + 1}/${GAMES.length} ${g} を点検中…`;
+    const r = await check(g), s = r.s; r.warns = r.warns || [];
+    let row;
+    if (!s) { ng++; row = `<td>${g}</td><td colspan="5" class="n">点検できず</td><td><small>${esc(r.error || '')}</small></td>`; }
+    else {
+      const pools = s.pools || [], bad = s.on && pools.some(p => !p.ok);
+      if (bad || !s.isolated) ng++;
+      const why = [].concat(pools.filter(p => p.error).map(p => p.wasm + ': ' + p.error), r.warns).map(esc).join('<br>');
+      row = `<td>${g}</td><td>${yn(s.isolated)}</td><td>${s.on ? '<span class="y">オン</span>' : `<span class="n">オフ</span>${s.touch ? ' <small>(タッチ端末)</small>' : ''}`}</td>` +
+        `<td>${pools.length ? pools.map(p => `${yn(p.ok, '動作', p.made ? '失敗' : '未作成')} <small>${esc(p.wasm)}</small>`).join('<br>') : '<span class="m">なし（mtsplit など）</span>'}</td>` +
+        `<td>${pools.filter(p => p.ok).map(p => p.threads).join(' / ') || '-'}</td><td>${cores(s.workers)}</td><td><small>${why}</small></td>`;
+    }
+    $('#tb').insertAdjacentHTML('beforeend', `<tr>${row}</tr>`);
+  }
+  $('#st').textContent = `終わりました。問題 ${ng} 件（${navigator.hardwareConcurrency || '?'} コア）`;
+  $('#go').disabled = false;
+};
+</script>
+</body>
+</html>

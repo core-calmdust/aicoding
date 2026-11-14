@@ -1156,7 +1156,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/ruletour.js?v=30tw"></script><!-- only RuleTour.intro() for the rules intro page -->
 <link rel="stylesheet" href="learn.css?v=20261028sk"><!-- learn-ui -->
-<script src="engine.js?v=20261110mt5"></script><script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtworkers.js?v=3"></script><script>MTWorkers.init({ sw: 'sw.js?v=1' });</script>
+<script src="engine.js?v=20261115p"></script><script src="../shared/mtengine.js?v=12"></script><script src="../shared/mtworkers.js?v=3"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script>MTWorkers.init({ sw: 'sw.js?v=1' });</script>
 <script src="rvbox.js?v=20261107l14"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="../shared/luxintro.js?v=3"></script><script src="learn.js?v=20261111lx"></script>
 <script src="i18n-online.js?v=20261107l14"></script>
@@ -1189,7 +1189,7 @@ function applyI18n() {
 }
 
 // ====================================================================== state
-const settings = { mode: 'ai', size: 4, order: 0, level: 5, level2: 6, sound: true, eval: true, anim: true, lang: '', coach: true };
+const settings = { pro: null, pro2: null, mode: 'ai', size: 4, order: 0, level: 5, level2: 6, sound: true, eval: true, anim: true, lang: '', coach: true };
 // game: n, moves[], human (player index of the human in 'ai' mode), setup {edges, owners} for lessons/puzzles
 let game = { n: 4, moves: [], human: 0, setup: null };
 let S = null;              // derived state (see compute)
@@ -1245,8 +1245,8 @@ function save() {
 function playerName(i) {
   if (lesson || puzzle) return learnPlayerName(i);
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(i);
-  if (settings.mode === 'ai') return i === game.human ? t('you') : AIW() + ' ' + t('lv')[settings.level];
-  if (settings.mode === 'watch') return (i === 0 ? t('aiA') : t('aiB')) + ' ' + t('lv')[i === 0 ? settings.level : settings.level2];
+  if (settings.mode === 'ai') return i === game.human ? t('you') : AIW() + ' ' + t('lv')[settings.level] + proTag(i);
+  if (settings.mode === 'watch') return (i === 0 ? t('aiA') : t('aiB')) + ' ' + t('lv')[i === 0 ? settings.level : settings.level2] + proTag(i);
   return i === 0 ? t('pA') : t('pB');
 }
 // person icon for human players, robot icon for AI players (2-player: both people, AI vs AI: both robots)
@@ -1302,7 +1302,7 @@ function edgeName(e) {
 // little (CPU time ×1.03 with 2 workers, ×1.42 with 8 — dots/RATING.md「本編のマルチスレッド」). Not isolated: one worker.
 const mtN = () => window.MTWorkers && MTWorkers.on() ? MTWorkers.helpers() : 0;
 const mtSh = () => window.MTWorkers && MTWorkers.shared ? MTWorkers.helpers() : 0;
-function makeWorker(onmsg) { const w = new Worker('engine.js?v=20261110mt5'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
+function makeWorker(onmsg) { const w = new Worker('engine.js?v=20261115p'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
 let aiWorker, anaWorker, aiJob = null, anaJob = null, jobId = 0, aiPending = false;
 function aiMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!aiJob || m.id !== aiJob.id) return; const j = aiJob; aiJob = null; j.resolve(m); }
 function anaMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!anaJob || m.id !== anaJob.id) return; const j = anaJob; anaJob = null; j.resolve(m); }
@@ -1310,8 +1310,8 @@ aiWorker = makeWorker(aiMsg); anaWorker = makeWorker(anaMsg);
 function cancelAI() { if (aiJob) { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); aiJob = null; } aiPending = false; }
 function cancelAna() { if (anaJob) { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); anaJob = null; } }
 function allEdges() { return (game.setup ? game.setup.edges : []).concat(game.moves); }
-function askAI(level) {
-  return new Promise(resolve => { aiJob = { id: ++jobId, resolve }; aiWorker.postMessage({ type: 'move', id: aiJob.id, R: game.n, C: game.n, edges: allEdges(), level, lead: S.scores[S.turn] - S.scores[1 - S.turn], mt: mtN() }); });
+function askAI(level, cfg) {
+  return new Promise(resolve => { aiJob = { id: ++jobId, resolve }; aiWorker.postMessage({ type: 'move', id: aiJob.id, R: game.n, C: game.n, edges: allEdges(), level, cfg: cfg || null, lead: S.scores[S.turn] - S.scores[1 - S.turn], mt: mtN() }); });
 }
 function askAna(type, ms) {
   cancelAna();
@@ -1543,7 +1543,7 @@ function aiTurn() {
   const t0 = performance.now();
   const lv = puzzle ? 8 : levelFor(S.turn);
   const before = { rem: S.G.B - S.p.filled, sc: S.scores.slice(), pl: S.turn };
-  askAI(lv).then(r => {
+  askAI(lv, puzzle ? null : proCfg(S.turn)).then(r => {
     if (tok !== busy) return;
     if (r.type === 'error' || r.move === undefined || r.move < 0 || S.p.drawn[r.move]) { aiPending = false; console.warn('AI failed', r); return; }
     if (r.value !== undefined && r.value !== null && (r.exact || lv >= 5)) {
@@ -1675,7 +1675,7 @@ function recordGame() {
   game.recorded = true;
   const rated = !!(window.rtGame && rtGame()), lv = levelFor(1 - h);
   const res = SF.resigned >= 0 ? (SF.resigned === h ? 'l' : 'w') : SF.scores[h] > SF.scores[1 - h] ? 'w' : SF.scores[h] < SF.scores[1 - h] ? 'l' : 'd';
-  GameRecord.add({ mode: rated ? 'rated' : 'ai', res, side: h, opp: 'AI Lv.' + lv + ' ' + t('lv')[lv] + ' · ' + game.n + '×' + game.n, key: (rated ? 'rt:' : 'ai:') + lv + ':' + game.n, n: game.moves.length, why: SF.resigned >= 0 ? t('ol.youResigned') : SF.scores[h] + '–' + SF.scores[1 - h] });
+  GameRecord.add({ mode: rated ? 'rated' : 'ai', res, side: h, opp: 'AI Lv.' + lv + ' ' + t('lv')[lv] + (rated ? '' : proTag(1 - h)) + ' · ' + game.n + '×' + game.n, key: (rated ? 'rt:' : proFor(1 - h) ? 'ai:pro' : 'ai:') + lv + ':' + game.n, n: game.moves.length, why: SF.resigned >= 0 ? t('ol.youResigned') : SF.scores[h] + '–' + SF.scores[1 - h] });
 }
 $('#btnReview').onclick = () => $('#resultOverlay').classList.remove('show');
 $('#btnResAnalyze').onclick = () => { $('#resultOverlay').classList.remove('show'); runReview(); };
@@ -1785,6 +1785,24 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#optEval').onchange = e => { draft.eval = e.target.checked; };
 $('#optAnim').onchange = e => { draft.anim = e.target.checked; };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」, 2026-11-15): beside the level — vs the AI / AI vs AI, never rated,
+// for the levels that search (Lv.5–10; Lv.1–4 play by rules). 思考の制限: the time a move (engine.js LEVELS ms, the share of
+// the heuristic search / the solver as the level's). The engine takes it with the 'move' message (cfg).
+const DOTS_MS = { 5: 400, 6: 800, 7: 1100, 8: 1750, 9: 3000, 10: 5000 };   // (engine.js LEVELS ms)
+const proDefaults = lv => ({ limit: { k: 'time', v: (DOTS_MS[lv] || 1750) / 1000 } });
+const proParams = () => [{ key: 'limit', kinds: { time: [0.2, 30] } }];
+var PRO = window.ProSet ? ProSet.init({ game: 'dots', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch') && (draft.level || settings.level) >= 5,
+  store: { get: () => settings.pro, set: v => { settings.pro = v; save(); } }, defaults: proDefaults, params: proParams() }) : null;
+var PRO2 = window.ProSet ? ProSet.init({ game: 'dots-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch' && (draft.level2 || settings.level2) >= 5,
+  store: { get: () => settings.pro2, set: v => { settings.pro2 = v; save(); } }, defaults: proDefaults, params: proParams() }) : null;
+function proFor(pl) {
+  const lv = levelFor(pl);
+  if ((window.rtGame && rtGame()) || lesson || puzzle || lv < 5 || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  const P = settings.mode === 'watch' && pl === 1 ? window.PRO2 : window.PRO;
+  return P ? P.get(lv) : null;
+}
+function proCfg(pl) { const e = proFor(pl); return e ? { ms: Math.round(e.limit.v * 1000) } : null; }
+function proTag(pl) { return proFor(pl) ? ' PRO' : ''; }
 $('#btnCancelNew').onclick = () => $('#newOverlay').classList.remove('show');
 $('#btnStart').onclick = () => {
   $('#newOverlay').classList.remove('show'); ac();
@@ -2300,12 +2318,12 @@ document.querySelector('#rsResume').onclick = () => { document.querySelector('#r
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&family=Kalam:wght@400;700&family=Zen+Kurenaido&family=Nanum+Pen+Script&family=Long+Cang&family=Aref+Ruqaa:wght@700&display=swap'; document.head.appendChild(f);   // (Kalam … Aref Ruqaa: the handwritten box initials and tally on the notebook page)
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=168')).then(() => load('../atlas/tables3d.js?v=123')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/models/dots.js?v=3l14')).then(() => load('../atlas/skin/dots.js?v=7l14'))
+  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=169')).then(() => load('../atlas/tables3d.js?v=126')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/models/dots.js?v=3l14')).then(() => load('../atlas/skin/dots.js?v=7l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261115amz2" defer></script>
+<script src="../shared/atlas.js?v=20261115alamz" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
 <script src="../shared/infotabs.js?v=24" defer></script>

@@ -77,13 +77,15 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shask .r{display:flex;gap:10px}.shask button{flex:1;font:inherit;font-weight:800;font-size:17px;padding:12px 8px;border-radius:14px;border:0;cursor:pointer;white-space:nowrap}
 .shask .y{background:#1f6a4c;color:#fff}.shask .n{background:#ece6d8;color:#3a3f4c}
 .bvi #bvOpts.shf > label:has(#bvSize){flex:1 1 100%!important}.bvi #bvOpts.shf .shfrow{display:contents}.bvi #bvOpts.shf .shfl{flex:1 1 0!important;min-width:0}
-.bvi #bvOpts.shf .pgbest .shbt{margin-inline-start:auto}.bvi #bvOpts.shf .pgbest .shbt + b{margin-inline-start:14px}
+.bvi #bvOpts.shf .pgbest .shbt{margin-inline-start:auto}.bvi #bvOpts.shf .pgbest{flex-wrap:wrap}.bvi #bvOpts.shf .pgbest .shfw{flex-basis:100%;display:flex;align-items:center;gap:6px;font-style:normal;font-size:12px;font-weight:700;color:#8a6a1e;margin-top:4px}.bvi #bvOpts.shf .pgbest .shfw img{width:24px;height:24px}.bvi #bvOpts.shf .pgbest .shbt + b{margin-inline-start:14px}
 .shstg{display:flex;flex-direction:column;gap:10px;align-items:stretch}
 .shstg .stinfo{box-sizing:border-box;width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:10px 14px;border-radius:14px;background:#fff;border:2px solid var(--line,#eadfc6);font-weight:900;font-size:15px;color:#2b3044}.shstg .stinfo .ss{color:#e0a020}.shstg .stinfo .sw{display:flex;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:#7a5a20}.shstg .stinfo .sw img{width:30px;height:30px}
-.shstg .strow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}.shstg .strow .mapb{padding:12px 10px;font-size:16px;background:linear-gradient(135deg,#1b2350,#3a2a6e);box-shadow:0 4px 0 #11163a}.shstg .mapb i{color:#ffd76a}.shstg .mapb span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}.shstg .mapb small{font-size:12px;color:#ffe7a0;font-weight:700}
-.shstg .dyb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;padding:10px;border-radius:14px;border:2px solid var(--line,#eadfc6);background:#fff;color:#2b3044;cursor:pointer;box-shadow:0 3px 0 var(--line,#eadfc6)}.shstg .dyb b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:900}.shstg .dyb b em{font-style:normal;font-size:11px;font-weight:900;color:#fff;background:#e5484d;border-radius:99px;padding:2px 7px;letter-spacing:.04em}.shstg .dyb small{font-size:12px;font-weight:700;color:#9a8762}.shstg .dyb.done small{color:#2f9a6a}
+.shstg .strow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}.shstg .strow .mapb{padding:12px 10px;font-size:16px;background:linear-gradient(135deg,#1b2350,#3a2a6e);box-shadow:0 4px 0 #11163a}.shstg .mapb i{color:#ffd76a}.shstg .strow .mapb.lst{background:#fff;color:#2b3044;border:2px solid var(--line,#eadfc6);box-shadow:0 3px 0 var(--line,#eadfc6)}.shstg .mapb.lst i{color:#c9a03a}.shstg .mapb span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}.shstg .mapb small{font-size:12px;color:#ffe7a0;font-weight:700}
+.shstg .dyb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;padding:10px;border-radius:14px;border:2px solid var(--line,#eadfc6);background:#fff;color:#2b3044;cursor:pointer;box-shadow:0 3px 0 var(--line,#eadfc6)}.shstg .dyb b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:900}.shstg .dyb b em{font-style:normal;font-size:11px;font-weight:900;color:#fff;background:#e5484d;border-radius:99px;padding:2px 7px;letter-spacing:.04em}.dyb b em.ez{background:#2fa36b}.shstg .dyb small{font-size:12px;font-weight:700;color:#9a8762}.shstg .dyb.done small{color:#2f9a6a}
 html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
-#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shbd > .lx-th{background:radial-gradient(ellipse at 50% 40%,#3a7a60,#24503f)!important}.lx-card.shbd .lx-th svg{width:88%;height:84%}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shcr > .lx-th{padding:0!important;overflow:hidden;background:#0d1236!important}.lx-card.shbd.sel{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
+html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidden!important;pointer-events:none}
+#bvMBody:has(> #bvStg){position:relative}#bvMBody > #bvStg.shstg:not([hidden]){position:absolute;left:0;right:0;top:0;height:calc(100% + var(--shdh,86px));box-sizing:border-box;justify-content:stretch;gap:10px;margin:0!important}#bvStg.shstg:not([hidden]) > *{flex:1 1 0;min-height:0}#bvStg.shstg .strow > *{height:100%;box-sizing:border-box}
+.lx-card.shcr .shrw{margin-inline-start:auto;display:inline-flex;gap:2px}.lx-card.shcr .shrw img{width:26px;height:26px;opacity:.6;filter:grayscale(.7)}.lx-card.shcr .shrw img.got{opacity:1;filter:none}.lx-card.shbd .shrw{margin-inline-start:auto;display:inline-flex;gap:2px}.lx-card.shbd .shrw img{width:30px;height:30px;opacity:.6;filter:grayscale(.7)}.lx-card.shbd .shrw img.got{opacity:1;filter:none}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shbd > .lx-th{background:radial-gradient(ellipse at 50% 40%,#3a7a60,#24503f)!important}.lx-card.shbd .lx-th svg{width:88%;height:84%}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shcr > .lx-th{padding:0!important;overflow:hidden;background:#0d1236!important}.lx-card.shbd.sel{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
 .shstg .pg{font-size:16px;font-weight:700;color:var(--ink,#2a2f3a)}
 .shstg .nx{font-size:15px;opacity:.8}
 .shstg .mapb{display:flex;align-items:center;justify-content:center;gap:10px;font:inherit;font-weight:800;font-size:18px;padding:14px;border-radius:16px;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#1b2350,#3a2a6e 60%,#5a3a8a);box-shadow:0 8px 20px -10px rgba(30,20,80,.8);white-space:nowrap}
@@ -101,7 +103,8 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
 .shmap .hd,.shmap .ars,.shmap .gift,.shmap .sh{flex-shrink:0}.shmap .hd{height:auto!important;max-height:none!important}
 .shmap .hd{position:relative;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 8px}
 .shmap .hd h2{margin:0;font-size:22px;letter-spacing:.04em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.shmap .hd .shtl{flex:1;min-width:0}.shmap .hd .em{display:none;flex:none}.shmap .hd .em.zx{display:none!important}.shmap .hd .emi{object-fit:cover;border-radius:14px;border:2px solid #e8c877}.shmap.scn .sky{background-size:cover;background-position:50% 100%;filter:blur(16px) brightness(.62) saturate(1.1);transform:scale(1.12)}.shmap.scn .sky canvas{display:none}.shmap.scn .wld .pn{fill:rgba(255,255,255,.85);paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.6px}.shmap .sh .art.scn{padding:0;overflow:hidden}.shmap .sh .art.scn svg{border-radius:14px 14px 0 0}.shmap .sh .art.scn b{margin:4px 0 6px}.shmap .hd .story{display:none;margin:4px 0 0;font-size:15px;line-height:1.55;color:#c8d2f4;opacity:.9;max-width:760px}
+.shmap .hd .shtl{flex:1;min-width:0}.shmap .hd .em{display:none;flex:none}.shmap .hd .em.zx{display:none!important}.shmap .hd .emi{object-fit:cover;border-radius:14px;border:2px solid #e8c877}@media (pointer:coarse),(max-width:819px){.shmap.scn .sky{filter:none!important;transform:none!important;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.4))!important}}
+.shmap.scn .sky{background:none;filter:blur(16px) brightness(.62) saturate(1.1);overflow:hidden}.shmap.scn .sks{position:absolute;left:0;top:-40px;bottom:-40px;display:flex;will-change:transform}.shmap.scn .sks img{flex:none;width:var(--aw,600px);height:100%;object-fit:fill}.shmap.scn .sky canvas{display:none}.shmap.scn .wld .pn{fill:rgba(255,255,255,.85);paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.6px}.shmap .sh .art.scn{padding:0;overflow:hidden}.shmap .sh .art.scn svg{border-radius:14px 14px 0 0}.shmap .sh .art.scn b{margin:4px 0 6px}.shmap .hd .story{display:none;margin:4px 0 0;font-size:15px;line-height:1.55;color:#c8d2f4;opacity:.9;max-width:760px}
 @media (min-width:820px){.shmap .hd{gap:18px;padding:calc(18px + env(safe-area-inset-top)) 24px 10px}.shmap .hd .em{display:block;width:64px;height:64px;filter:drop-shadow(0 0 14px rgba(255,215,106,.35))}.shmap .hd h2{font-size:34px;letter-spacing:.08em;color:#ffe7a0;text-shadow:0 0 18px rgba(255,215,106,.35)}.shmap .hd .story{display:block}.shmap .hd .tot{font-size:21px}}
 .shmap .hd .tot{font-size:17px;font-weight:800;color:#ffd76a;white-space:nowrap}
 .shmap .x{flex:none;width:46px;height:46px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
@@ -125,7 +128,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
 .shmap .vp{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
 .shmap .vp.drag{cursor:grabbing}
 .shmap .wld{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
-.shmap .wld > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.shmap .wld > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}.shmap .wld .plxc{position:absolute;inset:0;overflow:hidden;pointer-events:none}.shmap .wld .plxc > svg.plx{position:absolute;top:0;height:100%;pointer-events:none;will-change:transform}
 .shmap .wld .pn{font-size:6.4px;font-weight:900;letter-spacing:.3px;fill:rgba(255,255,255,.13);stroke:none}
 .shmap .wld .pn.on{fill:rgba(255,226,150,.22)}
 .shmap .zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px;z-index:3}
@@ -207,26 +210,52 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
      each; a course starts at its own difficulty step and climbs one step an area (shanghai-core courseStage). Progress:
      zodiac in st / bt (as before), the others in cs[<id>] = { st, bt }. Every ★ pays ¢10 alike (shared/atlas.js). */
   const COURSES = [
-    { id: 'forest', base: 0, bg: [307, 308, 310, 311, 380, 381], tint: '#1d3a2a' },
-    { id: 'sweets', base: 0, bg: [317, 318, 320, 321, 384, 386], tint: '#3a2236' },
-    { id: 'sea', base: 1, bg: [312, 313, 315, 403, 322, 324], tint: '#14304a' },
-    { id: 'castle', base: 1, bg: [325, 326, 344, 345, 347, 378], tint: '#2c2550' },
-    { id: 'festival', base: 2, bg: [389, 390, 356, 357, 330, 332], tint: '#33203f' },
-    { id: 'autumn', base: 2, bg: [333, 334, 335, 405, 406, 336], tint: '#3a2418' },
-    { id: 'snow', base: 3, bg: [337, 340, 341, 360, 361, 362], tint: '#1b2a44' },
-    { id: 'desert', base: 4, bg: [363, 364, 366, 382, 367, 365], tint: '#3a2a18' },
-    { id: 'toys', base: 5, bg: [370, 368, 369, 372, 373, 374], tint: '#2a2440' },
-    { id: 'space', base: 6, bg: [396, 397, 342, 343, 388, 398], tint: '#141838' },
+    { id: 'forest', base: 0, n: 6 },
+    { id: 'sweets', base: 0, n: 6 },
+    { id: 'sea', base: 1, n: 6 },
+    { id: 'castle', base: 1, n: 6 },
+    { id: 'festival', base: 2, n: 6 },
+    { id: 'autumn', base: 2, n: 6 },
+    { id: 'snow', base: 3, n: 6 },
+    { id: 'desert', base: 4, n: 6 },
+    { id: 'toys', base: 5, n: 6 },
+    { id: 'space', base: 6, n: 6 },
   ];
+  const scnCss = () => { if (window.ShanghaiScenes && !document.getElementById('shscn-css')) { const st = document.createElement('style'); st.id = 'shscn-css'; st.textContent = ShanghaiScenes.css; document.head.appendChild(st); } };
   const courseOf = id => COURSES.find(c => c.id === id) || null;
   const cprog = id => { if (!id || id === 'zodiac') return prog(); const d = load(), c = (d.cs || {})[id] || {}; return { st: c.st || {}, bt: c.bt || {} }; };
-  const cN = id => id && id !== 'zodiac' ? (courseOf(id) ? courseOf(id).bg.length * 10 : 0) : 120;
+  const cN = id => id && id !== 'zodiac' ? (courseOf(id) ? courseOf(id).n * 10 : 0) : 120;
   // a course's stage s (zodiac: as before)
   const cStage = (id, s) => { const K = C(); if (!id || id === 'zodiac') { const st = K.stage(s); st.cid = 'zodiac'; return st; } const ci = COURSES.findIndex(c => c.id === id), st = K.courseStage(ci, COURSES[ci].base, s); st.cid = id; return st; };
   // the winding path of an area's ten stars (x 0..100, y 0..64), a little different area to area
-  const cPts = i => Array.from({ length: 10 }, (_, k) => [R1(8 + k * 9.4), R1(34 + 13 * Math.sin(k * .82 + i * 1.7) + 4 * Math.cos(k * 1.9 + i))]);
+  const cPts = (id, i) => window.ShanghaiScenes ? ShanghaiScenes.pts(id, i) : Array.from({ length: 10 }, (_, k) => [R1(4 + k * 10.2), R1(44 + 9 * Math.sin(k * .78 + i))]);
   const R1 = v => Math.round(v * 10) / 10;
-  const bgUrl = n => '../images/atlas/bg/b' + String(n).padStart(3, '0') + '.webp';
+  // (2026-11-14, ユーザー: スマホでかなり重い) the scene drawn once into a bitmap per area (blob URL, cached for the session): the map
+  // on phones, the stage box, the cards and the header show these pictures instead of the live vector (thousands of shapes)
+  const LITE_SCN = () => { try { return matchMedia('(pointer: coarse)').matches || innerWidth < 820; } catch (e) { return false; } };
+  // areaKey → the bitmap's blob URL. Made one at a time (a queue: no burst of work), kept in the Cache Storage too so the next visit
+  // shows them at once. Until it is ready an element marked data-scn="<key>" shows nothing (no heavy vector meanwhile) and is
+  // filled in when it is (img src / svg image href).
+  const BMC = {}, BMQ = [], BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+  let bmBusy = false;
+  const scnKey = (id, i, w) => id + '-' + i + '-' + w;
+  const scnFill = (k, u) => document.querySelectorAll(`[data-scn="${k}"]`).forEach(e => { if (e.tagName.toLowerCase() === 'img') e.src = u; else e.setAttribute('href', u); });
+  function bmNext() {
+    if (bmBusy || !BMQ.length) return; bmBusy = true;
+    const { id, i, w, k } = BMQ.shift(), h = Math.round(w * 64 / 116), req = 'https://cache.local/shanghai-scn/v1/' + k + '.jpg';
+    const done = b => { bmBusy = false; if (b) { BMC[k] = URL.createObjectURL(b); scnFill(k, BMC[k]); } setTimeout(bmNext, 30); };
+    const draw = () => { const im = new Image(); im.onload = () => { try { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(im, 0, 0, w, h);
+      c.toBlob(b => { if (b && window.caches) caches.open('aicoding-shanghai-scn').then(C => C.put(req, new Response(b))).catch(() => {}); done(b); }, 'image/jpeg', .9); } catch (e) { done(null); } }; im.onerror = () => done(null); im.src = sceneUrl(id, i, w, h); };
+    if (window.caches) caches.open('aicoding-shanghai-scn').then(C => C.match(req)).then(r => r ? r.blob().then(done) : draw()).catch(draw); else draw();
+  }
+  function areaImg(id, i, w, first) {
+    const k = scnKey(id, i, w); if (BMC[k]) return { k, u: BMC[k] };
+    if (!BMQ.some(q => q.k === k)) { const q = { id, i, w, k }; if (first) BMQ.unshift(q); else BMQ.push(q); setTimeout(bmNext, 0); }
+    return { k, u: BLANK };
+  }
+  const scnImg = (id, i, w, style, first) => { const a = areaImg(id, i, w, first); return `<img data-scn="${a.k}" src="${a.u}" alt="" style="${style || ''}">`; };
+  // a course's area drawn as a picture (an <img> / a canvas source / a CSS background): the scene's SVG as a data URL
+  const sceneUrl = (id, i, w, h) => window.ShanghaiScenes ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${i * 116} 0 116 64" width="${w || 464}" height="${h || 256}" preserveAspectRatio="xMidYMid slice">${ShanghaiScenes.svg(id, courseOf(id).n, 'u' + id)}</svg>`) : '';
   // the pending stage: a number (a zodiac stage, as before) or { c: course, s } or { daily: 'n' | 'h' }
   const pend = v => v == null ? null : typeof v === 'number' ? { c: 'zodiac', s: v } : v;
   // 本日の上海 / HARD: one deal a day for everyone (the date's seed), a board by the date — HARD on a big board with 達人's rules
@@ -253,13 +282,13 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
   const COIN_STAR = 10, GIFT_AT = [0, 10, 60, 120], GIFT_S = [-1, 9, 59, 119];   // (2026-11-14) the gift sits on a stage of the map: the last of the 1st, 6th and 12th constellation
   const Reward = {
     COIN_STAR, GIFT_AT,
-    has(t) { try { return !!(window.Atlas && Atlas.load && Atlas.load().owned.includes('av-peacock-' + t)); } catch (e) { return false; } },
+    has(t, sp = 'peacock') { try { return !!(window.Atlas && Atlas.load && Atlas.load().owned.includes('av-' + sp + '-' + t)); } catch (e) { return false; } },
     // give tier t (once): true when it is new
-    grant(t, lang, wait) {
+    grant(t, lang, wait, sp = 'peacock') {
       try {
         if (!window.Atlas || !Atlas.load) return false;
-        const W = Atlas.load(), id = 'av-peacock-' + t; if (!W || W.owned.includes(id)) return false;
-        W.owned.push(id); Atlas.save(W); if (wait) setTimeout(() => giftToast(t, lang), wait); else giftToast(t, lang); return true;
+        const W = Atlas.load(), id = 'av-' + sp + '-' + t; if (!W || W.owned.includes(id)) return false;
+        W.owned.push(id); Atlas.save(W); if (wait) setTimeout(() => giftToast(t, lang, sp), wait); else giftToast(t, lang, sp); return true;
       } catch (e) { return false; }
     },
     // after a stage: the tiers the number of cleared stages has reached
@@ -270,12 +299,42 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
     at(s) { const t = GIFT_S.indexOf(s); return t > 0 ? t : 0; },
     // the next tier still to win by stages: { t, left } or null
     next() { const S = prog().st; for (let t = 1; t < 4; t++) if (!Reward.has(t) && !(S[GIFT_S[t]] > 0)) { let left = 0; for (let k = 0; k <= GIFT_S[t]; k++) if (!(S[k] > 0)) left++; return { t, left }; } return null; },
+    // (2026-11-14) the scene courses: four Atlamo each, of four kinds (the ten companions of atlas/avatars/sp-f.js), on stages 2-5 / 3-10 / 5-5 / 6-10.
+    // The harder the course, the rarer: 森 all N … おもちゃ・宇宙 all SSR; every companion's N, R, SR and SSR come from four different courses.
+    CG: {'forest': [['kinoko', 0, 14], ['macaron', 0, 29], ['tako', 0, 44], ['unipony', 0, 59]], 'sweets': [['kingyo', 0, 14], ['momiji', 0, 29], ['yukidaru', 0, 44], ['macaron', 1, 59]], 'sea': [['saboten', 0, 14], ['buriki', 0, 29], ['tako', 1, 44], ['kingyo', 1, 59]], 'castle': [['hoshippi', 0, 14], ['unipony', 1, 29], ['momiji', 1, 44], ['yukidaru', 1, 59]], 'festival': [['saboten', 1, 14], ['buriki', 1, 29], ['hoshippi', 1, 44], ['kingyo', 2, 59]], 'autumn': [['kinoko', 1, 14], ['momiji', 2, 29], ['yukidaru', 2, 44], ['saboten', 2, 59]], 'snow': [['buriki', 2, 14], ['hoshippi', 2, 29], ['kinoko', 2, 44], ['yukidaru', 3, 59]], 'desert': [['macaron', 2, 14], ['tako', 2, 29], ['unipony', 2, 44], ['saboten', 3, 59]], 'toys': [['buriki', 3, 14], ['kinoko', 3, 29], ['macaron', 3, 44], ['tako', 3, 59]], 'space': [['hoshippi', 3, 14], ['unipony', 3, 29], ['kingyo', 3, 44], ['momiji', 3, 59]]},
+    gifts(cid) {
+      if (cid === 'zodiac') return [1, 2, 3].map(t => ({ sp: 'peacock', t, s: GIFT_S[t] }));
+      return (Reward.CG[cid] || []).map(([sp, t, s]) => ({ sp, t, s }));
+    },
+    giftAt(cid, s) { return Reward.gifts(cid).find(g => g.s === s) || null; },
+    // hand over what a course's progress has earned (a stage cleared, ★ enough)
+    course(cid, lang, wait) { const P = cprog(cid), tot = Object.values(P.st).reduce((a, v) => a + v, 0); let k = 0;
+      Reward.gifts(cid).forEach(g => { if ((g.s != null ? P.st[g.s] > 0 : tot >= g.star) && Reward.grant(g.t, lang, wait + k * 1700, g.sp)) k++; }); return k; },
+    // the next gift of a course still to win: { g, left (stages or ★), star }
+    cnext(cid) { const P = cprog(cid), tot = Object.values(P.st).reduce((a, v) => a + v, 0);
+      for (const g of Reward.gifts(cid)) { if (Reward.has(g.t, g.sp)) continue;
+        if (g.s != null) { if (P.st[g.s] > 0) continue; let left = 0; for (let k = 0; k <= g.s; k++) if (!(P.st[k] > 0)) left++; return { g, left }; }
+        if (tot < g.star) return { g, left: g.star - tot, star: true }; }
+      return null; },
+    gname(g, lang) { const it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-' + g.sp + '-' + g.t); return it ? it.name[lang] || it.name.en : g.sp; },
+    // (2026-11-14) free play: every board has its own reward(s) with a rule — d: this difficulty or harder (1 入門 … 5 達人), t: within t seconds.
+    // The three dragon tiles: ハクパイ (haku) on the small boards, ハツパイ (hatsu) on the middle ones, チュンパイ (chun) on the big ones.
+    BOARD: {
+      petit: [['haku', 0, {}], ['haku', 3, { d: 5, t: 50 }]], twin: [['haku', 1, { d: 3 }]], pyramid: [['haku', 2, { t: 100 }]],
+      tower: [['hatsu', 0, { d: 3 }]], cross: [['hatsu', 1, { t: 180 }]], bridge: [['hatsu', 2, { d: 4 }]],
+      fortress: [['chun', 0, {}], ['chun', 1, { d: 4 }]], butterfly: [['chun', 2, { d: 4, t: 420 }]], dragon: [['hatsu', 3, { d: 5 }]], turtle: [['chun', 3, { d: 5 }]],
+    },
+    ok(r, diff, tt) { return (!r.d || diff >= r.d) && (!r.t || tt <= r.t); },
+    free(lay, diff, tt, lang, wait) { let k = 0; (Reward.BOARD[lay] || []).forEach(([sp, t, r]) => { if (Reward.ok(r, diff, tt) && Reward.grant(t, lang, wait + k * 1700, sp)) k++; }); return k; },
+    freeNext(lay) { return (Reward.BOARD[lay] || []).find(([sp, t]) => !Reward.has(t, sp)) || null; },
+    // the rule as words: クリア / 中級以上でクリア / 1:40以内にクリア / 上級以上で7:00以内にクリア
+    rule(r, lang) { const d = r.d ? TX('fd.' + r.d, lang) : '', t = r.t ? mmss(r.t) : ''; const x = r.d === 5 ? 'x' : ''; return TX(r.d && r.t ? 'rw.dt' + x : r.d ? 'rw.d' + x : r.t ? 'rw.t' : 'rw.c', lang, { d, t }); },
   };
   window.ShanghaiReward = Reward;
-  function giftToast(t, lang) {
-    css(); const R = ['N', 'R', 'SR', 'SSR'][t], it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? (it.name[lang] || it.name.en) : 'Peacotile';
+  function giftToast(t, lang, sp = 'peacock') {
+    css(); const R = ['N', 'R', 'SR', 'SSR'][t], it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-' + sp + '-' + t), nm = it ? (it.name[lang] || it.name.en) : sp === 'chun' ? 'Chuntile' : 'Peacotile';
     const el = document.createElement('div'); el.className = 'shgift'; el.setAttribute('role', 'status');
-    el.innerHTML = `<img src="../images/atlas/av/peacock-${t}.webp" alt=""><div><b>🎁 ${esc(TX('rw.got', lang, { name: nm }))}</b><small><span class="sr r${t}">${R}</span>${esc(TX('rw.dress', lang))}</small></div>`;
+    el.innerHTML = `<img src="../images/atlas/av/${sp}-${t}.webp" alt=""><div><b>🎁 ${esc(TX('rw.got', lang, { name: nm }))}</b><small><span class="sr r${t}">${R}</span>${esc(TX('rw.dress', lang))}</small></div>`;
     const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 500); };
     el.onclick = close; document.body.appendChild(el); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
     setTimeout(close, 6500);
@@ -450,8 +509,8 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       if (zodM) { fig(0, -gz); fig(0, gz); fig(-gx, 0); fig(gx, 0); }
       const tex = new TH3.CanvasTexture(cv);
       if (!zodM && courseOf(ST.cid)) {   // the other courses: their scene round the mat (this area's picture, tiled, a little dimmed)
-        const im = new Image(); im.onload = () => { if (stopped) return; const t = CS / 3; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) c.drawImage(im, i * t, j * t, t, t); c.fillStyle = 'rgba(10,12,30,.28)'; c.fillRect(0, 0, CS, CS); tex.needsUpdate = true; kick(300); };
-        im.src = bgUrl(courseOf(ST.cid).bg[ai] || courseOf(ST.cid).bg[0]);
+        const im = new Image(); im.onload = () => { if (stopped) return; c.drawImage(im, 0, 0, CS, CS); c.fillStyle = 'rgba(10,12,30,.18)'; c.fillRect(0, 0, CS, CS); tex.needsUpdate = true; kick(300); };   // (the area's own scene, drawn crisp at the canvas's size)
+        im.src = sceneUrl(ST.cid, ai, CS, CS);
       } if ('colorSpace' in tex) tex.colorSpace = 'srgb'; else if (TH3.sRGBEncoding) tex.encoding = TH3.sRGBEncoding; tex.anisotropy = 4;
       const pg = new TH3.PlaneGeometry(S, S); pg.rotateX(-Math.PI / 2);
       sky = new TH3.Mesh(pg, new TH3.MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0 })); sky.position.y = .006; sky.receiveShadow = true; g.add(sky);
@@ -619,12 +678,13 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       if (idx.length) anim(700, k => { idx.forEach(i => { st8[i].lift = Math.sin(k * Math.PI) * .5; place(i); }); im.instanceMatrix.needsUpdate = true; });
       if (DY) {
         const y = d.dy && d.dy.date === today() ? d.dy : (d.dy = { date: today() }), k = DY.kind, nb = y[k] === undefined || tt < y[k]; if (nb) y[k] = tt; save(d);
-        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx(k === 'h' ? 'dy.h' : 'dy.n') + ' ' + tx('r.clear'), score: tx('r.time', { t: mmss(tt) }), best: tx('r.best', { t: mmss(y[k]) }), opp: tx(k === 'h' ? 'dy.h' : 'dy.n'), key: 'dy-' + k, why: tx('r.clear') + ' · ' + mmss(tt) }), 350);
+        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx(k === 'h' ? 'dy.h' : 'dy.e') + ' ' + tx('r.clear'), score: tx('r.time', { t: mmss(tt) }), best: tx('r.best', { t: mmss(y[k]) }), opp: tx(k === 'h' ? 'dy.h' : 'dy.e'), key: 'dy-' + k, why: tx('r.clear') + ' · ' + mmss(tt) }), 350);
         return;
       }
       if (!ST) {
         const F = d.free = d.free || {}, r = F[FM.key] || {}, nb = r.best === undefined || tt < r.best, tk = n - left();
         F[FM.key] = { best: nb ? tt : r.best, tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1, date: nb ? today() : r.date }; save(d);
+        Reward.free(lay, FM.diff, tt, lang, 1900);
         const sub = tx('lay.' + lay) + ' · ' + tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff);
         later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx('r.clear'), score: tx('r.time', { t: mmss(tt) }) + (FM.type === 'clear' ? '' : ' · ' + tx('f.tiles', { n: tk })), best: (nb ? '🏅 ' + tx('r.newBest') + ' · ' : '') + tx('r.best', { t: mmss(F[FM.key].best) }), opp: sub, key: FM.key, why: tx('r.clear') + ' · ' + mmss(tt) }), 350);
         return;
@@ -635,7 +695,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       const was = S[s] || 0;
       S[s] = Math.max(was, stars); if (nb) B[s] = tt; save(d);
       const coin = (S[s] - was) * COIN_STAR;   // (the ★ won for the first time pay ¢10 each — the purse itself is derived from the stars)
-      if (zod) Reward.check(lang, 1900);
+      if (zod) Reward.check(lang, 1900); else Reward.course(ST.cid, lang, 1900);
       const cid = ST.cid, nx = s + 1 < cN(cid) ? { c: cid, s: s + 1 } : null;
       later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0,
         title: tx('r.stage') + ' ' + '★'.repeat(stars) + '☆'.repeat(3 - stars), score: stageName(s, lang) + ' · ' + tx('r.time', { t: mmss(tt) }),
@@ -649,7 +709,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       if (askEl) { askEl.remove(); askEl = null; }
       if (FM && !DY) { const d = load(), F = d.free = d.free || {}, r = F[FM.key] || {}, tk = n - left(); F[FM.key] = Object.assign({}, r, { tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1 }); save(d); }   // (a free game that ended early still counts its tiles: the card's 最多 n枚)
       later(() => ctx.onEnd({ win: false, draw: false, solo: true, level: 0, title: tx('r.fail'), score: (why === 'timeup' ? tx('r.timeup') : tx('r.stuck')) + ' · ' + tx('r.left', { n: left() }),
-        best: ST ? stageName(ST.s, lang) + ' · ' + missionText(ST, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.n') : tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff), opp: ST ? stageName(ST.s, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.n') : tx('lay.' + lay), key: ST ? (ST.cid === 'zodiac' ? 'st' : ST.cid + ':') + ST.s : FM.key, why: tx('r.fail') }), 600);
+        best: ST ? stageName(ST.s, lang) + ' · ' + missionText(ST, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.e') : tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff), opp: ST ? stageName(ST.s, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.e') : tx('lay.' + lay), key: ST ? (ST.cid === 'zodiac' ? 'st' : ST.cid + ':') + ST.s : FM.key, why: tx('r.fail') }), 600);
     }
 
     /* ---------- set up ---------- */
@@ -715,7 +775,9 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
     const paint = () => {
       const z = document.getElementById('bvSize') ? +document.getElementById('bvSize').value : 1, lay = C().FREE[z - 1] || 'petit', m = row.querySelector('#bvShM').value, dd = +row.querySelector('#bvShD').value;
       const r = (load().free || {})[freeKey(lay, m, dd)];
-      el.innerHTML = `<span>${esc(TX('best', lang))}</span>` + (r ? `<b class="shbt">${r.tiles ? esc(TX('f.tiles', lang, { n: r.tiles })) : '—'}</b><b>${r.best !== undefined ? mmss(r.best) : '—'}</b>` : '<b>—</b>');
+      const ft = Reward.freeNext(lay);
+      el.innerHTML = `<span>${esc(TX('best', lang))}</span>` + (r ? `<b class="shbt">${r.tiles ? esc(TX('f.tiles', lang, { n: r.tiles })) : '—'}</b><b>${r.best !== undefined ? mmss(r.best) : '—'}</b>` : '<b class="shbt">—</b>') +
+        (ft ? `<i class="shfw"><img src="../images/atlas/av/${ft[0]}-${ft[1]}.webp" alt="">${esc(TX('fw.line', lang, { c: Reward.rule(ft[2], lang), n: TX('sp.' + ft[0], lang), r: ['N', 'R', 'SR', 'SSR'][ft[1]] }))}</i>` : '');
     };
     const saveSt = () => { const d = load(); d.settings = Object.assign({}, d.settings, { fm: row.querySelector('#bvShM').value, fd5: +row.querySelector('#bvShD').value }); save(d); paint(); };
     row.querySelector('#bvShM').addEventListener('change', saveSt); row.querySelector('#bvShD').addEventListener('change', saveSt);
@@ -725,20 +787,25 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
   function allProg() {
     const ids = ['zodiac'].concat(COURSES.map(c => c.id)); let c = 0, n = 0, st = 0;
     ids.forEach(id => { const P = cprog(id), N = cN(id); n += N; Object.keys(P.st).forEach(k => { if (P.st[k] > 0) { c++; st += P.st[k]; } }); });
-    return { c, n, st, wait: [1, 2, 3].filter(t => !Reward.has(t)).length };
+    const G = []; ids.forEach(id => Reward.gifts(id).forEach(g => { if (!Reward.has(g.t, g.sp)) G.push(g); })); return { c, n, st, wait: G.length, wg: G[0] };
   }
   const lastCourse = () => { const l = pend(window.Atlas3D && Atlas3D.shanghai && Atlas3D.shanghai.last); return l && l.c && (l.c === 'zodiac' || courseOf(l.c)) ? l.c : 'zodiac'; };
   const cname = (id, lang) => id === 'zodiac' ? TX('st.title', lang) : TX('cn.' + id, lang);
   // the card's ステージ tab (2026-11-14): the totals, コース一覧 · 続きから (the course played last), 本日の上海 · HARD
   function stagePanel(lang) {
     css(); const A = allProg(), lc = lastCourse(), y = dailyRec();
-    const dy = k => `<button type="button" class="dyb${k === 'h' ? ' hard' : ''}${y[k] != null ? ' done' : ''}" data-shdy="${k}"><b>${esc(TX('dy.n', lang))}${k === 'h' ? '<em>HARD</em>' : ''}</b><small>${y[k] != null ? '✓ ' + esc(TX('r.best', lang, { t: mmss(y[k]) })) : esc(TX('lay.' + dailySpec(k).lay, lang))}</small></button>`;
+    const dy = k => `<button type="button" class="dyb${k === 'h' ? ' hard' : ''}${y[k] != null ? ' done' : ''}" data-shdy="${k}"><b>${esc(TX('dy.n', lang))}${k === 'h' ? '<em>HARD</em>' : '<em class="ez">EASY</em>'}</b><small>${y[k] != null ? '✓ ' + esc(TX('r.best', lang, { t: mmss(y[k]) })) : esc(TX('lay.' + dailySpec(k).lay, lang))}</small></button>`;
     return `<div class="strow"><button type="button" class="mapb lst" data-shlist><i>▦</i>${esc(TX('cl.title', lang))}</button><button type="button" class="mapb" data-shmap><i>✦</i><span>${esc(TX('cl.cont', lang))}<small>${esc(cname(lc, lang))}</small></span></button></div>` +
       `<div class="strow">${dy('n')}${dy('h')}</div>` +
       `<div class="stinfo"><span class="sc">${esc(TX('st.clear', lang, { c: A.c, n: A.n }))}</span><span class="ss">★ ${A.st}</span>` +
-      (A.wait ? `<span class="sw"><img src="../images/atlas/av/peacock-${[1, 2, 3].find(t => !Reward.has(t))}.webp" alt="">${esc(TX('st.wait', lang, { n: A.wait }))}</span>` : '') + `</div>`;
+      (A.wait ? `<span class="sw"><img src="../images/atlas/av/${A.wg.sp}-${A.wg.t}.webp" alt="">${esc(TX('st.wait', lang, { n: A.wait }))}</span>` : '') + `</div>`;
   }
   function stageBind(host, lang, play) {
+    // (2026-11-14, ユーザー: フリーとステージでカードの高さを同じに、スタート上の無駄な空きを詰める) PC: the stage panel lies over the
+    // body and the (hidden) スタート's place: the card keeps the free tab's height, and the free tab measures only its own rows
+    const fit = () => { const b = document.getElementById('bvMBody'), st = document.getElementById('bvStart'); if (!b || !st || !st.offsetHeight) return;
+      const d = st.getBoundingClientRect().bottom - b.getBoundingClientRect().bottom; if (d > 20) b.style.setProperty('--shdh', Math.round(d) + 'px'); };
+    requestAnimationFrame(() => requestAnimationFrame(fit)); setTimeout(fit, 400);
     host.addEventListener('click', e => {
       if (e.target.closest('[data-shmap]')) stageMap({ lang, play, course: lastCourse() });
       else if (e.target.closest('[data-shlist]')) courseList(lang, play);
@@ -749,14 +816,14 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
   const heroHtml = (lang, title, c, n) => `<div class="pzh-hero"><img class="pzh-ch" src="../images/atlas/av/peacock-0.webp" alt=""><div class="pzh-tx"><small>${esc(({ ja: '上海', zh: '上海', zhT: '上海', ko: '상하이' })[lang] || 'Shanghai')}</small><b>${esc(title)}</b><span class="pzh-bar"><i style="width:${n ? Math.round(c * 100 / n) : 0}%"></i></span><span class="pzh-n">${c} / ${n}</span></div></div>`;
   // a course's picture for its card: the scene (or, for 星座, a constellation of stars on the night sky)
   function courseThumb(id) {
-    if (id !== 'zodiac') return `<img src="${bgUrl(courseOf(id).bg[0])}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:50% 100%">`;
+    if (id !== 'zodiac') return window.ShanghaiScenes ? scnImg(id, 0, 348, 'width:100%;height:100%;object-fit:cover;background:' + (window.ShanghaiScenes ? ShanghaiScenes.tint(id) : '#223')) : '';
     const S = CON.leo, E = edges('leo');
     return `<svg viewBox="-6 -4 112 72" style="width:100%;height:100%;background:radial-gradient(ellipse at 50% 30%,#3a3a8a,#0d1236 75%)">${E.map(([i, j]) => `<line x1="${S.p[i][0]}" y1="${S.p[i][1]}" x2="${S.p[j][0]}" y2="${S.p[j][1]}" stroke="#ffd76a" stroke-width=".8" opacity=".8"/>`).join('')}${S.p.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#fff6d0"/>`).join('')}</svg>`;
   }
   // コース一覧 (2026-11-14): the courses as cards in the portal's list style (問題一覧), in three tabs by how hard; a card opens its map
   function courseList(lang, play) {
     if (!window.AtlasUI || !AtlasUI.bookSheet) { stageMap({ lang, play, course: lastCourse() }); return; }
-    const S0 = AtlasUI.bookSheet(TX('cl.title', lang)), TK = 'atlas-shcl';
+    scnCss(); const S0 = AtlasUI.bookSheet(TX('cl.title', lang)), TK = 'atlas-shcl';
     const ids = ['zodiac'].concat(COURSES.map(c => c.id)), tier = id => id === 'zodiac' ? 'e' : (b => b <= 0 ? 'e' : b <= 2 ? 'm' : 'h')(courseOf(id).base);
     let cur = 'e'; try { cur = localStorage.getItem(TK) || tier(lastCourse()); } catch (e) {}
     const info = id => { const P = cprog(id), N = cN(id), d = Object.keys(P.st).filter(k => P.st[k] > 0).length, st = Object.values(P.st).reduce((a, v) => a + v, 0); return { N, d, st }; };
@@ -764,7 +831,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       const A = allProg();
       const tabs = `<div class="lx-tabs">${['e', 'm', 'h'].map(k => { const xs = ids.filter(id => tier(id) === k), d = xs.reduce((a, id) => a + info(id).d, 0), n = xs.reduce((a, id) => a + info(id).N, 0); return `<button type="button" data-cat="${k}" class="${k === cur ? 'sel' : ''}"><span class="nm">${esc(TX('cl.tab.' + k, lang))}</span><span class="ct${d >= n ? ' ok' : ''}">${d}/${n}</span></button>`; }).join('')}</div>`;
       const card = id => { const { N, d, st } = info(id), full = d >= N;
-        return `<button type="button" class="lx-card shcr${full ? ' done' : ''}" data-set="" data-course="${id}"><span class="lx-th">${courseThumb(id)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${full ? ' ok' : d ? ' so' : ' new'}">${full ? '✓' : d ? d + '/' + N : 'NEW'}</span></span><span class="lx-t">${esc(cname(id, lang))}</span><span class="lx-desc">${esc(TX('cd.' + id, lang))}</span><span class="pzh-row"><span class="pzh-bar"><i style="width:${Math.round(d * 100 / N)}%"></i></span><span class="pzh-st">★ ${st}/${N * 3}</span></span></span></button>`; };
+        return `<button type="button" class="lx-card shcr${full ? ' done' : ''}" data-set="" data-course="${id}"><span class="lx-th">${courseThumb(id)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${full ? ' ok' : d ? ' so' : ' new'}">${full ? '✓' : d ? d + '/' + N : 'NEW'}</span></span><span class="lx-t">${esc(cname(id, lang))}</span><span class="lx-desc">${esc(TX('cd.' + id, lang))}</span><span class="pzh-row"><span class="pzh-bar"><i style="width:${Math.round(d * 100 / N)}%"></i></span><span class="pzh-st">★ ${st}/${N * 3}</span><span class="shrw">${Reward.gifts(id).map(g => `<img class="${Reward.has(g.t, g.sp) ? 'got' : ''}" src="../images/atlas/av/${g.sp}-${g.t}.webp" alt="">`).join('')}</span></span></span></button>`; };   // (the course's Atlamo: dim until won)
       S0.body.className = 'lesson-list lx-on';
       S0.body.innerHTML = `<div class="pzh-box">${heroHtml(lang, TX('cl.title', lang), A.c, A.n)}${tabs}</div><div class="lx-grid">${ids.filter(id => tier(id) === cur).map(card).join('')}</div>`;
     };
@@ -781,7 +848,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
     const S0 = AtlasUI.bookSheet(TX('f.board', lang)), K = C(), fp = freePick(), F = load().free || {};
     const played = K.FREE.filter(k => Object.keys(F).some(x => x === k || x.indexOf(k + ':') === 0)).length;
     const card = (k, z) => { const lv = Math.min(5, Math.ceil(z / 2)), r = F[freeKey(k, fp.mode, fp.diff)], on = String(z) === sel.value;
-      return `<button type="button" class="lx-card shbd${on ? ' sel' : ''}${r ? ' done' : ''}" data-set="" data-z="${z}"><span class="lx-th">${layArt(k)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${r ? ' ok' : ' new'}">${r ? '✓' : 'NEW'}</span></span><span class="lx-t">${esc(TX('lay.' + k, lang))}</span><span class="lx-desc">${'★'.repeat(lv)}${'☆'.repeat(5 - lv)} · ${esc(TX('tiles', lang, { n: K.LAYOUTS[k].length }))}</span><span class="pzh-row"><span class="pzh-st">${esc(TX('best', lang))} ${r && r.best != null ? mmss(r.best) : '—'}</span></span></span></button>`; };
+      return `<button type="button" class="lx-card shbd${on ? ' sel' : ''}${r ? ' done' : ''}" data-set="" data-z="${z}"><span class="lx-th">${layArt(k)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${r ? ' ok' : ' new'}">${r ? '✓' : 'NEW'}</span></span><span class="lx-t">${esc(TX('lay.' + k, lang))}</span><span class="lx-desc">${'★'.repeat(lv)}${'☆'.repeat(5 - lv)} · ${esc(TX('tiles', lang, { n: K.LAYOUTS[k].length }))}</span><span class="pzh-row"><span class="pzh-st">${esc(TX('best', lang))} ${r && r.best != null ? mmss(r.best) : '—'}</span><span class="shrw">${(Reward.BOARD[k] || []).map(([sp, t, rr]) => `<img class="${Reward.has(t, sp) ? 'got' : ''}" src="../images/atlas/av/${sp}-${t}.webp" alt="" title="${esc(Reward.rule(rr, lang))}">`).join('')}</span></span></span></button>`; };   // (the board's Atlamo: dim until won)
     S0.body.className = 'lesson-list lx-on';
     S0.body.innerHTML = `<div class="pzh-box">${heroHtml(lang, TX('f.board', lang), played, K.FREE.length)}</div><div class="lx-grid">${K.FREE.map((k, i) => card(k, i + 1)).join('')}</div>`;
     S0.body.onclick = e => { const b = e.target.closest('[data-z]'); if (!b) return; sel.value = b.dataset.z; sel.dispatchEvent(new Event('change')); S0.close(); };
@@ -842,19 +909,21 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
   const PW = 116, PH = 64;   // one constellation's box in the long sky (x 0..100 of CON plus a gap), the sky's height
   function stageMap(o) {
     css(); const lang = o.lang, K = C(), cid = o.course && courseOf(o.course) ? o.course : 'zodiac', ZOD = cid === 'zodiac', CO = courseOf(cid);
-    const AR = ZOD ? K.AREAS : CO.bg.map((_, i) => 'a' + i), NA = AR.length, N = NA * 10;
-    const areaName = i => ZOD ? TX('ar.' + AR[i], lang) : TX('st.area', lang, { n: i + 1 });
-    const RA = s => ZOD ? Reward.at(s) : 0, edg = i => ZOD ? edges(AR[i]) : Array.from({ length: 9 }, (_, k) => [k, k + 1]);
+    const LITE = !ZOD && LITE_SCN(), BMPX = Math.min(1600, Math.round(116 * Math.min(innerHeight / 64, 14) * Math.min(1.6, devicePixelRatio || 1)));
+    const AR = ZOD ? K.AREAS : Array.from({ length: CO.n }, (_, i) => 'a' + i), NA = AR.length, N = NA * 10;
+    const areaName = i => ZOD ? TX('ar.' + AR[i], lang) : TX('an.' + cid + '.' + i, lang);   // (2026-11-14: each area has its own name, was エリア1…)
+    const RA = s => Reward.giftAt(cid, s), edg = i => ZOD ? edges(AR[i]) : Array.from({ length: 9 }, (_, k) => [k, k + 1]);
     if (window.ShanghaiZodiac && !document.getElementById('shzod-css')) { const st = document.createElement('style'); st.id = 'shzod-css'; st.textContent = ShanghaiZodiac.css; document.head.appendChild(st); }
     let P = cprog(cid), area = Math.floor(nextStage(P, N) / 10), pick = nextStage(P, N);
     if (o.pick != null && o.pick < N) { pick = o.pick; area = Math.floor(pick / 10); }
-    const el = document.createElement('div'); el.className = 'shmap' + (ZOD ? '' : ' scn'); if (!ZOD) el.style.background = CO.tint;
-    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd">${ZOD ? '' : `<img class="em emi" src="${bgUrl(CO.bg[0])}" alt="">`}<svg class="em${ZOD ? '' : ' zx'}" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="shemg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b4aa0"/><stop offset="1" stop-color="#121640"/></radialGradient></defs><rect x="10" y="4" width="44" height="56" rx="8" fill="url(#shemg)" stroke="#e8c877" stroke-width="2"/><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="rgba(232,200,119,.35)"/><path d="M20 44 L28 34 L36 38 L44 22 M28 34 L30 22" fill="none" stroke="#ffe39a" stroke-width="1.4" stroke-linecap="round"/><g fill="#fff6d8"><circle cx="20" cy="44" r="2.2"/><circle cx="28" cy="34" r="2.6"/><circle cx="36" cy="38" r="2"/><circle cx="44" cy="22" r="2.8"/><circle cx="30" cy="22" r="1.8"/></g></svg><div class="shtl"><h2></h2><p class="story"></p></div><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
+    const el = document.createElement('div'); el.className = 'shmap' + (ZOD ? '' : ' scn'); if (!ZOD) { el.style.background = window.ShanghaiScenes ? ShanghaiScenes.tint(cid) : '#1b2140'; scnCss(); }
+    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd">${ZOD ? '' : scnImg(cid, 0, 232).replace('<img ', '<img class="em emi" ')}<svg class="em${ZOD ? '' : ' zx'}" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="shemg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b4aa0"/><stop offset="1" stop-color="#121640"/></radialGradient></defs><rect x="10" y="4" width="44" height="56" rx="8" fill="url(#shemg)" stroke="#e8c877" stroke-width="2"/><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="rgba(232,200,119,.35)"/><path d="M20 44 L28 34 L36 38 L44 22 M28 34 L30 22" fill="none" stroke="#ffe39a" stroke-width="1.4" stroke-linecap="round"/><g fill="#fff6d8"><circle cx="20" cy="44" r="2.2"/><circle cx="28" cy="34" r="2.6"/><circle cx="36" cy="38" r="2"/><circle cx="44" cy="22" r="2.8"/><circle cx="30" cy="22" r="1.8"/></g></svg><div class="shtl"><h2></h2><p class="story"></p></div><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
     document.body.appendChild(el);
     const $ = q => el.querySelector(q), vp = $('.vp'), wld = $('.wld');
+    if (!ZOD) { $('.sky').insertAdjacentHTML('beforeend', `<div class="sks">${AR.map((_, i) => scnImg(cid, i, 232, '', i === area)).join('')}</div>`); }
     // the pan / zoom: the long sky drawn at u px per unit, then scaled by z and moved by (tx, ty)
-    let u = 6, z = 1, tx = 0, ty = 0, raf = 0, anim = null;
-    const WW = PW * NA;
+    let u = 6, z = 1, tx = 0, ty = 0, raf = 0, anim = null, PLX = [], SKS = null;
+    const WW = PW * NA; SKS = ZOD ? null : $('.sks');
     const sky = ZOD ? skyLoop($('canvas'), () => tx) : { size() {}, stop() {} };   // (the scene courses: their pictures are the sky)
     if (window.Table3D && Table3D.quiet) Table3D.quiet(true);   // (2026-11-14) the map covers the room: the 3D scene behind it stops drawing (the showcase turntable kept it at 60 fps)
     requestAnimationFrame(() => el.classList.add('on'));
@@ -864,7 +933,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       tx = w + 2 * m <= vw ? (vw - w) / 2 : Math.min(m, Math.max(vw - w - m, tx));
       ty = h <= vh ? (vh - h) / 2 : Math.min(20, Math.max(vh - h - 20, ty));
     }
-    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; wld.style.setProperty('--iz', Math.max(1, Math.min(3, .72 / z)).toFixed(3)); track(); }   // (2026-11-14 --iz: zoomed out, the stage buttons keep ~72 % of their size on screen — the picture shrinks, the buttons do not)
+    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; if (SKS) SKS.style.transform = `translate3d(${(vp.offsetLeft + tx).toFixed(1)}px,0,0)`, SKS.style.setProperty('--aw', (PW * u * z).toFixed(1) + 'px'); PLX.forEach(([e, f]) => { e.style.transform = `translate3d(${((f - 1) * tx / z).toFixed(1)}px,0,0)`; }); wld.style.setProperty('--iz', Math.max(1, Math.min(3, .72 / z)).toFixed(3)); track(); }   // (2026-11-14 --iz: zoomed out, the stage buttons keep ~72 % of their size on screen — the picture shrinks, the buttons do not)
     const centerOf = a => (a * PW + 8 + 50) * u;   // the middle of constellation a, in sky px at z = 1
     function aim(a, smooth) {
       const ttx = vp.clientWidth / 2 - centerOf(a) * z;
@@ -900,21 +969,20 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(areaName(i))}<em>★${st}</em>${(ZOD ? [1, 2, 3] : []).filter(t => Math.floor(GIFT_S[t] / 10) === i && !Reward.has(t)).map(t => `<img class="agf" src="../images/atlas/av/peacock-${t}.webp" alt="">`).join('')}</button>`; }).join('');
       const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
       wld.querySelectorAll('.pn').forEach((t, i) => t.classList.toggle('on', i === area));
-      if (!ZOD) $('.sky').style.backgroundImage = `url(${bgUrl(CO.bg[area])})`;   // (a scene course: this area's picture, blurred, fills the screen round the map)
+      // (2026-11-14) a scene course: the frosted glass above and below the map is a strip of every area's picture, moved with the map in apply() (it follows the scroll, not only the tab)
     }
     // every constellation's stars, evenly spaced inside its box, in the long sky's units
-    const PTS = AR.map((a, i) => (ZOD ? CON[a].p : cPts(i)).map(([x, y]) => [i * PW + 8 + x, y]));   // (placed by hand on the figures, already evenly spaced)
+    const PTS = AR.map((a, i) => (ZOD ? CON[a].p : cPts(cid, i)).map(([x, y]) => [i * PW + 8 + x, y]));   // (placed by hand on the figures, already evenly spaced)
     function art() {
       const lit = ([i, j], fs) => cleared(P, fs + i) && cleared(P, fs + j);
-      let svg = `<svg viewBox="0 0 ${WW} ${PH}" preserveAspectRatio="none">`;
+      let svg = `<svg viewBox="0 0 ${WW} ${PH}" preserveAspectRatio="none">` + (!ZOD && window.ShanghaiScenes ? (LITE ? AR.map((_, i) => `<image class="scbm" data-scn="${scnKey(cid, i, BMPX)}" href="${areaImg(cid, i, BMPX, i === area).u}" x="${i * PW - .05}" y="0" width="${PW + .1}" height="${PH}" preserveAspectRatio="none"/>`).join('') : ShanghaiScenes.svg(cid, NA, 'm' + cid)) : '');   // (phones: the areas as bitmaps — light to pan and zoom; PC: the live vector with its motion)   // (a scene course: one continuous landscape, its road through every stage)
       AR.forEach((a, i) => {
         const fs = i * 10, done = Array.from({ length: 10 }, (_, k) => cleared(P, fs + k)).filter(Boolean).length;
-        if (!ZOD) svg += `<image href="${bgUrl(CO.bg[i])}" x="${i * PW}" y="0" width="${PW}" height="${PH}" preserveAspectRatio="xMidYMax slice" opacity="${(.84 + .16 * done / 10).toFixed(2)}"/>`;
         svg += `<text class="pn${i === area ? ' on' : ''}" x="${i * PW + 8}" y="7">${esc(areaName(i))}</text>`;
         if (ZOD) svg += `<g class="fig${done === 10 ? ' lit' : ''}" transform="translate(${i * PW + 8} 0)" style="--dl:${-i * .6}s;opacity:${(.55 + .45 * done / 10).toFixed(2)}">${window.ShanghaiZodiac ? ShanghaiZodiac(a, i) : ''}</g>`;
-        edg(i).forEach(e => { const [x1, y1] = PTS[i][e[0]], [x2, y2] = PTS[i][e[1]], L = lit(e, fs);
+        edg(i).forEach(e => { const [x1, y1] = PTS[i][e[0]], [x2, y2] = PTS[i][e[1]], L = lit(e, fs); if (!ZOD && !L) return;   // (the scene's road shows the way; a cleared stretch glows gold)
           svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${L ? '#ffd76a' : ZOD ? 'rgba(180,200,255,.3)' : 'rgba(255,255,255,.75)'}" stroke-width="${L ? .7 : ZOD ? .35 : .5}" stroke-linecap="round" ${L ? 'filter="drop-shadow(0 0 1.2px #ffd76a)"' : 'stroke-dasharray="1 1.2"'}/>`; });
-        if (i < NA - 1) { const [x1, y1] = PTS[i][9], [x2, y2] = PTS[i + 1][0], L = cleared(P, fs + 9);   // the road on to the next constellation
+        if (i < NA - 1 && ZOD) { const [x1, y1] = PTS[i][9], [x2, y2] = PTS[i + 1][0], L = cleared(P, fs + 9);   // the road on to the next constellation
           svg += `<path d="M${x1} ${y1} C${x1 + 14} ${y1} ${x2 - 14} ${y2} ${x2} ${y2}" fill="none" stroke="${L ? 'rgba(255,215,106,.7)' : 'rgba(180,200,255,.22)'}" stroke-width="${L ? .55 : .35}" stroke-dasharray="${L ? '2 1.4' : '1 1.6'}" stroke-linecap="round"/>`; }
       });
       return svg + '</svg>';
@@ -923,8 +991,8 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       let h = '';
       AR.forEach((a, i) => PTS[i].forEach(([x, y], k) => {
         const s = i * 10 + k, ok = cleared(P, s), ul = unlocked(P, s), sr = P.st[s] || 0, t = RA(s);
-        h += `<button type="button" class="nd${s === pick ? ' pk' : ''}${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${t ? `<i class="gft">${Reward.has(t) ? '✓' : '🎁'}</i>` : ''}</button>` +
-          (t ? `<img class="gf${Reward.has(t) ? ' got' : ''}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" src="../images/atlas/av/peacock-${t}.webp" alt="">` : '');
+        h += `<button type="button" class="nd${s === pick ? ' pk' : ''}${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${t ? `<i class="gft">${Reward.has(t.t, t.sp) ? '✓' : '🎁'}</i>` : ''}</button>` +
+          (t ? `<img class="gf${Reward.has(t.t, t.sp) ? ' got' : ''}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" src="../images/atlas/av/${t.sp}-${t.t}.webp" alt="">` : '');
       }));
       wld.querySelectorAll('.nd,.gf').forEach(n => n.remove());
       wld.insertAdjacentHTML('beforeend', h);
@@ -934,23 +1002,23 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
     function head() {
       const tot = Object.values(P.st).reduce((a, v) => a + v, 0);
       $('h2').textContent = ZOD ? TX('st.title', lang) : TX('cn.' + cid, lang); $('.story').textContent = ZOD ? TX('st.story', lang) : TX('cd.' + cid, lang); $('.tot').textContent = '★ ' + tot + ' / ' + N * 3;
-      const nx = ZOD ? Reward.next() : null, it = nx && window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + nx.t);
-      $('.gift').innerHTML = nx ? `<img src="../images/atlas/av/peacock-${nx.t}.webp" alt=""><span>${esc(TX('rw.next', lang, { n: nx.left, name: it ? it.name[lang] || it.name.en : 'Peacotile' }))}</span>` : '';
+      const nx = Reward.cnext(cid);
+      $('.gift').innerHTML = nx ? `<img src="../images/atlas/av/${nx.g.sp}-${nx.g.t}.webp" alt=""><span>${esc(TX(nx.star ? 'rw.nexts' : 'rw.next', lang, { n: nx.left, name: Reward.gname(nx.g, lang) }))}</span>` : '';
       $('.gift').style.display = nx ? '' : 'none';
     }
     // the stage that hands over a クジャクパイ: its picture and name in the sheet
     function giftLine(s) {
-      const t = RA(s); if (!t) return '';
-      const it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? it.name[lang] || it.name.en : 'Peacotile', got = Reward.has(t);
-      return `<div class="gfl${got ? ' got' : ''}"><img src="../images/atlas/av/peacock-${t}.webp" alt=""><span>${got ? '✓ ' : '🎁 '}${esc(TX(got ? 'rw.have' : 'rw.here', lang, { name: nm }))}</span></div>`;
+      const g = RA(s); if (!g) return '';
+      const nm = Reward.gname(g, lang), got = Reward.has(g.t, g.sp);
+      return `<div class="gfl${got ? ' got' : ''}"><img src="../images/atlas/av/${g.sp}-${g.t}.webp" alt=""><span>${got ? '✓ ' : '🎁 '}${esc(TX(got ? 'rw.have' : 'rw.here', lang, { name: nm }))}</span></div>`;
     }
     // the box below the sky: the constellation's picture with this stage's star ringed · the stage, its mission, the record · スタート
     // (2026-11-14, ユーザー: 画像をうまく組み込んで綺麗に見やすく、PCは文字も大きく; a pick refills it without re-laying the map)
     function conArt(a, k) {
       if (!ZOD) {   // a scene course: this area's picture with its path, this stage's star ringed
-        const Q = cPts(a), fs = a * 10;
-        let v = `<svg viewBox="-8 0 116 64" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><image href="${bgUrl(CO.bg[a])}" x="-8" y="0" width="116" height="64" preserveAspectRatio="xMidYMax slice"/>`;
-        for (let j = 0; j < 9; j++) { const L = cleared(P, fs + j) && cleared(P, fs + j + 1); v += `<line class="cl${L ? ' on' : ''}" x1="${Q[j][0]}" y1="${Q[j][1]}" x2="${Q[j + 1][0]}" y2="${Q[j + 1][1]}" style="stroke:${L ? '#ffd76a' : 'rgba(255,255,255,.85)'}"/>`; }
+        const Q = cPts(cid, a).map(([x, y]) => [a * PW + 8 + x, y]), fs = a * 10;
+        let v = `<svg viewBox="${a * PW} 0 116 64" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${window.ShanghaiScenes ?  `<image data-scn="${scnKey(cid, a, 464)}" href="${areaImg(cid, a, 464, true).u}" x="${a * PW}" y="0" width="116" height="64" preserveAspectRatio="none"/>` : ''}`;
+        for (let j = 0; j < 9; j++) { const L = cleared(P, fs + j) && cleared(P, fs + j + 1); if (!L) continue; v += `<line class="cl${L ? ' on' : ''}" x1="${Q[j][0]}" y1="${Q[j][1]}" x2="${Q[j + 1][0]}" y2="${Q[j + 1][1]}" style="stroke:${L ? '#ffd76a' : 'rgba(255,255,255,.85)'}"/>`; }
         Q.forEach(([x, y], j) => { v += j === k ? `<circle class="cpk" cx="${x}" cy="${y}" r="5.4"/><circle class="cst on" cx="${x}" cy="${y}" r="2.6"/>` : `<circle class="cst${cleared(P, fs + j) ? ' on' : ''}" cx="${x}" cy="${y}" r="1.8" style="${cleared(P, fs + j) ? '' : 'fill:#fff;stroke:rgba(0,0,0,.35);stroke-width:.3'}"/>`; });
         return v + '</svg>';
       }
@@ -984,7 +1052,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y); zoomAt(pinch.z * d / pinch.d / z, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); moved = 99; return; }
       const dx = e.clientX - lastX, dy = e.clientY - lastY, now = performance.now();
       moved += Math.abs(dx) + Math.abs(dy); if (moved > 6) { vp.classList.add('drag'); if (!vp.hasPointerCapture(e.pointerId)) try { vp.setPointerCapture(e.pointerId); } catch (_) {} }
-      if (moved > 6) { tx += dx; ty += dy; apply(); vx = dx / Math.max(1, now - lt) * 16; }
+      if (moved > 6) { tx += dx; if (PH * u * z > vp.clientHeight + 2) ty += dy; apply(); vx = dx / Math.max(1, now - lt) * 16; }
       lastX = e.clientX; lastY = e.clientY; lt = now;
     });
     const up = e => {
@@ -995,6 +1063,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
     vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
     vp.addEventListener('wheel', e => {
       e.preventDefault(); const r = vp.getBoundingClientRect();
+      if (!ZOD) { tx -= Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY * (e.deltaMode === 1 ? 32 : 1); apply(); return; }   // (2026-11-14 ユーザー: 星座以外はホイールで拡大しない — the wheel moves the map left and right)
       if (e.ctrlKey || Math.abs(e.deltaY) >= Math.abs(e.deltaX)) zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0018)), e.clientX - r.left, e.clientY - r.top);
       else { tx -= e.deltaX; apply(); }
     }, { passive: false });
@@ -1004,7 +1073,14 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       const n = e.target.closest('.nd'); if (n) { if (moved > 6) return; pick = +n.dataset.s; mark(); sheet(); return; }
       if (e.target.closest('.nav.l')) go(area - 1); else if (e.target.closest('.nav.r')) go(area + 1);
     });
-    head(); wld.innerHTML = art(); tabs(); nodes(); sheet();
+    head(); wld.innerHTML = art();
+    // (2026-11-14) a scene course: two more layers moved at other speeds — far things lag (×0.5), the ground band in front runs ahead (×1.35)
+    if (!ZOD && window.ShanghaiScenes && ShanghaiScenes.plx) {
+      const X = ShanghaiScenes.plx(cid, NA), H = PH, lay = (L, c) => `<svg class="plx ${c}" viewBox="${L.x0} 0 ${L.w} ${H}" preserveAspectRatio="none" style="left:${(L.x0 / WW * 100).toFixed(3)}%;width:${(L.w / WW * 100).toFixed(3)}%"><g class="shs">${L.svg}</g></svg>`;
+      wld.insertAdjacentHTML('beforeend', `<div class="plxc">${lay(X.far, 'pf') + lay(X.near, 'pnr')}</div>`);   // (clipped to the course: nothing past its ends)
+      PLX = [[wld.querySelector('.plx.pf'), .5], [wld.querySelector('.plx.pnr'), 1.35]];
+    }
+    tabs(); nodes(); sheet();
     // open on the stage to play next (its star a little left of the middle, so the road ahead shows)
     function aimPick() { const [x] = PTS[Math.floor(pick / 10)][pick % 10]; tx = vp.clientWidth * .42 - x * u * z; apply(); }
     layout(); z = Math.max(ZMIN(), 1); aimPick();

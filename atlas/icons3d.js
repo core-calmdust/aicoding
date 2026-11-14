@@ -842,6 +842,37 @@
       const pk = puck(.3, .12, C(0xf6f4ee, { roughness: .3 }), .4); g.add(at(pk, -.35, 1.1, -.25, .3, 0, -.2));
       return g;
     },
+    botao() {   // a corner of a futebol de botão table (green Celotex, the big and small areas, a white goal with its net), a chunky
+      // red button with a white crest (its shallow dish on top) and the felt ball bouncing off it towards the goal
+      const U = v => (v - .5) * 3.1;
+      const top = M({ map: X.canvasTex('icbt', 512, 512, (g, W) => {
+        g.fillStyle = '#2f7d3c'; g.fillRect(0, 0, W, W);
+        for (let i = 0; i < 6; i++) { g.fillStyle = i % 2 ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.05)'; g.fillRect(0, i * W / 6, W, W / 6); }
+        g.globalAlpha = .1; for (let i = 0; i < 900; i++) { g.fillStyle = Math.random() < .5 ? '#fff' : '#000'; g.fillRect(Math.random() * W, Math.random() * W, 2, 2); } g.globalAlpha = 1;
+        g.strokeStyle = 'rgba(255,255,255,.94)'; g.lineWidth = 9;
+        g.strokeRect(W * .2, -10, W * .6, W * .34); g.strokeRect(W * .36, -10, W * .28, W * .13);
+        g.beginPath(); g.arc(W * .5, W * .2, W * .2, Math.PI * .22, Math.PI * .78); g.stroke();
+        g.fillStyle = '#fff'; g.beginPath(); g.arc(W * .5, W * .2, 7, 0, 7); g.fill();
+      }), roughness: .92 });
+      const g = boardChunk(4, 3.6, top, C(0x6a3e1e, { roughness: .4 }));
+      const white = C(0xf8f8f4, { roughness: .3 }), net = C(0xffffff, { roughness: .8, transparent: true, opacity: .55 });
+      const goal = new T.Group();
+      for (const sx of [-1, 1]) goal.add(at(mesh(new T.CylinderGeometry(.045, .045, .5, 12), white), sx * .5, .25, 0));
+      goal.add(at(mesh(new T.CylinderGeometry(.045, .045, 1.04, 12), white), 0, .5, 0, 0, 0, Math.PI / 2));
+      const nb = mesh(new T.BoxGeometry(1, .48, .34), net); goal.add(at(nb, 0, .24, -.19));
+      g.add(at(goal, 0, .5, U(.04)));
+      // the button: a fat bevelled disc, red, a white crest with a red star on its top (deformed big — the game's signature piece)
+      const red = C(0xd4352a, { roughness: .2 }), btn = new T.Group(), H = .34;
+      btn.add(puck(.8, H, red, .45));
+      const crest = mesh(new T.CylinderGeometry(.56, .56, .02, 48), M({ map: X.canvasTex('icbtc', 256, 256, (q, W) => {
+        q.fillStyle = '#ffffff'; q.beginPath(); q.arc(W / 2, W / 2, W / 2, 0, 7); q.fill();
+        q.strokeStyle = '#d4352a'; q.lineWidth = 16; q.beginPath(); q.arc(W / 2, W / 2, W * .42, 0, 7); q.stroke();
+        q.fillStyle = '#d4352a'; q.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? W * .13 : W * .3; q.lineTo(W / 2 + Math.cos(a) * rr, W / 2 + Math.sin(a) * rr); } q.fill();
+      }), roughness: .35 })); btn.add(at(crest, 0, H + .006, 0));
+      g.add(at(btn, U(.64), .55, U(.66), .1, .4, -.06));
+      const ball = mesh(new T.SphereGeometry(.22, 24, 16), C(0xf6f1e4, { roughness: .95 })); g.add(at(ball, U(.4), 1.05, U(.36)));
+      return g;
+    },
     crokinole() {   // the middle of a crokinole board (honey maple, the 20 hole with its red ring, the 15 circle and its eight pegs, the 10
       // circle), a black disc beside a peg, a red disc by the hole, and a red disc leaping high over it all
       const U = v => (v - .5) * 3.1;

@@ -641,30 +641,24 @@ static inline int vFromTT(int v, int ply) { return v > WINT ? v - ply : v < -WIN
 #ifndef TTM_BITS
 #define TTM_BITS 20
 #endif
-static u64 TTM[(1 << TTM_BITS) * 8];
+// (2026-11-15) the bucket table is Praline's (shared/praline/praline_tt.h): w >> 58 = in use; replace the shallowest / oldest
+#define PL_TT_BITS TTM_BITS
+#define PL_TT_USED(w, c) ((w) >> 58)
+#define PL_TT_SCORE(w, c) (!((w) >> 58) ? -1000 : (int)(i8)((w) >> 32) - ((((w) >> 48) & 255) != ttAge ? 16 : 0))
+#include "../shared/praline/praline_tt.h"
 typedef struct { i16 v; u8 f, t; i8 d; u8 flag; } TTR;
 static inline int ttProbe(u64 key, TTR *r) {
-  const u64 *bk = &TTM[(key & ((1u << TTM_BITS) - 1)) * 8];
-  for (int j = 0; j < 4; j++) {
-    u64 w = bk[2 * j + 1], kx = bk[2 * j];
-    if ((kx ^ w) == key && (w >> 58)) { r->v = (i16)(w & 0xFFFF); r->f = (u8)(w >> 16); r->t = (u8)(w >> 24); r->d = (i8)(w >> 32); r->flag = (u8)((w >> 40) & 3); return 1; }
-  }
+  u64 w, c;
+  if (plttFind(key, key, &w, &c)) { r->v = (i16)(w & 0xFFFF); r->f = (u8)(w >> 16); r->t = (u8)(w >> 24); r->d = (i8)(w >> 32); r->flag = (u8)((w >> 40) & 3); return 1; }
   return 0;
 }
 static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
-  u64 *bk = &TTM[(key & ((1u << TTM_BITS) - 1)) * 8];
-  int j = -1, q = 1 << 30; u64 old = 0;
-  for (int i = 0; i < 4; i++) {
-    u64 w = bk[2 * i + 1], kx = bk[2 * i];
-    if ((kx ^ w) == key && (w >> 58)) { j = i; old = w; break; }
-    int s = !(w >> 58) ? -1000 : (int)(i8)(w >> 32) - (((w >> 48) & 255) != ttAge ? 16 : 0);
-    if (s < q) { q = s; j = i; }
-  }
+  int hit; u64 old, oc; u64 *x = plttSlot(key, key, &hit, &old, &oc);
   u64 mv = m && m->f ? ((u64)m->f << 16 | (u64)m->t << 24) : old ? (old & 0xFFFF0000ull) : 0;   // (no move: keep the entry's own)
   u64 w = (u64)(u16)(i16)vToTT(v, ply) | mv | (u64)(u8)(i8)(d > 120 ? 120 : d) << 32 | (u64)(flag & 3) << 40 | (u64)ttAge << 48 | 1ull << 58;
-  bk[2 * j + 1] = w; bk[2 * j] = key ^ w;
+  plttWrite(x, key, w, 0);
 }
-EXPORT(new_game) void new_game(void) { memset(TTM, 0, sizeof(TTM)); ttAge = 0; }
+EXPORT(new_game) void new_game(void) { memset(PL_TT, 0, sizeof(PL_TT)); ttAge = 0; }
 #else
 static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
   TTE *e = &TT[key & ((1 << TT_BITS) - 1)];

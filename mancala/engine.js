@@ -368,7 +368,10 @@ function evaluate(b, side, R) {
 
 // zobrist hashing
 let rs = 0x9e3779b9;
-function rnd() { rs ^= rs << 13; rs >>>= 0; rs ^= rs >>> 17; rs ^= rs << 5; rs >>>= 0; return rs; }
+// (2026-11-14) the xorshift's outputs go through murmur3's fmix32: the raw outputs of one linear generator are linearly
+// dependent, and different positions met the same 64-bit key ~150 times in one exact solve (wrong "solved" table entries,
+// found with the threads of engine_mt.wasm; claude/mancala-spec.md). engine.c uses the same keys.
+function rnd() { rs ^= rs << 13; rs >>>= 0; rs ^= rs >>> 17; rs ^= rs << 5; rs >>>= 0; let z = rs; z ^= z >>> 16; z = Math.imul(z, 0x85ebca6b) >>> 0; z ^= z >>> 13; z = Math.imul(z, 0xc2b2ae35) >>> 0; z ^= z >>> 16; return z >>> 0; }
 const ZN = 128, Z1 = new Uint32Array(14 * ZN), Z2 = new Uint32Array(14 * ZN);
 for (let i = 0; i < Z1.length; i++) { Z1[i] = rnd(); Z2[i] = rnd(); }
 const ZS1 = rnd(), ZS2 = rnd(), ZR1 = [rnd(), rnd(), rnd(), rnd(), rnd()], ZR2 = [rnd(), rnd(), rnd(), rnd(), rnd()];
@@ -772,12 +775,26 @@ if (typeof WorkerGlobalScope !== 'undefined' && root instanceof WorkerGlobalScop
   // (2026-11-11) the C engine: engine_simd.wasm (wasm SIMD) where the browser has SIMD, else engine.wasm (the same code); without
   // WebAssembly (or with ?nowasm) the JavaScript search above. Its clock (env.now) also stops a task the threads drop (SH).
   let core = 'js';
-  const ready = (async () => {
+  // ?…&mt=1 (2026-11-14): the lead of the page's threads (shared/mtengine.js): engine_mt.wasm on the shared memory sent with the
+  // first message ('mtinit'); the helpers (mt-helper.js) take moves at the split points of its search (Praline's YBW, engine.c)
+  const MTL = /[?&]mt=1\b/.test(root.location.search || '');
+  const ready = MTL ? new Promise(res => {
+    root.addEventListener('message', function f(e) {
+      const m = e.data; if (!m || m.type !== 'mtinit') return; root.removeEventListener('message', f);
+      try {
+        const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now } }).exports;
+        x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+        cxLoad(Object.assign({}, x, { memory: m.mem })); core = 'wasm-mt';
+        root.postMessage({ type: 'mtready' });
+      } catch (err) { CX = null; root.postMessage({ type: 'mtready', error: String(err && err.message || err) }); }
+      res();
+    });
+  }) : (async () => {
     try {
       if (typeof WebAssembly !== 'object' || /[?&]nowasm\b/.test(root.location.search || '')) return;
       let simd = true;
       try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
-      const url = new URL((simd ? 'engine_simd.wasm' : 'engine.wasm') + '?v=1', root.location.href);
+      const url = new URL((simd ? 'engine_simd.wasm' : 'engine.wasm') + '?v=2', root.location.href);
       const imp = { env: { now: () => (SH !== null && SH.stopped()) ? Infinity : now() } };
       const r = WebAssembly.instantiateStreaming ? await WebAssembly.instantiateStreaming(fetch(url), imp) : await WebAssembly.instantiate(await fetch(url).then(x => x.arrayBuffer()), imp);
       cxLoad(r.instance.exports); core = simd ? 'wasm-simd' : 'wasm';
@@ -785,6 +802,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && root instanceof WorkerGlobalScop
   })();
   root.onmessage = ev => {
     const m = ev.data;
+    if (m && m.type === 'mtinit') return;
     if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = root.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
     ready.then(() => handle(m));
   };

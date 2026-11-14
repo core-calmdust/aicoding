@@ -1,13 +1,28 @@
 /* =====================================================================
-   Xiangqi on the 3D table — an antique lacquer board: a vermilion
-   playing field with gold lines and gold calligraphy in the river
-   (楚 河 漢 界), a black lacquer frame painted with a gold Greek-key
-   (雷文) band and small white peonies, brass corner fittings;
-   thick boxwood / ivory-like discs with engraved red / black characters.
-   Registers into Table3D (replaces the simple builder in table3d.js):
-     Table3D.MODELS.xiangqi(live)   board (+ the opening position unless live)
-     userData: { top, u, W, D, pt(i, j) → [x, z], piece(code) → Group }
-     piece: children[0] = body, children[1] = the engraved face (games turn it with rotation.z)
+   Xiangqi on the 3D table — six boards and six sets of pieces (2026-11-14).
+   Boards (Table3D.BOARDS.xiangqi, 'atlas-xiangqi-board3'), in the menus' order; the first is the default:
+     kaya     本榧            the shogi board's golden kaya (images/atlas/shogi-kaya.webp), black ink lines and brushed 楚河 漢界 —
+                             the classic board on a solid block
+     walnut   ウォルナットと真鍮  planked American walnut, the lines carved as V grooves, a brass inlay round the field (as the modern
+                             walnut sets with brass-rimmed discs)
+     hongmu   紅木と金線       deep red rosewood under a clear finish, gold lines, gold 楚河 汉界 (the classic Chinese gift board)
+     raden    黒漆と螺鈿        black lacquer, the lines, the river words and plum sprays in the frame inlaid in mother-of-pearl
+                             (strips and chips of shell, the colour shifting with the angle)
+     lacquer  朱漆と雷文        the vermilion lacquer field with gold lines in a black lacquer frame painted with a gold Greek key and
+                             white peonies, brass corners (the first 3D board)
+     jade     翡翠と金          green jade with gold lines and gold words on a white-jade block
+   2026-11-14 v2: every block board (all but lacquer) and every face are pictures from atlas/tools/xiangqi-tex.py
+     (images/atlas/xiangqi3d/): real grain on the top, the long sides and the end grain on the ends; inlays as metal maps;
+     the characters drawn from real typefaces (楷書 LXGW WenKai / 明朝 Noto Serif CJK), centred and sized to fill the face.
+   Pieces (Table3D.PIECES.xiangqi, 'atlas-xiangqi-pc3'), the first the default: boxwood (engraved red / black on boxwood) ·
+     brass (brass-rimmed discs: cream face with a red character / dark face with a cream one, 明朝) · ebony (ebony discs, a
+     double ring, gold / silver characters inlaid) · urushi (vermilion / black lacquer, gold characters) · jade (white / green jade) ·
+     porcelain (white porcelain, copper-red / cobalt-blue characters).
+   Registers into Table3D:
+     Table3D.MODELS.xiangqi(live, look)   board (+ an opening position unless live)
+     Table3D.xiangqi = { board(look), piece(code, o, set), LOOKS, SETS, pcSet(), swatch(col, set), u, W, D }
+     userData: { top, u, W, D, look, pt(i, j) → [x, z], piece(code) → Group (the chosen set) }
+     piece: children[0] = body, children[1] = the face (games turn it with rotation.z)
    Units: one point step u = 0.9; the lines span 8u × 9u.
    ===================================================================== */
 (function () {
@@ -17,10 +32,15 @@
   const { canvasTex, makeNoise } = X;
   const SZ = v => Math.round(v * (X.texScale ? X.texScale() : 1));   // phones: half-size procedural textures
   const LO = () => !!(X.coarse || X.lite);
-  const u = .9, MG = .45, FR = .72, H = .42, REC = .045;   // point step, red margin round the lines, frame width, frame height, field recess
+  const u = .9, MG = .45, FR = .72, H = .42, REC = .045;   // point step, margin round the lines, frame width, board height, field recess
   const RW = 8 * u + 2 * MG, RD = 9 * u + 2 * MG, W = RW + 2 * FR, D = RD + 2 * FR, HF = H - REC;
   const KAI = '"STKaiti","KaiTi","Kaiti SC","Kaiti TC","BiauKai","AR PL UKai CN","Noto Serif SC","Noto Serif CJK SC","Noto Serif CJK JP","Shippori Mincho B1","Songti SC",serif';
-  const MIN = '"Noto Serif SC","Noto Serif CJK SC","Noto Serif CJK JP","Shippori Mincho B1","Songti SC","STKaiti","KaiTi",serif';
+  const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } } };
+  const LOOKS = ['lacquer', 'kaya', 'walnut', 'hongmu', 'raden', 'jade'];
+  const SETS = ['boxwood', 'brass', 'ebony', 'urushi', 'jade', 'porcelain'];
+  const lookOf = k => LOOKS.includes(k) ? k : (X.BOARDS && X.BOARDS.xiangqi ? X.BOARDS.xiangqi.get() : (LOOKS.includes(ls.get('atlas-xiangqi-board3')) ? ls.get('atlas-xiangqi-board3') : 'lacquer'));
+  const pcSet = () => { const v = ls.get('atlas-xiangqi-pc3'); return SETS.includes(v) ? v : 'boxwood'; };
+  const setOf = s => SETS.includes(s) ? s : pcSet();
 
   /* ---------- materials ---------- */
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
@@ -37,7 +57,7 @@
      prof: [[d, y], …] d = distance in from the outer edge; walk from the outer bottom, over the top, down the inside.
      uvMode 'plan': u, v from the top view of the whole board (for the painted top) */
   function sweep(A, B, prof, uvMode) {
-    const TT = T(), P = [], N = [], UV = [], idx = [];
+    const TT = T(), P = [], N = [], UV = [], idx = [], groups = [];
     const nrm = [];
     for (let i = 0; i < prof.length; i++) {   // vertex normals in (d, y): the mean of the neighbouring segments
       let nd = 0, ny = 0;
@@ -58,18 +78,21 @@
           const x = o[0] * (hac - d) + e[0] * s, z = o[2] * (hac - d) + e[2] * s;
           P.push(x, y, z); N.push(-o[0] * nd, ny, -o[2] * nd);
           if (uvMode === 'plan') UV.push((x + A) / (2 * A), 1 - (z + B) / (2 * B));
+          else if (uvMode === 'side') UV.push((s + hal) / (2 * hal), 1 - (si + Math.min(1, (arc[arc.length - 1] - arc[i]) / SIDE_H)) / 4);   // the four faces stacked in one picture (far, right, near, left)
           else UV.push((s + hal) / (2 * Math.max(A, B)) * .9 + si * .23, arc[i] * .35 + si * .19);
         }
       });
+      const i0 = idx.length;
       for (let i = 0; i < prof.length - 1; i++) {
         const a = base + i * 2, b = a + 1, c = a + 3, d = a + 2;
         if (Math.hypot(prof[i + 1][0] - prof[i][0], prof[i + 1][1] - prof[i][1]) < 1e-6) continue;
         idx.push(a, c, b, a, d, c);
       }
+      groups.push([i0, idx.length - i0, si & 1]);   // material 0: the far / near ends, 1: the long sides
     });
     const g = new TT.BufferGeometry();
     g.setAttribute('position', new TT.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new TT.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new TT.Float32BufferAttribute(UV, 2));
-    g.setIndex(idx); g.computeBoundingSphere(); return g;
+    g.setIndex(idx); if (uvMode === 'side') groups.forEach(([a, n, m]) => g.addGroup(a, n, m)); g.computeBoundingSphere(); return g;
   }
 
   /* ---------- the painted top: black lacquer frame with the gold key band and peonies, the vermilion field ---------- */
@@ -182,7 +205,7 @@
   }
 
   /* ---------- the board ---------- */
-  function board() {
+  function lacquerBoard() {
     const TT = T(), g = new TT.Group(), base = new TT.Group(); g.add(base);
     const tex = topCanvas(); tex.anisotropy = 8;
     const top = mat('top', () => phys({ map: tex, color: 0xffffff, roughness: .34, metalness: 0, clearcoat: .9, clearcoatRoughness: .1 }));
@@ -220,48 +243,116 @@
       sc.position.y = (HF - .03) / 2; sc.castShadow = true; sc.receiveShadow = false; sc.userData.noInst = true; sc.material.userData.noMerge = true; g.add(sc); }
     g.userData.top = HF + .001; g.userData.u = u; g.userData.W = W; g.userData.D = D;
     g.userData.pt = (i, j) => [(i - 4) * u, (j - 4.5) * u];   // i: file 0..8 left → right, j: rank 0..9 far → near
-    g.userData.piece = piece;
     return g;
   }
 
-  /* ---------- pieces: thick turned discs, the character engraved and filled with colour ---------- */
+
+  /* ---------- the block boards (2026-11-14 v2): pictures made by atlas/tools/xiangqi-tex.py (images/atlas/xiangqi3d/)
+     top-<look> / side-<look> (the long sides, along D) / end-<look> (near and far), each with a "-m" map: R height (bump),
+     G roughness, B metalness — gold and brass inlays are true metal set flush in the ground, the grooves cut by the bump,
+     the shell (metalness .35) shifts its colour with the angle you look at it from ---------- */
+  const XQ3 = (() => { try { return new URL('../../images/atlas/xiangqi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/xiangqi3d/'; } })();
+  const XQ3V = '?v=2';
+  const texs = {};
+  function imgTex(name, srgb = true, aniso = 8) {
+    if (texs[name]) return texs[name];
+    const TT = T(), t = new TT.TextureLoader().load(XQ3 + name + '.webp' + XQ3V, () => { if (X.kick) X.kick(300); });
+    if (srgb) t.encoding = TT.sRGBEncoding; t.anisotropy = aniso;
+    return (texs[name] = t);
+  }
+  function nacre(m) {   // the shell: where the m map's B (metalness) is about .35
+    m.onBeforeCompile = sh => {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+      #ifdef USE_METALNESSMAP
+      { float mb = texture2D( metalnessMap, vMetalnessMapUv ).b; float shl = smoothstep( .22, .3, mb ) * ( 1. - smoothstep( .42, .5, mb ) );
+        if ( shl > 0. ) { float vd = dot( normal, normalize( -vViewPosition ) ); float lum = dot( diffuseColor.rgb, vec3( .3, .5, .2 ) );
+          float ph = fract( vd * 4.5 + lum * 2.2 + vMetalnessMapUv.x * 6. + vMetalnessMapUv.y * 3. );
+          vec3 rb = .55 + .45 * cos( 6.2832 * ( ph + vec3( 0., .33, .67 ) ) );
+          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * .4 + rb * lum * .95, shl ); } }
+      #endif`);
+    };
+    m.customProgramCacheKey = () => 'xqNacre2';
+    return m;
+  }
+  const LK = {
+    kaya: { gloss: { roughness: 1, clearcoat: .25, clearcoatRoughness: .35 }, bump: .004, bottom: 0x8a6232 },
+    walnut: { gloss: { roughness: 1, clearcoat: .15, clearcoatRoughness: .4 }, bump: .012, bottom: 0x2a1a0e },
+    hongmu: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .05 }, bump: .004, bottom: 0x2a0806 },
+    raden: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .04 }, bump: .004, bottom: 0x0a0706, nacre: true },
+    jade: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.4 }, bump: .003, bottom: 0x0f4a2c },
+  };
+  function faceMat(look, part) {
+    const L = LK[look];
+    return mat(part + '-' + look, () => {
+      const mm = imgTex(part + '-' + look + '-m', false, 4);
+      const m = phys(Object.assign({ map: imgTex(part + '-' + look), color: 0xffffff, roughnessMap: mm, metalnessMap: mm, metalness: 1, bumpMap: mm, bumpScale: part === 'top' ? L.bump : .003 }, L.gloss));
+      return L.nacre ? nacre(m) : m;
+    });
+  }
+  const SIDE_H = .52;   // the side pictures' height in world units, from the top edge down
+  function blockBoard(look) {
+    const L = LK[look], TT = T(), g = new TT.Group(), base = new TT.Group(); g.add(base);
+    const A = W / 2, B = D / 2, e = .06, HB = H + .04;
+    const add = (geo, m, cast = true) => { const x = new TT.Mesh(geo, m); x.castShadow = cast; x.receiveShadow = true; base.add(x); return x; };
+    // the block: straight sides, a small round over into the top; the long sides and the ends each their own picture
+    const prof = [[0, 0], [0, HB - e]]; for (let i = 1; i <= (LO() ? 2 : 4); i++) { const a = i / (LO() ? 2 : 4) * Math.PI / 2; prof.push([e - Math.cos(a) * e, HB - e + Math.sin(a) * e]); }
+    add(sweep(A, B, prof, 'side'), faceMat(look, 'side'));
+    const fg = new TT.PlaneGeometry(W - 2 * e, D - 2 * e); fg.rotateX(-Math.PI / 2);
+    { const P = fg.attributes.position, UV = fg.attributes.uv; for (let i = 0; i < UV.count; i++) UV.setXY(i, (P.getX(i) + A) / W, 1 - (P.getZ(i) + B) / D); }
+    const fm = add(fg, faceMat(look, 'top'), false); fm.position.y = HB;
+    if (X.mergeStatic) { try { X.mergeStatic(base); } catch (err) {} }
+    { const sc = new TT.Mesh(new TT.BoxGeometry(W - .06, HB - .03, D - .06), new TT.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+      sc.position.y = (HB - .03) / 2; sc.castShadow = true; sc.receiveShadow = false; sc.userData.noInst = true; sc.material.userData.noMerge = true; g.add(sc); }
+    g.userData.top = HB + .001;
+    return g;
+  }
+  function board(lk) {
+    const look = lookOf(lk), g = look === 'lacquer' ? lacquerBoard() : blockBoard(look);
+    g.userData.u = u; g.userData.W = W; g.userData.D = D; g.userData.look = look;
+    g.userData.pt = (i, j) => [(i - 4) * u, (j - 4.5) * u];   // i: file 0..8 left → right, j: rank 0..9 far → near
+    g.userData.piece = (code, o) => piece(code, o);
+    return g;
+  }
+
+  /* ---------- pieces: thick turned discs, the character on the face ---------- */
   const PR = u * .43, PH = u * .27, FACE = PR * .84, TYPE = ' KAEHRCP';
   const GL = { r: ' 帥仕相傌俥炮兵', b: ' 將士象馬車砲卒' };
   const geos = {};
-  function bodyGeo() {
-    const key = LO() ? 'lo' : 'hi'; if (geos[key]) return geos[key];
-    const TT = T(), e = PH * .22, pts = [new TT.Vector2(0, 0), new TT.Vector2(PR - e * 1.2, 0)];
-    const seg = LO() ? 2 : 3;
-    for (let k = 1; k <= seg; k++) { const a = -Math.PI / 2 + Math.PI / 2 * k / seg; pts.push(new TT.Vector2(PR - e + Math.cos(a) * e, e + Math.sin(a) * e)); }
-    pts.push(new TT.Vector2(PR + .006, PH * .5));   // a slight barrel
-    for (let k = 0; k <= seg; k++) { const a = Math.PI / 2 * k / seg; pts.push(new TT.Vector2(PR - e + Math.cos(a) * e, PH - e + Math.sin(a) * e)); }
-    pts.push(new TT.Vector2(FACE + .02, PH), new TT.Vector2(FACE + .008, PH - .012), new TT.Vector2(FACE, PH - .004), new TT.Vector2(0, PH - .004));   // a fine groove round the face
-    const g = new TT.LatheGeometry(pts, LO() ? 18 : 24); if (X.share) X.share(g);   // (32 discs seen from above: 24 steps are round to < 1 px)
+  function bodyGeo(kind) {
+    const key = kind + (LO() ? 'lo' : 'hi'); if (geos[key]) return geos[key];
+    const TT = T(), seg = LO() ? 2 : 3;
+    let pts;
+    if (kind === 'brass') {   // a straight brass rim, crisp edges, the face set a little down inside it
+      const r = PR, h = PH * .92, e = .012, f = FACE * 1.02;
+      pts = [[0, 0], [r - e, 0], [r, e], [r, h - e], [r - e, h], [f + .012, h], [f + .004, h - .01], [f, h - .014], [0, h - .014]];
+    } else {
+      const e = PH * (kind === 'jade' || kind === 'porcelain' ? .32 : .22); pts = [[0, 0], [PR - e * 1.2, 0]];
+      for (let k = 1; k <= seg; k++) { const a = -Math.PI / 2 + Math.PI / 2 * k / seg; pts.push([PR - e + Math.cos(a) * e, e + Math.sin(a) * e]); }
+      pts.push([PR + .006, PH * .5]);
+      for (let k = 0; k <= seg; k++) { const a = Math.PI / 2 * k / seg; pts.push([PR - e + Math.cos(a) * e, PH - e + Math.sin(a) * e]); }
+      pts.push([FACE + .02, PH], [FACE + .008, PH - .012], [FACE, PH - .004], [0, PH - .004]);
+    }
+    const g = new TT.LatheGeometry(pts.map(([a, b]) => new TT.Vector2(a, b)), LO() ? 18 : 24); if (X.share) X.share(g);
     return (geos[key] = g);
   }
-  function faceGeo() {
-    if (geos.face) return geos.face;
-    const g = new (T().CircleGeometry)(FACE, LO() ? 18 : 24); if (X.share) X.share(g); return (geos.face = g);
+
+  // each set: the face picture (images/atlas/xiangqi3d/pc-<set>: 7 × 2 cells, row 0 red), the finish over it
+  const PS = {
+    boxwood: { roughness: 1, clearcoat: .35, clearcoatRoughness: .35 },
+    brass: { roughness: 1, clearcoat: .2, clearcoatRoughness: .4 },
+    ebony: { roughness: 1, clearcoat: .6, clearcoatRoughness: .12 },
+    urushi: { roughness: 1, clearcoat: 1, clearcoatRoughness: .04 },
+    jade: { roughness: 1, clearcoat: 1, clearcoatRoughness: .04 },
+    porcelain: { roughness: 1, clearcoat: 1, clearcoatRoughness: .03 },
+  };
+  function faceGeoOf(code) {   // the disc, its uv pointing at the code's cell
+    const key = 'face' + code + (LO() ? 'lo' : 'hi'); if (geos[key]) return geos[key];
+    const g = new (T().CircleGeometry)(FACE, LO() ? 24 : 40), UV = g.attributes.uv, col = code >= 8 ? 1 : 0, k = (code & 7) - 1;
+    for (let i = 0; i < UV.count; i++) UV.setXY(i, (k + UV.getX(i)) / 7, (1 - col + UV.getY(i)) / 2);
+    if (X.share) X.share(g); return (geos[key] = g);
   }
-  function faceTex(code) {
-    const black = code >= 8, ch = GL[black ? 'b' : 'r'][code & 7];
-    return canvasTex('xqFace2_' + code, 256, 256, (c, Wd) => {
-      const r = Wd / 2;
-      const gr = c.createRadialGradient(r * .75, r * .65, r * .05, r, r, r * 1.05); gr.addColorStop(0, '#fbecc9'); gr.addColorStop(.7, '#ecd2a0'); gr.addColorStop(1, '#d6b27a');
-      c.fillStyle = gr; c.fillRect(0, 0, Wd, Wd);
-      const wd = X.wood ? X.wood('xqPw', '#efd6a6', '#caa067', 256, 256, 1.4) : null;
-      if (wd) { c.globalAlpha = .35; c.globalCompositeOperation = 'multiply'; c.drawImage(wd.image, 0, 0, Wd, Wd); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; }
-      const ink = black ? '#1d1916' : '#b5221a';
-      // engraved ring and character: a light lower edge, a dark upper edge, the colour inside
-      const engrave = (draw) => {
-        c.save(); c.translate(Wd * .006, Wd * .008); c.globalAlpha = .9; draw('rgba(255,246,222,.9)'); c.restore();
-        c.save(); c.translate(-Wd * .005, -Wd * .006); draw('rgba(70,40,15,.55)'); c.restore();
-        draw(ink);
-      };
-      engrave(col => { c.strokeStyle = col; c.lineWidth = Wd * .022; c.beginPath(); c.arc(r, r, r * .83, 0, 7); c.stroke(); });
-      c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 ${Math.round(Wd * .54)}px ${MIN}`;
-      engrave(col => { c.fillStyle = col; c.fillText(ch, r, r + Wd * .025); });
-    });
+  function faceMatOf(set) {
+    return mat('pf2' + set, () => { const mm = imgTex('pc-' + set + '-m', false, 4); return phys(Object.assign({ map: imgTex('pc-' + set), color: 0xffffff, roughnessMap: mm, metalnessMap: mm, metalness: 1, bumpMap: mm, bumpScale: .006 }, PS[set])); });
   }
   // the disc's turned side: close boxwood / old ivory, fine fibres running up the edge (v), a soft cloud (u wraps round)
   function bodyTex() {
@@ -275,18 +366,34 @@
       c.putImageData(img, 0, 0);
     });
   }
-  function piece(code, o = {}) {
-    const TT = T(), black = code >= 8, tp = code & 7;
-    const wood = mat('pw', () => phys({ map: bodyTex(), color: 0xffffff, roughness: .4, clearcoat: .45, clearcoatRoughness: .3 }));
-    const fm = mat('pf' + code, () => phys({ map: faceTex(code), color: 0xffffff, roughness: .45, clearcoat: .35, clearcoatRoughness: .35 }));
-    const body = new TT.Mesh(bodyGeo(), wood); body.castShadow = true; body.receiveShadow = true;
-    const cap = new TT.Mesh(faceGeo(), fm); cap.rotation.x = -Math.PI / 2; cap.position.y = PH - .003; cap.castShadow = false; cap.receiveShadow = true;
-    const p = new TT.Group(); p.add(body, cap); p.userData = { code, type: TYPE[tp], black, h: PH, r: PR };
+  function bodyMat(set, black) {
+    return mat('pb' + set + (black ? 'b' : 'r'), () => {
+      if (set === 'boxwood') return phys({ map: bodyTex(), color: 0xffffff, roughness: .4, clearcoat: .45, clearcoatRoughness: .3 });
+      if (set === 'brass') return phys({ color: 0xe0b866, metalness: 1, roughness: .22, envMapIntensity: 1.4 });
+      if (set === 'ebony') return phys({ color: 0x1c1512, roughness: .3, clearcoat: .7, clearcoatRoughness: .12 });
+      if (set === 'urushi') return phys({ color: black ? 0x121012 : 0x9e231a, roughness: .16, clearcoat: 1, clearcoatRoughness: .03 });
+      if (set === 'jade') return phys({ color: black ? 0x23683f : 0xe6ebdc, roughness: .14, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 });
+      return phys({ color: 0xf6f7f9, roughness: .1, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.3 });   // porcelain
+    });
+  }
+  const GEOK = { brass: 'brass', jade: 'jade', porcelain: 'porcelain' };
+  function piece(code, o = {}, set0) {
+    const TT = T(), black = code >= 8, tp = code & 7, set = setOf(set0 || o.set);
+    const fm = faceMatOf(set);
+    const kind = GEOK[set] || 'disc', body = new TT.Mesh(bodyGeo(kind), bodyMat(set, black)); body.castShadow = true; body.receiveShadow = true;
+    const cap = new TT.Mesh(faceGeoOf(code), fm); cap.rotation.x = -Math.PI / 2; cap.position.y = (kind === 'brass' ? PH * .92 - .014 : PH - .004) + .001; cap.castShadow = false; cap.receiveShadow = true;
+    const p = new TT.Group(); p.add(body, cap); p.userData = { code, type: TYPE[tp], black, h: PH, r: PR, set };
     return p;
   }
+  // the page's small discs (the HUD): the two sides' faces in CSS
+  const SW = { boxwood: ['#fbecc9,#ecd2a0 60%,#c9a46a', '#fbecc9,#ecd2a0 60%,#c9a46a'], brass: ['#f6ead2,#ead8b4 55%,#c89a4c', '#3a2a20,#1c130e 55%,#c89a4c'], ebony: ['#3a2c24,#1a1310 60%,#0c0806', '#3a2c24,#1a1310 60%,#0c0806'],
+    urushi: ['#d0453a,#9a2219 60%,#5a0d08', '#3a3436,#121012 60%,#000'], jade: ['#ffffff,#e6ebdc 60%,#b8c4ae', '#5fae80,#22663f 60%,#0b3a24'], porcelain: ['#ffffff,#f1f4f7 60%,#c9d2dc', '#ffffff,#f1f4f7 60%,#c9d2dc'] };
+  const INK = { boxwood: ['#b5221a', '#1d1916'], brass: ['#a61e16', '#f2e6cc'], ebony: ['#e0b048', '#d6dbe2'], urushi: ['#f0c860', '#f0c860'], jade: ['#b02018', '#f0c860'], porcelain: ['#a8261c', '#1f3f8f'] };
+  const swatch = (col, set) => `radial-gradient(circle at 35% 30%,${SW[setOf(set)][col === 1 || col === 'b' ? 1 : 0]})`;
+  const ink = (col, set) => INK[setOf(set)][col === 1 || col === 'b' ? 1 : 0];
 
-  X.MODELS.xiangqi = function (live) {
-    const g = board(), Y0 = g.userData.top;
+  X.MODELS.xiangqi = function (live, look) {
+    const g = board(look), Y0 = g.userData.top;
     if (live) return g;
     const start = ['rnbakabnr', '.........', '.c.....c.', 'p.p.p.p.p', '.........', '.........', 'P.P.P.P.P', '.C..C....', '.........', 'RNBAKABNR'];   // a central cannon already played
     start.forEach((row, j) => [...row].forEach((chx, i) => {
@@ -297,5 +404,5 @@
     g.scale.setScalar(.94);   // about the other boards' size on the chabudai
     return g;
   };
-  X.xiangqi = { board, piece, u, W, D };
+  X.xiangqi = { board, piece, u, W, D, LOOKS, SETS, pcSet, swatch, ink, R: PR };
 })();

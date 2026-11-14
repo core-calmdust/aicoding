@@ -13,7 +13,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/g-owl.webp', ENG = '../morris/engine.js?v=20261114tx', RULE = 'nine';
+  const GUIDE = '../images/atlas/g-owl.webp', ENG = '../morris/engine.js?v=20261114eg-zf1', RULE = 'nine';
   const loadEngine = () => window.MorrisEngine ? Promise.resolve(window.MorrisEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.MorrisEngine ? res(window.MorrisEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
   const NONE = 31, mFrom = m => m & 31, mTo = m => (m >> 5) & 31, mRm = m => (m >> 10) & 31;
   // gold / silver on the board, h: pieces in hand [gold, silver]; act: what the task accepts

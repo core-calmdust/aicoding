@@ -587,17 +587,17 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/lessonkeys.js?v=1"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/ruletour.js?v=30tw"></script>
-<script src="engine.js?v=3"></script>
+<script src="engine.js?v=4"></script>
 <script src="board2d.js?v=7"></script>
 <script src="board-art.js?v=3"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
 <script src="coach.js?v=3sq-ls"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="../shared/record.js?v=16"></script>
-<script src="../shared/mtworkers.js?v=4"></script>
-<script src="mt.js?v=3"></script>
+<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/mtworkers.js?v=4"></script>
+<script src="mt.js?v=4"></script>
 <script src="house.js?v=7"></script>
-<script src="app.js?v=24"></script>
+<script src="app.js?v=25-pro"></script>
 <script src="review.js?v=3-mt"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="rated.js?v=2"></script>
@@ -606,7 +606,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/cardbar.js?v=15l14"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script><script src="../shared/ngdisp.js?v=1-nd1"></script>
-<script src="../shared/atlas.js?v=20261115amz2" defer></script>
+<script src="../shared/atlas.js?v=20261115alamz" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=4l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
@@ -621,7 +621,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=168')).then(() => load('../atlas/tables3d.js?v=123')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/models/ludo.js?v=9')).then(() => load('../atlas/skin/ludo.js?v=12'))
+  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=169')).then(() => load('../atlas/tables3d.js?v=126')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/models/ludo.js?v=9')).then(() => load('../atlas/skin/ludo.js?v=12'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

@@ -785,7 +785,7 @@ if (olOn()) ON.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = null;
 // rt solo rated games (the one with more games), set settings (+ setT), nm name (+ nmT). Merge: progress united (max / or), settings / name: newest.
 const UrSync = (() => {
   const META = 'ur-sync-meta';
-  const SET_KEYS = ['rule', 'color', 'level', 'level2', 'clock', 'speed', 'autoRoll', 'autoPick', 'eval', 'last', 'danger', 'coach', 'sound', 'design', 'pieces'];
+  const SET_KEYS = ['rule', 'color', 'level', 'level2', 'pro', 'pro2', 'clock', 'speed', 'autoRoll', 'autoPick', 'eval', 'last', 'danger', 'coach', 'sound', 'design', 'pieces'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   function meta() { return get(META, null); }

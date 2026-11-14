@@ -1755,7 +1755,7 @@ html:not(.atlas-skin) #lsListDesc{font-size:14px!important}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14as1"></script>
 <script src="online.js?v=stale2fisas1tq"></script>
-<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/ponder.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
+<script src="../shared/mtengine.js?v=12"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/ponder.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
 <script src="rbox.js?v=3-rc2"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/record.js?v=16"></script>
@@ -5921,13 +5921,13 @@ accRender();
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
   // three.js r186 trial (2026-11-13): ?three=186 loads the new version (+ the r128 compatibility layer); otherwise r128 as before
   const T186 = !/[?&]three=128\b/.test(location.search);   // (r186 by default since 2026-11-13; ?three=128 = the old version)
-  (T186 ? load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15')) : (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15')))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=168')).then(() => load('../atlas/tables3d.js?v=123')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/skin/reversi.js?v=23l15'))
+  (T186 ? load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15')) : (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15')))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=169')).then(() => load('../atlas/tables3d.js?v=126')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/skin/reversi.js?v=23l15'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/seqprac.js?v=3"></script><script src="opcourse.js?v=3"></script>
-<script src="../shared/atlas.js?v=20261115amz2" defer></script>
+<script src="../shared/atlas.js?v=20261115alamz" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
 <script src="../shared/infotabs.js?v=24" defer></script>

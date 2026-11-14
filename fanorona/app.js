@@ -152,13 +152,14 @@ function noteNps(nodes, ms) {
   const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
 }
 let aiW = makeWorker(), anaW = makeWorker();
-// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」, Fanorona's page only — Alquerque runs
-// this script without it): analysis, hints, the coach, the review box and the levels that think by time (四段・五段, rated
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」; the Alquerque page too since
+// 2026-11-14 — its own sw.js, the engine files from ../fanorona/): analysis, hints, the coach, the review box and the levels that think by time (四段・五段, rated
 // games too) go to the pool of threads when it is free (the lead keeps the level's own limits; the helpers fill the shared
 // table, so it reads deeper in the same time). The levels decided by depth / positions (15級〜三段) stay on the one-thread
 // workers, as does Fanoron-Telo (solved in JavaScript).
-const MTP = window.MTEngine && GID === 'fanorona' ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=5', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
+const MT_DIR = GID === 'fanorona' ? '' : '../fanorona/';
+const MTP = window.MTEngine && (GID === 'fanorona' || GID === 'alquerque') ? MTEngine.use({
+  wasm: MT_DIR + 'engine_mt.wasm?v=5', lead: ENGINE_URL + '&mt=1', helper: MT_DIR + 'mt-helper.js?v=2', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => m.rule === 'telo' ? null : { io: E.setupIO(m.start, m.moves || []), rk: E.ruleKey() },   // (the page's rule is the job's: gv)
 }) : null;
@@ -1386,7 +1387,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=1').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=2').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1501,7 +1502,69 @@ function startLesson(step) {
   stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
   lesson = { step, i: 0, results: [], answered: false, hinted: false };
   document.body.classList.add('in-lesson');
+  const R = LESSONS.steps[step].ramp;
+  if (R && R.length) { lesson.ramp = R; lesson.ri = 0; loadRamp(); return; }
   loadLessonProblem();
+}
+// ---- warm-up ramp before a lesson's scored problems (lessons.json step.ramp, built by tools/gen_ramps.js; not scored; 2026-11-15,
+// addendum「レッスンの段階化」, as ugolki / agon / kōnane)
+//   explain: read-only position + the idea as arrows (seq: [[move name, 'ok' | 'ng'], …] played in turn) + marks + a short text (次へ)
+//   try: a guided position, any move in ok (names) is right; hints go concept → where to look (look: points) → the answer
+const RU = (k, v) => { let x = LL(LESSONS.rampUi && LESSONS.rampUi[k]) || ''; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; };
+const rampItem = () => lesson.ramp[lesson.ri];
+const rampByName = (pos, s) => pos.moves().find(m => E.name(pos, m) === s);
+function rampMarks(it) {
+  const out = []; let p = E.Pos.from(it.s);
+  for (const [nm, cls] of it.seq || []) { const m = rampByName(p, nm); if (!m) break; out.push({ arrow: E.path(p, m), cls }); p = p.clone().play(m); }
+  for (const [q, c] of it.marks || []) out.push({ at: q, cls: c });
+  return out;
+}
+function loadRamp() {
+  const it = rampItem();
+  lesson.me = it.s.side;
+  enterSpecial(it.s);
+  lesson.rh = 0; lesson.rok = false; lesson.answered = it.k === 'explain';
+  lessonMarks = it.k === 'explain' ? rampMarks(it) : [];
+  update(false); renderLessonCard();
+  $('#lsFb').innerHTML = it.k === 'explain' ? '' : `<small style="color:var(--dim)">${RU('note')}</small>`;
+}
+function renderRampCard() {
+  const it = rampItem(), n = lesson.ramp.length, last = lesson.ri + 1 >= n;
+  $('#lsStep').textContent = RU('step', { i: lesson.ri + 1, n });
+  $('#lsTitle').textContent = t('ls.' + curStep().id + '.title');
+  const skip = `<button type="button" class="ls-skip" style="margin-top:6px;font-size:12px;background:none;border:0;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0">${RU('skip')} »</button>`;
+  $('#lsPrompt').innerHTML = it.k === 'explain'
+    ? `<div class="ls-goal"><span>💡</span><span><b>${LL(it.t)}</b></span></div><div class="ls-explain">${LL(it.body)}</div>${skip}`
+    : `<div class="ls-goal"><span class="pdisc p${lesson.me}"></span><span>${t('ls.turn', { c: pname(lesson.me) })} ${LL(it.g)}</span></div>${skip}`;
+  const sk = $('#lsPrompt').querySelector('.ls-skip'); if (sk) sk.onclick = rampDone;
+  $('#lsDots').innerHTML = lesson.ramp.map((_, i) => `<i class="${i < lesson.ri ? 'ok' : ''} ${i === lesson.ri ? 'cur' : ''}"></i>`).join('');
+  $('#lsHint').textContent = t('ls.hint'); $('#lsHint').disabled = it.k === 'explain' || lesson.answered;
+  $('#lsNext').textContent = last ? RU('main') : RU('next');
+  $('#lsNext').disabled = !(it.k === 'explain' || lesson.rok);
+}
+function rampDone() { if (!lesson || !lesson.ramp) return; lesson.ramp = null; lesson.i = 0; lesson.results = []; loadLessonProblem(); }
+function rampHint() {
+  const it = rampItem(); if (it.k !== 'try' || lesson.answered) return;
+  lesson.rh = Math.min(3, lesson.rh + 1);
+  const pos = E.Pos.from(it.s), best = rampByName(pos, it.ok[0]);
+  if (lesson.rh === 1) { $('#lsFb').innerHTML = LL(it.h); lessonMarks = []; }
+  else if (lesson.rh === 2) { $('#lsFb').innerHTML = LL(it.h) + '<br>' + RU('look'); lessonMarks = (it.look || []).map(q => ({ at: q, cls: 'ok' })); }
+  else { $('#lsFb').innerHTML = RU('ans', { m: it.ok[0] }); lessonMarks = []; if (best) markMove(pos, best, 'ok'); }
+  renderFx();
+}
+function rampMove(m) {
+  const L = lesson, it = rampItem(), ri = L.ri, pos0 = posAt(0).pos;
+  if (L.answered) return;
+  L.answered = true;
+  const good = it.ok.includes(E.name(pos0, m));
+  $('#lsFb').innerHTML = good ? `<b class="ok">✓</b> ${LL(it.y)}` : `<b class="ng">✗</b> ${RU('ng')}`;
+  L.rok = good; playChime(good); lessonMarks = []; playMove2(m); renderLessonCard();
+  if (good) return;
+  const tok = busyToken;
+  setTimeout(() => {
+    if (lesson !== L || !L.ramp || L.ri !== ri || tok !== busyToken) return;
+    moves = []; cur = 0; sel = null; L.answered = false; update(false); renderLessonCard();
+  }, moveDur(m, pos0) + 1100);
 }
 const curStep = () => lesson.virt || LESSONS.steps[lesson.step];
 function lessonProblem() { return curStep().problems[lesson.i]; }
@@ -1516,6 +1579,7 @@ function loadLessonProblem() {
   if (lesson.virt && lesson.virt.id !== 'mk' && window.seqGameStart && !lesson.ramp) seqGameStart(lessonProblem(), window.SEQ_CFG);   // opening practice: 3 moves in a row (shared/seqgame.js)
 }
 function renderLessonCard() {
+  if (lesson && lesson.ramp) return renderRampCard();
   const s = curStep(), n = s.problems.length, P = lessonProblem();
   $('#lsStep').textContent = lesson.virt ? t('op.practiceStep', { i: lesson.i + 1, n }) : t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
   $('#lsTitle').textContent = lesson.virt ? LL(s.title) : t('ls.' + s.id + '.title');
@@ -1547,6 +1611,7 @@ function lsAuto(good, ms) {
 }
 function lessonAnswer(m) {
   if (window.SeqPrac && SeqPrac.active()) { SeqPrac.move(String(m)); return; }
+  if (lesson.ramp) return rampMove(m);
   const P = lessonProblem(), s = curStep(), pos0 = posAt(0).pos;
   lesson.answered = true;
   const pts = problemPoints(P, m);
@@ -1591,6 +1656,7 @@ function okAnswer(P, s, m, pts) {
 }
 $('#lsHint').onclick = () => {
   if (lesson && lesson.study) { if (lesson.i > 0) { lesson.i--; showStudy(false); } return; }
+  if (lesson && lesson.ramp) { rampHint(); return; }
   if (!lesson || lesson.answered) return;
   lesson.hinted = true;
   const s = curStep(), P = lessonProblem();
@@ -1602,6 +1668,7 @@ $('#lsHint').onclick = () => {
 };
 $('#lsNext').onclick = () => {
   if (lesson && lesson.study) { if (lesson.i < lesson.g.study.line.length) { lesson.i++; showStudy(true); } else startPractice(lesson.gi); return; }
+  if (lesson && lesson.ramp) { if (!(rampItem().k === 'explain' || lesson.rok)) return; if (lesson.ri + 1 < lesson.ramp.length) { lesson.ri++; loadRamp(); } else rampDone(); return; }
   if (!lesson || !lesson.answered) return;
   const s = curStep();
   if (lesson.i + 1 < s.problems.length) { lesson.i++; loadLessonProblem(); return; }
@@ -1823,6 +1890,10 @@ const PZ_TSVG = {   // course badges (step1..step3 / end4 / end5 show their numb
   count: '<path d="M4 7h9M4 12h6M4 17h9"/><path d="M16 9l4 3-4 3"/>',
   chain: '<path d="M4 18 9 9l5 6 6-9"/><circle cx="4" cy="18" r="1.6"/><circle cx="20" cy="6" r="1.6"/>',
   gain2: '<path d="M5 19V9M12 19V5M19 19v-7"/>',
+  // Alquerque (alquerque/puzzles.json): the route of a jump / a sacrifice / three moves deep
+  route: '<path d="M4 19c4-1 4-7 8-7s4-6 8-7"/><path d="M12 12l5 5"/><circle cx="4" cy="19" r="1.6"/><circle cx="20" cy="5" r="1.6"/>',
+  sac: '<circle cx="9" cy="9" r="3.4"/><path d="M14 14l6 6M20 14l-6 6"/><path d="M4 20c1.5-3 3-4 5-4"/>',
+  gain3: '<path d="M4 19V11M9 19V8M14 19V5M19 19v-4"/>',
 };
 const pzBadge = T => PZ_TSVG[T.id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_TSVG[T.id]}</svg>` : `<b class="gl">${(T.id.match(/\d+$/) || [''])[0]}</b>`;
 function pzThumbOf(T, j, date) { if (j < 0) j = T.puzzles.length - 1; const P = pzAt(T, j, date); return P && P.s ? { board: pzThumbSVG(T, j, P), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }

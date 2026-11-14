@@ -258,7 +258,7 @@
     requestAnimationFrame(() => el.classList.add('on'));
     // the game's rules and words (ur/engine.js, ur/tour.js), then the board
     say('…'); buttons();
-    loadJS(BASE + 'engine.js?v=5', () => !!window.UrEngine).then(() => loadJS(BASE + 'tour.js?v=4', () => !!window.UrTour)).then(() => {
+    loadJS(BASE + 'engine.js?v=6', () => !!window.UrEngine).then(() => loadJS(BASE + 'tour.js?v=4', () => !!window.UrTour)).then(() => {
       if (stopped) return; E = window.UrEngine; TX = window.UrTour && UrTour._TX;
       kit = window.UrKit.make(T3, { sfx: x => SND[x] && SND[x](), top: true, stage: true });   // the tour: straight down, the same view on every page; the dice rolled large in view
       later(() => go(0), 250);

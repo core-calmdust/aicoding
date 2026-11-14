@@ -11,7 +11,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../xiangqi/', VER = '?v=11';   // same file / version as xiangqi/index.html → shared cache
+  const BASE = '../xiangqi/', VER = '?v=20261114w-zf1';   // same file / version as xiangqi/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.XiangqiEngine) return Promise.resolve(window.XiangqiEngine);
@@ -71,7 +71,9 @@
     const tall = innerHeight > innerWidth * 1.15;
     if (T3.fit) T3.fit(tall ? { w: U.W + .6, d: U.D + .8, y: Y + .2, pitch: 1.0 } : { w: U.W + .2, d: U.D + .5, y: Y + .2, pitch: 1.0 });   // the whole board, large, from the player's side
     const pvp = ctx.mode === 'pvp', PX = PV[ctx.lang] || PV.en;   // pvp: both colours are tapped in turn, Red at the bottom, no AI
-    const human = pvp ? 0 : ctx.side === 2 ? 1 : 0, flip = human === 1;   // engine colours: 0 = Red, 1 = Black; the player's side is at the bottom
+    const PZ = ctx.pz || null;   // a puzzle / lesson position driven by atlas/puzzles.js · lessons3d.js (no AI: ctx.pz.moved decides; me 1 Red / 2 Black)
+    let human = PZ ? (PZ.me === 2 ? 1 : 0) : pvp ? 0 : ctx.side === 2 ? 1 : 0, flip = human === 1;   // engine colours: 0 = Red, 1 = Black; the player's side is at the bottom
+    let startSpec = PZ ? PZ.spec || null : null;   // a puzzle / lesson start position (FEN; null = the usual start)
     const mover = () => pvp && pos ? pos.side : human;
     // point ↔ screen: i = file left → right, j = rank far → near
     const scr = sq => { const r = Math.floor(sq / 9), c = sq % 9; return flip ? [8 - c, 9 - r] : [c, r]; };
@@ -144,8 +146,8 @@
     }
 
     /* ---------- position ---------- */
-    function refresh() { const r = E.replay(null, moves); pos = r.pos; hashes = r.hashes; }
-    function status() { const st = E.judge(pos, hashes, null, moves); if (!st.over) st.legal = pos.moves(); return st; }
+    function refresh() { const r = E.replay(startSpec, moves); pos = r.pos; hashes = r.hashes; }
+    function status() { const st = E.judge(pos, hashes, startSpec, moves); if (!st.over) st.legal = pos.moves(); return st; }
     function material(c) { let s = 0; for (let sq = 0; sq < 90; sq++) { const p = pos.at(sq); if (p && (p >> 3) === c) s += VAL[p & 7]; } return s; }
     function hud(msg) {
       const d = pos ? Math.round(material(0) - material(1)) : 0;
@@ -188,7 +190,10 @@
       if (victim) { pending++; later(() => knockOff(victim, x1 - x0, z1 - z0, false, fin), dur * .6); }
       if (pos.inCheck()) later(() => hud(X.check), dur);
     }
-    function commit(m) { busy = true; play(m, () => { busy = false; next(); }); }
+    function commit(m) {
+      if (PZ) { const before = pos.clone(); pzOn = false; busy = true; play(m, () => { busy = false; pzAfter(before); }); return; }   // (a puzzle / lesson: the caller judges the move)
+      busy = true; play(m, () => { busy = false; next(); });
+    }
     function next() {
       if (stopped) return;
       const st = status(); legal = st.legal || [];
@@ -220,7 +225,7 @@
       const id = ++jid, t0 = Date.now(), mvs = moves.slice();
       const reply = m => {
         if (stopped || id !== jid || over) return;
-        if (m == null || m < 0) { try { m = E.think(null, mvs, Math.min(ctx.level, 6)).move; } catch (e) { m = -1; } }   // the worker failed: a small search on the page (JS)
+        if (m == null || m < 0) { try { m = E.think(startSpec, mvs, Math.min(ctx.level, 6)).move; } catch (e) { m = -1; } }   // the worker failed: a small search on the page (JS)
         later(() => {
           if (id !== jid || over) return;
           thinking = false;
@@ -230,7 +235,7 @@
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? null : r.move); };
       worker.onerror = () => { worker = null; reply(null); };
-      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level });
+      worker.postMessage({ type: 'think', id, start: startSpec, moves: mvs, level: ctx.level });
     }
 
     /* ---------- input ---------- */
@@ -242,7 +247,7 @@
       return sqAt(i, j);
     }
     function onClick(e) {
-      if (over || busy || !pos || pos.side !== mover() || T3.wasDrag()) return;
+      if (over || busy || thinking || !pos || pos.side !== mover() || T3.wasDrag() || (PZ && !pzOn)) return;
       const q = cellOf(e); if (q < 0) { deselect(); return; }
       if (sel >= 0) { const m = legal.find(x => E.mFrom(x) === sel && E.mTo(x) === q); if (m !== undefined) { commit(m); return; } }
       const p = pos.at(q);
@@ -251,6 +256,78 @@
       deselect();
     }
     ctx.el.addEventListener('click', onClick);
+    // the board view's 駒 row (Table3D.PIECES) during a game: the pieces on the board are made again in the new set at once
+    const onPcs = e => { if (!stopped && pos && e.detail && e.detail.id === 'xiangqi') rebuild(); };
+    addEventListener('atlas-pieces', onPcs);
+
+    /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-14, as atlas/games/checkers.js): a position from the puzzles / lessons, no AI; the
+       caller judges each move (ctx.pz.moved(m, info)) and plays the replies (api.pz.play). The solver and the evaluation come from the
+       game's worker, asked as xiangqi/app.js asks them ({ type: 'puzzle' | 'analyze' | 'think', start, moves }). Marks: points (glows,
+       gold rings) and arrows — the 3D board has no coordinates, so the guide names moves by their marks. ---------- */
+    let pzOn = false, pzW = null, pzJ = 0;
+    const pzMk = new TH.Group(); board.add(pzMk);
+    const PZC = { ok: 0x2fd17a, ng: 0xff3b30, hl: 0xffb21a, ring: 0xffc928 }, pzMat = {};
+    const pm = (c, op) => pzMat[c + op] || (pzMat[c + op] = basic(PZC[c] != null ? PZC[c] : PZC.hl, op));
+    const pzGeo = { disc: new TH.CircleGeometry(u * .46, 32) }; pzGeo.disc.rotateX(-Math.PI / 2);
+    function pzState() { const st = E.judge(pos, hashes, startSpec, moves); return { over: !!st.over, winner: st.winner || 0, draw: !!st.draw, why: st.why || '', turn: pos.side + 1, check: pos.inCheck(), n: moves.length }; }
+    function pzAfter(before) { const m = moves[moves.length - 1]; showMarks(); if (PZ.moved) PZ.moved(m, Object.assign({ before }, pzState())); }
+    function pzWait() { busy = false; legal = pos ? pos.moves() : []; pzOn = !PZ.lock; showMarks(); }
+    function pzClear() { pzMk.children.slice().forEach(o => { if (o.userData.own) o.geometry.dispose(); pzMk.remove(o); }); if (T3.kick) T3.kick(150); }
+    function pzLoad(spec, me, o) {
+      PZ.spec = spec || null; PZ.me = me === 2 ? 2 : 1; PZ.lock = !!(o && o.lock);
+      if (!E) return;   // (the engine is still loading: it starts from PZ)
+      timers.forEach(clearTimeout); timers.length = 0; jid++; pzJ++; pzOn = false; clear(mv); clear(hl); pzClear(); sel = -1;
+      const wasFlip = flip; startSpec = PZ.spec; human = PZ.me - 1; flip = human === 1;
+      moves = []; over = false; busy = true; thinking = false; refresh(); legal = [];
+      if (wasFlip !== flip) Object.values(pcs).forEach(g => board.remove(g));
+      const wait = setup();
+      later(() => { showMarks(); pzWait(); if (PZ.ready) PZ.ready(); }, wait + 200);
+    }
+    function pzArrow(from, to, c) {   // a flat arrow from a piece to its destination
+      const mat = pm(c, .9), [ax, az] = xz(from), [bx, bz] = xz(to), dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz); if (!len) return;
+      const ang = Math.atan2(dx, dz), head = u * .42, st = u * .2, L = Math.max(.05, len - head - st - u * .1);
+      const g = new TH.BoxGeometry(u * .17, .01, L), sh = new TH.Mesh(g, mat); sh.userData.own = true;
+      sh.position.set(ax + Math.sin(ang) * (st + L / 2), Y + .06, az + Math.cos(ang) * (st + L / 2)); sh.rotation.y = ang; sh.renderOrder = 3; pzMk.add(sh);
+      const tri = new TH.Shape(); tri.moveTo(-u * .26, 0); tri.lineTo(u * .26, 0); tri.lineTo(0, head); tri.lineTo(-u * .26, 0);
+      const hg = new TH.ShapeGeometry(tri); hg.rotateX(-Math.PI / 2); hg.rotateY(Math.PI);
+      const hm = new TH.Mesh(hg, mat); hm.userData.own = true; hm.position.set(ax + Math.sin(ang) * (st + L), Y + .065, az + Math.cos(ang) * (st + L)); hm.rotation.y = ang; hm.renderOrder = 3; pzMk.add(hm);
+    }
+    // marks: null clears · a move number = its arrow (gold) · a list of [point, 'ok'|'ng'|'hl'|'ring'] and { m: move, cls } / [{ m }, cls]
+    function pzMark(list) {
+      pzClear(); showMarks(); if (list == null || !pos) return;
+      const L = typeof list === 'number' ? [{ m: list, cls: 'ring' }] : list;
+      for (let e of L) {
+        if (Array.isArray(e) && e[0] && typeof e[0] === 'object') e = Object.assign({}, e[0], { cls: e[1] });
+        if (Array.isArray(e)) {
+          const [q, c] = e; if (!(q >= 0 && q < 90)) continue;
+          if (c === 'ring') { const r = new TH.Mesh(GEO.ring, pm('ring', .95)), [x, z] = xz(q); r.position.set(x, Y + .04, z); r.renderOrder = 3; pzMk.add(r); anim(1040, k => { const s = 1 + Math.sin(k * Math.PI * 4) * .12 * (1 - k); r.scale.set(s, 1, s); }); continue; }
+          const t = new TH.Mesh(pzGeo.disc, pm(c, c === 'hl' ? .55 : .5)), [x, z] = xz(q); t.position.set(x, Y + .008, z); t.renderOrder = 2; pzMk.add(t); continue;
+        }
+        if (e && e.m != null && e.m >= 0) pzArrow(E.mFrom(e.m), E.mTo(e.m), e.cls === 'ng' ? 'ng' : e.cls === 'ok' ? 'ok' : 'ring');
+      }
+      if (T3.kick) T3.kick(400);
+    }
+    const pzReq = msg => new Promise(res => {
+      if (!pzW) pzW = new Worker(BASE + 'engine.js' + VER);
+      const id = ++pzJ; pzW.onmessage = e => { const r = e.data; if (r.id !== id || r.type !== 'result') return; res(stopped ? null : r); };
+      pzW.onerror = () => { pzW = null; res(null); };
+      pzW.postMessage(Object.assign({ start: startSpec, moves: moves.slice(), id }, msg));
+    });
+    const pzApi = {
+      load: (spec, me, o) => pzLoad(spec, me, o),
+      wait: pzWait,
+      play: m => new Promise(res => { if (!pos || !pos.moves().includes(m)) return res(false); pzOn = false; busy = true; clear(mv); sel = -1; play(m, () => { busy = false; showMarks(); res(true); }); }),
+      undo(n = 1) { timers.forEach(clearTimeout); timers.length = 0; deselect(); moves.splice(Math.max(0, moves.length - n)); refresh(); rebuild(); pzClear(); over = false; showMarks(); },
+      moves: () => moves.slice(),
+      state: () => pos ? pzState() : {},
+      mark: pzMark,
+      pos: () => pos ? pos.clone() : null,
+      engine: () => E,
+      // the engine's mate solver: [{ m, need }] for the side to move (need: own moves to mate, 0 = none); checks: a checks-only puzzle
+      puzzle: (n, defend, checks, mvs) => pzReq(Object.assign({ type: 'puzzle', n, defend: !!defend, checks: !!checks }, mvs ? { moves: mvs } : {})).then(r => (r && r.list) || null),
+      analyze: time => pzReq({ type: 'analyze', time: time || 500 }).then(r => (r && r.list) || []),
+      think: level => pzReq({ type: 'think', level: level || 17 }).then(r => r && !r.error && r.move >= 0 ? r.move : null),
+    };
 
     function begin() {
       timers.forEach(clearTimeout); timers.length = 0; clear(mv); clear(hl);
@@ -259,7 +336,7 @@
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; if (PZ) { pzLoad(PZ.spec, PZ.me, { lock: PZ.lock }); return; } if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); begin(); }).catch(() => hud('⚠'));
 
     // test hooks (positions on screen, state)
     const dbg = {
@@ -289,7 +366,7 @@
       if (T3.kick) T3.kick(300);
     }
     const api = {
-      human,
+      human, pz: PZ ? pzApi : null,
       canUndo: () => myTurn() && moves.length >= undoN() && (pvp || moves.length - undoN() >= (human === 1 ? 1 : 0)),
       undo() {
         if (!api.canUndo()) return;
@@ -313,7 +390,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
+          hintW.postMessage({ type: 'think', id: j, start: startSpec, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
         });
       },
       // 引き分け（ポータルの操作バー）：2人対局は合意で draw()。AI 対局は offerDraw() → 'yes' / 'no' / 'wait'
@@ -329,7 +406,7 @@
           if (!hintW) hintW = new Worker(BASE + 'engine.js' + VER);
           hintW.onmessage = e => { const r = e.data; if (r.type !== 'result' || r.id !== j) return; res(!stopped && !over && moves.length === mvs.length && typeof r.v === 'number' && -r.v <= 0 ? 'yes' : 'no'); };   // r.v: the side to move (you) — the AI's view is -v
           hintW.onerror = () => { hintW = null; res('no'); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
+          hintW.postMessage({ type: 'think', id: j, start: startSpec, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
         });
       },
       draw() { if (pos && !over) finish(-1, 'draw'); },
@@ -339,8 +416,9 @@
       stop() {
         stopped = true; jid++;
         timers.forEach(clearTimeout);
-        ctx.el.removeEventListener('click', onClick);
-        if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
+        ctx.el.removeEventListener('click', onClick); removeEventListener('atlas-pieces', onPcs);
+        if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null; if (pzW) pzW.terminate(); pzW = null;
+        pzClear(); Object.values(pzMat).forEach(m => m.dispose()); pzGeo.disc.dispose();
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.Atlas3D.xiangqi._dbg === dbg) delete window.Atlas3D.xiangqi._dbg;
       },
@@ -390,5 +468,5 @@
     return { name, desc: L.lvd[n <= 4 ? 0 : n <= 10 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.xiangqi = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.xiangqi = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
 })();

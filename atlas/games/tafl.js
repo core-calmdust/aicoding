@@ -13,7 +13,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../tafl/', VER = '?v=nn2sr-lv25';   // same file / version as tafl/index.html → shared cache
+  const BASE = '../tafl/', VER = '?v=nn2sr-lv25-zf1';   // same file / version as tafl/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.TaflEngine) return Promise.resolve(window.TaflEngine);

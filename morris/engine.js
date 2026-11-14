@@ -18,6 +18,9 @@ const VARIANTS = {
   six:    { size: 5, pieces: 6,  fly: false, diag: false },
 };
 function xorshift(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s | 0; }; }
+// (2026-11-14) the xorshift's outputs go through murmur3's fmix32: raw, they are linear over GF(2), so the second half of
+// every key was a fixed linear map of the first — the 64-bit keys were only 32 bits (claude/praline-spec.md「Zobrist」)
+const zmix = f => () => { let z = f() >>> 0; z ^= z >>> 16; z = Math.imul(z, 0x85ebca6b); z ^= z >>> 13; z = Math.imul(z, 0xc2b2ae35); z ^= z >>> 16; return z | 0; };   // (2026-11-14) murmur3's fmix32 over the xorshift: see the Zobrist keys
 
 const geoms = {};
 function geom(name) {
@@ -43,7 +46,7 @@ function geom(name) {
   for (const [a, b] of extra) link(a, b);
   const pairs = Array.from({ length: n }, () => []);
   for (const m of mills) for (const i of m) { const o = m.filter(x => x !== i); pairs[i].push(o[0], o[1]); }
-  const rnd = xorshift(0x9e3779b9 ^ n * 7919 ^ (V.diag ? 77 : 0));
+  const rnd = zmix(xorshift(0x9e3779b9 ^ n * 7919 ^ (V.diag ? 77 : 0)));
   const zp = new Int32Array(3 * n), zp2 = new Int32Array(3 * n), zh = new Int32Array(3 * 16), zh2 = new Int32Array(3 * 16);
   for (let i = 0; i < zp.length; i++) { zp[i] = rnd(); zp2[i] = rnd(); }
   for (let i = 0; i < zh.length; i++) { zh[i] = rnd(); zh2[i] = rnd(); }
@@ -236,41 +239,7 @@ function evaluate(pos) {
   return s;
 }
 
-// ---------------------------------------------------------------- endgame databases (nine men's morris, moving phase)
-// Solved by retrograde analysis (tools/mdb.c). Class m-o: side to move has m pieces, the opponent o.
-// Value byte: 0 draw, 1..127 the side to move wins in v plies, 128+k it loses in k plies.
-const EGDB = {};      // 'm-o' -> { dense: Uint8Array } | { idx: Uint32Array, val: Uint8Array }
-let egdbState = 0;    // 0 not loaded, 1 loading, 2 ready
-const CBN = []; for (let n = 0; n <= 24; n++) { CBN[n] = []; CBN[n][0] = 1; for (let k = 1; k <= n; k++) CBN[n][k] = CBN[n - 1][k - 1] + (k <= n - 1 ? CBN[n - 1][k] : 0); }
-function setEGDB(buf) {
-  const u8 = new Uint8Array(buf), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
-  if (String.fromCharCode(u8[0], u8[1], u8[2], u8[3]) !== 'MDB1') return false;
-  let o = 4;
-  while (o + 8 <= u8.length) {
-    const m = u8[o], op = u8[o + 1], type = u8[o + 2], n = dv.getUint32(o + 4, true); o += 8;
-    if (type === 0) { EGDB[m + '-' + op] = { dense: u8.subarray(o, o + n) }; o += n; }
-    else { const idx = new Uint32Array(n); for (let i = 0; i < n; i++) idx[i] = dv.getUint32(o + i * 4, true); o += n * 4; EGDB[m + '-' + op] = { idx, val: u8.subarray(o, o + n) }; o += n; }
-  }
-  egdbState = 2; return true;
-}
-// raw value (see above) for the side to move, or -1 when the position is not covered
-function egdbProbe(pos) {
-  if (egdbState !== 2 || pos.G.name !== 'nine' || pos.hand[1] || pos.hand[2]) return -1;
-  const p = pos.side, m = pos.cnt[p], o = pos.cnt[3 - p], T = EGDB[m + '-' + o];
-  if (!T) return -1;
-  const b = pos.b; let ra = 0, rb = 0, ia = 0, ib = 0, j = 0;
-  for (let q = 0; q < 24; q++) {
-    const v = b[q];
-    if (v === p) { ia++; if (q >= ia) ra += CBN[q][ia]; }
-    else { if (v) { ib++; if (j >= ib) rb += CBN[j][ib]; } j++; }
-  }
-  const id = ra * CBN[24 - m][o] + rb;
-  if (T.dense) return T.dense[id];
-  let lo = 0, hi = T.idx.length - 1;
-  while (lo <= hi) { const mid = (lo + hi) >> 1, x = T.idx[mid]; if (x === id) return T.val[mid]; if (x < id) lo = mid + 1; else hi = mid - 1; }
-  return 0;
-}
-const egdbScore = (v, ply) => v === 0 ? 0 : v < 128 ? WIN - ply - v : -(WIN - ply - (v - 128));
+// (endgame databases of nine / twelve men's morris: engine.c (the WebAssembly search) and perfect.js; the JS search has none)
 
 // ---------------------------------------------------------------- search
 const TT_BITS = 19, TT_SIZE = 1 << TT_BITS, TT_MASK = TT_SIZE - 1;
@@ -315,7 +284,6 @@ class Engine {
     this.nodes++;
     const p = pos.side;
     if (pos.cnt[p] + pos.hand[p] < 3) return -(WIN - ply);
-    if (egdbState === 2 && !this.mate && !pos.hand[1] && !pos.hand[2]) { const dv = egdbProbe(pos); if (dv >= 0) return egdbScore(dv, ply); }
     const moves = this.buf[ply], n = pos.gen(moves);
     if (n === 0) return pos.cnt[1] + pos.cnt[2] === pos.G.n ? 0 : -(WIN - ply);
     let best = evaluate(pos);
@@ -346,7 +314,6 @@ class Engine {
       const ma = -(WIN - ply), mb = WIN - ply - 1;
       if (ma > alpha) { alpha = ma; if (alpha >= beta) return alpha; }
       if (mb < beta) { beta = mb; if (alpha >= beta) return beta; }
-      if (egdbState === 2 && !this.mate && !pos.hand[1] && !pos.hand[2]) { const dv = egdbProbe(pos); if (dv >= 0) return egdbScore(dv, ply); }
     }
     if (depth <= 0 || ply >= MAXPLY) return this.mate ? this.mateLeaf(pos, ply) : this.qsearch(pos, alpha, beta, ply, 6);
     const idx = pos.h1 & TT_MASK; let ttm = -1;
@@ -521,6 +488,21 @@ const meng = () => MENG || (MENG = new Engine());
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 // ---------------------------------------------------------------- WebAssembly search (engine.c), used by the worker when available
 let WX = null, wGeo = '', wProg = null;
+// the endgame database of nine / twelve men's morris in engine.c: copied from perfect.js into memory grown for it (once per variant)
+let wEg = '', wEgPtr = 0, wEgCap = 0;
+function egSync(variant) {
+  if (!WX || !WX.eg_init || wEg === variant || (variant !== 'nine' && variant !== 'twelve') || !PF || !PF.ready(variant)) return;
+  const c = PF.classes(variant); if (!c || !c.list.length) return;
+  let need = 0; for (const k of c.list) need += k.n;
+  if (need > wEgCap) { const mem = WX.memory, pages = Math.ceil(need / 65536); wEgPtr = mem.buffer.byteLength; mem.grow(pages); wEgCap = pages * 65536; }
+  const S = new Uint8Array(WX.memory.buffer, WX.eg_sym_ptr(), 16 * 24); S.fill(0);
+  c.sym.slice(0, 16).forEach((g, i) => S.set(g, i * 24));
+  WX.eg_init(Math.min(16, c.sym.length), geom(variant).mills.length);
+  let at = wEgPtr;
+  for (const k of c.list) { new Uint8Array(WX.memory.buffer, at, k.n).set(c.u8.subarray(k.off, k.off + k.n)); WX.eg_add(k.m, k.o, at); at += k.n; }
+  wEg = variant;
+}
+function egUse(variant, on) { if (!WX || !WX.eg_use) return; if (on) egSync(variant); WX.eg_use(on && wEg === variant ? 1 : 0); }
 const wIO = () => new Int32Array(WX.memory.buffer, WX.io_ptr(), 8192);
 function geoIO(variant) {   // the geometry buffer of engine.c set_geometry()
   const G = geom(variant), a = [G.n, G.pieces, G.fly ? 1 : 0, G.mills.length];
@@ -549,14 +531,22 @@ function wSetup(variant, start, moves) {
 }
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: r[2 + 2 * i], v: r[3 + 2 * i], kind: kindOf(r[3 + 2 * i]) }); return L; }
 // ---------------------------------------------------------------- perfect play (six men's morris, perfect.js in the worker)
+// (2026-11-14) and the endgame databases of nine / twelve men's morris (the moving phase with at most 8 pieces on the board):
+// perfect.js reads them for the exact verdicts, engine.c gets a copy for the search (egSync)
 let PF = null;   // MorrisPerfect once loaded
-const pfOn = variant => variant === 'six' && PF && PF.ready();
+const pfOn = variant => variant === 'six' && PF && PF.ready('six');
+// is the position (variant, start, moves) in a loaded database? (six: always once loaded)
+const pfCovers = (variant, start, moves) => {
+  if (!PF || !PF.ready(variant)) return false;
+  if (variant === 'six') return true;
+  try { const { pos } = replay(variant, start, moves); return pos.status() === 0 && PF.covers(pos); } catch (e) { return false; }
+};
 // exact values from the database on an analysis list (each entry gets pf: { r, z }; v becomes win WIN - z / loss -(WIN - z) /
 // draw a small value from the search, so every list consumer — hints, evaluation, coach, review — sorts and grades exactly)
 function pfAnnotate(variant, start, moves, list) {
-  if (!pfOn(variant) || !list || !list.length) return list;
+  if (!PF || !PF.ready(variant) || !list || !list.length) return list;
   const { pos, hashes } = replay(variant, start, moves);
-  if (pos.status() !== 0) return list;
+  if (pos.status() !== 0 || !PF.covers(pos)) return list;
   const vals = PF.moveVals(pos, hashes, list.map(e => e.m)), pl = pos.placing();
   return list.map((e, i) => {
     const x = vals[i], z = Math.min(x.z, 900);
@@ -574,6 +564,7 @@ function think(variant, start, moves, level, rand) {
   }
   if (WX && L0.noise === undefined && moves.length < 1000) {
     if (!wSetup(variant, start, moves)) return { move: -1 };
+    egUse(variant, !!PRO_CFG || level >= 9);   // (the endgame database: the time-based levels and PRO; Lv.8 as before)
     WX.best(L0.d, L0.ms || 0, 0); const r = wIO();
     return { move: r[0], v: r[1], depth: r[2], nodes: WX.last_nodes ? WX.last_nodes() : undefined };   // (nodes: the threads' build only)
   }
@@ -597,10 +588,11 @@ function think(variant, start, moves, level, rand) {
   return { move: r.m, v: r.v, depth: r.depth };
 }
 function analyze(variant, start, moves, ms, onProgress) {
-  const ann = l => pfAnnotate(variant, start, moves, l), pf = pfOn(variant);
+  const ann = l => pfAnnotate(variant, start, moves, l), pf = pfCovers(variant, start, moves);
   if (pf) ms = Math.min(ms, 300);   // the database decides; the search only orders the drawn moves
   if (WX && moves.length < 1000) {
     if (!wSetup(variant, start, moves)) return { list: [], depth: 0, solved: false };
+    egUse(variant, true);
     wProg = onProgress ? (d => onProgress(ann(wList()), d)) : null;
     WX.analyze(ms, 40); wProg = null;
     const list = ann(wList());
@@ -661,19 +653,10 @@ function mill(variant, start, moves, n, defend) {
   });
 }
 
-const API = { setPerfect: x => { PF = x; }, pfAnnotate, setNet, setEGDB, egdbProbe, egdbReady: () => egdbState === 2, mill, NONE, WIN, WINT, QUIET_DRAW, VARIANTS, LEVELS, geom, Pos, Engine, evaluate, replay, think, analyze, mate, mv, mFrom, mTo, mRm, kindOf, setupIO, geoKey };
+const API = { setPerfect: x => { PF = x; }, pfAnnotate, pfCovers, setNet, setWasm: x => { WX = x; wGeo = ''; wEg = ''; wEgCap = 0; }, egUse, mill, NONE, WIN, WINT, QUIET_DRAW, VARIANTS, LEVELS, geom, Pos, Engine, evaluate, replay, think, analyze, mate, mv, mFrom, mTo, mRm, kindOf, setupIO, geoKey };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.MorrisEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const EGDB_URL = '';   // endgame databases: not shipped yet (set to 'mdb.bin.gz?v=1' to enable)
-  // the endgame databases are fetched on demand, the first time a game gets near the end of the moving phase
-  const wantDB = m => {
-    if (!EGDB_URL || egdbState || m.variant !== 'nine' || typeof fetch !== 'function' || typeof DecompressionStream !== 'function') return;
-    try { const { pos } = replay(m.variant, m.start, m.moves); if (pos.placing() || pos.cnt[1] + pos.cnt[2] > 12) return; } catch (e) { return; }
-    egdbState = 1;
-    fetch(EGDB_URL).then(r => { if (!r.ok) throw 0; return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); })
-      .then(b => { if (!setEGDB(b)) egdbState = 0; }).catch(() => { egdbState = 0; });
-  };
   // load the WebAssembly search; until it is ready (or if it fails) the JS search is used
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile (the network sits in the engine's own
@@ -686,7 +669,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     let simd = true;
     try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
     if (/[?&]nosimd=1\b/.test(self.location.search || '')) simd = false;   // (a check of the fallback)
-    const url = new URL(simd ? 'engine_simd.wasm?v=2' : 'engine.wasm?v=20261114', self.location.href);
+    const url = new URL(simd ? 'engine_simd.wasm?v=4' : 'engine.wasm?v=20261114zf1', self.location.href);
     wReady = (MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
       .then(m => {
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (wProg) wProg(d); } } }).exports;
@@ -705,27 +688,34 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   }
   // perfect play (six men's morris): perfect.js and the solved database (six.mdb.gz, about 0.57 MB), fetched the first time
   // a six men's position is analysed or the 完全解析 level is to move; until then (or if it fails) the search answers
-  let pfP = null;
-  const wantPF = m => m.variant === 'six' && (m.type === 'pfload' || m.type === 'analyze' || m.type === 'cands' || (m.type === 'think' && LEVELS[m.level] && LEVELS[m.level].perfect));
-  const loadPF = () => pfP || (pfP = new Promise(res => {
-    try { importScripts(new URL('perfect.js?v=1', self.location.href).href); } catch (e) { res(false); return; }
-    self.MorrisPerfect.load(self.location.href).then(ok => { if (ok) PF = self.MorrisPerfect; res(ok); });
+  // (2026-11-14) nine / twelve men's morris: the endgame database (nine-eg.mdb.gz 0.17 MB, twelve-eg.mdb.gz 0.5 MB), fetched
+  // the first time a game is near it (moving phase, at most 10 pieces on the board) and the message waits for it (once)
+  const pfLoads = {};
+  const loadPF = variant => pfLoads[variant] || (pfLoads[variant] = new Promise(res => {
+    if (!self.MorrisPerfect) { try { importScripts(new URL('perfect.js?v=2', self.location.href).href); } catch (e) { res(false); return; } }
+    self.MorrisPerfect.load(self.location.href, variant).then(ok => { if (ok) PF = self.MorrisPerfect; res(ok); });
   }));
+  const wantPF = m => m.variant === 'six' && (m.type === 'pfload' || m.type === 'analyze' || m.type === 'cands' || (m.type === 'think' && LEVELS[m.level] && LEVELS[m.level].perfect));
+  const wantEG = m => {
+    if ((m.variant !== 'nine' && m.variant !== 'twelve') || (m.type !== 'think' && m.type !== 'analyze' && m.type !== 'cands')) return false;
+    if (m.type === 'think' && !m.cfg && !(m.level >= 9)) return false;   // (Lv.1〜8 never use it)
+    try { const { pos } = replay(m.variant, m.start, m.moves); return !pos.placing() && pos.cnt[1] + pos.cnt[2] <= 10; } catch (e) { return false; }
+  };
   self.onmessage = e => {
     const m = e.data;
     if (m && m.type === 'mtinit') return;
     if (MTL && !wDone && wReady) { wReady.then(() => self.onmessage(e)); return; }   // (the lead: answer with the threads' engine only)
-    if (wantPF(m) && !PF) { loadPF().then(() => handle(m)); return; }
+    if (wantPF(m) && !(PF && PF.ready('six'))) { loadPF('six').then(() => handle(m)); return; }
+    if (wantEG(m) && !pfLoads[m.variant]) { loadPF(m.variant).then(() => handle(m)); return; }
     handle(m);
   };
   const handle = m => {
-    if (m.type === 'think' || m.type === 'analyze' || m.type === 'cands') wantDB(m);
     try {
       if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.variant, m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
       else if (m.type === 'analyze') {
         const r = analyze(m.variant, m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
         self.postMessage({ id: m.id, type: 'result', ...r });
-      } else if (m.type === 'pfload') self.postMessage({ id: m.id, type: 'result', ok: !!PF, ms: PF ? PF.loadMs() : 0 });
+      } else if (m.type === 'pfload') self.postMessage({ id: m.id, type: 'result', ok: !!(PF && PF.ready('six')), ms: PF ? PF.loadMs('six') : 0 });
       else if (m.type === 'cands') {   // review box (rvbox.js): the top moves and a short line after each
         const r = analyze(m.variant, m.start, m.moves, m.time || 1000), list = r.list.slice().sort((a, b) => b.v - a.v), lines = {};
         self.postMessage({ id: m.id, type: 'cands', list, lines: {} });

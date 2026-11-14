@@ -60,7 +60,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
 <script src="mt.js?v=2"></script>
-<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script>
+<script src="../shared/mtengine.js?v=12"></script><script src="../shared/mtsplit.js?v=6"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
 <script>
@@ -80,7 +80,7 @@ env();
 let BOOK = null, TREEBUF = null;
 const POS = ["4334135554", "464351344625", "12535475744724", "273457145615347245", "3214516644", "4441245327"];
 const G = {
-  url: 'engine.js?v=20261109rs-sh1', drive: C4MT.drive,
+  url: 'engine.js?v=20261115p', drive: C4MT.drive,
   setup: w => { if (BOOK) w.postMessage({ type: 'book', book: BOOK }); if (TREEBUF) w.postMessage({ type: 'tree', buf: TREEBUF }); },
   async ready() { [BOOK, TREEBUF] = await Promise.all([fetch('book.json').then(r => r.json()), fetch('tree.bin').then(r => r.arrayBuffer())]); },
   positions(w) { return POS.slice(0, w === 'light' ? 3 : POS.length).map(s => ({ name: s.length + '手目 ' + s, moves: s })); },

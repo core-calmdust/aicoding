@@ -73,18 +73,23 @@ function threatLevel(g, s, q) {
 }
 
 class Bot {
+  // level may be fractional (段位戦, ユーザー 2026-11-14: the strength rises by small steps with the rank): each decision rolls
+  // between the two whole levels it lies between, and the slips of the weaker levels shrink smoothly
   constructor(level = 3) { this.level = level; }
+  // (ユーザー 2026-11-15: the first ranks must go easy on the player) levels below 0, down to -1, are the 接待 band: the bots
+  // pick loosely far more often, from a wider set, and hold back their skills
+  lvRoll() { const L = this.level, f = Math.floor(L); return Math.min(4, f + (Math.random() < L - f ? 1 : 0)); }
 
   async turn(g, s, o) {
     const p = g.P[s];
-    const lv = this.level;
+    const lv = this.lvRoll(), L = this.level;
     if (o.canTsumo) return { act: 'tsumo' };
     const c = MJ.countsIds(p.hand);
     const m = p.melds.length;
     const sh = shan(c, m);
     if (o.canKyuushu && sh >= 4) return { act: 'kyuushu' };
     // skills
-    if (o.canSkill && this.wantSkill(g, s, sh)) return { act: 'skill' };
+    if (o.canSkill && !(L < 0 && Math.random() < -L * .8) && this.wantSkill(g, s, sh)) return { act: 'skill' };
     if (o.mustTsumogiri) {
       if (o.ankans && o.ankans.length) return { act: 'ankan', t: o.ankans[0] };
       return { act: 'discard', id: o.drawn };
@@ -147,8 +152,10 @@ class Bot {
       for (const x of cand) x.v = x.score - x.dg * (threats.length ? 6 : 0);
       cand.sort((a, b) => b.v - a.v);
       pick = cand[0];
-      if (lv === 0 && Math.random() < 0.35) pick = cand[Math.min(cand.length - 1, (Math.random() * 3) | 0)];
-      if (lv === 1 && Math.random() < 0.12) pick = cand[Math.min(cand.length - 1, 1)];
+      // slips: a loose pick among the top three (35% at level 0, gone by level 1), then the second best (12% at level 1, gone by 2)
+      if (L < 0 && Math.random() < .35 - L * .4) pick = cand[Math.min(cand.length - 1, (Math.random() * (3 - L * 3)) | 0)];
+      else if (L < 1 && Math.random() < .35 * (1 - L)) pick = cand[Math.min(cand.length - 1, (Math.random() * 3) | 0)];
+      else if (L < 2 && Math.random() < .12 * Math.min(1, 2 - L)) pick = cand[Math.min(cand.length - 1, 1)];
     }
     // riichi?
     if (o.riichi && o.riichi.some(id => T(id) === pick.t) && pick.s2 === 0 && !fold) {
@@ -171,6 +178,7 @@ class Bot {
 
   // deal-time skills (point multipliers): decide right after the deal from the starting hand
   async dealSkill(g, s, o) {
+    if (this.level < 0 && Math.random() < -this.level * .8) return false;
     if (this.policy === 'always') return true;
     if (this.policy === 'never') return false;
     if (!this.paidOk(g, s)) return false;
@@ -217,8 +225,8 @@ class Bot {
 
   async react(g, s, o) {
     if (o.canRon) return { act: 'ron' };
-    const lv = this.level;
-    if (lv === 0) return { act: 'pass' };
+    const lv = this.lvRoll();
+    if (lv <= 0) return { act: 'pass' };
     const p = g.P[s];
     const t = T(o.tile);
     const c = MJ.countsIds(p.hand);

@@ -566,33 +566,28 @@ static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
 #ifndef TTM_BITS
 #define TTM_BITS 20
 #endif
-typedef struct { u64 kx, a, b; } TTX;
-static TTX TTM[(1 << TTM_BITS) * 2];
+// (2026-11-15) the bucket table is Praline's (shared/praline/praline_tt.h): 2 entries a bucket, 3 words { kx, a, b }; replace the
+// shallower / older (depth − 8 if from an earlier search)
+#define PL_TT_BITS TTM_BITS
+#define PL_TT_WAYS 2
+#define PL_TT_WORDS 3
+#define PL_TT_SCORE(w, c) ((int)(i8)(c) - ((((c) >> 16) & 255) != (u64)ttAge ? 8 : 0))
+#include "../shared/praline/praline_tt.h"
 static inline void ttLoad(u64 key, TTE *e) {
-  const TTX *bk = &TTM[(key & ((1 << TTM_BITS) - 1)) * 2];
-  for (int j = 0; j < 2; j++) {
-    u64 kx = bk[j].kx, a = bk[j].a, b = bk[j].b;
-    if ((kx ^ a ^ b) == key) {
-      e->key = key; e->cap = (u32)a; e->v = (i16)(a >> 32); e->ft[0] = (u8)(a >> 48); e->ft[1] = (u8)(a >> 56);
-      e->d = (i8)b; e->flag = (u8)(b >> 8); e->age = (u8)(b >> 16); return;
-    }
+  u64 a, b;
+  if (plttFind(key, key, &a, &b)) {
+    e->key = key; e->cap = (u32)a; e->v = (i16)(a >> 32); e->ft[0] = (u8)(a >> 48); e->ft[1] = (u8)(a >> 56);
+    e->d = (i8)b; e->flag = (u8)(b >> 8); e->age = (u8)(b >> 16); return;
   }
   e->key = ~key;
 }
 static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
-  TTX *bk = &TTM[(key & ((1 << TTM_BITS) - 1)) * 2];
-  int j = -1, age = ttAge;
-  for (int i = 0; i < 2; i++) if ((bk[i].kx ^ bk[i].a ^ bk[i].b) == key) { j = i; break; }
-  if (j < 0) {   // replace the less valuable entry
-    int q[2];
-    for (int i = 0; i < 2; i++) { u64 b = bk[i].b; q[i] = (int)(i8)b - (((b >> 16) & 255) != (u64)age ? 8 : 0); }
-    j = q[1] < q[0];
-  }
+  int hit, age = ttAge; u64 oa, ob; u64 *x = plttSlot(key, key, &hit, &oa, &ob);
   u64 a = (u64)m->cap | (u64)(u16)(i16)vToTT(v, ply) << 32 | (u64)m->f << 48 | (u64)(u8)(m->t | (m->promo << 7)) << 56;
   u64 b = (u64)(u8)(i8)(d > 120 ? 120 : d) | (u64)flag << 8 | (u64)age << 16;
-  bk[j].a = a; bk[j].b = b; bk[j].kx = key ^ a ^ b;
+  plttWrite(x, key, a, b);
 }
-EXPORT(new_game) void new_game(void) { u64 *p = (u64 *)TTM; for (unsigned long i = 0; i < sizeof(TTM) / 8; i++) p[i] = 0; ttAge = 0; }
+EXPORT(new_game) void new_game(void) { u64 *p = PL_TT; for (unsigned long i = 0; i < sizeof(PL_TT) / 8; i++) p[i] = 0; ttAge = 0; }
 #else
 EXPORT(new_game) void new_game(void) { memset(TT, 0, sizeof(TT)); ttAge = 0; }
 #endif

@@ -29,7 +29,7 @@
   const GUIDE = { shogi: 'm-shogi', chess: 'm-knight', reversi: 'm-disc', sudoku: 'm-tile', speedsudoku: 'av/tile-2', samegame: 'av/hippo-0', jailbreak: 'av/mole-0',
     poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', agon: 'av/teddy-0', fanorona: 'av/monkey-0',
     alquerque: 'av/camel-0', xiangqi: 'av/ryuou-0', tafl: 'av/seal-0', go: 'av/goke-0', gomoku: 'm-stone', dots: 'm-dot', connect4: 'm-plop', mancala: 'm-gem',
-    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0', ludo: 'av/monkey-1', carrom: 'av/otter-1', crokinole: 'av/beaver-1', hockey: 'av/seal-1', amazons: 'av/frog-0', peg: 'av/marble-2', shanghai: 'av/peacock-0' };
+    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0', ludo: 'av/monkey-1', carrom: 'av/otter-1', crokinole: 'av/beaver-1', hockey: 'av/seal-1', botao: 'av/disc-1', amazons: 'av/frog-0', peg: 'av/marble-2', shanghai: 'av/peacock-0' };
   const guideSrc = id => '../images/atlas/' + (GUIDE[id] || 'm-tile') + '.webp';
   const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/><path d="M7 8h2M15 8h2M7 11h2M15 11h2"/></svg>';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -50,7 +50,7 @@
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
   // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
-  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi ludo carrom crokinole hockey amazons peg shanghai'.split(' ')), has = id => IDS.has(id);
+  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi ludo carrom crokinole hockey botao amazons peg shanghai'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
@@ -872,6 +872,24 @@
       for (const sg of [1, -1]) body += `<path class="dl" pathLength="1" style="--d:${dd + 300}ms" d="M${X(-8.5)} ${Yy(sg * FL / 2)}A${8.5 * k} ${8.5 * k} 0 0 ${sg > 0 ? 1 : 0} ${X(8.5)} ${Yy(sg * FL / 2)}" fill="none" stroke="${ink}" stroke-width="1.3"/>`;
       const PC = { r: ['#e2402f', 3.1], y: ['#f2c230', 3.1], p: ['#f6f4ee', 2] };
       pcs(s.pcs).forEach(([x, y, c], i) => { const [f, r] = PC[c] || PC.p; body += `<g class="pc" style="--d:${dd + 500 + i * 90}ms"><circle cx="${X(x)}" cy="${Yy(y)}" r="${r * k}" fill="${c === 'p' ? f : '#18181c'}" stroke="${c === 'p' ? '#9aa0aa' : f}" stroke-width="${c === 'p' ? 1.2 : 3}"/>${c !== 'p' ? `<circle cx="${X(x)}" cy="${Yy(y)}" r="${1.1 * k}" fill="${f}"/>` : ''}</g>`; });
+      (s.arrows || []).forEach(([a, b, c2, d2], i) => { body += `<path class="ar" pathLength="1" style="--d:${dd + (s.pcs || []).length * 90 + 700 + i * 300}ms" d="M${X(a)} ${Yy(b)}L${X(c2)} ${Yy(d2)}" marker-end="url(#hsArr2)"/>`; });
+    } else if (T === 'botao') {   // futebol de botão: the field upright (104 × 167 cm), goals at the ends; pieces "x,y,c" (c: r red button | b blue | o the ball | k / K the near / far keeper)
+      const k = 1.55, FW = 104, FL = 167, PS = 8, PE = 10; W = (FW + 2 * PS) * k + PD * 2 - 20; H = (FL + 2 * PE) * k + PD * 2 - 20; const ox = W / 2, oy = H / 2, X = v => ox + v * k, Yy = v => oy + v * k;
+      const ink = s.ln || 'rgba(255,255,255,.92)';
+      body += `<rect x="${X(-FW / 2 - PS)}" y="${Yy(-FL / 2 - PE)}" width="${(FW + 2 * PS) * k}" height="${(FL + 2 * PE) * k}" rx="6" fill="${s.frame || '#2a6a36'}"/><rect x="${X(-FW / 2)}" y="${Yy(-FL / 2)}" width="${FW * k}" height="${FL * k}" fill="${s.bg || '#2e7a3a'}" stroke="${ink}" stroke-width="1.2"/>`;
+      body += ln(X(-FW / 2), Yy(0), X(FW / 2), Yy(0), 'gl', dd + 100) + `<circle class="dl" pathLength="1" style="--d:${dd + 200}ms" cx="${ox}" cy="${oy}" r="${16 * k}" fill="none" stroke="${ink}" stroke-width="1.2"/>`;
+      for (const sg of [1, -1]) {
+        const gy = sg * FL / 2;
+        body += `<path class="dl" pathLength="1" style="--d:${dd + 300}ms" d="M${X(-30)} ${Yy(gy)}L${X(-30)} ${Yy(gy - sg * 30)}L${X(30)} ${Yy(gy - sg * 30)}L${X(30)} ${Yy(gy)}M${X(-15)} ${Yy(gy)}L${X(-15)} ${Yy(gy - sg * 11)}L${X(15)} ${Yy(gy - sg * 11)}L${X(15)} ${Yy(gy)}" fill="none" stroke="${ink}" stroke-width="1.2"/>`;
+        body += `<rect x="${X(-6.25)}" y="${sg > 0 ? Yy(gy) : Yy(gy - 5)}" width="${12.5 * k}" height="${5 * k}" fill="#f4f4f0" opacity=".85"/>`;
+      }
+      pcs(s.pcs).forEach(([x, y, c], i) => {
+        let g;
+        if (c === 'o') g = `<circle cx="${X(x)}" cy="${Yy(y)}" r="${1.6 * k}" fill="#fffdf4" stroke="#7a7a70" stroke-width="1"/>`;
+        else if (c === 'k' || c === 'K') g = `<rect x="${X(x - 4)}" y="${Yy(y - 1.75)}" width="${8 * k}" height="${3.5 * k}" rx="2" fill="${c === 'k' ? '#d4352a' : '#1d3b78'}"/>`;
+        else g = `<circle cx="${X(x)}" cy="${Yy(y)}" r="${2.6 * k}" fill="${c === 'r' ? '#d4352a' : '#f3f1ea'}" stroke="${c === 'r' ? '#ffffff' : '#1d3b78'}" stroke-width="1.6"/>`;
+        body += `<g class="pc" style="--d:${dd + 500 + i * 90}ms">${g}</g>`;
+      });
       (s.arrows || []).forEach(([a, b, c2, d2], i) => { body += `<path class="ar" pathLength="1" style="--d:${dd + (s.pcs || []).length * 90 + 700 + i * 300}ms" d="M${X(a)} ${Yy(b)}L${X(c2)} ${Yy(d2)}" marker-end="url(#hsArr2)"/>`; });
     } else if (T === 'c4') {
       const n = s.w || 7, m = s.h || 6, S = 30; W = n * S + PD * 2; H = m * S + PD * 2;

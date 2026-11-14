@@ -144,3 +144,6 @@
 - 3Dのモデル：`atlas/models/ludo.js` の `board(rule, look)`。`Table3D.MODELS.ludo(live, rule, look)` は look を省くと `atlas-ludo-look`。駒は `userData.piece`（盤ごとに形が変わる）。展示盤のキャッシュは `atlas-ludo-look` も見る（table3d.js `stamp`）。サムネイルは `atlas/tools/boards.html?game=ludo&look=<look>` を 960×640 で撮って 240×160 に縮小。
 - 「もう一度！」などのトースト（3D卓・フル機能）は白地（他のUIと同じ。以前は紺地）。
 - 最初の一投の案内（2026-11-09）：対局の最初の自分の番（ルドー、自動で振るがオフのとき）、カップの上にふわふわ浮かぶ雲の形の吹き出し（ふちが丸いもこもこ＋カップへ続く小さな丸2つ、`LudoBoard2D.cloudPath`）「サイコロをクリック！」（タッチ画面は「タップ！」、14言語 `st.tapC`/`st.tapT`）。振ると消える。1局に1回（再読み込みで終盤には出さない）。2D・フル機能は SVG の #gCup に描く（`cupHint`。カップは描き直されることがあるので、浮かぶ動きは表示開始からの経過時間で続ける＝描き直しのたびに最初から始まって見えなくなっていた）、3D卓は HTML の吹き出しをカップの画面位置に追従させる（PC幅700px以上は文字22pxの大きめ、スマホは15px）。
+
+## 対局設定の Pro モード（2026-11-15）
+- `shared/proset.js`（保存は部品の既定 `localStorage 'aicoding-pro:ludo'`）。項目：追加の投げも読む（LEVELS `deep`、既定 Lv.9 から）、手のばらつき（でたらめな手 rand と値の揺らぎ noise：なし 0/0／小 0.03/2≈Lv.14／大 0.24/4.5≈Lv.9）。対局の開始時に `G.pro` に固定し、`engine.js` の `think(s, t, level, rng, cfg)` に渡す。レート戦では使わない。名前に「PRO」、戦績は `ai:pro`。
