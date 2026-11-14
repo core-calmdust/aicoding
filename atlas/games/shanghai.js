@@ -258,7 +258,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       im.geometry.computeBoundingBox(); const top = im.geometry.boundingBox.max.y;
       const ctex = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new TH3.CanvasTexture(c); t.colorSpace = TH3.SRGBColorSpace; return t; };
       const haloT = ctex(128, 160, (c, w, h) => { const gr = c.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w * .62); gr.addColorStop(0, 'rgba(255,214,90,.95)'); gr.addColorStop(.45, 'rgba(255,190,50,.55)'); gr.addColorStop(1, 'rgba(255,170,30,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
-      const sheenT = ctex(256, 64, (c, w, h) => { const gr = c.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.42, 'rgba(255,240,190,0)'); gr.addColorStop(.5, 'rgba(255,255,240,.95)'); gr.addColorStop(.58, 'rgba(255,240,190,0)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
+      const sheenT = ctex(256, 64, (c, w, h) => { const gr = c.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.3, 'rgba(255,240,200,0)'); gr.addColorStop(.42, 'rgba(255,244,214,.18)'); gr.addColorStop(.5, 'rgba(255,250,232,.42)'); gr.addColorStop(.58, 'rgba(255,244,214,.18)'); gr.addColorStop(.7, 'rgba(255,240,200,0)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
       sheenT.wrapS = TH3.ClampToEdgeWrapping; sheenT.repeat.set(.34, 1);
       const starT = ctex(64, 64, (c, w, h) => { c.translate(w / 2, h / 2); const gr = c.createRadialGradient(0, 0, 0, 0, 0, w / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.25, 'rgba(255,236,150,.8)'); gr.addColorStop(1, 'rgba(255,200,60,0)'); c.fillStyle = gr;
         c.beginPath(); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, r = k % 2 ? 5 : 31; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.closePath(); c.fill(); c.beginPath(); c.arc(0, 0, 9, 0, 7); c.fill(); });
@@ -271,26 +271,24 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         const sm = new TH3.MeshBasicMaterial({ map: sheenT.clone(), ...add, opacity: .8 }); sm.map.needsUpdate = true; sm.map.repeat.set(.5, 1);
         sm.map.center.set(.5, .5); sm.map.rotation = .55;
         const sheen = new TH3.Mesh(planeS, sm); sheen.rotation.x = -Math.PI / 2; sheen.renderOrder = 3;
-        const stars = [0, 1, 2].map(() => { const sp = new TH3.Sprite(starM.clone()); sp.renderOrder = 4; grp.add(sp); return sp; });
+        const stars = [];   // (no twinkling stars: ユーザー 2026-11-14「キラキラ星は出さずに」)
         grp.add(halo, sheen);
         return { i, halo, sheen, stars, ph: k * 1.37, sp: [0, 1, 2].map(j => ({ ph: Math.random() * 6, x: (Math.random() - .5) * TW * .9, z: (Math.random() - .5) * TD * .9 })) };
       });
       let raf = 0, last = 0;
       function frame(now) {
         raf = 0; if (stopped) return;
-        if (now - last >= 33) {
+        if (now - last >= 15) {
           last = now; const t = now / 1000; let any = false;
           items.forEach(o => {
             const S = st8[o.i], on = alive[o.i] || S.fly, sc = on ? S.s : 0, [x, y, z] = pos[o.i];
-            const vis = sc > .05; o.halo.visible = false; o.sheen.visible = vis; o.stars.forEach(sp => { sp.visible = vis; });
+            const vis = sc > .05; o.halo.visible = false; o.sheen.visible = vis; o.stars.forEach(sp => { sp.visible = false; });
             if (alive[o.i] || S.fly) any = true; if (!vis) return;
             const X = x + S.dx, Y = y + S.lift + S.dy, Z = z + S.dz;
             o.halo.position.set(X, Y + .012, Z); o.halo.scale.setScalar(sc * (1 + .06 * Math.sin(t * 2.4 + o.ph))); o.halo.material.opacity = .55 + .2 * Math.sin(t * 2.4 + o.ph);
             o.sheen.position.set(X, Y + top * sc + .004, Z); o.sheen.scale.setScalar(sc);
-            const cyc = ((t + o.ph) % 2.6) / 1.1;   // a sweep of ~1.1 s, then a rest
-            o.sheen.material.map.offset.x = cyc < 1 ? .9 - cyc * 1.4 : -1; o.sheen.visible = cyc < 1;
-            o.stars.forEach((sp, j) => { const q = o.sp[j], w = Math.max(0, Math.sin(t * 2.1 + q.ph)); sp.position.set(X + q.x, Y + top * sc + .1, Z + q.z); const k = .5 * w * w * sc; sp.scale.set(k, k, k); sp.material.rotation = t * .8 + q.ph;
-              if (w < .02) { q.x = (Math.random() - .5) * TW * .95; q.z = (Math.random() - .5) * TD * .95; } });
+            const cyc = ((t + o.ph) % 4.2) / 1.8, e = cyc < 1 ? cyc * cyc * (3 - 2 * cyc) : 1;   // a slow eased sweep (~1.8 s), then a rest
+            o.sheen.material.map.offset.x = .9 - e * 1.4; o.sheen.material.opacity = cyc < 1 ? Math.sin(cyc * Math.PI) * .9 : 0; o.sheen.visible = cyc < 1;
           });
           kick(80); if (!any) return;
         }
