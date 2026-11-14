@@ -107,10 +107,26 @@ const SND = (() => {
   document.addEventListener('visibilitychange', () => { if (ac) { if (document.hidden) ac.suspend(); else ac.resume(); } const B = SND && SND._bgm; if (B && B.el && B.on) { if (document.hidden) B.el.pause(); else { const p = B.el.play(); if (p && p.catch) p.catch(() => {}); } } });
   // recorded sounds (ユーザー 2026-11-14): tiles laid down (three, picked at random), the point sticks (riichi, paying for a skill),
   // and the calls in a voice (リーチ・ツモ・ロン・ポン・チー・カン・テンパイ・ノーテン). Decoded on first use; until then the synth stands in.
+  // Everything is fetched and decoded in the background right after the page loads (ユーザー 2026-11-14: no hitch the first time a
+  // sound plays): one file at a time when the browser is idle — the short ones first, then the riichi music — so the load is spread
+  // out and nothing waits on the network once the game is running. Decoding needs no click (a suspended context decodes fine).
   const BUF = {}, NAMES = ['tile1', 'tile2', 'tile3', 'stick1', 'stick2', 'stick3', 'v-riichi', 'v-tsumo', 'v-ron', 'v-pon', 'v-chi', 'v-kan', 'v-tenpai', 'v-noten'];
-  let loading = false;
-  function load() { const a = ctx(); if (!a || loading) return; loading = true;
-    for (const n of NAMES) fetch(`${ASSETS}snd/${n}.mp3`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => new Promise((ok, ng) => a.decodeAudioData(b, ok, ng))).then(buf => { BUF[n] = buf; }).catch(() => {}); }
+  let loading = false, bgmUrl = null;
+  const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
+  function mkctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return ac; }
+  function load() { if (loading) return; loading = true; const a = mkctx(); let i = 0;
+    const next = () => {
+      if (i < NAMES.length) { const n = NAMES[i++];
+        fetch(`${ASSETS}snd/${n}.mp3`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => a ? new Promise((ok, ng) => a.decodeAudioData(b, ok, ng)) : null)
+          .then(buf => { if (buf) BUF[n] = buf; }).catch(() => {}).finally(() => idle(next));
+      } else if (!bgmUrl) {      // the music: the whole file into memory, so it starts at once and never stalls mid-play
+        fetch(`${ASSETS}snd/bgm-riichi.mp3`).then(r => r.ok ? r.blob() : Promise.reject()).then(b => { bgmUrl = URL.createObjectURL(b); prepBgm(); }).catch(() => { bgmUrl = `${ASSETS}snd/bgm-riichi.mp3`; });
+      } };
+    idle(next); }
+  // the <audio> element and its gain node are made ahead of time (when the sound is first unlocked), not at the moment of riichi
+  function prepBgm() { const a = ac; if (!a || !bgmUrl) return; const B = SND._bgm || (SND._bgm = { el: null, g: null, on: false, t: 0 }); if (B.el) return;
+    B.el = new Audio(bgmUrl); B.el.loop = true; B.el.preload = 'auto';
+    try { const src = a.createMediaElementSource(B.el); B.g = a.createGain(); B.g.gain.value = 0; src.connect(B.g).connect(a.destination); } catch (e) { B.g = null; } }
   function play(n, g = 1, rate = 1) { const a = ctx(); if (!a || !on()) return false; load(); const b = BUF[n]; if (!b) return false;
     const s = a.createBufferSource(); s.buffer = b; s.playbackRate.value = rate; const v = a.createGain(); v.gain.value = g; s.connect(v).connect(a.destination); s.start(); return true; }
   const pick3 = k => `${k}${1 + ((Math.random() * 3) | 0)}`;
@@ -126,8 +142,7 @@ const SND = (() => {
       const B = this._bgm || (this._bgm = { el: null, g: null, on: false, t: 0 });
       if (onoff) {
         if (!on() || B.on) return;
-        if (!B.el) { B.el = new Audio(`${ASSETS}snd/bgm-riichi.mp3`); B.el.loop = true; B.el.preload = 'auto'; B.el.crossOrigin = 'anonymous';
-          try { const src = a.createMediaElementSource(B.el); B.g = a.createGain(); B.g.gain.value = 0; src.connect(B.g).connect(a.destination); } catch (e) { B.g = null; } }
+        if (!B.el) { if (!bgmUrl) bgmUrl = `${ASSETS}snd/bgm-riichi.mp3`; prepBgm(); if (!B.el) return; }
         B.on = true; clearTimeout(B.t); B.el.currentTime = 0;
         const p = B.el.play(); if (p && p.catch) p.catch(() => {});
         if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(.42, t + .8); } else B.el.volume = .42;
@@ -144,9 +159,10 @@ const SND = (() => {
     ok: () => { tone(988, .25, 'sine', .12); tone(1319, .5, 'sine', .1, .12); },
     pick: () => tone(660, .06, 'triangle', .06),
     gacha: r => { const b = r === 'SSR' ? 4 : r === 'SR' ? 3 : 2; for (let i = 0; i < b + 2; i++) tone(500 + i * 180, .3, 'triangle', .1, i * .07); },
-    unlock: () => { ctx(); load(); },
+    unlock: () => { ctx(); load(); prepBgm(); },
   };
 })();
+addEventListener("load", () => setTimeout(() => SND.preload(), 400));   // sounds load in the background from the start (spread out, idle time)
 
 // ---------------------------------------------------------------- character art
 const ART = new Map();
@@ -673,13 +689,13 @@ const AUTO = /[?&]auto/.test(location.search);
 async function startGame() {
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
-  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = () => SND.tile(); }
+  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = () => SND.tile(); TB.warm(); }
   TB.resume();
   TB.hideAll();
   const me = seatChar(MJChars.get(DB.sel), useKey(DB.sel));
   const others = MJChars.list.filter(c => c.id !== me.id).sort(() => Math.random() - .5).slice(0, 3).map(c => seatChar(c, rollSkillKey()));
   const chars = [me, ...others];
-  chars.forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); });   // cut-in art, loaded in advance
+  chars.forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); if (im.decode) im.decode().catch(() => {}); });   // cut-in art, loaded and decoded in advance
   UIS = { chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv: DB.set.lv }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
   const agents = [auto ? new AutoMe(DB.set.lv) : new Human(), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv)];
