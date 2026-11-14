@@ -291,7 +291,7 @@
   function tileMat(back) {
     if (mats[back]) return mats[back];
     const TT = T(), [cw, ch] = cellSize(), wo = faceOff(47);
-    const m = new TT.MeshStandardMaterial({ map: atlas(), normalMap: normalTex, vertexColors: true, roughness: .38, metalness: 0, envMapIntensity: .7 });   // (a polished resin face; the carving in the normal map)
+    const m = new TT.MeshStandardMaterial({ map: atlas(), normalMap: normalTex, vertexColors: true, roughness: .38, metalness: 0, envMapIntensity: .5, color: 0xe4e2dc });   // (2026-11-14 ユーザー: ライティングは少し抑えめ — the faces a touch less bright)   // (a polished resin face; the carving in the normal map)
     const back3 = new TT.Color(BACK_COL[back] || BACK_COL.jade).convertSRGBToLinear();
     m.onBeforeCompile = sh => {
       sh.uniforms.uCell = { value: new TT.Vector2(cw, ch) }; sh.uniforms.uWhite = { value: new TT.Vector2(wo[0] + cw * .5, wo[1] + ch * .5) };

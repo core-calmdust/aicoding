@@ -93,8 +93,11 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap.on{opacity:1}
 .shmap .sky{position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 50% at 70% 30%,rgba(110,60,180,.35),transparent 70%),radial-gradient(50% 45% at 20% 75%,rgba(40,90,190,.35),transparent 70%),radial-gradient(40% 35% at 45% 50%,rgba(200,80,160,.16),transparent 70%),linear-gradient(#070a1c,#0d1238 60%,#151040)}
 .shmap .sky canvas{position:absolute;inset:0;width:100%;height:100%}
+.shmap .hd,.shmap .ars,.shmap .gift,.shmap .sh{flex-shrink:0}.shmap .hd{height:auto!important;max-height:none!important}
 .shmap .hd{position:relative;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 8px}
-.shmap .hd h2{margin:0;font-size:22px;letter-spacing:.04em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shmap .hd h2{margin:0;font-size:22px;letter-spacing:.04em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shmap .hd .shtl{flex:1;min-width:0}.shmap .hd .em{display:none;flex:none}.shmap .hd .story{display:none;margin:4px 0 0;font-size:15px;line-height:1.55;color:#c8d2f4;opacity:.9;max-width:760px}
+@media (min-width:820px){.shmap .hd{gap:18px;padding:calc(18px + env(safe-area-inset-top)) 24px 10px}.shmap .hd .em{display:block;width:64px;height:64px;filter:drop-shadow(0 0 14px rgba(255,215,106,.35))}.shmap .hd h2{font-size:34px;letter-spacing:.08em;color:#ffe7a0;text-shadow:0 0 18px rgba(255,215,106,.35)}.shmap .hd .story{display:block}.shmap .hd .tot{font-size:21px}}
 .shmap .hd .tot{font-size:17px;font-weight:800;color:#ffd76a;white-space:nowrap}
 .shmap .x{flex:none;width:46px;height:46px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 .shmap .x svg{width:56%;height:56%;display:block;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
@@ -136,7 +139,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .sh .art .cst{fill:rgba(220,230,255,.55)}.shmap .sh .art .cst.on{fill:#ffe9a8}
 .shmap .sh .art .cpk{fill:rgba(255,215,106,.18);stroke:#fff;stroke-width:.6;animation:shpk 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes shpk{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:.6}}
-.shmap .sh .ly{display:flex;align-items:center;gap:8px;margin:2px 0 6px;font-size:16px;font-weight:800;color:#dfe6ff}.shmap .sh .ly .lm{width:46px;height:30px;flex:none}.shmap .sh .ly em{font-style:normal;opacity:.65;font-size:14px}
+.shmap .sh h3{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.shmap .sh h3 .sn{white-space:nowrap}.shmap .sh .ly{display:inline-flex;align-items:center;gap:8px;margin:0;font-size:16px;font-weight:800;color:#dfe6ff}.shmap .sh .ly .lm{width:46px;height:30px;flex:none}.shmap .sh .ly em{font-style:normal;opacity:.65;font-size:14px}
 .shmap .nd.pk{outline:3px solid #fff;outline-offset:3px}
 .shmap .sh h3{margin:0 0 2px;font-size:24px}.shmap .sh .mi{font-size:21px;font-weight:800;color:#ffe7a0;line-height:1.35}
 .shmap .sh .sub{font-size:16.5px;opacity:.8;margin-top:4px;line-height:1.45}
@@ -145,7 +148,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .nav{position:absolute;z-index:3;top:50%;transform:translateY(-50%);font:inherit;font-size:26px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 .shmap .nav.l{left:8px}.shmap .nav.r{right:8px}.shmap .nav:disabled{opacity:.2}
 @media (max-width:600px){.shmap .hd{padding:calc(8px + env(safe-area-inset-top)) 12px 6px}.shmap .hd h2{font-size:19px}.shmap .hd .tot{font-size:15px}.shmap .x{width:40px;height:40px;font-size:19px}.shmap .ars{padding:2px 12px 8px;gap:6px}.shmap .ar{font-size:14px;padding:7px 12px}.shmap .gift{margin:0 12px 6px;padding:2px 12px 2px 2px}.shmap .nd .sr{font-size:11px;margin-top:1px}
-.shmap .sh{width:calc(100vw - 20px);margin-bottom:calc(10px + env(safe-area-inset-bottom));padding:12px 14px;gap:8px;border-radius:18px}.shmap .sh h3{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shmap .sh .mi{font-size:16px}.shmap .sh .sub{font-size:13.5px;margin-top:2px;line-height:1.4}.shmap .sh .go{padding:12px 16px;font-size:17px}.shmap .gift{font-size:14px}.shmap .gift img{width:30px;height:30px}.shmap .sh .gfl{margin-top:6px;font-size:14.5px}.shmap .sh .gfl img{width:36px;height:36px}.shmap .sh{display:grid;grid-template-columns:96px 1fr;gap:8px 10px;align-items:start}.shmap .sh .art{width:auto;padding:4px 2px 6px;border-radius:12px}.shmap .sh .art b{font-size:11.5px}.shmap .sh .ly{font-size:14px;margin:0 0 4px}.shmap .sh .ly .lm{width:34px;height:22px}.shmap .sh .ly em{font-size:12.5px}.shmap .sh .recs{font-size:13.5px;margin-top:6px}.shmap .sh .go{grid-column:1/-1;width:100%}.shmap .nav{display:none}.shmap .cst{width:100%}}
+.shmap .sh{width:calc(100vw - 20px);margin-bottom:calc(10px + env(safe-area-inset-bottom));padding:12px 14px;gap:8px;border-radius:18px}.shmap .sh h3{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shmap .sh .mi{font-size:16px}.shmap .sh .sub{font-size:13.5px;margin-top:2px;line-height:1.4}.shmap .sh .go{padding:12px 16px;font-size:17px}.shmap .gift{font-size:14px}.shmap .gift img{width:30px;height:30px}.shmap .sh .gfl{margin-top:6px;font-size:14.5px}.shmap .sh .gfl img{width:36px;height:36px}.shmap .sh{display:grid;grid-template-columns:96px 1fr;gap:8px 10px;align-items:start}.shmap .sh .art{width:auto;padding:4px 2px 6px;border-radius:12px}.shmap .sh .art b{font-size:11.5px}.shmap .sh .ly{font-size:14px;margin:0}.shmap .sh h3{gap:8px;white-space:normal}.shmap .sh .ly .lm{width:34px;height:22px}.shmap .sh .ly em{font-size:12.5px}.shmap .sh .recs{font-size:13.5px;margin-top:6px}.shmap .sh .go{grid-column:1/-1;width:100%}.shmap .nav{display:none}.shmap .cst{width:100%}}
 `;
     document.head.appendChild(s);
   }
@@ -550,7 +553,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         const F = d.free = d.free || {}, r = F[FM.key] || {}, nb = r.best === undefined || tt < r.best, tk = n - left();
         F[FM.key] = { best: nb ? tt : r.best, tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1, date: nb ? today() : r.date }; save(d);
         const sub = tx('lay.' + lay) + ' · ' + tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff);
-        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx('r.clear'), score: tx('r.time', { t: mmss(tt) }) + (FM.type === 'clear' ? '' : ' · ' + tx('f.tiles', { n: tk })), best: (nb ? '🏅 ' + tx('r.newBest') + ' · ' : '') + tx('r.best', { t: mmss(F[FM.key].best) }), opp: sub, key: FM.key, why: tx('r.clear') + ' · ' + mmss(tt) }), 800);
+        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx('r.clear'), score: tx('r.time', { t: mmss(tt) }) + (FM.type === 'clear' ? '' : ' · ' + tx('f.tiles', { n: tk })), best: (nb ? '🏅 ' + tx('r.newBest') + ' · ' : '') + tx('r.best', { t: mmss(F[FM.key].best) }), opp: sub, key: FM.key, why: tx('r.clear') + ' · ' + mmss(tt) }), 350);
         return;
       }
       let stars = 1; if (tt <= parOf(ST)) { stars = 2; if (!hints && !shufs) stars = 3; }
@@ -565,7 +568,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         best: tx('r.best', { t: mmss(B[s]) }) + ' · ' + '★'.repeat(S[s]) + (coin ? ' · ' + tx('rw.coin', { n: coin }) : ''),
         opp: stageName(s, lang), key: 'st' + s, why: tx('r.stage') + ' ' + stars + '★',
         again: { label: tx('b.toMap'), cls: 'sun', go: restart => stageMap({ lang, play: p => restart(() => { AD.pending = p; AD.last = p; }) }) },   // (a cleared stage: マップへ instead of もう一局 — back to the course, ユーザー 2026-11-14)
-        next: nx != null ? { label: tx('b.next'), go: () => { AD.pending = nx; AD.last = nx; } } : null }), 800);
+        next: nx != null ? { label: tx('b.next'), go: () => { AD.pending = nx; AD.last = nx; } } : null }), 350);
     }
     function fail(why) {
       if (over) return; over = true; tEnd = performance.now(); clearInterval(clockT); turn();
@@ -659,7 +662,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     const c = cv.getContext('2d'); let W = 0, H = 0, dpr = 1, raf = 0, last = 0, stopped = false, shoot = null, nextShoot = performance.now() + 2500;
     let s = 99; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
     const S = Array.from({ length: 560 }, () => ({ x: R(), y: R(), a: R(), ph: R() * 6.3, sp: .6 + R() * 2.4, d: .15 + R() * .5 }));   // (2026-11-14: more sparkle — ユーザー)
-    const B = Array.from({ length: 38 }, () => ({ x: R(), y: R(), ph: R() * 6.3, sp: .4 + R() * .8, hue: R() }));
+    const B = Array.from({ length: 90 }, () => ({ x: R(), y: R(), ph: R() * 6.3, sp: .4 + R() * .8, hue: R() }));
     function size() { const r = cv.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.max(1, r.width * dpr); H = cv.height = Math.max(1, r.height * dpr); }
     size();
     // (2026-11-14, ユーザー: もっとリアルな光り方) the stars as soft photographic sprites drawn additively: a hot white core, a
@@ -684,9 +687,9 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       raf = 0; if (stopped) return;
       if (!document.hidden && now - last >= 32) {
         last = now; const t = now / 1000, px = getPan() * dpr; c.clearRect(0, 0, W, H); c.globalCompositeOperation = 'lighter';
-        S.forEach(o => { const tw = .7 + .3 * Math.sin(t * o.sp + o.ph) * Math.sin(t * o.sp * 1.7 + o.ph * 2), x = ((o.x * W - px * o.d) % W + W) % W, y = o.y * H, sz = (3 + o.a * o.a * 9) * dpr;
+        S.forEach(o => { const tw = .45 + .55 * Math.abs(Math.sin(t * o.sp + o.ph) * Math.sin(t * o.sp * 1.7 + o.ph * 2)), x = ((o.x * W - px * o.d) % W + W) % W, y = o.y * H, sz = (3 + o.a * o.a * 9) * dpr;
           c.globalAlpha = Math.min(1, (.25 + o.a * .75) * tw); c.drawImage(SPR[o.c], x - sz, y - sz, sz * 2, sz * 2); });
-        B.forEach(o => { const p = .5 + .5 * Math.sin(t * o.sp + o.ph), tw = .55 + .45 * p * (.85 + .15 * Math.sin(t * 9 + o.ph * 5)), x = ((o.x * W - px * .35) % W + W) % W, y = o.y * H, sz = (14 + 20 * p) * dpr;
+        B.forEach(o => { const q = Math.max(0, Math.sin(t * o.sp * 1.6 + o.ph)), p = q * q * q, tw = .1 + .9 * p * (.75 + .25 * Math.sin(t * 11 + o.ph * 5)), x = ((o.x * W - px * .35) % W + W) % W, y = o.y * H, sz = (6 + 30 * p) * dpr;   // (2026-11-14: they flare up and fade out — sparkle, not more light)
           c.globalAlpha = tw; c.drawImage(SPK[o.c], x - sz, y - sz, sz * 2, sz * 2); });
         c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
         if (!shoot && now > nextShoot) shoot = { x: (.2 + R() * .7) * W, y: R() * H * .45, t0: now, vx: -(.6 + R() * .5) * W, vy: .35 * H };
@@ -709,7 +712,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     if (window.ShanghaiZodiac && !document.getElementById('shzod-css')) { const st = document.createElement('style'); st.id = 'shzod-css'; st.textContent = ShanghaiZodiac.css; document.head.appendChild(st); }
     let P = prog(), area = Math.floor(nextStage(P) / 10), pick = nextStage(P);
     const el = document.createElement('div'); el.className = 'shmap';
-    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
+    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><svg class="em" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="shemg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b4aa0"/><stop offset="1" stop-color="#121640"/></radialGradient></defs><rect x="10" y="4" width="44" height="56" rx="8" fill="url(#shemg)" stroke="#e8c877" stroke-width="2"/><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="rgba(232,200,119,.35)"/><path d="M20 44 L28 34 L36 38 L44 22 M28 34 L30 22" fill="none" stroke="#ffe39a" stroke-width="1.4" stroke-linecap="round"/><g fill="#fff6d8"><circle cx="20" cy="44" r="2.2"/><circle cx="28" cy="34" r="2.6"/><circle cx="36" cy="38" r="2"/><circle cx="44" cy="22" r="2.8"/><circle cx="30" cy="22" r="1.8"/></g></svg><div class="shtl"><h2></h2><p class="story"></p></div><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
     document.body.appendChild(el);
     const $ = q => el.querySelector(q), vp = $('.vp'), wld = $('.wld');
     // the pan / zoom: the long sky drawn at u px per unit, then scaled by z and moved by (tx, ty)
@@ -791,7 +794,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     function mark() { wld.querySelectorAll('.nd.pk').forEach(b => b.classList.remove('pk')); const b = wld.querySelector(`.nd[data-s="${pick}"]`); if (b) b.classList.add('pk'); }
     function head() {
       const tot = Object.values(P.st).reduce((a, v) => a + v, 0);
-      $('h2').textContent = TX('st.title', lang); $('.tot').textContent = '★ ' + tot + ' / 360';
+      $('h2').textContent = TX('st.title', lang); $('.story').textContent = TX('st.story', lang); $('.tot').textContent = '★ ' + tot + ' / 360';
       const nx = Reward.next(), it = nx && window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + nx.t);
       $('.gift').innerHTML = nx ? `<img src="../images/atlas/av/peacock-${nx.t}.webp" alt=""><span>${esc(TX('rw.next', lang, { n: nx.left, name: it ? it.name[lang] || it.name.en : 'Peacotile' }))}</span>` : '';
       $('.gift').style.display = nx ? '' : 'none';
@@ -819,7 +822,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     function sheet() {
       const s = pick, st = K.stage(s), a = Math.floor(s / 10), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s], box = $('.sh'), h0 = box.offsetHeight;
       box.innerHTML = `<div class="art">${conArt(a, s % 10)}<b>${esc(TX('ar.' + AR[a], lang))}</b></div>` +
-        `<div class="tx"><h3>${esc(stageName(s, lang))}</h3><div class="ly">${layMini(st.lay)}<span>${esc(TX('lay.' + st.lay, lang))}</span><em>${esc(TX('tiles', lang, { n: st.n }))}</em></div>` +
+        `<div class="tx"><h3><span class="sn">${esc(stageName(s, lang))}</span><span class="ly">${layMini(st.lay)}<span>${esc(TX('lay.' + st.lay, lang))}</span><em>${esc(TX('tiles', lang, { n: st.n }))}</em></span></h3>` +
         `<div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) : esc(TX('st.lock', lang))}</div>` +
         `<div class="recs"><div>${esc(TX('rec', lang))}${sr ? `<span class="rs">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` + (bt != null ? ` <span class="rb">${esc(TX('r.best', lang, { t: mmss(bt) }))}</span>` : '') : '<span class="rb">—</span>'}</div><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span></div>${giftLine(s)}</div>` +
         `<button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
@@ -871,7 +874,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   window.Atlas3D.shanghai = {
     levels: 0, solo: true, table: false, sizes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], size0: 1,
     sizeLabel: lang => TX('f.board', lang), sizePick: true,
-    sizeName: (z, lang) => { const k = C() && C().FREE[z - 1]; return k ? TX('lay.' + k, lang) + ' · ' + TX('tiles', lang, { n: C().LAYOUTS[k].length }) : String(z); },
+    sizeName: (z, lang) => { const k = C() && C().FREE[z - 1], lv = Math.min(5, Math.ceil(z / 2)); return k ? TX('lay.' + k, lang) + ' · ' + '★'.repeat(lv) + '☆'.repeat(5 - lv) + ' · ' + TX('tiles', lang, { n: C().LAYOUTS[k].length }) : String(z); },   // (the board's name · how hard (FREE is in order of difficulty, two a step) · its tiles)
     stages: true, modeName: (m, lang) => TX(m === 'stage' ? 'm.stage' : 'm.free', lang),
     stagePanel, stageBind, freeBind, stageMap, pending: null, last: null, nextStage: () => nextStage(prog()),
     start,
