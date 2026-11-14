@@ -367,30 +367,26 @@ static inline int vFromTT(int v, int ply) { return v > WINT ? v - ply : v < -WIN
 #ifndef TTM_BITS
 #define TTM_BITS 19
 #endif
-static u64 TTM[(1u << TTM_BITS) * 12];
+// (2026-11-15) the bucket table is Praline's (shared/praline/praline_tt.h): 3 words an entry; w >> 58 = in use
+#define PL_TT_BITS TTM_BITS
+#define PL_TT_WORDS 3
+#define PL_TT_USED(e) ((e)[1] >> 58)
+#define PL_TT_SCORE(e) (!((e)[1] >> 58) ? -1000 : (int)(i8)((e)[1] >> 32) - ((((e)[1] >> 48) & 255) != ttAge ? 16 : 0))
+#include "../shared/praline/praline_tt.h"
 static inline void ttGet(u64 key, TTE *e) {
-  const u64 *bk = &TTM[(key & ((1u << TTM_BITS) - 1)) * 12];
-  for (int j = 0; j < 4; j++) {
-    u64 kx = bk[3 * j], w = bk[3 * j + 1], c = bk[3 * j + 2];
-    if ((kx ^ w ^ c) == key && (w >> 58)) { e->key = key; e->cap = c; e->v = (i16)(w & 0xFFFF); e->f = (u8)(w >> 16); e->t = (u8)(w >> 24); e->d = (i8)(w >> 32); e->flag = (u8)((w >> 40) & 3); e->age = (u8)(w >> 48); return; }
-  }
+  const u64 *x = plttFind(key, key);
+  if (x) { const u64 w = x[1], c = x[2]; e->key = key; e->cap = c; e->v = (i16)(w & 0xFFFF); e->f = (u8)(w >> 16); e->t = (u8)(w >> 24); e->d = (i8)(w >> 32); e->flag = (u8)((w >> 40) & 3); e->age = (u8)(w >> 48); return; }
   e->key = ~key; e->cap = 0; e->v = 0; e->f = 255; e->t = 0; e->d = -1; e->flag = 0; e->age = 0;
 }
 static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
-  u64 *bk = &TTM[(key & ((1u << TTM_BITS) - 1)) * 12];
-  int j = 0, q = 1 << 30; u64 ow = 0, oc = 0, hit = 0;
-  for (int i = 0; i < 4; i++) {
-    u64 kx = bk[3 * i], w = bk[3 * i + 1], c = bk[3 * i + 2];
-    if ((kx ^ w ^ c) == key && (w >> 58)) { j = i; ow = w; oc = c; hit = 1; break; }
-    int sc = !(w >> 58) ? -1000 : (int)(i8)(w >> 32) - (((w >> 48) & 255) != ttAge ? 16 : 0);
-    if (sc < q) { q = sc; j = i; }
-  }
+  int hit; u64 *x = plttSlot(key, key, &hit);
+  const u64 ow = hit ? x[1] : 0, oc = hit ? x[2] : 0;
   u64 mv, c;   // (no move: keep the entry's own, or none)
   if (m) { mv = (u64)m->f << 16 | (u64)m->t << 24; c = m->cap; } else if (hit) { mv = ow & 0xFFFF0000ull; c = oc; } else { mv = (u64)255 << 16; c = 0; }
   u64 w = (u64)(u16)(i16)vToTT(v, ply) | mv | (u64)(u8)(i8)(d > 120 ? 120 : d) << 32 | (u64)(flag & 3) << 40 | (u64)ttAge << 48 | 1ull << 58;
-  bk[3 * j + 1] = w; bk[3 * j + 2] = c; bk[3 * j] = key ^ w ^ c;
+  plttWrite(x, key, w, c);
 }
-EXPORT(new_game) void new_game(void) { memset(TTM, 0, sizeof(TTM)); ttAge = 0; }
+EXPORT(new_game) void new_game(void) { memset(PL_TT, 0, sizeof(PL_TT)); ttAge = 0; }
 #define TT_PROBE(k) TTE e_, *e = &e_; ttGet((k), e)
 #else
 #define TT_PROBE(k) TTE *e = &TT[(k) & ((1 << TT_BITS) - 1)]

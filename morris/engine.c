@@ -454,27 +454,22 @@ static TLS double nodes, maxNodes, deadline; static TLS int aborted;
 #define TTM_BITS 20
 #endif
 typedef unsigned long long u64;
-static u64 TTM[(1 << TTM_BITS) * 8];
 static u8 ttAge;
+// (2026-11-15) the bucket table is Praline's (shared/praline/praline_tt.h): indexed by h1, the whole key h1:h2 checked;
+// w >> 56 = in use; replace the shallowest / oldest
+#define PL_TT_BITS TTM_BITS
+#define PL_TT_USED(e) ((e)[1] >> 56)
+#define PL_TT_SCORE(e) (!((e)[1] >> 56) ? -1000 : (int)(i8)((e)[1] >> 32) - ((((e)[1] >> 48) & 255) != ttAge ? 16 : 0))
+#include "../shared/praline/praline_tt.h"
 static inline int ttLoad(const Pos *p, int *m, int *d, int *v, int *f) {
-  const u64 key = (u64)p->h1 << 32 | p->h2, *bk = &TTM[(p->h1 & ((1u << TTM_BITS) - 1)) * 8];
-  for (int j = 0; j < 4; j++) {
-    u64 kx = bk[2 * j], w = bk[2 * j + 1];
-    if ((kx ^ w) == key && (w >> 56)) { *v = (int16_t)(w & 0xFFFF); *m = (int)((w >> 16) & 0x7FFF); *d = (i8)(w >> 32); *f = (int)((w >> 40) & 3); return 1; }
-  }
+  const u64 *x = plttFind((u64)p->h1 << 32 | p->h2, p->h1);
+  if (x) { const u64 w = x[1]; *v = (int16_t)(w & 0xFFFF); *m = (int)((w >> 16) & 0x7FFF); *d = (i8)(w >> 32); *f = (int)((w >> 40) & 3); return 1; }
   return 0;
 }
 static void ttSave(const Pos *p, int sv, int m, int d, int f) {
-  const u64 key = (u64)p->h1 << 32 | p->h2; u64 *bk = &TTM[(p->h1 & ((1u << TTM_BITS) - 1)) * 8];
-  int j = -1, q = 1 << 30;
-  for (int i = 0; i < 4; i++) {
-    u64 kx = bk[2 * i], w = bk[2 * i + 1];
-    if ((kx ^ w) == key && (w >> 56)) { j = i; break; }
-    int s = !(w >> 56) ? -1000 : (int)(i8)(w >> 32) - (((w >> 48) & 255) != ttAge ? 16 : 0);
-    if (s < q) { q = s; j = i; }
-  }
+  const u64 key = (u64)p->h1 << 32 | p->h2; int hit; u64 *x = plttSlot(key, p->h1, &hit);
   u64 w = (u64)(uint16_t)(int16_t)sv | (u64)(m & 0x7FFF) << 16 | (u64)(u8)(i8)d << 32 | (u64)(f & 3) << 40 | (u64)ttAge << 48 | 1ull << 56;
-  bk[2 * j + 1] = w; bk[2 * j] = key ^ w;
+  plttWrite(x, key, w, 0);
 }
 // every thread's last finished iteration on the current root: { key ^ x, x }, x = depth | value | move | in use — the main
 // thread answers with the deepest one, and a helper that finishes the main thread's depth limit ends the search (gHit)
@@ -805,7 +800,7 @@ EXPORT(setup) int setup(void) {
 }
 EXPORT(new_game) void new_game(void) {
 #ifdef MT
-  for (unsigned i = 0; i < sizeof(TTM) / 8; i++) TTM[i] = 0;
+  for (unsigned i = 0; i < sizeof(PL_TT) / 8; i++) PL_TT[i] = 0;
   for (unsigned i = 0; i < (1u << BUSY_BITS); i++) busyT[i] = 0;
   ttAge = 0;
 #else

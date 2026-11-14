@@ -980,14 +980,16 @@ typedef unsigned long long u64;
 #ifndef TTM_BITS
 #define TTM_BITS 20
 #endif
-static u64 ttm[(1u << TTM_BITS) * 8];
+/* (2026-11-15) the bucket table is Praline's (shared/praline/praline_tt.h): indexed by hl, the key hl | hh checked; w >> 63 =
+   in use; replace the shallowest / oldest */
+#define PL_TT_BITS TTM_BITS
+#define PL_TT_USED(e) ((e)[1] >> 63)
+#define PL_TT_SCORE(e) (!((e)[1] >> 63) ? -1000 : (int)(((e)[1] >> 32) & 255) - ((((e)[1] >> 42) & 31) != (u64)(ttAge & 31) ? 16 : 0))
+#include "../shared/praline/praline_tt.h"
 static inline u64 ttKey(void) { return (u64)(u32)hl | (u64)(u32)hh << 32; }
 static inline void ttGet(TTEntry *e) {
-  u64 key = ttKey(); const u64 *bk = &ttm[((u32)hl & ((1u << TTM_BITS) - 1)) * 8];
-  for (int j = 0; j < 4; j++) {
-    u64 w = bk[2 * j + 1], kx = bk[2 * j];
-    if ((kx ^ w) == key && (w >> 63)) { e->key = hh; e->move = (i32)((w >> 16) & 0x7FFF); e->data = (i32)((w & 0xFFFF) | ((w >> 32) & 255) << 16 | ((w >> 40) & 3) << 24 | ((w >> 42) & 31) << 26); return; }
-  }
+  const u64 *x = plttFind(ttKey(), (u32)hl);
+  if (x) { const u64 w = x[1]; e->key = hh; e->move = (i32)((w >> 16) & 0x7FFF); e->data = (i32)((w & 0xFFFF) | ((w >> 32) & 255) << 16 | ((w >> 40) & 3) << 24 | ((w >> 42) & 31) << 26); return; }
   e->key = ~hh; e->move = 0; e->data = 0;
 }
 /* (2026-11-11) gStop, threadId, the busy marks and the split points of Young Brothers Wait are Praline's, the site's common
@@ -1015,7 +1017,7 @@ typedef i32 Move;   /* (a move is an int here) */
   i32 pvm[MAXPLY];   /* the line of the best move (its child's) */ \
   i16 lg[SP_MV];     /* the moves' place */
 #include "../shared/praline/praline.h"
-EXPORT(tt_clear) void tt_clear(void) { memset(ttm, 0, sizeof ttm); memset(busyT, 0, sizeof busyT); }
+EXPORT(tt_clear) void tt_clear(void) { memset(PL_TT, 0, sizeof PL_TT); memset(busyT, 0, sizeof busyT); }
 #else
 EXPORT(tt_clear) void tt_clear(void) { memset(tt, 0, sizeof tt); }
 #endif
@@ -1100,18 +1102,12 @@ static inline int timeUp(void) {
 }
 #ifdef MT
 static void store(int depth, double score, int flag, int move, int ply) {
-  u64 key = ttKey(), *bk = &ttm[((u32)hl & ((1u << TTM_BITS) - 1)) * 8];
-  int j = 0, q = 1 << 30; u64 old = 0;
-  for (int i = 0; i < 4; i++) {
-    u64 w = bk[2 * i + 1], kx = bk[2 * i];
-    if ((kx ^ w) == key && (w >> 63)) { j = i; old = w; break; }
-    int sc = !(w >> 63) ? -1000 : (int)((w >> 32) & 255) - (((w >> 42) & 31) != (u64)(ttAge & 31) ? 16 : 0);
-    if (sc < q) { q = sc; j = i; }
-  }
+  const u64 key = ttKey(); int hit; u64 *x = plttSlot(key, (u32)hl, &hit);
+  const u64 old = hit ? x[1] : 0;
   if (score > MATE - MAXPLY) score += ply; else if (score < -MATE + MAXPLY) score -= ply;
   if (!move && old) move = (int)((old >> 16) & 0x7FFF);
   u64 w = (u64)((i32)score & 0xffff) | (u64)(move & 0x7FFF) << 16 | (u64)(depth & 255) << 32 | (u64)(flag & 3) << 40 | (u64)(ttAge & 31) << 42 | 1ull << 63;
-  bk[2 * j + 1] = w; bk[2 * j] = key ^ w;
+  plttWrite(x, key, w, 0);
 }
 /* (2026-11-10, after the Mac bench-all-2: the time to the same depth only x2.3 with 14 threads; morris/MODEL_CARD.md
    「マルチスレッドの見直し その2」) busy marks (praline.h's busyOther / busySet / busyClear on ttKey()), from remaining depth
