@@ -407,8 +407,8 @@ class Table3D {
     this.tiles.set(id, g);
     return g;
   }
-  // a picture of one tile as the table draws it (ユーザー 2026-11-14: the dora in the box are the 3D tiles): face up, seen a
-  // little from below so the purple back shows under it; back = the tile face down. Drawn once by a small renderer of its own
+  // a picture of one tile as the table draws it (ユーザー 2026-11-14: the dora in the box are the 3D tiles): seen straight on
+  // (orthographic); back = the tile face down. Drawn once by a small renderer of its own
   // with a light from the front, and kept (data URL).
   tileShot(id, back) {
     const key = back ? 'back' : (id >> 2) + (id === 16 || id === 52 || id === 88 ? 'r' : '');
@@ -421,7 +421,7 @@ class Table3D {
       const sc = this.shotS = new THREE.Scene();
       sc.add(new THREE.HemisphereLight(0xffffff, 0x404060, .75));
       const k = new THREE.DirectionalLight(0xffffff, .75); k.position.set(-2, 3, 6); sc.add(k);
-      const cam = this.shotC = new THREE.PerspectiveCamera(16, 132 / 172, 1, 50); cam.position.set(0, -.95, 5.5); cam.lookAt(0, -0.06, 0);
+      const cam = this.shotC = new THREE.OrthographicCamera(-.62, .62, .81, -.81, .1, 20); cam.position.set(0, 0, 6); cam.lookAt(0, 0, 0);   // (ユーザー 2026-11-14: straight on, no perspective — the tiles stand in a straight row)
       this.shotG = new THREE.Group(); sc.add(this.shotG);
     }
     const G = this.shotG; while (G.children.length) G.remove(G.children[0]);
