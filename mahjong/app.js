@@ -536,8 +536,14 @@ function layoutRiver(s, anim) {
   // my own discard: the hand pinches the very tile of my hand row (the page's tile: its place and size on the screen → a pose
   // in front of the camera that covers it) and takes it out to the river
   let lx = 0;
-  if (anim && s === ME && riv.length) { try { const el = document.querySelector(`#hand .tl[data-id="${riv[riv.length - 1].id}"]`), st = $('#stage').getBoundingClientRect();
-    if (el && st.width && !document.documentElement.classList.contains('lp')) { const r = el.getBoundingClientRect(); lx = TB.screenPose(r.left + r.width / 2 - st.left, r.top + r.height / 2 - st.top, r.width); } } catch (e) {} }
+  // (the tile's place is read from the layout — offsets up to #game — not from the screen: on a phone held upright the whole
+  // game is turned 90°, where screen rectangles are turned too. 2026-11-14: with that case left out the hand came from the
+  // table's edge instead, which is what a phone or a narrow window showed)
+  if (anim && s === ME && riv.length) { try {
+    const el = document.querySelector(`#hand .tl[data-id="${riv[riv.length - 1].id}"]`), root = $('#game');
+    const off = e => { let x = 0, y = 0; for (let n = e; n && n !== root; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; } return [x, y]; };
+    if (el && root.contains(el)) { const [ex, ey] = off(el), [sx, sy] = off($('#stage')); lx = TB.screenPose(ex + el.offsetWidth / 2 - sx, ey + el.offsetHeight / 2 - sy, el.offsetWidth); }
+  } catch (e) {} }
   TB.layoutRiver(s, riv, anim, lx);
 }
 function firstVisibleAfter(p) {   // riichi tile was called: the next visible tile is turned instead
