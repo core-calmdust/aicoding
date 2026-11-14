@@ -1103,7 +1103,7 @@ html.lp .ps-grid,html.lp .ps-chs > div{grid-template-columns:repeat(2,1fr)}
 
 /* god rays (ユーザー 2026-11-14): very faint shafts of light falling in from the top left, over the table, under the HUD, with
    specks of dust glinting in them (two layers twinkling out of step) */
-#game .rays{position:absolute;inset:0;pointer-events:none;z-index:1;mix-blend-mode:screen;
+#game .rays{position:absolute;inset:0;pointer-events:none;z-index:1;will-change:opacity;contain:strict;
   background:conic-gradient(from 104deg at -8% -14%,transparent 0deg,rgba(255,238,205,.11) 4deg,transparent 9deg,transparent 12deg,rgba(255,238,205,.075) 15deg,transparent 19deg,transparent 23deg,rgba(255,238,205,.12) 28deg,transparent 34deg,transparent 39deg,rgba(255,238,205,.065) 42deg,transparent 46deg,rgba(255,238,205,.09) 51deg,transparent 57deg,transparent 360deg);
   -webkit-mask-image:radial-gradient(ellipse 95% 85% at 0% 0%,#000 0%,rgba(0,0,0,.55) 45%,transparent 88%);mask-image:radial-gradient(ellipse 95% 85% at 0% 0%,#000 0%,rgba(0,0,0,.55) 45%,transparent 88%);
   animation:raysBreathe 9s ease-in-out infinite alternate}
