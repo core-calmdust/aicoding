@@ -1,6 +1,6 @@
 # 上海（麻雀牌のひとり遊び）仕様 — 大百科の3D専用（atlas/#games/shanghai）
 
-2026-11-13 BETA公開。2Dページなし（ペグソリテールと同じ3D専用フォーマット、`only3d`）。大百科のカテゴリはパズル（cat: puzzle、定番タグ）。テーマ色 #1f6a4c（翡翠）。
+2026-11-13 BETA公開→2026-11-14 正式リリース（BETA 表記を外した）。2Dページなし（ペグソリテールと同じ3D専用フォーマット、`only3d`）。大百科のカテゴリはパズル（cat: puzzle、定番タグ）。テーマ色 #1f6a4c（翡翠）。
 
 ## ルール（atlas/games/shanghai-core.js、DOMなし・node でも動く）
 - 取れる牌：上に何も載っておらず、左か右の少なくとも片方が空いている牌。同じ絵柄の2枚を取る。花（梅蘭菊竹）は花どうし、季節（春夏秋冬）は季節どうしなら絵柄が違っても組になる。
@@ -32,7 +32,7 @@
 - 保存：'aicoding-shanghai' { settings, free: { 配置: { best, n, date } }, st: { s: 星 }, bt: { s: 秒 } }。大百科の進み具合は st の数（total pz 120）。
 
 ## 大百科・トップページ
-- shared/atlas.js（GAMES：beta・only3d、READ.shanghai）、atlas/lazy.js（G：core・i18n・model・game、rules はまだ false）、i18n.js（about／hist）、gamelist-i18n.js、gamelist.js（SHOTS）、app.js（R3）、icons3d.js（ICONS.shanghai：フェルトの角に牌の山と持ち上がる「中」）、images/atlas/shanghai.webp、images/shanghai.webp（ダイニング卓のプレイ画面）、atlas/shots/shanghai.webp、images/icons/shanghai.svg、index.html（key shh）。
+- shared/atlas.js（GAMES：only3d（beta は 2026-11-14 に外した）、READ.shanghai）、atlas/lazy.js（G：core・i18n・model・game、rules はまだ false）、i18n.js（about／hist）、gamelist-i18n.js、gamelist.js（SHOTS）、app.js（R3）、icons3d.js（ICONS.shanghai：フェルトの角に牌の山と持ち上がる「中」）、images/atlas/shanghai.webp、images/shanghai.webp（ダイニング卓のプレイ画面）、atlas/shots/shanghai.webp、images/icons/shanghai.svg、index.html（key shh）。
 - 文言は atlas/games/shanghai-i18n.js（14言語）。
 
 ## まだのこと
