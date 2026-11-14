@@ -46,3 +46,9 @@ URL: https://core-calmdust.github.io/aicoding/checkers/ ／ 旧版 checker.html 
 - パズル：atlas/puzzles.js `BOOK.checkers`（今日の一問は checkers/app.js dailyPick と同じ選び方）。レッスン・定跡：atlas/lessons3d.js `CHECKERS`。3D盤の印・矢印・ソルバー呼び出しは atlas/games/checkers.js の `ctx.pz`。
 - 3D盤にはマス番号がないので、ガイドの台詞では手を「緑の矢印の手／赤い矢印の手」（日本語以外は色の点）で示す。番号の入った準備ステップの文と定跡の紹介は atlas/nocoord/checkers.json（14言語）。
 - フル版／2D版を開くときは `?mode=puzzle|lesson|rated|online&sub=…`（checkers/app.js `AtlasDeep`）。
+
+## 3D盤と3D駒（2026-11-14）
+- 盤6種（`atlas-checkers-look`、Table3D.BOARDS.checkers）：黒漆（既定）・大理石と真鍮・寄木細工・金箔押しの革・アールデコ・ラピスラズリ。駒6種（`atlas-checkers-pc3`、Table3D.PIECES.checkers）：金と銀（既定）・黒檀と象牙・白黒の大理石・クリスタル・朱と黒の漆・ベークライト。すべて atlas/models/checkers.js。飾りは盤の縁（帯）だけで、マスには模様を入れない。
+- 選び方：大百科の盤パネル、フル版3D表示の新規対局「デザイン」タブ（「3D盤」「3D駒」の列、amazons と同じ）。2D盤を選ぶと 2D 表示に戻る。
+- 文言：テキストの「黒／白」（フル版のルール・レッスン・パズル・手番表示、大百科のレッスン・パズル）と、大百科ルール紹介の「金／銀」は、表示中の3D駒の色名に置き換える（`Table3D.checkers.recolor(html, lang, set, 'bw'|'metal')`、14言語の語形・冠詞・助詞を扱う）。フル版のミニ盤（miniSVG）の駒も3D駒の色。2D表示では元の黒／白のまま。
+- 画像：盤アイコン `atlas/img/boardic-checkers-<盤>.webp`（tools/boardicon.html）、盤サムネ `board-checkers-<盤>.webp`（tools/boards.html）、駒 `pc3-checkers-<駒>.webp`（tools/ckpiece.html）。

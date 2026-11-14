@@ -617,6 +617,7 @@
     function turn() { show(more.shift()); apply(); }
     function say(html) {
       html = String(html || '').replace(/[ \u00a0]*\u0001/g, '').replace(/\u0002[ \u00a0]*/g, '');   // (ja mark phrases: SP)
+      if (id === 'checkers' && window.Table3D && Table3D.checkers && Table3D.checkers.recolor) html = Table3D.checkers.recolor(html, ctx.lang);   // (黒 / 白 → the chosen set's colours, 2026-11-14)
       html = voice(String(html || '').replace(/<p[^>]*>/g, '').replace(/<\/p>\s*/g, '<br>').replace(/(<br>\s*)+$/, ''));   // (the chess texts come as <p> paragraphs)
       if (!greeted && X.hi && html !== X.loading) { greeted = true; html = X.hi + '<br>' + html; }
       const P = pages(html); more = P.slice(1); show(P[0]); apply();

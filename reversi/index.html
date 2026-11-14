@@ -5921,7 +5921,7 @@ accRender();
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
   // three.js r186 trial (2026-11-13): ?three=186 loads the new version (+ the r128 compatibility layer); otherwise r128 as before
   const T186 = !/[?&]three=128\b/.test(location.search);   // (r186 by default since 2026-11-13; ?three=128 = the old version)
-  (T186 ? load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15')) : (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15')))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=164')).then(() => load('../atlas/tables3d.js?v=107')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/skin/reversi.js?v=23l15'))
+  (T186 ? load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15')) : (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15')))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=168')).then(() => load('../atlas/tables3d.js?v=118')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/skin/reversi.js?v=23l15'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

@@ -76,7 +76,7 @@
 @keyframes ckT{from{transform:translate(-50%,8px);opacity:0}}`;
     document.head.appendChild(s);
   }
-  const DK = ['background:radial-gradient(circle at 35% 30%,#fff1c2,#e8b64e 45%,#8a6418);box-shadow:inset 0 0 0 1px rgba(110,80,20,.4)', 'background:radial-gradient(circle at 35% 30%,#fff,#d6d9de 45%,#7c8189);box-shadow:inset 0 0 0 1px rgba(80,86,96,.4)'];
+  const DK = c => { const C = window.Table3D && Table3D.checkers; return 'background:' + (C ? C.swatch(c) : c === 1 ? 'radial-gradient(circle at 35% 30%,#fff1c2,#e8b64e 45%,#8a6418)' : 'radial-gradient(circle at 35% 30%,#fff,#d6d9de 45%,#7c8189)') + ';box-shadow:inset 0 0 0 1px rgba(0,0,0,.3)'; };   // the chosen set's two colours (2026-11-14)
 
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, X = TX[ctx.lang] || TX.en;
@@ -89,7 +89,7 @@
     let human = PZ ? (PZ.me === 2 ? 2 : 1) : pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human;   // colours: 1 Black (moves first, gold), 2 White (silver)
     let flip = human === 1;                                             // the player's colour at the bottom (pvp: Black)
     let startSpec = PZ ? PZ.spec || null : null;                        // a puzzle / lesson start position ({ b: 32 chars, side }; null = the usual start)
-    const pname = c => X.n[c - 1];
+    const pname = c => T3.checkers && T3.checkers.recolor ? T3.checkers.recolor(X.n[c - 1], ctx.lang) : X.n[c - 1];   // (黒 / 白 → the chosen set's colours)
     let E = null;
     // square (0..31) ↔ board: x = column left → right, y = row far → near
     const scr = i => { const [r, c] = E.RC[i]; return flip ? [7 - c, 7 - r] : [c, r]; };
@@ -118,7 +118,7 @@
     /* ---------- pieces ---------- */
     let pcs = {};   // square → { g, k }
     function mk(kind, sq) {
-      const g = U.piece(colOf(kind) === 1 ? 'g' : 'w', isKing(kind), { reflect: true });
+      const g = U.piece(colOf(kind) === 1 ? 'g' : 'w', isKing(kind), { reflect: U.mirror });
       const sh = T3.contact(.36, .55); sh.position.y = .002; g.add(sh); g.userData.sh = sh;
       g.userData.rf = g.children.find(o => o.userData && o.userData.reflection) || null;
       const [x, z] = xz(sq); g.position.set(x, Y, z); board.add(g); return g;
@@ -202,7 +202,8 @@
     function refresh() { const r = E.replay(startSpec, moves); pos = r.pos; hashes = r.hashes; }
     function status() { const st = E.judge(pos, hashes); if (!st.over) st.legal = pos.moves(); return st; }
     function hud(msg) {
-      const side = c => `<span class="hs ${pos && pos.turn === c && !over ? 'on' : ''}"><i class="dk" style="${DK[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${pos ? pos.count(c) : 12}</b></span>`;
+      hud.last = msg;
+      const side = c => `<span class="hs ${pos && pos.turn === c && !over ? 'on' : ''}"><i class="dk" style="${DK(c)}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${pos ? pos.count(c) : 12}</b></span>`;
       ctx.hud(`${side(1)}<span class="hm">${msg || ''}</span>${side(2)}`);
     }
     function toast(msg) {
@@ -342,6 +343,9 @@
       deselect();
     }
     ctx.el.addEventListener('click', onClick);
+    // the board view's 駒 row (Table3D.PIECES) during a game: the checkers on the board are rebuilt in the new set at once
+    const onPcs = e => { if (!stopped && pos && e.detail && e.detail.id === 'checkers') { rebuild(); hud(hud.last); } };
+    addEventListener('atlas-pieces', onPcs);
 
     /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-14): a position from the puzzles / lessons, no AI; the caller judges each move
        (ctx.pz.moved(m, info)) and plays the replies (api.pz.play). The solver and the evaluation come from the game's worker, asked as
@@ -496,7 +500,7 @@
       stop() {
         stopped = true; jid++;
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
-        ctx.el.removeEventListener('click', onClick);
+        ctx.el.removeEventListener('click', onClick); removeEventListener('atlas-pieces', onPcs);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null; if (pzW) pzW.terminate(); pzW = null;
         pzClear(); Object.values(pzMat).forEach(m => m.dispose());
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
