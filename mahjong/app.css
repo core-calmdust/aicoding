@@ -160,6 +160,13 @@ svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 .tl:not(.back)::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background:linear-gradient(166deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 34%,rgba(120,108,84,0) 62%,rgba(120,108,84,.07) 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1.5px 0 rgba(128,112,82,.42),inset 0 -3px 2px rgba(128,112,82,.12),inset 1px 0 0 rgba(255,255,255,.5),inset -1px 0 0 rgba(128,112,82,.14)}
+/* dora (2026-11-14): a soft gold edge and a band of gold light that crosses the tile now and then, a small star at the corner */
+.tl.dora::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;
+  background:radial-gradient(circle at 80% 16%,rgba(255,236,160,.95) 0,rgba(255,214,110,.5) 5%,transparent 11%),linear-gradient(112deg,transparent 42%,rgba(255,214,110,.5) 49%,rgba(255,240,180,.62) 51%,transparent 58%);
+  background-size:100% 100%,320% 100%;background-position:0 0,130% 0;background-repeat:no-repeat;
+  box-shadow:inset 0 0 0 calc(var(--tw)*.028) rgba(255,196,70,.78),inset 0 0 calc(var(--tw)*.1) rgba(255,190,60,.4);
+  animation:doraGlint 3.3s ease-in-out infinite}
+@keyframes doraGlint{0%{background-position:0 0,130% 0;background-size:0% 0%,320% 100%}6%{background-size:100% 100%,320% 100%}27%{background-position:0 0,-30% 0;background-size:100% 100%,320% 100%}34%,100%{background-position:0 0,-30% 0;background-size:0% 0%,320% 100%}}
 .tl.back{background:radial-gradient(120% 80% at 30% 20%,rgba(220,200,250,.18),transparent 55%),linear-gradient(135deg,transparent 40%,rgba(220,205,245,.12) 46%,transparent 52%),linear-gradient(160deg,#66408f,#55337f 55%,#5f3a8c);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35),0 3px 0 #fafaf6,0 5px 8px rgba(0,0,0,.3)}   /* (pale polished lavender stone, as the 3D tile backs, 2026-11-14) */
 .tl.xs{--tw:22px;box-shadow:0 2px 0 #5a3787,0 3px 5px rgba(0,0,0,.3);margin:0}
 .tl.sm{--tw:34px;box-shadow:0 3px 0 #5a3787,0 4px 8px rgba(0,0,0,.3);margin:0}
