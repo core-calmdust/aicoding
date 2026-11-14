@@ -1632,14 +1632,11 @@ html.ds #game #opp2{--bf:clamp(44px, calc(var(--GH) * .062), 58px)}
 /* (ユーザー 2026-11-15) a locked character is her outline only: black on a lit violet ground, the full art edged in light */
 .chi.lock .frame,.sib.lock .frame,.frame.fr-lock{background:radial-gradient(circle at 50% 38%,#8a74c8,#3a2d5e 62%,#1c1530)!important}
 :is(#home,#chara) .aa-ch.lock img{filter:brightness(0) drop-shadow(0 0 1.5px rgba(214,196,255,.95)) drop-shadow(0 0 22px rgba(150,110,255,.55))!important;opacity:1!important;animation:none!important}
-/* (ユーザー 2026-11-15) the character list's SR / SSR / UR rings turn again (the light running round the box); only a transform
-   of one layer per card, the badges at the table and the sisters' row stay still */
-.chi .frame{overflow:hidden}
-.chi .frame::before{inset:-60%;border-radius:0;will-change:transform}
-.chi .fr-SR::before{animation:spinr 5s linear infinite}
-.chi .fr-SSR::before{animation:spinr 3.2s linear infinite}
-.chi .fr-UR::before{animation:spinr 2s linear infinite}
-html.lite .chi .frame::before{animation:none!important}
+/* (ユーザー 2026-11-15) the character list's SR / SSR / UR rings turn again (the light running round the box), as on the big
+   portraits: the frame's own conic background turned by --ra (ringSpin). The badges at the table and the sisters' row stay still. */
+#chList .chi .fr-SR{animation:ringSpin 4s linear infinite}
+#chList .chi .fr-SSR{animation:ringSpin 2.6s linear infinite}
+#chList .chi .fr-UR{animation:ringSpin 1.8s linear infinite}
 /* the UR mark in the list: its rainbow text sat on the dark pill as clear text (invisible) — white with a rainbow glow instead */
 .chi em.r-UR{-webkit-text-fill-color:#fff;color:#fff;background:rgba(10,6,22,.85);text-shadow:0 0 5px #ff6bd0,0 0 3px #6bc8ff}
 /* (ユーザー 2026-11-15) the action buttons (リーチ・ロン・ツモ・ポン・チー・カン・パス) and the riichi banner on a portrait in the
