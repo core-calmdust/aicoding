@@ -899,12 +899,12 @@ html.ds #game .rd .tl.xs{--tw:clamp(30px, calc(var(--GH) * .05), 42px);box-shado
 html.ds .khelp{left:calc(max(10px,var(--sl)) + 262px)}
 
 /* ================= PC: pull the UI in from the window edges ================= */
-html.ds{--ui:clamp(22px, calc(var(--SW, 1280px) * .028), 56px)}
+html.ds{--pad:clamp(22px, calc(var(--SW, 1280px) * .028), 56px)}
 html.ds #game{--gi:clamp(20px, calc(var(--GW) * .028), 60px)}
 /* home / character screens: wider margins, room above the big portraits for their effects */
-html.ds .top{padding:18px var(--ui) 10px}
-html.ds .hmain{padding:30px var(--ui) 26px;gap:30px}
-html.ds .ch-main{padding:30px var(--ui) 26px;gap:26px}
+html.ds .top{padding:18px var(--pad) 10px}
+html.ds .hmain{padding:30px var(--pad) 26px;gap:30px}
+html.ds .ch-main{padding:30px var(--pad) 26px;gap:26px}
 /* game HUD */
 html.ds #game .rbox{top:var(--gi);left:var(--gi)}
 html.ds #game .tbtns{top:var(--gi);right:var(--gi)}
@@ -1340,3 +1340,26 @@ html.lp #chara.ch2 .ch-info{justify-content:flex-start}
    smaller, inside it (ユーザー 2026-11-14) */
 .modal.stage .mbox{--gw:min(var(--W),calc(var(--H) * 2.4));--gh:min(var(--H),calc(var(--W) / 1.36));inset:auto;left:calc((var(--W) - var(--gw)) / 2);top:calc((var(--H) - var(--gh)) / 2);width:var(--gw);height:var(--gh)}
 .agst > .nx,.mvst > .nx{min-width:13cqw;font-size:max(13px,calc(var(--u)*2.5));padding:calc(var(--u)*1.1) 1.6cqw;bottom:calc(var(--u)*3)}
+/* the gold buttons in Mincho; the Next of the end-of-hand stages dressed like the title's start button: a slanted gold plate with a
+   thin inner line, wide-spaced Mincho and a slow shine (ユーザー 2026-11-14: the old one looked cheap) */
+.btn.gold{font-family:var(--serif);letter-spacing:.14em}
+.agst > .nx,.mvst > .nx{position:absolute;overflow:hidden;border-radius:0;clip-path:polygon(7% 0,100% 0,93% 100%,0 100%);
+  background:linear-gradient(180deg,#fff3cf 0%,#f0d79a 38%,#c99a48 62%,#a9772c 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+  font-family:var(--serif);font-weight:800;letter-spacing:.45em;text-indent:.45em;color:#2b1904;text-shadow:0 1px 0 rgba(255,246,220,.6);
+  padding:calc(var(--u)*1.3) 2.2cqw}
+.agst > .nx::before,.mvst > .nx::before{content:"";position:absolute;inset:calc(var(--u)*.55) 5.5%;border-top:1px solid rgba(90,56,12,.45);border-bottom:1px solid rgba(90,56,12,.45);transform:skewX(-14deg);pointer-events:none}
+.agst > .nx::after,.mvst > .nx::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%) no-repeat;background-size:250% 100%;background-position:160% 0;animation:aaShine2 4.5s ease-in-out 1s infinite;pointer-events:none}
+.agst > .nx:active,.mvst > .nx:active{transform:translateY(2px);filter:brightness(.95)}
+html.lite .agst > .nx::after,html.lite .mvst > .nx::after{animation:none}
+/* the game's type (ユーザー 2026-11-14: review the fonts): names, scores, the skill's name and the call buttons in the same Mincho as the
+   titles and the score cards; only the small print (descriptions, key hints) stays in the gothic, for legibility */
+#game .bt b,#game .bt .sc,.mv-n b,.mv-d,.skb b,#acts button,#game .rbox b{font-family:var(--serif)}
+#game .bt .sc,.mv-d{font-weight:800;letter-spacing:.02em}
+.agst > .nx,.mvst > .nx{font-size:max(15px,calc(var(--u)*2.9))}
+/* the names: proud rather than cute (ユーザー 2026-11-14: princesses of their nations staking their pride) — Cinzel capitals for the
+   Latin names, the heavy Mincho for the kanji, spaced out a little */
+#game .bt b,.mv-n b{font-family:'Cinzel',var(--serif);font-weight:800;letter-spacing:.1em}
+.mv-n b small{font-family:var(--serif);letter-spacing:0}
+.agst > .nx,.mvst > .nx{font-family:'Cinzel',var(--serif)}
+html:not([lang=ja]) :is(.agst,.mvst) > .nx{letter-spacing:.22em;text-indent:.22em}
