@@ -107,7 +107,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .ar .agf{width:26px;height:26px;margin:-6px -6px -6px 6px;vertical-align:middle}
 .shmap .sh .gfl{display:flex;align-items:center;gap:8px;margin-top:8px;padding:4px 12px 4px 4px;border-radius:14px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-weight:800;color:#ffe7a0;font-size:15.5px}.shmap .sh .gfl img{width:44px;height:44px;flex:none}.shmap .sh .gfl.got{opacity:.7}
 .shmap .sh .rs{color:#ffd76a;letter-spacing:1px}.shmap .sh .rb{color:#9fe8ff;font-weight:800;margin-inline-start:6px}
-.shmap .sh .recs{margin-top:10px}.shmap .sh .recs .rs{margin-inline-start:2px}
+.shmap .sh .recs{margin-top:10px;font-size:16.5px}.shmap .sh .recs .rs{margin-inline-start:2px}
 .shmap .sh .rw{display:inline-block;margin-top:2px;font-weight:800;color:#ffd76a}
 .shmap .ars{position:relative;display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}.shmap .ars::-webkit-scrollbar{display:none}
 .shmap .ar{flex:none;font:inherit;font-size:15px;font-weight:700;padding:9px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#dfe3ff;cursor:pointer;white-space:nowrap}
@@ -128,16 +128,24 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .nd.lk{opacity:.4;cursor:default}
 .shmap .nd .sr{position:absolute;top:100%;left:50%;transform:translateX(-50%);font-size:13px;letter-spacing:-1px;color:#ffd76a;white-space:nowrap;margin-top:3px;text-shadow:0 1px 3px #000}
 @keyframes shpulse{0%{box-shadow:0 0 0 0 rgba(159,232,255,.7)}70%{box-shadow:0 0 0 16px rgba(159,232,255,0)}100%{box-shadow:0 0 0 0 rgba(159,232,255,0)}}
-.shmap .sh{position:relative;margin:0 auto calc(14px + env(safe-area-inset-bottom));width:min(94vw,640px);background:rgba(16,20,52,.92);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:16px 18px;display:flex;gap:14px;align-items:center;backdrop-filter:blur(6px)}
+.shmap .sh{position:relative;margin:0 auto calc(14px + env(safe-area-inset-bottom));width:min(94vw,860px);background:rgba(16,20,52,.92);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:16px 18px;display:flex;gap:14px;align-items:center;backdrop-filter:blur(6px)}
 .shmap .sh .tx{flex:1;min-width:0}
-.shmap .sh h3{margin:0 0 4px;font-size:20px}.shmap .sh .mi{font-size:18px;font-weight:800;color:#ffe7a0;line-height:1.35}
-.shmap .sh .sub{font-size:15px;opacity:.8;margin-top:4px;line-height:1.45}
-.shmap .sh .go{flex:none;font:inherit;font-weight:900;font-size:19px;padding:16px 22px;border-radius:16px;border:0;background:#ffd76a;color:#241a05;cursor:pointer;white-space:nowrap}
+.shmap .sh .art{flex:none;position:relative;width:220px;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:16px;background:radial-gradient(ellipse at 50% 40%,rgba(90,110,220,.28),rgba(10,12,40,.2) 70%);border:1px solid rgba(255,255,255,.08);padding:6px 4px 8px}
+.shmap .sh .art svg{width:100%;height:auto;overflow:visible}.shmap .sh .art b{font-size:15px;font-weight:900;color:#c9d6ff;letter-spacing:.06em;margin-top:2px}
+.shmap .sh .art .cl{stroke:rgba(200,215,255,.35);stroke-width:.5;stroke-dasharray:1.4 1.2}.shmap .sh .art .cl.on{stroke:#ffd76a;stroke-dasharray:none;stroke-width:.7}
+.shmap .sh .art .cst{fill:rgba(220,230,255,.55)}.shmap .sh .art .cst.on{fill:#ffe9a8}
+.shmap .sh .art .cpk{fill:rgba(255,215,106,.18);stroke:#fff;stroke-width:.6;animation:shpk 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes shpk{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:.6}}
+.shmap .sh .ly{display:flex;align-items:center;gap:8px;margin:2px 0 6px;font-size:16px;font-weight:800;color:#dfe6ff}.shmap .sh .ly .lm{width:46px;height:30px;flex:none}.shmap .sh .ly em{font-style:normal;opacity:.65;font-size:14px}
+.shmap .nd.pk{outline:3px solid #fff;outline-offset:3px}
+.shmap .sh h3{margin:0 0 2px;font-size:24px}.shmap .sh .mi{font-size:21px;font-weight:800;color:#ffe7a0;line-height:1.35}
+.shmap .sh .sub{font-size:16.5px;opacity:.8;margin-top:4px;line-height:1.45}
+.shmap .sh .go{flex:none;font:inherit;font-weight:900;font-size:22px;padding:20px 28px;border-radius:16px;border:0;background:#ffd76a;color:#241a05;cursor:pointer;white-space:nowrap}
 .shmap .sh .go:disabled{opacity:.4;cursor:default}
 .shmap .nav{position:absolute;z-index:3;top:50%;transform:translateY(-50%);font:inherit;font-size:26px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 .shmap .nav.l{left:8px}.shmap .nav.r{right:8px}.shmap .nav:disabled{opacity:.2}
 @media (max-width:600px){.shmap .hd{padding:calc(8px + env(safe-area-inset-top)) 12px 6px}.shmap .hd h2{font-size:19px}.shmap .hd .tot{font-size:15px}.shmap .x{width:40px;height:40px;font-size:19px}.shmap .ars{padding:2px 12px 8px;gap:6px}.shmap .ar{font-size:14px;padding:7px 12px}.shmap .gift{margin:0 12px 6px;padding:2px 12px 2px 2px}.shmap .nd .sr{font-size:11px;margin-top:1px}
-.shmap .sh{width:calc(100vw - 20px);margin-bottom:calc(10px + env(safe-area-inset-bottom));padding:12px 14px;gap:8px;border-radius:18px}.shmap .sh h3{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shmap .sh .mi{font-size:16px}.shmap .sh .sub{font-size:13.5px;margin-top:2px;line-height:1.4}.shmap .sh .go{padding:12px 16px;font-size:17px}.shmap .gift{font-size:14px}.shmap .gift img{width:30px;height:30px}.shmap .sh .gfl{margin-top:6px;font-size:14.5px}.shmap .sh .gfl img{width:36px;height:36px}.shmap .sh{flex-direction:column;align-items:stretch}.shmap .sh .go{width:100%}.shmap .nav{display:none}.shmap .cst{width:100%}}
+.shmap .sh{width:calc(100vw - 20px);margin-bottom:calc(10px + env(safe-area-inset-bottom));padding:12px 14px;gap:8px;border-radius:18px}.shmap .sh h3{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shmap .sh .mi{font-size:16px}.shmap .sh .sub{font-size:13.5px;margin-top:2px;line-height:1.4}.shmap .sh .go{padding:12px 16px;font-size:17px}.shmap .gift{font-size:14px}.shmap .gift img{width:30px;height:30px}.shmap .sh .gfl{margin-top:6px;font-size:14.5px}.shmap .sh .gfl img{width:36px;height:36px}.shmap .sh{display:grid;grid-template-columns:96px 1fr;gap:8px 10px;align-items:start}.shmap .sh .art{width:auto;padding:4px 2px 6px;border-radius:12px}.shmap .sh .art b{font-size:11.5px}.shmap .sh .ly{font-size:14px;margin:0 0 4px}.shmap .sh .ly .lm{width:34px;height:22px}.shmap .sh .ly em{font-size:12.5px}.shmap .sh .recs{font-size:13.5px;margin-top:6px}.shmap .sh .go{grid-column:1/-1;width:100%}.shmap .nav{display:none}.shmap .cst{width:100%}}
 `;
     document.head.appendChild(s);
   }
@@ -773,12 +781,14 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       let h = '';
       AR.forEach((a, i) => PTS[i].forEach(([x, y], k) => {
         const s = i * 10 + k, ok = cleared(P, s), ul = unlocked(P, s), sr = P.st[s] || 0, t = Reward.at(s);
-        h += `<button type="button" class="nd${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / WW * 100}%;top:${y / PH * 100}%${s === pick ? ';outline:3px solid #fff;outline-offset:3px' : ''}" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${t ? `<i class="gft">${Reward.has(t) ? '✓' : '🎁'}</i>` : ''}</button>` +
+        h += `<button type="button" class="nd${s === pick ? ' pk' : ''}${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${t ? `<i class="gft">${Reward.has(t) ? '✓' : '🎁'}</i>` : ''}</button>` +
           (t ? `<img class="gf${Reward.has(t) ? ' got' : ''}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" src="../images/atlas/av/peacock-${t}.webp" alt="">` : '');
       }));
       wld.querySelectorAll('.nd,.gf').forEach(n => n.remove());
       wld.insertAdjacentHTML('beforeend', h);
     }
+    // (2026-11-14) picking a stage only moves the ring and refills the box below: nothing else is rebuilt (no hitch)
+    function mark() { wld.querySelectorAll('.nd.pk').forEach(b => b.classList.remove('pk')); const b = wld.querySelector(`.nd[data-s="${pick}"]`); if (b) b.classList.add('pk'); }
     function head() {
       const tot = Object.values(P.st).reduce((a, v) => a + v, 0);
       $('h2').textContent = TX('st.title', lang); $('.tot').textContent = '★ ' + tot + ' / 360';
@@ -792,11 +802,29 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       const it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? it.name[lang] || it.name.en : 'Peacotile', got = Reward.has(t);
       return `<div class="gfl${got ? ' got' : ''}"><img src="../images/atlas/av/peacock-${t}.webp" alt=""><span>${got ? '✓ ' : '🎁 '}${esc(TX(got ? 'rw.have' : 'rw.here', lang, { name: nm }))}</span></div>`;
     }
+    // the box below the sky: the constellation's picture with this stage's star ringed · the stage, its mission, the record · スタート
+    // (2026-11-14, ユーザー: 画像をうまく組み込んで綺麗に見やすく、PCは文字も大きく; a pick refills it without re-laying the map)
+    function conArt(a, k) {
+      const S = CON[AR[a]], fs = a * 10, done = Array.from({ length: 10 }, (_, j) => cleared(P, fs + j)).filter(Boolean).length;
+      let v = `<svg viewBox="-4 -1 108 66" aria-hidden="true"><g class="fig${done === 10 ? ' lit' : ''}">${window.ShanghaiZodiac ? ShanghaiZodiac(AR[a], a) : ''}</g>`;
+      edges(AR[a]).forEach(([i, j]) => { const L = cleared(P, fs + i) && cleared(P, fs + j); v += `<line class="cl${L ? ' on' : ''}" x1="${S.p[i][0]}" y1="${S.p[i][1]}" x2="${S.p[j][0]}" y2="${S.p[j][1]}"/>`; });
+      S.p.forEach(([x, y], j) => { v += j === k ? `<circle class="cpk" cx="${x}" cy="${y}" r="5.4"/><circle class="cst on" cx="${x}" cy="${y}" r="2.6"/>` : `<circle class="cst${cleared(P, fs + j) ? ' on' : ''}" cx="${x}" cy="${y}" r="1.7"/>`; });
+      return v + '</svg>';
+    }
+    function layMini(lay) {   // the board seen from above: its tiles, the upper layers lighter
+      const L = K.LAYOUTS[lay], xs = L.map(p => p[0]), ys = L.map(p => p[1]), x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0 + 2, h = Math.max(...ys) - y0 + 2;
+      const o = L.slice().sort((p, q) => p[2] - q[2]).map(([x, y, zz]) => `<rect x="${(x - x0 - zz * .25).toFixed(2)}" y="${((y - y0) * 1.25 - zz * .3).toFixed(2)}" width="1.86" height="2.4" rx=".3" fill="hsl(40,${30 + zz * 8}%,${70 + zz * 6}%)" stroke="rgba(40,30,10,.55)" stroke-width=".12"/>`).join('');
+      return `<svg class="lm" viewBox="-1.2 -1.4 ${w + 1.4} ${h * 1.25 + 1.6}" aria-hidden="true">${o}</svg>`;
+    }
     function sheet() {
-      const s = pick, st = K.stage(s), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s];
-      $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + '' : esc(TX('st.lock', lang))}<div class="recs"><div>${esc(TX('rec', lang))}${sr ? `<span class="rs">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` + (bt != null ? ` <span class="rb">${esc(TX('r.best', lang, { t: mmss(bt) }))}</span>` : '') : '<span class="rb">—</span>'}</div><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span></div>${giftLine(s)}</div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
-      $('.go').onclick = () => { if (!ul) return; close(); o.play(s); };
-      requestAnimationFrame(onFit);
+      const s = pick, st = K.stage(s), a = Math.floor(s / 10), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s], box = $('.sh'), h0 = box.offsetHeight;
+      box.innerHTML = `<div class="art">${conArt(a, s % 10)}<b>${esc(TX('ar.' + AR[a], lang))}</b></div>` +
+        `<div class="tx"><h3>${esc(stageName(s, lang))}</h3><div class="ly">${layMini(st.lay)}<span>${esc(TX('lay.' + st.lay, lang))}</span><em>${esc(TX('tiles', lang, { n: st.n }))}</em></div>` +
+        `<div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) : esc(TX('st.lock', lang))}</div>` +
+        `<div class="recs"><div>${esc(TX('rec', lang))}${sr ? `<span class="rs">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` + (bt != null ? ` <span class="rb">${esc(TX('r.best', lang, { t: mmss(bt) }))}</span>` : '') : '<span class="rb">—</span>'}</div><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span></div>${giftLine(s)}</div>` +
+        `<button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
+      box.querySelector('.go').onclick = () => { if (!ul) return; close(); o.play(s); };
+      if (box.offsetHeight !== h0) requestAnimationFrame(onFit);   // (only when the box changed its height: the sky above is fitted again)
     }
     /* ---------- drag to travel, flick to glide, pinch / wheel to zoom; a tap (no drag) picks a stage ---------- */
     const pts = new Map(); let moved = 0, lastX = 0, lastY = 0, vx = 0, lt = 0, pinch = null, glide = 0;
@@ -828,7 +856,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     el.addEventListener('click', e => {
       const a = e.target.closest('[data-a]'); if (a) { go(+a.dataset.a); return; }
       const zb = e.target.closest('[data-z]'); if (zb) { zoomAt(+zb.dataset.z > 0 ? 1.3 : 1 / 1.3); return; }
-      const n = e.target.closest('.nd'); if (n) { if (moved > 6) return; pick = +n.dataset.s; nodes(); sheet(); return; }
+      const n = e.target.closest('.nd'); if (n) { if (moved > 6) return; pick = +n.dataset.s; mark(); sheet(); return; }
       if (e.target.closest('.nav.l')) go(area - 1); else if (e.target.closest('.nav.r')) go(area + 1);
     });
     head(); wld.innerHTML = art(); tabs(); nodes(); sheet();
