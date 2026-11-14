@@ -2219,16 +2219,16 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=15"><\/script>');
 else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
 <script src="texgen.js?v=2"></script>
-<script src="npc/roster.js?v=7"></script>
+<script src="npc/roster.js?v=8"></script>
 <script src="art.js?v=13"></script>
-<script src="../shared/atlas.js?v=20261114sh1"></script>
+<script src="../shared/atlas.js?v=20261114pg2"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
-<script src="i18n/v.js?v=73sh"></script>
+<script src="i18n/v.js?v=75pg"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=73sh', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=75pg', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -2262,7 +2262,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=220"></script>
+<script src="lazy.js?v=221"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=26"></script>
 <script src="lessons3d.js?v=34"></script>
@@ -2277,9 +2277,9 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=37"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=35"></script>
-<script src="npc/npc.js?v=33"></script>
+<script src="npc/npc.js?v=34"></script>
 <script src="avtalk.js?v=3"></script>
-<script src="app.js?v=355"></script>
+<script src="app.js?v=356"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>

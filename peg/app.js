@@ -259,7 +259,7 @@ function onUp(e) {
 let worker = null, jid = 0;
 function solveAsync(a, target) {
   return new Promise(res => {
-    try { if (!worker) worker = new Worker('engine.js?v=1'); } catch (e) { worker = null; }
+    try { if (!worker) worker = new Worker('engine.js?v=2'); } catch (e) { worker = null; }
     if (!worker) { res(E.findPath(G.B, a, { target, time: 3000 })); return; }
     const id = ++jid; const on = e => { if (e.data.id !== id) return; worker.removeEventListener('message', on); res(e.data); };
     worker.addEventListener('message', on); worker.postMessage({ id, board: G.board, pegs: a, target, time: 6000 });

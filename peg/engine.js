@@ -45,6 +45,32 @@ function finish(B) {
   B.byTo = B.cells.map(() => []); B.jumps.forEach((j, k) => B.byTo[j[2]].push(k));
   return B;
 }
+// the pyramid (2026-11-14): marbles stacked as a square pyramid — layer L is (n−L)×(n−L), each marble of a layer sitting over the
+// gap between four of the layer below. A cell is [r, c, L]; its place on the board x = c + L/2, y = r + L/2, height L.
+// Jumps run along the straight lines of the stack: in a layer as on the square boards, and slantwise between layers (up and
+// down: over a marble of the next layer onto the one after). No rule of support: every place is a cup on a glass post.
+function pyrBoard(id, n) {
+  const cells = [], at = {};
+  for (let L = 0; L < n; L++) for (let r = 0; r < n - L; r++) for (let c = 0; c < n - L; c++) { at[r + ',' + c + ',' + L] = cells.length; cells.push([r, c, L]); }
+  const pos = cells.map(([r, c, L]) => [c + L / 2, r + L / 2]);
+  // in a layer: the rows and the columns; between layers: the four slants up and the four down
+  const dirs = [[0, 1, 0], [1, 0, 0], [0, -1, 0], [-1, 0, 0]];   // ([dr, dc, dL])
+  for (const dr of [0, -1]) for (const dc of [0, -1]) dirs.push([dr, dc, 1]);
+  for (const dr of [0, 1]) for (const dc of [0, 1]) dirs.push([dr, dc, -1]);
+  const B = { id, cells, at, pos, dirs, w: n, h: n, tri: true, pyr: true, layers: n, z: cells.map(c => c[2]), n: cells.length, jumps: [] };
+  cells.forEach(([r, c, L], i) => { for (const [dr, dc, dl] of dirs) { const o = at[(r + dr) + ',' + (c + dc) + ',' + (L + dl)], t = at[(r + 2 * dr) + ',' + (c + 2 * dc) + ',' + (L + 2 * dl)]; if (o !== undefined && t !== undefined) B.jumps.push([i, o, t]); } });
+  // the 8 symmetries of the square, layer by layer about the stack's axis
+  const T8 = [(y, x) => [y, x], (y, x) => [x, -y], (y, x) => [-y, -x], (y, x) => [-x, y], (y, x) => [y, -x], (y, x) => [-y, x], (y, x) => [x, y], (y, x) => [-x, -y]];
+  B.syms = T8.map(f => cells.map(([r, c, L]) => { const m = (n - L - 1) / 2, [y, x] = f(r - m, c - m); return at[(y + m) + ',' + (x + m) + ',' + L]; }));
+  // the middle: the axis of the stack (a little weight on height, so the solver works from the outside in and from the top down)
+  const m0 = (n - 1) / 2;
+  B.dist = cells.map(([r, c, L]) => Math.hypot(c + L / 2 - m0, r + L / 2 - m0) + (n - 1 - L) * .35);
+  B.center = cells.length - 1;
+  B.jumps.sort((a, b) => (B.dist[a[2]] - B.dist[a[0]]) - (B.dist[b[2]] - B.dist[b[0]]));
+  B.byTo = cells.map(() => []); B.jumps.forEach((j, k) => B.byTo[j[2]].push(k));
+  B.nbr = cells.map(([r, c, L]) => dirs.map(([dr, dc, dl]) => at[(r + dr) + ',' + (c + dc) + ',' + (L + dl)]).filter(x => x !== undefined));
+  return B;
+}
 const BOARDS = {
   // English (33): the cross with arms 3 wide — the standard game: the middle empty, finish with one peg in the middle
   english: sqBoard('english', ['..ooo..', '..ooo..', 'ooooooo', 'ooooooo', 'ooooooo', '..ooo..', '..ooo..']),
@@ -56,13 +82,16 @@ const BOARDS = {
   diamond: sqBoard('diamond', ['....o....', '...ooo...', '..ooooo..', '.ooooooo.', 'ooooooooo', '.ooooooo.', '..ooooo..', '...ooo...', '....o....']),
   // Wiegleb's German board (45): the cross with arms 3 wide and 3 long on a 9×9
   german: sqBoard('german', ['...ooo...', '...ooo...', '...ooo...', 'ooooooooo', 'ooooooooo', 'ooooooooo', '...ooo...', '...ooo...', '...ooo...']),
+  // the pyramid (3D only): 4 layers, 16 + 9 + 4 + 1 = 30 (3 layers can't be cleared below 4 marbles)
+  pyramid: pyrBoard('pyramid', 4),
 };
 const IDS = ['english', 'french', 'triangle', 'diamond', 'german'];
 // each board's classic start (the empty hole) and the hole of the finish that counts as perfect
 // (the position classes: on the French and diamond boards no hole can be both the start and the finish, and the
 // diamond's middle has no one-peg finish at all — checked by the "rule of three" colourings and the solver)
-const START = { english: 'center', french: [1, 3], triangle: [0, 0], diamond: [2, 4], german: 'center' };
-const GOAL = { english: 'center', french: [5, 3], triangle: [0, 0], diamond: [6, 4], german: 'center' };
+const START = { english: 'center', french: [1, 3], triangle: [0, 0], diamond: [2, 4], german: 'center', pyramid: [0, 0, 1] };
+const GOAL = { english: 'center', french: [5, 3], triangle: [0, 0], diamond: [6, 4], german: 'center', pyramid: [0, 2, 1] };
+// (the pyramid: a corner of the 2nd layer empty → one marble left on the next corner of that layer; checked by the solver)
 
 // ---------------------------------------------------------------- positions
 // a position: { lo, hi } bitset. helpers on plain arrays of 0/1 for the UI
@@ -72,10 +101,10 @@ function arr(B, p) { const a = new Array(B.n); for (let i = 0; i < B.n; i++) a[i
 const key = p => p.lo + p.hi * W32;
 function count(p) { let c = 0, x = p.lo; while (x) { x &= x - 1; c++; } x = p.hi; while (x) { x &= x - 1; c++; } return c; }
 function startPos(B, hole) {
-  const h = hole === undefined || hole === 'center' ? B.center : Array.isArray(hole) ? B.at[hole[0] + ',' + hole[1]] : hole;
+  const h = hole === undefined || hole === 'center' ? B.center : Array.isArray(hole) ? B.at[hole.join(',')] : hole;
   const a = new Array(B.n).fill(1); a[h] = 0; return a;
 }
-const holeOf = (B, s) => s === 'center' ? B.center : B.at[s[0] + ',' + s[1]];
+const holeOf = (B, s) => s === 'center' ? B.center : typeof s === 'number' ? s : B.at[s.join(',')];
 function startHole(id) { return holeOf(BOARDS[id], START[id]); }
 function goalHole(id) { return holeOf(BOARDS[id], GOAL[id]); }
 // the "rule of three": colour the holes by (r + c) mod 3 and (r − c) mod 3; every jump takes one peg off each colour and
@@ -179,7 +208,7 @@ function goodMoves(B, a, opt) {
   return { moves: ms, good };
 }
 // a move as text: the board's own letters (columns a… from the left, rows 1… from the top), e.g. "d2-d4"
-function sq(B, i) { const [r, c] = B.cells[i]; return String.fromCharCode(97 + c) + (r + 1); }
+function sq(B, i) { const [r, c, L] = B.cells[i]; return String.fromCharCode(97 + c) + (r + 1) + (B.pyr ? '·' + (L + 1) : ''); }
 function moveText(B, j) { return sq(B, j[0]) + '-' + sq(B, j[2]); }
 
 const API = { BOARDS, IDS, START, GOAL, make, has, arr, key, count, startPos, startHole, goalHole, moves, apply, canon, sig, canEnd, solve, beam, findPath, goodMoves, sq, moveText };
