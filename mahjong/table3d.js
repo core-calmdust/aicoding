@@ -220,7 +220,7 @@ function brocadeTex(base) {
 // octagonal guls on the red field with small branch motifs between, a border of stepped motifs between dark bands. Low in
 // contrast, and lit only a little: it is barely there in the dark room, just enough to read. 2048 px over the whole rug.
 function rugTex() {
-  const S = 2048, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+  const S = 2048, c = document.createElement('canvas'); c.width = c.height = S / 2; const g = c.getContext('2d'); g.scale(.5, .5);   // (drawn at half size: it lies dim and far — 2026-11-14, optimisation)
   let sd = 21; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
   const red = '#5c171b', red2 = '#4a1215', dark = 'rgba(28,6,8,.92)', dark2 = 'rgba(28,6,8,.6)';
   g.fillStyle = red; g.fillRect(0, 0, S, S);
@@ -334,7 +334,7 @@ function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcT
 class Table3D {
   constructor(host) {
     this.host = host;
-    const r = this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+    const r = this.renderer = new THREE.WebGLRenderer({ antialias: (window.devicePixelRatio || 1) < 1.5, alpha: true, powerPreference: 'high-performance' });   // (2026-11-14, optimisation: a high-density screen is already sharp — no multisampling on top; and the faster GPU when there are two)
     const mobile = matchMedia('(pointer: coarse)').matches;
     this.mobile = mobile;
     r.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5)); this.prMax = mobile ? 1.25 : 1.5; this.dyn = 1;
@@ -476,14 +476,14 @@ class Table3D {
     // shared tile geometry/materials
     // the tiles (2026-11-14, as 上海's): rounded white blocks with a purple back — corners and edges rounded, the face
     // carved (normal map from tiles.js). One shared geometry for the white part and one for the back.
-    { const tg = tileGeos(W, H, D, 0.16, 0.15, 0.28, 0.15), tb = tileGeos(W, H, D, 0.16, 0.05, 0.28, 0.05); this.geoFront = tg.front; this.geoBack = tb.back; }   // (ユーザー 2026-11-14: the face keeps its full round edge; the purple back has the crisper edge of the tiles in the dora box — the two meet on the straight side, same outline)   // (one rounded block, split where the white meets the purple)
+    { const tg = tileGeos(W, H, D, 0.16, 0.1, 0.28, 0.1), tb = tileGeos(W, H, D, 0.16, 0.05, 0.28, 0.05); this.geoFront = tg.front; this.geoBack = tb.back; }   // (ユーザー 2026-11-14: the face keeps its full round edge; the purple back has the crisper edge of the tiles in the dora box — the two meet on the straight side, same outline)   // (one rounded block, split where the white meets the purple)
     this.matIvory = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xe6e5df).convertSRGBToLinear(), roughness: .38, metalness: 0 });
     // the back (2026-11-14, ユーザー：紫をもう少し淡く、高級石を磨いたような質感): a pale lavender stone with soft veins, polished
     // (a clear coat over it, a little studio light reflected in it) — four cuts of the same slab so neighbours don't match
     this.envTex = this.envTex || studioEnv();
     const stone = stoneTex();
     this.matBacks = [0, 1, 2, 3].map(k => { const t = stone.clone(); t.needsUpdate = true; t.offset.set(k * .27, k * .41);
-      return new THREE.MeshPhysicalMaterial({ map: t, roughness: .3, metalness: 0, ior: 2.1, clearcoat: .8, clearcoatRoughness: .32, envMap: this.envTex, envMapIntensity: 1 }); });   // (2026-11-14, ユーザー: a little more sheen — stone polished by hand, not a gloss coat: a denser stone (ior 2.1: it gives back about three times the light of the plain 1.5) under a soft coat, both rough enough that the room shows as a broad glow, never as a mirror image)
+      return new THREE.MeshStandardMaterial({ map: t, roughness: .26, metalness: 0, envMap: this.envTex, envMapIntensity: 1.35 }); });   // (2026-11-14, optimisation: the same polished look without the clear-coat layer — the light it reflected is put into a smoother, brighter-reflecting surface)   // (2026-11-14, ユーザー: a little more sheen — stone polished by hand, not a gloss coat: a denser stone (ior 2.1: it gives back about three times the light of the plain 1.5) under a soft coat, both rough enough that the room shows as a broad glow, never as a mirror image)
     this.matBack = this.matBacks[0];
     this.matHi = new THREE.MeshStandardMaterial({ color: 0xfff1b8, roughness: .35, emissive: 0x6a5208, emissiveIntensity: .45 });
     this.setInfo({ round: 0, kyoku: 0, honba: 0, kyotaku: 0, left: 70, scores: [25000, 25000, 25000, 25000], dealer: 0, turn: -1 });
@@ -505,14 +505,10 @@ class Table3D {
   tile(id) {
     let g = this.tiles.get(id);
     if (g) return g;
-    g = new THREE.Group();
-    const fm = this.faceMat(id);
-    const front = new THREE.Mesh(this.geoFront, [fm.normal, this.matIvory]);   // (group 0: the face cap, 1: the rest)
-    const back = new THREE.Mesh(this.geoBack, this.matBacks[id % 4]);
-    front.castShadow = back.castShadow = true; front.receiveShadow = true;
-    g.add(front, back);
+    g = new THREE.Group();   // (an empty frame: the tile itself is drawn by the instanced meshes, _inst / _syncInst)
+    this._inst();
     g.rotation.order = 'YXZ';
-    g.userData = { id, front, fm };
+    g.userData = { id, look: 'normal' };
     g.visible = false;
     this.scene.add(g);
     this.tiles.set(id, g);
@@ -553,8 +549,83 @@ class Table3D {
     return url;
   }
   setTileLook(g, look) {
-    const fm = g.userData.fm;
-    g.userData.front.material[0] = look === 'hi' ? fm.hi : look === 'dim' ? fm.dim : fm.normal;
+    if (g.userData.look !== look) { g.userData.look = look; this.dirty = true; }
+    const so = g.userData.solo; if (so) { const fm = this.faceMat(g.userData.id); so[0].material[0] = look === 'hi' ? fm.hi : look === 'dim' ? fm.dim : fm.normal; }
+  }
+  // ---- the tiles in three draws (2026-11-14, optimisation — ユーザー: as light as it can be): every tile on the table is one
+  // instance of three InstancedMeshes — the faces (all the pictures in one atlas, each instance pointing at its cell), the white
+  // body and the purple back (four cuts of the stone, an offset per instance). Before each frame the tiles' frames (the groups
+  // the rest of the code moves) are copied in. ~180 draw calls (and as many again for the shadows) become 3.
+  _atlas() {
+    if (this.A && (this.A.sheets || !MJTiles.sheets())) return this.A;
+    const FW = MJTiles.FW, FH = MJTiles.FH, pad = 8, cw = FW + pad * 2, ch = FH + pad * 2, cols = 8, rows = 5;
+    const mk = () => { const c = document.createElement('canvas'); c.width = cols * cw; c.height = rows * ch; return c; };
+    const cv = mk(), cn = MJTiles.sheets() ? mk() : null, g = cv.getContext('2d'), gn = cn && cn.getContext('2d');
+    const cells = {}; let k = 0;
+    const put = (gg, src, x, y) => { gg.drawImage(src, x - pad, y - pad, FW + pad * 2, FH + pad * 2); gg.drawImage(src, x, y, FW, FH); };   // (the picture's edge stretched into the padding: no bleeding from the neighbours)
+    for (let t = 0; t < 34; t++) for (const red of t === 4 || t === 13 || t === 22 ? [false, true] : [false]) {
+      const col = k % cols, row = (k / cols) | 0, x = col * cw + pad, y = row * ch + pad;
+      put(g, MJTiles.canvas(t, red), x, y); if (gn) put(gn, MJTiles.normal(t, red), x, y);
+      cells[t + (red ? 'r' : '')] = [col, rows - 1 - row]; k++; }
+    const tex = c => { const t = new THREE.CanvasTexture(c); t.anisotropy = 8; return t; };
+    const map = tex(cv); map.encoding = THREE.sRGBEncoding;
+    const A = { map, nrm: cn ? tex(cn) : null, cells, sheets: !!cn, cell: new THREE.Vector4(cw / cv.width, ch / cv.height, FW / cv.width, FH / cv.height), pad: new THREE.Vector2(pad / cv.width, pad / cv.height) };
+    if (this.A && this.I) { const m = this.I.face.material; m.map = A.map; m.normalMap = A.nrm; m.needsUpdate = true; }
+    return (this.A = A);
+  }
+  _inst() {
+    if (this.I) return this.I;
+    const N = 136, F = this.geoFront, nf = F.groups[0].count, A = this._atlas();
+    const sub = (geo, st, n) => { const o = new THREE.BufferGeometry(); for (const k of ['position', 'normal', 'uv']) { const a = geo.attributes[k]; o.setAttribute(k, new THREE.BufferAttribute(a.array.slice(st * a.itemSize, (st + n) * a.itemSize), a.itemSize)); } return o; };
+    const gFace = sub(F, 0, nf), gBody = sub(F, nf, F.groups[1].count), gBack = this.geoBack.clone();
+    const aCell = new THREE.InstancedBufferAttribute(new Float32Array(N * 3), 3); aCell.setUsage(THREE.DynamicDrawUsage); gFace.setAttribute('aCell', aCell);
+    const aOff = new THREE.InstancedBufferAttribute(new Float32Array(N * 2), 2); aOff.setUsage(THREE.DynamicDrawUsage); gBack.setAttribute('aOff', aOff);
+    const faceMat = new THREE.MeshStandardMaterial({ map: A.map, normalMap: A.nrm, roughness: .38, color: 0xe4e2dc });
+    faceMat.onBeforeCompile = sh => {
+      sh.uniforms.uCell = { value: this.A.cell }; sh.uniforms.uPad = { value: this.A.pad };
+      sh.vertexShader = 'attribute vec3 aCell;\nvarying vec3 vCell;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vCell = aCell;');
+      sh.fragmentShader = 'uniform vec4 uCell; uniform vec2 uPad; varying vec3 vCell;\nvec2 atlasUV(vec2 u){ return vCell.xy * uCell.xy + uPad + clamp(u, 0., 1.) * uCell.zw; }\n' + sh.fragmentShader
+        .replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment.split('vMapUv').join('atlasUV(vMapUv)'))   // (the chunks are opened here: their texture reads go through the atlas)
+        .replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.split('vNormalMapUv').join('atlasUV(vNormalMapUv)'))
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += vec3(1., .66, .15) * .28 * vCell.z;');   // (a highlighted tile: a soft gold glow)
+    };
+    const backMat = this.matBacks[0].clone(); backMat.map = this.matBacks[0].map;
+    backMat.onBeforeCompile = sh => {
+      sh.vertexShader = 'attribute vec2 aOff;\nvarying vec2 vOff;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vOff = aOff;');
+      sh.fragmentShader = 'varying vec2 vOff;\n' + sh.fragmentShader.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment.split('vMapUv').join('(vMapUv + vOff)'));
+    };
+    const mk = (geo, mat, recv) => { const m = new THREE.InstancedMesh(geo, mat, N); m.count = 0; m.frustumCulled = false; m.castShadow = true; m.receiveShadow = recv; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); this.scene.add(m); return m; };
+    const face = mk(gFace, faceMat, true), body = mk(gBody, this.matIvory, true), back = mk(gBack, backMat, false);
+    face.setColorAt(0, new THREE.Color(1, 1, 1)); face.instanceColor.setUsage(THREE.DynamicDrawUsage);
+    return (this.I = { face, body, back, aCell, aOff, N });
+  }
+  _syncInst() {
+    const I = this.I; if (!I) return;
+    const A = this._atlas(), dimC = new THREE.Color(.68, .68, .68), one = new THREE.Color(1, 1, 1);
+    let n = 0;
+    for (const g of this.tiles.values()) {
+      if (!g.visible) continue;
+      g.updateMatrix();
+      I.face.setMatrixAt(n, g.matrix); I.body.setMatrixAt(n, g.matrix); I.back.setMatrixAt(n, g.matrix);
+      const id = g.userData.id, t = id >> 2, red = id === 16 || id === 52 || id === 88, c = A.cells[t + (red ? 'r' : '')], look = g.userData.look;
+      I.aCell.setXYZ(n, c[0], c[1], look === 'hi' ? 1 : 0); I.face.setColorAt(n, look === 'dim' ? dimC : one);
+      I.aOff.setXY(n, (id % 4) * .27, (id % 4) * .41);
+      if (++n >= I.N) break;
+    }
+    for (const m of [I.face, I.body, I.back]) { m.count = n; m.instanceMatrix.needsUpdate = true; }
+    I.aCell.needsUpdate = true; I.aOff.needsUpdate = true; I.face.instanceColor.needsUpdate = true;
+  }
+  // the player's own discard is also drawn over the page (layer 1): for that moment the tile gets real meshes of its own, on layer 1 only
+  _solo(g, on) {
+    if (on) {
+      if (!g.userData.solo) { const fm = this.faceMat(g.userData.id), lk = g.userData.look;
+        const f = new THREE.Mesh(this.geoFront, [lk === 'hi' ? fm.hi : lk === 'dim' ? fm.dim : fm.normal, this.matIvory]), b = new THREE.Mesh(this.geoBack, this.matBacks[g.userData.id % 4]);
+        g.add(f, b); g.userData.solo = [f, b]; }
+      g.traverse(o => o.layers.enable(1)); for (const m of g.userData.solo) m.layers.set(1);
+    } else {
+      g.traverse(o => o.layers.disable(1));
+      if (g.userData.solo) { for (const m of g.userData.solo) g.remove(m); g.userData.solo = null; }
+    }
   }
 
   // local (lx right of seat, lz toward seat) -> world
@@ -706,7 +777,7 @@ class Table3D {
     this._drop(g, seat);
     g.visible = true; g.position.set(f.x, f.y, f.z); g.rotation.set(f.rx, f.ry, f.rz); g.userData.target = to;
     const out = this.local(seat, 0, 3.4), r = { x: f.x + out.x, y: f.y + 2.6, z: f.z + out.z };   // from behind and above the tile
-    if (f.page) { g.traverse(o => o.layers.enable(1)); rig.traverse(o => o.layers.enable(1)); this._ov = { g, rig }; }   // (the tile of the page's hand row: drawn over the page too)
+    if (f.page) { this._solo(g, true); rig.traverse(o => o.layers.enable(1)); this._ov = { g, rig }; }   // (the tile of the page's hand row: drawn over the page too)
     this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(r.x, r.y, r.z);
     // (the first frame of the overlay uploads its textures and builds its shaders: draw it once before the clock starts, or
     // that pause would eat the movement — it is timed, not counted in frames. The player's own discard is also a little slower, to be seen.)
@@ -806,7 +877,7 @@ class Table3D {
     this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 240, then: () => this.tween(g, to, 420, from, seat, landed) });
     this.dirty = true;
   }
-  hideAll() { if (this.sorting) for (const S of this.sorting) if (S) clearTimeout(S.timer); this.sorting = []; for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this._ov) { this._ov.g.traverse(o => o.layers.disable(1)); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
+  hideAll() { if (this.sorting) for (const S of this.sorting) if (S) clearTimeout(S.timer); this.sorting = []; for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this._ov) { this._solo(this._ov.g, false); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
 
   layoutRiver(seat, river, animLast, fromLx) {   // fromLx: where the player's own discard stood — a pose from screenPose() (the tile of the page's hand row), or a place along the near edge
     // (ユーザー 2026-11-14: the far seat's discards looked stuck to each other — a little air between the tiles. The row is
@@ -1102,6 +1173,7 @@ class Table3D {
     if (!this.dirty || document.hidden) return;
     this.dirty = false;
     if (moved || this._ov) this.renderer.shadowMap.needsUpdate = true;
+    this._syncInst();
     this._doraSync();
     // the player's own discard: the hand and the tile are also drawn over the page (the hand row is HTML, above the table's
     // canvas). A second, small renderer on a canvas over the page draws only those two (layer 1) with the same camera and lights.
@@ -1110,7 +1182,7 @@ class Table3D {
     if (this._ov) {
       const R2 = this._over2(), O = this._ov;
       this.camera.layers.set(1); R2.render(this.scene, this.camera); this.camera.layers.set(0);
-      if (!O.rig.visible && !this.tweens.some(t => t.g === O.g) && !this.handFx.some(h => h.rig === O.rig)) { R2.clear(); O.g.traverse(o => o.layers.disable(1)); O.rig.traverse(o => o.layers.disable(1)); this._ov = null; }
+      if (!O.rig.visible && !this.tweens.some(t => t.g === O.g) && !this.handFx.some(h => h.rig === O.rig)) { R2.clear(); this._solo(O.g, false); O.rig.traverse(o => o.layers.disable(1)); this._ov = null; }
     }
     this.renderer.render(this.scene, this.camera);
     // frame pacing while things move (consecutive frames only): slow → a lower drawing ratio, quick again → back up

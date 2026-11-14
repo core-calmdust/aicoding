@@ -274,7 +274,7 @@ function isDora(id) { try { if (id === 16 || id === 52 || id === 88) return true
 function tileHTML(id, cls = '', extra = '') {
   const red = id === 16 || id === 52 || id === 88;
   const dr = isDora(id); if (dr) cls += ' dora';
-  return `<span class="tl ${cls}" data-id="${id}" ${extra}><img src="${MJTiles.url(T(id), red)}" alt="" draggable="false">${dr ? '<i class="dg"></i>' : ''}</span>`;
+  return `<span class="tl ${cls}" data-id="${id}" ${extra}><img src="${MJTiles.url(T(id), red)}" alt="" draggable="false">${dr ? '<i class="dg"><b></b></i>' : ''}</span>`;
 }
 function typeHTML(type, cls = '') { return `<span class="tl ${cls}"><img src="${MJTiles.url(type, false)}" alt="" draggable="false"></span>`; }
 function backHTML(cls = '') { return `<span class="tl back ${cls}"></span>`; }
