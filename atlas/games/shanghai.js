@@ -235,6 +235,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     const kick = ms => { if (T3.kick) T3.kick(ms || 150); };
     const anim = (dur, f, done) => { const a0 = performance.now(); (function s(now) { if (stopped) return; const k = Math.min(1, Math.max(0, (now - a0) / dur)); f(k); kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(a0); };
     const left = () => alive.reduce((s, v) => s + v, 0);
+    const UNDO_PEN = 3;   // an undo costs time too: +3 s (a time-limit stage: 3 s less left — the same pen) (ユーザー 2026-11-14)
     const SHUF_PEN = 10;   // a shuffle costs time: +10 s on the clock each (ユーザー 2026-11-14). It stays even if the shuffle is undone.
     const elapsed = () => t0 ? ((tEnd || performance.now()) - t0) / 1000 + pen : 0;
 
@@ -247,6 +248,58 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     const shI = P.map((p, i) => p[2] > 0 ? i : -1).filter(i => i >= 0), shOf = {}; shI.forEach((i, k) => { shOf[i] = k; });
     const shm = M3.shades(Math.max(1, shI.length)); if (!shI.length) shm.count = 0; g.add(shm);   // (the soft shade each upper tile throws on the ones below)
     const pos = P.map(([x, y, z]) => [(x / 2 + .5) * TW - W / 2, base + z * THh, (y / 2 + .5) * TD - D / 2]);
+
+    /* ---------- the golden tiles shine (ユーザー 2026-11-14「きんきらきんに光ってる感じ」): a warm halo round the tile, a sheen that
+       sweeps across its face now and then, and little stars that twinkle at its corners. Only while gold tiles remain: a light
+       ~30 fps loop that kicks the renderer, stopped when the last one is taken or the game ends. ---------- */
+    const goldFx = (() => {
+      if (!gold.size) return null;
+      if (im.userData.setGold) gold.forEach(i => im.userData.setGold(i, 1));   // (the tile itself in polished gold: models/shanghai.js aGold)
+      im.geometry.computeBoundingBox(); const top = im.geometry.boundingBox.max.y;
+      const ctex = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new TH3.CanvasTexture(c); t.colorSpace = TH3.SRGBColorSpace; return t; };
+      const haloT = ctex(128, 160, (c, w, h) => { const gr = c.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w * .62); gr.addColorStop(0, 'rgba(255,214,90,.95)'); gr.addColorStop(.45, 'rgba(255,190,50,.55)'); gr.addColorStop(1, 'rgba(255,170,30,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
+      const sheenT = ctex(256, 64, (c, w, h) => { const gr = c.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.42, 'rgba(255,240,190,0)'); gr.addColorStop(.5, 'rgba(255,255,240,.95)'); gr.addColorStop(.58, 'rgba(255,240,190,0)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
+      sheenT.wrapS = TH3.ClampToEdgeWrapping; sheenT.repeat.set(.34, 1);
+      const starT = ctex(64, 64, (c, w, h) => { c.translate(w / 2, h / 2); const gr = c.createRadialGradient(0, 0, 0, 0, 0, w / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.25, 'rgba(255,236,150,.8)'); gr.addColorStop(1, 'rgba(255,200,60,0)'); c.fillStyle = gr;
+        c.beginPath(); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, r = k % 2 ? 5 : 31; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.closePath(); c.fill(); c.beginPath(); c.arc(0, 0, 9, 0, 7); c.fill(); });
+      const add = { transparent: true, depthWrite: false, blending: TH3.AdditiveBlending, toneMapped: false };
+      const haloM = new TH3.MeshBasicMaterial({ map: haloT, ...add, opacity: .7 }), starM = new TH3.SpriteMaterial({ map: starT, ...add });
+      const planeH = new TH3.PlaneGeometry(TW * 1.75, TD * 1.6), planeS = new TH3.PlaneGeometry(TW * .9, TD * .9);
+      const grp = new TH3.Group(); g.add(grp);
+      const items = [...gold].map((i, k) => {
+        const halo = new TH3.Mesh(planeH, haloM); halo.rotation.x = -Math.PI / 2; halo.renderOrder = 2;
+        const sm = new TH3.MeshBasicMaterial({ map: sheenT.clone(), ...add, opacity: .8 }); sm.map.needsUpdate = true; sm.map.repeat.set(.5, 1);
+        sm.map.center.set(.5, .5); sm.map.rotation = .55;
+        const sheen = new TH3.Mesh(planeS, sm); sheen.rotation.x = -Math.PI / 2; sheen.renderOrder = 3;
+        const stars = [0, 1, 2].map(() => { const sp = new TH3.Sprite(starM.clone()); sp.renderOrder = 4; grp.add(sp); return sp; });
+        grp.add(halo, sheen);
+        return { i, halo, sheen, stars, ph: k * 1.37, sp: [0, 1, 2].map(j => ({ ph: Math.random() * 6, x: (Math.random() - .5) * TW * .9, z: (Math.random() - .5) * TD * .9 })) };
+      });
+      let raf = 0, last = 0;
+      function frame(now) {
+        raf = 0; if (stopped) return;
+        if (now - last >= 33) {
+          last = now; const t = now / 1000; let any = false;
+          items.forEach(o => {
+            const S = st8[o.i], on = alive[o.i] || S.fly, sc = on ? S.s : 0, [x, y, z] = pos[o.i];
+            const vis = sc > .05; o.halo.visible = false; o.sheen.visible = vis; o.stars.forEach(sp => { sp.visible = vis; });
+            if (alive[o.i] || S.fly) any = true; if (!vis) return;
+            const X = x + S.dx, Y = y + S.lift + S.dy, Z = z + S.dz;
+            o.halo.position.set(X, Y + .012, Z); o.halo.scale.setScalar(sc * (1 + .06 * Math.sin(t * 2.4 + o.ph))); o.halo.material.opacity = .55 + .2 * Math.sin(t * 2.4 + o.ph);
+            o.sheen.position.set(X, Y + top * sc + .004, Z); o.sheen.scale.setScalar(sc);
+            const cyc = ((t + o.ph) % 2.6) / 1.1;   // a sweep of ~1.1 s, then a rest
+            o.sheen.material.map.offset.x = cyc < 1 ? .9 - cyc * 1.4 : -1; o.sheen.visible = cyc < 1;
+            o.stars.forEach((sp, j) => { const q = o.sp[j], w = Math.max(0, Math.sin(t * 2.1 + q.ph)); sp.position.set(X + q.x, Y + top * sc + .1, Z + q.z); const k = .5 * w * w * sc; sp.scale.set(k, k, k); sp.material.rotation = t * .8 + q.ph;
+              if (w < .02) { q.x = (Math.random() - .5) * TW * .95; q.z = (Math.random() - .5) * TD * .95; } });
+          });
+          kick(80); if (!any) return;
+        }
+        raf = requestAnimationFrame(frame);
+      }
+      const go = () => { if (!raf && !stopped) raf = requestAnimationFrame(frame); };
+      go();
+      return { go, dispose() { cancelAnimationFrame(raf); raf = 0; items.forEach(o => { o.sheen.material.map.dispose(); o.sheen.material.dispose(); o.stars.forEach(sp => sp.material.dispose()); }); haloT.dispose(); sheenT.dispose(); starT.dispose(); haloM.dispose(); starM.dispose(); planeH.dispose(); planeS.dispose(); g.remove(grp); } };
+    })();
     const st8 = P.map(() => ({ lift: 0, s: 1, dx: 0, dz: 0, dy: 0, rz: 0 }));
     const o3 = new TH3.Object3D(), col = new TH3.Color();
     const o4 = new TH3.Object3D();
@@ -258,10 +311,9 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     function tint(i) {
       const fr = st8[i].fly || (alive[i] && K.isFree(G, alive, i));   // (a tile in the air keeps its bright face until it is gone)
       let r = 1, gg = 1, b = 1;
-      if (gold.has(i) && alive[i]) { r = 1.05; gg = .86; b = .46; }
       if (i === sel) { r *= 1.04; gg *= .93; b *= .66; }
       if (hintPair && hintPair.includes(i)) { r *= 1.05; gg *= .78; b *= .52; }
-      const k = fr ? 1 : .6;
+      const k = fr ? 1 : gold.has(i) && alive[i] ? .82 : .6;   // (a blocked gold tile still gleams)
       col.setRGB(r * k, gg * k, b * k); im.setColorAt(i, col);
     }
     function paintAll() { for (let i = 0; i < n; i++) { place(i); tint(i); } im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; kick(200); }
@@ -468,7 +520,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         title: tx('r.stage') + ' ' + '★'.repeat(stars) + '☆'.repeat(3 - stars), score: stageName(s, lang) + ' · ' + tx('r.time', { t: mmss(tt) }),
         best: tx('r.best', { t: mmss(B[s]) }) + ' · ' + '★'.repeat(S[s]) + (coin ? ' · ' + tx('rw.coin', { n: coin }) : ''),
         opp: stageName(s, lang), key: 'st' + s, why: tx('r.stage') + ' ' + stars + '★',
-        again: { label: tx('b.toMap'), go: restart => stageMap({ lang, play: p => restart(() => { AD.pending = p; AD.last = p; }) }) },   // (a cleared stage: マップへ instead of もう一局 — back to the course, ユーザー 2026-11-14)
+        again: { label: tx('b.toMap'), cls: 'sun', go: restart => stageMap({ lang, play: p => restart(() => { AD.pending = p; AD.last = p; }) }) },   // (a cleared stage: マップへ instead of もう一局 — back to the course, ユーザー 2026-11-14)
         next: nx != null ? { label: tx('b.next'), go: () => { AD.pending = nx; AD.last = nx; } } : null }), 800);
     }
     function fail(why) {
@@ -488,8 +540,9 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       undo() {
         if (!api.canUndo()) return; const h = hist.pop(); ply++; hintPair = null;
         if (sel >= 0) { st8[sel].lift = 0; sel = -1; }
-        if (h.t === 'p') { alive[h.a] = alive[h.b] = 1; [h.a, h.b].forEach(i => { const S = st8[i]; S.fly = 0; S.lift = 0; S.dx = S.dz = 0; S.rz = 0; S.s = 1; }); got--; if (gold.has(h.a)) goldGot--; if (gold.has(h.b)) goldGot--; }
+        if (h.t === 'p') { alive[h.a] = alive[h.b] = 1; [h.a, h.b].forEach(i => { const S = st8[i]; S.fly = 0; S.lift = 0; S.dx = S.dz = 0; S.rz = 0; S.s = 1; }); got--; if (gold.has(h.a)) goldGot--; if (gold.has(h.b)) goldGot--; if (goldFx) goldFx.go(); }
         else { face = h.face; faces(); }
+        pen += UNDO_PEN; toast(tx(ST && ST.limit ? 'msg.undoPenL' : 'msg.undoPen', { n: UNDO_PEN }), 1400);
         plan = null; paintAll(); hud(); turn(); SFX.tap();
       },
       canHint: () => !busy && !over && !(ST && ST.type === 'pure'),
@@ -513,6 +566,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         if (toastEl) toastEl.remove(); if (askEl) askEl.remove();
         ctx.el.removeEventListener('click', onClick);
         if (im.userData.dispose) im.userData.dispose(); if (shm.userData.dispose) shm.userData.dispose();
+        if (goldFx) goldFx.dispose();
         if (sky) { sky.geometry.dispose(); sky.material.map.dispose(); sky.material.dispose(); }
         removeEventListener('resize', onRs); (mqP.removeEventListener ? mqP.removeEventListener('change', onRs) : mqP.removeListener(onRs));
         lb.remove(); if (bvEl) { bvEl.classList.remove('land', 'shl', 'shb'); } document.documentElement.classList.remove('sh-land');
