@@ -127,12 +127,12 @@ const SND = (() => {
   // riichi and hands back at the end of the hand. Each is an <audio> element into the context, with a gain node for the crossfades;
   // the main track carries on from where it was, the riichi track starts from the top each time.
   // (the music's levels from its loudness, EBU R128: title −14.4 LUFS → ≈ −22, main −19 → ≈ −26 under the voices, riichi −12.3 → ≈ −24)
-  const TRK = { title: { file: 'bgm-title', vol: .42, restart: true }, main: { file: 'bgm-main', vol: .45, restart: false }, riichi: { file: 'bgm-riichi', vol: .26, restart: true },
+  const TRK = { title: { file: 'bgm-title', vol: .42, restart: true }, main: { file: 'bgm-main', vol: .45, restart: false }, main2: { file: 'bgm-main2', vol: .25, restart: false },   // (main2: −13.9 LUFS → ≈ −26) riichi: { file: 'bgm-riichi', vol: .26, restart: true },
     score: { file: 'bgm-score', vol: .38, restart: true } };   // (the results of a hand: −15.7 LUFS → ≈ −24)
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
   function mkctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return ac; }
-  function load() { if (loading) return; loading = true; const a = mkctx(); let i = 0; const music = ['title', 'main', 'score', 'riichi'];
+  function load() { if (loading) return; loading = true; const a = mkctx(); let i = 0; const music = ['title', 'main', 'main2', 'score', 'riichi'];
     const next = () => {
       if (i < NAMES.length) { const n = NAMES[i++];
         fetch(`${ASSETS}snd/${n}.mp3`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => a ? new Promise((ok, ng) => a.decodeAudioData(b, ok, ng)) : null)
@@ -149,7 +149,10 @@ const SND = (() => {
     try { const src = a.createMediaElementSource(B.el); B.g = a.createGain(); B.g.gain.value = 0; src.connect(B.g).connect(bgOut(a)); } catch (e) { B.g = null; } }
   function fade(B, to, sec) { const a = ac; if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(to, t + sec); } else if (B.el) B.el.volume = to; }
   let want = 'title';   // the track that should be playing (the title screen's to begin with) (kept while the sound is off, so it comes back when switched on)
+  // the game's music (ユーザー 2026-11-14): one of the two tracks, drawn at random for each game ('main' asks for this game's one)
+  let mainKey = 'main';
   function music(name) {
+    if (name === 'main') name = mainKey;
     want = name; const a = ctx(); if (!a) return;
     for (const k in TRK) { const B = TRK[k];
       if (k === name && on()) {
@@ -174,6 +177,7 @@ const SND = (() => {
     _trk: TRK,
     music,
     resume: () => music(want),
+    newGame() { mainKey = Math.random() < .5 ? 'main' : 'main2'; },
     // the window behind / in front again: the sound stops and comes back where it was
     gate(off) { const a = ac; if (!a) return;
       if (off) { if (a.state === 'running') a.suspend(); for (const k in TRK) if (TRK[k].el && TRK[k].on) TRK[k].el.pause(); }
@@ -828,7 +832,8 @@ class AutoMe extends SlowBot {     // ?auto: the player's seat plays itself (tes
 // auto-advance result screens in ?auto mode
 const AUTO = /[?&]auto/.test(location.search);
 
-async function startGame(opt = {}) {   // opt.ranked: a 段位戦 game, opt.len its length
+async function startGame(opt = {}) {
+  SND.newGame();   // opt.ranked: a 段位戦 game, opt.len its length
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
   if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = () => SND.tile(); TB.warm(); }
