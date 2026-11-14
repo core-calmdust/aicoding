@@ -179,6 +179,19 @@ static void terms(int La, int Lb, double kap, int kind) {
   } else { cc += sa; cc -= sb; }
   CS0 = (nA - nB) + kap * nT; CS1 = cc; CS2 = ww;
 }
+// ---- the evaluation's weights (2026-11-14, claude/amazons-spec.md「評価 v2」): EVM 0 = the classic set (exactly engine.js's
+// evalFor: the same constants in the same arithmetic), 1 = v2 (the king-distance terms t2 / c2 count more and the queen-distance
+// position term c1 less; tuned by self-play matches of the MCTS, tools/native_match.c). ev_set(k, v): k < 0 the set, else
+// parameter k of the set in use (tools); ev_reset: both sets back to their values.
+// EP: 0 W0 (w at which the board counts as open), 1 t1, 2 t1·e, 3 t2, 4 c1, 5 c2, 6 κ (the side to move's share of a tie)
+#define NEPS 7
+static const double EPC[2][NEPS] = { { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05 }, { 40, 1.0, 0, 0.85, 0.35, 0.6, 0.05 } };
+static double EPS[2][NEPS] = { { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05 }, { 40, 1.0, 0, 0.85, 0.35, 0.6, 0.05 } };
+static int EVM = 0;
+static const double *EP = EPS[0];
+__attribute__((export_name("ev_reset"))) void ev_reset(void) { for (int j = 0; j < 2; j++) for (int i = 0; i < NEPS; i++) EPS[j][i] = EPC[j][i]; }
+__attribute__((export_name("ev_set"))) void ev_set(int k, double v) { if (k < 0) { EVM = v > 0 ? 1 : 0; EP = EPS[EVM]; } else if (k < NEPS) EPS[EVM][k] = v; }
+__attribute__((export_name("ev_mode"))) int ev_mode(void) { return EVM; }
 // the value for `me` with `toMove` to move (evalFor in engine.js)
 __attribute__((export_name("ev"))) int ev(int me, int toMove) {
   init(); initBB(); evn++;
@@ -194,12 +207,12 @@ __attribute__((export_name("ev"))) int ev(int me, int toMove) {
 #endif
   BB E = { e0, e1 }, SA = Z0, SB = Z0;
   for (int k = 0; k < 8; k++) if (Q[k] >= 0) { if (k < 4) SA |= BIT[(int)Q[k]]; else SB |= BIT[(int)Q[k]]; }
-  double kap = toMove == 1 ? 0.05 : -0.05;
+  double kap = toMove == 1 ? EP[6] : -EP[6];
   props(E);
   int La = layersQ(SA, E, LA), Lb = layersQ(SB, E, LB);
   terms(La, Lb, kap, 0);
   double t1 = CS0, c1 = CS1, w = CS2, t2 = 0, c2 = 0;
-  double e = w > 40 ? 1 : w / 40;
+  double e = w > EP[0] ? 1 : w / EP[0];
   if (e > 0) {
     La = layersK(SA, E, LA); Lb = layersK(SB, E, LB);
     terms(La, Lb, kap, 1);
@@ -213,7 +226,7 @@ __attribute__((export_name("ev"))) int ev(int me, int toMove) {
     double pen = n == 0 ? 10 : n < 5 ? (5 - n) * 1.4 : 0;
     mob += (k < 4 ? -1 : 1) * pen * (0.25 + 0.75 * e);
   }
-  double v = 1.0 * t1 + e * (0.45 * t2 + 0.5 * 2 * c1 + 0.35 * c2) + 1.0 * mob;
+  double v = (EP[1] + EP[2] * e) * t1 + e * (EP[3] * t2 + EP[4] * 2 * c1 + EP[5] * c2) + 1.0 * mob;
   int s = jsRound(v * 100);
   return me == 1 ? s : -s;
 }
