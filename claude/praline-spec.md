@@ -377,11 +377,16 @@ Many cores (nuts) held together by shared memory (caramel).
 - 決めること：初期局面の作り方（ゲームごと）、1局の時間か局面数か（端末の速さに左右されない局面数が基本）、結果の書式（MODEL_CARD にそのまま貼れる形）。
 - 外部の強いソフトを物差しにするとき（リバーシは Edax、将棋は Gikou、シャンチーは Pikafish）は、作業機で使うだけでサイトには入れない（ライセンス）。
 
+- **（2026-11-14 実装）`shared/tools/match.js`**：設定 A 対 B を局面数の予算で、乱数の序盤（弱いレベルで4〜8手）を先後入れ替えて2局ずつ。B の勝敗・得点率・Elo と95%区間、MODEL_CARD／spec に貼る1行（表の行）を出す。`--a <nk>[@フォルダ]`・`--b …`：フォルダ（`git worktree` で作った前のコミットなど）を変えると、同じ予算でエンジンの変更（評価・探索）を比べられる。対応：ugolki・agon・konane・fanorona・alquerque・mancala（`--rule`）。ゲームは adapter（load(フォルダ)→think(局面, nk)、open／over／play）を足して増やす。`shared/tools/nodematch.js` は前のまま（ugolki・agon・konane の最上位レベルの刻みを測った道具）。
+
 ### ② 「黙って無効になる」事故の検出
 - リバーシで、初期化の順番の間違い（定数を使う場所より後ろで宣言）が `catch` に飲まれ、**wasm が黙って無効になり JavaScript の探索に落ちていた**。画面は普通に動くので気づきにくい（気づいたのは「終局まで読む」が発動しないテスト）。
 - 同じ形（`try { wasm の用意 } catch { 使わない }`）は各ゲームの `engine.js`・`shared/mtengine.js` にある。**「wasm が有効か」「マルチスレッドが有効か（分離・スレッド数）」を1か所で確かめられる**ようにする。
   - 案：各エンジンが状態（wasm の有無・スレッド数・落ちた理由）を返す共通の口を持ち、`bench.html`／`bench-all.html` と headless Chrome の確認（§5）でそれを見る。落ちた理由は `console.warn` に出す（握りつぶさない）。
   - §5 の「headless Chrome で確認」に「wasm とスレッドが有効なこと」を加える。
+
+- **（2026-11-14 実装）マルチスレッドの組**：`shared/mtengine.js` の組が失敗した理由（wasm の読み込み・lead／helper の起動・止まらない helper など）を覚え、`MTEngine.status(true)`（分離・スレッドのオン／オフ・各組の動作と理由、まだ作っていない組は作って待つ）で返す。分離されたページは外から読めないので、同じオリジンからの `postMessage({ type: 'mtengine-status' })` にも答える。点検ページ **`engine-health.html`**（リポジトリ直下、noindex）：mtengine.js を使う20ゲームのページを1つずつ裏の iframe で開き、分離・スレッド・組（wasm）・スレッド数・失敗の理由を一覧にする。headless Chrome（作業機2コア）で20ゲームすべて「分離○・オン・組が動作」（dots・connect4 は mtsplit のみで組なし）。
+- 残り：1スレッドの Worker（組を使わない弱いレベル・分離できないページ）の「wasm か JavaScript か」は各ゲームのエンジンの中にあり、まだ共通の口はない。各エンジンの `catch` で `console.warn` に理由を出し、Worker が `{ type: 'corestat' }` に `{ core: 'wasm-simd' | 'wasm' | 'js', why }` で答える形を順次入れる（マンカラは `ping` に `core` を返す）。
 
 ### ③ 時間を区切った追加の読み切り（共通の型）
 - リバーシの `tryMs`：通常の読みが終わった後、**決めた時間の中だけ**一段深い読み切りを試し、間に合わなければ結果を捨てて通常の手を使う。端末ごとの上限（遅い端末では試さない）つき。考える時間の上限は変えない（「強化で思考時間を増やさない」の約束を守る形）。
