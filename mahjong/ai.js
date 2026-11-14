@@ -73,11 +73,14 @@ function threatLevel(g, s, q) {
 }
 
 class Bot {
+  // level may be fractional (段位戦, ユーザー 2026-11-14: the strength rises by small steps with the rank): each decision rolls
+  // between the two whole levels it lies between, and the slips of the weaker levels shrink smoothly
   constructor(level = 3) { this.level = level; }
+  lvRoll() { const L = this.level, f = Math.floor(L); return Math.min(4, f + (Math.random() < L - f ? 1 : 0)); }
 
   async turn(g, s, o) {
     const p = g.P[s];
-    const lv = this.level;
+    const lv = this.lvRoll(), L = this.level;
     if (o.canTsumo) return { act: 'tsumo' };
     const c = MJ.countsIds(p.hand);
     const m = p.melds.length;
@@ -147,8 +150,9 @@ class Bot {
       for (const x of cand) x.v = x.score - x.dg * (threats.length ? 6 : 0);
       cand.sort((a, b) => b.v - a.v);
       pick = cand[0];
-      if (lv === 0 && Math.random() < 0.35) pick = cand[Math.min(cand.length - 1, (Math.random() * 3) | 0)];
-      if (lv === 1 && Math.random() < 0.12) pick = cand[Math.min(cand.length - 1, 1)];
+      // slips: a loose pick among the top three (35% at level 0, gone by level 1), then the second best (12% at level 1, gone by 2)
+      if (L < 1 && Math.random() < .35 * (1 - L)) pick = cand[Math.min(cand.length - 1, (Math.random() * 3) | 0)];
+      else if (L < 2 && Math.random() < .12 * Math.min(1, 2 - L)) pick = cand[Math.min(cand.length - 1, 1)];
     }
     // riichi?
     if (o.riichi && o.riichi.some(id => T(id) === pick.t) && pick.s2 === 0 && !fold) {
@@ -217,7 +221,7 @@ class Bot {
 
   async react(g, s, o) {
     if (o.canRon) return { act: 'ron' };
-    const lv = this.level;
+    const lv = this.lvRoll();
     if (lv === 0) return { act: 'pass' };
     const p = g.P[s];
     const t = T(o.tile);

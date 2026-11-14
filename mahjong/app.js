@@ -342,7 +342,7 @@ function renderHome() {
   $('#aaBanner').style.setProperty('--c', pick.color);
   // (ユーザー 2026-11-14: 段位戦 can be chosen here too) — free play or ranked; ranked fixes the skills and the BOTs' level
   const rankedMode = DB.set.mode !== 'free';
-  $('#aaGoSub').textContent = rankedMode ? `${t('rated')} ・ ${t(DB.set.len === 'south' ? 'south' : 'east')} ・ BOT ${t('lv')[MJRank.botLv(DB.rank.pt)]}`
+  $('#aaGoSub').textContent = rankedMode ? `${t('rated')} ・ ${t(DB.set.len === 'south' ? 'south' : 'east')} ・ BOT ${MJRank.botName(DB.rank.pt, t('lv'))}`
     : `${t(DB.set.len === 'south' ? 'south' : 'east')} ・ ${t(DB.set.skills ? 'skillOn' : 'skillOff')} ・ BOT ${t('lv')[DB.set.lv]}`;
   $('#optSkill').hidden = $('#optLv').hidden = rankedMode; $('#optRank').hidden = !rankedMode;
   if (rankedMode) { const r = MJRank.at(DB.rank.pt), n = MJRank.next(DB.rank.pt);
@@ -538,7 +538,7 @@ function openRanked() {
   SND.pick();
   const pt = DB.rank.pt, cur = MJRank.at(pt), nx = MJRank.next(pt);
   const nextGift = MJRank.list.find(x => x.reward && x.i > cur.i);
-  const P = MJRank.POINTS, lvName = t('lv')[MJRank.botLv(pt)];
+  const P = MJRank.POINTS, lvName = MJRank.botName(pt, t('lv'));
   const rows = MJRank.list.slice().reverse().map(x => {
     const g = x.reward ? MJChars.get(x.reward) : null, got = g && owns(g.id);
     return `<div class="rk-row ${x.i === cur.i ? 'cur' : x.i < cur.i ? 'past' : ''}">${rankBadge(x, 'sm')}<span class="rk-need">${x.pt} pt</span>${g ? `<span class="rk-gift ${got ? 'got' : ''}">${frame(g, 'face')}<em class="r-${g.rarity}">${g.rarity}</em>${got ? `<b>${esc(L(g.name))}</b>` : `<b>？？？</b>`}</span>` : '<span class="rk-gift none"></span>'}</div>`;
@@ -1393,7 +1393,7 @@ async function showRyuukyoku(d) {
 const PTS = { ja: '{n}点', en: '{n} pts', zh: '{n}点', ko: '{n}점', es: '{n} pts', fr: '{n} pts', pt: '{n} pts', de: '{n} Pkt.', hi: '{n} अंक', ar: '{n} نقطة', ru: '{n} очк.', 'zh-TW': '{n}點', id: '{n} poin', tr: '{n} puan' };
 function recordGame(d, myRank) {
   if (!window.GameRecord || /[?&]auto/.test(location.search) || !G || !G.rules) return;
-  const r = G.rules, lv = UIS.lv ?? DB.set.lv;
+  const r = G.rules, lv = Math.floor(UIS.lv ?? DB.set.lv);
   try { GameRecord.add({ mode: 'ai', res: myRank === 0 ? 'w' : myRank === 3 ? 'l' : 'd', opp: t(r.length === 'south' ? 'south' : 'east') + ' · ' + t(r.skills ? 'skillOn' : 'skillOff') + ' · BOT ' + t('lv')[lv], key: r.length + ':' + (r.skills ? 1 : 0) + ':' + lv, why: t('rank')[myRank] + ' · ' + (PTS[I18N.lang] || PTS.en).replace('{n}', d.scores[ME].toLocaleString()) }); } catch (e) {}
 }
 async function showFinal(d) {

@@ -23,8 +23,11 @@ const LIST = RAW.map(([pt, name, tier], i) => ({ i, pt, name, tier, reward: REWA
 const POINTS = { east: [8, 2, 1, 0], south: [16, 4, 2, 0] };
 function at(pt) { let r = LIST[0]; for (const x of LIST) if (pt >= x.pt) r = x; return r; }
 function next(pt) { return LIST.find(x => x.pt > pt) || null; }
-// the BOTs grow stronger with the rank (ユーザー 2026-11-14: it was hard from the very start): 見習い〜5級 → 入門,
-// 4級〜1級 → 初級, 初段〜五段 → 中級, 六段〜十段 → 上級, the titles → 達人
-function botLv(pt) { const i = at(pt).i; return i <= 6 ? 0 : i <= 10 ? 1 : i <= 15 ? 2 : i <= 20 ? 3 : 4; }
-root.MJRank = { list: LIST, at, next, botLv, POINTS, REWARD };
+// (2026-11-14, ユーザー: not the same level over and over — fine steps): a fractional level 0〜4 that climbs with every point:
+// 見習い 0 → 1級 1.3 → 五段 2.3 → 十段 3.3 → 雀神 4 (straight lines between). ai.js rolls between the two whole levels.
+const CURVE = [[0, 0], [100, 1.3], [230, 2.3], [450, 3.3], [1000, 4]];
+function botLv(pt) { for (let k = 1; k < CURVE.length; k++) { const [x0, y0] = CURVE[k - 1], [x1, y1] = CURVE[k]; if (pt <= x1) return +(y0 + (y1 - y0) * Math.max(0, pt - x0) / (x1 - x0)).toFixed(3); } return 4; }
+// the strength as shown: the nearest level's name and the exact value
+function botName(pt, lvNames) { const v = botLv(pt); return `${lvNames[Math.min(4, Math.floor(v + .0001))]} Lv${v.toFixed(1)}`; }
+root.MJRank = { list: LIST, at, next, botLv, botName, POINTS, REWARD };
 })(window);
