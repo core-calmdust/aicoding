@@ -94,7 +94,8 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .hd{position:relative;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 8px}
 .shmap .hd h2{margin:0;font-size:22px;letter-spacing:.04em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shmap .hd .tot{font-size:17px;font-weight:800;color:#ffd76a;white-space:nowrap}
-.shmap .x{font:inherit;font-size:22px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+.shmap .x{flex:none;width:46px;height:46px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+.shmap .x svg{width:56%;height:56%;display:block;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .shmap .gift{position:relative;align-self:center;display:flex;align-items:center;gap:8px;margin:0 16px 2px;padding:4px 14px 4px 4px;border-radius:99px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-size:15px;font-weight:800;color:#ffe7a0;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}.shmap .gift img{width:38px;height:38px;flex:none}
 .shmap .gf{position:absolute;z-index:2;width:calc(var(--nd) * 1.3);height:auto;margin-top:calc(var(--nd) * -1.8 + 10px);transform:translateX(-50%);pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));animation:shgfb 2.4s ease-in-out infinite}
 .shmap .gf.got{opacity:.55;animation:none;filter:grayscale(.2) drop-shadow(0 3px 6px rgba(0,0,0,.5))}
@@ -550,7 +551,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     css(); const lang = o.lang, K = C(), AR = K.AREAS;
     let P = prog(), area = Math.floor(nextStage(P) / 10), pick = nextStage(P);
     const el = document.createElement('div'); el.className = 'shmap';
-    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}">✕</button></div><div class="ars"></div><div class="gift"></div><div class="fld"><button type="button" class="nav l">‹</button><div class="cst"></div><button type="button" class="nav r">›</button></div><div class="sh"></div>`;
+    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="gift"></div><div class="fld"><button type="button" class="nav l">‹</button><div class="cst"></div><button type="button" class="nav r">›</button></div><div class="sh"></div>`;
     document.body.appendChild(el); requestAnimationFrame(() => { el.classList.add('on'); stars(el.querySelector('canvas')); });
     const $ = q => el.querySelector(q);
     function onFit() { requestAnimationFrame(fit); }
