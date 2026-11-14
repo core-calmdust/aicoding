@@ -207,26 +207,28 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
      each; a course starts at its own difficulty step and climbs one step an area (shanghai-core courseStage). Progress:
      zodiac in st / bt (as before), the others in cs[<id>] = { st, bt }. Every ★ pays ¢10 alike (shared/atlas.js). */
   const COURSES = [
-    { id: 'forest', base: 0, bg: [307, 308, 310, 311, 380, 381], tint: '#1d3a2a' },
-    { id: 'sweets', base: 0, bg: [317, 318, 320, 321, 384, 386], tint: '#3a2236' },
-    { id: 'sea', base: 1, bg: [312, 313, 315, 403, 322, 324], tint: '#14304a' },
-    { id: 'castle', base: 1, bg: [325, 326, 344, 345, 347, 378], tint: '#2c2550' },
-    { id: 'festival', base: 2, bg: [389, 390, 356, 357, 330, 332], tint: '#33203f' },
-    { id: 'autumn', base: 2, bg: [333, 334, 335, 405, 406, 336], tint: '#3a2418' },
-    { id: 'snow', base: 3, bg: [337, 340, 341, 360, 361, 362], tint: '#1b2a44' },
-    { id: 'desert', base: 4, bg: [363, 364, 366, 382, 367, 365], tint: '#3a2a18' },
-    { id: 'toys', base: 5, bg: [370, 368, 369, 372, 373, 374], tint: '#2a2440' },
-    { id: 'space', base: 6, bg: [396, 397, 342, 343, 388, 398], tint: '#141838' },
+    { id: 'forest', base: 0, n: 6 },
+    { id: 'sweets', base: 0, n: 6 },
+    { id: 'sea', base: 1, n: 6 },
+    { id: 'castle', base: 1, n: 6 },
+    { id: 'festival', base: 2, n: 6 },
+    { id: 'autumn', base: 2, n: 6 },
+    { id: 'snow', base: 3, n: 6 },
+    { id: 'desert', base: 4, n: 6 },
+    { id: 'toys', base: 5, n: 6 },
+    { id: 'space', base: 6, n: 6 },
   ];
+  const scnCss = () => { if (window.ShanghaiScenes && !document.getElementById('shscn-css')) { const st = document.createElement('style'); st.id = 'shscn-css'; st.textContent = ShanghaiScenes.css; document.head.appendChild(st); } };
   const courseOf = id => COURSES.find(c => c.id === id) || null;
   const cprog = id => { if (!id || id === 'zodiac') return prog(); const d = load(), c = (d.cs || {})[id] || {}; return { st: c.st || {}, bt: c.bt || {} }; };
-  const cN = id => id && id !== 'zodiac' ? (courseOf(id) ? courseOf(id).bg.length * 10 : 0) : 120;
+  const cN = id => id && id !== 'zodiac' ? (courseOf(id) ? courseOf(id).n * 10 : 0) : 120;
   // a course's stage s (zodiac: as before)
   const cStage = (id, s) => { const K = C(); if (!id || id === 'zodiac') { const st = K.stage(s); st.cid = 'zodiac'; return st; } const ci = COURSES.findIndex(c => c.id === id), st = K.courseStage(ci, COURSES[ci].base, s); st.cid = id; return st; };
   // the winding path of an area's ten stars (x 0..100, y 0..64), a little different area to area
-  const cPts = i => Array.from({ length: 10 }, (_, k) => [R1(8 + k * 9.4), R1(34 + 13 * Math.sin(k * .82 + i * 1.7) + 4 * Math.cos(k * 1.9 + i))]);
+  const cPts = (id, i) => window.ShanghaiScenes ? ShanghaiScenes.pts(id, i) : Array.from({ length: 10 }, (_, k) => [R1(4 + k * 10.2), R1(44 + 9 * Math.sin(k * .78 + i))]);
   const R1 = v => Math.round(v * 10) / 10;
-  const bgUrl = n => '../images/atlas/bg/b' + String(n).padStart(3, '0') + '.webp';
+  // a course's area drawn as a picture (an <img> / a canvas source / a CSS background): the scene's SVG as a data URL
+  const sceneUrl = (id, i, w, h) => window.ShanghaiScenes ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${i * 116} 0 116 64" width="${w || 464}" height="${h || 256}" preserveAspectRatio="xMidYMid slice">${ShanghaiScenes.svg(id, courseOf(id).n, 'u' + id)}</svg>`) : '';
   // the pending stage: a number (a zodiac stage, as before) or { c: course, s } or { daily: 'n' | 'h' }
   const pend = v => v == null ? null : typeof v === 'number' ? { c: 'zodiac', s: v } : v;
   // 本日の上海 / HARD: one deal a day for everyone (the date's seed), a board by the date — HARD on a big board with 達人's rules
@@ -450,8 +452,8 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       if (zodM) { fig(0, -gz); fig(0, gz); fig(-gx, 0); fig(gx, 0); }
       const tex = new TH3.CanvasTexture(cv);
       if (!zodM && courseOf(ST.cid)) {   // the other courses: their scene round the mat (this area's picture, tiled, a little dimmed)
-        const im = new Image(); im.onload = () => { if (stopped) return; const t = CS / 3; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) c.drawImage(im, i * t, j * t, t, t); c.fillStyle = 'rgba(10,12,30,.28)'; c.fillRect(0, 0, CS, CS); tex.needsUpdate = true; kick(300); };
-        im.src = bgUrl(courseOf(ST.cid).bg[ai] || courseOf(ST.cid).bg[0]);
+        const im = new Image(); im.onload = () => { if (stopped) return; c.drawImage(im, 0, 0, CS, CS); c.fillStyle = 'rgba(10,12,30,.18)'; c.fillRect(0, 0, CS, CS); tex.needsUpdate = true; kick(300); };   // (the area's own scene, drawn crisp at the canvas's size)
+        im.src = sceneUrl(ST.cid, ai, CS, CS);
       } if ('colorSpace' in tex) tex.colorSpace = 'srgb'; else if (TH3.sRGBEncoding) tex.encoding = TH3.sRGBEncoding; tex.anisotropy = 4;
       const pg = new TH3.PlaneGeometry(S, S); pg.rotateX(-Math.PI / 2);
       sky = new TH3.Mesh(pg, new TH3.MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0 })); sky.position.y = .006; sky.receiveShadow = true; g.add(sky);
@@ -749,14 +751,14 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
   const heroHtml = (lang, title, c, n) => `<div class="pzh-hero"><img class="pzh-ch" src="../images/atlas/av/peacock-0.webp" alt=""><div class="pzh-tx"><small>${esc(({ ja: '上海', zh: '上海', zhT: '上海', ko: '상하이' })[lang] || 'Shanghai')}</small><b>${esc(title)}</b><span class="pzh-bar"><i style="width:${n ? Math.round(c * 100 / n) : 0}%"></i></span><span class="pzh-n">${c} / ${n}</span></div></div>`;
   // a course's picture for its card: the scene (or, for 星座, a constellation of stars on the night sky)
   function courseThumb(id) {
-    if (id !== 'zodiac') return `<img src="${bgUrl(courseOf(id).bg[0])}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:50% 100%">`;
+    if (id !== 'zodiac') return window.ShanghaiScenes ? ShanghaiScenes.slice(id, 0, courseOf(id).n, 't' + id) : '';
     const S = CON.leo, E = edges('leo');
     return `<svg viewBox="-6 -4 112 72" style="width:100%;height:100%;background:radial-gradient(ellipse at 50% 30%,#3a3a8a,#0d1236 75%)">${E.map(([i, j]) => `<line x1="${S.p[i][0]}" y1="${S.p[i][1]}" x2="${S.p[j][0]}" y2="${S.p[j][1]}" stroke="#ffd76a" stroke-width=".8" opacity=".8"/>`).join('')}${S.p.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#fff6d0"/>`).join('')}</svg>`;
   }
   // コース一覧 (2026-11-14): the courses as cards in the portal's list style (問題一覧), in three tabs by how hard; a card opens its map
   function courseList(lang, play) {
     if (!window.AtlasUI || !AtlasUI.bookSheet) { stageMap({ lang, play, course: lastCourse() }); return; }
-    const S0 = AtlasUI.bookSheet(TX('cl.title', lang)), TK = 'atlas-shcl';
+    scnCss(); const S0 = AtlasUI.bookSheet(TX('cl.title', lang)), TK = 'atlas-shcl';
     const ids = ['zodiac'].concat(COURSES.map(c => c.id)), tier = id => id === 'zodiac' ? 'e' : (b => b <= 0 ? 'e' : b <= 2 ? 'm' : 'h')(courseOf(id).base);
     let cur = 'e'; try { cur = localStorage.getItem(TK) || tier(lastCourse()); } catch (e) {}
     const info = id => { const P = cprog(id), N = cN(id), d = Object.keys(P.st).filter(k => P.st[k] > 0).length, st = Object.values(P.st).reduce((a, v) => a + v, 0); return { N, d, st }; };
@@ -842,14 +844,14 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
   const PW = 116, PH = 64;   // one constellation's box in the long sky (x 0..100 of CON plus a gap), the sky's height
   function stageMap(o) {
     css(); const lang = o.lang, K = C(), cid = o.course && courseOf(o.course) ? o.course : 'zodiac', ZOD = cid === 'zodiac', CO = courseOf(cid);
-    const AR = ZOD ? K.AREAS : CO.bg.map((_, i) => 'a' + i), NA = AR.length, N = NA * 10;
+    const AR = ZOD ? K.AREAS : Array.from({ length: CO.n }, (_, i) => 'a' + i), NA = AR.length, N = NA * 10;
     const areaName = i => ZOD ? TX('ar.' + AR[i], lang) : TX('st.area', lang, { n: i + 1 });
     const RA = s => ZOD ? Reward.at(s) : 0, edg = i => ZOD ? edges(AR[i]) : Array.from({ length: 9 }, (_, k) => [k, k + 1]);
     if (window.ShanghaiZodiac && !document.getElementById('shzod-css')) { const st = document.createElement('style'); st.id = 'shzod-css'; st.textContent = ShanghaiZodiac.css; document.head.appendChild(st); }
     let P = cprog(cid), area = Math.floor(nextStage(P, N) / 10), pick = nextStage(P, N);
     if (o.pick != null && o.pick < N) { pick = o.pick; area = Math.floor(pick / 10); }
-    const el = document.createElement('div'); el.className = 'shmap' + (ZOD ? '' : ' scn'); if (!ZOD) el.style.background = CO.tint;
-    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd">${ZOD ? '' : `<img class="em emi" src="${bgUrl(CO.bg[0])}" alt="">`}<svg class="em${ZOD ? '' : ' zx'}" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="shemg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b4aa0"/><stop offset="1" stop-color="#121640"/></radialGradient></defs><rect x="10" y="4" width="44" height="56" rx="8" fill="url(#shemg)" stroke="#e8c877" stroke-width="2"/><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="rgba(232,200,119,.35)"/><path d="M20 44 L28 34 L36 38 L44 22 M28 34 L30 22" fill="none" stroke="#ffe39a" stroke-width="1.4" stroke-linecap="round"/><g fill="#fff6d8"><circle cx="20" cy="44" r="2.2"/><circle cx="28" cy="34" r="2.6"/><circle cx="36" cy="38" r="2"/><circle cx="44" cy="22" r="2.8"/><circle cx="30" cy="22" r="1.8"/></g></svg><div class="shtl"><h2></h2><p class="story"></p></div><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
+    const el = document.createElement('div'); el.className = 'shmap' + (ZOD ? '' : ' scn'); if (!ZOD) { el.style.background = window.ShanghaiScenes ? ShanghaiScenes.tint(cid) : '#1b2140'; scnCss(); }
+    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd">${ZOD ? '' : `<img class="em emi" src="${sceneUrl(cid, 0, 128, 128)}" alt="">`}<svg class="em${ZOD ? '' : ' zx'}" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="shemg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b4aa0"/><stop offset="1" stop-color="#121640"/></radialGradient></defs><rect x="10" y="4" width="44" height="56" rx="8" fill="url(#shemg)" stroke="#e8c877" stroke-width="2"/><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="rgba(232,200,119,.35)"/><path d="M20 44 L28 34 L36 38 L44 22 M28 34 L30 22" fill="none" stroke="#ffe39a" stroke-width="1.4" stroke-linecap="round"/><g fill="#fff6d8"><circle cx="20" cy="44" r="2.2"/><circle cx="28" cy="34" r="2.6"/><circle cx="36" cy="38" r="2"/><circle cx="44" cy="22" r="2.8"/><circle cx="30" cy="22" r="1.8"/></g></svg><div class="shtl"><h2></h2><p class="story"></p></div><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
     document.body.appendChild(el);
     const $ = q => el.querySelector(q), vp = $('.vp'), wld = $('.wld');
     // the pan / zoom: the long sky drawn at u px per unit, then scaled by z and moved by (tx, ty)
@@ -900,21 +902,20 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(areaName(i))}<em>★${st}</em>${(ZOD ? [1, 2, 3] : []).filter(t => Math.floor(GIFT_S[t] / 10) === i && !Reward.has(t)).map(t => `<img class="agf" src="../images/atlas/av/peacock-${t}.webp" alt="">`).join('')}</button>`; }).join('');
       const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
       wld.querySelectorAll('.pn').forEach((t, i) => t.classList.toggle('on', i === area));
-      if (!ZOD) $('.sky').style.backgroundImage = `url(${bgUrl(CO.bg[area])})`;   // (a scene course: this area's picture, blurred, fills the screen round the map)
+      if (!ZOD && $('.sky').dataset.a !== String(area)) { $('.sky').dataset.a = area; $('.sky').style.backgroundImage = `url("${sceneUrl(cid, area, 232, 128)}")`; }   // (a scene course: this area's picture, blurred, fills the screen round the map)
     }
     // every constellation's stars, evenly spaced inside its box, in the long sky's units
-    const PTS = AR.map((a, i) => (ZOD ? CON[a].p : cPts(i)).map(([x, y]) => [i * PW + 8 + x, y]));   // (placed by hand on the figures, already evenly spaced)
+    const PTS = AR.map((a, i) => (ZOD ? CON[a].p : cPts(cid, i)).map(([x, y]) => [i * PW + 8 + x, y]));   // (placed by hand on the figures, already evenly spaced)
     function art() {
       const lit = ([i, j], fs) => cleared(P, fs + i) && cleared(P, fs + j);
-      let svg = `<svg viewBox="0 0 ${WW} ${PH}" preserveAspectRatio="none">`;
+      let svg = `<svg viewBox="0 0 ${WW} ${PH}" preserveAspectRatio="none">` + (!ZOD && window.ShanghaiScenes ? ShanghaiScenes.svg(cid, NA, 'm' + cid) : '');   // (a scene course: one continuous landscape, its road through every stage)
       AR.forEach((a, i) => {
         const fs = i * 10, done = Array.from({ length: 10 }, (_, k) => cleared(P, fs + k)).filter(Boolean).length;
-        if (!ZOD) svg += `<image href="${bgUrl(CO.bg[i])}" x="${i * PW}" y="0" width="${PW}" height="${PH}" preserveAspectRatio="xMidYMax slice" opacity="${(.84 + .16 * done / 10).toFixed(2)}"/>`;
         svg += `<text class="pn${i === area ? ' on' : ''}" x="${i * PW + 8}" y="7">${esc(areaName(i))}</text>`;
         if (ZOD) svg += `<g class="fig${done === 10 ? ' lit' : ''}" transform="translate(${i * PW + 8} 0)" style="--dl:${-i * .6}s;opacity:${(.55 + .45 * done / 10).toFixed(2)}">${window.ShanghaiZodiac ? ShanghaiZodiac(a, i) : ''}</g>`;
-        edg(i).forEach(e => { const [x1, y1] = PTS[i][e[0]], [x2, y2] = PTS[i][e[1]], L = lit(e, fs);
+        edg(i).forEach(e => { const [x1, y1] = PTS[i][e[0]], [x2, y2] = PTS[i][e[1]], L = lit(e, fs); if (!ZOD && !L) return;   // (the scene's road shows the way; a cleared stretch glows gold)
           svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${L ? '#ffd76a' : ZOD ? 'rgba(180,200,255,.3)' : 'rgba(255,255,255,.75)'}" stroke-width="${L ? .7 : ZOD ? .35 : .5}" stroke-linecap="round" ${L ? 'filter="drop-shadow(0 0 1.2px #ffd76a)"' : 'stroke-dasharray="1 1.2"'}/>`; });
-        if (i < NA - 1) { const [x1, y1] = PTS[i][9], [x2, y2] = PTS[i + 1][0], L = cleared(P, fs + 9);   // the road on to the next constellation
+        if (i < NA - 1 && ZOD) { const [x1, y1] = PTS[i][9], [x2, y2] = PTS[i + 1][0], L = cleared(P, fs + 9);   // the road on to the next constellation
           svg += `<path d="M${x1} ${y1} C${x1 + 14} ${y1} ${x2 - 14} ${y2} ${x2} ${y2}" fill="none" stroke="${L ? 'rgba(255,215,106,.7)' : 'rgba(180,200,255,.22)'}" stroke-width="${L ? .55 : .35}" stroke-dasharray="${L ? '2 1.4' : '1 1.6'}" stroke-linecap="round"/>`; }
       });
       return svg + '</svg>';
@@ -948,9 +949,9 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
     // (2026-11-14, ユーザー: 画像をうまく組み込んで綺麗に見やすく、PCは文字も大きく; a pick refills it without re-laying the map)
     function conArt(a, k) {
       if (!ZOD) {   // a scene course: this area's picture with its path, this stage's star ringed
-        const Q = cPts(a), fs = a * 10;
-        let v = `<svg viewBox="-8 0 116 64" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><image href="${bgUrl(CO.bg[a])}" x="-8" y="0" width="116" height="64" preserveAspectRatio="xMidYMax slice"/>`;
-        for (let j = 0; j < 9; j++) { const L = cleared(P, fs + j) && cleared(P, fs + j + 1); v += `<line class="cl${L ? ' on' : ''}" x1="${Q[j][0]}" y1="${Q[j][1]}" x2="${Q[j + 1][0]}" y2="${Q[j + 1][1]}" style="stroke:${L ? '#ffd76a' : 'rgba(255,255,255,.85)'}"/>`; }
+        const Q = cPts(cid, a).map(([x, y]) => [a * PW + 8 + x, y]), fs = a * 10;
+        let v = `<svg viewBox="${a * PW} 0 116 64" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${window.ShanghaiScenes ? ShanghaiScenes.svg(cid, NA, 'b' + cid) : ''}`;
+        for (let j = 0; j < 9; j++) { const L = cleared(P, fs + j) && cleared(P, fs + j + 1); if (!L) continue; v += `<line class="cl${L ? ' on' : ''}" x1="${Q[j][0]}" y1="${Q[j][1]}" x2="${Q[j + 1][0]}" y2="${Q[j + 1][1]}" style="stroke:${L ? '#ffd76a' : 'rgba(255,255,255,.85)'}"/>`; }
         Q.forEach(([x, y], j) => { v += j === k ? `<circle class="cpk" cx="${x}" cy="${y}" r="5.4"/><circle class="cst on" cx="${x}" cy="${y}" r="2.6"/>` : `<circle class="cst${cleared(P, fs + j) ? ' on' : ''}" cx="${x}" cy="${y}" r="1.8" style="${cleared(P, fs + j) ? '' : 'fill:#fff;stroke:rgba(0,0,0,.35);stroke-width:.3'}"/>`; });
         return v + '</svg>';
       }
