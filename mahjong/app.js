@@ -33,7 +33,7 @@ function load() {
   delete d.owned;
   d.sel = d.sel && d.chars[d.sel] ? d.sel : Object.keys(d.chars)[0];
   const weak = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
-  d.set = Object.assign({ len: 'east', skills: true, lv: 2, snd: true, lite: weak }, d.set || {});
+  d.set = Object.assign({ len: 'east', skills: true, lv: 2, snd: true, lite: weak, mode: 'ranked' }, d.set || {});
   if (window.PhoneSnd && PhoneSnd.phone) d.set.snd = true;   // phones: the silent switch decides (shared/phonesnd.js)
   d.stats = Object.assign({ games: 0, rank: [0, 0, 0, 0] }, d.stats || {});
   // スタッツ (pstats.js): raw counters by mode, and games / places by the character played. Games from before the
@@ -338,7 +338,7 @@ function renderHome() {
   $('#aaBanner').innerHTML = `<i class="ab-art" style="background-image:url('${charImg(pick, 'bust')}')"></i><span class="ab-rib">PICK UP</span><span class="ab-tx"><em class="r-${pick.rarity}">${pick.rarity}</em><b>${esc(L(pick.name))}</b><small>${esc(L(pick.title))}</small></span><span class="ab-go">${esc(t('gacha'))} ›</span>`;
   $('#aaBanner').style.setProperty('--c', pick.color);
   // (ユーザー 2026-11-14: 段位戦 can be chosen here too) — free play or ranked; ranked fixes the skills and the BOTs' level
-  const rankedMode = DB.set.mode === 'ranked';
+  const rankedMode = DB.set.mode !== 'free';
   $('#aaGoSub').textContent = rankedMode ? `${t('rated')} ・ ${t(DB.set.len === 'south' ? 'south' : 'east')} ・ BOT ${t('lv')[MJRank.botLv(DB.rank.pt)]}`
     : `${t(DB.set.len === 'south' ? 'south' : 'east')} ・ ${t(DB.set.skills ? 'skillOn' : 'skillOff')} ・ BOT ${t('lv')[DB.set.lv]}`;
   $('#optSkill').hidden = $('#optLv').hidden = rankedMode; $('#optRank').hidden = !rankedMode;
@@ -351,7 +351,7 @@ function renderHome() {
     el.innerHTML = items.map(([v, lab]) => `<button class="${v === cur ? 'on' : ''}" data-v="${v}">${esc(lab)}</button>`).join('');
     el.onclick = e => { const b = e.target.closest('button'); if (!b) return; SND.pick(); cb(b.dataset.v); save(); renderHome(); };
   };
-  seg($('#optMode'), [['free', t('freePlay')], ['ranked', t('rated')]], rankedMode ? 'ranked' : 'free', v => DB.set.mode = v);
+  seg($('#optMode'), [['ranked', t('rated')], ['free', t('freePlay')]], rankedMode ? 'ranked' : 'free', v => DB.set.mode = v);
   seg($('#optLen'), [['east', t('east')], ['south', t('south')]], DB.set.len, v => DB.set.len = v);
   seg($('#optSkill'), [['1', t('skillOn')], ['0', t('skillOff')]], DB.set.skills ? '1' : '0', v => DB.set.skills = v === '1');
   seg($('#optLv'), t('lv').map((x, i) => [String(i), x]), String(DB.set.lv), v => DB.set.lv = +v);
@@ -503,7 +503,7 @@ function fitRoot() {
 fitRoot();
 addEventListener('resize', fitRoot);
 addEventListener('orientationchange', () => setTimeout(fitRoot, 120));
-$('#btnStart').addEventListener('click', () => { SND.unlock(); startGame(DB.set.mode === 'ranked' ? { ranked: true, len: DB.set.len } : {}); });
+$('#btnStart').addEventListener('click', () => { SND.unlock(); startGame(DB.set.mode !== 'free' ? { ranked: true, len: DB.set.len } : {}); });
 $('#btnGacha').addEventListener('click', openGacha);
 $('#btnColl').addEventListener('click', () => openChara(DB.sel));
 $('#chBack').addEventListener('click', () => { SND.pick(); closeChara(); });
