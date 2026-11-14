@@ -475,7 +475,7 @@ async function onEvent(ev, d) {
       layoutRiver(d.seat, true);
       if (d.seat !== ME) TB.layoutHand(d.seat, p.hand, null, false, true);   // (the gap the tile left stays open a moment, then the row closes up)
       else { clearActs(); renderHand(); }
-      await sleep(d.seat === ME ? 120 : 160);
+      await sleep(d.seat === ME ? 720 : 860);   // (ユーザー 2026-11-14: the next player's draw showed while the hand was still putting the tile out — wait until it is about down)
       break;
     }
     case 'riichi-stick': TB.setStick(d.seat, true); refreshTable(); renderBadges(); break;
