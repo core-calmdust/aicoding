@@ -266,7 +266,9 @@
     const H = helpers(), HM = Math.max(H, maxHelpers()), SLOT = cfg.slot || (2 << 20);   // H spawned at once, up to HM on demand (PRO)
     const isDone = cfg.isDone || (m => m.type === 'result'), isProg = cfg.isProg || (m => m.type === 'progress');   // the lead's message types
     let ok = false, dead = false, X = null, lead = null, hw = [], ctl = null, cnt = null, job = null, seq = 0, ini = null, memRef = null;
-    const P = { threads: 1 + H, maxThreads: 1 + HM, ready: null, free: () => ok && !dead && (!job || job.cancelled), run, cancel, close, preempt: t => preempt(t) };
+    let why = '';   // (2026-11-14) the reason the threads failed, for MTEngine.status() (claude/praline-spec.md §10 ②)
+    const P = { threads: 1 + H, maxThreads: 1 + HM, ready: null, free: () => ok && !dead && (!job || job.cancelled), run, cancel, close, preempt: t => preempt(t),
+      state: () => ({ ok, dead, error: why, threads: 1 + hw.length }) };
     const spawn = (url, msg) => new Promise((res, rej) => {
       const w = new Worker(url);
       w.onerror = e => rej(e.message || 'worker');
@@ -288,10 +290,10 @@
       lead = await spawn(cfg.lead, ini(0));                       // (the lead loads the network / tables into the shared memory)
       for (let i = 1; i <= H; i++) hw.push(await spawn(cfg.helper, ini(i)));
       if (cfg.after) await cfg.after(X, mem, [lead].concat(hw));
-      lead.onerror = () => { dead = true; if (job && job.resolve) job.resolve(undefined); };   // (undefined: the threads failed — run it the usual way; null: cancelled)
+      lead.onerror = e => { dead = true; why = why || 'lead: ' + ((e && e.message) || 'error'); if (job && job.resolve) job.resolve(undefined); };   // (undefined: the threads failed — run it the usual way; null: cancelled)
       if (dead) { close(); return false; }
       ok = true; return true;
-    })().catch(e => { console.warn('[mtengine]', e); close(); return false; });
+    })().catch(e => { why = why || String((e && e.message) || e); console.warn('[mtengine]', e); close(); return false; });
     const stopAll = () => { if (ctl) Atomics.store(ctl, 0, 1); if (X) X.mt_stop(1); };
     function run(msg, onProgress, tag) {
       const prev = job, j = { tag, onProgress, cancelled: false, running: false, id: ++seq };
@@ -322,10 +324,10 @@
         });
         stopAll();
         await Promise.race([hDone, new Promise(r => setTimeout(r, 8000))]);
-        if (left > 0) { dead = true; console.warn('[mtengine] a helper did not stop'); }
+        if (left > 0) { dead = true; why = why || 'a helper did not stop'; console.warn('[mtengine] a helper did not stop'); }
         if (job === j) job = null;   // (free before the caller hears of it: it may start the next job at once)
         if (j.resolve) j.resolve(Object.assign({}, res, { nodes: (res.nodes || 0) + hNodes, helperNodes: hNodes, threads: 1 + hs.length, ms: performance.now() - t0 }));
-      })().catch(e => { console.warn('[mtengine]', e); dead = true; if (j.resolve) j.resolve(j.cancelled ? null : undefined); }).finally(() => { if (job === j) job = null; if (dead) close(); });
+      })().catch(e => { why = why || String((e && e.message) || e); console.warn('[mtengine]', e); dead = true; if (j.resolve) j.resolve(j.cancelled ? null : undefined); }).finally(() => { if (job === j) job = null; if (dead) close(); });
       return out;
     }
     function preempt(tag) {   // the AI's move goes first: a running job of another kind (analysis, coach, …) is cancelled
@@ -340,8 +342,10 @@
     return P;
   }
   // one pool while threads are on (made a moment after the page has loaded, or on first use)
+  const USES = [];   // every MTEngine.use() of the page (MTEngine.status)
   function use(cfg) {
     let p = null, timer = 0;
+    USES.push({ wasm: cfg.wasm, lead: cfg.lead, get: () => p, make: () => make() });
     const make = () => { clearTimeout(timer); if (!p && on()) p = pool(cfg); return p; };
     const sync = v => { if (v) { if (!p) timer = setTimeout(make, 1500); } else { clearTimeout(timer); if (p) { p.close(); p = null; } } };
     subs.push(sync); sync(on());
@@ -352,6 +356,23 @@
       get threads() { return p ? p.threads : 1; },
     };
   }
-  window.MTEngine = { init, use, pool, on, helpers, maxHelpers, perfThreads, onChange: f => subs.push(f), isolated: ISO, coi: COI, flagged: FLAGGED, touch: TOUCH, T,
+  // (2026-11-14, claude/praline-spec.md §10 ②) is the page isolated, are the threads on, did the pools start — and why not.
+  // MTEngine.status(true) also starts the pools that have not been made yet and waits for them. Used by engine-health.html.
+  async function status(start) {
+    const pools = [];
+    for (const u of USES) {
+      let q = u.get();
+      if (!q && start && on()) q = u.make();
+      if (q && start) { try { await Promise.race([q.ready, new Promise(r => setTimeout(r, 15000))]); } catch (e) {} }
+      pools.push(Object.assign({ wasm: u.wasm, lead: u.lead, made: !!q }, q ? q.state() : {}));
+    }
+    return { can: CAN, isolated: ISO, coi: COI, on: on(), helpers: helpers(), perf: perfThreads(), touch: TOUCH, pools };
+  }
+  // engine-health.html opens the page in a frame; an isolated page cannot be read from outside, so it asks by message
+  addEventListener('message', e => {
+    if (!e.data || e.data.type !== 'mtengine-status' || e.origin !== location.origin || !e.source) return;
+    status(true).then(st => e.source.postMessage({ type: 'mtengine-status-r', st }, e.origin), err => e.source.postMessage({ type: 'mtengine-status-r', error: String(err) }, e.origin));
+  });
+  window.MTEngine = { init, use, pool, on, status, helpers, maxHelpers, perfThreads, onChange: f => subs.push(f), isolated: ISO, coi: COI, flagged: FLAGGED, touch: TOUCH, T,
     set, want, pref, can: CAN, tx };   // (set / want / pref / tx: for shared/mtsplit.js's shared mode, which keeps its own toggle)
 })();
