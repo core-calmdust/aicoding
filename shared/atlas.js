@@ -46,7 +46,7 @@
       name: N('ソリティア', 'Solitaire', '纸牌接龙', '솔리테어', 'Solitario', 'Solitaire', 'Paciência', 'Solitär', 'सॉलिटेयर', 'سوليتير', 'Пасьянс', '接龍', 'Solitaire', 'Solitaire') },
     { id: 'peg', cat: 'puzzle', store: ['aicoding-peg'], href: 'atlas/#games/peg', only3d: true, color: '#7d5ba6', released: '2026-11-11', tags: ['classic', 'daily', 'puzzles', 'variants', 'mobile'], total: { pz: 497 },
       name: N('ペグソリテール', 'Peg Solitaire', '孔明棋', '페그 솔리테르', 'Solitario de clavijas', 'Solitaire', 'Resta Um', 'Solitär', 'पेग सॉलिटेयर', 'سوليتير الأوتاد', 'Солитер', '孔明棋', 'Peg Solitaire', 'Peg Solitaire') },
-    { id: 'shanghai', cat: 'puzzle', store: ['aicoding-shanghai'], href: 'atlas/#games/shanghai', only3d: true, beta: true, color: '#1f6a4c', released: '2026-11-13', tags: ['classic', 'puzzles', 'variants', 'mobile'], total: { pz: 120 },
+    { id: 'shanghai', cat: 'puzzle', store: ['aicoding-shanghai'], href: 'atlas/#games/shanghai', only3d: true, beta: true, color: '#1f6a4c', released: '2026-11-13', tags: ['classic', 'puzzles', 'variants', 'mobile'], total: { pz: 720 },
       name: N('上海', 'Shanghai', '上海麻将', '상하이', 'Shanghái', 'Shanghai', 'Xangai', 'Shanghai', 'शंघाई', 'شنغهاي', 'Шанхай', '上海麻將', 'Shanghai', 'Şanghay') },
     { id: 'checkers', cat: 'chess', store: ['aicoding-checkers', 'checkers-online-name'], href: 'checkers/', color: '#8e2a3c', released: '2026-10-21', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 13 },
       name: N('チェッカー V2', 'Checkers V2', '跳棋（国际跳棋·英式） V2', '체커 V2', 'Damas V2', 'Dames anglaises V2', 'Damas V2', 'Dame V2', 'चेकर्स V2', 'الداما V2', 'Шашки V2', '西洋跳棋（英式） V2', 'Dam V2', 'Dama V2') },
@@ -354,7 +354,7 @@
     hex: () => { const pz = J('aicoding-hex-puzzles'); return { pz: cntPos(pz), st: starsOf(pz), ls: cntClear(J('aicoding-hex-lessons')), op: cntClear(J('aicoding-hex-open'), 'pass'), dl: daily('aicoding-hex-daily'), rt: rated('aicoding-hex-rated'), ru: rules('hex') }; },
     fanorona: () => { const pz = J('aicoding-fanorona-puzzles'); return { pz: cntPos(pz), st: starsOf(pz), ls: cntClear(J('aicoding-fanorona-lessons')), op: cntClear(J('aicoding-fanorona-open'), 'pass'), dl: daily('aicoding-fanorona-daily'), rt: rated('aicoding-fanorona-rated'), ru: rules('fanorona') }; },
     alquerque: () => ({ rt: rated('aicoding-alquerque-rated'), ru: rules('alquerque') }),
-    shanghai: () => { const d = J('aicoding-shanghai') || {}; return { pz: cntPos(d.st), st: starsOf(d.st), ru: rules('shanghai') }; },
+    shanghai: () => { const d = J('aicoding-shanghai') || {}, cs = Object.values(d.cs || {}); return { pz: cntPos(d.st) + cs.reduce((a, c) => a + cntPos(c.st), 0), st: starsOf(d.st) + cs.reduce((a, c) => a + starsOf(c.st), 0), ru: rules('shanghai') }; },   // (2026-11-14: + the 10 scene courses, cs[<id>])
     peg: () => { const pz = J('aicoding-peg-pz'), g = (J('aicoding-peg') || {}).goal || {}, b = Object.values(g);   // goal: { board: { b: fewest left (no hint), pf } } (2026-11-14)
       return { pz: cntPos(pz), st: starsOf(pz), dl: daily('aicoding-peg-daily'), ru: rules('peg'), pg: { g3: b.filter(x => x.b <= 3).length, g1: b.filter(x => x.b === 1).length, pf: b.filter(x => x.pf).length } }; },
     amazons: () => { const pz = J('aicoding-amazons-puzzles2'); return { pz: cntPos(pz), st: starsOf(pz), ls: cntClear(J('aicoding-amazons-lessons')), dl: daily('aicoding-amazons-daily'), rt: rated('aicoding-amazons-rated'), ru: rules('amazons') }; },
@@ -525,7 +525,7 @@
   function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
   // coins are derived, so nothing can be earned twice: achievements + login bonus + duplicate refunds − spent
   // (2026-11-14) a game's own play rewards, also derived: 上海 pays ¢10 for every ★ won on its stages (atlas/games/shanghai.js)
-  const PLAY_COINS = { shanghai: () => starsOf((J('aicoding-shanghai') || {}).st) * 10 };
+  const PLAY_COINS = { shanghai: () => { const d = J('aicoding-shanghai') || {}; return (starsOf(d.st) + Object.values(d.cs || {}).reduce((a, c) => a + starsOf(c.st), 0)) * 10; } };
   const playCoins = () => Object.values(PLAY_COINS).reduce((s, f) => s + (f() || 0), 0);
   function coins(W, A) {
     const ach = A.filter(a => a.done).reduce((s, a) => s + TIER_COINS[a.tier], 0), pc = playCoins();
