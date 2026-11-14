@@ -10,16 +10,16 @@
 (async function () {
   const T = THREE, M = Table3D.shanghai; await M.ready();
   const S = 720, R = new T.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); R.setSize(S, S); R.setClearColor(0, 0);
-  R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = 1.05; R.outputColorSpace = T.SRGBColorSpace; R.shadowMap.enabled = true; R.shadowMap.type = T.PCFSoftShadowMap;
+  R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = .6; R.outputColorSpace = T.SRGBColorSpace; R.shadowMap.enabled = true; R.shadowMap.type = T.PCFSoftShadowMap;
   document.body.appendChild(R.domElement);
   const sc = new T.Scene();
   // a soft studio for the reflections
   const env = new T.Scene(); env.background = new T.Color(0x9aa0aa);
   const box = (c, x, y, z, w, h, d) => { const m = new T.Mesh(new T.BoxGeometry(w, h, d), new T.MeshBasicMaterial({ color: c })); m.position.set(x, y, z); env.add(m); };
   box(0xffffff, 0, 6, 0, 8, .2, 8); box(0xfff4e0, -6, 2, 2, .2, 5, 6); box(0xdde8ff, 6, 3, -2, .2, 4, 5);
-  const pm = new T.PMREMGenerator(R); sc.environment = pm.fromScene(env, .03).texture;
-  sc.add(new T.HemisphereLight(0xffffff, 0x445544, .9));
-  const key = new T.DirectionalLight(0xffffff, 2.2); key.position.set(-3, 7, 4); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 6;
+  const pm = new T.PMREMGenerator(R); sc.environment = pm.fromScene(env, .03).texture; sc.environmentIntensity = .6;
+  sc.add(new T.HemisphereLight(0xffffff, 0x445544, .55));
+  const key = new T.DirectionalLight(0xfff2e2, 1.5); key.position.set(-5, 5, 3); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 6;
   Object.assign(key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4 }); sc.add(key);
   // three tiles below, one on top (中), seen from the front-left above
   const P = [[-1.02, 0, -.2, 18 + 4], [0, 0, -.2, 13], [1.02, 0, -.2, 27], [0, M.TH, .25, 33], [-.55, 0, 1.35, 32], [.55, 0, 1.4, 9]];
