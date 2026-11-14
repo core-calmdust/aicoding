@@ -127,8 +127,17 @@ const SND = (() => {
   // riichi and hands back at the end of the hand. Each is an <audio> element into the context, with a gain node for the crossfades;
   // the main track carries on from where it was, the riichi track starts from the top each time.
   // (the music's levels from its loudness, EBU R128: title −14.4 LUFS → ≈ −22, main −19 → ≈ −26 under the voices, riichi −12.3 → ≈ −24)
-  const TRK = { title: { file: 'bgm-title', vol: .42, restart: true }, main: { file: 'bgm-main', vol: .45, restart: false }, main2: { file: 'bgm-main2', vol: .25, restart: false }, main3: { file: 'bgm-main3', vol: .235, restart: false },   // (main3: −13.4 LUFS → ≈ −26)   // (main2: −13.9 LUFS → ≈ −26) riichi: { file: 'bgm-riichi', vol: .26, restart: true }, riichi2: { file: 'bgm-riichi2', vol: .33, restart: true },   // (riichi2: −14.4 LUFS → ≈ −24)
-    score: { file: 'bgm-score', vol: .38, restart: true } };   // (the results of a hand: −15.7 LUFS → ≈ −24)
+  // (levels from each file's loudness, EBU R128 — title −14.4 LUFS → ≈ −22; the game's tracks ≈ −26 under the voices: main −19,
+  // main2 −13.9, main3 −13.4; riichi ≈ −24: riichi −12.3, riichi2 −14.4; the results of a hand ≈ −24: score −15.7)
+  const TRK = {
+    title: { file: 'bgm-title', vol: .42, restart: true },
+    main: { file: 'bgm-main', vol: .45, restart: false },
+    main2: { file: 'bgm-main2', vol: .25, restart: false },
+    main3: { file: 'bgm-main3', vol: .235, restart: false },
+    riichi: { file: 'bgm-riichi', vol: .26, restart: true },
+    riichi2: { file: 'bgm-riichi2', vol: .33, restart: true },
+    score: { file: 'bgm-score', vol: .38, restart: true },
+  };
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
   function mkctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return ac; }
