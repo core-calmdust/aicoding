@@ -426,7 +426,9 @@ class Table3D {
     }
     const G = this.shotG; while (G.children.length) G.remove(G.children[0]);
     const fm = back ? null : this.faceMat(id);
-    G.add(new THREE.Mesh(this.geoFront, [back ? this.matIvory : fm.normal, this.matIvory]), new THREE.Mesh(this.geoBack, this.matBacks[0]));
+    // (ユーザー 2026-11-14: at this small size the table's round edge read as too soft — the box's tiles get crisper edges of their own)
+    if (!this.shotGeo) this.shotGeo = tileGeos(W, H, D, 0.11, 0.05, 0.28, 0.05);
+    G.add(new THREE.Mesh(this.shotGeo.front, [back ? this.matIvory : fm.normal, this.matIvory]), new THREE.Mesh(this.shotGeo.back, this.matBacks[0]));
     G.rotation.set(back ? 0 : 0, back ? PI : 0, 0);
     this.shotR.render(this.shotS, this.shotC);
     // cropped to the tile itself (so the tiles in the box can stand right next to each other)
