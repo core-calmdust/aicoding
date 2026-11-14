@@ -1,7 +1,7 @@
 # 雀華（じゃんか）〜姫たちの麻雀〜 仕様 v0.5（仮称）
 
 4人打ちリーチ麻雀。スキルで点数がインフレする「スキル戦」と、通常ルールの「標準戦」。ガチャで女の子キャラを集める独自ポータル型（経済圏は独自）。`mahjong/`。
-公開：トップページの開発室に PRE（プレアルファ）として掲載（2026-11-14〜、WYRMSPHERE の後ろ）。GitHub Pages（core-calmdust.github.io/aicoding/mahjong/）と、クリックで遊べる claude.ai アーティファクト（`tools/build-artifact.py` で生成した束を publish。1回の publish は255ファイルまでなので、追加と削除は分けて送る）。
+公開：トップページの開発室に PRE（プレアルファ）として掲載（2026-11-14〜、WYRMSPHERE の後ろ。アイコンは紫苑の顔の切り抜き images/icons/mahjong.webp）。GitHub Pages（core-calmdust.github.io/aicoding/mahjong/）と、クリックで遊べる claude.ai アーティファクト（`tools/build-artifact.py` で生成した束を publish。1回の publish は255ファイルまでなので、追加と削除は分けて送る）。
 
 ## 確定（ユーザー指示）
 - 4人打ちリーチ麻雀（雀魂準拠）。三麻は後で追加
