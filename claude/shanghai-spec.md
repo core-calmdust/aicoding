@@ -135,9 +135,16 @@
 - 上下のすりガラス（シーンのコース）：全エリアの絵を横に並べた帯をぼかして敷き、マップと一緒に動かす（スクロールに合わせて随時変わる。スマホでも出す）。
 
 ## コースの報酬：コースの仲間たち（2026-11-14）
-- シーンのコースごとに専用のアトラモ（atlas/avatars/sp-f.js、画像 images/atlas/av/<sp>-0..3.webp、art.js の EARN）：森＝キノコッコ、おかし＝マカロンちゃん、海＝タコマル、お城＝ユニポニー、お祭り＝キンギョン、秋＝モミジギツネ、雪＝ユキダルン、砂漠＝サボテンくん、おもちゃ＝ブリキロボ、宇宙＝ホシッピ。
-- むずかしいコースほど早くいいランク（ShanghaiReward.gifts）：
-  - 森・おかし：N ステージ3-10／R 6-10（ゴール）／SR ★150／SSR ★180
-  - 海・お城・お祭り・秋：N 2-10／R 4-10／SR 6-10（ゴール）／SSR ★180
-  - 雪・砂漠・おもちゃ・宇宙：N 2-5／R 3-10／SR 5-5／SSR 6-10（ゴール）
-- ステージでもらえるものはマップのそのステージにアイコン（星座と同じ）。マップ下の行に次の報酬（あと何ステージ／あと★いくつ）。コース一覧の各カードに報酬アイコン（未入手は薄く）。ステージタブの「マップで待ってるアトラモ」は全コースの合計。
+- シーンのコースの仲間たち10種（atlas/avatars/sp-f.js、画像 images/atlas/av/<sp>-0..3.webp、art.js の EARN）：森＝キノコッコ、おかし＝マカロンちゃん、海＝タコマル、お城＝ユニポニー、お祭り＝キンギョン、秋＝モミジギツネ、雪＝ユキダルン、砂漠＝サボテンくん、おもちゃ＝ブリキロボ、宇宙＝ホシッピ。
+- 各コースで4種類ずつ（ステージ2-5／3-10／5-5／6-10）。むずかしいコースほどいいランク（ShanghaiReward.CG）。どの仲間もN・R・SR・SSRが別々のコースでもらえる：
+  - forest: kinokoN、macaronN、takoN、uniponyN
+  - sweets: kingyoN、momijiN、yukidaruN、macaronR
+  - sea: sabotenN、burikiN、takoR、kingyoR
+  - castle: hoshippiN、uniponyR、momijiR、yukidaruR
+  - festival: sabotenR、burikiR、hoshippiR、kingyoSR
+  - autumn: kinokoR、momijiSR、yukidaruSR、sabotenSR
+  - snow: burikiSR、hoshippiSR、kinokoSR、yukidaruSSR
+  - desert: macaronSR、takoSR、uniponySR、sabotenSSR
+  - toys: burikiSSR、kinokoSSR、macaronSSR、takoSSR
+  - space: hoshippiSSR、uniponySSR、kingyoSSR、momijiSSR
+- ステージでもらえるものはマップのそのステージにアイコン（星座と同じ）。マップ下の行に次の報酬（あと何ステージ）。コース一覧の各カードに報酬アイコン（未入手は薄く）。ステージタブの「マップで待ってるアトラモ」は全コースの合計。
