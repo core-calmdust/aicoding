@@ -7,6 +7,7 @@ from xqtex_wood import wood
 from xqtex_glyph import glyph
 C = 320; R = C / 2
 GL = ['帥仕相傌俥炮兵', '將士象馬車砲卒']
+KAI_RED = '帥仕相馬車炮兵'   # 傌 / 俥 are missing from the 楷書 face: the red side's horse and chariot written 馬 / 車 (as many sets do)
 def blur(a, s): return ndimage.gaussian_filter(a, s)
 def disc_xy():
     y, x = np.mgrid[0:C, 0:C].astype(np.float32) + .5; return x - R, y - R
@@ -85,7 +86,7 @@ def run(only, put):
         rgb = np.zeros((2 * C, 7 * C, 3), np.float32); M = np.zeros((2 * C, 7 * C, 3), np.float32)
         for col in range(2):
             for k, ch in enumerate(GL[col]):
-                c, ro, me, hg = cell(s, col, ch, k + col * 7)
+                c, ro, me, hg = cell(s, col, KAI_RED[k] if col == 0 and s != 'brass' else ch, k + col * 7)
                 rgb[col * C:(col + 1) * C, k * C:(k + 1) * C] = c
                 M[col * C:(col + 1) * C, k * C:(k + 1) * C] = np.stack([128 + np.clip(hg, -1, 1) * 127, ro * 255, me * 255], -1)
         put('pc-' + s, rgb, M)

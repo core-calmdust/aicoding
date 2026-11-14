@@ -5,6 +5,7 @@ from scipy import ndimage
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 FONTS = os.environ.get('XQ_FONTS', '/tmp/fonts')
 MING = ('/usr/share/fonts/opentype/noto/NotoSerifCJK-Black.ttc', 3)
+MINGB = ('/usr/share/fonts/opentype/noto/NotoSerifCJK-Bold.ttc', 3)
 _cmap = None
 def cmap():
     global _cmap
@@ -32,6 +33,8 @@ def glyph(ch, style='kai', size=200, bold=None):
     if style == 'kai':
         g = _kai(ch); b = 5 if bold is None else bold
         if b: g = g.filter(ImageFilter.MaxFilter(b))
+    elif style == 'mingb':
+        g = _render(ch, MINGB[0], MINGB[1])
     else:
         g = _render(ch, MING[0], MING[1])
     k = size / max(g.size); return g.resize((max(1, round(g.size[0] * k)), max(1, round(g.size[1] * k))), Image.LANCZOS)
