@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><title>scenes preview</title>
+<style>body{margin:0;background:#222}svg{display:block;width:100%;margin-bottom:6px}</style>
+<body><div id="g"></div>
+<script src="../games/shanghai-scenes.js"></script>
+<script>
+const st=document.createElement('style');st.textContent=ShanghaiScenes.css;document.head.appendChild(st);
+const ids=(location.hash.slice(1)||'forest,sweets,sea,castle,festival,autumn,snow,desert,toys,space').split(',');
+document.getElementById('g').innerHTML=ids.map((id,u)=>{const NA=6;let s=`<svg viewBox="0 0 ${NA*116} 64">`+ShanghaiScenes.svg(id,NA,u);
+for(let i=0;i<NA;i++)ShanghaiScenes.pts(id,i).forEach(([x,y],k)=>s+=`<circle cx="${i*116+8+x}" cy="${y}" r="2.6" fill="#ffd76a" stroke="#fff" stroke-width=".4"/>`);
+return s+'</svg>'}).join('');
+</script>
