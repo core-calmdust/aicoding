@@ -52,11 +52,13 @@ function woodTex() {
     const u = x / Wd, v = y / Hd;
     const warp = N.fbm(B, u, v) - .5, slow = N.fbm(Dn, u, v * .5);
     // the cathedrals: the ring index bends into arches along the board (two arches per wrap), their tips wandering
-    // the cathedrals: no fixed rhythm — an arch rises wherever a slow noise field crests, of whatever size it happens to be
-    const arch = Math.pow(Math.max(0, N.fbm(E, u, v * .35) - .48) * 3.2, 1.6) * 2.4;
-    const ring = v * 7.5 + warp * 1.1 + arch + (N.fbm(A, u, v * 1.5) - .5) * .55 + (N.fbm(Dn, u, v) - .5) * 1.4;   // (uneven spacing from year to year)
+    // (ユーザー 2026-11-14: no knots or closed rings — a table like this is cut clear of them: the grain runs as long, uneven
+    // lines.) The ring index climbs steadily across the board (it never turns back, so no line closes on itself); it drifts
+    // a little along the length, and the years are of uneven width.
+    const ring = (v + (N.fbm(B, u, v) - .5) * .09 + (N.fbm(Dn, u, v) - .5) * .05) * 10 + (N.fbm(A, u, v) - .5) * .35;   // (every term wraps with v: no seam round the rail)
     const f = ring - Math.floor(ring);
-    const late = sstep(.62, .9, f) * (1 - sstep(.93, 1, f));               // early wood pale, darkening into a sharp late-wood edge
+    const yr = Math.floor(ring), hsh = Math.abs(Math.sin(yr * 12.9898 + 4.1) * 43758.5453) % 1;   // this year's own width of late wood
+    const late = sstep(.5 + hsh * .3, .9, f) * (1 - sstep(.93, 1, f)) * (.55 + hsh * .45);               // early wood pale, darkening into a sharp late-wood edge
     const streak = N.fbm(Cn, u, v * 5) - .5;                               // fine streaks along the grain
     const mineral = Math.max(0, N.fbm(Dn, u + .37, v * 4) - .64) * 3;   // the odd darker streak
     let t = .64 - late * .34 + streak * .3 - mineral * .35 + (slow - .5) * .3; t = Math.min(1, Math.max(0, t));
@@ -68,7 +70,7 @@ function woodTex() {
     let r = mix(mix(46, 58, warm), mix(150, 170, warm), t), gg = mix(mix(24, 30, warm), mix(92, 104, warm), t), bb = mix(mix(12, 14, warm), mix(50, 52, warm), t);
     r *= 1 - pore * .3; gg *= 1 - pore * .34; bb *= 1 - pore * .34;
     o[p] = r + d; o[p + 1] = gg + d; o[p + 2] = bb + d; o[p + 3] = 255;
-    const h = .6 - late * .25 - pore * .5 + streak * .1; H[y * Wd + x] = h;
+    const h = .6 - late * .25 - pore * .28 + streak * .1; H[y * Wd + x] = h;
     const k = Math.max(0, Math.min(255, h * 255)); ob[p] = ob[p + 1] = ob[p + 2] = k; ob[p + 3] = 255;
   }
   g.putImageData(im, 0, 0); gb.putImageData(ib, 0, 0);
