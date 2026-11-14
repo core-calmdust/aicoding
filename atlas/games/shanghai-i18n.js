@@ -97,5 +97,20 @@
   add('rw.have', '{name}をもらったよ', 'You got {name}', '已获得{name}', '已獲得{name}', '{name} 획득 완료', 'Ya tienes a {name}', '{name} obtenu', 'Você já tem {name}', '{name} erhalten', 'Уже получено: {name}', '{name} kazanıldı', '{name} sudah didapat', '{name} मिल गया', 'حصلت على {name}');
   add('msg.undoPen', '待った：タイム +{n}秒', 'Undo: +{n}s to your time', '悔棋：用时 +{n}秒', '悔棋：用時 +{n}秒', '무르기: 시간 +{n}초', 'Deshacer: +{n} s al tiempo', 'Annuler : +{n} s au temps', 'Desfazer: +{n} s no tempo', 'Zurück: +{n} s Zeit', 'Отмена: +{n} с ко времени', 'Geri al: süreye +{n} sn', 'Batal: waktu +{n} dtk', 'वापस: समय में +{n} से.', 'تراجع: +{n} ث إلى الوقت');
   add('msg.undoPenL', '待った：残り時間 −{n}秒', 'Undo: −{n}s left', '悔棋：剩余时间 −{n}秒', '悔棋：剩餘時間 −{n}秒', '무르기: 남은 시간 −{n}초', 'Deshacer: −{n} s restantes', 'Annuler : −{n} s restantes', 'Desfazer: −{n} s restantes', 'Zurück: −{n} s Restzeit', 'Отмена: осталось −{n} с', 'Geri al: kalan süre −{n} sn', 'Batal: sisa waktu −{n} dtk', 'वापस: बचा समय −{n} से.', 'تراجع: −{n} ث من الوقت المتبقي');
+
+  // (2026-11-14) free play: the mode and the difficulty
+  add('f.board', '盤の種類', 'Board', '牌局', '牌局', '판 종류', 'Tablero', 'Plateau', 'Tabuleiro', 'Brett', 'Раскладка', 'Dizilim', 'Papan', 'बोर्ड', 'اللوحة');
+  add('f.mode', 'モード', 'Mode', '模式', '模式', '모드', 'Modo', 'Mode', 'Modo', 'Modus', 'Режим', 'Mod', 'Mode', 'मोड', 'الوضع');
+  add('f.diff', '難易度', 'Level', '难度', '難度', '난이도', 'Dificultad', 'Difficulté', 'Dificuldade', 'Schwierigkeit', 'Сложность', 'Zorluk', 'Kesulitan', 'कठिनाई', 'الصعوبة');
+  add('fm.clear', 'ノーマル', 'Normal', '普通', '普通', '노멀', 'Normal', 'Normal', 'Normal', 'Normal', 'Обычный', 'Normal', 'Normal', 'सामान्य', 'عادي');
+  add('fm.time', 'タイムアタック', 'Time attack', '限时挑战', '限時挑戰', '타임어택', 'Contrarreloj', 'Contre-la-montre', 'Contra o tempo', 'Zeitangriff', 'На время', 'Zamana karşı', 'Lawan waktu', 'टाइम अटैक', 'ضد الوقت');
+  add('fm.pairs', 'ペアアタック', 'Pair attack', '对子挑战', '對子挑戰', '페어어택', 'Parejas a contrarreloj', 'Paires chrono', 'Pares contra o tempo', 'Paar-Jagd', 'Пары на время', 'Çift avı', 'Kejar pasangan', 'जोड़ी अटैक', 'تحدي الأزواج');
+  add('fm.gold', '金の牌', 'Golden tiles', '金牌', '金牌', '금색 패', 'Fichas doradas', 'Tuiles dorées', 'Peças douradas', 'Goldsteine', 'Золотые кости', 'Altın taşlar', 'Ubin emas', 'सुनहरी टाइलें', 'القطع الذهبية');
+  add('fd.1', '初級', 'Easy', '初级', '初級', '초급', 'Fácil', 'Facile', 'Fácil', 'Leicht', 'Лёгкий', 'Kolay', 'Mudah', 'आसान', 'سهل');
+  add('fd.2', '中級', 'Medium', '中级', '中級', '중급', 'Medio', 'Moyen', 'Médio', 'Mittel', 'Средний', 'Orta', 'Sedang', 'मध्यम', 'متوسط');
+  add('fd.3', '上級', 'Hard', '高级', '高級', '상급', 'Difícil', 'Difficile', 'Difícil', 'Schwer', 'Трудный', 'Zor', 'Sulit', 'कठिन', 'صعب');
+  add('f.tiles', '{n}枚', '{n} tiles', '{n}张', '{n}張', '{n}개', '{n} fichas', '{n} tuiles', '{n} peças', '{n} Steine', '{n} костей', '{n} taş', '{n} ubin', '{n} टाइलें', '{n} قطعة');
+  add('msg.noShufD', 'この難易度ではシャッフルできません', 'No shuffles at this level', '此难度不能洗牌', '此難度不能洗牌', '이 난이도에서는 셔플할 수 없어요', 'En esta dificultad no se baraja', 'Pas de mélange à ce niveau', 'Sem embaralhar nesta dificuldade', 'Auf dieser Stufe kein Mischen', 'На этой сложности нельзя перемешивать', 'Bu zorlukta karıştırma yok', 'Tidak bisa mengacak di tingkat ini', 'इस कठिनाई में फेंटना नहीं', 'لا خلط في هذه الصعوبة');
+  add('msg.noHintD', 'この難易度ではヒントは使えません', 'No hints at this level', '此难度不能用提示', '此難度不能用提示', '이 난이도에서는 힌트를 쓸 수 없어요', 'En esta dificultad no hay pistas', 'Pas d’indice à ce niveau', 'Sem dicas nesta dificuldade', 'Auf dieser Stufe keine Tipps', 'На этой сложности без подсказок', 'Bu zorlukta ipucu yok', 'Tidak ada petunjuk di tingkat ini', 'इस कठिनाई में संकेत नहीं', 'لا تلميحات في هذه الصعوبة');
   window.SHANGHAI_I18N = D;
 })();
