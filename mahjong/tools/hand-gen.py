@@ -80,7 +80,7 @@ out = pit(rig(P)); nor = pit(rign(NN))
 # 人差し指と中指の先の「腹」（先端付近でいちばん低い所）の中点を原点へ
 def pad(f):
     c = pit(rig(tip(f + '-finger-tip'))); m = np.linalg.norm(out - c, axis=1) < .42; return np.array([c[0], out[m][:, 1].min(), c[2] + .12])
-grip = (pad('index') + pad('middle')) / 2
+ipad = pad('index'); grip = (ipad + pad('middle')) / 2
 out = out - grip + np.array([0, .015, -.12])
 
 # 爪：各指の末節で、背側・先のほうの頂点
@@ -97,8 +97,71 @@ for f, dn, tn in [(x, x + '-finger-phalanx-distal', x + '-finger-tip') for x in 
     wr = np.exp(-(np.linalg.norm(out - b, axis=1) / .45) ** 2)[:, None]; col = col * (1 - wr * .45) + np.array([218, 140, 126]) * wr * .45   # 指先の赤み
 col[isn] = (238, 160, 174)
 
+# ---- つまむポーズ（ユーザー 2026-11-14：親指と人差し指で向かい合わせにつまみ、親指が牌の下面を支え、人差し指を上面に添える）----
+# 置くポーズ（上の、親指が横にある形）と同じ面の並びのまま、親指だけを牌の下へ回した形をもう一つ作る（実行時に二つの間を動かす）。
+# 親指の付け根の回転（3）と、先の二つの関節の曲げ（軸の向き 1 ＋ 角度 2）を、条件に合うように探す（乱数は固定）。
+OFF = np.array([0, .015, -.12])
+# （つまむ形では人差し指・中指も置く形より深く曲げる：置く形のままでは親指の付け根から牌の下まで届かない。手全体の位置は、
+#  つまむ形でも「人差し指と中指の腹の中点」が原点に来るように合わせ直す。→ 二つのポーズは全頂点が違う）
+TH = ['thumb-metacarpal', 'thumb-phalanx-proximal', 'thumb-phalanx-distal', 'thumb-tip']; thj = [idx[n] for n in TH]
+wth = sum(np.where(JI[:, c] == j, JW[:, c], 0) for c in range(4) for j in thj); tm = wth > .01
+wdi = sum(np.where(JI[:, c] == j, JW[:, c], 0) for c in range(4) for j in thj[2:]) > .6
+DB = {n: (D[n][0].copy(), D[n][1].copy()) for n in names}            # 置くポーズ（あとで戻す）
+def thumbD(q):
+    rv = np.array(q[:3]); a = np.linalg.norm(rv); R = rot(rv, a) if a > 1e-6 else np.eye(3); p0 = jpos[TH[0]]; t = p0 - R @ p0
+    D[TH[0]] = (R, t)
+    for k, fl in ((1, q[4]), (2, q[5])):
+        p = R @ jpos[TH[k]] + t; d = R @ jpos[TH[k + 1]] + t - p; d /= np.linalg.norm(d)
+        u = np.cross(d, R @ PALM); u /= np.linalg.norm(u); v = np.cross(d, u); r = rot(math.cos(q[3]) * u + math.sin(q[3]) * v, fl)
+        R, t = r @ R, r @ (t - p) + p
+        for n in TH[k:]: D[n] = (R, t)
+def RG(q):                                     # つまむ形での手全体の向き：指の向きを軸にしたひねり（親指側を下げる）と、手首の上げ下げ
+    c, s_ = math.cos(q[9]), math.sin(q[9]); c2, s2 = math.cos(q[10]), math.sin(q[10])
+    return np.array([[c, -s_, 0], [s_, c, 0], [0, 0, 1.]]) @ np.array([[1., 0, 0], [0, c2, -s2], [0, s2, c2]])
+def poseA(q):                                  # q: 親指 6 ＋ 人差し指の曲げ 3（中指は少しだけ深く）＋ 手全体のひねり・上げ下げ 2
+    thumbD(q); curl(F4('index'), q[6:9]); curl(F4('middle'), (q[6] + .03, q[7] + .03, q[8]))
+    Rs = np.stack([D[n][0] for n in names]); ts = np.stack([D[n][1] for n in names]); Pq = np.zeros_like(V)
+    for c in range(4): Pq += JW[:, c][:, None] * (np.einsum('nij,nj->ni', Rs[JI[:, c]], V) + ts[JI[:, c]])
+    Rg = RG(q); X = pit(rig(Pq)) @ Rg.T; g = []
+    for f in ('index', 'middle'):
+        c = Rg @ pit(rig(tip(f + '-finger-tip'))); m = np.linalg.norm(X - c, axis=1) < .42; g.append(np.array([c[0], X[m][:, 1].min(), c[2] + .12]))
+    return X - (g[0] + g[1]) / 2 + OFF, (g[0] - g[1])[0] / 2, (g[0] + g[1]) / 2
+GAP = 0.78 / 0.84                              # 牌の厚み（リグの単位。実行時に手を .84 倍にしている）
+nth = isn & tm
+def cost(q):
+    X, ipx, _g = poseA(q); Y = X[wdi]; ym = Y[:, 1].max(); w = np.exp((Y[:, 1] - ym) / .06); c = (Y[:, [0, 2]] * w[:, None]).sum(0) / w.sum()
+    foot = (np.abs(X[:, 0]) < .62) & (X[:, 2] < .42) & (X[:, 2] > -1.2) & (X[:, 1] > -GAP + .015)
+    ins = foot & np.where(tm, X[:, 1] < .35, X[:, 1] < -.05)                                          # 牌（親指は、その上の指にも）にめり込む分
+    d = RG(q) @ (pit(rig(tip('index-finger-tip'))) - pit(rig(tip('index-finger-phalanx-distal')))); d /= np.linalg.norm(d)
+    e = 12 * (ym + GAP) ** 2 + .6 * ((c - np.array([ipx * .5, .2])) ** 2).sum() + 40 * ((X[ins, 1] + GAP) ** 2).sum() / len(X) + .03 * float(np.sum(np.array(q[:3]) ** 2)) + .05 * q[9] ** 2 + .1 * q[10] ** 2
+    e += 3 * max(0., abs(d[1]) - .6) ** 2 + 2 * max(0., d[2] + .3) ** 2                             # 人差し指の先は寝かせて前（−z）へ向ける（腹で上面に添える）
+    dt = RG(q) @ (pit(rig(tip('thumb-tip'))) - pit(rig(tip('thumb-phalanx-distal')))); dt /= np.linalg.norm(dt)
+    e += 3 * max(0., abs(dt[1]) - .6) ** 2                                                           # 親指の先も寝かせる（腹で下面を支える。突き立てない）
+    e += 2 * max(0., Y[:, 2].mean() - .45) ** 2 + 2 * max(0., abs(Y[:, 0].mean()) - .5) ** 2         # 親指の先の節は牌の下に入っている
+    if nth.any(): e += 12 * max(0., X[nth, 1].mean() - (Y[:, 1].mean() - .12)) ** 2                    # 親指の爪は下（腹が上）
+    return e
+rng = np.random.RandomState(7); cands = []
+def clampq(q): q = list(q); q[4] = min(1.2, max(-.3, q[4])); q[5] = min(1.0, max(-.3, q[5])); q[6:9] = [min(1.5, max(0., x)) for x in q[6:9]]; q[9] = min(1.6, max(-1.6, q[9])); q[10] = min(.8, max(-.8, q[10])); return q
+print('thumb nail verts', int(nth.sum()))
+for _ in range(8000):
+    rv = rng.normal(size=3); rv *= rng.uniform(0, 2.0) / np.linalg.norm(rv)
+    q = clampq(list(rv) + [rng.uniform(0, 6.283), rng.uniform(-.2, 1.2), rng.uniform(-.2, 1.0), rng.uniform(.3, 1.4), rng.uniform(.2, 1.3), rng.uniform(.1, .9), rng.uniform(-1.6, 1.6), rng.uniform(-.8, .8)])
+    cands.append((cost(q), q))
+cands.sort(key=lambda x: x[0]); best = None
+for e0, q0 in cands[:6]:                       # よい出だしをいくつか、それぞれ詰める
+    cur = (e0, q0); sg = .2
+    for it in range(2500):
+        q = clampq(np.array(cur[1]) + rng.normal(size=11) * sg * np.array([1, 1, 1, 1.5, 1, 1, .8, .8, .8, 1, .6])); e = cost(q)
+        if e < cur[0]: cur = (e, q)
+        if it % 500 == 499: sg *= .6
+    if best is None or cur[0] < best[0]: best = cur
+outA, _, gA = poseA(best[1]); YA = outA[wdi]; RgA = RG(best[1])
+print('pinch: cost', round(best[0], 4), 'thumb top y', round(float(YA[:, 1].max()), 3), '(want', round(-GAP, 3), ')', 'q', np.round(best[1], 2))
+assert abs(YA[:, 1].max() + GAP) < .08, 'the thumb does not reach the underside of the tile'
+for n in names: D[n] = DB[n]
+
 # ---- 肌らしく（ユーザー 2026-11-14「ポリゴン感が強い」）：面を細かく丸め（Loop 細分割 1 回）、色に肌のむらを入れる ----
-def loop_subdivide(P, C, NL, F):
+def loop_subdivide(P, C, NL, F, P2):          # P2: もう一つのポーズ（同じ並びで細分割する）
     # 同じ位置の頂点をまとめる（元モデルは継ぎ目で頂点が分かれている）
     key = {}; rm = np.zeros(len(P), int); 
     for i, v in enumerate(np.round(P, 5)):
@@ -106,6 +169,7 @@ def loop_subdivide(P, C, NL, F):
     n0 = len(key); P0 = np.zeros((n0, 3)); C0 = np.zeros((n0, 3)); N0 = np.ones(n0, bool); cnt = np.zeros(n0)
     np.add.at(P0, rm, P); np.add.at(C0, rm, C); np.add.at(cnt, rm, 1); P0 /= cnt[:, None]; C0 /= cnt[:, None]
     for i in range(len(P)): N0[rm[i]] &= bool(NL[i])
+    Q0 = np.zeros((n0, 3)); np.add.at(Q0, rm, P2); Q0 /= cnt[:, None]
     F = rm[F]; F = F[(F[:, 0] != F[:, 1]) & (F[:, 1] != F[:, 2]) & (F[:, 0] != F[:, 2])]
     ed = {}                                   # 辺 → [向かいの頂点…]
     for a, b, c in F:
@@ -114,28 +178,30 @@ def loop_subdivide(P, C, NL, F):
     for (u, v), o in ed.items():
         nb[u].add(v); nb[v].add(u)
         if len(o) == 1: bnb[u].add(v); bnb[v].add(u)
-    E = np.zeros((n0, 3))
+    E = np.zeros((n0, 3)); E2 = np.zeros((n0, 3))
     for i in range(n0):
-        if len(bnb[i]) == 2: q = list(bnb[i]); E[i] = .75 * P0[i] + .125 * (P0[q[0]] + P0[q[1]])       # 縁（手首の切り口）
+        if len(bnb[i]) == 2: q = list(bnb[i]); E[i] = .75 * P0[i] + .125 * (P0[q[0]] + P0[q[1]]); E2[i] = .75 * Q0[i] + .125 * (Q0[q[0]] + Q0[q[1]])       # 縁（手首の切り口）
         else:
-            k = len(nb[i]); beta = 3 / 16 if k == 3 else 3 / (8 * k); E[i] = (1 - k * beta) * P0[i] + beta * P0[list(nb[i])].sum(0)
-    eid = {}; OP = []; OC = []; ON = []
+            k = len(nb[i]); beta = 3 / 16 if k == 3 else 3 / (8 * k); E[i] = (1 - k * beta) * P0[i] + beta * P0[list(nb[i])].sum(0); E2[i] = (1 - k * beta) * Q0[i] + beta * Q0[list(nb[i])].sum(0)
+    eid = {}; OP = []; OC = []; ON = []; OQ = []
     for (u, v), o in ed.items():
         eid[(u, v)] = n0 + len(OP)
         OP.append((P0[u] + P0[v]) / 2 if len(o) != 2 else .375 * (P0[u] + P0[v]) + .125 * (P0[o[0]] + P0[o[1]]))
+        OQ.append((Q0[u] + Q0[v]) / 2 if len(o) != 2 else .375 * (Q0[u] + Q0[v]) + .125 * (Q0[o[0]] + Q0[o[1]]))
         OC.append((C0[u] + C0[v]) / 2); ON.append(N0[u] and N0[v])
     e = lambda u, v: eid[(min(u, v), max(u, v))]
     F2 = []
     for a, b, c in F:
         ab, bc, ca = e(a, b), e(b, c), e(c, a); F2 += [(a, ab, ca), (b, bc, ab), (c, ca, bc), (ab, bc, ca)]
-    return np.concatenate([E, OP]), np.concatenate([C0, OC]), np.concatenate([N0, ON]), np.array(F2)
+    return np.concatenate([E, OP]), np.concatenate([C0, OC]), np.concatenate([N0, ON]), np.array(F2), np.concatenate([E2, OQ])
 def vnormals(P, F):
     fnm = np.cross(P[F[:, 1]] - P[F[:, 0]], P[F[:, 2]] - P[F[:, 0]]); N = np.zeros_like(P)
     for k in range(3): np.add.at(N, F[:, k], fnm)
     return N / np.maximum(np.linalg.norm(N, axis=1, keepdims=True), 1e-9)
 nor0 = nor.copy(); out0 = out.copy()
-out, col, isn, F = loop_subdivide(out, col, isn, F)
-nor = vnormals(out, F)
+out, col, isn, F, outA = loop_subdivide(out, col, isn, F, outA)
+nor = vnormals(out, F); norA = vnormals(outA, F)
+mv = np.where(np.linalg.norm(outA - out, axis=1) > 1e-4)[0]          # つまむポーズで動く頂点（親指のまわり）だけを持つ
 # （向きの確認：細分割後の法線が元の法線と同じ側を向いていること）
 _i = np.argmin(np.linalg.norm(out[:, None, :] - out0[None, :40, :], axis=2), axis=0); assert (np.sum(nor[_i] * nor0[:40], axis=1) > 0).mean() > .9, 'normals flipped'
 # 肌の色むら：くぼみ（指の股・関節のしわ）は少し暗く赤く、出っ張りは少し明るく。関節は赤み、下面（手のひら側）は桃色
@@ -162,10 +228,11 @@ sl = wz + pit(np.array([0, 0, -.35]))
 band = np.abs((out - sl) @ pit(np.array([0, 0, 1.]))) < .35
 ctr = out[band].mean(0); hw = float(np.abs(out[band][:, 0] - ctr[0]).max()); ht = float(np.abs((out[band] - ctr) @ pit(np.array([0, 1., 0]))).max())
 sl = np.array([ctr[0], sl[1] + (ctr - sl) @ pit(np.array([0, 1., 0])) * math.cos(PITCH), sl[2]])
-lo = out.min(0); hi = out.max(0); q16 = np.round((out - lo) / (hi - lo) * 65535).astype('<u2')
+lo = np.minimum(out.min(0), outA.min(0)); hi = np.maximum(out.max(0), outA.max(0)); q16 = np.round((out - lo) / (hi - lo) * 65535).astype('<u2')
 data = {'lo': [round(float(x), 4) for x in lo], 'hi': [round(float(x), 4) for x in hi], 'nv': int(len(out)), 'nt': int(len(F2)), 'nail': int((~fn).sum()),
-        'wrist': [round(float(x), 3) for x in sl], 'wr': [round(hw, 3), round(ht, 3)], 'pitch': PITCH,
+        'wrist': [round(float(x), 3) for x in sl], 'wristA': [round(float(x), 3) for x in (RgA @ (sl + grip - OFF) - gA + OFF)], 'rollA': round(float(best[1][9]), 4), 'dpA': round(float(best[1][10]), 4), 'wr': [round(hw, 3), round(ht, 3)], 'pitch': PITCH,
         'p': base64.b64encode(q16.tobytes()).decode(), 'n': base64.b64encode(np.round(nor * 127).astype('i1').tobytes()).decode(),
+        'mi': base64.b64encode(mv.astype('<u2').tobytes()).decode(), 'mp': base64.b64encode(np.round((outA[mv] - lo) / (hi - lo) * 65535).astype('<u2').tobytes()).decode(), 'mn': base64.b64encode(np.round(norA[mv] * 127).astype('i1').tobytes()).decode(),
         'i': base64.b64encode(F2.astype('<u2').tobytes()).decode(), 'c': base64.b64encode(col.clip(0, 255).astype('u1').tobytes()).decode()}
 lic = open(os.path.join(HERE, 'hand-src', 'LICENSE.md')).read().strip()
 dst = os.path.join(HERE, '..', 'hand.js')
