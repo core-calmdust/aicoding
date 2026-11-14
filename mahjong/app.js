@@ -31,6 +31,10 @@ function load() {
   d.set = Object.assign({ len: 'east', skills: true, lv: 2, snd: true, lite: weak }, d.set || {});
   if (window.PhoneSnd && PhoneSnd.phone) d.set.snd = true;   // phones: the silent switch decides (shared/phonesnd.js)
   d.stats = Object.assign({ games: 0, rank: [0, 0, 0, 0] }, d.stats || {});
+  // スタッツ (pstats.js): raw counters by mode, and games / places by the character played. Games from before the
+  // stats existed only know the places: they are kept as `old` and counted in すべて.
+  if (!d.pstats) d.pstats = { v: MJStats.V, skill: MJStats.blank(), std: MJStats.blank(), chars: {}, old: d.stats.games ? Object.assign(MJStats.blank(), { games: d.stats.games, rank: d.stats.rank.slice() }) : null };
+  MJStats.fix(d.pstats.skill); MJStats.fix(d.pstats.std); d.pstats.chars = d.pstats.chars || {};
   return d;
 }
 const owns = id => !!DB.chars[id];
@@ -63,6 +67,7 @@ const IC = {
   lock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/></svg>',
   bolt: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>',
   coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a2 2 0 0 1 0 4H9"/></svg>',
+  stats: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   chest: '<svg viewBox="0 0 24 24"><path d="M3 10h18v10H3zM3 10a9 5 0 0 1 18 0"/><path d="M11 13h2v3h-2z"/></svg>',
 };
 const icon = k => IC[k] || '';
@@ -218,7 +223,7 @@ function renderHome() {
   $('#partner').innerHTML = `
     <button class="pimg frame fr-${c.rarity}" id="pImg" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i><span class="ptap">${esc(t('tapChange'))}</span></button>
     <div class="pinfo">
-      <div class="prar r-${c.rarity}">${c.rarity}</div>
+      <div class="prow"><div class="prar r-${c.rarity}">${c.rarity}</div><button class="psbtn" id="pStats">${IC.stats}<span>${esc(t('stats'))}</span></button></div>
       <div class="pname">${esc(L(c.name))}<small>${esc(L(c.title))}</small></div>
       ${skillBlock(uk)}
       ${o.skills.length > 1 ? `<div class="skpick"><small>${t('useThis')}</small><div class="skl" id="homeSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>` : ''}
@@ -234,7 +239,7 @@ function renderHome() {
   seg($('#optSkill'), [['1', t('skillOn')], ['0', t('skillOff')]], DB.set.skills ? '1' : '0', v => DB.set.skills = v === '1');
   seg($('#optLv'), t('lv').map((x, i) => [String(i), x]), String(DB.set.lv), v => DB.set.lv = +v);
 }
-$('#partner').addEventListener('click', e => { if (e.target.closest('#pImg')) { SND.pick(); openChara(DB.sel); } });
+$('#partner').addEventListener('click', e => { if (e.target.closest('#pImg')) { SND.pick(); openChara(DB.sel); } else if (e.target.closest('#pStats')) openStats(null); });
 $('#langSel').addEventListener('change', e => { I18N.set(e.target.value); renderHome(); if (window.GameRecord) GameRecord.relabel(); });
 // 戦績: a labelled button in the home header (PC and phones — this game has no bottom tab bar)
 if (window.GameRecord) { GameRecord.init({ game: 'mahjong', lang: () => I18N.lang, menu: '#home .top', btnClass: 'ib rec' }); const rb = $('#btnRecord'); if (rb) $('#home .top').insertBefore(rb, $('#btnGacha')); }
@@ -388,6 +393,89 @@ function renderChara() {
 }
 $('#chList').addEventListener('click', e => { const b = e.target.closest('.chi'); if (!b) return; chView = b.dataset.id; SND.pick(); renderChara(); });
 
+// ---------------------------------------------------------------- スタッツ (player stats)
+// Tap a character (home: the partner's スタッツ button; in a game: any seat's face; the final places) → that player's stats,
+// with the character large on the left. Who a seat is comes from UIS.players[s]: { kind: 'me' } · { kind: 'bot', lv } ·
+// later { kind: 'online', uid, name } (read through MJStats.remote — the same raw counters as the player's own).
+let PS = null;
+const RANKC = ['#ffc94a', '#e6ecf5', '#f0a48a', '#8fd9c0'];
+const pct = (x, d = 1) => x == null ? '—' : (x * 100).toFixed(d) + '%';
+const num = (x, d = 0) => x == null ? '—' : (+x).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+function inGame() { return !!(UIS && G && !$('#game').hidden); }
+async function openStats(s) {             // s: a seat of the game on screen; null = the player (home)
+  SND.pick();
+  const ig = s != null && inGame();
+  const pl = ig ? (UIS.players && UIS.players[s]) || { kind: s === ME ? 'me' : 'bot', lv: DB.set.lv } : { kind: 'me' };
+  const c = ig ? UIS.chars[s] : seatChar(MJChars.get(DB.sel), useKey(DB.sel));
+  const tabs = [];
+  if (pl.kind === 'me') {
+    const P = DB.pstats;
+    tabs.push(['all', t('psAll'), MJStats.sum(P.skill, P.std, P.old)], ['skill', t('skillOn'), P.skill], ['std', t('skillOff'), P.std]);
+  } else if (pl.kind === 'online' && MJStats.remote) {
+    let r = null; try { r = await MJStats.remote(pl.uid); } catch (e) {}
+    if (r && r.raw) tabs.push(['all', t('psAll'), MJStats.sum(r.raw.skill, r.raw.std)], ['skill', t('skillOn'), MJStats.fix(r.raw.skill)], ['std', t('skillOff'), MJStats.fix(r.raw.std)]);
+  }
+  if (ig && UIS.track) tabs.push(['game', t('psGame'), UIS.track.seat[s]]);
+  let tab = tabs[0] ? tabs[0][0] : 'game';
+  if (ig && pl.kind === 'me' && !tabs[0][2].games) tab = 'game';      // nothing finished yet: start on this game
+  PS = { s, ig, pl, c, tabs, tab };
+  renderStats();
+  const el = $('#pstats'); el.hidden = false; requestAnimationFrame(() => el.classList.add('show'));
+}
+function closeStats() { const el = $('#pstats'); if (el.hidden) return; el.classList.remove('show'); el.hidden = true; el.innerHTML = ''; PS = null; }
+function renderStats() {
+  const P = PS, c = P.c, pl = P.pl;
+  const tb = P.tabs.find(x => x[0] === P.tab) || P.tabs[0];
+  const raw = tb ? tb[2] : MJStats.blank(), D = MJStats.derive(raw), isG = !!tb && tb[0] === 'game';
+  const who = pl.kind === 'me' ? t('you') : pl.kind === 'bot' ? 'BOT · ' + t('lv')[pl.lv | 0] : esc(pl.name || '');
+  const sk = (P.ig ? (c.skill ? MJSkills.key(c.skill, c.tier | 0) : null) : useKey(c.id));
+  const empty = isG ? !D.hands : !D.games && !D.hands;
+  let place = null; if (isG && G) place = G.ranking().indexOf(P.s);
+  const big = isG
+    ? [[t('psHands'), num(D.hands)], [t('psNow'), place == null ? '—' : t('rank')[place]], [t('psWin'), pct(D.win)], [t('psDealin'), pct(D.dealin)]]
+    : [[t('psGames'), num(D.games)], [t('psAvgRank'), num(D.avgRank, 2)], [t('psWin'), pct(D.win)], [t('psDealin'), pct(D.dealin)]];
+  const rows = (isG ? [] : [[t('psTop'), pct(D.top)], [t('psRentai'), pct(D.rentai)], [t('psLastAvoid'), pct(D.lastAvoid)], [t('psAvgScore'), num(D.avgScore)], [t('psBust'), pct(D.bust)]])
+    .concat([[t('psRiichi'), pct(D.riichi)], [t('psCall'), pct(D.call)], [t('psTsumo'), pct(D.tsumo)], [t('psRiichiWin'), pct(D.riichiWin)],
+      [t('psAvgWin'), num(D.avgWin)], [t('psAvgDeal'), num(D.avgDealin)], [t('psDrawTen'), pct(D.drawTenpai)],
+      isG ? [t('psSkillN'), num(raw.skillUses)] : [t('psSkill'), num(D.skillPerGame, 2)], [t('psYakuman'), num(D.yakuman)]]);
+  const mw = D.maxWin;
+  const mwHtml = mw && mw.pts ? `<b class="ps-mwp">${num(mw.pts)}</b><span>${mw.limit ? esc(t(mw.limit)) : esc(t('han', { n: mw.han }) + ' ' + t('fu', { n: mw.fu }))}${mw.yaku ? ` · ${esc(I18N.yaku(mw.yaku))}` : ''}</span>` : `<span class="ps-none">—</span>`;
+  const ymax = D.yakuTop.length ? D.yakuTop[0][1] : 1;
+  const yHtml = D.yakuTop.length ? D.yakuTop.map(([k, n]) => `<div class="ps-yk"><span>${esc(I18N.yaku(k))}</span><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i><b>${n}</b></div>`).join('') : `<span class="ps-none">—</span>`;
+  let chHtml = '';
+  if (pl.kind === 'me' && tb && tb[0] === 'all') {
+    const ch = Object.entries(DB.pstats.chars).filter(([id]) => MJChars.get(id)).sort((a, b) => b[1].g - a[1].g).slice(0, 6);
+    if (ch.length) chHtml = `<section class="ps-sec ps-chs"><h4>${t('psChars')}</h4><div>${ch.map(([id, o]) => { const x = MJChars.get(id); const ar = o.g ? (o.r[0] + o.r[1] * 2 + o.r[2] * 3 + o.r[3] * 4) / o.g : null; return `<div class="ps-ch" style="--c:${x.color}"><img src="${charImg(x, 'face')}" alt=""><b>${esc(L(x.name))}</b><small>${esc(t('psGamesN', { n: o.g }))} · ${esc(t('psAvgRank'))} ${num(ar, 2)}</small></div>`; }).join('')}</div></section>`;
+  }
+  $('#pstats').innerHTML = `
+    <div class="ps-box" style="--c:${c.color};--c2:${c.color2}">
+      <div class="ps-art ch-art frame fr-${c.rarity}" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i></div>
+      <div class="ps-main">
+        <header class="ps-h">
+          <div class="ps-id"><em class="prar r-${c.rarity}">${c.rarity}</em><div><b>${esc(L(c.name))}</b><small>${esc(L(c.title))}</small></div></div>
+          <span class="ps-who">${who}</span>
+          <button class="x" data-a="close" aria-label="${esc(t('close'))}">×</button>
+        </header>
+        ${sk ? `<div class="ps-sk">${skillChip(sk)}</div>` : ''}
+        ${P.tabs.length > 1 ? `<div class="ps-tabs">${P.tabs.map(([k, lab]) => `<button class="${k === (tb && tb[0]) ? 'on' : ''}" data-tab="${k}">${esc(lab)}</button>`).join('')}</div>` : ''}
+        <div class="ps-body">
+          ${!tb ? `<p class="ps-empty">${esc(t('psNoData'))}</p>` : empty ? `<p class="ps-empty">${esc(t(isG ? 'psEmptyG' : 'psEmpty'))}</p>` : `
+          <div class="ps-big">${big.map(([l, v]) => `<div><small>${esc(l)}</small><b>${v}</b></div>`).join('')}</div>
+          ${isG ? '' : `<section class="ps-sec"><h4>${t('psRanks')}</h4><div class="ps-rbar">${D.rankP.map((p, i) => p ? `<i style="flex:${p};--rc:${RANKC[i]}"><b>${t('rank')[i]}</b><span>${pct(p)}</span></i>` : '').join('')}</div>
+            <div class="ps-rn">${raw.rank.map((n, i) => `<span style="--rc:${RANKC[i]}"><i></i>${t('rank')[i]} <b>${n}</b></span>`).join('')}</div></section>`}
+          <div class="ps-grid">${rows.map(([l, v]) => `<div><span>${esc(l)}</span><b>${v}</b></div>`).join('')}</div>
+          <div class="ps-cols"><section class="ps-sec ps-mw"><h4>${t('psMaxWin')}</h4><div>${mwHtml}</div></section><section class="ps-sec"><h4>${t('psYaku')}</h4><div class="ps-yks">${yHtml}</div></section></div>
+          ${chHtml}`}
+          ${pl.kind === 'bot' ? `<p class="ps-note">${esc(t('psBotNote'))}</p>` : pl.kind === 'me' ? `<p class="ps-note">${esc(t('psNote'))}</p>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+$('#pstats').addEventListener('click', e => {
+  const tb = e.target.closest('[data-tab]'); if (tb && PS) { PS.tab = tb.dataset.tab; SND.pick(); renderStats(); return; }
+  if (e.target.closest('[data-a=close]') || !e.target.closest('.ps-main, .ps-art')) { SND.pick(); closeStats(); }
+});
+
 // ================================================================ GAME
 let G = null;          // MJGame
 let TB = null;         // Table3D
@@ -422,7 +510,7 @@ async function startGame() {
   const others = MJChars.list.filter(c => c.id !== me.id).sort(() => Math.random() - .5).slice(0, 3).map(c => seatChar(c, rollSkillKey()));
   const chars = [me, ...others];
   chars.forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); });   // cut-in art, loaded in advance
-  UIS = { chars, abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
+  UIS = { chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv: DB.set.lv }))], track: new MJStats.Tracker(), abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
   const agents = [auto ? new AutoMe(DB.set.lv) : new Human(), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv)];
   G = new MJGame({ agents, chars, rules: { length: DB.set.len, skills: DB.set.skills }, ui: onEvent });
@@ -434,12 +522,18 @@ async function startGame() {
   try { await G.run(); } catch (e) { if (e !== 'abort') { console.error(e); toast('Error: ' + e.message, 5000); } }
   if (g0 !== G) return;
 }
+// a seat's face → that player's stats
+$('#game .hud').addEventListener('click', e => {
+  const o = e.target.closest('.opp, .me .mb'); if (!o || !UIS) return;
+  openStats(o.id ? +o.id.slice(3) : ME);
+});
 $('#gExit').addEventListener('click', async () => {
   if (!(await confirmBox(t('exitQ')))) return;
   quitGame();
 });
 function quitGame() {
   if (UIS) UIS.abort = true;
+  closeStats();
   $('#dealAsk').hidden = true;
   G = null;
   $('#game').hidden = true; $('#home').hidden = false;
@@ -452,6 +546,8 @@ function quitGame() {
 async function onEvent(ev, d) {
   if (!UIS || UIS.abort || UIS.game !== G) throw 'abort';
   const g = G;
+  UIS.track.on(ev, d, g);
+  if (ev === 'agari' || ev === 'ryuukyoku' || ev === 'game-end') closeStats();
   switch (ev) {
     case 'game-start': renderBadges(); break;
     case 'hand-start': {
@@ -944,7 +1040,13 @@ async function showFinal(d) {
   const myRank = rank.indexOf(ME);
   // 1st = two single pulls, 2nd = one pull (COST1 each); hanchan pays double
   const coins = [COST1 * 2, COST1, 120, 60][myRank] * (G.rules.length === 'south' ? 2 : 1);
-  DB.coins += coins; DB.stats.games++; DB.stats.rank[myRank]++; save();
+  DB.coins += coins; DB.stats.games++; DB.stats.rank[myRank]++;
+  if (!AUTO) {   // スタッツ: this game's counters into the mode's total, and the place under the character played
+    MJStats.add(DB.pstats[G.rules.skills ? 'skill' : 'std'], UIS.track.seat[ME]);
+    const pc = DB.pstats.chars[UIS.chars[ME].id] = DB.pstats.chars[UIS.chars[ME].id] || { g: 0, r: [0, 0, 0, 0] };
+    pc.g++; pc.r[myRank]++;
+  }
+  save();
   recordGame(d, myRank);
   const w = UIS.chars[rank[0]];
   const box = modal(`
@@ -954,13 +1056,14 @@ async function showFinal(d) {
       <div class="agst-who"><b>${esc(L(w.name))}</b><span>${t('rank')[0]}</span></div>
       <div class="agst-main">
         <h2 class="fn-t">${t('final')}</h2>
-        <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
+        <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" data-ps="${s}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
         <div class="earn">${icon('coin')} ${t('earned', { n: coins })}</div>
         <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div>
       </div>
     </div>`, 'stage');
   SND.ok();
   await new Promise(res => box.addEventListener('click', e => {
+    const ps = e.target.closest('[data-ps]'); if (ps) { openStats(+ps.dataset.ps); return; }
     const a = e.target.closest('[data-a]'); if (!a) return;
     closeModal();
     if (a.dataset.a === 'home') quitGame(); else { UIS.abort = true; startGame(); }
@@ -988,6 +1091,7 @@ document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (!$('#pstats').hidden) { if (k === 'Escape' || k === 'Enter') { e.preventDefault(); closeStats(); } return; }
   const m = $('#modal');
   // modal screens
   if (!m.hidden) {
