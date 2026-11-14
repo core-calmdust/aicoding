@@ -531,7 +531,17 @@ class Table3D {
       let o = g.userData.dora;
       if (want && !o) {
         // (ユーザー 2026-11-14: the glow covers the whole tile, every side — a skin over the full block — and looks the same as in the hand row)
-        if (!this.doraMat) { this.doraGeo = this._tileSkin();
+        if (!this.doraMat) this._doraMake();
+        o = g.userData.dora = new THREE.Mesh(this.doraGeo, this.doraMat); o.renderOrder = 3; g.add(o);
+      }
+      if (o) o.visible = !!want;
+      if (want) n++;
+    }
+    this._doraN = n;
+  }
+  // the dora's glow lies on the face itself (ユーザー 2026-11-14: not a flat pane over the tile, like a case): the face's own
+  // triangles (the flat and the start of the round-over) lifted a hair along their normals, uv 0..1 over that area
+  _doraMake() { this.doraGeo = this._tileSkin();
           this.doraMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: -1 } },
             vertexShader: `varying vec3 vP; varying vec3 vN; varying vec3 vV; varying float vF;
               void main(){ vP = position; vF = normal.z; vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
@@ -550,15 +560,8 @@ class Table3D {
                 float band = uT < 0.0 ? 0.0 : (exp(-bp * bp / .006) * .85 + exp(-bp * bp / .05) * .25) * sin(sw * 3.14159) * 1.35;   // a band of light sweeps across the tile
                 float a = clamp(.15 + rim * .6 + run * 1.2 + st + band, 0.0, .96);
                 gl_FragColor = vec4(mix(vec3(1.0, .42, .68), vec3(1.0, .92, .96), clamp(run * 1.4 + st + band * 1.2, 0.0, 1.0)), a); }` }); }
-        o = g.userData.dora = new THREE.Mesh(this.doraGeo, this.doraMat); o.renderOrder = 3; g.add(o);
-      }
-      if (o) o.visible = !!want;
-      if (want) n++;
-    }
-    this._doraN = n;
-  }
-  // the dora's glow lies on the face itself (ユーザー 2026-11-14: not a flat pane over the tile, like a case): the face's own
-  // triangles (the flat and the start of the round-over) lifted a hair along their normals, uv 0..1 over that area
+  // compile the shaders ahead of time (ユーザー 2026-11-14: no hitch the first time a dora or a new look shows mid-game)
+  warm() { try { if (!this.doraMat) this._doraMake(); const m = new THREE.Mesh(this.doraGeo, this.doraMat); m.frustumCulled = false; this.scene.add(m); this.renderer.compile(this.scene, this.camera); this.scene.remove(m); } catch (e) {} }
   _tileSkin() {   // the whole tile (white part and back), lifted a hair along the normals
     const parts = [this.geoFront, this.geoBack], pos = [], nor = [];
     for (const f of parts) { const P = f.attributes.position, N = f.attributes.normal;
