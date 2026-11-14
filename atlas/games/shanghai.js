@@ -299,14 +299,12 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     at(s) { const t = GIFT_S.indexOf(s); return t > 0 ? t : 0; },
     // the next tier still to win by stages: { t, left } or null
     next() { const S = prog().st; for (let t = 1; t < 4; t++) if (!Reward.has(t) && !(S[GIFT_S[t]] > 0)) { let left = 0; for (let k = 0; k <= GIFT_S[t]; k++) if (!(S[k] > 0)) left++; return { t, left }; } return null; },
-    // (2026-11-14) the scene courses: each has its own companion (atlas/avatars/sp-f.js), N/R/SR/SSR. The harder the course, the sooner the
-    // better ones: easy (base 0) N/R on stages, SR/SSR for ★150/★180 · middle (base 1–2) N/R/SR on stages, SSR for ★180 · hard (base 3+) all four on stages.
-    SP: { forest: 'kinoko', sweets: 'macaron', sea: 'tako', castle: 'unipony', festival: 'kingyo', autumn: 'momiji', snow: 'yukidaru', desert: 'saboten', toys: 'buriki', space: 'hoshippi' },
+    // (2026-11-14) the scene courses: four Atlamo each, of four kinds (the ten companions of atlas/avatars/sp-f.js), on stages 2-5 / 3-10 / 5-5 / 6-10.
+    // The harder the course, the rarer: 森 all N … おもちゃ・宇宙 all SSR; every companion's N, R, SR and SSR come from four different courses.
+    CG: {'forest': [['kinoko', 0, 14], ['macaron', 0, 29], ['tako', 0, 44], ['unipony', 0, 59]], 'sweets': [['kingyo', 0, 14], ['momiji', 0, 29], ['yukidaru', 0, 44], ['macaron', 1, 59]], 'sea': [['saboten', 0, 14], ['buriki', 0, 29], ['tako', 1, 44], ['kingyo', 1, 59]], 'castle': [['hoshippi', 0, 14], ['unipony', 1, 29], ['momiji', 1, 44], ['yukidaru', 1, 59]], 'festival': [['saboten', 1, 14], ['buriki', 1, 29], ['hoshippi', 1, 44], ['kingyo', 2, 59]], 'autumn': [['kinoko', 1, 14], ['momiji', 2, 29], ['yukidaru', 2, 44], ['saboten', 2, 59]], 'snow': [['buriki', 2, 14], ['hoshippi', 2, 29], ['kinoko', 2, 44], ['yukidaru', 3, 59]], 'desert': [['macaron', 2, 14], ['tako', 2, 29], ['unipony', 2, 44], ['saboten', 3, 59]], 'toys': [['buriki', 3, 14], ['kinoko', 3, 29], ['macaron', 3, 44], ['tako', 3, 59]], 'space': [['hoshippi', 3, 14], ['unipony', 3, 29], ['kingyo', 3, 44], ['momiji', 3, 59]]},
     gifts(cid) {
       if (cid === 'zodiac') return [1, 2, 3].map(t => ({ sp: 'peacock', t, s: GIFT_S[t] }));
-      const c = courseOf(cid), sp = Reward.SP[cid]; if (!c || !sp) return [];
-      const G = c.base === 0 ? [{ s: 29 }, { s: 59 }, { star: 150 }, { star: 180 }] : c.base <= 2 ? [{ s: 19 }, { s: 39 }, { s: 59 }, { star: 180 }] : [{ s: 14 }, { s: 29 }, { s: 44 }, { s: 59 }];
-      return G.map((g, t) => Object.assign({ sp, t }, g));
+      return (Reward.CG[cid] || []).map(([sp, t, s]) => ({ sp, t, s }));
     },
     giftAt(cid, s) { return Reward.gifts(cid).find(g => g.s === s) || null; },
     // hand over what a course's progress has earned (a stage cleared, ★ enough)
