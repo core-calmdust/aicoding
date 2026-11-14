@@ -93,7 +93,8 @@
       for (let i = 0; i < B.n; i++) if (!a[i]) { const [x, z] = U.pt(i); M4.makeTranslation(x, TOP + Y(i) + .03, z); ghost.setMatrixAt(k++, M4); }
       ghost.count = k; ghost.instanceMatrix.needsUpdate = true; kick(120);
       // the colour goes slowly round the hues (user: 青一色だと青い玉と重なって見にくい — gently, not flashy): ~10 s a turn, a few steps a second
-      if (!hueT) hueT = setInterval(() => { if (stopped || !ghost || !ghost.count) return; ghost.material.color.setHSL((performance.now() / 10000) % 1, .7, .52); kick(60); }, 125);
+      // (2026-11-14: faster and brighter — 4 s a turn, a soft breathing of its strength)
+      if (!hueT) hueT = setInterval(() => { if (stopped || !ghost || !ghost.count) return; const t = performance.now(); ghost.material.color.setHSL((t / 4000) % 1, .9, .55); ghost.material.opacity = .8 + .15 * Math.sin(t / 420); kick(40); }, 66);
     }
     let hueT = 0;
     function marks(hint) {
