@@ -199,6 +199,7 @@
   add('cl.tab.m', 'ふつう', 'Standard', '普通', '普通', '보통', 'Normal', 'Normal', 'Normal', 'Normal', 'Обычные', 'Normal', 'Normal', 'सामान्य', 'عادي');
   add('cl.tab.h', 'むずかしい', 'Tough', '困难', '困難', '어려움', 'Difíciles', 'Difficiles', 'Difíceis', 'Schwer', 'Сложные', 'Zor', 'Sulit', 'कठिन', 'صعبة');
   add('dy.n', '本日の上海', 'Today’s Shanghai', '今日上海', '今日上海', '오늘의 상하이', 'Shanghai del día', 'Shanghai du jour', 'Shanghai do dia', 'Shanghai des Tages', 'Шанхай дня', 'Günün Şanghayı', 'Shanghai hari ini', 'आज का शंघाई', 'شنغهاي اليوم');
+  add('dy.e', '本日の上海 EASY', 'Today’s Shanghai EASY', '今日上海 EASY', '今日上海 EASY', '오늘의 상하이 EASY', 'Shanghai del día EASY', 'Shanghai du jour EASY', 'Shanghai do dia EASY', 'Shanghai des Tages EASY', 'Шанхай дня EASY', 'Günün Şanghayı EASY', 'Shanghai hari ini EASY', 'आज का शंघाई EASY', 'شنغهاي اليوم EASY');
   add('dy.h', '本日の上海 HARD', 'Today’s Shanghai HARD', '今日上海 HARD', '今日上海 HARD', '오늘의 상하이 HARD', 'Shanghai del día HARD', 'Shanghai du jour HARD', 'Shanghai do dia HARD', 'Shanghai des Tages HARD', 'Шанхай дня HARD', 'Günün Şanghayı HARD', 'Shanghai hari ini HARD', 'आज का शंघाई HARD', 'شنغهاي اليوم HARD');
   add('st.clear', 'クリア {c} / {n}', 'Cleared {c} / {n}', '通关 {c} / {n}', '通關 {c} / {n}', '클리어 {c} / {n}', 'Superadas {c} / {n}', 'Réussies {c} / {n}', 'Concluídas {c} / {n}', 'Geschafft {c} / {n}', 'Пройдено {c} / {n}', 'Geçilen {c} / {n}', 'Selesai {c} / {n}', 'पूरे {c} / {n}', 'مكتمل {c} / {n}');
   // (2026-11-14) free play: each board's reward rule, and the three dragon-tile Atlamo

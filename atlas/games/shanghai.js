@@ -81,7 +81,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shstg{display:flex;flex-direction:column;gap:10px;align-items:stretch}
 .shstg .stinfo{box-sizing:border-box;width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:10px 14px;border-radius:14px;background:#fff;border:2px solid var(--line,#eadfc6);font-weight:900;font-size:15px;color:#2b3044}.shstg .stinfo .ss{color:#e0a020}.shstg .stinfo .sw{display:flex;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:#7a5a20}.shstg .stinfo .sw img{width:30px;height:30px}
 .shstg .strow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}.shstg .strow .mapb{padding:12px 10px;font-size:16px;background:linear-gradient(135deg,#1b2350,#3a2a6e);box-shadow:0 4px 0 #11163a}.shstg .mapb i{color:#ffd76a}.shstg .strow .mapb.lst{background:#fff;color:#2b3044;border:2px solid var(--line,#eadfc6);box-shadow:0 3px 0 var(--line,#eadfc6)}.shstg .mapb.lst i{color:#c9a03a}.shstg .mapb span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}.shstg .mapb small{font-size:12px;color:#ffe7a0;font-weight:700}
-.shstg .dyb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;padding:10px;border-radius:14px;border:2px solid var(--line,#eadfc6);background:#fff;color:#2b3044;cursor:pointer;box-shadow:0 3px 0 var(--line,#eadfc6)}.shstg .dyb b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:900}.shstg .dyb b em{font-style:normal;font-size:11px;font-weight:900;color:#fff;background:#e5484d;border-radius:99px;padding:2px 7px;letter-spacing:.04em}.shstg .dyb small{font-size:12px;font-weight:700;color:#9a8762}.shstg .dyb.done small{color:#2f9a6a}
+.shstg .dyb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;padding:10px;border-radius:14px;border:2px solid var(--line,#eadfc6);background:#fff;color:#2b3044;cursor:pointer;box-shadow:0 3px 0 var(--line,#eadfc6)}.shstg .dyb b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:900}.shstg .dyb b em{font-style:normal;font-size:11px;font-weight:900;color:#fff;background:#e5484d;border-radius:99px;padding:2px 7px;letter-spacing:.04em}.dyb b em.ez{background:#2fa36b}.shstg .dyb small{font-size:12px;font-weight:700;color:#9a8762}.shstg .dyb.done small{color:#2f9a6a}
 html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
 html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidden!important;pointer-events:none}
 #bvMBody:has(> #bvStg){position:relative}#bvMBody > #bvStg.shstg:not([hidden]){position:absolute;left:0;right:0;top:0;height:calc(100% + var(--shdh,86px));box-sizing:border-box;justify-content:stretch;gap:10px;margin:0!important}#bvStg.shstg:not([hidden]) > *{flex:1 1 0;min-height:0}#bvStg.shstg .strow > *{height:100%;box-sizing:border-box}
@@ -678,7 +678,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       if (idx.length) anim(700, k => { idx.forEach(i => { st8[i].lift = Math.sin(k * Math.PI) * .5; place(i); }); im.instanceMatrix.needsUpdate = true; });
       if (DY) {
         const y = d.dy && d.dy.date === today() ? d.dy : (d.dy = { date: today() }), k = DY.kind, nb = y[k] === undefined || tt < y[k]; if (nb) y[k] = tt; save(d);
-        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx(k === 'h' ? 'dy.h' : 'dy.n') + ' ' + tx('r.clear'), score: tx('r.time', { t: mmss(tt) }), best: tx('r.best', { t: mmss(y[k]) }), opp: tx(k === 'h' ? 'dy.h' : 'dy.n'), key: 'dy-' + k, why: tx('r.clear') + ' · ' + mmss(tt) }), 350);
+        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx(k === 'h' ? 'dy.h' : 'dy.e') + ' ' + tx('r.clear'), score: tx('r.time', { t: mmss(tt) }), best: tx('r.best', { t: mmss(y[k]) }), opp: tx(k === 'h' ? 'dy.h' : 'dy.e'), key: 'dy-' + k, why: tx('r.clear') + ' · ' + mmss(tt) }), 350);
         return;
       }
       if (!ST) {
@@ -709,7 +709,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       if (askEl) { askEl.remove(); askEl = null; }
       if (FM && !DY) { const d = load(), F = d.free = d.free || {}, r = F[FM.key] || {}, tk = n - left(); F[FM.key] = Object.assign({}, r, { tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1 }); save(d); }   // (a free game that ended early still counts its tiles: the card's 最多 n枚)
       later(() => ctx.onEnd({ win: false, draw: false, solo: true, level: 0, title: tx('r.fail'), score: (why === 'timeup' ? tx('r.timeup') : tx('r.stuck')) + ' · ' + tx('r.left', { n: left() }),
-        best: ST ? stageName(ST.s, lang) + ' · ' + missionText(ST, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.n') : tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff), opp: ST ? stageName(ST.s, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.n') : tx('lay.' + lay), key: ST ? (ST.cid === 'zodiac' ? 'st' : ST.cid + ':') + ST.s : FM.key, why: tx('r.fail') }), 600);
+        best: ST ? stageName(ST.s, lang) + ' · ' + missionText(ST, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.e') : tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff), opp: ST ? stageName(ST.s, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.e') : tx('lay.' + lay), key: ST ? (ST.cid === 'zodiac' ? 'st' : ST.cid + ':') + ST.s : FM.key, why: tx('r.fail') }), 600);
     }
 
     /* ---------- set up ---------- */
@@ -794,7 +794,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
   // the card's ステージ tab (2026-11-14): the totals, コース一覧 · 続きから (the course played last), 本日の上海 · HARD
   function stagePanel(lang) {
     css(); const A = allProg(), lc = lastCourse(), y = dailyRec();
-    const dy = k => `<button type="button" class="dyb${k === 'h' ? ' hard' : ''}${y[k] != null ? ' done' : ''}" data-shdy="${k}"><b>${esc(TX('dy.n', lang))}${k === 'h' ? '<em>HARD</em>' : ''}</b><small>${y[k] != null ? '✓ ' + esc(TX('r.best', lang, { t: mmss(y[k]) })) : esc(TX('lay.' + dailySpec(k).lay, lang))}</small></button>`;
+    const dy = k => `<button type="button" class="dyb${k === 'h' ? ' hard' : ''}${y[k] != null ? ' done' : ''}" data-shdy="${k}"><b>${esc(TX('dy.n', lang))}${k === 'h' ? '<em>HARD</em>' : '<em class="ez">EASY</em>'}</b><small>${y[k] != null ? '✓ ' + esc(TX('r.best', lang, { t: mmss(y[k]) })) : esc(TX('lay.' + dailySpec(k).lay, lang))}</small></button>`;
     return `<div class="strow"><button type="button" class="mapb lst" data-shlist><i>▦</i>${esc(TX('cl.title', lang))}</button><button type="button" class="mapb" data-shmap><i>✦</i><span>${esc(TX('cl.cont', lang))}<small>${esc(cname(lc, lang))}</small></span></button></div>` +
       `<div class="strow">${dy('n')}${dy('h')}</div>` +
       `<div class="stinfo"><span class="sc">${esc(TX('st.clear', lang, { c: A.c, n: A.n }))}</span><span class="ss">★ ${A.st}</span>` +
