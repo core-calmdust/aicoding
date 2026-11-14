@@ -179,9 +179,20 @@ static void terms(int La, int Lb, double kap, int kind) {
   } else { cc += sa; cc -= sb; }
   CS0 = (nA - nB) + kap * nT; CS1 = cc; CS2 = ww;
 }
+// ---- the evaluation v2 (EVM = 1; tuning parameters EP, ev_set). EVM = 0: the classic one below, exactly as engine.js's evalFor.
+static int EVM = 0;
+#define NEPS 16
+static const double EP0[NEPS] = { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05, 10, 6, 1, 0.25, 0, 0, 0, 0, 0 };
+static double EP[NEPS] = { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05, 10, 6, 1, 0.25, 0, 0, 0, 0, 0 };
+__attribute__((export_name("ev_reset"))) void ev_reset(void) { for (int i = 0; i < NEPS; i++) EP[i] = EP0[i]; }
+__attribute__((export_name("ev_set"))) void ev_set(int k, double v) { if (k < 0) EVM = (int)v; else if (k < NEPS) EP[k] = v; }
+__attribute__((export_name("ev_mode"))) int ev_mode(void) { return EVM; }
+static int ev2(int me, int toMove);
+static float fexp(float x);
 // the value for `me` with `toMove` to move (evalFor in engine.js)
 __attribute__((export_name("ev"))) int ev(int me, int toMove) {
   init(); initBB(); evn++;
+  if (EVM) return ev2(me, toMove);
   u64 e0 = 0, e1 = 0;
 #ifdef __wasm_simd128__
   {   // (row r: the empty squares of SQ[10 r .. 10 r + 9] as 10 bits at bit 11 r)
@@ -217,6 +228,62 @@ __attribute__((export_name("ev"))) int ev(int me, int toMove) {
   int s = jsRound(v * 100);
   return me == 1 ? s : -s;
 }
+static inline BB emptyBB(void) {
+  u64 e0 = 0, e1 = 0;
+#ifdef __wasm_simd128__
+  const v128_t z = wasm_i8x16_splat(0); u64 m[10];
+  for (int r = 0; r < 10; r++) m[r] = (u64)(wasm_i8x16_bitmask(wasm_i8x16_eq(wasm_v128_load(SQ + 10 * r), z)) & 0x3FF);
+  e0 = m[0] | m[1] << 11 | m[2] << 22 | m[3] << 33 | m[4] << 44 | m[5] << 55; e1 = m[5] >> 9 | m[6] << 2 | m[7] << 13 | m[8] << 24 | m[9] << 35;
+#else
+  for (int i = 0; i < NN; i++) if (!SQ[i]) { int b = BI[i]; if (b < 64) e0 |= 1ULL << b; else e1 |= 1ULL << (b - 64); }
+#endif
+  BB E = { e0, e1 }; return E;
+}
+static inline int bbHas(BB x, int i) { int b = BI[i]; return b < 64 ? (int)((x[0] >> b) & 1) : (int)((x[1] >> (b - 64)) & 1); }
+static int ev2(int me, int toMove) {
+  BB E = emptyBB(), SA = Z0, SB = Z0;
+  for (int k = 0; k < 8; k++) if (Q[k] >= 0) { if (k < 4) SA |= BIT[(int)Q[k]]; else SB |= BIT[(int)Q[k]]; }
+  double kap = toMove == 1 ? EP[6] : -EP[6];
+  props(E);
+  int La = layersQ(SA, E, LA), Lb = layersQ(SB, E, LB);
+  BB allA = Z0, allB = Z0;
+  for (int i = 1; i <= La; i++) allA |= LA[i];
+  for (int j = 1; j <= Lb; j++) allB |= LB[j];
+  terms(La, Lb, kap, 0);
+  double t1 = CS0, c1 = CS1, w = CS2, t2 = 0, c2 = 0;
+  double e = w > EP[0] ? 1 : w / EP[0];
+  if (e > 0) {
+    La = layersK(SA, E, LA); Lb = layersK(SB, E, LB);
+    terms(La, Lb, kap, 1);
+    t2 = CS0; c2 = CS1;
+  }
+  BB both = allA & allB;
+  double mob = 0, pb = EP[10] + (1 - EP[10]) * e;
+  for (int k = 0; k < 8; k++) {
+    if (Q[k] < 0) continue;
+    int f = Q[k], n = 0, cont = 0; double al = 0, wj = 1, cut = EP[8] * 6;
+    if (EP[9] == 0) { for (int d = 0; d < 8 && n < 5; d++) { const int *r = RAY[f][d]; for (int j = 0, m = RAYN[f][d]; j < m && n < 5 && !SQ[r[j]]; j++) n++; } }
+    else {   // the squares one queen move away, nearest first (step j weighs 2^-(j-1)), each by its empty neighbours; stops once free
+      int open = 0; for (int d = 0; d < 8; d++) if (RAYN[f][d]) open |= 1 << d;
+      for (int j = 0; open && al < cut; j++, wj *= 0.5)
+        for (int d = 0; d < 8; d++) {
+          if (!(open >> d & 1)) continue;
+          if (j >= RAYN[f][d] || SQ[RAY[f][d][j]]) { open &= ~(1 << d); continue; }
+          int sq = RAY[f][d][j], nb = 0; n++;
+          for (int u = 0; u < NBN[sq]; u++) nb += !SQ[NBS[sq][u]];
+          al += wj * nb;
+          if (!cont && bbHas(both, sq)) cont = 1;
+        }
+    }
+    double pen;
+    if (EP[9] == 0) pen = n == 0 ? 10 : n < 5 ? (5 - n) * 1.4 : 0;
+    else pen = n == 0 ? EP[7] : !cont || al >= cut ? 0 : EP[7] * fexp((float)(-al / EP[8]));
+    mob += (k < 4 ? -1 : 1) * pen * pb;
+  }
+  double v = (EP[1] + EP[2] * e) * t1 + e * (EP[3] * t2 + EP[4] * 2 * c1 + EP[5] * c2) + mob;
+  int s = jsRound(v * 100);
+  return me == 1 ? s : -s;
+}
 static int canMove(int p) {
   int k0 = p == 1 ? 0 : 4;
   for (int k = k0; k < k0 + 4; k++) { int f = Q[k]; if (f < 0) continue; for (int j = 0; j < NBN[f]; j++) if (!SQ[NBS[f][j]]) return 1; }
@@ -244,11 +311,29 @@ __attribute__((export_name("cand"))) int cand(int me, int qkeep, int ply) {
     }
   }
   int keep = nq < qkeep ? nq : qkeep; candNQ = nq;
+  // (v2, EP[11]) the arrows only where they matter: squares both sides reach (queen distance, this position) or next to an
+  // opponent's amazon; a queen move with none of those keeps every arrow. The list is then not complete (candNQ: no proofs of all)
+  BB AW = Z0; int prune = EVM && EP[11] > 0;
+  if (prune) {
+    BB E = emptyBB(), SA = Z0, SB = Z0, NO = Z0;
+    for (int k = 0; k < 8; k++) if (Q[k] >= 0) { if (k < 4) SA |= BIT[(int)Q[k]]; else SB |= BIT[(int)Q[k]]; }
+    props(E);
+    int La = layersQ(SA, E, LA), Lb = layersQ(SB, E, LB);
+    BB allA = Z0, allB = Z0;
+    for (int i = 1; i <= La; i++) allA |= LA[i];
+    for (int j = 1; j <= Lb; j++) allB |= LB[j];
+    for (int k = op == 1 ? 0 : 4, k1 = k + 4; k < k1; k++) if (Q[k] >= 0) for (int u = 0; u < NBN[(int)Q[k]]; u++) NO |= BIT[NBS[(int)Q[k]][u]];
+    AW = (allA & allB) | NO;
+    if (!bnz(allA & allB)) prune = 0;   // (separated: every arrow)
+  }
   for (int i = 0; i < keep; i++) {
     int qm = QM[i], f = qm % 128, t = qm / 128, ki = qIdx(f);
     SQ[f] = 0; SQ[t] = (i8)me; Q[ki] = (i8)t;
+    int pr = 0;
+    if (prune) { for (int d = 0; d < 8 && !pr; d++) for (int j = 0; j < RAYN[t][d]; j++) { int a = RAY[t][d][j]; if (SQ[a]) break; if (bbHas(AW, a)) { pr = 1; break; } } }
     for (int d = 0; d < 8; d++) for (int j = 0; j < RAYN[t][d]; j++) {
       int a = RAY[t][d][j]; if (SQ[a]) break;
+      if (pr && a != f && !bbHas(AW, a)) { candNQ = 1 << 20; continue; }
       SQ[a] = 3;
       int s = !canMove(op) ? WIN - (ply + 1) : ev(me, op);
       SQ[a] = 0;
