@@ -173,8 +173,8 @@ function skillBlock(key) {
 function isDora(id) { try { if (id === 16 || id === 52 || id === 88) return true; if (!G || !G.doraInds) return false; const t = T(id); return G.doraInds().some(i => MJ.doraOf(i) === t); } catch (e) { return false; } }
 function tileHTML(id, cls = '', extra = '') {
   const red = id === 16 || id === 52 || id === 88;
-  if (isDora(id)) cls += ' dora';
-  return `<span class="tl ${cls}" data-id="${id}" ${extra}><img src="${MJTiles.url(T(id), red)}" alt="" draggable="false"></span>`;
+  const dr = isDora(id); if (dr) cls += ' dora';
+  return `<span class="tl ${cls}" data-id="${id}" ${extra}><img src="${MJTiles.url(T(id), red)}" alt="" draggable="false">${dr ? '<i class="dg"></i>' : ''}</span>`;
 }
 function typeHTML(type, cls = '') { return `<span class="tl ${cls}"><img src="${MJTiles.url(type, false)}" alt="" draggable="false"></span>`; }
 function backHTML(cls = '') { return `<span class="tl back ${cls}"></span>`; }
@@ -473,7 +473,7 @@ async function onEvent(ev, d) {
       if (d.riichi) await cutin(d.seat, 'riichi');
       SND.tile();
       layoutRiver(d.seat, true);
-      if (d.seat !== ME) TB.layoutHand(d.seat, p.hand, null);
+      if (d.seat !== ME) TB.layoutHand(d.seat, p.hand, null, false, true);   // (the gap the tile left stays open a moment, then the row closes up)
       else { clearActs(); renderHand(); }
       await sleep(d.seat === ME ? 120 : 160);
       break;

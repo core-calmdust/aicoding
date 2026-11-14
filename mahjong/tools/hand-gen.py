@@ -84,7 +84,7 @@ grip = (pad('index') + pad('middle')) / 2
 out = out - grip + np.array([0, .015, -.12])
 
 # 爪：各指の末節で、背側・先のほうの頂点
-col = np.tile(np.array([214, 164, 138], float), (len(V), 1)); isn = np.zeros(len(V), bool)
+col = np.tile(np.array([213, 160, 136], float), (len(V), 1)); isn = np.zeros(len(V), bool)
 for f, dn, tn in [(x, x + '-finger-phalanx-distal', x + '-finger-tip') for x in ('index', 'middle', 'ring', 'pinky')] + [('thumb', 'thumb-phalanx-distal', 'thumb-tip')]:
     a = pit(rig(tip(dn))) - grip + np.array([0, .015, -.12]); b = pit(rig(tip(tn))) - grip + np.array([0, .015, -.12]); d = (b - a); L = np.linalg.norm(d); d /= L
     up = pit(rign(D[dn][0] @ np.array([1., 0, 0]))); up = up - d * (up @ d); up /= np.linalg.norm(up)
@@ -96,6 +96,64 @@ for f, dn, tn in [(x, x + '-finger-phalanx-distal', x + '-finger-tip') for x in 
     isn |= m
     wr = np.exp(-(np.linalg.norm(out - b, axis=1) / .45) ** 2)[:, None]; col = col * (1 - wr * .45) + np.array([218, 140, 126]) * wr * .45   # 指先の赤み
 col[isn] = (238, 160, 174)
+
+# ---- 肌らしく（ユーザー 2026-11-14「ポリゴン感が強い」）：面を細かく丸め（Loop 細分割 1 回）、色に肌のむらを入れる ----
+def loop_subdivide(P, C, NL, F):
+    # 同じ位置の頂点をまとめる（元モデルは継ぎ目で頂点が分かれている）
+    key = {}; rm = np.zeros(len(P), int); 
+    for i, v in enumerate(np.round(P, 5)):
+        rm[i] = key.setdefault(tuple(v), len(key))
+    n0 = len(key); P0 = np.zeros((n0, 3)); C0 = np.zeros((n0, 3)); N0 = np.ones(n0, bool); cnt = np.zeros(n0)
+    np.add.at(P0, rm, P); np.add.at(C0, rm, C); np.add.at(cnt, rm, 1); P0 /= cnt[:, None]; C0 /= cnt[:, None]
+    for i in range(len(P)): N0[rm[i]] &= bool(NL[i])
+    F = rm[F]; F = F[(F[:, 0] != F[:, 1]) & (F[:, 1] != F[:, 2]) & (F[:, 0] != F[:, 2])]
+    ed = {}                                   # 辺 → [向かいの頂点…]
+    for a, b, c in F:
+        for u, v, w in ((a, b, c), (b, c, a), (c, a, b)): ed.setdefault((min(u, v), max(u, v)), []).append(w)
+    nb = [set() for _ in range(n0)]; bnb = [set() for _ in range(n0)]
+    for (u, v), o in ed.items():
+        nb[u].add(v); nb[v].add(u)
+        if len(o) == 1: bnb[u].add(v); bnb[v].add(u)
+    E = np.zeros((n0, 3))
+    for i in range(n0):
+        if len(bnb[i]) == 2: q = list(bnb[i]); E[i] = .75 * P0[i] + .125 * (P0[q[0]] + P0[q[1]])       # 縁（手首の切り口）
+        else:
+            k = len(nb[i]); beta = 3 / 16 if k == 3 else 3 / (8 * k); E[i] = (1 - k * beta) * P0[i] + beta * P0[list(nb[i])].sum(0)
+    eid = {}; OP = []; OC = []; ON = []
+    for (u, v), o in ed.items():
+        eid[(u, v)] = n0 + len(OP)
+        OP.append((P0[u] + P0[v]) / 2 if len(o) != 2 else .375 * (P0[u] + P0[v]) + .125 * (P0[o[0]] + P0[o[1]]))
+        OC.append((C0[u] + C0[v]) / 2); ON.append(N0[u] and N0[v])
+    e = lambda u, v: eid[(min(u, v), max(u, v))]
+    F2 = []
+    for a, b, c in F:
+        ab, bc, ca = e(a, b), e(b, c), e(c, a); F2 += [(a, ab, ca), (b, bc, ab), (c, ca, bc), (ab, bc, ca)]
+    return np.concatenate([E, OP]), np.concatenate([C0, OC]), np.concatenate([N0, ON]), np.array(F2)
+def vnormals(P, F):
+    fnm = np.cross(P[F[:, 1]] - P[F[:, 0]], P[F[:, 2]] - P[F[:, 0]]); N = np.zeros_like(P)
+    for k in range(3): np.add.at(N, F[:, k], fnm)
+    return N / np.maximum(np.linalg.norm(N, axis=1, keepdims=True), 1e-9)
+nor0 = nor.copy(); out0 = out.copy()
+out, col, isn, F = loop_subdivide(out, col, isn, F)
+nor = vnormals(out, F)
+# （向きの確認：細分割後の法線が元の法線と同じ側を向いていること）
+_i = np.argmin(np.linalg.norm(out[:, None, :] - out0[None, :40, :], axis=2), axis=0); assert (np.sum(nor[_i] * nor0[:40], axis=1) > 0).mean() > .9, 'normals flipped'
+# 肌の色むら：くぼみ（指の股・関節のしわ）は少し暗く赤く、出っ張りは少し明るく。関節は赤み、下面（手のひら側）は桃色
+_nb = [[] for _ in range(len(out))]
+for a, b, c in F: _nb[a] += [b, c]; _nb[b] += [a, c]; _nb[c] += [a, b]
+_cv = np.array([((out[list(set(q))].mean(0) - out[i]) @ nor[i]) if q else 0. for i, q in enumerate(_nb)])
+for _ in range(3): _cv = np.array([.5 * _cv[i] + .5 * _cv[list(set(q))].mean() if q else _cv[i] for i, q in enumerate(_nb)])
+_el = np.mean(np.linalg.norm(out[F[:, 0]] - out[F[:, 1]], axis=1)); _cv = _cv / _el
+skin = ~isn
+dark = np.clip(_cv * 5.5, 0, 1)[:, None]; lite = np.clip(-_cv * 4.0, 0, 1)[:, None]
+c2 = col * (1 - .40 * dark) + np.array([150, 70, 62]) * .40 * dark; c2 = c2 * (1 - .10 * lite) + np.array([244, 206, 186]) * .10 * lite
+_o = - grip + np.array([0, .015, -.12])
+for f in ('index', 'middle', 'ring', 'pinky', 'thumb'):
+    for part, k in ((('-finger-phalanx-proximal', .34), ('-finger-phalanx-intermediate', .38), ('-finger-phalanx-distal', .22)) if f != 'thumb' else (('-phalanx-proximal', .3), ('-phalanx-distal', .3))):
+        c = pit(rig(tip(f + part))) + _o; w = (np.exp(-(np.linalg.norm(out - c, axis=1) / .34) ** 2) * k * (nor[:, 1] > -.2))[:, None]   # 甲側の関節
+        c2 = c2 * (1 - w) + np.array([214, 124, 112]) * w
+under = np.clip(-nor[:, 1] * 1.4, 0, 1)[:, None] * .22; c2 = c2 * (1 - under) + np.array([232, 158, 150]) * under
+col = np.where(skin[:, None], c2, col)
 fn = isn[F].sum(1) >= 3
 F2 = np.concatenate([F[~fn], F[fn]])
 # 袖口の位置（手首の関節の少し手前）と、そこの腕の太さ
