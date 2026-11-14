@@ -40,7 +40,7 @@ def curl(chain, angles, spread=0.0):
     R, t = np.eye(3), np.zeros(3)
     for k, name in enumerate(chain[:-1]):
         p = R @ jpos[name] + t; q = R @ jpos[chain[k + 1]] + t; d = (q - p) / np.linalg.norm(q - p)
-        ax = np.cross(d, R @ PALM); r = rot(ax, -angles[k])            # 先が手のひら側へ
+        ax = np.cross(d, R @ PALM); r = rot(ax, angles[k])             # 先が手のひら側へ（下の assert で確認）
         if k == 0 and spread: r = rot(R @ PALM, spread) @ r
         R, t = r @ R, r @ (t - p) + p
         for m in chain[k:]: D[m] = (R.copy(), t.copy())
@@ -66,6 +66,9 @@ for c in range(4):
         R, t = D[names[j]]; w = JW[m, c][:, None]
         P[m] += w * (V[m] @ R.T + t); NN[m] += w * (N[m] @ R.T)
 tip = lambda n: D[n][0] @ jpos[n] + D[n][1]
+# 確認：曲げた指先は元より手のひら側（PALM の向き）にあること。逆に反っていたら止める（2026-11-14 に符号を間違えて甲側へ反らせた）
+for f in ('index', 'middle', 'ring', 'pinky'):
+    n = f + '-finger-tip'; assert (tip(n) - jpos[n]) @ PALM > .01, ('finger bends the wrong way', f)
 
 # モデル (x=厚み・甲が+, y=指先が−, z=幅・親指が−) → リグ (x=幅, y=上, z=手首が+)。幅と厚みを少し詰めて細く
 S = 27.0; SL = np.array([.92, .9, 1.0])
