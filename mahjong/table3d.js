@@ -182,6 +182,33 @@ function brocadeTex(base) {
   const bro = new THREE.CanvasTexture(bc); bro.encoding = THREE.sRGBEncoding; bro.wrapS = bro.wrapT = THREE.RepeatWrapping; bro.repeat.set(4, 5); bro.anisotropy = 4;
   return bro;
 }
+// a dark Chinese carpet (段通) for the floor: 2048 px over the whole rug
+function rugTex() {
+  const S = 2048, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+  let sd = 21; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  g.fillStyle = '#15172a'; g.fillRect(0, 0, S, S);   // the indigo field
+  for (let i = 0; i < 26000; i++) { g.fillStyle = `rgba(${R() < .5 ? '120,130,190' : '0,0,10'},${.03 + R() * .05})`; g.fillRect(R() * S, R() * S, 2 + R() * 3, 1 + R() * 2); }   // the wool
+  const gold = 'rgba(166,128,70,.55)', rust = '#3c1618', dark = '#0d0e1a';
+  // scattered roundels and cloud scrolls on the field (only the part outside the table shows)
+  const roundel = (x, y, r) => { g.save(); g.translate(x, y); g.strokeStyle = gold; g.lineWidth = 5; g.beginPath(); g.arc(0, 0, r, 0, 7); g.stroke();
+    g.fillStyle = 'rgba(120,40,40,.55)'; g.beginPath(); g.arc(0, 0, r * .78, 0, 7); g.fill();
+    for (let k = 0; k < 8; k++) { g.rotate(PI / 4); g.fillStyle = gold; g.beginPath(); g.ellipse(0, -r * .45, r * .13, r * .26, 0, 0, 7); g.fill(); }
+    g.fillStyle = gold; g.beginPath(); g.arc(0, 0, r * .16, 0, 7); g.fill(); g.restore(); };
+  const cloud = (x, y, k, rot) => { g.save(); g.translate(x, y); g.rotate(rot); g.scale(k, k); g.strokeStyle = 'rgba(110,120,170,.4)'; g.lineWidth = 5; g.lineCap = 'round';
+    for (const sx of [-1, 1]) { g.beginPath(); for (let a = 0; a < 5.4; a += .2) { const rr = 5 + a * 4; g.lineTo(sx * (26 + Math.cos(a) * rr), Math.sin(a) * rr); } g.stroke(); }
+    g.beginPath(); g.moveTo(-52, 16); g.quadraticCurveTo(0, 36, 52, 16); g.stroke(); g.restore(); };
+  const B0 = 170, B1 = 300;   // the border: from the edge to B0 a dark band, B0..B1 the rust band with the fret
+  for (let y = 380; y < S - 300; y += 250) for (let x = 380; x < S - 300; x += 250) { const odd = ((x + y) / 250) % 2; if (odd) roundel(x + (R() - .5) * 30, y + (R() - .5) * 30, 52); else cloud(x, y, 1.1, R() * PI); }
+  g.fillStyle = dark; g.fillRect(0, 0, S, B0); g.fillRect(0, S - B0, S, B0); g.fillRect(0, 0, B0, S); g.fillRect(S - B0, 0, B0, S);
+  g.fillStyle = rust; g.fillRect(B0, B0, S - 2 * B0, B1 - B0); g.fillRect(B0, S - B1, S - 2 * B0, B1 - B0); g.fillRect(B0, B0, B1 - B0, S - 2 * B0); g.fillRect(S - B1, B0, B1 - B0, S - 2 * B0);
+  // the key fret along the rust band (each side, turned)
+  const fret = (len) => { const u = 26, h = (B1 - B0); g.strokeStyle = gold; g.lineWidth = 7; g.lineJoin = 'miter';
+    for (let x = 0; x < len - 4 * u; x += 4 * u) { const y0 = h * .5 + 1.5 * u; g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y0 - 3 * u); g.lineTo(x + 3 * u, y0 - 3 * u); g.lineTo(x + 3 * u, y0 - u); g.lineTo(x + u, y0 - u); g.lineTo(x + u, y0 - 2 * u); g.lineTo(x + 2 * u, y0 - 2 * u); g.stroke();
+      g.beginPath(); g.moveTo(x + 3 * u, y0); g.lineTo(x + 4 * u, y0); g.stroke(); } };
+  for (let k = 0; k < 4; k++) { g.save(); g.translate(S / 2, S / 2); g.rotate(k * PI / 2); g.translate(-S / 2 + B1, -S / 2 + B0); fret(S - 2 * B1); g.restore(); }
+  g.strokeStyle = gold; g.lineWidth = 4; for (const d of [B0 + 8, B1 - 8, B1 + 22]) g.strokeRect(d, d, S - 2 * d, S - 2 * d);   // fine lines between the bands
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; return t;
+}
 function buildHand(env) {
   const Hd = window.JANKA_HAND, rig = new THREE.Group(); if (!Hd) return rig;
   const b64 = t => { const s = atob(t), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; };
@@ -306,6 +333,11 @@ class Table3D {
     const felt = new THREE.CanvasTexture(fc); felt.encoding = THREE.sRGBEncoding; felt.anisotropy = 8;
     const table = new THREE.Mesh(new THREE.PlaneGeometry(21.2, 21.2), new THREE.MeshStandardMaterial({ map: felt, roughness: 1, metalness: 0, bumpMap: napTex(), bumpScale: .012 }));
     table.rotation.x = -PI / 2; table.receiveShadow = true; s.add(table);
+    // ---- the floor under the table: a dark Chinese carpet (ユーザー 2026-11-14) — an indigo field with scattered roundels and
+    // cloud scrolls, a rust border with the key fret (回紋) in old gold between dark bands. Under the table, so only its outer
+    // part shows round the table (lying on the floor the table stands on).
+    { const rug = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), (() => { const t = rugTex(); return new THREE.MeshStandardMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .28, roughness: 1, metalness: 0 }); })());   // (a little of its own light, so the pattern reads in the dim room)
+      rug.rotation.x = -PI / 2; rug.position.y = -0.38; rug.receiveShadow = true; s.add(rug); }   // (just above the dark floor plane below)
 
     // ---- the frame: four walnut rails with rounded edges and four rounded corner blocks, lacquered; a black lip round the cloth
     const wood = woodTex(); this.envTex = this.envTex || studioEnv();
@@ -365,7 +397,7 @@ class Table3D {
     // shared tile geometry/materials
     // the tiles (2026-11-14, as 上海's): rounded white blocks with a purple back — corners and edges rounded, the face
     // carved (normal map from tiles.js). One shared geometry for the white part and one for the back.
-    { const tg = tileGeos(W, H, D, 0.15, 0.15, 0.28, 0.15); this.geoFront = tg.front; this.geoBack = tg.back; }   // (one rounded block, split where the white meets the purple)
+    { const tg = tileGeos(W, H, D, 0.16, 0.15, 0.28, 0.15), tb = tileGeos(W, H, D, 0.16, 0.05, 0.28, 0.05); this.geoFront = tg.front; this.geoBack = tb.back; }   // (ユーザー 2026-11-14: the face keeps its full round edge; the purple back has the crisper edge of the tiles in the dora box — the two meet on the straight side, same outline)   // (one rounded block, split where the white meets the purple)
     this.matIvory = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xf7f7f3).convertSRGBToLinear(), roughness: .38, metalness: 0 });
     // the back (2026-11-14, ユーザー：紫をもう少し淡く、高級石を磨いたような質感): a pale lavender stone with soft veins, polished
     // (a clear coat over it, a little studio light reflected in it) — four cuts of the same slab so neighbours don't match
@@ -407,8 +439,8 @@ class Table3D {
     this.tiles.set(id, g);
     return g;
   }
-  // a picture of one tile as the table draws it (ユーザー 2026-11-14: the dora in the box are the 3D tiles): face up, seen a
-  // little from below so the purple back shows under it; back = the tile face down. Drawn once by a small renderer of its own
+  // a picture of one tile as the table draws it (ユーザー 2026-11-14: the dora in the box are the 3D tiles): seen straight on
+  // (orthographic); back = the tile face down. Drawn once by a small renderer of its own
   // with a light from the front, and kept (data URL).
   tileShot(id, back) {
     const key = back ? 'back' : (id >> 2) + (id === 16 || id === 52 || id === 88 ? 'r' : '');
@@ -421,7 +453,7 @@ class Table3D {
       const sc = this.shotS = new THREE.Scene();
       sc.add(new THREE.HemisphereLight(0xffffff, 0x404060, .75));
       const k = new THREE.DirectionalLight(0xffffff, .75); k.position.set(-2, 3, 6); sc.add(k);
-      const cam = this.shotC = new THREE.PerspectiveCamera(16, 132 / 172, 1, 50); cam.position.set(0, -.95, 5.5); cam.lookAt(0, -0.06, 0);
+      const cam = this.shotC = new THREE.OrthographicCamera(-.62, .62, .81, -.81, .1, 20); cam.position.set(0, 0, 6); cam.lookAt(0, 0, 0);   // (ユーザー 2026-11-14: straight on, no perspective — the tiles stand in a straight row)
       this.shotG = new THREE.Group(); sc.add(this.shotG);
     }
     const G = this.shotG; while (G.children.length) G.remove(G.children[0]);

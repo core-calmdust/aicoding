@@ -939,7 +939,7 @@ html.ds #game .bf em{width:calc(28px * var(--hz, 1));height:calc(28px * var(--hz
 html.ds #game .bt .bk{zoom:var(--hz, 1)}
 html.ds .tl kbd.tk{font-size:clamp(9px,calc(var(--tw) * .2),calc(13px * var(--hz, 1)))}
 html.ds #game .bt .sc{background:rgba(10,14,30,.72);border-radius:8px;padding:0 calc(8px * var(--hz, 1))}
-html.ds #game #opp3{top:calc(var(--gi) + (var(--rbh, 140px) + var(--khh, 70px)) * var(--hz, 1) + 34px)}
+html.ds #game #opp3{top:calc(var(--gi) + var(--rbh, 140px) * var(--hz, 1) + 34px)}   /* (the key help is folded at the top right now) */
 /* phones: compact skill button — icon + name only (details stay in the character screen / confirm) */
 html.lp #game .skb{padding:3px 8px 3px 3px;gap:5px;border-radius:10px;max-width:calc(var(--W) * .22)}
 html.lp #game .skb i{width:26px;height:26px;padding:5px;border-radius:7px}
@@ -1006,7 +1006,7 @@ html.lp .top .ib.rec{width:auto}
 .mv-ar{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:2}
 .mv-a{stroke-dasharray:1;stroke-dashoffset:1;animation:mvDraw .45s calc(.15s + var(--k) * .08s) ease-out forwards}
 @keyframes mvDraw{to{stroke-dashoffset:0}}
-.mv-p{position:absolute;width:25cqw;height:calc(var(--u)*19);transform:translate(-50%,-50%);border-radius:calc(var(--u)*1.6);background:linear-gradient(180deg,#151a3e 0 34%,#3a4d8e 34%,#2b3a74 100%);border:calc(var(--u)*.35) solid #d9b98a;box-shadow:0 calc(var(--u)*1.2) calc(var(--u)*3) rgba(0,0,0,.55);clip-path:polygon(4% 0,96% 0,100% 16%,100% 84%,96% 100%,4% 100%,0 84%,0 16%);animation:mvIn .3s cubic-bezier(.2,.9,.3,1.2) both}
+.mv-p{position:absolute;width:25cqw;height:calc(var(--u)*19);transform:translate(-50%,-50%);border-radius:calc(var(--u)*1.6);background:linear-gradient(180deg,#151a3e 0 34%,#3a4d8e 34%,#2b3a74 100%);border:calc(var(--u)*.35) solid #d9b98a;box-shadow:0 calc(var(--u)*1.2) calc(var(--u)*3) rgba(0,0,0,.55);overflow:hidden;animation:mvIn .3s cubic-bezier(.2,.9,.3,1.2) both}
 @keyframes mvIn{from{transform:translate(-50%,-50%) scale(.8);opacity:0}}
 .mv-p.p0{left:50%;top:80%}.mv-p.p1{left:83%;top:51%}.mv-p.p2{left:50%;top:22%}.mv-p.p3{left:17%;top:51%}
 .mv-p.win{border-color:#ffd76a;box-shadow:0 0 0 calc(var(--u)*.3) rgba(255,215,106,.5),0 0 calc(var(--u)*4) rgba(255,200,90,.55),0 calc(var(--u)*1.2) calc(var(--u)*3) rgba(0,0,0,.55)}
@@ -1100,3 +1100,18 @@ html.lp .ps-box{inset:8px 10px;gap:10px}
 html.lp .ps-main{padding:8px 12px;gap:6px}
 html.lp .ps-grid,html.lp .ps-chs > div{grid-template-columns:repeat(2,1fr)}
 @container (max-aspect-ratio: 3/2){ .ps-grid,.ps-chs > div{grid-template-columns:repeat(2,1fr)} .ps-cols{grid-template-columns:1fr} }
+
+/* god rays (ユーザー 2026-11-14): thin shafts of light falling in from the top left, over the table, under the HUD — faint, slowly breathing */
+#game .rays{position:absolute;inset:0;pointer-events:none;z-index:1;mix-blend-mode:screen;
+  background:conic-gradient(from 104deg at -8% -14%,transparent 0deg,rgba(255,238,205,.2) 4deg,transparent 9deg,transparent 12deg,rgba(255,238,205,.13) 15deg,transparent 19deg,transparent 23deg,rgba(255,238,205,.22) 28deg,transparent 34deg,transparent 39deg,rgba(255,238,205,.11) 42deg,transparent 46deg,rgba(255,238,205,.16) 51deg,transparent 57deg,transparent 360deg);
+  -webkit-mask-image:radial-gradient(ellipse 95% 85% at 0% 0%,#000 0%,rgba(0,0,0,.55) 45%,transparent 88%);mask-image:radial-gradient(ellipse 95% 85% at 0% 0%,#000 0%,rgba(0,0,0,.55) 45%,transparent 88%);
+  animation:raysBreathe 9s ease-in-out infinite alternate}
+@keyframes raysBreathe{0%{opacity:.75}100%{opacity:1}}
+#game .hud{z-index:2}
+
+/* the keyboard help: folded; the keyboard button at the top right opens it under the buttons (PC only) (ユーザー 2026-11-14) */
+#gKeys{display:none}
+html.ds #gKeys{display:grid}
+#gKeys.on{background:rgba(232,206,140,.22);border-color:rgba(232,206,140,.6)}
+html.ds #game .khelp{display:none;left:auto;right:var(--gi);top:calc(var(--gi) + 52px * var(--hz, 1));transform-origin:top right;z-index:3;font-size:12px;background:rgba(10,14,30,.9)}
+html.ds #game .khelp.open{display:block}

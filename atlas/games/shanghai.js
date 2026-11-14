@@ -98,13 +98,16 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .hd .tot{font-size:17px;font-weight:800;color:#ffd76a;white-space:nowrap}
 .shmap .x{flex:none;width:46px;height:46px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 .shmap .x svg{width:56%;height:56%;display:block;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
-.shmap .gift{position:relative;align-self:center;display:flex;align-items:center;gap:8px;margin:0 16px 2px;padding:4px 14px 4px 4px;border-radius:99px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-size:15px;font-weight:800;color:#ffe7a0;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}.shmap .gift img{width:38px;height:38px;flex:none}
+.shmap .gift{position:relative;align-self:center;display:flex;align-items:center;gap:8px;margin:0 16px 8px;padding:4px 14px 4px 4px;border-radius:99px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-size:15px;font-weight:800;color:#ffe7a0;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}.shmap .gift img{width:38px;height:38px;flex:none}
 .shmap .gf{position:absolute;z-index:2;width:calc(var(--nd) * 1.3);height:auto;margin-top:calc(var(--nd) * -1.8 + 10px);transform:translateX(-50%);pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));animation:shgfb 2.4s ease-in-out infinite}
 .shmap .gf.got{opacity:.55;animation:none;filter:grayscale(.2) drop-shadow(0 3px 6px rgba(0,0,0,.5))}
 .shmap .nd .gft{position:absolute;right:-8px;top:-6px;font-style:normal;font-size:15px;line-height:1;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#ffd76a;color:#241a05;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.5)}
-@keyframes shgfb{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+@keyframes shgfb{0%,100%{transform:translateX(-50%) scale(var(--iz,1)) translateY(0)}50%{transform:translateX(-50%) scale(var(--iz,1)) translateY(-5px)}}
+.shmap .gf{transform-origin:50% calc(var(--nd) * 1.8 - 10px)}
 .shmap .ar .agf{width:26px;height:26px;margin:-6px -6px -6px 6px;vertical-align:middle}
 .shmap .sh .gfl{display:flex;align-items:center;gap:8px;margin-top:8px;padding:4px 12px 4px 4px;border-radius:14px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-weight:800;color:#ffe7a0;font-size:15.5px}.shmap .sh .gfl img{width:44px;height:44px;flex:none}.shmap .sh .gfl.got{opacity:.7}
+.shmap .sh .rs{color:#ffd76a;letter-spacing:1px}.shmap .sh .rb{color:#9fe8ff;font-weight:800;margin-inline-start:6px}
+.shmap .sh .recs{margin-top:10px;font-size:16.5px}.shmap .sh .recs .rs{margin-inline-start:2px}
 .shmap .sh .rw{display:inline-block;margin-top:2px;font-weight:800;color:#ffd76a}
 .shmap .ars{position:relative;display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}.shmap .ars::-webkit-scrollbar{display:none}
 .shmap .ar{flex:none;font:inherit;font-size:15px;font-weight:700;padding:9px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#dfe3ff;cursor:pointer;white-space:nowrap}
@@ -119,22 +122,30 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .wld .pn.on{fill:rgba(255,226,150,.22)}
 .shmap .zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px;z-index:3}
 .shmap .zoom button{font:inherit;font-size:22px;font-weight:900;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(16,20,52,.7);color:#fff;cursor:pointer;line-height:1}
-.shmap .nd{position:absolute;transform:translate(-50%,-50%);width:var(--nd);height:var(--nd);border-radius:50%;border:2px solid rgba(255,255,255,.35);background:radial-gradient(circle at 40% 35%,#3a4580,#141a40);color:#fff;font:inherit;font-weight:900;font-size:calc(var(--nd) * .36);cursor:pointer;display:grid;place-items:center;padding:0}
+.shmap .nd{position:absolute;transform:translate(-50%,-50%) scale(var(--iz,1));width:var(--nd);height:var(--nd);border-radius:50%;border:2px solid rgba(255,255,255,.35);background:radial-gradient(circle at 40% 35%,#3a4580,#141a40);color:#fff;font:inherit;font-weight:900;font-size:calc(var(--nd) * .36);cursor:pointer;display:grid;place-items:center;padding:0}
 .shmap .nd.ok{background:radial-gradient(circle at 40% 35%,#fff6c8,#f2c24a 55%,#b9851a);color:#3a2604;border-color:#fff3b0;box-shadow:0 0 18px 4px rgba(255,214,106,.55)}
 .shmap .nd.cur{border-color:#9fe8ff;box-shadow:0 0 0 0 rgba(159,232,255,.7);animation:shpulse 1.6s infinite}
 .shmap .nd.lk{opacity:.4;cursor:default}
 .shmap .nd .sr{position:absolute;top:100%;left:50%;transform:translateX(-50%);font-size:13px;letter-spacing:-1px;color:#ffd76a;white-space:nowrap;margin-top:3px;text-shadow:0 1px 3px #000}
 @keyframes shpulse{0%{box-shadow:0 0 0 0 rgba(159,232,255,.7)}70%{box-shadow:0 0 0 16px rgba(159,232,255,0)}100%{box-shadow:0 0 0 0 rgba(159,232,255,0)}}
-.shmap .sh{position:relative;margin:0 auto calc(14px + env(safe-area-inset-bottom));width:min(94vw,640px);background:rgba(16,20,52,.92);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:16px 18px;display:flex;gap:14px;align-items:center;backdrop-filter:blur(6px)}
+.shmap .sh{position:relative;margin:0 auto calc(14px + env(safe-area-inset-bottom));width:min(94vw,860px);background:rgba(16,20,52,.92);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:16px 18px;display:flex;gap:14px;align-items:center;backdrop-filter:blur(6px)}
 .shmap .sh .tx{flex:1;min-width:0}
-.shmap .sh h3{margin:0 0 4px;font-size:20px}.shmap .sh .mi{font-size:18px;font-weight:800;color:#ffe7a0;line-height:1.35}
-.shmap .sh .sub{font-size:15px;opacity:.8;margin-top:4px;line-height:1.45}
-.shmap .sh .go{flex:none;font:inherit;font-weight:900;font-size:19px;padding:16px 22px;border-radius:16px;border:0;background:#ffd76a;color:#241a05;cursor:pointer;white-space:nowrap}
+.shmap .sh .art{flex:none;position:relative;width:220px;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:16px;background:radial-gradient(ellipse at 50% 40%,rgba(90,110,220,.28),rgba(10,12,40,.2) 70%);border:1px solid rgba(255,255,255,.08);padding:6px 4px 8px}
+.shmap .sh .art svg{width:100%;height:auto;overflow:visible}.shmap .sh .art b{font-size:15px;font-weight:900;color:#c9d6ff;letter-spacing:.06em;margin-top:2px}
+.shmap .sh .art .cl{stroke:rgba(200,215,255,.35);stroke-width:.5;stroke-dasharray:1.4 1.2}.shmap .sh .art .cl.on{stroke:#ffd76a;stroke-dasharray:none;stroke-width:.7}
+.shmap .sh .art .cst{fill:rgba(220,230,255,.55)}.shmap .sh .art .cst.on{fill:#ffe9a8}
+.shmap .sh .art .cpk{fill:rgba(255,215,106,.18);stroke:#fff;stroke-width:.6;animation:shpk 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes shpk{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:.6}}
+.shmap .sh .ly{display:flex;align-items:center;gap:8px;margin:2px 0 6px;font-size:16px;font-weight:800;color:#dfe6ff}.shmap .sh .ly .lm{width:46px;height:30px;flex:none}.shmap .sh .ly em{font-style:normal;opacity:.65;font-size:14px}
+.shmap .nd.pk{outline:3px solid #fff;outline-offset:3px}
+.shmap .sh h3{margin:0 0 2px;font-size:24px}.shmap .sh .mi{font-size:21px;font-weight:800;color:#ffe7a0;line-height:1.35}
+.shmap .sh .sub{font-size:16.5px;opacity:.8;margin-top:4px;line-height:1.45}
+.shmap .sh .go{flex:none;font:inherit;font-weight:900;font-size:22px;padding:20px 28px;border-radius:16px;border:0;background:#ffd76a;color:#241a05;cursor:pointer;white-space:nowrap}
 .shmap .sh .go:disabled{opacity:.4;cursor:default}
 .shmap .nav{position:absolute;z-index:3;top:50%;transform:translateY(-50%);font:inherit;font-size:26px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 .shmap .nav.l{left:8px}.shmap .nav.r{right:8px}.shmap .nav:disabled{opacity:.2}
-@media (max-width:600px){.shmap .hd{padding:calc(8px + env(safe-area-inset-top)) 12px 6px}.shmap .hd h2{font-size:19px}.shmap .hd .tot{font-size:15px}.shmap .x{width:40px;height:40px;font-size:19px}.shmap .ars{padding:2px 12px 8px;gap:6px}.shmap .ar{font-size:14px;padding:7px 12px}.shmap .gift{margin:0 12px 2px;padding:2px 12px 2px 2px}.shmap .nd .sr{font-size:11px;margin-top:1px}
-.shmap .sh{width:calc(100vw - 20px);margin-bottom:calc(10px + env(safe-area-inset-bottom));padding:12px 14px;gap:8px;border-radius:18px}.shmap .sh h3{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shmap .sh .mi{font-size:16px}.shmap .sh .sub{font-size:13.5px;margin-top:2px;line-height:1.4}.shmap .sh .go{padding:12px 16px;font-size:17px}.shmap .gift{font-size:14px}.shmap .gift img{width:30px;height:30px}.shmap .sh .gfl{margin-top:6px;font-size:14.5px}.shmap .sh .gfl img{width:36px;height:36px}.shmap .sh{flex-direction:column;align-items:stretch}.shmap .sh .go{width:100%}.shmap .nav{display:none}.shmap .cst{width:100%}}
+@media (max-width:600px){.shmap .hd{padding:calc(8px + env(safe-area-inset-top)) 12px 6px}.shmap .hd h2{font-size:19px}.shmap .hd .tot{font-size:15px}.shmap .x{width:40px;height:40px;font-size:19px}.shmap .ars{padding:2px 12px 8px;gap:6px}.shmap .ar{font-size:14px;padding:7px 12px}.shmap .gift{margin:0 12px 6px;padding:2px 12px 2px 2px}.shmap .nd .sr{font-size:11px;margin-top:1px}
+.shmap .sh{width:calc(100vw - 20px);margin-bottom:calc(10px + env(safe-area-inset-bottom));padding:12px 14px;gap:8px;border-radius:18px}.shmap .sh h3{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shmap .sh .mi{font-size:16px}.shmap .sh .sub{font-size:13.5px;margin-top:2px;line-height:1.4}.shmap .sh .go{padding:12px 16px;font-size:17px}.shmap .gift{font-size:14px}.shmap .gift img{width:30px;height:30px}.shmap .sh .gfl{margin-top:6px;font-size:14.5px}.shmap .sh .gfl img{width:36px;height:36px}.shmap .sh{display:grid;grid-template-columns:96px 1fr;gap:8px 10px;align-items:start}.shmap .sh .art{width:auto;padding:4px 2px 6px;border-radius:12px}.shmap .sh .art b{font-size:11.5px}.shmap .sh .ly{font-size:14px;margin:0 0 4px}.shmap .sh .ly .lm{width:34px;height:22px}.shmap .sh .ly em{font-size:12.5px}.shmap .sh .recs{font-size:13.5px;margin-top:6px}.shmap .sh .go{grid-column:1/-1;width:100%}.shmap .nav{display:none}.shmap .cst{width:100%}}
 `;
     document.head.appendChild(s);
   }
@@ -647,22 +658,39 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   function skyLoop(cv, getPan) {
     const c = cv.getContext('2d'); let W = 0, H = 0, dpr = 1, raf = 0, last = 0, stopped = false, shoot = null, nextShoot = performance.now() + 2500;
     let s = 99; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    const S = Array.from({ length: 340 }, () => ({ x: R(), y: R(), a: R(), ph: R() * 6.3, sp: .6 + R() * 1.8, d: .15 + R() * .5 }));
-    const B = Array.from({ length: 16 }, () => ({ x: R(), y: R(), ph: R() * 6.3, sp: .4 + R() * .8, hue: R() }));
+    const S = Array.from({ length: 560 }, () => ({ x: R(), y: R(), a: R(), ph: R() * 6.3, sp: .6 + R() * 2.4, d: .15 + R() * .5 }));   // (2026-11-14: more sparkle — ユーザー)
+    const B = Array.from({ length: 38 }, () => ({ x: R(), y: R(), ph: R() * 6.3, sp: .4 + R() * .8, hue: R() }));
     function size() { const r = cv.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.max(1, r.width * dpr); H = cv.height = Math.max(1, r.height * dpr); }
     size();
+    // (2026-11-14, ユーザー: もっとリアルな光り方) the stars as soft photographic sprites drawn additively: a hot white core, a
+    // coloured gaussian halo, and for the bright ones faint diffraction spikes that fade along their length; they scintillate
+    const sprite = (rgb, spikes) => {
+      const N = 128, cv2 = document.createElement('canvas'); cv2.width = cv2.height = N; const g2 = cv2.getContext('2d'), m = N / 2;
+      let g = g2.createRadialGradient(m, m, 0, m, m, m); g.addColorStop(0, `rgba(${rgb},.55)`); g.addColorStop(.08, `rgba(${rgb},.32)`); g.addColorStop(.25, `rgba(${rgb},.08)`); g.addColorStop(1, `rgba(${rgb},0)`);
+      g2.fillStyle = g; g2.fillRect(0, 0, N, N);
+      g = g2.createRadialGradient(m, m, 0, m, m, N * .07); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.45, 'rgba(255,255,255,.85)'); g.addColorStop(1, `rgba(${rgb},0)`);
+      g2.fillStyle = g; g2.beginPath(); g2.arc(m, m, N * .07, 0, 7); g2.fill();
+      if (spikes) [[1, 0], [0, 1]].forEach(([dx, dy]) => [3, 1.4, .6].forEach((w, k) => {
+        const lg = g2.createLinearGradient(m - dx * m, m - dy * m, m + dx * m, m + dy * m);
+        lg.addColorStop(0, `rgba(${rgb},0)`); lg.addColorStop(.38, `rgba(${rgb},${[.05, .14, .3][k]})`); lg.addColorStop(.5, `rgba(255,255,255,${[.12, .35, .7][k]})`); lg.addColorStop(.62, `rgba(${rgb},${[.05, .14, .3][k]})`); lg.addColorStop(1, `rgba(${rgb},0)`);
+        g2.strokeStyle = lg; g2.lineWidth = w; g2.beginPath(); g2.moveTo(m - dx * m, m - dy * m); g2.lineTo(m + dx * m, m + dy * m); g2.stroke(); }));
+      return cv2;
+    };
+    const COLS = ['200,218,255', '255,240,214', '255,214,170', '220,206,255', '185,205,255'];
+    const SPR = COLS.map(c => sprite(c, false)), SPK = COLS.map(c => sprite(c, true));
+    S.forEach(o => { o.c = Math.floor(o.ph * 7) % COLS.length; });
+    B.forEach(o => { o.c = Math.floor(o.hue * COLS.length) % COLS.length; });
     function frame(now) {
       raf = 0; if (stopped) return;
       if (!document.hidden && now - last >= 32) {
-        last = now; const t = now / 1000, px = getPan() * dpr; c.clearRect(0, 0, W, H);
-        S.forEach(o => { const tw = .55 + .45 * Math.sin(t * o.sp + o.ph), x = ((o.x * W - px * o.d) % W + W) % W, y = o.y * H, rr = (.35 + o.a * o.a * 1.3) * dpr;
-          c.fillStyle = `rgba(255,255,255,${(.12 + o.a * .7) * tw})`; c.beginPath(); c.arc(x, y, rr, 0, 7); c.fill(); });
-        B.forEach(o => { const tw = Math.max(0, Math.sin(t * o.sp + o.ph)), x = ((o.x * W - px * .35) % W + W) % W, y = o.y * H, k = (2 + tw * 9) * dpr;
-          const col = o.hue < .3 ? '200,220,255' : o.hue < .6 ? '255,236,190' : '230,210,255';
-          const g = c.createRadialGradient(x, y, 0, x, y, k); g.addColorStop(0, `rgba(${col},${.25 + .6 * tw})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.beginPath(); c.arc(x, y, k, 0, 7); c.fill();
-          c.strokeStyle = `rgba(${col},${.35 * tw})`; c.lineWidth = .8 * dpr; c.beginPath(); c.moveTo(x - k * 1.6, y); c.lineTo(x + k * 1.6, y); c.moveTo(x, y - k * 1.6); c.lineTo(x, y + k * 1.6); c.stroke(); });
+        last = now; const t = now / 1000, px = getPan() * dpr; c.clearRect(0, 0, W, H); c.globalCompositeOperation = 'lighter';
+        S.forEach(o => { const tw = .7 + .3 * Math.sin(t * o.sp + o.ph) * Math.sin(t * o.sp * 1.7 + o.ph * 2), x = ((o.x * W - px * o.d) % W + W) % W, y = o.y * H, sz = (3 + o.a * o.a * 9) * dpr;
+          c.globalAlpha = Math.min(1, (.25 + o.a * .75) * tw); c.drawImage(SPR[o.c], x - sz, y - sz, sz * 2, sz * 2); });
+        B.forEach(o => { const p = .5 + .5 * Math.sin(t * o.sp + o.ph), tw = .55 + .45 * p * (.85 + .15 * Math.sin(t * 9 + o.ph * 5)), x = ((o.x * W - px * .35) % W + W) % W, y = o.y * H, sz = (14 + 20 * p) * dpr;
+          c.globalAlpha = tw; c.drawImage(SPK[o.c], x - sz, y - sz, sz * 2, sz * 2); });
+        c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
         if (!shoot && now > nextShoot) shoot = { x: (.2 + R() * .7) * W, y: R() * H * .45, t0: now, vx: -(.6 + R() * .5) * W, vy: .35 * H };
-        if (shoot) { const k = (now - shoot.t0) / 900; if (k >= 1) { shoot = null; nextShoot = now + 4000 + R() * 7000; } else {
+        if (shoot) { const k = (now - shoot.t0) / 900; if (k >= 1) { shoot = null; nextShoot = now + 1800 + R() * 3600; } else {
           const x = shoot.x + shoot.vx * k, y = shoot.y + shoot.vy * k, a = Math.sin(k * Math.PI), g = c.createLinearGradient(x, y, x - shoot.vx * .12, y - shoot.vy * .12);
           g.addColorStop(0, `rgba(255,255,255,${.85 * a})`); g.addColorStop(1, 'rgba(255,255,255,0)'); c.strokeStyle = g; c.lineWidth = 1.6 * dpr; c.beginPath(); c.moveTo(x, y); c.lineTo(x - shoot.vx * .12, y - shoot.vy * .12); c.stroke(); } }
       }
@@ -681,13 +709,14 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     if (window.ShanghaiZodiac && !document.getElementById('shzod-css')) { const st = document.createElement('style'); st.id = 'shzod-css'; st.textContent = ShanghaiZodiac.css; document.head.appendChild(st); }
     let P = prog(), area = Math.floor(nextStage(P) / 10), pick = nextStage(P);
     const el = document.createElement('div'); el.className = 'shmap';
-    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="gift"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="sh"></div>`;
+    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
     document.body.appendChild(el);
     const $ = q => el.querySelector(q), vp = $('.vp'), wld = $('.wld');
     // the pan / zoom: the long sky drawn at u px per unit, then scaled by z and moved by (tx, ty)
     let u = 6, z = 1, tx = 0, ty = 0, raf = 0, anim = null;
     const WW = PW * 12;
     const sky = skyLoop($('canvas'), () => tx);
+    if (window.Table3D && Table3D.quiet) Table3D.quiet(true);   // (2026-11-14) the map covers the room: the 3D scene behind it stops drawing (the showcase turntable kept it at 60 fps)
     requestAnimationFrame(() => el.classList.add('on'));
     const ZMIN = () => Math.min(1, (vp.clientWidth - 20) / (WW * u)) * .9, ZMAX = 3;
     function clamp() {
@@ -695,7 +724,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       tx = w + 2 * m <= vw ? (vw - w) / 2 : Math.min(m, Math.max(vw - w - m, tx));
       ty = h <= vh ? (vh - h) / 2 : Math.min(20, Math.max(vh - h - 20, ty));
     }
-    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; track(); }
+    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; wld.style.setProperty('--iz', Math.max(1, Math.min(3, .72 / z)).toFixed(3)); track(); }   // (2026-11-14 --iz: zoomed out, the stage buttons keep ~72 % of their size on screen — the picture shrinks, the buttons do not)
     const centerOf = a => (a * PW + 8 + 50) * u;   // the middle of constellation a, in sky px at z = 1
     function aim(a, smooth) {
       const ttx = vp.clientWidth / 2 - centerOf(a) * z;
@@ -716,7 +745,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       sky.size(); z = Math.max(ZMIN(), Math.min(ZMAX, z));
     }
     function onFit() { const c = (vp.clientWidth / 2 - tx) / z; layout(); tx = vp.clientWidth / 2 - c * z; apply(); }
-    const close = () => { el.classList.remove('on'); sky.stop(); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); removeEventListener('resize', onFit); if (window.visualViewport) visualViewport.removeEventListener('resize', onFit); };
+    const close = () => { el.classList.remove('on'); sky.stop(); if (window.Table3D && Table3D.quiet) Table3D.quiet(false); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); removeEventListener('resize', onFit); if (window.visualViewport) visualViewport.removeEventListener('resize', onFit); };
     const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') go(area - 1); if (e.key === 'ArrowRight') go(area + 1); if (e.key === '+' || e.key === '=') zoomAt(1.25); if (e.key === '-') zoomAt(.8); };
     addEventListener('keydown', key);
     addEventListener('resize', onFit); if (window.visualViewport) visualViewport.addEventListener('resize', onFit);
@@ -752,12 +781,14 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       let h = '';
       AR.forEach((a, i) => PTS[i].forEach(([x, y], k) => {
         const s = i * 10 + k, ok = cleared(P, s), ul = unlocked(P, s), sr = P.st[s] || 0, t = Reward.at(s);
-        h += `<button type="button" class="nd${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / WW * 100}%;top:${y / PH * 100}%${s === pick ? ';outline:3px solid #fff;outline-offset:3px' : ''}" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${t ? `<i class="gft">${Reward.has(t) ? '✓' : '🎁'}</i>` : ''}</button>` +
+        h += `<button type="button" class="nd${s === pick ? ' pk' : ''}${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${t ? `<i class="gft">${Reward.has(t) ? '✓' : '🎁'}</i>` : ''}</button>` +
           (t ? `<img class="gf${Reward.has(t) ? ' got' : ''}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" src="../images/atlas/av/peacock-${t}.webp" alt="">` : '');
       }));
       wld.querySelectorAll('.nd,.gf').forEach(n => n.remove());
       wld.insertAdjacentHTML('beforeend', h);
     }
+    // (2026-11-14) picking a stage only moves the ring and refills the box below: nothing else is rebuilt (no hitch)
+    function mark() { wld.querySelectorAll('.nd.pk').forEach(b => b.classList.remove('pk')); const b = wld.querySelector(`.nd[data-s="${pick}"]`); if (b) b.classList.add('pk'); }
     function head() {
       const tot = Object.values(P.st).reduce((a, v) => a + v, 0);
       $('h2').textContent = TX('st.title', lang); $('.tot').textContent = '★ ' + tot + ' / 360';
@@ -771,11 +802,29 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       const it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? it.name[lang] || it.name.en : 'Peacotile', got = Reward.has(t);
       return `<div class="gfl${got ? ' got' : ''}"><img src="../images/atlas/av/peacock-${t}.webp" alt=""><span>${got ? '✓ ' : '🎁 '}${esc(TX(got ? 'rw.have' : 'rw.here', lang, { name: nm }))}</span></div>`;
     }
+    // the box below the sky: the constellation's picture with this stage's star ringed · the stage, its mission, the record · スタート
+    // (2026-11-14, ユーザー: 画像をうまく組み込んで綺麗に見やすく、PCは文字も大きく; a pick refills it without re-laying the map)
+    function conArt(a, k) {
+      const S = CON[AR[a]], fs = a * 10, done = Array.from({ length: 10 }, (_, j) => cleared(P, fs + j)).filter(Boolean).length;
+      let v = `<svg viewBox="-4 -1 108 66" aria-hidden="true"><g class="fig${done === 10 ? ' lit' : ''}">${window.ShanghaiZodiac ? ShanghaiZodiac(AR[a], a) : ''}</g>`;
+      edges(AR[a]).forEach(([i, j]) => { const L = cleared(P, fs + i) && cleared(P, fs + j); v += `<line class="cl${L ? ' on' : ''}" x1="${S.p[i][0]}" y1="${S.p[i][1]}" x2="${S.p[j][0]}" y2="${S.p[j][1]}"/>`; });
+      S.p.forEach(([x, y], j) => { v += j === k ? `<circle class="cpk" cx="${x}" cy="${y}" r="5.4"/><circle class="cst on" cx="${x}" cy="${y}" r="2.6"/>` : `<circle class="cst${cleared(P, fs + j) ? ' on' : ''}" cx="${x}" cy="${y}" r="1.7"/>`; });
+      return v + '</svg>';
+    }
+    function layMini(lay) {   // the board seen from above: its tiles, the upper layers lighter
+      const L = K.LAYOUTS[lay], xs = L.map(p => p[0]), ys = L.map(p => p[1]), x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0 + 2, h = Math.max(...ys) - y0 + 2;
+      const o = L.slice().sort((p, q) => p[2] - q[2]).map(([x, y, zz]) => `<rect x="${(x - x0 - zz * .25).toFixed(2)}" y="${((y - y0) * 1.25 - zz * .3).toFixed(2)}" width="1.86" height="2.4" rx=".3" fill="hsl(40,${30 + zz * 8}%,${70 + zz * 6}%)" stroke="rgba(40,30,10,.55)" stroke-width=".12"/>`).join('');
+      return `<svg class="lm" viewBox="-1.2 -1.4 ${w + 1.4} ${h * 1.25 + 1.6}" aria-hidden="true">${o}</svg>`;
+    }
     function sheet() {
-      const s = pick, st = K.stage(s), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s];
-      $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + (sr ? '<br>' + '★'.repeat(sr) + '☆'.repeat(3 - sr) + (bt != null ? ' · ' + esc(TX('r.best', lang, { t: mmss(bt) })) : '') : '') : esc(TX('st.lock', lang))}<br><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span>${giftLine(s)}</div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
-      $('.go').onclick = () => { if (!ul) return; close(); o.play(s); };
-      requestAnimationFrame(onFit);
+      const s = pick, st = K.stage(s), a = Math.floor(s / 10), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s], box = $('.sh'), h0 = box.offsetHeight;
+      box.innerHTML = `<div class="art">${conArt(a, s % 10)}<b>${esc(TX('ar.' + AR[a], lang))}</b></div>` +
+        `<div class="tx"><h3>${esc(stageName(s, lang))}</h3><div class="ly">${layMini(st.lay)}<span>${esc(TX('lay.' + st.lay, lang))}</span><em>${esc(TX('tiles', lang, { n: st.n }))}</em></div>` +
+        `<div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) : esc(TX('st.lock', lang))}</div>` +
+        `<div class="recs"><div>${esc(TX('rec', lang))}${sr ? `<span class="rs">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` + (bt != null ? ` <span class="rb">${esc(TX('r.best', lang, { t: mmss(bt) }))}</span>` : '') : '<span class="rb">—</span>'}</div><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span></div>${giftLine(s)}</div>` +
+        `<button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
+      box.querySelector('.go').onclick = () => { if (!ul) return; close(); o.play(s); };
+      if (box.offsetHeight !== h0) requestAnimationFrame(onFit);   // (only when the box changed its height: the sky above is fitted again)
     }
     /* ---------- drag to travel, flick to glide, pinch / wheel to zoom; a tap (no drag) picks a stage ---------- */
     const pts = new Map(); let moved = 0, lastX = 0, lastY = 0, vx = 0, lt = 0, pinch = null, glide = 0;
@@ -807,7 +856,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     el.addEventListener('click', e => {
       const a = e.target.closest('[data-a]'); if (a) { go(+a.dataset.a); return; }
       const zb = e.target.closest('[data-z]'); if (zb) { zoomAt(+zb.dataset.z > 0 ? 1.3 : 1 / 1.3); return; }
-      const n = e.target.closest('.nd'); if (n) { if (moved > 6) return; pick = +n.dataset.s; nodes(); sheet(); return; }
+      const n = e.target.closest('.nd'); if (n) { if (moved > 6) return; pick = +n.dataset.s; mark(); sheet(); return; }
       if (e.target.closest('.nav.l')) go(area - 1); else if (e.target.closest('.nav.r')) go(area + 1);
     });
     head(); wld.innerHTML = art(); tabs(); nodes(); sheet();
