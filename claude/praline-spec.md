@@ -386,7 +386,7 @@ Many cores (nuts) held together by shared memory (caramel).
   - §5 の「headless Chrome で確認」に「wasm とスレッドが有効なこと」を加える。
 
 - **（2026-11-14 実装）マルチスレッドの組**：`shared/mtengine.js` の組が失敗した理由（wasm の読み込み・lead／helper の起動・止まらない helper など）を覚え、`MTEngine.status(true)`（分離・スレッドのオン／オフ・各組の動作と理由、まだ作っていない組は作って待つ）で返す。分離されたページは外から読めないので、同じオリジンからの `postMessage({ type: 'mtengine-status' })` にも答える。点検ページ **`engine-health.html`**（リポジトリ直下、noindex）：mtengine.js を使う20ゲームのページを1つずつ裏の iframe で開き、分離・スレッド・組（wasm）・スレッド数・失敗の理由を一覧にする。headless Chrome（作業機2コア）で20ゲームすべて「分離○・オン・組が動作」（dots・connect4 は mtsplit のみで組なし）。
-- 残り：1スレッドの Worker（組を使わない弱いレベル・分離できないページ）の「wasm か JavaScript か」は各ゲームのエンジンの中にあり、まだ共通の口はない。各エンジンの `catch` で `console.warn` に理由を出し、Worker が `{ type: 'corestat' }` に `{ core: 'wasm-simd' | 'wasm' | 'js', why }` で答える形を順次入れる（マンカラは `ping` に `core` を返す）。
+- **（2026-11-15 実装）1スレッドの Worker のコア**：エンジンは変えずに外から見る形にした。`?health=1` のページでだけ、`shared/mtengine.js` がページの Worker（`&mt=1`・`mt-helper` 以外、同じオリジンのクラシック Worker）を **`shared/corestat.js?u=<エンジン>`** 経由で起動する。corestat.js は `location`・相対の `fetch`／`importScripts` をエンジンの場所に合わせてからエンジンを読み込み、作られた WebAssembly のモジュール（元の .wasm の名前・共有メモリか）と失敗（例外・読み込みエラー）を BroadcastChannel `corestat` でページに知らせる。`MTEngine.status()` の `workers` に入り、`engine-health.html` の「1スレッドの worker（コア）」列に「wasm（ファイル名）／JS（wasm 失敗）＋理由／JS（wasm を読まない／まだ）」で出る。headless Chrome（2026-11-15）：20ゲームとも本体の Worker は wasm（SIMD 版のあるゲームは SIMD 版）。JS のままなのは wasm を持たない connect4、dots の初回に読まない Worker、リバーシの mt-worker.js（mtsplit の補助）。
 
 ### ③ 時間を区切った追加の読み切り（共通の型）
 - リバーシの `tryMs`：通常の読みが終わった後、**決めた時間の中だけ**一段深い読み切りを試し、間に合わなければ結果を捨てて通常の手を使う。端末ごとの上限（遅い端末では試さない）つき。考える時間の上限は変えない（「強化で思考時間を増やさない」の約束を守る形）。

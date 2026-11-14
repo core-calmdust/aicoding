@@ -35,7 +35,7 @@ iframe{position:fixed;left:-4000px;top:0;width:1280px;height:800px;border:0}
   <div id="st"></div>
 </div>
 <div class="card tw">
-  <table><thead><tr><th>ゲーム</th><th>分離</th><th>スレッド</th><th>組（wasm）</th><th>スレッド数</th><th>理由・警告</th></tr></thead><tbody id="tb"></tbody></table>
+  <table><thead><tr><th>ゲーム</th><th>分離</th><th>スレッド</th><th>組（wasm）</th><th>スレッド数</th><th>1スレッドのworker（コア）</th><th>理由・警告</th></tr></thead><tbody id="tb"></tbody></table>
 </div>
 </main>
 <script>
@@ -43,6 +43,17 @@ iframe{position:fixed;left:-4000px;top:0;width:1280px;height:800px;border:0}
 const GAMES = ['reversi', 'shogi', 'chess', 'checkers', 'xiangqi', 'janggi', 'tafl', 'go', 'gomoku', 'hex', 'morris', 'fanorona', 'alquerque', 'ugolki', 'agon', 'konane', 'amazons', 'mancala', 'dots', 'connect4'];
 const $ = s => document.querySelector(s), esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const yn = (v, a, b) => v ? `<span class="y">${a || '○'}</span>` : `<span class="n">${b || '×'}</span>`;
+// (2026-11-15) the core of each one-thread worker (shared/corestat.js): the wasm modules it made on its own memory, or JavaScript
+function core(w) {
+  const own = (w.mods || []).filter(m => !m.sh), name = (w.url || '').replace(/^.*\//, '').replace(/\?.*$/, '');
+  let c;
+  if (own.length) c = `<span class="y">wasm</span> <small>${esc([...new Set(own.map(m => m.src))].join(', '))}</small>`;
+  else if ((w.files || []).length || (w.errs || []).length) c = `<span class="n">JS（wasm 失敗）</span>`;
+  else c = '<span class="m">JS（wasm を読まない／まだ）</span>';
+  const er = (w.errs || []).length ? `<br><small>${esc(w.errs.join(' / '))}</small>` : '';
+  return `<small>${esc(name)}</small> ${c}${er}`;
+}
+const cores = ws => (ws || []).length ? ws.map(core).join('<br>') : '<span class="m">-</span>';
 function check(game) {
   return new Promise(res => {
     const f = document.createElement('iframe');
@@ -63,14 +74,14 @@ $('#go').onclick = async () => {
     const g = GAMES[i]; $('#st').textContent = `${i + 1}/${GAMES.length} ${g} を点検中…`;
     const r = await check(g), s = r.s; r.warns = r.warns || [];
     let row;
-    if (!s) { ng++; row = `<td>${g}</td><td colspan="4" class="n">点検できず</td><td><small>${esc(r.error || '')}</small></td>`; }
+    if (!s) { ng++; row = `<td>${g}</td><td colspan="5" class="n">点検できず</td><td><small>${esc(r.error || '')}</small></td>`; }
     else {
       const pools = s.pools || [], bad = s.on && pools.some(p => !p.ok);
       if (bad || !s.isolated) ng++;
       const why = [].concat(pools.filter(p => p.error).map(p => p.wasm + ': ' + p.error), r.warns).map(esc).join('<br>');
       row = `<td>${g}</td><td>${yn(s.isolated)}</td><td>${s.on ? '<span class="y">オン</span>' : `<span class="n">オフ</span>${s.touch ? ' <small>(タッチ端末)</small>' : ''}`}</td>` +
         `<td>${pools.length ? pools.map(p => `${yn(p.ok, '動作', p.made ? '失敗' : '未作成')} <small>${esc(p.wasm)}</small>`).join('<br>') : '<span class="m">なし（mtsplit など）</span>'}</td>` +
-        `<td>${pools.filter(p => p.ok).map(p => p.threads).join(' / ') || '-'}</td><td><small>${why}</small></td>`;
+        `<td>${pools.filter(p => p.ok).map(p => p.threads).join(' / ') || '-'}</td><td>${cores(s.workers)}</td><td><small>${why}</small></td>`;
     }
     $('#tb').insertAdjacentHTML('beforeend', `<tr>${row}</tr>`);
   }
