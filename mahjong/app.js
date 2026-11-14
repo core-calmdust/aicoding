@@ -277,15 +277,40 @@ function homeSay() {
   const el = $('#aaSay'); el.textContent = L(c.lines[ks[(Math.random() * ks.length) | 0]]); el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
   clearTimeout(sayT); sayT = setTimeout(() => { el.classList.remove('on'); }, 2600);
 }
-// the room: gold dust and petals drifting in the light (a small 2D canvas, only while the home is on screen; none in light mode)
-const HFX = { run: false, parts: [] };
+// the room: specks of light drifting in the warm air (ユーザー 2026-11-14: not vector dots — real light). Pre-rendered soft sprites
+// drawn additively: a few large out-of-focus bokeh discs far in front, fine motes in the light that twinkle (the brightest
+// throw a faint star), everything soft-edged and warm. A small 2D canvas, only while the home is on screen; none in light mode.
+const HFX = { run: false, parts: [], spr: null };
+function hfxSprites() {
+  const mk = (n, draw) => { const c = document.createElement('canvas'); c.width = c.height = n; draw(c.getContext('2d'), n / 2); return c; };
+  return {
+    mote: mk(64, (g, r) => { const gr = g.createRadialGradient(r, r, 0, r, r, r);
+      gr.addColorStop(0, 'rgba(255,250,235,1)'); gr.addColorStop(.08, 'rgba(255,236,190,.95)'); gr.addColorStop(.22, 'rgba(255,208,130,.38)'); gr.addColorStop(.5, 'rgba(255,180,90,.1)'); gr.addColorStop(1, 'rgba(255,170,80,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, 2 * r, 2 * r); }),
+    star: mk(96, (g, r) => { g.translate(r, r); for (const [w, l, a] of [[1.6, r, .55], [1, r * .7, .35]]) for (let k = 0; k < 2; k++) { g.rotate(k ? Math.PI / 2 : 0);
+      const gr = g.createLinearGradient(-l, 0, l, 0); gr.addColorStop(0, 'rgba(255,230,180,0)'); gr.addColorStop(.5, `rgba(255,246,220,${a})`); gr.addColorStop(1, 'rgba(255,230,180,0)');
+      g.fillStyle = gr; g.fillRect(-l, -w / 2, 2 * l, w); } }),
+    bokeh: mk(128, (g, r) => { const gr = g.createRadialGradient(r, r, 0, r, r, r * .96);
+      gr.addColorStop(0, 'rgba(255,214,150,.42)'); gr.addColorStop(.72, 'rgba(255,206,140,.5)'); gr.addColorStop(.86, 'rgba(255,224,170,.62)'); gr.addColorStop(.94, 'rgba(255,200,130,.18)'); gr.addColorStop(1, 'rgba(255,190,120,0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(r, r, r, 0, 7); g.fill(); }),
+  };
+}
 function homeFx() {
   const cv = $('#aaFx'); if (!cv) return;
   const on = !$('#home').hidden && !DB.set.lite;
   if (!on) { HFX.run = false; const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); return; }
   if (HFX.run) return; HFX.run = true;
-  const g = cv.getContext('2d');
+  if (!HFX.spr) HFX.spr = hfxSprites();
+  const g = cv.getContext('2d'), S = HFX.spr;
   let last = performance.now();
+  const spawn = (W, H, kind, top) => {
+    const z = kind === 'bokeh' ? .6 + Math.random() * .4 : kind === 'near' ? .35 + Math.random() * .25 : Math.random() * .3;   // depth: 1 = nearest
+    return { kind, z, x: Math.random() * W, y: top ? -40 : Math.random() * H,
+      vx: (4 + Math.random() * 10) * (.4 + z), vy: (3 + Math.random() * 8) * (.4 + z) * (Math.random() < .3 ? -.4 : 1),
+      size: kind === 'bokeh' ? 34 + Math.random() * 70 : kind === 'near' ? 10 + Math.random() * 12 : 4 + Math.random() * 6,
+      a: kind === 'bokeh' ? .06 + Math.random() * .1 : kind === 'near' ? .55 + Math.random() * .4 : .35 + Math.random() * .45,
+      ph: Math.random() * 6.3, sp: .6 + Math.random() * 1.6 };
+  };
   const step = now => {
     if (!HFX.run) return;
     if ($('#home').hidden || DB.set.lite) { HFX.run = false; g.clearRect(0, 0, cv.width, cv.height); return; }
@@ -293,15 +318,24 @@ function homeFx() {
     if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     const dt = Math.min(50, now - last) / 1000; last = now;
     const P = HFX.parts;
-    while (P.length < 70) { const petal = Math.random() < .3; P.push({ x: Math.random() * W, y: Math.random() < .5 ? Math.random() * H : -10, vx: (petal ? 14 : 4) + Math.random() * 10, vy: (petal ? 22 : 6) + Math.random() * 14, r: petal ? 3 + Math.random() * 3 : .8 + Math.random() * 1.8, a: Math.random() * 6.3, va: (Math.random() - .5) * 2, ph: Math.random() * 6.3, petal }); }
+    if (!P.length) { for (let i = 0; i < 90; i++) P.push(spawn(W, H, 'far')); for (let i = 0; i < 22; i++) P.push(spawn(W, H, 'near')); for (let i = 0; i < 9; i++) P.push(spawn(W, H, 'bokeh')); }
+    const hs = getComputedStyle($('#home')), mx = parseFloat(hs.getPropertyValue('--mx')) || 0, my = parseFloat(hs.getPropertyValue('--my')) || 0;
     g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
-    for (const p of P) {
-      p.x += p.vx * dt + Math.sin(now / 900 + p.ph) * 8 * dt; p.y += p.vy * dt; p.a += p.va * dt;
-      if (p.y > H + 12 || p.x > W + 12) { p.x = Math.random() * W * .8 - W * .1; p.y = -10; }
-      const tw = .45 + .55 * Math.sin(now / 520 + p.ph) ** 2;
-      if (p.petal) { g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.scale(1, .55 + .45 * Math.sin(now / 400 + p.ph)); g.fillStyle = `rgba(255,190,214,${.35 * tw + .15})`; g.beginPath(); g.ellipse(0, 0, p.r * 1.6, p.r, 0, 0, 7); g.fill(); g.restore(); }
-      else { g.fillStyle = `rgba(255,226,160,${.75 * tw})`; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill(); if (p.r > 1.9) { g.fillStyle = `rgba(255,236,190,${.12 * tw})`; g.beginPath(); g.arc(p.x, p.y, p.r * 4, 0, 7); g.fill(); } }
+    g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < P.length; i++) {
+      const p = P[i];
+      p.x += (p.vx + Math.sin(now / 1700 + p.ph) * 6) * dt; p.y += (p.vy + Math.cos(now / 2100 + p.ph) * 4) * dt;
+      if (p.x > W + 80 || p.y > H + 80 || p.y < -90) { P[i] = spawn(W, H, p.kind, true); P[i].x = Math.random() * W * .9 - W * .15; continue; }
+      const px = p.x - mx * 30 * p.z, py = p.y - my * 20 * p.z;   // (nearer specks move more with the pointer)
+      // brighter in the shaft of light from the upper left, fainter in the dark corners
+      const lit = .45 + .55 * Math.max(0, 1 - Math.hypot(px / W - .35, py / H - .3) * 1.4);
+      const tw = p.kind === 'bokeh' ? .75 + .25 * Math.sin(now / 2600 * p.sp + p.ph) : Math.pow(.5 + .5 * Math.sin(now / 700 * p.sp + p.ph), 2.2);
+      const al = p.a * lit * (p.kind === 'bokeh' ? tw : .25 + .75 * tw), sz = p.size * (p.kind === 'bokeh' ? 1 : .8 + .35 * tw);
+      g.globalAlpha = Math.min(1, al);
+      g.drawImage(p.kind === 'bokeh' ? S.bokeh : S.mote, px - sz, py - sz, sz * 2, sz * 2);
+      if (p.kind === 'near' && tw > .82) { const k = (tw - .82) / .18, ss = sz * 2.6; g.globalAlpha = Math.min(1, al * k); g.drawImage(S.star, px - ss, py - ss, ss * 2, ss * 2); }
     }
+    g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
     requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
