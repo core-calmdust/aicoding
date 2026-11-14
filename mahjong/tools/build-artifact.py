@@ -69,6 +69,11 @@ for f in sorted(os.listdir(chara)):
     if f.endswith('.webp'):
         files[f'img/chara/{f}'] = os.path.join(chara, f)
 
+# the baked table textures (table3d.js reads them from JANKA_ASSETS + 'tex/')
+tex = os.path.join(ROOT, 'images', 'mahjong', 'tex')
+for f in sorted(os.listdir(tex)):
+    if f.endswith('.webp'):
+        files[f'img/tex/{f}'] = os.path.join(tex, f)
 # the recorded sounds (app.js reads them from JANKA_ASSETS + 'snd/')
 snd = os.path.join(ROOT, 'images', 'mahjong', 'snd')
 for f in sorted(os.listdir(snd)):

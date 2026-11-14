@@ -4,6 +4,15 @@
 (function (root) {
 'use strict';
 const W = 1, H = 1.36, D = 0.78;
+// ---- baked textures (2026-11-14, optimisation): the slow procedural pictures — the felt (~0.5 s), the walnut and its height map
+// (~0.9 s), the stone of the backs (~0.1 s) — ship as images made from the very same code (tools/bake-tex.py). They are fetched as
+// the page opens; if one is not there in time (or ?nobake), the code below draws it as before. Every drawn one is kept in
+// JANKA_TEXGEN for the baking tool.
+const BAKE_V = 1, BAKED = {};
+if (!/[?&]nobake\b/.test(location.search)) for (const n of ['felt', 'wood', 'woodb', 'stone']) { const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + n + '.webp?v=' + BAKE_V; BAKED[n] = im; }
+function bakedCanvas(name) { const im = BAKED[name]; if (!im || !im.complete || !im.naturalWidth) return null;
+  const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); return c; }
+const keepGen = (name, c) => { (root.JANKA_TEXGEN = root.JANKA_TEXGEN || {})[name] = c; };
 // ---- the table's own materials (2026-11-14, ユーザー: a more real automatic table — a quieter felt, real wood with rounded
 // edges, the lift seams of an automatic table, a real score unit) ----
 // periodic fractal noise (several octaves of smooth value noise; wraps at 1)
@@ -42,6 +51,8 @@ function weaveTex() {
 // and a slow shift of colour from honey to chocolate along the board. A matching height map (the pores and the late wood a hair
 // lower) gives the lacquer something to catch on. u runs along the grain and wraps.
 function woodTex() {
+  const tex = cv => { const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t; };
+  { const bm = bakedCanvas('wood'), bb = bakedCanvas('woodb'); if (bm && bb) { const map = tex(bm); map.encoding = THREE.sRGBEncoding; return { map, bump: tex(bb) }; } }
   const Wd = 4096, Hd = 384, N = mkNoise(53);   // (one whole rail along u: nothing repeats along a rail — ユーザー 2026-11-14)
   const c = document.createElement('canvas'); c.width = Wd; c.height = Hd; const g = c.getContext('2d'), im = g.createImageData(Wd, Hd), o = im.data;
   const cb = document.createElement('canvas'); cb.width = Wd; cb.height = Hd; const gb = cb.getContext('2d'), ib = gb.createImageData(Wd, Hd), ob = ib.data;
@@ -73,9 +84,9 @@ function woodTex() {
     const h = .6 - late * .25 - pore * .28 + streak * .1; H[y * Wd + x] = h;
     const k = Math.max(0, Math.min(255, h * 255)); ob[p] = ob[p + 1] = ob[p + 2] = k; ob[p + 3] = 255;
   }
-  g.putImageData(im, 0, 0); gb.putImageData(ib, 0, 0);
-  const tex = cv => { const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t; };
-  const map = tex(c); map.encoding = THREE.sRGBEncoding;
+  g.putImageData(im, 0, 0); gb.putImageData(ib, 0, 0); keepGen('wood', c); keepGen('woodb', cb);
+  const tex_ = cv => { const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t; };
+  void tex_; const map = tex(c); map.encoding = THREE.sRGBEncoding;
   return { map, bump: tex(cb) };
 }
 // a seven-segment digit (the score unit's LED): the lit segments in `col`, the unlit ones as a ghost when `ghost` is given
@@ -99,6 +110,7 @@ function seg7(g, x, y, w, h, ch, col, ghost) {
 // a few soft pale veins that follow the same flow. It stays as faint as before (clouds ±3%, veins +5%), it wraps (the four
 // backs take different pieces of it), and a little dither keeps the dark purple from banding into steps.
 function stoneTex() {
+  { const b = bakedCanvas('stone'); if (b) { const t = new THREE.CanvasTexture(b); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t; } }
   const S = 512, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), im = g.createImageData(S, S), o = im.data;
   let seed = 7; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const grid = P => { const a = new Float32Array(P * P); for (let i = 0; i < P * P; i++) a[i] = R(); return a; };
@@ -117,6 +129,7 @@ function stoneTex() {
     o[p] = Math.min(255, br * f + vn * 5 + d); o[p + 1] = Math.min(255, bg * f + vn * 4 + d); o[p + 2] = Math.min(255, bb * f + vn * 6 + d); o[p + 3] = 255;
   }
   g.putImageData(im, 0, 0);
+  keepGen('stone', c);
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
 }
 // a small studio around the table for the polished surfaces to reflect: a soft ceiling light, a window strip, dark walls
@@ -382,7 +395,8 @@ class Table3D {
     // table pressed into it — the centre lift panel round the score unit, the four flaps that swallow the tiles (the square
     // with its diagonals, as on a real table) and the four slots the walls rise from.
     const U = 2048 / 21.2;                       // texture px per world unit
-    const fc = document.createElement('canvas'); fc.width = fc.height = 2048;
+    let fc = bakedCanvas('felt');
+    if (!fc) { fc = document.createElement('canvas'); fc.width = fc.height = 2048;
     const g = fc.getContext('2d');
     { const N = mkNoise(11), A = N.oct([6, 12, 24, 48, 96]), img = g.createImageData(2048, 2048), d = img.data;
       for (let y = 0; y < 2048; y++) for (let x = 0; x < 2048; x++) {
@@ -404,6 +418,7 @@ class Table3D {
     // the dark well the score unit stands in (its shadow on the cloth)
     { const sh = g.createRadialGradient(0, 0, 1.5 * U, 0, 0, 2.6 * U); sh.addColorStop(0, 'rgba(4,8,18,.6)'); sh.addColorStop(.75, 'rgba(4,8,18,.3)'); sh.addColorStop(1, 'rgba(4,8,18,0)'); g.fillStyle = sh; g.fillRect(-2.7 * U, -2.7 * U, 5.4 * U, 5.4 * U); }
     g.setTransform(1, 0, 0, 1, 0, 0);
+    keepGen('felt', fc); }
     const felt = new THREE.CanvasTexture(fc); felt.encoding = THREE.sRGBEncoding; felt.anisotropy = 8;
     const table = new THREE.Mesh(new THREE.PlaneGeometry(21.2, 21.2), new THREE.MeshStandardMaterial({ map: felt, roughness: 1, metalness: 0, bumpMap: napTex(), bumpScale: .012 }));
     table.rotation.x = -PI / 2; table.receiveShadow = true; s.add(table);
@@ -417,7 +432,7 @@ class Table3D {
     const wood = woodTex(); this.envTex = this.envTex || studioEnv();
     // (ユーザー 2026-11-14: glossy — a deep lacquer over the open-pored wood: the coat is near mirror-smooth and shows the room's lights
     // as long highlights along the rails, the wood under it stays satin, the pores read through the coat as a fine texture)
-    const rimMat = new THREE.MeshStandardMaterial({ map: wood.map, bumpMap: wood.bump, bumpScale: .9, roughness: .16, metalness: 0, envMap: this.envTex, envMapIntensity: 1.25 });   // (2026-11-14, optimisation: the lacquer's gloss in one smooth layer instead of a clear coat over a satin wood)
+    const rimMat = new THREE.MeshStandardMaterial({ map: wood.map, bumpMap: wood.bump, bumpScale: .45, roughness: .18, metalness: 0, envMap: this.envTex, envMapIntensity: 1.25 });   // (2026-11-14, optimisation: the lacquer's gloss in one smooth layer instead of a clear coat over a satin wood)
     const lipMat = new THREE.MeshStandardMaterial({ color: 0x0d0d10, roughness: .45, metalness: .2 });
     const RW = 1.75, RH0 = -0.28, RH1 = 0.92, RR = 0.26, RL = 21.1, RC = 10.55 + RW / 2;   // rail: width, bottom, top, edge radius, length, centre line
     { const sh = new THREE.Shape(), x0 = -RW / 2, x1 = RW / 2;
