@@ -1,0 +1,34 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>shanghai icon render</title>
+<!-- Renders the real 3D tiles of models/shanghai.js for the top page icon (images/icons/shanghai.svg embeds the result).
+     window.SHOT = PNG data URL (transparent). Used by hand: open, take SHOT. -->
+<style>body{margin:0;background:#0000}</style>
+<script src="../vendor/three-r186.min.js"></script><script src="../vendor/three-compat.js"></script>
+<script>window.Table3D = { MODELS: {}, coarse: false, lite: false, kick() {} };</script>
+<script src="../games/shanghai-core.js"></script>
+<script src="../models/shanghai.js"></script>
+</head><body><script>
+(async function () {
+  const T = THREE, M = Table3D.shanghai; await M.ready();
+  const S = 720, R = new T.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); R.setSize(S, S); R.setClearColor(0, 0);
+  R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = .6; R.outputColorSpace = T.SRGBColorSpace; R.shadowMap.enabled = true; R.shadowMap.type = T.PCFSoftShadowMap;
+  document.body.appendChild(R.domElement);
+  const sc = new T.Scene();
+  // a soft studio for the reflections
+  const env = new T.Scene(); env.background = new T.Color(0x9aa0aa);
+  const box = (c, x, y, z, w, h, d) => { const m = new T.Mesh(new T.BoxGeometry(w, h, d), new T.MeshBasicMaterial({ color: c })); m.position.set(x, y, z); env.add(m); };
+  box(0xffffff, 0, 6, 0, 8, .2, 8); box(0xfff4e0, -6, 2, 2, .2, 5, 6); box(0xdde8ff, 6, 3, -2, .2, 4, 5);
+  const pm = new T.PMREMGenerator(R); sc.environment = pm.fromScene(env, .03).texture; sc.environmentIntensity = .6;
+  sc.add(new T.HemisphereLight(0xffffff, 0x445544, .55));
+  const key = new T.DirectionalLight(0xfff2e2, 1.5); key.position.set(-5, 5, 3); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 6;
+  Object.assign(key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4 }); sc.add(key);
+  // three tiles below, one on top (中), seen from the front-left above
+  const P = [[-1.02, 0, -.2, 18 + 4], [0, 0, -.2, 13], [1.02, 0, -.2, 27], [0, M.TH, .25, 33], [-.55, 0, 1.35, 32], [.55, 0, 1.4, 9]];
+  const im = M.tiles(P.length); im.castShadow = true; const o = new T.Object3D();
+  P.forEach(([x, y, z, f], i) => { o.position.set(x, y, z); o.rotation.set(0, i === 3 ? -.12 : i > 3 ? (i === 4 ? .18 : -.1) : 0, 0); o.updateMatrix(); im.setMatrixAt(i, o.matrix); im.userData.setFace(i, f); });
+  sc.add(im);
+  const sh = new T.Mesh(new T.PlaneGeometry(20, 20), new T.ShadowMaterial({ opacity: .32 })); sh.rotation.x = -Math.PI / 2; sh.receiveShadow = true; sc.add(sh);
+  const cam = new T.PerspectiveCamera(30, 1, .1, 100); cam.position.set(0, 6.4, 6.2); cam.lookAt(0, .35, .45);
+  R.render(sc, cam); await new Promise(r => setTimeout(r, 400)); R.render(sc, cam);
+  window.SHOT = R.domElement.toDataURL('image/png');
+})();
+</script></body></html>
