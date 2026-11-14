@@ -1,4 +1,4 @@
-// Characters: 43 sisters in 10 families (same hair colour = sisters). Each character has her own art:
+// Characters: 58 sisters in 10 families (15 of them — the summer series — are rewards of the 段位戦, given as the rank goes up; `reward` = the rank's index, never in the gacha) (same hair colour = sisters). Each character has her own art:
 //   images/mahjong/chara/<id>.webp (1080x1920), <id>-t.webp (thumb), <id>-face.webp, <id>-bust.webp
 // Characters have no fixed skill: a skill (with its own rarity) is rolled when the character is pulled from the gacha.
 (function (root) {
@@ -37,23 +37,26 @@ const FAMILIES = {
     lines: { riichi: L('いっくよー、リーチ！', 'Here goes — riichi!'), tsumo: L('はい、ツモっ！', 'Tsumo, there it is!'), ron: L('ロン！もらった！', 'Ron! Got you!'), skill: L('燃えてきたっ！', 'Now I\'m fired up!') } },
 };
 const ROSTER = {
-  violet: [['shion', '紫苑', 'Shion', 'UR'], ['sumire', '菫', 'Sumire', 'SR'], ['fujino', '藤乃', 'Fujino', 'SR'], ['kikyo', '桔梗', 'Kikyo', 'R'], ['ayame', '菖蒲', 'Ayame', 'R'], ['rindo', '竜胆', 'Rindo', 'N']],
-  snow: [['yukino', '雪乃', 'Yukino', 'SSR'], ['mashiro', '真白', 'Mashiro', 'SR'], ['hyouka', '氷華', 'Hyouka', 'SR'], ['koyuki', '小雪', 'Koyuki', 'R'], ['hakuro', '白露', 'Hakuro', 'R'], ['rikka', '六花', 'Rikka', 'N']],
-  peach: [['momoka', '桃華', 'Momoka', 'SSR'], ['sakurako', '桜子', 'Sakurako', 'SR'], ['botan', '牡丹', 'Botan', 'SR'], ['nadeshiko', '撫子', 'Nadeshiko', 'R'], ['shakuyaku', '芍薬', 'Shakuyaku', 'R'], ['haruka', '春香', 'Haruka', 'N']],
+  violet: [['shion', '紫苑', 'Shion', 'UR'], ['sumire', '菫', 'Sumire', 'SR'], ['fujino', '藤乃', 'Fujino', 'SR'], ['kikyo', '桔梗', 'Kikyo', 'R'], ['ayame', '菖蒲', 'Ayame', 'R'], ['rindo', '竜胆', 'Rindo', 'N'],
+    ['aoi', '葵', 'Aoi', 'SSR', 20], ['yugiri', '夕霧', 'Yugiri', 'SSR', 24], ['kaoru', '薫', 'Kaoru', 'SSR', 12], ['ajisai', '紫陽花', 'Ajisai', 'UR', 30]],
+  snow: [['yukino', '雪乃', 'Yukino', 'SSR'], ['mashiro', '真白', 'Mashiro', 'SR'], ['hyouka', '氷華', 'Hyouka', 'SR'], ['koyuki', '小雪', 'Koyuki', 'R'], ['hakuro', '白露', 'Hakuro', 'R'], ['rikka', '六花', 'Rikka', 'N'],
+    ['kasumi', '霞', 'Kasumi', 'SSR', 16], ['hatsuyuki', '初雪', 'Hatsuyuki', 'SR', 6], ['ginka', '銀華', 'Ginka', 'UR', 26], ['shirayuri', '白百合', 'Shirayuri', 'SSR', 22]],
+  peach: [['momoka', '桃華', 'Momoka', 'SSR'], ['sakurako', '桜子', 'Sakurako', 'SR'], ['botan', '牡丹', 'Botan', 'SR'], ['nadeshiko', '撫子', 'Nadeshiko', 'R'], ['shakuyaku', '芍薬', 'Shakuyaku', 'R'], ['haruka', '春香', 'Haruka', 'N'],
+    ['karin', '花梨', 'Karin', 'SR', 4], ['mio', '美桜', 'Mio', 'SSR', 14], ['natsume', '夏芽', 'Natsume', 'SR', 8], ['renge', '蓮華', 'Renge', 'UR', 28]],
   amber: [['kohaku', '琥珀', 'Kohaku', 'SSR'], ['anzu', '杏', 'Anzu', 'SR'], ['yuzu', '柚子', 'Yuzu', 'R'], ['mitsu', '蜜', 'Mitsu', 'R'], ['nana', '菜々', 'Nana', 'N']],
   crimson: [['tsubaki', '椿', 'Tsubaki', 'SSR'], ['momiji', '紅葉', 'Momiji', 'SR'], ['akane', '茜', 'Akane', 'R'], ['shuon', '朱音', 'Shuon', 'N']],
   chestnut: [['shiori', '栞', 'Shiori', 'SSR'], ['kaede', '楓', 'Kaede', 'SR'], ['kurumi', '胡桃', 'Kurumi', 'R'], ['komachi', '小町', 'Komachi', 'N']],
   jade: [['midori', '翠', 'Midori', 'SSR'], ['wakaba', '若葉', 'Wakaba', 'R'], ['moegi', '萌黄', 'Moegi', 'N']],
   gold: [['kinka', '金華', 'Kinka', 'SSR'], ['yamabuki', '山吹', 'Yamabuki', 'R'], ['himawari', '向日葵', 'Himawari', 'N']],
-  lapis: [['ruri', '瑠璃', 'Ruri', 'SSR'], ['ai', '藍', 'Ai', 'R'], ['sora', '空', 'Sora', 'N']],
-  flame: [['akari', '緋莉', 'Akari', 'UR'], ['hina', '陽菜', 'Hina', 'SR'], ['matsuri', '茉莉', 'Matsuri', 'R']],
+  lapis: [['ruri', '瑠璃', 'Ruri', 'SSR'], ['ai', '藍', 'Ai', 'R'], ['sora', '空', 'Sora', 'N'], ['nagisa', '渚', 'Nagisa', 'SR', 2]],
+  flame: [['akari', '緋莉', 'Akari', 'UR'], ['hina', '陽菜', 'Hina', 'SR'], ['matsuri', '茉莉', 'Matsuri', 'R'], ['homura', '焔', 'Homura', 'SR', 10], ['yuhi', '夕陽', 'Yuhi', 'SSR', 18]],
 };
-const ORDER = [L('長女', 'eldest'), L('次女', 'second'), L('三女', 'third'), L('四女', 'fourth'), L('五女', 'fifth'), L('六女', 'sixth')];
+const ORDER = [L('長女', 'eldest'), L('次女', 'second'), L('三女', 'third'), L('四女', 'fourth'), L('五女', 'fifth'), L('六女', 'sixth'), L('七女', 'seventh'), L('八女', 'eighth'), L('九女', 'ninth'), L('十女', 'tenth')];
 const CHARS = [];
 for (const fid in ROSTER) {
   const F = FAMILIES[fid];
-  ROSTER[fid].forEach(([id, ja, en, rarity], k) => {
-    CHARS.push({ id, family: fid, rarity, art: true, color: F.color, color2: F.color2,
+  ROSTER[fid].forEach(([id, ja, en, rarity, reward], k) => {
+    CHARS.push({ id, family: fid, rarity, art: true, reward: reward ?? null, color: F.color, color2: F.color2,
       name: L(ja, en), title: L(`${F.name.ja}・${ORDER[k].ja}`, `${F.name.en}, ${ORDER[k].en}`),
       profile: F.profile, lines: F.lines });
   });
