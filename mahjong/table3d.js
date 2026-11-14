@@ -163,6 +163,25 @@ function tileGeos(w, h, d, r, b, backT, bs) {
 // tools/hand-src/). Here it gets its skin (vertex colours: warmer at the fingertips), glossy nails, and the sleeve of a Chinese
 // dress closing just above the wrist. The rig's origin is the point the fingertips hold (the top of the tile);
 // −z points away from the owner, +z up the arm.
+// the sleeve's silk brocade, woven on a ground of `base` (crimson by default; each seat wears its sisters' colour — ユーザー 2026-11-14)
+function brocadeTex(base) {
+  const bc = document.createElement('canvas'); bc.width = bc.height = 512; const g2 = bc.getContext('2d');
+  { g2.fillStyle = base; g2.fillRect(0, 0, 512, 512);
+    let sd = 9; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 2600; i++) { g2.strokeStyle = `rgba(${R() < .5 ? '255,190,170' : '40,0,6'},${.03 + R() * .05})`; g2.lineWidth = 1; const x = R() * 512, y = R() * 512; g2.beginPath(); g2.moveTo(x, y); g2.lineTo(x, y + 6 + R() * 16); g2.stroke(); }   // the weave
+    const gold = 'rgba(232,186,96,.92)', dim = 'rgba(206,150,70,.6)';
+    const flower = (x, y, r) => { g2.save(); g2.translate(x, y);
+      g2.strokeStyle = gold; g2.lineWidth = 3; g2.beginPath(); g2.arc(0, 0, r, 0, 7); g2.stroke(); g2.lineWidth = 1.6; g2.beginPath(); g2.arc(0, 0, r * .86, 0, 7); g2.stroke();
+      for (let k = 0; k < 8; k++) { g2.rotate(Math.PI / 4); g2.fillStyle = gold; g2.beginPath(); g2.ellipse(0, -r * .47, r * .15, r * .27, 0, 0, 7); g2.fill(); g2.fillStyle = dim; g2.beginPath(); g2.ellipse(r * .2, -r * .5, r * .07, r * .17, .4, 0, 7); g2.fill(); }
+      g2.fillStyle = base; g2.beginPath(); g2.arc(0, 0, r * .2, 0, 7); g2.fill(); g2.fillStyle = gold; g2.beginPath(); g2.arc(0, 0, r * .12, 0, 7); g2.fill(); g2.restore(); };
+    const cloud = (x, y, k) => { g2.save(); g2.translate(x, y); g2.scale(k, k); g2.strokeStyle = dim; g2.lineWidth = 3.2; g2.lineCap = 'round';
+      for (const sx of [-1, 1]) { g2.beginPath(); for (let a = 0; a < 5.4; a += .2) { const rr = 4 + a * 3.4; g2.lineTo(sx * (22 + Math.cos(a) * rr), Math.sin(a) * rr); } g2.stroke(); }
+      g2.beginPath(); g2.moveTo(-44, 14); g2.quadraticCurveTo(0, 30, 44, 14); g2.stroke(); g2.restore(); };
+    for (const [x, y] of [[128, 128], [384, 384]]) for (const [ox, oy] of [[0, 0], [512, 0], [-512, 0], [0, 512], [0, -512]]) flower(x + ox, y + oy, 86);
+    for (const [x, y] of [[384, 128], [128, 384]]) cloud(x, y, 1.25); }
+  const bro = new THREE.CanvasTexture(bc); bro.encoding = THREE.sRGBEncoding; bro.wrapS = bro.wrapT = THREE.RepeatWrapping; bro.repeat.set(4, 5); bro.anisotropy = 4;
+  return bro;
+}
 function buildHand(env) {
   const Hd = window.JANKA_HAND, rig = new THREE.Group(); if (!Hd) return rig;
   const b64 = t => { const s = atob(t), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; };
@@ -186,27 +205,14 @@ function buildHand(env) {
   const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; hand.frustumCulled = false; rig.add(hand); if (Hd.mi) hand.morphTargetInfluences = [0];
   // the sleeve (ユーザー 2026-11-14: only a glimpse of the wrist, the sleeve long; a pattern as on a Chinese dress): crimson silk
   // brocade — gold flower roundels and cloud scrolls woven in — closing just above the wrist in a black band between two gold pipings.
-  const bc = document.createElement('canvas'); bc.width = bc.height = 512; const g2 = bc.getContext('2d');
-  { g2.fillStyle = '#8c1626'; g2.fillRect(0, 0, 512, 512);
-    let sd = 9; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 2600; i++) { g2.strokeStyle = `rgba(${R() < .5 ? '255,190,170' : '40,0,6'},${.03 + R() * .05})`; g2.lineWidth = 1; const x = R() * 512, y = R() * 512; g2.beginPath(); g2.moveTo(x, y); g2.lineTo(x, y + 6 + R() * 16); g2.stroke(); }   // the weave
-    const gold = 'rgba(232,186,96,.92)', dim = 'rgba(206,150,70,.6)';
-    const flower = (x, y, r) => { g2.save(); g2.translate(x, y);
-      g2.strokeStyle = gold; g2.lineWidth = 3; g2.beginPath(); g2.arc(0, 0, r, 0, 7); g2.stroke(); g2.lineWidth = 1.6; g2.beginPath(); g2.arc(0, 0, r * .86, 0, 7); g2.stroke();
-      for (let k = 0; k < 8; k++) { g2.rotate(Math.PI / 4); g2.fillStyle = gold; g2.beginPath(); g2.ellipse(0, -r * .47, r * .15, r * .27, 0, 0, 7); g2.fill(); g2.fillStyle = dim; g2.beginPath(); g2.ellipse(r * .2, -r * .5, r * .07, r * .17, .4, 0, 7); g2.fill(); }
-      g2.fillStyle = '#8c1626'; g2.beginPath(); g2.arc(0, 0, r * .2, 0, 7); g2.fill(); g2.fillStyle = gold; g2.beginPath(); g2.arc(0, 0, r * .12, 0, 7); g2.fill(); g2.restore(); };
-    const cloud = (x, y, k) => { g2.save(); g2.translate(x, y); g2.scale(k, k); g2.strokeStyle = dim; g2.lineWidth = 3.2; g2.lineCap = 'round';
-      for (const sx of [-1, 1]) { g2.beginPath(); for (let a = 0; a < 5.4; a += .2) { const rr = 4 + a * 3.4; g2.lineTo(sx * (22 + Math.cos(a) * rr), Math.sin(a) * rr); } g2.stroke(); }
-      g2.beginPath(); g2.moveTo(-44, 14); g2.quadraticCurveTo(0, 30, 44, 14); g2.stroke(); g2.restore(); };
-    for (const [x, y] of [[128, 128], [384, 384]]) for (const [ox, oy] of [[0, 0], [512, 0], [-512, 0], [0, 512], [0, -512]]) flower(x + ox, y + oy, 86);
-    for (const [x, y] of [[384, 128], [128, 384]]) cloud(x, y, 1.25); }
-  const bro = new THREE.CanvasTexture(bc); bro.encoding = THREE.sRGBEncoding; bro.wrapS = bro.wrapT = THREE.RepeatWrapping; bro.repeat.set(4, 5); bro.anisotropy = 4;
+  const bro = brocadeTex('#8c1626');
   const cloth = new THREE.MeshPhysicalMaterial({ map: bro, roughness: .5, metalness: 0, sheen: .8, sheenRoughness: .35, sheenColor: new THREE.Color(0xffb0a0), envMap: env, envMapIntensity: .3 });
   const band = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x14080c).convertSRGBToLinear(), roughness: .6 });
+  rig.clothMat = cloth;   // (not in userData: clone() copies that through JSON)
   const gold = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd9b062).convertSRGBToLinear(), roughness: .32, metalness: .85, envMap: env, envMapIntensity: .9 });
   const sl = new THREE.Group(); sl.position.set(Hd.wrist[0], Hd.wrist[1], Hd.wrist[2]); sl.rotation.x = Hd.pitch; rig.add(sl);   // from just above the wrist on up the arm
   { const r0 = Hd.wr ? Hd.wr[0] * 1.1 : .8, SY = Hd.wr ? Math.min(1, Hd.wr[1] * 1.16 / r0) : .8, r1 = r0 + .95, Ls = 15;   // (the cuff fits the wrist of the model)
-    const cg = new THREE.CylinderGeometry(r1, r0, Ls, 28, 1, true); cg.rotateX(PI / 2); cg.translate(0, 0, Ls / 2 + .34); const m = new THREE.Mesh(cg, cloth); m.scale.set(1, SY, 1); m.castShadow = true; sl.add(m);
+    const cg = new THREE.CylinderGeometry(r1, r0, Ls, 28, 1, true); cg.rotateX(PI / 2); cg.translate(0, 0, Ls / 2 + .34); const m = new THREE.Mesh(cg, cloth); m.scale.set(1, SY, 1); m.castShadow = true; m.userData.sleeve = true; sl.add(m);
     const bg = new THREE.CylinderGeometry(r0 + .02, r0 - .02, .34, 28, 1, true); bg.rotateX(PI / 2); bg.translate(0, 0, .17); const bm = new THREE.Mesh(bg, band); bm.scale.set(1, SY, 1); sl.add(bm);
     for (const z of [0, .34]) { const cuff = new THREE.Mesh(new THREE.TorusGeometry(r0 + (z ? .02 : -.02), .045, 8, 32), gold); cuff.position.z = z; cuff.scale.set(1, SY, 1); cuff.castShadow = true; sl.add(cuff); }
     const cap = new THREE.Mesh(new THREE.CircleGeometry(r0 - .04, 24), band); cap.scale.set(1, SY, 1); cap.rotation.y = PI; cap.position.z = .06; sl.add(cap); }
@@ -217,6 +223,7 @@ function buildHand(env) {
   return rig;
 }
 const ROW = 6;
+const SPD = 1.3;   // every movement on the table runs this much faster than its written duration (ユーザー 2026-11-14: a little quicker overall)
 const PI = Math.PI;
 
 function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
@@ -256,9 +263,9 @@ class Table3D {
     // light on the middle of the table, the rim a tone lower. So the fill and the key are a little under what a flat light would
     // need, and a wide, fully soft spot from above the middle adds the rest: brightest at the score unit, easing off to the rails
     // (no edge to the pool — penumbra 1). It is light, not paint: the cloth's own texture stays even, so a new skin gets the same mood.
-    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x141a30, 0.42));
-    const pool = new THREE.SpotLight(0xfff3e2, 0.86, 0, 0.5, 1, 1); pool.position.set(0, 24, 2.5); pool.target.position.set(0, 0, 0.6); s.add(pool); s.add(pool.target);
-    const key = new THREE.DirectionalLight(0xffffff, 0.52);
+    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x141a30, 0.3));
+    const pool = new THREE.SpotLight(0xfff3e2, 1.45, 0, 0.34, 1, 1); pool.position.set(0, 24, 1.5); pool.target.position.set(0, 0, 0.6); s.add(pool); s.add(pool.target);
+    const key = new THREE.DirectionalLight(0xffffff, 0.4);
     key.position.set(-6, 22, 10);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -278,7 +285,7 @@ class Table3D {
       for (let y = 0; y < 2048; y++) for (let x = 0; x < 2048; x++) {
         const u = x / 2048, v = y / 2048, vig = 1;   // (even: the pool of light on the middle is the lamp's, see the lights)
         const m = (N.fbm(A, u, v) - .5) * .16, n = (N.R() - .5) * .09, f = vig * (1 + m + n), p = (y * 2048 + x) * 4;
-        d[p] = 28 * f; d[p + 1] = 50 * f; d[p + 2] = 92 * f; d[p + 3] = 255;
+        d[p] = 32 * f; d[p + 1] = 56 * f; d[p + 2] = 100 * f; d[p + 3] = 255;
       }
       g.putImageData(img, 0, 0); }
     g.translate(1024, 1024);
@@ -356,7 +363,7 @@ class Table3D {
     // shared tile geometry/materials
     // the tiles (2026-11-14, as 上海's): rounded white blocks with a purple back — corners and edges rounded, the face
     // carved (normal map from tiles.js). One shared geometry for the white part and one for the back.
-    { const tg = tileGeos(W, H, D, 0.16, 0.075, 0.28, 0.14); this.geoFront = tg.front; this.geoBack = tg.back; }   // (one rounded block, split where the white meets the purple)
+    { const tg = tileGeos(W, H, D, 0.2, 0.11, 0.28, 0.2); this.geoFront = tg.front; this.geoBack = tg.back; }   // (one rounded block, split where the white meets the purple)
     this.matIvory = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xf7f7f3).convertSRGBToLinear(), roughness: .38, metalness: 0 });
     // the back (2026-11-14, ユーザー：紫をもう少し淡く、高級石を磨いたような質感): a pale lavender stone with soft veins, polished
     // (a clear coat over it, a little studio light reflected in it) — four cuts of the same slab so neighbours don't match
@@ -397,6 +404,32 @@ class Table3D {
     this.scene.add(g);
     this.tiles.set(id, g);
     return g;
+  }
+  // a picture of one tile as the table draws it (ユーザー 2026-11-14: the dora in the box are the 3D tiles): face up, seen a
+  // little from below so the purple back shows under it; back = the tile face down. Drawn once by a small renderer of its own
+  // with a light from the front, and kept (data URL).
+  tileShot(id, back) {
+    const key = back ? 'back' : (id >> 2) + (id === 16 || id === 52 || id === 88 ? 'r' : '');
+    this.shots = this.shots || new Map();
+    if (this.shots.has(key)) return this.shots.get(key);
+    if (!this.shotR) {
+      const c = document.createElement('canvas'); c.width = 132; c.height = 172;
+      const r = this.shotR = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true, preserveDrawingBuffer: true, powerPreference: 'low-power' });
+      r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0x000000, 0); r.setPixelRatio(1); r.setSize(132, 172, false);
+      const sc = this.shotS = new THREE.Scene();
+      sc.add(new THREE.HemisphereLight(0xffffff, 0x404060, .75));
+      const k = new THREE.DirectionalLight(0xffffff, .75); k.position.set(-2, 3, 6); sc.add(k);
+      const cam = this.shotC = new THREE.PerspectiveCamera(16, 132 / 172, 1, 50); cam.position.set(0, -.95, 5.5); cam.lookAt(0, -0.06, 0);
+      this.shotG = new THREE.Group(); sc.add(this.shotG);
+    }
+    const G = this.shotG; while (G.children.length) G.remove(G.children[0]);
+    const fm = back ? null : this.faceMat(id);
+    G.add(new THREE.Mesh(this.geoFront, [back ? this.matIvory : fm.normal, this.matIvory]), new THREE.Mesh(this.geoBack, this.matBacks[0]));
+    G.rotation.set(back ? 0 : 0, back ? PI : 0, 0);
+    this.shotR.render(this.shotS, this.shotC);
+    const url = this.shotR.domElement.toDataURL('image/png');
+    this.shots.set(key, url);
+    return url;
   }
   setTileLook(g, look) {
     const fm = g.userData.fm;
@@ -459,8 +492,10 @@ class Table3D {
                 float run = uT < 0.0 ? 0.0 : rim * exp(-dd * dd / .006) * sin(clamp(uT, 0.0, 1.0) * 3.14159);
                 float t1 = uT < 0.0 ? 0.0 : max(0.0, sin(clamp(uT * 1.7, 0.0, 1.0) * 3.14159)), t2 = uT < 0.0 ? 0.0 : max(0.0, sin(clamp(uT * 1.7 - .7, 0.0, 1.0) * 3.14159));
                 float st = star((vUv - vec2(.86, .9)) * vec2(1.0, 1.36), t1) + star((vUv - vec2(.12, .08)) * vec2(1.0, 1.36) * 1.35, t2);
-                float a = clamp(rim * .5 + run + st, 0.0, .95);
-                gl_FragColor = vec4(mix(vec3(1.0, .74, .26), vec3(1.0, .97, .82), clamp(run * 1.4 + st, 0.0, 1.0)), a); }` }); }
+                float sw = uT < 0.0 ? 0.0 : clamp(uT * 1.25, 0.0, 1.0), bp = (vUv.x - .5) * .8 + (vUv.y - .5) - mix(-1.15, 1.15, sw);
+                float band = uT < 0.0 ? 0.0 : (exp(-bp * bp / .006) * .85 + exp(-bp * bp / .05) * .25) * sin(sw * 3.14159);   // (ユーザー 2026-11-14: a light that runs across the face itself)
+                float a = clamp(rim * .62 + run + st + band, 0.0, .95);
+                gl_FragColor = vec4(mix(vec3(1.0, .74, .26), vec3(1.0, .97, .86), clamp(run * 1.4 + st + band * 1.2, 0.0, 1.0)), a); }` }); }
         o = g.userData.dora = new THREE.Mesh(this.doraGeo, this.doraMat); o.position.z = D / 2 + 0.004; o.renderOrder = 3; g.add(o);
       }
       if (o) o.visible = !!want;
@@ -472,8 +507,20 @@ class Table3D {
   hand(seat) {
     if (!this.hands) this.hands = [];
     let rig = this.hands[seat];
-    if (!rig) { if (!this.handProto) this.handProto = buildHand(this.envTex); rig = this.hands[seat] = this.handProto.clone(true); rig.rotation.y = seat * PI / 2; rig.visible = false; this.scene.add(rig); }
+    if (!rig) { if (!this.handProto) this.handProto = buildHand(this.envTex); rig = this.hands[seat] = this.handProto.clone(true); rig.rotation.y = seat * PI / 2; rig.visible = false; this.scene.add(rig); if (this.sleeves && this.sleeves[seat]) this._sleeve(rig, this.sleeves[seat]); }
     return rig;
+  }
+  // each seat's sleeve in the colour of its character's sisters (cols: four CSS colours). The ground is the colour taken deeper,
+  // as silk is (a light colour stays light); one material per colour, made once.
+  setSleeves(cols) { this.sleeves = cols.slice(); (this.hands || []).forEach((rig, s) => { if (rig && cols[s]) this._sleeve(rig, cols[s]); }); this.dirty = true; }
+  _sleeve(rig, col) {
+    this.sleeveMats = this.sleeveMats || new Map();
+    if (!this.handProto || !this.handProto.clothMat) return;
+    let m = this.sleeveMats.get(col);
+    if (!m) { const c = new THREE.Color(col), hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, Math.min(1, hsl.s * .9), hsl.l > .78 ? hsl.l * .9 : hsl.l * .52);
+      const base = '#' + c.getHexString(), proto = this.handProto.clothMat;
+      m = proto.clone(); m.map = brocadeTex(base); m.sheenColor = new THREE.Color(col).lerp(new THREE.Color(0xffffff), .45); this.sleeveMats.set(col, m); }
+    rig.traverse(o => { if (o.userData && o.userData.sleeve) o.material = m; });
   }
   _over2() {   // the overlay's renderer (made on the first use; no shadows)
     if (this.r2) return this.r2;
@@ -853,7 +900,7 @@ class Table3D {
     if (this.tweens.length) {
       const ends = [];   // (what follows a tween may start another: run it after the list is rebuilt)
       this.tweens = this.tweens.filter(tw => {
-        let k = Math.max(0, Math.min(1, (now - tw.t0) / tw.dur));
+        let k = Math.max(0, Math.min(1, (now - tw.t0) * SPD / tw.dur));
         const e = 1 - Math.pow(1 - k, 3);
         const f = tw.from, t = tw.to, g = tw.g;
         const arc = tw.level ? 0 : Math.sin(k * PI) * 0.6;
@@ -871,13 +918,13 @@ class Table3D {
     }
     if (this.handFx.length) {
       const run = this.handFx; this.handFx = [];
-      for (const h of run) { const k = Math.min(1, (now - h.t0) / h.dur), e = k * k * (3 - 2 * k);
+      for (const h of run) { const k = Math.min(1, (now - h.t0) * SPD / h.dur), e = k * k * (3 - 2 * k);
         h.rig.position.set(h.from.x + (h.to.x - h.from.x) * e, h.from.y + (h.to.y - h.from.y) * e, h.from.z + (h.to.z - h.from.z) * e);
         if (k < 1) this.handFx.push(h); else { if (h.hide) h.rig.visible = false; if (h.then) h.then(); } }
       this.dirty = true;
     }
     // the dora's glint: a light runs round the rim of every dora that lies face up and two small stars twinkle, about once in three seconds
-    if (this._doraN) { const ph = now % 3300, on = ph < 1300;
+    if (this._doraN) { const ph = now % 2600, on = ph < 1300;
       if (on) { this.doraMat.uniforms.uT.value = ph / 1300; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
       this._doraOn = on; }
     if (this._ov) this.dirty = true;
