@@ -34,7 +34,7 @@ function applyI18n() {
 
 // ====================================================================== settings / state
 const STORE = 'aicoding-backgammon-v2';
-const settings = { mode: 'ai', color: 0, ck: ['gold', 'black'], skin: 'classic', level: 6, level2: 6, matchLen: 0, cube: true, eval: true, forced: true, autoRoll: true, coach: true, anim: true, sound: true, hint: false, lang: '' };
+const settings = { pro: null, pro2: null, mode: 'ai', color: 0, ck: ['gold', 'black'], skin: 'classic', level: 6, level2: 6, matchLen: 0, cube: true, eval: true, forced: true, autoRoll: true, coach: true, anim: true, sound: true, hint: false, lang: '' };
 const $ = s => document.querySelector(s);
 // the game's own animation setting is the only switch (the OS "reduce motion" preference is not used: the user
 // asked for dice / checker animations to play regardless)
@@ -117,8 +117,8 @@ function playerName(s) {
   if (puzzle || lesson) return s === (lesson || puzzle).side ? t('you') : '';
   if (settings.mode === 'pvp') return '';
   if (settings.mode === 'online') return window.olPlayerName ? olPlayerName(s) : '';
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(s))}`;
-  return s === humanSide ? t('you') : `${AIW()} ${LV(settings.level)}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(s))}${proTag(s)}`;
+  return s === humanSide ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(s)}`;
 }
 
 // ====================================================================== storage
@@ -154,7 +154,7 @@ function load() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261111c1');
+  const w = new Worker('engine.js?v=20261115p');
   w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; w.jobs.delete(m.id); if (m.error) console.warn(m.error); j.resolve(m); };
   w.onerror = e => console.warn('worker error', e.message);
@@ -932,7 +932,7 @@ async function doRoll(g, opening) {
     renderDice(s, dice, dice[0] === dice[1] ? 0 : [false, false]);
     thinking = s; renderInfo();
     const t0 = Date.now();
-    const r = await request('ai', { type: 'move', pos: st.pos, side: s, dice, level: levelFor(s), tag: match.seed + g + ':' + k });
+    const r = await request('ai', { type: 'move', pos: st.pos, side: s, dice, level: levelFor(s), cfg: proCfg(s), tag: match.seed + g + ':' + k });
     if (tok !== busyToken || !r) { if (tok === busyToken) { thinking = -1; renderInfo(); } return; }
     const wait = (settings.mode === 'watch' ? 500 : 0) - (Date.now() - t0);   // AIの着手は即時：さいころはもう止まっている（観戦だけ間を取る）
     if (wait > 0) await sleep(wait);
@@ -1021,7 +1021,7 @@ function recordGame(g, st) {
   const acts = match.games[g].actions;
   if (st.resigned && !acts.some((a, i) => a.t === 'r' && actorOf(g, i) === humanSide)) return;   // resigned before playing a move
   const why = st.dropped ? t('res.drop') : st.kind >= 3 ? t('res.bg') : st.kind === 2 ? t('res.gammon') : st.resigned ? t('res.resign') : t('res.single');
-  GameRecord.add({ mode: 'ai', res: st.winner === humanSide ? 'w' : 'l', side: humanSide, opp: 'AI Lv.' + settings.level + ' ' + LV(settings.level), key: 'ai:' + settings.level, n: acts.filter(a => a.t === 'r').length, why: why + ' · ' + st.points + t('pt') });
+  GameRecord.add({ mode: 'ai', res: st.winner === humanSide ? 'w' : 'l', side: humanSide, opp: 'AI Lv.' + settings.level + ' ' + LV(settings.level) + proTag(1 - humanSide), key: (proFor(1 - humanSide) ? 'ai:pro' : 'ai:') + settings.level, n: acts.filter(a => a.t === 'r').length, why: why + ' · ' + st.points + t('pt') });
 }
 function nextGame() {
   hideOverlay('#resultOverlay');
@@ -1763,6 +1763,29 @@ $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { dr
 $('#segMatch').onclick = e => { const b = e.target.closest('button'); if (b) { draft.matchLen = +b.dataset.v; segSync(); } };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」, 2026-11-15): beside the level — vs the AI / AI vs AI. 読みの深さ
+// (0-ply = the evaluator, 1-ply = level 8's search, 2-ply = level 10's — the threads read it as for level 10) and 手のばらつき
+// (noise on the equities, bg.js NOISE). The doubling cube stays the level's. bg.js aiChoosePlay(…, cfg).
+const PRO_NOISE = [0, 0.06, 0.25];   // 手のばらつき なし／小（≈ Lv.5）／大（≈ Lv.3）
+const PRO_UNIT = { depth: { ja: '手先（ply）', en: 'ply', zh: '层（ply）', 'zh-TW': '層（ply）', ko: '수 앞(ply)', es: 'ply', fr: 'ply', pt: 'ply', de: 'Ply', ru: 'ply', tr: 'ply', id: 'ply', hi: 'ply', ar: 'ply' } };
+const proPly = lv => lv >= 9 ? 2 : lv >= 8 ? 1 : 0;
+const proDefaults = lv => { const n = lv <= 1 ? 1 : BG.NOISE[lv] || 0; return { limit: { k: 'depth', v: proPly(lv) }, var: n >= 0.12 ? 2 : n > 0 ? 1 : 0 }; };
+const proParams = () => [{ key: 'limit', kinds: { depth: [0, 2] }, kunit: PRO_UNIT }, { key: 'var' }];
+var PRO = window.ProSet ? ProSet.init({ game: 'backgammon', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
+  store: { get: () => settings.pro, set: v => { settings.pro = v; save(); } }, defaults: proDefaults, params: proParams() }) : null;
+var PRO2 = window.ProSet ? ProSet.init({ game: 'backgammon-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
+  store: { get: () => settings.pro2, set: v => { settings.pro2 = v; save(); } }, defaults: proDefaults, params: proParams() }) : null;
+function proFor(side) {
+  if (lesson || puzzle || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  const P = settings.mode === 'watch' && side === 1 ? window.PRO2 : window.PRO;
+  return P ? P.get(levelFor(side)) : null;
+}
+function proCfg(side) {
+  const e = proFor(side); if (!e) return null;
+  const lv = levelFor(side), ply = e.limit.v;
+  return { ply, noise: e.changed.includes('var') ? PRO_NOISE[e.var] : lv <= 1 ? 1 : BG.NOISE[lv] || 0, fast: ply === 0 && lv < 7 && !e.changed.includes('limit') };
+}
+function proTag(side) { return proFor(side) ? ' PRO' : ''; }
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');

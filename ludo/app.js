@@ -37,7 +37,7 @@ function seatName(seat) {
   const c = G.state.ctrl[seat];
   if (G.mode === 'pvp') return t('p.player', { n: c + 1 });
   if (G.mode === 'ai' && c === 0) return t('p.you');
-  return t('p.ai', { n: G.level });
+  return t('p.ai', { n: G.level }) + (G.pro ? ' PRO' : '');
 }
 const isPachisi = () => G && G.state.rule === 'pachisi';
 
@@ -278,7 +278,7 @@ function newGame(rated) {
   const opts = settings.rule === 'ludo' && window.LudoHouse ? { rule: 'ludo', players, house: rated ? LudoHouse.DEF : LudoHouse.get() } : { rule: settings.rule, players, blocks: settings.blocks, threeSixes: settings.three };
   let st = E.newGame(opts);
   if (settings.first === 'r' || settings.mode === 'watch') st.turn = st.seats[Math.floor(Math.random() * st.seats.length)];
-  G = { opts, mode: settings.mode === 'rated' ? 'ai' : settings.mode, level: settings.level, state: st, thr: null, log: [], hist: [], plies: [], id: Date.now().toString(36), rated: rated || null };
+  G = { opts, mode: settings.mode === 'rated' ? 'ai' : settings.mode, level: settings.level, pro: rated || settings.mode === 'rated' ? null : proCfg(settings.level), state: st, thr: null, log: [], hist: [], plies: [], id: Date.now().toString(36), rated: rated || null };
   token++; busy = false; moves = []; selK = -1; VIEW = null; if (window.LudoRv) LudoRv.reset();
   drawBoard(); rollLabel(); showThrow(null); renderPlayers(); renderKifu(); save();
   $('#resultOverlay').classList.remove('show');
@@ -343,7 +343,7 @@ function afterThrow(my) {
     setStatus(t('st.pick', { v: thr.dice ? (G.state.left || thr.dice).join(' + ') : thr.v }));
     cRender();
   } else {
-    const r = E.think(s, thr, G.level);
+    const r = E.think(s, thr, G.level, Math.random, G.pro || null);   // (G.pro: PRO mode)
     if (G.mode === 'watch') setTimeout(() => { if (my === token) commit(r.move); }, 240 * SPD());   // AIの着手は即時（観戦だけ間を取る）
     else commit(r.move);
   }
@@ -426,7 +426,7 @@ function gameOver() {
 function recordGame() {
   const s = G.state; if (!window.GameRecord || G.mode === 'watch' || G.mode === 'pvp' || !G.plies.some(p => humanSeat(p.seat))) return;
   const me = s.team[s.seats.find(x => s.ctrl[x] === 0)];
-  try { GameRecord.add({ mode: G.rated ? 'rated' : 'ai', res: s.winner === me ? 'w' : 'l', side: G.plies[0] && humanSeat(G.plies[0].seat) ? 0 : 1, opp: 'AI Lv.' + G.level, key: 'ai:' + G.level, n: G.plies.length, why: '' }); } catch (e) {}
+  try { GameRecord.add({ mode: G.rated ? 'rated' : 'ai', res: s.winner === me ? 'w' : 'l', side: G.plies[0] && humanSeat(G.plies[0].seat) ? 0 : 1, opp: 'AI Lv.' + G.level + (G.pro ? ' PRO' : ''), key: (G.pro ? 'ai:pro' : 'ai:') + G.level, n: G.plies.length, why: '' }); } catch (e) {}
   if (G.rated && window.LudoRated) LudoRated.settle(s.winner === me);
 }
 /* the final places (common: every finish shows who came where): the winning side first, the others by pieces home, then by the
@@ -526,6 +526,22 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; $('#levelName')
 ['AutoRoll:autoRoll', 'AutoPick:autoPick'].forEach(x => { const [id, k] = x.split(':'); $('#opt' + id).onchange = e => { draft[k] = e.target.checked; }; });
 // design: applied at once (common rule) — even if the dialog is then closed
 $('#bdRow').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; draft.design[draft.rule] = b.dataset.v; settings.design[draft.rule] = b.dataset.v; save(); if (G && G.state.rule === draft.rule) { drawBoard(); if (!busy) step(); } renderDialog(); };   // (mid-throw or mid-move: just the new board — step() would cut the running throw off, the game then stood still)
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」, 2026-11-15): beside the level — vs the AI / AI only, never rated.
+// 手のばらつき (the chance of a random move and the noise on the values, engine.js LEVELS rand / noise) and 追加の投げも読む
+// (LEVELS deep). Kept in localStorage 'aicoding-pro:ludo' (the part's own store); the game keeps its values (G.pro).
+const PRO_VAR = [{ rand: 0, noise: 0 }, { rand: 0.03, noise: 2 }, { rand: 0.24, noise: 4.5 }];   // なし／小（≈ Lv.14）／大（≈ Lv.9）
+const PRO_DEEP = {
+  label: { ja: '追加の投げも読む', en: 'Read the extra throw', zh: '计算额外的掷骰', 'zh-TW': '計算額外的擲骰', ko: '추가 굴림도 읽기', es: 'Leer la tirada extra', fr: 'Lire le lancer en plus', pt: 'Ler o lance extra', de: 'Den Zusatzwurf mitrechnen', ru: 'Считать дополнительный бросок', tr: 'Ek atışı da hesapla', id: 'Hitung lemparan tambahan', hi: 'अतिरिक्त फेंक भी गिनें', ar: 'حساب الرمية الإضافية' },
+  help: { ja: 'もう一度投げられる手では、次の投げごとの最善の手まで読んで選びます。', en: 'For a move that earns another throw, the AI also reads the best move for each next throw.', zh: '能再掷一次的着法，会计算下一次每种点数的最佳着法后再选择。', 'zh-TW': '能再擲一次的走法，會計算下一次每種點數的最佳走法後再選擇。', ko: '한 번 더 굴릴 수 있는 수는 다음 굴림마다 최선의 수까지 읽고 고릅니다.', es: 'En una jugada que da otra tirada, la IA también calcula la mejor jugada para cada tirada siguiente.', fr: 'Pour un coup qui donne un autre lancer, l’IA calcule aussi le meilleur coup pour chaque lancer suivant.', pt: 'Num lance que dá outro lançamento, a IA também calcula o melhor lance para cada lançamento seguinte.', de: 'Bei einem Zug mit einem weiteren Wurf rechnet die KI auch den besten Zug für jeden nächsten Wurf.', ru: 'Для хода, дающего ещё один бросок, ИИ считает и лучший ход для каждого следующего броска.', tr: 'Bir atış daha kazandıran hamlelerde yapay zekâ sonraki her atış için en iyi hamleyi de hesaplar.', id: 'Untuk langkah yang memberi lemparan lagi, AI juga menghitung langkah terbaik untuk setiap lemparan berikutnya.', hi: 'जिस चाल से एक और फेंक मिलती है, उसमें AI अगली हर फेंक की सबसे अच्छी चाल भी गिनता है।', ar: 'في النقلة التي تمنح رمية أخرى، يحسب الذكاء الاصطناعي أيضًا أفضل نقلة لكل رمية تالية.' } };
+const proVarOf = lv => lv >= 18 ? 0 : lv >= 13 ? 1 : 2;
+var PRO = window.ProSet ? ProSet.init({ game: 'ludo', lang: () => LANG, level: () => (draft && draft.level) || settings.level, show: () => !!draft && (draft.mode === 'ai' || draft.mode === 'watch'),
+  defaults: lv => ({ var: proVarOf(lv), deep: lv >= 9 }),
+  params: [{ key: 'deep', type: 'bool', group: 'read', label: PRO_DEEP.label, help: PRO_DEEP.help }, { key: 'var' }] }) : null;
+function proCfg(lv) {
+  if (!PRO || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  const e = PRO.get(lv); if (!e) return null;
+  return Object.assign({ deep: !!e.deep }, e.changed.includes('var') ? PRO_VAR[e.var] : {});
+}
 $('#btnCancelNew').onclick = () => $('#newOverlay').classList.remove('show');
 $('#btnStart').onclick = () => { Object.assign(settings, draft); $('#newOverlay').classList.remove('show'); save(); if (settings.mode === 'rated' && window.LudoRated) LudoRated.start(); else newGame(); };
 document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
@@ -573,7 +589,7 @@ const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#
 applyI18n(); paintSnd();
 if (saved.game && saved.game.state && saved.game.state.pos) {
   const sg = saved.game;
-  G = { opts: sg.opts, mode: sg.mode, level: sg.level, state: sg.state, thr: sg.thr, log: sg.log || [], hist: sg.hist || [], plies: sg.plies || [], id: sg.id || Date.now().toString(36), rated: sg.rated || null, resShown: true, recorded: sg.recorded !== false };
+  G = { opts: sg.opts, mode: sg.mode, level: sg.level, pro: sg.pro || null, state: sg.state, thr: sg.thr, log: sg.log || [], hist: sg.hist || [], plies: sg.plies || [], id: sg.id || Date.now().toString(36), rated: sg.rated || null, resShown: true, recorded: sg.recorded !== false };
   if (G.plies.length !== G.log.length) G.plies = [];   // (older saves: no history to navigate)
   drawBoard(); rollLabel(); showThrow(G.thr); renderKifu();
   if (G.state.over) { renderPlayers(); setStatus(''); $('#btnRoll').disabled = true; cRender(); } else step();

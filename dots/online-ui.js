@@ -608,7 +608,7 @@ if (olOn()) ON.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = null;
 // Merge: progress keys are united (max / or), daily days united and the streak recomputed, settings / name / rating: newest wins.
 const DotsSync = (() => {
   const META = 'dots-sync-meta';
-  const SET_KEYS = ['sound', 'eval', 'anim', 'level', 'level2', 'size', 'order', 'lang'];
+  const SET_KEYS = ['sound', 'eval', 'anim', 'level', 'level2', 'pro', 'pro2', 'size', 'order', 'lang'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

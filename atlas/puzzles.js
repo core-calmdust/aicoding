@@ -486,7 +486,7 @@
   const bgTexts = () => Promise.all(BG_TX.map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(L => { const w = {}; for (const tx of L) { try { new Function('window', 'var I18N = window.I18N || (window.I18N = {});\n' + tx.replace(/^\s*var I18N = window\.I18N = \{\};/m, ''))(w); } catch (e) { console.warn('[puzzles] backgammon texts', e); } } window.AtlasBgTeach = { name: w.BGTeachName, html: w.BGTeachHTML }; return w.I18N || {}; });
   // the commentary engine (backgammon/explain.js: what a play is for) — after the rules (it reads window.BG when it loads)
   const bgScript = (src, test) => test() ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = src; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); });
-  window.AtlasBgExplain = window.AtlasBgExplain || (() => bgScript('../backgammon/bg.js?v=20261111c1', () => window.BG && BG.genPlays).then(() => bgScript('../backgammon/explain.js?v=20261115t', () => window.BGX && BGX.teach)));
+  window.AtlasBgExplain = window.AtlasBgExplain || (() => bgScript('../backgammon/bg.js?v=20261115p', () => window.BG && BG.genPlays).then(() => bgScript('../backgammon/explain.js?v=20261115t', () => window.BGX && BGX.teach)));
   window.AtlasBgTexts = window.AtlasBgTexts || (() => window.__bgTx || (window.__bgTx = bgTexts()));
   const bgTurn = (pos, side) => side === 1 ? String(pos).slice(26) + String(pos).slice(0, 26) : String(pos);   // (the mover always at the near side)
   const bgCk = () => { let ck = ['gold', 'black']; try { const st = (JSON.parse(localStorage.getItem('aicoding-backgammon-v2') || '{}') || {}).settings || {}; if (st.ck && st.ck[0] && st.ck[1] && st.ck[0] !== st.ck[1]) ck = st.ck.slice(); } catch (e) {} return ck; };

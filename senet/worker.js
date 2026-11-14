@@ -1,12 +1,12 @@
 /* senet/worker.js — runs the engine off the main thread (AI moves, the post-game review).
-   messages: { id, type:'think', state, n, level }          → { id, move }
+   messages: { id, type:'think', state, n, level, cfg? }    → { id, move }   (cfg: PRO mode, engine.js think opts.cfg)
              { id, type:'review', list:[{ state, n }] }      → { id, type:'progress', i, res } … { id, done:true }
                res = { ev:[{ from, to, wp }], wp0 }  (ev: every legal move, best first; wp0: the mover's win chance before rolling)
    the threads (../shared/mtworkers.js, one task per message):
              { id, type:'roll', state, n, d, k?, until? }   → { id, v }   (E.rollTask: one move × one throw [× one move: k] of E.splitEval)
              { id, type:'review1', state, n }               → { id, res }  (one position of the review)
              { id, type:'ping' }                            → { id, core }  ('wasm-simd' | 'wasm' | 'js') */
-importScripts('engine.js?v=6');
+importScripts('engine.js?v=7');
 const E = self.SenetEngine;
 // (2026-11-11) the C engine: engine_simd.wasm (wasm SIMD) where the browser has SIMD, else engine.wasm (the same numbers);
 // without WebAssembly (or with ?nowasm) the JavaScript search of engine.js. Messages wait until it is loaded.
@@ -32,7 +32,7 @@ const handle = e => {
       const ev = d.n ? E.evaluate(d.state, d.n, { depth: 2 }).map(x => ({ from: x.move.from, to: x.move.to, wp: x.wp })) : [];
       postMessage({ id: d.id, res: { ev, wp0: E.winProb(d.state, { depth: 1 }) } });
     } else if (d.type === 'think') {
-      const m = E.think(d.state, d.n, d.level, {});
+      const m = E.think(d.state, d.n, d.level, d.cfg ? { cfg: d.cfg, timeLimit: d.cfg.depth >= 3 ? 20000 : undefined } : {});   // (cfg: PRO mode)
       postMessage({ id: d.id, move: m ? { from: m.from, to: m.to } : null });
     } else if (d.type === 'review') {
       d.list.forEach((q, i) => {

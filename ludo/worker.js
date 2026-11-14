@@ -2,7 +2,7 @@
    { id, type:'wp', state, team, seed, count, plies } → { id, sum }  (E.wpTask: `count` playouts to the end → the wins of team)
      (each: true → { id, vals }: the result of every playout, for the page to add up in order — the same sum as one task)
    { id, type:'ping' } → { id } */
-importScripts('engine.js?v=3');
+importScripts('engine.js?v=4');
 const E = self.LudoEngine;
 self.onmessage = e => {
   const d = e.data || {};

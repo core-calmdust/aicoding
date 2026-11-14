@@ -10,12 +10,13 @@
 //   BGMT.prep(msg, prio) → Promise<msg with pre | msg>   (msg: a worker request 'move' or 'analyze'; unchanged when off / busy)
 //   BGMT.cancel(tag), BGMT.on(), BGMT.threads, BGMT.rate (the last job: candidates / s)
 window.BGMT = (function () {
-  const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'engine.js?v=20261111c1', warm: { type: 'ping' }, all: true }) : null;
+  const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'engine.js?v=20261115p', warm: { type: 'ping' }, all: true }) : null;
   let rate = 0;
   async function prep(msg, prio) {
     if (!MW || !msg || !msg.pos) return msg;
     let o = null;
-    if (msg.type === 'move' && BG.LEVEL_OPTS[msg.level] && BG.LEVEL_OPTS[msg.level].time) o = BG.LEVEL_OPTS[msg.level];
+    const lo = msg.cfg ? (msg.cfg.ply >= 2 ? BG.LEVEL_OPTS[10] : null) : BG.LEVEL_OPTS[msg.level];   // (cfg: PRO mode — 2-ply as level 10)
+    if (msg.type === 'move' && lo && lo.time) o = lo;
     else if (msg.type === 'analyze' && (msg.ply === undefined ? 1 : msg.ply) >= 1) o = { ply: msg.ply === undefined ? 1 : msg.ply, keep1: msg.keep || 8, margin1: 0.3, keep2: 3, margin2: 0.05 };
     if (!o) return msg;
     const tag = msg.type === 'move' ? 'ai' : 'ana';

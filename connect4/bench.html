@@ -80,7 +80,7 @@ env();
 let BOOK = null, TREEBUF = null;
 const POS = ["4334135554", "464351344625", "12535475744724", "273457145615347245", "3214516644", "4441245327"];
 const G = {
-  url: 'engine.js?v=20261109rs-sh1', drive: C4MT.drive,
+  url: 'engine.js?v=20261115p', drive: C4MT.drive,
   setup: w => { if (BOOK) w.postMessage({ type: 'book', book: BOOK }); if (TREEBUF) w.postMessage({ type: 'tree', buf: TREEBUF }); },
   async ready() { [BOOK, TREEBUF] = await Promise.all([fetch('book.json').then(r => r.json()), fetch('tree.bin').then(r => r.arrayBuffer())]); },
   positions(w) { return POS.slice(0, w === 'light' ? 3 : POS.length).map(s => ({ name: s.length + '手目 ' + s, moves: s })); },

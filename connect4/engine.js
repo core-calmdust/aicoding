@@ -736,8 +736,10 @@ function perfectLoss(str, order, done) {
   const owl = winPos(cl ^ ml, ch ^ mh, ml, mh), owh = _wh;
   return { move: order.find(c => !(((owl >>> 1) & moveBitsL(c)) | ((owh >>> 1) & moveBitsH(c)))) ?? order[0] };
 }
-function think(str, level) {
-  const cfg = LEVELS[level] || LEVELS[5];
+// over (2026-11-15): the page's PRO mode — the level's values with these on top (depth / time / solve / book / noise / blunder / perfect)
+const cfgOf = (level, over) => over ? Object.assign({}, LEVELS[level] || LEVELS[5], over) : LEVELS[level] || LEVELS[5];
+function think(str, level, over) {
+  const cfg = cfgOf(level, over);
   const h = thinkHead(str, cfg);
   if (h.result) return h.result;
   if (h.perfect) { const r = thinkPerfect(str, cfg); if (r) return r; }
@@ -871,7 +873,7 @@ function pvLine(str, c, plies, ms) {
 // weak or exact, until a Date.now() deadline), mtFin (the choice from the solved values), mtPv (a line)
 function mtPlan(m) {
   if (m.job === 'think') {
-    const cfg = LEVELS[m.level] || LEVELS[5];
+    const cfg = cfgOf(m.level, m.cfg);
     const h = thinkHead(m.moves, cfg); if (h.result) return { result: h.result };
     if (h.perfect) { const t0 = Date.now(); return { plan: { kind: 'perfect', order: perfectOrder(m.moves, cfg), t0, hard: t0 + cfg.hard, time: t0 + cfg.time } }; }
     const b = thinkBody(m.moves, cfg); if (b.result) return { result: b.result };
@@ -891,7 +893,7 @@ function mtSolve(m) {
   return { v, ok: v !== null, nodes };
 }
 function mtFin(m) {
-  const cfg = LEVELS[m.level] || LEVELS[5];
+  const cfg = cfgOf(m.level, m.cfg);
   if (m.kind === 'perfect') {
     if (m.move >= 0) return { result: { move: m.move, how: 'search', ms: Date.now() - m.t0, msProof: m.msProof, score: { kind: 'weak', v: m.cls } } };
     const r = perfectLoss(m.moves, m.order, m.done);
@@ -915,7 +917,7 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof postM
     if (m.type === 'book') BOOK = m.book;
     else if (m.type === 'tree') { try { TREE = decodeTree(m.buf); } catch (err) { TREE = null; } }
     else if (m.type === 'think') {
-      const r = think(m.moves, m.level);
+      const r = think(m.moves, m.level, m.cfg);
       postMessage({ type: 'result', id: m.id, ...r });
     } else if (m.type === 'analyze') {
       const r = analyzePosition(m.moves, m.time || 1000, (list, depth) => postMessage({ type: 'progress', id: m.id, list, depth }));

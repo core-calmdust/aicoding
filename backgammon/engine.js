@@ -1,5 +1,5 @@
 // Backgammon V2 — AI / analysis worker
-importScripts('bg.js?v=20261111c1', 'explain.js?v=20261021op');
+importScripts('bg.js?v=20261115p', 'explain.js?v=20261021op');
 let ready = null;
 async function init() {
   let j = null, man = null, bin = null, bo = null;
@@ -51,7 +51,7 @@ onmessage = async e => {
   try {
     if (m.type === 'move') {
       const t0 = now();
-      const pl = choosePlay(pos, m.side, m.dice, m.level, m.tag, m.pre);
+      const pl = choosePlay(pos, m.side, m.dice, m.level, m.tag, m.pre, m.cfg);   // (cfg: PRO mode)
       out.moves = pl.moves; out.ms = now() - t0;
     } else if (m.type === 'cube') {          // should side (on roll) double?
       const c = cubeFor(m.level, pos, m.side, m.ctx);

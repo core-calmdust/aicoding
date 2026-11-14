@@ -30,7 +30,7 @@
  * rollTask(state, n, d, k) → 出目 n の後の手番側の最善の勝率（splitEval の仕事1つ。k: その出目の k 番目の手だけの勝率）
  * hitRisk(state, side) → [prob per piece]   次の相手の1回の手番（ロゼットの追加手番は含まない）で各駒が取られる確率
  * raceCount(state) → { pips:[s0,s1], diff }   各側のゴールまでの残り歩数（diff = s1 − s0）
- * LEVELS[1..20]              各レベルの設定 { depth, temp, noise, capPref }
+ * LEVELS[1..20]              各レベルの設定 { depth, temp, noise, capPref }（think の opts.cfg で上書き：PRO モード）
  * staticEval(state) → 0..1    探索なしの評価（手番側の勝率）
  * loadNet(rule, url) → Promise<bool>  評価ネットの差し替え（任意。内蔵ネットが既定）
  * 評価ネット（各ルール約32KB、int16）は本ファイルに内蔵。gz 後の本ファイル全体 約80KB（base64のため）
@@ -340,7 +340,7 @@
     opts = opts || {}; const rng = opts.rng || Math.random;
     const ms = legalMoves(s, n); if (!ms.length) return null; if (ms.length === 1) return ms[0];
     level = Math.max(1, Math.min(20, Math.round(level || 20)));
-    const cfg = LEVELS[level];
+    const cfg = opts.cfg ? Object.assign({}, LEVELS[level], opts.cfg) : LEVELS[level];   // (opts.cfg: the page's PRO mode — depth / temp / noise)
     // 反復深化：浅い結果を先に得て、深い探索は opts.timeLimit（ms、既定 80）を超えたら打ち切る
     let sc = opts.ev ? opts.ev.map(x => ({ m: ms.find(y => y.from === x.move.from) || x.move, wp: x.wp })) : ms.map(m => ({ m, wp: wpAfter(s, m, Math.min(cfg.depth, 1)) }));
     if (cfg.depth >= 2 && !opts.ev) {

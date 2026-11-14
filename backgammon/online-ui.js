@@ -951,7 +951,7 @@ if (olOn()) ON.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = null;
 // the online summary: the record with the newest match, history united; settings / name: newest wins.
 const BgSync = (() => {
   const META = 'backgammon-sync-meta';
-  const SET_KEYS = ['sound', 'eval', 'anim', 'forced', 'autoRoll', 'coach', 'hint', 'level', 'level2', 'matchLen', 'cube', 'ck', 'skin', 'lang'];
+  const SET_KEYS = ['sound', 'eval', 'anim', 'forced', 'autoRoll', 'coach', 'hint', 'level', 'level2', 'pro', 'pro2', 'matchLen', 'cube', 'ck', 'skin', 'lang'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
