@@ -533,7 +533,10 @@ function refreshTable() {
 function layoutRiver(s, anim) {
   const p = G.P[s];
   const riv = p.river.map((r, i) => ({ id: r.id, taken: r.taken, sideways: i === p.riichiTurn || (p.riichiTurn >= 0 && i > p.riichiTurn && p.river.slice(p.riichiTurn, i).every(x => x.taken) && i === firstVisibleAfter(p)) }));
-  TB.layoutRiver(s, riv, anim);
+  // my own discard leaves from where the tile stood in my hand (the hand is drawn in the page: its place across the screen → the table's near edge)
+  let lx = 0;
+  if (anim && s === ME && riv.length) { try { const el = document.querySelector(`#hand .tl[data-id="${riv[riv.length - 1].id}"]`), st = $('#stage').getBoundingClientRect(); if (el && st.width && !document.documentElement.classList.contains('lp')) { const r = el.getBoundingClientRect(); lx = ((r.left + r.width / 2 - st.left) / st.width - .5) * 13.6; } } catch (e) {} }
+  TB.layoutRiver(s, riv, anim, lx);
 }
 function firstVisibleAfter(p) {   // riichi tile was called: the next visible tile is turned instead
   if (p.riichiTurn < 0 || !p.river[p.riichiTurn].taken) return -1;
