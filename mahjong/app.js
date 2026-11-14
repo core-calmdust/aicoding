@@ -76,6 +76,8 @@ const IC = {
   stats: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   rank: '<svg viewBox="0 0 24 24"><path d="M4 8l4 3 4-6 4 6 4-3-2 10H6z"/><path d="M6 21h12"/></svg>',
   keys: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.3a2.8 2.8 0 1 1 3.9 2.6c-.8.4-1.2 1-1.2 1.9v.4"/><path d="M12 17.3h.01"/></svg>',   // (？ — ユーザー 2026-11-14)
+  fsOn: '<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  fsOff: '<svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>',
   gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5"/><circle cx="12" cy="12" r="6.6"/></svg>',
   rated: '<svg viewBox="0 0 24 24"><path d="M4 20V14h4v6M10 20V9h4v11M16 20V4h4v16M3 20h18"/></svg>',
   lesson: '<svg viewBox="0 0 24 24"><path d="M3 6.5 12 3l9 3.5-9 3.5z"/><path d="M7 8.3V13c0 1.6 2.2 3 5 3s5-1.4 5-3V8.3M21 6.5V12"/></svg>',
@@ -304,6 +306,7 @@ function applyText() {
 }
 function sndIcons() { for (const b of document.querySelectorAll('.snd')) b.innerHTML = IC.gear; }
 function renderHome() {
+  if (typeof fsIcons === 'function') fsIcons();
   applyText();
   $('#coinN').textContent = DB.coins.toLocaleString();
   $('#btnPortal').innerHTML = IC.home; $('#btnSet').innerHTML = IC.gear;
@@ -360,6 +363,16 @@ $('#pArt').addEventListener('click', e => { if (e.target.closest('#pImg')) homeS
 $('#partner').addEventListener('click', e => { if (e.target.closest('#ppChg, #ppMore')) { SND.pick(); openChara(DB.sel); } });
 $('#btnStats').addEventListener('click', () => openStats(null));
 $('#btnRated').addEventListener('click', openRanked);
+// full screen (ユーザー 2026-11-14): a button by the gear, at home and in the game; F also toggles it in the game
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+function fsIcons() { const on = !!fsEl(); for (const b of document.querySelectorAll('.fsb')) { b.innerHTML = on ? IC.fsOff : IC.fsOn; b.title = t(on ? 'fsExit' : 'fsEnter'); b.setAttribute('aria-label', b.title); } }
+function toggleFs() { SND.pick(); const d = document.documentElement;
+  if (fsEl()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  else { const r = (d.requestFullscreen || d.webkitRequestFullscreen); if (r) { const p = r.call(d); if (p && p.catch) p.catch(() => {}); } } }
+document.querySelectorAll('.fsb').forEach(b => b.addEventListener('click', toggleFs));
+document.addEventListener('fullscreenchange', fsIcons); document.addEventListener('webkitfullscreenchange', fsIcons);
+if (!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)) document.querySelectorAll('.fsb').forEach(b => b.hidden = true);   // (iPhone Safari: none)
+fsIcons();
 $('#aaProf').addEventListener('click', () => openStats(null));
 $('#aaBanner').addEventListener('click', () => { SND.pick(); openGacha(); });
 // tapping her: a line of hers in a speech bubble
@@ -1003,7 +1016,7 @@ function renderBadges() {
     const html = `
       <div class="bf ${(s === g.kyoku) ? 'dealer' : ''} ${p && p.riichi ? 'rii' : ''}" style="--c:${c.color}">${frame(c, 'face')}<em>${wind}</em>${p && p.riichi ? `<i class="riiflag">${esc(t('riichi'))}</i>` : ''}</div>
       <div class="bt"><b>${esc(L(c.name))}</b><span class="sc">${g.scores[s].toLocaleString()}</span>
-        <span class="bk">${p && p.riichi ? `<i class="rbadge">${t('riichi')}</i>` : ''}${chips}${DB.set.skills && g.rules.skills ? `<i class="sk ${p && p.skillUsed ? 'used' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))} ${MJSkills.TIERS[c.tier | 0]}">${icon(sk.icon)}<b class="tr">${MJSkills.TIERS[c.tier | 0]}</b></i>` : ''}</span></div>`;
+        <span class="bk">${chips}${DB.set.skills && g.rules.skills ? `<i class="sk ${p && p.skillUsed ? 'used' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))} ${MJSkills.TIERS[c.tier | 0]}">${icon(sk.icon)}<b class="tr">${MJSkills.TIERS[c.tier | 0]}</b></i>` : ''}</span></div>`;
     if (s === ME) renderMe(html);
     else $('#opp' + s).innerHTML = html;
   }
@@ -1455,6 +1468,7 @@ document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (k === 'f') { e.preventDefault(); toggleFs(); return; }   // F: full screen
   if (k === 'Escape' && $('#khelp').classList.contains('open')) { e.preventDefault(); showKeys(false); return; }
   if (!$('#pstats').hidden) { if (k === 'Escape' || k === 'Enter') { e.preventDefault(); closeStats(); } return; }
   const m = $('#modal');
