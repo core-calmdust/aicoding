@@ -49,6 +49,72 @@
     toys: { ph: [0, .1, .3, .55, .8, 1], indoor: true, far: '#f2d9b4', mid: '#e9c99c', gr: '#d9a873', gr2: '#c99662', road: '#fff4dc', edge: '#b58552', props: ['blocks', 'ball', 'books', 'train', 'duck', 'blocks'], big: ['shelf', 'window', 'shelf', 'window', 'shelf', 'window'] },
     space: { ph: [1, 1, 1, 1, 1, 1], sky: 'space', far: '#5a4b9a', mid: '#46397f', gr: '#7a6bb8', gr2: '#6a5ba6', road: '#d9d2ff', edge: '#8a7fd0', props: ['crater', 'crystal', 'flagp', 'crater', 'alien', 'crystal'], big: ['planet', 'rocket', 'planet', 'rocket', 'planet', 'rocket'], planets: true },
   };
+  /* ---------- the chapters (2026-11-14, ユーザー: ループ感が強い。先に進める楽しみを): every area is its own place on the way,
+     with its own ground colour, its own things, two landmarks of its own, now and then a river the road crosses on a bridge,
+     a signpost at its start and, at the end of the course, the goal. (p: things, b: landmarks, g: ground [near, far hill],
+     r: a river's colour) ---------- */
+  const CH = {
+    forest: [{ p: ['flowers', 'bunny', 'bush', 'tulip', 'flowers'], b: ['bigtree', 'pond'], g: ['#9edb82', '#b2e2a8'] },
+      { p: ['tree', 'tree', 'bush', 'apple', 'mush'], b: ['bigtree', 'bigtree'], g: ['#8fd07a', '#9fd4a8'] },
+      { p: ['reed', 'duck2', 'tree', 'flowers'], b: ['pond', 'bigtree'], g: ['#86cc76', '#93cfa0'], r: '#7cc9ea' },
+      { p: ['mush', 'mush', 'flowers', 'bunny'], b: ['mushhouse', 'mushhouse'], g: ['#7ec46e', '#8cc898'] },
+      { p: ['pine', 'pine', 'tree', 'mush', 'firefly'], b: ['pine3', 'pine3'], g: ['#5fae62', '#6fb890'] },
+      { p: ['firefly', 'pine', 'mush', 'lamp'], b: ['treehouse', 'pine3'], g: ['#5aa45c', '#64ac84'], goal: 'treehouse' }],
+    sweets: [{ p: ['lolli', 'candy', 'lolli', 'cane'], b: ['lolli2', 'cakehouse'], g: ['#ffd6e8', '#ffc8e0'] },
+      { p: ['cupcake', 'cupcake', 'candy', 'donut'], b: ['cakehouse', 'cupcake2'], g: ['#ffe2c8', '#ffd0b0'] },
+      { p: ['donut', 'candy', 'cane'], b: ['cakehouse', 'lolli2'], g: ['#ffd8b8', '#e8b090'], r: '#8a5434' },
+      { p: ['donut', 'cupcake', 'cotton'], b: ['cakehouse', 'cakehouse'], g: ['#fff0c8', '#ffd8a0'] },
+      { p: ['cotton', 'cotton', 'candy', 'lolli'], b: ['cupcake2', 'lolli2'], g: ['#e0d0ff', '#c8b8ff'] },
+      { p: ['cotton', 'candy', 'cane', 'lolli'], b: ['cakecastle', 'lolli2'], g: ['#ffd0e8', '#e8b8ff'], goal: 'cakecastle' }],
+    sea: [{ p: ['umbrella', 'shell', 'crab', 'umbrella'], b: ['palm', 'boat'], g: ['#f6e2b2', '#7fd0e8'] },
+      { p: ['house', 'house', 'palm', 'shell'], b: ['boat', 'house'], g: ['#f2dca8', '#7fd0e8'] },
+      { p: ['rock2', 'shell', 'crab', 'palm'], b: ['lighthouse', 'boat'], g: ['#e8d29a', '#6ec4e0'] },
+      { p: ['palm', 'crab', 'rock2', 'shell'], b: ['boat', 'palm'], g: ['#f0d8a0', '#5ab8dc'], r: '#6cc4e8' },
+      { p: ['umbrella', 'house', 'lamp', 'shell'], b: ['pier', 'boat'], g: ['#ecd096', '#4aa8d0'] },
+      { p: ['lamp', 'palm', 'crab'], b: ['ship', 'lighthouse'], g: ['#e2c48a', '#3a8ab8'], goal: 'ship' }],
+    castle: [{ p: ['flowers', 'tulip', 'flowers', 'heart'], b: ['bush', 'tree'], g: ['#c9ecb4', '#d7c4f4'] },
+      { p: ['tulip', 'tulip', 'flowers'], b: ['windmill', 'windmill'], g: ['#bfe6a8', '#d0c0f0'] },
+      { p: ['flowers', 'heart', 'bush'], b: ['tree', 'windmill'], g: ['#b8e2a0', '#c8b8ee'], r: '#9ad8ff' },
+      { p: ['house', 'tulip', 'lamp'], b: ['castle', 'house'], g: ['#c4e8b0', '#c0b0ea'] },
+      { p: ['lamp', 'flowers', 'heart'], b: ['gate', 'castle'], g: ['#b0dca0', '#b8a8e6'] },
+      { p: ['heart', 'lamp', 'tulip'], b: ['bigcastle', 'castle'], g: ['#a8d898', '#b0a0e0'], goal: 'bigcastle' }],
+    festival: [{ p: ['stall', 'flag', 'balloons'], b: ['stall', 'tent'], g: ['#a9d58c', '#b7d6a0'] },
+      { p: ['balloons', 'stall', 'flag', 'lamp'], b: ['tent', 'tent'], g: ['#a2d086', '#b0d29a'] },
+      { p: ['stall', 'balloons', 'lamp'], b: ['ferris', 'tent'], g: ['#9ccb80', '#a8cd94'] },
+      { p: ['lamp', 'stall', 'flag'], b: ['ferris', 'stall'], g: ['#94c47a', '#a0c88e'], r: '#7ac8e8' },
+      { p: ['lantern', 'lantern', 'stall', 'lamp'], b: ['tent', 'ferris'], g: ['#8cbe74', '#98c288'] },
+      { p: ['lantern', 'lamp', 'balloons'], b: ['stage', 'ferris'], g: ['#86b86e', '#90bc82'], goal: 'stage' }],
+    autumn: [{ p: ['rice', 'rice', 'leafpile', 'hut'], b: ['hut', 'mountain'], g: ['#ecd28a', '#e7b48a'] },
+      { p: ['kaki', 'hut', 'leafpile', 'maple2'], b: ['hut', 'kaki'], g: ['#e8c48a', '#e2ac80'] },
+      { p: ['maple', 'maple', 'maple2', 'mush'], b: ['mountain', 'maple'], g: ['#e4b47a', '#dc9a6c'] },
+      { p: ['maple', 'rock', 'leafpile'], b: ['mountain', 'maple2'], g: ['#dcaa70', '#d29062'], r: '#7cc4e0' },
+      { p: ['rock', 'maple2', 'pine', 'rock'], b: ['mountain', 'mountain'], g: ['#d0a06c', '#c4885c'] },
+      { p: ['lamp', 'maple', 'rock'], b: ['torii', 'onsen'], g: ['#c8966a', '#ba7e58'], goal: 'torii' }],
+    snow: [{ p: ['house', 'snowman', 'spine'], b: ['house', 'house'], g: ['#f4f9ff', '#dfeefc'] },
+      { p: ['spine', 'spine', 'spine', 'snowman'], b: ['spine3', 'spine3'], g: ['#eef6ff', '#d6e8fa'] },
+      { p: ['spine', 'snowman', 'penguin'], b: ['ice', 'spine3'], g: ['#e8f2ff', '#cde2f8'], r: '#bfe4f8' },
+      { p: ['penguin', 'penguin', 'spine'], b: ['iceberg', 'iceberg'], g: ['#e2eefc', '#c4dcf4'] },
+      { p: ['igloo', 'penguin', 'snowman', 'lamp'], b: ['igloo', 'iceberg'], g: ['#dceafc', '#bcd6f2'] },
+      { p: ['penguin', 'spine', 'lamp'], b: ['observ', 'igloo'], g: ['#d6e6fa', '#b4d0ee'], goal: 'observ' }],
+    desert: [{ p: ['cactus', 'cactus2', 'rock', 'skull'], b: ['cactus', 'rock'], g: ['#f6d39a', '#f2c27e'] },
+      { p: ['palm', 'cactus2', 'house'], b: ['oasis', 'palm'], g: ['#f2cc90', '#ecba76'] },
+      { p: ['cactus', 'rock', 'cactus2'], b: ['camels', 'camels'], g: ['#eec488', '#e6b06c'] },
+      { p: ['rock', 'rock2', 'cactus'], b: ['canyon', 'canyon'], g: ['#e8b478', '#dc9e62'], r: '#6cc4e8' },
+      { p: ['cactus', 'rock', 'skull'], b: ['pyramid', 'pyramid'], g: ['#e6b880', '#d8a466'] },
+      { p: ['lamp', 'cactus2', 'rock'], b: ['sphinx', 'pyramid'], g: ['#dcae78', '#cc9860'], goal: 'sphinx' }],
+    toys: [{ p: ['blocks', 'blocks', 'ball', 'duck'], b: ['blocktower', 'shelf'], g: ['#d9a873', '#f2d9b4'] },
+      { p: ['train', 'rails', 'blocks'], b: ['window', 'blocktower'], g: ['#d4a26c', '#eed2ac'] },
+      { p: ['books', 'books', 'ball'], b: ['shelf', 'bookstack'], g: ['#cf9c66', '#ead0a6'] },
+      { p: ['duck', 'blocks', 'ball'], b: ['dollhouse', 'window'], g: ['#c99662', '#e6c89c'] },
+      { p: ['books', 'duck', 'lamp'], b: ['window', 'shelf'], g: ['#c08c5a', '#dcbc90'] },
+      { p: ['ball', 'blocks', 'train'], b: ['toycastle', 'blocktower'], g: ['#b88456', '#d4b086'], goal: 'toycastle' }],
+    space: [{ p: ['flagp', 'crater', 'crystal'], b: ['rocket', 'rocket'], g: ['#8a7bc8', '#5a4b9a'] },
+      { p: ['crater', 'crater', 'flagp'], b: ['planet', 'rocket'], g: ['#9a9ab8', '#6a6a8a'] },
+      { p: ['asteroid', 'crater', 'crystal'], b: ['asteroid', 'planet'], g: ['#7a6bb8', '#4a3b8a'] },
+      { p: ['alien', 'crystal', 'crater'], b: ['station', 'planet'], g: ['#6a8ac8', '#3a5a9a'] },
+      { p: ['crystal', 'crystal', 'alien'], b: ['planet', 'station'], g: ['#b86ac8', '#7a3a9a'] },
+      { p: ['crystal', 'alien', 'flagp'], b: ['starpalace', 'planet'], g: ['#c88ad8', '#8a4aaa'], goal: 'starpalace' }],
+  };
   const TINT = { forest: '#1d3a2a', sweets: '#3a2236', sea: '#14304a', castle: '#2c2550', festival: '#33203f', autumn: '#3a2418', snow: '#1b2a44', desert: '#3a2a18', toys: '#2a2440', space: '#0d0e2a' };
 
   /* ---------- the stage points: a winding road on the ground (y 32..56), a little different area to area ---------- */
@@ -131,6 +197,44 @@
     alien: () => `<g class="shs-bob"><ellipse cx="0" cy="-3" rx="3.4" ry="1.1" fill="#b8c4d8"/><path d="M-1.6 -3.4 Q0 -6 1.6 -3.4Z" fill="#8ae8ff" opacity=".85"/><circle cx="0" cy="-4.2" r=".7" fill="#7ad07a"/><circle cx="-2" cy="-2.9" r=".3" fill="#ffe27a" class="shs-win"/><circle cx="0" cy="-2.6" r=".3" fill="#ffe27a" class="shs-win"/><circle cx="2" cy="-2.9" r=".3" fill="#ffe27a" class="shs-win"/></g>`,
     planet: R => { const c = ['#ff9a6a', '#8ac8ff', '#c48aff'][R() * 3 | 0]; return `<g transform="translate(0 -14)"><circle r="5" fill="${c}"/><path d="M-4 -2 Q0 -3.4 4 -2 M-4.6 1 Q0 -.2 4.6 1" stroke="rgba(255,255,255,.3)" stroke-width=".8" fill="none"/><ellipse rx="8" ry="1.8" fill="none" stroke="#ffe2a8" stroke-width=".7" transform="rotate(-14)"/></g>`; },
     rocket: () => shadow(3) + `<path d="M0 -14 Q2.6 -10 2.4 -4 H-2.4 Q-2.6 -10 0 -14Z" fill="#f4f4fb"/><path d="M0 -14 Q1.4 -12.6 1.9 -11 H-1.9 Q-1.4 -12.6 0 -14Z" fill="#ff5a6a"/><circle cx="0" cy="-8" r="1" fill="#6ac8ff" stroke="#9aa" stroke-width=".25"/><path d="M-2.4 -6 L-4 -2.6 L-2.4 -4Z M2.4 -6 L4 -2.6 L2.4 -4Z" fill="#ff5a6a"/><path d="M-1.4 -4 L0 -1 L1.4 -4Z" fill="#ffb84a" class="shs-flame"/>`,
+
+    apple: () => shadow(4) + `<rect x="-.7" y="-5" width="1.4" height="5" rx=".5" fill="#9a6a3e"/><circle cx="0" cy="-7.4" r="3.8" fill="#5aae52"/><circle cx="-2.2" cy="-5.6" r="2.6" fill="#4fa84e"/><circle cx="2.2" cy="-5.8" r="2.5" fill="#62b85a"/>` + [[-1.6, -7.6], [1.4, -8.2], [.2, -5.6], [2.4, -6], [-2.4, -5.2]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".6" fill="#ff5a4a"/>`).join(''),
+    reed: () => [-1, 0, 1].map(x => `<path d="M${x} 0 Q${x + .4} -2.4 ${x + .2} -4.2" stroke="#4e9e50" stroke-width=".3" fill="none"/><ellipse cx="${x + .22}" cy="-4.4" rx=".35" ry=".9" fill="#8a5a32"/>`).join(''),
+    duck2: () => `<ellipse cx="0" cy="-.8" rx="1.4" ry=".8" fill="#fff"/><circle cx="1" cy="-1.8" r=".7" fill="#4aa86a"/><path d="M1.6 -1.8 L2.3 -1.6 L1.6 -1.4Z" fill="#f0a02a"/>`,
+    firefly: R => `<circle cx="${r1((R() - .5) * 4)}" cy="${r1(-2 - R() * 4)}" r=".35" fill="#fff6a0" class="shs-tw"/><circle cx="${r1((R() - .5) * 4)}" cy="${r1(-2 - R() * 4)}" r=".3" fill="#fff6a0" class="shs-tw" style="animation-delay:-1.5s"/>`,
+    pine3: () => [-3.4, 0, 3.6].map((x, k) => g(x, k === 1 ? 0 : .4, k === 1 ? 1.4 : 1.05, P.pine())).join(''),
+    spine3: () => [-3.4, 0, 3.6].map((x, k) => g(x, k === 1 ? 0 : .4, k === 1 ? 1.4 : 1.05, P.spine())).join(''),
+    mushhouse: R => { const c = R() < .5 ? '#e8504a' : '#f08a3a'; return shadow(6) + `<path d="M-3.4 0 Q-3.8 -4 -3 -6.4 H3 Q3.8 -4 3.4 0Z" fill="#fff4e0"/><rect x="-1" y="-3" width="2" height="3" rx="1" fill="#a8743e"/><circle cx="-2" cy="-4.4" r=".7" fill="#fff4a0" class="shs-win"/><path d="M-7.4 -6 Q-7.4 -13 0 -13 Q7.4 -13 7.4 -6Z" fill="${c}"/><circle cx="-3.6" cy="-9.6" r="1.1" fill="#fff"/><circle cx="1.6" cy="-11" r=".9" fill="#fff"/><circle cx="4.4" cy="-8.2" r=".8" fill="#fff"/><path d="M2.4 -13 V-15.4" stroke="#8a8a8a" stroke-width=".5"/><circle cx="2.4" cy="-16" r=".5" fill="#ddd" opacity=".6" class="shs-tw"/>`; },
+    treehouse: () => shadow(10) + `<path d="M-2.6 0 Q-1.8 -10 -2 -16 H2 Q1.8 -10 2.6 0Z" fill="#8a5a32"/><path d="M-2 0 Q-5 -.4 -6 1 M2 0 Q5 -.4 6 1" stroke="#8a5a32" stroke-width="1.2" fill="none"/><circle cx="0" cy="-24" r="11" fill="#3f9644"/><circle cx="-8" cy="-19" r="7" fill="#4aa04a"/><circle cx="8" cy="-19.4" r="7" fill="#4aa04a"/><circle cx="-3" cy="-30" r="5" fill="#55ad52"/><rect x="-4.6" y="-18" width="9.2" height="6" fill="#d8a46a"/><path d="M-5.6 -18 L0 -22.4 L5.6 -18Z" fill="#c0503a"/><rect x="-1.4" y="-16.6" width="2.8" height="2.4" fill="#fff4a0" class="shs-win"/><path d="M-4 -12 V-2 M-2.6 -12 V-2 M-4 -10 H-2.6 M-4 -8 H-2.6 M-4 -6 H-2.6 M-4 -4 H-2.6" stroke="#c99a5a" stroke-width=".3"/><path d="M4.6 -17 L9 -14.6" stroke="#8a6a4a" stroke-width=".15"/>` + [6, 7.4, 8.8].map((x, k) => `<circle cx="${x}" cy="${-16 + k * .8}" r=".6" fill="${['#ff6a8a', '#ffd24a', '#6ac8ff'][k]}" class="shs-win"/>`).join(''),
+    lolli2: () => shadow(4) + `<rect x="-.6" y="-12" width="1.2" height="12" fill="#fff"/><circle cx="0" cy="-15" r="5" fill="#ff6fa8"/><path d="M0 -15 m-3.4 0 a3.4 3.4 0 1 1 3.4 3.4 a2.4 2.4 0 1 1 -2.4 -2.4 a1.4 1.4 0 1 1 1.4 1.4" fill="none" stroke="#fff" stroke-width=".8"/>`,
+    cupcake2: () => g(0, 0, 2.2, P.cupcake(() => .1)),
+    cakecastle: () => shadow(12) + [[0, 11, 4.6, '#ffe2c4', '#ff9ac4'], [-4.6, 8, 3.6, '#fff0d8', '#b8e6ff'], [-9, 6, 2.8, '#ffe2c4', '#fff2a8']].map(([y0, w, h, c, ic], k) => { const y = -[0, 4.6, 8.2][k]; return `<rect x="${-w}" y="${y - h}" width="${w * 2}" height="${h}" fill="${c}"/><path d="M${-w - .4} ${y - h} Q${-w} ${y - h + 1.8} ${-w / 2} ${y - h + 1} Q0 ${y - h + 2} ${w / 2} ${y - h + 1} Q${w} ${y - h + 1.8} ${w + .4} ${y - h}Z" fill="${ic}"/>`; }).join('') + `<rect x="-.4" y="-14" width=".8" height="3" fill="#fff"/><path d="M0 -14 Q.7 -15.2 0 -16 Q-.7 -15.2 0 -14Z" fill="#ffb84a" class="shs-flame"/><circle cx="-6" cy="-3" r=".8" fill="#ff4a6a"/><circle cx="6" cy="-3" r=".8" fill="#ff4a6a"/><circle cx="-3.2" cy="-7" r=".7" fill="#ff4a6a"/><circle cx="3.2" cy="-7" r=".7" fill="#ff4a6a"/><rect x="-1.4" y="-3" width="2.8" height="3" rx="1.2" fill="#b8784a"/>`,
+    rock2: () => `<path d="M-3 0 Q-3.4 -2.4 -1 -3.2 Q1.6 -3.8 2.8 -1.8 Q3.4 0 3 0Z" fill="#a8a4a0"/><path d="M-1 -3.2 Q1.6 -3.8 2.8 -1.8 L1.4 -1.6Z" fill="#c4c0bc"/>`,
+    pier: () => `<rect x="-10" y="-2.4" width="20" height="1" fill="#a87a4a"/>` + [-9, -5, -1, 3, 7].map(x => `<rect x="${x}" y="-1.4" width=".6" height="1.6" fill="#8a5a32"/>`).join('') + `<path d="M8 -2.4 V-6" stroke="#4a4a5a" stroke-width=".35"/><circle cx="8" cy="-6.4" r=".7" fill="#ffe27a" class="shs-win"/>`,
+    ship: () => `<g class="shs-bob"><path d="M-10 -2 H10 L7 1.4 H-7.4Z" fill="#8a4a2a"/><rect x="-8" y="-3.4" width="15" height="1.4" fill="#c0703a"/><path d="M-3 -3 V-17 M3 -3 V-15" stroke="#6a3a1a" stroke-width=".5"/><path d="M-2.8 -16 Q2 -12.6 -2.8 -6.4Z M3.2 -14.4 Q7.4 -11 3.2 -5.6Z" fill="#fff8ea"/><path d="M-3 -17 L-.4 -16.2 L-3 -15.4Z" fill="#ff5a5a"/>` + [-6, -3, 0, 3, 6].map(x => `<circle cx="${x}" cy="-.6" r=".4" fill="#ffe27a" class="shs-win"/>`).join('') + `</g>`,
+    windmill: () => shadow(4) + `<path d="M-2.6 0 L-1.6 -9 H1.6 L2.6 0Z" fill="#fff4e8"/><path d="M-2 -9 L0 -11.6 L2 -9Z" fill="#c88ab0"/><rect x="-.7" y="-3" width="1.4" height="3" rx=".6" fill="#a87a6a"/><g class="shs-spin" style="transform-origin:0px -9.4px">${[0, 90, 180, 270].map(a => `<rect x="-.6" y="-16.4" width="1.2" height="7" fill="#fff" stroke="#c8a0b8" stroke-width=".15" transform="rotate(${a} 0 -9.4)"/>`).join('')}</g><circle cx="0" cy="-9.4" r=".6" fill="#c88ab0"/>`,
+    gate: () => shadow(9) + `<rect x="-9" y="-9" width="18" height="9" fill="#fff0f8"/><path d="M-9 -9 v-1.2 h1.5 v1.2 h1.5 v-1.2 h1.5 v1.2 h1.5 v-1.2 h1.5 v1.2 h1.5 v-1.2 h1.5 v1.2 h1.5 v-1.2 h1.5 v1.2 h1.5 v-1.2 h1.5 v1.2 h1.5 v-1.2 h1.5 v1.2" fill="#fff0f8"/><path d="M-2.6 0 V-4.4 Q0 -7.4 2.6 -4.4 V0Z" fill="#8a5a7a"/><path d="M-2.6 -1 H2.6 M-2.6 -2.4 H2.6 M-2.6 -3.8 H2.6 M-1.3 0 V-5.8 M1.3 0 V-5.8" stroke="#c8a8c0" stroke-width=".25"/>` + [-9, 9].map(x => `<rect x="${x - 1.8}" y="-12" width="3.6" height="12" fill="#ffe8f4"/><path d="M${x - 2.4} -12 L${x} -16 L${x + 2.4} -12Z" fill="#b48aff"/>`).join(''),
+    bigcastle: () => g(0, 0, 1.7, P.castle()) + g(-11, .4, 1, P.castle()) + g(11, .4, 1, P.castle()),
+    lantern: R => `<path d="M-4 -7 Q0 -5.6 4 -7" stroke="#6a4a3a" stroke-width=".15" fill="none"/>` + [-3, -1, 1, 3].map((x, k) => `<g class="shs-lan" style="transform-origin:${x}px -6.4px"><path d="M${x} ${-6.6 + Math.abs(x) * .2} v.6" stroke="#6a4a3a" stroke-width=".1"/><ellipse cx="${x}" cy="${-5.4 + Math.abs(x) * .2}" rx=".7" ry=".9" fill="${['#ff5a4a', '#ffb84a', '#ff5a4a', '#ffd24a'][k]}" class="shs-win"/></g>`).join('') + `<path d="M-4 0 V-7.2 M4 0 V-7.2" stroke="#8a6a4a" stroke-width=".3"/>`,
+    stage: () => shadow(10) + `<rect x="-10" y="-3" width="20" height="3" fill="#a8743e"/><path d="M-10 -3 V-13 H10 V-3" fill="none" stroke="#c0503a" stroke-width="1"/><path d="M-10 -13 Q-5 -9 -6 -3 M10 -13 Q5 -9 6 -3" stroke="#e85a5a" stroke-width="2" fill="none"/><path d="M-10 -13.4 H10" stroke="#ffd24a" stroke-width=".8"/>` + [-6, -2, 2, 6].map(x => `<circle cx="${x}" cy="-14.4" r=".7" fill="#ffe27a" class="shs-win"/>`).join('') + `<g class="shs-fw" style="transform-origin:0px -22px">${Array.from({ length: 16 }, (_, j) => { const a = j * Math.PI / 8; return `<path d="M${r1(Math.cos(a) * 1.4)} ${r1(-22 + Math.sin(a) * 1.4)} L${r1(Math.cos(a) * 6)} ${r1(-22 + Math.sin(a) * 6)}" stroke="${['#ff7aa8', '#ffe27a', '#7ae8ff'][j % 3]}" stroke-width=".4" stroke-linecap="round"/>`; }).join('')}</g>`,
+    rice: () => [-2.4, -1.2, 0, 1.2, 2.4].map(x => `<path d="M${x} 0 Q${x + .3} -1.6 ${x + .9} -2.4" stroke="#d8b04a" stroke-width=".35" fill="none"/>`).join(''),
+    kaki: () => g(0, 0, 1, P.maple2()) + [[-1.8, -7], [1.2, -8.4], [2.2, -6], [-.4, -5.6]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".6" fill="#ff8a2a"/>`).join(''),
+    torii: () => shadow(8) + `<rect x="-6" y="-11" width="1.4" height="11" fill="#e04a2a"/><rect x="4.6" y="-11" width="1.4" height="11" fill="#e04a2a"/><path d="M-9 -12.4 Q0 -11.4 9 -12.4 L8.6 -13.8 Q0 -12.8 -8.6 -13.8Z" fill="#2a2a2a"/><rect x="-7.6" y="-11.6" width="15.2" height="1" fill="#e04a2a"/><rect x="-7" y="-9" width="14" height=".8" fill="#e04a2a"/>`,
+    onsen: () => `<ellipse cx="0" cy="-1" rx="7" ry="2.2" fill="#9ad8e8"/><ellipse cx="0" cy="-1.2" rx="5.6" ry="1.4" fill="#c4ecf4"/>` + [-3, 0, 3].map((x, k) => `<path class="shs-steam" style="animation-delay:${-k}s" d="M${x} -2 q-.8 -1.4 0 -2.8 q.8 -1.4 0 -2.8" stroke="#fff" stroke-width=".6" fill="none" opacity=".7"/>`).join(''),
+    ice: () => `<ellipse cx="0" cy="-1" rx="9" ry="2.6" fill="#cfeefc"/><ellipse cx="0" cy="-1.2" rx="7.6" ry="1.8" fill="#e8f8ff"/><path d="M-4 -1.4 q2 -.6 4 0 M1 -.6 q2 -.5 4 0" stroke="#fff" stroke-width=".3" fill="none"/>` + g(2, -1, .6, P.penguin()),
+    observ: () => shadow(7) + `<rect x="-5" y="-6" width="10" height="6" fill="#e8eef8"/><path d="M-5.4 -6 Q-5.4 -12 0 -12 Q5.4 -12 5.4 -6Z" fill="#c8d4e8"/><path d="M-.8 -11.8 L4 -15.6 L4.8 -14.6 L.6 -11Z" fill="#8a96b0"/><rect x="-1" y="-3.4" width="2" height="3.4" rx=".8" fill="#5a6a8a"/><rect x="-4" y="-4.6" width="1.8" height="1.4" fill="#fff4a0" class="shs-win"/>`,
+    canyon: () => `<path d="M-9 0 V-9 L-6 -10 L-4 -8.4 L-4 0Z M3 0 V-12 L5 -13 L8 -11 L9 0Z" fill="#d07a4a"/><path d="M-9 -6 H-4 M3 -8 H9 M3 -4 H9" stroke="#b8643a" stroke-width=".5"/>`,
+    sphinx: () => shadow(10) + `<path d="M-10 0 V-4 Q-10 -6 -6 -6 H2 V-10 Q2 -13.6 5.2 -13.6 Q8.4 -13.6 8.4 -10 V0Z" fill="#e2b06a"/><path d="M2.4 -10.4 L1.4 -6.4 H9.2 L8 -10.4Z" fill="#4a7ad8"/><path d="M3.4 -10.4 Q5.2 -12.6 7 -10.4" fill="#e8ba76"/><path d="M-10 0 H-4 V-2 H-10Z" fill="#d8a45a"/>` + g(-14, 0, .8, P.pyramid()),
+    rails: () => `<path d="M-4 -.4 H4 M-4 .4 H4" stroke="#8a8a9a" stroke-width=".25"/>` + [-3.4, -2, -.6, .8, 2.2, 3.6].map(x => `<rect x="${x - .2}" y="-.7" width=".4" height="1.4" fill="#a87a4a"/>`).join(''),
+    blocktower: () => shadow(4) + [0, 1, 2, 3].map(k => `<rect x="${-1.8 + (k % 2) * .4}" y="${-3.6 * (k + 1)}" width="3.6" height="3.6" rx=".3" fill="${['#ff6a6a', '#4ab0ff', '#ffd24a', '#6ad08a'][k]}"/><text x="${.0 + (k % 2) * .4}" y="${-3.6 * k - .9}" font-size="2.4" font-weight="900" text-anchor="middle" fill="#fff">${'TOYS'[k]}</text>`).join(''),
+    bookstack: () => shadow(5) + Array.from({ length: 7 }, (_, k) => `<rect x="${-4 + (k % 2) * .6}" y="${-1.4 * (k + 1)}" width="8" height="1.3" rx=".2" fill="${['#e85a5a', '#4a8ad8', '#6ac07a', '#f0b03a', '#b48aff', '#ff8ab8', '#4ac0c0'][k]}"/>`).join(''),
+    dollhouse: () => shadow(6) + `<rect x="-6" y="-9" width="12" height="9" fill="#ffd8e4"/><path d="M-7 -9 L0 -14 L7 -9Z" fill="#e85a7a"/><path d="M-6 -4.6 H6 M0 -9 V0" stroke="#e8a8b8" stroke-width=".4"/><rect x="-4.6" y="-8" width="3" height="2.4" fill="#fff4a0" class="shs-win"/><rect x="1.6" y="-8" width="3" height="2.4" fill="#fff4a0" class="shs-win"/><rect x="-4.6" y="-3.6" width="3" height="2.4" fill="#fff4a0" class="shs-win"/><rect x="2" y="-3.6" width="2.2" height="3.6" rx=".8" fill="#a85a6a"/>`,
+    toycastle: () => g(0, 0, 1.6, P.blocktower()) + g(-7, .4, 1.1, P.blocktower()) + g(7, .4, 1.1, P.blocktower()) + `<path d="M0 -26 L3 -25 L0 -24Z" fill="#ff6a6a" class="shs-flap"/><path d="M0 -23 V-26" stroke="#8a8a8a" stroke-width=".3"/>`,
+    asteroid: R => `<g class="shs-bob"><path d="M-3 -6 Q-3.6 -9 -.6 -9.6 Q2.6 -10 3 -7 Q3.4 -4.4 .4 -4 Q-2.4 -3.6 -3 -6Z" fill="#8a7a9a"/><circle cx="-.8" cy="-7.6" r=".6" fill="#6a5a7a"/><circle cx="1.4" cy="-6" r=".4" fill="#6a5a7a"/></g>`,
+    station: () => `<g transform="translate(0 -14)"><g class="shs-spin" style="transform-origin:0px 0px"><ellipse rx="9" ry="2.6" fill="none" stroke="#d8dcf0" stroke-width="1.2"/>${[0, 90, 180, 270].map(a => `<rect x="-.3" y="-2.6" width=".6" height="5.2" fill="#b8bcd8" transform="rotate(${a})"/>`).join('')}</g><circle r="2.4" fill="#e8ecff"/><circle r="1" fill="#7ac8ff" class="shs-win"/></g>`,
+    starpalace: () => shadow(10) + g(0, 0, 1.2, P.castle()) + `<path d="M0 -30 L1.6 -26 L6 -26 L2.4 -23.4 L3.8 -19 L0 -21.6 L-3.8 -19 L-2.4 -23.4 L-6 -26 L-1.6 -26Z" fill="#ffe27a" class="shs-win"/><circle cx="0" cy="-24" r="8" fill="#ffe27a" opacity=".15" class="shs-tw"/>`,
+    sign: n => `<rect x="-.3" y="-6" width=".6" height="6" fill="#8a5a32"/><rect x="-3" y="-7.6" width="6" height="3" rx=".6" fill="#e8c890" stroke="#8a5a32" stroke-width=".35"/><text x="0" y="-5.4" font-size="2.2" font-weight="900" text-anchor="middle" fill="#6a3a1a">${n}</text>`,
+    goalflag: () => `<rect x="-.25" y="-9" width=".5" height="9" fill="#dddde8"/><g class="shs-flap"><rect x=".25" y="-9" width="5" height="3.2" fill="#fff"/>${[0, 1, 2, 3, 4].map(c => [0, 1].map(r => (c + r) % 2 ? `<rect x="${.25 + c}" y="${-9 + r * 1.6}" width="1" height="1.6" fill="#2a2a3a"/>` : '').join('')).join('')}</g><circle cx="0" cy="-9.3" r=".5" fill="#ffd24a"/>`,
   };
 
   /* ---------- the panorama ---------- */
@@ -148,7 +252,13 @@
       `<linearGradient id="${U}n" gradientUnits="userSpaceOnUse" x1="0" x2="${WT}" y1="0" y2="0">${Array.from({ length: NA }, (_, i) => { const p = ph(i), a = t.sky === 'space' ? 0 : nightA(p) * .42 + (p > .2 && p < .7 ? .08 : 0); return `<stop offset="${((i + .5) / NA).toFixed(3)}" stop-color="${p > .55 ? '#0c1040' : '#ff7a3a'}" stop-opacity="${a.toFixed(2)}"/>`; }).join('')}</linearGradient>` +
       `<linearGradient id="shs-beam" x1="0" x2="1"><stop offset="0" stop-color="#fff6b0" stop-opacity=".7"/><stop offset="1" stop-color="#fff6b0" stop-opacity="0"/></linearGradient>` +
       `<linearGradient id="shs-win-sky" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2a3a8a"/><stop offset="1" stop-color="#7a6ac8"/></linearGradient>`;
-    const horizon = t.indoor ? 30 : t.sea ? 25 : 27;
+    const horizon = t.indoor ? 30 : t.sea ? 25 : 27, C = CH[id] || [];
+    const chg = (i, k) => (C[Math.min(i, C.length - 1)] || {}).g ? C[Math.min(i, C.length - 1)].g[k] : [t.gr, t.far][k];
+    const gstops = f => Array.from({ length: NA }, (_, i) => `<stop offset="${(i / NA + .08).toFixed(3)}" stop-color="${f(i)}"/><stop offset="${((i + 1) / NA - .08).toFixed(3)}" stop-color="${f(i)}"/>`).join('');
+    defs += `<linearGradient id="${U}g" gradientUnits="userSpaceOnUse" x1="0" x2="${WT}" y1="0" y2="0">${gstops(i => chg(i, 0))}</linearGradient>` +
+      `<linearGradient id="${U}f" gradientUnits="userSpaceOnUse" x1="0" x2="${WT}" y1="0" y2="0">${gstops(i => chg(i, 1))}</linearGradient>` +
+      `<linearGradient id="${U}d" gradientUnits="userSpaceOnUse" x1="0" x2="${WT}" y1="0" y2="0">${gstops(i => mix(chg(i, 0), chg(i, 1), .5))}</linearGradient>`;
+    const GR = `url(#${U}g)`, FAR = `url(#${U}f)`, MID = `url(#${U}d)`;
     let back = '', mid = '', props = [], glow = '';
     // the sky, or the wall of the playroom
     if (t.indoor) {
@@ -180,26 +290,40 @@
         back += `<g class="shs-cl" style="animation-delay:${(-R() * 20).toFixed(1)}s"><g transform="translate(${r1(x)} ${r1(y)}) scale(${s.toFixed(2)})" opacity="${p > .6 ? .5 : .9}"><ellipse cx="0" cy="0" rx="5" ry="1.8" fill="${c}"/><circle cx="-1.6" cy="-1" r="2" fill="${c}"/><circle cx="1.4" cy="-1.4" r="2.4" fill="${c}"/></g></g>`; }
     }
     // hills (or the sea), then the ground
-    if (t.indoor) { mid += `<rect x="0" y="${horizon}" width="${WT}" height="${H - horizon}" fill="${t.gr}"/>`; for (let y = horizon + 3; y < H; y += 4.4) mid += `<path d="M0 ${y} H${WT}" stroke="${t.gr2}" stroke-width=".35"/>`; for (let x = 0; x < WT; x += 13) mid += `<path d="M${x} ${horizon} L${x - 6} ${H}" stroke="${t.gr2}" stroke-width=".25" opacity=".6"/>`; for (let i = 0; i < NA; i++) mid += `<ellipse cx="${i * W + 58}" cy="50" rx="34" ry="9" fill="#ff9ab8" opacity=".35"/><ellipse cx="${i * W + 58}" cy="50" rx="28" ry="7" fill="none" stroke="#fff" stroke-width=".4" opacity=".5"/>`; }
+    if (t.indoor) { mid += `<rect x="0" y="${horizon}" width="${WT}" height="${H - horizon}" fill="${GR}"/>`; for (let y = horizon + 3; y < H; y += 4.4) mid += `<path d="M0 ${y} H${WT}" stroke="${t.gr2}" stroke-width=".35"/>`; for (let x = 0; x < WT; x += 13) mid += `<path d="M${x} ${horizon} L${x - 6} ${H}" stroke="${t.gr2}" stroke-width=".25" opacity=".6"/>`; for (let i = 0; i < NA; i++) mid += `<ellipse cx="${i * W + 58}" cy="50" rx="34" ry="9" fill="#ff9ab8" opacity=".35"/><ellipse cx="${i * W + 58}" cy="50" rx="28" ry="7" fill="none" stroke="#fff" stroke-width=".4" opacity=".5"/>`; }
     else if (t.sea) {
-      mid += `<rect x="0" y="${horizon - 4}" width="${WT}" height="12" fill="${t.mid}"/><rect x="0" y="${horizon - 4}" width="${WT}" height="2" fill="${t.far}"/>`;
+      mid += `<rect x="0" y="${horizon - 4}" width="${WT}" height="12" fill="${FAR}"/><rect x="0" y="${horizon - 4}" width="${WT}" height="2" fill="#ffffff" opacity=".35"/>`;
       for (let x = 0; x < WT; x += 7) mid += `<path class="shs-wv" d="M${x} ${horizon - 1 + (x % 3)} q1.2 -.7 2.4 0" stroke="#e8faff" stroke-width=".3" fill="none"/>`;
-      mid += `<path d="${hill(0, WT, horizon + 6, 1.6, 11, 8)}" fill="${t.gr}"/><path d="${hill(0, WT, horizon + 6.4, 1.6, 11, 8)}" fill="none" stroke="#ffffff" stroke-width=".6" opacity=".8" class="shs-wv"/>`;
+      mid += `<path d="${hill(0, WT, horizon + 6, 1.6, 11, 8)}" fill="${GR}"/><path d="${hill(0, WT, horizon + 6.4, 1.6, 11, 8)}" fill="none" stroke="#ffffff" stroke-width=".6" opacity=".8" class="shs-wv"/>`;
     } else {
-      mid += `<path d="${hill(0, WT, horizon - 3, 4, 3, 7)}" fill="${t.far}"/><path d="${hill(0, WT, horizon + 1.5, 3, 7, 6)}" fill="${t.mid}"/><path d="${hill(0, WT, horizon + 5, 2, 13, 6)}" fill="${t.gr}"/>`;
+      mid += `<path d="${hill(0, WT, horizon - 3, 4, 3, 7)}" fill="${FAR}"/><path d="${hill(0, WT, horizon + 1.5, 3, 7, 6)}" fill="${MID}"/><path d="${hill(0, WT, horizon + 5, 2, 13, 6)}" fill="${GR}"/>`;
     }
     for (let k = 0; k < NA * 40; k++) { const x = R() * WT, y = horizon + 8 + R() * (H - horizon - 8); mid += t.indoor ? '' : `<path d="M${r1(x)} ${r1(y)} q.3 -.8 .6 0 q.3 -.6 .6 0" stroke="${t.gr2}" stroke-width=".25" fill="none"/>`; }
     // the road through every star of every area (one road for the whole course)
     const ALL = []; for (let i = 0; i < NA; i++) pts(id, i).forEach(([x, y]) => ALL.push([i * W + OX + x, y]));
-    const road = smooth(ALL);
+ const road = smooth(ALL);
+    const roadY = x => { for (let k = 0; k < ALL.length - 1; k++) if (ALL[k][0] <= x && ALL[k + 1][0] >= x) return ALL[k][1] + (ALL[k + 1][1] - ALL[k][1]) * (x - ALL[k][0]) / (ALL[k + 1][0] - ALL[k][0]); return 44; };
+    const RIV = [];   // a river crossing an area (chapter r): from the hills down to the front, the road over it on a bridge
+    for (let i = 0; i < NA; i++) { const ch = C[i]; if (!ch || !ch.r) continue; const rx = i * W + 8 + 4 + 10.2 * 4.5, Q = [];
+      for (let y = horizon + 3; y <= H + 2; y += 4) Q.push([rx + 6 * Math.sin(y * .22 + i) + (y - horizon) * .25, y]);
+      const w = y => 1.2 + (y - horizon) * .16, Lf = Q.map(([x, y]) => [x - w(y), y]), Rt = Q.map(([x, y]) => [x + w(y), y]).reverse();
+      mid += `<path d="${smooth(Lf)}L${smooth(Rt).slice(1)}Z" fill="${ch.r}"/><path d="${smooth(Q)}" stroke="#ffffff" stroke-width=".35" stroke-dasharray="1.6 2.4" fill="none" opacity=".6" class="shs-wv"/>`;
+      const bx = rx + 6 * Math.sin(roadY(rx) * .22 + i) + (roadY(rx) - horizon) * .25, by = roadY(bx); RIV.push(bx);
+      mid += `<rect x="${r1(bx - 4.6)}" y="${r1(by - 2.6)}" width="9.2" height="5.2" rx="1" fill="#b98a5a"/>`;
+      RIV.push({ bx, by }); }
     mid += `<path d="${road}" fill="none" stroke="${t.edge}" stroke-width="3.6" stroke-linecap="round" opacity=".55"/><path d="${road}" fill="none" stroke="${t.road}" stroke-width="2.8" stroke-linecap="round"/><path d="${road}" fill="none" stroke="${t.edge}" stroke-width=".25" stroke-dasharray="1.2 1.6" opacity=".7"/>`;
-    // the things by the road: the area's landmark at the back, small things scattered (never on the road), front ones larger
-    const near = (x, y, d) => ALL.some(([a, b]) => Math.hypot(a - x, (b - y) * 1.4) < d);
+    RIV.forEach(b => { if (typeof b !== 'object') return; for (const dy of [-2.8, 2.8]) mid += `<path d="M${r1(b.bx - 4.4)} ${r1(b.by + dy)} H${r1(b.bx + 4.4)}" stroke="#8a5a32" stroke-width=".5"/>` + [-4, -2, 0, 2, 4].map(dx => `<path d="M${r1(b.bx + dx)} ${r1(b.by + dy)} v-1.2" stroke="#8a5a32" stroke-width=".4"/>`).join(''); });
+    // the things by the road: the area's landmarks at the back, small things scattered (never on the road or in a river), front ones larger
+    const near = (x, y, d) => ALL.some(([a, b]) => Math.hypot(a - x, (b - y) * 1.4) < d) || RIV.some(b => typeof b === 'number' && Math.abs(b - x) < 5 + (y - horizon) * .2);
     for (let i = 0; i < NA; i++) {
-      [0, 1].forEach(j => { const big = t.big[(i + j * 3) % t.big.length]; let bx = i * W + (j ? 62 : 8) + R() * 46, tries = 0; while (near(bx, horizon + 7, 14) && tries++ < 14) bx = i * W + 8 + R() * 100;
-        props.push({ y: horizon + 6 + j * .1, s: g(bx, horizon + 6.5, j ? 1 : 1.25, P[big](R)) }); });
+      const ch = C[i] || {}, BIG = ch.b || t.big, PR = ch.p || t.props;
+      [0, 1].forEach(j => { const big = BIG[j % BIG.length]; let bx = i * W + (j ? 62 : 8) + R() * 46, tries = 0; while (near(bx, horizon + 7, 14) && tries++ < 14) bx = i * W + 8 + R() * 100;
+        props.push({ y: horizon + 6 + j * .1, s: g(bx, horizon + 6.5, j ? 1 : ch.goal ? 1.6 : 1.25, P[big](R)) }); });
       for (let k = 0; k < 40; k++) { const x = i * W + R() * W, y = horizon + 7 + R() * (H - horizon - 5); if (near(x, y, 6)) continue; const s = .5 + (y - horizon) / (H - horizon) * .75;
-        props.push({ y, s: g(x, y, s, P[t.props[R() * t.props.length | 0]](R)) }); }
+        props.push({ y, s: g(x, y, s, P[PR[R() * PR.length | 0]](R)) }); }
+      // a signpost at the start of every area (its number) · at the end of the course the goal flag and its landmark
+      const p0 = ALL[i * 10]; if (i > 0) props.push({ y: p0[1] - 3, s: g(p0[0] - 5, p0[1] - 3, .9, P.sign(i + 1)) });
+      if (i === NA - 1 && ch.goal) { const pe = ALL[ALL.length - 1]; props.push({ y: pe[1] - 2, s: g(pe[0] + 3, pe[1] - 2, 1, P.goalflag()) }); }
     }
     if (t.bunting) for (let i = 0; i < NA; i++) { const x0 = i * W + 10, x1 = x0 + 96, y = horizon + 2; let s = `<path d="M${x0} ${y} Q${(x0 + x1) / 2} ${y + 6} ${x1} ${y}" stroke="#8a6a4a" stroke-width=".2" fill="none"/>`;
       for (let k = 1; k < 16; k++) { const tt = k / 16, x = x0 + (x1 - x0) * tt, yy = y + 6 * 4 * tt * (1 - tt) * .5 * 2; s += `<path d="M${r1(x - .7)} ${r1(yy)} L${r1(x + .7)} ${r1(yy)} L${r1(x)} ${r1(yy + 1.4)}Z" fill="${['#ff6a8a', '#ffd24a', '#6ac8ff', '#8ae07a'][k % 4]}"/>`; } props.push({ y: horizon + 1, s }); }
@@ -229,6 +353,8 @@
 .shs .shs-aur{animation:shsaur 7s ease-in-out infinite alternate}
 .shs .shs-fw{animation:shsfw 2.8s ease-out infinite}
 .shs .shs-leaf{animation:shsleaf 9s linear infinite}
+.shs .shs-steam{animation:shssteam 3s ease-in-out infinite}
+.shs .shs-lan{animation:shslan 2.6s ease-in-out infinite}
 .shs .shs-beam{animation:shsbeam 4s ease-in-out infinite;transform-box:fill-box;transform-origin:left center}
 @keyframes shstw{0%,100%{opacity:.25}50%{opacity:1}}
 @keyframes shscl{to{transform:translateX(6px)}}
@@ -240,6 +366,8 @@
 @keyframes shsaur{0%{transform:translateX(0) skewX(0)}100%{transform:translateX(6px) skewX(6deg)}}
 @keyframes shsfw{0%{transform:scale(.2);opacity:0}20%{opacity:1}70%{transform:scale(1);opacity:.9}100%{transform:scale(1.15);opacity:0}}
 @keyframes shsleaf{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(-10px,30px) rotate(360deg);opacity:0}}
+@keyframes shssteam{0%{transform:translateY(0);opacity:0}40%{opacity:.8}100%{transform:translateY(-3px);opacity:0}}
+@keyframes shslan{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
 @keyframes shsbeam{0%,100%{opacity:.4}50%{opacity:1}}
 ` };
 })();
