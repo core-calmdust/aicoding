@@ -42,25 +42,26 @@ function weaveTex() {
 // and a slow shift of colour from honey to chocolate along the board. A matching height map (the pores and the late wood a hair
 // lower) gives the lacquer something to catch on. u runs along the grain and wraps.
 function woodTex() {
-  const Wd = 2048, Hd = 512, N = mkNoise(53);
+  const Wd = 4096, Hd = 384, N = mkNoise(53);   // (one whole rail along u: nothing repeats along a rail — ユーザー 2026-11-14)
   const c = document.createElement('canvas'); c.width = Wd; c.height = Hd; const g = c.getContext('2d'), im = g.createImageData(Wd, Hd), o = im.data;
   const cb = document.createElement('canvas'); cb.width = Wd; cb.height = Hd; const gb = cb.getContext('2d'), ib = gb.createImageData(Wd, Hd), ob = ib.data;
-  const A = N.oct([3, 6, 12]), B = N.oct([2, 4]), Cn = N.oct([16, 32, 64]), Dn = N.oct([4, 8]), Pn = N.oct([256, 128]);
+  const A = N.oct([5, 11, 23]), B = N.oct([3, 7]), Cn = N.oct([40, 83, 167]), Dn = N.oct([5, 13]), Pn = N.oct([512, 257]), E = N.oct([7, 17]);
   const mix = (a, b, t) => a + (b - a) * t, sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const H = new Float32Array(Wd * Hd);
   for (let y = 0; y < Hd; y++) for (let x = 0; x < Wd; x++) {
     const u = x / Wd, v = y / Hd;
     const warp = N.fbm(B, u, v) - .5, slow = N.fbm(Dn, u, v * .5);
     // the cathedrals: the ring index bends into arches along the board (two arches per wrap), their tips wandering
-    const arch = Math.pow(Math.abs(Math.sin((u + warp * .15) * Math.PI)), 4) * 1.3;   // one long, narrow arch per length of board
-    const ring = v * 7.5 + warp * 1.1 + arch + (N.fbm(A, u * 1.5, v * 1.5) - .5) * .55 + (N.fbm(Dn, u * .5, v) - .5) * 1.4;   // (uneven spacing from year to year)
+    // the cathedrals: no fixed rhythm — an arch rises wherever a slow noise field crests, of whatever size it happens to be
+    const arch = Math.pow(Math.max(0, N.fbm(E, u, v * .35) - .48) * 3.2, 1.6) * 2.4;
+    const ring = v * 7.5 + warp * 1.1 + arch + (N.fbm(A, u, v * 1.5) - .5) * .55 + (N.fbm(Dn, u, v) - .5) * 1.4;   // (uneven spacing from year to year)
     const f = ring - Math.floor(ring);
     const late = sstep(.62, .9, f) * (1 - sstep(.93, 1, f));               // early wood pale, darkening into a sharp late-wood edge
     const streak = N.fbm(Cn, u, v * 5) - .5;                               // fine streaks along the grain
-    const mineral = Math.max(0, N.fbm(A, u * .7 + .3, v * 4) - .62) * 3;   // the odd darker streak
+    const mineral = Math.max(0, N.fbm(Dn, u + .37, v * 4) - .64) * 3;   // the odd darker streak
     let t = .64 - late * .34 + streak * .3 - mineral * .35 + (slow - .5) * .3; t = Math.min(1, Math.max(0, t));
     // pores: short dark dashes along the grain (high-frequency noise squeezed along u), more of them in the early wood
-    const pn = N.fbm(Pn, u * .25, v * 3);
+    const pn = N.fbm(Pn, u, v * 6);
     const pore = sstep(.66 - (1 - late) * .04, .76, pn);
     const warm = slow;                                                       // honey ↔ chocolate along the board
     const d = (N.R() - .5) * 2.5, p = (y * Wd + x) * 4;
@@ -390,17 +391,20 @@ class Table3D {
       sh.lineTo(x0 + RR, RH1); sh.quadraticCurveTo(x0, RH1, x0, RH1 - RR); sh.lineTo(x0, RH0 + RR); sh.quadraticCurveTo(x0, RH0, x0 + RR, RH0);
       const rg = new THREE.ExtrudeGeometry(sh, { depth: RL, bevelEnabled: false, curveSegments: 5 }); rg.translate(0, 0, -RL / 2);
       const P = rg.attributes.position, UV = rg.attributes.uv, cy = (RH0 + RH1) / 2;
-      for (let i = 0; i < P.count; i++) UV.setXY(i, P.getZ(i) / 7.5, Math.atan2(P.getX(i), P.getY(i) - cy) / (2 * PI) * 1.15 + .5);   // the grain runs along the rail and wraps round its section (the join is underneath)
+      for (let i = 0; i < P.count; i++) UV.setXY(i, P.getZ(i) / RL + .5, Math.atan2(P.getX(i), P.getY(i) - cy) / (2 * PI) * 1.15 + .5);   // (the whole board along the rail, once)   // the grain runs along the rail and wraps round its section (the join is underneath)
       rg.rotateY(PI / 2);
-      for (let k = 0; k < 4; k++) { const a = k * PI / 2, b = new THREE.Mesh(rg, rimMat); b.position.set(Math.sin(a) * RC, 0, Math.cos(a) * RC); b.rotation.y = a; b.castShadow = b.receiveShadow = true; s.add(b);
+      // (each rail its own cut of the board — another stretch, other rings: the same texture, its uv shifted per rail)
+      const shifted = (geo, du, dv) => { const q = geo.clone(), U = q.attributes.uv; for (let i = 0; i < U.count; i++) U.setXY(i, U.getX(i) + du, U.getY(i) + dv); return q; };
+      for (let k = 0; k < 4; k++) { const a = k * PI / 2, b = new THREE.Mesh(shifted(rg, k * .37, k * .29), rimMat); b.position.set(Math.sin(a) * RC, 0, Math.cos(a) * RC); b.rotation.y = a; b.castShadow = b.receiveShadow = true; s.add(b);
         const lip = new THREE.Mesh(new THREE.BoxGeometry(21.2, 0.2, 0.12), lipMat); lip.position.set(Math.sin(a) * 10.56, 0.1, Math.cos(a) * 10.56); lip.rotation.y = a; s.add(lip); } }
     { const E = RW + .06, cr = 1.15, bv = .2, sh = new THREE.Shape();   // corner block: a square whose outer corner is rounded, its top edge rounded like the rails'
       sh.moveTo(0, 0); sh.lineTo(E, 0); sh.lineTo(E, E - cr); sh.quadraticCurveTo(E, E, E - cr, E); sh.lineTo(0, E); sh.closePath();
       const cg = new THREE.ExtrudeGeometry(sh, { depth: RH1 - RH0 - bv, bevelEnabled: true, bevelThickness: bv, bevelSize: bv, bevelOffset: -bv, bevelSegments: 4, curveSegments: 8 });
       cg.rotateX(-PI / 2); cg.translate(0, RH0, 0);   // (shape x → x, shape y → −z, height → y)
       const P = cg.attributes.position, UV = cg.attributes.uv;
-      for (let i = 0; i < P.count; i++) UV.setXY(i, (P.getX(i) + P.getZ(i)) / 7.5 + .31, (P.getX(i) - P.getZ(i)) / 3.4 + P.getY(i) * .25);   // grain across the corner
-      for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(cg, rimMat); m.rotation.y = k * PI / 2; const q = this.local(k, 10.53, -10.53 + 0); m.position.set(0, 0, 0);
+      for (let i = 0; i < P.count; i++) UV.setXY(i, (P.getX(i) + P.getZ(i)) / RL + .31, (P.getX(i) - P.getZ(i)) / 3.4 + P.getY(i) * .25);   // grain across the corner
+      for (let k = 0; k < 4; k++) { const cq = cg.clone(), U = cq.attributes.uv; for (let i = 0; i < U.count; i++) U.setXY(i, U.getX(i) + .13 + k * .23, U.getY(i) + .61 + k * .17);
+        const m = new THREE.Mesh(cq, rimMat); m.rotation.y = k * PI / 2; const q = this.local(k, 10.53, -10.53 + 0); m.position.set(0, 0, 0);
         // the block's own corner sits at the cloth's corner (+x, −z in its own frame), turned round the table's centre
         const piv = new THREE.Group(); piv.rotation.y = k * PI / 2; m.rotation.y = 0; m.position.set(10.53, 0, -10.53); piv.add(m); m.castShadow = m.receiveShadow = true; s.add(piv); void q; } }
     const under = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshStandardMaterial({ color: 0x0c0a14, roughness: 1 }));
