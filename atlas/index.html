@@ -1429,7 +1429,7 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
   #pg-home .heroCoin{display:none}
   #pg-home .ttl{width:min(88%,262px)}
   #pg-home .toprow{margin-top:0}
-  #pg-home .prof{border-radius:0 0 24px 24px!important;background:#fff;min-height:62px}
+  #pg-home .prof{border-radius:0 0 24px 24px!important;background:#fff;min-height:62px;overflow:visible}   /* (visible: はなす sits above the avatar, over the hero; the backdrop .pfbg clips itself) */
   /* the background chosen in きせかえ fills the whole name row (2026-11-11), under a light veil so the name and the pills read */
   #pg-home .prof > .pfbg{display:block;position:absolute;inset:0;z-index:0;border-radius:inherit;overflow:hidden;pointer-events:none}
   #pg-home .prof > .pfbg::after{content:'';position:absolute;inset:0;background:rgba(255,253,247,.3)}#pg-home .prof > .pfbg.dk::after{background:rgba(255,253,247,.55)}
@@ -1450,7 +1450,7 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
   #pg-home .prof .pf-l .av svg,#pg-home .prof .pf-l .av img{width:46px;height:46px}
   #pg-home .prof .pf-l .av{box-shadow:0 3px 0 rgba(0,0,0,.1),0 0 0 3px #fff}
   #pg-home .prof .pf-l .av.framed{box-shadow:none}
-  #pg-home .prof .pf-talk{font-size:10px;padding:3px 6px 4px;border-width:2px;border-radius:9px;top:-3px;inset-inline-end:-24px;box-shadow:0 2px 0 #e0a92e}#pg-home .prof .pf-talk::after{width:6px;height:6px;bottom:-4.5px;inset-inline-start:7px;border-width:0 2px 2px 0}
+  #pg-home .prof .pf-talk{font-size:14px;padding:6px 12px 7px;border-width:2.5px;border-radius:13px;top:-40px;inset-inline-end:auto;inset-inline-start:2px;z-index:5;box-shadow:0 3px 0 #e0a92e,0 5px 10px rgba(80,50,10,.18)}#pg-home .prof .pf-talk::after{width:9px;height:9px;bottom:-6.5px;inset-inline-start:16px;border-width:0 2.5px 2.5px 0}   /* (2026-11-14: a bigger button that sits above the avatar, over the hero picture, clear of the name) */
   #pg-home .prof .pf-l .av .lv{bottom:-4px;font-size:10px;padding:0 6px;line-height:15px}   /* (inside the card edge, 2026-11-11) */
   #pg-home .prof .pf-r input{font-size:16px;min-width:0}
   #pg-home .pf-sum{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:4px 0;cursor:pointer;color:var(--ink);font:inherit}
