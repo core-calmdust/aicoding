@@ -152,6 +152,33 @@ function tileGeos(w, h, d, r, b, backT) {
   g.dispose();
   return { front, back: make(bk, true) };
 }
+// ---- a hand (2026-11-14, ユーザー: a slender woman's hand lays the tile down — for discards, and for chi / pon / kan; very real) ----
+// The mesh is grown offline (mahjong/tools/hand-gen.py → hand.js): flesh blended smoothly over the bones — the back of the hand,
+// the knuckles, three-jointed fingers with their webbing, nails, the narrow wrist — posed to lay a tile (index and middle
+// finger on it, the thumb at its side). Here it gets its skin (vertex colours: warmer at the fingertips), glossy nails, and a
+// dark sleeve with a gold cuff over the forearm. The rig's origin is the point the fingertips hold (the top of the tile);
+// −z points away from the owner, +z up the arm.
+function buildHand(env) {
+  const Hd = window.JANKA_HAND, rig = new THREE.Group(); if (!Hd) return rig;
+  const b64 = t => { const s = atob(t), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; };
+  const q = new Uint16Array(b64(Hd.p).buffer), pos = new Float32Array(Hd.nv * 3), cb = b64(Hd.c), col = new Float32Array(Hd.nv * 3), lin = v => Math.pow(v / 255, 2.2);
+  for (let i = 0; i < Hd.nv * 3; i++) { const k = i % 3; pos[i] = Hd.lo[k] + q[i] / 65535 * (Hd.hi[k] - Hd.lo[k]); col[i] = lin(cb[i]); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.setIndex(new THREE.BufferAttribute(new Uint16Array(b64(Hd.i).buffer), 1)); g.computeVertexNormals();
+  g.addGroup(0, Hd.nail * 3, 0); g.addGroup(Hd.nail * 3, (Hd.nt - Hd.nail) * 3, 1);
+  // skin: soft, with a little warmth from within (a thin red glow stands in for light passing through the flesh); nails: lacquered
+  const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .56, metalness: 0, sheen: .18, sheenRoughness: .6, sheenColor: new THREE.Color(0xffd9cc), emissive: new THREE.Color(0x3a0f08), emissiveIntensity: .18, envMap: env, envMapIntensity: .2 });
+  const nail = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .22, clearcoat: 1, clearcoatRoughness: .08, envMap: env, envMapIntensity: .7, emissive: new THREE.Color(0x40141c), emissiveIntensity: .35 });
+  const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; rig.add(hand);
+  const cloth = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x33204b).convertSRGBToLinear(), roughness: .86 });
+  const gold = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd2aa5a).convertSRGBToLinear(), roughness: .35, metalness: .8, envMap: env, envMapIntensity: .8 });
+  const sl = new THREE.Group(); sl.position.set(Hd.wrist[0], Hd.wrist[1], Hd.wrist[2]); sl.rotation.x = Hd.pitch; rig.add(sl);   // the sleeve runs on up the forearm
+  { const cg = new THREE.CylinderGeometry(1.5, 1.0, 13, 20, 1, true); cg.rotateX(PI / 2); cg.translate(0, 0, 6.5); const m = new THREE.Mesh(cg, cloth); m.scale.set(1, .82, 1); m.castShadow = true; sl.add(m);
+    const cuff = new THREE.Mesh(new THREE.TorusGeometry(1.0, .07, 8, 28), gold); cuff.scale.set(1, .82, 1); cuff.castShadow = true; sl.add(cuff);
+    const cap = new THREE.Mesh(new THREE.CircleGeometry(.98, 20), cloth); cap.scale.set(1, .82, 1); cap.rotation.y = PI; cap.position.z = .02; sl.add(cap); }
+  rig.scale.setScalar(.84);   // (a little under life size against the tiles: it must not hide the table)
+  return rig;
+}
 const ROW = 6;
 const PI = Math.PI;
 
@@ -172,6 +199,7 @@ class Table3D {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(36, 1, 0.5, 200);
     this.tweens = [];
+    this.handFx = [];
     this.tiles = new Map();
     this.faceTex = new Map();
     this.dirty = true;
@@ -186,8 +214,13 @@ class Table3D {
   // ---------------------------------------------------------------- scene
   build(mobile) {
     const s = this.scene;
-    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x1c2440, 0.8));
-    const key = new THREE.DirectionalLight(0xffffff, 0.85);
+    // The table's light (ユーザー 2026-11-14 — the rule for every skin of the table, whatever its cloth): low contrast; a soft pool of
+    // light on the middle of the table, the rim a tone lower. So the fill and the key are a little under what a flat light would
+    // need, and a wide, fully soft spot from above the middle adds the rest: brightest at the score unit, easing off to the rails
+    // (no edge to the pool — penumbra 1). It is light, not paint: the cloth's own texture stays even, so a new skin gets the same mood.
+    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x1c2440, 0.52));
+    const pool = new THREE.SpotLight(0xfff3e2, 1.0, 0, 0.5, 1, 1); pool.position.set(0, 24, 2.5); pool.target.position.set(0, 0, 0.6); s.add(pool); s.add(pool.target);
+    const key = new THREE.DirectionalLight(0xffffff, 0.6);
     key.position.set(-6, 22, 10);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -205,7 +238,7 @@ class Table3D {
     const g = fc.getContext('2d');
     { const N = mkNoise(11), A = N.oct([6, 12, 24, 48, 96]), img = g.createImageData(2048, 2048), d = img.data;
       for (let y = 0; y < 2048; y++) for (let x = 0; x < 2048; x++) {
-        const u = x / 2048, v = y / 2048, r = Math.hypot(u - .5, v - .5) * 2, vig = 1 - Math.min(1, r * r) * .2;   // (only a soft falloff to the rim)
+        const u = x / 2048, v = y / 2048, vig = 1;   // (even: the pool of light on the middle is the lamp's, see the lights)
         const m = (N.fbm(A, u, v) - .5) * .16, n = (N.R() - .5) * .09, f = vig * (1 + m + n), p = (y * 2048 + x) * 4;
         d[p] = 44 * f; d[p + 1] = 72 * f; d[p + 2] = 112 * f; d[p + 3] = 255;
       }
@@ -346,20 +379,77 @@ class Table3D {
     else if (pose === 'side') { rx = -PI / 2; rz = PI / 2; y = D / 2; }
     else if (pose === 'back') { rx = PI / 2; y = D / 2; }
     const to = { x: p.x, y, z: p.z, rx, ry: yaw, rz };
+    g.userData.pose = pose;
     g.visible = true;
-    if (anim) this.tween(g, to, anim.dur || 260, anim.from);
+    if (anim) this.tween(g, to, anim.dur || 260, anim.from, anim.hand);
     else { g.position.set(to.x, to.y, to.z); g.rotation.set(rx, yaw, rz); g.userData.target = to; this.dirty = true; }
   }
-  tween(g, to, dur, from) {
+  tween(g, to, dur, from, hand, after) {   // hand: the seat whose hand carries the tile (it lets go and draws back when the tile is down)
     const f = from || { x: g.position.x, y: g.position.y, z: g.position.z, rx: g.rotation.x, ry: g.rotation.y, rz: g.rotation.z };
     this.tweens = this.tweens.filter(t => t.g !== g);
-    this.tweens.push({ g, from: f, to, t0: performance.now(), dur });
+    this.tweens.push({ g, from: f, to, t0: performance.now(), dur, hand: hand == null ? null : hand, after });
+    if (hand != null) { const rig = this.hand(hand); this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(f.x, f.y + D / 2, f.z); }
     g.userData.target = to;
     this.dirty = true;
   }
-
-  // ---------------------------------------------------------------- layout
-  hideAll() { for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.dirty = true; }
+  // ---------------------------------------------------------------- dora
+  // Every dora that lies face up on the table (rivers, melds, opened hands) wears a soft gold edge, and a band of gold light
+  // crosses it now and then (ユーザー 2026-11-14: so the dora is easy to find). `doraFn(id)` says which tiles are dora (app.js).
+  // One shared material; the overlay is a quad just above the face, made the first time a tile needs it.
+  _doraSync() {
+    let n = 0;
+    if (this.doraFn) for (const g of this.tiles.values()) {
+      const want = g.visible && (g.userData.pose === 'flat' || g.userData.pose === 'side') && this.doraFn(g.userData.id);
+      let o = g.userData.dora;
+      if (want && !o) {
+        if (!this.doraMat) { this.doraGeo = new THREE.PlaneGeometry(W, H);
+          this.doraMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: -1 } },
+            vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+            fragmentShader: `varying vec2 vUv; uniform float uT;
+              float rr(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
+              void main(){ vec2 p = (vUv - .5) * vec2(1.0, 1.36); float d = rr(p, vec2(.5, .68), .14); if (d > 0.0) discard;
+                float rim = smoothstep(-.085, -.005, d) * .62;
+                float c = vUv.x * .75 + (1.0 - vUv.y) * .45, band = uT < 0.0 ? 0.0 : exp(-pow((c - (uT * 1.7 - .25)) / .085, 2.0)) * .5;
+                vec2 s = (vUv - vec2(.8, .84)) * vec2(1.0, 1.36); float tw = uT < 0.0 ? 0.0 : sin(uT * 3.14159);
+                float star = tw * (exp(-abs(s.x) * 60.0 - abs(s.y) * 9.0) + exp(-abs(s.y) * 60.0 - abs(s.x) * 9.0) + exp(-dot(s, s) * 500.0));
+                float a = clamp(rim + band + star, 0.0, .92);
+                gl_FragColor = vec4(mix(vec3(1.0, .72, .2), vec3(1.0, .93, .62), clamp(band * 1.6 + star, 0.0, 1.0)), a); }` }); }
+        o = g.userData.dora = new THREE.Mesh(this.doraGeo, this.doraMat); o.position.z = D / 2 + 0.004; o.renderOrder = 3; g.add(o);
+      }
+      if (o) o.visible = !!want;
+      if (want) n++;
+    }
+    this._doraN = n;
+  }
+  // ---------------------------------------------------------------- hands
+  hand(seat) {
+    if (!this.hands) this.hands = [];
+    let rig = this.hands[seat];
+    if (!rig) { if (!this.handProto) this.handProto = buildHand(this.envTex); rig = this.hands[seat] = this.handProto.clone(true); rig.rotation.y = seat * PI / 2; rig.visible = false; this.scene.add(rig); }
+    return rig;
+  }
+  _handRest(seat) { const p = this.local(seat, 0, 12.5); return { x: p.x, y: 3.2, z: p.z }; }   // off the table, on the owner's side
+  _handBack(seat) { const rig = this.hand(seat), f = { x: rig.position.x, y: rig.position.y, z: rig.position.z }, d = this.local(seat, 0, 6.5);
+    this.handFx = this.handFx.filter(h => h.rig !== rig);
+    this.handFx.push({ rig, from: f, to: { x: f.x + d.x, y: f.y + 2.2, z: f.z + d.z }, t0: performance.now(), dur: 340, hide: true }); }
+  tilePose(id) { const g = this.tiles.get(id); if (!g) return null; const t = g.userData.target || {}; return { x: g.position.x, y: g.position.y, z: g.position.z, rx: g.rotation.x, ry: g.rotation.y, rz: g.rotation.z, seen: g.visible, to: t }; }
+  // a call: the caller's hand reaches for the tile where it lies (from: its pose before the new layout), then carries it to its
+  // place in the meld (the tile's new target). Without `from` (暗槓 / 加槓) the tile comes from the caller's own hand.
+  // A tile with no place on the table afterwards (the player's own melds are drawn in the page) is carried off toward its owner.
+  carry(seat, id, from) {
+    const g = this.tiles.get(id); if (!g) return;
+    const shown = g.visible, to = shown ? g.userData.target : this.handOrigin(seat), rig = this.hand(seat);
+    if (!to) return;
+    const done = shown ? null : () => { g.visible = false; };
+    if (!from) { g.visible = true; this.tween(g, to, 320, this.handOrigin(seat), seat, done); return; }
+    g.visible = true; this.tweens = this.tweens.filter(t => t.g !== g);
+    g.position.set(from.x, from.y, from.z); g.rotation.set(from.rx, from.ry, from.rz);
+    const r = this._handRest(seat);
+    this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(r.x, r.y, r.z);
+    this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 240, then: () => this.tween(g, to, 320, from, seat, done) });
+    this.dirty = true;
+  }
+  hideAll() { for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
 
   layoutRiver(seat, river, animLast, fromSeatHand) {
     let row = 0, col = 0, x = -3.0 * W;
@@ -370,7 +460,7 @@ class Table3D {
       const w = side ? H : W;
       const lx = x + (w - W) / 2;
       const lz = 3.56 + row * (H + 0.02) + (side ? (H - W) / 2 * 0 : 0);
-      const anim = (animLast && i === river.length - 1) ? { dur: 240, from: this.handOrigin(seat) } : null;
+      const anim = (animLast && i === river.length - 1) ? { dur: 300, from: this.handOrigin(seat), hand: seat } : null;
       this.place(g, seat, lx, lz, side ? 'side' : 'flat', anim);
       g.userData.taken = !!r.taken;
       g.visible = !r.taken;
@@ -584,12 +674,26 @@ class Table3D {
         const arc = Math.sin(k * PI) * 0.6;
         g.position.set(f.x + (t.x - f.x) * e, f.y + (t.y - f.y) * e + arc, f.z + (t.z - f.z) * e);
         g.rotation.set(f.rx + (t.rx - f.rx) * e, f.ry + (t.ry - f.ry) * e, f.rz + (t.rz - f.rz) * e);
+        if (tw.hand != null) { const rig = this.hand(tw.hand); rig.position.set(g.position.x, g.position.y + D / 2, g.position.z); }   // the hand holds the tile
+        if (k >= 1) { if (tw.hand != null) this._handBack(tw.hand); if (tw.after) tw.after(); }
         return k < 1;
       });
       this.dirty = true;
     }
+    if (this.handFx.length) {
+      const run = this.handFx; this.handFx = [];
+      for (const h of run) { const k = Math.min(1, (now - h.t0) / h.dur), e = k * k * (3 - 2 * k);
+        h.rig.position.set(h.from.x + (h.to.x - h.from.x) * e, h.from.y + (h.to.y - h.from.y) * e, h.from.z + (h.to.z - h.from.z) * e);
+        if (k < 1) this.handFx.push(h); else { if (h.hide) h.rig.visible = false; if (h.then) h.then(); } }
+      this.dirty = true;
+    }
+    // the dora's glint: a band of light crosses every dora that lies face up, about once in three seconds
+    if (this._doraN) { const ph = now % 3300, on = ph < 900;
+      if (on) { this.doraMat.uniforms.uT.value = ph / 900; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
+      this._doraOn = on; }
     if (!this.dirty || document.hidden) return;
     this.dirty = false;
+    this._doraSync();
     this.renderer.render(this.scene, this.camera);
     if (this._dbg) this._dbgPaint(now);
   }
