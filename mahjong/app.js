@@ -354,7 +354,7 @@ function fitRoot() {
   de.classList.toggle('ds', !PHONE);
   if (PHONE) { const W0 = rot ? h : w, H0 = rot ? w : h; de.style.setProperty('--PZ', Math.min(W0 / 1000, H0 / 560).toFixed(4)); }   // (the home is laid out on a 1000×560 stage and scaled, as on PC)
   if (!PHONE) {
-    const GW = Math.min(w, h * 2.0), GH = Math.min(h, w / 1.45);
+    const GW = Math.min(w, h * 2.4), GH = Math.min(h, w / 1.36);   // (the same landscape box as the game: a squarish window gets a band above and below)
     const Z = Math.max(.5, Math.min(GW / 1280, GH / 760, 1.6));
     // game HUD scale for big windows (icons, panels and tiles grow with the window instead of stopping at fixed px)
     de.style.setProperty('--hz', Math.max(1, Math.min(2, Math.min(h, w / 1.36) / 860)).toFixed(3));

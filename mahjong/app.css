@@ -1266,7 +1266,7 @@ html.lp #home.aaa .aa-play{right:30px;bottom:22px;width:380px}
 html.lp #home.aaa .aa-plate{bottom:22px}
 html.lp #home.aaa .pp-n{font-size:50px}
 html.lp #home.aaa .aa-go .ag-k{font-size:28px}
-html.ds #home.aaa{left:0;top:0;width:calc(100vw / var(--Z));height:calc(100vh / var(--Z))}   /* (full-bleed: the room fills the window; the pieces keep to the scaled stage) */
+/* (PC: the home keeps to the game's landscape box, centred — a squarish window gets bands above and below, ユーザー 2026-11-14) */
 html.lp #home.aaa .aa-logo .lg-k{font-size:78px}
 html.lp #home.aaa .aa-logo .lg-ser,html.lp #home.aaa .aa-orn{display:none}
 html.lp #home.aaa .ab-tx small{display:none}

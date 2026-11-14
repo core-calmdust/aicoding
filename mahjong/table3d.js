@@ -182,37 +182,39 @@ function brocadeTex(base) {
   const bro = new THREE.CanvasTexture(bc); bro.encoding = THREE.sRGBEncoding; bro.wrapS = bro.wrapT = THREE.RepeatWrapping; bro.repeat.set(4, 5); bro.anisotropy = 4;
   return bro;
 }
-// a dark Chinese carpet (段通) for the floor: 2048 px over the whole rug
+// the carpet under the table (ユーザー 2026-11-14, from a reference photo): a deep red rug of the Turkmen kind — rows of dark
+// octagonal guls on the red field with small branch motifs between, a border of stepped motifs between dark bands. Low in
+// contrast, and lit only a little: it is barely there in the dark room, just enough to read. 2048 px over the whole rug.
 function rugTex() {
   const S = 2048, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
   let sd = 21; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-  g.fillStyle = '#15172a'; g.fillRect(0, 0, S, S);   // the indigo field
-  for (let i = 0; i < 26000; i++) { g.fillStyle = `rgba(${R() < .5 ? '120,130,190' : '0,0,10'},${.03 + R() * .05})`; g.fillRect(R() * S, R() * S, 2 + R() * 3, 1 + R() * 2); }   // the wool
-  const gold = 'rgba(196,152,84,.85)', rust = '#4a1a1c', dark = '#0d0e1a';
-  // scattered roundels and cloud scrolls on the field (only the part outside the table shows)
-  const roundel = (x, y, r) => { g.save(); g.translate(x, y); g.strokeStyle = gold; g.lineWidth = 5; g.beginPath(); g.arc(0, 0, r, 0, 7); g.stroke();
-    g.fillStyle = 'rgba(140,46,44,.75)'; g.beginPath(); g.arc(0, 0, r * .78, 0, 7); g.fill();
-    for (let k = 0; k < 8; k++) { g.rotate(PI / 4); g.fillStyle = gold; g.beginPath(); g.ellipse(0, -r * .45, r * .13, r * .26, 0, 0, 7); g.fill(); }
-    g.fillStyle = gold; g.beginPath(); g.arc(0, 0, r * .16, 0, 7); g.fill(); g.restore(); };
-  const cloud = (x, y, k, rot) => { g.save(); g.translate(x, y); g.rotate(rot); g.scale(k, k); g.strokeStyle = 'rgba(130,140,200,.6)'; g.lineWidth = 6; g.lineCap = 'round';
-    for (const sx of [-1, 1]) { g.beginPath(); for (let a = 0; a < 5.4; a += .2) { const rr = 5 + a * 4; g.lineTo(sx * (26 + Math.cos(a) * rr), Math.sin(a) * rr); } g.stroke(); }
-    g.beginPath(); g.moveTo(-52, 16); g.quadraticCurveTo(0, 36, 52, 16); g.stroke(); g.restore(); };
-  const B0 = 170, B1 = 300;   // the border: from the edge to B0 a dark band, B0..B1 the rust band with the fret
-  for (let y = 380; y < S - 300; y += 250) for (let x = 380; x < S - 300; x += 250) { const odd = ((x + y) / 250) % 2; if (odd) roundel(x + (R() - .5) * 30, y + (R() - .5) * 30, 52); else cloud(x, y, 1.1, R() * PI); }
-  g.fillStyle = dark; g.fillRect(0, 0, S, B0); g.fillRect(0, S - B0, S, B0); g.fillRect(0, 0, B0, S); g.fillRect(S - B0, 0, B0, S);
-  g.fillStyle = rust; g.fillRect(B0, B0, S - 2 * B0, B1 - B0); g.fillRect(B0, S - B1, S - 2 * B0, B1 - B0); g.fillRect(B0, B0, B1 - B0, S - 2 * B0); g.fillRect(S - B1, B0, B1 - B0, S - 2 * B0);
-  // the key fret along the rust band (each side, turned)
-  const fret = (len) => { const u = 26, h = (B1 - B0); g.strokeStyle = gold; g.lineWidth = 7; g.lineJoin = 'miter';
-    for (let x = 0; x < len - 4 * u; x += 4 * u) { const y0 = h * .5 + 1.5 * u; g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y0 - 3 * u); g.lineTo(x + 3 * u, y0 - 3 * u); g.lineTo(x + 3 * u, y0 - u); g.lineTo(x + u, y0 - u); g.lineTo(x + u, y0 - 2 * u); g.lineTo(x + 2 * u, y0 - 2 * u); g.stroke();
-      g.beginPath(); g.moveTo(x + 3 * u, y0); g.lineTo(x + 4 * u, y0); g.stroke(); } };
-  for (let k = 0; k < 4; k++) { g.save(); g.translate(S / 2, S / 2); g.rotate(k * PI / 2); g.translate(-S / 2 + B1, -S / 2 + B0); fret(S - 2 * B1); g.restore(); }
-  // (ユーザー 2026-11-14: the pattern should read right round the table) — a second rust band with the fret just outside the table's
-  // edge (the table covers 25 of the 60 units), so the part of the carpet in view is the patterned one
-  const I0 = 470, I1 = I0 + (B1 - B0);
-  g.fillStyle = rust; g.fillRect(I0, I0, S - 2 * I0, I1 - I0); g.fillRect(I0, S - I1, S - 2 * I0, I1 - I0); g.fillRect(I0, I0, I1 - I0, S - 2 * I0); g.fillRect(S - I1, I0, I1 - I0, S - 2 * I0);
-  for (let k = 0; k < 4; k++) { g.save(); g.translate(S / 2, S / 2); g.rotate(k * PI / 2); g.translate(-S / 2 + I1, -S / 2 + I0); fret(S - 2 * I1); g.restore(); }
-  g.strokeStyle = gold; g.lineWidth = 4; for (const d of [I0 - 14, I0 + 8, I1 - 8, I1 + 14]) g.strokeRect(d, d, S - 2 * d, S - 2 * d);
-  g.strokeStyle = gold; g.lineWidth = 4; for (const d of [B0 + 8, B1 - 8, B1 + 22]) g.strokeRect(d, d, S - 2 * d, S - 2 * d);   // fine lines between the bands
+  const red = '#5c171b', red2 = '#4a1215', dark = 'rgba(28,6,8,.92)', dark2 = 'rgba(28,6,8,.6)';
+  g.fillStyle = red; g.fillRect(0, 0, S, S);
+  for (let i = 0; i < 40000; i++) { g.fillStyle = `rgba(${R() < .5 ? '255,120,110' : '20,0,0'},${.025 + R() * .05})`; g.fillRect(R() * S, R() * S, 2 + R() * 3, 1 + R() * 2); }   // the wool
+  const B = 230;   // the border's width
+  // the field: rows of guls (an octagon, quartered, with small hooks) and little branch motifs between them
+  const gul = (x, y, w, h) => { g.save(); g.translate(x, y);
+    const oct = (a, b) => { const k = .3; g.beginPath(); g.moveTo(-a * (1 - k), -b); g.lineTo(a * (1 - k), -b); g.lineTo(a, -b * (1 - k)); g.lineTo(a, b * (1 - k)); g.lineTo(a * (1 - k), b); g.lineTo(-a * (1 - k), b); g.lineTo(-a, b * (1 - k)); g.lineTo(-a, -b * (1 - k)); g.closePath(); };
+    oct(w, h); g.fillStyle = dark; g.fill();
+    oct(w * .86, h * .8); g.fillStyle = red2; g.fill();
+    g.fillStyle = dark2; g.fillRect(-w * .86, -2, w * 1.72, 4); g.fillRect(-2, -h * .8, 4, h * 1.6);   // quartered
+    for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.fillStyle = dark; g.fillRect(sx * w * .45 - 9, sy * h * .42 - 9, 18, 18); g.fillStyle = red; g.fillRect(sx * w * .45 - 4, sy * h * .42 - 4, 8, 8); }
+    for (const sx of [-1, 1]) { g.fillStyle = dark; g.beginPath(); g.moveTo(sx * w, 0); g.lineTo(sx * (w + 18), -14); g.lineTo(sx * (w + 18), 14); g.closePath(); g.fill(); }
+    g.restore(); };
+  const branch = (x, y) => { g.save(); g.translate(x, y); g.strokeStyle = dark; g.lineWidth = 6; g.lineCap = 'square';
+    g.beginPath(); g.moveTo(0, -34); g.lineTo(0, 34); for (const yy of [-22, -6, 10, 26]) { g.moveTo(0, yy); g.lineTo(-16, yy - 10); g.moveTo(0, yy); g.lineTo(16, yy - 10); } g.stroke(); g.restore(); };
+  const GX = 230, GY = 150;
+  for (let row = 0, y = B + 90; y < S - B - 40; y += GY, row++) for (let x = B + 100 + (row % 2) * GX / 2; x < S - B - 60; x += GX) gul(x, y, 72, 46);
+  for (let row = 0, y = B + 90 + GY / 2; y < S - B - 40; y += GY, row++) for (let x = B + 100 + ((row + 1) % 2) * GX / 2; x < S - B - 60; x += GX) branch(x, y);
+  // the border: a dark outer band with a chain of small diamonds, a red band of stepped (elem) motifs, a dark inner line
+  g.fillStyle = dark; g.fillRect(0, 0, S, 60); g.fillRect(0, S - 60, S, 60); g.fillRect(0, 0, 60, S); g.fillRect(S - 60, 0, 60, S);
+  g.fillStyle = red2; g.fillRect(60, 60, S - 120, B - 80); g.fillRect(60, S - B + 20, S - 120, B - 80); g.fillRect(60, 60, B - 80, S - 120); g.fillRect(S - B + 20, 60, B - 80, S - 120);
+  g.fillStyle = red; g.fillRect(B - 20, B - 20, S - 2 * B + 40, S - 2 * B + 40);
+  g.fillStyle = red; for (let k = 30; k < S; k += 46) for (const [x, y] of [[k, 30], [k, S - 30], [30, k], [S - 30, k]]) { g.save(); g.translate(x, y); g.rotate(PI / 4); g.fillRect(-9, -9, 18, 18); g.restore(); }
+  const step = (x, y) => { g.save(); g.translate(x, y); g.fillStyle = dark; for (const [w, h, yy] of [[64, 14, -28], [44, 14, -14], [24, 14, 0], [44, 14, 14], [64, 14, 28]]) g.fillRect(-w / 2, yy - h / 2, w, h); g.fillStyle = red; g.fillRect(-6, -6, 12, 12); g.restore(); };
+  const mid = (60 + B - 20) / 2;
+  for (let k = mid + 40; k < S - mid - 20; k += 110) { step(k, mid); step(k, S - mid); g.save(); g.translate(mid, k); g.rotate(PI / 2); step(0, 0); g.restore(); g.save(); g.translate(S - mid, k); g.rotate(PI / 2); step(0, 0); g.restore(); }
+  g.strokeStyle = dark; g.lineWidth = 10; g.strokeRect(B - 20, B - 20, S - 2 * B + 40, S - 2 * B + 40); g.lineWidth = 6; g.strokeRect(66, 66, S - 132, S - 132);
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; return t;
 }
 function buildHand(env) {
@@ -342,7 +344,7 @@ class Table3D {
     // ---- the floor under the table: a dark Chinese carpet (ユーザー 2026-11-14) — an indigo field with scattered roundels and
     // cloud scrolls, a rust border with the key fret (回紋) in old gold between dark bands. Under the table, so only its outer
     // part shows round the table (lying on the floor the table stands on).
-    { const rug = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), (() => { const t = rugTex(); return new THREE.MeshStandardMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .42, roughness: 1, metalness: 0 }); })());   // (a little of its own light, so the pattern reads in the dim room)
+    { const rug = new THREE.Mesh(new THREE.PlaneGeometry(38, 30), (() => { const t = rugTex(); return new THREE.MeshStandardMaterial({ map: t, color: 0x5e5e5e, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .05, roughness: 1, metalness: 0 }); })());   // (a rug a little larger than the table, its border in view; dim — barely there, just readable)
       rug.rotation.x = -PI / 2; rug.position.y = -0.38; rug.receiveShadow = true; s.add(rug); }   // (just above the dark floor plane below)
 
     // ---- the frame: four walnut rails with rounded edges and four rounded corner blocks, lacquered; a black lip round the cloth
