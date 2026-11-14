@@ -660,6 +660,91 @@ static inline int timeUp(void) {
   return stopFlag;
 }
 #endif
+// (2026-11-14) search v2 (MODEL_CARD.md「探索 v2」): stronger pruning, no training. Only where v2on (best_n without a node
+// limit — 四段・五段 and PRO by time — and analyze()); the node levels (4級〜三段) and values() search as before. -DSV_x=0 drops one.
+#ifndef SV_NULL
+#define SV_NULL 1
+#endif
+#ifndef NULL_MIN
+#define NULL_MIN 6         // null move only while the side to move has at least this many pieces (zugzwang in the endgame)
+#endif
+#ifndef SV_RFP
+#define SV_RFP 1
+#endif
+#ifndef RFP_D
+#define RFP_D 4
+#endif
+#ifndef RFP_M
+#define RFP_M 80
+#endif
+#ifndef SV_LMP
+#define SV_LMP 1
+#endif
+#ifndef LMP_D
+#define LMP_D 3
+#endif
+#ifndef LMP_A
+#define LMP_A 4
+#endif
+#ifndef LMP_B
+#define LMP_B 2
+#endif
+#ifndef SV_FUT
+#define SV_FUT 1
+#endif
+#ifndef FUT_D
+#define FUT_D 2
+#endif
+#ifndef FUT_M
+#define FUT_M 120
+#endif
+#ifndef SV_LMRT
+#define SV_LMRT 1
+#endif
+#ifndef LMR_C
+#define LMR_C 60
+#endif
+#ifndef LMR_K
+#define LMR_K 180
+#endif
+#ifndef SV_IIR
+#define SV_IIR 1
+#endif
+static int V2_FORCE;   // (tools/native.c: 1 = v2 also with a node limit, −1 = the search before v2 also by time; matches)
+static volatile int v2on;   // (shared: the helper threads search the split points as the main thread)
+static TLS u8 noNull[MAXPLY + 8];
+static u8 LT[64][64];
+static float lnf(float x) {   // (no libm in the wasm build) ln x for x >= 1
+  int k = 0; while (x >= 2) { x *= 0.5f; k++; }
+  float z = (x - 1) / (x + 1), z2 = z * z, t = z, r = 0; for (int j = 1; j < 30; j += 2) { r += t / j; t *= z2; }
+  return 2 * r + k * 0.69314718f;
+}
+static void setV2(int on) {
+  if (!LT[63][63]) for (int d = 1; d < 64; d++) for (int i = 1; i < 64; i++) { float r = LMR_C / 100.0f + lnf((float)d) * lnf((float)i) * 100.0f / LMR_K; LT[d][i] = (u8)(r < 0 ? 0 : (int)r); }
+  if (on != v2on) { new_game(); v2on = on; }
+}
+// the reduction of the quiet move i (before v2 / v2 off: as before)
+static inline int lmrR(int depth, int i, const Move *m, int caps, int pv, int v2) {
+  if (!v2 || !SV_LMRT) {
+    if (depth >= 3 && i >= 3 && !caps && !m->promo && !pv) return 1 + (i >= 8 && depth >= 6);
+    if (depth >= 3 && i >= 4 && !caps && !m->promo) return 1;
+    return 0;
+  }
+  if (depth < 3 || i < 2 || caps || m->promo) return 0;
+  int r = LT[depth < 63 ? depth : 63][i < 63 ? i : 63] - pv;
+  if (r > depth - 2) r = depth - 2;
+  return r < 0 ? 0 : r;
+}
+static inline int svPrune(int depth, int i, const Move *m, int caps, int pv, int se, int alpha) {
+  if (pv || i == 0 || caps || m->promo || se == -INF) return 0;
+#if SV_LMP
+  if (depth <= LMP_D && i >= LMP_A + LMP_B * depth * depth) return 1;
+#endif
+#if SV_FUT
+  if (depth <= FUT_D && i >= 2 && se + FUT_M * depth <= alpha && alpha < WINT) return 1;
+#endif
+  (void)depth; (void)alpha; return 0;
+}
 static int isRep(u64 key, int from) {   // the position occurred before since the last irreversible move
   for (int i = hn - 2; i >= from; i -= 2) if (hkeys[i] == key) return 1;
   return 0;
@@ -708,6 +793,28 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
       if (e->flag == TT_EXACT || (e->flag == TT_LOWER && v >= beta) || (e->flag == TT_UPPER && v <= alpha)) return v;
     }
   }
+  const int v2 = v2on; int se = -INF;
+  if (v2 && !pv && ply > 0 && !caps && beta < WINT && beta > -WINT) {
+    se = evalAt(p, ply);
+#if SV_RFP
+    if (depth <= RFP_D && se - RFP_M * depth >= beta) return se;
+#endif
+#if SV_NULL
+    if (depth >= 3 && se >= beta && !noNull[ply] && pc(p->p[p->side]) >= NULL_MIN && pc(p->p[p->side ^ 1]) >= 2 && ply < MAXPLY - 8) {
+      Pos q = *p; q.side ^= 1;
+      if (netOn()) { if (N2) for (int c = 0; c < 2; c++) for (int k = 0; k < N2_HMAX; k++) ACC2[ply + 1][c][k] = ACC2[ply][c][k];
+                     else for (int c = 0; c < 2; c++) for (int k = 0; k < NH_MAX; k++) ACC[ply + 1][c][k] = ACC[ply][c][k]; }
+      int saveIrr = hirr; hkeys[hn++] = key; hirr = hn; noNull[ply + 1] = 1;
+      int v = -search(&q, depth - 1 - (2 + depth / 4), -beta, -beta + 1, ply + 1, key ^ ZSIDE, 0, quietPlies);
+      noNull[ply + 1] = 0; hn--; hirr = saveIrr;
+      if (stopFlag) return 0;
+      if (v >= beta) return v > WINT ? beta : v;
+    }
+#endif
+  }
+#if SV_IIR
+  if (v2 && ttm.f == 255 && depth >= 4) depth--;
+#endif
   // move ordering scores
   int sc[MAXMV];
   for (int i = 0; i < n; i++) {
@@ -739,9 +846,8 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
             ii = j; int bi = j; for (int x = j + 1; x < n; x++) if (sc[x] > sc[bi]) bi = x;
             if (bi != j) { Move tm = L[bi]; L[bi] = L[j]; L[j] = tm; int ts = sc[bi]; sc[bi] = sc[j]; sc[j] = ts; }
           } else ii = defI[j - n];
-          int red = 0;
-          if (depth >= 3 && ii >= 3 && !caps && !L[ii].promo && !pv) red = 1 + (ii >= 8 && depth >= 6);
-          else if (depth >= 3 && ii >= 4 && !caps && !L[ii].promo) red = 1;
+          if (v2 && svPrune(depth, ii, &L[ii], caps, pv, se, alpha)) continue;
+          int red = lmrR(depth, ii, &L[ii], caps, pv, v2);
           sp->mv[ns] = L[ii]; sp->red[ns] = (u8)red; ns++;
         }
       }
@@ -764,6 +870,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
       { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
     } else i = defI[k - n];
     Move *m = &L[i];
+    if (v2 && best > -WINT && svPrune(depth, i, m, caps, pv, se, alpha)) continue;
     u64 k2 = hashMove(key, p, m);
     if (k < n && i > 0 && depth >= BUSY_D && nDef < BUSY_DEF && busyOther(k2)) { defI[nDef++] = i; continue; }
     const int mk = depth >= BUSY_D ? busySet(k2) : -1;
@@ -774,6 +881,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
     int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
     { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
     Move *m = &L[i];
+    if (v2 && best > -WINT && svPrune(depth, i, m, caps, pv, se, alpha)) break;   // (the moves after a pruned quiet one are quiet)
     Pos q = *p; doMove(&q, m);
     if (netOn()) accStep(p, m, ply);
     u64 k2 = hashMove(key, p, m);
@@ -784,9 +892,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
     int v, d1 = depth - 1;
     if (i == 0) v = -search(&q, d1, -beta, -alpha, ply + 1, k2, pv, qp);
     else {
-      int red = 0;
-      if (depth >= 3 && i >= 3 && !caps && !m->promo && !pv) red = 1 + (i >= 8 && depth >= 6);
-      else if (depth >= 3 && i >= 4 && !caps && !m->promo) red = 1;
+      const int red = lmrR(depth, i, m, caps, pv, v2);
       v = -search(&q, d1 - red, -alpha - 1, -alpha, ply + 1, k2, 0, qp);
       if (v > alpha && red) v = -search(&q, d1, -alpha - 1, -alpha, ply + 1, k2, 0, qp);
       if (v > alpha && v < beta) v = -search(&q, d1, -beta, -alpha, ply + 1, k2, pv, qp);
@@ -978,6 +1084,10 @@ static void mtPublish(int d, int v, const Move *m) {   // a finished iteration o
 }
 #endif
 static void bestN(int maxDepth, int ms, u64 nodeLim) {
+#ifdef MT
+  if (threadId == 0)
+#endif
+  setV2(V2_FORCE ? V2_FORCE > 0 : nodeLim == 0);
   beginSearch(ms); nodeLimit_on = nodeLim > 0; nodeLimit = nodeLim; nodeMask = nodeLimit_on && nodeLim < 100000 ? 127 : 2047;
   if (rootN == 0) { IO[0] = -1; IO[1] = 0; IO[2] = -WIN; IO[3] = 0; return; }
   Move bm = rootL[0]; int bv = 0, bd = 0;
@@ -1040,7 +1150,7 @@ static void bestN(int maxDepth, int ms, u64 nodeLim) {
 }
 // analysis: exact values of all root moves. IO[0] = n, IO[1] = depth, then (ft, cap, v) * n, best first
 EXPORT(analyze) void analyze(int ms, int maxDepth) {
-  beginSearch(ms); nodeLimit_on = 0; nodeMask = 2047;
+  setV2(1); beginSearch(ms); nodeLimit_on = 0; nodeMask = 2047;
   int depthDone = 0; int vals[MAXMV]; Move ord[MAXMV];
   for (int i = 0; i < rootN; i++) { ord[i] = rootL[i]; vals[i] = 0; }
   if (rootN) {
@@ -1064,7 +1174,7 @@ EXPORT(analyze) void analyze(int ms, int maxDepth) {
 }
 // fixed-depth values of all root moves (weak levels): IO like analyze
 EXPORT(values) void values(int depth, int noEval) {
-  beginSearch(0); nodeLimit_on = 0; nodeMask = 2047;
+  setV2(0); beginSearch(0); nodeLimit_on = 0; nodeMask = 2047;
   int saved = useNet; if (noEval) useNet = 0;
   for (int d = 1; d <= depth; d++) rootSearch(d, 1, -INF, INF);
   useNet = saved;

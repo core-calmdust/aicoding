@@ -14,7 +14,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/g-crab.webp', ENG = '../checkers/engine.js?v=rb4-pro1-n43-mt1';
+  const GUIDE = '../images/atlas/g-crab.webp', ENG = '../checkers/engine.js?v=rb4-pro1-n43-mt1-sv2';
   const loadEngine = () => window.CheckersEngine ? Promise.resolve(window.CheckersEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.CheckersEngine ? res(window.CheckersEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
   // me / meK: the player's men / kings, op / opK: the opponent's (square numbers of the full game's tour) → an engine spec, gold (Black) to move
   const SP = o => { const a = Array(32).fill('.'); (o.me || []).forEach(x => { a[32 - x] = 'b'; }); (o.meK || []).forEach(x => { a[32 - x] = 'B'; }); (o.op || []).forEach(x => { a[32 - x] = 'w'; }); (o.opK || []).forEach(x => { a[32 - x] = 'W'; }); return { b: a.join(''), side: 1 }; };
