@@ -588,6 +588,7 @@ body.hb-on .controls.hb-menu{display:flex!important}   /* PC: the header menu st
 .dots i.ok{background:#6fd3a0}.dots i.mid{background:#f2c060}.dots i.ng{background:#ff6b5b}.dots i.cur{box-shadow:0 0 0 2px var(--accent)}
 .lesson-prompt{font-size:14px;line-height:1.7}
 .ls-goal,.pz-goal{margin-bottom:8px;padding:8px 10px;border-radius:9px;background:rgba(226,194,117,.08);border:1px solid rgba(226,194,117,.28);color:var(--text);display:flex;align-items:center;gap:8px}
+.ls-explain{margin-top:6px;line-height:1.6}.ls-explain p{margin:0 0 8px}
 .pz-goal{font-size:15px;font-weight:700}
 .lesson-fb,.pz-status{margin-top:10px;font-size:13px;line-height:1.75;color:var(--muted);min-height:44px}
 .lesson-fb b.ok,.pz-status b.ok{color:#8fe3b8}.lesson-fb b.ng,.pz-status b.ng{color:#ff9b90}
@@ -2722,7 +2723,7 @@ function rtConfirm(after) {
 let LESSONS = null, lsVar = 'nine', pzVar = 'nine';
 const VSUF = v => v === 'nine' ? '' : '-' + v, VPRE = v => v === 'nine' ? '' : v + ':';
 const LSDATA = {}, PZDATA = {};
-function loadLs(v) { return LSDATA[v] || (LSDATA[v] = fetch(`lessons${VSUF(v)}.json?v=20261019c`).then(r => r.json()).catch(() => null)); }
+function loadLs(v) { return LSDATA[v] || (LSDATA[v] = fetch(`lessons${VSUF(v)}.json?v=20261115rp`).then(r => r.json()).catch(() => null)); }
 function loadPz(v) { return PZDATA[v] || (PZDATA[v] = fetch(`puzzles${VSUF(v)}.json?v=20261104pzd`).then(r => r.json()).catch(() => null)); }
 const lessonsReady = loadLs('nine').then(d => (LESSONS = d));
 const lsKey = id => VPRE(lsVar) + id;
@@ -2839,7 +2840,67 @@ function startLesson(step) {
   stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
   lesson = { step, i: 0, results: [], answered: false, hinted: false, v: lsVar };
   document.body.classList.add('in-lesson');
+  const R = LESSONS.steps[step].ramp;
+  if (R && R.length) { lesson.ramp = R; lesson.ri = 0; loadRamp(); return; }
   loadLessonProblem();
+}
+// ---- warm-up ramp before a lesson's scored problems (lessons.json step.ramp, built by tools/gen_ramps.js; not scored; 2026-11-15,
+// addendum「レッスンの段階化」, as fanorona / alquerque)
+//   explain: read-only position + the idea as marks (seq: [[move name, 'ok' | 'ng'], …] played in turn) + marks + a short text (次へ)
+//   try: a guided position, any move in ok (move codes) is right; hints go concept → where to look (look: points) → the answer
+const RU = (k, v) => { let x = LL(LESSONS.rampUi && LESSONS.rampUi[k]) || ''; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; };
+const rampItem = () => lesson.ramp[lesson.ri];
+const rampMark = (out, mm, cls) => { if (mFrom(mm) !== NONE) out.push({ arrow: [mFrom(mm), mTo(mm)], cls }); out.push({ at: mTo(mm), cls }); if (mRm(mm) !== NONE) out.push({ at: mRm(mm), cls: 'ng' }); };
+function rampMarks(it) {
+  const out = []; let p = E.Pos.from(G, it.s);
+  for (const [nm, cls] of it.seq || []) { const m = p.moves().find(x => mvName(x) === nm); if (m === undefined) break; rampMark(out, m, cls); p = p.clone(); p.play(m); }
+  for (const [q, c] of it.marks || []) out.push({ at: q, cls: c });
+  return out;
+}
+function loadRamp() {
+  const it = rampItem();
+  enterSpecial(it.s, lesson.v);
+  lesson.rh = 0; lesson.rok = false; lesson.answered = it.k === 'explain';
+  lessonMarks = it.k === 'explain' ? rampMarks(it) : [];
+  update(false); renderLessonCard();
+  $('#lsFb').innerHTML = it.k === 'explain' ? '' : `<small style="color:var(--dim)">${RU('note')}</small>`;
+}
+function renderRampCard() {
+  const it = rampItem(), n = lesson.ramp.length, last = lesson.ri + 1 >= n, me = it.s.side;
+  $('#lsStep').textContent = RU('step', { i: lesson.ri + 1, n });
+  $('#lsTitle').textContent = t('ls.' + curStep().id + '.title');
+  const skip = `<button type="button" class="ls-skip" style="margin-top:6px;font-size:12px;background:none;border:0;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0">${RU('skip')} »</button>`;
+  $('#lsPrompt').innerHTML = it.k === 'explain'
+    ? `<div class="ls-goal"><span>💡</span><span><b>${LL(it.t)}</b></span></div><div class="ls-explain">${LL(it.body)}</div>${skip}`
+    : `<div class="ls-goal"><span class="pdisc p${me}"></span><span>${t('ls.turn', { c: pname(me) })} ${LL(it.g)}</span></div>${skip}`;
+  const sk = $('#lsPrompt').querySelector('.ls-skip'); if (sk) sk.onclick = rampDone;
+  $('#lsDots').innerHTML = lesson.ramp.map((_, i) => `<i class="${i < lesson.ri ? 'ok' : ''} ${i === lesson.ri ? 'cur' : ''}"></i>`).join('');
+  $('#lsHint').textContent = t('ls.hint'); $('#lsHint').disabled = it.k === 'explain' || lesson.answered;
+  $('#lsNext').textContent = last ? RU('main') : RU('next');
+  $('#lsNext').disabled = !(it.k === 'explain' || lesson.rok);
+}
+function rampDone() { if (!lesson || !lesson.ramp) return; lesson.ramp = null; lesson.i = 0; lesson.results = []; loadLessonProblem(); }
+function rampHint() {
+  const it = rampItem(); if (it.k !== 'try' || lesson.answered) return;
+  lesson.rh = Math.min(3, lesson.rh + 1);
+  if (lesson.rh === 1) { $('#lsFb').innerHTML = LL(it.h); lessonMarks = []; }
+  else if (lesson.rh === 2) { $('#lsFb').innerHTML = LL(it.h) + '<br>' + RU('look'); lessonMarks = (it.look || []).map(q => ({ at: q, cls: 'ok' })); }
+  else { $('#lsFb').innerHTML = RU('ans', { m: mvName(it.ok[0]) }); lessonMarks = []; rampMark(lessonMarks, it.ok[0], 'ok'); }
+  renderFx();
+}
+function rampMove(m) {
+  const L = lesson, it = rampItem(), ri = L.ri;
+  if (L.answered) return;
+  L.answered = true;
+  const good = it.ok.includes(m);
+  $('#lsFb').innerHTML = good ? `<b class="ok">✓</b> ${LL(it.y)}` : `<b class="ng">✗</b> ${RU('ng')}`;
+  L.rok = good; playChime(good); lessonMarks = []; playMove2(m); renderLessonCard();
+  if (good) return;
+  const tok = busyToken;
+  setTimeout(() => {
+    if (lesson !== L || !L.ramp || L.ri !== ri || tok !== busyToken) return;
+    moves = []; cur = 0; sel = null; L.answered = false; update(false); renderLessonCard();
+  }, moveDur(m) + 1100);
 }
 const curStep = () => lesson.virt || LESSONS.steps[lesson.step];
 function lessonProblem() { return curStep().problems[lesson.i]; }
@@ -2853,6 +2914,7 @@ function loadLessonProblem() {
   if (lesson.virt && lesson.virt.id !== 'mk' && window.seqGameStart && !lesson.ramp) seqGameStart(lessonProblem(), window.SEQ_CFG);   // opening practice: 3 moves in a row (shared/seqgame.js)
 }
 function renderLessonCard() {
+  if (lesson && lesson.ramp) return renderRampCard();
   const s = curStep(), n = s.problems.length, P = lessonProblem();
   $('#lsStep').textContent = lesson.virt ? t('op.practiceStep', { i: lesson.i + 1, n }) : t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
   $('#lsTitle').textContent = lesson.virt ? LL(s.title) : t('ls.' + s.id + '.title');
@@ -2883,6 +2945,7 @@ function lsAuto(good, ms) {
 }
 function lessonAnswer(m) {
   if (window.SeqPrac && SeqPrac.active()) { SeqPrac.move(String(m)); return; }
+  if (lesson.ramp) return rampMove(m);
   const P = lessonProblem(), s = curStep();
   lesson.answered = true;
   const pts = problemPoints(P, m);
@@ -2929,6 +2992,7 @@ function okAnswer(P, s, m, pts) {
 }
 $('#lsHint').onclick = () => {
   if (lesson && lesson.study) { if (lesson.i > 0) { lesson.i--; showStudy(false); } return; }
+  if (lesson && lesson.ramp) { rampHint(); return; }
   if (!lesson || lesson.answered) return;
   lesson.hinted = true;
   const s = curStep(), { pos } = posAt(cur), me = pos.side, op = 3 - me, P = lessonProblem();
@@ -2952,6 +3016,7 @@ $('#lsHint').onclick = () => {
 };
 $('#lsNext').onclick = () => {
   if (lesson && lesson.study) { if (lesson.i < lesson.g.study.line.length) { lesson.i++; showStudy(true); } else startPractice(lesson.gi); return; }
+  if (lesson && lesson.ramp) { if (!(rampItem().k === 'explain' || lesson.rok)) return; if (lesson.ri + 1 < lesson.ramp.length) { lesson.ri++; loadRamp(); } else rampDone(); return; }
   if (!lesson || !lesson.answered) return;
   const s = curStep();
   if (lesson.i + 1 < s.problems.length) { lesson.i++; loadLessonProblem(); return; }
