@@ -148,3 +148,4 @@
   - toys: burikiSSR、kinokoSSR、macaronSSR、takoSSR
   - space: hoshippiSSR、uniponySSR、kingyoSSR、momijiSSR
 - ステージでもらえるものはマップのそのステージにアイコン（星座と同じ）。マップ下の行に次の報酬（あと何ステージ）。コース一覧の各カードに報酬アイコン（未入手は薄く）。ステージタブの「マップで待ってるアトラモ」は全コースの合計。
+- 本日の上海は「本日の上海 EASY」（緑のEASYバッジ）と「本日の上海 HARD」の2つ（2026-11-14）。
