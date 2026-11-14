@@ -1120,75 +1120,6 @@ html.ds #gKeys{display:grid}
 html.ds #game .khelp{display:none;left:auto;right:var(--gi);top:calc(var(--gi) + 52px * var(--hz, 1));transform-origin:top right;z-index:3;font-size:12px;background:rgba(10,14,30,.9)}
 html.ds #game .khelp.open{display:block}
 
-/* ================= HOME as a title screen (ユーザー 2026-11-14: a luxury layout) =================
-   A night palace hall: deep violet-black, a fine gold lattice, a warm glow. Left: the partner, tall, in her frame. Middle: her
-   name plate. Right: the title in gold leaf between ornaments, the play panel (BOT戦) and a menu of the rest. Only the system's
-   buttons (coins, settings, home) stay at the top right. */
-#home.lux{background:none}
-#home.lux .lux-bg{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
-  background:
-    radial-gradient(60% 55% at 74% 34%,rgba(232,190,110,.16),transparent 70%),
-    radial-gradient(55% 70% at 20% 60%,rgba(138,92,255,.22),transparent 70%),
-    radial-gradient(120% 90% at 50% 50%,transparent 55%,rgba(0,0,0,.55) 100%),
-    linear-gradient(180deg,#140c26,#0a0614)}
-#home.lux .lux-bg::before{content:"";position:absolute;inset:0;opacity:.11;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23e8ce8c' stroke-width='1'%3E%3Cpath d='M28 4 52 28 28 52 4 28z'/%3E%3Cpath d='M28 14 42 28 28 42 14 28z'/%3E%3Ccircle cx='28' cy='28' r='3'/%3E%3Cpath d='M0 0h6M50 0h6M0 56h6M50 56h6'/%3E%3C/g%3E%3C/svg%3E");
-  -webkit-mask-image:radial-gradient(80% 80% at 60% 45%,#000 20%,transparent 85%);mask-image:radial-gradient(80% 80% at 60% 45%,#000 20%,transparent 85%)}
-#home.lux .lux-bg::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(232,206,140,.55),transparent)}
-#home.lux .lux-top{position:relative;z-index:3;padding-top:14px}
-#home.lux .lux-stage{position:relative;z-index:2;flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,34fr) minmax(0,30fr) minmax(0,36fr);gap:28px;
-  padding:0 max(34px,var(--sr)) 30px max(34px,var(--sl));align-items:stretch}
-/* the partner */
-#home.lux .lux-art{position:relative;min-height:0;display:flex;align-items:stretch;justify-content:center}
-#home.lux .lux-art .pimg{width:100%;height:100%;max-height:100%;aspect-ratio:9/16;max-width:100%;margin:0 auto;border-radius:20px}
-#home.lux .lux-art .pimg::after{border-radius:20px}
-#home.lux .lux-art::before,#home.lux .lux-art::after{content:"";position:absolute;width:46px;height:46px;z-index:5;pointer-events:none;border:2px solid rgba(232,206,140,.75)}
-#home.lux .lux-art::before{left:-10px;top:-10px;border-right:0;border-bottom:0;border-radius:6px 0 0 0}
-#home.lux .lux-art::after{right:-10px;bottom:-10px;border-left:0;border-top:0;border-radius:0 0 6px 0}
-/* her name plate */
-#home.lux .lux-info{display:flex;align-items:center;min-width:0}
-#home.lux .pinfo{gap:14px;width:100%}
-#home.lux .pname{font-size:58px;letter-spacing:.08em;background:linear-gradient(180deg,#fff8e8,#e8ce8c 70%,#b8954a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 12px rgba(0,0,0,.6))}
-#home.lux .pname small{-webkit-text-fill-color:var(--gold);color:var(--gold);font-size:17px;letter-spacing:.22em;margin-top:10px}
-#home.lux .lx-rule{display:block;height:1px;background:linear-gradient(90deg,rgba(232,206,140,.8),rgba(232,206,140,0));position:relative}
-#home.lux .lx-rule::before{content:"";position:absolute;left:0;top:-4px;width:9px;height:9px;transform:rotate(45deg);background:#e8ce8c}
-#home.lux .pskill{background:linear-gradient(180deg,rgba(40,28,74,.75),rgba(20,13,38,.85));border-color:rgba(232,206,140,.35)}
-#home.lux .pprof{font-size:15px;color:#d8cdf0}
-/* the title */
-#home.lux .lux-side{display:flex;flex-direction:column;justify-content:center;gap:18px;min-width:0}
-#home.lux .lux-logo{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:6px 0 2px}
-#home.lux .lux-logo .lg-k{font-size:92px;line-height:1;letter-spacing:.14em;margin-right:-.14em;
-  background:linear-gradient(180deg,#fffaf0 0%,#f2dca4 38%,#c9a050 62%,#f6e2ae 80%,#9c7632 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 2px 0 rgba(60,36,6,.6)) drop-shadow(0 8px 26px rgba(232,190,110,.35))}
-#home.lux .lux-logo .lg-sub{font-family:var(--serif);font-weight:600;font-size:21px;letter-spacing:.32em;color:#f0dcae}
-#home.lux .lux-logo .lg-ser{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.5em;color:rgba(232,206,140,.6)}
-#home.lux .lx-orn{display:block;width:78%;height:12px;position:relative;
-  background:linear-gradient(90deg,transparent,rgba(232,206,140,.85) 30%,rgba(232,206,140,.85) 70%,transparent) center/100% 1px no-repeat}
-#home.lux .lx-orn::before{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;transform:translate(-50%,-50%) rotate(45deg);border:1.5px solid #e8ce8c;background:#140c26;box-shadow:0 0 0 4px #140c26}
-#home.lux .lx-orn.b{margin-top:6px}
-/* the play panel */
-#home.lux .lux-play{position:relative;display:flex;flex-direction:column;gap:12px;padding:20px 22px 22px;border-radius:18px;
-  background:linear-gradient(180deg,rgba(46,30,86,.86),rgba(18,12,34,.92));border:1px solid rgba(232,206,140,.45);
-  box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,240,210,.12),inset 0 0 0 4px rgba(10,6,22,.5),inset 0 0 0 5px rgba(232,206,140,.18)}
-#home.lux .lp-h{display:flex;align-items:center;gap:12px}
-#home.lux .lp-h b{font-family:var(--serif);font-weight:800;font-size:24px;color:var(--gold);letter-spacing:.1em}
-#home.lux .lp-h::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(232,206,140,.6),transparent)}
-#home.lux .lp-row{display:flex;flex-direction:column;gap:6px}
-#home.lux .lp-row small{font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:.06em}
-#home.lux .seg{background:rgba(0,0,0,.35);border-color:rgba(232,206,140,.16)}
-#home.lux .seg button{font-size:15px;padding:10px 6px}
-#home.lux .seg button.on{background:linear-gradient(180deg,#f3dfa6,#c9a050);color:#2a1a05;box-shadow:0 4px 14px rgba(201,160,80,.35)}
-#home.lux .seg.lv button{font-size:13.5px}
-#home.lux .go{margin-top:6px;font-size:26px;letter-spacing:.42em;padding:18px 16px 18px calc(16px + .42em)}
-/* the menu */
-#home.lux .lux-menu{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-#home.lux .lm{position:relative;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid rgba(232,206,140,.28);
-  background:linear-gradient(180deg,rgba(40,28,74,.7),rgba(16,10,30,.8));color:#f4eefc;font-weight:800;font-size:15px;text-align:left;white-space:nowrap;min-width:0;transition:border-color .15s,background .15s}
-#home.lux .lm:hover{border-color:rgba(232,206,140,.7);background:linear-gradient(180deg,rgba(60,42,104,.8),rgba(22,14,40,.85))}
-#home.lux .lm svg{width:24px;height:24px;flex:none;color:var(--gold)}
-#home.lux .lm span{overflow:hidden;text-overflow:ellipsis}
-#home.lux .lm.soon{opacity:.6}
-#home.lux .lm em{position:absolute;right:8px;top:-8px;font-style:normal;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:99px;background:#2a2142;border:1px solid rgba(232,206,140,.3);color:var(--muted)}
 /* settings */
 .modal.settings .mbox{width:min(440px,100%)}
 .st-row{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
@@ -1197,35 +1128,145 @@ html.ds #game .khelp.open{display:block}
 .st-row .seg button.on{background:linear-gradient(180deg,#f3dfa6,#c9a050);color:#2a1a05}
 .st-note{margin:-6px 0 14px;font-size:12.5px;color:var(--muted);line-height:1.6}
 .modal.settings .cbtns{display:flex;justify-content:flex-end}
-/* phones (landscape) */
-html.lp #home.lux .lux-top{padding-top:4px;padding-bottom:0}
-html.lp #home.lux .lux-stage{grid-template-columns:minmax(0,25fr) minmax(0,33fr) minmax(0,42fr);gap:12px;padding:0 max(12px,var(--sr)) 8px max(12px,var(--sl))}
-html.lp #home.lux .lux-art::before,html.lp #home.lux .lux-art::after{display:none}
-html.lp #home.lux .pname{font-size:30px}
-html.lp #home.lux .pname small{font-size:11.5px;margin-top:4px}
-html.lp #home.lux .pinfo{gap:7px}
-html.lp #home.lux .pskill{padding:8px;gap:8px}
-html.lp #home.lux .pskill i{width:32px;height:32px;padding:6px}
-html.lp #home.lux .pskill b{font-size:13px}
-html.lp #home.lux .pskill span{font-size:11px;line-height:1.45}
-html.lp #home.lux .lux-side{gap:7px;justify-content:flex-start}
-html.lp #home.lux .lux-logo{gap:0;padding:0}
-html.lp #home.lux .lux-logo .lg-k{font-size:40px}
-html.lp #home.lux .lux-logo .lg-sub{font-size:12px}
-html.lp #home.lux .lux-logo .lg-ser,html.lp #home.lux .lx-orn{display:none}
-html.lp #home.lux .lux-play{padding:9px 11px 11px;gap:6px}
-html.lp #home.lux .lp-h{display:none}
-html.lp #home.lux .seg button{font-size:12px;padding:5px 4px}
-html.lp #home.lux .go{font-size:17px;padding:9px;margin-top:2px}
-html.lp #home.lux .lux-menu{grid-template-columns:repeat(6,1fr);gap:5px}
-html.lp #home.lux .lm{flex-direction:column;gap:2px;padding:5px 2px;font-size:10px;text-align:center;justify-content:center}
-html.lp #home.lux .lm svg{width:17px;height:17px}
-html.lp #home.lux .lm em{display:none}
-/* narrow windows (not phones, not the desktop stage): one column */
-@media (max-width: 760px){
-  html:not(.lp):not(.ds) #home.lux{overflow-y:auto}
-  html:not(.lp):not(.ds) #home.lux .lux-stage{display:flex;flex-direction:column;gap:18px}
-  html:not(.lp):not(.ds) #home.lux .lux-art{height:62vh}
-  html:not(.lp):not(.ds) #home.lux .lux-side{order:-1}
-}
-html:not(.lp):not(.ds) #home.lux .pinfo{margin-top:0;padding:0}
+
+
+/* ================= HOME — an AAA-style title screen (ユーザー 2026-11-14) =================
+   The partner stands large in the middle of the room, free of any box; the room is her own art blurred into colour, a gold lattice,
+   a shaft of light, drifting gold dust and petals (canvas). Round her: the player plate and the system buttons at the top, the title
+   in gold leaf with a light running over it, the menu down the left, her name plate at her feet, a pick-up banner and the big
+   start button on the right. Laid out on a scaled stage (PC: ~1280×760, phones: 1000×560), the pieces slide in when the home opens. */
+#home.aaa{overflow:hidden;background:#07040e;--mx:0;--my:0}
+html.lp #home.aaa{inset:auto;left:0;top:0;width:calc(var(--W) / var(--PZ));height:calc(var(--H) / var(--PZ));transform:scale(var(--PZ));transform-origin:0 0}
+#home.aaa .aa-bg{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#home.aaa .aa-blur{position:absolute;left:-10%;top:-10%;width:120%;height:120%;object-fit:cover;filter:blur(38px) saturate(1.25) brightness(.42);transform:translate(calc(var(--mx) * -14px),calc(var(--my) * -10px)) scale(1.05);transition:transform .6s ease-out}
+#home.aaa .aa-wash{position:absolute;inset:0;background:
+  radial-gradient(48% 70% at 38% 58%,color-mix(in srgb,var(--c,#8a5cff) 34%,transparent),transparent 72%),
+  linear-gradient(90deg,rgba(6,3,14,.86) 0%,rgba(6,3,14,.25) 30%,rgba(6,3,14,.2) 55%,rgba(6,3,14,.82) 100%),
+  linear-gradient(180deg,rgba(6,3,14,.55),transparent 22%,transparent 70%,rgba(6,3,14,.9))}
+#home.aaa .aa-lat{position:absolute;inset:0;opacity:.09;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23e8ce8c' stroke-width='1'%3E%3Cpath d='M32 4 60 32 32 60 4 32z'/%3E%3Cpath d='M32 16 48 32 32 48 16 32z'/%3E%3Cpath d='M28 32h8M32 28v8'/%3E%3C/g%3E%3C/svg%3E");
+  -webkit-mask-image:linear-gradient(90deg,#000,transparent 35%,transparent 65%,#000);mask-image:linear-gradient(90deg,#000,transparent 35%,transparent 65%,#000)}
+#home.aaa .aa-beam{position:absolute;left:-10%;top:-30%;width:70%;height:150%;transform:rotate(-24deg);mix-blend-mode:screen;opacity:.5;
+  background:linear-gradient(90deg,transparent,rgba(255,226,170,.06) 30%,rgba(255,232,190,.12) 46%,rgba(255,226,170,.05) 60%,transparent);animation:aaBeam 8s ease-in-out infinite alternate}
+@keyframes aaBeam{to{opacity:.85;transform:rotate(-21deg) translateX(3%)}}
+#home.aaa .aa-fx{position:absolute;inset:0;width:100%;height:100%}
+#home.aaa .aa-vig{position:absolute;inset:0;background:radial-gradient(120% 95% at 45% 50%,transparent 55%,rgba(0,0,0,.65) 100%)}
+/* the partner */
+#home.aaa .aa-hero{position:absolute;z-index:1;left:17%;bottom:-10%;height:120%;aspect-ratio:9/16;transform:translate(calc(var(--mx) * 12px),calc(var(--my) * 6px));transition:transform .6s ease-out}
+#home.aaa .aa-aura{position:absolute;left:-20%;right:-20%;top:5%;bottom:20%;background:radial-gradient(closest-side,color-mix(in srgb,var(--c,#8a5cff) 55%,transparent),transparent);filter:blur(10px);opacity:.75;animation:aaAura 5s ease-in-out infinite alternate}
+@keyframes aaAura{to{opacity:1;transform:scale(1.05)}}
+#home.aaa .aa-ch{position:absolute;inset:0;padding:0;border:0;background:none;cursor:pointer}
+#home.aaa .aa-ch img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 70%,transparent 96%),linear-gradient(90deg,transparent 0%,#000 24%,#000 76%,transparent 100%);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(180deg,#000 0%,#000 70%,transparent 96%),linear-gradient(90deg,transparent 0%,#000 24%,#000 76%,transparent 100%);mask-composite:intersect;
+  filter:drop-shadow(0 0 30px rgba(0,0,0,.6));animation:aaBreath 6s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes aaBreath{50%{transform:scale(1.012) translateY(-4px)}}
+#home.aaa .aa-ui{position:absolute;inset:0;z-index:2;pointer-events:none}
+#home.aaa .aa-ui > *{pointer-events:auto}
+/* top: player plate · coins · settings · home */
+#home.aaa .aa-top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:20px 34px 0}
+#home.aaa .aa-prof{display:flex;align-items:center;gap:12px;padding:6px 22px 6px 6px;border-radius:99px;border:1px solid rgba(232,206,140,.4);background:linear-gradient(90deg,rgba(14,9,28,.85),rgba(14,9,28,.35));clip-path:polygon(0 0,100% 0,94% 100%,0 100%)}
+#home.aaa .aa-prof img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #e8ce8c;box-shadow:0 0 12px rgba(232,206,140,.4)}
+#home.aaa .aa-prof span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}
+#home.aaa .aa-prof b{font-family:var(--serif);font-size:17px;color:#fff3d6;letter-spacing:.08em}
+#home.aaa .aa-prof small{font-size:12px;color:var(--muted);font-weight:700}
+#home.aaa .aa-top .ib{background:rgba(10,6,22,.55)}
+#home.aaa .aa-top .sp{flex:1}
+/* the title */
+#home.aaa .aa-logo{position:absolute;right:46px;top:84px;width:420px;display:flex;flex-direction:column;align-items:center;text-align:center}
+#home.aaa .aa-logo .lg-k{position:relative;font-family:var(--serif);font-weight:800;font-size:120px;line-height:1;letter-spacing:.14em;margin-right:-.14em;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.95) 48%,transparent 58%) no-repeat,linear-gradient(180deg,#fffaf0 0%,#f2dca4 36%,#c49a48 60%,#f6e2ae 78%,#8f6a2c 100%);
+  background-size:260% 100%,100% 100%;background-position:160% 0,0 0;-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 0 rgba(50,28,4,.7)) drop-shadow(0 10px 30px rgba(232,190,110,.35));animation:aaShine 5.5s ease-in-out 1.2s infinite}
+@keyframes aaShine{0%,55%{background-position:160% 0,0 0}85%,100%{background-position:-60% 0,0 0}}
+#home.aaa .aa-logo .lg-sub{margin-top:8px;font-family:var(--serif);font-weight:600;font-size:24px;letter-spacing:.38em;margin-right:-.38em;color:#f3dfb0;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+#home.aaa .aa-orn{display:block;width:86%;height:14px;margin:10px 0 6px;position:relative;background:linear-gradient(90deg,transparent,rgba(232,206,140,.9) 25%,rgba(232,206,140,.9) 75%,transparent) center/100% 1px no-repeat}
+#home.aaa .aa-orn::before{content:"";position:absolute;left:50%;top:50%;width:11px;height:11px;transform:translate(-50%,-50%) rotate(45deg);border:1.5px solid #e8ce8c;background:#120a1f;box-shadow:0 0 0 5px rgba(18,10,31,.9),0 0 12px rgba(232,206,140,.6)}
+#home.aaa .aa-logo .lg-ser{font-family:'Cinzel',serif;font-size:12px;letter-spacing:.55em;color:rgba(232,206,140,.7)}
+/* the menu down the left */
+#home.aaa .aa-menu{position:absolute;left:34px;top:112px;display:flex;flex-direction:column;gap:10px;width:212px}
+#home.aaa .lm{position:relative;display:flex;align-items:center;gap:12px;padding:9px 16px 9px 10px;border:0;color:#f6efff;text-align:left;
+  background:linear-gradient(90deg,rgba(26,16,48,.92),rgba(26,16,48,.55));clip-path:polygon(0 0,100% 0,92% 100%,0 100%);transition:transform .18s,background .18s}
+#home.aaa .lm::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#f3dfa6,#b8954a)}
+#home.aaa .lm::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(232,206,140,.22),transparent 70%);opacity:0;transition:opacity .18s}
+#home.aaa .lm:hover{transform:translateX(6px)}
+#home.aaa .lm:hover::after{opacity:1}
+#home.aaa .lm-i{display:grid;place-items:center;width:38px;height:38px;flex:none;border-radius:50%;padding:8px;color:#f3dfa6;background:radial-gradient(circle at 35% 30%,rgba(232,206,140,.25),rgba(0,0,0,.35));border:1px solid rgba(232,206,140,.45)}
+#home.aaa .lm-i svg{width:100%;height:100%}
+#home.aaa .lm-t{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+#home.aaa .lm-t b{font-size:17px;font-weight:900;letter-spacing:.06em;white-space:nowrap}
+#home.aaa .lm-t small{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.2em;color:rgba(232,206,140,.75);white-space:nowrap}
+#home.aaa .lm.soon{opacity:.55}
+#home.aaa .lm.soon .lm-t small{font-family:var(--ui);letter-spacing:.06em;color:var(--muted)}
+/* her name plate */
+#home.aaa .aa-plate{position:absolute;left:calc(22% - 30px);bottom:34px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px 40px 14px 26px;
+  background:linear-gradient(90deg,rgba(8,5,18,.92),rgba(8,5,18,.6) 70%,transparent);border-left:3px solid #e8ce8c}
+#home.aaa .pp-r{display:flex;align-items:center;gap:10px}
+#home.aaa .pp-r .prar{font-style:normal;align-self:center;background:rgba(0,0,0,.4)}
+#home.aaa .pp-f{font-size:13px;font-weight:800;letter-spacing:.14em;color:var(--gold)}
+#home.aaa .pp-n{font-family:var(--serif);font-weight:800;font-size:64px;line-height:1.05;letter-spacing:.08em;color:#fff;text-shadow:0 0 24px color-mix(in srgb,var(--c,#8a5cff) 70%,transparent),0 3px 0 rgba(0,0,0,.5)}
+#home.aaa .pp-t{font-family:var(--serif);font-size:16px;letter-spacing:.3em;color:#f0dcae}
+#home.aaa .pp-sk{display:flex;align-items:center;gap:8px;margin-top:4px}
+#home.aaa .pp-sk .skc{font-size:14px;padding:5px 12px 5px 5px;cursor:default}
+#home.aaa .pp-sk .skc i{width:26px;height:26px;padding:5px}
+#home.aaa .pp-more{font-size:12px;color:var(--muted);font-weight:800;cursor:pointer;text-decoration:underline dotted}
+#home.aaa .pp-chg{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:6px 14px 6px 10px;border-radius:99px;border:1px solid rgba(232,206,140,.45);background:rgba(10,6,22,.6);color:var(--gold);font-size:13px;font-weight:800}
+#home.aaa .pp-chg svg{width:16px;height:16px}
+/* her line */
+#home.aaa .aa-say{position:absolute;left:calc(22% + 230px);top:150px;max-width:300px;padding:12px 18px;border-radius:16px 16px 16px 4px;background:rgba(255,252,244,.94);color:#2a1a12;font-family:var(--serif);font-weight:700;font-size:17px;line-height:1.5;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);opacity:0;transform:translateY(8px) scale(.96);transition:opacity .25s,transform .25s;pointer-events:none}
+#home.aaa .aa-say.on{opacity:1;transform:none}
+/* the pick-up banner */
+#home.aaa .aa-banner{position:absolute;right:46px;bottom:236px;width:420px;height:128px;padding:0;border:1px solid rgba(232,206,140,.55);border-radius:14px;overflow:hidden;text-align:left;color:#fff;
+  background:linear-gradient(90deg,rgba(10,6,22,.2),rgba(10,6,22,.85) 55%),color-mix(in srgb,var(--c,#8a5cff) 40%,#140c26);box-shadow:0 14px 40px rgba(0,0,0,.5)}
+#home.aaa .ab-art{position:absolute;left:0;top:0;bottom:0;width:62%;background-size:cover;background-position:50% 18%;-webkit-mask-image:linear-gradient(90deg,#000 55%,transparent);mask-image:linear-gradient(90deg,#000 55%,transparent)}
+#home.aaa .ab-rib{position:absolute;left:-30px;top:14px;transform:rotate(-30deg);padding:3px 34px;font-family:'Cinzel',serif;font-weight:800;font-size:11px;letter-spacing:.2em;color:#2a1a05;background:linear-gradient(180deg,#fbe9b6,#c9a050)}
+#home.aaa .ab-tx{position:absolute;right:18px;top:12px;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+#home.aaa .ab-tx em{font-style:normal;font-family:'Cinzel',serif;font-weight:800;font-size:14px}
+#home.aaa .ab-tx b{font-family:var(--serif);font-size:30px;letter-spacing:.08em;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+#home.aaa .ab-tx small{font-size:12px;color:#f0dcae;letter-spacing:.1em}
+#home.aaa .ab-go{position:absolute;right:16px;bottom:10px;font-size:13px;font-weight:900;color:var(--gold);letter-spacing:.1em}
+#home.aaa .aa-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%) no-repeat;background-size:250% 100%;background-position:160% 0;animation:aaShine2 6s ease-in-out 2s infinite;pointer-events:none}
+@keyframes aaShine2{0%,60%{background-position:160% 0}90%,100%{background-position:-60% 0}}
+/* play */
+#home.aaa .aa-play{position:absolute;right:46px;bottom:34px;width:420px;display:flex;flex-direction:column;gap:10px}
+#home.aaa .ap-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#home.aaa .ap-opts .seg.lv{grid-column:1/-1}
+#home.aaa .seg{background:rgba(8,5,18,.7);border-color:rgba(232,206,140,.2);padding:3px}
+#home.aaa .seg button{font-size:14px;padding:7px 4px}
+#home.aaa .seg button.on{background:linear-gradient(180deg,#f3dfa6,#c9a050);color:#2a1a05;box-shadow:0 3px 10px rgba(201,160,80,.35)}
+#home.aaa .seg.lv button{font-size:13px}
+#home.aaa .aa-go{position:relative;margin:2px 0 0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 16px;overflow:hidden;clip-path:polygon(4% 0,100% 0,96% 100%,0 100%);border-radius:0}
+#home.aaa .aa-go .ag-k{font-size:34px;letter-spacing:.5em;margin-right:-.5em;line-height:1.1}
+#home.aaa .aa-go .ag-s{font-family:var(--ui);font-size:12.5px;font-weight:800;letter-spacing:.14em;color:#5a3c0c}
+#home.aaa .aa-go::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%) no-repeat;background-size:250% 100%;background-position:160% 0;animation:aaShine2 4.5s ease-in-out 1.5s infinite}
+/* coming in */
+#home.aaa.enter .aa-hero{animation:aaInHero .9s cubic-bezier(.2,.8,.2,1) both}
+#home.aaa.enter .aa-logo{animation:aaInFade .9s .35s both}
+#home.aaa.enter .aa-menu .lm{animation:aaInL .5s cubic-bezier(.2,.8,.2,1) both}
+#home.aaa.enter .aa-menu .lm:nth-child(2){animation-delay:.05s}#home.aaa.enter .aa-menu .lm:nth-child(3){animation-delay:.1s}#home.aaa.enter .aa-menu .lm:nth-child(4){animation-delay:.15s}#home.aaa.enter .aa-menu .lm:nth-child(5){animation-delay:.2s}#home.aaa.enter .aa-menu .lm:nth-child(6){animation-delay:.25s}#home.aaa.enter .aa-menu .lm:nth-child(7){animation-delay:.3s}
+#home.aaa.enter .aa-plate{animation:aaInL .6s .25s cubic-bezier(.2,.8,.2,1) both}
+#home.aaa.enter .aa-banner,#home.aaa.enter .aa-play{animation:aaInR .6s .3s cubic-bezier(.2,.8,.2,1) both}
+#home.aaa.enter .aa-play{animation-delay:.42s}
+#home.aaa.enter .aa-top{animation:aaInFade .6s both}
+@keyframes aaInHero{from{opacity:0;transform:translateX(-40px) scale(1.04)}}
+@keyframes aaInL{from{opacity:0;transform:translateX(-40px)}}
+@keyframes aaInR{from{opacity:0;transform:translateX(40px)}}
+@keyframes aaInFade{from{opacity:0}}
+html.lite #home.aaa .aa-beam,html.lite #home.aaa .aa-aura,html.lite #home.aaa .aa-ch img,html.lite #home.aaa .lg-k,html.lite #home.aaa .aa-banner::after,html.lite #home.aaa .aa-go::after{animation:none}
+/* phones: the same stage, scaled (1000×560): a little tighter */
+html.lp #home.aaa .aa-top{padding:12px 22px 0}
+html.lp #home.aaa .aa-menu{left:22px;top:84px;gap:7px;width:190px}
+html.lp #home.aaa .lm{padding:6px 14px 6px 8px}
+html.lp #home.aaa .lm-i{width:32px;height:32px;padding:7px}
+html.lp #home.aaa .aa-logo{right:30px;top:62px;width:380px}
+html.lp #home.aaa .aa-logo .lg-k{font-size:92px}
+html.lp #home.aaa .aa-banner{right:30px;bottom:212px;width:380px;height:112px}
+html.lp #home.aaa .aa-play{right:30px;bottom:22px;width:380px}
+html.lp #home.aaa .aa-plate{bottom:22px}
+html.lp #home.aaa .pp-n{font-size:50px}
+html.lp #home.aaa .aa-go .ag-k{font-size:28px}
+html.ds #home.aaa{left:0;top:0;width:calc(100vw / var(--Z));height:calc(100vh / var(--Z))}   /* (full-bleed: the room fills the window; the pieces keep to the scaled stage) */
+html.lp #home.aaa .aa-logo .lg-k{font-size:78px}
+html.lp #home.aaa .aa-logo .lg-ser,html.lp #home.aaa .aa-orn{display:none}
+html.lp #home.aaa .ab-tx small{display:none}
