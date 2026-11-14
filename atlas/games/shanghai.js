@@ -148,6 +148,25 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     pisces: { p: [[8, 12], [17, 21], [27, 30], [38, 39], [50, 47], [62, 40], [73, 32], [84, 24], [92, 13], [80, 10]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 7]] },
   };
   const edges = a => CON[a].e || CON[a].p.slice(1).map((_, i) => [i, i + 1]);
+  // (2026-11-14) evenly spaced stars: springs pull each line of the figure to the same length, every pair is kept at least
+  // ~0.85 of it apart, and a weak pull to the original place keeps the constellation's shape. Done in screen-like units
+  // (sx, sy = pixels per unit) so a stretched phone box spaces them evenly too; then refit into the same margins.
+  function even(P, E, VW, VH, sx, sy) {
+    const n = P.length, O = P.map(([x, y]) => [x * sx, y * sy]), Q = O.map(p => p.slice());
+    const len = (a, b) => Math.hypot(Q[a][0] - Q[b][0], Q[a][1] - Q[b][1]) || 1e-6;
+    const L = E.reduce((t, [i, j]) => t + Math.hypot(O[i][0] - O[j][0], O[i][1] - O[j][1]), 0) / E.length;
+    for (let it = 0; it < 260; it++) {
+      const F = Q.map(() => [0, 0]);
+      E.forEach(([i, j]) => { const d = len(i, j), k = (d - L) / d * .25, dx = (Q[j][0] - Q[i][0]) * k, dy = (Q[j][1] - Q[i][1]) * k; F[i][0] += dx; F[i][1] += dy; F[j][0] -= dx; F[j][1] -= dy; });
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { const d = len(i, j), m = L * .85; if (d >= m) continue; const k = (m - d) / d * .3, dx = (Q[j][0] - Q[i][0]) * k, dy = (Q[j][1] - Q[i][1]) * k; F[i][0] -= dx; F[i][1] -= dy; F[j][0] += dx; F[j][1] += dy; }
+      for (let i = 0; i < n; i++) { Q[i][0] += F[i][0] + (O[i][0] - Q[i][0]) * .02; Q[i][1] += F[i][1] + (O[i][1] - Q[i][1]) * .02; }
+    }
+    const R = Q.map(([x, y]) => [x / sx, y / sy]);
+    const box = a => [Math.min(...a), Math.max(...a)], [ox0, ox1] = box(P.map(p => p[0])), [oy0, oy1] = box(P.map(p => p[1])), [rx0, rx1] = box(R.map(p => p[0])), [ry0, ry1] = box(R.map(p => p[1]));
+    const kx = (ox1 - ox0 || 1) / (rx1 - rx0 || 1), ky = (oy1 - oy0 || 1) / (ry1 - ry0 || 1);
+    const cx = (ox0 + ox1) / 2, cy = (oy0 + oy1) / 2, rcx = (rx0 + rx1) / 2, rcy = (ry0 + ry1) / 2;
+    return R.map(([x, y]) => [Math.max(4, Math.min(VW - 4, cx + (x - rcx) * kx)), Math.max(4, Math.min(VH - 4, cy + (y - rcy) * ky))]);
+  }
 
   /* ---------- progress ---------- */
   const prog = () => { const d = load(); return { st: d.st || {}, bt: d.bt || {} }; };
@@ -556,6 +575,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       // phones (2026-11-14): the figure stretched to fill the whole box left for it (both ways), so its ten stars spread out instead of crowding
       if (port) { const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
         pts = pts.map(([x, y]) => [9 + (x1 > x0 ? (x - x0) / (x1 - x0) : .5) * (VW - 18), 7 + (y1 > y0 ? (y - y0) / (y1 - y0) : .5) * (VH - 15)]); }
+      pts = even(pts, edges(a), VW, VH, port ? innerWidth / VW : 1, port ? innerHeight * .5 / VH : 1);
       $('.cst').classList.toggle('port', port);
       const lit = ([i, j]) => cleared(P, fs + i) && cleared(P, fs + j);
       $('.cst').innerHTML = `<div class="nm">${esc(TX('ar.' + a, lang))}</div><svg viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="none">${edges(a).map(e => { const [x1, y1] = pts[e[0]], [x2, y2] = pts[e[1]]; return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${lit(e) ? '#ffd76a' : 'rgba(180,200,255,.28)'}" stroke-width="${lit(e) ? .7 : .35}" stroke-linecap="round" ${lit(e) ? 'filter="drop-shadow(0 0 1.2px #ffd76a)"' : 'stroke-dasharray="1 1.2"'}/>`; }).join('')}</svg>` +
