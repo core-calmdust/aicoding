@@ -79,9 +79,10 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .bvi #bvOpts.shf > label:has(#bvSize){flex:1 1 100%!important}.bvi #bvOpts.shf .shfrow{display:contents}.bvi #bvOpts.shf .shfl{flex:1 1 0!important;min-width:0}
 .bvi #bvOpts.shf .pgbest .shbt{margin-inline-start:auto}.bvi #bvOpts.shf .pgbest .shbt + b{margin-inline-start:14px}
 .shstg{display:flex;flex-direction:column;gap:10px;align-items:stretch}
-.shstg .stinfo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:10px 14px;border-radius:14px;background:#fff;border:2px solid var(--line,#eadfc6);font-weight:900;font-size:15px;color:#2b3044}.shstg .stinfo .ss{color:#e0a020}.shstg .stinfo .sw{display:flex;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:#7a5a20}.shstg .stinfo .sw img{width:30px;height:30px}
-.shstg .strow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.shstg .strow .mapb{padding:12px 10px;font-size:16px}.shstg .mapb span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}.shstg .mapb small{font-size:12px;opacity:.8;font-weight:700}.shstg .mapb.lst{background:linear-gradient(135deg,#2a6a52,#1f4f3e)}
-.shstg .dyb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;padding:10px;border-radius:14px;border:2px solid #f3d48a;background:linear-gradient(180deg,#fff8e3,#ffefc2);color:#5a3a08;cursor:pointer;box-shadow:0 3px 0 #e8c46a}.shstg .dyb b{font-size:15px;font-weight:900}.shstg .dyb small{font-size:12px;font-weight:700;opacity:.8}.shstg .dyb.hard{border-color:#e9a0a0;background:linear-gradient(180deg,#fff0f0,#ffd9d9);color:#7a1f1f;box-shadow:0 3px 0 #e08a8a}.shstg .dyb.done{opacity:.85}
+.shstg .stinfo{box-sizing:border-box;width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:10px 14px;border-radius:14px;background:#fff;border:2px solid var(--line,#eadfc6);font-weight:900;font-size:15px;color:#2b3044}.shstg .stinfo .ss{color:#e0a020}.shstg .stinfo .sw{display:flex;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:#7a5a20}.shstg .stinfo .sw img{width:30px;height:30px}
+.shstg .strow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}.shstg .strow .mapb{padding:12px 10px;font-size:16px;background:linear-gradient(135deg,#1b2350,#3a2a6e);box-shadow:0 4px 0 #11163a}.shstg .mapb i{color:#ffd76a}.shstg .mapb span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}.shstg .mapb small{font-size:12px;color:#ffe7a0;font-weight:700}
+.shstg .dyb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;padding:10px;border-radius:14px;border:2px solid var(--line,#eadfc6);background:#fff;color:#2b3044;cursor:pointer;box-shadow:0 3px 0 var(--line,#eadfc6)}.shstg .dyb b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:900}.shstg .dyb b em{font-style:normal;font-size:11px;font-weight:900;color:#fff;background:#e5484d;border-radius:99px;padding:2px 7px;letter-spacing:.04em}.shstg .dyb small{font-size:12px;font-weight:700;color:#9a8762}.shstg .dyb.done small{color:#2f9a6a}
+html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
 #lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shbd > .lx-th{background:radial-gradient(ellipse at 50% 40%,#3a7a60,#24503f)!important}.lx-card.shbd .lx-th svg{width:88%;height:84%}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shcr > .lx-th{padding:0!important;overflow:hidden;background:#0d1236!important}.lx-card.shbd.sel{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
 .shstg .pg{font-size:16px;font-weight:700;color:var(--ink,#2a2f3a)}
 .shstg .nx{font-size:15px;opacity:.8}
@@ -731,11 +732,11 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   // the card's ステージ tab (2026-11-14): the totals, コース一覧 · 続きから (the course played last), 本日の上海 · HARD
   function stagePanel(lang) {
     css(); const A = allProg(), lc = lastCourse(), y = dailyRec();
-    const dy = k => `<button type="button" class="dyb${k === 'h' ? ' hard' : ''}${y[k] != null ? ' done' : ''}" data-shdy="${k}"><b>${esc(TX('dy.' + k, lang))}</b><small>${y[k] != null ? '✓ ' + esc(TX('r.best', lang, { t: mmss(y[k]) })) : esc(TX('lay.' + dailySpec(k).lay, lang))}</small></button>`;
-    return `<div class="stinfo"><span class="sc">${esc(TX('st.clear', lang, { c: A.c, n: A.n }))}</span><span class="ss">★ ${A.st}</span>` +
-      (A.wait ? `<span class="sw"><img src="../images/atlas/av/peacock-${[1, 2, 3].find(t => !Reward.has(t))}.webp" alt="">${esc(TX('st.wait', lang, { n: A.wait }))}</span>` : '') + `</div>` +
-      `<div class="strow"><button type="button" class="mapb lst" data-shlist><i>▦</i>${esc(TX('cl.title', lang))}</button><button type="button" class="mapb" data-shmap><i>✦</i><span>${esc(TX('cl.cont', lang))}<small>${esc(cname(lc, lang))}</small></span></button></div>` +
-      `<div class="strow">${dy('n')}${dy('h')}</div>`;
+    const dy = k => `<button type="button" class="dyb${k === 'h' ? ' hard' : ''}${y[k] != null ? ' done' : ''}" data-shdy="${k}"><b>${esc(TX('dy.n', lang))}${k === 'h' ? '<em>HARD</em>' : ''}</b><small>${y[k] != null ? '✓ ' + esc(TX('r.best', lang, { t: mmss(y[k]) })) : esc(TX('lay.' + dailySpec(k).lay, lang))}</small></button>`;
+    return `<div class="strow"><button type="button" class="mapb lst" data-shlist><i>▦</i>${esc(TX('cl.title', lang))}</button><button type="button" class="mapb" data-shmap><i>✦</i><span>${esc(TX('cl.cont', lang))}<small>${esc(cname(lc, lang))}</small></span></button></div>` +
+      `<div class="strow">${dy('n')}${dy('h')}</div>` +
+      `<div class="stinfo"><span class="sc">${esc(TX('st.clear', lang, { c: A.c, n: A.n }))}</span><span class="ss">★ ${A.st}</span>` +
+      (A.wait ? `<span class="sw"><img src="../images/atlas/av/peacock-${[1, 2, 3].find(t => !Reward.has(t))}.webp" alt="">${esc(TX('st.wait', lang, { n: A.wait }))}</span>` : '') + `</div>`;
   }
   function stageBind(host, lang, play) {
     host.addEventListener('click', e => {
