@@ -2227,16 +2227,16 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=15"><\/script>');
 else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
 <script src="texgen.js?v=2"></script>
-<script src="npc/roster.js?v=8"></script>
+<script src="npc/roster.js?v=9"></script>
 <script src="art.js?v=17"></script>
-<script src="../shared/atlas.js?v=20261114mcpr1"></script>
+<script src="../shared/atlas.js?v=20261115bt"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
-<script src="i18n/v.js?v=77pg"></script>
+<script src="i18n/v.js?v=78bt"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=77pg', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=78bt', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -2244,13 +2244,13 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
   L.forEach(function (x) { document.write('<script src="i18n/' + x + '.js?v=' + v + '"><\/script>'); });
 })();
 </script>
-<script src="gamelist-i18n.js?v=14pgs"></script>
+<script src="gamelist-i18n.js?v=15bt"></script>
 <script src="img/tex/baked.js?v=2"></script>
-<script src="table3d.js?v=169"></script>
+<script src="table3d.js?v=170"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=126', k = 0, p = null;
+  var SRC = 'tables3d.js?v=127', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2258,7 +2258,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 })();
 </script>
 <script src="models/cardtables.js?v=4"></script>
-<script src="icons3d.js?v=41"></script>
+<script src="icons3d.js?v=42"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
   if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
@@ -2270,13 +2270,13 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=288"></script>
+<script src="lazy.js?v=289"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=30"></script>
 <script src="lessons3d.js?v=40"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
-<script src="historia.js?v=42"></script>
+<script src="historia.js?v=43"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=5"></script>
 <script src="gacha3d.js?v=7"></script>
@@ -2287,12 +2287,12 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 .rsg-ov.draw .rsg-flag{color:#b8862a!important}</style>
 <script src="../shared/resign.js?v=3"></script><script src="../shared/drawoffer.js?v=1"></script>
 <script src="../shared/tick.js?v=2"></script>
-<script src="gamelist.js?v=37"></script>
+<script src="gamelist.js?v=38"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
-<script src="worldmap.js?v=35"></script>
-<script src="npc/npc.js?v=34"></script>
+<script src="worldmap.js?v=36"></script>
+<script src="npc/npc.js?v=35"></script>
 <script src="avtalk.js?v=3"></script>
-<script src="app.js?v=367"></script>
+<script src="app.js?v=368"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>

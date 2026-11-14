@@ -15,7 +15,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 25, shogi: 26, go: 32, reversi: 36, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 20, tafl: 25, ur: 20, senet: 20, morris: 10,
-    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, alquerque: 20, amazons: 23 };
+    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 23 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -251,6 +251,15 @@
       b('hothead', { a: 'bull', c: [0x6a4a3a, 0xf0dcc8, 0xd83a4a], hat: 'helmet', hc: [0x2f6fd0, 0xffffff], held: 'disc', ex: ['necklace'] }, 'スラップショットうし|Slapshot Bull|大力抽射牛|大力抽射牛|슬랩샷소|Бык-щелчок|स्लैपशॉट बैल|ثور الضربة'),
       b('scholar', { a: 'owl', c: [0xb08a68, 0xf6e6cc, 0x2f6fd0], held: 'book', ex: ['glasses'] }, 'エアテーブル博士|Dr. Air-Table|空气台博士|空氣台博士|에어테이블박사|Доктор Аэростол|डॉ. एयर-टेबल|الدكتور طاولة الهواء'),
       b('king', { a: 'bear', c: [0x8a6a50, 0xf4e2cc, 0xd83a4a], hat: 'crown', held: 'disc', ex: ['cape', 'scarf'], cape: 0xd83a4a, sc: 0xffffff }, 'マンロー大王グマ|Munro the Great Bear|芒罗大王熊|芒羅大王熊|먼로대왕곰|Медведь Манро Великий|महान मुनरो भालू|الدب مونرو العظيم'),
+    ],
+    botao: [
+      b('sleepy', { a: 'turtle', c: [0x5a9a5a, 0xe8f0c8, 0xf5c518], hat: 'straw', held: 'disc', ex: ['scarf'], sc: 0x1d8a3c }, 'ビーチのカメ|Beach Turtle|海滩海龟|海灘海龜|해변거북|Пляжная черепаха|समुद्र तट का कछुआ|سلحفاة الشاطئ'),
+      b('merchant', { a: 'monkey', c: [0xf0a030, 0xffe8c0, 0x1d8a3c], hat: 'cap', hc: [0x1d8a3c], held: 'disc', ex: ['necklace'] }, 'ミコの売り子|Tamarin Vendor|狨猴小贩|狨猴小販|타마린 장수|Тамарин-торговец|टैमरिन विक्रेता|بائع التمارين'),
+      b('trickster', { a: 'frog', c: [0x2a8ae8, 0xc8e8ff, 0xffd23c], hat: 'bandana', hc: [0xffd23c], held: 'disc', mouth: 'w' }, 'ドリブルガエル|Dribbling Frog|盘带蛙|盤帶蛙|드리블개구리|Лягушка-дриблёр|ड्रिबलिंग मेंढक|ضفدع المراوغة'),
+      b('cool', { a: 'croc', c: [0x4a7a3a, 0xd8e8b0, 0xf5c518], hat: 'cap', hc: [0xf5c518], held: 'shield', ex: ['glasses'] }, 'ワニの守護神|Caiman Keeper|凯门鳄门神|凱門鱷門神|카이만수문장|Кайман-вратарь|मगर गोलकीपर|حارس التمساح'),
+      b('hothead', { a: 'bull', c: [0xfbfaf4, 0xffffff, 0xe83a6a], hat: 'flowers', held: 'disc', ex: ['necklace', 'cape'], cape: 0x2a6ad8 }, 'ブンバ・メウ・ボイ|Bumba-meu-boi|彩牛|彩牛|붐바 메우 보이|Бумба-меу-бой|बुम्बा मेउ बोई|بومبا ميو بوي'),
+      b('scholar', { a: 'bird', c: [0x2a6ad8, 0xffe060, 0xe83a3a], beak: 0x2a2a30, held: 'book', ex: ['glasses', 'crest'] }, 'コンゴウインコ博士|Professor Macaw|金刚鹦鹉博士|金剛鸚鵡博士|금강앵무박사|Профессор Ара|प्रोफ़ेसर मकाउ|البروفيسور الببغاء'),
+      b('king', { a: 'jaguar', c: [0xe8b048, 0xfff0d0, 0x1d8a3c], hat: 'beret', hc: [0x2a2a38], held: 'disc', ex: ['cape', 'scarf'], cape: 0x1d8a3c, sc: 0xf5c518 }, 'ジャガー画伯|Jaguar the Painter|画家美洲豹|畫家美洲豹|화백재규어|Ягуар-художник|चित्रकार जगुआर|الفنان اليغور'),
     ],
     crokinole: [
       b('sleepy', { a: 'beaver', c: [0x8a5a3a, 0xf0dcc0, 0xc8282e], hat: 'cap', hc: [0xc8282e], held: 'disc' }, 'ログハウスビーバー|Cabin Beaver|小木屋河狸|小木屋河狸|통나무집비버|Бобр из хижины|केबिन ऊदबिलाव|قندس الكوخ'),
