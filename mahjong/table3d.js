@@ -25,6 +25,17 @@ function napTex() {
     for (const [ox, oy] of [[0, 0], [S, 0], [-S, 0], [0, S], [0, -S]]) { g.moveTo(x + ox, y + oy); g.lineTo(x + ox + Math.cos(a) * l, y + oy + Math.sin(a) * l); } g.stroke(); }
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(26, 26); return t;
 }
+// the sleeve's weave (ユーザー 2026-11-14: cloth, not a slick, shiny skin): a tiling twill height map — over-under threads in a diagonal
+// rhythm plus a little slub — for the bump, so the light breaks up on the threads instead of sliding over a smooth surface
+function weaveTex() {
+  const S = 128, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), im = g.createImageData(S, S), N = mkNoise(53), T = 4;
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const cx = (x % T) / T, cy = (y % T) / T, warp = ((Math.floor(x / T) + Math.floor(y / T)) % 4) < 2;   // a 2/2 twill
+    const v = warp ? Math.sin(cy * Math.PI) * (.6 + .4 * Math.sin(cx * Math.PI)) : Math.sin(cx * Math.PI) * (.6 + .4 * Math.sin(cy * Math.PI));
+    const k = Math.max(0, Math.min(255, 70 + v * 150 + (N.R() - .5) * 40)), i = (y * S + x) * 4; im.data[i] = im.data[i + 1] = im.data[i + 2] = k; im.data[i + 3] = 255; }
+  g.putImageData(im, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 10); return t;
+}
 // walnut, lacquered: long streaks, the rings' figure folded by the grain, pores. u runs along the grain and wraps.
 function woodTex() {
   const Wd = 1024, Hd = 256, c = document.createElement('canvas'); c.width = Wd; c.height = Hd; const g = c.getContext('2d'), im = g.createImageData(Wd, Hd), o = im.data, N = mkNoise(53);
@@ -243,7 +254,7 @@ function buildHand(env) {
   // the sleeve (ユーザー 2026-11-14: only a glimpse of the wrist, the sleeve long; a pattern as on a Chinese dress): crimson silk
   // brocade — gold flower roundels and cloud scrolls woven in — closing just above the wrist in a black band between two gold pipings.
   const bro = brocadeTex('#8c1626');
-  const cloth = new THREE.MeshPhysicalMaterial({ map: bro, roughness: .5, metalness: 0, sheen: .8, sheenRoughness: .35, sheenColor: new THREE.Color(0xffb0a0), envMap: env, envMapIntensity: .3 });
+  const cloth = new THREE.MeshPhysicalMaterial({ map: bro, roughness: .93, metalness: 0, sheen: .3, sheenRoughness: .9, sheenColor: new THREE.Color(0xb08078), envMap: env, envMapIntensity: .04, bumpMap: weaveTex(), bumpScale: 1.2 });   // (ユーザー 2026-11-14: woven cloth — matt, a soft fuzz at the edges, no reflections)
   const band = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x14080c).convertSRGBToLinear(), roughness: .6 });
   rig.clothMat = cloth;   // (not in userData: clone() copies that through JSON)
   const gold = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd9b062).convertSRGBToLinear(), roughness: .32, metalness: .85, envMap: env, envMapIntensity: .9 });
@@ -593,7 +604,7 @@ class Table3D {
     let m = this.sleeveMats.get(col);
     if (!m) { const c = new THREE.Color(col), hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, Math.min(1, hsl.s * .9), hsl.l > .78 ? hsl.l * .9 : hsl.l * .52);
       const base = '#' + c.getHexString(), proto = this.handProto.clothMat;
-      m = proto.clone(); m.map = brocadeTex(base); m.sheenColor = new THREE.Color(col).lerp(new THREE.Color(0xffffff), .45); this.sleeveMats.set(col, m); }
+      m = proto.clone(); m.map = brocadeTex(base); m.sheenColor = new THREE.Color(col).lerp(new THREE.Color(0xffffff), .2).multiplyScalar(.6); this.sleeveMats.set(col, m); }
     rig.traverse(o => { if (o.userData && o.userData.sleeve) o.material = m; });
   }
   _over2() {   // the overlay's renderer (made on the first use; no shadows)
