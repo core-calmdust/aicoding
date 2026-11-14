@@ -23,8 +23,12 @@ function ending(sn) {   // the kind of ending of one sentence
   return /[！？]$/.test(sn) ? sn.slice(-1) : 'noun';
 }
 let bad = 0, n = 0;
+// the backgammon warm-ups (backgammon/ramps.json): ダイスン's lines too
+if (!process.argv.slice(2).length) files.push(path.join(ROOT, 'backgammon', 'ramps.json'));
 for (const f of files) {
-  const w = {}; new Function('window', fs.readFileSync(f, 'utf8'))(w);
+  const w = {};
+  if (/\.json$/.test(f)) { const D = JSON.parse(fs.readFileSync(f, 'utf8')), o = {}; for (const st in D.steps || {}) D.steps[st].forEach((it, i) => ['b', 'g', 'h', 'y'].forEach(k => { if (it[k] && it[k].ja) o[st + '/' + i + '/' + k] = it[k].ja; })); for (const k in D.ui || {}) o['ui.' + k] = D.ui[k].ja; w.I18N = { 'ja@dicepup': o }; }
+  else new Function('window', fs.readFileSync(f, 'utf8'))(w);
   for (const key in w.I18N || {}) {
     const guide = key.split('@')[1]; if (!guide) continue;
     const T = w.I18N[key];

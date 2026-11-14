@@ -695,12 +695,29 @@
       if (this.p) return this.p;
       const tx = window.AtlasBgTexts ? AtlasBgTexts() : Promise.resolve({});
       const bg = window.AtlasBgExplain ? AtlasBgExplain() : Promise.resolve();   // (the rules and the commentary engine: atlas/puzzles.js loads them — the same files and cache keys as the table)
-      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=20261021pz'), getJ('../backgammon/openings.json?v=20261021op'), tx, bg])
-        .then(([ls, op, I]) => { this.I = I || {}; this.data = { ls, op }; return this; })
+      return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=20261021pz'), getJ('../backgammon/openings.json?v=20261021op'), tx, bg, getJ('../backgammon/ramps.json?v=1').catch(() => null)])
+        .then(([ls, op, I, _, rp]) => { this.I = I || {}; this.data = { ls, op, rp }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
     tx(k, lang, v) { const I = this.I || {}; let x = lang === 'ja' && I['ja@dicepup'] ? I['ja@dicepup'][k] : undefined; if (x === undefined) x = I[lang] && I[lang][k];   /* (ダイスン's own lines first, backgammon/voice-dicepup-ja.js) */ if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]); if (x === undefined) return ''; return v && typeof x === 'string' ? fill(x, v) : x; },
     names(lang) { const ck = bgCkOf(); return { c: this.tx('ng.' + ck[0], lang) || ck[0], o: this.tx('ng.' + ck[1], lang) || ck[1] }; },
+    // the warm-up (backgammon/ramps.json, 2026-11-15): explain = a board to look at with its marks; try = dice to play, judged by ok
+    rampPos: it => ({ bg: { pos: String(it.pos), dice: it.k === 'try' ? it.dice.slice() : null, lock: it.k !== 'try' } }), rampBody: (it, lang) => L(it.b, lang),
+    rampMarks: it => (it.marks || []).slice(), rampLook: it => (it.look || []).slice(), rampAns: it => it.ans || null,
+    rampAnsMk: it => (it.marks || []).concat(it.ans ? [{ m: it.ans, cls: 'ok' }] : []).concat(it.look || []),
+    rampUndo: P => P.reset(),
+    rampOk(it, u) {
+      if (!window.BG || !u || !u.pos) return false;
+      const p0 = bgDecP(it.pos), q = u.pos, mv = u.steps || [];
+      return String(it.ok).split('&').every(c => { const [k, a] = c.split(':');
+        if (k === 'any') return true; if (k === 'hit') return mv.some(x => BG.mvHit(x)); if (k === 'enter') return q[25] < p0[25];
+        if (k === 'make') return q[+a] >= 2 && p0[+a] < 2; if (k === 'off') return q[0] - p0[0] >= +a; if (k === 'has') return q[+a] >= 1; if (k === 'keep') return q[+a] >= 2;
+        if (k === 'slot') return q[+a] === 1 && p0[+a] === 0; if (k === 'race') return !BG.contact(q);
+        if (k === 'allhome') { for (let i = 7; i <= 25; i++) if (q[i]) return false; return true; }
+        if (k === 'safe') { for (let i = 1; i <= 24; i++) if (q[i] === 1) return false; return true; }
+        if (k === 'plays') { const K = BG.key(q); return a.split(',').some(t => { const r = p0.slice(); for (let i = 0; i + 1 < t.length; i += 2) BG.apply(r, 0, t.charCodeAt(i) - 65, t.charCodeAt(i + 1) - 65); return BG.key(r) === K; }); }
+        return false; });
+    },
     mini: (pos, dice) => window.AtlasMini && AtlasMini.backgammon ? AtlasMini.backgammon({ pos, dice }) : '',
     course(id) { const c = (this.data.ls.cats || []).find(x => x.steps.includes(id)); return c ? c.id : 'rules'; },
     opItems() { const op = this.data.op; return op.cats.flatMap(c => c.items.map(id => ({ c: c.id, it: op.items[id] }))).filter(x => x.it); },
@@ -731,7 +748,9 @@
       const intro = String(T('intro', { fig0: '', fig1: '', fig2: '' }) || '').replace(/\{fig\d\}/g, '');
       const keys = this.tx('ls.' + s.id + '.keys', lang), kh = this.tx('ls.keysH', lang);   // (the step's three principles, backgammon/i18n-ls2.js)
       const introK = intro + (keys && keys !== 'ls.' + s.id + '.keys' ? `<br><b>🧭 ${kh}</b>` + String(keys).split('|').map(x => { const cjk = /^(ja|zh)/.test(lang), y = cjk ? x.replace(/。(?=.)/g, '、') : x; return '<br>・' + y + (/[。！？!?.]$/.test(y) ? '' : cjk ? '。' : '.'); }).join('') : '');   // (one sentence per principle: the speech pages never cut one in two)
-      return { id: s.id, title: T('title'), intro: introK,
+      const rp = this.data.rp, ramp = rp && rp.steps && rp.steps[s.id] && rp.steps[s.id].length ? rp.steps[s.id] : null;   // (the warm-up: backgammon/ramps.json, 2026-11-15)
+      const RU = (k, v) => fill(L(((rp && rp.ui) || {})[k], lang), v || {});
+      return { id: s.id, title: T('title'), intro: introK, ramp, RU,
         probs: (s.problems || []).map(P => {
           const pos = bgPos(P.pos, P.side), ask = this.tx('ls.turn', lang, { c: '<b>' + N.c + '</b>' }) + ' ';
           if (P.kind === 'play') return this.play(P, pos, ask + T('goal', { d: P.dice.join('-') }), T('hint'), lang);
@@ -880,7 +899,7 @@
       head(cur.title + ' · ' + RU('step', { i: i + 1, n: cur.ramp.length }));
       const goOn = () => (last ? (cur.k = 0, prob()) : ramp(i + 1));
       if (it.k === 'explain') say(`💡 <b>${L(it.t, ctx.lang)}</b><br>${D.rampBody ? D.rampBody(it, ctx.lang) : L(it.b, ctx.lang)}`);
-      else say(`${L(it.g, ctx.lang)}<br><small>${RU('note')}</small>`);
+      else say(L(it.g, ctx.lang) + (cur.ramp.findIndex(x => x.k === 'try') === i ? `<br><small>${RU('note')}</small>` : ''));   // (the note once: on the first try)
       act(last ? RU('main') : RU('next'), { hint: it.k === 'try', nextOn: it.k === 'explain' });
       $('[data-a=next]').onclick = goOn;
       $('[data-a=hint]').onclick = () => {
@@ -888,7 +907,7 @@
         if (D.rampMarks) {   // gomoku: marks on points
           if (rh === 1) { say(L(it.h, ctx.lang)); pz().mark(D.rampMarks(it)); }
           else if (rh === 2) { say(L(it.h, ctx.lang) + '<br>' + RU('look')); pz().mark(D.rampMarks(it).concat(D.rampLook(it))); }
-          else { const a = D.rampAns(it); say(RU('ans', { m: D.spOk ? D.spOk(ctx.lang) : SP('ok', ctx.lang) })); pz().mark(D.rampMarks(it).concat([[a, 'ok']])); }
+          else { const a = D.rampAns(it); say(RU('ans', { m: D.spOk ? D.spOk(ctx.lang) : SP('ok', ctx.lang) })); pz().mark(D.rampAnsMk ? D.rampAnsMk(it) : D.rampMarks(it).concat([[a, 'ok']])); }
           return;
         }
         if (rh === 1) { say(L(it.h, ctx.lang)); pz().annot && pz().annot(null); }
@@ -901,7 +920,7 @@
       marks0();
       onMoved = u => {
         if (stopped || phase !== 'ramp' || cur.ri !== i) return;
-        if (it.k === 'explain') { pz().undo(1); marks0(); pz().wait(); return; }   // (the explanation's board is for looking)
+        if (it.k === 'explain') { if (D.rampUndo) D.rampUndo(pz()); else pz().undo(1); marks0(); pz().wait(); return; }   // (the explanation's board is for looking)
         if (D.rampOk ? D.rampOk(it, u) : it.ok.includes(u)) {
           ok = true; if (D.rampMarks) pz().mark(null); else if (pz().annot) pz().annot(null); say(`✓ ${L(it.y, ctx.lang)}`); try { chime(true); } catch (e) {}
           act(last ? RU('main') : RU('next'), {});
@@ -909,8 +928,8 @@
           return;
         }
         say(RU('ng')); try { chime(false); } catch (e) {}
-        if (D.rampMarks && id !== 'checkers' && id !== 'xiangqi') pz().mark([[u, 'ng']]);   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
-        later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { if (!(it.pick)) pz().undo(1); marks0(); pz().wait(); } }, 1100);
+        if (D.rampMarks && id !== 'checkers' && id !== 'xiangqi' && id !== 'backgammon') pz().mark([[u, 'ng']]);   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
+        later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { if (D.rampUndo) D.rampUndo(pz()); else if (!(it.pick)) pz().undo(1); marks0(); pz().wait(); } }, 1100);
       };
       pz().wait();
     }
@@ -1145,7 +1164,7 @@
       }
       if ((e.key !== 'Enter' && e.key !== 'ArrowRight') || e.isComposing || e.keyCode === 229 || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.repeat || stopped || !el.isConnected) return;
       const a = document.activeElement; if (a && a !== document.body && a.closest && a.closest('input,textarea,select,[contenteditable="true"]')) return;
-      if (a && a.matches && a.matches('button:focus-visible,a:focus-visible,[role=button]:focus-visible')) return;
+      if (e.key === 'Enter' && a && a.matches && a.matches('button:focus-visible,a:focus-visible,[role=button]:focus-visible')) return;   // (Enter on a focused button presses that button; → never does)
       const b = nextB(); if (!b || b.disabled || !b.getClientRects().length) return;
       e.preventDefault(); e.stopImmediatePropagation(); autoCancel(); b.click();
     };

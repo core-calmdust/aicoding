@@ -145,7 +145,8 @@
     }
     function place(c, p) { T3.kick(200); p = p || spot(c); c.m.position.set(p.x, p.y, p.z + (p.edge ? -M3.CK_H / 2 : 0)); c.m.rotation.set(p.edge ? Math.PI / 2 : 0, 0, 0); }
     function mk(side) { const m = M3.checker(CID[side]); const sh = T3.contact(.47, .45); sh.position.y = .002; sh.userData.contact = true; m.add(sh); board.add(m); return m; }
-    function restack() { const grp = {}; cks.forEach(c => { const key = c.side + ':' + c.at; (grp[key] = grp[key] || []).push(c); }); Object.values(grp).forEach(a => a.forEach((c, i) => { c.k = i; c.n = a.length; })); counts(); }
+    let decoCube = null;   // (the decoration cube sits on the bar: hidden while a checker is there, so the bar checker can be seen and tapped)
+    function restack() { if (decoCube) decoCube.visible = !cks.some(c => c.at === 'bar'); const grp = {}; cks.forEach(c => { const key = c.side + ':' + c.at; (grp[key] = grp[key] || []).push(c); }); Object.values(grp).forEach(a => a.forEach((c, i) => { c.k = i; c.n = a.length; })); counts(); }
     const shadow = c => c.m.children.forEach(ch => { if (ch.userData.contact) ch.visible = c.at !== 'off'; });
     function setBoard() {   // the starting position, dropped in one by one
       const P = { 24: 2, 13: 5, 8: 3, 6: 5 };
@@ -494,6 +495,7 @@
       const q0 = hitOf(e), q = q0 === null || q0 === 0 || q0 === 25 || !T.side ? q0 : 25 - q0;   // (side 1: its own numbering)
       if (sel !== null && q !== null && dests && dests.has(q)) { doPath(dests.get(q)); return; }
       const srcs = new Set(legalNow().map(x => x.from));
+      if (q !== null && q !== 0 && srcs.has(q) && q === sel) return;   // (the chosen checker tapped again — e.g. the bar checker, chosen for you: it stays chosen)
       if (q !== null && q !== 0 && srcs.has(q) && q !== sel) select(q);
       else if (srcs.size) { showSources(); say(L.tapCk); }
     }
@@ -502,7 +504,7 @@
     /* ---------- go ---------- */
     ready = true;
     if (!PZ) setBoard();
-    const cube = M3.cube(64); cube.position.set(g.BX + g.B / 2 - W2, M3.FY + M3.RH + .43, 0); cube.rotation.y = .1; board.add(cube); T3.kick(400);   // decoration: no doubling in table play
+    const cube = M3.cube(64); cube.position.set(g.BX + g.B / 2 - W2, M3.FY + M3.RH + .43, 0); cube.rotation.y = .1; board.add(cube); decoCube = cube; cube.visible = !cks.some(c => c.at === 'bar'); T3.kick(400);   // decoration: no doubling in table play
     say('');
     (async () => {
       try { await loadBG(); } catch (e) { say('…'); return; }

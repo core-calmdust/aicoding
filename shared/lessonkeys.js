@@ -13,7 +13,7 @@
     if ((e.key !== 'Enter' && e.key !== 'ArrowRight') || e.isComposing || e.keyCode === 229 || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.repeat) return;
     const a = document.activeElement;
     if (a && a !== document.body && a.closest && a.closest('input,textarea,select,[contenteditable="true"]')) return;
-    if (a && a.matches && a.matches('button:focus-visible,a:focus-visible,[role=button]:focus-visible')) return;
+    if (e.key === 'Enter' && a && a.matches && a.matches('button:focus-visible,a:focus-visible,[role=button]:focus-visible')) return;
     for (const id of IDS) { const b = document.getElementById(id); if (shown(b)) { e.preventDefault(); e.stopImmediatePropagation(); b.click(); return; } }
   }, true);
 })();
