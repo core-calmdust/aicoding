@@ -881,14 +881,13 @@
       [[784, 0, .07], [880, .075, .07], [988, .15, .07], [1047, .225, .09], [880, .39, .08], [1047, .475, .62]].forEach(([f, d, len]) => { note(f, d, len, v * .45); note(f, d, len, v * .35, 'triangle'); });
       [523, 659, 784].forEach(f => note(f, .475, .62, v * .4, 'triangle'));
     }
-    function fanfare() {   // the pass jingle: bells rising C' E' G', a soft bell chord, a little upward shimmer (2026-11-14: the user's pick, No.3 of 7)
+    function fanfare() {   // the pass jingle: bells rising C' E' G', then a soft bell chord — bells only (2026-11-14: the user's pick, No.3 of 7, without its fast arpeggio)
       try { if (localStorage.getItem('atlas-sfx') === '0') return; const C = window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume();
         const t0 = C.currentTime + .03, out = C.createGain(), comp = C.createDynamicsCompressor(); out.gain.value = .9; out.connect(comp).connect(C.destination);
         const tone = (f, t, len, v, att) => { const o = C.createOscillator(), g = C.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f, t); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + att); g.gain.exponentialRampToValueAtTime(.0008, t + len); o.connect(g).connect(out); o.start(t); o.stop(t + len + .05); };
         const bell = (f, t, v, len = 1.6) => [[1, 1], [2.76, .35], [5.4, .18], [8.9, .08]].forEach(([r, a]) => tone(f * r, t, len / (r > 1 ? r * .6 : 1), v * a, .004));
         [1046.5, 1318.5, 1568].forEach((f, i) => bell(f, t0 + i * .12, .07));
         [523.3, 784, 1046.5].forEach(f => bell(f, t0 + .42, .05, 2.4));
-        for (let i = 0; i < 8; i++) tone(1046.5 * Math.pow(2, i / 6), t0 + .45 + i * .035, .25, .015, .002);
       } catch (e) {}
     }
     function chime(ok) {
