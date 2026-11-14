@@ -138,7 +138,8 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   }
 
   /* ---------- the constellations: 10 stars each (x 0..100, y 0..64) and their lines ---------- */
-  const CON = {
+  // (2026-11-14) the stars sit where the traditional figures put them: shanghai-zodiac.js owns them (these are the old fallback)
+  const CON = (window.ShanghaiZodiac && ShanghaiZodiac.stars) || {
     aries: { p: [[8, 40], [18, 33], [28, 28], [39, 26], [50, 28], [60, 33], [68, 40], [77, 45], [86, 43], [93, 35]] },
     taurus: { p: [[8, 10], [18, 18], [30, 26], [42, 32], [52, 36], [60, 30], [66, 20], [72, 10], [70, 44], [88, 54]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [4, 8], [8, 9]] },
     gemini: { p: [[22, 58], [26, 46], [30, 34], [34, 22], [38, 10], [56, 8], [60, 20], [64, 32], [68, 44], [72, 56]] },
@@ -691,7 +692,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       wld.querySelectorAll('.pn').forEach((t, i) => t.classList.toggle('on', i === area));
     }
     // every constellation's stars, evenly spaced inside its box, in the long sky's units
-    const PTS = AR.map((a, i) => even(CON[a].p.map(p => p.slice()), edges(a), 100, 64, 1, 1).map(([x, y]) => [i * PW + 8 + x, y]));
+    const PTS = AR.map((a, i) => CON[a].p.map(([x, y]) => [i * PW + 8 + x, y]));   // (placed by hand on the figures, already evenly spaced)
     function art() {
       const lit = ([i, j], fs) => cleared(P, fs + i) && cleared(P, fs + j);
       let svg = `<svg viewBox="0 0 ${WW} ${PH}" preserveAspectRatio="none">`;

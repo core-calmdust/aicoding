@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>zodiac preview</title>
+<style>body{margin:0;background:#0b1030;color:#cde;font:12px sans-serif}.g{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.c{position:relative}.c svg{width:100%;display:block;overflow:visible}.shmap{}</style>
+<body class="shmap"><div class="g" id="g"></div>
+<script src="../games/shanghai-zodiac.js"></script>
+<script>
+const ids=['aries','taurus','gemini','cancer','leo','virgo','libra','scorpius','sagittarius','capricornus','aquarius','pisces'];
+const st=document.createElement('style');st.textContent=ShanghaiZodiac.css+'.shmap .fig .zb,.shmap .fig .zs{animation:none!important}';document.head.appendChild(st);
+document.getElementById('g').innerHTML=ids.map((id,i)=>{const S=ShanghaiZodiac.stars[id];let s=`<svg viewBox="-8 0 116 64">`;
+s+=`<rect x="-8" y="0" width="116" height="64" fill="#101845"/><g class="fig" ${location.hash=='#lit'?'class="fig lit"':''}>${ShanghaiZodiac(id,i)}</g>`;
+S.e.forEach(([a,b])=>s+=`<line x1="${S.p[a][0]}" y1="${S.p[a][1]}" x2="${S.p[b][0]}" y2="${S.p[b][1]}" stroke="rgba(255,220,120,.6)" stroke-width=".35"/>`);
+S.p.forEach(([x,y],k)=>s+=`<circle cx="${x}" cy="${y}" r="3" fill="rgba(30,40,100,.55)" stroke="#fff" stroke-width=".3"/><text x="${x}" y="${y+1}" font-size="3" fill="#fff" text-anchor="middle">${k+1}</text>`);
+return `<div class="c">${s}<text x="-6" y="5" font-size="4" fill="#9ab">${id}</text></svg></div>`}).join('');
+</script>

@@ -1,165 +1,292 @@
 /* =====================================================================
-   上海 — the zodiac figures behind the stars of the 星座マップ (2026-11-14, ユーザー: 星座に合わせた伝統絵みたいなもの、
-   図形はワイヤーフレームみたいな感じでもいい — like a star atlas's figures). Each figure is a silhouette in its
-   constellation's own box (x 0..100, y 0..64, as CON in shanghai.js), drawn as a low-poly wireframe: the outline is
-   resampled, filled with a few inner points, Delaunay-triangulated, and the triangles inside it kept. Pale blue lines
-   with a faint fill, a brighter outline, and a few details (horns, eyes, a bow …). Motion is CSS only: the figure
-   breathes, a part sways, and here and there a facet softly glows and fades (a twinkling mesh).
-   window.ShanghaiZodiac(id, i) → SVG markup (a <g>), cached per id.   window.ShanghaiZodiac.css → the shared styles.
+   上海 — the zodiac figures of the 星座マップ, drawn like the figures of an old star atlas
+   (2026-11-14, ユーザー: 独創性ではなく伝統性。各星座の伝統的なモチーフをリサーチして、ステージボタンの位置も合わせる).
+   Each constellation has its 10 stars (= the 10 stage buttons, x 0..100, y 0..64) placed where the traditional figure
+   puts them, and the figure drawn round them in the star-atlas manner: pale blue translucent parts with a light outline,
+   jointed segments, a few inner lines (cf. Bode's Uranographia / Flamsteed / Urania's Mirror):
+     Aries — the ram lying down, its head turned back over its shoulder, one foreleg stretched out (Hamal on the head);
+     Taurus — the front half of a charging bull, head lowered (Aldebaran the eye, Elnath and ζ the horn tips, the Pleiades on the shoulder);
+     Gemini — the twins with their arms round each other, Castor with the lyre, Pollux with the club (their heads the two stars);
+     Cancer — the crab seen from above, claws raised;   Leo — the lion striding west, the Sickle the mane, Regulus the heart, Denebola the tail;
+     Virgo — the winged maiden lying along the stars, the palm frond in one hand and the ear of wheat (Spica) in the other;
+     Libra — the scales;   Scorpius — the scorpion: claws and head, jointed legs, the curling tail with the sting;
+     Sagittarius — the centaur drawing his bow, the arrow aimed west at the scorpion's heart (the Teapot stars on the bow and arrow);
+     Capricornus — the sea-goat: horned head and folded forelegs, the body ending in a fish's tail (Deneb Algedi the tail);
+     Aquarius — the water-bearer pouring his urn, the stream running down into the mouth of the Southern Fish (Fomalhaut);
+     Pisces — two fishes tied by cords at their tails, the knot Alrescha; the western fish's head is the Circlet.
+   window.ShanghaiZodiac(id, i) → SVG markup, cached.  .css → the shared styles.  .stars → { id: { p, e } } (the map and the
+   play mat read the stars from here).
    ===================================================================== */
 (function () {
   'use strict';
-  const R2 = n => Math.round(n * 10) / 10;
+  const R1 = n => Math.round(n * 10) / 10;
+  const pt = p => R1(p[0]) + ' ' + R1(p[1]);
 
-  /* ---------- geometry helpers ---------- */
-  // a path of absolute M / L / C / Q (Z closes) → points along it
-  function pathPts(d, step) {
-    const tk = d.match(/[MLCQZ]|-?\d*\.?\d+/g), out = []; let i = 0, cx = 0, cy = 0, sx = 0, sy = 0, cmd = 'M';
-    const num = () => +tk[i++];
-    const seg = (f, len) => { const n = Math.max(2, Math.ceil(len / step)); for (let k = 1; k <= n; k++) out.push(f(k / n)); };
-    while (i < tk.length) {
-      if (/[MLCQZ]/.test(tk[i])) cmd = tk[i++];
-      if (cmd === 'Z') { cx = sx; cy = sy; cmd = 'M'; continue; }
-      if (cmd === 'M') { cx = sx = num(); cy = sy = num(); out.push([cx, cy]); cmd = 'L'; }
-      else if (cmd === 'L') { const x = num(), y = num(), x0 = cx, y0 = cy; seg(t => [x0 + (x - x0) * t, y0 + (y - y0) * t], Math.hypot(x - x0, y - y0)); cx = x; cy = y; }
-      else if (cmd === 'Q') { const ax = num(), ay = num(), x = num(), y = num(), x0 = cx, y0 = cy;
-        seg(t => { const u = 1 - t; return [u * u * x0 + 2 * u * t * ax + t * t * x, u * u * y0 + 2 * u * t * ay + t * t * y]; }, Math.hypot(ax - x0, ay - y0) + Math.hypot(x - ax, y - ay)); cx = x; cy = y; }
-      else if (cmd === 'C') { const ax = num(), ay = num(), bx = num(), by = num(), x = num(), y = num(), x0 = cx, y0 = cy;
-        seg(t => { const u = 1 - t; return [u * u * u * x0 + 3 * u * u * t * ax + 3 * u * t * t * bx + t * t * t * x, u * u * u * y0 + 3 * u * u * t * ay + 3 * u * t * t * by + t * t * t * y]; },
-          Math.hypot(ax - x0, ay - y0) + Math.hypot(bx - ax, by - ay) + Math.hypot(x - bx, y - by)); cx = x; cy = y; }
+  /* ---------- the stars: the stage buttons in order, and the lines between them ---------- */
+  const path = n => Array.from({ length: n - 1 }, (_, i) => [i, i + 1]);
+  const STARS = {
+    aries: { p: [[14, 36], [27, 28], [40, 26], [53, 28], [68, 26], [78, 14], [66, 9], [56, 12], [47, 17], [88, 50]], e: path(9).concat([[4, 9]]) },
+    taurus: { p: [[16, 8], [26, 18], [36, 26], [28, 36], [21, 28], [8, 31], [62, 14], [82, 20], [44, 47], [34, 56]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 1], [4, 5], [2, 6], [6, 7], [3, 8], [8, 9]] },
+    gemini: { p: [[56, 56], [46, 44], [36, 32], [24, 16], [40, 8], [52, 18], [64, 28], [66, 44], [80, 38], [88, 46]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [6, 8], [8, 9], [2, 5]] },
+    cancer: { p: [[28, 10], [36, 22], [44, 32], [56, 32], [64, 22], [72, 10], [40, 46], [26, 54], [60, 46], [74, 54]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [2, 6], [6, 7], [3, 8], [8, 9]] },
+    leo: { p: [[14, 31], [32, 22], [36, 38], [72, 46], [70, 35], [64, 24], [70, 13], [80, 9], [88, 16], [90, 28]], e: [[0, 1], [1, 2], [2, 0], [1, 5], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9]] },
+    virgo: { p: [[74, 8], [80, 20], [66, 28], [54, 22], [44, 12], [52, 36], [38, 40], [26, 44], [12, 48], [64, 50]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [2, 5], [5, 6], [6, 7], [7, 8], [5, 9]] },
+    libra: { p: [[50, 57], [50, 43], [50, 24], [50, 10], [30, 22], [20, 38], [28, 54], [70, 22], [80, 38], [72, 54]], e: [[0, 1], [1, 2], [2, 3], [2, 4], [4, 5], [5, 6], [2, 7], [7, 8], [8, 9]] },
+    scorpius: { p: [[80, 9], [86, 19], [87, 31], [72, 24], [61, 30], [46, 41], [44, 51], [34, 58], [21, 56], [14, 46]], e: [[0, 1], [1, 2], [1, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9]] },
+    sagittarius: { p: [[14, 40], [28, 32], [40, 34], [44, 22], [52, 9], [67, 13], [72, 26], [86, 26], [67, 39], [55, 53]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [5, 6], [6, 7], [6, 8], [8, 2], [8, 9]] },
+    capricornus: { p: [[75, 5], [84, 19], [77, 33], [70, 47], [56, 44], [42, 42], [28, 36], [12, 20], [26, 26], [44, 29]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 1]] },
+    aquarius: { p: [[24, 58], [30, 45], [28, 24], [42, 20], [54, 15], [60, 28], [72, 34], [70, 46], [80, 52], [92, 56]], e: path(10) },
+    pisces: { p: [[28, 15], [30, 28], [40, 48], [54, 58], [62, 48], [70, 32], [78, 26], [88, 20], [96, 26], [88, 32]], e: path(10).concat([[9, 6]]) },
+  };
+
+  /* ---------- geometry ---------- */
+  // Catmull–Rom through the points (closed or open) → a dense polyline
+  function cr(P, n, closed) {
+    const out = [], N = P.length, at = i => closed ? P[(i + N) % N] : P[Math.max(0, Math.min(N - 1, i))];
+    const segs = closed ? N : N - 1;
+    for (let i = 0; i < segs; i++) {
+      const p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
+      for (let k = 0; k < n; k++) { const t = k / n, t2 = t * t, t3 = t2 * t;
+        out.push([0, 1].map(j => .5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3))); }
     }
-    // (a closed outline ends where it began: drop the repeated last point)
-    if (out.length > 2 && Math.hypot(out[0][0] - out[out.length - 1][0], out[0][1] - out[out.length - 1][1]) < .01) out.pop();
+    if (!closed) out.push(P[N - 1]);
     return out;
   }
-  const ell = (cx, cy, rx, ry, n, rot) => { const c = Math.cos(rot || 0), s = Math.sin(rot || 0); return Array.from({ length: n || 18 }, (_, k) => { const a = k / (n || 18) * Math.PI * 2, x = Math.cos(a) * rx, y = Math.sin(a) * ry; return [cx + x * c - y * s, cy + x * s + y * c]; }); };
-  // a tapered tube along a polyline (the scorpion's tail, the sea-goat's body …) → its outline
-  function tube(Pp, w0, w1) {
-    const L = [], Rr = [];
-    Pp.forEach((p, k) => { const a = Pp[Math.max(0, k - 1)], b = Pp[Math.min(Pp.length - 1, k + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, w = (w0 + (w1 - w0) * k / (Pp.length - 1)) / 2;
-      L.push([p[0] - dy / l * w, p[1] + dx / l * w]); Rr.push([p[0] + dy / l * w, p[1] - dx / l * w]); });
-    return L.concat(Rr.reverse());
+  const poly = (Q, close) => 'M' + Q.map(pt).join('L') + (close ? 'Z' : '');
+  // a smooth closed shape through the points
+  const blob = (P, cls) => `<path class="${cls || 'zp'}" d="${poly(cr(P, 6, true), true)}"/>`;
+  // a smooth open line through the points
+  const ln = (P, cls) => `<path class="${cls || 'zl'}" d="${poly(cr(P, 6, false))}"/>`;
+  // a tapered limb along the points (widths w0 → w1, or one per point), rounded at both ends
+  function tube(P, ws, cls) {
+    const S = cr(P, 6, false), n = S.length, W = Array.isArray(ws) ? ws : [ws, ws];
+    const wAt = k => { const f = k / (n - 1) * (W.length - 1), i = Math.min(W.length - 2, Math.floor(f)); return W[i] + (W[i + 1] - W[i]) * (f - i); };
+    const L = [], R = [];
+    S.forEach((p, k) => { const a = S[Math.max(0, k - 1)], b = S[Math.min(n - 1, k + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, w = wAt(k) / 2;
+      L.push([p[0] - dy / l * w, p[1] + dx / l * w]); R.push([p[0] + dy / l * w, p[1] - dx / l * w]); });
+    const cap = (c, from, w, sgn) => { const out = [], a0 = Math.atan2(from[1] - c[1], from[0] - c[0]); for (let k = 1; k < 6; k++) { const a = a0 + sgn * Math.PI * k / 6; out.push([c[0] + Math.cos(a) * w, c[1] + Math.sin(a) * w]); } return out; };
+    const e = S[n - 1], s = S[0];
+    const Q = L.concat(cap(e, L[n - 1], wAt(n - 1) / 2, -1), R.slice().reverse(), cap(s, R[0], wAt(0) / 2, -1));
+    return `<path class="${cls || 'zp'}" d="${poly(Q, true)}"/>`;
   }
-  // a human figure (standing, arms at the sides) from its head to its feet; wd = how broad. Template: height 100, head on top.
-  const HUMAN = [[-3, 13], [-12, 18], [-15, 34], [-17, 52], [-15, 57], [-12, 52], [-10, 36], [-9, 46], [-12, 58], [-10, 80], [-8, 96], [-12, 100], [-2, 100], [-3, 80], [0, 62]];
-  function human(head, feet, wd) {
-    const pts = HUMAN.concat(HUMAN.slice(0, -1).reverse().map(([x, y]) => [-x, y]));
-    const dx = feet[0] - head[0], dy = feet[1] - head[1], l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l, k = l / 100;
-    const map = ([x, y]) => [head[0] + (-uy * x * wd + ux * y) * k, head[1] + (ux * x * wd + uy * y) * k];
-    const hc = map([0, 6]), hr = 6.5 * k;
-    return { body: pts.map(map), head: ell(hc[0], hc[1], hr, hr, 14), hc, map, y: pts };
-  }
-  const inside = (p, poly) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if ((yi > p[1]) !== (yj > p[1]) && p[0] < (xj - xi) * (p[1] - yi) / (yj - yi) + xi) c = !c; } return c; };
-  // Delaunay (Bowyer–Watson) of the resampled outline + a few inner points; only the triangles inside the outline
-  function mesh(poly, gap, seed) {
-    let s = seed || 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    const B = []; for (let i = 0; i < poly.length; i++) { const a = poly[i], b = poly[(i + 1) % poly.length], n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / gap)); for (let k = 0; k < n; k++) B.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]); }
-    const xs = B.map(p => p[0]), ys = B.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-    const Pt = B.slice(), g = gap * 1.6;
-    for (let y = y0 + g / 2; y < y1; y += g) for (let x = x0 + g / 2; x < x1; x += g) { const p = [x + (rnd() - .5) * g * .6, y + (rnd() - .5) * g * .6]; if (inside(p, poly) && B.every(q => Math.hypot(q[0] - p[0], q[1] - p[1]) > gap * .7)) Pt.push(p); }
-    const big = 1e4, V = Pt.concat([[-big, -big], [big * 2, -big], [-big, big * 2]]), n = Pt.length;
-    const circ = t => { const [a, b, c] = t.map(k => V[k]), d = 2 * (a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1])) || 1e-9;
-      const ux = ((a[0] ** 2 + a[1] ** 2) * (b[1] - c[1]) + (b[0] ** 2 + b[1] ** 2) * (c[1] - a[1]) + (c[0] ** 2 + c[1] ** 2) * (a[1] - b[1])) / d,
-        uy = ((a[0] ** 2 + a[1] ** 2) * (c[0] - b[0]) + (b[0] ** 2 + b[1] ** 2) * (a[0] - c[0]) + (c[0] ** 2 + c[1] ** 2) * (b[0] - a[0])) / d; return [ux, uy, (a[0] - ux) ** 2 + (a[1] - uy) ** 2]; };
-    let T = [[n, n + 1, n + 2]], C = T.map(circ);
-    for (let i = 0; i < n; i++) {
-      const p = V[i], bad = [], keep = [], kc = [];
-      T.forEach((t, k) => { const c = C[k]; if ((p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 < c[2]) bad.push(t); else { keep.push(t); kc.push(c); } });
-      const edge = new Map(); bad.forEach(t => [[t[0], t[1]], [t[1], t[2]], [t[2], t[0]]].forEach(([a, b]) => { const k = a < b ? a + ',' + b : b + ',' + a; edge.set(k, edge.has(k) ? null : [a, b]); }));
-      edge.forEach(e => { if (e) { const t = [e[0], e[1], i]; keep.push(t); kc.push(circ(t)); } });
-      T = keep; C = kc;
+  // jointed segments (a scorpion's tail and legs, a crab's legs): one swollen segment per pair of points
+  function seg(P, w0, w1) {
+    let s = '';
+    for (let i = 0; i < P.length - 1; i++) {
+      const a = P[i], b = P[i + 1], w = w0 + (w1 - w0) * i / Math.max(1, P.length - 2), cx = (a[0] + b[0]) / 2, cy = (a[1] + b[1]) / 2, l = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      s += `<ellipse class="zp" cx="${R1(cx)}" cy="${R1(cy)}" rx="${R1(l / 2 + w * .22)}" ry="${R1(w / 2)}" transform="rotate(${R1(Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI)} ${R1(cx)} ${R1(cy)})"/>`;
     }
-    return T.filter(t => t.every(k => k < n)).map(t => t.map(k => Pt[k])).filter(t => inside([(t[0][0] + t[1][0] + t[2][0]) / 3, (t[0][1] + t[1][1] + t[2][1]) / 3], poly));
+    return s;
   }
-
-  /* ---------- drawing ---------- */
-  let SEED = 1;
-  function part(poly, gap) {
-    const T = mesh(poly, gap || 4.2, SEED++ * 7919), seen = new Set(); let edges = '', glow = '';
-    T.forEach((t, k) => {
-      [[0, 1], [1, 2], [2, 0]].forEach(([a, b]) => { const p = t[a], q = t[b], key = [R2(p[0]), R2(p[1]), R2(q[0]), R2(q[1])], k1 = key.join(), k2 = [key[2], key[3], key[0], key[1]].join(); if (seen.has(k1) || seen.has(k2)) return; seen.add(k1); edges += `M${key[0]} ${key[1]}L${key[2]} ${key[3]}`; });
-      if (k % 5 === 2) glow += `<path class="zt" style="animation-delay:${-((k * 1.37) % 9).toFixed(2)}s" d="M${R2(t[0][0])} ${R2(t[0][1])}L${R2(t[1][0])} ${R2(t[1][1])}L${R2(t[2][0])} ${R2(t[2][1])}Z"/>`;
-    });
-    const outline = 'M' + poly.map(p => R2(p[0]) + ' ' + R2(p[1])).join('L') + 'Z';
-    return `<g class="zpart"><path class="zfil" d="${outline}"/>${glow}<path class="zed" d="${edges}"/><path class="zol" d="${outline}"/></g>`;
-  }
-  const line = (d, cls) => `<path class="zdt${cls ? ' ' + cls : ''}" d="${d}"/>`;
-  const dot = (x, y, r) => `<circle class="zey" cx="${x}" cy="${y}" r="${r || .7}"/>`;
+  const ell = (cx, cy, rx, ry, rot, cls) => `<ellipse class="${cls || 'zp'}" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"${rot ? ` transform="rotate(${rot} ${cx} ${cy})"` : ''}/>`;
+  // points in a local frame (x along angle a, scaled s, mirrored with f = -1) → the map
+  const xf = (P, x, y, a, s, f) => { const c = Math.cos(a), sn = Math.sin(a); return P.map(([u, v]) => { v *= f || 1; return [x + (u * c - v * sn) * s, y + (u * sn + v * c) * s]; }); };
+  const rad = d => d * Math.PI / 180;
+  // a claw (the scorpion's and the crab's pincers), opening along angle a (degrees)
+  const pincer = (x, y, a, s) => blob(xf([[0, -1.7], [3, -2.4], [5.4, -1.8], [5.4, 1.8], [3, 2.4], [0, 1.7]], x, y, rad(a), s)) +
+    blob(xf([[4.8, -1.8], [8, -3], [11.6, -1.8], [10.6, -.9], [7.6, -1.2], [5.2, -.2]], x, y, rad(a), s)) +
+    blob(xf([[4.8, 1.6], [7.8, 2.6], [10.6, 1.4], [9.6, .7], [7.4, .9], [5.2, .4]], x, y, rad(a), s));
+  const dot = (x, y, r) => `<circle class="zey" cx="${x}" cy="${y}" r="${r || .6}"/>`;
   const sway = (ox, oy, inner, amp, dur) => `<g class="zs" style="transform-origin:${ox}px ${oy}px;--a:${amp || 3}deg;--sd:${dur || 6}s">${inner}</g>`;
-  const P = (d, st) => pathPts(d, st || 2.4);
+  // the cross-bands of a body seen from above (the scorpion's back, the crab's shell …): chords of an ellipse
+  function bands(cx, cy, rx, ry, rotDeg, ts, bend) {
+    const a = rad(rotDeg), c = Math.cos(a), s = Math.sin(a), M = (u, v) => [cx + u * c - v * s, cy + u * s + v * c];
+    return ts.map(t => { const h = ry * Math.sqrt(Math.max(0, 1 - t * t)) * .96; const p = M(t * rx, -h), q = M(t * rx, h), m = M(t * rx + (bend || 0), 0); return `<path class="zl" d="M${pt(p)}Q${pt(m)} ${pt(q)}"/>`; }).join('');
+  }
+  // wool / scales: a row of small arcs along a line
+  function scallops(P, r, n, cls) {
+    const S = cr(P, 8, false); let d = '';
+    for (let k = 0; k < n; k++) { const i = Math.round(k / Math.max(1, n - 1) * (S.length - 1)), p = S[i], q = S[Math.min(S.length - 1, i + 1)], l = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1, ux = (q[0] - p[0]) / l, uy = (q[1] - p[1]) / l;
+      d += `M${pt([p[0] - ux * r, p[1] - uy * r])}Q${pt([p[0] - uy * r * 1.6, p[1] + ux * r * 1.6])} ${pt([p[0] + ux * r, p[1] + uy * r])}`; }
+    return `<path class="${cls || 'zl'}" d="${d}"/>`;
+  }
+  // a person: torso from the shoulders to the hips, limbs as tapered tubes, a round head (the atlases' classical figures)
+  function person(o) {
+    const [s0, s1] = o.sh, [h0, h1] = o.hip, mid = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+    const w0 = mid(s0, h0, .55), w1 = mid(s1, h1, .55), in0 = mid(w0, w1, .1), in1 = mid(w0, w1, .9);
+    const nk = o.neck, lw = o.lw || 2.4, aw = o.aw || 1.9;
+    const limb = (P, a, b) => tube(P, [a, b]);
+    let back = '', front = '';
+    (o.legs || []).forEach((L, k) => { (o.legBack === k ? (back += limb(L, lw, lw * .62)) : (front += limb(L, lw, lw * .62))); if (L.foot) {} });
+    const arms = (o.arms || []).map(A => limb(A, aw, aw * .7));
+    const torso = blob([s0, mid(s0, in0, .5), in0, h0, mid(h0, h1, .5), h1, in1, mid(s1, in1, .5), s1, mid(s0, s1, .5)].map((p, i) => i === 9 ? [p[0] + (nk[0] - p[0]) * .35, p[1] + (nk[1] - p[1]) * .35] : p));
+    const neck = tube([mid(s0, s1, .5), nk], [o.nw || 1.8, (o.nw || 1.8) * .9]);
+    const head = ell(o.head[0], o.head[1], o.head[2], o.head[2] * 1.06, 0);
+    const behind = (o.armBack != null ? arms[o.armBack] : '');
+    const infront = arms.filter((_, k) => k !== o.armBack).join('');
+    return behind + back + front + neck + torso + (o.robe ? blob(o.robe) + (o.folds || []).map(f => ln(f)).join('') : '') + (o.over || '') + infront + head + (o.hair || '');
+  }
 
+  /* ---------- the figures ---------- */
   const ART = {
-    // おひつじ座: a ram walking left, its curled horn on the head, fleece along the back
-    aries: () => part(P('M22 46 C18 44 15 42 13 40 C9 41 6 40 5 37 C4 34 6 31 9 30 C12 28 16 28 19 30 C24 30 28 31 32 31 C44 28 60 28 72 32 C82 34 88 36 90 40 C92 42 92 46 89 48 C88 51 87 53 86 55 L87 62 L84 62 L82 56 C78 56 74 56 70 55 L70 62 L67 62 L66 55 C56 56 44 56 34 55 L34 62 L31 62 L30 54 C28 54 26 53 25 52 L25 62 L22 62 L21 50 C21 48 22 47 22 46 Z')) +
-      line('M18 31 C21 25 28 26 28 32 C28 37 22 38 21 34 C20 31 24 31 24 33') + line('M40 33 Q44 30 48 33 Q52 30 56 33 Q60 30 64 33 Q68 30 72 34', 'zsoft') + dot(10, 34) +
-      sway(90, 42, line('M90 42 C94 41 96 44 93 47'), 6),
-    // おうし座: the front half of a charging bull (as the old star atlases show it), head lowered, horns up
-    taurus: () => part(P('M44 40 C42 34 44 29 48 27 C52 25 56 26 60 29 C66 24 72 21 80 22 C88 23 94 28 97 36 C98 42 96 46 92 47 L94 56 L91 57 L86 48 C82 48 77 48 73 47 L76 55 L73 56 L68 47 C64 46 60 45 57 45 C55 48 51 49 47 47 C44 46 43 43 44 40 Z')) +
-      line('M50 27 C47 20 50 12 57 9') + line('M57 27 C62 19 68 14 73 10') + line('M58 28 L64 25 L60 31') + dot(50, 33) + line('M46 44 Q48 46 50 45', 'zsoft') +
-      line('M97 36 Q99 40 97 44', 'zsoft'),
-    // ふたご座: the twins standing side by side, leaning together
-    gemini: () => { const a = human([37, 3], [26, 60], 1.05), b = human([58, 3], [68, 60], 1.05);
-      return part(a.body, 3.4) + part(a.head, 2.6) + part(b.body, 3.4) + part(b.head, 2.6) + line('M42 22 Q47 26 53 22', 'zsoft') +
-        sway(58, 3, line('M53 1 Q58 -3 63 1'), 5) + sway(37, 3, line('M32 1 Q37 -3 42 1'), 5); },
-    // かに座: a crab seen from above, claws raised, legs spread
-    cancer: () => part(ell(50, 38, 17, 11, 26)) +
-      sway(36, 30, part(P('M36 30 Q30 24 26 20 C20 18 18 12 22 9 C25 7 28 10 27 13 C30 11 33 13 31 17 C33 21 36 24 39 28 Z'), 2.8), 5, 5) +
-      sway(64, 30, part(P('M64 30 Q70 24 74 20 C80 18 82 12 78 9 C75 7 72 10 73 13 C70 11 67 13 69 17 C67 21 64 24 61 28 Z'), 2.8), -5, 5) +
-      line('M34 40 L22 48 L18 57M35 44 L26 53M37 47 L31 58M66 40 L78 48 L84 57M65 44 L74 53M63 47 L69 58') + line('M45 28 L44 22M55 28 L56 22') + dot(44, 21) + dot(56, 21),
-    // しし座: a lion walking left, the great mane round its head, the tail curling up behind
-    leo: () => part(P('M37 22 C46 27 60 30 74 30 C84 30 90 34 92 40 C93 45 91 49 89 53 L90 62 L86 62 L84 54 C77 55 70 55 66 54 L66 62 L62 62 L61 53 C52 53 46 52 41 51 L41 62 L37 62 L35 49 C32 47 31 44 31 41 Z')) +
-      part(P('M11 22 C10 13 17 8 24 8 C32 8 38 14 38 22 C38 30 34 37 26 39 C20 40 13 36 11 30 C8 30 8 25 11 22 Z'), 3.2) +
-      line('M16 22 C15 18 18 16 21 17') + dot(17, 21) + line('M12 27 Q15 29 18 27', 'zsoft') +
-      sway(92, 40, line('M92 40 C97 37 99 31 96 27 C95 25 97 23 99 24'), 7, 7),
-    // おとめ座: a winged maiden lying along the stars, a spike of wheat in her hand
-    virgo: () => { const h = human([10, 13], [88, 50], 1.15);
-      return part(h.body, 3.6) + part(h.head, 2.6) + part(P('M30 22 C34 10 46 4 56 6 C50 10 46 16 44 24 C40 22 34 22 30 22 Z'), 3) +
-        sway(46, 54, line('M42 40 L46 58') + line('M45 52 L42 49M46 55 L43 52M45 52 L48 49M46 55 L49 52', 'zsoft'), 6); },
-    // てんびん座: the scales: a stand, the beam (gently tipping), two pans on chains
-    libra: () => part(P('M47 12 L53 12 L52 50 L60 56 L40 56 L48 50 Z'), 3) + part(ell(50, 8, 4, 4, 12), 2.4) +
-      sway(50, 22, part(P('M24 21 L76 21 L76 24 L24 24 Z'), 3) + line('M26 23 L18 50M26 23 L34 50M74 23 L66 50M74 23 L82 50') +
-        part(P('M14 50 L38 50 C36 57 30 60 26 60 C21 60 16 57 14 50 Z'), 3) + part(P('M62 50 L86 50 C84 57 79 60 74 60 C70 60 64 57 62 50 Z'), 3), 4, 7),
-    // さそり座: a scorpion: head and claws up at the right, its tail of segments curling down to the stinger at the left
-    scorpius: () => part(tube(P('M88 8 Q80 18 70 25 Q58 32 48 39 Q40 47 32 54 Q24 58 17 56'), 10, 4), 3.2) +
-      part(P('M88 8 C90 4 94 2 97 4 C99 6 98 10 95 10 C96 7 93 6 91 8 Z'), 2) + part(P('M90 12 C94 12 98 14 98 18 C97 20 94 19 93 17 C95 17 95 15 92 15 Z'), 2) +
-      sway(17, 56, line('M17 56 C11 56 8 51 10 46 C11 44 13 44 14 46'), 8, 5) + dot(85, 10) + dot(88, 12),
-    // いて座: a centaur archer drawing his bow toward the right
-    sagittarius: () => { const h = human([60, 4], [56, 70], 1.2), top = h.y.map((p, k) => [p, h.body[k]]).filter(([p]) => p[1] < 50).map(([, q]) => q);
-      return part(P('M24 28 C30 23 44 22 56 26 C60 28 61 32 59 36 C60 40 58 44 56 46 L57 56 L54 56 L52 47 C46 48 38 48 32 47 L31 56 L28 56 L27 45 C23 43 21 38 22 33 C20 35 16 38 12 37 C16 34 20 31 24 28 Z'), 3.6) +
-        part(top, 3) + part(h.head, 2.4) +
-        line('M70 8 Q80 22 70 38') + line('M70 8 L64 22 L70 38', 'zsoft') + line('M58 22 L88 31') + line('M85 28 L89 31 L85 34'); },
-    // やぎ座: a sea-goat: a goat's head and forelegs, its body ending in a curling fish tail
-    capricornus: () => part(tube(P('M24 24 Q40 28 52 36 Q64 44 76 46 Q86 46 88 40'), 15, 4), 3.4) +
-      part(P('M10 14 C10 10 14 8 18 9 C22 10 25 14 25 19 C25 24 22 27 18 27 C14 27 11 24 10 21 C8 21 6 19 7 17 C8 16 9 15 10 14 Z'), 2.6) +
-      line('M14 10 C10 3 17 1 18 6M19 10 C22 3 29 4 26 9') + dot(16, 16) + line('M24 30 L20 40 L22 42M30 32 L28 42 L30 44') +
-      sway(88, 40, part(P('M88 40 C90 34 94 30 98 30 C95 34 95 38 98 42 C94 42 90 42 88 40 Z'), 2.4), 8, 6),
-    // みずがめ座: the water-bearer tipping his urn; the water runs down along the stars
-    aquarius: () => { const h = human([12, 6], [22, 62], 1.1);
-      return part(h.body, 3.4) + part(h.head, 2.4) + part(P('M28 12 L44 8 C48 12 48 20 44 26 C38 30 30 28 28 22 Z'), 2.6) +
-        sway(44, 20, line('M44 18 Q54 22 56 30 Q58 40 64 44 Q70 48 70 54 Q76 58 86 52', 'zwave') + line('M46 22 Q52 28 54 36 Q56 44 62 48 Q68 52 68 58', 'zwave'), 2, 8); },
-    // うお座: two fish tied together by a long cord that dips through the middle
-    pisces: () => line('M14 16 Q32 40 50 47 Q68 40 86 16', 'zsoft') +
-      sway(14, 14, part(ell(14, 14, 8.5, 4.6, 20, .55), 2.6) + part(P('M7 9 L1 3 L2 13 Z'), 2), 5, 6) + dot(19, 17) +
-      sway(86, 14, part(ell(86, 14, 8.5, 4.6, 20, -.55), 2.6) + part(P('M93 9 L99 3 L98 13 Z'), 2), -5, 6) + dot(81, 17),
+    // the ram, lying, one foreleg stretched out, its head turned back over the shoulder (Hamal on the head, the horn curling)
+    aries: () => {
+      const legs = tube([[30, 49], [24, 55], [35, 57]], [4, 3]) + tube([[60, 49], [66, 55], [56, 57]], [4, 3]) + tube([[74, 45], [82, 50], [91, 52]], [4, 2.6]) + ell(92, 52, 1.6, 1.1, 10);
+      const body = blob([[13, 39], [18, 30], [28, 26], [40, 24], [54, 25], [66, 28], [75, 36], [76, 46], [66, 52], [48, 53], [30, 53], [18, 50], [12, 45]]);
+      const neck = blob([[56, 27], [55, 18], [60, 11], [67, 12], [71, 22], [76, 34], [66, 33]]);
+      const head = blob([[67, 11], [63, 6.5], [56, 7], [50, 10.5], [45.5, 15], [46, 19], [50, 20.5], [56, 19.5], [62, 19], [67, 16]]);
+      const horn = tube([[63, 9], [70, 6], [77, 8], [80, 13], [78, 19], [72, 20], [69, 16], [72, 13], [75, 15]], [3.4, 1.2]);
+      return tube([[13, 40], [9, 44], [9, 49]], [3.4, 2]) + legs + body + scallops([[18, 33], [30, 28], [44, 27], [58, 29], [70, 35]], 1.7, 9) + scallops([[16, 42], [30, 38], [46, 37], [62, 39], [72, 43]], 1.6, 8) +
+        neck + scallops([[59, 16], [62, 22], [66, 29]], 1.4, 3) + head + horn + blob([[61, 16], [65, 15], [64, 19.5]]) + dot(52.5, 13) + ln([[46.5, 17], [48.5, 17.8]]);
+    },
+    // the forepart of a charging bull, head lowered; Aldebaran the eye, the horn tips Elnath (upper) and ζ (lower), the Pleiades on the shoulder
+    taurus: () => {
+      const body = blob([[34, 15], [42, 9], [52, 5], [61, 6], [69, 10], [80, 13], [92, 14], [99, 16], [97, 24], [99, 32], [95, 40], [86, 42], [74, 42], [64, 46], [54, 47.4], [44, 45], [36, 40]]);
+      const legs = tube([[48, 41], [44, 47], [35, 55]], [5, 3]) + blob([[32, 53], [37, 54], [36, 58], [31, 57]]) + tube([[60, 42], [63, 51], [56, 58]], [5, 3]) + blob([[53, 56], [58, 57], [57, 61], [52, 60]]);
+      const head = blob([[25, 16.4], [33, 15.6], [38.4, 20.6], [37.4, 28], [33, 36], [29.4, 43], [26, 48.4], [20, 49], [16, 46], [17, 40], [19, 32], [20, 24]]);
+      const horns = tube([[25, 18], [19, 15], [16, 11], [17, 7]], [3, 1]) + tube([[21, 26], [14, 27], [9, 30], [8, 34]], [3, 1]);
+      const cut = ln([[98, 17], [96, 23], [99, 29], [96, 36], [98, 44]], 'zl zsoft');
+      return legs + body + cut + ln([[36, 16], [46, 13], [60, 12]], 'zl zsoft') + ln([[44, 40], [48, 32], [46, 22]], 'zl zsoft') +
+        blob([[35, 18], [40, 15], [42, 19], [38, 21]]) + horns + head + dot(21.5, 28.5, .7) + dot(33, 27, .6) + ln([[19, 44], [21, 46], [24, 45]]) + ln([[26, 31], [24, 38], [22, 43]], 'zl zsoft') +
+        [[60, 12], [63, 13], [61.5, 15.5], [64, 16], [60, 16]].map(([x, y]) => `<circle class="zcl" cx="${x}" cy="${y}" r=".45"/>`).join('');
+    },
+    // the twins, arms round each other: Pollux (left) with the club, Castor (right) with the lyre
+    gemini: () => {
+      const pollux = person({ head: [24, 15.5, 3.6], neck: [27, 20], sh: [[27, 27], [34, 21]], hip: [[37, 37.5], [42.5, 33]],
+        legs: [[[37.5, 37], [43, 46], [51, 56]], [[42, 33], [49, 42], [57, 52]]], legBack: 1,
+        arms: [[[34, 21.5], [41, 27], [48, 25]], [[27, 27], [21, 30.5], [16.5, 27]]], armBack: 0,
+        robe: [[29, 28], [35, 22], [44, 33], [50, 37], [44, 42], [39, 45], [33, 38]], folds: [[[37, 30], [43, 39]], [[33, 32], [39, 41]]],
+        hair: ln([[21, 13], [24, 11.6], [27.4, 13.6]]) });
+      const club = tube([[15.5, 29], [12, 22], [9.6, 14]], [1.4, 3.6]) + ln([[11, 20], [12.6, 19.4]], 'zl zsoft') + ln([[10, 16.5], [11.6, 16]], 'zl zsoft');
+      const castor = person({ head: [40, 8, 3.6], neck: [43.4, 12], sh: [[44, 17.3], [50, 10.4]], hip: [[61.8, 30.7], [66.2, 25.3]],
+        legs: [[[62, 30.5], [64, 37.5], [66.5, 45]], [[66, 25.5], [75, 33], [85, 43]]], legBack: 0,
+        arms: [[[44, 17.5], [39.5, 22.5], [34, 22]], [[50, 10.5], [56, 9.5], [60, 14]]],
+        robe: [[45, 17], [50, 11], [60, 20], [74, 29], [70, 35], [66, 38], [56, 30]], folds: [[[52, 18], [64, 31]], [[56, 15], [70, 28]]],
+        hair: ln([[37, 6], [40, 4.2], [43.4, 6]]) });
+      const feet = blob([[49, 55], [53, 54.5], [57, 56.5], [52, 58]]) + blob([[64, 44], [68, 44], [70, 46.5], [65, 46.5]]) + blob([[83, 42], [88, 44.5], [89, 47], [84, 46]]);
+      const lyre = tube([[61, 18], [59, 12], [61.5, 6.5]], [1.2, .8]) + tube([[66, 17], [68, 11], [66, 5.5]], [1.2, .8]) + blob([[60, 16], [67, 15.5], [66, 20], [61, 20.5]]) + ln([[61, 7], [66.5, 6.5]]) + ln([[62, 16], [62.6, 8]], 'zl zsoft') + ln([[64, 16], [64, 7.8]], 'zl zsoft') + ln([[65.6, 16], [65.4, 8]], 'zl zsoft');
+      return pollux + club + feet + castor + lyre + dot(22.5, 15) + dot(38.4, 7.6);
+    },
+    // the crab from above, claws raised (Praesepe glimmering on the shell)
+    cancer: () => {
+      const legs = [[[36, 34], [26, 31], [18, 37]], [[36, 38], [26, 40], [19, 47]], [[38, 42], [30, 47], [24, 55]], [[43, 45], [39, 51], [35, 58]]];
+      const L = legs.map(P => seg(P, 3.2, 2.4) + ln([P[2], [P[2][0] - 1.6, P[2][1] + 1.8]])).join('') + legs.map(P => P.map(([x, y]) => [100 - x, y])).map(P => seg(P, 3.2, 2.4) + ln([P[2], [P[2][0] + 1.6, P[2][1] + 1.8]])).join('');
+      const claws = sway(40, 30, seg([[41, 29], [36, 23], [32.5, 16.5]], 3.6, 3) + pincer(32.5, 16.5, -122, .82), 4, 5) + sway(60, 30, seg([[59, 29], [64, 23], [67.5, 16.5]], 3.6, 3) + pincer(67.5, 16.5, -58, .82), -4, 5);
+      const shell = blob([[35, 33], [38, 27.5], [44, 25], [50, 24.4], [56, 25], [62, 27.5], [65, 33], [64.5, 40], [60, 45.5], [50, 47.5], [40, 45.5], [35.5, 40]]);
+      const eyes = ln([[46.5, 25.5], [45.5, 21.5]]) + ln([[53.5, 25.5], [54.5, 21.5]]) + dot(45.4, 21.2, .8) + dot(54.6, 21.2, .8);
+      const dots = [[49, 37], [51.5, 36.2], [50.4, 39], [48, 39.6], [52.6, 38.8]].map(([x, y]) => `<circle class="zcl" cx="${x}" cy="${y}" r=".45"/>`).join('');
+      return L + claws + shell + ln([[40, 30], [46, 33], [50, 31], [54, 33], [60, 30]]) + ln([[42, 41], [50, 43.5], [58, 41]], 'zl zsoft') + ln([[50, 31], [50, 43]], 'zl zsoft') + eyes + dots;
+    },
+    // the lion striding west (to the right): the Sickle his mane and head, Regulus the heart, Denebola the tail
+    leo: () => {
+      const hind = tube([[28, 40], [24, 50], [26, 59]], [5, 3.4]) + ell(27, 60, 2.6, 1.4, 0);
+      const fore = tube([[64, 43], [64, 52], [61, 59]], [4.6, 3.4]) + ell(61, 60, 2.6, 1.4, 0);
+      const body = blob([[27, 24], [36, 21], [50, 22.6], [61, 22], [69, 26], [75, 37], [72, 45], [62, 44.6], [50, 41.6], [40, 43.6], [30, 43], [24, 33]]);
+      const thigh = blob([[29, 30], [37, 31], [41, 40], [37, 47], [31, 46]]) + tube([[35, 44], [38, 52], [36, 59]], [5, 3.4]) + ell(37, 60, 2.6, 1.4, 0);
+      const leg2 = tube([[72, 42], [74, 51], [75, 59]], [4.8, 3.4]) + ell(76, 60, 2.8, 1.4, 0);
+      const mane = blob(Array.from({ length: 30 }, (_, k) => { const a = k / 30 * Math.PI * 2, r = k % 2 ? 1 : 1.16; return [75 + Math.cos(a) * 12 * r, 23 + Math.sin(a) * 18.6 * r]; }));
+      const locks = ln([[73, 8], [69, 13], [67, 20], [68, 28], [71, 35]], 'zl zsoft') + ln([[78, 10], [74, 16], [73, 24], [75, 31]], 'zl zsoft');
+      const head = blob([[80, 10], [86, 9], [92, 13], [96, 19], [97, 25], [93, 29], [87, 30], [82, 26], [79, 18]]);
+      const tail = sway(26, 27, tube([[27, 27], [20, 26], [15, 30], [13, 35]], [2, 1.4]) + blob([[13, 33], [15.5, 36], [13, 40], [10.5, 37]]), 6, 7);
+      return tail + hind + fore + body + thigh + leg2 + mane + locks + head + blob([[82, 10], [84, 6.5], [86, 10]]) + dot(89, 16) + ln([[96, 22], [94, 23.5], [96.5, 25.5]]) + ln([[88, 27], [92, 28.5]], 'zl zsoft');
+    },
+    // the winged maiden lying along the stars: Spica the ear of wheat in her lower hand, the palm frond in the other
+    virgo: () => {
+      const wing = blob([[76, 16], [77, 8], [71, 3], [61, 1.4], [50, 2.4], [41, 6], [43, 10], [49, 12.5], [57, 14.6], [65, 18.4], [71, 20]]);
+      const feathers = ln([[44, 8], [56, 9], [70, 13]], 'zl zsoft') + ln([[50, 5], [62, 6], [73, 10]], 'zl zsoft') + ln([[56, 12], [60, 9]], 'zl zsoft') + ln([[63, 15], [67, 11]], 'zl zsoft');
+      const maid = person({ head: [88, 14, 4], neck: [84.4, 16.6], sh: [[77, 13.9], [80.6, 22.1]], hip: [[55.4, 24.4], [58.2, 30.8]], nw: 2,
+        arms: [[[78, 14], [82.5, 7.5], [89, 4.5]], [[80.5, 22], [74, 33], [66.5, 45]]], armBack: 0,
+        robe: [[66, 20.5], [52, 23.5], [38, 29], [24, 35], [10, 39.5], [4.5, 45.5], [8, 51.5], [16, 54.5], [24, 50.5], [34, 45], [46, 38.5], [58, 32.5], [68, 27.5]],
+        folds: [[[56, 28], [40, 35], [24, 42], [10, 46]], [[48, 26.5], [34, 33], [18, 39]], [[52, 33], [36, 41], [22, 48]]],
+        hair: blob([[86, 10], [82, 10.5], [79, 13.5], [80.5, 17], [84.4, 15]]) });
+      const feet = blob([[5, 46], [2.6, 49], [5, 51.5], [8.5, 50]]);
+      const frond = ln([[89, 4.5], [95, 1.2]]) + [[90.5, 3.6], [92.2, 2.7], [93.8, 1.8]].map(([x, y]) => ln([[x, y], [x - 1.6, y - 2.8]], 'zl zsoft') + ln([[x, y], [x + 1.2, y + 2.6]], 'zl zsoft')).join('');
+      const wheat = sway(67, 45, ln([[68, 43], [63.5, 53.5]]) + [0, 1, 2, 3, 4].map(k => ell(R1(65.6 - k * .9), R1(48.6 + k * 1.9), 1, .55, -62 + (k % 2 ? 30 : -30))).join('') + ln([[64, 52.5], [61.5, 51]], 'zl zsoft') + ln([[63.6, 53.6], [66.4, 54.6]], 'zl zsoft'), 3, 6);
+      return wing + feathers + feet + maid + frond + wheat + dot(90.4, 13.2);
+    },
+    // the scales: a column with a finial ring, the beam (gently tipping) and two pans on chains
+    libra: () => {
+      const column = blob([[48.4, 14], [51.6, 14], [52, 50], [57, 53.5], [61, 58], [39, 58], [43, 53.5], [48, 50]]) + ln([[46, 51], [54, 51]], 'zl zsoft') + ln([[44, 55], [56, 55]], 'zl zsoft') + ell(50, 10, 3.2, 3.2, 0) + ell(50, 10, 1.4, 1.4, 0, 'zl');
+      const side = (x, s) => ln([[x, 23], [x - 12 * s, 45.5]]) + ln([[x, 23], [x + 10 * s, 45.5]]) + ln([[x, 23], [x - 1 * s, 45.5]], 'zl zsoft') +
+        blob([[x - 15 * s, 45.5], [x + 13 * s, 45.5], [x + 9 * s, 51.5], [x - 1 * s, 54.5], [x - 11 * s, 51.5]]) + ln([[x - 14 * s, 47], [x + 12 * s, 47]], 'zl zsoft');
+      const beam = blob([[28, 21], [40, 20.4], [50, 19.6], [60, 20.4], [72, 21], [72, 23.4], [60, 23], [50, 24.4], [40, 23], [28, 23.4]]) + ell(27.6, 22.2, 1.6, 1.6, 0) + ell(72.4, 22.2, 1.6, 1.6, 0) + blob([[49, 23], [51, 23], [50, 30.5]]);
+      return column + sway(50, 22, side(30, 1) + side(70, -1) + beam, 3, 8);
+    },
+    // the scorpion: head and claws up at the right, eight jointed legs, the jointed tail curling down to the sting
+    scorpius: () => {
+      const top = [[72.2, 17.2], [67.1, 18.5], [61.3, 21], [55.9, 24.4]].map(([x, y], k) => seg([[x, y], [x - 3, y - 7], [x - 7.4, y - 12]], 2.6, 2) + ln([[x - 7.4, y - 12], [x - 9.6, y - 12.6], [x - 10.4, y - 11]])).join('');
+      const bot = [[79.5, 35.5], [73.8, 38], [67.9, 40.1], [62.6, 41.3]].map(([x, y]) => seg([[x, y], [x + 1.4, y + 7], [x - .8, y + 13]], 2.6, 2) + ln([[x - .8, y + 13], [x + 1.4, y + 15], [x + 3.6, y + 14.4]])).join('');
+      const tail = seg([[53, 35.5], [46, 41.5], [44, 50.5], [39, 56], [31.5, 58.6], [24, 58], [17.5, 53], [14.4, 46], [16, 39.4]], 8.2, 4.6);
+      const sting = blob([[16, 39.5], [13.5, 36], [15.5, 32.6], [19.5, 33.5], [20, 37]]) + tube([[19.5, 34], [23, 31.5], [26, 32.8], [26.4, 35.6]], [1.8, .4]);
+      const claws = sway(86, 20, seg([[87, 20.5], [81.4, 13], [83.4, 5.6]], 3.8, 3.2) + pincer(83.6, 5.4, -70, .82), 3, 6) +
+        sway(89, 29, seg([[89.5, 29], [95.5, 36], [101.6, 38.6]], 3.8, 3.2) + pincer(101.8, 38.8, 20, .82), -3, 7);
+      const body = ell(69, 29, 21.5, 10.8, -21.5) + bands(69, 29, 21.5, 10.8, -21.5, [-.72, -.45, -.18, .1, .38, .62], -1.2);
+      const head = blob([[84, 19], [89.5, 18.5], [92, 23], [91, 29], [86, 31.5], [83, 26]]) + ln([[89.6, 18.6], [91.4, 15.6]], 'zl zsoft') + ln([[90.6, 19.4], [93.4, 17.2]], 'zl zsoft') + ln([[91.4, 20.6], [94.4, 19.6]], 'zl zsoft') + dot(88.6, 22) + dot(89.4, 25.2);
+      return top + bot + sway(16, 39, sting, 8, 5) + tail + claws + body + head;
+    },
+    // the centaur drawing his bow; the arrow points west (right) at the scorpion's heart. The bow and arrow carry the Teapot's stars
+    sagittarius: () => {
+      const tail = sway(14, 33, tube([[14, 33], [7, 36], [4, 43], [6, 50]], [3.4, 1.6]) + ln([[8, 37], [5, 44]], 'zl zsoft'), 5, 6);
+      const hindL = tube([[18, 42], [15, 50], [19, 59]], [4.4, 2.6]) + ell(20, 60, 2, 1.2, 0) + tube([[25, 44], [29, 51], [26, 59]], [4.4, 2.6]) + ell(26.6, 60, 2, 1.2, 0);
+      const foreL = tube([[51, 44], [52.6, 52], [50, 59.4]], [4, 2.6]) + ell(50.6, 60.4, 2, 1.2, 0) + tube([[56, 42], [59.6, 47.6], [55, 53]], [4, 2.6]) + ell(54.2, 53.8, 1.6, 1.2, 40);
+      const horse = blob([[12, 34], [18, 29], [30, 30], [42, 31], [52, 32], [58, 38], [56, 44], [46, 46.4], [30, 46.4], [18, 45], [12, 40]]);
+      const cape = sway(46, 16, blob([[46, 15], [40, 12.4], [32, 13], [25, 17], [32, 17.2], [40, 19]]) + ln([[42, 14.6], [30, 15.6]], 'zl zsoft'), 3, 7);
+      const man = person({ head: [52.4, 9.4, 3.4], neck: [51.6, 13.4], sh: [[45.6, 17.6], [56, 16.6]], hip: [[44.6, 33], [53.6, 33.4]], nw: 1.9,
+        arms: [[[46, 17.8], [37, 19.6], [44.6, 24.6]], [[55.6, 17], [63, 21.6], [70, 25.6]]], armBack: 0,
+        hair: blob([[49.4, 7], [52.6, 5.4], [55.4, 7.4], [51.6, 8.2]]) });
+      const bow = tube([[63, 7.6], [68.6, 13.2], [72.6, 20], [73.6, 26], [72.6, 32], [68.6, 38.8], [63, 44.4]], [1, 1.9, 1]);
+      const strg = ln([[63, 7.6], [44.4, 24.6], [63, 44.4]], 'zl zsoft');
+      const arrow = ln([[41.6, 25], [86, 26]]) + blob([[85, 24.4], [89.4, 26], [85, 27.6]]) + ln([[41.6, 25], [39.4, 23.4]]) + ln([[41.6, 25], [39.4, 26.8]]);
+      return tail + cape + hindL + horse + foreL + man + strg + bow + arrow + dot(54.2, 8.8);
+    },
+    // the sea-goat: horned goat's head and folded forelegs, the body turning into a fish's tail (Deneb Algedi at its tip)
+    capricornus: () => {
+      const legs = tube([[76, 38], [71, 46.4], [79.4, 50.4]], [3.6, 2.4]) + ell(80.6, 50.6, 1.6, 1.1, 20) + tube([[69, 40], [64, 48], [70.4, 52.4]], [3.6, 2.4]) + ell(71.6, 52.8, 1.6, 1.1, 20);
+      const fish = tube([[68, 31], [56, 35.4], [43, 35.8], [33, 32.6], [23, 28], [15, 22.6]], [18, 15, 12.4, 8.6, 5, 3]);
+      const fin = sway(15, 22, blob([[17, 23.6], [11, 21.6], [3.6, 13.6], [10.4, 15.6], [12, 9.6], [16.4, 18.6]]), 6, 6);
+      const front = blob([[60, 24], [70, 19.6], [78, 14.6], [84, 20], [84, 28], [80.6, 36], [72, 42], [62, 40]]);
+      const head = blob([[79, 12.6], [85, 11.6], [91, 14.6], [96.4, 19], [95.4, 23], [89, 23.6], [84, 24]]);
+      const horns = tube([[81, 13], [78.6, 6], [72.6, 2.8], [66.4, 3.6]], [3, .8]) + tube([[83.4, 12.6], [82.6, 6.4], [78, 3.4]], [2.2, .6]);
+      return fin + fish + scallops([[60, 34], [48, 35.4], [36, 33.6], [26, 29.4]], 1.7, 8) + scallops([[58, 40], [46, 40.6], [34, 37.6]], 1.6, 6) + blob([[44, 28], [38, 23.4], [34, 26.8]]) +
+        legs + front + horns + head + blob([[82, 15.4], [77, 17.6], [81, 19]]) + dot(87.4, 15.6) + tube([[90, 23.4], [88.6, 28.6]], [1.6, .6]) + ln([[94.6, 20.6], [96, 21.4]]);
+    },
+    // the water-bearer pouring his urn; the stream runs down into the mouth of the Southern Fish (Fomalhaut)
+    aquarius: () => {
+      const man = person({ head: [35.4, 10, 3.6], neck: [34.6, 14.4], sh: [[28, 21.4], [41.6, 19.4]], hip: [[29.6, 37.6], [38.6, 37.4]], nw: 2,
+        legs: [[[30.4, 37.6], [29.6, 45.2], [22.6, 56.6]], [[37.6, 37.4], [46.4, 46.4], [44.6, 57.6]]], legBack: 0,
+        arms: [[[28.4, 22], [37, 28.4], [48.6, 22.4]], [[41.6, 19.6], [47, 24], [51.4, 18.6]]], armBack: 1,
+        robe: [[27, 22], [36, 24.6], [42, 20], [44.6, 30], [46, 42.6], [38.6, 44.6], [32, 44], [27, 41.6], [28, 31]],
+        folds: [[[33, 26], [38, 40]], [[40, 26], [43, 40]]], hair: ln([[32, 8], [35.4, 6.2], [38.6, 8]]) });
+      const feet = blob([[20, 56], [25, 55.4], [26.6, 58.6], [21, 58.6]]) + blob([[42, 57], [47, 56.6], [48.6, 59.6], [43, 59.6]]);
+      const urn = blob(xf([[-4.6, -3.6], [2.6, -4.2], [5, -1.6], [6.6, -1], [6.6, 1], [5, 1.6], [2.6, 4.2], [-4.6, 3.6], [-6, 0]], 54, 15.6, rad(28), 1)) + ln(xf([[-1.4, -3.8], [-1.4, 3.8]], 54, 15.6, rad(28), 1), 'zl zsoft');
+      const W = [[58.6, 19.6], [60, 28], [66, 31.6], [72, 34], [72.6, 40], [70, 46], [74, 50], [80, 52], [86, 53.4], [91, 55.4]];
+      const water = ln(W, 'zl zw') + ln(W.map(([x, y], k) => [x + 1.4, y + (k % 2 ? -.8 : .8)]), 'zl zw zw2') + ln(W.map(([x, y], k) => [x - 1.2, y + (k % 2 ? .9 : -.6)]), 'zl zw zw3');
+      const sfish = blob([[92, 55.4], [96, 52.6], [102, 53.4], [106, 56], [102, 58.8], [96, 59.4]]) + blob([[105, 56], [109, 52.6], [108.4, 56], [109.4, 59.6]]) + dot(95.2, 55.2, .5);
+      return man + feet + urn + water + sfish;
+    },
+    // two fishes tied by cords at their tails; the knot is Alrescha. The northern fish swims up, the western one (the Circlet its head) to the right
+    pisces: () => {
+      const fishN = blob(xf([[-12, 0], [-8, -4.2], [0, -5.4], [7, -4], [12.4, -.6], [12.4, .6], [7, 4], [0, 5.4], [-8, 4.2]], 29.6, 25, rad(96), 1)) +
+        blob(xf([[-11.4, 0], [-16.4, -4.6], [-15.4, 0], [-16.4, 4.6]], 29.6, 25, rad(96), 1)) + blob(xf([[-2, -5], [2, -9], [5, -4.4]], 29.6, 25, rad(96), 1)) +
+        scallops(xf([[-6, 0], [6, 0]], 29.6, 25, rad(96), 1), 1.4, 4) + dot(28.4, 15.4) + ln(xf([[9, -2], [10, 0], [9, 2]], 29.6, 25, rad(96), 1), 'zl zsoft');
+      const fishW = blob(xf([[-14, 0], [-9, -5], [0, -6.6], [8, -5.4], [14.4, -1], [14.4, .8], [8, 5.4], [0, 6.6], [-9, 5]], 85, 26.4, rad(-10), 1)) +
+        blob(xf([[-13.6, 0], [-19, -5], [-18, 0], [-19, 5]], 85, 26.4, rad(-10), 1)) + blob(xf([[-2, -6.2], [3, -10], [6, -5.4]], 85, 26.4, rad(-10), 1)) +
+        scallops(xf([[-7, 0], [7, 0]], 85, 26.4, rad(-10), 1), 1.5, 5) + dot(95.6, 23.6) + ln(xf([[11, -2.6], [12.4, 0], [11, 2.6]], 85, 26.4, rad(-10), 1), 'zl zsoft');
+      const cordA = [[31, 40], [33.6, 44], [40, 48], [47, 53.6], [54, 58]], cordB = [[67, 30], [65, 38], [62, 48], [58, 54], [54, 58]];
+      const cords = ln(cordA, 'zl zcord') + ln(cordA.map(([x, y]) => [x + .8, y - .7]), 'zl zsoft') + ln(cordB, 'zl zcord') + ln(cordB.map(([x, y]) => [x + .8, y + .3]), 'zl zsoft') + ell(54, 58, 1.8, 1.3, 30);
+      return sway(30, 38, fishN, 4, 7) + sway(67, 29, fishW, -3, 8) + cords;
+    },
   };
+
   const cache = {};
-  window.ShanghaiZodiac = (id, i) => { if (!ART[id]) return ''; if (!cache[id]) { SEED = (i || 0) * 31 + 1; cache[id] = ART[id](); } return `<g class="zb" style="--bd:${-(i || 0) * 1.3}s">${cache[id]}</g>`; };
+  window.ShanghaiZodiac = (id, i) => { if (!ART[id]) return ''; if (!cache[id]) cache[id] = ART[id](); return `<g class="zb" style="--bd:${-(i || 0) * 1.3}s">${cache[id]}</g>`; };
+  window.ShanghaiZodiac.stars = STARS;
   window.ShanghaiZodiac.css = `
-.shmap .fig .zfil{fill:rgba(150,180,255,.06);stroke:none}
-.shmap .fig .zed{fill:none;stroke:rgba(170,200,255,.28);stroke-width:.18;stroke-linejoin:round}
-.shmap .fig .zol{fill:none;stroke:rgba(200,222,255,.62);stroke-width:.32;stroke-linejoin:round}
-.shmap .fig .zt{fill:rgba(180,210,255,.22);stroke:none;opacity:0;animation:shzt 9s ease-in-out infinite}
-.shmap .fig .zdt{fill:none;stroke:rgba(200,222,255,.62);stroke-width:.32;stroke-linecap:round;stroke-linejoin:round}
-.shmap .fig .zdt.zsoft{stroke:rgba(170,200,255,.35);stroke-width:.24}
-.shmap .fig .zdt.zwave{stroke:rgba(140,210,255,.55);stroke-dasharray:2 1.4;animation:shzw 3s linear infinite}
-.shmap .fig .zey{fill:rgba(230,240,255,.9);animation:shzblink 5s infinite;transform-box:fill-box;transform-origin:center}
-.shmap .fig.lit .zfil{fill:rgba(255,214,106,.07)}.shmap .fig.lit .zed{stroke:rgba(255,224,150,.32)}.shmap .fig.lit .zol,.shmap .fig.lit .zdt{stroke:rgba(255,226,150,.75)}.shmap .fig.lit .zt{fill:rgba(255,220,140,.25)}
+.shmap .fig .zp{fill:rgba(84,128,220,.24);stroke:rgba(178,214,255,.78);stroke-width:.3;stroke-linejoin:round}
+.shmap .fig .zl{fill:none;stroke:rgba(178,214,255,.6);stroke-width:.26;stroke-linecap:round;stroke-linejoin:round}
+.shmap .fig .zl.zsoft{stroke:rgba(160,200,255,.38);stroke-width:.22}
+.shmap .fig .zl.zcord{stroke:rgba(190,220,255,.7);stroke-width:.5}
+.shmap .fig .zl.zw{stroke:rgba(140,206,255,.65);stroke-width:.5;stroke-dasharray:2.4 1.2;animation:shzw 2.6s linear infinite}
+.shmap .fig .zl.zw2{animation-duration:3.2s;stroke-width:.36}.shmap .fig .zl.zw3{animation-duration:2.2s;stroke-width:.3}
+.shmap .fig .zey{fill:rgba(230,240,255,.95);animation:shzblink 5s infinite;transform-box:fill-box;transform-origin:center}
+.shmap .fig .zcl{fill:rgba(220,236,255,.85);animation:shztw 3s ease-in-out infinite}
+.shmap .fig.lit .zp{fill:rgba(255,206,110,.16);stroke:rgba(255,228,160,.85)}.shmap .fig.lit .zl{stroke:rgba(255,226,150,.65)}.shmap .fig.lit .zl.zsoft{stroke:rgba(255,220,140,.4)}
 .shmap .fig .zb{animation:shzbob 8s ease-in-out infinite;animation-delay:var(--bd,0s)}
 .shmap .fig .zs{animation:shzsway var(--sd,6s) ease-in-out infinite;transform-box:view-box}
-@keyframes shzbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes shzbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.6px)}}
 @keyframes shzsway{0%,100%{transform:rotate(calc(var(--a) * -1))}50%{transform:rotate(var(--a))}}
-@keyframes shzt{0%,100%{opacity:0}45%,55%{opacity:1}}
 @keyframes shzblink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
-@keyframes shzw{to{stroke-dashoffset:-6.8}}
+@keyframes shztw{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes shzw{to{stroke-dashoffset:-7.2}}
 `;
 })();
