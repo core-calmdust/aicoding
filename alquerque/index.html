@@ -1286,8 +1286,8 @@ html[data-pcs=felt] .pc.p2{box-shadow:0 calc(var(--cell) * .04) 0 #142a66,0 calc
 html:is([data-pcs=brass],[data-pcs=felt]) .reserve .rv.p1, html:is([data-pcs=brass],[data-pcs=felt]) .reserve .rv.p2{box-shadow:0 calc(var(--cell) * .015) calc(var(--cell) * .03) rgba(0,0,0,.45)}
 html[data-pcs=brass] .pdisc.p1{background:#d9ad4a} html[data-pcs=brass] .pdisc.p2{background:#1d3478}
 html[data-pcs=felt] .pdisc.p1{background:#e6dcc4} html[data-pcs=felt] .pdisc.p2{background:#1e3a84}
-/* Alquerque has no lessons / puzzles / openings / daily puzzle yet */
-#btnLesson, #btnPuzzle, #segMode [data-v=lesson], #segMode [data-v=puzzle], .ls-tabs [data-v=lesson], .ls-tabs [data-v=puzzle], .ls-tabs [data-v=open], .hb [data-hb=lesson], .hb [data-hb=puzzle], #dailyCard, .daily{display:none!important}
+/* Alquerque has no openings course (lessons, puzzles and the daily puzzle: alquerque/lessons.json, puzzles.json, 2026-11-14) */
+.ls-tabs [data-v=open]{display:none!important}
 /* larger coach / review text (PC, 2026-11-01) */
 @media not all and (pointer: coarse){
   #coachCard.ck-card h3.ck-h{font-size:15px}
@@ -1676,7 +1676,7 @@ window.OL_VARIANTS = ['alq', 'alqf']; window.OL_DB_PREFIX = 'alq/';
     };
     fit(); addEventListener('resize', fit);
     try { history.replaceState(null, '', location.pathname); } catch (e) {}   // (the iframe took the room / record links along)
-  } else document.write('<script src="../fanorona/i18n.js?v=fb5l14-nd1"><\/script><script src="i18n-alq.js?v=6n"><\/script><script src="../fanorona/i18n-online.js?v=l14b"><\/script><script src="../shared/pzbook.js?v=8l14"><\/script><script src="../shared/placement.js?v=1l14"><\/script><script src="../shared/rulesoffer.js?v=17l14j"><\/script><script src="../shared/headerbar.js?v=63"><\/script><script src="../shared/flipbtn.js?v=3l14"><\/script><script src="../shared/cardbar.js?v=15l14"><\/script><script src="../shared/watchpause.js?v=2l14"><\/script><script src="../shared/tick.js?v=2l14"><\/script><script src="../shared/ruletour.js?v=30tw"><\/script><script src="../fanorona/engine.js?v=fb5s-pro1-mt1"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2l14as1"><\/script><script src="../fanorona/online.js?v=fb3pf"><\/script><script src="../shared/resign.js?v=3l14"><\/script><script src="../shared/drawoffer.js?v=1l14"><\/script><script src="../fanorona/rvbox.js?v=fb3-l14-mt1"><\/script><script src="../shared/coachkit.js?v=17l14"><\/script><script src="../shared/record.js?v=16"><\/script><script src="../fanorona/coach.js?v=fb5sq-ls"><\/script><script src="../fanorona/coach-i18n.js?v=fb6"><\/script><script src="../shared/export.js?v=9l14"><\/script><script src="../fanorona/app.js?v=fb9rh-crllv-dr1-rc1-l14-ai1-pro1-aim2-mt3-ybw1-pl1-nd1"><\/script><script src="../fanorona/online-ui.js?v=fb2p-dr1"><\/script><script src="../fanorona/landtabs.js?v=fb5"><\/script><script src="../shared/pickdrop.js?v=8l14"><\/script><script src="../shared/ngtabs.js?v=36"><\/script><script src="../shared/nglux.js?v=24l16"><\/script><script src="../shared/resumeng.js?v=1l14"><\/script>');
+  } else document.write('<script src="../fanorona/i18n.js?v=fb5l14-nd1"><\/script><script src="i18n-alq.js?v=7"><\/script><script src="../fanorona/i18n-online.js?v=l14b"><\/script><script src="../shared/pzbook.js?v=8l14"><\/script><script src="../shared/placement.js?v=1l14"><\/script><script src="../shared/rulesoffer.js?v=17l14j"><\/script><script src="../shared/headerbar.js?v=63"><\/script><script src="../shared/flipbtn.js?v=3l14"><\/script><script src="../shared/cardbar.js?v=15l14"><\/script><script src="../shared/watchpause.js?v=2l14"><\/script><script src="../shared/tick.js?v=2l14"><\/script><script src="../shared/ruletour.js?v=30tw"><\/script><script src="../fanorona/engine.js?v=fb5s-pro1-mt1"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2l14as1"><\/script><script src="../fanorona/online.js?v=fb3pf"><\/script><script src="../shared/resign.js?v=3l14"><\/script><script src="../shared/drawoffer.js?v=1l14"><\/script><script src="../fanorona/rvbox.js?v=fb3-l14-mt1"><\/script><script src="../shared/coachkit.js?v=17l14"><\/script><script src="../shared/record.js?v=16"><\/script><script src="../fanorona/coach.js?v=fb5sq-ls"><\/script><script src="../fanorona/coach-i18n.js?v=fb6"><\/script><script src="../shared/export.js?v=9l14"><\/script><script src="../fanorona/app.js?v=fb9rh-crllv-dr1-rc1-l14-ai1-pro1-aim2-mt3-ybw1-pl1-nd1-aqpz1"><\/script><script src="../fanorona/online-ui.js?v=fb2p-dr1"><\/script><script src="../fanorona/landtabs.js?v=fb5"><\/script><script src="../shared/pickdrop.js?v=8l14"><\/script><script src="../shared/ngtabs.js?v=36"><\/script><script src="../shared/nglux.js?v=24l16"><\/script><script src="../shared/resumeng.js?v=1l14"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
@@ -1693,7 +1693,7 @@ window.OL_VARIANTS = ['alq', 'alqf']; window.OL_DB_PREFIX = 'alq/';
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
-<script src="../shared/atlas.js?v=20261114xq1mreg" defer></script>
+<script src="../shared/atlas.js?v=20261114aqpz1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=fa2l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
 <script src="../shared/infotabs.js?v=24" data-strips defer></script>
