@@ -341,7 +341,7 @@ class Table3D {
     r.outputEncoding = THREE.sRGBEncoding;
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFShadowMap;
-    r.shadowMap.autoUpdate = true;
+    r.shadowMap.autoUpdate = false;   // (redrawn only when something moved — not for the dora's glint: _loop)
     host.appendChild(r.domElement);
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(36, 1, 0.5, 200);
@@ -993,8 +993,8 @@ class Table3D {
   // (ユーザー 2026-11-14: full screen on a Mac dropped frames) the drawing resolution has a budget of pixels: a big window (a Retina
   // screen in full screen is ~4–5 million at 1.5×) is drawn at a lower ratio and scaled up, and if frames still come slowly while
   // things move, the ratio steps down a little more (and back up when there is room). `prMax`: the quality's ceiling.
-  _pr() { const w = this.host.clientWidth || 1, h = this.host.clientHeight || 1, BUDGET = this.lite ? 1.6e6 : 2.6e6;
-    return Math.max(.6, Math.min(window.devicePixelRatio || 1, this.prMax || 1.5, Math.sqrt(BUDGET / (w * h))) * (this.dyn || 1)); }
+  _pr() { const w = this.host.clientWidth || 1, h = this.host.clientHeight || 1, BUDGET = this.lite ? 2e6 : 3.8e6;
+    return Math.max(.75, Math.min(window.devicePixelRatio || 1, this.prMax || 1.5, Math.sqrt(BUDGET / (w * h))) * (this.dyn || 1)); }
   resize() {
     const w = this.host.clientWidth || 1, h = this.host.clientHeight || 1;
     const pr = this._pr(); if (Math.abs(this.renderer.getPixelRatio() - pr) > .01) this.renderer.setPixelRatio(pr);
@@ -1092,13 +1092,16 @@ class Table3D {
         if (k < 1) this.handFx.push(h); else { if (h.hide) h.rig.visible = false; if (h.then) h.then(); } }
       this.dirty = true;
     }
+    const moved = this.dirty;   // (anything moved or changed this frame: the shadows are redrawn too)
     // the dora's glint: a light runs round the rim of every dora that lies face up and two small stars twinkle, about once in three seconds
+    // (at ~30 frames a second when it is the only thing changing: the whole table is redrawn for it)
     if (this._doraN) { const ph = now % 2600, on = ph < 1300;
-      if (on) { this.doraMat.uniforms.uT.value = ph / 1300; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
+      if (on && (moved || now - (this._glT || 0) > 32)) { this._glT = now; this.doraMat.uniforms.uT.value = ph / 1300; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
       this._doraOn = on; }
     if (this._ov) this.dirty = true;
     if (!this.dirty || document.hidden) return;
     this.dirty = false;
+    if (moved || this._ov) this.renderer.shadowMap.needsUpdate = true;
     this._doraSync();
     // the player's own discard: the hand and the tile are also drawn over the page (the hand row is HTML, above the table's
     // canvas). A second, small renderer on a canvas over the page draws only those two (layer 1) with the same camera and lights.
@@ -1114,7 +1117,7 @@ class Table3D {
     { const P = this._pace || (this._pace = { last: 0, ema: 16, t: 0 }), dt = now - P.last; P.last = now;
       if (dt > 0 && dt < 120) { P.ema += (dt - P.ema) * .08;
         if (now - P.t > 1200) { P.t = now; const d0 = this.dyn || 1;
-          if (P.ema > 24 && d0 > .62) this.dyn = d0 * .85; else if (P.ema < 15 && d0 < 1) this.dyn = Math.min(1, d0 * 1.08);
+          if (P.ema > 28 && d0 > .8) this.dyn = d0 * .9; else if (P.ema < 18 && d0 < 1) this.dyn = Math.min(1, d0 * 1.08);
           if (this.dyn !== d0) this.resize(); } } }
     if (this._dbg) this._dbgPaint(now);
   }
