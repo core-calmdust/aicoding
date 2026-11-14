@@ -939,7 +939,7 @@ html.ds #game .bf em{width:calc(28px * var(--hz, 1));height:calc(28px * var(--hz
 html.ds #game .bt .bk{zoom:var(--hz, 1)}
 html.ds .tl kbd.tk{font-size:clamp(9px,calc(var(--tw) * .2),calc(13px * var(--hz, 1)))}
 html.ds #game .bt .sc{background:rgba(10,14,30,.72);border-radius:8px;padding:0 calc(8px * var(--hz, 1))}
-html.ds #game #opp3{top:calc(var(--gi) + (var(--rbh, 140px) + var(--khh, 70px)) * var(--hz, 1) + 34px)}
+html.ds #game #opp3{top:calc(var(--gi) + var(--rbh, 140px) * var(--hz, 1) + 34px)}   /* (the key help is folded at the top right now) */
 /* phones: compact skill button — icon + name only (details stay in the character screen / confirm) */
 html.lp #game .skb{padding:3px 8px 3px 3px;gap:5px;border-radius:10px;max-width:calc(var(--W) * .22)}
 html.lp #game .skb i{width:26px;height:26px;padding:5px;border-radius:7px}
@@ -1108,3 +1108,10 @@ html.lp .ps-grid,html.lp .ps-chs > div{grid-template-columns:repeat(2,1fr)}
   animation:raysBreathe 9s ease-in-out infinite alternate}
 @keyframes raysBreathe{0%{opacity:.75}100%{opacity:1}}
 #game .hud{z-index:2}
+
+/* the keyboard help: folded; the keyboard button at the top right opens it under the buttons (PC only) (ユーザー 2026-11-14) */
+#gKeys{display:none}
+html.ds #gKeys{display:grid}
+#gKeys.on{background:rgba(232,206,140,.22);border-color:rgba(232,206,140,.6)}
+html.ds #game .khelp{display:none;left:auto;right:var(--gi);top:calc(var(--gi) + 52px * var(--hz, 1));transform-origin:top right;z-index:3;font-size:12px;background:rgba(10,14,30,.9)}
+html.ds #game .khelp.open{display:block}

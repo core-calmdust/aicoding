@@ -97,6 +97,7 @@
 - `skills.js`（timing・cost・P[tier]・desc(v)・VALUE・TIERS）、`chars.js`（FAMILIES・ROSTER）、`pstats.js`（スタッツ）、`tiles.js`、`table3d.js`、`app.js`／`app.css`／`i18n.js`
 - テスト：`tools/test-engine.js`、`tools/test-shanten.js`、`tools/sim.js`、`tools/skill-value.js`
 - アーティファクト：`python3 mahjong/tools/build-artifact.py OUT_DIR`
+- キー操作の説明（PC）：ふだんはたたみ、右上のキーボードボタンで開閉（外側クリック・Escで閉じる）
 - デバッグ：`?auto`（自分の席もBOT）、`?fast`（演出短縮）
 
 ## これから（予定）
