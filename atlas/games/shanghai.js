@@ -1036,6 +1036,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
     vp.addEventListener('wheel', e => {
       e.preventDefault(); const r = vp.getBoundingClientRect();
+      if (!ZOD) { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { tx -= e.deltaX; apply(); } return; }   // (2026-11-14 ユーザー: 星座以外はホイールが効かない方がいい — no zoom by the wheel; a sideways trackpad swipe still pans)
       if (e.ctrlKey || Math.abs(e.deltaY) >= Math.abs(e.deltaX)) zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0018)), e.clientX - r.left, e.clientY - r.top);
       else { tx -= e.deltaX; apply(); }
     }, { passive: false });
