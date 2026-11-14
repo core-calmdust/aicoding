@@ -13,7 +13,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/g-gem.webp', ENG = '../mancala/engine.js?v=20261106wr1';   // (the same engine file and cache key as the table game)
+  const GUIDE = '../images/atlas/g-gem.webp', ENG = '../mancala/engine.js?v=20261114p1';   // (the same engine file and cache key as the table game)
   const loadEngine = () => window.MancalaEngine ? Promise.resolve(window.MancalaEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.MancalaEngine ? res(window.MancalaEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
 
   // a position: your pits left → right, your store, the far row as you see it (left → right), their store

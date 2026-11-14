@@ -95,7 +95,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | ウゴルキ（`ugolki/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
 | アゴン（`agon/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
 | コナネ（`konane/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
-| マンカラ | **C（wasm、2026-11-11）**：探索・評価・置換表（`engine.c`、SIMD 版となし版） | 各 Worker が自分の置換表でルートの手と本筋を分担（YBW。C では Lazy SMP は使わない） | mtsplit・proset（`claude/mancala-spec.md`） |
+| マンカラ（`mancala/`） | **C（wasm、2026-11-11）**：探索・評価・置換表（`engine.c`） | **YBW**（3、2026-11-14 から `engine_mt.wasm`・共有の置換表。分離できないページは mtsplit） | mtengine・**praline（2026-11-14）**・mtsplit・proset |
 | コネクトフォー | JS | 列ごとの完全読み（共有の置換表） | mtsplit＋`connect4/mt.js` |
 | ドット＆ボックス | JS＋wasm（5×5） | 手の分担（共有の置換表）・補助 Worker | mtworkers（共有モード）・wasm `dots5mt.wasm` |
 | ウル（`ur/`） | **C（wasm、2026-11-11）**：期待値の探索と評価ネット（`engine.c`、SIMD 版となし版） | 独立な仕事の配り分け（手 × 出目、全コア。各 Worker が C） | mtworkers（`claude/ur-spec.md`） |
