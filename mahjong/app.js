@@ -302,7 +302,7 @@ function renderHome() {
   // the menu down the left (ユーザー 2026-11-14: only the system's buttons stay at the top right; the rest are here)
   const mi = (ic, lab, sub) => `<i class="lm-i">${ic}</i><span class="lm-t"><b>${esc(lab)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>`;
   $('#btnGacha').innerHTML = mi(IC.gacha, t('gacha'), 'GACHA'); $('#btnColl').innerHTML = mi(IC.collection, t('chars'), 'CHARACTERS');
-  $('#btnStats').innerHTML = mi(IC.stats, t('stats'), 'STATS');
+  $('#btnStats').innerHTML = mi(IC.stats, t('record'), 'RECORD');   // (ユーザー 2026-11-14: 戦績 and スタッツ are one menu, 「戦績」 — the game log opens from inside it)
   $('#btnRated').innerHTML = mi(IC.rank, t('rated'), 'RANKED');
   document.querySelectorAll('#luxMenu [data-soon]').forEach(b => { b.innerHTML = mi(IC[b.dataset.soon] || '', t(b.dataset.soon), t('soon')); });
   sndIcons(); applyLite();
@@ -328,13 +328,21 @@ function renderHome() {
   const pick = MJChars.list.filter(x => !owns(x.id) && x.reward == null).sort((a, b) => RORD[a.rarity] - RORD[b.rarity])[0] || MJChars.list.find(x => x.rarity === 'UR');
   $('#aaBanner').innerHTML = `<i class="ab-art" style="background-image:url('${charImg(pick, 'bust')}')"></i><span class="ab-rib">PICK UP</span><span class="ab-tx"><em class="r-${pick.rarity}">${pick.rarity}</em><b>${esc(L(pick.name))}</b><small>${esc(L(pick.title))}</small></span><span class="ab-go">${esc(t('gacha'))} ›</span>`;
   $('#aaBanner').style.setProperty('--c', pick.color);
-  $('#aaGoSub').textContent = `${t(DB.set.len === 'south' ? 'south' : 'east')} ・ ${t(DB.set.skills ? 'skillOn' : 'skillOff')} ・ BOT ${t('lv')[DB.set.lv]}`;
+  // (ユーザー 2026-11-14: 段位戦 can be chosen here too) — free play or ranked; ranked fixes the skills and the BOTs' level
+  const rankedMode = DB.set.mode === 'ranked';
+  $('#aaGoSub').textContent = rankedMode ? `${t('rated')} ・ ${t(DB.set.len === 'south' ? 'south' : 'east')} ・ BOT ${t('lv')[MJRank.botLv(DB.rank.pt)]}`
+    : `${t(DB.set.len === 'south' ? 'south' : 'east')} ・ ${t(DB.set.skills ? 'skillOn' : 'skillOff')} ・ BOT ${t('lv')[DB.set.lv]}`;
+  $('#optSkill').hidden = $('#optLv').hidden = rankedMode; $('#optRank').hidden = !rankedMode;
+  if (rankedMode) { const r = MJRank.at(DB.rank.pt), n = MJRank.next(DB.rank.pt);
+    $('#optRank').innerHTML = `${rankBadge(r)}<span><b>${DB.rank.pt} pt</b><small>${n ? esc(t('rkNext', { r: L(n.name), n: n.pt - DB.rank.pt })) : esc(t('rkTop'))}</small></span><button class="ap-rk-more" data-a="ranked">${esc(t('rkLadder'))} ›</button>`;
+    $('#optRank').onclick = e => { if (e.target.closest('[data-a=ranked]')) openRanked(); }; }
   const hs = $('#homeSk');
   if (hs) hs.onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; DB.chars[c.id].use = b.dataset.k; save(); SND.pick(); renderHome(); };
   const seg = (el, items, cur, cb) => {
     el.innerHTML = items.map(([v, lab]) => `<button class="${v === cur ? 'on' : ''}" data-v="${v}">${esc(lab)}</button>`).join('');
     el.onclick = e => { const b = e.target.closest('button'); if (!b) return; SND.pick(); cb(b.dataset.v); save(); renderHome(); };
   };
+  seg($('#optMode'), [['free', t('freePlay')], ['ranked', t('rated')]], rankedMode ? 'ranked' : 'free', v => DB.set.mode = v);
   seg($('#optLen'), [['east', t('east')], ['south', t('south')]], DB.set.len, v => DB.set.len = v);
   seg($('#optSkill'), [['1', t('skillOn')], ['0', t('skillOff')]], DB.set.skills ? '1' : '0', v => DB.set.skills = v === '1');
   seg($('#optLv'), t('lv').map((x, i) => [String(i), x]), String(DB.set.lv), v => DB.set.lv = +v);
@@ -479,13 +487,14 @@ function fitRoot() {
     // game HUD scale for big windows (icons, panels and tiles grow with the window instead of stopping at fixed px)
     de.style.setProperty('--hz', Math.max(1, Math.min(2, Math.min(h, w / 1.36) / 860)).toFixed(3));
     de.style.setProperty('--SW', GW + 'px'); de.style.setProperty('--SH', GH + 'px'); de.style.setProperty('--Z', Z);
+    de.style.setProperty('--MZ', Math.max(1, Math.min((w - 40) / 1100, (h - 40) / 700, 1.6)).toFixed(3));   // (the dialogs' zoom on a big window)
     de.style.setProperty('--SX', ((w - GW) / 2) + 'px'); de.style.setProperty('--SY', ((h - GH) / 2) + 'px');
   }
 }
 fitRoot();
 addEventListener('resize', fitRoot);
 addEventListener('orientationchange', () => setTimeout(fitRoot, 120));
-$('#btnStart').addEventListener('click', () => { SND.unlock(); startGame(); });
+$('#btnStart').addEventListener('click', () => { SND.unlock(); startGame(DB.set.mode === 'ranked' ? { ranked: true, len: DB.set.len } : {}); });
 $('#btnGacha').addEventListener('click', openGacha);
 $('#btnColl').addEventListener('click', () => openChara(DB.sel));
 $('#chBack').addEventListener('click', () => { SND.pick(); closeChara(); });
@@ -747,7 +756,7 @@ function renderStats() {
       <div class="ps-main">
         <header class="ps-h">
           <div class="ps-id"><em class="prar r-${c.rarity}">${c.rarity}</em><div><b>${esc(L(c.name))}</b><small>${esc(L(c.title))}</small></div></div>
-          <span class="ps-who">${who}</span>
+          <span class="ps-who">${who}</span>${pl.kind === 'me' && !P.ig && window.GameRecord ? `<button class="btn sm ps-hist" data-a="hist">${esc(t('history'))}</button>` : ''}
           <button class="x" data-a="close" aria-label="${esc(t('close'))}">×</button>
         </header>
         ${sk ? `<div class="ps-sk">${skillChip(sk)}</div>` : ''}
@@ -767,6 +776,7 @@ function renderStats() {
 }
 $('#pstats').addEventListener('click', e => {
   const tb = e.target.closest('[data-tab]'); if (tb && PS) { PS.tab = tb.dataset.tab; SND.pick(); renderStats(); return; }
+  if (e.target.closest('[data-a=hist]')) { SND.pick(); GameRecord.open(); return; }
   if (e.target.closest('[data-a=close]') || !e.target.closest('.ps-main, .ps-art')) { SND.pick(); closeStats(); }
 });
 

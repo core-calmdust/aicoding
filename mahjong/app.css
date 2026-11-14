@@ -1508,3 +1508,30 @@ html.lite .rkb.rk-t3::before,html.lite .rkb.rk-t3 b{animation:none}
 .rkg-tx > span{font-family:var(--serif);font-size:calc(var(--u)*2.8);color:#e8dcff}
 html.lite .rkp-rays{animation:none}
 .rkg-tx .skc{font-size:max(14px,calc(var(--u)*2.8))}
+
+/* the home: free play / ranked (ユーザー 2026-11-14) */
+:is(#home,#chara).aaa .ap-opts .seg.mode{grid-column:1/-1}
+:is(#home,#chara).aaa .ap-rank{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06)}
+:is(#home,#chara).aaa .ap-rank[hidden]{display:none}
+:is(#home,#chara).aaa .ap-rank > span{display:flex;flex-direction:column;line-height:1.3;min-width:0}
+:is(#home,#chara).aaa .ap-rank b{font-family:var(--serif);font-size:17px;color:#f6e3b0}
+:is(#home,#chara).aaa .ap-rank small{font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-rk-more{margin-left:auto;border:0;background:none;color:var(--gold);font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}
+.seg[hidden]{display:none!important}
+/* 戦績: the game log from the stats screen */
+.ps-hist{margin-left:10px}
+/* the character screen's info panel: a dark glass all the way across, so the text never sits on the art (ユーザー 2026-11-14) */
+#chara.ch2 .ch-info{background:linear-gradient(270deg,rgba(8,5,18,.92),rgba(8,5,18,.84));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding-right:18px;border-radius:0 14px 14px 0}
+#chara.ch2 .ch-info small,#chara.ch2 .ch-info h4{color:#cfc2ea}
+/* PC: the dialogs grow with the window like the home does (ユーザー 2026-11-14: the text was too small) */
+html.ds .modal:not(.stage) .mbox{zoom:var(--MZ,1);max-width:calc((100vw - 28px) / var(--MZ,1));max-height:calc((100vh - 28px) / var(--MZ,1))}
+html.ds .modal.ranked .mbox{height:min(660px,calc((100vh - 28px) / var(--MZ,1)))}
+html.ds .pstats .ps-box{zoom:var(--MZ,1)}
+.rk-rule{font-size:13.5px}.rk-nx{font-size:14px}.rk-need{font-size:15px}.rk-gift b{font-size:16px}.rk-row .rkb.sm{font-size:14px}.rk-ng small{font-size:12.5px}.rk-ng em{font-size:13.5px}.rk-b small{font-size:12.5px}.rk-pts small{font-size:14px}
+#luxMenu #btnRecord{display:none}
+/* (the play box has a row more now — free play / ranked: the pick-up banner sits that much higher) */
+:is(#home,#chara).aaa .aa-banner{bottom:290px}
+html.lp :is(#home,#chara).aaa .aa-banner{bottom:262px}
+:is(#home,#chara).aaa .ap-opts:has(#optRank:not([hidden])) #optLen{grid-column:1/-1}
+html.ds .pstats .ps-box{zoom:1}
+html.ds .grc-ov > *{zoom:var(--MZ,1)}
