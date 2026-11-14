@@ -170,9 +170,9 @@
     tort: ['tort', { seed: 71 }],
     brass: ['brass', { seed: 83 }],
     // the marble discs' caps: bolder veins (a piece shows only a little of the sheet)
-    neroC: ['marble', { base: '#151517', vein: '#ece8e0', vein2: '#8a857c', cloud: '#26262a', seed: 17, s: .9, vw: .07, amt: .95, grain: 6 }],
-    calaC: ['marble', { base: '#f3f0ea', vein: '#7d766c', vein2: '#a99f92', cloud: '#e4dfd6', seed: 19, s: .9, vw: .06, amt: .9, grain: 5 }],
-    rossoC: ['marble', { base: '#9a2219', vein: '#f6e8e0', vein2: '#d07a6a', cloud: '#6a120c', seed: 23, s: .9, vw: .07, amt: .95, grain: 7 }],
+    neroC: ['marble', { base: '#2a2a2e', vein: '#d8d3ca', vein2: '#3a3a3e', cloud: '#38383d', seed: 17, s: .7, vw: .05, amt: .75, grain: 5 }],
+    calaC: ['marble', { base: '#f3f0ea', vein: '#8d867c', vein2: '#e8e3da', cloud: '#e4dfd6', seed: 19, s: .7, vw: .05, amt: .8, grain: 4 }],
+    rossoC: ['marble', { base: '#9a2219', vein: '#f0ddd4', vein2: '#a32a20', cloud: '#7a1810', seed: 23, s: .7, vw: .05, amt: .8, grain: 5 }],
     mahog: ['wood', { a: '#8e3a22', b: '#4a160c', seed: 19, rings: 22, ringAmt: .35, warp: 1.8, dir: 1, curl: .08, curlF: 30 }],
     green: ['leather', { a: '#1f4a35', b: '#0d2a1d', seed: 17 }],
     cream: ['leather', { a: '#efe3c6', b: '#cbb48a', seed: 23 }],
@@ -324,12 +324,13 @@
         for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) if ((r + f) % 2 === 0) q.fillRect(o + f * k, o + r * k, k, k);
         const mt = new TT.CanvasTexture(mc); m.metalnessMap = m.roughnessMap = mt; m.metalness = 1; m.roughness = 1;
       }
-      Object.assign(m, { stencilWrite: true, stencilRef: 2, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -6 }); return m; });   // (polygon offset: in front of the core's top)
+      Object.assign(m, { stencilWrite: true, stencilRef: 2, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp }); return m; });   // (no polygon offset: it pushed the far squares in front of the marks drawn just above the field — the glow
+                       // was cut off on the far rows, 2026-11-14; the core's top sits a little lower instead)
     const F = FRAMES[L.frame]();
     // the core: a slab under the whole board
     const coreM = F.core != null ? mat('core' + F.core, () => phys({ color: F.core, roughness: .3, clearcoat: .6, clearcoatRoughness: .1 })) : F.m;
     const bt = look === 'lacquer' ? mat('burlTop', () => { const t = new TT.CanvasTexture(tile('burl', SZ(768))); t.encoding = TT.sRGBEncoding; t.anisotropy = 4; return phys({ map: t, color: 0x4a4a50, roughness: .16, clearcoat: 1, clearcoatRoughness: .04 }); }) : coreM;
-    const core = new TT.Mesh(new TT.BoxGeometry(OW - .02, HF, OW - .02), [coreM, coreM, bt, coreM, coreM, coreM]); core.position.y = HF / 2; core.castShadow = core.receiveShadow = true; base.add(core);
+    const core = new TT.Mesh(new TT.BoxGeometry(OW - .02, HF - .006, OW - .02), [coreM, coreM, bt, coreM, coreM, coreM]); core.position.y = (HF - .006) / 2; core.castShadow = core.receiveShadow = true; base.add(core);
     const A = OW / 2, fr = new TT.Mesh(sweep(A, profileOf(F.prof)), F.m); fr.castShadow = fr.receiveShadow = true; base.add(fr);
     if (F.bead) {   // a fine half-round bead along the frame's inner edge (brass / holly / gilt)
       const n = LO() ? 3 : 5, r = .022, x0 = IW - .045, bp = [[x0 - r, H2 - .001]]; for (let i = 1; i < n; i++) { const a = Math.PI - i / n * Math.PI; bp.push([x0 + Math.cos(a) * r, H2 + Math.sin(a) * r]); } bp.push([x0 + r, H2 - .001]);
@@ -389,15 +390,16 @@
   }
   function capGeo() { if (geos.cap) return geos.cap; const TT = T(), g = new TT.CircleGeometry(R - .045, LO() ? 16 : 24); g.rotateX(-Math.PI / 2); if (X.share) X.share(g); return (geos.cap = g); }
   function ringGeo() { if (geos.ring) return geos.ring; const TT = T(), g = new TT.RingGeometry(R * .5, R * .62, LO() ? 16 : 24); g.rotateX(-Math.PI / 2); if (X.share) X.share(g); return (geos.ring = g); }
+  function rimGeo() { if (geos.rim) return geos.rim; const TT = T(), g = new TT.TorusGeometry(R - .021, .0095, 6, LO() ? 24 : 40); g.rotateX(Math.PI / 2); if (X.share) X.share(g); return (geos.rim = g); }
   function bandGeo() { if (geos.band) return geos.band; const TT = T(), g = new TT.TorusGeometry(R + .002, .011, 5, LO() ? 18 : 26); g.rotateX(Math.PI / 2); if (X.share) X.share(g); return (geos.band = g); }
   // each set: [Black's side, White's side] materials, the crown's metal, the colour of the mirror image
   const PM = {
     metal: { g: () => phys({ color: 0xf0c25e, metalness: 1, roughness: .2, envMapIntensity: 1.4 }), w: () => phys({ color: 0xe6e8ec, metalness: 1, roughness: .16, envMapIntensity: 1.4 }), ref: [0xb88a3a, 0xa9adb3] },
     ebony: { g: () => phys({ color: 0x1c1512, roughness: .32, clearcoat: .7, clearcoatRoughness: .12 }), w: () => phys({ color: 0xeee2c6, roughness: .36, clearcoat: .5, clearcoatRoughness: .15 }), ref: [0x2a201a, 0xcfc2a4], inlay: true, crown: 0xd8b064 },
-    stone: { g: () => phys({ color: 0x1b1b1d, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), w: () => phys({ color: 0xece8e1, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), ref: [0x232325, 0xd4d0c8], cap: ['neroC', 'calaC'], crown: 0xd8b064 },
-    rbmarble: { g: () => phys({ color: 0x1b1b1d, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), w: () => phys({ color: 0x8e1f19, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), ref: [0x232325, 0x6e1a14], cap: ['neroC', 'rossoC'], crown: 0xd8b064 },
+    stone: { g: () => phys({ color: 0x26262a, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), w: () => phys({ color: 0xece8e1, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), ref: [0x232325, 0xd4d0c8], rim: true, cap: ['neroC', 'calaC'], crown: 0xd8b064 },
+    rbmarble: { g: () => phys({ color: 0x26262a, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), w: () => phys({ color: 0x8e1f19, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), ref: [0x232325, 0x6e1a14], rim: true, cap: ['neroC', 'rossoC'], crown: 0xd8b064 },
     urushi: { g: () => phys({ color: 0x121113, roughness: .16, clearcoat: 1, clearcoatRoughness: .03 }), w: () => phys({ color: 0xb2261c, roughness: .18, clearcoat: 1, clearcoatRoughness: .03 }), ref: [0x1a191b, 0x8a2016], band: true, crown: 0xe6bd62 },
-    rmarble: { g: () => phys({ color: 0x8e1f19, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), w: () => phys({ color: 0xece8e1, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), ref: [0x6e1a14, 0xd4d0c8], cap: ['rossoC', 'calaC'], crown: 0xd8b064 },
+    rmarble: { g: () => phys({ color: 0x8e1f19, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), w: () => phys({ color: 0xece8e1, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), ref: [0x6e1a14, 0xd4d0c8], rim: true, cap: ['rossoC', 'calaC'], crown: 0xd8b064 },
   };
   const setOf = s => SETS.includes(s) ? s : pcSet();
   const pMat = (set, col) => mat('p' + set + col, PM[set][col]);
@@ -417,6 +419,7 @@
       if (D.cap) { const c = add(capGeo(), capMat(set, col), y0 + PH + .001); c.rotation.y = k * 1.3 + (col === 'g' ? .4 : 2.1); c.castShadow = false; }
       if (D.inlay && k === n - 1) { const r = add(ringGeo(), pMat(set, col === 'g' ? 'w' : 'g'), y0 + PH - .0155); r.castShadow = false; }
       if (D.band) { const b = add(bandGeo(), metalMat('gold', 0xe6bd62, .2), y0 + PH * .5); b.castShadow = false; }
+      if (D.rim) { const b = add(rimGeo(), metalMat('brass', 0xd8b064, .22), y0 + PH - .021); b.castShadow = false; }   // (a brass ring round the top's edge: the black marble discs read on black squares, 2026-11-14)
     }
     if (king) add(crownGeo(), D.crown ? metalMat('crown' + D.crown, D.crown, .2) : m, n * (PH + .004) - .03 + (set === 'urushi' ? .02 : 0));
     g.userData = { col, king: !!king, h: n * PH, set };
