@@ -40,3 +40,9 @@ URL: https://core-calmdust.github.io/aicoding/checkers/ ／ 旧版 checker.html 
 
 ## 対局設定の Pro モード（2026-11-08）
 対局設定の「AIの強さ」の PRO ボタン（`shared/proset.js` の `ProSet.ladder()`、addendum「対局設定の Pro モード」）。項目：思考の制限（時間／深さ／局面数）、手のばらつき（深さで読むときだけ。弱い段の既定はその段のノイズ、変えると 小＝いちばん弱いノイズ／大＝弱い段の中ほどのノイズ）。変えた値は engine.js `think` の `cfg`（LEVELS と同じキー。強い段の最大深さは `dx`）で渡す。レート戦では使わない。戦績のキーは `ai:pro<レベル>`、相手名に「PRO」。
+
+## 大百科の3Dカード（2026-11-14）
+- カードのタブは「対戦｜レート戦｜パズル｜レッスン」（将棋・リバーシ・五目並べ・囲碁と同じ完成形）。パズル・レッスン・定跡・レート戦（AI）は3D卓で遊べ、記録はフル版と共通（保存キーは上の「保存キー」のまま）。
+- パズル：atlas/puzzles.js `BOOK.checkers`（今日の一問は checkers/app.js dailyPick と同じ選び方）。レッスン・定跡：atlas/lessons3d.js `CHECKERS`。3D盤の印・矢印・ソルバー呼び出しは atlas/games/checkers.js の `ctx.pz`。
+- 3D盤にはマス番号がないので、ガイドの台詞では手を「緑の矢印の手／赤い矢印の手」（日本語以外は色の点）で示す。番号の入った準備ステップの文と定跡の紹介は atlas/nocoord/checkers.json（14言語）。
+- フル版／2D版を開くときは `?mode=puzzle|lesson|rated|online&sub=…`（checkers/app.js `AtlasDeep`）。
