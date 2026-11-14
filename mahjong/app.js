@@ -220,7 +220,7 @@ addEventListener("load", () => setTimeout(() => SND.preload(), 400));
 
 // ---------------------------------------------------------------- character art
 const ART = new Map();
-function charImg(c, kind) {          // kind: 'full' | 'bust' | 'face' | 'thumb'
+function charImg(c, kind) {          // kind: 'full' | 'bust' | 'face' | 'thumb' | 'sil' / 'silf' (the outline of a locked character, full / face: black on clear — tools/make-sil.py)
   if (c.art) {
     if (kind === 'full') return `${ASSETS}chara/${c.id}.webp`;
     if (kind === 'thumb') return `${ASSETS}chara/${c.id}-t.webp`;
@@ -318,7 +318,7 @@ function confirmBox(q) {
 function applyText() {
   document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
   document.querySelectorAll('[data-tt]').forEach(el => { el.title = t(el.dataset.tt); el.setAttribute('aria-label', t(el.dataset.tt)); });
-  document.title = I18N.lang === 'ja' ? '雀華 〜姫たちの麻雀〜' : 'JANKA — Mahjong of the Princesses';
+  document.title = I18N.lang === 'ja' ? '雀華 〜艶やかなる姫君の雀宴〜' : 'JANKA — The Princesses\' Mahjong Banquet';
 }
 function sndIcons() { for (const b of document.querySelectorAll('.snd')) b.innerHTML = IC.gear; }
 function renderHome() {
@@ -563,7 +563,7 @@ function openRanked() {
   const rows = (veiled ? `<div class="rk-row rk-veil">${rankBadge(MJRank.list[MJRank.list.length - 1], 'sm')}<span class="rk-vt">${esc(t('rkVeil'))}</span></div>` : '') +
     MJRank.list.filter(rkSeen).reverse().map(x => {
     const g = x.reward ? MJChars.get(x.reward) : null, got = g && owns(g.id);
-    return `<div class="rk-row ${x.i === cur.i ? 'cur' : x.i < cur.i ? 'past' : ''}">${rankBadge(x, 'sm')}<span class="rk-need">${x.pt} pt</span>${g ? `<span class="rk-gift ${got ? 'got' : ''}">${frame(g, 'face', got ? '' : 'fr-lock')}<em class="r-${g.rarity}">${g.rarity}</em>${got ? `<b>${esc(L(g.name))}</b>` : `<b>？？？</b>`}</span>` : '<span class="rk-gift none"></span>'}</div>`;
+    return `<div class="rk-row ${x.i === cur.i ? 'cur' : x.i < cur.i ? 'past' : ''}">${rankBadge(x, 'sm')}<span class="rk-need">${x.pt} pt</span>${g ? `<span class="rk-gift ${got ? 'got' : ''}">${frame(g, got ? 'face' : 'silf', got ? '' : 'fr-lock')}<em class="r-${g.rarity}">${g.rarity}</em>${got ? `<b>${esc(L(g.name))}</b>` : `<b>？？？</b>`}</span>` : '<span class="rk-gift none"></span>'}</div>`;
   }).join('');
   const b = modal(`
     <div class="rkd">
@@ -573,7 +573,7 @@ function openRanked() {
           <div class="rk-big">${rankBadge(cur, 'lg')}</div>
           <div class="rk-pts"><b>${pt}</b> pt <small>${esc(t('rkGames', { n: DB.rank.games }))}</small></div>
           ${rankBar(pt)}
-          ${nextGift ? `<div class="rk-ng"><span class="rk-gimg rk-sil">${frame(MJChars.get(nextGift.reward), 'face', 'fr-lock')}</span><span><small>${esc(t('rkNextGift'))}</small><b>？？？</b><em>${esc(t('rkGiftAt', { r: rkName(nextGift), n: Math.max(0, nextGift.pt - pt) }))}</em></span></div>` : ''}
+          ${nextGift ? `<div class="rk-ng"><span class="rk-gimg rk-sil">${frame(MJChars.get(nextGift.reward), 'silf', 'fr-lock')}</span><span><small>${esc(t('rkNextGift'))}</small><b>？？？</b><em>${esc(t('rkGiftAt', { r: rkName(nextGift), n: Math.max(0, nextGift.pt - pt) }))}</em></span></div>` : ''}
           <p class="rk-rule">${esc(t('rkRule', { lv: lvName }))}</p>
           <div class="rk-go">
             <button class="go rk-b" data-len="east"><b>${esc(t('east'))}</b><small>${[0, 1, 2].map(i => `${esc(t('rank')[i])} +${P.east[i]}`).join(' ・ ')}</small></button>
@@ -703,14 +703,14 @@ function renderChara() {
   $('#chList').innerHTML = list.map(c => {
     const own = owns(c.id);
     return `<button class="chi ${own ? '' : 'lock'} ${c.id === chView ? 'on' : ''}" data-id="${c.id}" style="--c:${c.color}">
-      ${frame(c, 'face')}<em class="r-${c.rarity}">${c.rarity}</em>${own ? '' : `<i class="lk">${IC.lock}</i>`}${c.id === DB.sel ? '<i class="pm">★</i>' : ''}<span>${own ? esc(L(c.name)) : '？？？'}</span></button>`;
+      ${frame(c, own ? 'face' : 'silf')}<em class="r-${c.rarity}">${c.rarity}</em>${own ? '' : `<i class="lk">${IC.lock}</i>`}${c.id === DB.sel ? '<i class="pm">★</i>' : ''}<span>${own ? esc(L(c.name)) : '？？？'}</span></button>`;
   }).join('');
   const c = MJChars.get(chView), own = owns(c.id);
   const ch = $('#chara'); ch.style.setProperty('--c', c.color); ch.style.setProperty('--c2', c.color2);
   const full = charImg(c, 'full');
   if ($('#chArt').dataset.id !== c.id + (own ? '' : 'x')) {
     $('#chArt').dataset.id = c.id + (own ? '' : 'x');
-    $('#chArt').innerHTML = `<i class="aa-aura"></i><div class="aa-ch ${own ? '' : 'lock'}"><img src="${full}" alt="" draggable="false"></div>` +
+    $('#chArt').innerHTML = `<i class="aa-aura"></i><div class="aa-ch ${own ? '' : 'lock'}"><img src="${own ? full : charImg(c, 'sil')}" alt="" draggable="false"></div>` +
       (own ? '' : c.reward != null ? `<div class="unlock"><i>${IC.lock}</i><b>？？？</b><span>${esc(t('mystery'))}<br>${esc(t('rkLocked', { r: rkName(MJRank.list[c.reward]) }))}</span><button class="go sm" data-a="rated">${esc(t('rated'))}</button></div>`
         : `<div class="unlock"><i>${IC.lock}</i><b>？？？</b><span>${esc(t('mystery'))}<br>${esc(t('lockedS', { r: c.rarity }))}</span><button class="go sm" data-a="gacha">${esc(t('toGacha'))}</button></div>`);
     $('#chBlur').src = own ? full : '';   // (a locked character: nothing of her shows, not even blurred behind)
@@ -728,7 +728,7 @@ function renderChara() {
       <div class="skpick"><small>${t('ownedSkills')} ${o.skills.length}${o.skills.length > 1 ? ` ・ ${t('useThis')}` : ''}</small>
       <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>
       <p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(t('notOwned'))}</div>`}
-    <div class="sis"><small>${esc(t('sisters'))}</small><div>${sisters.map(x => `<button class="sib ${x.id === c.id ? 'on' : ''} ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}" title="${owns(x.id) ? esc(L(x.name)) : '？？？'}">${frame(x, 'face')}</button>`).join('')}</div></div>
+    <div class="sis"><small>${esc(t('sisters'))}</small><div>${sisters.map(x => `<button class="sib ${x.id === c.id ? 'on' : ''} ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}" title="${owns(x.id) ? esc(L(x.name)) : '？？？'}">${frame(x, owns(x.id) ? 'face' : 'silf')}</button>`).join('')}</div></div>
     ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isPartner')}</div>` : `<button class="go ch-go" id="chSet">${t('setPartner')}</button>`) : ''}`;
   const b = $('#chSet');
   if (b) b.onclick = () => { DB.sel = c.id; save(); SND.ok(); renderChara(); };

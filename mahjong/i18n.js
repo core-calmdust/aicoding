@@ -3,7 +3,7 @@
 'use strict';
 const S = {
   ja: {
-    title: '雀華', sub: '〜姫たちの麻雀〜', series: 'CALMDUST COLLECTION',
+    title: '雀華', sub: '〜艶やかなる姫君の雀宴〜', series: 'CALMDUST COLLECTION',
     play: '対局', bot: 'BOT戦', rated: '段位戦', freePlay: 'フリー対局', fsEnter: 'フルスクリーン', fsExit: 'フルスクリーン解除', record: '戦績', rkLadder: '段位表', history: '対局履歴', rkLocked: '段位戦で「{r}」に到達すると仲間に', rkNext: '次の「{r}」まで あと {n} pt', rkTop: '最高位に到達', rkGain: '段位 +{n} pt', rkUp: '昇段！', rkGames: '{n} 戦', rkNextGift: '次の報酬キャラ', rkGiftAt: '「{r}」で獲得・あと {n} pt', rkPl: '位', rkRule: 'スキルあり。相手は段位が上がるにつれて強くなります。ポイントは減りません。2段階上がるごとに報酬キャラ', rkGiftGet: '報酬キャラ獲得！', lesson: 'レッスン', rules: 'ルール', soon: '準備中',
     east: '東風戦', south: '半荘戦', skillOn: 'スキル戦', skillOff: '標準戦', strength: 'BOTの強さ',
     lv: ['入門', '初級', '中級', '上級', '達人'], start: '対局開始', gacha: 'ガチャ', chars: 'キャラ', coins: 'コイン',
@@ -29,7 +29,7 @@ const S = {
     lineH: '台詞', dealQ: 'この局で「{name}」を使いますか？', use: '使う', notUse: '使わない', dealOnly: '配牌時に選択', tapChange: 'タップでキャラ変更', back: '戻る', riichiNo: 'リーチ不可', useThis: 'この対局で使うスキルを選ぶ', ownedSkills: '所持スキル', newSkill: '新スキル!', charRates: 'キャラ', skillRates: 'スキル', tenth: '10連の10回目はSR以上のキャラ確定。持っているキャラが出ると新しいスキルを覚えます', sisters: '姉妹', riichiWhy_sealed: '他家の「封じ」で、この局はリーチできません', riichiWhy_points: '持ち点が1000点未満なのでリーチできません', riichiWhy_wall: '山の残りが4枚未満なのでリーチできません',
   },
   en: {
-    title: 'JANKA', sub: 'Mahjong of the Princesses', series: 'CALMDUST COLLECTION',
+    title: 'JANKA', sub: 'The Princesses\' Mahjong Banquet', series: 'CALMDUST COLLECTION',
     play: 'Play', bot: 'vs BOT', rated: 'Ranked', freePlay: 'Free play', fsEnter: 'Full screen', fsExit: 'Exit full screen', record: 'Record', rkLadder: 'Ladder', history: 'Game log', rkLocked: 'Joins you when you reach “{r}” in Ranked', rkNext: '{n} pt to “{r}”', rkTop: 'Top rank reached', rkGain: 'Rank +{n} pt', rkUp: 'Promoted!', rkGames: '{n} games', rkNextGift: 'Next reward', rkGiftAt: 'At “{r}” · {n} pt to go', rkPl: '', rkRule: 'Skills on. Your opponents grow stronger as you climb. Points never go down. A reward character every second rank.', rkGiftGet: 'Reward character!', lesson: 'Lessons', rules: 'Rules', soon: 'Soon',
     east: 'East only', south: 'Half game', skillOn: 'Skills', skillOff: 'Standard', strength: 'BOT strength',
     lv: ['Novice', 'Easy', 'Normal', 'Hard', 'Master'], start: 'Start', gacha: 'Gacha', chars: 'Characters', coins: 'Coins',

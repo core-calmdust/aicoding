@@ -1629,3 +1629,6 @@ html.ds #game #opp2{--bf:clamp(44px, calc(var(--GH) * .062), 58px)}
 .rkb.rk-x{--a:#4a3f66;--b:#17112a;--t:#b9a9e0;--g:radial-gradient(closest-side,rgba(120,90,200,.35),transparent)}
 .rk-row.rk-veil{background:linear-gradient(90deg,rgba(120,90,200,.16),rgba(120,90,200,.02));box-shadow:inset 0 0 0 1px rgba(150,120,230,.35)}
 .rk-vt{grid-column:2 / -1;font-family:var(--serif);font-size:15px;color:#cdbff2;letter-spacing:.12em}
+/* (ユーザー 2026-11-15) a locked character is her outline only: black on a lit violet ground, the full art edged in light */
+.chi.lock .frame,.sib.lock .frame,.frame.fr-lock{background:radial-gradient(circle at 50% 38%,#8a74c8,#3a2d5e 62%,#1c1530)!important}
+:is(#home,#chara) .aa-ch.lock img{filter:brightness(0) drop-shadow(0 0 1.5px rgba(214,196,255,.95)) drop-shadow(0 0 22px rgba(150,110,255,.55))!important;opacity:1!important;animation:none!important}
