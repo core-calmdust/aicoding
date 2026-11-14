@@ -114,7 +114,7 @@ fn = isn[faces].sum(1) >= 2
 faces = np.concatenate([faces[~fn], faces[fn]])
 lo = out.min(0); hi = out.max(0); q16 = np.round((out - lo) / (hi - lo) * 65535).astype('<u2')
 data = {'lo': [round(float(x), 4) for x in lo], 'hi': [round(float(x), 4) for x in hi], 'nv': int(len(out)), 'nt': int(len(faces)), 'nail': int((~fn).sum()),
-        'wrist': [round(float(x), 3) for x in (place(np.array([0, .06, 6.2])) - grip + np.array([0, .02, -.18]))], 'pitch': PITCH,
+        'wrist': [round(float(x), 3) for x in (place(np.array([0, .04, 3.45])) - grip + np.array([0, .02, -.18]))], 'pitch': PITCH,
         'p': base64.b64encode(q16.tobytes()).decode(), 'i': base64.b64encode(faces.astype('<u2').tobytes()).decode(), 'c': base64.b64encode(col.clip(0, 255).astype('u1').tobytes()).decode()}
 dst = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'hand.js')
 open(dst, 'w').write('// 雀華：牌を置く手のメッシュ（mahjong/tools/hand-gen.py が生成。手で直さない）\nwindow.JANKA_HAND = ' + json.dumps(data, separators=(',', ':')) + ';\n')

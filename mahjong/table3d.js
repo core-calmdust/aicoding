@@ -170,12 +170,32 @@ function buildHand(env) {
   const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .56, metalness: 0, sheen: .18, sheenRoughness: .6, sheenColor: new THREE.Color(0xffd9cc), emissive: new THREE.Color(0x3a0f08), emissiveIntensity: .18, envMap: env, envMapIntensity: .2 });
   const nail = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .22, clearcoat: 1, clearcoatRoughness: .08, envMap: env, envMapIntensity: .7, emissive: new THREE.Color(0x40141c), emissiveIntensity: .35 });
   const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; rig.add(hand);
-  const cloth = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x33204b).convertSRGBToLinear(), roughness: .86 });
-  const gold = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd2aa5a).convertSRGBToLinear(), roughness: .35, metalness: .8, envMap: env, envMapIntensity: .8 });
-  const sl = new THREE.Group(); sl.position.set(Hd.wrist[0], Hd.wrist[1], Hd.wrist[2]); sl.rotation.x = Hd.pitch; rig.add(sl);   // the sleeve runs on up the forearm
-  { const cg = new THREE.CylinderGeometry(1.5, 1.0, 13, 20, 1, true); cg.rotateX(PI / 2); cg.translate(0, 0, 6.5); const m = new THREE.Mesh(cg, cloth); m.scale.set(1, .82, 1); m.castShadow = true; sl.add(m);
-    const cuff = new THREE.Mesh(new THREE.TorusGeometry(1.0, .07, 8, 28), gold); cuff.scale.set(1, .82, 1); cuff.castShadow = true; sl.add(cuff);
-    const cap = new THREE.Mesh(new THREE.CircleGeometry(.98, 20), cloth); cap.scale.set(1, .82, 1); cap.rotation.y = PI; cap.position.z = .02; sl.add(cap); }
+  // the sleeve (ユーザー 2026-11-14: only a glimpse of the wrist, the sleeve long; a pattern as on a Chinese dress): crimson silk
+  // brocade — gold flower roundels and cloud scrolls woven in — closing just above the wrist in a black band between two gold pipings.
+  const bc = document.createElement('canvas'); bc.width = bc.height = 512; const g2 = bc.getContext('2d');
+  { g2.fillStyle = '#8c1626'; g2.fillRect(0, 0, 512, 512);
+    let sd = 9; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 2600; i++) { g2.strokeStyle = `rgba(${R() < .5 ? '255,190,170' : '40,0,6'},${.03 + R() * .05})`; g2.lineWidth = 1; const x = R() * 512, y = R() * 512; g2.beginPath(); g2.moveTo(x, y); g2.lineTo(x, y + 6 + R() * 16); g2.stroke(); }   // the weave
+    const gold = 'rgba(232,186,96,.92)', dim = 'rgba(206,150,70,.6)';
+    const flower = (x, y, r) => { g2.save(); g2.translate(x, y);
+      g2.strokeStyle = gold; g2.lineWidth = 3; g2.beginPath(); g2.arc(0, 0, r, 0, 7); g2.stroke(); g2.lineWidth = 1.6; g2.beginPath(); g2.arc(0, 0, r * .86, 0, 7); g2.stroke();
+      for (let k = 0; k < 8; k++) { g2.rotate(Math.PI / 4); g2.fillStyle = gold; g2.beginPath(); g2.ellipse(0, -r * .47, r * .15, r * .27, 0, 0, 7); g2.fill(); g2.fillStyle = dim; g2.beginPath(); g2.ellipse(r * .2, -r * .5, r * .07, r * .17, .4, 0, 7); g2.fill(); }
+      g2.fillStyle = '#8c1626'; g2.beginPath(); g2.arc(0, 0, r * .2, 0, 7); g2.fill(); g2.fillStyle = gold; g2.beginPath(); g2.arc(0, 0, r * .12, 0, 7); g2.fill(); g2.restore(); };
+    const cloud = (x, y, k) => { g2.save(); g2.translate(x, y); g2.scale(k, k); g2.strokeStyle = dim; g2.lineWidth = 3.2; g2.lineCap = 'round';
+      for (const sx of [-1, 1]) { g2.beginPath(); for (let a = 0; a < 5.4; a += .2) { const rr = 4 + a * 3.4; g2.lineTo(sx * (22 + Math.cos(a) * rr), Math.sin(a) * rr); } g2.stroke(); }
+      g2.beginPath(); g2.moveTo(-44, 14); g2.quadraticCurveTo(0, 30, 44, 14); g2.stroke(); g2.restore(); };
+    for (const [x, y] of [[128, 128], [384, 384]]) for (const [ox, oy] of [[0, 0], [512, 0], [-512, 0], [0, 512], [0, -512]]) flower(x + ox, y + oy, 86);
+    for (const [x, y] of [[384, 128], [128, 384]]) cloud(x, y, 1.25); }
+  const bro = new THREE.CanvasTexture(bc); bro.encoding = THREE.sRGBEncoding; bro.wrapS = bro.wrapT = THREE.RepeatWrapping; bro.repeat.set(4, 5); bro.anisotropy = 4;
+  const cloth = new THREE.MeshPhysicalMaterial({ map: bro, roughness: .5, metalness: 0, sheen: .8, sheenRoughness: .35, sheenColor: new THREE.Color(0xffb0a0), envMap: env, envMapIntensity: .3 });
+  const band = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x14080c).convertSRGBToLinear(), roughness: .6 });
+  const gold = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd9b062).convertSRGBToLinear(), roughness: .32, metalness: .85, envMap: env, envMapIntensity: .9 });
+  const sl = new THREE.Group(); sl.position.set(Hd.wrist[0], Hd.wrist[1], Hd.wrist[2]); sl.rotation.x = Hd.pitch; rig.add(sl);   // from just above the wrist on up the arm
+  { const SY = .8, r0 = .8, r1 = 1.75, Ls = 15;
+    const cg = new THREE.CylinderGeometry(r1, r0, Ls, 28, 1, true); cg.rotateX(PI / 2); cg.translate(0, 0, Ls / 2 + .34); const m = new THREE.Mesh(cg, cloth); m.scale.set(1, SY, 1); m.castShadow = true; sl.add(m);
+    const bg = new THREE.CylinderGeometry(r0 + .02, r0 - .02, .34, 28, 1, true); bg.rotateX(PI / 2); bg.translate(0, 0, .17); const bm = new THREE.Mesh(bg, band); bm.scale.set(1, SY, 1); sl.add(bm);
+    for (const z of [0, .34]) { const cuff = new THREE.Mesh(new THREE.TorusGeometry(r0 + (z ? .02 : -.02), .045, 8, 32), gold); cuff.position.z = z; cuff.scale.set(1, SY, 1); cuff.castShadow = true; sl.add(cuff); }
+    const cap = new THREE.Mesh(new THREE.CircleGeometry(r0 - .04, 24), band); cap.scale.set(1, SY, 1); cap.rotation.y = PI; cap.position.z = .06; sl.add(cap); }
   rig.scale.setScalar(.84);   // (a little under life size against the tiles: it must not hide the table)
   return rig;
 }
