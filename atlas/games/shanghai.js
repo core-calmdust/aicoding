@@ -104,7 +104,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
 .shmap .hd{position:relative;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 8px}
 .shmap .hd h2{margin:0;font-size:22px;letter-spacing:.04em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shmap .hd .shtl{flex:1;min-width:0}.shmap .hd .em{display:none;flex:none}.shmap .hd .em.zx{display:none!important}.shmap .hd .emi{object-fit:cover;border-radius:14px;border:2px solid #e8c877}@media (pointer:coarse),(max-width:819px){.shmap.scn .sky{filter:none!important;transform:none!important;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.4))!important}}
-.shmap.scn .sky{background-color:transparent;background-size:cover;background-position:50% 100%;filter:blur(16px) brightness(.62) saturate(1.1);transform:scale(1.12)}.shmap.scn .sky canvas{display:none}.shmap.scn .wld .pn{fill:rgba(255,255,255,.85);paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.6px}.shmap .sh .art.scn{padding:0;overflow:hidden}.shmap .sh .art.scn svg{border-radius:14px 14px 0 0}.shmap .sh .art.scn b{margin:4px 0 6px}.shmap .hd .story{display:none;margin:4px 0 0;font-size:15px;line-height:1.55;color:#c8d2f4;opacity:.9;max-width:760px}
+.shmap.scn .sky{background:none;filter:blur(16px) brightness(.62) saturate(1.1);overflow:hidden}.shmap.scn .sks{position:absolute;left:0;top:-40px;bottom:-40px;display:flex;will-change:transform}.shmap.scn .sks img{flex:none;width:var(--aw,600px);height:100%;object-fit:fill}.shmap.scn .sky canvas{display:none}.shmap.scn .wld .pn{fill:rgba(255,255,255,.85);paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.6px}.shmap .sh .art.scn{padding:0;overflow:hidden}.shmap .sh .art.scn svg{border-radius:14px 14px 0 0}.shmap .sh .art.scn b{margin:4px 0 6px}.shmap .hd .story{display:none;margin:4px 0 0;font-size:15px;line-height:1.55;color:#c8d2f4;opacity:.9;max-width:760px}
 @media (min-width:820px){.shmap .hd{gap:18px;padding:calc(18px + env(safe-area-inset-top)) 24px 10px}.shmap .hd .em{display:block;width:64px;height:64px;filter:drop-shadow(0 0 14px rgba(255,215,106,.35))}.shmap .hd h2{font-size:34px;letter-spacing:.08em;color:#ffe7a0;text-shadow:0 0 18px rgba(255,215,106,.35)}.shmap .hd .story{display:block}.shmap .hd .tot{font-size:21px}}
 .shmap .hd .tot{font-size:17px;font-weight:800;color:#ffd76a;white-space:nowrap}
 .shmap .x{flex:none;width:46px;height:46px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
@@ -894,9 +894,10 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd">${ZOD ? '' : scnImg(cid, 0, 232).replace('<img ', '<img class="em emi" ')}<svg class="em${ZOD ? '' : ' zx'}" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="shemg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b4aa0"/><stop offset="1" stop-color="#121640"/></radialGradient></defs><rect x="10" y="4" width="44" height="56" rx="8" fill="url(#shemg)" stroke="#e8c877" stroke-width="2"/><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="rgba(232,200,119,.35)"/><path d="M20 44 L28 34 L36 38 L44 22 M28 34 L30 22" fill="none" stroke="#ffe39a" stroke-width="1.4" stroke-linecap="round"/><g fill="#fff6d8"><circle cx="20" cy="44" r="2.2"/><circle cx="28" cy="34" r="2.6"/><circle cx="36" cy="38" r="2"/><circle cx="44" cy="22" r="2.8"/><circle cx="30" cy="22" r="1.8"/></g></svg><div class="shtl"><h2></h2><p class="story"></p></div><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
     document.body.appendChild(el);
     const $ = q => el.querySelector(q), vp = $('.vp'), wld = $('.wld');
+    if (!ZOD) { $('.sky').insertAdjacentHTML('beforeend', `<div class="sks">${AR.map((_, i) => scnImg(cid, i, 232, '', i === area)).join('')}</div>`); }
     // the pan / zoom: the long sky drawn at u px per unit, then scaled by z and moved by (tx, ty)
-    let u = 6, z = 1, tx = 0, ty = 0, raf = 0, anim = null, PLX = [];
-    const WW = PW * NA;
+    let u = 6, z = 1, tx = 0, ty = 0, raf = 0, anim = null, PLX = [], SKS = null;
+    const WW = PW * NA; SKS = ZOD ? null : $('.sks');
     const sky = ZOD ? skyLoop($('canvas'), () => tx) : { size() {}, stop() {} };   // (the scene courses: their pictures are the sky)
     if (window.Table3D && Table3D.quiet) Table3D.quiet(true);   // (2026-11-14) the map covers the room: the 3D scene behind it stops drawing (the showcase turntable kept it at 60 fps)
     requestAnimationFrame(() => el.classList.add('on'));
@@ -906,7 +907,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       tx = w + 2 * m <= vw ? (vw - w) / 2 : Math.min(m, Math.max(vw - w - m, tx));
       ty = h <= vh ? (vh - h) / 2 : Math.min(20, Math.max(vh - h - 20, ty));
     }
-    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; PLX.forEach(([e, f]) => { e.style.transform = `translate3d(${((f - 1) * tx / z).toFixed(1)}px,0,0)`; }); wld.style.setProperty('--iz', Math.max(1, Math.min(3, .72 / z)).toFixed(3)); track(); }   // (2026-11-14 --iz: zoomed out, the stage buttons keep ~72 % of their size on screen — the picture shrinks, the buttons do not)
+    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; if (SKS) SKS.style.transform = `translate3d(${(vp.offsetLeft + tx).toFixed(1)}px,0,0)`, SKS.style.setProperty('--aw', (PW * u * z).toFixed(1) + 'px'); PLX.forEach(([e, f]) => { e.style.transform = `translate3d(${((f - 1) * tx / z).toFixed(1)}px,0,0)`; }); wld.style.setProperty('--iz', Math.max(1, Math.min(3, .72 / z)).toFixed(3)); track(); }   // (2026-11-14 --iz: zoomed out, the stage buttons keep ~72 % of their size on screen — the picture shrinks, the buttons do not)
     const centerOf = a => (a * PW + 8 + 50) * u;   // the middle of constellation a, in sky px at z = 1
     function aim(a, smooth) {
       const ttx = vp.clientWidth / 2 - centerOf(a) * z;
@@ -942,7 +943,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(areaName(i))}<em>★${st}</em>${(ZOD ? [1, 2, 3] : []).filter(t => Math.floor(GIFT_S[t] / 10) === i && !Reward.has(t)).map(t => `<img class="agf" src="../images/atlas/av/peacock-${t}.webp" alt="">`).join('')}</button>`; }).join('');
       const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
       wld.querySelectorAll('.pn').forEach((t, i) => t.classList.toggle('on', i === area));
-      if (!ZOD && !LITE && $('.sky').dataset.a !== String(area)) { const sk = $('.sky'); sk.dataset.a = area; const a2 = areaImg(cid, area, 232, true); sk.style.backgroundImage = `url("${a2.u}")`; if (a2.u === BLANK) { const t = setInterval(() => { if (sk.dataset.a !== String(area) || !sk.isConnected) return clearInterval(t); if (BMC[a2.k]) { sk.style.backgroundImage = `url("${BMC[a2.k]}")`; clearInterval(t); } }, 300); } }   // (a scene course: this area's picture, blurred, fills the screen round the map)
+      // (2026-11-14) a scene course: the frosted glass above and below the map is a strip of every area's picture, moved with the map in apply() (it follows the scroll, not only the tab)
     }
     // every constellation's stars, evenly spaced inside its box, in the long sky's units
     const PTS = AR.map((a, i) => (ZOD ? CON[a].p : cPts(cid, i)).map(([x, y]) => [i * PW + 8 + x, y]));   // (placed by hand on the figures, already evenly spaced)
@@ -1036,7 +1037,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
     vp.addEventListener('wheel', e => {
       e.preventDefault(); const r = vp.getBoundingClientRect();
-      if (!ZOD) { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { tx -= e.deltaX; apply(); } return; }   // (2026-11-14 ユーザー: 星座以外はホイールが効かない方がいい — no zoom by the wheel; a sideways trackpad swipe still pans)
+      if (!ZOD) { tx -= Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY * (e.deltaMode === 1 ? 32 : 1); apply(); return; }   // (2026-11-14 ユーザー: 星座以外はホイールで拡大しない — the wheel moves the map left and right)
       if (e.ctrlKey || Math.abs(e.deltaY) >= Math.abs(e.deltaX)) zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0018)), e.clientX - r.left, e.clientY - r.top);
       else { tx -= e.deltaX; apply(); }
     }, { passive: false });
