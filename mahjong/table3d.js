@@ -365,7 +365,7 @@ class Table3D {
     // shared tile geometry/materials
     // the tiles (2026-11-14, as 上海's): rounded white blocks with a purple back — corners and edges rounded, the face
     // carved (normal map from tiles.js). One shared geometry for the white part and one for the back.
-    { const tg = tileGeos(W, H, D, 0.15, 0.15, 0.28, 0.15); this.geoFront = tg.front; this.geoBack = tg.back; }   // (one rounded block, split where the white meets the purple)
+    { const tg = tileGeos(W, H, D, 0.16, 0.15, 0.28, 0.15), tb = tileGeos(W, H, D, 0.16, 0.05, 0.28, 0.05); this.geoFront = tg.front; this.geoBack = tb.back; }   // (ユーザー 2026-11-14: the face keeps its full round edge; the purple back has the crisper edge of the tiles in the dora box — the two meet on the straight side, same outline)   // (one rounded block, split where the white meets the purple)
     this.matIvory = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xf7f7f3).convertSRGBToLinear(), roughness: .38, metalness: 0 });
     // the back (2026-11-14, ユーザー：紫をもう少し淡く、高級石を磨いたような質感): a pale lavender stone with soft veins, polished
     // (a clear coat over it, a little studio light reflected in it) — four cuts of the same slab so neighbours don't match

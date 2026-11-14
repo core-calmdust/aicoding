@@ -1006,7 +1006,7 @@ html.lp .top .ib.rec{width:auto}
 .mv-ar{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:2}
 .mv-a{stroke-dasharray:1;stroke-dashoffset:1;animation:mvDraw .45s calc(.15s + var(--k) * .08s) ease-out forwards}
 @keyframes mvDraw{to{stroke-dashoffset:0}}
-.mv-p{position:absolute;width:25cqw;height:calc(var(--u)*19);transform:translate(-50%,-50%);border-radius:calc(var(--u)*1.6);background:linear-gradient(180deg,#151a3e 0 34%,#3a4d8e 34%,#2b3a74 100%);border:calc(var(--u)*.35) solid #d9b98a;box-shadow:0 calc(var(--u)*1.2) calc(var(--u)*3) rgba(0,0,0,.55);clip-path:polygon(4% 0,96% 0,100% 16%,100% 84%,96% 100%,4% 100%,0 84%,0 16%);animation:mvIn .3s cubic-bezier(.2,.9,.3,1.2) both}
+.mv-p{position:absolute;width:25cqw;height:calc(var(--u)*19);transform:translate(-50%,-50%);border-radius:calc(var(--u)*1.6);background:linear-gradient(180deg,#151a3e 0 34%,#3a4d8e 34%,#2b3a74 100%);border:calc(var(--u)*.35) solid #d9b98a;box-shadow:0 calc(var(--u)*1.2) calc(var(--u)*3) rgba(0,0,0,.55);overflow:hidden;animation:mvIn .3s cubic-bezier(.2,.9,.3,1.2) both}
 @keyframes mvIn{from{transform:translate(-50%,-50%) scale(.8);opacity:0}}
 .mv-p.p0{left:50%;top:80%}.mv-p.p1{left:83%;top:51%}.mv-p.p2{left:50%;top:22%}.mv-p.p3{left:17%;top:51%}
 .mv-p.win{border-color:#ffd76a;box-shadow:0 0 0 calc(var(--u)*.3) rgba(255,215,106,.5),0 0 calc(var(--u)*4) rgba(255,200,90,.55),0 calc(var(--u)*1.2) calc(var(--u)*3) rgba(0,0,0,.55)}
