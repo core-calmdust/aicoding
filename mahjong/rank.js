@@ -25,8 +25,8 @@ function at(pt) { let r = LIST[0]; for (const x of LIST) if (pt >= x.pt) r = x; 
 function next(pt) { return LIST.find(x => x.pt > pt) || null; }
 // (2026-11-14, ユーザー: not the same level over and over — fine steps): a fractional level 0〜4 that climbs with every point:
 // 見習い 0 → 1級 1.3 → 五段 2.3 → 十段 3.3 → 雀神 4 (straight lines between). ai.js rolls between the two whole levels.
-// (2026-11-15, ユーザー: the first ranks must go easy on the player) it starts below 0, in ai.js's 接待 band: 見習い -0.6 → 5級 0
-const CURVE = [[0, -0.6], [40, 0], [100, 1.3], [230, 2.3], [450, 3.3], [1000, 4]];
+// (2026-11-15, ユーザー: 見習い is just right, but the climb from there was too steep) a gentler slope: 1級 0.6 → 五段 1.5 → 十段 2.6
+const CURVE = [[0, 0], [100, 0.6], [230, 1.5], [450, 2.6], [1000, 4]];
 function botLv(pt) { for (let k = 1; k < CURVE.length; k++) { const [x0, y0] = CURVE[k - 1], [x1, y1] = CURVE[k]; if (pt <= x1) return +(y0 + (y1 - y0) * Math.max(0, pt - x0) / (x1 - x0)).toFixed(3); } return 4; }
 // the strength as shown: the nearest level's name and the exact value
 function botName(pt, lvNames) { const v = botLv(pt); return `${lvNames[Math.max(0, Math.min(4, Math.floor(v + .0001)))]} Lv${v.toFixed(1)}`; }
