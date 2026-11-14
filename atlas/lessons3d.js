@@ -173,24 +173,56 @@
     if (I2U[k]) return { dict: body + I2U[k], neg: body + I2A[k] + 'ない', vol: body + I2O[k] + 'う', past: body + (/行$/.test(body) ? 'った' : I2T[k]) };
     return null;
   }
-  function casualJa(html, fox) {
+  function casualJa(html, fox) {   // → plain speech; the sentence ends it made are tokens (\u0003D noun+だ, \u0003V verb, \u0003P past) for guideJa
     const E = '(?=[。！？!?」（(]|<br>|</b>|</p>|$)';
     let t = String(html)
       .replace(new RegExp('でしょうか' + E, 'g'), 'かな').replace(new RegExp('でしょう' + E, 'g'), 'だろうね')
-      .replace(new RegExp('でした' + E, 'g'), 'だったよ').replace(new RegExp('ですか' + E, 'g'), 'かな').replace(new RegExp('です' + E, 'g'), 'だよ')
+      .replace(new RegExp('でした' + E, 'g'), 'だった\u0003P').replace(new RegExp('ですか' + E, 'g'), 'かな').replace(new RegExp('です' + E, 'g'), '\u0003D')
+      .replace(/だよ(?=。|<br>|$)/g, '\u0003D')   // (the hand-written casual lines too: their だよ joins the rotation)
       .replace(new RegExp('([てで])ください' + E, 'g'), '$1ね')
       .replace(/ですが/g, 'だけど')
       .replace(new RegExp('([\\u3040-\\u30ff\\u4e00-\\u9fff々]+?)(ましょう|ません|ました|ますか|ますが|ます)' + E.replace('(?=[', '(?=[、'), 'g'), (m, stem, end, at, all) => {
         if (end !== 'ますが' && all[at + m.length] === '、') return m;   // (mid-sentence: left as it is)
         for (let n = Math.min(stem.length, 6); n >= 1; n--) {   // (the shortest piece that reads as one verb is enough: try from the long end)
           const pre = stem.slice(0, stem.length - n), v = verb(stem.slice(-n)); if (!v) continue;
-          return pre + (end === 'ましょう' ? v.vol : end === 'ません' ? v.neg + 'よ' : end === 'ました' ? v.past + 'よ' : end === 'ますか' ? v.dict + 'かな' : end === 'ますが' ? v.dict + 'けど' : v.dict + 'よ');
+          return pre + (end === 'ましょう' ? v.vol : end === 'ません' ? v.neg + '\u0003V' : end === 'ました' ? v.past + '\u0003P' : end === 'ますか' ? v.dict + 'かな' : end === 'ますが' ? v.dict + 'けど' : v.dict + '\u0003V');
         }
         return m;
       });
-    if (fox) { let done = false; t = t.replace(/だよ。(?![^]*だよ。)/, () => { done = true; return 'だコン。'; }); if (!done) t = t.replace(/よ。$/, 'コン。'); }
-    return t;
+    if (fox) return t;
+    return t.replace(/\u0003D/g, 'だよ').replace(/\u0003[VP]/g, 'よ');
   }
+  /* ---------- each guide's own way of talking (2026-11-15) ----------
+     The lesson texts are long: one ending (〜だよ・〜よ) on every sentence reads as a monotone. Each guide has its endings
+     (picked in turn, never the same twice running), its verbal tic now and then, how it calls the player, and short asides
+     dropped between sentences (not every one). Used by the lessons here and the backgammon puzzles (window.AtlasGuideJa). */
+  const GSTY = {
+    backgammon: { you: 'きみ', D: ['だよ', 'なんだ', 'だワン', 'だね', 'なんだよね'], V: ['よ', 'んだ', 'んだワン', 'ね', 'ぞ', 'んだよね'], P: ['よ', 'んだ', 'ね', 'んだワン'],
+      aside: ['ワン！ ', 'クンクン… ', 'ふむふむ、', 'それでね、', 'いい？ ', 'ここ、大事だワン！ ', 'ぼくの鼻がピクピクしてきた… '] },
+    shogi: { D: ['だよ', 'だコン', 'なんだ', 'だね', 'なのよ'], V: ['よ', 'のよ', 'コン', 'ね', 'んだ'], P: ['よ', 'のよ', 'コン', 'ね'], aside: ['コンコン、', 'ふふっ、', 'それでね、', 'いい？ ', 'ここがキモだコン！ '] },
+    xiangqi: { D: ['だよ', 'だコン', 'なんだ', 'だね', 'なのよ'], V: ['よ', 'のよ', 'コン', 'ね', 'んだ'], P: ['よ', 'のよ', 'コン', 'ね'], aside: ['コンコン、', 'ふふっ、', 'それでね、', 'いい？ ', 'ここがキモだコン！ '] },
+    chess: { D: ['だよ', 'なんだ', 'だね', 'だピョン', 'なんだよね'], V: ['よ', 'んだ', 'ね', 'ピョン', 'ぞ'], P: ['よ', 'んだ', 'ね', 'ピョン'], aside: ['ピョン！ ', 'よーし、', 'それでね、', 'いい？ ', 'ここ大事！ '] },
+    checkers: { D: ['だよ', 'なんだ', 'だカニ', 'だね', 'なんだよね'], V: ['よ', 'んだ', 'カニ', 'ね', 'ぞ'], P: ['よ', 'んだ', 'カニ', 'ね'], aside: ['チョキチョキ、', 'カニカニ、', 'それでね、', 'いい？ ', 'ここ大事だカニ！ '] },
+    gomoku: { D: ['だよ', 'なんだ', 'だペン', 'だね', 'なんだよね'], V: ['よ', 'んだ', 'ペン', 'ね', 'ぞ'], P: ['よ', 'んだ', 'ペン', 'ね'], aside: ['ペンペン！ ', 'ふむふむ、', 'それでね、', 'いい？ ', 'ここ大事だペン！ '] },
+  };
+  function guideJa(html, id) {
+    const S = GSTY[id], t = casualJa(html, true);
+    if (!S) return t.replace(/\u0003D/g, 'だよ').replace(/\u0003[VP]/g, 'よ');
+    let lastE = '';   // (never the same ending twice running, whatever kind of sentence: 〜ね。〜だね。 counts as the same)
+    const pk = k => { const a = S[k], c = a.filter(x => x.slice(-1) !== lastE.slice(-1)); const x = (c.length ? c : a)[Math.floor(Math.random() * (c.length || a.length))]; lastE = x; return x; };
+    // (a short sentence — 「金の番です」 — keeps the plain ending: the flourishes are for the explanations)
+    let out = t.replace(/\u0003([DVP])/g, (_, k, at, all) => { const b = Math.max(all.lastIndexOf('。', at), all.lastIndexOf('！', at), all.lastIndexOf('<br>', at) + 3, all.lastIndexOf('<p>', at) + 2); return at - b < 12 ? (k === 'D' ? 'だよ' : 'よ') : pk(k); });
+    if (S.you) out = out.replace(/あなた/g, S.you);
+    // asides: at a sentence start (after 。！ or a line break, not before a list mark or a tag), about one in four, never two running
+    let gap = 1, lastA = '';
+    out = out.replace(/(^|[。！]|<br>)(?=[^<・💡⚖🧭\s。、])/g, (m, a, at) => {
+      if (at === 0 && a === '') return m;
+      if (gap < 2 || Math.random() > .28) { gap++; return m; }
+      gap = 0; const c = S.aside.filter(x => x !== lastA); lastA = c[Math.floor(Math.random() * c.length)]; return a + lastA;
+    });
+    return out;
+  }
+  window.AtlasGuideJa = guideJa;
   const pick = a => Array.isArray(a) ? a[Math.floor(Math.random() * a.length)] : a;
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const J = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
@@ -764,7 +796,7 @@
     const id = ctx.id, D = DATA[id], ad = ctx.adapter, GD = (window.AtlasPuzzles && AtlasPuzzles.G || {})[id] || {};
     const VO = (VOICE[id] || {})[ctx.lang] || {}, X = Object.assign({}, TX[ctx.lang] || TX.en, VO);
     const LN = ((window.AtlasPuzzleLines || {})[id] || {})[ctx.lang] || {}, line = k => { const a = LN[k]; return a && a.length ? a[Math.floor(Math.random() * a.length)] : ''; };
-    const voice = h => ctx.lang === 'ja' ? casualJa(h, id === 'shogi') : h;
+    const voice = h => ctx.lang === 'ja' ? guideJa(h, id) : h;   // (each guide's own way of talking, 2026-11-15)
     let greeted = false;
     let stopped = false, sess = null, cur = null, phase = 'load', typeT = 0, onReady = null, onMoved = null;
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms)), sleep = ms => new Promise(r => later(r, ms));
