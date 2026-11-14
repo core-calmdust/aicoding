@@ -702,7 +702,20 @@ class Table3D {
   // the dora's glow lies on the face itself (ユーザー 2026-11-14: not a flat pane over the tile, like a case): the face's own
   // triangles (the flat and the start of the round-over) lifted a hair along their normals, uv 0..1 over that area
   _doraMake() { this.doraGeo = this._tileSkin();
-          this.doraMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: -1 } },
+    this.doraMat = this._glowMat('1.0, .42, .68', '1.0, .92, .96');
+    // (ユーザー 2026-11-15) the tile that can be called (pon, chi, ron) wears the same glow in yellow
+    this.callMat = this._glowMat('1.0, .74, .08', '1.0, .97, .78'); }
+  // the call glow: on one tile (by id) or none; its light runs round without a pause while it is on
+  markCall(id) {
+    const old = this._callG; if (old && old.userData.callFx) old.userData.callFx.visible = false;
+    this._callG = null;
+    const g = id == null ? null : this.tiles.get(id);
+    if (g) { if (!this.callMat) this._doraMake();
+      let o = g.userData.callFx; if (!o) { o = g.userData.callFx = new THREE.Mesh(this.doraGeo, this.callMat); o.renderOrder = 4; g.add(o); }
+      o.visible = true; this._callG = g; }
+    this.dirty = true;
+  }
+  _glowMat(c0, c1) { return new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: -1 } },
             vertexShader: `varying vec3 vP; varying vec3 vN; varying vec3 vV; varying float vF;
               void main(){ vP = position; vF = normal.z; vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
             fragmentShader: `varying vec3 vP; varying vec3 vN; varying vec3 vV; varying float vF; uniform float uT;
@@ -719,7 +732,7 @@ class Table3D {
                 float sw = uT < 0.0 ? 0.0 : clamp(uT * 1.25, 0.0, 1.0), bp = p.x * .4 + p.y * .5 - mix(-1.3, 1.3, sw);
                 float band = uT < 0.0 ? 0.0 : (exp(-bp * bp / .006) * .85 + exp(-bp * bp / .05) * .25) * sin(sw * 3.14159) * 1.35;   // a band of light sweeps across the tile
                 float a = clamp(.15 + rim * .6 + run * 1.2 + st + band, 0.0, .96);
-                gl_FragColor = vec4(mix(vec3(1.0, .42, .68), vec3(1.0, .92, .96), clamp(run * 1.4 + st + band * 1.2, 0.0, 1.0)), a); }` }); }
+                gl_FragColor = vec4(mix(vec3(${c0}), vec3(${c1}), clamp(run * 1.4 + st + band * 1.2, 0.0, 1.0)), a); }` }); }
   // compile the shaders ahead of time (ユーザー 2026-11-14: no hitch the first time a dora or a new look shows mid-game)
   warm() { try { if (!this.doraMat) this._doraMake(); const m = new THREE.Mesh(this.doraGeo, this.doraMat); m.frustumCulled = false; this.scene.add(m); this.renderer.compile(this.scene, this.camera); this.scene.remove(m); } catch (e) {} }
   _tileSkin() {   // the whole tile (white part and back), lifted a hair along the normals
@@ -895,7 +908,7 @@ class Table3D {
     this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 240, then: () => this.tween(g, to, 420, from, seat, landed) });
     this.dirty = true;
   }
-  hideAll() { if (this.sorting) for (const S of this.sorting) if (S) clearTimeout(S.timer); this.sorting = []; for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this._ov) { this._solo(this._ov.g, false); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
+  hideAll() { if (this._callG) this.markCall(null); if (this.sorting) for (const S of this.sorting) if (S) clearTimeout(S.timer); this.sorting = []; for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this._ov) { this._solo(this._ov.g, false); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
 
   layoutRiver(seat, river, animLast, fromLx) {   // fromLx: where the player's own discard stood — a pose from screenPose() (the tile of the page's hand row), or a place along the near edge
     // (ユーザー 2026-11-14: the far seat's discards looked stuck to each other — a little air between the tiles. The row is
@@ -1188,6 +1201,7 @@ class Table3D {
     if (this._doraN && !this.quiet) { const ph = now % 2600, on = ph < 1300;
       if (on && (moved || now - (this._glT || 0) > 32)) { this._glT = now; this.doraMat.uniforms.uT.value = ph / 1300; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
       this._doraOn = on; }
+    if (this._callG && this._callG.visible && this.callMat && (moved || now - (this._clT || 0) > 32)) { this._clT = now; this.callMat.uniforms.uT.value = (now % 1400) / 1400; this.dirty = true; }
     if (this._ov) this.dirty = true;
     if (!this.dirty || document.hidden) return;
     this.dirty = false;
