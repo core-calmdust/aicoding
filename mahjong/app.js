@@ -826,7 +826,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'agari': {
-      SND.music('main');
+      SND.music(null);   // (ユーザー 2026-11-14: no music over the results — it comes back with the next hand, on the table)
       clearActs();
       for (const r of d.results) await cutin(r.seat, r.tsumo ? 'tsumo' : 'ron');
       SND.win();
@@ -837,7 +837,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'ryuukyoku': {
-      SND.music('main');
+      SND.music(null);
       clearActs();
       for (let s = 1; s < 4; s++) if (d.tenpai[s]) TB.layoutHand(s, d.hands[s], null, true);
       if (!d.abort) [0, 1, 2, 3].forEach((s, i) => sleep(i * 520).then(() => SND.voice(d.tenpai[(G.kyoku + s) % 4] ? 'tenpai' : 'noten')));   // (each player declares, from the dealer round)
