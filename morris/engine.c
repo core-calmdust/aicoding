@@ -1,7 +1,7 @@
 // Nine Men's Morris search engine in C (compiled to WebAssembly) — a port of the search in engine.js.
 // Rules, evaluation and search mirror engine.js: negamax alpha-beta (PVS) with a transposition table,
 // killer/history ordering, quiescence on captures, repetition and 50-move draws, mate-distance pruning.
-// Optional: endgame databases (retrograde-solved, loaded by the host) for nine men's morris.
+// Optional: endgame databases (retrograde-solved by tools/solve.c, loaded by the host) for nine / twelve men's morris.
 //
 // Build: sh tools/build.sh (engine_simd.wasm, engine.wasm without SIMD, engine_mt.wasm)
 // Host protocol (all through the shared buffer at io_ptr()):
@@ -200,34 +200,71 @@ static void undo(Pos *p, int m) {
   p->quiet = p->stk[--p->sp];
 }
 
-// ---------------------------------------------------------------- endgame databases (nine, moving phase)
-// class m-o (side to move m pieces, opponent o): dense byte arrays or sparse (sorted u32 index + byte)
-typedef struct { const u8 *dense; const u32 *idx; const u8 *val; u32 n; } EG;
-static EG egdb[10][10]; static int egOn = 0;
+// ---------------------------------------------------------------- endgame databases (nine / twelve, moving phase)
+// (2026-11-14) The classes of tools/solve.c (-s 8: the moving phase with at most 8 pieces on the board), shipped packed as
+// nine-eg.mdb.gz / twelve-eg.mdb.gz (perfect.js reads them). The host (engine.js) grows the memory, copies each class there
+// and registers it (eg_add); the symmetries come with the file (eg_init). Values for the side to move at quiet count 0:
+// 0 draw, 1..127 win, 128 + z loss, z = the plies the winner needs to force its next capture (or a block); with quiet q a
+// win / loss is decisive only while z <= 50 - q (else a draw), as in solve.c. Index: solve.c idxOf (orbit of A under the
+// board's 16 symmetries, then the smallest image of B under the symmetries that fix it).
+// Probed only while egUse is set (the time-based levels, PRO, analysis); off, the search is exactly the one before.
+#define EG_MMAX 5
+static const u8 *egT[10][10];          // class m-o (m pieces of the side to move), NULL = not loaded
+static int egNM = 0, egUse = 0;        // the mill count of the loaded variant (16 nine, 20 twelve; 0 none); probing on
+static u8 egSymIn[16 * 24]; static int egNS;
+static u32 egSymT[16][3][256];
 static u32 CB[25][25];
 extern unsigned char __heap_base;
-EXPORT(heap_ptr) u8 *heap_ptr(void) { return &__heap_base; }
-// register a class whose data was copied by the host to ptr
-EXPORT(eg_add) void eg_add(int m, int o, int type, u32 n, u8 *ptr) {
-  if (!CB[0][0]) for (int a = 0; a <= 24; a++) { CB[a][0] = 1; for (int k = 1; k <= a; k++) CB[a][k] = CB[a - 1][k - 1] + (k <= a - 1 ? CB[a - 1][k] : 0); }
-  EG *e = &egdb[m][o]; e->n = n;
-  if (type == 0) e->dense = ptr; else { e->idx = (const u32 *)ptr; e->val = ptr + 4 * (u32)n; }
-  egOn = 1;
+static u32 egOrb[2024 + 10626 + 42504], egRepM[2024 + 10626 + 42504]; static uint16_t egGm[2024 + 10626 + 42504];
+static const int egOff[EG_MMAX + 1] = { 0, 0, 0, 0, 2024, 2024 + 10626 };
+static inline u32 egRank(u32 S) { u32 r = 0; int i = 0; while (S) { int q = __builtin_ctz(S); S &= S - 1; i++; if (q >= i) r += CB[q][i]; } return r; }
+static inline u32 egSym(int g, u32 S) { return egSymT[g][0][S & 255] | egSymT[g][1][(S >> 8) & 255] | egSymT[g][2][(S >> 16) & 255]; }
+static inline u32 egComp(u32 B, u32 A) { u32 out = 0; int j = 0; for (int q = 0; q < 24; q++) { if (A >> q & 1) continue; if (B >> q & 1) out |= 1u << j; j++; } return out; }
+static u32 egUnrank(u32 r, int k) { u32 mask = 0; for (int i = k; i >= 1; i--) { int q = i - 1; while (CB[q + 1][i] <= r) q++; r -= CB[q][i]; mask |= 1u << q; } return mask; }
+EXPORT(eg_sym_ptr) u8 *eg_sym_ptr(void) { return egSymIn; }
+// a new database (the symmetries in egSymIn, ns of them, as point images): clears the classes, builds the orbit tables
+EXPORT(eg_init) void eg_init(int ns, int nm) {
+  egNM = 0;
+  for (int a = 0; a < 10; a++) for (int b = 0; b < 10; b++) egT[a][b] = 0;
+  for (int a = 0; a <= 24; a++) { CB[a][0] = 1; for (int k = 1; k <= a; k++) CB[a][k] = CB[a - 1][k - 1] + (k <= a - 1 ? CB[a - 1][k] : 0); }
+  egNS = ns > 16 ? 16 : ns;
+  for (int g = 0; g < egNS; g++) for (int k = 0; k < 3; k++) for (int b = 0; b < 256; b++) { u32 x = 0; for (int j = 0; j < 8; j++) if (b >> j & 1) x |= 1u << egSymIn[g * 24 + 8 * k + j]; egSymT[g][k][b] = x; }
+  for (int m = 3; m <= EG_MMAX; m++) {   // as solve.c buildOrb: orbits numbered in the order of their smallest rank
+    u32 n = CB[24][m], *orb = egOrb + egOff[m], *rep = egRepM + egOff[m]; uint16_t *gm = egGm + egOff[m];
+    for (u32 r = 0; r < n; r++) {
+      u32 A = egUnrank(r, m), best = 0xFFFFFFFF, g0 = 0;
+      for (int g = 0; g < egNS; g++) { u32 x = egRank(egSym(g, A)); if (x < best) { best = x; g0 = 1u << g; } else if (x == best) g0 |= 1u << g; }
+      rep[r] = best; gm[r] = (uint16_t)g0;
+    }
+    u32 k = 0; for (u32 r = 0; r < n; r++) if (rep[r] == r) orb[r] = k++;   // (orb of a representative first)
+    for (u32 r = 0; r < n; r++) { u32 R = rep[r]; orb[r] = orb[R]; }
+    for (u32 r = 0; r < n; r++) rep[r] = egUnrank(rep[r], m);                   // (now the representative's point set)
+  }
+  egNM = nm;
 }
+EXPORT(eg_add) void eg_add(int m, int o, const u8 *ptr) { if (m >= 3 && m <= EG_MMAX && o >= 3 && o <= 9) egT[m][o] = ptr; }
+EXPORT(eg_use) void eg_use(int on) { egUse = on; }
+EXPORT(eg_ready) int eg_ready(void) { return egNM; }
+// raw value of the position for its side to move, or -1 when not covered (call with both hands empty)
 static int egProbe(const Pos *p) {
-  if (!egOn || N != 24 || p->hand[1] || p->hand[2]) return -1;
+  if (NM != egNM || N != 24) return -1;
   int s = p->side, m = p->cnt[s], o = p->cnt[3 - s];
-  if (m > 9 || o > 9) return -1;
-  EG *e = &egdb[m][o]; if (!e->dense && !e->idx) return -1;
-  u32 ra = 0, rb = 0; int ia = 0, ib = 0, j = 0;
-  for (int q = 0; q < 24; q++) { int v = p->b[q]; if (v == s) { ia++; if (q >= ia) ra += CB[q][ia]; } else { if (v) { ib++; if (j >= ib) rb += CB[j][ib]; } j++; } }
-  u32 id = ra * CB[24 - m][o] + rb;
-  if (e->dense) return e->dense[id];
-  int lo = 0, hi = (int)e->n - 1;
-  while (lo <= hi) { int mid = (lo + hi) >> 1; u32 x = e->idx[mid]; if (x == id) return e->val[mid]; if (x < id) lo = mid + 1; else hi = mid - 1; }
-  return 0;
+  if (m > EG_MMAX || o > 9) return -1;
+  const u8 *T = egT[m][o]; if (!T) return -1;
+  u32 A = p->bb[s], B = p->bb[3 - s], rA = egRank(A), at = egOff[m] + rA, R = egRepM[at], best = 0xFFFFFFFF;
+  for (u32 gs = egGm[at]; gs; gs &= gs - 1) { u32 x = egRank(egComp(egSym(__builtin_ctz(gs), B), R)); if (x < best) best = x; }
+  return T[egOrb[at] * CB[24 - m][o] + best];
 }
-static inline int egScore(int v, int ply) { return v == 0 ? 0 : v < 128 ? WIN - ply - v : -(WIN - ply - (v - 128)); }
+static int evaluate(const Pos *p);
+// search value of a probed position: a win is scored in the band WINT < v < WIN - 400 (below every forced win the search
+// finds by itself), higher for fewer pieces of the loser and a smaller z — so the winner always takes when it can (64 per
+// piece > any z) and otherwise lowers z; a draw is a small share of the evaluation (the stronger side keeps trying)
+static int egScore(const Pos *p, int v, int ply) {
+  int s = p->side, z = v & 127;
+  if (v == 0 || z > QUIET_DRAW - p->quiet) { int e = evaluate(p) / 8; return e > 100 ? 100 : e < -100 ? -100 : e; }
+  if (v < 128) return WIN - 400 - (64 * p->cnt[3 - s] + z) - ply;
+  return -(WIN - 400 - (64 * p->cnt[s] + z) - ply);
+}
 
 // ---------------------------------------------------------------- evaluation (side to move), same as engine.js
 // learned evaluation for nine men's morris (optional): 71 inputs -> H ReLU -> 1, weights set by the host
@@ -531,7 +568,7 @@ static int qsearch(Pos *p, int alpha, int beta, int ply, int qd) {
   nodes++;
   int s = p->side;
   if (p->cnt[s] + p->hand[s] < 3) return -(WIN - ply);
-  if (egOn && !p->hand[1] && !p->hand[2]) { int dv = egProbe(p); if (dv >= 0) return egScore(dv, ply); }
+  if (egUse && egNM && !p->hand[1] && !p->hand[2]) { int dv = egProbe(p); if (dv >= 0) return egScore(p, dv, ply); }
   if (!anyMove(p)) return p->cnt[1] + p->cnt[2] == N ? 0 : -(WIN - ply);
   int best = evaluate(p);
   if (best >= beta || qd <= 0 || ply >= MAXPLY) return best;
@@ -560,7 +597,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
     int ma = -(WIN - ply), mb = WIN - ply - 1;
     if (ma > alpha) { alpha = ma; if (alpha >= beta) return alpha; }
     if (mb < beta) { beta = mb; if (alpha >= beta) return beta; }
-    if (egOn && !p->hand[1] && !p->hand[2]) { int dv = egProbe(p); if (dv >= 0) return egScore(dv, ply); }
+    if (egUse && egNM && !p->hand[1] && !p->hand[2]) { int dv = egProbe(p); if (dv >= 0) return egScore(p, dv, ply); }
   }
   if (depth <= 0 || ply >= MAXPLY) return qsearch(p, alpha, beta, ply, 6);
 #ifdef MT
