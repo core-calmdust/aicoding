@@ -127,11 +127,12 @@ const SND = (() => {
   // riichi and hands back at the end of the hand. Each is an <audio> element into the context, with a gain node for the crossfades;
   // the main track carries on from where it was, the riichi track starts from the top each time.
   // (the music's levels from its loudness, EBU R128: title −14.4 LUFS → ≈ −22, main −19 → ≈ −26 under the voices, riichi −12.3 → ≈ −24)
-  const TRK = { title: { file: 'bgm-title', vol: .42, restart: true }, main: { file: 'bgm-main', vol: .45, restart: false }, riichi: { file: 'bgm-riichi', vol: .26, restart: true } };
+  const TRK = { title: { file: 'bgm-title', vol: .42, restart: true }, main: { file: 'bgm-main', vol: .45, restart: false }, riichi: { file: 'bgm-riichi', vol: .26, restart: true },
+    score: { file: 'bgm-score', vol: .38, restart: true } };   // (the results of a hand: −15.7 LUFS → ≈ −24)
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
   function mkctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return ac; }
-  function load() { if (loading) return; loading = true; const a = mkctx(); let i = 0; const music = ['title', 'main', 'riichi'];
+  function load() { if (loading) return; loading = true; const a = mkctx(); let i = 0; const music = ['title', 'main', 'score', 'riichi'];
     const next = () => {
       if (i < NAMES.length) { const n = NAMES[i++];
         fetch(`${ASSETS}snd/${n}.mp3`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => a ? new Promise((ok, ng) => a.decodeAudioData(b, ok, ng)) : null)
@@ -939,7 +940,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'agari': {
-      SND.music(null);   // (ユーザー 2026-11-14: no music over the results — it comes back with the next hand, on the table)
+      SND.music('score');   // (ユーザー 2026-11-14: the results of a hand have their own music; the game's comes back with the next hand, on the table)
       clearActs();
       for (const r of d.results) await cutin(r.seat, r.tsumo ? 'tsumo' : 'ron');
       SND.win();
@@ -950,7 +951,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'ryuukyoku': {
-      SND.music(null);
+      SND.music('score');
       clearActs();
       for (let s = 1; s < 4; s++) if (d.tenpai[s]) TB.layoutHand(s, d.hands[s], null, true);
       if (!d.abort) SND.voice(d.tenpai[ME] ? 'tenpai' : 'noten');   // (ユーザー 2026-11-14: only the player's own テンパイ / ノーテン)   // (each player declares, from the dealer round)
