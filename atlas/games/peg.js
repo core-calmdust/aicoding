@@ -92,9 +92,9 @@
       const M4 = new TH.Matrix4(); let k = 0;
       for (let i = 0; i < B.n; i++) if (!a[i]) { const [x, z] = U.pt(i); M4.makeTranslation(x, TOP + Y(i) + .03, z); ghost.setMatrixAt(k, M4); ghostRim.setMatrixAt(k++, M4); }
       ghost.count = ghostRim.count = k; ghost.instanceMatrix.needsUpdate = ghostRim.instanceMatrix.needsUpdate = true; kick(120);
-      // one colour at a time going round the rainbow like a gaming light (user, 2026-11-14): 2.5 s a turn, vivid, a soft breathing
+      // one colour at a time going round the rainbow like a gaming light (user, 2026-11-14): 2.5 s a turn, vivid, a soft breathing; see-through (fill .22, rim .55 — user: 濃すぎる・透明感を)
       if (!hueT) hueT = setInterval(() => { if (stopped || !ghost || !ghost.count) return; const t = performance.now(), b = .85 + .15 * Math.sin(t / 380);
-        ghost.material.color.setHSL((t / 2500) % 1, 1, .5); ghostRim.material.color.copy(ghost.material.color); ghost.material.opacity = .45 * b; ghostRim.material.opacity = .95 * b; kick(40); }, 50);
+        ghost.material.color.setHSL((t / 2500) % 1, 1, .55); ghostRim.material.color.copy(ghost.material.color); ghost.material.opacity = .22 * b; ghostRim.material.opacity = .55 * b; kick(40); }, 50);
     }
     let hueT = 0;
     function marks(hint) {
