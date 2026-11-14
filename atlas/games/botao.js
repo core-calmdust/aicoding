@@ -5,7 +5,11 @@
    · You are side 0 (the near goal, attacking up the table). "First" = you kick off. Two players on one device: the table
      turns so the side with the ball is at the bottom.
    · Controls: tap / click one of your buttons to pick it (the one nearest the ball is picked for you), then pull back from
-     it like a slingshot and let go. The dotted line shows what it meets first, the green line where the ball would go.
+     it like a slingshot and let go. You aim the BALL (2026-11-15 ユーザー: 玉の方向とはじく方向がバラバラで直感的でない):
+     the pull points the ball's way, E.ballAim finds the button's run that sends it there, and the green line is the ball's
+     path to its first knock (E.ballPath). Dots: the button's run to the ball. A gold cone floats over the ball.
+   · The view (2026-11-15): drag an empty spot (or with the right mouse button anywhere) to move it, the wheel / a pinch
+     to zoom, the arrow keys to move it, C to come back; it follows the ball again at the next flick. V: near / whole.
      「シュート宣言」 (or S) calls a shot when the ball is in the attacking half; the defender then sets the goalkeeper in
      the small area (drag it, then 「構えOK」) and the attacker shoots.
    · Game length (the size select): halves of 3 / 5 / 10 minutes (the clock runs while you play), or first to 3 goals.
@@ -89,25 +93,50 @@
     /* ---------- the camera: following the ball (an angled close view) or the whole table from above ---------- */
     const VK = 'atlas-botao-view';
     let whole = false; try { whole = localStorage.getItem(VK) === 'whole'; } catch (e) {}
-    let camAt = { x: 0, y: 0 };
+    let camAt = { x: 0, y: 0 }, pan = { x: 0, y: 0 }, span = { x: 0, y: 0 };   // span: also keep this much in view (the ball and the button that plays it)   // pan: your own move of the view (drag an empty spot / WASD), cm
     const port = () => innerHeight > innerWidth * 1.05;
     function camFit(ease) {
       if (!T3.fit) return;
-      if (whole) { T3.fit(port() ? { w: U.W * .98, d: U.L * 1.0, y: Y, pitch: 1.42 } : { w: U.W * 1.0, d: U.L * 1.16, y: Y, pitch: 1.36 }); return; }
-      const att = st ? (E.fwd(st.pos) * (pvp && st.pos === 1 ? -1 : 1)) : -1;
+      if (whole) {
+        const o = port() ? { w: U.W * .98, d: U.L * 1.0, y: Y, pitch: 1.42 } : { w: U.W * 1.0, d: U.L * 1.16, y: Y, pitch: 1.36 };
+        if (pan.x || pan.y) { const [cx, cz] = wx(pan.x, pan.y); o.cx = cx; o.cz = cz; }
+        T3.fit(o); return;
+      }
+      const att = phase === 'keeper' ? 0 : st ? (E.fwd(st.pos) * (pvp && st.pos === 1 ? -1 : 1)) : -1;
+      const wc = Math.max((port() ? 58 : 92), span.x * 1.35 + 24), dc = Math.max((port() ? 76 : 62), span.y * 1.3 + 26);
+      // the view never runs far past the end of the table (near a goal it used to show half a screen of the room)
+      // (the far end looks longer in perspective, so it gets the tighter limit)
+      const topSg = ((pvp && st && st.pos === 1) !== flipped) ? 1 : -1, near = D.H + (port() ? 2 : 6) - dc / 2, far = D.H + (port() ? -4 : 5) - dc / 2;
+      const yMin = -Math.max(0, topSg < 0 ? far : near), yMax = Math.max(0, topSg < 0 ? near : far), xLim = Math.max(0, D.HW + 12 - wc / 2);
+      const ax = Math.max(-xLim, Math.min(xLim, camAt.x + pan.x)), ay = Math.max(yMin, Math.min(yMax, camAt.y + pan.y + att * (port() ? 6 : 4)));
       // near the goal at the bottom of the screen the camera looks down more steeply (the net would hide the keeper)
-      const nearY = (pvp && st && st.pos === 1 ? -1 : 1) * (flipped ? -1 : 1) * camAt.y, steep = Math.max(0, Math.min(1, (nearY - 40) / 30));
-      const w = (port() ? 58 : 92) * K, d = (port() ? 76 : 62) * K, [cx, cz] = wx(camAt.x, camAt.y + att * (port() ? 6 : 4));
+      const nearY = (pvp && st && st.pos === 1 ? -1 : 1) * (flipped ? -1 : 1) * ay, steep = Math.max(0, Math.min(1, (nearY - 40) / 30));
+      const w = wc * K, d = dc * K, [cx, cz] = wx(ax, ay);
       T3.fit({ w, d, y: Y, pitch: (port() ? .98 : .92) + steep * .36, cx, cz, ease: !!ease, ek: ease === 'slow' ? .035 : .08 });
     }
-    function follow(x, y, ease) { camAt = { x, y }; if (!whole) camFit(ease == null ? true : ease); }
+    function follow(x, y, ease) { camAt = { x, y }; span = { x: 0, y: 0 }; if (!whole) camFit(ease == null ? true : ease); }
+    // the ball and the button about to play it, both in view (the ball can be far from every button you have)
+    function frameBallAnd(i, ease) {
+      if (i < 0 || !st) return follow(st.ball.x, st.ball.y, ease);
+      const b = st.b[i], dx = Math.abs(b.x - st.ball.x), dy = Math.abs(b.y - st.ball.y);
+      camAt = { x: (b.x + st.ball.x) / 2, y: (b.y + st.ball.y) / 2 }; span = { x: dx, y: dy };
+      if (!whole) camFit(ease == null ? true : ease);
+    }
+    // your own look around: the view stays where you put it until the next flick (then it follows the ball again)
+    function panBy(dx, dy) {
+      const lim = whole ? [D.HW * .6, D.H * .6] : [D.HW + 6, D.H + 6];
+      pan.x = Math.max(-lim[0] - (whole ? 0 : camAt.x), Math.min(lim[0] - (whole ? 0 : camAt.x), pan.x + dx));
+      pan.y = Math.max(-lim[1] - (whole ? 0 : camAt.y), Math.min(lim[1] - (whole ? 0 : camAt.y), pan.y + dy));
+      camFit(false);
+    }
+    function panReset(ease) { if (!pan.x && !pan.y) return; pan = { x: 0, y: 0 }; camFit(ease == null ? true : ease); }
     const onResize = () => camFit(false);
     addEventListener('resize', onResize);
 
     /* ---------- the guides ---------- */
     const gd = new TH.Group(); board.add(gd);
     const basic = (c, o) => new TH.MeshBasicMaterial({ color: c, transparent: true, opacity: o, toneMapped: false, depthWrite: false });
-    const MAT = { path: basic(0xffffff, .9), hint: basic(0xff3d7f, .95), ball: basic(0x3df59a, .95), sel: basic(0xffd34d, .95), can: basic(0xffffff, .55), arrow: basic(0xffffff, .95), box: basic(0x3df59a, .18), boxL: basic(0x3df59a, .8), no: basic(0xff5a5a, .7) };
+    const MAT = { path: basic(0xffffff, .9), hint: basic(0xff3d7f, .95), ball: basic(0x3df59a, .95), aiBall: basic(0x9fd8ff, .9), sel: basic(0xffd34d, .95), can: basic(0xffffff, .55), arrow: basic(0xffffff, .95), box: basic(0x3df59a, .18), boxL: basic(0x3df59a, .8), no: basic(0xff5a5a, .7) };
     const GEO = { bar: new TH.BoxGeometry(1, .004, 1), ring: new TH.TorusGeometry(1, .07, 6, 40), cone: new TH.ConeGeometry(.06, .16, 3), disc: new TH.CircleGeometry(1, 32) };
     GEO.ring.rotateX(Math.PI / 2); GEO.cone.rotateX(Math.PI / 2); GEO.disc.rotateX(-Math.PI / 2);
     function clearGuides() { while (gd.children.length) gd.remove(gd.children[0]); kick(100); }
@@ -117,37 +146,57 @@
       m.position.set(a, Y + (lift || .02), b); m.scale.set(len * K, 1, wid * K); m.rotation.y = -Math.atan2(dy, dx); m.renderOrder = 4; gd.add(m); return m;
     }
     function dots(x0, y0, x1, y1, mat, w) { const len = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.floor(len / 2.2)); for (let i = 0; i < n; i++) { const a = (i + .15) / n, b = (i + .6) / n; bar(x0 + (x1 - x0) * a, y0 + (y1 - y0) * a, x0 + (x1 - x0) * b, y0 + (y1 - y0) * b, w || .45, mat); } }
-    function ring(x, y, r, mat) { const m = new TH.Mesh(GEO.ring, mat), [a, b] = wx(x, y); m.position.set(a, Y + .012, b); m.scale.set(r * K, 1, r * K); m.renderOrder = 4; gd.add(m); return m; }
+    // a ring on the cloth (h = 0) or round a button at half its height (h = BMID), so it sits round the piece as you see it
+    const BMID = .7;   // at the height of the button's top face: the ring reads as a halo round the number you look at
+    function ring(x, y, r, mat, h) { const m = new TH.Mesh(GEO.ring, mat), [a, b] = wx(x, y); m.position.set(a, Y + (h ? h * K : .012), b); m.scale.set(r * K, 1, r * K); m.userData.r = r; m.renderOrder = 4; gd.add(m); return m; }
+    // the ball's path (a line of short bars) and a mark where it ends
+    function pathLine(pts, mat, w) { if (!pts || pts.length < 2) return; let px = pts[0][0], py = pts[0][1], acc = 0, on = true; for (let k = 1; k < pts.length; k++) { const [x, y] = pts[k], d = Math.hypot(x - px, y - py); if (d < .9 && k < pts.length - 1) continue; if (on) bar(px, py, x, y, w || .8, mat, .025); acc += d; on = !on || d > 2.5; px = x; py = y; } }
+    function endMark(pv, mat) { if (!pv || !pv.path || pv.path.length < 2) return; const [x, y] = pv.path[pv.path.length - 1]; ring(x, y, pv.end === 'stop' ? 1.6 : 1.2, pv.end === 'goal' ? MAT.sel : pv.end === 'out' ? MAT.no : mat); }
+    // the ball's marker: a little cone floating over the ball, always in view (the ball itself is small on the big table)
+    const beacon = new TH.Mesh(new TH.ConeGeometry(1.15 * K, 2.2 * K, 18), new TH.MeshBasicMaterial({ color: 0xffd34d, transparent: true, opacity: .95, toneMapped: false, depthTest: false, depthWrite: false }));
+    beacon.rotation.x = Math.PI; beacon.renderOrder = 9; beacon.visible = false; board.add(beacon);
+    let beaconOn = false;
+    function beaconAt(on) { beaconOn = !!on && !!st && !over; beacon.visible = beaconOn; if (beaconOn) beaconPut(); kick(100); }
+    function beaconPut() { if (!st) return; const [a, b] = wx(st.ball.x, st.ball.y), sc = whole ? 1.8 : 1, bob = Math.sin(performance.now() / 260) * .5; beacon.scale.setScalar(sc); beacon.position.set(a, Y + (D.RBALL * 2 + 2.6 * sc + bob) * K, b); }
     function boxArea(B) { const m = new TH.Mesh(GEO.bar, MAT.box), [a, b] = wx((B.x0 + B.x1) / 2, (B.y0 + B.y1) / 2); m.position.set(a, Y + .006, b); m.scale.set((B.x1 - B.x0 + 2 * D.KHW) * K, 1, (B.y1 - B.y0 + 2 * D.KHD) * K); m.renderOrder = 3; gd.add(m); }
+    // the flick your pull makes: you point where the BALL goes (the opposite of the pull); the button's run follows from it
+    const distOf = pw => 2 + pw * 150;   // the pull: how far the ball should roll (cm) — the end mark follows your hand
+    function aimMove(a) { if (!a || sel < 0) return null; const c = E.ballAim(st, sel, a.ang, distOf(a.pow)); return c ? { i: sel, ang: c.ang, v: c.v, limited: c.limited } : { i: sel, ang: Math.atan2(st.ball.y - st.b[sel].y, st.ball.x - st.b[sel].x), v: vOf(a.pow), limited: true }; }
+    let pv = null, pvKey = '';
+    function preview(mv) { const k = mv.i + ':' + mv.ang.toFixed(4) + ':' + mv.v.toFixed(1) + ':' + st.ply; if (k !== pvKey) { pvKey = k; pv = E.ballPath(st, mv); } return pv; }
+    // what a flick would do: the button's run to its first contact (dots), then the ball's path to its first knock (the line)
+    function drawMove(mv, matPath, matBall) {
+      const b = st.b[mv.i], tr = E.aimTrace(st, mv.i, mv.ang);
+      dots(b.x, b.y, tr.gx, tr.gy, matPath, .35);
+      if (tr.what === 'ball') { ring(tr.gx, tr.gy, D.RB, matPath, BMID); const p = preview(mv); if (p.path) { pathLine(p.path, matBall, .85); endMark(p, matBall); } }
+      else if (tr.what != null) { const o = st.b[tr.what]; ring(o.x, o.y, D.RB + .5, MAT.no, BMID); ring(tr.gx, tr.gy, D.RB, MAT.no, BMID); }
+      return tr;
+    }
     function showGuides() {
       clearGuides();
       if (!st || over) return;
       if (phase === 'keeper') { boxArea(E.keeperBox(keeperSide, st.restart === 'pen')); kick(120); return; }
       if (phase !== 'aim' || !human(st.pos)) return;
-      // which buttons may play: a faint ring; the picked one: gold; the one under the pointer: white
+      // which buttons may play: the picked one gold, the one under the pointer white, one that may not (3 in a row) red
       for (let i = st.pos * 10; i < st.pos * 10 + 10; i++) {
         const b = st.b[i];
-        if (!E.canFlick(st, i)) { ring(b.x, b.y, D.RB + .5, MAT.no); continue; }
-        if (i === sel) { const r = ring(b.x, b.y, D.RB + .9, MAT.sel); r.userData.pulse = 1; }
-        else if (i === hov) ring(b.x, b.y, D.RB + .6, MAT.path);
+        if (!E.canFlick(st, i)) { ring(b.x, b.y, D.RB + .5, MAT.no, BMID); continue; }
+        if (i === sel) { const r = ring(b.x, b.y, D.RB + .9, MAT.sel, BMID); r.userData.pulse = 1; }
+        else if (i === hov) ring(b.x, b.y, D.RB + .6, MAT.path, BMID);
       }
-      const mv = aim ? { i: sel, ang: aim.ang, pow: aim.pow } : hintMove && hintMove.i === sel ? { i: sel, ang: hintMove.ang, pow: powOf(hintMove.v), hint: true } : null;
-      if (mv && mv.i >= 0) {
-        const b = st.b[mv.i], tr = E.aimTrace(st, mv.i, mv.ang), mt = mv.hint ? MAT.hint : MAT.path;
-        dots(b.x, b.y, tr.gx, tr.gy, mt); ring(tr.gx, tr.gy, D.RB, mt);
-        if (tr.what === 'ball') { const L0 = 8 + mv.pow * 60; bar(st.ball.x, st.ball.y, st.ball.x + tr.ox * L0, st.ball.y + tr.oy * L0, .7, MAT.ball); }
-        else if (tr.what != null && E.team(tr.what) !== st.pos) { const o = st.b[tr.what]; ring(o.x, o.y, D.RB + .4, MAT.no); }
-        if (aim) {
-          const L0 = D.RB + 1 + aim.pow * 14, ex = b.x + Math.cos(aim.ang) * L0, ey = b.y + Math.sin(aim.ang) * L0;
-          MAT.arrow.color.copy(new TH.Color().setHSL(.33 - aim.pow * .33, .9, .55));
-          bar(b.x + Math.cos(aim.ang) * D.RB, b.y + Math.sin(aim.ang) * D.RB, ex, ey, 1.1, MAT.arrow, .03);
-          const c = new TH.Mesh(GEO.cone, MAT.arrow), [a, z] = wx(ex, ey); c.position.set(a, Y + .035, z); c.rotation.y = -aim.ang + Math.PI / 2; c.renderOrder = 5; gd.add(c);
-        }
-      }
+      if (aim && sel >= 0) {
+        const mv = aimMove(aim), b = st.b[sel];
+        drawMove(mv, MAT.path, MAT.ball);
+        // the pull: a band from the button back toward your finger, its colour the strength
+        const L0 = D.RB + 1.5 + aim.pow * 13, back = aim.ang + Math.PI;
+        MAT.arrow.color.copy(new TH.Color().setHSL(.33 - aim.pow * .33, .9, .55));
+        bar(b.x + Math.cos(back) * D.RB, b.y + Math.sin(back) * D.RB, b.x + Math.cos(back) * L0, b.y + Math.sin(back) * L0, 1.2, MAT.arrow, .03);
+        const ex = b.x + Math.cos(back) * L0, ey = b.y + Math.sin(back) * L0; ring(ex, ey, .9, MAT.arrow);
+      } else if (hintMove && hintMove.i === sel) drawMove(hintMove, MAT.hint, MAT.hint);
       kick(120);
     }
     let pulseT = 0;
-    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus() || (T3.decoOn && !T3.decoOn())) return; let any = false; gd.children.forEach(m => { if (m.userData.pulse) { const s = (D.RB + .9) * K * (1.06 + Math.sin((performance.now() - t0) / 230) * .08); m.scale.set(s, 1, s); any = true; } }); if (any) kick(80); }, 60); }
+    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus() || (T3.decoOn && !T3.decoOn())) return; let any = false; gd.children.forEach(m => { if (m.userData.pulse) { const s = (D.RB + .9) * K * (1.06 + Math.sin((performance.now() - t0) / 230) * .08); m.scale.set(s, 1, s); any = true; } }); if (beaconOn) { beaconPut(); any = true; } if (any) kick(80); }, 60); }
 
     /* ---------- HUD, toasts, the call button ---------- */
     const css = document.createElement('style');
@@ -166,7 +215,7 @@
     const howtoOn = () => { try { return localStorage.getItem(HK) !== 'off'; } catch (e) { return true; } };
     let cardEl = null;
     function howtoCard(done) {
-      const Hh = HOWTO[lang] || HOWTO.en, steps = Hh[mousey() ? 'm' : 't'], ic = ['☝', '↙', '📣', '🧤'];
+      const Hh = HOWTO[lang] || HOWTO.en, steps = Hh[mousey() ? 'm' : 't'], ic = ['☝', '↙', '🟢', '📣', '🖐'];
       const d = document.createElement('div'); d.className = 'bthow'; d.dir = lang === 'ar' ? 'rtl' : 'ltr';
       d.innerHTML = `<div class="bthow-c" role="dialog" aria-modal="true"><h2>${esc(Hh.title)}</h2><ol>${steps.map((x, i) => `<li><i>${ic[i]}</i><span>${esc(x)}</span></li>`).join('')}</ol><label><input type="checkbox"> ${esc(Hh.never)}</label><p class="n">${esc(Hh.note.replace('{r}', t('bv.rules')))}</p><button type="button">${esc(Hh.ok)}</button></div>`;
       const close = () => { if (d.querySelector('input').checked) { try { localStorage.setItem(HK, 'off'); } catch (e) {} } d.remove(); cardEl = null; done && done(); };
@@ -203,7 +252,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=1'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=2'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -280,7 +329,7 @@
     const RESTART = { kick: 'kick', fk: 'fk', ifk: 'ifk', throw: 'throw', corner: 'corner', gk: 'gk', pen: 'pen', keeper: 'keeperball' };
     async function flick(move) {
       if (over || stopped || busy) return;
-      busy = true; phase = 'anim'; clearGuides(); aim = null; hintMove = null; powEl.hidden = true; callBar(null); task('');
+      busy = true; phase = 'anim'; clearGuides(); aim = null; hintMove = null; powEl.hidden = true; callBar(null); task(''); beaconAt(false); drag = null; pan = { x: 0, y: 0 };
       const s0 = st, p = s0.pos;
       SND.flick();
       const sim = E.simulate(s0, move, { frames: true });
@@ -328,13 +377,13 @@
     }
     async function next() {
       if (over || stopped) return;
-      hintMove = null; aim = null; clearGuides(); onTurn(); hud();
+      hintMove = null; aim = null; clearGuides(); onTurn(); hud(); beaconAt(true);
       const p = st.pos;
       if (pvp) viewTo();
       follow(st.ball.x, st.ball.y, true);
       if (human(p)) {
         if (!pvp && !st.shot) hist.push({ st: E.clone(st), ply });
-        sel = autoSel(); phase = 'aim';
+        sel = autoSel(); phase = 'aim'; frameBallAnd(sel, true);
         say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn')); task(taskLine());
         callBar(E.canShoot(st) ? 'shot' : null);
         if (!told && howtoOn()) howtoCard(() => {}); told = true;
@@ -350,9 +399,9 @@
     }
     async function aiFlick(mv, my) {
       if (!mv || mv.i == null) { mv = { i: autoSel(), ang: -Math.PI / 2, v: 60 }; }
-      // show which button and the aim for a moment, then flick
-      clearGuides(); const b = st.b[mv.i]; ring(b.x, b.y, D.RB + .9, MAT.sel); const tr = E.aimTrace(st, mv.i, mv.ang); dots(b.x, b.y, tr.gx, tr.gy, MAT.path); kick(150);
-      await new Promise(r => later(r, 520)); if (stopped || my !== tok) return;
+      // show which button and where it means to send the ball for a moment, then flick (its hand may still wobble)
+      clearGuides(); pan = { x: 0, y: 0 }; frameBallAnd(mv.i, true); const b = st.b[mv.i]; ring(b.x, b.y, D.RB + .9, MAT.sel, BMID); drawMove(mv, MAT.path, MAT.aiBall); kick(150);
+      await new Promise(r => later(r, 900)); if (stopped || my !== tok) return;
       flick(E.perform(mv, level, seed()));
     }
     // a shot is called: the defender sets the keeper, then the attacker shoots
@@ -373,7 +422,8 @@
       const d = 1 - st.pos, my = tok; keeperSide = d;
       if (human(d)) {
         phase = 'keeper'; say(tx('keeper')); task(tx('keeperTask')); callBar('keeper'); showGuides();
-        follow(st.k[d].x * .6 + st.ball.x * .4, st.k[d].y * .6 + st.ball.y * .4, true);
+        // the ball, the shooter and your goal in one view
+        { const gy = E.goalY(d); camAt = { x: st.ball.x / 2, y: (st.ball.y + gy) / 2 }; span = { x: Math.abs(st.ball.x) + 14, y: Math.abs(gy - st.ball.y) + 4 }; pan = { x: 0, y: 0 }; camFit(true); }
         let left = 10; clearInterval(keeperT);
         keeperT = setInterval(() => { if (stopped || phase !== 'keeper') return clearInterval(keeperT); if (document.hidden || !document.hasFocus()) return; left--; task(tx('keeperTask') + ' (' + left + ')'); if (left <= 0) { clearInterval(keeperT); keeperDone(); } }, 1000);
         return;
@@ -389,7 +439,7 @@
     }
     async function afterKeeper() {
       const p = st.pos, my = tok;
-      if (human(p)) { if (pvp) viewTo(); phase = 'aim'; sel = autoSel(); say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn')); task(tx('shootNow')); follow(st.ball.x, st.ball.y, true); showGuides(); pulse(); return; }
+      if (human(p)) { if (pvp) viewTo(); phase = 'aim'; sel = autoSel(); say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn')); task(tx('shootNow')); frameBallAnd(sel, true); showGuides(); pulse(); return; }
       phase = 'ai'; say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) })); task('');
       const mv = await think(E.clone(st), level); if (stopped || my !== tok) return;
       await aiFlick(mv && !mv.declare ? mv : null, my);
@@ -418,7 +468,7 @@
       return true;
     }
     function end() {
-      over = true; phase = 'over'; clearGuides(); callBar(null); task(''); clearInterval(clkT); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = viewBtn.hidden = true; if (pvp) viewTo(0);
+      over = true; phase = 'over'; clearGuides(); callBar(null); task(''); clearInterval(clkT); beaconAt(false); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = viewBtn.hidden = true; if (pvp) viewTo(0);
       SX.whistle(3, .3); hud();
       const score = tx('score', { a: st.score[0], b: st.score[1] }), w = st.winner;
       if (pvp) { say(w < 0 ? t('res.draw') : tx('wins', { p: nameOf(w) })); return later(() => ctx.onEnd({ win: false, draw: w < 0, level, score, pvp: true, winnerText: (w < 0 ? t('res.draw') : tx('wins', { p: nameOf(w) })) + ' · ' + score }), 1400); }
@@ -446,19 +496,26 @@
       if (!a || !b) return null;
       return { ang: Math.atan2(b.y - a.y, b.x - a.x), pow: Math.max(0, Math.min(1, (len - DEAD) / PULL())) };
     }
+    // a press: on one of your buttons (or close to the picked one) → pull to aim; anywhere else → drag the view.
+    // The right / middle mouse button always drags the view. A second finger (a pinch to zoom) lets go of both.
+    const ptrs = new Set();
+    const nearSel = (e, q) => { if (sel < 0) return false; const b = st.b[sel], p = scr(b.x, b.y); return Math.hypot(q.x - b.x, q.y - b.y) < D.RB + 3 || (p && Math.hypot(p.x - e.clientX, p.y - e.clientY) < 46); };
     function pd(e) {
+      ptrs.add(e.pointerId);
+      if (ptrs.size > 1) { if (drag) cancel(); return; }
       if (phase === 'anim' && !stopped) { speedUp = 3; return; }
-      if (phase === 'keeper' && !stopped && st) { const q = toCm(e); if (!q) return; kdrag = true; moveKeeper(q); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); return; }
-      if (!canAim()) return;
-      if (e.pointerType === 'mouse' && e.button !== 0) { drag = null; aim = null; powEl.hidden = true; showGuides(); return; }
-      const q = toCm(e); if (!q) return;
+      if (phase === 'keeper' && !stopped && st && human(keeperSide)) { const q = toCm(e); if (!q) return; kdrag = true; moveKeeper(q); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); return; }
+      if (stopped || !st || cardEl) return;
+      const q = toCm(e);
+      const panStart = () => { drag = { id: e.pointerId, kind: 'pan', last: { clientX: e.clientX, clientY: e.clientY } }; try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} document.documentElement.classList.add('hand-drag'); e.preventDefault(); };
+      if (e.pointerType === 'mouse' && e.button !== 0) { panStart(); return; }
+      if (!canAim() || !q) { if (phase !== 'anim') panStart(); return; }
       const i = btnAt(q, e.pointerType === 'mouse' ? 1 : 3.2);
       if (i >= 0) {
         if (!E.canFlick(st, i)) { toast(tx('limit3'), 'bad'); return; }
         sel = i; hintMove = null;
-        const p = scr(st.b[i].x, st.b[i].y); drag = { id: e.pointerId, anchor: p, rel: false };
-      } else if (sel >= 0) drag = { id: e.pointerId, anchor: { x: e.clientX, y: e.clientY }, rel: true };
-      else return;
+      } else if (!nearSel(e, q)) { panStart(); return; }
+      const p = scr(st.b[sel].x, st.b[sel].y); drag = { id: e.pointerId, kind: 'aim', anchor: p };
       try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {}
       document.documentElement.classList.add('hand-drag');
       showGuides(); e.preventDefault();
@@ -466,10 +523,11 @@
     function pm(e) {
       if (kdrag) { const q = toCm(e); if (q) moveKeeper(q); return; }
       if (!drag) {
-        if (e.pointerType === 'mouse' && canAim()) { const q = toCm(e); const h = q ? btnAt(q, 1) : -1; if (h !== hov) { hov = h; showGuides(); } }
+        if (e.pointerType === 'mouse' && canAim()) { const q = toCm(e); const h = q ? btnAt(q, 1) : -1; if (h !== hov) { hov = h; showGuides(); } ctx.el.style.cursor = h >= 0 || (q && nearSel(e, q)) ? 'grab' : 'move'; }
         return;
       }
       if (e.pointerId !== drag.id) return;
+      if (drag.kind === 'pan') { const a = toCm(drag.last), b = toCm(e); if (a && b) panBy(a.x - b.x, a.y - b.y); drag.last = { clientX: e.clientX, clientY: e.clientY }; return; }
       if (!canAim()) return cancel();
       aim = aimFrom(e);
       if (aim) { powEl.hidden = false; powEl.textContent = Math.round(aim.pow * 100) + '%'; powEl.style.left = e.clientX + 'px'; powEl.style.top = e.clientY + 'px'; say('💪 ' + Math.round(aim.pow * 100) + '%'); }
@@ -477,18 +535,20 @@
       showGuides();
     }
     function pu(e) {
+      ptrs.delete(e.pointerId);
       if (kdrag) { kdrag = false; try { ctx.el.releasePointerCapture(e.pointerId); } catch (er) {} return; }
       if (!drag || e.pointerId !== drag.id) return;
       try { ctx.el.releasePointerCapture(drag.id); } catch (er) {}
       document.documentElement.classList.remove('hand-drag');
+      if (drag.kind === 'pan') { drag = null; return; }
       const a = aim; drag = null; aim = null; powEl.hidden = true;
-      if (a && a.pow >= .04 && canAim()) { flick(E.wobble({ i: sel, ang: a.ang, v: vOf(a.pow) }, seed(), feel)); return; }
+      if (a && a.pow >= .04 && canAim()) { const mv = aimMove(a); flick(E.wobble({ i: mv.i, ang: mv.ang, v: mv.v }, seed(), feel)); return; }
       say(pvp ? tx('turn', { p: nameOf(st.pos) }) : t('p.turn')); showGuides();
     }
     function cancel() { drag = null; aim = null; kdrag = false; powEl.hidden = true; document.documentElement.classList.remove('hand-drag'); showGuides(); }
     function moveKeeper(q) { const d = keeperSide; if (d < 0) return; E.setKeeper(st, d, q.x, q.y); put(kp[d], st.k[d].x, st.k[d].y); kick(100); }
     const wm = e => { if ((drag && e.pointerId === drag.id) || kdrag) { if (e.target !== ctx.el && !ctx.el.contains(e.target)) pm(e); } };
-    const wu = e => { if ((drag && e.pointerId === drag.id) || kdrag) pu(e); };
+    const wu = e => { if ((drag && e.pointerId === drag.id) || kdrag) pu(e); else ptrs.delete(e.pointerId); };
     ctx.el.addEventListener('pointerdown', pd); ctx.el.addEventListener('pointermove', pm); ctx.el.addEventListener('pointerup', pu); ctx.el.addEventListener('pointercancel', pu);
     addEventListener('pointermove', wm, true); addEventListener('pointerup', wu, true); addEventListener('pointercancel', wu, true);
     // no loupe / double-tap zoom / text selection while playing (as the carrom hand)
@@ -503,11 +563,18 @@
       if (stopped || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
       if ((e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.metaKey) { if (phase === 'aim' && E.canShoot(st) && human(st.pos)) { e.preventDefault(); declare(); } return; }
       if (e.key === 'Enter' && phase === 'keeper') { e.preventDefault(); keeperDone(); return; }
-      if ((e.key === 'Tab' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') && canAim() && !drag) {   // cycle the buttons that may play, nearest the ball first
+      // the arrow keys move the view (as the screen shows it), C: back to the ball
+      const pk = { ArrowUp: [0, -1], ArrowLeft: [-1, 0], ArrowDown: [0, 1], ArrowRight: [1, 0] }[e.key];
+      if (pk && !e.ctrlKey && !e.metaKey && !e.altKey && st) {
+        e.preventDefault(); const cx = innerWidth / 2, cy = innerHeight / 2, st0 = Math.min(innerWidth, innerHeight) * .12;
+        const a = toCm({ clientX: cx, clientY: cy }), b = toCm({ clientX: cx + pk[0] * st0, clientY: cy + pk[1] * st0 }); if (a && b) panBy(b.x - a.x, b.y - a.y); return;
+      }
+      if ((e.key === 'c' || e.key === 'C') && !e.ctrlKey && !e.metaKey) { panReset(true); return; }
+      if (e.key === 'Tab' && canAim() && !drag) {   // cycle the buttons that may play, nearest the ball first
         e.preventDefault();
         const L2 = []; for (let i = st.pos * 10; i < st.pos * 10 + 10; i++) if (E.canFlick(st, i)) L2.push(i);
         L2.sort((a, b) => Math.hypot(st.b[a].x - st.ball.x, st.b[a].y - st.ball.y) - Math.hypot(st.b[b].x - st.ball.x, st.b[b].y - st.ball.y));
-        const k = L2.indexOf(sel), d = e.key === 'ArrowLeft' || (e.key === 'Tab' && e.shiftKey) ? -1 : 1; sel = L2[((k + d) % L2.length + L2.length) % L2.length]; hintMove = null; showGuides();
+        const k = L2.indexOf(sel), d = e.shiftKey ? -1 : 1; sel = L2[((k + d) % L2.length + L2.length) % L2.length]; hintMove = null; frameBallAnd(sel, true); showGuides();
       }
     };
     document.addEventListener('keydown', onKey);
@@ -543,7 +610,7 @@
     const ICO_WHOLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="1.5"/><path d="M5 12h14"/><circle cx="12" cy="12" r="2.6"/></svg>';
     const ICO_NEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/><circle cx="11" cy="11" r="1.6" fill="currentColor"/></svg>';
     const viewSync = () => { const lab = tx(whole ? 'viewNear' : 'viewWhole'); viewBtn.innerHTML = whole ? ICO_NEAR : ICO_WHOLE; viewBtn.title = lab; viewBtn.setAttribute('aria-label', lab); };
-    function toggleView() { if (stopped) return; whole = !whole; try { localStorage.setItem(VK, whole ? 'whole' : 'near'); } catch (e) {} viewSync(); cancel(); camFit(false); kick(800); }
+    function toggleView() { if (stopped) return; whole = !whole; pan = { x: 0, y: 0 }; try { localStorage.setItem(VK, whole ? 'whole' : 'near'); } catch (e) {} viewSync(); cancel(); camFit(false); kick(800); }
     viewBtn.addEventListener('click', e => { e.preventDefault(); toggleView(); });
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => viewBtn.addEventListener(k, e => e.stopPropagation()));
     viewSync(); layer.appendChild(viewBtn);
@@ -554,12 +621,12 @@
     build();
     const goNow = () => {
       st = E.newMatch({ first: youFirst ? 0 : 1, goals: size === 103 ? 3 : 0, half: size === 103 ? 300 : size * 60 });
-      syncAll(); hud(); follow(0, 0, false); clockTick();
+      syncAll(); hud(); follow(0, 0, false); clockTick(); pulse();
       SX.whistle(1, .5); toast(tx('kick'));
       later(next, 900);
     };
     camFit(false); neonTick();
-    const pick = () => { if (stopped) return; AC().BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'botao') : k, thumb: k => T3.boardThumb ? T3.boardThumb('botao', k) : '', pick: k => new URL('img/pick/botao-' + k + '.webp?v=1', location.href).href, color: THEME, onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
+    const pick = () => { if (stopped) return; AC().BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'botao') : k, thumb: k => T3.boardThumb ? T3.boardThumb('botao', k) : '', pick: k => new URL('img/pick/botao-' + k + '.webp?v=2', location.href).href, color: THEME, onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
     if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
 
     const myTurn = () => !stopped && !over && !busy && st && human(st.pos) && phase === 'aim';
@@ -593,7 +660,7 @@
       timeout() { finish('time'); },
       stop() {
         document.querySelectorAll('.bpk').forEach(e => e.remove());
-        stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulseT); clearInterval(clkT); clearInterval(keeperT);
+        stopped = true; tok++; timers.forEach(clearTimeout); board.remove(beacon); beacon.geometry.dispose(); beacon.material.dispose(); clearInterval(pulseT); clearInterval(clkT); clearInterval(keeperT);
         ctx.el.removeEventListener('pointerdown', pd); ctx.el.removeEventListener('pointermove', pm); ctx.el.removeEventListener('pointerup', pu); ctx.el.removeEventListener('pointercancel', pu);
         removeEventListener('pointermove', wm, true); removeEventListener('pointerup', wu, true); removeEventListener('pointercancel', wu, true);
         NZ.forEach(([k, f]) => document.removeEventListener(k, f, { capture: true })); HTML.classList.remove('hand-on'); HTML.classList.remove('hand-drag');
