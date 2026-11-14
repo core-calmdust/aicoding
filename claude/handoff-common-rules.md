@@ -47,7 +47,7 @@
 - ボードゲーム：`shogi/ chess/ reversi/ gomoku/ checkers/ go/ xiangqi/ morris/ dots/ connect4/ mancala/ backgammon/ tafl/ hex/ fanorona/ alquerque/ ugolki/ agon/ ur/ konane/ amazons/`（アマゾンズは2026-11-10 BETA、`claude/amazons-spec.md`）
 - カードゲーム（2D専用）：`poker/ blackjack/ baccarat/ solitaire/`、麻雀：`mahjong/`
 - パズル系ポータル（別ルール）：`sudoku/`（まいにち数独）`speed-sudoku/` `samegame/` `jailbreak/`
-- 3D専用（2D版なし、大百科の3D卓が本体）：`carrom/` `crokinole/` `hockey/`（engine.js・worker.js のみ。画面は `atlas/games/<id>.js`）
+- 3D専用（2D版なし、大百科の3D卓が本体）：`carrom/` `crokinole/` `hockey/` `botao/`（フチボウ・ジ・ボタン、2026-11-15 BETA、`claude/botao-spec.md`）（engine.js・worker.js のみ。画面は `atlas/games/<id>.js`）
 - 開発室（アルファ）：`hexdeck/`（NUMBERLANDS）、`wyrm/`（WYRMSPHERE）
 - 共通：`shared/`、ポータル：`atlas/`、仕様書：`claude/`
 

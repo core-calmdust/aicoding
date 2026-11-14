@@ -215,6 +215,8 @@
     hockey: { list: ['classic', 'air', 'neon', 'pinball', 'gear', 'space'], get: () => { const v = ls.get('atlas-hockey-look'); return ['air', 'neon', 'pinball', 'gear', 'space'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-hockey-look', k) },
     // crokinole (3D only): 'atlas-crokinole-look' ('marq' the default | 'classic' | 'modern' | 'mcm' | 'winter' | 'neon')
     crokinole: { list: ['marq', 'classic', 'modern', 'mcm', 'winter', 'neon'], get: () => { const v = ls.get('atlas-crokinole-look'); return ['classic', 'modern', 'mcm', 'winter', 'neon'].includes(v) ? v : 'marq'; }, set: k => ls.set('atlas-crokinole-look', k) },
+    // futebol de botão (3D only, 2026-11-14): 'atlas-botao-look' ('classic' the default | 'retro' | 'night' | 'praia' | 'madeira' | 'neon')
+    botao: { list: ['classic', 'retro', 'night', 'praia', 'madeira', 'neon'], get: () => { const v = ls.get('atlas-botao-look'); return ['retro', 'night', 'praia', 'madeira', 'neon'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-botao-look', k) },
     // ludo (atlas/models/ludo.js, atlas/skin/ludo.js): 'atlas-ludo-look' ('classic' the default | 'marble' | 'street' | 'peg' | 'mondrian' | 'cutout'); pachisi keeps its cloth
     ludo: { list: ['classic', 'peg', 'street', 'mondrian', 'cutout', 'marble'], get: () => { const v = ls.get('atlas-ludo-look'); return ['marble', 'street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
   };
@@ -280,6 +282,14 @@
     night: { ja: "アブストラクト", en: "Abstract", zh: "抽象", 'zh-TW': "抽象", ko: "추상", es: "Abstracto", fr: "Abstrait", pt: "Abstrato", de: "Abstrakt", ru: "Абстракция", tr: "Soyut", id: "Abstrak", hi: "अमूर्त", ar: "تجريدي" } },
     art: { ja: "ホワイト", en: "White", zh: "白色", 'zh-TW': "白色", ko: "화이트", es: "Blanco", fr: "Blanc", pt: "Branco", de: "Weiß", ru: "Белая", tr: "Beyaz", id: "Putih", hi: "सफ़ेद", ar: "أبيض" },   // (2026-11-13: was カラフルアート)
     pop: { ja: "ポップアート", en: "Pop art", zh: "波普艺术", 'zh-TW': "普普藝術", ko: "팝아트", es: "Pop art", fr: "Pop art", pt: "Pop art", de: "Pop-Art", ru: "Поп-арт", tr: "Pop art", id: "Seni pop", hi: "पॉप आर्ट", ar: "فن البوب" },
+  botao: {
+    classic: { ja: 'クラシック', en: 'Classic', zh: '经典', 'zh-TW': '經典', ko: '클래식', es: 'Clásica', fr: 'Classique', pt: 'Clássica', de: 'Klassisch', ru: 'Классика', tr: 'Klasik', id: 'Klasik', hi: 'क्लासिक', ar: 'كلاسيكية' },
+    retro: { ja: 'レトロ', en: 'Retro', zh: '复古', 'zh-TW': '復古', ko: '레트로', es: 'Retro', fr: 'Rétro', pt: 'Retrô', de: 'Retro', ru: 'Ретро', tr: 'Retro', id: 'Retro', hi: 'रेट्रो', ar: 'ريترو' },
+    night: { ja: 'ナイトゲーム', en: 'Night game', zh: '夜场', 'zh-TW': '夜場', ko: '나이트 게임', es: 'Partido nocturno', fr: 'Match en nocturne', pt: 'Jogo noturno', de: 'Flutlichtspiel', ru: 'Вечерний матч', tr: 'Gece maçı', id: 'Laga malam', hi: 'रात का मैच', ar: 'مباراة ليلية' },
+    praia: { ja: 'コパカバーナ', en: 'Copacabana', zh: '科帕卡巴纳', 'zh-TW': '科帕卡巴納', ko: '코파카바나', es: 'Copacabana', fr: 'Copacabana', pt: 'Copacabana', de: 'Copacabana', ru: 'Копакабана', tr: 'Copacabana', id: 'Copacabana', hi: 'कोपाकबाना', ar: 'كوباكابانا' },
+    madeira: { ja: 'ウッド', en: 'Wood', zh: '木制', 'zh-TW': '木製', ko: '우드', es: 'Madera', fr: 'Bois', pt: 'Madeira', de: 'Holz', ru: 'Дерево', tr: 'Ahşap', id: 'Kayu', hi: 'लकड़ी', ar: 'خشبية' },
+    neon: { ja: 'ネオン', en: 'Neon', zh: '霓虹', 'zh-TW': '霓虹', ko: '네온', es: 'Neón', fr: 'Néon', pt: 'Neon', de: 'Neon', ru: 'Неон', tr: 'Neon', id: 'Neon', hi: 'नियॉन', ar: 'نيون' },
+  },
   hockey: {
     classic: { ja: 'クラシック', en: 'Classic', zh: '经典', 'zh-TW': '經典', ko: '클래식', es: 'Clásico', fr: 'Classique', pt: 'Clássico', de: 'Klassisch', ru: 'Классика', tr: 'Klasik', id: 'Klasik', hi: 'क्लासिक', ar: 'كلاسيك' },
     air: { ja: 'エアホッケー', en: 'Air hockey', zh: '气垫球', 'zh-TW': '氣墊球', ko: '에어하키', es: 'Air hockey', fr: 'Air-hockey', pt: 'Air hockey', de: 'Airhockey', ru: 'Аэрохоккей', tr: 'Hava hokeyi', id: 'Air hockey', hi: 'एयर हॉकी', ar: 'هوكي الهواء' },

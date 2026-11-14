@@ -15,6 +15,8 @@
 <script src="../models/crokinole.js"></script>
 <script src="../../hockey/engine.js"></script>
 <script src="../models/hockey.js"></script>
+<script src="../../botao/engine.js"></script>
+<script src="../models/botao.js"></script>
 <script>
 (function () {
   const q = new URLSearchParams(location.search), id = q.get('game') || 'carrom', look = q.get('look') || 'neon', S = +q.get('px') || 1600;
@@ -45,6 +47,13 @@
   if (id === 'hockey') {   // a rally: both mallets and the puck on its way
     const U = g.userData, put = (m, x, y) => { const [a, b] = U.xz(x, y); m.position.set(a, U.top, b); g.add(m); };
     put(U.mallet(0), -5, 19); put(U.mallet(1), 7, -17); put(U.puck(), 4, 3);
+  }
+  if (id === 'botao') {   // a match in progress: a few flicks by the engine itself (fixed seeds)
+    const E = window.BotaoEngine, U = g.userData;
+    let s = E.newMatch({ first: 0 });
+    for (let i = 0; i < 9; i++) { const m = E.think(s, 12, 31 + i); if (m.declare) break; s = E.resolve(s, E.simulate(s, E.perform(m, 12, 47 + i))).s; }
+    const put = (m, x, y) => { const [a, b] = U.xz(x, y); m.position.set(a, U.top, b); g.add(m); const sh = X.contact((m.userData.r || 3) * U.K * 1.2, .38); sh.position.set(a, U.top + .002, b); g.add(sh); };
+    s.b.forEach((b, i) => put(U.button(i < 10 ? 0 : 1, (i % 10) + 2), b.x, b.y)); put(U.ball(), s.ball.x, s.ball.y); s.k.forEach((k, t) => put(U.keeper(t), k.x, k.y));
   }
   if (id === 'crokinole') {   // a round in progress: a few shots by the engine itself (fixed seeds)
     const E = window.CrokinoleEngine, U = g.userData;

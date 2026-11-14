@@ -16,7 +16,7 @@
   const A = window.AtlasNPC = window.AtlasNPC || {};
   if (A.skin) return;
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
-  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '13';
+  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '14';
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }));
