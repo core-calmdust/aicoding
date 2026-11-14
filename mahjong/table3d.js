@@ -122,16 +122,16 @@ function roundTile(w, h, d, r, b, withFace) {
 // the rounding reads as a curve. Only then is it split at the plane where the white meets the purple (zs from the back): the
 // two halves share that ring of vertices and their normals, so the side runs straight through the colour change — no bevel,
 // no groove. Returns { front (group 0: the flat face, 1: the white body), back (the purple) }.
-// (ユーザー 2026-11-14: the face looked angular — a flat plate with a narrow rounded edge. Now the round-over is wide and low
-// (bs across, b deep, four steps), like the gently crowned face of a real tile; the picture is printed over the flat and the
-// first part of the curve, at the size it had before.)
+// (ユーザー 2026-11-14: the face looked angular. What is meant is the edge where the face turns down into the sides — a fuller round
+// there (a quarter round of 0.15, five steps), not a rounder outline seen from the front: the corner radius stays as it was.
+// The picture keeps its size.)
 function tileGeos(w, h, d, r, b, backT, bs) {
   bs = bs || b;
   const PW = (w - 0.17) / .94, PH = (h - 0.17) / .94;   // the picture's size on the face (as before the wider round-over)
   const s = new THREE.Shape(), x0 = -w / 2 + bs, y0 = -h / 2 + bs, x1 = w / 2 - bs, y1 = h / 2 - bs, q = Math.max(.01, r - bs);
   s.moveTo(x0 + q, y0); s.lineTo(x1 - q, y0); s.quadraticCurveTo(x1, y0, x1, y0 + q); s.lineTo(x1, y1 - q); s.quadraticCurveTo(x1, y1, x1 - q, y1);
   s.lineTo(x0 + q, y1); s.quadraticCurveTo(x0, y1, x0, y1 - q); s.lineTo(x0, y0 + q); s.quadraticCurveTo(x0, y0, x0 + q, y0);
-  const g = new THREE.ExtrudeGeometry(s, { depth: d - 2 * b, steps: 2, bevelEnabled: true, bevelThickness: b, bevelSize: bs, bevelSegments: 4, curveSegments: 4 });
+  const g = new THREE.ExtrudeGeometry(s, { depth: d - 2 * b, steps: 2, bevelEnabled: true, bevelThickness: b, bevelSize: bs, bevelSegments: 5, curveSegments: 4 });
   g.translate(0, 0, -(d - 2 * b) / 2);
   const P = g.attributes.position, n = P.count, zs = -d / 2 + backT, pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2);
   for (let i = 0; i < n; i++) { let z = P.getZ(i); if (Math.abs(z) < 1e-4) z = zs; pos[i * 3] = P.getX(i); pos[i * 3 + 1] = P.getY(i); pos[i * 3 + 2] = z; }   // the middle ring → the colour line
@@ -197,7 +197,9 @@ function buildHand(env) {
   g.addGroup(0, Hd.nail * 3, 0); g.addGroup(Hd.nail * 3, (Hd.nt - Hd.nail) * 3, 1);
   // skin (ユーザー 2026-11-14: it read as polygons — the mesh is now rounded finer and coloured unevenly as skin is, by the generator):
   // soft and matt; where the light turns to shade the flesh glows a little red (light passing through it), and a thin warm rim at grazing angles
-  const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: new THREE.Color(0xe6d6cf).convertSRGBToLinear(), roughness: .62, metalness: 0, sheen: .25, sheenRoughness: .55, sheenColor: new THREE.Color(0xffd0c0), emissive: new THREE.Color(0x3a0f08), emissiveIntensity: .1, envMap: env, envMapIntensity: .16 });
+  // (ユーザー 2026-11-14: the hand looked dark in the shade — fair and clean like a hand model's: lighter skin that glows a little from within
+  // (so the shaded side stays rosy, never grey), and casts no shadow on itself)
+  const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: new THREE.Color(0xf6e6de).convertSRGBToLinear(), roughness: .5, metalness: 0, sheen: .35, sheenRoughness: .5, sheenColor: new THREE.Color(0xffe0d4), emissive: new THREE.Color(0xc98a78), emissiveIntensity: .32, envMap: env, envMapIntensity: .35 });
   skin.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
     { vec3 sL = normalize((viewMatrix * vec4(.2, 1., .3, 0.)).xyz); float sn = dot(normalize(vNormal), sL), sv = 1. - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0., 1.);
       totalEmissiveRadiance += diffuseColor.rgb * vec3(1., .3, .2) * (smoothstep(-.55, .05, sn) * (1. - smoothstep(.0, .6, sn)) * .34 + sv * sv * sv * .16); }`); };
@@ -363,7 +365,7 @@ class Table3D {
     // shared tile geometry/materials
     // the tiles (2026-11-14, as 上海's): rounded white blocks with a purple back — corners and edges rounded, the face
     // carved (normal map from tiles.js). One shared geometry for the white part and one for the back.
-    { const tg = tileGeos(W, H, D, 0.2, 0.11, 0.28, 0.2); this.geoFront = tg.front; this.geoBack = tg.back; }   // (one rounded block, split where the white meets the purple)
+    { const tg = tileGeos(W, H, D, 0.15, 0.15, 0.28, 0.15); this.geoFront = tg.front; this.geoBack = tg.back; }   // (one rounded block, split where the white meets the purple)
     this.matIvory = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xf7f7f3).convertSRGBToLinear(), roughness: .38, metalness: 0 });
     // the back (2026-11-14, ユーザー：紫をもう少し淡く、高級石を磨いたような質感): a pale lavender stone with soft veins, polished
     // (a clear coat over it, a little studio light reflected in it) — four cuts of the same slab so neighbours don't match
@@ -427,7 +429,13 @@ class Table3D {
     G.add(new THREE.Mesh(this.geoFront, [back ? this.matIvory : fm.normal, this.matIvory]), new THREE.Mesh(this.geoBack, this.matBacks[0]));
     G.rotation.set(back ? 0 : 0, back ? PI : 0, 0);
     this.shotR.render(this.shotS, this.shotC);
-    const url = this.shotR.domElement.toDataURL('image/png');
+    // cropped to the tile itself (so the tiles in the box can stand right next to each other)
+    const src = this.shotR.domElement, c2 = document.createElement('canvas'), w0 = src.width, h0 = src.height; c2.width = w0; c2.height = h0;
+    const x2 = c2.getContext('2d'); x2.drawImage(src, 0, 0); const px = x2.getImageData(0, 0, w0, h0).data; let a0 = w0, a1 = -1, b0 = h0, b1 = -1;
+    for (let y = 0; y < h0; y++) for (let x = 0; x < w0; x++) if (px[(y * w0 + x) * 4 + 3] > 8) { if (x < a0) a0 = x; if (x > a1) a1 = x; if (y < b0) b0 = y; if (y > b1) b1 = y; }
+    let url;
+    if (a1 >= a0) { const c3 = document.createElement('canvas'); c3.width = a1 - a0 + 1; c3.height = b1 - b0 + 1; c3.getContext('2d').drawImage(c2, -a0, -b0); url = c3.toDataURL('image/png'); this.shotAR = c3.width / c3.height; }
+    else url = src.toDataURL('image/png');
     this.shots.set(key, url);
     return url;
   }
@@ -480,7 +488,7 @@ class Table3D {
       const want = g.visible && (g.userData.pose === 'flat' || g.userData.pose === 'side') && this.doraFn(g.userData.id);
       let o = g.userData.dora;
       if (want && !o) {
-        if (!this.doraMat) { this.doraGeo = new THREE.PlaneGeometry(W, H);
+        if (!this.doraMat) { this.doraGeo = this._faceSkin();
           this.doraMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: -1 } },
             vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
             fragmentShader: `varying vec2 vUv; uniform float uT;
@@ -494,14 +502,26 @@ class Table3D {
                 float st = star((vUv - vec2(.86, .9)) * vec2(1.0, 1.36), t1) + star((vUv - vec2(.12, .08)) * vec2(1.0, 1.36) * 1.35, t2);
                 float sw = uT < 0.0 ? 0.0 : clamp(uT * 1.25, 0.0, 1.0), bp = (vUv.x - .5) * .8 + (vUv.y - .5) - mix(-1.15, 1.15, sw);
                 float band = uT < 0.0 ? 0.0 : (exp(-bp * bp / .006) * .85 + exp(-bp * bp / .05) * .25) * sin(sw * 3.14159);   // (ユーザー 2026-11-14: a light that runs across the face itself)
-                float a = clamp(rim * .62 + run + st + band, 0.0, .95);
-                gl_FragColor = vec4(mix(vec3(1.0, .74, .26), vec3(1.0, .97, .86), clamp(run * 1.4 + st + band * 1.2, 0.0, 1.0)), a); }` }); }
-        o = g.userData.dora = new THREE.Mesh(this.doraGeo, this.doraMat); o.position.z = D / 2 + 0.004; o.renderOrder = 3; g.add(o);
+                band *= 1.35;
+                float a = clamp(.16 + rim * .8 + run * 1.2 + st + band, 0.0, .96);   // (ユーザー 2026-11-14: a little gold all the time, the light stronger)
+                gl_FragColor = vec4(mix(vec3(1.0, .72, .22), vec3(1.0, .97, .86), clamp(run * 1.4 + st + band * 1.2, 0.0, 1.0)), a); }` }); }
+        o = g.userData.dora = new THREE.Mesh(this.doraGeo, this.doraMat); o.renderOrder = 3; g.add(o);
       }
       if (o) o.visible = !!want;
       if (want) n++;
     }
     this._doraN = n;
+  }
+  // the dora's glow lies on the face itself (ユーザー 2026-11-14: not a flat pane over the tile, like a case): the face's own
+  // triangles (the flat and the start of the round-over) lifted a hair along their normals, uv 0..1 over that area
+  _faceSkin() {
+    const f = this.geoFront, gr = f.groups[0], P = f.attributes.position, N = f.attributes.normal, U = f.attributes.uv, n = gr.count;
+    const pos = new Float32Array(n * 3), uv = new Float32Array(n * 2); let u0 = 1e9, u1 = -1e9, v0 = 1e9, v1 = -1e9;
+    for (let i = 0; i < n; i++) { const j = gr.start + i; u0 = Math.min(u0, U.getX(j)); u1 = Math.max(u1, U.getX(j)); v0 = Math.min(v0, U.getY(j)); v1 = Math.max(v1, U.getY(j)); }
+    for (let i = 0; i < n; i++) { const j = gr.start + i;
+      pos[i * 3] = P.getX(j) + N.getX(j) * .003; pos[i * 3 + 1] = P.getY(j) + N.getY(j) * .003; pos[i * 3 + 2] = P.getZ(j) + N.getZ(j) * .003;
+      uv[i * 2] = (U.getX(j) - u0) / (u1 - u0); uv[i * 2 + 1] = (U.getY(j) - v0) / (v1 - v0); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); return g;
   }
   // ---------------------------------------------------------------- hands
   hand(seat) {
@@ -654,7 +674,7 @@ class Table3D {
   layoutRiver(seat, river, animLast, fromLx) {   // fromLx: where the player's own discard stood — a pose from screenPose() (the tile of the page's hand row), or a place along the near edge
     // (ユーザー 2026-11-14: the far seat's discards looked stuck to each other — a little air between the tiles. The row is
     // centred as before: six tiles and their gaps, and a riichi tile laid sideways still clears the neighbour's river.)
-    const GX = 0.075, GZ = 0.06, X0 = -(ROW * W + (ROW - 1) * GX) / 2;
+    const GX = 0.006, GZ = 0.006, X0 = -(ROW * W + (ROW - 1) * GX) / 2;   // (ユーザー 2026-11-14: each tile right against its neighbours — touching, not joined)
     // (ユーザー 2026-11-14: rivers must never overlap — a long row (a riichi tile laid sideways, the third row running on) could
     // reach into the neighbour's river. Each row is checked against the other seats' river tiles where they lie, and only a row
     // that would touch one is moved along its own line, by as little as clears it.)
@@ -808,18 +828,19 @@ class Table3D {
       }
       // the centre: a round screen behind a metal ring (where a table's dice dome sits) — the round and the tiles left
       g.save(); g.translate(C, C);
-      if (!em) { const ring = g.createLinearGradient(-230, -230, 230, 230); ring.addColorStop(0, '#e2e6ec'); ring.addColorStop(.35, '#7c828c'); ring.addColorStop(.6, '#c4c9d1'); ring.addColorStop(1, '#565b64');
-        g.fillStyle = 'rgba(0,0,0,.5)'; g.beginPath(); g.arc(3, 5, 232, 0, 7); g.fill();
-        g.fillStyle = ring; g.beginPath(); g.arc(0, 0, 228, 0, 7); g.fill(); }
-      const scr = g.createRadialGradient(-40, -60, 20, 0, 0, 215); scr.addColorStop(0, em ? '#0d2242' : '#12305c'); scr.addColorStop(1, em ? '#030814' : '#06101f');
-      g.fillStyle = scr; g.beginPath(); g.arc(0, 0, 208, 0, 7); g.fill();
-      g.fillStyle = '#8fe6ff'; g.shadowColor = '#3ab8ff'; g.shadowBlur = em ? 20 : 10;
+      // (ユーザー 2026-11-14: a wider round screen, the round and the tiles left larger)
+      if (!em) { const ring = g.createLinearGradient(-290, -290, 290, 290); ring.addColorStop(0, '#e2e6ec'); ring.addColorStop(.35, '#7c828c'); ring.addColorStop(.6, '#c4c9d1'); ring.addColorStop(1, '#565b64');
+        g.fillStyle = 'rgba(0,0,0,.5)'; g.beginPath(); g.arc(3, 5, 294, 0, 7); g.fill();
+        g.fillStyle = ring; g.beginPath(); g.arc(0, 0, 290, 0, 7); g.fill(); }
+      const scr = g.createRadialGradient(-50, -76, 26, 0, 0, 275); scr.addColorStop(0, em ? '#0d2242' : '#12305c'); scr.addColorStop(1, em ? '#030814' : '#06101f');
+      g.fillStyle = scr; g.beginPath(); g.arc(0, 0, 268, 0, 7); g.fill();
+      g.fillStyle = '#8fe6ff'; g.shadowColor = '#3ab8ff'; g.shadowBlur = em ? 24 : 12;
       // (ユーザー 2026-11-14: only the round and the tiles left here — the pot and the counters are in the box with the dora)
-      g.font = '800 84px "Shippori Mincho B1", serif'; g.fillText(`${WN[I.round]}${I.kyoku + 1}局`, 0, -52);
-      g.font = '700 38px "Zen Kaku Gothic New", sans-serif'; g.fillText('余', -74, 70);
-      const lf = String(I.left).padStart(2, ' '); for (let i = 0; i < 2; i++) seg7(g, -30 + i * 62, 36, 44, 68, lf[i], '#8fe6ff', em ? null : 'rgba(143,230,255,.06)');
+      g.font = '800 124px "Shippori Mincho B1", serif'; g.fillText(`${WN[I.round]}${I.kyoku + 1}局`, 0, -72);
+      g.font = '700 58px "Zen Kaku Gothic New", sans-serif'; g.fillText('余', -118, 74);
+      const lf = String(I.left).padStart(2, ' '); for (let i = 0; i < 2; i++) seg7(g, -56 + i * 94, 18, 68, 112, lf[i], '#8fe6ff', em ? null : 'rgba(143,230,255,.06)');
       g.shadowBlur = 0;
-      if (!em) { const gl = g.createLinearGradient(0, -208, 0, 40); gl.addColorStop(0, 'rgba(255,255,255,.16)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gl; g.beginPath(); g.arc(0, 0, 208, PI, 2 * PI); g.fill(); }   // the glass
+      if (!em) { const gl = g.createLinearGradient(0, -268, 0, 50); gl.addColorStop(0, 'rgba(255,255,255,.16)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gl; g.beginPath(); g.arc(0, 0, 268, PI, 2 * PI); g.fill(); }   // the glass
       g.restore();
     }
     this.conETex.needsUpdate = true;
