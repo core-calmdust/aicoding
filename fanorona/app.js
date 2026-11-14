@@ -152,13 +152,14 @@ function noteNps(nodes, ms) {
   const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
 }
 let aiW = makeWorker(), anaW = makeWorker();
-// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」, Fanorona's page only — Alquerque runs
-// this script without it): analysis, hints, the coach, the review box and the levels that think by time (四段・五段, rated
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」; the Alquerque page too since
+// 2026-11-14 — its own sw.js, the engine files from ../fanorona/): analysis, hints, the coach, the review box and the levels that think by time (四段・五段, rated
 // games too) go to the pool of threads when it is free (the lead keeps the level's own limits; the helpers fill the shared
 // table, so it reads deeper in the same time). The levels decided by depth / positions (15級〜三段) stay on the one-thread
 // workers, as does Fanoron-Telo (solved in JavaScript).
-const MTP = window.MTEngine && GID === 'fanorona' ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=5', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
+const MT_DIR = GID === 'fanorona' ? '' : '../fanorona/';
+const MTP = window.MTEngine && (GID === 'fanorona' || GID === 'alquerque') ? MTEngine.use({
+  wasm: MT_DIR + 'engine_mt.wasm?v=5', lead: ENGINE_URL + '&mt=1', helper: MT_DIR + 'mt-helper.js?v=2', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => m.rule === 'telo' ? null : { io: E.setupIO(m.start, m.moves || []), rk: E.ruleKey() },   // (the page's rule is the job's: gv)
 }) : null;
