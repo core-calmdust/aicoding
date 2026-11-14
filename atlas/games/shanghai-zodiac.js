@@ -122,24 +122,26 @@
     // the ram, lying, one foreleg stretched out, its head turned back over the shoulder (Hamal on the head, the horn curling)
     aries: () => {
       const legs = tube([[30, 49], [24, 55], [35, 57]], [4, 3]) + tube([[60, 49], [66, 55], [56, 57]], [4, 3]) + tube([[74, 45], [82, 50], [91, 52]], [4, 2.6]) + ell(92, 52, 1.6, 1.1, 10);
-      const body = blob([[13, 39], [18, 30], [28, 26], [40, 24], [54, 25], [66, 28], [75, 36], [76, 46], [66, 52], [48, 53], [30, 53], [18, 50], [12, 45]]);
-      const neck = blob([[56, 27], [55, 18], [60, 11], [67, 12], [71, 22], [76, 34], [66, 33]]);
-      const head = blob([[67, 11], [63, 6.5], [56, 7], [50, 10.5], [45.5, 15], [46, 19], [50, 20.5], [56, 19.5], [62, 19], [67, 16]]);
-      const horn = tube([[63, 9], [70, 6], [77, 8], [80, 13], [78, 19], [72, 20], [69, 16], [72, 13], [75, 15]], [3.4, 1.2]);
-      return tube([[13, 40], [9, 44], [9, 49]], [3.4, 2]) + legs + body + scallops([[18, 33], [30, 28], [44, 27], [58, 29], [70, 35]], 1.7, 9) + scallops([[16, 42], [30, 38], [46, 37], [62, 39], [72, 43]], 1.6, 8) +
-        neck + scallops([[59, 16], [62, 22], [66, 29]], 1.4, 3) + head + horn + blob([[61, 16], [65, 15], [64, 19.5]]) + dot(52.5, 13) + ln([[46.5, 17], [48.5, 17.8]]);
+      // the body and the neck in one outline (no inner lines): lying, the neck rising at the front to the head turned back
+      const body = blob([[13, 39], [18, 30], [28, 26], [40, 24], [50, 24.6], [55, 21], [57, 15], [64, 12], [70, 19], [75, 30], [77, 40], [74, 48], [64, 52.4], [48, 53], [30, 53], [18, 50], [12, 45]]);
+      const head = blob([[66, 10], [62, 6.6], [56, 7], [50, 10], [46, 14.6], [46.6, 18.4], [51, 19.6], [58, 18.4], [64, 16]]);
+      const horn = tube([[62, 8], [69, 4.6], [76, 7], [78.4, 13], [75.6, 18.4], [70.6, 18.6]], [3.6, 1.4]);
+      return tube([[13, 40], [9, 44], [9, 49]], [3.4, 2]) + legs + body + horn + head + dot(52.5, 12.6, .45);
     },
+
     // the forepart of a charging bull, head lowered; Aldebaran the eye, the horn tips Elnath (upper) and ζ (lower), the Pleiades on the shoulder
     taurus: () => {
-      const body = blob([[34, 15], [42, 9], [52, 5], [61, 6], [69, 10], [80, 13], [92, 14], [99, 16], [97, 24], [99, 32], [95, 40], [86, 42], [74, 42], [64, 46], [54, 47.4], [44, 45], [36, 40]]);
-      const legs = tube([[48, 41], [44, 47], [35, 55]], [5, 3]) + blob([[32, 53], [37, 54], [36, 58], [31, 57]]) + tube([[60, 42], [63, 51], [56, 58]], [5, 3]) + blob([[53, 56], [58, 57], [57, 61], [52, 60]]);
+      // the whole bull (head lowered, charging): the shoulder hump, the back, the rump with the tail, four legs
+      const body = blob([[34, 15], [42, 9], [52, 5], [61, 6], [70, 10], [80, 12], [90, 12], [96, 15], [99, 23], [97, 33], [92, 41], [82, 42.6], [72, 42], [62, 46], [52, 47.4], [44, 45], [36, 40]]);
+      const fore = tube([[48, 41], [44, 47], [35, 55]], [5, 3]) + blob([[32, 53], [37, 54], [36, 58], [31, 57]]) + tube([[60, 42], [63, 51], [56, 58]], [5, 3]) + blob([[53, 56], [58, 57], [57, 61], [52, 60]]);
+      const hind = tube([[82, 38], [80, 49], [83, 58]], [5.4, 3]) + blob([[80.6, 57], [85.4, 57.4], [85, 61], [80, 60.6]]) + tube([[92, 36], [95, 47], [91, 57]], [5.4, 3]) + blob([[88.6, 56], [93.4, 56.4], [93, 60], [88, 59.6]]);
+      const tail = sway(98, 18, tube([[98, 17], [101.6, 24], [101, 34], [100, 40]], [1.6, 1]) + blob([[99, 38.6], [101.6, 39], [101.4, 44], [99, 43.4]]), 4, 6);
       const head = blob([[25, 16.4], [33, 15.6], [38.4, 20.6], [37.4, 28], [33, 36], [29.4, 43], [26, 48.4], [20, 49], [16, 46], [17, 40], [19, 32], [20, 24]]);
       const horns = tube([[25, 18], [19, 15], [16, 11], [17, 7]], [3, 1]) + tube([[21, 26], [14, 27], [9, 30], [8, 34]], [3, 1]);
-      const cut = ln([[98, 17], [96, 23], [99, 29], [96, 36], [98, 44]], 'zl zsoft');
-      return legs + body + cut + ln([[36, 16], [46, 13], [60, 12]], 'zl zsoft') + ln([[44, 40], [48, 32], [46, 22]], 'zl zsoft') +
-        blob([[35, 18], [40, 15], [42, 19], [38, 21]]) + horns + head + dot(21.5, 28.5, .7) + dot(33, 27, .6) + ln([[19, 44], [21, 46], [24, 45]]) + ln([[26, 31], [24, 38], [22, 43]], 'zl zsoft') +
+      return tail + hind + fore + body + blob([[35, 18], [40, 15], [42, 19], [38, 21]]) + horns + head + dot(21.5, 28.5, .5) + dot(33, 27, .45) + ln([[19, 44], [21, 46], [24, 45]]) +
         [[60, 12], [63, 13], [61.5, 15.5], [64, 16], [60, 16]].map(([x, y]) => `<circle class="zcl" cx="${x}" cy="${y}" r=".45"/>`).join('');
     },
+
     // the twins, arms round each other: Pollux (left) with the club, Castor (right) with the lyre
     gemini: () => {
       const pollux = person({ head: [24, 15.5, 3.6], neck: [27, 20], sh: [[27, 27], [34, 21]], hip: [[37, 37.5], [42.5, 33]],
@@ -182,18 +184,20 @@
     },
     // the winged maiden lying along the stars: Spica the ear of wheat in her lower hand, the palm frond in the other
     virgo: () => {
-      const wing = blob([[76, 16], [77, 8], [71, 3], [61, 1.4], [50, 2.4], [41, 6], [43, 10], [49, 12.5], [57, 14.6], [65, 18.4], [71, 20]]);
-      const feathers = ln([[44, 8], [56, 9], [70, 13]], 'zl zsoft') + ln([[50, 5], [62, 6], [73, 10]], 'zl zsoft') + ln([[56, 12], [60, 9]], 'zl zsoft') + ln([[63, 15], [67, 11]], 'zl zsoft');
-      const maid = person({ head: [88, 14, 4], neck: [84.4, 16.6], sh: [[77, 13.9], [80.6, 22.1]], hip: [[55.4, 24.4], [58.2, 30.8]], nw: 2,
-        arms: [[[78, 14], [82.5, 7.5], [89, 4.5]], [[80.5, 22], [74, 33], [66.5, 45]]], armBack: 0,
-        robe: [[66, 20.5], [52, 23.5], [38, 29], [24, 35], [10, 39.5], [4.5, 45.5], [8, 51.5], [16, 54.5], [24, 50.5], [34, 45], [46, 38.5], [58, 32.5], [68, 27.5]],
-        folds: [[[56, 28], [40, 35], [24, 42], [10, 46]], [[48, 26.5], [34, 33], [18, 39]], [[52, 33], [36, 41], [22, 48]]],
-        hair: blob([[86, 10], [82, 10.5], [79, 13.5], [80.5, 17], [84.4, 15]]) });
-      const feet = blob([[5, 46], [2.6, 49], [5, 51.5], [8.5, 50]]);
-      const frond = ln([[89, 4.5], [95, 1.2]]) + [[90.5, 3.6], [92.2, 2.7], [93.8, 1.8]].map(([x, y]) => ln([[x, y], [x - 1.6, y - 2.8]], 'zl zsoft') + ln([[x, y], [x + 1.2, y + 2.6]], 'zl zsoft')).join('');
-      const wheat = sway(67, 45, ln([[68, 43], [63.5, 53.5]]) + [0, 1, 2, 3, 4].map(k => ell(R1(65.6 - k * .9), R1(48.6 + k * 1.9), 1, .55, -62 + (k % 2 ? 30 : -30))).join('') + ln([[64, 52.5], [61.5, 51]], 'zl zsoft') + ln([[63.6, 53.6], [66.4, 54.6]], 'zl zsoft'), 3, 6);
-      return wing + feathers + feet + maid + frond + wheat + dot(90.4, 13.2);
+      // a feathered wing from her back (the trailing edge in feathers)
+      const wing = blob([[76, 16], [75, 7], [68, 2.4], [57, 1.4], [46, 3.4], [43.4, 7], [47.4, 7.4], [50.4, 10.4], [54.4, 9.8], [57.4, 13], [61.6, 12.4], [64.4, 16], [68.4, 15.6], [71, 19]]);
+      const feathers = ln([[74, 10], [62, 6.6], [50, 5.4]], 'zl zsoft') + ln([[73, 14], [60, 10], [47.4, 7.4]], 'zl zsoft');
+      // a dress: a narrow bodice, the waist, the skirt flaring to a wavy hem at her feet
+      const maid = person({ head: [88.4, 13.4, 4.2], neck: [84.6, 16.6], sh: [[77.4, 13.6], [80.6, 21.6]], hip: [[64.6, 20.6], [66.8, 26]], nw: 1.8,
+        arms: [[[78, 14], [82, 7.6], [88.4, 4.6]], [[80.4, 21.6], [75, 30], [69.4, 38.6]]], armBack: 0,
+        robe: [[65, 20.4], [52, 24], [36, 28.6], [20, 32.6], [8, 36], [3, 41], [5.6, 46.4], [9, 51], [14.4, 55.6], [21, 57.6], [28, 52.6], [40, 45], [52, 37.4], [62, 30], [67.4, 26]],
+        folds: [[[58, 27], [40, 35.4], [22, 44], [9, 47]], [[56, 31], [38, 40.6], [24, 49.6]], [[60, 24.6], [42, 30.6], [24, 37.6]]],
+        hair: blob([[90, 9], [85, 8.8], [81.4, 11.4], [79.6, 16], [78, 20.4], [81.6, 19.6], [84.4, 16.4], [85.4, 12.6]]) });
+      const frond = tube([[88.4, 4.6], [94, 1.6], [99, 1.2]], [.8, .4]) + [[90.4, 3.6], [92.4, 2.6], [94.4, 1.8], [96.4, 1.4]].map(([x, y], k) => ln([[x, y], [x - 1.4, y - 2.6 + k * .2]], 'zl zsoft') + ln([[x, y], [x + 1, y + 2.8 - k * .3]], 'zl zsoft')).join('');
+      const wheat = sway(69, 39, ln([[69.6, 37.6], [63.5, 53.5]]) + [0, 1, 2, 3, 4, 5].map(k => ell(R1(66 - k * .8), R1(46 + k * 1.7), 1.1, .6, -62 + (k % 2 ? 30 : -30))).join('') + ln([[64, 52.5], [61.5, 51]], 'zl zsoft') + ln([[63.6, 53.6], [66.4, 54.6]], 'zl zsoft'), 3, 6);
+      return wing + feathers + maid + frond + wheat + dot(91, 12.6, .45);
     },
+
     // the scales: a column with a finial ring, the beam (gently tipping) and two pans on chains
     libra: () => {
       const column = blob([[48.4, 14], [51.6, 14], [52, 50], [57, 53.5], [61, 58], [39, 58], [43, 53.5], [48, 50]]) + ln([[46, 51], [54, 51]], 'zl zsoft') + ln([[44, 55], [56, 55]], 'zl zsoft') + ell(50, 10, 3.2, 3.2, 0) + ell(50, 10, 1.4, 1.4, 0, 'zl');
@@ -272,15 +276,15 @@
   window.ShanghaiZodiac = (id, i) => { if (!ART[id]) return ''; if (!cache[id]) cache[id] = ART[id](); return `<g class="zb" style="--bd:${-(i || 0) * 1.3}s">${cache[id]}</g>`; };
   window.ShanghaiZodiac.stars = STARS;
   window.ShanghaiZodiac.css = `
-.shmap .fig .zp{fill:rgba(84,128,220,.24);stroke:rgba(178,214,255,.78);stroke-width:.3;stroke-linejoin:round}
-.shmap .fig .zl{fill:none;stroke:rgba(178,214,255,.6);stroke-width:.26;stroke-linecap:round;stroke-linejoin:round}
-.shmap .fig .zl.zsoft{stroke:rgba(160,200,255,.38);stroke-width:.22}
+.shmap .fig .zp{fill:rgba(84,128,220,.11);stroke:rgba(178,214,255,.5);stroke-width:.28;stroke-linejoin:round}
+.shmap .fig .zl{fill:none;stroke:rgba(178,214,255,.4);stroke-width:.26;stroke-linecap:round;stroke-linejoin:round}
+.shmap .fig .zl.zsoft{stroke:rgba(160,200,255,.26);stroke-width:.22}
 .shmap .fig .zl.zcord{stroke:rgba(190,220,255,.7);stroke-width:.5}
 .shmap .fig .zl.zw{stroke:rgba(140,206,255,.65);stroke-width:.5;stroke-dasharray:2.4 1.2;animation:shzw 2.6s linear infinite}
 .shmap .fig .zl.zw2{animation-duration:3.2s;stroke-width:.36}.shmap .fig .zl.zw3{animation-duration:2.2s;stroke-width:.3}
-.shmap .fig .zey{fill:rgba(230,240,255,.95);animation:shzblink 5s infinite;transform-box:fill-box;transform-origin:center}
+.shmap .fig .zey{fill:rgba(230,240,255,.6);animation:shzblink 5s infinite;transform-box:fill-box;transform-origin:center}
 .shmap .fig .zcl{fill:rgba(220,236,255,.85);animation:shztw 3s ease-in-out infinite}
-.shmap .fig.lit .zp{fill:rgba(255,206,110,.16);stroke:rgba(255,228,160,.85)}.shmap .fig.lit .zl{stroke:rgba(255,226,150,.65)}.shmap .fig.lit .zl.zsoft{stroke:rgba(255,220,140,.4)}
+.shmap .fig.lit .zp{fill:rgba(255,206,110,.09);stroke:rgba(255,228,160,.55)}.shmap .fig.lit .zl{stroke:rgba(255,226,150,.42)}.shmap .fig.lit .zl.zsoft{stroke:rgba(255,220,140,.4)}
 .shmap .fig .zb{animation:shzbob 8s ease-in-out infinite;animation-delay:var(--bd,0s)}
 .shmap .fig .zs{animation:shzsway var(--sd,6s) ease-in-out infinite;transform-box:view-box}
 @keyframes shzbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.6px)}}

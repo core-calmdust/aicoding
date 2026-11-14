@@ -647,8 +647,8 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   function skyLoop(cv, getPan) {
     const c = cv.getContext('2d'); let W = 0, H = 0, dpr = 1, raf = 0, last = 0, stopped = false, shoot = null, nextShoot = performance.now() + 2500;
     let s = 99; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    const S = Array.from({ length: 340 }, () => ({ x: R(), y: R(), a: R(), ph: R() * 6.3, sp: .6 + R() * 1.8, d: .15 + R() * .5 }));
-    const B = Array.from({ length: 16 }, () => ({ x: R(), y: R(), ph: R() * 6.3, sp: .4 + R() * .8, hue: R() }));
+    const S = Array.from({ length: 560 }, () => ({ x: R(), y: R(), a: R(), ph: R() * 6.3, sp: .6 + R() * 2.4, d: .15 + R() * .5 }));   // (2026-11-14: more sparkle — ユーザー)
+    const B = Array.from({ length: 38 }, () => ({ x: R(), y: R(), ph: R() * 6.3, sp: .4 + R() * .8, hue: R() }));
     function size() { const r = cv.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.max(1, r.width * dpr); H = cv.height = Math.max(1, r.height * dpr); }
     size();
     function frame(now) {
@@ -656,13 +656,13 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       if (!document.hidden && now - last >= 32) {
         last = now; const t = now / 1000, px = getPan() * dpr; c.clearRect(0, 0, W, H);
         S.forEach(o => { const tw = .55 + .45 * Math.sin(t * o.sp + o.ph), x = ((o.x * W - px * o.d) % W + W) % W, y = o.y * H, rr = (.35 + o.a * o.a * 1.3) * dpr;
-          c.fillStyle = `rgba(255,255,255,${(.12 + o.a * .7) * tw})`; c.beginPath(); c.arc(x, y, rr, 0, 7); c.fill(); });
-        B.forEach(o => { const tw = Math.max(0, Math.sin(t * o.sp + o.ph)), x = ((o.x * W - px * .35) % W + W) % W, y = o.y * H, k = (2 + tw * 9) * dpr;
+          c.fillStyle = `rgba(255,255,255,${(.16 + o.a * .84) * tw})`; c.beginPath(); c.arc(x, y, rr, 0, 7); c.fill(); });
+        B.forEach(o => { const tw = Math.max(0, Math.sin(t * o.sp + o.ph)), x = ((o.x * W - px * .35) % W + W) % W, y = o.y * H, k = (2 + tw * tw * 13) * dpr;
           const col = o.hue < .3 ? '200,220,255' : o.hue < .6 ? '255,236,190' : '230,210,255';
-          const g = c.createRadialGradient(x, y, 0, x, y, k); g.addColorStop(0, `rgba(${col},${.25 + .6 * tw})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.beginPath(); c.arc(x, y, k, 0, 7); c.fill();
-          c.strokeStyle = `rgba(${col},${.35 * tw})`; c.lineWidth = .8 * dpr; c.beginPath(); c.moveTo(x - k * 1.6, y); c.lineTo(x + k * 1.6, y); c.moveTo(x, y - k * 1.6); c.lineTo(x, y + k * 1.6); c.stroke(); });
+          const g = c.createRadialGradient(x, y, 0, x, y, k); g.addColorStop(0, `rgba(${col},${.3 + .7 * tw})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.beginPath(); c.arc(x, y, k, 0, 7); c.fill();
+          c.strokeStyle = `rgba(${col},${.5 * tw})`; c.lineWidth = .8 * dpr; c.beginPath(); c.moveTo(x - k * 2, y); c.lineTo(x + k * 2, y); c.moveTo(x, y - k * 2); c.lineTo(x, y + k * 2); c.stroke(); });
         if (!shoot && now > nextShoot) shoot = { x: (.2 + R() * .7) * W, y: R() * H * .45, t0: now, vx: -(.6 + R() * .5) * W, vy: .35 * H };
-        if (shoot) { const k = (now - shoot.t0) / 900; if (k >= 1) { shoot = null; nextShoot = now + 4000 + R() * 7000; } else {
+        if (shoot) { const k = (now - shoot.t0) / 900; if (k >= 1) { shoot = null; nextShoot = now + 1800 + R() * 3600; } else {
           const x = shoot.x + shoot.vx * k, y = shoot.y + shoot.vy * k, a = Math.sin(k * Math.PI), g = c.createLinearGradient(x, y, x - shoot.vx * .12, y - shoot.vy * .12);
           g.addColorStop(0, `rgba(255,255,255,${.85 * a})`); g.addColorStop(1, 'rgba(255,255,255,0)'); c.strokeStyle = g; c.lineWidth = 1.6 * dpr; c.beginPath(); c.moveTo(x, y); c.lineTo(x - shoot.vx * .12, y - shoot.vy * .12); c.stroke(); } }
       }
@@ -688,6 +688,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     let u = 6, z = 1, tx = 0, ty = 0, raf = 0, anim = null;
     const WW = PW * 12;
     const sky = skyLoop($('canvas'), () => tx);
+    if (window.Table3D && Table3D.quiet) Table3D.quiet(true);   // (2026-11-14) the map covers the room: the 3D scene behind it stops drawing (the showcase turntable kept it at 60 fps)
     requestAnimationFrame(() => el.classList.add('on'));
     const ZMIN = () => Math.min(1, (vp.clientWidth - 20) / (WW * u)) * .9, ZMAX = 3;
     function clamp() {
@@ -716,7 +717,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       sky.size(); z = Math.max(ZMIN(), Math.min(ZMAX, z));
     }
     function onFit() { const c = (vp.clientWidth / 2 - tx) / z; layout(); tx = vp.clientWidth / 2 - c * z; apply(); }
-    const close = () => { el.classList.remove('on'); sky.stop(); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); removeEventListener('resize', onFit); if (window.visualViewport) visualViewport.removeEventListener('resize', onFit); };
+    const close = () => { el.classList.remove('on'); sky.stop(); if (window.Table3D && Table3D.quiet) Table3D.quiet(false); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); removeEventListener('resize', onFit); if (window.visualViewport) visualViewport.removeEventListener('resize', onFit); };
     const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') go(area - 1); if (e.key === 'ArrowRight') go(area + 1); if (e.key === '+' || e.key === '=') zoomAt(1.25); if (e.key === '-') zoomAt(.8); };
     addEventListener('keydown', key);
     addEventListener('resize', onFit); if (window.visualViewport) visualViewport.addEventListener('resize', onFit);
