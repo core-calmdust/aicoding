@@ -83,12 +83,9 @@
         if (ghost && ghost.parent) ghost.parent.remove(ghost);
         const m = new TH.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9, side: TH.DoubleSide, depthWrite: false, depthTest: false, toneMapped: false });
         // a flat disc of light where a marble can sit (user: 玉より置ける面を半透明の水色の面で — a ball was mistaken for a marble), the rim a little brighter
-        // (2026-11-14, user: ゲーミング・レインボーな感じ) a rainbow wheel that spins: the hues round the disc, a bright rim, a softer middle
-        const tx = document.createElement('canvas'); tx.width = tx.height = 128; const c2 = tx.getContext('2d');
-        for (let d = 0; d < 360; d += 2) { c2.fillStyle = `hsl(${d},100%,55%)`; c2.beginPath(); c2.moveTo(64, 64); c2.arc(64, 64, 63, d * Math.PI / 180, (d + 2.6) * Math.PI / 180); c2.closePath(); c2.fill(); }
-        const gr = c2.createRadialGradient(64, 64, 6, 64, 64, 63); gr.addColorStop(0, 'rgba(0,0,0,.5)'); gr.addColorStop(.68, 'rgba(0,0,0,.35)'); gr.addColorStop(.8, 'rgba(0,0,0,0)'); gr.addColorStop(.9, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,1)');
-        c2.globalCompositeOperation = 'destination-out'; c2.fillStyle = gr; c2.fillRect(0, 0, 128, 128);
-        m.map = new TH.CanvasTexture(tx); m.map.center.set(.5, .5); if (TH.sRGBEncoding) m.map.encoding = TH.sRGBEncoding;
+        const tx = document.createElement('canvas'); tx.width = tx.height = 64; const c2 = tx.getContext('2d'), gr = c2.createRadialGradient(32, 32, 4, 32, 32, 31);
+        gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(.72, 'rgba(255,255,255,.7)'); gr.addColorStop(.86, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+        c2.fillStyle = gr; c2.fillRect(0, 0, 64, 64); m.map = new TH.CanvasTexture(tx);
         const dg = new TH.CircleGeometry(.36, 32); dg.rotateX(-Math.PI / 2);
         ghost = new TH.InstancedMesh(dg, m, B.n); ghost.renderOrder = 5; ghost.frustumCulled = false; board.add(ghost);
       }
@@ -96,8 +93,8 @@
       for (let i = 0; i < B.n; i++) if (!a[i]) { const [x, z] = U.pt(i); M4.makeTranslation(x, TOP + Y(i) + .03, z); ghost.setMatrixAt(k++, M4); }
       ghost.count = k; ghost.instanceMatrix.needsUpdate = true; kick(120);
       // the colour goes slowly round the hues (user: 青一色だと青い玉と重なって見にくい — gently, not flashy): ~10 s a turn, a few steps a second
-      // (2026-11-14: faster and brighter — 4 s a turn, a soft breathing of its strength)
-      if (!hueT) hueT = setInterval(() => { if (stopped || !ghost || !ghost.count) return; const t = performance.now(); ghost.material.map.rotation = -(t / 1600) % (Math.PI * 2); ghost.material.opacity = .85 + .15 * Math.sin(t / 380); kick(40); }, 50);
+      // (2026-11-14: one colour at a time going round the rainbow like a gaming light — 2.5 s a turn, vivid, a soft breathing)
+      if (!hueT) hueT = setInterval(() => { if (stopped || !ghost || !ghost.count) return; const t = performance.now(); ghost.material.color.setHSL((t / 2500) % 1, 1, .5); ghost.material.opacity = .85 + .12 * Math.sin(t / 380); kick(40); }, 50);
     }
     let hueT = 0;
     function marks(hint) {
