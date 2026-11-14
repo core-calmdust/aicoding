@@ -203,6 +203,8 @@
       set: k => { try { const o = JSON.parse(ls.get('aicoding-peg') || '{}') || {}; o.settings = o.settings || {}; o.settings.bd = k; ls.set('aicoding-peg', JSON.stringify(o)); } catch (e) {} } },
     // shogi (atlas/models/shogi.js LOOK, 2026-11-11): 'atlas-shogi-look' — 本榧 (the default) · 蒔絵 · 新榧 · 漆黒 · 寄木細工 · 山桜
     shogi: { list: ['kaya', 'makie', 'grain', 'ink', 'yosegi', 'sakura'], get: () => { const v = ls.get('atlas-shogi-look'); return ['makie', 'grain', 'ink', 'yosegi', 'sakura'].includes(v) ? v : 'kaya'; }, set: k => ls.set('atlas-shogi-look', k) },
+    // checkers (atlas/models/checkers.js, 2026-11-14): 'atlas-checkers-look' — 黒漆 (the default) · 大理石と真鍮 · 寄木細工 · 金箔押しの革 · アールデコ · ラピスラズリ
+    checkers: { list: ['lacquer', 'marble', 'marq', 'leather', 'deco', 'lapis'], get: () => { const v = ls.get('atlas-checkers-look'); return ['marble', 'marq', 'leather', 'deco', 'lapis'].includes(v) ? v : 'lacquer'; }, set: k => ls.set('atlas-checkers-look', k) },
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
@@ -248,6 +250,13 @@
     butterfly: { ja: 'バタフライ', en: 'Butterflies', zh: '蝴蝶', 'zh-TW': '蝴蝶', ko: '나비', es: 'Mariposas', fr: 'Papillons', pt: 'Borboletas', de: 'Schmetterlinge', ru: 'Бабочки', tr: 'Kelebekler', id: 'Kupu-kupu', hi: 'तितलियाँ', ar: 'فراشات' },
     marble: { ja: '大理石と真鍮', en: 'Marble & brass', zh: '大理石与黄铜', 'zh-TW': '大理石與黃銅', ko: '대리석과 황동', es: 'Mármol y latón', fr: 'Marbre et laiton', pt: 'Mármore e latão', de: 'Marmor & Messing', ru: 'Мрамор и латунь', tr: 'Mermer ve pirinç', id: 'Marmer & kuningan', hi: 'संगमरमर और पीतल', ar: 'رخام ونحاس' },
     croc: { ja: 'クロコダイル', en: 'Crocodile', zh: '鳄鱼皮', 'zh-TW': '鱷魚皮', ko: '크로커다일', es: 'Cocodrilo', fr: 'Crocodile', pt: 'Crocodilo', de: 'Krokodil', ru: 'Крокодил', tr: 'Timsah derisi', id: 'Kulit buaya', hi: 'मगरमच्छ चमड़ा', ar: 'جلد التمساح' } },
+  checkers: {
+    lacquer: { ja: '黒漆', en: 'Black lacquer', zh: '黑漆', 'zh-TW': '黑漆', ko: '흑칠', es: 'Laca negra', fr: 'Laque noire', pt: 'Laca preta', de: 'Schwarzlack', ru: 'Чёрный лак', tr: 'Siyah lake', id: 'Pernis hitam', hi: 'काली लाख', ar: 'ورنيش أسود' },
+    marble: { ja: '大理石と真鍮', en: 'Marble & brass', zh: '大理石与黄铜', 'zh-TW': '大理石與黃銅', ko: '대리석과 황동', es: 'Mármol y latón', fr: 'Marbre et laiton', pt: 'Mármore e latão', de: 'Marmor & Messing', ru: 'Мрамор и латунь', tr: 'Mermer ve pirinç', id: 'Marmer & kuningan', hi: 'संगमरमर और पीतल', ar: 'رخام ونحاس' },
+    marq: { ja: '寄木細工', en: 'Parquetry', zh: '拼花木', 'zh-TW': '拼花木', ko: '쪽매붙임', es: 'Taracea', fr: 'Parqueterie', pt: 'Marchetaria', de: 'Parkettintarsie', ru: 'Паркетная мозаика', tr: 'Ahşap kakma', id: 'Parket', hi: 'लकड़ी की जड़ाई', ar: 'تطعيم خشبي' },
+    leather: { ja: '金箔押しの革', en: 'Gilt-tooled leather', zh: '烫金皮革', 'zh-TW': '燙金皮革', ko: '금박 가죽', es: 'Cuero repujado en oro', fr: 'Cuir doré au fer', pt: 'Couro com douração', de: 'Goldgeprägtes Leder', ru: 'Кожа с золотым тиснением', tr: 'Altın varaklı deri', id: 'Kulit berhias emas', hi: 'सुनहरी छाप वाला चमड़ा', ar: 'جلد مذهّب' },
+    deco: { ja: 'アールデコ', en: 'Art Deco', zh: '装饰艺术', 'zh-TW': '裝飾藝術', ko: '아르데코', es: 'Art déco', fr: 'Art déco', pt: 'Art déco', de: 'Art déco', ru: 'Ар-деко', tr: 'Art Deco', id: 'Art Deco', hi: 'आर्ट डेको', ar: 'آرت ديكو' },
+    lapis: { ja: 'ラピスラズリ', en: 'Lapis lazuli', zh: '青金石', 'zh-TW': '青金石', ko: '청금석', es: 'Lapislázuli', fr: 'Lapis-lazuli', pt: 'Lápis-lazúli', de: 'Lapislazuli', ru: 'Лазурит', tr: 'Lapis lazuli', id: 'Lapis lazuli', hi: 'लाजवर्द', ar: 'لازورد' } },
   shogi: {
     kaya: { ja: '本榧', en: 'Kaya', zh: '本榧', 'zh-TW': '本榧', ko: '본비자', es: 'Kaya', fr: 'Kaya', pt: 'Kaya', de: 'Kaya', ru: 'Кая', tr: 'Kaya', id: 'Kaya', hi: 'काया', ar: 'كايا' },
     makie: { ja: '蒔絵', en: 'Maki-e lacquer', zh: '莳绘', 'zh-TW': '蒔繪', ko: '마키에', es: 'Laca maki-e', fr: 'Laque maki-e', pt: 'Laca maki-e', de: 'Maki-e-Lack', ru: 'Лак макиэ', tr: 'Maki-e lake', id: 'Pernis maki-e', hi: 'माकी-ए लाख', ar: 'ورنيش ماكي-إي' },
@@ -279,6 +288,17 @@
   // 駒: the games whose 3D figures come in sets (the board view's panel shows them as a row under 盤; the full game's 「3D駒」 too)
   // amazons (atlas/models/amazons.js SETS): 'atlas-amazons-pc3'; the pictures are the full game's own (amazons/img/pc3-<set>-w.webp)
   const PIECES = {
+    // checkers (atlas/models/checkers.js SETS, 2026-11-14): 'atlas-checkers-pc3'
+    checkers: { list: ['metal', 'ebony', 'stone', 'crystal', 'urushi', 'catalin'], get: () => { const v = ls.get('atlas-checkers-pc3'); return PIECES.checkers.list.includes(v) ? v : 'metal'; }, set: k => ls.set('atlas-checkers-pc3', k),
+      thumb: k => new URL('img/pc3-checkers-' + k + '.webp?v=1', ME).href,
+      names: {
+        metal: { ja: '金と銀', en: 'Gold & silver', zh: '金与银', 'zh-TW': '金與銀', ko: '금과 은', es: 'Oro y plata', fr: 'Or et argent', pt: 'Ouro e prata', de: 'Gold & Silber', ru: 'Золото и серебро', tr: 'Altın ve gümüş', id: 'Emas & perak', hi: 'सोना और चाँदी', ar: 'ذهب وفضة' },
+        ebony: { ja: '黒檀と象牙', en: 'Ebony & ivory', zh: '乌木与象牙', 'zh-TW': '烏木與象牙', ko: '흑단과 상아', es: 'Ébano y marfil', fr: 'Ébène et ivoire', pt: 'Ébano e marfim', de: 'Ebenholz & Elfenbein', ru: 'Эбен и кость', tr: 'Abanoz ve fildişi', id: 'Eboni & gading', hi: 'आबनूस और हाथीदाँत', ar: 'أبنوس وعاج' },
+        stone: { ja: '白黒の大理石', en: 'Black & white marble', zh: '黑白大理石', 'zh-TW': '黑白大理石', ko: '흑백 대리석', es: 'Mármol blanco y negro', fr: 'Marbre noir et blanc', pt: 'Mármore preto e branco', de: 'Schwarz-weißer Marmor', ru: 'Чёрно-белый мрамор', tr: 'Siyah beyaz mermer', id: 'Marmer hitam putih', hi: 'काला-सफ़ेद संगमरमर', ar: 'رخام أسود وأبيض' },
+        crystal: { ja: 'クリスタル', en: 'Crystal', zh: '水晶', 'zh-TW': '水晶', ko: '크리스털', es: 'Cristal', fr: 'Cristal', pt: 'Cristal', de: 'Kristall', ru: 'Хрусталь', tr: 'Kristal', id: 'Kristal', hi: 'क्रिस्टल', ar: 'كريستال' },
+        urushi: { ja: '朱と黒の漆', en: 'Vermilion & black lacquer', zh: '朱漆与黑漆', 'zh-TW': '朱漆與黑漆', ko: '주칠과 흑칠', es: 'Laca bermellón y negra', fr: 'Laque vermillon et noire', pt: 'Laca vermelhão e preta', de: 'Zinnober- & Schwarzlack', ru: 'Киноварный и чёрный лак', tr: 'Vermilyon ve siyah lake', id: 'Pernis merah & hitam', hi: 'सिंदूरी और काली लाख', ar: 'ورنيش قرمزي وأسود' },
+        catalin: { ja: 'ベークライト', en: 'Bakelite', zh: '电木', 'zh-TW': '電木', ko: '베이클라이트', es: 'Baquelita', fr: 'Bakélite', pt: 'Baquelite', de: 'Bakelit', ru: 'Бакелит', tr: 'Bakalit', id: 'Bakelit', hi: 'बेकेलाइट', ar: 'باكليت' },
+      } },
     amazons: { list: ['statue', 'archer', 'bronze', 'totem', 'jade', 'pottery'], get: () => { const v = ls.get('atlas-amazons-pc3'); return PIECES.amazons.list.includes(v) ? v : 'statue'; }, set: k => ls.set('atlas-amazons-pc3', k),
       thumb: k => new URL('../amazons/img/pc3-' + k + '-w.webp?v=3', ME).href,
       names: {
