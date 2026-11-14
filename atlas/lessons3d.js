@@ -164,6 +164,7 @@
   const KANJI = /[\u4e00-\u9fff々]/;
   function verb(stem) {   // the verb stem before ます → { dict, neg, vol, past }
     const k = stem.slice(-1), body = stem.slice(0, -1);
+    if (/[てで]い$/.test(stem)) return { dict: stem + 'る', neg: stem + 'ない', vol: stem + 'よう', past: stem + 'た' };   // (〜ています: the いる of the progressive)
     // し: する after a noun / particle / two kanji (確認し), す after one kanji or the a-row kana of 動かし・逃がし・増やし (godan)
     if (k === 'し' && (stem.length === 1 || (KANJI.test(stem.slice(-2, -1)) && KANJI.test(stem.slice(-3, -2))) || !(KANJI.test(stem.slice(-2, -1)) || /[かがさやらわまたな]/.test(stem.slice(-2, -1))))) return { dict: body + 'する', neg: body + 'しない', vol: body + 'しよう', past: body + 'した' };
     if (/来$/.test(stem) || /来き$/.test(stem)) return { dict: stem.replace(/き?$/, '') + 'る', neg: stem.replace(/き?$/, '') + 'ない', vol: stem.replace(/き?$/, '') + 'よう', past: stem.replace(/き?$/, '') + 'た' };
@@ -681,7 +682,7 @@
     load() {
       if (this.p) return this.p;
       const tx = window.AtlasBgTexts ? AtlasBgTexts() : Promise.resolve({});
-      const bg = window.BG && BG.genPlays ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = '../backgammon/bg.js?v=20261111c1'; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); });   // (the rules: the same file and cache key as the table, atlas/games/backgammon.js)
+      const bg = window.AtlasBgExplain ? AtlasBgExplain() : Promise.resolve();   // (the rules and the commentary engine: atlas/puzzles.js loads them — the same files and cache keys as the table)
       return (this.p = Promise.all([getJ('../backgammon/lessons.json?v=20261021pz'), getJ('../backgammon/openings.json?v=20261021op'), tx, bg])
         .then(([ls, op, I]) => { this.I = I || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
@@ -716,7 +717,9 @@
       const s = this.data.ls.steps[+key]; if (!s) return null;
       const N = this.names(lang), T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, Object.assign({}, N, v || {}));
       const intro = String(T('intro', { fig0: '', fig1: '', fig2: '' }) || '').replace(/\{fig\d\}/g, '');
-      return { id: s.id, title: T('title'), intro,
+      const keys = this.tx('ls.' + s.id + '.keys', lang), kh = this.tx('ls.keysH', lang);   // (the step's three principles, backgammon/i18n-ls2.js)
+      const introK = intro + (keys && keys !== 'ls.' + s.id + '.keys' ? `<div class="ls-keys"><b>🧭 ${kh}</b><ul>${String(keys).split('|').map(x => '<li>' + x + '</li>').join('')}</ul></div>` : '');
+      return { id: s.id, title: T('title'), intro: introK,
         probs: (s.problems || []).map(P => {
           const pos = bgPos(P.pos, P.side), ask = this.tx('ls.turn', lang, { c: '<b>' + N.c + '</b>' }) + ' ';
           if (P.kind === 'play') return this.play(P, pos, ask + T('goal', { d: P.dice.join('-') }), T('hint'), lang);
@@ -1041,8 +1044,12 @@
       if (id === 'backgammon') {   // (the best play's arrows green, yours red, from the roll's start; a question: its explanation)
         const right = pts >= 16, k = cur.k;
         if (p.kind === 'bgplay' && u && u.steps) { const best = p.best(); later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().reset(); pz().mark([{ m: best, cls: 'ok' }, ...(right && pts >= 20 ? [] : [{ play: u.steps, cls: 'ng' }])]); }, 700); }
-        const nm = p.kind === 'bgplay' && window.BG ? `<bdi class="mv">${BG.notation(bgCodes(p.bgPos, p.best()).moves)}</bdi>` : '';
-        say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.kind === 'bgplay' && pts < 20 && nm ? '<br>' + D.tx('fb.answerIs', ctx.lang, { m: nm }) : '') + (p.why ? '<br>' + p.why : ''));
+        let teach = '';   // (what the best play is for, and what yours gives up: backgammon/explain.js teach)
+        if (p.kind === 'bgplay' && window.BGX && BGX.teach && window.AtlasBgTeach) {
+          try { const q0 = bgDecP(p.bgPos), mk = mv => { const q = q0.slice(); mv.forEach(c => BG.apply(q, 0, BG.mvFrom(c), BG.mvTo(c))); return { moves: mv, pos: q }; };
+            teach = AtlasBgTeach.html(BGX.teach(q0, 0, mk(bgCodes(p.bgPos, p.best()).moves), pts >= 20 ? null : mk(u.steps)), (k, v) => D.tx(k, ctx.lang, v), false, true); } catch (e) { console.warn(e); }
+        }
+        say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
         try { chime(right); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
