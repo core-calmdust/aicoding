@@ -481,7 +481,7 @@ class Table3D {
     all.forEach((id, i) => {
       const g = this.tile(id);
       if (drawn != null && i === all.length - 1) x += 0.3;
-      this.place(g, seat, x + W / 2, open ? lz - 0.2 : lz, open ? 'flat' : 'stand');
+      this.place(g, seat, x + W / 2, open ? lz - 0.2 : lz, open ? 'flat' : 'stand', open && g.visible && g.userData.pose === 'stand' ? { dur: 300 + i * 12 } : null);   // (opened: each tile falls forward where it stands — テンパイ / 和了)
       this.setTileLook(g, 'normal');
       x += W + 0.02;
     });
