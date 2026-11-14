@@ -939,7 +939,7 @@ html.ds #game .bf em{width:calc(28px * var(--hz, 1));height:calc(28px * var(--hz
 html.ds #game .bt .bk{zoom:var(--hz, 1)}
 html.ds .tl kbd.tk{font-size:clamp(9px,calc(var(--tw) * .2),calc(13px * var(--hz, 1)))}
 html.ds #game .bt .sc{background:rgba(10,14,30,.72);border-radius:8px;padding:0 calc(8px * var(--hz, 1))}
-html.ds #game #opp3{top:calc(var(--gi) + (var(--rbh, 140px) + var(--khh, 70px)) * var(--hz, 1) + 34px)}
+html.ds #game #opp3{top:calc(var(--gi) + var(--rbh, 140px) * var(--hz, 1) + 34px)}   /* (the key help is folded at the top right now) */
 /* phones: compact skill button — icon + name only (details stay in the character screen / confirm) */
 html.lp #game .skb{padding:3px 8px 3px 3px;gap:5px;border-radius:10px;max-width:calc(var(--W) * .22)}
 html.lp #game .skb i{width:26px;height:26px;padding:5px;border-radius:7px}
@@ -1100,3 +1100,18 @@ html.lp .ps-box{inset:8px 10px;gap:10px}
 html.lp .ps-main{padding:8px 12px;gap:6px}
 html.lp .ps-grid,html.lp .ps-chs > div{grid-template-columns:repeat(2,1fr)}
 @container (max-aspect-ratio: 3/2){ .ps-grid,.ps-chs > div{grid-template-columns:repeat(2,1fr)} .ps-cols{grid-template-columns:1fr} }
+
+/* god rays (ユーザー 2026-11-14): thin shafts of light falling in from the top left, over the table, under the HUD — faint, slowly breathing */
+#game .rays{position:absolute;inset:0;pointer-events:none;z-index:1;mix-blend-mode:screen;
+  background:conic-gradient(from 104deg at -8% -14%,transparent 0deg,rgba(255,238,205,.2) 4deg,transparent 9deg,transparent 12deg,rgba(255,238,205,.13) 15deg,transparent 19deg,transparent 23deg,rgba(255,238,205,.22) 28deg,transparent 34deg,transparent 39deg,rgba(255,238,205,.11) 42deg,transparent 46deg,rgba(255,238,205,.16) 51deg,transparent 57deg,transparent 360deg);
+  -webkit-mask-image:radial-gradient(ellipse 95% 85% at 0% 0%,#000 0%,rgba(0,0,0,.55) 45%,transparent 88%);mask-image:radial-gradient(ellipse 95% 85% at 0% 0%,#000 0%,rgba(0,0,0,.55) 45%,transparent 88%);
+  animation:raysBreathe 9s ease-in-out infinite alternate}
+@keyframes raysBreathe{0%{opacity:.75}100%{opacity:1}}
+#game .hud{z-index:2}
+
+/* the keyboard help: folded; the keyboard button at the top right opens it under the buttons (PC only) (ユーザー 2026-11-14) */
+#gKeys{display:none}
+html.ds #gKeys{display:grid}
+#gKeys.on{background:rgba(232,206,140,.22);border-color:rgba(232,206,140,.6)}
+html.ds #game .khelp{display:none;left:auto;right:var(--gi);top:calc(var(--gi) + 52px * var(--hz, 1));transform-origin:top right;z-index:3;font-size:12px;background:rgba(10,14,30,.9)}
+html.ds #game .khelp.open{display:block}
