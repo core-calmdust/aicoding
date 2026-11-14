@@ -341,7 +341,48 @@
   }
   // one area alone (a thumbnail): the same panorama seen through a window on area i
   const slice = (id, i, NA, uid) => `<svg viewBox="${i * W} 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="width:100%;height:100%;display:block">${svg(id, NA, uid)}</svg>`;
-  window.ShanghaiScenes = { pts, svg, slice, has: id => !!T[id], tint: id => TINT[id] || '#1b2140', W, H,
+  /* ---------- the parallax layers (2026-11-14, ユーザー: 左右に動かした時の多重スクロールがない): drawn apart from the scene and moved
+     at another speed by the map — far: clouds / star dust / soap bubbles that lag behind (×0.5), near: a band of ground things along
+     the bottom edge that runs ahead (×1.35). x in the scene's units, from x0 over w. ---------- */
+  function plx(id, NA) {
+    const t = T[id]; if (!t) return null;
+    const R = rng([...id].reduce((a, c) => a * 37 + c.charCodeAt(0), 11)), WT = NA * W, ph = i => t.ph[Math.min(i, t.ph.length - 1)];
+    // far: spread over the whole range the layer can show (it lags, so it spans about half the course plus a view)
+    const fx0 = -90, fw = WT * .62 + 220; let far = '';
+    const at = x => Math.max(0, Math.min(NA - 1, Math.floor((x / fw) * NA)));
+    if (t.sky === 'space') {
+      for (let k = 0; k < NA * 40; k++) { const x = fx0 + R() * fw, y = 1 + R() * 30; far += `<circle cx="${r1(x)}" cy="${r1(y)}" r="${(.12 + R() * .3).toFixed(2)}" fill="#fff" opacity="${(.35 + R() * .5).toFixed(2)}"/>`; }
+      for (let k = 0; k < NA * 2; k++) { const x = fx0 + R() * fw, y = 4 + R() * 18, r = 1 + R() * 2.2; far += `<circle cx="${r1(x)}" cy="${r1(y)}" r="${r1(r)}" fill="${['#ffb38a', '#9ad0ff', '#d4a8ff'][k % 3]}" opacity=".55"/><ellipse cx="${r1(x)}" cy="${r1(y)}" rx="${r1(r * 1.9)}" ry="${r1(r * .35)}" fill="none" stroke="#fff" stroke-width=".18" opacity=".35"/>`; }
+    } else if (t.indoor) {
+      for (let k = 0; k < NA * 9; k++) { const x = fx0 + R() * fw, y = 3 + R() * 22, r = .8 + R() * 2; far += `<g class="shs-bob" style="animation-delay:${(-R() * 6).toFixed(1)}s"><circle cx="${r1(x)}" cy="${r1(y)}" r="${r1(r)}" fill="rgba(200,230,255,.18)" stroke="rgba(255,255,255,.75)" stroke-width=".16"/><circle cx="${r1(x - r * .35)}" cy="${r1(y - r * .35)}" r="${r1(r * .22)}" fill="#fff" opacity=".8"/></g>`; }
+    } else {
+      for (let k = 0; k < NA * 7; k++) {
+        const x = fx0 + R() * fw, y = 3 + R() * 15, s = .6 + R() * .9, nt = Math.max(0, (ph(at(x - fx0)) - .45) / .55);
+        const c = mix(t.sky === 'pastel' ? '#fff6fb' : '#ffffff', '#6a6aa8', nt * .75), o = (.5 + R() * .35) * (1 - nt * .35);
+        far += `<g transform="translate(${r1(x)} ${r1(y)}) scale(${s.toFixed(2)})" opacity="${o.toFixed(2)}"><ellipse cx="0" cy="0" rx="7" ry="2" fill="${c}"/><circle cx="-2.4" cy="-1.2" r="2.3" fill="${c}"/><circle cx="1.2" cy="-2" r="3" fill="${c}"/><circle cx="4" cy="-.6" r="1.9" fill="${c}"/></g>`;
+      }
+      // a few birds (by day) far off
+      for (let k = 0; k < NA * 2; k++) { const x = fx0 + R() * fw, y = 6 + R() * 12; if (ph(at(x - fx0)) > .5) continue;
+        far += `<path d="M${r1(x - 1.2)} ${r1(y)} q.6 -.7 1.2 0 q.6 -.7 1.2 0" fill="none" stroke="rgba(60,60,90,.45)" stroke-width=".22" stroke-linecap="round"/>`; }
+    }
+    // near: a band along the bottom (it runs ahead, so it spans more than the course)
+    const nx0 = -90, nw = WT * 1.4 + 240, base = H - 1.2;
+    const dk = mix(t.gr2, '#1a1a2a', t.sky === 'space' ? .35 : .42), dk2 = mix(t.gr2, '#1a1a2a', .25);
+    let near = `<path d="${hill(nx0, nx0 + nw, base + 1.4, 1.6, 77, 5)}" fill="${dk}"/>`;
+    for (let k = 0; k < NA * 10; k++) {
+      const x = nx0 + R() * nw, s = .7 + R() * .8, y = base + .8 + R() * 1.2, c = R() < .5 ? dk : dk2;
+      let g = '';
+      if (t.sky === 'space' || id === 'desert') g = `<path d="M-3 0 Q-2.6 -2.6 -.4 -3 Q2.2 -2.8 3 0Z" fill="${c}"/>`;
+      else if (id === 'snow') g = `<path d="M-5 0 Q-3 -3 0 -2.6 Q3 -3.4 5 0Z" fill="#f4f9ff"/><path d="M-5 0 Q0 -1.2 5 0Z" fill="#c4d8ee"/>`;
+      else if (t.indoor) g = `<rect x="-1.8" y="-3.6" width="3.6" height="3.6" rx=".4" fill="${['#e86a6a', '#6aa8e8', '#f2c94a', '#7ac87a'][k % 4]}" opacity=".9"/><rect x="-1.8" y="-3.6" width="3.6" height=".7" fill="rgba(255,255,255,.3)"/>`;
+      else if (id === 'sweets') g = `<circle cx="0" cy="-2" r="2" fill="${['#ff8ab8', '#ffd36a', '#8ad8ff', '#c79aff'][k % 4]}"/><circle cx="-.6" cy="-2.6" r=".6" fill="#fff" opacity=".6"/>`;
+      else if (id === 'autumn') g = `<circle cx="-1.4" cy="-1.6" r="2" fill="${['#c8502a', '#d9822a', '#a8402a'][k % 3]}"/><circle cx="1.2" cy="-2" r="2.2" fill="${['#d9822a', '#c8502a', '#e0a040'][k % 3]}"/>`;
+      else g = `<path d="M-2.4 0 L-1.6 -3.4 L-.9 -.6 L0 -4.2 L.9 -.6 L1.6 -3.2 L2.4 0Z" fill="${c}"/><circle cx="2.8" cy="-1.2" r="1.6" fill="${c}"/>${t.sky !== 'space' && R() < .3 ? `<circle cx="0" cy="-4.4" r=".7" fill="${['#ffd6e8', '#fff3a0', '#ffffff'][k % 3]}"/>` : ''}`;
+      near += `<g transform="translate(${r1(x)} ${r1(y)}) scale(${s.toFixed(2)})">${g}</g>`;
+    }
+    return { far: { x0: fx0, w: fw, svg: far }, near: { x0: nx0, w: nw, svg: near } };
+  }
+  window.ShanghaiScenes = { pts, svg, slice, plx, has: id => !!T[id], tint: id => TINT[id] || '#1b2140', W, H,
     css: `
 .shs .shs-tw{animation:shstw 3.4s ease-in-out infinite}
 .shs .shs-cl{animation:shscl 26s ease-in-out infinite alternate}

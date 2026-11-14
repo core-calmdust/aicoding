@@ -128,7 +128,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
 .shmap .vp{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
 .shmap .vp.drag{cursor:grabbing}
 .shmap .wld{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
-.shmap .wld > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.shmap .wld > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}.shmap .wld .plxc{position:absolute;inset:0;overflow:hidden;pointer-events:none}.shmap .wld .plxc > svg.plx{position:absolute;top:0;height:100%;pointer-events:none;will-change:transform}
 .shmap .wld .pn{font-size:6.4px;font-weight:900;letter-spacing:.3px;fill:rgba(255,255,255,.13);stroke:none}
 .shmap .wld .pn.on{fill:rgba(255,226,150,.22)}
 .shmap .zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px;z-index:3}
@@ -885,7 +885,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     css(); const lang = o.lang, K = C(), cid = o.course && courseOf(o.course) ? o.course : 'zodiac', ZOD = cid === 'zodiac', CO = courseOf(cid);
     const LITE = !ZOD && LITE_SCN(), BMPX = Math.min(1600, Math.round(116 * Math.min(innerHeight / 64, 14) * Math.min(1.6, devicePixelRatio || 1)));
     const AR = ZOD ? K.AREAS : Array.from({ length: CO.n }, (_, i) => 'a' + i), NA = AR.length, N = NA * 10;
-    const areaName = i => ZOD ? TX('ar.' + AR[i], lang) : TX('st.area', lang, { n: i + 1 });
+    const areaName = i => ZOD ? TX('ar.' + AR[i], lang) : TX('an.' + cid + '.' + i, lang);   // (2026-11-14: each area has its own name, was エリア1…)
     const RA = s => ZOD ? Reward.at(s) : 0, edg = i => ZOD ? edges(AR[i]) : Array.from({ length: 9 }, (_, k) => [k, k + 1]);
     if (window.ShanghaiZodiac && !document.getElementById('shzod-css')) { const st = document.createElement('style'); st.id = 'shzod-css'; st.textContent = ShanghaiZodiac.css; document.head.appendChild(st); }
     let P = cprog(cid), area = Math.floor(nextStage(P, N) / 10), pick = nextStage(P, N);
@@ -895,7 +895,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     document.body.appendChild(el);
     const $ = q => el.querySelector(q), vp = $('.vp'), wld = $('.wld');
     // the pan / zoom: the long sky drawn at u px per unit, then scaled by z and moved by (tx, ty)
-    let u = 6, z = 1, tx = 0, ty = 0, raf = 0, anim = null;
+    let u = 6, z = 1, tx = 0, ty = 0, raf = 0, anim = null, PLX = [];
     const WW = PW * NA;
     const sky = ZOD ? skyLoop($('canvas'), () => tx) : { size() {}, stop() {} };   // (the scene courses: their pictures are the sky)
     if (window.Table3D && Table3D.quiet) Table3D.quiet(true);   // (2026-11-14) the map covers the room: the 3D scene behind it stops drawing (the showcase turntable kept it at 60 fps)
@@ -906,7 +906,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       tx = w + 2 * m <= vw ? (vw - w) / 2 : Math.min(m, Math.max(vw - w - m, tx));
       ty = h <= vh ? (vh - h) / 2 : Math.min(20, Math.max(vh - h - 20, ty));
     }
-    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; wld.style.setProperty('--iz', Math.max(1, Math.min(3, .72 / z)).toFixed(3)); track(); }   // (2026-11-14 --iz: zoomed out, the stage buttons keep ~72 % of their size on screen — the picture shrinks, the buttons do not)
+    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; PLX.forEach(([e, f]) => { e.style.transform = `translate3d(${((f - 1) * tx / z).toFixed(1)}px,0,0)`; }); wld.style.setProperty('--iz', Math.max(1, Math.min(3, .72 / z)).toFixed(3)); track(); }   // (2026-11-14 --iz: zoomed out, the stage buttons keep ~72 % of their size on screen — the picture shrinks, the buttons do not)
     const centerOf = a => (a * PW + 8 + 50) * u;   // the middle of constellation a, in sky px at z = 1
     function aim(a, smooth) {
       const ttx = vp.clientWidth / 2 - centerOf(a) * z;
@@ -1025,7 +1025,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y); zoomAt(pinch.z * d / pinch.d / z, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); moved = 99; return; }
       const dx = e.clientX - lastX, dy = e.clientY - lastY, now = performance.now();
       moved += Math.abs(dx) + Math.abs(dy); if (moved > 6) { vp.classList.add('drag'); if (!vp.hasPointerCapture(e.pointerId)) try { vp.setPointerCapture(e.pointerId); } catch (_) {} }
-      if (moved > 6) { tx += dx; ty += dy; apply(); vx = dx / Math.max(1, now - lt) * 16; }
+      if (moved > 6) { tx += dx; if (PH * u * z > vp.clientHeight + 2) ty += dy; apply(); vx = dx / Math.max(1, now - lt) * 16; }
       lastX = e.clientX; lastY = e.clientY; lt = now;
     });
     const up = e => {
@@ -1045,7 +1045,14 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       const n = e.target.closest('.nd'); if (n) { if (moved > 6) return; pick = +n.dataset.s; mark(); sheet(); return; }
       if (e.target.closest('.nav.l')) go(area - 1); else if (e.target.closest('.nav.r')) go(area + 1);
     });
-    head(); wld.innerHTML = art(); tabs(); nodes(); sheet();
+    head(); wld.innerHTML = art();
+    // (2026-11-14) a scene course: two more layers moved at other speeds — far things lag (×0.5), the ground band in front runs ahead (×1.35)
+    if (!ZOD && window.ShanghaiScenes && ShanghaiScenes.plx) {
+      const X = ShanghaiScenes.plx(cid, NA), H = PH, lay = (L, c) => `<svg class="plx ${c}" viewBox="${L.x0} 0 ${L.w} ${H}" preserveAspectRatio="none" style="left:${(L.x0 / WW * 100).toFixed(3)}%;width:${(L.w / WW * 100).toFixed(3)}%"><g class="shs">${L.svg}</g></svg>`;
+      wld.insertAdjacentHTML('beforeend', `<div class="plxc">${lay(X.far, 'pf') + lay(X.near, 'pnr')}</div>`);   // (clipped to the course: nothing past its ends)
+      PLX = [[wld.querySelector('.plx.pf'), .5], [wld.querySelector('.plx.pnr'), 1.35]];
+    }
+    tabs(); nodes(); sheet();
     // open on the stage to play next (its star a little left of the middle, so the road ahead shows)
     function aimPick() { const [x] = PTS[Math.floor(pick / 10)][pick % 10]; tx = vp.clientWidth * .42 - x * u * z; apply(); }
     layout(); z = Math.max(ZMIN(), 1); aimPick();
