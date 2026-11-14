@@ -92,7 +92,10 @@
       const M4 = new TH.Matrix4(); let k = 0;
       for (let i = 0; i < B.n; i++) if (!a[i]) { const [x, z] = U.pt(i); M4.makeTranslation(x, TOP + Y(i) + .03, z); ghost.setMatrixAt(k++, M4); }
       ghost.count = k; ghost.instanceMatrix.needsUpdate = true; kick(120);
+      // the colour goes slowly round the hues (user: 青一色だと青い玉と重なって見にくい — gently, not flashy): ~10 s a turn, a few steps a second
+      if (!hueT) hueT = setInterval(() => { if (stopped || !ghost || !ghost.count) return; ghost.material.color.setHSL((performance.now() / 10000) % 1, .7, .52); kick(60); }, 125);
     }
+    let hueT = 0;
     function marks(hint) {
       ghosts();
       while (hl.children.length) hl.remove(hl.children[0]);
@@ -348,7 +351,7 @@
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointerdown', onDown); removeEventListener('pointermove', onMove); removeEventListener('pointerup', onUp); removeEventListener('pointercancel', onUp);
         if (worker) worker.terminate(); worker = null;
-        if (ghost) { ghost.geometry.dispose(); if (ghost.material.map) ghost.material.map.dispose(); ghost.material.dispose(); }
+        clearInterval(hueT); if (ghost) { ghost.geometry.dispose(); if (ghost.material.map) ghost.material.map.dispose(); ghost.material.dispose(); }
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.__pgPlay === dbg) delete window.__pgPlay;
       },
