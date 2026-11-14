@@ -59,7 +59,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>幾何平均</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=9-sp"></script>
+<script src="engine.js?v=9-sp-zf1"></script>
 <script src="../shared/mtengine.js?v=11"></script><script src="../shared/mtsplit.js?v=6"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
@@ -82,7 +82,7 @@ env();
 const E = window.UgolkiEngine;
 const RULE = 'c33', D = { light: 8, normal: 10, heavy: 11 }, TA = { light: 1000, normal: 2000, heavy: 4000 };
 const G = {
-  url: 'engine.js?v=9-sp', drive: MTSplit.ladder.drive,
+  url: 'engine.js?v=9-sp-zf1', drive: MTSplit.ladder.drive,
   positions() {   // two games of Lv.6 vs Lv.6 (a fixed random seed), every 10 plies from ply 10
     const out = []; let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     E.setRule(RULE);

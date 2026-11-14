@@ -58,7 +58,9 @@ static u32 MMV[24] __attribute__((aligned(16))); static int NMV;   // the mill m
 static int ptMn[24]; static u32 ptMm[24][4];
 static u32 zp[3][24], zp2[3][24], zh[3][16], zh2[3][16], zs, zs2;
 static u32 rs = 0x9e3779b9u;
-static u32 rnd(void) { rs ^= rs << 13; rs ^= rs >> 17; rs ^= rs << 5; return rs; }
+// (2026-11-14) through murmur3's fmix32: the raw xorshift outputs are linear over GF(2) — each key's second half was a fixed
+// linear map of the first, so the 64-bit keys were only 32 bits (claude/praline-spec.md「Zobrist」)
+static u32 rnd(void) { rs ^= rs << 13; rs ^= rs >> 17; rs ^= rs << 5; u32 z = rs; z ^= z >> 16; z *= 0x85ebca6bu; z ^= z >> 13; z *= 0xc2b2ae35u; z ^= z >> 16; return z; }
 static void link(int a, int b) { for (int k = 0; k < adjn[a]; k++) if (adjv[a][k] == b) return; adjv[a][adjn[a]++] = b; adjv[b][adjn[b]++] = a; }
 #ifdef MT
 static volatile int geoKey;   // the geometry in force (shared): a helper thread waits for the job's before it searches

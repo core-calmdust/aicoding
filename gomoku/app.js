@@ -132,7 +132,7 @@ let jobId = 0;
 // (2026-11-12) the search is C (core.c → core_simd.wasm / core.wasm in the workers, core_mt.wasm for the threads); ?nowasm on the
 // page: the JavaScript search (engine.js) everywhere, also for the threads (engine_mt.wasm, mt.c)
 const NOWASM = /[?&]nowasm\b/.test(location.search);
-const ENGINE_URL = 'engine.js?v=20261112c1' + (NOWASM ? '&nowasm=1' : '');
+const ENGINE_URL = 'engine.js?v=20261112c1-zf1' + (NOWASM ? '&nowasm=1' : '');
 function makeWorker() {
   const w = new Worker(ENGINE_URL); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };

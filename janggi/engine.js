@@ -65,7 +65,9 @@ const mv = (f, t) => f + 90 * t;
 const mFrom = m => m % 90, mTo = m => Math.floor(m / 90);
 const isPass = m => m >= 0 && mFrom(m) === mTo(m);
 let zs = 0x2545F491;
-const zr = () => { zs ^= zs << 13; zs >>>= 0; zs ^= zs >>> 17; zs ^= zs << 5; zs >>>= 0; return zs; };
+// (2026-11-14) the xorshift's outputs go through murmur3's fmix32: raw, they are linear over GF(2), so the second half of
+// every key was a fixed linear map of the first — the 64-bit keys were only 32 bits (claude/praline-spec.md「Zobrist」)
+const zr = () => { zs ^= zs << 13; zs >>>= 0; zs ^= zs >>> 17; zs ^= zs << 5; zs >>>= 0; let z_ = zs; z_ ^= z_ >>> 16; z_ = Math.imul(z_, 0x85ebca6b); z_ ^= z_ >>> 13; z_ = Math.imul(z_, 0xc2b2ae35); z_ ^= z_ >>> 16; return z_ >>> 0; };
 const Z1 = [], Z2 = []; for (let p = 0; p < 16; p++) { Z1.push([]); Z2.push([]); for (let s = 0; s < 90; s++) { Z1[p].push(zr()); Z2[p].push(zr()); } }
 const ZS1 = zr(), ZS2 = zr();
 const FEN_CH = '.kabnrcp';

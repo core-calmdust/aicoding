@@ -667,9 +667,10 @@ EXPORT(pvp) int *pvp(void) { return PVA; }
 // engines), one shared table and one shared cache of candidate lists (lockless: the table's entries checked by the position's
 // 64-bit key; the cache by a sequence lock). One thread (no helper) searches exactly as without MT.
 static unsigned Z1[3][NN], Z2[3][NN], ZS1, ZS2;
+static inline unsigned zfmix(unsigned z) { z ^= z >> 16; z *= 0x85ebca6bu; z ^= z >> 13; z *= 0xc2b2ae35u; z ^= z >> 16; return z; }
 static void initZ(void) {
   unsigned zs = 0x2545F491u;
-#define ZR() (zs ^= zs << 13, zs ^= zs >> 17, zs ^= zs << 5, zs)
+#define ZR() (zs ^= zs << 13, zs ^= zs >> 17, zs ^= zs << 5, zfmix(zs))   /* (2026-11-14: fmix32, as engine.js — see Zobrist in claude/praline-spec.md) */
   for (int k = 0; k < 3; k++) for (int i = 0; i < NN; i++) { Z1[k][i] = ZR(); Z2[k][i] = ZR(); }
   ZS1 = ZR(); ZS2 = ZR();
 #undef ZR
