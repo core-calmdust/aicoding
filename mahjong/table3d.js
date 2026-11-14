@@ -666,6 +666,15 @@ class Table3D {
       const base = '#' + c.getHexString(), proto = this.handProto.clothMat;
       m = proto.clone(); m.map = brocadeTex(base); m.sheenColor = new THREE.Color(col).lerp(new THREE.Color(0xffffff), .2).multiplyScalar(.6); this.sleeveMats.set(col, m); }
     rig.traverse(o => { if (o.userData && o.userData.sleeve) o.material = m; });
+    // (ユーザー 2026-11-14: the nails in her colour too, like the sleeve) — a glossy polish of the sisters' colour, a little lighter,
+    // the glitter in it as before (the same shader: the clone keeps onBeforeCompile)
+    this.nailMats = this.nailMats || new Map();
+    let nm = this.nailMats.get(col);
+    if (!nm) { rig.traverse(o => { if (!nm && o.isMesh && Array.isArray(o.material) && o.material[1]) { const b = this.nailBase || (this.nailBase = o.material[1]);
+        nm = b.clone(); nm.onBeforeCompile = b.onBeforeCompile; nm.vertexColors = false;
+        const c = new THREE.Color(col), hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, Math.min(1, hsl.s * .85), Math.min(.72, Math.max(.42, hsl.l)));
+        nm.color = c.convertSRGBToLinear(); this.nailMats.set(col, nm); } }); }
+    if (nm) rig.traverse(o => { if (o.isMesh && Array.isArray(o.material) && o.material[1]) o.material = [o.material[0], nm]; });
   }
   _over2() {   // the overlay's renderer (made on the first use; no shadows)
     if (this.r2) return this.r2;
