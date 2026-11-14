@@ -2578,7 +2578,16 @@
   /* ---------- language apply ---------- */
   // the sub line under a kicker-style title never grows wider than the main title
   function fitWM(b, sm) { if (!b || !sm) return; sm.style.fontSize = ''; const k = b.querySelector('.wk'); if (!k || sm.hidden) return; const r = document.createRange(); r.setStartAfter(k); r.setEnd(b, b.childNodes.length); const mw = r.getBoundingClientRect().width, sw = sm.scrollWidth; if (mw > 0 && sw > mw) sm.style.fontSize = Math.max(7, parseFloat(getComputedStyle(sm).fontSize) * mw / sw * .98) + 'px'; }
-  const fitBrand = () => fitWM($('wm'), $('wmSub'));
+  // narrow phones: when the title (or its subtitle) would be cut off with "…", the compass emblem steps aside to give it room;
+  // if even that is not enough (very small screens), the title shrinks just enough to fit (2026-11-14)
+  const fitBrand = () => {
+    const b = $('wm'), sm = $('wmSub'), br = b && b.closest('.brand'); if (!b) return;
+    const over = () => b.scrollWidth > b.clientWidth || (sm && !sm.hidden && sm.scrollWidth > sm.clientWidth);
+    if (br) br.classList.remove('noem'); b.style.fontSize = ''; fitWM(b, sm);
+    if (!over() || !br) return;
+    br.classList.add('noem'); fitWM(b, sm);
+    for (let i = 0; i < 12 && over(); i++) { b.style.fontSize = parseFloat(getComputedStyle(b).fontSize) * .96 + 'px'; if (sm && sm.scrollWidth > sm.clientWidth) sm.style.fontSize = parseFloat(getComputedStyle(sm).fontSize) * .96 + 'px'; }
+  };
   if (document.fonts) document.fonts.ready.then(() => fitBrand()); addEventListener('resize', () => fitBrand());
   // Chinese face (see index.html html[lang^=zh]): the stylesheet is added the first time Chinese is picked (Google Fonts slices it by unicode-range)
   function zhFont() {
