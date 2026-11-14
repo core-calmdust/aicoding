@@ -82,7 +82,7 @@
 | **Praline** | ×1.76（1.77・1.75） | ×3.10（3.03・3.17） | ×5.47（5.20・5.74） | ×5.31（5.31・5.31） | ×5.83（5.65・6.00） | ×6.30（6.05・6.55） |
 
   - 揺れの内で同等。
-- headless Chrome（Playwright）：`bench.html`（1秒、1・2スレッド）と対局ページ（2スレッドの組で解析）がエラーなく動く。アルケルケは1スレッドのまま（変更なし）。
+- headless Chrome（Playwright）：`bench.html`（1秒、1・2スレッド）と対局ページ（2スレッドの組で解析）がエラーなく動く。アルケルケは1スレッドのまま（変更なし）。※2026-11-14 からアルケルケのページもマルチスレッド（claude/alquerque-spec.md）。
 - `engine_mt.wasm?v=5`（`app.js`・`bench.html`）、`app.js` を読む `fanorona/index.html`・`alquerque/index.html` の `?v=` も上げた。
 
 ## 探索の枝刈りの検証（2026-11-13、採用せず）

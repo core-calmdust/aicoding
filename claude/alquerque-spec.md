@@ -31,3 +31,10 @@
 - レッスン：はじめてのアルケルケ（b_jump 取り返されない取り・b_chain 続けて跳ぶ・b_route 跳ぶ道を選ぶ・b_safe 取られない手・b_win 全部取って勝つ・b_block 動けなくして勝つ。正解の手の一覧 `ok`）、戦術（t_count 取り返しを数える・t_sac 捨て駒・t_quiet 静かな一手。エンジン評価 `sc`、1.5秒）、終盤（e_hunt・e_trap。終盤DBで正確）。
 - 文言：alquerque/i18n-alq.js の最後のブロック（14言語）。パズル・レッスン・コーチのヒント（cr.tip.goodShot / missShot / allowShot）・棋譜の貼り付け説明（跳んで取る手は J）。あわせて、ルール説明（intro・tr.a*）が中国語・韓国語・スペイン語・フランス語・ポルトガル語・ドイツ語・ヒンディー語・アラビア語でファノロナの文章のままだったのを直した。
 - 台帳：shared/atlas.js の GAMES（tags に daily・lessons・puzzles・variants、total pz 240・ls 11）と READ（`aicoding-alquerque-puzzles` / `-lessons` / `-daily`）。
+
+## 本編のマルチスレッド（2026-11-14）
+- ファノロナと同じ組（`shared/mtengine.js`、`engine_mt.wasm`＝YBW＋busy marks、Praline）をアルケルケのページでも有効にした。ページの `alquerque/sw.js`（ページの分離。中身はファノロナと同じ）、エンジンのファイルは `../fanorona/`（fanorona/app.js の `MT_DIR`）。主スレッドは `../fanorona/engine.js?…&g=alq&mt=1` で、アルケルケの終盤DB（alqeg）を共有メモリに読み、補助も引く。対象はファノロナと同じ（分析・ヒント・コーチ・検討ボックス・時間で考える四段・五段・PRO のスレッド数）。
+- 2026-11-08 にアルケルケを1スレッドにした理由は記録がなく、性能の問題がないか調べてから有効にした：
+  - 「本当に同時」のシミュレーション（fanorona/tools/mtsim をアルケルケ用に：`set_rule(5,5)`・`set_alq(1)`・alqeg、乱数の16局面、1スレッドの予算 3M局面で届く深さまで）：同じ深さまでの時間 2・4・8スレッド **×1.88／×2.96／×4.45**（幾何平均 ×1.84／×2.81／×4.13）。遅くなる局面はない（読みの少ない局面でも ×1.4 以上）。ファノロナ（×1.83／×3.43／×5.78）より伸びが小さいのは盤が小さく取りが義務で手が少ないためで、悪化ではない。
+  - headless Chrome（作業機、2コア）：ページが分離され（crossOriginIsolated）、組で解析が動く。終盤DBの局面（6局面）で組と1スレッドの解析の値・手・exact が全部一致。
+  - 要計測（Mac）：対局ページの実時間。
