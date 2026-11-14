@@ -71,8 +71,10 @@ html.atlas-xiangqi .side{align-self:start!important}
     skip: '\\.pc|\\.ch|\\.ic|lines|fnum|reserve|\\.rv|sqfx|dest|\\.hov|\\.mark|fxsvg|hintlbl|frame',
     start(lv, side, mode) {
       if (typeof openNewDialog !== 'function' || typeof draft !== 'object' || typeof segSync !== 'function' || !document.getElementById('btnStart')) return null;
+      // the portal's card: straight to the puzzles / the lessons / the online match search (xiangqi/app.js AtlasDeep, 2026-11-14)
+      if (/^(puzzle|lesson|online)$/.test(mode)) { if (!window.AtlasDeep) return null; const q = new URLSearchParams(location.search); return AtlasDeep(mode, q.get('sub'), q.get('tc')); }
       openNewDialog();
-      draft.mode = mode === 'pvp' ? 'pvp' : 'ai';
+      draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (side === 1 || side === 2) draft.color = side;
       if (lv >= 1 && lv <= 20) draft.level = lv;
       segSync(); document.getElementById('btnStart').click();

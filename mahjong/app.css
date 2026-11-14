@@ -899,12 +899,12 @@ html.ds #game .rd .tl.xs{--tw:clamp(30px, calc(var(--GH) * .05), 42px);box-shado
 html.ds .khelp{left:calc(max(10px,var(--sl)) + 262px)}
 
 /* ================= PC: pull the UI in from the window edges ================= */
-html.ds{--ui:clamp(22px, calc(var(--SW, 1280px) * .028), 56px)}
+html.ds{--pad:clamp(22px, calc(var(--SW, 1280px) * .028), 56px)}
 html.ds #game{--gi:clamp(20px, calc(var(--GW) * .028), 60px)}
 /* home / character screens: wider margins, room above the big portraits for their effects */
-html.ds .top{padding:18px var(--ui) 10px}
-html.ds .hmain{padding:30px var(--ui) 26px;gap:30px}
-html.ds .ch-main{padding:30px var(--ui) 26px;gap:26px}
+html.ds .top{padding:18px var(--pad) 10px}
+html.ds .hmain{padding:30px var(--pad) 26px;gap:30px}
+html.ds .ch-main{padding:30px var(--pad) 26px;gap:26px}
 /* game HUD */
 html.ds #game .rbox{top:var(--gi);left:var(--gi)}
 html.ds #game .tbtns{top:var(--gi);right:var(--gi)}
@@ -994,7 +994,7 @@ html.lp .top .ib.rec{width:auto}
 .agst-han small{grid-column:1/-1;text-align:center;font-size:calc(var(--u)*3);font-weight:800;color:#fff}
 .agst-total{display:flex;align-items:center;justify-content:flex-end;gap:3cqw;margin-top:auto;animation:agPts .5s calc(.65s + var(--n) * .16s) cubic-bezier(.2,1.5,.4,1) both}
 .agst-total b{font-family:var(--serif);font-weight:800;font-size:calc(var(--u)*15);line-height:1;color:#fff;letter-spacing:.02em;text-shadow:0 calc(var(--u)*.5) 0 rgba(20,26,60,.9),0 0 calc(var(--u)*3) rgba(255,255,255,.35);font-variant-numeric:tabular-nums}
-.agst-total .stamp{font-size:calc(var(--u)*6);padding:calc(var(--u)*.4) 2cqw;animation-delay:calc(1s + var(--n) * .16s)}
+.agst-total .stamp{white-space:nowrap;font-size:calc(var(--u)*6);padding:calc(var(--u)*.4) 2cqw;animation-delay:calc(1s + var(--n) * .16s)}
 @keyframes agPts{from{transform:scale(1.5);opacity:0}}
 .agst .ag-note{font-size:calc(var(--u)*2.6)}
 .agst > .nx,.mvst > .nx{position:absolute;right:3cqw;bottom:calc(var(--u)*3.4);min-width:18cqw;font-size:max(15px,calc(var(--u)*3.2));padding:calc(var(--u)*1.6) 2cqw;z-index:3}
@@ -1340,3 +1340,84 @@ html.lp #chara.ch2 .ch-info{justify-content:flex-start}
    smaller, inside it (ユーザー 2026-11-14) */
 .modal.stage .mbox{--gw:min(var(--W),calc(var(--H) * 2.4));--gh:min(var(--H),calc(var(--W) / 1.36));inset:auto;left:calc((var(--W) - var(--gw)) / 2);top:calc((var(--H) - var(--gh)) / 2);width:var(--gw);height:var(--gh)}
 .agst > .nx,.mvst > .nx{min-width:13cqw;font-size:max(13px,calc(var(--u)*2.5));padding:calc(var(--u)*1.1) 1.6cqw;bottom:calc(var(--u)*3)}
+/* the gold buttons in Mincho; the Next of the end-of-hand stages dressed like the title's start button: a slanted gold plate with a
+   thin inner line, wide-spaced Mincho and a slow shine (ユーザー 2026-11-14: the old one looked cheap) */
+.btn.gold{font-family:var(--serif);letter-spacing:.14em}
+.agst > .nx,.mvst > .nx{position:absolute;overflow:hidden;border-radius:0;clip-path:polygon(7% 0,100% 0,93% 100%,0 100%);
+  background:linear-gradient(180deg,#fff3cf 0%,#f0d79a 38%,#c99a48 62%,#a9772c 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+  font-family:var(--serif);font-weight:800;letter-spacing:.45em;text-indent:.45em;color:#2b1904;text-shadow:0 1px 0 rgba(255,246,220,.6);
+  padding:calc(var(--u)*1.3) 2.2cqw}
+.agst > .nx::before,.mvst > .nx::before{content:"";position:absolute;inset:calc(var(--u)*.55) 5.5%;border-top:1px solid rgba(90,56,12,.45);border-bottom:1px solid rgba(90,56,12,.45);transform:skewX(-14deg);pointer-events:none}
+.agst > .nx::after,.mvst > .nx::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%) no-repeat;background-size:250% 100%;background-position:160% 0;animation:aaShine2 4.5s ease-in-out 1s infinite;pointer-events:none}
+.agst > .nx:active,.mvst > .nx:active{transform:translateY(2px);filter:brightness(.95)}
+html.lite .agst > .nx::after,html.lite .mvst > .nx::after{animation:none}
+/* the game's type (ユーザー 2026-11-14: review the fonts): names, scores, the skill's name and the call buttons in the same Mincho as the
+   titles and the score cards; only the small print (descriptions, key hints) stays in the gothic, for legibility */
+#game .bt b,#game .bt .sc,.mv-n b,.mv-d,.skb b,#acts button,#game .rbox b{font-family:var(--serif)}
+#game .bt .sc,.mv-d{font-weight:800;letter-spacing:.02em}
+.agst > .nx,.mvst > .nx{font-size:max(15px,calc(var(--u)*2.9))}
+/* the names: proud rather than cute (ユーザー 2026-11-14: princesses of their nations staking their pride) — Cinzel capitals for the
+   Latin names, the heavy Mincho for the kanji, spaced out a little */
+#game .bt b,.mv-n b{font-family:'Cinzel',var(--serif);font-weight:800;letter-spacing:.1em}
+.mv-n b small{font-family:var(--serif);letter-spacing:0}
+.agst > .nx,.mvst > .nx{font-family:'Cinzel',var(--serif)}
+html:not([lang=ja]) :is(.agst,.mvst) > .nx{letter-spacing:.22em;text-indent:.22em}
+/* ---- the louder the hand, the louder its points (ユーザー 2026-11-14) — .agst.lv0 plain … lv5 役満 ----
+   --tp: the moment the points land (the same delay as agPts), --ts: the moment the stamp lands */
+.agst{--tp:calc(.65s + var(--n) * .16s + .3s);--ts:calc(1s + var(--n) * .16s + .3s)}
+.agst-total .ag-pw{position:relative;display:inline-block;isolation:isolate}
+.agst-total b{position:relative;display:inline-block;z-index:1}
+.ag-pw > .ag-rays,.ag-pw > .ag-spark{position:absolute;pointer-events:none}
+/* 1 満貫: a warm glow on the figure, the stamp lands with a ring */
+.agst.lv1 .agst-total b{text-shadow:0 calc(var(--u)*.5) 0 rgba(20,26,60,.9),0 0 calc(var(--u)*4) rgba(255,214,140,.75)}
+.agst:is(.lv1,.lv2,.lv3,.lv4,.lv5) .agst-total .stamp{position:relative;animation-name:stamp,limPulse;animation-duration:.4s,2.2s;animation-delay:var(--ts),calc(var(--ts) + .6s);animation-iteration-count:1,infinite;animation-fill-mode:both,none}
+@keyframes limPulse{0%,100%{filter:none}50%{filter:brightness(1.3) drop-shadow(0 0 calc(var(--u)*1.4) currentColor)}}
+/* 2 跳満 and up: the figure in gold, a light sweeps across it; a flash over the stage as it lands */
+.agst:is(.lv2,.lv3,.lv4) .agst-total b{color:transparent;text-shadow:none;background:linear-gradient(180deg,#fffbe8 0%,#ffe08a 42%,#e0a03a 58%,#fff1c0 100%);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 calc(var(--u)*.5) 0 rgba(40,20,0,.85)) drop-shadow(0 0 calc(var(--u)*2.4) rgba(255,190,70,.7))}
+.agst:is(.lv2,.lv3,.lv4,.lv5) .agst-total b::after{content:attr(data-v);position:absolute;inset:0;color:transparent;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.95) 50%,transparent 60%) no-repeat;background-size:300% 100%;background-position:150% 0;-webkit-background-clip:text;background-clip:text;animation:limSweep 2.4s calc(var(--tp) + .2s) ease-in-out infinite}
+@keyframes limSweep{0%{background-position:150% 0}55%,100%{background-position:-50% 0}}
+.agst:is(.lv2,.lv3,.lv4,.lv5) .agst-total .stamp{color:#ffd56a;border-color:#ffd56a;background:rgba(40,20,0,.45)}
+.ag-flash{position:absolute;inset:0;z-index:4;pointer-events:none;background:radial-gradient(circle at 70% 75%,rgba(255,240,200,.95),rgba(255,200,120,.35) 40%,transparent 70%);opacity:0;animation:limFlash .7s var(--tp) ease-out both}
+@keyframes limFlash{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
+.agst.lv2 .ag-flash{animation-duration:.5s;filter:opacity(.6)}
+/* 3 倍満 and up: rays turning behind the figure, sparkles, the stage gives a shake */
+.ag-rays{left:50%;top:50%;width:calc(var(--u)*70);height:calc(var(--u)*70);margin:calc(var(--u)*-35) 0 0 calc(var(--u)*-35);z-index:0;border-radius:50%;
+  background:repeating-conic-gradient(from 0deg,rgba(255,220,140,.42) 0deg 5deg,transparent 5deg 15deg);-webkit-mask-image:radial-gradient(circle,transparent 4%,#000 16%,transparent 66%);mask-image:radial-gradient(circle,transparent 4%,#000 16%,transparent 66%);
+  animation:limRayIn .6s var(--tp) cubic-bezier(.2,.8,.2,1) both,limRay 14s var(--tp) linear infinite}
+@keyframes limRayIn{from{opacity:0;scale:.3}}
+@keyframes limRay{to{rotate:360deg}}
+.ag-spark{inset:-30% -12%;z-index:2}
+.ag-spark i{position:absolute;left:var(--x);top:var(--y);width:calc(var(--u)*3.4 * var(--s));aspect-ratio:1;background:radial-gradient(circle,#fff 0 8%,rgba(255,236,170,.9) 14%,transparent 40%),conic-gradient(from 45deg,transparent 0 22%,rgba(255,240,190,.9) 25%,transparent 28% 47%,rgba(255,240,190,.9) 50%,transparent 53% 72%,rgba(255,240,190,.9) 75%,transparent 78% 97%,rgba(255,240,190,.9) 100%);-webkit-mask-image:radial-gradient(circle,#000 20%,transparent 70%);mask-image:radial-gradient(circle,#000 20%,transparent 70%);opacity:0;animation:limTw 1.6s calc(var(--tp) + var(--d)) ease-in-out infinite}
+@keyframes limTw{0%,100%{opacity:0;transform:scale(.3) rotate(0)}45%{opacity:1;transform:scale(1) rotate(45deg)}}
+.agst:is(.lv3,.lv4,.lv5){animation:limShake .45s var(--tp) both}
+@keyframes limShake{0%,100%{translate:0 0}20%{translate:calc(var(--u)*-.8) calc(var(--u)*.5)}40%{translate:calc(var(--u)*.7) calc(var(--u)*-.6)}60%{translate:calc(var(--u)*-.5) calc(var(--u)*.3)}80%{translate:calc(var(--u)*.3) 0}}
+.agst:is(.lv3,.lv4,.lv5) .agst-bg{border-color:#ffd56a;box-shadow:0 0 calc(var(--u)*6) rgba(0,0,0,.6),0 0 calc(var(--u)*5) rgba(255,200,90,.45)}
+.agst:is(.lv3,.lv4,.lv5) .agst-total b{font-size:calc(var(--u)*17)}
+/* 4 三倍満 / 数え: bigger still, the rays brighter and denser, a longer shake */
+.agst.lv4 .ag-rays{background:repeating-conic-gradient(from 0deg,rgba(255,236,170,.6) 0deg 4deg,transparent 4deg 11deg);width:calc(var(--u)*90);height:calc(var(--u)*90);margin:calc(var(--u)*-45) 0 0 calc(var(--u)*-45)}
+.agst:is(.lv4,.lv5) .agst-total b{font-size:calc(var(--u)*18.5)}
+.agst.lv4{animation-duration:.7s}
+/* 5 役満: the figure in a running rainbow foil, rainbow rays, the band itself glowing in colours, the stamp in gold and fire */
+.agst.lv5 .agst-total b{color:transparent;text-shadow:none;background:linear-gradient(90deg,#ff7ab8,#ffd36a,#8cffc8,#7ad6ff,#c49bff,#ff7ab8);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 calc(var(--u)*.5) 0 rgba(30,10,40,.9)) drop-shadow(0 0 calc(var(--u)*3) rgba(255,255,255,.6));animation:limFoil 3s var(--tp) linear infinite}
+@keyframes limFoil{to{background-position:-200% 0}}
+.agst.lv5 .ag-rays{width:calc(var(--u)*110);height:calc(var(--u)*110);margin:calc(var(--u)*-55) 0 0 calc(var(--u)*-55);background:repeating-conic-gradient(from 0deg,rgba(255,140,200,.55) 0deg 4deg,transparent 4deg 9deg,rgba(140,220,255,.55) 9deg 13deg,transparent 13deg 18deg,rgba(255,230,140,.6) 18deg 22deg,transparent 22deg 27deg)}
+.agst.lv5 .agst-bg{border-color:#fff;animation:agBand .45s cubic-bezier(.2,.8,.2,1) both,limBand 2.4s var(--tp) linear infinite}
+@keyframes limBand{0%,100%{box-shadow:0 0 calc(var(--u)*6) rgba(255,120,200,.6)}33%{box-shadow:0 0 calc(var(--u)*6) rgba(120,220,255,.6)}66%{box-shadow:0 0 calc(var(--u)*6) rgba(255,220,120,.6)}}
+.agst.lv5 .agst-total .stamp{color:#fff4c8;border-color:#ffcf5a;background:linear-gradient(135deg,#c2182e,#7a0a1c);font-size:calc(var(--u)*7.4)}
+.agst.lv5 .ag-flash{background:radial-gradient(circle at 70% 75%,#fff,rgba(255,220,250,.6) 35%,rgba(160,220,255,.3) 55%,transparent 80%);animation-duration:1.1s}
+.agst.lv5{animation-duration:.9s}
+html.lite .ag-rays,html.lite .ag-spark{display:none}
+html.lite .agst-total b::after{animation:none}
+/* the volume rows of the settings (ユーザー 2026-11-14): a mute button and a slider for the effects and for the music */
+.st-vol small{display:flex;justify-content:space-between}.st-vol small b{font-family:var(--serif);color:var(--gold);font-weight:800;letter-spacing:.04em}
+.st-v{display:flex;align-items:center;gap:12px;padding:6px 10px 6px 6px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.06)}
+.st-m{flex:none;width:40px;height:40px;border-radius:10px;border:0;display:grid;place-items:center;background:linear-gradient(180deg,#f3dfa6,#c9a050);color:#2a1a05;cursor:pointer}
+.st-m svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.st-vol.off .st-m{background:rgba(255,255,255,.08);color:var(--muted)}
+.st-v input[type=range]{flex:1;min-width:0;height:28px;margin:0;background:none;-webkit-appearance:none;appearance:none;cursor:pointer}
+.st-v input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,#e8ce8c var(--p),rgba(255,255,255,.14) var(--p))}
+.st-v input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:linear-gradient(90deg,#e8ce8c var(--p),rgba(255,255,255,.14) var(--p))}
+.st-v input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;margin-top:-7px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff8e0,#d6b064);box-shadow:0 0 0 2px #2a1a05,0 2px 6px rgba(0,0,0,.5)}
+.st-v input[type=range]::-moz-range-thumb{width:20px;height:20px;border:0;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff8e0,#d6b064);box-shadow:0 0 0 2px #2a1a05}
+.st-vol.off input[type=range]{opacity:.45}

@@ -7,7 +7,7 @@
   'use strict';
   if (!window.Avatars3D) return;
   const K = Icons3D.KIT, T = K.T, V3 = K.V3, soft = K.soft, blob = K.blob, mesh = K.mesh, sq = K.sq, ell = K.ell,
-    face = K.face, alive = K.alive, decal = K.decal, noShadow = K.noShadow;
+    face = K.face, alive = K.alive, decal = K.decal, noShadow = K.noShadow, sqs = K.sqs;
   const D = Avatars3D.define;
   const plane = (w, h, mat) => noShadow(mesh(new T.PlaneGeometry(w, h), mat));
 
@@ -59,5 +59,37 @@
       return alive(g, eyes);
     },
     v: [{}, { hue: [-40, .95, .04, KEEP], acc: [['bow', 0xffd34f, 0xff9a4a]] }, { hue: [70, .9, .02, KEEP], acc: [['scarf', 0xffd34f, 0xff9a4a]] }, { finish: 'pearl', acc: ['tiara'] }],
+  });
+
+  /* チュンパイ (Chuntile, 2026-11-14): 上海のフリーの相棒。ふっくらした麻雀牌そのもの（白い牌に赤い「中」、背は緑）に、小さな手足と顔。
+     Earned in Shanghai's free play: N clear a board, R clear 5 different boards, SR clear a board of 100+ tiles on 上級 or harder,
+     SSR clear 亀（定番）on 達人. Rendered by icons.html?kind=av&id=chun-<0..3> → images/atlas/av/chun-<0..3>.webp. */
+  const chunM = () => decal('spe-chun', 160, 200, (c, W, H) => {
+    c.clearRect(0, 0, W, H); c.fillStyle = '#d8262c'; c.font = `900 ${Math.round(H * .62)}px "Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif`;
+    c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('中', W / 2, H * .54);
+  });
+  const KEEP2 = [0xd8262c, 0xfffefa, 0x2f8a64];
+  D('chun', {
+    name: { ja: 'チュンパイ', en: 'Chuntile' },
+    desc: { ja: 'ふっくらした「中」の牌。フリーで遊ぶほど仲良くなる、上海の相棒。', en: 'A plump little 中 tile — your partner in Shanghai’s free play.' },
+    build() {
+      const g = new T.Group();
+      const Tw = soft(0xfffefa, { under: 0xe8eef0, uk: .35, rough: .5 }), Tg = soft(0x2f8a64, { under: 0x3fb0a0, uk: .4, rough: .6 }),
+        Pk = soft(0xffd6dc, { under: 0xffb0bc, uk: .4 });
+      const c = V3(0, 1.0, 0), S = [1.16, 1.6, .56];
+      sq(g, Tw, [c.x, c.y, c.z + .06], S, .34);
+      sq(g, Tg, [c.x, c.y, c.z - .3], [1.12, 1.56, .34], .34);
+      // the 中 on the lower front, a face on the upper front
+      const front = sqs(c, S, .34), ch = noShadow(mesh(new T.PlaneGeometry(.62, .78), chunM())); ch.position.set(0, c.y - .26, c.z + S[2] / 2 + .066); g.add(ch);
+      // little arms and feet (green, like the tile's back)
+      [-1, 1].forEach(s => { blob(g, Tg, [s * .66, 1.0, .04], [.13, .2, .13], [0, 0, s * .5]); blob(g, Tg, [s * .28, .1, .06], [.17, .1, .2]); });
+      // a sprout of a tassel on top (a little red bead on a stalk)
+      const st = mesh(new T.CylinderGeometry(.02, .025, .22, 8), Tg); st.position.set(.18, 1.9, .02); st.rotation.z = -.3; g.add(st);
+      blob(g, soft(0xff5a5a, { under: 0xff8a6a, uk: .4 }), [.22, 2.02, .02], .07);
+      const eyes = face(g, (u, v) => { const r = front(u, v + .3); r.p.z += .06; return r; }, { er: .085, gap: .22, v: .06, mouth: 'smile', mw: .1, by: .12, bx: .16 });
+      g.userData.head = [1.3, .6, .1]; g.userData.top = [0, 1.84, .1, 0]; g.userData.neck = [0, 1.0, .1, .4];
+      return alive(g, eyes);
+    },
+    v: [{}, { hue: [-75, .95, .02, KEEP2.slice(0, 2)], acc: [['bow', 0xff6a8a, 0xffb0c0]] }, { hue: [-130, 1, .03, KEEP2.slice(0, 2)], acc: [['bow', 0xffd34f, 0xff9a4a]] }, { finish: 'pearl', acc: ['tiara'] }],
   });
 })();
