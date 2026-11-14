@@ -296,7 +296,7 @@
     m.onBeforeCompile = sh => {
       sh.uniforms.uCell = { value: new TT.Vector2(cw, ch) }; sh.uniforms.uWhite = { value: new TT.Vector2(wo[0] + cw * .5, wo[1] + ch * .5) };
       sh.uniforms.uBack = { value: back3 };
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aCap;\nattribute vec2 aFace;\nuniform vec2 uCell;\nuniform vec2 uWhite;\nuniform vec3 uBack;')
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aCap;\nattribute vec2 aFace;\nattribute float aGold;\nvarying float vGold;\nuniform vec2 uCell;\nuniform vec2 uWhite;\nuniform vec3 uBack;')
         .replace('#include <uv_vertex>', `#include <uv_vertex>
         vec2 shUv = aCap > .5 ? aFace + uv * uCell : uWhite;
         #ifdef USE_MAP
@@ -309,10 +309,20 @@
         #if defined( USE_NORMALMAP ) && defined( NORMALMAP_UV )
           vNormalMapUv = shUv;
         #endif`)
-        .replace('#include <color_vertex>', '#include <color_vertex>\n#if defined( USE_COLOR ) || defined( USE_COLOR_ALPHA ) || defined( USE_INSTANCING_COLOR )\nif (aCap < -.5) vColor.rgb *= uBack;\n#endif');
+        .replace('#include <color_vertex>', '#include <color_vertex>\n#if defined( USE_COLOR ) || defined( USE_COLOR_ALPHA ) || defined( USE_INSTANCING_COLOR )\nif (aCap < -.5) vColor.rgb *= uBack;\n#endif')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvGold = aGold;');
+      /* (2026-11-14) the golden tiles of a stage (aGold = 1): the light parts of the tile turn to polished gold — metallic, glossy and
+         a little glowing — while the carved ink keeps its colours (ユーザー「きんきらきんに光ってる感じ」) */
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vGold;')
+        .replace('#include <color_fragment>', `#include <color_fragment>
+        float shLum = dot(diffuseColor.rgb, vec3(.3, .59, .11)), shG = vGold * smoothstep(.35, .8, shLum);
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(1.0, .7, .18) * (.6 + .7 * shLum), shG);`)
+        .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, .9, shG);')
+        .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, .2, shG);')
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(.5, .32, .06) * shG;');
     };
     m.shadowSide = TT.BackSide;   // (the shadow pass from the inner faces: no striped self-shadow on the tile walls)
-    m.customProgramCacheKey = () => 'shanghai-tile';
+    m.customProgramCacheKey = () => 'shanghai-tile-g';
     return (mats[back] = m);
   }
 
@@ -320,11 +330,13 @@
   function tiles(n, back) {
     const TT = T(), g = tileGeo().clone();   // (its own copy: the per-instance face attribute)
     g.setAttribute('aFace', new TT.InstancedBufferAttribute(new Float32Array(n * 2), 2));
+    g.setAttribute('aGold', new TT.InstancedBufferAttribute(new Float32Array(n), 1));
     const im = new TT.InstancedMesh(g, tileMat(back || backNow()), n);
     im.instanceMatrix.setUsage(TT.DynamicDrawUsage);
     im.castShadow = !LO(); im.receiveShadow = false; im.frustumCulled = false;   // (onto the mat and the table only: tile-on-tile shade is the soft quads of shades(), no striped self-shadow on the walls)
     const c = new TT.Color(1, 1, 1); for (let i = 0; i < n; i++) im.setColorAt(i, c);
     im.userData.setFace = (i, f) => { const [u, v] = faceOff(f), A = g.attributes.aFace; A.setXY(i, u, v); A.needsUpdate = true; };
+    im.userData.setGold = (i, v) => { const A = g.attributes.aGold; A.setX(i, v ? 1 : 0); A.needsUpdate = true; };
     im.userData.dispose = () => g.dispose();
     return im;
   }
