@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=12';
+const ENGINE_URL = 'engine.js?v=13';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -142,7 +142,7 @@ const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L
 // core.c now, and on these threads the helpers take moves at its split points (Praline's Young Brothers Wait in core_mt.wasm,
 // claude/amazons-spec.md「αβ を C に」). Without an isolated page (no shared memory): shared/mtsplit.js's workers as before (each
 // with its own core: the root moves and the main line shared out, no shared table).
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=5', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB); initial ≥ its declared 617 pages
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=6', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB); initial ≥ its declared 617 pages
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: () => ({}) }) : null;
 const mcJob = msg => msg.type === 'think' && (msg.cfg ? !!(msg.cfg.s && msg.cfg.mc) : !!(E.LEVELS[msg.level] || {}).mc);
 // the MCTS's default thread count (2026-11-10): the performance cores (shared/mtengine.js perfThreads — 10 of the user's M4 Pro's
@@ -1333,7 +1333,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step (a first estimate from short matches of neighbouring levels on the work machine; to be measured on the
 // user's Mac): about +110 per step at the bottom, smaller at the top
-const RT_LV = [0, 350, 460, 570, 680, 790, 900, 1000, 1100, 1200, 1300, 1390, 1480, 1560, 1640, 1710, 1780, 1840, 1900, 2170, 2240, 2300, 2350, 2390];   // (Lv.19〜23 = the MCTS since 2026-11-10: the alpha-beta values +200, provisional — in the same CPU time it beat the alpha-beta search 82.5% at 0.5 s and 15 of 16 at 1.5 s; to be measured on the user's Mac)
+const RT_LV = [0, 350, 460, 570, 680, 790, 900, 1000, 1100, 1200, 1300, 1390, 1480, 1560, 1640, 1710, 1780, 1840, 1900, 2340, 2410, 2470, 2520, 2560];   // (Lv.19〜23 = the MCTS since 2026-11-10: the alpha-beta values +200, provisional — in the same CPU time it beat the alpha-beta search 82.5% at 0.5 s and 15 of 16 at 1.5 s; +170 more for the evaluation v2 of 2026-11-14 (+177 Elo in the same CPU time, claude/amazons-spec.md「評価 v2」); to be measured on the user's Mac)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
