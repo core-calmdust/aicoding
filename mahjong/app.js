@@ -800,7 +800,7 @@ function renderStats() {
   }
   $('#pstats').innerHTML = `
     <div class="ps-box" style="--c:${c.color};--c2:${c.color2}">
-      <div class="ps-art ch-art frame fr-${c.rarity}" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i></div>
+      <div class="ps-art ch-art frame fr-${c.rarity}" style="--c:${c.color};--c2:${c.color2}"><span class="ps-pic"><img src="${charImg(c, 'full')}" alt=""></span><i class="fx-sh"></i></div>
       <div class="ps-main">
         <header class="ps-h">
           <div class="ps-id"><em class="prar r-${c.rarity}">${c.rarity}</em><div><b>${esc(L(c.name))}</b><small>${esc(L(c.title))}</small></div></div>
