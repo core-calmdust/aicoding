@@ -89,7 +89,7 @@ const icon = k => IC[k] || '';
 // ---------------------------------------------------------------- sound (WebAudio synth)
 const SND = (() => {
   let ac = null;
-  const ctx = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state === 'suspended') ac.resume(); return ac; };
+  const ctx = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) ac.resume(); return ac; };
   const on = () => DB.set.snd && !document.hidden;
   // two buses (ユーザー 2026-11-14: the effects and the music each with their own volume and mute — the gear in the game)
   let seB = null, bgB = null;
@@ -195,6 +195,12 @@ const SND = (() => {
     gate(off) { const a = ac; if (!a) return;
       if (off) { if (a.state === 'running') a.suspend(); for (const k in TRK) if (TRK[k].el && TRK[k].on) TRK[k].el.pause(); }
       else if (!document.hidden) { a.resume(); for (const k in TRK) if (TRK[k].el && TRK[k].on) { const p = TRK[k].el.play(); if (p && p.catch) p.catch(() => {}); } } },
+    // (2026-11-15, ユーザー「画面を切り替えた後に音が出なくなる」) back from another app / tab a phone often refuses to restart the
+    // sound until the next touch (iOS leaves the context 'interrupted' and the music paused): every touch and key checks, and
+    // brings back the context and the music that should be playing
+    revive() { const a = ac; if (!a || document.hidden || !on()) return;
+      if (a.state !== 'running' && a.state !== 'closed') { const p = a.resume(); if (p && p.catch) p.catch(() => {}); }
+      for (const k in TRK) { const B = TRK[k]; if (B.el && B.on && B.el.paused) { const p = B.el.play(); if (p && p.catch) p.catch(() => {}); } } },
     levels,   // after the sound is switched back on
     call: () => { tone(520, .16, 'square', .06); tone(780, .2, 'square', .05, .08); },
     riichi: () => { tone(880, .5, 'sine', .14); tone(1320, .7, 'sine', .1, .08); tone(1760, .9, 'sine', .06, .16); },
@@ -219,7 +225,9 @@ addEventListener("load", () => setTimeout(() => SND.preload(), 400));
     document.documentElement.classList.toggle('fz', f); SND.gate(f); }, 200); }
 // the title music starts with the first touch or key (browsers let sound start only then) (ユーザー 2026-11-14)
 { const go = () => { removeEventListener('pointerdown', go, true); removeEventListener('keydown', go, true); SND.unlock(); SND.resume(); };
-  addEventListener('pointerdown', go, true); addEventListener('keydown', go, true); }   // sounds load in the background from the start (spread out, idle time)
+  addEventListener('pointerdown', go, true); addEventListener('keydown', go, true);
+  for (const ev of ['pointerdown', 'touchend', 'keydown']) addEventListener(ev, () => SND.revive(), true);
+  addEventListener('pageshow', () => SND.revive()); }   // sounds load in the background from the start (spread out, idle time)
 
 // ---------------------------------------------------------------- character art
 const ART = new Map();
@@ -675,7 +683,7 @@ async function showPulls(got) {
   st.innerHTML = `<div class="gcards n${got.length}">${got.map((g, i) => `
     <div class="gc frame fr-${g.c.rarity}" style="--d:${i * 110}ms;--c:${g.c.color};--c2:${g.c.color2}">
       <div class="gci"><img src="${charImg(g.c, 'bust')}" alt=""><i class="fx-sh"></i></div>
-      <div class="gcn"><em>${g.c.rarity}</em>${esc(L(g.c.name))}${skillChip(g.key, 'sm')}</div>
+      <div class="gcn"><em>${g.c.rarity}</em><span class="gcnm">${esc(L(g.c.name))}</span>${skillChip(g.key, 'sm')}</div>
       ${g.kind === 'newChar' ? `<i class="gnew">${t('newChar')}</i>` : g.kind === 'newSkill' ? `<i class="gnew sk">${t('newSkill')}</i>` : `<i class="gdup">${t('dupe', { n: g.refund })}</i>`}
     </div>`).join('')}</div>`;
 }
@@ -730,7 +738,7 @@ function renderChara() {
     ${own ? `${skillBlock(uk)}
       <div class="skpick"><small>${t('ownedSkills')} ${o.skills.length}${o.skills.length > 1 ? ` ・ ${t('useThis')}` : ''}</small>
       <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>
-      <p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(t('notOwned'))}</div>`}
+      <p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(c.reward != null ? t('rkLocked', { r: rkName(MJRank.list[c.reward]) }) : t('notOwned'))}</div>`}
     <div class="sis"><small>${esc(t('sisters'))}</small><div>${sisters.map(x => `<button class="sib ${x.id === c.id ? 'on' : ''} ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}" title="${owns(x.id) ? esc(L(x.name)) : '？？？'}">${frame(x, owns(x.id) ? 'face' : 'silf')}</button>`).join('')}</div></div>
     ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isPartner')}</div>` : `<button class="go ch-go" id="chSet">${t('setPartner')}</button>`) : ''}`;
   const b = $('#chSet');
@@ -778,7 +786,8 @@ function renderStats() {
   const P = PS, c = P.c, pl = P.pl;
   const tb = P.tabs.find(x => x[0] === P.tab) || P.tabs[0];
   const raw = tb ? tb[2] : MJStats.blank(), D = MJStats.derive(raw), isG = !!tb && tb[0] === 'game';
-  const who = pl.kind === 'me' ? t('you') : pl.kind === 'bot' ? 'BOT · ' + t('lv')[pl.lv | 0] : esc(pl.name || '');
+  // (in ranked play the bots' strength is not shown — only the rank, as on the ranked screen)
+  const who = pl.kind === 'me' ? t('you') : pl.kind === 'bot' ? (inGame() && UIS.ranked ? 'BOT' : 'BOT · ' + t('lv')[Math.max(0, Math.min(4, pl.lv | 0))]) : esc(pl.name || '');
   const sk = (P.ig ? (c.skill ? MJSkills.key(c.skill, c.tier | 0) : null) : useKey(c.id));
   const empty = isG ? !D.hands : !D.games && !D.hands;
   let place = null; if (isG && G) place = G.ranking().indexOf(P.s);
@@ -1099,7 +1108,7 @@ function renderHand(drawn) {
     return `<span class="meld">${order.map((id, i) => m.type === 'ankan' && (i === 0 || i === 3) ? backHTML('sm') : tileHTML(id, 'sm' + (id === m.called ? ' side' : '') + (m.type === 'kakan' && id === m.called ? ' kk' : ''))).join('')}</span>`;
   }).join('');
   const kl = i => `<kbd class="tk">${HAND_LABELS[i] || ''}</kbd>`;
-  $('#hand').innerHTML = `<div class="hrow">${ids.map((id, i) => tileHTML(id, cls(id)).replace('</span>', kl(i) + '</span>')).join('')}<span class="gap"></span>${dr != null ? tileHTML(dr, cls(dr) + ' drawn').replace('</span>', '<kbd class="tk">Space</kbd></span>') : '<span class="tl ph"></span>'}</div><div class="melds">${melds}</div>`;
+  $('#hand').innerHTML = `<div class="hrow">${ids.map((id, i) => tileHTML(id, cls(id)).replace('</span>', kl(i) + '<s class="hit"></s></span>')).join('')}<span class="gap"></span>${dr != null ? tileHTML(dr, cls(dr) + ' drawn').replace('</span>', '<kbd class="tk">Space</kbd><s class="hit"></s></span>') : '<span class="tl ph"></span>'}</div><div class="melds">${melds}</div>`;
   $('#hand').classList.toggle('active', !!o);
 }
 // hand tiles are bound to the number row, left to right: 1 … 0 - ^ ¥ ; the drawn tile is Space
@@ -1580,5 +1589,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, askDealSkill };
 })();

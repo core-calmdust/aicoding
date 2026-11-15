@@ -1691,3 +1691,43 @@ html.lp #game #opp1{top:calc(max(10px,var(--st)) + 42px + var(--bf) + 74px)}
 .ps-art.fr-SR > .ps-pic{inset:4px}
 .ps-art.fr-SSR > .ps-pic,.ps-art.fr-UR > .ps-pic{inset:5px}
 .ps-art .ps-pic > img{position:absolute;inset:0;width:100%;height:100%;border-radius:0}
+/* the round screen's words over the score unit (see table3d _conHud): a disc of the screen's own blue, the text crisp at any
+   drawing resolution */
+.conhud{position:absolute;pointer-events:none;z-index:1;border-radius:50%;overflow:hidden;
+  background:radial-gradient(circle at 40% 30%,#12305c,#06101f 75%)}
+.conhud > div{position:absolute;left:0;top:0;width:var(--cw);height:var(--cw);transform-origin:0 0;transform:scaleY(var(--sy));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--cw) * .02);color:#8fe6ff;
+  text-shadow:0 0 calc(var(--cw) * .03) rgba(58,184,255,.8)}
+.conhud b{font-family:"Shippori Mincho B1",serif;font-weight:800;font-size:calc(var(--cw) * .23);line-height:1;letter-spacing:.02em}
+.conhud span{display:flex;align-items:baseline;gap:calc(var(--cw) * .05);line-height:1}
+.conhud i{font-style:normal;font-family:"Zen Kaku Gothic New",sans-serif;font-weight:700;font-size:calc(var(--cw) * .11)}
+.conhud em{font-style:normal;font-family:"Zen Kaku Gothic New",sans-serif;font-weight:900;font-size:calc(var(--cw) * .24);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+/* (ユーザー 2026-11-15「タップ位置がズレて牌をうまく捨てられない」) on a touch screen a picked tile rose by a quarter of its height, so a
+   second tap where it had been (its lower part) hit nothing. Each hand tile now carries a clear hit area reaching down over the
+   place it rose from; and the hover lift (which sticks after a tap on a phone) is off — only the picked tile rises. */
+.hand .tl > s.hit{position:absolute;left:0;right:0;top:0;bottom:-30%;text-decoration:none;pointer-events:auto;z-index:3}
+html.lp #game .hand.active .tl.can:hover:not(.up){transform:none}
+/* the skill chip under a badge: its icon sat on the text line and fell out of the coloured square (seen on phones) */
+.bk i > svg{display:block;width:100%;height:100%}
+/* ---- phone UI pass (ユーザー 2026-11-15「スマホのUI崩れを入念にチェック」) ---- */
+/* the longer subtitle stays on one line */
+:is(#home,#chara).aaa .aa-logo .lg-sub{white-space:nowrap;letter-spacing:.26em;margin-right:-.26em}
+html.lp :is(#home,#chara).aaa .aa-logo .lg-sub{font-size:21px}
+/* the rank line on the home: the points on one line, the next-rank note given the room left */
+:is(#home,#chara).aaa .ap-rank > span{flex:1 1 auto;flex-direction:column!important;align-items:flex-start}
+:is(#home,#chara).aaa .ap-rank b{white-space:nowrap}
+/* the skill prompt at the deal: on a phone the words get the width, the two buttons go under them on the right */
+html.lp .dealAsk{flex-wrap:wrap;width:min(560px,calc(var(--W, 100vw) * .62));max-width:none;row-gap:8px}
+html.lp .dealAsk .da-t{flex:1 1 0;min-width:0}
+html.lp .dealAsk .da-b{flex:1 0 100%;justify-content:flex-end}
+html.lp .da-b .ab{letter-spacing:.1em;text-indent:.1em;min-width:96px;padding:8px 14px}
+html.lp #acts .ab kbd,html.lp .da-b .ab kbd{display:none}
+/* the ranked ladder: a long rank name (English) no longer runs over the points */
+.rk-row{grid-template-columns:minmax(150px,max-content) 70px 1fr}
+@media (max-width:760px),(max-height:500px){.rk-row{grid-template-columns:minmax(110px,max-content) 54px 1fr}}
+.rk-me{overflow-y:auto}
+/* a gacha card's name on its own line (a one-character name sat beside the skill chip) */
+.gcn .gcnm{display:block}
+/* the tier mark in a skill's heading (em.sr) also matched the stats-row class .sr (a grid with a 30px first column) and showed a
+   long empty dark pill after the letter */
+em.sr{display:inline-block;grid-template-columns:none;gap:0}

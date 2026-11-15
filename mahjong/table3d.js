@@ -356,7 +356,7 @@ function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcT
 class Table3D {
   constructor(host) {
     this.host = host;
-    const r = this.renderer = new THREE.WebGLRenderer({ antialias: (window.devicePixelRatio || 1) < 1.5, alpha: true, powerPreference: 'high-performance' });   // (2026-11-14, optimisation: a high-density screen is already sharp — no multisampling on top; and the faster GPU when there are two)
+    const r = this.renderer = new THREE.WebGLRenderer({ antialias: (window.devicePixelRatio || 1) < 1.5 || MOB, alpha: true, powerPreference: 'high-performance' });   // (2026-11-14, optimisation: a high-density screen is already sharp — no multisampling on top; and the faster GPU when there are two. 2026-11-15: but a phone draws at 1.25× of its 3× screen, so the tile edges stepped (ユーザー's screenshot) — phones keep multisampling)
     const mobile = matchMedia('(pointer: coarse)').matches;
     this.mobile = mobile;
     r.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5)); this.prMax = mobile ? 1.25 : 1.5; this.dyn = 1;
@@ -1094,6 +1094,7 @@ class Table3D {
     }
     this.conETex.needsUpdate = true;
     this.conTex.needsUpdate = true;
+    this._conText();
     this.dirty = true;
   }
 
@@ -1128,8 +1129,24 @@ class Table3D {
     // the camera also backs off until the far player's melds (along the far rail) and the tops of her standing tiles are in view
     const far = new THREE.Vector3(), top = 1 - 2 * 6 / h;   // (6 px below the top edge)
     for (let k = 0; k < 40; k++) { far.set(0, H + .1, -9.3).project(this.camera); if (far.y <= top) break; d *= 1.025; put(); }
+    this._conHud();
     this.dirty = true;
   }
+  // (2026-11-15, ユーザー: the round and the tiles left must always be readable — at a low drawing resolution the screen in the
+  // middle of the score unit blurred) the round screen's words are page text laid exactly over the 3D screen: the projected circle
+  // gives the box, the text is laid out in a square and squashed to the ellipse, so it sits on the panel as if printed there
+  _conHud() {
+    let el = this._chud;
+    if (!el) { el = this._chud = document.createElement('div'); el.className = 'conhud'; el.innerHTML = '<div><b></b><span><i>余</i><em></em></span></div>'; this.host.appendChild(el); }
+    const R = 268 / 1024 * 3.9, Y = 0.55, w = this.host.clientWidth || 1, h = this.host.clientHeight || 1, v = new THREE.Vector3();
+    const P = (x, z) => { v.set(x, Y, z).project(this.camera); return [(v.x + 1) / 2 * w, (1 - v.y) / 2 * h]; };
+    const L = P(-R, 0), Rt = P(R, 0), T = P(0, -R), B = P(0, R);
+    const cw = Rt[0] - L[0], ch = B[1] - T[1];
+    el.style.cssText = `left:${L[0]}px;top:${T[1]}px;width:${cw}px;height:${ch}px;--cw:${cw}px;--sy:${ch / cw}`;
+    this._conText();
+  }
+  _conText() { const el = this._chud, I = this.info; if (!el || !I) return;
+    el.querySelector('b').textContent = `${['東', '南', '西', '北'][I.round]}${I.kyoku + 1}局`; el.querySelector('em').textContent = String(I.left); }
   // quality: 'high' | 'lite'. Lite drops shadows and renders at 1x pixel ratio.
   setQuality(q) {
     const lite = q === 'lite'; this.lite = lite;
