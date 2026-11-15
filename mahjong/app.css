@@ -2489,3 +2489,29 @@ html.lp .modal.gacham .gstage:has(.gpick) .gorb{margin-top:64px}
 #btnRated{display:none!important}
 #home.aaa .ap-opts{min-height:139px;align-content:start}   /* (段位戦 / フリー対局: the same height, so nothing moves when switching) */
 html.lp #home.aaa .ap-opts{min-height:124px}
+
+/* (ユーザー 2026-11-16, phone) the four scores on the unit in the middle: page text over the LED windows, so they stay sharp */
+.conscore{position:absolute;pointer-events:none;z-index:1;display:flex;align-items:center;justify-content:flex-end;box-sizing:border-box;padding-right:2%;
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-weight:800;line-height:1;letter-spacing:.06em;font-variant-numeric:tabular-nums;white-space:nowrap;
+  color:#ff6a40;text-shadow:0 0 .18em rgba(255,70,30,.85),0 0 .5em rgba(255,60,20,.45)}
+.conscore.on{color:#ffc65a;text-shadow:0 0 .18em rgba(255,170,60,.9),0 0 .5em rgba(255,150,40,.5)}
+/* (ユーザー 2026-11-16, phone) the left player under the dora panel; the player across at the top, toward the right, laid sideways
+   (portrait, then name and skills) left of the corner buttons; the player's own portrait above her skill plates, which show their
+   names again (side by side, below the left river) */
+html.lp #game #opp3{top:calc(max(10px,var(--st)) + var(--rbh, 64px) + 10px)}
+html.lp #game #opp2{flex-direction:row;align-items:center;gap:6px;top:max(6px,var(--st));right:calc(max(14px,var(--sr)) + 80px)}
+html.lp #game #opp2 .bt{align-items:flex-start}
+html.lp #game #opp2 .bk .skws{flex-direction:row;align-items:center;gap:4px}
+html.lp #game .me{flex-direction:column;align-items:flex-start;gap:6px}
+html.lp #game .me .mb{order:0}
+html.lp #game .me .sks{order:1;flex-direction:row-reverse;align-items:flex-end;gap:6px}
+html.lp #game .skb>span:not(.sktip):not(.skfx){display:flex;min-width:0}
+html.lp #game .skb>span b{font-size:11px}
+html.lp #game .skb>span b em.sr{display:none}
+html.lp #game .skb{padding:3px 9px 3px 3px;gap:5px;max-width:calc(var(--W) * .2)}
+html.lp #game .skb.pt{padding-right:4px}
+html.lp #game .skb i{width:28px;height:28px}
+html.lp #game .skb>span.skfx{display:flex}   /* (the marks of effects in force stay on the plate's corner) */
+.conscore{letter-spacing:0;font-weight:900;padding-right:0}
+html.lp #game #opp2 .bk{flex-direction:row;align-items:center;gap:4px}
+html.lp #game #opp2 .bk .fxs{order:2}

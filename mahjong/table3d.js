@@ -1290,7 +1290,9 @@ class Table3D {
         // the score: up to six places, right-aligned; unlit segments show faintly through the glass
         const txt = String(I.scores[s]).slice(-6).padStart(6, ' '), dw = 44, dh = 68, gap = 16, x0 = 200 - 6 * dw - 5 * gap, col = on ? '#ffc04a' : '#ff5a36';
         g.shadowColor = on ? '#ff9a2e' : '#ff3a1a'; g.shadowBlur = em ? 16 : 8;
-        for (let i = 0; i < 6; i++) seg7(g, x0 + i * (dw + gap), 330, dw, dh, txt[i], col, em ? null : 'rgba(255,90,54,.07)');
+        // (ユーザー 2026-11-16, phone: the scores must read crisply) on a phone the digits are page text laid over the window (_conHud):
+        // the texture keeps only the faint unlit segments behind the glass
+        for (let i = 0; i < 6; i++) seg7(g, x0 + i * (dw + gap), 330, dw, dh, this.mobile ? '8' : txt[i], this.mobile ? (em ? '#000' : 'rgba(255,90,54,.07)') : col, this.mobile ? null : em ? null : 'rgba(255,90,54,.07)');
         g.shadowBlur = 0;
         g.restore();
       }
@@ -1394,9 +1396,23 @@ class Table3D {
     const L = P(-R, 0), Rt = P(R, 0), T = P(0, -R), B = P(0, R);
     const cw = Rt[0] - L[0], ch = B[1] - T[1];
     el.style.cssText = `left:${L[0]}px;top:${T[1]}px;width:${cw}px;height:${ch}px;--cw:${cw}px;--sy:${ch / cw}`;
+    // the four scores as page text (phone): each window's digit area (−144…200 × 330…398 on the 1024 canvas, turned for its side)
+    // projected, and a box of that length and height laid along it, turned as the window is
+    if (this.mobile) {
+      if (!this._cscore) { this._cscore = [0, 1, 2, 3].map(() => { const d = document.createElement('div'); d.className = 'conscore'; this.host.appendChild(d); return d; }); }
+      const K = 3.9 / 1024;
+      for (let side = 0; side < 4; side++) {
+        const a = -side * PI / 2, ca = Math.cos(a), sa = Math.sin(a);
+        const W2 = (x, y) => { const X = (x * ca - y * sa) * K, Z = (x * sa + y * ca) * K; return P(X, Z); };
+        const l = W2(-150, 364), r = W2(206, 364), t = W2(28, 326), b = W2(28, 402), c = W2(28, 364);
+        const len = Math.hypot(r[0] - l[0], r[1] - l[1]), hgt = Math.hypot(b[0] - t[0], b[1] - t[1]), ang = Math.atan2(r[1] - l[1], r[0] - l[0]);
+        this._cscore[side].style.cssText = `left:${c[0]}px;top:${c[1]}px;width:${len}px;height:${hgt}px;font-size:${Math.min(hgt * 1.12, len / 3.25)}px;transform:translate(-50%,-50%) rotate(${ang}rad)`;
+      }
+    }
     this._conText();
   }
   _conText() { const el = this._chud, I = this.info; if (!el || !I) return;
+    if (this._cscore) this._cscore.forEach((d, side) => { d.textContent = String(I.scores[side]); d.classList.toggle('on', I.turn === side); });
     el.querySelector('b').textContent = `${['東', '南', '西', '北'][I.round]}${I.kyoku + 1}局`; el.querySelector('em').textContent = String(I.left); }
   // quality: 'high' | 'lite'. Lite drops shadows and renders at 1x pixel ratio.
   setQuality(q) {
