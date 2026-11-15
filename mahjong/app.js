@@ -312,7 +312,7 @@ function skillBlock(key) {
   return `<div class="pskill st${k.tier}" style="--sc:${sk.color}"><i>${icon(sk.icon)}</i><div>
     <b>${esc(L(sk.name))} <em class="sr">${MJSkills.TIERS[k.tier]}</em> <em class="tm">${t('timing_' + (sk.timing || 'turn'))}</em></b>
     <span>${esc(L(sk.desc(v)))}</span>
-    <small class="cl">${esc(t(sk.noFree ? 'costLineNF' : 'costLine', { n: (sk.cost || 1000).toLocaleString() }))}</small></div></div>`;
+    <small class="cl">${esc(t(sk.noFree ? 'costLineNF' : 'costLine', { n: (sk.cost || 1000).toLocaleString(), h: ((sk.cost || 1000) / 2).toLocaleString() }))}</small></div></div>`;
 }
 
 // ---------------------------------------------------------------- tile html
@@ -847,8 +847,12 @@ function renderStats() {
   const mw = D.maxWin;
   const mwHtml = mw && mw.pts ? `<b class="ps-mwp">${num(mw.pts)}</b><span>${mw.limit ? esc(t(mw.limit)) : esc(t('han', { n: mw.han }) + ' ' + t('fu', { n: mw.fu }))}${mw.yaku ? ` · ${esc(I18N.yaku(mw.yaku))}` : ''}</span>` : `<span class="ps-none">—</span>`;
   // (ユーザー 2026-11-15) every yaku ever made: how many times, and in what share of all the hands played (回数 / 総局数)
-  const yAll = Object.entries(raw.yaku || {}).sort((a, b) => b[1] - a[1]), ymax = yAll.length ? yAll[0][1] : 1;
-  const yHtml = yAll.length ? `<div class="ps-yh"><span>${esc(t('psYakuName'))}</span><span>${esc(t('psYakuN'))}</span><span>${esc(t('psYakuP'))}</span></div>` + yAll.map(([k, n]) => `<div class="ps-yk"><span>${esc(I18N.yaku(k))}</span><b>${n}</b><em>${pct(raw.hands ? n / raw.hands : 0)}</em><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i></div>`).join('') : `<span class="ps-none">—</span>`;
+  // (ユーザー 2026-11-15: every yaku of the game listed — those never made too, at 0, after the ones made)
+  const NOTY = { dora: 1, aka: 1, ura: 1, skill_han: 1 }, made = raw.yaku || {};
+  const yAll = (I18N.yakuKeys ? I18N.yakuKeys() : Object.keys(made)).filter(k => !NOTY[k]).map((k, i) => [k, made[k] || 0, i])
+    .sort((a, b) => b[1] - a[1] || a[2] - b[2]), ymax = Math.max(1, ...yAll.map(x => x[1]));
+  const yHd = `<span>${esc(t('psYakuName'))}</span><span>${esc(t('psYakuN'))}</span><span>${esc(t('psYakuP'))}</span>`;
+  const yHtml = yAll.length ? `<div class="ps-yh">${yHd}</div><div class="ps-yh ps-yh2">${yHd}</div>` + yAll.map(([k, n]) => `<div class="ps-yk${n ? '' : ' zero'}"><span>${esc(I18N.yaku(k))}</span><b>${n}</b><em>${pct(raw.hands ? n / raw.hands : 0)}</em><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i></div>`).join('') : `<span class="ps-none">—</span>`;
   let chHtml = '';
   if (pl.kind === 'me' && tb && tb[0] === 'all') {
     const ch = Object.entries(DB.pstats.chars).filter(([id]) => MJChars.get(id)).sort((a, b) => b[1].g - a[1].g).slice(0, 6);
@@ -974,7 +978,7 @@ async function onEvent(ev, d) {
       TB.hideAll();
       UIS.intel = null; $('#intel').hidden = true;
       refreshTable(); renderBadges(); renderHand(); layoutAll();
-      await banner(t('kyoku', { w: t('round')[g.round], n: g.kyoku + 1 }) + (g.honba ? '  ' + t('honba', { n: g.honba }) : ''));
+      await roundBanner(g);
       break;
     }
     case 'draw': {
@@ -1341,6 +1345,19 @@ function showIntel(info) {
 }
 
 // ---------------------------------------------------------------- banners, callouts, cut-ins
+// (ユーザー 2026-11-15) a new hand is announced big, across the middle of the screen: 「東 三局」 in large Mincho on a lacquer band
+// between gold lines, the honba and the dealer under it
+async function roundBanner(g) {
+  const el = $('#callout'), ja = I18N.lang === 'ja' || I18N.lang === 'zh' || I18N.lang === 'zh-TW';
+  const KN = ['一', '二', '三', '四'];
+  const big = ja ? `<i>${esc(t('round')[g.round])}</i><span>${KN[g.kyoku]}局</span>` : `<span>${esc(t('kyoku', { w: t('round')[g.round], n: g.kyoku + 1 }))}</span>`;
+  const dealer = UIS && UIS.chars ? UIS.chars[g.dealer] : null;
+  const sub = [g.honba ? t('honba', { n: g.honba }) : '', dealer ? `${t('dealerOf', { n: L(dealer.name) })}` : ''].filter(Boolean).join('　·　');
+  el.className = 'callout rbn'; el.innerHTML = `<div class="rbn-band"><div class="rbn-big">${big}</div>${sub ? `<small>${esc(sub)}</small>` : ''}</div>`;
+  void el.offsetWidth; el.classList.add('show');
+  await sleep(1700);
+  el.classList.remove('show');
+}
 async function banner(text) {
   const el = $('#callout');
   el.className = 'callout banner'; el.innerHTML = `<b>${esc(text)}</b>`;
@@ -1654,5 +1671,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, askDealSkill };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, askDealSkill, roundBanner };
 })();

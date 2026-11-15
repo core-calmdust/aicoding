@@ -78,7 +78,7 @@ const SKILLS = [
       p.fx.swapped = nw;
       return { from: old, to: nw };
     } },
-  // (ユーザー 2026-11-15: far too cheap — shutting three players out of riichi) 3000, and never free: the first use costs it too
+  // (ユーザー 2026-11-15: far too cheap — shutting three players out of riichi) the first use 1500 (never free), then 3000, 6000, …
   { id: 'seal', timing: 'turn', cost: 3000, noFree: true, icon: 'lock', color: '#c6a0ff', P: [0, 0.1, 0.2, 0.3],
     name: L('封じ', 'Seal'), short: v => L(v ? `他家のリーチ封じ・放銃${pct(v)}%引き` : '他家のリーチ封じ', v ? `No riichi for others, deal-in −${pct(v)}%` : 'No riichi for others'),
     desc: v => L(`この局、他家はこれからリーチできない（すでにしたリーチはそのまま）。${v ? `あなたが放銃したときの支払いが${pct(v)}%減る。` : ''}`, `This hand, the others can no longer declare riichi (riichi already declared stays).${v ? ` Your deal-in payments are ${pct(v)}% lower.` : ''}`),

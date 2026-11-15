@@ -52,7 +52,8 @@ class MJGame {
     const sk = this.chars[s] && SK.get(this.chars[s].skill);
     if (n === 0 && !(sk && sk.noFree)) return 0;
     const base = (this.rules.costs && sk && this.rules.costs[sk.id]) || (sk && sk.cost) || 1000;
-    return sk && sk.noFree ? base * Math.pow(2, n) : base * Math.pow(2, n - 1);   // (a skill that is never free: base, then doubling)
+    if (n === 0) return base / 2;   // (a skill that is never free: half its cost the first time, then the cost, doubling — 封じ 1500 / 3000 / 6000)
+    return base * Math.pow(2, n - 1);
   }
   skillOf(s) { return this.chars[s] && this.chars[s].skill ? SK.get(this.chars[s].skill) : null; }
   canSkill(s, timing) {
