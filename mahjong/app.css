@@ -2305,3 +2305,9 @@ html.ds #game .me .mb{margin-left:calc((var(--hz, 1) * .82 - 1) * var(--skw, 0px
 .pstats .yk-tip{font-size:max(12.5px,calc(var(--u)*2.1));gap:.3em;padding:.7em 1em}
 .pstats .yk-tip b{font-size:1.12em}
 .pstats .yk-tip span{font-size:1em}
+/* (ユーザー 2026-11-15: the name card in 明朝 throughout) the family, the coin bonus, the skill chips and the skill descriptions were gothic */
+#home.aaa .aa-plate .pp-f,#home.aaa .aa-plate .pp-cb,#home.aaa .aa-plate .pp-more,#home.aaa .aa-plate .skc,#home.aaa .aa-plate .skc b,#home.aaa .aa-plate .pp-pt b,#home.aaa .pp-info .pi-sk span{font-family:var(--serif)}
+#home.aaa .aa-plate .pp-f{font-weight:600;letter-spacing:.18em}
+#home.aaa .aa-plate .skc b{font-weight:800;letter-spacing:.06em}
+#home.aaa .pp-info .pi-sk span{font-weight:600;letter-spacing:.02em}
+#home.aaa .aa-plate .pp-cb{font-weight:600}

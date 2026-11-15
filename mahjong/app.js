@@ -363,7 +363,14 @@ function fitCard() {
   for (const k of [1, .94, .88, .82, .76]) { pl.style.setProperty('--pis', k); if (pl.offsetTop >= navB && info.scrollWidth <= info.clientWidth + 1 && info.offsetWidth >= 200) return; }   // (the whole card a little smaller until it clears the menu)
   pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
 }
-addEventListener('resize', () => { if (!$('#home').hidden) fitCard(); });
+// (ユーザー 2026-11-15: after switching to full screen the card's size was off) the card was fitted on `resize` BEFORE the stage
+// itself was (fitRoot, below, listens later), so it measured the old stage. It is fitted after the stage now — at once, on the
+// next frame and once more a moment later (a full-screen switch settles over several frames) — and whenever the home's own
+// box or the right-hand column changes size, on a full-screen change, and when the web fonts arrive.
+function refitCard() {
+  const go = () => { if (!$('#home').hidden) fitCard(); };
+  go(); cancelAnimationFrame(refitCard.f); refitCard.f = requestAnimationFrame(go); clearTimeout(refitCard.t); refitCard.t = setTimeout(go, 350);
+}
 function skillChip(key, cls = '', attrs = '') {
   const k = MJSkills.parse(key), sk = MJSkills.get(k.id);
   return `<span class="skc st${k.tier} ${cls}" style="--sc:${sk.color}" ${attrs}><i>${icon(sk.icon)}</i><b>${esc(L(sk.name))}</b><em>${MJSkills.TIERS[k.tier]}</em></span>`;
@@ -649,6 +656,10 @@ function fitRoot() {
 }
 fitRoot();
 addEventListener('resize', fitRoot);
+addEventListener('resize', refitCard);   // (after fitRoot: the stage first, then the card on it)
+for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, refitCard);
+if (window.ResizeObserver) { const ro = new ResizeObserver(refitCard); for (const q of ['#home', '#home .aa-play', '#aaBanner', '#home nav']) { const e = document.querySelector(q); if (e) ro.observe(e); } }
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(refitCard);
 addEventListener('orientationchange', () => setTimeout(fitRoot, 120));
 $('#btnStart').addEventListener('click', () => { SND.unlock(); startGame(DB.set.mode !== 'free' ? { ranked: true, len: DB.set.len } : {}); });
 $('#btnGacha').addEventListener('click', openGacha);
