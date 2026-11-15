@@ -97,13 +97,16 @@
   })();
   const DK = ['background:radial-gradient(circle at 35% 30%,#fff,#ece3cf 55%,#c9b994);box-shadow:inset 0 0 0 1px rgba(110,90,50,.35)', 'background:radial-gradient(circle at 35% 30%,#6b6f78,#3a3d44 55%,#202227);box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)'];
 
+  // 種目 (2026-11-15): the full game's three rule sets; the card's "size" value names one (1 Finkel · 2 Blitz · 3 Masters)
+  const RIDS = ['finkel', 'blitz', 'masters'], RN = {"ja": {"n": ["フィンケル", "ブリッツ", "マスターズ"], "d": ["大英博物館のフィンケルが粘土板から復元。各7枚・14マス、中央のロゼットは安全。", "各5枚・マスターズの長い道（16マス）。取るともう一度振れる。ロゼットは安全ではない。", "各7枚・マスターズの長い道（16マス）。サイコロ3個（0は4）。ロゼットは安全ではなく、取っても追加の手番はない。"], "L": "ルール"}, "en": {"n": ["Finkel", "Blitz", "Masters"], "d": ["Reconstructed by Irving Finkel (British Museum) from a clay tablet. 7 pieces, 14 squares, the middle rosette is safe.", "5 pieces on Masters’ long track (16 squares). A capture gives another roll; rosettes are not safe.", "7 pieces on Masters’ long track (16 squares). Three dice (0 counts as 4). Rosettes are not safe and a capture gives no extra roll."], "L": "Rules"}, "zh": {"n": ["芬克尔", "闪电", "马斯特斯"], "d": ["大英博物馆的芬克尔根据泥板复原。各7枚、14格，中央花格安全。", "各5枚，马斯特斯的长路线（16格）。吃子后再掷一次；花格不安全。", "各7枚，马斯特斯的长路线（16格）。3枚骰子（0算作4）。花格不安全，吃子也不能再掷。"], "L": "规则"}, "ko": {"n": ["핑켈", "블리츠", "마스터스"], "d": ["대영박물관의 핑켈이 점토판에서 복원. 각 7개·14칸, 가운데 로제트는 안전.", "각 5개·마스터스의 긴 길(16칸). 잡으면 한 번 더 굴림. 로제트는 안전하지 않음.", "각 7개·마스터스의 긴 길(16칸). 주사위 3개(0은 4). 로제트는 안전하지 않고, 잡아도 추가 차례 없음."], "L": "규칙"}, "es": {"n": ["Finkel", "Blitz", "Masters"], "d": ["Reconstruida por Irving Finkel (Museo Británico) a partir de una tablilla. 7 fichas, 14 casillas, la roseta central es segura.", "5 fichas en el recorrido largo de Masters (16 casillas). Capturar da otra tirada; las rosetas no son seguras.", "7 fichas en el recorrido largo de Masters (16 casillas). Tres dados (0 vale 4). Las rosetas no son seguras y capturar no da tirada extra."], "L": "Reglas"}, "fr": {"n": ["Finkel", "Blitz", "Masters"], "d": ["Reconstituée par Irving Finkel (British Museum) d’après une tablette. 7 pions, 14 cases, la rosace centrale est sûre.", "5 pions sur le long parcours de Masters (16 cases). Une prise donne un nouveau jet ; les rosaces ne protègent pas.", "7 pions sur le long parcours de Masters (16 cases). Trois dés (0 compte pour 4). Les rosaces ne protègent pas et une prise ne donne pas de jet en plus."], "L": "Règles"}, "pt": {"n": ["Finkel", "Blitz", "Masters"], "d": ["Reconstruída por Irving Finkel (Museu Britânico) a partir de uma tábua. 7 peças, 14 casas, a roseta central é segura.", "5 peças no percurso longo de Masters (16 casas). Capturar dá outra jogada; as rosetas não protegem.", "7 peças no percurso longo de Masters (16 casas). Três dados (0 vale 4). As rosetas não protegem e capturar não dá jogada extra."], "L": "Regras"}, "de": {"n": ["Finkel", "Blitz", "Masters"], "d": ["Von Irving Finkel (British Museum) nach einer Tontafel rekonstruiert. 7 Steine, 14 Felder, die mittlere Rosette ist sicher.", "5 Steine auf Masters’ langer Bahn (16 Felder). Schlagen gibt einen weiteren Wurf; Rosetten schützen nicht.", "7 Steine auf Masters’ langer Bahn (16 Felder). Drei Würfel (0 zählt 4). Rosetten schützen nicht, und Schlagen gibt keinen Extrawurf."], "L": "Regeln"}, "hi": {"n": ["फ़िंकेल", "ब्लिट्ज़", "मास्टर्स"], "d": ["ब्रिटिश म्यूज़ियम के इर्विंग फ़िंकेल द्वारा मिट्टी की पट्टिका से पुनर्निर्मित। 7 मोहरे, 14 खाने, बीच का रोज़ेट सुरक्षित।", "मास्टर्स के लंबे रास्ते (16 खाने) पर 5 मोहरे। पकड़ने पर फिर फेंकें; रोज़ेट सुरक्षित नहीं।", "मास्टर्स के लंबे रास्ते (16 खाने) पर 7 मोहरे। तीन पासे (0 = 4)। रोज़ेट सुरक्षित नहीं और पकड़ने पर अतिरिक्त बारी नहीं।"], "L": "नियम"}, "ar": {"n": ["فينكل", "بليتز", "ماسترز"], "d": ["أعاد إيرفنغ فينكل (المتحف البريطاني) بناءها من لوح طيني. 7 قطع و14 مربعاً، والوردة الوسطى آمنة.", "5 قطع على مسار ماسترز الطويل (16 مربعاً). الأسر يمنح رمية أخرى؛ الورود غير آمنة.", "7 قطع على مسار ماسترز الطويل (16 مربعاً). ثلاثة أحجار نرد (0 تُحسب 4). الورود غير آمنة والأسر لا يمنح دوراً إضافياً."], "L": "القواعد"}, "ru": {"n": ["Финкель", "Блиц", "Мастерс"], "d": ["Восстановлены Ирвингом Финкелем (Британский музей) по глиняной табличке. По 7 фишек, 14 клеток, центральная розетка безопасна.", "По 5 фишек на длинном пути Мастерс (16 клеток). Взятие даёт ещё бросок; розетки не безопасны.", "По 7 фишек на длинном пути Мастерс (16 клеток). Три кости (0 считается за 4). Розетки не безопасны, взятие не даёт лишнего броска."], "L": "Правила"}, "zh-TW": {"n": ["芬克爾", "閃電", "大師"], "d": ["大英博物館的芬克爾根據泥板復原。各 7 枚、14 格，中央花格安全。", "各 5 枚，大師規則的長路線（16 格）。吃子後再擲一次；花格不安全。", "各 7 枚，大師規則的長路線（16 格）。3 枚骰子（0 算作 4）。花格不安全，吃子也不能再擲。"], "L": "規則"}, "id": {"n": ["Finkel", "Blitz", "Masters"], "d": ["Direkonstruksi oleh Irving Finkel (British Museum) dari sebuah lempeng tanah liat. 7 bidak, 14 kotak, roset tengah aman.", "5 bidak di jalur panjang Masters (16 kotak). Menangkap memberi lemparan lagi; roset tidak aman.", "7 bidak di jalur panjang Masters (16 kotak). Tiga dadu (0 dihitung 4). Roset tidak aman dan menangkap tidak memberi lemparan tambahan."], "L": "Aturan"}, "tr": {"n": ["Finkel", "Blitz", "Masters"], "d": ["Irving Finkel (British Museum) tarafından bir kil tabletten yeniden kuruldu. 7 taş, 14 kare, ortadaki rozet güvenli.", "Masters'ın uzun yolunda (16 kare) 5 taş. Taş almak bir atış daha verir; rozetler güvenli değil.", "Masters'ın uzun yolunda (16 kare) 7 taş. Üç zar (0, 4 sayılır). Rozetler güvenli değil, taş almak ek atış vermez."], "L": "Kurallar"}}, rn = l => RN[l] || RN.en;
   function start(ctx) {
     const T3 = ctx.Table3D, t = ctx.t, X = Object.assign({}, TX.en, TX[ctx.lang] || {});
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') };
     const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6));
     const human = pvp ? 0 : ctx.side === 2 ? 1 : 0;   // ctx.side: 1 = you start (Light), 2 = the AI starts. You always play Light (the near row)
     let design = 'orig'; try { design = ((JSON.parse(localStorage.getItem('aicoding-ur') || '{}') || {}).settings || {}).pieces || 'orig'; } catch (e) {}
-    const kit = window.UrKit.make(T3, { design, sfx: k => SND[k] && SND[k]() });
+    const rule = RIDS[(+ctx.size || 1) - 1] || 'finkel';
+    const kit = window.UrKit.make(T3, { design, rule, sfx: k => SND[k] && SND[k]() });
     const pname = s => pvp ? X.n[s] : s === 0 ? L.you : L.ai;
     let E = null, st = null, roll = null, phase = 'wait', over = false, stopped = false, busy = false, sel = -1, ply = 0, worker = null, jid = 0, hist = [], hintMv = null, hintJ = 0, msg = '';
     const jobs = new Map(), timers = [];
@@ -125,7 +128,7 @@
     /* ---------- HUD ---------- */
     function hud() {
       if (stopped) return;
-      const goal = E ? E.RULES.finkel.goal : 15;
+      const goal = E ? E.RULES[rule].goal : 15;
       const home = s => st ? st.pos[s].filter(p => p >= goal).length : 0;
       const side = s => `<span class="hs ${st && st.turn === s && !over ? 'on' : ''}"><i class="dk" style="${DK[s]};width:18px;height:18px;border-radius:50%;display:inline-block;flex:none"></i>${pname(s)}<b>${home(s)}</b></span>`;
       const btn = phase === 'roll' && mine() ? `<button type="button" class="btn urb go" data-urt="roll">🎲 ${X.roll}</button>` : phase === 'pass' && mine() ? `<button type="button" class="btn urb go" data-urt="pass">${X.pass}</button>` : `<span class="hm">${msg}</span>`;
@@ -166,10 +169,10 @@
     const say = m => { msg = m || ''; hud(); };
 
     /* ---------- marks: the pieces that can move, the destination of the selected one ---------- */
-    const goalOf = () => E.RULES.finkel.goal;
+    const goalOf = () => E.RULES[rule].goal;
     const legal = () => roll && roll.n ? E.legalMoves(st, roll.n) : [];
     const kOf = (side, from) => st.pos[side].findIndex(p => p === from);
-    const rcOf = (side, i) => { const q = E.coords('finkel', side, i); return q ? { r: q[0], c: q[1] } : null; };
+    const rcOf = (side, i) => { const q = E.coords(rule, side, i); return q ? { r: q[0], c: q[1] } : null; };
     function showMarks() {
       kit.marks.clear();
       if (lastMv) { if (lastMv.from) kit.marks.cell(lastMv.from.r, lastMv.from.c, 0xffd65a, .14); if (lastMv.to) kit.marks.cell(lastMv.to.r, lastMv.to.c, 0xffd65a, .28); }
@@ -203,7 +206,7 @@
     async function doRoll() {
       if (phase !== 'roll' || busy || over) return;
       busy = true; phase = 'anim'; say('');
-      const r0 = E.rollDice(Math.random, 'finkel'), r = { d: r0.dice, n: r0.n };
+      const r0 = E.rollDice(Math.random, rule), r = { d: r0.dice, n: r0.n };
       await kit.roll(st.turn, r.d); if (stopped) return;
       roll = r; busy = false;
       kit.marks.clear();
@@ -244,13 +247,13 @@
     function nextTurn() {
       if (over || stopped) return;
       onTurn(st.turn);
-      kit.restDice(st.turn, null);
+      kit.restDice(st.turn, null, E.RULES[rule].dice);
       if (!pvp && st.turn === 1) { phase = 'ai'; say(L.think); later(doAIRoll, 520); return; }
       phase = 'roll'; say(pvp ? X.turnP.replace('{p}', X.n[st.turn]) : '');
     }
     async function doAIRoll() {
       if (over || stopped) return;
-      busy = true; const r0 = E.rollDice(Math.random, 'finkel'), r = { d: r0.dice, n: r0.n };
+      busy = true; const r0 = E.rollDice(Math.random, rule), r = { d: r0.dice, n: r0.n };
       await kit.roll(1, r.d); if (stopped) return;
       roll = r; busy = false; kit.marks.clear();
       const ms = legal();
@@ -294,7 +297,7 @@
       // a piece (or the start tray) of the side to move
       let from = -1;
       if (h.tray === 'start' && h.side === s) from = 0;
-      else if (!h.tray) { const i = E.pathOf('finkel', s).findIndex(q => q[0] === h.r && q[1] === h.c) + 1; if (i > 0 && st.pos[s].includes(i)) from = i; }
+      else if (!h.tray) { const i = E.pathOf(rule, s).findIndex(q => q[0] === h.r && q[1] === h.c) + 1; if (i > 0 && st.pos[s].includes(i)) from = i; }
       // tapping the destination square of the only piece that goes there
       if (from < 0 && !h.tray) { const c = ms.filter(x => !x.finish && (q => q.r === h.r && q.c === h.c)(rcOf(s, x.to))); if (c.length === 1) { commit(c[0]); return; } }
       if (from >= 0 && ms.some(x => x.from === from)) { setSel(from === sel ? -1 : from); return; }
@@ -315,7 +318,7 @@
     frame();
     loadEngine().then(e => {
       if (stopped) return; E = e;
-      st = E.newGame('finkel', first); kit.sync(st); kit.restDice(st.turn, null);
+      st = E.newGame(rule, first); kit.sync(st); kit.restDice(st.turn, null, E.RULES[rule].dice);
       if (!pvp) ask(st, 2);   // warms the worker up while the board lands
       toast(X.first.replace('{p}', pname(first)));
       later(() => nextTurn(), 700);
@@ -336,7 +339,7 @@
       undo() {
         if (!api.canUndo()) return;
         const h = hist.pop(); st = E.clone(h.st); roll = null; sel = -1; hintMv = null; hintJ++; lastMv = null;
-        kit.sync(st); kit.marks.clear(); onTurn(st.turn); kit.restDice(st.turn, null); phase = 'roll'; say('');
+        kit.sync(st); kit.marks.clear(); onTurn(st.turn); kit.restDice(st.turn, null, E.RULES[rule].dice); phase = 'roll'; say('');
       },
       canHint: () => !stopped && !over && !busy && phase === 'move' && mine() && legal().length > 0,
       hint() {
@@ -363,5 +366,6 @@
 
   window.Atlas3D = window.Atlas3D || {};
   // table: true — ちゃぶ台で遊ぶ (AI / two players, start() above); フル機能 opens ur/?skin=atlas (rated games there)
-  window.Atlas3D.ur = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, land: 'side', tableModes: ['ai', 'pvp'], clock: 'bg', levelInfo, start, SND };   // SND: shared with the rules tour (atlas/rules/ur.js)
+  window.Atlas3D.ur = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, land: 'side', tableModes: ['ai', 'pvp'], clock: 'bg', kindFirst: true, sizes: [1, 2, 3], size0: 1, sizeLabel: l => rn(l).L,
+    sizeName: (z, l) => rn(l).n[(+z || 1) - 1], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[(+v || 1) - 1] } : null, levelInfo, start, SND };   // SND: shared with the rules tour (atlas/rules/ur.js)
 })();
