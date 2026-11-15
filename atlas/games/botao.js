@@ -136,10 +136,10 @@
     /* ---------- the guides ---------- */
     const gd = new TH.Group(); board.add(gd);
     const basic = (c, o) => new TH.MeshBasicMaterial({ color: c, transparent: true, opacity: o, toneMapped: false, depthWrite: false });
-    const MAT = { path: basic(0xffffff, .9), hint: basic(0xff3d7f, .95), ball: basic(0x3df59a, .95), aiBall: basic(0x9fd8ff, .9), sel: basic(0xffd34d, .95), can: basic(0xffffff, .55), arrow: basic(0xffffff, .95), box: basic(0x3df59a, .18), boxL: basic(0x3df59a, .8), no: basic(0xff5a5a, .7) };
+    const MAT = { path: basic(0xffffff, .9), hint: basic(0xff3d7f, .95), ball: basic(0xffd34d, .95), aiBall: basic(0xffd34d, .8), aiPath: basic(0x9fd8ff, .9), ghost: basic(0xffffff, .3), ghostB: basic(0xffd34d, .45), fan: basic(0xffffff, .1), fanL: basic(0xffffff, .45), knock: basic(0xffa040, .9), sel: basic(0xffffff, .95), can: basic(0xffffff, .55), arrow: basic(0xffffff, .6), box: basic(0x3df59a, .18), boxL: basic(0x3df59a, .8), no: basic(0xff5a5a, .7) };
     const GEO = { bar: new TH.BoxGeometry(1, .004, 1), ring: new TH.TorusGeometry(1, .07, 6, 40), cone: new TH.ConeGeometry(.06, .16, 3), disc: new TH.CircleGeometry(1, 32) };
     GEO.ring.rotateX(Math.PI / 2); GEO.cone.rotateX(Math.PI / 2); GEO.disc.rotateX(-Math.PI / 2);
-    function clearGuides() { while (gd.children.length) gd.remove(gd.children[0]); kick(100); }
+    function clearGuides() { while (gd.children.length) { const m = gd.children[0]; if (m.userData.own) m.userData.own.dispose(); gd.remove(m); } kick(100); }
     function bar(x0, y0, x1, y1, wid, mat, lift) {
       const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy); if (len < .05) return null;
       const m = new TH.Mesh(GEO.bar, mat), [a, b] = wx((x0 + x1) / 2, (y0 + y1) / 2);
@@ -149,9 +149,25 @@
     // a ring on the cloth (h = 0) or round a button at half its height (h = BMID), so it sits round the piece as you see it
     const BMID = .7;   // at the height of the button's top face: the ring reads as a halo round the number you look at
     function ring(x, y, r, mat, h) { const m = new TH.Mesh(GEO.ring, mat), [a, b] = wx(x, y); m.position.set(a, Y + (h ? h * K : .012), b); m.scale.set(r * K, 1, r * K); m.userData.r = r; m.renderOrder = 4; gd.add(m); return m; }
-    // the ball's path (a line of short bars) and a mark where it ends
-    function pathLine(pts, mat, w) { if (!pts || pts.length < 2) return; let px = pts[0][0], py = pts[0][1], acc = 0, on = true; for (let k = 1; k < pts.length; k++) { const [x, y] = pts[k], d = Math.hypot(x - px, y - py); if (d < .9 && k < pts.length - 1) continue; if (on) bar(px, py, x, y, w || .8, mat, .025); acc += d; on = !on || d > 2.5; px = x; py = y; } }
-    function endMark(pv, mat) { if (!pv || !pv.path || pv.path.length < 2) return; const [x, y] = pv.path[pv.path.length - 1]; ring(x, y, pv.end === 'stop' ? 1.6 : 1.2, pv.end === 'goal' ? MAT.sel : pv.end === 'out' ? MAT.no : mat); }
+    // a path through points: solid (the ball) or dotted (a button)
+    function pathLine(pts, mat, w, dotted) {
+      if (!pts || pts.length < 2) return; let px = pts[0][0], py = pts[0][1], run = 0;
+      for (let k = 1; k < pts.length; k++) {
+        const [x, y] = pts[k], d = Math.hypot(x - px, y - py); if (d < (dotted ? .7 : 1.1) && k < pts.length - 1) continue;
+        if (!dotted || Math.floor(run / 2.2) % 2 === 0) bar(px, py, x, y, w, mat, .03); run += d; px = x; py = y;
+      }
+    }
+    // the fan of ball directions this button can play (a button close to the ball can only push it nearly straight);
+    // its edges turn red when your pull asks for more than it can
+    function fan(i, dist, limited) {
+      const c = E.aimCone(st, i, dist), R0 = 16, a1 = c.a0 - c.lo, a2 = c.a0 + c.hi;
+      if (c.lo + c.hi > .01) {
+        const g = new TH.CircleGeometry(R0 * K, 28, -a2, c.lo + c.hi); g.rotateX(-Math.PI / 2);
+        const m = new TH.Mesh(g, MAT.fan), [x, z] = wx(st.ball.x, st.ball.y); m.position.set(x, Y + .008, z); m.renderOrder = 3; m.userData.own = g; gd.add(m);
+      }
+      for (const a of [a1, a2]) bar(st.ball.x + Math.cos(a) * 1.5, st.ball.y + Math.sin(a) * 1.5, st.ball.x + Math.cos(a) * R0, st.ball.y + Math.sin(a) * R0, .25, limited ? MAT.no : MAT.fanL, .02);
+    }
+    function disc(x, y, r, mat) { const m = new TH.Mesh(GEO.disc, mat), [a, b] = wx(x, y); m.position.set(a, Y + .01, b); m.scale.set(r * K, 1, r * K); m.renderOrder = 3; gd.add(m); return m; }
     // the ball's marker: a little cone floating over the ball, always in view (the ball itself is small on the big table)
     const beacon = new TH.Mesh(new TH.ConeGeometry(1.15 * K, 2.2 * K, 18), new TH.MeshBasicMaterial({ color: 0xffd34d, transparent: true, opacity: .95, toneMapped: false, depthTest: false, depthWrite: false }));
     beacon.rotation.x = Math.PI; beacon.renderOrder = 9; beacon.visible = false; board.add(beacon);
@@ -164,13 +180,25 @@
     function aimMove(a) { if (!a || sel < 0) return null; const c = E.ballAim(st, sel, a.ang, distOf(a.pow)); return c ? { i: sel, ang: c.ang, v: c.v, limited: c.limited } : { i: sel, ang: Math.atan2(st.ball.y - st.b[sel].y, st.ball.x - st.b[sel].x), v: vOf(a.pow), limited: true }; }
     let pv = null, pvKey = '';
     function preview(mv) { const k = mv.i + ':' + mv.ang.toFixed(4) + ':' + mv.v.toFixed(1) + ':' + st.ply; if (k !== pvKey) { pvKey = k; pv = E.ballPath(st, mv); } return pv; }
-    // what a flick would do: the button's run to its first contact (dots), then the ball's path to its first knock (the line)
-    function drawMove(mv, matPath, matBall) {
+    // what a flick would do — directions only (2026-11-15 ユーザー：ボールは大体どっちへ進むかわかればよく、どこまで飛ぶかは強弱の
+    // さじ加減でプレイヤーが考える). White dots: your button's run to the ball, then a short arrow the way it goes on.
+    // Gold arrow: the way the ball leaves. Red ring: an opponent's piece your button would hit first (a foul).
+    function arrow(x, y, a, len, mat, w, dotted) {
+      const x1 = x + Math.cos(a) * len, y1 = y + Math.sin(a) * len;
+      if (dotted) dots(x, y, x1, y1, mat, w); else bar(x, y, x1, y1, w, mat, .03);
+      for (const s2 of [-1, 1]) { const b2 = a + Math.PI + s2 * .5; bar(x1, y1, x1 + Math.cos(b2) * 2.2, y1 + Math.sin(b2) * 2.2, w, mat, .03); }
+    }
+    function drawMove(mv, matBtn, matBall) {
       const b = st.b[mv.i], tr = E.aimTrace(st, mv.i, mv.ang);
-      dots(b.x, b.y, tr.gx, tr.gy, matPath, .35);
-      if (tr.what === 'ball') { ring(tr.gx, tr.gy, D.RB, matPath, BMID); const p = preview(mv); if (p.path) { pathLine(p.path, matBall, .85); endMark(p, matBall); } }
-      else if (tr.what != null) { const o = st.b[tr.what]; ring(o.x, o.y, D.RB + .5, MAT.no, BMID); ring(tr.gx, tr.gy, D.RB, MAT.no, BMID); }
-      return tr;
+      dots(b.x, b.y, tr.gx, tr.gy, matBtn, .42);
+      if (tr.what !== 'ball') { if (tr.what != null) { const o = st.b[tr.what]; ring(o.x, o.y, D.RB + .6, MAT.no, BMID); } ring(tr.gx, tr.gy, D.RB, MAT.no, BMID); return; }
+      if (Math.hypot(tr.gx - b.x, tr.gy - b.y) > 2) ring(tr.gx, tr.gy, D.RB, matBtn, BMID);   // (not on top of the button itself)
+      const p = preview(mv), F = p.sim.frames, N = F.length;
+      let kc = -1; for (const e of p.sim.events) if (e.k === 'ball' && (e.a === mv.i || e.b === mv.i)) { kc = Math.min(N - 1, Math.round(e.t * 60)); break; }
+      if (kc < 0) return;
+      const k2 = Math.min(N - 1, kc + 3), dir = (j, k) => Math.atan2(F[k][j * 2 + 1] - F[kc][j * 2 + 1], F[k][j * 2] - F[kc][j * 2]), mvd = (j, k) => Math.hypot(F[k][j * 2] - F[kc][j * 2], F[k][j * 2 + 1] - F[kc][j * 2 + 1]);
+      if (mvd(20, k2) > .05) arrow(st.ball.x, st.ball.y, dir(20, k2), 20, matBall, .6);
+      if (mvd(mv.i, k2) > .05) arrow(tr.gx, tr.gy, dir(mv.i, k2), 8, matBtn, .42, true);
     }
     function showGuides() {
       clearGuides();
@@ -186,12 +214,13 @@
       }
       if (aim && sel >= 0) {
         const mv = aimMove(aim), b = st.b[sel];
+        fan(sel, distOf(aim.pow), mv.limited);
         drawMove(mv, MAT.path, MAT.ball);
         // the pull: a band from the button back toward your finger, its colour the strength
         const L0 = D.RB + 1.5 + aim.pow * 13, back = aim.ang + Math.PI;
-        MAT.arrow.color.copy(new TH.Color().setHSL(.33 - aim.pow * .33, .9, .55));
-        bar(b.x + Math.cos(back) * D.RB, b.y + Math.sin(back) * D.RB, b.x + Math.cos(back) * L0, b.y + Math.sin(back) * L0, 1.2, MAT.arrow, .03);
-        const ex = b.x + Math.cos(back) * L0, ey = b.y + Math.sin(back) * L0; ring(ex, ey, .9, MAT.arrow);
+        // its colour and length: the strength (cyan soft → red full, never the ball's gold); the % shows by your finger
+        MAT.arrow.color.setHSL(.55 + aim.pow * .42, .8, .6); MAT.arrow.opacity = .9;
+        bar(b.x + Math.cos(back) * D.RB, b.y + Math.sin(back) * D.RB, b.x + Math.cos(back) * L0, b.y + Math.sin(back) * L0, .7, MAT.arrow, .03);
       } else if (hintMove && hintMove.i === sel) drawMove(hintMove, MAT.hint, MAT.hint);
       kick(120);
     }
@@ -215,7 +244,7 @@
     const howtoOn = () => { try { return localStorage.getItem(HK) !== 'off'; } catch (e) { return true; } };
     let cardEl = null;
     function howtoCard(done) {
-      const Hh = HOWTO[lang] || HOWTO.en, steps = Hh[mousey() ? 'm' : 't'], ic = ['☝', '↙', '🟢', '📣', '🖐'];
+      const Hh = HOWTO[lang] || HOWTO.en, steps = Hh[mousey() ? 'm' : 't'], ic = ['☝', '↙', '✨', '📣', '🖐'];
       const d = document.createElement('div'); d.className = 'bthow'; d.dir = lang === 'ar' ? 'rtl' : 'ltr';
       d.innerHTML = `<div class="bthow-c" role="dialog" aria-modal="true"><h2>${esc(Hh.title)}</h2><ol>${steps.map((x, i) => `<li><i>${ic[i]}</i><span>${esc(x)}</span></li>`).join('')}</ol><label><input type="checkbox"> ${esc(Hh.never)}</label><p class="n">${esc(Hh.note.replace('{r}', t('bv.rules')))}</p><button type="button">${esc(Hh.ok)}</button></div>`;
       const close = () => { if (d.querySelector('input').checked) { try { localStorage.setItem(HK, 'off'); } catch (e) {} } d.remove(); cardEl = null; done && done(); };
@@ -252,7 +281,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=2'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=3'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -400,7 +429,7 @@
     async function aiFlick(mv, my) {
       if (!mv || mv.i == null) { mv = { i: autoSel(), ang: -Math.PI / 2, v: 60 }; }
       // show which button and where it means to send the ball for a moment, then flick (its hand may still wobble)
-      clearGuides(); pan = { x: 0, y: 0 }; frameBallAnd(mv.i, true); const b = st.b[mv.i]; ring(b.x, b.y, D.RB + .9, MAT.sel, BMID); drawMove(mv, MAT.path, MAT.aiBall); kick(150);
+      clearGuides(); pan = { x: 0, y: 0 }; frameBallAnd(mv.i, true); const b = st.b[mv.i]; ring(b.x, b.y, D.RB + .9, MAT.sel, BMID); drawMove(mv, MAT.aiPath, MAT.aiBall); kick(150);
       await new Promise(r => later(r, 900)); if (stopped || my !== tok) return;
       flick(E.perform(mv, level, seed()));
     }
