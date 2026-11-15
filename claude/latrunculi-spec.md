@@ -40,7 +40,7 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - コーチ（coach.js、ja/en）：方針分類＝勝ち筋・2個挟む・挟む・助ける・守る・跳ぶ・寄せる・並べる／離して置く。置く段階は定跡ではなく原則（並べる・隅を避ける）で解説。
 - 振り返り解説：挟みを逃した・助けを逃した・挟まれる形を作った。
 - オンライン：Firebase プロジェクト未作成のため準備中（firebase-config.js が null）。作成後に secrules.py へ追加。
-- 言語：**ja・en のみ**（残り12言語は i18n-lt-more.js・coach-i18n.js に追加する。揃うまで言語メニューに出さない：app.js の SUPPORTED / window.LT_LANGS）。
+- 言語：**14言語**（2026-11-16。残り12言語は i18n-lt-more.js・coach-i18n.js・lux.json。言語メニューは app.js の SUPPORTED / window.LT_LANGS。検査：全言語でキー206・コーチ113の抜けなし、差し込み記号一致、PC／スマホで表示確認。zh の題名「罗马强盗棋」は定訳未確認）。
 
 ## 3D（フル機能版 ?skin=atlas、2026-11-16）
 - atlas/models/latrunculi.js：3D盤6種（Table3D.BOARDS.latrunculi、保存キー atlas-latrunculi-look）＝大理石（既定）・トラバーチン・屋根瓦・モザイクの床・くるみ材・斑岩。2Dの盤画像（latrunculi/img/bd-*・fr-*）を面と縁に貼り、格子の溝を法線マップで彫る。3D駒6種（Table3D.PIECES.latrunculi、atlas-latrunculi-pc3）＝黒と白のガラス（既定）・青と琥珀のガラス・骨と角・川の小石・青銅と銀の硬貨・素焼きの赤と白。`Table3D.latrunculi.turn(g, k)` で駒を裏返す。
@@ -59,7 +59,7 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - Praline のマーク（shared/praline-badge.js の一覧）には入れていない（1スレッドの JS エンジンのため）。mtsplit／tools/mtsim も対象外。
 
 ## 未着手（次の作業）
-- 残り12言語（2Dページ）、レッスンの準備ステップ、piso・quintana のレッスン／パズル、ルール違いタブ。
+- レッスンの準備ステップ、piso・quintana のレッスン／パズル、ルール違いタブ。
 - 大百科：正式アイコン（icons3d.js のシーン＋書き出し。いまは仮の images/atlas/latrunculi.webp）、3D卓でのレート戦・パズル・レッスン（`atlas/app.js` RTG・`atlas/puzzles.js`・`atlas/lessons3d.js`。いまはフル機能版を開く）、種目カードの絵と説明を 2D のルールカードから作る `atlas/kindart.js`（2Dが14言語になってから。いまはアダプタ内の文言と簡易な絵）。
 - AI：評価と探索の強化、WASM 化、マルチスレッド、レート基準値の実測。
 - OG 画像（images/latrunculi.webp）の撮り直し、オンライン対戦（Firebase プロジェクト）。
