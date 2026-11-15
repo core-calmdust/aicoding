@@ -140,7 +140,7 @@ function render(it, t) {
 function loop(now) {
   if (!items.size) { running = false; return; }
   requestAnimationFrame(loop);
-  if (now - last < 33) return;
+  if (now - last < 49) return;   // (2026-11-16, ユーザー: batteries — 20 a second; the light moves slowly)
   last = now;
   if (document.hidden || document.documentElement.classList.contains('lite')) return;
   const t = now / 1000;
