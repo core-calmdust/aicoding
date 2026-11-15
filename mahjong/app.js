@@ -926,7 +926,7 @@ async function startGame(opt = {}) {
   const agents = [auto ? new AutoMe(lv) : new Human(), new SlowBot(lv), new SlowBot(lv), new SlowBot(lv)];
   G = new MJGame({ agents, chars, rules: { length: len, skills }, ui: onEvent });
   UIS.game = G;
-  TB.setSleeves(chars.map(c => c.color));   // (each seat's sleeve in her sisters' colour)
+  TB.setSleeves(chars.map(c => c.color), chars.map(c => c.nail));   // (each seat's sleeve in her sisters' colour)
   $('#gSnd').innerHTML = IC.gear; $('#gExit').innerHTML = IC.exit;
   $('#gKeys').innerHTML = IC.keys; $('#gKeys').title = t('keysT'); $('#gKeys').setAttribute('aria-label', t('keysT')); showKeys(false);
   $('#khelp').innerHTML = t('keys');
