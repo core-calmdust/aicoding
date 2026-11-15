@@ -89,7 +89,7 @@ class Bot {
     const sh = shan(c, m);
     if (o.canKyuushu && sh >= 4) return { act: 'kyuushu' };
     // skills
-    if (o.canSkill && !(L < 0 && Math.random() < -L * .8) && this.wantSkill(g, s, sh)) return { act: 'skill' };
+    if (o.canSkill && !(L < 0 && Math.random() < -L * .8)) { const cs = o.canSkills || [true]; for (let i = 0; i < cs.length; i++) if (cs[i] && this.wantSkill(g, s, sh, i)) return { act: 'skill', slot: i }; }
     if (o.mustTsumogiri) {
       if (o.ankans && o.ankans.length) return { act: 'ankan', t: o.ankans[0] };
       return { act: 'discard', id: o.drawn };
@@ -168,12 +168,12 @@ class Bot {
 
   // value of one use (points) for paid-use decisions; filled from the skill-value simulation
   skillValue(id) { const V = (typeof MJSkills !== 'undefined' && MJSkills.value) || (typeof require !== 'undefined' ? require('./skills.js').value : {}); return V[id] ?? 1000; }
-  paidOk(g, s) {
-    const cost = g.skillCost(s);
+  paidOk(g, s, i) {
+    const cost = g.skillCost(s, i);
     if (!cost) return true;
     if (this.policy === 'always') return true;
     if (this.policy === 'never') return false;
-    return this.skillValue(g.chars[s].skill) >= cost && g.scores[s] - cost >= 12000;
+    return this.skillValue(g.skillOf(s, i).id) >= cost && g.scores[s] - cost >= 12000;
   }
 
   // deal-time skills (point multipliers): decide right after the deal from the starting hand
@@ -181,7 +181,7 @@ class Bot {
     if (this.level < 0 && Math.random() < -this.level * .8) return false;
     if (this.policy === 'always') return true;
     if (this.policy === 'never') return false;
-    if (!this.paidOk(g, s)) return false;
+    if (!this.paidOk(g, s, o.slot)) return false;
     const p = g.P[s];
     const c = MJ.countsIds(p.hand);
     const sh = shan(c, 0);
@@ -201,11 +201,11 @@ class Bot {
   }
 
   // turn-timed skills
-  wantSkill(g, s, sh) {
+  wantSkill(g, s, sh, i) {
     const p = g.P[s];
-    const sk = g.chars[s].skill;
+    const sk = g.skillOf(s, i).id;
     if (this.policy === 'never') return false;
-    if (!this.paidOk(g, s)) return false;
+    if (!this.paidOk(g, s, i)) return false;
     if (this.policy === 'always') return true;
     switch (sk) {
       case 'doraplus': return p.riichi || sh === 0;

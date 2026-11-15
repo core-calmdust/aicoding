@@ -34,6 +34,7 @@ class MJGame {
     this.honba = 0;
     this.kyotaku = 0;        // points on the table (riichi sticks, skill costs)
     this.skillUses = [0, 0, 0, 0];
+    this.skillFree = [false, false, false, false];   // the one free use of the game is spent
     this.over = false;
     this.log = [];
     this.lastRoundIdx = this.rules.length === 'east' ? 0 : 1;
@@ -46,24 +47,35 @@ class MJGame {
   roundWind() { return WIND[this.round]; }
   isDealer(s) { return s === this.dealer; }
   liveLeft() { return this.liveEnd - this.livePos; }
-  // first use in a game is free; later uses cost the skill's base, doubling each time (paid into the pot)
-  skillCost(s) {
-    const n = this.skillUses[s];
-    const sk = this.chars[s] && SK.get(this.chars[s].skill);
-    if (n === 0 && !(sk && sk.noFree)) return 0;
-    const base = (this.rules.costs && sk && this.rules.costs[sk.id]) || (sk && sk.cost) || 1000;
-    if (n === 0) return base / 2;   // (a skill that is never free: half its cost the first time, then the cost, doubling — 封じ 1500 / 3000 / 6000)
-    return base * Math.pow(2, n - 1);
+  // A seat has one or two skills: her own (slot 0) and, with a partner — a sister of the same family — the partner's (slot 1).
+  // (ユーザー 2026-11-15) The cost is shared by the two: the first use in a game is free for one of them (never for a skill
+  // with noFree — 封じ), and every later use costs more by the count of uses, whichever skill it is:
+  // the skill's base on the 2nd use, ×2 on the 3rd, ×4 on the 4th … (封じ: half its base on the 1st, the base on the 2nd, …). Paid into the pot.
+  slot(s, i) {
+    const c = this.chars[s]; if (!c) return null;
+    const id = i ? (c.skill2 !== c.skill ? c.skill2 : null) : c.skill;   // (the same skill twice is one skill)
+    return id && SK.get(id) ? { sk: SK.get(id), tier: (i ? c.tier2 : c.tier) | 0 } : null;
   }
-  skillOf(s) { return this.chars[s] && this.chars[s].skill ? SK.get(this.chars[s].skill) : null; }
-  canSkill(s, timing) {
+  skillCost(s, i) {
+    const n = this.skillUses[s];
+    const sl = this.slot(s, i | 0), sk = sl && sl.sk;
+    const noFree = !!(sk && sk.noFree);
+    if (!noFree && !this.skillFree[s]) return 0;
+    const base = (this.rules.costs && sk && this.rules.costs[sk.id]) || (sk && sk.cost) || 1000;
+    if (noFree) return base / 2 * Math.pow(2, n);
+    return base * Math.pow(2, Math.max(0, n - 1));
+  }
+  skillOf(s, i) { const sl = this.slot(s, i | 0); return sl ? sl.sk : null; }
+  // i: the slot (0 / 1); left out = either
+  canSkill(s, timing, i) {
+    if (i == null) return this.canSkill(s, timing, 0) || this.canSkill(s, timing, 1);
     const p = this.P[s];
     if (!this.rules.skills) return false;
-    const sk = this.skillOf(s);
-    if (!sk || p.skillUsed) return false;
+    const sk = this.skillOf(s, i);
+    if (!sk || p.skUsed[i]) return false;
     if ((sk.timing || 'turn') !== (timing || 'turn')) return false;
     if (sk.can && !sk.can(this, s)) return false;
-    return this.scores[s] >= this.skillCost(s);
+    return this.scores[s] >= this.skillCost(s, i);
   }
   doraInds() { return this.doraIdx.map(i => T(this.dead[i])); }
   uraInds() { return this.doraIdx.map(i => T(this.dead[i + 1])); }
@@ -135,7 +147,7 @@ class MJGame {
     this.lastResult = null;
     this.P = [0, 1, 2, 3].map(s => ({
       seat: s, hand: [], melds: [], river: [], riichi: false, dblRiichi: false, ippatsu: false, riichiTurn: -1,
-      furitenTemp: false, furitenRiichi: false, discards: new Set(), skillUsed: false, fx: {}, firstTurn: true,
+      furitenTemp: false, furitenRiichi: false, discards: new Set(), skUsed: [false, false], fx: {}, firstTurn: true,
     }));
     for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) { const s = (this.dealer + k) % 4; for (let n = 0; n < 4; n++) this.P[s].hand.push(this.draw()); }
     for (let k = 0; k < 4; k++) { const s = (this.dealer + k) % 4; this.P[s].hand.push(this.draw()); }
@@ -147,10 +159,13 @@ class MJGame {
     if (this.rules.skills) {
       for (let k = 0; k < 4; k++) {
         const s = (this.dealer + k) % 4;
-        if (!this.canSkill(s, 'deal')) continue;
         const ag = this.agents[s];
-        const yes = ag.dealSkill ? await ag.dealSkill(this, s, { cost: this.skillCost(s), skill: this.skillOf(s).id, tier: this.chars[s].tier | 0 }) : false;
-        if (yes && this.canSkill(s, 'deal')) await this.useSkill(s);
+        for (let i = 0; i < 2; i++) {
+          if (!this.canSkill(s, 'deal', i)) continue;
+          const sl = this.slot(s, i);
+          const yes = ag.dealSkill ? await ag.dealSkill(this, s, { cost: this.skillCost(s, i), skill: sl.sk.id, tier: sl.tier, slot: i }) : false;
+          if (yes && this.canSkill(s, 'deal', i)) await this.useSkill(s, i);
+        }
       }
     }
     let drawn = this.draw();
@@ -268,13 +283,15 @@ class MJGame {
           opts.canKyuushu = k >= 9;
         }
       }
-      opts.canSkill = this.canSkill(s);
+      opts.canSkills = [this.canSkill(s, 'turn', 0), this.canSkill(s, 'turn', 1)];
+      opts.canSkill = opts.canSkills[0] || opts.canSkills[1];
       opts.forbid = afterCall ? this.kuikae(p) : [];
       opts.mustTsumogiri = p.riichi && !afterCall;
       const a = await this.agents[s].turn(this, s, opts);
 
       if (a.act === 'skill' && opts.canSkill) {
-        await this.useSkill(s);
+        const i = a.slot != null && opts.canSkills[a.slot | 0] ? a.slot | 0 : opts.canSkills[0] ? 0 : 1;
+        await this.useSkill(s, i);
         if (p.fx.swapped) { drawn = p.fx.swapped; p.fx.swapped = null; }
         continue;
       }
@@ -616,14 +633,17 @@ class MJGame {
   }
 
   // ---------------------------------------------------------------- skills
-  async useSkill(s) {
-    const cost = this.skillCost(s);
-    const sk = SK.get(this.chars[s].skill), tier = this.chars[s].tier | 0;
+  async useSkill(s, i) {
+    i = i | 0;
+    const cost = this.skillCost(s, i);
+    const { sk, tier } = this.slot(s, i);
     this.scores[s] -= cost; this.kyotaku += cost;
+    if (!sk.noFree && !this.skillFree[s]) this.skillFree[s] = true;
     this.skillUses[s]++;
-    this.P[s].skillUsed = true;
+    this.P[s].skUsed[i] = true;
     const info = await sk.use(this, s, SK.val(sk, tier));
-    await this.emit('skill', { seat: s, skill: sk.id, tier, cost, info: info || {}, scores: this.scores.slice(), kyotaku: this.kyotaku, char: this.chars[s] });
+    // slot 1 is the partner's skill: `by` is who uses it (the cut-in shows her)
+    await this.emit('skill', { seat: s, slot: i, skill: sk.id, tier, cost, info: info || {}, scores: this.scores.slice(), kyotaku: this.kyotaku, char: this.chars[s], by: (i && this.chars[s].partner) || this.chars[s] });
   }
 }
 
