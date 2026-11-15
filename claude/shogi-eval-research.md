@@ -100,6 +100,14 @@ tanuki-（いま使っているデータ `tanuki-.nnue-pytorch-2024-07-30.1` の
 
 1 と 2 は準備済み。3 以降は 1・2 の結果を見てから着手する。
 
+## 7. 実測の結果（2026-11-15 追記）
+
+- **§0 の 1（幅を広げる案）は外れ**：計測ツールを直して測り直しても、1024 は 300ms で −69（対照 −20）。浅い読み（3万局面）では +32〜62 だが、深い読みで差が消える。ツールは主因ではなかった。
+- **§3.1（勝敗の重みを手数で変える）も、512 幅では改善なし**：300ms で −42、尺度を合わせて −75。
+- 分かったこと：**浅い読みで効く改善（探索すれば分かることの先取り）は、実戦の強さにならない**。採否は 300ms で決める。残るのは教師の質（§3.2）と、器の作り（§2）・探索の合わせ込み（§4）。
+- §3.2 の道具を用意した：`shogi/tools/nnue/dlrelabel.py`・`dlrelabel.sh`（onnxruntime＋CoreML、無償の GCT モデル）。
+- 教師モデルの条件：GCT（dlshogi WCSC31 版に同梱の `model-0000225kai.onnx`、10ブロック）は配布ページに利用条件の記載なし。dlshogi の `dr2_exhi`（15ブロック）は、私的利用は自由・学習用の棋譜生成は可、商用利用・直接の対局・再配布・追加学習は不可（https://tadaoyamaoka.hatenablog.com/entry/2021/08/17/000710 ）。
+
 ## 出典
 
 - つようら王11mini/micro：やねうら王公式 https://yaneuraou.yaneu.com/2026/10/14/tsuyou-11-mini-micro-released-under-mit-license/ 、窓の杜 https://forest.watch.impress.co.jp/docs/news/2148597.html 、評価関数タイプの一覧 https://github.com/yaneurao/YaneuraOu/wiki/やねうら王のインストール手順
