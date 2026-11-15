@@ -682,3 +682,4 @@
 
 ## ヒストリカルのタグ（規定・2026-11-15）
 - カテゴリ「ヒストリカル」（`cat: 'hist'`）のゲーム（セネト・ウル・コナネ）は「定番」タグ（classic）ではなく「ヒストリカル」タグ（historical、柱の神殿のアイコン）を付ける（2026-11-15 ユーザー指示）。`shared/atlas.js` の TAGS と GAMES、トップページ `index.html` のゲーム定義（tags・`.tag.historical`・HIST_SVG・I18N `tag.historical`）、大百科の `atlas/i18n.js` の `tag.historical`（14言語）。ルドーのように別カテゴリが主で also にヒストリカルを持つゲームは定番のまま。
+- テーブルホッケー・フチボウ（2026-11-15）：トップページのSS（images/hockey.webp・images/botao.webp、1200×900）と大百科の一覧のSS（atlas/shots/）は3D版の対局中の画面（盤が主役。ホッケーは対局開始時のリンク全体を斜めから、フチボウはキックオフ直後のボール周りの寄り）。
