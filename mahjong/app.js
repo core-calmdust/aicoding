@@ -218,7 +218,32 @@ const SND = (() => {
   function play(n, g = 1, rate = 1) { g *= GAIN[n] || 1; const a = ctx(); if (!a || !on()) return false; load(); const b = BUF[n]; if (!b) return false;
     const s = a.createBufferSource(); s.buffer = b; s.playbackRate.value = rate; const v = a.createGain(); v.gain.value = g; s.connect(v).connect(seOut(a)); s.start(); return true; }
   const pick3 = k => `${k}${1 + ((Math.random() * 3) | 0)}`;
+  // filtered noise with a moving filter: wind, fire, sweeps, thunder (for the skills' effects)
+  function noise(d, type, f0, f1, g = .2, delay = 0, Q = 1, atk = .02) {
+    const a = ctx(); if (!a || !on()) return;
+    const n = a.createBuffer(1, Math.max(1, (a.sampleRate * d) | 0), a.sampleRate), ch = n.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+    const s = a.createBufferSource(); s.buffer = n; const t0 = a.currentTime + delay;
+    const f = a.createBiquadFilter(); f.type = type; f.Q.value = Q; f.frequency.setValueAtTime(f0, t0); f.frequency.exponentialRampToValueAtTime(f1, t0 + d);
+    const v = a.createGain(); v.gain.setValueAtTime(0, t0); v.gain.linearRampToValueAtTime(g, t0 + atk); v.gain.exponentialRampToValueAtTime(.0001, t0 + d);
+    s.connect(f).connect(v).connect(seOut(a)); s.start(t0); s.stop(t0 + d + .05);
+  }
+  // one sound per skill effect (ユーザー 2026-11-15: the effects over the table have their own sounds), in step with skillfx.js (1 s)
+  const SKFX = {
+    wareme: () => { for (const t of [0, .16, .34]) { noise(.09, 'highpass', 5000, 1500, .3, t, .7, .002); noise(.5, 'lowpass', 900, 70, .34, t + .02, .8, .005); } tone(70, .7, 'sine', .2, .34, 34); },
+    hanup: () => { noise(.95, 'bandpass', 220, 1500, .3, 0, .7, .22); noise(.8, 'lowpass', 500, 150, .26, .05, .6, .15); for (let i = 0; i < 7; i++) noise(.03, 'highpass', 3000, 2500, .1, .15 + Math.random() * .65, 1, .002); tone(90, .8, 'sawtooth', .05, 0, 150); },
+    guard: () => { tone(196, .9, 'sine', .14); tone(294, .9, 'sine', .1); tone(392, .8, 'triangle', .07, .05); for (const [f, t] of [[1568, .1], [2093, .22], [2637, .34]]) tone(f, .35, 'sine', .05, t); noise(.12, 'bandpass', 1200, 900, .12, 0, 6, .002); },
+    shugi: () => { [2093, 2637, 3136, 2349, 3520, 2794, 3951, 3136].forEach((f, i) => { tone(f, .22, 'sine', .07, .08 + i * .085); tone(f * 1.5, .12, 'sine', .03, .08 + i * .085); }); tone(523, .9, 'triangle', .06); tone(784, .9, 'triangle', .05, .1); },
+    pot: () => { noise(.95, 'bandpass', 300, 2400, .18, 0, 3, .3); tone(110, .9, 'sawtooth', .05, 0, 440); tone(220, .9, 'sine', .08, 0, 880); for (let i = 0; i < 5; i++) tone(1760 + i * 220, .14, 'sine', .05, .45 + i * .08); },
+    doraplus: () => { noise(.35, 'lowpass', 2400, 200, .3, 0, .7, .003); tone(120, .5, 'sine', .22, 0, 45); [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, .7, 'triangle', .08, .06 + i * .05)); for (let i = 0; i < 5; i++) tone(3136 + i * 370, .2, 'sine', .04, .3 + i * .09); },
+    lure: () => { noise(.8, 'bandpass', 2600, 380, .16, 0, 4, .35); tone(1400, .8, 'sine', .08, 0, 330); tone(2100, .8, 'sine', .04, .05, 495); tone(330, .35, 'triangle', .12, .75); tone(495, .35, 'sine', .08, .75); },
+    mind: () => { for (const [f, t] of [[440, 0], [554, .18], [659, .36]]) { tone(f, .7, 'sine', .09, t); tone(f * 1.006, .7, 'sine', .07, t); } tone(1760, .5, 'sine', .04, .5, 1720); noise(.6, 'bandpass', 900, 2200, .05, .1, 8, .2); },
+    peek: () => { tone(500, .7, 'sine', .08, 0, 2400); noise(.7, 'bandpass', 800, 5000, .1, 0, 5, .1); for (let i = 0; i < 5; i++) tone(2400, .035, 'square', .03, .12 + i * .11); tone(3136, .3, 'sine', .08, .72); },
+    swap: () => { noise(.38, 'bandpass', 500, 3000, .2, 0, 3, .12); noise(.38, 'bandpass', 3000, 500, .2, .32, 3, .12); tone(660, .3, 'triangle', .08, 0, 990); tone(990, .3, 'triangle', .08, .32, 660); tone(1319, .3, 'sine', .09, .7); tone(1976, .35, 'sine', .06, .76); },
+    seal: () => { tone(98, 1, 'sine', .2); tone(147, .9, 'sine', .1); noise(.9, 'lowpass', 300, 120, .12, 0, .7, .2); for (const t of [.22, .36]) { noise(.06, 'bandpass', 3400, 2600, .22, t, 5, .002); tone(2200, .08, 'square', .03, t); } noise(.3, 'lowpass', 1400, 90, .4, .58, .7, .003); tone(82, .5, 'sine', .26, .58, 40); },
+  };
   return {
+    skillFx: id => { const f = SKFX[id]; if (f) f(); },
     tile: () => { if (!play(pick3('tile'), 1, .96 + Math.random() * .08)) click(); },
     stick: () => { if (!play(pick3('stick'), 1)) tone(1800, .08, 'triangle', .06); },
     voice: k => play('v-' + k, 1),
@@ -1138,7 +1163,7 @@ async function onEvent(ev, d) {
     case 'skill': {
       if (d.cost > 0) SND.stick();   // (the points go into the pot)
       await cutin(d.seat, 'skill', d);
-      if (FAST >= 1 && window.MJSkillFx && TB) await MJSkillFx.play(d.skill, d.seat, TB, { lite: !!DB.set.lite });   // (ユーザー 2026-11-15: after the picture and the words, the skill's own effect over the table — skillfx.js)
+      if (FAST >= 1 && window.MJSkillFx && TB) { SND.skillFx(d.skill); await MJSkillFx.play(d.skill, d.seat, TB, { lite: !!DB.set.lite }); }   // (ユーザー 2026-11-15: after the picture and the words, the skill's own effect over the table — skillfx.js)
       refreshTable(); renderBadges();
       if (d.seat === ME) {
         if (d.info.peek) await peekPop(d.info.peek);   // (ユーザー 2026-11-15: shown once, mid-screen — remembered, not kept in the box)
