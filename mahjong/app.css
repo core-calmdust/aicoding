@@ -2235,3 +2235,7 @@ html.lp #chara.ch2 .ptn .sib .frame{width:100%;height:100%}
 html.lp #chara.ch2 .ptn .ptn-row{flex-wrap:wrap}
 html.lp #chara.ch2 .ptn .sib{flex:0 0 32px}
 html.lp #chara.ch2 .chsel.on{font-size:12.5px;letter-spacing:.08em;white-space:nowrap;padding:10px 4px}
+/* 最終結果の報酬欄（ユーザー 2026-11-15：16:9 で下がはみ出た）— ボーナスの行が2つになると .earn の幅が全行ぶん並んだ長さになり、
+   段位の欄が細く押されて縦に積まれていた。コインの行とボーナスの行を格子に積んで、幅はいちばん長い1行ぶんにする */
+.fn-foot .earn{display:grid;grid-template-columns:1fr auto;justify-items:end;align-items:center;column-gap:.4em}
+.fn-foot .earn .rbonus{grid-column:1/-1}
