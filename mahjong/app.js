@@ -1611,11 +1611,16 @@ function peekPop(ids) {
 // 読心 (ユーザー 2026-11-16): the others' hands, shown the same way as 先読み — one plate in the middle of the screen, a row per
 // player (face, テンパイ with the waits / n向聴, and any tiles the skill shows), closed by a tap or a key
 function mindPop(read) {
+  // (ユーザー 2026-11-16) every row: face · name · state in a fixed width · then the tiles, all starting in the same column, each
+  // group headed by what it is — 待ち (the tiles that would win) or 手の内 (tiles of the hand the skill shows)
+  const grp = (lab, tiles) => `<i class="mr-t"><small>${esc(lab)}</small>${tiles}</i>`;
   const row = (r, i) => {
-    const st = r.shanten === 0 ? `<b class="tp">${esc(t('tenpai'))}</b>${r.waits && r.waits.length ? `<i class="mr-w"><small>${esc(t('waitsOn'))}</small>${r.waits.map(w => typeHTML(w)).join('')}</i>` : ''}`
-      : r.shanten < 0 ? `<b class="tp">${esc(t('tenpai'))}</b>` : `<b>${esc(t('shanten', { n: r.shanten }))}</b>`;
+    const tp = r.shanten <= 0;
+    const st = `<b class="${tp ? 'tp' : ''}">${esc(tp ? t('tenpai') : t('shanten', { n: r.shanten }))}</b>`;
     const ch = UIS.chars[r.seat];
-    return `<div class="mr-r" style="--i:${i}"><img src="${charImg(ch, 'face')}" alt=""><span class="mr-n">${esc(L(ch.name))}</span><span class="mr-s">${st}</span>${r.show && r.show.length ? `<i class="mr-sh">${r.show.map(id => tileHTML(id)).join('')}</i>` : ''}</div>`;
+    const ts = (r.shanten === 0 && r.waits && r.waits.length ? grp(t('waitsOn'), r.waits.map(w => typeHTML(w)).join('')) : '')
+      + (r.show && r.show.length ? grp(t('handPart'), r.show.map(id => tileHTML(id)).join('')) : '');
+    return `<div class="mr-r" style="--i:${i}"><img src="${charImg(ch, 'face')}" alt=""><span class="mr-n">${esc(L(ch.name))}</span><span class="mr-s">${st}</span><span class="mr-ts">${ts}</span></div>`;
   };
   return new Promise(done => {
     const w = document.createElement('div'); w.className = 'peekpop mindpop';
