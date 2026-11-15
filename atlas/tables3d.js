@@ -181,6 +181,8 @@
       set: k => { ls.set('atlas-chess-look', k); ls.set('atlas-chess-view', '3d'); } },
     // atlas/skin/go.js / gomoku.js: 'kaya' | 'lacquer' ('0': the 2D stones)
     // go / gomoku (atlas/models/goban.js, 2026-11-15): six boards each; 'atlas-<game>-look' ('0' = the game's own 2D board in the full game)
+    // dots (atlas/models/dots.js, 2026-11-15): six surfaces
+    dots: { list: ['notebook', 'clipboard', 'slate', 'blueprint', 'daifuku', 'whiteboard'], get: () => { const v = ls.get('atlas-dots-look'); return BOARDS.dots.list.includes(v) ? v : 'notebook'; }, set: k => ls.set('atlas-dots-look', k) },
     // morris (atlas/models/morris.js, 2026-11-15): six boards
     morris: { list: ['jeweller', 'roman', 'viking', 'garden', 'cloister', 'bauhaus'], get: () => { const v = ls.get('atlas-morris-look'); return BOARDS.morris.list.includes(v) ? v : 'jeweller'; }, set: k => ls.set('atlas-morris-look', k) },
     // mancala (atlas/models/mancala.js, 2026-11-15): six boards
@@ -281,6 +283,14 @@
     gingham: { ja: 'ピクニック', en: 'Picnic', zh: '野餐', 'zh-TW': '野餐', ko: '피크닉', es: 'Pícnic', fr: 'Pique-nique', pt: 'Piquenique', de: 'Picknick', ru: 'Пикник', tr: 'Piknik', id: 'Piknik', hi: 'पिकनिक', ar: 'نزهة' },
     slate: { ja: '黒板', en: 'Blackboard', zh: '黑板', 'zh-TW': '黑板', ko: '칠판', es: 'Pizarra', fr: 'Tableau noir', pt: 'Quadro-negro', de: 'Tafel', ru: 'Школьная доска', tr: 'Kara tahta', id: 'Papan tulis', hi: 'ब्लैकबोर्ड', ar: 'سبورة' },
     denim: { ja: 'デニム', en: 'Denim', zh: '牛仔布', 'zh-TW': '丹寧', ko: '데님', es: 'Mezclilla', fr: 'Denim', pt: 'Jeans', de: 'Denim', ru: 'Деним', tr: 'Kot', id: 'Denim', hi: 'डेनिम', ar: 'دنيم' },
+  },
+  dots: {
+    notebook: { ja: 'リングノート', en: 'Spiral notebook', zh: '线圈笔记本', 'zh-TW': '線圈筆記本', ko: '스프링 노트', es: 'Cuaderno de espiral', fr: 'Cahier à spirale', pt: 'Caderno espiral', de: 'Spiralblock', ru: 'Тетрадь на спирали', tr: 'Spiralli defter', id: 'Buku spiral', hi: 'स्पाइरल नोटबुक', ar: 'دفتر حلزوني' },
+    clipboard: { ja: '方眼のクリップボード', en: 'Graph-paper clipboard', zh: '方格纸写字板', 'zh-TW': '方格紙寫字板', ko: '모눈종이 클립보드', es: 'Portapapeles cuadriculado', fr: 'Porte-bloc quadrillé', pt: 'Prancheta quadriculada', de: 'Klemmbrett mit Karopapier', ru: 'Планшет с миллиметровкой', tr: 'Kareli kâğıtlı altlık', id: 'Papan klip kertas grafik', hi: 'ग्राफ़ पेपर क्लिपबोर्ड', ar: 'لوح مشبك بورق مربعات' },
+    slate: { ja: '木枠の石盤', en: 'Framed slate', zh: '木框石板', 'zh-TW': '木框石板', ko: '나무틀 석판', es: 'Pizarra con marco', fr: 'Ardoise encadrée', pt: 'Lousa com moldura', de: 'Schiefertafel im Rahmen', ru: 'Грифельная доска в рамке', tr: 'Çerçeveli taş tahta', id: 'Batu tulis berbingkai', hi: 'फ़्रेम वाली स्लेट', ar: 'لوح أردواز بإطار' },
+    blueprint: { ja: '製図台の青焼き', en: 'Blueprint on a drafting board', zh: '绘图板上的蓝图', 'zh-TW': '製圖板上的藍圖', ko: '제도판 위 청사진', es: 'Plano en tablero de dibujo', fr: 'Plan sur planche à dessin', pt: 'Planta na prancheta', de: 'Blaupause auf dem Zeichenbrett', ru: 'Синька на чертёжной доске', tr: 'Çizim masasında mavi kopya', id: 'Cetak biru di meja gambar', hi: 'ड्राफ़्टिंग बोर्ड पर ब्लूप्रिंट', ar: 'مخطط أزرق على لوح رسم' },
+    daifuku: { ja: '大福帳', en: 'Daifukuchō ledger', zh: '大福帐', 'zh-TW': '大福帳', ko: '다이후쿠초 장부', es: 'Libro daifukuchō', fr: 'Registre daifukuchō', pt: 'Livro daifukuchō', de: 'Daifukuchō-Kontobuch', ru: 'Счётная книга дайфукутё', tr: 'Daifukuchō defteri', id: 'Buku besar daifukuchō', hi: 'दाइफ़ुकुचो बही', ar: 'دفتر دايفوكوتشو' },
+    whiteboard: { ja: 'ホワイトボード', en: 'Whiteboard', zh: '白板', 'zh-TW': '白板', ko: '화이트보드', es: 'Pizarra blanca', fr: 'Tableau blanc', pt: 'Quadro branco', de: 'Whiteboard', ru: 'Маркерная доска', tr: 'Beyaz tahta', id: 'Papan tulis putih', hi: 'व्हाइटबोर्ड', ar: 'سبورة بيضاء' },
   },
   morris: {
     jeweller: { ja: '宝石商の盤', en: 'Jeweller’s board', zh: '珠宝商棋盘', 'zh-TW': '珠寶商棋盤', ko: '보석상의 판', es: 'Tablero de joyero', fr: 'Plateau de joaillier', pt: 'Tabuleiro de joalheiro', de: 'Juwelierbrett', ru: 'Доска ювелира', tr: 'Kuyumcu tahtası', id: 'Papan perhiasan', hi: 'जौहरी का बोर्ड', ar: 'لوح الصائغ' },
@@ -436,6 +446,17 @@
       magnet: { ja: 'マグネット', en: 'Magnets', zh: '磁铁', 'zh-TW': '磁鐵', ko: '자석', es: 'Imanes', fr: 'Aimants', pt: 'Ímãs', de: 'Magnete', ru: 'Магниты', tr: 'Mıknatıs', id: 'Magnet', hi: 'चुंबक', ar: 'مغناطيس' },
       button: { ja: 'ボタン', en: 'Buttons', zh: '纽扣', 'zh-TW': '鈕扣', ko: '단추', es: 'Botones', fr: 'Boutons', pt: 'Botões', de: 'Knöpfe', ru: 'Пуговицы', tr: 'Düğme', id: 'Kancing', hi: 'बटन', ar: 'أزرار' },
       pearl: { ja: '真珠', en: 'Pearls', zh: '珍珠', 'zh-TW': '珍珠', ko: '진주', es: 'Perlas', fr: 'Perles', pt: 'Pérolas', de: 'Perlen', ru: 'Жемчуг', tr: 'İnci', id: 'Mutiara', hi: 'मोती', ar: 'لؤلؤ' },
+    } };
+  // dots (atlas/models/dots.js, 2026-11-15): the writing tools, 'atlas-dots-pc3'
+  PIECES.dots = { list: ['ballpoint', 'pencil', 'fountain', 'marker', 'chalk', 'brush'], get: () => { const v = ls.get('atlas-dots-pc3'); return PIECES.dots.list.includes(v) ? v : 'ballpoint'; }, set: k => ls.set('atlas-dots-pc3', k),
+    thumb: k => new URL('img/pc3-dots-' + k + '.webp?v=1', ME).href,
+    names: {
+      ballpoint: { ja: 'ボールペン', en: 'Ballpoint pens', zh: '圆珠笔', 'zh-TW': '原子筆', ko: '볼펜', es: 'Bolígrafos', fr: 'Stylos à bille', pt: 'Canetas esferográficas', de: 'Kugelschreiber', ru: 'Шариковые ручки', tr: 'Tükenmez kalemler', id: 'Pulpen', hi: 'बॉलपॉइंट पेन', ar: 'أقلام حبر جاف' },
+      pencil: { ja: '色鉛筆', en: 'Coloured pencils', zh: '彩色铅笔', 'zh-TW': '色鉛筆', ko: '색연필', es: 'Lápices de colores', fr: 'Crayons de couleur', pt: 'Lápis de cor', de: 'Buntstifte', ru: 'Цветные карандаши', tr: 'Kuru boyalar', id: 'Pensil warna', hi: 'रंगीन पेंसिलें', ar: 'أقلام تلوين' },
+      fountain: { ja: '万年筆', en: 'Fountain pens', zh: '钢笔', 'zh-TW': '鋼筆', ko: '만년필', es: 'Plumas estilográficas', fr: 'Stylos plume', pt: 'Canetas-tinteiro', de: 'Füller', ru: 'Перьевые ручки', tr: 'Dolma kalemler', id: 'Pena tinta', hi: 'फ़ाउंटेन पेन', ar: 'أقلام حبر سائل' },
+      marker: { ja: 'サインペン', en: 'Felt-tip markers', zh: '记号笔', 'zh-TW': '簽字筆', ko: '사인펜', es: 'Rotuladores', fr: 'Feutres', pt: 'Canetinhas', de: 'Filzstifte', ru: 'Фломастеры', tr: 'Keçeli kalemler', id: 'Spidol', hi: 'फ़ेल्ट-टिप मार्कर', ar: 'أقلام لبّاد' },
+      chalk: { ja: 'チョーク', en: 'Chalk in holders', zh: '粉笔', 'zh-TW': '粉筆', ko: '분필', es: 'Tizas con portatizas', fr: 'Craies et porte-craie', pt: 'Giz com porta-giz', de: 'Kreide im Halter', ru: 'Мел в держателе', tr: 'Tutuculu tebeşir', id: 'Kapur dengan pemegang', hi: 'होल्डर में चॉक', ar: 'طباشير بحامل' },
+      brush: { ja: '筆', en: 'Ink brushes', zh: '毛笔', 'zh-TW': '毛筆', ko: '붓', es: 'Pinceles de tinta', fr: 'Pinceaux à encre', pt: 'Pincéis de tinta', de: 'Tuschepinsel', ru: 'Кисти для туши', tr: 'Mürekkep fırçaları', id: 'Kuas tinta', hi: 'स्याही ब्रश', ar: 'فرش حبر' },
     } };
   // morris (atlas/models/morris.js, 2026-11-15): 'atlas-morris-pc3'
   PIECES.morris = { list: ['metal', 'glass', 'bone', 'stone', 'pewter', 'bauhaus'], get: () => { const v = ls.get('atlas-morris-pc3'); return PIECES.morris.list.includes(v) ? v : 'metal'; }, set: k => ls.set('atlas-morris-pc3', k),
