@@ -535,7 +535,7 @@
     async function flickLive(move) {
       if (over || stopped || busy) return;
       busy = true; phase = 'anim'; clearGuides(); callBar(null); task(''); beaconAt(false); pan = { x: 0, y: 0 };
-      const s0 = st, p = s0.pos, d = 1 - p, c = E.simCore(s0, move), TS = .7; SND.flick(); trailLast = null;
+      const s0 = st, p = s0.pos, d = 1 - p, c = E.simCore(s0, move), TS = Math.min(1, .7 + .015 * Math.max(1, Math.min(20, level || 1))); SND.flick(); trailLast = null;
       let gt = 0, last = performance.now(), ev = 0, px = c.X[20], py = c.Y[20];
       await new Promise(done => { (function step() {
         if (stopped) return done();
@@ -615,7 +615,7 @@
         const g = E.clone(st), B = E.keeperBox(d, true); E.setKeeper(g, d, PK_LANE() * (D.PK_GW / 2 - D.KHW), B.y0);
         const mv = await think(g, level); if (stopped || my !== tok) return; pkShot = mv && !mv.declare ? mv : null;
         // not too fast to react to (2026-11-15 ユーザー：キッカーの球の速度が早すぎると人間はほぼ対応不可) — still enough to reach the goal
-        if (pkShot && human(d) && !pvp) pkShot.v = Math.max(90, Math.min(115, pkShot.v));   // (84–96 at half speed was far too slow: 2026-11-15 ユーザー)
+        if (pkShot && human(d) && !pvp) { const L = Math.max(1, Math.min(20, level || 1)); pkShot.v = Math.max(90 + 2 * L, Math.min(110 + 4.5 * L, pkShot.v)); }   // stronger AIs shoot harder (Lv.20 still too weak at 90–115: 2026-11-15 ユーザー)   // (84–96 at half speed was far too slow: 2026-11-15 ユーザー)
       }
       if (st.pk && !human(d)) {
         const B = E.keeperBox(d, true); pkDive = { x: PK_LANE() * (D.PK_GW / 2 - D.KHW + .5), y: B.y0 };
