@@ -1731,3 +1731,17 @@ html.lp #acts .ab kbd,html.lp .da-b .ab kbd{display:none}
 /* the tier mark in a skill's heading (em.sr) also matched the stats-row class .sr (a grid with a 30px first column) and showed a
    long empty dark pill after the letter */
 em.sr{display:inline-block;grid-template-columns:none;gap:0}
+/* settings on a phone (ユーザー 2026-11-15): two columns, everything smaller, the whole dialog in one view */
+.st-grid{display:block}
+html.lp .modal.settings .mbox{width:min(640px,calc(var(--W, 100vw) - 40px));max-height:calc(var(--H, 100vh) - 24px);padding:14px 18px 12px;overflow:auto}
+html.lp .modal.settings h2{font-size:20px;margin:0 0 10px}
+html.lp .st-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+html.lp .modal.settings .st-row{gap:5px;margin-bottom:10px}
+html.lp .modal.settings .st-row small{font-size:11.5px}
+html.lp .modal.settings .st-row .seg button{font-size:13px;padding:6px 4px}
+html.lp .modal.settings .st-v{gap:8px;padding:3px 8px 3px 3px;border-radius:10px}
+html.lp .modal.settings .st-m{width:30px;height:30px;border-radius:8px}
+html.lp .modal.settings .st-m svg{width:17px;height:17px}
+html.lp .modal.settings .st-v input[type=range]{height:22px}
+html.lp .modal.settings .st-note{margin:-4px 0 0;font-size:10.5px;line-height:1.5}
+html.lp .modal.settings .cbtns .btn{padding:7px 18px;font-size:13px}
