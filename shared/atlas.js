@@ -56,7 +56,7 @@
       name: N("ファノロナ", "Fanorona", "法诺罗纳", "파노로나", "Fanorona", "Fanorona", "Fanorona", "Fanorona", "फ़ानोरोना", "فانورونا", "Фанорона", "法諾羅納", "Fanorona", "Fanorona") },
     { id: 'alquerque', cat: 'chess', store: ['aicoding-alquerque'], href: 'alquerque/', color: '#9a2a24', released: '2026-11-01', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 240, ls: 11 },
       name: N("アルケルケ", "Alquerque", "阿尔凯尔凯", "알케르케", "Alquerque", "Alquerque", "Alquerque", "Alquerque", "अलकेरके", "القِرْقة", "Алькерк", "阿爾凱爾凱", "Alquerque", "Alquerque") },
-    { id: 'konane', cat: 'hist', also: ['chess'], store: ['aicoding-konane', 'konane-online-name'], href: 'konane/', color: '#0f8a7e', released: '2026-11-06', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 226, ls: 9 },
+    { id: 'konane', cat: 'hist', also: ['chess'], store: ['aicoding-konane', 'konane-online-name'], href: 'konane/', color: '#0f8a7e', released: '2026-11-06', tags: ['historical', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 226, ls: 9 },
       name: N("コナネ", "Kōnane", "科纳内", "코나네", "Kōnane", "Kōnane", "Kōnane", "Kōnane", "कोनाने", "كونانيه", "Конане", "科納內", "Kōnane", "Kōnane") },
     { id: 'agon', cat: 'chess', store: ['aicoding-agon', 'agon-online-name'], href: 'agon/', color: '#6c1a1c', released: '2026-11-04', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 152, ls: 12 },
       name: N("アゴン", "Agon", "阿贡棋", "아곤", "Agon", "Agon", "Agon", "Agon", "अगोन", "أغون", "Агон", "阿貢棋", "Agon", "Agon") },
@@ -80,9 +80,9 @@
       name: N('マンカラ', 'Mancala', '播棋', '만칼라', 'Mancala', 'Mancala', 'Mancala', 'Mancala', 'मंकाला', 'مانكالا', 'Манкала', '播棋（Mancala）', 'Mancala (congklak)', 'Mangala') },
     { id: 'backgammon', cat: 'race', store: ['aicoding-backgammon-v2', 'backgammon-online-name'], href: 'backgammon/', color: '#a17cff', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 23 },
       name: N('バックギャモン V2', 'Backgammon V2', '西洋双陆棋 V2', '백개먼 V2', 'Backgammon V2', 'Backgammon V2', 'Gamão V2', 'Backgammon V2', 'बैकगैमन V2', 'طاولة الزهر V2', 'Нарды V2', '西洋雙陸棋 V2', 'Backgammon V2', 'Tavla V2') },
-    { id: 'ur', cat: 'hist', also: ['race'], store: ['aicoding-ur', 'ur-online-name'], href: 'ur/', color: '#2a3f9e', released: '2026-11-04', tags: ['classic', 'ai', 'online', 'rated', 'lessons', 'puzzles', 'variants', 'mobile'], total: {},
+    { id: 'ur', cat: 'hist', also: ['race'], store: ['aicoding-ur', 'ur-online-name'], href: 'ur/', color: '#2a3f9e', released: '2026-11-04', tags: ['historical', 'ai', 'online', 'rated', 'lessons', 'puzzles', 'variants', 'mobile'], total: {},
       name: N('ウル王朝のゲーム', 'The Royal Game of Ur', '乌尔王族局戏', '우르 왕실 게임', 'El Juego Real de Ur', 'Le Jeu royal d’Ur', 'O Jogo Real de Ur', 'Das Königliche Spiel von Ur', 'उर का शाही खेल', 'لعبة أور الملكية', 'Царская игра Ура', '烏爾王族局戲', 'Permainan Kerajaan Ur', 'Ur Kraliyet Oyunu') },
-    { id: 'senet', cat: 'hist', also: ['race'], store: ['aicoding-senet', 'senet-online-name'], href: 'senet/', color: '#8c9a2e', released: '2026-11-07', tags: ['classic', 'ai', 'online', 'rated', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 178, ls: 9 },
+    { id: 'senet', cat: 'hist', also: ['race'], store: ['aicoding-senet', 'senet-online-name'], href: 'senet/', color: '#8c9a2e', released: '2026-11-07', tags: ['historical', 'ai', 'online', 'rated', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 178, ls: 9 },
       name: N('セネト', 'Senet', '塞尼特', '세네트', 'Senet', 'Senet', 'Senet', 'Senet', 'सेनेट', 'سينيت', 'Сенет', '塞尼特', 'Senet', 'Senet') },
     { id: 'ludo', cat: 'race', also: ['hist'], store: ['aicoding-ludo'], href: 'ludo/', color: '#d9473b', released: '2026-11-08', tags: ['classic', 'ai', 'rated', 'lessons', 'variants', 'mobile'], total: { ls: 10 },
       name: N('ルドー・パチーシ', 'Ludo & Pachisi', '鲁多与帕棋西', '루도 & 파치시', 'Ludo y Pachisi', 'Ludo et Pachisi', 'Ludo e Pachisi', 'Ludo & Pachisi', 'लूडो और पचीसी', 'لودو وباتشيسي', 'Лудо и Пачиси', '魯多與帕奇西', 'Ludo & Pachisi', 'Ludo ve Pachisi') },
@@ -117,6 +117,7 @@
   /* ---------------- common tag & badge rules ---------------- */
   // tag order = display order. c = colour, i = small icon (svg path d)
   const TAGS = {
+    historical: { c: '#8a6a2e', i: 'M4 21h16M5 18h14M7 18v-8M12 18v-8M17 18v-8M4 10h16M12 3l8 5H4z' },
     classic:  { c: '#b5532f', i: 'M4 20h16M6 20v-3h12v3M8 17l1-6h6l1 6M8 11h8M12 4l2 3h-4zM12 7v4' },
     ai:       { c: '#7552e0', i: 'M12 3a4 4 0 0 1 4 4v1h1a3 3 0 0 1 0 6h-1v1a4 4 0 0 1-8 0v-1H7a3 3 0 0 1 0-6h1V7a4 4 0 0 1 4-4z' },
     online:   { c: '#22aa74', i: 'M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18' },
