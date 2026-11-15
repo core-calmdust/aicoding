@@ -852,6 +852,36 @@
       sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { bt.dataset.v = b.dataset.v; pref[g.id + ':var'] = b.dataset.v; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); try { SFX.tap && SFX.tap(); } catch (x) {} close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
     };
   }
+  // 種目 as shogi's cards for every game (2026-11-16): a button (picture + name) that opens a sheet of cards — a picture of the rule
+  // (adapter.kindArt(value) → svg, else the game's icon) with its name and description (adapter.optInfo(...).sub)
+  // pictures of a few games' rules (the starting position on a small board)
+  const kBoard = (W, H, diag, cell) => { const u = 10, pd = 7, w = (W - 1) * u + pd * 2, h = (H - 1) * u + pd * 2; let o = `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true"><rect x="1" y="1" width="${w - 2}" height="${h - 2}" rx="4" fill="#d9b27a" stroke="#8a5a2a" stroke-width="1"/><g stroke="#6a4422" stroke-width=".6">`;
+    for (let x = 0; x < W; x++) o += `<path d="M${pd + x * u} ${pd}v${(H - 1) * u}"/>`; for (let y = 0; y < H; y++) o += `<path d="M${pd} ${pd + y * u}h${(W - 1) * u}"/>`;
+    if (diag) for (let x = 0; x < W - 1; x++) for (let y = 0; y < H - 1; y++) if ((x + y) % 2 === 0) o += `<path d="M${pd + x * u} ${pd + y * u}l${u} ${u}M${pd + (x + 1) * u} ${pd + y * u}l${-u} ${u}"/>`;
+    o += '</g>'; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = cell(x, y); if (c) o += `<circle cx="${pd + x * u}" cy="${pd + y * u}" r="3.6" fill="${c === 1 ? '#2a1d14' : '#f4ead6'}" stroke="${c === 1 ? '#000' : '#8a7550'}" stroke-width=".5"/>`; }
+    return o + '</svg>'; };
+  const KART = {
+    morris: (sid, v) => window.AtlasMini && AtlasMini.morris ? AtlasMini.morris({ v: { 12: 'twelve', 6: 'six' }[v] || 'nine', b: '' }) : '',
+    konane: (sid, v) => { const n = +v || 8, u = 8, w = n * u + 6; let o = `<svg viewBox="0 0 ${w} ${w}" aria-hidden="true"><rect width="${w}" height="${w}" rx="4" fill="#b98a55"/>`; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) o += `<circle cx="${3 + (x + .5) * u}" cy="${3 + (y + .5) * u}" r="${u * .38}" fill="${(x + y) % 2 ? '#f2ead8' : '#222'}"/>`; return o + '</svg>'; },
+    fanorona: (sid, v) => { const W = +v === 2 ? 5 : 9, H = 5, m = (H - 1) / 2; return kBoard(W, H, true, (x, y) => y < m ? 1 : y > m ? 2 : x === (W - 1) / 2 ? 0 : (x % 2 === 0) === (x < (W - 1) / 2) ? 1 : 2); },
+    alquerque: (sid, v) => kBoard(5, 5, true, (x, y) => y < 2 || (y === 2 && x > 2) ? 1 : y > 2 || (y === 2 && x < 2) ? 2 : 0),
+  };
+  function kindPick(g, ad, sid, head) {
+    const sel = $(sid), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick vpick kpick'; sel.hidden = true; sel.after(bt);
+    const art = (v, cls) => { const a = ad.kindArt ? ad.kindArt(sid, v) : KART[g.id] ? KART[g.id](sid, v) : ''; return a ? `<span class="${cls} kart">${a}</span>` : `<span class="${cls} kart kic">${g3(g)}</span>`; };
+    const nm = o => { const inf = ad.optInfo ? ad.optInfo(sid, o.value, lang) || {} : {}; return inf.name || o.textContent; };
+    const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `${art(sel.value, 'vico')}<span>${esc(o ? nm(o) : '')}</span><i>▾</i>`; };
+    sel.addEventListener('change', paint); paint();
+    bt.onclick = () => {
+      try { SFX.tap && SFX.tap(); } catch (x) {}
+      const sh = document.createElement('div'); sh.className = 'lvsheet vsheet';
+      sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(head)}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="vgrps"><div class="lvs-l vgrid">${[...sel.options].map(o => { const inf = ad.optInfo ? ad.optInfo(sid, o.value, lang) || {} : {};
+        return `<button type="button" role="option" data-v="${esc(o.value)}" class="vcard${o.value === sel.value ? ' on' : ''}">${art(o.value, 'vsvg')}<span class="vtx"><span class="vnm">${esc(inf.name || o.textContent)}</span>${inf.tag ? `<em>${esc(inf.tag)}</em>` : ''}</span>${inf.sub ? `<small>${esc(inf.sub)}</small>` : ''}</button>`; }).join('')}</div></div></div>`;
+      document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
+      const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
+      sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); try { SFX.tap && SFX.tap(); } catch (x) {} close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
+    };
+  }
   function bvCard(g, id, push, flown) {
     const ad = glOK && window.Atlas3D && Atlas3D[id], r = P[id];
     const rows = [];
@@ -1016,6 +1046,8 @@
     // the rule pulldown: a new rule rebuilds the card with its own 長さ choices
     if ($('bvRuleSel') && RU) $('bvRuleSel').addEventListener('change', () => { pref[id + ':rule'] = $('bvRuleSel').value; const z = RU.size0($('bvRuleSel').value); if (z) pref[id + ':size'] = z; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {} bvCard(g, id, false, false); });
     ['bvRuleSel', 'bvSide', 'bvSize', 'bvRtOpp', 'bvLsK', 'bvShM', 'bvShD'].forEach(sid => { if (!$(sid)) return;
+      { const lb = $(sid).closest('label'), lt = lb ? ((lb.querySelector('.lbt') || {}).textContent || [...lb.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('')).trim() : '';
+        if (lt && lt === KL && $(sid).options.length > 1) { kindPick(g, ad, sid, lt); return; } }   // (種目, 2026-11-16: every game as shogi — big cards with a picture and the rule's description)
       // (2026-11-14) data-pick="drop": a small list that drops down right under the button (a few choices: 上海's 難易度)
       if ($(sid).dataset.pick === 'drop') {
         const sel = $(sid), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
