@@ -195,3 +195,6 @@ def tidy(out):
 
 if __name__ == '__main__' and sys.argv[1:2] == ['vec']: vec(sys.argv[2])
 if __name__ == '__main__' and sys.argv[1:2] == ['tidy']: tidy(sys.argv[2])
+
+# (2026-11-15) the WebP copies and the phones' half-size pictures (atlas/tools/mobile-tex.py)
+import subprocess as _sp, sys as _sys, os as _os; _sp.run([_sys.executable, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "mobile-tex.py")])

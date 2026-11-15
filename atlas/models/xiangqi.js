@@ -256,7 +256,8 @@
   const texs = {};
   function imgTex(name, srgb = true, aniso = 8) {
     if (texs[name]) return texs[name];
-    const TT = T(), t = new TT.TextureLoader().load(XQ3 + name + '.webp' + XQ3V, () => { if (X.kick) X.kick(300); });
+    const TT = T(), t = new TT.TextureLoader().load(XQ3 + name + (LO() ? '-h' : '') + '.webp' + XQ3V,   // (phones: the half-size copy, atlas/tools/mobile-tex.py)
+      () => { if (X.kick) X.kick(300); });
     if (srgb) t.encoding = TT.sRGBEncoding; t.anisotropy = aniso;
     return (texs[name] = t);
   }

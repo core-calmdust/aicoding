@@ -49,9 +49,9 @@
       });
     }).catch(() => {});
   }
-  // baked once from those SVGs into one sheet (images/atlas/shogi-glyphs.png, same licence) — fast to load and slice
+  // baked once from those SVGs into one sheet (images/atlas/shogi-glyphs.webp — the lossless copy of the tools' .png, atlas/tools/mobile-tex.py — same licence) — fast to load and slice
   const ME_SRC = (document.currentScript && document.currentScript.src) || location.href;
-  const SHEET = (() => { try { return new URL('../../images/atlas/shogi-glyphs.png?v=1', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi-glyphs.png?v=1'; } })();
+  const SHEET = (() => { try { return new URL('../../images/atlas/shogi-glyphs.webp?v=2', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi-glyphs.webp?v=2'; } })();
   const SHEET_KEYS = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
   /* ---------- the six 3D piece sets (2026-11-11, Table3D.PIECES.shogi, key 'atlas-shogi-pc3'): the same raised-lacquer boxwood pieces with
      the inscriptions of the 2D sets — 盛り上げ (2kanji_3d, the original) · 一字書き (1kanji_3d) · 錦旗 · 水無瀬 · 菱湖 (LuffyKudo) · 浮木 (sunfish-shogi's two-character pieces, CC0, atlas/tools/shogi-glyphs-futamoji.py).
@@ -64,7 +64,7 @@
     if (set === 'moriage') return glyphsReady;
     if (SHEETS[set]) return SHEETS[set];
     const G = GLY[set] = {};
-    const url = (() => { try { return new URL('../../images/atlas/shogi-glyphs-' + set + '.png?v=27', ME_SRC).href; } catch (e) { return '../images/atlas/shogi-glyphs-' + set + '.png?v=27'; } })();
+    const url = (() => { try { return new URL('../../images/atlas/shogi-glyphs-' + set + '.webp?v=28', ME_SRC).href; } catch (e) { return '../images/atlas/shogi-glyphs-' + set + '.webp?v=28'; } })();
     return (SHEETS[set] = new Promise(res => { const im = new Image(); im.onload = () => { SHEET_KEYS.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 296; c.getContext('2d', { willReadFrequently: true }).drawImage(im, (i % 5) * 256, (i / 5 | 0) * 296, 256, 296, 0, 0, 256, 296); G[k] = c; }); res(); upgrade(set); }; im.onerror = () => res(); im.src = url; }));
   }
   const glyphsReady = new Promise(res => {
@@ -179,7 +179,9 @@
   // 本榧 (2026-11-10): the same grain as the 2D board (shogi/index.html body.skin-kaya), pre-rendered to images/atlas/shogi-kaya.webp
   // (a same-origin picture: an SVG filter drawn into the canvas would taint it for WebGL); the top is redrawn once it has loaded
   let kayaImg = null;
-  const KAYA_SRC = (() => { try { return new URL('../../images/atlas/shogi-kaya.webp?v=3', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi-kaya.webp?v=3'; } })();   // (from this file: the tool pages too)
+  // phones (Table3D.coarse / lite): the half-size copies <name>-h.webp (atlas/tools/mobile-tex.py, 2026-11-15) — they shrank the full picture anyway
+  const HS = () => (X.coarse || X.lite) ? '-h' : '';
+  const KAYA_SRC = (() => { try { return new URL('../../images/atlas/shogi-kaya' + HS() + '.webp?v=3', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi-kaya' + HS() + '.webp?v=3'; } })();   // (from this file: the tool pages too)
   function withKaya(fn) {
     if (kayaImg && kayaImg.complete && kayaImg.naturalWidth) { fn(kayaImg); return; }
     if (!kayaImg) { kayaImg = new Image(); kayaImg.src = KAYA_SRC; }
@@ -206,13 +208,13 @@
   function withImg(name, fn) {
     let im = imgs[name];
     if (im && im.complete && im.naturalWidth) { fn(im); return; }
-    if (!im) { im = imgs[name] = new Image(); im.src = SH3 + name + '.webp' + SH3V; }
+    if (!im) { im = imgs[name] = new Image(); im.src = SH3 + name + HS() + '.webp' + SH3V; }
     im.addEventListener('load', () => fn(im), { once: true });
   }
   const texs = {};
   function imgTex(name, srgb = true, aniso = 8) {
     if (texs[name]) return texs[name];
-    const t = new (T().TextureLoader)().load(SH3 + name + '.webp' + SH3V, () => { if (X.kick) X.kick(300); });
+    const t = new (T().TextureLoader)().load(SH3 + name + HS() + '.webp' + SH3V, () => { if (X.kick) X.kick(300); });
     if (srgb) t.encoding = T().sRGBEncoding; t.anisotropy = aniso;
     return (texs[name] = t);
   }

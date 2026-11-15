@@ -426,7 +426,8 @@
   /* ---------- materials (shared) ---------- */
   const GIMG = (() => { try { return new URL('../../images/atlas/shogi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi3d/'; } })(), GIMGV = '?v=1', itex = {};
   function imgTex(name, srgb = true) { if (itex[name]) return itex[name];
-    const t = new (T().TextureLoader)().load(GIMG + name + '.webp' + GIMGV, () => { if (X.kick) X.kick(300); });
+    const t = new (T().TextureLoader)().load(GIMG + name + (X.coarse || X.lite ? '-h' : '') + '.webp' + GIMGV,   // (phones: the half-size copy, atlas/tools/mobile-tex.py)
+      () => { if (X.kick) X.kick(300); });
     if (srgb) t.encoding = T().sRGBEncoding; t.anisotropy = 8; return (itex[name] = t); }
   const mats = {};
   function matsFor(n, margin, look) {
