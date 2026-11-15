@@ -2567,3 +2567,10 @@ html.ds #game .me .sks>.skb{flex:1 1 0;min-height:0;box-sizing:border-box}
 html.lp .mr-rows{gap:4px}
 html.lp .mr-r{padding:3px 4px}
 html.lp .mindpop .pk-box{gap:8px;padding:14px 28px 10px}
+/* (ユーザー 2026-11-16) the tiles start in one column for every row, each group headed 待ち / 手の内 */
+.mr-s{flex:none;width:5.6em;font-size:clamp(16px, calc(var(--GH, 700px) * .03), 23px)}
+.mr-s b{font-size:1em}
+.mr-ts{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-height:calc(clamp(24px, calc(var(--GH, 700px) * .048), 38px) * 1.35)}
+.mr-t{display:flex;align-items:center;gap:5px;font-style:normal}
+.mr-t small{font-size:11px;letter-spacing:.12em;color:rgba(217,205,238,.75);margin-right:3px;white-space:nowrap}
+.mr-t small{min-width:3.6em}
