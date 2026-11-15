@@ -289,6 +289,7 @@ function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.pus
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 
 let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
+let BOOK = null;      // the opening book (book.json, loaded by the worker; 2026-11-15)
 function think(start, moves, level, rand) {
   rand = rand || Math.random;
   const L = PRO_CFG || LEVELS[level] || LEVELS[10];   // (PRO_CFG: the page's PRO mode, shared/proset.js ladder())
@@ -315,7 +316,11 @@ function think(start, moves, level, rand) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT - 1000 ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best, v: vals[0].v };
   }
-  // opening variety for the top levels: in the first plies pick among moves within a few points of the best
+  // opening variety for the top levels: in the first plies pick among moves within a few points of the best — from the opening
+  // book when the position is in it (book.json, shared/tools/genbook.js: the same rule on a deeper analysis, made beforehand)
+  // (the book also has the 16 set-ups' first plies: keys "<FEN>|m1,m2,…"; the live analysis stays for the plain start only)
+  const bk = L.book && moves.length < 10 && BOOK && BOOK.pos[(start ? start + '|' : '') + moves.join(',')];
+  if (bk && bk.length) { const good = bk.filter(e => e[1] >= bk[0][1] - 12); const e = good[Math.floor(rand() * good.length)]; if (all.includes(e[0])) return { move: e[0], v: bk[0][1], book: 1 }; }
   if (L.book && moves.length < 10 && !start) {
     WX.analyze(Math.max(800, (L.ms || 1000) * 0.4), 40);
     const vals = wList(), good = vals.filter(e => e.v >= vals[0].v - 12);
@@ -452,11 +457,13 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       wNNReady = true;
     } catch (e) { wNNReady = false; }
   }
+  // the opening book (2026-11-15): the top levels' first plies (think), loaded with the engine
+  const bookP = typeof fetch === 'function' ? fetch(new URL('book.json?v=1', self.location.href)).then(r => r.ok ? r.json() : null).then(b => { BOOK = b; }).catch(() => {}) : null;
   let queue = Promise.resolve();
   self.onmessage = e => {
     const m = e.data;
     if (m && m.type === 'mtinit') return;
-    queue = queue.then(() => readyP).catch(() => {}).then(() => {
+    queue = queue.then(() => Promise.all([readyP, bookP])).catch(() => {}).then(() => {
       try {
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {

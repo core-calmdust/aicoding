@@ -12,7 +12,8 @@
 //          checkers janggi xiangqi tafl morris (2026-11-15: the page's own worker — engine.js run as a Web Worker in a Node vm,
 //          loading its wasm, networks and endgame tables from its folder; the move asked with the PRO mode's cfg, so the search
 //          is the site's. checkers janggi xiangqi tafl: nk = thousands of nodes; morris: the number is the depth (d);
-//          tafl --rule copenhagen | fetlar | …, morris --rule nine | twelve | six)
+//          tafl --rule copenhagen | fetlar | …, morris --rule nine | twelve | six; --cfg '{"book":1}' more keys for the step,
+//          --open 0 games from the start position — e.g. an opening book: B with it, A a copy of the folder without it)
 //   A game is added with an adapter below: load(dir) → { think(state, nk) → move }, and the game's rules: open(rnd), over(state),
 //   play(state, move). Every side has engines of its own (its own table), loaded from its own folder.
 // Openings: 4–8 plies of a weak level with the seeded random (the same pair of games for A and B).
@@ -38,32 +39,17 @@ const moveList = (rule, prep) => ({
   play(R, st, m) { return { moves: st.moves.concat([m]) }; },
 });
 // ---- a game played through its page's worker (engine.js as a Web Worker in a Node vm: the site's wasm, networks, tables)
-const vm = require('vm'), { fileURLToPath, pathToFileURL } = require('url');
-function emuWorker(file) {
-  const msgs = new Map(), listeners = []; let seq = 0;
-  const ctx = { console, URL, Response, DecompressionStream, TextDecoder, TextEncoder, setTimeout, clearTimeout, setInterval, clearInterval, performance, Blob,
-    atob: x => Buffer.from(x, 'base64').toString('binary'), btoa: x => Buffer.from(x, 'binary').toString('base64') };
-  ctx.self = ctx; ctx.location = new URL(pathToFileURL(file).href);
-  ctx.WebAssembly = Object.assign(Object.create(WebAssembly), { instantiateStreaming: undefined, compileStreaming: undefined });   // (the arrayBuffer path)
-  const fp = u => fileURLToPath(new URL(String(u), ctx.location.href).href.replace(/[?#].*$/, ''));
-  ctx.fetch = async u => { try { return new Response(fs.readFileSync(fp(u))); } catch (e) { return new Response(null, { status: 404 }); } };
-  ctx.importScripts = (...us) => { for (const u of us) { const f = fp(u); vm.runInContext(fs.readFileSync(f, 'utf8'), ctx, { filename: f }); } };
-  ctx.postMessage = d => { const r = d && msgs.get(d.id); if (r && (d.type === 'result' || d.type === 'error' || d.error)) { msgs.delete(d.id); r(d); } };
-  ctx.addEventListener = (t, f) => { if (t === 'message') listeners.push(f); };
-  ctx.removeEventListener = (t, f) => { const i = listeners.indexOf(f); if (i >= 0) listeners.splice(i, 1); };
-  vm.createContext(ctx);
-  vm.runInContext(fs.readFileSync(file, 'utf8'), ctx, { filename: file });
-  return m => new Promise(res => { const id = ++seq; msgs.set(id, res); const ev = { data: Object.assign({ id }, m) }; for (const f of listeners.slice()) f(ev); if (ctx.onmessage) ctx.onmessage(ev); });
-}
+const { emuWorker } = require('./workeremu.js');   // (the page's worker in a Node vm)
 // G: { rule, cfg(x) → the PRO mode's step, ask(st, rule) → the think message's other fields, replay(R, st, rule), over(R, r, st, rule),
 //      weak(R, st, rnd, rule) → a weak move for the openings }
 const viaWorker = G => ({
   rule: G.rule, async: true,
   async load(dir, rules) {
     fresh(dir); const E = require(path.join(dir, 'engine.js')), ask = emuWorker(path.join(dir, 'engine.js'));
-    return { E, think: async (st, x) => { const r = await ask(Object.assign({ type: 'think', start: null, moves: st.moves, level: 10, cfg: G.cfg(x) }, G.ask ? G.ask(st, rules) : {})); return r.move; } };
+    const more = JSON.parse(process.env.MATCH_CFG || '{}');   // (--cfg: more keys for the PRO step, e.g. {"book":1})
+    return { E, think: async (st, x) => { const r = await ask(Object.assign({ type: 'think', start: null, moves: st.moves, level: 10, cfg: Object.assign(G.cfg(x), more) }, G.ask ? G.ask(st, rules) : {})); return r.move; } };
   },
-  open(R, rnd) { const st = { moves: [] }, k = 4 + Math.floor(rnd() * 5);
+  open(R, rnd) { const st = { moves: [] }, mx = process.env.MATCH_OPEN !== undefined ? +process.env.MATCH_OPEN : 8, k = Math.min(mx, 4 + Math.floor(rnd() * 5));
     for (let i = 0; i < k; i++) { if (this.over(R, st)) break; const m = G.weak(R, st, rnd, R.rules); if (m == null || m < 0) break; st.moves.push(m); }
     return st; },
   turn(R, st) { const p = G.replay(R, st, R.rules).pos; return p.turn || p.side; },
@@ -124,6 +110,8 @@ const side = s => { const [nk, dir] = String(s).split('@'); return { nk: +nk, di
 if (isMainThread) {
   const game = process.argv[2], AD = ADAPT[game];
   if (!AD || !argOf('a') || !argOf('b')) { console.log('usage: node shared/tools/match.js <game> --a <nk>[@dir] --b <nk>[@dir] [--pairs 50] [--workers 2] [--seed 1] [--rule r]\ngames: ' + Object.keys(ADAPT).join(' ')); process.exit(1); }
+  if (argOf('cfg')) process.env.MATCH_CFG = argOf('cfg');      // (the page-worker games: more keys for the PRO step)
+  if (argOf('open')) process.env.MATCH_OPEN = argOf('open');    // (the page-worker games: at most this many random opening plies; 0 = the start)
   const A = side(argOf('a')), B = side(argOf('b')), pairs = +argOf('pairs', 50), NW = +argOf('workers', 2), seed0 = +argOf('seed', 1), rule = argOf('rule', AD.rule);
   const def = path.join(ROOT, AD.dir || game);
   let next = 0, w = 0, d = 0, l = 0, done = 0, plies = 0; const t0 = Date.now();

@@ -445,6 +445,7 @@ function bestMove(pos, hist, maxD, ms, nk) {
 const histOf = (start, moves) => { const { hashes } = replay(start, moves); hashes.pop(); return hashes; };
 
 let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
+const BOOKS = {};     // the opening books by rule (book-<rule>.json, loaded by the worker; 2026-11-15)
 function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
@@ -481,6 +482,9 @@ function think(start, moves, level, rand, rule) {
     return { move: best, v: vals[0].v };
   }
   if (L.book && moves.length < 6 && !start) {
+    // from the opening book when the position is in it (shared/tools/genbook.js: the same rule on a deeper analysis, made beforehand)
+    const B = BOOKS[RK], bk = B && B.pos[moves.join(',')];
+    if (bk && bk.length) { const good = bk.filter(e => e[1] >= bk[0][1] - 10); const e = good[Math.floor(rand() * good.length)]; if (pos.moves().includes(e[0])) return { move: e[0], v: bk[0][1], book: 1 }; }
     nodes = 0; stop = false; tEnd = Date.now() + 600; nodeLimit = Infinity;
     const vals = rootValues(pos, 3, hist), good = vals.filter(e => e.v >= vals[0].v - 10);
     return { move: good[Math.floor(rand() * good.length)].m, v: vals[0].v };
@@ -754,6 +758,9 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         self.postMessage({ type: 'mtready' });
       }).catch(err => { MX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
   }
+  // the opening books (2026-11-15): the top levels' first plies, one file a rule
+  const bookP = typeof fetch === 'function' ? Promise.all(RULE_ORDER.map(k => fetch(new URL(`book-${k}.json?v=1`, self.location.href)).then(r => r.ok ? r.json() : null).then(b => { if (b) BOOKS[k] = b; }).catch(() => {}))) : Promise.resolve();
+  queueP = queueP.then(() => bookP);
   self.onmessage = e => {
     const m = e.data;
     if (m && m.type === 'mtinit') return;
