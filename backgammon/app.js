@@ -127,7 +127,7 @@ function save() {
     const d = JSON.parse(localStorage.getItem(STORE) || '{}');
     if (settings.mode === 'online') { d.settings = Object.assign({}, settings, { mode: window.olSavedMode ? olSavedMode() : 'ai' }); localStorage.setItem(STORE, JSON.stringify(d)); return; }   // an online match is not kept as the local game
     d.settings = settings;
-    if (!lesson && !puzzle && match) d.match = { seed: match.seed, len: match.len, cube: match.cube, games: match.games.map(gm => ({ k: BG.encodeGame(gm.actions), start: gm.start, crawford: gm.crawford })), humanSide };
+    if (!lesson && !puzzle && match) d.match = { seed: match.seed, len: match.len, cube: match.cube, games: match.games.map(gm => ({ k: BG.encodeGame(gm.actions), start: gm.start, crawford: gm.crawford })), humanSide, rt: match.rt || undefined };
     localStorage.setItem(STORE, JSON.stringify(d));
   } catch (e) {}
 }
@@ -144,6 +144,7 @@ function load() {
         m.games.push({ actions: r.actions, start: gm.start || [0, 0], crawford: !!gm.crawford });
       }
       if (!m.games.length) return false;
+      if (d.match.rt && d.match.rt.id) m.rt = d.match.rt;   // (a rated game against the AI: its settlement, 2026-11-15)
       match = m; humanSide = d.match.humanSide || 0;
       return true;
     }
@@ -999,6 +1000,7 @@ function onGameOver(g) {
     setTimeout(() => { if (match && !wpPaused && isLatest() && !lesson && !puzzle && stateAt(match.games.length - 1, match.games[match.games.length - 1].actions.length).over && !matchOver()) nextGame(); }, 2600);
     return;
   }
+  const rtX = match.rt ? rtSettle(st) : null;
   recordGame(g, st);
   if (youWin || settings.mode === 'pvp') confetti();
   $('#resultDisc').innerHTML = `<span class="pdisc p${st.winner}"></span>`;
@@ -1009,10 +1011,11 @@ function onGameOver(g) {
   let sub = t('res.points', { n: st.points, k: kindTxt });
   if (match.len) sub += '<br>' + t('res.score', { a: sc[0], b: sc[1], n: match.len, c0: pname(0), c1: pname(1) });
   else if (match.games.length > 1) sub += '<br>' + t('res.total', { a: sc[0], b: sc[1], c0: pname(0), c1: pname(1) });
-  if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
+  if (settings.mode === 'ai') { const lv = match.rt ? match.rt.lv : settings.level; sub += '<br>' + t('res.vs', { name: LV(lv), lv }); }
+  if (rtX) sub += `<br><b>${esc(t('ng.rated'))}</b>　R ${rtX.old} → <b>R ${rtX.now}</b>（${rtD(rtX.d)}）`;
   sub += `<br><span style="font-size:12px;color:var(--dim)">${t('res.seed')}</span> <code>${match.seed}</code>`;
   $('#resultSub').innerHTML = sub;
-  $('#btnAgain').textContent = mOver || !match.len ? (match.len ? t('res.again') : t('bb.again')) : t('bb.nextGame');
+  $('#btnAgain').textContent = match.rt ? t('rt.start') : mOver || !match.len ? (match.len ? t('res.again') : t('bb.again')) : t('bb.nextGame');
   setTimeout(() => { if (isLatest()) showOverlay('#resultOverlay'); }, 900);
 }
 // 勝敗記録 (shared/record.js): each finished game against the AI (online matches: online-ui.js finishOnline)
@@ -1021,11 +1024,13 @@ function recordGame(g, st) {
   const acts = match.games[g].actions;
   if (st.resigned && !acts.some((a, i) => a.t === 'r' && actorOf(g, i) === humanSide)) return;   // resigned before playing a move
   const why = st.dropped ? t('res.drop') : st.kind >= 3 ? t('res.bg') : st.kind === 2 ? t('res.gammon') : st.resigned ? t('res.resign') : t('res.single');
-  GameRecord.add({ mode: 'ai', res: st.winner === humanSide ? 'w' : 'l', side: humanSide, opp: 'AI Lv.' + settings.level + ' ' + LV(settings.level) + proTag(1 - humanSide), key: (proFor(1 - humanSide) ? 'ai:pro' : 'ai:') + settings.level, n: acts.filter(a => a.t === 'r').length, why: why + ' · ' + st.points + t('pt') });
+  const lvR = match.rt ? match.rt.lv : settings.level;
+  GameRecord.add({ mode: match.rt ? 'rated' : 'ai', res: st.winner === humanSide ? 'w' : 'l', side: humanSide, opp: 'AI Lv.' + lvR + ' ' + LV(lvR) + proTag(1 - humanSide), key: match.rt ? 'rt:' + match.rt.lv : (proFor(1 - humanSide) ? 'ai:pro' : 'ai:') + lvR, n: acts.filter(a => a.t === 'r').length, why: why + ' · ' + st.points + t('pt') });
 }
 function nextGame() {
   hideOverlay('#resultOverlay');
   if (!match) return;
+  if (match.rt) { rtStart(); return; }   // (after a rated game: the next rated game)
   const g = match.games.length - 1, st = stateAt(g, match.games[g].actions.length);
   if (!st.over) return;
   if (matchOver()) { startNewMatch(); return; }
@@ -1037,6 +1042,88 @@ function nextGame() {
   if (craw) setTimeout(() => toast(t('toast.crawford'), 1800), 300);
   save(); updateCommit(); afterAction();
 }
+// ====================================================================== rated games against the AI (2026-11-15)
+// One single game without the cube (as the online rated game g1) against a level picked near your rating; no taking back,
+// hints, evaluation or coach. The first 3 games place you (shared/placement.js). The store is shared with the 3D table
+// (atlas/app.js RTG.backgammon). The levels' ratings: tools/ladder.js (adjacent levels, the same dice with seats swapped).
+const RT_STORE = STORE + '-rated', RT_START = 1000;
+const RT_LV = window.BG_RT_LV;   // (= rt-levels.js: index = level 1..10)
+function rtLoad() {
+  let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
+  if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
+  if (!Array.isArray(s.hist)) s.hist = [];
+  return s;
+}
+function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
+const RT_MAXLV = 10, rtD = d => (d >= 0 ? '+' : '−') + Math.abs(d);
+function rtRank(r) { let k = 0; for (let i = 1; i <= RT_MAXLV; i++) if (r >= RT_LV[i] - 50) k = i; return k ? 'Lv.' + k + ' ' + LV(k) : t('rt.below'); }
+function rtPick(r) {
+  { const S0 = rtLoad(); if (window.Placement && Placement.on(S0)) { const x = Placement.pick(S0, RT_LV.map((v, i) => [i, v]).slice(1)); if (x) return Object.assign({ tag: 'even' }, x); } }
+  const u = Math.random(), v = Math.random(), off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100, target = r + off;
+  let lv = 1; for (let i = 1; i <= RT_MAXLV; i++) if (Math.abs(RT_LV[i] - target) < Math.abs(RT_LV[lv] - target)) lv = i;
+  const diff = RT_LV[lv] - r;
+  return { lv, or: RT_LV[lv], tag: diff > 150 ? 'up' : diff < -150 ? 'down' : 'even' };
+}
+function rtLive() {
+  if (!match || !match.rt || match.rt.done || lesson || puzzle || settings.mode !== 'ai') return false;
+  const g = match.games.length - 1; return !stateAt(g, match.games[g].actions.length).over;
+}
+function rtRestore() { const R = match && match.rt; if (R && R.prev) { Object.assign(settings, R.prev); R.prev = null; save(); } }
+function rtSettle(st) {   // once per game: the game id stays in the history, so a reload never counts twice
+  const R = match && match.rt; if (!R || !st || !st.over) return null;
+  if (R.done) return R.done;
+  const S = rtLoad(), prev = S.hist.find(h => h.id === R.id);
+  if (prev) { R.done = { old: prev.r - prev.d, now: prev.r, d: prev.d }; rtRestore(); return R.done; }
+  const sc = st.winner === humanSide ? 1 : 0, old = S.r, pl = window.Placement && Placement.on(S) ? Placement.record(S, R.or, sc) : null;
+  const K = S.n < 10 ? 48 : 24, Ex = 1 / (1 + Math.pow(10, (R.or - old) / 400)), now = pl ? pl.r : Math.max(0, Math.round(old + K * (sc - Ex)));
+  S.r = now; S.n++; if (sc === 1) S.w++; else S.l++;
+  S.hist.push({ id: R.id, t: Date.now(), lv: R.lv, or: R.or, s: sc, d: now - old, r: now, why: st.resigned ? 'resign' : st.kind >= 2 ? 'gammon' : '', pl: pl ? pl.k : undefined });
+  if (S.hist.length > 100) S.hist = S.hist.slice(-100);
+  rtStore(S); R.done = { old, now, d: now - old }; rtRestore();
+  if (pl && pl.final && window.Placement) Placement.reveal(S, rtRank(now));
+  save(); return R.done;
+}
+function rtStart() {
+  if (window.Placement && Placement.gate(rtLoad(), rtStore, () => rtStart())) return;
+  const S = rtLoad(), pk = rtPick(S.r);
+  exitSpecial(); hideOverlay('#resultOverlay');
+  const keep = match && match.rt && match.rt.prev;   // (rated after rated: the player's own settings are still the ones kept)
+  const prev = keep || { level: settings.level, color: settings.color, matchLen: settings.matchLen, cube: settings.cube, eval: settings.eval, hint: settings.hint, coach: settings.coach };
+  Object.assign(settings, { mode: 'ai', level: pk.lv, color: 2, matchLen: 0, cube: false, eval: false, hint: false, coach: false });
+  hintData = null; previewPlay = null;
+  startNewMatch();
+  match.rt = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), lv: pk.lv, or: pk.or, my: S.r, prev };
+  save(); renderInfo();
+  toast(t('rt.vs', { lv: 'Lv.' + pk.lv + ' ' + LV(pk.lv), r: pk.or, tag: t('rt.' + pk.tag) }), 4000);
+}
+function rtForfeit() {   // leaving a rated game before its end = a loss
+  if (!rtLive()) return null;
+  const g = match.games.length - 1;
+  busyToken++; cancelWorker('ai'); thinking = -1; busyRolling = false; stopPlay(); turn = null;
+  match.games[g].actions.push({ t: 'x', w: 1 - humanSide, n: 1 });
+  const st = stateAt(g, match.games[g].actions.length), x = rtSettle(st);
+  gameOverShown.add(g + ':' + match.games[g].actions.length); recordGame(g, st); save();
+  if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3200);
+  return x;
+}
+function rtStatsHtml() {
+  const S = rtLoad(), h = S.hist.slice(-10).reverse(), P = window.Placement;
+  let html = `<p style="font-size:13px;color:var(--muted);line-height:1.7;margin:0 0 8px">${esc(t('rt.desc'))}</p><div class="rt-card"><div class="rt-head"><span class="rt-lbl">${t('rt.title')}</span><b class="rt-r">R ${S.r}</b><span class="rt-rank">${esc(rtRank(S.r))}</span>${P && P.on(S) ? P.badge(S) : S.n < 10 ? `<span class="rt-prov">${t('rt.prov')}</span>` : ''}</div>`;
+  html += `<div class="rt-rec">${S.n ? t('rt.rec', { n: S.n, w: S.w, l: S.l, d: S.d }) : t('rt.none')}</div>`;
+  if (P) html += P.note(S);
+  if (h.length) html += `<div class="rt-lbl2">${t('rt.recent')}</div><div class="rt-hist">` + h.map(x => { const c = x.s === 1 ? 'w' : 'l'; return `<span class="rt-chip ${c}" title="Lv.${x.lv} · R${x.or}"><i>${t('rt.' + c.toUpperCase())}</i><b>${rtD(x.d)}</b></span>`; }).join('') + '</div>';
+  return html + '</div>';
+}
+// buttons that leave a rated game in progress ask first (the game is then lost)
+const RT_GUARD = '#btnNew, #btnLesson, #btnPuzzle, #btnStart';
+let rtPass = false;
+document.addEventListener('click', e => {
+  if (rtPass || !rtLive()) return;
+  const b = e.target.closest && e.target.closest(RT_GUARD); if (!b || b.disabled) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const go = () => { rtPass = true; try { b.click(); } finally { rtPass = false; } };
+  Resign.confirm({ lang: LANG, question: t('ng.rated'), note: t('rt.abandonQ') }).then(ok => { if (ok && rtForfeit()) { renderInfo(); go(); } });
+}, true);
 function startNewMatch() {
   restPose = null; wpPaused = false; settings.rsNoRec = false;
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = -1;
@@ -1086,7 +1173,7 @@ function canUndo() {
   if (!match || settings.mode === 'watch') return false;
   if (lesson || puzzle) return !!(turn && turn.steps.length);
   if (turn && turn.steps.length && canInteract()) return true;
-  if (reviewing || settings.mode === 'online') return false;
+  if (reviewing || settings.mode === 'online' || rtLive()) return false;   // (rated: no taking back — only this turn's own steps, above)
   const [g] = curGA(); const acts = match.games[g].actions;
   if (settings.mode === 'pvp') return acts.length > 0;
   // vs AI: some action by the human in this game
@@ -1248,7 +1335,8 @@ function renderInfo() {
   $('#btnUndo').disabled = !canUndo();
   wpRender();
   $('#btnResign').disabled = !canResign();
-  $('#btnHint').classList.toggle('on', settings.hint);
+  $('#btnHint').classList.toggle('on', settings.hint); $('#btnHint').disabled = rtLive();
+  document.body.classList.toggle('rated-live', rtLive());
   $('#btnSound').classList.toggle('on', settings.sound);
   renderReview(); renderHintCard(); renderBox();
   const mode = settings.mode === 'ai' ? `${AIW()} Lv.${settings.level}` : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp');
@@ -1532,6 +1620,7 @@ function confetti() {
 $('#btnNew').onclick = () => (lesson || puzzle) ? openNewDialog() : rsOpen();
 $('#btnUndo').onclick = undo;
 $('#btnHint').onclick = () => {
+  if (rtLive()) { toast(t('rt.noHint'), 1800); return; }
   settings.hint = !settings.hint; save();
   if (!settings.hint) { hintData = null; previewPlay = null; }
   else maybeHint();
@@ -1689,6 +1778,7 @@ function segSync() {
   ckSync(); skinSync();
   document.querySelectorAll('#segMatch button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.matchLen));
   const m = draft.mode, game = m === 'ai' || m === 'pvp' || m === 'watch';
+  if ($('#fRatedInfo')) { $('#fRatedInfo').classList.toggle('hidden', m !== 'rated'); if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml(); }
   $('#fSide').classList.toggle('hidden', !(draft.resume && m === 'ai'));
   if (draft.resume) { $('#sideLabel').textContent = window.ResumeNG ? ResumeNG.t('side') : ''; document.querySelectorAll('#segSide button').forEach(b => { const s = +b.dataset.v; b.textContent = t('ng.' + draft.ck[s]); b.classList.toggle('sel', s === draft.side); }); }
   $('#fColor').classList.toggle('hidden', !game);
@@ -1697,9 +1787,9 @@ function segSync() {
   $('#fDisplay').classList.toggle('hidden', !game);
   $('#fMatch').classList.toggle('hidden', !game);
   $('#fSeed').classList.toggle('hidden', !game);
-  $('#fInfo').classList.toggle('hidden', game);
+  $('#fInfo').classList.toggle('hidden', game || m === 'rated');
   $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc2', { n: LESSONS ? LESSONS.steps.length : 23 }) : m === 'puzzle' ? t('pz.desc') : '';
-  $('#btnStart').textContent = m === 'lesson' ? t('ng.toLessons') : m === 'puzzle' ? t('ng.toPuzzles') : t('start');
+  $('#btnStart').textContent = m === 'lesson' ? t('ng.toLessons') : m === 'puzzle' ? t('ng.toPuzzles') : m === 'rated' ? t('rt.start') : t('start');
   $('#levelLabel').textContent = m === 'watch' ? t('ng.levelC', { c: t('ng.' + draft.ck[0]) }) : t('ng.level');
   if ($('#level2Label')) $('#level2Label').textContent = t('ng.levelC', { c: t('ng.' + draft.ck[1]) });
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
@@ -1730,7 +1820,7 @@ $('#skinRow').onclick = e => { const b = e.target.closest('button[data-skin]'); 
 function applySkinNow() { if (window.BGTheme) BGTheme.applySkin(settings.skin); drawBoardSvg(); try { render(); } catch (e) {} }
 function applyCk() { if (window.BGTheme) { settings.ck = BGTheme.fixPair(settings.ck[0], settings.ck[1]); BGTheme.applyCheckers(CKV || settings.ck); } }
 function openNewDialog(resume) {
-  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : settings.mode, color: 0, ck: (settings.ck || ['gold', 'black']).slice(), level: settings.level, level2: settings.level2, matchLen: settings.matchLen };
+  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : match && match.rt && !resume ? 'rated' : settings.mode, color: 0, ck: (settings.ck || ['gold', 'black']).slice(), level: settings.level, level2: settings.level2, matchLen: settings.matchLen };
   if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.side = humanSide; }   // 「ここから再開」: the same dialog, only what fits going on from this position (+ which side you take)
   $('#optCube').checked = settings.cube; $('#optEval').checked = settings.eval; $('#optForced').checked = settings.forced;
   $('#optRoll').checked = settings.autoRoll; $('#optCoach').checked = settings.coach; $('#optAnim').checked = settings.anim;
@@ -1776,7 +1866,7 @@ var PRO = window.ProSet ? ProSet.init({ game: 'backgammon', lang: () => LANG, le
 var PRO2 = window.ProSet ? ProSet.init({ game: 'backgammon-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
   store: { get: () => settings.pro2, set: v => { settings.pro2 = v; save(); } }, defaults: proDefaults, params: proParams() }) : null;
 function proFor(side) {
-  if (lesson || puzzle || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  if (lesson || puzzle || !(settings.mode === 'ai' || settings.mode === 'watch') || (match && match.rt)) return null;
   const P = settings.mode === 'watch' && side === 1 ? window.PRO2 : window.PRO;
   return P ? P.get(levelFor(side)) : null;
 }
@@ -1791,13 +1881,14 @@ $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
+  if (draft.mode === 'rated') { rtStart(); return; }
   if (draft.resume) { if (match) resumeWith(); return; }
   exitSpecial();
   Object.assign(settings, { mode: draft.mode, color: 0, ck: draft.ck.slice(), level: draft.level, level2: draft.level2, matchLen: draft.matchLen,
     cube: $('#optCube').checked, eval: $('#optEval').checked, forced: $('#optForced').checked, autoRoll: $('#optRoll').checked, coach: $('#optCoach').checked, anim: $('#optAnim').checked });
   pendingSeed = $('#seedInput').value;
   applyCk(); drawBoardSvg();
-  startNewMatch();
+  startNewMatch();   // (a new match: no rated game any more — match.rt goes with the old match)
 };
 
 // ====================================================================== post-game review
@@ -3345,10 +3436,11 @@ window.AtlasDeep = function (mode, sub) {
   if (mode === 'puzzle') { Promise.resolve(openPuzzles()).then(() => { if (sub === 'd1') click('#pzLevels [data-pbh-daily]'); else if (sub === 'cont') click('#pzLevels [data-pbh-cont]'); }); return true; }
   if (mode === 'lesson') { if (sub === 'open' && window.OPH) Promise.resolve(lessonsReady).then(() => OPH.open()); else openLessons(); return true; }
   if (mode === 'online') { if (typeof window.olStartSearch !== 'function') return null; window.olStartSearch(); return true; }
+  if (mode === 'rated') { rtStart(); return true; }
   return false;
 };
 { const q = new URLSearchParams(location.search), m = q.get('mode');
-  if (m && /^(puzzle|lesson|online)$/.test(m) && q.get('skin') !== 'atlas') {   // the plain 2D page opened at a part of it
+  if (m && /^(puzzle|lesson|online|rated)$/.test(m) && q.get('skin') !== 'atlas') {   // the plain 2D page opened at a part of it
     let n = 0; const go = () => { const r = window.AtlasDeep(m, q.get('sub')); if (r === null && ++n < 60) return setTimeout(go, 200);
       ['mode', 'sub', 'tc'].forEach(k => q.delete(k)); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); };
     if (document.readyState === 'complete') setTimeout(go, 1200); else addEventListener('load', () => setTimeout(go, 1200));

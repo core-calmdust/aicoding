@@ -1211,7 +1211,7 @@
     gomoku: [{ id: 'blitz', main: 180, inc: 2 }, { id: 'rapid', main: 600, inc: 5 }, { id: 'classical', main: 900, inc: 10 }],   // (gomoku/online.js TC, 2026-11-13)
     checkers: [{ id: 'english', main: 300, inc: 5 }],
     xiangqi: [{ id: 'standard', main: 600, inc: 5 }],
-    backgammon: [{ id: 'g1', main: 180, dly: 12 }] };   // (backgammon/online.js FORMATS.g1: the rated single game without the cube — 12 s free per action, then a 3-minute reserve. The full game has no rated games against the AI: レート戦 is online only here)   // (xiangqi/online.js TC: one clock, 2026-11-14)   // (checkers/online.js TC: one clock, 2026-11-14)
+    backgammon: [{ id: 'g1', main: 180, dly: 12 }] };   // (backgammon/online.js FORMATS.g1: the rated single game without the cube — 12 s free per action, then a 3-minute reserve. Rated games against the AI as well since 2026-11-15: RTG.backgammon)   // (xiangqi/online.js TC: one clock, 2026-11-14)   // (checkers/online.js TC: one clock, 2026-11-14)
   const rtList = (id, opp) => opp === 'online' ? OTC[id] : RTG[id] ? [RTG[id].tc] : null;   // (the AI's rated games: the full game's fixed clock)
   const rtOpp = id => pref[id + ':rtOpp'] === 'online' ? 'online' : 'ai';
   /* ---------- rated games against the AI on the 3D table (2026-11-10): the same record as the full game (its localStorage store,
@@ -1229,6 +1229,8 @@
       lv: [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2320, 2370] },
     gomoku: { key: 'aicoding-gomoku-rated', start: 1000, flag: 'k', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },   // (gomoku/app.js RT_STORE / RT_LV / RT_CLOCK, 2026-11-13)
       lv: [0, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2400, 2600, 2800] },
+    backgammon: { key: 'aicoding-backgammon-v2-rated', start: 1000, flag: 'v', flagV: 1, off: 0, from: 1, tc: { id: 'rt' },   // (backgammon/app.js RT_STORE / rt-levels.js, 2026-11-15: one game without the cube, no clock — as the full game's rated game against the AI)
+      lv: [0, 100, 650, 920, 1135, 1250, 1310, 1345, 1350, 1385, 1395] },
     chess: { key: 'aicoding-chess-rated', start: 1000, flag: 'lvv', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },
       lv: [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2150, 2295, 2385, 2495, 2705, 2885, 2985, 3075, 3160, 3240, 3305, 3370, 3440] },
   };
@@ -1261,7 +1263,7 @@
   let rtCur = null;   // the rated game being played on the table: { gid, R } (leaving it before the end = a loss, as in the full games)
   const rtTc = (id, opp) => { const L = rtList(id, opp); if (!L) return null; return L.find(c => c.id === pref[id + ':rtTc:' + opp]) || L[0]; };
   function mxPanels(g) {
-    const id = g.id, opp = RTG[id] ? rtOpp(id) : 'online', lsk = pref[id + ':lsk'] === 'open' ? 'open' : 'list';   // (no rated games against the AI in the full game: online only — backgammon)
+    const id = g.id, opp = RTG[id] ? rtOpp(id) : 'online', lsk = pref[id + ':lsk'] === 'open' ? 'open' : 'list';
     const daily = id === 'shogi' ? [['d1', '★', t('bv.pz.d1')], ['d2', '☆', t('bv.pz.d2')]] : id === 'gomoku' ? [] : [['d1', '★', t('bv.pz.dc')]];   // (gomoku: no puzzle of the day in the full game)
     const rtOnly = !(window.Atlas3D && Atlas3D[id] && Atlas3D[id].variants) && !!RTG[id];   // (games without 種目: the current rating beside 持ち時間, as shogi shows it beside 種目 — 2026-11-14)
     return `<div class="opts mxp" id="bvRt" hidden>${rtOnly ? '<div class="opts vopts rtonly"><span class="rtnow2" id="bvRtNow" hidden></span></div>' : ''}<div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp">${RTG[id] ? `<option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option>` : ''}<option value="online" ${opp === 'online' || !RTG[id] ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><span class="hb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 3 3.6M16 6h2.5a2.5 2.5 0 0 1-3 3.6"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/></svg></span></button></div>`

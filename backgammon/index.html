@@ -1242,6 +1242,20 @@ html.lnd .lnd-pl em{font-style:normal;font-size:9.5px;color:var(--accent)}
 html.lnd #lndMsg{display:block;position:absolute;left:50%;top:calc(var(--u)*.62);transform:translate(-50%,-4px);z-index:44;max-width:70%;padding:4px 12px;border-radius:999px;background:rgba(8,14,12,.78);border:1px solid rgba(226,194,117,.35);color:var(--text);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .35s,transform .35s;pointer-events:none}
 html.lnd #lndMsg.show{opacity:1;transform:translate(-50%,0)}
 html.lnd .toast{font-size:13px;padding:9px 16px}
+.rt-card{margin-top:4px;padding:11px 14px 12px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
+.rt-head{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap}
+.rt-lbl{font-size:12px;color:var(--muted);letter-spacing:.08em}
+.rt-r{font-family:'JetBrains Mono',monospace;font-size:21px;color:var(--brass);font-weight:700}
+.rt-rank{font-size:12.5px;color:var(--text)}
+.rt-prov{font-size:10.5px;color:var(--dim);border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.rt-rec{font-size:12.5px;color:var(--muted);margin-top:3px}
+.rt-lbl2{font-size:11.5px;color:var(--dim);margin:7px 0 5px}
+.rt-hist{display:flex;flex-wrap:wrap;gap:4px}
+.rt-chip{font-size:11px;line-height:1.5;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);display:inline-flex;gap:4px;font-family:'JetBrains Mono',monospace;color:var(--muted);white-space:nowrap}
+.rt-chip i{font-style:normal}
+.rt-chip.w i,.rt-chip.w b{color:#8fe3b8}.rt-chip.l i,.rt-chip.l b{color:#ff9b90}
+.rt-chip b{font-weight:600}
+body.rated-live #evalCard,body.rated-live #coachCard{display:none!important}
 </style>
 <link rel="stylesheet" href="online.css?v=20261021ollx">
 <style>/* lesson passed: the three buttons never wrap their labels; if they don't fit in one row they go to two (2026-10-30) */
@@ -1376,6 +1390,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
       <label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode">
         <button data-v="ai" data-i18n="ng.ai"></button>
+        <button data-v="rated" data-i18n="ng.rated"></button>
         <button data-v="pvp" data-i18n="ng.pvp"></button>
         <button data-v="watch" data-i18n="ng.watch"></button>
         <button data-v="lesson" data-i18n="ng.lesson"></button>
@@ -1383,6 +1398,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
       </div>
     </div>
     <div class="ng-cols"><div class="ng-col">
+    <div class="field hidden" id="fRatedInfo"><div id="rtStats"></div></div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
     <div class="field" id="fColor" data-ng="design">
       <label data-i18n="ng.ck"></label>
@@ -1568,7 +1584,8 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="../shared/export.js?v=9l14"></script>
 <script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/mtworkers.js?v=4"></script>
 <script src="mt.js?v=4"></script>
-<script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=20261115p"></script>
+<script src="../shared/placement.js?v=1l14"></script><script src="i18n-rt.js?v=1"></script><script src="rt-levels.js?v=1"></script>
+<script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=20261115rt"></script>
 <script src="op.js?v=20261021opan-lx1"></script>
 <script src="online-ui.js?v=20261031ck1pnlx1c"></script>
 <script src="land.js?v=10"></script>
@@ -1581,7 +1598,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=169')).then(() => load('../atlas/tables3d.js?v=126')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/models/backgammon.js?v=123')).then(() => load('../atlas/skin/backgammon.js?v=10'))
+  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=169')).then(() => load('../atlas/tables3d.js?v=126')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/models/backgammon.js?v=123')).then(() => load('../atlas/skin/backgammon.js?v=11'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
