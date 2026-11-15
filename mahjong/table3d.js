@@ -432,19 +432,29 @@ function buildHand(env) {
       float skN(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
         return mix(mix(mix(skH(i), skH(i + vec3(1,0,0)), f.x), mix(skH(i + vec3(0,1,0)), skH(i + vec3(1,1,0)), f.x), f.y),
                    mix(mix(skH(i + vec3(0,0,1)), skH(i + vec3(1,0,1)), f.x), mix(skH(i + vec3(0,1,1)), skH(i + vec3(1,1,1)), f.x), f.y), f.z); }
-      float skPore, skSlow;
-      float skHeight(vec3 p){ skSlow = skN(p * 6.5); skPore = smoothstep(.5, .9, skN(p * 52.)); return -skPore * .34 + skSlow * .22; }
+      // (ユーザー 2026-11-15: a faint texture of skin — not wrinkles.) キメ: the fine net of skin — small raised cells with hair-thin
+      // grooves between them (a cellular pattern in the hand's own space, a little larger than life so it reads at the table's
+      // distance). Very shallow; it fades out where a cell would be smaller than about two pixels, so it never shimmers.
+      vec3 skH3(vec3 p){ return fract(sin(vec3(dot(p, vec3(127.1, 311.7, 74.7)), dot(p, vec3(269.5, 183.3, 246.1)), dot(p, vec3(113.5, 271.9, 124.6)))) * 43758.5453); }
+      float skCell(vec3 p){ vec3 i = floor(p), f = fract(p), s = step(.5, f) * 2. - 1.; float d1 = 9., d2 = 9.;
+        for (int k = 0; k < 8; k++) { vec3 o = vec3(float(k & 1), float((k >> 1) & 1), float((k >> 2) & 1)) * s, c = o + .15 + .7 * skH3(i + o) - f; float d = dot(c, c); if (d < d1) { d2 = d1; d1 = d; } else if (d < d2) d2 = d; }
+        return sqrt(d2) - sqrt(d1); }
+      float skPore, skSlow, skKime;
+      float skHeight(vec3 p){ skSlow = skN(p * 6.5); skPore = smoothstep(.5, .9, skN(p * 52.));
+        float fade = smoothstep(.55, .22, length(fwidth(p)) * 27.); skKime = (1. - smoothstep(0., .3, skCell(p * 27. + skSlow * .6))) * fade;   // 1 in the grooves
+        return -skPore * .34 + skSlow * .22 - skKime * .2; }
       vec3 skPerturb(vec3 surf_pos, vec3 n, vec2 dH, float fd){ vec3 sx = dFdx(surf_pos), sy = dFdy(surf_pos), r1 = cross(sy, n), r2 = cross(n, sx);
         float det = dot(sx, r1) * fd; vec3 g = sign(det) * (dH.x * r1 + dH.y * r2); return normalize(abs(det) * n - g); }
     ` + sh.fragmentShader
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
         { float hh = skHeight(vSkP) * .0019; normal = skPerturb(-vViewPosition, normal, vec2(dFdx(hh), dFdy(hh)), faceDirection); }`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-        roughnessFactor = clamp(roughnessFactor * (.86 + .3 * skPore + .16 * skSlow), .05, 1.);`)
+        roughnessFactor = clamp(roughnessFactor * (.86 + .3 * skPore + .16 * skSlow + .1 * skKime), .05, 1.);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
     { vec3 sL = normalize((viewMatrix * vec4(.2, 1., .3, 0.)).xyz); float sn = dot(normalize(vNormal), sL), sv = 1. - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0., 1.);
       float skM = skN(vSkP * 2.3 + 11.), ao = clamp(vSkA, 0., 1.);
       diffuseColor.rgb *= (.975 + .05 * skSlow) * (1. - .42 * smoothstep(-.75, .12, vSkC));   // (the cuff's shade on the wrist)
+      diffuseColor.rgb *= 1. - skKime * vec3(.012, .022, .022);   // (the grooves a breath darker and warmer)
       diffuseColor.rgb *= 1. + (skM - .5) * vec3(.10, -.03, -.07) + (skSlow - .5) * vec3(-.03, .02, .05);   // (uneven: rosier patches, paler ones)
       diffuseColor.rgb *= mix(vec3(.86, .66, .62), vec3(1.), smoothstep(-.7, .55, sn)) * mix(vec3(.6, .36, .32), vec3(1.), ao);   // (the shade and the occluded places: deeper and redder, not grey)
       totalEmissiveRadiance *= .45 + .55 * ao;
