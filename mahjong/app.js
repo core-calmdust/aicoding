@@ -312,7 +312,7 @@ function skillBlock(key) {
   return `<div class="pskill st${k.tier}" style="--sc:${sk.color}"><i>${icon(sk.icon)}</i><div>
     <b>${esc(L(sk.name))} <em class="sr">${MJSkills.TIERS[k.tier]}</em> <em class="tm">${t('timing_' + (sk.timing || 'turn'))}</em></b>
     <span>${esc(L(sk.desc(v)))}</span>
-    <small class="cl">${esc(t(sk.noFree ? 'costLineNF' : 'costLine', { n: (sk.cost || 1000).toLocaleString() }))}</small></div></div>`;
+    <small class="cl">${esc(t(sk.noFree ? 'costLineNF' : 'costLine', { n: (sk.cost || 1000).toLocaleString(), h: ((sk.cost || 1000) / 2).toLocaleString() }))}</small></div></div>`;
 }
 
 // ---------------------------------------------------------------- tile html
@@ -379,7 +379,7 @@ function renderHome() {
   const P = DB.pstats, all = MJStats.derive(MJStats.sum(P.skill, P.std, P.old));
   $('#aaProf').innerHTML = `<img src="${charImg(c, 'face')}" alt=""><span><b>${esc(t('you'))}</b><small>${esc(t('psGames'))} ${all.games} ・ ${esc(t('psAvgRank'))} ${all.avgRank == null ? '—' : all.avgRank.toFixed(2)}</small></span>${rankBadge(MJRank.at(DB.rank.pt), 'sm')}`;
   $('#partner').innerHTML = `
-    <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span></div>
+    <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}</div>
     <div class="pp-n">${esc(L(c.name))}</div>
     <div class="pp-t">${esc(L(c.title))}</div>
     <div class="pp-sk">${skillChip(uk, 'on')}${o.skills.length > 1 ? `<span class="pp-more" id="ppMore">${esc(t('ownedSkills'))} ${o.skills.length}</span>` : ''}</div>
@@ -669,13 +669,13 @@ const RANK_I = r => ['N', 'R', 'SR', 'SSR', 'UR'].indexOf(r);
 function openGacha() {
   const b = modal(`
     <div class="gacha">
-      <h2>${t('gacha')}</h2>
+      <h2>${t('gacha')}<small>GACHA</small></h2>
+      <div class="gcoins">${icon('coin')}<b id="gCoins">${DB.coins.toLocaleString()}</b></div>
       <div class="gstage" id="gStage"><div class="gorb"></div><p class="grates">${t('charRates')} UR 1% ・ SSR 4% ・ SR 15% ・ R 35% ・ N 45%<br>${t('skillRates')} SSR 3% ・ SR 12% ・ R 30% ・ N 55%<br><small>${t('tenth')}</small></p></div>
       <div class="gbtns">
-        <button class="btn" data-n="1">${t('pull1', { n: COST1 })}</button>
-        <button class="btn gold" data-n="10">${t('pull10', { n: COST10.toLocaleString() })}</button>
+        <button class="btn" data-n="1"><b>${esc(t('pull1', { n: '' }).replace(/[（(]\s*[）)]/, '').trim())}</b><small>${icon('coin')}${COST1}</small></button>
+        <button class="btn gold" data-n="10"><b>${esc(t('pull10', { n: '' }).replace(/[（(]\s*[）)]/, '').trim())}</b><small>${icon('coin')}${COST10.toLocaleString()}</small></button>
       </div>
-      <div class="gcoins">${icon('coin')}<b id="gCoins">${DB.coins.toLocaleString()}</b></div>
       <button class="x" data-a="close">×</button>
     </div>`, 'wide gacham');
   b.addEventListener('click', async e => {
@@ -758,7 +758,7 @@ function renderChara() {
   const sisters = MJChars.list.filter(x => x.family === c.family);
   const o = DB.chars[c.id], uk = own ? useKey(c.id) : null;
   $('#chInfo').innerHTML = `
-    <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span></div>
+    <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}</div>
     <div class="pp-n">${own ? esc(L(c.name)) : '？？？'}</div>
     <div class="pp-t">${esc(L(c.title))}</div>
     <i class="ci-rule"></i>
@@ -827,6 +827,12 @@ function histHTML() {
   const orows = old.map(x => `<div class="ph-r old ${x.res === 'w' ? 'p1' : x.res === 'l' ? 'p4' : ''}"><span class="ph-d">${dt(x.t)}</span><span class="ph-pl">${esc(x.why ? String(x.why).split('·')[0].trim() : '')}</span><span></span><span class="ph-m">${esc(x.opp || '')}</span><span class="ph-s">${esc(x.why && String(x.why).includes('·') ? String(x.why).split('·')[1].trim() : '')}</span><span></span></div>`).join('');
   return `<div class="ph-list">${rows}${orows}</div>`;
 }
+// the yaku list's groups (ユーザー 2026-11-15): by han (closed), and the yakuman apart
+const YAKU_CAT = [
+  ['ycat1', ['riichi', 'ippatsu', 'tsumo', 'pinfu', 'tanyao', 'iipeikou', 'haku', 'hatsu', 'chun', 'seat_wind', 'round_wind', 'haitei', 'houtei', 'rinshan', 'chankan']],
+  ['ycat2', ['dbl_riichi', 'chiitoi', 'chanta', 'ittsu', 'sanshoku', 'sanshoku_k', 'toitoi', 'sanankou', 'sankantsu', 'shousangen', 'honroutou']],
+  ['ycat3', ['honitsu', 'junchan', 'ryanpeikou', 'chinitsu']],
+  ['ycatY', ['kokushi', 'suuankou', 'daisangen', 'shousuushii', 'daisuushii', 'tsuuiisou', 'ryuuiisou', 'chinroutou', 'chuuren', 'suukantsu', 'tenhou', 'chiihou']]];
 function closeStats() { const el = $('#pstats'); if (el.hidden) return; el.classList.remove('show'); el.hidden = true; el.innerHTML = ''; PS = null; }
 function renderStats() {
   const P = PS, c = P.c, pl = P.pl;
@@ -847,8 +853,18 @@ function renderStats() {
   const mw = D.maxWin;
   const mwHtml = mw && mw.pts ? `<b class="ps-mwp">${num(mw.pts)}</b><span>${mw.limit ? esc(t(mw.limit)) : esc(t('han', { n: mw.han }) + ' ' + t('fu', { n: mw.fu }))}${mw.yaku ? ` · ${esc(I18N.yaku(mw.yaku))}` : ''}</span>` : `<span class="ps-none">—</span>`;
   // (ユーザー 2026-11-15) every yaku ever made: how many times, and in what share of all the hands played (回数 / 総局数)
-  const yAll = Object.entries(raw.yaku || {}).sort((a, b) => b[1] - a[1]), ymax = yAll.length ? yAll[0][1] : 1;
-  const yHtml = yAll.length ? `<div class="ps-yh"><span>${esc(t('psYakuName'))}</span><span>${esc(t('psYakuN'))}</span><span>${esc(t('psYakuP'))}</span></div>` + yAll.map(([k, n]) => `<div class="ps-yk"><span>${esc(I18N.yaku(k))}</span><b>${n}</b><em>${pct(raw.hands ? n / raw.hands : 0)}</em><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i></div>`).join('') : `<span class="ps-none">—</span>`;
+  // (ユーザー 2026-11-15: every yaku of the game listed — those never made too, at 0, after the ones made)
+  const NOTY = { dora: 1, aka: 1, ura: 1, skill_han: 1 }, made = raw.yaku || {};
+  const yAll = (I18N.yakuKeys ? I18N.yakuKeys() : Object.keys(made)).filter(k => !NOTY[k]).map((k, i) => [k, made[k] || 0, i])
+    .sort((a, b) => b[1] - a[1] || a[2] - b[2]), ymax = Math.max(1, ...yAll.map(x => x[1]));
+  const yHd = `<span>${esc(t('psYakuName'))}</span><span>${esc(t('psYakuN'))}</span><span>${esc(t('psYakuP'))}</span>`;
+  // (ユーザー 2026-11-15) the main page keeps to the top five made; the full list is its own page (「全役を見る」)
+  const yRow = ([k, n]) => `<div class="ps-yk${n ? '' : ' zero'}"><span>${esc(I18N.yaku(k))}</span><b>${n}</b><em>${pct(raw.hands ? n / raw.hands : 0)}</em><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i></div>`;
+  const yTop = yAll.filter(x => x[1]).slice(0, 5);
+  const yTopHtml = yTop.length ? `<div class="ps-yh">${yHd}</div>` + yTop.map(yRow).join('') : `<span class="ps-none">—</span>`;
+  const yAllPage = `<div class="ps-yall"><div class="ps-yall-h"><h4>${esc(t('psYakuList'))}</h4><small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small></div>
+    ${YAKU_CAT.map(([lab, keys]) => { const rows = yAll.filter(x => keys.includes(x[0])); return rows.length ? `<section class="ps-ycat"><h5>${esc(t(lab))}</h5>
+      <div class="ps-yks two"><div class="ps-yh">${yHd}</div><div class="ps-yh ps-yh2">${yHd}</div>${rows.map(yRow).join('')}</div></section>` : ''; }).join('')}</div>`;
   let chHtml = '';
   if (pl.kind === 'me' && tb && tb[0] === 'all') {
     const ch = Object.entries(DB.pstats.chars).filter(([id]) => MJChars.get(id)).sort((a, b) => b[1].g - a[1].g).slice(0, 6);
@@ -861,17 +877,18 @@ function renderStats() {
         <header class="ps-h">
           <div class="ps-id"><em class="prar r-${c.rarity}">${c.rarity}</em><div><b>${esc(L(c.name))}</b><small>${esc(L(c.title))}</small></div></div>
           ${pl.kind === 'me' ? '' : `<span class="ps-who">${who}</span>`}
+          ${tb && tb[0] !== 'log' ? `<button class="ps-yt" data-a="${P.yakuAll ? 'yback' : 'yall'}">${esc(t(P.yakuAll ? 'record' : 'psYakuList'))}</button>` : ''}
           <button class="x" data-a="close" aria-label="${esc(t('close'))}">×</button>
         </header>
         ${sk ? `<div class="ps-sk">${skillChip(sk)}</div>` : ''}
         ${P.tabs.length > 1 ? `<div class="ps-tabs">${P.tabs.map(([k, lab]) => `<button class="${k === (tb && tb[0]) ? 'on' : ''}" data-tab="${k}">${esc(lab)}</button>`).join('')}</div>` : ''}
         <div class="ps-body">
-          ${tb && tb[0] === 'log' ? histHTML() : !tb ? `<p class="ps-empty">${esc(t('psNoData'))}</p>` : empty ? `<p class="ps-empty">${esc(t(isG ? 'psEmptyG' : 'psEmpty'))}</p>` : `
+          ${P.yakuAll && tb && tb[0] !== 'log' ? yAllPage : tb && tb[0] === 'log' ? histHTML() : !tb ? `<p class="ps-empty">${esc(t('psNoData'))}</p>` : empty ? `<p class="ps-empty">${esc(t(isG ? 'psEmptyG' : 'psEmpty'))}</p>` : `
           <div class="ps-big">${big.map(([l, v]) => `<div><small>${esc(l)}</small><b>${v}</b></div>`).join('')}</div>
           ${isG ? '' : `<section class="ps-sec"><h4>${t('psRanks')}</h4><div class="ps-rbar">${D.rankP.map((p, i) => p ? `<i style="flex:${p};--rc:${RANKC[i]}"><b>${t('rank')[i]}</b><span>${pct(p)}</span></i>` : '').join('')}</div>
             <div class="ps-rn">${raw.rank.map((n, i) => `<span style="--rc:${RANKC[i]}"><i></i>${t('rank')[i]} <b>${n}</b></span>`).join('')}</div></section>`}
           <div class="ps-grid">${rows.map(([l, v]) => `<div><span>${esc(l)}</span><b>${v}</b></div>`).join('')}</div>
-          <div class="ps-cols"><section class="ps-sec ps-mw"><h4>${t('psMaxWin')}</h4><div>${mwHtml}</div></section><section class="ps-sec ps-yaku"><h4>${t('psYaku')}<small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small></h4><div class="ps-yks">${yHtml}</div></section></div>
+          <div class="ps-cols"><section class="ps-sec ps-mw"><h4>${t('psMaxWin')}</h4><div>${mwHtml}</div></section><section class="ps-sec ps-yaku"><h4>${t('psYaku')}<small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small></h4><div class="ps-yks">${yTopHtml}</div></section></div>
           ${chHtml}`}
           ${tb && tb[0] === 'log' ? '' : pl.kind === 'bot' ? `<p class="ps-note">${esc(t('psBotNote'))}</p>` : pl.kind === 'me' ? `<p class="ps-note">${esc(t('psNote'))}</p>` : ''}
         </div>
@@ -879,7 +896,9 @@ function renderStats() {
     </div>`;
 }
 $('#pstats').addEventListener('click', e => {
-  const tb = e.target.closest('[data-tab]'); if (tb && PS) { PS.tab = tb.dataset.tab; SND.pick(); renderStats(); return; }
+  const tb = e.target.closest('[data-tab]'); if (tb && PS) { PS.tab = tb.dataset.tab; PS.yakuAll = false; SND.pick(); renderStats(); return; }
+  if (e.target.closest('[data-a=yall]') && PS) { PS.yakuAll = true; SND.pick(); renderStats(); return; }
+  if (e.target.closest('[data-a=yback]') && PS) { PS.yakuAll = false; SND.pick(); renderStats(); return; }
   if (e.target.closest('[data-a=close]') || !e.target.closest('.ps-main, .ps-art')) { SND.pick(); closeStats(); }
 });
 
@@ -974,7 +993,7 @@ async function onEvent(ev, d) {
       TB.hideAll();
       UIS.intel = null; $('#intel').hidden = true;
       refreshTable(); renderBadges(); renderHand(); layoutAll();
-      await banner(t('kyoku', { w: t('round')[g.round], n: g.kyoku + 1 }) + (g.honba ? '  ' + t('honba', { n: g.honba }) : ''));
+      await roundBanner(g);
       break;
     }
     case 'draw': {
@@ -1341,6 +1360,19 @@ function showIntel(info) {
 }
 
 // ---------------------------------------------------------------- banners, callouts, cut-ins
+// (ユーザー 2026-11-15) a new hand is announced big, across the middle of the screen: 「東 三局」 in large Mincho on a lacquer band
+// between gold lines, the honba and the dealer under it
+async function roundBanner(g) {
+  const el = $('#callout'), ja = I18N.lang === 'ja' || I18N.lang === 'zh' || I18N.lang === 'zh-TW';
+  const KN = ['一', '二', '三', '四'];
+  const big = ja ? `<i>${esc(t('round')[g.round])}</i><span>${KN[g.kyoku]}局</span>` : `<span>${esc(t('kyoku', { w: t('round')[g.round], n: g.kyoku + 1 }))}</span>`;
+  const dealer = UIS && UIS.chars ? UIS.chars[g.dealer] : null;
+  const sub = [g.honba ? t('honba', { n: g.honba }) : '', dealer ? `${t('dealerOf', { n: L(dealer.name) })}` : ''].filter(Boolean).join('　·　');
+  el.className = 'callout rbn'; el.innerHTML = `<div class="rbn-band"><div class="rbn-big">${big}</div>${sub ? `<small>${esc(sub)}</small>` : ''}</div>`;
+  void el.offsetWidth; el.classList.add('show');
+  await sleep(1700);
+  el.classList.remove('show');
+}
 async function banner(text) {
   const el = $('#callout');
   el.className = 'callout banner'; el.innerHTML = `<b>${esc(text)}</b>`;
@@ -1514,11 +1546,14 @@ function recordGame(d, myRank) {
   const r = G.rules, lv = Math.floor(UIS.lv ?? DB.set.lv);
   try { GameRecord.add({ mode: 'ai', res: myRank === 0 ? 'w' : myRank === 3 ? 'l' : 'd', opp: t(r.length === 'south' ? 'south' : 'east') + ' · ' + t(r.skills ? 'skillOn' : 'skillOff') + ' · BOT ' + t('lv')[lv], key: r.length + ':' + (r.skills ? 1 : 0) + ':' + lv, why: t('rank')[myRank] + ' · ' + (PTS[I18N.lang] || PTS.en).replace('{n}', d.scores[ME].toLocaleString()) }); } catch (e) {}
 }
+const RAR_BONUS = { N: 0, R: .05, SR: .1, SSR: .2, UR: .3 };
 async function showFinal(d) {
   const rank = d.rank;
   const myRank = rank.indexOf(ME);
   // 1st = two single pulls, 2nd = one pull (COST1 each); hanchan pays double
-  const coins = [COST1 * 2, COST1, 120, 60][myRank] * (G.rules.length === 'south' ? 2 : 1);
+  const base = [COST1 * 2, COST1, 120, 60][myRank] * (G.rules.length === 'south' ? 2 : 1);
+  // (ユーザー 2026-11-15) playing a rarer character brings a little more: R +5%, SR +10%, SSR +20%, UR +30%
+  const myR = UIS.chars[ME] && UIS.chars[ME].rarity, bonusP = RAR_BONUS[myR] || 0, bonus = Math.round(base * bonusP / 10) * 10, coins = base + bonus;
   DB.coins += coins; DB.stats.games++; DB.stats.rank[myRank]++;
   if (!AUTO) {   // スタッツ: this game's counters into the mode's total, and the place under the character played
     MJStats.add(DB.pstats[G.rules.skills ? 'skill' : 'std'], UIS.track.seat[ME]);
@@ -1551,7 +1586,7 @@ async function showFinal(d) {
       <div class="agst-main">
         <h2 class="fn-t">${t('final')}</h2>
         <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" data-ps="${s}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
-        <div class="fn-foot">${rk ? rankStrip(rk) : '<span></span>'}<div class="earn">${icon('coin')} ${t('earned', { n: coins })}</div>
+        <div class="fn-foot">${rk ? rankStrip(rk) : '<span></span>'}<div class="earn">${icon('coin')} ${t('earned', { n: coins })}${bonus ? `<small class="rbonus">${esc(t('rarBonus', { r: myR, p: Math.round(bonusP * 100), n: bonus }))}</small>` : ''}</div>
           <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div></div>
       </div>
     </div>`, 'stage');
@@ -1654,5 +1689,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, askDealSkill };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, askDealSkill, roundBanner };
 })();

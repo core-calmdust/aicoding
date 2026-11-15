@@ -217,12 +217,13 @@ function tileGeos(w, h, d, r, b, backT, bs) {
 // dress closing just above the wrist. The rig's origin is the point the fingertips hold (the top of the tile);
 // −z points away from the owner, +z up the arm.
 // the sleeve's silk brocade, woven on a ground of `base` (crimson by default; each seat wears its sisters' colour — ユーザー 2026-11-14)
-function brocadeTex(base) {
+function brocadeTex(base, fx) {   // fx: the same pattern as roughness (g) and metalness (b) — the gold thread is metal thread, the ground matt cloth
+  if (fx) base = 'rgb(128,238,0)';
   const bc = document.createElement('canvas'); bc.width = bc.height = 512; const g2 = bc.getContext('2d');
   { g2.fillStyle = base; g2.fillRect(0, 0, 512, 512);
     let sd = 9; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 2600; i++) { g2.strokeStyle = `rgba(${R() < .5 ? '255,190,170' : '40,0,6'},${.03 + R() * .05})`; g2.lineWidth = 1; const x = R() * 512, y = R() * 512; g2.beginPath(); g2.moveTo(x, y); g2.lineTo(x, y + 6 + R() * 16); g2.stroke(); }   // the weave
-    const gold = 'rgba(232,186,96,.92)', dim = 'rgba(206,150,70,.6)';
+    if (!fx) for (let i = 0; i < 2600; i++) { g2.strokeStyle = `rgba(${R() < .5 ? '255,190,170' : '40,0,6'},${.03 + R() * .05})`; g2.lineWidth = 1; const x = R() * 512, y = R() * 512; g2.beginPath(); g2.moveTo(x, y); g2.lineTo(x, y + 6 + R() * 16); g2.stroke(); }   // the weave
+    const gold = fx ? 'rgb(128,105,118)' : 'rgba(236,192,100,.94)', dim = fx ? 'rgb(128,160,70)' : 'rgba(206,150,70,.6)';
     const flower = (x, y, r) => { g2.save(); g2.translate(x, y);
       g2.strokeStyle = gold; g2.lineWidth = 3; g2.beginPath(); g2.arc(0, 0, r, 0, 7); g2.stroke(); g2.lineWidth = 1.6; g2.beginPath(); g2.arc(0, 0, r * .86, 0, 7); g2.stroke();
       for (let k = 0; k < 8; k++) { g2.rotate(Math.PI / 4); g2.fillStyle = gold; g2.beginPath(); g2.ellipse(0, -r * .47, r * .15, r * .27, 0, 0, 7); g2.fill(); g2.fillStyle = dim; g2.beginPath(); g2.ellipse(r * .2, -r * .5, r * .07, r * .17, .4, 0, 7); g2.fill(); }
@@ -232,7 +233,7 @@ function brocadeTex(base) {
       g2.beginPath(); g2.moveTo(-44, 14); g2.quadraticCurveTo(0, 30, 44, 14); g2.stroke(); g2.restore(); };
     for (const [x, y] of [[128, 128], [384, 384]]) for (const [ox, oy] of [[0, 0], [512, 0], [-512, 0], [0, 512], [0, -512]]) flower(x + ox, y + oy, 86);
     for (const [x, y] of [[384, 128], [128, 384]]) cloud(x, y, 1.25); }
-  const bro = new THREE.CanvasTexture(bc); bro.encoding = THREE.sRGBEncoding; bro.wrapS = bro.wrapT = THREE.RepeatWrapping; bro.repeat.set(4, 5); bro.anisotropy = 4;
+  const bro = new THREE.CanvasTexture(bc); if (!fx) bro.encoding = THREE.sRGBEncoding; bro.wrapS = bro.wrapT = THREE.RepeatWrapping; bro.repeat.set(4, 5); bro.anisotropy = 4;
   return bro;
 }
 // the carpet under the table (ユーザー 2026-11-14, from a reference photo): a deep red rug of the Turkmen kind — rows of dark
@@ -419,10 +420,10 @@ function buildHand(env) {
   // the fine detail is solid noise in the hand's own space, worked very lightly into the normal: a fine, even grain (pores) and a
   // slow, soft unevenness — no lines, no folds. The gloss follows it (a moist sheen between the pores). Light: a soft wrap toward
   // the shade, red where light turns to shade (light passing through the flesh), a thin warm rim at grazing angles.
-  const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: new THREE.Color(0xfbeae2).convertSRGBToLinear(), roughness: .44, metalness: 0, sheen: .4, sheenRoughness: .45, sheenColor: new THREE.Color(0xffe6da), emissive: new THREE.Color(0xc08878), emissiveIntensity: .2, envMap: env, envMapIntensity: .32 });
+  const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: new THREE.Color(0xfbeae2).convertSRGBToLinear(), roughness: .44, metalness: 0, sheen: .4, sheenRoughness: .45, sheenColor: new THREE.Color(0xffe6da), emissive: new THREE.Color(0xc08878), emissiveIntensity: .13, envMap: env, envMapIntensity: .32 });
   skin.onBeforeCompile = sh => {
-    sh.vertexShader = 'varying vec3 vSkP;\n' + sh.vertexShader.replace('#include <morphtarget_vertex>', '#include <morphtarget_vertex>\n vSkP = transformed;');
-    sh.fragmentShader = `varying vec3 vSkP;
+    sh.vertexShader = 'varying vec3 vSkP; varying float vSkC; varying float vSkT;\n' + sh.vertexShader.replace('#include <morphtarget_vertex>', `#include <morphtarget_vertex>\n vSkP = transformed; vSkT = uv.x; vSkC = dot(position - vec3(${Hd.wrist.map(v => v.toFixed(3)).join(',')}), vec3(0., ${(-Math.sin(Hd.pitch)).toFixed(4)}, ${Math.cos(Hd.pitch).toFixed(4)}));`);   // (vSkC: how far up the arm from the cuff, on the unposed mesh — the shade stays on the wrist in both poses)
+    sh.fragmentShader = `varying vec3 vSkP; varying float vSkC; varying float vSkT;
       float skH(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
       float skN(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
         return mix(mix(mix(skH(i), skH(i + vec3(1,0,0)), f.x), mix(skH(i + vec3(0,1,0)), skH(i + vec3(1,1,0)), f.x), f.y),
@@ -437,9 +438,10 @@ function buildHand(env) {
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
         roughnessFactor = clamp(roughnessFactor * (.9 + .22 * skPore), .05, 1.);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-    { diffuseColor.rgb *= .975 + .05 * skSlow;
+    { diffuseColor.rgb *= (.975 + .05 * skSlow) * (1. - .42 * smoothstep(-.75, .12, vSkC));   // (the cuff's shade on the wrist)
       vec3 sL = normalize((viewMatrix * vec4(.2, 1., .3, 0.)).xyz); float sn = dot(normalize(vNormal), sL), sv = 1. - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0., 1.);
-      totalEmissiveRadiance += diffuseColor.rgb * (vec3(1., .34, .24) * (smoothstep(-.6, .05, sn) * (1. - smoothstep(.0, .6, sn)) * .36 + sv * sv * sv * .18) + vec3(1., .86, .8) * smoothstep(-1., .4, sn) * .1); }`); };
+      totalEmissiveRadiance += diffuseColor.rgb * (vec3(1., .34, .24) * (smoothstep(-.6, .05, sn) * (1. - smoothstep(.0, .6, sn)) * .36 + sv * sv * sv * .18) + vec3(1., .86, .8) * (smoothstep(-1., .4, sn) * .06 + pow(.5 + .5 * sn, 2.) * .12)
+        + vec3(1., .26, .16) * vSkT * (smoothstep(.4, -.7, sn) * .55 + sv * sv * .3)) * (1. - .5 * smoothstep(-.75, .12, vSkC)); }`); };   // (… and where the flesh is thin — fingers, the webs between them, the hand's edge: vSkT, measured on the mesh by hand-gen.py — light comes through it red on the side away from the light)   // (a soft key from above gives the hand its roundness: brighter on top, never dark below)
   // the nails (ユーザー 2026-11-15): gel nails with a painted look per player (nailArt above) — the colour, and one picture read as
   // height / roughness / metalness, under a clear top coat. Glitter and stones are metal in that picture: they mirror the room, and
   // flash as the hand turns (tiny facets, each with its own tilt).
@@ -455,17 +457,33 @@ function buildHand(env) {
     return nm; };
   rig.mkNail = mkNail;   // (not in userData: clone() copies that through JSON)
   const nail = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xf0c4c0).convertSRGBToLinear(), roughness: .2, envMap: env, envMapIntensity: .8 });   // (a plain stand-in: each seat gets its painted nails in _sleeve — no pictures are made for nails nobody wears)
-  const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; hand.frustumCulled = false; rig.add(hand); if (Hd.mi) hand.morphTargetInfluences = [0];
+  const PCQ = !matchMedia('(pointer: coarse)').matches;   // (desktop only — ユーザー 2026-11-15: the heavier touches may be for PC alone)
+  const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; hand.receiveShadow = PCQ;   /* (PC: the sleeve and the fingers shade the hand, thinly — only the key light is shadowed, the hand's own glow is not) */ hand.frustumCulled = false; rig.add(hand); if (Hd.mi) hand.morphTargetInfluences = [0];
   // the sleeve (ユーザー 2026-11-14: only a glimpse of the wrist, the sleeve long; a pattern as on a Chinese dress): crimson silk
   // brocade — gold flower roundels and cloud scrolls woven in — closing just above the wrist in a black band between two gold pipings.
   const bro = brocadeTex('#8c1626');
-  const cloth = new THREE.MeshPhysicalMaterial({ map: bro, roughness: .93, metalness: 0, sheen: .3, sheenRoughness: .9, sheenColor: new THREE.Color(0xb08078), envMap: env, envMapIntensity: .04, bumpMap: weaveTex(), bumpScale: 1.2 });   // (ユーザー 2026-11-14: woven cloth — matt, a soft fuzz at the edges, no reflections)
+  // (ユーザー 2026-11-14: woven cloth — matt, a soft fuzz at the edges. 2026-11-15: more real — the gold of the brocade is metal thread
+  // and catches the light (its own roughness / metalness picture), the cloth hangs in folds (below) and is darker in them.)
+  const clothFx = brocadeTex('#000', true);
+  const cloth = new THREE.MeshPhysicalMaterial({ map: bro, vertexColors: true, roughness: 1, metalness: 1, roughnessMap: clothFx, metalnessMap: clothFx, sheen: .6, sheenRoughness: .8, sheenColor: new THREE.Color(0xb08078), envMap: env, envMapIntensity: .42, bumpMap: weaveTex(), bumpScale: 1.2 });
   const band = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x14080c).convertSRGBToLinear(), roughness: .6 });
   rig.clothMat = cloth;   // (not in userData: clone() copies that through JSON)
   const gold = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd9b062).convertSRGBToLinear(), roughness: .32, metalness: .85, envMap: env, envMapIntensity: .9 });
   const sl = new THREE.Group(); sl.position.set(Hd.wrist[0], Hd.wrist[1], Hd.wrist[2]); sl.rotation.x = Hd.pitch; rig.add(sl);   // from just above the wrist on up the arm
   { const r0 = Hd.wr ? Hd.wr[0] * 1.1 : .8, SY = Hd.wr ? Math.min(1, Hd.wr[1] * 1.16 / r0) : .8, r1 = r0 + .95, Ls = 15;   // (the cuff fits the wrist of the model)
-    const cg = new THREE.CylinderGeometry(r1, r0, Ls, 28, 1, true); cg.rotateX(PI / 2); cg.translate(0, 0, Ls / 2 + .34); const m = new THREE.Mesh(cg, cloth); m.scale.set(1, SY, 1); m.castShadow = true; m.userData.sleeve = true; sl.add(m);
+    // the cloth hangs: long soft folds running up the arm (deeper where the sleeve is wide), small gathers above the cuff, and the
+    // underside sagging under its own weight. The folds' hollows are shaded (vertex colour). More segments on a desktop.
+    const fine = !matchMedia('(pointer: coarse)').matches, cg = new THREE.CylinderGeometry(r1, r0, Ls, fine ? 44 : 28, fine ? 30 : 14, true); cg.rotateX(PI / 2); cg.translate(0, 0, Ls / 2 + .34);
+    { const P = cg.attributes.position, col = new Float32Array(P.count * 3);
+      for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i) - .34, th = Math.atan2(y, x), r = Math.hypot(x, y), near = Math.min(1, z / 1.4), a = (.06 + .02 * z) * (fine ? 1.5 : 1) * near * near * (3 - 2 * near);
+        const f = Math.sin(3 * th + .22 * z + .6) * .5 + Math.sin(5 * th - .17 * z + 2.1) * .32 + Math.sin(8 * th + .36 * z + 4.) * .18, g = Math.sin(z * 5.2 + 1.6 * Math.sin(2 * th + .5)) * Math.exp(-z / 1.5) * near;
+        const d = a * f + .04 * g, rr = r + d, sag = Math.pow(Math.max(0, -Math.sin(th)), 2) * .028 * Math.pow(z, 1.25);
+        P.setXYZ(i, Math.cos(th) * rr, Math.sin(th) * rr - sag, z + .34);
+        const sh = 1 - Math.max(0, -f) * (fine ? .5 : .42) * Math.min(1, a / .14) - Math.max(0, -g) * .22; col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = sh * sh; }
+      cg.setAttribute('color', new THREE.BufferAttribute(col, 3)); cg.computeVertexNormals();
+      // (the seam: the first and last column of the cylinder are the same place — give them one normal)
+      const N = cg.attributes.normal, cols = (fine ? 44 : 28) + 1, rows = (fine ? 30 : 14) + 1; for (let rw = 0; rw < rows; rw++) { const a0 = rw * cols, b0 = a0 + cols - 1, nx = N.getX(a0) + N.getX(b0), ny = N.getY(a0) + N.getY(b0), nz = N.getZ(a0) + N.getZ(b0), l = Math.hypot(nx, ny, nz) || 1; N.setXYZ(a0, nx / l, ny / l, nz / l); N.setXYZ(b0, nx / l, ny / l, nz / l); } }
+    const m = new THREE.Mesh(cg, cloth); m.receiveShadow = fine; m.scale.set(1, SY, 1); m.castShadow = true; m.userData.sleeve = true; sl.add(m);
     const bg = new THREE.CylinderGeometry(r0 + .02, r0 - .02, .34, 28, 1, true); bg.rotateX(PI / 2); bg.translate(0, 0, .17); const bm = new THREE.Mesh(bg, band); bm.scale.set(1, SY, 1); sl.add(bm);
     for (const z of [0, .34]) { const cuff = new THREE.Mesh(new THREE.TorusGeometry(r0 + (z ? .02 : -.02), .045, 8, 32), gold); cuff.position.z = z; cuff.scale.set(1, SY, 1); cuff.castShadow = true; sl.add(cuff); }
     const cap = new THREE.Mesh(new THREE.CircleGeometry(r0 - .04, 24), band); cap.scale.set(1, SY, 1); cap.rotation.y = PI; cap.position.z = .06; sl.add(cap); }
@@ -904,6 +922,7 @@ class Table3D {
   // as silk is (a light colour stays light); one material per colour, made once.
   setSleeves(cols, nails) { this.sleeves = cols.slice(); this.nailStyles = (nails || []).slice(); (this.hands || []).forEach((rig, s) => { if (rig && cols[s]) this._sleeve(rig, cols[s]); });
     // (2026-11-15, memory: the nail pictures of looks no seat wears any more are freed — at most four sets are kept)
+    if (this.sleeveMats) for (const [k, sm] of this.sleeveMats) if (cols.indexOf(k) < 0) { if (sm.map) sm.map.dispose(); sm.dispose(); this.sleeveMats.delete(k); }
     if (this.nailMats) { const live = new Set(cols.map((c, s) => (this.nailStyles[s] || 'gem') + c)); for (const [k, nm] of this.nailMats) if (!live.has(k)) { if (nm.map) nm.map.dispose(); if (nm.bumpMap) nm.bumpMap.dispose(); nm.dispose(); this.nailMats.delete(k); } }
     this.dirty = true; }
   _sleeve(rig, col) {

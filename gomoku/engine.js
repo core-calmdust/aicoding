@@ -1373,12 +1373,14 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   const gunzip = r => typeof DecompressionStream === 'function' ? new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer() : Promise.reject(new Error('no gzip'));
   const ready = typeof fetch !== 'function' ? Promise.resolve() : Promise.all([coreP,
     fetch('eval_std.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) loadWeightsBuffer('std', b); }).catch(() => {}),
-    // renju: neural evaluation (nn.c -> nn.wasm + weights); falls back to the hand-made evaluation if anything fails
-    Promise.all([fetch('nn48.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_renju.bin.gz?v=4').then(r => r.ok ? gunzip(r) : null)])
-      .then(([w, b]) => { if (w && b) setNN('renju', w, b); }).catch(() => {}),
-    Promise.all([fetch('nn.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_std.bin.gz?v=2').then(r => r.ok ? gunzip(r) : null)])
-      .then(([w, b]) => { if (w && b) setNN('std', w, b); }).catch(() => {}),
   ]).then(() => coreWeights());
+  // renju / standard: neural evaluation (nn.c -> nn.wasm + weights); falls back to the hand-made evaluation if anything fails.
+  // (2026-11-15) each net is read when the first job of its rule comes (freestyle uses none): a phone playing one rule no longer
+  // downloads both (0.8MB + 0.55MB). The helpers of the thread pool get the same rule with their job, so they load the same net.
+  const NN_SRC = { renju: ['nn48.wasm?v=1', 'nn_renju.bin.gz?v=4'], std: ['nn.wasm?v=1', 'nn_std.bin.gz?v=2'] }, nnP = {};
+  const nnLoad = g => !g || typeof fetch !== 'function' ? Promise.resolve() : nnP[g] || (nnP[g] = Promise.all([fetch(NN_SRC[g][0]).then(r => r.ok ? r.arrayBuffer() : null), fetch(NN_SRC[g][1]).then(r => r.ok ? gunzip(r) : null)])
+    .then(([w, b]) => { if (w && b) { setNN(g, w, b); coreWeights(); } }).catch(() => {}));
+  const nnOf = rule => rule === 'renju' ? 'renju' : rule === 'standard' ? 'std' : null;
   let mtReady = null, mtCtl = null, mtCnt = null, mtId = 0;
   if (MTQ) mtReady = new Promise(res => self.addEventListener('message', function f(e) {
     const m = e.data; if (!m || m.type !== 'mtinit') return;
@@ -1415,6 +1417,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     if (mtReady) await mtReady;
     await ready;
     const m = e.data;
+    if (m && m.rule) await nnLoad(nnOf(m.rule));
+    else if (m && m.type === 'info') await Promise.all([nnLoad('renju'), nnLoad('std')]);   // (bench / tests: both, as before)
     if (m.type === 'help') { help(m); return; }
     if (MTQ === '1' && !CX) { const E = eng(); E.split = m.type === 'analyze' || m.type === 'cands'; E.rsplit = m.type === 'think'; E.ybw = E.split || E.rsplit; }   // (the lead: rootList / best share their moves with the helpers — split points at any node, see splitRun)
     try {

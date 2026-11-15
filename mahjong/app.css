@@ -1842,3 +1842,142 @@ html.lp .ph-r{grid-template-columns:5.6em 2.8em minmax(5em,1fr) minmax(6em,1.2fr
 html.lp .pstats .ps-art.ch-art{max-width:24cqw}
 html.lp .pstats .ps-cols{grid-template-columns:1fr}
 html.lp .pstats .ps-yh,html.lp .pstats .ps-yk{grid-template-columns:minmax(7em,1.2fr) 3em 4.4em minmax(3em,1fr)}
+/* the round announcement (roundBanner): a full-width band across the middle */
+.callout.rbn{left:0;right:0;top:50%;transform:translateY(-50%);z-index:40;pointer-events:none;opacity:0}
+.callout.rbn{transition:opacity .35s ease}
+.callout.rbn .rbn-band{transition:transform .45s cubic-bezier(.2,.9,.3,1);transform:scaleY(.15)}
+.callout.rbn.show{opacity:1}
+.callout.rbn.show .rbn-band{transform:none}
+.rbn-band{display:flex;flex-direction:column;align-items:center;gap:.25em;padding:calc(var(--u, 8px)*2.4) 0 calc(var(--u, 8px)*2);
+  background:linear-gradient(90deg,transparent,rgba(10,6,20,.9) 14%,rgba(10,6,20,.92) 50%,rgba(10,6,20,.9) 86%,transparent);
+  border-top:1px solid rgba(232,206,140,.7);border-bottom:1px solid rgba(232,206,140,.7);
+  box-shadow:0 -4px 0 -3px rgba(232,206,140,.35),0 4px 0 -3px rgba(232,206,140,.35);
+  -webkit-mask:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.rbn-big{display:flex;align-items:baseline;gap:.35em;font-family:var(--serif);font-weight:800;line-height:1;white-space:nowrap;
+  font-size:clamp(44px,calc(var(--GH, 100vh) * .13),120px);letter-spacing:.12em;
+  background:linear-gradient(180deg,#fff6d8 0%,#f3d48a 45%,#b98a3a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 18px rgba(255,200,90,.35)) drop-shadow(0 3px 0 rgba(0,0,0,.6))}
+.rbn-big i{font-style:normal;font-size:1.08em}
+.rbn-band small{font-family:var(--serif);font-size:clamp(13px,calc(var(--GH, 100vh) * .028),22px);letter-spacing:.3em;color:#e9dcff}
+@keyframes rbnIn{0%{opacity:0;transform:translateY(-50%) scaleY(.2)}14%{opacity:1;transform:translateY(-50%) scaleY(1)}82%{opacity:1;transform:translateY(-50%)}100%{opacity:0;transform:translateY(-50%) scale(1.04)}}
+/* (ユーザー 2026-11-15) 戦績 on a wide screen: smaller type and more on view — the panel about square beside the portrait, the pair
+   centred */
+html:not(.lp) .pstats{--u:min(.74cqh,.46cqw)}
+html:not(.lp) .pstats .ps-box{inset:3cqh 0;justify-content:center;gap:2cqw}
+html:not(.lp) .pstats .ps-main{flex:0 1 auto;width:min(calc(100cqw - 6cqw - min(30cqw, 94cqh * 9 / 16) - 2cqw),max(94cqh,640px))}
+html:not(.lp) .pstats .ps-art.ch-art{max-width:30cqw}
+.pstats .ps-yk.zero span,.pstats .ps-yk.zero b,.pstats .ps-yk.zero em{opacity:.38}
+/* the home menu's names (ガチャ・キャラ…) in the house's gold Mincho, not white gothic (ユーザー 2026-11-15) */
+:is(#home,#chara).aaa .lm-t b{font-family:var(--serif);font-weight:800;letter-spacing:.16em;font-size:18px;
+  background:linear-gradient(180deg,#fff6dc 0%,#f1d796 52%,#c99d4c 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 1px 0 rgba(0,0,0,.55))}
+:is(#home,#chara).aaa .lm.soon .lm-t b{background:linear-gradient(180deg,#b9b0cf,#7c7397);-webkit-background-clip:text;background-clip:text}
+:is(#home,#chara).aaa .lm.soon .lm-t small{font-family:var(--serif);letter-spacing:.2em}
+/* the yaku table across the panel's full width, in two columns (the biggest win above it) */
+.pstats .ps-cols{grid-template-columns:1fr!important}
+.pstats .ps-yks.two{display:grid;grid-template-columns:1fr 1fr;column-gap:calc(var(--u)*3)}
+.pstats .ps-yh2{display:none}
+.pstats .ps-yks.two .ps-yh2{display:grid}
+html.lp .pstats .ps-yks.two{grid-template-columns:1fr}
+html.lp .pstats .ps-yks.two .ps-yh2{display:none}
+.pstats .ps-mw > div{display:flex;align-items:baseline;gap:1em}
+/* the yaku section's link to the full list, and that page */
+.pstats .ps-ymore{margin-left:1em;flex:none;font-family:var(--serif);font-size:max(11px,calc(var(--u)*1.7));letter-spacing:.12em;color:var(--gl2);background:rgba(232,206,140,.08);
+  border:1px solid rgba(232,206,140,.55);border-radius:3px;padding:.25em .8em;cursor:pointer}
+.pstats .ps-ymore:hover{background:rgba(232,206,140,.18)}
+.ps-yall{display:flex;flex-direction:column;gap:calc(var(--u)*1.2)}
+.ps-yall-h{display:flex;align-items:baseline;gap:1.2em;border-bottom:1px solid rgba(232,206,140,.3);padding-bottom:.5em}
+.ps-yall-h h4{margin:0;font-family:var(--serif);letter-spacing:.24em;color:var(--gl);font-size:max(13px,calc(var(--u)*2.2))}
+.ps-yall-h small{margin-left:auto;color:rgba(232,206,140,.6);font-size:max(11px,calc(var(--u)*1.6))}
+.ps-yall-h .btn{font-family:var(--serif)}
+/* the header's switch between the stats and the yaku list (ユーザー 2026-11-15) */
+.pstats .ps-yt{margin-left:auto;flex:none;font-family:var(--serif);font-weight:700;font-size:max(12px,calc(var(--u)*1.9));letter-spacing:.16em;color:var(--gl2);
+  padding:.45em 1.1em;border-radius:3px;cursor:pointer;background:radial-gradient(120% 160% at 50% 0%,rgba(232,206,140,.2),transparent 65%),linear-gradient(180deg,#2a2040,#120d1e);
+  border:1px solid rgba(232,206,140,.7);box-shadow:inset 0 0 0 2px #120d1e,inset 0 0 0 3px rgba(232,206,140,.25)}
+.pstats .ps-yt:hover{border-color:var(--gl2);color:#fff6dc}
+.ps-ycat h5{margin:calc(var(--u)*.8) 0 calc(var(--u)*.4);font-family:var(--serif);font-weight:800;font-size:max(12px,calc(var(--u)*1.9));letter-spacing:.3em;color:#e9dcff;
+  display:flex;align-items:center;gap:.8em}
+.ps-ycat h5::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(232,206,140,.4),transparent)}
+.ps-ycat:last-child h5{color:var(--gl)}
+/* ================= the gacha, refined (ユーザー 2026-11-15: the boxes were too big) — PC and tablet; the phone keeps its own layout ===== */
+html:not(.lp) .modal.gacham .mbox{width:min(700px,calc(100% - 40px));padding:22px 28px 22px;border-radius:6px;
+  background:radial-gradient(120% 60% at 50% 0%,rgba(232,206,140,.1),transparent 60%),linear-gradient(180deg,var(--lq1),var(--lq2));
+  border:1px solid rgba(232,206,140,.75);box-shadow:inset 0 0 0 5px var(--lq2),inset 0 0 0 6px rgba(232,206,140,.28),0 30px 80px rgba(0,0,0,.65)}
+html:not(.lp) .modal.gacham .gacha{display:grid;grid-template-columns:1fr auto 1fr;grid-template-areas:". h c" "st st st" "b b b";align-items:center;row-gap:14px}
+html:not(.lp) .modal.gacham .gacha h2{grid-area:h;margin:0;font-family:var(--serif);font-weight:800;font-style:normal;font-size:24px;letter-spacing:.42em;text-indent:.42em;color:var(--gl2);
+  display:flex;flex-direction:column;align-items:center;gap:2px}
+html:not(.lp) .modal.gacham .gacha h2 small{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.5em;text-indent:.5em;color:rgba(232,206,140,.6)}
+html:not(.lp) .modal.gacham .gcoins{grid-area:c;justify-self:end;margin:0 44px 0 0;padding:4px 12px 4px 8px;border-radius:99px;border:1px solid rgba(232,206,140,.4);
+  background:rgba(0,0,0,.3);font-family:var(--serif);font-size:15px;color:#fff1c8;gap:6px}
+html:not(.lp) .modal.gacham .gcoins svg{width:17px;height:17px}
+html:not(.lp) .modal.gacham .gstage{grid-area:st;min-height:280px;margin:0;border-radius:3px;border:1px solid rgba(232,206,140,.28);
+  background:radial-gradient(circle at 50% 42%,rgba(150,105,255,.32),rgba(20,12,36,.6) 62%,rgba(8,5,16,.85));box-shadow:inset 0 0 40px rgba(0,0,0,.5)}
+html:not(.lp) .modal.gacham .gorb{width:112px;height:112px;margin-bottom:56px;position:relative}
+html:not(.lp) .modal.gacham .gorb::before,html:not(.lp) .modal.gacham .gorb::after{content:"";position:absolute;inset:-16px;border-radius:50%;border:1px solid rgba(232,206,140,.35);animation:spin 14s linear infinite}
+html:not(.lp) .modal.gacham .gorb::after{inset:-30px;border-style:dashed;border-color:rgba(232,206,140,.18);animation-duration:22s;animation-direction:reverse}
+html:not(.lp) .modal.gacham .gorb.spin::before,html:not(.lp) .modal.gacham .gorb.spin::after{display:none}
+html:not(.lp) .modal.gacham .grates{bottom:12px;font-family:var(--serif);font-size:11.5px;line-height:1.75;letter-spacing:.06em;color:rgba(217,205,238,.75)}
+html:not(.lp) .modal.gacham .grates small{color:rgba(232,206,140,.7);letter-spacing:.08em}
+html:not(.lp) .modal.gacham .gbtns{grid-area:b;gap:12px}
+html:not(.lp) .modal.gacham .gbtns .btn{min-width:180px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 22px 8px;border-radius:4px;font-family:var(--serif);
+  color:var(--gl2);background:radial-gradient(120% 150% at 50% 0%,rgba(232,206,140,.18),transparent 62%),linear-gradient(180deg,#2a2040,#120d1e);
+  border:1px solid rgba(232,206,140,.6);box-shadow:inset 0 0 0 3px #120d1e,inset 0 0 0 4px rgba(232,206,140,.22),0 8px 22px rgba(0,0,0,.45)}
+html:not(.lp) .modal.gacham .gbtns .btn.gold{border-color:#f3d48a;background:radial-gradient(120% 150% at 50% 0%,rgba(255,200,90,.38),transparent 62%),linear-gradient(180deg,#30223e,#140d1f);
+  box-shadow:inset 0 0 0 3px #140d1f,inset 0 0 0 4px rgba(243,212,138,.45),0 8px 22px rgba(0,0,0,.45),0 0 18px rgba(255,200,90,.18)}
+html:not(.lp) .modal.gacham .gbtns .btn:hover{border-color:var(--gl2);color:#fff6dc}
+html:not(.lp) .modal.gacham .gbtns .btn b{font-size:17px;font-weight:800;letter-spacing:.3em;text-indent:.3em}
+html:not(.lp) .modal.gacham .gbtns .btn small{display:flex;align-items:center;gap:4px;font-size:12px;letter-spacing:.06em;color:#e9dcff}
+html:not(.lp) .modal.gacham .gbtns .btn small svg{width:13px;height:13px}
+html:not(.lp) .modal.gacham .x{top:14px;right:14px;width:34px;height:34px}
+html:not(.lp) .modal.gacham .gcards{padding:10px;gap:8px}
+html:not(.lp) .modal.gacham .gcards.n1{grid-template-columns:180px}
+/* the phone: the buttons' new two lines */
+html.lp .modal.gacham .gbtns .btn{display:flex;flex-direction:column;align-items:center;gap:1px;font-family:var(--serif)}
+html.lp .modal.gacham .gbtns .btn small{display:flex;align-items:center;gap:3px;font-size:11px}
+html.lp .modal.gacham .gbtns .btn small svg{width:12px;height:12px}
+html.lp .modal.gacham .gacha h2 small{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* the phone's gacha in the same lacquer and gold */
+html.lp .modal.gacham .mbox{border-radius:6px;background:radial-gradient(120% 60% at 50% 0%,rgba(232,206,140,.1),transparent 60%),linear-gradient(180deg,var(--lq1),var(--lq2));
+  border:1px solid rgba(232,206,140,.75);box-shadow:inset 0 0 0 4px var(--lq2),inset 0 0 0 5px rgba(232,206,140,.28)}
+html.lp .modal.gacham .gacha h2{font-family:var(--serif);font-style:normal;font-weight:800;letter-spacing:.3em;color:var(--gl2)}
+html.lp .modal.gacham .gcoins{font-family:var(--serif);color:#fff1c8}
+html.lp .modal.gacham .gstage{border-radius:3px;border:1px solid rgba(232,206,140,.28);background:radial-gradient(circle at 50% 42%,rgba(150,105,255,.32),rgba(20,12,36,.6) 62%,rgba(8,5,16,.85))}
+html.lp .modal.gacham .grates{font-family:var(--serif);color:rgba(217,205,238,.75)}
+html.lp .modal.gacham .grates small{color:rgba(232,206,140,.7)}
+html.lp .modal.gacham .gorb{position:relative;margin-bottom:40px}
+html.lp .modal.gacham .gorb::before{content:"";position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(232,206,140,.35)}
+html.lp .modal.gacham .gorb.spin::before{display:none}
+html.lp .modal.gacham .gbtns .btn{border-radius:4px;color:var(--gl2);background:radial-gradient(120% 150% at 50% 0%,rgba(232,206,140,.18),transparent 62%),linear-gradient(180deg,#2a2040,#120d1e);
+  border:1px solid rgba(232,206,140,.6);box-shadow:inset 0 0 0 3px #120d1e,inset 0 0 0 4px rgba(232,206,140,.22)}
+html.lp .modal.gacham .gbtns .btn.gold{border-color:#f3d48a;background:radial-gradient(120% 150% at 50% 0%,rgba(255,200,90,.38),transparent 62%),linear-gradient(180deg,#30223e,#140d1f)}
+html.lp .modal.gacham .gbtns .btn b{letter-spacing:.24em;font-size:15px}
+html.lp .modal.gacham .gbtns .btn small{color:#e9dcff}
+.earn{flex-wrap:wrap}
+.earn .rbonus{flex-basis:100%;text-align:inherit;font-family:var(--serif);font-size:.62em;font-weight:700;letter-spacing:.08em;color:var(--gl)}
+.fnst .earn .rbonus{text-align:right}
+/* the coin bonus a character brings (rarer: more) */
+.pp-cb{display:inline-flex;align-items:center;gap:3px;margin-left:.6em;padding:1px 8px 1px 5px;border-radius:99px;border:1px solid rgba(232,206,140,.45);
+  font-family:var(--serif);font-size:.82em;font-weight:700;color:#ffe9b0;background:rgba(0,0,0,.25);white-space:nowrap}
+.pp-cb svg{width:1.05em;height:1.05em;color:#ffd24a}
+/* (ユーザー 2026-11-15, PC) the player across sits on the far rail, right of centre, face and name side by side (full size); the right
+   player back under the corner buttons; the left player lower, at the middle of the left side */
+html.ds #game #opp2{left:51%!important;right:auto!important;top:max(4px,calc(var(--gi) * .4))!important;transform:none!important;
+  flex-direction:row;align-items:center;gap:10px}
+html.ds #game #opp2 .bt{align-items:flex-start}
+html.ds #game #opp1{top:calc(var(--gi) + 32px * var(--hz, 1) + 14px)}
+html.ds #game #opp3{top:26%}
+/* (ユーザー 2026-11-15) a squarish window: the panel takes the width — a narrower portrait, three stat columns, the biggest win and
+   the top yaku side by side */
+@container (max-aspect-ratio: 3/2){
+  html:not(.lp) .pstats .ps-art.ch-art{max-width:24cqw}
+  html:not(.lp) .pstats{--u:min(.9cqh,.62cqw)}
+  html:not(.lp) .pstats .ps-box{top:50%;bottom:auto;transform:translateY(-50%);max-height:94cqh;align-items:stretch}
+  html:not(.lp) .pstats .ps-art.ch-art{height:auto;aspect-ratio:auto;width:24cqw}
+  html:not(.lp) .pstats .ps-main{max-height:94cqh}
+  html:not(.lp) .pstats .ps-body{flex:0 1 auto}
+  html:not(.lp) .pstats .ps-main{width:calc(100cqw - 6cqw - min(24cqw, 94cqh * 9 / 16) - 2cqw)}
+  html:not(.lp) .pstats .ps-grid{grid-template-columns:repeat(3,1fr)}
+  html:not(.lp) .pstats .ps-cols{grid-template-columns:1fr 1.7fr!important}
+  html:not(.lp) .pstats .ps-chs > div{grid-template-columns:repeat(3,1fr)}
+}

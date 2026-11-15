@@ -6,7 +6,11 @@
    Registers into Table3D:
      Table3D.MODELS.chess(live, o)   board (+ the starting position unless live)
      Table3D.chess.piece(type, color) one piece (type 'P','N','B','R','Q','K' or 1..6; color 'w'|'b' or 0|1)
-     Table3D.chess.images(px)         Promise → { wK, wQ, …, bP: dataURL } 3/4 renders for the DOM (sprite 1 × 1.6 squares)
+     Table3D.chess.images(px, set)    Promise → { wK, wQ, …, bP: dataURL } 3/4 renders for the DOM (sprite 1 × 1.6 squares)
+   Six boards (2026-11-15, 'atlas-chess-look' = Table3D.BOARDS.chess): lux 高級ラッカー (the default) · wood バール ·
+   marble 大理石と真鍮 · walnut ウォルナットとメープル · leather 革と金箔 · khatam ハータム — the last four are pictures made
+   by atlas/tools/chess-tex.py (images/atlas/chess3d/). Six piece sets ('atlas-chess-pc3' = Table3D.PIECES.chess): lux 銀と金 ·
+   wood ツゲと紫檀 · ebony 黒檀とツゲ · marble 白黒の大理石 · porcelain 白磁と瑠璃 · crystal クリスタルとスモーク.
    Units: one square is 1.0; the field is 8 × 8, the frame 0.85 wide (outer 9.7 = the page's board frame).
    ===================================================================== */
 (function () {
@@ -167,31 +171,50 @@
   }
 
   /* ---------- materials ---------- */
+  // the piece sets (2026-11-15): 'lux' and 'wood' as before; ebony / boxwood, stone, porcelain with gold, crystal
+  const PSETS = ['lux', 'wood', 'ebony', 'marble', 'porcelain', 'crystal'];
+  const CARVED = { wood: true, ebony: true };   // carved mane locks on the knight
   const mats = {};
-  function matsOf(col, set = 'lux') {
-    if (set === 'wood') return woodMats(col);
-    if (mats[col]) return mats[col];
-    const TT = T(), w = col === 'w';
-    const metal = new TT.MeshPhysicalMaterial({ color: new TT.Color(w ? 0xeef0f3 : 0xf2c464).convertSRGBToLinear(), metalness: 1, roughness: w ? .1 : .16, clearcoat: .6, clearcoatRoughness: .08, envMapIntensity: 1.25 });
-    const resin = new TT.MeshPhysicalMaterial({ map: w ? marble('chMarbW', '#4d5056', '#b9bcc2', 7) : marble('chMarbB', '#121214', '#5b564f', 13), roughness: .24, metalness: .05, clearcoat: 1, clearcoatRoughness: .05 });
-    const felt = new TT.MeshStandardMaterial({ color: new TT.Color(0x1d3b26).convertSRGBToLinear(), roughness: 1 });
-    // the reflection in the lacquer: the same materials drawn additively, only where the board is in front (see reflect())
-    // mixed in with alpha blending, still in the opaque pass (custom blending), before the real pieces, only on the lacquered top (stencil 2), one layer per pixel
-    const ref = (x, c, op) => new TT.MeshBasicMaterial({ map: x.map || null, color: new TT.Color(c).convertSRGBToLinear(), opacity: op, blending: TT.CustomBlending, blendSrc: TT.SrcAlphaFactor, blendDst: TT.OneMinusSrcAlphaFactor, blendSrcAlpha: TT.ZeroFactor, blendDstAlpha: TT.OneFactor,
+  // the reflection in the lacquer: the same materials drawn additively, only where the board is in front (see reflect())
+  // mixed in with alpha blending, still in the opaque pass (custom blending), before the real pieces, only on the glossy top (stencil 2), one layer per pixel
+  function refMat(x, c, op) {
+    const TT = T();
+    return new TT.MeshBasicMaterial({ map: (x && x.map) || null, color: new TT.Color(c).convertSRGBToLinear(), opacity: op, blending: TT.CustomBlending, blendSrc: TT.SrcAlphaFactor, blendDst: TT.OneMinusSrcAlphaFactor, blendSrcAlpha: TT.ZeroFactor, blendDstAlpha: TT.OneFactor,
       depthWrite: false, depthFunc: TT.GreaterDepth, stencilWrite: true, stencilRef: 2, stencilFunc: TT.EqualStencilFunc, stencilZPass: TT.IncrementStencilOp, stencilFail: TT.KeepStencilOp, stencilZFail: TT.KeepStencilOp });
-    const rMetal = ref(metal, w ? 0xc8ccd2 : 0xd8a645, .34), rResin = ref(resin, 0x9a9a9a, .3);
-    return (mats[col] = { metal, resin, felt, rMetal, rResin });
   }
-
-  function woodMats(col) {
-    const key = 'wood' + col; if (mats[key]) return mats[key];
-    const TT = T(), w = col === 'w';
-    const map = w ? grain('chBox2', '#e6c48e', '#c49a62', '#f3dcae', 9) : grain('chPad2', '#7c1610', '#470806', '#a02c1d', 17);
-    const wood = new TT.MeshPhysicalMaterial({ map, roughness: w ? .38 : .3, metalness: 0, clearcoat: .7, clearcoatRoughness: .18, sheen: 0 });
-    const felt = new TT.MeshStandardMaterial({ color: new TT.Color(0x1d3b26).convertSRGBToLinear(), roughness: 1 });
-    const TTb = TT, rw = new TTb.MeshBasicMaterial({ map, color: new TT.Color(0xa8a8a8).convertSRGBToLinear(), opacity: .3, blending: TT.CustomBlending, blendSrc: TT.SrcAlphaFactor, blendDst: TT.OneMinusSrcAlphaFactor, blendSrcAlpha: TT.ZeroFactor, blendDstAlpha: TT.OneFactor,
-      depthWrite: false, depthFunc: TT.GreaterDepth, stencilWrite: true, stencilRef: 2, stencilFunc: TT.EqualStencilFunc, stencilZPass: TT.IncrementStencilOp, stencilFail: TT.KeepStencilOp, stencilZFail: TT.KeepStencilOp });
-    return (mats[key] = { metal: wood, resin: wood, felt, rMetal: rw, rResin: rw });
+  const feltMat = c => { const TT = T(); return new TT.MeshStandardMaterial({ color: new TT.Color(c).convertSRGBToLinear(), roughness: 1 }); };
+  function matsOf(col, set = 'lux', spr) {
+    if (!PSETS.includes(set)) set = 'lux';
+    spr = !!spr && set === 'crystal';   // the pictures (sprites, tiles): glass drawn see-through (alpha) — refraction needs a scene behind it
+    const key = set + col + (spr ? 's' : ''); if (mats[key]) return mats[key];
+    const TT = T(), w = col === 'w', lin = c => new TT.Color(c).convertSRGBToLinear();
+    let metal, resin, felt, rMetal, rResin;
+    if (set === 'lux') {
+      metal = new TT.MeshPhysicalMaterial({ color: lin(w ? 0xeef0f3 : 0xf2c464), metalness: 1, roughness: w ? .1 : .16, clearcoat: .6, clearcoatRoughness: .08, envMapIntensity: 1.25 });
+      resin = new TT.MeshPhysicalMaterial({ map: w ? marble('chMarbW', '#4d5056', '#b9bcc2', 7) : marble('chMarbB', '#121214', '#5b564f', 13), roughness: .24, metalness: .05, clearcoat: 1, clearcoatRoughness: .05 });
+      felt = feltMat(0x1d3b26); rMetal = refMat(metal, w ? 0xc8ccd2 : 0xd8a645, .34); rResin = refMat(resin, 0x9a9a9a, .3);
+    } else if (set === 'wood' || set === 'ebony') {
+      const map = set === 'wood' ? (w ? grain('chBox2', '#e6c48e', '#c49a62', '#f3dcae', 9) : grain('chPad2', '#7c1610', '#470806', '#a02c1d', 17))
+        : (w ? grain('chBoxN', '#ecd5a6', '#cfa86e', '#f7e6c2', 21) : grain('chEbo', '#2c211b', '#0b0705', '#463328', 23));
+      resin = metal = new TT.MeshPhysicalMaterial({ map, roughness: set === 'ebony' ? (w ? .42 : .28) : w ? .38 : .3, metalness: 0, clearcoat: set === 'ebony' ? .55 : .7, clearcoatRoughness: .2, sheen: 0 });
+      felt = feltMat(0x1d3b26); rMetal = rResin = refMat(resin, 0xa8a8a8, .3);
+    } else if (set === 'marble') {   // the whole piece turned from stone: white Carrara, black Marquina
+      const map = w ? marble('chStoneW', '#efede8', '#8e9096', 31) : marble('chStoneB', '#1a1a1d', '#cfcbc3', 37);
+      resin = metal = new TT.MeshPhysicalMaterial({ map, roughness: .14, metalness: 0, clearcoat: 1, clearcoatRoughness: .04 });
+      felt = feltMat(0x2a2a2c); rMetal = rResin = refMat(resin, 0xa0a0a0, .32);
+    } else if (set === 'porcelain') {   // glazed porcelain, gilt: white with gold, cobalt blue with gold
+      resin = new TT.MeshPhysicalMaterial({ color: lin(w ? 0xf6f3ec : 0x1f3a86), roughness: w ? .16 : .12, metalness: 0, clearcoat: 1, clearcoatRoughness: .03, sheen: w ? .2 : 0, sheenColor: lin(0xffffff) });
+      metal = new TT.MeshPhysicalMaterial({ color: lin(0xf0c66c), metalness: 1, roughness: .18, clearcoat: .5, clearcoatRoughness: .08, envMapIntensity: 1.25 });
+      felt = feltMat(0xd9d2c2); rMetal = refMat(null, 0xd8a645, .32); rResin = refMat(null, w ? 0xb8b6b0 : 0x203a80, .3);
+    } else {   // crystal: clear, and smoke; the bead rings and finials frosted
+      const tint = w ? 0xffffff : 0xe2d2c2;
+      const base = { metalness: 0, transmission: X.lite ? 0 : 1, thickness: .6, ior: 1.52, attenuationColor: lin(w ? 0xf4f8ff : 0x8a5a36), attenuationDistance: w ? 3 : 1.1, specularIntensity: 1, envMapIntensity: 1.4 };
+      if (X.lite || spr) Object.assign(base, { transmission: 0, transparent: true, opacity: w ? .42 : .7, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 2 });
+      resin = new TT.MeshPhysicalMaterial(Object.assign({ color: lin(spr ? (w ? 0xffffff : 0x7a5a44) : tint), roughness: .02 }, base));
+      metal = new TT.MeshPhysicalMaterial(Object.assign({ color: lin(spr ? (w ? 0xf2f4f8 : 0x8e7260) : w ? 0xf2f4f8 : 0xd6c2ae), roughness: .38 }, base));
+      felt = feltMat(0x000000); felt.visible = false;   // (no felt under glass: it would show through) rMetal = rResin = refMat(null, w ? 0xc8ccd4 : 0x5c4c40, .26);
+    }
+    return (mats[key] = { metal, resin, felt, rMetal, rResin });
   }
 
   /* ---------- pieces: lathe parts, each in resin or metal ---------- */
@@ -327,8 +350,8 @@
   const TYPES = ' PNBRQK';
   function piece(type, color, o) {
     const TT = T(), tp = typeof type === 'number' ? TYPES[type] : String(type).toUpperCase(), col = color === 1 || color === 'b' ? 'b' : 'w';
-    const set = (o && o.set) || 'lux', wd = set === 'wood';
-    const pr = PROFILES[tp](), m = matsOf(col, set), g = new TT.Group();
+    const set = PSETS.includes(o && o.set) ? o.set : 'lux', wd = set === 'wood', carved = !!CARVED[set];
+    const pr = PROFILES[tp](), m = matsOf(col, set, o && o.spr), g = new TT.Group();
     const add = (geo, mat, o = {}) => { const x = new TT.Mesh(geo, mat); x.castShadow = true; x.receiveShadow = true; if (o.p) x.position.set(...o.p); if (o.r) x.rotation.set(...o.r); if (o.s) x.scale.set(...o.s); g.add(x); return x; };
     pr.resin.forEach((p, i) => add(lathe(tp + 'r' + i, p), m.resin));
     pr.metal.forEach((p, i) => add(lathe(tp + 'm' + i, p), m.metal));
@@ -362,7 +385,7 @@
       [1, -1].forEach(s => { const e = new TT.Mesh(eg, m.metal); e.position.set(.2, .655, s * .118); hd.add(e); });
       const nos = geoCache.nos || (geoCache.nos = new TT.TorusGeometry(.13, .018, 8, 24, Math.PI * .9));   // a metal noseband
       const nb = new TT.Mesh(nos, m.metal); nb.position.set(.3, .52, 0); nb.rotation.set(Math.PI / 2, 0, -.55); nb.scale.set(.9, .72, 1); nb.visible = false; hd.add(nb);
-      if (wd) [1, -1].forEach(s => { [0, 1].forEach(j => { const r = new TT.Mesh(maneGeo, m.resin); r.castShadow = true; r.position.set(.02 + j * .035, 0, s * (.05 + j * .028)); r.scale.set(.93 - j * .07, .97 - j * .05, .8); hd.add(r); }); });   // carved mane locks
+      if (carved) [1, -1].forEach(s => { [0, 1].forEach(j => { const r = new TT.Mesh(maneGeo, m.resin); r.castShadow = true; r.position.set(.02 + j * .035, 0, s * (.05 + j * .028)); r.scale.set(.93 - j * .07, .97 - j * .05, .8); hd.add(r); }); });   // carved mane locks
     }
     g.userData.type = tp; g.userData.color = col; g.userData.h = pr.h; g.userData.set = set;
     if (X.mergeStatic) { try { X.mergeStatic(g); } catch (e) {} }   // one mesh per material (resin / metal / felt) instead of ~8 parts: far fewer draw calls
@@ -370,16 +393,21 @@
     return g;
   }
   // mirror image under a piece standing on the glossy board (follows the piece when it moves)
+  // the mirror images show only on the glossy boards (the lacquer, marble, khatam) — the matt walnut and leather hide them (2026-11-15)
+  let mirrorOn = true; const REFS = new Set();
+  function setMirror(on) { mirrorOn = on; for (const w of REFS) { const r = w.deref ? w.deref() : w; if (!r) REFS.delete(w); else r.visible = on; } }
   function reflect(g) {
     const m = matsOf(g.userData.color, g.userData.set), r = new (T().Group)(); r.scale.y = -1; r.userData.reflection = true;
+    r.visible = mirrorOn; REFS.add(window.WeakRef ? new WeakRef(r) : r);
     let lo; LOW = true; try { lo = piece(g.userData.type, g.userData.color, { set: g.userData.set }); } finally { LOW = false; }   // same piece, coarser (it is seen dimmed and upside down)
     lo.children.slice().forEach(ch => { const c = ch.clone(); c.traverse(o => { if (o.isMesh) { o.material = o.material === m.metal ? m.rMetal : o.material === m.resin ? m.rResin : null; o.castShadow = o.receiveShadow = false; o.renderOrder = -1; if (!o.material) o.visible = false; } }); r.add(c); });
     g.add(r); return g;
   }
 
   /* ---------- the board ---------- */
+  const LOOKS = ['lux', 'wood', 'marble', 'walnut', 'leather', 'khatam'];
   let topMat = null;
-  function board() {
+  function lacquerBlock() {   // the lacquered burl boards ('lux' / 'wood'): one top picture drawn here, the burl round the sides
     const TT = T(), g = new TT.Group();
     topMat = topMat || new TT.MeshPhysicalMaterial({ map: boardTop(), roughness: .1, metalness: 0, clearcoat: 1, clearcoatRoughness: .28, envMapIntensity: 1.6 });   // (2026-11-08: a softer lacquer — the near-mirror coat (.02) burnt a lamp's point into the board's middle, e.g. in the study)
     topMat.map.anisotropy = 8;
@@ -389,9 +417,6 @@
     const bottom = new TT.MeshStandardMaterial({ color: new TT.Color(0x23201c).convertSRGBToLinear(), roughness: .9 });
     const block = new TT.Mesh(RB(OW, THICK, OW, .09, 3), [side, side, topMat, bottom, side, side]);
     block.position.y = THICK / 2; block.castShadow = block.receiveShadow = true; block.renderOrder = -2; g.add(block);   // drawn first: the reflections test against it
-    // the game's board skins tint the lacquer a little
-    const tinted = [topMat, side], base0 = tinted.map(m => m.color.clone());
-    const TONES = { classic: 0xffffff, grain: 0xf2dcc0, metal: 0xd8e2ec, ink: 0x6a6460, marble: 0xf2f1ee, tourney: 0xdce8cf, ocean: 0xd2e0ee, rosewood: 0xe8c4b2 };
     let curSet = 'lux';
     g.userData.setSet = name => {
       if (!SETS[name] || (name === curSet && topMat.map === topMaps[name])) return; curSet = name;   // topMat is shared by every board: another board may have left a different set on it
@@ -399,18 +424,108 @@
       topMat.map = topMaps[name]; side.map = sideTex(name); bottom.color.set(SETS[name].side).convertSRGBToLinear();
       topMat.needsUpdate = side.needsUpdate = true;
     };
-    g.userData.setTone = name => { const c = new TT.Color(TONES[name] || 0xffffff).convertSRGBToLinear(); tinted.forEach((m, i) => m.color.copy(base0[i]).multiply(c)); };
+    return g;
+  }
+
+  /* the picture boards (2026-11-15): images/atlas/chess3d/top-<look> and side-<look> (the four faces stacked: far, right, near,
+     left), each with a "-m" map: R height (bump), G roughness, B metalness — brass and gold set flush, joints and tooling in the bump */
+  const C3 = (() => { try { return new URL('../../images/atlas/chess3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/chess3d/'; } })();
+  const C3V = '?v=1';
+  const LO = () => !!(X.coarse || X.lite);
+  const texs = {};
+  function imgTex(name, srgb = true, aniso = 8) {
+    if (texs[name]) return texs[name];
+    const TT = T(), t = new TT.TextureLoader().load(C3 + name + (LO() ? '-h' : '') + '.webp' + C3V, () => { if (X.kick) X.kick(300); });   // (phones: the half-size copy, atlas/tools/mobile-tex.py)
+    if (srgb) t.encoding = TT.sRGBEncoding; t.anisotropy = aniso;
+    return (texs[name] = t);
+  }
+  // mirror: the pieces' reflections show in the top (stencil) · bump: the top's relief
+  const LK = {
+    marble: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 }, bump: .003, bottom: 0x141416, mirror: true },
+    walnut: { gloss: { roughness: 1, clearcoat: .25, clearcoatRoughness: .4 }, bump: .006, bottom: 0x2a1a10 },
+    leather: { gloss: { roughness: 1 }, bump: .012, bottom: 0x1d3a28 },
+    khatam: { gloss: { roughness: 1, clearcoat: .9, clearcoatRoughness: .14 }, bump: .004, bottom: 0x2a0f08, mirror: true },
+  };
+  const pmats = {};
+  function faceMat(look, part) {
+    const k = part + '-' + look; if (pmats[k]) return pmats[k];
+    const TT = T(), L = LK[look], mm = imgTex(k + '-m', false, 4), o = Object.assign({ map: imgTex(k), color: 0xffffff, roughnessMap: mm, metalnessMap: mm, metalness: 1, bumpMap: mm, bumpScale: part === 'top' ? L.bump : .003 }, L.gloss);
+    if (X.lite) { delete o.clearcoat; delete o.clearcoatRoughness; }
+    const m = new TT[o.clearcoat !== undefined ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](o);
+    if (part === 'top' && L.mirror) Object.assign(m, { stencilWrite: true, stencilRef: 2, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp });
+    return (pmats[k] = m);
+  }
+  const SIDE_H = .52, E_RO = .06;   // the side pictures' height (world units, from the top edge down) and the round-over (atlas/tools/chess-tex.py)
+  // a profile swept round the square (mitred corners); the four faces read one picture, stacked (far, right, near, left)
+  function sweep(A, prof) {
+    const TT = T(), Pp = [], N = [], UV = [], idx = [], nrm = [];
+    for (let i = 0; i < prof.length; i++) {
+      let nd = 0, ny = 0;
+      for (const [a, b] of [[i - 1, i], [i, i + 1]]) {
+        if (a < 0 || b >= prof.length) continue;
+        const dd = prof[b][0] - prof[a][0], dy = prof[b][1] - prof[a][1], L = Math.hypot(dd, dy); if (L < 1e-6) continue;
+        nd += -dy / L; ny += dd / L;
+      }
+      const L = Math.hypot(nd, ny) || 1; nrm.push([nd / L, ny / L]);
+    }
+    const arc = [0]; for (let i = 1; i < prof.length; i++) arc.push(arc[i - 1] + Math.hypot(prof[i][0] - prof[i - 1][0], prof[i][1] - prof[i - 1][1]));
+    const sides = [[[0, 0, -1], [1, 0, 0]], [[1, 0, 0], [0, 0, 1]], [[0, 0, 1], [-1, 0, 0]], [[-1, 0, 0], [0, 0, -1]]];
+    sides.forEach(([o, e], si) => {
+      const base = Pp.length / 3;
+      prof.forEach(([d, y], i) => {
+        const L = A - d, [nd, ny] = nrm[i];
+        for (const s of [-L, L]) {
+          Pp.push(o[0] * (A - d) + e[0] * s, y, o[2] * (A - d) + e[2] * s); N.push(-o[0] * nd, ny, -o[2] * nd);
+          UV.push((s + A) / (2 * A), 1 - (si + Math.min(1, (arc[arc.length - 1] - arc[i]) / SIDE_H)) / 4);
+        }
+      });
+      for (let i = 0; i < prof.length - 1; i++) {
+        const a = base + i * 2, b = a + 1, c = a + 3, d = a + 2;
+        if (Math.hypot(prof[i + 1][0] - prof[i][0], prof[i + 1][1] - prof[i][1]) < 1e-6) continue;
+        idx.push(a, c, b, a, d, c);
+      }
+    });
+    const g = new TT.BufferGeometry();
+    g.setAttribute('position', new TT.Float32BufferAttribute(Pp, 3)); g.setAttribute('normal', new TT.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new TT.Float32BufferAttribute(UV, 2));
+    g.setIndex(idx); g.computeBoundingSphere(); return g;
+  }
+  function pictureBlock(look) {
+    const L = LK[look], TT = T(), g = new TT.Group(), A = OW / 2, e = E_RO, n = LO() ? 2 : 4;
+    const prof = [[0, 0], [0, THICK - e]]; for (let i = 1; i <= n; i++) { const a = i / n * Math.PI / 2; prof.push([e - Math.cos(a) * e, THICK - e + Math.sin(a) * e]); }
+    const add = (geo, m, cast = true) => { const x = new TT.Mesh(geo, m); x.castShadow = cast; x.receiveShadow = true; g.add(x); return x; };
+    add(sweep(A, prof), faceMat(look, 'side'));
+    const fg = new TT.PlaneGeometry(OW - 2 * e, OW - 2 * e); fg.rotateX(-Math.PI / 2);
+    { const P = fg.attributes.position, UV = fg.attributes.uv; for (let i = 0; i < UV.count; i++) UV.setXY(i, (P.getX(i) + A) / OW, 1 - (P.getZ(i) + A) / OW); }
+    const top = add(fg, faceMat(look, 'top'), false); top.position.y = THICK; top.renderOrder = -2;   // drawn first: the reflections test against it
+    const bg = new TT.PlaneGeometry(OW, OW); bg.rotateX(Math.PI / 2); add(bg, new TT.MeshStandardMaterial({ color: new TT.Color(L.bottom).convertSRGBToLinear(), roughness: .9 }), false);
+    { const sc = new TT.Mesh(new TT.BoxGeometry(OW - .06, THICK - .03, OW - .06), new TT.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));   // the shadow caster (the swept sides alone leak light)
+      sc.position.y = (THICK - .03) / 2; sc.castShadow = true; sc.receiveShadow = false; sc.userData.noInst = true; sc.material.userData.noMerge = true; g.add(sc); }
+    return g;
+  }
+  function board(lk) {
+    const TT = T(), g = new TT.Group(), parts = {};
+    let cur = null;
+    const show = look => {
+      if (!LOOKS.includes(look)) look = 'lux';
+      const k = SETS[look] ? 'lacquer' : look;
+      if (!parts[k]) { parts[k] = SETS[look] ? lacquerBlock() : pictureBlock(look); g.add(parts[k]); }
+      for (const q in parts) parts[q].visible = q === k;
+      if (SETS[look]) parts[k].userData.setSet(look);
+      cur = look; g.userData.look = look; g.userData.mirror = !!(SETS[look] || LK[look].mirror); setMirror(g.userData.mirror); if (X.kick) X.kick(300);
+    };
+    g.userData.setSet = name => { if (name !== cur || SETS[name]) show(name); };   // (the lacquer's top is shared: setSet re-applies its picture)
+    g.userData.setTone = () => {};   // (2026-11-15: the 2D boards are picked as 2D boards — the 3D boards keep their own colours)
     g.userData.S = S; g.userData.top = THICK + .001; g.userData.outer = OW / S;
+    show(LOOKS.includes(lk) ? lk : (X.BOARDS && X.BOARDS.chess ? X.BOARDS.chess.get() : 'lux'));
     return g;
   }
   const cell = (f, r) => [-S / 2 + f + .5, -S / 2 + r + .5];   // f: 0 = left column on screen, r: 0 = top row
 
   X.MODELS.chess = function (live, o) {
-    const g = board(), Y = g.userData.top;
+    const g = board(o && o.look), Y = g.userData.top;
     if (live) return g;
-    // the showcase follows the set chosen for the 3D board (the portal's 盤 row / the full game's design tab: Table3D.BOARDS.chess)
-    const set = (X.BOARDS && X.BOARDS.chess) ? X.BOARDS.chess.get() : 'lux';
-    if (g.userData.setSet) g.userData.setSet(set);
+    // the showcase: the board and the piece set chosen (the portal's 盤 / 駒 rows, the full game's design tab: Table3D.BOARDS / PIECES.chess)
+    const set = (o && o.set) || (X.PIECES && X.PIECES.chess ? X.PIECES.chess.get() : 'lux');
     const back = 'RNBQKBNR';
     const put = (t, f, r, col) => {
       const p = piece(t, col, { reflect: true, set }), [x, z] = cell(f, r); p.position.set(x, Y, z);
@@ -442,7 +557,7 @@
     return (imgCache[set] = new Promise(res => setTimeout(res, 0)).then(() => {
       // portal: the textures are drawn in a worker — build the pieces once and wait for them (their materials are cached)
       if (!window.AtlasTexGen) return;
-      for (const col of ['w', 'b']) for (const tp of 'KQRBNP') piece(tp, col, { set });
+      for (const col of ['w', 'b']) for (const tp of 'KQRBNP') piece(tp, col, { set, spr: true });
       return AtlasTexGen.settle();
     }).then(() => {
       const TT = T(), W = px, H = Math.round(px * SPR_H);
@@ -458,7 +573,7 @@
       cam.position.set(0, Math.sin(ELEV) * 10, Math.cos(ELEV) * 10); cam.lookAt(0, 0, 0);
       const out = {};
       for (const col of ['w', 'b']) for (const tp of 'KQRBNP') {
-        const p = piece(tp, col, { set });
+        const p = piece(tp, col, { set, spr: true });
         if (tp === 'N') p.rotation.y = col === 'w' ? Math.PI * 1.1 : -Math.PI * .1;   // white looks left, black right (3/4)
         scene.add(p); R.render(scene, cam); out[col + tp] = R.domElement.toDataURL('image/png'); scene.remove(p);
       }
@@ -468,5 +583,5 @@
   }
   const SHEET_KEYS = ['wK', 'wQ', 'wR', 'wB', 'wN', 'wP', 'bK', 'bQ', 'bR', 'bB', 'bN', 'bP'];
 
-  X.chess = { piece, board, cell, images, S, MARGIN, OW, SPR_H, SHEET_KEYS };
+  X.chess = { piece, board, cell, images, S, MARGIN, OW, SPR_H, SHEET_KEYS, LOOKS, PSETS, mirrors: look => !!(SETS[look] || (LK[look] && LK[look].mirror)) };
 })();

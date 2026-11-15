@@ -1,0 +1,21 @@
+<!doctype html>
+<!-- Dev tool: the full chess page's piece sprites for one 3D set (atlas/models/chess.js images()): a 6 × 2 sheet of 256 × 410 cells,
+     White KQRBNP on top, Black below → images/atlas/chess-pieces-<set>.png (2026-11-15). chess-sheet.html?set=ebony → window.ICON -->
+<html><head><meta charset="utf-8"></head><body style="margin:0;background:#888">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../texgen.js"></script>
+<script src="../img/tex/baked.js?v=3"></script>
+<script src="../table3d.js"></script>
+<script src="../tables3d.js"></script>
+<script src="../models/chess.js"></script>
+<script>
+(function () {
+  const set = new URLSearchParams(location.search).get('set') || 'lux', CH = Table3D.chess, SW = 256, SH = Math.round(256 * CH.SPR_H);
+  CH.images(SW, set).then(o => {
+    const c = document.createElement('canvas'); c.width = SW * 6; c.height = SH * 2; const g = c.getContext('2d');
+    let n = 0;
+    CH.SHEET_KEYS.forEach((k, i) => { const im = new Image(); im.onload = () => { g.drawImage(im, (i % 6) * SW, (i / 6 | 0) * SH); if (++n === 12) { window.ICON = c.toDataURL('image/png'); document.body.appendChild(c); } }; im.src = o[k]; });
+  });
+})();
+</script>
+</body></html>

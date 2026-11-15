@@ -7,7 +7,7 @@
      draws) and the same engine as a Worker (WebAssembly search + NNUE, levels 1..25,
      opening book), exactly as chess/app.js asks it ({ type:'think', moves, level }).
      Board and Staunton pieces: atlas/models/chess.js (set 'lux' or 'wood' as chosen
-     in the game's 3D skin, localStorage 'atlas-chess-pc').
+     in the game's 3D skin: Table3D.BOARDS / PIECES.chess).
    Rendering is on demand: animations kick Table3D; nothing loops while idle.
    ===================================================================== */
 (function () {
@@ -83,9 +83,9 @@
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, CS = T3.chess, t = ctx.t, X = TX[ctx.lang] || TX.en;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    let set = 'lux'; try { set = localStorage.getItem('atlas-chess-pc') === 'wood' ? 'wood' : 'lux'; } catch (e) {}
+    const set = T3.PIECES && T3.PIECES.chess ? T3.PIECES.chess.get() : 'lux', look = T3.BOARDS && T3.BOARDS.chess ? T3.BOARDS.chess.get() : 'lux';   // (2026-11-15: six boards, six sets)
     const board = T3.MODELS.chess(true); T3.show('chess', board);
-    if (board.userData.setSet) board.userData.setSet(set);
+    if (board.userData.setSet) board.userData.setSet(look);
     if (board.userData.setTone) board.userData.setTone('classic');
     const Y = board.userData.top;
     if (T3.fit) T3.fit({ w: CS.OW + .2, d: CS.OW + .7, y: Y + .35, pitch: 1.0 });   // the whole board, large, from the player's side

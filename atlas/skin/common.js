@@ -842,10 +842,10 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       P.b2 = () => [...bf.children].filter(e => e !== f3 && e.tagName !== 'LABEL' && !e.classList.contains('a32') && !e.classList.contains('dsg-now'));
       P.bt = sw(bf, m => { P.bm = m; apply(); });
       // the 3D pieces → the 駒 field
-      const pl = f3.querySelector('label.pc3l'), pr = f3.querySelector('.bdrow.pc3'), p2 = document.getElementById('segPieces') || document.getElementById('pcRow'), pf = p2 && p2.closest('.field');
+      const pl = f3.querySelector('label.pc3l'), pr = f3.querySelector('.bdrow.pc3'), p2 = document.getElementById('segPieces') || document.getElementById('pcRow') || document.getElementById('segPcs'), pf = p2 && p2.closest('.field');
       if (pr) {
         // the 駒 field: the game's own (with its 2D pieces) when the full version shows it, else a new one with the 3D pieces alone
-        const own = pf && pf !== bf && getComputedStyle(pf).display !== 'none';
+        const own = pf && pf !== bf && (f3.dataset.pcown === '1' || getComputedStyle(pf).display !== 'none');   // (pcown: the skin says the game's 駒 field is shown — chess, whose field may be hidden while the dialog is closed)
         let host = own ? pf : null;
         if (!host) { host = document.createElement('div'); host.className = bf.className + ' a32-pcf'; host.removeAttribute('id'); if (bf.dataset.ng) host.dataset.ng = bf.dataset.ng; bf.after(host); }
         const box = document.createElement('div'); box.className = 'a32-pc3';

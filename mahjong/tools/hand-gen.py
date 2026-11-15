@@ -436,7 +436,22 @@ F, worst = decimate(out, outA, col, F, SKIN_TRIS, keepv)
 F, out, outA, col, crs = compact(F, out, outA, col, crs)
 print('skin tris', n_before, '-> cut', n_cut, '-> decimated', len(F), 'worst err', '%.2e' % worst)
 nskin = len(out)
-uv = np.zeros((nskin, 2))     # 肌の頂点は uv を使わない（爪だけ）
+# 肌の薄さ（ユーザー 2026-11-15：肌の透け感）：各頂点から内側へ向かって反対側の面までの距離を測り、薄い所（指・指の股・縁）ほど 1 に近い値を
+# 肌の頂点の uv.x に入れる（実行時のシェーダーが、薄い所に光が赤く透ける表現に使う）
+def thinness(P, F, Nv):
+    A, B, C = P[F[:, 0]], P[F[:, 1]], P[F[:, 2]]; e1, e2 = B - A, C - A; out_ = np.full(len(P), 9.)
+    for i in range(len(P)):
+        d = -Nv[i]; o = P[i] + d * 2e-3; h = np.cross(d, e2); a = np.einsum('ij,ij->i', e1, h); ok = np.abs(a) > 1e-9; f = np.where(ok, 1 / np.where(ok, a, 1), 0)
+        sv = o - A; u = f * np.einsum('ij,ij->i', sv, h); q = np.cross(sv, e1); v = f * (q @ d); t = f * np.einsum('ij,ij->i', e2, q)
+        hit = ok & (u >= 0) & (v >= 0) & (u + v <= 1) & (t > 1e-3)
+        if hit.any(): out_[i] = t[hit].min()
+    return out_
+_th = np.clip(1 - thinness(out, F, vnormals(out, F)) / .6, 0, 1)
+_nb2 = [[] for _ in range(nskin)]
+for a_, b_, c_ in F: _nb2[a_] += [b_, c_]; _nb2[b_] += [a_, c_]; _nb2[c_] += [a_, b_]
+for _ in range(2): _th = np.array([.5 * _th[i] + .5 * _th[list(set(q))].mean() if q else _th[i] for i, q in enumerate(_nb2)])
+print('thinness: mean %.2f, fingers>.4: %d of %d' % (_th.mean(), (_th > .4).sum(), nskin))
+uv = np.stack([_th, np.zeros(nskin)], 1)     # 肌の頂点の uv ＝（薄さ, 未使用）。爪の頂点は絵の uv
 
 # ---- ネイル（ユーザー 2026-11-15、参考画像4枚：ストーン付きラメ・シアーピンク＋蝶・黒フレンチ・深海グラデ。「破綻なく美しく」）----
 # 爪は1枚ずつ絵（実行時に描くテクスチャ）を貼れるよう uv を持つ：横5コマ（親指・人差し指・中指・薬指・小指）、u＝コマの中の横位置
