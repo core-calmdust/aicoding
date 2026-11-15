@@ -350,8 +350,8 @@
       } },
   };
   // chess (atlas/models/chess.js PSETS, 2026-11-15): 'atlas-chess-pc3' (before: 'atlas-chess-pc' 'wood' → wood, else lux)
-  PIECES.chess = { list: ['lux', 'wood', 'ceramic', 'jewel', 'brass', 'neon'],
-    get: () => { const v = ls.get('atlas-chess-pc3'); if (PIECES.chess.list.includes(v)) return v; return ls.get('atlas-chess-pc') === 'wood' ? 'wood' : 'lux'; },
+  PIECES.chess = { list: ['jewel', 'lux', 'wood', 'ceramic', 'brass', 'neon'],   // (2026-11-15: パヴェ first, the default)
+    get: () => { const v = ls.get('atlas-chess-pc3'); if (PIECES.chess.list.includes(v)) return v; return ls.get('atlas-chess-pc') === 'wood' ? 'wood' : 'jewel'; },
     set: k => ls.set('atlas-chess-pc3', k),
     thumb: k => new URL('img/pc3-chess-' + k + '.webp?v=5', ME).href,
     names: {

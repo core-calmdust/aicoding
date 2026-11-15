@@ -217,7 +217,7 @@
   /* ---------- materials ---------- */
   // the piece sets (2026-11-15 v2): 'lux' and 'wood' as before; each new set belongs to a board of its own world —
   // ceramic (glazed, gold), jewel (pavé), brass (slender engraved Indian turnings), neon (lit acrylic, a shape of its own)
-  const PSETS = ['lux', 'wood', 'ceramic', 'jewel', 'brass', 'neon'];
+  const PSETS = ['jewel', 'lux', 'wood', 'ceramic', 'brass', 'neon'];   // (パヴェ first: the default, 2026-11-15)
   const CARVED = { wood: true };   // carved mane locks on the knight
   function texMat(key, kern, p) { return canvasTex(key, SZ(512), SZ(512), g => { paint(g.canvas, kern, p); }); }
   // the pavé: the colour and its relief (bump) drawn together, 1024² (PC) — the crystals are tiny
@@ -634,7 +634,7 @@
     const g = board(o && o.look), Y = g.userData.top;
     if (live) return g;
     // the showcase: the board and the piece set chosen (the portal's 盤 / 駒 rows, the full game's design tab: Table3D.BOARDS / PIECES.chess)
-    const set = (o && o.set) || (X.PIECES && X.PIECES.chess ? X.PIECES.chess.get() : 'lux');
+    const set = (o && o.set) || (X.PIECES && X.PIECES.chess ? X.PIECES.chess.get() : 'jewel');
     const back = 'RNBQKBNR';
     const put = (t, f, r, col) => {
       const p = piece(t, col, { reflect: true, set }), [x, z] = cell(f, r); p.position.set(x, Y, z);

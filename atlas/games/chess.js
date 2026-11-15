@@ -83,7 +83,7 @@
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, CS = T3.chess, t = ctx.t, X = TX[ctx.lang] || TX.en;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const set = T3.PIECES && T3.PIECES.chess ? T3.PIECES.chess.get() : 'lux', look = T3.BOARDS && T3.BOARDS.chess ? T3.BOARDS.chess.get() : 'lux';   // (2026-11-15: six boards, six sets)
+    const set = T3.PIECES && T3.PIECES.chess ? T3.PIECES.chess.get() : 'jewel', look = T3.BOARDS && T3.BOARDS.chess ? T3.BOARDS.chess.get() : 'lux';   // (2026-11-15: six boards, six sets)
     const board = T3.MODELS.chess(true); T3.show('chess', board);
     if (board.userData.setSet) board.userData.setSet(look);
     if (board.userData.setTone) board.userData.setTone('classic');
