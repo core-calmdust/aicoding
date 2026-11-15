@@ -811,15 +811,14 @@ function renderChara() {
   const how = t(coarse() ? 'ptnHowT' : 'ptnHowC');
   const mine = sisters.filter(x => owns(x.id)), rest = sisters.length - mine.length;
   const ptn = !own ? '' : `<div class="ptn ${pt ? 'has' : canPick ? 'ask' : 'none'}">
-      <div class="ci-h"><b>PARTNER</b><span>${esc(t('partner'))}</span>${pt ? `<em class="ptn-n">${esc(L(pt.name))}</em><button class="ptn-x">${esc(t('ptnOff'))}</button>` : ''}</div>
+      <div class="ci-h"><b>PARTNER</b><span>${esc(t('partner'))}</span><small class="ptn-cnt">${esc(t('sisters'))} ${mine.length + 1} / ${sisters.length + 1}</small>${pt ? `<em class="ptn-n">${esc(L(pt.name))}</em><button class="ptn-x">${esc(t('ptnOff'))}</button>` : ''}</div>
       ${!pt && canPick ? `<div class="ptn-cue"><i></i><b>${esc(t('ptnPick'))}</b><small>${esc(how)}</small></div>` : ''}
-      ${mine.length ? `<div class="ptn-row">${mine.map(x => `<button class="sib can ${pt && x.id === pt.id ? 'on' : ''}" data-id="${x.id}" title="${esc(L(x.name))}">${frame(x, 'face')}${pt && x.id === pt.id ? '<i class="ck"></i>' : ''}<span>${esc(L(x.name))}</span></button>`).join('')}${rest ? `<small class="ptn-rest">${esc(t('ptnRest', { n: rest }))}</small>` : ''}</div>` : ''}
+      <div class="ptn-row">${mine.concat(sisters.filter(x => !owns(x.id))).map(x => { const ow = owns(x.id); return `<button class="sib ${ow ? 'can' : 'lock'} ${pt && x.id === pt.id ? 'on' : ''}" data-id="${x.id}" title="${ow ? esc(L(x.name)) : '？？？'}">${frame(x, ow ? 'face' : 'silf')}${pt && x.id === pt.id ? '<i class="ck"></i>' : ''}</button>`; }).join('')}</div>
       ${pt ? `${pk ? skillBlock(pk, true) : `<p class="ptn-same">${esc(t('ptnSame'))}</p>`}
           ${pks.length > 1 ? `<div class="skl ptn-skl">${pks.map(x => skillChip(x.k, (x.k === pk ? 'on' : '') + (x.ok ? '' : ' off'), `data-k="${x.k}"`)).join('')}</div>` : ''}
           <small class="ptn-cost">${esc(t('ptnCost'))}</small>`
         : `<small class="ptn-cost">${esc(t(canPick ? 'ptnNote' : 'ptnNone'))}</small>`}
     </div>`;
-  $('#chPtn').innerHTML = ptn; $('#chPtn').hidden = !own;
   $('#chInfo').innerHTML = `
     <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}${own && c.id === DB.sel ? `<span class="pp-lead">${esc(t('lead'))}</span>` : ''}</div>
     <div class="pp-n">${own ? esc(L(c.name)) : '？？？'}</div>
@@ -832,22 +831,21 @@ function renderChara() {
       <div class="ci-h st"><b>STORY</b></div><p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(c.reward != null ? t('rkLocked', { r: rkName(MJRank.list[c.reward]) }) : t('notOwned'))}</div>
       <div class="sis"><small>${esc(t('sisters'))}</small><div>${sisters.map(x => `<button class="sib ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}" title="${owns(x.id) ? esc(L(x.name)) : '？？？'}">${frame(x, owns(x.id) ? 'face' : 'silf')}</button>`).join('')}</div></div>`}
     ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isLead')}</div>` : `<button class="go ch-go" id="chSet">${t('setLead')}</button>`) : ''}`;
-  // the partner block: a plate of its own under the character where there is room between the two panels (a desktop);
-  // otherwise (a phone, a narrow window) inside the scrolling panel on the right
-  { const info = $('#chInfo'), list = document.querySelector('#chara .ch-panel'), gap = info.offsetLeft - (list.offsetLeft + list.offsetWidth);
-    ch.classList.toggle('ptn-in', document.documentElement.classList.contains('lp') || gap < 400);
-    const box = $('#chPtn'); box.style.left = (list.offsetLeft + list.offsetWidth + Math.max(16, (gap - 470) / 2)) + 'px'; box.style.width = Math.min(470, gap - 32) + 'px';
-    info.classList.remove('tight'); if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight');   // (it does not fit: her story gives way)
-    if (ch.classList.contains('ptn-in') && !pt && canPick) { const q = info.querySelector('.ptn'); if (q && q.offsetTop + q.offsetHeight > info.scrollTop + info.clientHeight) info.scrollTop = Math.max(0, q.offsetTop - 60); } }   // (the call to pick a partner is never left below the fold)
+  // (ユーザー 2026-11-15: the middle is for her picture — the partner block and the list of her sisters live in the panel on the right)
+  // It does not fit: her story gives way first, then the small labels and the size of her name.
+  { const info = $('#chInfo'); info.classList.remove('tight', 'tight2');
+    if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight');
+    if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight2');
+    if (!pt && canPick) { const q = info.querySelector('.ptn'); if (q && q.offsetTop + q.offsetHeight > info.scrollTop + info.clientHeight) info.scrollTop = Math.max(0, q.offsetTop - 60); } }   // (the call to pick a partner is never left below the fold)
   const b = $('#chSet');
   if (b) b.onclick = () => { DB.sel = c.id; save(); SND.ok(); renderChara(); };
-  $('#chInfo').onclick = $('#chPtn').onclick = e => {
+  $('#chInfo').onclick = e => {
     const k = e.target.closest('#chSk [data-k]'); if (k) { DB.chars[c.id].use = k.dataset.k; save(); SND.pick(); renderChara(); return; }
     const k2 = e.target.closest('.ptn-skl [data-k]'); if (k2) { if (k2.classList.contains('off')) { toast(t('ptnSame')); return; } DB.chars[c.id].puse = k2.dataset.k; save(); SND.pick(); renderChara(); return; }
     if (e.target.closest('.ptn-x')) { delete DB.chars[c.id].partner; save(); SND.pick(); renderChara(); return; }
     const sb = e.target.closest('.sib'); if (!sb) return;
     const id = sb.dataset.id;
-    if (sb.closest('.ptn')) { if (o.partner === id) delete o.partner; else { o.partner = id; delete o.puse; } save(); SND.ok(); renderChara(); }   // (her sister's icon: take her as the partner; again: let her go)
+    if (sb.closest('.ptn') && owns(id)) { if (o.partner === id) delete o.partner; else { o.partner = id; delete o.puse; } save(); SND.ok(); renderChara(); }   // (her sister's icon: take her as the partner; again: let her go)
     else { chView = id; SND.pick(); renderChara(); }                                                                                        // (a character not yet met: look at her sisters)
   };
 }
