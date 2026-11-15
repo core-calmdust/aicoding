@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 21;                     // data version (bump when historia/*.json change)
+  const V = 22;                     // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];   // (a game without text in a language falls back to English)
   const UI = {
@@ -725,6 +725,11 @@
         (s.burn || []).forEach(([i, j]) => out.push(`<g class="cl" transform="translate(${PD + i * cell + cell / 2} ${PD + j * cell + cell / 2})"><rect x="${-cell / 2 + 2}" y="${-cell / 2 + 2}" width="${cell - 4}" height="${cell - 4}" rx="4" fill="#3a2a1c"/><path d="M${-cell * .26} ${cell * .26}L${cell * .2} ${-cell * .2}M${cell * .2} ${-cell * .2}l-7 1.5M${cell * .2} ${-cell * .2}l-1.5 7" stroke="#f0c46a" stroke-width="2.2" stroke-linecap="round" fill="none"/></g>`));   // amazons: a burnt square with its arrow
         (s.ros || []).forEach(([i, j]) => out.push(`<g class="cl" transform="translate(${X(i)} ${Y(j)})">${[0, 45, 90, 135].map(a => `<ellipse rx="11" ry="3.6" transform="rotate(${a})" fill="#d8423a" opacity=".75"/>`).join('')}<circle r="3" fill="#f5c23c"/></g>`));
         if (s.box) { const [bw, bh] = s.box; for (let i = 0; i <= n; i += bw) out.push(ln(PD + i * cell, PD, PD + i * cell, PD + m * cell, 'gl th')); for (let j = 0; j <= m; j += bh) out.push(ln(PD, PD + j * cell, PD + n * cell, PD + j * cell, 'gl th')); }
+      } else if (s.cross) {   // fox and geese (2026-11-16): the cross of 33 points — lines only between its points, diagonals where (i + j) is even
+        const on = (i, j) => (i >= 2 && i <= 4) || (j >= 2 && j <= 4);
+        for (let j = 0; j < m; j++) for (let i = 0; i < n; i++) { if (!on(i, j)) continue;
+          if (i < n - 1 && on(i + 1, j)) out.push(ln(X(i), Y(j), X(i + 1), Y(j), 'gl', (i + j) * 20)); if (j < m - 1 && on(i, j + 1)) out.push(ln(X(i), Y(j), X(i), Y(j + 1), 'gl', (i + j) * 20));
+          if ((i + j) % 2 === 0) { if (i < n - 1 && j < m - 1 && on(i + 1, j + 1)) out.push(ln(X(i), Y(j), X(i + 1), Y(j + 1), 'gl', 300)); if (i > 0 && j < m - 1 && on(i - 1, j + 1)) out.push(ln(X(i), Y(j), X(i - 1), Y(j + 1), 'gl', 300)); } }
       } else {
         for (let i = 0; i < n; i++) out.push(s.river ? ln(X(i), Y(0), X(i), Y(i === 0 || i === n - 1 ? m - 1 : 4), 'gl', i * 30) + (i === 0 || i === n - 1 ? '' : ln(X(i), Y(5), X(i), Y(m - 1), 'gl', i * 30)) : ln(X(i), Y(0), X(i), Y(m - 1), 'gl', i * 30));
         for (let j = 0; j < m; j++) out.push(ln(X(0), Y(j), X(n - 1), Y(j), 'gl', j * 30));
