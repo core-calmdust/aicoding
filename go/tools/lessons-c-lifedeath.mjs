@@ -22,7 +22,7 @@ export const steps = [
     en: '<p>A group needs <b>two eyes</b> to live. Even with plenty of eye space, the opponent can reduce it to one eye by taking the vital point.</p><p>Two ways to live: <b>widen the eye space</b>, or play the <b>vital point that divides it into two eyes</b>.</p><p>After your move, point to exactly where the two eyes are.</p>' },
   goal: { ja: '黒番。黒石を生かしてください', en: 'Black to play and live' },
   hint: { ja: '一手で「確実な眼」が2つできる点を探しましょう。', en: 'Find the move that makes two certain eyes at once.' },
-  diagram: { rows: ldRows(9, ['C1', 'D1', 'E1', 'F1', 'D2'], [], { empty: ['G2', 'G1'] }), view: VS, marks: [['D1', 'ok'], ['C1', 'ok'], ['D2', 'ok']] },
+  diagram: { rows: ldRows(9, ['C1', 'D1', 'E1', 'F1', 'D2'], [], { empty: ['G2', 'G1'] }), view: VS, marks: [['D1', 'ok']] },
   problems: [
     ld(['C1', 'D1', 'E1', 'F1', 'E2'], ['B2', 'B1'], 1, 'D3', { ok: ['E1'],
       why: { ja: '<bdi>E1</bdi>で<bdi>E2</bdi>と<bdi>F1</bdi>の2つの眼が同時に確定します。左側をどう攻められても、もう生きています。', en: '<bdi>E1</bdi> secures two eyes at once: <bdi>E2</bdi> and <bdi>F1</bdi>. Whatever White does on the left, Black is alive.' },
