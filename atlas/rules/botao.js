@@ -11,7 +11,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/av/disc-1.webp';
+  const GUIDE = '../images/atlas/av/disc-1.webp?v=2';
   const UI = {
     ja: { name: 'タンピーニャ', next: 'つぎへ', back: 'もどる', start: '試合してみる', again: 'もういちど', tapIt: '盤の上でやってみよう', watch: 'タップしてお手本', origin: 'ブラジル', players: '2人', time: '公式は前後半 各10分', ready: '構えOK' },
     en: { name: 'Tampinha', next: 'Next', back: 'Back', start: "Let's play", again: 'Again', tapIt: 'Try it on the table', watch: 'Tap to watch', origin: 'Brazil', players: '2 players', time: 'officially 2 × 10 min', ready: 'Ready' },

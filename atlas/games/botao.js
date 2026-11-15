@@ -300,7 +300,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=7'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=8'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -757,7 +757,7 @@
       later(next, 900);
     };
     camFit(false); neonTick();
-    const pick = () => { if (stopped) return; AC().BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'botao') : k, thumb: k => T3.boardThumb ? T3.boardThumb('botao', k) : '', pick: k => new URL('img/pick/botao-' + k + '.webp?v=2', location.href).href, color: THEME, onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
+    const pick = () => { if (stopped) return; AC().BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'botao') : k, thumb: k => T3.boardThumb ? T3.boardThumb('botao', k) : '', pick: k => new URL('img/pick/botao-' + k + '.webp?v=3', location.href).href, color: THEME, onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
     if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
 
     const myTurn = () => !stopped && !over && !busy && st && human(st.pos) && phase === 'aim';
