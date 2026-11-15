@@ -9,7 +9,12 @@ out = {}
 for g, by in src.items():
     ja = by.get('ja') or []
     if not ja: continue
-    art = {c['key']: re.sub(r'\s+', ' ', c['art']) for c in ja if c.get('art')}
+    def fix(svg):   # pictures the 2D page links to: from the portal (atlas/) they live in ../<game>/
+        svg = svg.replace('http://localhost:8765/', '../')
+        svg = re.sub(r'<image[^>]*href="blob:[^"]*"[^>]*>(</image>)?', '', svg)
+        svg = re.sub(r'((?:xlink:)?href)="(?!data:|#|https?:|\.\./)([^"]+)"', lambda m: f'{m.group(1)}="../{g}/{m.group(2)}"', svg)
+        return re.sub(r'\s+', ' ', svg)
+    art = {c['key']: fix(c['art']) for c in ja if c.get('art')}
     tx, grp = {}, {}
     for lang, cards in by.items():
         if not cards: continue
