@@ -36,6 +36,44 @@ ok(!E.validFleet([{ r: 0, c: 7, len: 5, h: 1 }, { r: 2, c: 0, len: 4, h: 0 }, { 
   ok(st.winner === 0, 'win when all 17 are hit');
 }
 
+// ---- 1b) タクティクス: draft, skills, cooldowns ----
+{
+  // snake order A B B A A B B A
+  let d = E.draftNew(0); const seq = []; for (let i = 0; i < 8; i++) { seq.push(d.turn); const k = [4, 3, 2, 1, 0].find(x => E.draftCan(d, d.turn, x)); if (k == null) break; E.draftPick(d, k); }
+  ok(seq.join('') === '01100110', 'draft order is A B B A A B B A (' + seq.join('') + ')');
+  ok(!E.draftPick(E.draftNew(0), -1), 'cannot stop before 3 ships');
+  let bad = 0, sizes = {};
+  for (let g = 0; g < 2000; g++) { d = E.draftNew(g & 1); let guard = 0; while (d.turn >= 0 && guard++ < 40) { const p = d.turn; let k = g % 3 === 0 ? E.draftAI(d, rnd) : [0, 1, 2, 3, 4].filter(x => E.draftCan(d, p, x))[rnd() * 5 | 0]; if (k == null || k < 0) k = E.draftCanStop(d, p) && rnd() < .5 ? -1 : [0, 1, 2, 3, 4].find(x => E.draftCan(d, p, x)); if (!E.draftPick(d, k)) { bad++; break; } }
+    if (d.turn >= 0 || !E.validDraft(d.picks[0]) || !E.validDraft(d.picks[1]) || d.pool.some(x => x < 0)) bad++; sizes[d.picks[0].length] = (sizes[d.picks[0].length] || 0) + 1; }
+  ok(bad === 0, 'every draft (random and AI) ends with two legal fleets (' + JSON.stringify(sizes) + ')');
+  const fl = [{ r: 0, c: 0, len: 5, h: 1, t: 0 }, { r: 2, c: 0, len: 4, h: 1, t: 1 }, { r: 4, c: 0, len: 3, h: 1, t: 2 }, { r: 6, c: 0, len: 3, h: 1, t: 3 }];
+  let st = E.newGame({ rule: 'tactics', fleets: [fl, fl], first: 0 });
+  ok(st.cd[0].join() === '3,2,3,2', 'skills start half charged (' + st.cd[0].join() + ')');
+  ok(E.useSkill(st, 3, 55) === null, 'a charging skill cannot be used');
+  E.fire(st, 99); E.fire(st, 99); E.fire(st, 98); E.fire(st, 98);
+  ok(st.cd[0][3] === 0 && st.cd[0][1] === 0 && st.turn === 0, 'cooldowns count the owner’s turns');
+  let r = E.useSkill(st, 3, 11); ok(r && r.k === 6 && st.scans[0].length === 1 && st.turn === 1 && st.cd[0][3] === 3, 'sonar counts 6 ship squares around B2, costs the turn, goes on cooldown');
+  ok(E.heat(E.view(st.sides[1], st.scans[0]), false, 6)[1] > E.heat(E.view(st.sides[1]), false, 6)[1] * 1.5, 'the density map leans toward the sonar box');
+  E.fire(st, 97);
+  r = E.useSkill(st, 1, 0); ok(r && r.shots.length === 4 && r.shots.filter(x => x.hit).length === 2 && st.sides[1].shots[0] === 2 && st.sides[1].shots[10] === 1, 'volley: 2×2 block, 2 hits');
+  E.fire(st, 96); E.fire(st, 97); E.fire(st, 95);
+  ok(st.cd[0][2] === 0, 'torpedo ready'); r = E.useSkill(st, 2, 2);
+  ok(r && r.shots.length === 4 && r.shots[3].hit && r.shots[3].cell === 62 && st.sides[1].shots[92] === 1 && !st.sides[1].shots[52], 'torpedo runs up column C to the first ship (C7) and shows the water it crossed');
+  E.fire(st, 94); E.fire(st, 96); E.fire(st, 93);
+  ok(st.cd[0][0] === 0, 'bomb ready'); r = E.useSkill(st, 0, 22);
+  ok(r && r.shots.length === 5 && r.shots.filter(x => x.hit).length === 3, 'air strike: a plus of 5 squares');
+  // lose the ship, lose the skill
+  st = E.newGame({ rule: 'tactics', fleets: [fl, fl], first: 1 });
+  for (const c of [60, 61, 62]) { E.fire(st, c); if (st.turn === 0) E.fire(st, 99 - c % 10); }
+  ok(st.sides[0].sunk[3] && !E.skillReady(st, 0, 3), 'a sunk ship’s skill is gone');
+  for (let g = 0; g < 4; g++) E.fire(st, [90, 91, 92, 93, 94, 95, 96, 97][st.sides[1 - st.turn].nshots - (st.turn ? 3 : 0) + 4] ?? 89);
+  ok(E.preview(st, 3, 44) === null, 'and stays gone after the cooldown time');
+  // AI never produces an illegal action; skills get used
+  let used = { bomb: 0, volley: 0, torpedo: 0, sonar: 0 }, illegal = 0;
+  for (let g = 0; g < 60; g++) { const d2 = E.draftNew(g & 1); while (d2.turn >= 0) E.draftPick(d2, E.draftAI(d2, rnd)); const s2 = E.newGame({ rule: 'tactics', fleets: [E.randomFleet(rnd, false, d2.picks[0]), E.randomFleet(rnd, false, d2.picks[1])], first: g & 1 }); let k = 0; while (s2.winner < 0 && k++ < 400) { const a = E.chooseAction(s2, 20, rnd); if (a.skill) used[a.skill]++; if (!E.act(s2, a)) { illegal++; break; } } if (s2.winner < 0) illegal++; }
+  ok(illegal === 0 && used.bomb && used.volley && used.torpedo && used.sonar, 'AI games with drafted fleets all finish; every skill is used ' + JSON.stringify(used));
+}
+
 // ---- 2) shots to finish per level ----
 function solo(level, adj, n) { let s = 0; for (let g = 0; g < n; g++) { const side = E.newSide(E.randomFleet(rnd, adj)); let k = 0; while (side.afloat > 0) { const c = E.choose(side, level, adj, rnd); if (c < 0 || side.shots[c]) { ok(false, 'bad cell from choose lv' + level); break; } k++; const si = side.grid[c]; if (si >= 0) { side.shots[c] = 2; side.hits++; if (++side.hitsOn[si] === side.ships[si].len) { side.sunk[si] = true; side.afloat--; } } else side.shots[c] = 1; } s += k; } return s / n; }
 console.log('--- average shots to sink the whole fleet (' + G + ' fleets) ---');
@@ -49,6 +87,8 @@ console.log('no-touch rule, Lv.16: ' + solo(16, true, G).toFixed(1) + '   Lv.20:
 // ---- 3) ladder ----
 function match(la, lb, rule, n) { let w = 0; for (let g = 0; g < n; g++) { const st = E.newGame({ rule, fleets: [E.randomFleet(rnd), E.randomFleet(rnd)], first: g & 1 }); let guard = 0; while (st.winner < 0 && guard++ < 400) E.fire(st, E.choose(st.sides[1 - st.turn], st.turn ? lb : la, false, rnd)); ok(st.winner >= 0, 'game ends'); if (st.winner === 0) w++; } return w / n; }
 console.log('--- win rate of the higher level ---');
+function matchT(la, lb, n) { let w = 0; for (let g = 0; g < n; g++) { const st = E.newGame({ rule: 'tactics', fleets: [E.randomFleet(rnd, false, [0, 1, 2, 3]), E.randomFleet(rnd, false, [0, 1, 2, 3])], first: g & 1 }); let guard = 0; while (st.winner < 0 && guard++ < 400) E.act(st, E.chooseAction(st, st.turn ? lb : la, rnd)); if (st.winner === 0) w++; } return w / n; }
+for (const [a, b] of [[5, 1], [10, 5], [15, 10], [20, 15]]) { const w = matchT(a, b, G); console.log('Lv.' + a + ' vs Lv.' + b + ' tactics ' + (w * 100).toFixed(0) + '%'); ok(w > .5, 'Lv.' + a + ' beats Lv.' + b + ' (tactics)'); }
 for (const [a, b] of [[5, 1], [10, 5], [15, 10], [20, 15]]) for (const rule of ['classic', 'streak', 'salvo']) { const w = match(a, b, rule, G); console.log('Lv.' + a + ' vs Lv.' + b + ' ' + rule.padEnd(8) + (w * 100).toFixed(0) + '%'); ok(w > .5, 'Lv.' + a + ' beats Lv.' + b + ' (' + rule + ')'); }
 
 // ---- 3b) the hint map: probabilities are honest (cells said to be p% hold a ship p% of the time) ----
