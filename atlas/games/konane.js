@@ -68,10 +68,12 @@
   }
   const DK = ['background:radial-gradient(circle at 40% 35%,#5a5856,#1d1c1b 60%,#0b0b0b)', 'background:radial-gradient(circle at 40% 35%,#fff,#efe8da 60%,#c9bfae)'];
 
+  // 種目 (2026-11-15): the full game's three board sizes; the card's "size" value is the board (8 · 6 · 10)
+  const RIDS = ['s8', 's6', 's10'], RSZ = [8, 6, 10], RN = {"ja": {"n": ["8×8", "6×6", "10×10"], "d": ["32個ずつ。いまいちばん広く遊ばれている大きさ。", "18個ずつ。短くて読み切りやすい、入門向け。", "50個ずつの長い勝負。昔のハワイにはもっと大きな盤もありました。"], "L": "Rules"}, "en": {"n": ["8×8", "6×6", "10×10"], "d": ["32 stones each — the size most played today.", "18 each — short games you can read out; good to start.", "50 each — a long game; old Hawaiʻi had even bigger boards."], "L": "Rules"}, "zh": {"n": ["8×8", "6×6", "10×10"], "d": ["每方32子，现在最常见的大小。", "每方18子，短局，容易算清，适合入门。", "每方50子的长局。古代夏威夷还有更大的棋盘。"], "L": "Rules"}, "zh-TW": {"n": ["8×8", "6×6", "10×10"], "d": ["各32顆 — 現在最常下的大小。", "各18顆 — 可以算到底的短局，適合入門。", "各50顆 — 長局；古代夏威夷的棋盤甚至更大。"], "L": "Rules"}, "ko": {"n": ["8×8", "6×6", "10×10"], "d": ["각 32개. 지금 가장 널리 쓰이는 크기.", "각 18개. 짧고 다 읽기 쉬워 입문용.", "각 50개의 긴 승부. 옛 하와이에는 더 큰 판도 있었습니다."], "L": "Rules"}, "es": {"n": ["8×8", "6×6", "10×10"], "d": ["32 piedras cada uno: el tamaño más jugado hoy.", "18 cada uno: partidas cortas y calculables; ideal para empezar.", "50 cada uno: una partida larga; en el antiguo Hawái había tableros aún mayores."], "L": "Rules"}, "fr": {"n": ["8×8", "6×6", "10×10"], "d": ["32 pierres chacun : la taille la plus jouée aujourd’hui.", "18 chacun : parties courtes et calculables, idéal pour débuter.", "50 chacun : une longue partie ; l’ancien Hawaï avait des plateaux plus grands encore."], "L": "Rules"}, "pt": {"n": ["8×8", "6×6", "10×10"], "d": ["32 pedras cada: o tamanho mais jogado hoje.", "18 cada: partidas curtas e calculáveis; ótimo para começar.", "50 cada: uma partida longa; o antigo Havaí tinha tabuleiros ainda maiores."], "L": "Rules"}, "de": {"n": ["8×8", "6×6", "10×10"], "d": ["32 Steine je Seite — die heute meistgespielte Größe.", "18 je Seite — kurze, berechenbare Partien; gut für den Einstieg.", "50 je Seite — eine lange Partie; im alten Hawaiʻi gab es noch größere Bretter."], "L": "Rules"}, "ru": {"n": ["8×8", "6×6", "10×10"], "d": ["По 32 камня — самый популярный сегодня размер.", "По 18 — короткие партии, которые можно просчитать; хорошо для начала.", "По 50 — долгая партия; на старых Гавайях доски были ещё больше."], "L": "Rules"}, "tr": {"n": ["8×8", "6×6", "10×10"], "d": ["Her birine 32 taş — bugün en çok oynanan boyut.", "Her birine 18 — sonuna kadar hesaplanabilen kısa oyunlar; başlamak için iyi.", "Her birine 50 — uzun bir oyun; eski Hawaii'de tahtalar daha da büyüktü."], "L": "Rules"}, "id": {"n": ["8×8", "6×6", "10×10"], "d": ["32 batu masing-masing — ukuran yang paling sering dimainkan saat ini.", "18 masing-masing — permainan pendek yang bisa dihitung habis; bagus untuk mulai.", "50 masing-masing — permainan panjang; Hawaii zaman dulu bahkan punya papan lebih besar."], "L": "Rules"}, "hi": {"n": ["8×8", "6×6", "10×10"], "d": ["हर ओर 32 पत्थर — आज सबसे ज़्यादा खेला जाने वाला आकार।", "हर ओर 18 — छोटी, गिनने लायक बाज़ियाँ; शुरुआत के लिए।", "हर ओर 50 — लंबी बाज़ी; पुराने हवाई में इससे भी बड़े बोर्ड थे।"], "L": "Rules"}, "ar": {"n": ["8×8", "6×6", "10×10"], "d": ["32 حجرًا لكل طرف — الحجم الأكثر لعبًا اليوم.", "18 لكل طرف — مباريات قصيرة قابلة للحساب، مناسبة للبداية.", "50 لكل طرف — مباراة طويلة؛ وكانت في هاواي القديمة ألواح أكبر."], "L": "Rules"}}, rn = l => RN[l] || RN.en, rix = z => Math.max(0, RSZ.indexOf(+z));
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, X = TX[ctx.lang] || TX.en, K3 = T3.konane;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const N = 8, board = K3.board(N); T3.show('konane', board);
+    const N = RSZ[rix(ctx.size)], rule = RIDS[rix(ctx.size)], board = K3.board(N); T3.show('konane', board);
     const U = board.userData, Y = U.top - U.sink;
     const tall = innerHeight > innerWidth * 1.15;
     if (T3.fit) T3.fit(tall ? { w: U.W + .6, d: U.H + .8, y: U.top + .2, pitch: 1.0 } : { w: U.W + .3, d: U.H + .5, y: U.top + .2, pitch: 1.0 });
@@ -196,7 +198,7 @@
     }
 
     /* ---------- AI: the game's engine worker ---------- */
-    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule: 's8' }); return w; }
+    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule }); return w; }
     function aiMove() {
       thinking = true; hud(L.think);
       if (!worker) worker = newWorker();
@@ -208,7 +210,7 @@
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? null : r.move); };
       worker.onerror = () => { worker = null; reply(null); };
-      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule: 's8' });
+      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule });
     }
 
     /* ---------- input ---------- */
@@ -249,7 +251,7 @@
       later(() => { busy = false; next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; E.setRule('s8'); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
 
     const dbg = {
       at: i => { const [x, z] = xz(i); return T3.project(x, z, U.top); },
@@ -284,7 +286,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule: 's8' });
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule });
         });
       },
       canDraw: () => false,   // Kōnane has no draws (someone always runs out of jumps first)
@@ -345,5 +347,6 @@
     return { name: '', desc: n > 20 ? LVD_TOP[lang] || LVD_TOP.en : D[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[Math.min(n, 20) - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.konane = { levels: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };
+  window.Atlas3D.konane = { levels: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: RSZ, size0: 8, sizeLabel: l => rn(l).L,
+    sizeName: (z, l) => rn(l).n[rix(z)], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[rix(v)] } : null, levelInfo, start };
 })();

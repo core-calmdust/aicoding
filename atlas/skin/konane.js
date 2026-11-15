@@ -73,6 +73,7 @@ html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1
       draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (side === 1 || side === 2) draft.color = side;
       if (lv >= 1 && lv <= 20) draft.level = lv;
+      { const R = { 8: 's8', 6: 's6', 10: 's10' }[+new URLSearchParams(location.search).get('size')]; if (R && draft.mode !== 'rated') draft.rule = R; }   // (the portal card's 種目: the board size)
       segSync(); document.getElementById('btnStart').click();
       return true;
     },
