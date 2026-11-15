@@ -395,8 +395,7 @@ function renderHome() {
     <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}</div>
     <div class="pp-n">${esc(L(c.name))}</div>
     <div class="pp-t">${esc(L(c.title))}</div>
-    <div class="pp-sk">${skillChip(uk, 'on')}${o.skills.length > 1 ? `<span class="pp-more" id="ppMore">${esc(t('ownedSkills'))} ${o.skills.length}</span>` : ''}</div>
-    <button class="pp-chg" id="ppChg" title="${esc(t('tapChange'))}" aria-label="${esc(t('tapChange'))}">${IC.swap}<span>${esc(t('tapChange'))}</span></button></div>
+    <div class="pp-sk">${skillChip(uk, 'on')}${o.skills.length > 1 ? `<span class="pp-more" id="ppMore">${esc(t('ownedSkills'))} ${o.skills.length}</span>` : ''}</div></div>
     <div class="pp-info" style="--sc:${sk.color}">
       <div class="pi-h">STORY</div><p class="pi-st">${esc(L(c.profile))}</p>
       <div class="pi-h">SKILL</div>
