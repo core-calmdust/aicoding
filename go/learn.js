@@ -144,7 +144,9 @@ $('#rulesClose').onclick = () => closeRules();
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261115w').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+// (2026-11-15) read when the lessons are first opened, not with the page (0.9MB)
+let lessonsP = null;
+const lessonsLoad = () => lessonsP || (lessonsP = fetch('lessons.json?v=20261115w').then(r => r.json()).then(d => (LESSONS = d)).catch(() => { lessonsP = null; return null; }));
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -176,7 +178,7 @@ function lessonThumb(s) {
 const lsCourseSel = {};
 const stepTitle = s => LL(s.title);
 async function openLessons(v, course) {
-  const d = await lessonsReady; selTab('lesson');
+  const d = await lessonsLoad(); selTab('lesson');
   if (!d) { toast(t('ls.fail')); return; }
   openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden');
   $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
@@ -442,8 +444,9 @@ $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.v
 
 // ====================================================================== openings: 布石・定石 studied move by move (notes, side lines, engine values), then practice
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=3').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
-  .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
+// (2026-11-15) read when the openings are first opened, not with the page (1.6MB)
+let openP = null;
+const openLoad = () => openP || (openP = fetch('openings.json?v=3').then(r => r.json()).then(d => (OPEN = d)).catch(() => { openP = null; return null; }));
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
 let opCatSel = '';
@@ -458,7 +461,7 @@ function opThumb(g) {
 const OP_ICON = { basic: ICON_STONES('#141414', '#f4f1ea'), hoshi: '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" fill="#e1b469"/><path d="M2 8h20M2 14h20M8 2v20M14 2v20" stroke="#2a1c0e" stroke-width=".8"/><circle cx="14" cy="8" r="3.4" fill="#141414"/></svg>', komoku: '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" fill="#e1b469"/><path d="M2 8h20M2 14h20M8 2v20M14 2v20" stroke="#2a1c0e" stroke-width=".8"/><circle cx="14" cy="8" r="3.4" fill="#141414"/><circle cx="8" cy="8" r="3.4" fill="#f4f1ea" stroke="#777"/></svg>' };
 const opIcon = k => `<span class="ic sv">${OP_ICON[k] || LS_ICON.opening}</span>`;
 async function openOpenings(cat) {
-  await openReady; selTab('open');
+  await openLoad(); selTab('open');
   if (!OPEN) { toast(t('ls.fail')); return; }
   $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = t('op.desc');
   const pr = opProg(), cats = (OPEN.cats || []).map(c => c.id).filter(id => OPEN.sets.some(g => g.cat === id));

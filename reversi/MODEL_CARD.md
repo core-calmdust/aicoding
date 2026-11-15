@@ -1233,3 +1233,7 @@ v8 の後、同じ時間で中盤をさらに強くできるかを調べた。**
 - 大百科：AIの強さの一覧も Lv.1〜36（`Atlas3D.reversi.levels`、同日の次の変更から）。Lv.1〜28 のボスの帯（3レベルごと、10体）と報酬は番号のまま。Lv.29〜36 の相手は「白黒の神ヤヌスネコ」（ガチャ限定UR）で、勝っても報酬なし（addendum「AI戦のボスと観戦キャラ」の「天上のレベル」）。レート戦は36段階。
 - レーティング表：新しい8つは両隣の平均、ほかは以前の値のまま。2026-11-12 の強化ぶん（Lv.25〜36）と合わせて、Mac の計測後に直す。
 - `tools/levelmatch.js` のプランのレベル番号も新しい番号にした。
+
+### 配信用の重み（2026-11-15）
+- ページ（index.html・pro/pro.js）は `weights.pk.bin.gz`（6.3MB）を読み、`rvUnpack` で元の int16 に戻す（値は weights.bin.gz と完全に同じ。フェーズ差分 → zigzag → 下位・上位バイトの面 → gzip）。読めなければ weights.bin.gz（8.6MB）を読む。
+- `weights.bin.gz` が正本（ツール・学習器はこちらを読む）。重みを差し替えたら `python3 reversi/tools/pack-weights.py` を実行し、index.html・pro.js の `weights.pk.bin.gz?v=` を上げる。
