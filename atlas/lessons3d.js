@@ -215,7 +215,7 @@
     LKEY: 'shogi-kaya-lessons-v1', OKEY: 'shogi-kaya-open-v1', CATS: ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'], data: null,
     load() {
       if (this.p) return this.p;
-      const voice = fetch('../shogi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
+      const voice = fetch('../shogi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       return (this.p = Promise.all([voice, getJ('../shogi/lessons.json?v=20261115r'), getJ('../shogi/openings.json?v=20261107l14'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261107l14`).catch(() => ({ sets: [] })))])
         .then(([_, ls, op, ...more]) => {
@@ -925,15 +925,25 @@
       const marks0 = () => { if (D.rampMarks) pz().mark(D.rampMarks(it)); else if (pz().annot) pz().annot(it.k === 'explain' ? rmk(it) : null); };
       if (it.k === 'explain' && it.seq && it.seq.length) { for (const q of (D.rampSeq ? D.rampSeq(it) : it.seq)) { await sleep(420); if (stopped || phase !== 'ramp' || cur.ri !== i) return; await pz().play(q); } }   // (an example sequence, played out)
       marks0();
-      onMoved = u => {
+      let rLine = false;   // (a mate in 3 or more: the first move was right, the line goes on — the defender answers, the player mates)
+      const rDone = () => {
+        ok = true; if (D.rampMarks) pz().mark(null); else if (pz().annot) pz().annot(null); say(`✓ ${L(it.y, ctx.lang)}`); try { chime(true); } catch (e) {}
+        act(last ? RU('main') : RU('next'), {});
+        autoGo(2600, () => cur && phase === 'ramp' && cur.ri === i && !more.length, goOn);
+      };
+      onMoved = async (u, info) => {
         if (stopped || phase !== 'ramp' || cur.ri !== i) return;
-        if (it.k === 'explain') { if (D.rampUndo) D.rampUndo(pz()); else pz().undo(1); marks0(); pz().wait(); return; }   // (the explanation's board is for looking)
-        if (D.rampOk ? D.rampOk(it, u) : it.ok.includes(u)) {
-          ok = true; if (D.rampMarks) pz().mark(null); else if (pz().annot) pz().annot(null); say(`✓ ${L(it.y, ctx.lang)}`); try { chime(true); } catch (e) {}
-          act(last ? RU('main') : RU('next'), {});
-          autoGo(2600, () => cur && phase === 'ramp' && cur.ri === i && !more.length, goOn);   // (right: on to the next step by itself, the meter on 次へ)
-          return;
+        if (it.k === 'try' && it.goal === 'mate' && it.n > 1 && pz().defend && (rLine || it.ok.includes(u))) {   // (shogi's mates in 3+: played out to the end, 2026-11-15)
+          rLine = true; if (pz().annot) pz().annot(null);
+          if (info && info.mate) return rDone();
+          const remain = it.n - pz().moves().length;
+          let reply = null; if (remain > 0) { const r = await pz().defend(remain); if (stopped || phase !== 'ramp' || cur.ri !== i) return; reply = r && r.reply; }
+          if (!reply) { say(`${X.escaped}<br>${RU('ng')}`); try { chime(false); } catch (e) {} later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) ramp(i); }, 1600); return; }
+          await sleep(150); await pz().play(reply); if (stopped || phase !== 'ramp' || cur.ri !== i) return;
+          say(RU('cont')); pz().wait(); return;
         }
+        if (it.k === 'explain') { if (D.rampUndo) D.rampUndo(pz()); else pz().undo(1); marks0(); pz().wait(); return; }   // (the explanation's board is for looking)
+        if (D.rampOk ? D.rampOk(it, u) : it.ok.includes(u)) return rDone();   // (right: on to the next step by itself, the meter on 次へ)
         say(RU('ng')); try { chime(false); } catch (e) {}
         if (D.rampMarks && id !== 'checkers' && id !== 'xiangqi' && id !== 'backgammon') pz().mark([[u, 'ng']]);   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
         later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { if (D.rampUndo) D.rampUndo(pz()); else if (!(it.pick)) pz().undo(1); marks0(); pz().wait(); } }, 1100);
