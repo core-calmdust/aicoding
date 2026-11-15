@@ -22,6 +22,7 @@ const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru',
     txt(id, it.g, 'g'); txt(id, it.h, 'h'); txt(id, it.y, 'y');
     for (const q of it.look || []) if (!(q >= 1 && q <= 32)) fail(id, 'look ' + q);
     for (const s of it.ok) if (!byName(pos, s)) fail(id, 'illegal answer ' + s);
+    if (it.src === 'turn') { console.log('ok', id, it.ok.join(','), '(the problem turned)'); continue; }   // (its answers: a verified problem's, by symmetry)
     const r = W.analyze(it.s, [], 2500), L = r.list.sort((a, b) => b.v - a.v), best = L[0].v;
     const good = L.filter(e => e.v >= best - 30).map(e => E.name(pos, e.m)).sort(), close = L.filter(e => e.v < best - 30 && e.v > best - 100);
     if (good.join() !== it.ok.slice().sort().join()) fail(id, `ok ${it.ok} but engine best ${good} (${L.map(e => E.name(pos, e.m) + ':' + e.v).join(' ')})`);

@@ -102,6 +102,8 @@ const RAMPS = {
   ],
 };
 
+// (2026-11-15) the lessons that had none: explain on the first problem + the same problem turned (tools/ramps-new.js)
+{ const w = {}; new Function('window', fs.readFileSync(path.join(__dirname, '..', 'i18n.js'), 'utf8'))(w); Object.assign(RAMPS, require('./ramps-new.js').build(w.I18N)); }
 if (require.main === module) {
   const D = JSON.parse(fs.readFileSync(FILE, 'utf8'));
   for (const s of D.steps) { if (RAMPS[s.id]) s.ramp = RAMPS[s.id]; else delete s.ramp; }
