@@ -864,25 +864,46 @@
   /* hex (2026-11-15): hex/lessons.json (13 steps of 5 one-move problems on 7–11 boards: 'ok' kinds — 20 points or 0 — and 'sc' kinds
      scored by the engine's values (= hex/app.js problemPoints)). Progress = the full game's ('aicoding-hex-lessons' { id: { best, clear } }).
      Texts: hex/i18n.js, read into a sandbox. A position here is { spec: { n, b, side }, me: 1 Red / 2 Blue }; cells are named by their marks. */
+  const HX_ENG = '../hex/engine.js?v=4-pro1-mt1';   // (the table adapter's file: one cache)
+  const hxEng = () => window.HexEngine ? Promise.resolve(window.HexEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = HX_ENG; sc.onload = () => window.HexEngine ? res(window.HexEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
   const HEX_WINT = 29000;   // (hex/engine.js WINT)
   const HEX = {
-    LKEY: 'aicoding-hex-lessons', data: null, I: null,
+    LKEY: 'aicoding-hex-lessons', OKEY: 'aicoding-hex-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../hex/lessons.json?v=20261115'), fetch('../hex/i18n.js?v=20261115').then(r => r.text())])
-        .then(([ls, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] hex texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
+      return (this.p = Promise.all([getJ('../hex/lessons.json?v=20261115'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261115').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=1').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+        .then(([ls, op, tx, , rt, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] hex texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; this.RT = rt || {};
+          try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
+          return this; })
         .catch(e => { this.p = null; throw e; }));
     },
-    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    tx(k, lang, v) { const I = this.I || {}; let x = lang === 'ja' && this.V && this.V[k] != null ? this.V[k] : I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
     mini: sp => window.AtlasMini && AtlasMini.hex ? AtlasMini.hex(sp) : '',
+    // 定跡 (hex/openings.json): coordinates are not on the 3D board — a title with one is replaced by the set's short line, and the
+    // notes name cells by their marks (the stone just played green, an earlier one gold)
+    opTitle(g, lang) { const t = L(g.title, lang); return /\b[a-m](1[0-3]|[1-9])\b/.test(t) ? this.tx('op.' + g.id + '.short', lang) || t : t; },
+    opSpec(g, k) { const E = window.HexEngine; if (!E) return null; const p = E.replay({ n: g.n, swap: g.swap }, g.study.line.slice(0, k)).pos; let b = ''; for (let i = 0; i < p.b.length; i++) b += p.b[i] === 1 ? 'r' : p.b[i] === 2 ? 'b' : '.'; return { n: g.n, b, side: p.side }; },
     list(kind, lang) {
       const D = this.data, pr = J(this.LKEY, {});
+      if (kind === 'open') { const po = J(this.OKEY, {}); return D.op.sets.map(g => ({ key: g.id, cat: g.grp, catName: this.tx('op.grp.' + g.grp, lang), title: this.opTitle(g, lang), sub: this.tx('op.' + g.id + '.short', lang), svg: this.opSpec(g, g.show || 2) ? this.mini(this.opSpec(g, g.show || 2)) : '', st: po[g.id] ? (po[g.id].pass ? 'pass' : 'try') : '' })); }
       return D.ls.steps.map((s, i) => ({ key: String(i), cat: s.course, catName: this.tx('course.' + s.course, lang) || s.course, title: this.tx('ls.' + s.id + '.title', lang), sub: this.tx('ls.' + s.id + '.sub', lang), svg: s.problems && s.problems[0] ? this.mini(s.problems[0].s) : '', st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '' }));
     },
     lesson(key, lang) {
       const s = this.data.ls.steps[+key]; if (!s) return null;
       const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v);
-      return { id: s.id, title: T('title'), intro: T('intro'), ramp: null, RU: () => '',
+      // the warm-up (2026-11-15): explain on the first problem (its answers green) → the same problem turned 180° (a symmetry of Hex);
+      // texts hex/ramps3d.json (14 languages), ゴイシペン's own lines in ja (hex/voice-pen-ja.js ramp:<step>/<field>)
+      const RT = this.RT || {}, V = lang === 'ja' ? (this.V || {}) : {}, W = f => V['ramp:' + s.id + '/' + f] != null ? { ja: V['ramp:' + s.id + '/' + f], __voice: true } : RT[s.id + '/' + f];
+      const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L(RT['ui/' + k], lang), v || {});
+      const P0 = (s.problems || [])[0]; let ramp = null;
+      if (P0 && W('t') && W('g')) {
+        const n = P0.s.n, N = n * n, rot = q => q >= 0 && q < N ? N - 1 - q : q, ok = hxOk(P0), sp = P0.s;
+        const sr = Object.assign({}, sp, { b: String(sp.b).split('').reverse().join('') });
+        const mk = ok.filter(q => q >= 0 && q < N).map(q => [q, 'ok']); if (ok.includes(1023)) { const r = String(sp.b).search(/[rb]/); if (r >= 0) mk.push([r, 'hl']); }
+        ramp = [{ k: 'explain', s: sp, marks: mk, t: W('t'), body: W('body') },
+          { k: 'try', s: sr, ok: ok.map(rot), look: hxArea(sr, rot(ok[0])), g: W('g'), h: V['ls.' + s.id + '.hint'] != null ? { ja: V['ls.' + s.id + '.hint'], __voice: true } : Object.fromEntries(Object.keys(this.I || {}).map(l => [l, (this.I[l] || {})['ls.' + s.id + '.hint']]).filter(x => x[1])), y: W('y') }];
+      }
+      return { id: s.id, title: T('title'), intro: T('intro'), ramp, RU,
         probs: (s.problems || []).map(P => { const good = P.ok || [P.best];
           return { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.ok ? P.ok[0] : P.best, hintTx: T('hint'), hint: hxArea(P.s, P.ok ? P.ok[0] : P.best),
             good: () => T('why', { m: HXM('ok', lang), x: HXM('ng', lang) }), ng: () => { const t = T('ng', { m: HXM('ok', lang), x: HXM('ng', lang) }); return t && t !== 'undefined' ? t : T('why', { m: HXM('ok', lang), x: HXM('ng', lang) }); } }; }),
@@ -897,15 +918,39 @@
       if (mine < -HEX_WINT && best >= -HEX_WINT) return 0;
       return Math.max(0, Math.round(20 * (1 - (wr(best) - wr(mine)) / 0.25)));
     },
+    opening(key, lang) {
+      const g = this.data.op.sets.find(x => x.id === key); if (!g) return null;
+      const n = g.n, line = g.study.line.slice(), notes = {}, noteMarks = {}, NCH = NC.hex || {};
+      const cellOf = t => { const c = 'abcdefghijklm'.indexOf(t[0]), r = +t.slice(1) - 1; return c >= 0 && c < n && r >= 0 && r < n ? r * n + c : -1; };
+      const E = window.HexEngine; let pos = E ? E.replay({ n, swap: g.swap }, []).pos : null;
+      line.forEach((m, i) => {
+        let played = m;
+        if (pos) { const before = pos.clone ? pos.clone() : null; pos.play(m); if (m === (E ? E.SWAP : 1023)) { for (let q = 0; q < pos.b.length; q++) if (pos.b[q] && before && !before.b[q]) played = q; } }
+        const raw = g.study.notes && g.study.notes[i] ? L(g.study.notes[i], lang) : '', mk = [];
+        const txt = String(raw).replace(/\b([a-m])(1[0-3]|[1-9])\b/g, t => { const q = cellOf(t); if (q < 0) return t; const k = q === played ? 'ok' : 'hl'; mk.push([q, k]); return HXM(k, lang); });
+        notes[String(i)] = `<b>${i + 1}. ${this.tx(i % 2 ? 'p2' : 'p1', lang) || (i % 2 ? '○' : '●')}</b>` + (txt ? '<br>' + txt : '');
+        if (mk.length) noteMarks[String(i)] = mk;
+      });
+      const probs = shuffle(g.problems || []).slice(0, 5);
+      const intro = NCH['op:' + g.id + '/intro'] ? L(NCH['op:' + g.id + '/intro'], lang) : this.tx('op.' + g.id + '.intro', lang);
+      return { id: g.id, title: this.opTitle(g, lang), intro: String(intro || '').replace(/\n/g, '<br>'), start: { spec: { n, swap: g.swap }, me: g.side === 2 ? 2 : 1 }, steps: line, notes, noteMarks,
+        probs: probs.map(P => ({ pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: hxArea(P.s, P.best),
+          ng: () => this.tx('op.why', lang, { m: HXM('ok', lang) }), good: () => this.tx('op.why', lang, { m: HXM('ok', lang) }) })),
+        save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= max * .75; pr[g.id] = { best: Math.max(o.best || 0, Math.round(pts / max * 100)), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
+    },
+    // the warm-up: its position, marks, the right moves
+    rampPos: it => ({ spec: it.s, me: it.s.side === 2 ? 2 : 1 }), rampBody: (it, lang) => L(it.body, lang),
+    rampMarks: it => it.marks || [], rampOk: (it, u) => (it.ok || []).includes(u), rampAns: it => (it.ok || [])[0], rampLook: it => (it.look || []).map(q => [q, 'ring']),
     spOk: lang => HXM('ok', lang),
     introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), P = s && s.problems && s.problems[0]; return P ? { pos: { spec: { n: P.s.n, b: '.'.repeat(P.s.n * P.s.n), side: 1 }, me: 1, lock: true } } : null; },   // (the empty board of the lesson's size while the intro is read)
   };
+  const hxOk = P => { if (P.ok) return P.ok.slice(); const best = Math.max(...P.sc.map(e => e[1])); return P.sc.filter(e => e[1] >= best - 15).sort((a, b) => b[1] - a[1]).map(e => e[0]); };   // (the moves worth full points: hex/app.js problemPoints)
   const hxArea = (sp, m) => {   // the hint (= hex/app.js): the answer and one empty cell next to it, never the answer alone
     const n = sp.n, b = sp.b || ''; if (!(m >= 0 && m < n * n)) return [];
     const r = Math.floor(m / n), q = m % n, nb = [[-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0]].map(([dr, dq]) => [r + dr, q + dq]).filter(([a, c]) => a >= 0 && a < n && c >= 0 && c < n).map(([a, c]) => a * n + c).filter(x => b[x] === '.');
     return nb.length ? [nb[Math.floor(Math.random() * nb.length)], m] : [m];
   };
-  const HXM = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の点' : '赤い印の点') + '\u0002' : `<i class="ls-spot ${k}"></i>`;   // (a cell named by its mark)
+  const HXM = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の点' : k === 'hl' ? '金の印の点' : '赤い印の点') + '\u0002' : `<i class="ls-spot ${k}"></i>`;   // (a cell named by its mark)
   const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(), ncLoad(id)]).then(() => D.list(kind, lang)); }
@@ -1132,7 +1177,8 @@
         }
         act(X.next, { nextOn: false });
         await pz().play(cur.steps[cur.si]); if (stopped) return;
-        const note = cur.notes[String(cur.si)]; cur.si++;
+        const note = cur.notes[String(cur.si)], nmk = cur.noteMarks && cur.noteMarks[String(cur.si)]; cur.si++;
+        if (nmk && pz().mark) pz().mark(nmk);   // (hex: the cells its note names)
         head(cur.title + ' · ' + fill(X.step, { i: cur.si, n: cur.steps.length }));
         say(note ? L(note, ctx.lang) : '　'); act(X.next);
       };
