@@ -152,6 +152,7 @@
     const GEO = { bar: new TH.BoxGeometry(1, .004, 1), ring: new TH.TorusGeometry(1, .07, 6, 40), cone: new TH.ConeGeometry(.06, .16, 3), disc: new TH.CircleGeometry(1, 32) };
     GEO.ring.rotateX(Math.PI / 2); GEO.cone.rotateX(Math.PI / 2); GEO.disc.rotateX(-Math.PI / 2);
     GEO.flat = new TH.RingGeometry(.86, 1, 48); GEO.flat.rotateX(-Math.PI / 2);
+    GEO.px = new TH.PlaneGeometry(1.6, 1.6); GEO.px.rotateX(-Math.PI / 2);   // (8-bit: the ball's square crumbs)
     function clearGuides() { while (gd.children.length) { const m = gd.children[0]; if (m.userData.own) m.userData.own.dispose(); gd.remove(m); } kick(100); }
     function bar(x0, y0, x1, y1, wid, mat, lift) {
       const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy); if (len < .05) return null;
@@ -330,22 +331,25 @@
     const placeAI = (s, lv) => { const sd = seed(); return ask({ s, level: lv, seed: sd, place: true }, () => E.placeFor(s, lv, sd)); };
     const keeperAI = (s, side, lv) => { const sd = seed(); return ask({ s, level: lv, seed: sd, keeper: side }, () => E.keeperFor(s, side, lv, sd)); };
 
-    /* ---------- neon: the gaming-rig show (2026-11-15 ユーザー：ネオン版はゲーミング演出に) ----------
-       The rails' light strip runs a rainbow round the table, the goal frames cycle, the buttons breathe, the ball glows in
-       shifting colours and leaves a light trail; every knock flashes the cloth, a goal sets off a rainbow strobe. */
+    /* ---------- 8-bit (the 'neon' look, 2026-11-16 ユーザー：ネオン台＆駒を8bitのレトロゲームをモチーフに) ----------
+       Everything moves in steps, as on an old console: the rail's light strip marches in the console palette (8 steps a
+       second), a knock makes the screen blink, a goal flashes the pitch through the palette; the ball leaves square pixel
+       crumbs that shrink in steps. The other looks keep a faint round light trail. */
     let waveT = 0, flashT = 0, strobeT = 0;
     const TRAIL = [];
+    const PAL8 = ['#fcfcfc', '#f8b800', '#f83800', '#d800cc', '#0078f8', '#00b800'];
     function neonFlash(k) { flashT = Math.max(flashT, performance.now() + 120 * (k || 1)); }
     function neonStrobe() { strobeT = performance.now() + 1800; }
-    // the ball's light trail: every look gets a faint one, the neon look a rainbow glow (2026-11-15 ユーザー)
     let trailRaf = 0, trailLast = null;
     function trailPaint(m, now) {
       const k = (now - m.userData.t0) / 650; if (k >= 1) { m.visible = false; return; }
-      const neon = U.look === 'neon', mat = m.material, bl = neon ? TH.AdditiveBlending : TH.NormalBlending;
-      if (mat.blending !== bl) { mat.blending = bl; mat.needsUpdate = true; }
-      if (neon) mat.color.setHSL(((now / 2600) % 1 + k * .3) % 1, 1, .6); else mat.color.setRGB(1, 1, 1);
-      mat.opacity = (1 - k) * (neon ? .55 : .22);
-      const r = D.RBALL * (neon ? 1.6 - k * .8 : 1 - k * .5) * K; m.scale.set(r, 1, r);
+      const px = U.look === 'neon', mat = m.material;
+      if (mat.blending !== TH.NormalBlending) { mat.blending = TH.NormalBlending; mat.needsUpdate = true; }
+      m.geometry = px ? GEO.px : GEO.disc;
+      if (px) {   // a square crumb: four sizes, the colour steps through the palette
+        const st = Math.floor(k * 4); mat.color.set(PAL8[(st + (m.userData.n || 0)) % 3]); mat.opacity = 1;
+        const r = D.RBALL * (1 - st * .22) * K; m.scale.set(r, 1, r);
+      } else { mat.color.setRGB(1, 1, 1); mat.opacity = (1 - k) * .22; const r = D.RBALL * (1 - k * .5) * K; m.scale.set(r, 1, r); }
     }
     function trailTick() {
       cancelAnimationFrame(trailRaf);
@@ -354,36 +358,36 @@
         kick(60); if (on) trailRaf = requestAnimationFrame(step); };
       trailRaf = requestAnimationFrame(step);
     }
+    let crumbN = 0;
     function neonTrail(x, y) {
       if (!U) return;
-      if (trailLast && Math.hypot(x - trailLast[0], y - trailLast[1]) < D.RBALL * .7) return;
+      const px = U.look === 'neon';
+      if (trailLast && Math.hypot(x - trailLast[0], y - trailLast[1]) < D.RBALL * (px ? 1.6 : .7)) return;
       trailLast = [x, y];
       let m = TRAIL.find(q => !q.visible);
       if (!m) { if (TRAIL.length >= 40) m = TRAIL.reduce((a, q) => q.userData.t0 < a.userData.t0 ? q : a); else { m = new TH.Mesh(GEO.disc, new TH.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false })); m.renderOrder = 3; board.add(m); TRAIL.push(m); } }
-      const [a, b] = wx(x, y); m.position.set(a, Y + .006, b); m.userData.t0 = performance.now(); m.visible = true;
+      const [a, b] = wx(x, y); m.position.set(a, Y + .006, b); m.userData.t0 = performance.now(); m.userData.n = crumbN++; m.visible = true;
       trailPaint(m, m.userData.t0); trailTick();
     }
     // the materials are shared (the board picker, the showcase): put them back as the model made them
     function neonReset() {
       const M = U && U.mats; if (!M || U.look !== 'neon') return;
-      M.top.emissive.setRGB(.8, .8, .8); if (M.edge) { M.edge.emissive.setHex(0x3ce6ff); M.edge.emissiveIntensity = 1.5; } if (M.post) { M.post.emissive.copy(new TH.Color('#ff3fb4').convertSRGBToLinear()); M.post.emissiveIntensity = .5; }
-      bt.forEach(g => { const m = g.userData && g.userData.mat; if (m) m.emissiveIntensity = .55; });
-      const bm = ballG && ballG.children[0] && ballG.children[0].material; if (bm && bm.emissive) bm.emissive.setRGB(1, 1, 1);
+      M.top.emissive.setRGB(.45, .45, .45); if (M.edge) { M.edge.emissive.set('#fcfcfc').convertSRGBToLinear(); M.edge.emissiveIntensity = 1; } if (M.post) { M.post.emissive.set('#fcfcfc').convertSRGBToLinear(); M.post.emissiveIntensity = .35; }
     }
     function neonTick() {
       cancelAnimationFrame(waveT); if (stopped) TRAIL.forEach(m => { m.visible = false; }); if (stopped || !U || U.look !== 'neon') return;
-      const c = new TH.Color(), c2 = new TH.Color();
+      const c = new TH.Color(); let lastStep = -1, lastKey = '';
       const step = () => { if (stopped) return; waveT = requestAnimationFrame(step);
         if (U.look !== 'neon' || document.hidden || !document.hasFocus()) return;
-        const now = performance.now(), h = (now / 2600) % 1, M = U.mats, strobe = now < strobeT, fl = now < flashT ? (flashT - now) / 240 : 0;
-        // the cloth: a slow colour wash, a flash on a knock, a strobe on a goal
-        c.setHSL(strobe ? (now / 120) % 1 : h, 1, .6); M.top.emissive.setRGB(.8, .8, .8).lerp(c, strobe ? .9 : .4 + Math.min(.4, fl));
-        if (M.edge) { M.edge.emissive.setHSL((h + .5) % 1, 1, .55); M.edge.emissiveIntensity = 1.4 + Math.sin(now / 180) * .4 + (strobe ? 1.2 : 0); }
-        if (M.post) { M.post.emissive.setHSL((h + .25) % 1, 1, .55); M.post.emissiveIntensity = strobe ? 1.6 : .7; }
-        // the buttons breathe in their team colours; the ball cycles
-        bt.forEach((g, i) => { const m = g.userData && g.userData.mat; if (m) m.emissiveIntensity = .45 + .3 * (.5 + .5 * Math.sin(now / 420 + i * .7)) + (strobe ? .6 : 0); });
-        const bm = ballG && ballG.children[0] && ballG.children[0].material; if (bm && bm.emissive) { c2.setHSL((h * 3) % 1, 1, .65); bm.emissive.copy(c2); }
-        kick(160); };
+        const now = performance.now(), st = Math.floor(now / 125), M = U.mats, strobe = now < strobeT, fl = now < flashT;
+        const key = st + '|' + strobe + '|' + fl; if (key === lastKey) return; lastKey = key;   // (only on a new step)
+        // the pitch: a blink on a knock, the palette on a goal
+        if (strobe) { c.set(PAL8[st % PAL8.length]).convertSRGBToLinear(); M.top.emissive.copy(c).multiplyScalar(.8); }
+        else M.top.emissive.setRGB(fl ? .85 : .45, fl ? .85 : .45, fl ? .85 : .45);
+        // the rail's strip marches through the palette; the goal frames blink on a goal
+        if (M.edge && st !== lastStep) { M.edge.emissive.set(PAL8[st % PAL8.length]).convertSRGBToLinear(); M.edge.emissiveIntensity = 1; }
+        if (M.post) { M.post.emissive.set(strobe ? PAL8[(st + 2) % PAL8.length] : '#fcfcfc').convertSRGBToLinear(); M.post.emissiveIntensity = strobe ? 1 : .35; }
+        lastStep = st; kick(160); };
       waveT = requestAnimationFrame(step);
     }
 
@@ -843,7 +847,7 @@
       later(next, 900);
     };
     camFit(false); neonTick();
-    const pick = () => { if (stopped) return; AC().BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'botao') : k, thumb: k => T3.boardThumb ? T3.boardThumb('botao', k) : '', pick: k => new URL('img/pick/botao-' + k + '.webp?v=3', location.href).href, color: THEME, onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
+    const pick = () => { if (stopped) return; AC().BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'botao') : k, thumb: k => T3.boardThumb ? T3.boardThumb('botao', k) : '', pick: k => new URL('img/pick/botao-' + k + '.webp?v=4', location.href).href, color: THEME, onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
     if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
 
     const myTurn = () => !stopped && !over && !busy && st && human(st.pos) && phase === 'aim';
