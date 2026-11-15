@@ -1131,6 +1131,30 @@ class Table3D {
     // the camera also backs off until the far player's melds (along the far rail) and the tops of her standing tiles are in view
     const far = new THREE.Vector3(), top = 1 - 2 * 6 / h;   // (6 px below the top edge)
     for (let k = 0; k < 40; k++) { far.set(0, H + .1, -9.3).project(this.camera); if (far.y <= top) break; d *= 1.025; put(); }
+    // (2026-11-15, ユーザー: on a phone the discards were too small to read — closer) a phone in landscape frames only what is played
+    // on: from the far player's melds along the far rail to my own river, and from side to side the two side players' hands and
+    // melds. A steeper look (58°) and, for each aim point along the table, the nearest camera that still holds that box (above the
+    // hand row along the bottom); the aim that lets the camera come closest wins.
+    if (this.mobile && a >= 1.55) {
+      const bot = -1 + 2 * .2, v = new THREE.Vector3(), v2 = new THREE.Vector3(), top2 = 1 - 2 * 12 / h;
+      // the box: the far melds (flat, along the far rail) and the far hand's tops; the side players' hands (standing) and melds; my
+      // own river down to where the hand row begins
+      const pts = [[-9.1, .1, -9.3], [9.1, .1, -9.3], [0, .1, -9.4], [0, H + .05, -8.3], [-7.4, H, -8.3], [7.4, H, -8.3], [-8, H, -7.4], [8, H, -7.4], [-9.3, .1, -9.3], [9.3, .1, -9.3],
+        [-9.3, .1, 5.6], [9.3, .1, 5.6], [-8, H, 5.6], [8, H, 5.6]];
+      let best = null;
+      for (let el = 46; el <= 72; el += 2) { const E = el * PI / 180;
+        const aim = (tz, dd) => { this.lookAt.set(0, 0, tz); this.camera.position.set(0, dd * Math.sin(E), tz + dd * Math.cos(E)); this.camera.updateProjectionMatrix(); this.camera.lookAt(this.lookAt); this.camera.updateMatrixWorld(); };
+        const fits = () => pts.every(([x, y, z]) => { v.set(x, y, z).project(this.camera); return v.x >= -.985 && v.x <= .985 && v.y <= top2 && v.y >= bot; });
+        for (let tz = -2; tz <= 3; tz += .25) {
+          let lo = 6, hi = 90; aim(tz, hi); if (!fits()) continue;
+          for (let i = 0; i < 22; i++) { const m = (lo + hi) / 2; aim(tz, m); if (fits()) hi = m; else lo = m; }
+          aim(tz, hi);
+          // how big the discards come out: the mean width of a tile laid in the middle of each river
+          let sz = 0; for (const [x, z] of [[0, 3.6], [0, -3.6], [3.6, 0], [-3.6, 0]]) { v.set(x - .5, 0, z).project(this.camera); v2.set(x + .5, 0, z).project(this.camera); const q = Math.hypot(v2.x - v.x, (v2.y - v.y) / a); sz += x ? Math.hypot(0, 0) || q : q; }
+          if (!best || sz > best[0]) best = [sz, el, tz, hi]; } }
+      if (best) { const E = best[1] * PI / 180, tz = best[2], dd = best[3]; this.lookAt.set(0, 0, tz); this.camera.position.set(0, dd * Math.sin(E), tz + dd * Math.cos(E)); this.camera.updateProjectionMatrix(); this.camera.lookAt(this.lookAt); this.camera.updateMatrixWorld(); this._camBest = best; }
+      else put();
+    }
     this._conHud();
     this.dirty = true;
   }
