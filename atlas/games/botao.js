@@ -12,7 +12,8 @@
      to zoom, the arrow keys to move it, C to come back; it follows the ball again at the next flick. V: near / whole.
      「シュート宣言」 (or S) calls a shot when the ball is in the attacking half; the defender then sets the goalkeeper in
      the small area (drag it, then 「構えOK」) and the attacker shoots.
-   · Game length (the size select): halves of 3 / 5 / 10 minutes (the clock runs while you play), or first to 3 goals.
+   · Game length (the size select): halves of 20 / 30 / 50 flicks (both sides' flicks together; 2026-11-15 ユーザー：時間制は問題が
+     多いので行動回数制に — it was 3 / 5 / 10 minutes), or first to 3 goals.
    ===================================================================== */
 (function () {
   'use strict';
@@ -20,9 +21,9 @@
   const TXT = window.BOTAO_TXT || {};   // (atlas/games/botao-i18n.js)
   const LVD = window.BOTAO_LVD || {}, WHO = window.BOTAO_WHO || {}, HOWTO = window.BOTAO_HOWTO || {};
   function levelInfo(n, lang) { const b = n <= 3 ? 0 : n <= 8 ? 1 : n <= 14 ? 2 : 3; return { name: 'Lv.' + n, desc: (LVD[lang] || LVD.en || [])[b] || '', who: (WHO[lang] || WHO.en || [])[b] || '' }; }
-  const SIZES = [3, 5, 10, 103];
+  const SIZES = [20, 30, 50, 103];   // halves of 20 / 30 / 50 flicks (both sides' together), or first to 3 goals
   const tl = (l, k) => ((window.BOTAO_TXT || {})[l] || (window.BOTAO_TXT || {}).en || {})[k] || k;
-  const sizeName = (z, l) => z === 103 ? tl(l, 'g3') : tl(l, 'm' + z);
+  const sizeName = (z, l) => z === 103 ? tl(l, 'g3') : tl(l, 'n' + z);
   const sizeLabel = l => tl(l, 'len');
   const AC = () => window.Atlas3D.carrom;
   const mousey = () => { try { return matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { return false; } };
@@ -48,7 +49,7 @@
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, E = window.BotaoEngine, D = E.DIM, SND = AC().SND;
     const lang = ctx.lang, L = TXT[lang] || TXT.en;
     const tx = (k, o) => { let s = L[k] != null ? L[k] : (TXT.en[k] != null ? TXT.en[k] : k); if (o) for (const q in o) s = s.split('{' + q + '}').join(o[q]); return s; };
-    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), size = SIZES.includes(+ctx.size) ? +ctx.size : 5;
+    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), size = SIZES.includes(+ctx.size) ? +ctx.size : 30;
     const youFirst = (+ctx.side || 1) === 1;
     const BDL = (T3.BOARDS && T3.BOARDS.botao) ? T3.BOARDS.botao.list : ['classic', 'retro', 'night', 'praia', 'madeira', 'neon'];
     let look = T3.BOARDS && T3.BOARDS.botao ? T3.BOARDS.botao.get() : 'classic';
@@ -93,7 +94,7 @@
     /* ---------- the camera: following the ball (an angled close view) or the whole table from above ---------- */
     const VK = 'atlas-botao-view';
     let whole = false; try { whole = localStorage.getItem(VK) === 'whole'; } catch (e) {}
-    let camAt = { x: 0, y: 0 }, pan = { x: 0, y: 0 }, span = { x: 0, y: 0 };   // span: also keep this much in view (the ball and the button that plays it)   // pan: your own move of the view (drag an empty spot / WASD), cm
+    let camAt = { x: 0, y: 0 }, pan = { x: 0, y: 0 }, span = { x: 0, y: 0 }, roomy = false;   // roomy: framing the hand (the edge limits loosened)   // span: also keep this much in view (the ball and the button that plays it)   // pan: your own move of the view (drag an empty spot / WASD), cm
     const port = () => innerHeight > innerWidth * 1.05;
     function camFit(ease) {
       if (!T3.fit) return;
@@ -107,19 +108,23 @@
       // the view never runs far past the end of the table (near a goal it used to show half a screen of the room)
       // (the far end looks longer in perspective, so it gets the tighter limit)
       const topSg = ((pvp && st && st.pos === 1) !== flipped) ? 1 : -1, near = D.H + (port() ? 2 : 6) - dc / 2, far = D.H + (port() ? -4 : 5) - dc / 2;
-      const yMin = -Math.max(0, topSg < 0 ? far : near), yMax = Math.max(0, topSg < 0 ? near : far), xLim = Math.max(0, D.HW + 12 - wc / 2);
+      const ex = roomy ? 30 : 0, yMin = -Math.max(0, (topSg < 0 ? far : near) + ex), yMax = Math.max(0, (topSg < 0 ? near : far) + ex), xLim = Math.max(0, D.HW + 12 + ex - wc / 2);
       const ax = Math.max(-xLim, Math.min(xLim, camAt.x + pan.x)), ay = Math.max(yMin, Math.min(yMax, camAt.y + pan.y + att * (port() ? 6 : 4)));
       // near the goal at the bottom of the screen the camera looks down more steeply (the net would hide the keeper)
       const nearY = (pvp && st && st.pos === 1 ? -1 : 1) * (flipped ? -1 : 1) * ay, steep = Math.max(0, Math.min(1, (nearY - 40) / 30));
       const w = wc * K, d = dc * K, [cx, cz] = wx(ax, ay);
       T3.fit({ w, d, y: Y, pitch: (port() ? .98 : .92) + steep * .36, cx, cz, ease: !!ease, ek: ease === 'slow' ? .035 : .08 });
     }
-    function follow(x, y, ease) { camAt = { x, y }; span = { x: 0, y: 0 }; if (!whole) camFit(ease == null ? true : ease); }
+    function follow(x, y, ease) { camAt = { x, y }; span = { x: 0, y: 0 }; roomy = false; if (!whole) camFit(ease == null ? true : ease); }
     // the ball and the button about to play it, both in view (the ball can be far from every button you have)
     function frameBallAnd(i, ease) {
       if (i < 0 || !st) return follow(st.ball.x, st.ball.y, ease);
-      const b = st.b[i], dx = Math.abs(b.x - st.ball.x), dy = Math.abs(b.y - st.ball.y);
-      camAt = { x: (b.x + st.ball.x) / 2, y: (b.y + st.ball.y) / 2 }; span = { x: dx, y: dy };
+      // the ball, the button and room behind the button to pull back in (2026-11-15 ユーザー：スローインで幅が狭くて飛ばせない):
+      // the point 18 cm behind the button (away from the ball) is kept in view too, even past the table's edge
+      const b = st.b[i], ux = b.x - st.ball.x, uy = b.y - st.ball.y, ul = Math.hypot(ux, uy) || 1;
+      const xs = [b.x, st.ball.x, b.x + ux / ul * 18], ys = [b.y, st.ball.y, b.y + uy / ul * 18];
+      const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+      camAt = { x: (x0 + x1) / 2, y: (y0 + y1) / 2 }; span = { x: x1 - x0, y: y1 - y0 }; roomy = true;
       if (!whole) camFit(ease == null ? true : ease);
     }
     // your own look around: the view stays where you put it until the next flick (then it follows the ball again)
@@ -139,6 +144,7 @@
     const MAT = { path: basic(0xffffff, .9), hint: basic(0xff3d7f, .95), ball: basic(0xffd34d, .95), aiBall: basic(0xffd34d, .8), aiPath: basic(0x9fd8ff, .9), ghost: basic(0xffffff, .3), ghostB: basic(0xffd34d, .45), fan: basic(0xffffff, .1), fanL: basic(0xffffff, .45), knock: basic(0xffa040, .9), sel: basic(0xffffff, .95), can: basic(0xffffff, .55), arrow: basic(0xffffff, .6), box: basic(0x3df59a, .18), boxL: basic(0x3df59a, .8), no: basic(0xff5a5a, .7) };
     const GEO = { bar: new TH.BoxGeometry(1, .004, 1), ring: new TH.TorusGeometry(1, .07, 6, 40), cone: new TH.ConeGeometry(.06, .16, 3), disc: new TH.CircleGeometry(1, 32) };
     GEO.ring.rotateX(Math.PI / 2); GEO.cone.rotateX(Math.PI / 2); GEO.disc.rotateX(-Math.PI / 2);
+    GEO.flat = new TH.RingGeometry(.86, 1, 48); GEO.flat.rotateX(-Math.PI / 2);
     function clearGuides() { while (gd.children.length) { const m = gd.children[0]; if (m.userData.own) m.userData.own.dispose(); gd.remove(m); } kick(100); }
     function bar(x0, y0, x1, y1, wid, mat, lift) {
       const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy); if (len < .05) return null;
@@ -148,6 +154,8 @@
     function dots(x0, y0, x1, y1, mat, w) { const len = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.floor(len / 2.2)); for (let i = 0; i < n; i++) { const a = (i + .15) / n, b = (i + .6) / n; bar(x0 + (x1 - x0) * a, y0 + (y1 - y0) * a, x0 + (x1 - x0) * b, y0 + (y1 - y0) * b, w || .45, mat); } }
     // a ring on the cloth (h = 0) or round a button at half its height (h = BMID), so it sits round the piece as you see it
     const BMID = .7;   // at the height of the button's top face: the ring reads as a halo round the number you look at
+    // a flat circle on the cloth (2026-11-15 ユーザー：選んだコマのまわりは2Dの平らな円で)
+    function flat(x, y, r, mat) { const m = new TH.Mesh(GEO.flat, mat), [a, b] = wx(x, y); m.position.set(a, Y + .012, b); m.scale.set(r * K, 1, r * K); m.userData.r = r; m.renderOrder = 4; gd.add(m); return m; }
     function ring(x, y, r, mat, h) { const m = new TH.Mesh(GEO.ring, mat), [a, b] = wx(x, y); m.position.set(a, Y + (h ? h * K : .012), b); m.scale.set(r * K, 1, r * K); m.userData.r = r; m.renderOrder = 4; gd.add(m); return m; }
     // a path through points: solid (the ball) or dotted (a button)
     function pathLine(pts, mat, w, dotted) {
@@ -187,12 +195,18 @@
       const x1 = x + Math.cos(a) * len, y1 = y + Math.sin(a) * len; bar(x, y, x1, y1, w, mat, .03);
       for (const s2 of [-1, 1]) { const b2 = a + Math.PI + s2 * .5; bar(x1, y1, x1 + Math.cos(b2) * 2.2, y1 + Math.sin(b2) * 2.2, w, mat, .03); }
     }
+    // no ring where it lands (2026-11-15 ユーザー：飛ばした先の丸い表示は不要): the dots run as far as the button slides on its
+    // own (shorter for a soft flick) or to what it meets first; the gold arrow from the ball when the ball is what it meets
     function drawMove(mv, matBtn, matBall) {
-      const b = st.b[mv.i], tr = E.aimTrace(st, mv.i, mv.ang);
-      dots(b.x, b.y, tr.gx, tr.gy, matBtn, .42);
-      if (tr.what === 'ball') { if (Math.hypot(tr.gx - b.x, tr.gy - b.y) > 2) ring(tr.gx, tr.gy, D.RB, matBtn, BMID); arrow(st.ball.x, st.ball.y, Math.atan2(st.ball.y - tr.gy, st.ball.x - tr.gx), 14, matBall, .6); }
-      else if (tr.what != null) { const o = st.b[tr.what]; ring(tr.gx, tr.gy, D.RB, MAT.no, BMID); if (o && E.team(tr.what) !== E.team(mv.i)) ring(o.x, o.y, D.RB + .6, MAT.no, BMID); }
-      else ring(tr.gx, tr.gy, D.RB, matBtn, BMID);
+      const b = st.b[mv.i], tr = E.aimTrace(st, mv.i, mv.ang), slide = mv.v * mv.v / (2 * D.DEC_B) + D.RB, k = Math.min(tr.k, slide);
+      dots(b.x, b.y, b.x + Math.cos(mv.ang) * k, b.y + Math.sin(mv.ang) * k, matBtn, .42);
+      if (tr.k <= slide) {
+        if (tr.what === 'ball') arrow(st.ball.x, st.ball.y, Math.atan2(st.ball.y - tr.gy, st.ball.x - tr.gx), 14, matBall, .6);
+        else if (tr.what != null) { const o = st.b[tr.what]; if (o && E.team(tr.what) !== E.team(mv.i)) flat(o.x, o.y, D.RB + .9, MAT.no); }
+      }
+      // where your button comes to rest (2026-11-15 ユーザー：コマの飛び先は表示したほうがいい — worked out with the real knocks;
+      // the hand still wobbles a little)
+      const f = preview(mv).sim.fin.b[mv.i]; if (Math.hypot(f.x - b.x, f.y - b.y) > 1) { disc(f.x, f.y, D.RB, MAT.ghost); flat(f.x, f.y, D.RB, matBtn); }
     }
     function showGuides() {
       clearGuides();
@@ -202,9 +216,9 @@
       // which buttons may play: the picked one gold, the one under the pointer white, one that may not (3 in a row) red
       for (let i = st.pos * 10; i < st.pos * 10 + 10; i++) {
         const b = st.b[i];
-        if (!E.canFlick(st, i)) { ring(b.x, b.y, D.RB + .5, MAT.no, BMID); continue; }
-        if (i === sel) { const r = ring(b.x, b.y, D.RB + .9, MAT.sel, BMID); r.userData.pulse = 1; }
-        else if (i === hov) ring(b.x, b.y, D.RB + .6, MAT.path, BMID);
+        if (!E.canFlick(st, i)) { flat(b.x, b.y, D.RB + .8, MAT.no); continue; }
+        if (i === sel) { const r = flat(b.x, b.y, D.RB + 1.2, MAT.sel); r.userData.pulse = 1; }
+        else if (i === hov) flat(b.x, b.y, D.RB + .9, MAT.path);
       }
       if (aim && sel >= 0) {
         const mv = aimMove(aim), b = st.b[sel];
@@ -218,7 +232,7 @@
       kick(120);
     }
     let pulseT = 0;
-    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus() || (T3.decoOn && !T3.decoOn())) return; let any = false; gd.children.forEach(m => { if (m.userData.pulse) { const s = (D.RB + .9) * K * (1.06 + Math.sin((performance.now() - t0) / 230) * .08); m.scale.set(s, 1, s); any = true; } }); if (beaconOn) { beaconPut(); any = true; } if (any) kick(80); }, 60); }
+    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus() || (T3.decoOn && !T3.decoOn())) return; let any = false; gd.children.forEach(m => { if (m.userData.pulse) { const s = (D.RB + 1.2) * K * (1.04 + Math.sin((performance.now() - t0) / 230) * .06); m.scale.set(s, 1, s); any = true; } }); if (beaconOn) { beaconPut(); any = true; } if (any) kick(80); }, 60); }
 
     /* ---------- HUD, toasts, the call button ---------- */
     const css = document.createElement('style');
@@ -262,11 +276,10 @@
       else { callEl.hidden = true; callEl.innerHTML = ''; }
     }
     const dotCol = p => U.dot ? U.dot(p) : (p === 0 ? '#d4352a' : '#e9e6dc');
-    const mmss = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
     function hud() {
       if (stopped || !st) return;
       const pill = p => `<span class="btp ${st.pos === p && !over ? 'on' : ''}"><i style="background:${dotCol(p)}"></i><span class="nm">${esc(nameOf(p))}</span><b>${st.score[p]}</b></span>`;
-      const top = st.goals ? tx('to', { n: st.goals }) : tx(st.half === 1 ? 'first' : 'second') + ' ' + mmss(st.halfLen - st.clock);
+      const top = st.goals ? tx('to', { n: st.goals }) : tx(st.half === 1 ? 'first' : 'second') + ' ' + tx('left', { n: Math.max(0, st.halfLen - st.clock) });
       const sub = `<small>${esc(top)} · ${esc(tx('touch', { n: st.rem }))}</small>`;
       ctx.hud(pill(1) + `<span class="btm">${sub}<span>${esc(msg)}</span></span>` + pill(0));
     }
@@ -274,7 +287,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=4'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=5'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -347,7 +360,7 @@
     }
 
     /* ---------- the flow ---------- */
-    const vOf = pw => E.VMIN + (E.VMAX - E.VMIN) * pw * pw, powOf = v => Math.sqrt(Math.max(0, Math.min(1, (v - E.VMIN) / (E.VMAX - E.VMIN))));
+    const vOf = pw => E.powV(pw), powOf = v => E.vPow(v);
     const RESTART = { kick: 'kick', fk: 'fk', ifk: 'ifk', throw: 'throw', corner: 'corner', gk: 'gk', pen: 'pen', keeper: 'keeperball' };
     async function flick(move) {
       if (over || stopped || busy) return;
@@ -359,6 +372,8 @@
       const gone = await playback(sim); if (stopped) return;
       const r = E.resolve(s0, sim);
       ply++;
+      // the halves are counted in flicks, not minutes (2026-11-15 ユーザー：時間制だと問題が多い → 行動回数制)
+      if (!r.s.goals) r.s.clock = Math.min(r.s.halfLen, (s0.clock || 0) + 1);
       const lead = r.msg[0];
       if (r.goal >= 0) {
         SX.goal(); bigGoal(tx(lead === 'own' ? 'own' : 'goal'));
@@ -367,7 +382,7 @@
         await new Promise(res => later(res, 1900)); if (stopped) return;
         if (st.over) { busy = false; return end(); }
         await glideTo(st, 900); if (stopped) return;
-        busy = false; follow(st.ball.x, st.ball.y, false); syncAll(); later(next, 500); void gone; return;
+        busy = false; follow(st.ball.x, st.ball.y, false); syncAll(); if (clockOut()) return; later(next, 500); void gone; return;
       }
       st = r.s;
       if (r.foul) { SX.whistle(2, .2); toast(tx(r.msg.includes('pen') ? 'penFoul' : 'foul') + '\n' + tx(RESTART[st.restart] || 'fk'), 'bad'); }
@@ -422,7 +437,7 @@
     async function aiFlick(mv, my) {
       if (!mv || mv.i == null) { mv = { i: autoSel(), ang: -Math.PI / 2, v: 60 }; }
       // show which button and where it means to send the ball for a moment, then flick (its hand may still wobble)
-      clearGuides(); pan = { x: 0, y: 0 }; frameBallAnd(mv.i, true); const b = st.b[mv.i]; ring(b.x, b.y, D.RB + .9, MAT.sel, BMID); drawMove(mv, MAT.aiPath, MAT.aiBall); kick(150);
+      clearGuides(); pan = { x: 0, y: 0 }; frameBallAnd(mv.i, true); const b = st.b[mv.i]; flat(b.x, b.y, D.RB + 1.2, MAT.sel); drawMove(mv, MAT.aiPath, MAT.aiBall); kick(150);
       await new Promise(r => later(r, 900)); if (stopped || my !== tok) return;
       flick(E.perform(mv, level, seed()));
     }
@@ -467,19 +482,9 @@
       await aiFlick(mv && !mv.declare ? mv : null, my);
     }
 
-    /* ---------- the match clock (timed halves): runs on performance.now (it stands still while the window is not in front) ---------- */
-    let clk0 = 0, clkT = 0;
-    function clockTick() {
-      clearInterval(clkT); if (st.goals) return;
-      clk0 = performance.now();
-      clkT = setInterval(() => {
-        if (stopped || over || !st || cardEl) { clk0 = performance.now(); return; }
-        const now = performance.now(), dt = (now - clk0) / 1000; clk0 = now;
-        if (phase === 'wait') return;
-        st.clock = Math.min(st.halfLen, st.clock + dt); hud();
-        if (st.clock >= st.halfLen && !busy && (phase === 'aim' || phase === 'keeper') && !st.shot) clockOut();
-      }, 250);
-    }
+    /* ---------- the halves: counted in flicks (st.clock = flicks so far, st.halfLen = flicks a half); no running clock ---------- */
+    function clockTick() {}
+    const clkT = 0;
     function clockOut() {
       if (st.goals || st.clock < st.halfLen || over) return false;
       tok++; clearGuides(); callBar(null); clearInterval(keeperT); phase = 'anim';
@@ -647,7 +652,7 @@
     /* ---------- go ---------- */
     build();
     const goNow = () => {
-      st = E.newMatch({ first: youFirst ? 0 : 1, goals: size === 103 ? 3 : 0, half: size === 103 ? 300 : size * 60 });
+      st = E.newMatch({ first: youFirst ? 0 : 1, goals: size === 103 ? 3 : 0, half: size === 103 ? 999 : size });
       syncAll(); hud(); follow(0, 0, false); clockTick(); pulse();
       SX.whistle(1, .5); toast(tx('kick'));
       later(next, 900);
@@ -668,7 +673,7 @@
       canUndo: () => !pvp && myTurn() && hist.length > 1 && !st.shot,
       undo() {
         if (!api.canUndo()) return;
-        tok++; hist.pop(); const h = hist.pop(); const keepClock = st.clock, keepHalf = st.half; st = E.clone(h.st); if (st.half === keepHalf) st.clock = keepClock; ply = h.ply; busy = false; drag = null;
+        tok++; hist.pop(); const h = hist.pop(); st = E.clone(h.st); ply = h.ply; busy = false; drag = null;
         syncAll(); next();
       },
       canHint: () => myTurn(),
@@ -703,5 +708,5 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.botao = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 5, sizeLabel, sizeName, levelInfo, start, TXT, SX, L14 };
+  window.Atlas3D.botao = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 30, sizeLabel, sizeName, levelInfo, start, TXT, SX, L14 };
 })();

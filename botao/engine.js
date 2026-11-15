@@ -32,7 +32,7 @@
     E_BB = .75, E_BBALL = .85, E_RIM = .55, E_KEEP = .45, E_POST = .5,
     VMAX = 200, VMIN = 12,
     DT = 1 / 360, TMAX = 12, FPS = 60;
-  const DIM = { FW, FL, HW, H, PS, PE, TX, TY, GW, GHW, GD, SA_W, SA_D, BA_W, BA_D, PEN, CR, RB, RBALL, KHW, KHD, VMAX };
+  const DIM = { FW, FL, HW, H, PS, PE, TX, TY, GW, GHW, GD, SA_W, SA_D, BA_W, BA_D, PEN, CR, RB, RBALL, KHW, KHD, VMAX, DEC_B };
   const team = i => i < 10 ? 0 : 1;
   const goalY = t => t === 0 ? H : -H;                      // the goal line side t defends
   const fwd = t => t === 0 ? -1 : 1;                        // the direction side t attacks (sign of y)
@@ -404,6 +404,15 @@
     }
     return null;
   }
+  // the player's strength: pull 0..1 → the button's speed (2026-11-15 ユーザー：威力が直感的じゃない、弱く弾いた時はもう少し強く、
+  // このゲームの距離感に): up to 80% the ball rolls about 5 + 155 × pull cm off a straight hit (a soft pull is a short pass,
+  // not nothing), then the last 20% climb to full speed for a long run-up or a hard shot
+  function powV(p) {
+    p = Math.max(0, Math.min(1, p));
+    const base = q => Math.max(VMIN, ballSpeedFor(5 + 155 * q) / VB_RATIO);
+    return p <= .8 ? base(p) : base(.8) + (VMAX - base(.8)) * (p - .8) / .2;
+  }
+  function vPow(v) { let lo = 0, hi = 1; for (let k = 0; k < 30; k++) { const m = (lo + hi) / 2; if (powV(m) < v) lo = m; else hi = m; } return (lo + hi) / 2; }
   // the ball directions button i can play (it can only cut the ball so finely): [a0 - lo, a0 + hi] around the straight line a0
   function aimCone(s, i, dist) {
     const b = s.b[i], a0 = Math.atan2(s.ball.y - b.y, s.ball.x - b.x), side = sg => { let r = 0; for (let k = 1; k <= 70; k++) { const q = k * .02 * sg; if (!aimRoll(s, i, a0 + q, dist, true)) break; r = k * .02; } return r; };
@@ -613,7 +622,7 @@
     const c = clone(s); return setKeeper(c, t, k.x, k.y);
   }
 
-  const api = { _int: { candidates: (s, sk) => candidates(s, sk), evaluate: (a, b, c, d) => evaluate(a, b, c, d), attackValue: (a, b, c, d) => attackValue(a, b, c, d), skill: l => skill(l) }, DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor, aimTrace, wobble, perform, think, skill, speedFor, aimAt, aimRoll, ballAim, aimCone, ballPath, ballSpeedFor, rollOf, clone, laneOpen };
+  const api = { VB_RATIO, powV, vPow, _int: { candidates: (s, sk) => candidates(s, sk), evaluate: (a, b, c, d) => evaluate(a, b, c, d), attackValue: (a, b, c, d) => attackValue(a, b, c, d), skill: l => skill(l) }, DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor, aimTrace, wobble, perform, think, skill, speedFor, aimAt, aimRoll, ballAim, aimCone, ballPath, ballSpeedFor, rollOf, clone, laneOpen };
   root.BotaoEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : this);
