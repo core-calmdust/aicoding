@@ -149,6 +149,22 @@
       hi: { hi: 'मैं प्लॉपबन हूँ! चलो साथ में कनेक्ट फ़ोर सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छा हरा स्तंभ है।', wrong: 'करीब था! जवाब हरा स्तंभ है।', hintSay: 'संकेत: निशान वाले खानों को देखो।' },
       ar: { hi: 'أنا بلوب بن! لنتعلّم أربعة في صف معًا.', partial: 'نقلة جيدة! لكن الأفضل هو العمود الأخضر.', wrong: 'قريب جدًا! الجواب هو العمود الأخضر.', hintSay: 'تلميح: انظر إلى الخانات المعلّمة.' },
     },
+    tafl: {
+      ja: { hi: 'タフリンだよ！ いっしょにタフルのお勉強をしよう。', partial: 'いい手！ でもいちばんは緑の印の手なんだ。', wrong: 'おしい！ 正解は緑の印の手だよ。', hintSay: 'ヒント：光っている駒から考えてみて。' },
+      en: { hi: "Taflin here! Let's study tafl together.", partial: 'A nice move! But the green-marked move is the best.', wrong: 'So close! The green-marked move is the answer.', hintSay: 'Hint: start from the glowing pieces.' },
+      zh: { hi: '我是塔芙林！一起来学塔夫棋吧。', partial: '好棋！不过最好的是绿色标记的那步。', wrong: '差一点！正解是绿色标记的那步。', hintSay: '提示：从发光的棋子想起。' },
+      'zh-TW': { hi: '我是塔芙林！一起來學塔夫棋吧。', partial: '好棋！不過最好的是綠色標記的那步。', wrong: '差一點！正解是綠色標記的那步。', hintSay: '提示：從發光的棋子想起。' },
+      ko: { hi: '타플린이야! 같이 타플을 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 표시 수야.', wrong: '아깝다! 정답은 초록 표시 수야.', hintSay: '힌트: 빛나는 말부터 생각해 봐.' },
+      es: { hi: '¡Soy Taflín! Estudiemos tafl juntos.', partial: '¡Buena jugada! Pero la mejor es la marcada en verde.', wrong: '¡Casi! La respuesta es la jugada marcada en verde.', hintSay: 'Pista: empieza por las piezas que brillan.' },
+      fr: { hi: 'C’est Taflin ! Étudions le tafl ensemble.', partial: 'Joli coup ! Mais le meilleur est celui marqué en vert.', wrong: 'Presque ! La réponse est le coup marqué en vert.', hintSay: 'Indice : pars des pièces qui brillent.' },
+      pt: { hi: 'Aqui é o Taflin! Vamos estudar tafl juntos.', partial: 'Boa jogada! Mas a melhor é a marcada em verde.', wrong: 'Quase! A resposta é a jogada marcada em verde.', hintSay: 'Dica: comece pelas peças que brilham.' },
+      de: { hi: 'Hier ist Taflin! Lass uns zusammen Tafl lernen.', partial: 'Guter Zug! Aber am besten ist der grün markierte.', wrong: 'Knapp! Die Antwort ist der grün markierte Zug.', hintSay: 'Tipp: Fang bei den leuchtenden Steinen an.' },
+      ru: { hi: 'Это Тафлин! Давай вместе изучать тафл.', partial: 'Хороший ход! Но лучший — отмеченный зелёным.', wrong: 'Почти! Ответ — ход, отмеченный зелёным.', hintSay: 'Подсказка: начни со светящихся фишек.' },
+      tr: { hi: 'Ben Taflin! Birlikte tafl çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil işaretli olan.', wrong: 'Az kaldı! Cevap yeşil işaretli hamle.', hintSay: 'İpucu: parlayan taşlardan başla.' },
+      id: { hi: 'Aku Taflin! Ayo belajar tafl bersama.', partial: 'Langkah bagus! Tapi yang terbaik bertanda hijau.', wrong: 'Hampir! Jawabannya langkah bertanda hijau.', hintSay: 'Petunjuk: mulai dari bidak yang bersinar.' },
+      hi: { hi: 'मैं टैफ़लिन हूँ! चलो साथ में टैफ़्ल सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे निशान वाली है।', wrong: 'बहुत क़रीब! जवाब हरे निशान वाली चाल है।', hintSay: 'संकेत: चमकती गोटियों से सोचो।' },
+      ar: { hi: 'أنا تافلين! لنتعلّم التافل معًا.', partial: 'نقلة جيدة! لكن الأفضل هي المعلّمة بالأخضر.', wrong: 'قريب جدًا! الجواب هو النقلة المعلّمة بالأخضر.', hintSay: 'تلميح: ابدأ من القطع المضيئة.' },
+    },
     amazons: {
       ja: { hi: 'ケロだよ！ いっしょにアマゾンズのお勉強をするケロ。', partial: 'いい手ケロ。でもいちばんは緑の印の手なんだ。', wrong: 'おしい！ 正解は緑の印の手ケロ。', hintSay: 'ヒントだケロ。光っているアマゾンから考えてみて。' },
       en: { hi: "Kero here! Let's study Amazons together.", partial: 'A nice move! But the green-marked move is the best.', wrong: 'So close! The green-marked move is the answer.', hintSay: 'Psst — start from the glowing amazons.' },
@@ -1059,7 +1075,54 @@
     spOk: lang => C4M('ok', lang),
     introPos(cc) { const s = this.data.ls.steps.find(x => x.id === cc.id), P = s && s.problems && s.problems[0]; return P ? { pos: { moves: P.moves, me: P.moves.length & 1 ? 2 : 1, lock: true } } : null; },
   };
-  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  /* hnefatafl (2026-11-15): tafl/lessons.json (16 steps of 5 problems): one move from P.ok (20 or 0), a strategy move scored by the
+     engine's values P.sc (= tafl/app.js problemPoints), or N moves that keep a forced escape / capture (P.n > 1, = seqAnswer: the engine's
+     puzzle solver checks each move, the most stubborn defence answers). Progress = the full game's ('aicoding-tafl-lessons' { id: { best:
+     points, clear } }). Texts: tafl/i18n.js (a sandbox). The 3D board has no coordinates: the moves the texts name are their marks (a ring
+     on the piece, the destination square); the warm-ups name squares, so they stay in the full game; a notation paragraph is dropped. */
+  const TF_ENG = '../tafl/engine.js?v=nn2sr-lv25-zf1';   // (the table adapter's file: one cache)
+  const tfEng = () => window.TaflEngine ? Promise.resolve(window.TaflEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = TF_ENG; sc.onload = () => window.TaflEngine ? res(window.TaflEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
+  const TFM = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の手' : '赤い印の手') + '\u0002' : `<i class="ls-spot ${k}"></i>`;
+  const TAFL = {
+    LKEY: 'aicoding-tafl-lessons', data: null, I: null,
+    load() {
+      if (this.p) return this.p;
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=3'), fetch('../tafl/i18n.js?v=6ek-nd1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null)])
+        .then(([ls, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
+        .catch(e => { this.p = null; throw e; }));
+    },
+    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    mini: sp => window.AtlasMini && AtlasMini.tafl ? AtlasMini.tafl(sp) : '',
+    list(kind, lang) {
+      const pr = J(this.LKEY, {});
+      return this.data.ls.steps.map((s, i) => ({ key: String(i), cat: s.course, catName: this.tx('course.' + s.course, lang) || s.course, title: this.tx('ls.' + s.id + '.title', lang), sub: this.tx('ls.' + s.id + '.sub', lang), svg: s.problems && s.problems[0] ? this.mini(s.problems[0].s) : '', st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '', full: false }));
+    },
+    lesson(key, lang) {
+      const s = this.data.ls.steps[+key]; if (!s) return null;
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), E = window.TaflEngine;
+      const intro = String(T('intro') || '').replace(/<p>[^<]*?[a-k](?:1[01]|[1-9])-[a-k](?:1[01]|[1-9])[^]*?<\/p>/g, '');
+      const sp = { m: TFM('ok', lang), x: TFM('ng', lang) };
+      return { id: s.id, title: T('title'), intro, ramp: null,
+        probs: (s.problems || []).map(P => { const me = P.s.side === 2 ? 2 : 1, good = P.ok || [P.best], seq = (P.n || 1) > 1;
+          return { pos: { spec: P.s, me }, kind: seq ? 'tfseq' : 'best', P, n: P.n || 1, me, ask: T('goal', { n: P.n || 1 }), ans: seq ? null : P.best != null ? P.best : good[0], hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
+            why: '', good: () => T('why', sp), ng: () => T(seq ? 'ng' : 'why', Object.assign({ n: P.n || 1 }, sp)) }; }),
+        save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
+    },
+    points(P, m) {   // (= tafl/app.js problemPoints)
+      if (P.ok) return P.ok.includes(m) ? 20 : 0;
+      if (!P.sc) return m === P.best ? 20 : 0;
+      const WIN = 30000, WINT = 29000, sOfV = v => v > WINT ? 0.9 + 0.1 * Math.min(1, 6 / (WIN - v + 1)) : v < -WINT ? -(0.9 + 0.1 * Math.min(1, 6 / (WIN + v + 1))) : Math.tanh(v / 450) * 0.85;
+      const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -WIN;
+      if (mine >= best - 15 && !(best > WINT && mine < best)) return 20;
+      if (best > WINT && mine > WINT) return 16;
+      if (best > WINT && mine <= WINT) return mine > -WINT && mine >= 300 ? 8 : mine > -100 ? 4 : 0;
+      if (mine < -WINT && best >= -WINT) return 0;
+      return Math.max(0, Math.round(20 * (1 - (sOfV(best) - sOfV(mine)) / 0.5)));
+    },
+    spOk: lang => TFM('ok', lang),
+    introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), P = s && s.problems && s.problems[0]; return P ? { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1, lock: true } } : null; },
+  };
+  const DATA = { tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -1154,13 +1217,14 @@
       return new Promise(res => {
         onReady = res;
         const G = pos && typeof pos === 'object' ? pos : null;   // (gomoku: { start, rule, me, last, pick, noForbid } · go: { spec, me, view, marks })
-        if (sess && (id === 'go' || id === 'hex') && G && pz() && pz().n !== (G.spec.n || 9)) { sess.stop(); sess = null; }   // (go / hex: another board size — a new board)
+        if (sess && (id === 'go' || id === 'hex') && G && pz() && pz().n !== (G.spec.n || 9)) { sess.stop(); sess = null; }
+        if (sess && id === 'tafl' && G && pz() && pz().n !== Math.round(Math.sqrt(String(G.spec.b).length))) { sess.stop(); sess = null; }   // (tafl: another rule set's board)   // (go / hex: another board size — a new board)
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons' || id === 'tafl')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
         else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
@@ -1333,7 +1397,31 @@
         await sleep(120); await pz().play(reply); if (stopped) return;
         pz().wait(); return;
       }
+      if (p.kind === 'tfseq') return tfSeq(p, u, info);
       scored(p, D.points(p.P, u, p), undefined, u);
+    }
+    // tafl: N moves that keep a forced escape / capture (= tafl/app.js seqAnswer); a move that lets it slip is taken back, a working one shown
+    async function tfSeq(p, u, info) {
+      const win = () => { p.why = p.good ? p.good() : ''; scored(p, PTS); }, used0 = Math.ceil(pz().moves().length / 2) - 1, left = p.n - used0, pre = pz().moves().slice(0, -1), here = () => !stopped && cur && cur.probs[cur.k] === p;
+      say(D.tx('pz.checking', ctx.lang));
+      const list = await pz().puzzle(left, false, pre); if (!here()) return;
+      p.used = used0 + 1;   // (counted from the board: the solver moves first, so a retry starts from 0)
+      if (info.over && info.winner === p.me) return win();
+      const e = (list || []).find(x => x.m === u), good = (list || []).filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need);
+      if (!e || !(e.need > 0) || e.need > left) {
+        await sleep(600); if (!here()) return;
+        pz().undo(1); pz().mark([...(good[0] ? [{ m: good[0].m, cls: 'ok' }] : []), { m: u, cls: 'ng' }]);
+        return scored(p, 0, (p.ng ? p.ng() : '') || X.wrong);
+      }
+      say(D.tx('pz.good', ctx.lang));
+      const dl = await pz().puzzle(p.n - p.used, true); if (!here()) return;
+      await sleep(300); if (!here()) return;
+      if (!dl || !dl.length) return win();
+      const r = pz().engine().pickDefence(pz().pos(), dl); if (r == null) return win();
+      await pz().play(r); if (!here()) return;
+      const st = pz().state(); if (st.over && st.winner === p.me) return win();
+      if (st.over) return scored(p, 0, X.wrong);
+      pz().wait();
     }
     // (2026-11-12) a partial or wrong answer names the best move in words too (not only the glowing squares)
     const ANSM = { ja: '正解は盤に印を付けた手です。', en: 'The best move is marked on the board.', zh: '正解已在棋盘上标出。', 'zh-TW': '正解已在棋盤上標出。', ko: '정답은 판에 표시한 수입니다.', es: 'La mejor jugada está marcada en el tablero.', fr: 'Le meilleur coup est marqué sur le plateau.', pt: 'O melhor lance está marcado no tabuleiro.', de: 'Der beste Zug ist auf dem Brett markiert.', ru: 'Лучший ход отмечен на доске.', tr: 'En iyi hamle tahtada işaretli.', id: 'Langkah terbaik ditandai di papan.', hi: 'सबसे अच्छी चाल बोर्ड पर चिह्नित है।', ar: 'أفضل نقلة مُعلَّمة على اللوح.' };
@@ -1391,7 +1479,7 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if ((id === 'checkers' || id === 'xiangqi' || id === 'amazons') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
+      if ((id === 'checkers' || id === 'xiangqi' || id === 'amazons' || id === 'tafl') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;
         say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}

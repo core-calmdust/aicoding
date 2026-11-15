@@ -26,6 +26,7 @@
     xiangqi: { guide: '../images/atlas/g-shogi.webp', name: { ja: 'ショウギツネ', en: 'Shogitsune', zh: '将棋狐', ko: '쇼기여우', es: 'Shogizorro', fr: 'Shogirenard', pt: 'Shogiraposa', de: 'Shogifuchs', hi: 'शोगी लोमड़ी', ar: 'ثعلب الشوغي', ru: 'Сёгицунэ', 'zh-TW': '將棋狐', id: 'Shogitsune', tr: 'Shogitsune' } },   // (the xiangqi guide is the shogi fox, as atlas/rules/xiangqi.js)
     backgammon: { guide: '../images/atlas/g-dice.webp', name: {"ja":"ダイスン","en":"Dicepup","zh":"骰子汪","ko":"다이슨","es":"Dicepup","fr":"Dicepup","pt":"Dicepup","de":"Dicepup","hi":"डाइसपप","ar":"دايس باب","ru":"Дайспап","zh-TW":"骰子汪","id":"Dicepup","tr":"Dicepup"} },
     connect4: { guide: '../images/atlas/g-plop.webp', name: { ja: 'ポトンウサ', en: 'Plopbun', zh: '叮咚兔', 'zh-TW': '叮咚兔', ko: '포통우사', es: 'Plopbun', fr: 'Plopbun', pt: 'Plopbun', de: 'Plopbun', hi: 'प्लॉपबन', ar: 'بلوب بن', ru: 'Плопбан', id: 'Plopbun', tr: 'Plopbun' } },
+    tafl: { guide: '../images/atlas/g-puffin.webp', name: { ja: 'タフリン', en: 'Taflin', zh: '塔芙林', 'zh-TW': '塔芙林', ko: '타플린', es: 'Taflín', fr: 'Taflin', pt: 'Taflin', de: 'Taflin', hi: 'टैफ़लिन', ar: 'تافلين', ru: 'Тафлин', id: 'Taflin', tr: 'Taflin' } },
     amazons: { guide: '../images/atlas/av/frog-0.webp', name: { ja: 'ケロ', en: 'Kero', zh: '呱呱', 'zh-TW': '呱呱', ko: '케로', es: 'Kero', fr: 'Kero', pt: 'Kero', de: 'Kero', hi: 'केरो', ar: 'كيرو', ru: 'Керо', id: 'Kero', tr: 'Kero' } },
     peg: { guide: '../images/atlas/av/marble-2.webp', name: { ja: 'ビーユ', en: 'Bille', zh: '比尤', ko: '비유', es: 'Bille', fr: 'Bille', pt: 'Bille', de: 'Bille', hi: 'बिय', ar: 'بيّ', ru: 'Бий', 'zh-TW': '比尤', id: 'Bille', tr: 'Bille' } },
   };
@@ -251,6 +252,17 @@
       if (ch === 'x') o += `<rect x="${x + 1.2}" y="${y + 1.2}" width="5.6" height="5.6" rx="1" fill="#5a2a16"/><path d="M${x + 2} ${y + 6}l4-4" stroke="#ff8a50" stroke-width=".9"/>`;
       else if (ch === 'w' || ch === 'b') o += `<circle cx="${x + 4}" cy="${y + 4}" r="3.1" fill="${ch === 'w' ? '#fbf6ea' : '#1c1816'}" stroke="${ch === 'w' ? '#6f6250' : '#000'}" stroke-width=".7"/>`;
     }
+    return o + '</svg>';
+  };
+  // hnefatafl (2026-11-15): a tafl/puzzles.json spec { v, b: n² chars '.adk', side } on a small board (throne and corners marked)
+  window.AtlasMini.tafl = spec => {
+    const b = spec && spec.b ? String(spec.b) : '', n = Math.round(Math.sqrt(b.length)) || 11, c = 80 / n, mid = n >> 1, edge = spec && (spec.v === 'tablut' || spec.v === 'tawlbwrdd');
+    let o = '<svg viewBox="0 0 84 84" aria-hidden="true"><rect width="84" height="84" rx="5" fill="#4a2c18"/><rect x="2" y="2" width="80" height="80" fill="#d6ad74"/>';
+    const sp = [[mid, mid]].concat(edge ? [] : [[0, 0], [0, n - 1], [n - 1, 0], [n - 1, n - 1]]);
+    sp.forEach(([r, q]) => { o += `<rect x="${2 + q * c}" y="${2 + r * c}" width="${c}" height="${c}" fill="#9b6a3c"/>`; });
+    for (let i = 1; i < n; i++) o += `<path d="M${2 + i * c} 2V82M2 ${2 + i * c}H82" stroke="#6a4424" stroke-width=".5"/>`;
+    for (let i = 0; i < b.length; i++) { const ch = b[i]; if (ch === '.') continue; const x = 2 + (i % n + .5) * c, y = 2 + (Math.floor(i / n) + .5) * c, r = c * (ch === 'k' ? .42 : .36);
+      o += `<circle cx="${x}" cy="${y}" r="${r}" fill="${ch === 'a' ? '#2a1a10' : '#f6ecd4'}" stroke="${ch === 'a' ? '#000' : '#8a7550'}" stroke-width=".6"/>`; if (ch === 'k') o += `<circle cx="${x}" cy="${y}" r="${r * .45}" fill="#e2b13c"/>`; }
     return o + '</svg>';
   };
   // peg solitaire (2026-11-13): 'board:pegs:goal' (peg/puzzles.json b · p · t) on the board's own hole layout (PegEngine)
@@ -554,6 +566,42 @@
     look(i, lang) { const T = this.data.themes[i], P = T.puzzles[0]; return { desc: this.tx('pz.th.' + T.id + '.sub', lang), board: P ? 'am:' + JSON.stringify(P.s) : '' }; },
     guide: '../images/atlas/av/frog-0.webp',
   };
+  /* ---------- hnefatafl (2026-11-15): tafl/puzzles.json (themes: escape the king in N · capture the king in N; Copenhagen, Brandubh,
+     Tablut), progress = the full game's ('aicoding-tafl-puzzles' { '<theme>-<j>': stars }). Texts: tafl/i18n.js (a sandbox). */
+  BOOK.tafl = {
+    url: '../tafl/puzzles.json?v=2', KEY: 'aicoding-tafl-puzzles', LAST: 'aicoding-tafl-pz-last', data: null, I: null,
+    ICO: { Esc: '<path d="M4 20V4h16"/><path d="M9 15l6-6M11 9h4v4"/>', Cap: '<circle cx="12" cy="12" r="3"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>', Var: '<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>' },
+    prep(d) { d.levels = d.themes; return d; },
+    tx(k, lang, v) { const I = this.I || {}; let x = (I[lang] && I[lang][k]); if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    sv: x => x === true ? 3 : (+x || 0),
+    pr() { return store.get(this.KEY, {}) || {}; },
+    sets() { const pr = this.pr(); return this.data.themes.map((T, i) => ({ key: i, recs: T.puzzles.map((_, j) => this.sv(pr[T.id + '-' + j])), cat: T.grp })); },
+    title(i, lang) { return this.tx('pz.th.' + this.data.themes[i].id, lang); },
+    problem(i, j, X, lang) {
+      const T = this.data.themes[i], P = T.puzzles[j];
+      return { i, j, P, rk: T.id + '-' + j, kind: 'tf', goal: T.goal, spec: P.s, me: P.s.side === 2 ? 2 : 1, n: P.n, count: T.puzzles.length, set: this.title(i, lang) };
+    },
+    save(p, stars, daily) { const pr = this.pr(); pr[p.rk] = Math.max(this.sv(pr[p.rk]), stars); store.set(this.KEY, pr); if (!daily) store.set(this.LAST, String(p.i)); },
+    cats(lang) { const has = k => this.data.themes.some(T => T.grp === k); return ['Esc', 'Cap', 'Var'].filter(has).map(k => ({ k, name: this.tx('pz.grp' + k, lang), desc: this.tx('pz.grp' + k + 'Sub', lang), icon: `<svg viewBox="0 0 24 24">${this.ICO[k]}</svg>` })); },
+    look(i, lang) { const T = this.data.themes[i], P = T.puzzles[0]; return { desc: this.tx('pz.th.' + T.id + '.sub', lang), board: P ? 'tf:' + JSON.stringify(P.s) : '' }; },
+    guide: '../images/atlas/g-puffin.webp',
+  };
+  const TFX = {
+    ja: { hi: 'タフリンだよ。詰めタフルで、王を逃がす読み・捕らえる読みをきたえよう！', mid: 'いい手！ あと{n}手。', out: '{n}手では決まらなかった…' },
+    en: { hi: "I'm Taflin! Sharpen your reading with tafl puzzles: free the king, or catch him.", mid: 'Good move! {n} moves left.', out: 'Not done within {n} moves…' },
+    zh: { hi: '我是塔芙林！用塔夫棋谜题练习让国王逃脱或擒住国王的计算吧！', mid: '好棋！还剩{n}手。', out: '{n}手内没能完成……' },
+    'zh-TW': { hi: '我是塔芙林！用塔夫棋謎題練習讓國王逃脫或擒住國王的計算吧！', mid: '好棋！還剩{n}手。', out: '{n}手內沒能完成……' },
+    ko: { hi: '타플린이야! 타플 퍼즐로 왕을 탈출시키거나 잡는 수읽기를 단련하자!', mid: '좋은 수! {n}수 남았어.', out: '{n}수 안에 끝내지 못했어…' },
+    es: { hi: '¡Soy Taflín! Entrena el cálculo con problemas de tafl: libera al rey o atrápalo.', mid: '¡Buena jugada! Quedan {n}.', out: 'No se logró en {n} jugadas…' },
+    fr: { hi: 'Je suis Taflin ! Entraîne ton calcul avec des problèmes de tafl : libère le roi ou capture-le.', mid: 'Bon coup ! Encore {n}.', out: 'Pas réussi en {n} coups…' },
+    pt: { hi: 'Sou o Taflin! Treine o cálculo com problemas de tafl: liberte o rei ou capture-o.', mid: 'Boa jogada! Faltam {n}.', out: 'Não deu em {n} lances…' },
+    de: { hi: 'Ich bin Taflin! Trainiere dein Rechnen mit Tafl-Aufgaben: befreie den König oder fang ihn.', mid: 'Guter Zug! Noch {n}.', out: 'In {n} Zügen nicht geschafft…' },
+    ru: { hi: 'Я Тафлин! Тренируй расчёт на задачах тафла: выведи короля или поймай его.', mid: 'Хороший ход! Осталось {n}.', out: 'За {n} ходов не вышло…' },
+    tr: { hi: 'Ben Taflin! Tafl bulmacalarıyla hesap gücünü geliştir: kralı kaçır ya da yakala.', mid: 'İyi hamle! {n} kaldı.', out: '{n} hamlede olmadı…' },
+    id: { hi: 'Aku Taflin! Latih perhitungan dengan soal tafl: loloskan raja atau tangkap dia.', mid: 'Langkah bagus! Sisa {n}.', out: 'Tidak berhasil dalam {n} langkah…' },
+    hi: { hi: 'मैं टैफ़लिन हूँ! टैफ़्ल पहेलियों से गणना निखारो: राजा को भगाओ या पकड़ो।', mid: 'बढ़िया चाल! {n} बाकी।', out: '{n} चालों में नहीं हुआ…' },
+    ar: { hi: 'أنا تافلين! درّب حسابك بألغاز التافل: حرّر الملك أو أمسك به.', mid: 'نقلة جيدة! بقي {n}.', out: 'لم ينجح خلال {n} نقلات…' },
+  };
   const AMX = {
     ja: { hi: 'ケロだよ。アマゾンズのパズルで、相手を追いつめる読みをきたえるケロ！', mid: 'いい調子ケロ！ あと{n}手。', reply: '相手はこう答えたケロ。あと{n}手。', guard: '守れたケロ！ あと{n}回しのごう。' },
     en: { hi: "Kero here! Let's sharpen your reading with Amazons puzzles.", mid: 'Good! {n} moves left.', reply: 'The opponent answered. {n} moves left.', guard: 'Held! Hold {n} more times.' },
@@ -749,7 +797,7 @@
   };
   /* ---------- the daily puzzles: the same problem of the day as the full games, and their streak record ---------- */
   const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  const DAILY = { connect4: { d1: 'aicoding-connect4-v2-daily' }, amazons: { d1: 'aicoding-amazons-daily' }, hex: { d1: 'aicoding-hex-daily' }, backgammon: { d1: 'aicoding-backgammon-v2-daily' }, xiangqi: { d1: 'aicoding-xiangqi-daily' }, checkers: { d1: 'aicoding-checkers-daily' }, go: { d1: 'aicoding-go-daily' }, reversi: { d1: 'reversi-emerald-daily' }, chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' }, peg: { d1: 'aicoding-peg-daily', d2: 'aicoding-peg-daily' } };
+  const DAILY = { tafl: { d1: 'aicoding-tafl-daily' }, connect4: { d1: 'aicoding-connect4-v2-daily' }, amazons: { d1: 'aicoding-amazons-daily' }, hex: { d1: 'aicoding-hex-daily' }, backgammon: { d1: 'aicoding-backgammon-v2-daily' }, xiangqi: { d1: 'aicoding-xiangqi-daily' }, checkers: { d1: 'aicoding-checkers-daily' }, go: { d1: 'aicoding-go-daily' }, reversi: { d1: 'reversi-emerald-daily' }, chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' }, peg: { d1: 'aicoding-peg-daily', d2: 'aicoding-peg-daily' } };
   function dailyPick(id, which) {
     const B = BOOK[id], now = new Date(), date = ymd(now), wd = now.getDay(), day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
     if (id === 'reversi') {   // (reversi/index.html dailyPick: Mon–Tue level 2, Wed–Thu 3, Fri–Sat 4, Sun 5)
@@ -777,7 +825,7 @@
       let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
       return { date, i: li, j: (h >>> 0) % D.levels[li].puzzles.length };
     }
-    if (id === 'checkers' || id === 'hex' || id === 'amazons') {   // (checkers/app.js · hex/app.js · amazons/app.js dailyPick: a course per weekday)
+    if (id === 'checkers' || id === 'hex' || id === 'amazons' || id === 'tafl') {   // (tafl/app.js too; checkers/app.js · hex/app.js · amazons/app.js dailyPick: a course per weekday)
       const D = B.data; if (!D || !D.themes) return null;
       const ids = D.daily || D.themes.map(x => x.id), L = Math.max(0, D.themes.findIndex(x => x.id === ids[now.getDay() % ids.length]));
       let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
@@ -818,7 +866,7 @@
     const d = dailyPick(id, which); if (!d) return null;
     const B = BOOK[id]; let p;
     if (id === 'chess') p = B.problem(d.i, d.j, X);
-    else if (id === 'reversi' || id === 'go' || id === 'xiangqi' || id === 'hex' || id === 'amazons') p = B.problem(d.i, d.j, X, lang);
+    else if (id === 'reversi' || id === 'go' || id === 'xiangqi' || id === 'hex' || id === 'amazons' || id === 'tafl') p = B.problem(d.i, d.j, X, lang);
     else if (id === 'checkers' || id === 'backgammon' || id === 'connect4') p = B.problem(d.i, d.j, X, lang, d.date);   // (the day's slot: an old puzzle for dates up to the cut)
     else if (id === 'peg') p = { i: -1, j: 0, P: d.P, kind: 'peg', cells: B.cells(d.P), n: d.P.n, count: 1, set: '' };
     else { const g = B.data.sets[d.i], P = (g.base || g.problems)[d.j]; p = { i: d.i, j: d.j, P, sfen: P.sfen, kind: 'tsume', n: P.n, count: g.problems.length, set: (g.title && (g.title[lang] || g.title.en)) || g.id }; }
@@ -845,9 +893,9 @@
   const catsOf = (id, lang) => loadBook(id).then(B => B.cats ? { cats: B.cats(lang), guide: B.guide } : null);
   function loadBook(id) {
     const B = BOOK[id]; if (B.data) return Promise.resolve(B);
-    return B.p || (B.p = Promise.all([fetch(B.url).then(r => r.json()), id === 'peg' ? fetch('../peg/daily.json?v=2').then(r => r.json()).catch(() => null) : id === 'gomoku' ? fetch('../gomoku/i18n.js?v=20261112c1').then(r => r.text()).catch(() => '') : id === 'go' ? fetch('../go/i18n.js?v=20261113').then(r => r.text()).catch(() => '') : id === 'checkers' ? fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()).catch(() => '') : id === 'hex' ? fetch('../hex/i18n.js?v=20261115').then(r => r.text()).catch(() => '') : id === 'connect4' ? Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261107l14'].map(f => fetch(f).then(r => r.text()).catch(() => ''))).then(L => L.join('\n')) : id === 'amazons' ? Promise.all(['../checkers/i18n.js?v=20261107l14-nd1', 'i18n-am.js?v=4', 'i18n-am-more.js?v=4', 'i18n-am-pz.js?v=3'].map(f => fetch(f[0] === '.' ? f : '../amazons/' + f).then(r => r.text()).catch(() => ''))).then(L => L[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + L.slice(1).join('\n')) : id === 'xiangqi' ? fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()).catch(() => '') : id === 'backgammon' ? Promise.all([AtlasBgTexts(), AtlasBgExplain()]).then(r => r[0]) : null]).then(([d, dl]) => {
-      B.data = id === 'shogi' || id === 'peg' || id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' ? B.prep(d) : d; if (id === 'peg') B.daily = dl;
-      if (id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons' || id === 'connect4') { const w = {}; try { new Function('window', dl)(w); } catch (e) {} B.I = w.I18N || {}; }
+    return B.p || (B.p = Promise.all([fetch(B.url).then(r => r.json()), id === 'peg' ? fetch('../peg/daily.json?v=2').then(r => r.json()).catch(() => null) : id === 'gomoku' ? fetch('../gomoku/i18n.js?v=20261112c1').then(r => r.text()).catch(() => '') : id === 'go' ? fetch('../go/i18n.js?v=20261113').then(r => r.text()).catch(() => '') : id === 'checkers' ? fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()).catch(() => '') : id === 'hex' ? fetch('../hex/i18n.js?v=20261115').then(r => r.text()).catch(() => '') : id === 'connect4' ? Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261107l14'].map(f => fetch(f).then(r => r.text()).catch(() => ''))).then(L => L.join('\n')) : id === 'tafl' ? fetch('../tafl/i18n.js?v=6ek-nd1').then(r => r.text()).catch(() => '') : id === 'amazons' ? Promise.all(['../checkers/i18n.js?v=20261107l14-nd1', 'i18n-am.js?v=4', 'i18n-am-more.js?v=4', 'i18n-am-pz.js?v=3'].map(f => fetch(f[0] === '.' ? f : '../amazons/' + f).then(r => r.text()).catch(() => ''))).then(L => L[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + L.slice(1).join('\n')) : id === 'xiangqi' ? fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()).catch(() => '') : id === 'backgammon' ? Promise.all([AtlasBgTexts(), AtlasBgExplain()]).then(r => r[0]) : null]).then(([d, dl]) => {
+      B.data = id === 'shogi' || id === 'peg' || id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' || id === 'tafl' ? B.prep(d) : d; if (id === 'peg') B.daily = dl;
+      if (id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons' || id === 'connect4' || id === 'tafl') { const w = {}; try { new Function('window', dl)(w); } catch (e) {} B.I = w.I18N || {}; }
       if (id === 'backgammon') B.I = dl || {};   // (a sandbox: the page's own words stay untouched)
       return B; }).catch(e => { B.p = null; throw e; }));
   }
@@ -917,13 +965,13 @@
     const GA = Object.assign({}, GMX.en, GMX[ctx.lang] || {});
     const GO = Object.assign({}, GOX.en, GOX[ctx.lang] || {});
     const CA = Object.assign({}, CKX.en, CKX[ctx.lang] || {});
-    const QA = Object.assign({}, XQX.en, XQX[ctx.lang] || {}), HA = Object.assign({}, HXX.en, HXX[ctx.lang] || {}), AA = Object.assign({}, AMX.en, AMX[ctx.lang] || {}), C4 = Object.assign({}, C4X.en, C4X[ctx.lang] || {});
+    const QA = Object.assign({}, XQX.en, XQX[ctx.lang] || {}), HA = Object.assign({}, HXX.en, HXX[ctx.lang] || {}), AA = Object.assign({}, AMX.en, AMX[ctx.lang] || {}), TA = Object.assign({}, TFX.en, TFX[ctx.lang] || {}), C4 = Object.assign({}, C4X.en, C4X[ctx.lang] || {});
     const QB = Object.assign({}, BGX.en, BGX[ctx.lang] || {});
 
     /* ---------- the guide's panel (the rules tour's .rgd) ---------- */
     const el = document.createElement('div'); el.className = 'rgd pzg';
     el.innerHTML = `<div class="rgd-in"><div class="pic"><img src="${GD.guide}" alt=""></div><div class="bub"><div class="nm">${name}<span class="pg"></span></div><div class="tx"></div><div class="rvn" hidden></div><div class="cnt"></div></div></div>
-      <div class="rgd-act"><button type="button" class="btn ghost sm ic" data-a="hint" aria-label="${X.hint}" title="${X.hint}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><small>${X.hint}</small></button><button type="button" class="btn ghost sm ic" data-a="again" aria-label="${X.again}" title="${X.again}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><small>${X.again}</small></button>${ctx.onList ? `<button type="button" class="btn ghost sm ic" data-a="list" aria-label="${ctx.t ? ctx.t('bv.list') : ''}" title="${ctx.t ? ctx.t('bv.list') : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>${ctx.t ? ctx.t('bv.list') : ''}</small></button>` : ''}${id === 'reversi' || id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' ? `<button type="button" class="btn ghost sm ic" data-a="ans" aria-label="${RVA.lb}" title="${RVA.lb}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><small>${RVA.lb}</small></button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
+      <div class="rgd-act"><button type="button" class="btn ghost sm ic" data-a="hint" aria-label="${X.hint}" title="${X.hint}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><small>${X.hint}</small></button><button type="button" class="btn ghost sm ic" data-a="again" aria-label="${X.again}" title="${X.again}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><small>${X.again}</small></button>${ctx.onList ? `<button type="button" class="btn ghost sm ic" data-a="list" aria-label="${ctx.t ? ctx.t('bv.list') : ''}" title="${ctx.t ? ctx.t('bv.list') : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>${ctx.t ? ctx.t('bv.list') : ''}</small></button>` : ''}${id === 'reversi' || id === 'tafl' || id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' ? `<button type="button" class="btn ghost sm ic" data-a="ans" aria-label="${RVA.lb}" title="${RVA.lb}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><small>${RVA.lb}</small></button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
     ctx.panel.appendChild(el);
     const $ = s => el.querySelector(s);
     function say(html) {   // typed speech; a tap on the bubble shows it all
@@ -964,6 +1012,7 @@
       if (p.kind === 'go') return '<b>' + B.tx('pz.goalLine', ctx.lang, { c: B.tx(p.me === 1 ? 'p1' : 'p2', ctx.lang), n: p.n, g: B.tx('pz.goal.' + (p.P.goal || 'kill'), ctx.lang) }) + '</b>';
       if (p.kind === 'hx') { const nm = c => B.tx('p' + c, ctx.lang) || (c === 1 ? 'Red' : 'Blue'); return '<b>' + B.tx(p.block ? 'pz.goalBlock' : 'pz.goal', ctx.lang, { c: nm(p.me), o: nm(3 - p.me), n: p.n, k: p.k }) + '</b>'; }
       if (p.kind === 'c4') { const c = c4Name(p.me); return '<b>' + (p.c4 === 'mate' ? B.tx('pz.goal', ctx.lang, { c, n: p.n }) : p.c4 === 's' ? B.tx('pz.goal.def', ctx.lang, { c, n: p.n }) : B.tx(p.P.goal === 'draw' ? 'pz.goal.draw' : 'pz.goal.win', ctx.lang, { c })) + '</b>'; }
+      if (p.kind === 'tf') return '<b>' + B.tx(p.goal === 'cap' ? 'pz.goalCap' : 'pz.goalEsc', ctx.lang, { c: B.tx(p.me === 1 ? 'p1' : 'p2', ctx.lang), n: p.n }) + '</b>';
       if (p.kind === 'am') return '<b>' + B.tx(p.am === 'duel' ? 'pz.goal' : 'pz.goal.' + p.am, ctx.lang, { c: amName(p.me), n: p.n }) + '</b>';
       if (p.kind === 'ck') return '<b>' + B.tx(p.g ? 'pz.goalGain' : 'pz.goal', ctx.lang, { c: B.tx(p.me === 1 ? 'p1' : 'p2', ctx.lang), n: p.n, g: p.g }) + '</b>';
       if (p.kind === 'xq') return '<b>' + B.tx(p.ck ? 'pz.goalCk' : 'pz.goal', ctx.lang, { c: B.tx(p.me === 1 ? 'p1' : 'p2', ctx.lang), n: p.n }) + '</b>';
@@ -981,19 +1030,20 @@
       head(); stars(0); buttons();
       const opts = { ready: () => onReady(p), moved: (u, info) => onMoved(p, u, info) };
       if (sess && p.kind === 'go' && pz() && pz().n !== (p.spec.n || 9)) { sess.stop(); sess = null; }
-      if (sess && p.kind === 'hx' && pz() && pz().n !== (p.spec.n || 9)) { sess.stop(); sess = null; }   // (hex: another board size — a new board)   // (go: another board size — a new board)
+      if (sess && p.kind === 'hx' && pz() && pz().n !== (p.spec.n || 9)) { sess.stop(); sess = null; }
+      if (sess && p.kind === 'tf' && pz() && pz().n !== Math.round(Math.sqrt(String(p.spec.b).length))) { sess.stop(); sess = null; }   // (tafl: another rule set's board — a new board)   // (hex: another board size — a new board)   // (go: another board size — a new board)
       if (!sess) {
         sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
           pz: Object.assign({ moves: p.moves, bg: p.bg, step: i => cur ? bgStep(cur, i) : true, fen: p.fen, sfen: p.sfen, sol: p.P.sol, cells: p.cells, toMove: p.toMove, me: p.me, start: p.start, spec: p.spec, view: p.view, marks: p.marks, rule: p.kind === 'gm' ? 'renju' : undefined, last: p.last, judge: p.kind === 'gm' ? (p.vcf ? 'vcf' : 'all') : undefined }, { ready: () => cur && cur.ready && cur.ready(), moved: (u, i) => cur && cur.moved && cur.moved(u, i) }) });
         ctx.Table3D.play(true);   // (after start(): the adapter's show() puts its board on the table in the showcase view)
       } else if (p.kind === 'gm') pz().load(p.start, 'renju', p.me, p.last, { judge: p.vcf ? 'vcf' : 'all' });
-      else if (p.kind === 'ck' || p.kind === 'xq' || p.kind === 'hx' || p.kind === 'am') pz().load(p.spec, p.me);
+      else if (p.kind === 'ck' || p.kind === 'xq' || p.kind === 'hx' || p.kind === 'am' || p.kind === 'tf') pz().load(p.spec, p.me);
       else if (p.kind === 'c4') pz().load(p.moves, p.me);
       else if (p.kind === 'bg') pz().load(p.bg);
       else if (p.kind === 'go') pz().load(p.spec, p.me, { view: p.view, marks: p.marks });
       else pz().load(p.fen || p.sfen || p.cells, p.P.sol, p.toMove, p.me);
       cur.ready = opts.ready; cur.moved = opts.moved;
-      say((first ? (line('hi') || X.hi[id] || (id === 'gomoku' ? GA.hi : id === 'go' ? GO.hi : id === 'checkers' ? CA.hi : id === 'xiangqi' ? QA.hi : id === 'hex' ? HA.hi : id === 'amazons' ? AA.hi : id === 'connect4' ? C4.hi : id === 'backgammon' ? QB.hi : '') || PEG_HI[ctx.lang] || PEG_HI.en) : line('intro') || '') + ' ' + goal(p)); first = false;
+      say((first ? (line('hi') || X.hi[id] || (id === 'gomoku' ? GA.hi : id === 'go' ? GO.hi : id === 'checkers' ? CA.hi : id === 'xiangqi' ? QA.hi : id === 'hex' ? HA.hi : id === 'tafl' ? TA.hi : id === 'amazons' ? AA.hi : id === 'connect4' ? C4.hi : id === 'backgammon' ? QB.hi : '') || PEG_HI[ctx.lang] || PEG_HI.en) : line('intro') || '') + ' ' + goal(p)); first = false;
     }
     async function onReady(p) {
       if (p !== cur || stopped) return;
@@ -1002,6 +1052,7 @@
       if (p.kind === 'ck') { const q = pz().pos(); p.base = q ? ckLead(q, p.me) : 0; if (p.auto) return ckAuto(p); }
       if (p.kind === 'xq' && p.auto) return xqAuto(p);
       if (p.kind === 'hx' && p.auto) return hxAuto(p);
+      if (p.kind === 'tf' && p.auto) return tfAuto(p);
       if (p.kind === 'am') { amMarks(p); if (p.auto) return amAuto(p); }
       if (p.kind === 'c4') { p.step = 0; p.off = null; if (p.auto) return c4Auto(p); }
       if (p.kind === 'bg') { bgChoices(p); if (p.auto) return bgAuto(p); p.state = 'play'; if (!p.cube) pz().wait(); buttons(); return; }
@@ -1024,6 +1075,7 @@
       if (p.kind === 'gm') return gmMoved(p, u, info);
       if (p.kind === 'ck') return ckMoved(p, u, info);
       if (p.kind === 'hx') return hxMoved(p, u, info);
+      if (p.kind === 'tf') return tfMoved(p, u, info);
       if (p.kind === 'am') return amMoved(p, u, info);
       if (p.kind === 'c4') return c4Moved(p, u, info);
       if (p.kind === 'xq') return xqMoved(p, u, info);
@@ -1445,6 +1497,58 @@
       }
       p.state = 'answer'; say(B.tx('pz.answerDone', ctx.lang)); buttons();
     }
+    /* 詰めタフル (= tafl/app.js puzzleMove / pzBlunder, PZBook v2): "escape the king in N" / "capture the king in N" — a move off the
+       solution is played on (the opponent answers with the engine's move) until N is used up; reaching the goal within it still counts
+       (★2). An obvious mistake (the opponent wins with its very next move) or the last move missing is taken back with the right move
+       shown. Moves are named by their marks (no coordinates on the 3D board). */
+    const tfReached = (p, st) => st.over && st.winner === p.me;
+    function tfBlunder(p, before, m) { const after = before.clone().play(m); if (after.res) return null; return after.moves().some(x => { const q = after.clone().play(x); return q.res && q.res !== p.me; }) ? 'lose' : null; }
+    const tfOut = p => { p.failed = true; p.state = 'fail'; streak = 0; chime(false); say(fill(TA.out, { n: p.n }) + ' ' + (line('retry') || X.retry)); buttons(); };
+    async function tfMoved(p, m, info) {
+      const before = info.before, pre = pz().moves().slice(0, -1), left = p.n - p.used, E = pz().engine();
+      say(B.tx('pz.checking', ctx.lang));
+      const list = await pz().puzzle(left, false, pre); if (p !== cur || stopped) return;
+      p.used++;
+      if (tfReached(p, info)) return solved(p);
+      const L = list || [], e = L.find(x => x.m === m), good = L.filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need);
+      const back = async html => { p.failed = true; streak = 0; chime(false); await sleep(500); if (p !== cur) return; pz().undo(1); p.used--; pz().mark([...(good[0] ? [{ m: good[0].m, cls: 'ok' }] : []), { m, cls: 'ng' }]); p.state = 'fail'; say(html + ' ' + (line('retry') || X.retry)); buttons(); };
+      if (!e || !(e.need > 0) || e.need > left) {
+        if (left <= 1) return back(good.length ? B.tx('pz.fail', ctx.lang) + ' ' + B.tx(p.goal === 'cap' ? 'pz.failCap' : 'pz.failEsc', ctx.lang, { m: SPH('ng'), b: SPH('ok'), n: p.n }) : fill(TA.out, { n: p.n }));
+        const why = before && E ? tfBlunder(p, before, m) : null;
+        if (why) return back(B.tx('pz.bl.' + why, ctx.lang, { n: p.n }) + (good.length ? ' ' + B.tx('pz.best', ctx.lang, { b: SPH('ok') }) : ''));
+        p.failed = true; p.off = true;   // not the solution: played on, the opponent answers with the engine's move
+        const r = await pz().think(16); if (p !== cur || stopped) return;
+        await sleep(250); if (p !== cur) return;
+        if (r == null) return tfOut(p);
+        await pz().play(r); if (p !== cur) return;
+        if (pz().state().over || p.used >= p.n) return tfOut(p);
+        say(B.tx('pz.stray', ctx.lang) + ' ' + fill(TA.mid, { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons(); return;
+      }
+      say(B.tx('pz.good', ctx.lang));
+      const dl = await pz().puzzle(p.n - p.used, true); if (p !== cur || stopped) return;
+      await sleep(250); if (p !== cur) return;
+      if (!dl || !dl.length) return solved(p);
+      const r = E.pickDefence(pz().pos(), dl); if (r == null) return solved(p);
+      await pz().play(r); if (p !== cur) return;
+      if (tfReached(p, pz().state())) return solved(p);
+      say(fill(TA.mid, { n: p.n - p.used })); p.state = 'play'; pz().wait(); buttons();
+    }
+    async function tfAuto(p) {   // 答え: the solver's line for both sides (tafl/app.js pzAnswer)
+      p.state = 'busy'; buttons(); say(B.tx('pz.showing', ctx.lang));
+      for (let step = 0; step < 24; step++) {
+        if (p !== cur || stopped) return;
+        const st = pz().state(); if (st.over) break;
+        const att = st.turn === p.me, left = p.n - p.used;
+        const list = await pz().puzzle(left, !att); if (p !== cur || stopped) return;
+        let m = null;
+        if (att) { const g = (list || []).filter(x => x.need > 0 && x.need <= left).sort((a, b) => a.need - b.need)[0]; m = g ? g.m : null; }
+        else m = list && list.length ? pz().engine().pickDefence(pz().pos(), list) : null;
+        if (p !== cur) return; if (m == null) break;
+        await sleep(450); if (p !== cur) return; pz().mark([{ m, cls: att ? 'ok' : 'hl' }]); await sleep(500); if (p !== cur) return;
+        if (!(await pz().play(m))) break; if (p !== cur) return; if (att) p.used++;
+      }
+      p.state = 'answer'; say(B.tx('pz.answerDone', ctx.lang)); buttons();
+    }
     async function ckAuto(p) {   // 答え: the stored first move, then the solver's best line for both sides (checkers/app.js pzAnswer)
       p.state = 'busy'; buttons(); say(B.tx('pz.showing', ctx.lang));
       for (let step = 0; step < 24; step++) {
@@ -1631,7 +1735,7 @@
     function solved(p) {
       const n = p.answered ? 1 : p.hinted || p.failed || p.off ? 2 : 3;   // (★3 first try · ★2 after a hint, a miss or leaving the line · ★1 after the answer — gomoku/app.js PZBook.starsFor)
       p.state = 'solved'; chime(true); stars(n);
-      if (p.daily) { dailySolved(p, p.hinted || p.failed); if (id === 'checkers' || id === 'xiangqi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4') B.save(p, n, true); if (id === 'reversi') { const pr = B.pr(); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'chess') { const pr = store.get(B.KEY, {}); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'go') { const pr = store.get(B.KEY, {}), v = pr[p.rk]; pr[p.rk] = Math.max(v === true ? 3 : +v || 0, n); store.set(B.KEY, pr); } }   // (as the full games: chess also keeps the stars, shogi only the streak)
+      if (p.daily) { dailySolved(p, p.hinted || p.failed); if (id === 'checkers' || id === 'xiangqi' || id === 'backgammon' || id === 'hex' || id === 'amazons' || id === 'connect4' || id === 'tafl') B.save(p, n, true); if (id === 'reversi') { const pr = B.pr(); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'chess') { const pr = store.get(B.KEY, {}); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'go') { const pr = store.get(B.KEY, {}), v = pr[p.rk]; pr[p.rk] = Math.max(v === true ? 3 : +v || 0, n); store.set(B.KEY, pr); } }   // (as the full games: chess also keeps the stars, shogi only the streak)
       else B.save(p, n);
       streak = n === 3 ? streak + 1 : 0;
       say(n === 3 ? (streak >= 3 && line('streak', { n: streak })) || line('solved') || pick(X.solved) : line('help') || X.solvedHelp);
@@ -1673,6 +1777,11 @@
         if (p.hl === 2) { pz().mark(base.concat([...new Set(L.map(m => E.mFrom(m)))].map(q => [q, 'ring']))); say(B.tx('pz.hintText', ctx.lang) || X.hintSay); return; }
         pz().mark(base.concat([{ m: L[0], cls: 'ok' }])); say(line('hint') || X.hintSay); return;
       }
+      if (p.kind === 'tf') {   // the pieces that start a solution (gold rings), not the whole move (tafl/app.js pzHint)
+        p.state = 'busy'; buttons(); const L = await pz().puzzle(p.n - p.used); if (p !== cur) return; p.state = 'play'; pz().wait(); buttons();
+        const good = (L || []).filter(x => x.need > 0 && x.need <= p.n - p.used); if (!good.length) return; const E = pz().engine();
+        p.hinted = true; pz().mark([...new Set(good.map(x => E.mFrom(x.m)))].map(q => [q, 'ring'])); say(B.tx('pz.hintText', ctx.lang) || X.hintSay); return;
+      }
       if (p.kind === 'hx') {   // a dashed ring round the area of the answer (hex/app.js pzHint: the cells around it)
         p.state = 'busy'; buttons(); const L = p.block ? await pz().puzzle(p.k, true) : await pz().puzzle(p.n - p.used); if (p !== cur) return; p.state = 'play'; pz().wait(); buttons();
         const good = (L || []).filter(x => p.block ? x.need === 0 : x.need > 0 && x.need <= p.n - p.used); if (!good.length) return;
@@ -1706,9 +1815,9 @@
     }
     $('[data-a=hint]').onclick = hint;
     if ($('[data-a=list]')) $('[data-a=list]').onclick = () => ctx.onList();   // 一覧 (the portal's list sheet: pick another problem)
-    $('[data-a=again]').onclick = () => { if (!cur) return; begin(cur.daily && (cur.kind === 'peg' || cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang), false); const a = line('again'); if (a) say(a + ' ' + goal(cur)); };
+    $('[data-a=again]').onclick = () => { if (!cur) return; begin(cur.daily && (cur.kind === 'peg' || cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4' || cur.kind === 'tf') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang), false); const a = line('again'); if (a) say(a + ' ' + goal(cur)); };
     $('[data-a=next]').onclick = () => nextPuzzle();
-    if ($('[data-a=ans]')) $('[data-a=ans]').onclick = () => { if (!cur || (cur.kind !== 'rv' && cur.kind !== 'gm' && cur.kind !== 'go' && cur.kind !== 'ck' && cur.kind !== 'xq' && cur.kind !== 'bg' && cur.kind !== 'hx' && cur.kind !== 'am' && cur.kind !== 'c4')) return; const np = cur.daily && (cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang); np.auto = true; begin(np, false); cur.failed = true; cur.answered = true; };
+    if ($('[data-a=ans]')) $('[data-a=ans]').onclick = () => { if (!cur || (cur.kind !== 'rv' && cur.kind !== 'gm' && cur.kind !== 'go' && cur.kind !== 'ck' && cur.kind !== 'xq' && cur.kind !== 'bg' && cur.kind !== 'hx' && cur.kind !== 'am' && cur.kind !== 'c4' && cur.kind !== 'tf')) return; const np = cur.daily && (cur.kind === 'ck' || cur.kind === 'xq' || cur.kind === 'bg' || cur.kind === 'hx' || cur.kind === 'am' || cur.kind === 'c4' || cur.kind === 'tf') ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang); np.auto = true; begin(np, false); cur.failed = true; cur.answered = true; };
 
     requestAnimationFrame(() => el.classList.add('on'));
     say(X.loading); buttons();
