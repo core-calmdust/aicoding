@@ -17,6 +17,7 @@
 - トップページ：GAMES に `key:'fb'`（`fb.title/desc/play`、14言語）、`images/botao.webp`（tools/topdown.html、エンジン同士の数手後の局面）、アイコン `images/icons/botao.svg`。
 - ポータル：アイコン `images/atlas/botao.webp`（icons3d.js `botao()`：芝の切れ端・白いゴール・赤い大きなボタンと白い紋章・ボール）、一覧 `atlas/shots/botao.webp`、盤のサムネイル `atlas/img/board-botao-<look>.webp`、盤選びの絵 `atlas/img/pick/botao-<look>.webp`（tools/boards.html）。
 - 地図（mapdata.js）：サンパウロ・リオデジャネイロ・ブダペスト・タンブリッジ・ウェルズ。一覧のひとこと `tl.botao`、紹介 `about.botao`・`hist.botao`（i18n.js → `node tools/i18n-split.js`）。
+- ゲームカードの紹介（`about.botao`）はルールではなく「どんなゲームか」を書く場所（2026-11-15 ユーザー）：おはじきのようなテーブルサッカーであること、名前は服のボタンをはじいて遊んでいたことに由来、ブラジル（公式競技）とハンガリー・ジョージア・スロベニアなどで遊ばれている、の3点を短く。
 - AIのボス7体（npc/roster.js）：ビーチのカメ・ミコの売り子・ドリブルガエル・ワニの守護神・ブンバ・メウ・ボイ・コンゴウインコ博士・ジャガー画伯（最初のルールを書いた画家デクールトがモチーフ）。肩書きとまめちしきは npc/t/<lang>.js、アバターは images/atlas/av/boss-botao-<n>-<tier>.webp（tools/bosses.html）。
 
 ## ルール（CBFM「12タッチ」を卓用に簡略化）
