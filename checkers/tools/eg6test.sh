@@ -2,7 +2,7 @@
 # 6-piece endgame database test (2026-11-16): build the 6-piece tables, compress them (CKZ3) and play the site's
 # engine with 2–6 pieces against itself with 2–5 pieces (claude/checkers-spec.md「終盤DB」).
 #   sh checkers/tools/eg6test.sh [pairs=1500] [workers=10]      (from the repository root; resumable: run it again)
-# Work files go to ~/eg6test (about 3 GB). The 6-piece build takes hours (single-threaded without libomp).
+# Work files go to ~/eg6test. checkers/egdb6.bin.gz (CKZ3, 52 MB) is used when present; otherwise it is built (hours, ~3 GB).
 set -e
 ROOT=$(cd "$(dirname "$0")/../.." && pwd); W=${EG6_DIR:-$HOME/eg6test}; PAIRS=${1:-1500}; NW=${2:-10}
 mkdir -p "$W/ckpt"; cd "$ROOT/checkers"
@@ -12,7 +12,8 @@ CC=${CC:-cc}; ARCH=""; [ "$(uname -m)" = x86_64 ] && ARCH="-march=native"
 [ -x "$W/egdb" ] || $CC -O3 $ARCH $OMP -DNATIVE -w -o "$W/egdb" tools/egdb.c
 [ -x "$W/egpack" ] || $CC -O3 $ARCH $OMP -DNATIVE -w -o "$W/egpack" tools/egpack.c
 echo "OpenMP: ${OMP:-none (single-threaded)}"
-[ -s "$W/egdb6.bin" ] || CKPT_DIR="$W/ckpt" NOSYM=1 "$W/egdb" 6 "$W/egdb6.bin"
+[ -s "$W/egdb6.bin.gz" ] || [ ! -s egdb6.bin.gz ] || cp egdb6.bin.gz "$W/"   # (the repository has it: no build)
+[ -s "$W/egdb6.bin.gz" ] || [ -s "$W/egdb6.bin" ] || CKPT_DIR="$W/ckpt" NOSYM=1 "$W/egdb" 6 "$W/egdb6.bin"
 [ -s "$W/egdb6.bin.gz" ] || { "$W/egpack" "$W/egdb6.bin" "$W/egdb6.ckz" 6 6 && gzip -9 -c "$W/egdb6.ckz" > "$W/egdb6.bin.gz"; }
 # two copies of the engine: A (up to 5 pieces), B (+ the 6-piece file); both load the 5-piece file at every level
 for s in A B; do
