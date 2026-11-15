@@ -218,8 +218,15 @@
   // a point: a small gold rosette, nearly flush with the marble (base at y = 0)
   const ROSE = [[.2, 0], [.195, .006], [.18, .014], [.15, .018], [.12, .013], [.095, .02], [.065, .03], [.035, .036], [0, .038]];   // (outside → in: the lathe faces up)
 
-  /* ---------- the board ---------- */
-  function board(m) {
+  /* ---------- the board (2026-11-15: the three rules — nine 24 points · twelve the same with the four diagonals · six 16 points on
+     two squares, a 5 × 5 lattice; the points as the engine's geom: morris/engine.js) ---------- */
+  const VAR = {
+    nine: { size: 7, pts: [[0, 0], [3, 0], [6, 0], [1, 1], [3, 1], [5, 1], [2, 2], [3, 2], [4, 2], [0, 3], [1, 3], [2, 3], [4, 3], [5, 3], [6, 3], [2, 4], [3, 4], [4, 4], [1, 5], [3, 5], [5, 5], [0, 6], [3, 6], [6, 6]], pieces: 9 },
+    six: { size: 5, pts: [[0, 0], [2, 0], [4, 0], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2], [3, 2], [4, 2], [1, 3], [2, 3], [3, 3], [0, 4], [2, 4], [4, 4]], pieces: 6 },
+  };
+  VAR.twelve = Object.assign({}, VAR.nine, { pieces: 12, diag: true });
+  function board(m, variant) {
+    const V = VAR[variant] || VAR.nine, Pv = v => -3.4 + v * 6.8 / (V.size - 1);
     const TT = T(), g = new TT.Group();
     // brass plinth (the board stands on a thin gilt band, set back under the frame)
     const pl = mesh(X.RB(W - .3, Y0, D - .3, .03, 2), m.brassD); pl.position.y = Y0 / 2; g.add(pl);
@@ -241,24 +248,31 @@
       const len = Math.hypot(x1 - x0, z1 - z0) + LW, s = mesh(new TT.BoxGeometry(len, LH, LW), m.brass, false);
       s.position.set((x0 + x1) / 2, y, (z0 + z1) / 2); if (Math.abs(z1 - z0) > Math.abs(x1 - x0)) s.rotation.y = Math.PI / 2; g.add(s);
     };
-    [0, 1, 2].forEach(k => { const a = P(k), b = P(6 - k); strip(a, a, b, a); strip(a, b, b, b); strip(a, a, a, b); strip(b, a, b, b); });
-    strip(P(3), P(0), P(3), P(2)); strip(P(3), P(4), P(3), P(6)); strip(P(0), P(3), P(2), P(3)); strip(P(4), P(3), P(6), P(3));
+    const n = V.size - 1, h = n / 2, sq = V.size === 5 ? [0, 1] : [0, 1, 2];
+    sq.forEach(k => { const a = Pv(k), b = Pv(n - k); strip(a, a, b, a); strip(a, b, b, b); strip(a, a, a, b); strip(b, a, b, b); });
+    const inner = sq[sq.length - 1];
+    strip(Pv(h), Pv(0), Pv(h), Pv(inner)); strip(Pv(h), Pv(n - inner), Pv(h), Pv(n)); strip(Pv(0), Pv(h), Pv(inner), Pv(h)); strip(Pv(n - inner), Pv(h), Pv(n), Pv(h));
+    if (V.diag) {   // twelve: the corner diagonals (outer to inner square), raised strips turned 45°
+      [[0, 0, 2, 2], [6, 0, 4, 2], [0, 6, 2, 4], [6, 6, 4, 4]].forEach(([x0, z0, x1, z1]) => {
+        const a = [Pv(x0), Pv(z0)], b = [Pv(x1), Pv(z1)], len = Math.hypot(b[0] - a[0], b[1] - a[1]) + LW, s = mesh(new TT.BoxGeometry(len, LH, LW), m.brass, false);
+        s.position.set((a[0] + b[0]) / 2, y - .002, (a[1] + b[1]) / 2); s.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]); g.add(s); });
+    }
     // the 24 points: gold rosettes
     const rg = lathe('nmRose', ROSE, X.coarse ? 16 : 24);
-    PTS.forEach(([i, j]) => { const r = mesh(rg, m.gold, false); r.position.set(P(i), YF + LH - .004, P(j)); g.add(r); });
+    V.pts.forEach(([i, j]) => { const r = mesh(rg, m.gold, false); r.position.set(Pv(i), YF + LH - .004, Pv(j)); g.add(r); });
     // small brass rosettes inlaid at the ends of the channels
     [-1, 1].forEach(sx => [-1, 1].forEach(sz => { const r = mesh(rg, m.brass, false); r.scale.setScalar(.8); r.position.set(sx * (CH[0] + CH[1]) / 2, YT - .002, sz * (F + .36)); g.add(r); }));
-    Object.assign(g.userData, { top: YF + LH, pt: (i, j) => [P(i), P(j)] });
+    Object.assign(g.userData, { top: YF + LH, pt: (i, j) => [Pv(i), Pv(j)], pts: V.pts, P: Pv, pieces: V.pieces, variant: VAR[variant] ? variant : 'nine' });
     return g;
   }
   const PTS = [[0, 0], [3, 0], [6, 0], [1, 1], [3, 1], [5, 1], [2, 2], [3, 2], [4, 2], [0, 3], [1, 3], [2, 3], [4, 3], [5, 3], [6, 3], [2, 4], [3, 4], [4, 4], [1, 5], [3, 5], [5, 5], [0, 6], [3, 6], [6, 6]];
 
   /* ---------- MODELS.morris: board + a mid-game position (gold has just closed a mill on the far row) ---------- */
-  X.MODELS.morris = function (live) {
+  X.MODELS.morris = function (live, o = {}) {
     const TT = T(), outer = new TT.Group(), g = new TT.Group(), m = mats();
-    const b = board(m); g.add(b);
+    const b = board(m, o.variant); g.add(b);
     const top = b.userData.top;
-    Object.assign(outer.userData, { top: top * SCALE, pt: b.userData.pt, piece: c => piece(c, m) });
+    Object.assign(outer.userData, { top: top * SCALE, pt: b.userData.pt, pts: b.userData.pts, P: b.userData.P, pieces: b.userData.pieces, variant: b.userData.variant, piece: c => piece(c, m) });
     outer.add(g); g.scale.setScalar(SCALE);
     if (live) return outer;
     const put = (c, x, z, y) => {
