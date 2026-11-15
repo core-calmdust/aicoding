@@ -123,6 +123,7 @@ html.atlas-fanorona.lt-land body.lt-on .reserve .lbl{display:none!important}
       draft.rule = ALQ ? 'alq' : 'sivy';
       if (side === 1 || side === 2) draft.color = side;
       if (lv >= 1 && lv <= 20) draft.level = lv;
+      { const R = (ALQ ? ['alq', 'alqf'] : ['sivy', 'dimy'])[+new URLSearchParams(location.search).get('size') - 1]; if (R && draft.mode !== 'rated') draft.rule = R; }   // (the portal card's 種目)
       segSync(); document.getElementById('btnStart').click();
       return true;
     },
