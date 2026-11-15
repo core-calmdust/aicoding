@@ -1154,15 +1154,16 @@ function renderBadges() {
     const fx = p ? Object.keys(p.fx).filter(k => p.fx[k] && ['wareme', 'hanup', 'guard', 'shugi', 'pot', 'seal', 'lure'].includes(k)) : [];
     const sk = MJSkills.get(c.skill);
     const chips = fx.map(k => { const s2 = MJSkills.get(k === 'lure' ? 'lure' : k); return s2 ? `<i class="fx" style="--sc:${s2.color}" title="${esc(L(s2.name))}">${icon(s2.icon)}</i>` : ''; }).join('');
+    // (ユーザー 2026-11-15: no score here — the four scores are on the unit in the middle of the table; the name and the skill marks only)
     const html = `
       <div class="bf ${(s === g.dealer) ? 'dealer' : ''} ${p && p.riichi ? 'rii' : ''}" style="--c:${c.color}">${frame(c, 'face')}<em>${wind}</em>${p && p.riichi ? `<i class="riiflag">${esc(t('riichi'))}</i>` : ''}</div>
-      <div class="bt"><b>${esc(L(c.name))}</b><span class="sc">${g.scores[s].toLocaleString()}</span>
+      <div class="bt"><b>${esc(L(c.name))}</b>
         <span class="bk">${s === ME && g.rules.skills ? '' : chips}${DB.set.skills && g.rules.skills && !(s === ME) ? `<i class="sk ${p && p.skillUsed ? 'used' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))} ${MJSkills.TIERS[c.tier | 0]}">${icon(sk.icon)}<b class="tr">${MJSkills.TIERS[c.tier | 0]}</b></i>` : ''}</span></div>`;
-    if (s === ME) renderMe(html, chips);   // (ユーザー 2026-11-15: the player's own skill marks — the effects in force, the seal's lock — sit inside the skill plate, not under the portrait; the plate already shows the skill itself)
+    if (s === ME) renderMe(html, chips, fx.map(k => L(MJSkills.get(k).name)));   // (ユーザー 2026-11-15: the player's own skill marks — the effects in force, the seal's lock — sit inside the skill plate, not under the portrait; the plate already shows the skill itself)
     else $('#opp' + s).innerHTML = html;
   }
 }
-function renderMe(badgeHtml, chips) {
+function renderMe(badgeHtml, chips, fxNames) {
   const g = G, c = UIS.chars[ME], sk = MJSkills.get(c.skill);
   const p = g.P ? g.P[ME] : null;
   const cost = g.skillCost ? g.skillCost(ME) : 0;
@@ -1170,12 +1171,13 @@ function renderMe(badgeHtml, chips) {
   const can = UIS.opts && UIS.opts.canSkill;
   $('#mePanel').innerHTML = `
     <div class="mb">${badgeHtml}</div>
-    ${skillsOn ? `<button class="skb ${can ? 'ready' : ''} ${p && p.skillUsed ? 'used' : ''} ${chips ? 'hasfx' : ''}" id="skBtn" style="--sc:${sk.color}" ${can ? '' : 'disabled'}>
-      <kbd class="skk">S</kbd><i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b><small>${p && p.skillUsed ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))} · ${esc(L(sk.short(MJSkills.val(sk, c.tier))))}</small></span>${chips ? `<span class="skfx">${chips}</span>` : ''}</button>` : ''}`;
+    ${skillsOn ? `<button class="skb ${can ? 'ready' : ''} ${p && p.skillUsed ? 'used' : ''} ${chips ? 'hasfx' : ''}" id="skBtn" style="--sc:${sk.color}" aria-disabled="${can ? 'false' : 'true'}">
+      <kbd class="skk">S</kbd><i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b></span>${chips ? `<span class="skfx">${chips}</span>` : ''}
+      <span class="sktip"><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b><small>${p && p.skillUsed ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))}</small><span>${esc(L(sk.desc(MJSkills.val(sk, c.tier))))}</span>${fxNames && fxNames.length ? `<small class="on">${chips} ${fxNames.map(esc).join(' ・ ')}</small>` : ''}</span></button>` : ''}`;   // (ユーザー 2026-11-15: the plate is compact and of one width — the icon and the name; what the skill does comes up in a bubble on hover, or on a tap when it cannot be used; the marks of effects in force sit on its corner)
   const b = $('#skBtn');
-  { const mb = document.querySelector('#mePanel .mb'), hz = document.documentElement.classList.contains('ds') ? parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hz')) || 1 : 1; if (mb) mb.style.marginLeft = b ? Math.round(b.offsetWidth * (hz - 1)) + 'px' : ''; }   // (the skill button is drawn enlarged: keep the portrait clear of it)
+  { const mb = document.querySelector('#mePanel .mb'); let k = 1; if (b) { const tf = getComputedStyle(b).transform; if (tf && tf !== 'none') k = new DOMMatrix(tf).a || 1; } if (mb) mb.style.marginLeft = b && k > 1 ? Math.round(b.offsetWidth * (k - 1)) + 'px' : ''; }   // (the skill button is drawn enlarged by a transform of its own on a desktop — read the scale it really has: keep the portrait clear of it, and no further)
   if (b) b.onclick = async () => {
-    if (!UIS.opts || !UIS.opts.canSkill || !UIS.resolve) return;
+    if (!UIS.opts || !UIS.opts.canSkill || !UIS.resolve) { b.classList.toggle('tip'); clearTimeout(renderMe.tt); if (b.classList.contains('tip')) renderMe.tt = setTimeout(() => { const x = $('#skBtn'); if (x) x.classList.remove('tip'); }, 4000); return; }
     if (cost > 0 && !(await confirmBox(t('skillCostQ', { n: cost.toLocaleString() })))) return;
     const r = UIS.resolve; UIS.resolve = null; UIS.opts = null; clearActs();
     r({ act: 'skill' });
@@ -1707,7 +1709,7 @@ document.addEventListener('keydown', e => {
     if (el && el.classList.contains('can')) doDiscard(+el.dataset.id);
     return;
   }
-  if (k === 's') { const b = $('#skBtn'); if (b && !b.disabled) { e.preventDefault(); b.click(); } return; }
+  if (k === 's') { const b = $('#skBtn'); if (b && b.classList.contains('ready')) { e.preventDefault(); b.click(); } return; }
   // hand
   if (UIS.kind === 'turn' && UIS.resolve) {
     if (k === 'ArrowLeft') { e.preventDefault(); moveCursor(-1); }
