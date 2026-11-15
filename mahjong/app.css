@@ -1997,7 +1997,6 @@ html.ds #game #opp3{top:26%}
 html.ds #game #opp1,html.ds #game #opp3{top:calc(var(--gi) + var(--rbh, 140px) * var(--hz, 1) + 34px)}
 html.lp #game #opp1,html.lp #game #opp3{top:calc(max(10px,var(--st)) + 42px + var(--bf) + 74px)}
 #game .me .mb{order:2}
-#game .me .mb .bf{width:calc(var(--bf) * .8);height:calc(var(--bf) * .8)}
 
 /* (ユーザー 2026-11-15) the partner's card on the home screen is ONE name card from the menu's left edge to about 38% of the width:
    the name on the left, her story and what her skill does on the right. fitCard() in app.js sets .wide (and the card's left edge,
@@ -2063,3 +2062,30 @@ html.ds #game .dealAsk{transform:translateX(-50%) scale(calc(var(--hz, 1) * 1.15
 #home.aaa .aa-plate.wide .pp-chg{padding:7px;margin-top:4px}
 #home.aaa .aa-plate.wide .pp-chg span{display:none}
 #home.aaa .aa-plate.wide .pp-info{padding-left:20px}
+
+/* (ユーザー 2026-11-15) the others' skill: its icon and its name */
+#game .opp .bk{flex-direction:column;gap:3px;align-items:center}
+#game .opp .bk .skw{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 3px;border-radius:99px;background:rgba(12,16,32,.86);border:1px solid color-mix(in srgb,var(--sc) 55%,transparent);white-space:nowrap}
+#game .opp .bk .skw.used{filter:grayscale(1) brightness(.7)}
+#game .opp .bk .skw>span{font-family:var(--serif);font-weight:700;font-size:12px;color:#fff}
+html.ds #game .opp .bk .skw>span{font-size:calc(12.5px * var(--hz, 1))}
+html.ds #game .opp .bk .skw i.sk{width:calc(20px * var(--hz, 1));height:calc(20px * var(--hz, 1))}
+html.lp #game .opp .bk .skw{padding:1px 6px 1px 2px;gap:3px}
+html.lp #game .opp .bk .skw>span{font-size:9.5px}
+#game .opp .bk .fxs{display:flex;gap:4px}
+#game .opp .bk .skw{position:relative;cursor:help}
+#game .opp .bk .skw .sktip{position:absolute;top:calc(100% + 8px);left:0;width:max-content;max-width:min(300px,56vw);display:none;flex-direction:column;gap:3px;padding:10px 14px;border-radius:12px;
+  background:rgba(14,9,28,.97);border:1px solid var(--sc);box-shadow:0 10px 26px rgba(0,0,0,.5);text-align:left;white-space:normal;z-index:9;filter:none}
+#game #opp1 .bk .skw .sktip{left:auto;right:0}
+#game .opp .bk .skw:hover .sktip,#game .opp .bk .skw.tip .sktip{display:flex}
+#game .opp .bk .skw:hover,#game .opp .bk .skw.tip{filter:none}
+#game .opp .bk .skw .sktip b{font-family:var(--serif);font-size:15px;color:#fff}
+#game .opp .bk .skw .sktip b em{font-style:normal;font-family:'Cinzel',serif;font-size:10px;padding:0 5px;border-radius:5px;background:rgba(0,0,0,.4)}
+#game .opp .bk .skw .sktip small{font-size:12px;color:var(--gold);font-weight:700}
+#game .opp .bk .skw .sktip>span{font-family:inherit;font-size:13.5px;line-height:1.6;color:#e6dcf7;font-weight:500}
+html.lp #game .opp .bk .skw .sktip{max-width:min(230px,56vw);padding:7px 10px}
+html.lp #game .opp .bk .skw .sktip>span{font-size:11.5px}
+@media (pointer: coarse){ #game .opp .bk .skw:hover:not(.tip) .sktip{display:none} }
+html.lp #game #opp2 .bk .skw .sktip{left:auto;right:0}
+#game #mePanel{pointer-events:none}
+#game #mePanel>*{pointer-events:auto}
