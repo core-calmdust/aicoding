@@ -96,6 +96,34 @@
     hintRing.rotation.x = Math.PI / 2; hintRing.visible = false; board.add(hintRing);
     const hintGlow = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, .015, 32), new THREE.MeshBasicMaterial({ color: 0xffb03a, transparent: true, opacity: .5, toneMapped: false, depthWrite: false }));
     hintGlow.visible = false; board.add(hintGlow);
+    /* notes on the board (the lessons' warm-up, 2026-11-15): frames, small dots, number / letter labels and flat arrows.
+       Entries: [sq, cls] | { at, cls: 'ok'|'ng'|'hl'|'dot' } | { at, label } | { arrow: [from, to], cls } */
+    const an = new THREE.Group(); board.add(an);
+    const CW = Math.abs(T3.cellPos(8, S, 1) - T3.cellPos(8, S, 0)), ANC = { ok: 0x2fd17a, ng: 0xff3b30, hang: 0xff3b30, hl: 0xffb21a, '': 0xffb21a };
+    const anMat = {}, am = (c, op) => anMat[c + op] || (anMat[c + op] = new THREE.MeshBasicMaterial({ color: ANC[c] ?? ANC[''], transparent: true, opacity: op, toneMapped: false, depthWrite: false }));
+    const frameGeo = (() => { const sh = new THREE.Shape(), h = CW * .47, w = CW * .37; sh.moveTo(-h, -h); sh.lineTo(h, -h); sh.lineTo(h, h); sh.lineTo(-h, h); sh.lineTo(-h, -h);
+      const ho = new THREE.Path(); ho.moveTo(-w, -w); ho.lineTo(-w, w); ho.lineTo(w, w); ho.lineTo(w, -w); ho.lineTo(-w, -w); sh.holes.push(ho); const g = new THREE.ShapeGeometry(sh); g.rotateX(-Math.PI / 2); return g; })();
+    const dotGeo = new THREE.CylinderGeometry(CW * .12, CW * .12, .01, 18), labGeo = new THREE.PlaneGeometry(CW * .62, CW * .62); labGeo.rotateX(-Math.PI / 2);
+    function annot(list) {
+      while (an.children.length) { const o = an.children.pop(); if (o.userData.own) o.geometry.dispose(); }
+      for (let o of list || []) {
+        if (Array.isArray(o)) o = { at: o[0], cls: o[1] };
+        if (o.arrow) {
+          const [a, b] = o.arrow.map(pos), dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz); if (!len) continue;
+          const ang = Math.atan2(dx, dz), m = am(o.cls || '', .9), head = CW * .32, Ln = Math.max(.05, len - head - CW * .2);
+          const sh = new THREE.Mesh(new THREE.BoxGeometry(CW * .1, .01, Ln), m); sh.userData.own = true; sh.position.set(a[0] + Math.sin(ang) * (Ln / 2 + CW * .1), Y + .06, a[1] + Math.cos(ang) * (Ln / 2 + CW * .1)); sh.rotation.y = ang;
+          const tri = new THREE.Shape(); tri.moveTo(-CW * .2, 0); tri.lineTo(CW * .2, 0); tri.lineTo(0, head); tri.lineTo(-CW * .2, 0);
+          const hg = new THREE.ShapeGeometry(tri); hg.rotateX(-Math.PI / 2); hg.rotateY(Math.PI); const hm = new THREE.Mesh(hg, m); hm.userData.own = true;
+          hm.position.set(a[0] + Math.sin(ang) * (Ln + CW * .1), Y + .065, a[1] + Math.cos(ang) * (Ln + CW * .1)); hm.rotation.y = ang; sh.renderOrder = hm.renderOrder = 4; an.add(sh, hm); continue;
+        }
+        if (o.at == null || o.at < 0) continue; const [x, z] = pos(+o.at);
+        if (o.label != null) { const l = new THREE.Mesh(labGeo, cntMat(o.label)); l.position.set(x, Y + .045, z); l.renderOrder = 5; an.add(l); continue; }
+        if (o.cls === 'dot') { const d = new THREE.Mesh(dotGeo, am('ng', .85)); d.position.set(x, Y + .012, z); an.add(d); continue; }
+        const f = new THREE.Mesh(frameGeo, am(o.cls || 'hl', .85)); f.position.set(x, Y + .014, z); f.renderOrder = 3; an.add(f);
+      }
+      if (T3.kick) T3.kick(150);
+    }
+    window.__rvTable = { xy: q => { const [x, z] = pos(q), v = new THREE.Vector3(x, Y, z); board.localToWorld(v); return T3.project(v.x, v.z, v.y); } };   // (test hook: a square's screen position)
     const ix = c => c - 1;   // HUD pill / clock side: black (left) 0, white 1
     const onTurn = () => { if (ctx.onTurn) ctx.onTurn(ix(turn), { human: pvp || turn === human, ply }); };
     function hideHint() { hintSq = -1; if (hintRing.visible || hintGlow.visible) { hintRing.visible = hintGlow.visible = false; if (T3.kick) T3.kick(150); } hintJ++; }
@@ -122,7 +150,7 @@
       while (hints.children.length) hints.remove(hints.children[0]);
       if (over || (!pvp && turn !== human)) return;
       // (2026-11-12) the lessons (ctx.pz.counts): each legal square shows how many discs it turns, as the 2D / full game's hints
-      if (PZ && PZ.counts) { legal(cells, turn).forEach(s => { const n = flipsOf(cells, s, turn).length, [x, z] = pos(s), [x1] = pos(s ^ 1), cw = Math.abs(x1 - x) || .9;
+      if (PZ && (typeof PZ.counts === 'function' ? PZ.counts() : PZ.counts)) { legal(cells, turn).forEach(s => { const n = flipsOf(cells, s, turn).length, [x, z] = pos(s), [x1] = pos(s ^ 1), cw = Math.abs(x1 - x) || .9;
         const m = new THREE.Mesh(new THREE.PlaneGeometry(cw * .62, cw * .62), cntMat(n)); m.rotation.x = -Math.PI / 2; m.position.set(x, Y + .025, z); hints.add(m); }); return; }
       legal(cells, turn).forEach(s => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .02, 20), hintM); const [x, z] = pos(s); m.position.set(x, Y + .02, z); hints.add(m); });
     }
@@ -217,7 +245,8 @@
         setTimeout(() => { if (stopped) return; pzTurn(); res(true); }, wait);
       }),
       undo(n = 1) { const h = pzHist.length >= n ? pzHist.splice(pzHist.length - n)[0] : null; if (!h) return; cells = h.cells; turn = h.turn; last = h.last; pzMoves.length = h.n; over = false; hideHint(); while (hints.children.length) hints.remove(hints.children[0]); rebuild(); hud(''); },
-      mark(sq) { hideHint(); if (sq == null || sq < 0) return; hintSq = sq; const [x, z] = pos(sq); hintRing.position.set(x, Y + .03, z); hintGlow.position.set(x, Y + .012, z); hintRing.visible = hintGlow.visible = true;
+      annot,
+      mark(sq) { hideHint(); if (Array.isArray(sq) || sq == null) { annot(sq || null); return; } if (sq < 0) return; hintSq = sq; const [x, z] = pos(sq); hintRing.position.set(x, Y + .03, z); hintGlow.position.set(x, Y + .012, z); hintRing.visible = hintGlow.visible = true;
         anim(560, k => { const s = 1 + Math.sin(k * Math.PI * 2) * .18 * (1 - k); hintRing.scale.set(s, s, s); }); },
       exact: () => ready().then(() => new Promise(res => {   // exact final scores of every move here (side-to-move view) — the full game's analysis
         if (stopped || over) return res([]);
@@ -229,7 +258,7 @@
       load(c, _sol, toMove) {   // a new puzzle: the side to move is the player
         if (toMove == null && String(c).includes(':')) { const q = String(c).split(':'); c = q[0]; toMove = +q[1] || 1; }
         anaJ++; cells = String(c).split('').map(Number); human = +toMove; ai = 3 - human; turn = human; last = -1; over = false; busy = true; pzOn = false; pzMoves = []; pzHist = [];
-        hideHint(); while (hints.children.length) hints.remove(hints.children[0]); rebuild(); hud('');
+        hideHint(); annot(null); while (hints.children.length) hints.remove(hints.children[0]); rebuild(); hud('');
         setTimeout(() => { if (!stopped && PZ.ready) PZ.ready(); }, 450);
       },
     };
