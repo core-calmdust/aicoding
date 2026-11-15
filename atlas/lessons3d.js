@@ -557,7 +557,7 @@
   /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
-  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=17').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=18').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   function ncApply(id, L2) {
     const T = NC[id] || {}; if (!L2 || !L2.ramp) return L2;
     L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v && !(o[f] && o[f].__voice)) o[f] = v; }); return o; });   // (a guide's own line stays)
@@ -1101,8 +1101,8 @@
   };
   /* connect four (2026-11-15): connect4/lessons.json (23 steps of 3–4 one-move problems: any column in P.answer is right, = connect4/index.html
      lessonAnswer). Progress = the full game's ('aicoding-connect4-v2-lessons' { id: { best: right answers, clear: all but one right } }).
-     Texts: connect4/i18n.js + learn.js (a sandbox). Columns are named by their marks (no letters on the 3D tower); the warm-ups name
-     columns in their lines, so they stay in the full game for now. A position: { moves, me }. */
+     Texts: connect4/i18n.js + learn.js (a sandbox). Columns are named by their marks (no letters on the 3D tower); the warm-ups play here
+     too, with texts without coordinates (atlas/nocoord/connect4.json, 2026-11-16). A position: { moves, me }. */
   const C4M = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の列' : k === 'hl' ? '金の印の列' : '赤い印の列') + '\u0002' : `<i class="ls-spot ${k}"></i>`;
   const c4Grid = mv => { const g = Array.from({ length: 7 }, () => []); for (let i = 0; i < mv.length; i++) g[mv.charCodeAt(i) - 49].push(i & 1 ? 2 : 1); return g; };
   function c4Line(g, c, r, p) { const at = (x, y) => (x >= 0 && x < 7 && y >= 0 && y < g[x].length) ? g[x][y] : 0; for (const [dc, dr] of [[1, 0], [0, 1], [1, 1], [1, -1]]) { let n = 1; for (const s of [1, -1]) { let x = c + dc * s, y = r + dr * s; while (at(x, y) === p) { n++; x += dc * s; y += dr * s; } } if (n >= 4) return true; } return false; }
@@ -1124,7 +1124,8 @@
     lesson(key, lang) {
       const s = this.data.ls.steps[+key]; if (!s) return null;
       const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), name = c => (window.Atlas3D && Atlas3D.connect4 && Atlas3D.connect4.names ? Atlas3D.connect4.names(lang) : ['Gold', 'Silver'])[c - 1];
-      return { id: s.id, title: T('title'), intro: T('intro'), ramp: null,
+      const RU = (k, v) => k === 'ans' ? fill(L(C4_ANS, lang), v || {}) : fill(L((this.data.ls.rampUi || {})[k], lang), v || {}).replace(/%P([12])%/g, (_, n) => name(+n));
+      return { id: s.id, title: T('title'), intro: T('intro'), ramp: s.ramp && s.ramp.length ? s.ramp.slice() : null, RU,   // (the warm-up: texts without coordinates from atlas/nocoord/connect4.json)
         probs: (s.problems || []).map(P => { const me = P.moves.length & 1 ? 2 : 1, g = c4Grid(P.moves), hm = s.hintMarks;
           const thr = hm ? [...(hm === 'me' || hm === 'both' ? c4Thr(c4Grid(P.moves), me).map(([c, r]) => ({ c, r, cls: 'ok' })) : []), ...(hm === 'op' || hm === 'both' ? c4Thr(c4Grid(P.moves), 3 - me).map(([c, r]) => ({ c, r, cls: 'ng' })) : [])] : [];
           const why = () => T('why' + (P.why || ''), { m: C4M('ok', lang), x: C4M('ng', lang), c: name(me), a: P.alt !== undefined ? C4M('hl', lang) : '' });
@@ -1133,8 +1134,18 @@
     },
     points(P, c) { return P.answer.includes(c) ? 20 : 0; },   // (= connect4/index.html lessonAnswer)
     spOk: lang => C4M('ok', lang),
-    introPos(cc) { const s = this.data.ls.steps.find(x => x.id === cc.id), P = s && s.problems && s.problems[0]; return P ? { pos: { moves: P.moves, me: P.moves.length & 1 ? 2 : 1, lock: true } } : null; },
+    introPos(cc) { const s = this.data.ls.steps.find(x => x.id === cc.id), it = s && s.ramp && s.ramp[0], mv = it ? it.moves : s && s.problems && s.problems[0] && s.problems[0].moves; return mv != null ? { pos: { moves: mv, me: mv.length & 1 ? 2 : 1, lock: true } } : null; },
+    // the warm-up (= connect4/index.html loadRamp / rampMarks): marks are cells [c, r, cls] (a dotted threat → gold), a try's right
+    // columns are it.ok; the disc names %P1% / %P2% are the 3D set's
+    rampTx: (x, lang) => String(x || '').replace(/%P([12])%/g, (_, n) => (window.Atlas3D && Atlas3D.connect4 && Atlas3D.connect4.names ? Atlas3D.connect4.names(lang) : ['Gold', 'Silver'])[n - 1]),
+    rampPos: it => ({ moves: it.moves, me: it.moves.length & 1 ? 2 : 1 }), rampBody(it, lang) { return this.rampTx(L(it.body, lang), lang); },
+    rampMarks: it => it.k === 'explain' ? (it.marks || []).map(([c, r, cls]) => ({ c, r, cls: cls === 'ok' ? 'ok' : cls === 'ng' ? 'ng' : 'hl' })) : [],
+    rampLook: it => (it.look || []).map(([c, r]) => ({ c, r, cls: 'hl' })),
+    rampOk: (it, u) => (it.ok || []).includes(u), rampAns: it => (it.ok || [])[0],
+    rampAnsMk(it) { const g = c4Grid(it.moves); return (it.ok || []).map(c => ({ c, r: g[c].length, cls: 'ok' })); },
+    rampSeq: it => [...String(it.seq || '')].map(ch => +ch - 1),
   };
+  const C4_ANS = { ja: '答え：{m}', en: 'Answer: {m}', zh: '答案：{m}', 'zh-TW': '答案：{m}', ko: '정답: {m}', es: 'Respuesta: {m}', fr: 'Réponse : {m}', pt: 'Resposta: {m}', de: 'Lösung: {m}', hi: 'उत्तर: {m}', ar: 'الجواب: {m}', ru: 'Ответ: {m}', id: 'Jawaban: {m}', tr: 'Cevap: {m}' };
   /* hnefatafl (2026-11-15): tafl/lessons.json (16 steps of 5 problems): one move from P.ok (20 or 0), a strategy move scored by the
      engine's values P.sc (= tafl/app.js problemPoints), or N moves that keep a forced escape / capture (P.n > 1, = seqAnswer: the engine's
      puzzle solver checks each move, the most stubborn defence answers). Progress = the full game's ('aicoding-tafl-lessons' { id: { best:
@@ -1458,20 +1469,21 @@
       phase = 'ramp'; cur.ri = i; dots(); onMoved = null; let rh = 0, ok = false;
       head(cur.title + ' · ' + RU('step', { i: i + 1, n: cur.ramp.length }));
       const goOn = () => (last ? (cur.k = 0, prob()) : ramp(i + 1));
-      if (it.k === 'explain') say(`💡 <b>${L(it.t, ctx.lang)}</b><br>${D.rampBody ? D.rampBody(it, ctx.lang) : L(it.b, ctx.lang)}`);
-      else say(L(it.g, ctx.lang) + (cur.ramp.findIndex(x => x.k === 'try') === i ? `<br><small>${RU('note')}</small>` : ''));   // (the note once: on the first try)
+      const RT = x => D.rampTx ? D.rampTx(L(x, ctx.lang), ctx.lang) : L(x, ctx.lang);   // (connect4: the disc names in the lines)
+      if (it.k === 'explain') say(`💡 <b>${RT(it.t)}</b><br>${D.rampBody ? D.rampBody(it, ctx.lang) : L(it.b, ctx.lang)}`);
+      else say(RT(it.g) + (cur.ramp.findIndex(x => x.k === 'try') === i ? `<br><small>${RU('note')}</small>` : ''));   // (the note once: on the first try)
       act(last ? RU('main') : RU('next'), { hint: it.k === 'try', nextOn: it.k === 'explain' });
       $('[data-a=next]').onclick = goOn;
       $('[data-a=hint]').onclick = () => {
         if (it.k !== 'try' || ok || !pz()) return; rh = Math.min(3, rh + 1);
         if (D.rampMarks) {   // gomoku: marks on points
-          if (rh === 1) { say(L(it.h, ctx.lang)); pz().mark(D.rampMarks(it)); }
-          else if (rh === 2) { say(L(it.h, ctx.lang) + '<br>' + RU('look')); pz().mark(D.rampMarks(it).concat(D.rampLook(it))); }
+          if (rh === 1) { say(RT(it.h)); pz().mark(D.rampMarks(it)); }
+          else if (rh === 2) { say(RT(it.h) + '<br>' + RU('look')); pz().mark(D.rampMarks(it).concat(D.rampLook(it))); }
           else { const a = D.rampAns(it); say(RU('ans', { m: D.spOk ? D.spOk(ctx.lang) : SP('ok', ctx.lang) })); pz().mark(D.rampAnsMk ? D.rampAnsMk(it) : D.rampMarks(it).concat([[a, 'ok']])); }
           return;
         }
-        if (rh === 1) { say(L(it.h, ctx.lang)); pz().annot && pz().annot(null); }
-        else if (rh === 2) { say(L(it.h, ctx.lang) + '<br>' + RU('look')); pz().annot && pz().annot((it.look || []).map(q => ({ at: q, cls: 'ok' }))); }
+        if (rh === 1) { say(RT(it.h)); pz().annot && pz().annot(null); }
+        else if (rh === 2) { say(RT(it.h) + '<br>' + RU('look')); pz().annot && pz().annot((it.look || []).map(q => ({ at: q, cls: 'ok' }))); }
         else { say(RU('ans', { m: SP(pz().annot ? 'arrow' : 'mark', ctx.lang) })); if (pz().annot) pz().annot([{ arrow: [it.ok[0].slice(0, 2), it.ok[0].slice(2, 4)], cls: '' }, { at: it.ok[0].slice(0, 2), cls: 'ok' }]); else if (pz().mark) pz().mark(it.ok[0]); }
       };
       await board(D.rampPos ? D.rampPos(it) : it.fen); if (stopped || phase !== 'ramp' || cur.ri !== i) return;
@@ -1480,7 +1492,7 @@
       marks0();
       let rLine = false;   // (a mate in 3 or more: the first move was right, the line goes on — the defender answers, the player mates)
       const rDone = () => {
-        ok = true; if (D.rampMarks) pz().mark(null); else if (pz().annot) pz().annot(null); say(`✓ ${L(it.y, ctx.lang)}`); try { chime(true); } catch (e) {}
+        ok = true; if (D.rampMarks) pz().mark(null); else if (pz().annot) pz().annot(null); say(`✓ ${RT(it.y)}`); try { chime(true); } catch (e) {}
         act(last ? RU('main') : RU('next'), {});
         autoGo(2600, () => cur && phase === 'ramp' && cur.ri === i && !more.length, goOn);
       };
@@ -1498,7 +1510,7 @@
         if (it.k === 'explain') { if (D.rampUndo) D.rampUndo(pz()); else pz().undo(1); marks0(); pz().wait(); return; }   // (the explanation's board is for looking)
         if (D.rampOk ? D.rampOk(it, u) : it.ok.includes(u)) return rDone();   // (right: on to the next step by itself, the meter on 次へ)
         say(RU('ng')); try { chime(false); } catch (e) {}
-        if (D.rampMarks && !['checkers', 'xiangqi', 'backgammon', 'tafl', 'amazons'].includes(id)) pz().mark([[u, 'ng']]);   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
+        if (D.rampMarks && !['checkers', 'xiangqi', 'backgammon', 'tafl', 'amazons', 'connect4'].includes(id)) pz().mark([[u, 'ng']]);   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
         later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { if (D.rampUndo) D.rampUndo(pz()); else if (!(it.pick)) pz().undo(1); marks0(); pz().wait(); } }, 1100);
       };
       pz().wait();
