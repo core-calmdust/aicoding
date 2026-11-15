@@ -411,6 +411,89 @@
     });
   }
 
+  /* ---------- the picture looks (2026-11-15): a surface without the grid (images/atlas/goban3d/surf-<look>, atlas/tools/goban-tex.py),
+     the grid drawn on it here for any n, in the look's own way ---------- */
+  // Go: kaya · lacquer · cosmos 星空 · zen 枯山水 · blue 青花 · bamboo 竹.  Gomoku: lacquer · kaya · tile モザイク · gingham ピクニック · slate 黒板 · denim デニム
+  const PLOOK = {
+    cosmos: { line: 'glow', col: '#bfe6ff', star: 'star', leg: { color: 0x0a0a12, roughness: .12, clearcoat: 1, clearcoatRoughness: .05 }, bottom: 0x07070c, gloss: { clearcoat: 1, clearcoatRoughness: .06 }, emis: true },
+    zen: { line: 'groove', col: 'rgba(96,84,64,.82)', star: 'pit', leg: { color: 0x6f6d68, roughness: .9 }, bottom: 0x5a5852 },
+    blue: { line: 'brush', col: 'rgba(32,62,150,.92)', star: 'dot', leg: { color: 0xf3f2ec, roughness: .1, clearcoat: 1, clearcoatRoughness: .04 }, bottom: 0xe8e6de, gloss: { clearcoat: 1, clearcoatRoughness: .04 } },
+    bamboo: { line: 'burn', col: 'rgba(70,38,14,.9)', star: 'dot', leg: { color: 0x7a5a2c, roughness: .5, clearcoat: .4, clearcoatRoughness: .3 }, bottom: 0x8a6a38, gloss: { clearcoat: .35, clearcoatRoughness: .35 } },
+    tile: { line: 'grout', col: 'rgba(238,232,214,.97)', star: 'tile', leg: { color: 0xece6d6, roughness: .5 }, bottom: 0xd8d0be, gloss: { clearcoat: .9, clearcoatRoughness: .1 } },
+    gingham: { line: 'stitch', col: 'rgba(24,20,20,.95)', star: 'button', leg: { color: 0xb88a50, roughness: .7 }, bottom: 0xa07a46 },
+    slate: { line: 'chalk', col: 'rgba(236,238,230,.85)', star: 'chalkdot', leg: { color: 0xa87c48, roughness: .6 }, bottom: 0x8a643a },
+    denim: { line: 'jeans', col: '#e8a040', star: 'rivet', leg: { color: 0x2a3550, roughness: .6, metalness: 0 }, bottom: 0x1c2438 },
+  };
+  const LOOKS_GO = ['kaya', 'lacquer', 'cosmos', 'zen', 'blue', 'bamboo'], LOOKS_GM = ['lacquer', 'kaya', 'tile', 'gingham', 'slate', 'denim'];
+  const GB3 = (() => { try { return new URL('../../images/atlas/goban3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/goban3d/'; } })(), GB3V = '?v=1';
+  const gbImg = {};
+  function gb3(name, srgb = true) { if (gbImg[name]) return gbImg[name];
+    const t = new (T().TextureLoader)().load(GB3 + name + (X.coarse || X.lite ? '-h' : '') + '.webp' + GB3V, () => { if (X.kick) X.kick(300); });
+    if (srgb) t.encoding = T().sRGBEncoding; t.anisotropy = 8; return (gbImg[name] = t); }
+  // the grid in the look's way (g: a 2D context of size W; p(i): the i-th line's place; c: one cell)
+  function drawGrid(g, W, n, margin, L, layer) {
+    const span = n - 1 + 2 * margin, c = W / span, p = i => (margin + i) * c, r = rnd(n * 31 + 7);
+    const line = (x0, y0, x1, y1, w) => { g.lineWidth = w; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); };
+    const each = f => { for (let i = 0; i < n; i++) { const edge = i === 0 || i === n - 1; f(p(i), p(0), p(i), p(n - 1), edge); f(p(0), p(i), p(n - 1), p(i), edge); } };
+    const st = stars(n);
+    g.save(); g.lineCap = 'round';
+    if (layer === 'bump') {   // white: raised (paint, stitches, rivets) · black: sunk (grooves, grout)
+      const sunk = L.line === 'groove' || L.line === 'grout' || L.line === 'burn';
+      g.fillStyle = '#808080'; g.fillRect(0, 0, W, W); g.strokeStyle = g.fillStyle = sunk ? '#202020' : '#ffffff';
+      if (L.line === 'stitch' || L.line === 'jeans') g.setLineDash([c * .16, c * .1]);
+      each((a, b, cc, d, e) => line(a, b, cc, d, c * (L.line === 'grout' ? .1 : L.line === 'groove' ? .09 : .05)));
+      if (L.line === 'jeans') each((a, b, cc, d) => { const o = c * .07; a === cc ? line(a + o, b, cc + o, d, c * .04) : line(a, b + o, cc, d + o, c * .04); });
+      g.setLineDash([]); st.forEach(([a, b]) => { g.beginPath(); g.arc(p(a), p(b), c * (L.star === 'rivet' || L.star === 'button' ? .16 : .1), 0, TAU); g.fill(); });
+      g.restore(); return;
+    }
+    const col = L.col;
+    if (L.line === 'glow') {
+      g.strokeStyle = col; g.shadowColor = col; g.shadowBlur = c * .35; each((a, b, cc, d, e) => line(a, b, cc, d, c * (e ? .045 : .03)));
+      g.shadowBlur = 0; g.globalAlpha = .9; each((a, b, cc, d) => line(a, b, cc, d, c * .012)); g.globalAlpha = 1;
+      st.forEach(([a, b]) => { const x = p(a), y = p(b), gr = g.createRadialGradient(x, y, 0, x, y, c * .45); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.15, 'rgba(210,235,255,.9)'); gr.addColorStop(1, 'rgba(120,180,255,0)'); g.fillStyle = gr; g.fillRect(x - c * .5, y - c * .5, c, c);
+        g.strokeStyle = 'rgba(255,255,255,.85)'; line(x - c * .4, y, x + c * .4, y, c * .02); line(x, y - c * .4, x, y + c * .4, c * .02); });
+    } else if (L.line === 'groove') {
+      g.strokeStyle = col; each((a, b, cc, d) => line(a, b, cc, d, c * .085)); g.strokeStyle = 'rgba(255,252,244,.5)'; each((a, b, cc, d) => line(a + c * .03, b + c * .03, cc + c * .03, d + c * .03, c * .015));
+      g.fillStyle = 'rgba(90,80,64,.7)'; st.forEach(([a, b]) => { g.beginPath(); g.arc(p(a), p(b), c * .1, 0, TAU); g.fill(); });
+    } else if (L.line === 'brush' || L.line === 'burn' || L.line === 'chalk') {
+      g.strokeStyle = col;
+      const k = L.line === 'chalk' ? 3 : 1;
+      each((a, b, cc, d, e) => { for (let q = 0; q < k; q++) { g.globalAlpha = L.line === 'chalk' ? .45 + r() * .3 : .85 + r() * .15; const j = () => (r() - .5) * c * (L.line === 'chalk' ? .03 : .012);
+        g.lineWidth = c * (L.line === 'burn' ? .06 : e ? .05 : .035) * (.85 + r() * .3); g.beginPath(); g.moveTo(a + j(), b + j()); g.lineTo((a + cc) / 2 + j(), (b + d) / 2 + j()); g.lineTo(cc + j(), d + j()); g.stroke(); } });
+      if (L.line === 'burn') { g.globalAlpha = .35; g.strokeStyle = 'rgba(70,38,14,.5)'; each((a, b, cc, d) => line(a, b, cc, d, c * .12)); }
+      g.globalAlpha = 1; g.fillStyle = col; st.forEach(([a, b]) => { g.beginPath(); g.arc(p(a), p(b), c * .09, 0, TAU); g.fill(); });
+    } else if (L.line === 'grout') {
+      g.strokeStyle = col; each((a, b, cc, d) => line(a, b, cc, d, c * .11)); g.lineCap = 'butt';
+      g.fillStyle = '#e8b830'; st.forEach(([a, b]) => { g.fillRect(p(a) - c * .14, p(b) - c * .14, c * .28, c * .28); });   // a gold tile at each star point
+    } else if (L.line === 'stitch') {
+      g.strokeStyle = col; g.setLineDash([c * .16, c * .1]); each((a, b, cc, d) => line(a, b, cc, d, c * .04)); g.setLineDash([]);
+      st.forEach(([a, b]) => { const x = p(a), y = p(b); g.fillStyle = '#f4f0e6'; g.beginPath(); g.arc(x, y, c * .15, 0, TAU); g.fill(); g.strokeStyle = 'rgba(0,0,0,.4)'; g.lineWidth = c * .015; g.stroke(); g.fillStyle = '#333'; for (const [u, v] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.beginPath(); g.arc(x + u * c * .045, y + v * c * .045, c * .022, 0, TAU); g.fill(); } });
+    } else if (L.line === 'jeans') {
+      g.strokeStyle = col; g.setLineDash([c * .12, c * .07]); each((a, b, cc, d) => line(a, b, cc, d, c * .03));
+      each((a, b, cc, d) => { const o = c * .07; a === cc ? line(a + o, b, cc + o, d, c * .03) : line(a, b + o, cc, d + o, c * .03); }); g.setLineDash([]);
+      st.forEach(([a, b]) => { const x = p(a), y = p(b), gr = g.createRadialGradient(x - c * .04, y - c * .04, 0, x, y, c * .16); gr.addColorStop(0, '#f6d4a0'); gr.addColorStop(.5, '#c4782e'); gr.addColorStop(1, '#6a3a14'); g.fillStyle = gr; g.beginPath(); g.arc(x, y, c * .15, 0, TAU); g.fill(); });
+    } else {
+      g.strokeStyle = col; each((a, b, cc, d, e) => line(a, b, cc, d, c * (e ? .05 : .035))); g.fillStyle = col; st.forEach(([a, b]) => { g.beginPath(); g.arc(p(a), p(b), c * .09, 0, TAU); g.fill(); });
+    }
+    g.restore();
+  }
+  const ptex = {};
+  function pTop(n, margin, look, layer) {   // the surface picture + the grid, composed once the picture has loaded
+    const key = 'gbP' + look + n + (layer || ''); if (ptex[key]) return ptex[key];
+    const TT = T(), Wd = SZ(layer === 'bump' ? 1024 : 2048), c = document.createElement('canvas'); c.width = c.height = Wd;
+    const t = new TT.CanvasTexture(c); t.anisotropy = 8; if (layer !== 'bump') t.encoding = TT.sRGBEncoding;
+    const g = c.getContext('2d'), L = PLOOK[look];
+    if (layer === 'bump') { drawGrid(g, Wd, n, margin, L, 'bump'); t.needsUpdate = true; }
+    else if (layer === 'emis') { g.fillStyle = '#000'; g.fillRect(0, 0, Wd, Wd); drawGrid(g, Wd, n, margin, L); t.needsUpdate = true; }
+    else {
+      const im = new Image(); im.crossOrigin = 'anonymous';
+      im.onload = () => { g.drawImage(im, 0, 0, Wd, Wd); drawGrid(g, Wd, n, margin, L); t.needsUpdate = true; if (X.kick) X.kick(300); };
+      im.src = GB3 + 'surf-' + look + (X.coarse || X.lite ? '-h' : '') + '.webp' + GB3V;
+      g.fillStyle = '#888'; g.fillRect(0, 0, Wd, Wd);
+    }
+    return (ptex[key] = t);
+  }
+
   /* ---------- 沈金: gold hairline landscapes on black urushi ---------- */
   const GOLD = '#efcd72', PALE = '#f7e3a4', DEEP = '#c9a04a', MOSS = '#bcc77a', JADE = '#8fbf8e', BLUE = '#8fb1c4';
   // 沈金 side panels + their metalness / roughness maps: one job (the art is drawn in a worker where it can be)
@@ -433,6 +516,19 @@
   function matsFor(n, margin, look) {
     const key = n + look; if (mats[key]) return mats[key];
     const TT = T(), o = {};
+    if (PLOOK[look]) {
+      const L = PLOOK[look], sm = gb3('surf-' + look + '-m', false), dm = gb3('side-' + look + '-m', false);
+      const tp = Object.assign({ map: pTop(n, margin, look), roughnessMap: sm, roughness: 1, metalness: 0, bumpMap: pTop(n, margin, look, 'bump'), bumpScale: .003 }, L.gloss || {});
+      if (L.emis) Object.assign(tp, { emissiveMap: pTop(n, margin, look, 'emis'), emissive: new TT.Color(0xffffff), emissiveIntensity: .9 });
+      o.top = new TT[tp.clearcoat !== undefined ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](tp);
+      const sd = Object.assign({ map: gb3('side-' + look), roughnessMap: dm, metalnessMap: dm, metalness: 1, roughness: 1, bumpMap: dm, bumpScale: .002 }, L.gloss || {});
+      if (L.emis) Object.assign(sd, { emissiveMap: gb3('side-' + look), emissive: new TT.Color(0xffffff), emissiveIntensity: .4 });
+      const side = new TT[sd.clearcoat !== undefined ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](sd);
+      o.sides = [side, side, side, side];
+      o.leg = new TT.MeshPhysicalMaterial(Object.assign({}, L.leg, { color: new TT.Color(L.leg.color).convertSRGBToLinear() }));
+      o.bottom = M({ color: L.bottom, roughness: .8 });
+      return (mats[key] = o);
+    }
     const top = tex('gbTop' + n, topCanvas(n, margin)), bump = tex('gbTopB' + n, topBump(n, margin), false);
     o.top = M({ map: top, bump: false, roughness: .42, clearcoat: .2, clearcoatRoughness: .35 });
     o.top.bumpMap = bump; o.top.bumpScale = .0035;
@@ -478,7 +574,8 @@
     const TT = T(), n = o.n || 15, margin = o.margin || 1.25, W = o.W || 8.8, cell = W / (n - 1 + 2 * margin);
     const TH = o.thick || W * .3, LH = o.leg || W * .2, top = LH + TH;
     const g = new TT.Group();
-    let look = o.look === 'kaya' ? 'kaya' : 'lacquer';
+    const okLook = lk => lk === 'kaya' || lk === 'lacquer' || !!PLOOK[lk];
+    let look = okLook(o.look) ? o.look : 'lacquer';
     const m0 = matsFor(n, margin, look);
     // BoxGeometry groups: +x, −x, +y, −y, +z, −z → sides: front +z = 0, right +x = 1, back −z = 2, left −x = 3
     const body = new TT.Mesh(RB(W, TH, W, W * .006, 3), [m0.sides[1], m0.sides[3], m0.top, m0.bottom, m0.sides[0], m0.sides[2]]);
@@ -490,10 +587,10 @@
     // the games' own 2D board designs tint the kaya a little (when their 2D stones are chosen)
     const TONES = { classic: 0xffffff, grain: 0xd8b088, metal: 0xd2d8de, ink: 0x6e665e };
     let tone = 'classic';
-    const paintTone = () => { const m = matsFor(n, margin, look).top; if (!m.userData.c0) m.userData.c0 = m.color.clone(); m.color.copy(m.userData.c0).multiply(new TT.Color(TONES[tone] || 0xffffff).convertSRGBToLinear()); };
+    const paintTone = () => { if (PLOOK[look]) return; const m = matsFor(n, margin, look).top; if (!m.userData.c0) m.userData.c0 = m.color.clone(); m.color.copy(m.userData.c0).multiply(new TT.Color(TONES[tone] || 0xffffff).convertSRGBToLinear()); };
     function setTone(t) { tone = TONES[t] ? t : 'classic'; paintTone(); if (X.kick) X.kick(200); }
     function setLook(lk) {
-      lk = lk === 'kaya' ? 'kaya' : 'lacquer'; if (lk === look) return; look = lk;
+      lk = okLook(lk) ? lk : 'lacquer'; if (lk === look) return; look = lk;
       const m = matsFor(n, margin, look);
       body.material = [m.sides[1], m.sides[3], m.top, m.bottom, m.sides[0], m.sides[2]]; legs.forEach(l => { l.material = m.leg; });
       g.userData.look = look; paintTone(); if (X.kick) X.kick(200);
@@ -535,9 +632,61 @@
       : M({ map: tex('gbShell', shellCanvas()), bump: false, roughness: .26, clearcoat: .55, clearcoatRoughness: .18 });
     return (stoneMats[color] = m);
   }
+  /* ---------- stone sets (2026-11-15): six per game, each with a shape and finish of its own ----------
+     Go: classic 那智黒と蛤 · yunzi 雲子 (single convex) · pebble 川石 · gem 黒曜石と月長石 · porcelain 天目と白磁 · wood 黒檀とツゲ
+     Gomoku: classic · glass おはじき · cookie クッキー · magnet マグネット · button ボタン · pearl 真珠 */
+  const SETS_GO = ['classic', 'yunzi', 'pebble', 'gem', 'porcelain', 'wood'], SETS_GM = ['classic', 'glass', 'cookie', 'magnet', 'button', 'pearl'];
+  let curGame = 'go';
+  const curSet = () => { const P = X.PIECES && X.PIECES[curGame]; const v = P ? P.get() : 'classic'; return v || 'classic'; };
+  const SHAPE = { classic: 'cv', yunzi: 'single', pebble: 'pebble', gem: 'cv', porcelain: 'cv', wood: 'disc', glass: 'lens', cookie: 'disc', magnet: 'flat', button: 'disc', pearl: 'sphere' };
+  function shapeGeo(kind, r) {
+    if (kind === 'cv') return stoneGeo(r);
+    const key = kind + r.toFixed(4); if (geos[key]) return geos[key];
+    const TT = T(), pts = [], seg = X.coarse ? 16 : 24;
+    const V = (x, y) => pts.push(new TT.Vector2(Math.max(.0004, x), y));
+    if (kind === 'single') { const h = r * .42; V(.0004, 0); V(r * .96, 0); V(r, h * .08); for (let i = 1; i <= 7; i++) { const a = i / 7 * Math.PI / 2; V(r * Math.cos(a) * .98, h * Math.pow(Math.sin(a), .85)); } }
+    else if (kind === 'disc' || kind === 'flat') { const h = r * (kind === 'flat' ? .2 : .26), b = h * (kind === 'flat' ? .2 : .45); V(.0004, 0); V(r - b, 0); for (let i = 0; i <= 4; i++) { const a = -Math.PI / 2 + i / 4 * Math.PI; V(r - b + Math.cos(a) * b, b + Math.sin(a) * b + (i > 2 ? h - 2 * b : 0)); } V(r - b, h); V(.0004, h); }
+    else if (kind === 'lens') { const h = r * .24; V(.0004, 0); for (let i = 0; i <= 6; i++) { const a = i / 6 * Math.PI; V(r * Math.sin(a), h / 2 - Math.cos(a) * h / 2 + (Math.sin(a) > .999 ? 0 : 0)); } V(.0004, h); }
+    else if (kind === 'sphere') { const h = r * .9; for (let i = 0; i <= 10; i++) { const a = -Math.PI / 2 + i / 10 * Math.PI; V(r * .92 * Math.cos(a), h / 2 + Math.sin(a) * h / 2); } }
+    else if (kind === 'pebble') { const h = r * .5; for (let i = 0; i <= 8; i++) { const a = -Math.PI / 2 + i / 8 * Math.PI; V(r * Math.pow(Math.cos(a), .7), h / 2 + Math.sin(a) * h / 2 * (a > 0 ? 1.1 : .8)); } }
+    const g = new TT.LatheGeometry(pts.sort((a, b) => a.y - b.y), seg), P = g.attributes.position, uv = g.attributes.uv;
+    if (kind === 'pebble') for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i), a = Math.atan2(z, x), k = 1 + .07 * Math.sin(a * 2 + .7) + .04 * Math.sin(a * 3 + 2.1); P.setX(i, x * k); P.setZ(i, z * k * .9); }
+    for (let i = 0; i < P.count; i++) uv.setXY(i, .5 + P.getX(i) / (2 * r), .5 + P.getZ(i) / (2 * r));
+    g.computeVertexNormals();
+    return (geos[key] = X.share ? X.share(g) : g);
+  }
+  const ftx = {};
+  function ftex(key, draw, srgb = true, Wd = 256) { if (ftx[key]) return ftx[key]; const c = document.createElement('canvas'); c.width = c.height = Wd; draw(c.getContext('2d'), Wd); const t = new (T().CanvasTexture)(c); if (srgb) t.encoding = T().sRGBEncoding; t.anisotropy = 4; return (ftx[key] = t); }
+  const speck = (key, base, dots, n, seed) => ftex(key, (g, W) => { g.fillStyle = base; g.fillRect(0, 0, W, W); const r = rnd(seed); for (let i = 0; i < n; i++) { g.fillStyle = dots[i % dots.length]; const s = r() * 2.4 + .5; g.globalAlpha = .3 + r() * .7; g.fillRect(r() * W, r() * W, s, s); } g.globalAlpha = 1; });
+  const setMats = {};
+  function setMat(set, color) {
+    const key = set + color; if (setMats[key]) return setMats[key];
+    const TT = T(), w = color === 2, lin = c => new TT.Color(c).convertSRGBToLinear(), P = o => new TT.MeshPhysicalMaterial(o);
+    let m;
+    switch (set) {
+      case 'yunzi': m = w ? P({ color: lin(0xeee7d2), roughness: .62, sheen: .6, sheenColor: lin(0xfffbe8), clearcoat: .15 }) : P({ color: lin(0x121612), roughness: .5, sheen: .8, sheenColor: lin(0x2e4a32), clearcoat: .2 }); break;
+      case 'pebble': m = w ? P({ map: speck('gpW', '#e3dfd6', ['#c9c3b8', '#f7f4ee', '#b8b0a2'], 2600, 3), roughness: .7 }) : P({ map: speck('gpB', '#2e2e2c', ['#4a4a46', '#1a1a1a', '#5a5852'], 2600, 5), roughness: .78 }); break;
+      case 'gem': m = w ? P({ color: lin(0xe9edf4), roughness: .08, clearcoat: 1, clearcoatRoughness: .02, iridescence: .9, iridescenceIOR: 1.4, sheen: 1, sheenColor: lin(0x86aaff) }) : P({ color: lin(0x08080a), roughness: .03, clearcoat: 1, clearcoatRoughness: .01, envMapIntensity: 1.6 }); break;
+      case 'porcelain': m = w ? P({ map: ftex('gpPor', (g, W) => { g.fillStyle = '#f6f5ef'; g.fillRect(0, 0, W, W); g.strokeStyle = '#2a4aa0'; g.lineWidth = W * .03; g.beginPath(); g.arc(W / 2, W / 2, W * .36, 0, TAU); g.stroke(); g.lineWidth = W * .01; g.beginPath(); g.arc(W / 2, W / 2, W * .3, 0, TAU); g.stroke(); }), roughness: .08, clearcoat: 1, clearcoatRoughness: .03 })
+        : P({ map: speck('gpTen', '#140d08', ['#b8b8c0', '#8e8a98', '#6a5a4a'], 900, 9), roughness: .08, clearcoat: 1, clearcoatRoughness: .03, iridescence: .5 }); break;
+      case 'wood': m = w ? P({ color: lin(0xe6cc94), roughness: .42, clearcoat: .5, clearcoatRoughness: .25 }) : P({ color: lin(0x261c16), roughness: .32, clearcoat: .6, clearcoatRoughness: .2 }); break;
+      case 'glass': m = w ? P({ color: lin(0xf2f6fa), roughness: .04, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .62 }) : P({ color: lin(0x22242c), roughness: .03, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .88 }); break;
+      case 'cookie': { const b = ftex('gpCk', (g, W) => { g.fillStyle = '#808080'; g.fillRect(0, 0, W, W); g.fillStyle = '#a8a8a8'; g.beginPath(); g.arc(W / 2, W / 2, W * .4, 0, TAU); g.fill(); g.fillStyle = '#5a5a5a'; for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; g.beginPath(); g.arc(W / 2 + Math.cos(a) * W * .3, W / 2 + Math.sin(a) * W * .3, W * .02, 0, TAU); g.fill(); } g.strokeStyle = '#5a5a5a'; g.lineWidth = W * .015; for (let i = -2; i <= 2; i++) { g.beginPath(); g.moveTo(W * (.5 + i * .08), W * .3); g.lineTo(W * (.5 + i * .08), W * .7); g.stroke(); } }, false);
+        m = w ? P({ color: lin(0xe8cc8c), roughness: .85, bumpMap: b, bumpScale: .004 }) : P({ color: lin(0x4a2816), roughness: .8, bumpMap: b, bumpScale: .004 }); break; }
+      case 'magnet': m = w ? P({ color: lin(0xf5f5f2), roughness: .3, clearcoat: .6, clearcoatRoughness: .2 }) : P({ color: lin(0x151517), roughness: .28, clearcoat: .6, clearcoatRoughness: .2 }); break;
+      case 'button': { const t = ftex('gpBt' + color, (g, W) => { g.fillStyle = w ? '#f2efe6' : '#1c1c1f'; g.fillRect(0, 0, W, W); g.strokeStyle = w ? '#d8d2c4' : '#33333a'; g.lineWidth = W * .05; g.beginPath(); g.arc(W / 2, W / 2, W * .36, 0, TAU); g.stroke(); g.fillStyle = w ? '#6a6050' : '#000'; for (const [u, v] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.beginPath(); g.arc(W / 2 + u * W * .08, W / 2 + v * W * .08, W * .045, 0, TAU); g.fill(); } });
+        const b = ftex('gpBtB', (g, W) => { g.fillStyle = '#808080'; g.fillRect(0, 0, W, W); g.strokeStyle = '#d0d0d0'; g.lineWidth = W * .08; g.beginPath(); g.arc(W / 2, W / 2, W * .4, 0, TAU); g.stroke(); g.fillStyle = '#404040'; g.beginPath(); g.arc(W / 2, W / 2, W * .3, 0, TAU); g.fill(); g.fillStyle = '#000'; for (const [u, v] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.beginPath(); g.arc(W / 2 + u * W * .08, W / 2 + v * W * .08, W * .045, 0, TAU); g.fill(); } }, false);
+        m = P({ map: t, bumpMap: b, bumpScale: .006, roughness: .22, clearcoat: .8, clearcoatRoughness: .1 }); break; }
+      case 'pearl': m = w ? P({ color: lin(0xf4efe6), roughness: .16, iridescence: .8, iridescenceIOR: 1.5, sheen: .8, sheenColor: lin(0xffe8f0), clearcoat: .6 }) : P({ color: lin(0x2c2c36), roughness: .14, iridescence: .9, iridescenceIOR: 1.5, sheen: .8, sheenColor: lin(0x8a7a9a), clearcoat: .6 }); break;
+      default: m = stoneMat(color);
+    }
+    return (setMats[key] = m);
+  }
   function stone(color, cell, seed) {
-    const m = new (T().Mesh)(stoneGeo(cell * .47), stoneMat(color === 1 ? 1 : 2));
+    const set = curSet(), col = color === 1 ? 1 : 2;
+    const m = new (T().Mesh)(set === 'classic' ? stoneGeo(cell * .47) : shapeGeo(SHAPE[set] || 'cv', cell * .47), set === 'classic' ? stoneMat(col) : setMat(set, col));
     m.castShadow = !X.coarse; m.receiveShadow = !X.coarse; m.rotation.y = ((seed ?? Math.random() * 1e3) * 2.39996) % TAU;
+    if (set === 'pebble') { const k = .92 + ((seed || 0) * 7.13 % 1) * .14; m.scale.set(k, 1, k * (.94 + ((seed || 0) * 3.7 % 1) * .1)); }
     m.userData.stone = color; return m;
   }
 
@@ -658,13 +807,13 @@
     return g;
   }
 
-  X.goban = { board, stone, bowl, tapMark, stoneGeo, stoneMat, stars, SH, _canvas: { art, artMR, kayaGrain, kayaSide, topCanvas, shellCanvas, ringCanvas, sideGrainCanvas } };
+  X.goban = { board, stone, bowl, tapMark, stoneGeo, stoneMat, stars, SH, LOOKS_GO, LOOKS_GM, SETS_GO, SETS_GM, game: g => { curGame = g; }, _canvas: { art, artMR, kayaGrain, kayaSide, topCanvas, shellCanvas, ringCanvas, sideGrainCanvas } };
 
   /* ---------- gomoku on the chabudai ---------- */
   const SHOW = [112, 127, 129, 126, 124, 114, 143, 96, 109, 157, 156, 142, 110, 111, 81, 139, 95, 123, 82, 65, 67];   // a renju game from the centre (cells: row * 15 + col, row 0 = bottom)
   X.MODELS.gomoku = function (live, o) {
-    const TT = T(), g = new TT.Group();
-    let look = (o && o.look) || null; if (!look) { try { look = localStorage.getItem('atlas-gomoku-look') === 'kaya' ? 'kaya' : 'lacquer'; } catch (e) { look = 'lacquer'; } }
+    const TT = T(), g = new TT.Group(); curGame = 'gomoku';
+    let look = (o && o.look) || null; if (!look) look = X.BOARDS && X.BOARDS.gomoku ? X.BOARDS.gomoku.get() : 'lacquer';
     const b = board({ n: 15, look, W: (o && o.W) || 8.8 }); g.add(b);
     Object.assign(g.userData, b.userData, { board: b, viewY: b.userData.top * 1.05 });   // showcase: the camera looks at the playing surface of the tall legged board, so it sits where the other boards do
     if (live) return g;
@@ -687,8 +836,8 @@
   // the showcase: a 19 × 19 opening (x, y from the top-left corner), black first
   const GO_SHOW = ['pd', 'dp', 'pq', 'dd', 'fq', 'cn', 'jp', 'qf', 'nc', 'rd', 'qc', 'qi', 'qk', 'oe', 'pe', 'of', 'ld', 'fc', 'cf', 'ch'];
   X.MODELS.go = function (live, o) {
-    const TT = T(), g = new TT.Group(), n = Math.max(5, Math.min(19, (o && o.n) || 19));
-    let look = (o && o.look) || null; if (!look) { try { look = localStorage.getItem('atlas-go-look') === 'lacquer' ? 'lacquer' : 'kaya'; } catch (e) { look = 'kaya'; } }
+    const TT = T(), g = new TT.Group(), n = Math.max(5, Math.min(19, (o && o.n) || 19)); curGame = 'go';
+    let look = (o && o.look) || null; if (!look) look = X.BOARDS && X.BOARDS.go ? X.BOARDS.go.get() : 'kaya';
     const b = board({ n, look, W: (o && o.W) || 8.8 }); g.add(b);
     Object.assign(g.userData, b.userData, { board: b, viewY: b.userData.top * 1.05 });   // showcase: the camera looks at the playing surface of the tall legged board, so it sits where the other boards do
     if (live) return g;

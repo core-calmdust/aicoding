@@ -1240,7 +1240,7 @@
       lv: [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1977, 2087, 2212, 2302, 2337, 2362, 2537, 2602] },
     checkers: { key: 'aicoding-checkers-rated', start: 1000, flag: 'k', off: 0, from: 1, tc: { id: 'rt', main: 300, inc: 3 },   // (checkers/app.js RT_STORE / RT_LV / RT_CLOCK, 2026-11-14)
       lv: [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2320, 2370] },
-    gomoku: { key: 'aicoding-gomoku-rated', start: 1000, flag: 'k', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },   // (gomoku/app.js RT_STORE / RT_LV / RT_CLOCK, 2026-11-13)
+    gomoku: { key: 'aicoding-gomoku-rated', start: 1000, flag: 'k', off: 0, from: 1, size: 1, tc: { id: 'rt', main: 600, inc: 5 },   // (gomoku/app.js RT_STORE / RT_LV / RT_CLOCK, 2026-11-13)
       lv: [0, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2400, 2600, 2800] },
     hex: { key: 'aicoding-hex-rated', start: 1000, flag: 'f', off: 0, from: 1, size: 11, tc: { id: 'rt', main: 300, inc: 3 },   // (hex/app.js RT_STORE / RT_LV / rtClock: 11×11 with the swap rule, 5 min + 3 s, 2026-11-15)
       lv: [0, 630, 740, 850, 1015, 1180, 1345, 1545, 1670, 1735, 1830, 1870, 1910, 1945, 1965, 1985, 2005, 2045, 2085, 2125, 2185] },

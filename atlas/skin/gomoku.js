@@ -24,7 +24,7 @@
 
   /* ---------- look: 'lacquer' | 'kaya' | '' (the game's own 2D stones on the kaya board) ---------- */
   const LK = 'atlas-gomoku-look';
-  let mine = 'lacquer'; try { const v = localStorage.getItem(LK); mine = v === '0' ? '' : v === 'kaya' ? 'kaya' : 'lacquer'; } catch (e) {}
+  let mine = 'lacquer'; try { const v = localStorage.getItem(LK); mine = v === '0' ? '' : (T3.BOARDS.gomoku.list.includes(v) ? v : 'lacquer'); } catch (e) {}   // (2026-11-15: six 3D boards)
   const root = T3.MODELS.gomoku(true, { look: mine || 'kaya' }), U = root.userData, S = U.S, Y = U.top, c = U.cell;
   // how far the near side and the legs reach below the field (in DOM cells), for the shift lens
   const SHIFT = S * 1.3, PERSP = 2.6, D = S * PERSP, zE = U.W / 2;
@@ -112,35 +112,23 @@
   // every redraw of the marks (last move, hints, forbidden points, win line …) asks for a frame too
   if (typeof window.renderFx === 'function') { const oFx = window.renderFx; window.renderFx = function () { const r = oFx.apply(this, arguments); T3.kick(200); return r; }; }
 
-  /* ---------- the board-design row: two 3D looks + the game's own 2D boards ---------- */
-  const LBLS = {
-    lacquer: { ja: '漆・沈金3D', en: 'Lacquer 3D', zh: '漆金3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي', ru: 'Лак 3D', 'zh-TW': '漆器3D', id: '3D pernis', tr: 'Lake 3D' },
-    kaya: { ja: '榧3D', en: 'Kaya 3D', zh: '榧木3D', ko: '비자 3D', es: 'Kaya 3D', fr: 'Kaya 3D', pt: 'Kaya 3D', de: 'Kaya 3D', hi: 'काया 3D', ar: 'كايا ثلاثي', ru: 'Кая 3D', 'zh-TW': '榧木3D', id: '3D kaya', tr: 'Kaya ağacı 3D' },
-  };
-  const BTN = { lacquer: 'atlaslacq', kaya: 'atlaskaya' };
+  /* ---------- デザイン: the game's own 2D boards, and under them 「3D盤」 (six boards) / 「3D石」 (six stone sets) (2026-11-15) ---------- */
   const seg = document.getElementById('segSkin');
-  { const st2 = document.createElement('style'); st2.textContent = '#segSkin .a3gm{display:grid;place-items:center;aspect-ratio:1;border-radius:8px;background:radial-gradient(85% 85% at 50% 38%,#fff9ea,#f1dfba 70%,#e3c98f)}#segSkin .a3gm img{width:84%;height:84%;object-fit:contain}'; document.head.appendChild(st2); }
   const skinNow = () => { try { return settings.skin || 'classic'; } catch (e) { return 'classic'; } };
-  let V = null;   // AtlasSkin.view: a 2D board = the plain 2D page (no 3D table), a 3D look = the 3D board
+  let V = null, R3 = null;   // AtlasSkin.view: a 2D board = the plain 2D page (no 3D table), a 3D look = the 3D board
   function look() {
     if (V) V.set(!!mine);
-    if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === BTN[mine]); else if (x.dataset.set) x.classList.remove('sel'); });
     U.setLook(mine || 'kaya'); U.setTone(mine ? 'classic' : skinNow());
     group.visible = !!mine; de.classList.toggle('atlas-gm3d', !!mine);
-    try { localStorage.setItem('atlas-gomoku-look', mine === 'kaya' ? 'kaya' : mine ? 'lacquer' : '0'); } catch (e) {}
+    try { localStorage.setItem('atlas-gomoku-look', mine || '0'); } catch (e) {}
+    if (R3) R3.paint();
     T3.kick(400);
   }
-  if (seg) {
-    const bs = ['kaya', 'lacquer'].map(k => { const b = document.createElement('button'); b.type = 'button'; b.dataset.v = BTN[k]; b.dataset.set = k; seg.prepend(b); return b; });
-    const paintLbl = () => { const l = (document.getElementById('langSel') || {}).value || 'ja'; bs.forEach(b => { const L = LBLS[b.dataset.set]; b.innerHTML = '<i class="skart a3gm"><img src="../images/atlas/gomoku.webp" alt="" draggable="false"></i><span></span>'; b.querySelector('span').textContent = L[l] || L.en; }); };
-    paintLbl(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintLbl, 30));
-    seg.addEventListener('click', e => {
-      const t = e.target.closest('button'); if (!t) return;
-      mine = t.dataset.set || '';
-      if (mine) e.stopImmediatePropagation();   // a 3D look: the game's own 2D setting stays as it is
-      setTimeout(look, 0);
-    }, true);
-  }
+  function restone() { for (const [, o] of st3) { group.remove(o.g); o.g.userData.sh.material.dispose(); } st3.clear(); try { mirror(-1); } catch (e) {} T3.kick(400); }
+  if (seg) seg.addEventListener('click', e => { if (e.target.closest('button')) { mine = ''; setTimeout(look, 0); } }, true);   // a 2D board: the plain 2D page
+  const r3host = seg && (seg.closest('.field') || seg.parentNode);
+  if (AtlasSkin.rows3d && r3host) R3 = AtlasSkin.rows3d({ id: 'gomoku', host: r3host, clear: seg, is3: () => !!mine, board: k => { mine = k; look(); }, piece: () => { if (!mine) { mine = T3.BOARDS.gomoku.get(); look(); } restone(); } });
+  addEventListener('storage', e => { if (e.key === 'atlas-gomoku-pc3') restone(); });
   if (typeof window.applySkin === 'function') { const oa = window.applySkin; window.applySkin = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} return r; }; }
   if (skin.view) V = skin.view({ key: 'atlas-gomoku-view', init: !!mine, cls: ['atlas-gomoku'], on() { setTimeout(() => { try { if (typeof window.applySkin === 'function') window.applySkin(); } catch (e) {} }, 0); } });
   setTimeout(look, 0);
