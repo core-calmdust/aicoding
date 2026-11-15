@@ -485,11 +485,13 @@ function openSettings() {
   // a volume row: its name, a slider, a mute button (ユーザー 2026-11-14)
   const vrow = k => { const off = DB.set[k + 'On'] === false, v = Math.round((DB.set[k + 'Vol'] ?? 1) * 100);
     return `<div class="st-row st-vol ${off ? 'off' : ''}"><small>${esc(t(k === 'se' ? 'se' : 'music'))}<b>${off ? esc(t('mute')) : v}</b></small><div class="st-v"><button class="st-m" data-m="${k}" aria-label="${esc(t('mute'))}">${off ? IC.mute : IC.snd}</button><input type="range" min="0" max="100" step="5" value="${v}" data-k="${k}" style="--p:${v}%"></div></div>`; };
+  // (2026-11-15, ユーザー: on a phone everything was too big and the light mode fell off the bottom) two columns — the sound on
+  // one side, the language and light mode on the other — which on a phone fit the screen in one view; a PC keeps one column
   const draw = () => `<h2>${esc(t('settings'))}</h2>
-    ${row('language', [['ja', '日本語'], ['en', 'English']], I18N.lang)}
-    ${vrow('se')}${vrow('bg')}
+    <div class="st-grid"><div class="st-col">${vrow('se')}${vrow('bg')}</div>
+    <div class="st-col">${row('language', [['ja', '日本語'], ['en', 'English']], I18N.lang)}
     ${row('lite', [['0', t('off')], ['1', t('on')]], DB.set.lite ? '1' : '0')}
-    <p class="st-note">${esc(t('liteNote'))}</p>
+    <p class="st-note">${esc(t('liteNote'))}</p></div></div>
     <div class="cbtns"><button class="btn gold" data-a="close">${esc(t('close'))}</button></div>`;
   const box = modal(draw(), 'settings');
   box.addEventListener('input', e => {
