@@ -315,6 +315,7 @@ body.no-anim :is(.dst,.trayglow,.cube.offer){animation:none}
 /* lesson & puzzle */
 .lesson-card,.puzzle-card{display:none}
 body.in-lesson .lesson-card{display:block}
+body.in-ramp #coachCard{display:none!important}   /* the warm-up before a lesson (2026-11-15): no coach box beside it */
 body.in-puzzle .puzzle-card{display:block}
 body.in-lesson #evalCard, body.in-lesson .kifu-card, body.in-lesson .info-line, body.in-lesson .controls, body.in-lesson .hint-card,
 body.in-puzzle #evalCard, body.in-puzzle .kifu-card, body.in-puzzle .info-line, body.in-puzzle .controls, body.in-puzzle .hint-card{display:none!important}
@@ -850,7 +851,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
   html:not(.rot) .app:has(:is(.review-card,.hint-card).show){grid-template-columns:minmax(0,.95fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,.95fr);grid-template-areas:"board board board board" "pl ev rv kf"}
   /* the coach (coach.js) takes a wide column of the info row; switched off it stays as a narrow note */
   html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)){grid-template-columns:minmax(0,.9fr) minmax(0,1.7fr) minmax(0,.95fr) minmax(0,.9fr);grid-template-areas:"board board board board" "pl ck ev kf"}
-  html:not(.rot) .app:has(> .side > .side-in > #coachCard.ck-off:not(.hidden)){grid-template-columns:minmax(0,1fr) minmax(0,.7fr) minmax(0,1.1fr) minmax(0,1fr)}
+  html:not(.rot) body:not(.in-ramp) .app:has(> .side > .side-in > #coachCard.ck-off:not(.hidden)){grid-template-columns:minmax(0,1fr) minmax(0,.7fr) minmax(0,1.1fr) minmax(0,1fr)}
   html:not(.rot) .app:has(> .side > .side-in > #coachCard:not(.hidden)):has(:is(.review-card,.hint-card).show){grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr) minmax(0,.85fr) minmax(0,1.1fr) minmax(0,.8fr);grid-template-areas:"board board board board board" "pl ck ev rv kf"}
   #coachCard{grid-area:ck;overflow-y:auto;min-height:0;padding:12px 14px;scrollbar-width:thin}
   /* one layout for play and review (2026-10-30): the wide left column is the coach (review: the review box), 対局者 above 形勢 in the middle,
@@ -881,6 +882,7 @@ html[lang=ar] .lx-st{margin-left:0;margin-right:auto}
   .review-card.show, .hint-card.show{grid-area:rv;display:flex;flex-direction:column;overflow:hidden;padding:12px 14px;min-height:0}
   #rvBody, #hintBody{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin}
   body.in-lesson .lesson-card, body.in-puzzle .puzzle-card{grid-area:ls;overflow-y:auto;min-height:0}
+  html:not(.rot) body.in-ramp .lesson-card{grid-row:2 / 4}   /* the warm-up: no coach box, the card takes its rows */
   :is(.lesson-card,.puzzle-card) .lesson-actions{flex-wrap:wrap}
   :is(.lesson-card,.puzzle-card) .lesson-actions button{flex:1 1 auto;white-space:nowrap;text-overflow:clip}
   /* compact player cards: name on the left, pips on the right, the status line under it */
@@ -1585,7 +1587,7 @@ body.rated-live #evalCard,body.rated-live #coachCard{display:none!important}
 <script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/mtworkers.js?v=4"></script>
 <script src="mt.js?v=4"></script>
 <script src="../shared/placement.js?v=1l14"></script><script src="i18n-rt.js?v=1"></script><script src="rt-levels.js?v=1"></script>
-<script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=20261115rt"></script>
+<script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=20261115ramp2"></script>
 <script src="op.js?v=20261021opan-lx1"></script>
 <script src="online-ui.js?v=20261031ck1pnlx1c"></script>
 <script src="land.js?v=10"></script>

@@ -1482,5 +1482,19 @@
   "id": "Jawabannya adalah panah hijau. Ikuti panahnya.",
   "hi": "जवाब हरे तीर हैं। तीरों के हिसाब से चलो।",
   "ar": "الإجابة هي الأسهم الخضراء. تحرّك على طولها."
+ },
+ "ui/skip": {
+  "zh": "跳过热身",
+  "zh-TW": "跳過暖身",
+  "ko": "준비 건너뛰기",
+  "es": "Saltar el calentamiento",
+  "fr": "Passer l’échauffement",
+  "pt": "Pular o aquecimento",
+  "de": "Aufwärmen überspringen",
+  "ru": "Пропустить разминку",
+  "tr": "Isınmayı geç",
+  "id": "Lewati pemanasan",
+  "hi": "तैयारी छोड़ो",
+  "ar": "تخطَّ الإحماء"
  }
 }
