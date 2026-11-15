@@ -385,9 +385,9 @@ function nailArt(style, col, small) {
       if (name === 'ring' || name === 'index') for (let x = -.3; x <= .31; x += .3) stone(x, .26 + (.3 - Math.abs(x)) * .2, .085, 'pearl', 0, '#f6d98a');
       if (name === 'middle' || name === 'thumb') stone(0, .5, .14, 'pearl');
     } else {                                   // 'ombre': pale at the cuticle running to her colour gone deep at the tip; holographic flakes (reference 4)
-      band(0, AR, [[0, pale], [.22, hc(h, s * .7, .82)], [.55, hc(h, Math.min(.9, s), .46)], [1, deep]]);
-      for (let k = 0; k < 7; k++) blob((R() * 2 - 1) * .7, AR * (.15 + R() * .4), .35 + R() * .4, .9 + R() * 1.0, 'rgba(255,255,255,.3)', 'rgba(255,255,255,0)');     // soft pale clouds, like water colour
-      const yC = AR * .5;
+      band(0, AR, [[0, hc(h, s * .75, .82)], [.12, hc(h, s * .85, .68)], [.36, hc(h, Math.min(.9, s), .46)], [1, deep]]);     // (ユーザー 2026-11-15: the white part stood out in play — the colour takes most of the nail, only the cuticle end is pale)
+      for (let k = 0; k < 4; k++) blob((R() * 2 - 1) * .7, AR * (.05 + R() * .22), .3 + R() * .3, .6 + R() * .6, 'rgba(255,255,255,.16)', 'rgba(255,255,255,0)');     // soft pale clouds, like water colour
+      const yC = AR * .42;
       glitter(3200, .1, AR, y => Math.max(.04, 1 - Math.abs(y - yC) / (AR * .36)) * .8, .007, .017, silver);
       glitter(110, .2, AR, y => Math.max(.1, 1 - Math.abs(y - yC) / (AR * .4)), .035, .065, holo, true);
       if (name === 'ring') { stone(0, .6, .17, 'round'); stone(-.28, .95, .08, 'round'); stone(.28, .95, .08, 'round'); }
