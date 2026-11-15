@@ -12,7 +12,7 @@
      to zoom, the arrow keys to move it, C to come back; it follows the ball again at the next flick. V: near / whole.
      「シュート宣言」 (or S) calls a shot when the ball is in the attacking half; the defender then sets the goalkeeper in
      the small area (drag it, then 「構えOK」) and the attacker shoots.
-   · Game length (the size select): halves of 20 / 30 / 50 flicks (both sides' flicks together; 2026-11-15 ユーザー：時間制は問題が
+   · Game length (the size select): halves of 30 / 50 / 80 flicks (both sides' flicks together; 50 the default — 30 felt short; 2026-11-15 ユーザー：時間制は問題が
      多いので行動回数制に — it was 3 / 5 / 10 minutes), or first to 3 goals.
    ===================================================================== */
 (function () {
@@ -21,7 +21,7 @@
   const TXT = window.BOTAO_TXT || {};   // (atlas/games/botao-i18n.js)
   const LVD = window.BOTAO_LVD || {}, WHO = window.BOTAO_WHO || {}, HOWTO = window.BOTAO_HOWTO || {};
   function levelInfo(n, lang) { const b = n <= 3 ? 0 : n <= 8 ? 1 : n <= 14 ? 2 : 3; return { name: 'Lv.' + n, desc: (LVD[lang] || LVD.en || [])[b] || '', who: (WHO[lang] || WHO.en || [])[b] || '' }; }
-  const SIZES = [20, 30, 50, 103];   // halves of 20 / 30 / 50 flicks (both sides' together), or first to 3 goals
+  const SIZES = [30, 50, 80, 103];   // halves of 30 / 50 / 80 flicks (both sides' together), or first to 3 goals
   const tl = (l, k) => ((window.BOTAO_TXT || {})[l] || (window.BOTAO_TXT || {}).en || {})[k] || k;
   const sizeName = (z, l) => z === 103 ? tl(l, 'g3') : tl(l, 'n' + z);
   const sizeLabel = l => tl(l, 'len');
@@ -49,7 +49,7 @@
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, E = window.BotaoEngine, D = E.DIM, SND = AC().SND;
     const lang = ctx.lang, L = TXT[lang] || TXT.en;
     const tx = (k, o) => { let s = L[k] != null ? L[k] : (TXT.en[k] != null ? TXT.en[k] : k); if (o) for (const q in o) s = s.split('{' + q + '}').join(o[q]); return s; };
-    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), size = SIZES.includes(+ctx.size) ? +ctx.size : 30;
+    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), size = SIZES.includes(+ctx.size) ? +ctx.size : 50;
     const youFirst = (+ctx.side || 1) === 1;
     const BDL = (T3.BOARDS && T3.BOARDS.botao) ? T3.BOARDS.botao.list : ['classic', 'retro', 'night', 'praia', 'madeira', 'neon'];
     let look = T3.BOARDS && T3.BOARDS.botao ? T3.BOARDS.botao.get() : 'classic';
@@ -708,5 +708,5 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.botao = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 30, sizeLabel, sizeName, levelInfo, start, TXT, SX, L14 };
+  window.Atlas3D.botao = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 50, sizeLabel, sizeName, levelInfo, start, TXT, SX, L14 };
 })();
