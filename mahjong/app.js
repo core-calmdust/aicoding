@@ -1611,20 +1611,21 @@ function peekPop(ids) {
 // 読心 (ユーザー 2026-11-16): the others' hands, shown the same way as 先読み — one plate in the middle of the screen, a row per
 // player (face, テンパイ with the waits / n向聴, and any tiles the skill shows), closed by a tap or a key
 function mindPop(read) {
-  // (ユーザー 2026-11-16) every row: face · name · state in a fixed width · then the tiles, all starting in the same column, each
-  // group headed by what it is — 待ち (the tiles that would win) or 手の内 (tiles of the hand the skill shows)
-  const grp = (lab, tiles) => `<i class="mr-t"><small>${esc(lab)}</small>${tiles}</i>`;
+  // (ユーザー 2026-11-16) a small table: the headings 待ち | 手の内 along the top, and each player's tiles under the heading they belong
+  // to (待ち: the tiles that would win; 手の内: tiles of the hand the skill shows) — an empty cell is a faint dash
+  const cell = (cls, tiles) => `<span class="mr-c ${cls}">${tiles || '<i class="mr-no">—</i>'}</span>`;
   const row = (r, i) => {
     const tp = r.shanten <= 0;
-    const st = `<b class="${tp ? 'tp' : ''}">${esc(tp ? t('tenpai') : t('shanten', { n: r.shanten }))}</b>`;
     const ch = UIS.chars[r.seat];
-    const ts = (r.shanten === 0 && r.waits && r.waits.length ? grp(t('waitsOn'), r.waits.map(w => typeHTML(w)).join('')) : '')
-      + (r.show && r.show.length ? grp(t('handPart'), r.show.map(id => tileHTML(id)).join('')) : '');
-    return `<div class="mr-r" style="--i:${i}"><img src="${charImg(ch, 'face')}" alt=""><span class="mr-n">${esc(L(ch.name))}</span><span class="mr-s">${st}</span><span class="mr-ts">${ts}</span></div>`;
+    return `<div class="mr-r" style="--i:${i}"><img src="${charImg(ch, 'face')}" alt=""><span class="mr-n">${esc(L(ch.name))}</span>`
+      + `<span class="mr-s"><b class="${tp ? 'tp' : ''}">${esc(tp ? t('tenpai') : t('shanten', { n: r.shanten }))}</b></span>`
+      + cell('w', r.shanten === 0 && r.waits && r.waits.length ? r.waits.map(w => typeHTML(w)).join('') : '')
+      + cell('h', r.show && r.show.length ? r.show.map(id => tileHTML(id)).join('') : '') + '</div>';
   };
+  const head = `<div class="mr-hd"><span></span><span></span><span></span><span class="w">${esc(t('waitsOn'))}</span><span class="h">${esc(t('handPart'))}</span></div>`;
   return new Promise(done => {
     const w = document.createElement('div'); w.className = 'peekpop mindpop';
-    w.innerHTML = `<div class="pk-box"><small>${esc(t('mindT'))}</small><div class="mr-rows">${read.map(row).join('')}</div><em>${esc(t('peekClose'))}</em></div>`;
+    w.innerHTML = `<div class="pk-box"><small>${esc(t('mindT'))}</small><div class="mr-rows">${head}${read.map(row).join('')}</div><em>${esc(t('peekClose'))}</em></div>`;
     $('#game').appendChild(w); void w.offsetWidth; w.classList.add('show');
     let shut = false;
     const close = e => { if (shut) return; if (e) { e.preventDefault(); e.stopPropagation(); } shut = true; removeEventListener('keydown', key, true);
