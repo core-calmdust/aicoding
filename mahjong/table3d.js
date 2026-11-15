@@ -276,7 +276,7 @@ function rugTex() {
 // Each nail of the hand mesh has its own uv (hand-gen.py): five cells side by side (thumb, index, middle, ring, little finger), u across
 // the nail in its outline's shape, v from the cuticle (0) to the tip (1). Two pictures are painted per look: the colour, and a
 // second one read as height (r: stones and beads stand up), roughness (g) and metalness (b: glitter and stones mirror the room).
-// style: 'gem' | 'butterfly' | 'french' | 'ombre'; col: the sisters' colour. Drawn in the nail's own measure: x −1…1 across at
+// style: 'gem' | 'butterfly' | 'french' | 'ombre' | 'bekko' | 'foil' | 'marble'; col: the sisters' colour. Drawn in the nail's own measure: x −1…1 across at
 // the widest (Hd.nl: where the free edge starts, the length, the width there), y from the cuticle up to AR at the tip (the same unit both ways, so a circle is round on the nail).
 function nailArt(style, col, small) {
   const Hd = window.JANKA_HAND, W = small ? 512 : 1024, H = small ? 256 : 512, CW = W / 5;
@@ -308,7 +308,7 @@ function nailArt(style, col, small) {
       const R1 = kind === 'marq' ? r * 1.7 : kind === 'sq' ? r * 1.15 : r;
       m.fillStyle = 'rgba(40,20,30,.28)'; m.save(); m.translate(r * .08, -r * .1); path(m); m.fill(); m.restore();                                  // a little shade under it
       path(m); const g1 = m.createRadialGradient(-r * .25, r * .3, r * .05, 0, 0, R1); const base = c0 || (pearl ? '#fffaf2' : '#f4f8ff');
-      g1.addColorStop(0, '#ffffff'); g1.addColorStop(.55, base); g1.addColorStop(1, pearl ? '#d9cfc8' : '#b4c0d8'); m.fillStyle = g1; m.fill();
+      g1.addColorStop(0, '#ffffff'); g1.addColorStop(.55, base); g1.addColorStop(1, c0 ? '#c79a45' : pearl ? '#d9cfc8' : '#b4c0d8'); m.fillStyle = g1; m.fill();
       if (!pearl) { m.save(); path(m); m.clip();                                                                                                     // facets: light and dark wedges, a bright table
         for (let k = 0; k < 8; k++) { const a = k * .785 + .2; m.fillStyle = k % 2 ? 'rgba(255,255,255,.55)' : 'rgba(120,140,180,.3)'; m.beginPath(); m.moveTo(0, 0); m.lineTo(Math.cos(a) * R1 * 1.2, Math.sin(a) * R1 * 1.2); m.lineTo(Math.cos(a + .785) * R1 * 1.2, Math.sin(a + .785) * R1 * 1.2); m.fill(); }
         m.fillStyle = 'rgba(255,255,255,.7)'; m.beginPath(); if (kind === 'round') m.arc(0, 0, r * .42, 0, 6.3); else m.rect(-r * .3, -R1 * .42, r * .6, R1 * .84); m.fill(); m.restore(); }
@@ -327,47 +327,71 @@ function nailArt(style, col, small) {
     f.fillStyle = FX0; f.fillRect(-1.3, -.1, 2.6, AR + .2);
     const dust = (amt) => glitter(Math.round(2200 * amt), .1, AR, y => .2 + .8 * Math.pow(y / AR, 1.6), .007, .016, silver);     // a fine shimmer, more toward the tip
 
-    if (style === 'gem') {                     // nude with glitter; rhinestones; the ring finger edged with pearl beads (reference 1)
+    // (ユーザー 2026-11-15: no nail painted differently from the rest — every finger has the same base; the fingers differ only in pattern and decoration)
+    const flake = (x, y, r, c) => { for (const [g, cc] of [[m, c], [f, 'rgb(150,30,255)']]) { g.fillStyle = cc; g.beginPath(); const n = 5 + Math.floor(R() * 3), a0 = R() * 6.3; for (let k = 0; k < n; k++) { const a = a0 + k * 6.283 / n, q = r * (.45 + R() * .75); g.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q * 1.2); } g.closePath(); g.fill(); } };   // a torn bit of metal leaf
+    const leaf = (n, y0, y1, dens, c) => { for (let k = 0; k < n; k++) { const y = y0 + R() * (y1 - y0), x = (R() * 2 - 1) * wAt(y) * .92; if (R() < dens(y)) flake(x, y, .04 + R() * .09, c()); } };
+    const vein = (c, wd, metal, a) => { let x = (R() * 2 - 1) * .8, y = -.1; const pts = [[x, y]]; while (y < AR + .2) { x += (R() - .5) * .34 + (a || 0); y += .3 + R() * .4; pts.push([x, y]); }
+      for (const [g, cc] of metal ? [[m, c], [f, 'rgb(150,30,255)']] : [[m, c]]) { g.strokeStyle = cc; g.lineWidth = wd; g.lineJoin = g.lineCap = 'round'; g.beginPath(); pts.forEach(([px, py], k) => k ? g.lineTo(px, py) : g.moveTo(px, py)); g.stroke(); } };
+    const blob = (x, y, rx, ry, c0, c1) => { m.save(); m.translate(x, y); m.rotate(R() * 3.1); m.scale(rx, ry); const gr = m.createRadialGradient(0, 0, 0, 0, 0, 1); gr.addColorStop(0, c0); gr.addColorStop(.6, c0); gr.addColorStop(1, c1); m.fillStyle = gr; m.beginPath(); m.arc(0, 0, 1, 0, 6.3); m.fill(); m.restore(); };
+    const gold = () => R() < .5 ? '#f3d27a' : R() < .5 ? '#e2b653' : '#fbe7a6';
+    if (style === 'gem') {                     // nude with glitter gathering toward the tip; rhinestones; the ring finger edged with pearl beads (reference 1)
       band(0, AR, [[0, nude], [.45, hc(hN, grey ? .36 : Math.min(.75, s * .7), grey ? .84 : .8)], [1, hc(hN, grey ? .3 : Math.min(.8, s * .8), grey ? .82 : .72)]]);
-      if (name === 'middle' || name === 'thumb') {           // a full glitter nail
-        glitter(5200, .05, AR, y => .5 + .5 * y / AR, .008, .02, () => R() < .5 ? '#ffffff' : hc(hN + (R() - .5) * .1, grey ? .3 : .6, .84));
-        glitter(150, .3, AR, () => .8, .03, .055, holo, true);
-        stone(0, .62, .24, 'round'); if (name === 'middle') stone(0, yE + .2, .13, 'round');
-      } else if (name === 'ring') {                          // the accent nail
-        dust(.5);
+      glitter(3600, .1, AR, y => Math.pow(y / AR, 1.4), .008, .02, () => R() < .5 ? '#ffffff' : hc(hN + (R() - .5) * .1, grey ? .3 : .6, .84));
+      glitter(110, yE * .7, AR, y => (y - yE * .7) / (AR - yE * .7), .028, .05, holo, true);
+      if (name === 'ring') {
         for (let y = .2; y < AR - .12; y += .2) for (const sx of [-1, 1]) stone(sx * (wAt(y) - .1), y, .088, 'pearl');
         for (let x = -.3; x <= .31; x += .2) stone(x * wAt(AR - .1) / .5, AR - .1, .088, 'pearl');
         for (let x = -.42; x <= .43; x += .21) stone(x, .12 + (.42 - Math.abs(x)) * .12, .088, 'pearl');
         stone(.04, AR * .62, .27, 'marq', .12); stone(-.08, AR * .3, .26, 'sq', -.1); stone(.34, AR * .43, .12, 'round'); stone(-.36, AR * .52, .1, 'round'); stone(.3, AR * .26, .09, 'round'); stone(-.2, AR * .8, .1, 'round');
-      } else { dust(.9); glitter(90, yE, AR, y => (y - yE) / (AR - yE), .028, .05, holo, true);
-        stone(0, .6, name === 'index' ? .2 : .17, 'round'); stone(-.3, 1.0, .08, 'round'); stone(.32, 1.12, .07, 'round'); if (name === 'index') stone(.02, 1.42, .09, 'round'); }
+      } else if (name === 'middle' || name === 'thumb') { stone(0, .62, .24, 'round'); stone(-.3, 1.02, .1, 'round'); stone(.3, 1.02, .1, 'round'); stone(0, 1.3, .13, 'round'); }
+      else { stone(0, .6, name === 'index' ? .2 : .17, 'round'); stone(-.3, 1.0, .08, 'round'); stone(.32, 1.12, .07, 'round'); }
     } else if (style === 'butterfly') {        // a sheer syrup pink; a white butterfly on the ring finger and the thumb (reference 2)
       band(0, AR, [[0, nude], [.3, nude2], [1, hc(h, Math.min(.7, s * .8), .74)]]);
       dust(.22);
       if (name === 'ring' || name === 'thumb') butterfly(0, AR * .5, Math.min(.92, AR * .19));
-      else if (name === 'middle') { stone(0, .5, .1, 'pearl'); }
+      else stone(0, .5, .1, 'pearl');
     } else if (style === 'french') {           // nude, the tip dipped in her colour gone almost black, glitter along the edge, little stars (reference 3)
       band(0, AR, [[0, nude], [1, nude2]]);
-      const full = name === 'ring', yS = full ? -.2 : yE + (AR - yE) * .18;
+      const yS = yE + (AR - yE) * .18;
       const gr = m.createLinearGradient(0, yS - .5, 0, yS + .45); gr.addColorStop(0, hc(h, .5, .12, 0)); gr.addColorStop(.6, hc(h, grey ? .1 : .55, .14, .8)); gr.addColorStop(1, ink); m.fillStyle = gr; m.fillRect(-1.3, yS - .5, 2.6, AR + 2);
       { const g3 = m.createLinearGradient(0, yS, 0, AR); g3.addColorStop(0, hc(h, s, .3, 0)); g3.addColorStop(1, hc(h, Math.min(.9, s), .34, .5)); m.fillStyle = g3; m.fillRect(-1.3, yS, 2.6, AR + 2); }   // her colour glows in the tip
-      if (!full) glitter(4200, yS - 1.3, yS + .8, y => Math.pow(Math.max(0, 1 - Math.abs(y - yS + .1) / 1.0), 1.5), .008, .02, silver);
-      else { dust(.5); stone(0, AR * .3, .2, 'round'); stone(0, AR * .3 + .42, .09, 'round'); stone(0, AR * .3 - .4, .09, 'round'); }
+      glitter(4200, yS - 1.3, yS + .8, y => Math.pow(Math.max(0, 1 - Math.abs(y - yS + .1) / 1.0), 1.5), .008, .02, silver);
       if (name === 'index') { star(.3, yS - .95, .34); star(-.36, yS - .3, .2); star(-.1, yS + 1.3, .26); }
       if (name === 'middle') { star(-.28, yS - .7, .3); star(.3, yS + 1.0, .3); stone(.05, yS - .15, .13, 'round'); }
-      if (name === 'ring') { star(-.3, AR * .7, .34); star(.34, AR * .56, .2); }
+      if (name === 'ring') { stone(0, yS - .75, .2, 'round'); stone(0, yS - .32, .1, 'round'); stone(0, yS - 1.16, .1, 'round'); star(-.32, yS + 1.1, .3); star(.3, yS + .5, .2); }
       if (name === 'pinky') { stone(0, yS - .1, .15, 'round'); star(.2, yS + 1.1, .24); }
       if (name === 'thumb') { star(.3, yS - .8, .32); star(-.3, yS + .8, .24); stone(-.1, yS - .2, .12, 'round'); }
-    } else {                                   // 'ombre': her colour deep, running to a pale tip on two nails; holographic flakes (reference 4)
-      const grad = name === 'middle' || name === 'ring';
-      if (grad) { band(0, AR, [[0, pale], [.22, hc(h, s * .7, .82)], [.55, hc(h, Math.min(.9, s), .46)], [1, deep]]);
-        for (let k = 0; k < 7; k++) { const x = (R() * 2 - 1) * .7, y0 = AR * (.15 + R() * .4), rr = .35 + R() * .4; m.save(); m.translate(x, y0); m.scale(1, 2.6);     // soft pale clouds, like water colour
-          const gr = m.createRadialGradient(0, 0, 0, 0, 0, rr); gr.addColorStop(0, 'rgba(255,255,255,.34)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); m.fillStyle = gr; m.beginPath(); m.arc(0, 0, rr, 0, 6.3); m.fill(); m.restore(); } }
-      else band(0, AR, [[0, hc(h, Math.min(.85, s * .9), .36)], [.5, deep], [1, hc(h, Math.min(.9, s), .2)]]);
-      const yC = grad ? AR * .45 : AR * .72;
+    } else if (style === 'bekko') {            // tortoiseshell: clear honey amber with soft brown clouds, a little gold leaf
+      band(0, AR, [[0, 'hsl(40,90%,74%)'], [.5, hc(h, .9, .6)], [1, hc(h - .02, .9, .52)]]);
+      for (let k = 0; k < 5; k++) blob((R() * 2 - 1) * .7, .3 + R() * (AR - .4), .3 + R() * .35, .5 + R() * .6, 'hsla(28,85%,42%,.55)', 'hsla(28,85%,42%,0)');
+      for (let k = 0; k < 3; k++) blob((R() * 2 - 1) * .7, .3 + R() * (AR - .4), .2 + R() * .22, .35 + R() * .4, 'hsla(20,75%,22%,.62)', 'hsla(20,75%,24%,0)');
+      leaf(name === 'ring' || name === 'thumb' ? 60 : 26, .3, AR, () => .5, gold);
+      if (name === 'ring') for (let x = -.45; x <= .46; x += .225) stone(x, .2 + (.45 - Math.abs(x)) * .14, .085, 'pearl', 0, '#f6d98a');
+      if (name === 'middle') stone(0, .55, .16, 'round', 0, '#ffe9b0');
+    } else if (style === 'foil') {             // milk white under torn gold leaf, a gold line along the tip
+      band(0, AR, [[0, nude], [.4, 'hsl(30,60%,93%)'], [1, 'hsl(40,70%,95%)']]);
+      const side = name === 'index' || name === 'ring' ? 1 : -1;
+      leaf(120, .3, AR, y => .1 + .9 * Math.pow(y / AR, 1.6), gold);
+      leaf(22, .3, AR * .8, () => .7, () => R() < .5 ? hc(h, .9, .6) : '#fff3c4');
+      vein('#e9bf5c', .05, true, side * .12);
+      for (const [g, cc] of [[m, '#eac566'], [f, 'rgb(170,24,255)']]) { g.fillStyle = cc; g.fillRect(-1.3, AR - .16, 2.6, .3); }
+      if (name === 'ring') { stone(0, .6, .2, 'pearl'); stone(-.3, .95, .09, 'pearl', 0, '#f6d98a'); stone(.3, .95, .09, 'pearl', 0, '#f6d98a'); }
+      if (name === 'thumb' || name === 'middle') stone(0, .5, .12, 'pearl', 0, '#f6d98a');
+    } else if (style === 'marble') {           // a milk-tea marble: soft white clouds and veins on mocha, fine gold veins
+      band(0, AR, [[0, hc(h, .42, .8)], [.5, hc(h, .45, .7)], [1, hc(h, .48, .6)]]);
+      for (let k = 0; k < 6; k++) blob((R() * 2 - 1) * .7, R() * AR, .3 + R() * .4, .6 + R() * .8, 'rgba(255,248,240,.6)', 'rgba(255,248,240,0)');
+      for (let k = 0; k < 3; k++) blob((R() * 2 - 1) * .7, R() * AR, .2 + R() * .3, .4 + R() * .5, hc(h, .5, .4, .5), hc(h, .5, .4, 0));
+      vein('rgba(255,255,255,.7)', .05, false, .05); vein('rgba(255,255,255,.5)', .03, false, -.06); vein('#e9bf5c', .03, true, -.04);
+      if (name === 'ring' || name === 'index') for (let x = -.3; x <= .31; x += .3) stone(x, .26 + (.3 - Math.abs(x)) * .2, .085, 'pearl', 0, '#f6d98a');
+      if (name === 'middle' || name === 'thumb') stone(0, .5, .14, 'pearl');
+    } else {                                   // 'ombre': pale at the cuticle running to her colour gone deep at the tip; holographic flakes (reference 4)
+      band(0, AR, [[0, pale], [.22, hc(h, s * .7, .82)], [.55, hc(h, Math.min(.9, s), .46)], [1, deep]]);
+      for (let k = 0; k < 7; k++) blob((R() * 2 - 1) * .7, AR * (.15 + R() * .4), .35 + R() * .4, .9 + R() * 1.0, 'rgba(255,255,255,.3)', 'rgba(255,255,255,0)');     // soft pale clouds, like water colour
+      const yC = AR * .5;
       glitter(3200, .1, AR, y => Math.max(.04, 1 - Math.abs(y - yC) / (AR * .36)) * .8, .007, .017, silver);
       glitter(110, .2, AR, y => Math.max(.1, 1 - Math.abs(y - yC) / (AR * .4)), .035, .065, holo, true);
-      if (name === 'pinky' || name === 'index') stone(0, .55, .13, 'round');
+      if (name === 'ring') { stone(0, .6, .17, 'round'); stone(-.28, .95, .08, 'round'); stone(.28, .95, .08, 'round'); }
+      if (name === 'index' || name === 'thumb') stone(0, .5, .12, 'round');
     }
     m.restore(); f.restore();
   });
