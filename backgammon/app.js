@@ -2977,7 +2977,7 @@ function startLesson(step) {
 //   checkers (look) → the answer's arrows (ans).
 let RAMPS = null;
 const LL = o => !o ? '' : typeof o === 'string' ? o : o[LANG] != null ? o[LANG] : o.en != null ? o.en : o.ja || '';
-fetch('ramps.json?v=2').then(r => r.json()).then(d => { RAMPS = d; }).catch(() => {});
+fetch('ramps.json?v=3').then(r => r.json()).then(d => { RAMPS = d; }).catch(() => {});
 const RU = (k, v) => { let x = LL(RAMPS && RAMPS.ui && RAMPS.ui[k]) || ''; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; };
 const rampItem = () => lesson && lesson.ramp ? lesson.ramp[lesson.ri] : null;
 function rampMarks(it, p) {
