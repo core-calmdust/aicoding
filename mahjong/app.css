@@ -2420,3 +2420,20 @@ html.lp #chara.ch2 .ci-pane .ptn .sib.lock .frame{width:40px;height:40px;margin-
 html.lp #chara.ch2 .ci-pane .ptn .sib.lock .sn{display:none}
 html.lp #chara.ch2 .ci-pane .ptn .ptn-box{min-height:0}
 html.lp #chara.ch2 .ci-pane .ptn .ptn-empty{padding:12px 14px}
+
+/* (ユーザー 2026-11-16) the character screen has no coin count at the top right */
+#chara .ch-top .coins{display:none}
+/* (ユーザー 2026-11-16, phone) a compact head: the name (the 許婚 mark beside it), then rarity · title · coin bonus on one line */
+html.lp #chara.ch2 .ci-hd{display:flex;align-items:center;gap:12px}
+html.lp #chara.ch2 .ci-hd .pp-lead{margin-left:auto}
+html.lp #chara.ch2 .ch-sub{display:flex;align-items:center;gap:9px;margin-top:-2px;white-space:nowrap}
+html.lp #chara.ch2 .ch-sub em.prar{font-size:14px;padding:1px 10px}
+html.lp #chara.ch2 .ch-sub .pp-t{font-size:16px;letter-spacing:.14em;margin:0}
+html.lp #chara.ch2 .ch-sub .pp-cb{font-size:14px}
+/* (ユーザー 2026-11-16) パートナー is an option: while none is chosen a soft light runs across its tab now and then (the tab itself as it was) */
+html.lp #chara.ch2 .ci-tabs button.glow{overflow:hidden}
+html.lp #chara.ch2 .ci-tabs button.glow>span{position:relative;z-index:1}
+html.lp #chara.ch2 .ci-tabs button.glow::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,236,190,.28) 46%,rgba(255,248,226,.5) 50%,rgba(255,236,190,.28) 54%,transparent 70%);background-size:260% 100%;background-position:130% 0;animation:ptnTabShine 3.2s ease-in-out infinite;pointer-events:none}
+html.lp #chara.ch2 .ci-tabs button.glow:not(.on){color:#e8dcff;text-shadow:0 0 10px rgba(255,226,160,.0);animation:ptnTabText 3.2s ease-in-out infinite}
+@keyframes ptnTabShine{0%{background-position:130% 0}45%,100%{background-position:-30% 0}}
+@keyframes ptnTabText{0%,100%{text-shadow:0 0 0 rgba(255,226,160,0)}25%{text-shadow:0 0 12px rgba(255,226,160,.85)}}

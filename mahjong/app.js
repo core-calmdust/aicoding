@@ -912,12 +912,18 @@ function renderChara() {
   // the skill to use, her story) and パートナー (her sisters, big, and the partner's skill) — each shown large on its own
   const lpTabs = document.documentElement.classList.contains('lp');
   $('#chInfo').classList.toggle('tabs', !!(lpTabs && own));
-  $('#chInfo').innerHTML = `
+  // (ユーザー 2026-11-16, phone) a compact head: her name, then one line — rarity, her title (which names her family already), the coin
+  // bonus; the 許婚 mark at the right of the name
+  const lpHead = lpTabs && own ? `<div class="ci-hd"><div class="pp-n">${esc(L(c.name))}</div>${c.id === DB.sel ? `<span class="pp-lead">${esc(t('lead'))}</span>` : ''}</div>
+    <div class="ch-sub"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-t">${esc(L(c.title))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}</div>` : '';
+  $('#chInfo').innerHTML = lpHead ? `${lpHead}
+    ${chSelBody()}` : `
     <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}${own && c.id === DB.sel ? `<span class="pp-lead">${esc(t('lead'))}</span>` : ''}</div>
     <div class="pp-n">${own ? esc(L(c.name)) : '？？？'}</div>
     <div class="pp-t">${esc(L(c.title))}</div>
     <i class="ci-rule"></i>
-    ${own && lpTabs ? `<div class="ci-tabs"><button class="${chPane === 'lead' ? 'on' : ''}" data-pane="lead">${esc(t('lead'))}</button><button class="${chPane === 'ptn' ? 'on' : ''}" data-pane="ptn">${esc(t('partner'))}${!pt && canPick ? '<i class="dot"></i>' : ''}</button></div>
+    ${chSelBody()}`;
+  function chSelBody() { return `${own && lpTabs ? `<div class="ci-tabs"><button class="${chPane === 'lead' ? 'on' : ''}" data-pane="lead">${esc(t('lead'))}</button><button class="${chPane === 'ptn' ? 'on' : ''} ${!pt && canPick ? 'glow' : ''}" data-pane="ptn"><span>${esc(t('partner'))}</span>${!pt && canPick ? '<i class="dot"></i>' : ''}</button></div>
       <div class="ci-pane">${chPane === 'lead' ? `${skillBlock(uk)}
         <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div>
         <div class="ci-h st"><b>STORY</b></div><p class="pprof">${esc(L(c.profile))}</p>` : `<div class="ptn-inl">${ptn}</div>`}</div>` :
@@ -926,7 +932,7 @@ function renderChara() {
       <div class="ptn-inl">${ptn}</div>
       <div class="ci-h st"><b>STORY</b></div><p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(c.reward != null ? t('rkLocked', { r: rkName(MJRank.list[c.reward]) }) : t('notOwned'))}</div>
       <div class="sis"><small>${esc(t('sisters'))}</small><div>${sisters.map(x => `<button class="sib ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}" title="${owns(x.id) ? esc(L(x.name)) : '？？？'}">${frame(x, owns(x.id) ? 'face' : 'silf')}</button>`).join('')}</div></div>`}
-`;
+`; }
   // (ユーザー 2026-11-15: the middle is for her picture — the partner block and the list of her sisters live in the panel on the right)
   // It does not fit: her story gives way first, then the small labels and the size of her name.
   ch.style.setProperty('--dl', /^(ja|zh|ko)/.test(I18N.lang) ? 3 : 5);   // (lines kept for a skill's description: the longest one in this language)
@@ -1662,7 +1668,7 @@ async function cutin(s, kind, d) {
     <div class="ci-txt">
       <div class="ci-word" data-len="${word.length}">${esc(word)}</div>
       ${kana && I18N.lang === 'ja' ? `<div class="ci-kana">${esc(kana)}</div>` : ''}
-      ${sub ? `<div class="ci-sub">${esc(sub)}</div>` : ''}
+      ${sub ? `<div class="ch-sub">${esc(sub)}</div>` : ''}
       <div class="ci-line">${kind === 'skill' && d.slot ? `<em class="ci-pt">${esc(t('partner'))}</em>` : ''}<b>${esc(L(c.name))}</b>「${esc(line)}」</div>
     </div>
     <div class="ci-flash"></div>`;
