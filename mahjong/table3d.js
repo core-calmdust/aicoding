@@ -1152,7 +1152,7 @@ class Table3D {
   // quality: 'high' | 'lite'. Lite drops shadows and renders at 1x pixel ratio.
   setQuality(q) {
     const lite = q === 'lite'; this.lite = lite;
-    this.prMax = lite ? 1 : this.mobile ? 2 : 1.5; this.dyn = 1;   // (2026-11-15: a phone draws at 2× — sharp without multisampling, which costs more memory than the extra pixels)
+    this.prMax = lite ? (this.mobile ? 1.5 : 1) : this.mobile ? 2 : 1.5; this.dyn = 1;   // (2026-11-15: a phone draws at 2× — sharp without multisampling, which costs more memory than the extra pixels)
     this.renderer.setPixelRatio(this._pr());
     if (this.r2) { this.r2.setPixelRatio(this.renderer.getPixelRatio()); this.r2.setSize(this.host.clientWidth || 1, this.host.clientHeight || 1, false); }
     this.renderer.shadowMap.enabled = !lite;

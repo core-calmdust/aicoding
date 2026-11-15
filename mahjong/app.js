@@ -32,8 +32,12 @@ function load() {
   if (!Object.keys(d.chars).length) { const st = MJChars.starter, k = MJSkills.key(st.skill, st.tier); d.chars[st.id] = { skills: [k], use: k }; }
   delete d.owned;
   d.sel = d.sel && d.chars[d.sel] ? d.sel : Object.keys(d.chars)[0];
-  const weak = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+  // (2026-11-15, ユーザー「ボケて見える」) light mode no longer turns itself on from the core count: iPhones report 4 (or fewer) cores
+  // whatever they have, so every iPhone started in light mode — drawn at 1× and blurred. Only a device that says it has 2 GB or
+  // less, or 2 cores or less, starts light. Saves from before (liteV < 2) are set again once by the new rule.
+  const weak = (navigator.deviceMemory || 8) <= 2 || (navigator.hardwareConcurrency || 8) <= 2;
   d.set = Object.assign({ len: 'east', skills: true, lv: 2, snd: true, lite: weak, mode: 'ranked' }, d.set || {});
+  if ((d.set.liteV | 0) < 2) { d.set.lite = weak; d.set.liteV = 2; }
   if (window.PhoneSnd && PhoneSnd.phone) d.set.snd = true;   // phones: the silent switch decides (shared/phonesnd.js)
   d.stats = Object.assign({ games: 0, rank: [0, 0, 0, 0] }, d.stats || {});
   // スタッツ (pstats.js): raw counters by mode, and games / places by the character played. Games from before the
