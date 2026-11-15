@@ -2350,3 +2350,73 @@ html.lp #game #opp2 .bk .skws{flex-direction:column;align-items:flex-end;gap:3px
 /* (ユーザー 2026-11-16, phone) the riichi label sat above the portrait, over the neighbouring skill marks and the rivers: on a phone it
    lies across the foot of the portrait, smaller, inside the portrait's own box */
 html.lp .riiflag{top:auto;bottom:4px;font-size:10.5px;padding:1px 7px;letter-spacing:.12em;text-indent:.12em}
+
+/* (ユーザー 2026-11-16) phone: the character's panel in two tabs, 許婚 and パートナー, each large; a wider panel and a list of three across */
+#chara.ch2 .ptn .sib .sn{display:none}
+html.lp #chara.ch2 .ch-panel{width:300px}
+html.lp #chara.ch2 .ch-list{grid-template-columns:repeat(3,1fr);gap:9px 8px}
+html.lp #chara.ch2 .ch-tabs button{font-size:13px;padding:6px 1px}
+html.lp #chara.ch2 .chi span{font-size:14px}
+html.lp #chara.ch2 .ch-info.tabs{width:430px;right:20px;top:64px;bottom:14px;gap:8px;display:flex;flex-direction:column}
+html.lp #chara.ch2 .ch-info.tabs>*{flex:none}
+html.lp #chara.ch2 .ch-info.tabs .pp-r{margin-top:0}
+html.lp #chara.ch2 .ch-info.tabs .pp-r em.prar{font-size:15px}
+html.lp #chara.ch2 .ch-info.tabs .pp-f{font-size:15px}
+html.lp #chara.ch2 .ch-info.tabs .pp-n{font-size:46px;line-height:1.05}
+html.lp #chara.ch2 .ch-info.tabs .pp-t{font-size:16px}
+html.lp #chara.ch2 .ch-info.tabs .ci-rule{display:none}
+html.lp #chara.ch2 .ci-tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(232,206,140,.35)}
+html.lp #chara.ch2 .ci-tabs button{position:relative;padding:10px 4px 9px;background:none;border:0;font-family:var(--serif);font-size:19px;font-weight:800;letter-spacing:.2em;text-indent:.2em;color:#a99cc8;white-space:nowrap}
+html.lp #chara.ch2 .ci-tabs button.on{color:var(--gl2);background:linear-gradient(0deg,rgba(232,206,140,.16),transparent)}
+html.lp #chara.ch2 .ci-tabs button.on::after{content:"";position:absolute;left:12%;right:12%;bottom:-1px;height:3px;background:linear-gradient(90deg,transparent,var(--gl2),transparent)}
+html.lp #chara.ch2 .ci-tabs .dot{position:absolute;top:8px;right:14%;width:10px;height:10px;border-radius:50%;background:#ff6b7a;box-shadow:0 0 0 2px #120d22,0 0 10px #ff6b7a;animation:ptnPulseDot 1.4s ease-in-out infinite}
+@keyframes ptnPulseDot{50%{transform:scale(1.3)}}
+html.lp #chara.ch2 .ci-pane{flex:1 1 auto!important;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:2px 2px 6px}
+/* 許婚 tab */
+html.lp #chara.ch2 .ci-pane>.pskill{padding:12px 14px}
+html.lp #chara.ch2 .ci-pane>.pskill i{width:46px;height:46px;padding:10px}
+html.lp #chara.ch2 .ci-pane>.pskill b{font-size:20px}
+html.lp #chara.ch2 .ci-pane>.pskill span{font-size:15px;line-height:1.6;height:auto;-webkit-line-clamp:unset;display:block}
+html.lp #chara.ch2 .ci-pane .pskill .cl{font-size:13.5px}
+html.lp #chara.ch2 .ci-pane .skl{height:44px}
+html.lp #chara.ch2 .ci-pane .skl .skc{font-size:15px;padding:6px 14px 6px 6px}
+html.lp #chara.ch2 .ci-pane .skl .skc i{width:28px;height:28px;padding:6px}
+html.lp #chara.ch2 .ci-pane .ci-h.st,html.lp #chara.ch2 .ci-pane .pprof{display:block!important}
+html.lp #chara.ch2 .ci-pane .ci-h.st{display:flex!important}
+html.lp #chara.ch2 .ci-pane .pprof{font-size:15.5px;line-height:1.7;margin:0}
+/* パートナー tab */
+html.lp #chara.ch2 .ci-pane .ptn{gap:10px}
+html.lp #chara.ch2 .ci-pane .ptn>.ci-h{display:none}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-row{flex-wrap:wrap;gap:10px 8px;order:-1}
+html.lp #chara.ch2 .ci-pane .ptn .sib{flex:0 0 74px;width:74px;height:auto;aspect-ratio:auto;display:flex;flex-direction:column;align-items:center;gap:4px}
+html.lp #chara.ch2 .ci-pane .ptn .sib .frame{width:66px;height:66px;flex:none}
+html.lp #chara.ch2 .ci-pane .ptn .sib .sn{display:block;font-size:13.5px;font-weight:700;letter-spacing:.06em;color:#e3daf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html.lp #chara.ch2 .ci-pane .ptn .sib.on .sn{color:var(--gl2)}
+html.lp #chara.ch2 .ci-pane .ptn .sib .ck{top:50px;bottom:auto;right:-2px;width:22px;height:22px}
+html.lp #chara.ch2 .ci-pane .ptn .sib .ck::after{left:7px;top:3.5px;width:5px;height:10px;border-width:0 2.5px 2.5px 0}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-who{height:40px}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-who .ptn-n{font-size:22px}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-who .ptn-x{font-size:14px;padding:4px 14px}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-who .ptn-cue b{font-size:17px;letter-spacing:.06em}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-who .ptn-cue small{display:none}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-box{height:auto;min-height:96px}
+html.lp #chara.ch2 .ci-pane .ptn .pskill{padding:11px 13px}
+html.lp #chara.ch2 .ci-pane .ptn .pskill i{width:42px;height:42px;padding:9px}
+html.lp #chara.ch2 .ci-pane .ptn .pskill b{font-size:18px}
+html.lp #chara.ch2 .ci-pane .ptn .pskill span{font-size:14.5px;line-height:1.55;height:auto;-webkit-line-clamp:unset;display:block}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-empty{font-size:15px}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-empty b{font-size:16px}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-cost{font-size:13px;white-space:normal;height:auto;line-height:1.5}
+html.lp #chara.ch2 .ch-info.tabs.tight .pprof,html.lp #chara.ch2 .ch-info.tabs.tight .ci-h.st,html.lp #chara.ch2 .ch-info.tabs.tight2 .ptn-cost{display:revert}
+/* the partner tab: who she is and her skill come first, then the sisters — owned ones large with their names, the ones not yet met small */
+html.lp #chara.ch2 .ci-pane .ptn .ptn-who{order:1}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-box{order:2}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-skl{order:3}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-row{order:4}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-cost{order:5}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-skl:empty{display:none}
+html.lp #chara.ch2 .ci-pane .ptn .sib.lock{flex-basis:40px;width:40px}
+html.lp #chara.ch2 .ci-pane .ptn .sib.lock .frame{width:40px;height:40px;margin-top:13px}
+html.lp #chara.ch2 .ci-pane .ptn .sib.lock .sn{display:none}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-box{min-height:0}
+html.lp #chara.ch2 .ci-pane .ptn .ptn-empty{padding:12px 14px}

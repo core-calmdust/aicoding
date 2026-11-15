@@ -855,6 +855,7 @@ function openChara(id) {
 }
 function closeChara() { $('#chara').hidden = true; $('#home').hidden = false; renderHome(); homeEnter(); }
 let chTab = 'all';
+let chPane = 'lead';   // (phone) the right panel's tab: 'lead' (her skill and story) / 'ptn' (the partner and her sisters)
 function renderChara() {
   const keepScroll = renderChara.last === chView ? $('#chInfo').scrollTop : 0; renderChara.last = chView;   // (the panel stays where it was scrolled while the same character is on)
   applyText();
@@ -900,19 +901,27 @@ function renderChara() {
   // (as tall as the longest description: --dl lines), the row of the partner's skills, the cost line.
   const ptn = !own ? '' : `<div class="ptn ${pt ? 'has' : canPick ? 'ask' : 'none'}">
       <div class="ci-h"><b>PARTNER</b><span>${esc(t('partner'))}</span><small class="ptn-cnt">${esc(t('sisters'))} ${mine.length + 1} / ${sisters.length + 1}</small></div>
-      <div class="ptn-row">${mine.concat(sisters.filter(x => !owns(x.id))).map(x => { const ow = owns(x.id); return `<button class="sib ${ow ? 'can' : 'lock'} ${pt && x.id === pt.id ? 'on' : ''}" data-id="${x.id}" title="${ow ? esc(L(x.name)) : '？？？'}">${frame(x, ow ? 'face' : 'silf')}${pt && x.id === pt.id ? '<i class="ck"></i>' : ''}</button>`; }).join('')}</div>
+      <div class="ptn-row">${mine.concat(sisters.filter(x => !owns(x.id))).map(x => { const ow = owns(x.id); return `<button class="sib ${ow ? 'can' : 'lock'} ${pt && x.id === pt.id ? 'on' : ''}" data-id="${x.id}" title="${ow ? esc(L(x.name)) : '？？？'}">${frame(x, ow ? 'face' : 'silf')}${pt && x.id === pt.id ? '<i class="ck"></i>' : ''}<span class="sn">${ow ? esc(L(x.name)) : '？？？'}</span></button>`; }).join('')}</div>
       <div class="ptn-who">${pt ? `<b class="ptn-n">${esc(L(pt.name))}</b><button class="ptn-x">${esc(t('ptnOff'))}</button>`
         : canPick ? `<span class="ptn-cue"><i></i><b>${esc(t('ptnPick'))}</b></span>` : `<small class="ptn-no">${esc(t('ptnNone'))}</small>`}</div>
       <div class="ptn-box">${pt ? (pk ? skillBlock(pk, true) : `<div class="ptn-dup">${skillBlock(useKey(pt.id), true)}<em>${esc(t('ptnSame'))}</em></div>`) : `<p class="ptn-empty">${canPick ? `<b>${esc(how)}</b>` : ''}<span>${esc(t('ptnNote'))}</span></p>`}</div>
       <div class="skl ptn-skl">${pks.map(x => skillChip(x.k, (x.k === pk ? 'on' : '') + (x.ok ? '' : ' off'), `data-k="${x.k}"`)).join('')}</div>
       <small class="ptn-cost">${esc(t('ptnCost'))}</small>
     </div>`;
+  // (ユーザー 2026-11-16, phone: everything was too small to read and to pick) on a phone the right panel has two tabs — 許婚 (her skill,
+  // the skill to use, her story) and パートナー (her sisters, big, and the partner's skill) — each shown large on its own
+  const lpTabs = document.documentElement.classList.contains('lp');
+  $('#chInfo').classList.toggle('tabs', !!(lpTabs && own));
   $('#chInfo').innerHTML = `
     <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}${own && c.id === DB.sel ? `<span class="pp-lead">${esc(t('lead'))}</span>` : ''}</div>
     <div class="pp-n">${own ? esc(L(c.name)) : '？？？'}</div>
     <div class="pp-t">${esc(L(c.title))}</div>
     <i class="ci-rule"></i>
-    ${own ? `${skillBlock(uk)}
+    ${own && lpTabs ? `<div class="ci-tabs"><button class="${chPane === 'lead' ? 'on' : ''}" data-pane="lead">${esc(t('lead'))}</button><button class="${chPane === 'ptn' ? 'on' : ''}" data-pane="ptn">${esc(t('partner'))}${!pt && canPick ? '<i class="dot"></i>' : ''}</button></div>
+      <div class="ci-pane">${chPane === 'lead' ? `${skillBlock(uk)}
+        <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div>
+        <div class="ci-h st"><b>STORY</b></div><p class="pprof">${esc(L(c.profile))}</p>` : `<div class="ptn-inl">${ptn}</div>`}</div>` :
+      own ? `${skillBlock(uk)}
       <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div>
       <div class="ptn-inl">${ptn}</div>
       <div class="ci-h st"><b>STORY</b></div><p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(c.reward != null ? t('rkLocked', { r: rkName(MJRank.list[c.reward]) }) : t('notOwned'))}</div>
@@ -922,11 +931,13 @@ function renderChara() {
   // It does not fit: her story gives way first, then the small labels and the size of her name.
   ch.style.setProperty('--dl', /^(ja|zh|ko)/.test(I18N.lang) ? 3 : 5);   // (lines kept for a skill's description: the longest one in this language)
   { const info = $('#chInfo'); info.classList.remove('tight', 'tight2');
+    if (!info.classList.contains('tabs')) {   // (the phone's tabs scroll inside their pane instead)
     if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight');
-    if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight2');
+    if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight2'); }
     info.scrollTop = keepScroll;
     if (!pt && canPick) { const q = info.querySelector('.ptn'); if (q && q.offsetTop + q.offsetHeight > info.scrollTop + info.clientHeight) info.scrollTop = Math.max(0, q.offsetTop - 60); } }   // (the call to pick a partner is never left below the fold)
   $('#chInfo').onclick = e => {
+    const tb = e.target.closest('.ci-tabs [data-pane]'); if (tb) { if (chPane !== tb.dataset.pane) { chPane = tb.dataset.pane; SND.pick(); renderChara(); } return; }
     const k = e.target.closest('#chSk [data-k]'); if (k) { DB.chars[c.id].use = k.dataset.k; save(); SND.pick(); renderChara(); return; }
     const k2 = e.target.closest('.ptn-skl [data-k]'); if (k2) { if (k2.classList.contains('off')) { toast(t('ptnSame')); return; } DB.chars[c.id].puse = k2.dataset.k; save(); SND.pick(); renderChara(); return; }
     if (e.target.closest('.ptn-x')) { delete DB.chars[c.id].partner; save(); SND.pick(); renderChara(); return; }
