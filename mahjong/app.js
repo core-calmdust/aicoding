@@ -1420,7 +1420,7 @@ function waitClick(box, sel) { return new Promise(res => { const b = box.querySe
 async function showAgari(d, r, last) {
   SND.score();
   const c = UIS.chars[r.seat], res = r.res;
-  const ys = res.list.filter(([k, h]) => !(k === 'ura' && !h && !(G.P[r.seat].riichi)));
+  const ys = res.list.filter(([k, h]) => !(k === 'ura' && !h));   // (ユーザー 2026-11-15: no ura-dora → no line, not 「0翻」)
   const yl = ys.map(([k, h], i) =>
     `<div class="yk" style="--i:${i}"><span>${esc(I18N.yaku(k))}</span><b>${res.yakumanN ? (h >= 26 ? t('dbl_yakuman') : t('yakuman')) : t('han', { n: h })}</b></div>`).join('');
   const hand = r.hand.slice(0, r.tsumo ? -1 : r.hand.length - 1).sort((a, b) => a - b);
