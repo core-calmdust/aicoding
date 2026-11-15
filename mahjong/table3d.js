@@ -1330,7 +1330,7 @@ class Table3D {
   // screen in full screen is ~4–5 million at 1.5×) is drawn at a lower ratio and scaled up, and if frames still come slowly while
   // things move, the ratio steps down a little more (and back up when there is room). `prMax`: the quality's ceiling.
   _pr() { const w = this.host.clientWidth || 1, h = this.host.clientHeight || 1, BUDGET = this.lite ? 2e6 : 3.8e6;
-    return Math.max(.75, Math.min(window.devicePixelRatio || 1, this.prMax || 1.5, Math.sqrt(BUDGET / (w * h))) * (this.dyn || 1)); }
+    return Math.max(.75, Math.min(window.devicePixelRatio || 1, this.prMax || 1.5, Math.sqrt(BUDGET / (w * h))) * (this.dyn || 1) * (this.mot || 1)); }
   resize() {
     const w = this.host.clientWidth || 1, h = this.host.clientHeight || 1;
     const pr = this._pr(); if (Math.abs(this.renderer.getPixelRatio() - pr) > .01) this.renderer.setPixelRatio(pr);
@@ -1442,7 +1442,7 @@ class Table3D {
     this._drew = false;
     this._tick(now);
     if (this.paused) return;
-    if (this._drew || this.tweens.length || this.handFx.length || this._ov || (this._callG && this._callG.visible)) this._idleT = now;
+    if (this._drew || this.tweens.length || this.handFx.length || this._ov || (this._callG && this._callG.visible) || this.mot === .875) this._idleT = now;
     if (now - (this._idleT || 0) < 400) { requestAnimationFrame(this._loop); return; }
     this._sleep = true;
     if (this._doraN) { const P = this._mob ? 4200 : 2600; this._wt = setTimeout(() => this._wake(), P - now % P + 8); }
@@ -1477,7 +1477,21 @@ class Table3D {
       'frame      ' + (dt && dt < 1000 ? dt.toFixed(1) + ' ms since the last draw' : 'on demand (idle)'),
     ].join('\n');
   }
+  // (2026-11-16, ユーザー: batteries, but the discards must stay easy to read) on a phone, while tiles or hands move the table is
+  // drawn a little finer-grained (×0.875: 2 → 1.75, about 23% fewer pixels); 0.25 s after the last movement it is drawn once more at
+  // the full ratio, so everything that stands still is as sharp as before
+  _motion(now) {
+    if (!this.mobile || this.lite) { if (this.mot && this.mot !== 1) { this.mot = 1; this._applyPR(); } return; }
+    if (this.tweens.length || this.handFx.length) { this._motT = now; if (this.mot !== .875) { this.mot = .875; this._applyPR(); } }
+    else if (this.mot === .875 && now - (this._motT || 0) > 250) { this.mot = 1; this._applyPR(); this.dirty = true; }
+  }
+  _applyPR() { const pr = this._pr(); if (Math.abs(this.renderer.getPixelRatio() - pr) < .01) return;
+    const w = this.host.clientWidth || 1, h = this.host.clientHeight || 1;
+    this.renderer.setPixelRatio(pr); this.renderer.setSize(w, h, false);
+    if (this.r2) { this.r2.setPixelRatio(pr); this.r2.setSize(w, h, false); }
+    this.dirty = true; }
   _tick(now) {
+    this._motion(now);
     if (this.tweens.length) {
       const ends = [];   // (what follows a tween may start another: run it after the list is rebuilt)
       this.tweens = this.tweens.filter(tw => {
@@ -1521,7 +1535,7 @@ class Table3D {
     // (at ~30 frames a second when it is the only thing changing: the whole table is redrawn for it)
     // (`quiet`: a full-screen result is over the table — nothing behind it needs to move, so the glint waits: 2026-11-14, optimisation)
     // (2026-11-15, ユーザー: for phones' batteries) on a touch screen the glint comes every ~4 s and is drawn at 20 frames a second
-    const MOB = this._mob ?? (this._mob = matchMedia('(pointer: coarse)').matches), GSTEP = MOB ? 50 : 32;
+    const MOB = this._mob ?? (this._mob = matchMedia('(pointer: coarse)').matches), GSTEP = MOB ? 62 : 32;   // (2026-11-16: 16 a second on a phone)
     if (this._doraN && !this.quiet) { const ph = now % (MOB ? 4200 : 2600), on = ph < 1300;
       if (on && (moved || now - (this._glT || 0) > GSTEP)) { this._glT = now; this.doraMat.uniforms.uT.value = ph / 1300; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
       this._doraOn = on; }
