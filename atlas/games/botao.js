@@ -431,6 +431,7 @@
     async function flick(move) {
       if (over || stopped || busy) return;
       busy = true; phase = 'anim'; clearGuides(); aim = null; hintMove = null; powEl.hidden = true; callBar(null); task(''); beaconAt(false); drag = null; pan = { x: 0, y: 0 };
+      if (st.pk && pkDive) { const d = 1 - st.pos; E.setKeeper(st, d, pkDive.x, pkDive.y); keeperSlide(d, st.k[d], 260); pkDive = null; }   // the AI keeper dives as you flick
       const s0 = st, p = s0.pos;
       SND.flick();
       const sim = E.simulate(s0, move, { frames: true });
@@ -510,10 +511,11 @@
       if (mv && mv.declare) { await aiDeclare(); return; }
       await aiFlick(mv, my);
     }
-    async function aiFlick(mv, my) {
+    async function aiFlick(mv, my, quiet) {
       if (!mv || mv.i == null) { mv = { i: autoSel(), ang: -Math.PI / 2, v: 60 }; }
-      // show which button and where it means to send the ball for a moment, then flick (its hand may still wobble)
-      clearGuides(); pan = { x: 0, y: 0 }; frameBallAnd(mv.i, true); const b = st.b[mv.i]; flat(b.x, b.y, D.RB + 1.2, MAT.sel); drawMove(mv, MAT.aiPath, MAT.aiBall); kick(150);
+      // show which button and where it means to send the ball for a moment, then flick (its hand may still wobble).
+      // A penalty keeps its aim to itself (2026-11-15 ユーザー：相手がどの方向に打ち出すのか見えないほうがいい)
+      clearGuides(); pan = { x: 0, y: 0 }; frameBallAnd(mv.i, true); const b = st.b[mv.i]; flat(b.x, b.y, D.RB + 1.2, MAT.sel); if (!quiet) drawMove(mv, MAT.aiPath, MAT.aiBall); kick(150);
       await new Promise(r => later(r, 900)); if (stopped || my !== tok) return;
       flick(E.perform(mv, level, seed()));
     }
@@ -563,10 +565,26 @@
       st = E.clone(st); st.shot = true;
       await setKeeperPhase();
     }
+    // PK戦 is a guess on both sides (2026-11-15 ユーザー：PK戦がただの運ゲー → キーパーを操作できるように): the shooter picks its
+    // side before the keeper is set and does not see where the keeper will go; the AI keeper picks a side of its own and
+    // stands in the middle until the flick, then dives. Your keeper you set yourself, not knowing where the AI will shoot.
+    let pkShot = null, pkDive = null;
+    const PK_LANE = () => { const r = Math.random(); return r < .37 ? -1 : r < .74 ? 1 : 0; };
     async function setKeeperPhase() {
-      const d = 1 - st.pos, my = tok; keeperSide = d;
+      const d = 1 - st.pos, my = tok; keeperSide = d; pkShot = null; pkDive = null;
+      if (st.pk && !human(st.pos)) {
+        // the AI shooter: its shot against a keeper on a side it guesses (so it does not simply aim past where yours stands)
+        phase = 'ai'; say(tx('think', { p: nameOf(st.pos) }));
+        const g = E.clone(st), B = E.keeperBox(d, true); E.setKeeper(g, d, PK_LANE() * (D.GHW - D.KHW), B.y0);
+        const mv = await think(g, level); if (stopped || my !== tok) return; pkShot = mv && !mv.declare ? mv : null;
+      }
+      if (st.pk && !human(d)) {
+        const B = E.keeperBox(d, true); pkDive = { x: PK_LANE() * (D.GHW - D.KHW + .5), y: B.y0 };
+        E.setKeeper(st, d, 0, B.y0); await keeperSlide(d, st.k[d], 250); if (stopped || my !== tok) return;
+        return afterKeeper();
+      }
       if (human(d)) {
-        phase = 'keeper'; say(tx('keeper')); task(tx('keeperTask')); callBar('keeper'); showGuides();
+        phase = 'keeper'; say(tx('keeper')); task(tx(st.pk ? 'pkKeep' : 'keeperTask')); callBar('keeper'); showGuides();
         // the ball, the shooter and your goal in one view
         { const gy = E.goalY(d); camAt = { x: st.ball.x / 2, y: (st.ball.y + gy) / 2 }; span = { x: Math.abs(st.ball.x) + 14, y: Math.abs(gy - st.ball.y) + 4 }; pan = { x: 0, y: 0 }; camFit(true); }
         let left = 10; clearInterval(keeperT);
@@ -586,6 +604,7 @@
       const p = st.pos, my = tok;
       if (human(p)) { if (pvp) viewTo(); phase = 'aim'; sel = autoSel(); say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn')); task(tx('shootNow')); frameBallAnd(sel, true); showGuides(); pulse(); return; }
       phase = 'ai'; say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) })); task('');
+      if (pkShot) { const m = pkShot; pkShot = null; return aiFlick(m, my, true); }
       const mv = await think(E.clone(st), level); if (stopped || my !== tok) return;
       await aiFlick(mv && !mv.declare ? mv : null, my);
     }
