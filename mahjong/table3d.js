@@ -454,7 +454,7 @@ function buildHand(env) {
         totalEmissiveRadiance += vec3(1., .97, .98) * sp * metalnessFactor * 1.6; }`); };
     return nm; };
   rig.mkNail = mkNail;   // (not in userData: clone() copies that through JSON)
-  const nail = mkNail('gem', '#f0a8b4');
+  const nail = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xf0c4c0).convertSRGBToLinear(), roughness: .2, envMap: env, envMapIntensity: .8 });   // (a plain stand-in: each seat gets its painted nails in _sleeve — no pictures are made for nails nobody wears)
   const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; hand.frustumCulled = false; rig.add(hand); if (Hd.mi) hand.morphTargetInfluences = [0];
   // the sleeve (ユーザー 2026-11-14: only a glimpse of the wrist, the sleeve long; a pattern as on a Chinese dress): crimson silk
   // brocade — gold flower roundels and cloud scrolls woven in — closing just above the wrist in a black band between two gold pipings.
@@ -898,7 +898,10 @@ class Table3D {
   }
   // each seat's sleeve in the colour of its character's sisters (cols: four CSS colours). The ground is the colour taken deeper,
   // as silk is (a light colour stays light); one material per colour, made once.
-  setSleeves(cols, nails) { this.sleeves = cols.slice(); this.nailStyles = (nails || []).slice(); (this.hands || []).forEach((rig, s) => { if (rig && cols[s]) this._sleeve(rig, cols[s]); }); this.dirty = true; }
+  setSleeves(cols, nails) { this.sleeves = cols.slice(); this.nailStyles = (nails || []).slice(); (this.hands || []).forEach((rig, s) => { if (rig && cols[s]) this._sleeve(rig, cols[s]); });
+    // (2026-11-15, memory: the nail pictures of looks no seat wears any more are freed — at most four sets are kept)
+    if (this.nailMats) { const live = new Set(cols.map((c, s) => (this.nailStyles[s] || 'gem') + c)); for (const [k, nm] of this.nailMats) if (!live.has(k)) { if (nm.map) nm.map.dispose(); if (nm.bumpMap) nm.bumpMap.dispose(); nm.dispose(); this.nailMats.delete(k); } }
+    this.dirty = true; }
   _sleeve(rig, col) {
     this.sleeveMats = this.sleeveMats || new Map();
     if (!this.handProto || !this.handProto.clothMat) return;
