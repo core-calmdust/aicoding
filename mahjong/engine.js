@@ -59,6 +59,10 @@ function shantenNormalSlow(c, melds) {
 }
 
 // fast version: per-suit pareto sets of (mentsu, taatsu) memoized, combined over pair choices
+// (ユーザー 2026-11-16: the game grew heavy the longer it was played) the two memo tables were the main growth of the page's memory:
+// the shanten table kept up to 300,000 hand strings (some 25–30 MB, ~7 MB more after every hanchan until it was full). Both are
+// capped well below that now — they are rebuilt quickly — and a new game may clear them (MJ.clearCache).
+const SUIT_MAX = 40000, SH_MAX = 40000;
 const SUIT_MEMO = new Map();
 function suitOpts(c, off) {
   let key = 0;
@@ -83,6 +87,7 @@ function suitOpts(c, off) {
   for (const [mm, tt] of res) r.push([mm, tt]);
   // drop dominated
   r = r.filter(([m1, t1]) => !r.some(([m2, t2]) => (m2 >= m1 && t2 >= t1) && (m2 > m1 || t2 > t1)));
+  if (SUIT_MEMO.size >= SUIT_MAX) SUIT_MEMO.clear();
   SUIT_MEMO.set(key, r);
   return r;
 }
@@ -123,7 +128,7 @@ function shanten(c, melds) {
   if (s !== undefined) return s;
   s = shantenNormal(c, melds);
   if (!melds) { s = Math.min(s, shantenChiitoi(c), shantenKokushi(c)); }
-  if (SH_CACHE.size > 300000) SH_CACHE.clear();
+  if (SH_CACHE.size >= SH_MAX) SH_CACHE.clear();
   SH_CACHE.set(key, s);
   return s;
 }
@@ -439,6 +444,7 @@ function parse(str) {         // "123m456p789s11z" style -> types (z: 1-7 = E S 
 }
 
 const MJ = {
+  clearCache() { SH_CACHE.clear(); SUIT_MEMO.clear(); }, _cache() { return [SH_CACHE.size, SUIT_MEMO.size]; },
   RED, T, isHonor, isTerm, isYao, isDragon, isWind, suit, num, doraOf, counts, countsIds,
   shanten, shantenNormal, shantenNormalSlow, shantenChiitoi, shantenKokushi, isAgari, waits, decompose,
   evaluate, payments, limitBase, limitName, YAKU, NAMES, parse, roundUp100,

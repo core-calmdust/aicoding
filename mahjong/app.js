@@ -1126,6 +1126,7 @@ class AutoMe extends SlowBot {     // ?auto: the player's seat plays itself (tes
 const AUTO = /[?&]auto/.test(location.search);
 
 async function startGame(opt = {}) {
+  if (window.MJ && MJ.clearCache) MJ.clearCache();   // (a fresh game: the memo tables start empty, so they never pile up across games)
   SND.newGame();   // opt.ranked: a 段位戦 game, opt.len its length
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
