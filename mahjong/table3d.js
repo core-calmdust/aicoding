@@ -8,7 +8,7 @@ const W = 1, H = 1.36, D = 0.78;
 // (~0.9 s), the stone of the backs (~0.1 s) — ship as images made from the very same code (tools/bake-tex.py). They are fetched as
 // the page opens; if one is not there in time (or ?nobake), the code below draws it as before. Every drawn one is kept in
 // JANKA_TEXGEN for the baking tool.
-const BAKE_V = 2, BAKED = {};
+const BAKE_V = 3, BAKED = {};
 if (!/[?&]nobake\b/.test(location.search)) for (const n of ['felt', 'wood', 'woodb', 'stone']) { const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + n + '.webp?v=' + BAKE_V; BAKED[n] = im; }
 // (2026-11-15, ユーザー「スマホで落ちまくる」: memory) on a touch device the big pictures are kept at half size — on a phone's screen
 // the felt and the rails never show more than that — and once a picture that never changes is on the graphics card, the copy the
@@ -594,9 +594,9 @@ class Table3D {
     const g = fc.getContext('2d');
     { const N = mkNoise(11), A = N.oct([6, 12, 24, 48, 96]), img = g.createImageData(2048, 2048), d = img.data;
       for (let y = 0; y < 2048; y++) for (let x = 0; x < 2048; x++) {
-        const u = x / 2048, v = y / 2048, rq = Math.min(1, Math.max(0, (Math.hypot(u - .5, v - .5) - .2) / .42)), vig = 1.1 - .34 * rq * rq * (3 - 2 * rq);   // (ユーザー 2026-11-15, a reference shot: the cloth bright in the middle and clearly deeper toward the rails — in the cloth itself, so the tiles stay evenly lit)
+        const u = x / 2048, v = y / 2048, rq = Math.min(1, Math.max(0, (Math.hypot(u - .5, v - .5) - .2) / .42)), vig = 1.14 - .3 * rq * rq * (3 - 2 * rq);   // (ユーザー 2026-11-15, a reference shot: the cloth bright in the middle and clearly deeper toward the rails — in the cloth itself, so the tiles stay evenly lit)
         const m = (N.fbm(A, u, v) - .5) * .16, n = (N.R() - .5) * .09, f = vig * (1 + m + n), p = (y * 2048 + x) * 4;
-        d[p] = 34 * f; d[p + 1] = 96 * f; d[p + 2] = 138 * f; d[p + 3] = 255;   // (ユーザー 2026-11-15: a hue that sits better with the brown frame and the tiles — a clear lake blue, a touch toward teal; was a dusty navy 32,56,100)
+        d[p] = 32 * f; d[p + 1] = 58 * f; d[p + 2] = 104 * f; d[p + 3] = 255;   // (ユーザー 2026-11-15: the lake blue was too vivid — back to the calm dusty navy; the middle-bright shading stays)   // (ユーザー 2026-11-15: a hue that sits better with the brown frame and the tiles — a clear lake blue, a touch toward teal; was a dusty navy 32,56,100)
       }
       g.putImageData(img, 0, 0); }
     g.translate(1024, 1024);

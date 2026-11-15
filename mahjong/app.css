@@ -1991,3 +1991,25 @@ html.ds #game #opp3{top:26%}
 .yk-tip b{color:var(--gl2);font-size:13px;letter-spacing:.12em}
 .yk-tip span{color:#efe4ff;font-size:12px;line-height:1.55;letter-spacing:.04em}
 .pstats .ps-yk{cursor:help}
+
+/* (ユーザー 2026-11-15) the two side players at one height; the player's own portrait right of the skill button, a little smaller, so it
+   stands on the cloth's near corner clear of the river */
+html.ds #game #opp1,html.ds #game #opp3{top:calc(var(--gi) + var(--rbh, 140px) * var(--hz, 1) + 34px)}
+html.lp #game #opp1,html.lp #game #opp3{top:calc(max(10px,var(--st)) + 42px + var(--bf) + 74px)}
+#game .me .mb{order:2}
+#game .me .mb .bf{width:calc(var(--bf) * .8);height:calc(var(--bf) * .8)}
+
+/* (ユーザー 2026-11-15) the partner's card on the home screen runs on to the left of the gold line, as far as the menu's left edge:
+   her story and what the skill she is using does. Not on a phone (no room). */
+#home.aaa .aa-plate .pp-info{position:absolute;right:calc(100% + 3px);bottom:0;width:300px;box-sizing:border-box;font-size:calc(1px * var(--pis, 1));   /* (its width, greatest height and text scale are fitted by fitInfo() in app.js: from the menu's left edge to the gold line, below the menu) */
+  display:flex;flex-direction:column;justify-content:center;gap:5px;padding:12px 20px 12px 18px;border-radius:14px 0 0 14px;
+  background:linear-gradient(90deg,rgba(8,5,18,.55),rgba(8,5,18,.92));border:1px solid rgba(232,206,140,.22);border-right:0;overflow:hidden}
+#home.aaa .pp-info .pi-h{font-family:'Cinzel',var(--serif);font-size:11.5em;letter-spacing:.32em;color:var(--gold);opacity:.85}
+#home.aaa .pp-info .pi-st{margin:0 0 5px;font-family:var(--serif);font-size:14.5em;line-height:1.7;color:#f1e8ff}
+#home.aaa .pp-info .pi-sk{display:flex;gap:10px;align-items:flex-start}
+#home.aaa .pp-info .pi-sk i{flex:none;width:34px;height:34px;border-radius:10px;padding:7px;color:#fff;background:radial-gradient(circle at 30% 25%,color-mix(in srgb,var(--sc) 60%,#fff),var(--sc));box-shadow:0 0 14px color-mix(in srgb,var(--sc) 50%,transparent)}
+#home.aaa .pp-info .pi-sk b{display:block;font-family:var(--serif);font-size:15.5em;color:#fff;margin-bottom:2px}
+#home.aaa .pp-info .pi-sk em{font-style:normal;font-family:'Cinzel',serif;font-size:.72em;padding:0 6px;border-radius:5px;background:rgba(0,0,0,.45);color:var(--gold);vertical-align:middle}
+#home.aaa .pp-info .pi-sk em.tm{font-family:inherit;color:#cfc4ea}
+#home.aaa .pp-info .pi-sk span{font-size:13.5em;line-height:1.6;color:#d9cfee}
+html.lp #home.aaa .pp-info{display:none}
