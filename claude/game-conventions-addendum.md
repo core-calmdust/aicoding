@@ -632,6 +632,9 @@
   - 絵は `atlas/tools/goban-tex.py` → `images/atlas/goban3d/` の surf-／side-<盤>（`-m` 付き）。タイルは `atlas/tools/gbpiece.html`（石）・boardicon.html・boards.html。フル版のデザインタブの「3D盤」「3D石」の行は共通の `AtlasSkin.rows3d`（atlas/skin/common.js）で作る（2Dの盤を選ぶと3Dの選択が外れる）。
 - 五目並べ3D卓の種目（2026-11-15）：カードの「ルール」で 連珠・標準（禁手なし、ちょうど5）・自由（禁手なし、5以上）を選ぶ。値は ctx.size（1/2/3）で渡す（adapter.sizes＋sizeName）。レート戦はフル版と同じ連珠に固定（RTG.gomoku.size = 1）。
 - アマゾンズの3Dカードも4モード（対戦｜レート戦｜パズル｜レッスン、2026-11-15）。詳細は claude/amazons-spec.md。
+- ヘックスの3D盤・石（2026-11-15）：盤の形（ひし形の六角タイル・赤青の辺の帯・角金具）はそのまま、素材と世界観を6種に。盤（`atlas-hex-board`＝Table3D.BOARDS.hex、先頭が既定）：寄木と七宝 marquetry（既定、従来の手続き生成）・玄武岩の柱 basalt（柱ごとに高さが違う＝石は U.topAt(i) の高さに置く）・蜂の巣 honey・回路基板 circuit（金のパッド、配線の見える緑の基板、赤青のLED帯）・ステンドグラス glass（色ガラスが内側から光る、鉛の枠）・北欧チーク teak（ピート・ハインのデンマーク）。石（`atlas-hex-pc3`）：ガラスのレンズ glass（既定）・ルビーとサファイア gem・碧玉とラピス pebble・LED led・封蝋 seal・六角ナット nut。
+  - 絵は `atlas/tools/hex-tex.py` → `images/atlas/hex3d/` の tile-／frame-<盤>（どれも継ぎ目なく繰り返す1024²、`-m`＝R高さ G粗さ B金属）。タイル `atlas/tools/hxpiece.html`（石）・boardicon.html・boards.html。
+  - フル版3Dの「3D / 2D」の記憶キーは `atlas-hex-mode` に変更（旧 `atlas-hex-look` の '3d'/'3d2'/'2d' は読み替えて移す）。デザインタブの3D行は AtlasSkin.rows3d。大百科の対局中に「駒」を変えると盤上の石もその場で替わる。
 
 
 ## 3Dポータル：Esc の挙動（2026-11-14）

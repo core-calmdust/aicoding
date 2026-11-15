@@ -198,7 +198,7 @@
     /* ---------- stones ---------- */
     function put(q, col, delay = 0, drop = true) {
       const g = new TH.Group(), s = U.stone(col), sh = T3.contact(c * .44, .5); sh.position.y = .002; g.add(sh, s);
-      const [x, z] = xz(q); g.position.set(x, Y, z); stones.add(g); st[q] = g; g.userData.s = s; g.userData.sh = sh; g.userData.col = col;
+      const [x, z] = xz(q); g.position.set(x, U.topAt ? U.topAt(ix(q)) : Y, z); stones.add(g); st[q] = g; g.userData.s = s; g.userData.sh = sh; g.userData.col = col;
       if (!drop) return g;
       g.visible = false;
       later(() => {

@@ -110,6 +110,57 @@
     });
   }
 
+  /* ---------- the six boards (2026-11-15) and six stone sets: each look its own world, the board's shape kept ----------
+     marquetry 寄木と七宝 (default, procedural) · basalt 玄武岩の柱 (Giant's Causeway: columns of uneven height, red jasper / lapis bands)
+     · honey 蜂の巣 (wax caps in a pine hive frame) · circuit 回路基板 (gold pads, solder-mask frame with traces, red / blue LED strips)
+     · glass ステンドグラス (cathedral glass lit from within, lead came) · teak 北欧チーク (pale oak in a teak frame — Piet Hein's Denmark).
+     Pictures: atlas/tools/hex-tex.py → images/atlas/hex3d/tile-|frame-<look> (+ "-m": R height · G roughness · B metalness). */
+  const LOOKS = ['marquetry', 'basalt', 'honey', 'circuit', 'glass', 'teak'];
+  const SETS = ['glass', 'gem', 'pebble', 'led', 'seal', 'nut'];
+  const LK = 'atlas-hex-board', PK = 'atlas-hex-pc3';
+  const ls = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } } };
+  const curLook = () => { const v = ls.get(LK); return LOOKS.includes(v) ? v : 'marquetry'; };
+  const curSet = () => { const v = ls.get(PK); return SETS.includes(v) ? v : 'glass'; };
+  const H3 = (() => { try { return new URL('../../images/atlas/hex3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/hex3d/'; } })(), H3V = '?v=1', h3img = {};
+  function h3(name, srgb = true) { if (h3img[name]) return h3img[name];
+    const TT = T(), t = new TT.TextureLoader().load(H3 + name + (X.coarse || X.lite ? '-h' : '') + '.webp' + H3V, () => { if (X.kick) X.kick(300); });
+    if (srgb) t.encoding = TT.sRGBEncoding; t.anisotropy = 8; t.wrapS = t.wrapT = TT.RepeatWrapping; return (h3img[name] = t); }
+  // the look's spec: tiles (3 tints in sRGB, × the picture), frame, trim metal, the corner guards / rivets / stringing, bands, joints
+  const LS = {
+    basalt: { tint: [[1, 1, 1], [.86, .88, .92], [.94, .9, .86]], tile: { roughness: 1, bump: .006 }, frame: { roughness: 1, bump: .004 }, rise: .06,
+      trim: { color: 0x2a2a2e, roughness: .7, metalness: 0 }, guards: false, rivets: false, string: false, floor: 0x0c0c0e,
+      red: { color: 0xa8321e, roughness: .45, clearcoat: .4, bump: 'frame' }, blue: { color: 0x2b4ca8, roughness: .45, clearcoat: .4, bump: 'frame' } },
+    honey: { tint: [[1, .97, .9], [1, .86, .7], [.96, .8, .6]], tile: { roughness: 1, clearcoat: .5, clearcoatRoughness: .3, bump: .003, glow: .16 }, frame: { roughness: 1, bump: .003 },
+      trim: { color: 0x8a5a2a, roughness: .55, metalness: 0 }, guards: 'frame', rivets: false, string: false, floor: 0x3a1e06,
+      red: { color: 0xe04a36, roughness: .6, map: 'frame' }, blue: { color: 0x5a92ff, roughness: .6, map: 'frame' } },
+    circuit: { tint: [[1.25, 1.2, 1.1], [1.3, 1.22, 1.08], [1.2, 1.16, 1.08]], tile: { roughness: 1, metalness: 1, bump: .0015, glow: .12 }, frame: { roughness: 1, metalness: 1, bump: .002, clearcoat: .6, clearcoatRoughness: .2 }, sunk: .03,
+      trim: { color: 0xd8dadc, roughness: .25, metalness: 1 }, guards: 'trim', rivets: true, string: false, floor: 0x062a16,
+      red: { color: 0xff3a2a, emissive: 0xff2414, ei: 1.1, roughness: .2 }, blue: { color: 0x3a8aff, emissive: 0x1a5aff, ei: 1.1, roughness: .2 } },
+    glass: { tint: [[1, .74, .3], [.56, .86, .58], [.98, .94, .82]], tile: { roughness: 1, clearcoat: 1, clearcoatRoughness: .05, bump: .004, glow: .5 }, frame: { roughness: 1, metalness: 1, bump: .003 },
+      trim: { color: 0x6a6e70, roughness: .5, metalness: .8 }, guards: 'trim', rivets: false, string: 'trim', floor: 0x1a1c1e,
+      red: { color: 0xd8202a, emissive: 0x9a0a10, ei: .9, roughness: .05, clearcoat: 1 }, blue: { color: 0x2a5ae0, emissive: 0x0a2ab0, ei: .9, roughness: .05, clearcoat: 1 } },
+    teak: { tint: [[1, 1, 1], [.96, .93, .88], [1, .96, .9]], tile: { roughness: 1, clearcoat: .25, clearcoatRoughness: .4, bump: .002 }, frame: { roughness: 1, clearcoat: .35, clearcoatRoughness: .3, bump: .002 },
+      trim: { color: 0x1e1a18, roughness: .5, metalness: 0 }, guards: false, rivets: false, string: false, floor: 0x2a1a10,
+      red: { color: 0xc8402c, roughness: .55 }, blue: { color: 0x2c5a9a, roughness: .55 } },
+  };
+  const LMAT = {};
+  function matsFor(look) {
+    if (look === 'marquetry' || !LS[look]) return mats();
+    if (LMAT[look]) return LMAT[look];
+    const TT = T(), L = LS[look], base = mats();
+    const pic = (kind, o) => { const m = M(Object.assign({ map: h3(kind + '-' + look), bump: false, vertexColors: kind === 'tile' }, { roughness: o.roughness, metalness: o.metalness || 0 }));
+      const mm = h3(kind + '-' + look + '-m', false); m.roughnessMap = mm; if (o.metalness) m.metalnessMap = mm; if (o.bump) { m.bumpMap = mm; m.bumpScale = o.bump; }
+      if (o.clearcoat) { m.clearcoat = o.clearcoat; m.clearcoatRoughness = o.clearcoatRoughness || .2; }
+      if (o.glow) { m.emissive = new TT.Color(0xffffff); m.emissiveMap = h3(kind + '-' + look); m.emissiveIntensity = o.glow;
+        if (kind === 'tile') { m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n#if defined( USE_COLOR ) || defined( USE_COLOR_ALPHA )\n totalEmissiveRadiance *= vColor.rgb;\n#endif'); }; m.customProgramCacheKey = () => 'hxGlowTint'; } }   // (the glow takes each tile's tint)
+      return m; };
+    const band = o => { const m = M({ color: o.color, roughness: o.roughness, bump: false, metalness: o.metalness || 0 });
+      if (o.map) m.map = h3(o.map + '-' + look); if (o.bump) { m.bumpMap = h3(o.bump + '-' + look + '-m', false); m.bumpScale = .004; }
+      if (o.clearcoat) { m.clearcoat = o.clearcoat; m.clearcoatRoughness = .05; } if (o.emissive) { m.emissive = new TT.Color(o.emissive); m.emissiveIntensity = o.ei || 1; } return m; };
+    const frame = pic('frame', L.frame), trim = M(Object.assign({ bump: false }, L.trim));
+    return (LMAT[look] = Object.assign({}, base, { laq: frame, brass: trim, guard: L.guards === 'frame' ? frame : trim, tiles: pic('tile', L.tile), red: band(L.red), blue: band(L.blue), floor: M({ color: L.floor, roughness: .8 }) }));
+  }
+
   /* ---------- materials (shared) ---------- */
   let MAT = null;
   function mats() {
@@ -124,7 +175,7 @@
     const gR = M({ map: glassTex('hxGR', '#5a0207', '#b4121a', '#ff5a3c'), bump: false, roughness: .06, clearcoat: 1, clearcoatRoughness: .02 });
     const gB = M({ map: glassTex('hxGB', '#03134a', '#1240b4', '#4f9cff'), bump: false, roughness: .06, clearcoat: 1, clearcoatRoughness: .02 });
     gR.emissive = new TT.Color(0x300203); gB.emissive = new TT.Color(0x020a2c);   // the glass keeps a little inner glow on the shadowed side
-    return (MAT = { laq, brass, tiles, red, blue, floor, gR, gB });
+    return (MAT = { laq, brass, guard: brass, tiles, red, blue, floor, gR, gB });
   }
 
   /* ---------- glass stone (one shared lathe per size) ---------- */
@@ -136,6 +187,66 @@
     const g = new TT.LatheGeometry(P.map(([a, b]) => new TT.Vector2(Math.max(.0005, a * r), b * h)), X.coarse ? 16 : 24);
     return (stoneGeos[key] = X.share ? X.share(g) : g);
   }
+
+  /* ---------- the stone sets: glass (default: red / cobalt lenses) · gem ルビーとサファイア (hexagonal step cut, its table along the
+     grid) · pebble 碧玉とラピス (polished stones) · led LED (a domed cap lit from inside on a dark foot) · seal 封蝋 (red / blue sealing
+     wax pressed with a hexagon) · nut 六角ナット (anodised steel nuts) ---------- */
+  const SM = {};
+  function setMats(set) {
+    if (SM[set]) return SM[set];
+    const TT = T(), base = mats(), em = (m, c, k) => { m.emissive = new TT.Color(c); m.emissiveIntensity = k || 1; return m; };
+    let r, b;
+    if (set === 'gem') { r = em(M({ color: 0xc4102a, roughness: .04, metalness: .1, clearcoat: 1, clearcoatRoughness: .02, flatShading: true, bump: false }), 0x4a0208);
+      b = em(M({ color: 0x1c3ccc, roughness: .04, metalness: .1, clearcoat: 1, clearcoatRoughness: .02, flatShading: true, bump: false }), 0x060f4a); }
+    else if (set === 'pebble') { const bm = h3('frame-basalt-m', false);
+      r = M({ color: 0xa83a24, roughness: .3, clearcoat: .7, clearcoatRoughness: .15, bump: false }); r.bumpMap = bm; r.bumpScale = .002;
+      b = M({ color: 0x24409e, roughness: .3, clearcoat: .7, clearcoatRoughness: .15, bump: false }); b.bumpMap = bm; b.bumpScale = .002; }
+    else if (set === 'led') { r = em(M({ color: 0xe8201a, roughness: .12, clearcoat: 1, clearcoatRoughness: .04, bump: false }), 0xd01008, .75);
+      b = em(M({ color: 0x1a6aff, roughness: .12, clearcoat: 1, clearcoatRoughness: .04, bump: false }), 0x0a3ae0, .75); }
+    else if (set === 'seal') { r = M({ color: 0xb0141c, roughness: .32, clearcoat: .6, clearcoatRoughness: .25, bump: false }); b = M({ color: 0x1c3a96, roughness: .32, clearcoat: .6, clearcoatRoughness: .25, bump: false });
+      const r2 = M({ color: 0x7a0a10, roughness: .6, bump: false }), b2 = M({ color: 0x10245e, roughness: .6, bump: false }); SM[set] = { r, b, r2, b2 }; }
+    else if (set === 'nut') { r = em(M({ color: 0xd8483a, roughness: .28, metalness: .85, bump: false }), 0x2a0604); b = em(M({ color: 0x3a6ad8, roughness: .28, metalness: .85, bump: false }), 0x040c2a); }
+    else { r = base.gR; b = base.gB; }
+    const foot = M({ color: 0x1a1a1c, roughness: .4, metalness: .6, bump: false });
+    return (SM[set] = Object.assign(SM[set] || {}, { r, b, foot }));
+  }
+  const sGeo = {};
+  function setGeo(set, cell) {
+    const key = set + cell.toFixed(4) + (X.coarse ? 'c' : ''); if (sGeo[key]) return sGeo[key];
+    const TT = T(), r = cell * .4, h = cell * .26, V = (L, k = 1, kh = 1) => L.map(([a, b]) => new TT.Vector2(Math.max(.0005, a * r * k), b * h * kh));
+    let g;
+    if (set === 'gem') {   // a hexagonal step cut: pavilion to the girdle, two crown steps, a small table
+      g = new TT.LatheGeometry(V([[0, 0], [.42, .02], [.9, .28], [1, .4], [1, .46], [.84, .7], [.56, .92], [0, .94]], 1, 1.3), 6); g.rotateY(Math.PI / 6); g = g.toNonIndexed(); g.computeVertexNormals(); }
+    else if (set === 'pebble') {   // a river-worn stone: a squashed sphere, its outline wavering
+      g = new TT.SphereGeometry(r * .98, X.coarse ? 16 : 26, X.coarse ? 8 : 14); const P = g.attributes.position, R1 = rnd(77);
+      const ph = [R1() * TAU, R1() * TAU, R1() * TAU];
+      for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), a = Math.atan2(z, x), k = 1 + .07 * Math.sin(2 * a + ph[0]) + .04 * Math.sin(3 * a + ph[1]) + .03 * Math.sin(5 * a + ph[2]); P.setXYZ(i, x * k, y * (y < 0 ? .3 : .44), z * k * .9); }
+      g.computeVertexNormals(); g.translate(0, r * .3, 0); }
+    else if (set === 'led') { g = { cap: new TT.LatheGeometry(V([[0, .42], [.9, .42], [.92, .6], [.82, .86], [.6, 1.06], [.32, 1.18], [0, 1.2]], .9, 1.2), X.coarse ? 16 : 24), base: new TT.CylinderGeometry(r * .92, r * .96, h * .5, X.coarse ? 16 : 24) }; g.base.translate(0, h * .25, 0); }
+    else if (set === 'seal') {   // a blob of sealing wax (a wavering, spread outline) pressed with a hexagon: a sunken hex face and its raised rim
+      const sh = new TT.Shape(), R1 = rnd(91), K = 40, ph = [R1() * TAU, R1() * TAU, R1() * TAU];
+      for (let k = 0; k <= K; k++) { const a = k / K * TAU, rr = r * (1.02 + .06 * Math.sin(3 * a + ph[0]) + .04 * Math.sin(5 * a + ph[1]) + .03 * Math.sin(8 * a + ph[2])); const x = Math.cos(a) * rr, z = Math.sin(a) * rr; k ? sh.lineTo(x, z) : sh.moveTo(x, z); }
+      const disc = new TT.ExtrudeGeometry(sh, { depth: h * .18, bevelEnabled: true, bevelThickness: h * .14, bevelSize: r * .12, bevelSegments: 4, curveSegments: 1 }); disc.rotateX(-Math.PI / 2); disc.translate(0, h * .14, 0);
+      const top = h * .46, rim = new TT.CylinderGeometry(r * .66, r * .7, h * .08, 6); rim.rotateY(Math.PI / 6); rim.translate(0, top + h * .02, 0);
+      const face = new TT.CylinderGeometry(r * .54, r * .54, h * .02, 6); face.rotateY(Math.PI / 6); face.translate(0, top + h * .055, 0);
+      g = { disc, rim, face }; }
+    else if (set === 'nut') { const sh = new TT.Shape(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + Math.PI / 6, x = Math.cos(a) * r * 1.02, z = Math.sin(a) * r * 1.02; k ? sh.lineTo(x, z) : sh.moveTo(x, z); } sh.closePath();
+      const ho = new TT.Path(); ho.absarc(0, 0, r * .42, 0, TAU, true); sh.holes.push(ho);
+      g = new TT.ExtrudeGeometry(sh, { depth: h * .62, bevelEnabled: true, bevelThickness: h * .08, bevelSize: r * .06, bevelSegments: 2, curveSegments: X.coarse ? 12 : 20 }); g.rotateX(-Math.PI / 2); g.translate(0, h * .08, 0); }
+    else g = stoneGeo(cell);
+    return (sGeo[key] = g);
+  }
+  function makeStone(cell, colr, set) {
+    const TT = T(), sm = setMats(set), mat = colr === 1 ? sm.r : sm.b, g = setGeo(set, cell), sh = !X.coarse;
+    let o;
+    if (set === 'led') { o = new TT.Group(); const a = new TT.Mesh(g.base, sm.foot), b = new TT.Mesh(g.cap, mat); a.castShadow = b.castShadow = sh; o.add(a, b); }
+    else if (set === 'seal') { o = new TT.Group(); const a = new TT.Mesh(g.disc, mat), b = new TT.Mesh(g.rim, mat), c = new TT.Mesh(g.face, colr === 1 ? sm.r2 : sm.b2); a.castShadow = sh; o.add(a, b, c); return o; }
+    else { o = new TT.Mesh(g, mat); o.castShadow = sh; o.receiveShadow = false; }
+    if (set === 'glass' || set === 'pebble') o.rotation.y = Math.random() * TAU;
+    return o;
+  }
+  // tile pictures for the 3D-stone row (atlas/tools/hxpiece.html): the set's red and blue stones on a dark plate
+  X.hex = { LOOKS, SETS, stone: (cell, colr, set) => makeStone(cell, colr, set || curSet()), look: curLook, set: curSet };
 
   /* ---------- polygon helpers (x, z in cell units) ---------- */
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1]], add = (a, b) => [a[0] + b[0], a[1] + b[1]], mul = (a, k) => [a[0] * k, a[1] * k];
@@ -167,8 +278,9 @@
   }
 
   /* ---------- the board ---------- */
-  function board(n, Wt) {
-    const TT = T(), m = mats(), coarse = !!X.coarse;
+  function board(n, Wt, look) {
+    look = LOOKS.includes(look) ? look : 'marquetry';
+    const TT = T(), m = matsFor(look), coarse = !!X.coarse, LL = LS[look] || {};
     const cx = .75 * (n - 1), cz = (n - 1) * S3 / 4;
     const P = (r, c) => [c + r / 2 - cx, r * S3 / 2 - cz];   // cell units (1 = centre-to-centre)
     const C = [P(0, 0), P(0, n - 1), P(n - 1, n - 1), P(n - 1, 0)];   // corners: far-left (acute), far-right (obtuse), near-right (acute), near-left (obtuse)
@@ -251,13 +363,14 @@
       add3(eg, k % 2 ? m.blue : m.red, false, true);
     }
     // a fine brass stringing round the zigzag well
-    add3(slabGeo(shapeOf(offsetPoly(well, .11), [offsetPoly(well, .06)]), YF - .01, YF + .006, 0, 1, cell), m.brass, false, true);
+    if (look === 'marquetry' || LL.string) add3(slabGeo(shapeOf(offsetPoly(well, .11), [offsetPoly(well, .06)]), YF - .01, YF + .006, 0, 1, cell), m.brass, false, true);
     // the guards: a bevelled plate with a raised inner panel (an engraved border line between them), two domed rivets
     const rivG = new TT.SphereGeometry(.065, coarse ? 8 : 10, coarse ? 4 : 5, 0, TAU, 0, Math.PI / 2);
     const rivets = [];
-    G.forEach(gd => {
-      add3(slabGeo(shapeOf(gd.L), YF - .005, YF + .035, .015, coarse ? 1 : 2, cell), m.brass, true, true);
-      add3(slabGeo(shapeOf(offsetPoly(gd.L, -.1)), YF + .02, YF + .045, .01, 1, cell), m.brass, false, true);
+    if (look === 'marquetry' || LL.guards) G.forEach(gd => {
+      add3(slabGeo(shapeOf(gd.L), YF - .005, YF + .035, .015, coarse ? 1 : 2, cell), m.guard, true, true);
+      add3(slabGeo(shapeOf(offsetPoly(gd.L, -.1)), YF + .02, YF + .045, .01, 1, cell), m.guard, false, true);
+      if (!(look === 'marquetry' || LL.rivets)) return;
       const apex = gd.L[0];
       [[gd.endA, gd.n1], [gd.endB, gd.n2]].forEach(([e, nn]) => rivets.push(add(add(e, mul(sub(apex, e), .2)), mul(nn, (OOUT - IIN) * .5))));
     });
@@ -269,13 +382,14 @@
     const per = 4 + 12 * (rings.length - 1), NT = n * n * per;
     const pos = new Float32Array(NT * 9), nor = new Float32Array(NT * 9), uv = new Float32Array(NT * 6), col = new Float32Array(NT * 9);
     let t = 0;
-    const R0 = rnd(1234 + n);
-    const WOOD = [[1, .97, .9], [1, .84, .58], [.8, .72, .56]];   // curly maple, satinwood, olive ash (× the veneer)
+    const R0 = rnd(1234 + n), dys = new Float32Array(n * n);
+    const WOOD = LL.tint || [[1, .97, .9], [1, .84, .58], [.8, .72, .56]];   // curly maple, satinwood, olive ash (× the veneer) · the look's tints
     const lin = v => Math.pow(v, 2.2);
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
       const p = P(r, c), q = (r + 2 * c) % 3, ang = q * Math.PI / 3 + (R0() - .5) * .12, ca = Math.cos(ang), sa = Math.sin(ang);
       const ou = R0(), ov = R0(), jit = .94 + R0() * .1, wc = WOOD[q].map(v => lin(v * jit));
-      const vtx = (ri, j) => { const a = (60 * j - 90) * Math.PI / 180, [rr, y] = rings[ri]; return [p[0] + Math.cos(a) * rr, y, p[1] + Math.sin(a) * rr]; };
+      const dy = LL.rise ? (R0() - .35) * LL.rise / cell : LL.sunk ? -LL.sunk / cell : 0; dys[r * n + c] = dy * cell;   // (basalt: columns of uneven height · circuit: pads set lower)
+      const vtx = (ri, j) => { const a = (60 * j - 90) * Math.PI / 180, [rr, y] = rings[ri]; return [p[0] + Math.cos(a) * rr, ri < rings.length - 1 ? y + dy : y, p[1] + Math.sin(a) * rr]; };
       const uvOf = v => [ou + (v[0] * ca - v[2] * sa) * .21, ov + (v[0] * sa + v[2] * ca) * .21];
       const tri = (a, b, cc, want) => {
         const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], e2 = [cc[0] - a[0], cc[1] - a[1], cc[2] - a[2]];
@@ -298,22 +412,22 @@
     add3(tg, m.tiles, false, true);
 
     const pt = i => { const [x, z] = P(Math.floor(i / n), i % n); return [x * cell, z * cell]; };
-    const stone = colr => { const s = new TT.Mesh(stoneGeo(cell), colr === 1 ? m.gR : m.gB); s.castShadow = !coarse; s.receiveShadow = false; s.rotation.y = Math.random() * TAU; return s; };
-    const top = YT + .001;
-    Object.assign(g.userData, { n, cell, top, W, D, S: W, pt, stone, viewY: top * .92 });
+    const stone = colr => makeStone(cell, colr, curSet());
+    const top = YT + .001 + (LL.rise ? LL.rise * .65 : LL.sunk ? -LL.sunk : 0), topAt = i => YT + .001 + (dys[i] || 0);   // (basalt: each column its own height)
+    Object.assign(g.userData, { n, cell, top, topAt, W, D, S: W, pt, stone, look, viewY: top * .92 });
     return g;
   }
 
   // the showcase: a mid-game position, a red chain of bridges from the far edge, blue blocking from the sides
   const SHOW = [[1, 6, 1], [3, 5, 1], [4, 4, 1], [5, 4, 1], [6, 3, 1], [8, 2, 1], [3, 6, 2], [4, 6, 2], [5, 5, 2], [6, 5, 2], [2, 8, 2], [7, 4, 2], [8, 3, 2]];
   X.MODELS.hex = function (live, o = {}) {
-    const n = Math.max(3, Math.min(13, o.n || 11)), g = board(n, o.W || 10.4);
+    const n = Math.max(3, Math.min(13, o.n || 11)), g = board(n, o.W || 10.4, o.look || curLook());
     if (live) return g;
     const U = g.userData;
     SHOW.forEach(([r, c, col]) => {
       if (r >= n || c >= n) return;
-      const [x, z] = U.pt(r * n + c), s = U.stone(col); s.position.set(x, U.top, z); g.add(s);
-      const sh = X.contact(U.cell * .44, .5); sh.position.set(x, U.top + .002, z); g.add(sh);
+      const [x, z] = U.pt(r * n + c), s = U.stone(col), y = U.topAt(r * n + c); s.position.set(x, y, z); g.add(s);
+      const sh = X.contact(U.cell * .44, .5); sh.position.set(x, y + .002, z); g.add(sh);
     });
     return g;
   };

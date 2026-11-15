@@ -96,8 +96,8 @@
     const stones = new TH.Group(), marks = new TH.Group(); board.add(stones, marks);
     const st = {};   // cell → group
     function place(m, col, animate) {
-      const g = new TH.Group(), s = U.stone(col), sh = T3.contact(c * .44, .5); sh.position.y = .002; g.add(sh, s); g.userData.s = s; g.userData.sh = sh;
-      const [x, z] = xz(m); g.position.set(x, Y, z); stones.add(g); st[m] = g;
+      const g = new TH.Group(), s = U.stone(col), sh = T3.contact(c * .44, .5); sh.position.y = .002; g.add(sh, s); g.userData.s = s; g.userData.sh = sh; g.userData.col = col;
+      const [x, z] = xz(m); g.position.set(x, U.topAt ? U.topAt(m) : Y, z); stones.add(g); st[m] = g;
       if (!animate) return 0;
       const h0 = c * 1.3; s.position.y = h0; sh.material.opacity = 0;
       anim(300, k => {
@@ -211,6 +211,9 @@
       if (myTurn() && pos.swapOk) { if (PZ) { const before = pos.clone(); pzOn = false; busy = true; pzClear(); const w = play(E.SWAP); later(() => { busy = false; pzAfter(before); }, w + 60); return; } busy = true; const w = play(E.SWAP); hud(''); later(next, w + 60); }
     }
     ctx.el.addEventListener('click', onClick);
+    // the board view's 駒 row (Table3D.PIECES.hex) during a game: the stones on the board change set at once
+    const onPcs = e => { if (stopped || !e.detail || e.detail.id !== 'hex') return; for (const k in st) { const g = st[k], o = g.userData.s, nw = U.stone(g.userData.col); g.remove(o); g.add(nw); g.userData.s = nw; } kick(300); };
+    addEventListener('atlas-pieces', onPcs);
     document.addEventListener('click', onHud, true);
 
     /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-15): a position from the puzzles / lessons / openings, no AI; the caller judges
@@ -331,7 +334,7 @@
       stop() {
         stopped = true; jid++;
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
-        ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true);
+        ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); removeEventListener('atlas-pieces', onPcs);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null; if (pzW) pzW.terminate(); pzW = null;
         pzClear(); Object.values(pzMat).forEach(m => m.dispose()); pzDisc.dispose(); pzRing.dispose();
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
