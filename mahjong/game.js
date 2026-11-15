@@ -23,7 +23,8 @@ class MJGame {
   constructor(o) {
     this.agents = o.agents;
     this.chars = o.chars || [null, null, null, null];
-    this.rules = Object.assign({ length: 'south', skills: true, start: 25000, ret: 30000, aka: true }, o.rules || {});
+    // costSplit (ユーザー 2026-11-15: 別々方式で遊んでみたい): each of the two skills' costs rises on its own; the one free use is shared
+    this.rules = Object.assign({ length: 'south', skills: true, start: 25000, ret: 30000, aka: true, costSplit: true }, o.rules || {});
     this.ui = o.ui || (async () => {});
     this.rand = rng(o.seed == null ? (Math.random() * 2 ** 32) >>> 0 : o.seed);
     this.scores = [0, 1, 2, 3].map(() => this.rules.start);
@@ -62,7 +63,7 @@ class MJGame {
     const noFree = !!(sk && sk.noFree);
     if (!noFree && !this.skillFree[s]) return 0;
     const base = (this.rules.costs && sk && this.rules.costs[sk.id]) || (sk && sk.cost) || 1000;
-    // rules.costSplit (an option, for tools/dual-skill-sim.js): each skill's cost rises with its own paid uses only —
+    // rules.costSplit (on by default; off = one count for both, as before): each skill's cost rises with its own paid uses only —
     // base, ×2, ×4 … (封じ: half, base, ×2 …); the one free use of the game is still shared
     if (this.rules.costSplit) { const p = this.paidUses ? this.paidUses[s][i | 0] : 0; return (noFree ? base / 2 : base) * Math.pow(2, p); }
     if (noFree) return base / 2 * Math.pow(2, n);
