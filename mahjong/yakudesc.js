@@ -1,0 +1,35 @@
+// 役の簡単な説明 (ユーザー 2026-11-15: hover / tap a yaku in 戦績 for a short note). ja / en; other languages fall back to en.
+const YAKU_DESC = {
+  ja: {
+    riichi: '門前でテンパイし、1000点を出して宣言する。', ippatsu: 'リーチ後、鳴きが入らず一巡以内に和了る。', tsumo: '門前で自分で引いて和了る。',
+    pinfu: '門前で、順子4つ＋役牌でない雀頭、両面待ち。符のつかない手。', tanyao: '2〜8の数牌だけで作る（一九字牌なし）。鳴いても可。',
+    iipeikou: '門前で、同じ順子を2組そろえる。', haku: '白を3枚そろえる。', hatsu: '發を3枚そろえる。', chun: '中を3枚そろえる。',
+    seat_wind: '自分の風（自風）の牌を3枚そろえる。', round_wind: 'その場の風（場風）の牌を3枚そろえる。',
+    haitei: '山の最後の牌をツモって和了る。', houtei: '最後に捨てられた牌でロン和了る。', rinshan: 'カンした後の嶺上牌で和了る。', chankan: '他家が加槓した牌でロン和了る。',
+    dbl_riichi: '最初の打牌でリーチする（鳴きが入る前）。', chiitoi: '異なる対子を7組そろえる。門前のみ。',
+    chanta: 'すべての面子と雀頭に一九字牌を含む（順子あり）。鳴くと1翻。', ittsu: '同じ色で123・456・789をそろえる。鳴くと1翻。',
+    sanshoku: '3色で同じ数字の順子をそろえる。鳴くと1翻。', sanshoku_k: '3色で同じ数字の刻子をそろえる。', toitoi: '4面子すべてを刻子（槓子）にする。',
+    sanankou: '暗刻（鳴かずに作った刻子）を3つ作る。', sankantsu: '槓子を3つ作る。', shousangen: '三元牌のうち2つを刻子、1つを雀頭にする。',
+    honroutou: '一九牌と字牌だけで作る。', honitsu: '1色の数牌＋字牌だけで作る。鳴くと2翻。', junchan: 'すべての面子と雀頭に一九牌を含む（字牌なし）。鳴くと2翻。',
+    ryanpeikou: '門前で、一盃口を2組作る。', chinitsu: '1色の数牌だけで作る。鳴くと5翻。',
+    kokushi: '一九字牌13種を1枚ずつ＋どれか1枚。', suuankou: '暗刻を4つ作る。', daisangen: '白・發・中をすべて刻子にする。',
+    shousuushii: '風牌のうち3つを刻子、1つを雀頭にする。', daisuushii: '東南西北すべてを刻子にする。', tsuuiisou: '字牌だけで作る。',
+    ryuuiisou: '23468索と發だけで作る。', chinroutou: '一九牌だけで作る。', chuuren: '門前で1色の1112345678999＋同じ色の1枚。',
+    suukantsu: '槓子を4つ作る。', tenhou: '親が配牌で和了っている。', chiihou: '子が最初のツモで和了る（鳴きが入る前）。' },
+  en: {
+    riichi: 'Declare a closed tenpai hand, putting up 1,000 points.', ippatsu: 'Win within one go-around after riichi, with no calls.', tsumo: 'Win a closed hand on your own draw.',
+    pinfu: 'Closed: four runs, a non-value pair, a two-sided wait.', tanyao: 'Only number tiles 2–8 (no terminals or honors). Open OK.',
+    iipeikou: 'Closed: two identical runs.', haku: 'A set of white dragons.', hatsu: 'A set of green dragons.', chun: 'A set of red dragons.',
+    seat_wind: 'A set of your own seat wind.', round_wind: 'A set of the round wind.',
+    haitei: 'Win on the last tile of the wall by self-draw.', houtei: 'Win on the last discard.', rinshan: 'Win on the replacement tile after a kan.', chankan: 'Ron on a tile another player adds to a kan.',
+    dbl_riichi: 'Riichi on your very first discard (before any call).', chiitoi: 'Seven different pairs. Closed only.',
+    chanta: 'Every set and the pair include a terminal or honor (runs allowed). 1 han open.', ittsu: '123, 456, 789 in one suit. 1 han open.',
+    sanshoku: 'The same run in all three suits. 1 han open.', sanshoku_k: 'The same triplet in all three suits.', toitoi: 'All four sets are triplets (or kans).',
+    sanankou: 'Three concealed triplets.', sankantsu: 'Three kans.', shousangen: 'Two dragon triplets and a dragon pair.',
+    honroutou: 'Only terminals and honors.', honitsu: 'One suit plus honors. 2 han open.', junchan: 'Every set and the pair include a terminal (no honors). 2 han open.',
+    ryanpeikou: 'Closed: two pairs of identical runs.', chinitsu: 'One suit only. 5 han open.',
+    kokushi: 'One of each of the 13 terminals and honors, plus one more.', suuankou: 'Four concealed triplets.', daisangen: 'Triplets of all three dragons.',
+    shousuushii: 'Three wind triplets and a wind pair.', daisuushii: 'Triplets of all four winds.', tsuuiisou: 'Honors only.',
+    ryuuiisou: 'Only 2,3,4,6,8 of bamboo and green dragons.', chinroutou: 'Terminals only.', chuuren: 'Closed 1112345678999 in one suit, plus one more of it.',
+    suukantsu: 'Four kans.', tenhou: 'The dealer wins with the dealt hand.', chiihou: 'A non-dealer wins on the first draw (before any call).' } };
+window.YAKU_DESC = YAKU_DESC;
