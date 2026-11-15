@@ -836,9 +836,9 @@ function renderChara() {
   setHTML($('#chList'), list.map(c => {
     const own = owns(c.id);
     return `<button class="chi ${own ? '' : 'lock'}" data-id="${c.id}" style="--c:${c.color}">
-      ${frame(c, own ? 'face' : 'silf')}<em class="r-${c.rarity}">${c.rarity}</em>${own ? '' : `<i class="lk">${IC.lock}</i>`}${c.id === DB.sel ? '<i class="pm">★</i>' : ''}<span>${own ? esc(L(c.name)) : '？？？'}</span></button>`;
+      ${frame(c, own ? 'face' : 'silf')}<em class="r-${c.rarity}">${c.rarity}</em>${own ? '' : `<i class="lk">${IC.lock}</i>`}${own ? '<i class="pm">★</i>' : ''}<span>${own ? esc(L(c.name)) : '？？？'}</span></button>`;
   }).join(''));
-  for (const el of $('#chList').children) el.classList.toggle('on', el.dataset.id === chView);
+  for (const el of $('#chList').children) { el.classList.toggle('on', el.dataset.id === chView); el.classList.toggle('sel', el.dataset.id === DB.sel); }
   const c = MJChars.get(chView), own = owns(c.id);
   const ch = $('#chara'); ch.style.setProperty('--c', c.color); ch.style.setProperty('--c2', c.color2);
   const full = charImg(c, 'full');
@@ -881,7 +881,7 @@ function renderChara() {
       <div class="ptn-inl">${ptn}</div>
       <div class="ci-h st"><b>STORY</b></div><p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(c.reward != null ? t('rkLocked', { r: rkName(MJRank.list[c.reward]) }) : t('notOwned'))}</div>
       <div class="sis"><small>${esc(t('sisters'))}</small><div>${sisters.map(x => `<button class="sib ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}" title="${owns(x.id) ? esc(L(x.name)) : '？？？'}">${frame(x, owns(x.id) ? 'face' : 'silf')}</button>`).join('')}</div></div>`}
-    ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isLead')}</div>` : `<button class="go ch-go" id="chSet">${t('setLead')}</button>`) : ''}`;
+`;
   // (ユーザー 2026-11-15: the middle is for her picture — the partner block and the list of her sisters live in the panel on the right)
   // It does not fit: her story gives way first, then the small labels and the size of her name.
   ch.style.setProperty('--dl', /^(ja|zh|ko)/.test(I18N.lang) ? 3 : 5);   // (lines kept for a skill's description: the longest one in this language)
@@ -890,8 +890,6 @@ function renderChara() {
     if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight2');
     info.scrollTop = keepScroll;
     if (!pt && canPick) { const q = info.querySelector('.ptn'); if (q && q.offsetTop + q.offsetHeight > info.scrollTop + info.clientHeight) info.scrollTop = Math.max(0, q.offsetTop - 60); } }   // (the call to pick a partner is never left below the fold)
-  const b = $('#chSet');
-  if (b) b.onclick = () => { DB.sel = c.id; save(); SND.ok(); renderChara(); };
   $('#chInfo').onclick = e => {
     const k = e.target.closest('#chSk [data-k]'); if (k) { DB.chars[c.id].use = k.dataset.k; save(); SND.pick(); renderChara(); return; }
     const k2 = e.target.closest('.ptn-skl [data-k]'); if (k2) { if (k2.classList.contains('off')) { toast(t('ptnSame')); return; } DB.chars[c.id].puse = k2.dataset.k; save(); SND.pick(); renderChara(); return; }
@@ -905,7 +903,11 @@ function renderChara() {
 addEventListener('resize', () => { if (!$('#chara').hidden) renderChara(); });
 $('#chArt').addEventListener('click', e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } else if (e.target.closest('[data-a=rated]')) { SND.pick(); openRanked(); } });
 $('#chTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; chTab = b.dataset.tab; SND.pick(); renderChara(); });
-$('#chList').addEventListener('click', e => { const b = e.target.closest('.chi'); if (!b) return; chView = b.dataset.id; SND.pick(); renderChara(); });
+// (ユーザー 2026-11-15: no 「許婚にする」 button) the character picked in the list becomes the 許婚 at once, when she is owned;
+// one not owned yet is only looked at (the 許婚 stays who she was)
+$('#chList').addEventListener('click', e => { const b = e.target.closest('.chi'); if (!b) return; chView = b.dataset.id;
+  if (owns(chView) && DB.sel !== chView) { DB.sel = chView; save(); SND.ok(); } else SND.pick();
+  renderChara(); });
 
 // ---------------------------------------------------------------- スタッツ (player stats)
 // Tap a character (home: the partner's スタッツ button; in a game: any seat's face; the final places) → that player's stats,

@@ -2311,3 +2311,7 @@ html.ds #game .me .mb{margin-left:calc((var(--hz, 1) * .82 - 1) * var(--skw, 0px
 #home.aaa .aa-plate .skc b{font-weight:800;letter-spacing:.06em}
 #home.aaa .pp-info .pi-sk span{font-weight:600;letter-spacing:.02em}
 #home.aaa .aa-plate .pp-cb{font-weight:600}
+/* (ユーザー 2026-11-15) the 許婚 is the owned character picked in the list: her star shows by a class; no button at the foot of the panel */
+.chi .pm{display:none}
+.chi.sel .pm{display:block}
+#chara.ch2 .ch-info>:last-child{margin-top:0}
