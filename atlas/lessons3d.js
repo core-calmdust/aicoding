@@ -165,6 +165,22 @@
       hi: { hi: 'मैं रत्नू भौंरा हूँ! चलो साथ में मनकला सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छा सुनहरे घेरे वाला गड्ढा है।', wrong: 'बहुत क़रीब! जवाब सुनहरे घेरे वाला गड्ढा है।', hintSay: 'संकेत: बीज गिनो।' },
       ar: { hi: 'أنا خنفوس الجواهر! لنتعلّم المنقلة معًا.', partial: 'نقلة جيدة! لكن الأفضل هي الحفرة ذات الحلقة الذهبية.', wrong: 'قريب جدًا! الجواب هو الحفرة ذات الحلقة الذهبية.', hintSay: 'تلميح: عُدَّ البذور.' },
     },
+    dots: {
+      ja: { hi: 'ハコピヨだよ！ いっしょにドット・アンド・ボックスのお勉強をしよう。', partial: 'いい線！ でもいちばんは緑の線なんだ。', wrong: 'おしい！ 正解は緑の線だよ。', hintSay: 'ヒント：金色の線を見てね。' },
+      en: { hi: "Boxchick here! Let's study dots and boxes together.", partial: 'A nice line! But the green one is the best.', wrong: 'So close! The green line is the answer.', hintSay: 'Hint: look at the gold lines.' },
+      zh: { hi: '我是方块小鸡！一起来学点格棋吧。', partial: '好线！不过最好的是绿色那条。', wrong: '差一点！正解是绿色那条线。', hintSay: '提示：看看金色的线。' },
+      'zh-TW': { hi: '我是方塊小雞！一起來學點格棋吧。', partial: '好線！不過最好的是綠色那條。', wrong: '差一點！正解是綠色那條線。', hintSay: '提示：看看金色的線。' },
+      ko: { hi: '하코피요야! 같이 도트 앤 박스를 공부하자.', partial: '좋은 선이야! 하지만 최선은 초록 선이야.', wrong: '아깝다! 정답은 초록 선이야.', hintSay: '힌트: 금색 선을 봐.' },
+      es: { hi: '¡Soy Boxchick! Estudiemos puntos y cajas juntos.', partial: '¡Buena línea! Pero la mejor es la verde.', wrong: '¡Casi! La respuesta es la línea verde.', hintSay: 'Pista: mira las líneas doradas.' },
+      fr: { hi: 'C’est Boxchick ! Étudions la pipopipette ensemble.', partial: 'Jolie ligne ! Mais la meilleure est la verte.', wrong: 'Presque ! La réponse est la ligne verte.', hintSay: 'Indice : regarde les lignes dorées.' },
+      pt: { hi: 'Aqui é o Boxchick! Vamos estudar pontinhos juntos.', partial: 'Boa linha! Mas a melhor é a verde.', wrong: 'Quase! A resposta é a linha verde.', hintSay: 'Dica: olhe as linhas douradas.' },
+      de: { hi: 'Hier ist Boxchick! Lass uns zusammen Käsekästchen lernen.', partial: 'Gute Linie! Aber am besten ist die grüne.', wrong: 'Knapp! Die Antwort ist die grüne Linie.', hintSay: 'Tipp: schau auf die goldenen Linien.' },
+      ru: { hi: 'Это Боксчик! Давай вместе изучать точки и квадраты.', partial: 'Хорошая линия! Но лучшая — зелёная.', wrong: 'Почти! Ответ — зелёная линия.', hintSay: 'Подсказка: смотри на золотые линии.' },
+      tr: { hi: 'Ben Boxchick! Birlikte noktalar ve kutular çalışalım.', partial: 'Güzel çizgi! Ama en iyisi yeşil olan.', wrong: 'Az kaldı! Cevap yeşil çizgi.', hintSay: 'İpucu: altın çizgilere bak.' },
+      id: { hi: 'Aku Boxchick! Ayo belajar titik dan kotak bersama.', partial: 'Garis bagus! Tapi yang terbaik yang hijau.', wrong: 'Hampir! Jawabannya garis hijau.', hintSay: 'Petunjuk: lihat garis emas.' },
+      hi: { hi: 'मैं बॉक्सचिक हूँ! चलो साथ में डॉट्स एंड बॉक्सेस सीखें।', partial: 'अच्छी रेखा! पर सबसे अच्छी हरी वाली है।', wrong: 'करीब! जवाब हरी रेखा है।', hintSay: 'संकेत: सुनहरी रेखाएँ देखो।' },
+      ar: { hi: 'أنا بوكس تشيك! لنتعلّم النقاط والمربعات معًا.', partial: 'خط جيد! لكن الأفضل هو الأخضر.', wrong: 'قريب جدًا! الجواب هو الخط الأخضر.', hintSay: 'تلميح: انظر إلى الخطوط الذهبية.' },
+    },
     morris: {
       ja: { hi: 'モリフクだよ！ いっしょにモリスのお勉強をしよう。', partial: 'いい手！ でもいちばんは緑の印の手なんだ。', wrong: 'おしい！ 正解は緑の印の手だよ。', hintSay: 'ヒント：金の丸を見てね。' },
       en: { hi: "Millowl here! Let's study morris together.", partial: 'A nice move! But the green-marked move is the best.', wrong: 'So close! The green-marked move is the answer.', hintSay: 'Hint: look at the gold rings.' },
@@ -1251,9 +1267,47 @@
     },
     introPos(c) { const s = this.data.steps.find(x => x.id === c.id), P = s && s.problems[0]; return P ? { pos: { spec: { v: s.v, s: P.s }, me: P.s.side === 2 ? 2 : 1, lock: true } } : null; },
   };
-  const DATA = { morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  /* dots & boxes (2026-11-16): dots/lessons.json (15 steps; problem 0 is the worked example, the next five are played) — one line each,
+     scored by rank among the solver's values (= dots/learn.js rankPoints); after the line, back to the problem with the best line green
+     and yours red. Progress = the full game's ('dots-lessons-v2' { id: { best, clear } }). Texts: dots/i18n.js + i18n-learn.js + the long
+     texts content/text.<lang>.json (a sandbox). The hint: the safe lines in gold (the steps about safe lines) or the step's words. */
+  const DK = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  const dDecE = x => [...x].map(c => DK.indexOf(c)), dDecO = x => [...x].map(c => c === '.' ? -1 : +c), dDecV = x => [...x].map((c, e) => c === '.' ? null : [e, DK.indexOf(c) - 30]).filter(Boolean);
+  const dRank = (vals, mine) => { const d = [...new Set(vals.map(x => x[1]))].sort((a, b) => b - a); if (d.length <= 1) return 20; const i = d.indexOf(mine); return i < 0 ? 0 : Math.max(0, Math.round(20 * (d.length - 1 - i) / (d.length - 1))); };
+  const dSafe = (n, edges) => { const HN = (n + 1) * n, E = HN + n * (n + 1), on = new Set(edges), be = bx => { const r = Math.floor(bx / n), c = bx % n; return [r * n + c, (r + 1) * n + c, HN + r * (n + 1) + c, HN + r * (n + 1) + c + 1]; };
+    const cnt = bx => be(bx).filter(e => on.has(e)).length, eb = e => { const o = []; for (let bx = 0; bx < n * n; bx++) if (be(bx).includes(e)) o.push(bx); return o; };
+    const out = []; for (let e = 0; e < E; e++) if (!on.has(e) && eb(e).every(bx => cnt(bx) < 2)) out.push(e); return out; };
+  const DOTS = {
+    LKEY: 'dots-lessons-v2', data: null, I: null, got: {},
+    load(lang) {
+      const T = () => Promise.all([...new Set(['ja', 'en', lang || 'en'])].filter(l => !this.got[l]).map(l => getJ(`../dots/content/text.${l}.json?v=20261021L`).then(d => { this.got[l] = 1; if (this.I) this.I[l] = Object.assign(this.I[l] || {}, d); }).catch(() => {})));
+      if (this.p) return this.p.then(() => T()).then(() => this);
+      return (this.p = Promise.all([getJ('../dots/lessons.json?v=20261116'), Promise.all(['../dots/i18n.js?v=20261116', '../dots/i18n-learn.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+        .then(([ls, X]) => { const w = {}; try { new Function('window', 'with (window) {' + X + '\n}')(w); } catch (e) { console.warn('[lessons3d] dots texts', e); } this.I = w.I18N || {}; this.data = { ls }; return T(); }).then(() => this)
+        .catch(e => { this.p = null; throw e; }));
+    },
+    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; if (Array.isArray(x)) x = x.map(p => `<p>${p}</p>`).join(''); return v ? fill(x, v) : x; },
+    list(kind, lang) {
+      const pr = J(this.LKEY, {});
+      return this.data.ls.steps.map((s, i) => { const q = s.problems[0];
+        return { key: String(i), cat: s.course, catName: this.tx('course.' + s.course, lang) || s.course, title: this.tx('ls.' + s.id + '.t', lang), sub: this.tx('ls.' + s.id + '.d', lang),
+          svg: q && window.AtlasMini && AtlasMini.dots ? AtlasMini.dots({ n: q.n, e: q.e, o: q.o }) : '', st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '', full: false }; });
+    },
+    lesson(key, lang) {
+      const s = this.data.ls.steps[+key]; if (!s) return null;
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), SAFE = ['safe', 'third', 'parity', 'sacrifice', 'open3', 'mid4', 'mid5'].includes(s.id);
+      return { id: s.id, title: T('t'), intro: T('body'), ramp: null,
+        probs: s.problems.slice(1, 6).map(q => { const edges = dDecE(q.e), values = dDecV(q.v), best = Math.max(...values.map(x => x[1])), ans = values.find(x => x[1] === best)[0];
+          return { pos: { spec: { n: q.n, edges, owners: dDecO(q.o) }, me: 0 }, kind: 'best', P: { values }, ask: `<small>${q.n}×${q.n}</small> ` + T('q'), ans, hintTx: T('hint'), hint: SAFE ? dSafe(q.n, edges) : [], dHint: true,
+            why: '', good: () => T('tip'), ng: () => T('tip') }; }),
+        save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
+    },
+    points(P, e) { const v = new Map(P.values).get(e); return v === undefined ? 0 : dRank(P.values, v); },
+    introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), q = s && s.problems[0]; return q ? { pos: { spec: { n: q.n, edges: dDecE(q.e), owners: dDecO(q.o) }, me: 0, lock: true } } : null; },
+  };
+  const DATA = { dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
-  function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(), ncLoad(id)]).then(() => D.list(kind, lang)); }
+  function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
 
   function start(ctx) {
@@ -1347,6 +1401,7 @@
         onReady = res;
         const G = pos && typeof pos === 'object' ? pos : null;   // (gomoku: { start, rule, me, last, pick, noForbid } · go: { spec, me, view, marks })
         if (sess && (id === 'go' || id === 'hex') && G && pz() && pz().n !== (G.spec.n || 9)) { sess.stop(); sess = null; }
+        if (sess && id === 'dots' && G && pz() && pz().n !== G.spec.n) { sess.stop(); sess = null; }   // (dots: another board size)
         if (sess && id === 'morris' && G && pz() && pz().v !== G.spec.v) { sess.stop(); sess = null; }   // (morris: another rule set's board)
         if (sess && id === 'tafl' && G && pz() && pz().n !== Math.round(Math.sqrt(String(G.spec.b).length))) { sess.stop(); sess = null; }   // (tafl: another rule set's board)   // (go / hex: another board size — a new board)
         if (!sess) {
@@ -1354,7 +1409,7 @@
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
@@ -1511,6 +1566,7 @@
       $('[data-a=hint]').onclick = () => { if (p.ans == null || p.ans < 0 || p.ans === '' || p.done) return; p.hinted = true;
         if (id === 'connect4') { pz().mark(p.hintMk && p.hintMk.length ? p.hintMk : null); say(p.hintTx || X.hintSay); return; }
         if (id === 'mancala') { pz().mark(p.base.concat(p.hintMk ? p.hintMk() : [])); say(p.hintTx || X.hintSay); return; }   // (mancala/app.js lsHint: the store, the pits to capture, the threats — never the answer itself)   // (the threats the step's hint names: yours green, the opponent's red)
+        if (p.dHint) { pz().mark(p.hint.length ? p.hint.map(q => [q, 'ring']) : null); say(p.hintTx || X.hintSay); return; }   // (dots: the safe lines, or the step's words alone — never the answer)
         if (p.hint && p.hint.length) { pz().mark((id === 'amazons' && p.marks ? p.marks : []).concat(p.hint.map(q => [q, 'ring']))); say(p.hintTx || X.hintSay); return; }   // (gomoku: the lesson's own hint points and words)
         if (p.kind === 'bgplay') { pz().reset(); pz().mark(p.ans); pz().wait(); say((p.hintTx ? p.hintTx + '<br>' : '') + X.hintSay); return; }   // (backgammon: back to the roll's start, rings on the checkers the best play moves)
         if (p.kind === 'choice') { say(p.hintTx || X.hintSay); return; }
@@ -1622,7 +1678,7 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if ((id === 'checkers' || id === 'xiangqi' || id === 'amazons' || id === 'tafl' || id === 'morris') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
+      if ((id === 'checkers' || id === 'xiangqi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;
         say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
@@ -1703,7 +1759,7 @@
     if ($('[data-a=list]')) $('[data-a=list]').onclick = () => ctx.onList(ctx.kind);   // 一覧 (the portal's list sheet)
     requestAnimationFrame(() => el.classList.add('on'));
     say(X.loading); act(X.next, { nextOn: false });
-    Promise.all([D.load(), ncLoad(id)]).then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
+    Promise.all([D.load(ctx.lang), ncLoad(id)]).then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
     const dbg = { state: () => cur && { key: cur.key, phase, k: cur.k, si: cur.si, res: cur.res.slice(), ans: cur.probs[cur.k] && cur.probs[cur.k].ans, say: $('.tx').textContent },
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return; u = u || p.ans; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook)
     window.__atlasLs = dbg;

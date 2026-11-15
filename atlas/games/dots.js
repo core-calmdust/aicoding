@@ -237,8 +237,9 @@
     const T3 = ctx.Table3D, THREE = window.THREE, t = ctx.t, D = T3.dots;
     const lang = ctx.lang, X = Object.assign({}, TX.en, TX[lang] || {});
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const n = [3, 4, 5].includes(+ctx.size) ? +ctx.size : 4, level = Math.max(1, Math.min(10, +ctx.level || 5));
-    const pvp = ctx.mode === 'pvp', human = pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
+    const PZ = ctx.pz || null;   // PZ: a puzzle / lesson position (atlas/puzzles.js · lessons3d.js) — { n, edges (already drawn), owners }; no AI, ctx.pz.moved judges
+    const n = PZ ? PZ.spec.n : [3, 4, 5].includes(+ctx.size) ? +ctx.size : 4, level = Math.max(1, Math.min(10, +ctx.level || 5));
+    const pvp = !PZ && ctx.mode === 'pvp', human = PZ ? 0 : pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
     const pname = s => X.n[s];
     const K = kit(T3, n), { root, nb, PY, E, B, HN, boxEdges, edgeBoxes, INK, tall, pens, anim, penHome, ribbon, ribbonG, preview, hintMk, markEdge, flash } = K;
     const redraw = () => K.redraw(by, owner, score), edgeAt = ev => K.edgeAt(ev, by);
@@ -248,6 +249,8 @@
 
     /* ---------- state ---------- */
     let by = new Int8Array(E).fill(-1), owner = new Int8Array(B).fill(-1), score = [0, 0], turn = 0, over = false, stopped = false, busy = false;
+    let pre = [];   // (a puzzle / lesson: the lines already on the page, in pencil; the engine is given them before the moves)
+    let pzOn = false, pzMk = [];
     let combo = 0, comboPl = -1;   // boxes closed in a row by one player (the chime climbs)
     let worker = null, hintW = null, ply = 0, hist = [], aiJ = 0, hintJ = 0, tok = 0, hintE = -1, msg = '', moves = [];
     const cnt = bx => boxEdges(bx).filter(e => by[e] >= 0).length;
@@ -258,8 +261,8 @@
     const onPcs = e => { if (!stopped && e.detail && e.detail.id === 'dots' && K.repiece) K.repiece(); };   // (the board view's 駒 row during a game)
     addEventListener('atlas-pieces', onPcs);
     function hideHint() { hintE = -1; markEdge(hintMk, -1); hintJ++; }
-    async function play(e, pl) {   // player pl draws edge e
-      if (pvp || pl === human) hist.push({ by: by.slice(), owner: owner.slice(), score: score.slice(), turn, moves: moves.slice() });
+    async function play(e, pl, after) {   // player pl draws edge e (after: a puzzle / lesson move — told when it is done)
+      if (pvp || pl === human || PZ) hist.push({ by: by.slice(), owner: owner.slice(), score: score.slice(), turn, moves: moves.slice() });
       hideHint(); markEdge(preview, -1); busy = true; ply++;
       msg = ''; hud();
       const my = ++tok, ok = await K.drawLine(e, pl, () => my === tok && !stopped);
@@ -269,16 +272,17 @@
       closed.forEach(bx => { owner[bx] = pl; score[pl]++; });
       redraw();
       if (!closed.length) combo = 0; else { if (comboPl !== pl) combo = 0; comboPl = pl; combo++; closed.forEach(bx => flash(bx, pl)); SND.box(closed.length, combo); }
-      over = moves.length === E;
+      over = pre.length + moves.length === E;
       if (!closed.length) turn = 1 - turn;
       busy = false;
+      if (PZ) { if (over) { penHome(0); penHome(1); } hud(); if (after) after(closed.length); return; }
       if (over) return end();
       if (closed.length) { msg = X.again; hud(); }
       next(!!closed.length);
     }
     function hud(m) {
       if (m !== undefined) msg = m;
-      const pill = c => `<span class="hs ${turn === c && !over ? 'on' : ''}"><i class="dk" style="background:${INK[c]};border-radius:4px;transform:rotate(45deg) scale(.8)"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${score[c]}</b></span>`;
+      const pill = c => `<span class="hs ${turn === c && !over ? 'on' : ''}"><i class="dk" style="background:${INK[c]};border-radius:4px;transform:rotate(45deg) scale(.8)"></i>${pvp ? pname(c) : c === human ? L.you : PZ ? X.n[c] : L.ai}<b>${score[c]}</b></span>`;
       ctx.hud(`${pill(0)}<span class="hm">${msg || ''}</span>${pill(1)}`);
     }
     function next(again) {
@@ -312,8 +316,10 @@
       hud(me > op ? L.win : me < op ? L.lose : L.draw);
       ctx.onEnd({ win: me > op, draw: me === op, level, score: me + ' - ' + op });
     }
-    const canTap = () => !over && !busy && (pvp || turn === human);
-    function onClick(ev) { if (!canTap() || T3.wasDrag()) return; const e = edgeAt(ev); if (e >= 0) play(e, turn); }
+    const canTap = () => PZ ? pzOn && !over && !busy : !over && !busy && (pvp || turn === human);
+    function onClick(ev) { if (!canTap() || T3.wasDrag()) return; const e = edgeAt(ev); if (e < 0) return;
+      if (PZ) { const before = { by: by.slice(), owner: owner.slice(), score: score.slice(), turn, all: pre.concat(moves) }; pzOn = false; pzMark(null); markEdge(preview, -1); play(e, turn, closed => { if (PZ.moved) PZ.moved(e, { before, closed, over, score: score.slice(), turn }); }); return; }
+      play(e, turn); }
     let hov = -1;
     function onMove(ev) {
       if (ev.pointerType && ev.pointerType !== 'mouse') return;
@@ -321,7 +327,56 @@
       if (e !== hov) { hov = e; ctx.el.style.cursor = e >= 0 ? 'pointer' : ''; markEdge(preview, e); }
     }
     ctx.el.addEventListener('click', onClick); ctx.el.addEventListener('pointermove', onMove);
-    hud(''); setTimeout(() => next(), 600);
+    /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-16): the position's lines in pencil, the solver's jobs from the game's worker
+       ({ type: 'solve' | 'move', R, C, edges: the lines drawn so far }) as dots/learn.js asks them ---------- */
+    let pzW = null, pzJ = 0;
+    const MKC = { ok: 0x2fd17a, ng: 0xff3b30, hl: 0xffa21a, ring: 0xffc928 };
+    function pzMark(list) {
+      pzMk.forEach(m => { m.visible = false; }); if (list == null) { if (T3.kick) T3.kick(120); return; }
+      const L = typeof list === 'number' ? [[list, 'ring']] : list; let i = 0;
+      for (let e of L) {
+        if (Array.isArray(e) && e[0] && typeof e[0] === 'object') e = [e[0].m, e[1]];
+        const [q, k] = Array.isArray(e) ? e : typeof e === 'object' ? [e.at != null ? e.at : e.m, e.cls] : [e, 'ring'];
+        if (!(q >= 0 && q < E)) continue;
+        if (!pzMk[i]) pzMk[i] = K.mkMark(0xffffff, .62, .2);
+        const m = pzMk[i++]; m.material.color.setHex(MKC[k] || MKC.hl); m.material.opacity = k === 'ng' ? .55 : .62; markEdge(m, q);
+      }
+    }
+    function pzLoad(spec, me, o) {
+      PZ.spec = spec || PZ.spec; PZ.lock = !!(o && o.lock); tok++; pzJ++; hideHint(); pzMark(null); markEdge(preview, -1); ribbon.visible = false;
+      by = new Int8Array(E).fill(-1); owner = new Int8Array(B).fill(-1); score = [0, 0]; turn = 0; over = false; busy = false; moves = []; hist = []; combo = 0;
+      pre = (PZ.spec.edges || []).slice(); pre.forEach(e => { by[e] = 2; });
+      (PZ.spec.owners || []).forEach((w, bx) => { if (w >= 0) { owner[bx] = w; score[w]++; } });
+      over = pre.length === E; penHome(0); penHome(1); redraw(); hud('');
+      if (o && o.marks) pzMark(o.marks);
+      setTimeout(() => { if (stopped) return; pzOn = !PZ.lock && !over; if (PZ.ready) PZ.ready(); }, 250);
+    }
+    const pzReq = msg => new Promise(res => {
+      if (!pzW) pzW = new Worker(BASE + 'engine.js?v=' + EV);
+      const id = ++pzJ; pzW.onmessage = ev => { const m = ev.data; if (m.id !== id) return; res(stopped ? null : m); };
+      pzW.onerror = () => { pzW = null; res(null); };
+      pzW.postMessage(Object.assign({ id, R: n, C: n, edges: pre.concat(moves) }, msg));
+    });
+    const pzApi = {
+      n,
+      load: (spec, me, o) => pzLoad(spec, me, o),
+      wait() { busy = false; pzOn = !PZ.lock && !over; hud(); },
+      mark: pzMark,
+      play: e => new Promise(res => { if (!(e >= 0) || by[e] >= 0 || over) return res(false); pzOn = false; pzMark(null); play(e, turn, () => res(true)); }),
+      undo(k = 1) { tok++; while (k-- > 0 && hist.length) { const h = hist.pop(); by = h.by; owner = h.owner; score = h.score; turn = h.turn; moves = h.moves; } over = pre.length + moves.length === E; busy = false; ribbon.visible = false; penHome(0); penHome(1); redraw(); hud(); },
+      moves: () => moves.slice(),
+      edges: () => pre.concat(moves),
+      state: () => ({ over, turn, score: score.slice(), undrawn: E - pre.length - moves.length, moves: moves.length }),
+      // the exact values of every line for the side to move ({ m, v }: v = final box difference from here) — the game's 'solve'
+      solve: (ms, ed) => pzReq(Object.assign({ type: 'solve', ms: ms || 8000 }, ed ? { edges: ed } : {})).then(r => (r && r.list) || null),
+      think: lv => pzReq({ type: 'move', level: lv || 8, lead: score[turn] - score[1 - turn] }).then(r => r && r.move >= 0 ? r.move : null),
+      completes: e => edgeBoxes(e).filter(bx => cnt(bx) === 3).length,
+      gives: e => by[e] < 0 && !edgeBoxes(e).some(bx => cnt(bx) === 3) ? edgeBoxes(e).filter(bx => cnt(bx) === 2).length : 0,
+      free: () => { const o = []; for (let e = 0; e < E; e++) if (by[e] < 0) o.push(e); return o; },
+    };
+    hud('');
+    if (PZ) { INK[2] = '#7a7f88'; pzLoad(PZ.spec, PZ.me, { lock: PZ.lock, marks: PZ.marks }); }
+    else setTimeout(() => next(), 600);
     window.Atlas3D.dots._dbg = {
       at: e => { const st = K.strokeOf(e), [x, z] = K.qpt(st, .5), v = K.toRoot(x, z, PY); return T3.project(v.x, v.z, PY); },
       state: () => ({ n, turn, over, busy, human, pvp, score: score.slice(), moves: moves.slice(), drawn: moves.length, E, owner: Array.from(owner), hint: hintE, hist: hist.length }),
@@ -338,7 +393,7 @@
       hud(L.lose); ctx.onEnd({ win: false, draw: false, level, score: r });
     }
     const api = {
-      human: pvp ? 0 : human,
+      human: pvp ? 0 : human, pz: PZ ? pzApi : null,
       canUndo: () => canTap() && hist.length > 0,
       undo() {
         if (!api.canUndo()) return;
@@ -370,7 +425,7 @@
       stop() {
         stopped = true; tok++; removeEventListener('atlas-pieces', onPcs); K.stop();
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointermove', onMove); ctx.el.style.cursor = '';
-        if (worker) worker.terminate(); if (hintW) hintW.terminate();
+        if (worker) worker.terminate(); if (hintW) hintW.terminate(); if (pzW) pzW.terminate();
       },
     };
     return api;
