@@ -352,7 +352,15 @@ function fitCard() {
   const pl = $('#partner'), nav = document.querySelector('#home nav'), info = pl && pl.querySelector('.pp-info'); if (!pl || !nav || !info) return;
   const home = $('#home'), W = home.clientWidth, navB = nav.offsetTop + nav.offsetHeight + 8;
   pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
-  if (document.documentElement.classList.contains('lp') || W < 900) return;
+  // (ユーザー 2026-11-16) on a phone the card is left-aligned too: its left edge on the menu's left edge, as on a desktop
+  // When the menu leaves too little height under it, the card is drawn a little smaller (down to 76%) until it clears the menu;
+  // if it still would not, it keeps its old place beside the menu.
+  if (document.documentElement.classList.contains('lp')) {
+    pl.style.left = nav.offsetLeft + 'px'; pl.classList.add('lpl');   // (lpl: a little lower, closer to the bottom edge)
+    const clear = nav.offsetTop + nav.offsetHeight + 4;
+    for (const k of [1, .94, .88, .82, .76, .7]) { pl.style.setProperty('--pis', k); if (pl.offsetTop >= clear) return; }
+    pl.style.left = ''; pl.classList.remove('lpl'); pl.style.setProperty('--pis', 1); return; }
+  if (W < 900) return;
   // (ユーザー 2026-11-15: where the window has width to spare — 16:9 and wider — the card is longer, for STORY and SKILL) it runs
   // to just short of the right-hand column (the pick-up banner / the play panel); never narrower than before
   const w0 = Math.round(Math.min(W * .56, Math.max(W * .38, 660)) - nav.offsetLeft);
@@ -512,18 +520,23 @@ $('#aaProf').addEventListener('click', () => openStats(null));
 $('#aaBanner').addEventListener('click', () => { SND.pick(); openGacha(); });
 // tapping her: a line of hers in a speech bubble
 let sayT = 0;
+// a screen point in the frame the UI is laid out in (see uiRect: on a phone held upright #root is turned 90°)
+function uiPt(x, y) { return document.documentElement.classList.contains('rot') ? [y, innerWidth - x] : [x, y]; }
 function homeSay(e) {
   const c = MJChars.get(DB.sel); let txt = null, at = null;
   // (ユーザー 2026-11-15) where she was touched decides what she says (touch.js: about a hundred lines each, Japanese only)
   if (e && window.MJTouch && I18N.lang === 'ja') { const im = e.target.closest('#pImg') && document.querySelector('#pImg img');
-    if (im) { const r = im.getBoundingClientRect(), k = Math.max(r.width / 1080, r.height / 1920), w = 1080 * k, h = 1920 * k;   // (the picture covers its box, held at the top, centred across)
-      const u = (e.clientX - r.left - (r.width - w) / 2) / w, v = (e.clientY - r.top) / h; txt = MJTouch.line(c.id, MJTouch.zone(c.id, u, v)); at = [e.clientX, e.clientY]; } }
+    if (im) { const r = uiRect(im), k = Math.max(r.width / 1080, r.height / 1920), w = 1080 * k, h = 1920 * k, [px, py] = uiPt(e.clientX, e.clientY);   // (the picture covers its box, held at the top, centred across)
+      const u = (px - r.left - (r.width - w) / 2) / w, v = (py - r.top) / h; txt = MJTouch.line(c.id, MJTouch.zone(c.id, u, v)); at = [px, py]; } }
   if (!txt) { const ks = Object.keys(c.lines || {}); if (!ks.length) return; txt = L(c.lines[ks[(Math.random() * ks.length) | 0]]); }
   SND.say();
   const el = $('#aaSay'); el.textContent = txt; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-  // the bubble comes up beside the place touched (kept inside the picture's column)
-  if (at) { const hr = $('#home').getBoundingClientRect(), z = hr.width / $('#home').offsetWidth || 1, x = (at[0] - hr.left) / z, y = (at[1] - hr.top) / z, W = $('#home').offsetWidth, H = $('#home').offsetHeight;
-    el.style.left = Math.max(W * .2, Math.min(W * .66 - el.offsetWidth, x + 24)) + 'px'; el.style.top = Math.max(70, Math.min(H * .7, y - el.offsetHeight - 14)) + 'px'; }
+  // the bubble comes up beside the place touched, kept inside the picture's column — never over the right-hand column
+  // (ユーザー 2026-11-16, phone: it covered the play settings — the touch point was read in the screen's frame, not the turned UI's)
+  if (at) { const home = $('#home'), hr = uiRect(home), z = hr.width / home.offsetWidth || 1, x = (at[0] - hr.left) / z, y = (at[1] - hr.top) / z, W = home.offsetWidth, H = home.offsetHeight;
+    const offL = n => { let v = 0; while (n && n !== home) { v += n.offsetLeft; n = n.offsetParent; } return v; };
+    const colL = Math.min(W * .66, ...['#aaBanner', '.aa-play'].map(q => home.querySelector(q)).filter(n => n && n.offsetWidth).map(n => offL(n) - 12));
+    el.style.left = Math.max(W * .2, Math.min(colL - el.offsetWidth, x + 24)) + 'px'; el.style.top = Math.max(70, Math.min(H * .7, y - el.offsetHeight - 14)) + 'px'; }
   else el.style.left = el.style.top = '';
   clearTimeout(sayT); sayT = setTimeout(() => { el.classList.remove('on'); }, Math.max(2600, 1400 + txt.length * 90));
 }
