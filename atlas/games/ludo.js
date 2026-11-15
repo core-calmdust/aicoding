@@ -20,6 +20,10 @@
   const SIZES = [4, 3, 2, 14, 12];
   const sizeName = (z, l) => { const r = RN[l] || RN.en; return `${r[z > 10 ? 1 : 0]} · ${r[2].replace('{n}', z > 10 ? z - 10 : z)}`; };
   const sizeLabel = l => (RN[l] || RN.en)[3];
+  // 種目 first (2026-11-15): 種目 ルドー / パチーシ (a pulldown) beside 人数 — the size value still says both (12–14: pachisi)
+  const PL = { ja: '人数', en: 'Players', zh: '人数', 'zh-TW': '人數', ko: '인원', es: 'Jugadores', fr: 'Joueurs', pt: 'Jogadores', de: 'Spieler', ru: 'Игроки', tr: 'Oyuncu', id: 'Pemain', hi: 'खिलाड़ी', ar: 'اللاعبون' };
+  const rule = { label: l => sizeLabel(l), list: ['ludo', 'pachisi'], name: (v, l) => (RN[l] || RN.en)[v === 'pachisi' ? 1 : 0],
+    sizes: v => v === 'pachisi' ? [14, 12] : [4, 3, 2], size0: v => v === 'pachisi' ? 14 : 4, of: z => z > 10 ? 'pachisi' : z > 0 ? 'ludo' : '', info: () => null };
 
   const LVD = {
     ja: ['入門：目に任せて動かす', '初級：取りと安全マスを考える', '中級：危険と得点を比べる', '上級：次の一投まで読む'],
@@ -566,7 +570,7 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.ludo = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 4, sizeLabel, sizeName, levelInfo, start, SND,
+  window.Atlas3D.ludo = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 4, kindFirst: true, rule, sizeLabel: l => PL[l] || PL.en, sizeName: (z, l) => (RN[l] || RN.en)[2].replace('{n}', z > 10 ? z - 10 : z), levelInfo, start, SND,
     house: window.LudoHouse && {   // the house rules (ludo/house.js — shared with the 2D game); ludo only, not pachisi
       show: z => !(z > 10), label: lang => (LudoHouse.T[lang] || LudoHouse.T.en).ui[0],
       summary: lang => { const H = LudoHouse.T[lang] || LudoHouse.T.en, n = LudoHouse.changed(); return n ? H.ui[9].replace('{n}', n) : ''; },
