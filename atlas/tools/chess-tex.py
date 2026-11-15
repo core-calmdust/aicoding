@@ -231,7 +231,7 @@ def ceramic_top():
     col = col[sy_, sx_] * tone[lab][..., None]; hgt = hgt[sy_, sx_]; paint_gold = paint_gold[sy_, sx_]
     rough = np.full((h, w), .05, np.float32); metal = np.zeros((h, w), np.float32)
     pg = metal_col(h, w, (232, 186, 98), 21)
-    col = col * (1 - paint_gold[..., None]) + pg * paint_gold[..., None]; rough = rough * (1 - paint_gold) + .3 * paint_gold; metal = np.maximum(metal, paint_gold)
+    col = col * (1 - paint_gold[..., None]) + pg * paint_gold[..., None]; rough = rough * (1 - paint_gold) + .45 * paint_gold; metal = np.maximum(metal, paint_gold * .45)
     # the mend: a dark urushi bed a hair wider than the gold, the glaze chipped at the crack's lips, then the gold (金粉 — powder,
     # burnished on its ridge), standing up from the surface
     lips = np.clip(blur(gold, 2.2) - gold, 0, 1)
@@ -239,10 +239,11 @@ def ceramic_top():
     col = col * (1 - np.clip(lips * 3, 0, .6)[..., None]) + np.array([46, 28, 16], np.float32) * np.clip(lips * 3, 0, .6)[..., None]
     gb = blur(gold, 1.6); ridge = np.clip((gb - .55) / .45, 0, 1)   # the middle of the seam
     grain = f3(X, Y, Z0, .012, .012, .012, 23, 2)
-    gcol = np.array([214, 164, 72], np.float32)[None, None, :] * (.86 + grain[..., None] * .22 + ridge[..., None] * .18)
+    gcol = np.array([226, 176, 80], np.float32)[None, None, :] * (.9 + grain[..., None] * .18 + ridge[..., None] * .14)
     col = col * (1 - gold[..., None]) + gcol * gold[..., None]
-    rough = rough * (1 - gold) + (.42 - ridge * .26) * gold; metal = metal * (1 - gold) + gold
-    hgt = hgt * (1 - gold) + (gb * .55 + grain * .06) * gold + lips * -.15
+    # (2026-11-15: the gold half metal, half matt — a full mirror showed the dark room in it at some angles and went black)
+    rough = rough * (1 - gold) + (.5 - ridge * .14) * gold; metal = metal * (1 - gold) + .45 * gold
+    hgt = hgt * (1 - gold) + (gb * .25 + grain * .04) * gold + lips * -.08
     return col, mmap(rough, metal, hgt)
 def ceramic_side():
     X, Y, Z, Ek = perimeter(W, W, E_RO, SH, SPX)
@@ -254,7 +255,7 @@ def ceramic_side():
     # glaze runs: the black pools a little thicker towards the foot
     col *= (1 + smooth(-.2, -.5, Z) * (f3(X, Y, Z, .08, .08, .5, 35, 3) - .5)[..., None] * .5 if False else 1)
     gc = metal_col(h, w, (232, 186, 98), 37)
-    col = col * (1 - gm[..., None]) + gc * gm[..., None]; rough = rough * (1 - gm) + .28 * gm; metal = metal * (1 - gm) + gm
+    col = col * (1 - gm[..., None]) + gc * gm[..., None]; rough = rough * (1 - gm) + .45 * gm; metal = metal * (1 - gm) + gm * .45
     return col, mmap(rough, metal, blur(gm, .8) * .3)
 
 # ---------- ジュエリー (jewel): pavé — white diamonds and black spinels set in platinum, a frame of baguettes ----------

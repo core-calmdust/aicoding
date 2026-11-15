@@ -264,6 +264,21 @@
       // the rings, crowns and crosses polished gold — the facets (a normal map) break the light so the pieces glitter
       const P = w ? pavePair('chPave5W', { n: 30 }) : pavePair('chPave5B', { n: 30, dark: true });
       resin = new TT.MeshPhysicalMaterial({ map: P.map, normalMap: P.bump, normalScale: new TT.Vector2(1.4, 1.4), emissiveMap: P.glow, emissive: lin(0xffffff), emissiveIntensity: 1.6, roughness: .03, metalness: w ? .55 : .7, clearcoat: 1, clearcoatRoughness: .01, envMapIntensity: 3, specularIntensity: 1, iridescence: X.lite ? 0 : .35, iridescenceIOR: 1.6 });
+      // キラキラ: each crystal's facets flash as the view turns — per facet (the normal map's normal, in view space) and per stone (a hash
+      // of its cell), a sharp peak of light; moving the camera moves the peaks from stone to stone (2026-11-15)
+      resin.onBeforeCompile = sh => {
+        sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+          #ifdef USE_MAP
+          { vec2 cu = floor(vMapUv * vec2(30.0, 34.6)); float ph = fract(sin(dot(cu, vec2(12.9898, 78.233))) * 43758.5453);
+            vec3 vd = normalize(vViewPosition);
+            float sp = pow(max(0.0, sin(dot(normal * 1.7 + vd, vec3(21.0, 17.0, 29.0)) + ph * 6.2832)), 48.0);
+            float sp2 = pow(max(0.0, sin(dot(normal * 1.3 - vd * .7, vec3(-13.0, 23.0, 19.0)) + ph * 12.566)), 90.0);
+            float hue = fract(ph * 7.31);
+            vec3 fire = clamp(abs(fract(hue + vec3(0.0, .333, .667)) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
+            totalEmissiveRadiance += vec3(${w ? '1.6' : '1.1'}) * sp + mix(vec3(1.0), fire, .75) * sp2 * ${w ? '1.4' : '1.6'}; }
+          #endif`);
+      };
+      resin.customProgramCacheKey = () => 'chPaveSpark' + (w ? 'w' : 'b');
       metal = new TT.MeshPhysicalMaterial({ color: lin(0xf6cf73), metalness: 1, roughness: .07, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.8 });
       felt = feltMat(0x2a2a2e); rMetal = refMat(null, 0xe0b050, .36); rResin = refMat(P.map, w ? 0xe8e8ee : 0x60606a, .34);
     } else if (set === 'brass') {   // engraved Indian turnings: black enamel cut through to brass (Black), nickel silver cut and darkened (White)
@@ -515,7 +530,7 @@
   /* the picture boards (2026-11-15): images/atlas/chess3d/top-<look> and side-<look> (the four faces stacked: far, right, near,
      left), each with a "-m" map: R height (bump), G roughness, B metalness — brass and gold set flush, joints and tooling in the bump */
   const C3 = (() => { try { return new URL('../../images/atlas/chess3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/chess3d/'; } })();
-  const C3V = '?v=4';
+  const C3V = '?v=5';
   const LO = () => !!(X.coarse || X.lite);
   const texs = {};
   function imgTex(name, srgb = true, aniso = 8) {

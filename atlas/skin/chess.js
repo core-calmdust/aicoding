@@ -126,7 +126,7 @@ html.atlas-chess-matt .pc img.a3d.rf{display:none!important}`; document.head.app
 
   // pre-rendered sheets of the 3D pieces (images/atlas/chess-pieces[-<set>].png, made with Table3D.chess.images); live render as fallback
   const SW = 256, SH = Math.round(256 * CH.SPR_H);
-  const SRC = set => '../images/atlas/chess-pieces' + (set === 'lux' ? '' : '-' + set) + '.png?v=' + (set === 'lux' || set === 'wood' ? 1 : set === 'jewel' ? 3 : 2);
+  const SRC = set => '../images/atlas/chess-pieces' + (set === 'lux' ? '' : '-' + set) + '.png?v=' + (set === 'lux' || set === 'wood' ? 1 : set === 'jewel' ? 4 : 2);
   const sheet = set => new Promise((res, rej) => { const im = new Image(); im.onload = () => {
     if (im.naturalWidth !== SW * 6) return rej();
     const out = {};
