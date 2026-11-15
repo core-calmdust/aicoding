@@ -2154,6 +2154,7 @@
   // the character flies up big and talks (atlas/avtalk.js); without it, straight to dress-up (the home card) / nothing (きせかえ)
   function talk(from, onDress) {
     if (!window.AvTalk) return onDress && onDress();
+    W.talks = (W.talks || 0) + 1; A_.save(W); refresh();   // (counted for the 「おしゃべり」 awards)
     const st = profStats(), tg = todayGame(), un = A_.GAMES.filter(g => !P[g.id].touched), fg = un.length ? un[Math.floor(Math.random() * un.length)] : null;
     AvTalk.open({ from, av: W.av, name: W.name || t('pf.player'), lang, lv: st.lv, streak: st.s, coins: C.balance, done: st.done, achTotal: ACH.length,
       touched: st.touched, gamesTotal: A_.GAMES.length, today: { id: tg.id, name: gname(tg) }, fresh: fg ? { id: fg.id, name: gname(fg) } : null,

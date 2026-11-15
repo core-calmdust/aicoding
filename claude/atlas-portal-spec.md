@@ -227,3 +227,4 @@ GAMES に追加（store 含む）→ i18n.js に hist.<id>（歴史・雑学、1
 
 ## ルールのプルダウン（`adapter.rule`、2026-11-15）
 - `rule = { label(lang), list, name(v, lang), sizes(v), size0(v), of(size) }`：カードに「ルール」プルダウン（`#bvRuleSel`、data-pick="drop"。`adapter.optInfo('bvRuleSel', v, lang).sub` が説明行）を出し、選んだルールの `sizes(v)` だけを「長さ」に並べる（ルールと長さで1行 `.rulerow`）。ルールを変えるとカードを作り直し、`pref[id + ':rule']` と既定の長さを保存。サイズの値がルールも表すので、ゲームの `start` はこれまでどおり `size` だけ読む。最初の利用：フチボウ・ジ・ボタン（手数制・点数制・PK戦）。
+- おしゃべり実績（2026-11-15）：プロフ／きせかえでアトラモと話した回数（`atlas-v1` の `talks`）で、1・10・50・100・300回の5段階の実績（`tk`、ランク 0・0・1・2・3）。

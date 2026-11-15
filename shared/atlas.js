@@ -508,6 +508,7 @@
     const owned = (W.owned || []).length;
     ladder(null, 'gi', owned, [10, 30, 60], META.art, 'giAll');
     ladder(null, 'gp', W.pulls || 0, [1, 10, 50, 100]);
+    [[1, 0], [10, 0], [50, 1], [100, 2], [300, 3]].forEach(([n, tier]) => add(null, 'tk', n, tier, W.talks || 0, n));   // talking with your Atlamo (the profile / dress-up talk, atlas/avtalk.js — 2026-11-15)
     const doneN = A.filter(a => a.done).length;
     ladder(null, 'ga', doneN, [10, 30, 60, 100]);
     return A;
