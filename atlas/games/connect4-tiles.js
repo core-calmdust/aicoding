@@ -93,7 +93,7 @@
 
     /* ---------- marks ---------- */
     const basic = (color, op, add) => new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false, blending: add ? TH.AdditiveBlending : TH.NormalBlending });
-    const MAT = { last: basic(0xff3b2b, .95), hint: basic(0x4ad8ff, .28, true), hintA: basic(0x4ad8ff, .95), win: basic(0xffd24a, .95), glow: basic(0xffc94a, .5, true) };
+    const MAT = { ok: basic(0x2fd17a, .9), ng: basic(0xff3b30, .9), hl: basic(0xffb21a, .9), last: basic(0xff3b2b, .95), hint: basic(0x4ad8ff, .28, true), hintA: basic(0x4ad8ff, .95), win: basic(0xffd24a, .95), glow: basic(0xffc94a, .5, true) };
     const FZ = .13 + .012;   // just in front of a tile's face
     const GEO = { dot: new TH.CircleGeometry(.07, 20), col: new TH.PlaneGeometry(.9, 1), arrow: new TH.ConeGeometry(.16, .3, 18), bar: new TH.BoxGeometry(1, .07, .02), ring: new TH.RingGeometry(.52, .6, 4, 1, Math.PI / 4) };
     GEO.arrow.rotateX(Math.PI);   // pointing down
@@ -107,6 +107,10 @@
         const c = o.hint, h = TOPY - rowY(0) + PY * .5, p = new TH.Mesh(GEO.col, MAT.hint); p.scale.y = h; p.position.set(colX(c), rowY(0) - PY * .5 + h / 2, FZ + .01); p.renderOrder = 3; marks.add(p);
         const a = new TH.Mesh(GEO.arrow, MAT.hintA); a.position.set(colX(c), SPAWN + .15, 0); a.userData = { bob: true, y: SPAWN + .15 }; a.scale.y = 1 / ky(); marks.add(a); pulses.push(a);
       }
+      // (2026-11-15, puzzles / lessons) cells marked: a square frame and a dot in front of the cell (ok green · ng red · hl gold)
+      (o.cells || []).forEach(({ c, r, cls }) => { if (!(c >= 0 && c < 7 && r >= 0 && r < 6)) return; const mt = MAT[cls] || MAT.hl;
+        const f = new TH.Mesh(GEO.ring, mt); f.position.set(colX(c), rowY(r), FZ + .004); f.scale.set(.82, .82 / ky(), 1); f.renderOrder = 4; marks.add(f);
+        const d = new TH.Mesh(GEO.dot, mt); d.position.set(colX(c), rowY(r), FZ + .006); d.scale.set(1.6, 1.6 / ky(), 1); d.renderOrder = 4; marks.add(d); f.userData = { op: mt.opacity }; pulses.push(f); });
       if (o.ghost && o.ghost.c >= 0) { ghost = U.tile(o.ghost.p === 1 ? 'gold' : 'pearl'); ghost.scale.y = 1 / ky(); ghost.position.set(colX(o.ghost.c), SPAWN, 0); layer.add(ghost); }
       if (pulses.length && !pulseOn) { pulseOn = true; pulse(); }
       kick(200);
