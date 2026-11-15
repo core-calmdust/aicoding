@@ -2014,9 +2014,24 @@ html.lp #game #opp1,html.lp #game #opp3{top:calc(max(10px,var(--st)) + 42px + va
 #home.aaa .pp-info .pi-sk span{font-size:14em;line-height:1.6;color:#d9cfee}
 html.lp #home.aaa .aa-plate .pp-info{display:none}
 
-/* (ユーザー 2026-11-15) the player's skill marks inside the skill plate, at its right end */
-.skb .skfx{display:flex;gap:5px;align-items:center;margin-left:4px;padding-left:10px;border-left:1px solid rgba(255,255,255,.18)}
-.skb .skfx .fx{width:26px;height:26px;padding:5px;border-radius:8px;background:var(--sc);color:#fff;flex:none;box-shadow:0 0 10px color-mix(in srgb,var(--sc) 60%,transparent)}
-html.lp #game .skb .skfx .fx{width:20px;height:20px;padding:4px;border-radius:6px}
-.skb.hasfx{opacity:1}   /* (the marks stay at full strength on a plate that is dimmed — used, or not usable now: only the plate's own icon and words dim) */
-.skb.hasfx:not(.ready)>i,.skb.hasfx:not(.ready)>span:not(.skfx),.skb.hasfx:not(.ready)>kbd{opacity:.5}
+/* (ユーザー 2026-11-15) the player's skill plate: compact, one width — the icon and the name. The marks of effects in force (the seal's
+   lock, …) sit on its top right corner, off the layout; what the skill does comes up in a bubble above it on hover / tap. */
+#game .skb{position:relative;cursor:pointer}
+#game .skb .skfx{position:absolute;right:-6px;top:-11px;display:flex;gap:4px;margin:0;padding:0;border:0}
+#game .skb .skfx .fx{width:22px;height:22px;padding:4px;border-radius:7px;box-sizing:border-box;background:var(--sc);color:#fff;flex:none;box-shadow:0 0 10px color-mix(in srgb,var(--sc) 60%,transparent),0 0 0 1.5px #120d22}
+html.lp #game .skb .skfx .fx{width:17px;height:17px;padding:3px;border-radius:5px}
+#game .skb.hasfx{opacity:1}   /* (the marks stay at full strength on a dimmed plate: only the plate's own icon and name dim) */
+#game .skb.hasfx:not(.ready)>i,#game .skb.hasfx:not(.ready)>span:not(.skfx):not(.sktip),#game .skb.hasfx:not(.ready)>kbd{opacity:.5}
+#game .skb .sktip{position:absolute;left:0;bottom:calc(100% + 10px);width:max-content;max-width:min(300px,60vw);display:none;flex-direction:column;gap:3px;padding:10px 14px;border-radius:12px;
+  background:rgba(14,9,28,.97);border:1px solid var(--sc);box-shadow:0 10px 26px rgba(0,0,0,.5);text-align:left;white-space:normal;z-index:5}
+#game .skb .sktip::after{content:'';position:absolute;left:22px;top:100%;border:7px solid transparent;border-top-color:var(--sc)}
+#game .skb:hover,#game .skb.tip{opacity:1}
+#game .skb:hover .sktip,#game .skb.tip .sktip{display:flex}
+#game .skb .sktip b{font-size:15px;color:#fff}
+#game .skb .sktip small{display:block;font-size:12px;color:var(--gold);font-weight:700}
+#game .skb .sktip>span{font-size:13.5px;line-height:1.6;color:#e6dcf7;font-weight:500}
+#game .skb .sktip small.on{display:flex;align-items:center;gap:5px;margin-top:3px;color:#fff}
+#game .skb .sktip small.on .fx{width:18px;height:18px;padding:3px;border-radius:5px;box-sizing:border-box;background:var(--sc);color:#fff;flex:none}
+html.lp #game .skb{max-width:none}
+html.lp #game .skb .sktip{max-width:min(240px,60vw);padding:7px 10px}
+html.lp #game .skb .sktip>span{font-size:12px}
