@@ -2437,3 +2437,10 @@ html.lp #chara.ch2 .ci-tabs button.glow::before{content:"";position:absolute;ins
 html.lp #chara.ch2 .ci-tabs button.glow:not(.on){color:#e8dcff;text-shadow:0 0 10px rgba(255,226,160,.0);animation:ptnTabText 3.2s ease-in-out infinite}
 @keyframes ptnTabShine{0%{background-position:130% 0}45%,100%{background-position:-30% 0}}
 @keyframes ptnTabText{0%,100%{text-shadow:0 0 0 rgba(255,226,160,0)}25%{text-shadow:0 0 12px rgba(255,226,160,.85)}}
+/* (ユーザー 2026-11-16) with the coin count gone from the top right, the right-hand panel moves up into the room it left */
+#chara.ch2 .ch-info{top:26px}
+html.lp #chara.ch2 .ch-info,html.lp #chara.ch2 .ch-info.tabs{top:14px}
+/* (ユーザー 2026-11-16) the light on the パートナー tab runs always — chosen or not — and whatever the light mode or the device's motion setting */
+html.lp #chara.ch2 .ci-tabs button.glow::before{animation:ptnTabShine 3.2s ease-in-out infinite!important;display:block!important}
+html.lp #chara.ch2 .ci-tabs button.glow:not(.on){animation:ptnTabText 3.2s ease-in-out infinite!important}
+@media (prefers-reduced-motion: reduce){html.lp #chara.ch2 .ci-tabs button.glow::before{animation:ptnTabShine 3.2s ease-in-out infinite!important}html.lp #chara.ch2 .ci-tabs button.glow:not(.on){animation:ptnTabText 3.2s ease-in-out infinite!important}}

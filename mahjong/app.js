@@ -923,7 +923,7 @@ function renderChara() {
     <div class="pp-t">${esc(L(c.title))}</div>
     <i class="ci-rule"></i>
     ${chSelBody()}`;
-  function chSelBody() { return `${own && lpTabs ? `<div class="ci-tabs"><button class="${chPane === 'lead' ? 'on' : ''}" data-pane="lead">${esc(t('lead'))}</button><button class="${chPane === 'ptn' ? 'on' : ''} ${!pt && canPick ? 'glow' : ''}" data-pane="ptn"><span>${esc(t('partner'))}</span>${!pt && canPick ? '<i class="dot"></i>' : ''}</button></div>
+  function chSelBody() { return `${own && lpTabs ? `<div class="ci-tabs"><button class="${chPane === 'lead' ? 'on' : ''}" data-pane="lead">${esc(t('lead'))}</button><button class="${chPane === 'ptn' ? 'on' : ''} glow" data-pane="ptn"><span>${esc(t('partner'))}</span>${!pt && canPick ? '<i class="dot"></i>' : ''}</button></div>
       <div class="ci-pane">${chPane === 'lead' ? `${skillBlock(uk)}
         <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div>
         <div class="ci-h st"><b>STORY</b></div><p class="pprof">${esc(L(c.profile))}</p>` : `<div class="ptn-inl">${ptn}</div>`}</div>` :
