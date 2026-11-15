@@ -976,5 +976,35 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     const go = () => { scan(); new MutationObserver(rs => { if (ours(rs)) scan(); }).observe(document.body, { childList: true, subtree: true }); addEventListener('resize', later); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
   })();
-  window.AtlasSkin = { init };
+  /* ---------- 「3D盤」 / 「3D駒」 rows for the new-game dialog's デザイン tab (2026-11-15; go, gomoku, hex …; as checkers / reversi):
+     rows3d({ id, host (the field to append to), board(k) / piece(k) (picked), is3() (the 3D view is on), clear (the game's own 2D row to
+     unselect while a 3D tile is) , p3: label set for the pieces row }) → { paint() } — tiles from Table3D.BOARDS[id] / PIECES[id] */
+  const R3B = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد', ru: '3D-доски', 'zh-TW': '3D棋盤', id: 'Papan 3D', tr: '3D tahtalar' };
+  const R3S = { ja: '3D石', en: '3D stones', zh: '3D棋子', ko: '3D 돌', es: 'Piedras 3D', fr: 'Pierres 3D', pt: 'Pedras 3D', de: '3D-Steine', hi: '3D पत्थर', ar: 'أحجار ثلاثية الأبعاد', ru: '3D-камни', 'zh-TW': '3D棋子', id: 'Batu 3D', tr: '3D taşlar' };
+  function rows3d(o) {
+    const T3 = window.Table3D, B = T3.BOARDS[o.id], P = T3.PIECES[o.id]; if (!o.host || !B || !P) return { paint() {} };
+    const lng = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))((document.getElementById('langSel') || {}).value || (typeof LANG !== 'undefined' ? LANG : 'ja'));
+    const f3 = document.createElement('div'); f3.id = 'f3D';
+    f3.innerHTML = '<label></label><div class="bdrow"></div><label class="pc3l"></label><div class="bdrow pc3"></div>'; o.host.appendChild(f3);
+    const [lb, lp] = f3.querySelectorAll('label'), [row, prow] = f3.querySelectorAll('.bdrow');
+    const tile = (src, fn) => { const bt = document.createElement('button'); bt.type = 'button'; const im = document.createElement('img'); im.src = src; im.alt = ''; im.draggable = false; bt.append(im, document.createElement('span')); bt.onclick = fn; return bt; };
+    B.list.forEach(k => { const bt = tile(T3.boardIcon(o.id, k), () => { if (T3.setBoard) T3.setBoard(o.id, k); else B.set(k); o.board(k); paint(); }); bt.dataset.look = k; row.appendChild(bt); });
+    P.list.forEach(k => { const bt = tile(P.thumb(k), () => { if (T3.setPieces) T3.setPieces(o.id, k); else P.set(k); o.piece(k); paint(); }); bt.dataset.set = k; prow.appendChild(bt); });
+    function paint() {
+      const l = lng(), on = o.is3 ? o.is3() : true, cb = B.get(), cp = P.get();
+      lb.textContent = R3B[l] || R3B.en; lp.textContent = (o.p3 || R3S)[l] || (o.p3 || R3S).en;
+      row.querySelectorAll('button').forEach(bt => { const k = bt.dataset.look, sel = on && cb === k; bt.querySelector('span').textContent = T3.boardName(k, l, o.id); bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+      prow.querySelectorAll('button').forEach(bt => { const k = bt.dataset.set, sel = on && cp === k; bt.querySelector('span').textContent = T3.pieceName(o.id, k, l); bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+      const r2 = o.clear; if (r2 && on) r2.querySelectorAll('button').forEach(b => { if (b.classList.contains('sel')) b.classList.remove('sel'); if (b.getAttribute('aria-pressed') === 'true') b.setAttribute('aria-pressed', 'false'); });
+    }
+    if (!document.getElementById('r3Css')) { const st = document.createElement('style'); st.id = 'r3Css'; st.textContent = `
+html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f6f1e4;border:2px solid #e2cf9e}
+html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#7a5a1c;margin:0 0 8px}
+html.atlas-skin #f3D > label.pc3l{margin-top:12px}
+html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:8px}
+html.atlas-skin #f3D .bdrow.pc3 button img{aspect-ratio:3/2;background:radial-gradient(80% 80% at 50% 40%,#6a5e52,#2a231d);padding:4%;box-sizing:border-box}`; document.head.appendChild(st); }
+    const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint, 30));
+    paint(); return { paint };
+  }
+  window.AtlasSkin = { init, rows3d };
 })();

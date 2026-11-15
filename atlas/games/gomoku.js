@@ -15,6 +15,9 @@
   'use strict';
   const BASE = '../gomoku/', VER = '?v=20261115nn';   // same file / version as gomoku/index.html → shared cache
   const RULE = 'renju';
+  // 種目 (2026-11-15): the card's pulldown — 1 連珠 · 2 標準 (exactly five, no forbidden points) · 3 自由 (five or more); the game reads ctx.size
+  const RULES3 = ['renju', 'standard', 'free'], RN = {"ja":["ルール","連珠","標準","自由"],"en":["Rules","Renju","Standard","Freestyle"],"zh":["规则","连珠","标准","自由"],"ko":["규칙","렌주","표준","자유"],"es":["Reglas","Renju","Estándar","Libre"],"fr":["Règles","Renju","Standard","Libre"],"pt":["Regras","Renju","Padrão","Livre"],"de":["Regeln","Renju","Standard","Freistil"],"hi":["नियम","रेंजू","स्टैंडर्ड","फ़्रीस्टाइल"],"ar":["القواعد","رينجو","قياسي","حر"],"ru":["Правила","Рэндзю","Стандарт","Свободные"],"zh-TW":["規則","連珠","標準","自由"],"id":["Aturan","Renju","Standar","Bebas"],"tr":["Kurallar","Renju","Standart","Serbest"]};
+  const ruleOf = z => RULES3[(+z || 1) - 1] || RULE;
   let engP = null;
   function loadEngine() {
     if (window.RenjuEngine) return Promise.resolve(window.RenjuEngine);
@@ -60,7 +63,7 @@
     const tall = innerHeight > innerWidth * 1.15;   // phones held upright: the width decides, so frame a little wider and keep the board centred
     if (T3.fit) T3.fit(tall ? { w: U.W + 1.9, d: U.W + 3.4, y: Y - 1.3, cy: Y, pitch: 1.0 } : { w: U.W + .6, d: U.W + 3.4, y: Y - 2.4, cy: Y, pitch: 1.0 });   // the whole board from the player's side: the near side and the legs show
     const pvp = ctx.mode === 'pvp', PZ = ctx.pz || null;   // PZ: a puzzle / lesson position driven by atlas/puzzles.js · lessons3d.js (no AI: ctx.pz.moved decides)
-    let human = PZ ? (PZ.me || 1) : pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human, rule = PZ ? PZ.rule || RULE : RULE, startP = PZ ? PZ.start || null : null, lastP = PZ ? PZ.last : -1;
+    let human = PZ ? (PZ.me || 1) : pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human, GR = ruleOf(ctx.size), rule = PZ ? PZ.rule || RULE : GR, startP = PZ ? PZ.start || null : null, lastP = PZ ? PZ.last : -1;
     const pname = col => X.n[col - 1], fmt = (s, p) => s.replace('{p}', p);
     const xz = m => U.pt(m % 15, 14 - Math.floor(m / 15));
 
@@ -170,7 +173,7 @@
       const id = ++jid, t0 = Date.now(), mvs = moves.slice();
       const reply = m => {
         if (stopped || id !== jid || over) return;
-        if (m === undefined || m === null || m < 0) { try { m = E.think(RULE, mvs, ctx.level).move; } catch (e) { m = -1; } }   // the worker failed: the same search on the page
+        if (m === undefined || m === null || m < 0) { try { m = E.think(rule, mvs, ctx.level).move; } catch (e) { m = -1; } }   // the worker failed: the same search on the page
         later(() => {
           if (id !== jid || over) return;
           if (m < 0 || !pos.isLegal(m)) { busy = false; hud(''); return; }
@@ -179,7 +182,7 @@
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? -1 : r.move); };
       worker.onerror = () => { worker = null; reply(-1); };
-      worker.postMessage({ type: 'think', id, rule: RULE, start: null, moves: mvs, level: ctx.level });
+      worker.postMessage({ type: 'think', id, rule, start: null, moves: mvs, level: ctx.level });
     }
 
     /* ---------- input ---------- */
@@ -224,7 +227,7 @@
       if (!E) return;   // (the engine is still loading: it starts from PZ)
       timers.forEach(clearTimeout); timers.length = 0; jid++; pzJ++; pzOn = false; pzMarks = [];
       Object.values(st).forEach(g => stones.remove(g)); for (const k in st) delete st[k];
-      rule = r || RULE; startP = start || null; lastP = last >= 0 ? last : -1; human = me || 1; ai = 3 - human;
+      rule = r || GR; startP = start || null; lastP = last >= 0 ? last : -1; human = me || 1; ai = 3 - human;
       moves = []; pos = E.replay(rule, [], startP); over = false; busy = true; clearMarks();
       const all = [...((startP && startP.b) || []).map(m => [m, 1]), ...((startP && startP.w) || []).map(m => [m, 2])];
       all.forEach(([m, col], i) => later(() => place(m, col, true), 40 + i * 28));
@@ -260,7 +263,7 @@
     function begin() {
       timers.forEach(clearTimeout); timers.length = 0; jid++;
       Object.values(st).forEach(g => stones.remove(g)); for (const k in st) delete st[k];
-      moves = []; pos = E.replay(RULE, []); over = false; busy = true;
+      moves = []; pos = E.replay(rule, []); over = false; busy = true;
       hud(''); later(next, 650);
     }
     hud('');
@@ -309,7 +312,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, rule: RULE, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
+          hintW.postMessage({ type: 'think', id: j, rule, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
         });
       },
       canResign: () => !!pos && !over,
@@ -354,5 +357,5 @@
     return { name, desc: L.lvd[n <= 3 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.gomoku = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.gomoku = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', sizes: [1, 2, 3], size0: 1, sizeLabel: l => (RN[l] || RN.en)[0], sizeName: (z, l) => (RN[l] || RN.en)[z] || (RN[l] || RN.en)[1], levelInfo, start };   // table: start() plays on the chabudai itself
 })();

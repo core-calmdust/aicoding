@@ -34,7 +34,7 @@
 
   /* ---------- look: 'kaya' | 'lacquer' | '' (the game's own 2D stones on the kaya board) ---------- */
   const LK = 'atlas-go-look';
-  let mine = 'kaya'; try { const v = localStorage.getItem(LK); mine = v === '0' ? '' : v === 'lacquer' ? 'lacquer' : 'kaya'; } catch (e) {}
+  let mine = 'kaya'; try { const v = localStorage.getItem(LK); mine = v === '0' ? '' : (T3.BOARDS.go.list.includes(v) ? v : 'kaya'); } catch (e) {}   // (2026-11-15: six 3D boards)
 
   /* ---------- the board (rebuilt when the size changes) ---------- */
   const PERSP = 2.6;
@@ -192,41 +192,25 @@ html.atlas-go .playbar .pbtn.go{background:linear-gradient(180deg,#e2c27c,#b08f4
   try { drawnKey = ''; if (typeof renderBoard === 'function') renderBoard(false); } catch (e) {}
   try { mirror(posAt(cur), false, null); marks(); } catch (e) {}
 
-  /* ---------- the board-design row: two 3D looks + the game's own 2D boards ---------- */
-  const LBLS = {
-    kaya: { ja: '榧3D', en: 'Kaya 3D', zh: '榧木3D', ko: '비자 3D', es: 'Kaya 3D', fr: 'Kaya 3D', pt: 'Kaya 3D', de: 'Kaya 3D', hi: 'काया 3D', ar: 'كايا ثلاثي', ru: 'Кая 3D', 'zh-TW': '榧木3D', id: '3D kaya', tr: 'Kaya ağacı 3D' },
-    lacquer: { ja: '漆・沈金3D', en: 'Lacquer 3D', zh: '漆金3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي', ru: 'Лак 3D', 'zh-TW': '漆器3D', id: '3D pernis', tr: 'Lake 3D' },
-  };
-  // thumbnails: the game's own kaya thumbnail (a real little board), the lacquer one with a black urushi side and a gold line
-  const thumb = k => { let s = ''; try { s = designThumb('kaya', 'classic'); } catch (e) {} if (!s) return '<svg viewBox="0 0 40 40"><rect width="40" height="40" fill="#e1b469"/></svg>';
-    if (k !== 'lacquer') return s; const W = +(s.match(/viewBox="0 0 ([\d.]+)/) || [0, 74])[1];
-    return s.replace('</svg>', `<rect x="0" y="${W * .8}" width="${W}" height="${W * .2}" fill="#120d0a"/><path d="M${W * .08} ${W * .9}H${W * .92}" stroke="#efcd72" stroke-width="${W * .02}"/></svg>`); };
-  const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
+  /* ---------- デザイン: the game's own 2D boards, and under them 「3D盤」 (six boards) / 「3D石」 (six stone sets) (2026-11-15) ---------- */
   let V = null;   // AtlasSkin.view: a 2D board = the plain 2D page (no 3D table), a 3D look = the 3D board
+  let R3 = null;
   function look(quiet) {
     if (V) V.set(!!mine);
     U.setLook(mine || 'kaya');
     group.visible = !!mine; if (lastMesh) lastMesh.visible = !!mine;
     de.classList.toggle('atlas-go3d', !!mine);
     try { localStorage.setItem(LK, mine || '0'); } catch (e) {}
-    paintRow();
+    if (R3) R3.paint();
     if (!quiet) T3.kick(400);
   }
-  function paintRow() {
-    const row = document.getElementById('bdRow'); if (!row) return;
-    let bs = [...row.querySelectorAll('button[data-look]')];
-    if (!bs.length) bs = ['lacquer', 'kaya'].map(k => { const b = document.createElement('button'); b.type = 'button'; b.dataset.look = k; row.prepend(b); return b; });
-    bs.forEach(b => { const k = b.dataset.look, L = LBLS[k]; b.innerHTML = thumb(k) + '<span></span>'; b.querySelector('span').textContent = L[lang()] || L.en; b.classList.toggle('sel', mine === k); b.setAttribute('aria-pressed', mine === k); });
-    if (mine) row.querySelectorAll('button[data-bd]').forEach(b => { b.classList.remove('sel'); b.setAttribute('aria-pressed', 'false'); });
-  }
+  function restone() { for (const [, o] of st3) group.remove(o.g); st3.clear(); lastMark = -2; try { mirror(posAt(cur), false, null); marks(); } catch (e) {} T3.kick(400); }
   const bdRow = document.getElementById('bdRow');
-  if (bdRow) bdRow.addEventListener('click', e => {
-    const t = e.target.closest('button'); if (!t) return;
-    if (t.dataset.look) { e.stopImmediatePropagation(); mine = t.dataset.look; look(); return; }   // a 3D look: the game's own 2D board setting stays as it is
-    if (t.dataset.bd) { mine = ''; setTimeout(() => look(), 0); }                                   // a 2D board: its 2D stones on the kaya board
-  }, true);
-  if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paintRow(); } catch (e) {} return r; }; }
-  const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paintRow, 30));
+  if (bdRow) bdRow.addEventListener('click', e => { const t = e.target.closest('button'); if (t && t.dataset.bd) { mine = ''; setTimeout(() => look(), 0); } }, true);   // a 2D board: the plain 2D page
+  const r3host = bdRow && (bdRow.closest('.field') || bdRow.parentNode);
+  if (AtlasSkin.rows3d && r3host) R3 = AtlasSkin.rows3d({ id: 'go', host: r3host, clear: bdRow, is3: () => !!mine, board: k => { mine = k; look(); }, piece: () => { if (!mine) { mine = T3.BOARDS.go.get(); look(); } restone(); } });
+  if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { if (R3) R3.paint(); } catch (e) {} return r; }; }
+  addEventListener('storage', e => { if (e.key === 'atlas-go-pc3') restone(); });
   if (skin.view) V = skin.view({ key: 'atlas-go-view', init: !!mine, cls: ['atlas-go'], on() { try { drawnKey = ''; update(false); } catch (e) {} } });
   look(true);
 

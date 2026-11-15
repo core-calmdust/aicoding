@@ -626,6 +626,11 @@
 - リバーシの3D盤・石（2026-11-15）：「白黒をひっくり返す」ゲームならではの世界観で、盤と石をセットで作る（別々にも選べる）。盤6種（`atlas-reversi-look`＝Table3D.BOARDS.reversi、この順・先頭が既定）：クラシック classic（既定：緑のフェルト＋ウォルナット枠、table3d.js）・昭和のおもちゃ toy（つやのある緑の成形プラ、盛り上がった線、クリームの枠）・墨と和紙 ink（和紙に筆のマス線、漆黒の枠に朱の落款）・月と夜空 moon（星と天の川の紺の空、銀の線、枠に月の満ち欠けの刻印）・チョコレート chocolate（溝で割れる板チョコ、金紙の枠）・ピクセル pixel（ドット絵の盤、ぶどう色の段々の枠）。石6種（`atlas-reversi-pc3`＝Table3D.PIECES.reversi）：つや消し classic（既定）・プラスチック toy（段と窪みのある成形）・漆と胡粉 ink（黒漆に金粉の輪、和紙のような胡粉の白）・満月と新月 moon（クレーターのある満月、地球照で縁が光る新月：返すと満ち欠け）・ホワイトとビター chocolate（花の型押しのチョココイン）・ボクセル pixel（小さな立方体を積んだ石）。
   - atlas/models/reversi.js：table3d.js の盤（形はそのまま）に絵を貼り替え、`Table3D.rvMats(set)`／`rvDisc` を6種対応に差し替える（大百科は lazy.js、フル版は index.html でスキンの前に読む）。絵は `atlas/tools/reversi-tex.py` → `images/atlas/reversi3d/` の field-／frame-<盤>（それぞれ `-m`＝R高さ G粗さ B金属、frame は上から見た平面図）。
   - フル版3D表示のデザインタブ：2Dの盤の下に「3D盤」「3D石」の行（チェッカーと同じ）。タイル `atlas/img/boardic-reversi-<盤>.webp`・`pc3-reversi-<石>.webp`（`atlas/tools/rvpiece.html`）・`board-reversi-<盤>.webp`。
+- 囲碁・五目並べの3D盤・石（2026-11-15）：同じ脚付き碁盤（atlas/models/goban.js）を使うが、盤の世界観はゲームごとに分ける（囲碁＝静かな工芸・自然、五目＝遊び心のある素材）。盤面の絵には線を描かず、線と星は路数に合わせて pTop で描き重ねる（線の描き方は盤ごと：光る線・溝・筆・焼き・目地・ステッチ・チョーク・デニムの縫い目）。
+  - 囲碁の盤（`atlas-go-look`＝Table3D.BOARDS.go、先頭が既定）：本榧 kaya・漆と蒔絵 lacquer・星空 cosmos・枯山水 zen・青花 blue・竹 bamboo。石（`atlas-go-pc3`）：那智黒と蛤 classic・雲子 yunzi・川石 pebble・黒曜石と月長石 gem・天目と白磁 porcelain・黒檀とツゲ wood。
+  - 五目並べの盤（`atlas-gomoku-look`）：漆と蒔絵 lacquer・本榧 kaya・モザイクタイル tile・ピクニック gingham・黒板 slate・デニム denim。石（`atlas-gomoku-pc3`）：那智黒と蛤 classic・おはじき glass・クッキー cookie・マグネット magnet・ボタン button・真珠 pearl。
+  - 絵は `atlas/tools/goban-tex.py` → `images/atlas/goban3d/` の surf-／side-<盤>（`-m` 付き）。タイルは `atlas/tools/gbpiece.html`（石）・boardicon.html・boards.html。フル版のデザインタブの「3D盤」「3D石」の行は共通の `AtlasSkin.rows3d`（atlas/skin/common.js）で作る（2Dの盤を選ぶと3Dの選択が外れる）。
+- 五目並べ3D卓の種目（2026-11-15）：カードの「ルール」で 連珠・標準（禁手なし、ちょうど5）・自由（禁手なし、5以上）を選ぶ。値は ctx.size（1/2/3）で渡す（adapter.sizes＋sizeName）。レート戦はフル版と同じ連珠に固定（RTG.gomoku.size = 1）。
 
 
 ## 3Dポータル：Esc の挙動（2026-11-14）
