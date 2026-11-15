@@ -2035,3 +2035,22 @@ html.lp #game .skb .skfx .fx{width:17px;height:17px;padding:3px;border-radius:5p
 html.lp #game .skb{max-width:none}
 html.lp #game .skb .sktip{max-width:min(240px,60vw);padding:7px 10px}
 html.lp #game .skb .sktip>span{font-size:12px}
+
+/* (ユーザー 2026-11-15) the skill sheet on a touch screen (a tap on the skill plate): the bubble's words, then use / cancel */
+.skq{display:flex;flex-direction:column;gap:5px;text-align:left;margin-bottom:10px;padding:12px 14px;border-radius:12px;border:1px solid var(--sc);background:rgba(14,9,28,.6)}
+.skq b{font-family:var(--serif);font-size:18px;color:#fff}
+.skq b em{font-style:normal;font-family:'Cinzel',serif;font-size:11px;padding:0 5px;border-radius:5px;background:rgba(0,0,0,.4)}
+.skq small{display:block;font-size:13px;color:var(--gold);font-weight:700}
+.skq>span{font-size:15px;line-height:1.65;color:#e6dcf7}
+.skq small.on{display:flex;align-items:center;gap:5px;color:#fff}
+.skq small.on .fx{width:20px;height:20px;padding:3px;border-radius:6px;box-sizing:border-box;background:var(--sc);color:#fff;flex:none}
+@media (pointer: coarse){ #game .skb:hover .sktip{display:none} }
+
+/* (ユーザー 2026-11-15) the portrait right of the enlarged skill plate, whatever the window (--skw: the plate's own width, from app.js) */
+html.ds #game .me .mb{margin-left:calc((var(--hz, 1) - 1) * var(--skw, 0px))}
+/* (ユーザー 2026-11-15, PC) the question at the deal — "use this skill this hand?" — was small on a large screen: it grows with the rest */
+html.ds #game .dealAsk{transform:translateX(-50%) scale(calc(var(--hz, 1) * 1.15));transform-origin:50% 100%}
+/* the home name card, wide: the "change" button beside the skill, so the card is lower and need not be shrunk under the menu */
+#home.aaa .aa-plate.wide .pp-main{display:grid;grid-template-columns:auto auto;justify-content:start;align-items:center;column-gap:10px;row-gap:4px}
+#home.aaa .aa-plate.wide .pp-main>.pp-r,#home.aaa .aa-plate.wide .pp-main>.pp-n,#home.aaa .aa-plate.wide .pp-main>.pp-t{grid-column:1 / -1}
+#home.aaa .aa-plate.wide .pp-main>.pp-sk,#home.aaa .aa-plate.wide .pp-main>.pp-chg{margin-top:4px}
