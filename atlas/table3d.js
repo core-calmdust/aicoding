@@ -1007,6 +1007,7 @@
   // a place may show the page's own CSS behind a transparent canvas (2D準拠): the canvas container carries it
   let roomCss = '';
   function paintCss(css) { if (!el || mountOpts.local) return; el.style.background = css || ''; }
+  let panX = 0, panZ = 0;   // the play view's pan (world units; a slide off the board)
   let roomMode = '', alignFn = null, alignSize = 0, alignTop = 0, zoom = 1, zoomTo = 1, pzoom = 1, pzoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
   let R, scene, cam, root, cur = null, el = null, drag = null, yaw = 0, spin = true, mode = 'view', camK = 0, camTo = 0;
   // 盤面反転 on the skin pages (AtlasSkin): the table turned round its own centre — tYaw / tS set from outside each frame (turn())
@@ -1541,6 +1542,28 @@
     const pup = e => { if (pinch0 || pts.size > 1) pinchEnd = performance.now(); pts.delete(e.pointerId); if (pts.size < 2) pinch0 = 0; };
     addEventListener('click', e => { if (performance.now() - pinchEnd < 450 && container.parentNode && container.parentNode.contains(e.target)) { e.stopPropagation(); e.preventDefault(); } }, true);
     container.addEventListener('pointerup', pup, true); container.addEventListener('pointercancel', pup, true);
+    // play view (2026-11-16): a slide that starts off the board and its pieces moves the view (pan, within the board's own size);
+    // not for the games played by flicking / dragging on the table (NO_PAN). Pinch zoom as before.
+    const NO_PAN = { carrom: 1, crokinole: 1, hockey: 1, botao: 1 };
+    let pan = null; const ray = new (T().Raycaster)(), ndc = new (T().Vector2)();
+    const onBoard = e => { if (!cur) return false; const r = container.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, cam); return ray.intersectObject(root, true).some(h => h.object.visible !== false); };
+    container.addEventListener('pointerdown', e => {
+      if (mode !== 'play' || pts.size > 1 || camK < .9 || !cur || NO_PAN[cur.userData.gameId] || fitTo && fitTo.roll || orthoWant) return;
+      if (onBoard(e)) return;
+      pan = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, moved: false, id: e.pointerId };
+    }, true);
+    container.addEventListener('pointermove', e => {
+      if (!pan || e.pointerId !== pan.id) return;
+      if (pts.size > 1) { pan = null; return; }
+      if (!pan.moved && Math.hypot(e.clientX - pan.x, e.clientY - pan.y) > 8) { pan.moved = true; try { container.setPointerCapture(e.pointerId); } catch (x) {} }
+      if (!pan.moved) return;
+      const F = fitCur || fitTo, q = camPose(1), wpp = 2 * Math.tan(cam.fov * Math.PI / 360) * Math.hypot(q[1], q[2]) / Math.max(1, container.clientHeight);
+      const lim = F ? Math.max(F.w || 6, F.d || 6) * .45 : 4;
+      panX = Math.max(-lim, Math.min(lim, panX - (e.clientX - pan.lx) * wpp)); panZ = Math.max(-lim, Math.min(lim, panZ - (e.clientY - pan.ly) * wpp));
+      pan.lx = e.clientX; pan.ly = e.clientY; dragEnd = performance.now(); kick(200);
+    }, true);
+    const panUp = e => { if (pan && pan.moved) dragEnd = performance.now(); if (pan && e.pointerId === pan.id) pan = null; };
+    container.addEventListener('pointerup', panUp, true); container.addEventListener('pointercancel', panUp, true);
     container.addEventListener('pointerdown', e => { if (mode === 'play' || pts.size > 1) return; drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: false }; vel = 0; });
     container.addEventListener('pointermove', e => {
       if (!drag || pts.size > 1) return;
@@ -1866,7 +1889,7 @@
   function play(on, o) {   // (the ceiling lamp's shade hides while the camera looks down at a game: see loop)
     if (on) orthoWant = !!(o && o.ortho);
     if (o && o.glide) glide = { t: 0, dur: o.glide, k0: camK, i0: inset, i1: insetTo, v0: vsh, t0: insetT };   // (t0: the top band glides on the same curve — it used to snap away first)
-    mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; kick(400); }
+    mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; panX = panZ = 0; kick(400); }
   const wasDrag = () => performance.now() - dragEnd < 250;
   // pointer → point on the horizontal plane at height y, in the current model's local space
   function pick(ev, y) {
@@ -2129,10 +2152,11 @@
     { const m0 = cur && cur.children[0], vy = (m0 && m0.userData.viewY) || .4;   // a tall board (legged goban) asks to be framed around its own middle
       const F = fitCur || fitTo, ly = F ? vy + (F.y - vy) * camK : vy, fcx = F && F.cx ? F.cx * camK : 0, fcz = F && F.cz ? F.cz * camK : 0; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0, rs = fitTo && fitTo.roll === -1 ? -1 : 1; cam.up.set(-rl * rs, 1 - rl, 0);
       const sh = fitTo && fitTo.up ? fitTo.up * camK : 0, ux = rl ? -rs : 0, uz = rl ? 0 : -1;   // fit.up: the board sits this far (world units) above the middle of the view (clear of a HUD at the bottom)
-      cam.position.x += fcx - ux * sh; cam.position.z += fcz - uz * sh; cam.lookAt(fcx - ux * sh, ly, fcz - uz * sh); camLook = ly;
+      const pxk = panX * camK, pzk = panZ * camK;
+      cam.position.x += fcx - ux * sh + pxk; cam.position.z += fcz - uz * sh + pzk; cam.lookAt(fcx - ux * sh + pxk, ly, fcz - uz * sh + pzk); camLook = ly;
       // play view: centre the board itself (its bounding box as drawn) between the top and the bottom of the free view — with the
       // camera tilted, framing the look point left boards sitting low (2026-11-09). Not with a focus point (cx/cz), fit.up or a roll.
-      if (fitRelease) {} else if (F && k > .01 && !rl && !sh && !fcx && !fcz && !orthoWant) centreBoard(F, k); else if (vsh) { vsh = 0; frame(); } }   // (fitRelease: the glide back eases vsh to 0 itself)   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
+      if (fitRelease || panX || panZ) {} else if (F && k > .01 && !rl && !sh && !fcx && !fcz && !orthoWant) centreBoard(F, k); else if (vsh) { vsh = 0; frame(); } }   // (fitRelease: the glide back eases vsh to 0 itself)   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
     // the near plane follows the camera's distance (a far camera — the gallery's showcase — with near .1 had too little depth
     // precision left at the board: inlays and piece faces a few thousandths above a surface flickered as it turned)
     { const nn = Math.min(2, Math.max(.1, d * .05)); if (Math.abs(cam.near - nn) > .01) { cam.near = nn; cam.updateProjectionMatrix(); dirty = true; } }
