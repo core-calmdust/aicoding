@@ -255,6 +255,28 @@
     const MAT = {};
     const mat = (color, op) => MAT[color + ':' + op] || (MAT[color + ':' + op] = new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false }));
     const clearMarks = () => { while (marks.children.length) marks.remove(marks.children[0]); };
+    /* notes on the board (the lessons' warm-up, 2026-11-15 — the same as atlas/games/chess.js annot): frames on squares and flat
+       arrows. Squares in USI ('7g'). */
+    const an = new TH.Group(); board.add(an);
+    const ANC = { ok: 0x2fd17a, hang: 0xff3b30, ng: 0xff3b30, '': 0xffb21a, hl: 0xffb21a };
+    const usiSq = q => E.mTo(P.fromUsi('1a' + q));
+    function annot(list) {
+      while (an.children.length) { const o = an.children.pop(); if (o.geometry && o.geometry !== tileGeo) o.geometry.dispose(); }
+      if (list && list.length) for (const o of list) {
+        if (o.at && String(o.at).includes('*')) continue;   // (a drop has no square to leave from)
+        if (o.at) { const t = new TH.Mesh(tileGeo, mat(ANC[o.cls || 'ok'] ?? ANC[''], o.cls === 'ok' || o.cls === 'hang' || o.cls === 'ng' ? .5 : .55)); const [x, z] = cellXZ(usiSq(o.at)); t.position.set(x, Y + .013, z); t.renderOrder = 2; an.add(t); continue; }
+        if (!o.arrow) continue;
+        if (String(o.arrow[0]).includes('*')) { const t = new TH.Mesh(tileGeo, mat(ANC.ok, .5)); const [x, z] = cellXZ(usiSq(o.arrow[1])); t.position.set(x, Y + .013, z); an.add(t); continue; }   // (a drop: its square)
+        const [a, b] = o.arrow.map(q => cellXZ(usiSq(q))), dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz); if (!len) continue;
+        const ang = Math.atan2(dx, dz), m = mat(ANC[o.cls || ''] ?? ANC[''], .9), head = .3, Ln = Math.max(.05, len - head - .16);
+        const shaft = new TH.Mesh(new TH.BoxGeometry(.11, .01, Ln), m); shaft.position.set(a[0] + Math.sin(ang) * (Ln / 2 + .08), Y + .2, a[1] + Math.cos(ang) * (Ln / 2 + .08)); shaft.rotation.y = ang;
+        const tri = new TH.Shape(); tri.moveTo(-.18, 0); tri.lineTo(.18, 0); tri.lineTo(0, head); tri.lineTo(-.18, 0);
+        const hg = new TH.ShapeGeometry(tri); hg.rotateX(-Math.PI / 2); hg.rotateY(Math.PI);
+        const hm = new TH.Mesh(hg, m); hm.position.set(a[0] + Math.sin(ang) * (Ln + .08), Y + .205, a[1] + Math.cos(ang) * (Ln + .08)); hm.rotation.y = ang;
+        shaft.renderOrder = hm.renderOrder = 3; an.add(shaft, hm);
+      }
+      T3.kick(150);
+    }
     function tileAt(sq, color, op, geo = tileGeo) { const m = new TH.Mesh(geo, mat(color, op)), [x, z] = cellXZ(sq); m.position.set(x, Y + .012, z); marks.add(m); return m; }
     function drawMarks() {
       clearMarks();
@@ -489,7 +511,7 @@
     }
     const hasCheck = () => P.legalMoves(true).some(m => { P.doMove(m); const c = P.inCheck(); P.undoMove(); return c; });
     function pzLoad(sfen, sol, o) {   // the next puzzle: a new position, the pieces drop in again
-      timers.forEach(clearTimeout); timers.length = 0; jobId++; closePopup();
+      timers.forEach(clearTimeout); timers.length = 0; jobId++; closePopup(); annot(null);
       SF = sfen; PZ.lock = !!(o && o.lock); hc = SF.split(' ')[1] === 'w' ? 1 : 0; ac = hc ^ 1; pzSol = sol || []; region = null;
       if (!E) return;   // (the engine is still loading: load() starts from SF)
       P = new E.Position(); P.setSfen(SF); moves = []; last = null; sel = null; hint = null; hintJ++; over = null; busy = true; pzOn = false;
@@ -558,6 +580,7 @@
       }),
       load: pzLoad,
       moves: () => moves.slice(),
+      annot,   // [{ at: '7g', cls: 'ok'|'hang'|'hl' } | { arrow: ['7g', '7f'], cls: ''|'ok'|'ng' }] — null clears (the lessons' warm-up)
     };
     const api = {
       human: hc, pz,

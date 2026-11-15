@@ -12,8 +12,9 @@
 // (−15); a sentence over 85 characters (−5 each); a text with 5+ sentences and no ！／？／invitation (−10).
 const fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '..');
-const files = process.argv.slice(2).length ? process.argv.slice(2) : fs.readdirSync(path.join(ROOT, 'backgammon')).filter(f => /^voice-.*-ja\.js$/.test(f)).map(f => path.join(ROOT, 'backgammon', f));
-const TIC = { dicepup: /ワン/g };
+const files = process.argv.slice(2).length ? process.argv.slice(2) : fs.readdirSync(ROOT).filter(d => { try { return fs.statSync(path.join(ROOT, d)).isDirectory(); } catch (e) { return false; } })
+  .flatMap(d => fs.readdirSync(path.join(ROOT, d)).filter(f => /^voice-.*-ja\.js$/.test(f)).map(f => path.join(ROOT, d, f)));
+const TIC = { dicepup: /ワン/g, fox: /コン(?![ト-ヾ])/g };
 const plain = s => String(s).replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, '').replace(/\{\w+\}/g, '0');
 const sentences = s => (plain(s).match(/[^。！？\n]+[。！？]+|[^。！？\n]+$/gm) || []).map(x => x.trim()).filter(Boolean);
 function ending(sn) {   // the kind of ending of one sentence

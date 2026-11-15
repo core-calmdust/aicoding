@@ -190,8 +190,7 @@
         }
         return m;
       });
-    if (fox) return t;
-    return t.replace(/\u0003D/g, 'だよ').replace(/\u0003[VP]/g, 'よ');
+    return t.replace(/\u0003D/g, 'だよ').replace(/\u0003[VP]/g, 'よ');   // (fox: no flourish of its own any more — its lines are written for it)
   }
   /* ---------- the guide's speech in Japanese (2026-11-15) ----------
      No random endings or asides: a guide's character lives in lines written for it by hand (backgammon: ダイスン,
@@ -216,9 +215,10 @@
     LKEY: 'shogi-kaya-lessons-v1', OKEY: 'shogi-kaya-open-v1', CATS: ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'], data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../shogi/lessons.json?v=20261107l14'), getJ('../shogi/openings.json?v=20261107l14'),
+      const voice = fetch('../shogi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
+      return (this.p = Promise.all([voice, getJ('../shogi/lessons.json?v=20261115r'), getJ('../shogi/openings.json?v=20261107l14'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261107l14`).catch(() => ({ sets: [] })))])
-        .then(([ls, op, ...more]) => {
+        .then(([_, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
           const ord = {}; Object.entries(op.index || {}).forEach(([c, L2]) => L2.forEach(([id], i) => { ord[id] = i; }));
@@ -236,9 +236,15 @@
       const g = this.data.ls.grades[+key]; if (!g) return null;
       const pool = g.problems.filter(p => !p.variant && (p.kind === 'best' || p.kind === 'tsume'));
       const probs = g.rules ? pool : shuffle(pool).slice(0, 5);
-      return { id: g.id, title: `${L(g.grade, lang)} · ${L(g.title, lang)}`, intro: (L(g.intro, lang) || []).join('<br>'),
+      // the warm-up (lessons.json grade.ramp, shogi/tools/ramps.js; 2026-11-15 on the 3D table): the 2D form → the runner's (fen, hl, ar)
+      const HLC = { ng: 'hang', ok: 'ok', hl: '' };
+      const V = lang === 'ja' ? (this.V || {}) : {}, vo = k => V[k] != null ? { ja: V[k], __voice: true } : null;   // (ショウギツネ's lines win over the plain texts and atlas/nocoord)
+      const ramp = (g.ramp || []).map((it, j) => { const o = Object.assign({}, it, { fen: it.sfen, hl: (it.marks || []).map(([q, c]) => [q, HLC[c] ?? '']), ar: (it.arrows || []).map(([a, b]) => [a, b, '']) });
+        ['t', 'body', 'g', 'h', 'y'].forEach(f => { const v = vo(`ramp:${g.id}/${j}/${f}`); if (v) o[f] = v; }); return o; });
+      const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L((this.data.ls.rampUi || {})[k], lang), v || {});
+      return { id: g.id, title: `${L(g.grade, lang)} · ${L(g.title, lang)}`, intro: V['intro:' + g.id] || (L(g.intro, lang) || []).join('<br>'), ramp: ramp.length ? ramp : null, RU,
         probs: probs.map(p => ({ pos: p.sfen, kind: p.kind === 'tsume' ? 'tsume' : 'best', n: p.n, sol: p.sol, P: p,
-          ask: L(p.q, lang) || (p.kind === 'tsume' ? fill(X.tsume, { n: p.n }) : L(g.prompt, lang)), why: L((NC.shogi || {})[g.id + '/p' + g.problems.indexOf(p) + '/expl'] || p.expl, lang), ans: p.sol ? p.sol[0] : (p.accept || p.pv || [])[0] })),
+          ask: L(p.q, lang) || (p.kind === 'tsume' ? fill(X.tsume, { n: p.n }) : V['prompt:' + g.id] || L(g.prompt, lang)), why: L((NC.shogi || {})[g.id + '/p' + g.problems.indexOf(p) + '/expl'] || p.expl, lang), ans: p.sol ? p.sol[0] : (p.accept || p.pv || [])[0] })),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[g.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
@@ -249,7 +255,8 @@
         probs: probs.map(p => ({ pos: p.sfen, kind: 'best', P: p, ans: (p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] })),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[s.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
-    introPos() { return { pos: 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1', lock: true }; },   // (no diagram in lessons.json: the starting position, for looking only, while the intro is read)
+    introPos() { return { pos: 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1', lock: true }; },
+    rampBody: (it, lang) => L(it.body, lang),   // (no diagram in lessons.json: the starting position, for looking only, while the intro is read)
     points(P, u) {   // = shogi/index.html movePoints (without the engine's runtime score)
       if (P.mode === 'material' || P.mode === 'freq') { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u); return c ? Math.round(PTS * c[1] / best) : 0; }
       if ((P.accept || []).includes(u)) return PTS;
@@ -405,7 +412,7 @@
   const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=14').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   function ncApply(id, L2) {
     const T = NC[id] || {}; if (!L2 || !L2.ramp) return L2;
-    L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v) o[f] = v; }); return o; });
+    L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v && !(o[f] && o[f].__voice)) o[f] = v; }); return o; });   // (a guide's own line stays)
     return L2;
   }
   const GSQ = x => typeof x === 'number' ? x : (+String(x).slice(1) - 1) * 15 + String(x).charCodeAt(0) - 97;

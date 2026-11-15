@@ -123,6 +123,7 @@ const RAMPS = {
   ],
 };
 
+Object.assign(RAMPS, require('./ramps-new.js'));   // (2026-11-15: the other grades)
 if (require.main === module) {
   const D = JSON.parse(fs.readFileSync(FILE, 'utf8'));
   for (const g of D.grades) { if (RAMPS[g.id]) g.ramp = RAMPS[g.id]; else delete g.ramp; }
