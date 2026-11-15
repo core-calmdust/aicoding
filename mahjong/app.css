@@ -2284,3 +2284,16 @@ html.lp #game .skb .skp{position:static;width:18px;height:18px}
 html.lp #game .skb.pt{padding-right:5px}
 #chara.ch2 .ptn .ptn-empty{flex-direction:column;gap:2px}
 #chara.ch2 .ptn .ptn-empty b{color:var(--gl2);font-size:14.5px;letter-spacing:.08em}
+/* (ユーザー 2026-11-15: the partner row made the name side wider and her story short) the row never widens the name side:
+   it takes the width the name and the rarity line already have, and the skill's name is cut if it must be */
+#home.aaa .pp-pt{width:0;min-width:100%;max-width:100%;box-sizing:border-box;overflow:hidden;gap:7px}
+#home.aaa .pp-pt img{flex:none}
+#home.aaa .pp-pt>b{flex:none}
+#home.aaa .pp-pt .skc{flex:0 1 auto;min-width:0;overflow:hidden}
+#home.aaa .pp-pt .skc b{overflow:hidden;text-overflow:ellipsis}
+#home.aaa .pp-pt .skc i,#home.aaa .pp-pt .skc em{flex:none}
+#home.aaa .aa-plate:not(.wide) .pp-pt{width:auto;min-width:0}
+#home.aaa .aa-plate.wide .pp-pt{contain:inline-size}
+#home.aaa .pp-pt.ask{padding:5px 10px 5px 7px;gap:6px}
+#home.aaa .pp-pt.ask b{font-size:13.5px;letter-spacing:.02em}
+#home.aaa .pp-pt.ask i{width:20px;height:20px;line-height:18px;font-size:14px;flex:none}
