@@ -215,7 +215,7 @@ function setupIO(start, moves) {
   for (const m of moves) { a.push(mFrom(m) | (mTo(m) << 5), mCap(m) | 0); }
   return a;
 }
-function wSetup(start, moves) { wIO().set(setupIO(start, moves)); return WX.setup(); }
+function wSetup(start, moves, egr) { wIO().set(setupIO(start, moves)); if (WX.eg_root) WX.eg_root(egr ? 1 : 0); return WX.setup(); }   // (egr: a game move of a searching level: engine.c egRootFilter)
 const wMove = (ft, cap) => mv(ft & 31, (ft >> 5) & 31, cap >>> 0);
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: wMove(r[2 + 3 * i], r[3 + 3 * i]), v: r[4 + 3 * i] }); return L; }
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
@@ -233,7 +233,7 @@ function think(start, moves, level, rand) {
     if (L.blunder && rand() < L.blunder) return { move: vals[Math.floor(rand() * vals.length)].m };
     let best = vals[0].m, bv = -Infinity; for (const e of vals) { const x = e.v + gauss(rand) * (L.noise || 0); if (x > bv) { bv = x; best = e.m; } } return { move: best };
   }
-  if (!wSetup(start, moves)) return { move: -1 };
+  if (!wSetup(start, moves, L.s)) return { move: -1 };
   if (!L.s) {
     WX.values(L.d, L.hand ? 1 : 0);
     const vals = wList();
@@ -301,12 +301,16 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NB, JP, RC, sqAt, bit, popc, bitsOf
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.CheckersEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261114sv2';
+  const V = 'v=20261115eg5';
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The network sits in the engine's
   // own (shared) tables; the endgame databases go into the shared memory above every thread's slot. The rest is the usual API.
   const MTL = /[?&]mt=1\b/.test(self.location.search || '');
-  let readyP = null, egTop = 0;
+  let readyP = null, egTop = 0, egLoad = null, eg5P = null;
+  // the 5-piece classes (2026-11-15, compressed and probed in place, tools/egpack.c: 2.7 MB download, 4.6 MB of memory): loaded
+  // at the first search of a level that thinks by time (四段・五段・PRO's upper steps) or an analysis; up to 4 pieces at once.
+  const wantEg5 = m => (m.type === 'analyze' || m.type === 'cands' ||
+    (m.type === 'think' && (() => { const L = m.cfg || LEVELS[m.level] || {}; return (L.ms >= 1000 && !L.nk) || L.nk >= 500; })()));
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     // SIMD build when the browser supports it (about 1.8x faster with the learned evaluation)
@@ -331,17 +335,21 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
             else if (mg === 0x314E4B43) { const H = dv.getUint32(4, true), H2 = dv.getUint32(8, true), sc = dv.getFloat32(12, true), n = 128 * H + H + H * H2 + H2 + H2 + 1; new Float32Array(X.memory.buffer, X.net_ptr(), n).set(new Float32Array(b, 16, n)); X.net_set(H, H2, sc); }
           }
         } catch (e) {}
-        // endgame databases (up to 4 pieces)
-        try {
-          const b = await gunzip('egdb4.bin.gz?' + V);
+        // endgame databases (up to 4 pieces now; the 5-piece classes later, egLoad('egdb5.bin.gz') above the 4-piece ones)
+        let egEnd = egTop || X.heap_base();
+        egLoad = async f => {
+          const b = await gunzip(f + '?' + V);
           if (b) {
-            const dv = new DataView(b), nc = dv.getUint32(4, true); let o = 8 + nc * 8, base = egTop || X.heap_base(), need = b.byteLength;
+            const dv = new DataView(b), nc = dv.getUint32(4, true); let o = 8 + nc * 8, base = (egEnd + 15) & ~15, need = b.byteLength;
             const cur = X.memory.buffer.byteLength; if (base + need + 65536 > cur) X.memory.grow(Math.ceil((base + need + 65536 - cur) / 65536));
             new Uint8Array(X.memory.buffer, base, b.byteLength - o).set(new Uint8Array(b, o));
             let off = base;
-            for (let i = 0; i < nc; i++) { const h = 8 + i * 8, len = dv.getUint32(h + 4, true); X.eg_add(dv.getUint8(h), dv.getUint8(h + 1), dv.getUint8(h + 2), dv.getUint8(h + 3), off); off += len; }
+            const add = dv.getUint32(0, true) === 0x325A4B43 ? X.eg_addz : X.eg_add;   // "CKZ2": compressed, probed in place (tools/egpack.c)
+            for (let i = 0; i < nc; i++) { const h = 8 + i * 8, len = dv.getUint32(h + 4, true); add(dv.getUint8(h), dv.getUint8(h + 1), dv.getUint8(h + 2), dv.getUint8(h + 3), off); off += len; }
+            egEnd = off;
           }
-        } catch (e) {}
+        };
+        try { await egLoad('egdb4.bin.gz'); } catch (e) {}
         WX = X;
         if (MTL) self.postMessage({ type: 'mtready' });
       }).catch(err => { WX = null; if (MTL) self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
@@ -350,7 +358,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   self.onmessage = e => {
     const m = e.data;
     if (m && m.type === 'mtinit') return;
-    queue = queue.then(() => readyP).catch(() => {}).then(() => {
+    queue = queue.then(() => readyP).then(() => { if (egLoad && !eg5P && wantEg5(m)) eg5P = egLoad('egdb5.bin.gz').catch(() => {}); return eg5P; }).catch(() => {}).then(() => {
       try {
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {

@@ -21,7 +21,7 @@ async function load(opts) {
     const dv = new DataView(ab), nc = dv.getUint32(4, true); let o = 8 + nc * 8, base = X.heap_base();
     const cur = X.memory.buffer.byteLength; if (base + ab.byteLength + 65536 > cur) X.memory.grow(Math.ceil((base + ab.byteLength + 65536 - cur) / 65536));
     new Uint8Array(X.memory.buffer, base, ab.byteLength - o).set(new Uint8Array(ab, o));
-    let off = base; for (let i = 0; i < nc; i++) { const h = 8 + i * 8; X.eg_add(dv.getUint8(h), dv.getUint8(h + 1), dv.getUint8(h + 2), dv.getUint8(h + 3), off); off += dv.getUint32(h + 4, true); }
+    let off = base; for (let i = 0; i < nc; i++) { const h = 8 + i * 8; (dv.getUint32(0, true) === 0x325A4B43 ? X.eg_addz : X.eg_add)(dv.getUint8(h), dv.getUint8(h + 1), dv.getUint8(h + 2), dv.getUint8(h + 3), off); off += dv.getUint32(h + 4, true); }
   }
   const setup = (spec, moves) => { const p = E.Pos.from(spec), a = [p.b | 0, p.w | 0, p.k | 0, p.side, (moves || []).length]; for (const m of moves || []) a.push(E.mFrom(m) | (E.mTo(m) << 5), E.mCap(m) | 0); io().set(a); return X.setup(); };
   const wMove = (ft, cap) => E.mv(ft & 31, (ft >> 5) & 31, cap >>> 0);
