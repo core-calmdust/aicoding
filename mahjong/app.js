@@ -159,6 +159,23 @@ const SND = (() => {
     B.el = new Audio(B.url); B.el.loop = !B.once; B.el.preload = 'auto';
     if (B.once) B.el.addEventListener('ended', () => { B.on = false; });   // (played to its end: the next results screen plays it again)
     try { const src = a.createMediaElementSource(B.el); B.g = a.createGain(); B.g.gain.value = 0; src.connect(B.g).connect(bgOut(a)); } catch (e) { B.g = null; } }
+  // (2026-11-15, ユーザー「サウンドの問題が治ってない」) a phone's browser (iOS above all) can leave the sound dead after the page has been
+  // in the background — the context 'interrupted', the music's element sources silent even once resumed. So on a touch device,
+  // back from the background, the first touch builds the sound afresh: a new context, new buses, new music elements (the files are
+  // still in memory; the decoded effects carry over), and the music that was wanted starts again where it was.
+  let stale = false;
+  const TOUCH = matchMedia('(pointer: coarse)').matches;
+  document.addEventListener('visibilitychange', () => { if (document.hidden && ac && TOUCH) stale = true; });
+  function rebuild() { stale = false; const old = ac; if (!old) return false;
+    const pos = {};
+    for (const k in TRK) { const B = TRK[k]; if (B.el) { pos[k] = B.el.currentTime; try { B.el.pause(); B.el.removeAttribute('src'); B.el.load(); } catch (e) {} }
+      clearTimeout(B.t); B.el = null; B.g = null; B.on = false; if (B.url && !B.url.startsWith('blob:')) B.url = null; }
+    try { old.close(); } catch (e) {}
+    ac = null; seB = bgB = null;
+    const a = ctx(); if (!a) return true;
+    for (const k in TRK) if (TRK[k].url) prep(TRK[k]);
+    for (const k in pos) { const B = TRK[k]; if (B.el && !B.restart) try { B.el.currentTime = pos[k]; } catch (e) {} }
+    music(want); return true; }
   function fade(B, to, sec) { const a = ac; if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(to, t + sec); } else if (B.el) B.el.volume = to; }
   let want = 'title';   // the track that should be playing (the title screen's to begin with) (kept while the sound is off, so it comes back when switched on)
   // the game's music (ユーザー 2026-11-14): one of the three tracks, drawn at random for each game ('main' asks for this game's one)
@@ -186,7 +203,7 @@ const SND = (() => {
     stick: () => { if (!play(pick3('stick'), 1)) tone(1800, .08, 'triangle', .06); },
     voice: k => play('v-' + k, 1),
     preload: () => load(),
-    _trk: TRK,
+    _trk: TRK, _rebuild: () => rebuild(), _ac: () => ac,
     music,
     resume: () => music(want),
     score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music('score'); },   // (once per results screen, from its top)
@@ -198,7 +215,7 @@ const SND = (() => {
     // (2026-11-15, ユーザー「画面を切り替えた後に音が出なくなる」) back from another app / tab a phone often refuses to restart the
     // sound until the next touch (iOS leaves the context 'interrupted' and the music paused): every touch and key checks, and
     // brings back the context and the music that should be playing
-    revive() { const a = ac; if (!a || document.hidden || !on()) return;
+    revive() { if (stale && !document.hidden && rebuild()) return; const a = ac; if (!a || document.hidden || !on()) return;
       if (a.state !== 'running' && a.state !== 'closed') { const p = a.resume(); if (p && p.catch) p.catch(() => {}); }
       for (const k in TRK) { const B = TRK[k]; if (B.el && B.on && B.el.paused) { const p = B.el.play(); if (p && p.catch) p.catch(() => {}); } } },
     levels,   // after the sound is switched back on
@@ -490,6 +507,7 @@ function openSettings() {
   const draw = () => `<h2>${esc(t('settings'))}</h2>
     <div class="st-grid"><div class="st-col">${vrow('se')}${vrow('bg')}</div>
     <div class="st-col">${row('language', [['ja', '日本語'], ['en', 'English']], I18N.lang)}
+    ${row('tapMode', [['1', t('tapSingle')], ['2', t('tapDouble')]], DB.set.tap2 ? '2' : '1')}
     ${row('lite', [['0', t('off')], ['1', t('on')]], DB.set.lite ? '1' : '0')}
     <p class="st-note">${esc(t('liteNote'))}</p></div></div>
     <div class="cbtns"><button class="btn gold" data-a="close">${esc(t('close'))}</button></div>`;
@@ -508,6 +526,7 @@ function openSettings() {
     const k = b.parentNode.dataset.k, v = b.dataset.v; SND.pick();
     if (k === 'language') { I18N.set(v); renderHome(); if (window.GameRecord) GameRecord.relabel(); }
     else if (k === 'lite') { DB.set.lite = v === '1'; save(); applyLite(); }
+    else if (k === 'tapMode') { DB.set.tap2 = v === '2'; save(); }
     box.innerHTML = draw();
   });
 }
@@ -1127,7 +1146,8 @@ handEl.addEventListener('click', e => {
   if (!el || !UIS || UIS.kind !== 'turn' || !UIS.resolve) return;
   if (el.classList.contains('no')) return;
   const id = +el.dataset.id;
-  if (!fine.matches && UIS.picked !== id) { UIS.picked = id; SND.pick(); renderHand(); TB.highlightType(T(id)); return; }
+  // (ユーザー 2026-11-15) one tap discards; 「ダブル」 in the settings: the first tap picks the tile, a second on it discards
+  if (DB.set.tap2 && UIS.picked !== id) { UIS.picked = id; SND.pick(); renderHand(); TB.highlightType(T(id)); return; }
   doDiscard(id);
 });
 function doDiscard(id) {
@@ -1207,6 +1227,11 @@ function myCall(o, res) {
 }
 
 // PC: call buttons sit just above the draw-tile slot at the right end of the hand (not in the rotated phone layout)
+// a screen rectangle in the frame the UI is laid out in: the same on a PC; on a phone held upright #root is turned 90°
+// (translateX(innerWidth) rotate(90deg)), so the screen's y is the UI's x and the UI's y runs from the screen's right edge
+function uiRect(el) { const r = el.getBoundingClientRect();
+  if (!document.documentElement.classList.contains('rot')) return r;
+  return { left: r.top, top: innerWidth - r.right, width: r.height, height: r.width, right: r.bottom, bottom: innerWidth - r.left }; }
 function hudLocal(p) {
   const hud = $('#acts').offsetParent; if (!hud || !p) return null;
   const r = hud.getBoundingClientRect(); if (!r.width) return null;
@@ -1420,7 +1445,9 @@ async function showMoves(d, o = {}) {
     </div>`, 'stage clear');
   // arrows: from every player who pays to every player who is paid (drawn between the panels as they are laid out). (2026-11-14: the glow
   // filter's region is the whole stage — sized by the path's own box, a straight arrow through the centre had no height and was not drawn)
-  const svg = box.querySelector('.mv-ar'), R = box.getBoundingClientRect(), mid = el => { const r = el.getBoundingClientRect(); return [r.left - R.left + r.width / 2, r.top - R.top + r.height / 2, r.width, r.height]; };
+  // (2026-11-15, ユーザー「矢印がおかしい（スマホ）」) on a phone held upright the whole UI is turned 90° (html.rot): a rectangle
+  // measured on the screen is turned back into the UI's own frame before use
+  const svg = box.querySelector('.mv-ar'), R = uiRect(box), mid = el => { const r = uiRect(el); return [r.left - R.left + r.width / 2, r.top - R.top + r.height / 2, r.width, r.height]; };
   const P = {}; box.querySelectorAll('.mv-p').forEach(el => { P[el.dataset.s] = mid(el); });
   const cx = R.width / 2, cy = R.height / 2, u = Math.min(R.width, R.height) / 100;
   svg.setAttribute('viewBox', `0 0 ${R.width} ${R.height}`);

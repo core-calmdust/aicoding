@@ -356,7 +356,7 @@ function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcT
 class Table3D {
   constructor(host) {
     this.host = host;
-    const r = this.renderer = new THREE.WebGLRenderer({ antialias: (window.devicePixelRatio || 1) < 1.5 || MOB, alpha: true, powerPreference: 'high-performance' });   // (2026-11-14, optimisation: a high-density screen is already sharp — no multisampling on top; and the faster GPU when there are two. 2026-11-15: but a phone draws at 1.25× of its 3× screen, so the tile edges stepped (ユーザー's screenshot) — phones keep multisampling)
+    const r = this.renderer = new THREE.WebGLRenderer({ antialias: (window.devicePixelRatio || 1) < 1.5, alpha: true, powerPreference: 'high-performance' });   // (2026-11-14, optimisation: a high-density screen is already sharp — no multisampling on top; and the faster GPU when there are two. 2026-11-15: a phone now draws at 2× (prMax) — sharp enough without it)
     const mobile = matchMedia('(pointer: coarse)').matches;
     this.mobile = mobile;
     r.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5)); this.prMax = mobile ? 1.25 : 1.5; this.dyn = 1;
@@ -582,7 +582,9 @@ class Table3D {
   // the rest of the code moves) are copied in. ~180 draw calls (and as many again for the shadows) become 3.
   _atlas() {
     if (this.A && (this.A.sheets || !MJTiles.sheets())) return this.A;
-    const sc = this.mobile ? .5 : 1, FW = Math.round(MJTiles.FW * sc), FH = Math.round(MJTiles.FH * sc), pad = this.mobile ? 4 : 8, cw = FW + pad * 2, ch = FH + pad * 2, cols = 8, rows = 5;
+    // (2026-11-15: the tiles' pictures stay full size on a phone too — ユーザー: the board was blurred more than it needed; only the
+    // cloth and the rails are kept at half, and the page's copies are let go)
+    const FW = MJTiles.FW, FH = MJTiles.FH, pad = 8, cw = FW + pad * 2, ch = FH + pad * 2, cols = 8, rows = 5;
     const mk = () => { const c = document.createElement('canvas'); c.width = cols * cw; c.height = rows * ch; return c; };
     const cv = mk(), cn = MJTiles.sheets() ? mk() : null, g = cv.getContext('2d'), gn = cn && cn.getContext('2d');
     const cells = {}; let k = 0;
@@ -1150,7 +1152,7 @@ class Table3D {
   // quality: 'high' | 'lite'. Lite drops shadows and renders at 1x pixel ratio.
   setQuality(q) {
     const lite = q === 'lite'; this.lite = lite;
-    this.prMax = lite ? 1 : this.mobile ? 1.25 : 1.5; this.dyn = 1;
+    this.prMax = lite ? 1 : this.mobile ? 2 : 1.5; this.dyn = 1;   // (2026-11-15: a phone draws at 2× — sharp without multisampling, which costs more memory than the extra pixels)
     this.renderer.setPixelRatio(this._pr());
     if (this.r2) { this.r2.setPixelRatio(this.renderer.getPixelRatio()); this.r2.setSize(this.host.clientWidth || 1, this.host.clientHeight || 1, false); }
     this.renderer.shadowMap.enabled = !lite;
