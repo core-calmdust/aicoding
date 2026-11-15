@@ -284,6 +284,7 @@ UI = dict(
     step=dict(ja='準備 {i}/{n}', en='Warm-up {i}/{n}'),
     next=dict(ja='次へ', en='Next'),
     main=dict(ja='本番の問題へ', en='To the problems'),
+    skip=dict(ja='準備をとばす', en='Skip the warm-up'),
     note=dict(ja='準備は点数に入らないよ。何回でもやり直してね。', en='Warm-ups are not scored. Try as often as you like.'),
     ng=dict(ja='おしい！ もう一回考えてみよう。こまったら「ヒント」を押してね。', en='Not quite! Think again — press Hint if you’re stuck.'),
     look=dict(ja='光っている場所に注目してみて。', en='Look at the glowing points.'),
