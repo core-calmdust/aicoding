@@ -911,6 +911,7 @@
       const layout = m => {
         if ($('bvVarRow')) $('bvVarRow').hidden = !(m === 'ai' || m === 'pvp' || m === 'rated');   // (online games too: every variant, 2026-11-12)
         if (rtNowHook) rtNowHook();   // (種目: AI games, two players, rated games against the AI)
+        requestAnimationFrame(lblAlign);   // (the names' column, after the rows of this mode show)
         if (MX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvTcRow')) $('bvTcRow').hidden = m !== 'ai'; mxLayout(m); return; }
         if (PZX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvPz')) $('bvPz').hidden = m !== 'puzzle'; return; }
         if (STX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvStg')) $('bvStg').hidden = m !== 'stage'; return; }
@@ -1278,16 +1279,27 @@
   function mxPanels(g) {
     const id = g.id, opp = RTG[id] ? rtOpp(id) : 'online', lsk = pref[id + ':lsk'] === 'open' && !NO_OPEN3D[id] ? 'open' : 'list';
     const daily = id === 'shogi' ? [['d1', '★', t('bv.pz.d1')], ['d2', '☆', t('bv.pz.d2')]] : id === 'gomoku' ? [] : [['d1', '★', t('bv.pz.dc')]];   // (gomoku: no puzzle of the day in the full game)
-    const rtOnly = !(window.Atlas3D && Atlas3D[id] && Atlas3D[id].variants) && !!RTG[id];   // (games without 種目: the current rating beside 持ち時間, as shogi shows it beside 種目 — 2026-11-14)
-    return `<div class="opts mxp" id="bvRt" hidden>${rtOnly ? '<div class="opts vopts rtonly"><span class="rtnow2" id="bvRtNow" hidden></span></div>' : ''}<div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp">${RTG[id] ? `<option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option>` : ''}<option value="online" ${opp === 'online' || !RTG[id] ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><span class="hb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 3 3.6M16 6h2.5a2.5 2.5 0 0 1-3 3.6"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/></svg></span></button></div>`
-      + `<label id="bvRtTcL">${t('tc.h')}<button type="button" class="lvpick" id="bvRtTc"></button></label><div class="mxnote" id="bvRtNote" hidden>${esc(t('bv.rtNoTc'))}</div></div>`
+    const rtOnly = !(window.Atlas3D && Atlas3D[id] && Atlas3D[id].variants) && !!RTG[id];   // (games without 種目: 相手 → 時間 → 現在のレート (+ 戦績, the cup, on its right) — 2026-11-15; games with 種目 keep shogi's 種目｜レート｜cup row)
+    return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp">${RTG[id] ? `<option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option>` : ''}<option value="online" ${opp === 'online' || !RTG[id] ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><span class="hb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 3 3.6M16 6h2.5a2.5 2.5 0 0 1-3 3.6"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/></svg></span></button></div>`
+      + `<label id="bvRtTcL">${t('tc.h')}<button type="button" class="lvpick" id="bvRtTc"></button></label>${rtOnly ? '<div class="opts vopts rtonly"><span class="rtnow2" id="bvRtNow" hidden></span></div>' : ''}<div class="mxnote" id="bvRtNote" hidden>${esc(t('bv.rtNoTc'))}</div></div>`
       + `<div class="opts mxp" id="bvPz" hidden>${daily.map(([k, ic, lb]) => `<button type="button" class="mxb${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
       + `<div class="opts mxp" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option>${NO_OPEN3D[id] ? '' : `<option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option>`}</select></label><button type="button" class="mxb mxwide" id="bvLsList"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`;
   }
   const mx2d = (g, m) => '../' + g.href + (m === 'puzzle' ? '?mode=puzzle&sub=cont' : m === 'lesson' ? '?mode=lesson&sub=' + ($('bvLsK') ? $('bvLsK').value : 'list') : '');
+  // the setting rows' names (種目 · 相手 · 時間 …) in one column as wide as the longest of them, the settings lined up on their right —
+  // so a long word in another language does not push the rows out of line (2026-11-15)
+  function lblAlign() {
+    const mb = $('bvMBody'); if (!mb) return;
+    mb.querySelectorAll('label').forEach(l => { const n = l.firstChild; if (n && n.nodeType === 3 && n.textContent.trim()) { const sp = document.createElement('span'); sp.className = 'lbt'; sp.textContent = n.textContent.trim(); l.replaceChild(sp, n); } });
+    const L = [...mb.querySelectorAll('.lbt')].filter(x => { const l = x.parentElement; const f = l.parentElement && [...l.parentElement.children].find(c => !c.hidden); const first = f === l; x.classList.toggle('lbt1', first); return first; });   // (only a row's first name: a second one inside a row, like 手番, stays as it is) mb.style.removeProperty('--lbw'); L.forEach(x => { x.style.minWidth = ''; });
+    const w = Math.max(0, ...L.filter(x => x.offsetParent).map(x => Math.ceil(x.getBoundingClientRect().width)));
+    if (w) mb.style.setProperty('--lbw', w + 'px');
+    const o = $('bvOpts'); if (o && !o.hidden) { o.classList.remove('wrap2'); const pk = [...o.querySelectorAll(':scope > label:first-child :is(.lvpick, select)')].find(x => x.offsetParent); if (pk && pk.getBoundingClientRect().width < 110) o.classList.add('wrap2'); }   // (a long side picker in another language: it goes under the level, lined up with the settings)
+  }
   function mxLayout(m) {
     const g = bvGame; if (!g) return;
     ['bvRt', 'bvPz', 'bvLs'].forEach((k, i) => { if ($(k)) $(k).hidden = m !== ['rated', 'puzzle', 'lesson'][i]; });
+    lblAlign();
     const f = $('bvFull'), tb = $('bvTable'), cl = $('bvi').querySelector('.R .act > a.btn'), act = $('bvi').querySelector('.R .act'); if (!f || !tb) return;
     const set = (el, a, b) => { el.innerHTML = `<b>${a}</b>${b ? `<small>${b}</small>` : ''}`; };
     // every tab the same (2026-11-10): red あそぶ = here on the 3D table · brown フル機能で遊ぶ · white 2Dで遊ぶ
