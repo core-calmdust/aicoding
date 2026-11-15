@@ -157,3 +157,6 @@ for code in [c for c in KIND if c not in ('GY', 'OU')] + ['GY', 'OU']:
     info.append(f'{code}:{asp:.3f}'); print(code, n, round(asp, 3))
 sheet.save(path); tr.save(os.path.join(ROOT, 'shogi', 'pieces', SET, 'traced.png'), optimize=True)
 print('photo pieces width/height —', ' '.join(info))
+
+# (2026-11-15) the WebP copies and the phones' half-size pictures (atlas/tools/mobile-tex.py)
+import subprocess as _sp, sys as _sys, os as _os; _sp.run([_sys.executable, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "mobile-tex.py")])

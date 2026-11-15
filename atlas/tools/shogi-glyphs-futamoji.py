@@ -64,3 +64,6 @@ def main():
     for i, c in enumerate(CODES): sheet.paste(cell(a, pos[c]), ((i % 5) * CW, (i // 5) * CH))
     sheet.save(os.path.join(ROOT, 'images', 'atlas', 'shogi-glyphs-futofude.png')); print('futofude')
 main()
+
+# (2026-11-15) the WebP copies and the phones' half-size pictures (atlas/tools/mobile-tex.py)
+import subprocess as _sp, sys as _sys, os as _os; _sp.run([_sys.executable, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "mobile-tex.py")])

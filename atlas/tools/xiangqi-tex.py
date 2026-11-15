@@ -378,3 +378,6 @@ if __name__ == '__main__':
             for k, (c, m) in sides().items(): put(k + '-' + n, c, m)
         elif n.startswith('pc'):
             import xqtex_pieces; xqtex_pieces.run(n[3:] or None, put)
+
+# (2026-11-15) the WebP copies and the phones' half-size pictures (atlas/tools/mobile-tex.py)
+import subprocess as _sp, sys as _sys, os as _os; _sp.run([_sys.executable, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "mobile-tex.py")])

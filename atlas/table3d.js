@@ -28,7 +28,7 @@
   // the browser caches it. A key not listed, a composite drawing its parts (texNest), window.TEX_DRAW (the baking tool) or an
   // image that fails to load → drawn as before. Re-bake (python3 atlas/tools/texbake.py) when a listed drawing changes.
   const TEX_HERE = (document.currentScript && document.currentScript.src) || location.href;
-  const texFile = key => 'img/tex/b/' + key.replace(/[^A-Za-z0-9_.-]/g, ch => '_' + ch.charCodeAt(0).toString(16)) + '.webp';
+  const texFile = (key, half) => 'img/tex/b/' + key.replace(/[^A-Za-z0-9_.-]/g, ch => '_' + ch.charCodeAt(0).toString(16)) + (half ? '-h' : '') + '.webp';
   const texT = {};   // key → { ms, w, h } (how long each drawing took: read by the baking tool)
   function drawTex(key, w, h, draw) {
     const c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -54,7 +54,9 @@
       img.onload = () => { texDone();   // (baked at full size: a phone asking for half the size gets it shrunk, as its drawing would have been)
         t.image = fill(img); t.needsUpdate = true; c0.__bakeDone = true; doneP(); kickSoon(); };
       img.onerror = () => { texDone(); t.image = fill(drawTex(key, w, h, draw)); t.__baked = false; t.needsUpdate = true; c0.__bakeDone = true; doneP(); kickSoon(); };
-      img.src = new URL(texFile(key) + '?v=' + v, TEX_HERE).href;
+      // (2026-11-15) phones asking for the smaller size of a key without its size in it: the half-size copy (window.ATLAS_TEXH, atlas/tools/mobile-tex.py)
+      const H = window.ATLAS_TEXH, half = texScale() < 1 && H && H[key] === v;
+      img.src = new URL(texFile(key, half) + '?v=' + v, TEX_HERE).href;
     } else t = new (T().CanvasTexture)(drawTex(key, w, h, draw));
     t.anisotropy = 4; t.encoding = T().sRGBEncoding;
     if (rep) { t.wrapS = t.wrapT = T().RepeatWrapping; t.repeat.set(rep, rep); }
