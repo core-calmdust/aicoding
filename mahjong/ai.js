@@ -210,7 +210,7 @@ class Bot {
     switch (sk) {
       case 'doraplus': return p.riichi || sh === 0;
       case 'lure': return sh >= 1 && g.liveLeft() > 30;
-      case 'seal': return sh <= 2 && !g.P.some((q, i) => i !== s && q.riichi) && g.liveLeft() < 56;
+      case 'seal': return sh <= 1 && !g.P.some((q, i) => i !== s && q.riichi) && g.liveLeft() < 50 && g.scores[s] >= 15000;   // (it costs 3000 from the first use)
       case 'swap': {
         if (p.riichi || g.curDrawn == null) return false;
         const c = MJ.countsIds(p.hand), t = T(g.curDrawn);
