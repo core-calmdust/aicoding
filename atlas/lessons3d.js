@@ -270,13 +270,14 @@
     load() {
       if (this.p) return this.p;
       const txt = u => fetch(u).then(r => r.text());
-      return (this.p = Promise.all([getJ('../chess/lessons.json?v=20261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14'), txt('../chess/i18n_basics.js?v=20261019ol-i14')])
-        .then(([ls, op, a, b]) => {
+      return (this.p = Promise.all([getJ('../chess/lessons.json?v=20261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=1').catch(() => '')])
+        .then(([ls, op, a, b, vk]) => {
           const w = {}; try { new Function('window', a)(w); new Function('window', b)(w); } catch (e) { console.warn('[lessons3d] chess texts', e); }   // (a sandbox: the page's own I18N stays untouched)
+          try { const v = {}; new Function('window', vk)(v); this.V = ((v.I18N || {})['ja@knight']) || {}; } catch (e) { this.V = {}; }   // (ナイトン's own lines, 3D, ja)
           this.I = w.I18N || {}; this.data = { ls, op }; return this;
         }).catch(e => { this.p = null; throw e; }));
     },
-    tx(k, lang) { const I = this.I || {}; return (I[lang] && I[lang][k]) || (I.en && I.en[k]) || (I.ja && I.ja[k]) || ''; },
+    tx(k, lang) { const I = this.I || {}; if (lang === 'ja' && this.V && this.V[k] != null) return this.V[k]; return (I[lang] && I[lang][k]) || (I.en && I.en[k]) || (I.ja && I.ja[k]) || ''; },
     list(kind, lang) {
       const D = this.data;
       const mini = f => f && window.AtlasMini ? AtlasMini.chess(f) : '';
@@ -295,8 +296,10 @@
       const T = k => this.tx('ls.' + s.id + '.' + k, lang);
       if (s.kind === 'drill') return { id: s.id, title: T('title'), intro: T('intro'), goal: T('goal'), drill: s.stages, probs: [], dx: k => this.tx(k, lang),   // ★ stages (= chess/app.js drillMove: 3 ★ within par, 2 within par + 2, else 1; always passed)
         save: n => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }; pr[s.id] = { best: Math.max(o.best || 0, n), clear: true }; put(this.LKEY, pr); return true; } };
-      const RU = (k, v) => fill(L((this.data.ls.rampUi || {})[k], lang), v || {});
-      return { id: s.id, title: T('title'), intro: T('intro'), ramp: s.ramp && s.ramp.length ? s.ramp : null, RU,   // (the warm-up before the scored problems: explain / try — not scored)
+      const V = lang === 'ja' ? (this.V || {}) : {};
+      const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L((this.data.ls.rampUi || {})[k], lang), v || {});
+      const ramp = s.ramp && s.ramp.length ? s.ramp.map((it, j) => { const o = Object.assign({}, it); ['t', 'b', 'g', 'h', 'y'].forEach(f => { const v = V[`ramp:${s.id}/${j}/${f}`]; if (v != null) o[f] = { ja: v, __voice: true }; }); return o; }) : null;
+      return { id: s.id, title: T('title'), intro: T('intro'), ramp, RU,   // (the warm-up before the scored problems: explain / try — not scored)
         probs: (s.problems || []).map(p => ({ pos: p.fen, kind: 'best', P: p, ask: T('goal'), why: T('why'), ans: p.best || (p.ok || [])[0] })),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
@@ -409,7 +412,7 @@
   /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
-  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=14').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=15').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   function ncApply(id, L2) {
     const T = NC[id] || {}; if (!L2 || !L2.ramp) return L2;
     L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v && !(o[f] && o[f].__voice)) o[f] = v; }); return o; });   // (a guide's own line stays)
