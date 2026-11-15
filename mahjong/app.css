@@ -1745,3 +1745,35 @@ html.lp .modal.settings .st-m svg{width:17px;height:17px}
 html.lp .modal.settings .st-v input[type=range]{height:22px}
 html.lp .modal.settings .st-note{margin:-4px 0 0;font-size:10.5px;line-height:1.5}
 html.lp .modal.settings .cbtns .btn{padding:7px 18px;font-size:13px}
+/* ---- the gacha on a phone (ユーザー 2026-11-15): the stage on the left fills the height; the title, the coins and the two pull
+   buttons stand in a column on the right, always in view (before, the buttons were below the bottom edge) ---- */
+html.lp .modal.gacham .mbox{width:calc(var(--W, 100vw) - 24px);height:calc(var(--H, 100vh) - 20px);max-height:none;padding:12px;overflow:hidden}
+html.lp .modal.gacham .gacha{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 170px;grid-template-rows:auto auto auto 1fr;
+  grid-template-areas:"st h" "st c" "st b" "st .";gap:10px 14px;text-align:left}
+html.lp .modal.gacham .gacha h2{grid-area:h;margin:4px 0 0;font-size:22px;padding-right:40px}
+html.lp .modal.gacham .gstage{grid-area:st;min-height:0;height:100%;max-height:none;margin:0;align-content:center}
+html.lp .modal.gacham .gcoins{grid-area:c;margin:0;justify-content:flex-start;font-size:15px}
+html.lp .modal.gacham .gcoins svg{width:18px;height:18px}
+html.lp .modal.gacham .gbtns{grid-area:b;flex-direction:column;gap:8px}
+html.lp .modal.gacham .gbtns .btn{width:100%;padding:10px 8px;font-size:13px}
+html.lp .modal.gacham .x{top:8px;right:8px;width:32px;height:32px;font-size:18px}
+html.lp .modal.gacham .gorb{width:96px;height:96px}
+html.lp .modal.gacham .grates{font-size:10px;line-height:1.5;bottom:6px;padding:0 6px}
+html.lp .modal.gacham .gcards{padding:6px;gap:6px;align-self:center}
+html.lp .modal.gacham .gcards.n1{grid-template-columns:min(170px,40%)}
+html.lp .modal.gacham .gcn{padding:12px 4px 4px;font-size:11.5px}
+html.lp .modal.gacham .gstage{text-align:center}
+html.lp .modal.gacham .gacha{grid-template-columns:minmax(0,1fr) 150px}
+html.lp .modal.gacham .gcards.n10 .gci{aspect-ratio:3/4}
+html.lp .modal.gacham .gcards.n10 .gcn{font-size:10.5px;padding:10px 3px 3px}
+html.lp .modal.gacham .gcards.n10 .gcn em{font-size:9px}
+html.lp .modal.gacham .gcards.n10 .skc.sm{font-size:9px;padding:1px 4px 1px 1px;gap:2px}
+html.lp .modal.gacham .gcards.n10 .skc.sm i{width:13px;height:13px;padding:1.5px}
+html.lp .modal.gacham .gcards.n10 .gnew,html.lp .modal.gacham .gcards.n10 .gdup{font-size:9px;padding:2px 5px;top:4px;left:4px}
+html.lp .modal.gacham .gcards.n1 .gci{aspect-ratio:3/4}
+/* the ranked panel on a phone: the rule note smaller, so it is read without scrolling */
+html.lp .rk-me .rk-rule{font-size:11px;line-height:1.5}
+/* the record dialog (shared module): its close button in the lacquer and gold of this game, not a flat yellow */
+#root .grc-ov .grc-go{font-family:var(--serif);font-weight:800;letter-spacing:.18em;color:var(--gl2);border-radius:6px;
+  background:radial-gradient(120% 150% at 50% 0%,rgba(232,206,140,.22),transparent 62%),linear-gradient(180deg,var(--lq1),var(--lq2));
+  border:1px solid rgba(232,206,140,.85);box-shadow:inset 0 0 0 3px var(--lq2),inset 0 0 0 4px rgba(232,206,140,.35),0 6px 16px rgba(0,0,0,.45)}

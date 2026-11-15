@@ -513,7 +513,9 @@ function openSettings() {
 }
 $('#btnSet').addEventListener('click', openSettings);
 // 戦績: a labelled button in the home header (PC and phones — this game has no bottom tab bar)
-if (window.GameRecord) { GameRecord.init({ game: 'mahjong', lang: () => I18N.lang, menu: '#luxMenu', btnClass: 'lm rec' }); const rb = $('#btnRecord'); if (rb) { $('#luxMenu').insertBefore(rb, $('#btnStats'));
+if (window.GameRecord) { GameRecord.init({ game: 'mahjong', lang: () => I18N.lang, menu: '#luxMenu', btnClass: 'lm rec' });
+  // (2026-11-15) its dialog joins #root, so that on a phone held upright it turns with the rest of the UI (it stood sideways)
+  { const ov = document.querySelector('.grc-ov'); if (ov) $('#root').appendChild(ov); } const rb = $('#btnRecord'); if (rb) { $('#luxMenu').insertBefore(rb, $('#btnStats'));
   const fix = () => { const sp = rb.querySelector('span'); if (sp && !rb.querySelector('.lm-t')) { const ic = rb.querySelector('svg'); rb.innerHTML = `<i class="lm-i">${ic ? ic.outerHTML : ''}</i><span class="lm-t"><b>${esc(sp.textContent)}</b><small>RECORD</small></span>`; } };
   fix(); new MutationObserver(fix).observe(rb, { childList: true }); } }
 function applyLite() {
@@ -652,7 +654,7 @@ function openGacha() {
       </div>
       <div class="gcoins">${icon('coin')}<b id="gCoins">${DB.coins.toLocaleString()}</b></div>
       <button class="x" data-a="close">×</button>
-    </div>`, 'wide');
+    </div>`, 'wide gacham');
   b.addEventListener('click', async e => {
     if (e.target.closest('[data-a=close]')) { closeModal(); if (!$('#chara').hidden) renderChara(); else renderHome(); return; }
     const btn = e.target.closest('[data-n]'); if (!btn || b.busy) return;
