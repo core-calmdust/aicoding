@@ -63,6 +63,7 @@
       const r = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), u = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 1), h = Math.tan(12 * Math.PI / 180) * d;
       tgt.addScaledVector(r, (e.x0 + e.x1) / 2 * h * (W / H)).addScaledVector(u, (e.y0 + e.y1) / 2 * h); }
     place(d);
+    if (q.get('cam')) { const v = q.get('cam').split(',').map(Number); cam.position.set(v[0], v[1], v[2]); cam.lookAt(v[3] || 0, v[4] || 0, v[5] || 0); cam.updateMatrixWorld(); }   // (a fixed close-up: cam=x,y,z,tx,ty,tz)
     R.setPixelRatio(1); R.setSize(W, H, false); R.setClearColor(0x000000, 0);
     R.render(scene, cam);
     window.ICON = R.domElement.toDataURL('image/png'); window.READY = true;
