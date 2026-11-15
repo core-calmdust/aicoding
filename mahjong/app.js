@@ -574,15 +574,19 @@ function homeFx() {
       a: kind === 'bokeh' ? .06 + Math.random() * .1 : kind === 'near' ? .55 + Math.random() * .4 : .35 + Math.random() * .45,
       ph: Math.random() * 6.3, sp: .6 + Math.random() * 1.6 };
   };
+  // (2026-11-16, ユーザー: batteries) drawn 30 times a second (the specks drift slowly: the same to the eye as 60)
+  let lastDraw = 0;
   const step = now => {
     if (!HFX.run) return;
+    if (now - lastDraw < 31) { requestAnimationFrame(step); return; }
+    lastDraw = now;
     if ($('#home').hidden || DB.set.lite) { HFX.run = false; g.clearRect(0, 0, cv.width, cv.height); return; }
     const W = cv.clientWidth, H = cv.clientHeight, dpr = Math.min(1.5, devicePixelRatio || 1);
     if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     const dt = Math.min(50, now - last) / 1000; last = now;
     const P = HFX.parts;
     if (!P.length) { for (let i = 0; i < 90; i++) P.push(spawn(W, H, 'far')); for (let i = 0; i < 22; i++) P.push(spawn(W, H, 'near')); for (let i = 0; i < 9; i++) P.push(spawn(W, H, 'bokeh')); }
-    const hs = getComputedStyle($('#home')), mx = parseFloat(hs.getPropertyValue('--mx')) || 0, my = parseFloat(hs.getPropertyValue('--my')) || 0;
+    const mx = HFX.mx || 0, my = HFX.my || 0;   // (2026-11-16: from the pointer handler — no style read each frame)
     g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
     g.globalCompositeOperation = 'lighter';
     for (let i = 0; i < P.length; i++) {
@@ -604,7 +608,7 @@ function homeFx() {
   requestAnimationFrame(step);
 }
 // a little depth: the art and the room shift against each other with the pointer
-$('#home').addEventListener('pointermove', e => { const r = $('#home').getBoundingClientRect(); $('#home').style.setProperty('--mx', ((e.clientX - r.left) / r.width - .5).toFixed(3)); $('#home').style.setProperty('--my', ((e.clientY - r.top) / r.height - .5).toFixed(3)); });
+$('#home').addEventListener('pointermove', e => { const r = $('#home').getBoundingClientRect(); HFX.mx = (e.clientX - r.left) / r.width - .5; HFX.my = (e.clientY - r.top) / r.height - .5; $('#home').style.setProperty('--mx', HFX.mx.toFixed(3)); $('#home').style.setProperty('--my', HFX.my.toFixed(3)); });
 // entering the home: the pieces come in one after another
 function homeEnter() { const h = $('#home'); h.classList.remove('enter'); void h.offsetWidth; h.classList.add('enter'); homeFx(); }
 $('#luxMenu').addEventListener('click', e => { if (e.target.closest('[data-soon]')) { SND.pick(); toast(t('soon')); } });
