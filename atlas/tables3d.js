@@ -181,6 +181,8 @@
       set: k => { ls.set('atlas-chess-look', k); ls.set('atlas-chess-view', '3d'); } },
     // atlas/skin/go.js / gomoku.js: 'kaya' | 'lacquer' ('0': the 2D stones)
     // go / gomoku (atlas/models/goban.js, 2026-11-15): six boards each; 'atlas-<game>-look' ('0' = the game's own 2D board in the full game)
+    // morris (atlas/models/morris.js, 2026-11-15): six boards
+    morris: { list: ['jeweller', 'roman', 'viking', 'garden', 'cloister', 'bauhaus'], get: () => { const v = ls.get('atlas-morris-look'); return BOARDS.morris.list.includes(v) ? v : 'jeweller'; }, set: k => ls.set('atlas-morris-look', k) },
     // mancala (atlas/models/mancala.js, 2026-11-15): six boards
     mancala: { list: ['lacquer', 'baobab', 'sand', 'copper', 'celadon', 'concrete'], get: () => { const v = ls.get('atlas-mancala-look'); return BOARDS.mancala.list.includes(v) ? v : 'lacquer'; }, set: k => ls.set('atlas-mancala-look', k) },
     // connect4 (atlas/models/connect4.js, 2026-11-15): six stands
@@ -280,6 +282,14 @@
     slate: { ja: '黒板', en: 'Blackboard', zh: '黑板', 'zh-TW': '黑板', ko: '칠판', es: 'Pizarra', fr: 'Tableau noir', pt: 'Quadro-negro', de: 'Tafel', ru: 'Школьная доска', tr: 'Kara tahta', id: 'Papan tulis', hi: 'ब्लैकबोर्ड', ar: 'سبورة' },
     denim: { ja: 'デニム', en: 'Denim', zh: '牛仔布', 'zh-TW': '丹寧', ko: '데님', es: 'Mezclilla', fr: 'Denim', pt: 'Jeans', de: 'Denim', ru: 'Деним', tr: 'Kot', id: 'Denim', hi: 'डेनिम', ar: 'دنيم' },
   },
+  morris: {
+    jeweller: { ja: '宝石商の盤', en: 'Jeweller’s board', zh: '珠宝商棋盘', 'zh-TW': '珠寶商棋盤', ko: '보석상의 판', es: 'Tablero de joyero', fr: 'Plateau de joaillier', pt: 'Tabuleiro de joalheiro', de: 'Juwelierbrett', ru: 'Доска ювелира', tr: 'Kuyumcu tahtası', id: 'Papan perhiasan', hi: 'जौहरी का बोर्ड', ar: 'لوح الصائغ' },
+    roman: { ja: '古代ローマの石段', en: 'Roman steps', zh: '古罗马石阶', 'zh-TW': '古羅馬石階', ko: '고대 로마의 돌계단', es: 'Escalones romanos', fr: 'Marches romaines', pt: 'Degraus romanos', de: 'Römische Stufen', ru: 'Римские ступени', tr: 'Roma basamakları', id: 'Tangga Romawi', hi: 'रोमन सीढ़ियाँ', ar: 'درج روماني' },
+    viking: { ja: 'ヴァイキングの樫', en: 'Viking oak', zh: '维京橡木', 'zh-TW': '維京橡木', ko: '바이킹의 참나무', es: 'Roble vikingo', fr: 'Chêne viking', pt: 'Carvalho viking', de: 'Wikinger-Eiche', ru: 'Дуб викингов', tr: 'Viking meşesi', id: 'Ek Viking', hi: 'वाइकिंग ओक', ar: 'بلوط الفايكنغ' },
+    garden: { ja: '庭の芝と敷石', en: 'Garden lawn', zh: '花园草坪', 'zh-TW': '花園草坪', ko: '정원 잔디', es: 'Césped de jardín', fr: 'Pelouse de jardin', pt: 'Gramado de jardim', de: 'Gartenrasen', ru: 'Садовый газон', tr: 'Bahçe çimi', id: 'Rumput taman', hi: 'बगीचे की घास', ar: 'عشب الحديقة' },
+    cloister: { ja: '回廊の粘板岩', en: 'Cloister slate', zh: '回廊石板', 'zh-TW': '迴廊石板', ko: '회랑의 점판암', es: 'Pizarra de claustro', fr: 'Ardoise de cloître', pt: 'Ardósia do claustro', de: 'Kreuzgang-Schiefer', ru: 'Сланец галереи', tr: 'Manastır arduvazı', id: 'Batu tulis biara', hi: 'मठ की स्लेट', ar: 'أردواز الرواق' },
+    bauhaus: { ja: 'バウハウス', en: 'Bauhaus', zh: '包豪斯', 'zh-TW': '包浩斯', ko: '바우하우스', es: 'Bauhaus', fr: 'Bauhaus', pt: 'Bauhaus', de: 'Bauhaus', ru: 'Баухаус', tr: 'Bauhaus', id: 'Bauhaus', hi: 'बाउहाउस', ar: 'باوهاوس' },
+  },
   mancala: {
     lacquer: { ja: '漆黒と金', en: 'Black lacquer & gold', zh: '黑漆与金', 'zh-TW': '黑漆與金', ko: '흑칠과 금', es: 'Laca negra y oro', fr: 'Laque noire et or', pt: 'Laca preta e ouro', de: 'Schwarzlack & Gold', ru: 'Чёрный лак и золото', tr: 'Siyah lake ve altın', id: 'Pernis hitam & emas', hi: 'काला लाह और सोना', ar: 'ورنيش أسود وذهب' },
     baobab: { ja: '彫りのアフリカ材', en: 'Carved African wood', zh: '雕刻非洲木', 'zh-TW': '雕刻非洲木', ko: '조각한 아프리카 나무', es: 'Madera africana tallada', fr: 'Bois africain sculpté', pt: 'Madeira africana entalhada', de: 'Geschnitztes Afrikaholz', ru: 'Резное африканское дерево', tr: 'Oymalı Afrika ağacı', id: 'Kayu Afrika berukir', hi: 'नक्काशीदार अफ़्रीकी लकड़ी', ar: 'خشب أفريقي منحوت' },
@@ -366,8 +376,8 @@
   } };
   X.boardName = (k, lang, id) => { const g = id && NG[id] && NG[id][k]; if (g) return g[lang] || g.en; const o = N3[k]; if (!o) return k; const n = o[lang] || o.en, c = n.replace(/\s*(?:3D|ثلاثي(?: الأبعاد)?)$/, '').trim(); return c || n; };   // (2026-11-10: the boards' names without '3D')
   // the full games' 「3D盤」 tiles: the board alone, from straight above, no room (atlas/tools/boardicon.html, 2026-11-09)
-  X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'chess' ? 7 : 1), ME).href;
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'botao' ? 3 : id === 'chess' ? 7 : 1), ME).href;
+  X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'morris' ? 2 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'chess' ? 7 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'morris' ? 2 : id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'botao' ? 3 : id === 'chess' ? 7 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   // 駒: the games whose 3D figures come in sets (the board view's panel shows them as a row under 盤; the full game's 「3D駒」 too)
@@ -426,6 +436,17 @@
       magnet: { ja: 'マグネット', en: 'Magnets', zh: '磁铁', 'zh-TW': '磁鐵', ko: '자석', es: 'Imanes', fr: 'Aimants', pt: 'Ímãs', de: 'Magnete', ru: 'Магниты', tr: 'Mıknatıs', id: 'Magnet', hi: 'चुंबक', ar: 'مغناطيس' },
       button: { ja: 'ボタン', en: 'Buttons', zh: '纽扣', 'zh-TW': '鈕扣', ko: '단추', es: 'Botones', fr: 'Boutons', pt: 'Botões', de: 'Knöpfe', ru: 'Пуговицы', tr: 'Düğme', id: 'Kancing', hi: 'बटन', ar: 'أزرار' },
       pearl: { ja: '真珠', en: 'Pearls', zh: '珍珠', 'zh-TW': '珍珠', ko: '진주', es: 'Perlas', fr: 'Perles', pt: 'Pérolas', de: 'Perlen', ru: 'Жемчуг', tr: 'İnci', id: 'Mutiara', hi: 'मोती', ar: 'لؤلؤ' },
+    } };
+  // morris (atlas/models/morris.js, 2026-11-15): 'atlas-morris-pc3'
+  PIECES.morris = { list: ['metal', 'glass', 'bone', 'stone', 'pewter', 'bauhaus'], get: () => { const v = ls.get('atlas-morris-pc3'); return PIECES.morris.list.includes(v) ? v : 'metal'; }, set: k => ls.set('atlas-morris-pc3', k),
+    thumb: k => new URL('img/pc3-morris-' + k + '.webp?v=1', ME).href,
+    names: {
+      metal: { ja: '金とプラチナ', en: 'Gold & platinum', zh: '金与铂金', 'zh-TW': '金與鉑金', ko: '금과 백금', es: 'Oro y platino', fr: 'Or et platine', pt: 'Ouro e platina', de: 'Gold & Platin', ru: 'Золото и платина', tr: 'Altın ve platin', id: 'Emas & platina', hi: 'सोना और प्लैटिनम', ar: 'ذهب وبلاتين' },
+      glass: { ja: '琥珀と水晶のガラス', en: 'Amber & clear glass', zh: '琥珀与透明玻璃', 'zh-TW': '琥珀與透明玻璃', ko: '호박색과 투명 유리', es: 'Vidrio ámbar y claro', fr: 'Verre ambré et clair', pt: 'Vidro âmbar e claro', de: 'Bernstein- & Klarglas', ru: 'Янтарное и прозрачное стекло', tr: 'Kehribar ve şeffaf cam', id: 'Kaca kuning & bening', hi: 'अंबर और साफ़ काँच', ar: 'زجاج كهرماني وشفاف' },
+      bone: { ja: '骨と角', en: 'Bone & antler', zh: '骨与鹿角', 'zh-TW': '骨與鹿角', ko: '뼈와 뿔', es: 'Hueso y asta', fr: 'Os et bois de cerf', pt: 'Osso e chifre', de: 'Knochen & Geweih', ru: 'Кость и рог', tr: 'Kemik ve boynuz', id: 'Tulang & tanduk', hi: 'हड्डी और सींग', ar: 'عظم وقرن' },
+      stone: { ja: '砂岩と花崗岩', en: 'Sandstone & granite', zh: '砂岩与花岗岩', 'zh-TW': '砂岩與花崗岩', ko: '사암과 화강암', es: 'Arenisca y granito', fr: 'Grès et granit', pt: 'Arenito e granito', de: 'Sandstein & Granit', ru: 'Песчаник и гранит', tr: 'Kumtaşı ve granit', id: 'Batu pasir & granit', hi: 'बलुआ पत्थर और ग्रेनाइट', ar: 'حجر رملي وغرانيت' },
+      pewter: { ja: '真鍮と白目', en: 'Brass & pewter', zh: '黄铜与锡', 'zh-TW': '黃銅與錫', ko: '황동과 백랍', es: 'Latón y peltre', fr: 'Laiton et étain', pt: 'Latão e estanho', de: 'Messing & Zinn', ru: 'Латунь и олово', tr: 'Pirinç ve kalay', id: 'Kuningan & timah', hi: 'पीतल और प्यूटर', ar: 'نحاس أصفر وقصدير' },
+      bauhaus: { ja: '黄と白の塗り駒', en: 'Yellow & white lacquer', zh: '黄白漆子', 'zh-TW': '黃白漆子', ko: '노랑과 흰 칠', es: 'Laca amarilla y blanca', fr: 'Laque jaune et blanche', pt: 'Laca amarela e branca', de: 'Gelber & weißer Lack', ru: 'Жёлтый и белый лак', tr: 'Sarı ve beyaz lake', id: 'Pernis kuning & putih', hi: 'पीला और सफ़ेद लाह', ar: 'ورنيش أصفر وأبيض' },
     } };
   // mancala (atlas/models/mancala.js, 2026-11-15): 'atlas-mancala-pc3'
   PIECES.mancala = { list: ['gems', 'cowrie', 'nazar', 'beans', 'pebble', 'nicker'], get: () => { const v = ls.get('atlas-mancala-pc3'); return PIECES.mancala.list.includes(v) ? v : 'gems'; }, set: k => ls.set('atlas-mancala-pc3', k),
