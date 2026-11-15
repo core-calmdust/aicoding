@@ -114,7 +114,7 @@
   };
 
   /* ---------- the 3D board (turned a quarter when the page stands the board up) ---------- */
-  const holder = new THREE.Group(), board = MC.board(); holder.add(board);
+  const holder = new THREE.Group(); let board = MC.board(); holder.add(board);
   T3.show('mancala', holder, { still: true });
   let alignFn = null, vertNow = null; const oAlign = T3.align;
   T3.align = function (fn, size, top) { alignFn = fn; return oAlign.call(this, fn, size, top); };
@@ -130,6 +130,9 @@
   // デザイン: "3D board" first in the board row, or one of the game's own 2D boards (shown as the plain 2D page)
   if (skin.view) skin.view({ key: 'atlas-mancala-view', row: document.getElementById('skRow'), img: '../images/atlas/mancala.webp', cls: ['atlas-mancala'],
     on() { setTimeout(() => { try { layout(); if (typeof update === 'function') update(); } catch (e) {} }, 30); } });
+  // the six 3D boards (2026-11-15, Table3D.BOARDS.mancala): a row under the game's own; the page keeps drawing its own gems
+  { const row = document.getElementById('skRow'), h = row && (row.closest('.field') || row.parentNode);
+    if (AtlasSkin.rows3d && h) AtlasSkin.rows3d({ id: 'mancala', host: h, noPieces: true, is3: () => !is2d(), board: () => { holder.remove(board); board = MC.board(); holder.add(board); T3.kick(800); } }); }
   new MutationObserver(() => { orient(); }).observe(document.getElementById('frame'), { attributes: true, attributeFilter: ['class'] });
   // the board's size changes after the skin CSS arrives / on rotation: the still scene must be drawn again
   if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(() => T3.kick(600))).observe(boardEl);

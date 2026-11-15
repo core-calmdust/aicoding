@@ -181,6 +181,8 @@
       set: k => { ls.set('atlas-chess-look', k); ls.set('atlas-chess-view', '3d'); } },
     // atlas/skin/go.js / gomoku.js: 'kaya' | 'lacquer' ('0': the 2D stones)
     // go / gomoku (atlas/models/goban.js, 2026-11-15): six boards each; 'atlas-<game>-look' ('0' = the game's own 2D board in the full game)
+    // mancala (atlas/models/mancala.js, 2026-11-15): six boards
+    mancala: { list: ['lacquer', 'baobab', 'sand', 'copper', 'celadon', 'concrete'], get: () => { const v = ls.get('atlas-mancala-look'); return BOARDS.mancala.list.includes(v) ? v : 'lacquer'; }, set: k => ls.set('atlas-mancala-look', k) },
     // connect4 (atlas/models/connect4.js, 2026-11-15): six stands
     connect4: { list: ['leather', 'steam', 'ice', 'tansu', 'pueblo', 'diner'], get: () => { const v = ls.get('atlas-connect4-look'); return BOARDS.connect4.list.includes(v) ? v : 'leather'; }, set: k => ls.set('atlas-connect4-look', k) },
     // hex (atlas/models/hex.js, 2026-11-15): six boards; 'atlas-hex-board' (the full game's 3D / 2D choice: 'atlas-hex-mode')
@@ -278,6 +280,14 @@
     slate: { ja: '黒板', en: 'Blackboard', zh: '黑板', 'zh-TW': '黑板', ko: '칠판', es: 'Pizarra', fr: 'Tableau noir', pt: 'Quadro-negro', de: 'Tafel', ru: 'Школьная доска', tr: 'Kara tahta', id: 'Papan tulis', hi: 'ब्लैकबोर्ड', ar: 'سبورة' },
     denim: { ja: 'デニム', en: 'Denim', zh: '牛仔布', 'zh-TW': '丹寧', ko: '데님', es: 'Mezclilla', fr: 'Denim', pt: 'Jeans', de: 'Denim', ru: 'Деним', tr: 'Kot', id: 'Denim', hi: 'डेनिम', ar: 'دنيم' },
   },
+  mancala: {
+    lacquer: { ja: '漆黒と金', en: 'Black lacquer & gold', zh: '黑漆与金', 'zh-TW': '黑漆與金', ko: '흑칠과 금', es: 'Laca negra y oro', fr: 'Laque noire et or', pt: 'Laca preta e ouro', de: 'Schwarzlack & Gold', ru: 'Чёрный лак и золото', tr: 'Siyah lake ve altın', id: 'Pernis hitam & emas', hi: 'काला लाह और सोना', ar: 'ورنيش أسود وذهب' },
+    baobab: { ja: '彫りのアフリカ材', en: 'Carved African wood', zh: '雕刻非洲木', 'zh-TW': '雕刻非洲木', ko: '조각한 아프리카 나무', es: 'Madera africana tallada', fr: 'Bois africain sculpté', pt: 'Madeira africana entalhada', de: 'Geschnitztes Afrikaholz', ru: 'Резное африканское дерево', tr: 'Oymalı Afrika ağacı', id: 'Kayu Afrika berukir', hi: 'नक्काशीदार अफ़्रीकी लकड़ी', ar: 'خشب أفريقي منحوت' },
+    sand: { ja: '砂の盤', en: 'Sand board', zh: '沙盘', 'zh-TW': '沙盤', ko: '모래판', es: 'Tablero de arena', fr: 'Plateau de sable', pt: 'Tabuleiro de areia', de: 'Sandbrett', ru: 'Доска на песке', tr: 'Kum tahtası', id: 'Papan pasir', hi: 'रेत का बोर्ड', ar: 'لوح الرمل' },
+    copper: { ja: '打ち出しの銅盆', en: 'Hammered copper tray', zh: '锤纹铜盘', 'zh-TW': '錘紋銅盤', ko: '두드린 구리 쟁반', es: 'Bandeja de cobre martillado', fr: 'Plateau de cuivre martelé', pt: 'Bandeja de cobre martelado', de: 'Gehämmertes Kupfertablett', ru: 'Чеканный медный поднос', tr: 'Dövme bakır tepsi', id: 'Nampan tembaga tempa', hi: 'पीटा हुआ ताँबे का थाल', ar: 'صينية نحاس مطروق' },
+    celadon: { ja: '青磁', en: 'Celadon', zh: '青瓷', 'zh-TW': '青瓷', ko: '청자', es: 'Celadón', fr: 'Céladon', pt: 'Celadon', de: 'Seladon', ru: 'Селадон', tr: 'Seladon', id: 'Seladon', hi: 'सेलाडॉन', ar: 'سيلادون' },
+    concrete: { ja: 'コンクリートと真鍮', en: 'Concrete & brass', zh: '混凝土与黄铜', 'zh-TW': '混凝土與黃銅', ko: '콘크리트와 황동', es: 'Hormigón y latón', fr: 'Béton et laiton', pt: 'Concreto e latão', de: 'Beton & Messing', ru: 'Бетон и латунь', tr: 'Beton ve pirinç', id: 'Beton & kuningan', hi: 'कंक्रीट और पीतल', ar: 'خرسانة ونحاس أصفر' },
+  },
   connect4: {
     leather: { ja: '革と胡桃', en: 'Leather & walnut', zh: '皮革与胡桃木', 'zh-TW': '皮革與胡桃木', ko: '가죽과 호두나무', es: 'Cuero y nogal', fr: 'Cuir et noyer', pt: 'Couro e nogueira', de: 'Leder & Nussbaum', ru: 'Кожа и орех', tr: 'Deri ve ceviz', id: 'Kulit & walnut', hi: 'चमड़ा और अखरोट', ar: 'جلد وجوز' },
     steam: { ja: '銅と真鍮', en: 'Copper & brass', zh: '铜与黄铜', 'zh-TW': '銅與黃銅', ko: '구리와 황동', es: 'Cobre y latón', fr: 'Cuivre et laiton', pt: 'Cobre e latão', de: 'Kupfer & Messing', ru: 'Медь и латунь', tr: 'Bakır ve pirinç', id: 'Tembaga & kuningan', hi: 'ताँबा और पीतल', ar: 'نحاس وأصفر' },
@@ -356,8 +366,8 @@
   } };
   X.boardName = (k, lang, id) => { const g = id && NG[id] && NG[id][k]; if (g) return g[lang] || g.en; const o = N3[k]; if (!o) return k; const n = o[lang] || o.en, c = n.replace(/\s*(?:3D|ثلاثي(?: الأبعاد)?)$/, '').trim(); return c || n; };   // (2026-11-10: the boards' names without '3D')
   // the full games' 「3D盤」 tiles: the board alone, from straight above, no room (atlas/tools/boardicon.html, 2026-11-09)
-  X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'chess' ? 7 : 1), ME).href;
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'botao' ? 3 : id === 'chess' ? 7 : 1), ME).href;
+  X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'chess' ? 7 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'botao' ? 3 : id === 'chess' ? 7 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   // 駒: the games whose 3D figures come in sets (the board view's panel shows them as a row under 盤; the full game's 「3D駒」 too)
@@ -416,6 +426,17 @@
       magnet: { ja: 'マグネット', en: 'Magnets', zh: '磁铁', 'zh-TW': '磁鐵', ko: '자석', es: 'Imanes', fr: 'Aimants', pt: 'Ímãs', de: 'Magnete', ru: 'Магниты', tr: 'Mıknatıs', id: 'Magnet', hi: 'चुंबक', ar: 'مغناطيس' },
       button: { ja: 'ボタン', en: 'Buttons', zh: '纽扣', 'zh-TW': '鈕扣', ko: '단추', es: 'Botones', fr: 'Boutons', pt: 'Botões', de: 'Knöpfe', ru: 'Пуговицы', tr: 'Düğme', id: 'Kancing', hi: 'बटन', ar: 'أزرار' },
       pearl: { ja: '真珠', en: 'Pearls', zh: '珍珠', 'zh-TW': '珍珠', ko: '진주', es: 'Perlas', fr: 'Perles', pt: 'Pérolas', de: 'Perlen', ru: 'Жемчуг', tr: 'İnci', id: 'Mutiara', hi: 'मोती', ar: 'لؤلؤ' },
+    } };
+  // mancala (atlas/models/mancala.js, 2026-11-15): 'atlas-mancala-pc3'
+  PIECES.mancala = { list: ['gems', 'cowrie', 'nazar', 'beans', 'pebble', 'nicker'], get: () => { const v = ls.get('atlas-mancala-pc3'); return PIECES.mancala.list.includes(v) ? v : 'gems'; }, set: k => ls.set('atlas-mancala-pc3', k),
+    thumb: k => new URL('img/pc3-mancala-' + k + '.webp?v=1', ME).href,
+    names: {
+      gems: { ja: 'ガラスの玉', en: 'Glass gems', zh: '玻璃珠', 'zh-TW': '玻璃珠', ko: '유리구슬', es: 'Gemas de vidrio', fr: 'Gemmes de verre', pt: 'Gemas de vidro', de: 'Glassteine', ru: 'Стеклянные камешки', tr: 'Cam taşlar', id: 'Permata kaca', hi: 'काँच के रत्न', ar: 'جواهر زجاجية' },
+      cowrie: { ja: 'タカラガイ', en: 'Cowrie shells', zh: '宝贝壳', 'zh-TW': '寶貝殼', ko: '개오지 조개', es: 'Cauris', fr: 'Cauris', pt: 'Búzios', de: 'Kaurischnecken', ru: 'Каури', tr: 'Kauri kabukları', id: 'Kerang cowrie', hi: 'कौड़ियाँ', ar: 'أصداف الودع' },
+      nazar: { ja: 'ナザール・ボンジュウ', en: 'Nazar beads', zh: '蓝眼珠', 'zh-TW': '藍眼珠', ko: '나자르 본주', es: 'Cuentas nazar', fr: 'Perles nazar', pt: 'Contas nazar', de: 'Nazar-Perlen', ru: 'Бусины назар', tr: 'Nazar boncukları', id: 'Manik nazar', hi: 'नज़र मनके', ar: 'خرز النظر' },
+      beans: { ja: '豆', en: 'Beans', zh: '豆子', 'zh-TW': '豆子', ko: '콩', es: 'Judías', fr: 'Haricots', pt: 'Feijões', de: 'Bohnen', ru: 'Бобы', tr: 'Fasulyeler', id: 'Kacang', hi: 'फलियाँ', ar: 'فاصولياء' },
+      pebble: { ja: '川石', en: 'River pebbles', zh: '河石', 'zh-TW': '河石', ko: '강돌', es: 'Cantos rodados', fr: 'Galets', pt: 'Seixos', de: 'Flusskiesel', ru: 'Речная галька', tr: 'Dere taşları', id: 'Kerikil sungai', hi: 'नदी के कंकड़', ar: 'حصى النهر' },
+      nicker: { ja: '本物の種', en: 'Nicker seeds', zh: '刺果苏木种子', 'zh-TW': '刺果蘇木種子', ko: '진짜 씨앗', es: 'Semillas de nicker', fr: 'Graines de bonduc', pt: 'Sementes de nicker', de: 'Kugelbohnen', ru: 'Семена бондука', tr: 'Nikker tohumları', id: 'Biji kelici', hi: 'निकर बीज', ar: 'بذور النيكر' },
     } };
   // connect4 (atlas/models/connect4.js, 2026-11-15): 'atlas-connect4-pc3'
   PIECES.connect4 = { list: ['inlay', 'coin', 'crystal', 'lacquer', 'chip', 'sun'], get: () => { const v = ls.get('atlas-connect4-pc3'); return PIECES.connect4.list.includes(v) ? v : 'inlay'; }, set: k => ls.set('atlas-connect4-pc3', k),

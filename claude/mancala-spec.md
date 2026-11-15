@@ -128,3 +128,8 @@
 - 卓の手は `MancalaEngine.legal(b, side, rule)`（オワレ・アヨアヨの「種を渡す義務」）。AI・ヒントのワーカーにも rules を渡す。
 - カードのルールのプルダウンは自分の行（時計のある卓では時間・粒数の行と分ける：atlas/app.js、他ゲームの ad.rule も同じ）。
 
+## 3D盤・種（2026-11-15）
+- 盤6種（`atlas-mancala-look`＝Table3D.BOARDS.mancala、先頭が既定）：漆黒と金 lacquer（既定、手続き生成）・彫りのアフリカ材 baobab（ジグザグの彫り帯、木の輪）・砂の盤 sand（輪なし）・打ち出しの銅盆 copper（唐草の線彫り、真鍮）・青磁 celadon（貫入）・コンクリートと真鍮 concrete。絵は `atlas/tools/mancala-tex.py` → `images/atlas/mancala3d/top-<look>`（盤全体に平面で貼る2048×800）。穴の内側は look ごとのグラデーション。
+- 種6種（`atlas-mancala-pc3`）：ガラスの玉 gems（既定、8色）・タカラガイ cowrie・ナザール・ボンジュウ nazar・豆 beans（ボーネンシュピール）・川石 pebble・本物の種 nicker（オワレの種）。どれも8種類の見た目（色の番号で選ぶ）。タイル `atlas/tools/mcpiece.html`。
+- フル版3Dはページが自分の宝石を描くので、デザインタブの3D行は盤だけ（AtlasSkin.rows3d の noPieces）。大百科の対局中に「駒」を変えると種がその場で替わる。
+

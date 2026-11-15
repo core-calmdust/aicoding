@@ -377,6 +377,8 @@
       if (h !== hover) { hover = h; ctx.el.style.cursor = h >= 0 ? 'pointer' : ''; showGlows(); }
     }
     ctx.el.addEventListener('click', onClick); ctx.el.addEventListener('pointermove', onMove);
+    const onPcs = e => { if (!stopped && e.detail && e.detail.id === 'mancala' && !busy) { rebuild(); showGlows(); } };   // (the board view's 駒 row during a game: the seeds change set)
+    addEventListener('atlas-pieces', onPcs);
     rebuild(); hud(''); frame();
     loadEngine().then(() => { if (!stopped) setTimeout(next, 500); }).catch(() => hud('—'));
     // test hooks (Playwright): a hollow's screen position, the state
@@ -422,7 +424,7 @@
       timeout(s) { if (!over) finish(s, 'time'); },
       stop() {
         stopped = true; tok++; K.stop(); ov.remove(); clearInterval(plIv); removeEventListener('atlasland', onPL); removeEventListener('resize', onPL);
-        ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointermove', onMove); ctx.el.style.cursor = '';
+        ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointermove', onMove); ctx.el.style.cursor = ''; removeEventListener('atlas-pieces', onPcs);
         if (worker) worker.terminate(); if (hintW) hintW.terminate();
       },
     };

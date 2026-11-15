@@ -1004,6 +1004,7 @@ html.atlas-skin #f3D > label.pc3l{margin-top:12px}
 html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:8px}
 html.atlas-skin #f3D .bdrow.pc3 button img{aspect-ratio:3/2;background:radial-gradient(80% 80% at 50% 40%,#6a5e52,#2a231d);padding:4%;box-sizing:border-box}`; document.head.appendChild(st); }
     const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint, 30));
+    if (o.noPieces) { lp.hidden = true; prow.hidden = true; }   // (mancala's full game: the page draws its own gems — the 3D board only)
     paint(); return { paint };
   }
   window.AtlasSkin = { init, rows3d };
