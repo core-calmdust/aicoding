@@ -85,22 +85,35 @@
             d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
           }
       },
-      // pavé round the lathe (x wraps): hex-set stones, each with a table and eight facets of its own brightness; p.dark: black spinels
-      pave(d, W, H, p) {
-          const N = makeNoise(p.seed || 3), cs = W / 34, rt3 = Math.sqrt(3);
-          const hash = (a, b, c) => { let h = (a * 374761393 + b * 668265263 + c * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
+      // pavé round the lathe (x wraps): tiny crystals packed edge to edge (p.n across the width), each a brilliant — a table and
+      // eight facets of their own brightness, a dark girdle line; now and then a facet flashes with rainbow fire. Between them
+      // bright beads of the setting. p.dark: black diamonds (with white flashes). Writes the colour (d) and, in d2, the relief.
+      pave(d, W, H, p, d2) {
+          // d2: a tangent-space normal map — each crystal cut into a flat table and eight crown facets tilted outwards (each stone
+          // turned a little its own way), so the light breaks on them and they glint as the view moves
+          const n = p.n || 34, cs = W / n, rt3 = Math.sqrt(3), rh = cs * rt3 / 2;
+          const hash = (a, b, c) => { let h = (a * 374761393 + b * 668265263 + c * 1442695041) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
           for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-            const row = Math.round(y / (cs * rt3 / 2)), off = (row & 1) ? cs / 2 : 0, col = Math.round((x - off) / cs);
-            const cx = col * cs + off, cy = row * cs * rt3 / 2, dx = x - cx, dy = y - cy, r = Math.hypot(dx, dy) / (cs * .47);
-            const i = (y * W + x) * 4; let v;
-            if (r < 1) {
-              const sec = Math.floor((Math.atan2(dy, dx) + Math.PI) / (Math.PI / 4)), tb = r < .42;
-              const f = tb ? .55 + hash(col, row, 99) * .45 : .18 + hash(col, row, sec) * .95, g = r > .86 ? 1 - (r - .86) / .14 * .75 : 1;
-              v = Math.min(1.3, f) * g;
-              if (p.dark) { const k = 8 + Math.pow(v, 2.4) * 160; d[i] = k; d[i + 1] = k; d[i + 2] = k + 6; }
-              else { const hue = hash(col, row, 7) * 6.283, fire = v > .95 ? 22 : 0, k = 105 + v * 140; d[i] = k + Math.cos(hue) * fire; d[i + 1] = k + Math.cos(hue - 2.1) * fire; d[i + 2] = k + 4 + Math.cos(hue - 4.2) * fire; }
-            } else { const k = p.dark ? 60 : 214; d[i] = k; d[i + 1] = k; d[i + 2] = k + 4; }   // the setting between the stones
-            d[i + 3] = 255;
+            const row = Math.round(y / rh), off = (row & 1) ? cs / 2 : 0, col = ((Math.round((x - off) / cs) % n) + n) % n;
+            let dx = x - (col * cs + off); if (dx > W / 2) dx -= W; if (dx < -W / 2) dx += W;
+            const dy = y - row * rh, r = Math.hypot(dx, dy) / (cs * .5), i = (y * W + x) * 4;
+            let R, G, B, nx = 0, ny = 0, nz = 1;
+            if (r < .9) {
+              const rot = hash(col, row, 3) * Math.PI / 4, a = Math.atan2(dy, dx) - rot, sec = Math.floor((a + Math.PI * 4) / (Math.PI / 4)) % 8, ac = (sec + .5) * Math.PI / 4 + rot;
+              const tb = r < .42, tilt = tb ? .05 : r < .68 ? .62 : .9;   // table · star / kite facets · lower girdle facets
+              nx = Math.cos(ac) * Math.sin(tilt); ny = Math.sin(ac) * Math.sin(tilt); nz = Math.cos(tilt);
+              const fv = hash(col, row, sec + 7), fire = hash(col, row, sec + 40) > .93, hu = hash(col, row, 5) * 6.283;
+              const glint = hash(col, row, 77) > .955 && (tb || sec === (hash(col, row, 78) * 8 | 0));   // a stone that catches the light (pure white: the emissive picks it)
+              if (p.dark) { const k = 16 + fv * 34; R = k; G = k; B = k + 8; if (fire) { R = 150 + Math.cos(hu) * 60; G = 150 + Math.cos(hu - 2.1) * 60; B = 175 + Math.cos(hu - 4.2) * 50; } }
+              else { const k = 200 + fv * 44; R = k - 4; G = k - 2; B = k; if (fire) { R = 230 + Math.cos(hu) * 22; G = 224 + Math.cos(hu - 2.1) * 26; B = 232 + Math.cos(hu - 4.2) * 20; } }
+              if (glint) { R = G = B = 255; }
+              if (r > .8) { const g = (r - .8) / .1; R *= 1 - g * .6; G *= 1 - g * .6; B *= 1 - g * .6; }   // the girdle's dark line
+            } else {   // the setting: bright metal, a bead (a little dome) where three stones meet
+              const k = p.dark ? 96 : 226; R = k; G = k; B = k + 4;
+              const bx = Math.abs(dx) - cs * .5, by = Math.abs(dy) - rh / 3; nx = Math.sign(dx) * Math.min(.6, Math.abs(bx) / cs * 3); ny = Math.sign(dy) * Math.min(.6, Math.abs(by) / cs * 3); nz = 1;
+            }
+            d[i] = R; d[i + 1] = G; d[i + 2] = B; d[i + 3] = 255;
+            if (d2) { const L = Math.hypot(nx, ny, nz); d2[i] = (nx / L * .5 + .5) * 255; d2[i + 1] = (-ny / L * .5 + .5) * 255; d2[i + 2] = (nz / L * .5 + .5) * 255; d2[i + 3] = 255; }
           }
       },
       // engraved turned bands (y runs up the profile): enamel or metal ground, rings of short strokes and fine lines cut in (p.A ground, p.B the cuts)
@@ -207,6 +220,20 @@
   const PSETS = ['lux', 'wood', 'ceramic', 'jewel', 'brass', 'neon'];
   const CARVED = { wood: true };   // carved mane locks on the knight
   function texMat(key, kern, p) { return canvasTex(key, SZ(512), SZ(512), g => { paint(g.canvas, kern, p); }); }
+  // the pavé: the colour and its relief (bump) drawn together, 1024² (PC) — the crystals are tiny
+  const paveTex = {};
+  function pavePair(key, p) {
+    if (paveTex[key]) return paveTex[key];
+    const TT = T(), N = SZ(1024), c = document.createElement('canvas'), c2 = document.createElement('canvas'); c.width = c2.width = c.height = c2.height = N;
+    const a = new TT.CanvasTexture(c), b = new TT.CanvasTexture(c2);
+    a.encoding = TT.sRGBEncoding; a.wrapS = a.wrapT = b.wrapS = b.wrapT = TT.RepeatWrapping; a.anisotropy = b.anisotropy = 8;
+    // the glints: the pure white facets and the coloured fire, alone, as an emissive picture
+    const c3 = document.createElement('canvas'); c3.width = c3.height = N; const e = new TT.CanvasTexture(c3); e.encoding = TT.sRGBEncoding; e.wrapS = e.wrapT = TT.RepeatWrapping;
+    const glints = () => { try { const g = c.getContext('2d').getImageData(0, 0, N, N), D = g.data; for (let i = 0; i < D.length; i += 4) { const mx = Math.max(D[i], D[i + 1], D[i + 2]), mn = Math.min(D[i], D[i + 1], D[i + 2]); if (!((mn === 255) || (mx - mn > 22 && mx > 120))) { D[i] = D[i + 1] = D[i + 2] = 0; } } c3.getContext('2d').putImageData(g, 0, 0); e.needsUpdate = true; } catch (x) {} };
+    paint(c, 'pave', p, () => { glints(); a.needsUpdate = b.needsUpdate = true; if (X.kick) X.kick(300); }, c2);
+    glints(); a.needsUpdate = b.needsUpdate = true;
+    return (paveTex[key] = { map: a, bump: b, glow: e });
+  }
   const mats = {};
   // the reflection in the lacquer: the same materials drawn additively, only where the board is in front (see reflect())
   // mixed in with alpha blending, still in the opaque pass (custom blending), before the real pieces, only on the glossy top (stencil 2), one layer per pixel
@@ -233,11 +260,12 @@
       resin = new TT.MeshPhysicalMaterial({ color: lin(w ? 0xf4f0e6 : 0x16161b), roughness: w ? .14 : .1, metalness: 0, clearcoat: 1, clearcoatRoughness: .03, sheen: w ? .25 : 0, sheenColor: lin(0xffffff) });
       metal = new TT.MeshPhysicalMaterial({ color: lin(0xf0c46a), metalness: 1, roughness: .2, clearcoat: .6, clearcoatRoughness: .1, envMapIntensity: 1.3 });
       felt = feltMat(0xc9b597); rMetal = refMat(null, 0xd8a645, .32); rResin = refMat(null, w ? 0xc0bdb4 : 0x202024, .3);
-    } else if (set === 'jewel') {   // pavé: diamonds (White) or black spinels (Black) all over, the rings and crowns polished platinum
-      const map = w ? texMat('chPaveW', 'pave', { seed: 3 }) : texMat('chPaveB', 'pave', { seed: 7, dark: true });
-      resin = new TT.MeshPhysicalMaterial({ map, bumpMap: map, bumpScale: .0025, roughness: .05, metalness: .25, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 1.6 });
-      metal = new TT.MeshPhysicalMaterial({ color: lin(w ? 0xe8eaee : 0x8a8c92), metalness: 1, roughness: .08, envMapIntensity: 1.4 });
-      felt = feltMat(0x2a2a2e); rMetal = refMat(null, 0xc8ccd4, .32); rResin = refMat(map, w ? 0xd0d0d4 : 0x505058, .3);
+    } else if (set === 'jewel') {   // 超ゴージャス: every surface encrusted with cut crystals (White: clear, Black: black diamonds) in a bright setting,
+      // the rings, crowns and crosses polished gold — the facets (a normal map) break the light so the pieces glitter
+      const P = w ? pavePair('chPave5W', { n: 30 }) : pavePair('chPave5B', { n: 30, dark: true });
+      resin = new TT.MeshPhysicalMaterial({ map: P.map, normalMap: P.bump, normalScale: new TT.Vector2(1.4, 1.4), emissiveMap: P.glow, emissive: lin(0xffffff), emissiveIntensity: 1.6, roughness: .03, metalness: w ? .55 : .7, clearcoat: 1, clearcoatRoughness: .01, envMapIntensity: 3, specularIntensity: 1, iridescence: X.lite ? 0 : .35, iridescenceIOR: 1.6 });
+      metal = new TT.MeshPhysicalMaterial({ color: lin(0xf6cf73), metalness: 1, roughness: .07, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.8 });
+      felt = feltMat(0x2a2a2e); rMetal = refMat(null, 0xe0b050, .36); rResin = refMat(P.map, w ? 0xe8e8ee : 0x60606a, .34);
     } else if (set === 'brass') {   // engraved Indian turnings: black enamel cut through to brass (Black), nickel silver cut and darkened (White)
       const map = w ? texMat('chBandW', 'bands', { A: [200, 200, 194], B: [58, 54, 50], seed: 3 }) : texMat('chBandB', 'bands', { A: [16, 15, 14], B: [226, 182, 96], seed: 5 });
       resin = new TT.MeshPhysicalMaterial({ map, roughness: w ? .26 : .3, metalness: w ? .9 : .35, clearcoat: w ? 0 : .5, clearcoatRoughness: .2 });
@@ -487,7 +515,7 @@
   /* the picture boards (2026-11-15): images/atlas/chess3d/top-<look> and side-<look> (the four faces stacked: far, right, near,
      left), each with a "-m" map: R height (bump), G roughness, B metalness — brass and gold set flush, joints and tooling in the bump */
   const C3 = (() => { try { return new URL('../../images/atlas/chess3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/chess3d/'; } })();
-  const C3V = '?v=3';
+  const C3V = '?v=4';
   const LO = () => !!(X.coarse || X.lite);
   const texs = {};
   function imgTex(name, srgb = true, aniso = 8) {
