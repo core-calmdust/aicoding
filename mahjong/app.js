@@ -275,6 +275,8 @@ const SND = (() => {
     skill: () => { tone(300, .5, 'sawtooth', .05, 0, 1200); tone(1200, .6, 'sine', .1, .3); },
     ok: () => { tone(988, .25, 'sine', .12); tone(1319, .5, 'sine', .1, .12); },
     pick: () => tone(660, .06, 'triangle', .06),
+    // (ユーザー 2026-11-15: the sound when she is touched and speaks was drowned by the music) a clear two-note chime, well above the title music
+    say: () => { tone(988, .16, 'sine', .3); tone(1480, .42, 'sine', .26, .08); tone(2960, .3, 'sine', .07, .08); },
     gacha: r => { const b = r === 'SSR' ? 4 : r === 'SR' ? 3 : 2; for (let i = 0; i < b + 2; i++) tone(500 + i * 180, .3, 'triangle', .1, i * .07); },
     unlock: () => { ctx(); load(); prep(TRK.title); },
   };
@@ -495,7 +497,7 @@ function homeSay(e) {
     if (im) { const r = im.getBoundingClientRect(), k = Math.max(r.width / 1080, r.height / 1920), w = 1080 * k, h = 1920 * k;   // (the picture covers its box, held at the top, centred across)
       const u = (e.clientX - r.left - (r.width - w) / 2) / w, v = (e.clientY - r.top) / h; txt = MJTouch.line(c.id, MJTouch.zone(c.id, u, v)); at = [e.clientX, e.clientY]; } }
   if (!txt) { const ks = Object.keys(c.lines || {}); if (!ks.length) return; txt = L(c.lines[ks[(Math.random() * ks.length) | 0]]); }
-  SND.pick();
+  SND.say();
   const el = $('#aaSay'); el.textContent = txt; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
   // the bubble comes up beside the place touched (kept inside the picture's column)
   if (at) { const hr = $('#home').getBoundingClientRect(), z = hr.width / $('#home').offsetWidth || 1, x = (at[0] - hr.left) / z, y = (at[1] - hr.top) / z, W = $('#home').offsetWidth, H = $('#home').offsetHeight;
@@ -801,6 +803,7 @@ function openChara(id) {
 function closeChara() { $('#chara').hidden = true; $('#home').hidden = false; renderHome(); homeEnter(); }
 let chTab = 'all';
 function renderChara() {
+  const keepScroll = renderChara.last === chView ? $('#chInfo').scrollTop : 0; renderChara.last = chView;   // (the panel stays where it was scrolled while the same character is on)
   applyText();
   $('#coinN2').textContent = DB.coins.toLocaleString();
   $('#chara .coin').innerHTML = IC.coin;
@@ -835,14 +838,17 @@ function renderChara() {
   const canPick = own && sisters.some(x => owns(x.id));
   const how = t(coarse() ? 'ptnHowT' : 'ptnHowC');
   const mine = sisters.filter(x => owns(x.id)), rest = sisters.length - mine.length;
+  // (ユーザー 2026-11-15: the boxes changed size with every skill and partner — hard to use) every part of the block keeps its
+  // place and size whoever is picked: header, her sisters, a line (who the partner is / the call to pick one), the skill box
+  // (as tall as the longest description: --dl lines), the row of the partner's skills, the cost line.
   const ptn = !own ? '' : `<div class="ptn ${pt ? 'has' : canPick ? 'ask' : 'none'}">
-      <div class="ci-h"><b>PARTNER</b><span>${esc(t('partner'))}</span><small class="ptn-cnt">${esc(t('sisters'))} ${mine.length + 1} / ${sisters.length + 1}</small>${pt ? `<em class="ptn-n">${esc(L(pt.name))}</em><button class="ptn-x">${esc(t('ptnOff'))}</button>` : ''}</div>
-      ${!pt && canPick ? `<div class="ptn-cue"><i></i><b>${esc(t('ptnPick'))}</b><small>${esc(how)}</small></div>` : ''}
+      <div class="ci-h"><b>PARTNER</b><span>${esc(t('partner'))}</span><small class="ptn-cnt">${esc(t('sisters'))} ${mine.length + 1} / ${sisters.length + 1}</small></div>
       <div class="ptn-row">${mine.concat(sisters.filter(x => !owns(x.id))).map(x => { const ow = owns(x.id); return `<button class="sib ${ow ? 'can' : 'lock'} ${pt && x.id === pt.id ? 'on' : ''}" data-id="${x.id}" title="${ow ? esc(L(x.name)) : '？？？'}">${frame(x, ow ? 'face' : 'silf')}${pt && x.id === pt.id ? '<i class="ck"></i>' : ''}</button>`; }).join('')}</div>
-      ${pt ? `${pk ? skillBlock(pk, true) : `<p class="ptn-same">${esc(t('ptnSame'))}</p>`}
-          ${pks.length > 1 ? `<div class="skl ptn-skl">${pks.map(x => skillChip(x.k, (x.k === pk ? 'on' : '') + (x.ok ? '' : ' off'), `data-k="${x.k}"`)).join('')}</div>` : ''}
-          <small class="ptn-cost">${esc(t('ptnCost'))}</small>`
-        : `<small class="ptn-cost">${esc(t(canPick ? 'ptnNote' : 'ptnNone'))}</small>`}
+      <div class="ptn-who">${pt ? `<b class="ptn-n">${esc(L(pt.name))}</b><button class="ptn-x">${esc(t('ptnOff'))}</button>`
+        : canPick ? `<span class="ptn-cue"><i></i><b>${esc(t('ptnPick'))}</b></span>` : `<small class="ptn-no">${esc(t('ptnNone'))}</small>`}</div>
+      <div class="ptn-box">${pt ? (pk ? skillBlock(pk, true) : `<div class="ptn-dup">${skillBlock(useKey(pt.id), true)}<em>${esc(t('ptnSame'))}</em></div>`) : `<p class="ptn-empty">${canPick ? `<b>${esc(how)}</b>` : ''}<span>${esc(t('ptnNote'))}</span></p>`}</div>
+      <div class="skl ptn-skl">${pks.map(x => skillChip(x.k, (x.k === pk ? 'on' : '') + (x.ok ? '' : ' off'), `data-k="${x.k}"`)).join('')}</div>
+      <small class="ptn-cost">${esc(t('ptnCost'))}</small>
     </div>`;
   $('#chInfo').innerHTML = `
     <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}${own && c.id === DB.sel ? `<span class="pp-lead">${esc(t('lead'))}</span>` : ''}</div>
@@ -850,17 +856,18 @@ function renderChara() {
     <div class="pp-t">${esc(L(c.title))}</div>
     <i class="ci-rule"></i>
     ${own ? `${skillBlock(uk)}
-      ${o.skills.length > 1 ? `<div class="skpick"><small>${t('useThis')}</small>
-      <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>` : ''}
+      <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div>
       <div class="ptn-inl">${ptn}</div>
       <div class="ci-h st"><b>STORY</b></div><p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(c.reward != null ? t('rkLocked', { r: rkName(MJRank.list[c.reward]) }) : t('notOwned'))}</div>
       <div class="sis"><small>${esc(t('sisters'))}</small><div>${sisters.map(x => `<button class="sib ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}" title="${owns(x.id) ? esc(L(x.name)) : '？？？'}">${frame(x, owns(x.id) ? 'face' : 'silf')}</button>`).join('')}</div></div>`}
     ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isLead')}</div>` : `<button class="go ch-go" id="chSet">${t('setLead')}</button>`) : ''}`;
   // (ユーザー 2026-11-15: the middle is for her picture — the partner block and the list of her sisters live in the panel on the right)
   // It does not fit: her story gives way first, then the small labels and the size of her name.
+  ch.style.setProperty('--dl', /^(ja|zh|ko)/.test(I18N.lang) ? 3 : 5);   // (lines kept for a skill's description: the longest one in this language)
   { const info = $('#chInfo'); info.classList.remove('tight', 'tight2');
     if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight');
     if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight2');
+    info.scrollTop = keepScroll;
     if (!pt && canPick) { const q = info.querySelector('.ptn'); if (q && q.offsetTop + q.offsetHeight > info.scrollTop + info.clientHeight) info.scrollTop = Math.max(0, q.offsetTop - 60); } }   // (the call to pick a partner is never left below the fold)
   const b = $('#chSet');
   if (b) b.onclick = () => { DB.sel = c.id; save(); SND.ok(); renderChara(); };

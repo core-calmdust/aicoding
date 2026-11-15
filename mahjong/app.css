@@ -2239,3 +2239,48 @@ html.lp #chara.ch2 .chsel.on{font-size:12.5px;letter-spacing:.08em;white-space:n
    段位の欄が細く押されて縦に積まれていた。コインの行とボーナスの行を格子に積んで、幅はいちばん長い1行ぶんにする */
 .fn-foot .earn{display:grid;grid-template-columns:1fr auto;justify-items:end;align-items:center;column-gap:.4em}
 .fn-foot .earn .rbonus{grid-column:1/-1}
+
+/* (ユーザー 2026-11-15) the character panel keeps its layout: nothing moves or resizes when the skill or the partner changes */
+#chara.ch2 .ch-info>.pp-r{margin-top:0}
+#chara.ch2 .ch-info>:last-child{margin-top:auto;margin-bottom:0;flex:none}
+#chara.ch2 .ch-info>*{flex:none}
+#chara.ch2 .pskill{box-sizing:border-box;overflow:hidden}
+#chara.ch2 .pskill b{flex-wrap:nowrap;white-space:nowrap;line-height:1.5;margin-bottom:2px}
+#chara.ch2 .pskill span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:var(--dl,3);overflow:hidden}
+#chara.ch2 .ch-info>.pskill span{height:calc(var(--dl,3) * 1.7em)}
+#chara.ch2 .ptn .pskill span{height:calc(var(--dl,3) * 1.5em)}
+#chara.ch2 .skl{flex-wrap:nowrap;height:34px;align-items:center;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+#chara.ch2 .skl::-webkit-scrollbar{display:none}
+#chara.ch2 .skl .skc{flex:none}
+#chara.ch2 .ptn-inl .ptn.ask{padding:0;border:0;background:none;animation:none}
+#chara.ch2 .ptn .ci-h::after{order:3}
+#chara.ch2 .ptn .ptn-who{display:flex;align-items:center;gap:10px;height:30px;overflow:hidden}
+#chara.ch2 .ptn .ptn-who .ptn-n{font-size:19px;letter-spacing:.14em;line-height:1}
+#chara.ch2 .ptn .ptn-who .ptn-x{margin-left:auto;flex:none}
+#chara.ch2 .ptn .ptn-who .ptn-cue{flex:1;min-width:0;height:100%;display:flex;flex-wrap:nowrap;align-items:center;gap:8px;padding:0 10px;white-space:nowrap;border:1px solid rgba(247,231,189,.8);border-radius:3px;background:radial-gradient(120% 200% at 50% 0%,rgba(232,206,140,.2),transparent 70%);animation:ptnCue 2s ease-in-out infinite;box-sizing:border-box}
+#chara.ch2 .ptn .ptn-who .ptn-cue b{font-size:15.5px;letter-spacing:.06em}
+#chara.ch2 .ptn .ptn-who .ptn-cue small{font-size:12px;overflow:hidden;text-overflow:ellipsis}
+@keyframes ptnCue{0%,100%{box-shadow:0 0 0 0 rgba(232,206,140,0)}50%{box-shadow:0 0 14px 0 rgba(232,206,140,.5)}}
+#chara.ch2 .ptn .ptn-who .ptn-no{font-size:13px;color:#a99cc8}
+#chara.ch2 .ptn .ptn-box{height:calc(var(--dl,3) * 19.5px + 46px);display:flex}
+#chara.ch2 .ptn .ptn-box>*{flex:1;min-width:0;margin:0;box-sizing:border-box}
+#chara.ch2 .ptn .ptn-empty,#chara.ch2 .ptn .ptn-same{display:flex;align-items:center;justify-content:center;text-align:center;padding:8px 16px;border:1px dashed rgba(232,206,140,.3);border-radius:4px;font-size:13.5px;line-height:1.6;color:#b9acd6}
+#chara.ch2 .ptn .ptn-same{color:#ffb9a8}
+#chara.ch2 .ptn .ptn-cost{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:18px;line-height:18px}
+#chara.ch2 .ch-info.tight2 .ptn-cost{display:none}
+html.lp #chara.ch2 .ptn .ptn-who .ptn-cue b{font-size:13px;letter-spacing:.02em}
+html.lp #chara.ch2 .ptn .ptn-who .ptn-cue small{display:none}
+/* (ユーザー 2026-11-15) the partner's skill is shown even when it is the same as hers (it cannot be brought: dimmed, with the reason) */
+#chara.ch2 .ptn .ptn-dup{position:relative;display:flex}
+#chara.ch2 .ptn .ptn-dup>.pskill{flex:1;min-width:0;opacity:.45;filter:grayscale(.6)}
+#chara.ch2 .ptn .ptn-dup>em{position:absolute;right:8px;top:8px;font-style:normal;font-size:12px;letter-spacing:.04em;padding:1px 8px;border:1px solid rgba(255,185,168,.7);border-radius:3px;color:#ffb9a8;background:rgba(12,9,21,.9);white-space:nowrap}
+#chara.ch2 .ch-info.tight2>.pskill{padding:10px 14px}
+#chara.ch2 .ch-info.tight2 .ptn{gap:5px}
+#chara.ch2 .ch-info.tight2 .ptn .ptn-who{height:27px}
+/* (ユーザー 2026-11-15: the partner's face on the plate's corner ran into the player's own portrait) the face sits inside the plate, at its right end */
+#game .skb .skp{position:static;flex:none;margin-left:auto;width:28px;height:28px;box-shadow:0 0 0 1.5px var(--gl)}
+#game .skb.pt{padding-right:9px}
+html.lp #game .skb .skp{position:static;width:18px;height:18px}
+html.lp #game .skb.pt{padding-right:5px}
+#chara.ch2 .ptn .ptn-empty{flex-direction:column;gap:2px}
+#chara.ch2 .ptn .ptn-empty b{color:var(--gl2);font-size:14.5px;letter-spacing:.08em}
