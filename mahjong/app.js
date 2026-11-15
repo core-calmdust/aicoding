@@ -357,9 +357,18 @@ function fitCard() {
   // to just short of the right-hand column (the pick-up banner / the play panel); never narrower than before
   const w0 = Math.round(Math.min(W * .56, Math.max(W * .38, 660)) - nav.offsetLeft);
   pl.classList.add('wide'); pl.style.left = nav.offsetLeft + 'px'; pl.style.width = w0 + 'px';
+  // (ユーザー 2026-11-15, 16:9: the box as long as the words need, plus a margin — not all the way to the right column; and it
+  // fades out toward its right end) the room is up to just short of the right-hand column (the pick-up banner / the play panel).
+  // The card is measured with its lines unbroken: when they fit in the room, it is that wide plus a quarter of the text side
+  // (class `fade`: the dark ground thins out to the right); when they do not (a squarish window), it takes all the room, as before.
   { const offL = e => { let x = 0; while (e && e !== home) { x += e.offsetLeft; e = e.offsetParent; } return x; };   // (layout offsets, not on-screen boxes: the screen's entry animation moves both while it plays)
     const cols = ['#aaBanner', '.aa-play'].map(q => home.querySelector(q)).filter(e => e && e.offsetWidth).map(offL);
-    if (cols.length) { const room = Math.min(...cols) - (offL(pl) + pl.offsetWidth) - 28; if (room > 0) pl.style.width = Math.round(w0 + room) + 'px'; } }
+    pl.classList.remove('fade');
+    if (cols.length) { const room = Math.min(...cols) - (offL(pl) + pl.offsetWidth) - 28;
+      if (room > 0) { const max = w0 + room;
+        pl.classList.add('meas'); const nat = pl.offsetWidth, text = info.offsetWidth; pl.classList.remove('meas');
+        const want = Math.round(nat + text * .25);
+        if (nat <= max) { pl.style.width = Math.max(w0, Math.min(max, want)) + 'px'; pl.classList.add('fade'); } else pl.style.width = Math.round(max) + 'px'; } } }
   for (const k of [1, .94, .88, .82, .76]) { pl.style.setProperty('--pis', k); if (pl.offsetTop >= navB && info.scrollWidth <= info.clientWidth + 1 && info.offsetWidth >= 200) return; }   // (the whole card a little smaller until it clears the menu)
   pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
 }
