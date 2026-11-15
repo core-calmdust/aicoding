@@ -21,9 +21,16 @@
   const TXT = window.BOTAO_TXT || {};   // (atlas/games/botao-i18n.js)
   const LVD = window.BOTAO_LVD || {}, WHO = window.BOTAO_WHO || {}, HOWTO = window.BOTAO_HOWTO || {};
   function levelInfo(n, lang) { const b = n <= 3 ? 0 : n <= 8 ? 1 : n <= 14 ? 2 : 3; return { name: 'Lv.' + n, desc: (LVD[lang] || LVD.en || [])[b] || '', who: (WHO[lang] || WHO.en || [])[b] || '' }; }
-  const SIZES = [30, 50, 80, 103];   // halves of 30 / 50 / 80 flicks (both sides' together), or first to 3 goals
+  // the rule and its length (2026-11-15 ユーザー：プルダウンで手数制・点数制、点数は1・2・3点、面白そうなルールも同じ形で):
+  //   手数制 — halves of 30 / 50 / 80 flicks (both sides' together); 点数制 — first to 1 / 2 / 3 goals (101–103);
+  //   PK戦 — a penalty shoot-out of 3 / 5 kicks each, then sudden death (203, 205). The size value says both.
+  const RULE = { moves: [30, 50, 80], goals: [101, 102, 103], pk: [203, 205] }, RULE0 = { moves: 50, goals: 103, pk: 205 };
+  const SIZES = [].concat(RULE.moves, RULE.goals, RULE.pk);
   const tl = (l, k) => ((window.BOTAO_TXT || {})[l] || (window.BOTAO_TXT || {}).en || {})[k] || k;
-  const sizeName = (z, l) => z === 103 ? tl(l, 'g3') : tl(l, 'n' + z);
+  const sizeName = (z, l) => z > 200 ? tl(l, 'pk' + (z - 200)) : z > 100 ? tl(l, 'g' + (z - 100)) : tl(l, 'n' + z);
+  const rule = { label: l => tl(l, 'rule'), list: ['moves', 'goals', 'pk'], name: (v, l) => tl(l, 'r_' + v), sizes: v => RULE[v] || RULE.moves, size0: v => RULE0[v] || 50,
+    of: z => Object.keys(RULE).find(k => RULE[k].includes(z)) || '' };
+  const optInfo = (sid, v, l) => sid === 'bvRuleSel' ? { sub: tl(l, 's_' + v) } : null;
   const sizeLabel = l => tl(l, 'len');
   const AC = () => window.Atlas3D.carrom;
   const mousey = () => { try { return matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { return false; } };
@@ -285,7 +292,7 @@
     function hud() {
       if (stopped || !st) return;
       const pill = p => `<span class="btp ${st.pos === p && !over ? 'on' : ''}"><i style="background:${dotCol(p)}"></i><span class="nm">${esc(nameOf(p))}</span><b>${st.score[p]}</b></span>`;
-      const top = st.goals ? tx('to', { n: st.goals }) : tx(st.half === 1 ? 'first' : 'second') + ' ' + tx('left', { n: Math.max(0, st.halfLen - st.clock) });
+      const top = st.pk ? tx('pkHud', { n: st.pk.n }) + ' ' + [0, 1].map(t => st.pk.k[t].map(x => x ? '●' : '×').join('')).join(' | ') : st.goals ? tx('to', { n: st.goals }) : tx(st.half === 1 ? 'first' : 'second') + ' ' + tx('left', { n: Math.max(0, st.halfLen - st.clock) });
       const sub = `<small>${esc(top)} · ${esc(tx('touch', { n: st.rem }))}</small>`;
       ctx.hud(pill(1) + `<span class="btm">${sub}<span>${esc(msg)}</span></span>` + pill(0));
     }
@@ -412,6 +419,7 @@
       // the halves are counted in flicks, not minutes (2026-11-15 ユーザー：時間制だと問題が多い → 行動回数制)
       if (!r.s.goals) r.s.clock = Math.min(r.s.halfLen, (s0.clock || 0) + 1);
       const lead = r.msg[0];
+      if (s0.pk) return pkResult(s0, r, p);
       if (r.goal >= 0) {
         SX.goal(); bigGoal(tx(lead === 'own' ? 'own' : 'goal'));
         st = r.s; hud();
@@ -451,6 +459,7 @@
     }
     async function next() {
       if (over || stopped) return;
+      if (st.pk && !st.pkReady) return pkSetup();
       hintMove = null; aim = null; clearGuides(); onTurn(); hud(); beaconAt(true);
       const p = st.pos;
       if (pvp) viewTo();
@@ -491,6 +500,28 @@
       clearGuides(); pan = { x: 0, y: 0 }; frameBallAnd(mv.i, true); const b = st.b[mv.i]; flat(b.x, b.y, D.RB + 1.2, MAT.sel); drawMove(mv, MAT.aiPath, MAT.aiBall); kick(150);
       await new Promise(r => later(r, 900)); if (stopped || my !== tok) return;
       flick(E.perform(mv, level, seed()));
+    }
+    /* ---------- PK戦: the sides take turns at the penalty mark; after n each, sudden death ---------- */
+    async function pkSetup() {
+      const t0 = st.pk.next, s1 = E.clone(st); E.kickoff(s1, t0); E.restartFor(s1, t0, 'pen'); s1.pk = st.pk; s1.pkReady = true; s1.score = st.score.slice();
+      st = s1; hud(); clearGuides(); await glideTo(st, 700); if (stopped) return; syncAll();
+      onTurn(); toast(tx('pkKick', { p: nameOf(t0), k: st.pk.k[t0].length + 1 }));
+      await setKeeperPhase();
+    }
+    function pkOver(pk) {
+      const n = pk.n, [a, b] = pk.k, sa = a.reduce((x, y) => x + y, 0), sb = b.reduce((x, y) => x + y, 0);
+      if (a.length <= n && b.length <= n) { if (sa + (n - a.length) < sb) return 1; if (sb + (n - b.length) < sa) return 0; if (a.length === n && b.length === n && sa !== sb) return sa > sb ? 0 : 1; return -1; }
+      return a.length === b.length && sa !== sb ? (sa > sb ? 0 : 1) : -1;   // sudden death: a pair each, until one side is ahead
+    }
+    async function pkResult(s0, r, p) {
+      const sc = r.goal === p, pk = JSON.parse(JSON.stringify(s0.pk));
+      pk.k[p].push(sc ? 1 : 0); pk.next = 1 - p;
+      if (sc) { SX.goal(); bigGoal(tx('goal')); } else { SX.ooh(); toast(tx(r.msg.includes('save') ? 'save' : 'miss'), human(p) && !pvp ? 'bad' : 'good'); }
+      st = E.clone(r.s); st.pk = pk; st.pkReady = false; st.shot = false; st.score = [pk.k[0].reduce((x, y) => x + y, 0), pk.k[1].reduce((x, y) => x + y, 0)]; hud();
+      await new Promise(res => later(res, sc ? 1700 : 1100)); if (stopped) return;
+      busy = false; const w = pkOver(pk);
+      if (w >= 0) { st.over = true; st.winner = w; return end(); }
+      later(next, 300);
     }
     function placeDone() {
       if (stopped || phase !== 'place') return;
@@ -718,9 +749,11 @@
     /* ---------- go ---------- */
     build();
     const goNow = () => {
-      st = E.newMatch({ first: youFirst ? 0 : 1, goals: size === 103 ? 3 : 0, half: size === 103 ? 999 : size });
+      const goalsN = size > 100 && size < 200 ? size - 100 : 0, pkN = size > 200 ? size - 200 : 0;
+      st = E.newMatch({ first: youFirst ? 0 : 1, goals: goalsN, half: goalsN || pkN ? 999 : size });
+      if (pkN) { st.pk = { n: pkN, k: [[], []], next: youFirst ? 0 : 1 }; st.pkReady = false; }
       syncAll(); hud(); follow(0, 0, false); clockTick(); pulse();
-      SX.whistle(1, .5); toast(tx('kick'));
+      SX.whistle(1, .5); toast(st.pk ? tx('pkHud', { n: st.pk.n }) : tx('kick'));
       later(next, 900);
     };
     camFit(false); neonTick();
@@ -736,7 +769,7 @@
     }
     const api = {
       human: 0,
-      canUndo: () => !pvp && myTurn() && hist.length > 1 && !st.shot,
+      canUndo: () => !pvp && myTurn() && hist.length > 1 && !st.shot && !st.pk,
       undo() {
         if (!api.canUndo()) return;
         tok++; hist.pop(); const h = hist.pop(); st = E.clone(h.st); ply = h.ply; busy = false; drag = null;
@@ -775,5 +808,5 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.botao = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 50, sizeLabel, sizeName, levelInfo, start, TXT, SX, L14 };
+  window.Atlas3D.botao = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 50, rule, optInfo, sizeLabel, sizeName, levelInfo, start, TXT, SX, L14 };
 })();

@@ -54,7 +54,7 @@
       'shoot.t': 'シュート宣言', 'shoot.b': 'ボールが<b>相手側の半分</b>に入ったら、<b>「シュート宣言」</b>をしてからシュート。宣言のないゴールは無効だよ。相手がキーパーを構えたら、すき間を狙おう！', 'shoot.k': 'キーパーの横のすき間へシュート！', 'shoot.ok': 'ゴーーール！', 'shoot.ng': '止められた！ キーパーのいない側を狙って',
       'keep.t': 'キーパーで守る', 'keep.b': '相手がシュート宣言したら、<b>キーパーをゴール前の小さな枠の中で動かして</b>構えるよ。点線がボールの通り道。', 'keep.k': 'キーパーを点線の上に動かして「構えOK」', 'keep.ok': 'ナイスセーブ！ 守りは位置取りが命', 'keep.ng': '入っちゃった… 点線をふさぐように置こう',
       'out.t': '外に出たら', 'out.b': '横の線から出たら<b>スローイン</b>、ゴールの線から出たら<b>ゴールキック</b>か<b>コーナーキック</b>。最後に触った人の<b>相手</b>のボールになるよ。', 'out.k': 'タップしてお手本を見てね', 'out.ok': 'スローイン！ 相手のボールで再開',
-      'win.t': 'これで遊べるよ！', 'win.b': '前後半の時間内で<b>点の多い方が勝ち</b>（「3点先取」も選べるよ）。タッチを数えながらパスをつないで、チャンスで宣言！ さあ、キックオフ！',
+      'win.t': 'これで遊べるよ！', 'win.b': '決まった手数の前後半で<b>点の多い方が勝ち</b>（ルールで「点数制」や「PK戦」も選べるよ）。タッチを数えながらパスをつないで、チャンスで宣言！ さあ、キックオフ！',
     },
     en: {
       'ball.t': 'The ball and the buttons', 'ball.b': 'Your <b>10 buttons</b> are at the near end, with a <b>goalkeeper</b> (the square block) in each goal. The ball is a little felt ball.', 'ball.k': 'Tap the ball', 'ball.ok': 'That’s it! This little ball is the star', 'ball.ng': 'The ball is the little white one under the gold marker',
@@ -64,7 +64,7 @@
       'shoot.t': 'Calling a shot', 'shoot.b': 'Once the ball is <b>in their half</b>, <b>call a shot</b> before you shoot — a goal without a call doesn’t count. They set their keeper, then you aim for the gap!', 'shoot.k': 'Shoot into the gap beside the keeper!', 'shoot.ok': 'GOOOOL!', 'shoot.ng': 'Saved! Aim for the side the keeper isn’t',
       'keep.t': 'Defending with the keeper', 'keep.b': 'When they call a shot, <b>move your keeper inside the small box in front of the goal</b>. The dotted line is the ball’s path.', 'keep.k': 'Put the keeper on the dotted line, then Ready', 'keep.ok': 'Great save! Defending is all about position', 'keep.ng': 'It went in… block the dotted line',
       'out.t': 'Out of play', 'out.b': 'Over a side line: a <b>throw-in</b>. Over an end line: a <b>goal kick</b> or a <b>corner</b>. The ball goes to <b>the other side</b> from whoever touched it last.', 'out.k': 'Tap to watch', 'out.ok': 'Throw-in! Their ball to restart',
-      'win.t': 'You’re ready!', 'win.b': '<b>More goals by the end of the two halves wins</b> (or pick “first to 3”). Count your touches, pass it around and call your shot when it’s on. Kick-off!',
+      'win.t': 'You’re ready!', 'win.b': '<b>More goals after the two halves wins</b> (the Rule menu also has “Goals” and a “Shoot-out”). Count your touches, pass it around and call your shot when it’s on. Kick-off!',
     },
     zh: {
       'ball.t': '球和纽扣', 'ball.b': '你的<b>10颗纽扣</b>在靠近你的一边，每个球门前有一个<b>守门员</b>（方块）。球是一颗小小的毛毡球。', 'ball.k': '点一下球', 'ball.ok': '对！主角就是这颗小球', 'ball.ng': '球是金色标记下面那颗白色小球哦',
@@ -74,7 +74,7 @@
       'shoot.t': '宣布射门', 'shoot.b': '球进入<b>对方半场</b>后，先<b>宣布射门</b>再射。没宣布的进球不算。对方摆好守门员后，瞄准空隙！', 'shoot.k': '把球射进守门员旁的空隙！', 'shoot.ok': '球进啦——！', 'shoot.ng': '被扑出了！瞄准守门员不在的那边',
       'keep.t': '用守门员防守', 'keep.b': '对方宣布射门时，<b>在球门前的小框里移动守门员</b>摆好位置。虚线就是球的路线。', 'keep.k': '把守门员移到虚线上，再按“准备好了”', 'keep.ok': '好球！防守靠站位', 'keep.ng': '被进了…挡住虚线吧',
       'out.t': '出界了', 'out.b': '从边线出界是<b>界外球</b>，从底线出界是<b>球门球</b>或<b>角球</b>。球归<b>最后碰球一方的对手</b>。', 'out.k': '点击看示范', 'out.ok': '界外球！由对方开球',
-      'win.t': '可以开始玩啦！', 'win.b': '上下半场结束时<b>进球多的一方获胜</b>（也可选“先进3球”）。数着触球次数传球，有机会就宣布射门！开球！',
+      'win.t': '可以开始玩啦！', 'win.b': '在规定手数的上下半场里<b>进球多的一方获胜</b>（规则里还能选“进球制”和“点球大战”）。数着触球次数传球，有机会就宣布射门！开球！',
     },
     'zh-TW': {
       'ball.t': '球和鈕扣', 'ball.b': '你的<b>10顆鈕扣</b>在靠近你的一邊，每個球門前有一個<b>守門員</b>（方塊）。球是一顆小小的毛氈球。', 'ball.k': '點一下球', 'ball.ok': '對！主角就是這顆小球', 'ball.ng': '球是金色標記下面那顆白色小球喔',
@@ -84,7 +84,7 @@
       'shoot.t': '宣告射門', 'shoot.b': '球進入<b>對方半場</b>後，先<b>宣告射門</b>再射。沒宣告的進球不算。對方擺好守門員後，瞄準空隙！', 'shoot.k': '把球射進守門員旁的空隙！', 'shoot.ok': '球進啦——！', 'shoot.ng': '被撲出了！瞄準守門員不在的那邊',
       'keep.t': '用守門員防守', 'keep.b': '對方宣告射門時，<b>在球門前的小框裡移動守門員</b>擺好位置。虛線就是球的路線。', 'keep.k': '把守門員移到虛線上，再按「準備好了」', 'keep.ok': '好球！防守靠站位', 'keep.ng': '被進了…擋住虛線吧',
       'out.t': '出界了', 'out.b': '從邊線出界是<b>界外球</b>，從底線出界是<b>球門球</b>或<b>角球</b>。球歸<b>最後碰球一方的對手</b>。', 'out.k': '點一下看示範', 'out.ok': '界外球！由對方開球',
-      'win.t': '可以開始玩啦！', 'win.b': '上下半場結束時<b>進球多的一方獲勝</b>（也可選「先進3球」）。數著觸球次數傳球，有機會就宣告射門！開球！',
+      'win.t': '可以開始玩啦！', 'win.b': '在規定手數的上下半場裡<b>進球多的一方獲勝</b>（規則裡還能選「進球制」和「PK大戰」）。數著觸球次數傳球，有機會就宣布射門！開球！',
     },
     ko: {
       'ball.t': '공과 단추', 'ball.b': '내 단추는 앞쪽의 <b>10개</b>, 골문엔 <b>골키퍼</b>(네모난 블록)가 있어. 공은 작은 펠트 공이야.', 'ball.k': '공을 탭해 봐', 'ball.ok': '그거! 주인공은 이 작은 공', 'ball.ng': '공은 금색 표시 아래의 하얀 작은 공이야',
@@ -94,7 +94,7 @@
       'shoot.t': '슛 선언', 'shoot.b': '공이 <b>상대 진영</b>에 들어가면 <b>「슛 선언」</b>을 하고 슛. 선언 없는 골은 무효야. 상대가 골키퍼를 세우면 빈틈을 노려!', 'shoot.k': '골키퍼 옆 빈틈으로 슛!', 'shoot.ok': '고오오올!', 'shoot.ng': '막혔어! 골키퍼가 없는 쪽을 노려',
       'keep.t': '골키퍼로 지키기', 'keep.b': '상대가 슛 선언을 하면 <b>골 앞 작은 칸 안에서 골키퍼를 움직여</b> 자리 잡아. 점선이 공이 지나갈 길이야.', 'keep.k': '골키퍼를 점선 위로 옮기고 「준비 완료」', 'keep.ok': '나이스 세이브! 수비는 위치가 생명', 'keep.ng': '들어가 버렸어… 점선을 막도록 놓자',
       'out.t': '밖으로 나가면', 'out.b': '옆줄 밖이면 <b>스로인</b>, 골라인 밖이면 <b>골킥</b>이나 <b>코너킥</b>. 마지막에 건드린 쪽의 <b>상대</b> 공이야.', 'out.k': '탭해서 시범을 봐', 'out.ok': '스로인! 상대 공으로 재개',
-      'win.t': '이제 할 수 있어!', 'win.b': '전후반 시간 안에 <b>골이 많은 쪽이 승리</b>(「3골 선취」도 골라). 터치를 세며 패스를 잇고, 기회가 오면 선언! 킥오프!',
+      'win.t': '이제 할 수 있어!', 'win.b': '정해진 수의 전후반에서 <b>골이 많은 쪽이 승리</b> (규칙에서 ‘득점제’와 ‘승부차기’도 고를 수 있어). 터치를 세며 패스를 잇고, 기회가 오면 선언! 킥오프!',
     },
     es: {
       'ball.t': 'La pelota y los botones', 'ball.b': 'Tus <b>10 botones</b> están en tu lado y en cada arco hay un <b>portero</b> (el bloque cuadrado). La pelota es una bolita de fieltro.', 'ball.k': 'Toca la pelota', 'ball.ok': '¡Eso! La estrella es esta bolita', 'ball.ng': 'La pelota es la bolita blanca bajo la marca dorada',
@@ -104,7 +104,7 @@
       'shoot.t': 'Anunciar el tiro', 'shoot.b': 'Con la pelota <b>en su campo</b>, <b>anuncia el tiro</b> antes de tirar: un gol sin anunciar no vale. Ellos colocan al portero y tú buscas el hueco.', 'shoot.k': '¡Tira al hueco junto al portero!', 'shoot.ok': '¡GOOOOL!', 'shoot.ng': '¡Atajada! Apunta al lado libre',
       'keep.t': 'Defender con el portero', 'keep.b': 'Cuando anuncian un tiro, <b>mueve a tu portero dentro del área chica</b>. La línea de puntos es el camino de la pelota.', 'keep.k': 'Pon al portero sobre la línea y pulsa Listo', 'keep.ok': '¡Gran atajada! Defender es colocarse', 'keep.ng': 'Entró… tapa la línea de puntos',
       'out.t': 'Fuera de juego', 'out.b': 'Por la banda: <b>saque de banda</b>. Por la línea de fondo: <b>saque de puerta</b> o <b>córner</b>. La pelota es para <b>el otro equipo</b> del último que la tocó.', 'out.k': 'Toca para verlo', 'out.ok': '¡Saque de banda! Reanuda el rival',
-      'win.t': '¡Ya puedes jugar!', 'win.b': '<b>Gana quien marque más al final de los dos tiempos</b> (o elige «al primero en 3»). Cuenta tus toques, combina pases y anuncia el tiro cuando lo veas. ¡Saque inicial!',
+      'win.t': '¡Ya puedes jugar!', 'win.b': '<b>Gana quien marque más al final de los dos tiempos</b> (en Regla también hay «Por goles» y «Penaltis»). Cuenta tus toques, pásala y canta el tiro cuando llegue. ¡Saque!',
     },
     fr: {
       'ball.t': 'La balle et les boutons', 'ball.b': 'Tes <b>10 boutons</b> sont de ton côté, et un <b>gardien</b> (le bloc carré) garde chaque but. La balle est une petite boule de feutre.', 'ball.k': 'Touche la balle', 'ball.ok': 'C’est ça ! La vedette, c’est cette petite balle', 'ball.ng': 'La balle, c’est la petite boule blanche sous le repère doré',
@@ -114,7 +114,7 @@
       'shoot.t': 'Annoncer le tir', 'shoot.b': 'Une fois la balle <b>dans leur moitié</b>, <b>annonce le tir</b> avant de tirer : un but non annoncé ne compte pas. Ils placent leur gardien, puis tu vises le trou !', 'shoot.k': 'Tire dans l’espace à côté du gardien !', 'shoot.ok': 'BUUUT !', 'shoot.ng': 'Arrêté ! Vise le côté sans gardien',
       'keep.t': 'Défendre avec le gardien', 'keep.b': 'Quand ils annoncent un tir, <b>déplace ton gardien dans la petite surface</b>. La ligne pointillée, c’est le chemin de la balle.', 'keep.k': 'Mets le gardien sur les pointillés, puis Prêt', 'keep.ok': 'Superbe arrêt ! Défendre, c’est se placer', 'keep.ng': 'C’est rentré… bouche la ligne pointillée',
       'out.t': 'Sortie', 'out.b': 'Par une ligne de touche : <b>touche</b>. Par la ligne de but : <b>six mètres</b> ou <b>corner</b>. La balle va à <b>l’équipe adverse</b> du dernier à l’avoir touchée.', 'out.k': 'Touche pour voir', 'out.ok': 'Touche ! Ballon à l’adversaire',
-      'win.t': 'Tu es prêt !', 'win.b': '<b>Le plus de buts à la fin des deux mi-temps gagne</b> (ou choisis « premier à 3 »). Compte tes touches, fais tourner et annonce ton tir au bon moment. Coup d’envoi !',
+      'win.t': 'Tu es prêt !', 'win.b': '<b>Le plus de buts après les deux mi-temps gagne</b> (le menu Règle propose aussi « Aux buts » et les « Tirs au but »). Compte tes touches, fais circuler et annonce ton tir. Coup d’envoi !',
     },
     pt: {
       'ball.t': 'A bola e os botões', 'ball.b': 'Seus <b>10 botões</b> ficam do seu lado e cada gol tem um <b>goleiro</b> (o bloco retangular). A bola é uma bolinha de feltro.', 'ball.k': 'Toque na bola', 'ball.ok': 'Isso! A estrela é essa bolinha', 'ball.ng': 'A bola é a bolinha branca embaixo da marca dourada',
@@ -124,7 +124,7 @@
       'shoot.t': 'Avisar o chute', 'shoot.b': 'Com a bola <b>no campo de ataque</b>, <b>avise o chute</b> antes de chutar — gol sem aviso não vale. Eles arrumam o goleiro e você mira no canto!', 'shoot.k': 'Chute no espaço ao lado do goleiro!', 'shoot.ok': 'GOOOOL!', 'shoot.ng': 'Defendeu! Mire no lado sem goleiro',
       'keep.t': 'Defender com o goleiro', 'keep.b': 'Quando avisam o chute, <b>mova seu goleiro dentro da pequena área</b>. O pontilhado é o caminho da bola.', 'keep.k': 'Ponha o goleiro no pontilhado e toque em Pronto', 'keep.ok': 'Que defesa! Defender é se posicionar', 'keep.ng': 'Entrou… tape o pontilhado',
       'out.t': 'Bola fora', 'out.b': 'Pela linha lateral: <b>lateral</b>. Pela linha de fundo: <b>tiro de meta</b> ou <b>escanteio</b>. A bola fica com <b>o adversário</b> de quem tocou por último.', 'out.k': 'Toque para ver', 'out.ok': 'Lateral! Bola do adversário',
-      'win.t': 'Pronto para jogar!', 'win.b': '<b>Vence quem fizer mais gols nos dois tempos</b> (ou escolha “quem fizer 3”). Conte os toques, troque passes e avise o chute na hora certa. Saída de bola!',
+      'win.t': 'Pronto para jogar!', 'win.b': '<b>Vence quem fizer mais gols nos dois tempos</b> (em Regra também há “Por gols” e “Pênaltis”). Conte os toques, toque a bola e peça o chute na hora certa. Saída!',
     },
     de: {
       'ball.t': 'Ball und Knöpfe', 'ball.b': 'Deine <b>10 Knöpfe</b> stehen auf deiner Seite, in jedem Tor ein <b>Torwart</b> (der eckige Block). Der Ball ist eine kleine Filzkugel.', 'ball.k': 'Tippe auf den Ball', 'ball.ok': 'Genau! Der Star ist diese kleine Kugel', 'ball.ng': 'Der Ball ist die kleine weiße Kugel unter der goldenen Markierung',
@@ -134,7 +134,7 @@
       'shoot.t': 'Schuss ansagen', 'shoot.b': 'Ist der Ball <b>in ihrer Hälfte</b>, <b>sag den Schuss an</b>, bevor du schießt – ein Tor ohne Ansage zählt nicht. Sie stellen den Torwart, dann zielst du auf die Lücke!', 'shoot.k': 'Schieß in die Lücke neben dem Torwart!', 'shoot.ok': 'TOOOOR!', 'shoot.ng': 'Gehalten! Ziel auf die freie Seite',
       'keep.t': 'Mit dem Torwart verteidigen', 'keep.b': 'Sagen sie einen Schuss an, <b>schieb deinen Torwart im Torraum</b> zurecht. Die gepunktete Linie ist der Weg des Balls.', 'keep.k': 'Stell den Torwart auf die Punktlinie, dann Bereit', 'keep.ok': 'Klasse Parade! Verteidigen heißt richtig stehen', 'keep.ng': 'Drin… versperr die Punktlinie',
       'out.t': 'Im Aus', 'out.b': 'Über die Seitenlinie: <b>Einwurf</b>. Über die Torlinie: <b>Abstoß</b> oder <b>Ecke</b>. Der Ball geht an <b>die andere Seite</b> als die, die ihn zuletzt berührt hat.', 'out.k': 'Tippen zum Zuschauen', 'out.ok': 'Einwurf! Ball für den Gegner',
-      'win.t': 'Los geht’s!', 'win.b': '<b>Wer nach zwei Halbzeiten mehr Tore hat, gewinnt</b> (oder wähle „Wer zuerst 3“). Zähl deine Berührungen, spiel Pässe und sag den Schuss im richtigen Moment an. Anstoß!',
+      'win.t': 'Los geht’s!', 'win.b': '<b>Mehr Tore nach zwei Hälften gewinnt</b> (unter Regel gibt es auch „Nach Toren“ und „Elfmeterschießen“). Zähl deine Berührungen, spiel Pässe und sag deinen Schuss an. Anstoß!',
     },
     ru: {
       'ball.t': 'Мяч и пуговицы', 'ball.b': 'Твои <b>10 пуговиц</b> на твоей стороне, в каждых воротах — <b>вратарь</b> (прямоугольный брусок). Мяч — маленький фетровый шарик.', 'ball.k': 'Нажми на мяч', 'ball.ok': 'Да! Главный герой — этот шарик', 'ball.ng': 'Мяч — маленький белый шарик под золотой меткой',
@@ -144,7 +144,7 @@
       'shoot.t': 'Объявить удар', 'shoot.b': 'Когда мяч <b>на их половине</b>, <b>объяви удар</b> и только потом бей — гол без объявления не засчитают. Они ставят вратаря, а ты целься в просвет!', 'shoot.k': 'Бей в просвет рядом с вратарём!', 'shoot.ok': 'ГОООЛ!', 'shoot.ng': 'Отбил! Целься туда, где нет вратаря',
       'keep.t': 'Защита вратарём', 'keep.b': 'Когда объявлен удар, <b>передвинь вратаря в вратарской площади</b>. Пунктир — путь мяча.', 'keep.k': 'Поставь вратаря на пунктир и нажми «Готово»', 'keep.ok': 'Отличный сейв! Защита — это позиция', 'keep.ng': 'Пропустил… перекрой пунктир',
       'out.t': 'Мяч за линией', 'out.b': 'За боковой — <b>аут</b>. За лицевой — <b>удар от ворот</b> или <b>угловой</b>. Мяч получает <b>соперник</b> того, кто коснулся последним.', 'out.k': 'Нажми, чтобы посмотреть', 'out.ok': 'Аут! Мяч у соперника',
-      'win.t': 'Можно играть!', 'win.b': '<b>Побеждает тот, кто забил больше за два тайма</b> (или выбери «до 3 голов»). Считай касания, пасуй и объявляй удар вовремя. Начальный удар!',
+      'win.t': 'Можно играть!', 'win.b': '<b>Побеждает тот, кто забил больше за два тайма</b> (в «Правиле» есть ещё «По голам» и «Серия пенальти»). Считай касания, пасуй и объявляй удар. Начинаем!',
     },
     tr: {
       'ball.t': 'Top ve düğmeler', 'ball.b': '<b>10 düğmen</b> senin tarafında, her kalede bir <b>kaleci</b> (dikdörtgen blok) var. Top küçük bir keçe top.', 'ball.k': 'Topa dokun', 'ball.ok': 'İşte o! Yıldız bu küçük top', 'ball.ng': 'Top, altın işaretin altındaki küçük beyaz top',
@@ -154,7 +154,7 @@
       'shoot.t': 'Şut ilan etmek', 'shoot.b': 'Top <b>rakip yarı sahadayken</b> önce <b>şut ilan et</b>, sonra vur — ilansız gol geçersiz. Onlar kaleciyi yerleştirir, sen boşluğu hedeflersin!', 'shoot.k': 'Kalecinin yanındaki boşluğa vur!', 'shoot.ok': 'GOOOL!', 'shoot.ng': 'Kurtardı! Kalecinin olmadığı tarafı hedefle',
       'keep.t': 'Kaleciyle savunma', 'keep.b': 'Şut ilan edilince <b>kalecini kale önündeki küçük alanda kaydır</b>. Noktalı çizgi topun yolu.', 'keep.k': 'Kaleciyi noktalı çizgiye koy, sonra Hazır', 'keep.ok': 'Harika kurtarış! Savunma pozisyon işi', 'keep.ng': 'Gol oldu… noktalı çizgiyi kapat',
       'out.t': 'Top dışarıda', 'out.b': 'Yan çizgiden: <b>taç</b>. Kale çizgisinden: <b>kale vuruşu</b> ya da <b>korner</b>. Top, son dokunanın <b>rakibine</b> geçer.', 'out.k': 'İzlemek için dokun', 'out.ok': 'Taç! Top rakipte',
-      'win.t': 'Hazırsın!', 'win.b': '<b>İki yarı sonunda daha çok gol atan kazanır</b> (ya da “3 gole ilk ulaşan”ı seç). Dokunuşlarını say, pas yap ve doğru anda şut ilan et. Başlama vuruşu!',
+      'win.t': 'Hazırsın!', 'win.b': '<b>İki devre sonunda çok gol atan kazanır</b> (Kural menüsünde “Gol” ve “Penaltılar” da var). Dokunuşlarını say, pas yap ve fırsatta şutunu ilan et. Başlama vuruşu!',
     },
     id: {
       'ball.t': 'Bola dan kancing', 'ball.b': '<b>10 kancingmu</b> ada di sisimu, dan tiap gawang dijaga <b>kiper</b> (balok persegi). Bolanya bola kecil dari kain flanel.', 'ball.k': 'Ketuk bolanya', 'ball.ok': 'Betul! Bintangnya bola kecil ini', 'ball.ng': 'Bolanya bola putih kecil di bawah penanda emas',
@@ -164,7 +164,7 @@
       'shoot.t': 'Mengumumkan tembakan', 'shoot.b': 'Saat bola <b>di separuh lawan</b>, <b>umumkan tembakan</b> dulu baru menembak — gol tanpa pengumuman tak sah. Mereka mengatur kiper, lalu kamu bidik celahnya!', 'shoot.k': 'Tembak ke celah di samping kiper!', 'shoot.ok': 'GOOOL!', 'shoot.ng': 'Ditepis! Bidik sisi yang kosong',
       'keep.t': 'Bertahan dengan kiper', 'keep.b': 'Saat lawan mengumumkan tembakan, <b>geser kipermu di dalam kotak kecil depan gawang</b>. Garis titik-titik adalah jalur bola.', 'keep.k': 'Taruh kiper di garis titik-titik, lalu Siap', 'keep.ok': 'Penyelamatan hebat! Bertahan itu soal posisi', 'keep.ng': 'Kebobolan… tutup garis titik-titiknya',
       'out.t': 'Bola keluar', 'out.b': 'Lewat garis samping: <b>lemparan ke dalam</b>. Lewat garis gawang: <b>tendangan gawang</b> atau <b>tendangan sudut</b>. Bola jadi milik <b>lawan</b> dari yang terakhir menyentuh.', 'out.k': 'Ketuk untuk melihat', 'out.ok': 'Lemparan ke dalam! Bola lawan',
-      'win.t': 'Kamu siap!', 'win.b': '<b>Yang mencetak gol terbanyak dalam dua babak menang</b> (atau pilih “duluan 3 gol”). Hitung sentuhanmu, alirkan bola, dan umumkan tembakan saat peluang tiba. Sepak mula!',
+      'win.t': 'Kamu siap!', 'win.b': '<b>Yang mencetak gol lebih banyak setelah dua babak menang</b> (di Aturan juga ada “Jumlah gol” dan “Adu penalti”). Hitung sentuhanmu, operkan bola, dan umumkan tembakan saat ada peluang. Kick-off!',
     },
     hi: {
       'ball.t': 'गेंद और बटन', 'ball.b': 'तुम्हारे <b>10 बटन</b> तुम्हारी तरफ़ हैं, हर गोल में एक <b>गोलकीपर</b> (चौकोर ब्लॉक)। गेंद एक छोटी फ़ेल्ट की गेंद है।', 'ball.k': 'गेंद को छुओ', 'ball.ok': 'हाँ! असली सितारा यही छोटी गेंद है', 'ball.ng': 'गेंद सुनहरे निशान के नीचे वाली छोटी सफ़ेद गेंद है',
@@ -174,7 +174,7 @@
       'shoot.t': 'शॉट की घोषणा', 'shoot.b': 'गेंद <b>उनके आधे हिस्से</b> में हो तो पहले <b>शॉट घोषित करो</b>, फिर मारो — बिना घोषणा का गोल नहीं गिना जाता। वे कीपर सेट करते हैं, फिर तुम ख़ाली जगह पर निशाना लगाओ!', 'shoot.k': 'कीपर के बगल की ख़ाली जगह में शॉट!', 'shoot.ok': 'गोओओल!', 'shoot.ng': 'बचा लिया! जिधर कीपर नहीं, उधर मारो',
       'keep.t': 'कीपर से बचाव', 'keep.b': 'जब वे शॉट घोषित करें, <b>गोल के सामने छोटे बॉक्स में अपना कीपर खिसकाओ</b>। बिंदुदार रेखा गेंद का रास्ता है।', 'keep.k': 'कीपर को बिंदुदार रेखा पर रखो, फिर तैयार', 'keep.ok': 'शानदार बचाव! बचाव मतलब सही जगह', 'keep.ng': 'गोल हो गया… बिंदुदार रेखा रोक दो',
       'out.t': 'गेंद बाहर', 'out.b': 'साइड लाइन से बाहर: <b>थ्रो-इन</b>। गोल लाइन से बाहर: <b>गोल किक</b> या <b>कॉर्नर</b>। गेंद आख़िरी बार छूने वाले के <b>विरोधी</b> को मिलती है।', 'out.k': 'देखने के लिए छुओ', 'out.ok': 'थ्रो-इन! गेंद विरोधी की',
-      'win.t': 'अब खेल सकते हो!', 'win.b': '<b>दोनों हाफ़ के बाद ज़्यादा गोल करने वाला जीतता है</b> (या "पहले 3 गोल" चुनो)। टच गिनो, पास दो और मौक़ा मिलते ही शॉट घोषित करो। किक-ऑफ़!',
+      'win.t': 'अब खेल सकते हो!', 'win.b': '<b>दोनों हाफ के बाद ज़्यादा गोल वाला जीतता है</b> (नियम में “गोलों से” और “पेनल्टी शूटआउट” भी हैं)। छुअन गिनो, पास करो और मौका मिले तो शॉट की घोषणा करो। किक-ऑफ़!',
     },
     ar: {
       'ball.t': 'الكرة والأزرار', 'ball.b': 'أزرارك <b>العشرة</b> في جهتك، وفي كل مرمى <b>حارس</b> (القطعة المستطيلة). الكرة كرة لبّاد صغيرة.', 'ball.k': 'المس الكرة', 'ball.ok': 'هذه هي! النجمة هي هذه الكرة الصغيرة', 'ball.ng': 'الكرة هي الكرة البيضاء الصغيرة تحت العلامة الذهبية',
@@ -184,7 +184,7 @@
       'shoot.t': 'إعلان التسديد', 'shoot.b': 'حين تصبح الكرة <b>في نصف ملعبهم</b>، <b>أعلن التسديد</b> ثم سدّد — الهدف بلا إعلان لا يُحتسب. يضعون حارسهم ثم تصوّب نحو الفراغ!', 'shoot.k': 'سدّد في الفراغ بجانب الحارس!', 'shoot.ok': 'جووول!', 'shoot.ng': 'تصدّى لها! صوّب إلى الجهة الخالية',
       'keep.t': 'الدفاع بالحارس', 'keep.b': 'عندما يعلنون التسديد، <b>حرّك حارسك داخل المنطقة الصغيرة أمام المرمى</b>. الخط المنقط هو طريق الكرة.', 'keep.k': 'ضع الحارس على الخط المنقط ثم «جاهز»', 'keep.ok': 'تصدٍّ رائع! الدفاع هو التمركز', 'keep.ng': 'دخلت… أغلق الخط المنقط',
       'out.t': 'خارج الملعب', 'out.b': 'من خط التماس: <b>رمية تماس</b>. من خط المرمى: <b>ركلة مرمى</b> أو <b>ركلة ركنية</b>. تذهب الكرة إلى <b>خصم</b> آخر من لمسها.', 'out.k': 'المس لتشاهد', 'out.ok': 'رمية تماس! الكرة للخصم',
-      'win.t': 'أنت جاهز!', 'win.b': '<b>يفوز صاحب الأهداف الأكثر بعد الشوطين</b> (أو اختر «أول من يسجل 3»). عدّ لمساتك ومرّر الكرة وأعلن التسديد في الوقت المناسب. ركلة البداية!',
+      'win.t': 'أنت جاهز!', 'win.b': '<b>يفوز صاحب الأهداف الأكثر بعد الشوطين</b> (في القاعدة أيضًا «بعدد الأهداف» و«ركلات الترجيح»). عُدّ لمساتك ومرّر، وأعلن تسديدتك حين تسنح الفرصة. انطلاق!',
     },
   };
   // the pages: buttons staged (index, x, y; index 0–9 yours, 10–19 theirs), the ball, the keepers, the task
