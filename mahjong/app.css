@@ -2339,3 +2339,14 @@ html.lp :is(#home,#chara).aaa .aa-plate.lpl{bottom:12px}
 html.lp #home.aaa .aa-plate .pp-main{display:grid;grid-template-columns:auto auto;justify-content:start;align-items:center;column-gap:8px}
 html.lp #home.aaa .aa-plate .pp-main>:not(.pp-sk):not(.pp-pt){grid-column:1 / -1}
 html.lp #home.aaa .aa-plate .pp-main>.pp-pt{margin-top:4px;width:auto;min-width:0;max-width:none;grid-column:2;justify-self:start}
+/* (ユーザー 2026-11-16, phone: the discards ran under the player's portrait and the skill plates) on a phone the plates show their
+   icon only (the name, the tier and what it does come up on a tap) and the camera stands back a little: the portrait, right of the
+   plates, stays left of the player's own river */
+html.lp #game .skb>span,html.lp #game .skb>kbd{display:none}
+html.lp #game .skb{padding:3px;gap:3px}
+html.lp #game .skb.pt{padding-right:4px}
+html.lp #game .skb i{width:30px;height:30px}
+html.lp #game #opp2 .bk .skws{flex-direction:column;align-items:flex-end;gap:3px}   /* (the across seat's two marks one above the other: side by side they reached over the right-hand river) */
+/* (ユーザー 2026-11-16, phone) the riichi label sat above the portrait, over the neighbouring skill marks and the rivers: on a phone it
+   lies across the foot of the portrait, smaller, inside the portrait's own box */
+html.lp .riiflag{top:auto;bottom:4px;font-size:10.5px;padding:1px 7px;letter-spacing:.12em;text-indent:.12em}
