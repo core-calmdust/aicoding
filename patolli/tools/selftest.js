@@ -43,4 +43,9 @@ for (const id of ['bell', 'popular']) for (const [la, lb] of [[1, 1], [10, 10], 
   }
   console.log(id, 'Lv' + la, 'vs Lv' + lb, w.join('-'), 'avg throws', (plies / N) | 0, 'max', mx, 'rounds', (rounds / N).toFixed(2), (Date.now() - t0) + 'ms');
 }
+{ // 強さの順：ばらつきなしの Lv.19 が Lv.18 より弱くならない（同じ勝率の手が並ぶとき、いつも先頭の駒を選ぶと弱くなる不具合の確認）
+  const rnd = rng(777); let w = 0; const G = 500;
+  for (let g = 0; g < G; g++) { let s = E.newGame('bell', { first: g & 1 }); while (s.winner < 0) { const d = E.rollDice(rnd); s = E.apply(s, E.think(s, d.n, s.turn === 0 ? 19 : 18, { rng: rnd }), d.n).state; } if (s.winner === 0) w++; }
+  console.log('bell Lv19 vs Lv18', w + '-' + (G - w)); assert(w / G > 0.44, 'Lv19 should not be weaker than Lv18: ' + w + '/' + G);
+}
 console.log('selftest OK');
