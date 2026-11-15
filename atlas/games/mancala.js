@@ -254,12 +254,15 @@
     const T3 = ctx.Table3D, THREE = window.THREE, t = ctx.t, MC = T3.mancala, G = MC.G;
     const lang = ctx.lang, X = Object.assign({}, TX.en, TX[lang] || {});
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const bottom0 = ctx.mode === 'pvp' ? 0 : ctx.side === 2 ? 1 : 0;   // the human's row (pvp: the first player's) is the near one, sowing counter-clockwise
+    const bottom0 = ctx.pz ? 0 : ctx.mode === 'pvp' ? 0 : ctx.side === 2 ? 1 : 0;   // the human's row (pvp: the first player's) is the near one, sowing counter-clockwise
     const K = kit(T3, bottom0), { board, tall, isStore, ownerOf, hollow, slots, labels, setCount, glows, hintRing, anim } = K;
     const rebuild = () => K.rebuild(b), pitAt = e => K.pitAt(e, side);
     T3.show('mancala', board);
-    const TOP = G.TOP, level = Math.max(1, Math.min(10, +ctx.level || 5)), SEEDS = seedsOf(+ctx.size || 4), RULES = ruleOfSize(+ctx.size || 4);
-    const pvp = ctx.mode === 'pvp', human = pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
+    let pzOn = false, pzW = null, pzJ = 0;
+    const PZ = ctx.pz || null;   // PZ: a puzzle / lesson position driven by atlas/puzzles.js · lessons3d.js (no AI: ctx.pz.moved decides; you sow the near row)
+    const TOP = G.TOP, level = Math.max(1, Math.min(10, +ctx.level || 5)), SEEDS = seedsOf(+ctx.size || 4);
+    let RULES = PZ && PZ.spec ? PZ.spec.rules || 'kalah' : ruleOfSize(+ctx.size || 4);
+    const pvp = !PZ && ctx.mode === 'pvp', human = PZ ? 0 : pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
     const pname = s => s ? t('bv.second') : t('bv.first');
 
     /* ---------- the portal's phone-landscape layout (#bv.pland, app.js LAND 'bar'): the full game's landscape page —
@@ -294,6 +297,7 @@
     const onPL = () => { frame(); setTimeout(frame, 350); };
     addEventListener('atlasland', onPL); addEventListener('resize', onPL);
     let b = new Int8Array(14); for (let i = 0; i < 6; i++) { b[i] = SEEDS; b[i + 7] = SEEDS; }
+    if (PZ && PZ.spec && PZ.spec.b) b = Int8Array.from(PZ.spec.b);
     let side = 0, over = false, stopped = false, busy = false, worker = null, hintW = null, ply = 0, hist = [], aiJ = 0, hintJ = 0, tok = 0, hintPit = -1, msg = '';
     const ix = s => s;   // HUD pill / clock: first player left (0), second right (1)
     const onTurn = () => { if (ctx.onTurn) ctx.onTurn(ix(side), { human: pvp || side === human, ply }); };
@@ -301,7 +305,7 @@
     let hover = -1;
     const legalNow = () => { try { return Array.from(MancalaEngine.legal(b, side, RULES)); } catch (e) { const o = []; for (let k = 0; k < 6; k++) if (b[(side ? 7 : 0) + k] > 0) o.push(k); return o; } };
     function showGlows() {
-      const mine = !over && !busy && (pvp || side === human) && window.MancalaEngine, ok = mine ? legalNow() : [];
+      const mine = !over && !busy && (pvp || side === human) && (!PZ || pzOn) && window.MancalaEngine, ok = mine ? legalNow() : [];
       for (let k = 0; k < 6; k++) {
         const i = (side ? 7 : 0) + k, g = glows[k];
         g.visible = !!(mine && ok.includes(k));
@@ -325,8 +329,8 @@
       ov.querySelector('.mcl-m').textContent = msg || '';
     }
     function turnMsg() { return pvp ? X.turn.replace('{p}', pname(side)) : side === human ? L.turn : L.think; }
-    async function play(k, mover) {   // mover sows pit k (0..5 from its first pit)
-      if (pvp || mover === human) hist.push({ b: Int8Array.from(b), side });   // 待った: back to before this move
+    async function play(k, mover, after) {   // mover sows pit k (0..5 from its first pit); after: instead of the next turn (puzzles / lessons)
+      if (!PZ && (pvp || mover === human)) hist.push({ b: Int8Array.from(b), side });   // 待った: back to before this move
       hideHint(); busy = true; hover = -1; showGlows(); ply++;
       const tr = MancalaEngine.trace(b, mover, k, RULES);
       msg = ''; hud();
@@ -335,6 +339,7 @@
       if (stopped) return;
       b = Int8Array.from(tr.board); for (let i = 0; i < 14; i++) setCount(i, b[i]);
       over = tr.over; side = tr.over ? side : tr.next; busy = false;
+      if (after) return after(tr);
       if (over) return end();
       next();
     }
@@ -365,10 +370,11 @@
       hud(me > op ? L.win : me < op ? L.lose : L.draw);
       ctx.onEnd({ win: me > op, draw: me === op, level, score: me + ' - ' + op });
     }
-    const canTap = () => !over && !busy && (pvp || side === human) && !!window.MancalaEngine;
+    const canTap = () => !over && !busy && (pvp || side === human) && (!PZ || pzOn) && !!window.MancalaEngine;
     function onClick(e) {
       if (!canTap() || T3.wasDrag()) return;
       const i = pitAt(e); if (i < 0 || !b[i] || !legalNow().includes(i % 7)) return;   // (オワレ・アヨアヨ: an empty opponent must be fed)
+      if (PZ) { const before = Int8Array.from(b), k = i % 7; pzOn = false; pzMark(null); play(k, side, tr => { if (PZ.moved) PZ.moved(k, Object.assign({ before, tr }, pzState())); }); return; }
       play(i % 7, side);
     }
     function onMove(e) {
@@ -380,9 +386,54 @@
     const onPcs = e => { if (!stopped && e.detail && e.detail.id === 'mancala' && !busy) { rebuild(); showGlows(); } };   // (the board view's 駒 row during a game: the seeds change set)
     addEventListener('atlas-pieces', onPcs);
     rebuild(); hud(''); frame();
-    loadEngine().then(() => { if (!stopped) setTimeout(next, 500); }).catch(() => hud('—'));
+    loadEngine().then(() => { if (stopped) return; if (PZ) return pzLoad(PZ.spec, 1, { lock: PZ.lock }); setTimeout(next, 500); }).catch(() => hud('—'));
     // test hooks (Playwright): a hollow's screen position, the state
     window.Atlas3D.mancala._dbg = { at: i => { const [x, z] = hollow(i); return T3.project(x, z, TOP); }, state: () => ({ b: Array.from(b), side, over, busy, human, pvp, hint: hintPit, hist: hist.length, gems: slots.map(l => l.length), labels: labels.map(l => l.n) }) };
+
+    /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-16): a position from the puzzles / lessons; the caller judges each move
+       (ctx.pz.moved(k, info)) and plays the replies (api.pz.play). Marks: rings round pits ({ at: slot, cls: ok · ng · hl · cap · target })
+       and small value labels over pits ({ at, label, best }). The solver: the game's worker ({ type: 'solve' }, mancala/app.js solveReq). ---------- */
+    const pzG = new THREE.Group(); board.add(pzG);
+    const PZC = { ok: 0xffc928, ng: 0xff3b30, hl: 0xffc928, cap: 0xff7ad0, target: 0x4aa8ff, '': 0xffffff };   // (the full game's colours: the answer in gold)
+    function pzState() { return { b: Array.from(b), side, over, store: [b[6], b[13]] }; }
+    function pzMark(list) {
+      while (pzG.children.length) { const m = pzG.children.pop(); m.geometry.dispose(); if (m.material.map) m.material.map.dispose(); m.material.dispose(); }
+      if (list) for (let e of list) {
+        if (Array.isArray(e)) e = { at: e[0], cls: e[1] === 'ring' ? 'hl' : e[1] };   // ([slot, cls] pairs too)
+        if (!e || !(e.at >= 0)) continue;
+        const [x, z] = hollow(e.at), st = isStore(e.at);
+        if (e.label != null) {   // a value over the pit (on the player's side of it)
+          const cv = document.createElement('canvas'); cv.width = 128; cv.height = 64; const c = cv.getContext('2d');
+          c.fillStyle = e.best ? 'rgba(255,200,40,.95)' : 'rgba(20,24,32,.82)'; c.beginPath(); c.roundRect(4, 8, 120, 48, 22); c.fill();
+          c.fillStyle = e.best ? '#3a2600' : String(e.label).startsWith('-') ? '#ff9b9b' : '#fff'; c.font = '700 34px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(e.label), 64, 33);
+          const tx = new THREE.CanvasTexture(cv); tx.encoding = THREE.sRGBEncoding;
+          const m = new THREE.Mesh(new THREE.PlaneGeometry(.62, .31), new THREE.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false, toneMapped: false }));
+          m.rotation.x = -Math.PI / 2; if (board.rotation.y) m.rotation.z = Math.PI; m.position.set(x, TOP + .06, z + (ownerOf(e.at) === bottom0 ? 1 : -1) * (G.PR + .3) * (board.rotation.y ? -1 : 1)); m.renderOrder = 6; pzG.add(m); continue;
+        }
+        const g = new THREE.TorusGeometry((st ? G.PR * 1.5 : G.PR) + .14, .05, 8, 44); g.rotateX(Math.PI / 2);
+        const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: PZC[e.cls] != null ? PZC[e.cls] : PZC[''], transparent: true, opacity: .95, toneMapped: false, depthWrite: false }));
+        m.position.set(x, TOP + .03, z); if (st) m.scale.z = 2.2; m.renderOrder = 5; pzG.add(m);
+      }
+      if (T3.kick) T3.kick(300);
+    }
+    function pzLoad(spec, me, o) {
+      PZ.spec = spec || PZ.spec; PZ.lock = !!(o && o.lock); tok++; aiJ++; hideHint(); pzMark(null);
+      RULES = (PZ.spec && PZ.spec.rules) || 'kalah'; b = Int8Array.from(PZ.spec.b); side = PZ.spec.side || 0; over = false; busy = false; pzOn = false;
+      rebuild(); msg = ''; hud(); showGlows(); if (o && o.marks) pzMark(o.marks);
+      setTimeout(() => { if (stopped) return; pzWait(); if (PZ.ready) PZ.ready(); }, 200);
+    }
+    function pzWait() { busy = false; pzOn = !PZ.lock && !over; showGlows(); hud(); }
+    const pzSolve = (bb, sd) => new Promise(res => {
+      if (!pzW) pzW = new Worker(BASE + 'engine.js?v=' + EV);
+      const id = ++pzJ; pzW.onmessage = e => { const m = e.data; if (m.id !== id) return; res(stopped || m.type === 'error' ? null : m.list || null); };
+      pzW.onerror = () => { pzW = null; res(null); };
+      pzW.postMessage({ type: 'solve', id, b: Array.from(bb || b), side: sd == null ? side : sd, rules: RULES, ms: 9000 });
+    });
+    const pzApi = {
+      load: pzLoad, wait: pzWait, mark: pzMark, state: pzState, solve: pzSolve, engine: () => window.MancalaEngine, rules: () => RULES, moves: () => [],
+      play: k => new Promise(res => { if (over || busy || !legalNow().includes(k)) return res(false); pzOn = false; pzMark(null); play(k, side, () => res(true)); }),
+      msg: m => { msg = m || ''; hud(); },
+    };
 
     /* ---------- 待った · 投了 · ヒント · time-out ---------- */
     const myTurn = () => canTap();
@@ -394,7 +445,7 @@
       hud(L.lose); ctx.onEnd({ win: false, draw: false, level, score: r });
     }
     const api = {
-      human: pvp ? 0 : human,
+      human: pvp ? 0 : human, pz: PZ ? pzApi : null,
       canUndo: () => myTurn() && hist.length > 0,
       undo() {
         if (!api.canUndo()) return;
@@ -425,7 +476,7 @@
       stop() {
         stopped = true; tok++; K.stop(); ov.remove(); clearInterval(plIv); removeEventListener('atlasland', onPL); removeEventListener('resize', onPL);
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointermove', onMove); ctx.el.style.cursor = ''; removeEventListener('atlas-pieces', onPcs);
-        if (worker) worker.terminate(); if (hintW) hintW.terminate();
+        if (worker) worker.terminate(); if (hintW) hintW.terminate(); if (pzW) pzW.terminate(); pzMark(null);
       },
     };
     return api;
