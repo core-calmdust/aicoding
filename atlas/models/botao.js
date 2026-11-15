@@ -24,7 +24,7 @@
   const SZ = v => Math.round(v * (X.texScale ? X.texScale() : 1));
   const E = () => window.BotaoEngine;
   const FW = 104, FL = 167, HW = FW / 2, H = FL / 2, PS = 8, PE = 10, TX = HW + PS, TY = H + PE, GW = 15, GHW = GW / 2, GD = 5, GH = 5;
-  const RB = 2.4, RBALL = .8, KHW = 4, KHD = 1.75, KH = 1.6, BH = .75;
+  const RB = 3, RBALL = 1.3, KHW = 4, KHD = 1.75, KH = 1.6, BH = .85;   // (the engine's sizes: 2.4 / .8 at first)
   const FR = 3, RAILH = 2.2;   // the rail round the table (width, height above the top), cm
   const K = .066, TOP = .3;
   const LOOKS = ['classic', 'retro', 'night', 'praia', 'madeira', 'neon'];
@@ -192,7 +192,25 @@
   }
   function ball(look) {
     const TT = T(), g = new TT.Group();
-    const m = mat('btBall' + look, () => { const q = phys({ color: look === 'night' ? '#fff8d8' : look === 'praia' ? '#ffe14a' : look === 'neon' ? '#ffffff' : '#f6f3ea', roughness: .95 }); if (look === 'neon') { q.emissive = lin('#ffffff'); q.emissiveIntensity = .7; } return q; });
+    // a football (2026-11-15 ユーザー：ボールもサッカーボールに): black pentagons at the 12 corners of an icosahedron, painted
+    // texel by texel on an equirectangular map (the base keeps each look's colour: cream at night, yellow on the beach)
+    const m = mat('btBall' + look, () => {
+      const base = look === 'night' ? '#fff8d8' : look === 'praia' ? '#ffe14a' : look === 'neon' ? '#ffffff' : '#f6f3ea';
+      const tex = X.canvasTex('btBallT' + look, 256, 128, (g, S) => {
+        const W = 256, H = 128, im = g.createImageData(W, H), ph = (1 + Math.sqrt(5)) / 2, V = [];
+        [[0, 1, ph], [0, -1, ph], [0, 1, -ph], [0, -1, -ph], [1, ph, 0], [-1, ph, 0], [1, -ph, 0], [-1, -ph, 0], [ph, 0, 1], [-ph, 0, 1], [ph, 0, -1], [-ph, 0, -1]].forEach(v => { const l = Math.hypot(...v); V.push(v.map(c => c / l)); });
+        const bc = new (T().Color)(base), dark = look === 'neon' ? [255, 63, 180] : [26, 28, 34];
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          const lon = x / W * 2 * Math.PI, lat = (y / H - .5) * Math.PI, d = [Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon)];
+          let best = -1; for (const v of V) best = Math.max(best, d[0] * v[0] + d[1] * v[1] + d[2] * v[2]);
+          const a = Math.acos(Math.min(1, best)), k = (y * W + x) * 4, blk = a < .3, seam = !blk && Math.abs(a - .55) < .025;
+          const c = blk ? dark : seam ? [150, 150, 150] : [bc.r * 255, bc.g * 255, bc.b * 255];
+          im.data[k] = c[0]; im.data[k + 1] = c[1]; im.data[k + 2] = c[2]; im.data[k + 3] = 255;
+        }
+        g.putImageData(im, 0, 0);
+      });
+      const q = phys({ map: tex, color: '#ffffff', roughness: .55, clearcoat: .4 }); if (look === 'neon') { q.emissiveMap = tex; q.emissive = lin('#ffffff'); q.emissiveIntensity = .7; } return q;
+    });
     const s = new TT.Mesh(geo('btBallG', () => new TT.SphereGeometry(RBALL * K, LO() ? 12 : 18, LO() ? 9 : 14)), m); s.position.y = RBALL * K; s.castShadow = true; g.add(s);
     g.userData = { r: RBALL };
     return g;

@@ -24,11 +24,12 @@
     GW = 15, GHW = GW / 2, GD = 5,                          // the goal (inside width, depth of the net)
     SA_W = 30, SA_D = 11, BA_W = 60, BA_D = 30,             // small area, big area
     PEN = 20.5, CR = 16,                                    // the penalty mark, the centre circle
-    RB = 2.4, RBALL = .8, KHW = 4, KHD = 1.75,              // button radius, ball radius, the goalkeeper's half sizes (8 × 3.5)
+    RB = 3, RBALL = 1.3, KHW = 4, KHD = 1.75,   // (2026-11-15: 2.4 / .8 at first — smaller than the real sets, the ball hard to see)
+                 // button radius, ball radius, the goalkeeper's half sizes (8 × 3.5)
     MB = 8, MBALL = .6;                                     // masses (g; the ball a little heavier than the real one: easier to control)
   const NB = 20, BALL = 20;                                 // buttons 0–9 side 0, 10–19 side 1; the ball is body 20
   const DEC_B = 140,                                        // a button slides to a stop (cm/s²)
-    DEC_BALL0 = 45, DEC_BALL1 = .6,                         // the ball: rolling resistance + a drag that grows with speed
+    DEC_BALL0 = 70, DEC_BALL1 = .9,                         // the ball: rolling resistance + a drag that grows with speed
     E_BB = .75, E_BBALL = .85, E_RIM = .55, E_KEEP = .45, E_POST = .5,
     VMAX = 200, VMIN = 12,
     DT = 1 / 360, TMAX = 12, FPS = 60;
