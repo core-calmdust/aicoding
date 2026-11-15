@@ -557,7 +557,7 @@
   /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
-  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=15').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=16').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   function ncApply(id, L2) {
     const T = NC[id] || {}; if (!L2 || !L2.ramp) return L2;
     L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v && !(o[f] && o[f].__voice)) o[f] = v; }); return o; });   // (a guide's own line stays)
@@ -1132,16 +1132,18 @@
   const tfEng = () => window.TaflEngine ? Promise.resolve(window.TaflEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = TF_ENG; sc.onload = () => window.TaflEngine ? res(window.TaflEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
   const TFM = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の手' : '赤い印の手') + '\u0002' : `<i class="ls-spot ${k}"></i>`;
   const TAFL = {
-    LKEY: 'aicoding-tafl-lessons', data: null, I: null,
+    LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=3'), fetch('../tafl/i18n.js?v=6ek-nd1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null)])
-        .then(([ls, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
+      return (this.p = Promise.all([getJ('../tafl/lessons.json?v=3'), fetch('../tafl/i18n.js?v=6ek-nd1').then(r => r.text()).catch(() => ''), tfEng().catch(() => null), getJ('../tafl/openings.json?v=20261116').catch(() => null)])
+        .then(([ls, T, _, op]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] tafl texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
     tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
     mini: sp => window.AtlasMini && AtlasMini.tafl ? AtlasMini.tafl(sp) : '',
     list(kind, lang) {
+      if (kind === 'open') { const pr = J(this.OKEY, {}), O = this.data.op; return O ? O.sets.map(g => ({ key: g.id, cat: g.grp, catName: this.tx('op.grp.' + g.grp, lang), title: L(g.title, lang), sub: '',
+        svg: g.problems && g.problems[0] ? this.mini(g.problems[0].s) : '', st: pr[g.id] ? (pr[g.id].pass ? 'pass' : 'try') : '', full: false })) : []; }
       const pr = J(this.LKEY, {});
       return this.data.ls.steps.map((s, i) => ({ key: String(i), cat: s.course, catName: this.tx('course.' + s.course, lang) || s.course, title: this.tx('ls.' + s.id + '.title', lang), sub: this.tx('ls.' + s.id + '.sub', lang), svg: s.problems && s.problems[0] ? this.mini(s.problems[0].s) : '', st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '', full: false }));
     },
@@ -1150,7 +1152,8 @@
       const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), E = window.TaflEngine;
       const intro = String(T('intro') || '').replace(/<p>[^<]*?[a-k](?:1[01]|[1-9])-[a-k](?:1[01]|[1-9])[^]*?<\/p>/g, '');
       const sp = { m: TFM('ok', lang), x: TFM('ng', lang) };
-      return { id: s.id, title: T('title'), intro, ramp: null,
+      const RU = (k, v) => fill(L((this.data.ls.rampUi || {})[k], lang), v || {});
+      return { id: s.id, title: T('title'), intro, ramp: s.ramp && s.ramp.length ? s.ramp.slice() : null, RU,   // (the warm-up: tafl/lessons.json step.ramp — texts without coordinates from atlas/nocoord/tafl.json)
         probs: (s.problems || []).map(P => { const me = P.s.side === 2 ? 2 : 1, good = P.ok || [P.best], seq = (P.n || 1) > 1;
           return { pos: { spec: P.s, me }, kind: seq ? 'tfseq' : 'best', P, n: P.n || 1, me, ask: T('goal', { n: P.n || 1 }), ans: seq ? null : P.best != null ? P.best : good[0], hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
             why: '', good: () => T('why', sp), ng: () => T(seq ? 'ng' : 'why', Object.assign({ n: P.n || 1 }, sp)) }; }),
@@ -1168,7 +1171,23 @@
       return Math.max(0, Math.round(20 * (1 - (sOfV(best) - sOfV(mine)) / 0.5)));
     },
     spOk: lang => TFM('ok', lang),
-    introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), P = s && s.problems && s.problems[0]; return P ? { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1, lock: true } } : null; },
+    introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), it = s && s.ramp && s.ramp[0]; if (it) return { pos: { spec: it.s, me: it.s.side === 2 ? 2 : 1, lock: true } }; const P = s && s.problems && s.problems[0]; return P ? { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1, lock: true } } : null; },
+    // the warm-up (= tafl/app.js loadRamp / rampMarks): the example move played out, the marked squares, the right moves
+    rampPos: it => ({ spec: it.s, me: it.s.side === 2 ? 2 : 1 }), rampBody: (it, lang) => L(it.body, lang),
+    rampMarks: it => (it.marks || []).map(([q, c]) => [q, c === 'ng' ? 'ng' : c === 'ok' ? 'ok' : 'hl']),
+    rampOk: (it, u) => (it.ok || []).includes(u), rampAns: it => ({ m: (it.ok || [])[0] }), rampLook: it => (it.look || []).map(q => [q, 'ring']),
+    rampSeq(it) { const E = window.TaflEngine; if (!E) return []; let p = E.Pos.from(it.s, it.s.v); const out = []; for (const [nm] of it.seq || []) { const m = p.moves().find(x => E.name(p, x) === nm); if (m === undefined) break; out.push(m); p = p.clone().play(m); } return out; },
+    // the openings (tafl/openings.json: 8 plans of the Copenhagen rules — the line to study, then 5 positions where the engine's move is the
+    // answer, scored as the lessons; progress = the full game's 'aicoding-tafl-open' { id: { best, pass } })
+    opening(key, lang) {
+      const g = this.data.op && this.data.op.sets.find(x => x.id === key); if (!g) return null;
+      const notes = {}; (g.study.notes || []).forEach((n, i) => { if (n) notes[String(i)] = L(n, lang); });
+      const it = g.intro && (g.intro[lang] || g.intro.en), hist = Array.isArray(it) ? it[0] : it || '';
+      const probs = shuffle(g.problems || []).slice(0, 5), E = window.TaflEngine;
+      return { id: g.id, title: L(g.title, lang), intro: hist, start: { spec: { v: 'copenhagen', b: E && E.START && E.START.copenhagen ? E.START.copenhagen : null, side: 1 }, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes,
+        probs: probs.map(P => ({ pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: E ? [E.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: TFM('ok', lang) }) })),
+        save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= max * .75; pr[g.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
+    },
   };
   /* mancala (2026-11-16): mancala/lessons.json (29 steps of 5 problems, by rule set and course = the full game's LS_RULESETS): one move,
      scored by the stored values P.sc (= mancala/app.js problemPoints); after the move, back to the problem with the answer (gold ring),
@@ -1403,7 +1422,7 @@
         if (sess && (id === 'go' || id === 'hex') && G && pz() && pz().n !== (G.spec.n || 9)) { sess.stop(); sess = null; }
         if (sess && id === 'dots' && G && pz() && pz().n !== G.spec.n) { sess.stop(); sess = null; }   // (dots: another board size)
         if (sess && id === 'morris' && G && pz() && pz().v !== G.spec.v) { sess.stop(); sess = null; }   // (morris: another rule set's board)
-        if (sess && id === 'tafl' && G && pz() && pz().n !== Math.round(Math.sqrt(String(G.spec.b).length))) { sess.stop(); sess = null; }   // (tafl: another rule set's board)   // (go / hex: another board size — a new board)
+        if (sess && id === 'tafl' && G && G.spec && G.spec.b && pz() && pz().n !== Math.round(Math.sqrt(String(G.spec.b).length))) { sess.stop(); sess = null; }   // (tafl: another rule set's board)   // (go / hex: another board size — a new board)
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
