@@ -64,10 +64,12 @@ function draw(svg, o) {
   let lines = ''; for (let i = 1; i < 10; i++) lines += `M${O + i * 10} ${O}V${O + 100}M${O} ${O + i * 10}H${O + 100}`;
   h += `<path d="${lines}" class="sb-grid"/>`;
   if (!o.mini) for (let i = 0; i < 10; i++) h += `<text x="${O + i * 10 + 5}" y="${O - 2.6}" class="sb-lbl">${'ABCDEFGHIJ'[i]}</text><text x="${O - 4.4}" y="${O + i * 10 + 6.4}" class="sb-lbl">${i + 1}</text>`;
-  if (o.ships) o.ships.forEach((s, i) => { const c = o.show ? o.show(i) : 'own'; if (s && c) h += `<g class="sb-shadow" filter="url(#${id}s)" transform="translate(.7 1.2)">${shipG(s, i, 'sh', id)}</g>` + shipG(s, i, c, id); });
+  if (o.ships) o.ships.forEach((s, i) => { const c = o.show ? o.show(i) : 'own', kind = s && s.t != null ? s.t : i; if (s && c) h += `<g class="sb-shadow" filter="url(#${id}s)" transform="translate(.7 1.2)">${shipG(s, kind, 'sh', id)}</g>` + shipG(s, kind, c, id); });
   if (o.glow) for (const c of o.glow) { const [x, y] = xy(c); h += `<rect x="${x + .8}" y="${y + .8}" width="8.4" height="8.4" rx="1.6" class="sb-glow"/>`; }
   if (o.shots) for (let i = 0; i < 100; i++) { const v = o.shots[i]; if (!v) continue; const [x, y] = xy(i), cx = x + 5, cy = y + 5;
     h += v === 2 ? `<circle cx="${cx}" cy="${cy}" r="4.3" fill="url(#${id}f)" class="sb-hitglow"/><circle cx="${cx}" cy="${cy}" r="1.9" class="sb-hit"/>` : `<circle cx="${cx}" cy="${cy}" r="1.25" class="sb-miss"/><circle cx="${cx}" cy="${cy}" r="2.9" class="sb-missring"/>`; }
+  if (o.scans) o.scans.slice(-3).forEach((sc, n, arr) => { const r = sc.at / 10 | 0, c = sc.at % 10, r0 = Math.max(0, r - 1), c0 = Math.max(0, c - 1), r1 = Math.min(9, r + 1), c1 = Math.min(9, c + 1), x = O + c0 * 10, y = O + r0 * 10;
+    h += `<g class="sb-scan${n === arr.length - 1 ? ' new' : ''}"><rect x="${x + .7}" y="${y + .7}" width="${(c1 - c0 + 1) * 10 - 1.4}" height="${(r1 - r0 + 1) * 10 - 1.4}" rx="2.4"/><circle cx="${x + 1.2}" cy="${y + 1.2}" r="3.3"/><text x="${x + 1.2}" y="${y + 2.5}">${sc.k}</text></g>`; });
   if (o.last != null && o.last >= 0) { const [x, y] = xy(o.last); h += `<rect x="${x + .6}" y="${y + .6}" width="8.8" height="8.8" rx="1.8" class="sb-last"/>`; }
   if (o.best != null && o.best >= 0) { const [x, y] = xy(o.best); h += `<g class="sb-best" transform="translate(${x + 5} ${y + 5})"><circle r="3.6"/><path d="M-5.2 0h2.6M2.6 0h2.6M0 -5.2v2.6M0 2.6v2.6"/></g>`; }
   h += `<rect x="${O}" y="${O}" width="100" height="100" rx="2.2" class="sb-rim"/><g class="sb-aim" style="display:none"><rect width="10" height="10" rx="1.8"/><path d="M5 1.6v2M5 6.4v2M1.6 5h2M6.4 5h2"/></g>`;
@@ -93,5 +95,12 @@ function fx(svg, cell, hit, fast) {
     res();
   }, t1));
 }
-window.SeaBoard = { draw, cellAt, point, aim, fx, xy, O };
+// sonar: a ring sweeps over the 3×3 box
+function sweep(svg, area) {
+  const layer = svg.querySelector('.sb-fx'); let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1; for (const c of area) { const [x, y] = xy(c); x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x + 10); y1 = Math.max(y1, y + 10); }
+  const g = document.createElementNS(NS, 'g'); g.innerHTML = `<rect x="${x0 + .7}" y="${y0 + .7}" width="${x1 - x0 - 1.4}" height="${y1 - y0 - 1.4}" rx="2.4" class="sb-fx-scan"/><circle cx="${(x0 + x1) / 2}" cy="${(y0 + y1) / 2}" r="5" class="sb-fx-ring scan"/><circle cx="${(x0 + x1) / 2}" cy="${(y0 + y1) / 2}" r="5" class="sb-fx-ring scan d2"/>`;
+  layer.appendChild(g); setTimeout(() => g.remove(), 1100);
+  return new Promise(res => setTimeout(res, 750));
+}
+window.SeaBoard = { draw, cellAt, point, aim, fx, sweep, xy, O };
 })();
