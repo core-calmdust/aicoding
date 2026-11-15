@@ -71,24 +71,14 @@
     };
   })();
 
-  // cream paper: soft clouds painted small and scaled up, plus a tiled fine grain (fast: no per-pixel work at full size)
-  function paperFill(c, CW, CH, T3) {
-    const sw = Math.ceil(CW / 6), sh = Math.ceil(CH / 6), sm = document.createElement('canvas'); sm.width = sw; sm.height = sh;
-    const sc = sm.getContext('2d'), Nz = T3.makeNoise(3), img = sc.createImageData(sw, sh), d = img.data;
-    for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) { const v = (Nz(x / 12, y / 12, 3) - .5) * 9, i = (y * sw + x) * 4; d[i] = 251 + v; d[i + 1] = 247 + v; d[i + 2] = 236 + v * .9; d[i + 3] = 255; }
-    sc.putImageData(img, 0, 0); c.imageSmoothingEnabled = true; c.drawImage(sm, 0, 0, CW, CH);
-    const gs = 256, g = document.createElement('canvas'); g.width = g.height = gs;
-    const gc = g.getContext('2d'), gi = gc.createImageData(gs, gs), gd = gi.data;
-    for (let i = 0; i < gs * gs; i++) { const v = Math.random() < .5 ? 0 : 255; gd[i * 4] = gd[i * 4 + 1] = gd[i * 4 + 2] = v; gd[i * 4 + 3] = 5 + Math.random() * 9; }
-    gc.putImageData(gi, 0, 0); c.fillStyle = c.createPattern(g, 'repeat'); c.fillRect(0, 0, CW, CH);
-  }
-
   // the notebook page, its ink and the two pens: shared by table play and the rules tour (atlas/rules/dots.js),
   // so a demo line is drawn exactly as in a game. n = boxes per side.
   function kit(T3, n, o) {   // o.tall: force the upright-phone layout on / off
-    const THREE = window.THREE, D = T3.dots, INK = [D.RED, D.BLUE], K0 = { dead: false };
+    const THREE = window.THREE, D = T3.dots, K0 = { dead: false };
+    const look = D.curLook ? D.curLook() : 'notebook'; let set = D.curSet ? D.curSet() : 'ballpoint';
+    const INK = D.inkOf ? D.inkOf(set, look).slice() : [D.RED, D.BLUE];   // (the chosen tools' red and blue; a lighter pair on a dark board)
     /* ---------- the notebook, the page we draw on, the two pens ---------- */
-    const root = new THREE.Group(), nb = D.notebook(false); root.add(nb);
+    const root = new THREE.Group(), nb = D.board ? D.board(look, false) : D.notebook(false); root.add(nb);
     const PW = D.PW, PD = D.PD, PY = D.PY;
     const page = nb.userData.page;
     // the board: (n+1)² dots spread over the same square as the model's 6 × 6 grid
@@ -103,21 +93,9 @@
     const s = T3.texScale(), CW = Math.round(2048 * s), CH = Math.round(CW * PD / PW), PH = CW, K = CW / PW, U = v => v * K;
     const paper = document.createElement('canvas'); paper.width = CW; paper.height = PH;
     {
-      const c = paper.getContext('2d'); c.setTransform(1, 0, 0, PH / CH, 0, 0); paperFill(c, CW, CH, T3);
-      c.strokeStyle = 'rgba(80,130,200,.3)'; c.lineWidth = Math.max(1, U(.014));
-      for (let z = Z0 - Math.ceil((Z0 - 1.1) / (SP / 2)) * SP / 2; z < PD - .2; z += SP / 2) { c.beginPath(); c.moveTo(0, U(z)); c.lineTo(CW, U(z)); c.stroke(); }
-      c.strokeStyle = 'rgba(214,80,90,.4)'; c.lineWidth = U(.016); c.beginPath(); c.moveTo(U(.75), U(.75)); c.lineTo(U(.75), CH); c.stroke();
-      c.fillStyle = 'rgba(70,110,170,.55)'; c.font = `600 ${U(.17)}px "Helvetica Neue",Arial,sans-serif`;
-      c.fillText('No.', U(4.3), U(.98)); c.fillText('Date', U(5.6), U(.98));
-      c.strokeStyle = 'rgba(70,110,170,.5)'; c.lineWidth = U(.01); c.beginPath(); c.moveTo(U(4.62), U(1)); c.lineTo(U(5.45), U(1)); c.moveTo(U(6.05), U(1)); c.lineTo(U(7.2), U(1)); c.stroke();
-      for (let i = 0; i < D.HOLES; i++) { const x = D.holeX(i) + PW / 2; c.beginPath(); c.arc(U(x), U(.32), U(.085), 0, 7); c.fillStyle = '#2a2c33'; c.fill(); }
-      // the dots, inked by hand once (slightly uneven)
-      let q = 99; const rr = () => ((q = (q * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-      for (let r = 0; r <= n; r++) for (let cc = 0; cc <= n; cc++) {
-        const [px, pz] = dotP(r, cc), x = U(px) + (rr() - .5) * U(.02), y = U(pz) + (rr() - .5) * U(.02);
-        c.fillStyle = 'rgba(35,37,44,.3)'; c.beginPath(); c.arc(x, y, U(.095), 0, 7); c.fill();
-        c.fillStyle = '#23252c'; c.beginPath(); c.ellipse(x, y, U(.072), U(.066), rr() * 3, 0, 7); c.fill();
-      }
+      const c = paper.getContext('2d'); c.setTransform(1, 0, 0, PH / CH, 0, 0);
+      const dots = []; for (let r = 0; r <= n; r++) for (let cc = 0; cc <= n; cc++) dots.push(dotP(r, cc));
+      D.surface(look, c, U, { dots, sp: SP, z0: Z0 });
     }
     const cv = document.createElement('canvas'); cv.width = CW; cv.height = PH;
     const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
@@ -130,31 +108,21 @@
       if (g.h) { x1 += a; x2 -= a; } else { z1 += a; z2 -= a; }
       if (rr() < .5) [x1, z1, x2, z2] = [x2, z2, x1, z1];
       const L = Math.hypot(x2 - x1, z2 - z1), nx = -(z2 - z1) / L, nz = (x2 - x1) / L, bow = (rr() - .5) * L * .06;
-      return { x1, z1, x2, z2, cx: (x1 + x2) / 2 + nx * bow, cz: (z1 + z2) / 2 + nz * bow, w: .05, j: [(rr() - .5) * .03, (rr() - .5) * .03] };
+      return { x1, z1, x2, z2, cx: (x1 + x2) / 2 + nx * bow, cz: (z1 + z2) / 2 + nz * bow, w: D.strokeW ? D.strokeW(set) : .05, j: [(rr() - .5) * .03, (rr() - .5) * .03] };
     }
     const qpt = (st, k) => { const u = 1 - k; return [u * u * st.x1 + 2 * u * k * st.cx + k * k * st.x2, u * u * st.z1 + 2 * u * k * st.cz + k * k * st.z2]; };
-    function inkStroke(c, st, col) {   // ballpoint: drawn twice with a little offset (pressure varies), an ink blob where the pen started
-      c.strokeStyle = col; c.lineCap = 'round';
-      for (let p = 0; p < 2; p++) {
-        c.globalAlpha = p ? .5 : .92; c.lineWidth = U(st.w) * (p ? .55 : 1);
-        const ox = p ? U(st.j[0]) : 0, oz = p ? U(st.j[1]) : 0;
-        c.beginPath(); c.moveTo(U(st.x1) + ox, U(st.z1) + oz); c.quadraticCurveTo(U(st.cx) + ox, U(st.cz) + oz, U(st.x2) - ox, U(st.z2) - oz); c.stroke();
-      }
-      c.globalAlpha = .8; c.fillStyle = col; c.beginPath(); c.arc(U(st.x1), U(st.z1), U(st.w) * .62, 0, 7); c.fill(); c.globalAlpha = 1;
-    }
+    const inkStroke = (c, st, col) => D.stroke(set, c, st, col, U);   // (the chosen tool's line: atlas/models/dots.js)
     function boxInk(c, bx, o) {   // diagonal hatching and the closer's initial
       const r = Math.floor(bx / n), cc = bx % n, [px, pz] = dotP(r, cc), x0 = U(px), y0 = U(pz), sz = U(SP), col = INK[o];
       let q = 131 * (bx + 3); const rr = () => ((q = (q * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-      c.save(); c.beginPath(); c.rect(x0 + U(.08), y0 + U(.08), sz - U(.16), sz - U(.16)); c.clip();
-      c.strokeStyle = col; c.globalAlpha = .24; c.lineWidth = U(.022);
-      const gap = U(Math.max(.11, SP * .11));
-      for (let tt = -sz; tt < sz * 2; tt += gap) { c.beginPath(); c.moveTo(x0 + tt + (rr() - .5) * U(.03), y0); c.lineTo(x0 + tt - sz + (rr() - .5) * U(.03), y0 + sz); c.stroke(); }
-      c.restore();
+      D.boxMark(set, c, x0, y0, sz, col, rr, U);
       c.save(); c.translate(x0 + sz / 2, y0 + sz / 2 + U(.04)); c.rotate((rr() - .5) * .3); c.globalAlpha = .9; c.fillStyle = col;
       c.font = `italic 700 ${U(Math.min(.95, SP * .5))}px "Segoe Print","Bradley Hand","Comic Sans MS","Chalkboard SE",cursive`; c.textAlign = 'center'; c.textBaseline = 'middle';
       c.fillText(o ? 'B' : 'R', 0, 0); c.restore();
     }
+    let lastDraw = null;
     function redraw(by, owner, score) {   // paper + every drawn line + every closed box + the running tally in the margin
+      lastDraw = [by, owner, score];
       const c = cv.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(paper, 0, 0); c.setTransform(1, 0, 0, PH / CH, 0, 0);
       for (let bx = 0; bx < B; bx++) if (owner[bx] >= 0) boxInk(c, bx, owner[bx]);
       for (let e = 0; e < E; e++) if (by[e] >= 0) inkStroke(c, strokeOf(e), INK[by[e]]);
@@ -166,11 +134,11 @@
     // the pens: red (first) lies right of the notebook, blue (second) on the left; the one in use is held over the page
     const tall = o && o.tall != null ? !!o.tall : innerHeight > innerWidth * 1.15;   // phones held upright
     const pens = INK.map((col, i) => {
-      const yaw = new THREE.Group(), tilt = new THREE.Group(), p = D.pen(new THREE.Color(col).getHex(), false);
+      const yaw = new THREE.Group(), tilt = new THREE.Group(), p = D.tool ? D.tool(set, i, look) : D.pen(new THREE.Color(col).getHex(), false);
       p.position.set(1.695, 0, 0); tilt.add(p); yaw.add(tilt); root.add(yaw);
       // resting (the tip's position): beside the notebook, or on its bottom margin when the screen is upright
       const rest = tall ? { x: i ? -.15 : -3.6, y: PY + .135, z: i ? 3.72 : 3.98, yaw: i ? .03 : -.02, tilt: 0 } : { x: i ? -4.6 : 4.6, y: .135, z: .7, yaw: i ? 1.39 : 1.75, tilt: 0 };
-      const o = { yaw, tilt, rest, pose: Object.assign({}, rest) };
+      const o = { yaw, tilt, rest, pose: Object.assign({}, rest), p };
       setPose(o, rest); return o;
     });
     function setPose(o, q) { o.pose = Object.assign({}, q); o.yaw.position.set(q.x, q.y, q.z); o.yaw.rotation.y = q.yaw; o.tilt.rotation.z = q.tilt; }
@@ -256,6 +224,12 @@
     }
     return Object.assign(K0, { root, nb, page, PW, PD, PY, SP, X0, Z0, dotP, HN, E, B, edgeRC, boxEdges, edgeBoxes, INK, tall, pens, setPose, toRoot, WRITE,
       strokeOf, qpt, redraw, anim, ease, penTo, penHome, ribbon, ribbonM, ribbonG, shapeRibbon, mkMark, preview, hintMk, markEdge, flash, drawLine, edgeAt,
+      // another pair of tools (the board view's 駒 row, mid-game): new pens in the same hands, the page re-inked
+      repiece() {
+        if (!D.curSet) return; set = D.curSet(); const ink = D.inkOf(set, look); INK[0] = ink[0]; INK[1] = ink[1];
+        pens.forEach((o, i) => { const p = D.tool(set, i, look); p.position.set(1.695, 0, 0); o.tilt.remove(o.p); o.p = p; o.tilt.add(p); });
+        if (lastDraw) redraw(...lastDraw); if (T3.kick) T3.kick(300);
+      },
       stop() { K0.dead = true; tweens.clear(); if (raf) cancelAnimationFrame(raf); tex.dispose(); ribbonG.dispose(); } });
   }
 
@@ -281,6 +255,8 @@
     const onTurn = () => { if (ctx.onTurn) ctx.onTurn(ix(turn), { human: pvp || turn === human, ply }); };
     redraw();
 
+    const onPcs = e => { if (!stopped && e.detail && e.detail.id === 'dots' && K.repiece) K.repiece(); };   // (the board view's 駒 row during a game)
+    addEventListener('atlas-pieces', onPcs);
     function hideHint() { hintE = -1; markEdge(hintMk, -1); hintJ++; }
     async function play(e, pl) {   // player pl draws edge e
       if (pvp || pl === human) hist.push({ by: by.slice(), owner: owner.slice(), score: score.slice(), turn, moves: moves.slice() });
@@ -392,7 +368,7 @@
       resign() { if (!over) finish(pvp ? turn : human, 'resign'); },
       timeout(sd) { if (!over) finish(sd, 'time'); },
       stop() {
-        stopped = true; tok++; K.stop();
+        stopped = true; tok++; removeEventListener('atlas-pieces', onPcs); K.stop();
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointermove', onMove); ctx.el.style.cursor = '';
         if (worker) worker.terminate(); if (hintW) hintW.terminate();
       },

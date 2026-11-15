@@ -24,7 +24,9 @@
   // the DOM frame (1.07 × the board) = the page's full width; its bottom = the page's bottom
   const SQ = PW / 1.07, BX0 = (PW - SQ) / 2, BZ0 = PD - BX0 - SQ, BAND = BZ0 - BX0 + .2;   // board square on the page; the band above the frame (spiral + head)
   de.style.setProperty('--dtband', (BAND / SQ).toFixed(4));
-  const INK = [D.RED, D.BLUE], NEUTRAL = '#3c3f48';
+  let look = D.curLook ? D.curLook() : 'notebook', set = D.curSet ? D.curSet() : 'ballpoint';
+  const INK = D.inkOf ? D.inkOf(set, look).slice() : [D.RED, D.BLUE], NEUTRAL0 = '#3c3f48';
+  let NEUTRAL = D.dark && D.dark(look) ? '#c9ced6' : NEUTRAL0;
 
   const skin = AtlasSkin.init({
     board: boardEl,
@@ -47,22 +49,10 @@
   });
   if (!skin) return;
 
-  // cream paper: soft clouds painted small and scaled up, plus a tiled fine grain (fast: no per-pixel work at full size)
-  function paperFill(c, CW, CH, T3) {
-    const sw = Math.ceil(CW / 6), sh = Math.ceil(CH / 6), sm = document.createElement('canvas'); sm.width = sw; sm.height = sh;
-    const sc = sm.getContext('2d'), Nz = T3.makeNoise(3), img = sc.createImageData(sw, sh), d = img.data;
-    for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) { const v = (Nz(x / 12, y / 12, 3) - .5) * 9, i = (y * sw + x) * 4; d[i] = 251 + v; d[i + 1] = 247 + v; d[i + 2] = 236 + v * .9; d[i + 3] = 255; }
-    sc.putImageData(img, 0, 0); c.imageSmoothingEnabled = true; c.drawImage(sm, 0, 0, CW, CH);
-    const gs = 256, g = document.createElement('canvas'); g.width = g.height = gs;
-    const gc = g.getContext('2d'), gi = gc.createImageData(gs, gs), gd = gi.data;
-    for (let i = 0; i < gs * gs; i++) { const v = Math.random() < .5 ? 0 : 255; gd[i * 4] = gd[i * 4 + 1] = gd[i * 4 + 2] = v; gd[i * 4 + 3] = 5 + Math.random() * 9; }
-    gc.putImageData(gi, 0, 0); c.fillStyle = c.createPattern(g, 'repeat'); c.fillRect(0, 0, CW, CH);
-  }
-
   /* ---------- the notebook: the board square's centre at the origin ---------- */
-  const root = new THREE.Group(), nb = D.notebook(false); root.add(nb);
+  const root = new THREE.Group(); let nb = D.board ? D.board(look, false) : D.notebook(false); root.add(nb);
   nb.position.set(PW / 2 - (BX0 + SQ / 2), 0, PD / 2 - (BZ0 + SQ / 2));
-  const page = nb.userData.page;
+  let page = nb.userData.page;
   T3.show('dots', root, { still: true });
   skin.alignTo(SQ, PY);
 
@@ -78,22 +68,8 @@
   const geo = () => { const n = game.n, W = n * U + 2 * M, F = flipOn3(); return { n, W, F, dot: (r, c) => { if (F) { r = n - r; c = n - c; } return [BX0 + (M + c * U) / W * SQ, BZ0 + (M + r * U) / W * SQ]; }, sp: U / W * SQ }; };
   function makePaper(gm) {
     const c = (paper = paper || document.createElement('canvas')).getContext('2d'); paper.width = CW; paper.height = PH; paperN = gm.n; c.setTransform(1, 0, 0, PH / CH, 0, 0);
-    paperFill(c, CW, CH, T3);
-    c.globalCompositeOperation = 'multiply'; c.fillStyle = 'rgba(255,236,205,1)'; c.fillRect(0, 0, CW, CH); c.globalCompositeOperation = 'source-over';   // a warmer cream under the page's cooler light
-    const z0 = gm.dot(0, 0)[1], h = gm.sp / 2;
-    c.strokeStyle = 'rgba(80,130,200,.3)'; c.lineWidth = Math.max(1, Uu(.014));
-    for (let z = z0 - Math.ceil((z0 - 1.1) / h) * h; z < PD - .2; z += h) { c.beginPath(); c.moveTo(0, Uu(z)); c.lineTo(CW, Uu(z)); c.stroke(); }
-    c.strokeStyle = 'rgba(214,80,90,.4)'; c.lineWidth = Uu(.016); c.beginPath(); c.moveTo(Uu(.75), Uu(.75)); c.lineTo(Uu(.75), CH); c.stroke();
-    c.fillStyle = 'rgba(70,110,170,.55)'; c.font = `600 ${Uu(.17)}px "Helvetica Neue",Arial,sans-serif`;
-    c.fillText('No.', Uu(4.3), Uu(.98)); c.fillText('Date', Uu(5.6), Uu(.98));
-    c.strokeStyle = 'rgba(70,110,170,.5)'; c.lineWidth = Uu(.01); c.beginPath(); c.moveTo(Uu(4.62), Uu(1)); c.lineTo(Uu(5.45), Uu(1)); c.moveTo(Uu(6.05), Uu(1)); c.lineTo(Uu(7.2), Uu(1)); c.stroke();
-    for (let i = 0; i < D.HOLES; i++) { const x = D.holeX(i) + PW / 2; c.beginPath(); c.arc(Uu(x), Uu(.32), Uu(.085), 0, 7); c.fillStyle = '#2a2c33'; c.fill(); }
-    let q = 99; const rr = () => ((q = (q * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-    for (let r = 0; r <= gm.n; r++) for (let cc = 0; cc <= gm.n; cc++) {
-      const [px, pz] = gm.dot(r, cc), x = Uu(px) + (rr() - .5) * Uu(.02), y = Uu(pz) + (rr() - .5) * Uu(.02);
-      c.fillStyle = 'rgba(35,37,44,.3)'; c.beginPath(); c.arc(x, y, Uu(.095), 0, 7); c.fill();
-      c.fillStyle = '#23252c'; c.beginPath(); c.ellipse(x, y, Uu(.072), Uu(.066), rr() * 3, 0, 7); c.fill();
-    }
+    const dots = []; for (let r = 0; r <= gm.n; r++) for (let cc = 0; cc <= gm.n; cc++) dots.push(gm.dot(r, cc));
+    D.surface(look, c, Uu, { dots, sp: gm.sp, z0: gm.dot(0, 0)[1], warm: true });
   }
   function strokeOf(gm, e) {   // the same hand-drawn line every time (seeded by the edge)
     let q = 7919 * (e + 1) + gm.n * 31; const rr = () => ((q = (q * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
@@ -102,18 +78,10 @@
     if (h) { x1 += a; x2 -= a; } else { z1 += a; z2 -= a; }
     if (rr() < .5) [x1, z1, x2, z2] = [x2, z2, x1, z1];
     const L = Math.hypot(x2 - x1, z2 - z1), nx = -(z2 - z1) / L, nz = (x2 - x1) / L, bow = (rr() - .5) * L * .06;
-    return { x1, z1, x2, z2, cx: (x1 + x2) / 2 + nx * bow, cz: (z1 + z2) / 2 + nz * bow, w: .05, j: [(rr() - .5) * .03, (rr() - .5) * .03] };
+    return { x1, z1, x2, z2, cx: (x1 + x2) / 2 + nx * bow, cz: (z1 + z2) / 2 + nz * bow, w: D.strokeW ? D.strokeW(set) : .05, j: [(rr() - .5) * .03, (rr() - .5) * .03] };
   }
   const qpt = (st, k) => { const u = 1 - k; return [u * u * st.x1 + 2 * u * k * st.cx + k * k * st.x2, u * u * st.z1 + 2 * u * k * st.cz + k * k * st.z2]; };
-  function inkStroke(c, st, col) {
-    c.strokeStyle = col; c.lineCap = 'round';
-    for (let p = 0; p < 2; p++) {
-      c.globalAlpha = p ? .5 : .92; c.lineWidth = Uu(st.w) * (p ? .55 : 1);
-      const ox = p ? Uu(st.j[0]) : 0, oz = p ? Uu(st.j[1]) : 0;
-      c.beginPath(); c.moveTo(Uu(st.x1) + ox, Uu(st.z1) + oz); c.quadraticCurveTo(Uu(st.cx) + ox, Uu(st.cz) + oz, Uu(st.x2) - ox, Uu(st.z2) - oz); c.stroke();
-    }
-    c.globalAlpha = .8; c.fillStyle = col; c.beginPath(); c.arc(Uu(st.x1), Uu(st.z1), Uu(st.w) * .62, 0, 7); c.fill(); c.globalAlpha = 1;
-  }
+  const inkStroke = (c, st, col) => D.stroke(set, c, st, col, Uu);   // (the chosen tool's line: atlas/models/dots.js)
   /* handwriting: the marker hand of the Latin marks, then handwritten webfonts for every other script
      (Kalam: Latin + Devanagari, Zen Kurenaido: kana/kanji, Nanum Pen Script: Hangul, Long Cang: hanzi, Aref Ruqaa: Arabic),
      so 「あ」「山」「나」「आ」「أ」 are scribbled like "AI" instead of falling back to a bold UI font */
@@ -147,11 +115,7 @@
   function boxInk(c, gm, bx, o) {
     const r = Math.floor(bx / gm.n), cc = bx % gm.n, [px, pz] = gm.F ? gm.dot(r + 1, cc + 1) : gm.dot(r, cc), x0 = Uu(px), y0 = Uu(pz), sz = Uu(gm.sp), col = o === 2 ? NEUTRAL : INK[o];
     let q = 131 * (bx + 3); const rr = () => ((q = (q * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-    c.save(); c.beginPath(); c.rect(x0 + Uu(.08), y0 + Uu(.08), sz - Uu(.16), sz - Uu(.16)); c.clip();
-    c.strokeStyle = col; c.globalAlpha = o === 2 ? .12 : .24; c.lineWidth = Uu(.022);
-    const gap = Uu(Math.max(.11, gm.sp * .11));
-    for (let tt = -sz; tt < sz * 2; tt += gap) { c.beginPath(); c.moveTo(x0 + tt + (rr() - .5) * Uu(.03), y0); c.lineTo(x0 + tt - sz + (rr() - .5) * Uu(.03), y0 + sz); c.stroke(); }
-    c.restore();
+    D.boxMark(set, c, x0, y0, sz, col, rr, Uu, o === 2);
     if (o === 2) return;
     let ch = 'RB'[o]; try { ch = initial(o) || ch; } catch (e) {}
     const lat = LATIN.test(ch), hang = /[\u1100-\u11ff\uac00-\ud7af]/.test(ch), wide = !lat && /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/.test(ch);   // kana / kanji fill the em: a little smaller (the pen Hangul is drawn small: larger)
@@ -217,5 +181,16 @@
   };
   try { paint(); } catch (e) {}
   // デザイン: "3D board" first in the board row, or one of the game's own 2D boards (shown as the plain 2D page)
-  if (skin.view) skin.view({ key: 'atlas-dots-view', row: document.getElementById('skRow'), img: '../images/atlas/dots.webp', cls: ['atlas-dots'] });
+  // 3D の盤・駒 (2026-11-15): another surface → a new board in the same place (the page re-painted); other tools → the ink re-drawn
+  function swapBoard() {
+    look = D.curLook(); const ink = D.inkOf(set, look); INK[0] = ink[0]; INK[1] = ink[1]; NEUTRAL = D.dark(look) ? '#c9ced6' : NEUTRAL0;
+    const pos = nb.position.clone(); nb.remove(ribbon); root.remove(nb); nb = D.board(look, false); nb.position.copy(pos); root.add(nb); nb.add(ribbon);
+    page = nb.userData.page; page.material = page.material.clone(); page.material.map = tex; page.material.needsUpdate = true;
+    paper = null; lastKey = ''; try { paint(); } catch (e) {} T3.kick(800);
+  }
+  function swapTools() { set = D.curSet(); const ink = D.inkOf(set, look); INK[0] = ink[0]; INK[1] = ink[1]; lastKey = ''; try { paint(); } catch (e) {} }
+  const V = skin.view ? skin.view({ key: 'atlas-dots-view', row: document.getElementById('skRow'), img: '../images/atlas/dots.webp', cls: ['atlas-dots'] }) : null;
+  { const r1 = document.getElementById('skRow'), h = r1 && (r1.closest('.field') || r1.parentNode), is3 = () => (V && V.is3d ? V.is3d() : true), on3 = () => { if (V && V.set && !is3()) V.set(true); };
+    const R3 = AtlasSkin.rows3d && h && D.board ? AtlasSkin.rows3d({ id: 'dots', host: h, is3, p3: { ja: '3D筆記具', en: '3D pens', zh: '3D笔', 'zh-TW': '3D筆', ko: '3D 필기구', es: 'Útiles 3D', fr: 'Stylos 3D', pt: 'Canetas 3D', de: '3D-Stifte', hi: '3D पेन', ar: 'أقلام ثلاثية الأبعاد', ru: '3D-ручки', id: 'Alat tulis 3D', tr: '3D kalemler' }, board: () => { on3(); swapBoard(); }, piece: () => { on3(); swapTools(); } }) : null;
+    if (R3 && r1) r1.addEventListener('click', () => setTimeout(() => R3.paint(), 0)); }
 })();
