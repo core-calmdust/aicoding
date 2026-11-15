@@ -1960,3 +1960,10 @@ html.lp .modal.gacham .gbtns .btn small{color:#e9dcff}
 .pp-cb{display:inline-flex;align-items:center;gap:3px;margin-left:.6em;padding:1px 8px 1px 5px;border-radius:99px;border:1px solid rgba(232,206,140,.45);
   font-family:var(--serif);font-size:.82em;font-weight:700;color:#ffe9b0;background:rgba(0,0,0,.25);white-space:nowrap}
 .pp-cb svg{width:1.05em;height:1.05em;color:#ffd24a}
+/* (ユーザー 2026-11-15, PC) the player across sits on the far rail, right of centre, face and name side by side (full size); the right
+   player back under the corner buttons; the left player lower, at the middle of the left side */
+html.ds #game #opp2{left:51%!important;right:auto!important;top:max(4px,calc(var(--gi) * .4))!important;transform:none!important;
+  flex-direction:row;align-items:center;gap:10px}
+html.ds #game #opp2 .bt{align-items:flex-start}
+html.ds #game #opp1{top:calc(var(--gi) + 32px * var(--hz, 1) + 14px)}
+html.ds #game #opp3{top:26%}
