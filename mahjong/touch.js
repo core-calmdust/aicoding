@@ -71,7 +71,7 @@ const famOf = id => { const c = root.MJChars && root.MJChars.get(id); return c &
 const DATA = {}, loading = {}, bags = {};
 // add(id, 性格のメモ, { f: 'a|b|c', … })
 function add(id, note, o) { const d = DATA[id] = { note }; for (const k in o) d[k] = o[k].split('|').map(s => s.trim()).filter(Boolean); }
-const HAVE = ['violet'];   // (the families whose lines are written so far; the others keep their old lines)
+const HAVE = ['violet', 'snow', 'peach', 'amber', 'crimson', 'chestnut', 'jade', 'gold', 'lapis', 'flame'];
 function load(id) { const f = famOf(id); if (!f || loading[f] || HAVE.indexOf(f) < 0) return; loading[f] = true; const s = document.createElement('script'); s.src = (root.JANKA_TOUCH || 'touch/') + f + '.js?v=' + VER; s.async = true; document.head.appendChild(s); }
 // where on the picture (u, v: 0…1 of the whole picture) → the kind of place
 function zone(id, u, v) { let best = null; for (const z of ZONES[id] || []) { const dx = (u - z[1]) / z[3], dy = (v - z[2]) / z[4]; if (dx * dx + dy * dy <= 1 && (best == null || ORDER[z[0]] < ORDER[best])) best = z[0]; } return best; }
@@ -84,6 +84,6 @@ function line(id, kind) {
   if (!bag || !bag.length) { bag = bags[key] = d[kind].map((_, i) => i); for (let i = bag.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [bag[i], bag[j]] = [bag[j], bag[i]]; } }
   return d[kind][bag.pop()];
 }
-const VER = 1;
+const VER = 2;
 root.MJTouch = { add, load, zone, line, data: DATA, zones: ZONES };
 })(window);
