@@ -304,7 +304,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=11'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=12'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -519,11 +519,35 @@
       await new Promise(r => later(r, 900)); if (stopped || my !== tok) return;
       flick(E.perform(mv, level, seed()));
     }
+    // the AI's penalty against your live keeper: the physics runs as it plays (at half speed, so a person can react),
+    // the keeper where your mouse / finger has it at each step — and still yours to move after the ball is in
+    async function flickLive(move) {
+      if (over || stopped || busy) return;
+      busy = true; phase = 'anim'; clearGuides(); callBar(null); task(''); beaconAt(false); pan = { x: 0, y: 0 };
+      const s0 = st, p = s0.pos, d = 1 - p, c = E.simCore(s0, move), TS = .5; SND.flick(); trailLast = null;
+      let gt = 0, last = performance.now(), ev = 0, px = c.X[20], py = c.Y[20];
+      await new Promise(done => { (function step() {
+        if (stopped) return done();
+        const now = performance.now(); gt += Math.min(.05, (now - last) / 1000) * TS; last = now;
+        c.setKeeper(d, st.k[d].x, st.k[d].y); c.runUntil(gt);
+        for (let i = 0; i < 20; i++) put(bt[i], c.X[i], c.Y[i]);
+        const bx = c.X[20], by = c.Y[20]; put(ballG, bx, by);
+        const dd = Math.hypot(bx - px, by - py); if (dd > 1e-4 && ballG.children[0]) { const ax = new TH.Vector3(py - by, 0, bx - px).normalize(); ballG.children[0].rotateOnWorldAxis(ax, dd / D.RBALL * -1); }
+        if (dd > .05) neonTrail(bx, by); px = bx; py = by;
+        while (ev < c.events.length) { const e = c.events[ev++];
+          if ((e.k === 'hit' || e.k === 'ball') && e.v > 6) { SND.hit(e.v * (e.k === 'ball' ? .55 : 1)); neonFlash(Math.min(3, e.v / 40)); } else if ((e.k === 'rim' || e.k === 'post' || e.k === 'keep') && e.v > 10) { SND.cush(e.v * .7); neonFlash(1); } else if (e.k === 'goal') { SX.net(); neonStrobe(); } }
+        kick(120);
+        if (!c.done) requestAnimationFrame(step); else done();
+      })(); });
+      if (stopped) return;
+      const sim = c.result(), s1 = E.clone(s0); s1.k = sim.k; ply++;
+      return pkResult(s1, E.resolve(s1, sim), p);
+    }
     /* ---------- PK戦: the sides take turns at the penalty mark; after n each, sudden death ---------- */
     // the PK shoot-out's wider goal (three keepers wide): on the table while a shoot-out is on
     function goalW() { if (U && U.goalWidth) { U.goalWidth(st && st.pk ? D.PK_GW : 0); kick(120); } }
     async function pkSetup() {
-      goalW(); const t0 = st.pk.next, s1 = E.clone(st); E.kickoff(s1, t0); s1.pk = st.pk; E.restartFor(s1, t0, 'pen'); s1.pkReady = true; s1.score = st.score.slice();
+      pkLive = false; kdrag = false; goalW(); const t0 = st.pk.next, s1 = E.clone(st); E.kickoff(s1, t0); s1.pk = st.pk; E.restartFor(s1, t0, 'pen'); s1.pkReady = true; s1.score = st.score.slice();
       st = s1; hud(); clearGuides(); await glideTo(st, 700); if (stopped) return; syncAll();
       onTurn(); toast(tx('pkKick', { p: nameOf(t0), k: st.pk.k[t0].length + 1 }));
       await setKeeperPhase();
@@ -579,6 +603,8 @@
         phase = 'ai'; say(tx('think', { p: nameOf(st.pos) }));
         const g = E.clone(st), B = E.keeperBox(d, true); E.setKeeper(g, d, PK_LANE() * (D.PK_GW / 2 - D.KHW), B.y0);
         const mv = await think(g, level); if (stopped || my !== tok) return; pkShot = mv && !mv.declare ? mv : null;
+        // not too fast to react to (2026-11-15 ユーザー：キッカーの球の速度が早すぎると人間はほぼ対応不可) — still enough to reach the goal
+        if (pkShot && human(d) && !pvp) pkShot.v = Math.max(84, Math.min(96, pkShot.v));
       }
       if (st.pk && !human(d)) {
         const B = E.keeperBox(d, true); pkDive = { x: PK_LANE() * (D.PK_GW / 2 - D.KHW + .5), y: B.y0 };
@@ -590,7 +616,7 @@
         // drag) from side to side until the AI shoots, after a run-up of its own choosing
         phase = 'keeper'; pkLive = true; say(tx('keeper')); task(tx('pkLive')); callBar(null); showGuides();
         { const gy = E.goalY(d); camAt = { x: st.ball.x / 2, y: (st.ball.y + gy) / 2 }; span = { x: Math.abs(st.ball.x) + 14, y: Math.abs(gy - st.ball.y) + 4 }; pan = { x: 0, y: 0 }; camFit(true); }
-        later(() => { if (stopped || my !== tok || phase !== 'keeper' || !pkLive) return; pkLive = false; kdrag = false; clearGuides(); const m = pkShot; pkShot = null; flick(E.perform(m, level, seed())); }, 1800 + Math.random() * 1600);
+        later(() => { if (stopped || my !== tok || phase !== 'keeper' || !pkLive) return; clearGuides(); const m = pkShot; pkShot = null; flickLive(E.perform(m, level, seed())); }, 1800 + Math.random() * 1600);
         return;
       }
       if (human(d)) {
@@ -695,7 +721,7 @@
     function pm(e) {
       if (pdrag) { const q = toCm(e); if (q) orbitTo(q); return; }
       if (kdrag) { const q = toCm(e); if (q) moveKeeper(q); return; }
-      if (pkLive && phase === 'keeper' && e.pointerType === 'mouse') { const q = toCm(e); if (q) moveKeeper({ x: q.x, y: st.k[keeperSide].y }); return; }
+      if (pkLive && e.pointerType === 'mouse') { const q = toCm(e); if (q) moveKeeper({ x: q.x, y: st.k[keeperSide].y }); return; }
       if (!drag) {
         if (e.pointerType === 'mouse' && canAim()) { const q = toCm(e); const h = q ? btnAt(q, 1) : -1;
           // a restart: the taker follows the mouse round the ball (2026-11-15 ユーザー：向きはマウス移動で勝手に追従)
