@@ -84,6 +84,8 @@
   const DK = ['background:radial-gradient(circle at 35% 30%,#fff,#efe2c3 55%,#c9b98f);box-shadow:inset 0 0 0 1px rgba(110,90,50,.35)', 'background:radial-gradient(circle at 35% 30%,#6b5a4a,#3a2a1c 55%,#1b120a);box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)'];
   const PAT = n => { const a = [0, 0, 0, 0]; if (n < 5) { const ix = [0, 1, 2, 3].sort(() => Math.random() - .5); for (let i = 0; i < n; i++) a[ix[i]] = 1; } return a; };
 
+  // 種目 (2026-11-15): the full game's two rule sets; the card's "size" value names one (1 standard, 5 pieces · 2 long, 7 pieces)
+  const RIDS = ['std', 'long'], RN = {"ja": {"n": ["標準（5枚）", "ロング（7枚）"], "d": ["ケンドールの復元に基づく、いま最も広く遊ばれるルール。各5枚を1〜10に交互に並べて始める。", "ケンドールが1979年に最初に発表した枚数。各7枚を1〜14に交互に並べる、長い勝負。"], "L": "ルール"}, "en": {"n": ["Standard (5)", "Long (7)"], "d": ["The most widely played reconstruction, after Kendall: five pieces each, alternating on squares 1–10.", "The number of pieces in Kendall’s first 1979 rules: seven each on squares 1–14, a longer game."], "L": "Rules"}, "zh": {"n": ["标准（5枚）", "长局（7枚）"], "d": ["依据肯德尔复原、如今最普及的规则。各5枚，交替排在1〜10格。", "肯德尔1979年最初发表的棋子数。各7枚交替排在1〜14格，对局更长。"], "L": "规则"}, "ko": {"n": ["표준 (5개)", "롱 (7개)"], "d": ["켄들의 복원을 따른 가장 널리 쓰이는 규칙. 각 5개를 1~10칸에 번갈아 놓고 시작.", "켄들이 1979년 처음 발표한 개수. 각 7개를 1~14칸에 번갈아 놓는 긴 승부."], "L": "규칙"}, "es": {"n": ["Estándar (5)", "Larga (7)"], "d": ["La reconstrucción más jugada, según Kendall: cinco piezas cada uno, alternadas en 1–10.", "El número de piezas de las primeras reglas de Kendall (1979): siete cada uno en 1–14."], "L": "Reglas"}, "fr": {"n": ["Standard (5)", "Longue (7)"], "d": ["La reconstitution la plus jouée, d’après Kendall : cinq pions chacun, alternés sur 1–10.", "Le nombre de pions des premières règles de Kendall (1979) : sept chacun sur 1–14."], "L": "Règles"}, "pt": {"n": ["Padrão (5)", "Longa (7)"], "d": ["A reconstrução mais jogada, segundo Kendall: cinco peças cada, alternadas em 1–10.", "O número de peças das primeiras regras de Kendall (1979): sete cada em 1–14."], "L": "Regras"}, "de": {"n": ["Standard (5)", "Lang (7)"], "d": ["Die meistgespielte Rekonstruktion nach Kendall: je fünf Figuren abwechselnd auf 1–10.", "Die Figurenzahl aus Kendalls ersten Regeln von 1979: je sieben auf 1–14."], "L": "Regeln"}, "hi": {"n": ["मानक (5)", "लंबा (7)"], "d": ["केंडल के पुनर्निर्माण पर आधारित सबसे प्रचलित नियम: हर ओर 5 गोटियाँ, 1–10 पर बारी-बारी।", "केंडल के 1979 के पहले नियमों की संख्या: हर ओर 7 गोटियाँ, 1–14 पर।"], "L": "नियम"}, "ar": {"n": ["قياسي (5)", "طويل (7)"], "d": ["أكثر إعادة بناء شيوعًا وفق كيندال: خمس قطع لكل لاعب متناوبة على 1–10.", "عدد القطع في قواعد كيندال الأولى (1979): سبع لكل لاعب على 1–14."], "L": "القواعد"}, "ru": {"n": ["Стандарт (5)", "Длинная (7)"], "d": ["Самая распространённая реконструкция, по Кендаллу: по пять фишек, поочерёдно на клетках 1–10.", "Число фишек в первых правилах Кендалла 1979 года: по семь на клетках 1–14, партия длиннее."], "L": "Правила"}, "zh-TW": {"n": ["標準（5 枚）", "長局（7 枚）"], "d": ["最廣為流行的復原版，依肯德爾：各 5 枚，交錯排在第 1～10 格。", "肯德爾 1979 年最初規則的棋子數：各 7 枚排在第 1～14 格，對局較長。"], "L": "規則"}, "id": {"n": ["Standar (5)", "Panjang (7)"], "d": ["Rekonstruksi yang paling banyak dimainkan, menurut Kendall: lima bidak masing-masing, berselang-seling di petak 1–10.", "Jumlah bidak dalam aturan pertama Kendall 1979: tujuh masing-masing di petak 1–14, permainan lebih panjang."], "L": "Aturan"}, "tr": {"n": ["Standart (5)", "Uzun (7)"], "d": ["En yaygın oynanan yeniden kurgu, Kendall'a göre: her biri beş taş, 1–10. karelere sırayla dizilir.", "Kendall'ın ilk 1979 kurallarındaki taş sayısı: 1–14. karelerde her biri yedi, daha uzun bir oyun."], "L": "Kurallar"}}, rn = l => RN[l] || RN.en;
   function start(ctx) {
     const T3 = ctx.Table3D, t = ctx.t, X = Object.assign({}, TX.en, TX[ctx.lang] || {});
     const L = { you: t('p.you'), ai: t('p.ai'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') };
@@ -301,7 +303,7 @@
       if (stopped) return; E = e;
       kit = window.SenetKit.make(T3, { design: dsg, pieces: look, sfx: k => SND[k] && SND[k]() });
       frame();
-      st = E.newGame('std', first); kit.sync(st); kit.restSticks(st.turn, null);
+      st = E.newGame(RIDS[(+ctx.size || 1) - 1] || 'std', first); kit.sync(st); kit.restSticks(st.turn, null);
       if (!pvp) ask(st, 2);
       toast(X.first.replace('{p}', pname(first)));
       later(() => nextTurn(), 700);
@@ -347,5 +349,6 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.senet = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, land: 'side', tableModes: ['ai', 'pvp'], clock: 'bg', levelInfo, start, SND };
+  window.Atlas3D.senet = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, land: 'side', tableModes: ['ai', 'pvp'], clock: 'bg', kindFirst: true, sizes: [1, 2], size0: 1, sizeLabel: l => rn(l).L,
+    sizeName: (z, l) => rn(l).n[(+z || 1) - 1], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[(+v || 1) - 1] } : null, levelInfo, start, SND };
 })();
