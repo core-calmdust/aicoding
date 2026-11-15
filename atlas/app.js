@@ -1124,7 +1124,12 @@
       const p = $('bv').querySelector('.rgd');
       // phones: the board below やめる and the 詰将棋 hand chips at the top (they covered its top row, 2026-11-11)
       let tp = 0; if (matchMedia('(max-width: 819px)').matches) [$('bvQuit'), document.querySelector('.sghs')].forEach(e => { if (!e || !e.getClientRects().length) return; const r = e.getBoundingClientRect(); if (r.height && r.bottom < innerHeight * .35) tp = Math.max(tp, Math.round(r.bottom + 6)); });
-      Table3D.setInset(p ? $('bv').clientHeight - p.offsetTop + 4 : 0, tp); return; }
+      // phones (2026-11-15): the framing doesn't follow the bubble's text — the text box is counted as 4 lines whatever it holds
+      // (a longer text may cover the board's edge: it is read, not played on), so the board stays put and as large as it can be
+      let bt = p ? $('bv').clientHeight - p.offsetTop + 4 : 0;
+      const tx = p && matchMedia('(max-width: 819px)').matches && p.querySelector('.tx');
+      if (tx) { const lh = parseFloat(getComputedStyle(tx).lineHeight) || 25; bt += Math.round(4 * lh - tx.offsetHeight); }
+      Table3D.setInset(bt, tp); return; }
     // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)
     let top = 0; for (let e = card; e; e = e.offsetParent) top += e.offsetTop;
     if (!card.offsetParent) top = card.getBoundingClientRect().top;
@@ -1132,6 +1137,10 @@
     $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - top) + 'px');
   }
   addEventListener('resize', () => fitStage());
+  // back to this tab / app (2026-11-15, iOS): the viewport's size settles a moment later — the canvas and the framing are measured again
+  const refit = () => [80, 400, 1000].forEach(ms => setTimeout(() => { if (document.hidden) return; try { Table3D.refit && Table3D.refit(); } catch (e) {} fitStage(); }, ms));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refit(); });
+  addEventListener('pageshow', refit); addEventListener('orientationchange', refit);
   window.__fitStage = () => fitStage();
   // the SSR / UR name card's running light (index.html .prof > .rfx / .dprev > .rfx): its angle turned here, ~30 fps, only while one is on screen
   // (2026-11-11, battery) frames only while such a card can be seen: none on the page, scrolled off (IntersectionObserver),

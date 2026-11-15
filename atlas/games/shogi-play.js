@@ -504,7 +504,7 @@
     }
     /* ---------- puzzle mode (ctx.pz) ---------- */
     let pzOn = false;
-    function pzReady() { if (stopped) return; if (!region && zoomOn) pzZoom(); legal = P.legalMoves(true); busy = false; pzOn = !PZ.lock; drawMarks(); if (PZ.ready) PZ.ready(); }   // (lock: a lesson's opening picture, for looking only)
+    function pzReady() { if (stopped) return; if (!region && PZ.lesson) { region = pzRegion(); zoomOn = false; pan = [0, 0]; zoomBtn(); layout(); } else if (!region && zoomOn) pzZoom();   /* (lessons: the whole board in the middle; the zoom button still there, 2026-11-15) */ legal = P.legalMoves(true); busy = false; pzOn = !PZ.lock; drawMarks(); if (PZ.ready) PZ.ready(); }   // (lock: a lesson's opening picture, for looking only)
     function pzAfter() {   // the player's move has landed: the puzzle decides what happens next
       legal = []; pzOn = false; drawMarks();
       PZ.moved(moves[moves.length - 1], { check: P.inCheck(), mate: !P.legalMoves(false).length, n: moves.length });

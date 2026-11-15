@@ -143,6 +143,7 @@ extra('vct', 5, L('練習：同じ形を向きを変えて。今度は自分で�
 extra('trap', 3, L('練習：同じ形を向きを変えて。×の点をよく見て。', 'Practice: the same shape, turned. Watch the × point.', '练习：同一形状换个方向，注意 × 点。', '연습: 같은 모양을 돌려서. × 점을 잘 보세요.', 'Práctica: la misma figura girada. Mira el punto ×.', 'Exercice : la même figure tournée. Regardez le point ×.', 'Prática: a mesma figura girada. Olhe o ponto ×.', 'Übung: dasselbe Bild gedreht. Achte auf das ×.', 'अभ्यास: वही आकार घुमाकर। × बिंदु देखिए।', 'تمرين: الشكل نفسه مُدارًا. انتبه إلى النقطة ×.'),
   L('×の点は黒の禁手。白の四の止め場所が×になる点を探そう。', 'The × is forbidden for Black. Find a white four whose block is the ×.', '× 是黑的禁手。找一个挡点正好是 × 的白四。', '×는 흑의 금수. 막는 자리가 ×가 되는 백의 사를 찾으세요.', 'La × está prohibida para las negras. Busca un cuatro blanco cuyo bloqueo sea la ×.', 'Le × est interdit à Noir. Cherchez un quatre blanc dont le blocage est le ×.', 'O × é proibido às pretas. Ache um quatro branco cujo bloqueio seja o ×.', 'Das × ist für Schwarz verboten. Suche eine weiße Vier, deren Blockpunkt das × ist.', '× काले के लिए वर्जित है। ऐसा सफ़ेद चार खोजिए जिसका रोक-बिंदु × हो।', 'العلامة × محظورة على الأسود. جِد رباعية بيضاء نقطة سدّها هي ×.'));
 
+Object.assign(RAMPS, require('./ramps-new.js').NEW);   // (2026-11-15: the lessons that had none)
 if (require.main === module) {
   const D = JSON.parse(fs.readFileSync(FILE, 'utf8'));
   for (const s of D.steps) { if (RAMPS[s.id]) s.ramp = RAMPS[s.id]; else delete s.ramp; }

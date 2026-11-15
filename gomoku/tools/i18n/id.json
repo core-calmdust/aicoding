@@ -406,7 +406,7 @@
   "ls.block.ng": "{x} tidak menghentikannya. Lawan membuat lima di {m}.",
   "ls.three.title": "Tutup tiga",
   "ls.three.sub": "Hentikan tiga terbuka sejak awal",
-  "ls.three.intro": "<p>Tiga berderet dengan <b>kedua ujung terbuka</b> disebut <b>tiga</b> (tiga terbuka). Jika dibiarkan, ia menjadi <b>empat terbuka</b> — terbuka di kedua ujung — yang tak bisa dihentikan lagi.</p><p>Tutup tiga <b>di salah satu ujungnya</b> (atau di celahnya). Di diagram, lingkaran hijau menutupnya; titik abu-abu adalah pilihan lain.</p>",
+  "ls.three.intro": "<p>Tiga berderet dengan <b>kedua ujung terbuka</b> disebut <b>tiga</b> (tiga terbuka). Jika dibiarkan, ia menjadi <b>empat terbuka</b> — terbuka di kedua ujung — yang tak bisa dihentikan lagi.</p><p>Tutup tiga <b>di salah satu ujungnya</b> (atau di celahnya). Di diagram, lingkaran hijau menutupnya.</p>",
   "ls.three.goal": "Tutup tiga lawan.",
   "ls.three.hint": "Temukan tiga batu lawan dalam satu garis (celah boleh) dengan kedua ujung terbuka.",
   "ls.three.why": "{m} menghentikan tiga; empat terbuka tidak mungkin lagi ({n} titik benar).",

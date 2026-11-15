@@ -100,7 +100,7 @@
   "ls.block.ng": "{x} does not stop it. Your opponent makes five at {m}.",
   "ls.three.title": "Block a three",
   "ls.three.sub": "Stop an open three early",
-  "ls.three.intro": "<p>Three in a row with <b>both ends open</b> is called a <b>three</b> (open three). Left alone it becomes a <b>straight four</b> — open at both ends — which can no longer be stopped.</p><p>Block a three <b>at one of its ends</b> (or in the gap). In the diagram the green circles block it; the grey dots are further options.</p>",
+  "ls.three.intro": "<p>Three in a row with <b>both ends open</b> is called a <b>three</b> (open three). Left alone it becomes a <b>straight four</b> — open at both ends — which can no longer be stopped.</p><p>Block a three <b>at one of its ends</b> (or in the gap). In the diagram the green circles block it.</p>",
   "ls.three.goal": "Block your opponent's three.",
   "ls.three.hint": "Find three of the opponent's stones in a line (a gap is fine) with both ends open.",
   "ls.three.why": "{m} stops the three; no straight four is possible now ({n} correct points).",

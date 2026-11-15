@@ -91,7 +91,7 @@ S('five', 'basics', collect(5, positions(9, 30, 'free'), c => {
   const g = gridOf(c.pos), me = c.pos.side, op = 3 - me;
   const f = fiveCells(g, me, false); if (f.length !== 1 || fiveCells(g, op, false).length) return null;
   return { ok: [sqName(f[0])], rule: 'free' };
-}), { diagram: { b: ['f8', 'g8', 'h8', 'i8'], w: ['g9', 'h9', 'f7', 'j7'], o: ['j8'], d: ['e8'] } });
+}), { diagram: { b: ['f8', 'g8', 'h8', 'i8'], w: ['g9', 'h9', 'f7', 'j7'], o: ['j8'] } });
 // 2. block a four
 S('block', 'basics', collect(5, positions(9, 30, 'free'), c => {
   const g = gridOf(c.pos), me = c.pos.side, op = 3 - me;
@@ -108,7 +108,7 @@ S('three', 'basics', collect(5, positions(7, 24, 'free'), c => {
   for (const m of empties(g)) { g[m] = me; if (!sfourCells(g, op, false).length) ok.push(m); g[m] = 0; }
   if (ok.length < 2 || ok.length > 4) return null;
   return { ok: ok.map(sqName), rule: 'free' };
-}), { diagram: { w: ['g8', 'h8', 'i8'], b: ['g9', 'h9'], o: ['f8', 'j8'], d: ['e8', 'k8'] } });
+}), { diagram: { w: ['g8', 'h8', 'i8'], b: ['g9', 'h9'], o: ['f8', 'j8'] } });
 // 4. make a straight four
 S('sfour', 'basics', collect(5, positions(7, 26, 'free'), c => {
   const g = gridOf(c.pos), me = c.pos.side, op = 3 - me;
