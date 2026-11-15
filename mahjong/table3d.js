@@ -1353,13 +1353,16 @@ class Table3D {
     // melds. A steeper look (58°) and, for each aim point along the table, the nearest camera that still holds that box (above the
     // hand row along the bottom); the aim that lets the camera come closest wins.
     if (this.mobile && a >= 1.55) {
+      // (ユーザー 2026-11-16: less perspective on a phone, a view from higher — the far player's discards read better) a narrower
+      // lens from further away flattens the table, and the camera looks down more steeply (62°–76° instead of 46°–72°)
+      this.camera.fov = 22;
       const bot = -1 + 2 * .2, v = new THREE.Vector3(), v2 = new THREE.Vector3(), top2 = 1 - 2 * 12 / h;
       // the box: the far melds (flat, along the far rail) and the far hand's tops; the side players' hands (standing) and melds; my
       // own river down to where the hand row begins
       const pts = [[-9.1, .1, -9.3], [9.1, .1, -9.3], [0, .1, -9.4], [0, H + .05, -8.3], [-7.4, H, -8.3], [7.4, H, -8.3], [-8, H, -7.4], [8, H, -7.4], [-9.3, .1, -9.3], [9.3, .1, -9.3],
         [-9.3, .1, 5.6], [9.3, .1, 5.6], [-8, H, 5.6], [8, H, 5.6]];
       let best = null;
-      for (let el = 46; el <= 72; el += 2) { const E = el * PI / 180;
+      for (let el = 62; el <= 76; el += 2) { const E = el * PI / 180;
         const aim = (tz, dd) => { this.lookAt.set(0, 0, tz); this.camera.position.set(0, dd * Math.sin(E), tz + dd * Math.cos(E)); this.camera.updateProjectionMatrix(); this.camera.lookAt(this.lookAt); this.camera.updateMatrixWorld(); };
         const fits = () => pts.every(([x, y, z]) => { v.set(x, y, z).project(this.camera); return v.x >= -.985 && v.x <= .985 && v.y <= top2 && v.y >= bot; });
         for (let tz = -2; tz <= 3; tz += .25) {
@@ -1371,8 +1374,9 @@ class Table3D {
           if (!best || sz > best[0]) best = [sz, el, tz, hi]; } }
       // (ユーザー 2026-11-16: the camera may come back a little on a phone — the rivers ran under the portraits and the skill plates)
       // the closest fit, then backed off by PULL; the aim moves a touch toward the player so the far side keeps its place
-      const PULL = this.camPull || 1.16;
-      if (best) { best[3] *= PULL; best[2] += .35; }
+      // (the steeper, flatter view of 2026-11-16 needs less of it: 1.09 — just enough that the player's portrait stays clear of the left river)
+      const PULL = this.camPull || (a < 2 ? 1.14 : 1.09);   // (a less wide screen — iPhone SE, Safari with its bars — a touch more)
+      if (best) { best[3] *= PULL; best[2] += .2; }
       if (best) { const E = best[1] * PI / 180, tz = best[2], dd = best[3]; this.lookAt.set(0, 0, tz); this.camera.position.set(0, dd * Math.sin(E), tz + dd * Math.cos(E)); this.camera.updateProjectionMatrix(); this.camera.lookAt(this.lookAt); this.camera.updateMatrixWorld(); this._camBest = best; }
       else put();
     }
