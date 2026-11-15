@@ -1369,6 +1369,10 @@ class Table3D {
           // how big the discards come out: the mean width of a tile laid in the middle of each river
           let sz = 0; for (const [x, z] of [[0, 3.6], [0, -3.6], [3.6, 0], [-3.6, 0]]) { v.set(x - .5, 0, z).project(this.camera); v2.set(x + .5, 0, z).project(this.camera); const q = Math.hypot(v2.x - v.x, (v2.y - v.y) / a); sz += x ? Math.hypot(0, 0) || q : q; }
           if (!best || sz > best[0]) best = [sz, el, tz, hi]; } }
+      // (ユーザー 2026-11-16: the camera may come back a little on a phone — the rivers ran under the portraits and the skill plates)
+      // the closest fit, then backed off by PULL; the aim moves a touch toward the player so the far side keeps its place
+      const PULL = this.camPull || 1.16;
+      if (best) { best[3] *= PULL; best[2] += .35; }
       if (best) { const E = best[1] * PI / 180, tz = best[2], dd = best[3]; this.lookAt.set(0, 0, tz); this.camera.position.set(0, dd * Math.sin(E), tz + dd * Math.cos(E)); this.camera.updateProjectionMatrix(); this.camera.lookAt(this.lookAt); this.camera.updateMatrixWorld(); this._camBest = best; }
       else put();
     }
