@@ -1167,11 +1167,14 @@ function renderBadges() {
     const html = `
       <div class="bf ${(s === g.dealer) ? 'dealer' : ''} ${p && p.riichi ? 'rii' : ''}" style="--c:${c.color}">${frame(c, 'face')}<em>${wind}</em>${p && p.riichi ? `<i class="riiflag">${esc(t('riichi'))}</i>` : ''}</div>
       <div class="bt"><b>${esc(L(c.name))}</b>
-        <span class="bk">${s === ME && g.rules.skills ? '' : chips}${DB.set.skills && g.rules.skills && !(s === ME) ? `<i class="sk ${p && p.skillUsed ? 'used' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))} ${MJSkills.TIERS[c.tier | 0]}">${icon(sk.icon)}<b class="tr">${MJSkills.TIERS[c.tier | 0]}</b></i>` : ''}</span></div>`;
+        <span class="bk">${s === ME && g.rules.skills ? '' : chips ? `<span class="fxs">${chips}</span>` : ''}${DB.set.skills && g.rules.skills && !(s === ME) ? `<span class="skw ${p && p.skillUsed ? 'used' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))} ${MJSkills.TIERS[c.tier | 0]}"><i class="sk" style="--sc:${sk.color}">${icon(sk.icon)}<b class="tr">${MJSkills.TIERS[c.tier | 0]}</b></i><span>${esc(L(sk.name))}</span><span class="sktip"><b>${esc(L(sk.name))} <em class="sr">${MJSkills.TIERS[c.tier | 0]}</em></b>${p && p.skillUsed ? `<small>${t('used')}</small>` : ''}<span>${esc(L(sk.desc(MJSkills.val(sk, c.tier))))}</span></span></span>` : ''}</span></div>`;
     if (s === ME) renderMe(html, chips, fx.map(k => L(MJSkills.get(k).name)));   // (ユーザー 2026-11-15: the player's own skill marks — the effects in force, the seal's lock — sit inside the skill plate, not under the portrait; the plate already shows the skill itself)
     else $('#opp' + s).innerHTML = html;
   }
 }
+// (ユーザー 2026-11-15) the others' skill chips: what the skill does in a bubble — on hover, or on a tap (a touch screen; it closes by itself)
+document.addEventListener('click', e => { const w = e.target.closest('#game .opp .skw'); document.querySelectorAll('#game .opp .skw.tip').forEach(x => { if (x !== w) x.classList.remove('tip'); });
+  if (!w) return; e.stopPropagation(); w.classList.toggle('tip'); clearTimeout(w._tt); if (w.classList.contains('tip')) w._tt = setTimeout(() => w.classList.remove('tip'), 4000); }, true);
 function renderMe(badgeHtml, chips, fxNames) {
   const g = G, c = UIS.chars[ME], sk = MJSkills.get(c.skill);
   const p = g.P ? g.P[ME] : null;

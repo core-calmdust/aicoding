@@ -45,6 +45,7 @@ void *memcpy(void *d, const void *s, unsigned long n) { u8 *p = (u8 *)d; const u
 
 #define WIN 30000
 #define WINT 29000
+#define DECV 28000   // scores beyond are decided (a database result: WINT - 200 - ply ± 150, or a won game): no pruning there
 #define INF 32000
 #define MAXPLY 128
 #define MAXMV 64
@@ -174,6 +175,16 @@ static inline u32 mvKey(const Move *m) { return (u32)m->f | ((u32)m->t << 5) | (
 static const u8 *EGD[DBMAX + 1][DBMAX + 1][DBMAX + 1][DBMAX + 1];   // 2 bits per position, both sides to move
 static u32 EGN[DBMAX + 1][DBMAX + 1][DBMAX + 1][DBMAX + 1];
 static int egMaxN = 0;
+// compressed classes (2026-11-15, tools/egpack.c "CKZ2"): probed in place — per side, a token stream cut into EGBS-byte
+// blocks with the first value index of each block. Tokens: 0..80 four values in base 3, 81..255 a run of one value.
+#define EGBS 64
+#define EGNRUN 58
+static const u32 EGRUN[EGNRUN] = { 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 23, 26, 30, 34, 39, 45, 52, 60, 70, 80, 92, 106,
+  122, 140, 161, 185, 213, 245, 282, 324, 373, 429, 493, 567, 652, 750, 862, 991, 1140, 1311, 1508, 1734, 1994, 2293,
+  2637, 3033, 3488, 4011, 4613, 5305, 6100, 7016, 8068, 9278, 10670, 12270 };
+typedef struct { const u32 *first[2]; const u8 *data[2]; u32 nb[2]; } EGZC;
+static EGZC EGZ[DBMAX + 1][DBMAX + 1][DBMAX + 1][DBMAX + 1];
+static u32 EGTL[256]; static u8 EGTV[256];
 static u32 CB[33][33];
 static void initCB(void) { if (CB[0][0]) return; for (int a = 0; a <= 32; a++) { CB[a][0] = 1; for (int k = 1; k <= a; k++) CB[a][k] = CB[a - 1][k - 1] + (k <= a - 1 ? CB[a - 1][k] : 0); } }
 // rank of a set of squares within a list of allowed squares (combinatorial number system)
@@ -201,15 +212,44 @@ EXPORT(eg_add) void eg_add(int bm, int bk, int wm, int wk, const u8 *data) {
   initCB(); EGD[bm][bk][wm][wk] = data; EGN[bm][bk][wm][wk] = eg_size(bm, bk, wm, wk);
   int n = bm + bk + wm + wk; if (n > egMaxN) egMaxN = n;
 }
+EXPORT(eg_addz) void eg_addz(int bm, int bk, int wm, int wk, const u8 *blob) {
+  initCB();
+  if (!EGTL[0]) for (int t = 0; t < 256; t++) { EGTL[t] = t < 81 ? 4 : EGRUN[(t - 81) / 3]; EGTV[t] = t < 81 ? 0 : (u8)((t - 81) % 3 + 1); }
+  const u32 *H = (const u32 *)blob; EGZC *z = &EGZ[bm][bk][wm][wk];
+  z->nb[0] = H[0]; z->nb[1] = H[1];
+  z->first[0] = H + 4; z->first[1] = H + 4 + H[0];
+  z->data[0] = blob + 16 + 4 * (H[0] + H[1]); z->data[1] = z->data[0] + ((H[2] + 3) & ~3u);
+  EGD[bm][bk][wm][wk] = 0; EGN[bm][bk][wm][wk] = eg_size(bm, bk, wm, wk);
+  int n = bm + bk + wm + wk; if (n > egMaxN) egMaxN = n;
+}
+static int egProbeZ(const EGZC *z, u32 idx, int s) {
+  const u32 *F = z->first[s]; u32 lo = 0, hi = z->nb[s];   // the last block whose first index <= idx
+  while (hi - lo > 1) { u32 mid = (lo + hi) >> 1; if (F[mid] <= idx) lo = mid; else hi = mid; }
+  u32 at = F[lo]; const u8 *q = z->data[s] + lo * EGBS;
+  for (;;) {
+    u32 t = *q++, len = EGTL[t];
+    if (idx < at + len) { if (t >= 81) return EGTV[t]; u32 d = idx - at; while (d--) t /= 3; return (int)(t % 3) + 1; }
+    at += len;
+  }
+}
 // 0 unknown, 1 win (side to move), 2 loss, 3 draw. Only quiet positions are stored meaningfully (captures resolved by search)
-static int egProbe(const Pos *p) {
-  int n = pc(p->p[0] | p->p[1]); if (n > egMaxN) return 0;
+static int egRootOn = 0;      // (host: eg_root) a game move: a root inside the databases plays by egRootFilter
+static TLS int egCap = 99;    // pieces above this are not probed (the root's count - 1 while egRootFilter applies)
+static int egProbeK(const Pos *p, int caps) {   // caps: the side to move's captures (-1: not known)
+  int n = pc(p->p[0] | p->p[1]); if (n > egMaxN || n > egCap) return 0;
   int bm = pc(p->p[0] & ~p->k), bk = pc(p->p[0] & p->k), wm = pc(p->p[1] & ~p->k), wk = pc(p->p[1] & p->k);
   if (!bm && !bk) return p->side ? 1 : 2; if (!wm && !wk) return p->side ? 2 : 1;
-  const u8 *D = EGD[bm][bk][wm][wk]; if (!D) return 0;
+  const u8 *D = EGD[bm][bk][wm][wk];
+  if (!D) {
+    const EGZC *z = &EGZ[bm][bk][wm][wk]; if (!z->nb[p->side]) return 0;
+    if (caps < 0) { Move L[MAXMV]; caps = genCaps(p, L); }
+    if (caps) return 0;   // (the compressed classes keep no value where the side to move must capture)
+    return egProbeZ(z, egIndex(p, bm, bk, wm, wk), p->side);
+  }
   u32 idx = egIndex(p, bm, bk, wm, wk) * 2 + p->side;
   return (D[idx >> 2] >> ((idx & 3) * 2)) & 3;
 }
+static inline int egProbe(const Pos *p) { return egProbeK(p, -1); }
 
 // progress inside a database win (side to move's view, |x| < 150): the database knows the result but not how to get there,
 // so the winner is steered towards captures, crowning and closing in on the loser's pieces (the loser does the opposite).
@@ -530,6 +570,14 @@ static inline int evalAt(const Pos *p, int ply) {
   if (N2) return net2Out(p, ACC2[ply][p->side], ACC2[ply][p->side ^ 1]);
   return NH ? netEvalAcc(p, ply) : hand(p);
 }
+// progress inside a database result: the hand-made steer (egProg), or (EGEVAL) the evaluation clamped below the margin
+static inline int egPr(const Pos *p, int ply, int winnerToMove) {
+#ifdef EGEVAL
+  int x = evalAt(p, ply) / EGEVAL; if (x > 140) x = 140; if (x < -140) x = -140; return x;
+#else
+  return egProg(p, winnerToMove);
+#endif
+}
 
 
 // ---------------------------------------------------------------- transposition table
@@ -736,7 +784,7 @@ static inline int svPrune(int depth, int i, const Move *m, int caps, int pv, int
   if (depth <= LMP_D && i >= LMP_A + LMP_B * depth * depth) return 1;
 #endif
 #if SV_FUT
-  if (depth <= FUT_D && i >= 2 && se + FUT_M * depth <= alpha && alpha < WINT) return 1;
+  if (depth <= FUT_D && i >= 2 && se + FUT_M * depth <= alpha && alpha < DECV) return 1;
 #endif
   (void)depth; (void)alpha; return 0;
 }
@@ -760,9 +808,9 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   if (ply >= MAXPLY - 4) return evalAt(p, ply);
   // endgame database (quiet positions)
   if (egMaxN && !caps && ply > 0) {
-    int e = egProbe(p);
+    int e = egProbeK(p, 0);
     if (e) {
-      int v = e == 1 ? WINT - 200 - ply + egProg(p, 1) : e == 2 ? -(WINT - 200 - ply) + egProg(p, 0) : 0;
+      int v = e == 1 ? WINT - 200 - ply + egPr(p, ply, 1) : e == 2 ? -(WINT - 200 - ply) + egPr(p, ply, 0) : 0;
       if (e == 3) return 0;
       if (e == 1 && v >= beta) return v;
       if (e == 2 && v <= alpha) return v;
@@ -771,7 +819,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   }
   if (n == 1 && ply > 0) depth++;          // forced move: does not cost depth
   else if (caps && depth <= 0) depth = 1;   // captures pending at the horizon: resolve them (quiescence)
-  if (depth <= 0) { nodes++; int e = egMaxN ? egProbe(p) : 0; if (e == 3) return 0; if (e) return e == 1 ? WINT - 200 - ply + egProg(p, 1) : -(WINT - 200 - ply) + egProg(p, 0); return evalAt(p, ply); }
+  if (depth <= 0) { nodes++; int e = egMaxN ? egProbeK(p, caps) : 0; if (e == 3) return 0; if (e) return e == 1 ? WINT - 200 - ply + egPr(p, ply, 1) : -(WINT - 200 - ply) + egPr(p, ply, 0); return evalAt(p, ply); }
   nodes++;
   if (ply > seldepth) seldepth = ply;
   // transposition table
@@ -789,7 +837,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
     }
   }
   const int v2 = v2on; int se = -INF;
-  if (v2 && !pv && ply > 0 && !caps && beta < WINT && beta > -WINT) {
+  if (v2 && !pv && ply > 0 && !caps && beta < DECV && beta > -DECV) {
     se = evalAt(p, ply);
 #if SV_RFP
     if (depth <= RFP_D && se - RFP_M * depth >= beta) return se;
@@ -803,7 +851,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
       int v = -search(&q, depth - 1 - (2 + depth / 4), -beta, -beta + 1, ply + 1, key ^ ZSIDE, 0, quietPlies);
       noNull[ply + 1] = 0; hn--; hirr = saveIrr;
       if (stopFlag) return 0;
-      if (v >= beta) return v > WINT ? beta : v;
+      if (v >= beta) return v > DECV ? beta : v;
     }
 #endif
   }
@@ -865,7 +913,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
       { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
     } else i = defI[k - n];
     Move *m = &L[i];
-    if (v2 && best > -WINT && svPrune(depth, i, m, caps, pv, se, alpha)) continue;
+    if (v2 && best > -DECV && svPrune(depth, i, m, caps, pv, se, alpha)) continue;
     u64 k2 = hashMove(key, p, m);
     if (k < n && i > 0 && depth >= BUSY_D && nDef < BUSY_DEF && busyOther(k2)) { defI[nDef++] = i; continue; }
     const int mk = depth >= BUSY_D ? busySet(k2) : -1;
@@ -876,7 +924,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
     int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
     { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
     Move *m = &L[i];
-    if (v2 && best > -WINT && svPrune(depth, i, m, caps, pv, se, alpha)) break;   // (the moves after a pruned quiet one are quiet)
+    if (v2 && best > -DECV && svPrune(depth, i, m, caps, pv, se, alpha)) break;   // (the moves after a pruned quiet one are quiet)
     Pos q = *p; doMove(&q, m);
     if (netOn()) accStep(p, m, ply);
     u64 k2 = hashMove(key, p, m);
@@ -975,6 +1023,39 @@ static void spIdleReset(int fresh) {   // mt_idle: a helper's search state (fres
 static TLS Pos ROOT; static TLS u64 rootKey;
 static TLS Move rootL[MAXMV]; static TLS int rootN;
 static TLS int rootVal[MAXMV];
+// the databases at the root (2026-11-15, as the strong programs do with win/loss/draw tables): a won root keeps only the moves
+// that keep the win, a drawn root the moves that keep the draw; then the search picks among them by the evaluation, the
+// tables probed only below the root's piece count (a capture into a smaller won ending scores as a win). Without this every
+// won move scores the same and the winner wanders into the 40-move rule or a repetition (claude/checkers-spec.md「終盤DB」).
+static int dbVal(const Pos *p) {   // the side to move's database result with captures played out (0: not in the tables)
+  int n = pc(p->p[0] | p->p[1]); if (n > egMaxN) return 0;
+  if (!p->p[0] || !p->p[1]) return p->p[p->side] ? 1 : 2;
+  Move L[MAXMV]; int k = genCaps(p, L);
+  if (!k) return egProbeK(p, 0);
+  int best = 0;   // 1 win, 3 draw, 2 loss (best first)
+  for (int i = 0; i < k; i++) {
+    Pos q = *p; doMove(&q, &L[i]); int c = dbVal(&q); if (!c) return 0;
+    int mine = c == 2 ? 1 : c == 1 ? 2 : 3;
+    if (mine == 1) return 1; if (mine == 3) best = 3; else if (!best) best = 2;
+  }
+  return best;
+}
+EXPORT(eg_root) void eg_root(int on) { egRootOn = on; }
+static void egRootFilter(void) {
+  egCap = 99;
+  if (!egRootOn || !egMaxN || rootN < 2) return;
+  int n = pc(ROOT.p[0] | ROOT.p[1]); if (n > egMaxN) return;
+  int r = dbVal(&ROOT); if (!r) return;
+  if (r != 2) {
+    int k = 0;
+    for (int i = 0; i < rootN; i++) {
+      Pos q = ROOT; doMove(&q, &rootL[i]); int c = dbVal(&q), mine = c == 2 ? 1 : c == 1 ? 2 : c == 3 ? 3 : 0;
+      if (mine == r) rootL[k++] = rootL[i];
+    }
+    if (k) rootN = k;
+  }
+  egCap = n - 1;
+}
 // setup: IO = [black, white, kings, side, nmoves, (ft, cap) * nmoves]; ft = f | t << 5. Returns 1 if all moves were legal.
 static int findMove(const Pos *p, int ft, u32 cap, Move *out) {
   Move L[MAXMV]; int n = gen(p, L);
@@ -994,6 +1075,7 @@ EXPORT(setup) int setup(void) {
   }
   ROOT = p; rootKey = key;
   rootN = gen(&p, rootL);
+  egRootFilter();
   return 1;
 }
 static void writeMove(i32 *o, const Move *m) { o[0] = m->f | (m->t << 5); o[1] = (i32)m->cap; }
