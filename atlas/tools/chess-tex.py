@@ -6,7 +6,7 @@
 #                          gold seams of changing width on an urushi bed, chips filled with gold
 #   jewel    ジュエリー     pavé of white diamonds / black spinels in platinum, baguettes and millegrain on the frame
 #   brass    真鍮彫り       black enamel engraved with brass (a lotus on each dark square, bands of strokes on the frame), nickel-silver squares
-#   neon     ネオン         smoked acrylic, frosted light squares lit cyan (far) → magenta (near), a lit rim
+#   neon     ネオン         smoked acrylic, lit light squares cyan (far) → magenta (near), a lit rim
 # Each board is a world of its own (2026-11-15 v2: the first marble / walnut / leather / khatam boards looked like other games' boards).
 import os, sys, math
 import numpy as np
@@ -144,33 +144,59 @@ def kintsugi_plan(seed=5):
     R = np.random.default_rng(seed); cracks = []; chips = []
     mains = [(-.1, R.uniform(2.2, 3.6), R.uniform(-.25, .25)), (R.uniform(5.6, 7.4), -.1, math.pi / 2 + R.uniform(-.3, .3))]
     for (x, y, a) in mains:
-        pts = fracture(R, x, y, a, 14); cracks.append((pts, .016, .034, True))
+        pts = fracture(R, x, y, a, 14); cracks.append((pts, .01, .05, True))
         for k in range(R.integers(2, 4)):   # branches
             i = R.integers(len(pts) // 5, len(pts) * 4 // 5); bx, by = pts[i]; ba = a + R.choice([-1, 1]) * R.uniform(.6, 1.2)
-            bp = fracture(R, bx, by, ba, R.uniform(1.2, 3.2)); cracks.append((bp, .009, .022, False))
+            bp = fracture(R, bx, by, ba, R.uniform(1.2, 3.2)); cracks.append((bp, .006, .03, False))
             if R.random() < .7: chips.append((*bp[len(bp) // 2], R.uniform(.05, .1)))
-        for k in range(2):   # chips on the main break
-            i = R.integers(len(pts) // 6, len(pts) * 5 // 6); chips.append((*pts[i], R.uniform(.07, .14)))
+        for k in range(3):   # chips on the main break
+            i = R.integers(len(pts) // 8, len(pts) * 7 // 8); chips.append((*pts[i], R.uniform(.06, .16)))
     for k in range(3):   # hair cracks from the rim
         side = R.integers(4); t = R.uniform(1.5, W - 1.5)
         x, y, a = [(t, -.05, math.pi / 2), (W + .05, t, math.pi), (t, W + .05, -math.pi / 2), (-.05, t, 0)][side]
         cracks.append((fracture(R, x, y, a + R.uniform(-.4, .4), R.uniform(.6, 1.6), (.03, .08)), .005, .012, False))
     return cracks, chips
+def resample(pts, step=.012):
+    """the polyline at an even, fine spacing (so the width can change over a short distance)"""
+    P_ = np.array(pts, np.float64); seg = np.hypot(*np.diff(P_, axis=0).T); L = np.concatenate([[0], np.cumsum(seg)])
+    t = np.arange(0, L[-1], step); return np.stack([np.interp(t, L, P_[:, 0]), np.interp(t, L, P_[:, 1])], 1), t
+def noise1(t, scale, R):
+    """smooth 1-D value noise along the seam (feature size: scale, world units)"""
+    k = np.arange(int(t[-1] / scale) + 3); v = R.normal(0, 1, len(k)); u = t / scale; i = np.floor(u).astype(int); f = u - i; f = f * f * (3 - 2 * f)
+    return v[i] * (1 - f) + v[i + 1] * f
+def seam_widths(t, w, R):
+    """half-widths of one seam, left and right: the width changes all the time and a lot — hair-thin necks, sudden fat
+       swells, a slower drift — partly shared by both sides, partly each side its own (the lips of a break never match)"""
+    shared = noise1(t, .05, R) * .55 + noise1(t, .16, R) * .55 + noise1(t, .6, R) * .35
+    out = []
+    for side in range(2):
+        own = noise1(t, .045, R) * .2 + noise1(t, .11, R) * .32
+        g = np.exp(shared + own) * w
+        for k in range(max(1, int(t[-1] / .5))):   # pools along the seam: gold gathered in a wider spot
+            c = R.uniform(0, t[-1]); g += w * R.uniform(.8, 2.4) * np.exp(-((t - c) / R.uniform(.025, .07)) ** 2)
+        out.append(np.clip(g, w * .12, w * 4))
+    return out
 def gold_masks(cracks, chips, seed):
-    """the gold: each crack drawn segment by segment with a width that swells and thins; the chips as irregular blobs"""
+    """the gold: each seam as a polygon whose left and right edges wander on their own (seam_widths); the chips as
+       rounded pools; the hair line of the break itself (for the fragments' shift)"""
     R = np.random.default_rng(seed); im, d = canvas(); bar, db = canvas()
     for pts, w0, w1, main in cracks:
-        ph = R.uniform(0, 6)
-        for i in range(len(pts) - 1):
-            t = i / max(1, len(pts) - 1); wv = w0 + (w1 - w0) * (.5 + .5 * math.sin(i * .55 + ph)) * (.75 + .25 * R.random())
-            d.line([P(*pts[i]), P(*pts[i + 1])], fill=255, width=max(1, round(wv * PX * SS)))
-            r = wv / 2 * PX * SS; x, y = P(*pts[i + 1]); d.ellipse([x - r, y - r, x + r, y + r], fill=255)
-            if main: db.line([P(*pts[i]), P(*pts[i + 1])], fill=255, width=max(1, round(.004 * PX * SS)))
-    for x, y, sz in chips:
-        n = 11; pts = []
-        for k in range(n):
-            a = k / n * 6.283 + R.uniform(-.15, .15); rr = sz * R.uniform(.45, 1)
-            pts.append(P(x + math.cos(a) * rr, y + math.sin(a) * rr * R.uniform(.6, 1)))
+        if len(pts) < 2: continue
+        P_, t = resample(pts)
+        if len(P_) < 3: continue
+        T = np.gradient(P_, axis=0); T /= np.maximum(1e-9, np.hypot(T[:, 0], T[:, 1]))[:, None]
+        N_ = np.stack([-T[:, 1], T[:, 0]], 1)
+        wl, wr = seam_widths(t, (w0 + w1) / 4, R)
+        if not main:   # a branch thins out to a hair at its end
+            e = np.minimum(1, (t[-1] - t) / .25) * .85 + .15; wl, wr = wl * e, wr * e
+        L = P_ + N_ * wl[:, None]; Rr = P_ - N_ * wr[:, None]
+        for i in range(len(P_) - 1):
+            d.polygon([P(*L[i]), P(*L[i + 1]), P(*Rr[i + 1]), P(*Rr[i])], fill=255)
+        if main: db.line([P(*p) for p in pts], fill=255, width=max(1, round(.004 * PX * SS)))
+    for x, y, sz in chips:   # pools where a fragment was lost: a rounded, lumpy blob of gold
+        n = 40; ph = R.uniform(0, 6); a0 = R.uniform(.9, 1.6)
+        rr = 1 + np.sin(np.linspace(0, 6.283, n) * 2 + ph) * .22 + np.sin(np.linspace(0, 6.283, n) * 3 + ph * 2) * .14
+        pts = [P(x + math.cos(a) * sz * .55 * r * a0, y + math.sin(a) * sz * .55 * r / a0) for a, r in zip(np.linspace(0, 6.283, n, endpoint=False), rr)]
         d.polygon(pts, fill=255)
     return done(im), done(bar)
 def ceramic_top():
@@ -431,7 +457,7 @@ def brass_side():
     col = col * (1 - m[..., None]) + bc * m[..., None]; rough = rough * (1 - m) + .14 * m; metal = metal * (1 - m) + m; hgt -= m * .18
     return col, mmap(rough, metal, hgt)
 
-# ---------- ネオン (neon): smoked acrylic, frosted light squares lit from the edge (cyan far → magenta near) ----------
+# ---------- ネオン (neon): smoked acrylic, light squares lit from the edge (cyan far → magenta near) ----------
 def glow_col(Y):
     t = np.clip(Y / W, 0, 1)[..., None]
     C = np.array([70, 225, 255], np.float32); Mg = np.array([255, 70, 200], np.float32)
@@ -440,12 +466,11 @@ def neon_top():
     X, Y = coords(); h = w = CW; Z0 = np.zeros_like(X)
     base = np.ones((h, w, 3), np.float32) * np.array([9, 10, 16], np.float32)
     G = glow_col(Y)
-    # light squares: frosted and lit, the dark squares clear smoke
+    # light squares: lit panels, the dark squares clear smoke
     fx, fy = np.floor(X - M), np.floor(Y - M); infield = (X > M) & (X < M + S) & (Y > M) & (Y < M + S)
     light = (infield & (((fx + fy) % 2) == 0)).astype(np.float32)
     cx, cy = M + fx + .5, M + fy + .5; rr = np.hypot(X - cx, Y - cy)
-    edge_sq = np.maximum(np.abs(X - cx), np.abs(Y - cy))   # a frosted panel, a little brighter towards its lit edges
-    glow = light * (.22 + smooth(.3, .5, edge_sq) * .16)
+    glow = light * .24   # a lit panel (as before, without the engraved rings)
     # the field's edge and the outer rim: bright lit lines
     edge = np.maximum(np.abs(X - W / 2), np.abs(Y - W / 2))
     ln = np.exp(-((edge - S / 2 - .05) / .012) ** 2) * 1.2 + np.exp(-((edge - W / 2 + .06) / .016) ** 2) * 1.4 + np.exp(-((edge - S / 2 - .38) / .006) ** 2) * .5

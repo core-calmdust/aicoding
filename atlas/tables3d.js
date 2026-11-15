@@ -309,8 +309,8 @@
   } };
   X.boardName = (k, lang, id) => { const g = id && NG[id] && NG[id][k]; if (g) return g[lang] || g.en; const o = N3[k]; if (!o) return k; const n = o[lang] || o.en, c = n.replace(/\s*(?:3D|ثلاثي(?: الأبعاد)?)$/, '').trim(); return c || n; };   // (2026-11-10: the boards' names without '3D')
   // the full games' 「3D盤」 tiles: the board alone, from straight above, no room (atlas/tools/boardicon.html, 2026-11-09)
-  X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'chess' ? 4 : 1), ME).href;
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'botao' ? 3 : id === 'chess' ? 4 : 1), ME).href;
+  X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'chess' ? 5 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'botao' ? 3 : id === 'chess' ? 5 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   // 駒: the games whose 3D figures come in sets (the board view's panel shows them as a row under 盤; the full game's 「3D駒」 too)
@@ -353,7 +353,7 @@
   PIECES.chess = { list: ['lux', 'wood', 'ceramic', 'jewel', 'brass', 'neon'],
     get: () => { const v = ls.get('atlas-chess-pc3'); if (PIECES.chess.list.includes(v)) return v; return ls.get('atlas-chess-pc') === 'wood' ? 'wood' : 'lux'; },
     set: k => ls.set('atlas-chess-pc3', k),
-    thumb: k => new URL('img/pc3-chess-' + k + '.webp?v=2', ME).href,
+    thumb: k => new URL('img/pc3-chess-' + k + '.webp?v=3', ME).href,
     names: {
       lux: { ja: '銀と金', en: 'Silver & gold', zh: '银与金', 'zh-TW': '銀與金', ko: '은과 금', es: 'Plata y oro', fr: 'Argent et or', pt: 'Prata e ouro', de: 'Silber & Gold', ru: 'Серебро и золото', tr: 'Gümüş ve altın', id: 'Perak & emas', hi: 'चाँदी और सोना', ar: 'فضة وذهب' },
       wood: { ja: 'ツゲと紫檀', en: 'Boxwood & padauk', zh: '黄杨与紫檀', 'zh-TW': '黃楊與紫檀', ko: '회양목과 자단', es: 'Boj y padauk', fr: 'Buis et padouk', pt: 'Buxo e padauk', de: 'Buchs & Padouk', ru: 'Самшит и падук', tr: 'Şimşir ve padauk', id: 'Boxwood & padauk', hi: 'बॉक्सवुड और पडौक', ar: 'البقس والبادوك' },
