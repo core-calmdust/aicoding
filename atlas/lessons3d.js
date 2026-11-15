@@ -557,7 +557,7 @@
   /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
-  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=16').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=17').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   function ncApply(id, L2) {
     const T = NC[id] || {}; if (!L2 || !L2.ramp) return L2;
     L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v && !(o[f] && o[f].__voice)) o[f] = v; }); return o; });   // (a guide's own line stays)
@@ -1050,13 +1050,15 @@
   /* amazons (2026-11-15): amazons/lessons.json (8 steps of 5 one-move problems: any move in P.ok is right — 20 points or 0, = amazons/app.js
      lessonAnswer). Progress = the full game's ('aicoding-amazons-lessons' { id: { best, clear } }). Texts: checkers/i18n.js + amazons/
      i18n-am*.js (the page's own order), read into a sandbox. The 3D board has no coordinates: the moves the texts name ({m}, {x}) are
-     their marks on the board (the amazon's square ring, the destination dot, the arrow's diamond). The warm-ups (step.ramp) name squares
-     in every line, so they stay in the full game until texts without coordinates are written; an intro's notation paragraph is dropped.
+     their marks on the board (the amazon's square ring, the destination dot, the arrow's diamond). The warm-ups (step.ramp) play here
+     too, with texts without coordinates (atlas/nocoord/amazons.json, 2026-11-16); an intro's notation paragraph is dropped.
      A position here is { spec: { b, side }, me }. Moves: amazons/engine.js move numbers. */
   const AM_ENG = '../amazons/engine.js?v=15';   // (the table adapter's file: one cache)
   const amEng = () => window.AmazonsEngine ? Promise.resolve(window.AmazonsEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = AM_ENG; sc.onload = () => window.AmazonsEngine ? res(window.AmazonsEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
   const AMM = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の手' : '赤い印の手') + '\u0002' : `<i class="ls-spot ${k}"></i>`;   // (a move named by its marks)
   const AM_MK = { s_escape: 'ng' };   // (amazons/app.js MK_CLS: the squares a problem lights)
+  const AM_GM = { 'b_queen/1': [['c8', 'hl']], 'b_arrow/1': [['h7', 'hl']], 'b_block/1': [['c7', 'hl']], 's_trap/1': [['j1', 'ng']], 's_escape/1': [['j10', 'ng']] };
+  const amByName = (sp, nm) => { const E = window.AmazonsEngine; if (!E || !nm) return null; const p = E.Pos.from(sp), m = p.moves().find(x => E.name(p, x) === nm); return m === undefined ? null : m; };
   const AMAZONS = {
     LKEY: 'aicoding-amazons-lessons', data: null, I: null,
     load() {
@@ -1077,7 +1079,8 @@
       const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), E = window.AmazonsEngine;
       const intro = String(T('intro') || '').replace(/<p>[^<]*?[a-j](?:10|[1-9])-[a-j](?:10|[1-9])[^]*?<\/p>/g, '');   // (the notation paragraph: no coordinates on the 3D board)
       const mkc = AM_MK[s.id] || 'ok';
-      return { id: s.id, title: T('title'), intro, ramp: null,
+      const RX = it => { const o = Object.assign({}, it); ['t', 'body', 'g', 'h', 'y'].forEach(f => { if (typeof o[f] === 'string') o[f] = this.tx(o[f], lang); }); o.gm = AM_GM[s.id + '/' + s.ramp.indexOf(it)] || null; return o; };
+      return { id: s.id, title: T('title'), intro, ramp: s.ramp && s.ramp.length ? s.ramp.map(RX) : null, RU: (k, v) => this.tx('ru.' + k, lang, v || {}),   // (the warm-up: texts without coordinates from atlas/nocoord/amazons.json)
         probs: (s.problems || []).map(P => { const good = P.ok || [P.best];
           return { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.best != null ? P.best : good[0], marks: (P.mk || []).map(q => [q, mkc]), hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
             good: () => T('why', { m: AMM('ok', lang), x: AMM('ng', lang) }), ng: () => T('ng', { m: AMM('ok', lang), x: AMM('ng', lang) }) }; }),
@@ -1085,7 +1088,16 @@
     },
     points(P, m) { return (P.ok || [P.best]).includes(m) ? 20 : 0; },   // (= amazons/app.js lessonAnswer)
     spOk: lang => AMM('ok', lang),
-    introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), P = s && s.problems && s.problems[0]; return P ? { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1, lock: true } } : null; },
+    introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), it = s && s.ramp && s.ramp[0]; if (it) return { pos: { spec: it.s, me: it.s.side === 2 ? 2 : 1, lock: true } }; const P = s && s.problems && s.problems[0]; return P ? { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1, lock: true } } : null; },
+    // the warm-up (= amazons/app.js loadRamp / rampMarks; its marks and looks count squares from 1): the example move played out, the marks,
+    // on a try the square or piece the goal names (AM_GM: the full game's texts name it by its coordinate)
+    rampPos: it => ({ spec: it.s, me: it.s.side === 2 ? 2 : 1 }), rampBody: (it, lang) => L(it.body, lang),
+    rampMarks: it => it.k === 'explain' ? (it.marks || []).map(([q, c]) => [q - 1, c === 'ng' ? 'ng' : c === 'ok' ? 'ok' : 'hl']) : (it.gm || []).map(([q, c]) => [window.AmazonsEngine.sqIdx(q), c]),
+    rampLook: it => (it.look || []).map(q => [q - 1, 'ring']),
+    rampOk: (it, u) => { const E = window.AmazonsEngine; return !!E && (it.ok || []).includes(E.name(E.Pos.from(it.s), u)); },
+    rampAns: it => ({ m: amByName(it.s, (it.ok || [])[0]) }),
+    rampAnsMk(it) { const m = amByName(it.s, (it.ok || [])[0]); return this.rampMarks(it).concat(m != null ? [{ m, cls: 'ok' }] : []); },
+    rampSeq(it) { const E = window.AmazonsEngine; if (!E) return []; let p = E.Pos.from(it.s); const out = []; for (const nm of it.seq || []) { const m = p.moves().find(x => E.name(p, x) === nm); if (m === undefined) break; out.push(m); p = p.clone().play(m); } return out; },
   };
   /* connect four (2026-11-15): connect4/lessons.json (23 steps of 3–4 one-move problems: any column in P.answer is right, = connect4/index.html
      lessonAnswer). Progress = the full game's ('aicoding-connect4-v2-lessons' { id: { best: right answers, clear: all but one right } }).
@@ -1486,7 +1498,7 @@
         if (it.k === 'explain') { if (D.rampUndo) D.rampUndo(pz()); else pz().undo(1); marks0(); pz().wait(); return; }   // (the explanation's board is for looking)
         if (D.rampOk ? D.rampOk(it, u) : it.ok.includes(u)) return rDone();   // (right: on to the next step by itself, the meter on 次へ)
         say(RU('ng')); try { chime(false); } catch (e) {}
-        if (D.rampMarks && id !== 'checkers' && id !== 'xiangqi' && id !== 'backgammon') pz().mark([[u, 'ng']]);   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
+        if (D.rampMarks && !['checkers', 'xiangqi', 'backgammon', 'tafl', 'amazons'].includes(id)) pz().mark([[u, 'ng']]);   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
         later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { if (D.rampUndo) D.rampUndo(pz()); else if (!(it.pick)) pz().undo(1); marks0(); pz().wait(); } }, 1100);
       };
       pz().wait();
