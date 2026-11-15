@@ -122,11 +122,18 @@ function key(s) { return s.rule + '|' + s.turn + '|' + s.pos[0].slice().sort((a,
 
 /* ── 形勢 ── */
 const AVG = 85 / 32;              // 1回の投げで進む平均
-const W = { bell: { turnsScale: 5.2, tempo: 0.45 }, popular: { turnsScale: 5.0, tempo: 0.45, gold: 0.62 } };
+const W = { exShare: 0.35, enterWait: 2.2, bell: { turnsScale: 7.8, tempo: 0.675 }, popular: { turnsScale: 10, tempo: 0.18, gold: 0.341 } };   // 自己対局 1,500局の結果に合わせた値（2026-11-16）
+// 1個だけで上がるまでの投げの数の期待値（ちょうどの目が要る）。EX[d]＝残り d マスのときの「待ち」の分（d/AVG との差）
+const EX = (() => { const T = [0]; for (let d = 1; d <= 70; d++) { let stay = PROB[0], sum = 1; for (const r of ROLLS) { if (r.n > d) stay += r.p; else sum += r.p * T[d - r.n]; } T.push(sum / (1 - stay)); } return T.map((t, d) => t - d / AVG); })();
 function turnsLeft(s, R, sd) {    // 全部上げるまでのおおよその手番数
-  let t = 0, waiting = 0, on = 0;
-  for (const i of s.pos[sd]) { if (i === 0) { waiting++; t += R.L / AVG + 1.5; } else if (i <= R.L) { on++; t += (R.goal - i) / AVG + 1.5; } }   // 1.5＝ちょうどの目を待つ分
-  if (waiting) { const firstFree = R.enterAny && !on; t += (waiting - (firstFree ? 1 : 0)) * 2.2; }      // 「1」待ち（他の駒を動かしながらなので割り引く）
+  let t = 0, waiting = 0, on = 0, ex = 0, exMax = 0;
+  for (const i of s.pos[sd]) {
+    if (i === 0) { waiting++; t += R.L / AVG; ex += EX[R.L]; }
+    else if (i <= R.L) { on++; const d = R.goal - i, e = EX[d]; t += d / AVG; ex += e; if (e > exMax) exMax = e; }
+  }
+  // ちょうどの目の待ち：駒が多いほど別の駒を動かして待てるので、いちばん長い待ち＋残りの一部
+  t += exMax + (ex - exMax) * W.exShare;
+  if (waiting) { const firstFree = R.enterAny && !on; t += (waiting - (firstFree ? 1 : 0)) * W.enterWait; }      // 「1」待ち
   return t;
 }
 function sig(x) { return 1 / (1 + Math.exp(-x)); }
@@ -140,19 +147,19 @@ function staticWp(s, sd) {        // sd から見た勝率（手番は s.turn）
 // これから投げる側 s.turn の、sd から見た勝率の期待値。d＝先まで読む投げの数
 function valueToRoll(s, sd, d) {
   if (s.winner >= 0 || d <= 0) return staticWp(s, sd);
-  let v = PROB[0] * afterBest(s, 0, sd, d);
-  for (const r of ROLLS) v += r.p * afterBest(s, r.n, sd, d);
+  let v = PROB[0] * afterBest(s, 0, sd, d - 1);
+  for (const r of ROLLS) v += r.p * afterBest(s, r.n, sd, d - 1);
   return v;
 }
-function afterMove(s, m, n, sd, d) { const r = apply(s, m, n); return valueToRoll(r.state, sd, r.again ? d : d - 1); }
+function afterMove(s, m, n, sd, d) { const r = apply(s, m, n); return valueToRoll(r.state, sd, d); }
 function afterBest(s, n, sd, d) {
   const ms = legalMoves(s, n); if (!ms.length) return afterMove(s, null, n, sd, d);
   const mine = s.turn === sd; let best = mine ? -1 : 2;
   for (const m of ms) { const v = afterMove(s, m, n, sd, d); if (mine ? v > best : v < best) best = v; }
   return best;
 }
-function winProb(s, d) { return valueToRoll(s, s.turn, d == null ? 1 : d); }
-function evaluate(s, n, d) {      // 良い順の [{ move, wp }]。wp＝その手のあとの自分の勝率
+function winProb(s, d) { return valueToRoll(s, s.turn, d == null ? 1 : d); }   // d＝読む投げの数
+function evaluate(s, n, d) {      // 良い順の [{ move, wp }]。wp＝その手のあとの自分の勝率。d＝手のあとに読む投げの数
   const me = s.turn; d = d == null ? 1 : d;
   return legalMoves(s, n).map(m => ({ move: m, wp: afterMove(s, m, n, me, d) })).sort((a, b) => b.wp - a.wp);
 }
@@ -160,7 +167,7 @@ function evaluate(s, n, d) {      // 良い順の [{ move, wp }]。wp＝その�
 const LEVELS = [];
 for (let lv = 1; lv <= 20; lv++) {
   const t = (20 - lv) / 19;
-  LEVELS.push({ rand: lv <= 3 ? [0.6, 0.4, 0.25][lv - 1] : 0, temp: lv >= 19 ? 0 : 0.004 + 0.16 * Math.pow(t, 1.7), d: lv >= 20 ? 2 : lv >= 12 ? 1 : 0 });
+  LEVELS.push({ rand: lv <= 3 ? [0.6, 0.4, 0.25][lv - 1] : 0, temp: lv >= 19 ? 0 : 0.004 + 0.16 * Math.pow(t, 1.7), d: lv >= 20 ? 3 : lv >= 16 ? 2 : lv >= 8 ? 1 : 0 });
 }
 function think(s, n, level, opts) {
   const o = opts || {}, rng = o.rng || Math.random, L = LEVELS[Math.max(1, Math.min(20, level | 0)) - 1];

@@ -51,7 +51,7 @@ apply(state, move|null, n) → { state, again, ev:[{t:'pay',from,to:0|1|'pool',a
 coords(rule, side, i, dir) → [r,c]；kind(rule, side, i, dir)
 winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, level 1..20, { rng, ev, d, temp })
 ```
-- AI：期待値探索（投げ d 回先）＋手数の見積もりによる形勢。Lv.1〜11＝0投先、12〜19＝1投先、20＝2投先。弱いレベルは勝率差のソフトマックスでばらつく。
+- AI：期待値探索（投げ d 回先）＋手数の見積もりによる形勢。Lv.1〜7＝手のあと0投、8〜15＝1投、16〜19＝2投、20＝3投先まで読む（1投読むだけで勝率 約65〜75%、2投目はベルでは差なし・広く知られたルールで65%、3投目は 52〜53%。Lv.20 の1手は平均 3〜4 ミリ秒）。弱いレベルは勝率差のソフトマックスでばらつく。
 - 検査：`node tools/selftest.js`（盤の形、ルールの要点、宝の総数が変わらないこと、自動対局が必ず終わること）。
 
 ## 4. 画面（予定。`ur/` の構成を踏襲）
