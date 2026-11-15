@@ -858,7 +858,7 @@
     if (g.total.pz) rows.push([t('pg.pz'), r.pz || 0, g.total.pz]);
     if (g.total.ls) rows.push([t('pg.ls'), r.ls || 0, g.total.ls]);
     // shogi / chess on PC (2026-11-10): the tabs are 対戦 · レート戦 · パズル · レッスン — 二人で対戦 is the first choice of the 相手 list
-    const MX = !!(MXG[id] && ad && ad.table && FULL_SKIN[id]);   // (phones too, 2026-11-13: レート戦 vs AI or online, パズル, レッスン)
+    const MX = !!(ad && ad.table && FULL_SKIN[id] && !ad.stages && id !== 'peg');   // (2026-11-16: every game with a full 3D version — 対戦 (二人で対戦 in 相手) · レート戦 · パズル · レッスン, as shogi)   // (phones too, 2026-11-13: レート戦 vs AI or online, パズル, レッスン)
     const lv = MX && pref[id + ':mode'] === 'pvp' ? 0 : pref[id + ':lv'] || 1, side = pref[id + ':side'] || 1;
     const vcur = ad && ad.variants && ad.variants.list.includes(pref[id + ':var']) ? pref[id + ':var'] : '';   // 種目 (shogi: its variants, 2026-11-12)
     // a game's rule (adapter.rule — フチボウ・ジ・ボタン 2026-11-15: 手数制 · 点数制 · PK戦): a pulldown whose choice decides the
@@ -871,7 +871,7 @@
     const PZX = !MX && id === 'peg' && !!(ad && window.AtlasPuzzles && AtlasPuzzles.has(id));
     // a game with its own stages (上海, 2026-11-13): フリー · ステージ — the adapter draws the stage panel and its map (adapter.stages)
     const STX = !MX && !PZX && !!(ad && ad.stages);
-    const modes = MX ? mxModes(id) : PZX ? ['ai', 'puzzle'] : STX ? ['ai', 'stage'] : ad && ad.modes, mode = modes && modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
+    const modes = MX ? mxModes(id, g, ad) : PZX ? ['ai', 'puzzle'] : STX ? ['ai', 'stage'] : ad && ad.modes, mode = modes && modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
     // board size (go): on the same row as the time control when there is one
     // 種目 first (mancala · morris, 2026-11-15, as shogi): 種目 (+ its own setting: 種の数) → 相手 → 時間
     const KF = !!(ad && ad.kindFirst), KL = KIND[lang] || KIND.en;
@@ -1217,7 +1217,10 @@
   const PVP_SVG = '<svg viewBox="0 0 96 80" aria-hidden="true"><ellipse cx="48" cy="74" rx="38" ry="5" fill="rgba(80,60,30,.13)"/><path d="M14 72c0-15 6-25 16-25s16 10 16 25z" fill="#ff8f7a"/><path d="M50 72c0-15 6-25 16-25s16 10 16 25z" fill="#5fb8f0"/><path d="M40 55q8 7 16 0" fill="none" stroke="#f3c79a" stroke-width="5" stroke-linecap="round"/><circle cx="30" cy="31" r="15" fill="#ffe2c4"/><circle cx="66" cy="31" r="15" fill="#ffe2c4"/><path d="M15 29a15 15 0 0 1 30 0q-8-6-15-4q-8 1-15 4z" fill="#5a3a22"/><path d="M51 27a15 15 0 0 1 30 2q-4-8-12-8q-10 0-18 6z" fill="#2f2a3a"/><circle cx="25" cy="33" r="2" fill="#2b2b33"/><circle cx="35" cy="33" r="2" fill="#2b2b33"/><circle cx="61" cy="33" r="2" fill="#2b2b33"/><circle cx="71" cy="33" r="2" fill="#2b2b33"/><path d="M27 39q3 2.4 6 0M63 39q3 2.4 6 0" fill="none" stroke="#c4553f" stroke-width="1.6" stroke-linecap="round"/><circle cx="21.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/><circle cx="38.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/><circle cx="57.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/><circle cx="74.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/></svg>';
   const NO_OPEN3D = { tafl: true, mancala: true };   // (games whose openings are not on the 3D table yet: レッスン only — their 定跡 are in the full game)
   const MXG = { shogi: true, chess: true, reversi: true, gomoku: true, go: true, checkers: true, xiangqi: true, backgammon: true, hex: true, amazons: true, connect4: true, tafl: true, mancala: true, morris: true }, MX_MODES = ['ai', 'rated', 'puzzle', 'lesson'];
-  const mxModes = id => MX_MODES.filter(m => (m !== 'rated' || !!RTG[id]) && (m !== 'lesson' || (window.AtlasLessons && (!AtlasLessons.has || AtlasLessons.has(id)))));   // (each game gets レッスン on the table when atlas/lessons3d.js has it)
+  const pz3dOf = id => !!(MXG[id] && window.AtlasPuzzles && AtlasPuzzles.has(id)), ls3dOf = id => !!(window.AtlasLessons && AtlasLessons.has && AtlasLessons.has(id));
+  // the tabs (2026-11-16, every 3D game): レート戦 when the game has one (on the table: RTG; online only: the adapter's 'rated'), パズル / レッスン
+  // on the table when atlas/puzzles.js · lessons3d.js have them, otherwise when the full game has them (the tab opens the full game)
+  const mxModes = (id, g, ad) => MX_MODES.filter(m => m === 'ai' || (m === 'rated' ? !!RTG[id] || !!(ad && ad.modes && ad.modes.includes('rated')) : m === 'puzzle' ? pz3dOf(id) || !!(g && g.total.pz) : ls3dOf(id) || !!(g && g.total.ls)));   // (each game gets レッスン on the table when atlas/lessons3d.js has it)
   const KIND = { ja: '種目', en: 'Game', zh: '棋种', 'zh-TW': '遊戲', ko: '종목', es: 'Variante', fr: 'Variante', pt: 'Variante', de: 'Variante', hi: 'खेल', ar: 'النوع', ru: 'Игра', id: 'Permainan', tr: 'Oyun' };   // (the 種目 row's name: shogi's own word)
   const MX_LBL = { ai: 'bv.m.vs', rated: 'bv.m.rated', puzzle: 'pg.pz', lesson: 'pg.ls' };
   const OTC = { shogi: [{ id: 'fast', main: 300, byo: 30 }, { id: 'long', main: 600, byo: 30 }, { id: 'blitz', byo: 30 }, { id: 'fis', main: 300, inc: 10 }],
@@ -1297,8 +1300,8 @@
     const rtOnly = !(window.Atlas3D && Atlas3D[id] && Atlas3D[id].variants) && !!RTG[id];   // (games without 種目: 相手 → 時間 → 現在のレート (+ 戦績, the cup, on its right) — 2026-11-15; games with 種目 keep shogi's 種目｜レート｜cup row)
     return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp">${RTG[id] ? `<option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option>` : ''}<option value="online" ${opp === 'online' || !RTG[id] ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><span class="hb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 3 3.6M16 6h2.5a2.5 2.5 0 0 1-3 3.6"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/></svg></span></button></div>`
       + `<label id="bvRtTcL">${t('tc.h')}<button type="button" class="lvpick" id="bvRtTc"></button></label>${rtOnly ? '<div class="opts vopts rtonly"><span class="rtnow2" id="bvRtNow" hidden></span></div>' : ''}<div class="mxnote" id="bvRtNote" hidden>${esc(t('bv.rtNoTc'))}</div></div>`
-      + `<div class="opts mxp" id="bvPz" hidden>${daily.map(([k, ic, lb]) => `<button type="button" class="mxb${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
-      + `<div class="opts mxp" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option>${NO_OPEN3D[id] ? '' : `<option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option>`}</select></label><button type="button" class="mxb mxwide" id="bvLsList"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
+      + `<div class="opts mxp${pz3dOf(id) ? '' : ' mxoff'}" id="bvPz" hidden>${daily.map(([k, ic, lb]) => `<button type="button" class="mxb${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
+      + `<div class="opts mxp${ls3dOf(id) ? '' : ' mxoff'}" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option>${NO_OPEN3D[id] ? '' : `<option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option>`}</select></label><button type="button" class="mxb mxwide" id="bvLsList"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
       + '<div class="ps-prog mxprog" id="bvMxProg" hidden></div>';   // (phones, 2026-11-16: how far the パズル / レッスン tab has gone, just above あそぶ · フル機能で遊ぶ — the sheet's own rows for them are gone)
   }
   const MXI = { puzzle: '<svg viewBox="0 0 24 24"><path d="M10 3h4v2.2a1.8 1.8 0 1 0 3.6 0V3H21v6h-2.2a1.8 1.8 0 1 0 0 3.6H21V21h-6v-2.2a1.8 1.8 0 1 0-3.6 0V21H3v-6h2.2a1.8 1.8 0 1 0 0-3.6H3V3h7z"/></svg>', lesson: '<svg viewBox="0 0 24 24"><path d="M3 9.5 12 5l9 4.5-9 4.5z"/><path d="M7 11.6V16c0 1.4 2.2 2.6 5 2.6s5-1.2 5-2.6v-4.4M21 9.5V15"/></svg>' };
@@ -1329,6 +1332,8 @@
     // every tab the same (2026-11-10): red あそぶ = here on the 3D table · brown フル機能で遊ぶ · white 2Dで遊ぶ
     const online = m === 'rated' && $('bvRtOpp') && $('bvRtOpp').value === 'online';
     set(f, esc(t('ps.go')) + ' ▶', esc(online ? t('bv.lsSub') : t(m === 'puzzle' ? 'bv.pzContSub' : m === 'lesson' ? 'bv.lsSub3d' : 'bv.tableSub')));
+    const off = (m === 'puzzle' && !pz3dOf(g.id)) || (m === 'lesson' && !ls3dOf(g.id)) || (online && !RTG[g.id]);   // (only in the full game: one フル機能で遊ぶ)
+    f.classList.toggle('mxgone', off); f.parentNode.classList.toggle('mxone', off);
     set(tb, esc(t('bv.full')), esc(t('bv.fullSub2'))); tb.classList.add('mxfull'); tb.style.display = ''; tb.disabled = false;
     if (act) act.classList.remove('act1');
     if (cl) cl.href = mx2d(g, m);
@@ -1342,7 +1347,7 @@
     $('bvRtRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openRec(g, 'all', 'rt'); };
     $('bvLsK').addEventListener('change', () => { pref[id + ':lsk'] = $('bvLsK').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} const cl = $('bvi').querySelector('.R .act > a.btn'); if (cl && M() === 'lesson') cl.href = mx2d(g, 'lesson'); });
     // レート戦's time control: a picker button + list sheet (the same UI as the level); its list follows 相手
-    const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c; $('bvRtNote').hidden = !!c; if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
+    const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c; $('bvRtNote').hidden = !!c || opp === 'online'; if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
     const rtNow = () => { const el = $('bvRtNow'); if (!el) return; const rec = $('bvRtRec'); if (rec) { if (rec.previousElementSibling !== el) { el.after(rec); rec.classList.add('rtrec'); } rec.hidden = !RTG[id] || M() !== 'rated'; }   /* (戦績 (the cup) sits right of the current rating, 2026-11-14) */ const ol = $('bvRtOpp').value === 'online'; const solo = !!el.closest('.rtonly'); el.hidden = !RTG[id] || M() !== 'rated' || (ol && olNowTxt(id) === null && !solo); /* (beside 種目: the right half, rated games only) */ if (!el.hidden) el.innerHTML = `<small>${esc(t('rec.rtNow'))}</small><b>${esc(ol ? olNowTxt(id) || UNPL[lang] || UNPL.en : rtNowTxt(id, $('bvVar') ? $('bvVar').dataset.v || '' : ''))}</b>`; };   // (online: the account's one online rating, as the full page last saw it — shogi/online.js cacheRt)
     const olNowTxt = id => { let o = null; try { o = JSON.parse(localStorage.getItem(id + '-online-rt') || 'null'); } catch (e) {} if (!o && id !== 'shogi') return null; return o && o.n > 0 && typeof o.r === 'number' ? 'R ' + o.r : UNPL[lang] || UNPL.en; };   // (null: a game whose full page does not save its online rating yet — no box)
     rtNowHook = rtNow; rtNow();
