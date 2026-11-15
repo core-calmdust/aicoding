@@ -2255,6 +2255,25 @@ function dailySolved(date, hinted) {
   try { localStorage.setItem(DAILY_STORE, JSON.stringify(daily)); } catch (e) {}
 }
 
+// ---- the portal's 3D view card opens this page at a part of it (2026-11-15, as checkers/app.js): ?mode=puzzle|lesson|rated|online &sub=…
+// (the 3D skin calls it from its start(); the plain 2D page on load, below). null: not ready yet (called again)
+window.AtlasDeep = function (mode, sub) {
+  if (typeof openPuzzles !== 'function' || typeof openNewDialog !== 'function' || !$('#btnStart')) return null;
+  const click = (sel, n = 0) => { const b = document.querySelector(sel); if (b) b.click(); else if (n < 30) setTimeout(() => click(sel, n + 1), 150); };
+  if (mode === 'puzzle') { Promise.resolve(openPuzzles()).then(() => { if (sub === 'd1') click('#pzLevels [data-pbh-daily]'); else if (sub === 'cont') { const b = document.querySelector('#pzLevels [data-pbh-cont]'); if (b) b.click(); } }); return true; }
+  if (mode === 'lesson') { if (sub === 'open') openOpenings(); else openLessons(); return true; }
+  if (mode === 'online') { if (typeof window.olStartSearch !== 'function' && typeof olStartSearch !== 'function') return null; (window.olStartSearch || olStartSearch)(); return true; }
+  if (mode === 'rated') { openNewDialog(); draft.mode = 'rated'; segSync(); $('#btnStart').click(); return true; }
+  return false;
+};
+{ const q = new URLSearchParams(location.search), m = q.get('mode');
+  if (m && /^(puzzle|lesson|rated|online)$/.test(m) && q.get('skin') !== 'atlas') {   // the plain 2D page opened at a part of it
+    let n = 0; const go = () => { const r = window.AtlasDeep(m, q.get('sub')); if (r === null && ++n < 60) return setTimeout(go, 200);
+      ['mode', 'sub', 'tc'].forEach(k => q.delete(k)); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); };
+    if (document.readyState === 'complete') setTimeout(go, 1200); else addEventListener('load', () => setTimeout(go, 1200));
+  }
+}
+
 // ====================================================================== boot
 if (window.RulesOffer) RulesOffer.init({ game: 'hex', lang: () => LANG, open: () => openRules(null, 0), watch: '#rulesOverlay' });
 const hadSave = load();

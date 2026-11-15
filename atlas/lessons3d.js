@@ -133,6 +133,10 @@
       ja: { hi: 'チェッカニだよ！ いっしょにチェッカーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'おしい！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
       en: { hi: "Checkrab here! Let's study checkers together.", partial: 'A nice move! But the green arrow is the best.', wrong: 'So close! The green arrow is the answer.', hintSay: 'Psst — look at the pieces in the gold rings!', opGoal: 'What is the best next move here?' },
     },
+    hex: {
+      ja: { hi: 'ゴイシペンだよ！ いっしょにヘックスのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の印の点なんだ。', wrong: 'おしい！ 正解は緑の印の点だよ。', hintSay: 'ヒントだよ。印のあたりをよく見てみて。' },
+      en: { hi: "Stoneguin here! Let's study Hex together.", partial: 'A nice move! But the green mark is the best.', wrong: 'So close! The green mark is the answer.', hintSay: 'Psst — look around the marked cells.' },
+    },
     gomoku: {
       ja: { hi: 'ゴイシペンだよ！ いっしょに五目並べのお勉強をしよう。', partial: 'いい手だね。でもいちばんは光ってる点なんだ。', wrong: 'おしい！ 正解は光ってる点だよ。', hintSay: 'ヒントだよ。光ってるあたりに注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどこかな？' },
       en: { hi: "Stoneguin here! Let's study gomoku together.", partial: 'A nice move! But the glowing point is the best.', wrong: 'So close! The glowing point is the answer.', hintSay: 'Psst — look around the glowing points!', opGoal: 'What is the best next move here?' },
@@ -857,7 +861,52 @@
       return { pos: { bg: { pos: bgPos(f.pos, sd), dice: f.dice || null, lock: true } }, marks: f.play ? [{ m: f.play, cls: 'ok' }] : (f.marks || []).map(x => Array.isArray(x) ? { pt: (x[0] ^ sd) === 0 ? x[1] : 25 - x[1], cls: 'hl' } : null).filter(Boolean) };
     },
   };
-  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON };
+  /* hex (2026-11-15): hex/lessons.json (13 steps of 5 one-move problems on 7–11 boards: 'ok' kinds — 20 points or 0 — and 'sc' kinds
+     scored by the engine's values (= hex/app.js problemPoints)). Progress = the full game's ('aicoding-hex-lessons' { id: { best, clear } }).
+     Texts: hex/i18n.js, read into a sandbox. A position here is { spec: { n, b, side }, me: 1 Red / 2 Blue }; cells are named by their marks. */
+  const HEX_WINT = 29000;   // (hex/engine.js WINT)
+  const HEX = {
+    LKEY: 'aicoding-hex-lessons', data: null, I: null,
+    load() {
+      if (this.p) return this.p;
+      return (this.p = Promise.all([getJ('../hex/lessons.json?v=20261115'), fetch('../hex/i18n.js?v=20261115').then(r => r.text())])
+        .then(([ls, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] hex texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
+        .catch(e => { this.p = null; throw e; }));
+    },
+    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    mini: sp => window.AtlasMini && AtlasMini.hex ? AtlasMini.hex(sp) : '',
+    list(kind, lang) {
+      const D = this.data, pr = J(this.LKEY, {});
+      return D.ls.steps.map((s, i) => ({ key: String(i), cat: s.course, catName: this.tx('course.' + s.course, lang) || s.course, title: this.tx('ls.' + s.id + '.title', lang), sub: this.tx('ls.' + s.id + '.sub', lang), svg: s.problems && s.problems[0] ? this.mini(s.problems[0].s) : '', st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '' }));
+    },
+    lesson(key, lang) {
+      const s = this.data.ls.steps[+key]; if (!s) return null;
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v);
+      return { id: s.id, title: T('title'), intro: T('intro'), ramp: null, RU: () => '',
+        probs: (s.problems || []).map(P => { const good = P.ok || [P.best];
+          return { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.ok ? P.ok[0] : P.best, hintTx: T('hint'), hint: hxArea(P.s, P.ok ? P.ok[0] : P.best),
+            good: () => T('why', { m: HXM('ok', lang), x: HXM('ng', lang) }), ng: () => { const t = T('ng', { m: HXM('ok', lang), x: HXM('ng', lang) }); return t && t !== 'undefined' ? t : T('why', { m: HXM('ok', lang), x: HXM('ng', lang) }); } }; }),
+        save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
+    },
+    points(P, m) {   // = hex/app.js problemPoints
+      if (P.ok) return P.ok.includes(m) ? 20 : 0;
+      const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : (P.sc.length ? Math.min(...P.sc.map(e => e[1])) - 60 : -1000);
+      const wr = v => v > HEX_WINT ? 1 : v < -HEX_WINT ? 0 : Math.max(0, Math.min(1, (v + 1000) / 2000));   // (= hex/app.js wrOf)
+      if (mine >= best - 15 && !(best > HEX_WINT && mine < best)) return 20;
+      if (best > HEX_WINT && mine <= HEX_WINT) return mine > 400 ? 8 : 0;
+      if (mine < -HEX_WINT && best >= -HEX_WINT) return 0;
+      return Math.max(0, Math.round(20 * (1 - (wr(best) - wr(mine)) / 0.25)));
+    },
+    spOk: lang => HXM('ok', lang),
+    introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), P = s && s.problems && s.problems[0]; return P ? { pos: { spec: { n: P.s.n, b: '.'.repeat(P.s.n * P.s.n), side: 1 }, me: 1, lock: true } } : null; },   // (the empty board of the lesson's size while the intro is read)
+  };
+  const hxArea = (sp, m) => {   // the hint (= hex/app.js): the answer and one empty cell next to it, never the answer alone
+    const n = sp.n, b = sp.b || ''; if (!(m >= 0 && m < n * n)) return [];
+    const r = Math.floor(m / n), q = m % n, nb = [[-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0]].map(([dr, dq]) => [r + dr, q + dq]).filter(([a, c]) => a >= 0 && a < n && c >= 0 && c < n).map(([a, c]) => a * n + c).filter(x => b[x] === '.');
+    return nb.length ? [nb[Math.floor(Math.random() * nb.length)], m] : [m];
+  };
+  const HXM = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の点' : '赤い印の点') + '\u0002' : `<i class="ls-spot ${k}"></i>`;   // (a cell named by its mark)
+  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -952,13 +1001,13 @@
       return new Promise(res => {
         onReady = res;
         const G = pos && typeof pos === 'object' ? pos : null;   // (gomoku: { start, rule, me, last, pick, noForbid } · go: { spec, me, view, marks })
-        if (sess && id === 'go' && G && pz() && pz().n !== (G.spec.n || 9)) { sess.stop(); sess = null; }   // (go: another board size — a new board)
+        if (sess && (id === 'go' || id === 'hex') && G && pz() && pz().n !== (G.spec.n || 9)) { sess.stop(); sess = null; }   // (go / hex: another board size — a new board)
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && (id === 'checkers' || id === 'xiangqi')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
         else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
         else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
