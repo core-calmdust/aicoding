@@ -1777,3 +1777,11 @@ html.lp .rk-me .rk-rule{font-size:11px;line-height:1.5}
 #root .grc-ov .grc-go{font-family:var(--serif);font-weight:800;letter-spacing:.18em;color:var(--gl2);border-radius:6px;
   background:radial-gradient(120% 150% at 50% 0%,rgba(232,206,140,.22),transparent 62%),linear-gradient(180deg,var(--lq1),var(--lq2));
   border:1px solid rgba(232,206,140,.85);box-shadow:inset 0 0 0 3px var(--lq2),inset 0 0 0 4px rgba(232,206,140,.35),0 6px 16px rgba(0,0,0,.45)}
+/* the seat wind on each portrait, larger (ユーザー 2026-11-15: hard to make out) */
+html.lp #game .bf em{width:25px;height:25px;font-size:14.5px;right:-10px;bottom:-8px}
+html.ds #game .bf em{width:calc(34px * var(--hz, 1));height:calc(34px * var(--hz, 1));font-size:calc(19px * var(--hz, 1));right:-12px;bottom:-10px}
+/* the results of a hand on a phone: the yaku in one column, each name on one line (ユーザー 2026-11-15「役名の折り返しはしない」) */
+html.lp .agst .ag-yaku{grid-template-columns:1fr;max-width:42cqw}
+.agst .ag-yaku .yk span,.agst .ag-yaku .yk b{white-space:nowrap}
+html.lp .agst .ag-yaku{font-size:clamp(10.5px,calc(21cqh / max(var(--n),3)),20px);gap:calc(var(--u)*.6)}
+.agst .ag-yaku{font-size:clamp(13px,calc(22cqh / max(var(--n),5)),calc(var(--u)*4.4));gap:calc(var(--u)*.7);align-content:safe center}
