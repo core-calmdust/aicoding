@@ -27,7 +27,8 @@
   de.classList.add('atlas-hex');
 
   /* ---------- looks: 3D board (+ 3D or 2D stones) or the game's own 2D board and stones ---------- */
-  const LK = 'atlas-hex-look';
+  const LK = 'atlas-hex-mode';   // ('3d' | '3d2' = 3D board with the 2D stones | '2d'; the 3D board's look itself: Table3D.BOARDS.hex)
+  try { const o = localStorage.getItem('atlas-hex-look'); if (o === '2d' || o === '3d' || o === '3d2') { localStorage.setItem(LK, o); localStorage.removeItem('atlas-hex-look'); } } catch (e) {}   // (2026-11-15: the old key now names the board)
   let bd3 = true, pc3 = true;
   try { const v = localStorage.getItem(LK); if (v === '2d') bd3 = pc3 = false; else if (v === '3d2') pc3 = false; } catch (e) {}
 
@@ -139,7 +140,7 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
   function make(i, col) {
     const c = U.cell, g = new THREE.Group(), s = U.stone(col), sh = T3.contact(c * .44, .5);
     sh.position.y = .002; g.add(sh, s); g.userData.s = s; g.userData.sh = sh;
-    const [x, z] = U.pt(i); g.position.set(x, U.top, z); group.add(g); return g;
+    const [x, z] = U.pt(i); g.position.set(x, U.topAt ? U.topAt(i) : U.top, z); group.add(g); return g;
   }
   function drop(g) {   // set down: it comes in low from the player's side, touches, slides a hair and settles
     const c = U.cell, s = g.userData.s, sh = g.userData.sh, h0 = c * .6, z0 = c * .3;
@@ -158,8 +159,9 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
     anim(360, k => { s.position.y = Math.sin(k * Math.PI) * c * .5; s.rotation.x = (1 - k) * Math.PI; }, () => { s.position.y = 0; s.rotation.x = 0; });
   }
   function remove(o) { group.remove(o.g); o.g.userData.sh.material.dispose(); }
+  let lastPos = null;
   function mirror(pos, animCell) {
-    const g = curG(); if (!pos || !pos.b || !g) return;
+    const g = curG(); if (!pos || !pos.b || !g) return; lastPos = pos;
     build(pos.n, g.rot);
     const ok = animOk(), fresh = ok && animCell >= 0 ? animCell : -1;
     let swapped = false;
@@ -195,7 +197,13 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
     s += st(cx - R * S3 / 2, cy - R * 1.5, true) + st(cx + R * S3 / 2, cy, false) + st(cx - R * S3 / 2, cy + R * 1.5, true);
     return `<svg viewBox="${vb}"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${kind === 'pc' ? '#3a2a1c' : '#120d0a'}"/>${s}</svg>`;
   }
+  let R3 = null;
   function paintRows() {
+    if (R3) {   // (2026-11-15: the six 3D boards / stone sets in their own rows; the game's 2D rows lose their mark while a 3D one is on)
+      R3.paint();
+      [[document.getElementById('bdRow'), bd3], [document.getElementById('pcRow'), bd3 && pc3]].forEach(([row, on]) => { if (row && on) row.querySelectorAll('button').forEach(x => { x.classList.remove('sel'); x.setAttribute('aria-pressed', 'false'); }); });
+      return;
+    }
     [[document.getElementById('bdRow'), 'bd'], [document.getElementById('pcRow'), 'pc']].forEach(([row, k]) => {
       if (!row) return;
       let b = row.querySelector('button[data-a3]');
@@ -227,6 +235,10 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
     setTimeout(look, 0);
   };
   const r1 = document.getElementById('bdRow'), r2 = document.getElementById('pcRow');
+  function relook() { root = null; build(n, rot); if (lastPos) mirror(lastPos, -1); look(); }   // another 3D board: rebuilt, the stones set again
+  function restone() { for (const [, o] of st3) remove(o); st3.clear(); if (lastPos) mirror(lastPos, -1); T3.kick(300); }
+  const r3host = r1 && (r1.closest('.field') || r1.parentNode);
+  if (AtlasSkin.rows3d && r3host) R3 = AtlasSkin.rows3d({ id: 'hex', host: r3host, is3: () => bd3, board: () => { bd3 = true; pc3 = true; relook(); }, piece: () => { bd3 = true; pc3 = true; restone(); look(); } });
   if (r1) r1.addEventListener('click', onRow('bd'), true);
   if (r2) r2.addEventListener('click', onRow('pc'), true);
   if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paintRows(); } catch (e) {} return r; }; }
