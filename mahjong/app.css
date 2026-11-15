@@ -1864,7 +1864,7 @@ html.lp .pstats .ps-yh,html.lp .pstats .ps-yk{grid-template-columns:minmax(7em,1
    centred */
 html:not(.lp) .pstats{--u:min(.74cqh,.46cqw)}
 html:not(.lp) .pstats .ps-box{inset:3cqh 0;justify-content:center;gap:2cqw}
-html:not(.lp) .pstats .ps-main{flex:0 1 auto;width:min(calc(100cqw - 6cqw - 94cqh * 9 / 16 - 2cqw),max(94cqh,640px))}
+html:not(.lp) .pstats .ps-main{flex:0 1 auto;width:min(calc(100cqw - 6cqw - min(30cqw, 94cqh * 9 / 16) - 2cqw),max(94cqh,640px))}
 html:not(.lp) .pstats .ps-art.ch-art{max-width:30cqw}
 .pstats .ps-yk.zero span,.pstats .ps-yk.zero b,.pstats .ps-yk.zero em{opacity:.38}
 /* the home menu's names (ガチャ・キャラ…) in the house's gold Mincho, not white gothic (ユーザー 2026-11-15) */
@@ -1967,3 +1967,17 @@ html.ds #game #opp2{left:51%!important;right:auto!important;top:max(4px,calc(var
 html.ds #game #opp2 .bt{align-items:flex-start}
 html.ds #game #opp1{top:calc(var(--gi) + 32px * var(--hz, 1) + 14px)}
 html.ds #game #opp3{top:26%}
+/* (ユーザー 2026-11-15) a squarish window: the panel takes the width — a narrower portrait, three stat columns, the biggest win and
+   the top yaku side by side */
+@container (max-aspect-ratio: 3/2){
+  html:not(.lp) .pstats .ps-art.ch-art{max-width:24cqw}
+  html:not(.lp) .pstats{--u:min(.9cqh,.62cqw)}
+  html:not(.lp) .pstats .ps-box{top:50%;bottom:auto;transform:translateY(-50%);max-height:94cqh;align-items:stretch}
+  html:not(.lp) .pstats .ps-art.ch-art{height:auto;aspect-ratio:auto;width:24cqw}
+  html:not(.lp) .pstats .ps-main{max-height:94cqh}
+  html:not(.lp) .pstats .ps-body{flex:0 1 auto}
+  html:not(.lp) .pstats .ps-main{width:calc(100cqw - 6cqw - min(24cqw, 94cqh * 9 / 16) - 2cqw)}
+  html:not(.lp) .pstats .ps-grid{grid-template-columns:repeat(3,1fr)}
+  html:not(.lp) .pstats .ps-cols{grid-template-columns:1fr 1.7fr!important}
+  html:not(.lp) .pstats .ps-chs > div{grid-template-columns:repeat(3,1fr)}
+}
