@@ -133,6 +133,85 @@
     return tex('c4Inlay' + col + k, c, { wrap: true, rep: [1.4, 1.4] });
   }
 
+  /* ---------- the six stands and six tile sets (2026-11-15): the tower's shape kept, each look its own world ----------
+     leather 革と胡桃 (default, procedural) · steam 銅と真鍮 (riveted copper, iron spine, copper-pipe rails) · ice 氷と水晶 (frosted ice, snow,
+     icicle-clear rails) · tansu 欅と黒鉄 (zelkova chest, black iron fittings, tatami) · pueblo 砂岩とトルコ石 (layered sandstone, turquoise,
+     silver) · diner 50年代ダイナー (tufted red vinyl, a check floor, chrome).  Pictures: atlas/tools/c4-tex.py → images/atlas/c43d/.
+     Tiles: inlay 革の象嵌 (default) · coin 金貨と銀貨 · crystal シトリンと水晶 · lacquer 金箔と螺鈿 · chip ダイナーのチップ · sun 太陽と月. */
+  const LOOKS = ['leather', 'steam', 'ice', 'tansu', 'pueblo', 'diner'], SETS = ['inlay', 'coin', 'crystal', 'lacquer', 'chip', 'sun'];
+  const lsg = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const curLook = () => { const v = lsg('atlas-connect4-look'); return LOOKS.includes(v) ? v : 'leather'; };
+  const curSet = () => { const v = lsg('atlas-connect4-pc3'); return SETS.includes(v) ? v : 'inlay'; };
+  const C3 = (() => { try { return new URL('../../images/atlas/c43d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/c43d/'; } })(), C3V = '?v=1', c3img = {};
+  function c3(name, rep, srgb = true) { const key = name + (rep ? rep.join(',') : ''); if (c3img[key]) return c3img[key];
+    const TT = T(), t = new TT.TextureLoader().load(C3 + name + (X.coarse || X.lite ? '-h' : '') + '.webp' + C3V, () => { if (X.kick) X.kick(300); });
+    if (srgb) t.encoding = TT.sRGBEncoding; t.anisotropy = 8; t.wrapS = t.wrapT = TT.RepeatWrapping; if (rep) t.repeat.set(rep[0], rep[1]); return (c3img[key] = t); }
+  const LSPEC = {
+    steam: { tray: { roughness: 1, metalness: 1, bump: .004 }, floor: { roughness: 1, metalness: 1, bump: .003 }, spine: { roughness: 1, metalness: .55, bump: .002 },
+      rail: [0xc4703c, .28], fit: [0xd8a850, .2] },
+    ice: { tray: { roughness: 1, bump: .004, clearcoat: 1, glow: .12 }, floor: { roughness: 1, bump: .006 }, spine: { roughness: 1, clearcoat: 1, glow: .1 },
+      rail: [0xd8eef8, .08, true], fit: [0xbfe4f4, .12] },
+    tansu: { tray: { roughness: 1, bump: .003, clearcoat: .4 }, floor: { roughness: 1, bump: .004 }, spine: { roughness: 1, metalness: .4, bump: .003 },
+      rail: [0x4a3a2a, .35], fit: [0x2a2826, .4] },
+    pueblo: { tray: { roughness: 1, bump: .006 }, floor: { roughness: 1, bump: .005 }, spine: { roughness: 1, bump: .005 },
+      rail: [0xd8dce0, .22], fit: [0x3ab4aa, .3, false, true] },
+    diner: { tray: { roughness: 1, bump: .008, clearcoat: .7 }, floor: { roughness: 1, bump: .002, clearcoat: .5 }, spine: { roughness: 1, metalness: 1 },
+      rail: [0xe8ecf0, .1], fit: [0xf2f4f6, .08] },
+  };
+  const LM = {};
+  function lookMats(look, base) {
+    if (look === 'leather' || !LSPEC[look]) return base;
+    if (LM[look]) return LM[look];
+    const TT = T(), L = LSPEC[look], C = c => new TT.Color(c).convertSRGBToLinear();
+    const pic = (kind, o, rep) => { const m = X.M({ map: c3(kind + '-' + look, rep), bump: false, roughness: o.roughness, metalness: o.metalness || 0, color: 0xffffff });
+      const mm = c3(kind + '-' + look + '-m', rep, false); m.roughnessMap = mm; if (o.metalness) m.metalnessMap = mm; if (o.bump) { m.bumpMap = mm; m.bumpScale = o.bump; }
+      if (o.clearcoat) { m.clearcoat = o.clearcoat; m.clearcoatRoughness = .12; } if (o.glow) { m.emissive = new TT.Color(0xffffff); m.emissiveMap = m.map; m.emissiveIntensity = o.glow; } return m; };
+    const metal = ([c, r, glass, stone]) => { if (glass) { const m = X.M({ color: c, roughness: r, metalness: 0, clearcoat: 1, clearcoatRoughness: .04, bump: false }); m.transparent = true; m.opacity = .78; return m; }
+      if (stone) return X.M({ color: c, roughness: r, metalness: 0, clearcoat: .6, clearcoatRoughness: .2, bump: false });
+      const m = X.lite ? new TT.MeshStandardMaterial({ color: C(c), metalness: 1, roughness: r + .04 }) : new TT.MeshPhysicalMaterial({ color: C(c), metalness: 1, roughness: r, clearcoat: .3, clearcoatRoughness: .2 }); return m; };
+    const tray = pic('tray', L.tray, [.42, .42]);
+    return (LM[look] = Object.assign({}, base, { top: tray, side: pic('tray', L.tray, [.42, .42]), suede: pic('floor', L.floor, [.36, .36]), walnut: pic('spine', L.spine, [.6, .6]), bronze: metal(L.rail), brass: metal(L.fit) }));
+  }
+  // the tile sets: frame + face materials, or a shape of their own (coin / chip: round)
+  const SM = {};
+  function canvasTex(key, w, h, draw) { if (TX[key]) return TX[key]; const c = cv(w, h); draw(c.getContext('2d'), w, h); return tex(key, c); }
+  function setMats(set, base) {
+    if (set === 'inlay' || !SETS.includes(set)) return { frame: base.walnutT, gold: base.gold, pearl: base.pearl };
+    if (SM[set]) return SM[set];
+    const TT = T(), C = c => new TT.Color(c).convertSRGBToLinear(), lite = X.lite;
+    const phys = o => lite ? new TT.MeshStandardMaterial(o) : new TT.MeshPhysicalMaterial(o);
+    let o;
+    if (set === 'coin') {
+      const face = (col, a, b) => canvasTex('c4coin' + col, 256, 256, (g, w) => { const gr = g.createRadialGradient(w * .4, w * .38, 4, w / 2, w / 2, w * .5); gr.addColorStop(0, a); gr.addColorStop(1, b); g.fillStyle = gr; g.fillRect(0, 0, w, w);
+        g.strokeStyle = 'rgba(0,0,0,.28)'; g.lineWidth = 6; g.beginPath(); g.arc(w / 2, w / 2, w * .4, 0, 7); g.stroke(); g.font = `bold ${w * .34}px serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(0,0,0,.22)'; g.fillText('4', w / 2 + 3, w / 2 + 4); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillText('4', w / 2, w / 2); });
+      o = { gold: phys({ map: face('g', '#ffe39a', '#c08a2a'), metalness: 1, roughness: .26 }), pearl: phys({ map: face('s', '#ffffff', '#a8b0b8'), metalness: 1, roughness: .24 }) };
+      o.goldE = phys({ color: C(0xc89a3a), metalness: 1, roughness: .32 }); o.pearlE = phys({ color: C(0xb8c0c8), metalness: 1, roughness: .3 });
+    } else if (set === 'crystal') {
+      o = { gold: phys({ color: C(0xf2b030), roughness: .04, metalness: 0, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .86, emissive: C(0x5a3204) }),
+        pearl: phys({ color: C(0xe8f2ff), roughness: .04, metalness: 0, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .72, emissive: C(0x203040) }) };
+      if (!lite) { o.gold.sheen = 1; o.pearl.sheen = 1; o.pearl.sheenColor = C(0xbfe8ff); }
+    } else if (set === 'lacquer') {
+      const leaf = canvasTex('c4leaf', 256, 256, (g, w) => { g.fillStyle = '#d8a83a'; g.fillRect(0, 0, w, w); for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) { g.fillStyle = `rgba(${255 - (i * 7 + j * 13) % 40},${210 - (i * 11 + j * 5) % 50},${90 + (i + j) % 30},.5)`; g.fillRect(i * w / 6 + 1, j * w / 6 + 1, w / 6 - 2, w / 6 - 2); } });
+      const raden = canvasTex('c4raden', 256, 256, (g, w) => { const gr = g.createLinearGradient(0, 0, w, w); ['#f6f2ff', '#bfe6f0', '#f0d0f4', '#d8f4e0', '#f8f0d8'].forEach((c, i) => gr.addColorStop(i / 4, c)); g.fillStyle = gr; g.fillRect(0, 0, w, w);
+        g.strokeStyle = 'rgba(80,90,140,.25)'; g.lineWidth = 2; for (let i = 0; i < 14; i++) { g.beginPath(); g.moveTo(Math.random() * w, Math.random() * w); g.lineTo(Math.random() * w, Math.random() * w); g.stroke(); } });
+      o = { frame: phys({ color: C(0x120a08), roughness: .12, metalness: 0, clearcoat: 1, clearcoatRoughness: .04 }), gold: phys({ map: leaf, metalness: 1, roughness: .2 }), pearl: phys({ map: raden, metalness: .3, roughness: .18, clearcoat: 1, clearcoatRoughness: .05 }) };
+    } else if (set === 'chip') {
+      const chip = (key, c1, c2) => canvasTex('c4chip' + key, 256, 256, (g, w) => { g.fillStyle = c1; g.fillRect(0, 0, w, w); g.fillStyle = c2; for (let k = 0; k < 8; k++) { g.save(); g.translate(w / 2, w / 2); g.rotate(k * Math.PI / 4); g.fillRect(-w * .07, -w * .5, w * .14, w * .16); g.restore(); }
+        g.strokeStyle = c2; g.lineWidth = w * .03; g.setLineDash([w * .05, w * .04]); g.beginPath(); g.arc(w / 2, w / 2, w * .3, 0, 7); g.stroke(); g.setLineDash([]); g.fillStyle = c2; g.font = `bold ${w * .2}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('★', w / 2, w / 2 + 2); });
+      o = { gold: phys({ map: chip('g', '#f2b81e', '#ffffff'), roughness: .35, clearcoat: .5 }), pearl: phys({ map: chip('s', '#f6f6f2', '#d8202a'), roughness: .35, clearcoat: .5 }) };
+      o.goldE = phys({ map: chip('ge', '#f2b81e', '#ffffff'), roughness: .4 }); o.pearlE = phys({ map: chip('se', '#f6f6f2', '#d8202a'), roughness: .4 });
+    } else if (set === 'sun') {
+      const relief = (key, sun) => canvasTex('c4rel' + key, 256, 256, (g, w) => { g.fillStyle = '#808080'; g.fillRect(0, 0, w, w); g.translate(w / 2, w / 2); g.fillStyle = '#e8e8e8'; g.strokeStyle = '#e8e8e8';
+        if (sun) { g.beginPath(); g.arc(0, 0, w * .17, 0, 7); g.fill(); g.lineWidth = w * .035; for (let k = 0; k < 12; k++) { g.save(); g.rotate(k * Math.PI / 6); g.beginPath(); g.moveTo(0, w * .23); g.lineTo(0, w * .36); g.stroke(); g.restore(); } }
+        else { g.beginPath(); g.arc(0, 0, w * .3, 0, 7); g.fill(); g.fillStyle = '#808080'; g.beginPath(); g.arc(w * .12, -w * .08, w * .27, 0, 7); g.fill(); g.fillStyle = '#e8e8e8'; [[-.2, -.3], [.28, .2], [-.3, .26]].forEach(([x, y]) => { g.beginPath(); g.arc(x * w, y * w, w * .02, 0, 7); g.fill(); }); } });
+      const tint = (key, sun, a, b) => canvasTex('c4tint' + key, 256, 256, (g, w) => { g.fillStyle = a; g.fillRect(0, 0, w, w); g.globalCompositeOperation = 'overlay'; g.drawImage(relief(key, sun).image, 0, 0, w, w); });
+      const mk = (col, key, sun, a, b) => { const m = phys({ map: tint(key, sun, a, b), metalness: 1, roughness: .28 }); m.bumpMap = relief(key, sun); m.bumpScale = .25; return m; };
+      o = { gold: mk(0xe0b048, 'sun', true, '#f0c050', '#3a2004'), pearl: mk(0xcfd6de, 'moon', false, '#d8dee6', '#20242c'), frame: phys({ color: C(0x2c2a30), metalness: 1, roughness: .35 }) };
+    }
+    o.frame = o.frame || base.walnutT;
+    return (SM[set] = o);
+  }
+
   /* ---------- materials ---------- */
   function mats() {
     const TT = T(), C = c => new TT.Color(c).convertSRGBToLinear(), lite = X.lite;
@@ -177,9 +256,42 @@
     X.share && (X.share(frame), X.share(inlay));
     return (GEO[k] = { frame, inlay, face: TD / 2 - .045 });
   }
+  function roundGeo(set) {
+    const k = 'c4round' + set + (X.coarse ? 'c' : ''); if (GEO[k]) return GEO[k];
+    const TT = T(), seg = X.coarse ? 24 : 40, R = TW / 2 - .01, body = new TT.CylinderGeometry(R, R, TD, seg, 1, true); body.rotateX(Math.PI / 2);
+    const face = new TT.CircleGeometry(R - (set === 'coin' ? .025 : .0), seg);
+    let rim = null; if (set === 'coin') { rim = new TT.TorusGeometry(R - .02, .022, 6, seg); }
+    return (GEO[k] = { body, face, rim, R });
+  }
+  function gemGeo() {   // a cut stone: a square step cut with wide flat facets
+    const k = 'c4gem'; if (GEO[k]) return GEO[k];
+    const TT = T(), bv = .11, hw = TW / 2 - bv, sh = rrShape(new TT.Shape(), hw, hw, .06, 1);
+    let g = new TT.ExtrudeGeometry(sh, { depth: TD - 2 * bv * .8, bevelEnabled: true, bevelThickness: bv * .8, bevelSize: bv, bevelSegments: 1, curveSegments: 1 }); g.translate(0, 0, -(TD - 2 * bv * .8) / 2);
+    g = g.toNonIndexed(); g.computeVertexNormals(); return (GEO[k] = g);
+  }
+  function slabGeo() {   // a solid rounded square (sun & moon)
+    const k = 'c4slab' + (X.coarse ? 'c' : ''); if (GEO[k]) return GEO[k];
+    const TT = T(), bv = .05, hw = TW / 2 - bv, cs = X.coarse ? 3 : 5, sh = rrShape(new TT.Shape(), hw, hw, .18, cs);
+    const g = new TT.ExtrudeGeometry(sh, { depth: TD - 2 * bv, bevelEnabled: true, bevelThickness: bv, bevelSize: bv, bevelSegments: X.coarse ? 2 : 4, curveSegments: cs }); g.translate(0, 0, -(TD - 2 * bv) / 2);
+    // planar UVs on the faces: x, y → 0..1 (the relief maps)
+    const P = g.attributes.position, UV = g.attributes.uv; for (let i = 0; i < UV.count; i++) UV.setXY(i, P.getX(i) / TW + .5, P.getY(i) / TW + .5);
+    return (GEO[k] = g);
+  }
   // a tile standing up, facing +z (centre at the origin)
-  function tile(color, m) {
-    const TT = T(), g = new TT.Group(), G = tileGeo();
+  function tile(color, m, set) {
+    const TT = T(), g = new TT.Group(); set = set || curSet();
+    if (set !== 'inlay' && m.sets) {
+      const S = setMats(set, m), F = color === 'pearl' ? S.pearl : S.gold;
+      if (set === 'coin' || set === 'chip') {
+        const G = roundGeo(set), E = color === 'pearl' ? S.pearlE : S.goldE;
+        g.add(mesh(G.body, E)); const a = mesh(G.face, F, false); a.position.z = TD / 2; g.add(a); const b = mesh(G.face, F, false); b.position.z = -TD / 2; b.rotation.y = Math.PI; g.add(b);
+        if (G.rim) [TD / 2 - .01, -TD / 2 + .01].forEach(z => { const r = mesh(G.rim, E, false); r.position.z = z; g.add(r); });
+      } else if (set === 'crystal') { g.add(mesh(gemGeo(), F)); }
+      else if (set === 'sun') { g.add(mesh(slabGeo(), F)); }
+      else { const G = tileGeo(); g.add(mesh(G.frame, S.frame)); const a = mesh(G.inlay, F, false); a.position.z = G.face; g.add(a); const b = mesh(G.inlay, F, false); b.position.z = -G.face; b.rotation.y = Math.PI; g.add(b); }
+      g.userData.color = color; return g;
+    }
+    const G = tileGeo();
     g.add(mesh(G.frame, m.walnutT));
     const inl = color === 'pearl' ? m.pearl : m.gold;
     const a = mesh(G.inlay, inl, false); a.position.z = G.face; g.add(a);
@@ -215,13 +327,14 @@
     return g;
   }
 
+  X.c4 = { LOOKS, SETS, tile: (c, set) => tile(c, Object.assign(lookMats('leather', mats()), { sets: true }), set) };   // (the tile pictures: atlas/tools/c4piece.html)
   /* ---------- MODELS.connect4 ---------- */
   // a mid-game position: [column, colours bottom → top] (gold moved first)
   const SHOW = [[1, 'p'], [2, 'pgp'], [3, 'gpgg'], [4, 'gpg'], [5, 'pg'], [6, 'p']];
-  X.MODELS.connect4 = function (live) {
-    const TT = T(), outer = new TT.Group(), g = new TT.Group(), m = mats();
+  X.MODELS.connect4 = function (live, o = {}) {
+    const TT = T(), outer = new TT.Group(), g = new TT.Group(), m = lookMats(o.look || curLook(), mats()); m.sets = true;
     g.add(stand(m)); outer.add(g); g.scale.setScalar(SCALE);
-    Object.assign(outer.userData, { viewY: 2.3, cell: (c, r) => [colX(c) * SCALE, rowY(r) * SCALE], tile: c => tile(c, m) });
+    Object.assign(outer.userData, { viewY: 2.3, cell: (c, r) => [colX(c) * SCALE, rowY(r) * SCALE], tile: (c, set) => tile(c, m, set) });
     if (live) return outer;
     SHOW.forEach(([c, s]) => [...s].forEach((ch, r) => { const t = tile(ch === 'g' ? 'gold' : 'pearl', m); t.position.set(colX(c), rowY(r), 0); g.add(t); }));
     // spare tiles resting in the tray: small stacks in the front well, a few in the back

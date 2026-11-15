@@ -36,10 +36,12 @@ html.atlas-skin.atlas-2d{--top:1}   /* the plain 2D board: the game's own (unitl
 html.atlas-c4 .colhl{background:linear-gradient(180deg,rgba(255,226,122,0),rgba(255,226,122,.16) 22%,rgba(255,226,122,.08))!important}`;
   document.head.appendChild(st);
 
-  const root = T3.MODELS.connect4(true), U = root.userData, g = root.children[0], SC = g.scale.x;
-  const PITCH = U.cell(0, 1)[1] - U.cell(0, 0)[1], COLW = U.cell(1, 0)[0] - U.cell(0, 0)[0];   // world row / column pitch
+  let root = T3.MODELS.connect4(true), U = root.userData, g = root.children[0];
+  const SC = g.scale.x, PITCH = U.cell(0, 1)[1] - U.cell(0, 0)[1], COLW = U.cell(1, 0)[0] - U.cell(0, 0)[0];   // world row / column pitch
   g.scale.y = SC * COLW / PITCH;            // square cells: the rows get the columns' pitch (tiles are counter-scaled)
-  const set = T3.c4Set(root, { sfx: false });   // (the page plays its own sounds)
+  let set = T3.c4Set(root, { sfx: false });   // (the page plays its own sounds)
+  // another 3D stand (2026-11-15: six looks, Table3D.BOARDS.connect4): rebuilt, the tiles set again
+  function restand() { set.dispose(); root = T3.MODELS.connect4(true); U = root.userData; g = root.children[0]; g.scale.y = SC * COLW / PITCH; set = T3.c4Set(root, { sfx: false }); T3.show('connect4', root, { still: true }); winKey = ''; try { mirror(false); } catch (e) {} T3.kick(600); }
   const S = 6 * COLW;                       // the DOM board is 6 cells high
   const Y = (set.rowY(0) + set.rowY(5)) / 2 * g.scale.y;   // its centre height (world)
   const PERSP = 4.2;   // a longer lens than the flat boards: the tray (nearer the camera) stays inside the frame
@@ -65,7 +67,10 @@ html.atlas-c4 .colhl{background:linear-gradient(180deg,rgba(255,226,122,0),rgba(
   if (!skin) return;
   T3.show('connect4', root, { still: true });
   skin.alignTo(S, Y);
-  if (skin.view) skin.view({ key: 'atlas-c4-view', row: document.getElementById('bdRow'), img: '../images/atlas/connect4.webp', cls: ['atlas-c4'] });
+  const V = skin.view ? skin.view({ key: 'atlas-c4-view', row: document.getElementById('bdRow'), img: '../images/atlas/connect4.webp', cls: ['atlas-c4'] }) : null;
+  { const r1 = document.getElementById('bdRow'), h = r1 && (r1.closest('.field') || r1.parentNode), is3 = () => (V && V.is3d ? V.is3d() : true), on3 = () => { if (V && V.set && !is3()) V.set(true); };
+    const R3 = AtlasSkin.rows3d && h ? AtlasSkin.rows3d({ id: 'connect4', host: h, is3, board: () => { on3(); restand(); }, piece: () => { on3(); set.retile(); } }) : null;
+    if (R3 && r1) r1.addEventListener('click', () => setTimeout(() => R3.paint(), 0)); }
   // a front view: the camera stands level with the board's centre, looking at the tower (tilt 90°); the DOM board stays flat
   const host = document.getElementById('atlasGL'), holder = boardDom.parentElement;
   const box = () => { let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x: x - host.offsetLeft, y: y - host.offsetTop, w: boardDom.offsetWidth, h: boardDom.offsetHeight }; };
