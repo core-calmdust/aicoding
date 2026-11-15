@@ -876,7 +876,7 @@
     // 種目 first (mancala · morris, 2026-11-15, as shogi): 種目 (+ its own setting: 種の数) → 相手 → 時間
     const KF = !!(ad && ad.kindFirst), KL = KIND[lang] || KIND.en;
     const ruleHtml = RU ? `<label>${esc(KF ? KL : RU.label(lang))}<select id="bvRuleSel" data-pick="drop">${RU.list.map(v => `<option value="${esc(v)}" ${v === rcur ? 'selected' : ''}>${esc(RU.name(v, lang))}</option>`).join('')}</select></label>` : '';
-    const sizeOnly = ad && ad.sizes ? `<label>${esc(KF && !RU ? KL : ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${SZS.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : ''
+    const sizeOnly = ad && ad.sizes ? `<label>${esc(KF && !RU && !ad.kindOwn ? KL : ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${SZS.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : ''
     const sizeHtml = sizeOnly ? ruleHtml + sizeOnly : '';
     headIcons(false);   // (ヒストリア / 戦績 back out of the old card before it is rebuilt)
     $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${ring(r.pct, g.color)}</div>
