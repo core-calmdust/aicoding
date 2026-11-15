@@ -1296,7 +1296,15 @@
     return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp">${RTG[id] ? `<option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option>` : ''}<option value="online" ${opp === 'online' || !RTG[id] ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><span class="hb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 3 3.6M16 6h2.5a2.5 2.5 0 0 1-3 3.6"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/></svg></span></button></div>`
       + `<label id="bvRtTcL">${t('tc.h')}<button type="button" class="lvpick" id="bvRtTc"></button></label>${rtOnly ? '<div class="opts vopts rtonly"><span class="rtnow2" id="bvRtNow" hidden></span></div>' : ''}<div class="mxnote" id="bvRtNote" hidden>${esc(t('bv.rtNoTc'))}</div></div>`
       + `<div class="opts mxp" id="bvPz" hidden>${daily.map(([k, ic, lb]) => `<button type="button" class="mxb${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
-      + `<div class="opts mxp" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option>${NO_OPEN3D[id] ? '' : `<option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option>`}</select></label><button type="button" class="mxb mxwide" id="bvLsList"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`;
+      + `<div class="opts mxp" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option>${NO_OPEN3D[id] ? '' : `<option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option>`}</select></label><button type="button" class="mxb mxwide" id="bvLsList"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
+      + '<div class="ps-prog mxprog" id="bvMxProg" hidden></div>';   // (phones, 2026-11-16: how far the パズル / レッスン tab has gone, just above あそぶ · フル機能で遊ぶ — the sheet's own rows for them are gone)
+  }
+  const MXI = { puzzle: '<svg viewBox="0 0 24 24"><path d="M10 3h4v2.2a1.8 1.8 0 1 0 3.6 0V3H21v6h-2.2a1.8 1.8 0 1 0 0 3.6H21V21h-6v-2.2a1.8 1.8 0 1 0-3.6 0V21H3v-6h2.2a1.8 1.8 0 1 0 0-3.6H3V3h7z"/></svg>', lesson: '<svg viewBox="0 0 24 24"><path d="M3 9.5 12 5l9 4.5-9 4.5z"/><path d="M7 11.6V16c0 1.4 2.2 2.6 5 2.6s5-1.2 5-2.6v-4.4M21 9.5V15"/></svg>' };
+  function mxProg(m) {
+    const el = $('bvMxProg'), g = bvGame; if (!el || !g) return;
+    const pz = m === 'puzzle', b = pz ? g.total.pz : m === 'lesson' ? g.total.ls : 0, r = P[g.id] || {}, a = Math.min(b, (pz ? r.pz : r.ls) || 0);
+    el.hidden = !b || !matchMedia('(max-width: 819px)').matches; if (el.hidden) return;
+    el.innerHTML = `<span class="ps-ic" style="--c:${g.color}">${MXI[m]}</span><span class="mxpt"><b>${esc(t(pz ? 'pg.pz' : 'pg.ls'))}</b><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span></span><em>${a.toLocaleString()}/${b.toLocaleString()}</em>`;
   }
   const mx2d = (g, m) => '../' + g.href + (m === 'puzzle' ? '?mode=puzzle&sub=cont' : m === 'lesson' ? '?mode=lesson&sub=' + ($('bvLsK') ? $('bvLsK').value : 'list') : '');
   // the setting rows' names (種目 · 相手 · 時間 …) in one column as wide as the longest of them, the settings lined up on their right —
@@ -1312,6 +1320,7 @@
   function mxLayout(m) {
     const g = bvGame; if (!g) return;
     ['bvRt', 'bvPz', 'bvLs'].forEach((k, i) => { if ($(k)) $(k).hidden = m !== ['rated', 'puzzle', 'lesson'][i]; });
+    mxProg(m);
     lblAlign();
     const f = $('bvFull'), tb = $('bvTable'), cl = $('bvi').querySelector('.R .act > a.btn'), act = $('bvi').querySelector('.R .act'); if (!f || !tb) return;
     const set = (el, a, b) => { el.innerHTML = `<b>${a}</b>${b ? `<small>${b}</small>` : ''}`; };
@@ -1357,7 +1366,7 @@
     const ps = document.createElement('div'); ps.className = 'psheet'; ps.id = 'bvPS';
     ps.innerHTML = `<div class="ps-in bvi" role="dialog" aria-label="${esc(t('ps.h'))}"><div class="ps-main"><div class="ps-h">${esc(t('ps.h'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div>
       <div class="ps-sec"><div class="ps-t">${esc(t('ps.vs'))}</div><div class="ps-body"></div><div class="ps-act"></div></div>
-      ${g.total.pz ? row('puzzle', PZI, t('pg.pz'), r.pz || 0, g.total.pz) : ''}${g.total.ls ? row('lesson', LSI, t('pg.ls'), r.ls || 0, g.total.ls) : ''}</div><div class="ps-subv" hidden></div></div>`;
+      ${$('bvMxProg') ? '' : g.total.pz ? row('puzzle', PZI, t('pg.pz'), r.pz || 0, g.total.pz) : ''}${$('bvMxProg') ? '' : g.total.ls ? row('lesson', LSI, t('pg.ls'), r.ls || 0, g.total.ls) : ''}</div><div class="ps-subv" hidden></div></div>`;
     $('bv').appendChild(ps);
     const body = ps.querySelector('.ps-body'), pa = ps.querySelector('.ps-act');
     ['bvMode', 'bvMBody', 'bvSzRow'].forEach(i => { if ($(i)) body.appendChild($(i)); });
