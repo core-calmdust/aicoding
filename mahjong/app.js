@@ -793,12 +793,16 @@ function rollChar(guarantee) {
 }
 const DUPE = { N: 30, R: 80, SR: 250, SSR: 800, UR: 2000 };
 const RANK_I = r => ['N', 'R', 'SR', 'SSR', 'UR'].indexOf(r);
+// (ユーザー 2026-11-16) the pick-up is shown in the gacha, not on the home: the best character not yet owned (or the best of all)
+function gPick() { return MJChars.list.filter(x => !owns(x.id) && x.reward == null).sort((a, b) => RORD[a.rarity] - RORD[b.rarity])[0] || MJChars.list.find(x => x.rarity === 'UR'); }
+function gPickHTML() { const pk = gPick(); if (!pk) return '';
+  return `<div class="gpick" style="--c:${pk.color}"><i class="gp-art" style="background-image:url('${charImg(pk, 'bust')}')"></i><span class="gp-rib">PICK UP</span><span class="gp-tx"><em class="r-${pk.rarity}">${pk.rarity}</em><b>${esc(L(pk.name))}</b><small>${esc(L(pk.title))}</small></span></div>`; }
 function openGacha() {
   const b = modal(`
     <div class="gacha">
       <h2>${t('gacha')}<small>GACHA</small></h2>
       <div class="gcoins">${icon('coin')}<b id="gCoins">${DB.coins.toLocaleString()}</b></div>
-      <div class="gstage" id="gStage"><div class="gorb"></div><p class="grates">${t('charRates')} UR 1% ・ SSR 4% ・ SR 15% ・ R 35% ・ N 45%<br>${t('skillRates')} SSR 3% ・ SR 12% ・ R 30% ・ N 55%<br><small>${t('tenth')}</small></p></div>
+      <div class="gstage" id="gStage">${gPickHTML()}<div class="gorb"></div><p class="grates">${t('charRates')} UR 1% ・ SSR 4% ・ SR 15% ・ R 35% ・ N 45%<br>${t('skillRates')} SSR 3% ・ SR 12% ・ R 30% ・ N 55%<br><small>${t('tenth')}</small></p></div>
       <div class="gbtns">
         <button class="btn" data-n="1"><b>${esc(t('pull1', { n: '' }).replace(/[（(]\s*[）)]/, '').trim())}</b><small>${icon('coin')}${COST1}</small></button>
         <button class="btn gold" data-n="10"><b>${esc(t('pull10', { n: '' }).replace(/[（(]\s*[）)]/, '').trim())}</b><small>${icon('coin')}${COST10.toLocaleString()}</small></button>
