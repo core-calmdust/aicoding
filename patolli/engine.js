@@ -167,7 +167,8 @@ function think(s, n, level, opts) {
   const ms = legalMoves(s, n); if (!ms.length) return null; if (ms.length === 1) return ms[0];
   if (L.rand && rng() < L.rand) return ms[Math.floor(rng() * ms.length)];
   const ev = o.ev || evaluate(s, n, o.d != null ? o.d : L.d), temp = o.temp != null ? o.temp : L.temp;
-  if (!temp) return ev[0].move;
+  // ばらつきなし（Lv.19〜20）：勝率がまったく同じ手が並ぶときは、その中から無作為に選ぶ（いつも先頭の駒だけを動かすと、Lv.18 より弱くなる）
+  if (!temp) { const top = ev.filter(e => ev[0].wp - e.wp < 1e-9); return top[top.length > 1 ? Math.floor(rng() * top.length) : 0].move; }
   const ws = ev.map(e => Math.exp((e.wp - ev[0].wp) / temp)); let x = rng() * ws.reduce((a, b) => a + b, 0);
   for (let i = 0; i < ev.length; i++) { x -= ws[i]; if (x <= 0) return ev[i].move; }
   return ev[0].move;

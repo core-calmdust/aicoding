@@ -1,0 +1,15 @@
+<!DOCTYPE html><meta charset="utf-8"><title>patolli board2d demo</title>
+<!-- 盤・駒・豆の見た目の確認用（対局ページとは別）。?d=petate&p=pebble&rule=bell -->
+<body style="margin:0;background:#12292c;color:#fff;font-family:sans-serif">
+<div style="display:flex;flex-wrap:wrap;gap:10px;padding:10px"><div id="b" style="width:760px;height:760px;position:relative"></div><div id="d" style="width:216px;height:250px;background:#0006"></div><div id="minis" style="display:grid;grid-template-columns:repeat(3,200px);gap:8px"></div></div>
+<script src="../engine.js"></script><script src="../board2d.js"></script>
+<script>
+const q = new URLSearchParams(location.search), E = PatolliEngine, B = PatolliBoard2D, rule = q.get('rule') || 'bell';
+const st = E.newGame(rule); st.pos = [[0, 0, 3, 11, 25, E.RULES[rule].goal], [0, 7, 15, 33, E.RULES[rule].goal, E.RULES[rule].goal]];
+const v = B.mount(document.getElementById('b'), { design: q.get('d') || 'petate', pieces: q.get('p') || 'pebble', trayLabel: k => ({ start: '待ち', goal: '上がり', gold0: '赤の宝', gold1: '青の宝', pool: '場' })[k] });
+const c = E.coords(rule, 0, 14, 1);
+v.render(st, { targets: [{ r: c[0], c: c[1] }], hint: { from: { r: E.coords(rule, 0, 11, 1)[0], c: E.coords(rule, 0, 11, 1)[1] }, to: { r: c[0], c: c[1] } }, marks: [{ type: 'path', side: 0, from: 1, to: 9 }] });
+v.on('cell', e => console.log('cell', JSON.stringify(e))).on('tray', e => console.log('tray', JSON.stringify(e)));
+const d = B.dice(document.getElementById('d')); d.show([1, 0, 1, 1, 0]); window.v = v; window.d = d;
+document.getElementById('minis').innerHTML = B.BOARDS.map((bd, i) => B.mini(st, { design: bd, pieces: B.PIECES[i], crop: 'board', trays: false })).join('');
+</script>
