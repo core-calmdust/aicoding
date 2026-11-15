@@ -32,7 +32,7 @@ function statusAt(i) {
   if (manualEnd && !kenSw && manualEnd.n === moves.length && i === moves.length && !lesson && !puzzle && settings.mode !== 'online') return manualEnd;
   if (settings.mode === 'online' && !kenSw && window.olOver && i === moves.length && !lesson && !puzzle) { const o = olOver(); if (o) return o; }
   if (rgame && rgame.over && !kenSw && i === moves.length && !lesson && !puzzle) return rgame.over;
-  return E.judge(posAt(i).pos);
+  const pc = posAt(i); return E.judge(pc.pos, pc.hashes);   // 同じ局面3回目・取りのない60手ずつは狐の勝ち
 }
 const toMoveAt = i => posAt(i).pos.turn;
 // move name in standard notation (needs the position before the move)
@@ -112,7 +112,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=1';
+const ENGINE_URL = 'engine.js?v=2';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
