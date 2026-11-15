@@ -875,7 +875,7 @@
     ur: { 1: 'finkel', 2: 'blitz', 3: 'masters' }, senet: { 1: 'std', 2: 'long' }, janggi: { 1: '0', 2: '1', 3: '2', 4: '3' } };
   const kKey = (id, v) => KMAP[id] ? KMAP[id][v] : v;
   let kindsP = null;
-  const kindsLoad = () => kindsP || (kindsP = new Promise(res => { if (window.AtlasKinds) return res(); const sc = document.createElement('script'); sc.src = 'kindart.js?v=1'; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); }));
+  const kindsLoad = () => kindsP || (kindsP = new Promise(res => { if (window.AtlasKinds) return res(); const sc = document.createElement('script'); sc.src = 'kindart.js?v=2'; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); }));
   function kindPick(g, ad, sid, head) {
     const sel = $(sid), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick vpick kpick'; sel.hidden = true; sel.after(bt);
     const K = () => window.AtlasKinds && AtlasKinds[g.id], KT = v => { const k = K(); if (!k) return null; const L = k.tx[lang] || k.tx.en || k.tx.ja; return L && L[kKey(g.id, v)]; };
