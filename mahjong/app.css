@@ -2196,3 +2196,42 @@ html.lp #game #opp1 .bk{align-items:flex-end}
 #game .opp .bk .skw{padding:1px 8px 1px 2px;gap:4px}
 #game .opp .bk .skw>span{font-size:11px}
 html.ds #game .opp .bk .skw i.sk{width:18px;height:18px;padding:3px}
+
+/* (ユーザー 2026-11-15) the middle shows her picture: the partner block — with all her sisters — is in the right panel only */
+#chara.ch2 .ch-ptn{display:none}
+#chara.ch2 .ptn-inl{display:block!important}
+#chara.ch2 .ptn-inl .ptn.ask{padding:10px 12px}
+#chara.ch2 .ptn{gap:7px}
+#chara.ch2 .ptn .ptn-cnt{order:2;font-family:'Cinzel',var(--serif);font-size:12px;letter-spacing:.08em;color:#a99cc8}
+#chara.ch2 .ptn .ptn-row{gap:6px;padding:3px 2px;flex-wrap:wrap}
+#chara.ch2 .ptn .sib,#chara.ch2 .ptn .sib .frame{width:36px;height:36px;flex:none}
+#chara.ch2 .ptn .sib .frame{border-radius:8px}
+#chara.ch2 .ptn .sib .frame>img{border-radius:6px}
+#chara.ch2 .ptn .sib.lock{opacity:.6;cursor:pointer}
+#chara.ch2 .ptn.ask .sib.lock .frame{animation:none}
+#chara.ch2 .ptn .sib .ck{top:auto;bottom:-6px;right:-6px;width:17px;height:17px}
+#chara.ch2 .ptn .sib .ck::after{left:5.5px;top:2.5px;width:4px;height:8px;border-width:0 2px 2px 0}
+#chara.ch2 .ptn .ptn-n{font-size:17px}
+#chara.ch2 .ptn .pskill{padding:7px 10px}
+#chara.ch2 .ptn .pskill i{width:32px;height:32px;padding:7px}
+#chara.ch2 .ptn .pskill b{font-size:16px;margin-bottom:0}
+#chara.ch2 .ptn .pskill span{font-size:13px;line-height:1.5}
+#chara.ch2 .ch-info{width:420px;gap:9px}
+#chara.ch2 .pp-lead{letter-spacing:.14em;text-indent:0;white-space:nowrap}
+#chara.ch2 .ch-info.tight2 .skpick small,#chara.ch2 .ch-info.tight2 .ptn-cost,#chara.ch2 .ch-info.tight2 .ci-rule{display:none}
+#chara.ch2 .ch-info.tight2 .pp-n{font-size:46px}
+#chara.ch2 .ch-info.tight2 .pskill .cl{margin-top:2px}
+#chara.ch2 .ch-info.tight2{gap:7px}
+html.lp #chara.ch2 .ch-info{width:340px}
+html.lp #chara.ch2 .ptn .sib,html.lp #chara.ch2 .ptn .sib .frame{width:32px;height:32px}
+html.lp #chara.ch2 .ptn .ptn-row{gap:4px}
+#chara.ch2 .ptn .ci-h>*{white-space:nowrap}
+html.lp #chara.ch2 .ptn .ci-h>span{display:none}
+#chara.ch2 .ptn .ptn-row{flex-wrap:nowrap}
+#chara.ch2 .ptn .sib{flex:0 1 36px;min-width:0;width:auto;height:auto;aspect-ratio:1}
+#chara.ch2 .ptn .sib .frame{width:100%;height:100%}
+html.lp #chara.ch2 .ptn .sib{flex-basis:32px;width:auto;height:auto}
+html.lp #chara.ch2 .ptn .sib .frame{width:100%;height:100%}
+html.lp #chara.ch2 .ptn .ptn-row{flex-wrap:wrap}
+html.lp #chara.ch2 .ptn .sib{flex:0 0 32px}
+html.lp #chara.ch2 .chsel.on{font-size:12.5px;letter-spacing:.08em;white-space:nowrap;padding:10px 4px}
