@@ -177,28 +177,22 @@
     function boxArea(B) { const m = new TH.Mesh(GEO.bar, MAT.box), [a, b] = wx((B.x0 + B.x1) / 2, (B.y0 + B.y1) / 2); m.position.set(a, Y + .006, b); m.scale.set((B.x1 - B.x0 + 2 * D.KHW) * K, 1, (B.y1 - B.y0 + 2 * D.KHD) * K); m.renderOrder = 3; gd.add(m); }
     // the flick your pull makes: you point where the BALL goes (the opposite of the pull); the button's run follows from it
     const distOf = pw => 2 + pw * 150;   // the pull: how far the ball should roll (cm) — the end mark follows your hand
-    function aimMove(a) { if (!a || sel < 0) return null; const c = E.ballAim(st, sel, a.ang, distOf(a.pow)); return c ? { i: sel, ang: c.ang, v: c.v, limited: c.limited } : { i: sel, ang: Math.atan2(st.ball.y - st.b[sel].y, st.ball.x - st.b[sel].x), v: vOf(a.pow), limited: true }; }
+    function aimMove(a) { return a && sel >= 0 ? { i: sel, ang: a.ang, v: vOf(a.pow) } : null; }
     let pv = null, pvKey = '';
     function preview(mv) { const k = mv.i + ':' + mv.ang.toFixed(4) + ':' + mv.v.toFixed(1) + ':' + st.ply; if (k !== pvKey) { pvKey = k; pv = E.ballPath(st, mv); } return pv; }
-    // what a flick would do — directions only (2026-11-15 ユーザー：ボールは大体どっちへ進むかわかればよく、どこまで飛ぶかは強弱の
-    // さじ加減でプレイヤーが考える). White dots: your button's run to the ball, then a short arrow the way it goes on.
-    // Gold arrow: the way the ball leaves. Red ring: an opponent's piece your button would hit first (a foul).
-    function arrow(x, y, a, len, mat, w, dotted) {
-      const x1 = x + Math.cos(a) * len, y1 = y + Math.sin(a) * len;
-      if (dotted) dots(x, y, x1, y1, mat, w); else bar(x, y, x1, y1, w, mat, .03);
+    // what a flick would do — directions only, the crokinole way (2026-11-15 ユーザー：ボールは大体どっちへ進むかわかればよい、
+    // クロキノールそのままの方がいい): the button goes where you aim (the arrow, drawn in showGuides); dots to what it meets
+    // first and a ring there; from the ball, a gold arrow the way it leaves. Red: it meets an opponent's piece first (a foul).
+    function arrow(x, y, a, len, mat, w) {
+      const x1 = x + Math.cos(a) * len, y1 = y + Math.sin(a) * len; bar(x, y, x1, y1, w, mat, .03);
       for (const s2 of [-1, 1]) { const b2 = a + Math.PI + s2 * .5; bar(x1, y1, x1 + Math.cos(b2) * 2.2, y1 + Math.sin(b2) * 2.2, w, mat, .03); }
     }
     function drawMove(mv, matBtn, matBall) {
       const b = st.b[mv.i], tr = E.aimTrace(st, mv.i, mv.ang);
       dots(b.x, b.y, tr.gx, tr.gy, matBtn, .42);
-      if (tr.what !== 'ball') { if (tr.what != null) { const o = st.b[tr.what]; ring(o.x, o.y, D.RB + .6, MAT.no, BMID); } ring(tr.gx, tr.gy, D.RB, MAT.no, BMID); return; }
-      if (Math.hypot(tr.gx - b.x, tr.gy - b.y) > 2) ring(tr.gx, tr.gy, D.RB, matBtn, BMID);   // (not on top of the button itself)
-      const p = preview(mv), F = p.sim.frames, N = F.length;
-      let kc = -1; for (const e of p.sim.events) if (e.k === 'ball' && (e.a === mv.i || e.b === mv.i)) { kc = Math.min(N - 1, Math.round(e.t * 60)); break; }
-      if (kc < 0) return;
-      const k2 = Math.min(N - 1, kc + 3), dir = (j, k) => Math.atan2(F[k][j * 2 + 1] - F[kc][j * 2 + 1], F[k][j * 2] - F[kc][j * 2]), mvd = (j, k) => Math.hypot(F[k][j * 2] - F[kc][j * 2], F[k][j * 2 + 1] - F[kc][j * 2 + 1]);
-      if (mvd(20, k2) > .05) arrow(st.ball.x, st.ball.y, dir(20, k2), 20, matBall, .6);
-      if (mvd(mv.i, k2) > .05) arrow(tr.gx, tr.gy, dir(mv.i, k2), 8, matBtn, .42, true);
+      if (tr.what === 'ball') { if (Math.hypot(tr.gx - b.x, tr.gy - b.y) > 2) ring(tr.gx, tr.gy, D.RB, matBtn, BMID); arrow(st.ball.x, st.ball.y, Math.atan2(st.ball.y - tr.gy, st.ball.x - tr.gx), 14, matBall, .6); }
+      else if (tr.what != null) { const o = st.b[tr.what]; ring(tr.gx, tr.gy, D.RB, MAT.no, BMID); if (o && E.team(tr.what) !== E.team(mv.i)) ring(o.x, o.y, D.RB + .6, MAT.no, BMID); }
+      else ring(tr.gx, tr.gy, D.RB, matBtn, BMID);
     }
     function showGuides() {
       clearGuides();
@@ -214,13 +208,12 @@
       }
       if (aim && sel >= 0) {
         const mv = aimMove(aim), b = st.b[sel];
-        fan(sel, distOf(aim.pow), mv.limited);
         drawMove(mv, MAT.path, MAT.ball);
-        // the pull: a band from the button back toward your finger, its colour the strength
-        const L0 = D.RB + 1.5 + aim.pow * 13, back = aim.ang + Math.PI;
-        // its colour and length: the strength (cyan soft → red full, never the ball's gold); the % shows by your finger
-        MAT.arrow.color.setHSL(.55 + aim.pow * .42, .8, .6); MAT.arrow.opacity = .9;
-        bar(b.x + Math.cos(back) * D.RB, b.y + Math.sin(back) * D.RB, b.x + Math.cos(back) * L0, b.y + Math.sin(back) * L0, .7, MAT.arrow, .03);
+        // the aim: an arrow from the button the way it goes, its length and colour the strength (green soft → red full)
+        const L0 = D.RB + 2 + aim.pow * 18, ex = b.x + Math.cos(aim.ang) * L0, ey = b.y + Math.sin(aim.ang) * L0;
+        MAT.arrow.color.setHSL(.33 - aim.pow * .33, .9, .55); MAT.arrow.opacity = .95;
+        bar(b.x + Math.cos(aim.ang) * D.RB, b.y + Math.sin(aim.ang) * D.RB, ex, ey, 1, MAT.arrow, .045);
+        const c = new TH.Mesh(GEO.cone, MAT.arrow), [ca, cb] = wx(ex, ey); c.position.set(ca, Y + .05, cb); c.rotation.y = -aim.ang + Math.PI / 2; c.renderOrder = 5; gd.add(c);
       } else if (hintMove && hintMove.i === sel) drawMove(hintMove, MAT.hint, MAT.hint);
       kick(120);
     }
@@ -281,7 +274,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=3'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=4'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -515,15 +508,20 @@
       return best;
     }
     let drag = null, kdrag = false;
-    const DEAD = 14;
-    const PULL = () => Math.max(110, Math.min(230, Math.min(innerWidth, innerHeight) * .3));
+    // the pull, as in carrom / crokinole (2026-11-15 ユーザー：クロキノールそのままの方がいい): measured on the table from the
+    // button, DEAD cm is "not yet", POWMAX cm more is full; the strength grows with the square of the pull (fine touches at the
+    // soft end). The button goes the way you aim it (away from your pull). On a phone a finger's move is magnified less (gt).
+    const DEAD_M = 3.2, DEAD_T = 1.6, POWMAX = 20, TOUCH_PULL = 210;
+    function gainAt(e) {
+      const a = toCm(e), b = toCm({ clientX: e.clientX + 40, clientY: e.clientY }), c = toCm({ clientX: e.clientX, clientY: e.clientY + 40 });
+      if (!a || !b || !c) return 1; const k = (Math.hypot(b.x - a.x, b.y - a.y) + Math.hypot(c.x - a.x, c.y - a.y)) / 80;
+      return Math.min(1, (POWMAX + DEAD_T) / (TOUCH_PULL * k));
+    }
     function aimFrom(e) {
-      // the pull in screen pixels (the same feel at any zoom); its direction on the table from two picked points
-      const p0 = drag.anchor, dx = p0.x - e.clientX, dy = p0.y - e.clientY, len = Math.hypot(dx, dy);
-      if (len < DEAD) return null;
-      const a = toCm({ clientX: e.clientX, clientY: e.clientY }), b = toCm({ clientX: p0.x, clientY: p0.y });
-      if (!a || !b) return null;
-      return { ang: Math.atan2(b.y - a.y, b.x - a.x), pow: Math.max(0, Math.min(1, (len - DEAD) / PULL())) };
+      const q = toCm(e); if (!q || sel < 0) return null;
+      const b = st.b[sel], dx = b.x - q.x, dy = b.y - q.y, d = Math.hypot(dx, dy) * drag.gt;
+      if (d < drag.dead) return null;
+      return { ang: Math.atan2(dy, dx), pow: Math.max(0, Math.min(1, (d - drag.dead) / POWMAX)) };
     }
     // a press: on one of your buttons (or close to the picked one) → pull to aim; anywhere else → drag the view.
     // The right / middle mouse button always drags the view. A second finger (a pinch to zoom) lets go of both.
@@ -544,7 +542,7 @@
         if (!E.canFlick(st, i)) { toast(tx('limit3'), 'bad'); return; }
         sel = i; hintMove = null;
       } else if (!nearSel(e, q)) { panStart(); return; }
-      const p = scr(st.b[sel].x, st.b[sel].y); drag = { id: e.pointerId, kind: 'aim', anchor: p };
+      const touch = e.pointerType !== 'mouse'; drag = { id: e.pointerId, kind: 'aim', dead: touch ? DEAD_T : DEAD_M, gt: touch ? gainAt(e) : 1 };
       try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {}
       document.documentElement.classList.add('hand-drag');
       showGuides(); e.preventDefault();
