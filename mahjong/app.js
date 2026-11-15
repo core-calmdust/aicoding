@@ -353,7 +353,13 @@ function fitCard() {
   const home = $('#home'), W = home.clientWidth, navB = nav.offsetTop + nav.offsetHeight + 8;
   pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
   if (document.documentElement.classList.contains('lp') || W < 900) return;
-  pl.classList.add('wide'); pl.style.left = nav.offsetLeft + 'px'; pl.style.width = Math.round(Math.min(W * .56, Math.max(W * .38, 660)) - nav.offsetLeft) + 'px';   // (to 38% of the width; in a squarish window, wide enough for the card at full size)
+  // (ユーザー 2026-11-15: where the window has width to spare — 16:9 and wider — the card is longer, for STORY and SKILL) it runs
+  // to just short of the right-hand column (the pick-up banner / the play panel); never narrower than before
+  const w0 = Math.round(Math.min(W * .56, Math.max(W * .38, 660)) - nav.offsetLeft);
+  pl.classList.add('wide'); pl.style.left = nav.offsetLeft + 'px'; pl.style.width = w0 + 'px';
+  { const offL = e => { let x = 0; while (e && e !== home) { x += e.offsetLeft; e = e.offsetParent; } return x; };   // (layout offsets, not on-screen boxes: the screen's entry animation moves both while it plays)
+    const cols = ['#aaBanner', '.aa-play'].map(q => home.querySelector(q)).filter(e => e && e.offsetWidth).map(offL);
+    if (cols.length) { const room = Math.min(...cols) - (offL(pl) + pl.offsetWidth) - 28; if (room > 0) pl.style.width = Math.round(w0 + room) + 'px'; } }
   for (const k of [1, .94, .88, .82, .76]) { pl.style.setProperty('--pis', k); if (pl.offsetTop >= navB && info.scrollWidth <= info.clientWidth + 1 && info.offsetWidth >= 200) return; }   // (the whole card a little smaller until it clears the menu)
   pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
 }
