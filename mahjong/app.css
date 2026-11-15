@@ -2320,3 +2320,16 @@ html.ds #game .me .mb{margin-left:calc((var(--hz, 1) * .82 - 1) * var(--skw, 0px
 #home.aaa .aa-plate.wide.meas .pp-info{flex:none}
 #home.aaa .aa-plate.wide.meas .pp-info *{white-space:nowrap}
 #home.aaa .aa-plate.wide.fade{background:linear-gradient(90deg,rgba(8,5,18,.94),rgba(8,5,18,.9) 45%,rgba(8,5,18,.72) 72%,rgba(8,5,18,.3) 90%,rgba(8,5,18,0));border-radius:0}
+/* (ユーザー 2026-11-16) データのリセット: a quiet red button at the left of the settings' foot, and its own confirmation */
+.modal.settings .cbtns{justify-content:space-between;align-items:center}
+.modal.settings .st-reset{background:none;border-color:rgba(255,120,120,.45);color:#ff9f9f;font-size:13.5px;font-weight:700;padding:9px 16px;white-space:nowrap}
+.modal.settings .st-reset:hover{background:rgba(255,90,90,.12);border-color:rgba(255,140,140,.8);color:#ffc4c4}
+.modal.reset .mbox{width:min(460px,100%)}
+.modal.reset h2{margin:0 0 12px;color:#ffb1b1}
+.modal.reset .rs-q{font-weight:800;font-size:16px;line-height:1.6;margin:0 0 8px}
+.modal.reset .rs-warn{margin:0 0 18px;font-size:14px;line-height:1.7;color:#ffc9c9}
+.modal.reset .cbtns{display:flex;justify-content:flex-end;gap:10px}
+.modal.reset .rs-go{background:linear-gradient(180deg,#d9474f,#a3262f);border-color:#ff8a8a;color:#fff;white-space:nowrap}
+html.lp .modal.settings .st-reset{padding:6px 12px;font-size:12px}
+.modal.reset .cbtns .btn{min-width:168px}
+.modal.settings .cbtns{align-items:stretch}
