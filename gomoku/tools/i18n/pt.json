@@ -100,7 +100,7 @@
   "ls.block.ng": "{x} não impede. O adversário faz cinco em {m}.",
   "ls.three.title": "Bloquear um três",
   "ls.three.sub": "Pare cedo um três aberto",
-  "ls.three.intro": "<p>Três em linha com <b>as duas pontas livres</b> se chama <b>três</b> (três aberto). Se ficar livre, vira um <b>quatro aberto</b> — livre nas duas pontas — que não pode mais ser parado.</p><p>Bloqueie um três <b>em uma das pontas</b> (ou no espaço). No diagrama os círculos verdes bloqueiam; os pontos cinza são outras opções.</p>",
+  "ls.three.intro": "<p>Três em linha com <b>as duas pontas livres</b> se chama <b>três</b> (três aberto). Se ficar livre, vira um <b>quatro aberto</b> — livre nas duas pontas — que não pode mais ser parado.</p><p>Bloqueie um três <b>em uma das pontas</b> (ou no espaço). No diagrama os círculos verdes bloqueiam.</p>",
   "ls.three.goal": "Bloqueie o três do adversário.",
   "ls.three.hint": "Procure três pedras do adversário em linha (pode ter um espaço) com as duas pontas livres.",
   "ls.three.why": "{m} para o três; agora não é possível um quatro aberto ({n} pontos corretos).",

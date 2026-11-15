@@ -406,7 +406,7 @@
   "ls.block.ng": "{x} durdurmaz. Rakip {m}'de beşli yapar.",
   "ls.three.title": "Üçlüyü kapat",
   "ls.three.sub": "Açık üçlüyü erkenden durdur",
-  "ls.three.intro": "<p><b>İki ucu açık</b> üçlü sıraya <b>üçlü</b> (açık üçlü) denir. Bırakılırsa iki ucu açık bir <b>açık dörtlüye</b> dönüşür ve artık durdurulamaz.</p><p>Üçlüyü <b>uçlarından birinde</b> (ya da boşlukta) kapat. Şemada yeşil halkalar kapatır; gri noktalar başka seçeneklerdir.</p>",
+  "ls.three.intro": "<p><b>İki ucu açık</b> üçlü sıraya <b>üçlü</b> (açık üçlü) denir. Bırakılırsa iki ucu açık bir <b>açık dörtlüye</b> dönüşür ve artık durdurulamaz.</p><p>Üçlüyü <b>uçlarından birinde</b> (ya da boşlukta) kapat. Şemada yeşil halkalar kapatır.</p>",
   "ls.three.goal": "Rakibin üçlüsünü kapat.",
   "ls.three.hint": "Rakibin iki ucu açık, bir çizgideki üç taşını bul (boşluk olabilir).",
   "ls.three.why": "{m} üçlüyü durdurur; artık açık dörtlü olmaz ({n} doğru nokta).",

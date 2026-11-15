@@ -100,7 +100,7 @@
   "ls.block.ng": "{x} hält sie nicht auf. Der Gegner bildet fünf auf {m}.",
   "ls.three.title": "Eine Drei blockieren",
   "ls.three.sub": "Eine offene Drei früh stoppen",
-  "ls.three.intro": "<p>Drei in einer Reihe mit <b>beiden Enden frei</b> heißt <b>Drei</b> (offene Drei). Lässt man sie, wird daraus eine <b>offene Vier</b> — an beiden Enden frei —, die nicht mehr zu stoppen ist.</p><p>Blockiere eine Drei <b>an einem ihrer Enden</b> (oder in der Lücke). Im Diagramm blockieren die grünen Kreise; die grauen Punkte sind weitere Möglichkeiten.</p>",
+  "ls.three.intro": "<p>Drei in einer Reihe mit <b>beiden Enden frei</b> heißt <b>Drei</b> (offene Drei). Lässt man sie, wird daraus eine <b>offene Vier</b> — an beiden Enden frei —, die nicht mehr zu stoppen ist.</p><p>Blockiere eine Drei <b>an einem ihrer Enden</b> (oder in der Lücke). Im Diagramm blockieren die grünen Kreise.</p>",
   "ls.three.goal": "Blockiere die Drei des Gegners.",
   "ls.three.hint": "Finde drei gegnerische Steine in einer Linie (eine Lücke ist möglich) mit beiden Enden frei.",
   "ls.three.why": "{m} stoppt die Drei; eine offene Vier ist nicht mehr möglich ({n} richtige Punkte).",

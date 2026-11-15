@@ -1241,7 +1241,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261104rp-l14').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261115w').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1436,7 +1436,7 @@ const rampItem = () => lesson.ramp[lesson.ri];
 const rampMarks = it => (it.marks || []).map(([q, c]) => ({ at: sqOf(q), cls: c }));
 function loadRamp() {
   const it = rampItem();
-  lesson.me = it.side || P1; lesson.pick = false; lesson.noForbidMarks = false;
+  lesson.me = it.side || P1; lesson.pick = !!it.pick; lesson.noForbidMarks = !!it.pick;   // (pick: tap the point, no stone — the forbidden-point warm-ups)
   enterSpecial(spOf(it), it.rule || 'renju');
   lesson.rh = 0; lesson.rok = false; lesson.answered = it.k === 'explain';
   if (it.k === 'explain' && it.seq) { moves = it.seq.map(sqOf); cur = moves.length; }
@@ -1452,7 +1452,7 @@ function renderRampCard() {
   const skip = `<button type="button" class="ls-skip" style="margin-top:6px;font-size:12px;background:none;border:0;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0">${RU('skip')} »</button>`;
   $('#lsPrompt').innerHTML = it.k === 'explain'
     ? `<div class="ls-goal"><span>💡</span><span><b>${LL(it.t)}</b></span></div><div class="ls-explain">${LL(it.body)}</div>${skip}`
-    : `<div class="ls-goal"><span class="pdisc p${lesson.me}"></span><span>${t('ls.turn', { c: pname(lesson.me) })} ${LL(it.g)}</span></div>${skip}`;
+    : `<div class="ls-goal"><span class="pdisc p${lesson.me}"></span><span>${it.pick ? '' : t('ls.turn', { c: pname(lesson.me) }) + ' '}${LL(it.g)}</span></div>${skip}`;
   const sk = $('#lsPrompt').querySelector('.ls-skip'); if (sk) sk.onclick = rampDone;
   $('#lsDots').innerHTML = lesson.ramp.map((_, i) => `<i class="${i < lesson.ri ? 'ok' : ''} ${i === lesson.ri ? 'cur' : ''}"></i>`).join('');
   $('#lsHint').textContent = t('ls.hint'); $('#lsHint').disabled = it.k === 'explain' || lesson.answered;
@@ -1475,7 +1475,7 @@ function rampMove(m) {
   L.answered = true;
   const good = it.ok.map(sqOf).includes(m);
   $('#lsFb').innerHTML = good ? `<b class="ok">✓</b> ${LL(it.y)}` : `<b class="ng">✗</b> ${RU('ng')}`;
-  L.rok = good; playChime(good); moves = [m]; cur = 1; lessonMarks = good ? [] : [{ at: m, cls: 'ng' }]; update(true); renderLessonCard();
+  L.rok = good; playChime(good); if (!L.pick) { moves = [m]; cur = 1; } lessonMarks = good ? (L.pick ? [{ at: m, cls: 'ok' }] : []) : [{ at: m, cls: 'ng' }]; update(true); renderLessonCard();
   if (good) return;
   const tok = busyToken;
   setTimeout(() => {

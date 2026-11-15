@@ -100,7 +100,7 @@
   "ls.block.ng": "{x} no lo para. Tu rival hace cinco en {m}.",
   "ls.three.title": "Bloquear un tres",
   "ls.three.sub": "Detén pronto un tres abierto",
-  "ls.three.intro": "<p>Tres en línea con <b>ambos extremos libres</b> se llama <b>tres</b> (tres abierto). Si no se bloquea se convierte en un <b>cuatro abierto</b> — libre por ambos lados — que ya no se puede parar.</p><p>Bloquea un tres <b>en uno de sus extremos</b> (o en el hueco). En el diagrama los círculos verdes lo bloquean; los puntos grises son otras opciones.</p>",
+  "ls.three.intro": "<p>Tres en línea con <b>ambos extremos libres</b> se llama <b>tres</b> (tres abierto). Si no se bloquea se convierte en un <b>cuatro abierto</b> — libre por ambos lados — que ya no se puede parar.</p><p>Bloquea un tres <b>en uno de sus extremos</b> (o en el hueco). En el diagrama los círculos verdes lo bloquean.</p>",
   "ls.three.goal": "Bloquea el tres del rival.",
   "ls.three.hint": "Busca tres piedras del rival en línea (puede haber un hueco) con ambos extremos libres.",
   "ls.three.why": "{m} detiene el tres; ya no es posible un cuatro abierto ({n} puntos correctos).",

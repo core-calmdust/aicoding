@@ -71,11 +71,201 @@
     ],
     "o": [
      "j8"
-    ],
-    "d": [
-     "e8"
     ]
-   }
+   },
+   "ramp": [
+    {
+     "k": "explain",
+     "marks": [
+      [
+       "e8",
+       "t4"
+      ],
+      [
+       "f8",
+       "t4"
+      ],
+      [
+       "g8",
+       "t4"
+      ],
+      [
+       "h8",
+       "t4"
+      ],
+      [
+       "i8",
+       "hl2"
+      ]
+     ],
+     "rule": "free",
+     "b": "e8 f8 g8 h8",
+     "w": "d8 f9 h9 g7",
+     "side": 1,
+     "t": {
+      "ja": "あと1つで5つ並ぶ点",
+      "en": "The point that makes five",
+      "zh": "再下一子就成五的点",
+      "zh-TW": "再下一顆就成五的點",
+      "ko": "하나만 더 놓으면 5개가 되는 점",
+      "es": "El punto que hace cinco",
+      "fr": "Le point qui fait cinq",
+      "pt": "O ponto que faz cinco",
+      "de": "Der Punkt, der fünf ergibt",
+      "ru": "Пункт, который даёт пятёрку",
+      "tr": "Beşli yapan nokta",
+      "id": "Titik yang membuat lima",
+      "hi": "पाँच बनाने वाला बिंदु",
+      "ar": "النقطة التي تكمل الخمسة"
+     },
+     "body": {
+      "ja": "<p>黒が<b>4つ</b>並んでいます（赤い丸）。片方のはしは白にふさがれていますが、もう片方の<b>光っている点</b>はあいています。</p><p>ここに打てば<b>5つ並んで勝ち</b>。縦・横・斜め、どの向きでも同じです。</p>",
+      "en": "<p>Black has <b>four</b> in a row (red circles). One end is blocked by White, but the other end — the <b>highlighted point</b> — is empty.</p><p>Play there and you have <b>five in a row: you win</b>. It works the same across, down or diagonally.</p>",
+      "zh": "<p>黑棋有<b>4个</b>连在一起（红圈）。一端被白棋堵住，但另一端的<b>发光点</b>是空的。</p><p>下在这里就<b>连成五，获胜</b>。横、竖、斜任何方向都一样。</p>",
+      "zh-TW": "<p>黑棋有<b>4顆</b>連成一線（紅圈）。一端被白棋擋住，但另一端<b>發光的點</b>是空的。</p><p>下在這裡就<b>連成五，獲勝</b>。橫、直、斜哪個方向都一樣。</p>",
+      "ko": "<p>흑이 <b>4개</b> 나란히 있어요(빨간 동그라미). 한쪽 끝은 백이 막았지만, 다른 쪽 <b>빛나는 점</b>은 비어 있어요.</p><p>여기에 두면 <b>5개가 나란히 되어 승리</b>. 가로・세로・대각선 어느 방향이든 똑같아요.</p>",
+      "es": "<p>Las negras tienen <b>cuatro</b> en línea (círculos rojos). Un extremo está tapado por las blancas, pero el otro, el <b>punto resaltado</b>, está libre.</p><p>Juega ahí y harás <b>cinco en línea: ¡ganas!</b> Funciona igual en horizontal, vertical o diagonal.</p>",
+      "fr": "<p>Noir a <b>quatre</b> pierres alignées (cercles rouges). Un bout est bloqué par Blanc, mais l’autre, le <b>point en surbrillance</b>, est libre.</p><p>Jouez-y et vous faites <b>cinq : c’est gagné</b>. C’est pareil à l’horizontale, à la verticale ou en diagonale.</p>",
+      "pt": "<p>As pretas têm <b>quatro</b> em linha (círculos vermelhos). Uma ponta está bloqueada pelas brancas, mas a outra, o <b>ponto destacado</b>, está livre.</p><p>Jogue ali e você faz <b>cinco em linha: vitória</b>. Vale igual na horizontal, na vertical ou na diagonal.</p>",
+      "de": "<p>Schwarz hat <b>vier</b> in einer Reihe (rote Kreise). Ein Ende blockiert Weiß, aber das andere Ende, der <b>markierte Punkt</b>, ist frei.</p><p>Setz dorthin und du hast <b>fünf in einer Reihe: gewonnen</b>. Das gilt waagerecht, senkrecht und diagonal genauso.</p>",
+      "ru": "<p>У чёрных <b>четыре</b> в ряд (красные кружки). Один конец закрыт белыми, но другой — <b>подсвеченный пункт</b> — свободен.</p><p>Поставьте туда камень, и будет <b>пять в ряд — победа</b>. По горизонтали, вертикали и диагонали всё так же.</p>",
+      "tr": "<p>Siyah'ın <b>dört</b> taşı yan yana (kırmızı halkalar). Bir ucu Beyaz kapatmış ama diğer uç, <b>parlayan nokta</b>, boş.</p><p>Oraya oyna ve <b>beşli yap: kazandın</b>. Yatay, dikey ya da çapraz, hepsinde aynıdır.</p>",
+      "id": "<p>Hitam punya <b>empat</b> berderet (lingkaran merah). Satu ujung ditutup Putih, tetapi ujung lainnya, <b>titik yang menyala</b>, masih kosong.</p><p>Main di sana dan kamu dapat <b>lima berderet: menang</b>. Sama saja untuk mendatar, tegak, atau diagonal.</p>",
+      "hi": "<p>काले के <b>चार</b> पत्थर एक कतार में हैं (लाल घेरे)। एक सिरा सफ़ेद ने रोका है, पर दूसरा सिरा — <b>चमकता बिंदु</b> — खाली है।</p><p>वहाँ रखिए और <b>पाँच एक कतार में: जीत</b>। आड़ी, खड़ी या तिरछी — हर दिशा में यही होता है।</p>",
+      "ar": "<p>للأسود <b>أربعة</b> أحجار في صف (الدوائر الحمراء). أحد الطرفين يسدّه الأبيض، لكن الطرف الآخر — <b>النقطة المضيئة</b> — فارغ.</p><p>العب هناك فتكوّن <b>خمسة في صف وتفوز</b>. الأمر نفسه أفقيًا أو عموديًا أو قطريًا.</p>"
+     }
+    },
+    {
+     "k": "try",
+     "goal": "five",
+     "ok": [
+      "i8"
+     ],
+     "look": [
+      "e8",
+      "f8",
+      "g8",
+      "h8"
+     ],
+     "rule": "free",
+     "b": "e8 f8 g8 h8",
+     "w": "d8 f9 h9 g7",
+     "side": 1,
+     "g": {
+      "ja": "図と同じ形。5つ並べて勝とう。",
+      "en": "Same shape as the diagram: make five and win.",
+      "zh": "和图相同：连成五取胜吧。",
+      "zh-TW": "和圖相同的形狀：連成五獲勝吧。",
+      "ko": "그림과 같은 모양. 5개를 놓아 이겨 보세요.",
+      "es": "La misma figura del diagrama: haz cinco y gana.",
+      "fr": "La même forme que le schéma : faites cinq et gagnez.",
+      "pt": "A mesma forma do diagrama: faça cinco e vença.",
+      "de": "Dieselbe Form wie im Diagramm: Bilde fünf und gewinne.",
+      "ru": "Та же форма, что на схеме: сделайте пятёрку и победите.",
+      "tr": "Şemadaki şeklin aynısı: beşli yap ve kazan.",
+      "id": "Bentuk yang sama dengan diagram: buat lima dan menang.",
+      "hi": "चित्र जैसा ही आकार: पाँच बनाकर जीतिए।",
+      "ar": "الشكل نفسه كما في الرسم: كوّن خمسة وافز."
+     },
+     "h": {
+      "ja": "黒の4つ並びの、あいているほうのはしは？",
+      "en": "Which end of the black four is still empty?",
+      "zh": "黑棋4连的哪一端还空着？",
+      "zh-TW": "黑棋四連的哪一端還空著？",
+      "ko": "흑 4개 줄에서 비어 있는 쪽 끝은 어디일까요?",
+      "es": "¿Qué extremo del cuatro negro sigue libre?",
+      "fr": "Quel bout du quatre noir est encore libre ?",
+      "pt": "Qual ponta do quatro preto ainda está livre?",
+      "de": "Welches Ende der schwarzen Vier ist noch frei?",
+      "ru": "Какой конец чёрной четвёрки ещё свободен?",
+      "tr": "Siyah dörtlünün hangi ucu hâlâ boş?",
+      "id": "Ujung mana dari empat Hitam yang masih kosong?",
+      "hi": "काले के चार का कौन-सा सिरा अभी खाली है?",
+      "ar": "أيّ طرف من رباعية الأسود ما زال فارغًا؟"
+     },
+     "y": {
+      "ja": "5つ並んで勝ち！",
+      "en": "Five in a row — you win!",
+      "zh": "连成五，获胜！",
+      "zh-TW": "連成五，獲勝！",
+      "ko": "5개 완성, 승리!",
+      "es": "¡Cinco en línea: ganas!",
+      "fr": "Cinq alignées : gagné !",
+      "pt": "Cinco em linha: vitória!",
+      "de": "Fünf in einer Reihe – gewonnen!",
+      "ru": "Пять в ряд — победа!",
+      "tr": "Beşli tamam, kazandın!",
+      "id": "Lima berderet — menang!",
+      "hi": "पाँच एक कतार में — जीत!",
+      "ar": "خمسة في صف — فزت!"
+     }
+    },
+    {
+     "k": "try",
+     "goal": "five",
+     "ok": [
+      "g7"
+     ],
+     "look": [
+      "e5",
+      "f6",
+      "h8",
+      "i9"
+     ],
+     "rule": "free",
+     "b": "e5 f6 h8 i9",
+     "w": "d4 j10 g8 h6",
+     "side": 1,
+     "g": {
+      "ja": "練習：今度はナナメ。すき間に気をつけて。",
+      "en": "Practice: a diagonal this time. Watch for the gap.",
+      "zh": "练习：这次是斜向，注意空隙。",
+      "zh-TW": "練習：這次是斜向，注意空隙。",
+      "ko": "연습: 이번엔 대각선. 빈칸에 주의하세요.",
+      "es": "Práctica: ahora en diagonal. Ojo con el hueco.",
+      "fr": "Exercice : cette fois en diagonale. Attention au trou.",
+      "pt": "Prática: agora na diagonal. Atenção ao espaço vazio.",
+      "de": "Übung: diesmal diagonal. Achte auf die Lücke.",
+      "ru": "Практика: теперь по диагонали. Следите за промежутком.",
+      "tr": "Alıştırma: bu kez çapraz. Boşluğa dikkat.",
+      "id": "Latihan: kali ini diagonal. Perhatikan celahnya.",
+      "hi": "अभ्यास: इस बार तिरछा। बीच की खाली जगह पर ध्यान दीजिए।",
+      "ar": "تمرين: هذه المرة قطريًا. انتبه إلى الفراغ."
+     },
+     "h": {
+      "ja": "黒の石がナナメに並んでいるね。1つだけあいている点を埋めると…？",
+      "en": "The black stones line up diagonally. What if you fill the one empty point between them?",
+      "zh": "黑子斜着排成一线。把唯一空着的点填上会怎样……？",
+      "zh-TW": "黑子斜向排成一線。把唯一空著的點補上會怎樣……？",
+      "ko": "흑돌이 대각선으로 놓여 있죠. 하나만 비어 있는 점을 채우면…?",
+      "es": "Las piedras negras están en diagonal. ¿Y si llenas el único punto vacío?",
+      "fr": "Les pierres noires sont en diagonale. Et si vous remplissez le seul point vide ?",
+      "pt": "As pedras pretas estão na diagonal. E se você preencher o único ponto vazio?",
+      "de": "Die schwarzen Steine stehen diagonal. Was passiert, wenn du den einzigen freien Punkt füllst?",
+      "ru": "Чёрные камни стоят по диагонали. Что будет, если занять единственный пустой пункт?",
+      "tr": "Siyah taşlar çapraz dizilmiş. Tek boş noktayı doldurursan ne olur?",
+      "id": "Batu Hitam berderet diagonal. Bagaimana kalau kamu isi satu-satunya titik kosong?",
+      "hi": "काले पत्थर तिरछे लगे हैं। अकेले खाली बिंदु को भर दें तो…?",
+      "ar": "الأحجار السوداء مصطفة قطريًا. ماذا لو ملأت النقطة الفارغة الوحيدة؟"
+     },
+     "y": {
+      "ja": "正解！すき間を埋めても5つ並びになります。",
+      "en": "Right! Filling the gap also makes five.",
+      "zh": "正确！填上空隙也能连成五。",
+      "zh-TW": "正確！補上空隙也能連成五。",
+      "ko": "정답! 빈칸을 채워도 5개가 돼요.",
+      "es": "¡Bien! Llenar el hueco también hace cinco.",
+      "fr": "Exact ! Remplir le trou fait aussi cinq.",
+      "pt": "Certo! Preencher o espaço também faz cinco.",
+      "de": "Richtig! Auch das Füllen der Lücke ergibt fünf.",
+      "ru": "Верно! Заполнив промежуток, вы тоже получаете пятёрку.",
+      "tr": "Doğru! Boşluğu doldurmak da beşli yapar.",
+      "id": "Benar! Mengisi celah juga membuat lima.",
+      "hi": "सही! खाली जगह भरने से भी पाँच बनते हैं।",
+      "ar": "صحيح! ملء الفراغ يكوّن خمسة أيضًا."
+     }
+    }
+   ]
   },
   {
    "id": "block",
@@ -147,7 +337,200 @@
     "o": [
      "i9"
     ]
-   }
+   },
+   "ramp": [
+    {
+     "k": "explain",
+     "marks": [
+      [
+       "f9",
+       "t4"
+      ],
+      [
+       "g9",
+       "t4"
+      ],
+      [
+       "h9",
+       "t4"
+      ],
+      [
+       "i9",
+       "t4"
+      ],
+      [
+       "j9",
+       "hl2"
+      ]
+     ],
+     "rule": "free",
+     "w": "f9 g9 h9 i9",
+     "b": "e9 g8 h8",
+     "side": 1,
+     "t": {
+      "ja": "相手の四は、すぐ止める",
+      "en": "Block the opponent’s four at once",
+      "zh": "对方的四，立刻挡住",
+      "zh-TW": "對手的四，馬上擋住",
+      "ko": "상대의 사는 바로 막기",
+      "es": "Bloquea el cuatro rival enseguida",
+      "fr": "Bloquez tout de suite le quatre adverse",
+      "pt": "Bloqueie o quatro do adversário na hora",
+      "de": "Blockiere die gegnerische Vier sofort",
+      "ru": "Четвёрку соперника закрывайте сразу",
+      "tr": "Rakibin dörtlüsünü hemen kapat",
+      "id": "Tutup empat lawan segera",
+      "hi": "विरोधी का चार तुरंत रोकें",
+      "ar": "سُدّ رباعية الخصم فورًا"
+     },
+     "body": {
+      "ja": "<p>白が<b>4つ</b>並んでいます（赤い丸）。片方のはしは黒がふさいでいますが、もう片方（光っている点）があいています。</p><p>黒がここに打たないと、次に白が5つ並べて負け。自分が5つ並べられないときは、<b>四を止めるのが最優先</b>です。</p>",
+      "en": "<p>White has <b>four</b> in a row (red circles). Black blocks one end, but the other end (the highlighted point) is open.</p><p>If Black does not play there, White makes five next and wins. When you cannot make five yourself, <b>blocking a four comes first</b>.</p>",
+      "zh": "<p>白棋有<b>4个</b>连在一起（红圈）。一端被黑棋堵住，另一端（发光点）还空着。</p><p>黑棋不下在这里，白棋下一步就连成五，黑棋输。自己不能成五时，<b>挡住四是第一优先</b>。</p>",
+      "zh-TW": "<p>白棋有<b>4顆</b>連成一線（紅圈）。一端被黑棋擋住，另一端（發光的點）還空著。</p><p>黑棋不下這裡，白棋下一手就連成五，黑棋輸。自己無法成五時，<b>擋四優先</b>。</p>",
+      "ko": "<p>백이 <b>4개</b> 나란히 있어요(빨간 동그라미). 한쪽 끝은 흑이 막았지만, 다른 쪽(빛나는 점)은 비어 있어요.</p><p>흑이 여기에 두지 않으면 백이 다음에 5개를 만들어 흑의 패배. 내가 5개를 만들 수 없을 때는 <b>사를 막는 것이 최우선</b>이에요.</p>",
+      "es": "<p>Las blancas tienen <b>cuatro</b> en línea (círculos rojos). Las negras tapan un extremo, pero el otro (el punto resaltado) está libre.</p><p>Si las negras no juegan ahí, las blancas hacen cinco y ganan. Si tú no puedes hacer cinco, <b>bloquear un cuatro va primero</b>.</p>",
+      "fr": "<p>Blanc a <b>quatre</b> pierres alignées (cercles rouges). Noir bloque un bout, mais l’autre (le point en surbrillance) est libre.</p><p>Si Noir n’y joue pas, Blanc fait cinq au coup suivant et gagne. Si vous ne pouvez pas faire cinq vous-même, <b>bloquer un quatre passe avant tout</b>.</p>",
+      "pt": "<p>As brancas têm <b>quatro</b> em linha (círculos vermelhos). As pretas bloqueiam uma ponta, mas a outra (o ponto destacado) está livre.</p><p>Se as pretas não jogarem ali, as brancas fazem cinco e vencem. Quando você não pode fazer cinco, <b>bloquear o quatro vem primeiro</b>.</p>",
+      "de": "<p>Weiß hat <b>vier</b> in einer Reihe (rote Kreise). Schwarz blockiert ein Ende, aber das andere (der markierte Punkt) ist frei.</p><p>Setzt Schwarz nicht dorthin, bildet Weiß im nächsten Zug fünf und gewinnt. Wenn du selbst keine Fünf bilden kannst, <b>geht das Blockieren einer Vier vor</b>.</p>",
+      "ru": "<p>У белых <b>четыре</b> в ряд (красные кружки). Один конец закрыт чёрными, но другой (подсвеченный пункт) свободен.</p><p>Если чёрные не сходят туда, белые следующим ходом сделают пятёрку и победят. Если вы сами не можете сделать пятёрку, <b>защита от четвёрки — на первом месте</b>.</p>",
+      "tr": "<p>Beyaz'ın <b>dört</b> taşı yan yana (kırmızı halkalar). Bir ucu Siyah kapatmış ama diğer uç (parlayan nokta) boş.</p><p>Siyah oraya oynamazsa Beyaz sonraki hamlede beşli yapar ve kazanır. Kendin beşli yapamıyorsan <b>önce dörtlüyü kapatırsın</b>.</p>",
+      "id": "<p>Putih punya <b>empat</b> berderet (lingkaran merah). Hitam menutup satu ujung, tetapi ujung lainnya (titik yang menyala) masih kosong.</p><p>Kalau Hitam tidak main di sana, Putih membuat lima berikutnya dan menang. Jika kamu tak bisa membuat lima sendiri, <b>menutup empat diutamakan</b>.</p>",
+      "hi": "<p>सफ़ेद के <b>चार</b> पत्थर एक कतार में हैं (लाल घेरे)। एक सिरा काले ने रोका है, पर दूसरा (चमकता बिंदु) खाली है।</p><p>अगर काला वहाँ न रखे, तो सफ़ेद अगली चाल में पाँच बनाकर जीत जाएगा। जब आप खुद पाँच न बना सकें, <b>चार रोकना सबसे पहले है</b>।</p>",
+      "ar": "<p>للأبيض <b>أربعة</b> في صف (الدوائر الحمراء). يسدّ الأسود أحد الطرفين، لكن الطرف الآخر (النقطة المضيئة) مفتوح.</p><p>إن لم يلعب الأسود هناك، كوّن الأبيض خمسة في النقلة التالية وفاز. ما لم تستطع تكوين خمسة بنفسك، <b>فسدّ الرباعية يأتي أولًا</b>.</p>"
+     }
+    },
+    {
+     "k": "try",
+     "goal": "block",
+     "ok": [
+      "j9"
+     ],
+     "look": [
+      "f9",
+      "g9",
+      "h9",
+      "i9"
+     ],
+     "rule": "free",
+     "w": "f9 g9 h9 i9",
+     "b": "e9 g8 h8",
+     "side": 1,
+     "g": {
+      "ja": "図と同じ形。白の四を止めよう。",
+      "en": "Same shape as the diagram: block White’s four.",
+      "zh": "和图相同：挡住白棋的四。",
+      "zh-TW": "和圖相同的形狀：擋住白棋的四。",
+      "ko": "그림과 같은 모양. 백의 사를 막으세요.",
+      "es": "La misma figura del diagrama: bloquea el cuatro blanco.",
+      "fr": "La même forme que le schéma : bloquez le quatre blanc.",
+      "pt": "A mesma forma do diagrama: bloqueie o quatro branco.",
+      "de": "Dieselbe Form wie im Diagramm: Blockiere die weiße Vier.",
+      "ru": "Та же форма, что на схеме: закройте четвёрку белых.",
+      "tr": "Şemadaki şeklin aynısı: Beyaz'ın dörtlüsünü kapat.",
+      "id": "Bentuk yang sama dengan diagram: tutup empat Putih.",
+      "hi": "चित्र जैसा ही आकार: सफ़ेद का चार रोकिए।",
+      "ar": "الشكل نفسه كما في الرسم: سُدّ رباعية الأبيض."
+     },
+     "h": {
+      "ja": "白の4つ並びのうち、まだあいているはしは？",
+      "en": "Which end of White’s four is still open?",
+      "zh": "白棋4连的哪一端还空着？",
+      "zh-TW": "白棋四連的哪一端還空著？",
+      "ko": "백 4개 줄에서 아직 비어 있는 끝은?",
+      "es": "¿Qué extremo del cuatro blanco sigue libre?",
+      "fr": "Quel bout du quatre blanc est encore libre ?",
+      "pt": "Qual ponta do quatro branco ainda está livre?",
+      "de": "Welches Ende der weißen Vier ist noch frei?",
+      "ru": "Какой конец четвёрки белых ещё открыт?",
+      "tr": "Beyaz dörtlünün hangi ucu hâlâ açık?",
+      "id": "Ujung mana dari empat Putih yang masih terbuka?",
+      "hi": "सफ़ेद के चार का कौन-सा सिरा अभी खुला है?",
+      "ar": "أيّ طرف من رباعية الأبيض ما زال مفتوحًا؟"
+     },
+     "y": {
+      "ja": "止めた！これで白は5つ並べられません。",
+      "en": "Blocked! Now White cannot make five.",
+      "zh": "挡住了！这样白棋就连不成五了。",
+      "zh-TW": "擋住了！這樣白棋就無法連成五。",
+      "ko": "막았다! 이제 백은 5개를 만들 수 없어요.",
+      "es": "¡Bloqueado! Ahora las blancas no pueden hacer cinco.",
+      "fr": "Bloqué ! Blanc ne peut plus faire cinq.",
+      "pt": "Bloqueado! Agora as brancas não podem fazer cinco.",
+      "de": "Geblockt! Jetzt kann Weiß keine Fünf mehr bilden.",
+      "ru": "Закрыто! Теперь белые не могут сделать пятёрку.",
+      "tr": "Kapattın! Artık Beyaz beşli yapamaz.",
+      "id": "Tertutup! Sekarang Putih tak bisa membuat lima.",
+      "hi": "रोक दिया! अब सफ़ेद पाँच नहीं बना सकता।",
+      "ar": "سددتها! الآن لا يستطيع الأبيض تكوين خمسة."
+     }
+    },
+    {
+     "k": "try",
+     "goal": "block",
+     "ok": [
+      "h7"
+     ],
+     "look": [
+      "h5",
+      "h6",
+      "h8",
+      "h9"
+     ],
+     "rule": "free",
+     "w": "h5 h6 h8 h9",
+     "b": "h4 g7 i6",
+     "side": 1,
+     "g": {
+      "ja": "練習：すき間のある四も、四です。",
+      "en": "Practice: a four with a gap is still a four.",
+      "zh": "练习：有空隙的四也是四。",
+      "zh-TW": "練習：有空隙的四也是四。",
+      "ko": "연습: 빈칸이 있는 사도 사예요.",
+      "es": "Práctica: un cuatro con hueco también es un cuatro.",
+      "fr": "Exercice : un quatre avec un trou reste un quatre.",
+      "pt": "Prática: um quatro com espaço também é um quatro.",
+      "de": "Übung: Auch eine Vier mit Lücke ist eine Vier.",
+      "ru": "Практика: четвёрка с промежутком — тоже четвёрка.",
+      "tr": "Alıştırma: boşluklu dörtlü de dörtlüdür.",
+      "id": "Latihan: empat yang bercelah tetap empat.",
+      "hi": "अभ्यास: खाली जगह वाला चार भी चार ही है।",
+      "ar": "تمرين: الرباعية التي فيها فراغ رباعية أيضًا."
+     },
+     "h": {
+      "ja": "白がタテに4つ。すき間の1点に白が入ると5つ並ぶね。",
+      "en": "White has four stones in a column. If White fills the one gap, that makes five.",
+      "zh": "白棋竖向有4子。白棋一旦下进空隙，就连成五了。",
+      "zh-TW": "白棋直向有4顆。白棋只要補上空隙那一點，就連成五了。",
+      "ko": "백이 세로로 4개. 빈칸 한 점에 백이 들어가면 5개가 되죠.",
+      "es": "Las blancas tienen cuatro en vertical. Si llenan el hueco, hacen cinco.",
+      "fr": "Blanc a quatre pierres en colonne. S’il remplit le trou, il fait cinq.",
+      "pt": "As brancas têm quatro na vertical. Se preencherem o espaço, fazem cinco.",
+      "de": "Weiß hat vier Steine senkrecht. Füllt Weiß die Lücke, sind es fünf.",
+      "ru": "У белых четыре камня по вертикали. Если белые займут промежуток, будет пятёрка.",
+      "tr": "Beyaz'ın dikeyde dört taşı var. Beyaz boşluğu doldurursa beşli olur.",
+      "id": "Putih punya empat batu tegak. Jika Putih mengisi celahnya, jadilah lima.",
+      "hi": "सफ़ेद के चार पत्थर खड़ी कतार में हैं। सफ़ेद खाली जगह भर दे तो पाँच बन जाएँगे।",
+      "ar": "للأبيض أربعة أحجار عموديًا. إن ملأ الأبيض الفراغ صارت خمسة."
+     },
+     "y": {
+      "ja": "正解！すき間の四は、すき間に打って止めます。",
+      "en": "Right! You stop a four with a gap by playing in the gap.",
+      "zh": "正确！有空隙的四，要下在空隙里挡住。",
+      "zh-TW": "正確！有空隙的四，要下在空隙擋住。",
+      "ko": "정답! 빈칸이 있는 사는 빈칸에 두어 막아요.",
+      "es": "¡Bien! Un cuatro con hueco se bloquea jugando en el hueco.",
+      "fr": "Exact ! Un quatre avec un trou se bloque dans le trou.",
+      "pt": "Certo! Um quatro com espaço se bloqueia jogando no espaço.",
+      "de": "Richtig! Eine Vier mit Lücke blockierst du in der Lücke.",
+      "ru": "Верно! Четвёрку с промежутком закрывают в промежутке.",
+      "tr": "Doğru! Boşluklu dörtlü, boşluğa oynanarak kapatılır.",
+      "id": "Benar! Empat bercelah ditutup dengan bermain di celahnya.",
+      "hi": "सही! खाली जगह वाले चार को खाली जगह में रखकर रोकते हैं।",
+      "ar": "صحيح! تُسدّ الرباعية ذات الفراغ باللعب في الفراغ."
+     }
+    }
+   ]
   },
   {
    "id": "three",
@@ -223,12 +606,202 @@
     "o": [
      "f8",
      "j8"
-    ],
-    "d": [
-     "e8",
-     "k8"
     ]
-   }
+   },
+   "ramp": [
+    {
+     "k": "explain",
+     "marks": [
+      [
+       "g8",
+       "t3"
+      ],
+      [
+       "h8",
+       "t3"
+      ],
+      [
+       "i8",
+       "t3"
+      ],
+      [
+       "f8",
+       "ok"
+      ],
+      [
+       "j8",
+       "ok"
+      ]
+     ],
+     "rule": "free",
+     "w": "g8 h8 i8",
+     "b": "g9 h9",
+     "side": 1,
+     "t": {
+      "ja": "三は、はしを止める",
+      "en": "Stop a three at its end",
+      "zh": "活三要挡住一端",
+      "zh-TW": "三要擋在一端",
+      "ko": "삼은 끝을 막는다",
+      "es": "El tres se bloquea en un extremo",
+      "fr": "Un trois se bloque à un bout",
+      "pt": "O três se bloqueia na ponta",
+      "de": "Eine Drei am Ende blockieren",
+      "ru": "Тройку закрывают с конца",
+      "tr": "Üçlü ucundan kapatılır",
+      "id": "Tiga ditutup di ujungnya",
+      "hi": "तीन को सिरे पर रोकें",
+      "ar": "الثلاثية تُسدّ من طرفها"
+     },
+     "body": {
+      "ja": "<p>白が<b>3つ</b>並び、両はしがあいています。これが<b>三</b>（活三）。</p><p>放っておくと白は次に<b>両はしがあいた四（達四）</b>を作り、もう止められません。三を見たら、<b>どちらかのはし</b>（緑の丸）に打って止めましょう。</p>",
+      "en": "<p>White has <b>three</b> in a row with both ends open: a <b>three</b> (open three).</p><p>Left alone, White makes a <b>four open at both ends</b> (a straight four) next, and that cannot be stopped. When you see a three, block <b>one of its ends</b> (green circles).</p>",
+      "zh": "<p>白棋<b>3子</b>相连，两端都空着。这就是<b>三</b>（活三）。</p><p>放着不管，白棋下一手就会做成<b>两端都空的四（活四）</b>，再也挡不住。看到活三，就下在<b>任意一端</b>（绿圈）挡住它。</p>",
+      "zh-TW": "<p>白棋<b>3顆</b>相連，兩端都空著。這就是<b>三</b>（活三）。</p><p>不管它的話，白棋下一手就會做出<b>兩端都空的四（活四）</b>，再也擋不住。看到三，就下在<b>其中一端</b>（綠圈）擋住。</p>",
+      "ko": "<p>백이 <b>3개</b> 나란히 있고, 양 끝이 비어 있어요. 이것이 <b>삼</b>(열린 삼).</p><p>그대로 두면 백은 다음에 <b>양 끝이 열린 사(열린 사)</b>를 만들어 더는 막을 수 없어요. 삼을 보면 <b>어느 한쪽 끝</b>(초록 원)에 두어 막으세요.</p>",
+      "es": "<p>Las blancas tienen <b>tres</b> en línea con ambos extremos libres: un <b>tres</b> (tres abierto).</p><p>Si lo dejas, las blancas harán un <b>cuatro libre por ambos lados (cuatro abierto)</b> y ya no se podrá parar. Cuando veas un tres, bloquéalo en <b>uno de sus extremos</b> (círculos verdes).</p>",
+      "fr": "<p>Blanc a <b>trois</b> pierres alignées, les deux bouts libres : c’est un <b>trois</b> (trois ouvert).</p><p>Si on le laisse, Blanc fera ensuite un <b>quatre libre aux deux bouts (quatre ouvert)</b>, impossible à arrêter. Quand vous voyez un trois, bloquez-le à <b>l’un de ses bouts</b> (cercles verts).</p>",
+      "pt": "<p>As brancas têm <b>três</b> em linha com as duas pontas livres: um <b>três</b> (três aberto).</p><p>Se você deixar, as brancas fazem um <b>quatro livre nas duas pontas (quatro aberto)</b>, que não dá mais para parar. Ao ver um três, bloqueie <b>uma das pontas</b> (círculos verdes).</p>",
+      "de": "<p>Weiß hat <b>drei</b> in einer Reihe, beide Enden frei: eine <b>Drei</b> (offene Drei).</p><p>Lässt du sie stehen, bildet Weiß als Nächstes eine <b>an beiden Enden freie Vier (offene Vier)</b>, die nicht mehr zu stoppen ist. Siehst du eine Drei, blockiere sie an <b>einem ihrer Enden</b> (grüne Kreise).</p>",
+      "ru": "<p>У белых <b>три</b> в ряд, и оба конца свободны. Это <b>тройка</b> (открытая тройка).</p><p>Если её не трогать, белые следующим ходом сделают <b>четвёрку, открытую с обеих сторон (открытую четвёрку)</b>, и её уже не остановить. Увидев тройку, закройте её <b>с одного из концов</b> (зелёные кружки).</p>",
+      "tr": "<p>Beyaz'ın <b>üç</b> taşı yan yana ve iki ucu da açık. Buna <b>üçlü</b> (açık üçlü) denir.</p><p>Bırakırsan Beyaz sonra <b>iki ucu açık bir dörtlü (açık dörtlü)</b> yapar ve artık durdurulamaz. Üçlü görünce onu <b>uçlarından birinde</b> (yeşil halkalar) kapat.</p>",
+      "id": "<p>Putih punya <b>tiga</b> berderet dengan kedua ujung terbuka. Inilah <b>tiga</b> (tiga terbuka).</p><p>Jika dibiarkan, Putih berikutnya membuat <b>empat yang terbuka di kedua ujung (empat terbuka)</b> dan tak bisa dihentikan lagi. Saat melihat tiga, tutup di <b>salah satu ujungnya</b> (lingkaran hijau).</p>",
+      "hi": "<p>सफ़ेद के <b>तीन</b> पत्थर एक कतार में हैं और दोनों सिरे खुले हैं। यही है <b>तीन</b> (खुला तीन)।</p><p>छोड़ दिया तो सफ़ेद अगली चाल में <b>खुला चार (दोनों सिरे खुले)</b> बना लेगा, जिसे फिर रोका नहीं जा सकता। तीन दिखे तो <b>किसी एक सिरे</b> (हरे घेरे) पर रखकर रोकिए।</p>",
+      "ar": "<p>للأبيض <b>ثلاثة</b> في صف وطرفاها مفتوحان. هذه <b>ثلاثية</b> (ثلاثية مفتوحة).</p><p>إن تركتها، كوّن الأبيض في النقلة التالية <b>رباعية مفتوحة من الطرفين</b> ولا يمكن إيقافها. إذا رأيت ثلاثية فسُدّها عند <b>أحد طرفيها</b> (الدوائر الخضراء).</p>"
+     }
+    },
+    {
+     "k": "try",
+     "goal": "block3",
+     "ok": [
+      "f8",
+      "j8"
+     ],
+     "look": [
+      "g8",
+      "h8",
+      "i8"
+     ],
+     "rule": "free",
+     "w": "g8 h8 i8",
+     "b": "g9 h9",
+     "side": 1,
+     "g": {
+      "ja": "図と同じ形。白の三を止めよう。",
+      "en": "Same shape as the diagram: stop White’s three.",
+      "zh": "和图相同：挡住白棋的活三。",
+      "zh-TW": "和圖相同的形狀：擋住白棋的三。",
+      "ko": "그림과 같은 모양. 백의 삼을 막으세요.",
+      "es": "La misma figura del diagrama: bloquea el tres blanco.",
+      "fr": "La même forme que le schéma : bloquez le trois blanc.",
+      "pt": "A mesma forma do diagrama: bloqueie o três branco.",
+      "de": "Dieselbe Form wie im Diagramm: Blockiere die weiße Drei.",
+      "ru": "Та же форма, что на схеме: закройте тройку белых.",
+      "tr": "Şemadaki şeklin aynısı: Beyaz'ın üçlüsünü kapat.",
+      "id": "Bentuk yang sama dengan diagram: tutup tiga Putih.",
+      "hi": "चित्र जैसा ही आकार: सफ़ेद का तीन रोकिए।",
+      "ar": "الشكل نفسه كما في الرسم: سُدّ ثلاثية الأبيض."
+     },
+     "h": {
+      "ja": "白の3つ並びの、すぐとなりのはしに打つと…？",
+      "en": "What if you play right next to one end of White’s three?",
+      "zh": "下在白棋3连紧挨着的一端会怎样……？",
+      "zh-TW": "下在白棋三連緊鄰的一端會怎樣……？",
+      "ko": "백 3개 줄 바로 옆 끝에 두면…?",
+      "es": "¿Y si juegas justo al lado de un extremo del tres blanco?",
+      "fr": "Et si vous jouez juste à côté d’un bout du trois blanc ?",
+      "pt": "E se você jogar bem ao lado de uma ponta do três branco?",
+      "de": "Was, wenn du direkt neben ein Ende der weißen Drei setzt?",
+      "ru": "А если сходить вплотную к одному из концов тройки белых?",
+      "tr": "Beyaz üçlünün bir ucunun hemen yanına oynarsan…?",
+      "id": "Bagaimana kalau kamu main tepat di sebelah salah satu ujung tiga Putih?",
+      "hi": "सफ़ेद के तीन के किसी सिरे के ठीक बगल में रखें तो…?",
+      "ar": "ماذا لو لعبت مباشرة بجانب أحد طرفي ثلاثية الأبيض؟"
+     },
+     "y": {
+      "ja": "正解！片方のはしをふさげば、白は達四を作れません。",
+      "en": "Right! With one end closed, White cannot make a straight four.",
+      "zh": "正确！堵住一端，白棋就做不成活四了。",
+      "zh-TW": "正確！擋住一端，白棋就做不出活四。",
+      "ko": "정답! 한쪽 끝을 막으면 백은 열린 사를 만들 수 없어요.",
+      "es": "¡Bien! Con un extremo tapado, las blancas no pueden hacer un cuatro abierto.",
+      "fr": "Exact ! Un bout fermé, Blanc ne peut plus faire de quatre ouvert.",
+      "pt": "Certo! Com uma ponta fechada, as brancas não fazem quatro aberto.",
+      "de": "Richtig! Mit einem geschlossenen Ende kann Weiß keine offene Vier bilden.",
+      "ru": "Верно! Если один конец закрыт, белые не сделают открытую четвёрку.",
+      "tr": "Doğru! Bir ucu kapalıyken Beyaz açık dörtlü yapamaz.",
+      "id": "Benar! Dengan satu ujung tertutup, Putih tak bisa membuat empat terbuka.",
+      "hi": "सही! एक सिरा बंद हो तो सफ़ेद खुला चार नहीं बना सकता।",
+      "ar": "صحيح! بعد سدّ أحد الطرفين لا يستطيع الأبيض تكوين رباعية مفتوحة."
+     }
+    },
+    {
+     "k": "try",
+     "goal": "block3",
+     "ok": [
+      "f6",
+      "i9",
+      "k11"
+     ],
+     "look": [
+      "g7",
+      "h8",
+      "j10"
+     ],
+     "rule": "free",
+     "w": "g7 h8 j10",
+     "b": "g8 h7 f9",
+     "side": 1,
+     "g": {
+      "ja": "練習：すき間のある三（飛び三）も三です。",
+      "en": "Practice: a three with a gap (a split three) is still a three.",
+      "zh": "练习：有空隙的三（跳三）也是三。",
+      "zh-TW": "練習：有空隙的三（跳三）也是三。",
+      "ko": "연습: 빈칸이 있는 삼(띈삼)도 삼이에요.",
+      "es": "Práctica: un tres con hueco (tres partido) también es un tres.",
+      "fr": "Exercice : un trois avec un trou (trois brisé) reste un trois.",
+      "pt": "Prática: um três com espaço (três quebrado) também é um três.",
+      "de": "Übung: Auch eine Drei mit Lücke (gebrochene Drei) ist eine Drei.",
+      "ru": "Практика: тройка с промежутком (разорванная тройка) — тоже тройка.",
+      "tr": "Alıştırma: boşluklu üçlü (kırık üçlü) de üçlüdür.",
+      "id": "Latihan: tiga dengan celah (tiga berlubang) juga tiga.",
+      "hi": "अभ्यास: खाली जगह वाला तीन (टूटा तीन) भी तीन है।",
+      "ar": "تمرين: الثلاثية ذات الفراغ (الثلاثية المتقطعة) ثلاثية أيضًا."
+     },
+     "h": {
+      "ja": "白がナナメに3つ、すき間が1つ。すき間か、両はしのどれかで止められるよ。",
+      "en": "Three white stones on a diagonal with one gap. You can stop it in the gap or at either end.",
+      "zh": "白棋斜向3子，中间有1个空隙。下在空隙或两端任意一处都能挡住。",
+      "zh-TW": "白棋斜向3顆，中間有1個空隙。下在空隙或兩端任一處都能擋住。",
+      "ko": "백이 대각선으로 3개, 빈칸이 1개. 빈칸이나 양 끝 중 어디든 두면 막을 수 있어요.",
+      "es": "Tres piedras blancas en diagonal con un hueco. Puedes bloquear en el hueco o en cualquiera de los extremos.",
+      "fr": "Trois pierres blanches en diagonale avec un trou. Vous pouvez bloquer dans le trou ou à l’un des bouts.",
+      "pt": "Três pedras brancas na diagonal com um espaço. Dá para bloquear no espaço ou em qualquer ponta.",
+      "de": "Drei weiße Steine diagonal mit einer Lücke. Du kannst in der Lücke oder an einem der Enden blocken.",
+      "ru": "Три белых камня по диагонали и один промежуток. Закрыть можно в промежутке или с любого конца.",
+      "tr": "Çaprazda üç beyaz taş ve bir boşluk. Boşlukta ya da uçlardan birinde kapatabilirsin.",
+      "id": "Tiga batu Putih diagonal dengan satu celah. Kamu bisa menutup di celah atau di salah satu ujung.",
+      "hi": "तिरछे में तीन सफ़ेद पत्थर और एक खाली जगह। खाली जगह में या किसी भी सिरे पर रोक सकते हैं।",
+      "ar": "ثلاثة أحجار بيضاء قطريًا وبينها فراغ واحد. يمكنك السدّ في الفراغ أو عند أيّ من الطرفين."
+     },
+     "y": {
+      "ja": "正解！飛び三は、すき間でも、はしでも止められます。",
+      "en": "Right! A split three can be stopped in the gap or at an end.",
+      "zh": "正确！跳三在空隙或两端都能挡住。",
+      "zh-TW": "正確！跳三在空隙或兩端都能擋住。",
+      "ko": "정답! 띈삼은 빈칸에서도, 끝에서도 막을 수 있어요.",
+      "es": "¡Bien! Un tres partido se bloquea en el hueco o en un extremo.",
+      "fr": "Exact ! Un trois brisé se bloque dans le trou ou à un bout.",
+      "pt": "Certo! Um três quebrado se bloqueia no espaço ou numa ponta.",
+      "de": "Richtig! Eine gebrochene Drei blockst du in der Lücke oder an einem Ende.",
+      "ru": "Верно! Разорванную тройку можно закрыть в промежутке или с конца.",
+      "tr": "Doğru! Kırık üçlü boşlukta da uçta da kapatılabilir.",
+      "id": "Benar! Tiga berlubang bisa ditutup di celah atau di ujung.",
+      "hi": "सही! टूटे तीन को खाली जगह में या सिरे पर रोका जा सकता है।",
+      "ar": "صحيح! الثلاثية المتقطعة تُسدّ في الفراغ أو عند طرف."
+     }
+    }
+   ]
   },
   {
    "id": "sfour",
@@ -305,7 +878,199 @@
      "f8",
      "j8"
     ]
-   }
+   },
+   "ramp": [
+    {
+     "k": "explain",
+     "marks": [
+      [
+       "g8",
+       "t3"
+      ],
+      [
+       "h8",
+       "t3"
+      ],
+      [
+       "i8",
+       "t3"
+      ],
+      [
+       "f8",
+       "ok"
+      ],
+      [
+       "j8",
+       "ok"
+      ]
+     ],
+     "rule": "free",
+     "b": "g8 h8 i8",
+     "w": "g9 i9 h7",
+     "side": 1,
+     "t": {
+      "ja": "三を伸ばして達四",
+      "en": "Extend a three into a straight four",
+      "zh": "延长活三成活四",
+      "zh-TW": "把三延長成活四",
+      "ko": "삼을 늘려 열린 사",
+      "es": "Alarga el tres hasta un cuatro abierto",
+      "fr": "Prolongez le trois en quatre ouvert",
+      "pt": "Estenda o três até um quatro aberto",
+      "de": "Die Drei zur offenen Vier verlängern",
+      "ru": "Продлите тройку до открытой четвёрки",
+      "tr": "Üçlüyü açık dörtlüye uzat",
+      "id": "Perpanjang tiga jadi empat terbuka",
+      "hi": "तीन बढ़ाकर खुला चार",
+      "ar": "مُدّ الثلاثية إلى رباعية مفتوحة"
+     },
+     "body": {
+      "ja": "<p>黒の<b>三</b>（両はしがあいた3つ並び）があります。どちらかのはし（緑の丸）に打つと4つ並びになり、<b>両はしがあいた四＝達四</b>ができます。</p><p>白は片方しか止められないので、次に必ず5つ並べられます。</p>",
+      "en": "<p>Black has a <b>three</b> (three in a row, both ends open). Play at either end (green circles) to make four in a row with <b>both ends open: a straight four</b>.</p><p>White can block only one end, so you make five next for sure.</p>",
+      "zh": "<p>黑棋有一个<b>活三</b>（两端都空的3连）。下在任意一端（绿圈）就成4连，形成<b>两端都空的四＝活四</b>。</p><p>白棋只能挡住一端，所以下一手一定能连成五。</p>",
+      "zh-TW": "<p>黑棋有一個<b>三</b>（兩端都空的三連）。下在其中一端（綠圈）就成四連，形成<b>兩端都空的四＝活四</b>。</p><p>白棋只能擋一端，所以下一手一定能連成五。</p>",
+      "ko": "<p>흑의 <b>삼</b>(양 끝이 빈 3개 줄)이 있어요. 어느 한쪽 끝(초록 원)에 두면 4개가 되어 <b>양 끝이 열린 사 = 열린 사</b>가 생겨요.</p><p>백은 한쪽밖에 막을 수 없으니, 다음에 반드시 5개를 만들 수 있어요.</p>",
+      "es": "<p>Las negras tienen un <b>tres</b> (tres en línea con ambos extremos libres). Juega en cualquier extremo (círculos verdes) y harás cuatro en línea: <b>un cuatro libre por ambos lados, un cuatro abierto</b>.</p><p>Las blancas solo pueden tapar un extremo, así que en la siguiente jugada harás cinco seguro.</p>",
+      "fr": "<p>Noir a un <b>trois</b> (trois pierres alignées, les deux bouts libres). Jouez à l’un des bouts (cercles verts) : cela fait quatre alignées, <b>libres aux deux bouts : un quatre ouvert</b>.</p><p>Blanc ne peut bloquer qu’un bout, vous ferez donc cinq au coup suivant à coup sûr.</p>",
+      "pt": "<p>As pretas têm um <b>três</b> (três em linha com as duas pontas livres). Jogue em qualquer ponta (círculos verdes) e você faz quatro em linha <b>livre nas duas pontas: um quatro aberto</b>.</p><p>As brancas só conseguem bloquear uma ponta, então no lance seguinte você faz cinco com certeza.</p>",
+      "de": "<p>Schwarz hat eine <b>Drei</b> (drei in einer Reihe, beide Enden frei). Setz an eines der Enden (grüne Kreise), dann hast du vier in einer Reihe <b>mit beiden Enden frei: eine offene Vier</b>.</p><p>Weiß kann nur ein Ende blocken, also bildest du im nächsten Zug sicher fünf.</p>",
+      "ru": "<p>У чёрных есть <b>тройка</b> (три в ряд, оба конца свободны). Сходите на любой из концов (зелёные кружки) — получится четыре в ряд, <b>открытая с обеих сторон: открытая четвёрка</b>.</p><p>Белые могут закрыть только один конец, поэтому следующим ходом вы точно сделаете пятёрку.</p>",
+      "tr": "<p>Siyah'ın bir <b>üçlüsü</b> var (iki ucu açık üç taş). Uçlardan birine (yeşil halkalar) oynarsan dört taş yan yana olur: <b>iki ucu açık dörtlü, yani açık dörtlü</b>.</p><p>Beyaz yalnızca bir ucu kapatabilir, bu yüzden sonraki hamlede kesin beşli yaparsın.</p>",
+      "id": "<p>Hitam punya <b>tiga</b> (tiga berderet, kedua ujung terbuka). Main di salah satu ujung (lingkaran hijau) dan jadilah empat berderet <b>yang terbuka di kedua ujung: empat terbuka</b>.</p><p>Putih hanya bisa menutup satu ujung, jadi langkah berikutnya kamu pasti membuat lima.</p>",
+      "hi": "<p>काले के पास एक <b>तीन</b> है (तीन एक कतार में, दोनों सिरे खुले)। किसी भी सिरे (हरे घेरे) पर रखिए तो चार एक कतार में होंगे — <b>दोनों सिरे खुले: खुला चार</b>।</p><p>सफ़ेद केवल एक सिरा रोक सकता है, इसलिए अगली चाल में आप पक्का पाँच बना लेंगे।</p>",
+      "ar": "<p>للأسود <b>ثلاثية</b> (ثلاثة في صف وطرفاها مفتوحان). العب عند أيّ طرف (الدوائر الخضراء) فتصير أربعة في صف <b>مفتوحة من الطرفين: رباعية مفتوحة</b>.</p><p>لا يستطيع الأبيض سدّ إلا طرف واحد، فتكوّن خمسة في النقلة التالية حتمًا.</p>"
+     }
+    },
+    {
+     "k": "try",
+     "goal": "sfour",
+     "ok": [
+      "f8",
+      "j8"
+     ],
+     "look": [
+      "g8",
+      "h8",
+      "i8"
+     ],
+     "rule": "free",
+     "b": "g8 h8 i8",
+     "w": "g9 i9 h7",
+     "side": 1,
+     "g": {
+      "ja": "図と同じ形。達四を作ろう。",
+      "en": "Same shape as the diagram: make a straight four.",
+      "zh": "和图相同：做成活四。",
+      "zh-TW": "和圖相同的形狀：做出活四。",
+      "ko": "그림과 같은 모양. 열린 사를 만드세요.",
+      "es": "La misma figura del diagrama: haz un cuatro abierto.",
+      "fr": "La même forme que le schéma : faites un quatre ouvert.",
+      "pt": "A mesma forma do diagrama: faça um quatro aberto.",
+      "de": "Dieselbe Form wie im Diagramm: Bilde eine offene Vier.",
+      "ru": "Та же форма, что на схеме: сделайте открытую четвёрку.",
+      "tr": "Şemadaki şeklin aynısı: açık dörtlü yap.",
+      "id": "Bentuk yang sama dengan diagram: buat empat terbuka.",
+      "hi": "चित्र जैसा ही आकार: खुला चार बनाइए।",
+      "ar": "الشكل نفسه كما في الرسم: كوّن رباعية مفتوحة."
+     },
+     "h": {
+      "ja": "黒の3つ並びを、あいているはしに伸ばしてみよう。",
+      "en": "Extend Black’s three toward an open end.",
+      "zh": "把黑棋的3连往空着的一端延长试试。",
+      "zh-TW": "試著把黑棋的三連往空著的一端延長。",
+      "ko": "흑 3개 줄을 비어 있는 끝 쪽으로 늘려 보세요.",
+      "es": "Alarga el tres negro hacia un extremo libre.",
+      "fr": "Prolongez le trois noir vers un bout libre.",
+      "pt": "Estenda o três preto para uma ponta livre.",
+      "de": "Verlängere die schwarze Drei zu einem freien Ende hin.",
+      "ru": "Продлите тройку чёрных в сторону свободного конца.",
+      "tr": "Siyah üçlüyü açık bir uca doğru uzat.",
+      "id": "Perpanjang tiga Hitam ke arah ujung yang terbuka.",
+      "hi": "काले के तीन को किसी खुले सिरे की ओर बढ़ाइए।",
+      "ar": "مُدّ ثلاثية الأسود نحو طرف مفتوح."
+     },
+     "y": {
+      "ja": "達四！白がどちらを止めても、もう片方で5つ並びます。",
+      "en": "A straight four! Whichever end White blocks, you make five at the other.",
+      "zh": "活四！白棋挡哪一端，你都能在另一端连成五。",
+      "zh-TW": "活四！不管白棋擋哪一端，另一端都能連成五。",
+      "ko": "열린 사! 백이 어느 쪽을 막아도 다른 쪽에서 5개가 돼요.",
+      "es": "¡Cuatro abierto! Tapen el extremo que tapen las blancas, haces cinco en el otro.",
+      "fr": "Quatre ouvert ! Quel que soit le bout bloqué par Blanc, vous faites cinq de l’autre côté.",
+      "pt": "Quatro aberto! Seja qual for a ponta que as brancas bloquearem, você faz cinco na outra.",
+      "de": "Offene Vier! Egal welches Ende Weiß blockt, am anderen bildest du fünf.",
+      "ru": "Открытая четвёрка! Какой бы конец ни закрыли белые, на другом вы сделаете пятёрку.",
+      "tr": "Açık dörtlü! Beyaz hangi ucu kapatırsa kapatsın, diğerinde beşli yaparsın.",
+      "id": "Empat terbuka! Ujung mana pun yang ditutup Putih, kamu membuat lima di ujung lain.",
+      "hi": "खुला चार! सफ़ेद कोई भी सिरा रोके, आप दूसरे सिरे पर पाँच बना लेंगे।",
+      "ar": "رباعية مفتوحة! أيّ طرف يسدّه الأبيض، تكوّن خمسة عند الآخر."
+     }
+    },
+    {
+     "k": "try",
+     "goal": "sfour",
+     "ok": [
+      "h8"
+     ],
+     "look": [
+      "h6",
+      "h7",
+      "h9"
+     ],
+     "rule": "free",
+     "b": "h6 h7 h9",
+     "w": "g7 i8 g9",
+     "side": 1,
+     "g": {
+      "ja": "練習：すき間のある三から達四を作ろう。",
+      "en": "Practice: make a straight four from a three with a gap.",
+      "zh": "练习：从有空隙的三做成活四。",
+      "zh-TW": "練習：從有空隙的三做出活四。",
+      "ko": "연습: 빈칸이 있는 삼에서 열린 사를 만드세요.",
+      "es": "Práctica: haz un cuatro abierto desde un tres con hueco.",
+      "fr": "Exercice : faites un quatre ouvert à partir d’un trois avec un trou.",
+      "pt": "Prática: faça um quatro aberto a partir de um três com espaço.",
+      "de": "Übung: Bilde aus einer Drei mit Lücke eine offene Vier.",
+      "ru": "Практика: сделайте открытую четвёрку из тройки с промежутком.",
+      "tr": "Alıştırma: boşluklu üçlüden açık dörtlü yap.",
+      "id": "Latihan: buat empat terbuka dari tiga yang bercelah.",
+      "hi": "अभ्यास: खाली जगह वाले तीन से खुला चार बनाइए।",
+      "ar": "تمرين: كوّن رباعية مفتوحة من ثلاثية فيها فراغ."
+     },
+     "h": {
+      "ja": "黒がタテに3つ、すき間が1つ。どこに打てば、すき間のない4つ並びになる？",
+      "en": "Three black stones in a column with one gap. Where do you play to get four in a row with no gap?",
+      "zh": "黑棋竖向3子，有1个空隙。下在哪里才能变成没有空隙的4连？",
+      "zh-TW": "黑棋直向3顆，有1個空隙。下在哪裡會變成沒有空隙的四連？",
+      "ko": "흑이 세로로 3개, 빈칸이 1개. 어디에 두면 빈칸 없는 4개 줄이 될까요?",
+      "es": "Tres piedras negras en vertical con un hueco. ¿Dónde juegas para tener cuatro en línea sin hueco?",
+      "fr": "Trois pierres noires en colonne avec un trou. Où jouer pour avoir quatre alignées sans trou ?",
+      "pt": "Três pedras pretas na vertical com um espaço. Onde jogar para ter quatro em linha sem espaço?",
+      "de": "Drei schwarze Steine senkrecht mit einer Lücke. Wohin setzt du, damit vier ohne Lücke in einer Reihe stehen?",
+      "ru": "Три чёрных камня по вертикали и один промежуток. Куда сходить, чтобы получилось четыре в ряд без промежутка?",
+      "tr": "Dikeyde üç siyah taş ve bir boşluk. Nereye oynarsan boşluksuz dört taş yan yana olur?",
+      "id": "Tiga batu Hitam tegak dengan satu celah. Main di mana agar jadi empat berderet tanpa celah?",
+      "hi": "खड़ी कतार में तीन काले पत्थर और एक खाली जगह। कहाँ रखें कि बिना खाली जगह के चार एक कतार में हों?",
+      "ar": "ثلاثة أحجار سوداء عموديًا وبينها فراغ. أين تلعب لتحصل على أربعة في صف بلا فراغ؟"
+     },
+     "y": {
+      "ja": "正解！すき間を埋めると、両はしがあいた四になります。",
+      "en": "Right! Filling the gap gives a four open at both ends.",
+      "zh": "正确！填上空隙，就成了两端都空的四。",
+      "zh-TW": "正確！補上空隙，就成了兩端都空的四。",
+      "ko": "정답! 빈칸을 채우면 양 끝이 열린 사가 돼요.",
+      "es": "¡Bien! Llenar el hueco da un cuatro libre por ambos lados.",
+      "fr": "Exact ! Remplir le trou donne un quatre libre aux deux bouts.",
+      "pt": "Certo! Preencher o espaço dá um quatro livre nas duas pontas.",
+      "de": "Richtig! Füllst du die Lücke, entsteht eine an beiden Enden freie Vier.",
+      "ru": "Верно! Заполнив промежуток, вы получаете четвёрку, открытую с обеих сторон.",
+      "tr": "Doğru! Boşluğu doldurunca iki ucu açık bir dörtlü olur.",
+      "id": "Benar! Mengisi celah menghasilkan empat yang terbuka di kedua ujung.",
+      "hi": "सही! खाली जगह भरने से दोनों सिरों पर खुला चार बनता है।",
+      "ar": "صحيح! ملء الفراغ يعطي رباعية مفتوحة من الطرفين."
+     }
+    }
+   ]
   },
   {
    "id": "fourthree",
@@ -660,7 +1425,202 @@
     "x": [
      "h8"
     ]
-   }
+   },
+   "ramp": [
+    {
+     "k": "explain",
+     "marks": [
+      [
+       "g8",
+       "t3"
+      ],
+      [
+       "i8",
+       "t3"
+      ],
+      [
+       "h9",
+       "t3"
+      ],
+      [
+       "h10",
+       "t3"
+      ],
+      [
+       "h8",
+       "hl2"
+      ]
+     ],
+     "rule": "renju",
+     "b": "g8 i8 h9 h10",
+     "w": "f9 j10 l5",
+     "side": 1,
+     "t": {
+      "ja": "三が2つ同時＝三三（黒だけ禁手）",
+      "en": "Two threes at once: double three (forbidden for Black)",
+      "zh": "同时两个三＝三三（仅黑棋禁手）",
+      "zh-TW": "同時兩個三＝三三（只有黑棋是禁手）",
+      "ko": "삼이 2개 동시 = 삼삼(흑만 금수)",
+      "es": "Dos treses a la vez: doble tres (prohibido para las negras)",
+      "fr": "Deux trois à la fois : double trois (interdit pour Noir)",
+      "pt": "Dois três de uma vez: três duplo (proibido para as pretas)",
+      "de": "Zwei Dreien zugleich: Doppel-Drei (für Schwarz verboten)",
+      "ru": "Две тройки сразу: двойная тройка (запрещено только чёрным)",
+      "tr": "Aynı anda iki üçlü: çift üçlü (yalnızca Siyah'a yasak)",
+      "id": "Dua tiga sekaligus: tiga ganda (terlarang hanya bagi Hitam)",
+      "hi": "एक साथ दो तीन: दोहरा तीन (केवल काले के लिए वर्जित)",
+      "ar": "ثلاثيتان معًا: ثلاثية مزدوجة (محظورة على الأسود وحده)"
+     },
+     "body": {
+      "ja": "<p>黒が<b>光っている点</b>に打つと、ヨコに三、タテに三が<b>同時に2つ</b>できます。これが<b>三三</b>。</p><p>連珠では黒だけ、この手を打てません。盤の×は、黒が打てない点のしるしです。</p>",
+      "en": "<p>If Black plays the <b>highlighted point</b>, a three across and a three down appear <b>at the same time</b>: a <b>double three</b>.</p><p>In renju, only Black may not play this. The × on the board marks the points Black cannot play.</p>",
+      "zh": "<p>黑棋下在<b>发光点</b>，横向一个三、竖向一个三，<b>同时出现两个</b>。这就是<b>三三</b>。</p><p>在连珠规则中，只有黑棋不能下这一手。棋盘上的×表示黑棋不能下的点。</p>",
+      "zh-TW": "<p>黑棋下在<b>發光的點</b>，橫向一個三、直向一個三，<b>同時出現兩個</b>。這就是<b>三三</b>。</p><p>在連珠中，只有黑棋不能下這一手。盤上的×是黑棋不能下的點的記號。</p>",
+      "ko": "<p>흑이 <b>빛나는 점</b>에 두면 가로로 삼, 세로로 삼이 <b>동시에 2개</b> 생겨요. 이것이 <b>삼삼</b>.</p><p>렌주에서는 흑만 이 수를 둘 수 없어요. 판의 ×는 흑이 둘 수 없는 점의 표시예요.</p>",
+      "es": "<p>Si las negras juegan en el <b>punto resaltado</b>, aparecen un tres horizontal y un tres vertical <b>a la vez</b>: un <b>doble tres</b>.</p><p>En el renju, solo las negras no pueden hacer esta jugada. La × del tablero marca los puntos donde las negras no pueden jugar.</p>",
+      "fr": "<p>Si Noir joue sur le <b>point en surbrillance</b>, un trois horizontal et un trois vertical apparaissent <b>en même temps</b> : c’est un <b>double trois</b>.</p><p>Au renju, seul Noir n’a pas le droit de jouer ce coup. La × sur le plateau marque les points où Noir ne peut pas jouer.</p>",
+      "pt": "<p>Se as pretas jogarem no <b>ponto destacado</b>, surgem um três na horizontal e um três na vertical <b>ao mesmo tempo</b>: um <b>três duplo</b>.</p><p>No renju, só as pretas não podem fazer esse lance. O × no tabuleiro marca os pontos onde as pretas não podem jogar.</p>",
+      "de": "<p>Setzt Schwarz auf den <b>markierten Punkt</b>, entstehen eine waagerechte und eine senkrechte Drei <b>gleichzeitig</b>: eine <b>Doppel-Drei</b>.</p><p>Bei Renju darf nur Schwarz diesen Zug nicht spielen. Das × auf dem Brett markiert die Punkte, auf die Schwarz nicht setzen darf.</p>",
+      "ru": "<p>Если чёрные сходят на <b>подсвеченный пункт</b>, по горизонтали и по вертикали <b>одновременно</b> появятся две тройки: это <b>двойная тройка</b>.</p><p>В рэндзю только чёрным нельзя делать такой ход. Знак × на доске отмечает пункты, куда чёрным ходить нельзя.</p>",
+      "tr": "<p>Siyah <b>parlayan noktaya</b> oynarsa yatayda bir üçlü ve dikeyde bir üçlü <b>aynı anda</b> oluşur: bu bir <b>çift üçlü</b>.</p><p>Renjuda bu hamleyi yalnızca Siyah oynayamaz. Tahtadaki ×, Siyah'ın oynayamadığı noktaları gösterir.</p>",
+      "id": "<p>Jika Hitam bermain di <b>titik yang menyala</b>, tiga mendatar dan tiga tegak muncul <b>sekaligus</b>: inilah <b>tiga ganda</b>.</p><p>Dalam renju, hanya Hitam yang tak boleh memainkan langkah ini. Tanda × di papan menandai titik yang tak boleh dimainkan Hitam.</p>",
+      "hi": "<p>अगर काला <b>चमकते बिंदु</b> पर रखे, तो आड़ा तीन और खड़ा तीन <b>एक साथ</b> बनते हैं: यह है <b>दोहरा तीन</b>।</p><p>रेंजू में केवल काला यह चाल नहीं चल सकता। बोर्ड पर × उन बिंदुओं का निशान है जहाँ काला नहीं रख सकता।</p>",
+      "ar": "<p>إذا لعب الأسود في <b>النقطة المضيئة</b> ظهرت ثلاثية أفقية وثلاثية عمودية <b>في آن واحد</b>: هذه <b>ثلاثية مزدوجة</b>.</p><p>في رينجو لا تجوز هذه النقلة للأسود وحده. علامة × على اللوح تحدد النقاط التي لا يستطيع الأسود اللعب فيها.</p>"
+     }
+    },
+    {
+     "k": "try",
+     "goal": "forbid",
+     "pick": true,
+     "ok": [
+      "h8"
+     ],
+     "look": [
+      "g8",
+      "i8",
+      "h7",
+      "h6"
+     ],
+     "rule": "renju",
+     "b": "g8 i8 h7 h6",
+     "w": "f7 j6 l11",
+     "side": 1,
+     "g": {
+      "ja": "同じ形を向きを変えて、×を消しました。三三の点をタップしよう。",
+      "en": "The same shape turned, with the × hidden. Tap the double-three point.",
+      "zh": "同样的形状换了方向，并去掉了×。点出三三的点吧。",
+      "zh-TW": "同樣的形狀換了方向，並拿掉了×。點一下三三的點吧。",
+      "ko": "같은 모양을 방향을 바꾸고 ×를 지웠어요. 삼삼 점을 탭하세요.",
+      "es": "La misma figura girada y sin la ×. Toca el punto de doble tres.",
+      "fr": "La même forme tournée, sans la ×. Touchez le point de double trois.",
+      "pt": "A mesma forma girada e sem o ×. Toque no ponto de três duplo.",
+      "de": "Dieselbe Form gedreht, ohne das ×. Tippe auf den Doppel-Drei-Punkt.",
+      "ru": "Та же форма, но повёрнута и без ×. Нажмите на пункт двойной тройки.",
+      "tr": "Aynı şekil döndürüldü ve × gizlendi. Çift üçlü noktasına dokun.",
+      "id": "Bentuk yang sama diputar, tanpa ×. Ketuk titik tiga ganda.",
+      "hi": "वही आकार घुमाया गया है और × हटा दिया गया है। दोहरे तीन वाले बिंदु पर टैप कीजिए।",
+      "ar": "الشكل نفسه بعد تدويره ومن دون ×. اضغط على نقطة الثلاثية المزدوجة."
+     },
+     "h": {
+      "ja": "黒の2つ並びが2本あるね。2本の線が交わる点に打つと、三が2つ…？",
+      "en": "There are two black pairs. If Black plays where their two lines cross, that makes two threes…",
+      "zh": "黑棋有两组二连。下在两条线交叉的点，会出现两个三……？",
+      "zh-TW": "黑棋有兩組二連。下在兩條線交叉的點，就會有兩個三……？",
+      "ko": "흑의 2개 줄이 두 개 있죠. 두 줄이 만나는 점에 두면 삼이 2개…?",
+      "es": "Hay dos parejas negras. Si las negras juegan donde se cruzan sus líneas, salen dos treses…",
+      "fr": "Il y a deux paires noires. Si Noir joue là où leurs lignes se croisent, cela fait deux trois…",
+      "pt": "Há duas duplas pretas. Se as pretas jogarem onde as linhas se cruzam, surgem dois três…",
+      "de": "Es gibt zwei schwarze Zweier. Setzt Schwarz dorthin, wo sich ihre Linien kreuzen, entstehen zwei Dreien …",
+      "ru": "У чёрных две двойки. Если сходить туда, где их линии пересекаются, получатся две тройки…",
+      "tr": "İki siyah ikili var. Siyah çizgilerinin kesiştiği yere oynarsa iki üçlü olur…",
+      "id": "Ada dua pasang batu Hitam. Jika Hitam main di titik silang kedua garisnya, jadilah dua tiga…",
+      "hi": "काले के दो जोड़े हैं। जहाँ दोनों लाइनें मिलती हैं वहाँ रखें, तो दो तीन…?",
+      "ar": "هناك ثنائيتان سوداوان. إذا لعب الأسود حيث يتقاطع خطّاهما تكوّنت ثلاثيتان…"
+     },
+     "y": {
+      "ja": "正解！そこは三三。黒は打てない点です。",
+      "en": "Right! That is a double three: Black cannot play there.",
+      "zh": "正确！那里是三三，黑棋不能下。",
+      "zh-TW": "正確！那裡是三三，是黑棋不能下的點。",
+      "ko": "정답! 그곳은 삼삼. 흑이 둘 수 없는 점이에요.",
+      "es": "¡Bien! Es un doble tres: las negras no pueden jugar ahí.",
+      "fr": "Exact ! C’est un double trois : Noir ne peut pas y jouer.",
+      "pt": "Certo! É um três duplo: as pretas não podem jogar ali.",
+      "de": "Richtig! Das ist eine Doppel-Drei: Schwarz darf dort nicht setzen.",
+      "ru": "Верно! Это двойная тройка: чёрным туда ходить нельзя.",
+      "tr": "Doğru! Orası çift üçlü: Siyah oraya oynayamaz.",
+      "id": "Benar! Itu tiga ganda: Hitam tak boleh main di sana.",
+      "hi": "सही! वह दोहरा तीन है: काला वहाँ नहीं रख सकता।",
+      "ar": "صحيح! هذه ثلاثية مزدوجة: لا يستطيع الأسود اللعب هناك."
+     }
+    },
+    {
+     "k": "try",
+     "goal": "forbid",
+     "pick": true,
+     "ok": [
+      "g7"
+     ],
+     "look": [
+      "e5",
+      "f6",
+      "f7",
+      "h7"
+     ],
+     "rule": "renju",
+     "b": "f7 h7 e5 f6",
+     "w": "i6 c9 k8",
+     "side": 1,
+     "g": {
+      "ja": "練習：今度はナナメとヨコ。三三の点をタップしよう。",
+      "en": "Practice: a diagonal and a row this time. Tap the double-three point.",
+      "zh": "练习：这次是斜向和横向。点出三三的点吧。",
+      "zh-TW": "練習：這次是斜向和橫向。點一下三三的點吧。",
+      "ko": "연습: 이번엔 대각선과 가로. 삼삼 점을 탭하세요.",
+      "es": "Práctica: ahora una diagonal y una horizontal. Toca el punto de doble tres.",
+      "fr": "Exercice : cette fois une diagonale et une ligne horizontale. Touchez le point de double trois.",
+      "pt": "Prática: agora uma diagonal e uma horizontal. Toque no ponto de três duplo.",
+      "de": "Übung: diesmal diagonal und waagerecht. Tippe auf den Doppel-Drei-Punkt.",
+      "ru": "Практика: теперь диагональ и горизонталь. Нажмите на пункт двойной тройки.",
+      "tr": "Alıştırma: bu kez çapraz ve yatay. Çift üçlü noktasına dokun.",
+      "id": "Latihan: kali ini diagonal dan mendatar. Ketuk titik tiga ganda.",
+      "hi": "अभ्यास: इस बार तिरछा और आड़ा। दोहरे तीन वाले बिंदु पर टैप कीजिए।",
+      "ar": "تمرين: هذه المرة قطري وأفقي. اضغط على نقطة الثلاثية المزدوجة."
+     },
+     "h": {
+      "ja": "ナナメの2つ並びと、すき間のあるヨコの2つ。どちらも三になる点は？",
+      "en": "A diagonal pair and a row of two with a gap. Which point makes both of them a three?",
+      "zh": "斜向的二连，加上有空隙的横向两子。哪个点能让两者都成三？",
+      "zh-TW": "斜向的二連，和有空隙的橫向兩顆。哪個點能讓兩邊都變成三？",
+      "ko": "대각선의 2개 줄과 빈칸이 있는 가로 2개. 둘 다 삼이 되는 점은?",
+      "es": "Una pareja en diagonal y dos en horizontal con un hueco. ¿Qué punto convierte a ambas en tres?",
+      "fr": "Une paire en diagonale et deux pierres horizontales avec un trou. Quel point fait un trois des deux côtés ?",
+      "pt": "Uma dupla na diagonal e duas na horizontal com um espaço. Qual ponto transforma as duas em três?",
+      "de": "Ein diagonaler Zweier und zwei waagerechte Steine mit Lücke. Welcher Punkt macht aus beiden eine Drei?",
+      "ru": "Диагональная двойка и горизонтальная двойка с промежутком. Какой пункт превращает обе в тройки?",
+      "tr": "Çaprazda bir ikili ve yatayda boşluklu iki taş. Hangi nokta ikisini de üçlü yapar?",
+      "id": "Sepasang diagonal dan dua batu mendatar dengan celah. Titik mana yang membuat keduanya jadi tiga?",
+      "hi": "तिरछा एक जोड़ा और खाली जगह वाले दो आड़े पत्थर। कौन-सा बिंदु दोनों को तीन बना देता है?",
+      "ar": "ثنائية قطرية وحجران أفقيان بينهما فراغ. أيّ نقطة تجعل كليهما ثلاثية؟"
+     },
+     "y": {
+      "ja": "正解！ナナメとヨコの三が同時にできる三三です。",
+      "en": "Right! A diagonal three and a row three at once: a double three.",
+      "zh": "正确！斜向和横向同时成三，这就是三三。",
+      "zh-TW": "正確！斜向和橫向同時成三，這就是三三。",
+      "ko": "정답! 대각선과 가로에 삼이 동시에 생기는 삼삼이에요.",
+      "es": "¡Bien! Un tres diagonal y uno horizontal a la vez: un doble tres.",
+      "fr": "Exact ! Un trois diagonal et un trois horizontal à la fois : un double trois.",
+      "pt": "Certo! Um três diagonal e um horizontal ao mesmo tempo: um três duplo.",
+      "de": "Richtig! Eine diagonale und eine waagerechte Drei zugleich: eine Doppel-Drei.",
+      "ru": "Верно! Диагональная и горизонтальная тройки сразу — двойная тройка.",
+      "tr": "Doğru! Çapraz ve yatay üçlü aynı anda: çift üçlü.",
+      "id": "Benar! Tiga diagonal dan tiga mendatar sekaligus: tiga ganda.",
+      "hi": "सही! तिरछा और आड़ा तीन एक साथ: दोहरा तीन।",
+      "ar": "صحيح! ثلاثية قطرية وأخرى أفقية معًا: ثلاثية مزدوجة."
+     }
+    }
+   ]
   },
   {
    "id": "forbid44",
@@ -733,7 +1693,279 @@
     "x": [
      "h8"
     ]
-   }
+   },
+   "ramp": [
+    {
+     "k": "explain",
+     "marks": [
+      [
+       "e8",
+       "t4"
+      ],
+      [
+       "f8",
+       "t4"
+      ],
+      [
+       "g8",
+       "t4"
+      ],
+      [
+       "h9",
+       "t4"
+      ],
+      [
+       "h10",
+       "t4"
+      ],
+      [
+       "h11",
+       "t4"
+      ],
+      [
+       "h8",
+       "hl2"
+      ]
+     ],
+     "rule": "renju",
+     "b": "e8 f8 g8 h9 h10 h11",
+     "w": "d8 h12 k5",
+     "side": 1,
+     "t": {
+      "ja": "四が2つ同時＝四四",
+      "en": "Two fours at once: double four",
+      "zh": "同时两个四＝四四",
+      "zh-TW": "同時兩個四＝四四",
+      "ko": "사가 2개 동시 = 사사",
+      "es": "Dos cuatros a la vez: doble cuatro",
+      "fr": "Deux quatre à la fois : double quatre",
+      "pt": "Dois quatros de uma vez: quatro duplo",
+      "de": "Zwei Vieren zugleich: Doppel-Vier",
+      "ru": "Две четвёрки сразу: двойная четвёрка",
+      "tr": "Aynı anda iki dörtlü: çift dörtlü",
+      "id": "Dua empat sekaligus: empat ganda",
+      "hi": "एक साथ दो चार: दोहरा चार",
+      "ar": "رباعيتان معًا: رباعية مزدوجة"
+     },
+     "body": {
+      "ja": "<p>黒が<b>光っている点</b>に打つと、ヨコとタテに<b>四が2つ</b>同時にできます。これが<b>四四</b>で、黒の禁手です。</p><p>四四は、同じ列に四が2つできる形でも禁手になります。</p>",
+      "en": "<p>If Black plays the <b>highlighted point</b>, <b>two fours</b> appear at once, across and down. That is a <b>double four</b>, forbidden for Black.</p><p>Two fours on the same line are a double four too.</p>",
+      "zh": "<p>黑棋下在<b>发光点</b>，横向和竖向同时形成<b>两个四</b>。这就是<b>四四</b>，是黑棋的禁手。</p><p>同一条线上出现两个四，也算四四禁手。</p>",
+      "zh-TW": "<p>黑棋下在<b>發光的點</b>，橫向和直向同時形成<b>兩個四</b>。這就是<b>四四</b>，是黑棋的禁手。</p><p>同一條線上出現兩個四，也算四四禁手。</p>",
+      "ko": "<p>흑이 <b>빛나는 점</b>에 두면 가로와 세로에 <b>사가 2개</b> 동시에 생겨요. 이것이 <b>사사</b>이고, 흑의 금수예요.</p><p>같은 줄에 사가 2개 생기는 모양도 사사 금수예요.</p>",
+      "es": "<p>Si las negras juegan en el <b>punto resaltado</b>, aparecen <b>dos cuatros</b> a la vez, en horizontal y en vertical. Es un <b>doble cuatro</b>, jugada prohibida para las negras.</p><p>Dos cuatros en una misma línea también son un doble cuatro.</p>",
+      "fr": "<p>Si Noir joue sur le <b>point en surbrillance</b>, <b>deux quatre</b> apparaissent en même temps, à l’horizontale et à la verticale. C’est un <b>double quatre</b>, coup interdit pour Noir.</p><p>Deux quatre sur une même ligne forment aussi un double quatre.</p>",
+      "pt": "<p>Se as pretas jogarem no <b>ponto destacado</b>, surgem <b>dois quatros</b> ao mesmo tempo, na horizontal e na vertical. É um <b>quatro duplo</b>, lance proibido para as pretas.</p><p>Dois quatros na mesma linha também são um quatro duplo.</p>",
+      "de": "<p>Setzt Schwarz auf den <b>markierten Punkt</b>, entstehen waagerecht und senkrecht <b>zwei Vieren</b> zugleich. Das ist eine <b>Doppel-Vier</b> – für Schwarz verboten.</p><p>Auch zwei Vieren in derselben Linie sind eine Doppel-Vier.</p>",
+      "ru": "<p>Если чёрные сходят на <b>подсвеченный пункт</b>, по горизонтали и вертикали сразу появятся <b>две четвёрки</b>. Это <b>двойная четвёрка</b> — запрещённый ход для чёрных.</p><p>Две четвёрки на одной линии — тоже двойная четвёрка.</p>",
+      "tr": "<p>Siyah <b>parlayan noktaya</b> oynarsa yatayda ve dikeyde aynı anda <b>iki dörtlü</b> oluşur. Bu bir <b>çift dörtlü</b>dür, Siyah için yasak hamle.</p><p>Aynı çizgide iki dörtlü de çift dörtlü sayılır.</p>",
+      "id": "<p>Jika Hitam bermain di <b>titik yang menyala</b>, <b>dua empat</b> muncul sekaligus, mendatar dan tegak. Inilah <b>empat ganda</b>, langkah terlarang bagi Hitam.</p><p>Dua empat di satu garis juga termasuk empat ganda.</p>",
+      "hi": "<p>अगर काला <b>चमकते बिंदु</b> पर रखे, तो आड़े और खड़े <b>दो चार</b> एक साथ बनते हैं। यह <b>दोहरा चार</b> है, काले की वर्जित चाल।</p><p>एक ही लाइन में दो चार बनें, तो वह भी दोहरा चार है।</p>",
+      "ar": "<p>إذا لعب الأسود في <b>النقطة المضيئة</b> ظهرت <b>رباعيتان</b> معًا، أفقيًا وعموديًا. هذه <b>رباعية مزدوجة</b>، وهي نقلة محظورة على الأسود.</p><p>رباعيتان على خط واحد هما أيضًا رباعية مزدوجة.</p>"
+     }
+    },
+    {
+     "k": "explain",
+     "marks": [
+      [
+       "d8",
+       "t4"
+      ],
+      [
+       "e8",
+       "t4"
+      ],
+      [
+       "f8",
+       "t4"
+      ],
+      [
+       "h8",
+       "t4"
+      ],
+      [
+       "i8",
+       "t4"
+      ],
+      [
+       "g8",
+       "hl2"
+      ]
+     ],
+     "rule": "renju",
+     "b": "d8 e8 f8 h8 i8",
+     "w": "d9 g10 j6",
+     "side": 1,
+     "t": {
+      "ja": "6つ以上＝長連",
+      "en": "Six or more: overline",
+      "zh": "六子以上＝长连",
+      "zh-TW": "六子以上＝長連",
+      "ko": "6개 이상 = 장목",
+      "es": "Seis o más: sobrelínea",
+      "fr": "Six ou plus : overline",
+      "pt": "Seis ou mais: sobrelinha",
+      "de": "Sechs oder mehr: Überlänge",
+      "ru": "Шесть и больше: длинный ряд",
+      "tr": "Altı veya fazlası: uzun sıra",
+      "id": "Enam atau lebih: baris panjang",
+      "hi": "छह या अधिक: ओवरलाइन",
+      "ar": "ستة أو أكثر: الخط الطويل"
+     },
+     "body": {
+      "ja": "<p>黒が光っている点に打つと、<b>6つ</b>並びます。これが<b>長連</b>で、黒の禁手。黒は<b>ちょうど5つ</b>でないと勝ちになりません。</p><p>ただし、ちょうど5つ並ぶ手は、同時に禁手の形ができても<b>五が優先</b>で黒の勝ちです。</p>",
+      "en": "<p>If Black plays the highlighted point, <b>six</b> line up. That is an <b>overline</b>, forbidden for Black: Black wins only with <b>exactly five</b>.</p><p>But a move that makes exactly five wins for Black even if it also makes a forbidden shape: <b>five comes first</b>.</p>",
+      "zh": "<p>黑棋下在发光点，就会连成<b>六子</b>。这就是<b>长连</b>，是黑棋的禁手。黑棋必须<b>正好五连</b>才算赢。</p><p>不过，正好连成五的一手，即使同时形成禁手形状，也<b>五连优先</b>，黑棋获胜。</p>",
+      "zh-TW": "<p>黑棋下在發光的點，就會連成<b>六子</b>。這就是<b>長連</b>，是黑棋的禁手。黑棋必須<b>正好五連</b>才算勝。</p><p>不過正好成五的一手，即使同時形成禁手形狀，也是<b>五連優先</b>，黑棋獲勝。</p>",
+      "ko": "<p>흑이 빛나는 점에 두면 <b>6개</b>가 이어져요. 이것이 <b>장목</b>이고, 흑의 금수. 흑은 <b>정확히 5개</b>여야만 승리예요.</p><p>단, 정확히 5개가 되는 수는 동시에 금수 모양이 생겨도 <b>오목이 우선</b>이라 흑의 승리예요.</p>",
+      "es": "<p>Si las negras juegan en el punto resaltado, se alinean <b>seis</b>. Es una <b>sobrelínea</b>, prohibida para las negras: solo ganan con <b>cinco exactas</b>.</p><p>Pero una jugada que hace cinco exactas gana para las negras aunque también forme una figura prohibida: <b>el cinco va primero</b>.</p>",
+      "fr": "<p>Si Noir joue sur le point en surbrillance, <b>six</b> pierres s’alignent. C’est un <b>overline</b>, interdit pour Noir : Noir ne gagne qu’avec <b>exactement cinq</b>.</p><p>Mais un coup qui fait exactement cinq gagne pour Noir même s’il forme aussi une figure interdite : <b>le cinq passe en premier</b>.</p>",
+      "pt": "<p>Se as pretas jogarem no ponto destacado, ficam <b>seis</b> em linha. É uma <b>sobrelinha</b>, proibida para as pretas: elas só vencem com <b>exatamente cinco</b>.</p><p>Mas um lance que faz exatamente cinco dá a vitória às pretas mesmo que forme também uma figura proibida: <b>o cinco vem primeiro</b>.</p>",
+      "de": "<p>Setzt Schwarz auf den markierten Punkt, stehen <b>sechs</b> in einer Reihe. Das ist eine <b>Überlänge</b>, für Schwarz verboten: Schwarz gewinnt nur mit <b>genau fünf</b>.</p><p>Aber ein Zug, der genau fünf bildet, gewinnt für Schwarz, auch wenn er zugleich eine verbotene Form ergibt: <b>Fünf geht vor</b>.</p>",
+      "ru": "<p>Если чёрные сходят на подсвеченный пункт, в ряд встанут <b>шесть</b> камней. Это <b>длинный ряд</b> — запрещённый ход для чёрных: чёрные выигрывают только <b>ровно пятью</b>.</p><p>Но ход, дающий ровно пять, приносит чёрным победу, даже если одновременно создаёт запрещённую форму: <b>пятёрка важнее</b>.</p>",
+      "tr": "<p>Siyah parlayan noktaya oynarsa <b>altı</b> taş yan yana gelir. Bu bir <b>uzun sıra</b>dır, Siyah için yasak: Siyah yalnızca <b>tam beşli</b> ile kazanır.</p><p>Ama tam beşli yapan hamle, aynı anda yasak bir şekil oluştursa bile Siyah'a kazandırır: <b>beşli önce gelir</b>.</p>",
+      "id": "<p>Jika Hitam bermain di titik yang menyala, <b>enam</b> batu berderet. Inilah <b>baris panjang</b>, terlarang bagi Hitam: Hitam hanya menang dengan <b>tepat lima</b>.</p><p>Namun langkah yang membuat tepat lima tetap membuat Hitam menang, meski sekaligus membentuk bentuk terlarang: <b>lima didahulukan</b>.</p>",
+      "hi": "<p>अगर काला चमकते बिंदु पर रखे, तो <b>छह</b> एक कतार में हो जाते हैं। यह <b>ओवरलाइन</b> है, काले के लिए वर्जित: काला केवल <b>ठीक पाँच</b> से जीतता है।</p><p>लेकिन ठीक पाँच बनाने वाली चाल से काला जीतता है, भले ही उससे साथ में वर्जित आकार भी बने: <b>पाँच सबसे पहले</b>।</p>",
+      "ar": "<p>إذا لعب الأسود في النقطة المضيئة اصطفّت <b>ستة</b> أحجار. هذا <b>الخط الطويل</b>، وهو محظور على الأسود: لا يفوز الأسود إلا بـ<b>خمسة بالضبط</b>.</p><p>لكن النقلة التي تكوّن خمسة بالضبط تعطي الأسود الفوز حتى لو كوّنت شكلًا محظورًا في الوقت نفسه: <b>الخمسة أولًا</b>.</p>"
+     }
+    },
+    {
+     "k": "try",
+     "goal": "forbid",
+     "pick": true,
+     "ok": [
+      "h8"
+     ],
+     "look": [
+      "h5",
+      "h6",
+      "h7",
+      "g8",
+      "f8",
+      "e8"
+     ],
+     "rule": "renju",
+     "b": "h5 h6 h7 g8 f8 e8",
+     "w": "h4 d8 k11",
+     "side": 1,
+     "g": {
+      "ja": "四四の形を向きを変えて、×を消しました。禁手の点をタップしよう。",
+      "en": "The double-four shape turned, with the × hidden. Tap the forbidden point.",
+      "zh": "四四的形状换了方向，并去掉了×。点出禁手点吧。",
+      "zh-TW": "四四的形狀換了方向，並拿掉了×。點一下禁點吧。",
+      "ko": "사사 모양을 방향을 바꾸고 ×를 지웠어요. 금수점을 탭하세요.",
+      "es": "La figura de doble cuatro girada y sin la ×. Toca el punto prohibido.",
+      "fr": "La forme de double quatre tournée, sans la ×. Touchez le point interdit.",
+      "pt": "A forma de quatro duplo girada e sem o ×. Toque no ponto proibido.",
+      "de": "Die Doppel-Vier-Form gedreht, ohne das ×. Tippe auf den verbotenen Punkt.",
+      "ru": "Форма двойной четвёрки повёрнута и без ×. Нажмите на запрещённый пункт.",
+      "tr": "Çift dörtlü şekli döndürüldü ve × gizlendi. Yasak noktaya dokun.",
+      "id": "Bentuk empat ganda diputar, tanpa ×. Ketuk titik terlarang.",
+      "hi": "दोहरे चार का आकार घुमाया गया है और × हटा दिया गया है। वर्जित बिंदु पर टैप कीजिए।",
+      "ar": "شكل الرباعية المزدوجة بعد تدويره ومن دون ×. اضغط على النقطة المحظورة."
+     },
+     "h": {
+      "ja": "黒の3つ並びが2本。両方を同時に4つにできる点は？",
+      "en": "Two black threes. Which point turns both into fours at once?",
+      "zh": "黑棋有两组3连。哪个点能让两组同时变成4连？",
+      "zh-TW": "黑棋有兩組三連。哪個點能讓兩組同時變成四連？",
+      "ko": "흑의 3개 줄이 두 개. 둘 다 동시에 4개로 만드는 점은?",
+      "es": "Dos treses negros. ¿Qué punto convierte a los dos en cuatros a la vez?",
+      "fr": "Deux trois noirs. Quel point les transforme tous les deux en quatre d’un coup ?",
+      "pt": "Dois três pretos. Qual ponto transforma os dois em quatros de uma vez?",
+      "de": "Zwei schwarze Dreien. Welcher Punkt macht aus beiden zugleich Vieren?",
+      "ru": "Две тройки чёрных. Какой пункт сразу превращает обе в четвёрки?",
+      "tr": "İki siyah üçlü. Hangi nokta ikisini aynı anda dörtlü yapar?",
+      "id": "Dua tiga Hitam. Titik mana yang membuat keduanya jadi empat sekaligus?",
+      "hi": "काले के दो तीन। कौन-सा बिंदु दोनों को एक साथ चार बना देता है?",
+      "ar": "ثلاثيتان سوداوان. أيّ نقطة تجعل كلتيهما رباعية في آن واحد؟"
+     },
+     "y": {
+      "ja": "正解！四が2つできる四四。黒は打てません。",
+      "en": "Right! Two fours at once: a double four. Black cannot play there.",
+      "zh": "正确！形成两个四的四四，黑棋不能下。",
+      "zh-TW": "正確！形成兩個四的四四，黑棋不能下。",
+      "ko": "정답! 사가 2개 생기는 사사. 흑은 둘 수 없어요.",
+      "es": "¡Bien! Dos cuatros a la vez: un doble cuatro. Las negras no pueden jugar ahí.",
+      "fr": "Exact ! Deux quatre à la fois : un double quatre. Noir ne peut pas y jouer.",
+      "pt": "Certo! Dois quatros de uma vez: um quatro duplo. As pretas não podem jogar ali.",
+      "de": "Richtig! Zwei Vieren zugleich: eine Doppel-Vier. Schwarz darf dort nicht setzen.",
+      "ru": "Верно! Две четвёрки сразу — двойная четвёрка. Чёрным туда нельзя.",
+      "tr": "Doğru! Aynı anda iki dörtlü: çift dörtlü. Siyah oraya oynayamaz.",
+      "id": "Benar! Dua empat sekaligus: empat ganda. Hitam tak boleh main di sana.",
+      "hi": "सही! दो चार एक साथ: दोहरा चार। काला वहाँ नहीं रख सकता।",
+      "ar": "صحيح! رباعيتان معًا: رباعية مزدوجة. لا يستطيع الأسود اللعب هناك."
+     }
+    },
+    {
+     "k": "try",
+     "goal": "forbid",
+     "pick": true,
+     "ok": [
+      "h8"
+     ],
+     "look": [
+      "e5",
+      "f6",
+      "g7",
+      "h9",
+      "h10",
+      "h11"
+     ],
+     "rule": "renju",
+     "b": "e5 f6 g7 h9 h10 h11",
+     "w": "d4 h12 l3",
+     "side": 1,
+     "g": {
+      "ja": "練習：ナナメとタテ。黒の禁手をタップしよう。",
+      "en": "Practice: a diagonal and a column. Tap Black’s forbidden point.",
+      "zh": "练习：斜向和竖向。点出黑棋的禁手点吧。",
+      "zh-TW": "練習：斜向和直向。點一下黑棋的禁點吧。",
+      "ko": "연습: 대각선과 세로. 흑의 금수점을 탭하세요.",
+      "es": "Práctica: una diagonal y una vertical. Toca el punto prohibido de las negras.",
+      "fr": "Exercice : une diagonale et une colonne. Touchez le point interdit de Noir.",
+      "pt": "Prática: uma diagonal e uma vertical. Toque no ponto proibido das pretas.",
+      "de": "Übung: diagonal und senkrecht. Tippe auf den verbotenen Punkt von Schwarz.",
+      "ru": "Практика: диагональ и вертикаль. Нажмите на запрещённый пункт чёрных.",
+      "tr": "Alıştırma: çapraz ve dikey. Siyah'ın yasak noktasına dokun.",
+      "id": "Latihan: diagonal dan tegak. Ketuk titik terlarang Hitam.",
+      "hi": "अभ्यास: तिरछा और खड़ा। काले के वर्जित बिंदु पर टैप कीजिए।",
+      "ar": "تمرين: قطري وعمودي. اضغط على نقطة الأسود المحظورة."
+     },
+     "h": {
+      "ja": "ナナメの3つ並びとタテの3つ並び。2本が交わる点は？",
+      "en": "A diagonal three and a column of three. Where do the two lines cross?",
+      "zh": "斜向3连和竖向3连，两条线在哪里交叉？",
+      "zh-TW": "斜向三連和直向三連，兩條線在哪裡交叉？",
+      "ko": "대각선 3개 줄과 세로 3개 줄. 두 줄이 만나는 점은?",
+      "es": "Un tres en diagonal y un tres en vertical. ¿Dónde se cruzan las dos líneas?",
+      "fr": "Un trois en diagonale et un trois en colonne. Où les deux lignes se croisent-elles ?",
+      "pt": "Um três na diagonal e um três na vertical. Onde as duas linhas se cruzam?",
+      "de": "Eine diagonale Drei und eine senkrechte Drei. Wo kreuzen sich die beiden Linien?",
+      "ru": "Диагональная тройка и вертикальная тройка. Где пересекаются эти две линии?",
+      "tr": "Çaprazda bir üçlü, dikeyde bir üçlü. İki çizgi nerede kesişiyor?",
+      "id": "Tiga diagonal dan tiga tegak. Di mana kedua garis bersilangan?",
+      "hi": "तिरछा तीन और खड़ा तीन। दोनों लाइनें कहाँ मिलती हैं?",
+      "ar": "ثلاثية قطرية وثلاثية عمودية. أين يتقاطع الخطّان؟"
+     },
+     "y": {
+      "ja": "正解！ナナメとタテに四ができる四四です。",
+      "en": "Right! A diagonal four and a column four: a double four.",
+      "zh": "正确！斜向和竖向同时成四，这就是四四。",
+      "zh-TW": "正確！斜向和直向同時成四，這就是四四。",
+      "ko": "정답! 대각선과 세로에 사가 생기는 사사예요.",
+      "es": "¡Bien! Un cuatro diagonal y uno vertical: un doble cuatro.",
+      "fr": "Exact ! Un quatre diagonal et un quatre vertical : un double quatre.",
+      "pt": "Certo! Um quatro diagonal e um vertical: um quatro duplo.",
+      "de": "Richtig! Eine diagonale und eine senkrechte Vier: eine Doppel-Vier.",
+      "ru": "Верно! Диагональная и вертикальная четвёрки — двойная четвёрка.",
+      "tr": "Doğru! Çaprazda ve dikeyde dörtlü: çift dörtlü.",
+      "id": "Benar! Empat diagonal dan empat tegak: empat ganda.",
+      "hi": "सही! तिरछा और खड़ा चार: दोहरा चार।",
+      "ar": "صحيح! رباعية قطرية وأخرى عمودية: رباعية مزدوجة."
+     }
+    }
+   ]
   },
   {
    "id": "fourthreeB",
@@ -783,6 +2015,205 @@
      "ok": [
       "k12"
      ]
+    }
+   ],
+   "ramp": [
+    {
+     "k": "explain",
+     "marks": [
+      [
+       "e8",
+       "t4"
+      ],
+      [
+       "f8",
+       "t4"
+      ],
+      [
+       "g8",
+       "t4"
+      ],
+      [
+       "h9",
+       "t3"
+      ],
+      [
+       "h10",
+       "t3"
+      ],
+      [
+       "h8",
+       "hl2"
+      ]
+     ],
+     "rule": "renju",
+     "b": "e8 f8 g8 h9 h10 j12 k12 l10 l11",
+     "w": "d8 i11 c3 m12 l13",
+     "side": 1,
+     "t": {
+      "ja": "禁手をよけて四三",
+      "en": "A four-three that avoids the forbidden points",
+      "zh": "避开禁手的四三",
+      "zh-TW": "避開禁手的四三",
+      "ko": "금수를 피해 사삼",
+      "es": "Un cuatro-tres que evita los puntos prohibidos",
+      "fr": "Un quatre-trois qui évite les points interdits",
+      "pt": "Um quatro-três que evita os pontos proibidos",
+      "de": "Eine Vier-Drei, die verbotene Punkte meidet",
+      "ru": "Вилка 4-3 в обход запрещённых пунктов",
+      "tr": "Yasak noktalardan kaçan dört-üç",
+      "id": "Empat-tiga yang menghindari titik terlarang",
+      "hi": "वर्जित बिंदुओं से बचकर चार-तीन",
+      "ar": "رباعية-ثلاثية تتجنّب النقاط المحظورة"
+     },
+     "body": {
+      "ja": "<p>黒の勝ち方は<b>四三</b>。四と三が1つずつなら、禁手ではありません。</p><p>光っている点は、ヨコに四・タテに三ができる四三。×の点は三三の禁手なので、黒は打てません。打つ前に×かどうか確かめましょう。</p>",
+      "en": "<p>Black wins with a <b>four-three</b>: one four plus one three is not forbidden.</p><p>The highlighted point makes a four across and a three down: a four-three. The × point is a forbidden double three, so Black cannot play it. Check for an × before you play.</p>",
+      "zh": "<p>黑棋的取胜方法是<b>四三</b>。四和三各一个，不算禁手。</p><p>发光点能横向成四、竖向成三，是四三。×的点是三三禁手，黑棋不能下。落子前先确认是不是×吧。</p>",
+      "zh-TW": "<p>黑棋的勝法是<b>四三</b>。四和三各一個，不算禁手。</p><p>發光的點能橫向成四、直向成三，是四三。×的點是三三禁手，黑棋不能下。下之前先確認是不是×吧。</p>",
+      "ko": "<p>흑의 승리법은 <b>사삼</b>. 사와 삼이 하나씩이면 금수가 아니에요.</p><p>빛나는 점은 가로에 사, 세로에 삼이 생기는 사삼. ×인 점은 삼삼 금수라 흑은 둘 수 없어요. 두기 전에 ×인지 확인하세요.</p>",
+      "es": "<p>Las negras ganan con un <b>cuatro-tres</b>: un cuatro y un tres no es jugada prohibida.</p><p>El punto resaltado hace un cuatro horizontal y un tres vertical: un cuatro-tres. El punto con × es un doble tres prohibido, así que las negras no pueden jugar ahí. Mira si hay una × antes de jugar.</p>",
+      "fr": "<p>Noir gagne avec un <b>quatre-trois</b> : un quatre et un trois, ce n’est pas interdit.</p><p>Le point en surbrillance fait un quatre horizontal et un trois vertical : un quatre-trois. Le point marqué × est un double trois interdit, Noir ne peut donc pas y jouer. Vérifiez s’il y a une × avant de jouer.</p>",
+      "pt": "<p>As pretas vencem com um <b>quatro-três</b>: um quatro e um três não é lance proibido.</p><p>O ponto destacado faz um quatro na horizontal e um três na vertical: um quatro-três. O ponto com × é um três duplo proibido, então as pretas não podem jogar ali. Veja se há um × antes de jogar.</p>",
+      "de": "<p>Schwarz gewinnt mit einer <b>Vier-Drei</b>: eine Vier und eine Drei sind nicht verboten.</p><p>Der markierte Punkt ergibt waagerecht eine Vier und senkrecht eine Drei: eine Vier-Drei. Der Punkt mit × ist eine verbotene Doppel-Drei, dort darf Schwarz nicht setzen. Prüfe vor dem Setzen, ob dort ein × ist.</p>",
+      "ru": "<p>Чёрные выигрывают <b>вилкой 4-3</b>: одна четвёрка и одна тройка — это не запрещённый ход.</p><p>Подсвеченный пункт даёт четвёрку по горизонтали и тройку по вертикали — вилку 4-3. Пункт с × — запрещённая двойная тройка, туда чёрным нельзя. Перед ходом проверяйте, нет ли там ×.</p>",
+      "tr": "<p>Siyah <b>dört-üç</b> ile kazanır: bir dörtlü ve bir üçlü yasak değildir.</p><p>Parlayan nokta yatayda dörtlü, dikeyde üçlü yapar: bir dört-üç. × olan nokta yasak bir çift üçlüdür, Siyah oraya oynayamaz. Oynamadan önce × olup olmadığına bak.</p>",
+      "id": "<p>Hitam menang dengan <b>empat-tiga</b>: satu empat dan satu tiga tidak terlarang.</p><p>Titik yang menyala membuat empat mendatar dan tiga tegak: empat-tiga. Titik bertanda × adalah tiga ganda yang terlarang, jadi Hitam tak boleh main di sana. Periksa dulu ada × atau tidak sebelum bermain.</p>",
+      "hi": "<p>काला <b>चार-तीन</b> से जीतता है: एक चार और एक तीन वर्जित नहीं है।</p><p>चमकते बिंदु से आड़ा चार और खड़ा तीन बनता है: यह चार-तीन है। × वाला बिंदु वर्जित दोहरा तीन है, इसलिए काला वहाँ नहीं रख सकता। रखने से पहले देख लीजिए कि वहाँ × तो नहीं।</p>",
+      "ar": "<p>يفوز الأسود بـ<b>رباعية-ثلاثية</b>: رباعية واحدة وثلاثية واحدة ليستا محظورتين.</p><p>النقطة المضيئة تكوّن رباعية أفقية وثلاثية عمودية: رباعية-ثلاثية. أما النقطة ذات العلامة × فهي ثلاثية مزدوجة محظورة، فلا يستطيع الأسود اللعب فيها. تحقّق من وجود × قبل أن تلعب.</p>"
+     }
+    },
+    {
+     "k": "try",
+     "goal": "fourthree",
+     "ok": [
+      "h8"
+     ],
+     "look": [
+      "e8",
+      "f8",
+      "g8",
+      "h9",
+      "h10"
+     ],
+     "rule": "renju",
+     "b": "e8 f8 g8 h9 h10 j12 k12 l10 l11",
+     "w": "d8 i11 c3 m12 l13",
+     "side": 1,
+     "g": {
+      "ja": "図と同じ形。黒の四三を打とう。",
+      "en": "Same shape as the diagram: play Black’s four-three.",
+      "zh": "和图相同：下出黑棋的四三。",
+      "zh-TW": "和圖相同的形狀：下出黑棋的四三。",
+      "ko": "그림과 같은 모양. 흑의 사삼을 두세요.",
+      "es": "La misma figura del diagrama: juega el cuatro-tres negro.",
+      "fr": "La même forme que le schéma : jouez le quatre-trois noir.",
+      "pt": "A mesma forma do diagrama: jogue o quatro-três preto.",
+      "de": "Dieselbe Form wie im Diagramm: Spiele die schwarze Vier-Drei.",
+      "ru": "Та же форма, что на схеме: сыграйте вилку 4-3 чёрных.",
+      "tr": "Şemadaki şeklin aynısı: Siyah'ın dört-üçünü oyna.",
+      "id": "Bentuk yang sama dengan diagram: mainkan empat-tiga Hitam.",
+      "hi": "चित्र जैसा ही आकार: काले का चार-तीन चलिए।",
+      "ar": "الشكل نفسه كما في الرسم: العب رباعية-ثلاثية الأسود."
+     },
+     "h": {
+      "ja": "×の点は打てないよ。ヨコの3つ並びとタテの2つ並びが交わる点は？",
+      "en": "The × point is off limits. Where do the row of three and the column of two cross?",
+      "zh": "×的点不能下哦。横向3连和竖向2连交叉的点在哪里？",
+      "zh-TW": "×的點不能下喔。橫向三連和直向二連交叉的點在哪裡？",
+      "ko": "×인 점에는 둘 수 없어요. 가로 3개 줄과 세로 2개 줄이 만나는 점은?",
+      "es": "El punto con × no se puede jugar. ¿Dónde se cruzan el tres horizontal y el dos vertical?",
+      "fr": "Le point marqué × est interdit. Où se croisent le trois horizontal et le deux vertical ?",
+      "pt": "O ponto com × não pode ser jogado. Onde se cruzam o três horizontal e o dois vertical?",
+      "de": "Auf den Punkt mit × darfst du nicht. Wo kreuzen sich die waagerechte Drei und die senkrechte Zwei?",
+      "ru": "На пункт с × ходить нельзя. Где пересекаются горизонтальная тройка и вертикальная двойка?",
+      "tr": "× olan noktaya oynanamaz. Yatay üçlü ile dikey ikili nerede kesişiyor?",
+      "id": "Titik bertanda × tak boleh dimainkan. Di mana tiga mendatar dan dua tegak bersilangan?",
+      "hi": "× वाले बिंदु पर नहीं रख सकते। आड़ा तीन और खड़ा दो कहाँ मिलते हैं?",
+      "ar": "لا يمكن اللعب في النقطة ذات العلامة ×. أين تتقاطع الثلاثية الأفقية والثنائية العمودية؟"
+     },
+     "y": {
+      "ja": "四三！禁手でもないので、黒の勝ちが決まります。",
+      "en": "A four-three, and not forbidden: Black’s win is sure.",
+      "zh": "四三！而且不是禁手，黑棋胜局已定。",
+      "zh-TW": "四三！也不是禁手，黑棋的勝利確定了。",
+      "ko": "사삼! 금수도 아니니 흑의 승리가 정해졌어요.",
+      "es": "¡Cuatro-tres! Y no está prohibido: la victoria negra es segura.",
+      "fr": "Quatre-trois ! Et ce n’est pas interdit : le gain de Noir est assuré.",
+      "pt": "Quatro-três! E não é proibido: a vitória das pretas está garantida.",
+      "de": "Vier-Drei! Und nicht verboten: Der Sieg von Schwarz ist sicher.",
+      "ru": "Вилка 4-3! И ход не запрещён — победа чёрных обеспечена.",
+      "tr": "Dört-üç! Yasak da değil: Siyah'ın kazancı kesin.",
+      "id": "Empat-tiga! Dan tidak terlarang: kemenangan Hitam pasti.",
+      "hi": "चार-तीन! और यह वर्जित भी नहीं: काले की जीत पक्की।",
+      "ar": "رباعية-ثلاثية! وليست محظورة: فوز الأسود مضمون."
+     }
+    },
+    {
+     "k": "try",
+     "goal": "fourthree",
+     "ok": [
+      "i9"
+     ],
+     "look": [
+      "f6",
+      "g7",
+      "h8",
+      "j9",
+      "k9"
+     ],
+     "rule": "renju",
+     "b": "f6 g7 h8 j9 k9 d10 e10 f11 f12",
+     "w": "e5 g9 h10 l4 c12",
+     "side": 1,
+     "g": {
+      "ja": "練習：×をよけて、黒の四三を探そう。",
+      "en": "Practice: avoid the × and find Black’s four-three.",
+      "zh": "练习：避开×，找出黑棋的四三。",
+      "zh-TW": "練習：避開×，找出黑棋的四三。",
+      "ko": "연습: ×를 피해서 흑의 사삼을 찾으세요.",
+      "es": "Práctica: evita la × y encuentra el cuatro-tres negro.",
+      "fr": "Exercice : évitez la × et trouvez le quatre-trois noir.",
+      "pt": "Prática: evite o × e encontre o quatro-três preto.",
+      "de": "Übung: Meide das × und finde die schwarze Vier-Drei.",
+      "ru": "Практика: обойдите × и найдите вилку 4-3 чёрных.",
+      "tr": "Alıştırma: ×'ten kaçın ve Siyah'ın dört-üçünü bul.",
+      "id": "Latihan: hindari × dan temukan empat-tiga Hitam.",
+      "hi": "अभ्यास: × से बचकर काले का चार-तीन ढूँढिए।",
+      "ar": "تمرين: تجنّب × وابحث عن رباعية-ثلاثية الأسود."
+     },
+     "h": {
+      "ja": "ナナメの3つ並びと、ヨコの2つ並び。2本が交わる点は？",
+      "en": "A diagonal three and a row of two. Where do the two lines cross?",
+      "zh": "斜向3连和横向2连，两条线在哪里交叉？",
+      "zh-TW": "斜向三連和橫向二連，兩條線在哪裡交叉？",
+      "ko": "대각선 3개 줄과 가로 2개 줄. 두 줄이 만나는 점은?",
+      "es": "Un tres en diagonal y un dos en horizontal. ¿Dónde se cruzan las dos líneas?",
+      "fr": "Un trois en diagonale et un deux horizontal. Où les deux lignes se croisent-elles ?",
+      "pt": "Um três na diagonal e um dois na horizontal. Onde as duas linhas se cruzam?",
+      "de": "Eine diagonale Drei und eine waagerechte Zwei. Wo kreuzen sich die beiden Linien?",
+      "ru": "Диагональная тройка и горизонтальная двойка. Где пересекаются эти две линии?",
+      "tr": "Çaprazda bir üçlü, yatayda bir ikili. İki çizgi nerede kesişiyor?",
+      "id": "Tiga diagonal dan dua mendatar. Di mana kedua garis bersilangan?",
+      "hi": "तिरछा तीन और आड़ा दो। दोनों लाइनें कहाँ मिलती हैं?",
+      "ar": "ثلاثية قطرية وثنائية أفقية. أين يتقاطع الخطّان؟"
+     },
+     "y": {
+      "ja": "正解！×をよけた四三です。",
+      "en": "Right! A four-three that avoids the ×.",
+      "zh": "正确！这是避开×的四三。",
+      "zh-TW": "正確！這是避開×的四三。",
+      "ko": "정답! ×를 피한 사삼이에요.",
+      "es": "¡Bien! Un cuatro-tres que evita la ×.",
+      "fr": "Exact ! Un quatre-trois qui évite la ×.",
+      "pt": "Certo! Um quatro-três que evita o ×.",
+      "de": "Richtig! Eine Vier-Drei, die das × meidet.",
+      "ru": "Верно! Вилка 4-3 в обход ×.",
+      "tr": "Doğru! ×'ten kaçan bir dört-üç.",
+      "id": "Benar! Empat-tiga yang menghindari ×.",
+      "hi": "सही! × से बचा हुआ चार-तीन।",
+      "ar": "صحيح! رباعية-ثلاثية تتجنّب ×."
+     }
     }
    ]
   },

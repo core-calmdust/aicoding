@@ -467,16 +467,18 @@
   const GNM = m => 'abcdefghijklmno'[m % 15] + (Math.floor(m / 15) + 1);
   const gCells = a => (Array.isArray(a) ? a : String(a || '').split(/\s+/)).filter(Boolean).map(GSQ);
   const gPos = (P, o) => Object.assign({ start: { b: gCells(P.b), w: gCells(P.w), side: P.side || 1 }, rule: P.rule || 'renju', me: P.side || 1, last: P.last ? GSQ(P.last) : -1 }, o || {});
-  const GMK = { ok: 'ok', ng: 'ng', hl2: 'ring', t4: 'hl', t3: 'hl', hang: 'ng' };
+  const GMK = { ok: 'ok', ng: 'ng', hl2: 'ring', t4: 'hl', t3: 'hl', hang: 'ng', forb: 'ng' };
   const GOMOKU = {
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=20261113'), getJ('../gomoku/openings.json?v=20261113'), fetch('../gomoku/i18n.js?v=20261112c1').then(r => r.text())])
-        .then(([ls, op, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=20261115'), getJ('../gomoku/openings.json?v=20261113'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+        .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
+          try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
+          return this; })
         .catch(e => { this.p = null; throw e; }));
     },
-    tx(k, lang, v) { const I = this.I || {}; let x = (I[lang] && I[lang][k]) || (I.en && I.en[k]) || (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    tx(k, lang, v) { const I = this.I || {}; let x = lang === 'ja' && this.V && this.V[k] != null ? this.V[k] : (I[lang] && I[lang][k]) || (I.en && I.en[k]) || (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
     mini: P => window.AtlasMini && AtlasMini.gomoku ? AtlasMini.gomoku(Array.isArray(P.b) ? P.b.join(' ') : P.b, Array.isArray(P.w) ? P.w.join(' ') : P.w) : '',
     name(g, lang) { return lang === 'ja' ? g.kanji : lang === 'zh' || lang === 'zh-TW' ? g.zh || g.kanji : lang === 'ko' ? g.ko || g.name : g.name; },
     list(kind, lang) {
@@ -487,8 +489,10 @@
     },
     lesson(key, lang) {
       const s = this.data.ls.steps[+key]; if (!s) return null;
-      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), RU = (k, v) => fill(L((this.data.ls.rampUi || {})[k], lang), v || {});
-      return { id: s.id, title: T('title'), intro: T('intro'), ramp: s.ramp && s.ramp.length ? s.ramp : null, RU,
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), V = lang === 'ja' ? (this.V || {}) : {};
+      const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L((this.data.ls.rampUi || {})[k], lang), v || {});
+      const ramp = s.ramp && s.ramp.length ? s.ramp.map((it, j) => { const o = Object.assign({}, it); ['t', 'body', 'g', 'h', 'y'].forEach(f => { const v = V[`ramp:${s.id}/${j}/${f}`]; if (v != null) o[f] = { ja: v, __voice: true }; }); return o; }) : null;
+      return { id: s.id, title: T('title'), intro: T('intro'), ramp, RU,
         probs: (s.problems || []).map(P => { const ok = gCells(P.ok || []), pick = P.kind === 'pick';
           return { pos: gPos(P, { pick, noForbid: !!(s.hideForbid || pick) }), kind: 'best', P: { ok }, ask: T('goal'), ans: ok[0], why: '', ng: () => T('ng', { m: SP('ok', lang), x: SP('ng', lang) }), good: () => T('why', { m: SP('here', lang), n: ok.length }), hintTx: T('hint'), hint: P.hint ? gCells(P.hint) : null }; }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
@@ -516,7 +520,7 @@
       return (P.ok || []).includes(u) ? 20 : 0;
     },
     // the warm-up: its position, its marks, whether a move is right
-    rampPos: it => gPos(it, { noForbid: false }), rampBody: (it, lang) => L(it.body, lang),
+    rampPos: it => gPos(it, { noForbid: !!it.pick, pick: !!it.pick }), rampBody: (it, lang) => L(it.body, lang),
     rampMarks: it => (it.marks || []).map(([q, c]) => [GSQ(q), GMK[c] || 'hl']),
     rampOk: (it, u) => gCells(it.ok || []).includes(u), rampAns: it => GSQ((it.ok || [])[0]), rampLook: it => gCells(it.look || []).map(q => [q, 'ring']),
     rampSeq: it => gCells(it.seq || []), nm: m => GNM(m),
@@ -855,14 +859,14 @@
     let stopped = false, sess = null, cur = null, phase = 'load', typeT = 0, onReady = null, onMoved = null;
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms)), sleep = ms => new Promise(r => later(r, ms));
     const el = document.createElement('div'); el.className = 'rgd pzg lsg';
-    el.innerHTML = `<div class="rgd-in"><div class="pic"><img src="${GD.guide || ''}" alt=""></div><div class="bub"><div class="nm">${(GD.name && (GD.name[ctx.lang] || GD.name.en)) || ''}<span class="pg"></span></div><div class="tx"></div><div class="cnt"></div></div></div>
+    el.innerHTML = `<div class="rgd-in"><div class="pic"><img src="${GD.guide || ''}" alt=""></div><div class="bub"><div class="nm"><span class="gn">${(GD.name && (GD.name[ctx.lang] || GD.name.en)) || ''}</span><span class="pg"></span></div><div class="tx"></div><div class="cnt"></div></div></div>
       <div class="rgd-act"><button type="button" class="btn ghost sm ic" data-a="hint" aria-label="${X.hint}" title="${X.hint}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><small>${X.hint}</small></button><button type="button" class="btn ghost sm ic" data-a="again" aria-label="${X.again}" title="${X.again}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><small>${X.again}</small></button>${ctx.onList ? `<button type="button" class="btn ghost sm ic" data-a="list" aria-label="${ctx.t ? ctx.t('bv.list') : ''}" title="${ctx.t ? ctx.t('bv.list') : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>${ctx.t ? ctx.t('bv.list') : ''}</small></button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
     ctx.panel.appendChild(el); autoCss();
     const $ = s => el.querySelector(s);
     el.addEventListener('click', e => { if (more.length && e.target.closest('[data-a=next]')) { e.stopImmediatePropagation(); e.preventDefault(); if (typing) $('.tx').onclick(); else turn(); } }, true);
     // a long text is said a little at a time, like the rules guide (2026-11-11): pages of a sentence or two; 次へ (or a tap on
     // the bubble once it is all typed) shows the next page — the button's own action waits until the last page
-    const CJK = /^(ja|zh|zh-TW|ko)$/.test(ctx.lang), LIM = CJK ? 58 : 150;
+    const CJK = /^(ja|zh|zh-TW|ko)$/.test(ctx.lang), NARROW = matchMedia('(max-width: 600px)').matches, LIM = CJK ? (NARROW ? 44 : 58) : (NARROW ? 110 : 150);   // (phones: shorter pages, the bubble keeps to ~4 lines, 2026-11-15)
     let more = [], want = null, typing = false;
     const plain = h => h.replace(/<[^>]*>/g, '');
     function pages(html) {
@@ -871,6 +875,11 @@
       // (a paragraph break stays a break when its sentences share a page)
       const raw = String(html).split(/<br\s*\/?>/i);
       let pi = 0; const brAfter = new Set(); raw.forEach(par => { const n = (par.match(CJK ? /[^。！？!?]*[。！？!?]+」?|[^。！？!?]+$/g : /[^.!?]*[.!?]+["”)]?\s*|[^.!?]+$/g) || [par]).map(x => x.trim()).filter(Boolean).length; pi += n; brAfter.add(pi - 1); });
+      // (one sentence much longer than a page: cut at the comma nearest its middle, outside any tag)
+      const cut = sn => { const t = plain(sn); if (t.length <= LIM * 1.25) return [sn]; const mid = sn.length / 2; let best = -1, depth = 0;
+        for (let k = 0; k < sn.length; k++) { const ch = sn[k]; if (ch === '<') depth++; else if (ch === '>') depth--; else if (!depth && (CJK ? ch === '、' || ch === '，' : ch === ',') && (best < 0 || Math.abs(k - mid) < Math.abs(best - mid))) best = k; }
+        if (best < 0 || /<b>[^<]*$/.test(sn.slice(0, best + 1))) return [sn]; return [sn.slice(0, best + 1), sn.slice(best + 1).trim()]; };
+      for (let k = parts.length - 1; k >= 0; k--) { const c = cut(parts[k]); if (c.length > 1) { parts.splice(k, 1, ...c); const sh = new Set(); brAfter.forEach(b => sh.add(b >= k ? b + 1 : b)); brAfter.clear(); sh.forEach(b => brAfter.add(b)); } }
       parts.forEach((sn, i) => { const glue = curP ? (brAfter.has(i - 1) ? '<br>' : CJK ? '' : ' ') : '';
         if (curP && plain(curP + sn).length > LIM) { out.push(curP); curP = sn; } else curP += glue + sn; });
       if (curP) out.push(curP);
@@ -934,7 +943,7 @@
         if (sess && id === 'go' && G && pz() && pz().n !== (G.spec.n || 9)) { sess.stop(); sess = null; }   // (go: another board size — a new board)
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
-            pz: Object.assign({ fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
+            pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
         else if (G && (id === 'checkers' || id === 'xiangqi')) pz().load(G.spec, G.me, { lock: !!G.lock });

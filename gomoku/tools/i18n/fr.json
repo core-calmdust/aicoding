@@ -100,7 +100,7 @@
   "ls.block.ng": "{x} ne l'arrête pas. L'adversaire fait cinq en {m}.",
   "ls.three.title": "Bloquer un trois",
   "ls.three.sub": "Arrêter tôt un trois ouvert",
-  "ls.three.intro": "<p>Trois pierres en ligne avec <b>les deux bouts libres</b> forment un <b>trois</b> (trois ouvert). Si on le laisse, il devient un <b>quatre ouvert</b> — libre aux deux bouts — qu'on ne peut plus arrêter.</p><p>Bloquez un trois <b>à l'un de ses bouts</b> (ou dans le trou). Sur le schéma, les cercles verts le bloquent ; les points gris sont d'autres possibilités.</p>",
+  "ls.three.intro": "<p>Trois pierres en ligne avec <b>les deux bouts libres</b> forment un <b>trois</b> (trois ouvert). Si on le laisse, il devient un <b>quatre ouvert</b> — libre aux deux bouts — qu'on ne peut plus arrêter.</p><p>Bloquez un trois <b>à l'un de ses bouts</b> (ou dans le trou). Sur le schéma, les cercles verts le bloquent.</p>",
   "ls.three.goal": "Bloquez le trois de l'adversaire.",
   "ls.three.hint": "Trouvez trois pierres adverses en ligne (un trou est possible) avec les deux bouts libres.",
   "ls.three.why": "{m} arrête le trois ; aucun quatre ouvert n'est plus possible ({n} points corrects).",
