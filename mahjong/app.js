@@ -610,7 +610,7 @@ function openSettings() {
     ${row('tapMode', [['1', t('tapSingle')], ['2', t('tapDouble')]], DB.set.tap2 ? '2' : '1')}
     ${row('lite', [['0', t('off')], ['1', t('on')]], DB.set.lite ? '1' : '0')}
     <p class="st-note">${esc(t('liteNote'))}</p></div></div>
-    <div class="cbtns"><button class="btn gold" data-a="close">${esc(t('close'))}</button></div>`;
+    <div class="cbtns"><button class="btn st-reset" data-a="reset">${esc(t('resetData'))}</button><button class="btn gold" data-a="close">${esc(t('close'))}</button></div>`;
   const box = modal(draw(), 'settings');
   box.addEventListener('input', e => {
     const r = e.target.closest('input[type=range]'); if (!r) return;
@@ -620,6 +620,7 @@ function openSettings() {
   box.addEventListener('change', e => { if (e.target.dataset.k === 'se') SND.tile(); });   // a sample of the effects' level
   box.addEventListener('click', e => {
     if (e.target.closest('[data-a=close]')) { closeModal(); return; }
+    if (e.target.closest('[data-a=reset]')) { resetData(); return; }
     const m = e.target.closest('.st-m');
     if (m) { const k = m.dataset.m; DB.set[k + 'On'] = DB.set[k + 'On'] === false; DB.set.snd = true; save(); SND.unlock(); SND.levels(); SND.resume(); sndIcons(); box.innerHTML = draw(); if (DB.set[k + 'On']) SND.pick(); return; }
     const b = e.target.closest('.seg button'); if (!b) return;
@@ -628,6 +629,19 @@ function openSettings() {
     else if (k === 'lite') { DB.set.lite = v === '1'; save(); applyLite(); }
     else if (k === 'tapMode') { DB.set.tap2 = v === '2'; save(); }
     box.innerHTML = draw();
+  });
+}
+// (ユーザー 2026-11-16) データのリセット: asked once more in a popup of its own (what goes, that it cannot be undone), then the save
+// is cleared and the page starts again as on a first visit — the settings (sound, language, tap, light mode) are kept
+function resetData() {
+  SND.pick();
+  const b = modal(`<h2>${esc(t('resetData'))}</h2><p class="cq rs-q">${esc(t('resetQ'))}</p><p class="rs-warn">${esc(t('resetWarn'))}</p>
+    <div class="cbtns"><button class="btn" data-a="no">${esc(t('cancel'))}</button><button class="btn rs-go" data-a="yes">${esc(t('resetGo'))}</button></div>`, 'small reset');
+  b.addEventListener('click', e => {
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a !== 'yes') { closeModal(); openSettings(); return; }
+    try { localStorage.setItem(KEY, JSON.stringify({ set: DB.set })); } catch (e) {}
+    location.reload();
   });
 }
 $('#btnSet').addEventListener('click', openSettings);
