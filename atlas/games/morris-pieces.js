@@ -20,8 +20,8 @@
 (function () {
   'use strict';
   const X = window.Table3D; if (!X) return;
-  const PTS = [[0, 0], [3, 0], [6, 0], [1, 1], [3, 1], [5, 1], [2, 2], [3, 2], [4, 2], [0, 3], [1, 3], [2, 3], [4, 3], [5, 3], [6, 3], [2, 4], [3, 4], [4, 4], [1, 5], [3, 5], [5, 5], [0, 6], [3, 6], [6, 6]];
-  const P = v => -3.4 + v * 6.8 / 6;          // lattice → board units (atlas/models/morris.js)
+  const PTS0 = [[0, 0], [3, 0], [6, 0], [1, 1], [3, 1], [5, 1], [2, 2], [3, 2], [4, 2], [0, 3], [1, 3], [2, 3], [4, 3], [5, 3], [6, 3], [2, 4], [3, 4], [4, 4], [1, 5], [3, 5], [5, 5], [0, 6], [3, 6], [6, 6]];
+  const P0 = v => -3.4 + v * 6.8 / 6;         // lattice → board units (atlas/models/morris.js; the board's own userData.P for other rules)
   const CHX = 4.8, CHY = .46, CHZ0 = 3.3, CHP = .86;   // channel centre x, felt height, end slot z, slot pitch (board units)
   let AC = null;
   function clack(kind) {   // a metal piece set down on marble / felt; a soft whoosh when flying (respects the portal's sound switch)
@@ -49,6 +49,7 @@
 
   X.morrisSet = function (outer, opt = {}) {
     const TH = window.THREE, U = outer.userData, g = outer.children[0], SC = g.scale.x || 1;
+    const PTS = U.pts || PTS0, P = U.P || P0, NP = PTS.length;   // (the board's rule: six men's 16 points on a 5 × 5 lattice — atlas/models/morris.js)
     const TOP = U.top / SC + .03;           // a piece rests on the rosettes
     const sfx = !!opt.sfx;
     let stopped = false;
@@ -70,8 +71,9 @@
     const chanX = c => (c === 1 ? 1 : -1) * CHX;
     function slotOf(kind, c, k) {   // → [x, y, z]
       if (kind === 'b') return [P(PTS[k][0]), TOP, P(PTS[k][1])];
-      if (kind === 'h') return [chanX(c), CHY, -CHZ0 + k * CHP];
-      return [chanX(c), CHY, CHZ0 - k * CHP];   // 'c': in the taker's channel, from the near end
+      const row = k % 9, up = Math.floor(k / 9) * .2;   // (twelve men's: a tenth piece and on stack on the first ones)
+      if (kind === 'h') return [chanX(c), CHY + up, -CHZ0 + row * CHP];
+      return [chanX(c), CHY + up, CHZ0 - row * CHP];   // 'c': in the taker's channel, from the near end
     }
     // send o to [x, y, z]: a straight slide on the board, an arc otherwise; delay in ms
     function travel(o, to, how, delay) {
@@ -100,7 +102,7 @@
     function sync(S, how) {
       const animate = how !== false, freed = [null, [], []], incoming = [];
       for (const [i, o] of onBoard) if (S.b[i] !== o.c) { onBoard.delete(i); freed[o.c].push(o); }
-      for (let i = 0; i < 24; i++) if (S.b[i] && !onBoard.has(i)) incoming.push(i);
+      for (let i = 0; i < NP; i++) if (S.b[i] && !onBoard.has(i)) incoming.push(i);
       const moves = [];   // [obj, kind]
       for (const i of incoming) {
         const c = S.b[i]; let o = null, kind = 'place';
@@ -174,7 +176,7 @@
     }
     function pointAt(x, z) {   // outer-space coordinates → point (within ~0.45 lattice units)
       const bx = x / SC, bz = z / SC; let best = -1, bd = .5;
-      for (let i = 0; i < 24; i++) { const d = Math.hypot(P(PTS[i][0]) - bx, P(PTS[i][1]) - bz); if (d < bd) { bd = d; best = i; } }
+      for (let i = 0; i < NP; i++) { const d = Math.hypot(P(PTS[i][0]) - bx, P(PTS[i][1]) - bz); if (d < bd) { bd = d; best = i; } }
       return best;
     }
     const xz = i => [P(PTS[i][0]) * SC, P(PTS[i][1]) * SC];
@@ -186,5 +188,5 @@
     return { sync, lift, marks: setMarks, mill, pointAt, xz, top: TOP * SC, dispose, count: () => onBoard.size, clack, chime,
       _dump: () => ({ board: [...onBoard].map(([i, o]) => [i, o.g.position.toArray().map(v => +v.toFixed(2)), +o.p.position.y.toFixed(2), o.g.parent === layer]), hand: [hand[1].length, hand[2].length], live: !!layer.parent, inScene: (() => { let x = g; while (x.parent) x = x.parent; return x.type; })() }) };
   };
-  X.morrisSet.PTS = PTS;
+  X.morrisSet.PTS = PTS0;
 })();

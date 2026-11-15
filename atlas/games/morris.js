@@ -16,7 +16,10 @@
 (function () {
   'use strict';
   const BASE = '../morris/', VER = '?v=20261114eg-zf1';   // same file / version as morris/index.html → shared cache
-  const RULE = 'nine';
+  // 種目 (2026-11-15): the full game's three rules on the card's ルール pulldown — nine (24 points, 9 pieces, flying) · twelve (+ the
+  // diagonals, 12 pieces) · six (16 points, 6 pieces, no flying); the size value names the rule (9 / 12 / 6)
+  const RULE_OF = { 9: 'nine', 12: 'twelve', 6: 'six' }, RTX = {"ja": {"L": "ルール", "n": ["ナイン", "トゥエルブ", "シックス"], "d": ["24点・9枚。3枚になると飛べる、最も遊ばれているルール。", "斜めの線が加わり12枚ずつ。盤が埋まりやすく攻め合いが激しい。", "四角2つ・6枚・飛びなし。小さな盤ですぐ遊べる入門版。"]}, "en": {"L": "Rules", "n": ["Nine", "Twelve", "Six"], "d": ["24 points, 9 pieces, flying with three. The classic game.", "Diagonals and 12 pieces each. The board fills fast — sharp fights.", "Two squares, 6 pieces, no flying. A small board to start with."]}, "zh": {"L": "规则", "n": ["九子", "十二子", "六子"], "d": ["24点・9子，剩3子可飞。最流行的规则。", "加入斜线，每方12子。棋盘容易填满，攻防激烈。", "两个方框・6子・不能飞。小棋盘，适合入门。"]}, "ko": {"L": "규칙", "n": ["나인", "트웰브", "식스"], "d": ["24점・9개, 3개가 되면 날 수 있다. 가장 널리 쓰는 규칙.", "대각선이 더해지고 12개씩. 판이 빨리 차서 공방이 치열하다.", "사각형 2개・6개・날기 없음. 작은 판의 입문판."]}, "es": {"L": "Variante", "n": ["Nueve", "Doce", "Seis"], "d": ["24 puntos, 9 fichas, vuelo con tres. El juego clásico.", "Diagonales y 12 fichas por lado. El tablero se llena pronto: lucha intensa.", "Dos cuadrados, 6 fichas, sin vuelo. Un tablero pequeño para empezar."]}, "fr": {"L": "Variante", "n": ["Neuf", "Douze", "Six"], "d": ["24 points, 9 pions, vol à trois. Le jeu classique.", "Diagonales et 12 pions chacun. Le plateau se remplit vite : combat serré.", "Deux carrés, 6 pions, sans vol. Un petit plateau pour débuter."]}, "pt": {"L": "Variante", "n": ["Nove", "Doze", "Seis"], "d": ["24 pontos, 9 peças, voo com três. O jogo clássico.", "Diagonais e 12 peças cada. O tabuleiro enche rápido: luta intensa.", "Dois quadrados, 6 peças, sem voo. Um tabuleiro pequeno para começar."]}, "de": {"L": "Variante", "n": ["Neun", "Zwölf", "Sechs"], "d": ["24 Punkte, 9 Steine, Springen mit drei. Das klassische Spiel.", "Diagonalen und 12 Steine je Seite. Das Brett füllt sich schnell — scharfe Kämpfe.", "Zwei Quadrate, 6 Steine, kein Springen. Ein kleines Brett zum Einstieg."]}, "hi": {"L": "नियम", "n": ["नौ", "बारह", "छह"], "d": ["24 बिंदु, 9 गोटियाँ, तीन बचने पर उड़ना। क्लासिक खेल।", "तिरछी रेखाएँ और 12-12 गोटियाँ। बोर्ड जल्दी भरता है — तीखी लड़ाई।", "दो वर्ग, 6 गोटियाँ, उड़ना नहीं। शुरुआत के लिए छोटा बोर्ड।"]}, "ar": {"L": "النوع", "n": ["التساعية", "الاثنا عشرية", "السداسية"], "d": ["24 نقطة، 9 قطع، طيران عند الثلاث. اللعبة الكلاسيكية.", "خطوط قطرية و12 قطعة لكل لاعب. يمتلئ اللوح سريعًا — قتال حاد.", "مربعان، 6 قطع، بلا طيران. لوح صغير للبداية."]}, "ru": {"L": "Правила", "n": ["9 фишек", "12 фишек", "6 фишек"], "d": ["24 точки, 9 фишек, полёт при трёх. Классика.", "Диагонали и по 12 фишек. Доска быстро заполняется — острая борьба.", "Два квадрата, 6 фишек, без полёта. Маленькая доска для начала."]}, "zh-TW": {"L": "規則", "n": ["九子", "十二子", "六子"], "d": ["24點、9子，剩三子可飛。經典玩法。", "加上斜線，每方12子。棋盤很快下滿，戰況激烈。", "兩個方框、6子，不能飛。適合入門的小棋盤。"]}, "id": {"L": "Aturan", "n": ["Sembilan", "Dua belas", "Enam"], "d": ["24 titik, 9 bidak, terbang saat tinggal tiga. Permainan klasik.", "Ada diagonal dan 12 bidak per pemain. Papan cepat penuh — pertarungan sengit.", "Dua persegi, 6 bidak, tanpa terbang. Papan kecil untuk memulai."]}, "tr": {"L": "Kurallar", "n": ["Dokuz", "On iki", "Altı"], "d": ["24 nokta, 9 taş, üç taşla uçma. Klasik oyun.", "Çaprazlar ve kişi başı 12 taş. Tahta hızla dolar — sert mücadele.", "İki kare, 6 taş, uçma yok. Başlamak için küçük bir tahta."]}};
+  const rtx = l => RTX[l] || RTX.en, RIX = { nine: 0, twelve: 1, six: 2 };
   let engP = null;
   function loadEngine() {
     if (window.MorrisEngine) return Promise.resolve(window.MorrisEngine);
@@ -45,7 +48,8 @@
   function start(ctx) {
     const T3 = ctx.Table3D, t = ctx.t, X = TX[ctx.lang] || TX.en, TN = TURN[ctx.lang] || TURN.en;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const board = T3.MODELS.morris(true); T3.show('morris', board);
+    const RULE = RULE_OF[+ctx.size] || 'nine';
+    const board = T3.MODELS.morris(true, { variant: RULE }); T3.show('morris', board);
     const set = T3.morrisSet(board, { sfx: true }), Y = set.top;
     const tall = innerHeight > innerWidth * 1.15;
     if (T3.fit) T3.fit(tall ? { w: 10.6, d: 9.6, y: Y - .4, pitch: 1.18 } : { w: 10.2, d: 9.4, y: Y - .6, pitch: 1.14 });   // the whole board with both channels, from the player's side
@@ -315,5 +319,5 @@
     return { name: L.lv[n], desc: L.lvd[n], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.morris = { levels: 10, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.morris = { sizes: [9, 12, 6], size0: 9, sizeLabel: l => rtx(l).L, sizeName: (z, l) => rtx(l).n[RIX[RULE_OF[z] || 'nine']], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rtx(l).d[RIX[RULE_OF[+v] || 'nine']] } : null, levels: 10, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
 })();
