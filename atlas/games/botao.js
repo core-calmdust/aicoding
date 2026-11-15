@@ -568,10 +568,10 @@
     // PK戦 is a guess on both sides (2026-11-15 ユーザー：PK戦がただの運ゲー → キーパーを操作できるように): the shooter picks its
     // side before the keeper is set and does not see where the keeper will go; the AI keeper picks a side of its own and
     // stands in the middle until the flick, then dives. Your keeper you set yourself, not knowing where the AI will shoot.
-    let pkShot = null, pkDive = null;
+    let pkShot = null, pkDive = null, pkLive = false;
     const PK_LANE = () => { const r = Math.random(); return r < .37 ? -1 : r < .74 ? 1 : 0; };
     async function setKeeperPhase() {
-      const d = 1 - st.pos, my = tok; keeperSide = d; pkShot = null; pkDive = null;
+      const d = 1 - st.pos, my = tok; keeperSide = d; pkShot = null; pkDive = null; pkLive = false;
       if (st.pk && !human(st.pos)) {
         // the AI shooter: its shot against a keeper on a side it guesses (so it does not simply aim past where yours stands)
         phase = 'ai'; say(tx('think', { p: nameOf(st.pos) }));
@@ -582,6 +582,14 @@
         const B = E.keeperBox(d, true); pkDive = { x: PK_LANE() * (D.GHW - D.KHW + .5), y: B.y0 };
         E.setKeeper(st, d, 0, B.y0); await keeperSlide(d, st.k[d], 250); if (stopped || my !== tok) return;
         return afterKeeper();
+      }
+      if (st.pk && pkShot && human(d) && !pvp) {
+        // your keeper in a penalty is live (2026-11-15 ユーザー：マウスの左右などで動かせる、構えは不要): it follows the mouse (or a
+        // drag) from side to side until the AI shoots, after a run-up of its own choosing
+        phase = 'keeper'; pkLive = true; say(tx('keeper')); task(tx('pkLive')); callBar(null); showGuides();
+        { const gy = E.goalY(d); camAt = { x: st.ball.x / 2, y: (st.ball.y + gy) / 2 }; span = { x: Math.abs(st.ball.x) + 14, y: Math.abs(gy - st.ball.y) + 4 }; pan = { x: 0, y: 0 }; camFit(true); }
+        later(() => { if (stopped || my !== tok || phase !== 'keeper' || !pkLive) return; pkLive = false; kdrag = false; clearGuides(); const m = pkShot; pkShot = null; flick(E.perform(m, level, seed())); }, 1800 + Math.random() * 1600);
+        return;
       }
       if (human(d)) {
         phase = 'keeper'; say(tx('keeper')); task(tx(st.pk ? 'pkKeep' : 'keeperTask')); callBar('keeper'); showGuides();
@@ -685,6 +693,7 @@
     function pm(e) {
       if (pdrag) { const q = toCm(e); if (q) orbitTo(q); return; }
       if (kdrag) { const q = toCm(e); if (q) moveKeeper(q); return; }
+      if (pkLive && phase === 'keeper' && e.pointerType === 'mouse') { const q = toCm(e); if (q) moveKeeper({ x: q.x, y: st.k[keeperSide].y }); return; }
       if (!drag) {
         if (e.pointerType === 'mouse' && canAim()) { const q = toCm(e); const h = q ? btnAt(q, 1) : -1;
           // a restart: the taker follows the mouse round the ball (2026-11-15 ユーザー：向きはマウス移動で勝手に追従)
@@ -714,7 +723,7 @@
     }
     function cancel() { drag = null; aim = null; kdrag = false; powEl.hidden = true; document.documentElement.classList.remove('hand-drag'); showGuides(); }
     function moveKeeper(q) { const d = keeperSide; if (d < 0) return; E.setKeeper(st, d, q.x, q.y); put(kp[d], st.k[d].x, st.k[d].y); kick(100); }
-    const wm = e => { if ((drag && e.pointerId === drag.id) || kdrag) { if (e.target !== ctx.el && !ctx.el.contains(e.target)) pm(e); } };
+    const wm = e => { if ((drag && e.pointerId === drag.id) || kdrag || (pkLive && e.pointerType === 'mouse')) { if (e.target !== ctx.el && !ctx.el.contains(e.target)) pm(e); } };
     const wu = e => { if ((drag && e.pointerId === drag.id) || kdrag || pdrag) pu(e); else ptrs.delete(e.pointerId); };
     ctx.el.addEventListener('pointerdown', pd); ctx.el.addEventListener('pointermove', pm); ctx.el.addEventListener('pointerup', pu); ctx.el.addEventListener('pointercancel', pu);
     addEventListener('pointermove', wm, true); addEventListener('pointerup', wu, true); addEventListener('pointercancel', wu, true);
@@ -729,7 +738,7 @@
     const onKey = e => {
       if (stopped || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
       if ((e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.metaKey) { if (phase === 'aim' && E.canShoot(st) && human(st.pos)) { e.preventDefault(); declare(); } return; }
-      if (e.key === 'Enter' && phase === 'keeper') { e.preventDefault(); keeperDone(); return; }
+      if (e.key === 'Enter' && phase === 'keeper' && !pkLive) { e.preventDefault(); keeperDone(); return; }
       // the arrow keys move the view (as the screen shows it), C: back to the ball
       const pk = { ArrowUp: [0, -1], ArrowLeft: [-1, 0], ArrowDown: [0, 1], ArrowRight: [1, 0] }[e.key];
       if (pk && !e.ctrlKey && !e.metaKey && !e.altKey && st) {
@@ -839,7 +848,7 @@
         cancelAnimationFrame(viewRaf); cancelAnimationFrame(waveT); flipBtn.remove(); viewBtn.remove(); if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
-      _debug: { st: () => st, phase: () => phase, set: s => { st = s; syncAll(); hud(); }, flick: (i, ang, pw) => { if (phase !== 'aim') return false; sel = i; flick({ i, ang, v: vOf(pw) }); return true; }, flickRaw: m => { if (phase !== 'aim') return false; flick(m); return true; }, declare: () => declare(), keeperDone: () => keeperDone(), aiDeclare: () => aiDeclare(), at: (x, y) => scr(x, y), next: () => next() },
+      _debug: { pk: () => ({ pkLive, phase, keeperSide, pkShot: !!pkShot }), st: () => st, phase: () => phase, set: s => { st = s; syncAll(); hud(); }, flick: (i, ang, pw) => { if (phase !== 'aim') return false; sel = i; flick({ i, ang, v: vOf(pw) }); return true; }, flickRaw: m => { if (phase !== 'aim') return false; flick(m); return true; }, declare: () => declare(), keeperDone: () => keeperDone(), aiDeclare: () => aiDeclare(), at: (x, y) => scr(x, y), next: () => next() },
     };
     window.__botaoTable = api;
     return api;
