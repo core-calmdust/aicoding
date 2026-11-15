@@ -2234,6 +2234,9 @@
   }, true);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('bv').classList.contains('on') && !$('ov').classList.contains('on')) { if ($('bv').classList.contains('playing')) { const q = $('bvQuit'); if (q) q.click(); } else closeBoard(); } });   // in a game (or the rules on the table): back to the 3D view, like the × (2026-11-10)
   // ‹ › / ← → / swipe: the previous / next game on the chabudai (same order as the game grid)
+  // the board view (2026-11-16): a pinch on the card, the sheets or the buttons must not zoom the page itself (iOS Safari: the whole UI
+  // then sat bigger than the screen) — the 3D view has its own pinch zoom
+  ['gesturestart', 'gesturechange'].forEach(ev => document.addEventListener(ev, e => { if ($('bv') && $('bv').classList.contains('on')) e.preventDefault(); }, { passive: false }));
   function stepBoard(d) {
     const bv = $('bv'); if (!bv.classList.contains('on') || bv.classList.contains('playing') || bv.classList.contains('rules') || !bvGame) return;
     const list = A_.byUpdate(), i = list.findIndex(g => g.id === bvGame.id); if (i < 0) return;
