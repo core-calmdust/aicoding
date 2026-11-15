@@ -2523,3 +2523,8 @@ html.lite :is(.pimg,.ch-art,.gc,.ag-art,#chList .chi .frame,#game .bf .frame):is
 :is(.fr-lock,.lock .frame)::before{content:none!important}
 /* the table's sparkle: its own layers, so the glint (opacity and a small shift) is done by the compositor, not repainted */
 #game .rays,#game .rays::before,#game .rays::after{will-change:opacity,transform}
+/* (2026-11-16, ユーザー: batteries, the same look) the light that sweeps across the PLAY button and the banner: the gradient no longer
+   moves by background-position (repainted every frame) but as a 2.5×-wide layer slid by transform — the same path and timing
+   (background-position 160% → −60% of a 250% image = translateX −96% → 36% of the layer) */
+@keyframes aaShine2T{0%,60%{transform:translateX(-96%)}90%,100%{transform:translateX(36%)}}
+:is(#home,#chara).aaa :is(.aa-go,.aa-banner)::after{inset:0 auto 0 0;width:250%;background-size:100% 100%;background-position:0 0;transform:translateX(-96%);animation-name:aaShine2T;will-change:transform}
