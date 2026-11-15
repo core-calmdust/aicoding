@@ -354,7 +354,12 @@ function fitCard() {
   pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
   if (document.documentElement.classList.contains('lp') || W < 900) return;
   pl.classList.add('wide'); pl.style.left = nav.offsetLeft + 'px'; pl.style.width = Math.round(Math.min(W * .56, Math.max(W * .38, 660)) - nav.offsetLeft) + 'px';   // (to 38% of the width; in a squarish window, wide enough for the card at full size)
-  for (const k of [1, .94, .88, .82, .76]) { pl.style.setProperty('--pis', k); if (pl.offsetTop >= navB && info.scrollWidth <= info.clientWidth + 1 && info.offsetWidth >= 200) return; }   // (the whole card a little smaller until it clears the menu)
+  // (ユーザー 2026-11-15: her story stays as long as it was) the partner row may be wider than the name: the card grows by that much
+  // (to 60% of the width at most), so the story side keeps the width it has without a partner
+  const base = parseFloat(pl.style.width), row = pl.querySelector('.pp-pt'), main = pl.querySelector('.pp-main');
+  for (const k of [1, .94, .88, .82, .76]) { pl.style.setProperty('--pis', k); pl.style.width = base + 'px';
+    if (row) { const w1 = info.offsetWidth; row.style.display = 'none'; const w0 = info.offsetWidth; row.style.display = ''; if (w0 > w1) pl.style.width = Math.round(Math.min(W * .6 - nav.offsetLeft, base + w0 - w1)) + 'px'; }
+    if (pl.offsetTop >= navB && info.scrollWidth <= info.clientWidth + 1 && info.offsetWidth >= 200) return; }   // (the whole card a little smaller until it clears the menu)
   pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
 }
 addEventListener('resize', () => { if (!$('#home').hidden) fitCard(); });
@@ -441,7 +446,7 @@ function renderHome() {
     <div class="pp-n">${esc(L(c.name))}</div>
     <div class="pp-t">${esc(L(c.title))}</div>
     <div class="pp-sk">${skillChip(uk, 'on')}${o.skills.length > 1 ? `<span class="pp-more" id="ppMore">${esc(t('ownedSkills'))} ${o.skills.length}</span>` : ''}</div>
-    ${pt ? `<button class="pp-pt" id="ppChg"><img src="${charImg(pt, 'face')}" alt="" title="${esc(t('partner'))} ${esc(L(pt.name))}">${pk ? skillChip(pk, 'on') : ''}</button>`
+    ${pt ? `<button class="pp-pt" id="ppChg"><img src="${charImg(pt, 'face')}" alt="" title="${esc(t('partner'))} ${esc(L(pt.name))}">${pk ? skillChip(pk, 'on') : ''}<small class="pp-ptn">${esc(L(pt.name))}</small></button>`
       : canPick ? `<button class="pp-pt ask" id="ppChg"><i>＋</i><b>${esc(t('ptnHome'))}</b></button>` : ''}</div>
     <div class="pp-info" style="--sc:${sk.color}">
       <div class="pi-h">STORY</div><p class="pi-st">${esc(L(c.profile))}</p>
