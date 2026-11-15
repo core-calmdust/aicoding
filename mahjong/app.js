@@ -310,7 +310,7 @@ function fitCard() {
   const home = $('#home'), W = home.clientWidth, navB = nav.offsetTop + nav.offsetHeight + 8;
   pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
   if (document.documentElement.classList.contains('lp') || W < 900) return;
-  pl.classList.add('wide'); pl.style.left = nav.offsetLeft + 'px'; pl.style.width = Math.round(W * .38 - nav.offsetLeft) + 'px';
+  pl.classList.add('wide'); pl.style.left = nav.offsetLeft + 'px'; pl.style.width = Math.round(Math.min(W * .56, Math.max(W * .38, 660)) - nav.offsetLeft) + 'px';   // (to 38% of the width; in a squarish window, wide enough for the card at full size)
   for (const k of [1, .94, .88, .82, .76]) { pl.style.setProperty('--pis', k); if (pl.offsetTop >= navB && info.scrollWidth <= info.clientWidth + 1 && info.offsetWidth >= 200) return; }   // (the whole card a little smaller until it clears the menu)
   pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
 }
@@ -1175,10 +1175,21 @@ function renderMe(badgeHtml, chips, fxNames) {
       <kbd class="skk">S</kbd><i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b></span>${chips ? `<span class="skfx">${chips}</span>` : ''}
       <span class="sktip"><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b><small>${p && p.skillUsed ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))}</small><span>${esc(L(sk.desc(MJSkills.val(sk, c.tier))))}</span>${fxNames && fxNames.length ? `<small class="on">${chips} ${fxNames.map(esc).join(' ・ ')}</small>` : ''}</span></button>` : ''}`;   // (ユーザー 2026-11-15: the plate is compact and of one width — the icon and the name; what the skill does comes up in a bubble on hover, or on a tap when it cannot be used; the marks of effects in force sit on its corner)
   const b = $('#skBtn');
-  { const mb = document.querySelector('#mePanel .mb'); let k = 1; if (b) { const tf = getComputedStyle(b).transform; if (tf && tf !== 'none') k = new DOMMatrix(tf).a || 1; } if (mb) mb.style.marginLeft = b && k > 1 ? Math.round(b.offsetWidth * (k - 1)) + 'px' : ''; }   // (the skill button is drawn enlarged by a transform of its own on a desktop — read the scale it really has: keep the portrait clear of it, and no further)
+  { const me = $('#mePanel'); if (me) me.style.setProperty('--skw', (b ? b.offsetWidth : 0) + 'px'); }   // (the skill button is drawn enlarged on a desktop, by --hz: the portrait is kept clear of it in CSS, so it stays right when the window changes)
   if (b) b.onclick = async () => {
-    if (!UIS.opts || !UIS.opts.canSkill || !UIS.resolve) { b.classList.toggle('tip'); clearTimeout(renderMe.tt); if (b.classList.contains('tip')) renderMe.tt = setTimeout(() => { const x = $('#skBtn'); if (x) x.classList.remove('tip'); }, 4000); return; }
-    if (cost > 0 && !(await confirmBox(t('skillCostQ', { n: cost.toLocaleString() })))) return;
+    const ok = () => UIS.opts && UIS.opts.canSkill && UIS.resolve;
+    // (ユーザー 2026-11-15) a touch screen has no hover: a tap opens a small sheet — what the skill does, and when it can be used now,
+    // "use" / "cancel" (the cost is named there, so it is not asked a second time). A mouse: a click uses it (the bubble is on hover).
+    if (matchMedia('(pointer: coarse)').matches) {
+      const tip = b.querySelector('.sktip'), can = ok();
+      const use = await new Promise(res => { const m = modal(`<div class="skq" style="--sc:${sk.color}">${tip ? tip.innerHTML : ''}</div>${can && cost > 0 ? `<p class="cq">${esc(t('skillCostQ', { n: cost.toLocaleString() }))}</p>` : ''}
+          <div class="cbtns">${can ? `<button class="btn" data-a="no">${t('cancel')}</button><button class="btn gold" data-a="yes">${t('skillUse')}</button>` : `<button class="btn" data-a="no">${t('close')}</button>`}</div>`, 'small');
+        m.addEventListener('click', e => { const a = e.target.closest('[data-a]'); if (!a) return; closeModal(); res(a.dataset.a === 'yes'); }); });
+      if (!use || !ok()) return;
+    } else {
+      if (!ok()) { b.classList.toggle('tip'); clearTimeout(renderMe.tt); if (b.classList.contains('tip')) renderMe.tt = setTimeout(() => { const x = $('#skBtn'); if (x) x.classList.remove('tip'); }, 4000); return; }
+      if (cost > 0 && !(await confirmBox(t('skillCostQ', { n: cost.toLocaleString() })))) return;
+    }
     const r = UIS.resolve; UIS.resolve = null; UIS.opts = null; clearActs();
     r({ act: 'skill' });
   };
