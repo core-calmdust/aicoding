@@ -123,4 +123,7 @@ html.atlas-mm3d .dest{background:rgba(255,226,122,.9);box-shadow:0 0 12px rgba(2
   // デザイン: "3D board" first in the board row, or one of the game's own 2D boards (shown as the plain 2D page)
   if (skin.view) skin.view({ key: 'atlas-morris-view', row: document.getElementById('bdRow'), img: '../images/atlas/morris.webp?v=2', cls: ['atlas-morris'],
     on(is3) { variant = ''; try { mirror(); } catch (e) {} if (!is3) de.classList.remove('atlas-mm3d'); } });
+  // the six 3D boards and piece sets (2026-11-15, Table3D.BOARDS / PIECES.morris): the board is swapped inside the same group, the pieces repainted
+  { const row = document.getElementById('bdRow'), h = row && (row.closest('.field') || row.parentNode), is3 = () => !de.classList.contains('atlas-2d');
+    if (AtlasSkin.rows3d && h && T3.morris3d) AtlasSkin.rows3d({ id: 'morris', host: h, is3, board: () => { const g = root.children[0], old = g.children.find(c => c.userData && c.userData.pt); if (old) g.remove(old); g.add(T3.morris3d.board()); T3.kick(800); }, piece: () => set.repiece() }); }
 })();

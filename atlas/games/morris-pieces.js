@@ -185,7 +185,12 @@
       Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(m => m.dispose());
       layer.traverse(o => { if (o.userData && o.userData.contact && o.material) o.material.dispose(); });
     }
-    return { sync, lift, marks: setMarks, mill, pointAt, xz, top: TOP * SC, dispose, count: () => onBoard.size, clack, chime,
+    function repiece() {   // another piece set (Table3D.PIECES.morris): every piece takes the new look where it stands
+      const all = [...onBoard.values(), ...hand[1], ...hand[2], ...caps[1], ...caps[2]];
+      all.forEach(o => { const np = U.piece(o.c === 1 ? 'gold' : 'plat'); np.position.copy(o.p.position); np.rotation.copy(o.p.rotation); o.g.remove(o.p); o.g.add(np); o.p = np; });
+      kick(300);
+    }
+    return { repiece, sync, lift, marks: setMarks, mill, pointAt, xz, top: TOP * SC, dispose, count: () => onBoard.size, clack, chime,
       _dump: () => ({ board: [...onBoard].map(([i, o]) => [i, o.g.position.toArray().map(v => +v.toFixed(2)), +o.p.position.y.toFixed(2), o.g.parent === layer]), hand: [hand[1].length, hand[2].length], live: !!layer.parent, inScene: (() => { let x = g; while (x.parent) x = x.parent; return x.type; })() }) };
   };
   X.morrisSet.PTS = PTS0;

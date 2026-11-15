@@ -200,6 +200,8 @@
       toast(X.mill, true); showMarks();
     }
     ctx.el.addEventListener('click', onClick);
+    const onPcs = e => { if (!stopped && e.detail && e.detail.id === 'morris') set.repiece(); };   // (the board view's 駒 row during a game)
+    addEventListener('atlas-pieces', onPcs);
 
     function begin() {
       timers.forEach(clearTimeout); timers.length = 0; jid++;
@@ -284,7 +286,7 @@
       stop() {
         stopped = true; jid++;
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
-        ctx.el.removeEventListener('click', onClick);
+        ctx.el.removeEventListener('click', onClick); removeEventListener('atlas-pieces', onPcs);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
         set.dispose();
         if (window.Atlas3D.morris._dbg === dbg) delete window.Atlas3D.morris._dbg;

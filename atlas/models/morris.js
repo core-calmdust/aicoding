@@ -194,6 +194,56 @@
     };
   }
 
+  /* ---------- the six boards and six piece sets (2026-11-15): the board's shape kept, each look its own world ----------
+     jeweller 宝石商の盤 (default, procedural) · roman 古代ローマの石段 (travertine, incised lines, a red tessera border) · viking ヴァイキングの樫
+     (oak, a knotwork border, iron) · garden 庭の芝と敷石 (a lawn, stone-paved lines) · cloister 回廊の粘板岩 (slate with chalk lines, scratched)
+     · bauhaus バウハウス (white lacquer, black lines, primary blocks).  Pictures: atlas/tools/morris-tex.py → images/atlas/morris3d/.
+     Pieces (gold / platinum families, the game's 金 / 銀): metal 金とプラチナ (default) · glass 琥珀と水晶のガラス (Roman counters) · bone 骨と角
+     (ring-and-dot carved) · stone 砂岩と花崗岩 · pewter 真鍮と白目 (stamped tokens) · bauhaus 黄と白の塗り駒. */
+  const LOOKS = ['jeweller', 'roman', 'viking', 'garden', 'cloister', 'bauhaus'], SETS = ['metal', 'glass', 'bone', 'stone', 'pewter', 'bauhaus'];
+  const lsg = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const curLook = () => { const v = lsg('atlas-morris-look'); return LOOKS.includes(v) ? v : 'jeweller'; };
+  const curSet = () => { const v = lsg('atlas-morris-pc3'); return SETS.includes(v) ? v : 'metal'; };
+  const M3 = (() => { try { return new URL('../../images/atlas/morris3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/morris3d/'; } })(), M3V = '?v=1', m3img = {};
+  function m3(name, rep, srgb = true) { const key = name + (rep || ''); if (m3img[key]) return m3img[key];
+    const TT = T(), t = new TT.TextureLoader().load(M3 + name + (X.coarse || X.lite ? '-h' : '') + '.webp' + M3V, () => { if (X.kick) X.kick(300); });
+    if (srgb) t.encoding = TT.sRGBEncoding; t.anisotropy = 8; if (rep) { t.wrapS = t.wrapT = TT.RepeatWrapping; t.repeat.set(rep, rep); } return (m3img[key] = t); }
+  const LSPEC = {
+    roman: { line: [0x5a4634, .8, 0], rose: [0x8a2a1c, .5, 0], plinth: [0xa89878, .8, 0], felt: 0x6a3a22, field: { bump: .004 }, frame: { bump: .004 } },
+    viking: { line: [0x3a3a3c, .45, .7], rose: [0x4a4a4c, .4, .8], plinth: [0x2a2a2c, .5, .6], felt: 0x3a2a1c, field: { bump: .003, clearcoat: .3 }, frame: { bump: .003, clearcoat: .3 } },
+    garden: { line: [0xcac2b2, .9, 0], rose: [0xb8b0a0, .9, 0], plinth: [0x6a6258, .9, 0], felt: 0x3a5a2a, field: { bump: .006 }, frame: { bump: .005 }, wide: 1.8 },
+    cloister: { line: [0xe8e6dc, .95, 0], rose: [0xdcdad0, .95, 0], plinth: [0x2a2420, .6, 0], felt: 0x2a2a3a, field: { bump: .003 }, frame: { bump: .003, clearcoat: .3 }, flat: true },
+    bauhaus: { line: [0x141416, .3, 0], rose: [0xd82828, .3, 0], plinth: [0x141416, .3, 0], felt: 0xe8e4d8, field: { clearcoat: .8 }, frame: { clearcoat: .8 } },
+  };
+  const LM = {};
+  function lookMats(look) {
+    const base = mats(); if (look === 'jeweller' || !LSPEC[look]) return base;
+    if (LM[look]) return LM[look];
+    const TT = T(), L = LSPEC[look];
+    const pic = (kind, o, rep) => { const mm = m3(kind + '-' + look + '-m', rep, false), m = X.M({ map: m3(kind + '-' + look, rep), bump: false, roughness: 1, color: 0xffffff }); m.roughnessMap = mm; if (o.bump) { m.bumpMap = mm; m.bumpScale = o.bump; } if (o.clearcoat) { m.clearcoat = o.clearcoat; m.clearcoatRoughness = .15; } return m; };
+    const mat = ([c, r, mt]) => X.M({ color: c, roughness: r, metalness: mt, bump: false });
+    return (LM[look] = Object.assign({}, base, { marble: pic('field', L.field), frame: pic('frame', L.frame, .35), body: pic('frame', L.frame, .35), brass: mat(L.line), rose: mat(L.rose), brassD: mat(L.plinth), felt: X.M({ color: L.felt, roughness: .95, bump: false }), spec: L }));
+  }
+  const SM = {};
+  function relief(key, draw) { return canvasTex('nmRel' + key, 256, 256, (g, w) => { g.fillStyle = '#808080'; g.fillRect(0, 0, w, w); g.translate(w / 2, w / 2); draw(g, w); }); }
+  function setMats(set) {
+    if (SM[set]) return SM[set];
+    const TT = T(), C = c => new TT.Color(c).convertSRGBToLinear(), lite = X.lite, base = mats();
+    const phys = o => lite ? new TT.MeshStandardMaterial(o) : new TT.MeshPhysicalMaterial(o);
+    let o;
+    if (set === 'glass') o = { gold: phys({ color: C(0xe89a1c), roughness: .04, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .82, emissive: C(0x4a2200) }), plat: phys({ color: C(0xe6f0ff), roughness: .04, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .7, emissive: C(0x1a2430) }) };
+    else if (set === 'bone') { const dots = relief('bone', (g, w) => { g.strokeStyle = '#303030'; g.lineWidth = w * .02; [[0, 0], [.22, 0], [-.22, 0], [0, .22], [0, -.22]].forEach(([x, y]) => { g.beginPath(); g.arc(x * w, y * w, w * .055, 0, 7); g.stroke(); g.fillStyle = '#303030'; g.beginPath(); g.arc(x * w, y * w, w * .012, 0, 7); g.fill(); }); g.beginPath(); g.arc(0, 0, w * .42, 0, 7); g.stroke(); });
+      const mk = c => { const m = phys({ color: C(c), roughness: .4, clearcoat: .4, clearcoatRoughness: .3 }); m.bumpMap = dots; m.bumpScale = .25; return m; };
+      o = { gold: mk(0xe8d2a0), plat: mk(0x8e8a84) }; }
+    else if (set === 'stone') o = { gold: phys({ color: C(0xc89058), roughness: .7 }), plat: phys({ color: C(0x9aa0a6), roughness: .55 }) };
+    else if (set === 'pewter') { const stamp = relief('pew', (g, w) => { g.fillStyle = '#e0e0e0'; g.fillRect(-w * .05, -w * .3, w * .1, w * .6); g.fillRect(-w * .3, -w * .05, w * .6, w * .1); g.strokeStyle = '#e0e0e0'; g.lineWidth = w * .03; g.beginPath(); g.arc(0, 0, w * .4, 0, 7); g.stroke(); });
+      const mk = c => { const m = phys({ color: C(c), metalness: 1, roughness: .32 }); m.bumpMap = stamp; m.bumpScale = .3; return m; };
+      o = { gold: mk(0xc8a04a), plat: mk(0xa4a8ac) }; }
+    else if (set === 'bauhaus') o = { gold: phys({ color: C(0xf0c020), roughness: .3, clearcoat: .8, clearcoatRoughness: .1 }), plat: phys({ color: C(0xf2f0ea), roughness: .3, clearcoat: .8, clearcoatRoughness: .1 }) };
+    else o = { gold: base.gold, plat: base.plat };
+    return (SM[set] = o);
+  }
+
   /* ---------- geometry helpers ---------- */
   function rrect(path, x0, y0, x1, y1, r) {
     path.moveTo(x0 + r, y0); path.lineTo(x1 - r, y0); path.absarc(x1 - r, y0 + r, r, -Math.PI / 2, 0, false);
@@ -211,7 +261,22 @@
   }
   // a piece: rounded rim, an engraved V-ring, a gently domed centre with a small boss (base at y = 0)
   const PIECE = [[0, 0], [.33, 0], [.37, .012], [.393, .04], [.4, .08], [.398, .125], [.386, .16], [.362, .182], [.33, .193], [.3, .192], [.282, .176], [.264, .19], [.22, .198], [.15, .203], [.085, .208], [.07, .222], [.045, .232], [0, .235]];
-  function piece(color, m) {   // (28 steps round: the pieces are ~1 cm on screen; 40 cost 41% more triangles for no visible change)
+  const SHAPE = {   // the sets' own profiles (outside → in, base at y = 0)
+    glass: [[0, 0], [.34, 0], [.38, .03], [.39, .07], [.36, .14], [.29, .2], [.18, .24], [0, .255]],
+    bone: [[0, 0], [.37, 0], [.39, .02], [.39, .1], [.37, .12], [0, .12]],
+    pewter: [[0, 0], [.37, 0], [.385, .015], [.385, .06], [.37, .075], [0, .075]],
+    bauhaus: [[0, 0], [.38, 0], [.39, .01], [.39, .14], [.38, .15], [0, .15]],
+  };
+  function piece(color, m, set) {   // (28 steps round: the pieces are ~1 cm on screen; 40 cost 41% more triangles for no visible change)
+    set = set || curSet();
+    if (set !== 'metal' && SETS.includes(set)) {
+      const S = setMats(set), mt = color === 'plat' ? S.plat : S.gold;
+      if (set === 'stone') { const k = 'nmStone'; if (!GEO[k]) { const TT = T(), g = new TT.SphereGeometry(.37, 16, 8), P = g.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), a = Math.atan2(z, x), q = 1 + .06 * Math.sin(3 * a + 1) + .04 * Math.sin(5 * a); P.setXYZ(i, x * q, Math.max(0, y) * .42 + (y < 0 ? y * .05 : 0), z * q); } g.computeVertexNormals(); GEO[k] = g; }
+        const p = mesh(GEO[k], mt, !X.lite); p.rotation.y = Math.random() * 6.28; return p; }
+      const p = mesh(lathe('nmPc' + set, SHAPE[set], X.coarse ? 20 : 28), mt, !X.lite);
+      if (set === 'bone' || set === 'pewter') { const k = 'nmFace' + set; if (!GEO[k]) { const TT = T(), f = new TT.CircleGeometry(SHAPE[set][1][0] - .005, 28); f.rotateX(-Math.PI / 2); GEO[k] = f; } const f = mesh(GEO[k], mt, false); f.position.y = SHAPE[set][SHAPE[set].length - 1][1] + .001; p.add(f); }
+      p.rotation.y = Math.random() * 6.28; return p;
+    }
     const p = mesh(lathe('nmPiece', PIECE, X.coarse ? 20 : 28), color === 'plat' ? m.plat : m.gold, !X.lite);
     p.rotation.y = Math.random() * 6.28; return p;
   }
@@ -243,7 +308,7 @@
     // channels: felt floors
     [-1, 1].forEach(s => { const f = mesh(new TT.BoxGeometry(CH[1] - CH[0], .02, 2 * F), m.felt, false); f.position.set(s * (CH[0] + CH[1]) / 2, YB + .01, 0); g.add(f); });
     // the lines: raised brass strips (3 squares + 4 cross lines)
-    const LW = .085, LH = .018, y = YF + LH / 2;
+    const LW = .085 * ((m.spec && m.spec.wide) || 1), LH = (m.spec && m.spec.flat) ? .004 : .018, y = YF + LH / 2;   // (garden: wide paths · cloister: chalk lines, flush)
     const strip = (x0, z0, x1, z1) => {
       const len = Math.hypot(x1 - x0, z1 - z0) + LW, s = mesh(new TT.BoxGeometry(len, LH, LW), m.brass, false);
       s.position.set((x0 + x1) / 2, y, (z0 + z1) / 2); if (Math.abs(z1 - z0) > Math.abs(x1 - x0)) s.rotation.y = Math.PI / 2; g.add(s);
@@ -259,7 +324,7 @@
     }
     // the 24 points: gold rosettes
     const rg = lathe('nmRose', ROSE, X.coarse ? 16 : 24);
-    V.pts.forEach(([i, j]) => { const r = mesh(rg, m.gold, false); r.position.set(Pv(i), YF + LH - .004, Pv(j)); g.add(r); });
+    V.pts.forEach(([i, j]) => { const r = mesh(rg, m.rose || m.gold, false); r.position.set(Pv(i), YF + LH - .004, Pv(j)); g.add(r); });
     // small brass rosettes inlaid at the ends of the channels
     [-1, 1].forEach(sx => [-1, 1].forEach(sz => { const r = mesh(rg, m.brass, false); r.scale.setScalar(.8); r.position.set(sx * (CH[0] + CH[1]) / 2, YT - .002, sz * (F + .36)); g.add(r); }));
     Object.assign(g.userData, { top: YF + LH, pt: (i, j) => [Pv(i), Pv(j)], pts: V.pts, P: Pv, pieces: V.pieces, variant: VAR[variant] ? variant : 'nine' });
@@ -268,11 +333,12 @@
   const PTS = [[0, 0], [3, 0], [6, 0], [1, 1], [3, 1], [5, 1], [2, 2], [3, 2], [4, 2], [0, 3], [1, 3], [2, 3], [4, 3], [5, 3], [6, 3], [2, 4], [3, 4], [4, 4], [1, 5], [3, 5], [5, 5], [0, 6], [3, 6], [6, 6]];
 
   /* ---------- MODELS.morris: board + a mid-game position (gold has just closed a mill on the far row) ---------- */
+  X.morris3d = { LOOKS, SETS, piece: (c, set) => piece(c, mats(), set), board: (look, variant) => board(lookMats(look || curLook()), variant) };   // (board: another look in place — the full game's skin)   // (the piece pictures: atlas/tools/mrpiece.html)
   X.MODELS.morris = function (live, o = {}) {
-    const TT = T(), outer = new TT.Group(), g = new TT.Group(), m = mats();
+    const TT = T(), outer = new TT.Group(), g = new TT.Group(), m = lookMats(o.look || curLook());
     const b = board(m, o.variant); g.add(b);
     const top = b.userData.top;
-    Object.assign(outer.userData, { top: top * SCALE, pt: b.userData.pt, pts: b.userData.pts, P: b.userData.P, pieces: b.userData.pieces, variant: b.userData.variant, piece: c => piece(c, m) });
+    Object.assign(outer.userData, { top: top * SCALE, pt: b.userData.pt, pts: b.userData.pts, P: b.userData.P, pieces: b.userData.pieces, variant: b.userData.variant, piece: (c, set) => piece(c, m, set) });
     outer.add(g); g.scale.setScalar(SCALE);
     if (live) return outer;
     const put = (c, x, z, y) => {
