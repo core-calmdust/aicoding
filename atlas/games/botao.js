@@ -219,17 +219,6 @@
       clearGuides();
       if (!st || over) return;
       if (phase === 'keeper') { boxArea(E.keeperBox(keeperSide, st.restart === 'pen')); kick(120); return; }
-      if (phase === 'place') {
-        // the taker goes round the ball (2026-11-15 ユーザー：ボールを軸にコマをドラッグすると飛ばす方向にラインが出て、その周辺を
-        // コマがぐるぐる位置取りする): a thin track where it may stand (a half for a throw-in, a quarter for a corner) and
-        // a gold line from the ball the way the taker would send it
-        const arc = E.takerArc(st), a0 = arc ? arc[0] - arc[1] : 0, len = arc ? 2 * arc[1] : 2 * Math.PI, bx = st.ball.x, by = st.ball.y;
-        const g = new TH.RingGeometry((ORBIT - .3) * K, (ORBIT + .3) * K, 48, 1, -(a0 + len), len); g.rotateX(-Math.PI / 2);
-        const zm = new TH.Mesh(g, MAT.boxL), [zx, zz] = wx(bx, by); zm.position.set(zx, Y + .008, zz); zm.renderOrder = 3; zm.userData.own = g; gd.add(zm);
-        const b = st.b[st.taker], a = Math.atan2(by - b.y, bx - b.x), L = 30;
-        dots(bx + Math.cos(a) * (D.RBALL + 1), by + Math.sin(a) * (D.RBALL + 1), bx + Math.cos(a) * L, by + Math.sin(a) * L, MAT.ball, .6);
-        arrow(bx + Math.cos(a) * L, by + Math.sin(a) * L, a, .01, MAT.ball, .6);
-        const r = flat(b.x, b.y, D.RB + 1.2, MAT.sel); r.userData.pulse = 1; kick(120); return; }
       if (phase !== 'aim' || !human(st.pos)) return;
       // which buttons may play: the picked one gold, the one under the pointer white, one that may not (3 in a row) red
       for (let i = st.pos * 10; i < st.pos * 10 + 10; i++) {
@@ -237,6 +226,16 @@
         if (!E.canFlick(st, i)) { flat(b.x, b.y, D.RB + .8, MAT.no); continue; }
         if (i === sel) { const r = flat(b.x, b.y, D.RB + 1.2, MAT.sel); r.userData.pulse = 1; }
         else if (i === hov) flat(b.x, b.y, D.RB + .9, MAT.path);
+      }
+      if (freeTaker()) {
+        // a restart: the taker swings round the ball (2026-11-15 ユーザー：ボールを軸にコマが回り、飛ばす方向にライン). A thin
+        // track where it may stand (a half for a throw-in, a quarter for a corner); a gold line the way it would send the ball
+        const arc = E.takerArc(st), a0 = arc ? arc[0] - arc[1] : 0, len = arc ? 2 * arc[1] : 2 * Math.PI, bx = st.ball.x, by = st.ball.y;
+        const g = new TH.RingGeometry((ORBIT - .3) * K, (ORBIT + .3) * K, 48, 1, -(a0 + len), len); g.rotateX(-Math.PI / 2);
+        const zm = new TH.Mesh(g, MAT.boxL), [zx, zz] = wx(bx, by); zm.position.set(zx, Y + .008, zz); zm.renderOrder = 3; zm.userData.own = g; gd.add(zm);
+        if (!aim) { const b = st.b[st.taker], a = Math.atan2(by - b.y, bx - b.x), L = 30;
+          dots(bx + Math.cos(a) * (D.RBALL + 1), by + Math.sin(a) * (D.RBALL + 1), bx + Math.cos(a) * L, by + Math.sin(a) * L, MAT.ball, .6);
+          arrow(bx + Math.cos(a) * L, by + Math.sin(a) * L, a, .01, MAT.ball, .6); }
       }
       if (aim && sel >= 0) {
         const mv = aimMove(aim), b = st.b[sel];
@@ -290,7 +289,6 @@
     function callBar(kind) {
       if (stopped) return;
       if (kind === 'shot') { callEl.innerHTML = `<button type="button">📣 ${esc(tx('shoot'))}</button>`; callEl.querySelector('button').onclick = declare; callEl.hidden = false; }
-      else if (kind === 'place') { callEl.innerHTML = `<button type="button">✋ ${esc(tx('placeOk'))}</button>`; callEl.querySelector('button').onclick = () => placeDone(); callEl.hidden = false; }
       else if (kind === 'keeper') { callEl.innerHTML = `<button type="button">🧤 ${esc(tx('ready'))}</button>`; callEl.querySelector('button').onclick = () => keeperDone(); callEl.hidden = false; }
       else { callEl.hidden = true; callEl.innerHTML = ''; }
     }
@@ -472,7 +470,7 @@
     // what the side with the ball should do now
     function taskLine() {
       if (st.shot) return tx('shootNow');
-      if (st.restart && RESTART[st.restart] && st.rem === 12) return tx(RESTART[st.restart]) + ' — ' + tx('pick');
+      if (st.restart && RESTART[st.restart] && st.rem === 12) return tx(RESTART[st.restart]) + ' — ' + tx(E.canPlace(st) && human(st.pos) ? 'placeTask' : 'pick');
       if (E.canShoot(st)) return tx('canShoot');
       return tx('pick');
     }
@@ -488,23 +486,17 @@
       const p = st.pos;
       if (pvp) viewTo();
       follow(st.ball.x, st.ball.y, true);
-      if (E.canPlace(st) && !st.placed) {
-        // a restart: first the taker's place round the ball (yours by dragging, the AI's worked out), then the flick
+      if (E.canPlace(st) && !st.placed && !human(p)) {
+        // a restart: the AI works out where its taker stands round the ball, then flicks (yours swings round the ball with
+        // the mouse — or a drag round the ball on a touch screen — until you flick: no separate step)
         st = E.clone(st); st.placed = true;
-        if (human(p)) {
-          if (!pvp) hist.push({ st: E.clone(st), ply });
-          phase = 'place'; sel = st.taker; frameBallAnd(sel, true);
-          say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn')); task(tx(RESTART[st.restart] || 'fk') + ' — ' + tx('placeTask')); callBar('place');
-          if (!told && howtoOn()) howtoCard(() => {}); told = true;
-          showGuides(); pulse(); return;
-        }
         phase = 'ai'; callBar(null); say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) })); task('');
         const my0 = tok, q = await placeAI(E.clone(st), level); if (stopped || my0 !== tok) return;
         if (q) { const i = st.taker; E.setTaker(st, q.x, q.y); await slidePiece(i, st.b[i]); if (stopped || my0 !== tok) return; }
       }
       if (human(p)) {
-        if (!pvp && !st.shot && !(st.placed && st.rem === 12 && st.restart)) hist.push({ st: E.clone(st), ply });
-        sel = autoSel(); phase = 'aim'; frameBallAnd(sel, true);
+        if (!pvp && !st.shot) hist.push({ st: E.clone(st), ply });
+        sel = E.canPlace(st) ? st.taker : autoSel(); phase = 'aim'; frameBallAnd(sel, true);
         say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn')); task(taskLine());
         callBar(E.canShoot(st) ? 'shot' : null);
         if (!told && howtoOn()) howtoCard(() => {}); told = true;
@@ -549,12 +541,8 @@
     }
     // the taker's place from a pointer: round the ball at ORBIT, on the side of the pointer
     const ORBIT = D.RB + D.RBALL + 3;
+    const freeTaker = () => phase === 'aim' && st && !over && human(st.pos) && E.canPlace(st) && sel === st.taker;
     function orbitTo(q) { const dx = q.x - st.ball.x, dy = q.y - st.ball.y, d = Math.hypot(dx, dy); if (d < .5) return; E.setTaker(st, st.ball.x + dx / d * ORBIT, st.ball.y + dy / d * ORBIT); syncAll(); showGuides(); }
-    function placeDone() {
-      if (stopped || phase !== 'place') return;
-      callBar(null); clearGuides(); phase = 'aim'; sel = st.taker;
-      task(taskLine()); callBar(E.canShoot(st) ? 'shot' : null); frameBallAnd(sel, true); showGuides(); pulse();
-    }
     // a button glides to its new place (the AI's taker)
     function slidePiece(i, to) {
       const m = bt[i]; if (!m) return Promise.resolve();
@@ -656,7 +644,6 @@
       ptrs.add(e.pointerId);
       if (ptrs.size > 1) { if (drag) cancel(); return; }
       if (phase === 'anim' && !stopped) { speedUp = 3; return; }
-      if (phase === 'place' && !stopped && st && human(st.pos)) { const q = toCm(e); if (!q) return; pdrag = true; orbitTo(q); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); return; }
       if (phase === 'keeper' && !stopped && st && human(keeperSide)) { const q = toCm(e); if (!q) return; kdrag = true; moveKeeper(q); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); return; }
       if (stopped || !st || cardEl) return;
       const q = toCm(e);
@@ -667,6 +654,9 @@
       if (i >= 0) {
         if (!E.canFlick(st, i)) { toast(tx('limit3'), 'bad'); return; }
         sel = i; hintMove = null;
+      } else if (freeTaker() && e.pointerType !== 'mouse' && Math.hypot(q.x - st.ball.x, q.y - st.ball.y) < ORBIT + 6) {
+        // a touch screen has no hover: a drag that starts round the ball (not on the taker) swings the taker
+        pdrag = true; orbitTo(q); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); return;
       } else if (!nearSel(e, q)) { panStart(); return; }
       const touch = e.pointerType !== 'mouse'; drag = { id: e.pointerId, kind: 'aim', dead: touch ? DEAD_T : DEAD_M, gt: touch ? gainAt(e) : 1 };
       try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {}
@@ -677,7 +667,10 @@
       if (pdrag) { const q = toCm(e); if (q) orbitTo(q); return; }
       if (kdrag) { const q = toCm(e); if (q) moveKeeper(q); return; }
       if (!drag) {
-        if (e.pointerType === 'mouse' && canAim()) { const q = toCm(e); const h = q ? btnAt(q, 1) : -1; if (h !== hov) { hov = h; showGuides(); } ctx.el.style.cursor = h >= 0 || (q && nearSel(e, q)) ? 'grab' : 'move'; }
+        if (e.pointerType === 'mouse' && canAim()) { const q = toCm(e); const h = q ? btnAt(q, 1) : -1;
+          // a restart: the taker follows the mouse round the ball (2026-11-15 ユーザー：向きはマウス移動で勝手に追従)
+          if (q && freeTaker() && (h < 0 || h === st.taker) && Math.hypot(q.x - st.b[st.taker].x, q.y - st.b[st.taker].y) > D.RB * .6) { hov = h; orbitTo(q); }
+          else if (h !== hov) { hov = h; showGuides(); } ctx.el.style.cursor = h >= 0 || (q && nearSel(e, q)) ? 'grab' : 'move'; }
         return;
       }
       if (e.pointerId !== drag.id) return;
@@ -718,7 +711,6 @@
       if (stopped || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
       if ((e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.metaKey) { if (phase === 'aim' && E.canShoot(st) && human(st.pos)) { e.preventDefault(); declare(); } return; }
       if (e.key === 'Enter' && phase === 'keeper') { e.preventDefault(); keeperDone(); return; }
-      if (e.key === 'Enter' && phase === 'place') { e.preventDefault(); placeDone(); return; }
       // the arrow keys move the view (as the screen shows it), C: back to the ball
       const pk = { ArrowUp: [0, -1], ArrowLeft: [-1, 0], ArrowDown: [0, 1], ArrowRight: [1, 0] }[e.key];
       if (pk && !e.ctrlKey && !e.metaKey && !e.altKey && st) {
