@@ -65,7 +65,7 @@ html.atlas-latr .reserve .rsv-plate .rsv-w:not(.hot){color:#f0d9e6!important;bac
       draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (side === 1 || side === 2) draft.color = side;
       if (lv >= 1 && lv <= 20) draft.level = lv;
-      { const R = new URLSearchParams(location.search).get('rule'); if (E.RULE_ORDER.includes(R) && draft.mode !== 'rated') draft.rule = R; }   // (the portal card's 種目)
+      { const q = new URLSearchParams(location.search), R = q.get('rule') || ['seneca', 'piso', 'quintana'][+q.get('size') - 1]; if (E.RULE_ORDER.includes(R) && draft.mode !== 'rated') draft.rule = R; }   // (the portal card's 種目: size 1 Schädler · 2 Piso · 3 Quintana)
       segSync(); document.getElementById('btnStart').click();
       return true;
     },

@@ -65,7 +65,7 @@ html.atlas-fox .reserve .rsv-plate .rsv-w:not(.hot){color:#f0d9e6!important;back
       draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (side === 1 || side === 2) draft.color = side;
       if (lv >= 1 && lv <= 20) draft.level = lv;
-      { const R = new URLSearchParams(location.search).get('rule'); if (E.RULE_ORDER.includes(R) && draft.mode !== 'rated') draft.rule = R; }   // (the portal card's 種目)
+      { const q = new URLSearchParams(location.search), R = q.get('rule') || { 13: 'g13', 17: 'g17' }[+q.get('size')]; if (E.RULE_ORDER.includes(R) && draft.mode !== 'rated') draft.rule = R; }   // (the portal card's 種目: size 13 · 17 = the number of geese)
       segSync(); document.getElementById('btnStart').click();
       return true;
     },
