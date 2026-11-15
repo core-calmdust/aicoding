@@ -122,13 +122,13 @@ function key(s) { return s.rule + '|' + s.turn + '|' + s.pos[0].slice().sort((a,
 
 /* ── 形勢 ── */
 const AVG = 85 / 32;              // 1回の投げで進む平均
-const W = { exShare: 0.35, enterWait: 2.2, bell: { turnsScale: 7.8, tempo: 0.675 }, popular: { turnsScale: 10, tempo: 0.18, gold: 0.341 } };   // 自己対局 1,500局の結果に合わせた値（2026-11-16）
+const W = { exShare: 0.35, enterWait: 2.2, bell: { turnsScale: 7.8, tempo: 0.5 }, popular: { turnsScale: 10, tempo: 0.5, gold: 0.341 } };   // 自己対局 1,500局の結果に合わせた値（2026-11-16）
 // 1個だけで上がるまでの投げの数の期待値（ちょうどの目が要る）。EX[d]＝残り d マスのときの「待ち」の分（d/AVG との差）
 const EX = (() => { const T = [0]; for (let d = 1; d <= 70; d++) { let stay = PROB[0], sum = 1; for (const r of ROLLS) { if (r.n > d) stay += r.p; else sum += r.p * T[d - r.n]; } T.push(sum / (1 - stay)); } return T.map((t, d) => t - d / AVG); })();
 function turnsLeft(s, R, sd) {    // 全部上げるまでのおおよその手番数
   let t = 0, waiting = 0, on = 0, ex = 0, exMax = 0;
   for (const i of s.pos[sd]) {
-    if (i === 0) { waiting++; t += R.L / AVG; ex += EX[R.L]; }
+    if (i === 0) { waiting++; const e = EX[R.goal]; t += R.goal / AVG; ex += e; if (e > exMax) exMax = e; }
     else if (i <= R.L) { on++; const d = R.goal - i, e = EX[d]; t += d / AVG; ex += e; if (e > exMax) exMax = e; }
   }
   // ちょうどの目の待ち：駒が多いほど別の駒を動かして待てるので、いちばん長い待ち＋残りの一部
