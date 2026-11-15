@@ -70,9 +70,12 @@
   const DK = ['background:radial-gradient(circle at 40% 35%,#fffaf0,#e7dcc2 60%,#b9a67e)', 'background:radial-gradient(circle at 40% 35%,#5a4a40,#2a201b 60%,#120d0a)'];
   const lookOf = () => { try { const v = localStorage.getItem('atlas-agon-look3') || localStorage.getItem('atlas-agon-look'); if (v === 'folk') return 'folk'; } catch (e) {} return 'victorian'; };
 
+  // 種目 (2026-11-15): the full game's two openings; the card's "size" value names one (1 standard · 2 the 1842 placement)
+  const RIDS = ['std', 'place'], RN = {"ja": {"n": ["標準（1842年）", "原典の配置"], "d": ["女王1枚とガード6枚ずつが外周に交互に並んで開始。内側か同じ輪へ1歩、はさんで捕獲、女王を王座に入れて6枚で囲めば勝ち。", "1842年の原典の始め方。女王だけが向かい合う角にいて、ガード12枚を交互に1枚ずつ好きな空きマスへ置いてから対局が始まる。"], "L": "Rules"}, "en": {"n": ["Standard (1842)", "Original placement"], "d": ["Each side’s queen and six guards alternate round the edge. Step along the ring or inwards, capture by sandwiching, and win with your queen on the throne ringed by six guards.", "The 1842 opening: only the queens start, in opposite corners; the twelve guards are placed one at a time, in turn, on any empty cell before play begins."], "L": "Rules"}, "zh": {"n": ["标准（1842年）", "原始布局"], "d": ["双方各1个女王和6个卫兵在外圈交替排列开局。沿同一圈或向内走一步，夹住即吃子；女王坐上王座并由6个卫兵围住即获胜。", "1842年原版的开局方式：只有女王位于相对的两角，双方轮流把12个卫兵逐一放到任意空格后再开始对局。"], "L": "Rules"}, "zh-TW": {"n": ["標準（1842）", "原始布子"], "d": ["雙方的女王和六名衛兵交錯排在外圈。沿圈或往內走一步，夾住敵子就能吃掉；女王坐上王座、六名衛兵圍住她即獲勝。", "1842 年的開局方式：一開始只有兩位女王，各在相對的角落；十二名衛兵輪流一枚一枚擺到任意空格後才開始對局。"], "L": "Rules"}, "ko": {"n": ["표준 (1842년)", "원전 배치"], "d": ["양쪽의 여왕 1개와 호위병 6개가 바깥 고리에 번갈아 놓인 채 시작. 같은 고리나 안쪽으로 한 걸음, 끼워서 잡고, 여왕이 왕좌에 앉아 호위병 6개로 둘러싸면 승리.", "1842년 원전의 시작 방법. 여왕만 마주 보는 모서리에 있고, 호위병 12개를 번갈아 한 개씩 아무 빈칸에 놓은 뒤 대국을 시작합니다."], "L": "Rules"}, "es": {"n": ["Estándar (1842)", "Colocación original"], "d": ["La reina y los seis guardias de cada bando empiezan alternados en el borde. Un paso por el anillo o hacia dentro, captura encerrando, y gana tu reina en el trono rodeada de seis guardias.", "La apertura de 1842: solo las reinas empiezan, en esquinas opuestas; los doce guardias se colocan uno a uno, por turnos, en cualquier casilla vacía antes de empezar."], "L": "Rules"}, "fr": {"n": ["Standard (1842)", "Placement d’origine"], "d": ["La reine et les six gardes de chaque camp commencent en alternance sur le bord. Un pas le long de l’anneau ou vers l’intérieur, capture par prise en tenaille, et victoire avec la reine sur le trône entourée de six gardes.", "Le début de 1842 : seules les reines sont en jeu, dans des coins opposés ; les douze gardes sont posés un par un, à tour de rôle, sur n’importe quelle case vide avant la partie."], "L": "Rules"}, "pt": {"n": ["Padrão (1842)", "Colocação original"], "d": ["A rainha e os seis guardas de cada lado começam alternados na borda. Um passo pelo anel ou para dentro, captura por cerco, e vence quem tiver a rainha no trono cercada por seis guardas.", "O início de 1842: só as rainhas começam, em cantos opostos; os doze guardas são colocados um de cada vez, alternadamente, em qualquer casa vazia antes de a partida começar."], "L": "Rules"}, "de": {"n": ["Standard (1842)", "Ursprüngliche Aufstellung"], "d": ["Königin und sechs Wachen jeder Seite stehen abwechselnd am Rand. Ein Schritt auf dem Ring oder nach innen, Schlagen durch Einschließen, und es gewinnt die Königin auf dem Thron, umringt von sechs Wachen.", "Der Beginn von 1842: Nur die Königinnen stehen, in gegenüberliegenden Ecken; die zwölf Wachen werden abwechselnd einzeln auf beliebige freie Felder gesetzt, bevor das Spiel beginnt."], "L": "Rules"}, "ru": {"n": ["Стандарт (1842)", "Исходная расстановка"], "d": ["Королева и шесть стражей каждой стороны стоят по краю вперемежку. Ходите по кольцу или внутрь, берите, зажимая фигуры, и победите: королева на троне, вокруг шесть стражей.", "Начало 1842 года: в начале на доске только королевы, в противоположных углах; двенадцать стражей ставят по очереди по одному на любые пустые клетки, затем начинается игра."], "L": "Rules"}, "tr": {"n": ["Standart (1842)", "Özgün diziliş"], "d": ["Her tarafın kraliçesi ve altı muhafızı kenarda karışık dizilir. Halka boyunca ya da içeri adım at, sıkıştırarak al; kraliçen tahtta ve çevresinde altı muhafız olunca kazan.", "1842 başlangıcı: yalnızca kraliçeler karşı köşelerde başlar; on iki muhafız oyun başlamadan önce sırayla birer birer boş karelere konur."], "L": "Rules"}, "id": {"n": ["Standar (1842)", "Penempatan asli"], "d": ["Ratu dan enam pengawal tiap pihak berselang-seling di tepi. Melangkah di cincin atau ke dalam, tangkap dengan menjepit, dan menang dengan ratu di takhta dikelilingi enam pengawal.", "Pembukaan 1842: hanya kedua ratu yang mulai, di sudut berseberangan; dua belas pengawal diletakkan bergiliran satu per satu di petak kosong mana saja sebelum permainan dimulai."], "L": "Rules"}, "hi": {"n": ["मानक (1842)", "मूल व्यवस्था"], "d": ["हर पक्ष की रानी और छह रक्षक बाहरी घेरे पर बारी-बारी से खड़े होकर शुरू करते हैं। उसी घेरे पर या अंदर एक कदम, बीच में फँसाकर पकड़ें, और रानी सिंहासन पर छह रक्षकों से घिरी हो तो जीत।", "1842 की शुरुआत: सिर्फ़ रानियाँ आमने-सामने के कोनों में होती हैं; खेल शुरू होने से पहले बारह रक्षक बारी-बारी से एक-एक करके किसी भी खाली खाने पर रखे जाते हैं।"], "L": "Rules"}, "ar": {"n": ["القياسي (1842)", "الترتيب الأصلي"], "d": ["تبدأ ملكة كل طرف وحراسها الستة متناوبين على الحلقة الخارجية. خطوة على الحلقة أو إلى الداخل، والأسر بالمحاصرة، ويفوز من تجلس ملكته على العرش ويحيط بها ستة حراس.", "بداية 1842: تبدأ الملكتان فقط في زاويتين متقابلتين، ثم يوضع الحراس الاثنا عشر واحدًا تلو الآخر بالتناوب في أي خانة فارغة قبل بدء اللعب."], "L": "Rules"}}, rn = l => RN[l] || RN.en;
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, X = TX[ctx.lang] || TX.en;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
+    const rule = RIDS[(+ctx.size || 1) - 1] || 'std';
     const A3 = T3.agon, board = A3.board(lookOf()); T3.show('agon', board);
     const U = board.userData, Y = U.top;
     const tall = innerHeight > innerWidth * 1.15;
@@ -217,7 +220,7 @@
     }
 
     /* ---------- AI: the game's engine worker ---------- */
-    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule: 'std' }); return w; }
+    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule }); return w; }
     function aiMove() {
       thinking = true; hud(L.think);
       if (!worker) worker = newWorker();
@@ -229,7 +232,7 @@
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? null : r.move); };
       worker.onerror = () => { worker = null; reply(null); };
-      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule: 'std' });
+      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule });
     }
 
     /* ---------- input ---------- */
@@ -264,7 +267,7 @@
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; E.setRule('std'); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
 
     const dbg = {
       at: i => { const [x, z] = xz(i); return T3.project(x, z, Y); },
@@ -307,7 +310,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule: 'std' });
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule });
         });
       },
       // 引き分け（ポータルの操作バー）：2人対局は合意で draw()。AI 対局は offerDraw() → 'yes' / 'no' / 'wait'
@@ -323,7 +326,7 @@
           if (!hintW) hintW = newWorker();
           hintW.onmessage = e => { const r = e.data; if (r.type !== 'result' || r.id !== j) return; res(!stopped && !over && moves.length === mvs.length && typeof r.v === 'number' && -r.v <= 0 ? 'yes' : 'no'); };   // r.v: the side to move (you) — the AI's view is -v
           hintW.onerror = () => { hintW = null; res('no'); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule: 'std' });
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule });
         });
       },
       draw() { if (pos && !over) finish(-1, 'draw'); },
@@ -384,5 +387,6 @@
     return { name: '', desc: n > 20 ? LVD_TOP[lang] || LVD_TOP.en : D[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[Math.min(n, 20) - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.agon = { levels: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };
+  window.Atlas3D.agon = { levels: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: [1, 2], size0: 1, sizeLabel: l => rn(l).L,
+    sizeName: (z, l) => rn(l).n[(+z || 1) - 1], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[(+v || 1) - 1] } : null, levelInfo, start };
 })();
