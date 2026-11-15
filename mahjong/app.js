@@ -303,18 +303,18 @@ function frame(c, kind, cls = '', extra = '') {
   return `<span class="frame fr-${c.rarity} ${cls}" style="--c:${c.color}" ${extra}><img src="${charImg(c, kind)}" alt="" draggable="false"><i class="fx-sh"></i></span>`;
 }
 // skill chip: icon + name + skill rarity
-// the story / skill panel of the home card: as wide as from the menu's left edge to the card, no taller than the room under the
-// menu; the text is scaled down (to 82% at most) until it fits, and if it still does not, the panel is left out
-function fitInfo() {
-  const el = document.querySelector('#partner .pp-info'), pl = $('#partner'), nav = document.querySelector('#home nav'); if (!el || !pl || !nav) return;
-  el.style.display = ''; const w = pl.offsetLeft - nav.offsetLeft - 3, room = pl.offsetTop + pl.offsetHeight - (nav.offsetTop + nav.offsetHeight) - 10;
-  if (getComputedStyle(el).display === 'none') return;
-  if (w < 190 || room < 110) { el.style.display = 'none'; return; }
-  el.style.width = w + 'px'; el.style.maxHeight = room + 'px';
-  for (const k of [1, .94, .88, .82]) { el.style.setProperty('--pis', k); if (el.scrollHeight <= room + 1) return; }
-  el.style.display = 'none';
+// the home screen's name card: wide (the name, then her story and skill) when it fits under the menu — from the menu's left edge to
+// 38% of the width, the card scaled down to 76% at most; otherwise the name alone, where it always was
+function fitCard() {
+  const pl = $('#partner'), nav = document.querySelector('#home nav'), info = pl && pl.querySelector('.pp-info'); if (!pl || !nav || !info) return;
+  const home = $('#home'), W = home.clientWidth, navB = nav.offsetTop + nav.offsetHeight + 8;
+  pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
+  if (document.documentElement.classList.contains('lp') || W < 900) return;
+  pl.classList.add('wide'); pl.style.left = nav.offsetLeft + 'px'; pl.style.width = Math.round(W * .38 - nav.offsetLeft) + 'px';
+  for (const k of [1, .94, .88, .82, .76]) { pl.style.setProperty('--pis', k); if (pl.offsetTop >= navB && info.scrollWidth <= info.clientWidth + 1 && info.offsetWidth >= 200) return; }   // (the whole card a little smaller until it clears the menu)
+  pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
 }
-addEventListener('resize', () => { if (!$('#home').hidden) fitInfo(); });
+addEventListener('resize', () => { if (!$('#home').hidden) fitCard(); });
 function skillChip(key, cls = '', attrs = '') {
   const k = MJSkills.parse(key), sk = MJSkills.get(k.id);
   return `<span class="skc st${k.tier} ${cls}" style="--sc:${sk.color}" ${attrs}><i>${icon(sk.icon)}</i><b>${esc(L(sk.name))}</b><em>${MJSkills.TIERS[k.tier]}</em></span>`;
@@ -390,18 +390,18 @@ function renderHome() {
   }
   const P = DB.pstats, all = MJStats.derive(MJStats.sum(P.skill, P.std, P.old));
   $('#aaProf').innerHTML = `<img src="${charImg(c, 'face')}" alt=""><span><b>${esc(t('you'))}</b><small>${esc(t('psGames'))} ${all.games} ・ ${esc(t('psAvgRank'))} ${all.avgRank == null ? '—' : all.avgRank.toFixed(2)}</small></span>${rankBadge(MJRank.at(DB.rank.pt), 'sm')}`;
-  $('#partner').innerHTML = `
+  { const k = MJSkills.parse(uk), sk = MJSkills.get(k.id), v = MJSkills.val(sk, k.tier);   // (ユーザー 2026-11-15: one name card — the name on the left, her story and a short word on her skill on the right)
+  $('#partner').innerHTML = `<div class="pp-main">
     <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}</div>
     <div class="pp-n">${esc(L(c.name))}</div>
     <div class="pp-t">${esc(L(c.title))}</div>
     <div class="pp-sk">${skillChip(uk, 'on')}${o.skills.length > 1 ? `<span class="pp-more" id="ppMore">${esc(t('ownedSkills'))} ${o.skills.length}</span>` : ''}</div>
-    <button class="pp-chg" id="ppChg">${IC.swap}<span>${esc(t('tapChange'))}</span></button>
-    ${(() => { const k = MJSkills.parse(uk), sk = MJSkills.get(k.id), v = MJSkills.val(sk, k.tier);   // (ユーザー 2026-11-15: the card runs on to the left — her story and what her skill does)
-      return `<div class="pp-info" style="--sc:${sk.color}">
-        <div class="pi-h">STORY</div><p class="pi-st">${esc(L(c.profile))}</p>
-        <div class="pi-h">SKILL</div>
-        <div class="pi-sk"><i>${icon(sk.icon)}</i><div><b>${esc(L(sk.name))} <em>${MJSkills.TIERS[k.tier]}</em> <em class="tm">${t('timing_' + (sk.timing || 'turn'))}</em></b><span>${esc(L(sk.desc(v)))}</span></div></div></div>`; })()}`;
-  fitInfo();
+    <button class="pp-chg" id="ppChg">${IC.swap}<span>${esc(t('tapChange'))}</span></button></div>
+    <div class="pp-info" style="--sc:${sk.color}">
+      <div class="pi-h">STORY</div><p class="pi-st">${esc(L(c.profile))}</p>
+      <div class="pi-h">SKILL</div>
+      <div class="pi-sk"><i>${icon(sk.icon)}</i><span>${esc(L(sk.desc(v)))}</span></div></div>`; }
+  fitCard();
   // pick-up banner: the best character not yet owned (or the best of all)
   const pick = MJChars.list.filter(x => !owns(x.id) && x.reward == null).sort((a, b) => RORD[a.rarity] - RORD[b.rarity])[0] || MJChars.list.find(x => x.rarity === 'UR');
   $('#aaBanner').innerHTML = `<i class="ab-art" style="background-image:url('${charImg(pick, 'bust')}')"></i><span class="ab-rib">PICK UP</span><span class="ab-tx"><em class="r-${pick.rarity}">${pick.rarity}</em><b>${esc(L(pick.name))}</b><small>${esc(L(pick.title))}</small></span><span class="ab-go">${esc(t('gacha'))} ›</span>`;
