@@ -241,7 +241,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
   .bv.bvt .bvplm{top:calc(62px + env(safe-area-inset-top));inset-inline-end:auto;inset-inline-start:14px}
 }
 .bv.on{display:block;animation:fadeIn .25s}
-#gl{position:absolute;inset:0;touch-action:none}
+#bv,#bv *:not(#gl):not(#gl *){touch-action:pan-x pan-y}.psheet,.psheet *,.lvsheet,.lvsheet *{touch-action:pan-x pan-y}#gl{position:absolute;inset:0;touch-action:none}
 #gl canvas{display:block;width:100%!important;height:100%!important}
 .bv .x{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:14px;z-index:3}
 /* info card: always docked at the bottom; on wide screens it spans the width in two columns */
@@ -2294,7 +2294,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=36"></script>
 <script src="npc/npc.js?v=35"></script>
 <script src="avtalk.js?v=3"></script>
-<script src="app.js?v=403"></script>
+<script src="app.js?v=404"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
