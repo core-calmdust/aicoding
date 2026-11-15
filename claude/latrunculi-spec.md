@@ -42,9 +42,14 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - オンライン：Firebase プロジェクト未作成のため準備中（firebase-config.js が null）。作成後に secrules.py へ追加。
 - 言語：**ja・en のみ**（残り12言語は i18n-lt-more.js・coach-i18n.js に追加する。揃うまで言語メニューに出さない：app.js の SUPPORTED / window.LT_LANGS）。
 
+## 3D（フル機能版 ?skin=atlas、2026-11-16）
+- atlas/models/latrunculi.js：3D盤6種（Table3D.BOARDS.latrunculi、保存キー atlas-latrunculi-look）＝大理石（既定）・トラバーチン・屋根瓦・モザイクの床・くるみ材・斑岩。2Dの盤画像（latrunculi/img/bd-*・fr-*）を面と縁に貼り、格子の溝を法線マップで彫る。3D駒6種（Table3D.PIECES.latrunculi、atlas-latrunculi-pc3）＝黒と白のガラス（既定）・青と琥珀のガラス・骨と角・川の小石・青銅と銀の硬貨・素焼きの赤と白。`Table3D.latrunculi.turn(g, k)` で駒を裏返す。
+- atlas/skin/latrunculi.js：2Dページの駒（syncPieces / animateMove / .inc クラス）を3Dに写す。置く＝上から落ちる、移動＝滑る、跳び＝味方を越えて弧を描く、取る＝浮いて消える、挟まれた駒＝その場で跳ねて裏返る（助けられたら表に戻る）。デザインタブの「3D盤」「3D駒」は共通の `AtlasSkin.rows3d`。レート戦・レッスン・パズル・コーチは2Dと同じものがそのまま3D盤で動く。
+- サムネイル：atlas/img/boardic-latrunculi-*・board-latrunculi-*・pc3-latrunculi-*.webp（atlas/tools/boardicon.html?game=latrunculi&look=…[&pcs=…]）。
+
 ## 未着手（次の作業）
 - 残り12言語、レッスンの準備ステップ、piso・quintana のレッスン／パズル、ルール違いタブ。
-- 大百科：GAMES 登録・アイコン・地図・ヒストリア・3D盤と駒（6種ずつ）・3Dルールコース・3Dでのレート戦／レッスン／パズル（atlas/models・skin・games・rules）。
+- 大百科：GAMES 登録・正式アイコン・地図・ヒストリア・ちゃぶ台対局（atlas/games）・3Dルールコース（atlas/rules）・NPC の台詞。
 - AI：評価と探索の強化、WASM 化、マルチスレッド、レート基準値の実測。
 - トップページ掲載、OG 画像（images/latrunculi.webp）、アイコン（images/atlas/latrunculi.webp）。
 

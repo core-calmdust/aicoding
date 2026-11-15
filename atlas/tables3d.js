@@ -222,6 +222,8 @@
     reversi: { list: ['classic', 'toy', 'ink', 'moon', 'chocolate', 'pixel'], get: () => { const v = ls.get('atlas-reversi-look'); return BOARDS.reversi.list.includes(v) ? v : 'classic'; }, set: k => { ls.set('atlas-reversi-look', k); ls.set('atlas-reversi-view', '3d'); } },
     checkers: { list: ['marble', 'lacquer', 'deco', 'lapis', 'leather', 'boulle'], get: () => { const v = ls.get('atlas-checkers-look'); return BOARDS.checkers.list.includes(v) ? v : 'marble'; }, set: k => ls.set('atlas-checkers-look', k) },
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
+    // ludus latrunculorum (atlas/models/latrunculi.js, 2026-11-16): 'atlas-latrunculi-look' — 大理石 (the default) · トラバーチン · 屋根瓦 · モザイク · くるみ材 · 斑岩
+    latrunculi: { list: ['marble', 'travertine', 'tile', 'mosaic', 'wood', 'porphyry'], get: () => { const v = ls.get('atlas-latrunculi-look'); return BOARDS.latrunculi.list.includes(v) ? v : 'marble'; }, set: k => ls.set('atlas-latrunculi-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
     // table hockey (3D only): 'atlas-hockey-look'
@@ -261,7 +263,14 @@
     ui: (k, lang) => (CKN[lang] || CKN.en)[{ you: 8, opp: 9, head: 10 }[k]],
   } };
   // a game's own board names (the board is part of its game, so no '3D'): table hockey
-  const NG = { backgammon: {
+  const NG = { latrunculi: {
+    marble: { ja: '大理石', en: 'Marble', zh: '大理石', 'zh-TW': '大理石', ko: '대리석', es: 'Mármol', fr: 'Marbre', pt: 'Mármore', de: 'Marmor', ru: 'Мрамор', tr: 'Mermer', id: 'Marmer', hi: 'संगमरमर', ar: 'رخام' },
+    travertine: { ja: 'トラバーチン', en: 'Travertine', zh: '洞石', 'zh-TW': '洞石', ko: '트래버틴', es: 'Travertino', fr: 'Travertin', pt: 'Travertino', de: 'Travertin', ru: 'Травертин', tr: 'Traverten', id: 'Travertin', hi: 'ट्रैवर्टीन', ar: 'ترافرتين' },
+    tile: { ja: '屋根瓦（テグラ）', en: 'Roof tile (tegula)', zh: '屋瓦（tegula）', 'zh-TW': '屋瓦（tegula）', ko: '기와(테굴라)', es: 'Teja (tegula)', fr: 'Tuile (tegula)', pt: 'Telha (tegula)', de: 'Dachziegel (Tegula)', ru: 'Черепица (тегула)', tr: 'Kiremit (tegula)', id: 'Genting (tegula)', hi: 'खपरैल (टेगुला)', ar: 'قرميد (تيغولا)' },
+    mosaic: { ja: 'モザイクの床', en: 'Mosaic floor', zh: '马赛克地面', 'zh-TW': '馬賽克地面', ko: '모자이크 바닥', es: 'Suelo de mosaico', fr: 'Sol en mosaïque', pt: 'Piso de mosaico', de: 'Mosaikboden', ru: 'Мозаичный пол', tr: 'Mozaik zemin', id: 'Lantai mosaik', hi: 'मोज़ेक फ़र्श', ar: 'أرضية فسيفساء' },
+    wood: { ja: 'くるみ材', en: 'Walnut', zh: '胡桃木', 'zh-TW': '胡桃木', ko: '호두나무', es: 'Nogal', fr: 'Noyer', pt: 'Nogueira', de: 'Nussbaum', ru: 'Орех', tr: 'Ceviz', id: 'Kayu kenari', hi: 'अखरोट की लकड़ी', ar: 'خشب الجوز' },
+    porphyry: { ja: '斑岩', en: 'Porphyry', zh: '斑岩', 'zh-TW': '斑岩', ko: '반암', es: 'Pórfido', fr: 'Porphyre', pt: 'Pórfiro', de: 'Porphyr', ru: 'Порфир', tr: 'Porfir', id: 'Porfiri', hi: 'पॉर्फ़िरी', ar: 'حجر السماق' } },
+    backgammon: {
     marq: { ja: '寄木細工', en: 'Marquetry', zh: '镶嵌木', 'zh-TW': '鑲嵌木', ko: '상감 목재', es: 'Marquetería', fr: 'Marqueterie', pt: 'Marchetaria', de: 'Intarsie', ru: 'Маркетри', tr: 'Marketeri', id: 'Marketri', hi: 'मार्केट्री', ar: 'تطعيم خشبي' },
     scarlet: { ja: 'レザー', en: 'Leather', zh: '皮革', 'zh-TW': '皮革', ko: '가죽', es: 'Cuero', fr: 'Cuir', pt: 'Couro', de: 'Leder', ru: 'Кожа', tr: 'Deri', id: 'Kulit', hi: 'लेदर', ar: 'جلد' },
     oak: { ja: 'スモークオーク', en: 'Smoked oak', zh: '烟熏橡木', 'zh-TW': '煙燻橡木', ko: '스모크 오크', es: 'Roble ahumado', fr: 'Chêne fumé', pt: 'Carvalho defumado', de: 'Räuchereiche', ru: 'Морёный дуб', tr: 'Füme meşe', id: 'Ek asap', hi: 'स्मोक्ड ओक', ar: 'بلوط مدخّن' },
@@ -459,6 +468,17 @@
       brush: { ja: '筆', en: 'Ink brushes', zh: '毛笔', 'zh-TW': '毛筆', ko: '붓', es: 'Pinceles de tinta', fr: 'Pinceaux à encre', pt: 'Pincéis de tinta', de: 'Tuschepinsel', ru: 'Кисти для туши', tr: 'Mürekkep fırçaları', id: 'Kuas tinta', hi: 'स्याही ब्रश', ar: 'فرش حبر' },
     } };
   // morris (atlas/models/morris.js, 2026-11-15): 'atlas-morris-pc3'
+  // ludus latrunculorum (atlas/models/latrunculi.js SETS, 2026-11-16): 'atlas-latrunculi-pc3'
+  PIECES.latrunculi = { list: ['glass', 'gem', 'bone', 'stone', 'bronze', 'terra'], get: () => { const v = ls.get('atlas-latrunculi-pc3'); return PIECES.latrunculi.list.includes(v) ? v : 'glass'; }, set: k => ls.set('atlas-latrunculi-pc3', k),
+    thumb: k => new URL('img/pc3-latrunculi-' + k + '.webp?v=1', ME).href,
+    names: {
+      glass: { ja: '黒と白のガラス', en: 'Black & white glass', zh: '黑白玻璃', 'zh-TW': '黑白玻璃', ko: '검정과 흰 유리', es: 'Vidrio negro y blanco', fr: 'Verre noir et blanc', pt: 'Vidro preto e branco', de: 'Schwarzes & weißes Glas', ru: 'Чёрное и белое стекло', tr: 'Siyah ve beyaz cam', id: 'Kaca hitam & putih', hi: 'काला और सफ़ेद काँच', ar: 'زجاج أسود وأبيض' },
+      gem: { ja: '青と琥珀のガラス', en: 'Blue & amber glass', zh: '蓝与琥珀色玻璃', 'zh-TW': '藍與琥珀色玻璃', ko: '파랑과 호박색 유리', es: 'Vidrio azul y ámbar', fr: 'Verre bleu et ambre', pt: 'Vidro azul e âmbar', de: 'Blaues & bernsteinfarbenes Glas', ru: 'Синее и янтарное стекло', tr: 'Mavi ve kehribar cam', id: 'Kaca biru & kuning', hi: 'नीला और अंबर काँच', ar: 'زجاج أزرق وكهرماني' },
+      bone: { ja: '骨と角', en: 'Bone & horn', zh: '骨与角', 'zh-TW': '骨與角', ko: '뼈와 뿔', es: 'Hueso y cuerno', fr: 'Os et corne', pt: 'Osso e chifre', de: 'Knochen & Horn', ru: 'Кость и рог', tr: 'Kemik ve boynuz', id: 'Tulang & tanduk', hi: 'हड्डी और सींग', ar: 'عظم وقرن' },
+      stone: { ja: '川の小石', en: 'River pebbles', zh: '河卵石', 'zh-TW': '河卵石', ko: '강 조약돌', es: 'Guijarros de río', fr: 'Galets de rivière', pt: 'Seixos de rio', de: 'Flusskiesel', ru: 'Речная галька', tr: 'Nehir çakılları', id: 'Kerikil sungai', hi: 'नदी के कंकड़', ar: 'حصى النهر' },
+      bronze: { ja: '青銅と銀の硬貨', en: 'Bronze & silver coins', zh: '青铜与银币', 'zh-TW': '青銅與銀幣', ko: '청동과 은화', es: 'Monedas de bronce y plata', fr: 'Pièces de bronze et d’argent', pt: 'Moedas de bronze e prata', de: 'Bronze- & Silbermünzen', ru: 'Бронзовые и серебряные монеты', tr: 'Bronz ve gümüş sikkeler', id: 'Koin perunggu & perak', hi: 'काँसे और चाँदी के सिक्के', ar: 'عملات برونزية وفضية' },
+      terra: { ja: '素焼きの赤と白', en: 'Red & cream clay', zh: '红白陶', 'zh-TW': '紅白陶', ko: '붉은 흙과 크림색 흙', es: 'Arcilla roja y crema', fr: 'Argile rouge et crème', pt: 'Argila vermelha e creme', de: 'Roter & heller Ton', ru: 'Красная и светлая глина', tr: 'Kırmızı ve krem kil', id: 'Tanah liat merah & krem', hi: 'लाल और क्रीम मिट्टी', ar: 'طين أحمر وكريمي' },
+    } };
   PIECES.morris = { list: ['metal', 'glass', 'bone', 'stone', 'pewter', 'bauhaus'], get: () => { const v = ls.get('atlas-morris-pc3'); return PIECES.morris.list.includes(v) ? v : 'metal'; }, set: k => ls.set('atlas-morris-pc3', k),
     thumb: k => new URL('img/pc3-morris-' + k + '.webp?v=1', ME).href,
     names: {
@@ -585,6 +605,7 @@
     senet: ["#130c07", "radial-gradient(1100px 620px at 18% -12%, rgba(31, 143, 168, 0.22), transparent 62%), radial-gradient(900px 600px at 110% 115%, rgba(214, 150, 60, 0.16), transparent 60%)"],
     ur: ["#080d26", "radial-gradient(1100px 620px at 18% -12%, rgba(42, 63, 158, 0.55), transparent 62%), radial-gradient(900px 600px at 110% 115%, rgba(142, 42, 28, 0.28), transparent 60%), radial-gradient(1px 1px at 12% 22%, rgba(255, 240, 200, 0.6), transparent), radial-gradient(1px 1px at 78% 12%, rgba(255, 240, 200, 0.5), transparent), radial-gradient(1.4px 1.4px at 64% 30%, rgba(255, 240, 200, 0.45), transparent), radial-gradient(1px 1px at 36% 8%, rgba(255, 240, 200, 0.5), transparent)"],
     agon: ["#0e0907", "radial-gradient(1200px 700px at 28% -10%, #3a1d12, transparent 60%), radial-gradient(900px 600px at 110% 110%, #24120b, transparent 60%)"],
+    latrunculi: ["#180a16", "radial-gradient(1200px 700px at 28% -10%, #4c1c40, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3a1a14, transparent 60%)"],
     konane: ["#03201f", "radial-gradient(1200px 700px at 28% -10%, #0c5a55, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3a2414, transparent 60%)"],
     fanorona: ["#170b06", "radial-gradient(1200px 700px at 28% -10%, #4b2510, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3d1c0b, transparent 60%)"],
     alquerque: ["#14070c", "radial-gradient(1200px 700px at 28% -10%, #4b2510, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3d1c0b, transparent 60%)"],
