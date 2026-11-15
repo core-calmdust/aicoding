@@ -342,12 +342,39 @@
     for (let k = 1; k < 8; k++) o += `<path d="M${2 + k * 10} 2V82M2 ${2 + k * 10}H82" stroke="#1f6b42" stroke-width=".8"/>`;
     for (let q = 0; q < 64; q++) if (c[q] === '1' || c[q] === '2') o += `<circle cx="${7 + (q & 7) * 10}" cy="${7 + (q >> 3) * 10}" r="4.1" fill="${c[q] === '1' ? '#17181c' : '#f6f2e6'}"${c[q] === '2' ? ' stroke="#bdb6a2" stroke-width=".6"' : ''}/>`;
     return o + '</svg>'; };
+  const rvLegal = (c, me) => { const a = Array.isArray(c) ? c : String(c).split('').map(Number), out = []; for (let q = 0; q < 64; q++) if (rvFlips(a, q, me).length) out.push(q); return out; };
+  const RV_MK = { focus: 'hl', danger: 'ng', flip: 'ok', front: 'ok', best: 'ok' };
+  function rvAid(it) {   // = reversi/index.html warmFacts + warmAids: what the step tells the player to look at
+    const c = String(it.cells).split('').map(Number), me = +it.toMove, op = 3 - me, CN = [0, 7, 56, 63], opL = rvLegal(c, op), out = [];
+    const nbr = q => { const r = q >> 3, k = q & 7, o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = k + dc; if ((dr || dc) && rr >= 0 && rr < 8 && cc >= 0 && cc < 8) o.push(rr * 8 + cc); } return o; };
+    const front = (b, s) => { let n = 0; for (let q = 0; q < 64; q++) if (b[q] === s && nbr(q).some(y => !b[y])) n++; return n; };
+    const F = {}; for (const m of rvLegal(c, me)) { const f = rvFlips(c, m, me), nc = c.slice(); nc[m] = me; f.forEach(q => { nc[q] = me; });
+      const seen = new Set(); f.forEach(q => nbr(q).forEach(y => { if (!nc[y]) seen.add(y); })); const ol = rvLegal(nc.join(''), op), r = m >> 3, k = m & 7;
+      const ed = r === 0 || r === 7 ? [m - 1, m + 1] : k === 0 || k === 7 ? [m - 8, m + 8] : null;
+      F[m] = { n: f.length, open: seen.size, oM: ol.length, give: ol.filter(q => CN.includes(q) && !opL.includes(q)), front: front(nc, me), reserve: !opL.includes(m), wedge: !CN.includes(m) && !!ed && ed.every(x => c[x] === op) }; }
+    const L2 = Object.keys(F).map(Number), lab = (q, v) => out.push({ at: q, label: v }), danger = () => L2.forEach(q => { if (F[q].give.length) out.push([q, 'ng']); }), dots = () => opL.forEach(q => out.push([q, 'dot']));
+    const xc = () => { for (const [cn, xs] of [[0, [9, 1, 8]], [7, [14, 6, 15]], [56, [49, 57, 48]], [63, [54, 62, 55]]]) if (!c[cn]) xs.forEach((q, i) => { if (!c[q]) lab(q, i ? 'C' : 'X'); }); };
+    switch (it.aid) {
+      case 'corner': xc(); danger(); break;
+      case 'cwait': xc(); danger(); dots(); break;
+      case 'odots': dots(); break;
+      case 'mob': case 'pass': L2.forEach(q => lab(q, F[q].oM)); break;
+      case 'open': L2.forEach(q => lab(q, F[q].open)); break;
+      case 'front': L2.forEach(q => lab(q, F[q].front)); break;
+      case 'flips': L2.forEach(q => lab(q, F[q].n)); break;
+      case 'wallc': for (let q = 0; q < 64; q++) if (c[q] === me && nbr(q).some(y => !c[y])) out.push([q, 'ng']); break;
+      case 'reserve': L2.forEach(q => { if (F[q].reserve) out.push([q, 'ok']); }); dots(); danger(); break;
+      case 'wedge': L2.forEach(q => { if (F[q].wedge) out.push([q, 'hl']); }); break;
+      case 'region': { const seen = new Set(); for (let q = 0; q < 64; q++) { if (c[q] || seen.has(q)) continue; const reg = [q]; seen.add(q); for (let i = 0; i < reg.length; i++) for (const y of nbr(reg[i])) if (!c[y] && !seen.has(y)) { seen.add(y); reg.push(y); } reg.forEach(y => lab(y, reg.length)); } break; }
+    }
+    return out;
+  }
   const REVERSI = {
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=20261107l14'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({}))])
-        .then(([ls, op, ev]) => {
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=20261107l14'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({})), getJ('../reversi/warm3d.json?v=1').catch(() => ({}))])
+        .then(([ls, op, ev, wt]) => { this.WT = wt || {};
           const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
           RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
           this.data = { ls, op, ev, steps }; return this;
@@ -361,12 +388,30 @@
       return D.ls.lessons.map((l, i) => { const T = this.T(l, lang); const p0 = (l.problems || [])[0]; return { key: String(i), cat: 'lesson', catName: '', title: T.title || l.id, sub: T.short || '', desc: T.goal || '', svg: p0 ? rvSvg(p0.cells) : '', st: this.pr(l.id) }; });
     },
     introPos() { return { pos: rvAfter(''), lock: true }; },   // (no diagram in lessons.json: the four starting discs, for looking only, while the intro is read)
+    // the warm-up (reversi/lessons.json l.warm + reversi/warm3d.json texts, 2026-11-15): the 2D aids drawn on the 3D board
+    rampPos: it => it.pos, rampBody: (it, lang) => L(it.b, lang),
+    rampMarks(it) { const out = it.k === 'explain' || it.guided ? rvAid(it) : []; for (const q in it.marks || {}) out.push([+q, RV_MK[it.marks[q]] || 'hl']); for (const ar of it.arrows || []) out.push({ arrow: ar, cls: 'ok' }); return out; },
+    rampLook: it => it.guided ? [] : rvAid(it), rampAns: it => it.ans,
+    rampAnsMk(it) { return this.rampMarks(it).concat(it.guided ? [] : rvAid(it)).concat([[it.ans, 'ok']]); },
+    rampOk: (it, u) => it.oks ? it.oks.includes(+u) : +u === it.ans,
     save(id, pts, max) { const pr = J(this.LKEY, {}), o = pr[id] || { best: 0, clear: false, v: 2 }, n = Math.round(pts * 100 / max), pass = n >= 75; pr[id] = { best: Math.max(o.best || 0, n), clear: !!o.clear || pass, v: 2 }; put(this.LKEY, pr); return pass; },
     lesson(key, lang) {
       const l = this.data.ls.lessons[+key]; if (!l) return null;
       const T = this.T(l, lang), std = shuffle(l.problems.filter(p => !p.trap)), trap = shuffle(l.problems.filter(p => p.trap)), nT = trap.length ? 1 : 0;
       const probs = [...std.slice(0, 5 - nT), ...trap.slice(0, nT)];
-      return { id: l.id, title: T.title || l.id, intro: (Array.isArray(T.intro) ? T.intro.join('<br>') : T.intro || ''),
+      const WT = this.WT || {}, W = k => WT[l.id + '/' + k] || null, pos = (c, m) => (Array.isArray(c) ? c.join('') : c) + ':' + m;
+      let ramp = (l.warm || []).map(w => w.t === 'concept'
+        ? { k: 'explain', pos: pos(w.cells, w.toMove), cells: w.cells, toMove: w.toMove, aid: w.aid, marks: w.marks, arrows: w.arrows, t: W('t' + w.k.slice(1)), b: W(w.k) }
+        : { k: 'try', pos: pos(w.cells, w.toMove), cells: w.cells, toMove: w.toMove, aid: w.aid, guided: w.t === 'guided', ans: w.ans, g: w.t === 'guided' ? W(w.k) : WT['ui/pp'], y: W(w.k + 'ok'), h: W('h0') });
+      if (l.id === 'rules' && WT['rules/c1']) {   // (no warm-up in the full game: placing and flipping, then the biggest flip)
+        const st = rvAfter('').split(':')[0], me = 1, lg = rvLegal(st, me), P0 = (l.problems || [])[0];
+        ramp = [{ k: 'explain', pos: st + ':1', cells: st, toMove: 1, marks: Object.fromEntries(lg.map(q => [q, 'flip'])), t: W('t1'), b: W('c1') },
+          { k: 'try', pos: st + ':1', cells: st, toMove: 1, marks: Object.fromEntries(lg.map(q => [q, 'flip'])), oks: lg, ans: lg[0], g: W('g1'), y: W('y1'), h: W('h1') }];
+        if (P0) { const v = Object.entries(P0.f), top = Math.max(...v.map(x => x[1][0])); ramp.push({ k: 'try', pos: pos(P0.cells, P0.toMove), cells: P0.cells, toMove: P0.toMove, aid: 'flips', guided: true, oks: v.filter(x => x[1][0] === top).map(x => +x[0]), ans: +v.find(x => x[1][0] === top)[0], g: W('g2'), y: W('y2'), h: W('h2'), look: W('look') }); }
+      }
+      if (!ramp.every(it => (it.k === 'explain' ? it.b : it.g))) ramp = [];   // (texts missing: no warm-up rather than an empty one)
+      const look = W('look'), RU = (k, v) => fill(k === 'look' && look ? L(look, lang) : L(WT['ui/' + k], lang) || '', v || {});
+      return { id: l.id, title: T.title || l.id, intro: (Array.isArray(T.intro) ? T.intro.join('<br>') : T.intro || ''), ramp: ramp.length ? ramp : null, RU,
         probs: probs.map(p => { const v = Object.entries(p.f), b = v.reduce((a, x) => x[1][0] > a[1][0] ? x : a, v[0]); return { pos: p.cells + ':' + p.toMove, kind: 'best', P: p, ask: T.prompt || '', why: '', ans: b ? b[0] : '' }; }),
         save: (pts, max) => this.save(l.id, pts, max) };
     },
@@ -889,7 +934,7 @@
         if (sess && id === 'go' && G && pz() && pz().n !== (G.spec.n || 9)) { sess.stop(); sess = null; }   // (go: another board size — a new board)
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
-            pz: Object.assign({ fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: id === 'reversi', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
+            pz: Object.assign({ fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
         else if (G && (id === 'checkers' || id === 'xiangqi')) pz().load(G.spec, G.me, { lock: !!G.lock });
