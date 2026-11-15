@@ -2,10 +2,11 @@
 #   python3 atlas/tools/chess-tex.py [name …]        (numpy, scipy, Pillow; the noise / wood helpers are the xiangqi ones: xqtex_*.py)
 # Each board: top-<look> (the whole top, 2048²) and side-<look> (the four faces stacked: far / right / near / left, see
 # xqtex_field.perimeter), each with a "-m" map: R height (bump), G roughness, B metalness.
-#   ceramic  陶器と金継ぎ   hand-painted white glaze squares on a black glaze, gold kintsugi seams across the board
+#   ceramic  陶器と金継ぎ   hand-painted white glaze squares on a black glaze, broken and mended: the fragments sit a hair off,
+#                          gold seams of changing width on an urushi bed, chips filled with gold
 #   jewel    ジュエリー     pavé of white diamonds / black spinels in platinum, baguettes and millegrain on the frame
 #   brass    真鍮彫り       black enamel engraved with brass (a lotus on each dark square, bands of strokes on the frame), nickel-silver squares
-#   neon     ネオン         smoked acrylic, rings engraved in the light squares lit cyan (far) → magenta (near), a lit rim
+#   neon     ネオン         smoked acrylic, frosted light squares lit cyan (far) → magenta (near), a lit rim
 # Each board is a world of its own (2026-11-15 v2: the first marble / walnut / leather / khatam boards looked like other games' boards).
 import os, sys, math
 import numpy as np
@@ -128,57 +129,94 @@ def pebble(X, Y, cell, seed):
     return d1 / cell, (d2 - d1) / cell
 
 # ---------- 陶器と金継ぎ (ceramic): a hand-painted glazed slab, its cracks mended with gold ----------
-def crack_paths(seed, n=3):
-    """kintsugi seams: wandering lines that start at the rim and run across, with a few short branches"""
-    R = np.random.default_rng(seed); out = []
-    starts = [(R.uniform(1.5, W - 1.5), .02, math.pi / 2), (W - .02, R.uniform(2, W - 2), math.pi), (R.uniform(2, W - 2), W - .02, -math.pi / 2), (.02, R.uniform(2, W - 2), 0)]
-    R.shuffle(starts)
-    for k in range(n):
-        x, y, a = starts[k]; a += R.uniform(-.35, .35); pts = [(x, y)]; L = R.uniform(6.5, 10)
-        a0 = a
-        for i in range(int(L / .045)):
-            a += R.normal(0, .16) + (a0 - a) * .04 + math.sin(i * .21 + k) * .04   # wanders, but keeps its heading: across the board
-            x += math.cos(a) * .045; y += math.sin(a) * .045
-            if not (0 <= x <= W and 0 <= y <= W): break
-            pts.append((x, y))
-            if R.random() < .012:   # a branch
-                bx, by, ba = x, y, a + R.choice([-1, 1]) * R.uniform(.6, 1.1); bp = [(bx, by)]
-                for j in range(R.integers(8, 24)):
-                    ba += R.normal(0, .3); bx += math.cos(ba) * .04; by += math.sin(ba) * .04; bp.append((bx, by))
-                out.append((bp, .006))
-        out.append((pts, .011))
-    return out
+def fracture(R, x, y, a, L, step=(.05, .14), turn=.42):
+    """a fracture line: straight runs that change direction abruptly (as ceramic breaks), keeping a general heading"""
+    pts = [(x, y)]; a0 = a; d = 0
+    while d < L:
+        st = R.uniform(*step); a = a0 + np.clip(a - a0 + R.normal(0, turn), -.7, .7)
+        x += math.cos(a) * st; y += math.sin(a) * st; d += st
+        pts.append((x, y))
+        if not (-.2 <= x <= W + .2 and -.2 <= y <= W + .2): break
+    return pts
+def kintsugi_plan(seed=5):
+    """two breaks right across the slab, a few branches off them and some hair cracks; chips (missing fragments) along the way.
+       → [(points, width_min, width_max, main)], [(x, y, size)]"""
+    R = np.random.default_rng(seed); cracks = []; chips = []
+    mains = [(-.1, R.uniform(2.2, 3.6), R.uniform(-.25, .25)), (R.uniform(5.6, 7.4), -.1, math.pi / 2 + R.uniform(-.3, .3))]
+    for (x, y, a) in mains:
+        pts = fracture(R, x, y, a, 14); cracks.append((pts, .016, .034, True))
+        for k in range(R.integers(2, 4)):   # branches
+            i = R.integers(len(pts) // 5, len(pts) * 4 // 5); bx, by = pts[i]; ba = a + R.choice([-1, 1]) * R.uniform(.6, 1.2)
+            bp = fracture(R, bx, by, ba, R.uniform(1.2, 3.2)); cracks.append((bp, .009, .022, False))
+            if R.random() < .7: chips.append((*bp[len(bp) // 2], R.uniform(.05, .1)))
+        for k in range(2):   # chips on the main break
+            i = R.integers(len(pts) // 6, len(pts) * 5 // 6); chips.append((*pts[i], R.uniform(.07, .14)))
+    for k in range(3):   # hair cracks from the rim
+        side = R.integers(4); t = R.uniform(1.5, W - 1.5)
+        x, y, a = [(t, -.05, math.pi / 2), (W + .05, t, math.pi), (t, W + .05, -math.pi / 2), (-.05, t, 0)][side]
+        cracks.append((fracture(R, x, y, a + R.uniform(-.4, .4), R.uniform(.6, 1.6), (.03, .08)), .005, .012, False))
+    return cracks, chips
+def gold_masks(cracks, chips, seed):
+    """the gold: each crack drawn segment by segment with a width that swells and thins; the chips as irregular blobs"""
+    R = np.random.default_rng(seed); im, d = canvas(); bar, db = canvas()
+    for pts, w0, w1, main in cracks:
+        ph = R.uniform(0, 6)
+        for i in range(len(pts) - 1):
+            t = i / max(1, len(pts) - 1); wv = w0 + (w1 - w0) * (.5 + .5 * math.sin(i * .55 + ph)) * (.75 + .25 * R.random())
+            d.line([P(*pts[i]), P(*pts[i + 1])], fill=255, width=max(1, round(wv * PX * SS)))
+            r = wv / 2 * PX * SS; x, y = P(*pts[i + 1]); d.ellipse([x - r, y - r, x + r, y + r], fill=255)
+            if main: db.line([P(*pts[i]), P(*pts[i + 1])], fill=255, width=max(1, round(.004 * PX * SS)))
+    for x, y, sz in chips:
+        n = 11; pts = []
+        for k in range(n):
+            a = k / n * 6.283 + R.uniform(-.15, .15); rr = sz * R.uniform(.45, 1)
+            pts.append(P(x + math.cos(a) * rr, y + math.sin(a) * rr * R.uniform(.6, 1)))
+        d.polygon(pts, fill=255)
+    return done(im), done(bar)
 def ceramic_top():
     X, Y = coords(); h = w = CW; Z0 = np.zeros_like(X)
-    # glazes: white (a warm, thick tin glaze; thinner and greyer at the painted edges) and black (thinner at its rims: the clay
-    # browns through)
+    # glazes: white (a warm, thick tin glaze; thinner and greyer at the painted edges) and black (thinner at its rims: the clay browns through)
     WH = np.array([243, 239, 229], np.float32); BK = np.array([17, 17, 21], np.float32)
     im, d = canvas()
     for f, r, sy, sx in tiles():
         if (f + r) % 2 == 0: d.polygon([P(*p) for p in wobbly_square(M + f + .025, M + r + .025, .95, 31 + f * 8 + r)], fill=255)
     wm = done(im)
-    edge_in = np.clip(wm - blur(wm, 5) + .0, 0, 1) * 2.2   # inside the white, near its edge
+    edge_in = np.clip(wm - blur(wm, 5) + .0, 0, 1) * 2.2
     cl = (f3(X, Y, Z0, .6, .6, .6, 3, 4) - .5)
     white = WH * (1 + cl[..., None] * .05) * (1 - np.clip(edge_in, 0, 1)[..., None] * np.array([.10, .07, .02], np.float32))
-    d1, ce = pebble(X * 1.0, Y * 1.0, .16, 7); craq = (1 - smooth(0, .05, ce)) * smooth(.35, .65, f3(X, Y, Z0, 1.2, 1.2, 1.2, 9, 3))
+    d1, ce = pebble(X, Y, .16, 7); craq = (1 - smooth(0, .05, ce)) * smooth(.35, .65, f3(X, Y, Z0, 1.2, 1.2, 1.2, 9, 3))
     white *= (1 - craq * .07)[..., None]
     black = BK * (1 + (f3(X, Y, Z0, .5, .5, .5, 13, 4) - .5)[..., None] * .5)
-    rim = np.clip(blur(wm, 2.5) - wm, 0, 1) * 2.5   # the black thins where it meets the white
+    rim = np.clip(blur(wm, 2.5) - wm, 0, 1) * 2.5
     black = black * (1 - rim[..., None]) + np.array([92, 62, 40], np.float32) * rim[..., None] * .55 + black * rim[..., None] * .45
     col = black * (1 - wm[..., None]) + white * wm[..., None]
-    rough = np.full((h, w), .05, np.float32); metal = np.zeros((h, w), np.float32)
-    hgt = (f3(X, Y, Z0, .25, .25, .25, 17, 3) - .5) * .12 + wm * .08 - craq * .05   # orange-peel glaze, the white a hair thicker
-    # gold: a painted line round the field and near the outer edge, then the mended cracks
+    hgt = (f3(X, Y, Z0, .25, .25, .25, 17, 3) - .5) * .12 + wm * .08 - craq * .05
+    # painted gold lines round the field and near the edge (drawn before the break: they are broken and shifted too)
     ring = lambda a: [(M - a, M - a), (M + S + a, M - a), (M + S + a, M + S + a), (M - a, M + S + a), (M - a, M - a)]
-    gm = lines([ring(.1)], .022) + lines([ring(M - .14)], .014)
-    cr = crack_paths(5)
-    for pts, lw in cr: gm = gm + lines([pts], lw)
-    gm = np.clip(gm, 0, 1)
-    seam = np.clip(blur(gm, 1.4) - gm, 0, 1) * 2
-    col *= (1 - np.clip(seam, 0, 1) * .25)[..., None]
-    gc = metal_col(h, w, (232, 186, 98), 21) * (1 + (f3(X, Y, Z0, .05, .05, .05, 23, 2) - .5) * .25)[..., None]   # 金粉: a grainy gold
-    col = col * (1 - gm[..., None]) + gc * gm[..., None]
-    rough = rough * (1 - gm) + .28 * gm; metal = metal * (1 - gm) + gm; hgt = hgt + blur(gm, .8) * .35
+    paint_gold = np.clip(lines([ring(.1)], .022) + lines([ring(M - .14)], .014), 0, 1)
+    # the break: the slab came apart along the cracks — each fragment sits a hair off (shifted, a breath lighter or darker)
+    cracks, chips = kintsugi_plan(5)
+    gold, bar = gold_masks(cracks, chips, 7)
+    barrier = (bar > .3) | (gold > .5)
+    lab, n = ndimage.label(~barrier)
+    R = np.random.default_rng(11); off = R.integers(-3, 4, (n + 1, 2)); off[0] = 0; tone = 1 + R.uniform(-.025, .025, n + 1); tone[0] = 1
+    yy, xx = np.mgrid[0:h, 0:w]; oy = off[lab, 0]; ox = off[lab, 1]
+    sy_ = np.clip(yy + oy, 0, h - 1); sx_ = np.clip(xx + ox, 0, w - 1)
+    col = col[sy_, sx_] * tone[lab][..., None]; hgt = hgt[sy_, sx_]; paint_gold = paint_gold[sy_, sx_]
+    rough = np.full((h, w), .05, np.float32); metal = np.zeros((h, w), np.float32)
+    pg = metal_col(h, w, (232, 186, 98), 21)
+    col = col * (1 - paint_gold[..., None]) + pg * paint_gold[..., None]; rough = rough * (1 - paint_gold) + .3 * paint_gold; metal = np.maximum(metal, paint_gold)
+    # the mend: a dark urushi bed a hair wider than the gold, the glaze chipped at the crack's lips, then the gold (金粉 — powder,
+    # burnished on its ridge), standing up from the surface
+    lips = np.clip(blur(gold, 2.2) - gold, 0, 1)
+    col *= (1 - np.clip(lips * 2.4, 0, 1) * .55)[..., None]
+    col = col * (1 - np.clip(lips * 3, 0, .6)[..., None]) + np.array([46, 28, 16], np.float32) * np.clip(lips * 3, 0, .6)[..., None]
+    gb = blur(gold, 1.6); ridge = np.clip((gb - .55) / .45, 0, 1)   # the middle of the seam
+    grain = f3(X, Y, Z0, .012, .012, .012, 23, 2)
+    gcol = np.array([214, 164, 72], np.float32)[None, None, :] * (.86 + grain[..., None] * .22 + ridge[..., None] * .18)
+    col = col * (1 - gold[..., None]) + gcol * gold[..., None]
+    rough = rough * (1 - gold) + (.42 - ridge * .26) * gold; metal = metal * (1 - gold) + gold
+    hgt = hgt * (1 - gold) + (gb * .55 + grain * .06) * gold + lips * -.15
     return col, mmap(rough, metal, hgt)
 def ceramic_side():
     X, Y, Z, Ek = perimeter(W, W, E_RO, SH, SPX)
@@ -234,7 +272,7 @@ def jewel_top():
     hue = XF._hash(ix, iz, np.full_like(ix, 3), 17)
     fire = np.stack([np.cos(hue * 6.28) * .5 + .5, np.cos(hue * 6.28 - 2.1) * .5 + .5, np.cos(hue * 6.28 - 4.2) * .5 + .5], -1)
     dia = (96 + v[..., None] * 150) * (1 - .1 * fire * (v[..., None] > 1)) + fire * 26 * (v[..., None] > 1)
-    spi = 10 + v[..., None] ** 3 * np.array([92, 92, 100], np.float32) + (v[..., None] > 1) * 90
+    spi = (14 + np.minimum(v, 1)[..., None] * 58) * np.array([1, 1, 1.06], np.float32)   # black spinels: the same cut, dark
     stone = np.where(light[..., None], dia, spi)
     stone = stone * (1 - girdle[..., None] * .7)
     setting = np.where(light[..., None], PT, BR) * (.86 + (vnoise(h, w, 3, 3, 5) - .5)[..., None] * .2)
@@ -299,7 +337,7 @@ def jewel_side():
     return col, mmap(rough, metal, hgt)
 
 # ---------- 真鍮彫り (brass): black enamel engraved with brass line work; nickel-silver light squares ----------
-BRASS2 = (222, 178, 92)
+BRASS2 = (240, 196, 106)
 def hatch_band(d, a_in, a_out, kind, seed):
     """a band of engraving round the field between a_in and a_out (out from the field's edge)"""
     R = np.random.default_rng(seed); lw = lambda v: max(1, round(v * PX * SS))
@@ -375,7 +413,7 @@ def brass_top():
     for cx, cy in [(M - .37, M - .37), (M + S + .37, M - .37), (M + S + .37, M + S + .37), (M - .37, M + S + .37)]: lotus(d, cx, cy, .24, .007)
     eg = done(im) * (1 - pm)
     bc = metal_col(h, w, BRASS2, 13) * (1 + (vnoise(h, w, 2, 2, 15) - .5)[..., None] * .3)
-    col = col * (1 - eg[..., None]) + bc * eg[..., None]; rough = rough * (1 - eg) + .32 * eg; metal = metal * (1 - eg) + eg; hgt -= eg * .35
+    col = col * (1 - eg[..., None]) + bc * eg[..., None]; rough = rough * (1 - eg) + .14 * eg; metal = metal * (1 - eg) + eg; hgt -= eg * .18
     return col, mmap(rough, metal, hgt)
 def brass_side():
     X, Y, Z, Ek = perimeter(W, W, E_RO, SH, SPX)
@@ -390,10 +428,10 @@ def brass_side():
     m = np.maximum(m, (band & (strokes > 0)).astype(np.float32))
     m = blur(m, .5)
     bc = metal_col(h, w, BRASS2, 55)
-    col = col * (1 - m[..., None]) + bc * m[..., None]; rough = rough * (1 - m) + .32 * m; metal = metal * (1 - m) + m; hgt -= m * .35
+    col = col * (1 - m[..., None]) + bc * m[..., None]; rough = rough * (1 - m) + .14 * m; metal = metal * (1 - m) + m; hgt -= m * .18
     return col, mmap(rough, metal, hgt)
 
-# ---------- ネオン (neon): smoked acrylic, engraved rings in the light squares lit from the edge (cyan far → magenta near) ----------
+# ---------- ネオン (neon): smoked acrylic, frosted light squares lit from the edge (cyan far → magenta near) ----------
 def glow_col(Y):
     t = np.clip(Y / W, 0, 1)[..., None]
     C = np.array([70, 225, 255], np.float32); Mg = np.array([255, 70, 200], np.float32)
@@ -402,20 +440,19 @@ def neon_top():
     X, Y = coords(); h = w = CW; Z0 = np.zeros_like(X)
     base = np.ones((h, w, 3), np.float32) * np.array([9, 10, 16], np.float32)
     G = glow_col(Y)
-    # light squares: frosted, engraved with concentric rings (lit), the dark squares clear smoke
+    # light squares: frosted and lit, the dark squares clear smoke
     fx, fy = np.floor(X - M), np.floor(Y - M); infield = (X > M) & (X < M + S) & (Y > M) & (Y < M + S)
     light = (infield & (((fx + fy) % 2) == 0)).astype(np.float32)
     cx, cy = M + fx + .5, M + fy + .5; rr = np.hypot(X - cx, Y - cy)
-    rings = np.clip(1 - np.abs(((rr / .065) % 1) - .5) / .09, 0, 1) * (rr < .46)
-    frost = light * .14
-    glow = light * (rings * .85 + .1) + frost
+    edge_sq = np.maximum(np.abs(X - cx), np.abs(Y - cy))   # a frosted panel, a little brighter towards its lit edges
+    glow = light * (.22 + smooth(.3, .5, edge_sq) * .16)
     # the field's edge and the outer rim: bright lit lines
     edge = np.maximum(np.abs(X - W / 2), np.abs(Y - W / 2))
     ln = np.exp(-((edge - S / 2 - .05) / .012) ** 2) * 1.2 + np.exp(-((edge - W / 2 + .06) / .016) ** 2) * 1.4 + np.exp(-((edge - S / 2 - .38) / .006) ** 2) * .5
     glow = glow + ln
     col = base + G * glow[..., None] * .95
     rough = np.where(light > .5, .35, .03).astype(np.float32); metal = np.zeros((h, w), np.float32)
-    hgt = -light * rings * .2
+    hgt = np.zeros((h, w), np.float32)
     return col, mmap(rough, metal, hgt)
 def neon_side():
     X, Y, Z, Ek = perimeter(W, W, E_RO, SH, SPX)
