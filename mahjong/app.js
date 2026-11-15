@@ -881,7 +881,7 @@ function renderStats() {
           <button class="x" data-a="close" aria-label="${esc(t('close'))}">×</button>
         </header>
         ${sk ? `<div class="ps-sk">${skillChip(sk)}</div>` : ''}
-        ${P.tabs.length > 1 ? `<div class="ps-tabs">${P.tabs.map(([k, lab]) => `<button class="${k === (tb && tb[0]) ? 'on' : ''}" data-tab="${k}">${esc(lab)}</button>`).join('')}</div>` : ''}
+        ${P.tabs.length > 1 && !P.yakuAll ? `<div class="ps-tabs">${P.tabs.map(([k, lab]) => `<button class="${k === (tb && tb[0]) ? 'on' : ''}" data-tab="${k}">${esc(lab)}</button>`).join('')}</div>` : ''}
         <div class="ps-body">
           ${P.yakuAll && tb && tb[0] !== 'log' ? yAllPage : tb && tb[0] === 'log' ? histHTML() : !tb ? `<p class="ps-empty">${esc(t('psNoData'))}</p>` : empty ? `<p class="ps-empty">${esc(t(isG ? 'psEmptyG' : 'psEmpty'))}</p>` : `
           <div class="ps-big">${big.map(([l, v]) => `<div><small>${esc(l)}</small><b>${v}</b></div>`).join('')}</div>
