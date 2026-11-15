@@ -33,7 +33,7 @@
     E_BB = .75, E_BBALL = .85, E_RIM = .55, E_KEEP = .45, E_POST = .5,
     VMAX = 200, VMIN = 12,
     DT = 1 / 360, TMAX = 12, FPS = 60;
-  const DIM = { FW, FL, HW, H, PS, PE, TX, TY, GW, GHW, GD, SA_W, SA_D, BA_W, BA_D, PEN, CR, RB, RBALL, KHW, KHD, VMAX, DEC_B };
+  const DIM = { FW, FL, HW, H, PS, PE, TX, TY, GW, GHW, PK_GW: 6 * KHW, GD, SA_W, SA_D, BA_W, BA_D, PEN, CR, RB, RBALL, KHW, KHD, VMAX, DEC_B };
   const team = i => i < 10 ? 0 : 1;
   const goalY = t => t === 0 ? H : -H;                      // the goal line side t defends
   const fwd = t => t === 0 ? -1 : 1;                        // the direction side t attacks (sign of y)
@@ -187,7 +187,10 @@
     return 0;
   }
   // the goal frames: two side boards and a back board each end (outside the field), the posts
-  const GOALBOX = []; for (const sg of [1, -1]) { const y0 = sg * (H + GD / 2 + .3); GOALBOX.push([-(GHW + .5), y0, .5, GD / 2 + .3], [GHW + .5, y0, .5, GD / 2 + .3], [0, sg * (H + GD + .6), GHW + 1, .3]); }
+  // the PK shoot-out plays at a goal three keepers wide (2026-11-15 ユーザー：中央に構えられるとほぼ入らない — the match goal stays)
+  const PK_GW = 6 * KHW, ghw = s => s && s.pk ? PK_GW / 2 : GHW;
+  const goalBoxFor = h => { const B = []; for (const sg of [1, -1]) { const y0 = sg * (H + GD / 2 + .3); B.push([-(h + .5), y0, .5, GD / 2 + .3], [h + .5, y0, .5, GD / 2 + .3], [0, sg * (H + GD + .6), h + 1, .3]); } return B; };
+  const GBOX = {};
 
   // shot: { i (button), ang, v (cm/s) }. Returns where everything ended up and what touched what.
   function simulate(s, shot, opt) {
@@ -197,7 +200,7 @@
     X[BALL] = s.ball.x; Y[BALL] = s.ball.y; R[BALL] = RBALL; M[BALL] = MBALL;
     const S = shot.i, v = Math.max(0, Math.min(VMAX, shot.v));
     VX[S] = Math.cos(shot.ang) * v; VY[S] = Math.sin(shot.ang) * v;
-    const K = s.k;
+    const K = s.k, GH_ = ghw(s), GOALBOX = GBOX[GH_] || (GBOX[GH_] = goalBoxFor(GH_));
     function keepers(i) {
       for (let kt = 0; kt < 2; kt++) {
         const vn = boxHit(X, Y, VX, VY, i, R[i], K[kt].x, K[kt].y, KHW, KHD, i === BALL ? E_KEEP : E_BB);
@@ -239,7 +242,7 @@
         keepers(i);
         if (i === BALL && !out && !goal) {
           // in the goal: the ball's middle over the line between the posts
-          if (Math.abs(Y[i]) > H && Math.abs(X[i]) < GHW) { goal = { side: Y[i] > 0 ? 0 : 1, x: X[i] }; tGoal = t; events.push({ t, k: 'goal', side: goal.side }); }
+          if (Math.abs(Y[i]) > H && Math.abs(X[i]) < GH_) { goal = { side: Y[i] > 0 ? 0 : 1, x: X[i] }; tGoal = t; events.push({ t, k: 'goal', side: goal.side }); }
           else if (Math.abs(X[i]) > HW) { out = { kind: 'side', x: X[i], y: Y[i], t }; events.push({ t, k: 'out' }); }
           else if (Math.abs(Y[i]) > H) { out = { kind: 'end', x: X[i], y: Y[i], side: Y[i] > 0 ? 0 : 1, t }; events.push({ t, k: 'out' }); }
         }
@@ -530,7 +533,7 @@
   function laneOpen(s, bx, by, gy, t) {
     let ok = 0, n = 0;
     for (let k = -1; k <= 1.001; k += .5) {
-      const tx = k * (GHW - 1), ty = gy; n++;
+      const tx = k * (ghw(s) - 1), ty = gy; n++;
       const dx = tx - bx, dy = ty - by, L2 = dx * dx + dy * dy || 1;
       let blocked = false;
       for (let i = (1 - t) * 10; i < (1 - t) * 10 + 10 && !blocked; i++) { const b = s.b[i], q = ((b.x - bx) * dx + (b.y - by) * dy) / L2; if (q > 0 && q < 1 && Math.hypot(b.x - bx - dx * q, b.y - by - dy * q) < RB + RBALL) blocked = true; }
@@ -592,7 +595,7 @@
       if (!canFlick(s, i)) continue;
       const d = Math.hypot(s.b[i].x - s.ball.x, s.b[i].y - s.ball.y); if (d > sk.reach + RB) continue;
       for (let k = -1; k <= 1.001; k += sk.lv < 8 ? .5 : .25) for (const v of [120, 165, 200]) {
-        const th = Math.atan2(gy + (t === 0 ? -2 : 2) - s.ball.y, k * (GHW - 1.2) - s.ball.x), c = aimAt(s, i, th, v);
+        const th = Math.atan2(gy + (t === 0 ? -2 : 2) - s.ball.y, k * (ghw(s) - 1.2) - s.ball.x), c = aimAt(s, i, th, v);
         if (c) { c.v = Math.min(VMAX, c.v); out.push(c); }
       }
     }
@@ -668,7 +671,7 @@
       // how much of the mouth this keeper hides from the ball (and the shooter's nearest buttons don't matter here)
       let hid = 0, n = 0;
       for (let k = -1; k <= 1.001; k += .1) {
-        n++; const tx = k * GHW, dx = tx - bx, dy = gy - by;
+        n++; const tx = k * ghw(s), dx = tx - bx, dy = gy - by;
         for (let q = 0; q <= 1; q += .015) { const px = bx + dx * q, py = by + dy * q; if (Math.abs(px - x) < KHW + RBALL && Math.abs(py - y) < KHD + RBALL) { hid++; break; } }
       }
       const v = hid / n - Math.abs(y - gy) * .004;

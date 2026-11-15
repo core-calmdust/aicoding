@@ -241,14 +241,14 @@
     // the goals: two posts, a crossbar, the net (back, sides, roof) behind the line
     for (const sg of [1, -1]) {
       const gy = sg * H;
-      for (const sx of [-1, 1]) { const p = new TT.Mesh(geo('btPost', () => new TT.CylinderGeometry(.35 * K, .35 * K, GH * K, 12)), BM.post); p.position.set(sx * GHW * K, TOP + GH * K / 2, gy * K); p.castShadow = true; g.add(p); }
-      const bar = new TT.Mesh(geo('btBar', () => { const q = new TT.CylinderGeometry(.35 * K, .35 * K, GW * K, 12); q.rotateZ(Math.PI / 2); return q; }), BM.post); bar.position.set(0, TOP + GH * K, gy * K); bar.castShadow = true; g.add(bar);
-      const back = new TT.Mesh(geo('btNetB', () => new TT.PlaneGeometry(GW * K, GH * K)), BM.net); back.position.set(0, TOP + GH * K / 2, (gy + sg * GD) * K); g.add(back);
-      const roof = new TT.Mesh(geo('btNetR', () => { const q = new TT.PlaneGeometry(GW * K, GD * K); q.rotateX(Math.PI / 2); return q; }), BM.net); roof.position.set(0, TOP + GH * K, (gy + sg * GD / 2) * K); g.add(roof);
-      for (const sx of [-1, 1]) { const sd = new TT.Mesh(geo('btNetS', () => { const q = new TT.PlaneGeometry(GD * K, GH * K); q.rotateY(Math.PI / 2); return q; }), BM.net); sd.position.set(sx * GHW * K, TOP + GH * K / 2, (gy + sg * GD / 2) * K); g.add(sd); }
+      for (const sx of [-1, 1]) { const p = new TT.Mesh(geo('btPost', () => new TT.CylinderGeometry(.35 * K, .35 * K, GH * K, 12)), BM.post); p.position.set(sx * GHW * K, TOP + GH * K / 2, gy * K); p.castShadow = true; p.userData.gx = sx; g.add(p); }
+      const bar = new TT.Mesh(geo('btBar', () => { const q = new TT.CylinderGeometry(.35 * K, .35 * K, GW * K, 12); q.rotateZ(Math.PI / 2); return q; }), BM.post); bar.position.set(0, TOP + GH * K, gy * K); bar.castShadow = true; bar.userData.gs = 1; g.add(bar);
+      const back = new TT.Mesh(geo('btNetB', () => new TT.PlaneGeometry(GW * K, GH * K)), BM.net); back.position.set(0, TOP + GH * K / 2, (gy + sg * GD) * K); back.userData.gs = 1; g.add(back);
+      const roof = new TT.Mesh(geo('btNetR', () => { const q = new TT.PlaneGeometry(GW * K, GD * K); q.rotateX(Math.PI / 2); return q; }), BM.net); roof.position.set(0, TOP + GH * K, (gy + sg * GD / 2) * K); roof.userData.gs = 1; g.add(roof);
+      for (const sx of [-1, 1]) { const sd = new TT.Mesh(geo('btNetS', () => { const q = new TT.PlaneGeometry(GD * K, GH * K); q.rotateY(Math.PI / 2); return q; }), BM.net); sd.position.set(sx * GHW * K, TOP + GH * K / 2, (gy + sg * GD / 2) * K); sd.userData.gx = sx; g.add(sd); }
       // the frame on the table behind the net
-      for (const sx of [-1, 1]) { const f = new TT.Mesh(geo('btGFs', () => new TT.BoxGeometry(.5 * K, .5 * K, GD * K)), BM.post); f.position.set(sx * GHW * K, TOP + .25 * K, (gy + sg * GD / 2) * K); g.add(f); }
-      const fb = new TT.Mesh(geo('btGFb', () => new TT.BoxGeometry(GW * K, .5 * K, .5 * K)), BM.post); fb.position.set(0, TOP + .25 * K, (gy + sg * GD) * K); g.add(fb);
+      for (const sx of [-1, 1]) { const f = new TT.Mesh(geo('btGFs', () => new TT.BoxGeometry(.5 * K, .5 * K, GD * K)), BM.post); f.position.set(sx * GHW * K, TOP + .25 * K, (gy + sg * GD / 2) * K); f.userData.gx = sx; g.add(f); }
+      const fb = new TT.Mesh(geo('btGFb', () => new TT.BoxGeometry(GW * K, .5 * K, .5 * K)), BM.post); fb.position.set(0, TOP + .25 * K, (gy + sg * GD) * K); fb.userData.gs = 1; g.add(fb);
     }
     if (look === 'neon') top.userData.keep = true;
     const U = g.userData;
@@ -256,6 +256,9 @@
     U.xz = (x, y) => [x * K, y * K];
     U.button = (side, n) => button(look, side, n); U.ball = () => ball(look); U.keeper = side => keeper(look, side);
     U.dot = side => DOT[look][side];
+    // the goal's inside width (cm): the PK shoot-out widens it (the posts and side nets move out, the bar and nets stretch)
+    const GM = g.children.filter(m => m.userData.gx || m.userData.gs);
+    U.goalWidth = w => { w = w || GW; GM.forEach(m => { const d = m.userData; if (d.gx) m.position.x = d.gx * w / 2 * K; else if (d.gs) m.scale.x = w / GW; }); };
     return g;
   }
 
