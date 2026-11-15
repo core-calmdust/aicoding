@@ -121,6 +121,55 @@
     });
   }
 
+  /* ---------- the six boards and six seed sets (2026-11-15): the board's shape kept, each look its own world ----------
+     lacquer 漆黒と金 (default, procedural) · baobab 彫りのアフリカ材 (dark hardwood, a carved zigzag band, wooden rings) · sand 砂の盤 (pits
+     scooped in packed sand, no rings) · copper 打ち出しの銅盆 (a hammered Ottoman tray, engraved vines, brass) · celadon 青磁 (jade glaze with
+     a fine crackle) · concrete コンクリートと真鍮 (cast concrete, brass rings).  Pictures: atlas/tools/mancala-tex.py → images/atlas/mancala3d/.
+     Seeds: gems ガラスの玉 (default, eight colours) · cowrie タカラガイ · nazar ナザール・ボンジュウ · beans 豆 · pebble 川石 · nicker 本物の種 (nickernut). */
+  const LOOKS = ['lacquer', 'baobab', 'sand', 'copper', 'celadon', 'concrete'], SETS = ['gems', 'cowrie', 'nazar', 'beans', 'pebble', 'nicker'];
+  const lsg = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const curLook = () => { const v = lsg('atlas-mancala-look'); return LOOKS.includes(v) ? v : 'lacquer'; };
+  const curSet = () => { const v = lsg('atlas-mancala-pc3'); return SETS.includes(v) ? v : 'gems'; };
+  const M3 = (() => { try { return new URL('../../images/atlas/mancala3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/mancala3d/'; } })(), M3V = '?v=1', m3img = {};
+  function m3(name, srgb = true) { if (m3img[name]) return m3img[name];
+    const TT = T(), t = new TT.TextureLoader().load(M3 + name + (X.coarse || X.lite ? '-h' : '') + '.webp' + M3V, () => { if (X.kick) X.kick(300); });
+    if (srgb) t.encoding = TT.sRGBEncoding; t.anisotropy = 8; return (m3img[name] = t); }
+  const LSPEC = {
+    baobab: { top: { bump: .004, clearcoat: .3 }, cup: ['#3a2416', '#120a06'], ring: [0x2a1a10, .45, 0], plinth: 0x1a0e08 },
+    sand: { top: { bump: .01 }, cup: ['#c89a62', '#7a5a34'], ring: null, plinth: 0x8a6a40, cupRough: .95 },
+    copper: { top: { bump: .006, metal: true }, cup: ['#a85a30', '#4a2210'], ring: [0xd8b064, .22, 1], plinth: 0x3a1a0c, cupMetal: true },
+    celadon: { top: { bump: .002, clearcoat: 1 }, cup: ['#8ab49a', '#3a5a48'], ring: [0xf2f0e6, .3, 0], plinth: 0x2a3a30 },
+    concrete: { top: { bump: .004 }, cup: ['#8a8a86', '#3a3a38'], ring: [0xd6b060, .2, 1], plinth: 0x2a2a28, cupRough: .8 },
+  };
+  const LM = {};
+  function lookMats(look) {
+    const base = mats(); if (look === 'lacquer' || !LSPEC[look]) return base;
+    if (LM[look]) return LM[look];
+    const TT = T(), L = LSPEC[look], mm = m3('top-' + look + '-m', false);
+    const top = M({ map: m3('top-' + look), bump: false, roughnessMap: mm, roughness: 1, metalness: L.top.metal ? 1 : 0, color: 0xffffff }); if (L.top.metal) top.metalnessMap = mm;
+    top.bumpMap = mm; top.bumpScale = L.top.bump || .003; if (L.top.clearcoat) { top.clearcoat = L.top.clearcoat; top.clearcoatRoughness = .08; }
+    const cup = M({ map: X.canvasTex('mcCup' + look, 8, 256, (c, w, h) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, L.cup[0]); g.addColorStop(1, L.cup[1]); c.fillStyle = g; c.fillRect(0, 0, w, h); }), bump: false, roughness: L.cupRough || .35, metalness: L.cupMetal ? .8 : 0, clearcoat: L.cupRough ? 0 : .5, clearcoatRoughness: .2 });
+    const gold = L.ring ? M({ color: L.ring[0], roughness: L.ring[1], metalness: L.ring[2], bump: false }) : null;
+    return (LM[look] = Object.assign({}, base, { top, cup, gold, plinth: M({ color: L.plinth, roughness: .6, bump: false }) }));
+  }
+  // seed sets: 8 materials each (the gems' colour index picks one) and their shape
+  const SM = {};
+  function canvasT(key, w, h, draw) { return X.canvasTex(key, w, h, draw); }
+  function setMats(set) {
+    if (SM[set]) return SM[set];
+    const TT = T(), base = mats(), C = c => new TT.Color(c).getHex();
+    const P = (o) => M(Object.assign({ bump: false }, o));
+    let L;
+    if (set === 'cowrie') L = ['#f6eedc', '#efe2c4', '#f4e8d6', '#e8d8b8', '#f8f2e6', '#ead6b4', '#f2e4cc', '#e6d2ae'].map((c, i) => { const m = P({ color: C(c), roughness: .2, clearcoat: 1, clearcoatRoughness: .08 }); m.map = canvasT('mcCow' + i, 64, 64, (g, w) => { g.fillStyle = '#fff'; g.fillRect(0, 0, w, w); for (let k = 0; k < 40; k++) { g.fillStyle = `rgba(150,110,60,${.06 + (k % 5) * .02})`; g.beginPath(); g.arc((k * 37 + i * 11) % w, (k * 53 + i * 7) % w, 1 + k % 3, 0, 7); g.fill(); } }); return m; });
+    else if (set === 'nazar') { const eye = canvasT('mcNazar', 128, 128, (g, w) => { const c = w / 2; [['#0a3aa8', .5], ['#ffffff', .34], ['#7ac8ff', .24], ['#0a0a10', .12]].forEach(([f, r]) => { g.fillStyle = f; g.beginPath(); g.arc(c, c, w * r, 0, 7); g.fill(); }); });
+      L = Array.from({ length: 8 }, (_, i) => P({ color: 0xffffff, map: eye, roughness: .05, clearcoat: 1, clearcoatRoughness: .02, emissive: C('#081a50') })); }
+    else if (set === 'beans') L = ['#7a3a1e', '#f2ead8', '#8a5a34', '#e8dcc0', '#5a2a18', '#c88a5a', '#efe6d2', '#a0522d'].map(c => P({ color: C(c), roughness: .3, clearcoat: .8, clearcoatRoughness: .15 }));
+    else if (set === 'pebble') L = ['#8a8a86', '#a8a49c', '#6e6c68', '#b8b2a6', '#7a746a', '#9a948a', '#c4beb2', '#5a5854'].map(c => P({ color: C(c), roughness: .5, clearcoat: .3, clearcoatRoughness: .4 }));
+    else if (set === 'nicker') L = ['#9aa49a', '#8a948c', '#a6aea2', '#7e8a80', '#b0b6aa', '#929a90', '#a0a89e', '#868e86'].map(c => P({ color: C(c), roughness: .25, clearcoat: 1, clearcoatRoughness: .1 }));
+    else L = base.gems;
+    return (SM[set] = L);
+  }
+
   /* ---------- materials ---------- */
   let MAT = null;
   function mats() {
@@ -141,8 +190,8 @@
   /* ---------- the board ---------- */
   const PITS = []; for (let i = 0; i < 6; i++) { PITS.push([-2.5 * PX + i * PX, PZ]); PITS.push([-2.5 * PX + i * PX, -PZ]); }
   const STORES = [[SX, 0], [-SX, 0]];
-  function board() {
-    const TT = T(), g = new TT.Group(), m = mats(), n = seg();
+  function board(look) {
+    const TT = T(), g = new TT.Group(), m = lookMats(look || curLook()), n = seg();
     // body: a rounded rectangle with the 14 hollows cut through, extruded with a rounded edge (outside and round each hole)
     const rr = .5, hw = W / 2 - .002, hd = D / 2 - .002, sh = new TT.Shape();
     sh.moveTo(-hw + rr, -hd); sh.lineTo(hw - rr, -hd); sh.quadraticCurveTo(hw, -hd, hw, -hd + rr); sh.lineTo(hw, hd - rr); sh.quadraticCurveTo(hw, hd, hw - rr, hd);
@@ -161,8 +210,8 @@
     // gold rings round the hollows, lying on the rounded edge
     const tube = .022, ry = TOP - BT * .35, rad = BS * .55;
     const ringG = new TT.TorusGeometry(PR + rad, tube, 4, n); ringG.rotateX(Math.PI / 2);
-    PITS.forEach(([x, z]) => { const r = new TT.Mesh(ringG, m.gold); r.position.set(x, ry, z); r.castShadow = false; r.receiveShadow = true; g.add(r); });
-    STORES.forEach(([x, z]) => {
+    if (m.gold) PITS.forEach(([x, z]) => { const r = new TT.Mesh(ringG, m.gold); r.position.set(x, ry, z); r.castShadow = false; r.receiveShadow = true; g.add(r); });
+    if (m.gold) STORES.forEach(([x, z]) => {
       const o = outline(x, z, SL, SR + rad, n + 8).map(([a, b]) => new TT.Vector3(a, ry, b));
       const r = new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(o, true), n + 8, tube, X.coarse ? 4 : 6, true), m.gold); r.receiveShadow = true; g.add(r);
     });
@@ -176,7 +225,7 @@
       const bg = new TT.ExtrudeGeometry(so, { depth: ht, bevelEnabled: false, curveSegments: 6 }); bg.rotateX(-Math.PI / 2); bg.translate(0, y0, 0);
       const bm = new TT.Mesh(bg, m.gold); bm.receiveShadow = true; return bm;
     };
-    g.add(band(.008, .03, PL + H * .62, .045));
+    if (m.gold) g.add(band(.008, .03, PL + H * .62, .045));
     // recessed plinth with a fine gold line at its foot
     const pl = new TT.Mesh(RB(W - .5, PL + .02, D - .5, .04, 1), m.plinth); pl.position.y = (PL + .02) / 2; pl.receiveShadow = true; pl.castShadow = true; g.add(pl);
     Object.assign(g.userData, { top: TOP, viewY: .55 });
@@ -190,7 +239,21 @@
     if (!stoneG) { stoneG = new (T().SphereGeometry)(SRAD, X.coarse ? 10 : 12, X.coarse ? 6 : 8); stoneG.scale(1, SFLAT, 1); X.share(stoneG); }   // (48 small pebbles: 12 × 8 is smooth at their size)
     return stoneG;
   }
-  function stone(ci) { const s = new (T().Mesh)(stoneGeo(), mats().gems[ci % GEMS.length]); s.castShadow = true; s.receiveShadow = true; return s; }
+  const SG = {};
+  function setGeo(set) {
+    if (SG[set]) return SG[set];
+    const TT = T(), sh = X.coarse ? .7 : 1;
+    let g;
+    if (set === 'cowrie') { g = new TT.SphereGeometry(SRAD, 14 * sh | 0, 8 * sh | 0); g.scale(1.15, .62, .78); }
+    else if (set === 'nazar') { const b = new TT.SphereGeometry(SRAD * .98, 16 * sh | 0, 8 * sh | 0); b.scale(1, .5, 1); const P = b.attributes.position, UV = b.attributes.uv; for (let i = 0; i < P.count; i++) UV.setXY(i, P.getX(i) / (SRAD * 2) + .5, P.getZ(i) / (SRAD * 2) + .5); g = b; }   // (planar UVs from above: the eye on the top)
+    else if (set === 'beans') { g = new TT.SphereGeometry(SRAD, 14 * sh | 0, 8 * sh | 0); const P = g.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i); P.setXYZ(i, x * 1.2, P.getY(i) * .55, z * .72 - Math.abs(x) * x * .9); } g.computeVertexNormals(); }
+    else if (set === 'pebble') { g = new TT.SphereGeometry(SRAD, 12 * sh | 0, 8 * sh | 0); const P = g.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), a = Math.atan2(z, x), k = 1 + .1 * Math.sin(3 * a + 1) + .06 * Math.sin(5 * a); P.setXYZ(i, x * k * 1.08, y * .55, z * k * .9); } g.computeVertexNormals(); }
+    else if (set === 'nicker') { g = new TT.SphereGeometry(SRAD * .92, 14 * sh | 0, 10 * sh | 0); g.scale(1, .86, 1); }
+    else g = stoneGeo();
+    if (g !== stoneG) X.share(g);
+    return (SG[set] = g);
+  }
+  function stone(ci, set) { set = set || curSet(); const L = setMats(set), s = new (T().Mesh)(setGeo(set), L[ci % L.length]); s.castShadow = true; s.receiveShadow = true; return s; }
   // heap cnt stones in a hollow: each one goes to the lowest free spot among a few candidates (on the bowl or on stones)
   function heap(g, cx, cz, L, r, dep, cnt, seed) {
     let q = seed * 9301 + 7; const rnd = () => ((q = (q * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
@@ -210,9 +273,9 @@
     }
   }
 
-  X.mancala = { board, stone, PITS, STORES, heap, floorY, GEMS, G: { W, D, PX, PZ, PR, PDEP, SX, SL, SR, SDEP, TOP, RIM, SRAD, SFLAT } };   // (G: the geometry, for table play / the portal skin)
-  X.MODELS.mancala = function (live) {
-    const g = board();
+  X.mancala = { LOOKS, SETS, board, stone, PITS, STORES, heap, floorY, GEMS, G: { W, D, PX, PZ, PR, PDEP, SX, SL, SR, SDEP, TOP, RIM, SRAD, SFLAT } };   // (G: the geometry, for table play / the portal skin)
+  X.MODELS.mancala = function (live, o = {}) {
+    const g = board(o.look);
     if (live) return g;
     // a mid-game position (Kalah, 4 seeds): pits of the near row left → right, then the far row, and the two stores
     const near = [4, 0, 5, 5, 4, 1], far = [4, 5, 2, 0, 6, 4];
