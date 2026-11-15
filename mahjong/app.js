@@ -797,6 +797,7 @@ async function openStats(s) {             // s: a seat of the game on screen; nu
   if (pl.kind === 'me') {
     const P = DB.pstats;
     tabs.push(['all', t('psAll'), MJStats.sum(P.skill, P.std, P.old)], ['skill', t('skillOn'), P.skill], ['std', t('skillOff'), P.std]);
+    if (!ig) tabs.push(['log', t('history'), null]);
   } else if (pl.kind === 'online' && MJStats.remote) {
     let r = null; try { r = await MJStats.remote(pl.uid); } catch (e) {}
     if (r && r.raw) tabs.push(['all', t('psAll'), MJStats.sum(r.raw.skill, r.raw.std)], ['skill', t('skillOn'), MJStats.fix(r.raw.skill)], ['std', t('skillOff'), MJStats.fix(r.raw.std)]);
@@ -808,15 +809,33 @@ async function openStats(s) {             // s: a seat of the game on screen; nu
   renderStats();
   const el = $('#pstats'); el.hidden = false; requestAnimationFrame(() => el.classList.add('show'));
 }
+// 対局履歴: newest first — when, the rules, who was played, the place, the final points, and in ranked play the points gained.
+// Games from before this log (kept by the shared record) are shown after, with what they recorded.
+function histHTML() {
+  const L0 = (DB.hist || []).slice().reverse();
+  let old = []; try { if (window.GameRecord) old = GameRecord.load().filter(x => x.t && !(DB.hist || []).some(h => Math.abs(h.t - x.t) < 5000)).reverse(); } catch (e) {}
+  if (!L0.length && !old.length) return `<p class="ps-empty">${esc(t('psEmpty'))}</p>`;
+  const dt = ms => { const d = new Date(ms), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}.${z(d.getMonth() + 1)}.${z(d.getDate())}<small>${z(d.getHours())}:${z(d.getMinutes())}</small>`; };
+  const pc = ['p1', 'p2', 'p3', 'p4'];
+  const rows = L0.map(h => { const c = MJChars.get(h.ch);
+    return `<div class="ph-r ${pc[h.pl]}"><span class="ph-d">${dt(h.t)}</span>
+      <span class="ph-pl">${t('rank')[h.pl]}</span>
+      ${c ? `<span class="ph-c">${frame(c, 'face')}<b>${esc(L(c.name))}</b></span>` : '<span></span>'}
+      <span class="ph-m">${esc(h.rk ? t('rated') : t('freePlay'))}<small>${esc(t(h.len === 'south' ? 'south' : 'east'))} · ${esc(t(h.sk ? 'skillOn' : 'skillOff'))}</small></span>
+      <span class="ph-s">${num(h.sc)}<small>${esc(t('ptsUnit'))}</small></span>
+      <span class="ph-g">${h.g != null ? `<b class="${h.g > 0 ? 'up' : ''}">${h.g > 0 ? '+' : ''}${h.g} pt</b><small>${esc(rkName(MJRank.list[h.rn] || MJRank.list[0]))}</small>` : ''}</span></div>`; }).join('');
+  const orows = old.map(x => `<div class="ph-r old ${x.res === 'w' ? 'p1' : x.res === 'l' ? 'p4' : ''}"><span class="ph-d">${dt(x.t)}</span><span class="ph-pl">${esc(x.why ? String(x.why).split('·')[0].trim() : '')}</span><span></span><span class="ph-m">${esc(x.opp || '')}</span><span class="ph-s">${esc(x.why && String(x.why).includes('·') ? String(x.why).split('·')[1].trim() : '')}</span><span></span></div>`).join('');
+  return `<div class="ph-list">${rows}${orows}</div>`;
+}
 function closeStats() { const el = $('#pstats'); if (el.hidden) return; el.classList.remove('show'); el.hidden = true; el.innerHTML = ''; PS = null; }
 function renderStats() {
   const P = PS, c = P.c, pl = P.pl;
   const tb = P.tabs.find(x => x[0] === P.tab) || P.tabs[0];
-  const raw = tb ? tb[2] : MJStats.blank(), D = MJStats.derive(raw), isG = !!tb && tb[0] === 'game';
+  const raw = (tb && tb[2]) || MJStats.blank(), D = MJStats.derive(raw), isG = !!tb && tb[0] === 'game';
   // (in ranked play the bots' strength is not shown — only the rank, as on the ranked screen)
   const who = pl.kind === 'me' ? t('you') : pl.kind === 'bot' ? (inGame() && UIS.ranked ? 'BOT' : 'BOT · ' + t('lv')[Math.max(0, Math.min(4, pl.lv | 0))]) : esc(pl.name || '');
   const sk = (P.ig ? (c.skill ? MJSkills.key(c.skill, c.tier | 0) : null) : useKey(c.id));
-  const empty = isG ? !D.hands : !D.games && !D.hands;
+  const empty = tb && tb[0] === 'log' ? false : isG ? !D.hands : !D.games && !D.hands;
   let place = null; if (isG && G) place = G.ranking().indexOf(P.s);
   const big = isG
     ? [[t('psHands'), num(D.hands)], [t('psNow'), place == null ? '—' : t('rank')[place]], [t('psWin'), pct(D.win)], [t('psDealin'), pct(D.dealin)]]
@@ -827,8 +846,9 @@ function renderStats() {
       isG ? [t('psSkillN'), num(raw.skillUses)] : [t('psSkill'), num(D.skillPerGame, 2)], [t('psYakuman'), num(D.yakuman)]]);
   const mw = D.maxWin;
   const mwHtml = mw && mw.pts ? `<b class="ps-mwp">${num(mw.pts)}</b><span>${mw.limit ? esc(t(mw.limit)) : esc(t('han', { n: mw.han }) + ' ' + t('fu', { n: mw.fu }))}${mw.yaku ? ` · ${esc(I18N.yaku(mw.yaku))}` : ''}</span>` : `<span class="ps-none">—</span>`;
-  const ymax = D.yakuTop.length ? D.yakuTop[0][1] : 1;
-  const yHtml = D.yakuTop.length ? D.yakuTop.map(([k, n]) => `<div class="ps-yk"><span>${esc(I18N.yaku(k))}</span><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i><b>${n}</b></div>`).join('') : `<span class="ps-none">—</span>`;
+  // (ユーザー 2026-11-15) every yaku ever made: how many times, and in what share of all the hands played (回数 / 総局数)
+  const yAll = Object.entries(raw.yaku || {}).sort((a, b) => b[1] - a[1]), ymax = yAll.length ? yAll[0][1] : 1;
+  const yHtml = yAll.length ? `<div class="ps-yh"><span>${esc(t('psYakuName'))}</span><span>${esc(t('psYakuN'))}</span><span>${esc(t('psYakuP'))}</span></div>` + yAll.map(([k, n]) => `<div class="ps-yk"><span>${esc(I18N.yaku(k))}</span><b>${n}</b><em>${pct(raw.hands ? n / raw.hands : 0)}</em><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i></div>`).join('') : `<span class="ps-none">—</span>`;
   let chHtml = '';
   if (pl.kind === 'me' && tb && tb[0] === 'all') {
     const ch = Object.entries(DB.pstats.chars).filter(([id]) => MJChars.get(id)).sort((a, b) => b[1].g - a[1].g).slice(0, 6);
@@ -840,27 +860,26 @@ function renderStats() {
       <div class="ps-main">
         <header class="ps-h">
           <div class="ps-id"><em class="prar r-${c.rarity}">${c.rarity}</em><div><b>${esc(L(c.name))}</b><small>${esc(L(c.title))}</small></div></div>
-          <span class="ps-who">${who}</span>${pl.kind === 'me' && !P.ig && window.GameRecord ? `<button class="btn sm ps-hist" data-a="hist">${esc(t('history'))}</button>` : ''}
+          ${pl.kind === 'me' ? '' : `<span class="ps-who">${who}</span>`}
           <button class="x" data-a="close" aria-label="${esc(t('close'))}">×</button>
         </header>
         ${sk ? `<div class="ps-sk">${skillChip(sk)}</div>` : ''}
         ${P.tabs.length > 1 ? `<div class="ps-tabs">${P.tabs.map(([k, lab]) => `<button class="${k === (tb && tb[0]) ? 'on' : ''}" data-tab="${k}">${esc(lab)}</button>`).join('')}</div>` : ''}
         <div class="ps-body">
-          ${!tb ? `<p class="ps-empty">${esc(t('psNoData'))}</p>` : empty ? `<p class="ps-empty">${esc(t(isG ? 'psEmptyG' : 'psEmpty'))}</p>` : `
+          ${tb && tb[0] === 'log' ? histHTML() : !tb ? `<p class="ps-empty">${esc(t('psNoData'))}</p>` : empty ? `<p class="ps-empty">${esc(t(isG ? 'psEmptyG' : 'psEmpty'))}</p>` : `
           <div class="ps-big">${big.map(([l, v]) => `<div><small>${esc(l)}</small><b>${v}</b></div>`).join('')}</div>
           ${isG ? '' : `<section class="ps-sec"><h4>${t('psRanks')}</h4><div class="ps-rbar">${D.rankP.map((p, i) => p ? `<i style="flex:${p};--rc:${RANKC[i]}"><b>${t('rank')[i]}</b><span>${pct(p)}</span></i>` : '').join('')}</div>
             <div class="ps-rn">${raw.rank.map((n, i) => `<span style="--rc:${RANKC[i]}"><i></i>${t('rank')[i]} <b>${n}</b></span>`).join('')}</div></section>`}
           <div class="ps-grid">${rows.map(([l, v]) => `<div><span>${esc(l)}</span><b>${v}</b></div>`).join('')}</div>
-          <div class="ps-cols"><section class="ps-sec ps-mw"><h4>${t('psMaxWin')}</h4><div>${mwHtml}</div></section><section class="ps-sec"><h4>${t('psYaku')}</h4><div class="ps-yks">${yHtml}</div></section></div>
+          <div class="ps-cols"><section class="ps-sec ps-mw"><h4>${t('psMaxWin')}</h4><div>${mwHtml}</div></section><section class="ps-sec ps-yaku"><h4>${t('psYaku')}<small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small></h4><div class="ps-yks">${yHtml}</div></section></div>
           ${chHtml}`}
-          ${pl.kind === 'bot' ? `<p class="ps-note">${esc(t('psBotNote'))}</p>` : pl.kind === 'me' ? `<p class="ps-note">${esc(t('psNote'))}</p>` : ''}
+          ${tb && tb[0] === 'log' ? '' : pl.kind === 'bot' ? `<p class="ps-note">${esc(t('psBotNote'))}</p>` : pl.kind === 'me' ? `<p class="ps-note">${esc(t('psNote'))}</p>` : ''}
         </div>
       </div>
     </div>`;
 }
 $('#pstats').addEventListener('click', e => {
   const tb = e.target.closest('[data-tab]'); if (tb && PS) { PS.tab = tb.dataset.tab; SND.pick(); renderStats(); return; }
-  if (e.target.closest('[data-a=hist]')) { SND.pick(); GameRecord.open(); return; }
   if (e.target.closest('[data-a=close]') || !e.target.closest('.ps-main, .ps-art')) { SND.pick(); closeStats(); }
 });
 
@@ -1516,6 +1535,11 @@ async function showFinal(d) {
       { const k = rollSkillKey(); DB.chars[u.reward] = { skills: [k], use: k }; gifts.push(u.reward); }
     rk = { gain, before, r0, r1, ups, gifts };
   }
+  // 対局履歴 (ユーザー 2026-11-15: the log is part of 戦績, not the shared dialog): the last 200 finished games
+  if (!AUTO) { const L0 = DB.hist = DB.hist || [];
+    L0.push({ t: Date.now(), len: G.rules.length, sk: G.rules.skills ? 1 : 0, rk: UIS.ranked ? 1 : 0, ch: UIS.chars[ME].id, pl: myRank, sc: G.scores[ME],
+      g: rk ? rk.gain : null, rn: rk ? rk.r1.i : null, h: UIS.track.seat[ME].hands, w: UIS.track.seat[ME].wins });
+    if (L0.length > 200) L0.splice(0, L0.length - 200); }
   save();
   recordGame(d, myRank);
   const w = UIS.chars[rank[0]];

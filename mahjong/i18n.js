@@ -4,7 +4,7 @@
 const S = {
   ja: {
     title: '雀華', sub: '〜艶やかなる姫君の雀宴〜', series: 'CALMDUST COLLECTION',
-    play: '対局', bot: 'BOT戦', rated: '段位戦', freePlay: 'フリー対局', fsEnter: 'フルスクリーン', fsExit: 'フルスクリーン解除', record: '戦績', rkLadder: '段位表', history: '対局履歴', rkLocked: '段位戦で「{r}」に到達すると仲間に', rkNext: '次の「{r}」まで あと {n} pt', rkTop: '最高位に到達', rkGain: '段位 +{n} pt', rkUp: '昇段！', rkGames: '{n} 戦', rkNextGift: '次の報酬キャラ', rkGiftAt: '「{r}」で獲得・あと {n} pt', rkPl: '位', rkRule: 'スキルあり。相手は段位が上がるにつれて強くなります。ポイントは減りません。2段階上がるごとに報酬キャラ', rkGiftGet: '報酬キャラ獲得！', lesson: 'レッスン', rules: 'ルール', soon: '準備中',
+    play: '対局', bot: 'BOT戦', rated: '段位戦', freePlay: 'フリー対局', fsEnter: 'フルスクリーン', fsExit: 'フルスクリーン解除', record: '戦績', rkLadder: '段位表', history: '対局履歴', psYakuName: '役', psYakuN: '回数', psYakuP: '出現率', psYakuOf: '総局数 {n} に対して', ptsUnit: '点', rkLocked: '段位戦で「{r}」に到達すると仲間に', rkNext: '次の「{r}」まで あと {n} pt', rkTop: '最高位に到達', rkGain: '段位 +{n} pt', rkUp: '昇段！', rkGames: '{n} 戦', rkNextGift: '次の報酬キャラ', rkGiftAt: '「{r}」で獲得・あと {n} pt', rkPl: '位', rkRule: 'スキルあり。相手は段位が上がるにつれて強くなります。ポイントは減りません。2段階上がるごとに報酬キャラ', rkGiftGet: '報酬キャラ獲得！', lesson: 'レッスン', rules: 'ルール', soon: '準備中',
     east: '東風戦', south: '半荘戦', skillOn: 'スキル戦', skillOff: '標準戦', strength: 'BOTの強さ',
     lv: ['入門', '初級', '中級', '上級', '達人'], start: '対局開始', gacha: 'ガチャ', chars: 'キャラ', coins: 'コイン',
     skill: 'スキル', free: '無料', cost: '{n}点', used: '使用済み', partner: 'パートナー', select: 'えらぶ', selected: '選択中',
@@ -24,13 +24,13 @@ const S = {
     stats: 'スタッツ', psAll: 'すべて', psGame: 'この対局', psGames: '対局数', psGamesN: '{n}戦', psHands: '局数', psNow: '現在の順位', psAvgRank: '平均順位', psWin: '和了率', psDealin: '放銃率',
     psTop: 'トップ率', psRentai: '連対率', psLastAvoid: 'ラス回避率', psAvgScore: '平均持ち点', psBust: 'トビ率', psRiichi: '立直率', psCall: '副露率', psTsumo: 'ツモ率', psRiichiWin: '立直後の和了率',
     psAvgWin: '平均打点', psAvgDeal: '平均放銃点', psDrawTen: '流局時の聴牌率', psSkill: 'スキル使用（1戦あたり）', psSkillN: 'スキル使用回数', psYakuman: '役満',
-    psRanks: '順位の分布', psMaxWin: '最高打点', psYaku: 'よく和了る役', psChars: 'よく使うキャラ', psEmpty: 'まだ記録がありません。対局を最後まで打つと記録されます。', psEmptyG: 'この対局はまだ始まったばかりです。',
+    psRanks: '順位の分布', psMaxWin: '最高打点', psYaku: '和了った役', psChars: 'よく使うキャラ', psEmpty: 'まだ記録がありません。対局を最後まで打つと記録されます。', psEmptyG: 'この対局はまだ始まったばかりです。',
     psNoData: '記録を読み込めませんでした。', psNote: '記録はこのブラウザに保存されます（最後まで打った対局のみ）。', psBotNote: 'BOTはこの対局の成績を表示しています。',
     lineH: '台詞', dealQ: 'この局で「{name}」を使いますか？', use: '使う', notUse: '使わない', dealOnly: '配牌時に選択', tapChange: 'タップでキャラ変更', back: '戻る', riichiNo: 'リーチ不可', useThis: 'この対局で使うスキルを選ぶ', ownedSkills: '所持スキル', newSkill: '新スキル!', charRates: 'キャラ', skillRates: 'スキル', tenth: '10連の10回目はSR以上のキャラ確定。持っているキャラが出ると新しいスキルを覚えます', sisters: '姉妹', riichiWhy_sealed: '他家の「封じ」で、この局はリーチできません', riichiWhy_points: '持ち点が1000点未満なのでリーチできません', riichiWhy_wall: '山の残りが4枚未満なのでリーチできません',
   },
   en: {
     title: 'JANKA', sub: 'The Princesses\' Mahjong Banquet', series: 'CALMDUST COLLECTION',
-    play: 'Play', bot: 'vs BOT', rated: 'Ranked', freePlay: 'Free play', fsEnter: 'Full screen', fsExit: 'Exit full screen', record: 'Record', rkLadder: 'Ladder', history: 'Game log', rkLocked: 'Joins you when you reach “{r}” in Ranked', rkNext: '{n} pt to “{r}”', rkTop: 'Top rank reached', rkGain: 'Rank +{n} pt', rkUp: 'Promoted!', rkGames: '{n} games', rkNextGift: 'Next reward', rkGiftAt: 'At “{r}” · {n} pt to go', rkPl: '', rkRule: 'Skills on. Your opponents grow stronger as you climb. Points never go down. A reward character every second rank.', rkGiftGet: 'Reward character!', lesson: 'Lessons', rules: 'Rules', soon: 'Soon',
+    play: 'Play', bot: 'vs BOT', rated: 'Ranked', freePlay: 'Free play', fsEnter: 'Full screen', fsExit: 'Exit full screen', record: 'Record', rkLadder: 'Ladder', history: 'Game log', psYakuName: 'Yaku', psYakuN: 'Times', psYakuP: 'Rate', psYakuOf: 'over {n} hands played', ptsUnit: 'pts', rkLocked: 'Joins you when you reach “{r}” in Ranked', rkNext: '{n} pt to “{r}”', rkTop: 'Top rank reached', rkGain: 'Rank +{n} pt', rkUp: 'Promoted!', rkGames: '{n} games', rkNextGift: 'Next reward', rkGiftAt: 'At “{r}” · {n} pt to go', rkPl: '', rkRule: 'Skills on. Your opponents grow stronger as you climb. Points never go down. A reward character every second rank.', rkGiftGet: 'Reward character!', lesson: 'Lessons', rules: 'Rules', soon: 'Soon',
     east: 'East only', south: 'Half game', skillOn: 'Skills', skillOff: 'Standard', strength: 'BOT strength',
     lv: ['Novice', 'Easy', 'Normal', 'Hard', 'Master'], start: 'Start', gacha: 'Gacha', chars: 'Characters', coins: 'Coins',
     skill: 'Skill', free: 'Free', cost: '{n} pts', used: 'Used', partner: 'Partner', select: 'Select', selected: 'Selected',
@@ -50,7 +50,7 @@ const S = {
     stats: 'Stats', psAll: 'All', psGame: 'This game', psGames: 'Games', psGamesN: '{n} games', psHands: 'Hands', psNow: 'Place now', psAvgRank: 'Avg. place', psWin: 'Win rate', psDealin: 'Deal-in rate',
     psTop: '1st place', psRentai: 'Top two', psLastAvoid: 'Avoid 4th', psAvgScore: 'Avg. final score', psBust: 'Busted', psRiichi: 'Riichi rate', psCall: 'Call rate', psTsumo: 'Tsumo share', psRiichiWin: 'Win after riichi',
     psAvgWin: 'Avg. win', psAvgDeal: 'Avg. deal-in', psDrawTen: 'Tenpai at draws', psSkill: 'Skills per game', psSkillN: 'Skills used', psYakuman: 'Yakuman',
-    psRanks: 'Places', psMaxWin: 'Biggest win', psYaku: 'Favourite yaku', psChars: 'Most played', psEmpty: 'No games yet. A game is recorded when it is played to the end.', psEmptyG: 'This game has only just started.',
+    psRanks: 'Places', psMaxWin: 'Biggest win', psYaku: 'Yaku made', psChars: 'Most played', psEmpty: 'No games yet. A game is recorded when it is played to the end.', psEmptyG: 'This game has only just started.',
     psNoData: 'The record could not be loaded.', psNote: 'Your record is kept in this browser (finished games only).', psBotNote: 'BOTs show this game only.',
     lineH: 'Lines', dealQ: 'Use “{name}” this hand?', use: 'Use', notUse: 'Skip', dealOnly: 'Chosen at the deal', tapChange: 'Tap to change', back: 'Back', riichiNo: 'No riichi', useThis: 'Pick the skill for this game', ownedSkills: 'Skills', newSkill: 'New skill!', charRates: 'Characters', skillRates: 'Skills', tenth: '10th pull of ×10: SR or better character. A character you already have learns a new skill', sisters: 'Sisters', riichiWhy_sealed: 'An opponent used Seal: no riichi this hand', riichiWhy_points: 'You need at least 1000 points to riichi', riichiWhy_wall: 'Fewer than 4 tiles left: no riichi',
   },
