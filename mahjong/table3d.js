@@ -276,7 +276,7 @@ function rugTex() {
 // Each nail of the hand mesh has its own uv (hand-gen.py): five cells side by side (thumb, index, middle, ring, little finger), u across
 // the nail in its outline's shape, v from the cuticle (0) to the tip (1). Two pictures are painted per look: the colour, and a
 // second one read as height (r: stones and beads stand up), roughness (g) and metalness (b: glitter and stones mirror the room).
-// style: 'gem' | 'butterfly' | 'french' | 'ombre'; col: the sisters' colour. Drawn in the nail's own measure: x −1…1 across at
+// style: 'gem' | 'butterfly' | 'french' | 'ombre' | 'bekko' | 'foil' | 'marble'; col: the sisters' colour. Drawn in the nail's own measure: x −1…1 across at
 // the widest (Hd.nl: where the free edge starts, the length, the width there), y from the cuticle up to AR at the tip (the same unit both ways, so a circle is round on the nail).
 function nailArt(style, col, small) {
   const Hd = window.JANKA_HAND, W = small ? 512 : 1024, H = small ? 256 : 512, CW = W / 5;
@@ -308,7 +308,7 @@ function nailArt(style, col, small) {
       const R1 = kind === 'marq' ? r * 1.7 : kind === 'sq' ? r * 1.15 : r;
       m.fillStyle = 'rgba(40,20,30,.28)'; m.save(); m.translate(r * .08, -r * .1); path(m); m.fill(); m.restore();                                  // a little shade under it
       path(m); const g1 = m.createRadialGradient(-r * .25, r * .3, r * .05, 0, 0, R1); const base = c0 || (pearl ? '#fffaf2' : '#f4f8ff');
-      g1.addColorStop(0, '#ffffff'); g1.addColorStop(.55, base); g1.addColorStop(1, pearl ? '#d9cfc8' : '#b4c0d8'); m.fillStyle = g1; m.fill();
+      g1.addColorStop(0, '#ffffff'); g1.addColorStop(.55, base); g1.addColorStop(1, c0 ? '#c79a45' : pearl ? '#d9cfc8' : '#b4c0d8'); m.fillStyle = g1; m.fill();
       if (!pearl) { m.save(); path(m); m.clip();                                                                                                     // facets: light and dark wedges, a bright table
         for (let k = 0; k < 8; k++) { const a = k * .785 + .2; m.fillStyle = k % 2 ? 'rgba(255,255,255,.55)' : 'rgba(120,140,180,.3)'; m.beginPath(); m.moveTo(0, 0); m.lineTo(Math.cos(a) * R1 * 1.2, Math.sin(a) * R1 * 1.2); m.lineTo(Math.cos(a + .785) * R1 * 1.2, Math.sin(a + .785) * R1 * 1.2); m.fill(); }
         m.fillStyle = 'rgba(255,255,255,.7)'; m.beginPath(); if (kind === 'round') m.arc(0, 0, r * .42, 0, 6.3); else m.rect(-r * .3, -R1 * .42, r * .6, R1 * .84); m.fill(); m.restore(); }
@@ -327,47 +327,71 @@ function nailArt(style, col, small) {
     f.fillStyle = FX0; f.fillRect(-1.3, -.1, 2.6, AR + .2);
     const dust = (amt) => glitter(Math.round(2200 * amt), .1, AR, y => .2 + .8 * Math.pow(y / AR, 1.6), .007, .016, silver);     // a fine shimmer, more toward the tip
 
-    if (style === 'gem') {                     // nude with glitter; rhinestones; the ring finger edged with pearl beads (reference 1)
+    // (ユーザー 2026-11-15: no nail painted differently from the rest — every finger has the same base; the fingers differ only in pattern and decoration)
+    const flake = (x, y, r, c) => { for (const [g, cc] of [[m, c], [f, 'rgb(150,30,255)']]) { g.fillStyle = cc; g.beginPath(); const n = 5 + Math.floor(R() * 3), a0 = R() * 6.3; for (let k = 0; k < n; k++) { const a = a0 + k * 6.283 / n, q = r * (.45 + R() * .75); g.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q * 1.2); } g.closePath(); g.fill(); } };   // a torn bit of metal leaf
+    const leaf = (n, y0, y1, dens, c) => { for (let k = 0; k < n; k++) { const y = y0 + R() * (y1 - y0), x = (R() * 2 - 1) * wAt(y) * .92; if (R() < dens(y)) flake(x, y, .04 + R() * .09, c()); } };
+    const vein = (c, wd, metal, a) => { let x = (R() * 2 - 1) * .8, y = -.1; const pts = [[x, y]]; while (y < AR + .2) { x += (R() - .5) * .34 + (a || 0); y += .3 + R() * .4; pts.push([x, y]); }
+      for (const [g, cc] of metal ? [[m, c], [f, 'rgb(150,30,255)']] : [[m, c]]) { g.strokeStyle = cc; g.lineWidth = wd; g.lineJoin = g.lineCap = 'round'; g.beginPath(); pts.forEach(([px, py], k) => k ? g.lineTo(px, py) : g.moveTo(px, py)); g.stroke(); } };
+    const blob = (x, y, rx, ry, c0, c1) => { m.save(); m.translate(x, y); m.rotate(R() * 3.1); m.scale(rx, ry); const gr = m.createRadialGradient(0, 0, 0, 0, 0, 1); gr.addColorStop(0, c0); gr.addColorStop(.6, c0); gr.addColorStop(1, c1); m.fillStyle = gr; m.beginPath(); m.arc(0, 0, 1, 0, 6.3); m.fill(); m.restore(); };
+    const gold = () => R() < .5 ? '#f3d27a' : R() < .5 ? '#e2b653' : '#fbe7a6';
+    if (style === 'gem') {                     // nude with glitter gathering toward the tip; rhinestones; the ring finger edged with pearl beads (reference 1)
       band(0, AR, [[0, nude], [.45, hc(hN, grey ? .36 : Math.min(.75, s * .7), grey ? .84 : .8)], [1, hc(hN, grey ? .3 : Math.min(.8, s * .8), grey ? .82 : .72)]]);
-      if (name === 'middle' || name === 'thumb') {           // a full glitter nail
-        glitter(5200, .05, AR, y => .5 + .5 * y / AR, .008, .02, () => R() < .5 ? '#ffffff' : hc(hN + (R() - .5) * .1, grey ? .3 : .6, .84));
-        glitter(150, .3, AR, () => .8, .03, .055, holo, true);
-        stone(0, .62, .24, 'round'); if (name === 'middle') stone(0, yE + .2, .13, 'round');
-      } else if (name === 'ring') {                          // the accent nail
-        dust(.5);
+      glitter(3600, .1, AR, y => Math.pow(y / AR, 1.4), .008, .02, () => R() < .5 ? '#ffffff' : hc(hN + (R() - .5) * .1, grey ? .3 : .6, .84));
+      glitter(110, yE * .7, AR, y => (y - yE * .7) / (AR - yE * .7), .028, .05, holo, true);
+      if (name === 'ring') {
         for (let y = .2; y < AR - .12; y += .2) for (const sx of [-1, 1]) stone(sx * (wAt(y) - .1), y, .088, 'pearl');
         for (let x = -.3; x <= .31; x += .2) stone(x * wAt(AR - .1) / .5, AR - .1, .088, 'pearl');
         for (let x = -.42; x <= .43; x += .21) stone(x, .12 + (.42 - Math.abs(x)) * .12, .088, 'pearl');
         stone(.04, AR * .62, .27, 'marq', .12); stone(-.08, AR * .3, .26, 'sq', -.1); stone(.34, AR * .43, .12, 'round'); stone(-.36, AR * .52, .1, 'round'); stone(.3, AR * .26, .09, 'round'); stone(-.2, AR * .8, .1, 'round');
-      } else { dust(.9); glitter(90, yE, AR, y => (y - yE) / (AR - yE), .028, .05, holo, true);
-        stone(0, .6, name === 'index' ? .2 : .17, 'round'); stone(-.3, 1.0, .08, 'round'); stone(.32, 1.12, .07, 'round'); if (name === 'index') stone(.02, 1.42, .09, 'round'); }
+      } else if (name === 'middle' || name === 'thumb') { stone(0, .62, .24, 'round'); stone(-.3, 1.02, .1, 'round'); stone(.3, 1.02, .1, 'round'); stone(0, 1.3, .13, 'round'); }
+      else { stone(0, .6, name === 'index' ? .2 : .17, 'round'); stone(-.3, 1.0, .08, 'round'); stone(.32, 1.12, .07, 'round'); }
     } else if (style === 'butterfly') {        // a sheer syrup pink; a white butterfly on the ring finger and the thumb (reference 2)
       band(0, AR, [[0, nude], [.3, nude2], [1, hc(h, Math.min(.7, s * .8), .74)]]);
       dust(.22);
       if (name === 'ring' || name === 'thumb') butterfly(0, AR * .5, Math.min(.92, AR * .19));
-      else if (name === 'middle') { stone(0, .5, .1, 'pearl'); }
+      else stone(0, .5, .1, 'pearl');
     } else if (style === 'french') {           // nude, the tip dipped in her colour gone almost black, glitter along the edge, little stars (reference 3)
       band(0, AR, [[0, nude], [1, nude2]]);
-      const full = name === 'ring', yS = full ? -.2 : yE + (AR - yE) * .18;
+      const yS = yE + (AR - yE) * .18;
       const gr = m.createLinearGradient(0, yS - .5, 0, yS + .45); gr.addColorStop(0, hc(h, .5, .12, 0)); gr.addColorStop(.6, hc(h, grey ? .1 : .55, .14, .8)); gr.addColorStop(1, ink); m.fillStyle = gr; m.fillRect(-1.3, yS - .5, 2.6, AR + 2);
       { const g3 = m.createLinearGradient(0, yS, 0, AR); g3.addColorStop(0, hc(h, s, .3, 0)); g3.addColorStop(1, hc(h, Math.min(.9, s), .34, .5)); m.fillStyle = g3; m.fillRect(-1.3, yS, 2.6, AR + 2); }   // her colour glows in the tip
-      if (!full) glitter(4200, yS - 1.3, yS + .8, y => Math.pow(Math.max(0, 1 - Math.abs(y - yS + .1) / 1.0), 1.5), .008, .02, silver);
-      else { dust(.5); stone(0, AR * .3, .2, 'round'); stone(0, AR * .3 + .42, .09, 'round'); stone(0, AR * .3 - .4, .09, 'round'); }
+      glitter(4200, yS - 1.3, yS + .8, y => Math.pow(Math.max(0, 1 - Math.abs(y - yS + .1) / 1.0), 1.5), .008, .02, silver);
       if (name === 'index') { star(.3, yS - .95, .34); star(-.36, yS - .3, .2); star(-.1, yS + 1.3, .26); }
       if (name === 'middle') { star(-.28, yS - .7, .3); star(.3, yS + 1.0, .3); stone(.05, yS - .15, .13, 'round'); }
-      if (name === 'ring') { star(-.3, AR * .7, .34); star(.34, AR * .56, .2); }
+      if (name === 'ring') { stone(0, yS - .75, .2, 'round'); stone(0, yS - .32, .1, 'round'); stone(0, yS - 1.16, .1, 'round'); star(-.32, yS + 1.1, .3); star(.3, yS + .5, .2); }
       if (name === 'pinky') { stone(0, yS - .1, .15, 'round'); star(.2, yS + 1.1, .24); }
       if (name === 'thumb') { star(.3, yS - .8, .32); star(-.3, yS + .8, .24); stone(-.1, yS - .2, .12, 'round'); }
-    } else {                                   // 'ombre': her colour deep, running to a pale tip on two nails; holographic flakes (reference 4)
-      const grad = name === 'middle' || name === 'ring';
-      if (grad) { band(0, AR, [[0, pale], [.22, hc(h, s * .7, .82)], [.55, hc(h, Math.min(.9, s), .46)], [1, deep]]);
-        for (let k = 0; k < 7; k++) { const x = (R() * 2 - 1) * .7, y0 = AR * (.15 + R() * .4), rr = .35 + R() * .4; m.save(); m.translate(x, y0); m.scale(1, 2.6);     // soft pale clouds, like water colour
-          const gr = m.createRadialGradient(0, 0, 0, 0, 0, rr); gr.addColorStop(0, 'rgba(255,255,255,.34)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); m.fillStyle = gr; m.beginPath(); m.arc(0, 0, rr, 0, 6.3); m.fill(); m.restore(); } }
-      else band(0, AR, [[0, hc(h, Math.min(.85, s * .9), .36)], [.5, deep], [1, hc(h, Math.min(.9, s), .2)]]);
-      const yC = grad ? AR * .45 : AR * .72;
+    } else if (style === 'bekko') {            // tortoiseshell: clear honey amber with soft brown clouds, a little gold leaf
+      band(0, AR, [[0, 'hsl(40,90%,74%)'], [.5, hc(h, .9, .6)], [1, hc(h - .02, .9, .52)]]);
+      for (let k = 0; k < 5; k++) blob((R() * 2 - 1) * .7, .3 + R() * (AR - .4), .3 + R() * .35, .5 + R() * .6, 'hsla(28,85%,42%,.55)', 'hsla(28,85%,42%,0)');
+      for (let k = 0; k < 3; k++) blob((R() * 2 - 1) * .7, .3 + R() * (AR - .4), .2 + R() * .22, .35 + R() * .4, 'hsla(20,75%,22%,.62)', 'hsla(20,75%,24%,0)');
+      leaf(name === 'ring' || name === 'thumb' ? 60 : 26, .3, AR, () => .5, gold);
+      if (name === 'ring') for (let x = -.45; x <= .46; x += .225) stone(x, .2 + (.45 - Math.abs(x)) * .14, .085, 'pearl', 0, '#f6d98a');
+      if (name === 'middle') stone(0, .55, .16, 'round', 0, '#ffe9b0');
+    } else if (style === 'foil') {             // milk white under torn gold leaf, a gold line along the tip
+      band(0, AR, [[0, nude], [.4, 'hsl(30,60%,93%)'], [1, 'hsl(40,70%,95%)']]);
+      const side = name === 'index' || name === 'ring' ? 1 : -1;
+      leaf(120, .3, AR, y => .1 + .9 * Math.pow(y / AR, 1.6), gold);
+      leaf(22, .3, AR * .8, () => .7, () => R() < .5 ? hc(h, .9, .6) : '#fff3c4');
+      vein('#e9bf5c', .05, true, side * .12);
+      for (const [g, cc] of [[m, '#eac566'], [f, 'rgb(170,24,255)']]) { g.fillStyle = cc; g.fillRect(-1.3, AR - .16, 2.6, .3); }
+      if (name === 'ring') { stone(0, .6, .2, 'pearl'); stone(-.3, .95, .09, 'pearl', 0, '#f6d98a'); stone(.3, .95, .09, 'pearl', 0, '#f6d98a'); }
+      if (name === 'thumb' || name === 'middle') stone(0, .5, .12, 'pearl', 0, '#f6d98a');
+    } else if (style === 'marble') {           // a milk-tea marble: soft white clouds and veins on mocha, fine gold veins
+      band(0, AR, [[0, hc(h, .42, .8)], [.5, hc(h, .45, .7)], [1, hc(h, .48, .6)]]);
+      for (let k = 0; k < 6; k++) blob((R() * 2 - 1) * .7, R() * AR, .3 + R() * .4, .6 + R() * .8, 'rgba(255,248,240,.6)', 'rgba(255,248,240,0)');
+      for (let k = 0; k < 3; k++) blob((R() * 2 - 1) * .7, R() * AR, .2 + R() * .3, .4 + R() * .5, hc(h, .5, .4, .5), hc(h, .5, .4, 0));
+      vein('rgba(255,255,255,.7)', .05, false, .05); vein('rgba(255,255,255,.5)', .03, false, -.06); vein('#e9bf5c', .03, true, -.04);
+      if (name === 'ring' || name === 'index') for (let x = -.3; x <= .31; x += .3) stone(x, .26 + (.3 - Math.abs(x)) * .2, .085, 'pearl', 0, '#f6d98a');
+      if (name === 'middle' || name === 'thumb') stone(0, .5, .14, 'pearl');
+    } else {                                   // 'ombre': pale at the cuticle running to her colour gone deep at the tip; holographic flakes (reference 4)
+      band(0, AR, [[0, hc(h, s * .75, .82)], [.12, hc(h, s * .85, .68)], [.36, hc(h, Math.min(.9, s), .46)], [1, deep]]);     // (ユーザー 2026-11-15: the white part stood out in play — the colour takes most of the nail, only the cuticle end is pale)
+      for (let k = 0; k < 4; k++) blob((R() * 2 - 1) * .7, AR * (.05 + R() * .22), .3 + R() * .3, .6 + R() * .6, 'rgba(255,255,255,.16)', 'rgba(255,255,255,0)');     // soft pale clouds, like water colour
+      const yC = AR * .42;
       glitter(3200, .1, AR, y => Math.max(.04, 1 - Math.abs(y - yC) / (AR * .36)) * .8, .007, .017, silver);
       glitter(110, .2, AR, y => Math.max(.1, 1 - Math.abs(y - yC) / (AR * .4)), .035, .065, holo, true);
-      if (name === 'pinky' || name === 'index') stone(0, .55, .13, 'round');
+      if (name === 'ring') { stone(0, .6, .17, 'round'); stone(-.28, .95, .08, 'round'); stone(.28, .95, .08, 'round'); }
+      if (name === 'index' || name === 'thumb') stone(0, .5, .12, 'round');
     }
     m.restore(); f.restore();
   });
@@ -430,7 +454,7 @@ function buildHand(env) {
         totalEmissiveRadiance += vec3(1., .97, .98) * sp * metalnessFactor * 1.6; }`); };
     return nm; };
   rig.mkNail = mkNail;   // (not in userData: clone() copies that through JSON)
-  const nail = mkNail('gem', '#f0a8b4');
+  const nail = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xf0c4c0).convertSRGBToLinear(), roughness: .2, envMap: env, envMapIntensity: .8 });   // (a plain stand-in: each seat gets its painted nails in _sleeve — no pictures are made for nails nobody wears)
   const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; hand.frustumCulled = false; rig.add(hand); if (Hd.mi) hand.morphTargetInfluences = [0];
   // the sleeve (ユーザー 2026-11-14: only a glimpse of the wrist, the sleeve long; a pattern as on a Chinese dress): crimson silk
   // brocade — gold flower roundels and cloud scrolls woven in — closing just above the wrist in a black band between two gold pipings.
@@ -455,6 +479,7 @@ const ROW = 6;
 // the opponents' hand rows stand inside the slot the automatic table raises them from (ユーザー 2026-11-15) — the slot pressed into
 // the felt runs x −7.3…7.3, z 7.42…8.40 from its owner's side: the row starts at its left end and stands on its middle line
 const HX0 = -7.27, HZ = 7.91, HGAP = 0.25;
+const MJ = k => k * k * k * (10 - 15 * k + 6 * k * k);   // the ease of a reaching arm (minimum jerk): gentle start, gentle stop
 const SPD = 1.6;   // every movement on the table runs this much faster than its written duration (ユーザー 2026-11-14: a little quicker overall)
 const PI = Math.PI;
 
@@ -874,7 +899,10 @@ class Table3D {
   }
   // each seat's sleeve in the colour of its character's sisters (cols: four CSS colours). The ground is the colour taken deeper,
   // as silk is (a light colour stays light); one material per colour, made once.
-  setSleeves(cols, nails) { this.sleeves = cols.slice(); this.nailStyles = (nails || []).slice(); (this.hands || []).forEach((rig, s) => { if (rig && cols[s]) this._sleeve(rig, cols[s]); }); this.dirty = true; }
+  setSleeves(cols, nails) { this.sleeves = cols.slice(); this.nailStyles = (nails || []).slice(); (this.hands || []).forEach((rig, s) => { if (rig && cols[s]) this._sleeve(rig, cols[s]); });
+    // (2026-11-15, memory: the nail pictures of looks no seat wears any more are freed — at most four sets are kept)
+    if (this.nailMats) { const live = new Set(cols.map((c, s) => (this.nailStyles[s] || 'gem') + c)); for (const [k, nm] of this.nailMats) if (!live.has(k)) { if (nm.map) nm.map.dispose(); if (nm.bumpMap) nm.bumpMap.dispose(); nm.dispose(); this.nailMats.delete(k); } }
+    this.dirty = true; }
   _sleeve(rig, col) {
     this.sleeveMats = this.sleeveMats || new Map();
     if (!this.handProto || !this.handProto.clothMat) return;
@@ -935,7 +963,7 @@ class Table3D {
       const up = { x: f.x, y: f.y + 0.95, z: f.z, rx: to.rx, ry: f.ry, rz: to.rz };
       this.tween(g, up, 250, f, seat, () => { if (g.userData.target === to) { this.tween(g, to, 460, up, seat, () => { this._land('river', seat); this._sortNext(seat); }); this.tweens[this.tweens.length - 1].grip = 'held'; } else this._handBack(seat); });
       const tw = this.tweens[this.tweens.length - 1]; tw.level = true; tw.grip = 'take'; g.userData.target = to; };
-    this.handFx.push({ rig, from: r, to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: performance.now(), dur: f.page ? 380 : 280, then: go });
+    this.handFx.push({ rig, from: r, to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: performance.now(), dur: f.page ? 420 : 340, then: go, path: 'in' });
     this.dirty = true;
   }
   // ---------------------------------------------------------------- 理牌 (ユーザー 2026-11-14: the others tidy their hands by hand)
@@ -976,20 +1004,20 @@ class Table3D {
       const g = this.tile(S.drawn), f = this._pose(g), slot = this._slot(seat, k);
       g.userData.target = slot;
       const lift = Object.assign({}, f, { y: f.y + H * .75 }), above = Object.assign({}, slot, { y: slot.y + H * .75 });
-      const step = (to, dur, fr, then, last) => { if (!this._sortLive(S)) return; this.tween(g, to, dur, fr, seat, then); const tw = this.tweens[this.tweens.length - 1]; tw.sort = seat; tw.level = true; if (!last) tw.grip = 'take'; };
-      this.handFx.push({ rig, from, to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: now, dur: 300, then: () => {
+      const step = (to, dur, fr, then, last) => { if (!this._sortLive(S)) return; this.tween(g, to, dur, fr, seat, then); const tw = this.tweens[this.tweens.length - 1]; tw.sort = seat; tw.level = true; if (!last) tw.grip = 'take'; if (to === above) { tw.grip = 'held'; tw.arc = .28; tw.keep = true; } };   // (over the row in a low arc, not along a ruler)
+      this.handFx.push({ rig, from, path: 'in', to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: now, dur: 340, then: () => {
         if (!this._sortLive(S)) return this._handBack(seat);
         step(lift, 210, f, () => {
           if (!this._sortLive(S)) return this._handBack(seat);
           slide(330, 40);
-          step(above, 420, lift, () => { if (!this._sortLive(S)) return this._handBack(seat); step(slot, 220, above, () => { if (this._sortLive(S)) this.sorting[seat] = null; }, true); });
+          step(above, 440, lift, () => { if (!this._sortLive(S)) return this._handBack(seat); step(slot, 220, above, () => { if (this._sortLive(S)) this.sorting[seat] = null; }, true); });
         });
       } });
     } else if (moves.length) {
       // a gap and no drawn tile: the hand comes down beside the rightmost tile and pushes the tiles right of the gap along
       const [gl, tl] = moves[moves.length - 1], side = this.local(seat, W * .78, 0), o = { x: side.x, z: side.z };
       const p0 = { x: gl.position.x + o.x, y: H * .62, z: gl.position.z + o.z }, p1 = { x: tl.x + o.x, y: H * .62, z: tl.z + o.z };
-      this.handFx.push({ rig, from, to: p0, t0: now, dur: 300, then: () => {
+      this.handFx.push({ rig, from, to: p0, t0: now, dur: 340, path: 'in', then: () => {
         if (!this._sortLive(S)) return this._handBack(seat);
         slide(340, 0);
         this.handFx.push({ rig, from: p0, to: p1, t0: performance.now(), dur: 340, then: () => { if (this._sortLive(S)) this.sorting[seat] = null; this._handBack(seat); } });
@@ -999,10 +1027,26 @@ class Table3D {
   }
   // a tile set down on the table — a discard in the river, the called tile in a meld: the app plays the tile's sound (ユーザー 2026-11-14)
   _land(kind, seat) { if (this.onTileLand) try { this.onTileLand(kind, seat); } catch (e) {} }
+  // the wrist (ユーザー 2026-11-15: a person's movement): the rig turns a little about the point the fingertips hold, following how
+  // the hand moves — the wrist rises as the hand goes down onto a tile or lifts one, leans into a sideways carry and trails
+  // behind it — each on a soft spring, so it lags the movement and settles after it (follow-through). The fingertips stay put.
+  _handSway(now) {
+    const dt = Math.min(.05, Math.max(.001, (now - (this._swT || now)) / 1000)); this._swT = now;
+    if (!this.hands) return;
+    this.hands.forEach((rig, seat) => { if (!rig) return; const u = rig.userData, S = u.sway || (u.sway = { p: 0, r: 0, y: 0, vp: 0, vr: 0, vy: 0, px: 0, py: 0, pz: 0, on: false });
+      if (!rig.visible) { if (S.on) { S.on = false; S.p = S.r = S.y = S.vp = S.vr = S.vy = 0; rig.rotation.set(0, seat * PI / 2, 0); } return; }
+      const P = rig.position; if (!S.on) { S.on = true; S.px = P.x; S.py = P.y; S.pz = P.z; rig.rotation.order = 'YXZ'; }
+      const a = seat * PI / 2, c = Math.cos(a), sn = Math.sin(a), dx = (P.x - S.px) / dt, dy = (P.y - S.py) / dt, dz = (P.z - S.pz) / dt; S.px = P.x; S.py = P.y; S.pz = P.z;
+      const lx = dx * c - dz * sn, lz = dx * sn + dz * c, cl = (v, m) => Math.max(-m, Math.min(m, v)), k = 1 - .55 * Math.max(0, u.pinch || 0);   // (the hand's own axes: x to its right, −z the way the fingers point)
+      const tp = cl(-.016 * Math.abs(dy) + .004 * lz, .2) * k, tr = cl(-.007 * lx, .16) * k, ty = cl(-.006 * lx, .14) * k, w = 15, z = .78;
+      for (const [q, v, t] of [['p', 'vp', tp], ['r', 'vr', tr], ['y', 'vy', ty]]) { S[v] += (-2 * z * w * S[v] - w * w * (S[q] - t)) * dt; S[q] += S[v] * dt; }
+      rig.rotation.set(S.p, a + S.y, S.r);
+      if (Math.abs(S.p) + Math.abs(S.r) + Math.abs(S.y) + (Math.abs(S.vp) + Math.abs(S.vr) + Math.abs(S.vy)) * .05 > 4e-4) this.dirty = true; });
+  }
   _handRest(seat) { const p = this.local(seat, 0, 12.5); return { x: p.x, y: 3.2, z: p.z }; }   // off the table, on the owner's side
-  _handBack(seat) { const rig = this.hand(seat); this.pinch(rig, 0); const f = { x: rig.position.x, y: rig.position.y, z: rig.position.z }, d = this.local(seat, 0, 6.5);
+  _handBack(seat, wait) { const rig = this.hand(seat); this.pinch(rig, 0); const f = { x: rig.position.x, y: rig.position.y, z: rig.position.z }, d = this.local(seat, 0, 6.5);
     this.handFx = this.handFx.filter(h => h.rig !== rig);
-    this.handFx.push({ rig, from: f, to: { x: f.x + d.x, y: f.y + 2.2, z: f.z + d.z }, t0: performance.now(), dur: 340, hide: true }); }
+    this.handFx.push({ rig, from: f, to: { x: f.x + d.x, y: f.y + 2.2, z: f.z + d.z }, t0: performance.now() + (wait || 0) / SPD, dur: 460, hide: true, path: 'out' }); }
   tilePose(id) { const g = this.tiles.get(id); if (!g) return null; const t = g.userData.target || {}; return { x: g.position.x, y: g.position.y, z: g.position.z, rx: g.rotation.x, ry: g.rotation.y, rz: g.rotation.z, seen: g.visible, to: t }; }
   // a call: the caller's hand reaches for the tile where it lies (from: its pose before the new layout), then carries it to its
   // place in the meld (the tile's new target). Without `from` (暗槓 / 加槓) the tile comes from the caller's own hand.
@@ -1018,7 +1062,7 @@ class Table3D {
     g.position.set(from.x, from.y, from.z); g.rotation.set(from.rx, from.ry, from.rz);
     const r = this._handRest(seat);
     this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(r.x, r.y, r.z);
-    this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 240, then: () => this.tween(g, to, 420, from, seat, landed) });
+    this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 300, then: () => this.tween(g, to, 420, from, seat, landed), path: 'in' });
     this.dirty = true;
   }
   hideAll() { if (this._callG) this.markCall(null); if (this.sorting) for (const S of this.sorting) if (S) clearTimeout(S.timer); this.sorting = []; for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this._ov) { this._solo(this._ov.g, false); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
@@ -1329,16 +1373,19 @@ class Table3D {
       const ends = [];   // (what follows a tween may start another: run it after the list is rebuilt)
       this.tweens = this.tweens.filter(tw => {
         let k = Math.max(0, Math.min(1, (now - tw.t0) * SPD / tw.dur));
-        const e = 1 - Math.pow(1 - k, 3);
+        // (ユーザー 2026-11-15: smoother, more like a person.) A tile in a hand moves as an arm does — it starts gently, is quickest
+        // in the middle and slows into its place (minimum jerk), not at full speed from the first frame. A lift that leads into a
+        // carry (grip 'take') does not stop at the top: it is still rising as the carry takes over, so the two read as one movement.
+        const e = tw.hand == null ? 1 - Math.pow(1 - k, 3) : tw.grip === 'take' ? Math.pow(k, 1.5) : MJ(Math.pow(k, .9));
         const f = tw.from, t = tw.to, g = tw.g;
-        const arc = tw.level ? 0 : Math.sin(k * PI) * 0.6;
+        const arc = tw.level ? Math.sin(k * PI) * (tw.arc || 0) : Math.sin(k * PI) * 0.6;
         g.position.set(f.x + (t.x - f.x) * e, f.y + (t.y - f.y) * e + arc, f.z + (t.z - f.z) * e);
         g.rotation.set(f.rx + (t.rx - f.rx) * e, f.ry + (t.ry - f.ry) * e, f.rz + (t.rz - f.rz) * e);
         if (tw.hand != null) { const rig = this.hand(tw.hand); rig.position.set(g.position.x, g.position.y + this._top(g.rotation.x), g.position.z);   // the hand holds the tile
           const ss = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a))); return u * u * (3 - 2 * u); }, sn = Math.sin(g.rotation.x), flat = sn * sn;
           // (pinched only while the tile is in the air and lying flat: the thumb goes under as it leaves the row or the table, and is out again before it lands)
           this.pinch(rig, flat * flat * (tw.grip === 'take' ? ss(0, .85, k) : (tw.grip === 'held' ? 1 : ss(.1, .38, k)) * (1 - ss(.5, .8, k)))); }
-        if (k >= 1) { if (tw.hand != null && tw.grip !== 'take') this._handBack(tw.hand); if (tw.after) ends.push(tw.after); }
+        if (k >= 1) { if (tw.hand != null && tw.grip !== 'take' && !tw.keep) this._handBack(tw.hand, 90); if (tw.after) ends.push(tw.after); }   // (the fingers rest on the tile a moment before the hand draws back)
         return k < 1;
       });
       for (const f of ends) f();
@@ -1346,11 +1393,17 @@ class Table3D {
     }
     if (this.handFx.length) {
       const run = this.handFx; this.handFx = [];
-      for (const h of run) { const k = Math.min(1, (now - h.t0) * SPD / h.dur), e = k * k * (3 - 2 * k);
-        h.rig.position.set(h.from.x + (h.to.x - h.from.x) * e, h.from.y + (h.to.y - h.from.y) * e, h.from.z + (h.to.z - h.from.z) * e);
+      for (const h of run) { const k = Math.max(0, Math.min(1, (now - h.t0) * SPD / h.dur));
+        // the hand alone: reaching ('in'), it comes over the place first and sinks onto it at the end; drawing back ('out'), it
+        // lifts off first and then goes — a curved path both ways, never a straight slide. Reaching, the fingers open a little
+        // and close again as they arrive.
+        const e = h.path === 'in' ? MJ(Math.pow(k, .8)) : h.path === 'out' ? MJ(Math.pow(k, 1.3)) : MJ(k), ey = h.path === 'in' ? MJ(Math.pow(k, 1.45)) : h.path === 'out' ? MJ(Math.pow(k, .6)) : e;
+        h.rig.position.set(h.from.x + (h.to.x - h.from.x) * e, h.from.y + (h.to.y - h.from.y) * ey, h.from.z + (h.to.z - h.from.z) * e);
+        if (h.path === 'in') this.pinch(h.rig, -.16 * Math.sin(Math.pow(k, .8) * PI));
         if (k < 1) this.handFx.push(h); else { if (h.hide) h.rig.visible = false; if (h.then) h.then(); } }
       this.dirty = true;
     }
+    this._handSway(now);
     const moved = this.dirty;   // (anything moved or changed this frame: the shadows are redrawn too)
     // the dora's glint: a light runs round the rim of every dora that lies face up and two small stars twinkle, about once in three seconds
     // (at ~30 frames a second when it is the only thing changing: the whole table is redrawn for it)

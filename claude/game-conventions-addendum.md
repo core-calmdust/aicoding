@@ -625,3 +625,10 @@
 - 盤の上に一覧シート（強さ・盤の種類・モード等の .lvsheet）・上海の星座マップ・戦績の重ね表示などが開いているときの Esc は、それだけを閉じて3Dビュー（モード選択前の盤）に戻る。何も開いていない3Dビューでの Esc は従来どおり直前のページ（ホーム／ゲーム一覧）へ戻る。
 - 実装：atlas/app.js の window キャプチャの keydown（最初に動く）。新しい重ね表示を足すときもこの一覧に入れる（または .lvsheet を使う）。
 - 上海（2026-11-14・正式リリース）：BETA 表記を外した（index.html の beta:1、shared/atlas.js の beta: true）。
+
+## 画像の容量：スマホ用の半分サイズと PNG の WebP 化（2026-11-15）
+- スマホ（`Table3D.coarse` / `lite`）は3D盤の画像を原寸で読んでから半分に縮めていた。いまは半分サイズの `<名前>-h.webp` を読む：将棋の3D盤 `images/atlas/shogi3d/`（碁の漆の盤 go-lacquer も）・本榧 `shogi-kaya`・象棋 `images/atlas/xiangqi3d/`・ペグの3D盤面 `peg/img/bd-*`、焼き込み `atlas/img/tex/b/` のうちサイズ名のない大きい key（`window.ATLAS_TEXH`、table3d.js の canvasTex）。2D のページの画像は今までどおり原寸。
+- 将棋の駒・字のシート（`images/atlas/shogi-pieces*`・`shogi-glyphs*`）、上海の絵・字（`atlas/img/shanghai-*`）、COMET+ のロゴはページが **WebP ロスレス**（画素は PNG と完全に同じ）を読む。PNG はツールが読み書きする元として残す。
+- 作り方：`python3 atlas/tools/mobile-tex.py`（WebP 版と `-h` 版、baked.js の ATLAS_TEXH を作り直す）。texbake.py・xiangqi-tex.py・将棋の駒／字のツール・shanghai-glyphs.py は最後に自動で実行する。shogi-tex.html で将棋の3D盤の画像を書き出したときは手で実行する。**元の画像を変えたら必ず作り直す**（古い -h が出る）。
+- 新しく3D専用の大きい画像フォルダを足すときは mobile-tex.py の HALF に足し、読み込みで `X.coarse || X.lite` のとき `-h` を付ける。
+- 調査結果（ゲームごとの容量と削減量）はプロジェクトの claude/texture-size-audit.md。既存の WebP はほぼ最適で、再圧縮の効果は小さい（改善率一桁台のゲームは対象外）。
