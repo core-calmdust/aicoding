@@ -2,6 +2,10 @@
 (function () {
 'use strict';
 const E = window.SudokuEngine, BG = window.SudokuBG, ON = window.SudokuOnline;
+// (2026-11-15) the collection's course pictures as images (one element each instead of ~200 SVG shapes: the home screen
+// had ~15,000 elements, ~10,600 of them in these thumbnails; the thumbnails are not animated, so they look the same)
+const BGI = {};
+const bgImg = (k, W, H) => BGI[k + '|' + W] || (BGI[k + '|' + W] = `<img class="bgi" src="data:image/svg+xml,${encodeURIComponent(BG.svg(k, W, H))}" alt="" decoding="async">`);
 const BASE = window.SUDOKU_BASE || '';            // '' in sudoku/, '../sudoku/' in speed-sudoku/
 const MODE = window.SUDOKU_MODE || 'daily';       // 'daily' = まいにち数独, 'speed' = すぴーど数独 (stand-alone)
 const SPDX = window.SudokuSpeed || null, TUT = window.SudokuTutorial || null;
@@ -578,7 +582,7 @@ function renderHome() {
   // grouped by difficulty like すぴーど's course book, with a sticky jump bar
   const card = i => {
     const n = cCleared(i), lvs = cLvs(i);
-    return `<button class="tcard ${n === CSZ ? 'full' : ''}" data-t="${i}"><div class="pic">${BG.svg(cKey(i), 320, 200)}<span class="no">${CNO(i)}</span><span class="crown">${CROWN}</span></div><div class="tx"><span class="nm">${esc(cName(i))}</span><span class="lv">${lvs.map(lvChip).join('')}</span><span class="pg"><span class="bar"><i style="width:${n / CSZ * 100}%"></i></span>${n}/${CSZ}</span></div></button>`;
+    return `<button class="tcard ${n === CSZ ? 'full' : ''}" data-t="${i}"><div class="pic">${bgImg(cKey(i), 320, 200)}<span class="no">${CNO(i)}</span><span class="crown">${CROWN}</span></div><div class="tx"><span class="nm">${esc(cName(i))}</span><span class="lv">${lvs.map(lvChip).join('')}</span><span class="pg"><span class="bar"><i style="width:${n / CSZ * 100}%"></i></span>${n}/${CSZ}</span></div></button>`;
   };
   const groups = CTIERS.map(([lv, a, b]) => ({ lv, ids: CORDER.slice(a, b) })).map(g => Object.assign(g, { n: g.ids.reduce((x, i) => x + cCleared(i), 0), L: g.ids.length * CSZ }));
   const tc = $('#themes'); tc.className = 'ctiers';
