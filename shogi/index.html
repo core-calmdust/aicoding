@@ -4524,7 +4524,7 @@ function bookMove() {
 let LESSONS = null;
 // grades flagged rules:true (the finer rules moved out of the rules tutorial) are kept apart from the 段級 ladder (exam, next step):
 // they are addressed by negative indices (-1 = LESSONS.rules[0]) — see gradeAt()
-const lessonsReady = fetch('lessons.json?v=20261113pc').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => console.warn('lessons unavailable', e));
+const lessonsReady = fetch('lessons.json?v=20261115r').then(r => r.json()).then(d => { d.rules = d.grades.filter(g => g.rules); d.grades = d.grades.filter(g => !g.rules); return (LESSONS = d); }).catch(e => console.warn('lessons unavailable', e));
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || o.en || o.ja)) || '';
