@@ -1231,6 +1231,9 @@ function placeActsAtPointer() {
 // while a call (chi/pon/kan/ron) is offered, clicking anywhere except the buttons skips it
 $('#game').addEventListener('click', e => {
   // (ユーザー 2026-11-15) a click on the table on my turn discards the tile just drawn (ツモ切り), as a click there passes a call
+  // (a tap that picked a hand tile re-drew the hand: its target is no longer in the page, and must not count as a tap on the table —
+  // that let go of the tile at once, so on a phone nothing could be discarded, 2026-11-15)
+  if (!e.target.isConnected) return;
   if (UIS && UIS.kind === 'turn' && UIS.resolve && !e.target.closest('#hand, #acts, #chiPick, .tbtns, #skBtn, #dealAsk, .opp, #mePanel, #meBadge, .me, #khelp, #rbox, .modal')) {
     // (2026-11-15, ユーザー「スマホ、どこをタップしても牌を捨ててしまう」) only with a mouse: on a touch screen a tap on the table
     // just lets go of the picked tile
