@@ -2528,3 +2528,19 @@ html.lite :is(.pimg,.ch-art,.gc,.ag-art,#chList .chi .frame,#game .bf .frame):is
    (background-position 160% → −60% of a 250% image = translateX −96% → 36% of the layer) */
 @keyframes aaShine2T{0%,60%{transform:translateX(-96%)}90%,100%{transform:translateX(36%)}}
 :is(#home,#chara).aaa :is(.aa-go,.aa-banner)::after{inset:0 auto 0 0;width:250%;background-size:100% 100%;background-position:0 0;transform:translateX(-96%);animation-name:aaShine2T;will-change:transform}
+/* (2026-11-16, ユーザー: batteries, the same look) the title's sweeping light: the drop shadows were on the animated text itself, so
+   the whole filtered title was redone for every frame of the sweep. Now three layers: the span keeps the layout (its own text clear),
+   ::before is the still shadow (solid text with the two drop shadows — drawn once), ::after the gold text with the moving light. */
+:is(#home,#chara).aaa .aa-logo .lg-k{background:none;filter:none;animation:none;color:transparent}
+:is(#home,#chara).aaa .aa-logo .lg-k::before,:is(#home,#chara).aaa .aa-logo .lg-k::after{content:attr(data-text);position:absolute;inset:0;pointer-events:none}
+:is(#home,#chara).aaa .aa-logo .lg-k::before{color:#c49a48;filter:drop-shadow(0 3px 0 rgba(50,28,4,.7)) drop-shadow(0 10px 30px rgba(232,190,110,.35))}
+:is(#home,#chara).aaa .aa-logo .lg-k::after{color:transparent;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.95) 48%,transparent 58%) no-repeat,linear-gradient(180deg,#fffaf0 0%,#f2dca4 36%,#c49a48 60%,#f6e2ae 78%,#8f6a2c 100%);
+  background-size:260% 100%,100% 100%;background-position:160% 0,0 0;-webkit-background-clip:text;background-clip:text;animation:aaShine 5.5s ease-in-out 1.2s infinite}
+html.lite :is(#home,#chara).aaa .aa-logo .lg-k::after{animation:none}
+/* the riichi ring on a portrait at the table: not a pulsing outline colour (repainted each frame) but the same line on its own
+   layer, faded by opacity (outline 2px, 3px out; colour alpha 1 → .3 = opacity 1 → .3) */
+#game .bf.rii .frame{outline:none!important;animation:none!important}
+#game .bf.rii::after{content:"";position:absolute;inset:-5px;border:2px solid #f3d48a;border-radius:calc(var(--bf, 52px) * .12 + 5px);pointer-events:none;will-change:opacity;animation:riiFade 1.4s ease-in-out infinite}
+@keyframes riiFade{50%{opacity:.3}}
+html.lite #game .bf.rii::after{animation:none}
