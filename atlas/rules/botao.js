@@ -219,7 +219,7 @@
     let st = null, step = 0, played = false, busy = false, stopped = false, timers = [], sel = -1, drag = null, aim = null;
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const wx = (x, y) => U.xz(x, y), kick = ms => T3.kick && T3.kick(ms || 150);
-    const vOf = pw => E.VMIN + (E.VMAX - E.VMIN) * pw * pw;
+    const vOf = pw => E.powV(pw);   // the game's strength curve
 
     /* ---------- the pieces ---------- */
     const bt = [], kp = []; let ballG = null;
@@ -253,6 +253,7 @@
     const MAT = { path: basic(0xffffff, .9), ball: basic(0xffd34d, .95), ghost: basic(0xffffff, .3), ghostB: basic(0xffd34d, .45), knock: basic(0xffa040, .9), fan: basic(0xffffff, .1), fanL: basic(0xffffff, .45), sel: basic(0xffffff, .95), goal: basic(0x3df59a, .95), goalF: basic(0x3df59a, .22), arrow: basic(0xffffff, .95), box: basic(0x3df59a, .2), shot: basic(0xff5a5a, .95), no: basic(0xff5a5a, .8) };
     const GEO = { bar: new TH.BoxGeometry(1, .004, 1), ring: new TH.TorusGeometry(1, .07, 6, 40), cone: new TH.ConeGeometry(.06, .16, 3), disc: new TH.CircleGeometry(1, 36) };
     GEO.ring.rotateX(Math.PI / 2); GEO.cone.rotateX(Math.PI / 2); GEO.disc.rotateX(-Math.PI / 2);
+    GEO.flat = new TH.RingGeometry(.86, 1, 48); GEO.flat.rotateX(-Math.PI / 2);
     function clearGuides() { while (gd.children.length) { const m = gd.children[0]; if (m.userData.own) m.userData.own.dispose(); gd.remove(m); } kick(100); }
     function bar(x0, y0, x1, y1, wid, mat, lift) { const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy); if (len < .05) return; const m = new TH.Mesh(GEO.bar, mat), [a, b] = wx((x0 + x1) / 2, (y0 + y1) / 2); m.position.set(a, Y + (lift || .02), b); m.scale.set(len * K, 1, wid * K); m.rotation.y = -Math.atan2(dy, dx); m.renderOrder = 4; gd.add(m); }
     function dots(x0, y0, x1, y1, mat, w) { const len = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.floor(len / 2.2)); for (let i = 0; i < n; i++) { const a = (i + .15) / n, b = (i + .6) / n; bar(x0 + (x1 - x0) * a, y0 + (y1 - y0) * a, x0 + (x1 - x0) * b, y0 + (y1 - y0) * b, w || .45, mat); } }
@@ -277,10 +278,11 @@
     }
     // directions only, as in the game: dots to what the button meets first, a ring there, the ball's way (gold arrow)
     function drawMove(mv) {
-      const b = st.b[mv.i], tr = E.aimTrace(st, mv.i, mv.ang);
-      dots(b.x, b.y, tr.gx, tr.gy, MAT.path, .42);
-      if (tr.what === 'ball') { if (Math.hypot(tr.gx - b.x, tr.gy - b.y) > 2) ring(tr.gx, tr.gy, D.RB, MAT.path, false, BMID); arrow(st.ball.x, st.ball.y, Math.atan2(st.ball.y - tr.gy, st.ball.x - tr.gx), 14, MAT.ball, .6); }
-      else ring(tr.gx, tr.gy, D.RB, tr.what != null ? MAT.no : MAT.path, false, BMID);
+      const b = st.b[mv.i], tr = E.aimTrace(st, mv.i, mv.ang), slide = mv.v * mv.v / (2 * D.DEC_B) + D.RB, k = Math.min(tr.k, slide);
+      dots(b.x, b.y, b.x + Math.cos(mv.ang) * k, b.y + Math.sin(mv.ang) * k, MAT.path, .42);
+      if (tr.k > slide) return;
+      if (tr.what === 'ball') arrow(st.ball.x, st.ball.y, Math.atan2(st.ball.y - tr.gy, st.ball.x - tr.gx), 14, MAT.ball, .6);
+      else if (tr.what != null && st.b[tr.what] && E.team(tr.what) !== E.team(mv.i)) { const o = st.b[tr.what]; ring(o.x, o.y, D.RB + .6, MAT.no, false, BMID); }
     }
     const beacon = new TH.Mesh(new TH.ConeGeometry(1.15 * K, 2.2 * K, 18), new TH.MeshBasicMaterial({ color: 0xffd34d, transparent: true, opacity: .95, toneMapped: false, depthTest: false, depthWrite: false }));
     beacon.rotation.x = Math.PI; beacon.renderOrder = 9; board.add(beacon);
@@ -296,7 +298,7 @@
       if (pg.kind === 'keep' && !played) { boxArea(E.keeperBox(0, false)); dots(SHOT.from[0], SHOT.from[1], SHOT.to[0], SHOT.to[1], MAT.shot, .6); }
       if (['flick', 'pass', 'shoot'].includes(pg.kind) && !played && !busy && sel >= 0) {
         const b = st.b[sel];
-        if (!aim) ring(b.x, b.y, D.RB + .9, MAT.sel, true, BMID);
+        if (!aim) { const m = new TH.Mesh(GEO.flat, MAT.sel), [x, z] = wx(b.x, b.y); m.position.set(x, Y + .012, z); m.scale.set((D.RB + 1.2) * K, 1, (D.RB + 1.2) * K); m.userData.pulse = D.RB + 1.2; m.renderOrder = 4; gd.add(m); }
         else {
           const mv = aimMove(aim); drawMove(mv);
           // the pull: a band from the button back toward the finger, its colour the strength
