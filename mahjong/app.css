@@ -2013,3 +2013,10 @@ html.lp #game #opp1,html.lp #game #opp3{top:calc(max(10px,var(--st)) + 42px + va
 #home.aaa .pp-info .pi-sk em.tm{font-family:inherit;color:#cfc4ea}
 #home.aaa .pp-info .pi-sk span{font-size:13.5em;line-height:1.6;color:#d9cfee}
 html.lp #home.aaa .pp-info{display:none}
+
+/* (ユーザー 2026-11-15) the player's skill marks inside the skill plate, at its right end */
+.skb .skfx{display:flex;gap:5px;align-items:center;margin-left:4px;padding-left:10px;border-left:1px solid rgba(255,255,255,.18)}
+.skb .skfx .fx{width:26px;height:26px;padding:5px;border-radius:8px;background:var(--sc);color:#fff;flex:none;box-shadow:0 0 10px color-mix(in srgb,var(--sc) 60%,transparent)}
+html.lp #game .skb .skfx .fx{width:20px;height:20px;padding:4px;border-radius:6px}
+.skb.hasfx{opacity:1}   /* (the marks stay at full strength on a plate that is dimmed — used, or not usable now: only the plate's own icon and words dim) */
+.skb.hasfx:not(.ready)>i,.skb.hasfx:not(.ready)>span:not(.skfx),.skb.hasfx:not(.ready)>kbd{opacity:.5}
