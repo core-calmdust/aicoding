@@ -1,1 +1,18 @@
-{}
+{
+ "op:center11/intro": {
+  "ja": "中央の点は赤のいちばん強い1手目。だからスワップありでは青がそれをもらいます。\nそのあと赤は、青の石になった中央を止めながら自分の列を作っていきます。",
+  "en": "The centre is Red's strongest first move — so with the swap rule Blue takes it over.\nThen Red plays as if it were Blue's game: it must block the swapped stone and build its own chain.",
+  "zh": "中央点是红方最强的第一手——所以有交换规则时蓝方会把它接管过来。\n之后红方要挡住被交换过去的棋子，同时建立自己的连线。",
+  "ko": "중앙은 빨강의 가장 강한 첫 수입니다. 그래서 스왑 규칙에서는 파랑이 그것을 가져갑니다.\n그 뒤 빨강은 스왑된 돌을 막으면서 자신의 사슬을 만들어야 합니다.",
+  "es": "El centro es la primera jugada más fuerte de Rojo, así que con la regla del cambio Azul se la queda.\nDespués Rojo debe bloquear la piedra cambiada y construir su propia cadena.",
+  "fr": "Le centre est le premier coup le plus fort de Rouge : avec la règle de l'échange, Bleu le reprend donc.\nEnsuite Rouge doit bloquer la pierre échangée tout en construisant sa propre chaîne.",
+  "pt": "O centro é o primeiro lance mais forte do Vermelho — por isso, com a regra da troca, o Azul fica com ele.\nDepois o Vermelho precisa bloquear a pedra trocada e construir sua própria cadeia.",
+  "de": "Die Mitte ist der stärkste erste Zug von Rot — mit Tauschregel übernimmt Blau ihn deshalb.\nDanach muss Rot den getauschten Stein blocken und seine eigene Kette aufbauen.",
+  "hi": "केंद्र लाल की सबसे मज़बूत पहली चाल है — इसलिए स्वैप नियम में नीला उसे ले लेता है।\nफिर लाल को स्वैप हुई गोटी रोकनी होती है और अपनी कड़ी बनानी होती है।",
+  "ar": "المركز هو أقوى نقلة أولى للأحمر — لذا مع قاعدة التبديل يأخذها الأزرق.\nبعدها على الأحمر أن يصدّ الحجر المبدَّل ويبني سلسلته الخاصة.",
+  "ru": "Центр — сильнейший первый ход Красных, поэтому с правилом обмена Синие забирают его.\nДальше Красные играют так, будто это партия Синих: нужно блокировать обменянный камень и строить свою цепь.",
+  "zh-TW": "中央點是紅方最強的第一手——所以有交換規則時，藍方會把它拿走。\n之後紅方要像在下藍方的棋一樣：必須擋住被交換的棋子，並建立自己的連線。",
+  "id": "Tengah papan adalah langkah pertama terkuat Merah — jadi dengan aturan tukar Biru mengambilnya.\nLalu Merah bermain seolah-olah itu permainan Biru: ia harus memblokir batu yang ditukar dan membangun rantainya sendiri.",
+  "tr": "Merkez, Kırmızı'nın en güçlü ilk hamlesidir — bu yüzden takas kuralıyla Mavi onu alır.\nSonra Kırmızı sanki Mavi'nin oyunuymuş gibi oynar: takas edilen taşı kesmeli ve kendi zincirini kurmalıdır."
+ }
+}
