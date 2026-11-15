@@ -45,3 +45,9 @@ speed current: nodes 3600397  time 3505 ms  1027 knps
 speed new:     nodes 3600399  time 5863 ms  614 knps
 new vs current (30000): +153 -107 =0  score 0.588  Elo +62 (+20 .. +106)
 new vs current (300ms): +97 -160 =3  score 0.379  Elo -86 (-131 .. -44)
+
+Deeper teacher (2026-11-15): 11,962,970 positions of the ROUND=4 data relabelled at depth 12 (YaneuraOu + a public eval, FV_SCALE 30), from v7, 4 epochs (not adopted: no gain)
+relabel speed: 317 positions/s on 13 processes (1.1 million per hour); old vs new scores: correlation 0.961
+epoch 0  valid 0.02031 (eval only 0.00880)   epoch 1  0.02009   epoch 2  0.02006   epoch 3  0.02003   epoch 4  0.02003   (valid = 1% of the relabelled data)
+new vs current (30000): +126 -133 =1  score 0.487  Elo -9 (-52 .. +33)
+new vs current (300ms): +131 -124 =5  score 0.513  Elo +9 (-33 .. +52)
