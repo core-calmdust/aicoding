@@ -222,6 +222,8 @@
     reversi: { list: ['classic', 'toy', 'ink', 'moon', 'chocolate', 'pixel'], get: () => { const v = ls.get('atlas-reversi-look'); return BOARDS.reversi.list.includes(v) ? v : 'classic'; }, set: k => { ls.set('atlas-reversi-look', k); ls.set('atlas-reversi-view', '3d'); } },
     checkers: { list: ['marble', 'lacquer', 'deco', 'lapis', 'leather', 'boulle'], get: () => { const v = ls.get('atlas-checkers-look'); return BOARDS.checkers.list.includes(v) ? v : 'marble'; }, set: k => ls.set('atlas-checkers-look', k) },
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
+    // fox and geese (atlas/models/foxgeese.js, 2026-11-16): 'atlas-foxgeese-look' — オーク材 (the default) · 石盤 · リネン · 牧場 · ナイト · ペーパー
+    foxgeese: { list: ['oak', 'slate', 'linen', 'meadow', 'night', 'paper'], get: () => { const v = ls.get('atlas-foxgeese-look'); return BOARDS.foxgeese.list.includes(v) ? v : 'oak'; }, set: k => ls.set('atlas-foxgeese-look', k) },
     // ludus latrunculorum (atlas/models/latrunculi.js, 2026-11-16): 'atlas-latrunculi-look' — 大理石 (the default) · トラバーチン · 屋根瓦 · モザイク · くるみ材 · 斑岩
     latrunculi: { list: ['marble', 'travertine', 'tile', 'mosaic', 'wood', 'porphyry'], get: () => { const v = ls.get('atlas-latrunculi-look'); return BOARDS.latrunculi.list.includes(v) ? v : 'marble'; }, set: k => ls.set('atlas-latrunculi-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
@@ -263,7 +265,14 @@
     ui: (k, lang) => (CKN[lang] || CKN.en)[{ you: 8, opp: 9, head: 10 }[k]],
   } };
   // a game's own board names (the board is part of its game, so no '3D'): table hockey
-  const NG = { latrunculi: {
+  const NG = { foxgeese: {
+    oak: { ja: 'オーク材', en: 'Oak', zh: '橡木', 'zh-TW': '橡木', ko: '오크', es: 'Roble', fr: 'Chêne', pt: 'Carvalho', de: 'Eiche', ru: 'Дуб', tr: 'Meşe', id: 'Kayu ek', hi: 'ओक', ar: 'بلوط' },
+    slate: { ja: '石盤とチョーク', en: 'Slate & chalk', zh: '石板与粉笔', 'zh-TW': '石板與粉筆', ko: '석판과 분필', es: 'Pizarra y tiza', fr: 'Ardoise et craie', pt: 'Ardósia e giz', de: 'Schiefer & Kreide', ru: 'Грифельная доска и мел', tr: 'Arduvaz ve tebeşir', id: 'Batu tulis & kapur', hi: 'स्लेट और चॉक', ar: 'لوح أردواز وطباشير' },
+    linen: { ja: 'リネンの刺しゅう', en: 'Stitched linen', zh: '亚麻刺绣', 'zh-TW': '亞麻刺繡', ko: '리넨 자수', es: 'Lino bordado', fr: 'Lin brodé', pt: 'Linho bordado', de: 'Besticktes Leinen', ru: 'Вышитый лён', tr: 'İşlemeli keten', id: 'Linen bersulam', hi: 'कढ़ाईदार लिनन', ar: 'كتان مطرّز' },
+    meadow: { ja: '牧場', en: 'Meadow', zh: '草地', 'zh-TW': '草地', ko: '목초지', es: 'Prado', fr: 'Prairie', pt: 'Prado', de: 'Wiese', ru: 'Луг', tr: 'Çayır', id: 'Padang rumput', hi: 'घास का मैदान', ar: 'مرج' },
+    night: { ja: 'ナイト', en: 'Night', zh: '夜色', 'zh-TW': '夜色', ko: '나이트', es: 'Noche', fr: 'Nuit', pt: 'Noite', de: 'Nacht', ru: 'Ночь', tr: 'Gece', id: 'Malam', hi: 'रात', ar: 'ليل' },
+    paper: { ja: 'ペーパー', en: 'Paper', zh: '纸', 'zh-TW': '紙', ko: '종이', es: 'Papel', fr: 'Papier', pt: 'Papel', de: 'Papier', ru: 'Бумага', tr: 'Kâğıt', id: 'Kertas', hi: 'काग़ज़', ar: 'ورق' } },
+    latrunculi: {
     marble: { ja: '大理石', en: 'Marble', zh: '大理石', 'zh-TW': '大理石', ko: '대리석', es: 'Mármol', fr: 'Marbre', pt: 'Mármore', de: 'Marmor', ru: 'Мрамор', tr: 'Mermer', id: 'Marmer', hi: 'संगमरमर', ar: 'رخام' },
     travertine: { ja: 'トラバーチン', en: 'Travertine', zh: '洞石', 'zh-TW': '洞石', ko: '트래버틴', es: 'Travertino', fr: 'Travertin', pt: 'Travertino', de: 'Travertin', ru: 'Травертин', tr: 'Traverten', id: 'Travertin', hi: 'ट्रैवर्टीन', ar: 'ترافرتين' },
     tile: { ja: '屋根瓦（テグラ）', en: 'Roof tile (tegula)', zh: '屋瓦（tegula）', 'zh-TW': '屋瓦（tegula）', ko: '기와(테굴라)', es: 'Teja (tegula)', fr: 'Tuile (tegula)', pt: 'Telha (tegula)', de: 'Dachziegel (Tegula)', ru: 'Черепица (тегула)', tr: 'Kiremit (tegula)', id: 'Genting (tegula)', hi: 'खपरैल (टेगुला)', ar: 'قرميد (تيغولا)' },
@@ -468,6 +477,17 @@
       brush: { ja: '筆', en: 'Ink brushes', zh: '毛笔', 'zh-TW': '毛筆', ko: '붓', es: 'Pinceles de tinta', fr: 'Pinceaux à encre', pt: 'Pincéis de tinta', de: 'Tuschepinsel', ru: 'Кисти для туши', tr: 'Mürekkep fırçaları', id: 'Kuas tinta', hi: 'स्याही ब्रश', ar: 'فرش حبر' },
     } };
   // morris (atlas/models/morris.js, 2026-11-15): 'atlas-morris-pc3'
+  // fox and geese (atlas/models/foxgeese.js SETS, 2026-11-16): 'atlas-foxgeese-pc3'
+  PIECES.foxgeese = { list: ['wood', 'marble', 'pewter', 'paint', 'bronze', 'clay'], get: () => { const v = ls.get('atlas-foxgeese-pc3'); return PIECES.foxgeese.list.includes(v) ? v : 'wood'; }, set: k => ls.set('atlas-foxgeese-pc3', k),
+    thumb: k => new URL('img/pc3-foxgeese-' + k + '.webp?v=1', ME).href,
+    names: {
+      wood: { ja: '塗りの木', en: 'Painted wood', zh: '彩绘木', 'zh-TW': '彩繪木', ko: '칠한 나무', es: 'Madera pintada', fr: 'Bois peint', pt: 'Madeira pintada', de: 'Bemaltes Holz', ru: 'Крашеное дерево', tr: 'Boyalı ahşap', id: 'Kayu dicat', hi: 'रंगी लकड़ी', ar: 'خشب مطلي' },
+      marble: { ja: 'ガラス', en: 'Glass', zh: '玻璃', 'zh-TW': '玻璃', ko: '유리', es: 'Vidrio', fr: 'Verre', pt: 'Vidro', de: 'Glas', ru: 'Стекло', tr: 'Cam', id: 'Kaca', hi: 'काँच', ar: 'زجاج' },
+      pewter: { ja: '銅とピューター', en: 'Copper & pewter', zh: '铜与锡', 'zh-TW': '銅與錫', ko: '구리와 백랍', es: 'Cobre y peltre', fr: 'Cuivre et étain', pt: 'Cobre e estanho', de: 'Kupfer & Zinn', ru: 'Медь и олово', tr: 'Bakır ve kalay', id: 'Tembaga & timah', hi: 'ताँबा और प्यूटर', ar: 'نحاس وقصدير' },
+      paint: { ja: 'エナメル', en: 'Enamel', zh: '珐琅', 'zh-TW': '琺瑯', ko: '에나멜', es: 'Esmalte', fr: 'Émail', pt: 'Esmalte', de: 'Emaille', ru: 'Эмаль', tr: 'Emaye', id: 'Enamel', hi: 'इनेमल', ar: 'مينا' },
+      bronze: { ja: '青銅と銀', en: 'Bronze & silver', zh: '青铜与银', 'zh-TW': '青銅與銀', ko: '청동과 은', es: 'Bronce y plata', fr: 'Bronze et argent', pt: 'Bronze e prata', de: 'Bronze & Silber', ru: 'Бронза и серебро', tr: 'Bronz ve gümüş', id: 'Perunggu & perak', hi: 'काँसा और चाँदी', ar: 'برونز وفضة' },
+      clay: { ja: '素焼き', en: 'Fired clay', zh: '素烧陶', 'zh-TW': '素燒陶', ko: '초벌구이', es: 'Arcilla cocida', fr: 'Terre cuite', pt: 'Barro cozido', de: 'Gebrannter Ton', ru: 'Обожжённая глина', tr: 'Pişmiş kil', id: 'Tanah liat bakar', hi: 'पकी मिट्टी', ar: 'طين محروق' },
+    } };
   // ludus latrunculorum (atlas/models/latrunculi.js SETS, 2026-11-16): 'atlas-latrunculi-pc3'
   PIECES.latrunculi = { list: ['glass', 'gem', 'bone', 'stone', 'bronze', 'terra'], get: () => { const v = ls.get('atlas-latrunculi-pc3'); return PIECES.latrunculi.list.includes(v) ? v : 'glass'; }, set: k => ls.set('atlas-latrunculi-pc3', k),
     thumb: k => new URL('img/pc3-latrunculi-' + k + '.webp?v=1', ME).href,
@@ -605,6 +625,7 @@
     senet: ["#130c07", "radial-gradient(1100px 620px at 18% -12%, rgba(31, 143, 168, 0.22), transparent 62%), radial-gradient(900px 600px at 110% 115%, rgba(214, 150, 60, 0.16), transparent 60%)"],
     ur: ["#080d26", "radial-gradient(1100px 620px at 18% -12%, rgba(42, 63, 158, 0.55), transparent 62%), radial-gradient(900px 600px at 110% 115%, rgba(142, 42, 28, 0.28), transparent 60%), radial-gradient(1px 1px at 12% 22%, rgba(255, 240, 200, 0.6), transparent), radial-gradient(1px 1px at 78% 12%, rgba(255, 240, 200, 0.5), transparent), radial-gradient(1.4px 1.4px at 64% 30%, rgba(255, 240, 200, 0.45), transparent), radial-gradient(1px 1px at 36% 8%, rgba(255, 240, 200, 0.5), transparent)"],
     agon: ["#0e0907", "radial-gradient(1200px 700px at 28% -10%, #3a1d12, transparent 60%), radial-gradient(900px 600px at 110% 110%, #24120b, transparent 60%)"],
+    foxgeese: ["#12150a", "radial-gradient(1200px 700px at 28% -10%, #424b17, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3a2414, transparent 60%)"],
     latrunculi: ["#180a16", "radial-gradient(1200px 700px at 28% -10%, #4c1c40, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3a1a14, transparent 60%)"],
     konane: ["#03201f", "radial-gradient(1200px 700px at 28% -10%, #0c5a55, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3a2414, transparent 60%)"],
     fanorona: ["#170b06", "radial-gradient(1200px 700px at 28% -10%, #4b2510, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3d1c0b, transparent 60%)"],
