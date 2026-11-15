@@ -77,6 +77,7 @@ html.atlas-janggi .side{align-self:start!important}
       draft.mode = mode === 'pvp' ? 'pvp' : 'ai';
       if (side === 1 || side === 2) draft.color = side;
       if (lv >= 1 && lv <= 20) draft.level = lv;
+      { const z = +new URLSearchParams(location.search).get('size'); if (z >= 1 && z <= 4) draft.setup = z - 1; }   // (the portal card's 상차림: set-up + 1)
       segSync(); document.getElementById('btnStart').click();
       return true;
     },

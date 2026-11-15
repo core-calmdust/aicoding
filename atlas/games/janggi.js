@@ -93,6 +93,9 @@
     } catch (e) {}
   }
 
+  // 상차림 (2026-11-15): your horse / elephant set-up, first on the card as the full game asks it (the card's "size" value is the
+  // set-up + 1: 1 inner elephants · 2 outer · 3 left horse · 4 right horse, the full game's default); the AI picks its own at random
+  const RN = {"ja": {"n": ["馬象象馬（内象）", "象馬馬象（外象）", "馬象馬象（左馬）", "象馬象馬（右馬）"], "L": "配置"}, "en": {"n": ["H E E H (inner elephants)", "E H H E (outer elephants)", "H E H E (left horse)", "E H E H (right horse)"], "L": "Set-up"}, "zh": {"n": ["马象象马（内象）", "象马马象（外象）", "马象马象（左马）", "象马象马（右马）"], "L": "布阵"}, "zh-TW": {"n": ["馬象象馬（內象）", "象馬馬象（外象）", "馬象馬象（左馬）", "象馬象馬（右馬）"], "L": "布陣"}, "ko": {"n": ["마상상마 (안상)", "상마마상 (바깥상)", "마상마상 (왼마)", "상마상마 (오른마)"], "L": "상차림"}, "es": {"n": ["C E E C (elefantes dentro)", "E C C E (elefantes fuera)", "C E C E (caballo izquierdo)", "E C E C (caballo derecho)"], "L": "Disposición"}, "fr": {"n": ["C É É C (éléphants dedans)", "É C C É (éléphants dehors)", "C É C É (cheval à gauche)", "É C É C (cheval à droite)"], "L": "Disposition"}, "pt": {"n": ["C E E C (elefantes dentro)", "E C C E (elefantes fora)", "C E C E (cavalo à esquerda)", "E C E C (cavalo à direita)"], "L": "Disposição"}, "de": {"n": ["P E E P (Elefanten innen)", "E P P E (Elefanten außen)", "P E P E (Pferd links)", "E P E P (Pferd rechts)"], "L": "Aufstellung"}, "ru": {"n": ["К С С К (слоны внутри)", "С К К С (слоны снаружи)", "К С К С (конь слева)", "С К С К (конь справа)"], "L": "Расстановка"}, "tr": {"n": ["A F F A (filler içte)", "F A A F (filler dışta)", "A F A F (at solda)", "F A F A (at sağda)"], "L": "Diziliş"}, "id": {"n": ["K G G K (gajah di dalam)", "G K K G (gajah di luar)", "K G K G (kuda kiri)", "G K G K (kuda kanan)"], "L": "Susunan"}, "hi": {"n": ["घो हा हा घो (हाथी अंदर)", "हा घो घो हा (हाथी बाहर)", "घो हा घो हा (बायाँ घोड़ा)", "हा घो हा घो (दायाँ घोड़ा)"], "L": "जमावट"}, "ar": {"n": ["ح ف ف ح (الفيلة في الداخل)", "ف ح ح ف (الفيلة في الخارج)", "ح ف ح ف (حصان يسار)", "ف ح ف ح (حصان يمين)"], "L": "الترتيب"}}, rn = l => RN[l] || RN.en;
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, X = TX[ctx.lang] || TX.en;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
@@ -174,7 +177,8 @@
     }
 
     /* ---------- position ---------- */
-    function refresh() { const r = E.replay(null, moves); pos = r.pos; hashes = r.hashes; }
+    let START = null;   // (the starting position with both set-ups: E.startFen(cho, han))
+    function refresh() { const r = E.replay(START, moves); pos = r.pos; hashes = r.hashes; }
     function status() { const st = E.judge(pos, hashes, null, moves); if (!st.over) st.legal = pos.moves(); return st; }
     function material(c) { let s = 0; for (let sq = 0; sq < 90; sq++) { const p = pos.at(sq); if (p && (p >> 3) === c) s += VAL[p & 7]; } return s; }
     function hud(msg) {
@@ -250,7 +254,7 @@
       const id = ++jid, t0 = Date.now(), mvs = moves.slice();
       const reply = m => {
         if (stopped || id !== jid || over) return;
-        if (m == null || m < 0) { try { m = E.think(null, mvs, Math.min(ctx.level, 6)).move; } catch (e) { m = -1; } }   // the worker failed: a small search on the page (JS)
+        if (m == null || m < 0) { try { m = E.think(START, mvs, Math.min(ctx.level, 6)).move; } catch (e) { m = -1; } }   // the worker failed: a small search on the page (JS)
         later(() => {
           if (id !== jid || over) return;
           thinking = false;
@@ -260,7 +264,7 @@
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? null : r.move); };
       worker.onerror = () => { worker = null; reply(null); };
-      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level });
+      worker.postMessage({ type: 'think', id, start: START, moves: mvs, level: ctx.level });
     }
 
     /* ---------- input ---------- */
@@ -289,7 +293,9 @@
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e;
+      { const mine = Math.max(0, Math.min(3, (+ctx.size || 4) - 1)), rnd = () => Math.floor(Math.random() * 4); START = pvp ? E.startFen(mine, mine) : human === 0 ? E.startFen(mine, rnd()) : E.startFen(rnd(), mine); }
+      if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); begin(); }).catch(() => hud('⚠'));
 
     // test hooks (positions on screen, state)
     const dbg = {
@@ -342,7 +348,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
+          hintW.postMessage({ type: 'think', id: j, start: START, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)) });
         });
       },
       // no draws in janggi: no offerDraw / draw, so the portal's action bar shows no 引き分け button
@@ -403,5 +409,6 @@
     return { name, desc: L.lvd[n <= 4 ? 0 : n <= 10 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.janggi = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.janggi = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, kindOwn: true, sizes: [1, 2, 3, 4], size0: 4, sizePick: true, sizeLabel: l => rn(l).L,
+    sizeName: (z, l) => rn(l).n[Math.max(0, (+z || 4) - 1)], levelInfo, start };   // table: start() plays on the chabudai itself
 })();
