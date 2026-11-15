@@ -102,6 +102,8 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
     skip: '\\.bd|\\.st\\b|\\.co\\b|lastdot|winline|\\.thr|\\.mark|hintlbl|ghost|plate|rim|frame|swap',
     start(lv, side, mode) {
+      // the portal's card: straight to the puzzles / the lessons / the online match search / a rated game (hex/app.js AtlasDeep, 2026-11-15)
+      if (/^(puzzle|lesson|online|rated)$/.test(mode)) { if (!window.AtlasDeep) return null; const q = new URLSearchParams(location.search); return AtlasDeep(mode, q.get('sub')); }
       if (typeof openNewDialog !== 'function' || typeof draft !== 'object' || typeof segSync !== 'function' || !document.getElementById('btnStart')) return null;
       openNewDialog();
       draft.mode = mode === 'pvp' ? 'pvp' : 'ai';
