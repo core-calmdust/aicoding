@@ -479,6 +479,7 @@ const ROW = 6;
 // the opponents' hand rows stand inside the slot the automatic table raises them from (ユーザー 2026-11-15) — the slot pressed into
 // the felt runs x −7.3…7.3, z 7.42…8.40 from its owner's side: the row starts at its left end and stands on its middle line
 const HX0 = -7.27, HZ = 7.91, HGAP = 0.25;
+const MJ = k => k * k * k * (10 - 15 * k + 6 * k * k);   // the ease of a reaching arm (minimum jerk): gentle start, gentle stop
 const SPD = 1.6;   // every movement on the table runs this much faster than its written duration (ユーザー 2026-11-14: a little quicker overall)
 const PI = Math.PI;
 
@@ -962,7 +963,7 @@ class Table3D {
       const up = { x: f.x, y: f.y + 0.95, z: f.z, rx: to.rx, ry: f.ry, rz: to.rz };
       this.tween(g, up, 250, f, seat, () => { if (g.userData.target === to) { this.tween(g, to, 460, up, seat, () => { this._land('river', seat); this._sortNext(seat); }); this.tweens[this.tweens.length - 1].grip = 'held'; } else this._handBack(seat); });
       const tw = this.tweens[this.tweens.length - 1]; tw.level = true; tw.grip = 'take'; g.userData.target = to; };
-    this.handFx.push({ rig, from: r, to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: performance.now(), dur: f.page ? 380 : 280, then: go });
+    this.handFx.push({ rig, from: r, to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: performance.now(), dur: f.page ? 420 : 340, then: go, path: 'in' });
     this.dirty = true;
   }
   // ---------------------------------------------------------------- 理牌 (ユーザー 2026-11-14: the others tidy their hands by hand)
@@ -1003,20 +1004,20 @@ class Table3D {
       const g = this.tile(S.drawn), f = this._pose(g), slot = this._slot(seat, k);
       g.userData.target = slot;
       const lift = Object.assign({}, f, { y: f.y + H * .75 }), above = Object.assign({}, slot, { y: slot.y + H * .75 });
-      const step = (to, dur, fr, then, last) => { if (!this._sortLive(S)) return; this.tween(g, to, dur, fr, seat, then); const tw = this.tweens[this.tweens.length - 1]; tw.sort = seat; tw.level = true; if (!last) tw.grip = 'take'; };
-      this.handFx.push({ rig, from, to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: now, dur: 300, then: () => {
+      const step = (to, dur, fr, then, last) => { if (!this._sortLive(S)) return; this.tween(g, to, dur, fr, seat, then); const tw = this.tweens[this.tweens.length - 1]; tw.sort = seat; tw.level = true; if (!last) tw.grip = 'take'; if (to === above) { tw.grip = 'held'; tw.arc = .28; tw.keep = true; } };   // (over the row in a low arc, not along a ruler)
+      this.handFx.push({ rig, from, path: 'in', to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: now, dur: 340, then: () => {
         if (!this._sortLive(S)) return this._handBack(seat);
         step(lift, 210, f, () => {
           if (!this._sortLive(S)) return this._handBack(seat);
           slide(330, 40);
-          step(above, 420, lift, () => { if (!this._sortLive(S)) return this._handBack(seat); step(slot, 220, above, () => { if (this._sortLive(S)) this.sorting[seat] = null; }, true); });
+          step(above, 440, lift, () => { if (!this._sortLive(S)) return this._handBack(seat); step(slot, 220, above, () => { if (this._sortLive(S)) this.sorting[seat] = null; }, true); });
         });
       } });
     } else if (moves.length) {
       // a gap and no drawn tile: the hand comes down beside the rightmost tile and pushes the tiles right of the gap along
       const [gl, tl] = moves[moves.length - 1], side = this.local(seat, W * .78, 0), o = { x: side.x, z: side.z };
       const p0 = { x: gl.position.x + o.x, y: H * .62, z: gl.position.z + o.z }, p1 = { x: tl.x + o.x, y: H * .62, z: tl.z + o.z };
-      this.handFx.push({ rig, from, to: p0, t0: now, dur: 300, then: () => {
+      this.handFx.push({ rig, from, to: p0, t0: now, dur: 340, path: 'in', then: () => {
         if (!this._sortLive(S)) return this._handBack(seat);
         slide(340, 0);
         this.handFx.push({ rig, from: p0, to: p1, t0: performance.now(), dur: 340, then: () => { if (this._sortLive(S)) this.sorting[seat] = null; this._handBack(seat); } });
@@ -1026,10 +1027,26 @@ class Table3D {
   }
   // a tile set down on the table — a discard in the river, the called tile in a meld: the app plays the tile's sound (ユーザー 2026-11-14)
   _land(kind, seat) { if (this.onTileLand) try { this.onTileLand(kind, seat); } catch (e) {} }
+  // the wrist (ユーザー 2026-11-15: a person's movement): the rig turns a little about the point the fingertips hold, following how
+  // the hand moves — the wrist rises as the hand goes down onto a tile or lifts one, leans into a sideways carry and trails
+  // behind it — each on a soft spring, so it lags the movement and settles after it (follow-through). The fingertips stay put.
+  _handSway(now) {
+    const dt = Math.min(.05, Math.max(.001, (now - (this._swT || now)) / 1000)); this._swT = now;
+    if (!this.hands) return;
+    this.hands.forEach((rig, seat) => { if (!rig) return; const u = rig.userData, S = u.sway || (u.sway = { p: 0, r: 0, y: 0, vp: 0, vr: 0, vy: 0, px: 0, py: 0, pz: 0, on: false });
+      if (!rig.visible) { if (S.on) { S.on = false; S.p = S.r = S.y = S.vp = S.vr = S.vy = 0; rig.rotation.set(0, seat * PI / 2, 0); } return; }
+      const P = rig.position; if (!S.on) { S.on = true; S.px = P.x; S.py = P.y; S.pz = P.z; rig.rotation.order = 'YXZ'; }
+      const a = seat * PI / 2, c = Math.cos(a), sn = Math.sin(a), dx = (P.x - S.px) / dt, dy = (P.y - S.py) / dt, dz = (P.z - S.pz) / dt; S.px = P.x; S.py = P.y; S.pz = P.z;
+      const lx = dx * c - dz * sn, lz = dx * sn + dz * c, cl = (v, m) => Math.max(-m, Math.min(m, v)), k = 1 - .55 * Math.max(0, u.pinch || 0);   // (the hand's own axes: x to its right, −z the way the fingers point)
+      const tp = cl(-.016 * Math.abs(dy) + .004 * lz, .2) * k, tr = cl(-.007 * lx, .16) * k, ty = cl(-.006 * lx, .14) * k, w = 15, z = .78;
+      for (const [q, v, t] of [['p', 'vp', tp], ['r', 'vr', tr], ['y', 'vy', ty]]) { S[v] += (-2 * z * w * S[v] - w * w * (S[q] - t)) * dt; S[q] += S[v] * dt; }
+      rig.rotation.set(S.p, a + S.y, S.r);
+      if (Math.abs(S.p) + Math.abs(S.r) + Math.abs(S.y) + (Math.abs(S.vp) + Math.abs(S.vr) + Math.abs(S.vy)) * .05 > 4e-4) this.dirty = true; });
+  }
   _handRest(seat) { const p = this.local(seat, 0, 12.5); return { x: p.x, y: 3.2, z: p.z }; }   // off the table, on the owner's side
-  _handBack(seat) { const rig = this.hand(seat); this.pinch(rig, 0); const f = { x: rig.position.x, y: rig.position.y, z: rig.position.z }, d = this.local(seat, 0, 6.5);
+  _handBack(seat, wait) { const rig = this.hand(seat); this.pinch(rig, 0); const f = { x: rig.position.x, y: rig.position.y, z: rig.position.z }, d = this.local(seat, 0, 6.5);
     this.handFx = this.handFx.filter(h => h.rig !== rig);
-    this.handFx.push({ rig, from: f, to: { x: f.x + d.x, y: f.y + 2.2, z: f.z + d.z }, t0: performance.now(), dur: 340, hide: true }); }
+    this.handFx.push({ rig, from: f, to: { x: f.x + d.x, y: f.y + 2.2, z: f.z + d.z }, t0: performance.now() + (wait || 0) / SPD, dur: 460, hide: true, path: 'out' }); }
   tilePose(id) { const g = this.tiles.get(id); if (!g) return null; const t = g.userData.target || {}; return { x: g.position.x, y: g.position.y, z: g.position.z, rx: g.rotation.x, ry: g.rotation.y, rz: g.rotation.z, seen: g.visible, to: t }; }
   // a call: the caller's hand reaches for the tile where it lies (from: its pose before the new layout), then carries it to its
   // place in the meld (the tile's new target). Without `from` (暗槓 / 加槓) the tile comes from the caller's own hand.
@@ -1045,7 +1062,7 @@ class Table3D {
     g.position.set(from.x, from.y, from.z); g.rotation.set(from.rx, from.ry, from.rz);
     const r = this._handRest(seat);
     this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(r.x, r.y, r.z);
-    this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 240, then: () => this.tween(g, to, 420, from, seat, landed) });
+    this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 300, then: () => this.tween(g, to, 420, from, seat, landed), path: 'in' });
     this.dirty = true;
   }
   hideAll() { if (this._callG) this.markCall(null); if (this.sorting) for (const S of this.sorting) if (S) clearTimeout(S.timer); this.sorting = []; for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this._ov) { this._solo(this._ov.g, false); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
@@ -1356,16 +1373,19 @@ class Table3D {
       const ends = [];   // (what follows a tween may start another: run it after the list is rebuilt)
       this.tweens = this.tweens.filter(tw => {
         let k = Math.max(0, Math.min(1, (now - tw.t0) * SPD / tw.dur));
-        const e = 1 - Math.pow(1 - k, 3);
+        // (ユーザー 2026-11-15: smoother, more like a person.) A tile in a hand moves as an arm does — it starts gently, is quickest
+        // in the middle and slows into its place (minimum jerk), not at full speed from the first frame. A lift that leads into a
+        // carry (grip 'take') does not stop at the top: it is still rising as the carry takes over, so the two read as one movement.
+        const e = tw.hand == null ? 1 - Math.pow(1 - k, 3) : tw.grip === 'take' ? Math.pow(k, 1.5) : MJ(Math.pow(k, .9));
         const f = tw.from, t = tw.to, g = tw.g;
-        const arc = tw.level ? 0 : Math.sin(k * PI) * 0.6;
+        const arc = tw.level ? Math.sin(k * PI) * (tw.arc || 0) : Math.sin(k * PI) * 0.6;
         g.position.set(f.x + (t.x - f.x) * e, f.y + (t.y - f.y) * e + arc, f.z + (t.z - f.z) * e);
         g.rotation.set(f.rx + (t.rx - f.rx) * e, f.ry + (t.ry - f.ry) * e, f.rz + (t.rz - f.rz) * e);
         if (tw.hand != null) { const rig = this.hand(tw.hand); rig.position.set(g.position.x, g.position.y + this._top(g.rotation.x), g.position.z);   // the hand holds the tile
           const ss = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a))); return u * u * (3 - 2 * u); }, sn = Math.sin(g.rotation.x), flat = sn * sn;
           // (pinched only while the tile is in the air and lying flat: the thumb goes under as it leaves the row or the table, and is out again before it lands)
           this.pinch(rig, flat * flat * (tw.grip === 'take' ? ss(0, .85, k) : (tw.grip === 'held' ? 1 : ss(.1, .38, k)) * (1 - ss(.5, .8, k)))); }
-        if (k >= 1) { if (tw.hand != null && tw.grip !== 'take') this._handBack(tw.hand); if (tw.after) ends.push(tw.after); }
+        if (k >= 1) { if (tw.hand != null && tw.grip !== 'take' && !tw.keep) this._handBack(tw.hand, 90); if (tw.after) ends.push(tw.after); }   // (the fingers rest on the tile a moment before the hand draws back)
         return k < 1;
       });
       for (const f of ends) f();
@@ -1373,11 +1393,17 @@ class Table3D {
     }
     if (this.handFx.length) {
       const run = this.handFx; this.handFx = [];
-      for (const h of run) { const k = Math.min(1, (now - h.t0) * SPD / h.dur), e = k * k * (3 - 2 * k);
-        h.rig.position.set(h.from.x + (h.to.x - h.from.x) * e, h.from.y + (h.to.y - h.from.y) * e, h.from.z + (h.to.z - h.from.z) * e);
+      for (const h of run) { const k = Math.max(0, Math.min(1, (now - h.t0) * SPD / h.dur));
+        // the hand alone: reaching ('in'), it comes over the place first and sinks onto it at the end; drawing back ('out'), it
+        // lifts off first and then goes — a curved path both ways, never a straight slide. Reaching, the fingers open a little
+        // and close again as they arrive.
+        const e = h.path === 'in' ? MJ(Math.pow(k, .8)) : h.path === 'out' ? MJ(Math.pow(k, 1.3)) : MJ(k), ey = h.path === 'in' ? MJ(Math.pow(k, 1.45)) : h.path === 'out' ? MJ(Math.pow(k, .6)) : e;
+        h.rig.position.set(h.from.x + (h.to.x - h.from.x) * e, h.from.y + (h.to.y - h.from.y) * ey, h.from.z + (h.to.z - h.from.z) * e);
+        if (h.path === 'in') this.pinch(h.rig, -.16 * Math.sin(Math.pow(k, .8) * PI));
         if (k < 1) this.handFx.push(h); else { if (h.hide) h.rig.visible = false; if (h.then) h.then(); } }
       this.dirty = true;
     }
+    this._handSway(now);
     const moved = this.dirty;   // (anything moved or changed this frame: the shadows are redrawn too)
     // the dora's glint: a light runs round the rim of every dora that lies face up and two small stars twinkle, about once in three seconds
     // (at ~30 frames a second when it is the only thing changing: the whole table is redrawn for it)
