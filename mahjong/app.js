@@ -1157,12 +1157,12 @@ function renderBadges() {
     const html = `
       <div class="bf ${(s === g.dealer) ? 'dealer' : ''} ${p && p.riichi ? 'rii' : ''}" style="--c:${c.color}">${frame(c, 'face')}<em>${wind}</em>${p && p.riichi ? `<i class="riiflag">${esc(t('riichi'))}</i>` : ''}</div>
       <div class="bt"><b>${esc(L(c.name))}</b><span class="sc">${g.scores[s].toLocaleString()}</span>
-        <span class="bk">${chips}${DB.set.skills && g.rules.skills ? `<i class="sk ${p && p.skillUsed ? 'used' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))} ${MJSkills.TIERS[c.tier | 0]}">${icon(sk.icon)}<b class="tr">${MJSkills.TIERS[c.tier | 0]}</b></i>` : ''}</span></div>`;
-    if (s === ME) renderMe(html);
+        <span class="bk">${s === ME && g.rules.skills ? '' : chips}${DB.set.skills && g.rules.skills && !(s === ME) ? `<i class="sk ${p && p.skillUsed ? 'used' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))} ${MJSkills.TIERS[c.tier | 0]}">${icon(sk.icon)}<b class="tr">${MJSkills.TIERS[c.tier | 0]}</b></i>` : ''}</span></div>`;
+    if (s === ME) renderMe(html, chips);   // (ユーザー 2026-11-15: the player's own skill marks — the effects in force, the seal's lock — sit inside the skill plate, not under the portrait; the plate already shows the skill itself)
     else $('#opp' + s).innerHTML = html;
   }
 }
-function renderMe(badgeHtml) {
+function renderMe(badgeHtml, chips) {
   const g = G, c = UIS.chars[ME], sk = MJSkills.get(c.skill);
   const p = g.P ? g.P[ME] : null;
   const cost = g.skillCost ? g.skillCost(ME) : 0;
@@ -1170,8 +1170,8 @@ function renderMe(badgeHtml) {
   const can = UIS.opts && UIS.opts.canSkill;
   $('#mePanel').innerHTML = `
     <div class="mb">${badgeHtml}</div>
-    ${skillsOn ? `<button class="skb ${can ? 'ready' : ''} ${p && p.skillUsed ? 'used' : ''}" id="skBtn" style="--sc:${sk.color}" ${can ? '' : 'disabled'}>
-      <kbd class="skk">S</kbd><i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b><small>${p && p.skillUsed ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))} · ${esc(L(sk.short(MJSkills.val(sk, c.tier))))}</small></span></button>` : ''}`;
+    ${skillsOn ? `<button class="skb ${can ? 'ready' : ''} ${p && p.skillUsed ? 'used' : ''} ${chips ? 'hasfx' : ''}" id="skBtn" style="--sc:${sk.color}" ${can ? '' : 'disabled'}>
+      <kbd class="skk">S</kbd><i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b><small>${p && p.skillUsed ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))} · ${esc(L(sk.short(MJSkills.val(sk, c.tier))))}</small></span>${chips ? `<span class="skfx">${chips}</span>` : ''}</button>` : ''}`;
   const b = $('#skBtn');
   { const mb = document.querySelector('#mePanel .mb'), hz = document.documentElement.classList.contains('ds') ? parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hz')) || 1 : 1; if (mb) mb.style.marginLeft = b ? Math.round(b.offsetWidth * (hz - 1)) + 'px' : ''; }   // (the skill button is drawn enlarged: keep the portrait clear of it)
   if (b) b.onclick = async () => {
