@@ -67,9 +67,12 @@
   }
   const DK = ['background:radial-gradient(circle at 40% 35%,#fff,#e2e8f5 60%,#b8c4de)', 'background:radial-gradient(circle at 40% 35%,#3a66cc,#1d3f9a 60%,#11275f)'];
 
+  // 種目 (2026-11-15): the full game's four rule sets; the card's "size" value names one (1 classic 3×3 · 2 3×4 · 3 4×4 · 4 diagonal)
+  const RIDS = ['c33', 'c34', 'c44', 'diag'], RN = {"ja": {"n": ["古典（3×3）", "3×4", "4×4", "斜めあり"], "d": ["9枚ずつ。縦横に1歩、または駒を跳び越える。40手で自陣を空け、80手で決着。", "12枚ずつの長い勝負。自陣を空けるのは50手、決着は100手まで（本サイトの設定）。", "16枚ずつ。陣地が中央で接し、混み合う上級者向け。60手／120手（本サイトの設定）。", "9枚ずつ。斜めにも動けて跳べる速い変則ルール。30手で自陣を空け、80手で決着。"], "L": "Rules"}, "en": {"n": ["Classic (3×3)", "3×4", "4×4", "Diagonal"], "d": ["9 each. Step up/down/sideways or jump over pieces. Empty your corner by move 40; the game ends by move 80.", "12 each, a longer race. Corner empty by move 50, game over by move 100 (this site’s setting).", "16 each. The corners touch in the middle — crowded and hard. 60 / 120 moves (this site’s setting).", "9 each, steps and jumps also diagonal — a fast variant. Corner empty by move 30, over by move 80."], "L": "Rules"}, "zh": {"n": ["经典（3×3）", "3×4", "4×4", "可斜走"], "d": ["每方9子。横竖走一步，或跳过棋子。40步内离开本营，80步决胜。", "每方12子的长局。50步内离开本营，100步决胜（本站设定）。", "每方16子。双方营地在中央相接，拥挤难下。60步／120步（本站设定）。", "每方9子，斜向也能走和跳的快速变体。30步内离开本营，80步决胜。"], "L": "Rules"}, "zh-TW": {"n": ["經典（3×3）", "3×4", "4×4", "斜走"], "d": ["各9枚。上下左右走一格，或跳過棋子。第40手前清空自己的角落；第80手前結束。", "各12枚，賽程更長。第50手前清空角落，第100手前結束（本站設定）。", "各16枚。兩個角落在中央相接 — 擁擠又困難。60 / 120 手（本站設定）。", "各9枚，走和跳也可以斜向 — 節奏快的變體。第30手前清空角落，第80手前結束。"], "L": "Rules"}, "ko": {"n": ["고전 (3×3)", "3×4", "4×4", "대각선 허용"], "d": ["9개씩. 상하좌우 한 칸 또는 말을 뛰어넘기. 40수에 진영을 비우고 80수에 결판.", "12개씩의 긴 승부. 진영 비우기 50수, 결판 100수 (이 사이트 설정).", "16개씩. 진영이 중앙에서 맞닿아 복잡한 상급자용. 60수/120수 (이 사이트 설정).", "9개씩. 대각선으로도 움직이고 뛰는 빠른 변형. 30수에 진영을 비우고 80수에 결판."], "L": "Rules"}, "es": {"n": ["Clásico (3×3)", "3×4", "4×4", "Diagonal"], "d": ["9 por bando. Paso arriba/abajo/lateral o salto sobre piezas. Esquina vacía en 40 jugadas; fin en 80.", "12 por bando, carrera más larga. Esquina vacía en 50, fin en 100 (ajuste de este sitio).", "16 por bando. Las esquinas se tocan en el centro: muy cerrado. 60 / 120 jugadas (ajuste del sitio).", "9 por bando, pasos y saltos también en diagonal: variante rápida. Esquina vacía en 30, fin en 80."], "L": "Rules"}, "fr": {"n": ["Classique (3×3)", "3×4", "4×4", "Diagonale"], "d": ["9 chacun. Un pas en haut/bas/côté ou un saut par-dessus. Coin vidé au coup 40, fin au coup 80.", "12 chacun, course plus longue. Coin vidé au coup 50, fin au coup 100 (réglage du site).", "16 chacun. Les coins se touchent au centre : très serré. 60 / 120 coups (réglage du site).", "9 chacun, pas et sauts aussi en diagonale : variante rapide. Coin vidé au coup 30, fin au coup 80."], "L": "Rules"}, "pt": {"n": ["Clássico (3×3)", "3×4", "4×4", "Diagonal"], "d": ["9 cada. Passo para cima/baixo/lado ou salto sobre peças. Canto vazio até o lance 40; fim no 80.", "12 cada, corrida mais longa. Canto vazio até 50, fim em 100 (ajuste do site).", "16 cada. Os cantos se tocam no centro: muito fechado. 60 / 120 lances (ajuste do site).", "9 cada, passos e saltos também na diagonal: variante rápida. Canto vazio até 30, fim em 80."], "L": "Rules"}, "de": {"n": ["Klassisch (3×3)", "3×4", "4×4", "Diagonal"], "d": ["Je 9 Steine. Ein Schritt hoch/runter/seitwärts oder Sprung über Steine. Ecke leer bis Zug 40, Ende bis Zug 80.", "Je 12, ein längeres Rennen. Ecke leer bis Zug 50, Ende bis Zug 100 (Einstellung der Seite).", "Je 16. Die Ecken berühren sich in der Mitte – eng und schwer. 60 / 120 Züge (Einstellung der Seite).", "Je 9, Schritte und Sprünge auch diagonal – eine schnelle Variante. Ecke leer bis Zug 30, Ende bis Zug 80."], "L": "Rules"}, "ru": {"n": ["Классические (3×3)", "3×4", "4×4", "Диагональные"], "d": ["По 9 шашек. Ход вверх/вниз/вбок или прыжок через шашки. Освободить свой уголок к 40-му ходу; партия заканчивается к 80-му.", "По 12 шашек, гонка длиннее. Уголок пуст к 50-му ходу, конец партии к 100-му (настройка сайта).", "По 16 шашек. Уголки сходятся в центре — тесно и трудно. 60 / 120 ходов (настройка сайта).", "По 9 шашек, ходы и прыжки также по диагонали — быстрый вариант. Уголок пуст к 30-му ходу, конец к 80-му."], "L": "Rules"}, "tr": {"n": ["Klasik (3×3)", "3×4", "4×4", "Çapraz"], "d": ["Her birine 9. Yukarı/aşağı/yana adım ya da taşların üzerinden atla. 40. hamleye kadar köşeni boşalt; oyun 80. hamlede biter.", "Her birine 12, daha uzun bir yarış. Köşe 50. hamleye kadar boş, oyun 100. hamlede biter (site ayarı).", "Her birine 16. Köşeler ortada birleşir — kalabalık ve zor. 60 / 120 hamle (site ayarı).", "Her birine 9, adım ve atlamalar çapraz da olur — hızlı varyant. Köşe 30. hamleye kadar boş, 80. hamlede biter."], "L": "Rules"}, "id": {"n": ["Klasik (3×3)", "3×4", "4×4", "Diagonal"], "d": ["Masing-masing 9. Melangkah atas/bawah/samping atau lompati bidak. Kosongkan sudutmu sebelum langkah 40; permainan berakhir di langkah 80.", "Masing-masing 12, balapan lebih panjang. Sudut kosong sebelum langkah 50, selesai di langkah 100 (pengaturan situs ini).", "Masing-masing 16. Sudut bersentuhan di tengah — padat dan sulit. 60 / 120 langkah (pengaturan situs ini).", "Masing-masing 9, langkah dan lompatan juga diagonal — varian cepat. Sudut kosong sebelum langkah 30, selesai di langkah 80."], "L": "Rules"}, "hi": {"n": ["पारंपरिक (3×3)", "3×4", "4×4", "तिरछा भी"], "d": ["हर ओर 9। ऊपर/नीचे/बगल एक कदम या गोटी के ऊपर छलांग। 40 चाल तक कोना खाली, 80 तक फ़ैसला।", "हर ओर 12, लंबी दौड़। 50 चाल तक कोना खाली, 100 तक फ़ैसला (इस साइट का नियम)।", "हर ओर 16। कोने बीच में मिलते हैं — भीड़ भरा, कठिन। 60 / 120 चालें (इस साइट का नियम)।", "हर ओर 9, कदम और छलांग तिरछे भी — तेज़ रूप। 30 चाल तक कोना खाली, 80 तक फ़ैसला।"], "L": "Rules"}, "ar": {"n": ["كلاسيكي (3×3)", "3×4", "4×4", "قطري"], "d": ["9 لكلٍّ. خطوة أفقية أو عمودية أو قفز فوق القطع. يُفرغ الركن حتى النقلة 40، والنهاية حتى 80.", "12 لكلٍّ، سباق أطول. يُفرغ الركن حتى 50، والنهاية حتى 100 (إعداد الموقع).", "16 لكلٍّ. يتلامس الركنان في الوسط: مزدحم وصعب. 60 / 120 نقلة (إعداد الموقع).", "9 لكلٍّ، الخطوات والقفزات قطرية أيضًا: نسخة سريعة. يُفرغ الركن حتى 30، والنهاية حتى 80."], "L": "Rules"}}, rn = l => RN[l] || RN.en;
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, X = TX[ctx.lang] || TX.en;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
+    const rule = RIDS[(+ctx.size || 1) - 1] || 'c33', NP = { c33: 9, c34: 12, c44: 16, diag: 9 }[rule];   // (NP: pieces each)
     const board = T3.ugolki.board(); T3.show('ugolki', board);
     const U = board.userData, Y = U.top;
     const tall = innerHeight > innerWidth * 1.15;
@@ -131,7 +134,7 @@
     /* ---------- position ---------- */
     function refresh() { const r = E.replay(null, moves); pos = r.pos; hashes = r.hashes; }
     function hud(msg) {
-      const side = c => `<span class="hs ${pos && pos.side + 1 === c && !over ? 'on' : ''}"><i class="dk" style="${DK[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${pos ? pos.inTarget(c) : 0}/9</b></span>`;
+      const side = c => `<span class="hs ${pos && pos.side + 1 === c && !over ? 'on' : ''}"><i class="dk" style="${DK[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${pos ? pos.inTarget(c) : 0}/${NP}</b></span>`;
       ctx.hud(`${side(1)}<span class="hm">${msg || ''}</span>${side(2)}`);
     }
     function toast(msg) {
@@ -187,7 +190,7 @@
     }
 
     /* ---------- AI: the game's engine worker ---------- */
-    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule: 'c33' }); return w; }
+    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule }); return w; }
     function aiMove() {
       thinking = true; hud(L.think);
       if (!worker) worker = newWorker();
@@ -199,7 +202,7 @@
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? null : r.move); };
       worker.onerror = () => { worker = null; reply(null); };
-      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule: 'c33' });
+      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule });
     }
 
     /* ---------- input ---------- */
@@ -235,7 +238,7 @@
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; E.setRule('c33'); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
 
     const dbg = {
       at: i => { const [x, z] = xz(i); return T3.project(x, z, Y); },
@@ -274,7 +277,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule: 'c33' });
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule });
         });
       },
       // 引き分け（ポータルの操作バー）：2人対局は合意で draw()。AI 対局は offerDraw() → 'yes' / 'no' / 'wait'
@@ -290,7 +293,7 @@
           if (!hintW) hintW = newWorker();
           hintW.onmessage = e => { const r = e.data; if (r.type !== 'result' || r.id !== j) return; res(!stopped && !over && moves.length === mvs.length && typeof r.v === 'number' && -r.v <= 0 ? 'yes' : 'no'); };   // r.v: the side to move (you) — the AI's view is -v
           hintW.onerror = () => { hintW = null; res('no'); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule: 'c33' });
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule });
         });
       },
       draw() { if (pos && !over) finish(-1, 'draw'); },
@@ -351,5 +354,6 @@
     return { name: '', desc: n > 20 ? LVD_TOP[lang] || LVD_TOP.en : D[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[Math.min(n, 20) - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.ugolki = { levels: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };
+  window.Atlas3D.ugolki = { levels: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: [1, 2, 3, 4], size0: 1, sizeLabel: l => rn(l).L,
+    sizeName: (z, l) => rn(l).n[(+z || 1) - 1], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[(+v || 1) - 1] } : null, levelInfo, start };
 })();
