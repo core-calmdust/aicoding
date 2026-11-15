@@ -1,6 +1,6 @@
 # 狐とガチョウ（foxgeese/）仕様
 
-URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒストリカル。**2026-11-16 時点は未掲載の BETA**：トップページ・大百科ポータルには未登録、URL 直打ちで遊べる）。テーマ色 #5d6a1f（オリーブ＝牧草地。既存の緑系（リバーシ・アマゾンズ・チャンギ）より黄み）。
+URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒストリカル、`also: ['chess']`。**BETA**。2026-11-16 にトップページと大百科ポータルへ登録：下の「大百科への登録」）。テーマ色 #5d6a1f（オリーブ＝牧草地。既存の緑系（リバーシ・アマゾンズ・チャンギ）より黄み）。
 
 ## ルール
 出典（2026-11 確認）：Wikipedia「Fox games」（『グレティルのサガ』のハラタフル、遅くとも14世紀。エドワード4世の「狐2匹と猟犬26匹」。13羽は狐有利で、15・17・18羽や狐2匹がより釣り合う。取りは強制でない。ヴィクトリア女王。各国の呼び名。同じ盤のペグ・ソリテール）、ウォータールー大学 Elliott Avedon Museum「Fox and Geese Games」（17羽、狐が先手、上手なガチョウがたいてい勝つ）、M. Winther「Fox and Geese, classic version」（H. J. R. Murray に基づく：13羽は後ろにも動ける／17羽は縦横のみで後退不可／ガチョウ5羽以下で狐の勝ち）。
@@ -38,10 +38,24 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
 - コーチ（ja/en）：狐＝勝ち筋・続けて取る・取る・2羽を狙う・狙う・広い所へ・位置を変える／ガチョウ＝閉じ込める・守る・詰める・形を整える・誘う。
 - オンライン：Firebase プロジェクト未作成のため準備中。言語：**ja・en のみ**（残り12言語が揃うまで言語メニューに出さない）。
 
+## 3D（フル機能版 ?skin=atlas、2026-11-16）
+- atlas/models/foxgeese.js：3D盤6種（オーク材＝既定・石盤とチョーク・リネンの刺しゅう・牧場・ナイト・ペーパー、保存キー atlas-foxgeese-look）と3D駒6種（木＝既定・ガラス・ピューター・塗り・青銅と銀・素焼き、atlas-foxgeese-pc3）。狐は耳のある頭、ガチョウはくちばしのある丸い体。atlas/skin/foxgeese.js が2Dページの駒を3Dに写す。
+
+## 大百科への登録（2026-11-16、コナネと同じ形）
+- **台帳**：`shared/atlas.js` の GAMES（`beta: true`、released 2026-11-16、tags＝historical・ai・rated・daily・lessons・puzzles・variants・mobile。オンラインは Firebase 未作成なので `online` タグなし）と READ。total＝パズル250・レッスン6。名前は14言語（ja「狐とガチョウ」／en「Fox and Geese」ほか）。
+- **文言（14言語）**：`atlas/i18n.js` の `about.foxgeese`・`hist.foxgeese`、`atlas/gamelist-i18n.js` の一言、`shared/atlas-updates.js` の公開行、トップページ `index.html` の `fg.title`・`fg.desc`。
+- **読み込み**：`atlas/lazy.js` に models／games／rules の3本。`atlas/app.js` の R3（アイコン images/atlas/foxgeese.webp は仮のまま）と FULL_SKIN。
+- **ちゃぶ台対局**（`atlas/games/foxgeese.js`）：エンジン（`../foxgeese/engine.js` をページと Worker で）そのままの2ルール。カードの「種目」＝ガチョウ13羽・17羽（size 13・17。フル機能版へは `&size=` で渡り、`atlas/skin/foxgeese.js` が rule に直す）。手番の「先手」＝狐、「後手」＝ガチョウ。盤は回さない（ガチョウがいつも手前）。モードは 対戦（AI Lv.1〜20・二人で対戦）／レート戦・パズル・レッスンはフル機能版を開く。狐の連続跳びは着地点を1つずつタップし、まだ跳べる所で止まるときは同じ点（か狐）をもう一度タップ。HUD の数字は狐＝取った数、ガチョウ＝残りの数。待った・ヒント・投了。3D駒の切り替え（`atlas-pieces`）に追従。
+- **3Dルールコース**（`atlas/rules/foxgeese.js`、案内はドミノダック `av/duck-0`、10ステップ）：紹介 → 盤と駒 → 狐の動き → 跳び越えて取る → 続けて跳ぶ → ガチョウの動き → 後ろを守る → ガチョウの勝ち → 狐の勝ち → 2つのルール。課題の正解はエンジンで判定。3D盤には座標がないので点の名前を言わない（「光っている点」）。
+- **ヒストリア**（`atlas/historia/s/foxgeese.json`＋14言語）：この spec と 2D の紹介文にある事実だけで構成（『グレティルのサガ』のハラタフル・遅くとも14世紀・エドワード4世の駒・ヴィクトリア女王・「狐とめんどり」「狼と羊」・ペグ・ソリテールと同じ盤・13羽と17羽）。盤の図は十字形（`atlas/historia.js` の grid に `cross` を追加）。地図のピン＝アイスランド・イングランド・フランス・ロシア（伝わった道筋は資料にないので線は引かない）。
+- **ボスと観戦キャラ**（`atlas/npc/roster.js`・`atlas/npc/t/<lang>.js`、14言語）：ボス7体（ねぼすけガチョウ → 農場のめんどり → サガのひつじ → 王の猟犬 → おおかみ → 女王陛下のガチョウ → エドワード王ギツネ＝UR）。画像 `images/atlas/av/boss-foxgeese-<1〜7>-<0〜3>.webp`。豆知識4行。
+- **トップページ**：`index.html` の一覧（ラトルンクロルムの次、`beta:1`）、アイコン `images/icons/foxgeese.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/foxgeese.webp`。
+- Praline のマーク・mtsplit／tools/mtsim は対象外（1スレッドの JS エンジン）。
+
 ## 未着手（次の作業）
-- 残り12言語、レッスンの準備ステップ、g17 のレッスン／パズル。
-- 3D（盤・駒6種ずつ、スキン）、大百科登録（GAMES・正式アイコン・地図・ヒストリア・ちゃぶ台対局・3Dルールコース）。
-- AI の強化（ガチョウの囲い方、完全解析、WASM）、レート基準値の実測。トップページ掲載。
+- 残り12言語（2Dページ）、レッスンの準備ステップ、g17 のレッスン／パズル。
+- 大百科：正式アイコン（icons3d.js。いまは仮の images/atlas/foxgeese.webp）、3D卓でのレート戦・パズル・レッスン（いまはフル機能版を開く）、種目カードを 2D のルールカードから作る `atlas/kindart.js`（2Dが14言語になってから）。
+- AI の強化（ガチョウの囲い方、完全解析、WASM）、レート基準値の実測。オンライン対戦（Firebase プロジェクト）。
 
 ## 保存キー
 - aicoding-foxgeese（設定・対局）、-lessons、-puzzles、-daily、-rated、-rules、foxgeese-online-name。

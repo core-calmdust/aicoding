@@ -241,7 +241,9 @@
       if (pvp || pos.side + 1 === human) {
         const c = cur();
         if (rmSel >= 0 && c.length && c.every(E.isRemoveOnly)) { busy = true; hud(''); later(() => commit(c[0]), 500); return; }   // nothing can move: the removal alone
-        hud(prompt()); return;
+        hud(prompt());
+        if (pos.placing && moves.length < 2) toast(X.place); else if (rmList.length > 1) toast(X.rm);   // (phones show no line in the HUD: what to do now, once)
+        return;
       }
       aiMove();
     }
@@ -318,7 +320,7 @@
     const dbg = {
       at: i => { const [x, z] = xz(i); return T3.project(x, z, U.top); },
       state: () => ({ moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, rule, placing: pos && pos.placing, sel: sel ? sel.from : null, pieces: Object.keys(pcs).length, turned: Object.values(pcs).filter(p => p.inc).length, cap: pos && pos.cap.slice(), hand: pos && pos.hand.slice(), rmList: rmList.slice(), rmSel }),
-      legal: () => legal.map(m => ({ m, from: E.mFrom(m), to: E.mTo(m), rm: E.mRm(m) })),
+      legal: () => legal.map(m => { const e = E.effect(pos, m); return { m, from: E.mFrom(m), to: E.mTo(m), rm: E.mRm(m), hit: e.blocks.length + e.takes.length, free: e.frees.length }; }),
     };
     window.Atlas3D.latrunculi._dbg = dbg;
     const myTurn = () => !!pos && !over && !busy && !thinking && (pvp || pos.side + 1 === human);
