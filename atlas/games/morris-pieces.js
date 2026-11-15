@@ -141,7 +141,7 @@
 
     /* ---------- marks ---------- */
     const basic = (color, op) => new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false });
-    const MAT = { last: basic(0xff3b2b, .9), from: basic(0xff3b2b, .35), sel: basic(0xffd84a, .95), dest: basic(0xffe27a, .85), rm: basic(0xff4a3a, .9), mill: basic(0xffd24a, .85), hint: basic(0x4ad8ff, .9) };
+    const MAT = { pz_ok: basic(0x2fd17a, .95), pz_ng: basic(0xff3b30, .95), pz_hl: basic(0xffb21a, .95), pz_ring: basic(0xffc928, 1), last: basic(0xff3b2b, .9), from: basic(0xff3b2b, .35), sel: basic(0xffd84a, .95), dest: basic(0xffe27a, .85), rm: basic(0xff4a3a, .9), mill: basic(0xffd24a, .85), hint: basic(0x4ad8ff, .9) };
     const GEO = { ring: new TH.TorusGeometry(.5, .035, 8, 40), dot: new TH.CylinderGeometry(.13, .13, .012, 20), big: new TH.TorusGeometry(.56, .06, 8, 44) };
     GEO.ring.rotateX(Math.PI / 2); GEO.big.rotateX(Math.PI / 2);
     // candidate destinations: a bright core, a crisp ring and a soft additive glow, so they read at a glance
@@ -163,6 +163,8 @@
       if (o.sel >= 0 && o.sel != null) put(GEO.big, MAT.sel, o.sel, TOP + .01);
       (o.dests || []).forEach(i => { put(GEO.core, MAT.core, i, TOP + .008); pulses.push(put(GEO.dring, MAT.dring, i, TOP + .01)); pulses.push(put(GEO.glow, MAT.glow, i, TOP + .004)); });
       (o.rm || []).forEach(i => pulses.push(put(GEO.big, MAT.rm, i, TOP + .02)));
+      // puzzles / lessons (2026-11-16): points in a colour ({ at, cls: ok · ng · hl · ring }); a move's points are given one by one
+      (o.pz || []).forEach(e => { const k = MAT['pz_' + e.cls] || MAT.pz_hl; put(GEO.big, k, e.at, TOP + .025); if (e.cls !== 'ring') put(GEO.core, k, e.at, TOP + .012); });
       if (o.hint) { const [f, t] = o.hint; if (f >= 0) put(GEO.big, MAT.hint, f, TOP + .02); if (t >= 0) pulses.push(put(GEO.big, MAT.hint, t, TOP + .02)); }
       if (pulses.length && !pulseOn) { pulseOn = true; pulse(); }
       kick(200);
