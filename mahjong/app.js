@@ -852,7 +852,12 @@ function renderStats() {
   const yAll = (I18N.yakuKeys ? I18N.yakuKeys() : Object.keys(made)).filter(k => !NOTY[k]).map((k, i) => [k, made[k] || 0, i])
     .sort((a, b) => b[1] - a[1] || a[2] - b[2]), ymax = Math.max(1, ...yAll.map(x => x[1]));
   const yHd = `<span>${esc(t('psYakuName'))}</span><span>${esc(t('psYakuN'))}</span><span>${esc(t('psYakuP'))}</span>`;
-  const yHtml = yAll.length ? `<div class="ps-yh">${yHd}</div><div class="ps-yh ps-yh2">${yHd}</div>` + yAll.map(([k, n]) => `<div class="ps-yk${n ? '' : ' zero'}"><span>${esc(I18N.yaku(k))}</span><b>${n}</b><em>${pct(raw.hands ? n / raw.hands : 0)}</em><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i></div>`).join('') : `<span class="ps-none">—</span>`;
+  // (ユーザー 2026-11-15) the main page keeps to the top five made; the full list is its own page (「全役を見る」)
+  const yRow = ([k, n]) => `<div class="ps-yk${n ? '' : ' zero'}"><span>${esc(I18N.yaku(k))}</span><b>${n}</b><em>${pct(raw.hands ? n / raw.hands : 0)}</em><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i></div>`;
+  const yTop = yAll.filter(x => x[1]).slice(0, 5);
+  const yTopHtml = yTop.length ? `<div class="ps-yh">${yHd}</div>` + yTop.map(yRow).join('') : `<span class="ps-none">—</span>`;
+  const yAllPage = `<div class="ps-yall"><div class="ps-yall-h"><button class="btn sm" data-a="yback">‹ ${esc(t('back'))}</button><h4>${esc(t('psYakuList'))}</h4><small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small></div>
+    <div class="ps-yks two"><div class="ps-yh">${yHd}</div><div class="ps-yh ps-yh2">${yHd}</div>${yAll.map(yRow).join('')}</div></div>`;
   let chHtml = '';
   if (pl.kind === 'me' && tb && tb[0] === 'all') {
     const ch = Object.entries(DB.pstats.chars).filter(([id]) => MJChars.get(id)).sort((a, b) => b[1].g - a[1].g).slice(0, 6);
@@ -870,12 +875,12 @@ function renderStats() {
         ${sk ? `<div class="ps-sk">${skillChip(sk)}</div>` : ''}
         ${P.tabs.length > 1 ? `<div class="ps-tabs">${P.tabs.map(([k, lab]) => `<button class="${k === (tb && tb[0]) ? 'on' : ''}" data-tab="${k}">${esc(lab)}</button>`).join('')}</div>` : ''}
         <div class="ps-body">
-          ${tb && tb[0] === 'log' ? histHTML() : !tb ? `<p class="ps-empty">${esc(t('psNoData'))}</p>` : empty ? `<p class="ps-empty">${esc(t(isG ? 'psEmptyG' : 'psEmpty'))}</p>` : `
+          ${P.yakuAll && tb && tb[0] !== 'log' ? yAllPage : tb && tb[0] === 'log' ? histHTML() : !tb ? `<p class="ps-empty">${esc(t('psNoData'))}</p>` : empty ? `<p class="ps-empty">${esc(t(isG ? 'psEmptyG' : 'psEmpty'))}</p>` : `
           <div class="ps-big">${big.map(([l, v]) => `<div><small>${esc(l)}</small><b>${v}</b></div>`).join('')}</div>
           ${isG ? '' : `<section class="ps-sec"><h4>${t('psRanks')}</h4><div class="ps-rbar">${D.rankP.map((p, i) => p ? `<i style="flex:${p};--rc:${RANKC[i]}"><b>${t('rank')[i]}</b><span>${pct(p)}</span></i>` : '').join('')}</div>
             <div class="ps-rn">${raw.rank.map((n, i) => `<span style="--rc:${RANKC[i]}"><i></i>${t('rank')[i]} <b>${n}</b></span>`).join('')}</div></section>`}
           <div class="ps-grid">${rows.map(([l, v]) => `<div><span>${esc(l)}</span><b>${v}</b></div>`).join('')}</div>
-          <div class="ps-cols"><section class="ps-sec ps-mw"><h4>${t('psMaxWin')}</h4><div>${mwHtml}</div></section><section class="ps-sec ps-yaku"><h4>${t('psYaku')}<small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small></h4><div class="ps-yks">${yHtml}</div></section></div>
+          <div class="ps-cols"><section class="ps-sec ps-mw"><h4>${t('psMaxWin')}</h4><div>${mwHtml}</div></section><section class="ps-sec ps-yaku"><h4>${t('psYaku')}<small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small><button class="ps-ymore" data-a="yall">${esc(t('psYakuAll'))} ›</button></h4><div class="ps-yks">${yTopHtml}</div></section></div>
           ${chHtml}`}
           ${tb && tb[0] === 'log' ? '' : pl.kind === 'bot' ? `<p class="ps-note">${esc(t('psBotNote'))}</p>` : pl.kind === 'me' ? `<p class="ps-note">${esc(t('psNote'))}</p>` : ''}
         </div>
@@ -883,7 +888,9 @@ function renderStats() {
     </div>`;
 }
 $('#pstats').addEventListener('click', e => {
-  const tb = e.target.closest('[data-tab]'); if (tb && PS) { PS.tab = tb.dataset.tab; SND.pick(); renderStats(); return; }
+  const tb = e.target.closest('[data-tab]'); if (tb && PS) { PS.tab = tb.dataset.tab; PS.yakuAll = false; SND.pick(); renderStats(); return; }
+  if (e.target.closest('[data-a=yall]') && PS) { PS.yakuAll = true; SND.pick(); renderStats(); return; }
+  if (e.target.closest('[data-a=yback]') && PS) { PS.yakuAll = false; SND.pick(); renderStats(); return; }
   if (e.target.closest('[data-a=close]') || !e.target.closest('.ps-main, .ps-art')) { SND.pick(); closeStats(); }
 });
 

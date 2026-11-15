@@ -1875,8 +1875,18 @@ html:not(.lp) .pstats .ps-art.ch-art{max-width:30cqw}
 :is(#home,#chara).aaa .lm.soon .lm-t small{font-family:var(--serif);letter-spacing:.2em}
 /* the yaku table across the panel's full width, in two columns (the biggest win above it) */
 .pstats .ps-cols{grid-template-columns:1fr!important}
-.pstats .ps-yaku .ps-yks{display:grid;grid-template-columns:1fr 1fr;column-gap:calc(var(--u)*3)}
-.pstats .ps-yh2{display:grid}
-html.lp .pstats .ps-yaku .ps-yks{grid-template-columns:1fr}
-html.lp .pstats .ps-yh2{display:none}
+.pstats .ps-yks.two{display:grid;grid-template-columns:1fr 1fr;column-gap:calc(var(--u)*3)}
+.pstats .ps-yh2{display:none}
+.pstats .ps-yks.two .ps-yh2{display:grid}
+html.lp .pstats .ps-yks.two{grid-template-columns:1fr}
+html.lp .pstats .ps-yks.two .ps-yh2{display:none}
 .pstats .ps-mw > div{display:flex;align-items:baseline;gap:1em}
+/* the yaku section's link to the full list, and that page */
+.pstats .ps-ymore{margin-left:1em;flex:none;font-family:var(--serif);font-size:max(11px,calc(var(--u)*1.7));letter-spacing:.12em;color:var(--gl2);background:rgba(232,206,140,.08);
+  border:1px solid rgba(232,206,140,.55);border-radius:3px;padding:.25em .8em;cursor:pointer}
+.pstats .ps-ymore:hover{background:rgba(232,206,140,.18)}
+.ps-yall{display:flex;flex-direction:column;gap:calc(var(--u)*1.2)}
+.ps-yall-h{display:flex;align-items:baseline;gap:1.2em;border-bottom:1px solid rgba(232,206,140,.3);padding-bottom:.5em}
+.ps-yall-h h4{margin:0;font-family:var(--serif);letter-spacing:.24em;color:var(--gl);font-size:max(13px,calc(var(--u)*2.2))}
+.ps-yall-h small{margin-left:auto;color:rgba(232,206,140,.6);font-size:max(11px,calc(var(--u)*1.6))}
+.ps-yall-h .btn{font-family:var(--serif)}
