@@ -8,11 +8,19 @@ set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
 IN=${1:?usage: dlrelabel.sh <in.bin> <out.bin> [positions]}; OUT=${2:?usage: dlrelabel.sh <in.bin> <out.bin> [positions]}; N=${3:-0}
 DL=${DL:-$HOME/shogi-dl}; mkdir -p "$DL"
-if [ ! -x "$DL/venv/bin/python" ]; then
-  echo "== Python environment in $DL/venv"
-  python3 -m venv "$DL/venv"
-  "$DL/venv/bin/pip" install -q --upgrade pip
-  "$DL/venv/bin/pip" install -q numpy onnxruntime cshogi
+# onnxruntime has no package for the very newest Python: try the Pythons on this Mac in turn until one installs (PYTHON=<path> picks one)
+if [ ! -f "$DL/venv/.ok" ]; then
+  for PY in $PYTHON python3.13 python3.12 python3.11 python3.10 /usr/bin/python3 python3; do
+    command -v "$PY" > /dev/null 2>&1 || continue
+    echo "== Python environment in $DL/venv ($PY: $("$PY" -V 2>&1))"
+    rm -rf "$DL/venv"; "$PY" -m venv "$DL/venv" || continue
+    "$DL/venv/bin/pip" install -q --upgrade pip > /dev/null 2>&1 || true
+    if "$DL/venv/bin/pip" install -q numpy onnxruntime cshogi > "$DL/pip.log" 2>&1; then touch "$DL/venv/.ok"; break; fi
+    echo "   (no packages for this Python, trying the next one)"
+  done
+  if [ ! -f "$DL/venv/.ok" ]; then
+    echo "No Python here can install onnxruntime (details: $DL/pip.log). Install Python 3.12: brew install python@3.12   (or from https://www.python.org/downloads/), then run this again."; exit 1
+  fi
 fi
 MODEL=${MODEL:-$DL/model-0000225kai.onnx}
 if [ ! -s "$MODEL" ]; then
