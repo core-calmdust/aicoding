@@ -237,6 +237,19 @@
       stop() { K0.dead = true; tweens.clear(); if (raf) cancelAnimationFrame(raf); labels.forEach(l => { l.tex.dispose(); l.m.geometry.dispose(); l.m.material.dispose(); }); } });
   }
 
+  /* ---------- 種目 (2026-11-15): the full game's eight rules (mancala/engine.js RULE_IDS) on the card's ルール pulldown; the size value
+     says both the rule and the seeds per pit: 100 × (rule + 1) + seeds (Bohnenspiel: 6 seeds only, as its source). Old values 4 / 6 = Kalah. */
+  const RIDS = ['easy', 'basic', 'kalah', 'sunka', 'oware', 'mangala', 'bohnen', 'ayo'];
+  const RTX = {"ja": {"L": "ルール", "n": ["イージー", "ノーマル", "カラハ", "スンカ", "オワレ", "マンガラ", "ボーネンシュピール", "アヨアヨ"], "d": ["横取りなし。まき方と「もう一回」だけ。", "横取りは相手の種だけ（最後の1粒は残る）。", "相手の種と最後の1粒をまとめて横取り。", "フィリピン生まれ。種のある穴に止まると拾ってまき続けるリレーまき。", "ガーナ生まれ。ストアにまかず、相手の穴を2〜3粒にして取る。", "トルコ生まれ。最初の1粒は元の穴へ。相手の穴を偶数にして取る。", "ドイツ・バルトの豆遊び。1穴6粒。2・4・6粒にした穴を取る。", "ナイジェリア生まれ。リレーでまき、自分の空き穴で向かいを取る。"]}, "en": {"L": "Rule set", "n": ["Easy", "Normal", "Kalah", "Sunka", "Oware", "Mangala", "Bohnenspiel", "Ayoayo"], "d": ["No captures — just sowing and extra turns.", "Capture only the opponent's seeds; your last seed stays.", "Capture the opposite seeds plus your last seed.", "From the Philippines: land on a full pit, pick it up and keep sowing (relay).", "From Ghana: no sowing into stores; make opposing pits 2 or 3 to capture.", "From Turkey: the first seed goes back home; make opposing pits even to capture.", "The Baltic bean game: 6 per pit; make any pit 2, 4 or 6 to capture.", "From Nigeria: relay sowing; stop in your empty pit to take the seeds opposite."]}, "zh": {"L": "规则", "n": ["简单", "普通", "卡拉", "松卡", "奥瓦雷", "曼加拉", "豆子棋", "阿约阿约"], "d": ["不能吃子，只有播种和再走一次。", "只吃对手的种子（最后一颗留在坑里）。", "吃掉对面的种子和你的最后一颗。", "源自菲律宾：落在有种子的坑就拿起继续播（接力播种）。", "源自加纳：不往仓库播种，把对方的坑变成2〜3颗来吃。", "源自土耳其：第一颗放回原坑，把对方的坑变成偶数来吃。", "波罗的海的豆子游戏：每坑6颗，变成2、4、6颗就吃。", "源自尼日利亚：接力播种，停在自己空坑吃对面。"]}, "ko": {"L": "규칙", "n": ["이지", "노멀", "칼라", "숭카", "오와레", "망갈라", "보넨슈필", "아요아요"], "d": ["가져오기 없음. 뿌리기와 한 번 더만.", "상대 씨앗만 가져온다 (마지막 한 개는 남는다).", "맞은편 씨앗과 마지막 한 개를 함께 가져온다.", "필리핀 태생: 씨앗이 있는 구멍에 멈추면 집어서 계속 뿌리는 릴레이.", "가나 태생. 창고에 뿌리지 않고 상대 구멍을 2~3개로 만들어 가져온다.", "튀르키예 태생. 첫 한 개는 원래 구멍으로. 상대 구멍을 짝수로 만들어 가져온다.", "발트의 콩 놀이. 구멍마다 6개. 2・4・6개로 만든 구멍을 가져온다.", "나이지리아 태생. 릴레이로 뿌리고 내 빈 구멍에서 맞은편을 가져온다."]}, "es": {"L": "Reglas", "n": ["Fácil", "Normal", "Kalah", "Sunka", "Oware", "Mangala", "Bohnenspiel", "Ayoayo"], "d": ["Sin capturas: solo sembrar y turnos extra.", "Solo capturas las semillas rivales; la última se queda.", "Capturas las semillas de enfrente y tu última semilla.", "De Filipinas: si caes en un hoyo con semillas, las recoges y sigues sembrando (relevo).", "De Ghana: sin sembrar en almacenes; deja hoyos rivales con 2 o 3 para capturar.", "De Turquía: la primera semilla vuelve a casa; deja pares los hoyos rivales.", "El juego báltico de las judías: 6 por hoyo; captura al dejar 2, 4 o 6.", "De Nigeria: siembra en relevo; para en tu hoyo vacío y toma lo de enfrente."]}, "fr": {"L": "Règles", "n": ["Facile", "Normale", "Kalah", "Sunka", "Oware", "Mangala", "Bohnenspiel", "Ayoayo"], "d": ["Pas de capture : semis et tours en plus seulement.", "Seules les graines adverses sont capturées ; la dernière reste.", "Capturez les graines d'en face et votre dernière graine.", "Des Philippines : sur un trou plein, ramassez-le et continuez à semer (relais).", "Du Ghana (awalé) : pas de semis dans les greniers ; prenez les trous portés à 2 ou 3.", "De Turquie : la première graine retourne chez elle ; prenez les trous rendus pairs.", "Le jeu balte des fèves : 6 par trou ; prenez les trous portés à 2, 4 ou 6.", "Du Nigeria : semis en relais ; arrêtez-vous dans votre trou vide pour prendre en face."]}, "pt": {"L": "Regras", "n": ["Fácil", "Normal", "Kalah", "Sunka", "Oware", "Mangala", "Bohnenspiel", "Ayoayo"], "d": ["Sem capturas: só semear e jogadas extras.", "Captura só as sementes do adversário; a última fica.", "Captura as sementes da frente e a sua última semente.", "Das Filipinas: caiu numa casa com sementes, pegue-as e continue semeando (revezamento).", "De Gana: sem semear nos depósitos; deixe casas rivais com 2 ou 3 para capturar.", "Da Turquia: a primeira semente volta para casa; deixe pares as casas rivais.", "O jogo báltico do feijão: 6 por casa; capture ao deixar 2, 4 ou 6.", "Da Nigéria: semeadura em revezamento; pare na sua casa vazia e leve a da frente."]}, "de": {"L": "Regeln", "n": ["Einfach", "Normal", "Kalah", "Sunka", "Oware", "Mangala", "Bohnenspiel", "Ayoayo"], "d": ["Kein Fangen – nur Säen und Extrazüge.", "Nur gegnerische Samen werden gefangen; der letzte bleibt liegen.", "Fange die gegenüberliegenden Samen und deinen letzten Samen.", "Aus den Philippinen: Landest du in einer vollen Mulde, nimm sie auf und säe weiter (Staffel).", "Aus Ghana: nie in die Speicher säen; fange Mulden, die 2 oder 3 werden.", "Aus der Türkei: der erste Samen kehrt zurück; fange Mulden, die gerade werden.", "Das baltische Bohnenspiel: 6 je Mulde; fange Mulden, die 2, 4 oder 6 werden.", "Aus Nigeria: Staffel-Säen; halte in deiner leeren Mulde und nimm gegenüber."]}, "hi": {"L": "नियम", "n": ["आसान", "नॉर्मल", "कलाह", "सुंका", "ओवारे", "मंगाला", "बोनेनश्पील", "अयोअयो"], "d": ["पकड़ना नहीं — सिर्फ़ बोना और अतिरिक्त चाल।", "सिर्फ़ विरोधी के बीज पकड़ें; आखिरी बीज वहीं रहता है।", "सामने के बीज और आपका आखिरी बीज, दोनों पकड़ें।", "फ़िलीपींस से: भरे गड्ढे में रुकें तो उसे उठाकर बोते रहें (रिले)।", "घाना से: भंडार में नहीं बोते; विरोधी के गड्ढे 2 या 3 बनाकर पकड़ें।", "तुर्की से: पहला बीज वापस अपने गड्ढे में; विरोधी के गड्ढे सम बनाकर पकड़ें।", "बाल्टिक फलियों का खेल: हर गड्ढे में 6; 2, 4 या 6 बनाकर पकड़ें।", "नाइजीरिया से: रिले बुवाई; अपने खाली गड्ढे में रुककर सामने के बीज लें।"]}, "ar": {"L": "القواعد", "n": ["سهلة", "عادية", "كالاه", "سونكا", "أواري", "مانغالا", "بوننشبيل", "أيوأيو"], "d": ["لا أسر — فقط البذر والدور الإضافي.", "تأسر بذور الخصم فقط؛ تبقى بذرتك الأخيرة.", "تأسر البذور المقابلة وبذرتك الأخيرة معًا.", "من الفلبين: إذا توقفت في حفرة ممتلئة فالتقطها وتابع البذر (تتابع).", "من غانا: لا بذر في المخازن؛ اجعل حفر الخصم 2 أو 3 لتأسرها.", "من تركيا: تعود البذرة الأولى إلى حفرتها؛ اجعل حفر الخصم زوجية لتأسرها.", "لعبة الفول البلطيقية: 6 في كل حفرة؛ تأسر ما يصير 2 أو 4 أو 6.", "من نيجيريا: بذر بالتتابع؛ توقف في حفرتك الفارغة وخذ المقابل."]}, "ru": {"L": "Правила", "n": ["Лёгкие", "Обычные", "Калах", "Сунка", "Оваре", "Мангала", "Боненшпиль", "Айоайо"], "d": ["Без захватов — только посев и дополнительные ходы.", "Забираете только семена соперника; ваше последнее семя остаётся.", "Забираете семена напротив и своё последнее семя.", "С Филиппин: попав в полную лунку, берёте её семена и сеете дальше (эстафета).", "Из Ганы: в амбары не сеют; делайте лунки соперника 2 или 3, чтобы захватить.", "Из Турции: первое семя возвращается домой; делайте лунки соперника чётными, чтобы захватить.", "Прибалтийская игра в бобы: по 6 в лунке; делайте любую лунку 2, 4 или 6, чтобы захватить.", "Из Нигерии: эстафетный посев; остановитесь в своей пустой лунке, чтобы забрать семена напротив."]}, "zh-TW": {"L": "規則", "n": ["簡單", "普通", "卡拉", "松卡", "奧瓦雷", "曼加拉", "豆子棋", "阿約阿約"], "d": ["不能吃子，只有播種和再走一次。", "只吃對手的種子（最後一顆留在坑裡）。", "吃掉對面的種子和你的最後一顆。", "源自菲律賓：落在有種子的坑就拿起來繼續播（接力播種）。", "源自迦納：不播進倉；讓對手的坑變成2或3顆來吃子。", "源自土耳其：第一顆放回原坑；讓對手的坑變成偶數來吃子。", "波羅的海的豆子遊戲：每坑6顆；讓任一坑變成2、4或6顆來吃子。", "源自奈及利亞：接力播種；停在自己的空坑就拿走對面的種子。"]}, "id": {"L": "Aturan", "n": ["Mudah", "Normal", "Kalah", "Sunka", "Oware", "Mangala", "Bohnenspiel", "Ayoayo"], "d": ["Tanpa tangkapan — hanya menyebar biji dan jalan lagi.", "Tangkap biji lawan saja; biji terakhirmu tetap di lubang.", "Tangkap biji di seberang beserta biji terakhirmu.", "Dari Filipina: jatuh di lubang berisi, ambil semuanya dan terus sebar (estafet).", "Dari Ghana: tidak menyebar ke lumbung; buat lubang lawan berisi 2 atau 3 untuk menangkap.", "Dari Turki: biji pertama kembali ke rumah; buat lubang lawan genap untuk menangkap.", "Permainan kacang Baltik: 6 per lubang; buat lubang mana pun berisi 2, 4, atau 6 untuk menangkap.", "Dari Nigeria: sebaran estafet; berhenti di lubang kosongmu untuk mengambil biji di seberangnya."]}, "tr": {"L": "Kural seti", "n": ["Kolay", "Normal", "Kalah", "Sunka", "Oware", "Mangala", "Bohnenspiel", "Ayoayo"], "d": ["Taş alma yok — yalnızca dağıtma ve ekstra tur.", "Yalnızca rakibin taşlarını alırsınız; son taşınız kuyuda kalır.", "Karşıdaki taşları ve son taşınızı alırsınız.", "Filipinler'den: dolu bir kuyuya düşerseniz taşları alıp dağıtmaya devam edersiniz (bayrak).", "Gana'dan: hazinelere dağıtılmaz; almak için rakip kuyularını 2 veya 3 yapın.", "Türkiye'den: ilk taş evine döner; almak için rakip kuyularını çift yapın.", "Baltık fasulye oyunu: kuyu başına 6; almak için herhangi bir kuyuyu 2, 4 veya 6 yapın.", "Nijerya'dan: bayrak dağıtımı; karşıdaki taşları almak için kendi boş kuyunuzda durun."]}};
+  const rtx = l => RTX[l] || RTX.en;
+  const codeOf = (r, n) => 100 * (RIDS.indexOf(r) + 1) + n;
+  const ruleOfSize = z => z >= 100 ? RIDS[Math.floor(z / 100) - 1] || 'kalah' : 'kalah', seedsOf = z => (z >= 100 ? z % 100 : z) === 6 ? 6 : 4;
+  const RSZ = Object.fromEntries(RIDS.map(r => [r, r === 'bohnen' ? [codeOf(r, 6)] : [codeOf(r, 4), codeOf(r, 6)]]));
+  // (the list: Kalah first — the default, as before)
+  const rule = { label: l => rtx(l).L, list: ['kalah', 'basic', 'easy', 'sunka', 'oware', 'mangala', 'bohnen', 'ayo'], name: (v, l) => rtx(l).n[RIDS.indexOf(v)] || v, sizes: v => RSZ[v] || RSZ.kalah, size0: v => (RSZ[v] || RSZ.kalah)[0],
+    of: z => z >= 100 ? RIDS[Math.floor(z / 100) - 1] || '' : '' };
+  const optInfo = (sid, v, l) => sid === 'bvRuleSel' ? { sub: rtx(l).d[RIDS.indexOf(v)] || '' } : null;
+
   function start(ctx) {
     const T3 = ctx.Table3D, THREE = window.THREE, t = ctx.t, MC = T3.mancala, G = MC.G;
     const lang = ctx.lang, X = Object.assign({}, TX.en, TX[lang] || {});
@@ -245,7 +258,7 @@
     const K = kit(T3, bottom0), { board, tall, isStore, ownerOf, hollow, slots, labels, setCount, glows, hintRing, anim } = K;
     const rebuild = () => K.rebuild(b), pitAt = e => K.pitAt(e, side);
     T3.show('mancala', board);
-    const TOP = G.TOP, level = Math.max(1, Math.min(10, +ctx.level || 5)), SEEDS = +ctx.size === 6 ? 6 : 4, RULES = 'kalah';
+    const TOP = G.TOP, level = Math.max(1, Math.min(10, +ctx.level || 5)), SEEDS = seedsOf(+ctx.size || 4), RULES = ruleOfSize(+ctx.size || 4);
     const pvp = ctx.mode === 'pvp', human = pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
     const pname = s => s ? t('bv.second') : t('bv.first');
 
@@ -286,11 +299,12 @@
     const onTurn = () => { if (ctx.onTurn) ctx.onTurn(ix(side), { human: pvp || side === human, ply }); };
 
     let hover = -1;
+    const legalNow = () => { try { return Array.from(MancalaEngine.legal(b, side, RULES)); } catch (e) { const o = []; for (let k = 0; k < 6; k++) if (b[(side ? 7 : 0) + k] > 0) o.push(k); return o; } };
     function showGlows() {
-      const mine = !over && !busy && (pvp || side === human) && window.MancalaEngine;
+      const mine = !over && !busy && (pvp || side === human) && window.MancalaEngine, ok = mine ? legalNow() : [];
       for (let k = 0; k < 6; k++) {
         const i = (side ? 7 : 0) + k, g = glows[k];
-        g.visible = !!(mine && b[i] > 0);
+        g.visible = !!(mine && ok.includes(k));
         if (g.visible) { const [x, z] = hollow(i); g.position.set(x, TOP - .005, z); g.scale.setScalar(i === hover ? 1.07 : 1); }
       }
       if (T3.kick) T3.kick(150);
@@ -354,12 +368,12 @@
     const canTap = () => !over && !busy && (pvp || side === human) && !!window.MancalaEngine;
     function onClick(e) {
       if (!canTap() || T3.wasDrag()) return;
-      const i = pitAt(e); if (i < 0 || !b[i]) return;
+      const i = pitAt(e); if (i < 0 || !b[i] || !legalNow().includes(i % 7)) return;   // (オワレ・アヨアヨ: an empty opponent must be fed)
       play(i % 7, side);
     }
     function onMove(e) {
       if (e.pointerType && e.pointerType !== 'mouse') return;
-      const i = canTap() ? pitAt(e) : -1, h = i >= 0 && b[i] ? i : -1;
+      const i = canTap() ? pitAt(e) : -1, h = i >= 0 && b[i] && legalNow().includes(i % 7) ? i : -1;
       if (h !== hover) { hover = h; ctx.el.style.cursor = h >= 0 ? 'pointer' : ''; showGlows(); }
     }
     ctx.el.addEventListener('click', onClick); ctx.el.addEventListener('pointermove', onMove);
@@ -420,6 +434,6 @@
     return { name: a[n], desc: d[n], rating: 0, who: w[WG[n]] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.mancala = { kit, levels: 10, land: 'bar', sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [4, 6], size0: 4,
-    sizeLabel: l => SEEDS_L[l] || SEEDS_L.en, sizeName: (z, l) => (SEEDS_N[l] || SEEDS_N.en).replace('{n}', z), levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.mancala = { kit, levels: 10, land: 'bar', sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [].concat(...RIDS.map(r => RSZ[r])), size0: codeOf('kalah', 4), rule, optInfo,
+    sizeLabel: l => SEEDS_L[l] || SEEDS_L.en, sizeName: (z, l) => (SEEDS_N[l] || SEEDS_N.en).replace('{n}', seedsOf(z)), levelInfo, start };   // table: start() plays on the chabudai itself
 })();
