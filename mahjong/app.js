@@ -1263,7 +1263,7 @@ async function onEvent(ev, d) {
       refreshTable(); renderBadges();
       if (d.seat === ME) {
         if (d.info.peek) await peekPop(d.info.peek);   // (ユーザー 2026-11-15: shown once, mid-screen — remembered, not kept in the box)
-        if (d.info.read) showIntel({ read: d.info.read });
+        if (d.info.read) await mindPop(d.info.read);   // (ユーザー 2026-11-16: like 先読み — shown once, mid-screen, then gone)
         if (d.info.to != null) renderHand(d.info.to);
       }
       break;
@@ -1606,6 +1606,26 @@ function peekPop(ids) {
       w.classList.remove('show'); setTimeout(() => w.remove(), 260); done(); };
     const key = e => { if (['Enter', ' ', 'Escape'].includes(e.key)) close(e); };
     setTimeout(() => { w.addEventListener('pointerdown', close); addEventListener('keydown', key, true); }, 450);   // (not closed by the click that used the skill)
+  });
+}
+// 読心 (ユーザー 2026-11-16): the others' hands, shown the same way as 先読み — one plate in the middle of the screen, a row per
+// player (face, テンパイ with the waits / n向聴, and any tiles the skill shows), closed by a tap or a key
+function mindPop(read) {
+  const row = (r, i) => {
+    const st = r.shanten === 0 ? `<b class="tp">${esc(t('tenpai'))}</b>${r.waits && r.waits.length ? `<i class="mr-w"><small>${esc(t('waitsOn'))}</small>${r.waits.map(w => typeHTML(w)).join('')}</i>` : ''}`
+      : r.shanten < 0 ? `<b class="tp">${esc(t('tenpai'))}</b>` : `<b>${esc(t('shanten', { n: r.shanten }))}</b>`;
+    const ch = UIS.chars[r.seat];
+    return `<div class="mr-r" style="--i:${i}"><img src="${charImg(ch, 'face')}" alt=""><span class="mr-n">${esc(L(ch.name))}</span><span class="mr-s">${st}</span>${r.show && r.show.length ? `<i class="mr-sh">${r.show.map(id => tileHTML(id)).join('')}</i>` : ''}</div>`;
+  };
+  return new Promise(done => {
+    const w = document.createElement('div'); w.className = 'peekpop mindpop';
+    w.innerHTML = `<div class="pk-box"><small>${esc(t('mindT'))}</small><div class="mr-rows">${read.map(row).join('')}</div><em>${esc(t('peekClose'))}</em></div>`;
+    $('#game').appendChild(w); void w.offsetWidth; w.classList.add('show');
+    let shut = false;
+    const close = e => { if (shut) return; if (e) { e.preventDefault(); e.stopPropagation(); } shut = true; removeEventListener('keydown', key, true);
+      w.classList.remove('show'); setTimeout(() => w.remove(), 260); done(); };
+    const key = e => { if (['Enter', ' ', 'Escape'].includes(e.key)) close(e); };
+    setTimeout(() => { w.addEventListener('pointerdown', close); addEventListener('keydown', key, true); }, 450);
   });
 }
 function showIntel(info) {
@@ -1963,5 +1983,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, askDealSkill, roundBanner };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, askDealSkill, roundBanner };
 })();

@@ -2549,3 +2549,21 @@ html.lite #game .bf.rii::after{animation:none}
    is the frame's height divided by that scale. */
 html.ds #game .me .sks{align-self:flex-start;transform-origin:top left;height:calc(var(--bf) / (var(--hz, 1) * .82))}
 html.ds #game .me .sks>.skb{flex:1 1 0;min-height:0;box-sizing:border-box}
+/* 読心 (ユーザー 2026-11-16): the same plate as 先読み, a row per other player */
+.mr-rows{display:flex;flex-direction:column;gap:clamp(8px, 1.4vmin, 14px);min-width:min(78vw, 420px)}
+.mr-r{display:flex;align-items:center;gap:clamp(10px, 1.6vmin, 16px);padding:6px 4px;border-top:1px solid rgba(232,206,140,.18);opacity:0;transform:translateY(10px);animation:pkIn .35s calc(.12s + var(--i) * .1s) cubic-bezier(.2,1.2,.4,1) forwards}
+.mr-r:first-child{border-top:0}
+.mr-r>img{flex:none;width:clamp(38px, calc(var(--GH, 700px) * .07), 56px);height:auto;aspect-ratio:1;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1.5px rgba(232,206,140,.8),0 0 0 4px rgba(10,6,20,.8)}
+.mr-n{flex:none;min-width:4.5em;font-family:var(--serif);font-weight:700;font-size:clamp(12px, calc(var(--GH, 700px) * .02), 15px);letter-spacing:.08em;color:#cfc2ea}
+.mr-s{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mr-s b{font-family:var(--serif);font-weight:800;font-size:clamp(16px, calc(var(--GH, 700px) * .03), 23px);letter-spacing:.12em;color:#f2ecff;white-space:nowrap}
+.mr-s b.tp{color:var(--gl2);text-shadow:0 0 12px rgba(232,206,140,.45)}
+.mr-w{display:flex;align-items:center;gap:4px;font-style:normal}
+.mr-w small{font-size:11px;letter-spacing:.12em;color:rgba(217,205,238,.7);margin-right:2px}
+.mr-r .tl{--tw:clamp(24px, calc(var(--GH, 700px) * .048), 38px)}
+.mr-sh{display:flex;gap:3px;margin-left:auto;font-style:normal}
+.mr-r .tl{margin:0;flex:none}
+.mr-w,.mr-sh{gap:5px}
+html.lp .mr-rows{gap:4px}
+html.lp .mr-r{padding:3px 4px}
+html.lp .mindpop .pk-box{gap:8px;padding:14px 28px 10px}
