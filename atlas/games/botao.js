@@ -304,7 +304,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=10'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=11'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -523,7 +523,7 @@
     // the PK shoot-out's wider goal (three keepers wide): on the table while a shoot-out is on
     function goalW() { if (U && U.goalWidth) { U.goalWidth(st && st.pk ? D.PK_GW : 0); kick(120); } }
     async function pkSetup() {
-      goalW(); const t0 = st.pk.next, s1 = E.clone(st); E.kickoff(s1, t0); E.restartFor(s1, t0, 'pen'); s1.pk = st.pk; s1.pkReady = true; s1.score = st.score.slice();
+      goalW(); const t0 = st.pk.next, s1 = E.clone(st); E.kickoff(s1, t0); s1.pk = st.pk; E.restartFor(s1, t0, 'pen'); s1.pkReady = true; s1.score = st.score.slice();
       st = s1; hud(); clearGuides(); await glideTo(st, 700); if (stopped) return; syncAll();
       onTurn(); toast(tx('pkKick', { p: nameOf(t0), k: st.pk.k[t0].length + 1 }));
       await setKeeperPhase();
