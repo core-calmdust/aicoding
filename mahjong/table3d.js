@@ -270,6 +270,111 @@ function rugTex() {
   g.strokeStyle = dark; g.lineWidth = 10; g.strokeRect(B - 20, B - 20, S - 2 * B + 40, S - 2 * B + 40); g.lineWidth = 6; g.strokeRect(66, 66, S - 132, S - 132);
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; return t;
 }
+// ---- nail art (ユーザー 2026-11-15, four reference pictures: nude glitter with rhinestones and a pearl-edged accent nail; sheer pink
+// with a butterfly; a black French tip with sparkles; a deep-sea gradient with holographic flakes — "beautiful nails, nothing
+// broken, in each player's colour") ----
+// Each nail of the hand mesh has its own uv (hand-gen.py): five cells side by side (thumb, index, middle, ring, little finger), u across
+// the nail in its outline's shape, v from the cuticle (0) to the tip (1). Two pictures are painted per look: the colour, and a
+// second one read as height (r: stones and beads stand up), roughness (g) and metalness (b: glitter and stones mirror the room).
+// style: 'gem' | 'butterfly' | 'french' | 'ombre'; col: the sisters' colour. Drawn in the nail's own measure: x −1…1 across at
+// the widest (Hd.nl: where the free edge starts, the length, the width there), y from the cuticle up to AR at the tip (the same unit both ways, so a circle is round on the nail).
+function nailArt(style, col, small) {
+  const Hd = window.JANKA_HAND, W = small ? 512 : 1024, H = small ? 256 : 512, CW = W / 5;
+  const mc = document.createElement('canvas'), fc = document.createElement('canvas'); mc.width = fc.width = W; mc.height = fc.height = H;
+  const m = mc.getContext('2d'), f = fc.getContext('2d');
+  let sd = 11; for (const ch of style + col) sd = (sd * 31 + ch.charCodeAt(0)) % 2147483647; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const hsl = {}; new THREE.Color(col).getHSL(hsl); const h = hsl.h, s = hsl.s, grey = s < .2;
+  const hc = (hh, ss, ll, a) => `hsla(${Math.round(((hh % 1) + 1) % 1 * 360)},${Math.round(Math.min(1, Math.max(0, ss)) * 100)}%,${Math.round(Math.min(1, Math.max(0, ll)) * 100)}%,${a == null ? 1 : a})`;
+  const hN = grey ? .03 : h, nude = 'hsl(12,58%,88%)', nude2 = 'hsl(10,52%,83%)';          // a sheer nude, a breath of her colour in it
+  const tint = hc(h, Math.min(.85, s), grey ? .86 : .66), pale = hc(h, s * .6, .93);
+  const deep = hc(h, grey ? .12 : Math.min(.9, s * .95), grey ? .3 : .27), ink = hc(h, grey ? .1 : Math.min(.6, s * .6), grey ? .16 : .1);
+  const FX0 = 'rgb(128,26,0)', METAL = 'rgb(128,34,255)';                                                         // gel: level, glossy, not metal
+  const holo = () => R() < .45 ? '#ffffff' : hc(R(), .65, .8), silver = () => R() < .6 ? '#ffffff' : hc(h + (R() - .5) * .16, .35, .88);
+  const names = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+  names.forEach((name, i) => {
+    const vE = Hd.nl[name][0], AR = Hd.nl[name][1], wE = Hd.nl[name][2] || 1, yE = vE * AR, kx = CW * .45, ky = H / AR;
+    for (const g of [m, f]) { g.save(); g.beginPath(); g.rect(i * CW, 0, CW, H); g.clip(); g.setTransform(kx, 0, 0, -ky, (i + .5) * CW, H); }
+    const wAt = y => { const v = y / AR; if (v < vE) { const b = v / vE; return (1 + (wE - 1) * b) * (.5 + .5 * Math.sqrt(1 - Math.pow(1 - Math.min(1, b / .34), 2))); }
+      const t = (v - vE) / (1 - vE); return wE * (1 - .36 * Math.pow(t, 1.3)) * (t < .9 ? 1 : Math.sqrt(1 - Math.pow((t - .9) / .1 * .72, 2))); };
+    const band = (y0, y1, stops) => { const gr = m.createLinearGradient(0, y0, 0, y1); stops.forEach(([p, c]) => gr.addColorStop(p, c)); m.fillStyle = gr; m.fillRect(-1.3, -.1, 2.6, AR + .2); };
+    const fleck = (x, y, r, c, hex) => { for (const [g, cc] of [[m, c], [f, METAL]]) { g.fillStyle = cc; g.beginPath();
+      if (hex) { const a0 = R() * 6.3; for (let k = 0; k < 6; k++) g.lineTo(x + Math.cos(a0 + k * 1.047) * r, y + Math.sin(a0 + k * 1.047) * r); } else g.rect(x - r, y - r, 2 * r, 2 * r); g.fill(); } };
+    // glitter: n tries between y0 and y1, kept with the chance dens(y) (0…1); inside the outline
+    const glitter = (n, y0, y1, dens, r0, r1, colf, hex) => { for (let k = 0; k < n; k++) { const y = y0 + R() * (y1 - y0), x = (R() * 2 - 1) * wAt(y); if (R() < dens(y)) fleck(x, y, r0 + R() * (r1 - r0), colf(), hex); } };
+    // a stone (kind: 'round' | 'marq' | 'sq') or a 'pearl': drawn faceted, raised in the height picture
+    const stone = (x, y, r, kind, rot, c0) => { const pearl = kind === 'pearl';
+      const path = g => { g.beginPath(); if (kind === 'marq') { g.moveTo(0, r * 1.7); g.quadraticCurveTo(r * .95, 0, 0, -r * 1.7); g.quadraticCurveTo(-r * .95, 0, 0, r * 1.7); } else if (kind === 'sq') g.rect(-r * .72, -r, r * 1.44, r * 2); else g.arc(0, 0, r, 0, 6.3); g.closePath(); };
+      for (const g of [m, f]) { g.save(); g.translate(x, y); g.rotate(rot || 0); }
+      const R1 = kind === 'marq' ? r * 1.7 : kind === 'sq' ? r * 1.15 : r;
+      m.fillStyle = 'rgba(40,20,30,.28)'; m.save(); m.translate(r * .08, -r * .1); path(m); m.fill(); m.restore();                                  // a little shade under it
+      path(m); const g1 = m.createRadialGradient(-r * .25, r * .3, r * .05, 0, 0, R1); const base = c0 || (pearl ? '#fffaf2' : '#f4f8ff');
+      g1.addColorStop(0, '#ffffff'); g1.addColorStop(.55, base); g1.addColorStop(1, pearl ? '#d9cfc8' : '#b4c0d8'); m.fillStyle = g1; m.fill();
+      if (!pearl) { m.save(); path(m); m.clip();                                                                                                     // facets: light and dark wedges, a bright table
+        for (let k = 0; k < 8; k++) { const a = k * .785 + .2; m.fillStyle = k % 2 ? 'rgba(255,255,255,.55)' : 'rgba(120,140,180,.3)'; m.beginPath(); m.moveTo(0, 0); m.lineTo(Math.cos(a) * R1 * 1.2, Math.sin(a) * R1 * 1.2); m.lineTo(Math.cos(a + .785) * R1 * 1.2, Math.sin(a + .785) * R1 * 1.2); m.fill(); }
+        m.fillStyle = 'rgba(255,255,255,.7)'; m.beginPath(); if (kind === 'round') m.arc(0, 0, r * .42, 0, 6.3); else m.rect(-r * .3, -R1 * .42, r * .6, R1 * .84); m.fill(); m.restore(); }
+      path(f); const g2 = f.createRadialGradient(0, 0, 0, 0, 0, R1); g2.addColorStop(0, pearl ? 'rgb(250,46,0)' : 'rgb(240,10,255)'); g2.addColorStop(.7, pearl ? 'rgb(225,46,0)' : 'rgb(232,10,255)'); g2.addColorStop(1, pearl ? 'rgb(150,46,0)' : 'rgb(150,10,255)'); f.fillStyle = g2; f.fill();
+      m.restore(); f.restore(); };
+    const star = (x, y, r, c) => { for (const [g, cc] of [[m, c || '#ffffff'], [f, 'rgb(170,20,255)']]) { g.fillStyle = cc; g.beginPath(); for (let k = 0; k < 8; k++) { const a = k * .7854, q = k % 2 ? r * .16 : (k % 4 ? r * .62 : r); g.lineTo(x + Math.sin(a) * q, y + Math.cos(a) * q); } g.closePath(); g.fill(); } };
+    const butterfly = (x, y, k) => { for (const [g, cc] of [[m, null], [f, 'rgb(150,40,40)']]) { g.save(); g.translate(x, y); g.rotate(-.18); g.scale(k, k);
+      for (const sx of [-1, 1]) { g.save(); g.scale(sx, 1);
+        if (!cc) { const gr = g.createRadialGradient(.1, .1, .02, .45, .3, .95); gr.addColorStop(0, 'rgba(255,255,255,.98)'); gr.addColorStop(.7, 'rgba(255,246,250,.9)'); gr.addColorStop(1, hc(h, s * .5, .9, .75)); g.fillStyle = gr; } else g.fillStyle = cc;
+        g.beginPath(); g.moveTo(.04, .06); g.bezierCurveTo(.2, .75, .85, 1.0, .98, .62); g.bezierCurveTo(1.04, .34, .6, .05, .04, .06); g.fill();           // the upper wing
+        g.beginPath(); g.moveTo(.04, .02); g.bezierCurveTo(.5, -.04, .78, -.3, .62, -.62); g.bezierCurveTo(.48, -.86, .14, -.5, .04, .02); g.fill();        // the lower wing
+        if (!cc) { g.strokeStyle = 'rgba(190,176,196,.85)'; g.lineWidth = .028; g.beginPath(); for (const [ex, ey] of [[.82, .7], [.6, .34], [.5, -.5]]) { g.moveTo(.06, .04); g.quadraticCurveTo(ex * .5, ey * .7, ex, ey); } g.stroke(); }
+        g.restore(); }
+      g.fillStyle = cc ? 'rgb(190,26,255)' : '#d8ccd8'; g.beginPath(); g.ellipse(0, 0, .045, .34, 0, 0, 6.3); g.fill(); g.restore(); }
+      for (let k2 = 0; k2 < 60; k2++) { const a = R() * 6.3, d = R() * k * .95; fleck(x + Math.cos(a) * d * .95, y + Math.sin(a) * d * .8 + k * .05, .008 + R() * .014, '#ffffff'); } };
+    f.fillStyle = FX0; f.fillRect(-1.3, -.1, 2.6, AR + .2);
+    const dust = (amt) => glitter(Math.round(2200 * amt), .1, AR, y => .2 + .8 * Math.pow(y / AR, 1.6), .007, .016, silver);     // a fine shimmer, more toward the tip
+
+    if (style === 'gem') {                     // nude with glitter; rhinestones; the ring finger edged with pearl beads (reference 1)
+      band(0, AR, [[0, nude], [.45, hc(hN, grey ? .36 : Math.min(.75, s * .7), grey ? .84 : .8)], [1, hc(hN, grey ? .3 : Math.min(.8, s * .8), grey ? .82 : .72)]]);
+      if (name === 'middle' || name === 'thumb') {           // a full glitter nail
+        glitter(5200, .05, AR, y => .5 + .5 * y / AR, .008, .02, () => R() < .5 ? '#ffffff' : hc(hN + (R() - .5) * .1, grey ? .3 : .6, .84));
+        glitter(150, .3, AR, () => .8, .03, .055, holo, true);
+        stone(0, .62, .24, 'round'); if (name === 'middle') stone(0, yE + .2, .13, 'round');
+      } else if (name === 'ring') {                          // the accent nail
+        dust(.5);
+        for (let y = .2; y < AR - .12; y += .2) for (const sx of [-1, 1]) stone(sx * (wAt(y) - .1), y, .088, 'pearl');
+        for (let x = -.3; x <= .31; x += .2) stone(x * wAt(AR - .1) / .5, AR - .1, .088, 'pearl');
+        for (let x = -.42; x <= .43; x += .21) stone(x, .12 + (.42 - Math.abs(x)) * .12, .088, 'pearl');
+        stone(.04, AR * .62, .27, 'marq', .12); stone(-.08, AR * .3, .26, 'sq', -.1); stone(.34, AR * .43, .12, 'round'); stone(-.36, AR * .52, .1, 'round'); stone(.3, AR * .26, .09, 'round'); stone(-.2, AR * .8, .1, 'round');
+      } else { dust(.9); glitter(90, yE, AR, y => (y - yE) / (AR - yE), .028, .05, holo, true);
+        stone(0, .6, name === 'index' ? .2 : .17, 'round'); stone(-.3, 1.0, .08, 'round'); stone(.32, 1.12, .07, 'round'); if (name === 'index') stone(.02, 1.42, .09, 'round'); }
+    } else if (style === 'butterfly') {        // a sheer syrup pink; a white butterfly on the ring finger and the thumb (reference 2)
+      band(0, AR, [[0, nude], [.3, nude2], [1, hc(h, Math.min(.7, s * .8), .74)]]);
+      dust(.22);
+      if (name === 'ring' || name === 'thumb') butterfly(0, AR * .5, Math.min(.92, AR * .19));
+      else if (name === 'middle') { stone(0, .5, .1, 'pearl'); }
+    } else if (style === 'french') {           // nude, the tip dipped in her colour gone almost black, glitter along the edge, little stars (reference 3)
+      band(0, AR, [[0, nude], [1, nude2]]);
+      const full = name === 'ring', yS = full ? -.2 : yE + (AR - yE) * .18;
+      const gr = m.createLinearGradient(0, yS - .5, 0, yS + .45); gr.addColorStop(0, hc(h, .5, .12, 0)); gr.addColorStop(.6, hc(h, grey ? .1 : .55, .14, .8)); gr.addColorStop(1, ink); m.fillStyle = gr; m.fillRect(-1.3, yS - .5, 2.6, AR + 2);
+      { const g3 = m.createLinearGradient(0, yS, 0, AR); g3.addColorStop(0, hc(h, s, .3, 0)); g3.addColorStop(1, hc(h, Math.min(.9, s), .34, .5)); m.fillStyle = g3; m.fillRect(-1.3, yS, 2.6, AR + 2); }   // her colour glows in the tip
+      if (!full) glitter(4200, yS - 1.3, yS + .8, y => Math.pow(Math.max(0, 1 - Math.abs(y - yS + .1) / 1.0), 1.5), .008, .02, silver);
+      else { dust(.5); stone(0, AR * .3, .2, 'round'); stone(0, AR * .3 + .42, .09, 'round'); stone(0, AR * .3 - .4, .09, 'round'); }
+      if (name === 'index') { star(.3, yS - .95, .34); star(-.36, yS - .3, .2); star(-.1, yS + 1.3, .26); }
+      if (name === 'middle') { star(-.28, yS - .7, .3); star(.3, yS + 1.0, .3); stone(.05, yS - .15, .13, 'round'); }
+      if (name === 'ring') { star(-.3, AR * .7, .34); star(.34, AR * .56, .2); }
+      if (name === 'pinky') { stone(0, yS - .1, .15, 'round'); star(.2, yS + 1.1, .24); }
+      if (name === 'thumb') { star(.3, yS - .8, .32); star(-.3, yS + .8, .24); stone(-.1, yS - .2, .12, 'round'); }
+    } else {                                   // 'ombre': her colour deep, running to a pale tip on two nails; holographic flakes (reference 4)
+      const grad = name === 'middle' || name === 'ring';
+      if (grad) { band(0, AR, [[0, pale], [.22, hc(h, s * .7, .82)], [.55, hc(h, Math.min(.9, s), .46)], [1, deep]]);
+        for (let k = 0; k < 7; k++) { const x = (R() * 2 - 1) * .7, y0 = AR * (.15 + R() * .4), rr = .35 + R() * .4; m.save(); m.translate(x, y0); m.scale(1, 2.6);     // soft pale clouds, like water colour
+          const gr = m.createRadialGradient(0, 0, 0, 0, 0, rr); gr.addColorStop(0, 'rgba(255,255,255,.34)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); m.fillStyle = gr; m.beginPath(); m.arc(0, 0, rr, 0, 6.3); m.fill(); m.restore(); } }
+      else band(0, AR, [[0, hc(h, Math.min(.85, s * .9), .36)], [.5, deep], [1, hc(h, Math.min(.9, s), .2)]]);
+      const yC = grad ? AR * .45 : AR * .72;
+      glitter(3200, .1, AR, y => Math.max(.04, 1 - Math.abs(y - yC) / (AR * .36)) * .8, .007, .017, silver);
+      glitter(110, .2, AR, y => Math.max(.1, 1 - Math.abs(y - yC) / (AR * .4)), .035, .065, holo, true);
+      if (name === 'pinky' || name === 'index') stone(0, .55, .13, 'round');
+    }
+    m.restore(); f.restore();
+  });
+  const map = new THREE.CanvasTexture(mc); map.encoding = THREE.sRGBEncoding; map.anisotropy = 4;
+  const fx = new THREE.CanvasTexture(fc); fx.anisotropy = 4;
+  return { map, fx };
+}
 function buildHand(env) {
   const Hd = window.JANKA_HAND, rig = new THREE.Group(); if (!Hd) return rig;
   const b64 = t => { const s = atob(t), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; };
@@ -277,20 +382,20 @@ function buildHand(env) {
   for (let i = 0; i < Hd.nv * 3; i++) { const k = i % 3; pos[i] = Hd.lo[k] + q[i] / 65535 * (Hd.hi[k] - Hd.lo[k]); col[i] = lin(cb[i]); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
   g.setIndex(new THREE.BufferAttribute(new Uint16Array(b64(Hd.i).buffer), 1));
+  if (Hd.uv) { const ub = new Uint16Array(b64(Hd.uv).buffer), uv = new Float32Array(Hd.nv * 2); for (let i = 0; i < uv.length; i++) uv[i] = ub[i] / 65535; g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); }   // (the nails' picture; the skin does not use it)
   if (Hd.n) { const nb = new Int8Array(b64(Hd.n).buffer), nr = new Float32Array(Hd.nv * 3); for (let i = 0; i < nr.length; i++) nr[i] = nb[i] / 127; g.setAttribute('normal', new THREE.BufferAttribute(nr, 3)); } else g.computeVertexNormals();
   // the second pose (pinching: the thumb under the tile, the forefinger on its face — ユーザー 2026-11-14) as a morph target
   if (Hd.mi) { const mi = new Uint16Array(b64(Hd.mi).buffer), mp = new Uint16Array(b64(Hd.mp).buffer), mn = new Int8Array(b64(Hd.mn).buffer), p2 = pos.slice(), n2 = g.attributes.normal.array.slice();
     for (let k = 0; k < mi.length; k++) for (let c = 0; c < 3; c++) { p2[mi[k] * 3 + c] = Hd.lo[c] + mp[k * 3 + c] / 65535 * (Hd.hi[c] - Hd.lo[c]); n2[mi[k] * 3 + c] = mn[k * 3 + c] / 127; }
     g.morphAttributes.position = [new THREE.BufferAttribute(p2, 3)]; g.morphAttributes.normal = [new THREE.BufferAttribute(n2, 3)]; }
   g.addGroup(0, Hd.nail * 3, 0); g.addGroup(Hd.nail * 3, (Hd.nt - Hd.nail) * 3, 1);
-  // skin (ユーザー 2026-11-14: it read as polygons — the mesh is now rounded finer and coloured unevenly as skin is, by the generator):
-  // soft and matt; where the light turns to shade the flesh glows a little red (light passing through it), and a thin warm rim at grazing angles
-  // (ユーザー 2026-11-14: the hand looked dark in the shade — fair and clean like a hand model's: lighter skin that glows a little from within
-  // (so the shaded side stays rosy, never grey), and casts no shadow on itself)
-  const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: new THREE.Color(0xf6e6de).convertSRGBToLinear(), roughness: .5, metalness: 0, sheen: .35, sheenRoughness: .5, sheenColor: new THREE.Color(0xffe0d4), emissive: new THREE.Color(0xc98a78), emissiveIntensity: .32, envMap: env, envMapIntensity: .35 });
-  // (ユーザー 2026-11-14: a feel of skin — a fine texture on the hand.) The mesh has no uv, so the detail is solid noise in the hand's own
-  // space, worked into the normal as a bump: pores (a fine pitted grain), the faint diamond lines of skin, and a slow unevenness; the
-  // same noise makes the gloss uneven (the pores matt, the skin between a little sheen) and the colour very slightly blotchy.
+  // skin (ユーザー 2026-11-14: fair and clean like a hand model's — it glows a little from within, the shaded side stays rosy, never grey.
+  // ユーザー 2026-11-15: a better feel of skin, but no wrinkles drawn out — every character is a young princess; smooth and lovely.)
+  // The colour is the generator's (per vertex: rosy fingertips, a breath of pink at the knuckles). The mesh has no texture uv, so
+  // the fine detail is solid noise in the hand's own space, worked very lightly into the normal: a fine, even grain (pores) and a
+  // slow, soft unevenness — no lines, no folds. The gloss follows it (a moist sheen between the pores). Light: a soft wrap toward
+  // the shade, red where light turns to shade (light passing through the flesh), a thin warm rim at grazing angles.
+  const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: new THREE.Color(0xfbeae2).convertSRGBToLinear(), roughness: .44, metalness: 0, sheen: .4, sheenRoughness: .45, sheenColor: new THREE.Color(0xffe6da), emissive: new THREE.Color(0xc08878), emissiveIntensity: .2, envMap: env, envMapIntensity: .32 });
   skin.onBeforeCompile = sh => {
     sh.vertexShader = 'varying vec3 vSkP;\n' + sh.vertexShader.replace('#include <morphtarget_vertex>', '#include <morphtarget_vertex>\n vSkP = transformed;');
     sh.fragmentShader = `varying vec3 vSkP;
@@ -298,32 +403,34 @@ function buildHand(env) {
       float skN(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
         return mix(mix(mix(skH(i), skH(i + vec3(1,0,0)), f.x), mix(skH(i + vec3(0,1,0)), skH(i + vec3(1,1,0)), f.x), f.y),
                    mix(mix(skH(i + vec3(0,0,1)), skH(i + vec3(1,0,1)), f.x), mix(skH(i + vec3(0,1,1)), skH(i + vec3(1,1,1)), f.x), f.y), f.z); }
-      float skHeight(vec3 p){
-        float pore = smoothstep(.62, .82, skN(p * 46.)) ;                                  // pits
-        float lines = abs(sin(dot(p, vec3(31., 9., 23.)) + skN(p * 7.) * 3.)) * abs(sin(dot(p, vec3(-11., 27., 19.)) + skN(p * 6.) * 3.));   // the skin's criss-cross lines
-        return -pore * .6 + (1. - smoothstep(0., .25, lines)) * -.35 + skN(p * 9.) * .4; }
+      float skPore, skSlow;
+      float skHeight(vec3 p){ skSlow = skN(p * 6.5); skPore = smoothstep(.55, .9, skN(p * 52.)); return -skPore * .3 + skSlow * .22; }
       vec3 skPerturb(vec3 surf_pos, vec3 n, vec2 dH, float fd){ vec3 sx = dFdx(surf_pos), sy = dFdy(surf_pos), r1 = cross(sy, n), r2 = cross(n, sx);
         float det = dot(sx, r1) * fd; vec3 g = sign(det) * (dH.x * r1 + dH.y * r2); return normalize(abs(det) * n - g); }
     ` + sh.fragmentShader
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
-        { float hh = skHeight(vSkP) * .0016; normal = skPerturb(-vViewPosition, normal, vec2(dFdx(hh), dFdy(hh)), faceDirection); }`)
+        { float hh = skHeight(vSkP) * .0014; normal = skPerturb(-vViewPosition, normal, vec2(dFdx(hh), dFdy(hh)), faceDirection); }`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-        roughnessFactor = clamp(roughnessFactor * (.9 + .25 * smoothstep(.55, .85, skN(vSkP * 46.))), .05, 1.);`)
-      .replace('#include <color_fragment>', `#include <color_fragment>
-        diffuseColor.rgb *= .97 + .06 * skN(vSkP * 4.5);`)
+        roughnessFactor = clamp(roughnessFactor * (.9 + .22 * skPore), .05, 1.);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-    { vec3 sL = normalize((viewMatrix * vec4(.2, 1., .3, 0.)).xyz); float sn = dot(normalize(vNormal), sL), sv = 1. - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0., 1.);
-      totalEmissiveRadiance += diffuseColor.rgb * vec3(1., .3, .2) * (smoothstep(-.55, .05, sn) * (1. - smoothstep(.0, .6, sn)) * .34 + sv * sv * sv * .16); }`); };
-  const nail = new THREE.MeshPhysicalMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: .22, clearcoat: 1, clearcoatRoughness: .05, envMap: env, envMapIntensity: .9,   // (long nails: a thin shell, seen from both sides — ユーザー 2026-11-14)
-    emissive: new THREE.Color(0x40141c), emissiveIntensity: .35 });
-  // the nails (ユーザー 2026-11-14, a picture of long coffin nails): a sheer nude pink under a high gloss, with fine glitter in it —
-  // tiny flecks that flash as the hand turns
-  nail.onBeforeCompile = sh => {
-    sh.vertexShader = 'varying vec3 vNkP;\n' + sh.vertexShader.replace('#include <morphtarget_vertex>', '#include <morphtarget_vertex>\n vNkP = transformed;');
-    sh.fragmentShader = 'varying vec3 vNkP;\nfloat nkH(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-      { vec3 c = floor(vNkP * 90.), f = fract(vNkP * 90.) - .5; float r = nkH(c);
-        if (r > .78) { vec3 fn = normalize(vec3(nkH(c + 1.), nkH(c + 2.), nkH(c + 3.)) - .5); float sp = pow(max(0., dot(reflect(normalize(vViewPosition), normalize(vNormal)), fn)), 6.);
-          totalEmissiveRadiance += vec3(1., .95, .97) * sp * smoothstep(.45, .1, length(f)) * 2.2; } }`); };
+    { diffuseColor.rgb *= .975 + .05 * skSlow;
+      vec3 sL = normalize((viewMatrix * vec4(.2, 1., .3, 0.)).xyz); float sn = dot(normalize(vNormal), sL), sv = 1. - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0., 1.);
+      totalEmissiveRadiance += diffuseColor.rgb * (vec3(1., .34, .24) * (smoothstep(-.6, .05, sn) * (1. - smoothstep(.0, .6, sn)) * .36 + sv * sv * sv * .18) + vec3(1., .86, .8) * smoothstep(-1., .4, sn) * .1); }`); };
+  // the nails (ユーザー 2026-11-15): gel nails with a painted look per player (nailArt above) — the colour, and one picture read as
+  // height / roughness / metalness, under a clear top coat. Glitter and stones are metal in that picture: they mirror the room, and
+  // flash as the hand turns (tiny facets, each with its own tilt).
+  const mkNail = (style, col) => { const a = nailArt(style, col, matchMedia('(pointer: coarse)').matches);
+    const nm = new THREE.MeshPhysicalMaterial({ map: a.map, bumpMap: a.fx, bumpScale: 1.4, roughnessMap: a.fx, metalnessMap: a.fx, roughness: 1, metalness: 1, clearcoat: 1, clearcoatRoughness: .04, envMap: env, envMapIntensity: 1.15,
+      emissive: new THREE.Color(0xffffff), emissiveMap: a.map, emissiveIntensity: .1 });   // (a little of its own colour in the shade: gel is sheer, it never goes grey)
+    nm.onBeforeCompile = sh => {
+      sh.vertexShader = 'varying vec3 vNkP;\n' + sh.vertexShader.replace('#include <morphtarget_vertex>', '#include <morphtarget_vertex>\n vNkP = transformed;');
+      sh.fragmentShader = 'varying vec3 vNkP;\nfloat nkH(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+      { vec3 c = floor(vNkP * 70.); vec3 fn = normalize(vec3(nkH(c + 1.), nkH(c + 2.), nkH(c + 3.)) - .5);
+        float sp = pow(max(0., dot(reflect(normalize(vViewPosition), normalize(vNormal)), fn)), 7.);
+        totalEmissiveRadiance += vec3(1., .97, .98) * sp * metalnessFactor * 1.6; }`); };
+    return nm; };
+  rig.mkNail = mkNail;   // (not in userData: clone() copies that through JSON)
+  const nail = mkNail('gem', '#f0a8b4');
   const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; hand.frustumCulled = false; rig.add(hand); if (Hd.mi) hand.morphTargetInfluences = [0];
   // the sleeve (ユーザー 2026-11-14: only a glimpse of the wrist, the sleeve long; a pattern as on a Chinese dress): crimson silk
   // brocade — gold flower roundels and cloud scrolls woven in — closing just above the wrist in a black band between two gold pipings.
@@ -767,7 +874,7 @@ class Table3D {
   }
   // each seat's sleeve in the colour of its character's sisters (cols: four CSS colours). The ground is the colour taken deeper,
   // as silk is (a light colour stays light); one material per colour, made once.
-  setSleeves(cols) { this.sleeves = cols.slice(); (this.hands || []).forEach((rig, s) => { if (rig && cols[s]) this._sleeve(rig, cols[s]); }); this.dirty = true; }
+  setSleeves(cols, nails) { this.sleeves = cols.slice(); this.nailStyles = (nails || []).slice(); (this.hands || []).forEach((rig, s) => { if (rig && cols[s]) this._sleeve(rig, cols[s]); }); this.dirty = true; }
   _sleeve(rig, col) {
     this.sleeveMats = this.sleeveMats || new Map();
     if (!this.handProto || !this.handProto.clothMat) return;
@@ -776,14 +883,12 @@ class Table3D {
       const base = '#' + c.getHexString(), proto = this.handProto.clothMat;
       m = proto.clone(); m.map = brocadeTex(base); m.sheenColor = new THREE.Color(col).lerp(new THREE.Color(0xffffff), .2).multiplyScalar(.6); this.sleeveMats.set(col, m); }
     rig.traverse(o => { if (o.userData && o.userData.sleeve) o.material = m; });
-    // (ユーザー 2026-11-14: the nails in her colour too, like the sleeve) — a glossy polish of the sisters' colour, a little lighter,
-    // the glitter in it as before (the same shader: the clone keeps onBeforeCompile)
+    // (ユーザー 2026-11-14: the nails in her colour too, like the sleeve. 2026-11-15: a painted look per family — rig.userData.nailStyle,
+    // see nailArt.) One material per colour and look, made once.
     this.nailMats = this.nailMats || new Map();
-    let nm = this.nailMats.get(col);
-    if (!nm) { rig.traverse(o => { if (!nm && o.isMesh && Array.isArray(o.material) && o.material[1]) { const b = this.nailBase || (this.nailBase = o.material[1]);
-        nm = b.clone(); nm.onBeforeCompile = b.onBeforeCompile; nm.vertexColors = false;
-        const c = new THREE.Color(col), hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, Math.min(1, hsl.s * .85), Math.min(.72, Math.max(.42, hsl.l)));
-        nm.color = c.convertSRGBToLinear(); this.nailMats.set(col, nm); } }); }
+    const style = (this.nailStyles && this.nailStyles[this.hands ? this.hands.indexOf(rig) : -1]) || 'gem', key = style + col;
+    let nm = this.nailMats.get(key);
+    if (!nm && this.handProto.mkNail) { nm = this.handProto.mkNail(style, col); this.nailMats.set(key, nm); }
     if (nm) rig.traverse(o => { if (o.isMesh && Array.isArray(o.material) && o.material[1]) o.material = [o.material[0], nm]; });
   }
   _over2() {   // the overlay's renderer (made on the first use; no shadows)

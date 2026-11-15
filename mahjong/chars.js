@@ -4,35 +4,36 @@
 (function (root) {
 'use strict';
 const L = (ja, en) => ({ ja, en });
+// nail: the family's nail art on the 3D hand (table3d.js nailArt): 'gem' | 'butterfly' | 'french' | 'ombre', painted in the family's colour
 const FAMILIES = {
-  violet: { color: '#8a5cff', color2: '#2a1650', name: L('紫宮の姉妹', 'Violet Palace Sisters'),
+  violet: { color: '#8a5cff', color2: '#2a1650', nail: 'french', name: L('紫宮の姉妹', 'Violet Palace Sisters'),
     profile: L('紫の宮殿で卓を囲む姉妹。冷静沈着、勝負どころを決して外さない。', 'Sisters of the violet palace. Cool-headed, they never miss the decisive moment.'),
     lines: { riichi: L('この手…いただくわ。リーチ。', 'This hand is mine. Riichi.'), tsumo: L('ふふ、引き寄せたわ。', 'Mm. It came to me.'), ron: L('それ、いただくわね。', 'I\'ll take that.'), skill: L('見せてあげる。', 'Let me show you.') } },
-  snow: { color: '#d9dde8', color2: '#5a1a24', name: L('白峰の姉妹', 'Shiramine Sisters'),
+  snow: { color: '#d9dde8', color2: '#5a1a24', nail: 'gem', name: L('白峰の姉妹', 'Shiramine Sisters'),
     profile: L('雪のように白い衣の姉妹。守りが堅く、静かに好機を待つ。', 'Sisters in snow-white robes. Solid in defence, they wait quietly for their chance.'),
     lines: { riichi: L('静かに、リーチ。', 'Quietly — riichi.'), tsumo: L('ツモ。凍えるでしょう？', 'Tsumo. Chilly, isn\'t it?'), ron: L('ロン。', 'Ron.'), skill: L('凍てつけ。', 'Freeze.') } },
-  peach: { color: '#ff8fc4', color2: '#4a1430', name: L('桃園の姉妹', 'Peach Garden Sisters'),
+  peach: { color: '#ff8fc4', color2: '#4a1430', nail: 'butterfly', name: L('桃園の姉妹', 'Peach Garden Sisters'),
     profile: L('桃の花の庭で育った華やかな姉妹。明るく大胆に打ち回す。', 'Bright sisters raised in a peach-blossom garden. They play boldly and cheerfully.'),
     lines: { riichi: L('リーチっ！', 'Riichi!'), tsumo: L('ほらね、来たでしょ？', 'See? Told you!'), ron: L('ロンだよっ！', 'That\'s ron!'), skill: L('とっておき、いくよ！', 'Here comes my best!') } },
-  amber: { color: '#ffbf3d', color2: '#4a3006', name: L('琥珀堂の姉妹', 'Amber House Sisters'),
+  amber: { color: '#ffbf3d', color2: '#4a3006', nail: 'gem', name: L('琥珀堂の姉妹', 'Amber House Sisters'),
     profile: L('宝石商・琥珀堂の姉妹。きらめく牌には目がない。', 'Sisters of the Amber House jewellers. They can\'t resist a sparkling tile.'),
     lines: { riichi: L('きらっとリーチ♪', 'Sparkle riichi♪'), tsumo: L('ツモ！宝物みーつけた！', 'Tsumo! Found treasure!'), ron: L('ロン！いただきっ♪', 'Ron! Mine♪'), skill: L('きらきらにしちゃお♪', 'Let\'s make it sparkle!') } },
-  crimson: { color: '#e0334f', color2: '#3e0a14', name: L('紅椿の姉妹', 'Crimson Camellia Sisters'),
+  crimson: { color: '#e0334f', color2: '#3e0a14', nail: 'french', name: L('紅椿の姉妹', 'Crimson Camellia Sisters'),
     profile: L('賭場「紅椿」を仕切る派手好きな姉妹。積み上がった点棒はまとめていただく。', 'Flashy sisters who run the Crimson Camellia gambling hall. They sweep up every stick on the table.'),
     lines: { riichi: L('全部いただくよ、リーチ。', 'I\'m taking it all. Riichi.'), tsumo: L('総取りだね。', 'Jackpot.'), ron: L('ロン、ごちそうさま。', 'Ron. Thanks for the meal.'), skill: L('場の点棒、ぜーんぶ私の！', 'Every stick on the table is mine!') } },
-  chestnut: { color: '#b98552', color2: '#3a2414', name: L('栗原雀荘の姉妹', 'Kurihara Parlor Sisters'),
+  chestnut: { color: '#b98552', color2: '#3a2414', nail: 'butterfly', name: L('栗原雀荘の姉妹', 'Kurihara Parlor Sisters'),
     profile: L('老舗の雀荘を切り盛りする姉妹。手先が器用で、場の空気を読むのがうまい。', 'Sisters who run an old mahjong parlor. Nimble fingers, and they read the table well.'),
     lines: { riichi: L('リーチ、いきます！', 'Riichi, here I go!'), tsumo: L('やった、ツモです！', 'Yay, tsumo!'), ron: L('ロンです！', 'Ron!'), skill: L('えいっ！', 'Hup!') } },
-  jade: { color: '#2fc58a', color2: '#0b3a2a', name: L('翡翠の姉妹', 'Jade Sisters'),
+  jade: { color: '#2fc58a', color2: '#0b3a2a', nail: 'ombre', name: L('翡翠の姉妹', 'Jade Sisters'),
     profile: L('翡翠の簪をさした物静かな姉妹。欲しい牌が向こうから寄ってくる。', 'Quiet sisters with jade hairpins. The tiles they want come to them.'),
     lines: { riichi: L('…リーチ、です。', '…Riichi.'), tsumo: L('来てくれました。', 'You came.'), ron: L('ロン、です。', 'Ron.'), skill: L('おいで…', 'Come here…') } },
-  gold: { color: '#ffd24a', color2: '#4a3a06', name: L('金色の姉妹', 'Golden Sisters'),
+  gold: { color: '#ffd24a', color2: '#4a3a06', nail: 'gem', name: L('金色の姉妹', 'Golden Sisters'),
     profile: L('大店を営む金色の髪の姉妹。商売も麻雀も、取れるものは全部取る。', 'Golden-haired sisters who run a great trading house. In business and mahjong, they take all they can.'),
     lines: { riichi: L('商談成立、リーチ。', 'Deal struck. Riichi.'), tsumo: L('毎度あり。', 'Pleasure doing business.'), ron: L('ロン。お代はこちら。', 'Ron. The bill, please.'), skill: L('ご祝儀、はずんでね。', 'Be generous.') } },
-  lapis: { color: '#4b6bff', color2: '#101a4a', name: L('瑠璃の姉妹', 'Lapis Sisters'),
+  lapis: { color: '#4b6bff', color2: '#101a4a', nail: 'ombre', name: L('瑠璃の姉妹', 'Lapis Sisters'),
     profile: L('水晶玉をのぞく占い師の姉妹。相手の手の内はお見通し。', 'Fortune-teller sisters with a crystal ball. They see right through everyone\'s hands.'),
     lines: { riichi: L('運命は決まりました。リーチ。', 'Fate is sealed. Riichi.'), tsumo: L('見えていましたよ。', 'I saw this coming.'), ron: L('ロン。占いどおり。', 'Ron. As foretold.'), skill: L('あなたの心、読ませて。', 'Let me read your heart.') } },
-  flame: { color: '#ff7a3d', color2: '#4a1608', name: L('緋色の姉妹', 'Scarlet Sisters'),
+  flame: { color: '#ff7a3d', color2: '#4a1608', nail: 'ombre', name: L('緋色の姉妹', 'Scarlet Sisters'),
     profile: L('炎のような髪の陽気な勝負師の姉妹。押すときは迷わず押す。', 'Cheerful gambler sisters with flame-coloured hair. When they push, they push all the way.'),
     lines: { riichi: L('いっくよー、リーチ！', 'Here goes — riichi!'), tsumo: L('はい、ツモっ！', 'Tsumo, there it is!'), ron: L('ロン！もらった！', 'Ron! Got you!'), skill: L('燃えてきたっ！', 'Now I\'m fired up!') } },
 };
@@ -56,7 +57,7 @@ const CHARS = [];
 for (const fid in ROSTER) {
   const F = FAMILIES[fid];
   ROSTER[fid].forEach(([id, ja, en, rarity, reward], k) => {
-    CHARS.push({ id, family: fid, rarity, art: true, reward: reward ?? null, color: F.color, color2: F.color2,
+    CHARS.push({ id, family: fid, rarity, art: true, reward: reward ?? null, color: F.color, color2: F.color2, nail: F.nail,
       name: L(ja, en), title: L(`${F.name.ja}・${ORDER[k].ja}`, `${F.name.en}, ${ORDER[k].en}`),
       profile: F.profile, lines: F.lines });
   });
