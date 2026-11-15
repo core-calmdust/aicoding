@@ -176,6 +176,12 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
 - 大百科の3Dビューでの対局（atlas/games/amazons.js の start、table: true）：エンジンは ../amazons/engine.js（ページとワーカー）、入力は3タップ（自分のアマゾン → 行き先（アマゾンがそこへ歩む）→ 矢のマス、行き先をもう一度タップで選び直し）、印は前の手（元・行き先・矢の枠）、選択リング・行き先の点・矢のひし形、ヒント。手のアニメ・火矢・着弾は Table3D.amazons.fly / strike、燃え続ける火は ignite / douse（フル機能版スキンと共通）：負荷を避けて動かない炎のアイコン（炎の舌3枚の絵のスプライト）と熾火の縁。3Dは止まっている間は描画しない。2Dは CSS の炎の舌が揺れる。
 - 大百科：atlas/lazy.js（models/amazons.js・games/amazons.js、t3・play）、atlas/app.js の FULL_SKIN、盤の行のサムネイル atlas/img/board-amazons-<look>.webp（atlas/tools/boards.html）、3D盤タイル atlas/img/boardic-amazons-<look>.webp（atlas/tools/boardicon.html、盤だけ）、名前は atlas/tables3d.js の N3（temple / ruins）。
 
+- 大百科の3Dカードの4つのモード（2026-11-15）：対戦｜レート戦｜パズル｜レッスン（atlas/app.js の MXG.amazons）。
+  - レート戦：RTG.amazons＝フル版と同じ記録 aicoding-amazons-rated・レベルのレート RT_LV・持ち時間5分＋1手3秒。3D卓で対AI。
+  - パズル：atlas/puzzles.js の BOOK.amazons（amazons/puzzles.json、記録 aicoding-amazons-puzzles・-pz-last・今日のパズル -daily はフル版と共通）。案内役はケロ（av/frog-0）。判定はフル版と同じ（engine.js の pzgood / duelReply をワーカーで）：途中の悪手は止めずに相手が最善で答え、手数切れ・閉じ込められ・終局で結果。光るアマゾン（trap＝相手・guard＝自分）は印で追う。ヒント3段（考え方→始めるアマゾン→手）、答え（正解手順の再生）。
+  - レッスン：atlas/lessons3d.js の AMAZONS（amazons/lessons.json、記録 aicoding-amazons-lessons）。1手問題（P.ok のどれでも20点）。座標のない3D盤なので、文中の {m}/{x} は盤の印（アマゾンのマスの枠・行き先の点・矢のひし形）で示す。準備（ramp）は文が座標だらけなので3Dではまだ出さない（座標なしの文ができたら追加）。導入の表記の段落（「d1-d7/g7」）は外す。
+  - 3D卓（atlas/games/amazons.js）の ctx.pz：局面 { b, side } から始め、手は呼び手が判定。印は [マス, 'ok'|'ng'|'hl'|'ring']、手は { m, cls } か [{ m }, cls]。'ring' は金のマス＋外枠（像に隠れないよう大きめ）。
+
 ## ポータル・トップ
 - shared/atlas.js の GAMES（beta: true、released 2026-11-10、total.pz 120・ls 8）、READ（パズル・星・今日の一問・レッスン合格数・レート戦・ルール既読）、UPDATES。
 - アイコン：atlas/icons3d.js の amazons()（ジャングル盤の角、焼けたマスに刺さった矢、黒のアマゾン、矢を放ちながら滑り込む象牙のアマゾン）→ images/atlas/amazons.webp。トップのアイコン images/icons/amazons.svg、サムネイル images/amazons.webp。

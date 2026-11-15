@@ -133,6 +133,22 @@
       ja: { hi: 'チェッカニだよ！ いっしょにチェッカーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'おしい！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
       en: { hi: "Checkrab here! Let's study checkers together.", partial: 'A nice move! But the green arrow is the best.', wrong: 'So close! The green arrow is the answer.', hintSay: 'Psst — look at the pieces in the gold rings!', opGoal: 'What is the best next move here?' },
     },
+    amazons: {
+      ja: { hi: 'ケロだよ！ いっしょにアマゾンズのお勉強をするケロ。', partial: 'いい手ケロ。でもいちばんは緑の印の手なんだ。', wrong: 'おしい！ 正解は緑の印の手ケロ。', hintSay: 'ヒントだケロ。光っているアマゾンから考えてみて。' },
+      en: { hi: "Kero here! Let's study Amazons together.", partial: 'A nice move! But the green-marked move is the best.', wrong: 'So close! The green-marked move is the answer.', hintSay: 'Psst — start from the glowing amazons.' },
+      zh: { hi: '我是呱呱！一起来学亚马逊棋吧。', partial: '好棋！不过最好的是绿色标记的那步。', wrong: '差一点！正解是绿色标记的那步。', hintSay: '提示：从发光的亚马逊想起。' },
+      'zh-TW': { hi: '我是呱呱！一起來學亞馬遜棋吧。', partial: '好棋！不過最好的是綠色標記的那步。', wrong: '差一點！正解是綠色標記的那步。', hintSay: '提示：從發光的亞馬遜想起。' },
+      ko: { hi: '케로야! 같이 아마존을 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 표시 수야.', wrong: '아깝다! 정답은 초록 표시 수야.', hintSay: '힌트: 빛나는 아마존부터 생각해 봐.' },
+      es: { hi: '¡Soy Kero! Estudiemos Amazonas juntos.', partial: '¡Buena jugada! Pero la mejor es la marcada en verde.', wrong: '¡Casi! La respuesta es la jugada marcada en verde.', hintSay: 'Pista: empieza por las amazonas que brillan.' },
+      fr: { hi: 'C’est Kero ! Étudions les Amazones ensemble.', partial: 'Joli coup ! Mais le meilleur est celui marqué en vert.', wrong: 'Presque ! La réponse est le coup marqué en vert.', hintSay: 'Indice : pars des amazones qui brillent.' },
+      pt: { hi: 'Aqui é o Kero! Vamos estudar Amazonas juntos.', partial: 'Boa jogada! Mas a melhor é a marcada em verde.', wrong: 'Quase! A resposta é a jogada marcada em verde.', hintSay: 'Dica: comece pelas amazonas que brilham.' },
+      de: { hi: 'Hier ist Kero! Lass uns zusammen Amazonen lernen.', partial: 'Guter Zug! Aber am besten ist der grün markierte.', wrong: 'Knapp! Die Antwort ist der grün markierte Zug.', hintSay: 'Tipp: Fang bei den leuchtenden Amazonen an.' },
+      ru: { hi: 'Это Керо! Давай вместе изучать амазонок.', partial: 'Хороший ход! Но лучший — отмеченный зелёным.', wrong: 'Почти! Ответ — ход, отмеченный зелёным.', hintSay: 'Подсказка: начни со светящихся амазонок.' },
+      tr: { hi: 'Ben Kero! Birlikte Amazonlar çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil işaretli olan.', wrong: 'Az kaldı! Cevap yeşil işaretli hamle.', hintSay: 'İpucu: parlayan amazonlardan başla.' },
+      id: { hi: 'Aku Kero! Ayo belajar Amazon bersama.', partial: 'Langkah bagus! Tapi yang terbaik bertanda hijau.', wrong: 'Hampir! Jawabannya langkah bertanda hijau.', hintSay: 'Petunjuk: mulai dari amazon yang bersinar.' },
+      hi: { hi: 'मैं केरो हूँ! चलो साथ में अमेज़न्स सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे निशान वाली है।', wrong: 'करीब था! जवाब हरे निशान वाली चाल है।', hintSay: 'संकेत: चमकती अमेज़न से शुरू करो।' },
+      ar: { hi: 'أنا كيرو! لنتعلّم الأمازونات معًا.', partial: 'نقلة جيدة! لكن الأفضل هي المعلّمة بالأخضر.', wrong: 'قريب جدًا! الجواب هو النقلة المعلّمة بالأخضر.', hintSay: 'تلميح: ابدأ من الأمازونات المضيئة.' },
+    },
     hex: {
       ja: { hi: 'ゴイシペンだよ！ いっしょにヘックスのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の印の点なんだ。', wrong: 'おしい！ 正解は緑の印の点だよ。', hintSay: 'ヒントだよ。印のあたりをよく見てみて。' },
       en: { hi: "Stoneguin here! Let's study Hex together.", partial: 'A nice move! But the green mark is the best.', wrong: 'So close! The green mark is the answer.', hintSay: 'Psst — look around the marked cells.' },
@@ -951,7 +967,47 @@
     return nb.length ? [nb[Math.floor(Math.random() * nb.length)], m] : [m];
   };
   const HXM = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の点' : k === 'hl' ? '金の印の点' : '赤い印の点') + '\u0002' : `<i class="ls-spot ${k}"></i>`;   // (a cell named by its mark)
-  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX };
+  /* amazons (2026-11-15): amazons/lessons.json (8 steps of 5 one-move problems: any move in P.ok is right — 20 points or 0, = amazons/app.js
+     lessonAnswer). Progress = the full game's ('aicoding-amazons-lessons' { id: { best, clear } }). Texts: checkers/i18n.js + amazons/
+     i18n-am*.js (the page's own order), read into a sandbox. The 3D board has no coordinates: the moves the texts name ({m}, {x}) are
+     their marks on the board (the amazon's square ring, the destination dot, the arrow's diamond). The warm-ups (step.ramp) name squares
+     in every line, so they stay in the full game until texts without coordinates are written; an intro's notation paragraph is dropped.
+     A position here is { spec: { b, side }, me }. Moves: amazons/engine.js move numbers. */
+  const AM_ENG = '../amazons/engine.js?v=15';   // (the table adapter's file: one cache)
+  const amEng = () => window.AmazonsEngine ? Promise.resolve(window.AmazonsEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = AM_ENG; sc.onload = () => window.AmazonsEngine ? res(window.AmazonsEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
+  const AMM = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の手' : '赤い印の手') + '\u0002' : `<i class="ls-spot ${k}"></i>`;   // (a move named by its marks)
+  const AM_MK = { s_escape: 'ng' };   // (amazons/app.js MK_CLS: the squares a problem lights)
+  const AMAZONS = {
+    LKEY: 'aicoding-amazons-lessons', data: null, I: null,
+    load() {
+      if (this.p) return this.p;
+      const tx = ['../checkers/i18n.js?v=20261107l14-nd1', '../amazons/i18n-am.js?v=4', '../amazons/i18n-am-more.js?v=4', '../amazons/i18n-am-ls.js?v=1', '../amazons/i18n-am-ls-more.js?v=1', '../amazons/i18n-am-ls-more2.js?v=1'];
+      return (this.p = Promise.all([getJ('../amazons/lessons.json?v=1'), Promise.all(tx.map(u => fetch(u).then(r => r.text()).catch(() => ''))), amEng().catch(() => null)])
+        .then(([ls, T]) => { const w = {}; try { new Function('window', T[0] + '\nvar I18N = window.I18N = window.I18N || {};\n' + T.slice(1).join('\n'))(w); } catch (e) { console.warn('[lessons3d] amazons texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
+        .catch(e => { this.p = null; throw e; }));
+    },
+    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    mini: sp => window.AtlasMini && AtlasMini.amazons ? AtlasMini.amazons(sp) : '',
+    list(kind, lang) {
+      const D = this.data, pr = J(this.LKEY, {});
+      return D.ls.steps.map((s, i) => ({ key: String(i), cat: s.course, catName: this.tx('course.' + s.course, lang) || s.course, title: this.tx('ls.' + s.id + '.title', lang), sub: this.tx('ls.' + s.id + '.sub', lang), svg: s.problems && s.problems[0] ? this.mini(s.problems[0].s) : '', st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '', full: false }));
+    },
+    lesson(key, lang) {
+      const s = this.data.ls.steps[+key]; if (!s) return null;
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), E = window.AmazonsEngine;
+      const intro = String(T('intro') || '').replace(/<p>[^<]*?[a-j](?:10|[1-9])-[a-j](?:10|[1-9])[^]*?<\/p>/g, '');   // (the notation paragraph: no coordinates on the 3D board)
+      const mkc = AM_MK[s.id] || 'ok';
+      return { id: s.id, title: T('title'), intro, ramp: null,
+        probs: (s.problems || []).map(P => { const good = P.ok || [P.best];
+          return { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.best != null ? P.best : good[0], marks: (P.mk || []).map(q => [q, mkc]), hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
+            good: () => T('why', { m: AMM('ok', lang), x: AMM('ng', lang) }), ng: () => T('ng', { m: AMM('ok', lang), x: AMM('ng', lang) }) }; }),
+        save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
+    },
+    points(P, m) { return (P.ok || [P.best]).includes(m) ? 20 : 0; },   // (= amazons/app.js lessonAnswer)
+    spOk: lang => AMM('ok', lang),
+    introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), P = s && s.problems && s.problems[0]; return P ? { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1, lock: true } } : null; },
+  };
+  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -1052,7 +1108,7 @@
             pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
         else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
         else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
@@ -1205,7 +1261,7 @@
       if (!p.choices) pz().wait(); act(X.next, { hint: true, nextOn: false });
       $('[data-a=next]').onclick = () => { cur.k++; if (cur.k < cur.probs.length) prob(); else finish(); };
       $('[data-a=hint]').onclick = () => { if (p.ans == null || p.ans < 0 || p.ans === '' || p.done) return; p.hinted = true;
-        if (p.hint && p.hint.length) { pz().mark(p.hint.map(q => [q, 'ring'])); say(p.hintTx || X.hintSay); return; }   // (gomoku: the lesson's own hint points and words)
+        if (p.hint && p.hint.length) { pz().mark((id === 'amazons' && p.marks ? p.marks : []).concat(p.hint.map(q => [q, 'ring']))); say(p.hintTx || X.hintSay); return; }   // (gomoku: the lesson's own hint points and words)
         if (p.kind === 'bgplay') { pz().reset(); pz().mark(p.ans); pz().wait(); say((p.hintTx ? p.hintTx + '<br>' : '') + X.hintSay); return; }   // (backgammon: back to the roll's start, rings on the checkers the best play moves)
         if (p.kind === 'choice') { say(p.hintTx || X.hintSay); return; }
         pz().mark(p.ans); say(p.hintTx || X.hintSay); };
@@ -1272,7 +1328,7 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if ((id === 'checkers' || id === 'xiangqi') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
+      if ((id === 'checkers' || id === 'xiangqi' || id === 'amazons') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;
         say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}

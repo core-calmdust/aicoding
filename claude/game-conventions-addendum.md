@@ -631,6 +631,7 @@
   - 五目並べの盤（`atlas-gomoku-look`）：漆と蒔絵 lacquer・本榧 kaya・モザイクタイル tile・ピクニック gingham・黒板 slate・デニム denim。石（`atlas-gomoku-pc3`）：那智黒と蛤 classic・おはじき glass・クッキー cookie・マグネット magnet・ボタン button・真珠 pearl。
   - 絵は `atlas/tools/goban-tex.py` → `images/atlas/goban3d/` の surf-／side-<盤>（`-m` 付き）。タイルは `atlas/tools/gbpiece.html`（石）・boardicon.html・boards.html。フル版のデザインタブの「3D盤」「3D石」の行は共通の `AtlasSkin.rows3d`（atlas/skin/common.js）で作る（2Dの盤を選ぶと3Dの選択が外れる）。
 - 五目並べ3D卓の種目（2026-11-15）：カードの「ルール」で 連珠・標準（禁手なし、ちょうど5）・自由（禁手なし、5以上）を選ぶ。値は ctx.size（1/2/3）で渡す（adapter.sizes＋sizeName）。レート戦はフル版と同じ連珠に固定（RTG.gomoku.size = 1）。
+- アマゾンズの3Dカードも4モード（対戦｜レート戦｜パズル｜レッスン、2026-11-15）。詳細は claude/amazons-spec.md。
 
 
 ## 3Dポータル：Esc の挙動（2026-11-14）
