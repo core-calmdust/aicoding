@@ -85,7 +85,7 @@
       kick(200);
     }
     function setLook(v) {
-      if (v === look) return; look = v; feel = AC().feelOf(CFEEL[v]);
+      if (v === look) return; neonReset(); look = v; feel = AC().feelOf(CFEEL[v]);
       try { if (T3.setBoard) T3.setBoard('botao', v); } catch (e) {}
       const nb = T3.MODELS.botao(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c)); board.userData = nb.userData; U = board.userData;
       build(); syncAll(); neonTick(); if (T3.kick) T3.kick(500);
@@ -212,6 +212,11 @@
       clearGuides();
       if (!st || over) return;
       if (phase === 'keeper') { boxArea(E.keeperBox(keeperSide, st.restart === 'pen')); kick(120); return; }
+      if (phase === 'place') {
+        // where the taker may stand: a band round the ball (a half for a throw-in, a quarter for a corner)
+        const arc = E.takerArc(st), a0 = arc ? arc[0] - arc[1] : 0, len = arc ? 2 * arc[1] : 2 * Math.PI;
+        const g = new TH.RingGeometry(E.TAKER_NEAR * K, E.TAKER_FAR * K, 40, 1, -(a0 + len), len); g.rotateX(-Math.PI / 2);
+        const zm = new TH.Mesh(g, MAT.box), [zx, zz] = wx(st.ball.x, st.ball.y); zm.position.set(zx, Y + .008, zz); zm.renderOrder = 3; zm.userData.own = g; gd.add(zm); const b = st.b[st.taker], r = flat(b.x, b.y, D.RB + 1.2, MAT.sel); r.userData.pulse = 1; kick(120); return; }
       if (phase !== 'aim' || !human(st.pos)) return;
       // which buttons may play: the picked one gold, the one under the pointer white, one that may not (3 in a row) red
       for (let i = st.pos * 10; i < st.pos * 10 + 10; i++) {
@@ -272,6 +277,7 @@
     function callBar(kind) {
       if (stopped) return;
       if (kind === 'shot') { callEl.innerHTML = `<button type="button">📣 ${esc(tx('shoot'))}</button>`; callEl.querySelector('button').onclick = declare; callEl.hidden = false; }
+      else if (kind === 'place') { callEl.innerHTML = `<button type="button">✋ ${esc(tx('placeOk'))}</button>`; callEl.querySelector('button').onclick = () => placeDone(); callEl.hidden = false; }
       else if (kind === 'keeper') { callEl.innerHTML = `<button type="button">🧤 ${esc(tx('ready'))}</button>`; callEl.querySelector('button').onclick = () => keeperDone(); callEl.hidden = false; }
       else { callEl.hidden = true; callEl.innerHTML = ''; }
     }
@@ -287,7 +293,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=6'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=7'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -299,15 +305,45 @@
     }
     const seed = () => (Math.random() * 1e9) | 0;
     const think = (s, lv) => { const sd = seed(); return ask({ s, level: lv, seed: sd }, () => E.think(s, lv, sd)); };
+    const placeAI = (s, lv) => { const sd = seed(); return ask({ s, level: lv, seed: sd, place: true }, () => E.placeFor(s, lv, sd)); };
     const keeperAI = (s, side, lv) => { const sd = seed(); return ask({ s, level: lv, seed: sd, keeper: side }, () => E.keeperFor(s, side, lv, sd)); };
 
-    /* ---------- neon: the RGB keeps flowing while you play ---------- */
-    let waveT = 0;
+    /* ---------- neon: the gaming-rig show (2026-11-15 ユーザー：ネオン版はゲーミング演出に) ----------
+       The rails' light strip runs a rainbow round the table, the goal frames cycle, the buttons breathe, the ball glows in
+       shifting colours and leaves a light trail; every knock flashes the cloth, a goal sets off a rainbow strobe. */
+    let waveT = 0, flashT = 0, strobeT = 0;
+    const TRAIL = [];
+    function neonFlash(k) { flashT = Math.max(flashT, performance.now() + 120 * (k || 1)); }
+    function neonStrobe() { strobeT = performance.now() + 1800; }
+    function neonTrail(x, y) {
+      if (!U || U.look !== 'neon') return;
+      let m = TRAIL.find(q => !q.visible);
+      if (!m) { if (TRAIL.length >= 28) m = TRAIL.reduce((a, q) => q.userData.t0 < a.userData.t0 ? q : a); else { m = new TH.Mesh(GEO.disc, new TH.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, blending: TH.AdditiveBlending })); m.renderOrder = 3; board.add(m); TRAIL.push(m); } }
+      const [a, b] = wx(x, y); m.position.set(a, Y + .006, b); m.userData.t0 = performance.now(); m.visible = true;
+    }
+    // the materials are shared (the board picker, the showcase): put them back as the model made them
+    function neonReset() {
+      const M = U && U.mats; if (!M || U.look !== 'neon') return;
+      M.top.emissive.setRGB(.8, .8, .8); if (M.edge) { M.edge.emissive.setHex(0x3ce6ff); M.edge.emissiveIntensity = 1.5; } if (M.post) { M.post.emissive.copy(new TH.Color('#ff3fb4').convertSRGBToLinear()); M.post.emissiveIntensity = .5; }
+      bt.forEach(g => { const m = g.userData && g.userData.mat; if (m) m.emissiveIntensity = .55; });
+      const bm = ballG && ballG.children[0] && ballG.children[0].material; if (bm && bm.emissive) bm.emissive.setRGB(1, 1, 1);
+    }
     function neonTick() {
-      cancelAnimationFrame(waveT); if (stopped || !U || U.look !== 'neon') return;
-      const c = new TH.Color();
+      cancelAnimationFrame(waveT); if (stopped || !U || U.look !== 'neon') { TRAIL.forEach(m => { m.visible = false; }); return; }
+      const c = new TH.Color(), c2 = new TH.Color();
       const step = () => { if (stopped) return; waveT = requestAnimationFrame(step);
-        if (U.look === 'neon' && !document.hidden && document.hasFocus()) { c.setHSL((performance.now() / 2600) % 1, 1, .6); U.mats.top.emissive.setRGB(.8, .8, .8).lerp(c, .4); kick(160); } };
+        if (U.look !== 'neon' || document.hidden || !document.hasFocus()) return;
+        const now = performance.now(), h = (now / 2600) % 1, M = U.mats, strobe = now < strobeT, fl = now < flashT ? (flashT - now) / 240 : 0;
+        // the cloth: a slow colour wash, a flash on a knock, a strobe on a goal
+        c.setHSL(strobe ? (now / 120) % 1 : h, 1, .6); M.top.emissive.setRGB(.8, .8, .8).lerp(c, strobe ? .9 : .4 + Math.min(.4, fl));
+        if (M.edge) { M.edge.emissive.setHSL((h + .5) % 1, 1, .55); M.edge.emissiveIntensity = 1.4 + Math.sin(now / 180) * .4 + (strobe ? 1.2 : 0); }
+        if (M.post) { M.post.emissive.setHSL((h + .25) % 1, 1, .55); M.post.emissiveIntensity = strobe ? 1.6 : .7; }
+        // the buttons breathe in their team colours; the ball cycles
+        bt.forEach((g, i) => { const m = g.userData && g.userData.mat; if (m) m.emissiveIntensity = .45 + .3 * (.5 + .5 * Math.sin(now / 420 + i * .7)) + (strobe ? .6 : 0); });
+        const bm = ballG && ballG.children[0] && ballG.children[0].material; if (bm && bm.emissive) { c2.setHSL((h * 3) % 1, 1, .65); bm.emissive.copy(c2); }
+        // the trail fades out
+        TRAIL.forEach(m => { if (!m.visible) return; const k = (now - m.userData.t0) / 650; if (k >= 1) { m.visible = false; return; } m.material.color.setHSL((h + k * .3) % 1, 1, .6); m.material.opacity = (1 - k) * .55; const r = D.RBALL * (1.6 - k * .8) * K; m.scale.set(r, 1, r); });
+        kick(160); };
       waveT = requestAnimationFrame(step);
     }
 
@@ -323,11 +359,12 @@
           for (let i = 0; i < 20; i++) put(bt[i], f[i * 2], f[i * 2 + 1]);
           const bx = f[40], by = f[41];
           put(ballG, bx, by);
+          if (U.look === 'neon' && Math.hypot(bx - f0[40], by - f0[41]) > .05) neonTrail(bx, by);
           const dd = Math.hypot(bx - f0[40], by - f0[41]); if (dd > 1e-4 && ballG.children[0]) { const ax = new TH.Vector3(f0[41] - by, 0, bx - f0[40]).normalize(); ballG.children[0].rotateOnWorldAxis(ax, dd / D.RBALL * -1); }
           follow(bx, by, 'slow');
           while (ev < sim.events.length && sim.events[ev].t <= el) {
             const e = sim.events[ev++];
-            if ((e.k === 'hit' || e.k === 'ball') && e.v > 6) SND.hit(e.v * (e.k === 'ball' ? .55 : 1)); else if ((e.k === 'rim' || e.k === 'post' || e.k === 'keep') && e.v > 10) SND.cush(e.v * .7); else if (e.k === 'goal') { SX.net(); gone = true; }
+            if ((e.k === 'hit' || e.k === 'ball') && e.v > 6) { SND.hit(e.v * (e.k === 'ball' ? .55 : 1)); neonFlash(Math.min(3, e.v / 40)); } else if ((e.k === 'rim' || e.k === 'post' || e.k === 'keep') && e.v > 10) { SND.cush(e.v * .7); neonFlash(1); } else if (e.k === 'goal') { SX.net(); gone = true; neonStrobe(); }
           }
           kick(120);
           if (fi < F.length - 1) requestAnimationFrame(step); else done(gone);
@@ -418,8 +455,22 @@
       const p = st.pos;
       if (pvp) viewTo();
       follow(st.ball.x, st.ball.y, true);
+      if (E.canPlace(st) && !st.placed) {
+        // a restart: first the taker's place round the ball (yours by dragging, the AI's worked out), then the flick
+        st = E.clone(st); st.placed = true;
+        if (human(p)) {
+          if (!pvp) hist.push({ st: E.clone(st), ply });
+          phase = 'place'; sel = st.taker; frameBallAnd(sel, true);
+          say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn')); task(tx(RESTART[st.restart] || 'fk') + ' — ' + tx('placeTask')); callBar('place');
+          if (!told && howtoOn()) howtoCard(() => {}); told = true;
+          showGuides(); pulse(); return;
+        }
+        phase = 'ai'; callBar(null); say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) })); task('');
+        const my0 = tok, q = await placeAI(E.clone(st), level); if (stopped || my0 !== tok) return;
+        if (q) { const i = st.taker; E.setTaker(st, q.x, q.y); await slidePiece(i, st.b[i]); if (stopped || my0 !== tok) return; }
+      }
       if (human(p)) {
-        if (!pvp && !st.shot) hist.push({ st: E.clone(st), ply });
+        if (!pvp && !st.shot && !(st.placed && st.rem === 12 && st.restart)) hist.push({ st: E.clone(st), ply });
         sel = autoSel(); phase = 'aim'; frameBallAnd(sel, true);
         say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn')); task(taskLine());
         callBar(E.canShoot(st) ? 'shot' : null);
@@ -440,6 +491,17 @@
       clearGuides(); pan = { x: 0, y: 0 }; frameBallAnd(mv.i, true); const b = st.b[mv.i]; flat(b.x, b.y, D.RB + 1.2, MAT.sel); drawMove(mv, MAT.aiPath, MAT.aiBall); kick(150);
       await new Promise(r => later(r, 900)); if (stopped || my !== tok) return;
       flick(E.perform(mv, level, seed()));
+    }
+    function placeDone() {
+      if (stopped || phase !== 'place') return;
+      callBar(null); clearGuides(); phase = 'aim'; sel = st.taker;
+      task(taskLine()); callBar(E.canShoot(st) ? 'shot' : null); frameBallAnd(sel, true); showGuides(); pulse();
+    }
+    // a button glides to its new place (the AI's taker)
+    function slidePiece(i, to) {
+      const m = bt[i]; if (!m) return Promise.resolve();
+      const [x1, z1] = wx(to.x, to.y), x0 = m.position.x, z0 = m.position.z, t0 = performance.now(), ms = 500;
+      return new Promise(res => { const step = () => { if (stopped) return res(); const k = Math.min(1, (performance.now() - t0) / ms), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; m.position.x = x0 + (x1 - x0) * e; m.position.z = z0 + (z1 - z0) * e; kick(60); if (k < 1) requestAnimationFrame(step); else { syncAll(); res(); } }; step(); });
     }
     // a shot is called: the defender sets the keeper, then the attacker shoots
     let keeperSide = -1, keeperT = 0;
@@ -512,7 +574,7 @@
       for (let i = st.pos * 10; i < st.pos * 10 + 10; i++) { const d = Math.hypot(st.b[i].x - q.x, st.b[i].y - q.y); if (d < D.RB + slack && d < bd) { bd = d; best = i; } }
       return best;
     }
-    let drag = null, kdrag = false;
+    let drag = null, kdrag = false, pdrag = false;
     // the pull, as in carrom / crokinole (2026-11-15 ユーザー：クロキノールそのままの方がいい): measured on the table from the
     // button, DEAD cm is "not yet", POWMAX cm more is full; the strength grows with the square of the pull (fine touches at the
     // soft end). The button goes the way you aim it (away from your pull). On a phone a finger's move is magnified less (gt).
@@ -536,6 +598,7 @@
       ptrs.add(e.pointerId);
       if (ptrs.size > 1) { if (drag) cancel(); return; }
       if (phase === 'anim' && !stopped) { speedUp = 3; return; }
+      if (phase === 'place' && !stopped && st && human(st.pos)) { const q = toCm(e); if (!q) return; pdrag = true; E.setTaker(st, q.x, q.y); syncAll(); showGuides(); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); return; }
       if (phase === 'keeper' && !stopped && st && human(keeperSide)) { const q = toCm(e); if (!q) return; kdrag = true; moveKeeper(q); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); return; }
       if (stopped || !st || cardEl) return;
       const q = toCm(e);
@@ -553,6 +616,7 @@
       showGuides(); e.preventDefault();
     }
     function pm(e) {
+      if (pdrag) { const q = toCm(e); if (q) { E.setTaker(st, q.x, q.y); syncAll(); showGuides(); } return; }
       if (kdrag) { const q = toCm(e); if (q) moveKeeper(q); return; }
       if (!drag) {
         if (e.pointerType === 'mouse' && canAim()) { const q = toCm(e); const h = q ? btnAt(q, 1) : -1; if (h !== hov) { hov = h; showGuides(); } ctx.el.style.cursor = h >= 0 || (q && nearSel(e, q)) ? 'grab' : 'move'; }
@@ -568,6 +632,7 @@
     }
     function pu(e) {
       ptrs.delete(e.pointerId);
+      if (pdrag) { pdrag = false; try { ctx.el.releasePointerCapture(e.pointerId); } catch (er) {} return; }
       if (kdrag) { kdrag = false; try { ctx.el.releasePointerCapture(e.pointerId); } catch (er) {} return; }
       if (!drag || e.pointerId !== drag.id) return;
       try { ctx.el.releasePointerCapture(drag.id); } catch (er) {}
@@ -580,7 +645,7 @@
     function cancel() { drag = null; aim = null; kdrag = false; powEl.hidden = true; document.documentElement.classList.remove('hand-drag'); showGuides(); }
     function moveKeeper(q) { const d = keeperSide; if (d < 0) return; E.setKeeper(st, d, q.x, q.y); put(kp[d], st.k[d].x, st.k[d].y); kick(100); }
     const wm = e => { if ((drag && e.pointerId === drag.id) || kdrag) { if (e.target !== ctx.el && !ctx.el.contains(e.target)) pm(e); } };
-    const wu = e => { if ((drag && e.pointerId === drag.id) || kdrag) pu(e); else ptrs.delete(e.pointerId); };
+    const wu = e => { if ((drag && e.pointerId === drag.id) || kdrag || pdrag) pu(e); else ptrs.delete(e.pointerId); };
     ctx.el.addEventListener('pointerdown', pd); ctx.el.addEventListener('pointermove', pm); ctx.el.addEventListener('pointerup', pu); ctx.el.addEventListener('pointercancel', pu);
     addEventListener('pointermove', wm, true); addEventListener('pointerup', wu, true); addEventListener('pointercancel', wu, true);
     // no loupe / double-tap zoom / text selection while playing (as the carrom hand)
@@ -595,6 +660,7 @@
       if (stopped || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
       if ((e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.metaKey) { if (phase === 'aim' && E.canShoot(st) && human(st.pos)) { e.preventDefault(); declare(); } return; }
       if (e.key === 'Enter' && phase === 'keeper') { e.preventDefault(); keeperDone(); return; }
+      if (e.key === 'Enter' && phase === 'place') { e.preventDefault(); placeDone(); return; }
       // the arrow keys move the view (as the screen shows it), C: back to the ball
       const pk = { ArrowUp: [0, -1], ArrowLeft: [-1, 0], ArrowDown: [0, 1], ArrowRight: [1, 0] }[e.key];
       if (pk && !e.ctrlKey && !e.metaKey && !e.altKey && st) {
@@ -692,6 +758,7 @@
       timeout() { finish('time'); },
       stop() {
         document.querySelectorAll('.bpk').forEach(e => e.remove());
+        neonReset(); TRAIL.forEach(m => { board.remove(m); m.material.dispose(); }); TRAIL.length = 0;
         stopped = true; tok++; timers.forEach(clearTimeout); board.remove(beacon); beacon.geometry.dispose(); beacon.material.dispose(); clearInterval(pulseT); clearInterval(clkT); clearInterval(keeperT);
         ctx.el.removeEventListener('pointerdown', pd); ctx.el.removeEventListener('pointermove', pm); ctx.el.removeEventListener('pointerup', pu); ctx.el.removeEventListener('pointercancel', pu);
         removeEventListener('pointermove', wm, true); removeEventListener('pointerup', wu, true); removeEventListener('pointercancel', wu, true);

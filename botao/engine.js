@@ -100,6 +100,44 @@
     const p = freeSpot(s, best, want.x, want.y); s.b[best].x = p.x; s.b[best].y = p.y;
     s.taker = best;
   }
+  // the taker's place at a restart is the player's choice (2026-11-15 ユーザー：ボールの位置は決まっていても、蹴るコマの位置は
+  // ルール上自由に決められないの？): anywhere round the ball from touching it (+0.6 cm) to TAKER_FAR away, on the table,
+  // not on another piece. A kickoff and a penalty keep theirs.
+  const TAKER_NEAR = RB + RBALL + .6, TAKER_FAR = RB + RBALL + 10, PLACE_KINDS = ['throw', 'corner', 'gk', 'fk', 'ifk'];
+  const canPlace = s => s.taker != null && PLACE_KINDS.includes(s.restart) && s.rem === 12 && !s.shot;
+  // the side of the ball the taker may stand on: a throw-in from outside the touchline (a half circle), a corner from
+  // outside the corner (a quarter); other restarts all round. Returns [centre angle, half width] or null (anywhere).
+  function takerArc(s) {
+    if (s.restart === 'throw') return [s.ball.x > 0 ? 0 : Math.PI, Math.PI / 2];
+    if (s.restart === 'corner') return [Math.atan2(Math.sign(s.ball.y), Math.sign(s.ball.x)), Math.PI / 4];
+    return null;
+  }
+  function setTaker(s, x, y) {
+    const i = s.taker; if (i == null) return;
+    let dx = x - s.ball.x, dy = y - s.ball.y, d = Math.hypot(dx, dy); if (d < .01) { dx = 0; dy = 1; d = 1; }
+    const arc = takerArc(s);
+    if (arc) {   // keep it on its side of the ball (the touchline / the corner)
+      let a = Math.atan2(dy, dx), r = ((a - arc[0] + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
+      if (Math.abs(r) > arc[1]) { r = Math.sign(r) * arc[1]; a = arc[0] + r; dx = Math.cos(a) * d; dy = Math.sin(a) * d; }
+    }
+    const r = Math.max(TAKER_NEAR, Math.min(TAKER_FAR, d)), p = freeSpot(s, i, s.ball.x + dx / d * r, s.ball.y + dy / d * r);
+    if (Math.hypot(p.x - s.ball.x, p.y - s.ball.y) < RB + RBALL + .2) return;   // (freeSpot pushed it onto the ball: keep the old place)
+    s.b[i].x = p.x; s.b[i].y = p.y;
+  }
+  // the AI's taker place: a few spots round the ball, each judged by the best flick the taker then has
+  function placeFor(s, level, seed) {
+    const sk = skill(level), p = s.pos, i = s.taker; let best = null;
+    const base = { x: s.b[i].x, y: s.b[i].y };
+    for (let k = 0; k < 12; k++) for (const r of [TAKER_NEAR + 1.4, TAKER_NEAR + 4]) {
+      const a = k / 12 * 2 * Math.PI, c = clone(s); setTaker(c, s.ball.x + Math.cos(a) * r, s.ball.y + Math.sin(a) * r);
+      const q = c.b[i]; if (Math.hypot(q.x - s.ball.x, q.y - s.ball.y) > TAKER_FAR + .1) continue;
+      let v = -1e9;
+      for (const m of candidates(c, sk)) { if (m.i !== i) continue; const b = c.b[m.i], d = Math.hypot(c.ball.x - b.x, c.ball.y - b.y), cut = m.th == null ? 0 : Math.abs(((m.ang - m.th + 3 * Math.PI) % (2 * Math.PI)) - Math.PI);
+        const ph = Phi(((RB + RBALL) * (1 - Math.sin(cut)) + .2) / Math.max(.05, d * sk.angSd)), e = evaluate(c, resolve(c, simulate(c, m)), p, sk); const w = e * ph + (1 - ph) * -60; if (w > v) v = w; }
+      if (!best || v > best.v) best = { v, x: q.x, y: q.y };
+    }
+    return best ? { x: best.x, y: best.y } : base;
+  }
   function restartFor(s, t, kind, x, y) {
     freshPossession(s, t); s.restart = kind;
     if (kind === 'pen') {
@@ -232,7 +270,7 @@
   function resolve(s0, sim) {
     const s = clone(s0), p = s0.pos, o = 1 - p, S = sim.shooter, msg = [];
     s.b = sim.fin.b.map(q => ({ x: q.x, y: q.y })); s.ball = { x: sim.fin.ball.x, y: sim.fin.ball.y }; s.ply = (s.ply || 0) + 1;
-    s.restart = ''; delete s.taker;
+    s.restart = ''; delete s.taker; delete s.placed;
     const shot = s0.shot, first = sim.first, tw = w => w[0] === 'k' ? +w[1] : team(+w.slice(1));
     // the last side to touch the ball BEFORE it crossed a line (2026-11-15 ユーザー指摘：線を越えた後も卓の中で転がり続けた
     // ボールに触れたボタンまで数えていた — a throw-in / corner / goal kick goes against whoever touched it last before it went out)
@@ -626,7 +664,7 @@
     const c = clone(s); return setKeeper(c, t, k.x, k.y);
   }
 
-  const api = { VB_RATIO, powV, vPow, _int: { candidates: (s, sk) => candidates(s, sk), evaluate: (a, b, c, d) => evaluate(a, b, c, d), attackValue: (a, b, c, d) => attackValue(a, b, c, d), skill: l => skill(l) }, DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor, aimTrace, wobble, perform, think, skill, speedFor, aimAt, aimRoll, ballAim, aimCone, ballPath, ballSpeedFor, rollOf, clone, laneOpen };
+  const api = { VB_RATIO, powV, vPow, _int: { candidates: (s, sk) => candidates(s, sk), evaluate: (a, b, c, d) => evaluate(a, b, c, d), attackValue: (a, b, c, d) => attackValue(a, b, c, d), skill: l => skill(l) }, DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor, aimTrace, wobble, perform, think, skill, speedFor, aimAt, canPlace, setTaker, takerArc, placeFor, TAKER_NEAR, TAKER_FAR, aimRoll, ballAim, aimCone, ballPath, ballSpeedFor, rollOf, clone, laneOpen };
   root.BotaoEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : this);
