@@ -979,7 +979,6 @@
       const card = $('bvi'), L = card.querySelector('.L'), grab = document.createElement('div'); grab.className = 'grab'; grab.innerHTML = '<i></i>'; card.prepend(grab);
       const more = document.createElement('div'); more.className = 'more';
       [...L.querySelectorAll(':scope > .tags, :scope > .bvab, :scope > .pgl')].forEach(n => more.appendChild(n)); L.appendChild(more);
-      { const ext = card.querySelector('.R .soon.ext'); if (ext) more.appendChild(ext); }
       { const tg = more.querySelector('.tags');   // (2026-11-16: one row of tags — the rest behind a +N chip that opens them all — so the game's text has room)
         const fitTags = () => {
           if (!tg) return; const ch = [...tg.children].filter(x => !x.classList.contains('tagmore')); ch.forEach(x => { x.hidden = false; }); const o = tg.querySelector('.tagmore'); if (o) o.remove();
@@ -1451,6 +1450,7 @@
     const cls = $('bvi').querySelector('.R .act > a.btn');   // 2Dで遊ぶ stays on the card
     act.className = 'act act2';
     const go = document.createElement('button'); go.className = 'btn big'; go.id = 'bvGo'; go.textContent = t('ps.go') + ' ▶'; act.prepend(go);
+    if (!cls) act.classList.add('psolo');   // (a 3D-only game, no 2D page — carrom, crokinole …: あそぶ across the whole row, 2026-11-16)
     if (cls) { cls.querySelectorAll('small').forEach(x => x.remove()); cls.classList.remove('pk'); }
     // パズル / レッスン (2026-11-11): the sheet keeps its size and turns into that part's page (← back), with the PC card's three buttons:
     // red あそぶ (here on the 3D table) · brown フル機能で遊ぶ · white 2Dで遊ぶ
