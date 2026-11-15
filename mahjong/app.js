@@ -833,6 +833,25 @@ const YAKU_CAT = [
   ['ycat2', ['dbl_riichi', 'chiitoi', 'chanta', 'ittsu', 'sanshoku', 'sanshoku_k', 'toitoi', 'sanankou', 'sankantsu', 'shousangen', 'honroutou']],
   ['ycat3', ['honitsu', 'junchan', 'ryanpeikou', 'chinitsu']],
   ['ycatY', ['kokushi', 'suuankou', 'daisangen', 'shousuushii', 'daisuushii', 'tsuuiisou', 'ryuuiisou', 'chinroutou', 'chuuren', 'suukantsu', 'tenhou', 'chiihou']]];
+// a yaku's short note in a bubble over its row: on hover with a mouse, on tap on a touch screen (ユーザー 2026-11-15)
+function yakuTip(row) {
+  const D = window.YAKU_DESC, k = row.dataset.yk, txt = D && ((D[I18N.lang] || D.en)[k] || D.en[k]);
+  let tip = document.querySelector('.yk-tip');
+  if (!txt) { if (tip) tip.remove(); return; }
+  if (tip && tip.dataset.k === k && tip.classList.contains('show') && !fine.matches) { tip.classList.remove('show'); return; }
+  if (!tip) { tip = document.createElement('div'); tip.className = 'yk-tip'; }
+  const host = row.closest('.ps-main') || document.body; host.appendChild(tip);
+  tip.dataset.k = k; tip.innerHTML = `<b>${esc(I18N.yaku(k))}</b><span>${esc(txt)}</span>`;
+  const H = host.getBoundingClientRect(), r = row.getBoundingClientRect(), sx = H.width / host.offsetWidth || 1, sy = H.height / host.offsetHeight || 1;
+  const rot = document.documentElement.classList.contains('rot'), R = rot ? uiRect(row) : r, HH = rot ? uiRect(host) : H;
+  const x = (R.left - HH.left) / (rot ? 1 : sx), y = (R.top - HH.top) / (rot ? 1 : sy), w = R.width / (rot ? 1 : sx);
+  tip.style.left = Math.max(8, Math.min(host.clientWidth - 8 - Math.min(320, host.clientWidth - 16), x)) + 'px';
+  tip.style.top = y + 'px'; tip.style.maxWidth = Math.min(320, host.clientWidth - 16) + 'px';
+  tip.classList.toggle('below', y < 90);
+  if (tip.classList.contains('below')) tip.style.top = (y + (R.height / (rot ? 1 : sy))) + 'px';
+  void tip.offsetWidth; tip.classList.add('show');
+}
+document.addEventListener('mouseover', e => { if (!fine.matches) return; const yk = e.target.closest && e.target.closest('#pstats [data-yk]'); if (yk) yakuTip(yk); else if (!e.target.closest || !e.target.closest('.yk-tip')) { const t0 = document.querySelector('.yk-tip.show'); if (t0) t0.classList.remove('show'); } });
 function closeStats() { const el = $('#pstats'); if (el.hidden) return; el.classList.remove('show'); el.hidden = true; el.innerHTML = ''; PS = null; }
 function renderStats() {
   const P = PS, c = P.c, pl = P.pl;
@@ -859,7 +878,7 @@ function renderStats() {
     .sort((a, b) => b[1] - a[1] || a[2] - b[2]), ymax = Math.max(1, ...yAll.map(x => x[1]));
   const yHd = `<span>${esc(t('psYakuName'))}</span><span>${esc(t('psYakuN'))}</span><span>${esc(t('psYakuP'))}</span>`;
   // (ユーザー 2026-11-15) the main page keeps to the top five made; the full list is its own page (「全役を見る」)
-  const yRow = ([k, n]) => `<div class="ps-yk${n ? '' : ' zero'}"><span>${esc(I18N.yaku(k))}</span><b>${n}</b><em>${pct(raw.hands ? n / raw.hands : 0)}</em><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i></div>`;
+  const yRow = ([k, n]) => `<div class="ps-yk${n ? '' : ' zero'}" data-yk="${k}"><span>${esc(I18N.yaku(k))}</span><b>${n}</b><em>${pct(raw.hands ? n / raw.hands : 0)}</em><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i></div>`;
   const yTop = yAll.filter(x => x[1]).slice(0, 5);
   const yTopHtml = yTop.length ? `<div class="ps-yh">${yHd}</div>` + yTop.map(yRow).join('') : `<span class="ps-none">—</span>`;
   const yAllPage = `<div class="ps-yall"><div class="ps-yall-h"><h4>${esc(t('psYakuList'))}</h4><small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small></div>
@@ -897,6 +916,7 @@ function renderStats() {
 }
 $('#pstats').addEventListener('click', e => {
   const tb = e.target.closest('[data-tab]'); if (tb && PS) { PS.tab = tb.dataset.tab; PS.yakuAll = false; SND.pick(); renderStats(); return; }
+  const yk = e.target.closest('[data-yk]'); if (yk) { yakuTip(yk); return; }
   if (e.target.closest('[data-a=yall]') && PS) { PS.yakuAll = true; SND.pick(); renderStats(); return; }
   if (e.target.closest('[data-a=yback]') && PS) { PS.yakuAll = false; SND.pick(); renderStats(); return; }
   if (e.target.closest('[data-a=close]') || !e.target.closest('.ps-main, .ps-art')) { SND.pick(); closeStats(); }
