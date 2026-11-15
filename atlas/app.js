@@ -1094,6 +1094,7 @@
     if (window.Historia) Historia.sync(g, lang, { art: artSrc, name: gname, fit: fitStage });   // the ヒストリア button (atlas/historia.js) opens this game's history
     if (window.AtlasGameList && AtlasGameList.sheetActions) { AtlasGameList.sheetActions($('bvi'), t); fitStage(); }   // PC: ヒストリア under ルール + ring; tags on one quiet line
     playSheet(g, ad, r);
+    if (!ad) menuSheet(g);
   }
   // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)
   // a level's name: kyu / dan for the Japanese games (shogi, go, gomoku); the games numbered Lv.1 … Lv.N (their name is 'Lv.N')
@@ -1362,6 +1363,25 @@
       const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
       sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { pref[id + ':rtTc:' + opp] = b.dataset.v; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
     };
+  }
+  // a game played on its own page (ソリティア, 2026-11-16): on phones あそぶ opens a sheet of the page's own menus — each game type,
+  // today's deal of it — that open the page straight there (solitaire/app.js ?v= · ?daily=). Names: the page's own i18n (a sandbox).
+  const MENU_SHEET = { solitaire: { list: ['klondike', 'spider', 'freecell', 'golf', 'tripeaks', 'pyramid'], i18n: '../solitaire/i18n.js?v=31' } };
+  let menuI18n = {};
+  function menuSheet(g) {
+    const M = MENU_SHEET[g.id], old = $('bvMS'); if (old) old.remove();
+    if (!M || !matchMedia('(max-width: 819px)').matches) return;
+    const a = $('bvi').querySelector('.R .act > a.btn.big'); if (!a) return;
+    const ps = document.createElement('div'); ps.className = 'psheet'; ps.id = 'bvMS'; $('bv').appendChild(ps);
+    const T = (k, d) => { const I = menuI18n[g.id] || {}; return (I[lang] && I[lang][k]) || (I.en && I.en[k]) || d || ''; };
+    const draw = () => {
+      ps.innerHTML = `<div class="ps-in bvi" role="dialog" aria-label="${esc(t('ps.h'))}"><div class="ps-main"><div class="ps-h">${esc(t('ps.h'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div>
+        <div class="ps-sec"><div class="ps-t">${esc(gname(g))}</div><div class="msl">${M.list.map(v => `<div class="msi"><div class="mst"><b>${esc(T('v.' + v, v))}</b><small>${esc(T('vg.' + v))}</small></div><div class="msb"><a class="btn big2 pk" href="../${g.href}?v=${v}">${esc(t('ps.go'))} ▶</a><a class="btn ghost big2 pk" href="../${g.href}?daily=${v}">${esc(T('side.daily', '★'))}</a></div></div>`).join('')}</div></div></div></div>`;
+    };
+    draw();
+    if (!menuI18n[g.id]) fetch(M.i18n).then(r => r.text()).then(x => { try { menuI18n[g.id] = new Function(x + '\n;return I18N;')(); } catch (e) { menuI18n[g.id] = {}; } if ($('bvMS') === ps) draw(); }).catch(() => {});
+    a.addEventListener('click', e => { e.preventDefault(); ps.classList.add('on'); try { SFX.tap && SFX.tap(); } catch (x) {} });
+    ps.addEventListener('click', e => { if (e.target === ps || e.target.closest('.lvs-x')) ps.classList.remove('on'); });
   }
   function playSheet(g, ad, r) {
     const old = $('bvPS'); if (old) old.remove();
