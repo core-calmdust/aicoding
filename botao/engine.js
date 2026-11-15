@@ -420,7 +420,7 @@
       lv, dirs: lv < 4 ? 8 : lv < 9 ? 12 : lv < 15 ? 18 : 24, pows: lv < 6 ? 3 : 4, reach: 22 + k * 22,
       angSd: (2.4 - Math.pow(k, .8) * 2.1) * Math.PI / 180, vSd: .07 - k * .045,   // a weak hand is still a hand: it aims, a little off (2026-11-15: 4.6° looked random)
       robust: lv < 8 ? 3 : lv < 15 ? 4 : 5, pickTop: lv <= 3 ? 4 : lv <= 7 ? 2 : 1,
-      shotBar: .3 + k * .08,           // how sure of a goal it wants before declaring a shot (its own hand counted in)
+      shotBar: .22 + k * .06,          // how sure of a goal it wants before declaring a shot (its own hand counted in)
       keepSd: 6 - k * 5.4,             // the goalkeeper's placing error (cm)
       defend: k,                       // weight on its own shape when the ball is lost
     };
@@ -521,7 +521,9 @@
   function attackValue(s, t, rem, sk) {
     const gy = goalY(1 - t), bx = s.ball.x, by = s.ball.y, sd = sk ? Math.max(.004, sk.angSd) : .02;
     const dGoal = Math.hypot(bx, by - gy);
-    let v = (H - Math.abs(by - gy)) * .35;   // ground gained
+    // ground gained — but only up to a shooting distance: driving the ball on to the goal line or into a corner
+    // leaves no angle for a shot (2026-11-15 ユーザー：ゴール手前でシュートしない — the AI kept the ball 2–15 cm from the line, wide)
+    let v = Math.min(H - Math.abs(by - gy), H - 16) * .35;
     v -= Math.abs(bx) * .08;
     // control: the surest next touch — a button of t's near the ball (the chance this hand meets it), better from behind it.
     // Possession only lasts while a button can reach the ball, so this weighs more than the ground gained.
@@ -535,7 +537,14 @@
     // a shot on: close, in front, the line to goal open
     if (inAttack(t, by) && dGoal < 75) {
       const open = laneOpen(s, bx, by, gy, t);
-      v += (1 - dGoal / 75) * 45 * open * ctrl * (rem > 0 ? 1 : .2) * Math.max(.25, 1 - Math.abs(bx) / 45);
+      // a good place to shoot from: 14–45 cm out, the goal seen face on (not from the side), and a button of t's
+      // behind the ball on the line to goal, close enough to shoot with
+      const dist = dGoal < 14 ? .35 + .65 * dGoal / 14 : dGoal < 45 ? 1 : Math.max(0, 1 - (dGoal - 45) / 30);
+      const face = Math.max(0, Math.abs(by - gy) / Math.max(1, dGoal) - .35) / .65;
+      let aim = 0; const ux = -bx / Math.max(1, dGoal), uy = (gy - by) / Math.max(1, dGoal);
+      for (let i = t * 10; i < t * 10 + 10; i++) { const b = s.b[i], dx = bx - b.x, dy = by - b.y, d = Math.hypot(dx, dy); if (d > 26 || d < .1) continue;
+        const c = (dx * ux + dy * uy) / d; if (c > .55) aim = Math.max(aim, (c - .55) / .45 * (d < 16 ? 1 : 1 - (d - 16) / 10)); }
+      v += 75 * open * dist * face * (.35 + .65 * aim) * (rem > 0 ? 1 : .2);
     }
     v += Math.min(rem, 12) * 1.5;
     return v;
