@@ -12,7 +12,7 @@ import { specFromRows, solveFirst, legalSetup, after, pt, T } from './lessons-li
 import { createRequire } from 'module';
 const { keepLangs } = createRequire(import.meta.url)('../../tools/keep-langs.js');   // keeps ru / zh-TW / id / tr of unchanged texts
 const DIR = path.dirname(new URL(import.meta.url).pathname), FILE = path.join(DIR, '..', 'lessons.json');
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'], LANGS14 = LANGS.concat(['ru', 'zh-TW', 'id', 'tr']);
 const L = (...a) => Object.fromEntries(LANGS.map((l, i) => [l, a[i]]));
 const E9 = '.........', E7 = '.......';
 
@@ -138,6 +138,12 @@ for (const [id, items] of Object.entries(RAMPS)) {
     return item;
   });
 }
+// (2026-11-15) the lessons that had none: explain on the problem + the same problem mirrored (lessons-ramps-new.mjs)
+{ const { build } = await import('./lessons-ramps-new.mjs'), NEWR = build(JSON.parse(fs.readFileSync(FILE, 'utf8')));
+  for (const [id, items] of Object.entries(NEWR)) { items.forEach((it, j) => { const tag = id + '#' + j, bad = legalSetup(it.s); if (bad.length) errors.push(tag + ': stones without liberties ' + bad);
+      for (const q of it.ok || []) pt(q, it.s.n);
+      if (it.k === 'explain') { txt(tag, it.t, 't'); txt(tag, it.body, 'body'); } else { txt(tag, it.g, 'g'); txt(tag, it.h, 'h'); txt(tag, it.y, 'y'); } });
+    out[id] = items; } }
 if (errors.length) { console.log(errors.join('\n')); console.log(errors.length + ' problem(s)'); process.exit(1); }
 if (!process.argv.includes('--check')) {
   const D = JSON.parse(fs.readFileSync(FILE, 'utf8'));
