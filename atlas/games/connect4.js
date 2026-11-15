@@ -153,6 +153,8 @@
     }
     ctx.el.addEventListener('click', onClick);
     ctx.el.addEventListener('pointermove', onMove);
+    const onPcs = e => { if (!stopped && e.detail && e.detail.id === 'connect4') set.retile(); };   // (the board view's 駒 row during a game)
+    addEventListener('atlas-pieces', onPcs);
 
     /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-15): a position (a move string) from the puzzles / lessons, no AI; the caller
        judges each move (ctx.pz.moved(c, info)) and plays the replies (api.pz.play). The engine's jobs come from the game's worker, asked
@@ -249,7 +251,7 @@
       stop() {
         stopped = true; jid++;
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
-        ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointermove', onMove);
+        ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('atlas-pieces', onPcs);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null; if (pzW) pzW.terminate(); pzW = null;
         set.dispose();
         if (window.Atlas3D.connect4._dbg === dbg) delete window.Atlas3D.connect4._dbg;

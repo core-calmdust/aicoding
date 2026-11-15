@@ -139,6 +139,7 @@
     }
     const cellXY = (c, r) => [colX(c) * S0, rowY(r) * g.scale.y];
     function dispose() { stopped = true; g.remove(layer, marks); Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(m => m.dispose()); }
-    return { sync, win, marks: setMarks, colAt, cellXY, dispose, count: () => tiles.size, knock, fanfare, rowY, colX, TOPY, SPAWN };
+    function retile() { const want = new Map(); for (const [k, t] of tiles) want.set(k, t.c); for (const t of tiles.values()) layer.remove(t.o); tiles.clear(); for (const [k, p] of want) { const [c, r] = k.split(',').map(Number); tiles.set(k, { o: make(p, c, r), c: p }); } kick(300); }   // (another tile set: the same position in the new tiles)
+    return { retile, sync, win, marks: setMarks, colAt, cellXY, dispose, count: () => tiles.size, knock, fanfare, rowY, colX, TOPY, SPAWN };
   };
 })();

@@ -12,7 +12,7 @@ P = lambda *a: os.path.join(ROOT, *a)
 
 PNG = ['images/atlas/shogi-pieces*.png', 'images/atlas/shogi-glyphs*.png', 'atlas/img/shanghai-art.png', 'atlas/img/shanghai-glyphs.png',
        'comet-plus/title-logo.png']
-HALF = ['images/atlas/shogi3d/*.webp', 'images/atlas/xiangqi3d/*.webp', 'images/atlas/chess3d/*.webp', 'images/atlas/reversi3d/*.webp', 'images/atlas/goban3d/*.webp', 'images/atlas/hex3d/*.webp', 'images/atlas/shogi-kaya.webp', 'peg/img/bd-*.webp']
+HALF = ['images/atlas/shogi3d/*.webp', 'images/atlas/xiangqi3d/*.webp', 'images/atlas/chess3d/*.webp', 'images/atlas/reversi3d/*.webp', 'images/atlas/goban3d/*.webp', 'images/atlas/hex3d/*.webp', 'images/atlas/c43d/*.webp', 'images/atlas/shogi-kaya.webp', 'peg/img/bd-*.webp']
 HALF_MIN = 0              # （ページは名前だけで -h を読むので、一覧のフォルダは全部作る）
 TEXB_MIN = 2_000_000      # tex/b のサイズ名なしの key はこれ以上だけ
 TEXB_SKIP = {'dtPage1', 'dtPageG1'}   # key に縮尺が入っている（スマホは dtPage0.5 を手描きするので読まない）
