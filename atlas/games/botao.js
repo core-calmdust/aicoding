@@ -220,10 +220,16 @@
       if (!st || over) return;
       if (phase === 'keeper') { boxArea(E.keeperBox(keeperSide, st.restart === 'pen')); kick(120); return; }
       if (phase === 'place') {
-        // where the taker may stand: a band round the ball (a half for a throw-in, a quarter for a corner)
-        const arc = E.takerArc(st), a0 = arc ? arc[0] - arc[1] : 0, len = arc ? 2 * arc[1] : 2 * Math.PI;
-        const g = new TH.RingGeometry(E.TAKER_NEAR * K, E.TAKER_FAR * K, 40, 1, -(a0 + len), len); g.rotateX(-Math.PI / 2);
-        const zm = new TH.Mesh(g, MAT.box), [zx, zz] = wx(st.ball.x, st.ball.y); zm.position.set(zx, Y + .008, zz); zm.renderOrder = 3; zm.userData.own = g; gd.add(zm); const b = st.b[st.taker], r = flat(b.x, b.y, D.RB + 1.2, MAT.sel); r.userData.pulse = 1; kick(120); return; }
+        // the taker goes round the ball (2026-11-15 ユーザー：ボールを軸にコマをドラッグすると飛ばす方向にラインが出て、その周辺を
+        // コマがぐるぐる位置取りする): a thin track where it may stand (a half for a throw-in, a quarter for a corner) and
+        // a gold line from the ball the way the taker would send it
+        const arc = E.takerArc(st), a0 = arc ? arc[0] - arc[1] : 0, len = arc ? 2 * arc[1] : 2 * Math.PI, bx = st.ball.x, by = st.ball.y;
+        const g = new TH.RingGeometry((ORBIT - .3) * K, (ORBIT + .3) * K, 48, 1, -(a0 + len), len); g.rotateX(-Math.PI / 2);
+        const zm = new TH.Mesh(g, MAT.boxL), [zx, zz] = wx(bx, by); zm.position.set(zx, Y + .008, zz); zm.renderOrder = 3; zm.userData.own = g; gd.add(zm);
+        const b = st.b[st.taker], a = Math.atan2(by - b.y, bx - b.x), L = 30;
+        dots(bx + Math.cos(a) * (D.RBALL + 1), by + Math.sin(a) * (D.RBALL + 1), bx + Math.cos(a) * L, by + Math.sin(a) * L, MAT.ball, .6);
+        arrow(bx + Math.cos(a) * L, by + Math.sin(a) * L, a, .01, MAT.ball, .6);
+        const r = flat(b.x, b.y, D.RB + 1.2, MAT.sel); r.userData.pulse = 1; kick(120); return; }
       if (phase !== 'aim' || !human(st.pos)) return;
       // which buttons may play: the picked one gold, the one under the pointer white, one that may not (3 in a row) red
       for (let i = st.pos * 10; i < st.pos * 10 + 10; i++) {
@@ -249,7 +255,7 @@
     /* ---------- HUD, toasts, the call button ---------- */
     const css = document.createElement('style');
     css.textContent = `.hud .btp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.66;white-space:nowrap}.hud .btp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .btp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .btp b{font-size:17px}.hud .btm{display:flex;flex-direction:column;align-items:center;min-width:0;font-weight:800;font-size:13px;line-height:1.25;max-width:44vw;text-align:center}.hud .btm small{font-size:11.5px;font-weight:800;opacity:.75;white-space:nowrap}.hud .btm span{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.bttask{position:fixed;left:50%;top:calc(80px + env(safe-area-inset-top));transform:translateX(-50%);z-index:85;max-width:min(92vw,520px);padding:8px 18px;border-radius:99px;background:rgba(255,255,255,.96);color:#1d2133;font-weight:900;font-size:15px;pointer-events:none;text-align:center;white-space:nowrap;box-shadow:0 0 0 2.5px ${THEME},0 6px 18px rgba(0,0,0,.25)}.bttask[hidden]{display:none}
+.bttask{position:fixed;left:50%;top:calc(80px + env(safe-area-inset-top));transform:translateX(-50%);z-index:85;max-width:min(92vw,560px);padding:8px 18px;border-radius:20px;background:rgba(255,255,255,.96);color:#1d2133;font-weight:900;font-size:15px;line-height:1.35;pointer-events:none;text-align:center;width:max-content;box-sizing:border-box;text-wrap:balance;box-shadow:0 0 0 2.5px ${THEME},0 6px 18px rgba(0,0,0,.25)}.bttask[hidden]{display:none}
 .bttoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px ${THEME},0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.bttoast.good{color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.bttoast.bad{color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}
 .btgoal{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);z-index:92;pointer-events:none;font:900 clamp(54px,11vw,120px)/1 "Fredoka",system-ui,sans-serif;color:#ffd84a;letter-spacing:.04em;text-shadow:0 4px 0 #b8741a,0 10px 30px rgba(0,0,0,.45);opacity:0;transition:transform .35s cubic-bezier(.2,1.6,.4,1),opacity .25s;white-space:nowrap}.btgoal.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .btpow{position:fixed;z-index:6;pointer-events:none;padding:4px 10px;border-radius:99px;background:rgba(20,22,34,.82);color:#fff;font-weight:900;font-size:14px;transform:translate(-50%,-150%);white-space:nowrap}
@@ -300,7 +306,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=8'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=9'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -322,11 +328,31 @@
     const TRAIL = [];
     function neonFlash(k) { flashT = Math.max(flashT, performance.now() + 120 * (k || 1)); }
     function neonStrobe() { strobeT = performance.now() + 1800; }
+    // the ball's light trail: every look gets a faint one, the neon look a rainbow glow (2026-11-15 ユーザー)
+    let trailRaf = 0, trailLast = null;
+    function trailPaint(m, now) {
+      const k = (now - m.userData.t0) / 650; if (k >= 1) { m.visible = false; return; }
+      const neon = U.look === 'neon', mat = m.material, bl = neon ? TH.AdditiveBlending : TH.NormalBlending;
+      if (mat.blending !== bl) { mat.blending = bl; mat.needsUpdate = true; }
+      if (neon) mat.color.setHSL(((now / 2600) % 1 + k * .3) % 1, 1, .6); else mat.color.setRGB(1, 1, 1);
+      mat.opacity = (1 - k) * (neon ? .55 : .22);
+      const r = D.RBALL * (neon ? 1.6 - k * .8 : 1 - k * .5) * K; m.scale.set(r, 1, r);
+    }
+    function trailTick() {
+      cancelAnimationFrame(trailRaf);
+      const step = () => { if (stopped) return; const now = performance.now(); let on = false;
+        TRAIL.forEach(m => { if (m.visible) { trailPaint(m, now); on = on || m.visible; } });
+        kick(60); if (on) trailRaf = requestAnimationFrame(step); };
+      trailRaf = requestAnimationFrame(step);
+    }
     function neonTrail(x, y) {
-      if (!U || U.look !== 'neon') return;
+      if (!U) return;
+      if (trailLast && Math.hypot(x - trailLast[0], y - trailLast[1]) < D.RBALL * .7) return;
+      trailLast = [x, y];
       let m = TRAIL.find(q => !q.visible);
-      if (!m) { if (TRAIL.length >= 28) m = TRAIL.reduce((a, q) => q.userData.t0 < a.userData.t0 ? q : a); else { m = new TH.Mesh(GEO.disc, new TH.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, blending: TH.AdditiveBlending })); m.renderOrder = 3; board.add(m); TRAIL.push(m); } }
+      if (!m) { if (TRAIL.length >= 40) m = TRAIL.reduce((a, q) => q.userData.t0 < a.userData.t0 ? q : a); else { m = new TH.Mesh(GEO.disc, new TH.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false })); m.renderOrder = 3; board.add(m); TRAIL.push(m); } }
       const [a, b] = wx(x, y); m.position.set(a, Y + .006, b); m.userData.t0 = performance.now(); m.visible = true;
+      trailPaint(m, m.userData.t0); trailTick();
     }
     // the materials are shared (the board picker, the showcase): put them back as the model made them
     function neonReset() {
@@ -336,7 +362,7 @@
       const bm = ballG && ballG.children[0] && ballG.children[0].material; if (bm && bm.emissive) bm.emissive.setRGB(1, 1, 1);
     }
     function neonTick() {
-      cancelAnimationFrame(waveT); if (stopped || !U || U.look !== 'neon') { TRAIL.forEach(m => { m.visible = false; }); return; }
+      cancelAnimationFrame(waveT); if (stopped) TRAIL.forEach(m => { m.visible = false; }); if (stopped || !U || U.look !== 'neon') return;
       const c = new TH.Color(), c2 = new TH.Color();
       const step = () => { if (stopped) return; waveT = requestAnimationFrame(step);
         if (U.look !== 'neon' || document.hidden || !document.hasFocus()) return;
@@ -348,8 +374,6 @@
         // the buttons breathe in their team colours; the ball cycles
         bt.forEach((g, i) => { const m = g.userData && g.userData.mat; if (m) m.emissiveIntensity = .45 + .3 * (.5 + .5 * Math.sin(now / 420 + i * .7)) + (strobe ? .6 : 0); });
         const bm = ballG && ballG.children[0] && ballG.children[0].material; if (bm && bm.emissive) { c2.setHSL((h * 3) % 1, 1, .65); bm.emissive.copy(c2); }
-        // the trail fades out
-        TRAIL.forEach(m => { if (!m.visible) return; const k = (now - m.userData.t0) / 650; if (k >= 1) { m.visible = false; return; } m.material.color.setHSL((h + k * .3) % 1, 1, .6); m.material.opacity = (1 - k) * .55; const r = D.RBALL * (1.6 - k * .8) * K; m.scale.set(r, 1, r); });
         kick(160); };
       waveT = requestAnimationFrame(step);
     }
@@ -366,7 +390,7 @@
           for (let i = 0; i < 20; i++) put(bt[i], f[i * 2], f[i * 2 + 1]);
           const bx = f[40], by = f[41];
           put(ballG, bx, by);
-          if (U.look === 'neon' && Math.hypot(bx - f0[40], by - f0[41]) > .05) neonTrail(bx, by);
+          if (fi === 0) trailLast = null; if (Math.hypot(bx - f0[40], by - f0[41]) > .05) neonTrail(bx, by);
           const dd = Math.hypot(bx - f0[40], by - f0[41]); if (dd > 1e-4 && ballG.children[0]) { const ax = new TH.Vector3(f0[41] - by, 0, bx - f0[40]).normalize(); ballG.children[0].rotateOnWorldAxis(ax, dd / D.RBALL * -1); }
           follow(bx, by, 'slow');
           while (ev < sim.events.length && sim.events[ev].t <= el) {
@@ -405,7 +429,7 @@
 
     /* ---------- the flow ---------- */
     const vOf = pw => E.powV(pw), powOf = v => E.vPow(v);
-    const RESTART = { kick: 'kick', fk: 'fk', ifk: 'ifk', throw: 'throw', corner: 'corner', gk: 'gk', pen: 'pen', keeper: 'keeperball' };
+    const RESTART = { kick: 'kick', fk: 'fk', ifk: 'ifk', throw: 'throw', corner: 'corner', gk: 'gk', pen: 'pen', keeper: 'keeperball2' };
     async function flick(move) {
       if (over || stopped || busy) return;
       busy = true; phase = 'anim'; clearGuides(); aim = null; hintMove = null; powEl.hidden = true; callBar(null); task(''); beaconAt(false); drag = null; pan = { x: 0, y: 0 };
@@ -523,6 +547,9 @@
       if (w >= 0) { st.over = true; st.winner = w; return end(); }
       later(next, 300);
     }
+    // the taker's place from a pointer: round the ball at ORBIT, on the side of the pointer
+    const ORBIT = D.RB + D.RBALL + 3;
+    function orbitTo(q) { const dx = q.x - st.ball.x, dy = q.y - st.ball.y, d = Math.hypot(dx, dy); if (d < .5) return; E.setTaker(st, st.ball.x + dx / d * ORBIT, st.ball.y + dy / d * ORBIT); syncAll(); showGuides(); }
     function placeDone() {
       if (stopped || phase !== 'place') return;
       callBar(null); clearGuides(); phase = 'aim'; sel = st.taker;
@@ -629,7 +656,7 @@
       ptrs.add(e.pointerId);
       if (ptrs.size > 1) { if (drag) cancel(); return; }
       if (phase === 'anim' && !stopped) { speedUp = 3; return; }
-      if (phase === 'place' && !stopped && st && human(st.pos)) { const q = toCm(e); if (!q) return; pdrag = true; E.setTaker(st, q.x, q.y); syncAll(); showGuides(); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); return; }
+      if (phase === 'place' && !stopped && st && human(st.pos)) { const q = toCm(e); if (!q) return; pdrag = true; orbitTo(q); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); return; }
       if (phase === 'keeper' && !stopped && st && human(keeperSide)) { const q = toCm(e); if (!q) return; kdrag = true; moveKeeper(q); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); return; }
       if (stopped || !st || cardEl) return;
       const q = toCm(e);
@@ -647,7 +674,7 @@
       showGuides(); e.preventDefault();
     }
     function pm(e) {
-      if (pdrag) { const q = toCm(e); if (q) { E.setTaker(st, q.x, q.y); syncAll(); showGuides(); } return; }
+      if (pdrag) { const q = toCm(e); if (q) orbitTo(q); return; }
       if (kdrag) { const q = toCm(e); if (q) moveKeeper(q); return; }
       if (!drag) {
         if (e.pointerType === 'mouse' && canAim()) { const q = toCm(e); const h = q ? btnAt(q, 1) : -1; if (h !== hov) { hov = h; showGuides(); } ctx.el.style.cursor = h >= 0 || (q && nearSel(e, q)) ? 'grab' : 'move'; }
