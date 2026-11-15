@@ -44,7 +44,7 @@
   /* ---------- the line-up: a 4-3-3, side 0 in its own half (y > 0); side 1 the same turned round ---------- */
   const SHAPE = [[-34, 58], [-11, 62], [11, 62], [34, 58], [-24, 36], [0, 40], [24, 36], [-30, 18], [0, 22], [30, 18]];
   // at the kick-off the side kicking off has its centre forward just behind the ball, the wingers up at the circle
-  const KICK = [[-34, 58], [-11, 62], [11, 62], [34, 58], [-24, 36], [0, 40], [24, 36], [-22, 9], [0, RB + RBALL + .25], [22, 9]];
+  const KICK = [[-34, 58], [-11, 62], [11, 62], [34, 58], [-24, 36], [0, 40], [24, 36], [-22, 9], [0, RB + RBALL + 2.5], [22, 9]];   // the kicker 2.5 cm behind the ball: from touching it, only a straight push was possible
   function lineup(s, kicker) {
     s.b = [];
     for (let t = 0; t < 2; t++) {
@@ -94,7 +94,7 @@
     // the taker: the nearest own button stands just behind the ball (towards the goal it attacks)
     let best = -1, bd = 1e9;
     for (let i = t * 10; i < t * 10 + 10; i++) { const d = Math.hypot(s.b[i].x - x, s.b[i].y - y); if (d < bd) { bd = d; best = i; } }
-    const gx = 0, gy = goalY(1 - t), a = Math.atan2(gy - y, gx - x), dd = RB + RBALL + 1.2;
+    const gx = 0, gy = goalY(1 - t), a = Math.atan2(gy - y, gx - x), dd = RB + RBALL + 3;   // a gap: the closer the taker, the narrower the angles it can play
     const want = { x: x - Math.cos(a) * dd, y: y - Math.sin(a) * dd };
     if (kind === 'throw' || kind === 'corner') { const sx = Math.sign(x) || 1; if (kind === 'throw') { want.x = x + sx * dd; want.y = y; } else { want.x = x + sx * dd * .7; want.y = y + Math.sign(y) * dd * .7; } }
     const p = freeSpot(s, best, want.x, want.y); s.b[best].x = p.x; s.b[best].y = p.y;
@@ -379,28 +379,35 @@
   }
   // a flick from button i that sends the ball off at angle th to roll about `dist` cm (ghost-ball aim; the button slows
   // on its way to the ball, a cut passes on less). null when the cut is too fine or the button cannot get there.
-  function aimRoll(s, i, th, dist) {
+  function aimRoll(s, i, th, dist, soft) {
     const b = s.b[i], gx = s.ball.x - Math.cos(th) * (RB + RBALL), gy = s.ball.y - Math.sin(th) * (RB + RBALL);
     const a = Math.atan2(gy - b.y, gx - b.x), cut = Math.abs(((a - th + 3 * Math.PI) % (2 * Math.PI)) - Math.PI), run = Math.hypot(gx - b.x, gy - b.y);
     if (cut > 1.15 || run < .2) return null;
-    // (it should still be moving when it gets there: a hand that comes up a little short would miss the ball outright)
-    const vc = Math.max(14 + run * .9, ballSpeedFor(dist) / (VB_RATIO * Math.max(.4, Math.cos(cut)))), v = Math.sqrt(vc * vc + 2 * DEC_B * (run + .3)) * 1.01;
+    // (it should still be moving when it gets there: a hand that comes up a little short would miss the ball outright.
+    // soft — the player's aim: only a small margin, so a gentle pull is a gentle touch even from a few cm away;
+    // 2026-11-15 ユーザー：強弱が全然つかない — with the AI's margin every touch from a distance rolled 25 cm or more)
+    const vc = Math.max(soft ? 6 + run * .2 : 14 + run * .9, ballSpeedFor(dist) / (VB_RATIO * Math.max(.4, Math.cos(cut)))), v = Math.sqrt(vc * vc + 2 * DEC_B * (run + .3)) * 1.01;
     if (Math.sqrt(2 * DEC_B * (run + 1.5)) > VMAX) return null;
     return { i, ang: a, v: Math.min(VMAX, v) };
   }
   // the player's aim (2026-11-15): you point where the BALL should go and how far; this finds the flick that does it.
   // th: the ball's direction, dist: how far it should roll (cm). Beyond the finest cut a button can make, the direction is
   // pulled in toward the straight line (limited: true). null when the button cannot reach the ball.
-  function ballAim(s, i, th, dist) {
+  function ballAim(s, i, th, dist) {   // (the player's: soft)
     const b = s.b[i], a0 = Math.atan2(s.ball.y - b.y, s.ball.x - b.x);
     let rel = ((th - a0 + 3 * Math.PI) % (2 * Math.PI)) - Math.PI, limited = false;
     const LIM = 1.2; if (Math.abs(rel) > LIM) { rel = Math.sign(rel) * LIM; limited = true; }
     for (let k = 0; k < 16; k++) {
-      const c = aimRoll(s, i, a0 + rel, dist);
+      const c = aimRoll(s, i, a0 + rel, dist, true);
       if (c) return { i, ang: c.ang, v: c.v, th: a0 + rel, limited };
       rel *= .88; limited = true;
     }
     return null;
+  }
+  // the ball directions button i can play (it can only cut the ball so finely): [a0 - lo, a0 + hi] around the straight line a0
+  function aimCone(s, i, dist) {
+    const b = s.b[i], a0 = Math.atan2(s.ball.y - b.y, s.ball.x - b.x), side = sg => { let r = 0; for (let k = 1; k <= 70; k++) { const q = k * .02 * sg; if (!aimRoll(s, i, a0 + q, dist, true)) break; r = k * .02; } return r; };
+    return { a0, lo: side(-1), hi: side(1) };
   }
   // where the ball goes for a flick (no wobble): its path from the contact to its first knock or its stop,
   // and what stops the path ('rim' | 'piece' | 'keep' | 'post' | 'goal' | 'out' | 'stop'); null when the ball is not hit first
@@ -417,7 +424,18 @@
     if (t0 < 0) t0 = 0;
     const path = [], i0 = Math.max(0, Math.floor(t0 * FPS)), i1 = Math.min(F.length - 1, Math.ceil(t1 * FPS));
     for (let k = i0; k <= i1; k++) path.push([F[k][BALL * 2], F[k][BALL * 2 + 1]]);
-    return { sim, path, end, first: sim.first };
+    // the flicked button's own way (2026-11-15 ユーザー：自分がどっちに飛ぶのかわからない): from its start, past the ball,
+    // to where it stops or first knocks something else (bEnd 'stop' | 'piece' | 'rim' | 'keep' | 'post')
+    let u1 = sim.dur, bEnd = 'stop';
+    for (const e of sim.events) {
+      if (e.t <= t0 + .05) continue;
+      const mine = e.i === move.i || e.a === move.i || e.b === move.i; if (!mine) continue;
+      if (e.k === 'ball' && (e.a === BALL || e.b === BALL)) continue;   // touching the ball again on its way
+      u1 = e.t; bEnd = e.k === 'ball' ? 'piece' : e.k; break;
+    }
+    const bpath = [], j1 = Math.min(F.length - 1, Math.ceil(u1 * FPS));
+    for (let k = 0; k <= j1; k++) bpath.push([F[k][move.i * 2], F[k][move.i * 2 + 1]]);
+    return { sim, path, end, bpath, bEnd, first: sim.first };
   }
   // how well side t stands with the ball where it is (bigger = better for t), the ball t's to play
   function attackValue(s, t, rem, sk) {
@@ -595,7 +613,7 @@
     const c = clone(s); return setKeeper(c, t, k.x, k.y);
   }
 
-  const api = { _int: { candidates: (s, sk) => candidates(s, sk), evaluate: (a, b, c, d) => evaluate(a, b, c, d), attackValue: (a, b, c, d) => attackValue(a, b, c, d), skill: l => skill(l) }, DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor, aimTrace, wobble, perform, think, skill, speedFor, aimAt, aimRoll, ballAim, ballPath, ballSpeedFor, rollOf, clone, laneOpen };
+  const api = { _int: { candidates: (s, sk) => candidates(s, sk), evaluate: (a, b, c, d) => evaluate(a, b, c, d), attackValue: (a, b, c, d) => attackValue(a, b, c, d), skill: l => skill(l) }, DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor, aimTrace, wobble, perform, think, skill, speedFor, aimAt, aimRoll, ballAim, aimCone, ballPath, ballSpeedFor, rollOf, clone, laneOpen };
   root.BotaoEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : this);

@@ -48,7 +48,7 @@
   const V = {
     ja: {
       'ball.t': 'ボールとボタン', 'ball.b': '自分のボタンは手前の<b>10個</b>、ゴールには<b>キーパー</b>（四角いブロック）。ボールは小さなフェルトの玉だよ。', 'ball.k': 'ボールをタップしてね', 'ball.ok': 'それ！ 主役はこの小さなボール', 'ball.ng': 'ボールは金色の目印の下にある白い玉だよ',
-      'flick.t': 'はじいてみよう', 'flick.b': 'ボタンを選んで、<b>ボールを飛ばしたい向きと反対に引っぱって離す</b>。<b>緑の線</b>がボールの通り道。引くほど強くはじけるよ。', 'flick.k': '光るボタンでボールをはじこう', 'flick.ok': 'ナイスタッチ！ これが1タッチ', 'flick.ng': 'ボールに当たらなかった… 緑の線を見ながらもう一回',
+      'flick.t': 'はじいてみよう', 'flick.b': 'ボタンを選んで、<b>ボールを飛ばしたい向きと反対に引っぱって離す</b>。<b>金色の矢印</b>がボールの向き、<b>白い点線</b>が自分のボタンの向き。どこまで飛ぶかは引く強さ次第だよ。', 'flick.k': '光るボタンでボールをはじこう', 'flick.ok': 'ナイスタッチ！ これが1タッチ', 'flick.ng': 'ボールに当たらなかった… 緑の線を見ながらもう一回',
       'touch.t': '12タッチと3回まで', 'touch.b': 'ボールを持つ間は<b>全部で12タッチ</b>まで、<b>同じボタンは3回続けて</b>まで。だから<b>パスでつなぐ</b>のがコツ。', 'touch.k': 'ボールを光る輪の中へパスしよう', 'touch.ok': 'つながった！ 次はそのボタンで打てるね', 'touch.ng': '惜しい！ 輪をめがけてもう一度',
       'foul.t': '相手に先に当てたら反則', 'foul.b': 'はじいたボタンが<b>ボールより先に相手のボタンに当たると反則</b>。相手のフリーキックになるよ。ボールが相手に当たったら相手ボールに。', 'foul.k': 'タップしてお手本を見てね', 'foul.ok': 'ね、ピーッと笛。ボールを先に触るのが大事！',
       'shoot.t': 'シュート宣言', 'shoot.b': 'ボールが<b>相手側の半分</b>に入ったら、<b>「シュート宣言」</b>をしてからシュート。宣言のないゴールは無効だよ。相手がキーパーを構えたら、すき間を狙おう！', 'shoot.k': 'キーパーの横のすき間へシュート！', 'shoot.ok': 'ゴーーール！', 'shoot.ng': '止められた！ キーパーのいない側を狙って',
@@ -58,7 +58,7 @@
     },
     en: {
       'ball.t': 'The ball and the buttons', 'ball.b': 'Your <b>10 buttons</b> are at the near end, with a <b>goalkeeper</b> (the square block) in each goal. The ball is a little felt ball.', 'ball.k': 'Tap the ball', 'ball.ok': 'That’s it! This little ball is the star', 'ball.ng': 'The ball is the little white one under the gold marker',
-      'flick.t': 'Give it a flick', 'flick.b': 'Pick a button and <b>pull back away from where you want the ball to go</b>, then let go. The <b>green line</b> is the ball’s path — pull further for a harder flick.', 'flick.k': 'Flick the glowing button into the ball', 'flick.ok': 'Nice touch! That’s one touch', 'flick.ng': 'It missed the ball… watch the green line and try again',
+      'flick.t': 'Give it a flick', 'flick.b': 'Pick a button and <b>pull back away from where you want the ball to go</b>, then let go. The <b>gold arrow</b> is the ball’s way, the <b>white dots</b> your button’s. How far it goes is up to how hard you pull.', 'flick.k': 'Flick the glowing button into the ball', 'flick.ok': 'Nice touch! That’s one touch', 'flick.ng': 'It missed the ball… watch the green line and try again',
       'touch.t': '12 touches, 3 in a row', 'touch.b': 'While you have the ball you get <b>12 touches in all</b>, and <b>no more than 3 in a row with one button</b>. So the trick is to <b>pass</b>.', 'touch.k': 'Pass the ball into the glowing ring', 'touch.ok': 'Connected! Now that button can play it', 'touch.ng': 'Close! Aim for the ring again',
       'foul.t': 'Hit them first: a foul', 'foul.b': 'If your button <b>hits an opponent’s button before the ball, it’s a foul</b> — a free kick to them. And a ball that comes off their button is their ball.', 'foul.k': 'Tap to watch', 'foul.ok': 'Hear the whistle? Always touch the ball first!',
       'shoot.t': 'Calling a shot', 'shoot.b': 'Once the ball is <b>in their half</b>, <b>call a shot</b> before you shoot — a goal without a call doesn’t count. They set their keeper, then you aim for the gap!', 'shoot.k': 'Shoot into the gap beside the keeper!', 'shoot.ok': 'GOOOOL!', 'shoot.ng': 'Saved! Aim for the side the keeper isn’t',
@@ -68,7 +68,7 @@
     },
     zh: {
       'ball.t': '球和纽扣', 'ball.b': '你的<b>10颗纽扣</b>在靠近你的一边，每个球门前有一个<b>守门员</b>（方块）。球是一颗小小的毛毡球。', 'ball.k': '点一下球', 'ball.ok': '对！主角就是这颗小球', 'ball.ng': '球是金色标记下面那颗白色小球哦',
-      'flick.t': '弹弹看', 'flick.b': '选一颗纽扣，<b>朝想让球去的反方向拉，然后松开</b>。<b>绿线</b>就是球的路线，拉得越远越用力。', 'flick.k': '用发光的纽扣把球弹出去', 'flick.ok': '漂亮！这就是1次触球', 'flick.ng': '没碰到球…看着绿线再来一次',
+      'flick.t': '弹弹看', 'flick.b': '选一颗纽扣，<b>朝想让球去的反方向拉，然后松开</b>。<b>金色箭头</b>是球的方向，<b>白色虚线</b>是自己纽扣的方向。能走多远看你拉得多用力。', 'flick.k': '用发光的纽扣把球弹出去', 'flick.ok': '漂亮！这就是1次触球', 'flick.ng': '没碰到球…看着绿线再来一次',
       'touch.t': '12次触球，连续3次', 'touch.b': '控球期间<b>总共12次触球</b>，<b>同一颗纽扣最多连续3次</b>。所以诀窍是<b>传球</b>。', 'touch.k': '把球传进发光的圈里', 'touch.ok': '传到了！现在那颗纽扣可以出球了', 'touch.ng': '可惜！再瞄准圈试试',
       'foul.t': '先碰对方就犯规', 'foul.b': '你的纽扣<b>先碰到对方纽扣再碰球，就是犯规</b>，对方得到任意球。球碰到对方纽扣后就是对方的球。', 'foul.k': '点击看示范', 'foul.ok': '听到哨声了吧？一定要先碰球！',
       'shoot.t': '宣布射门', 'shoot.b': '球进入<b>对方半场</b>后，先<b>宣布射门</b>再射。没宣布的进球不算。对方摆好守门员后，瞄准空隙！', 'shoot.k': '把球射进守门员旁的空隙！', 'shoot.ok': '球进啦——！', 'shoot.ng': '被扑出了！瞄准守门员不在的那边',
@@ -78,7 +78,7 @@
     },
     'zh-TW': {
       'ball.t': '球和鈕扣', 'ball.b': '你的<b>10顆鈕扣</b>在靠近你的一邊，每個球門前有一個<b>守門員</b>（方塊）。球是一顆小小的毛氈球。', 'ball.k': '點一下球', 'ball.ok': '對！主角就是這顆小球', 'ball.ng': '球是金色標記下面那顆白色小球喔',
-      'flick.t': '彈彈看', 'flick.b': '選一顆鈕扣，<b>朝想讓球去的反方向拉，然後放開</b>。<b>綠線</b>就是球的路線，拉得越遠越用力。', 'flick.k': '用發光的鈕扣把球彈出去', 'flick.ok': '漂亮！這就是1次觸球', 'flick.ng': '沒碰到球…看著綠線再來一次',
+      'flick.t': '彈彈看', 'flick.b': '選一顆鈕扣，<b>朝想讓球去的反方向拉，然後放開</b>。<b>金色箭頭</b>是球的方向，<b>白色虛線</b>是自己鈕扣的方向。能走多遠看你拉得多用力。', 'flick.k': '用發光的鈕扣把球彈出去', 'flick.ok': '漂亮！這就是1次觸球', 'flick.ng': '沒碰到球…看著綠線再來一次',
       'touch.t': '12次觸球，連續3次', 'touch.b': '控球期間<b>總共12次觸球</b>，<b>同一顆鈕扣最多連續3次</b>。所以訣竅是<b>傳球</b>。', 'touch.k': '把球傳進發光的圈裡', 'touch.ok': '傳到了！現在那顆鈕扣可以出球了', 'touch.ng': '可惜！再瞄準圈試試',
       'foul.t': '先碰對方就犯規', 'foul.b': '你的鈕扣<b>先碰到對方鈕扣再碰球，就是犯規</b>，對方得到自由球。球碰到對方鈕扣後就是對方的球。', 'foul.k': '點一下看示範', 'foul.ok': '聽到哨聲了吧？一定要先碰球！',
       'shoot.t': '宣告射門', 'shoot.b': '球進入<b>對方半場</b>後，先<b>宣告射門</b>再射。沒宣告的進球不算。對方擺好守門員後，瞄準空隙！', 'shoot.k': '把球射進守門員旁的空隙！', 'shoot.ok': '球進啦——！', 'shoot.ng': '被撲出了！瞄準守門員不在的那邊',
@@ -88,7 +88,7 @@
     },
     ko: {
       'ball.t': '공과 단추', 'ball.b': '내 단추는 앞쪽의 <b>10개</b>, 골문엔 <b>골키퍼</b>(네모난 블록)가 있어. 공은 작은 펠트 공이야.', 'ball.k': '공을 탭해 봐', 'ball.ok': '그거! 주인공은 이 작은 공', 'ball.ng': '공은 금색 표시 아래의 하얀 작은 공이야',
-      'flick.t': '튕겨 보자', 'flick.b': '단추를 고르고 <b>공을 보내고 싶은 방향의 반대로 당겼다가 놓아</b>. <b>초록 선</b>이 공이 가는 길이야. 많이 당길수록 세게.', 'flick.k': '빛나는 단추로 공을 튕기자', 'flick.ok': '나이스 터치! 이게 1터치야', 'flick.ng': '공에 안 맞았어… 초록 선을 보며 다시',
+      'flick.t': '튕겨 보자', 'flick.b': '단추를 고르고 <b>공을 보내고 싶은 방향의 반대로 당겼다가 놓아</b>. <b>금색 화살표</b>는 공의 방향, <b>흰 점선</b>은 내 단추의 방향. 얼마나 멀리 갈지는 당기는 힘에 달렸어.', 'flick.k': '빛나는 단추로 공을 튕기자', 'flick.ok': '나이스 터치! 이게 1터치야', 'flick.ng': '공에 안 맞았어… 초록 선을 보며 다시',
       'touch.t': '12터치와 연속 3번', 'touch.b': '공을 가진 동안 <b>모두 12터치</b>까지, <b>같은 단추는 연속 3번</b>까지. 그래서 <b>패스로 잇는</b> 게 요령이야.', 'touch.k': '공을 빛나는 고리 안으로 패스하자', 'touch.ok': '연결됐어! 이제 그 단추로 칠 수 있어', 'touch.ng': '아깝다! 고리를 노려 다시',
       'foul.t': '상대에 먼저 맞으면 반칙', 'foul.b': '튕긴 단추가 <b>공보다 먼저 상대 단추에 맞으면 반칙</b>. 상대 프리킥이야. 공이 상대 단추에 맞으면 상대 공.', 'foul.k': '탭해서 시범을 봐', 'foul.ok': '삐익! 공을 먼저 건드리는 게 중요해!',
       'shoot.t': '슛 선언', 'shoot.b': '공이 <b>상대 진영</b>에 들어가면 <b>「슛 선언」</b>을 하고 슛. 선언 없는 골은 무효야. 상대가 골키퍼를 세우면 빈틈을 노려!', 'shoot.k': '골키퍼 옆 빈틈으로 슛!', 'shoot.ok': '고오오올!', 'shoot.ng': '막혔어! 골키퍼가 없는 쪽을 노려',
@@ -98,7 +98,7 @@
     },
     es: {
       'ball.t': 'La pelota y los botones', 'ball.b': 'Tus <b>10 botones</b> están en tu lado y en cada arco hay un <b>portero</b> (el bloque cuadrado). La pelota es una bolita de fieltro.', 'ball.k': 'Toca la pelota', 'ball.ok': '¡Eso! La estrella es esta bolita', 'ball.ng': 'La pelota es la bolita blanca bajo la marca dorada',
-      'flick.t': 'Dale un toque', 'flick.b': 'Elige un botón y <b>tira en sentido contrario a donde quieres mandar la pelota</b>; luego suelta. La <b>línea verde</b> es el camino de la pelota: cuanto más tiras, más fuerte.', 'flick.k': 'Golpea la pelota con el botón brillante', 'flick.ok': '¡Buen toque! Eso es un toque', 'flick.ng': 'No tocó la pelota… mira la línea verde e inténtalo otra vez',
+      'flick.t': 'Dale un toque', 'flick.b': 'Elige un botón y <b>tira en sentido contrario a donde quieres mandar la pelota</b>; luego suelta. La <b>flecha dorada</b> es la dirección de la pelota y los <b>puntos blancos</b> la de tu botón. Lo lejos que llegue depende de cuánto tires.', 'flick.k': 'Golpea la pelota con el botón brillante', 'flick.ok': '¡Buen toque! Eso es un toque', 'flick.ng': 'No tocó la pelota… mira la línea verde e inténtalo otra vez',
       'touch.t': '12 toques, 3 seguidos', 'touch.b': 'Mientras tienes la pelota, <b>12 toques en total</b> y <b>no más de 3 seguidos con un botón</b>. El truco es <b>pasar</b>.', 'touch.k': 'Pasa la pelota al anillo brillante', 'touch.ok': '¡Conectado! Ahora ese botón puede jugarla', 'touch.ng': '¡Casi! Apunta otra vez al anillo',
       'foul.t': 'Tocar primero al rival es falta', 'foul.b': 'Si tu botón <b>toca un botón rival antes que la pelota, es falta</b>: tiro libre para ellos. Y si la pelota rebota en un rival, es suya.', 'foul.k': 'Toca para verlo', 'foul.ok': '¿Oíste el silbato? ¡Primero la pelota!',
       'shoot.t': 'Anunciar el tiro', 'shoot.b': 'Con la pelota <b>en su campo</b>, <b>anuncia el tiro</b> antes de tirar: un gol sin anunciar no vale. Ellos colocan al portero y tú buscas el hueco.', 'shoot.k': '¡Tira al hueco junto al portero!', 'shoot.ok': '¡GOOOOL!', 'shoot.ng': '¡Atajada! Apunta al lado libre',
@@ -108,7 +108,7 @@
     },
     fr: {
       'ball.t': 'La balle et les boutons', 'ball.b': 'Tes <b>10 boutons</b> sont de ton côté, et un <b>gardien</b> (le bloc carré) garde chaque but. La balle est une petite boule de feutre.', 'ball.k': 'Touche la balle', 'ball.ok': 'C’est ça ! La vedette, c’est cette petite balle', 'ball.ng': 'La balle, c’est la petite boule blanche sous le repère doré',
-      'flick.t': 'Une pichenette', 'flick.b': 'Choisis un bouton et <b>tire dans le sens opposé à là où tu veux envoyer la balle</b>, puis lâche. La <b>ligne verte</b> montre le trajet de la balle : plus tu tires, plus c’est fort.', 'flick.k': 'Frappe la balle avec le bouton lumineux', 'flick.ok': 'Belle touche ! Ça fait une touche', 'flick.ng': 'Raté… suis la ligne verte et recommence',
+      'flick.t': 'Une pichenette', 'flick.b': 'Choisis un bouton et <b>tire dans le sens opposé à là où tu veux envoyer la balle</b>, puis lâche. La <b>flèche dorée</b> montre la direction de la balle, les <b>pointillés blancs</b> celle de ton bouton. La distance dépend de la force avec laquelle tu tires.', 'flick.k': 'Frappe la balle avec le bouton lumineux', 'flick.ok': 'Belle touche ! Ça fait une touche', 'flick.ng': 'Raté… suis la ligne verte et recommence',
       'touch.t': '12 touches, 3 de suite', 'touch.b': 'Quand tu as la balle, <b>12 touches en tout</b>, et <b>pas plus de 3 de suite avec un bouton</b>. L’astuce : <b>faire des passes</b>.', 'touch.k': 'Passe la balle dans l’anneau lumineux', 'touch.ok': 'Reçue ! Ce bouton peut jouer maintenant', 'touch.ng': 'Presque ! Vise l’anneau encore',
       'foul.t': 'Toucher l’adversaire d’abord : faute', 'foul.b': 'Si ton bouton <b>touche un bouton adverse avant la balle, c’est une faute</b> : coup franc pour eux. Une balle qui rebondit sur un adversaire est à lui.', 'foul.k': 'Touche pour voir', 'foul.ok': 'Tu entends le sifflet ? La balle d’abord !',
       'shoot.t': 'Annoncer le tir', 'shoot.b': 'Une fois la balle <b>dans leur moitié</b>, <b>annonce le tir</b> avant de tirer : un but non annoncé ne compte pas. Ils placent leur gardien, puis tu vises le trou !', 'shoot.k': 'Tire dans l’espace à côté du gardien !', 'shoot.ok': 'BUUUT !', 'shoot.ng': 'Arrêté ! Vise le côté sans gardien',
@@ -118,7 +118,7 @@
     },
     pt: {
       'ball.t': 'A bola e os botões', 'ball.b': 'Seus <b>10 botões</b> ficam do seu lado e cada gol tem um <b>goleiro</b> (o bloco retangular). A bola é uma bolinha de feltro.', 'ball.k': 'Toque na bola', 'ball.ok': 'Isso! A estrela é essa bolinha', 'ball.ng': 'A bola é a bolinha branca embaixo da marca dourada',
-      'flick.t': 'Dê um toque', 'flick.b': 'Escolha um botão e <b>puxe para o lado contrário de onde quer mandar a bola</b>; depois solte. A <b>linha verde</b> é o caminho da bola: quanto mais puxar, mais forte.', 'flick.k': 'Toque na bola com o botão brilhante', 'flick.ok': 'Belo toque! Isso é um toque', 'flick.ng': 'Não pegou na bola… olhe a linha verde e tente de novo',
+      'flick.t': 'Dê um toque', 'flick.b': 'Escolha um botão e <b>puxe para o lado contrário de onde quer mandar a bola</b>; depois solte. A <b>seta dourada</b> é a direção da bola e os <b>pontos brancos</b> a do seu botão. A distância depende de quanto você puxa.', 'flick.k': 'Toque na bola com o botão brilhante', 'flick.ok': 'Belo toque! Isso é um toque', 'flick.ng': 'Não pegou na bola… olhe a linha verde e tente de novo',
       'touch.t': '12 toques, 3 seguidos', 'touch.b': 'Com a bola, você tem <b>12 toques ao todo</b> e <b>no máximo 3 seguidos com o mesmo botão</b>. O segredo é <b>tocar a bola</b> de botão em botão.', 'touch.k': 'Passe a bola para dentro do anel', 'touch.ok': 'Chegou! Agora aquele botão pode jogar', 'touch.ng': 'Quase! Mire no anel de novo',
       'foul.t': 'Bateu antes no adversário: falta', 'foul.b': 'Se o seu botão <b>bate num botão adversário antes da bola, é falta</b>: tiro livre para eles. E bola que bate no adversário fica com ele.', 'foul.k': 'Toque para ver', 'foul.ok': 'Ouviu o apito? Sempre a bola primeiro!',
       'shoot.t': 'Avisar o chute', 'shoot.b': 'Com a bola <b>no campo de ataque</b>, <b>avise o chute</b> antes de chutar — gol sem aviso não vale. Eles arrumam o goleiro e você mira no canto!', 'shoot.k': 'Chute no espaço ao lado do goleiro!', 'shoot.ok': 'GOOOOL!', 'shoot.ng': 'Defendeu! Mire no lado sem goleiro',
@@ -128,7 +128,7 @@
     },
     de: {
       'ball.t': 'Ball und Knöpfe', 'ball.b': 'Deine <b>10 Knöpfe</b> stehen auf deiner Seite, in jedem Tor ein <b>Torwart</b> (der eckige Block). Der Ball ist eine kleine Filzkugel.', 'ball.k': 'Tippe auf den Ball', 'ball.ok': 'Genau! Der Star ist diese kleine Kugel', 'ball.ng': 'Der Ball ist die kleine weiße Kugel unter der goldenen Markierung',
-      'flick.t': 'Schnipp mal', 'flick.b': 'Wähle einen Knopf und <b>zieh ihn entgegen der Richtung, in die der Ball soll</b>, dann loslassen. Die <b>grüne Linie</b> ist der Weg des Balls – je weiter du ziehst, desto kräftiger.', 'flick.k': 'Spiel den Ball mit dem leuchtenden Knopf', 'flick.ok': 'Schöne Berührung! Das ist eine Berührung', 'flick.ng': 'Ball verfehlt… achte auf die grüne Linie und versuch es nochmal',
+      'flick.t': 'Schnipp mal', 'flick.b': 'Wähle einen Knopf und <b>zieh ihn entgegen der Richtung, in die der Ball soll</b>, dann loslassen. Der <b>goldene Pfeil</b> zeigt die Richtung des Balls, die <b>weißen Punkte</b> die deines Knopfes. Wie weit er rollt, hängt davon ab, wie fest du ziehst.', 'flick.k': 'Spiel den Ball mit dem leuchtenden Knopf', 'flick.ok': 'Schöne Berührung! Das ist eine Berührung', 'flick.ng': 'Ball verfehlt… achte auf die grüne Linie und versuch es nochmal',
       'touch.t': '12 Berührungen, 3 am Stück', 'touch.b': 'Solange du am Ball bist: <b>12 Berührungen insgesamt</b>, <b>höchstens 3 am Stück mit einem Knopf</b>. Der Trick: <b>Pässe spielen</b>.', 'touch.k': 'Pass den Ball in den leuchtenden Ring', 'touch.ok': 'Angekommen! Jetzt darf dieser Knopf spielen', 'touch.ng': 'Fast! Zieh nochmal auf den Ring',
       'foul.t': 'Erst den Gegner treffen: Foul', 'foul.b': 'Trifft dein Knopf <b>einen gegnerischen Knopf vor dem Ball, ist es ein Foul</b> – Freistoß für sie. Prallt der Ball vom Gegner ab, gehört er ihm.', 'foul.k': 'Tippen zum Zuschauen', 'foul.ok': 'Hörst du die Pfeife? Immer zuerst den Ball!',
       'shoot.t': 'Schuss ansagen', 'shoot.b': 'Ist der Ball <b>in ihrer Hälfte</b>, <b>sag den Schuss an</b>, bevor du schießt – ein Tor ohne Ansage zählt nicht. Sie stellen den Torwart, dann zielst du auf die Lücke!', 'shoot.k': 'Schieß in die Lücke neben dem Torwart!', 'shoot.ok': 'TOOOOR!', 'shoot.ng': 'Gehalten! Ziel auf die freie Seite',
@@ -138,7 +138,7 @@
     },
     ru: {
       'ball.t': 'Мяч и пуговицы', 'ball.b': 'Твои <b>10 пуговиц</b> на твоей стороне, в каждых воротах — <b>вратарь</b> (прямоугольный брусок). Мяч — маленький фетровый шарик.', 'ball.k': 'Нажми на мяч', 'ball.ok': 'Да! Главный герой — этот шарик', 'ball.ng': 'Мяч — маленький белый шарик под золотой меткой',
-      'flick.t': 'Щёлкни', 'flick.b': 'Выбери пуговицу и <b>оттяни её в сторону, противоположную той, куда должен полететь мяч</b>, затем отпусти. <b>Зелёная линия</b> — путь мяча: чем дальше оттянешь, тем сильнее удар.', 'flick.k': 'Ударь по мячу светящейся пуговицей', 'flick.ok': 'Отличное касание! Это одно касание', 'flick.ng': 'Мимо мяча… смотри на зелёную линию и попробуй снова',
+      'flick.t': 'Щёлкни', 'flick.b': 'Выбери пуговицу и <b>оттяни её в сторону, противоположную той, куда должен полететь мяч</b>, затем отпусти. <b>Золотая стрелка</b> — направление мяча, <b>белый пунктир</b> — направление твоей пуговицы. Как далеко он улетит, зависит от силы.', 'flick.k': 'Ударь по мячу светящейся пуговицей', 'flick.ok': 'Отличное касание! Это одно касание', 'flick.ng': 'Мимо мяча… смотри на зелёную линию и попробуй снова',
       'touch.t': '12 касаний, 3 подряд', 'touch.b': 'Пока мяч у тебя — <b>всего 12 касаний</b>, и <b>не больше 3 подряд одной пуговицей</b>. Секрет — <b>пасовать</b>.', 'touch.k': 'Отдай пас в светящееся кольцо', 'touch.ok': 'Пас дошёл! Теперь бьёт та пуговица', 'touch.ng': 'Почти! Целься в кольцо ещё раз',
       'foul.t': 'Задел соперника первым — фол', 'foul.b': 'Если твоя пуговица <b>задела пуговицу соперника раньше мяча — это фол</b>, штрафной сопернику. А мяч, отскочивший от соперника, — его.', 'foul.k': 'Нажми, чтобы посмотреть', 'foul.ok': 'Слышишь свисток? Сначала — мяч!',
       'shoot.t': 'Объявить удар', 'shoot.b': 'Когда мяч <b>на их половине</b>, <b>объяви удар</b> и только потом бей — гол без объявления не засчитают. Они ставят вратаря, а ты целься в просвет!', 'shoot.k': 'Бей в просвет рядом с вратарём!', 'shoot.ok': 'ГОООЛ!', 'shoot.ng': 'Отбил! Целься туда, где нет вратаря',
@@ -148,7 +148,7 @@
     },
     tr: {
       'ball.t': 'Top ve düğmeler', 'ball.b': '<b>10 düğmen</b> senin tarafında, her kalede bir <b>kaleci</b> (dikdörtgen blok) var. Top küçük bir keçe top.', 'ball.k': 'Topa dokun', 'ball.ok': 'İşte o! Yıldız bu küçük top', 'ball.ng': 'Top, altın işaretin altındaki küçük beyaz top',
-      'flick.t': 'Bir fiske', 'flick.b': 'Bir düğme seç, <b>topun gitmesini istediğin yönün tersine çek ve bırak</b>. <b>Yeşil çizgi</b> topun yolu: ne kadar çekersen o kadar sert.', 'flick.k': 'Parlayan düğmeyle topa vur', 'flick.ok': 'Güzel dokunuş! Bu bir dokunuş', 'flick.ng': 'Topa değmedi… yeşil çizgiye bakıp tekrar dene',
+      'flick.t': 'Bir fiske', 'flick.b': 'Bir düğme seç, <b>topun gitmesini istediğin yönün tersine çek ve bırak</b>. <b>Altın ok</b> topun yönü, <b>beyaz noktalar</b> düğmenin yönü. Ne kadar uzağa gideceği ne kadar sert çektiğine bağlı.', 'flick.k': 'Parlayan düğmeyle topa vur', 'flick.ok': 'Güzel dokunuş! Bu bir dokunuş', 'flick.ng': 'Topa değmedi… yeşil çizgiye bakıp tekrar dene',
       'touch.t': '12 dokunuş, art arda 3', 'touch.b': 'Top sendeyken <b>toplam 12 dokunuş</b>, <b>bir düğmeyle art arda en fazla 3</b>. Püf noktası <b>pas yapmak</b>.', 'touch.k': 'Topu parlayan halkaya pasla', 'touch.ok': 'Ulaştı! Şimdi o düğme oynayabilir', 'touch.ng': 'Az kaldı! Halkayı tekrar hedefle',
       'foul.t': 'Önce rakibe çarpmak faul', 'foul.b': 'Düğmen <b>toptan önce rakip düğmeye çarparsa faul</b> olur, serbest vuruş onlara. Rakipten seken top da onundur.', 'foul.k': 'İzlemek için dokun', 'foul.ok': 'Düdüğü duydun mu? Önce top!',
       'shoot.t': 'Şut ilan etmek', 'shoot.b': 'Top <b>rakip yarı sahadayken</b> önce <b>şut ilan et</b>, sonra vur — ilansız gol geçersiz. Onlar kaleciyi yerleştirir, sen boşluğu hedeflersin!', 'shoot.k': 'Kalecinin yanındaki boşluğa vur!', 'shoot.ok': 'GOOOL!', 'shoot.ng': 'Kurtardı! Kalecinin olmadığı tarafı hedefle',
@@ -158,7 +158,7 @@
     },
     id: {
       'ball.t': 'Bola dan kancing', 'ball.b': '<b>10 kancingmu</b> ada di sisimu, dan tiap gawang dijaga <b>kiper</b> (balok persegi). Bolanya bola kecil dari kain flanel.', 'ball.k': 'Ketuk bolanya', 'ball.ok': 'Betul! Bintangnya bola kecil ini', 'ball.ng': 'Bolanya bola putih kecil di bawah penanda emas',
-      'flick.t': 'Coba sentil', 'flick.b': 'Pilih kancing, lalu <b>tarik ke arah kebalikan tujuan bola</b> dan lepaskan. <b>Garis hijau</b> adalah jalur bola — makin jauh ditarik, makin kuat.', 'flick.k': 'Sentil bola dengan kancing yang bersinar', 'flick.ok': 'Sentuhan bagus! Itu satu sentuhan', 'flick.ng': 'Meleset dari bola… lihat garis hijau dan coba lagi',
+      'flick.t': 'Coba sentil', 'flick.b': 'Pilih kancing, lalu <b>tarik ke arah kebalikan tujuan bola</b> dan lepaskan. <b>Panah emas</b> adalah arah bola dan <b>titik-titik putih</b> arah kancingmu. Seberapa jauh tergantung seberapa kuat kamu menarik.', 'flick.k': 'Sentil bola dengan kancing yang bersinar', 'flick.ok': 'Sentuhan bagus! Itu satu sentuhan', 'flick.ng': 'Meleset dari bola… lihat garis hijau dan coba lagi',
       'touch.t': '12 sentuhan, 3 berturut-turut', 'touch.b': 'Selama menguasai bola: <b>12 sentuhan total</b>, <b>maksimal 3 berturut-turut dengan satu kancing</b>. Kuncinya <b>mengoper</b>.', 'touch.k': 'Oper bola ke dalam cincin bersinar', 'touch.ok': 'Sampai! Kini kancing itu bisa main', 'touch.ng': 'Hampir! Bidik cincinnya lagi',
       'foul.t': 'Kena lawan dulu: pelanggaran', 'foul.b': 'Kalau kancingmu <b>mengenai kancing lawan sebelum bola, itu pelanggaran</b> — tendangan bebas untuk mereka. Bola yang memantul dari lawan jadi milik lawan.', 'foul.k': 'Ketuk untuk melihat', 'foul.ok': 'Dengar peluitnya? Selalu bola dulu!',
       'shoot.t': 'Mengumumkan tembakan', 'shoot.b': 'Saat bola <b>di separuh lawan</b>, <b>umumkan tembakan</b> dulu baru menembak — gol tanpa pengumuman tak sah. Mereka mengatur kiper, lalu kamu bidik celahnya!', 'shoot.k': 'Tembak ke celah di samping kiper!', 'shoot.ok': 'GOOOL!', 'shoot.ng': 'Ditepis! Bidik sisi yang kosong',
@@ -168,7 +168,7 @@
     },
     hi: {
       'ball.t': 'गेंद और बटन', 'ball.b': 'तुम्हारे <b>10 बटन</b> तुम्हारी तरफ़ हैं, हर गोल में एक <b>गोलकीपर</b> (चौकोर ब्लॉक)। गेंद एक छोटी फ़ेल्ट की गेंद है।', 'ball.k': 'गेंद को छुओ', 'ball.ok': 'हाँ! असली सितारा यही छोटी गेंद है', 'ball.ng': 'गेंद सुनहरे निशान के नीचे वाली छोटी सफ़ेद गेंद है',
-      'flick.t': 'मारकर देखो', 'flick.b': 'एक बटन चुनो और <b>जिधर गेंद भेजनी है उसकी उलटी ओर खींचकर छोड़ दो</b>। <b>हरी रेखा</b> गेंद का रास्ता है — जितना खींचोगे, उतनी ज़ोर से।', 'flick.k': 'चमकते बटन से गेंद मारो', 'flick.ok': 'बढ़िया टच! यह एक टच हुआ', 'flick.ng': 'गेंद नहीं लगी… हरी रेखा देखकर फिर कोशिश करो',
+      'flick.t': 'मारकर देखो', 'flick.b': 'एक बटन चुनो और <b>जिधर गेंद भेजनी है उसकी उलटी ओर खींचकर छोड़ दो</b>। <b>सुनहरा तीर</b> गेंद की दिशा है और <b>सफ़ेद बिंदु</b> तुम्हारे बटन की। कितनी दूर जाएगी, यह खींचने की ताक़त पर है।', 'flick.k': 'चमकते बटन से गेंद मारो', 'flick.ok': 'बढ़िया टच! यह एक टच हुआ', 'flick.ng': 'गेंद नहीं लगी… हरी रेखा देखकर फिर कोशिश करो',
       'touch.t': '12 टच, लगातार 3', 'touch.b': 'गेंद तुम्हारे पास हो तो <b>कुल 12 टच</b>, और <b>एक बटन से लगातार 3 से ज़्यादा नहीं</b>। तरकीब है <b>पास देना</b>।', 'touch.k': 'गेंद को चमकते घेरे में पास करो', 'touch.ok': 'पहुँच गई! अब वह बटन खेल सकता है', 'touch.ng': 'लगभग! घेरे पर फिर निशाना लगाओ',
       'foul.t': 'पहले विरोधी से टकराना फ़ाउल', 'foul.b': 'तुम्हारा बटन <b>गेंद से पहले विरोधी बटन से टकराए तो फ़ाउल</b> — उन्हें फ़्री किक। और विरोधी से टकराकर लौटी गेंद उन्हीं की।', 'foul.k': 'देखने के लिए छुओ', 'foul.ok': 'सीटी सुनी? पहले गेंद, हमेशा!',
       'shoot.t': 'शॉट की घोषणा', 'shoot.b': 'गेंद <b>उनके आधे हिस्से</b> में हो तो पहले <b>शॉट घोषित करो</b>, फिर मारो — बिना घोषणा का गोल नहीं गिना जाता। वे कीपर सेट करते हैं, फिर तुम ख़ाली जगह पर निशाना लगाओ!', 'shoot.k': 'कीपर के बगल की ख़ाली जगह में शॉट!', 'shoot.ok': 'गोओओल!', 'shoot.ng': 'बचा लिया! जिधर कीपर नहीं, उधर मारो',
@@ -178,7 +178,7 @@
     },
     ar: {
       'ball.t': 'الكرة والأزرار', 'ball.b': 'أزرارك <b>العشرة</b> في جهتك، وفي كل مرمى <b>حارس</b> (القطعة المستطيلة). الكرة كرة لبّاد صغيرة.', 'ball.k': 'المس الكرة', 'ball.ok': 'هذه هي! النجمة هي هذه الكرة الصغيرة', 'ball.ng': 'الكرة هي الكرة البيضاء الصغيرة تحت العلامة الذهبية',
-      'flick.t': 'انقر الزر', 'flick.b': 'اختر زرًا و<b>اسحبه عكس الاتجاه الذي تريد أن تذهب إليه الكرة</b> ثم اتركه. <b>الخط الأخضر</b> هو طريق الكرة، وكلما سحبت أكثر كانت الضربة أقوى.', 'flick.k': 'اضرب الكرة بالزر المضيء', 'flick.ok': 'لمسة جميلة! هذه لمسة واحدة', 'flick.ng': 'لم يلمس الكرة… انظر إلى الخط الأخضر وأعد المحاولة',
+      'flick.t': 'انقر الزر', 'flick.b': 'اختر زرًا و<b>اسحبه عكس الاتجاه الذي تريد أن تذهب إليه الكرة</b> ثم اتركه. <b>السهم الذهبي</b> اتجاه الكرة و<b>النقاط البيضاء</b> اتجاه زرك. المسافة تعتمد على قوة السحب.', 'flick.k': 'اضرب الكرة بالزر المضيء', 'flick.ok': 'لمسة جميلة! هذه لمسة واحدة', 'flick.ng': 'لم يلمس الكرة… انظر إلى الخط الأخضر وأعد المحاولة',
       'touch.t': '12 لمسة و3 متتالية', 'touch.b': 'ما دامت الكرة معك لك <b>12 لمسة إجمالًا</b>، و<b>3 متتالية فقط بالزر نفسه</b>. السر هو <b>التمرير</b>.', 'touch.k': 'مرّر الكرة إلى الحلقة المضيئة', 'touch.ok': 'وصلت! الآن يلعبها ذلك الزر', 'touch.ng': 'قريب! صوّب نحو الحلقة مرة أخرى',
       'foul.t': 'لمس الخصم أولًا خطأ', 'foul.b': 'إذا <b>لمس زرك زر الخصم قبل الكرة فهو خطأ</b> — ركلة حرة لهم. والكرة التي ترتد من الخصم تصبح له.', 'foul.k': 'المس لتشاهد', 'foul.ok': 'سمعت الصافرة؟ الكرة أولًا دائمًا!',
       'shoot.t': 'إعلان التسديد', 'shoot.b': 'حين تصبح الكرة <b>في نصف ملعبهم</b>، <b>أعلن التسديد</b> ثم سدّد — الهدف بلا إعلان لا يُحتسب. يضعون حارسهم ثم تصوّب نحو الفراغ!', 'shoot.k': 'سدّد في الفراغ بجانب الحارس!', 'shoot.ok': 'جووول!', 'shoot.ng': 'تصدّى لها! صوّب إلى الجهة الخالية',
@@ -250,25 +250,51 @@
     /* ---------- guides ---------- */
     const gd = new TH.Group(); board.add(gd);
     const basic = (c, o) => new TH.MeshBasicMaterial({ color: c, transparent: true, opacity: o, toneMapped: false, depthWrite: false });
-    const MAT = { path: basic(0xffffff, .9), ball: basic(0x3df59a, .95), sel: basic(0xffd34d, .95), goal: basic(0x3df59a, .95), goalF: basic(0x3df59a, .22), arrow: basic(0xffffff, .95), box: basic(0x3df59a, .2), shot: basic(0xff5a5a, .95), no: basic(0xff5a5a, .8) };
+    const MAT = { path: basic(0xffffff, .9), ball: basic(0xffd34d, .95), ghost: basic(0xffffff, .3), ghostB: basic(0xffd34d, .45), knock: basic(0xffa040, .9), fan: basic(0xffffff, .1), fanL: basic(0xffffff, .45), sel: basic(0xffffff, .95), goal: basic(0x3df59a, .95), goalF: basic(0x3df59a, .22), arrow: basic(0xffffff, .95), box: basic(0x3df59a, .2), shot: basic(0xff5a5a, .95), no: basic(0xff5a5a, .8) };
     const GEO = { bar: new TH.BoxGeometry(1, .004, 1), ring: new TH.TorusGeometry(1, .07, 6, 40), cone: new TH.ConeGeometry(.06, .16, 3), disc: new TH.CircleGeometry(1, 36) };
     GEO.ring.rotateX(Math.PI / 2); GEO.cone.rotateX(Math.PI / 2); GEO.disc.rotateX(-Math.PI / 2);
-    function clearGuides() { while (gd.children.length) gd.remove(gd.children[0]); kick(100); }
+    function clearGuides() { while (gd.children.length) { const m = gd.children[0]; if (m.userData.own) m.userData.own.dispose(); gd.remove(m); } kick(100); }
     function bar(x0, y0, x1, y1, wid, mat, lift) { const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy); if (len < .05) return; const m = new TH.Mesh(GEO.bar, mat), [a, b] = wx((x0 + x1) / 2, (y0 + y1) / 2); m.position.set(a, Y + (lift || .02), b); m.scale.set(len * K, 1, wid * K); m.rotation.y = -Math.atan2(dy, dx); m.renderOrder = 4; gd.add(m); }
     function dots(x0, y0, x1, y1, mat, w) { const len = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.floor(len / 2.2)); for (let i = 0; i < n; i++) { const a = (i + .15) / n, b = (i + .6) / n; bar(x0 + (x1 - x0) * a, y0 + (y1 - y0) * a, x0 + (x1 - x0) * b, y0 + (y1 - y0) * b, w || .45, mat); } }
     // a ring on the cloth (h 0) or round a button at half its height (h BMID: it sits round the piece as you see it)
     const BMID = .7;   // at the height of the button's top face: the ring reads as a halo round the number you look at
     function ring(x, y, r, mat, pul, h) { const m = new TH.Mesh(GEO.ring, mat), [a, b] = wx(x, y); m.position.set(a, Y + (h ? h * K : .012), b); m.scale.set(r * K, 1, r * K); m.userData.pulse = pul ? r : 0; m.renderOrder = 4; gd.add(m); return m; }
     function disc(x, y, r, mat) { const m = new TH.Mesh(GEO.disc, mat), [a, b] = wx(x, y); m.position.set(a, Y + .006, b); m.scale.set(r * K, 1, r * K); m.renderOrder = 3; gd.add(m); return m; }
-    function pathLine(pts, mat, w) { if (!pts || pts.length < 2) return; let px = pts[0][0], py = pts[0][1]; for (let k = 1; k < pts.length; k++) { const [x, y] = pts[k], d = Math.hypot(x - px, y - py); if (d < .9 && k < pts.length - 1) continue; bar(px, py, x, y, w || .8, mat, .025); px = x; py = y; } }
-    // the ball's marker: a gold cone over the ball (the ball is small)
+    function pathLine(pts, mat, w, dotted) {
+      if (!pts || pts.length < 2) return; let px = pts[0][0], py = pts[0][1], run = 0;
+      for (let k = 1; k < pts.length; k++) { const [x, y] = pts[k], d = Math.hypot(x - px, y - py); if (d < (dotted ? .7 : 1.1) && k < pts.length - 1) continue; if (!dotted || Math.floor(run / 2.2) % 2 === 0) bar(px, py, x, y, w, mat, .03); run += d; px = x; py = y; }
+    }
+    // as in the game: the fan of directions this button can play, then where the ball (gold) and the button (white dots) go
+    function fan(i, dist, limited) {
+      const c = E.aimCone(st, i, dist), R0 = 16, a1 = c.a0 - c.lo, a2 = c.a0 + c.hi;
+      if (c.lo + c.hi > .01) { const g = new TH.CircleGeometry(R0 * K, 28, -a2, c.lo + c.hi); g.rotateX(-Math.PI / 2); const m = new TH.Mesh(g, MAT.fan), [x, z] = wx(st.ball.x, st.ball.y); m.position.set(x, Y + .008, z); m.renderOrder = 3; m.userData.own = g; gd.add(m); }
+      for (const a of [a1, a2]) bar(st.ball.x + Math.cos(a) * 1.5, st.ball.y + Math.sin(a) * 1.5, st.ball.x + Math.cos(a) * R0, st.ball.y + Math.sin(a) * R0, .25, limited ? MAT.no : MAT.fanL, .02);
+    }
+    function arrow(x, y, a, len, mat, w, dotted) {
+      const x1 = x + Math.cos(a) * len, y1 = y + Math.sin(a) * len;
+      if (dotted) dots(x, y, x1, y1, mat, w); else bar(x, y, x1, y1, w, mat, .03);
+      for (const s2 of [-1, 1]) { const b2 = a + Math.PI + s2 * .5; bar(x1, y1, x1 + Math.cos(b2) * 2.2, y1 + Math.sin(b2) * 2.2, w, mat, .03); }
+    }
+    // directions only, as in the game: the button's run to the ball (dots) and on (short arrow), the ball's way (gold arrow)
+    function drawMove(mv) {
+      const b = st.b[mv.i], tr = E.aimTrace(st, mv.i, mv.ang);
+      dots(b.x, b.y, tr.gx, tr.gy, MAT.path, .42);
+      if (tr.what !== 'ball') { ring(tr.gx, tr.gy, D.RB, MAT.no, false, BMID); return; }
+      if (Math.hypot(tr.gx - b.x, tr.gy - b.y) > 2) ring(tr.gx, tr.gy, D.RB, MAT.path, false, BMID);
+      const sim = E.simulate(st, mv, { frames: true }), F = sim.frames, N = F.length;
+      let kc = -1; for (const e of sim.events) if (e.k === 'ball' && (e.a === mv.i || e.b === mv.i)) { kc = Math.min(N - 1, Math.round(e.t * 60)); break; }
+      if (kc < 0) return;
+      const k2 = Math.min(N - 1, kc + 3), dir = j => Math.atan2(F[k2][j * 2 + 1] - F[kc][j * 2 + 1], F[k2][j * 2] - F[kc][j * 2]), mvd = j => Math.hypot(F[k2][j * 2] - F[kc][j * 2], F[k2][j * 2 + 1] - F[kc][j * 2 + 1]);
+      if (mvd(20) > .05) arrow(st.ball.x, st.ball.y, dir(20), 20, MAT.ball, .6);
+      if (mvd(mv.i) > .05) arrow(tr.gx, tr.gy, dir(mv.i), 8, MAT.path, .42, true);
+    }
     const beacon = new TH.Mesh(new TH.ConeGeometry(1.15 * K, 2.2 * K, 18), new TH.MeshBasicMaterial({ color: 0xffd34d, transparent: true, opacity: .95, toneMapped: false, depthTest: false, depthWrite: false }));
     beacon.rotation.x = Math.PI; beacon.renderOrder = 9; board.add(beacon);
     const beaconPut = () => { if (!st) return; const [a, b] = wx(st.ball.x, st.ball.y), sc = wholeV ? 1.8 : 1; beacon.scale.setScalar(sc); beacon.position.set(a, Y + (D.RBALL * 2 + 2.6 * sc + Math.sin(performance.now() / 260) * .5) * K, b); };
     function boxArea(B) { const m = new TH.Mesh(GEO.bar, MAT.box), [a, b] = wx((B.x0 + B.x1) / 2, (B.y0 + B.y1) / 2); m.position.set(a, Y + .006, b); m.scale.set((B.x1 - B.x0 + 2 * D.KHW) * K, 1, (B.y1 - B.y0 + 2 * D.KHD) * K); gd.add(m); }
     const SHOT = { from: [-8, 52], to: [3.2, D.H + 1] };   // the keeper page: the shot that comes at your goal
     // your pull points where the BALL goes; this is the flick it makes (as in the game)
-    const distOf = pw => 2 + pw * 150, aimMove = a => { const c = E.ballAim(st, sel, a.ang, distOf(a.pow)); return c ? { i: sel, ang: c.ang, v: c.v } : { i: sel, ang: Math.atan2(st.ball.y - st.b[sel].y, st.ball.x - st.b[sel].x), v: vOf(a.pow) }; };
+    const distOf = pw => 2 + pw * 150, aimMove = a => { const c = E.ballAim(st, sel, a.ang, distOf(a.pow)); return c ? { i: sel, ang: c.ang, v: c.v, limited: c.limited } : { i: sel, ang: Math.atan2(st.ball.y - st.b[sel].y, st.ball.x - st.b[sel].x), v: vOf(a.pow) }; };
     function guides() {
       clearGuides();
       const pg = P();
@@ -278,15 +304,11 @@
         const b = st.b[sel];
         if (!aim) ring(b.x, b.y, D.RB + .9, MAT.sel, true, BMID);
         else {
-          const mv = aimMove(aim), tr = E.aimTrace(st, sel, mv.ang);
-          dots(b.x, b.y, tr.gx, tr.gy, MAT.path, .35);
-          if (tr.what === 'ball') { ring(tr.gx, tr.gy, D.RB, MAT.path, false, BMID); const pv = E.ballPath(st, mv); if (pv.path) pathLine(pv.path, MAT.ball, .85); }
-          else if (tr.what != null) ring(tr.gx, tr.gy, D.RB, MAT.no, false, BMID);
+          const mv = aimMove(aim); fan(sel, distOf(aim.pow), mv.limited); drawMove(mv);
           // the pull: a band from the button back toward the finger, its colour the strength
           const L0 = D.RB + 1.5 + aim.pow * 13, back = aim.ang + Math.PI;
-          MAT.arrow.color.setHSL(.33 - aim.pow * .33, .9, .55);
-          bar(b.x + Math.cos(back) * D.RB, b.y + Math.sin(back) * D.RB, b.x + Math.cos(back) * L0, b.y + Math.sin(back) * L0, 1.2, MAT.arrow, .03);
-          ring(b.x + Math.cos(back) * L0, b.y + Math.sin(back) * L0, .9, MAT.arrow);
+          MAT.arrow.color.setHSL(.55 + aim.pow * .42, .8, .6);
+          bar(b.x + Math.cos(back) * D.RB, b.y + Math.sin(back) * D.RB, b.x + Math.cos(back) * L0, b.y + Math.sin(back) * L0, .7, MAT.arrow, .03);
         }
       }
       kick(120);
