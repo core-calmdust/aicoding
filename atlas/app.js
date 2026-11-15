@@ -1205,7 +1205,7 @@
     const sub = document.createElement('div'); sub.className = 'hdsub'; col.append(ru, sub);
     [rb, hb].forEach(b => { if (b) { b.classList.add('inhd'); sub.appendChild(b); } });
   }
-  const PS_GAMES = { shogi: true, chess: true };
+  const PS_GAMES = new Proxy({}, { get: (_, id) => !!FULL_SKIN[id] });   // (2026-11-16: every game with a full 3D version — the same あそぶ sheet as shogi)
   const pzDone = (id, k) => { try { return !!(window.AtlasPuzzles && AtlasPuzzles.done && AtlasPuzzles.done(id, k)); } catch (e) { return false; } };   // (today's puzzle solved: a ✓ on its button, 2026-11-13)
   const PEG_BEST = { ja: 'ベスト記録', en: 'Best', zh: '最佳纪录', 'zh-TW': '最佳紀錄', ko: '베스트 기록', es: 'Mejor marca', fr: 'Record', pt: 'Melhor marca', de: 'Bestwert', ru: 'Лучший результат', tr: 'En iyi', id: 'Rekor terbaik', hi: 'सर्वश्रेष्ठ', ar: 'أفضل نتيجة' };
   const PEG_FREE = { ja: 'フリー', en: 'Free play', zh: '自由', 'zh-TW': '自由', ko: '자유', es: 'Libre', fr: 'Libre', pt: 'Livre', de: 'Frei', ru: 'Свободно', tr: 'Serbest', id: 'Bebas', hi: 'खुला', ar: 'حر' };
@@ -1371,6 +1371,10 @@
     const body = ps.querySelector('.ps-body'), pa = ps.querySelector('.ps-act');
     ['bvMode', 'bvMBody', 'bvSzRow'].forEach(i => { if ($(i)) body.appendChild($(i)); });
     pa.append($('bvFull')); if ($('bvTable')) pa.append($('bvTable'));
+    if (!$('bvMxProg') && $('bvTable')) {   // (games without the パズル / レッスン tabs, 2026-11-16: the same pair as shogi — gold あそぶ ▶ (this 3D table) · red フル機能で遊ぶ)
+      const tb = $('bvTable'), f = $('bvFull'); pa.prepend(tb); tb.classList.add('psgo'); f.classList.add('psfull');
+      tb.innerHTML = `<b>${esc(t('ps.go'))} ▶</b><small>${esc(t('bv.tableSub'))}</small>`; f.innerHTML = `<b>${esc(t('bv.full'))}</b><small>${esc(t('bv.fullSub2'))}</small>`;
+    }
     const cls = $('bvi').querySelector('.R .act > a.btn');   // 2Dで遊ぶ stays on the card
     act.className = 'act act2';
     const go = document.createElement('button'); go.className = 'btn big'; go.id = 'bvGo'; go.textContent = t('ps.go') + ' ▶'; act.prepend(go);
@@ -2111,7 +2115,7 @@
       // a new place or brightness (here, the きせかえ tab, or a full game's デザイン tab in another tab of the browser): every label follows
       addEventListener('atlas-table', () => {
         renderPlace();
-        const tb = $('bvTable'), b = tb && tb.querySelector('b'); if (b) b.textContent = placeT('play');
+        const tb = $('bvTable'), b = tb && !tb.classList.contains('psgo') && tb.querySelector('b'); if (b) b.textContent = placeT('play');
         const go = document.querySelector('#today [data-go]'); if (go) go.textContent = placeT('go') + ' ▶';
         if (page === 'dress' && dKind === 'table') renderDress();
         else if (!$('bv').classList.contains('on')) render(page);   // (the updates list names the place too; under the board view it is redrawn on close)
