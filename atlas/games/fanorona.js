@@ -82,12 +82,13 @@
   const DKA = ['background:radial-gradient(circle at 38% 32%,#fff0b8,#d9ad4a 55%,#8a6420)', 'background:radial-gradient(circle at 38% 32%,#4a78e0,#1d3f9a 60%,#0d2470)'];
   const DK = ['background:radial-gradient(circle at 38% 32%,#f6e2bf,#d6ab73 55%,#9c7240)', 'background:radial-gradient(circle at 38% 32%,#6a4a36,#2e1d14 60%,#140b06)'];
 
-  // 種目 (2026-11-15): the card's "size" value names the rule set — Fanorona 1 Tsivy (9×5) · 2 Dimy (5×5); Alquerque 1 Bell · 2 Alfonso
-  const VARS = { fanorona: [{ rule: 'sivy', nc: 9, pcs: 22 }, { rule: 'dimy', nc: 5, pcs: 12 }], alquerque: [{ rule: 'alq' }, { rule: 'alqf' }] };
-  const RNS = {"fanorona": {"ja": {"n": ["ツィヴィ（9×5）", "ディミ（5×5）"], "d": ["22枚ずつの本格ファノロナ。接近と離脱で列ごと取り合う、マダガスカルの国民的ゲーム。", "5×5・12枚ずつ。ルールは同じで、短時間で決着する入門版。"], "L": "Rules"}, "en": {"n": ["Tsivy (9×5)", "Dimy (5×5)"], "d": ["Full Fanorona with 22 pieces each: capture whole lines by approach and withdrawal. Madagascar's national game.", "5×5 with 12 pieces each. The same rules, a shorter game — a good start."], "L": "Rules"}, "zh": {"n": ["齐维（9×5）", "迪米（5×5）"], "d": ["每方22子的正式法诺罗纳：以靠近与后撤整列吃子，马达加斯加的国民游戏。", "5×5，每方12子。规则相同，对局更短，适合入门。"], "L": "Rules"}, "zh-TW": {"n": ["齊維（9×5）", "迪米（5×5）"], "d": ["雙方各 22 子的完整法諾納：用接近與撤離整排吃子。馬達加斯加的國民遊戲。", "5×5，雙方各 12 子。規則相同，對局較短 — 適合入門。"], "L": "Rules"}, "ko": {"n": ["치비 (9×5)", "디미 (5×5)"], "d": ["각 22개의 정식 파노로나. 접근과 이탈로 줄째로 잡는 마다가스카르의 국민 게임.", "5×5, 각 12개. 규칙은 같고 빨리 끝나는 입문판."], "L": "Rules"}, "es": {"n": ["Tsivy (9×5)", "Dimy (5×5)"], "d": ["Fanorona completo, 22 piezas cada uno: captura filas enteras por aproximación y retirada. El juego nacional de Madagascar.", "5×5 con 12 piezas cada uno. Las mismas reglas, partidas más cortas."], "L": "Rules"}, "fr": {"n": ["Tsivy (9×5)", "Dimy (5×5)"], "d": ["Le Fanorona complet, 22 pions chacun : capture de lignes entières par approche et retrait. Le jeu national de Madagascar.", "5×5, 12 pions chacun. Mêmes règles, parties plus courtes."], "L": "Rules"}, "pt": {"n": ["Tsivy (9×5)", "Dimy (5×5)"], "d": ["Fanorona completo, 22 peças cada: captura linhas inteiras por aproximação e afastamento. O jogo nacional de Madagáscar.", "5×5 com 12 peças cada. As mesmas regras, partidas mais curtas."], "L": "Rules"}, "de": {"n": ["Tsivy (9×5)", "Dimy (5×5)"], "d": ["Volles Fanorona mit je 22 Steinen: ganze Reihen schlagen durch Annähern und Zurückziehen. Madagaskars Nationalspiel.", "5×5 mit je 12 Steinen. Gleiche Regeln, kürzere Partien."], "L": "Rules"}, "ru": {"n": ["Цыви (9×5)", "Дими (5×5)"], "d": ["Полная фанорона, по 22 фишки: берите целые ряды подходом и отходом. Национальная игра Мадагаскара.", "5×5, по 12 фишек. Те же правила, партия короче — хорошее начало."], "L": "Rules"}, "tr": {"n": ["Tsivy (9×5)", "Dimy (5×5)"], "d": ["Taraf başına 22 taşla tam Fanorona: yaklaşma ve uzaklaşmayla bütün sıraları al. Madagaskar'ın ulusal oyunu.", "Taraf başına 12 taşla 5×5. Aynı kurallar, daha kısa oyun — iyi bir başlangıç."], "L": "Rules"}, "id": {"n": ["Tsivy (9×5)", "Dimy (5×5)"], "d": ["Fanorona penuh dengan 22 biji per pihak: makan seluruh barisan dengan mendekat dan menjauh. Permainan nasional Madagaskar.", "5×5 dengan 12 biji per pihak. Aturan sama, permainan lebih singkat — awal yang baik."], "L": "Rules"}, "hi": {"n": ["त्सिवी (9×5)", "दिमी (5×5)"], "d": ["हर ओर 22 गोटियों वाला पूरा फ़ानोरोना: पास आकर या हटकर पूरी पंक्ति पकड़ें। मेडागास्कर का राष्ट्रीय खेल।", "5×5, हर ओर 12 गोटियाँ। वही नियम, छोटा खेल।"], "L": "Rules"}, "ar": {"n": ["تسيفي (9×5)", "ديمي (5×5)"], "d": ["فانورونا الكاملة، 22 قطعة لكل لاعب: أسر صفوف كاملة بالاقتراب والانسحاب. اللعبة الوطنية لمدغشقر.", "5×5 و12 قطعة لكل لاعب. القواعد نفسها ولعب أقصر."], "L": "Rules"}}, "alquerque": {"ja": {"n": ["アルケルケ（ベル式）", "アルフォンソ式"], "d": ["12枚ずつ。前か横へ1歩（後ろへは戻れない）。相手を跳び越えて取る。取りは義務で、取れる限り続けて跳ぶ。", "アルフォンソ10世『遊戯の書』（1283年）の元のルール。駒はどの向きにも1歩動ける（後ろへも）。取り方は同じ。"], "L": "Rules"}, "en": {"n": ["Alquerque (Bell)", "Alfonso rules"], "d": ["12 pieces each. Step forward or sideways (never back), capture by jumping over an enemy piece. Capturing is compulsory and you keep jumping while you can.", "The original rules from Alfonso X's Book of Games (1283): a piece may step in any direction, backwards too. Captures are the same."], "L": "Rules"}, "zh": {"n": ["阿尔凯尔凯（贝尔式）", "阿方索式"], "d": ["各12枚。向前或横走一步（不能后退），跳过对方棋子吃子。吃子是义务，能跳就必须继续跳。", "阿方索十世《游戏之书》（1283年）的原始规则：棋子可向任何方向走一步（也可后退）。吃法相同。"], "L": "Rules"}, "zh-TW": {"n": ["阿爾凱爾凱（貝爾式）", "阿方索式"], "d": ["雙方各 12 子。向前或橫走一步（不能後退），跳過對手棋子吃子。吃子是義務，能跳就必須繼續跳。", "阿方索十世《遊戲之書》（1283 年）的原始規則：棋子可往任何方向走一步（也能後退）。吃法相同。"], "L": "Rules"}, "ko": {"n": ["알케르케 (벨식)", "알폰소식"], "d": ["각 12개. 앞이나 옆으로 한 걸음(뒤로는 못 감). 상대 말을 뛰어넘어 잡는다. 잡기는 의무이며 뛸 수 있는 한 계속 뛴다.", "알폰소 10세 『놀이의 책』(1283년)의 원래 규칙. 말은 어느 방향으로든(뒤로도) 한 걸음 움직인다. 잡는 법은 같다."], "L": "Rules"}, "es": {"n": ["Alquerque (Bell)", "Reglas de Alfonso X"], "d": ["12 piezas cada uno. Paso adelante o de lado (nunca atrás); se captura saltando una pieza rival. Capturar es obligatorio y se sigue saltando mientras se pueda.", "Las reglas originales del Libro de los juegos de Alfonso X (1283): una pieza puede moverse en cualquier dirección, también hacia atrás. Las capturas son iguales."], "L": "Rules"}, "fr": {"n": ["Alquerque (Bell)", "Règles d'Alphonse X"], "d": ["12 pièces chacun. Un pas en avant ou de côté (jamais en arrière) ; on prend en sautant une pièce adverse. La prise est obligatoire et on saute tant qu'on peut.", "Les règles d'origine du Livre des jeux d'Alphonse X (1283) : une pièce peut avancer d'un pas dans toutes les directions, en arrière aussi. Les prises sont les mêmes."], "L": "Rules"}, "pt": {"n": ["Alquerque (Bell)", "Regras de Afonso X"], "d": ["12 peças cada. Um passo para a frente ou para o lado (nunca para trás); captura-se saltando uma peça adversária. Capturar é obrigatório e continua-se a saltar enquanto possível.", "As regras originais do Livro dos Jogos de Afonso X (1283): uma peça pode mover-se em qualquer direção, também para trás. As capturas são iguais."], "L": "Rules"}, "de": {"n": ["Alquerque (Bell)", "Alfons-Regeln"], "d": ["Je 12 Steine. Ein Schritt vorwärts oder seitwärts (nie zurück); geschlagen wird durch Überspringen. Schlagen ist Pflicht, und man springt weiter, solange es geht.", "Die ursprünglichen Regeln aus dem Buch der Spiele Alfons' X. (1283): Ein Stein darf in jede Richtung ziehen, auch rückwärts. Geschlagen wird gleich."], "L": "Rules"}, "ru": {"n": ["Алькерке (Белл)", "Правила Альфонсо"], "d": ["По 12 фишек. Шаг вперёд или вбок (никогда назад), взятие прыжком через фишку соперника. Взятие обязательно, и прыгать нужно, пока можно.", "Исходные правила из «Книги игр» Альфонсо X (1283): фишка может ходить в любом направлении, в том числе назад. Взятия те же."], "L": "Rules"}, "tr": {"n": ["Alquerque (Bell)", "Alfonso kuralları"], "d": ["Taraf başına 12 taş. İleri ya da yana bir adım (asla geri değil), rakip taşın üzerinden atlayarak alma. Almak zorunludur ve alabildiğin sürece atlamaya devam edersin.", "X. Alfonso'nun Oyunlar Kitabı'ndaki (1283) özgün kurallar: taş her yöne, geriye de bir adım gidebilir. Almalar aynıdır."], "L": "Rules"}, "id": {"n": ["Alquerque (Bell)", "Aturan Alfonso"], "d": ["Masing-masing 12 biji. Melangkah maju atau ke samping (tidak pernah mundur), makan dengan melompati biji lawan. Makan itu wajib dan kamu terus melompat selama bisa.", "Aturan asli dari Buku Permainan Alfonso X (1283): biji boleh melangkah ke arah mana pun, termasuk mundur. Cara makannya sama."], "L": "Rules"}, "hi": {"n": ["अलकेरके (बेल)", "अल्फ़ोंसो नियम"], "d": ["दोनों के 12 गोटियाँ। एक क़दम आगे या बग़ल में (पीछे नहीं); विरोधी गोटी के ऊपर से कूदकर लें। लेना अनिवार्य है और जब तक हो सके कूदते रहें।", "अल्फ़ोंसो दसवें की खेलों की पुस्तक (1283) के मूल नियम: गोटी किसी भी दिशा में (पीछे भी) एक क़दम चल सकती है। लेने का तरीका वही है।"], "L": "Rules"}, "ar": {"n": ["القِرْقة (بيل)", "قواعد ألفونسو"], "d": ["12 قطعة لكل لاعب. خطوة إلى الأمام أو إلى الجانب (لا رجوع)، والأسر بالقفز فوق قطعة الخصم. الأسر إجباري ويستمر القفز ما دام ممكنًا.", "القواعد الأصلية من كتاب الألعاب لألفونسو العاشر (1283): يجوز للقطعة أن تتحرك خطوة في أي اتجاه، حتى إلى الخلف. والأسر كما هو."], "L": "Rules"}}}, rn = (g, l) => RNS[g][l] || RNS[g].en;
+  // 種目 (2026-11-15): the card's "size" value names the rule set — Fanorona 1 Tsivy (9×5) · 2 Dimy (5×5) · 3 Telo (3×3, 2026-11-16:
+  // 3 balls each are put on the board first — they wait in their owner's groove — then step along the lines; three in a row wins); Alquerque 1 Bell · 2 Alfonso
+  const VARS = { fanorona: [{ rule: 'sivy', nc: 9, pcs: 22 }, { rule: 'dimy', nc: 5, pcs: 12 }, { rule: 'telo', nc: 3, nr: 3, pcs: 3 }], alquerque: [{ rule: 'alq' }, { rule: 'alqf' }] };
+  const RNS = {"fanorona": {"ja": {"n": ["ツィヴィ（9×5）", "ディミ（5×5）", "テロ（3×3）"], "d": ["22枚ずつの本格ファノロナ。接近と離脱で列ごと取り合う、マダガスカルの国民的ゲーム。", "5×5・12枚ずつ。ルールは同じで、短時間で決着する入門版。", "3×3・3枚ずつ。交互に置いたあと線に沿って動かし、3つ並べたら勝ち（取りはなし）。"], "L": "Rules"}, "en": {"n": ["Tsivy (9×5)", "Dimy (5×5)", "Telo (3×3)"], "d": ["Full Fanorona with 22 pieces each: capture whole lines by approach and withdrawal. Madagascar's national game.", "5×5 with 12 pieces each. The same rules, a shorter game — a good start.", "3×3, 3 pieces each. Place them in turn, then move them along the lines: three in a row wins (no captures)."], "L": "Rules"}, "zh": {"n": ["齐维（9×5）", "迪米（5×5）", "特罗（3×3）"], "d": ["每方22子的正式法诺罗纳：以靠近与后撤整列吃子，马达加斯加的国民游戏。", "5×5，每方12子。规则相同，对局更短，适合入门。", "3×3，每方3子。轮流放子后沿线移动，连成三子即胜（无吃子）。"], "L": "Rules"}, "zh-TW": {"n": ["齊維（9×5）", "迪米（5×5）", "特羅（3×3）"], "d": ["雙方各 22 子的完整法諾納：用接近與撤離整排吃子。馬達加斯加的國民遊戲。", "5×5，雙方各 12 子。規則相同，對局較短 — 適合入門。", "3×3，雙方各 3 子。輪流放下後沿線移動：三子連線獲勝（不吃子）。"], "L": "Rules"}, "ko": {"n": ["치비 (9×5)", "디미 (5×5)", "텔로 (3×3)"], "d": ["각 22개의 정식 파노로나. 접근과 이탈로 줄째로 잡는 마다가스카르의 국민 게임.", "5×5, 각 12개. 규칙은 같고 빨리 끝나는 입문판.", "3×3, 각 3개. 번갈아 놓은 뒤 선을 따라 움직여 3개를 잇으면 승리(잡기 없음)."], "L": "Rules"}, "es": {"n": ["Tsivy (9×5)", "Dimy (5×5)", "Telo (3×3)"], "d": ["Fanorona completo, 22 piezas cada uno: captura filas enteras por aproximación y retirada. El juego nacional de Madagascar.", "5×5 con 12 piezas cada uno. Las mismas reglas, partidas más cortas.", "3×3, 3 piezas cada uno. Se colocan por turnos y luego se mueven por las líneas: tres en raya gana (sin capturas)."], "L": "Rules"}, "fr": {"n": ["Tsivy (9×5)", "Dimy (5×5)", "Telo (3×3)"], "d": ["Le Fanorona complet, 22 pions chacun : capture de lignes entières par approche et retrait. Le jeu national de Madagascar.", "5×5, 12 pions chacun. Mêmes règles, parties plus courtes.", "3×3, 3 pions chacun. On les pose à tour de rôle puis on les déplace le long des lignes : trois alignés gagnent (sans prise)."], "L": "Rules"}, "pt": {"n": ["Tsivy (9×5)", "Dimy (5×5)", "Telo (3×3)"], "d": ["Fanorona completo, 22 peças cada: captura linhas inteiras por aproximação e afastamento. O jogo nacional de Madagáscar.", "5×5 com 12 peças cada. As mesmas regras, partidas mais curtas.", "3×3, 3 peças cada. Colocam-se alternadamente e depois movem-se pelas linhas: três em linha vence (sem capturas)."], "L": "Rules"}, "de": {"n": ["Tsivy (9×5)", "Dimy (5×5)", "Telo (3×3)"], "d": ["Volles Fanorona mit je 22 Steinen: ganze Reihen schlagen durch Annähern und Zurückziehen. Madagaskars Nationalspiel.", "5×5 mit je 12 Steinen. Gleiche Regeln, kürzere Partien.", "3×3, je 3 Steine. Abwechselnd setzen, dann entlang der Linien ziehen: drei in einer Reihe gewinnt (ohne Schlagen)."], "L": "Rules"}, "ru": {"n": ["Цыви (9×5)", "Дими (5×5)", "Тело (3×3)"], "d": ["Полная фанорона, по 22 фишки: берите целые ряды подходом и отходом. Национальная игра Мадагаскара.", "5×5, по 12 фишек. Те же правила, партия короче — хорошее начало.", "3×3, по 3 фишки. Ставьте по очереди, затем двигайте по линиям: три в ряд побеждают (без взятий)."], "L": "Rules"}, "tr": {"n": ["Tsivy (9×5)", "Dimy (5×5)", "Telo (3×3)"], "d": ["Taraf başına 22 taşla tam Fanorona: yaklaşma ve uzaklaşmayla bütün sıraları al. Madagaskar'ın ulusal oyunu.", "Taraf başına 12 taşla 5×5. Aynı kurallar, daha kısa oyun — iyi bir başlangıç.", "3×3, taraf başına 3 taş. Sırayla yerleştir, sonra hatlar boyunca oynat: üçü bir sırada kazanır (alma yok)."], "L": "Rules"}, "id": {"n": ["Tsivy (9×5)", "Dimy (5×5)", "Telo (3×3)"], "d": ["Fanorona penuh dengan 22 biji per pihak: makan seluruh barisan dengan mendekat dan menjauh. Permainan nasional Madagaskar.", "5×5 dengan 12 biji per pihak. Aturan sama, permainan lebih singkat — awal yang baik.", "3×3, 3 biji per pihak. Letakkan bergantian, lalu geser sepanjang garis: tiga sebaris menang (tanpa makan)."], "L": "Rules"}, "hi": {"n": ["त्सिवी (9×5)", "दिमी (5×5)", "तेलो (3×3)"], "d": ["हर ओर 22 गोटियों वाला पूरा फ़ानोरोना: पास आकर या हटकर पूरी पंक्ति पकड़ें। मेडागास्कर का राष्ट्रीय खेल।", "5×5, हर ओर 12 गोटियाँ। वही नियम, छोटा खेल।", "3×3, हर ओर 3 गोटियाँ। बारी-बारी रखें, फिर रेखाओं पर चलाएँ: एक पंक्ति में तीन से जीत (पकड़ना नहीं)।"], "L": "Rules"}, "ar": {"n": ["تسيفي (9×5)", "ديمي (5×5)", "تيلو (3×3)"], "d": ["فانورونا الكاملة، 22 قطعة لكل لاعب: أسر صفوف كاملة بالاقتراب والانسحاب. اللعبة الوطنية لمدغشقر.", "5×5 و12 قطعة لكل لاعب. القواعد نفسها ولعب أقصر.", "3×3، ثلاث قطع لكل لاعب. توضع بالتناوب ثم تتحرك على الخطوط: ثلاث في صف تفوز (بلا أسر)."], "L": "Rules"}}, "alquerque": {"ja": {"n": ["アルケルケ（ベル式）", "アルフォンソ式"], "d": ["12枚ずつ。前か横へ1歩（後ろへは戻れない）。相手を跳び越えて取る。取りは義務で、取れる限り続けて跳ぶ。", "アルフォンソ10世『遊戯の書』（1283年）の元のルール。駒はどの向きにも1歩動ける（後ろへも）。取り方は同じ。"], "L": "Rules"}, "en": {"n": ["Alquerque (Bell)", "Alfonso rules"], "d": ["12 pieces each. Step forward or sideways (never back), capture by jumping over an enemy piece. Capturing is compulsory and you keep jumping while you can.", "The original rules from Alfonso X's Book of Games (1283): a piece may step in any direction, backwards too. Captures are the same."], "L": "Rules"}, "zh": {"n": ["阿尔凯尔凯（贝尔式）", "阿方索式"], "d": ["各12枚。向前或横走一步（不能后退），跳过对方棋子吃子。吃子是义务，能跳就必须继续跳。", "阿方索十世《游戏之书》（1283年）的原始规则：棋子可向任何方向走一步（也可后退）。吃法相同。"], "L": "Rules"}, "zh-TW": {"n": ["阿爾凱爾凱（貝爾式）", "阿方索式"], "d": ["雙方各 12 子。向前或橫走一步（不能後退），跳過對手棋子吃子。吃子是義務，能跳就必須繼續跳。", "阿方索十世《遊戲之書》（1283 年）的原始規則：棋子可往任何方向走一步（也能後退）。吃法相同。"], "L": "Rules"}, "ko": {"n": ["알케르케 (벨식)", "알폰소식"], "d": ["각 12개. 앞이나 옆으로 한 걸음(뒤로는 못 감). 상대 말을 뛰어넘어 잡는다. 잡기는 의무이며 뛸 수 있는 한 계속 뛴다.", "알폰소 10세 『놀이의 책』(1283년)의 원래 규칙. 말은 어느 방향으로든(뒤로도) 한 걸음 움직인다. 잡는 법은 같다."], "L": "Rules"}, "es": {"n": ["Alquerque (Bell)", "Reglas de Alfonso X"], "d": ["12 piezas cada uno. Paso adelante o de lado (nunca atrás); se captura saltando una pieza rival. Capturar es obligatorio y se sigue saltando mientras se pueda.", "Las reglas originales del Libro de los juegos de Alfonso X (1283): una pieza puede moverse en cualquier dirección, también hacia atrás. Las capturas son iguales."], "L": "Rules"}, "fr": {"n": ["Alquerque (Bell)", "Règles d'Alphonse X"], "d": ["12 pièces chacun. Un pas en avant ou de côté (jamais en arrière) ; on prend en sautant une pièce adverse. La prise est obligatoire et on saute tant qu'on peut.", "Les règles d'origine du Livre des jeux d'Alphonse X (1283) : une pièce peut avancer d'un pas dans toutes les directions, en arrière aussi. Les prises sont les mêmes."], "L": "Rules"}, "pt": {"n": ["Alquerque (Bell)", "Regras de Afonso X"], "d": ["12 peças cada. Um passo para a frente ou para o lado (nunca para trás); captura-se saltando uma peça adversária. Capturar é obrigatório e continua-se a saltar enquanto possível.", "As regras originais do Livro dos Jogos de Afonso X (1283): uma peça pode mover-se em qualquer direção, também para trás. As capturas são iguais."], "L": "Rules"}, "de": {"n": ["Alquerque (Bell)", "Alfons-Regeln"], "d": ["Je 12 Steine. Ein Schritt vorwärts oder seitwärts (nie zurück); geschlagen wird durch Überspringen. Schlagen ist Pflicht, und man springt weiter, solange es geht.", "Die ursprünglichen Regeln aus dem Buch der Spiele Alfons' X. (1283): Ein Stein darf in jede Richtung ziehen, auch rückwärts. Geschlagen wird gleich."], "L": "Rules"}, "ru": {"n": ["Алькерке (Белл)", "Правила Альфонсо"], "d": ["По 12 фишек. Шаг вперёд или вбок (никогда назад), взятие прыжком через фишку соперника. Взятие обязательно, и прыгать нужно, пока можно.", "Исходные правила из «Книги игр» Альфонсо X (1283): фишка может ходить в любом направлении, в том числе назад. Взятия те же."], "L": "Rules"}, "tr": {"n": ["Alquerque (Bell)", "Alfonso kuralları"], "d": ["Taraf başına 12 taş. İleri ya da yana bir adım (asla geri değil), rakip taşın üzerinden atlayarak alma. Almak zorunludur ve alabildiğin sürece atlamaya devam edersin.", "X. Alfonso'nun Oyunlar Kitabı'ndaki (1283) özgün kurallar: taş her yöne, geriye de bir adım gidebilir. Almalar aynıdır."], "L": "Rules"}, "id": {"n": ["Alquerque (Bell)", "Aturan Alfonso"], "d": ["Masing-masing 12 biji. Melangkah maju atau ke samping (tidak pernah mundur), makan dengan melompati biji lawan. Makan itu wajib dan kamu terus melompat selama bisa.", "Aturan asli dari Buku Permainan Alfonso X (1283): biji boleh melangkah ke arah mana pun, termasuk mundur. Cara makannya sama."], "L": "Rules"}, "hi": {"n": ["अलकेरके (बेल)", "अल्फ़ोंसो नियम"], "d": ["दोनों के 12 गोटियाँ। एक क़दम आगे या बग़ल में (पीछे नहीं); विरोधी गोटी के ऊपर से कूदकर लें। लेना अनिवार्य है और जब तक हो सके कूदते रहें।", "अल्फ़ोंसो दसवें की खेलों की पुस्तक (1283) के मूल नियम: गोटी किसी भी दिशा में (पीछे भी) एक क़दम चल सकती है। लेने का तरीका वही है।"], "L": "Rules"}, "ar": {"n": ["القِرْقة (بيل)", "قواعد ألفونسو"], "d": ["12 قطعة لكل لاعب. خطوة إلى الأمام أو إلى الجانب (لا رجوع)، والأسر بالقفز فوق قطعة الخصم. الأسر إجباري ويستمر القفز ما دام ممكنًا.", "القواعد الأصلية من كتاب الألعاب لألفونسو العاشر (1283): يجوز للقطعة أن تتحرك خطوة في أي اتجاه، حتى إلى الخلف. والأسر كما هو."], "L": "Rules"}}}, rn = (g, l) => RNS[g][l] || RNS[g].en;
   // G: the game — Fanorona (9×5, carved acacia, wooden balls) or Alquerque (5×5 on the same engine, the Damascene inlaid board)
   function start(ctx, G0) {
-    const G1 = G0 || GAMES.fanorona, GG = Object.assign({}, G1, (VARS[G1.id] || [])[(+ctx.size || 1) - 1] || {}), NCg = GG.nc, NPg = 45;   // (the engine numbers the points r * 9 + c on every board)
+    const G1 = G0 || GAMES.fanorona, GG = Object.assign({}, G1, (VARS[G1.id] || [])[(+ctx.size || 1) - 1] || {}), NCg = GG.nc, NRg = GG.nr || 5, NPg = 45, TELO = GG.rule === 'telo';   // (the engine numbers the points r * 9 + c on every board)
     const T3 = ctx.Table3D, TH = window.THREE, F3 = T3[GG.model], t = ctx.t, X = TX[ctx.lang] || TX.en;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
     const board = F3.board(GG.rule); T3.show(GG.id, board);
@@ -100,7 +101,7 @@
     const pname = c => X.n[c - 1];
     let E = null;
     // point (r * 9 + c) ↔ board: display column left → right, display row far → near
-    const scr = i => { const r = (i / 9) | 0, c = i % 9; return flip ? [NCg - 1 - c, r] : [c, 4 - r]; };
+    const scr = i => { const r = (i / 9) | 0, c = i % 9; return flip ? [NCg - 1 - c, r] : [c, NRg - 1 - r]; };
     const xz = i => U.pt(...scr(i));
     const bottomCol = flip ? 2 : 1;
 
@@ -143,8 +144,33 @@
     function drop(g) { if (g.userData.sh) g.userData.sh.material.dispose(); board.remove(g); }
     function bump(g) { const r = g.userData.r; anim(150, k => { g.userData.ball.scale.setScalar(r * (1 + Math.sin(k * Math.PI) * .04)); }, () => g.userData.ball.scale.setScalar(r)); }
     const slot = (side, i) => { const [x, z] = U.groove.at(side, i, GG.pcs); return [x, U.groove.y(GS), z]; };
+    // the grooves: the balls each side has taken, next to the capturer (Telo: the balls still to be put on the board, next to their owner)
+    function fillGrooves(drop0) {
+      for (const side of [0, 1]) {
+        const owner = side ? bottomCol : 3 - bottomCol, col = TELO ? owner : 3 - owner, n = Math.max(0, TELO ? 3 - pos.count(owner) : GG.pcs - pos.count(col));
+        for (let j = 0; j < n; j++) {
+          const g = mk(col, null, GS), [x, y, z] = slot(side, j); g.position.set(x, y, z); lift(g, 0, y, y - g.userData.r + .002); G[side].push(g);
+          if (drop0) { g.visible = false; later(() => { g.visible = true; anim(240, q => lift(g, (1 - q) * (1 - q) * .8, y, y - g.userData.r + .002), () => { lift(g, 0, y, y - g.userData.r + .002); SND.put(1.5); }); }, 80 + j * 90 + side * 40); }
+        }
+      }
+      kick(300);
+    }
+    // Telo: a ball leaves its owner's groove and hops onto point `to`
+    function place3(to, k, done) {
+      const side = k === bottomCol ? 1 : 0, g = G[side].pop(); if (!g) { rebuild(); if (done) done(); return; }
+      pcs[to] = { g, k };
+      const sx = g.position.x, sy = g.position.y, sz = g.position.z, [tx, tz] = xz(to), r0 = g.userData.r, r1 = F3.R;
+      SND.lift();
+      anim(400, q => {
+        const e = io(q), y = sy + (U.rest - sy) * e + Math.sin(q * Math.PI) * .9;
+        g.position.set(sx + (tx - sx) * e, y, sz + (tz - sz) * e);
+        const r = r0 + (r1 - r0) * e; g.userData.ball.scale.setScalar(r); g.userData.r = r;
+        if (g.userData.sh) { g.userData.sh.position.y = U.top + .002 - y; g.userData.sh.material.opacity = .5 * (1 - Math.sin(q * Math.PI) * .9); }
+      }, () => { g.userData.r = r1; lift(g, 0); bump(g); SND.put(); if (done) done(); });
+    }
     function setup() {
       Object.values(pcs).forEach(p => drop(p.g)); pcs = {}; G.forEach(L => { L.forEach(drop); L.length = 0; });
+      if (TELO) { fillGrooves(true); return 80 + 3 * 90 + 300; }
       let n = 0;
       const order = []; for (let i = 0; i < NPg; i++) if (pos.at(i)) order.push(i);
       order.sort((a, b) => scr(b)[1] - scr(a)[1]);   // the near rows first
@@ -158,11 +184,7 @@
     function rebuild() {   // balls exactly as the position says (after 待った), without the drop-in
       Object.values(pcs).forEach(p => drop(p.g)); pcs = {}; G.forEach(L => { L.forEach(drop); L.length = 0; });
       for (let i = 0; i < NPg; i++) { const k = pos.at(i); if (k) pcs[i] = { g: mk(k, i), k }; }
-      // the grooves: the balls each side has taken, next to the capturer
-      for (const side of [0, 1]) {
-        const capturer = side ? bottomCol : 3 - bottomCol, lost = 3 - capturer, n = Math.max(0, GG.pcs - pos.count(lost));
-        for (let j = 0; j < n; j++) { const g = mk(lost, null, GS), [x, y, z] = slot(side, j); g.position.set(x, y, z); lift(g, 0, y, y - g.userData.r + .002); G[side].push(g); }
-      }
+      fillGrooves(false);
       kick(300);
     }
     // one step: the ball rolls along the line; then its captures pop out one after the other and hop into the groove
@@ -197,7 +219,7 @@
     function refresh() { const r = E.replay(null, moves); pos = r.pos; hashes = r.hashes; }
     function status() { return E.judge(pos, hashes); }
     function hud(msg) {
-      const side = c => `<span class="hs ${pos && pos.turn === c && !over ? 'on' : ''}"><i class="dk" style="${(GG.id === 'alquerque' ? DKA : DK)[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${pos ? pos.count(c) : 22}</b></span>`;
+      const side = c => `<span class="hs ${pos && pos.turn === c && !over ? 'on' : ''}"><i class="dk" style="${(GG.id === 'alquerque' ? DKA : DK)[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${pos ? pos.count(c) : GG.pcs}</b></span>`;
       ctx.hud(`${side(1)}<span class="hm">${msg || ''}</span>${side(2)}`);
     }
     function toast(msg) {
@@ -209,7 +231,8 @@
     function showMarks() {
       clear(hl); hintMv = null; hintJ++; mustMarks = [];
       if (moves.length) {
-        const m = moves[moves.length - 1], before = E.replay(null, moves.slice(0, -1)).pos, p = E.path(before, m);
+        const m = moves[moves.length - 1], before = E.replay(null, moves.slice(0, -1)).pos, p = E.path(before, m).filter(q => q >= 0);
+        if (p.length === 1) { mark(hl, GEO.ring, MAT.last, p[0], .01); showMust(); return; }   // (Telo: a ball put on the board)
         mark(hl, GEO.small, MAT.lastF, p[0], .01); mark(hl, GEO.ring, MAT.last, p[p.length - 1], .01);
         for (let j = 1; j < p.length - 1; j++) mark(hl, GEO.dot, MAT.lastF, p[j], .01);
         E.capsOf(before, m).flat().forEach(i => [1, -1].forEach(sg => { const b = mark(hl, GEO.x, MAT.took, i, .01); b.rotation.y = sg * Math.PI / 4; }));
@@ -219,11 +242,13 @@
     function showMust() {   // compulsory capture: a ring round every ball that can (must) capture, on a human's turn
       mustMarks.forEach(m => hl.remove(m)); mustMarks = [];
       if (over || !pos || sel || !(pvp || pos.turn === human) || thinking || busy) return;
+      if (placing()) { for (let i = 0; i < NPg; i++) if ((i % 9) < NCg && ((i / 9) | 0) < NRg && !pos.at(i)) mustMarks.push(mark(hl, GEO.dot, MAT.dest, i, .02)); return; }   // (Telo: where a ball can go)
       if (!pos.hasCaps()) return;
       new Set(pos.capSteps(null).map(x => x.from)).forEach(f => { const r = mark(hl, GEO.ring, MAT.must, f, .03); mustMarks.push(r); pulse(r, 2); });
     }
 
     /* ---------- selection: a ball, its destinations; the approach / withdrawal choice; going on capturing ---------- */
+    const placing = () => TELO && !!pos && pos.count(pos.turn) < 3;   // (Telo: the balls are put on the board first)
     const selCur = () => sel ? (sel.st ? sel.st.cur : sel.from) : -1;
     function drawSel() {
       clear(mv); if (!sel) return;
@@ -262,8 +287,9 @@
 
     /* ---------- moves ---------- */
     function play(m, pre, done) {
-      const S = pos.steps(m);
+      const S = pos.steps(m), k0 = pos.turn;
       moves.push(m); refresh(); ply++; onTurn();
+      if (S && S[0] && S[0].from < 0) { place3(S[0].to, k0, () => { showMarks(); hud(''); later(done, 60); }); return; }   // Telo: a ball put on the board
       if (pre || !S) { showMarks(); hud(''); if (!S) rebuild(); later(done, pre ? 120 : 200); return; }
       // the steps one after the other (a capture chain: each step waits for the previous one)
       let k = 0; const caps = S.some(s => s.cap.length);
@@ -316,9 +342,9 @@
     /* ---------- input ---------- */
     function pointOf(e) {
       const p = T3.pick(e, Y); if (!p) return -1;
-      const hc = (NCg - 1) / 2, dc = Math.round(p.x + hc), dr = Math.round(p.z + 2);
-      if (dc < 0 || dc > NCg - 1 || dr < 0 || dr > 4 || Math.hypot(p.x + hc - dc, p.z + 2 - dr) > .5) return -1;
-      const c = flip ? NCg - 1 - dc : dc, r = flip ? dr : 4 - dr;
+      const hc = (NCg - 1) / 2, hr = (NRg - 1) / 2, dc = Math.round(p.x + hc), dr = Math.round(p.z + hr);
+      if (dc < 0 || dc > NCg - 1 || dr < 0 || dr > NRg - 1 || Math.hypot(p.x + hc - dc, p.z + hr - dr) > .5) return -1;
+      const c = flip ? NCg - 1 - dc : dc, r = flip ? dr : NRg - 1 - dr;
       return r * 9 + c;
     }
     function onClick(e) {
@@ -337,6 +363,7 @@
         return;
       }
       if (i < 0) { deselect(); return; }
+      if (placing()) { if (pos.at(i)) { toast(X.move); return; } const m = canon(E.pname(i)); if (pos.steps(m)) commit(m, false); return; }   // Telo: put a ball on an empty point
       if (pos.at(i) === me) {
         if (sel && sel.from === i) { deselect(); return; }
         if (!pos.firstSteps().some(x => x.from === i)) { const mj = pos.hasCaps(); toast(mj ? X.must : X.stuck); if (mj) mustMarks.forEach(r => pulse(r, 2)); return; }
@@ -399,7 +426,7 @@
             if (stopped || j !== hintJ || over || moves.length !== mvs.length) return res(true);
             const m = r.error ? null : r.move; if (m == null || !pos.steps(m)) return res(false);
             hintMv = m;
-            const p = E.path(pos, m), rs = p.map((s, k) => mark(hl, k ? GEO.dot : GEO.ring, MAT.hint, s, .05));
+            const p = E.path(pos, m).filter(q => q >= 0), rs = p.map((s, k) => mark(hl, k || p.length === 1 ? GEO.dot : GEO.ring, MAT.hint, s, .05));
             rs.forEach(x => pulse(x, 2));
             res(true);
           };
@@ -481,6 +508,6 @@
     return { name, desc: L.lvd[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.fanorona = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: [1, 2], size0: 1, sizeLabel: l => rn('fanorona', l).L, sizeName: (z, l) => rn('fanorona', l).n[(+z || 1) - 1], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn('fanorona', l).d[(+v || 1) - 1] } : null, levelInfo, start: ctx => start(ctx, GAMES.fanorona) };
+  window.Atlas3D.fanorona = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: [1, 2, 3], size0: 1, sizeLabel: l => rn('fanorona', l).L, sizeName: (z, l) => rn('fanorona', l).n[(+z || 1) - 1], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn('fanorona', l).d[(+v || 1) - 1] } : null, levelInfo, start: ctx => start(ctx, GAMES.fanorona) };
   window.Atlas3D.alquerque = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: [1, 2], size0: 1, sizeLabel: l => rn('alquerque', l).L, sizeName: (z, l) => rn('alquerque', l).n[(+z || 1) - 1], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn('alquerque', l).d[(+v || 1) - 1] } : null, levelInfo, start: ctx => start(ctx, GAMES.alquerque) };   // table: start() plays on the chabudai itself
 })();

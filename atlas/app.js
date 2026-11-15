@@ -870,7 +870,7 @@
   };
   // the 2D games' own rule cards (2026-11-16): atlas/kindart.js (made by tools/kindart.py from each 2D page's ゲーム tab) — the picture,
   // the name, the level tags, the description and the groups (mancala: ストアにまくルール · 世界の伝統ルール), every language
-  const KMAP = { morris: { 9: 'nine', 12: 'twelve', 6: 'six' }, fanorona: { 1: 'sivy', 2: 'dimy' }, agon: { 1: 'std', 2: 'place' }, konane: { 8: 's8', 6: 's6', 10: 's10' },
+  const KMAP = { morris: { 9: 'nine', 12: 'twelve', 6: 'six' }, fanorona: { 1: 'sivy', 2: 'dimy', 3: 'telo' }, agon: { 1: 'std', 2: 'place' }, konane: { 8: 's8', 6: 's6', 10: 's10' },
     ugolki: { 1: 'c33', 2: 'c34', 3: 'c44', 4: 'diag' }, tafl: { 11: 'copenhagen', 111: 'fetlar', 112: 'tawlbwrdd', 9: 'tablut', 7: 'brandubh', 71: 'ardri' },
     ur: { 1: 'finkel', 2: 'blitz', 3: 'masters' }, senet: { 1: 'std', 2: 'long' }, janggi: { 1: '0', 2: '1', 3: '2', 4: '3' } };
   const kKey = (id, v) => KMAP[id] ? KMAP[id][v] : v;
