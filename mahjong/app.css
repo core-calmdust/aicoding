@@ -2068,8 +2068,6 @@ html.ds #game .dealAsk{transform:translateX(-50%) scale(calc(var(--hz, 1) * 1.15
 #game .opp .bk .skw{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 3px;border-radius:99px;background:rgba(12,16,32,.86);border:1px solid color-mix(in srgb,var(--sc) 55%,transparent);white-space:nowrap}
 #game .opp .bk .skw.used{filter:grayscale(1) brightness(.7)}
 #game .opp .bk .skw>span{font-family:var(--serif);font-weight:700;font-size:12px;color:#fff}
-html.ds #game .opp .bk .skw>span{font-size:calc(12.5px * var(--hz, 1))}
-html.ds #game .opp .bk .skw i.sk{width:calc(20px * var(--hz, 1));height:calc(20px * var(--hz, 1))}
 html.lp #game .opp .bk .skw{padding:1px 6px 1px 2px;gap:3px}
 html.lp #game .opp .bk .skw>span{font-size:9.5px}
 #game .opp .bk .fxs{display:flex;gap:4px}
@@ -2089,3 +2087,8 @@ html.lp #game .opp .bk .skw .sktip>span{font-size:11.5px}
 html.lp #game #opp2 .bk .skw .sktip{left:auto;right:0}
 #game #mePanel{pointer-events:none}
 #game #mePanel>*{pointer-events:auto}
+
+/* (ユーザー 2026-11-15: the others' skill chip was far too large — the row is already enlarged with the window (zoom), so the chip keeps its plain size) */
+#game .opp .bk .skw{padding:1px 8px 1px 2px;gap:4px}
+#game .opp .bk .skw>span{font-size:11px}
+html.ds #game .opp .bk .skw i.sk{width:18px;height:18px;padding:3px}
