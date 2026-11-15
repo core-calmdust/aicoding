@@ -441,7 +441,7 @@ function renderHome() {
     <div class="pp-n">${esc(L(c.name))}</div>
     <div class="pp-t">${esc(L(c.title))}</div>
     <div class="pp-sk">${skillChip(uk, 'on')}${o.skills.length > 1 ? `<span class="pp-more" id="ppMore">${esc(t('ownedSkills'))} ${o.skills.length}</span>` : ''}</div>
-    ${pt ? `<button class="pp-pt" id="ppChg"><img src="${charImg(pt, 'face')}" alt=""><small>${esc(t('partner'))}</small><b>${esc(L(pt.name))}</b>${pk ? skillChip(pk, 'on') : ''}</button>`
+    ${pt ? `<button class="pp-pt" id="ppChg"><img src="${charImg(pt, 'face')}" alt="" title="${esc(t('partner'))} ${esc(L(pt.name))}">${pk ? skillChip(pk, 'on') : ''}</button>`
       : canPick ? `<button class="pp-pt ask" id="ppChg"><i>＋</i><b>${esc(t('ptnHome'))}</b></button>` : ''}</div>
     <div class="pp-info" style="--sc:${sk.color}">
       <div class="pi-h">STORY</div><p class="pi-st">${esc(L(c.profile))}</p>
