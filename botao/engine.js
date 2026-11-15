@@ -33,7 +33,7 @@
     E_BB = .75, E_BBALL = .85, E_RIM = .55, E_KEEP = .45, E_POST = .5,
     VMAX = 200, VMIN = 12,
     DT = 1 / 360, TMAX = 12, FPS = 60;
-  const DIM = { FW, FL, HW, H, PS, PE, TX, TY, GW, GHW, PK_GW: 6 * KHW, GD, SA_W, SA_D, BA_W, BA_D, PEN, CR, RB, RBALL, KHW, KHD, VMAX, DEC_B };
+  const DIM = { FW, FL, HW, H, PS, PE, TX, TY, GW, GHW, PK_GW: 6 * KHW, PK_PEN: 28, GD, SA_W, SA_D, BA_W, BA_D, PEN, CR, RB, RBALL, KHW, KHD, VMAX, DEC_B };
   const team = i => i < 10 ? 0 : 1;
   const goalY = t => t === 0 ? H : -H;                      // the goal line side t defends
   const fwd = t => t === 0 ? -1 : 1;                        // the direction side t attacks (sign of y)
@@ -145,9 +145,11 @@
   function restartFor(s, t, kind, x, y) {
     freshPossession(s, t); s.restart = kind;
     if (kind === 'pen') {
-      const gy = goalY(1 - t), my = gy + (t === 0 ? PEN : -PEN);   // the mark in front of the goal t attacks
+      const pd = s.pk ? PK_PEN : PEN, gy = goalY(1 - t), my = gy + (t === 0 ? pd : -pd);   // the mark in front of the goal t attacks (the shoot-out's mark further out)
       // everyone but the taker leaves the big area
-      for (let i = 0; i < NB; i++) { const b = s.b[i]; if (inBig(1 - t, b.x, b.y) || Math.hypot(b.x, b.y - my) < 16) { const ny = gy + (t === 0 ? BA_D + RB + 1 : -(BA_D + RB + 1)); const p = freeSpot(s, i, b.x, ny); b.x = p.x; b.y = p.y; } }
+      // (the shoot-out's mark is further out: everyone stands well behind it, out of the kicker's way)
+      const L = s.pk ? Math.max(BA_D, pd + 12) + RB + 1 : BA_D + RB + 1;
+      for (let i = 0; i < NB; i++) { const b = s.b[i]; if (inBig(1 - t, b.x, b.y) || (s.pk && Math.abs(b.y - gy) < L) || Math.hypot(b.x, b.y - my) < 16) { const ny = gy + (t === 0 ? L : -L); const p = freeSpot(s, i, b.x, ny); b.x = p.x; b.y = p.y; } }
       s.k[1 - t] = { x: 0, y: gy + (t === 0 ? KHD + .4 : -(KHD + .4)) };
       placeBall(s, t, 0, my, 'pen'); s.shot = true; s.direct = true;
       return;
@@ -188,7 +190,8 @@
   }
   // the goal frames: two side boards and a back board each end (outside the field), the posts
   // the PK shoot-out plays at a goal three keepers wide (2026-11-15 ユーザー：中央に構えられるとほぼ入らない — the match goal stays)
-  const PK_GW = 6 * KHW, ghw = s => s && s.pk ? PK_GW / 2 : GHW;
+  // and from further out: more room between the kicker and the keeper (2026-11-15 ユーザー)
+  const PK_PEN = 28, PK_GW = 6 * KHW, ghw = s => s && s.pk ? PK_GW / 2 : GHW;
   const goalBoxFor = h => { const B = []; for (const sg of [1, -1]) { const y0 = sg * (H + GD / 2 + .3); B.push([-(h + .5), y0, .5, GD / 2 + .3], [h + .5, y0, .5, GD / 2 + .3], [0, sg * (H + GD + .6), h + 1, .3]); } return B; };
   const GBOX = {};
 
