@@ -251,6 +251,7 @@ body.rated-live #evalCard .evalrow .val, body.rated-live #evalCard .evalbar, bod
 .rv-list button{display:flex;gap:8px;align-items:center;text-align:start;font-size:12.5px;padding:4px 8px;border-radius:7px;border:1px solid transparent;color:var(--muted)}
 .rv-list button:hover{border-color:var(--line);color:var(--text);background:rgba(255,255,255,.03)}
 .rv-list .tag{flex:none;font-size:11px;font-weight:700;padding:0 6px;border-radius:5px;color:#0b1110}
+.tag{color:#0b1110;font-size:.85em;font-weight:700;padding:0 6px;border-radius:5px;white-space:nowrap}
 .tag.bad{background:#ff6b5b}.tag.dubious{background:#f2c060}.tag.best{background:#6fd3a0}.tag.good{background:#9fc7ff}
 .rv-prog{height:6px;border-radius:4px;background:rgba(0,0,0,.3);overflow:hidden;margin:6px 0}
 .rv-prog i{display:block;height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));width:0;transition:width .2s}
@@ -372,7 +373,9 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
 .dsg button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .dsg.pcs button .pp{display:block;width:74%;padding:2px 0}
 .dsg.pcs button .pp i{width:30px;height:30px;border-radius:50%;background-size:200% 100%;background-repeat:no-repeat;box-shadow:0 2px 4px rgba(0,0,0,.5)}
-@media (min-width: 900px){.dsg{grid-template-columns:repeat(6,minmax(0,1fr))} .modal.ngt-on .dsg{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* 盤6種・駒6種：PC は 6×1、スマホは 3×2（端数の出ない並び） */
+#newOverlay .modal .dsg{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+@media (min-width: 900px){#newOverlay .modal .dsg{grid-template-columns:repeat(6,minmax(0,1fr))!important}}
 
 /* rules / lessons / puzzles (tabbed list dialog, fixed size) */
 .ls-tabs{margin-bottom:16px}
@@ -384,6 +387,8 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
 @media not all and (min-width: 900px) and (min-height: 561px){
   #rulesOverlay .modal, #lessonOverlay .modal, #puzzleOverlay .modal{width:100%;height:calc(100dvh - 20px)}
 }
+/* タブと本体を1つの箱に入れる（shared/ngtabs.js のスマホの並び：タブを下端へ、本体 .rt-host が残りの高さを使う） */
+#rulesView{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 #rulesBody{flex:1;min-height:0;display:flex;flex-direction:column}
 #rulesBody > .rt{flex:1;min-height:0}
 #lessonListView:not(.hidden), #pzListView:not(.hidden), #pzGridView:not(.hidden), #lessonIntroView:not(.hidden), #lessonDoneView:not(.hidden){flex:1 0 auto;display:flex;flex-direction:column}
@@ -474,6 +479,7 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
   html.hb-on .pl-col .player .gold{flex:none}
   html.hb-on .sbox .st small{display:none}
   html.hb-on .sbox{min-height:56px}
+  html.hb-on body.reviewing .sbox{display:none}
   /* 低いウィンドウ：状態の箱を外してコーチに場所をゆずる（手番はヘッダー、投げるボタンは盤の上にある） */
   @media (max-height: 800px){ html.hb-on .sbox, html.hb-on .pool-info{display:none!important} html.hb-on #evalCard .graph{height:40px} }
   html.hb-on #evalCard{order:-1;padding:10px 12px}
@@ -511,7 +517,8 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
   body.in-lesson .lesson-card{order:-3}
   body.in-puzzle .puzzle-card{order:-3!important}   /* スマホ：パズルのカードは盤の上（共通ルール 2026-11-10） */
   body:is(.in-lesson,.in-puzzle) .side-in{display:contents}
-  body:is(.in-lesson,.in-puzzle) .side-in > :is(.lesson-card,.puzzle-card){order:2}
+  body:is(.in-lesson,.in-puzzle) .side-in > :is(.lesson-card,.puzzle-card){order:2;flex:none;overflow:visible}
+  .app > *, .board-area > *{flex-shrink:0}
   body:is(.in-lesson,.in-puzzle) .side-in > :not(.lesson-card):not(.puzzle-card){order:6}
   body:is(.in-lesson,.in-puzzle) .board-area > .player{display:none}
   .pl-col{display:none}
@@ -719,11 +726,13 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
   </div>
 </div>
 
-<!-- rules (hands-on tutorial: ur/tour.js on shared/ruletour.js) -->
+<!-- ルール（動かして覚えるチュートリアル：patolli/tour.js ＋ shared/ruletour.js） -->
 <div class="overlay" id="rulesOverlay">
   <div class="modal">
-    <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
-    <div id="rulesBody"></div>
+    <div id="rulesView">
+      <div class="seg ls-tabs"><button data-v="rules" data-i18n="tab.rules"></button><button data-v="lesson" data-i18n="tab.lesson"></button><button data-v="puzzle" data-i18n="tab.puzzle"></button></div>
+      <div id="rulesBody" class="rt-host"></div>
+    </div>
   </div>
 </div>
 

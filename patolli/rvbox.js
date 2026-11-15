@@ -113,7 +113,7 @@ function paintBox() {
   CTL.innerHTML = ken ? `<button data-a="back"${ken.plies.length ? '' : ' disabled'}>◀ ${esc(tr('back'))}</button><button class="reset" data-a="reset">${esc(tr('reset'))}</button>` : `<button class="go" data-a="ken">${esc(tr('ken'))}</button>`;
   rows = [];
   if (st && n && st.winner < 0) {
-    const ev = (!ken && R.res[src]) ? R.res[src].ev.map(e => ({ move: fullMove(st, e, n), wp: e.wp })).filter(e => e.move) : E.evaluate(st, n, 1);
+    const ev = (!ken && R.res[src]) ? R.res[src].ev.map(e => ({ move: fullMove(st, e, n), wp: e.wp })).filter(e => e.move) : E.evaluate(st, n, 2);
     rows = ev.slice(0, 6);
     LIST.innerHTML = rows.map((e, k) => `<div class="rvb-row" data-k="${k}"><span class="rk">${k + 1}</span><span>${esc(plyText(st, { s: st.turn, n, m: e.move }, false))}${played && e.move.from === played.from ? `<span class="pl">✓</span>` : ''}</span><span class="va">${Math.round(e.wp * 100)}%</span></div>`).join('');
   } else LIST.innerHTML = `<div class="rv-note">${esc(tr('candsNo'))}</div>`;

@@ -142,7 +142,7 @@ const SND = {
   dieHit(k = 1) { noise(.035, .13 * k, 2300 + Math.random() * 1500); if (k > .8) tone(1500 + Math.random() * 500, 0, .03, .012 * k, 'triangle'); },
   place() { noise(.06, .22, 1500); tone(420, 260, .08, .05, 'triangle'); },
   cap() { noise(.12, .28, 700); tone(220, 90, .22, .09, 'sine'); },
-  rosette() { [659.3, 987.8].forEach((f, i) => tone(f, 0, .5, .045, 'sine', i * .09)); },
+  again() { [659.3, 987.8].forEach((f, i) => tone(f, 0, .5, .045, 'sine', i * .09)); },
   pass() { tone(330, 247, .28, .04, 'sine'); },
   home() { [784, 1175].forEach((f, i) => tone(f, 0, .35, .05, 'triangle', i * .07)); },
   ok() { [880, 1318.5].forEach((f, i) => tone(f, 0, .4, .06, 'sine', i * .08)); },
@@ -174,7 +174,7 @@ function think(st, n, level, cfg) {   // cfg＝PROモードの { d: 先を読む
 }
 // その局面・その目の全部の手の勝率（良い順。depth 投げ先まで読む）
 function evalJob(st, n, depth) {
-  const here = () => E.evaluate(st, n, Math.min(depth, 1));
+  const here = () => E.evaluate(st, n, depth);
   return new Promise(res => {
     const w = worker();
     if (!w) { res(here()); return; }
@@ -185,7 +185,7 @@ function evalJob(st, n, depth) {
 function reviewJob(list, onProg) {
   return new Promise(res => {
     const w = worker();
-    const here = () => { list.forEach((q, i) => onProg(i, { ev: q.n ? E.evaluate(q.state, q.n, 1).map(x => ({ from: x.move.from, to: x.move.to, wp: x.wp })) : [], wp0: E.winProb(q.state, 1) })); res(); };
+    const here = () => { list.forEach((q, i) => onProg(i, { ev: q.n ? E.evaluate(q.state, q.n, 2).map(x => ({ from: x.move.from, to: x.move.to, wp: x.wp })) : [], wp0: E.winProb(q.state, 1) })); res(); };
     if (!w) { here(); return; }
     const id = ++jobSeq; jobs.set(id, d => { if (d.error) { jobs.delete(id); here(); } else if (d.type === 'progress') onProg(d.i, d.res); else { jobs.delete(id); res(); } });
     w.postMessage({ id, type: 'review', list });
@@ -619,7 +619,7 @@ async function commit(m) {
   if (sp) { if (special === sp && sp.onMove) sp.onMove(fm, res); renderAll(); return; }
   const rd = res.ev.find(e => e.t === 'round');
   if (rd) { fxMsg(t('fx.round', { n: rd.round }), t('fx.roundSub', { s: sideName(rd.winner) }), '', 1700); snd('ok'); }
-  else if (res.again && res.state.winner < 0) { fxMsg(t('fx.again'), t('fx.againSub'), '', 1200); snd('rosette'); }
+  else if (res.again && res.state.winner < 0) { fxMsg(t('fx.again'), t('fx.againSub'), '', 1200); snd('again'); }
   update();
   if (res.state.winner >= 0) { onGameEnd(); return; }
   afterPosition();
@@ -836,9 +836,9 @@ function resumeHere() {
 
 // ====================================================================== rated games (solo, placement)
 const RT_STORE = STORE + '-rated', RT_START = 1000;
-// 各レベルのAIのレート：tools/rate_levels.js の自己対局（ベルの復元、隣り合うレベルどうし各1200局）の勝率から。Lv.1 を 800 に固定。
-// 豆の運が大きいので、1段ごとの差は小さい（Lv.12 から1投げ先、Lv.20 は2投げ先まで読むので、そこで差がつく）
-const RT_LV = [0, 800, 815, 840, 850, 860, 885, 895, 910, 930, 940, 950, 995, 1020, 1045, 1070, 1085, 1095, 1105, 1115, 1205];
+// 各レベルのAIのレート：tools/rate_levels.js の自己対局（ベルの復元、隣り合うレベルどうし各800局）の勝率から。Lv.1 を 800 に固定。
+// 豆の運が大きいので1段ごとの差は小さい（読む投げの数が増える Lv.8・16・20 と、ばらつきが減る上の段で差がつく）
+const RT_LV = [0, 800, 810, 820, 850, 860, 885, 895, 920, 935, 950, 990, 1010, 1050, 1085, 1130, 1190, 1230, 1270, 1345, 1375];
 function rtLoad() { let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {} if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] }; if (!Array.isArray(s.hist)) s.hist = []; return s; }
 function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
 function rtRank(r) { let k = 0; for (let i = 1; i <= LV_MAX; i++) if (r >= RT_LV[i] - 25) k = i; return k ? LV(k) : t('rt.below'); }
@@ -1047,6 +1047,7 @@ $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
   applyI18n(); kifuKey = ''; renderAll();
   if ($('#newOverlay').classList.contains('show')) { segSync(); designPickers(); }
+  fixRulesOffer();
   if (HB) HB.relabel();
   if (window.PatolliCoach) PatolliCoach.relabel();
   if (window.GameRecord && GameRecord.relabel) GameRecord.relabel();
@@ -1065,6 +1066,10 @@ $('#btnSound').classList.toggle('on', settings.sound);
 buildView();
 if (window.CountTick) { CountTick.setMuted(() => !settings.sound); }
 if (window.RulesOffer) RulesOffer.init({ game: GID, lang: () => LANG, open: () => window.PatolliLearn && PatolliLearn.openRules(0), watch: '#rulesOverlay' });
+// 「はじめての方へ」の文：shared/rulesoffer.js の一覧にまだパトリがない（ない場合はチェスの文になる）ので、ここで自分の文に差し替える。
+// 共通部品に patolli の行を足したら、この差し替えは外す
+function fixRulesOffer() { const sp = document.querySelector('#newOverlay .rules-offer span'); if (sp) { const tx = t('rules.offer'); if (sp.textContent !== tx) sp.textContent = tx; } }
+new MutationObserver(fixRulesOffer).observe($('#newOverlay'), { attributes: true, attributeFilter: ['class'] }); fixRulesOffer();
 if (window.GameRecord) GameRecord.init({ game: GID, lang: () => LANG, menu: '.controls', sides: () => [t('first'), t('second')], variant: () => ({ k: game.rule, n: t('rule.' + game.rule) }), variants: () => RULES, variantName: k => t('rule.' + k), defVariant: 'bell' });
 if (window.PatolliCoach) PatolliCoach.init();
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;

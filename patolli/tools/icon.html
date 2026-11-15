@@ -1,0 +1,16 @@
+<!DOCTYPE html><meta charset="utf-8"><title>patolli icons</title>
+<!-- アイコンの元絵（仮）：images/patolli.webp（1200×900）と images/atlas/patolli.webp（512×512、角丸・透過）を
+     盤の絵から作る。node tools/make_icons.js がこのページを撮って書き出す。?k=card | atlas -->
+<style>html,body{margin:0;background:transparent}#card{width:1200px;height:900px;display:flex;align-items:center;justify-content:center;background:radial-gradient(900px 700px at 30% 20%,#2a6f78 0,#143a3f 45%,#170f0b 100%)}#card>div{width:820px;height:820px;filter:drop-shadow(0 26px 30px rgba(0,0,0,.55))}#atlas{width:512px;height:512px;border-radius:96px;overflow:hidden}</style>
+<div id="card"><div id="b1"></div></div><div id="atlas"></div>
+<script src="../engine.js"></script><script src="../board2d.js"></script>
+<script>
+const E = PatolliEngine, B = PatolliBoard2D, k = new URLSearchParams(location.search).get('k') || 'card';
+const st = E.newGame('bell'); st.pos = [[0, 0, 5, 18, 37, 60], [0, 9, 26, 44, 60, 60]];
+document.getElementById('b1').innerHTML = B.mini(st, { crop: 'board', trays: false });
+// 大百科のアイコン：盤の中央を大きく切り出す
+const s2 = E.newGame('bell'); s2.pos = [[3, 12, 59, 0, 0, 0], [2, 13, 58, 0, 0, 0]];
+const svg = B.mini(s2, { crop: 'board', trays: false }).replace(/viewBox="[^"]*"/, 'viewBox="-300 -300 600 600"');
+document.getElementById('atlas').innerHTML = svg;
+document.getElementById(k === 'card' ? 'atlas' : 'card').style.display = 'none';
+</script>

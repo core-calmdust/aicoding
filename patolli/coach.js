@@ -134,7 +134,7 @@ function ttl(st, m) { return m.enter ? tx('tt.enter', { to: m.to }) : m.finish ?
 function listFor(st, n) {
   const key = E.key(st) + '#' + n;
   if (S.lists.has(key)) return S.lists.get(key);
-  const v = E.evaluate(st, n, 1); S.lists.set(key, v); if (S.lists.size > 300) S.lists.delete(S.lists.keys().next().value);
+  const v = E.evaluate(st, n, 2); S.lists.set(key, v); if (S.lists.size > 300) S.lists.delete(S.lists.keys().next().value);
   return v;
 }
 function gapOf(d, i) { return i === 0 ? ['gap.best', 'g0'] : d <= .01 ? ['gap.eq', 'g1'] : d <= .04 ? ['gap.lt', 'g2'] : ['gap.bad', 'g3']; }
