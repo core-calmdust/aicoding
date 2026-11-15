@@ -104,7 +104,7 @@
   // the taker's place at a restart is the player's choice (2026-11-15 ユーザー：ボールの位置は決まっていても、蹴るコマの位置は
   // ルール上自由に決められないの？): anywhere round the ball from touching it (+0.6 cm) to TAKER_FAR away, on the table,
   // not on another piece. A kickoff and a penalty keep theirs.
-  const TAKER_NEAR = RB + RBALL + .6, TAKER_FAR = RB + RBALL + 10, PLACE_KINDS = ['throw', 'corner', 'gk', 'fk', 'ifk'];
+  const TAKER_NEAR = RB + RBALL + .6, TAKER_FAR = RB + RBALL + 10, PLACE_KINDS = ['throw', 'corner', 'gk', 'fk', 'ifk', 'keeper'];
   const canPlace = s => s.taker != null && PLACE_KINDS.includes(s.restart) && s.rem === 12 && !s.shot;
   // the side of the ball the taker may stand on: a throw-in from outside the touchline (a half circle), a corner from
   // outside the corner (a quarter); other restarts all round. Returns [centre angle, half width] or null (anywhere).
@@ -139,6 +139,9 @@
     }
     return best ? { x: best.x, y: best.y } : base;
   }
+  // (2026-11-15 ユーザー：キーパーの上に球がのって進まない — the ball was left where it stopped, often against the keeper
+  // where no button could get at it)
+  function keeperSpot(s, t, x) { const k = s.k[t], fy = -Math.sign(k.y); return { x: Math.max(-(SA_W / 2 - 2), Math.min(SA_W / 2 - 2, x)), y: k.y + fy * (KHD + RBALL + 2.5) }; }
   function restartFor(s, t, kind, x, y) {
     freshPossession(s, t); s.restart = kind;
     if (kind === 'pen') {
@@ -151,6 +154,7 @@
     }
     const q = kind === 'throw' ? { x: Math.sign(x) * (HW - RBALL - .2), y: Math.max(-H + 2, Math.min(H - 2, y)) }
       : kind === 'corner' ? { x: Math.sign(x || 1) * (HW - 1.4), y: Math.sign(y) * (H - 1.4) }
+      : kind === 'keeper' ? keeperSpot(s, t, x)   // the keeper's ball: out in front of the keeper, a button takes it
       : kind === 'gk' ? { x: Math.max(-12, Math.min(12, x * .4)), y: goalY(t) + (t === 0 ? -(SA_D + 1.2) : SA_D + 1.2) }   // just outside the small area
       : clampField(x, y);
     placeBall(s, t, q.x, q.y, kind);
@@ -194,6 +198,16 @@
     const S = shot.i, v = Math.max(0, Math.min(VMAX, shot.v));
     VX[S] = Math.cos(shot.ang) * v; VY[S] = Math.sin(shot.ang) * v;
     const K = s.k;
+    function keepers(i) {
+      for (let kt = 0; kt < 2; kt++) {
+        const vn = boxHit(X, Y, VX, VY, i, R[i], K[kt].x, K[kt].y, KHW, KHD, i === BALL ? E_KEEP : E_BB);
+        if (vn > 0) {
+          events.push({ t, k: 'keep', v: vn, i, kt });
+          if (i === BALL) touch('k' + kt);
+          if (i === S) { firstOf('k' + kt, K[kt].x, K[kt].y); if (kt !== team(S) && first.what !== 'k' + kt) hitOppAfter = true; }
+        }
+      }
+    }
     const moving = new Uint8Array(N); moving[S] = 1;
     const events = [], frames = opt.frames ? [] : null, touches = [], touchT = [];   // touches: who touched the ball, in order ('b<i>' buttons, 'k<t>' keepers)
     let first = null, hitOppAfter = false, out = null, goal = null, tGoal = 0, t = 0, nextF = 0, ballFrozen = false;
@@ -222,14 +236,7 @@
         // the goal frames
         for (const g of GOALBOX) { const vn = boxHit(X, Y, VX, VY, i, r, g[0], g[1], g[2], g[3], E_POST); if (vn > 0) events.push({ t, k: 'post', v: vn, i }); }
         // the goalkeepers
-        for (let kt = 0; kt < 2; kt++) {
-          const vn = boxHit(X, Y, VX, VY, i, r, K[kt].x, K[kt].y, KHW, KHD, i === BALL ? E_KEEP : E_BB);
-          if (vn > 0) {
-            events.push({ t, k: 'keep', v: vn, i, kt });
-            if (i === BALL) touch('k' + kt);
-            if (i === S) { firstOf('k' + kt, K[kt].x, K[kt].y); if (kt !== team(S) && first.what !== 'k' + kt) hitOppAfter = true; }
-          }
-        }
+        keepers(i);
         if (i === BALL && !out && !goal) {
           // in the goal: the ball's middle over the line between the posts
           if (Math.abs(Y[i]) > H && Math.abs(X[i]) < GHW) { goal = { side: Y[i] > 0 ? 0 : 1, x: X[i] }; tGoal = t; events.push({ t, k: 'goal', side: goal.side }); }
@@ -258,8 +265,15 @@
           else if (i === S || j === S) { const o = i === S ? j : i; firstOf('b' + o, X[o], Y[o]); if (first.what !== 'b' + o && team(o) !== team(S)) hitOppAfter = true; }
         }
       }
+      // a knock can shove a piece into a goalkeeper: out again at once (2026-11-15 ユーザー：キーパーの上に球がのって進まない —
+      // a ball left inside the keeper could not be reached by any button)
+      for (let i = 0; i < N; i++) if (moving[i]) keepers(i);
       if (frames && t >= nextF) { snap(); nextF += 1 / FPS; }
     }
+    // and at rest nothing may be left overlapping a keeper (the ball out on the field side)
+    for (let i = 0; i < N; i++) for (let kt = 0; kt < 2; kt++) { const k = K[kt], hx = KHW + R[i], hy = KHD + R[i];
+      if (Math.abs(X[i] - k.x) < hx - .01 && Math.abs(Y[i] - k.y) < hy - .01) { const fy = -Math.sign(k.y), ox = hx - Math.abs(X[i] - k.x), oy = (Y[i] - k.y) * fy + hy;
+        if (ox < oy) X[i] = k.x + (Math.sign(X[i] - k.x) || 1) * hx; else Y[i] = k.y + fy * hy; } }
     if (frames) snap();
     const fin = { b: [], ball: { x: X[BALL], y: Y[BALL] } };
     for (let i = 0; i < NB; i++) fin.b.push({ x: X[i], y: Y[i] });
@@ -305,7 +319,7 @@
       return done();
     }
     // 4. a shot that did not score: the defender's ball
-    if (shot) { msg.push(sim.touches.some(w => w === 'k' + o) ? 'save' : 'miss'); freshPossession(s, o); s.restart = 'keeper'; s.noShot = 1; return done(); }
+    if (shot) { msg.push(sim.touches.some(w => w === 'k' + o) ? 'save' : 'miss'); restartFor(s, o, 'keeper', s.ball.x, s.ball.y); return done(); }
     // 5. a miss (furada) or your own button first
     if (!first || first.what !== 'ball') {
       msg.push(first ? 'ownfirst' : 'furada');
@@ -316,7 +330,7 @@
     // 6. the ball last touched an opponent's piece
     if (lastTeam === o) { msg.push('lost'); freshPossession(s, o); return done(); }
     // 7. the ball at rest in the opponent's small area: the goalkeeper's
-    if (inSmall(o, s.ball.x, s.ball.y)) { msg.push('keeperball'); freshPossession(s, o); s.noShot = 1; s.restart = 'keeper'; return done(); }
+    if (inSmall(o, s.ball.x, s.ball.y)) { msg.push('keeperball'); restartFor(s, o, 'keeper', s.ball.x, s.ball.y); return done(); }
     // 8. play on
     s.rem = s0.rem - 1; s.cons = s0.last === S ? s0.cons + 1 : 1; s.last = S; s.noShot = Math.max(0, s0.noShot - 1); s.direct = false;
     if (sim.hitOppAfter && s.rem > 3) { s.rem = 3; msg.push('three'); }
