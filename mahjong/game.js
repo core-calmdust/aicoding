@@ -49,10 +49,10 @@ class MJGame {
   // first use in a game is free; later uses cost the skill's base, doubling each time (paid into the pot)
   skillCost(s) {
     const n = this.skillUses[s];
-    if (n === 0) return 0;
     const sk = this.chars[s] && SK.get(this.chars[s].skill);
+    if (n === 0 && !(sk && sk.noFree)) return 0;
     const base = (this.rules.costs && sk && this.rules.costs[sk.id]) || (sk && sk.cost) || 1000;
-    return base * Math.pow(2, n - 1);
+    return sk && sk.noFree ? base * Math.pow(2, n) : base * Math.pow(2, n - 1);   // (a skill that is never free: base, then doubling)
   }
   skillOf(s) { return this.chars[s] && this.chars[s].skill ? SK.get(this.chars[s].skill) : null; }
   canSkill(s, timing) {
