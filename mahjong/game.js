@@ -62,6 +62,9 @@ class MJGame {
     const noFree = !!(sk && sk.noFree);
     if (!noFree && !this.skillFree[s]) return 0;
     const base = (this.rules.costs && sk && this.rules.costs[sk.id]) || (sk && sk.cost) || 1000;
+    // rules.costSplit (an option, for tools/dual-skill-sim.js): each skill's cost rises with its own paid uses only —
+    // base, ×2, ×4 … (封じ: half, base, ×2 …); the one free use of the game is still shared
+    if (this.rules.costSplit) { const p = this.paidUses ? this.paidUses[s][i | 0] : 0; return (noFree ? base / 2 : base) * Math.pow(2, p); }
     if (noFree) return base / 2 * Math.pow(2, n);
     return base * Math.pow(2, Math.max(0, n - 1));
   }
@@ -638,6 +641,7 @@ class MJGame {
     const cost = this.skillCost(s, i);
     const { sk, tier } = this.slot(s, i);
     this.scores[s] -= cost; this.kyotaku += cost;
+    if (cost > 0) { if (!this.paidUses) this.paidUses = [[0, 0], [0, 0], [0, 0], [0, 0]]; this.paidUses[s][i]++; }
     if (!sk.noFree && !this.skillFree[s]) this.skillFree[s] = true;
     this.skillUses[s]++;
     this.P[s].skUsed[i] = true;
