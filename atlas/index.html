@@ -1865,7 +1865,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .rgd.lsg .rgd-act{gap:8px}.rgd.lsg .rgd-act .sp{flex:1}.rgd.lsg .cnt{display:flex;align-items:center;gap:5px;min-height:0}.rgd.lsg .lsd{width:12px;height:12px;border-radius:50%;background:#e6dccb;display:inline-block}.rgd.lsg .lsd.ok{background:#3ccf91}.rgd.lsg .lsd.mid{background:#ffb21e}.rgd.lsg .lsd.ng{background:#ff5d5d}.rgd.lsg .lsd.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
 body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,body:has(#pg-gacha.on) .msbtn,body:has(#pg-dress.on) .msbtn{display:none}   /* (ミッション: not over the 3D view) */
 /* shogi / chess, PC: 対戦 · レート戦 · パズル · レッスン (app.js mxPanels, 2026-11-10) */
-.bvi .mtab3.mtab4 button{padding-inline:4px;font-size:13.5px}
+.bvi .mtab3.mtab4 button{padding-inline:4px;font-size:13.5px}.bvi .mxp.mxoff > *{display:none!important}#bvFull.mxgone{display:none!important}.mxone > #bvTable{grid-column:1 / -1}
 .bvi .mxp[hidden]{display:none!important}
 .bvi #bvRt{flex-direction:column;align-items:stretch;flex-wrap:nowrap}.bvi #bvRt > label{flex:none!important;width:100%}.bvi #bvRt > label[hidden]{display:none}
 .bvi #bvRt .mxrow{display:flex;gap:10px;align-items:center}.bvi #bvRt .mxrow > label{flex:1 1 auto!important;min-width:0;display:flex;align-items:center;gap:8px;white-space:nowrap}.bvi #bvRt .mxrow .mxb{flex:none}
@@ -2294,7 +2294,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=36"></script>
 <script src="npc/npc.js?v=35"></script>
 <script src="avtalk.js?v=3"></script>
-<script src="app.js?v=392"></script>
+<script src="app.js?v=394"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
