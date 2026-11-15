@@ -3,7 +3,7 @@
    • FACTS  'MM-DD' → one short "what was this day?" line in all 14 languages,
             shown under each date header. Only well-established, checkable facts;
             each entry keeps its source. A date without an entry simply shows no line —
-            add one whenever a new date appears in shared/atlas.js UPDATES.
+            add one whenever a new date appears in UPDATES (shared/atlas-updates.js).
    • LABEL  the small caption in front of the line
    • TAGS   labels for the tags derived from each changelog line (rules in app.js updTags)
    ===================================================================== */

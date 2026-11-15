@@ -60,7 +60,17 @@
   const HC = navigator.hardwareConcurrency || 4, MAXT = Math.max(1, Math.min(32, HC));
   const MT = { X: null, mem: null, module: null, base: 0, workers: [], weights: null, ctl: null };
   const CFG = { depth: 60, exact: 22, wld: 24, mpc: 1 };   // like level 20, solving a little earlier (several threads)
+  // (2026-11-15) weights.pk.bin.gz (tools/pack-weights.py): phase differences, zigzag, byte planes → the v4 int16 weights, same values
+  function rvUnpack(buf) {
+    const h = new DataView(buf, 0, 8);
+    if (h.getUint8(0) !== 82 || h.getUint8(1) !== 86 || h.getUint8(2) !== 90 || h.getUint8(3) !== 49) return null;
+    const nph = h.getUint16(4, true), b = new Uint8Array(buf, 8), n = b.length >> 1, per = n / nph, w = new Int16Array(n);
+    for (let i = 0; i < n; i++) { const z = b[i] | (b[n + i] << 8); w[i] = (z >>> 1) ^ -(z & 1); }
+    for (let i = per; i < n; i++) w[i] = (w[i] + w[i - per]) << 16 >> 16;
+    return { buffer: w.buffer, nphase: nph };
+  }
   async function loadWeights() {
+    try { const r0 = await fetch('../weights.pk.bin.gz?v=1'); if (r0.ok) { const w0 = rvUnpack(await new Response(r0.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); if (w0) return w0; } } catch (e) {}   // (the packed copy, 2026-11-15)
     const res = await fetch('../weights.bin.gz?v=4');
     const buf = await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
     const meta = await fetch('../weights.json').then(r => r.json()).catch(() => ({ nphase: 12 }));
