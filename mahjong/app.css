@@ -2297,11 +2297,7 @@ html.lp #game .skb.pt{padding-right:5px}
 #home.aaa .pp-pt.ask{padding:5px 10px 5px 7px;gap:6px}
 #home.aaa .pp-pt.ask b{font-size:13.5px;letter-spacing:.02em}
 #home.aaa .pp-pt.ask i{width:20px;height:20px;line-height:18px;font-size:14px;flex:none}
-/* (ユーザー 2026-11-15) the partner's name, small, right of her skill — it gives way first when there is no room */
 #home.aaa .pp-pt .skc{flex:none}
-#home.aaa .pp-pt .pp-ptn{flex:0 1 auto;min-width:0;overflow:hidden;white-space:nowrap;font-family:var(--serif);font-size:13px;letter-spacing:.1em;color:#e3daf5}
-#home.aaa .aa-plate.wide .pp-pt{width:auto;min-width:0;max-width:none;contain:none;overflow:visible}
-#home.aaa .pp-pt .pp-ptn{flex:none;overflow:visible}
 /* (ユーザー 2026-11-15: the skill plates left of the player's portrait may be a little smaller on a desktop) 82% of what they were */
 html.ds #game .me .sks{transform:scale(calc(var(--hz, 1) * .82))}
 html.ds #game .me .mb{margin-left:calc((var(--hz, 1) * .82 - 1) * var(--skw, 0px))}
