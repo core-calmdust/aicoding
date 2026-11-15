@@ -2315,3 +2315,8 @@ html.ds #game .me .mb{margin-left:calc((var(--hz, 1) * .82 - 1) * var(--skw, 0px
 .chi .pm{display:none}
 .chi.sel .pm{display:block}
 #chara.ch2 .ch-info>:last-child{margin-top:0}
+/* (ユーザー 2026-11-15) the name card at 16:9: as long as its words need plus a margin, the dark ground fading out to the right */
+#home.aaa .aa-plate.wide.meas{width:max-content!important}
+#home.aaa .aa-plate.wide.meas .pp-info{flex:none}
+#home.aaa .aa-plate.wide.meas .pp-info *{white-space:nowrap}
+#home.aaa .aa-plate.wide.fade{background:linear-gradient(90deg,rgba(8,5,18,.94),rgba(8,5,18,.9) 45%,rgba(8,5,18,.72) 72%,rgba(8,5,18,.3) 90%,rgba(8,5,18,0));border-radius:0}
