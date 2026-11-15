@@ -399,6 +399,7 @@ function renderHome() {
   const home = $('#home'); home.style.setProperty('--c', c.color); home.style.setProperty('--c2', c.color2);
   // the partner, large and free of any box (AAA title screen, ユーザー 2026-11-14), and the same art blurred as the room's light
   const full = charImg(c, 'full');
+  if (window.MJTouch && I18N.lang === 'ja') MJTouch.load(c.id);
   if ($('#pArt').dataset.id !== c.id) {
     $('#pArt').dataset.id = c.id;
     $('#pArt').innerHTML = `<i class="aa-aura"></i><button class="aa-ch" id="pImg" aria-label="${esc(L(c.name))}"><img src="${full}" alt="" draggable="false"></button>`;
@@ -444,7 +445,7 @@ function renderHome() {
   seg($('#optSkill'), [['1', t('skillOn')], ['0', t('skillOff')]], DB.set.skills ? '1' : '0', v => DB.set.skills = v === '1');
   seg($('#optLv'), t('lv').map((x, i) => [String(i), x]), String(DB.set.lv), v => DB.set.lv = +v);
 }
-$('#pArt').addEventListener('click', e => { if (e.target.closest('#pImg')) homeSay(); });
+$('#pArt').addEventListener('click', e => { if (e.target.closest('#pImg')) homeSay(e); });
 $('#partner').addEventListener('click', e => { if (e.target.closest('#ppChg, #ppMore')) { SND.pick(); openChara(DB.sel); } });
 $('#btnStats').addEventListener('click', () => openStats(null));
 $('#btnRated').addEventListener('click', openRanked);
@@ -462,11 +463,20 @@ $('#aaProf').addEventListener('click', () => openStats(null));
 $('#aaBanner').addEventListener('click', () => { SND.pick(); openGacha(); });
 // tapping her: a line of hers in a speech bubble
 let sayT = 0;
-function homeSay() {
-  const c = MJChars.get(DB.sel), ks = Object.keys(c.lines || {}); if (!ks.length) return;
+function homeSay(e) {
+  const c = MJChars.get(DB.sel); let txt = null, at = null;
+  // (ユーザー 2026-11-15) where she was touched decides what she says (touch.js: about a hundred lines each, Japanese only)
+  if (e && window.MJTouch && I18N.lang === 'ja') { const im = e.target.closest('#pImg') && document.querySelector('#pImg img');
+    if (im) { const r = im.getBoundingClientRect(), k = Math.max(r.width / 1080, r.height / 1920), w = 1080 * k, h = 1920 * k;   // (the picture covers its box, held at the top, centred across)
+      const u = (e.clientX - r.left - (r.width - w) / 2) / w, v = (e.clientY - r.top) / h; txt = MJTouch.line(c.id, MJTouch.zone(c.id, u, v)); at = [e.clientX, e.clientY]; } }
+  if (!txt) { const ks = Object.keys(c.lines || {}); if (!ks.length) return; txt = L(c.lines[ks[(Math.random() * ks.length) | 0]]); }
   SND.pick();
-  const el = $('#aaSay'); el.textContent = L(c.lines[ks[(Math.random() * ks.length) | 0]]); el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-  clearTimeout(sayT); sayT = setTimeout(() => { el.classList.remove('on'); }, 2600);
+  const el = $('#aaSay'); el.textContent = txt; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  // the bubble comes up beside the place touched (kept inside the picture's column)
+  if (at) { const hr = $('#home').getBoundingClientRect(), z = hr.width / $('#home').offsetWidth || 1, x = (at[0] - hr.left) / z, y = (at[1] - hr.top) / z, W = $('#home').offsetWidth, H = $('#home').offsetHeight;
+    el.style.left = Math.max(W * .2, Math.min(W * .66 - el.offsetWidth, x + 24)) + 'px'; el.style.top = Math.max(70, Math.min(H * .7, y - el.offsetHeight - 14)) + 'px'; }
+  else el.style.left = el.style.top = '';
+  clearTimeout(sayT); sayT = setTimeout(() => { el.classList.remove('on'); }, Math.max(2600, 1400 + txt.length * 90));
 }
 // the room: specks of light drifting in the warm air (ユーザー 2026-11-14: not vector dots — real light). Pre-rendered soft sprites
 // drawn additively: a few large out-of-focus bokeh discs far in front, fine motes in the light that twinkle (the brightest
@@ -1683,7 +1693,9 @@ async function showFinal(d) {
   // 1st = two single pulls, 2nd = one pull (COST1 each); hanchan pays double
   const base = [COST1 * 2, COST1, 120, 60][myRank] * (G.rules.length === 'south' ? 2 : 1);
   // (ユーザー 2026-11-15) playing a rarer character brings a little more: R +5%, SR +10%, SSR +20%, UR +30%
-  const myR = UIS.chars[ME] && UIS.chars[ME].rarity, bonusP = RAR_BONUS[myR] || 0, bonus = Math.round(base * bonusP / 10) * 10, coins = base + bonus;
+  const myR = UIS.chars[ME] && UIS.chars[ME].rarity, bonusP = RAR_BONUS[myR] || 0, bonus = Math.round(base * bonusP / 10) * 10;
+  // (ユーザー 2026-11-15) a big win pays more: 10 coins for every full 1,000 points over the starting 25,000
+  const over = Math.max(0, Math.floor((d.scores[ME] - 25000) / 1000)), sbonus = over * 10, coins = base + bonus + sbonus;
   DB.coins += coins; DB.stats.games++; DB.stats.rank[myRank]++;
   if (!AUTO) {   // スタッツ: this game's counters into the mode's total, and the place under the character played
     MJStats.add(DB.pstats[G.rules.skills ? 'skill' : 'std'], UIS.track.seat[ME]);
@@ -1716,7 +1728,7 @@ async function showFinal(d) {
       <div class="agst-main">
         <h2 class="fn-t">${t('final')}</h2>
         <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" data-ps="${s}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
-        <div class="fn-foot">${rk ? rankStrip(rk) : '<span></span>'}<div class="earn">${icon('coin')} ${t('earned', { n: coins })}${bonus ? `<small class="rbonus">${esc(t('rarBonus', { r: myR, p: Math.round(bonusP * 100), n: bonus }))}</small>` : ''}</div>
+        <div class="fn-foot">${rk ? rankStrip(rk) : '<span></span>'}<div class="earn">${icon('coin')} ${t('earned', { n: coins })}${bonus ? `<small class="rbonus">${esc(t('rarBonus', { r: myR, p: Math.round(bonusP * 100), n: bonus }))}</small>` : ''}${sbonus ? `<small class="rbonus">${esc(t('scoreBonus', { n: sbonus, k: (over * 1000).toLocaleString() }))}</small>` : ''}</div>
           <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div></div>
       </div>
     </div>`, 'stage');
