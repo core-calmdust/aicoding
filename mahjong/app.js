@@ -1230,6 +1230,9 @@ function placeActsAtPointer() {
 $('#game').addEventListener('click', e => {
   // (ユーザー 2026-11-15) a click on the table on my turn discards the tile just drawn (ツモ切り), as a click there passes a call
   if (UIS && UIS.kind === 'turn' && UIS.resolve && !e.target.closest('#hand, #acts, #chiPick, .tbtns, #skBtn, #dealAsk, .opp, #mePanel, #meBadge, .me, #khelp, #rbox, .modal')) {
+    // (2026-11-15, ユーザー「スマホ、どこをタップしても牌を捨ててしまう」) only with a mouse: on a touch screen a tap on the table
+    // just lets go of the picked tile
+    if (!fine.matches) { if (UIS.picked != null) { UIS.picked = null; renderHand(); TB.highlightType(null); } return; }
     const dr = document.querySelector('#hand .tl.drawn');
     if (dr && !dr.classList.contains('no')) { SND.pick(); doDiscard(+dr.dataset.id); }
     return;
