@@ -249,6 +249,14 @@
       // the frame on the table behind the net
       for (const sx of [-1, 1]) { const f = new TT.Mesh(geo('btGFs', () => new TT.BoxGeometry(.5 * K, .5 * K, GD * K)), BM.post); f.position.set(sx * GHW * K, TOP + .25 * K, (gy + sg * GD / 2) * K); f.userData.gx = sx; g.add(f); }
       const fb = new TT.Mesh(geo('btGFb', () => new TT.BoxGeometry(GW * K, .5 * K, .5 * K)), BM.post); fb.position.set(0, TOP + .25 * K, (gy + sg * GD) * K); fb.userData.gs = 1; g.add(fb);
+      // the PK shoot-out's own mark, further out (2026-11-15 ユーザー：PKはもっとゴールまでの距離があるほうが良い、盤面のデザインも変える):
+      // a spot, a ring round it and a lane of dashes towards the goal, shown only while the shoot-out is on
+      { const lineM = new TT.MeshBasicMaterial({ color: look === 'neon' ? 0x3ce6ff : 0xffffff, transparent: true, opacity: look === 'neon' ? .9 : .85, toneMapped: look !== 'neon', depthWrite: false }), py = sg * (H - 40);
+        const pkG = new TT.Group(); pkG.userData.pkm = 1; pkG.visible = false;
+        const spot = new TT.Mesh(new TT.CircleGeometry(1.1 * K, 24), lineM); spot.rotation.x = -Math.PI / 2; spot.position.set(0, TOP + .02 * K, py * K); pkG.add(spot);
+        const ring = new TT.Mesh(new TT.RingGeometry(9.4 * K, 10 * K, 64), lineM); ring.rotation.x = -Math.PI / 2; ring.position.set(0, TOP + .02 * K, py * K); pkG.add(ring);
+        for (let q = 13; q < 38; q += 4) { const dsh = new TT.Mesh(new TT.PlaneGeometry(.45 * K, 1.8 * K), lineM); dsh.rotation.x = -Math.PI / 2; dsh.position.set(0, TOP + .02 * K, (py + sg * q) * K); pkG.add(dsh); }
+        g.add(pkG); }
     }
     if (look === 'neon') top.userData.keep = true;
     const U = g.userData;
@@ -257,8 +265,8 @@
     U.button = (side, n) => button(look, side, n); U.ball = () => ball(look); U.keeper = side => keeper(look, side);
     U.dot = side => DOT[look][side];
     // the goal's inside width (cm): the PK shoot-out widens it (the posts and side nets move out, the bar and nets stretch)
-    const GM = g.children.filter(m => m.userData.gx || m.userData.gs);
-    U.goalWidth = w => { w = w || GW; GM.forEach(m => { const d = m.userData; if (d.gx) m.position.x = d.gx * w / 2 * K; else if (d.gs) m.scale.x = w / GW; }); };
+    const GM = g.children.filter(m => m.userData.gx || m.userData.gs || m.userData.pkm);
+    U.goalWidth = w => { w = w || GW; GM.forEach(m => { if (m.userData.pkm) { m.visible = w > GW; return; } const d = m.userData; if (d.gx) m.position.x = d.gx * w / 2 * K; else if (d.gs) m.scale.x = w / GW; }); };
     return g;
   }
 

@@ -33,7 +33,7 @@
     E_BB = .75, E_BBALL = .85, E_RIM = .55, E_KEEP = .45, E_POST = .5,
     VMAX = 200, VMIN = 12,
     DT = 1 / 360, TMAX = 12, FPS = 60;
-  const DIM = { FW, FL, HW, H, PS, PE, TX, TY, GW, GHW, PK_GW: 6 * KHW, PK_PEN: 28, GD, SA_W, SA_D, BA_W, BA_D, PEN, CR, RB, RBALL, KHW, KHD, VMAX, DEC_B };
+  const DIM = { FW, FL, HW, H, PS, PE, TX, TY, GW, GHW, PK_GW: 6 * KHW, PK_PEN: 40, GD, SA_W, SA_D, BA_W, BA_D, PEN, CR, RB, RBALL, KHW, KHD, VMAX, DEC_B };
   const team = i => i < 10 ? 0 : 1;
   const goalY = t => t === 0 ? H : -H;                      // the goal line side t defends
   const fwd = t => t === 0 ? -1 : 1;                        // the direction side t attacks (sign of y)
@@ -191,19 +191,22 @@
   // the goal frames: two side boards and a back board each end (outside the field), the posts
   // the PK shoot-out plays at a goal three keepers wide (2026-11-15 ユーザー：中央に構えられるとほぼ入らない — the match goal stays)
   // and from further out: more room between the kicker and the keeper (2026-11-15 ユーザー)
-  const PK_PEN = 28, PK_GW = 6 * KHW, ghw = s => s && s.pk ? PK_GW / 2 : GHW;
+  const PK_PEN = 40, PK_GW = 6 * KHW, ghw = s => s && s.pk ? PK_GW / 2 : GHW;
   const goalBoxFor = h => { const B = []; for (const sg of [1, -1]) { const y0 = sg * (H + GD / 2 + .3); B.push([-(h + .5), y0, .5, GD / 2 + .3], [h + .5, y0, .5, GD / 2 + .3], [0, sg * (H + GD + .6), h + 1, .3]); } return B; };
   const GBOX = {};
 
   // shot: { i (button), ang, v (cm/s) }. Returns where everything ended up and what touched what.
-  function simulate(s, shot, opt) {
+  function simulate(s, shot, opt) { const c = simCore(s, shot, opt); c.runUntil(Infinity); return c.result(); }
+  // the same physics stepped bit by bit, with a keeper that can be moved between steps (the PK shoot-out's live keeper:
+  // 2026-11-15 ユーザー：打ったあと、ゴールに入った後もキーパーは動かせるように)
+  function simCore(s, shot, opt) {
     opt = opt || {};
     const N = NB + 1, X = new Float64Array(N), Y = new Float64Array(N), VX = new Float64Array(N), VY = new Float64Array(N), R = new Float64Array(N), M = new Float64Array(N);
     for (let i = 0; i < NB; i++) { X[i] = s.b[i].x; Y[i] = s.b[i].y; R[i] = RB; M[i] = MB; }
     X[BALL] = s.ball.x; Y[BALL] = s.ball.y; R[BALL] = RBALL; M[BALL] = MBALL;
     const S = shot.i, v = Math.max(0, Math.min(VMAX, shot.v));
     VX[S] = Math.cos(shot.ang) * v; VY[S] = Math.sin(shot.ang) * v;
-    const K = s.k, GH_ = ghw(s), GOALBOX = GBOX[GH_] || (GBOX[GH_] = goalBoxFor(GH_));
+    const K = s.k.map(k => ({ x: k.x, y: k.y })), GH_ = ghw(s), GOALBOX = GBOX[GH_] || (GBOX[GH_] = goalBoxFor(GH_));
     function keepers(i) {
       for (let kt = 0; kt < 2; kt++) {
         const vn = boxHit(X, Y, VX, VY, i, R[i], K[kt].x, K[kt].y, KHW, KHD, i === BALL ? E_KEEP : E_BB);
@@ -222,7 +225,8 @@
     const touch = who => { if (touches[touches.length - 1] !== who) { touches.push(who); touchT.push(t); } };
     const firstOf = (what, x, y) => { if (!first) first = { what, x, y }; };
     let any = true;
-    while (any && t < TMAX) {
+    function runUntil(tt) {
+    while (any && t < TMAX && t < tt) {
       t += DT; any = false;
       for (let i = 0; i < N; i++) {
         if (!moving[i]) continue;
@@ -276,6 +280,8 @@
       for (let i = 0; i < N; i++) if (moving[i]) keepers(i);
       if (frames && t >= nextF) { snap(); nextF += 1 / FPS; }
     }
+    }
+    function result() {
     // and at rest nothing may be left overlapping a keeper (the ball out on the field side)
     for (let i = 0; i < N; i++) for (let kt = 0; kt < 2; kt++) { const k = K[kt], hx = KHW + R[i], hy = KHD + R[i];
       if (Math.abs(X[i] - k.x) < hx - .01 && Math.abs(Y[i] - k.y) < hy - .01) { const fy = -Math.sign(k.y), ox = hx - Math.abs(X[i] - k.x), oy = (Y[i] - k.y) * fy + hy;
@@ -283,7 +289,9 @@
     if (frames) snap();
     const fin = { b: [], ball: { x: X[BALL], y: Y[BALL] } };
     for (let i = 0; i < NB; i++) fin.b.push({ x: X[i], y: Y[i] });
-    return { fin, first, touches, touchT, hitOppAfter, out, goal, tGoal, events, frames, dur: t, shooter: S };
+    return { fin, first, touches, touchT, hitOppAfter, out, goal, tGoal, events, frames, dur: t, shooter: S, k: K.map(k => ({ x: k.x, y: k.y })) };
+    }
+    return { runUntil, result, X, Y, events, get t() { return t; }, get done() { return !(any && t < TMAX); }, get goal() { return goal; }, setKeeper(kt, x, y) { K[kt] = { x, y }; } };
   }
 
   /* ---------- the result of a flick by the rules ---------- */
@@ -685,7 +693,7 @@
     const c = clone(s); return setKeeper(c, t, k.x, k.y);
   }
 
-  const api = { VB_RATIO, powV, vPow, _int: { candidates: (s, sk) => candidates(s, sk), evaluate: (a, b, c, d) => evaluate(a, b, c, d), attackValue: (a, b, c, d) => attackValue(a, b, c, d), skill: l => skill(l) }, DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor, aimTrace, wobble, perform, think, skill, speedFor, aimAt, canPlace, setTaker, takerArc, placeFor, TAKER_NEAR, TAKER_FAR, aimRoll, ballAim, aimCone, ballPath, ballSpeedFor, rollOf, clone, laneOpen };
+  const api = { VB_RATIO, powV, vPow, _int: { candidates: (s, sk) => candidates(s, sk), evaluate: (a, b, c, d) => evaluate(a, b, c, d), attackValue: (a, b, c, d) => attackValue(a, b, c, d), skill: l => skill(l) }, DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor, aimTrace, wobble, perform, think, skill, speedFor, aimAt, canPlace, setTaker, simCore, takerArc, placeFor, TAKER_NEAR, TAKER_FAR, aimRoll, ballAim, aimCone, ballPath, ballSpeedFor, rollOf, clone, laneOpen };
   root.BotaoEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : this);
