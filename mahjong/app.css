@@ -1785,3 +1785,60 @@ html.lp .agst .ag-yaku{grid-template-columns:1fr;max-width:42cqw}
 .agst .ag-yaku .yk span,.agst .ag-yaku .yk b{white-space:nowrap}
 html.lp .agst .ag-yaku{font-size:clamp(10.5px,calc(21cqh / max(var(--n),3)),20px);gap:calc(var(--u)*.6)}
 .agst .ag-yaku{font-size:clamp(13px,calc(22cqh / max(var(--n),5)),calc(var(--u)*4.4));gap:calc(var(--u)*.7);align-content:safe center}
+/* ================= 戦績 (the stats screen) in the house's luxury style (ユーザー 2026-11-15: no plain gothic — a lacquer and gold
+   screen; the game log built in; every yaku with its count and its share of all hands) ================= */
+.pstats .ps-main{font-family:var(--serif);background:radial-gradient(120% 70% at 50% 0%,rgba(232,206,140,.08),transparent 60%),linear-gradient(180deg,var(--lq1),var(--lq2));
+  border:1px solid rgba(232,206,140,.7);box-shadow:inset 0 0 0 4px var(--lq2),inset 0 0 0 5px rgba(232,206,140,.28),0 24px 60px rgba(0,0,0,.6)}
+.pstats .ps-id b{color:var(--gl2);letter-spacing:.08em}
+.pstats .ps-id small{font-family:var(--serif);letter-spacing:.14em;color:rgba(232,206,140,.85)}
+.pstats .ps-tabs{gap:0;border:1px solid rgba(232,206,140,.45);border-radius:4px;padding:3px;background:rgba(0,0,0,.3)}
+.pstats .ps-tabs button{font-family:var(--serif);font-weight:700;letter-spacing:.16em;border:0;border-radius:2px;background:none;color:rgba(232,206,140,.6)}
+.pstats .ps-tabs button.on{background:radial-gradient(120% 160% at 50% 0%,rgba(232,206,140,.28),transparent 65%),linear-gradient(180deg,#2c2240,#120d1e);color:var(--gl2);box-shadow:inset 0 0 0 1px rgba(232,206,140,.75)}
+.pstats .ps-big > div{border-radius:3px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.25));border:1px solid rgba(232,206,140,.35);box-shadow:inset 0 0 0 3px rgba(12,9,21,.9),inset 0 0 0 4px rgba(232,206,140,.12);text-align:center}
+.pstats .ps-big small{font-family:var(--serif);letter-spacing:.18em;color:rgba(232,206,140,.75)}
+.pstats .ps-big b{color:#fff4d6;letter-spacing:.02em}
+.pstats .ps-sec h4{font-family:var(--serif);letter-spacing:.24em;color:var(--gl);display:flex;align-items:baseline;gap:1em;border-bottom:1px solid rgba(232,206,140,.3);padding-bottom:.35em}
+.pstats .ps-sec h4 small{margin-left:auto;font-size:.8em;letter-spacing:.08em;color:rgba(232,206,140,.6);font-weight:600}
+.pstats .ps-rbar{border-radius:2px;box-shadow:0 0 0 1px rgba(232,206,140,.35)}
+.pstats .ps-rbar i,.pstats .ps-rn{font-family:var(--serif)}
+.pstats .ps-grid > div{border-bottom:1px solid rgba(232,206,140,.14)}
+.pstats .ps-grid span{font-family:var(--serif);letter-spacing:.08em;color:#d8cdee}
+.pstats .ps-grid b{font-family:var(--serif);color:#fff4d6}
+.pstats .ps-cols .ps-sec{border-radius:3px;background:rgba(0,0,0,.22);border:1px solid rgba(232,206,140,.25)}
+.pstats .ps-mw b.ps-mwp{color:var(--gl)}
+.pstats .ps-mw span,.pstats .ps-note,.pstats .ps-empty,.pstats .ps-ch b,.pstats .ps-ch small{font-family:var(--serif)}
+.pstats .ps-note{letter-spacing:.06em}
+/* the yaku table: name · times · share of all hands · a bar */
+.pstats .ps-yaku .ps-yks{max-height:none;gap:0}
+.pstats .ps-yh,.pstats .ps-yk{display:grid;grid-template-columns:minmax(6em,1fr) 3.4em 4.6em minmax(3em,1fr);align-items:center;gap:calc(var(--u)*1.2);padding:calc(var(--u)*.45) 0}
+.pstats .ps-yh{font-size:max(10.5px,calc(var(--u)*1.6));letter-spacing:.2em;color:rgba(232,206,140,.6);border-bottom:1px solid rgba(232,206,140,.2)}
+.pstats .ps-yh span:nth-child(2),.pstats .ps-yh span:nth-child(3){text-align:right}
+.pstats .ps-yk{font-size:max(12.5px,calc(var(--u)*2.1));border-bottom:1px solid rgba(232,206,140,.08)}
+.pstats .ps-yk span{color:#efe4ff;letter-spacing:.06em;white-space:nowrap}
+.pstats .ps-yk b{text-align:right;color:#fff4d6;font-variant-numeric:tabular-nums}
+.pstats .ps-yk em{font-style:normal;text-align:right;color:var(--gl);font-variant-numeric:tabular-nums}
+/* 対局履歴 */
+.ph-list{display:flex;flex-direction:column}
+.ph-r{display:grid;grid-template-columns:6.4em 3.4em minmax(7em,1.2fr) minmax(8em,1.3fr) 6.4em 6.6em;align-items:center;gap:calc(var(--u)*1.4);padding:calc(var(--u)*.9) calc(var(--u)*1);
+  border-bottom:1px solid rgba(232,206,140,.14);font-size:max(12.5px,calc(var(--u)*2.1));color:#efe4ff}
+.ph-r small{display:block;font-size:.78em;color:rgba(217,205,238,.65);letter-spacing:.04em}
+.ph-d{font-variant-numeric:tabular-nums;color:#d8cdee;line-height:1.25}
+.ph-pl{font-weight:800;font-size:1.25em;letter-spacing:.04em;color:#cfc6e8;text-align:center}
+.ph-r.p1 .ph-pl{color:#ffd56a;text-shadow:0 0 .6em rgba(255,200,80,.45)}
+.ph-r.p2 .ph-pl{color:#f0f0f6}
+.ph-r.p4 .ph-pl{color:#8fa0c8}
+.ph-r.p1{background:linear-gradient(90deg,rgba(255,200,80,.08),transparent 60%)}
+.ph-c{display:flex;align-items:center;gap:.6em;min-width:0}
+.ph-c .frame{width:max(28px,calc(var(--u)*4.6));height:max(28px,calc(var(--u)*4.6));flex:none;border-radius:6px}
+.ph-c b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.06em}
+.ph-m{line-height:1.25;letter-spacing:.06em}
+.ph-s{text-align:right;font-variant-numeric:tabular-nums;color:#fff4d6;font-weight:700}
+.ph-s small{display:inline;margin-left:.15em}
+.ph-g{text-align:right;line-height:1.25}
+.ph-g b{font-variant-numeric:tabular-nums;color:#cfc6e8}
+.ph-g b.up{color:#7ee6b0}
+.ph-r.old{opacity:.8}
+html.lp .ph-r{grid-template-columns:5.6em 2.8em minmax(5em,1fr) minmax(6em,1.2fr) 5.4em 5.6em;gap:6px;font-size:11px;padding:5px 4px}
+html.lp .pstats .ps-art.ch-art{max-width:24cqw}
+html.lp .pstats .ps-cols{grid-template-columns:1fr}
+html.lp .pstats .ps-yh,html.lp .pstats .ps-yk{grid-template-columns:minmax(7em,1.2fr) 3em 4.4em minmax(3em,1fr)}
