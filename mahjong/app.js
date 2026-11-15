@@ -275,8 +275,8 @@ const SND = (() => {
     skill: () => { tone(300, .5, 'sawtooth', .05, 0, 1200); tone(1200, .6, 'sine', .1, .3); },
     ok: () => { tone(988, .25, 'sine', .12); tone(1319, .5, 'sine', .1, .12); },
     pick: () => tone(660, .06, 'triangle', .06),
-    // (ユーザー 2026-11-15: the sound when she is touched and speaks was drowned by the music) a clear two-note chime, well above the title music
-    say: () => { tone(988, .16, 'sine', .3); tone(1480, .42, 'sine', .26, .08); tone(2960, .3, 'sine', .07, .08); },
+    // (ユーザー 2026-11-15: the sound when she is touched and speaks was drowned by the music) the same short tone as pick, a little louder
+    say: () => tone(660, .07, 'triangle', .11),   // (ユーザー 2026-11-15: the chime stood out too much — the old pick sound, only a little louder)
     gacha: r => { const b = r === 'SSR' ? 4 : r === 'SR' ? 3 : 2; for (let i = 0; i < b + 2; i++) tone(500 + i * 180, .3, 'triangle', .1, i * .07); },
     unlock: () => { ctx(); load(); prep(TRK.title); },
   };
