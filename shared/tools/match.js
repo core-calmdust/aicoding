@@ -8,7 +8,11 @@
 //           change of the engine (evaluation, search) at the same budget: --a 50@/tmp/old/<game> --b 50
 //   games: ugolki agon konane (engine.js, the strong steps' ladder: iterative deepening stopped at the budget), fanorona
 //          alquerque (fanorona/engine.js + engine.wasm; alquerque = rule 'alq' with its endgame tables), mancala (engine.wasm:
-//          iterative deepening of mc_rootbest with mc_nodelimit; --rule kalah | oware | mangala | bohnen | ayo | …)
+//          iterative deepening of mc_rootbest with mc_nodelimit; --rule kalah | oware | mangala | bohnen | ayo | …),
+//          checkers janggi xiangqi tafl morris (2026-11-15: the page's own worker — engine.js run as a Web Worker in a Node vm,
+//          loading its wasm, networks and endgame tables from its folder; the move asked with the PRO mode's cfg, so the search
+//          is the site's. checkers janggi xiangqi tafl: nk = thousands of nodes; morris: the number is the depth (d);
+//          tafl --rule copenhagen | fetlar | …, morris --rule nine | twelve | six)
 //   A game is added with an adapter below: load(dir) → { think(state, nk) → move }, and the game's rules: open(rnd), over(state),
 //   play(state, move). Every side has engines of its own (its own table), loaded from its own folder.
 // Openings: 4–8 plies of a weak level with the seeded random (the same pair of games for A and B).
@@ -33,6 +37,40 @@ const moveList = (rule, prep) => ({
   over(R, st) { const { pos, hashes } = R.replay(null, st.moves), j = R.judge(pos, hashes); return j.over ? { winner: j.draw ? 0 : j.winner || 0 } : null; },
   play(R, st, m) { return { moves: st.moves.concat([m]) }; },
 });
+// ---- a game played through its page's worker (engine.js as a Web Worker in a Node vm: the site's wasm, networks, tables)
+const vm = require('vm'), { fileURLToPath, pathToFileURL } = require('url');
+function emuWorker(file) {
+  const msgs = new Map(), listeners = []; let seq = 0;
+  const ctx = { console, URL, Response, DecompressionStream, TextDecoder, TextEncoder, setTimeout, clearTimeout, setInterval, clearInterval, performance, Blob,
+    atob: x => Buffer.from(x, 'base64').toString('binary'), btoa: x => Buffer.from(x, 'binary').toString('base64') };
+  ctx.self = ctx; ctx.location = new URL(pathToFileURL(file).href);
+  ctx.WebAssembly = Object.assign(Object.create(WebAssembly), { instantiateStreaming: undefined, compileStreaming: undefined });   // (the arrayBuffer path)
+  const fp = u => fileURLToPath(new URL(String(u), ctx.location.href).href.replace(/[?#].*$/, ''));
+  ctx.fetch = async u => { try { return new Response(fs.readFileSync(fp(u))); } catch (e) { return new Response(null, { status: 404 }); } };
+  ctx.importScripts = (...us) => { for (const u of us) { const f = fp(u); vm.runInContext(fs.readFileSync(f, 'utf8'), ctx, { filename: f }); } };
+  ctx.postMessage = d => { const r = d && msgs.get(d.id); if (r && (d.type === 'result' || d.type === 'error' || d.error)) { msgs.delete(d.id); r(d); } };
+  ctx.addEventListener = (t, f) => { if (t === 'message') listeners.push(f); };
+  ctx.removeEventListener = (t, f) => { const i = listeners.indexOf(f); if (i >= 0) listeners.splice(i, 1); };
+  vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(file, 'utf8'), ctx, { filename: file });
+  return m => new Promise(res => { const id = ++seq; msgs.set(id, res); const ev = { data: Object.assign({ id }, m) }; for (const f of listeners.slice()) f(ev); if (ctx.onmessage) ctx.onmessage(ev); });
+}
+// G: { rule, cfg(x) → the PRO mode's step, ask(st, rule) → the think message's other fields, replay(R, st, rule), over(R, r, st, rule),
+//      weak(R, st, rnd, rule) → a weak move for the openings }
+const viaWorker = G => ({
+  rule: G.rule, async: true,
+  async load(dir, rules) {
+    fresh(dir); const E = require(path.join(dir, 'engine.js')), ask = emuWorker(path.join(dir, 'engine.js'));
+    return { E, think: async (st, x) => { const r = await ask(Object.assign({ type: 'think', start: null, moves: st.moves, level: 10, cfg: G.cfg(x) }, G.ask ? G.ask(st, rules) : {})); return r.move; } };
+  },
+  open(R, rnd) { const st = { moves: [] }, k = 4 + Math.floor(rnd() * 5);
+    for (let i = 0; i < k; i++) { if (this.over(R, st)) break; const m = G.weak(R, st, rnd, R.rules); if (m == null || m < 0) break; st.moves.push(m); }
+    return st; },
+  turn(R, st) { const p = G.replay(R, st, R.rules).pos; return p.turn || p.side; },
+  over(R, st) { return G.over(R, G.replay(R, st, R.rules), st, R.rules); },
+  play(R, st, m) { return { moves: st.moves.concat([m]) }; },
+});
+const judged = (R, r, st) => { const j = R.judge(r.pos, r.hashes, null, st.moves); return j.over ? { winner: j.draw ? 0 : j.winner || 0 } : null; };
 // engine.js required afresh (ugolki, agon, konane: engine.js loads its core-wasm.js itself; a fresh copy = its own table)
 const fresh = dir => { for (const k of Object.keys(require.cache)) if (k.startsWith(dir + path.sep)) delete require.cache[k]; };
 const required = () => async (dir, rules) => { fresh(dir); const E = require(path.join(dir, 'engine.js')); if (rules) E.setRule(rules); return E; };
@@ -49,6 +87,14 @@ const ADAPT = {
   konane: moveList('s8', required()),
   fanorona: moveList('sivy', fanoronaLike(false)),
   alquerque: Object.assign(moveList('alq', fanoronaLike(true)), { dir: 'fanorona' }),
+  checkers: viaWorker({ rule: 'std', cfg: x => ({ s: 1, d: 99, nk: x, ms: 0 }), replay: (R, st) => R.replay(null, st.moves), over: judged, weak: (R, st, rnd) => R.think(null, st.moves, 3, rnd).move }),
+  janggi: viaWorker({ rule: 'std', cfg: x => ({ s: 1, nk: x }), replay: (R, st) => R.replay(null, st.moves), over: judged, weak: (R, st, rnd) => R.think(null, st.moves, 3, rnd).move }),
+  xiangqi: viaWorker({ rule: 'std', cfg: x => ({ s: 1, nk: x }), replay: (R, st) => R.replay(null, st.moves), over: judged, weak: (R, st, rnd) => R.think(null, st.moves, 3, rnd).move }),
+  tafl: viaWorker({ rule: 'copenhagen', cfg: x => ({ d: 99, ms: 0, nk: x }), ask: (st, v) => ({ v }), replay: (R, st, v) => R.replay(null, st.moves, v), over: judged,
+    weak: (R, st, rnd, v) => R.think(null, st.moves, 3, v, Math.floor(rnd() * 1e9)).move }),
+  morris: viaWorker({ rule: 'nine', cfg: x => ({ d: x }), ask: (st, v) => ({ variant: v }), replay: (R, st, v) => R.replay(v, null, st.moves),
+    over: (R, r) => { const s = r.pos.status(), h = r.hashes[r.hashes.length - 1]; if (s === -1) return { winner: 3 - r.pos.side }; if (s === 2 || r.hashes.filter(x => x === h).length >= 3) return { winner: 0 }; return null; },
+    weak: (R, st, rnd, v) => R.think(v, null, st.moves, 3, rnd).move }),
   mancala: {
     rule: 'kalah',
     async load(dir, rules) {
@@ -102,19 +148,19 @@ if (isMainThread) {
     const R = AD === ADAPT.mancala ? require(path.join(def, 'engine.js')) : await AD.load(def, rule).then(x => x.E);   // the referee: rules, openings
     R.rules = rule;
     const EA = await AD.load(A.dir, rule), EB = await AD.load(B.dir, rule);
-    const game1 = (st, bFirst) => {   // → +1 B won, −1 A won, 0 draw
+    const game1 = async (st, bFirst) => {   // → +1 B won, −1 A won, 0 draw
       for (let ply = 0; ply < 600; ply++) {
         const o = AD.over(R, st); if (o) return { res: !o.winner ? 0 : (o.winner === 1) === bFirst ? 1 : -1, plies: ply };
         const toB = (AD.turn(R, st) === 1) === bFirst, S = toB ? B : A, Eng = toB ? EB : EA;
-        const m = Eng.think(st, S.nk); if (m == null || m < 0) return { res: 0, plies: ply };
+        const m = await Eng.think(st, S.nk); if (m == null || m < 0) return { res: 0, plies: ply };
         st = AD.play(R, st, m);
       }
       return { res: 0, plies: 600 };
     };
-    parentPort.on('message', seed => {
+    parentPort.on('message', async seed => {
       let s = seed % 2147483646 + 1; const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
       const op = AD.open(R, rnd);
-      parentPort.postMessage([game1(op, true), game1(op, false)]);
+      parentPort.postMessage([await game1(op, true), await game1(op, false)]);
     });
     parentPort.postMessage({ ready: true });
   })().catch(err => { console.error(err); process.exit(1); });
