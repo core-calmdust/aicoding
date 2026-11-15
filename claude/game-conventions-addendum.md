@@ -649,3 +649,7 @@
 - 更新情報の本文は `shared/atlas-updates.js`（トップページとポータルだけが読む）。ゲームのページは shared/atlas.js だけを読む（581KB → 63KB）。
 - レッスン・定跡のデータは開いたときに読む：囲碁 `lessons.json`・`openings.json`（go/learn.js `lessonsLoad` / `openLoad`）、将棋 `lessons.json`（`lessonsLoad`）。新しく大きいデータを足すときも、ページを開いた時点で要らないものは同じ形（最初に使うときに fetch する関数）にする。
 - 五目並べの評価ネットはルールごとに、そのルールの最初の思考で読む（自由ルールは読まない）。リバーシの評価データは `weights.pk.bin.gz`（同じ値で 8.6MB → 6.3MB、reversi/MODEL_CARD.md）。
+
+## ヒストリカルのタグ（規定・2026-11-15）
+- カテゴリ「ヒストリカル」（`cat: 'hist'`）のゲーム（セネト・ウル・コナネ）は「定番」タグ（classic）ではなく「ヒストリカル」タグ（historical、柱の神殿のアイコン）を付ける（2026-11-15 ユーザー指示）。`shared/atlas.js` の TAGS と GAMES、トップページ `index.html` のゲーム定義（tags・`.tag.historical`・HIST_SVG・I18N `tag.historical`）、大百科の `atlas/i18n.js` の `tag.historical`（14言語）。ルドーのように別カテゴリが主で also にヒストリカルを持つゲームは定番のまま。
+
