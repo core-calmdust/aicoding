@@ -33,12 +33,15 @@ def rep(a, b, count=1):
     assert n >= 1 and (count == 0 or n == count), (a, n)
     s = s.replace(a, b)
 
-def cut_threads(marker):
+def cut_threads(marker):   # the #ifdef … #endif block around marker (2026-11-15: nested #if inside it, e.g. shogi's #ifdef NATIVE)
     global s
     k = s.index(marker)
     i = s.rindex('#ifdef', 0, k)
-    j = s.index('#endif', k)
-    s = s[:i] + s[j + len('#endif'):]
+    depth, pos = 0, i
+    for mm in re.finditer(r'^#(if|ifdef|ifndef|endif)\b', s[i:], re.M):
+        depth += -1 if mm.group(1) == 'endif' else 1
+        if depth == 0: pos = i + mm.end(); break
+    s = s[:i] + s[pos:]
 
 if game in ('xiangqi', 'janggi'):
     cut_threads('// ---------------------------------------------------------------- threads (engine_mt.wasm')
@@ -48,7 +51,8 @@ elif game == 'chess':
     ck = 'CHK_MASK' if '& CHK_MASK) == 0)) check_time();' in s else '2047'   # (2026-11-12: the threads' stops every CHK_MASK + 1 nodes)
     rep('if ((++nodes, ((long long)nodes & %s) == 0)) check_time();' % ck, 'if ((++nodes, SIM_NODE_E(), ((long long)nodes & %s) == 0)) check_time();' % ck, 0)
 elif game == 'shogi':   # (built with -DNATIVE: its native block, with thread-local state as -DMT)
-    rep('#define EXPORT(name)\n#define TLS\n', '#define EXPORT(name)\n#define TLS _Thread_local\n')
+    if '#define EXPORT(name)\n#define TLS\n' in s:   # (2026-11-15: the native block now has its own #ifdef MT → TLS)
+        rep('#define EXPORT(name)\n#define TLS\n', '#define EXPORT(name)\n#define TLS _Thread_local\n')
     cut_threads('/* ------------------------------------------------------------------ threads (engine_mt.wasm')
     rep('  nodes++;\n  if (timeUp()) return 0;', '  nodes++; SIM_NODE();\n  if (timeUp()) return 0;', 0)
 elif game == 'tafl':    # (2026-11-11; built with -DNATIVE: its native block, with thread-local state as -DMT)
