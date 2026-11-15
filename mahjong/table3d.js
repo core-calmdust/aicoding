@@ -420,26 +420,34 @@ function buildHand(env) {
   // the fine detail is solid noise in the hand's own space, worked very lightly into the normal: a fine, even grain (pores) and a
   // slow, soft unevenness — no lines, no folds. The gloss follows it (a moist sheen between the pores). Light: a soft wrap toward
   // the shade, red where light turns to shade (light passing through the flesh), a thin warm rim at grazing angles.
-  const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: new THREE.Color(0xfbeae2).convertSRGBToLinear(), roughness: .44, metalness: 0, sheen: .4, sheenRoughness: .45, sheenColor: new THREE.Color(0xffe6da), emissive: new THREE.Color(0xc08878), emissiveIntensity: .13, envMap: env, envMapIntensity: .32 });
+  // (ユーザー 2026-11-15: "still looks like plastic" — what plastic is: an even colour under a clean white shine. So: the shine is
+  // low, wide and broken up (rougher, half the reflectance, little of the room mirrored); the colour is uneven as living skin is
+  // (soft warmer and paler patches); the shade is not grey but deeper and redder; and where skin is close to skin — between the
+  // fingers, under the hand — it is occluded, measured on the mesh by hand-gen.py (uv.y), again toward red.)
+  const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: new THREE.Color(0xfbeae2).convertSRGBToLinear(), roughness: .62, metalness: 0, specularIntensity: .55, sheen: .22, sheenRoughness: .65, sheenColor: new THREE.Color(0xffd8c8), emissive: new THREE.Color(0xc08878), emissiveIntensity: .1, envMap: env, envMapIntensity: .12 });
   skin.onBeforeCompile = sh => {
-    sh.vertexShader = 'varying vec3 vSkP; varying float vSkC; varying float vSkT;\n' + sh.vertexShader.replace('#include <morphtarget_vertex>', `#include <morphtarget_vertex>\n vSkP = transformed; vSkT = uv.x; vSkC = dot(position - vec3(${Hd.wrist.map(v => v.toFixed(3)).join(',')}), vec3(0., ${(-Math.sin(Hd.pitch)).toFixed(4)}, ${Math.cos(Hd.pitch).toFixed(4)}));`);   // (vSkC: how far up the arm from the cuff, on the unposed mesh — the shade stays on the wrist in both poses)
-    sh.fragmentShader = `varying vec3 vSkP; varying float vSkC; varying float vSkT;
+    sh.vertexShader = 'varying vec3 vSkP; varying float vSkC; varying float vSkT; varying float vSkA;\n' + sh.vertexShader.replace('#include <morphtarget_vertex>', `#include <morphtarget_vertex>\n vSkP = transformed; vSkT = uv.x; vSkA = uv.y; vSkC = dot(position - vec3(${Hd.wrist.map(v => v.toFixed(3)).join(',')}), vec3(0., ${(-Math.sin(Hd.pitch)).toFixed(4)}, ${Math.cos(Hd.pitch).toFixed(4)}));`);   // (vSkC: how far up the arm from the cuff, on the unposed mesh — the shade stays on the wrist in both poses)
+    sh.fragmentShader = `varying vec3 vSkP; varying float vSkC; varying float vSkT; varying float vSkA;
       float skH(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
       float skN(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
         return mix(mix(mix(skH(i), skH(i + vec3(1,0,0)), f.x), mix(skH(i + vec3(0,1,0)), skH(i + vec3(1,1,0)), f.x), f.y),
                    mix(mix(skH(i + vec3(0,0,1)), skH(i + vec3(1,0,1)), f.x), mix(skH(i + vec3(0,1,1)), skH(i + vec3(1,1,1)), f.x), f.y), f.z); }
       float skPore, skSlow;
-      float skHeight(vec3 p){ skSlow = skN(p * 6.5); skPore = smoothstep(.55, .9, skN(p * 52.)); return -skPore * .3 + skSlow * .22; }
+      float skHeight(vec3 p){ skSlow = skN(p * 6.5); skPore = smoothstep(.5, .9, skN(p * 52.)); return -skPore * .34 + skSlow * .22; }
       vec3 skPerturb(vec3 surf_pos, vec3 n, vec2 dH, float fd){ vec3 sx = dFdx(surf_pos), sy = dFdy(surf_pos), r1 = cross(sy, n), r2 = cross(n, sx);
         float det = dot(sx, r1) * fd; vec3 g = sign(det) * (dH.x * r1 + dH.y * r2); return normalize(abs(det) * n - g); }
     ` + sh.fragmentShader
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
-        { float hh = skHeight(vSkP) * .0014; normal = skPerturb(-vViewPosition, normal, vec2(dFdx(hh), dFdy(hh)), faceDirection); }`)
+        { float hh = skHeight(vSkP) * .0019; normal = skPerturb(-vViewPosition, normal, vec2(dFdx(hh), dFdy(hh)), faceDirection); }`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-        roughnessFactor = clamp(roughnessFactor * (.9 + .22 * skPore), .05, 1.);`)
+        roughnessFactor = clamp(roughnessFactor * (.86 + .3 * skPore + .16 * skSlow), .05, 1.);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-    { diffuseColor.rgb *= (.975 + .05 * skSlow) * (1. - .42 * smoothstep(-.75, .12, vSkC));   // (the cuff's shade on the wrist)
-      vec3 sL = normalize((viewMatrix * vec4(.2, 1., .3, 0.)).xyz); float sn = dot(normalize(vNormal), sL), sv = 1. - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0., 1.);
+    { vec3 sL = normalize((viewMatrix * vec4(.2, 1., .3, 0.)).xyz); float sn = dot(normalize(vNormal), sL), sv = 1. - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0., 1.);
+      float skM = skN(vSkP * 2.3 + 11.), ao = clamp(vSkA, 0., 1.);
+      diffuseColor.rgb *= (.975 + .05 * skSlow) * (1. - .42 * smoothstep(-.75, .12, vSkC));   // (the cuff's shade on the wrist)
+      diffuseColor.rgb *= 1. + (skM - .5) * vec3(.10, -.03, -.07) + (skSlow - .5) * vec3(-.03, .02, .05);   // (uneven: rosier patches, paler ones)
+      diffuseColor.rgb *= mix(vec3(.86, .66, .62), vec3(1.), smoothstep(-.7, .55, sn)) * mix(vec3(.6, .36, .32), vec3(1.), ao);   // (the shade and the occluded places: deeper and redder, not grey)
+      totalEmissiveRadiance *= .45 + .55 * ao;
       totalEmissiveRadiance += diffuseColor.rgb * (vec3(1., .34, .24) * (smoothstep(-.6, .05, sn) * (1. - smoothstep(.0, .6, sn)) * .36 + sv * sv * sv * .18) + vec3(1., .86, .8) * (smoothstep(-1., .4, sn) * .06 + pow(.5 + .5 * sn, 2.) * .12)
         + vec3(1., .26, .16) * vSkT * (smoothstep(.4, -.7, sn) * .55 + sv * sv * .3)) * (1. - .5 * smoothstep(-.75, .12, vSkC)); }`); };   // (… and where the flesh is thin — fingers, the webs between them, the hand's edge: vSkT, measured on the mesh by hand-gen.py — light comes through it red on the side away from the light)   // (a soft key from above gives the hand its roundness: brighter on top, never dark below)
   // the nails (ユーザー 2026-11-15): gel nails with a painted look per player (nailArt above) — the colour, and one picture read as
@@ -466,6 +474,19 @@ function buildHand(env) {
   // and catches the light (its own roughness / metalness picture), the cloth hangs in folds (below) and is darker in them.)
   const clothFx = brocadeTex('#000', true);
   const cloth = new THREE.MeshPhysicalMaterial({ map: bro, vertexColors: true, roughness: 1, metalness: 1, roughnessMap: clothFx, metalnessMap: clothFx, sheen: .6, sheenRoughness: .8, sheenColor: new THREE.Color(0xb08078), envMap: env, envMapIntensity: .42, bumpMap: weaveTex(), bumpScale: 1.2 });
+  // (ユーザー 2026-11-15: not plastic — woven cloth is never one even colour: the threads take the dye unevenly (long faint streaks along
+  // the weave, a fine grain across it), and the cloth is a little darker and deeper where it turns from the light)
+  cloth.onBeforeCompile = sh => {
+    sh.vertexShader = 'varying vec3 vClP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vClP = position;');
+    sh.fragmentShader = `varying vec3 vClP;
+      float clH(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+      float clN(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
+        return mix(mix(mix(clH(i), clH(i + vec3(1,0,0)), f.x), mix(clH(i + vec3(0,1,0)), clH(i + vec3(1,1,0)), f.x), f.y),
+                   mix(mix(clH(i + vec3(0,0,1)), clH(i + vec3(1,0,1)), f.x), mix(clH(i + vec3(0,1,1)), clH(i + vec3(1,1,1)), f.x), f.y), f.z); }
+    ` + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+      { float st = clN(vClP * vec3(14., 14., 1.1)), gr = clN(vClP * vec3(3., 3., 26.)), sl = clN(vClP * 1.3);
+        diffuseColor.rgb *= (.86 + .2 * st + .1 * gr) * (.9 + .2 * sl);
+        vec3 cL = normalize((viewMatrix * vec4(.2, 1., .3, 0.)).xyz); diffuseColor.rgb *= mix(vec3(.72, .68, .74), vec3(1.), smoothstep(-.5, .7, dot(normalize(vNormal), cL))); }`); };
   const band = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x14080c).convertSRGBToLinear(), roughness: .6 });
   rig.clothMat = cloth;   // (not in userData: clone() copies that through JSON)
   const gold = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd9b062).convertSRGBToLinear(), roughness: .32, metalness: .85, envMap: env, envMapIntensity: .9 });
@@ -931,7 +952,7 @@ class Table3D {
     let m = this.sleeveMats.get(col);
     if (!m) { const c = new THREE.Color(col), hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, Math.min(1, hsl.s * .9), hsl.l > .78 ? hsl.l * .9 : hsl.l * .52);
       const base = '#' + c.getHexString(), proto = this.handProto.clothMat;
-      m = proto.clone(); m.map = brocadeTex(base); m.sheenColor = new THREE.Color(col).lerp(new THREE.Color(0xffffff), .2).multiplyScalar(.6); this.sleeveMats.set(col, m); }
+      m = proto.clone(); m.onBeforeCompile = proto.onBeforeCompile; m.map = brocadeTex(base); m.sheenColor = new THREE.Color(col).lerp(new THREE.Color(0xffffff), .2).multiplyScalar(.6); this.sleeveMats.set(col, m); }
     rig.traverse(o => { if (o.userData && o.userData.sleeve) o.material = m; });
     // (ユーザー 2026-11-14: the nails in her colour too, like the sleeve. 2026-11-15: a painted look per family — rig.userData.nailStyle,
     // see nailArt.) One material per colour and look, made once.
