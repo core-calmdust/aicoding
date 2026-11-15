@@ -94,7 +94,7 @@
     function setLook(v) {
       if (v === look) return; neonReset(); look = v; feel = AC().feelOf(CFEEL[v]);
       try { if (T3.setBoard) T3.setBoard('botao', v); } catch (e) {}
-      const nb = T3.MODELS.botao(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c)); board.userData = nb.userData; U = board.userData;
+      const nb = T3.MODELS.botao(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c)); board.userData = nb.userData; U = board.userData; goalW();
       build(); syncAll(); neonTick(); if (T3.kick) T3.kick(500);
     }
 
@@ -296,15 +296,15 @@
     function hud() {
       if (stopped || !st) return;
       const pill = p => `<span class="btp ${st.pos === p && !over ? 'on' : ''}"><i style="background:${dotCol(p)}"></i><span class="nm">${esc(nameOf(p))}</span><b>${st.score[p]}</b></span>`;
-      const top = st.pk ? tx('pkHud', { n: st.pk.n }) + ' ' + [0, 1].map(t => st.pk.k[t].map(x => x ? '●' : '×').join('')).join(' | ') : st.goals ? tx('to', { n: st.goals }) : tx(st.half === 1 ? 'first' : 'second') + ' ' + tx('left', { n: Math.max(0, st.halfLen - st.clock) });
-      const sub = `<small>${esc(top)} · ${esc(tx('touch', { n: st.rem }))}</small>`;
+      const top = st.pk ? tx('pkHud', { n: st.pk.n }) + ' ' + [0, 1].map(t => st.pk.k[t].map(x => x ? '●' : '×').join('') || '−').join(' | ') : st.goals ? tx('to', { n: st.goals }) : tx(st.half === 1 ? 'first' : 'second') + ' ' + tx('left', { n: Math.max(0, st.halfLen - st.clock) });
+      const sub = `<small>${esc(top)}${st.pk ? '' : ' · ' + esc(tx('touch', { n: st.rem }))}</small>`;   // (a penalty has no touches to count)
       ctx.hud(pill(1) + `<span class="btm">${sub}<span>${esc(msg)}</span></span>` + pill(0));
     }
     const say = m => { msg = m || ''; hud(); };
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=9'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=10'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -520,8 +520,10 @@
       flick(E.perform(mv, level, seed()));
     }
     /* ---------- PK戦: the sides take turns at the penalty mark; after n each, sudden death ---------- */
+    // the PK shoot-out's wider goal (three keepers wide): on the table while a shoot-out is on
+    function goalW() { if (U && U.goalWidth) { U.goalWidth(st && st.pk ? D.PK_GW : 0); kick(120); } }
     async function pkSetup() {
-      const t0 = st.pk.next, s1 = E.clone(st); E.kickoff(s1, t0); E.restartFor(s1, t0, 'pen'); s1.pk = st.pk; s1.pkReady = true; s1.score = st.score.slice();
+      goalW(); const t0 = st.pk.next, s1 = E.clone(st); E.kickoff(s1, t0); E.restartFor(s1, t0, 'pen'); s1.pk = st.pk; s1.pkReady = true; s1.score = st.score.slice();
       st = s1; hud(); clearGuides(); await glideTo(st, 700); if (stopped) return; syncAll();
       onTurn(); toast(tx('pkKick', { p: nameOf(t0), k: st.pk.k[t0].length + 1 }));
       await setKeeperPhase();
@@ -575,11 +577,11 @@
       if (st.pk && !human(st.pos)) {
         // the AI shooter: its shot against a keeper on a side it guesses (so it does not simply aim past where yours stands)
         phase = 'ai'; say(tx('think', { p: nameOf(st.pos) }));
-        const g = E.clone(st), B = E.keeperBox(d, true); E.setKeeper(g, d, PK_LANE() * (D.GHW - D.KHW), B.y0);
+        const g = E.clone(st), B = E.keeperBox(d, true); E.setKeeper(g, d, PK_LANE() * (D.PK_GW / 2 - D.KHW), B.y0);
         const mv = await think(g, level); if (stopped || my !== tok) return; pkShot = mv && !mv.declare ? mv : null;
       }
       if (st.pk && !human(d)) {
-        const B = E.keeperBox(d, true); pkDive = { x: PK_LANE() * (D.GHW - D.KHW + .5), y: B.y0 };
+        const B = E.keeperBox(d, true); pkDive = { x: PK_LANE() * (D.PK_GW / 2 - D.KHW + .5), y: B.y0 };
         E.setKeeper(st, d, 0, B.y0); await keeperSlide(d, st.k[d], 250); if (stopped || my !== tok) return;
         return afterKeeper();
       }
@@ -839,6 +841,7 @@
       stop() {
         document.querySelectorAll('.bpk').forEach(e => e.remove());
         neonReset(); TRAIL.forEach(m => { board.remove(m); m.material.dispose(); }); TRAIL.length = 0;
+        if (U && U.goalWidth) U.goalWidth(0);
         stopped = true; tok++; timers.forEach(clearTimeout); board.remove(beacon); beacon.geometry.dispose(); beacon.material.dispose(); clearInterval(pulseT); clearInterval(clkT); clearInterval(keeperT);
         ctx.el.removeEventListener('pointerdown', pd); ctx.el.removeEventListener('pointermove', pm); ctx.el.removeEventListener('pointerup', pu); ctx.el.removeEventListener('pointercancel', pu);
         removeEventListener('pointermove', wm, true); removeEventListener('pointerup', wu, true); removeEventListener('pointercancel', wu, true);
