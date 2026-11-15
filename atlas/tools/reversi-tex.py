@@ -175,7 +175,7 @@ def choc_field():
     groove = .055; bev = .06
     hgt = np.clip((dd - groove / 2) / bev, 0, 1); hgt = hgt * hgt * (3 - 2 * hgt)   # each square a slab: a bevel down into the groove
     top = np.clip((np.minimum(dx, dy) - groove / 2 - bev) / .05, 0, 1)
-    base = np.array([150, 96, 58], np.float32)   # milk chocolate: the dark discs stand out on it
+    base = np.array([112, 66, 40], np.float32)   # milk chocolate: the dark discs stand out on it
     col = np.ones((h, w, 3), np.float32) * base * (1 + (f3(X, Y, np.zeros_like(X), .4, .4, .4, 5, 4) - .5)[..., None] * .08)
     col *= (.7 + hgt[..., None] * .3)
     bloom = smooth(.72, .9, f3(X, Y, np.zeros_like(X), .3, .3, .3, 9, 4)) * .12   # a little fat bloom
@@ -191,7 +191,7 @@ def choc_frame():
     for k, (sc, ang) in enumerate([(.5, .3), (.3, 1.4), (.18, 2.3), (.1, .9)]):
         c, s_ = math.cos(ang), math.sin(ang); U = X * c - Y * s_; V = X * s_ + Y * c
         a += (1 - np.abs(f3(U, V, np.zeros_like(X), sc, sc, sc, 31 + k, 2) * 2 - 1)) * (.7 ** k)
-    gy, gx = np.gradient(a); shade = np.clip(1 + gx * 18 - gy * 12, .62, 1.25)
+    gy, gx = np.gradient(a); shade = np.clip(1 + gx * 7 - gy * 5, .8, 1.15)
     col = np.ones((h, w, 3), np.float32) * np.array([212, 168, 84], np.float32) * shade[..., None]
     return col, mmap(np.full((h, w), .22, np.float32), np.ones((h, w), np.float32), (a - a.mean()) * .5)
 
