@@ -2544,3 +2544,8 @@ html.lite :is(#home,#chara).aaa .aa-logo .lg-k::after{animation:none}
 #game .bf.rii::after{content:"";position:absolute;inset:-5px;border:2px solid #f3d48a;border-radius:calc(var(--bf, 52px) * .12 + 5px);pointer-events:none;will-change:opacity;animation:riiFade 1.4s ease-in-out infinite}
 @keyframes riiFade{50%{opacity:.3}}
 html.lite #game .bf.rii::after{animation:none}
+/* (2026-11-16, ユーザー: PC) the two skill plates stand exactly as tall as the portrait's frame, to its left: top with its top, bottom
+   with its bottom (each plate takes half, less the gap). The column is scaled (hz × .82) from its top-left corner, so its layout height
+   is the frame's height divided by that scale. */
+html.ds #game .me .sks{align-self:flex-start;transform-origin:top left;height:calc(var(--bf) / (var(--hz, 1) * .82))}
+html.ds #game .me .sks>.skb{flex:1 1 0;min-height:0;box-sizing:border-box}
