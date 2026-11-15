@@ -231,7 +231,7 @@ def ceramic_top():
     col = col[sy_, sx_] * tone[lab][..., None]; hgt = hgt[sy_, sx_]; paint_gold = paint_gold[sy_, sx_]
     rough = np.full((h, w), .05, np.float32); metal = np.zeros((h, w), np.float32)
     pg = metal_col(h, w, (232, 186, 98), 21)
-    col = col * (1 - paint_gold[..., None]) + pg * paint_gold[..., None]; rough = rough * (1 - paint_gold) + .45 * paint_gold; metal = np.maximum(metal, paint_gold * .45)
+    col = col * (1 - paint_gold[..., None]) + pg * paint_gold[..., None]; rough = rough * (1 - paint_gold) + .26 * paint_gold; metal = np.maximum(metal, paint_gold)
     # the mend: a dark urushi bed a hair wider than the gold, the glaze chipped at the crack's lips, then the gold (金粉 — powder,
     # burnished on its ridge), standing up from the surface
     lips = np.clip(blur(gold, 2.2) - gold, 0, 1)
@@ -241,9 +241,12 @@ def ceramic_top():
     grain = f3(X, Y, Z0, .012, .012, .012, 23, 2)
     gcol = np.array([226, 176, 80], np.float32)[None, None, :] * (.9 + grain[..., None] * .18 + ridge[..., None] * .14)
     col = col * (1 - gold[..., None]) + gcol * gold[..., None]
-    # (2026-11-15: the gold half metal, half matt — a full mirror showed the dark room in it at some angles and went black)
-    rough = rough * (1 - gold) + (.5 - ridge * .14) * gold; metal = metal * (1 - gold) + .45 * gold
+    # glossy metal gold; a full mirror shows the dark room at some angles, so the gold also carries its own colour as an emissive
+    # picture (top-ceramic-e: never black, 2026-11-15)
+    rough = rough * (1 - gold) + (.24 - ridge * .12) * gold; metal = metal * (1 - gold) + gold
     hgt = hgt * (1 - gold) + (gb * .25 + grain * .04) * gold + lips * -.08
+    allg = np.clip(gold + paint_gold, 0, 1)
+    put('top-ceramic-e', col * allg[..., None])   # the emissive picture: the gold alone
     return col, mmap(rough, metal, hgt)
 def ceramic_side():
     X, Y, Z, Ek = perimeter(W, W, E_RO, SH, SPX)
@@ -255,7 +258,8 @@ def ceramic_side():
     # glaze runs: the black pools a little thicker towards the foot
     col *= (1 + smooth(-.2, -.5, Z) * (f3(X, Y, Z, .08, .08, .5, 35, 3) - .5)[..., None] * .5 if False else 1)
     gc = metal_col(h, w, (232, 186, 98), 37)
-    col = col * (1 - gm[..., None]) + gc * gm[..., None]; rough = rough * (1 - gm) + .45 * gm; metal = metal * (1 - gm) + gm * .45
+    col = col * (1 - gm[..., None]) + gc * gm[..., None]; rough = rough * (1 - gm) + .26 * gm; metal = metal * (1 - gm) + gm
+    put('side-ceramic-e', col * gm[..., None])
     return col, mmap(rough, metal, blur(gm, .8) * .3)
 
 # ---------- ジュエリー (jewel): pavé — white diamonds and black spinels set in platinum, a frame of baguettes ----------

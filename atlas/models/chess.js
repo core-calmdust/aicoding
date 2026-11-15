@@ -102,8 +102,8 @@
               const rot = hash(col, row, 3) * Math.PI / 4, a = Math.atan2(dy, dx) - rot, sec = Math.floor((a + Math.PI * 4) / (Math.PI / 4)) % 8, ac = (sec + .5) * Math.PI / 4 + rot;
               const tb = r < .42, tilt = tb ? .05 : r < .68 ? .62 : .9;   // table · star / kite facets · lower girdle facets
               nx = Math.cos(ac) * Math.sin(tilt); ny = Math.sin(ac) * Math.sin(tilt); nz = Math.cos(tilt);
-              const fv = hash(col, row, sec + 7), fire = hash(col, row, sec + 40) > .93, hu = hash(col, row, 5) * 6.283;
-              const glint = hash(col, row, 77) > .955 && (tb || sec === (hash(col, row, 78) * 8 | 0));   // a stone that catches the light (pure white: the emissive picks it)
+              const fv = hash(col, row, sec + 7), fire = false, hu = hash(col, row, 5) * 6.283;
+              const glint = false;   // a stone that catches the light (pure white: the emissive picks it)
               if (p.dark) { const k = 16 + fv * 34; R = k; G = k; B = k + 8; if (fire) { R = 150 + Math.cos(hu) * 60; G = 150 + Math.cos(hu - 2.1) * 60; B = 175 + Math.cos(hu - 4.2) * 50; } }
               else { const k = 200 + fv * 44; R = k - 4; G = k - 2; B = k; if (fire) { R = 230 + Math.cos(hu) * 22; G = 224 + Math.cos(hu - 2.1) * 26; B = 232 + Math.cos(hu - 4.2) * 20; } }
               if (glint) { R = G = B = 255; }
@@ -262,23 +262,30 @@
       felt = feltMat(0xc9b597); rMetal = refMat(null, 0xd8a645, .32); rResin = refMat(null, w ? 0xc0bdb4 : 0x202024, .3);
     } else if (set === 'jewel') {   // 超ゴージャス: every surface encrusted with cut crystals (White: clear, Black: black diamonds) in a bright setting,
       // the rings, crowns and crosses polished gold — the facets (a normal map) break the light so the pieces glitter
-      const P = w ? pavePair('chPave5W', { n: 30 }) : pavePair('chPave5B', { n: 30, dark: true });
-      resin = new TT.MeshPhysicalMaterial({ map: P.map, normalMap: P.bump, normalScale: new TT.Vector2(1.4, 1.4), emissiveMap: P.glow, emissive: lin(0xffffff), emissiveIntensity: 1.6, roughness: .03, metalness: w ? .55 : .7, clearcoat: 1, clearcoatRoughness: .01, envMapIntensity: 3, specularIntensity: 1, iridescence: X.lite ? 0 : .35, iridescenceIOR: 1.6 });
+      const P = w ? pavePair('chPave6W', { n: 30 }) : pavePair('chPave6B', { n: 30, dark: true });
+      resin = new TT.MeshPhysicalMaterial({ map: P.map, normalMap: P.bump, normalScale: new TT.Vector2(1.4, 1.4), emissive: lin(0x000000), roughness: .03, metalness: w ? .55 : .7, clearcoat: 1, clearcoatRoughness: .01, envMapIntensity: 3, specularIntensity: 1, iridescence: X.lite ? 0 : .35, iridescenceIOR: 1.6 });
       // キラキラ: each crystal's facets flash as the view turns — per facet (the normal map's normal, in view space) and per stone (a hash
       // of its cell), a sharp peak of light; moving the camera moves the peaks from stone to stone (2026-11-15)
       resin.onBeforeCompile = sh => {
+        // each stone (the hex cell under this pixel) is cut a little tilted its own way; it flashes — the whole stone, a bright
+        // core and a soft star — when it mirrors a light into the eye. The tilt is small, so the flashes gather where the piece's
+        // curve faces the light and move across it as the view turns (as on real pavé), not scattered noise.
         sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
           #ifdef USE_MAP
-          { vec2 cu = floor(vMapUv * vec2(30.0, 34.6)); float ph = fract(sin(dot(cu, vec2(12.9898, 78.233))) * 43758.5453);
-            vec3 vd = normalize(vViewPosition);
-            float sp = pow(max(0.0, sin(dot(normal * 1.7 + vd, vec3(21.0, 17.0, 29.0)) + ph * 6.2832)), 48.0);
-            float sp2 = pow(max(0.0, sin(dot(normal * 1.3 - vd * .7, vec3(-13.0, 23.0, 19.0)) + ph * 12.566)), 90.0);
-            float hue = fract(ph * 7.31);
-            vec3 fire = clamp(abs(fract(hue + vec3(0.0, .333, .667)) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
-            totalEmissiveRadiance += vec3(${w ? '1.6' : '1.1'}) * sp + mix(vec3(1.0), fire, .75) * sp2 * ${w ? '1.4' : '1.6'}; }
+          { const float NS = 30.0; const float RH = 0.8660254 / NS;
+            float row = floor(vMapUv.y / RH + 0.5), off = mod(row, 2.0) * 0.5, col = floor(vMapUv.x * NS - off + 0.5);
+            vec2 c = vec2((col + off) / NS, row * RH), d = (vMapUv - c) * NS * 2.0;   // -1..1 across the stone
+            float h1 = fract(sin(dot(vec2(col, row), vec2(12.9898, 78.233))) * 43758.5453), h2 = fract(h1 * 91.7), h3 = fract(h1 * 37.3);
+            vec3 ns = normalize(normalize(vNormal) + (vec3(h1, h2, h3) - 0.5) * 0.55);
+            vec3 rd = reflect(-normalize(vViewPosition), ns);
+            float g = max(smoothstep(0.958, 0.994, dot(rd, normalize(vec3(-0.35, 0.75, 0.55)))), smoothstep(0.968, 0.996, dot(rd, normalize(vec3(0.6, 0.35, 0.7)))) * 0.85);
+            float r2 = dot(d, d), core = exp(-r2 * 5.0), star = exp(-abs(d.x) * 9.0) * exp(-d.y * d.y * 1.5) + exp(-abs(d.y) * 9.0) * exp(-d.x * d.x * 1.5);
+            vec3 tint = clamp(abs(fract(h2 + vec3(0.0, 0.333, 0.667)) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
+            vec3 cg = mix(vec3(1.0), tint, ${w ? '0.18' : '0.55'});
+            totalEmissiveRadiance += cg * g * (core * 3.0 + star * 1.3) * step(r2, 1.4); }
           #endif`);
       };
-      resin.customProgramCacheKey = () => 'chPaveSpark' + (w ? 'w' : 'b');
+      resin.customProgramCacheKey = () => 'chPaveSpark2' + (w ? 'w' : 'b');
       metal = new TT.MeshPhysicalMaterial({ color: lin(0xf6cf73), metalness: 1, roughness: .07, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.8 });
       felt = feltMat(0x2a2a2e); rMetal = refMat(null, 0xe0b050, .36); rResin = refMat(P.map, w ? 0xe8e8ee : 0x60606a, .34);
     } else if (set === 'brass') {   // engraved Indian turnings: black enamel cut through to brass (Black), nickel silver cut and darkened (White)
@@ -530,7 +537,7 @@
   /* the picture boards (2026-11-15): images/atlas/chess3d/top-<look> and side-<look> (the four faces stacked: far, right, near,
      left), each with a "-m" map: R height (bump), G roughness, B metalness — brass and gold set flush, joints and tooling in the bump */
   const C3 = (() => { try { return new URL('../../images/atlas/chess3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/chess3d/'; } })();
-  const C3V = '?v=5';
+  const C3V = '?v=6';
   const LO = () => !!(X.coarse || X.lite);
   const texs = {};
   function imgTex(name, srgb = true, aniso = 8) {
@@ -541,7 +548,7 @@
   }
   // mirror: the pieces' reflections show in the top (stencil) · bump: the top's relief
   const LK = {
-    ceramic: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .03 }, bump: .004, bottom: 0x141418, mirror: true },
+    ceramic: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .03 }, bump: .004, bottom: 0x141418, mirror: true, emis: .55 },   // emis: the gold's own colour (…-e pictures)
     jewel: { gloss: { roughness: 1, clearcoat: .6, clearcoatRoughness: .05, envMapIntensity: 1.5 }, bump: .004, bottom: 0x303034, mirror: true },
     brass: { gloss: { roughness: 1, clearcoat: .4, clearcoatRoughness: .2 }, bump: .006, bottom: 0x141312 },
     neon: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .02 }, bump: .003, bottom: 0x08090e, mirror: true, glow: .85 },   // glow: the picture lights itself (emissive)
@@ -551,6 +558,7 @@
     const k = part + '-' + look; if (pmats[k]) return pmats[k];
     const TT = T(), L = LK[look], mm = imgTex(k + '-m', false, 4), o = Object.assign({ map: imgTex(k), color: 0xffffff, roughnessMap: mm, metalnessMap: mm, metalness: 1, bumpMap: mm, bumpScale: part === 'top' ? L.bump : .003 }, L.gloss);
     if (L.glow) Object.assign(o, { emissiveMap: o.map, emissive: new TT.Color(0xffffff), emissiveIntensity: L.glow });
+    if (L.emis) Object.assign(o, { emissiveMap: imgTex(k + '-e'), emissive: new TT.Color(0xffffff), emissiveIntensity: L.emis });
     if (X.lite) { delete o.clearcoat; delete o.clearcoatRoughness; }
     const m = new TT[o.clearcoat !== undefined ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](o);
     if (part === 'top' && L.mirror) Object.assign(m, { stencilWrite: true, stencilRef: 2, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp });
