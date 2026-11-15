@@ -866,22 +866,38 @@
     fanorona: (sid, v) => { const W = +v === 2 ? 5 : 9, H = 5, m = (H - 1) / 2; return kBoard(W, H, true, (x, y) => y < m ? 1 : y > m ? 2 : x === (W - 1) / 2 ? 0 : (x % 2 === 0) === (x < (W - 1) / 2) ? 1 : 2); },
     alquerque: (sid, v) => kBoard(5, 5, true, (x, y) => y < 2 || (y === 2 && x > 2) ? 1 : y > 2 || (y === 2 && x < 2) ? 2 : 0),
   };
+  // the 2D games' own rule cards (2026-11-16): atlas/kindart.js (made by tools/kindart.py from each 2D page's ゲーム tab) — the picture,
+  // the name, the level tags, the description and the groups (mancala: ストアにまくルール · 世界の伝統ルール), every language
+  const KMAP = { morris: { 9: 'nine', 12: 'twelve', 6: 'six' }, fanorona: { 1: 'sivy', 2: 'dimy' }, agon: { 1: 'std', 2: 'place' }, konane: { 8: 's8', 6: 's6', 10: 's10' },
+    ugolki: { 1: 'c33', 2: 'c34', 3: 'c44', 4: 'diag' }, tafl: { 11: 'copenhagen', 111: 'fetlar', 112: 'tawlbwrdd', 9: 'tablut', 7: 'brandubh', 71: 'ardri' },
+    ur: { 1: 'finkel', 2: 'blitz', 3: 'masters' }, senet: { 1: 'std', 2: 'long' }, janggi: { 1: '0', 2: '1', 3: '2', 4: '3' } };
+  const kKey = (id, v) => KMAP[id] ? KMAP[id][v] : v;
+  let kindsP = null;
+  const kindsLoad = () => kindsP || (kindsP = new Promise(res => { if (window.AtlasKinds) return res(); const sc = document.createElement('script'); sc.src = 'kindart.js?v=1'; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); }));
   function kindPick(g, ad, sid, head) {
     const sel = $(sid), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick vpick kpick'; sel.hidden = true; sel.after(bt);
-    const art = (v, cls) => { const a = ad.kindArt ? ad.kindArt(sid, v) : KART[g.id] ? KART[g.id](sid, v) : ''; return a ? `<span class="${cls} kart">${a}</span>` : `<span class="${cls} kart kic">${g3(g)}</span>`; };
-    const nm = o => { const inf = ad.optInfo ? ad.optInfo(sid, o.value, lang) || {} : {}; return inf.name || o.textContent; };
+    const K = () => window.AtlasKinds && AtlasKinds[g.id], KT = v => { const k = K(); if (!k) return null; const L = k.tx[lang] || k.tx.en || k.tx.ja; return L && L[kKey(g.id, v)]; };
+    const art = (v, cls) => { const k = K(), a = (k && k.art[kKey(g.id, v)]) || (ad.kindArt ? ad.kindArt(sid, v) : KART[g.id] ? KART[g.id](sid, v) : ''); return a ? `<span class="${cls} kart">${a}</span>` : `<span class="${cls} kart kic">${g3(g)}</span>`; };
+    const nm = o => { const x = KT(o.value); if (x && x.n) return x.n; const inf = ad.optInfo ? ad.optInfo(sid, o.value, lang) || {} : {}; return inf.name || o.textContent; };
     const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `${art(sel.value, 'vico')}<span>${esc(o ? nm(o) : '')}</span><i>▾</i>`; };
-    sel.addEventListener('change', paint); paint();
-    bt.onclick = () => {
+    sel.addEventListener('change', paint); paint(); kindsLoad().then(() => { if (bt.isConnected) paint(); });
+    const card = o => { const x = KT(o.value), inf = ad.optInfo ? ad.optInfo(sid, o.value, lang) || {} : {}, tg = x ? x.t || [] : inf.tag ? [inf.tag] : [], d = x && x.d ? x.d : inf.sub;
+      return `<button type="button" role="option" data-v="${esc(o.value)}" class="vcard${o.value === sel.value ? ' on' : ''}">${art(o.value, 'vsvg')}<span class="vtx"><span class="vnm">${esc(nm(o))}</span></span>${tg.length ? `<span class="vtgs">${tg.map(z => `<em class="vtg">${esc(z)}</em>`).join('')}</span>` : ''}${d ? `<small>${esc(d)}</small>` : ''}</button>`; };
+    bt.onclick = async () => {
       try { SFX.tap && SFX.tap(); } catch (x) {}
+      await kindsLoad();
+      const k = K(), G = k && (k.grp[lang] || k.grp.en || k.grp.ja), opts = [...sel.options], byKey = new Map(opts.map(o => [String(kKey(g.id, o.value)), o]));
+      const groups = G && G.length > 1 ? G.map(([h, d, keys]) => [h, d, keys.map(x => byKey.get(String(x))).filter(Boolean)]).filter(x => x[2].length) : [['', '', opts]];
+      const used = new Set(groups.flatMap(x => x[2])); const rest = opts.filter(o => !used.has(o)); if (rest.length) groups.push(['', '', rest]);
       const sh = document.createElement('div'); sh.className = 'lvsheet vsheet';
-      sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(head)}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="vgrps"><div class="lvs-l vgrid">${[...sel.options].map(o => { const inf = ad.optInfo ? ad.optInfo(sid, o.value, lang) || {} : {};
-        return `<button type="button" role="option" data-v="${esc(o.value)}" class="vcard${o.value === sel.value ? ' on' : ''}">${art(o.value, 'vsvg')}<span class="vtx"><span class="vnm">${esc(inf.name || o.textContent)}</span>${inf.tag ? `<em>${esc(inf.tag)}</em>` : ''}</span>${inf.sub ? `<small>${esc(inf.sub)}</small>` : ''}</button>`; }).join('')}</div></div></div>`;
+      sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(head)}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="vgrps">${groups.map(([h, d, os]) => `${h ? `<div class="vgh">${esc(h)}${d ? `<small>${esc(d)}</small>` : ''}</div>` : ''}<div class="lvs-l vgrid">${os.map(card).join('')}</div>`).join('')}</div></div>`;
       document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
       const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
       sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); try { SFX.tap && SFX.tap(); } catch (x) {} close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
     };
   }
+  // phones (2026-11-16): the 専用ページ box in one short line
+  const EXT_PH = { ja: '専用のページで遊ぶよ。ボドゲ大百科の実績ももらえるよ♪', en: 'Plays on its own page — your Atlas achievements still count♪', zh: '在专用页面里玩，也能获得大百科成就哦♪', 'zh-TW': '在專用頁面裡玩，也能獲得大百科成就喔♪', ko: '전용 페이지에서 플레이해요. 대백과 업적도 받을 수 있어요♪', es: 'Se juega en su propia página, y los logros del Atlas cuentan♪', fr: 'Se joue sur sa propre page — vos succès de l’Atlas comptent♪', pt: 'Joga-se na própria página — as conquistas do Atlas contam♪', de: 'Wird auf einer eigenen Seite gespielt – Atlas-Erfolge zählen trotzdem♪', hi: 'अपने अलग पेज पर खेलें — एटलस की उपलब्धियाँ भी मिलेंगी♪', ar: 'تُلعب في صفحتها الخاصة، وتُحتسب إنجازات الأطلس♪', ru: 'Играется на своей странице — достижения Атласа засчитываются♪', id: 'Dimainkan di halamannya sendiri — pencapaian Atlas tetap dihitung♪', tr: 'Kendi sayfasında oynanır — Atlas başarıları yine sayılır♪' };
   function bvCard(g, id, push, flown) {
     const ad = glOK && window.Atlas3D && Atlas3D[id], r = P[id];
     const rows = [];
@@ -917,10 +933,11 @@
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}
         ${ad.sizes && !(ad.table && TCS[ad.clock]) && !ad.house && !RU && !KF ? sizeHtml : ''}${ad.house ? `<button type="button" class="hrb" id="bvHouse"><span>${esc(ad.house.label(lang))}</span><b></b><i aria-hidden="true">⚙</i></button>` : ''}</div>
         ${RU && !KF ? `<div class="opts rulerow">${ruleHtml}</div>${!(ad.table && TCS[ad.clock]) ? `<div class="opts szrow">${sizeOnly}</div>` : ''}` : ''}
-        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes && !KF ? (RU ? sizeOnly : sizeHtml) : ''}</div>` : ''}${MX ? mxPanels(g, ad) : PZX ? `<div class="opts mxp" id="bvPz" hidden>${[['d1', ''], ['d2', '<em class="ez">EASY</em>']].map(([k, ez]) => `<button type="button" class="mxb pzd${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><span>${esc(t('bv.pz.dc'))}</span>${ez}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>` : STX ? `<div class="opts shstg" id="bvStg" hidden>${ad.stagePanel(lang)}</div>` : ''}</div>${ad.house && ad.sizes && !KF ? `<div class="opts szrow" id="bvSzRow">${sizeHtml}</div>` : ''}` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' || g.id === 'amazons' || g.id === 'peg' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
+        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes && !KF ? (RU ? sizeOnly : sizeHtml) : ''}</div>` : ''}${MX ? mxPanels(g, ad) : PZX ? `<div class="opts mxp" id="bvPz" hidden>${[['d1', ''], ['d2', '<em class="ez">EASY</em>']].map(([k, ez]) => `<button type="button" class="mxb pzd${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><span>${esc(t('bv.pz.dc'))}</span>${ez}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>` : STX ? `<div class="opts shstg" id="bvStg" hidden>${ad.stagePanel(lang)}</div>` : ''}</div>${ad.house && ad.sizes && !KF ? `<div class="opts szrow" id="bvSzRow">${sizeHtml}</div>` : ''}` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' || g.id === 'amazons' || g.id === 'peg' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span><em class="extph">${esc(EXT_PH[lang] || EXT_PH.en)}</em></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span><em class="extph">${esc(EXT_PH[lang] || EXT_PH.en)}</em></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${esc(placeT('play'))}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button>${g.only3d ? '' : `<a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}`}</div></div></div>`;   // (only3d: a game made for the 3D table alone — carrom — has no 2D page)
+    try {
     if (window.AtlasGameList && AtlasGameList.fitTitle) AtlasGameList.fitTitle($('bvi').querySelector('.row h3'));   // the whole name, never "…"
     // three ways to play: on the chabudai (the portal's own 3D play), the full game in the 3D skin, or the 2D game
     if ($('bvStart')) $('bvStart').onclick = () => { if (PZX && $('bvMode') && $('bvMode').dataset.v === 'puzzle') startPuzzle(); else { if (STX && $('bvMode') && $('bvMode').dataset.v === 'stage' && ad.nextStage) ad.pending = ad.nextStage(); startPlay(); } };
@@ -973,6 +990,7 @@
     if (MX) mxBind(g, ad);
     $('bvRec').setAttribute('aria-label', t('rec.btn')); $('bvRec').title = t('rec.btn'); $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };   // (the cup: phones right of the ヒストリア pill, PC beside the place chip)
     placeRec();
+    } catch (e) { console.error(e); }   // (2026-11-16: whatever fails above, the phone drawer below is still set up — a card left half-built showed everything open)
     // phones: a grab handle on the card — swipe down (or tap) folds away the tags and progress, leaving the game settings; swipe up opens it again
     if (matchMedia('(max-width: 819px)').matches) {
       // phones: tags + progress live in a drawer above the settings; it follows the finger (swipe up opens, down closes)
@@ -1006,7 +1024,10 @@
         D.forEach((el, i) => { el.style.height = Math.max(0, Hs[i] * ku) + 'px'; el.style.opacity = Math.max(0, Math.min(1, ku * 1.4)); });
         if (RC) { RC.style.height = Math.max(0, Hr * kd) + 'px'; RC.style.opacity = Math.max(0, Math.min(1, kd * 1.6 - .4)); RC.style.overflow = 'hidden'; }
       };
-      const measure = () => { Hs = D.map(fullOf); Hr = RC ? fullOf(RC) : 1; };
+      // (2026-11-16) the opened drawer never pushes the buttons off the screen: it is capped to the room above the card (its own scroll inside)
+      const capOf = () => { const r = card.getBoundingClientRect(), now = more.offsetHeight, cs = getComputedStyle(card), mh = parseFloat(cs.maxHeight) || innerHeight - 150, rest = card.scrollHeight - now + 2;   // (the card's own max-height: past it the card scrolled and the buttons went off the bottom)
+        return Math.max(90, Math.min(mh, innerHeight - 76 - 16) - rest); };
+      const measure = () => { Hs = D.map(fullOf); Hr = RC ? fullOf(RC) : 1; const c = capOf(); more.classList.toggle('mcap', Hs[0] > c); if (Hs[0] > c) Hs[0] = c; };
       const to = (s, anim = true) => {
         st = s; bvDrawer = s; fold = s < 1; measure();
         const els = [...D, RC].filter(Boolean);
@@ -1017,7 +1038,7 @@
         setTimeout(() => {
           if (tok !== toTok) return;   // (a newer move started meanwhile — a tap's touchend and its click: the drawer opened again, empty)
           els.forEach(el => { el.style.transition = 'none'; });
-          if (s === 1) D.forEach(el => { el.style.height = 'auto'; });
+          if (s === 1) D.forEach((el, i) => { el.style.height = i === 0 && more.classList.contains('mcap') ? Hs[0] + 'px' : 'auto'; });
           if (RC && s >= 0) { RC.style.height = 'auto'; RC.style.overflow = ''; }
           fitStage();
         }, anim ? 340 : 0);
@@ -1046,7 +1067,7 @@
     if ($('bvRuleSel') && RU) $('bvRuleSel').addEventListener('change', () => { pref[id + ':rule'] = $('bvRuleSel').value; const z = RU.size0($('bvRuleSel').value); if (z) pref[id + ':size'] = z; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {} bvCard(g, id, false, false); });
     ['bvRuleSel', 'bvSide', 'bvSize', 'bvRtOpp', 'bvLsK', 'bvShM', 'bvShD'].forEach(sid => { if (!$(sid)) return;
       { const lb = $(sid).closest('label'), lt = lb ? ((lb.querySelector('.lbt') || {}).textContent || [...lb.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('')).trim() : '';
-        if (lt && lt === KL && $(sid).options.length > 1) { kindPick(g, ad, sid, lt); return; } }   // (種目, 2026-11-16: every game as shogi — big cards with a picture and the rule's description)
+        if (((lt && lt === KL) || (ad.kindFirst && ad.kindOwn && sid === 'bvSize')) && $(sid).options.length > 1) { kindPick(g, ad, sid, lt); return; } }   // (種目, 2026-11-16: every game as shogi — big cards with a picture and the rule's description)
       // (2026-11-14) data-pick="drop": a small list that drops down right under the button (a few choices: 上海's 難易度)
       if ($(sid).dataset.pick === 'drop') {
         const sel = $(sid), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
