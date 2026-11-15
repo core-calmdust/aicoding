@@ -321,5 +321,5 @@
     return { name: L.lv[n], desc: L.lvd[n], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.morris = { sizes: [9, 12, 6], size0: 9, sizeLabel: l => rtx(l).L, sizeName: (z, l) => rtx(l).n[RIX[RULE_OF[z] || 'nine']], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rtx(l).d[RIX[RULE_OF[+v] || 'nine']] } : null, levels: 10, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.morris = { kindFirst: true, sizes: [9, 12, 6], size0: 9, sizeLabel: l => rtx(l).L, sizeName: (z, l) => rtx(l).n[RIX[RULE_OF[z] || 'nine']], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rtx(l).d[RIX[RULE_OF[+v] || 'nine']] } : null, levels: 10, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
 })();

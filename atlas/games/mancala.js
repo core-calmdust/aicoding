@@ -436,6 +436,6 @@
     return { name: a[n], desc: d[n], rating: 0, who: w[WG[n]] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.mancala = { kit, levels: 10, land: 'bar', sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [].concat(...RIDS.map(r => RSZ[r])), size0: codeOf('kalah', 4), rule, optInfo,
+  window.Atlas3D.mancala = { kindFirst: true, kit, levels: 10, land: 'bar', sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [].concat(...RIDS.map(r => RSZ[r])), size0: codeOf('kalah', 4), rule, optInfo,
     sizeLabel: l => SEEDS_L[l] || SEEDS_L.en, sizeName: (z, l) => (SEEDS_N[l] || SEEDS_N.en).replace('{n}', seedsOf(z)), levelInfo, start };   // table: start() plays on the chabudai itself
 })();
