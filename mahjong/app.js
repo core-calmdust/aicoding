@@ -1735,7 +1735,12 @@ async function showMoves(d, o = {}) {
   // filter's region is the whole stage — sized by the path's own box, a straight arrow through the centre had no height and was not drawn)
   // (2026-11-15, ユーザー「矢印がおかしい（スマホ）」) on a phone held upright the whole UI is turned 90° (html.rot): a rectangle
   // measured on the screen is turned back into the UI's own frame before use
-  const svg = box.querySelector('.mv-ar'), R = uiRect(box), mid = el => { const r = uiRect(el); return [r.left - R.left + r.width / 2, r.top - R.top + r.height / 2, r.width, r.height]; };
+  // (2026-11-16, ユーザー「矢印が相変わらずおかしい」) measured in the stage's own layout, not on the screen: a screen rectangle turned back by
+  // hand (uiRect) is off whenever the browser's innerWidth is not the width the UI was turned with (iOS Safari's bars, zoom) — layout
+  // offsets know nothing of the turn, the zoom or the panels' entry animation. A panel is centred on its left/top (translate -50%).
+  // (the svg fills .mvst, inset 0, and the panels are laid out in .mvst: an svg element has no offsetLeft of its own)
+  const svg = box.querySelector('.mv-ar'), st = svg.parentNode, R = { width: st.clientWidth, height: st.clientHeight },
+    mid = el => [el.offsetLeft, el.offsetTop, el.offsetWidth, el.offsetHeight];
   const P = {}; box.querySelectorAll('.mv-p').forEach(el => { P[el.dataset.s] = mid(el); });
   const cx = R.width / 2, cy = R.height / 2, u = Math.min(R.width, R.height) / 100;
   svg.setAttribute('viewBox', `0 0 ${R.width} ${R.height}`);
@@ -1747,7 +1752,15 @@ async function showMoves(d, o = {}) {
     const A = P[a], B = P[b], opp = (a - b + 4) % 4 === 2, mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
     const qx = opp ? mx : mx + (mx - cx) * .55, qy = opp ? my : my + (my - cy) * .55;       // neighbours: the arrow bows outward round the centre
     const at = tt => [(1 - tt) * (1 - tt) * A[0] + 2 * (1 - tt) * tt * qx + tt * tt * B[0], (1 - tt) * (1 - tt) * A[1] + 2 * (1 - tt) * tt * qy + tt * tt * B[1]];
-    const t0 = opp ? .34 : .3, t1 = opp ? .66 : .7, p0 = at(t0), p1 = at(t1), pm = at(.5), q2 = [2 * pm[0] - (p0[0] + p1[0]) / 2, 2 * pm[1] - (p0[1] + p1[1]) / 2];
+    // (ユーザー 2026-11-16「矢印が相変わらずおかしい」, phone: the panels are big against the screen, so the middle part of the curve ran
+    // over the panels and its head sat on the numbers) the arrow is kept off both panels: it starts where the curve leaves the payer's
+    // panel and ends where it reaches the receiver's, with a margin — and no longer than the middle part it always was
+    const pad = u * 2.2, out = (pt, r) => Math.abs(pt[0] - r[0]) > r[2] / 2 + pad || Math.abs(pt[1] - r[1]) > r[3] / 2 + pad;
+    let ta = opp ? .34 : .3, tb = opp ? .66 : .7;
+    for (let tt = 0; tt < .5; tt += .01) if (out(at(tt), A)) { ta = Math.max(ta, tt); break; }
+    for (let tt = 1; tt > .5; tt -= .01) if (out(at(tt), B)) { tb = Math.min(tb, tt); break; }
+    if (tb - ta < .08) { const c = (ta + tb) / 2; ta = c - .04; tb = c + .04; }
+    const t0 = ta, t1 = tb, p0 = at(t0), p1 = at(t1), pm = at((t0 + t1) / 2), q2 = [2 * pm[0] - (p0[0] + p1[0]) / 2, 2 * pm[1] - (p0[1] + p1[1]) / 2];
     const dp = `M${p0[0].toFixed(1)} ${p0[1].toFixed(1)} Q${q2[0].toFixed(1)} ${q2[1].toFixed(1)} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`;
     h += `<path class="mv-a" id="mvp${k}" style="--k:${k}" pathLength="1" d="${dp}" fill="none" stroke="#eaffff" stroke-width="${(u * 1.5).toFixed(1)}" stroke-linecap="round" marker-end="url(#mvh)" filter="url(#mvg)"/>`;
     // (ユーザー 2026-11-14: something is sent along the arrow — quietly: a soft glint slides down it to the receiver, over and over)
