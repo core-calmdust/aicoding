@@ -949,6 +949,7 @@
       const card = $('bvi'), L = card.querySelector('.L'), grab = document.createElement('div'); grab.className = 'grab'; grab.innerHTML = '<i></i>'; card.prepend(grab);
       const more = document.createElement('div'); more.className = 'more';
       [...L.querySelectorAll(':scope > .tags, :scope > .bvab, :scope > .pgl')].forEach(n => more.appendChild(n)); L.appendChild(more);
+      { const ext = card.querySelector('.R .soon.ext'); if (ext) more.appendChild(ext); }   // (puzzle / card games, 2026-11-16: 「このゲームは専用のページで遊ぶよ」 goes up into the drawer too — the card shows just the name and あそぶ)
       { const pg = more.querySelector('.pgl'), rg = L.querySelector('.row .ring');   // the % ring sits right of the progress bars
         if (pg && rg) { const pr = document.createElement('div'); pr.className = 'pgrow'; pg.before(pr); pr.append(pg, rg); }
         else if (rg) { const pr = document.createElement('div'); pr.className = 'pgrow solo'; more.appendChild(pr); pr.append(rg); } }   // (no progress bars — e.g. Ur: the ring alone, still only in the open drawer)
@@ -1093,6 +1094,7 @@
     if (window.Historia) Historia.sync(g, lang, { art: artSrc, name: gname, fit: fitStage });   // the ヒストリア button (atlas/historia.js) opens this game's history
     if (window.AtlasGameList && AtlasGameList.sheetActions) { AtlasGameList.sheetActions($('bvi'), t); fitStage(); }   // PC: ヒストリア under ルール + ring; tags on one quiet line
     playSheet(g, ad, r);
+    if (!ad) menuSheet(g);
   }
   // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)
   // a level's name: kyu / dan for the Japanese games (shogi, go, gomoku); the games numbered Lv.1 … Lv.N (their name is 'Lv.N')
@@ -1362,10 +1364,30 @@
       sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { pref[id + ':rtTc:' + opp] = b.dataset.v; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
     };
   }
+  // a game played on its own page (ソリティア, 2026-11-16): on phones あそぶ opens a sheet of the page's own menus — each game type,
+  // today's deal of it — that open the page straight there (solitaire/app.js ?v= · ?daily=). Names: the page's own i18n (a sandbox).
+  const MENU_SHEET = { solitaire: { list: ['klondike', 'spider', 'freecell', 'golf', 'tripeaks', 'pyramid'], i18n: '../solitaire/i18n.js?v=31' } };
+  let menuI18n = {};
+  function menuSheet(g) {
+    const M = MENU_SHEET[g.id], old = $('bvMS'); if (old) old.remove();
+    if (!M || !matchMedia('(max-width: 819px)').matches) return;
+    const a = $('bvi').querySelector('.R .act > a.btn.big'); if (!a) return;
+    const ps = document.createElement('div'); ps.className = 'psheet'; ps.id = 'bvMS'; $('bv').appendChild(ps);
+    const T = (k, d) => { const I = menuI18n[g.id] || {}; return (I[lang] && I[lang][k]) || (I.en && I.en[k]) || d || ''; };
+    const draw = () => {
+      ps.innerHTML = `<div class="ps-in bvi" role="dialog" aria-label="${esc(t('ps.h'))}"><div class="ps-main"><div class="ps-h">${esc(t('ps.h'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div>
+        <div class="ps-sec"><div class="ps-t">${esc(gname(g))}</div><div class="msl">${M.list.map(v => `<div class="msi"><div class="mst"><b>${esc(T('v.' + v, v))}</b><small>${esc(T('vg.' + v))}</small></div><div class="msb"><a class="btn big2 pk" href="../${g.href}?v=${v}">${esc(t('ps.go'))} ▶</a><a class="btn ghost big2 pk" href="../${g.href}?daily=${v}">${esc(T('side.daily', '★'))}</a></div></div>`).join('')}</div></div></div></div>`;
+    };
+    draw();
+    if (!menuI18n[g.id]) fetch(M.i18n).then(r => r.text()).then(x => { try { menuI18n[g.id] = new Function(x + '\n;return I18N;')(); } catch (e) { menuI18n[g.id] = {}; } if ($('bvMS') === ps) draw(); }).catch(() => {});
+    a.addEventListener('click', e => { e.preventDefault(); ps.classList.add('on'); try { SFX.tap && SFX.tap(); } catch (x) {} });
+    ps.addEventListener('click', e => { if (e.target === ps || e.target.closest('.lvs-x')) ps.classList.remove('on'); });
+  }
   function playSheet(g, ad, r) {
     const old = $('bvPS'); if (old) old.remove();
-    if (!PS_GAMES[g.id] || !ad || !FULL_SKIN[g.id] || !matchMedia('(max-width: 819px)').matches) return;
-    const act = $('bvi').querySelector('.R .act'); if (!act || !$('bvFull')) return;
+    const ST = !!(ad && !FULL_SKIN[g.id] && $('bvStart') && $('bvMode'));   // (2026-11-16: 上海 · ペグ … — a game with its own modes on the card: the same あそぶ sheet, its スタート inside)
+    if (!ad || !(ST || (PS_GAMES[g.id] && FULL_SKIN[g.id])) || !matchMedia('(max-width: 819px)').matches) return;
+    const act = $('bvi').querySelector('.R .act'); if (!act || !(ST || $('bvFull'))) return;
     // headIcons(true);   // (ヒストリア / 戦績 in the card: tried, back to the top left for now — 2026-11-10)
     const row = (k, ic, lb, a, b) => `<button type="button" class="ps-row" data-k="${k}"><span class="ps-ic" style="--c:${g.color}">${ic}</span><span class="ps-tx"><b>${esc(lb)}</b><small>${esc(t(k === 'puzzle' && window.AtlasPuzzles && AtlasPuzzles.has(g.id) && ad.table ? 'ps.here' : 'ps.full'))}</small></span>${b ? `<span class="ps-pg"><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><em>${Math.min(a, b).toLocaleString()}/${b.toLocaleString()}</em></span>` : ''}<i class="ps-cv"></i></button>`;
     const PZI = '<svg viewBox="0 0 24 24"><path d="M10 3h4v2.2a1.8 1.8 0 1 0 3.6 0V3H21v6h-2.2a1.8 1.8 0 1 0 0 3.6H21V21h-6v-2.2a1.8 1.8 0 1 0-3.6 0V21H3v-6h2.2a1.8 1.8 0 1 0 0-3.6H3V3h7z"/></svg>';
@@ -1373,12 +1395,13 @@
     const ps = document.createElement('div'); ps.className = 'psheet'; ps.id = 'bvPS';
     ps.innerHTML = `<div class="ps-in bvi" role="dialog" aria-label="${esc(t('ps.h'))}"><div class="ps-main"><div class="ps-h">${esc(t('ps.h'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div>
       <div class="ps-sec"><div class="ps-t">${esc(t('ps.vs'))}</div><div class="ps-body"></div><div class="ps-act"></div></div>
-      ${$('bvMxProg') ? '' : g.total.pz ? row('puzzle', PZI, t('pg.pz'), r.pz || 0, g.total.pz) : ''}${$('bvMxProg') ? '' : g.total.ls ? row('lesson', LSI, t('pg.ls'), r.ls || 0, g.total.ls) : ''}</div><div class="ps-subv" hidden></div></div>`;
+      ${$('bvMxProg') || ST ? '' : g.total.pz ? row('puzzle', PZI, t('pg.pz'), r.pz || 0, g.total.pz) : ''}${$('bvMxProg') || ST ? '' : g.total.ls ? row('lesson', LSI, t('pg.ls'), r.ls || 0, g.total.ls) : ''}</div><div class="ps-subv" hidden></div></div>`;
     $('bv').appendChild(ps);
     const body = ps.querySelector('.ps-body'), pa = ps.querySelector('.ps-act');
     ['bvMode', 'bvMBody', 'bvSzRow'].forEach(i => { if ($(i)) body.appendChild($(i)); });
-    pa.append($('bvFull')); if ($('bvTable')) pa.append($('bvTable'));
-    if (!$('bvMxProg') && $('bvTable')) {   // (games without the パズル / レッスン tabs, 2026-11-16: the same pair as shogi — gold あそぶ ▶ (this 3D table) · red フル機能で遊ぶ)
+    if (ST) { pa.append($('bvStart')); $('bvStart').classList.add('pk', 'psone'); }
+    else pa.append($('bvFull')); if ($('bvTable')) pa.append($('bvTable'));
+    if (!ST && !$('bvMxProg') && $('bvTable')) {   // (games without the パズル / レッスン tabs, 2026-11-16: the same pair as shogi — gold あそぶ ▶ (this 3D table) · red フル機能で遊ぶ)
       const tb = $('bvTable'), f = $('bvFull'); pa.prepend(tb); tb.classList.add('psgo'); f.classList.add('psfull');
       tb.innerHTML = `<b>${esc(t('ps.go'))} ▶</b><small>${esc(t('bv.tableSub'))}</small>`; f.innerHTML = `<b>${esc(t('bv.full'))}</b><small>${esc(t('bv.fullSub2'))}</small>`;
     }

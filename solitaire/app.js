@@ -771,7 +771,18 @@ if (window.RulesOffer) RulesOffer.init({ game: 'solitaire', lang: () => LANG, op
 })();
 
 // opening the page shows the new-game dialog (this game only, at the user's request; the saved game stays behind it)
-setTimeout(() => { if (!/[?&]nonew\b/.test(location.search) && !$('#resultOverlay').classList.contains('show')) openNew(); }, 60);
+// ?v=<game> (the portal's あそぶ sheet, 2026-11-16): straight into that game; ?daily=<game>: today's deal of it
+setTimeout(() => {
+  const q = new URLSearchParams(location.search), dv = q.get('daily'), pv = q.get('v');
+  if (dv && S.VARIANTS[dv]) { playDaily(dv); return; }
+  if (pv && S.VARIANTS[pv]) {
+    if (st && st.v === pv && G && !G.over) return;   // (that game is already on the table: carry on)
+    const go = () => { const p = prefOf(pv); startGame(pv, { o: p.o, diff: p.diff, deal: p.deal, undo: p.undo }); };
+    if (G && G.started && !G.over) confirmBox(t('newQ'), go); else go();
+    return;
+  }
+  if (!/[?&]nonew\b/.test(location.search) && !$('#resultOverlay').classList.contains('show')) openNew();
+}, 60);
 
 window.SolApp = { _st: () => st, _G: () => G, _move: m => userMove(m), t, gArt, get LANG() { return LANG; }, sfx, startGame, prefOf, openNew, vName, optVal, gIcon, set, closeOv, openOv, toast };
 })();
