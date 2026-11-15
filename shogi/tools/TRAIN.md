@@ -187,6 +187,8 @@ $W/trainkp --rescale a.bin b.bin 0.805                       # 出力層を 0.80
 
 - **出力の区分つき（8区分）で学習する**：`OB=8 KMAP=k1 WORK=~/shogi-ob8 caffeinate -i bash tools/nnue/run-kp.sh`（前処理済みのデータを使い回すなら、先に `mkdir -p ~/shogi-ob8 && ln -s <前の作業フォルダ>/train.bin <前の作業フォルダ>/val.bin ~/shogi-ob8/`）。ネットのファイルは先頭が `NUEO` の形式（`trainkp.c` の冒頭）。サイトに載せるには読み込み側（`engine.js`・`pro/pro.js`・`overkill/ok-ai.js`）の対応が必要（勝ち越したら Claude 側で）。
 - **中間層を広げて学習する**（例：1024）：`H=1024 KMAP=k1 WORK=~/shogi-h1024 caffeinate -i bash tools/nnue/run-kp.sh`。サイトのネット（512）を出発点に、今の512個はそのまま、増やした分は出力への重み0で始める（最初の評価値は今のネットと完全一致）。速さは落ちる（作業環境で 1024 は約 −36%）ので、同じ局面数での勝ち越しがそれを上回るかを見る。
+- **勝敗の重みを手数で変える**（tanuki- が同じデータで最良とした形）：`LAMBDA=1 TRAIN_OPTS="--lambda-end 0 --lambda-ply 60" KMAP=k1 WORK=~/shogi-lam caffeinate -i bash tools/nnue/run-kp.sh`（0手目は評価値だけ、60手目以降は勝敗だけ）。中間は `--lambda-end 0.3` など。検証誤差は目標が変わるので、ほかの設定と比べられない（対局で判断）。
+- **対局ツールの速さ**：出力層は NEON / SSE2 で計算する（2026-11-15〜。サイトの wasm と同じ条件にするため）。`bash tools/nnue/simd-check.sh` で、素のループと同じ探索になることと速さを確認できる。
 - **教師の読みを深くしたデータで学習する**（2026-11-14〜、試行中）：公開データの評価値は深さ9。強いエンジン（やねうら王＋公開の評価関数。**教師として使うだけで、サイトには載せない**）で、手持ちの局面に深い読みの評価値を付け直す。
   1. `bash tools/nnue/setup-teacher.sh`（やねうら王をこの Mac 用にビルド → `~/shogi-teacher/`）。教師の評価関数（標準の NNUE＝HalfKP 256x2-32-32。Hao＝`tanuki-.halfkp_256x2-32-32.2023-05-08` や水匠5）を `~/shogi-teacher/eval/nn.bin` に置いて、もう一度実行（「teacher ready」と出れば準備完了）。
   2. 速さの確認：`bash tools/nnue/relabel.sh ~/shogi-ob8/train.bin 28000 12`（最後に 1時間あたりの局面数と、新旧の評価値の尺度の比較が出る。「the new scores x 1.00 fit」に近ければ尺度が合っている。大きくずれるなら `FV_SCALE`（Hao は 20、水匠5 は 24）を見直す）。

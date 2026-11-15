@@ -16,6 +16,9 @@
      search is tuned to the scale of the site's net, whose output layer was multiplied by 0.805 (MODEL_CARD v6): a net for
      the site (starting from the site's net or not) is trained with --oscale 0.805. Without it, training starting from the
      site's net first undoes the 0.805 (the evaluation grows 1.24 times) and the search no longer suits the net.
+   --lambda L: the target is L x sigmoid(score / 600) + (1 - L) x the game's result. --lambda-ply N --lambda-end E: L goes
+     linearly from --lambda at ply 0 to E at ply N and stays E after it (tanuki- found, on the data used here, that the
+     result should weigh more the later the position: --lambda 1 --lambda-end 0 --lambda-ply 60 was their best).
    --ob 8: 8 output buckets (one output layer per stage of the game: by the number of pieces in hand, engine.c nueBucket;
      the shipped engine already has them, nue_set_nb). Starting from a net with one output, every bucket starts as it.
      The file then is NUEO: int32 "NUEO" 0x4F45554E, H, IN, KB, NB; kmap[84]; W1; B1; W2[NB][2H]; B2[NB].
@@ -52,6 +55,7 @@ static int H = 256, NTH = 4, BS = 16384, KB = 9, FACT = 1, OB = 1;   /* OB: outp
 static long ROWS;                           /* KB * BASE (+ BASE for the shared copy) */
 static uint8_t KMAP[84];
 static float LAMBDA = 0.75f;
+static float LEND = 0.f; static int LPLY = 0;   /* --lambda-end / --lambda-ply: the weight of the score goes from --lambda at ply 0 to --lambda-end at that ply */
 static float OSCALE = 1.f;                 /* --oscale: the net's output is OSCALE x the data's scale (the site's search is tuned to 0.805) */
 static float *W1, *B1, *W2, *B2;
 static float *mW1, *vW1, *mB1, *vB1, *mW2, *vW2, *mB2, *vB2;
@@ -95,7 +99,9 @@ static inline int obucket(const Pos *p, int nb) {
 }
 static inline float target(const PSV *r) {
   float e = sigm(r->score / 600.f), w = r->result > 0 ? 1.f : r->result < 0 ? 0.f : .5f;
-  return LAMBDA * e + (1 - LAMBDA) * w;
+  float lam = LAMBDA;
+  if (LPLY > 0) { float f = 1.f - (float)r->ply / LPLY; if (f < 0) f = 0; lam = LEND + (LAMBDA - LEND) * f; }   /* --lambda-ply */
+  return lam * e + (1 - lam) * w;
 }
 static float forward(const Pos *p, uint32_t *fu, int *nu, uint32_t *ft, int *nt, float *au, float *at, int *bk) {
   *nu = feats(p, p->side, fu, FACT); *nt = feats(p, p->side ^ 1, ft, FACT);
@@ -343,6 +349,8 @@ int main(int argc, char **argv) {
     else if (!strcmp(argv[a], "--epochs")) epochs = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--lr")) lr0 = atof(argv[++a]);
     else if (!strcmp(argv[a], "--lambda")) LAMBDA = atof(argv[++a]);
+    else if (!strcmp(argv[a], "--lambda-end")) LEND = atof(argv[++a]);
+    else if (!strcmp(argv[a], "--lambda-ply")) LPLY = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--oscale")) OSCALE = atof(argv[++a]);
     else if (!strcmp(argv[a], "--ob")) OB = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--batch")) BS = atoi(argv[++a]);

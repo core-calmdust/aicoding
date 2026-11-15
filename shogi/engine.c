@@ -14,6 +14,13 @@ typedef unsigned int u32;
 #ifdef NATIVE   /* native build for the tools (tools/match/usimatch.c): libc + a wall clock */
 #include <string.h>
 #include <time.h>
+#if defined(__ARM_NEON) && !defined(NUE_NOSIMD)   /* the output layer with SIMD, as the wasm build has it (nueEval) */
+#include <arm_neon.h>
+#define NUE_NEON 1
+#elif defined(__SSE2__) && !defined(NUE_NOSIMD)
+#include <emmintrin.h>
+#define NUE_SSE2 1
+#endif
 #define EXPORT(name)
 #ifdef MT   /* (tools/match/usimatch.c --threads: the multi-thread search of engine_mt.wasm on pthreads) */
 #define TLS _Thread_local
@@ -325,6 +332,37 @@ static double nueEval(void) {
       s64 = wasm_i64x2_add(s64, wasm_i64x2_add(wasm_i64x2_extend_low_i32x4(pb), wasm_i64x2_extend_high_i32x4(pb)));
     }
     sum = wasm_i64x2_extract_lane(s64, 0) + wasm_i64x2_extract_lane(s64, 1);
+  }
+  if (0)
+#elif defined(NUE_NEON)
+  /* The native tools measure what a net costs in time, so their output layer must cost what the site's does: until
+     2026-11-15 they ran the plain loop below, and a 1024-wide net looked 40% slower than a 512-wide one when the wasm build
+     loses 12-15%. The same integer sum (x*x fits int16; two products per int32 lane, then int64), 8 lanes at a time. */
+  {
+    const int16x8_t lo = vdupq_n_s16(0), hi = vdupq_n_s16(NUE_QA); int64x2_t s64 = vdupq_n_s64(0);
+    for (int i0 = 0; i0 < NUE_H; i0 += 8) {
+      const int16x8_t xa = vminq_s16(vmaxq_s16(vld1q_s16(a + i0), lo), hi), xb = vminq_s16(vmaxq_s16(vld1q_s16(b + i0), lo), hi);
+      const int16x8_t qa = vmulq_s16(xa, xa), qb = vmulq_s16(xb, xb), wa = vld1q_s16(w2 + i0), wb = vld1q_s16(w2 + NUE_H + i0);
+      const int32x4_t pa = vmlal_s16(vmull_s16(vget_low_s16(qa), vget_low_s16(wa)), vget_high_s16(qa), vget_high_s16(wa));
+      const int32x4_t pb = vmlal_s16(vmull_s16(vget_low_s16(qb), vget_low_s16(wb)), vget_high_s16(qb), vget_high_s16(wb));
+      s64 = vpadalq_s32(vpadalq_s32(s64, pa), pb);
+    }
+    sum = vgetq_lane_s64(s64, 0) + vgetq_lane_s64(s64, 1);
+  }
+  if (0)
+#elif defined(NUE_SSE2)
+  {
+    const __m128i lo = _mm_setzero_si128(), hi = _mm_set1_epi16(NUE_QA); __m128i s64 = _mm_setzero_si128();
+    for (int i0 = 0; i0 < NUE_H; i0 += 8) {
+      const __m128i xa = _mm_min_epi16(_mm_max_epi16(_mm_loadu_si128((const __m128i *)(a + i0)), lo), hi);
+      const __m128i xb = _mm_min_epi16(_mm_max_epi16(_mm_loadu_si128((const __m128i *)(b + i0)), lo), hi);
+      const __m128i pa = _mm_madd_epi16(_mm_mullo_epi16(xa, xa), _mm_loadu_si128((const __m128i *)(w2 + i0)));
+      const __m128i pb = _mm_madd_epi16(_mm_mullo_epi16(xb, xb), _mm_loadu_si128((const __m128i *)(w2 + NUE_H + i0)));
+      const __m128i ga = _mm_srai_epi32(pa, 31), gb = _mm_srai_epi32(pb, 31);
+      s64 = _mm_add_epi64(s64, _mm_add_epi64(_mm_unpacklo_epi32(pa, ga), _mm_unpackhi_epi32(pa, ga)));
+      s64 = _mm_add_epi64(s64, _mm_add_epi64(_mm_unpacklo_epi32(pb, gb), _mm_unpackhi_epi32(pb, gb)));
+    }
+    long long t2[2]; _mm_storeu_si128((__m128i *)t2, s64); sum = t2[0] + t2[1];
   }
   if (0)
 #endif
