@@ -39,7 +39,7 @@
   if (id === 'senet' && look) try { localStorage.setItem('aicoding-senet', JSON.stringify({ settings: { design: look } })); } catch (e) {}
   X.mount(document.getElementById('gl'));
   const g = new THREE.Group(), set = q.get('set') || 'lux';
-  { const a = Table3D.chess.piece('K', 'w', { set, spr: true }), b = Table3D.chess.piece('N', 'b', { set, spr: true }); a.position.set(-.34, 0, -.08); b.position.set(.36, 0, .12); b.rotation.y = Math.PI * 1.08; g.add(a, b); }
+  { const a = Table3D.chess.piece('K', 'w', { set }), b = Table3D.chess.piece('N', 'b', { set }); a.position.set(-.34, 0, -.08); b.position.set(.36, 0, .12); b.rotation.y = Math.PI * 1.08; g.add(a, b); }
   X.show(id, g, { still: true }); X.quiet(true); X.snap();
   setTimeout(() => { X.kick(3000); setTimeout(() => (window.AtlasTexGen ? AtlasTexGen.settle() : Promise.resolve()).then(() => { X.kick(1500); setTimeout(shoot, 1200); }), 5000); }, 800);
   function shoot() {

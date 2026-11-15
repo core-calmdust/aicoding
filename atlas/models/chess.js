@@ -7,10 +7,10 @@
      Table3D.MODELS.chess(live, o)   board (+ the starting position unless live)
      Table3D.chess.piece(type, color) one piece (type 'P','N','B','R','Q','K' or 1..6; color 'w'|'b' or 0|1)
      Table3D.chess.images(px, set)    Promise → { wK, wQ, …, bP: dataURL } 3/4 renders for the DOM (sprite 1 × 1.6 squares)
-   Six boards (2026-11-15, 'atlas-chess-look' = Table3D.BOARDS.chess): lux 高級ラッカー (the default) · wood バール ·
-   marble 大理石と真鍮 · walnut ウォルナットとメープル · leather 革と金箔 · khatam ハータム — the last four are pictures made
-   by atlas/tools/chess-tex.py (images/atlas/chess3d/). Six piece sets ('atlas-chess-pc3' = Table3D.PIECES.chess): lux 銀と金 ·
-   wood ツゲと紫檀 · ebony 黒檀とツゲ · marble 白黒の大理石 · porcelain 白磁と瑠璃 · crystal クリスタルとスモーク.
+   Six boards (2026-11-15 v2, 'atlas-chess-look' = Table3D.BOARDS.chess): lux 高級ラッカー (the default) · wood バール ·
+   ceramic 陶器と金継ぎ · jewel ジュエリー · brass 真鍮彫り · neon ネオン — the last four are pictures made by atlas/tools/chess-tex.py
+   (images/atlas/chess3d/). Six piece sets ('atlas-chess-pc3' = Table3D.PIECES.chess): lux 銀と金 · wood ツゲと紫檀 · ceramic 陶器と金彩 ·
+   jewel パヴェ · brass 真鍮彫り (slender) · neon ネオン (acrylic shapes of their own).
    Units: one square is 1.0; the field is 8 × 8, the frame 0.85 wide (outer 9.7 = the page's board frame).
    ===================================================================== */
 (function () {
@@ -83,6 +83,37 @@
             const cloud = (N(px * 3, py * 3, 3) - .5) * .25;
             const t = Math.max(0, Math.min(1, v1 * .75 + v2 + cloud + .05)), i = (y * W + x) * 4;
             d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
+          }
+      },
+      // pavé round the lathe (x wraps): hex-set stones, each with a table and eight facets of its own brightness; p.dark: black spinels
+      pave(d, W, H, p) {
+          const N = makeNoise(p.seed || 3), cs = W / 34, rt3 = Math.sqrt(3);
+          const hash = (a, b, c) => { let h = (a * 374761393 + b * 668265263 + c * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
+          for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+            const row = Math.round(y / (cs * rt3 / 2)), off = (row & 1) ? cs / 2 : 0, col = Math.round((x - off) / cs);
+            const cx = col * cs + off, cy = row * cs * rt3 / 2, dx = x - cx, dy = y - cy, r = Math.hypot(dx, dy) / (cs * .47);
+            const i = (y * W + x) * 4; let v;
+            if (r < 1) {
+              const sec = Math.floor((Math.atan2(dy, dx) + Math.PI) / (Math.PI / 4)), tb = r < .42;
+              const f = tb ? .55 + hash(col, row, 99) * .45 : .18 + hash(col, row, sec) * .95, g = r > .86 ? 1 - (r - .86) / .14 * .75 : 1;
+              v = Math.min(1.3, f) * g;
+              if (p.dark) { const k = 8 + Math.pow(v, 2.4) * 160; d[i] = k; d[i + 1] = k; d[i + 2] = k + 6; }
+              else { const hue = hash(col, row, 7) * 6.283, fire = v > .95 ? 22 : 0, k = 105 + v * 140; d[i] = k + Math.cos(hue) * fire; d[i + 1] = k + Math.cos(hue - 2.1) * fire; d[i + 2] = k + 4 + Math.cos(hue - 4.2) * fire; }
+            } else { const k = p.dark ? 60 : 214; d[i] = k; d[i + 1] = k; d[i + 2] = k + 4; }   // the setting between the stones
+            d[i + 3] = 255;
+          }
+      },
+      // engraved turned bands (y runs up the profile): enamel or metal ground, rings of short strokes and fine lines cut in (p.A ground, p.B the cuts)
+      bands(d, W, H, p) {
+          const A = p.A, B = p.B, N = makeNoise(p.seed || 5);
+          for (let y = 0; y < H; y++) {
+            const v = y / H, k = v * 9 % 1, ln = (k < .04 || (k > .1 && k < .13)), hatch = k > .2 && k < .42, dot = k > .55 && k < .6;
+            for (let x = 0; x < W; x++) {
+              const u = x / W, gx = u * 72, cl = Math.floor(gx / 4.4), inCl = (gx % 4.4) < 2.6 && ((gx % 4.4) % .62) < .26;
+              const cut = ln || (hatch && inCl) || (dot && ((u * 120) % 1) < .3);
+              const n = (N(u * 40, v * 40, 2) - .5) * 18, i = (y * W + x) * 4, C = cut ? B : A;
+              d[i] = C[0] + n; d[i + 1] = C[1] + n; d[i + 2] = C[2] + n; d[i + 3] = 255;
+            }
           }
       },
       grain(d, W, H, p) {
@@ -171,9 +202,11 @@
   }
 
   /* ---------- materials ---------- */
-  // the piece sets (2026-11-15): 'lux' and 'wood' as before; ebony / boxwood, stone, porcelain with gold, crystal
-  const PSETS = ['lux', 'wood', 'ebony', 'marble', 'porcelain', 'crystal'];
-  const CARVED = { wood: true, ebony: true };   // carved mane locks on the knight
+  // the piece sets (2026-11-15 v2): 'lux' and 'wood' as before; each new set belongs to a board of its own world —
+  // ceramic (glazed, gold), jewel (pavé), brass (slender engraved Indian turnings), neon (lit acrylic, a shape of its own)
+  const PSETS = ['lux', 'wood', 'ceramic', 'jewel', 'brass', 'neon'];
+  const CARVED = { wood: true };   // carved mane locks on the knight
+  function texMat(key, kern, p) { return canvasTex(key, SZ(512), SZ(512), g => { paint(g.canvas, kern, p); }); }
   const mats = {};
   // the reflection in the lacquer: the same materials drawn additively, only where the board is in front (see reflect())
   // mixed in with alpha blending, still in the opaque pass (custom blending), before the real pieces, only on the glossy top (stencil 2), one layer per pixel
@@ -183,36 +216,37 @@
       depthWrite: false, depthFunc: TT.GreaterDepth, stencilWrite: true, stencilRef: 2, stencilFunc: TT.EqualStencilFunc, stencilZPass: TT.IncrementStencilOp, stencilFail: TT.KeepStencilOp, stencilZFail: TT.KeepStencilOp });
   }
   const feltMat = c => { const TT = T(); return new TT.MeshStandardMaterial({ color: new TT.Color(c).convertSRGBToLinear(), roughness: 1 }); };
-  function matsOf(col, set = 'lux', spr) {
+  function matsOf(col, set = 'lux') {
     if (!PSETS.includes(set)) set = 'lux';
-    spr = !!spr && set === 'crystal';   // the pictures (sprites, tiles): glass drawn see-through (alpha) — refraction needs a scene behind it
-    const key = set + col + (spr ? 's' : ''); if (mats[key]) return mats[key];
+    const key = set + col; if (mats[key]) return mats[key];
     const TT = T(), w = col === 'w', lin = c => new TT.Color(c).convertSRGBToLinear();
     let metal, resin, felt, rMetal, rResin;
     if (set === 'lux') {
       metal = new TT.MeshPhysicalMaterial({ color: lin(w ? 0xeef0f3 : 0xf2c464), metalness: 1, roughness: w ? .1 : .16, clearcoat: .6, clearcoatRoughness: .08, envMapIntensity: 1.25 });
       resin = new TT.MeshPhysicalMaterial({ map: w ? marble('chMarbW', '#4d5056', '#b9bcc2', 7) : marble('chMarbB', '#121214', '#5b564f', 13), roughness: .24, metalness: .05, clearcoat: 1, clearcoatRoughness: .05 });
       felt = feltMat(0x1d3b26); rMetal = refMat(metal, w ? 0xc8ccd2 : 0xd8a645, .34); rResin = refMat(resin, 0x9a9a9a, .3);
-    } else if (set === 'wood' || set === 'ebony') {
-      const map = set === 'wood' ? (w ? grain('chBox2', '#e6c48e', '#c49a62', '#f3dcae', 9) : grain('chPad2', '#7c1610', '#470806', '#a02c1d', 17))
-        : (w ? grain('chBoxN', '#ecd5a6', '#cfa86e', '#f7e6c2', 21) : grain('chEbo', '#2c211b', '#0b0705', '#463328', 23));
-      resin = metal = new TT.MeshPhysicalMaterial({ map, roughness: set === 'ebony' ? (w ? .42 : .28) : w ? .38 : .3, metalness: 0, clearcoat: set === 'ebony' ? .55 : .7, clearcoatRoughness: .2, sheen: 0 });
+    } else if (set === 'wood') {
+      const map = w ? grain('chBox2', '#e6c48e', '#c49a62', '#f3dcae', 9) : grain('chPad2', '#7c1610', '#470806', '#a02c1d', 17);
+      resin = metal = new TT.MeshPhysicalMaterial({ map, roughness: w ? .38 : .3, metalness: 0, clearcoat: .7, clearcoatRoughness: .2, sheen: 0 });
       felt = feltMat(0x1d3b26); rMetal = rResin = refMat(resin, 0xa8a8a8, .3);
-    } else if (set === 'marble') {   // the whole piece turned from stone: white Carrara, black Marquina
-      const map = w ? marble('chStoneW', '#efede8', '#8e9096', 31) : marble('chStoneB', '#1a1a1d', '#cfcbc3', 37);
-      resin = metal = new TT.MeshPhysicalMaterial({ map, roughness: .14, metalness: 0, clearcoat: 1, clearcoatRoughness: .04 });
-      felt = feltMat(0x2a2a2c); rMetal = rResin = refMat(resin, 0xa0a0a0, .32);
-    } else if (set === 'porcelain') {   // glazed porcelain, gilt: white with gold, cobalt blue with gold
-      resin = new TT.MeshPhysicalMaterial({ color: lin(w ? 0xf6f3ec : 0x1f3a86), roughness: w ? .16 : .12, metalness: 0, clearcoat: 1, clearcoatRoughness: .03, sheen: w ? .2 : 0, sheenColor: lin(0xffffff) });
-      metal = new TT.MeshPhysicalMaterial({ color: lin(0xf0c66c), metalness: 1, roughness: .18, clearcoat: .5, clearcoatRoughness: .08, envMapIntensity: 1.25 });
-      felt = feltMat(0xd9d2c2); rMetal = refMat(null, 0xd8a645, .32); rResin = refMat(null, w ? 0xb8b6b0 : 0x203a80, .3);
-    } else {   // crystal: clear, and smoke; the bead rings and finials frosted
-      const tint = w ? 0xffffff : 0xe2d2c2;
-      const base = { metalness: 0, transmission: X.lite ? 0 : 1, thickness: .6, ior: 1.52, attenuationColor: lin(w ? 0xf4f8ff : 0x8a5a36), attenuationDistance: w ? 3 : 1.1, specularIntensity: 1, envMapIntensity: 1.4 };
-      if (X.lite || spr) Object.assign(base, { transmission: 0, transparent: true, opacity: w ? .42 : .7, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 2 });
-      resin = new TT.MeshPhysicalMaterial(Object.assign({ color: lin(spr ? (w ? 0xffffff : 0x7a5a44) : tint), roughness: .02 }, base));
-      metal = new TT.MeshPhysicalMaterial(Object.assign({ color: lin(spr ? (w ? 0xf2f4f8 : 0x8e7260) : w ? 0xf2f4f8 : 0xd6c2ae), roughness: .38 }, base));
-      felt = feltMat(0x000000); felt.visible = false;   // (no felt under glass: it would show through) rMetal = rResin = refMat(null, w ? 0xc8ccd4 : 0x5c4c40, .26);
+    } else if (set === 'ceramic') {   // a thick, glossy glaze — milk white or ink black — with gold lustre on the rings and crowns
+      resin = new TT.MeshPhysicalMaterial({ color: lin(w ? 0xf4f0e6 : 0x16161b), roughness: w ? .14 : .1, metalness: 0, clearcoat: 1, clearcoatRoughness: .03, sheen: w ? .25 : 0, sheenColor: lin(0xffffff) });
+      metal = new TT.MeshPhysicalMaterial({ color: lin(0xf0c46a), metalness: 1, roughness: .2, clearcoat: .6, clearcoatRoughness: .1, envMapIntensity: 1.3 });
+      felt = feltMat(0xc9b597); rMetal = refMat(null, 0xd8a645, .32); rResin = refMat(null, w ? 0xc0bdb4 : 0x202024, .3);
+    } else if (set === 'jewel') {   // pavé: diamonds (White) or black spinels (Black) all over, the rings and crowns polished platinum
+      const map = w ? texMat('chPaveW', 'pave', { seed: 3 }) : texMat('chPaveB', 'pave', { seed: 7, dark: true });
+      resin = new TT.MeshPhysicalMaterial({ map, bumpMap: map, bumpScale: .0025, roughness: .05, metalness: .25, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 1.6 });
+      metal = new TT.MeshPhysicalMaterial({ color: lin(w ? 0xe8eaee : 0x8a8c92), metalness: 1, roughness: .08, envMapIntensity: 1.4 });
+      felt = feltMat(0x2a2a2e); rMetal = refMat(null, 0xc8ccd4, .32); rResin = refMat(map, w ? 0xd0d0d4 : 0x505058, .3);
+    } else if (set === 'brass') {   // engraved Indian turnings: black enamel cut through to brass (Black), nickel silver cut and darkened (White)
+      const map = w ? texMat('chBandW', 'bands', { A: [200, 200, 194], B: [58, 54, 50], seed: 3 }) : texMat('chBandB', 'bands', { A: [16, 15, 14], B: [226, 182, 96], seed: 5 });
+      resin = new TT.MeshPhysicalMaterial({ map, roughness: w ? .26 : .3, metalness: w ? .9 : .35, clearcoat: w ? 0 : .5, clearcoatRoughness: .2 });
+      metal = new TT.MeshPhysicalMaterial({ color: lin(w ? 0xdcdcd6 : 0xe2b660), metalness: 1, roughness: .2, envMapIntensity: 1.25 });
+      felt = feltMat(0x1d3b26); rMetal = refMat(null, w ? 0xc8ccd2 : 0xd8a645, .32); rResin = refMat(map, 0x9a9a9a, .3);
+    } else {   // neon: cast acrylic lit from inside — magenta (White, the near side) and cyan (Black)
+      const c = w ? 0xff5cc8 : 0x4fd9ff;
+      resin = metal = new TT.MeshPhysicalMaterial({ color: lin(c), emissive: lin(c), emissiveIntensity: 1.05, roughness: .06, metalness: 0, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .82 });
+      felt = feltMat(0x000000); felt.visible = false; rMetal = rResin = refMat(null, c, .4);
     }
     return (mats[key] = { metal, resin, felt, rMetal, rResin });
   }
@@ -351,7 +385,8 @@
   function piece(type, color, o) {
     const TT = T(), tp = typeof type === 'number' ? TYPES[type] : String(type).toUpperCase(), col = color === 1 || color === 'b' ? 'b' : 'w';
     const set = PSETS.includes(o && o.set) ? o.set : 'lux', wd = set === 'wood', carved = !!CARVED[set];
-    const pr = PROFILES[tp](), m = matsOf(col, set, o && o.spr), g = new TT.Group();
+    if (set === 'neon') return neonPiece(tp, col, o);
+    const pr = PROFILES[tp](), m = matsOf(col, set), g = new TT.Group();
     const add = (geo, mat, o = {}) => { const x = new TT.Mesh(geo, mat); x.castShadow = true; x.receiveShadow = true; if (o.p) x.position.set(...o.p); if (o.r) x.rotation.set(...o.r); if (o.s) x.scale.set(...o.s); g.add(x); return x; };
     pr.resin.forEach((p, i) => add(lathe(tp + 'r' + i, p), m.resin));
     pr.metal.forEach((p, i) => add(lathe(tp + 'm' + i, p), m.metal));
@@ -387,13 +422,35 @@
       const nb = new TT.Mesh(nos, m.metal); nb.position.set(.3, .52, 0); nb.rotation.set(Math.PI / 2, 0, -.55); nb.scale.set(.9, .72, 1); nb.visible = false; hd.add(nb);
       if (carved) [1, -1].forEach(s => { [0, 1].forEach(j => { const r = new TT.Mesh(maneGeo, m.resin); r.castShadow = true; r.position.set(.02 + j * .035, 0, s * (.05 + j * .028)); r.scale.set(.93 - j * .07, .97 - j * .05, .8); hd.add(r); }); });   // carved mane locks
     }
-    g.userData.type = tp; g.userData.color = col; g.userData.h = pr.h; g.userData.set = set;
+    if (set === 'brass') { g.children.forEach(c => { c.scale.x *= .8; c.scale.z *= .8; c.scale.y *= 1.06; c.position.y *= 1.06; }); }   // the slender Indian turnings
+    g.userData.type = tp; g.userData.color = col; g.userData.h = pr.h * (set === 'brass' ? 1.06 : 1); g.userData.set = set;
     if (X.mergeStatic) { try { X.mergeStatic(g); } catch (e) {} }   // one mesh per material (resin / metal / felt) instead of ~8 parts: far fewer draw calls
     if (o && o.reflect && !X.coarse) reflect(g);   // phones: no mirror images in the lacquer (they double every piece)
     return g;
   }
   // mirror image under a piece standing on the glossy board (follows the piece when it moves)
-  // the mirror images show only on the glossy boards (the lacquer, marble, khatam) — the matt walnut and leather hide them (2026-11-15)
+  // neon (2026-11-15): cut acrylic — a round foot, then a shape per piece: pawn a short rod with a ball, rook a hexagonal prism,
+  // knight a slanted slab, bishop a rod with a cone, queen a tall rod with a gem, king the tallest with a cross
+  function neonPiece(tp, col, o) {
+    const TT = T(), m = matsOf(col, 'neon'), g = new TT.Group(), lo = small() || LOW, seg = lo ? 16 : 32;
+    const add = (geo, p, r) => { const x = new TT.Mesh(geo, m.resin); x.castShadow = true; x.receiveShadow = true; if (p) x.position.set(...p); if (r) x.rotation.set(...r); g.add(x); return x; };
+    const k = 'neon' + tp + (lo ? 'l' : ''), C = geoCache[k] || (geoCache[k] = (() => {
+      const out = [], cyl = (r0, r1, h, y, n = seg) => { const q = new TT.CylinderGeometry(r1, r0, h, n); q.translate(0, y + h / 2, 0); out.push(q); };
+      cyl(.31, .29, .07, 0);   // the foot
+      if (tp === 'P') { cyl(.15, .15, .4, .07); const s = new TT.SphereGeometry(.14, seg, seg / 2); s.translate(0, .6, 0); out.push(s); }
+      else if (tp === 'R') { cyl(.26, .26, .56, .07, 6); cyl(.22, .26, .06, .63, 6); }
+      else if (tp === 'N') { const b = new TT.BoxGeometry(.2, .72, .44); b.rotateZ(.32); b.translate(.07, .46, 0); out.push(b); cyl(.17, .17, .12, .07); }
+      else if (tp === 'B') { cyl(.18, .16, .58, .07); const c = new TT.ConeGeometry(.17, .34, seg); c.translate(0, .82, 0); out.push(c); }
+      else if (tp === 'Q') { cyl(.21, .18, .78, .07); const s = new TT.OctahedronGeometry(.16); s.translate(0, 1.0, 0); out.push(s); }
+      else { cyl(.23, .2, .9, .07); const a = new TT.BoxGeometry(.07, .28, .07), b = new TT.BoxGeometry(.24, .07, .07); a.translate(0, 1.11, 0); b.translate(0, 1.12, 0); out.push(a, b); }
+      return out; })());
+    C.forEach(q => add(q));
+    g.userData.type = tp; g.userData.color = col; g.userData.h = { P: .74, R: .69, N: .85, B: .99, Q: 1.16, K: 1.25 }[tp]; g.userData.set = 'neon';
+    if (X.mergeStatic) { try { X.mergeStatic(g); } catch (e) {} }
+    if (o && o.reflect && !X.coarse) reflect(g);
+    return g;
+  }
+  // the mirror images show only on the glossy boards (the lacquer, ceramic, jewel, neon) — the satin brass hides them (2026-11-15)
   let mirrorOn = true; const REFS = new Set();
   function setMirror(on) { mirrorOn = on; for (const w of REFS) { const r = w.deref ? w.deref() : w; if (!r) REFS.delete(w); else r.visible = on; } }
   function reflect(g) {
@@ -405,7 +462,7 @@
   }
 
   /* ---------- the board ---------- */
-  const LOOKS = ['lux', 'wood', 'marble', 'walnut', 'leather', 'khatam'];
+  const LOOKS = ['lux', 'wood', 'ceramic', 'jewel', 'brass', 'neon'];
   let topMat = null;
   function lacquerBlock() {   // the lacquered burl boards ('lux' / 'wood'): one top picture drawn here, the burl round the sides
     const TT = T(), g = new TT.Group();
@@ -430,7 +487,7 @@
   /* the picture boards (2026-11-15): images/atlas/chess3d/top-<look> and side-<look> (the four faces stacked: far, right, near,
      left), each with a "-m" map: R height (bump), G roughness, B metalness — brass and gold set flush, joints and tooling in the bump */
   const C3 = (() => { try { return new URL('../../images/atlas/chess3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/chess3d/'; } })();
-  const C3V = '?v=1';
+  const C3V = '?v=2';
   const LO = () => !!(X.coarse || X.lite);
   const texs = {};
   function imgTex(name, srgb = true, aniso = 8) {
@@ -441,15 +498,16 @@
   }
   // mirror: the pieces' reflections show in the top (stencil) · bump: the top's relief
   const LK = {
-    marble: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 }, bump: .003, bottom: 0x141416, mirror: true },
-    walnut: { gloss: { roughness: 1, clearcoat: .25, clearcoatRoughness: .4 }, bump: .006, bottom: 0x2a1a10 },
-    leather: { gloss: { roughness: 1 }, bump: .012, bottom: 0x1d3a28 },
-    khatam: { gloss: { roughness: 1, clearcoat: .9, clearcoatRoughness: .14 }, bump: .004, bottom: 0x2a0f08, mirror: true },
+    ceramic: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .03 }, bump: .004, bottom: 0x141418, mirror: true },
+    jewel: { gloss: { roughness: 1, clearcoat: .6, clearcoatRoughness: .05, envMapIntensity: 1.5 }, bump: .004, bottom: 0x303034, mirror: true },
+    brass: { gloss: { roughness: 1, clearcoat: .4, clearcoatRoughness: .2 }, bump: .006, bottom: 0x141312 },
+    neon: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .02 }, bump: .003, bottom: 0x08090e, mirror: true, glow: .85 },   // glow: the picture lights itself (emissive)
   };
   const pmats = {};
   function faceMat(look, part) {
     const k = part + '-' + look; if (pmats[k]) return pmats[k];
     const TT = T(), L = LK[look], mm = imgTex(k + '-m', false, 4), o = Object.assign({ map: imgTex(k), color: 0xffffff, roughnessMap: mm, metalnessMap: mm, metalness: 1, bumpMap: mm, bumpScale: part === 'top' ? L.bump : .003 }, L.gloss);
+    if (L.glow) Object.assign(o, { emissiveMap: o.map, emissive: new TT.Color(0xffffff), emissiveIntensity: L.glow });
     if (X.lite) { delete o.clearcoat; delete o.clearcoatRoughness; }
     const m = new TT[o.clearcoat !== undefined ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](o);
     if (part === 'top' && L.mirror) Object.assign(m, { stencilWrite: true, stencilRef: 2, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp });
@@ -557,7 +615,7 @@
     return (imgCache[set] = new Promise(res => setTimeout(res, 0)).then(() => {
       // portal: the textures are drawn in a worker — build the pieces once and wait for them (their materials are cached)
       if (!window.AtlasTexGen) return;
-      for (const col of ['w', 'b']) for (const tp of 'KQRBNP') piece(tp, col, { set, spr: true });
+      for (const col of ['w', 'b']) for (const tp of 'KQRBNP') piece(tp, col, { set });
       return AtlasTexGen.settle();
     }).then(() => {
       const TT = T(), W = px, H = Math.round(px * SPR_H);
@@ -573,7 +631,7 @@
       cam.position.set(0, Math.sin(ELEV) * 10, Math.cos(ELEV) * 10); cam.lookAt(0, 0, 0);
       const out = {};
       for (const col of ['w', 'b']) for (const tp of 'KQRBNP') {
-        const p = piece(tp, col, { set, spr: true });
+        const p = piece(tp, col, { set });
         if (tp === 'N') p.rotation.y = col === 'w' ? Math.PI * 1.1 : -Math.PI * .1;   // white looks left, black right (3/4)
         scene.add(p); R.render(scene, cam); out[col + tp] = R.domElement.toDataURL('image/png'); scene.remove(p);
       }
