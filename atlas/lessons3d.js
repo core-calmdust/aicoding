@@ -149,6 +149,22 @@
       hi: { hi: 'मैं प्लॉपबन हूँ! चलो साथ में कनेक्ट फ़ोर सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छा हरा स्तंभ है।', wrong: 'करीब था! जवाब हरा स्तंभ है।', hintSay: 'संकेत: निशान वाले खानों को देखो।' },
       ar: { hi: 'أنا بلوب بن! لنتعلّم أربعة في صف معًا.', partial: 'نقلة جيدة! لكن الأفضل هو العمود الأخضر.', wrong: 'قريب جدًا! الجواب هو العمود الأخضر.', hintSay: 'تلميح: انظر إلى الخانات المعلّمة.' },
     },
+    mancala: {
+      ja: { hi: 'マンカラビだよ！ いっしょにマンカラのお勉強をしよう。', partial: 'いい手！ でもいちばんは金の丸の穴なんだ。', wrong: 'おしい！ 正解は金の丸の穴だよ。', hintSay: 'ヒント：種の数を数えてみて。' },
+      en: { hi: "Gembeetle here! Let's study mancala together.", partial: 'A nice move! But the gold-ringed pit is the best.', wrong: 'So close! The gold-ringed pit is the answer.', hintSay: 'Hint: count the seeds.' },
+      zh: { hi: '我是宝石甲虫！一起来学播棋吧。', partial: '好棋！不过最好的是金圈的坑。', wrong: '差一点！正解是金圈的坑。', hintSay: '提示：数一数种子。' },
+      'zh-TW': { hi: '我是寶石甲蟲！一起來學播棋吧。', partial: '好棋！不過最好的是金圈的洞。', wrong: '差一點！正解是金圈的洞。', hintSay: '提示：數一數種子。' },
+      ko: { hi: '보석풍뎅이야! 같이 만칼라를 공부하자.', partial: '좋은 수야! 하지만 최선은 금색 고리 구멍이야.', wrong: '아깝다! 정답은 금색 고리 구멍이야.', hintSay: '힌트: 씨앗 수를 세어 봐.' },
+      es: { hi: '¡Soy Escarabajoya! Estudiemos mancala juntos.', partial: '¡Buena jugada! Pero la mejor es el hoyo con anillo dorado.', wrong: '¡Casi! La respuesta es el hoyo con anillo dorado.', hintSay: 'Pista: cuenta las semillas.' },
+      fr: { hi: 'C’est Scarabijou ! Étudions le mancala ensemble.', partial: 'Joli coup ! Mais le meilleur est le trou cerclé d’or.', wrong: 'Presque ! La réponse est le trou cerclé d’or.', hintSay: 'Indice : compte les graines.' },
+      pt: { hi: 'Aqui é o Besourojoia! Vamos estudar mancala juntos.', partial: 'Boa jogada! Mas a melhor é a casa com anel dourado.', wrong: 'Quase! A resposta é a casa com anel dourado.', hintSay: 'Dica: conte as sementes.' },
+      de: { hi: 'Hier ist Juwelkäfer! Lass uns zusammen Mancala lernen.', partial: 'Guter Zug! Aber am besten ist die golden umrandete Mulde.', wrong: 'Knapp! Die Antwort ist die golden umrandete Mulde.', hintSay: 'Tipp: Zähl die Samen.' },
+      ru: { hi: 'Это Джембитл! Давай вместе изучать манкалу.', partial: 'Хороший ход! Но лучший — лунка с золотым кольцом.', wrong: 'Почти! Ответ — лунка с золотым кольцом.', hintSay: 'Подсказка: посчитай камни.' },
+      tr: { hi: 'Ben Gembeetle! Birlikte mangala çalışalım.', partial: 'Güzel hamle! Ama en iyisi altın halkalı çukur.', wrong: 'Az kaldı! Cevap altın halkalı çukur.', hintSay: 'İpucu: taşları say.' },
+      id: { hi: 'Aku Gembeetle! Ayo belajar congklak bersama.', partial: 'Langkah bagus! Tapi yang terbaik lubang bercincin emas.', wrong: 'Hampir! Jawabannya lubang bercincin emas.', hintSay: 'Petunjuk: hitung bijinya.' },
+      hi: { hi: 'मैं रत्नू भौंरा हूँ! चलो साथ में मनकला सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छा सुनहरे घेरे वाला गड्ढा है।', wrong: 'बहुत क़रीब! जवाब सुनहरे घेरे वाला गड्ढा है।', hintSay: 'संकेत: बीज गिनो।' },
+      ar: { hi: 'أنا خنفوس الجواهر! لنتعلّم المنقلة معًا.', partial: 'نقلة جيدة! لكن الأفضل هي الحفرة ذات الحلقة الذهبية.', wrong: 'قريب جدًا! الجواب هو الحفرة ذات الحلقة الذهبية.', hintSay: 'تلميح: عُدَّ البذور.' },
+    },
     tafl: {
       ja: { hi: 'タフリンだよ！ いっしょにタフルのお勉強をしよう。', partial: 'いい手！ でもいちばんは緑の印の手なんだ。', wrong: 'おしい！ 正解は緑の印の手だよ。', hintSay: 'ヒント：光っている駒から考えてみて。' },
       en: { hi: "Taflin here! Let's study tafl together.", partial: 'A nice move! But the green-marked move is the best.', wrong: 'So close! The green-marked move is the answer.', hintSay: 'Hint: start from the glowing pieces.' },
@@ -218,7 +234,7 @@
     const k = stem.slice(-1), body = stem.slice(0, -1);
     if (/[てで][いみ]$/.test(stem)) return { dict: stem + 'る', neg: stem + 'ない', vol: stem + 'よう', past: stem + 'た' };   // (〜ています: the いる of the progressive)
     // し: する after a noun / particle / two kanji (確認し), す after one kanji or the a-row kana of 動かし・逃がし・増やし (godan)
-    if (k === 'し' && (stem.length === 1 || (KANJI.test(stem.slice(-2, -1)) && KANJI.test(stem.slice(-3, -2))) || !(KANJI.test(stem.slice(-2, -1)) || /[かがさやらわまたな]/.test(stem.slice(-2, -1))))) return { dict: body + 'する', neg: body + 'しない', vol: body + 'しよう', past: body + 'した' };
+    if (k === 'し' && (stem.length === 1 || (KANJI.test(stem.slice(-2, -1)) && KANJI.test(stem.slice(-3, -2))) || !(KANJI.test(stem.slice(-2, -1)) || /[かがさやらわまたなば]/.test(stem.slice(-2, -1))))) return { dict: body + 'する', neg: body + 'しない', vol: body + 'しよう', past: body + 'した' };
     if (/来$/.test(stem) || /来き$/.test(stem)) return { dict: stem.replace(/き?$/, '') + 'る', neg: stem.replace(/き?$/, '') + 'ない', vol: stem.replace(/き?$/, '') + 'よう', past: stem.replace(/き?$/, '') + 'た' };
     if (/あり$/.test(stem)) return { dict: body + 'る', neg: body.slice(0, -1) + 'ない', vol: body + 'ろう', past: body + 'った' };
     if (/[えけげせぜてでねへべめれ]$/.test(stem) || ICHI_I.test(stem) || stem === 'い') return { dict: stem + 'る', neg: stem + 'ない', vol: stem + 'よう', past: stem + 'た' };
@@ -1122,7 +1138,61 @@
     spOk: lang => TFM('ok', lang),
     introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), P = s && s.problems && s.problems[0]; return P ? { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1, lock: true } } : null; },
   };
-  const DATA = { tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
+  /* mancala (2026-11-16): mancala/lessons.json (29 steps of 5 problems, by rule set and course = the full game's LS_RULESETS): one move,
+     scored by the stored values P.sc (= mancala/app.js problemPoints); after the move, back to the problem with the answer (gold ring),
+     your move (red) and every pit's value. Progress = the full game's ('aicoding-mancala-v1-lessons' { id: { best, clear } }). Texts:
+     mancala/i18n.js + i18n-learn.js (a sandbox); a pit is named by its ring (the 3D board has no pit numbers). The warm-ups stay in the
+     full game. */
+  const MC_SETS = { kalah: { basic: ['sow', 'extra', 'capture'], tactics: ['defend', 'chain', 'endgame'], kOpen: ['k_open', 'k_open6', 'k_tempo'], kMid: ['k_combo', 'k_hoard', 'k_starve', 'k_count'] },
+    basic: { nOpen: ['n_open', 'n_chain'], nCap: ['n_cap', 'n_defend'], nEnd: ['n_play', 'n_end'] }, easy: { eOpen: ['e_open', 'e_chain'], eMid: ['e_block', 'e_keep', 'e_end'] },
+    sunka: { sRelay: ['s_relay', 's_chain', 's_cap'], sEnd: ['s_defend', 's_end'] } };
+  const MCM = (k, lang) => lang === 'ja' ? (k === 'ok' ? '（金の丸）' : '（赤い丸）') : `<i class="ls-spot ${k}"></i>`;
+  const mcFmt = (v, exact) => { const r = exact ? Math.round(v) : Math.round(v * 10) / 10; return (r > 0 ? '+' : r < 0 ? '−' : '±') + Math.abs(r); };
+  const MANCALA = {
+    LKEY: 'aicoding-mancala-v1-lessons', data: null, I: null,
+    load() {
+      if (this.p) return this.p;
+      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=3'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+        .then(([ls, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] mancala texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
+        .catch(e => { this.p = null; throw e; }));
+    },
+    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    courseOf(sid) { for (const r in MC_SETS) for (const c in MC_SETS[r]) if (MC_SETS[r][c].includes(sid)) return [r, c]; return ['kalah', 'basic']; },
+    rules(s) { return s.rules || this.data.ls.rules || 'kalah'; },
+    list(kind, lang) {
+      const pr = J(this.LKEY, {}), steps = this.data.ls.steps, out = [];
+      for (const r in MC_SETS) for (const c in MC_SETS[r]) for (const sid of MC_SETS[r][c]) {
+        const i = steps.findIndex(s => s.id === sid); if (i < 0) continue; const s = steps[i];
+        out.push({ key: String(i), cat: c, catName: (r !== 'kalah' ? this.tx('rule.' + r, lang) + '・' : '') + (this.tx('lc.' + c, lang) || c), title: this.tx('ls.' + s.id + '.title', lang), sub: this.tx('ls.' + s.id + '.sub', lang),
+          svg: s.problems && s.problems[0] && window.AtlasMini && AtlasMini.mancala ? AtlasMini.mancala({ b: s.problems[0].b }) : '', st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '', full: false });
+      }
+      return out;
+    },
+    lesson(key, lang) {
+      const s = this.data.ls.steps[+key]; if (!s) return null;
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), R = this.rules(s), sp = { m: MCM('ok', lang), x: MCM('ng', lang) };
+      return { id: s.id, title: T('title'), intro: T('intro'), ramp: null,
+        probs: (s.problems || []).map(P => {
+          const base = s.id === 'sow' ? [{ at: P.target, cls: 'target' }] : [];
+          const th = { extra: 'store', chain: 'store', e_chain: 'store', s_relay: 'store', capture: 'cap', k_combo: 'cap', n_cap: 'cap', s_cap: 'cap', defend: 'def', n_defend: 'def', s_defend: 'def', n_chain: 'store', s_chain: 'store', e_block: 'blk' }[s.id];
+          const hintMk = () => { const b = P.b, E = window.MancalaEngine, o = [];
+            if (th === 'store') o.push({ at: 6, cls: '' });
+            if (th === 'cap') for (let i = 0; i < 6; i++) if (!b[i] && b[12 - i]) o.push({ at: 12 - i, cls: 'cap' });
+            if ((th === 'blk' || th === 'def') && E) for (let k = 0; k < 6; k++) { if (!b[7 + k]) continue; const tr = E.trace(Int8Array.from(b), 1, k, R); if (th === 'blk' && tr.extra && !tr.over) o.push({ at: 7 + k, cls: 'cap' }); if (th === 'def' && tr.cap) o.push({ at: tr.capFrom, cls: 'cap' }); }
+            return o; };
+          return { pos: { spec: { b: P.b.slice(), rules: R, side: 0 }, me: 1, marks: base }, kind: 'best', P, base, hintMk, sow: s.id === 'sow', ans: P.best, ask: T('goal'), hintTx: T('hint'), hint: null, why: '',
+            good: () => T('why', sp), ng: () => this.tx('fb.answerIs', lang, { m: MCM('ok', lang) }) + ' ' + T('why', sp) };
+        }),
+        save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
+    },
+    points(P, k) {   // (= mancala/app.js problemPoints)
+      const sc = P.sc, all = sc.filter(v => v !== null), mine = sc[k], best = Math.max(...all), n = all.length;
+      if (mine == null) return 0; if (n <= 1 || mine >= best - 1e-9) return 20;
+      const r = all.filter(v => v > mine + 1e-9).length; return Math.max(0, Math.round(20 * (n - 1 - r) / (n - 1)));
+    },
+    introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), P = s && s.problems && s.problems[0]; return P ? { pos: { spec: { b: P.b.slice(), rules: this.rules(s), side: 0 }, me: 1, lock: true } } : null; },
+  };
+  const DATA = { mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -1225,6 +1295,7 @@
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
         else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons' || id === 'tafl')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && id === 'mancala') pz().load(G.spec, G.me, { lock: !!G.lock, marks: G.marks });
         else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
         else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
@@ -1378,7 +1449,8 @@
       if (!p.choices) pz().wait(); act(X.next, { hint: true, nextOn: false });
       $('[data-a=next]').onclick = () => { cur.k++; if (cur.k < cur.probs.length) prob(); else finish(); };
       $('[data-a=hint]').onclick = () => { if (p.ans == null || p.ans < 0 || p.ans === '' || p.done) return; p.hinted = true;
-        if (id === 'connect4') { pz().mark(p.hintMk && p.hintMk.length ? p.hintMk : null); say(p.hintTx || X.hintSay); return; }   // (the threats the step's hint names: yours green, the opponent's red)
+        if (id === 'connect4') { pz().mark(p.hintMk && p.hintMk.length ? p.hintMk : null); say(p.hintTx || X.hintSay); return; }
+        if (id === 'mancala') { pz().mark(p.base.concat(p.hintMk ? p.hintMk() : [])); say(p.hintTx || X.hintSay); return; }   // (mancala/app.js lsHint: the store, the pits to capture, the threats — never the answer itself)   // (the threats the step's hint names: yours green, the opponent's red)
         if (p.hint && p.hint.length) { pz().mark((id === 'amazons' && p.marks ? p.marks : []).concat(p.hint.map(q => [q, 'ring']))); say(p.hintTx || X.hintSay); return; }   // (gomoku: the lesson's own hint points and words)
         if (p.kind === 'bgplay') { pz().reset(); pz().mark(p.ans); pz().wait(); say((p.hintTx ? p.hintTx + '<br>' : '') + X.hintSay); return; }   // (backgammon: back to the roll's start, rings on the checkers the best play moves)
         if (p.kind === 'choice') { say(p.hintTx || X.hintSay); return; }
@@ -1466,6 +1538,17 @@
         }
         say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
         try { chime(right); } catch (e) {}
+        act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
+        if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
+        return;
+      }
+      if (id === 'mancala' && typeof u === 'number') {   // (back to the problem: the answer's pit in gold, yours red, every pit's value)
+        const right = pts >= 16, k = cur.k, P = p.P;
+        say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b><br>` + (right ? p.good() : p.ng()) + (p.sow ? '' : '<br><small>' + D.tx('fb.values', ctx.lang, { a: mcFmt(P.sc[u], false), b: mcFmt(P.sc[P.best], false) }) + '</small>'));
+        try { chime(right); } catch (e) {}
+        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().load(p.pos.spec, 1, { lock: true });
+          const best = Math.max(...P.sc.filter(v => v !== null));
+          later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().mark([...p.base, { at: P.best, cls: 'ok' }, ...(u !== P.best ? [{ at: u, cls: 'ng' }] : []), ...(p.sow ? [] : P.sc.map((v, j) => v === null ? null : { at: j, label: mcFmt(v, false), best: v >= best }).filter(Boolean))]); }, 260); }, 900);
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
