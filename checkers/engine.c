@@ -182,7 +182,8 @@ static int egMaxN = 0;
 static const u32 EGRUN[EGNRUN] = { 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 23, 26, 30, 34, 39, 45, 52, 60, 70, 80, 92, 106,
   122, 140, 161, 185, 213, 245, 282, 324, 373, 429, 493, 567, 652, 750, 862, 991, 1140, 1311, 1508, 1734, 1994, 2293,
   2637, 3033, 3488, 4011, 4613, 5305, 6100, 7016, 8068, 9278, 10670, 12270 };
-typedef struct { const u32 *first[2]; const u8 *data[2]; u32 nb[2]; } EGZC;
+typedef struct { const u32 *first[2]; const u8 *data[2]; u32 nb[2]; int thr; } EGZC;   // thr: CKZ3 (no value under a threat)
+#define EG_THREAT 4   // egProbeK: a CKZ3 class where the side not to move could capture (play one more move)
 static EGZC EGZ[DBMAX + 1][DBMAX + 1][DBMAX + 1][DBMAX + 1];
 static u32 EGTL[256]; static u8 EGTV[256];
 static u32 CB[33][33];
@@ -222,6 +223,7 @@ EXPORT(eg_addz) void eg_addz(int bm, int bk, int wm, int wk, const u8 *blob) {
   EGD[bm][bk][wm][wk] = 0; EGN[bm][bk][wm][wk] = eg_size(bm, bk, wm, wk);
   int n = bm + bk + wm + wk; if (n > egMaxN) egMaxN = n;
 }
+EXPORT(eg_addz3) void eg_addz3(int bm, int bk, int wm, int wk, const u8 *blob) { eg_addz(bm, bk, wm, wk, blob); EGZ[bm][bk][wm][wk].thr = 1; }
 static int egProbeZ(const EGZC *z, u32 idx, int s) {
   const u32 *F = z->first[s]; u32 lo = 0, hi = z->nb[s];   // the last block whose first index <= idx
   while (hi - lo > 1) { u32 mid = (lo + hi) >> 1; if (F[mid] <= idx) lo = mid; else hi = mid; }
@@ -244,12 +246,13 @@ static int egProbeK(const Pos *p, int caps) {   // caps: the side to move's capt
     const EGZC *z = &EGZ[bm][bk][wm][wk]; if (!z->nb[p->side]) return 0;
     if (caps < 0) { Move L[MAXMV]; caps = genCaps(p, L); }
     if (caps) return 0;   // (the compressed classes keep no value where the side to move must capture)
+    if (z->thr) { Pos q = *p; q.side ^= 1; Move L[MAXMV]; if (genCaps(&q, L)) return EG_THREAT; }
     return egProbeZ(z, egIndex(p, bm, bk, wm, wk), p->side);
   }
   u32 idx = egIndex(p, bm, bk, wm, wk) * 2 + p->side;
   return (D[idx >> 2] >> ((idx & 3) * 2)) & 3;
 }
-static inline int egProbe(const Pos *p) { return egProbeK(p, -1); }
+static inline int egProbe(const Pos *p) { int e = egProbeK(p, -1); return e == EG_THREAT ? 0 : e; }
 
 // progress inside a database win (side to move's view, |x| < 150): the database knows the result but not how to get there,
 // so the winner is steered towards captures, crowning and closing in on the loser's pieces (the loser does the opposite).
@@ -808,7 +811,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   if (ply >= MAXPLY - 4) return evalAt(p, ply);
   // endgame database (quiet positions)
   if (egMaxN && !caps && ply > 0) {
-    int e = egProbeK(p, 0);
+    int e = egProbeK(p, 0); if (e == EG_THREAT) e = 0;
     if (e) {
       int v = e == 1 ? WINT - 200 - ply + egPr(p, ply, 1) : e == 2 ? -(WINT - 200 - ply) + egPr(p, ply, 0) : 0;
       if (e == 3) return 0;
@@ -819,7 +822,9 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   }
   if (n == 1 && ply > 0) depth++;          // forced move: does not cost depth
   else if (caps && depth <= 0) depth = 1;   // captures pending at the horizon: resolve them (quiescence)
-  if (depth <= 0) { nodes++; int e = egMaxN ? egProbeK(p, caps) : 0; if (e == 3) return 0; if (e) return e == 1 ? WINT - 200 - ply + egPr(p, ply, 1) : -(WINT - 200 - ply) + egPr(p, ply, 0); return evalAt(p, ply); }
+  int eh = depth <= 0 && egMaxN ? egProbeK(p, caps) : 0;
+  if (eh == EG_THREAT) depth = 1;   // (a threat inside the tables: one more move, as with captures pending)
+  if (depth <= 0) { nodes++; int e = eh; if (e == 3) return 0; if (e) return e == 1 ? WINT - 200 - ply + egPr(p, ply, 1) : -(WINT - 200 - ply) + egPr(p, ply, 0); return evalAt(p, ply); }
   nodes++;
   if (ply > seldepth) seldepth = ply;
   // transposition table
@@ -1027,19 +1032,20 @@ static TLS int rootVal[MAXMV];
 // that keep the win, a drawn root the moves that keep the draw; then the search picks among them by the evaluation, the
 // tables probed only below the root's piece count (a capture into a smaller won ending scores as a win). Without this every
 // won move scores the same and the winner wanders into the 40-move rule or a repetition (claude/checkers-spec.md「終盤DB」).
-static int dbVal(const Pos *p) {   // the side to move's database result with captures played out (0: not in the tables)
+static int dbValD(const Pos *p, int d) {   // the side to move's database result with captures (and threats, d plies) played out
   int n = pc(p->p[0] | p->p[1]); if (n > egMaxN) return 0;
   if (!p->p[0] || !p->p[1]) return p->p[p->side] ? 1 : 2;
   Move L[MAXMV]; int k = genCaps(p, L);
-  if (!k) return egProbeK(p, 0);
+  if (!k) { int e = egProbeK(p, 0); if (e != EG_THREAT) return e; if (d <= 0) return 0; k = gen(p, L); if (!k) return 2; }
   int best = 0;   // 1 win, 3 draw, 2 loss (best first)
   for (int i = 0; i < k; i++) {
-    Pos q = *p; doMove(&q, &L[i]); int c = dbVal(&q); if (!c) return 0;
+    Pos q = *p; doMove(&q, &L[i]); int c = dbValD(&q, L[i].cap ? d : d - 1); if (!c) return 0;
     int mine = c == 2 ? 1 : c == 1 ? 2 : 3;
     if (mine == 1) return 1; if (mine == 3) best = 3; else if (!best) best = 2;
   }
   return best;
 }
+static inline int dbVal(const Pos *p) { return dbValD(p, 2); }
 EXPORT(eg_root) void eg_root(int on) { egRootOn = on; }
 static void egRootFilter(void) {
   egCap = 99;

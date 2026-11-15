@@ -7,11 +7,14 @@
 // Black's crowning row) are "don't care": they take the value that makes the longest run. The stream is cut into blocks
 // of EGBS bytes (a block starts at a token); the block's first value index is kept, so a probe finds its block by binary
 // search and decodes at most EGBS tokens.
-// File "CKZ2": nclass (u32); per class bm bk wm wk (u8) and the class blob's byte length (u32); then the blobs:
+// (CKZ3, THREAT: also no value where the side not to move could capture.) File "CKZ2" / "CKZ3": nclass (u32); per class bm bk wm wk (u8) and the class blob's byte length (u32); then the blobs:
 //   nb0 nb1 len0 len1 (u32), first[nb0] first[nb1] (u32), bytes0 (len0, padded to 4), bytes1 (len1, padded to 4)
 // build: gcc -O3 -march=native -fopenmp -DNATIVE -o egpack tools/egpack.c   run: ./egpack egdb5.bin egdb5.ckz [min] [max]
 #include "../engine.c"
 #include <omp.h>
+#ifndef THREAT
+#define THREAT 1   // (CKZ3) also no value where the side not to move could capture: the search plays one more move there
+#endif
 typedef struct { int bm, bk, wm, wk; u32 len; const u8 *v; u32 n; } RC;
 static u32 unrankIn(u32 r, int k, u32 allowed) {
   int sq[32], m = 0; for (u32 a = allowed; a; a &= a - 1) sq[m++] = ctz(a);
@@ -74,7 +77,7 @@ int main(int argc, char **argv) {
       int unused = (p.p[1] & ~p.k & ROW[0]) != 0;
       for (int s = 0; s < 2; s++) {
         u32 id = i * 2 + s; int v = (c->v[id >> 2] >> ((id & 3) * 2)) & 3;
-        if (unused) v = 0; else { p.side = s; Move L[MAXMV]; if (genCaps(&p, L)) v = 0; }
+        if (unused) v = 0; else { p.side = s; Move L[MAXMV]; if (genCaps(&p, L)) v = 0; else if (THREAT) { Pos q = p; q.side = s ^ 1; if (genCaps(&q, L)) v = 0; } }
         val[(size_t)s * c->n + i] = (u8)v;
       }
     }
@@ -91,7 +94,7 @@ int main(int argc, char **argv) {
     fprintf(stderr, "class %d%d-%d%d  positions %u  %u bytes (%.3f bits/value)\n", c->bm, c->bk, c->wm, c->wk, c->n, L, 8.0 * L / (2.0 * c->n));
     free(O[0].b); free(O[1].b); free(O[0].first); free(O[1].first);
   }
-  fwrite("CKZ2", 1, 4, g); fwrite(&keep, 4, 1, g);
+  fwrite(THREAT ? "CKZ3" : "CKZ2", 1, 4, g); fwrite(&keep, 4, 1, g);
   for (u32 ci = 0; ci < nc; ci++) { if (!blob[ci]) continue; RC *c = &C[ci]; u8 h[4] = { (u8)c->bm, (u8)c->bk, (u8)c->wm, (u8)c->wk }; fwrite(h, 1, 4, g); fwrite(&blen[ci], 4, 1, g); }
   for (u32 ci = 0; ci < nc; ci++) if (blob[ci]) fwrite(blob[ci], 1, blen[ci], g);
   fclose(g);
