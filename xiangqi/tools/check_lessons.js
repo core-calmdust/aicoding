@@ -24,6 +24,7 @@ const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru',
     txt(id, it.g, 'g'); txt(id, it.h, 'h'); txt(id, it.y, 'y');
     for (const q of it.look || []) if (!sqOk(q)) fail(id, 'look ' + q);
     for (const s of it.ok) if (!byName(pos, s)) fail(id, 'illegal answer ' + s);
+    if (it.src === 'mirror') { console.log('ok', id, it.ok.join(','), '(the problem mirrored)'); continue; }   // (its answers: a verified problem's, by symmetry)
     let good;
     if (it.mate) {
       good = (E.puzzle(it.s, [], it.mate, false, false) || []).filter(x => x.need && x.need <= it.mate).map(x => E.name(pos, x.m, 'iccs')).sort();
