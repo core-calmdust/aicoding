@@ -121,7 +121,7 @@ html.atlas-tafl #newOverlay .modal-actions .mbtn{padding-top:10px!important;padd
   document.head.appendChild(css);
 
   { const d = document.getElementById('fDisplay'), col = document.querySelector('#newOverlay .ng-play'); if (d && col) col.appendChild(d); }   // (PC: the right column has room, the left one is long)
-  const RULE_OF = { 7: 'brandubh', 9: 'tablut', 11: 'copenhagen' };
+  const RULE_OF = { 7: 'brandubh', 9: 'tablut', 11: 'copenhagen', 111: 'fetlar', 112: 'tawlbwrdd', 71: 'ardri' };   // (the portal card's 種目: the size value names the rule set)
   const skin = AtlasSkin.init({
     hold: true,   // 盤面反転: the 3D stones keep the board's own places — the table stays turned round while flipped
     margin: 0.16,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
