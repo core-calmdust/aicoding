@@ -1890,3 +1890,12 @@ html.lp .pstats .ps-yks.two .ps-yh2{display:none}
 .ps-yall-h h4{margin:0;font-family:var(--serif);letter-spacing:.24em;color:var(--gl);font-size:max(13px,calc(var(--u)*2.2))}
 .ps-yall-h small{margin-left:auto;color:rgba(232,206,140,.6);font-size:max(11px,calc(var(--u)*1.6))}
 .ps-yall-h .btn{font-family:var(--serif)}
+/* the header's switch between the stats and the yaku list (ユーザー 2026-11-15) */
+.pstats .ps-yt{margin-left:auto;flex:none;font-family:var(--serif);font-weight:700;font-size:max(12px,calc(var(--u)*1.9));letter-spacing:.16em;color:var(--gl2);
+  padding:.45em 1.1em;border-radius:3px;cursor:pointer;background:radial-gradient(120% 160% at 50% 0%,rgba(232,206,140,.2),transparent 65%),linear-gradient(180deg,#2a2040,#120d1e);
+  border:1px solid rgba(232,206,140,.7);box-shadow:inset 0 0 0 2px #120d1e,inset 0 0 0 3px rgba(232,206,140,.25)}
+.pstats .ps-yt:hover{border-color:var(--gl2);color:#fff6dc}
+.ps-ycat h5{margin:calc(var(--u)*.8) 0 calc(var(--u)*.4);font-family:var(--serif);font-weight:800;font-size:max(12px,calc(var(--u)*1.9));letter-spacing:.3em;color:#e9dcff;
+  display:flex;align-items:center;gap:.8em}
+.ps-ycat h5::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(232,206,140,.4),transparent)}
+.ps-ycat:last-child h5{color:var(--gl)}

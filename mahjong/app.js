@@ -827,6 +827,12 @@ function histHTML() {
   const orows = old.map(x => `<div class="ph-r old ${x.res === 'w' ? 'p1' : x.res === 'l' ? 'p4' : ''}"><span class="ph-d">${dt(x.t)}</span><span class="ph-pl">${esc(x.why ? String(x.why).split('·')[0].trim() : '')}</span><span></span><span class="ph-m">${esc(x.opp || '')}</span><span class="ph-s">${esc(x.why && String(x.why).includes('·') ? String(x.why).split('·')[1].trim() : '')}</span><span></span></div>`).join('');
   return `<div class="ph-list">${rows}${orows}</div>`;
 }
+// the yaku list's groups (ユーザー 2026-11-15): by han (closed), and the yakuman apart
+const YAKU_CAT = [
+  ['ycat1', ['riichi', 'ippatsu', 'tsumo', 'pinfu', 'tanyao', 'iipeikou', 'haku', 'hatsu', 'chun', 'seat_wind', 'round_wind', 'haitei', 'houtei', 'rinshan', 'chankan']],
+  ['ycat2', ['dbl_riichi', 'chiitoi', 'chanta', 'ittsu', 'sanshoku', 'sanshoku_k', 'toitoi', 'sanankou', 'sankantsu', 'shousangen', 'honroutou']],
+  ['ycat3', ['honitsu', 'junchan', 'ryanpeikou', 'chinitsu']],
+  ['ycatY', ['kokushi', 'suuankou', 'daisangen', 'shousuushii', 'daisuushii', 'tsuuiisou', 'ryuuiisou', 'chinroutou', 'chuuren', 'suukantsu', 'tenhou', 'chiihou']]];
 function closeStats() { const el = $('#pstats'); if (el.hidden) return; el.classList.remove('show'); el.hidden = true; el.innerHTML = ''; PS = null; }
 function renderStats() {
   const P = PS, c = P.c, pl = P.pl;
@@ -856,8 +862,9 @@ function renderStats() {
   const yRow = ([k, n]) => `<div class="ps-yk${n ? '' : ' zero'}"><span>${esc(I18N.yaku(k))}</span><b>${n}</b><em>${pct(raw.hands ? n / raw.hands : 0)}</em><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i></div>`;
   const yTop = yAll.filter(x => x[1]).slice(0, 5);
   const yTopHtml = yTop.length ? `<div class="ps-yh">${yHd}</div>` + yTop.map(yRow).join('') : `<span class="ps-none">—</span>`;
-  const yAllPage = `<div class="ps-yall"><div class="ps-yall-h"><button class="btn sm" data-a="yback">‹ ${esc(t('back'))}</button><h4>${esc(t('psYakuList'))}</h4><small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small></div>
-    <div class="ps-yks two"><div class="ps-yh">${yHd}</div><div class="ps-yh ps-yh2">${yHd}</div>${yAll.map(yRow).join('')}</div></div>`;
+  const yAllPage = `<div class="ps-yall"><div class="ps-yall-h"><h4>${esc(t('psYakuList'))}</h4><small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small></div>
+    ${YAKU_CAT.map(([lab, keys]) => { const rows = yAll.filter(x => keys.includes(x[0])); return rows.length ? `<section class="ps-ycat"><h5>${esc(t(lab))}</h5>
+      <div class="ps-yks two"><div class="ps-yh">${yHd}</div><div class="ps-yh ps-yh2">${yHd}</div>${rows.map(yRow).join('')}</div></section>` : ''; }).join('')}</div>`;
   let chHtml = '';
   if (pl.kind === 'me' && tb && tb[0] === 'all') {
     const ch = Object.entries(DB.pstats.chars).filter(([id]) => MJChars.get(id)).sort((a, b) => b[1].g - a[1].g).slice(0, 6);
@@ -870,6 +877,7 @@ function renderStats() {
         <header class="ps-h">
           <div class="ps-id"><em class="prar r-${c.rarity}">${c.rarity}</em><div><b>${esc(L(c.name))}</b><small>${esc(L(c.title))}</small></div></div>
           ${pl.kind === 'me' ? '' : `<span class="ps-who">${who}</span>`}
+          ${tb && tb[0] !== 'log' ? `<button class="ps-yt" data-a="${P.yakuAll ? 'yback' : 'yall'}">${esc(t(P.yakuAll ? 'record' : 'psYakuList'))}</button>` : ''}
           <button class="x" data-a="close" aria-label="${esc(t('close'))}">×</button>
         </header>
         ${sk ? `<div class="ps-sk">${skillChip(sk)}</div>` : ''}
@@ -880,7 +888,7 @@ function renderStats() {
           ${isG ? '' : `<section class="ps-sec"><h4>${t('psRanks')}</h4><div class="ps-rbar">${D.rankP.map((p, i) => p ? `<i style="flex:${p};--rc:${RANKC[i]}"><b>${t('rank')[i]}</b><span>${pct(p)}</span></i>` : '').join('')}</div>
             <div class="ps-rn">${raw.rank.map((n, i) => `<span style="--rc:${RANKC[i]}"><i></i>${t('rank')[i]} <b>${n}</b></span>`).join('')}</div></section>`}
           <div class="ps-grid">${rows.map(([l, v]) => `<div><span>${esc(l)}</span><b>${v}</b></div>`).join('')}</div>
-          <div class="ps-cols"><section class="ps-sec ps-mw"><h4>${t('psMaxWin')}</h4><div>${mwHtml}</div></section><section class="ps-sec ps-yaku"><h4>${t('psYaku')}<small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small><button class="ps-ymore" data-a="yall">${esc(t('psYakuAll'))} ›</button></h4><div class="ps-yks">${yTopHtml}</div></section></div>
+          <div class="ps-cols"><section class="ps-sec ps-mw"><h4>${t('psMaxWin')}</h4><div>${mwHtml}</div></section><section class="ps-sec ps-yaku"><h4>${t('psYaku')}<small>${esc(t('psYakuOf', { n: num(raw.hands) }))}</small></h4><div class="ps-yks">${yTopHtml}</div></section></div>
           ${chHtml}`}
           ${tb && tb[0] === 'log' ? '' : pl.kind === 'bot' ? `<p class="ps-note">${esc(t('psBotNote'))}</p>` : pl.kind === 'me' ? `<p class="ps-note">${esc(t('psNote'))}</p>` : ''}
         </div>
