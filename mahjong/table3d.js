@@ -551,6 +551,12 @@ class Table3D {
     host.appendChild(r.domElement);
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(36, 1, 0.5, 200);
+    // (2026-11-16, ユーザー: phones' batteries) the frame loop sleeps once nothing has moved for a moment, and wakes when the table
+    // is marked to be drawn or a movement is added (setting `dirty`, `tweens` or `handFx`, or pushing onto them) — see _loop
+    const wakeArr = arr => { arr.push = (...a) => { this._wake(); return Array.prototype.push.apply(arr, a); }; return arr; };
+    Object.defineProperty(this, 'dirty', { get() { return this._d; }, set(v) { this._d = v; if (v) this._wake(); } });
+    Object.defineProperty(this, 'tweens', { get() { return this._tw; }, set(v) { this._tw = wakeArr(v); if (v.length) this._wake(); } });
+    Object.defineProperty(this, 'handFx', { get() { return this._hf; }, set(v) { this._hf = wakeArr(v); if (v.length) this._wake(); } });
     this.tweens = [];
     this.handFx = [];
     this.tiles = new Map();
@@ -1427,7 +1433,20 @@ class Table3D {
   }
   // stop the frame loop while the table is not on screen
   pause() { this.paused = true; }
-  resume() { if (!this.paused) return; this.paused = false; this.dirty = true; requestAnimationFrame(this._loop); }
+  resume() { if (!this.paused) return; this.paused = false; this._sleep = false; clearTimeout(this._wt); this.dirty = true; requestAnimationFrame(this._loop); }
+  _wake() { if (!this._sleep || this.paused) return; this._sleep = false; clearTimeout(this._wt); requestAnimationFrame(this._loop); }
+  // the loop: one frame (_tick), then the next one only while something moves or was drawn in the last 0.4 s. Asleep, the
+  // dora's glint wakes it at the start of its next round.
+  _loop(now) {
+    if (this.paused) return;
+    this._drew = false;
+    this._tick(now);
+    if (this.paused) return;
+    if (this._drew || this.tweens.length || this.handFx.length || this._ov || (this._callG && this._callG.visible)) this._idleT = now;
+    if (now - (this._idleT || 0) < 400) { requestAnimationFrame(this._loop); return; }
+    this._sleep = true;
+    if (this._doraN) { const P = this._mob ? 4200 : 2600; this._wt = setTimeout(() => this._wake(), P - now % P + 8); }
+  }
   // ---------------------------------------------------------------- debug (the I key): polygons and the rest of the frame's cost
   // The numbers are the renderer's own for the last frame drawn (the table draws on demand, so they stand still while nothing
   // moves): triangles and draw calls as sent to the GPU (the shadow pass included), then the scene by itself — meshes shown,
@@ -1458,9 +1477,7 @@ class Table3D {
       'frame      ' + (dt && dt < 1000 ? dt.toFixed(1) + ' ms since the last draw' : 'on demand (idle)'),
     ].join('\n');
   }
-  _loop(now) {
-    if (this.paused) return;
-    requestAnimationFrame(this._loop);
+  _tick(now) {
     if (this.tweens.length) {
       const ends = [];   // (what follows a tween may start another: run it after the list is rebuilt)
       this.tweens = this.tweens.filter(tw => {
@@ -1511,7 +1528,7 @@ class Table3D {
     if (this._callG && this._callG.visible && this.callMat && (moved || now - (this._clT || 0) > GSTEP)) { this._clT = now; this.callMat.uniforms.uT.value = (now % 1400) / 1400; this.dirty = true; }
     if (this._ov) this.dirty = true;
     if (!this.dirty || document.hidden) return;
-    this.dirty = false;
+    this.dirty = false; this._drew = true;
     if (moved || this._ov) this.renderer.shadowMap.needsUpdate = true;
     this._syncInst();
     this._doraSync();
