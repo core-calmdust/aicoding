@@ -1,0 +1,50 @@
+{
+"b_hostile/0/body": {
+"ja": "<p>駒は前後（左右）を相手の駒にはさまれると取られます。<b>角のマスと空いた玉座</b>も、はさむ側として数えます。</p><p>赤い印にいた守り手は、いま動いた攻め手と<b>緑の印の角</b>にはさまれて取られました。</p>",
+"en": "<p>A piece is taken when it is sandwiched between two enemy pieces. <b>The corners and the empty throne</b> count as one side of the sandwich.</p><p>The defender on the red mark was caught between the attacker that just moved and <b>the corner marked green</b>.</p>",
+"zh": "<p>棋子前后（左右）被对方棋子夹住就会被吃掉。<b>角格和空着的王座</b>也算作夹击的一方。</p><p>红色标记上的守方棋子，被刚走动的攻方棋子和<b>绿色标记的角</b>夹住而被吃掉。</p>",
+"zh-TW": "<p>棋子前後（左右）被對方棋子夾住就會被吃掉。<b>角格和空著的王座</b>也算作夾擊的一方。</p><p>紅色標記上的守方棋子，被剛走動的攻方棋子和<b>綠色標記的角</b>夾住而被吃掉。</p>",
+"ko": "<p>말은 앞뒤(좌우)로 상대 말에 끼이면 잡힙니다. <b>모서리 칸과 비어 있는 왕좌</b>도 끼우는 쪽으로 칩니다.</p><p>빨간 표시에 있던 수비 말은 방금 움직인 공격 말과 <b>초록 표시의 모서리</b> 사이에 끼여 잡혔습니다.</p>",
+"es": "<p>Una pieza se captura cuando queda entre dos piezas enemigas. <b>Las esquinas y el trono vacío</b> cuentan como uno de los lados.</p><p>El defensor de la marca roja quedó atrapado entre el atacante que acaba de mover y <b>la esquina marcada en verde</b>.</p>",
+"fr": "<p>Une pièce est prise quand elle est prise en tenaille entre deux pièces ennemies. <b>Les coins et le trône vide</b> comptent comme un des deux côtés.</p><p>Le défenseur sur la marque rouge a été pris entre l’attaquant qui vient de jouer et <b>le coin marqué en vert</b>.</p>",
+"pt": "<p>Uma peça é capturada quando fica entre duas peças inimigas. <b>Os cantos e o trono vazio</b> contam como um dos lados.</p><p>O defensor na marca vermelha ficou preso entre o atacante que acabou de mover e <b>o canto marcado em verde</b>.</p>",
+"de": "<p>Ein Stein wird geschlagen, wenn er zwischen zwei gegnerischen Steinen eingeklemmt wird. <b>Die Ecken und der leere Thron</b> zählen als eine Seite.</p><p>Der Verteidiger auf der roten Markierung wurde zwischen dem eben gezogenen Angreifer und <b>der grün markierten Ecke</b> eingeklemmt.</p>",
+"hi": "<p>कोई मोहरा दो विरोधी मोहरों के बीच दब जाए तो पकड़ा जाता है। <b>कोने और खाली सिंहासन</b> भी एक तरफ़ गिने जाते हैं।</p><p>लाल निशान वाला रक्षक, अभी चले हमलावर और <b>हरे निशान वाले कोने</b> के बीच दबकर पकड़ा गया।</p>",
+"ar": "<p>تُؤسر القطعة عندما تُحاصر بين قطعتين للخصم. <b>الزوايا والعرش الفارغ</b> تُحسب أحد الطرفين.</p><p>المدافع على العلامة الحمراء حوصر بين المهاجم الذي تحرّك للتو و<b>الزاوية المعلّمة بالأخضر</b>.</p>",
+"ru": "<p>Фишка снимается, когда её зажимают две фишки соперника. <b>Углы и пустой трон</b> считаются одной из сторон.</p><p>Защитник на красной отметке зажат между только что сходившим нападающим и <b>углом с зелёной отметкой</b>.</p>",
+"id": "<p>Bidak dimakan bila terjepit di antara dua bidak lawan. <b>Sudut dan takhta yang kosong</b> dihitung sebagai salah satu sisi.</p><p>Bidak bertahan di tanda merah terjepit di antara penyerang yang baru bergerak dan <b>sudut bertanda hijau</b>.</p>",
+"tr": "<p>Bir taş iki rakip taş arasında kalırsa alınır. <b>Köşeler ve boş taht</b> da bir taraf sayılır.</p><p>Kırmızı işaretteki savunucu, az önce oynayan saldırgan ile <b>yeşil işaretli köşe</b> arasında kalıp alındı.</p>"
+},
+"t_tuichi/0/body": {
+"ja": "<p>王が端まで出ると、<b>緑の印の左右どちらの角</b>にもまっすぐ行けます（<b>トゥイチ</b>）。</p><p>攻め手は1手で1本しかふさげないので、次の手で王は必ず角に逃げられます。</p>",
+"en": "<p>The king has just reached the edge and has a straight path to both <b>corners marked green</b> (<b>tuichi</b>).</p><p>The attackers can block only one path per move, so the king surely escapes next turn.</p>",
+"zh": "<p>王走到边上后，可以直通<b>绿色标记的左右两个角</b>（<b>tuichi</b>）。</p><p>攻方一步只能堵住一条路，所以下一步王一定能逃到角上。</p>",
+"zh-TW": "<p>王走到邊上後，可以直通<b>綠色標記的左右兩個角</b>（<b>tuichi</b>）。</p><p>攻方一步只能堵住一條路，所以下一步王一定能逃到角上。</p>",
+"ko": "<p>왕이 가장자리까지 나오면 <b>초록 표시된 좌우 모서리</b> 어느 쪽으로도 곧장 갈 수 있습니다(<b>투이치</b>).</p><p>공격 측은 한 수에 한 길밖에 막지 못하므로, 다음 수에 왕은 반드시 모서리로 탈출합니다.</p>",
+"es": "<p>El rey acaba de llegar al borde y tiene camino directo a las dos <b>esquinas marcadas en verde</b> (<b>tuichi</b>).</p><p>Los atacantes solo pueden cerrar un camino por jugada, así que el rey escapa seguro en el siguiente turno.</p>",
+"fr": "<p>Le roi vient d’atteindre le bord et a un chemin direct vers les deux <b>coins marqués en vert</b> (<b>tuichi</b>).</p><p>Les attaquants ne bloquent qu’un chemin par coup : le roi s’échappe forcément au tour suivant.</p>",
+"pt": "<p>O rei acabou de chegar à borda e tem caminho direto para os dois <b>cantos marcados em verde</b> (<b>tuichi</b>).</p><p>Os atacantes só bloqueiam um caminho por lance, então o rei escapa com certeza no próximo turno.</p>",
+"de": "<p>Der König hat gerade den Rand erreicht und einen freien Weg zu beiden <b>grün markierten Ecken</b> (<b>Tuichi</b>).</p><p>Die Angreifer können pro Zug nur einen Weg sperren – der König entkommt im nächsten Zug sicher.</p>",
+"hi": "<p>राजा अभी किनारे पर पहुँचा है और <b>हरे निशान वाले दोनों कोनों</b> तक उसका सीधा रास्ता है (<b>तुइची</b>)।</p><p>हमलावर एक चाल में एक ही रास्ता रोक सकते हैं, इसलिए अगली चाल में राजा ज़रूर भाग निकलेगा।</p>",
+"ar": "<p>وصل الملك للتو إلى الحافة وله طريق مستقيم إلى <b>الزاويتين المعلّمتين بالأخضر</b> (<b>تويتشي</b>).</p><p>لا يستطيع المهاجمون سدّ أكثر من طريق واحد في النقلة، لذا سيهرب الملك حتمًا في الدور التالي.</p>",
+"ru": "<p>Король только что вышел на край и имеет прямой путь к обоим <b>углам с зелёной отметкой</b> (<b>туичи</b>).</p><p>Нападающие перекрывают лишь один путь за ход, так что король обязательно уйдёт следующим ходом.</p>",
+"id": "<p>Raja baru saja mencapai tepi dan punya jalan lurus ke kedua <b>sudut bertanda hijau</b> (<b>tuichi</b>).</p><p>Penyerang hanya bisa menutup satu jalan per langkah, jadi raja pasti lolos di giliran berikutnya.</p>",
+"tr": "<p>Kral az önce kenara ulaştı ve <b>yeşil işaretli iki köşeye</b> de düz yolu var (<b>tuichi</b>).</p><p>Saldırganlar bir hamlede yalnızca bir yolu kapatabilir; kral bir sonraki hamlede mutlaka kaçar.</p>"
+},
+"t_block/0/body": {
+"ja": "<p>王は今いる列をまっすぐ<b>赤い印の角</b>へ逃げられます。次の手で逃げられたら負け。</p><p>攻め手は、王と角のあいだに駒を動かして<b>ふさぎます</b>。ここでは、いま動いた駒で止められました。</p>",
+"en": "<p>The king has a straight path along its line to <b>the corner marked red</b> — if it gets there next move, you lose.</p><p>The attackers <b>block the path</b> by moving a piece between the king and the corner. Here the piece that just moved stops it.</p>",
+"zh": "<p>王可以沿所在的一行直通<b>红色标记的角</b>。下一步让它逃走就输了。</p><p>攻方把棋子走到王和角之间来<b>堵住</b>。这里刚走动的棋子把它拦住了。</p>",
+"zh-TW": "<p>王可以沿所在的一行直通<b>紅色標記的角</b>。下一步讓它逃走就輸了。</p><p>攻方把棋子走到王和角之間來<b>堵住</b>。這裡剛走動的棋子把它攔住了。</p>",
+"ko": "<p>왕은 지금 있는 줄을 따라 <b>빨간 표시의 모서리</b>로 곧장 탈출할 수 있습니다. 다음 수에 탈출하면 패배입니다.</p><p>공격 측은 왕과 모서리 사이로 말을 옮겨 <b>막습니다</b>. 여기서는 방금 움직인 말로 막았습니다.</p>",
+"es": "<p>El rey tiene camino recto por su línea hasta <b>la esquina marcada en rojo</b>: si llega en la siguiente jugada, pierdes.</p><p>Los atacantes <b>cierran el camino</b> moviendo una pieza entre el rey y la esquina. Aquí lo detiene la pieza que acaba de mover.</p>",
+"fr": "<p>Le roi a un chemin direct le long de sa ligne vers <b>le coin marqué en rouge</b> : s’il y arrive au coup suivant, tu perds.</p><p>Les attaquants <b>bloquent le chemin</b> en plaçant une pièce entre le roi et le coin. Ici, la pièce qui vient de jouer l’arrête.</p>",
+"pt": "<p>O rei tem caminho reto pela sua linha até <b>o canto marcado em vermelho</b>: se chegar lá no próximo lance, você perde.</p><p>Os atacantes <b>bloqueiam o caminho</b> movendo uma peça entre o rei e o canto. Aqui a peça que acabou de mover o detém.</p>",
+"de": "<p>Der König hat entlang seiner Linie einen freien Weg zur <b>rot markierten Ecke</b> – erreicht er sie im nächsten Zug, verlierst du.</p><p>Die Angreifer <b>sperren den Weg</b>, indem sie einen Stein zwischen König und Ecke ziehen. Hier hält ihn der eben gezogene Stein auf.</p>",
+"hi": "<p>राजा अपनी पंक्ति में सीधे <b>लाल निशान वाले कोने</b> तक जा सकता है — अगली चाल में पहुँच गया तो तुम हारोगे।</p><p>हमलावर राजा और कोने के बीच मोहरा लाकर <b>रास्ता रोकते हैं</b>। यहाँ अभी चला मोहरा उसे रोक देता है।</p>",
+"ar": "<p>للملك طريق مستقيم على خطّه إلى <b>الزاوية المعلّمة بالأحمر</b>، وإن وصل إليها في النقلة التالية تخسر.</p><p>يـ<b>سدّ</b> المهاجمون الطريق بتحريك قطعة بين الملك والزاوية. هنا أوقفته القطعة التي تحرّكت للتو.</p>",
+"ru": "<p>У короля прямой путь по его линии к <b>углу с красной отметкой</b> — дойдёт следующим ходом, и вы проиграли.</p><p>Нападающие <b>перекрывают путь</b>, ставя фишку между королём и углом. Здесь его останавливает только что сходившая фишка.</p>",
+"id": "<p>Raja punya jalan lurus di barisnya menuju <b>sudut bertanda merah</b> — jika sampai di langkah berikutnya, kamu kalah.</p><p>Penyerang <b>menutup jalan</b> dengan memindahkan bidak ke antara raja dan sudut. Di sini bidak yang baru bergerak menghentikannya.</p>",
+"tr": "<p>Kralın kendi hattı boyunca <b>kırmızı işaretli köşeye</b> düz yolu var; bir sonraki hamlede oraya varırsa kaybedersin.</p><p>Saldırganlar kral ile köşe arasına bir taş sürerek <b>yolu kapatır</b>. Burada az önce oynayan taş onu durduruyor.</p>"
+}
+}

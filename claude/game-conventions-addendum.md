@@ -717,3 +717,4 @@
 - （2026-11-16）盤のビュー（#bv）・シートの上ではページ自体のピンチ拡大を止める（touch-action: pan-x pan-y、iOS の gesturestart を preventDefault）。3D盤の拡大縮小は table3d.js が自分で行う。
 - （2026-11-16）モリスのレッスンも3Dカードで遊べる（lessons3d.js の MORRIS）。問題はフル版と同じ（`morris/lessons.json`・`-six`・`-twelve`）、点数はフル版の problemPoints、進み具合はフル版の `aicoding-morris-lessons`。3D盤には座標がないので、座標（a1〜g7）を含む文はレッスン文から外し、手は盤の印（緑＝正解、赤＝あなたの手、金の丸＝ヒント）で示す。
 - （2026-11-16）ドット・アンド・ボックスのパズル（詰めドット）とレッスンも3Dカードで遊べる。パズルはフル版と同じ問題・順番（`dots/puzzles/index.json` の order）で、最後まで完全読みの相手と打ち切り、目標スコアに届けば正解（フル版の puzzle v2：明らかな悪手＝取れる箱を取らない／安全な線があるのに渡す、はその場で戻して正解を緑で示す）。進み具合はフル版の `dots-puzzles-v2`・`dots-lessons-v2`・`dots-daily-v1`。盤にすでに引かれている線は鉛筆の色で描く。案内役はハコピヨ。
+- （2026-11-16）タフルのレッスンの準備（ramp）と定跡（`tafl/openings.json` の8作戦：手順の解説→エンジンの手を当てる5問）も3Dカードで遊べる。進み具合はフル版の `aicoding-tafl-open`。座標を含む準備の説明文は `atlas/nocoord/tafl.json`（14言語）で盤の印を使う言い方に置き換える。
