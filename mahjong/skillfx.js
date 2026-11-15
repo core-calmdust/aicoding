@@ -57,14 +57,19 @@ vec3 wareme(vec2 q,float t){
   return c;
 }
 vec3 hanup(vec2 q,float t){
-  float front=mix(9.5,-3.5,ss(0.,.62,t)), band=ss(front-2.2,front+2.6,q.y)*(1.-ss(8.5,11.,q.y)), wide=1.-ss(2.5,8.,abs(q.x)+1.6*(fbm(q*.5+t)-.5));
-  vec2 p=vec2(q.x*.5,q.y*.34+t*3.2);
-  float w=fbm(p*1.25+vec2(0.,t*.9)), n=fbm(p*2.3+vec2(w*2.2,-w*1.4));
-  float lead=ss(front+3.5,front,q.y);
-  float heat=band*wide*ss(.42,.9,n+.3*lead)*(1.35-ss(.62,1.,t)*1.35);
-  vec3 c=vec3(1.6,.2,.04)*heat+vec3(1.3,.75,.1)*heat*heat*1.3+vec3(1.,1.,.9)*pow(heat,4.)*1.2;
-  c+=vec3(1.,.25,.05)*.22*band*wide*(1.-ss(.6,1.,t));                                   // the glow lying on the cloth
-  float em=pow(vn(q*5.+vec2(w*3.,t*11.)),14.)*band*wide*(1.-ss(.7,1.,t)); c+=vec3(1.5,.8,.25)*em*14.;   // embers
+  // (ユーザー 2026-11-15: it did not read as fire, and it was dotty.) Flames rooted along the user's edge, their tongues licking toward the
+  // middle: a smooth turbulence streams along each tongue, the body is cut by the distance from the root (each column its own
+  // length), and the colour runs from deep red at the edges through orange to a white-yellow heart. No speckle.
+  float d=8.8-q.y, L=12.*ss(0.,.28,t)*(1.-ss(.55,1.,t))+.01, edge=1.-ss(4.5,8.5,abs(q.x));
+  float warp=fbm(vec2(q.x*.45,d*.26-t*3.))-.5;
+  float n=fbm(vec2(q.x*.8+warp*1.9,d*.3-t*5.5)), n2=fbm(vec2(q.x*1.7-warp*1.2+7.,d*.55-t*8.));
+  float hcol=.5+.95*vn(vec2(q.x*.5+3.,t*2.6)), shape=1.-d/(L*hcol);
+  float f=clamp(shape*1.2+(n-.5)*1.7+(n2-.5)*.5,0.,1.)*ss(-.25,.2,shape)*edge*ss(-1.2,.4,d);
+  f=pow(f,1.35);
+  vec3 c=vec3(1.75,.24,.04)*f+vec3(1.4,.78,.1)*pow(f,2.2)*1.5+vec3(1.,.96,.8)*pow(f,5.)*1.5;
+  c+=vec3(1.,.22,.04)*.3*edge*exp(-max(d,0.)*.16)*ss(0.,.2,t)*(1.-ss(.6,1.,t));          // its glow on the cloth
+  vec2 g=vec2(q.x*1.1,d*.5-t*7.),id=floor(g); float hh=h21(id);                          // a few soft sparks carried along
+  if(hh>.8){ vec2 o=vec2(h21(id+.3),h21(id+.7))*.6+.2-fract(g); c+=vec3(1.6,.9,.3)*exp(-dot(o,o)*90.)*edge*ss(.1,.9,shape+.5)*(1.-ss(.6,1.,t)); }
   return c;
 }
 vec3 guard(vec2 q,float t){
@@ -235,12 +240,13 @@ function play(id, seat, tb, opt) {
   gl.uniform2f(U.uO1, O[0][0], O[0][1]); gl.uniform2f(U.uO2, O[1][0], O[1][1]); gl.uniform2f(U.uO3, O[2][0], O[2][1]);
   gl.uniform1f(U.uUnit, Math.max(8, Math.hypot(c1[0] - c0[0], c1[1] - c0[1]))); gl.uniform1f(U.uMode, mode); gl.uniform1f(U.uSeed, Math.random() * 40);
   gl.uniformMatrix3fv(U.uH, false, [Hm[0], Hm[3], Hm[6], Hm[1], Hm[4], Hm[7], Hm[2], Hm[5], Hm[8]]);
-  const dur = opt.dur || 1500, t0 = performance.now(), me = cur = {};
+  const dur = opt.dur || 1000,   // (ユーザー 2026-11-15: shorter)
+    t0 = performance.now(), me = cur = {};
   return new Promise(res => { let told = false;
     const frame = now => { if (cur !== me) { if (!told) res(); return; }
       const t = Math.min(1, (now - t0) / dur);
       gl.uniform1f(U.uT, t); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.TRIANGLES, 0, 3);
-      if (!told && t >= .7) { told = true; res(); }
+      if (!told && t >= .6) { told = true; res(); }
       if (t < 1) raf = requestAnimationFrame(frame); else stop(); };
     raf = requestAnimationFrame(frame); });
 }
