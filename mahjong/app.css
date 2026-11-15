@@ -2444,3 +2444,48 @@ html.lp #chara.ch2 .ch-info,html.lp #chara.ch2 .ch-info.tabs{top:14px}
 html.lp #chara.ch2 .ci-tabs button.glow::before{animation:ptnTabShine 3.2s ease-in-out infinite!important;display:block!important}
 html.lp #chara.ch2 .ci-tabs button.glow:not(.on){animation:ptnTabText 3.2s ease-in-out infinite!important}
 @media (prefers-reduced-motion: reduce){html.lp #chara.ch2 .ci-tabs button.glow::before{animation:ptnTabShine 3.2s ease-in-out infinite!important}html.lp #chara.ch2 .ci-tabs button.glow:not(.on){animation:ptnTabText 3.2s ease-in-out infinite!important}}
+
+/* (ユーザー 2026-11-16) the home: no pick-up banner (it is in the gacha now) — the play settings take its room, larger and easier to read */
+:is(#home,#chara).aaa .aa-banner{display:none!important}
+#home.aaa .aa-play{width:460px;gap:14px}
+#home.aaa .ap-tabs button{font-size:20px;padding:6px 0 11px}
+#home.aaa .ap-opts{height:auto;gap:10px}
+#home.aaa .seg{padding:4px}
+#home.aaa .seg button{font-size:17px;padding:11px 4px}
+#home.aaa .seg.lv button{font-size:15.5px;padding:10px 3px}
+#home.aaa .ap-rank{height:auto;min-height:58px;padding:8px 14px}
+#home.aaa .ap-rank .rkb{font-size:16px}
+#home.aaa .ap-rank b{font-size:20px}
+#home.aaa .ap-rank small{font-size:13.5px}
+#home.aaa .aa-go{padding:18px 16px}
+#home.aaa .aa-go .ag-k{font-size:40px}
+#home.aaa .aa-go .ag-s{font-size:14px}
+html.lp #home.aaa .aa-play{width:390px;gap:11px}
+html.lp #home.aaa .ap-tabs button{font-size:17px;padding:4px 0 9px}
+html.lp #home.aaa .seg button{font-size:15.5px;padding:9px 4px}
+html.lp #home.aaa .seg.lv button{font-size:14px;padding:8px 2px}
+html.lp #home.aaa .ap-rank{min-height:50px;padding:6px 12px}
+html.lp #home.aaa .ap-rank b{font-size:18px}
+html.lp #home.aaa .ap-rank small{font-size:12.5px}
+html.lp #home.aaa .aa-go{padding:14px 14px}
+html.lp #home.aaa .aa-go .ag-k{font-size:32px}
+/* the pick-up in the gacha's stage: a band along its top */
+.modal.gacham .gpick{position:absolute;left:10px;right:10px;top:10px;height:96px;display:flex;align-items:center;overflow:hidden;border:1px solid rgba(232,206,140,.5);border-radius:4px;
+  background:linear-gradient(90deg,rgba(10,6,22,.25),rgba(10,6,22,.9) 46%);z-index:1}
+.modal.gacham .gpick .gp-art{position:absolute;left:0;top:0;bottom:0;width:58%;background-size:cover;background-position:50% 18%;-webkit-mask-image:linear-gradient(90deg,#000 55%,transparent);mask-image:linear-gradient(90deg,#000 55%,transparent)}
+.modal.gacham .gpick .gp-rib{position:absolute;left:-30px;top:12px;transform:rotate(-30deg);padding:2px 34px;background:linear-gradient(180deg,#f7e7bd,#c9a050);color:#2a1a05;font-family:'Cinzel',var(--serif);font-weight:700;font-size:11px;letter-spacing:.2em;z-index:2}
+.modal.gacham .gpick .gp-tx{position:relative;margin-left:auto;padding-right:18px;display:flex;flex-direction:column;align-items:flex-end;gap:1px;text-align:right}
+.modal.gacham .gpick .gp-tx em{font-style:normal;font-family:'Cinzel',var(--serif);font-weight:700;font-size:14px}
+.modal.gacham .gpick .gp-tx b{font-family:var(--serif);font-size:28px;font-weight:800;letter-spacing:.12em;line-height:1.1;color:#fff}
+.modal.gacham .gpick .gp-tx small{font-family:var(--serif);font-size:12.5px;letter-spacing:.14em;color:#d9cdee}
+html.lp .modal.gacham .gpick{height:70px;left:6px;right:6px;top:6px}
+html.lp .modal.gacham .gpick .gp-tx b{font-size:20px}
+html.lp .modal.gacham .gpick .gp-tx small{font-size:10.5px}
+html.lp .modal.gacham .gpick .gp-rib{font-size:9px;top:8px}
+.modal.gacham .gstage:has(.gpick) .gorb{margin-top:150px}
+.modal.gacham .gstage:has(.gpick){min-height:400px}
+html.lp .modal.gacham .gstage:has(.gpick) .gorb{margin-top:64px}
+/* (ユーザー 2026-11-16) 段位戦 is reached from the play settings: no entry for it in the left menu */
+#btnRated{display:none!important}
+#home.aaa .ap-opts{min-height:139px;align-content:start}   /* (段位戦 / フリー対局: the same height, so nothing moves when switching) */
+html.lp #home.aaa .ap-opts{min-height:124px}
