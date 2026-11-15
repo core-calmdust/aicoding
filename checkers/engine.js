@@ -301,7 +301,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NB, JP, RC, sqAt, bit, popc, bitsOf
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.CheckersEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261115eg5';
+  const V = 'v=20261116z3';
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The network sits in the engine's
   // own (shared) tables; the endgame databases go into the shared memory above every thread's slot. The rest is the usual API.
@@ -344,7 +344,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
             const cur = X.memory.buffer.byteLength; if (base + need + 65536 > cur) X.memory.grow(Math.ceil((base + need + 65536 - cur) / 65536));
             new Uint8Array(X.memory.buffer, base, b.byteLength - o).set(new Uint8Array(b, o));
             let off = base;
-            const add = dv.getUint32(0, true) === 0x325A4B43 ? X.eg_addz : X.eg_add;   // "CKZ2": compressed, probed in place (tools/egpack.c)
+            const mg = dv.getUint32(0, true), add = mg === 0x335A4B43 ? X.eg_addz3 : mg === 0x325A4B43 ? X.eg_addz : X.eg_add;   // "CKZ2" / "CKZ3": compressed, probed in place (tools/egpack.c)
             for (let i = 0; i < nc; i++) { const h = 8 + i * 8, len = dv.getUint32(h + 4, true); add(dv.getUint8(h), dv.getUint8(h + 1), dv.getUint8(h + 2), dv.getUint8(h + 3), off); off += len; }
             egEnd = off;
           }
