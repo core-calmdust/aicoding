@@ -12,6 +12,7 @@
 <script src="../table3d.js"></script>
 <script src="../tables3d.js"></script>
 <script src="../models/chess.js"></script>
+<script src="../models/reversi.js"></script>
 <script src="../models/backgammon.js"></script>
 <script src="../models/goban.js"></script>
 <script src="../models/agon.js"></script>
@@ -41,7 +42,7 @@
   if (q.get('pcs') && X.PIECES[id]) X.PIECES[id].set(q.get('pcs'));   // (a piece set too: chess)
   if (id === 'senet' && look) try { localStorage.setItem('aicoding-senet', JSON.stringify({ settings: { design: look } })); } catch (e) {}
   X.mount(document.getElementById('gl'));
-  const g = X.MODELS[id](id === 'senet' || id === 'amazons' || id === 'shogi' || id === 'checkers' || id === 'xiangqi' || (id === 'chess' && !q.get('pcs')));   // (amazons: the board alone, without the showcase's game)
+  const g = X.MODELS[id](id === 'senet' || id === 'amazons' || id === 'shogi' || id === 'checkers' || id === 'xiangqi' || ((id === 'chess' || id === 'reversi') && !q.get('pcs')));   // (amazons: the board alone, without the showcase's game)
   X.show(id, g, { still: true }); X.quiet(true); X.snap();
   setTimeout(() => { X.kick(3000); setTimeout(() => (window.AtlasTexGen ? AtlasTexGen.settle() : Promise.resolve()).then(() => { X.kick(1500); setTimeout(shoot, 1200); }), 5000); }, 800);   // (waits for the procedural textures)
   function shoot() {

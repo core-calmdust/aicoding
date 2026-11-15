@@ -110,8 +110,8 @@ def ink_field():
     for (a, b) in STARS:
         x, y = a * CELL, b * CELL; r = .06; d.ellipse([FP(x - r, y - r), FP(x + r, y + r)], fill=255)
     ink = fdone(im)
-    dry = smooth(.45, .75, f3(X, Y * 14, np.zeros_like(X), .2, .2, .2, 13, 3)) * smooth(.4, .6, f3(X * 14, Y, np.zeros_like(X), .2, .2, .2, 17, 3))   # dry-brush streaks: the paper shows through
-    ink = ink * (1 - dry * .6)
+    dens = .82 + f3(X, Y, np.zeros_like(X), .35, .35, .35, 13, 3) * .3   # the ink's density varies along the strokes
+    ink = np.clip(ink * dens, 0, 1)
     bleed = np.clip(blur(ink, 2.5) - ink, 0, 1) * .5 * (1 + fib)   # the ink feathers into the fibres
     k = np.clip(ink + bleed * .6, 0, 1)
     col = col * (1 - k[..., None]) + np.array([24, 22, 22], np.float32) * k[..., None]
@@ -175,7 +175,7 @@ def choc_field():
     groove = .055; bev = .06
     hgt = np.clip((dd - groove / 2) / bev, 0, 1); hgt = hgt * hgt * (3 - 2 * hgt)   # each square a slab: a bevel down into the groove
     top = np.clip((np.minimum(dx, dy) - groove / 2 - bev) / .05, 0, 1)
-    base = np.array([84, 46, 26], np.float32)
+    base = np.array([150, 96, 58], np.float32)   # milk chocolate: the dark discs stand out on it
     col = np.ones((h, w, 3), np.float32) * base * (1 + (f3(X, Y, np.zeros_like(X), .4, .4, .4, 5, 4) - .5)[..., None] * .08)
     col *= (.7 + hgt[..., None] * .3)
     bloom = smooth(.72, .9, f3(X, Y, np.zeros_like(X), .3, .3, .3, 9, 4)) * .12   # a little fat bloom
@@ -186,13 +186,14 @@ def choc_field():
     return col, mmap(np.clip(rough, 0, 1).astype(np.float32), np.zeros((h, w), np.float32), hgt - .5 - sm * .3)
 def choc_frame():
     X, Y = rcoords(); h = w = RW
-    # crinkled gold foil: sharp facets from a few layers of folded noise
+    # crumpled gold foil: flat facets between sharp creases (the creases: ridges of a few folded noises at different angles)
     a = np.zeros((h, w), np.float32)
-    for k, sc in enumerate([.45, .18]):
-        a += np.abs(f3(X, Y, np.zeros_like(X), sc, sc, sc, 31 + k, 2) - .5) * (1 / (k + 1))
-    g = np.gradient(a * 40); shade = np.clip(.86 + g[0] * 2.2 - g[1] * 1.6, .62, 1.18)
-    col = np.ones((h, w, 3), np.float32) * np.array([206, 164, 84], np.float32) * shade[..., None]
-    return col, mmap(np.clip(.2 + a * .3, 0, 1).astype(np.float32), np.ones((h, w), np.float32), (a - .3) * .6)
+    for k, (sc, ang) in enumerate([(.5, .3), (.3, 1.4), (.18, 2.3), (.1, .9)]):
+        c, s_ = math.cos(ang), math.sin(ang); U = X * c - Y * s_; V = X * s_ + Y * c
+        a += (1 - np.abs(f3(U, V, np.zeros_like(X), sc, sc, sc, 31 + k, 2) * 2 - 1)) * (.7 ** k)
+    gy, gx = np.gradient(a); shade = np.clip(1 + gx * 18 - gy * 12, .62, 1.25)
+    col = np.ones((h, w, 3), np.float32) * np.array([212, 168, 84], np.float32) * shade[..., None]
+    return col, mmap(np.full((h, w), .22, np.float32), np.ones((h, w), np.float32), (a - a.mean()) * .5)
 
 # ---------- ピクセル ----------
 def pixel_field():
@@ -232,7 +233,7 @@ if __name__ == '__main__':
     for n in names:
         f, r = BOARDS[n]
         c, m = f(); put('field-' + n, c, m)
-        c, m = r(); put('frame-' + n, c, m)
+        c, m = r(); put('frame-' + n, np.flipud(c), np.flipud(m))   # (the bezel's planar UVs: the near side at the picture's top)
     if '--nomobile' not in sys.argv:
         import subprocess as _sp
         _sp.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mobile-tex.py')])
