@@ -690,11 +690,13 @@
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=20261104rp'), getJ('../xiangqi/openings.json?v=2'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()), xqEng()])
-        .then(([ls, op, lux, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux }; return this; })
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=20261115'), getJ('../xiangqi/openings.json?v=2'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()), xqEng(), fetch('../xiangqi/voice-fox-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+        .then(([ls, op, lux, tx, , vf]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
+          try { const v = {}; new Function('window', vf)(v); this.V = ((v.I18N || {})['ja@fox']) || {}; } catch (e) { this.V = {}; }   // (ショウギツネ's own lines, 3D, ja)
+          return this; })
         .catch(e => { this.p = null; throw e; }));
     },
-    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    tx(k, lang, v) { const I = this.I || {}; let x = lang === 'ja' && this.V && this.V[k] != null ? this.V[k] : I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
     mini: fen => window.AtlasMini && AtlasMini.xiangqi ? AtlasMini.xiangqi(fen) : '',
     lineSpec(line) { const E = window.XiangqiEngine; if (!E) return null; const p = E.replay(null, line).pos; return E.toFen ? E.toFen(p) : p.fen ? p.fen() : null; },
     list(kind, lang) {
@@ -705,8 +707,10 @@
     },
     lesson(key, lang) {
       const s = this.data.ls.steps[+key]; if (!s) return null;
-      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), RU = (k, v) => fill(L((this.data.ls.rampUi || {})[k], lang), v || {}), E = window.XiangqiEngine;
-      return { id: s.id, title: T('title'), intro: T('intro'), ramp: s.ramp && s.ramp.length ? s.ramp : null, RU,
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), E = window.XiangqiEngine, V = lang === 'ja' ? (this.V || {}) : {};
+      const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L((this.data.ls.rampUi || {})[k], lang), v || {});
+      const ramp = s.ramp && s.ramp.length ? s.ramp.map((it, j) => { const o = Object.assign({}, it); ['t', 'body', 'g', 'h', 'y'].forEach(f => { const v = V[`ramp:${s.id}/${j}/${f}`] != null ? V[`ramp:${s.id}/${j}/${f}`] : f === 'h' && it.src === 'mirror' && V['ls.' + s.id + '.hint'] != null ? V['ls.' + s.id + '.hint'] : null; if (v != null) o[f] = { ja: v, __voice: true }; }); return o; }) : null;
+      return { id: s.id, title: T('title'), intro: T('intro'), ramp, RU,
         probs: (s.problems || []).map(P => { const good = P.ok || [P.best];
           return { pos: { spec: P.s, me: xqMe(P.s) }, kind: 'best', P, ask: T('goal'), ans: P.ok ? P.ok[0] : P.best, hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
             good: () => T('why', { m: CKM('ok', lang), x: CKM('ng', lang) }), ng: () => T('ng', { m: CKM('ok', lang), x: CKM('ng', lang) }) }; }),
