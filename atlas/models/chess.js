@@ -487,7 +487,7 @@
   /* the picture boards (2026-11-15): images/atlas/chess3d/top-<look> and side-<look> (the four faces stacked: far, right, near,
      left), each with a "-m" map: R height (bump), G roughness, B metalness — brass and gold set flush, joints and tooling in the bump */
   const C3 = (() => { try { return new URL('../../images/atlas/chess3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/chess3d/'; } })();
-  const C3V = '?v=2';
+  const C3V = '?v=3';
   const LO = () => !!(X.coarse || X.lite);
   const texs = {};
   function imgTex(name, srgb = true, aniso = 8) {
