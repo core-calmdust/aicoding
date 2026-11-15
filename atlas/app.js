@@ -949,7 +949,18 @@
       const card = $('bvi'), L = card.querySelector('.L'), grab = document.createElement('div'); grab.className = 'grab'; grab.innerHTML = '<i></i>'; card.prepend(grab);
       const more = document.createElement('div'); more.className = 'more';
       [...L.querySelectorAll(':scope > .tags, :scope > .bvab, :scope > .pgl')].forEach(n => more.appendChild(n)); L.appendChild(more);
-      { const ext = card.querySelector('.R .soon.ext'); if (ext) more.appendChild(ext); }   // (puzzle / card games, 2026-11-16: 「このゲームは専用のページで遊ぶよ」 goes up into the drawer too — the card shows just the name and あそぶ)
+      { const ext = card.querySelector('.R .soon.ext'); if (ext) more.appendChild(ext); }
+      { const tg = more.querySelector('.tags');   // (2026-11-16: one row of tags — the rest behind a +N chip that opens them all — so the game's text has room)
+        const fitTags = () => {
+          if (!tg) return; const ch = [...tg.children].filter(x => !x.classList.contains('tagmore')); ch.forEach(x => { x.hidden = false; }); const o = tg.querySelector('.tagmore'); if (o) o.remove();
+          if (tg.classList.contains('all') || ch.length < 2) return;
+          const top = ch[0].offsetTop; let k = ch.findIndex(x => x.offsetTop > top + 2); if (k < 0) return;
+          const m = document.createElement('button'); m.type = 'button'; m.className = 'tag tagmore'; tg.appendChild(m);
+          const cut = n => { ch.forEach((x, i) => { x.hidden = i >= n; }); m.textContent = '+' + (ch.length - n); };
+          cut(k); while (k > 1 && m.offsetTop > top + 2) cut(--k);
+          m.onclick = e => { e.stopPropagation(); tg.classList.add('all'); fitTags(); const d = tg.closest('.more'); if (d && d.style.height && d.style.height !== 'auto') d.style.height = 'auto'; fitStage(); };
+        };
+        fitTags(); }   // (puzzle / card games, 2026-11-16: 「このゲームは専用のページで遊ぶよ」 goes up into the drawer too — the card shows just the name and あそぶ)
       { const pg = more.querySelector('.pgl'), rg = L.querySelector('.row .ring');   // the % ring sits right of the progress bars
         if (pg && rg) { const pr = document.createElement('div'); pr.className = 'pgrow'; pg.before(pr); pr.append(pg, rg); }
         else if (rg) { const pr = document.createElement('div'); pr.className = 'pgrow solo'; more.appendChild(pr); pr.append(rg); } }   // (no progress bars — e.g. Ur: the ring alone, still only in the open drawer)

@@ -121,7 +121,7 @@ html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 .badge.beta{background:var(--grape);box-shadow:0 2px 0 var(--grape2)}
 .badge.alpha{background:#1fb597;box-shadow:0 2px 0 #13856e}
 .badge.original{background:#f5891f;box-shadow:0 2px 0 #c4650e}
-.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tags{display:flex;flex-wrap:wrap;gap:5px}.tags > .tag[hidden]{display:none}.tag.tagmore{--c:#9a8a6a;padding:0 10px;font-weight:800;cursor:pointer;font-family:inherit}
 .tag{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px 0 6px;border-radius:99px;font-size:12px;font-weight:700;background:#fff;border:1.5px solid color-mix(in srgb,var(--c) 45%,#fff);color:color-mix(in srgb,var(--c) 85%,#000)}
 .tag svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .gicon{width:56px;height:56px;border-radius:16px;flex:none;box-shadow:0 3px 0 rgba(0,0,0,.12)}
@@ -2294,7 +2294,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=36"></script>
 <script src="npc/npc.js?v=35"></script>
 <script src="avtalk.js?v=3"></script>
-<script src="app.js?v=396"></script>
+<script src="app.js?v=397"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
