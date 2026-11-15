@@ -913,7 +913,7 @@
       const body = $('bvMBody');
       const layout = m => {
         if ($('bvVarRow')) $('bvVarRow').hidden = !(m === 'ai' || m === 'pvp' || m === 'rated');
-        { const kr = $('bvMBody') && $('bvMBody').querySelector('.kindrow'); if (kr) kr.hidden = m === 'puzzle' || m === 'lesson' || m === 'stage' || (m === 'rated' && !!(RTG[id] && RTG[id].size)); }   // (種目 first: not for puzzles / lessons, nor a rated game with its fixed rule set — tafl: Copenhagen)   // (online games too: every variant, 2026-11-12)
+        { const kr = $('bvMBody') && $('bvMBody').querySelector('.kindrow'); if (kr) kr.hidden = m === 'puzzle' || m === 'lesson' || m === 'stage' || m === 'rated'; }   // (種目 first: not for puzzles / lessons, nor rated games — their rule set is fixed: tafl Copenhagen, ur Finkel …)   // (online games too: every variant, 2026-11-12)
         if (rtNowHook) rtNowHook();   // (種目: AI games, two players, rated games against the AI)
         requestAnimationFrame(lblAlign);   // (the names' column, after the rows of this mode show)
         if (MX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvTcRow')) $('bvTcRow').hidden = m !== 'ai'; mxLayout(m); return; }

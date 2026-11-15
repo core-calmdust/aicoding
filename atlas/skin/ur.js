@@ -163,6 +163,7 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
       draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (side === 1 || side === 2) draft.color = side === 2 ? '1' : '0';
       if (lv >= 1 && lv <= 20) draft.level = lv;
+      { const z = +new URLSearchParams(location.search).get('size'), R = ['finkel', 'blitz', 'masters'][z - 1]; if (R && draft.mode !== 'rated') draft.rule = R; }   // (the portal card's 種目: 1 Finkel · 2 Blitz · 3 Masters)
       segSync(); document.getElementById('btnStart').click();
       return true;
     },
