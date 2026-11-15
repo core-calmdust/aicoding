@@ -156,11 +156,11 @@
     VX[S] = Math.cos(shot.ang) * v; VY[S] = Math.sin(shot.ang) * v;
     const K = s.k;
     const moving = new Uint8Array(N); moving[S] = 1;
-    const events = [], frames = opt.frames ? [] : null, touches = [];   // touches: who touched the ball, in order ('b<i>' buttons, 'k<t>' keepers)
+    const events = [], frames = opt.frames ? [] : null, touches = [], touchT = [];   // touches: who touched the ball, in order ('b<i>' buttons, 'k<t>' keepers)
     let first = null, hitOppAfter = false, out = null, goal = null, tGoal = 0, t = 0, nextF = 0, ballFrozen = false;
     const snap = () => { const f = new Float32Array(N * 2); for (let i = 0; i < N; i++) { f[i * 2] = X[i]; f[i * 2 + 1] = Y[i]; } frames.push(f); };
     if (frames) snap();
-    const touch = who => { if (touches[touches.length - 1] !== who) touches.push(who); };
+    const touch = who => { if (touches[touches.length - 1] !== who) { touches.push(who); touchT.push(t); } };
     const firstOf = (what, x, y) => { if (!first) first = { what, x, y }; };
     let any = true;
     while (any && t < TMAX) {
@@ -224,7 +224,7 @@
     if (frames) snap();
     const fin = { b: [], ball: { x: X[BALL], y: Y[BALL] } };
     for (let i = 0; i < NB; i++) fin.b.push({ x: X[i], y: Y[i] });
-    return { fin, first, touches, hitOppAfter, out, goal, tGoal, events, frames, dur: t, shooter: S };
+    return { fin, first, touches, touchT, hitOppAfter, out, goal, tGoal, events, frames, dur: t, shooter: S };
   }
 
   /* ---------- the result of a flick by the rules ---------- */
@@ -234,7 +234,11 @@
     s.b = sim.fin.b.map(q => ({ x: q.x, y: q.y })); s.ball = { x: sim.fin.ball.x, y: sim.fin.ball.y }; s.ply = (s.ply || 0) + 1;
     s.restart = ''; delete s.taker;
     const shot = s0.shot, first = sim.first, tw = w => w[0] === 'k' ? +w[1] : team(+w.slice(1));
-    const lastTouch = sim.touches.length ? sim.touches[sim.touches.length - 1] : null, lastTeam = lastTouch ? tw(lastTouch) : p;
+    // the last side to touch the ball BEFORE it crossed a line (2026-11-15 ユーザー指摘：線を越えた後も卓の中で転がり続けた
+    // ボールに触れたボタンまで数えていた — a throw-in / corner / goal kick goes against whoever touched it last before it went out)
+    const tEnd = sim.goal ? sim.tGoal : sim.out ? sim.out.t : Infinity;
+    let lastTouch = null; for (let k = 0; k < sim.touches.length; k++) if (!sim.touchT || sim.touchT[k] <= tEnd) lastTouch = sim.touches[k];
+    const lastTeam = lastTouch ? tw(lastTouch) : p;
     let goal = -1, foul = false, change = false;
     // 1. a foul: the flicked button met an opponent's piece before the ball
     if (first && first.what !== 'ball' && tw(first.what) === o) {
