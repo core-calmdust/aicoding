@@ -19,6 +19,7 @@
 - 14言語。文言は xiangqi/i18n.js ＋ janggi/tools/i18n_jg_*.json の上書き（node janggi/tools/build_i18n.js で janggi/i18n.js を生成）。
 - 棋譜表記：韓国式座標（段1〜0・筋1〜9、楚から見て）＋駒名。韓国語はハングル、それ以外は漢字。
 - 引分提案ボタンは非表示。定跡タブなし（定跡集は未作成）。
+- AI の序盤ブック（2026-11-15）：`janggi/book.json`（`shared/tools/genbook.js janggi --starts all` で作成。16通りの配置それぞれの初手から3手、上位3手まで、1局面8秒の分析、最善から12点以内の手）。キーは `<開始FEN>|手,手,…`。book 付きのレベル（Lv.19〜20・PRO で book 指定）が10手目まで使い、無い局面は前のまま。効果：book あり対なしで +70 Elo [9, 137]（120局、`match.js janggi --cfg '{"book":1}'`）。
 - コーチ：xiangqi のコーチを流用し、チャンギ向けの文言・点数（janggi/coach-jg.js）。川・飛将・格言系のヒントは無効。
 - パズル：janggi/tools/native.c の `jg mates` で自己対局から収集（tools/mates/run*.txt）→ janggi/tools/build_puzzles.js で検証・テーマ分け（1〜3手詰め・連続王手4〜5手）。289問。
 - レッスン：15ステップ×5問（はじめて7：車・馬・象・包・卒で取る／逃げる／1手詰め、戦術4：得な交換・両取り・王手で得・守る、詰み2：2手・3手詰め、終盤2：車と馬・卒2つ）。`jg dump`（自己対局の局面）→ `node janggi/tools/gen_lessons.js dump.txt tools/mates/run2.txt,tools/mates/run1.txt` で自動生成・エンジン検証（パズルと重複なし）。文言は tools/i18n_jg_lessons.json（14言語）。準備ステップ（ramp）はなし。

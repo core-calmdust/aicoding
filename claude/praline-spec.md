@@ -419,4 +419,9 @@ Many cores (nuts) held together by shared memory (caramel).
 
 ## match.js の対応ゲームを追加（2026-11-15）
 - `shared/tools/match.js` にチェッカー・チャンギ・シャンチー・タフル・モリスを追加。ページの Worker（engine.js）を Node の vm で Web Worker として動かし（`location`・`fetch`・`importScripts` をそのゲームのフォルダに向ける）、サイトと同じ wasm・ネットワーク・終盤の表で指させる。手は PRO モードの `cfg` で頼む（チェッカー・チャンギ・シャンチー・タフル：`nk`＝千局面、モリス：数字＝深さ `d`）。序盤は各ゲームの弱いレベル（JS）で作る。例：`node shared/tools/match.js checkers --a 1 --b 30 --pairs 4` → +6 =2 −0。タフルは `--rule copenhagen` など、モリスは `--rule nine|twelve|six`。
+- （2026-11-15 追加）Worker の模擬は `shared/tools/workeremu.js` に分けた（match.js と genbook.js で共用）。match.js に `--cfg '<JSON>'`（両者の cfg に足す。例 `{"book":1}`）と `--open N`（乱数の序盤の手数の上限、0 で無し）を追加。
+
+## 序盤ブックの自動作成（2026-11-15）
+- `shared/tools/genbook.js <game>`：初期局面から、各局面をサイトのエンジン（Worker の分析）で `--ms` ミリ秒調べ、最善から `--margin` 点以内の手を記録し、上位 `--k` 手を `--plies` 手先まで広げる。出力 `{v, game, rule, ms, margin, plies, k, pos: {キー: [[手, 評価], …]}}`。エンジンは記録の中から最善に近い手を乱数で選ぶ。`--starts all`（チャンギ：16通りの配置）・`--merge 既存ファイル`。
+- 対応：チャンギ（`janggi/book.json`）、ウゴルキ（`ugolki/book-<ルール>.json`）。アマゾン・コナネ・アゴンには book 付きのレベルが無く、ヘックスは既に初手の表（bookMove）がある。
 
