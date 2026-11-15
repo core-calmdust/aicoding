@@ -2305,3 +2305,7 @@ html.lp #game .skb.pt{padding-right:5px}
 /* (ユーザー 2026-11-15: the skill plates left of the player's portrait may be a little smaller on a desktop) 82% of what they were */
 html.ds #game .me .sks{transform:scale(calc(var(--hz, 1) * .82))}
 html.ds #game .me .mb{margin-left:calc((var(--hz, 1) * .82 - 1) * var(--skw, 0px))}
+/* (ユーザー 2026-11-15: at 16:9 the yaku bubble was small against the screen) its text follows the screen's unit like the rows it explains */
+.pstats .yk-tip{font-size:max(12.5px,calc(var(--u)*2.1));gap:.3em;padding:.7em 1em}
+.pstats .yk-tip b{font-size:1.12em}
+.pstats .yk-tip span{font-size:1em}

@@ -957,8 +957,9 @@ function yakuTip(row) {
   const H = host.getBoundingClientRect(), r = row.getBoundingClientRect(), sx = H.width / host.offsetWidth || 1, sy = H.height / host.offsetHeight || 1;
   const rot = document.documentElement.classList.contains('rot'), R = rot ? uiRect(row) : r, HH = rot ? uiRect(host) : H;
   const x = (R.left - HH.left) / (rot ? 1 : sx), y = (R.top - HH.top) / (rot ? 1 : sy), w = R.width / (rot ? 1 : sx);
-  tip.style.left = Math.max(8, Math.min(host.clientWidth - 8 - Math.min(320, host.clientWidth - 16), x)) + 'px';
-  tip.style.top = y + 'px'; tip.style.maxWidth = Math.min(320, host.clientWidth - 16) + 'px';
+  const mw = Math.min(Math.max(320, parseFloat(getComputedStyle(tip).fontSize) * 27), host.clientWidth - 16);   // (the bubble's text grows with the screen, and its width with the text)
+  tip.style.left = Math.max(8, Math.min(host.clientWidth - 8 - mw, x)) + 'px';
+  tip.style.top = y + 'px'; tip.style.maxWidth = mw + 'px';
   tip.classList.toggle('below', y < 90);
   if (tip.classList.contains('below')) tip.style.top = (y + (R.height / (rot ? 1 : sy))) + 'px';
   void tip.offsetWidth; tip.classList.add('show');
