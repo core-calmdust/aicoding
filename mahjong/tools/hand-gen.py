@@ -451,7 +451,26 @@ _nb2 = [[] for _ in range(nskin)]
 for a_, b_, c_ in F: _nb2[a_] += [b_, c_]; _nb2[b_] += [a_, c_]; _nb2[c_] += [a_, b_]
 for _ in range(2): _th = np.array([.5 * _th[i] + .5 * _th[list(set(q))].mean() if q else _th[i] for i, q in enumerate(_nb2)])
 print('thinness: mean %.2f, fingers>.4: %d of %d' % (_th.mean(), (_th > .4).sum(), nskin))
-uv = np.stack([_th, np.zeros(nskin)], 1)     # 肌の頂点の uv ＝（薄さ, 未使用）。爪の頂点は絵の uv
+# 肌の陰（ユーザー 2026-11-15「まだプラスチックっぽい」）：指の股・指どうしの間・手のひら側など、まわりの肌に光をさえぎられる所を頂点ごとに測る
+# （法線側の半球へ光線を飛ばし、近くの肌に当たる割合。1＝開けている、0＝ふさがれている）。肌の uv.y に入れ、シェーダーが赤みのある陰にする
+def occlusion(P, F, Nv, nray=24, far=1.3):
+    A, B, C = P[F[:, 0]], P[F[:, 1]], P[F[:, 2]]; e1, e2 = B - A, C - A; rs = np.random.RandomState(3); out_ = np.ones(len(P))
+    u_, v_ = rs.rand(nray), rs.rand(nray); r_ = np.sqrt(u_); ph = 2 * np.pi * v_; L = np.stack([r_ * np.cos(ph), r_ * np.sin(ph), np.sqrt(1 - u_)], 1)     # 余弦で重み付けした半球
+    for i in range(len(P)):
+        n = Nv[i]; t1 = np.cross(n, [0, 1., 0] if abs(n[1]) < .9 else [1., 0, 0]); t1 /= np.linalg.norm(t1); t2 = np.cross(n, t1)
+        Dr = L[:, :1] * t1 + L[:, 1:2] * t2 + L[:, 2:] * n; o = P[i] + n * 4e-3; occ = 0.
+        sv = o - A; q = np.cross(sv, e1)
+        for d in Dr:
+            h = np.cross(d, e2); a = np.einsum('ij,ij->i', e1, h); ok = np.abs(a) > 1e-9; f = np.where(ok, 1 / np.where(ok, a, 1), 0)
+            u = f * np.einsum('ij,ij->i', sv, h); v = f * (q @ d); t = f * np.einsum('ij,ij->i', e2, q)
+            hit = ok & (u >= 0) & (v >= 0) & (u + v <= 1) & (t > 1e-3) & (t < far)
+            if hit.any(): occ += 1 - t[hit].min() / far
+        out_[i] = 1 - occ / nray
+    return out_
+_ao = occlusion(out, F, vnormals(out, F))
+for _ in range(2): _ao = np.array([.5 * _ao[i] + .5 * _ao[list(set(q))].mean() if q else _ao[i] for i, q in enumerate(_nb2)])
+print('occlusion: mean %.2f min %.2f, below .7: %d of %d' % (_ao.mean(), _ao.min(), (_ao < .7).sum(), nskin))
+uv = np.stack([_th, _ao], 1)     # 肌の頂点の uv ＝（薄さ, 陰）。爪の頂点は絵の uv
 
 # ---- ネイル（ユーザー 2026-11-15、参考画像4枚：ストーン付きラメ・シアーピンク＋蝶・黒フレンチ・深海グラデ。「破綻なく美しく」）----
 # 爪は1枚ずつ絵（実行時に描くテクスチャ）を貼れるよう uv を持つ：横5コマ（親指・人差し指・中指・薬指・小指）、u＝コマの中の横位置
