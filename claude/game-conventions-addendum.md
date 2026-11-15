@@ -619,6 +619,11 @@
 - シャンチーの3D盤・駒（2026-11-14）：盤6種（`atlas-xiangqi-board3`、この順・先頭が既定）：朱漆と雷文（既定）・本榧（将棋の榧の木目・墨の線）・ウォルナットと真鍮（一枚板・彫り線・真鍮の象嵌）・紅木と金線・黒漆と螺鈿・翡翠と金。駒6種（`atlas-xiangqi-pc3`）：黄楊（既定）・真鍮縁・黒檀と金銀・朱と黒の漆・白玉と翡翠・青花磁器。すべて atlas/models/xiangqi.js。フル版3D表示のデザインタブに「3D盤」「3D駒」の列（スキンの3D/2D切り替えのキー 'atlas-xiangqi-look' とは別）。
   - 2026-11-14 v2（実写感の作り直し）：朱漆と雷文以外の盤と全駒の面は `atlas/tools/xiangqi-tex.py`（numpy、フォントは xqtex_glyph.py）で作った画像 `images/atlas/xiangqi3d/`（top-/side-/end-<盤>・pc-<駒>、それぞれ `-m` は R高さ G粗さ B金属）。木目は年輪の3D場を天板・長辺の側面・木口で切って作る（側面は木口に年輪、長辺は柾/板目）。金・真鍮は金属マップで面一に象嵌（際に細い目地）、ウォルナットの線はバンプのV溝、螺鈿は貝の帯と欠片（金属値 .35 の画素を角度で虹色にするシェーダー）。駒の字は実フォント（楷書＝LXGW WenKai TC、真鍮縁だけ明朝＝Noto Serif CJK TC Black）を字面の中心で揃え面の約6割に。ゴシック体は使わない。楷書には傌・俥がないので赤も馬・車（真鍮縁は傌・俥）。螺鈿の河界の字は明朝（Noto Serif CJK Bold）。
   - v3（同日）：側面は4面を1枚の画像（side-<盤>：上から奥・右・手前・左の帯）にし、天板と同じ3Dの木目場から作るので角・縁でつながる（本榧の木口は天板の端の木目をそのまま下へ）。板の継ぎ目はなし。画像を変えたら models/xiangqi.js の XQ3V を上げる。確認用に atlas/tools/xqview.html（?look=&set=&el=&close=1）。
+- チェスの3D盤・駒（2026-11-15）：盤6種（`atlas-chess-look`＝Table3D.BOARDS.chess、この順・先頭が既定）：高級ラッカー lux（既定）・バール wood・大理石と真鍮 marble（白カララ×黒マルキーナのマス、マルキーナの枠、真鍮の象嵌2本）・ウォルナットとメープル walnut（大会盤、ツゲ／黒檀の象嵌線、艶消し）・革と金箔 leather（緑とクリームの革、枠に金の型押し：フィレット・葉と点のロール・四隅の花）・ハータム khatam（骨と紅木のマス、紅木の枠にペルシャの寄木モザイク帯：真鍮・骨・黒檀の六芒星）。**盤面（マス）には柄を入れず、装飾は枠だけ**。駒6種（`atlas-chess-pc3`＝Table3D.PIECES.chess）：銀と金 lux（既定）・ツゲと紫檀 wood・黒檀とツゲ ebony・白黒の大理石 marble・白磁と瑠璃 porcelain（金彩）・クリスタルとスモーク crystal。盤と駒は別々に選ぶ（旧 `atlas-chess-pc`／`-bd` は初回だけ読み替え。`atlas-chess-pc`='0' は3D盤の上に2Dの駒）。
+  - 新4盤は画像（`atlas/tools/chess-tex.py` → `images/atlas/chess3d/` の top-/side-<盤>、それぞれ `-m`＝R高さ G粗さ B金属。side は4面を1枚に積んだ絵。スマホは `mobile-tex.py` の `-h`）。画像を変えたら models/chess.js の `C3V` を上げる。
+  - 駒の映り込み：three r186 の描画にはステンシルがないため、艶のない盤（ウォルナット・革）では映り込みを出さない（models/chess.js `setMirror`、フル版の駒の絵は `html.atlas-chess-matt` で反射の絵を隠す）。
+  - クリスタル：3Dは透過（transmission）で本物の屈折、駒の絵（フル版のスプライト・タイル）は半透明（`spr`）、フェルトなし。
+  - フル版3D表示のデザインタブ：盤の欄に「3D｜2D」（3D盤6種のタイル）、駒の欄に「3D｜2D」（3D駒6種／2Dの駒）。2D版専用の「3D版 ラッカー／ウッド」のタイルは3D表示では隠す。駒の絵 `images/atlas/chess-pieces-<駒>.png`（`atlas/tools/chess-sheet.html`）、タイル `atlas/img/pc3-chess-<駒>.webp`（`chpiece.html`）・`boardic-chess-<盤>.webp`（`boardicon.html`）・`board-chess-<盤>.webp`（`boards.html`）。
 
 
 ## 3Dポータル：Esc の挙動（2026-11-14）
