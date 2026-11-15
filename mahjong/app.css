@@ -2089,3 +2089,108 @@ html.lp #game .opp .bk .skw .sktip>span{font-size:11.5px}
 html.lp #game #opp2 .bk .skw .sktip{left:auto;right:0}
 #game #mePanel{pointer-events:none}
 #game #mePanel>*{pointer-events:auto}
+
+/* ================= (ユーザー 2026-11-15) 代表 + パートナー: two skills; the character screen in the house type ================= */
+/* --- character screen: 明朝 for words, Cinzel for latin labels (as on the home and record screens), no gothic */
+#chara.ch2,#chara.ch2 button{font-family:var(--serif)}
+#chara.ch2 .ch-title{font-size:30px}
+#chara.ch2 .ch-count{font-family:'Cinzel',var(--serif);font-size:15px;font-weight:600;letter-spacing:.12em;color:rgba(232,206,140,.8)}
+#chara.ch2 .ch-tabs button{font-family:'Cinzel',var(--serif);font-weight:600;font-size:14px;letter-spacing:.08em}
+#chara.ch2 .chi span{font-family:var(--serif);font-weight:600;font-size:14px;letter-spacing:.08em;color:#f1e8ff}
+#chara.ch2 .chi.lock span{color:rgba(232,206,140,.5)}
+#chara.ch2 .pp-f{font-family:var(--serif);font-size:15px;font-weight:600;letter-spacing:.2em}
+#chara.ch2 .ci-h{display:flex;align-items:baseline;gap:10px;margin-top:2px}
+#chara.ch2 .ci-h b{font-family:'Cinzel',var(--serif);font-weight:600;font-size:12.5px;letter-spacing:.32em;color:var(--gold);opacity:.9}
+#chara.ch2 .ci-h span{font-size:13px;letter-spacing:.2em;color:#cfc2ea}
+#chara.ch2 .ci-h::after{content:"";flex:1;height:1px;align-self:center;background:linear-gradient(90deg,rgba(232,206,140,.4),transparent)}
+#chara.ch2 .pskill{border-radius:4px;background:radial-gradient(120% 160% at 0% 0%,rgba(232,206,140,.08),transparent 60%),linear-gradient(180deg,var(--lq1),var(--lq2));border:1px solid rgba(232,206,140,.45);box-shadow:inset 0 0 0 3px var(--lq2),inset 0 0 0 4px rgba(232,206,140,.22)}
+#chara.ch2 .pskill b{font-family:var(--serif);font-weight:800;font-size:19px;letter-spacing:.1em;color:#fff}
+#chara.ch2 .pskill span{font-family:var(--serif);font-weight:600;font-size:14.5px;line-height:1.7;color:#e3daf5}
+#chara.ch2 .pskill .tm{font-family:var(--serif);font-size:12px;letter-spacing:.1em;border-radius:3px;background:none;border:1px solid color-mix(in srgb,var(--sc) 70%,#fff);color:#fff}
+#chara.ch2 .pskill .cl{font-family:var(--serif);font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--gl)}
+#chara.ch2 .pskill i{border-radius:8px}
+#chara.ch2 .skpick small,#chara.ch2 .sis small{font-size:13px;font-weight:600;letter-spacing:.1em}
+#chara.ch2 .skc{font-family:var(--serif);font-size:13.5px;border-radius:4px;background:linear-gradient(180deg,var(--lq1),var(--lq2));border-color:rgba(232,206,140,.25)}
+#chara.ch2 .skc i{border-radius:4px}
+#chara.ch2 .skc.on{border-color:var(--gl);box-shadow:inset 0 0 0 1px rgba(232,206,140,.5),0 0 12px rgba(232,206,140,.25);background:radial-gradient(120% 160% at 50% 0%,rgba(232,206,140,.2),transparent 65%),linear-gradient(180deg,var(--lq1),var(--lq2))}
+#chara.ch2 .skc.off{opacity:.4;cursor:not-allowed}
+#chara.ch2 .pprof{font-family:var(--serif);font-weight:600;font-size:15px;line-height:1.8;color:#f1e8ff}
+#chara.ch2 .chsel{font-family:var(--serif);letter-spacing:.2em;border-radius:4px}
+#chara.ch2 .chsel.on{color:var(--gl2);border:1px solid rgba(232,206,140,.6);background:linear-gradient(180deg,var(--lq1),var(--lq2));box-shadow:inset 0 0 0 3px var(--lq2),inset 0 0 0 4px rgba(232,206,140,.25)}
+#chara.ch2 .ch-hero .unlock span{font-size:14.5px;line-height:1.7}
+#chara.ch2 .pp-lead{margin-left:auto;padding:2px 12px;font-size:13px;letter-spacing:.3em;text-indent:.3em;color:var(--lq2);background:linear-gradient(180deg,var(--gl2),#c9a050);clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+#chara.ch2 .ch-info{justify-content:flex-start;gap:10px}
+#chara.ch2 .ch-info>.pp-r{margin-top:auto}
+#chara.ch2 .ch-info>:last-child{margin-bottom:auto}
+/* --- the partner block: a lacquer plate under the character (desktop) / inside the right panel (phone, narrow) */
+#chara.ch2 .ch-ptn{position:absolute;bottom:30px;z-index:3;padding:14px 18px 13px;border:1px solid rgba(232,206,140,.5);border-radius:4px;background:linear-gradient(180deg,rgba(34,26,51,.94),rgba(12,9,21,.95));box-shadow:inset 0 0 0 3px rgba(12,9,21,.9),inset 0 0 0 4px rgba(232,206,140,.2),0 18px 40px rgba(0,0,0,.55)}
+#chara.ch2.ptn-in .ch-ptn,#chara.ch2:not(.ptn-in) .ptn-inl{display:none}
+#chara.ch2.enter .ch-ptn{animation:aaInFade .5s .15s both}
+.ptn{display:flex;flex-direction:column;gap:9px}
+#chara.ch2 .ptn .ci-h{margin:0}
+#chara.ch2 .ptn .ci-h::after{order:3}
+.ptn .ptn-n{order:4;font-style:normal;font-size:19px;font-weight:800;letter-spacing:.14em;color:#fff}
+.ptn .ptn-x{order:5;padding:1px 10px;border:1px solid rgba(232,206,140,.35);border-radius:3px;background:none;color:#cfc2ea;font-size:12.5px;letter-spacing:.1em;white-space:nowrap}
+.ptn .ptn-x:hover{color:var(--gl2);border-color:var(--gl)}
+.ptn .ptn-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:3px}
+#chara.ch2 .ptn .sib{position:relative;width:56px;height:auto;display:flex;flex-direction:column;align-items:center;gap:3px;transition:transform .12s;cursor:pointer}
+#chara.ch2 .ptn .sib .frame{width:56px;height:56px}
+.ptn .sib span{font-size:12.5px;letter-spacing:.08em;color:#e3daf5;white-space:nowrap}
+.ptn .sib:hover{transform:translateY(-3px)}
+.ptn .sib.on .frame{outline:2px solid var(--gl2);outline-offset:2px;box-shadow:0 0 16px rgba(232,206,140,.7)}
+.ptn .sib.on span{color:var(--gl2)}
+.ptn .sib .ck{position:absolute;right:-5px;top:41px;z-index:4;width:20px;height:20px;border-radius:50%;background:linear-gradient(180deg,var(--gl2),#c9a050);box-shadow:0 0 0 2px var(--lq2)}
+.ptn .sib .ck::after{content:"";position:absolute;left:6.5px;top:3px;width:5px;height:10px;border:solid var(--lq2);border-width:0 2.5px 2.5px 0;transform:rotate(42deg)}
+.ptn .ptn-rest{margin-left:4px;font-size:12.5px;color:#a99cc8!important;letter-spacing:.06em}
+/* nobody picked yet: say so, and the icons that can be picked breathe */
+#chara.ch2 .ch-ptn:has(.ptn.ask),#chara.ch2 .ptn-inl .ptn.ask{border-color:rgba(247,231,189,.85);animation:ptnBox 2.4s ease-in-out infinite}
+#chara.ch2 .ptn-inl .ptn.ask{padding:12px 14px;border:1px solid rgba(247,231,189,.85);border-radius:4px;background:radial-gradient(120% 140% at 50% 0%,rgba(232,206,140,.13),transparent 70%)}
+.ptn .ptn-cue{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;color:var(--gl2)}
+.ptn .ptn-cue b{font-size:19px;font-weight:800;letter-spacing:.1em}
+.ptn .ptn-cue small{font-size:13.5px;color:var(--gl)!important;letter-spacing:.06em}
+.ptn .ptn-cue i{flex:none;width:0;height:0;border:7px solid transparent;border-top:11px solid var(--gl2);border-bottom:0;animation:ptnArrow 1s ease-in-out infinite}
+.ptn.ask .sib .frame{animation:ptnPulse 1.6s ease-in-out infinite}
+@keyframes ptnBox{0%,100%{box-shadow:inset 0 0 0 3px rgba(12,9,21,.9),inset 0 0 0 4px rgba(232,206,140,.2),0 18px 40px rgba(0,0,0,.55),0 0 0 0 rgba(232,206,140,0)}50%{box-shadow:inset 0 0 0 3px rgba(12,9,21,.9),inset 0 0 0 4px rgba(232,206,140,.2),0 18px 40px rgba(0,0,0,.55),0 0 26px 2px rgba(232,206,140,.45)}}
+@keyframes ptnArrow{0%,100%{transform:translateY(-2px)}50%{transform:translateY(4px)}}
+@keyframes ptnPulse{0%,100%{box-shadow:0 0 0 0 rgba(247,231,189,0)}50%{box-shadow:0 0 0 3px rgba(247,231,189,.85),0 0 16px rgba(247,231,189,.6)}}
+#chara.ch2 .ptn .pskill{padding:9px 12px;gap:10px}
+#chara.ch2 .ptn .pskill i{width:38px;height:38px;padding:8px}
+#chara.ch2 .ptn .pskill b{font-size:17px}
+#chara.ch2 .ptn .pskill span{font-size:13.5px;line-height:1.55}
+.ptn .ptn-same{margin:0;font-size:13.5px;color:#ffb9a8}
+#chara.ch2 .ptn .ptn-cost{font-size:12.5px;line-height:1.55;color:var(--gl);opacity:.9}
+#chara.ch2 .ch-info.tight .pprof,#chara.ch2 .ch-info.tight .ci-h.st{display:none}
+html.lp #chara.ch2 .ptn .sib,html.lp #chara.ch2 .ptn .sib .frame{width:44px}
+html.lp #chara.ch2 .ptn .sib .frame{height:44px}
+html.lp .ptn .sib .ck{top:30px}
+/* --- home name card: the partner under the skill */
+#home.aaa .pp-pt{display:inline-flex;align-items:center;gap:8px;margin-top:4px;padding:3px 10px 3px 3px;border:1px solid rgba(232,206,140,.35);border-radius:4px;background:linear-gradient(180deg,var(--lq1),var(--lq2));font-family:var(--serif);color:#fff;white-space:nowrap;grid-column:1 / -1;justify-self:start}
+#home.aaa .pp-pt img{width:34px;height:34px;border-radius:3px;object-fit:cover;display:block}
+#home.aaa .pp-pt small{font-size:11.5px;letter-spacing:.14em;color:var(--gl)}
+#home.aaa .pp-pt b{font-size:16px;letter-spacing:.1em}
+#home.aaa .pp-pt .skc{font-size:13px;padding:3px 9px 3px 3px;cursor:pointer}
+#home.aaa .pp-pt .skc i{width:22px;height:22px;padding:4px}
+#home.aaa .pp-pt.ask{padding:6px 14px 6px 8px;border-color:rgba(232,206,140,.7);color:var(--gl2);animation:ptnBox 2.4s ease-in-out infinite}
+#home.aaa .pp-pt.ask i{font-style:normal;width:22px;height:22px;line-height:20px;text-align:center;border:1px solid var(--gl);border-radius:50%;font-size:15px}
+#home.aaa .pp-pt.ask b{font-size:14.5px;letter-spacing:.14em}
+#home.aaa .pp-info .pi-sk+.pi-sk{margin-top:6px}
+/* --- game: the two skill plates (the partner's above her own), the others' two marks */
+#game .me .sks{display:flex;flex-direction:column;align-items:stretch;gap:7px}
+html.ds #game .me .sks{transform:scale(var(--hz, 1));transform-origin:bottom left}
+html.ds #game .me .skb{transform:none}
+html.lp #game .me .sks{gap:4px}
+#game .skb .skp{position:absolute;right:-7px;top:-8px;width:24px;height:24px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1.5px var(--gl),0 0 0 3px #120d22}
+html.lp #game .skb .skp{width:17px;height:17px;right:-5px;top:-6px}
+#game .skb.pt{padding-right:22px}
+html.lp #game .skb.pt{padding-right:14px}
+#game .skb:hover,#game .skb.tip{z-index:3}
+#game .sktip small.who{color:#cfc2ea!important;letter-spacing:.1em}
+.dealAsk .da-pt{display:flex;align-items:center;gap:6px;font-style:normal;font-family:var(--serif);font-size:12.5px;letter-spacing:.1em;color:var(--gl);margin-bottom:2px}
+.dealAsk .da-pt img{width:22px;height:22px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px var(--gl)}
+.cutin .ci-pt{font-style:normal;font-size:.62em;letter-spacing:.2em;margin-right:.7em;padding:.1em .7em;border:1px solid currentColor;color:var(--gl2);vertical-align:.12em}
+html.lp .ptn .ptn-cue b{font-size:15px;letter-spacing:.04em}
+html.lp #game .me .sks{flex-direction:row-reverse;align-items:flex-end;gap:7px}
+#game .opp .bk .skws{display:flex;flex-direction:column;align-items:center;gap:3px}
+html.lp #game .opp .bk .skws{flex-direction:row;width:max-content;gap:4px}   /* (a phone: the two marks side by side, so the left seat stays clear of the player's plates) */
+html.lp #game #opp3 .bk{align-items:flex-start}
+html.lp #game #opp1 .bk{align-items:flex-end}

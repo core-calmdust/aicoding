@@ -49,7 +49,23 @@ function load() {
 }
 const owns = id => !!DB.chars[id];
 function useKey(id) { const o = DB.chars[id]; return o ? (o.skills.includes(o.use) ? o.use : o.skills[0]) : null; }
-function seatChar(c, key) { const k = MJSkills.parse(key); return Object.assign({}, c, { skill: k.id, tier: k.tier }); }
+// pc / pkey: the partner (a sister) and the partner's skill — the seat's second skill (game.js slot 1)
+function seatChar(c, key, pc, pkey) {
+  const k = MJSkills.parse(key), o = Object.assign({}, c, { skill: k.id, tier: k.tier });
+  if (pc && pkey) { const k2 = MJSkills.parse(pkey); if (k2.id !== k.id) Object.assign(o, { skill2: k2.id, tier2: k2.tier, partner: pc }); }
+  return o;
+}
+// (ユーザー 2026-11-15) 代表 = the character played; パートナー = one of her sisters (same family, owned), whose skill she can use too.
+// Each character remembers her own partner (DB.chars[id].partner) and which of the partner's skills to bring (puse).
+function partnerOf(id) { const o = DB.chars[id], c = MJChars.get(id), p = o && o.partner && MJChars.get(o.partner); return p && c && owns(p.id) && p.id !== id && p.family === c.family ? p : null; }
+function partnerSkills(id) { const p = partnerOf(id); if (!p) return []; const mine = MJSkills.parse(useKey(id)).id; return DB.chars[p.id].skills.map(k => ({ k, ok: MJSkills.parse(k).id !== mine })); }   // (the same skill as the 代表's cannot be brought)
+function partnerKey(id) {
+  const p = partnerOf(id); if (!p) return null;
+  const ks = partnerSkills(id).filter(x => x.ok).map(x => x.k), o = DB.chars[id];
+  return ks.includes(o.puse) ? o.puse : ks.includes(useKey(p.id)) ? useKey(p.id) : ks[0] || null;
+}
+function mySeat() { const id = DB.sel; return seatChar(MJChars.get(id), useKey(id), partnerOf(id), partnerKey(id)); }
+const coarse = () => matchMedia('(pointer: coarse)').matches;
 function rollSkillKey() {
   const r = Math.random() * 100; let acc = 0, tier = 0;
   for (let i = MJSkills.TIERS.length - 1; i >= 0; i--) { acc += MJSkills.TIER_W[i]; if (r < acc) { tier = i; break; } }
@@ -319,12 +335,12 @@ function skillChip(key, cls = '', attrs = '') {
   const k = MJSkills.parse(key), sk = MJSkills.get(k.id);
   return `<span class="skc st${k.tier} ${cls}" style="--sc:${sk.color}" ${attrs}><i>${icon(sk.icon)}</i><b>${esc(L(sk.name))}</b><em>${MJSkills.TIERS[k.tier]}</em></span>`;
 }
-function skillBlock(key) {
+function skillBlock(key, lite) {
   const k = MJSkills.parse(key), sk = MJSkills.get(k.id), v = MJSkills.val(sk, k.tier);
   return `<div class="pskill st${k.tier}" style="--sc:${sk.color}"><i>${icon(sk.icon)}</i><div>
     <b>${esc(L(sk.name))} <em class="sr">${MJSkills.TIERS[k.tier]}</em> <em class="tm">${t('timing_' + (sk.timing || 'turn'))}</em></b>
     <span>${esc(L(sk.desc(v)))}</span>
-    <small class="cl">${esc(t(sk.noFree ? 'costLineNF' : 'costLine', { n: (sk.cost || 1000).toLocaleString(), h: ((sk.cost || 1000) / 2).toLocaleString() }))}</small></div></div>`;
+    ${lite ? '' : `<small class="cl">${esc(t(sk.noFree ? 'costLineNF' : 'costLine', { n: (sk.cost || 1000).toLocaleString(), h: ((sk.cost || 1000) / 2).toLocaleString() }))}</small>`}</div></div>`;
 }
 
 // ---------------------------------------------------------------- tile html
@@ -390,16 +406,20 @@ function renderHome() {
   }
   const P = DB.pstats, all = MJStats.derive(MJStats.sum(P.skill, P.std, P.old));
   $('#aaProf').innerHTML = `<img src="${charImg(c, 'face')}" alt=""><span><b>${esc(t('you'))}</b><small>${esc(t('psGames'))} ${all.games} ・ ${esc(t('psAvgRank'))} ${all.avgRank == null ? '—' : all.avgRank.toFixed(2)}</small></span>${rankBadge(MJRank.at(DB.rank.pt), 'sm')}`;
-  { const k = MJSkills.parse(uk), sk = MJSkills.get(k.id), v = MJSkills.val(sk, k.tier);   // (ユーザー 2026-11-15: one name card — the name on the left, her story and a short word on her skill on the right)
+  const pt = partnerOf(c.id), pk = pt ? partnerKey(c.id) : null, canPick = !pt && MJChars.list.some(x => x.family === c.family && x.id !== c.id && owns(x.id));
+  { const k = MJSkills.parse(uk), sk = MJSkills.get(k.id), v = MJSkills.val(sk, k.tier), k2 = pk ? MJSkills.parse(pk) : null, sk2 = k2 ? MJSkills.get(k2.id) : null;   // (ユーザー 2026-11-15: one name card — the name on the left, her story and a short word on her skill on the right)
   $('#partner').innerHTML = `<div class="pp-main">
     <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}</div>
     <div class="pp-n">${esc(L(c.name))}</div>
     <div class="pp-t">${esc(L(c.title))}</div>
-    <div class="pp-sk">${skillChip(uk, 'on')}${o.skills.length > 1 ? `<span class="pp-more" id="ppMore">${esc(t('ownedSkills'))} ${o.skills.length}</span>` : ''}</div></div>
+    <div class="pp-sk">${skillChip(uk, 'on')}${o.skills.length > 1 ? `<span class="pp-more" id="ppMore">${esc(t('ownedSkills'))} ${o.skills.length}</span>` : ''}</div>
+    ${pt ? `<button class="pp-pt" id="ppChg"><img src="${charImg(pt, 'face')}" alt=""><small>${esc(t('partner'))}</small><b>${esc(L(pt.name))}</b>${pk ? skillChip(pk, 'on') : ''}</button>`
+      : canPick ? `<button class="pp-pt ask" id="ppChg"><i>＋</i><b>${esc(t('ptnHome'))}</b></button>` : ''}</div>
     <div class="pp-info" style="--sc:${sk.color}">
       <div class="pi-h">STORY</div><p class="pi-st">${esc(L(c.profile))}</p>
       <div class="pi-h">SKILL</div>
-      <div class="pi-sk"><i>${icon(sk.icon)}</i><span>${esc(L(sk.desc(v)))}</span></div></div>`; }
+      <div class="pi-sk"><i>${icon(sk.icon)}</i><span>${esc(L(sk.desc(v)))}</span></div>
+      ${sk2 ? `<div class="pi-sk" style="--sc:${sk2.color}"><i>${icon(sk2.icon)}</i><span>${esc(L(sk2.desc(MJSkills.val(sk2, k2.tier))))}</span></div>` : ''}</div>`; }
   fitCard();
   // pick-up banner: the best character not yet owned (or the best of all)
   const pick = MJChars.list.filter(x => !owns(x.id) && x.reward == null).sort((a, b) => RORD[a.rarity] - RORD[b.rarity])[0] || MJChars.list.find(x => x.rarity === 'UR');
@@ -772,26 +792,56 @@ function renderChara() {
     $('#chBlur').style.visibility = own ? '' : 'hidden';
     $('#chArt').classList.remove('in'); void $('#chArt').offsetWidth; $('#chArt').classList.add('in');
   }
-  const sisters = MJChars.list.filter(x => x.family === c.family);
+  const sisters = MJChars.list.filter(x => x.family === c.family && x.id !== c.id);
   const o = DB.chars[c.id], uk = own ? useKey(c.id) : null;
+  // (ユーザー 2026-11-15) パートナー: one of her sisters, picked by her icon here — her skill is used as well. Nobody picked yet:
+  // a line that says so and the icons that can be picked glow, so that anyone finds it.
+  const pt = own ? partnerOf(c.id) : null, pk = pt ? partnerKey(c.id) : null, pks = pt ? partnerSkills(c.id) : [];
+  const canPick = own && sisters.some(x => owns(x.id));
+  const how = t(coarse() ? 'ptnHowT' : 'ptnHowC');
+  const mine = sisters.filter(x => owns(x.id)), rest = sisters.length - mine.length;
+  const ptn = !own ? '' : `<div class="ptn ${pt ? 'has' : canPick ? 'ask' : 'none'}">
+      <div class="ci-h"><b>PARTNER</b><span>${esc(t('partner'))}</span>${pt ? `<em class="ptn-n">${esc(L(pt.name))}</em><button class="ptn-x">${esc(t('ptnOff'))}</button>` : ''}</div>
+      ${!pt && canPick ? `<div class="ptn-cue"><i></i><b>${esc(t('ptnPick'))}</b><small>${esc(how)}</small></div>` : ''}
+      ${mine.length ? `<div class="ptn-row">${mine.map(x => `<button class="sib can ${pt && x.id === pt.id ? 'on' : ''}" data-id="${x.id}" title="${esc(L(x.name))}">${frame(x, 'face')}${pt && x.id === pt.id ? '<i class="ck"></i>' : ''}<span>${esc(L(x.name))}</span></button>`).join('')}${rest ? `<small class="ptn-rest">${esc(t('ptnRest', { n: rest }))}</small>` : ''}</div>` : ''}
+      ${pt ? `${pk ? skillBlock(pk, true) : `<p class="ptn-same">${esc(t('ptnSame'))}</p>`}
+          ${pks.length > 1 ? `<div class="skl ptn-skl">${pks.map(x => skillChip(x.k, (x.k === pk ? 'on' : '') + (x.ok ? '' : ' off'), `data-k="${x.k}"`)).join('')}</div>` : ''}
+          <small class="ptn-cost">${esc(t('ptnCost'))}</small>`
+        : `<small class="ptn-cost">${esc(t(canPick ? 'ptnNote' : 'ptnNone'))}</small>`}
+    </div>`;
+  $('#chPtn').innerHTML = ptn; $('#chPtn').hidden = !own;
   $('#chInfo').innerHTML = `
-    <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}</div>
+    <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span>${RAR_BONUS[c.rarity] ? `<span class="pp-cb">${icon('coin')}+${Math.round(RAR_BONUS[c.rarity] * 100)}%</span>` : ''}${own && c.id === DB.sel ? `<span class="pp-lead">${esc(t('lead'))}</span>` : ''}</div>
     <div class="pp-n">${own ? esc(L(c.name)) : '？？？'}</div>
     <div class="pp-t">${esc(L(c.title))}</div>
     <i class="ci-rule"></i>
     ${own ? `${skillBlock(uk)}
-      <div class="skpick"><small>${t('ownedSkills')} ${o.skills.length}${o.skills.length > 1 ? ` ・ ${t('useThis')}` : ''}</small>
-      <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>
-      <p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(c.reward != null ? t('rkLocked', { r: rkName(MJRank.list[c.reward]) }) : t('notOwned'))}</div>`}
-    <div class="sis"><small>${esc(t('sisters'))}</small><div>${sisters.map(x => `<button class="sib ${x.id === c.id ? 'on' : ''} ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}" title="${owns(x.id) ? esc(L(x.name)) : '？？？'}">${frame(x, owns(x.id) ? 'face' : 'silf')}</button>`).join('')}</div></div>
-    ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isPartner')}</div>` : `<button class="go ch-go" id="chSet">${t('setPartner')}</button>`) : ''}`;
+      ${o.skills.length > 1 ? `<div class="skpick"><small>${t('useThis')}</small>
+      <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>` : ''}
+      <div class="ptn-inl">${ptn}</div>
+      <div class="ci-h st"><b>STORY</b></div><p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(c.reward != null ? t('rkLocked', { r: rkName(MJRank.list[c.reward]) }) : t('notOwned'))}</div>
+      <div class="sis"><small>${esc(t('sisters'))}</small><div>${sisters.map(x => `<button class="sib ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}" title="${owns(x.id) ? esc(L(x.name)) : '？？？'}">${frame(x, owns(x.id) ? 'face' : 'silf')}</button>`).join('')}</div></div>`}
+    ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isLead')}</div>` : `<button class="go ch-go" id="chSet">${t('setLead')}</button>`) : ''}`;
+  // the partner block: a plate of its own under the character where there is room between the two panels (a desktop);
+  // otherwise (a phone, a narrow window) inside the scrolling panel on the right
+  { const info = $('#chInfo'), list = document.querySelector('#chara .ch-panel'), gap = info.offsetLeft - (list.offsetLeft + list.offsetWidth);
+    ch.classList.toggle('ptn-in', document.documentElement.classList.contains('lp') || gap < 400);
+    const box = $('#chPtn'); box.style.left = (list.offsetLeft + list.offsetWidth + Math.max(16, (gap - 470) / 2)) + 'px'; box.style.width = Math.min(470, gap - 32) + 'px';
+    info.classList.remove('tight'); if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight');   // (it does not fit: her story gives way)
+    if (ch.classList.contains('ptn-in') && !pt && canPick) { const q = info.querySelector('.ptn'); if (q && q.offsetTop + q.offsetHeight > info.scrollTop + info.clientHeight) info.scrollTop = Math.max(0, q.offsetTop - 60); } }   // (the call to pick a partner is never left below the fold)
   const b = $('#chSet');
   if (b) b.onclick = () => { DB.sel = c.id; save(); SND.ok(); renderChara(); };
-  $('#chInfo').onclick = e => {
+  $('#chInfo').onclick = $('#chPtn').onclick = e => {
     const k = e.target.closest('#chSk [data-k]'); if (k) { DB.chars[c.id].use = k.dataset.k; save(); SND.pick(); renderChara(); return; }
-    const sb = e.target.closest('.sib'); if (sb) { chView = sb.dataset.id; SND.pick(); renderChara(); }
+    const k2 = e.target.closest('.ptn-skl [data-k]'); if (k2) { if (k2.classList.contains('off')) { toast(t('ptnSame')); return; } DB.chars[c.id].puse = k2.dataset.k; save(); SND.pick(); renderChara(); return; }
+    if (e.target.closest('.ptn-x')) { delete DB.chars[c.id].partner; save(); SND.pick(); renderChara(); return; }
+    const sb = e.target.closest('.sib'); if (!sb) return;
+    const id = sb.dataset.id;
+    if (sb.closest('.ptn')) { if (o.partner === id) delete o.partner; else { o.partner = id; delete o.puse; } save(); SND.ok(); renderChara(); }   // (her sister's icon: take her as the partner; again: let her go)
+    else { chView = id; SND.pick(); renderChara(); }                                                                                        // (a character not yet met: look at her sisters)
   };
 }
+addEventListener('resize', () => { if (!$('#chara').hidden) renderChara(); });
 $('#chArt').addEventListener('click', e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } else if (e.target.closest('[data-a=rated]')) { SND.pick(); openRanked(); } });
 $('#chTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; chTab = b.dataset.tab; SND.pick(); renderChara(); });
 $('#chList').addEventListener('click', e => { const b = e.target.closest('.chi'); if (!b) return; chView = b.dataset.id; SND.pick(); renderChara(); });
@@ -809,7 +859,7 @@ async function openStats(s) {             // s: a seat of the game on screen; nu
   SND.pick();
   const ig = s != null && inGame();
   const pl = ig ? (UIS.players && UIS.players[s]) || { kind: s === ME ? 'me' : 'bot', lv: DB.set.lv } : { kind: 'me' };
-  const c = ig ? UIS.chars[s] : seatChar(MJChars.get(DB.sel), useKey(DB.sel));
+  const c = ig ? UIS.chars[s] : mySeat();
   const tabs = [];
   if (pl.kind === 'me') {
     const P = DB.pstats;
@@ -916,7 +966,7 @@ function renderStats() {
           ${tb && tb[0] !== 'log' ? `<button class="ps-yt" data-a="${P.yakuAll ? 'yback' : 'yall'}">${esc(t(P.yakuAll ? 'record' : 'psYakuList'))}</button>` : ''}
           <button class="x" data-a="close" aria-label="${esc(t('close'))}">×</button>
         </header>
-        ${sk ? `<div class="ps-sk">${skillChip(sk)}</div>` : ''}
+        ${sk ? `<div class="ps-sk">${skillChip(sk)}${c.skill2 ? skillChip(MJSkills.key(c.skill2, c.tier2 | 0)) : ''}</div>` : ''}
         ${P.tabs.length > 1 && !P.yakuAll ? `<div class="ps-tabs">${P.tabs.map(([k, lab]) => `<button class="${k === (tb && tb[0]) ? 'on' : ''}" data-tab="${k}">${esc(lab)}</button>`).join('')}</div>` : ''}
         <div class="ps-body">
           ${P.yakuAll && tb && tb[0] !== 'log' ? yAllPage : tb && tb[0] === 'log' ? histHTML() : !tb ? `<p class="ps-empty">${esc(t('psNoData'))}</p>` : empty ? `<p class="ps-empty">${esc(t(isG ? 'psEmptyG' : 'psEmpty'))}</p>` : `
@@ -971,11 +1021,22 @@ async function startGame(opt = {}) {
   if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = () => SND.tile(); TB.warm(); }
   TB.resume();
   TB.hideAll();
-  const me = seatChar(MJChars.get(DB.sel), useKey(DB.sel));
-  const others = MJChars.list.filter(c => c.id !== me.id && (c.reward == null || owns(c.id)))   // (a reward character not yet earned never sits at the table)
-   .sort(() => Math.random() - .5).slice(0, 3).map(c => seatChar(c, rollSkillKey()));
+  const me = mySeat();
+  const pool = MJChars.list.filter(c => c.id !== me.id && !(me.partner && c.id === me.partner.id) && (c.reward == null || owns(c.id)));   // (a reward character not yet earned never sits at the table)
+  const picked = pool.slice().sort(() => Math.random() - .5).slice(0, 3);
+  // (fair play) when the player brings a partner's skill, each BOT brings a sister's too — a second skill of another kind
+  const taken = new Set([me.id, ...picked.map(c => c.id)]); if (me.partner) taken.add(me.partner.id);
+  const others = picked.map(c => {
+    const key = rollSkillKey();
+    if (!me.skill2) return seatChar(c, key);
+    const sis = pool.filter(x => x.family === c.family && !taken.has(x.id)).sort(() => Math.random() - .5)[0];
+    if (!sis) return seatChar(c, key);
+    taken.add(sis.id);
+    let k2 = rollSkillKey(); for (let n = 0; n < 20 && MJSkills.parse(k2).id === MJSkills.parse(key).id; n++) k2 = rollSkillKey();
+    return seatChar(c, key, sis, k2);
+  });
   const chars = [me, ...others];
-  chars.forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); if (im.decode) im.decode().catch(() => {}); });   // cut-in art, loaded and decoded in advance
+  chars.concat(chars.map(c => c.partner).filter(Boolean)).forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); if (im.decode) im.decode().catch(() => {}); });   // cut-in art, loaded and decoded in advance
   const ranked = !!opt.ranked, len = ranked ? opt.len : DB.set.len, lv = ranked ? MJRank.botLv(DB.rank.pt) : DB.set.lv, skills = ranked ? true : DB.set.skills;
   UIS = { ranked: ranked ? { len } : null, lv, chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
@@ -1151,13 +1212,12 @@ function renderBadges() {
     const p = g.P ? g.P[s] : null;
     const wind = t('wind')[(s - g.dealer + 4) % 4];
     const fx = p ? Object.keys(p.fx).filter(k => p.fx[k] && ['wareme', 'hanup', 'guard', 'shugi', 'pot', 'seal', 'lure'].includes(k)) : [];
-    const sk = MJSkills.get(c.skill);
     const chips = fx.map(k => { const s2 = MJSkills.get(k === 'lure' ? 'lure' : k); return s2 ? `<i class="fx" style="--sc:${s2.color}" title="${esc(L(s2.name))}">${icon(s2.icon)}</i>` : ''; }).join('');
     // (ユーザー 2026-11-15: no score here — the four scores are on the unit in the middle of the table; the name and the skill marks only)
     const html = `
       <div class="bf ${(s === g.dealer) ? 'dealer' : ''} ${p && p.riichi ? 'rii' : ''}" style="--c:${c.color}">${frame(c, 'face')}<em>${wind}</em>${p && p.riichi ? `<i class="riiflag">${esc(t('riichi'))}</i>` : ''}</div>
       <div class="bt"><b>${esc(L(c.name))}</b>
-        <span class="bk">${s === ME && g.rules.skills ? '' : chips ? `<span class="fxs">${chips}</span>` : ''}${DB.set.skills && g.rules.skills && !(s === ME) ? `<span class="skw ${p && p.skillUsed ? 'used' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))} ${MJSkills.TIERS[c.tier | 0]}"><i class="sk" style="--sc:${sk.color}">${icon(sk.icon)}<b class="tr">${MJSkills.TIERS[c.tier | 0]}</b></i><span>${esc(L(sk.name))}</span><span class="sktip"><b>${esc(L(sk.name))} <em class="sr">${MJSkills.TIERS[c.tier | 0]}</em></b>${p && p.skillUsed ? `<small>${t('used')}</small>` : ''}<span>${esc(L(sk.desc(MJSkills.val(sk, c.tier))))}</span></span></span>` : ''}</span></div>`;
+        <span class="bk">${s === ME && g.rules.skills ? '' : chips ? `<span class="fxs">${chips}</span>` : ''}${DB.set.skills && g.rules.skills && !(s === ME) ? `<span class="skws">${[0, 1].map(i => oppSkill(g, s, i)).join('')}</span>` : ''}</span></div>`;
     if (s === ME) renderMe(html, chips, fx.map(k => L(MJSkills.get(k).name)));   // (ユーザー 2026-11-15: the player's own skill marks — the effects in force, the seal's lock — sit inside the skill plate, not under the portrait; the plate already shows the skill itself)
     else $('#opp' + s).innerHTML = html;
   }
@@ -1165,35 +1225,49 @@ function renderBadges() {
 // (ユーザー 2026-11-15) the others' skill chips: what the skill does in a bubble — on hover, or on a tap (a touch screen; it closes by itself)
 document.addEventListener('click', e => { const w = e.target.closest('#game .opp .skw'); document.querySelectorAll('#game .opp .skw.tip').forEach(x => { if (x !== w) x.classList.remove('tip'); });
   if (!w) return; e.stopPropagation(); w.classList.toggle('tip'); clearTimeout(w._tt); if (w.classList.contains('tip')) w._tt = setTimeout(() => w.classList.remove('tip'), 4000); }, true);
+// one of another seat's skills (slot 0 her own, 1 her partner's): the icon and the name, what it does in a bubble
+function oppSkill(g, s, i) {
+  const sl = g.slot ? g.slot(s, i) : null; if (!sl) return '';
+  const sk = sl.sk, tr = MJSkills.TIERS[sl.tier], p = g.P ? g.P[s] : null, used = p && p.skUsed[i], pt = i ? UIS.chars[s].partner : null;
+  return `<span class="skw ${used ? 'used' : ''} ${i ? 'pt' : ''}" style="--sc:${sk.color}" title="${esc(L(sk.name))} ${tr}"><i class="sk" style="--sc:${sk.color}">${icon(sk.icon)}<b class="tr">${tr}</b></i><span>${esc(L(sk.name))}</span><span class="sktip">${pt ? `<small class="who">${esc(t('partner'))} ${esc(L(pt.name))}</small>` : ''}<b>${esc(L(sk.name))} <em class="sr">${tr}</em></b>${used ? `<small>${t('used')}</small>` : ''}<span>${esc(L(sk.desc(MJSkills.val(sk, sl.tier))))}</span></span></span>`;
+}
 function renderMe(badgeHtml, chips, fxNames) {
-  const g = G, c = UIS.chars[ME], sk = MJSkills.get(c.skill);
+  const g = G, c = UIS.chars[ME];
   const p = g.P ? g.P[ME] : null;
-  const cost = g.skillCost ? g.skillCost(ME) : 0;
   const skillsOn = g.rules.skills;
-  const can = UIS.opts && UIS.opts.canSkill;
+  // (ユーザー 2026-11-15: the plate is compact and of one width — the icon and the name; what the skill does comes up in a bubble on hover, or on a tap when it cannot be used; the marks of effects in force sit on its corner)
+  // With a partner there are two plates, the partner's above her own (S / D keys); the cost shown is what the next use costs.
+  const plate = i => {
+    const sl = g.slot ? g.slot(ME, i) : null; if (!sl) return '';
+    const sk = sl.sk, tr = `<em class="sr st${sl.tier}">${MJSkills.TIERS[sl.tier]}</em>`, used = p && p.skUsed[i];
+    const cost = g.skillCost(ME, i), can = !!(UIS.opts && UIS.opts.canSkills && UIS.opts.canSkills[i]), pt = i ? c.partner : null, fxOn = chips && !i;
+    return `<button class="skb ${can ? 'ready' : ''} ${used ? 'used' : ''} ${fxOn ? 'hasfx' : ''} ${i ? 'pt' : ''}" id="${i ? 'skBtn2' : 'skBtn'}" data-slot="${i}" data-cost="${cost}" style="--sc:${sk.color}" aria-disabled="${can ? 'false' : 'true'}">
+      <kbd class="skk">${i ? 'D' : 'S'}</kbd><i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))} ${tr}</b></span>${pt ? `<img class="skp" src="${charImg(pt, 'face')}" alt="">` : ''}${fxOn ? `<span class="skfx">${chips}</span>` : ''}
+      <span class="sktip">${pt ? `<small class="who">${esc(t('partner'))} ${esc(L(pt.name))}</small>` : ''}<b>${esc(L(sk.name))} ${tr}</b><small>${used ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))}</small><span>${esc(L(sk.desc(MJSkills.val(sk, sl.tier))))}</span>${fxOn && fxNames && fxNames.length ? `<small class="on">${chips} ${fxNames.map(esc).join(' ・ ')}</small>` : ''}</span></button>`;
+  };
   $('#mePanel').innerHTML = `
     <div class="mb">${badgeHtml}</div>
-    ${skillsOn ? `<button class="skb ${can ? 'ready' : ''} ${p && p.skillUsed ? 'used' : ''} ${chips ? 'hasfx' : ''}" id="skBtn" style="--sc:${sk.color}" aria-disabled="${can ? 'false' : 'true'}">
-      <kbd class="skk">S</kbd><i>${icon(sk.icon)}</i><span><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b></span>${chips ? `<span class="skfx">${chips}</span>` : ''}
-      <span class="sktip"><b>${esc(L(sk.name))} <em class="sr st${c.tier | 0}">${MJSkills.TIERS[c.tier | 0]}</em></b><small>${p && p.skillUsed ? t('used') : (sk.timing === 'deal' ? t('dealOnly') + ' · ' : '') + (cost ? t('cost', { n: cost.toLocaleString() }) : t('free'))}</small><span>${esc(L(sk.desc(MJSkills.val(sk, c.tier))))}</span>${fxNames && fxNames.length ? `<small class="on">${chips} ${fxNames.map(esc).join(' ・ ')}</small>` : ''}</span></button>` : ''}`;   // (ユーザー 2026-11-15: the plate is compact and of one width — the icon and the name; what the skill does comes up in a bubble on hover, or on a tap when it cannot be used; the marks of effects in force sit on its corner)
-  const b = $('#skBtn');
-  { const me = $('#mePanel'); if (me) me.style.setProperty('--skw', (b ? b.offsetWidth : 0) + 'px'); }   // (the skill button is drawn enlarged on a desktop, by --hz: the portrait is kept clear of it in CSS, so it stays right when the window changes)
-  if (b) b.onclick = async () => {
-    const ok = () => UIS.opts && UIS.opts.canSkill && UIS.resolve;
+    ${skillsOn ? `<div class="sks">${plate(1)}${plate(0)}</div>` : ''}`;
+  const box = $('#mePanel .sks');
+  { const me = $('#mePanel'); if (me) me.style.setProperty('--skw', (box ? box.offsetWidth : 0) + 'px'); }   // (the skill plates are drawn enlarged on a desktop, by --hz: the portrait is kept clear of them in CSS, so it stays right when the window changes)
+  if (box) box.onclick = async e => {
+    const b = e.target.closest('.skb'); if (!b) return;
+    const i = +b.dataset.slot, cost = +b.dataset.cost, sk = g.slot(ME, i).sk;
+    const ok = () => UIS.opts && UIS.opts.canSkills && UIS.opts.canSkills[i] && UIS.resolve;
     // (ユーザー 2026-11-15) a touch screen has no hover: a tap opens a small sheet — what the skill does, and when it can be used now,
     // "use" / "cancel" (the cost is named there, so it is not asked a second time). A mouse: a click uses it (the bubble is on hover).
-    if (matchMedia('(pointer: coarse)').matches) {
+    if (coarse()) {
       const tip = b.querySelector('.sktip'), can = ok();
       const use = await new Promise(res => { const m = modal(`<div class="skq" style="--sc:${sk.color}">${tip ? tip.innerHTML : ''}</div>${can && cost > 0 ? `<p class="cq">${esc(t('skillCostQ', { n: cost.toLocaleString() }))}</p>` : ''}
           <div class="cbtns">${can ? `<button class="btn" data-a="no">${t('cancel')}</button><button class="btn gold" data-a="yes">${t('skillUse')}</button>` : `<button class="btn" data-a="no">${t('close')}</button>`}</div>`, 'small');
         m.addEventListener('click', e => { const a = e.target.closest('[data-a]'); if (!a) return; closeModal(); res(a.dataset.a === 'yes'); }); });
       if (!use || !ok()) return;
     } else {
-      if (!ok()) { b.classList.toggle('tip'); clearTimeout(renderMe.tt); if (b.classList.contains('tip')) renderMe.tt = setTimeout(() => { const x = $('#skBtn'); if (x) x.classList.remove('tip'); }, 4000); return; }
+      if (!ok()) { const on = !b.classList.contains('tip'); box.querySelectorAll('.skb.tip').forEach(x => x.classList.remove('tip')); b.classList.toggle('tip', on); clearTimeout(renderMe.tt); if (on) renderMe.tt = setTimeout(() => document.querySelectorAll('#mePanel .skb.tip').forEach(x => x.classList.remove('tip')), 4000); return; }
       if (cost > 0 && !(await confirmBox(t('skillCostQ', { n: cost.toLocaleString() })))) return;
     }
     const r = UIS.resolve; UIS.resolve = null; UIS.opts = null; clearActs();
-    r({ act: 'skill' });
+    r({ act: 'skill', slot: i });
   };
 }
 
@@ -1367,7 +1441,7 @@ $('#game').addEventListener('click', e => {
     return;
   }
   if (!UIS || UIS.kind !== 'call') return;
-  if (e.target.closest('#acts, #chiPick, .tbtns, #skBtn, #dealAsk')) return;
+  if (e.target.closest('#acts, #chiPick, .tbtns, #mePanel .sks, #dealAsk')) return;
   const s = $('#acts .skip'); if (s) s.click();
 });
 
@@ -1376,8 +1450,9 @@ function askDealSkill(o, res) {
   const sk = MJSkills.get(o.skill);
   const el = $('#dealAsk');
   el.style.setProperty('--sc', sk.color);
+  const who = o.slot && UIS.chars[ME].partner ? UIS.chars[ME].partner : null;
   el.innerHTML = `<i>${icon(sk.icon)}</i>
-    <div class="da-t"><b>${esc(t('dealQ', { name: L(sk.name) + ' ' + MJSkills.TIERS[o.tier | 0] }))}</b><span>${esc(L(sk.desc(MJSkills.val(sk, o.tier))))}</span><small>${o.cost ? t('cost', { n: o.cost.toLocaleString() }) : t('free')}</small></div>
+    <div class="da-t">${who ? `<em class="da-pt"><img src="${charImg(who, 'face')}" alt="">${esc(t('partner'))} ${esc(L(who.name))}</em>` : ''}<b>${esc(t('dealQ', { name: L(sk.name) + ' ' + MJSkills.TIERS[o.tier | 0] }))}</b><span>${esc(L(sk.desc(MJSkills.val(sk, o.tier))))}</span><small>${o.cost ? t('cost', { n: o.cost.toLocaleString() }) : t('free')}</small></div>
     <div class="da-b"><button class="ab skip" data-a="no">${t('notUse')}<kbd>Esc</kbd></button><button class="ab call" data-a="yes">${t('use')}<kbd>Enter</kbd></button></div>`;
   el.hidden = false;
   renderHand();
@@ -1452,14 +1527,14 @@ async function callout(s, text) {
 }
 const WORD = { riichi: { ja: '立直', en: 'RIICHI' }, tsumo: { ja: '自摸', en: 'TSUMO' }, ron: { ja: '栄和', en: 'RON' } };
 async function cutin(s, kind, d) {
-  const c = UIS.chars[s];
+  const c = (kind === 'skill' && d && d.by) || UIS.chars[s];   // (a partner's skill: the partner comes on)
   const el = $('#cutin');
   let word, sub = '';
   if (kind === 'skill') { const sk = MJSkills.get(d.skill); word = L(sk.name); sub = MJSkills.TIERS[d.tier | 0] + ' ・ ' + L(sk.short(MJSkills.val(sk, d.tier))) + (d.cost ? ` ・ ${t('cost', { n: d.cost.toLocaleString() })}` : ''); }
   else word = I18N.lang === 'ja' ? WORD[kind].ja : WORD[kind].en;
   const kana = kind === 'riichi' ? t('riichi') : kind === 'tsumo' ? t('tsumo') : kind === 'ron' ? t('ron') : '';
   const line = c.lines && c.lines[kind] ? L(c.lines[kind]) : '';
-  const sk = MJSkills.get(c.skill);
+  const sk = MJSkills.get(kind === 'skill' ? d.skill : UIS.chars[s].skill);
   const rk = RANK_I(c.rarity);
   el.className = `cutin k-${kind} cr-${c.rarity} ${s === ME ? 'me' : ''}`;
   el.style.setProperty('--c', c.color); el.style.setProperty('--c2', c.color2); el.style.setProperty('--sc', sk.color);
@@ -1473,7 +1548,7 @@ async function cutin(s, kind, d) {
       <div class="ci-word" data-len="${word.length}">${esc(word)}</div>
       ${kana && I18N.lang === 'ja' ? `<div class="ci-kana">${esc(kana)}</div>` : ''}
       ${sub ? `<div class="ci-sub">${esc(sub)}</div>` : ''}
-      <div class="ci-line"><b>${esc(L(c.name))}</b>「${esc(line)}」</div>
+      <div class="ci-line">${kind === 'skill' && d.slot ? `<em class="ci-pt">${esc(t('partner'))}</em>` : ''}<b>${esc(L(c.name))}</b>「${esc(line)}」</div>
     </div>
     <div class="ci-flash"></div>`;
   el.hidden = false;
@@ -1722,7 +1797,7 @@ document.addEventListener('keydown', e => {
     if (el && el.classList.contains('can')) doDiscard(+el.dataset.id);
     return;
   }
-  if (k === 's') { const b = $('#skBtn'); if (b && b.classList.contains('ready')) { e.preventDefault(); b.click(); } return; }
+  if (k === 's' || k === 'd') { const b = $(k === 's' ? '#skBtn' : '#skBtn2'); if (b && b.classList.contains('ready')) { e.preventDefault(); b.click(); } return; }
   // hand
   if (UIS.kind === 'turn' && UIS.resolve) {
     if (k === 'ArrowLeft') { e.preventDefault(); moveCursor(-1); }
