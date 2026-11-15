@@ -1099,9 +1099,12 @@ async function startGame(opt = {}) {
   const picked = pool.slice().sort(() => Math.random() - .5).slice(0, 3);
   // (fair play) when the player brings a partner's skill, each BOT brings a sister's too — a second skill of another kind
   const taken = new Set([me.id, ...picked.map(c => c.id)]); if (me.partner) taken.add(me.partner.id);
+  // (ユーザー 2026-11-15) in 段位戦 up to 6級 the BOTs bring one skill only, even when the player brings two (an easier start;
+  // tools/dual-skill-sim.js: two skills against one is worth about 0.06 of a place)
+  const bot1 = !!opt.ranked && DB.rank.pt < MJRank.list.find(r => r.name.ja === '5級').pt;
   const others = picked.map(c => {
     const key = rollSkillKey();
-    if (!me.skill2) return seatChar(c, key);
+    if (!me.skill2 || bot1) return seatChar(c, key);
     const sis = pool.filter(x => x.family === c.family && !taken.has(x.id)).sort(() => Math.random() - .5)[0];
     if (!sis) return seatChar(c, key);
     taken.add(sis.id);
