@@ -684,6 +684,7 @@
       fly.getAnimations().forEach(a => a.cancel());
       wrap.animate([{ opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(${sc})` }, { opacity: 1, transform: `translate(${dx}px, ${dy + 6}px) scale(${sc * 1.12},${sc * .86})`, offset: .35 }, { opacity: 1, transform: `translate(${dx}px, ${dy - 6}px) scale(${sc * 1.3})`, offset: .7 }, { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(${sc * .2})` }], { duration: 230, easing: 'ease-in', fill: 'forwards' })
         .onfinish = () => { wrap.remove(); img.style.visibility = ''; flying = false; };
+      setTimeout(() => { wrap.remove(); img.style.visibility = ''; flying = false; }, 1400);   // (an animation that never reports its end — a hidden tab, a busy phone: the icon must still go, 2026-11-16)
       magic(cx, cy, 0, Math.min(W * .55, 280), -110);
       SFX.pop(140); SFX.shimmer(190); SFX.chime(420);   // swell & pop → smoke / sparkle burst → the board appears (reveal at 400 ms)
       setTimeout(() => window.Table3D && Table3D.reveal(), 400);   // after the icon has gone and the smoke is at its fullest
@@ -698,9 +699,10 @@
       }, 0));
       (window.AtlasLazy ? AtlasLazy.need(id) : Promise.resolve()).then(() => {   // (its files first: atlas/lazy.js)
         try { warm(id); } catch (e) {}
-        if (texBusy(id)) texReady(id).then(go); else go();   // (the icon keeps wobbling meanwhile)
-      });
+        if (texBusy(id)) texReady(id).then(go, go); else go();   // (the icon keeps wobbling meanwhile)
+      }).catch(go);   // (its files failed to load: open the card anyway — the icon never stays)
     }, T1);
+    setTimeout(() => { if (done) return; try { openBoard(id, true, true); } catch (e) {} finish(); }, T1 + 7000);   // (a step that never answers: after 7 s the icon pops and the card opens all the same)
   }
   // magic: sparkles trail the rising icon, then rain down and twinkle over the board as it appears
   function magic(cx, cy, rise, size, shift = 0) {
