@@ -383,7 +383,7 @@
     night: { ja: 'ナイトゲーム', en: 'Night game', zh: '夜场', 'zh-TW': '夜場', ko: '나이트 게임', es: 'Partido nocturno', fr: 'Match en nocturne', pt: 'Jogo noturno', de: 'Flutlichtspiel', ru: 'Вечерний матч', tr: 'Gece maçı', id: 'Laga malam', hi: 'रात का मैच', ar: 'مباراة ليلية' },
     praia: { ja: 'コパカバーナ', en: 'Copacabana', zh: '科帕卡巴纳', 'zh-TW': '科帕卡巴納', ko: '코파카바나', es: 'Copacabana', fr: 'Copacabana', pt: 'Copacabana', de: 'Copacabana', ru: 'Копакабана', tr: 'Copacabana', id: 'Copacabana', hi: 'कोपाकबाना', ar: 'كوباكابانا' },
     madeira: { ja: 'ウッド', en: 'Wood', zh: '木制', 'zh-TW': '木製', ko: '우드', es: 'Madera', fr: 'Bois', pt: 'Madeira', de: 'Holz', ru: 'Дерево', tr: 'Ahşap', id: 'Kayu', hi: 'लकड़ी', ar: 'خشبية' },
-    neon: { ja: 'ネオン', en: 'Neon', zh: '霓虹', 'zh-TW': '霓虹', ko: '네온', es: 'Neón', fr: 'Néon', pt: 'Neon', de: 'Neon', ru: 'Неон', tr: 'Neon', id: 'Neon', hi: 'नियॉन', ar: 'نيون' },
+    neon: { ja: '8ビット', en: '8-bit', zh: '8位像素', 'zh-TW': '8位元像素', ko: '8비트', es: '8 bits', fr: '8 bits', pt: '8 bits', de: '8-Bit', ru: '8 бит', tr: '8-bit', id: '8-bit', hi: '8-बिट', ar: '8 بت' },   // (2026-11-16: was ネオン — the id stays 'neon')
   },
   hockey: {
     classic: { ja: 'クラシック', en: 'Classic', zh: '经典', 'zh-TW': '經典', ko: '클래식', es: 'Clásico', fr: 'Classique', pt: 'Clássico', de: 'Klassisch', ru: 'Классика', tr: 'Klasik', id: 'Klasik', hi: 'क्लासिक', ar: 'كلاسيك' },
@@ -396,7 +396,7 @@
   X.boardName = (k, lang, id) => { const g = id && NG[id] && NG[id][k]; if (g) return g[lang] || g.en; const o = N3[k]; if (!o) return k; const n = o[lang] || o.en, c = n.replace(/\s*(?:3D|ثلاثي(?: الأبعاد)?)$/, '').trim(); return c || n; };   // (2026-11-10: the boards' names without '3D')
   // the full games' 「3D盤」 tiles: the board alone, from straight above, no room (atlas/tools/boardicon.html, 2026-11-09)
   X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'morris' ? 2 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'chess' ? 7 : 1), ME).href;
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'morris' ? 2 : id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'botao' ? 3 : id === 'chess' ? 7 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'morris' ? 2 : id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'botao' ? 4 : id === 'chess' ? 7 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   // 駒: the games whose 3D figures come in sets (the board view's panel shows them as a row under 盤; the full game's 「3D駒」 too)
