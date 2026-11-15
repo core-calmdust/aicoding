@@ -65,20 +65,23 @@
     const set = T3.c4Set(stand, { sfx: true });
     const tall = innerHeight > innerWidth * 1.15;
     if (T3.fit) T3.fit(tall ? { w: 9.7, d: 8.2, y: 3.05, pitch: .36 } : { w: 10.2, d: 7.4, y: 3.2, pitch: .34 });   // the tower seen from the front, a little from above
-    const pvp = ctx.mode === 'pvp', human = pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human;
+    const pvp = ctx.mode === 'pvp', PZ = ctx.pz || null;   // PZ: a puzzle / lesson position driven by atlas/puzzles.js · lessons3d.js (no AI: ctx.pz.moved decides)
+    let human = PZ ? (PZ.me === 2 ? 2 : 1) : pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human;
     const pname = c => X.n[c - 1], fmt = (s, p) => s.replace('{p}', p);
     let moves = '', stopped = false, busy = true, over = false, worker = null, jid = 0, toastEl = null, toastT = 0;
     let ply = 0, hintW = null, hintJ = 0, hintC = -1, hover = -1;
     const side = () => moves.length & 1 ? 2 : 1;
     const onTurn = () => { if (ctx.onTurn) ctx.onTurn(side() - 1, { human: pvp || side() === human, ply }); };   // HUD pills: gold (left) 0, pearl 1
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
-    const myTurn = () => !over && !busy && (pvp || side() === human);
+    const myTurn = () => !over && !busy && (pvp || side() === human) && !(PZ && !pzOn);
+    let pzOn = false, pzCells = null, pzW = null, pzJ = 0;
 
     function showMarks() {
       const o = {};
       if (moves.length && !over) { const c = moves.charCodeAt(moves.length - 1) - 49; o.last = [c, gridOf(moves)[c].length - 1]; }
       if (hintC >= 0) o.hint = hintC;
       if (hover >= 0 && myTurn() && gridOf(moves)[hover].length < ROWS) o.ghost = { c: hover, p: side() };
+      if (pzCells) o.cells = pzCells;
       set.marks(o);
     }
     function hud(msg) {
@@ -140,6 +143,7 @@
       if (!myTurn() || T3.wasDrag()) return;
       const c = set.colAt(e.clientX, e.clientY); if (c < 0) return;
       if (gridOf(moves)[c].length >= ROWS) { toast(X.full); set.knock(0, true); return; }
+      if (PZ) { const before = moves; pzOn = false; busy = true; pzCells = null; const w = play(c); later(() => { busy = false; const s = statusOf(moves); if (s.line) set.win(s.line); if (PZ.moved) PZ.moved(c, Object.assign({ before }, pzState())); }, w + 80); return; }   // (a puzzle / lesson: the caller judges the move)
       busy = true; hud(''); const w = play(c); later(next, w + 80);
     }
     function onMove(e) {
@@ -150,13 +154,51 @@
     ctx.el.addEventListener('click', onClick);
     ctx.el.addEventListener('pointermove', onMove);
 
+    /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-15): a position (a move string) from the puzzles / lessons, no AI; the caller
+       judges each move (ctx.pz.moved(c, info)) and plays the replies (api.pz.play). The engine's jobs come from the game's worker, asked
+       as connect4/index.html asks them ({ type: 'mate', moves, n, defend } · 'think'). Marks: cells { c, r, cls } (ok · ng · hl). ---------- */
+    function pzState() { const s = statusOf(moves); return { over: s.over, winner: s.winner || 0, line: s.line || null, turn: side(), n: moves.length }; }
+    function pzWait() { busy = false; over = statusOf(moves).over; pzOn = !PZ.lock && !over; showMarks(); }
+    function pzLoad(mv, me, o) {
+      PZ.moves = mv || ''; PZ.me = me === 2 ? 2 : 1; PZ.lock = !!(o && o.lock);
+      timers.forEach(clearTimeout); timers.length = 0; jid++; pzJ++; pzOn = false; pzCells = null; hintC = -1;
+      moves = PZ.moves; human = PZ.me; over = false; busy = true; set.sync(gridOf(moves), null, false); set.win(null); showMarks(); hud('');
+      later(() => { pzWait(); if (PZ.ready) PZ.ready(); }, 250);
+    }
+    const pzReq = msg => new Promise(res => {
+      if (!pzW) pzW = makeWorker();
+      const id = ++pzJ; pzW.onmessage = e => { const r = e.data; if (r.id !== id || (r.type !== 'result' && r.type !== msg.type)) return; res(stopped ? null : r); };   // (the 'mate' job answers as type 'mate')
+      pzW.onerror = () => { pzW = null; res(null); };
+      pzW.postMessage(Object.assign({ id, moves }, msg));
+    });
+    const pzApi = {
+      load: (mv, me, o) => pzLoad(mv, me, o),
+      wait: pzWait,
+      play: c => new Promise(res => { if (!(c >= 0 && c < COLS) || gridOf(moves)[c].length >= ROWS || statusOf(moves).over) return res(false); pzOn = false; busy = true; pzCells = null; const w = play(c); later(() => { busy = false; const s = statusOf(moves); if (s.line) set.win(s.line); over = s.over; res(true); }, w + 80); }),
+      undo(k = 1) { timers.forEach(clearTimeout); timers.length = 0; moves = moves.slice(0, Math.max(PZ.base || 0, moves.length - k)); over = false; set.win(null); set.sync(gridOf(moves), null, false); pzCells = null; showMarks(); },
+      reset() { moves = PZ.moves; over = false; set.win(null); set.sync(gridOf(moves), null, false); pzCells = null; showMarks(); },
+      moves: () => moves,
+      state: () => pzState(),
+      grid: () => gridOf(moves),
+      // marks: null clears · a column number = that column's next cell, gold · a list of [c, cls] (the column's next cell) or { c, r, cls }
+      mark(list) {
+        if (list == null) { pzCells = null; hintC = -1; showMarks(); return; }
+        const g = gridOf(moves), L = typeof list === 'number' ? [[list, 'hl']] : list;
+        pzCells = L.map(e => Array.isArray(e) ? { c: e[0], r: g[e[0]] ? g[e[0]].length : -1, cls: e[1] } : e).filter(e => e.c >= 0);
+        showMarks();
+      },
+      hintCol: c => { hintC = c; showMarks(); },
+      mate: (mv, n, defend) => pzReq({ type: 'mate', moves: mv, n, defend: !!defend }).then(r => { if (!r || !r.list) return null; if (defend) r.list.pick = r.pick; return r.list; }),
+      think: level => pzReq({ type: 'think', level: level || 8 }).then(r => r && r.move >= 0 ? r.move : null),
+    };
+
     function begin() {
       timers.forEach(clearTimeout); timers.length = 0; jid++;
       moves = ''; over = false; busy = true; set.sync(gridOf(''), null, false); set.win(null); showMarks();
       hud(''); later(next, 600);
     }
     hud('');
-    worker = makeWorker(); begin();
+    if (PZ) pzLoad(PZ.moves, PZ.me, { lock: PZ.lock }); else { worker = makeWorker(); begin(); }
 
     // test hooks (positions on screen, state)
     const dbg = {
@@ -174,7 +216,7 @@
       hud(L.lose); later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: r }), 200);
     }
     const api = {
-      human: human - 1,
+      human: human - 1, pz: PZ ? pzApi : null,
       canUndo: () => myTurn() && moves.length >= undoN() + (pvp || human === 1 ? 0 : 1),
       undo() {
         if (!api.canUndo()) return;
@@ -208,7 +250,7 @@
         stopped = true; jid++;
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointermove', onMove);
-        if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
+        if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null; if (pzW) pzW.terminate(); pzW = null;
         set.dispose();
         if (window.Atlas3D.connect4._dbg === dbg) delete window.Atlas3D.connect4._dbg;
       },
@@ -242,5 +284,5 @@
     return { name: L.lv[n], desc: L.lvd[n], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.connect4 = { levels: 8, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.connect4 = { names: l => (TX[l] || TX.en).n, levels: 8, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
 })();

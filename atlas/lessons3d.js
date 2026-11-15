@@ -133,6 +133,22 @@
       ja: { hi: 'チェッカニだよ！ いっしょにチェッカーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'おしい！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
       en: { hi: "Checkrab here! Let's study checkers together.", partial: 'A nice move! But the green arrow is the best.', wrong: 'So close! The green arrow is the answer.', hintSay: 'Psst — look at the pieces in the gold rings!', opGoal: 'What is the best next move here?' },
     },
+    connect4: {
+      ja: { hi: 'ポトンウサだよ！ いっしょにコネクトフォーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の印の列なんだ。', wrong: 'おしい！ 正解は緑の印の列だよ。', hintSay: 'ヒントだよ。印のマスをよく見てみて。' },
+      en: { hi: "Plopbun here! Let's study Connect Four together.", partial: 'A nice move! But the green-marked column is the best.', wrong: 'So close! The green-marked column is the answer.', hintSay: 'Psst — look at the marked cells.' },
+      zh: { hi: '我是叮咚兔！一起来学四子棋吧。', partial: '好棋！不过最好的是绿色标记的那一列。', wrong: '差一点！正解是绿色标记的那一列。', hintSay: '提示：仔细看标记的格子。' },
+      'zh-TW': { hi: '我是叮咚兔！一起來學四子棋吧。', partial: '好棋！不過最好的是綠色標記的那一列。', wrong: '差一點！正解是綠色標記的那一列。', hintSay: '提示：仔細看標記的格子。' },
+      ko: { hi: '포통우사야! 같이 커넥트 포를 공부하자.', partial: '좋은 수야! 하지만 최선은 초록 표시 열이야.', wrong: '아깝다! 정답은 초록 표시 열이야.', hintSay: '힌트: 표시된 칸을 잘 봐.' },
+      es: { hi: '¡Soy Plopbun! Estudiemos Conecta 4 juntos.', partial: '¡Buena jugada! Pero la mejor es la columna verde.', wrong: '¡Casi! La respuesta es la columna verde.', hintSay: 'Pista: mira las casillas marcadas.' },
+      fr: { hi: 'C’est Plopbun ! Étudions le Puissance 4 ensemble.', partial: 'Joli coup ! Mais la meilleure est la colonne verte.', wrong: 'Presque ! La réponse est la colonne verte.', hintSay: 'Indice : regarde les cases marquées.' },
+      pt: { hi: 'Aqui é o Plopbun! Vamos estudar Lig 4 juntos.', partial: 'Boa jogada! Mas a melhor é a coluna verde.', wrong: 'Quase! A resposta é a coluna verde.', hintSay: 'Dica: veja as casas marcadas.' },
+      de: { hi: 'Hier ist Plopbun! Lass uns zusammen Vier gewinnt lernen.', partial: 'Guter Zug! Aber am besten ist die grüne Spalte.', wrong: 'Knapp! Die Antwort ist die grüne Spalte.', hintSay: 'Tipp: Schau dir die markierten Felder an.' },
+      ru: { hi: 'Это Плопбан! Давай вместе изучать «Четыре в ряд».', partial: 'Хороший ход! Но лучший — зелёный столбец.', wrong: 'Почти! Ответ — зелёный столбец.', hintSay: 'Подсказка: посмотри на отмеченные клетки.' },
+      tr: { hi: 'Ben Plopbun! Birlikte Dört Bağlamaca çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil sütun.', wrong: 'Az kaldı! Cevap yeşil sütun.', hintSay: 'İpucu: işaretli karelere bak.' },
+      id: { hi: 'Aku Plopbun! Ayo belajar Connect Four bersama.', partial: 'Langkah bagus! Tapi yang terbaik kolom hijau.', wrong: 'Hampir! Jawabannya kolom hijau.', hintSay: 'Petunjuk: lihat kotak yang bertanda.' },
+      hi: { hi: 'मैं प्लॉपबन हूँ! चलो साथ में कनेक्ट फ़ोर सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छा हरा स्तंभ है।', wrong: 'करीब था! जवाब हरा स्तंभ है।', hintSay: 'संकेत: निशान वाले खानों को देखो।' },
+      ar: { hi: 'أنا بلوب بن! لنتعلّم أربعة في صف معًا.', partial: 'نقلة جيدة! لكن الأفضل هو العمود الأخضر.', wrong: 'قريب جدًا! الجواب هو العمود الأخضر.', hintSay: 'تلميح: انظر إلى الخانات المعلّمة.' },
+    },
     amazons: {
       ja: { hi: 'ケロだよ！ いっしょにアマゾンズのお勉強をするケロ。', partial: 'いい手ケロ。でもいちばんは緑の印の手なんだ。', wrong: 'おしい！ 正解は緑の印の手ケロ。', hintSay: 'ヒントだケロ。光っているアマゾンから考えてみて。' },
       en: { hi: "Kero here! Let's study Amazons together.", partial: 'A nice move! But the green-marked move is the best.', wrong: 'So close! The green-marked move is the answer.', hintSay: 'Psst — start from the glowing amazons.' },
@@ -1007,7 +1023,43 @@
     spOk: lang => AMM('ok', lang),
     introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), P = s && s.problems && s.problems[0]; return P ? { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1, lock: true } } : null; },
   };
-  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS };
+  /* connect four (2026-11-15): connect4/lessons.json (23 steps of 3–4 one-move problems: any column in P.answer is right, = connect4/index.html
+     lessonAnswer). Progress = the full game's ('aicoding-connect4-v2-lessons' { id: { best: right answers, clear: all but one right } }).
+     Texts: connect4/i18n.js + learn.js (a sandbox). Columns are named by their marks (no letters on the 3D tower); the warm-ups name
+     columns in their lines, so they stay in the full game for now. A position: { moves, me }. */
+  const C4M = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の列' : k === 'hl' ? '金の印の列' : '赤い印の列') + '\u0002' : `<i class="ls-spot ${k}"></i>`;
+  const c4Grid = mv => { const g = Array.from({ length: 7 }, () => []); for (let i = 0; i < mv.length; i++) g[mv.charCodeAt(i) - 49].push(i & 1 ? 2 : 1); return g; };
+  function c4Line(g, c, r, p) { const at = (x, y) => (x >= 0 && x < 7 && y >= 0 && y < g[x].length) ? g[x][y] : 0; for (const [dc, dr] of [[1, 0], [0, 1], [1, 1], [1, -1]]) { let n = 1; for (const s of [1, -1]) { let x = c + dc * s, y = r + dr * s; while (at(x, y) === p) { n++; x += dc * s; y += dr * s; } } if (n >= 4) return true; } return false; }
+  function c4Thr(g, p) { const out = []; for (let c = 0; c < 7; c++) { const col = g[c]; for (let r = col.length; r < 6; r++) { const tmp = col.slice(); while (tmp.length < r) tmp.push(-1); tmp[r] = p; g[c] = tmp; if (c4Line(g, c, r, p)) out.push([c, r]); } g[c] = col; } return out; }
+  const CONNECT4 = {
+    LKEY: 'aicoding-connect4-v2-lessons', data: null, I: null,
+    load() {
+      if (this.p) return this.p;
+      return (this.p = Promise.all([getJ('../connect4/lessons.json?v=20261107l14'), Promise.all(['../connect4/i18n.js?v=20261107l14', '../connect4/learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => '')))])
+        .then(([ls, T]) => { const w = {}; try { new Function('window', T.join('\n'))(w); } catch (e) { console.warn('[lessons3d] connect4 texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
+        .catch(e => { this.p = null; throw e; }));
+    },
+    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    mini: mv => window.AtlasMini && AtlasMini.connect4 ? AtlasMini.connect4(mv) : '',
+    list(kind, lang) {
+      const pr = J(this.LKEY, {});
+      return this.data.ls.steps.map((s, i) => ({ key: String(i), cat: s.course, catName: this.tx('lx.course.' + s.course, lang) || s.course, title: this.tx('ls.' + s.id + '.title', lang), sub: this.tx('ls.' + s.id + '.sub', lang), svg: s.problems && s.problems[0] ? this.mini(s.problems[0].moves) : '', st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '', full: false }));
+    },
+    lesson(key, lang) {
+      const s = this.data.ls.steps[+key]; if (!s) return null;
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), name = c => (window.Atlas3D && Atlas3D.connect4 && Atlas3D.connect4.names ? Atlas3D.connect4.names(lang) : ['Gold', 'Silver'])[c - 1];
+      return { id: s.id, title: T('title'), intro: T('intro'), ramp: null,
+        probs: (s.problems || []).map(P => { const me = P.moves.length & 1 ? 2 : 1, g = c4Grid(P.moves), hm = s.hintMarks;
+          const thr = hm ? [...(hm === 'me' || hm === 'both' ? c4Thr(c4Grid(P.moves), me).map(([c, r]) => ({ c, r, cls: 'ok' })) : []), ...(hm === 'op' || hm === 'both' ? c4Thr(c4Grid(P.moves), 3 - me).map(([c, r]) => ({ c, r, cls: 'ng' })) : [])] : [];
+          const why = () => T('why' + (P.why || ''), { m: C4M('ok', lang), x: C4M('ng', lang), c: name(me), a: P.alt !== undefined ? C4M('hl', lang) : '' });
+          return { pos: { moves: P.moves, me }, kind: 'best', P, ask: T('goal'), ans: P.answer[0], hintTx: T('hint'), hintMk: thr, good: why, ng: why }; }),
+        save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, n = Math.round(pts / PTS), cnt = Math.round(max / PTS), pass = n >= cnt - 1; pr[s.id] = { best: Math.max(o.best || 0, n), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
+    },
+    points(P, c) { return P.answer.includes(c) ? 20 : 0; },   // (= connect4/index.html lessonAnswer)
+    spOk: lang => C4M('ok', lang),
+    introPos(cc) { const s = this.data.ls.steps.find(x => x.id === cc.id), P = s && s.problems && s.problems[0]; return P ? { pos: { moves: P.moves, me: P.moves.length & 1 ? 2 : 1, lock: true } } : null; },
+  };
+  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -1109,6 +1161,7 @@
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
         else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons')) pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && id === 'connect4') pz().load(G.moves, G.me, { lock: !!G.lock });
         else if (G && id === 'backgammon') pz().load(G.bg);
         else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
         else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
@@ -1261,6 +1314,7 @@
       if (!p.choices) pz().wait(); act(X.next, { hint: true, nextOn: false });
       $('[data-a=next]').onclick = () => { cur.k++; if (cur.k < cur.probs.length) prob(); else finish(); };
       $('[data-a=hint]').onclick = () => { if (p.ans == null || p.ans < 0 || p.ans === '' || p.done) return; p.hinted = true;
+        if (id === 'connect4') { pz().mark(p.hintMk && p.hintMk.length ? p.hintMk : null); say(p.hintTx || X.hintSay); return; }   // (the threats the step's hint names: yours green, the opponent's red)
         if (p.hint && p.hint.length) { pz().mark((id === 'amazons' && p.marks ? p.marks : []).concat(p.hint.map(q => [q, 'ring']))); say(p.hintTx || X.hintSay); return; }   // (gomoku: the lesson's own hint points and words)
         if (p.kind === 'bgplay') { pz().reset(); pz().mark(p.ans); pz().wait(); say((p.hintTx ? p.hintTx + '<br>' : '') + X.hintSay); return; }   // (backgammon: back to the roll's start, rings on the checkers the best play moves)
         if (p.kind === 'choice') { say(p.hintTx || X.hintSay); return; }
@@ -1324,6 +1378,15 @@
         }
         say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
         try { chime(right); } catch (e) {}
+        act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
+        if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
+        return;
+      }
+      if (id === 'connect4' && typeof u === 'number') {   // (back to the problem: the right column green, yours red)
+        const right = pts >= 16, k = cur.k;
+        say(`${right ? line('solved') || pick(X.good) : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.good ? '<br>' + p.good(u) : ''));
+        try { chime(right); } catch (e) {}
+        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([[p.ans, 'ok'], ...(right ? [] : [[u, 'ng']])]); }, 900);
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
