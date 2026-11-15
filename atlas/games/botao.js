@@ -282,7 +282,18 @@
     function bigGoal(txt) { goalEl.textContent = txt; goalEl.classList.add('on'); later(() => goalEl.classList.remove('on'), 1700); }
     const powEl = document.createElement('div'); powEl.className = 'btpow'; powEl.hidden = true; document.body.appendChild(powEl);
     const taskEl = document.createElement('div'); taskEl.className = 'bttask'; taskEl.hidden = true; document.body.appendChild(taskEl);
-    const task = m => { if (stopped) return; taskEl.textContent = m || ''; taskEl.hidden = !m; };
+    // On a phone held upright the pill at the top covers the far goal and its keeper (2026-11-15 ユーザー：メッセージがキーパーと被る、
+    // プレイヤー下に): there it sits just below the ball / your selected button, kept clear of the bottom bar, and follows the view
+    let taskT = 0;
+    const narrow = () => innerWidth < 700 && innerHeight > innerWidth;
+    function taskPlace() {
+      if (taskEl.hidden || !narrow() || !st) { taskEl.style.top = ''; return; }
+      let yy = -1; const pts = [[st.ball.x, st.ball.y]]; if (sel >= 0 && st.b[sel]) pts.push([st.b[sel].x, st.b[sel].y]);
+      for (const [x, y] of pts) { const p = scr(x, y); if (p && p.y > yy) yy = p.y; }
+      if (yy < 0) { taskEl.style.top = ''; return; }
+      const h = taskEl.offsetHeight || 44; taskEl.style.top = Math.round(Math.max(90, Math.min(innerHeight - 240 - h, yy + 52))) + 'px';
+    }
+    const task = m => { if (stopped) return; taskEl.textContent = m || ''; taskEl.hidden = !m; clearInterval(taskT); taskPlace(); if (m && narrow()) taskT = setInterval(taskPlace, 250); };
     const callEl = document.createElement('div'); callEl.className = 'btcall'; callEl.hidden = true;
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => callEl.addEventListener(k, e => e.stopPropagation()));
     (document.getElementById('bv') || document.body).appendChild(callEl);
@@ -873,7 +884,7 @@
         removeEventListener('pointermove', wm, true); removeEventListener('pointerup', wu, true); removeEventListener('pointercancel', wu, true);
         NZ.forEach(([k, f]) => document.removeEventListener(k, f, { capture: true })); HTML.classList.remove('hand-on'); HTML.classList.remove('hand-drag');
         document.removeEventListener('keydown', onKey); document.removeEventListener('keydown', onFlipKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
-        css.remove(); powEl.remove(); taskEl.remove(); goalEl.remove(); callEl.remove(); if (toastEl) toastEl.remove(); if (cardEl) cardEl.remove(); if (worker) worker.terminate();
+        clearInterval(taskT); css.remove(); powEl.remove(); taskEl.remove(); goalEl.remove(); callEl.remove(); if (toastEl) toastEl.remove(); if (cardEl) cardEl.remove(); if (worker) worker.terminate();
         cancelAnimationFrame(viewRaf); cancelAnimationFrame(waveT); flipBtn.remove(); viewBtn.remove(); if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
