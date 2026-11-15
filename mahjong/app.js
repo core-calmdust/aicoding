@@ -987,7 +987,7 @@ $('#gExit').addEventListener('click', async () => {
   if (!(await confirmBox(t('exitQ')))) return;
   quitGame();
 });
-function quitGame() {
+function quitGame() { if (window.MJSkillFx) MJSkillFx.stop();
   if (UIS) UIS.abort = true;
   SND.music('title');
   closeStats();
@@ -1052,6 +1052,7 @@ async function onEvent(ev, d) {
     case 'skill': {
       if (d.cost > 0) SND.stick();   // (the points go into the pot)
       await cutin(d.seat, 'skill', d);
+      if (FAST >= 1 && window.MJSkillFx && TB) await MJSkillFx.play(d.skill, d.seat, TB, { lite: !!DB.set.lite });   // (ユーザー 2026-11-15: after the picture and the words, the skill's own effect over the table — skillfx.js)
       refreshTable(); renderBadges();
       if (d.seat === ME) {
         if (d.info.peek) await peekPop(d.info.peek);   // (ユーザー 2026-11-15: shown once, mid-screen — remembered, not kept in the box)

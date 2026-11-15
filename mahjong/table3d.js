@@ -8,7 +8,7 @@ const W = 1, H = 1.36, D = 0.78;
 // (~0.9 s), the stone of the backs (~0.1 s) — ship as images made from the very same code (tools/bake-tex.py). They are fetched as
 // the page opens; if one is not there in time (or ?nobake), the code below draws it as before. Every drawn one is kept in
 // JANKA_TEXGEN for the baking tool.
-const BAKE_V = 1, BAKED = {};
+const BAKE_V = 2, BAKED = {};
 if (!/[?&]nobake\b/.test(location.search)) for (const n of ['felt', 'wood', 'woodb', 'stone']) { const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + n + '.webp?v=' + BAKE_V; BAKED[n] = im; }
 // (2026-11-15, ユーザー「スマホで落ちまくる」: memory) on a touch device the big pictures are kept at half size — on a phone's screen
 // the felt and the rails never show more than that — and once a picture that never changes is on the graphics card, the copy the
@@ -84,7 +84,7 @@ function woodTex() {
     const pore = sstep(.66 - (1 - late) * .04, .76, pn);
     const warm = slow;                                                       // honey ↔ chocolate along the board
     const d = (N.R() - .5) * 2.5, p = (y * Wd + x) * 4;
-    let r = mix(mix(46, 58, warm), mix(150, 170, warm), t), gg = mix(mix(24, 30, warm), mix(92, 104, warm), t), bb = mix(mix(12, 14, warm), mix(50, 52, warm), t);
+    let r = mix(mix(60, 72, warm), mix(164, 182, warm), t), gg = mix(mix(36, 44, warm), mix(110, 124, warm), t), bb = mix(mix(18, 22, warm), mix(58, 66, warm), t);   // (ユーザー 2026-11-15: the frame more brown — less red in it, a lighter warm brown; was 46–170 / 24–104 / 12–52)
     r *= 1 - pore * .3; gg *= 1 - pore * .34; bb *= 1 - pore * .34;
     o[p] = r + d; o[p + 1] = gg + d; o[p + 2] = bb + d; o[p + 3] = 255;
     const h = .6 - late * .25 - pore * .28 + streak * .1; H[y * Wd + x] = h;
@@ -572,9 +572,10 @@ class Table3D {
     // light on the middle of the table, the rim a tone lower. So the fill and the key are a little under what a flat light would
     // need, and a wide, fully soft spot from above the middle adds the rest: brightest at the score unit, easing off to the rails
     // (no edge to the pool — penumbra 1). It is light, not paint: the cloth's own texture stays even, so a new skin gets the same mood.
-    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x141a30, 0.22));
-    const pool = new THREE.SpotLight(0xfff3e2, 0.7, 0, 0.46, 1, 1); pool.position.set(0, 24, 1.5); pool.target.position.set(0, 0, 0.6); s.add(pool); s.add(pool.target);
-    const key = new THREE.DirectionalLight(0xffffff, 0.3);
+    // (ユーザー 2026-11-15, a reference shot of another game's table: brighter and clearer overall — more fill, a stronger pool)
+    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x141a30, 0.3));
+    const pool = new THREE.SpotLight(0xfff3e2, 0.84, 0, 0.46, 1, 1); pool.position.set(0, 24, 1.5); pool.target.position.set(0, 0, 0.6); s.add(pool); s.add(pool.target);
+    const key = new THREE.DirectionalLight(0xffffff, 0.33);
     key.position.set(-6, 22, 10);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -593,9 +594,9 @@ class Table3D {
     const g = fc.getContext('2d');
     { const N = mkNoise(11), A = N.oct([6, 12, 24, 48, 96]), img = g.createImageData(2048, 2048), d = img.data;
       for (let y = 0; y < 2048; y++) for (let x = 0; x < 2048; x++) {
-        const u = x / 2048, v = y / 2048, vig = 1;   // (even: the pool of light on the middle is the lamp's, see the lights)
+        const u = x / 2048, v = y / 2048, rq = Math.min(1, Math.max(0, (Math.hypot(u - .5, v - .5) - .2) / .42)), vig = 1.1 - .34 * rq * rq * (3 - 2 * rq);   // (ユーザー 2026-11-15, a reference shot: the cloth bright in the middle and clearly deeper toward the rails — in the cloth itself, so the tiles stay evenly lit)
         const m = (N.fbm(A, u, v) - .5) * .16, n = (N.R() - .5) * .09, f = vig * (1 + m + n), p = (y * 2048 + x) * 4;
-        d[p] = 32 * f; d[p + 1] = 56 * f; d[p + 2] = 100 * f; d[p + 3] = 255;
+        d[p] = 34 * f; d[p + 1] = 96 * f; d[p + 2] = 138 * f; d[p + 3] = 255;   // (ユーザー 2026-11-15: a hue that sits better with the brown frame and the tiles — a clear lake blue, a touch toward teal; was a dusty navy 32,56,100)
       }
       g.putImageData(img, 0, 0); }
     g.translate(1024, 1024);
