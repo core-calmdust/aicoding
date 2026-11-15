@@ -2054,3 +2054,12 @@ html.ds #game .dealAsk{transform:translateX(-50%) scale(calc(var(--hz, 1) * 1.15
 #home.aaa .aa-plate.wide .pp-main{display:grid;grid-template-columns:auto auto;justify-content:start;align-items:center;column-gap:10px;row-gap:4px}
 #home.aaa .aa-plate.wide .pp-main>.pp-r,#home.aaa .aa-plate.wide .pp-main>.pp-n,#home.aaa .aa-plate.wide .pp-main>.pp-t{grid-column:1 / -1}
 #home.aaa .aa-plate.wide .pp-main>.pp-sk,#home.aaa .aa-plate.wide .pp-main>.pp-chg{margin-top:4px}
+
+/* (ユーザー 2026-11-15) the wide name card: the name side held back — a smaller name, the "change" button as its icon alone — so the
+   story and the skill's words get the room */
+#home.aaa .aa-plate.wide{gap:20px}
+#home.aaa .aa-plate.wide .pp-n{font-size:50px}
+#home.aaa .aa-plate.wide .pp-t{font-size:14px;letter-spacing:.2em}
+#home.aaa .aa-plate.wide .pp-chg{padding:7px;margin-top:4px}
+#home.aaa .aa-plate.wide .pp-chg span{display:none}
+#home.aaa .aa-plate.wide .pp-info{padding-left:20px}
