@@ -1625,10 +1625,11 @@
     let bx, bb; try { bx = new (T().Box3)().setFromObject(cur); bb = boardBox(); } finally { root.rotation.y = ry; cur.scale.copy(cs); cur.rotation.y = cr; cur.position.y = cp; root.updateMatrixWorld(true); }
     try { const sz = bx.getSize(new (T().Vector3)()); if (!isFinite(sz.x) || sz.x <= 0) return 6.5;
       cur.userData._h = Math.max(.3, Math.min(6, sz.y));
-      { const z2 = (bb || bx).getSize(new (T().Vector3)()); cur.userData._s = Math.max(z2.x, z2.z) / 2; cur.userData._rb = Math.max(2.5, Math.min(9, cur.userData._s * .7 + Math.hypot(z2.x, z2.z) / 2 * .3)); }
+      { const z2 = bx.getSize(new (T().Vector3)()); cur.userData._s = Math.max(z2.x, z2.z) / 2; cur.userData._rb = Math.max(2.5, Math.min(9, cur.userData._s * .7 + Math.hypot(z2.x, z2.z) / 2 * .3)); }
       return cur.userData._r = Math.max(2.5, Math.min(9, Math.max(sz.x, sz.z) / 2 * .7 + Math.hypot(sz.x, sz.z) / 2 * .3)); } catch (e) { return 6.5; }   // (between half its side and half its diagonal: the slow turntable only swings it a little)
   }
-  // the board alone (no komadai, go bowls or pieces set aside) — the phone framing sizes by this (2026-11-09). Meshes are merged
+  // the board alone (no komadai, go bowls or pieces set aside) — the phone framing sized by this (2026-11-09); since 2026-11-17 it
+  // uses the whole set (board + komadai / bowls) instead, capped at 8.5 (user: the shogi stands were cut off). Meshes are merged
   // (one mesh may hold a board and its bowls), so it works on the drawn footprint: every visible triangle's x–z box is filled into a
   // fine grid (3 cm cells: the komadai stand ~10 cm off the shogi board), and the largest connected patch is the board
   function boardBox() {
@@ -1706,7 +1707,7 @@
     // (2026-11-12: every screen, not just phones — a wide, short laptop showed the board small above the info card)
     // phones (a narrow view): the showcase frames the board by its own size, so it reads ~1.45× larger than the fixed ~11-unit frame
     // (a chess board fills ~60% of the width); never further than that frame (big boards such as the legged goban stay as they were)
-    const pr = !k && !mr && cw ? Math.min(6.5, Math.max((boardR(), (cur && cur.userData._rb) || 6.5) * .92, ((cur && cur.userData._s) || 0) * 1.06)) : 0;   // (a long board such as Ur's: its long side kept clear of the edges)
+    const pr = !k && !mr && cw ? Math.min(8.5, Math.max((boardR(), (cur && cur.userData._rb) || 6.5) * .92, ((cur && cur.userData._s) || 0) * 1.06)) : 0;   // (a long board such as Ur's: its long side kept clear of the edges)
     // (2026-11-13) a mouse screen whose free area is tall for its width (a squarish or portrait window: the view above the card is
     // nearly as tall as wide): the board, framed by the height alone, filled the width edge to edge — there it keeps to ~60% of the
     // width (×1.67). A wide window (the height is the limit, ~45% of the width) and phones / tablets are as they were.
