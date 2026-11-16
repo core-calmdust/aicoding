@@ -110,7 +110,12 @@ async function runtime() {
     ok('no page errors (swap)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('drag')) { console.log('[drag] phone: slide a tile to the middle');
-    const p = await page(SP); await myTurn(p); await p.evaluate(traceReach);
+    const p = await page(SP); await myTurn(p);
+    // (2026-11-16, ユーザー「スライドで置ける範囲が中央部のみ。自分の捨て牌エリアならOK」) over the player's own river counts; over the hand row not
+    const rv = await p.evaluate(`(()=>{const TB=JANKA.TB,r=TB.host.getBoundingClientRect(),q=TB.project(0,.5,5.4),h=document.querySelector('#hand .hrow').getBoundingClientRect();
+      return [JANKA._overMyRiver(r.left+q.x,r.top+q.y), JANKA._overMyRiver(h.left+h.width/2,h.top+h.height/2), Math.round((r.top+q.y)/innerHeight*100)]})()`);
+    ok('phone: letting go over my river discards, over the hand row not', rv[0] === true && rv[1] === false, JSON.stringify(rv));
+    await p.evaluate(traceReach);
     const el = await p.$('#hand .hrow .tl[data-id]'); const bx = await el.boundingBox(); const cx = bx.x + bx.width / 2, cy = bx.y + bx.height / 2;
     await p.mouse.move(cx, cy); await p.mouse.down(); await p.mouse.move(cx, cy - 40, { steps: 4 }); await p.mouse.up(); await p.waitForTimeout(400);
     ok('short slide: the tile goes back, still my turn', await p.evaluate(`JANKA.UIS.kind === 'turn'`));
@@ -197,7 +202,7 @@ async function runtime() {
       const c=(f)=>(...a)=>{n++;return f(...a)};VFX.burst=c(o);VFX.shock=c(o2);VFX.pull=c(o3);VFX.slash=c(o4);VFX.rise=c(o5);
       await MJSkillFx.play(id,0,JANKA.TB,{dur:600});await new Promise(r=>setTimeout(r,700));VFX.burst=o;VFX.shock=o2;VFX.pull=o3;VFX.slash=o4;VFX.rise=o5;return n};
       for(const id of MJSkillFx.ids)if(!await one(id))out.push(id);
-      const again=[];for(const id of out)if(!await one(id))again.push(id);return again})()`);   // (once more for any whose effect the game's own events cut short)
+      let again=out;for(let k=0;k<3&&again.length;k++){const n=[];for(const id of again)if(!await one(id))n.push(id);again=n}return again})()`);   // (once more for any whose effect the game's own events cut short)
     ok('skill effects: each one adds its light (vfx.js)', !sk.length, sk.join(','));
     // (2026-11-16, ユーザー「GPU負荷を見た目を変えずに」) nothing in the game screen is animated by CSS for ever (the rays are set ~12/s)
     const inf = await p.evaluate(`document.getAnimations().filter(a=>{if(a.playState!=='running'||!a.effect||a.effect.getTiming().iterations!==Infinity)return false;const r=a.effect.target.getBoundingClientRect();return r.width*r.height>innerWidth*innerHeight*.4}).map(a=>a.animationName)`);

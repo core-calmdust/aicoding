@@ -1597,9 +1597,21 @@ addEventListener('pointermove', e => {
   if (!d.on) { if (Math.hypot(dx, dy) < 10) return; d.on = true; d.el.classList.add('hdrag'); }
   e.preventDefault();
   d.dx = dx; d.dy = dy; d.el.style.transform = `translate(${dx}px,${dy}px) scale(1.12)`;
-  const H = $('#game').offsetHeight || innerHeight, over = y < H * .58 && !!UIS.resolve;
+  // (2026-11-16, ユーザー「スマホ：スライドして置ける範囲がかなり中央部のみ。自分の捨て牌エリアであればOK」) let go above the middle,
+  // or anywhere over the player's own river (its three rows, with a little margin round them, as seen on the screen)
+  const H = $('#game').offsetHeight || innerHeight, over = !!UIS.resolve && (y < H * .58 || overMyRiver(x, y));
   if (over !== d.over) { d.over = over; d.el.classList.toggle('hdrop', over); if (over) SND.pick(); }
 }, { passive: false });
+// the player's river on the screen (UI frame): the quad of its area on the cloth, lx −4.2…5.2 (a riichi tile and a long third row
+// reach right), lz 2.4…7.1 (from the middle side of the first row to just past the third — not over the hand row, where a drag starts), projected; the point is inside it
+function overMyRiver(x, y) {
+  if (!TB || !TB.host) return false;
+  const hr = document.querySelector('#hand .hrow'); if (hr && y > uiRect(hr).top - 8) return false;   // (never over the hand row itself, where the drag begins)
+  const r = uiRect(TB.host), kx = r.width / (TB.host.clientWidth || 1), ky = r.height / (TB.host.clientHeight || 1);
+  const q = [[-4.2, 2.4], [5.2, 2.4], [5.2, 7.1], [-4.2, 7.1]].map(([lx, lz]) => { const p = TB.project(ME, lx, lz); return [r.left + p.x * kx, r.top + p.y * ky]; });
+  let sg = 0; for (let i = 0; i < 4; i++) { const [ax, ay] = q[i], [bx, by] = q[(i + 1) % 4], c = (bx - ax) * (y - ay) - (by - ay) * (x - ax); if (c === 0) continue; const s1 = Math.sign(c); if (sg && s1 !== sg) return false; sg = s1; }
+  return true;
+}
 const hDragUp = e => {
   const d = hDrag; if (!d || e.pointerId !== d.pid) return; hDrag = null;
   if (!d.on) return;   // (a tap: the click handles it)
@@ -2178,5 +2190,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { _ev: (e, d) => onEvent(e, d), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
+window.JANKA = { _ev: (e, d) => onEvent(e, d), _overMyRiver: (x, y) => overMyRiver(x, y), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
 })();
