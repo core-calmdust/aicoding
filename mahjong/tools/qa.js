@@ -89,6 +89,12 @@ async function runtime() {
     ok('round band in the middle after a call-out', Math.abs(y - 450) < 30, 'y ' + Math.round(y)); await p.ctx.close(); }
 
   if (want('home')) { console.log('[home] name card, top line, settings');
+    // (2026-11-16, ユーザー「戦績：タブによってボックスのサイズが変化するので固定（最大で）」) the record panel keeps one size on every tab
+    for (const vp of [PC, { viewport: { width: 1400, height: 1000 } }]) { const p = await page(vp);
+      await p.evaluate(`document.querySelector('#btnStats').click()`); await p.waitForTimeout(700);
+      const sz = await p.evaluate(`(async()=>{const o=[];for(const b of document.querySelectorAll('.pstats .ps-tabs button')){b.click();await new Promise(r=>setTimeout(r,250));
+        const m=document.querySelector('.pstats .ps-main').getBoundingClientRect();o.push(Math.round(m.width)+'x'+Math.round(m.height))}return o})()`);
+      ok(`record: one panel size on every tab (${vp.viewport.width}x${vp.viewport.height})`, sz.length > 1 && sz.every(x => x === sz[0]), sz.join(' ')); await p.ctx.close(); }
     for (const lang of ['ja', 'en']) {
       const p = await page(PC, {}, lang);
       const w0 = await p.evaluate(`document.querySelector('#partner').offsetWidth`);
