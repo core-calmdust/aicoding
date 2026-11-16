@@ -509,7 +509,10 @@
     window.Atlas3D.hitblow._dbg = dbg;
     return {
       get human() { return 0; },
-      inset: () => 0,
+      // room under the board for the Atlamo's speech bubble (2026-11-16 user: the talk must not cover the tray) — AI games only;
+      // npc.js puts it over the action bar on phones (just above it on PCs), so the board + tray is framed above where it reaches
+      inset: () => { if (!vsAI) return 0; const bar = document.querySelector('.bv .tbar'); if (!bar || !bar.getClientRects().length) return 0;
+        const r = bar.getBoundingClientRect(), ph = innerWidth <= 600; return Math.round(innerHeight - (ph ? r.bottom : r.top) + (ph ? 104 : 140)); },
       undo() {}, canUndo: () => false,
       hint, canHint: () => myTurn() && mode !== 'rated',
       canResign: () => !over,

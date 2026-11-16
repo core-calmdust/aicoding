@@ -50,7 +50,7 @@ URL：https://core-calmdust.github.io/aicoding/atlas/#games/hitblow （旧2Dペ�
   - 記録：`aicoding-hitblow-daily3d`（EASY/HARD 別、日付ごと）、解けた日は共通形式 `aicoding-hitblow-daily`（days・streak・best。実績の「今日の一問」に使う）。カードのボタンには解けた日に ✓。
 
 ## アトラモ（ボス、2026-11-16）
-- `atlas/npc/roster.js` の `BOSSES.hitblow`（7体、Lv.1〜3, 4〜6 … ごと、LEVELS.hitblow＝20）：みならい探偵ウサギ・ブルズアンドカウズうし（紙と鉛筆の元祖）・ピンかくしギツネ・ブレッチリーのハヤブサ（暗号解読）・あてずっぽうガエル・クヌースフクロウ（5回で必ず当たる証明、1977）・メイロヴィッツ局長ライオン（マスターマインドを作った郵便局長、1970）。肩書き・まめちしきは `atlas/npc/t/<lang>.js`（14言語）。勝つと他のAIゲームと同じくその段のアトラモ（N/R/SR）がもらえる。
+- `atlas/npc/roster.js` の `BOSSES.hitblow`（7体、Lv.1〜3, 4〜6 … ごと、LEVELS.hitblow＝20）：みならい探偵ウサギ・ブルズアンドカウズうし（紙と鉛筆の元祖）・ピンかくしギツネ・ブレッチリーのハヤブサ（暗号解読）・あてずっぽうガエル・クヌースフクロウ（5回で必ず当たる証明、1977）・メイロヴィッツ局長ライオン（マスターマインドを作った郵便局長、1970）。肩書き・まめちしきは `atlas/npc/t/<lang>.js`（14言語）。顔の画像 `images/atlas/av/boss-hitblow-<1..7>-<0..3>.webp`（`atlas/tools/bosses.html` で描いて 256px）。AI戦ではアトラモの吹き出しがトレイに重ならないよう、盤＋トレイを吹き出しの上に収める（session.inset：スマホはバーの下端から104px、PCはバーの上端から140px）。勝つと他のAIゲームと同じくその段のアトラモ（N/R/SR）がもらえる。
 
 ## 問題集（パズルタブの「問題一覧」、2026-11-16 ユーザー：パズルが面白いのでたくさん）
 - 10コース×50問＝500問（`engine.js` の `BOOK`・`makePuzzle(set, i)`、`genPuzzle` は今日の一問と同じ作り方。シード `hb3d-pz:<set>:<i>` でどの端末でも同じ。重複した1問は `BOOK_SALT` で作り直し）。
