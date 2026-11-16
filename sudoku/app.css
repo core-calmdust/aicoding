@@ -92,7 +92,7 @@ body.still #bg *{animation:none!important}
 
 /* ---------- header ---------- */
 #app{position:relative;z-index:1;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
-.top{position:sticky;top:0;z-index:20;height:calc(var(--hh) + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left));display:flex;align-items:center;gap:4px;background:linear-gradient(var(--hdr1),var(--hdr2));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.14);box-shadow:0 2px 14px rgba(90,60,120,.06)}
+.top{position:sticky;top:0;z-index:20;height:calc(var(--hh) + var(--sat,env(safe-area-inset-top)));padding:var(--sat,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left));display:flex;align-items:center;gap:4px;background:linear-gradient(var(--hdr1),var(--hdr2));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.14);box-shadow:0 2px 14px rgba(90,60,120,.06)}
 .brand{display:flex;flex-direction:column;line-height:1.05;min-width:0}
 .series{font-size:10.5px;color:var(--ink2);text-decoration:none;letter-spacing:.06em;white-space:nowrap}
 .series:hover{color:var(--acc)}
@@ -138,7 +138,7 @@ html[dir=rtl] .back svg,html[dir=rtl] .flip svg{transform:scaleX(-1)}
 .av svg{width:100%;height:100%;display:block}
 
 /* ---------- home ---------- */
-.htabs{display:flex;gap:8px;margin:14px 0;background:var(--paper);border-radius:20px;padding:6px;box-shadow:var(--shadow);position:sticky;top:calc(var(--hh) + env(safe-area-inset-top) + 6px);z-index:10}
+.htabs{display:flex;gap:8px;margin:14px 0;background:var(--paper);border-radius:20px;padding:6px;box-shadow:var(--shadow);position:sticky;top:calc(var(--hh) + var(--sat,env(safe-area-inset-top)) + 6px);z-index:10}
 .htabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 6px;border-radius:15px;font-weight:900;font-size:15px;color:var(--ink2);transition:background .15s,color .15s;white-space:nowrap}
 .htabs button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .htabs button.on{background:var(--acc);color:#fff;box-shadow:0 3px 10px color-mix(in srgb,var(--acc) 40%,transparent)}
@@ -325,7 +325,7 @@ body.night .node.cleared{background:linear-gradient(180deg,var(--surface),color-
 /* ---------- game ---------- */
 #game.on{display:grid;grid-template-columns:var(--bs) minmax(250px,360px);grid-template-areas:"bar side" "board side";grid-template-rows:auto auto;gap:12px 24px;justify-content:center;align-items:start}
 body:not(.compact) .key .n{font-size:36px}body:not(.compact) .key .c{font-size:12px}body:not(.compact) .tool{font-size:12.5px;padding:10px 2px}body:not(.compact) .tool svg{width:28px;height:28px}body:not(.compact) .side{gap:14px}
-body:not(.compact) #game.on{min-height:calc(100vh - var(--hh) - env(safe-area-inset-top) - 32px);min-height:calc(100dvh - var(--hh) - env(safe-area-inset-top) - 32px);align-content:center}
+body:not(.compact) #game.on{min-height:calc(100vh - var(--hh) - var(--sat,env(safe-area-inset-top)) - 32px);min-height:calc(100dvh - var(--hh) - var(--sat,env(safe-area-inset-top)) - 32px);align-content:center}
 .gbar{grid-area:bar;display:flex;align-items:center;gap:6px;min-width:0}
 .gbar .ib{background:var(--chip);box-shadow:0 2px 8px rgba(90,60,120,.08)}
 .gt{font-weight:900;font-size:16px;white-space:nowrap;overflow:hidden;min-width:0;display:flex;align-items:center;gap:6px;background:var(--chip);border-radius:99px;padding:5px 12px 5px 8px;box-shadow:0 2px 8px rgba(90,60,120,.08)}
@@ -423,7 +423,7 @@ body.night .board{box-shadow:var(--shadow),0 0 0 5px rgba(255,255,255,.12)}
 .flick.memo i.on{color:#fff}
 .flick::before{content:"";position:absolute;inset:8px;border-radius:50%;background:radial-gradient(color-mix(in srgb,var(--acc) 22%,transparent),transparent 70%)}
 body.compact main.gm{padding-top:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
-body.compact #game.on{grid-template-columns:var(--bs);grid-template-areas:"bar" "board" "side";gap:var(--gg,8px);min-height:calc(100dvh - var(--hh) - env(safe-area-inset-top) - 16px - env(safe-area-inset-bottom));align-content:center}
+body.compact #game.on{grid-template-columns:var(--bs);grid-template-areas:"bar" "board" "side";gap:var(--gg,8px);min-height:calc(100dvh - var(--hh) - var(--sat,env(safe-area-inset-top)) - 16px - env(safe-area-inset-bottom));align-content:center}
 body.compact .side{gap:8px;align-self:stretch}
 body.compact .side .help{display:none}
 body.compact .pad{grid-template-columns:repeat(9,1fr);gap:4px}
@@ -455,7 +455,7 @@ body.compact .pill{padding:4px 9px;font-size:13px}
 .tab{padding:7px 14px;border-radius:99px;font-weight:700;font-size:13.5px;color:var(--ink2);background:var(--surface2);white-space:nowrap;flex:none}
 .tab.on{background:var(--acc);color:#fff}
 @media (max-width:560px){
-  .modal{padding:0;align-items:flex-end;padding-top:calc(env(safe-area-inset-top) + 12px)}
+  .modal{padding:0;align-items:flex-end;padding-top:calc(var(--sat,env(safe-area-inset-top)) + 12px)}
   .sheet{border-radius:26px 26px 0 0;max-height:100%;width:100%!important}
   .sheet.tall{height:100%}
   .tabs.seg{margin:0 14px 10px}.tabs.seg .tab{font-size:12px;padding:8px 2px}
@@ -643,7 +643,7 @@ body.night .gbal{background:linear-gradient(135deg,#4a3b2a,#4a2a46);color:#ffd28
 .zdet b{display:block;font-size:16px;margin:4px 0}
 .zdet small{font-size:11.5px;color:var(--ink2);font-family:var(--num)}
 /* toast & confetti */
-.toasts{position:fixed;top:calc(var(--hh) + env(safe-area-inset-top) + 10px);left:50%;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:min(380px,92vw)}
+.toasts{position:fixed;top:calc(var(--hh) + var(--sat,env(safe-area-inset-top)) + 10px);left:50%;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:min(380px,92vw)}
 .toast{display:flex;align-items:center;gap:10px;background:var(--sheet);border-radius:18px;box-shadow:0 10px 30px rgba(60,40,90,.25);padding:10px 14px;animation:tin .4s cubic-bezier(.2,1.4,.4,1)}
 .toast svg{width:42px;height:42px;flex:none}
 .toast b{display:block;font-size:13.5px}
@@ -714,7 +714,7 @@ html:is([lang=zh-TW]) body{--font:'PingFang TC','Microsoft JhengHei','Noto Sans 
 .namebox .syncbox b{font-size:17px}
 .namebox .syncbox p{font-size:14.5px;line-height:1.75}
 /* collection overview: centered like a game title/login panel */
-#theme.ovw.on{min-height:calc(100vh - var(--hh) - env(safe-area-inset-top) - 40px);min-height:calc(100dvh - var(--hh) - env(safe-area-inset-top) - 40px);display:flex;align-items:center;justify-content:center;padding:12px 0}
+#theme.ovw.on{min-height:calc(100vh - var(--hh) - var(--sat,env(safe-area-inset-top)) - 40px);min-height:calc(100dvh - var(--hh) - var(--sat,env(safe-area-inset-top)) - 40px);display:flex;align-items:center;justify-content:center;padding:12px 0}
 #theme.ovw > .card{width:min(820px,100%);padding:22px 24px 24px;box-shadow:0 18px 50px rgba(60,40,90,.22),var(--shadow);border-radius:30px}
 #theme.ovw .tl-head{justify-content:center;position:relative;text-align:center;flex-wrap:wrap}
 #theme.ovw .tl-head{flex-direction:column;gap:4px;padding:0 96px;min-height:44px}
@@ -801,7 +801,7 @@ html:is([lang=zh-TW]) body{--font:'PingFang TC','Microsoft JhengHei','Noto Sans 
   :root{--tbH:calc(64px + env(safe-area-inset-bottom))}
   /* the home area is exactly the space between the header and the bar; a long section scrolls inside it */
   body.scr-home main{padding:0}
-  body.scr-home #home.on{height:calc(100vh - var(--hh) - env(safe-area-inset-top) - var(--tbH));height:calc(100dvh - var(--hh) - env(safe-area-inset-top) - var(--tbH));overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;padding:12px max(14px,env(safe-area-inset-right)) 16px max(14px,env(safe-area-inset-left));animation:hfade .25s ease}
+  body.scr-home #home.on{height:calc(100vh - var(--hh) - var(--sat,env(safe-area-inset-top)) - var(--tbH));height:calc(100dvh - var(--hh) - var(--sat,env(safe-area-inset-top)) - var(--tbH));overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;padding:12px max(14px,env(safe-area-inset-right)) 16px max(14px,env(safe-area-inset-left));animation:hfade .25s ease}
   @keyframes hfade{from{opacity:0}}
   #home .htabs{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:30;margin:0;height:var(--tbH);box-sizing:border-box;gap:2px;justify-content:space-around;border-radius:20px 20px 0 0;padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));background:var(--sheet);box-shadow:0 -4px 18px rgba(90,60,120,.13)}
   #home .htabs > button{flex:1 1 0;min-width:0;max-width:96px;flex-direction:column;gap:3px;padding:6px 2px;border-radius:14px;font-size:11px;line-height:1.15}
@@ -843,7 +843,7 @@ body.achnew .achdot{display:block}
 .sgbar{display:none}
 @media (max-width:760px){
   :root{--sgH:50px}
-  body.scr-home.has-sg #home.on{height:calc(100vh - var(--hh) - env(safe-area-inset-top) - var(--tbH) - var(--sgH));height:calc(100dvh - var(--hh) - env(safe-area-inset-top) - var(--tbH) - var(--sgH))}
+  body.scr-home.has-sg #home.on{height:calc(100vh - var(--hh) - var(--sat,env(safe-area-inset-top)) - var(--tbH) - var(--sgH));height:calc(100dvh - var(--hh) - var(--sat,env(safe-area-inset-top)) - var(--tbH) - var(--sgH))}
   body.has-sg #home .sgbar:not([hidden]){display:flex;position:fixed;left:0;right:0;bottom:var(--tbH);z-index:31;height:var(--sgH);box-sizing:border-box;gap:6px;align-items:center;padding:7px max(10px,env(safe-area-inset-right)) 3px max(10px,env(safe-area-inset-left));overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;background:var(--sheet);border-radius:20px 20px 0 0;box-shadow:0 -4px 18px rgba(90,60,120,.13)}
   #home .sgbar::-webkit-scrollbar{display:none}
   body.has-sg #home .htabs{border-radius:0;box-shadow:none}

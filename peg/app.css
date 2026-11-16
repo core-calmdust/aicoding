@@ -182,7 +182,7 @@ body.in-puzzle .daily-card,body.in-puzzle .rec-card{display:none}
 @media (max-width: 860px), (pointer: coarse) and (orientation: portrait){
   html,body{overflow:auto;height:auto}
   :root{--sidew:100%;--bs:min(calc(100vw - 10px), calc(var(--vh) - 210px), 680px)}
-  .app{display:flex;flex-direction:column;align-items:center;height:auto;min-height:var(--vh);padding:calc(10px + env(safe-area-inset-top)) 8px calc(16px + env(safe-area-inset-bottom));gap:10px}
+  .app{display:flex;flex-direction:column;align-items:center;height:auto;min-height:var(--vh);padding:calc(10px + var(--sat,env(safe-area-inset-top))) 8px calc(16px + env(safe-area-inset-bottom));gap:10px}
   .board-area{order:2}
   .side{order:1;display:contents}
   .side > .brand{position:static;width:100%;order:0;padding:0 4px}

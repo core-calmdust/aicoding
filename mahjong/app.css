@@ -1,6 +1,6 @@
 /* 雀華 — palace night: deep violet, gold leaf, ivory tiles */
 :root{
-  --W:100vw; --H:100vh; --st:env(safe-area-inset-top); --sr:env(safe-area-inset-right); --sb:env(safe-area-inset-bottom); --sl:env(safe-area-inset-left);
+  --W:100vw; --H:100vh; --st:var(--sat,env(safe-area-inset-top)); --sr:env(safe-area-inset-right); --sb:env(safe-area-inset-bottom); --sl:env(safe-area-inset-left);
   --bg:#120d22; --bg2:#1d1536; --panel:rgba(28,20,52,.86); --line:rgba(232,206,140,.28); --gold:#e8ce8c; --gold2:#b8954a;
   --text:#f4eefc; --muted:#b4a8d6; --acc:#8a5cff; --red:#ff5a6e;
   --ui:'Zen Kaku Gothic New',system-ui,sans-serif; --serif:'Shippori Mincho B1',serif;
@@ -525,7 +525,7 @@ html[lang=en] .ci-word{font-family:'Cinzel',serif;font-weight:800;font-size:min(
 /* forced landscape: a phone held upright gets the whole UI turned 90° */
 #root{position:fixed;inset:0;overflow:hidden}
 html.rot #root{inset:auto;top:0;left:0;width:var(--W);height:var(--H);transform-origin:0 0;transform:translateX(var(--H)) rotate(90deg)}
-html.rot{--st:env(safe-area-inset-right);--sr:env(safe-area-inset-bottom);--sb:env(safe-area-inset-left);--sl:env(safe-area-inset-top)}
+html.rot{--st:env(safe-area-inset-right);--sr:env(safe-area-inset-bottom);--sb:env(safe-area-inset-left);--sl:var(--sat,env(safe-area-inset-top))}
 
 /* ================= partner image -> character screen ================= */
 button.pimg{padding:0;border:0;cursor:pointer;display:block;text-align:left}

@@ -306,14 +306,14 @@ body:has(#runInfo:not([hidden]) .tm) .slbar { display: block; }
   /* phone: the rule line sits right under the title row; the board stays in the vertical middle of the space above the buttons
      (the tilt pad below is balanced by --ihT) */
   #play { grid-template-areas: "bar stat" "info info" "run run" "sl sl" "f1 f1" "board board" "tilt tilt" "f2 f2" "btn btn"; grid-template-rows: auto auto auto auto 1fr auto auto 1fr auto;
-    min-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+    min-height: calc(100dvh - 16px - var(--sat,env(safe-area-inset-top, 0px)) - env(safe-area-inset-bottom, 0px)); }
   .gctl .gbtns { padding-bottom: env(safe-area-inset-bottom, 0px); }
   #boardWrap { margin-top: var(--ihT, 0px); margin-bottom: var(--ihB, 0px); }
   .gtitle { flex-wrap: nowrap; } .gtitle small { display: none; }
   .gbar { gap: 6px; } .gbar .ib { width: 38px; height: 38px; flex: none; }
   /* phone: the title row is the game's top band, dark and tinted with the course / mode colour, hazard stripe underneath (like the home header) */
   .gbar { position: relative; }
-  .gbar::before { content: ''; position: absolute; z-index: -1; left: -8px; width: 100vw; top: calc(-6px - env(safe-area-inset-top, 0px)); bottom: -8px;
+  .gbar::before { content: ''; position: absolute; z-index: -1; left: -8px; width: 100vw; top: calc(-6px - var(--sat,env(safe-area-inset-top, 0px))); bottom: -8px;
     background: radial-gradient(circle at 1px 1px, rgba(255,255,255,.07) 1px, transparent 1.5px) 0 0 / 7px 7px, linear-gradient(180deg, color-mix(in srgb, var(--band, #2b313c) 45%, #232832), color-mix(in srgb, var(--band, #2b313c) 30%, #1b1f27));
     border-bottom: 3px solid var(--ink); box-shadow: 0 7px 0 -1px var(--yel), 0 10px 0 -1px var(--ink); }
   .gbar::after { content: ''; position: absolute; z-index: -1; left: -8px; width: 100vw; bottom: -17px; height: 7px; background: repeating-linear-gradient(-45deg, var(--yel) 0 10px, var(--ink) 10px 20px); border-bottom: 2.5px solid var(--ink); }

@@ -415,7 +415,7 @@
     let flashT = 0, toastEl = null;
     function flash(msg) {   // a short note at the top of the screen (the bubble keeps the page's explanation)
       if (toastEl) toastEl.remove(); clearTimeout(flashT);
-      toastEl = document.createElement('div'); toastEl.className = 'hbtoast'; toastEl.style.cssText = 'top:calc(env(safe-area-inset-top) + 70px);bottom:auto';
+      toastEl = document.createElement('div'); toastEl.className = 'hbtoast'; toastEl.style.cssText = 'top:calc(var(--sat,env(safe-area-inset-top)) + 70px);bottom:auto';
       toastEl.textContent = window.TapWord ? TapWord.fix(msg, ctx.lang).replace(/<[^>]+>/g, '') : msg; document.body.appendChild(toastEl);
       const t = toastEl; flashT = setTimeout(() => { t.remove(); if (toastEl === t) toastEl = null; }, 1900);
     }

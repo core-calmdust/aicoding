@@ -56,7 +56,7 @@ html.atlas-skin .coach::before{content:'';position:absolute;left:6px;top:50%;wid
 html.atlas-skin .toast{background:#2b3044!important;color:#fff!important;border-radius:99px!important}
 
 /* home button back to the portal */
-.atlas-home{position:fixed;z-index:30;top:max(10px,env(safe-area-inset-top));left:10px;display:inline-flex;align-items:center;gap:6px;padding:7px 14px 7px 10px;border-radius:99px;background:#fff;border:2px solid #ead9b6;box-shadow:0 3px 0 #ead9b6;color:#2b3044;font:900 13px 'Zen Maru Gothic',sans-serif;text-decoration:none}
+.atlas-home{position:fixed;z-index:30;top:max(10px,var(--sat,env(safe-area-inset-top)));left:10px;display:inline-flex;align-items:center;gap:6px;padding:7px 14px 7px 10px;border-radius:99px;background:#fff;border:2px solid #ead9b6;box-shadow:0 3px 0 #ead9b6;color:#2b3044;font:900 13px 'Zen Maru Gothic',sans-serif;text-decoration:none}
 .atlas-home svg{width:18px;height:18px}
 @media (max-width:520px){.atlas-home span{display:none}.atlas-home{padding:7px}}
 

@@ -112,7 +112,7 @@
 #avTalk .at-bt button{height:44px;padding:0 18px;border-radius:99px;border:2px solid #ead9b6;background:#fff;color:#2b3044;font:inherit;font-size:14px;font-weight:900;box-shadow:0 3px 0 #ead9b6;cursor:pointer}
 #avTalk .at-bt button.go{background:#ff5d5d;border-color:transparent;color:#fff;box-shadow:0 3px 0 #d93c3c}
 #avTalk .at-bt button:hover{transform:translateY(-1px)}
-#avTalk .at-x{position:absolute;top:max(14px,env(safe-area-inset-top));right:14px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.85);color:#4a5068;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+#avTalk .at-x{position:absolute;top:max(14px,var(--sat,env(safe-area-inset-top)));right:14px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.85);color:#4a5068;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.08)}
 @media (max-height:620px){#avTalk .at-ch{width:min(190px,40vh)}#avTalk .at-bub{font-size:15.5px;min-height:80px;padding:14px 18px 14px}}
 @media (prefers-reduced-motion:reduce){#avTalk .at-ch img,#avTalk .at-ch .sp{animation:none!important}}
 html[dir=rtl] #avTalk .at-nm{left:auto;right:20px}html[dir=rtl] #avTalk .at-nx{right:auto;left:16px}html[dir=rtl] #avTalk .at-pg{right:auto;left:18px}`;

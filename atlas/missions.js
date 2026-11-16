@@ -221,7 +221,7 @@
 .msnf .c{flex:none;display:flex;align-items:center;gap:4px;font:900 14px var(--font,sans-serif);color:#a66a00;background:#fff3c4;border-radius:99px;padding:4px 10px 4px 5px}
 .msnf .c i{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00);font-size:10px;font-style:normal;color:#8a5a00}
 [dir=rtl] .msnf{right:auto;left:max(16px,env(safe-area-inset-left))}[dir=rtl] .msnf .b{transform:translateX(-120%)}[dir=rtl] .msnf .b.on{transform:none}
-@media (max-width:600px){.msnf{right:50%;bottom:auto;top:max(10px,env(safe-area-inset-top));transform:translateX(50%)}.msnf .b{transform:translateY(-140%)}.msnf .b.out{transform:translateY(-140%)}}
+@media (max-width:600px){.msnf{right:50%;bottom:auto;top:max(10px,var(--sat,env(safe-area-inset-top)));transform:translateX(50%)}.msnf .b{transform:translateY(-140%)}.msnf .b.out{transform:translateY(-140%)}}
 .msov{position:fixed;inset:0;z-index:120;background:rgba(30,20,10,.42);display:grid;place-items:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s}
 .msov.on{opacity:1;pointer-events:auto}
 .msp{width:min(720px,100%);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;background:#fffaf0;border-radius:26px;border:3px solid #fff;box-shadow:0 30px 60px -20px rgba(60,30,0,.55);overflow:hidden;transform:translateY(20px) scale(.97);transition:transform .25s cubic-bezier(.3,1.4,.5,1);font-family:var(--font,sans-serif);color:var(--ink,#2b3044)}

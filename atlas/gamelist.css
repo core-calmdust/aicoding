@@ -92,7 +92,7 @@
 @media (max-width:819px) and (max-height:700px){ .bvi .bvab{max-height:4.95em} }
 /* phones: the board sheet never grows past the screen (small phones, drawer open): it scrolls inside, below the close button and the ‹ › buttons */
 @media (max-width:819px){
-  .bv:not(.playing) .bvi{max-height:calc(100% - 150px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .bv:not(.playing) .bvi{max-height:calc(100% - 150px - var(--sat,env(safe-area-inset-top)) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .bv:not(.playing) .bvi::-webkit-scrollbar{display:none}
 }
 /* game names as headings (board sheet): gamelist.js fitTitle() shrinks them to one line, or two balanced lines — never "…" */

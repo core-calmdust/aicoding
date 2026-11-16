@@ -1,3 +1,18 @@
+/* --sat: the top safe-area inset to use (2026-11-17). In-app browsers (X, Instagram, LINE, Facebook…) put the page below their own
+   bar yet still report the status bar's env(safe-area-inset-top), so everything pinned to the top sat that much too low. When the
+   page does not fill the whole screen height (an in-app browser, or Safari with its bars), nothing of it is under the status bar:
+   the inset is 0. Full screen (a home-screen app, a landscape notch) keeps the real inset. CSS: var(--sat, env(safe-area-inset-top)) */
+(function () {
+  var R = document.documentElement, ua = navigator.userAgent || '';
+  var inApp = /\bTwitter\b|FBAN|FBAV|Instagram|\bLine\/|LIFF|MicroMessenger|KAKAOTALK|Threads/i.test(ua);
+  function f() {
+    var vw = innerWidth, vh = innerHeight, sw = screen.width, sh = screen.height, tall = vw < vh ? Math.max(sw, sh) : Math.min(sw, sh);
+    var full = !inApp && vh >= tall - 2;
+    R.style.setProperty('--sat', full ? 'env(safe-area-inset-top)' : '0px');
+  }
+  f(); addEventListener('resize', f); addEventListener('orientationchange', function () { setTimeout(f, 300); });
+})();
+
 /* =====================================================================
    World Board Game Atlas — shared core  (shared/atlas.js)
    One file that every 世界のボドゲ大百科 page can load. It holds:
@@ -528,7 +543,7 @@
 .atlas-ach .c{flex:none;display:flex;align-items:center;gap:4px;font:700 15px 'Fredoka',sans-serif;color:#a66a00;background:#fff3c4;border-radius:99px;padding:4px 10px 4px 5px}
 .atlas-ach .c i{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00)}
 [dir=rtl] .atlas-ach{right:auto;left:max(16px,env(safe-area-inset-left))}[dir=rtl] .atlas-ach .b{transform:translateX(-120%)}[dir=rtl] .atlas-ach .b.on{transform:none}
-@media (max-width:600px){.atlas-ach{right:50%;bottom:auto;top:max(10px,env(safe-area-inset-top));transform:translateX(50%)}.atlas-ach .b{transform:translateY(-140%)}.atlas-ach .b.out{transform:translateY(-140%)}}`;
+@media (max-width:600px){.atlas-ach{right:50%;bottom:auto;top:max(10px,var(--sat,env(safe-area-inset-top)));transform:translateX(50%)}.atlas-ach .b{transform:translateY(-140%)}.atlas-ach .b.out{transform:translateY(-140%)}}`;
     document.head.appendChild(st);
   }
   function chime() {   // a soft two-note chime; skipped silently where audio isn't allowed yet

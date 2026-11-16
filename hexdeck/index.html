@@ -3,6 +3,7 @@
 <title>ナンバーランズ NUMBERLANDS</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<script src="../shared/safetop.js?v=2"></script>
 <script src="../shared/latinfs.js?v=1"></script>
 <script src="../shared/focusgate.js?v=4ol"></script>
 <script src="../shared/phonesnd.js?v=2"></script>
@@ -1404,7 +1405,7 @@ table.rtb-pts .tf-badge{white-space:nowrap}
 .coach.min{width:auto;min-width:220px}
 .coach-hl{position:relative;z-index:5;outline:3px solid var(--gold2)!important;outline-offset:-3px;border-radius:10px;animation:coHl 1.1s ease-in-out infinite}
 @keyframes coHl{0%,100%{box-shadow:inset 0 0 0 0 rgba(240,210,140,0),0 0 0 0 rgba(240,210,140,0);filter:brightness(1)}50%{box-shadow:inset 0 0 26px 4px rgba(240,210,140,.55),0 0 18px 2px rgba(240,210,140,.55);filter:brightness(1.28)}}
-@media (max-width:900px){.tut-ask.three{grid-template-columns:1fr}.coach{left:50%;transform:translateX(-50%);width:calc(100vw - 20px);top:calc(env(safe-area-inset-top) + 50px);padding:8px 11px}.co-body p{font-size:13.5px;line-height:1.55}.co-body h4{font-size:15px}.co-fig{display:none}}
+@media (max-width:900px){.tut-ask.three{grid-template-columns:1fr}.coach{left:50%;transform:translateX(-50%);width:calc(100vw - 20px);top:calc(var(--sat,env(safe-area-inset-top)) + 50px);padding:8px 11px}.co-body p{font-size:13.5px;line-height:1.55}.co-body h4{font-size:15px}.co-fig{display:none}}
 .dlg.tutask .in{width:min(900px,94vw)}
 .tut-ask.three{grid-template-columns:repeat(3,1fr);gap:14px}
 .tut-ask.three button{padding:22px 12px 20px;justify-content:flex-start}
@@ -1514,14 +1515,14 @@ body.coach-lock #shopList .btn:not(.coach-hl){opacity:.3;filter:saturate(.3)}
 /* チュートリアル：押す場所が隠れるときは枠をよける */
 .coach.dodge{left:auto;right:16px}
 @media (max-width:900px){.coach.dodge{left:50%;right:auto;top:auto;bottom:calc(env(safe-area-inset-bottom) + 10px)}}
-@media (max-width:900px){body:has(.dlg) .coach.dodge{top:calc(env(safe-area-inset-top) + 50px);bottom:auto}}
+@media (max-width:900px){body:has(.dlg) .coach.dodge{top:calc(var(--sat,env(safe-area-inset-top)) + 50px);bottom:auto}}
 /* スマホ：ダイアログ表示中は案内を上部の細い帯にして、ダイアログを優先 */
 @media (max-width:900px){
-  body:has(.dlg) .coach{top:calc(env(safe-area-inset-top) + 4px)!important;bottom:auto!important;padding:5px 10px}
+  body:has(.dlg) .coach{top:calc(var(--sat,env(safe-area-inset-top)) + 4px)!important;bottom:auto!important;padding:5px 10px}
   body:has(.dlg) .coach .co-body p:not(.co-gift),body:has(.dlg) .coach .co-foot,body:has(.dlg) .coach .co-x,body:has(.dlg) .coach .co-fig{display:none}
   body:has(.dlg) .coach .co-body h4{margin:2px 0 0;font-size:14px}
   body:has(.dlg) .coach .co-top{margin:0}
-  body:has(.coach) .dlg{padding-top:calc(env(safe-area-inset-top) + 84px)}
+  body:has(.coach) .dlg{padding-top:calc(var(--sat,env(safe-area-inset-top)) + 84px)}
 }
 @media (max-width:900px){.coach{box-sizing:border-box;width:calc(100vw - 32px)}.coach.min{width:auto}}
 </style>
