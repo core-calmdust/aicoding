@@ -936,6 +936,7 @@
     const sizeOnly = ad && ad.sizes ? `<label>${esc(KF && !RU && !ad.kindOwn ? KL : ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${SZS.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : ''
     const sizeHtml = sizeOnly ? ruleHtml + sizeOnly : '';
     headIcons(false);   // (ヒストリア / 戦績 back out of the old card before it is rebuilt)
+    { const rc = $('bvRec'); if (rc && rc.parentNode === $('bvi')) $('bv').appendChild(rc); }   // (the cup rides on the card: keep it out of the rebuild)
     $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${ring(r.pct, g.color)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       <p class="bvab">${esc(t('about.' + id))}</p>
@@ -1292,18 +1293,15 @@
   homeMark(); addEventListener('pagehide', homeMark);
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
   // 戦績 (the cup): on phones under the ヒストリア pill (top left); on PC beside the place chip
-  // (2026-11-17 user: 戦績アイコンは見えてる画面の右下に、ボックスサイズが変わると追従) the cup sits at the bottom right of the
-  // 3D view that shows — just above the card — and moves with the card as it grows or shrinks (PC and phones)
-  function placeRec() { const r = $('bvRec'), bv = $('bv'); if (!r || !bv) return;
-    r.classList.remove('inhd'); r.classList.add('bvrecf'); if (r.parentNode !== bv) bv.appendChild(r); posRec(); if (typeof posRecSoon === 'function') posRecSoon(); }
-  function posRec() { const r = $('bvRec'), bv = $('bv'), bi = $('bvi'); if (!r || !bv || !bi) return;
-    const I = bi.getBoundingClientRect(), vh = window.visualViewport ? visualViewport.height : innerHeight, top = I.height ? I.top : vh - 16;
-    r.style.setProperty('--recb', Math.max(12, Math.round(vh - top + 12)) + 'px'); }
-  addEventListener('resize', placeRec);
-  // the card slides and grows: follow it for a moment after anything changes (its size: ResizeObserver; its slide: transitionend)
-  let recRaf = 0, recN = 0; const posRecSoon = () => { recN = 50; if (!recRaf) { const f = () => { posRec(); recRaf = --recN > 0 ? requestAnimationFrame(f) : 0; }; recRaf = requestAnimationFrame(f); } };
-  try { new ResizeObserver(posRecSoon).observe($('bvi')); } catch (e) {}
-  $('bvi').addEventListener('transitionend', posRecSoon); addEventListener('resize', posRecSoon);
+  // (2026-11-17 user: 戦績アイコンは見えてる画面の右下に、カードの動き・大きさと即連動して) the cup is a child of the card, set just above
+  // its top edge (CSS bottom: 100%) — so it moves in the same frame as the card's slide and growth; sideways it reaches out to the
+  // window's right edge (--recR: how far the card's right edge is from it)
+  function placeRec() { const r = $('bvRec'), bi = $('bvi'); if (!r || !bi) return;
+    r.classList.remove('inhd'); r.classList.add('bvrecf'); if (r.parentNode !== bi) bi.appendChild(r); posRec(); }
+  function posRec() { const r = $('bvRec'), bi = $('bvi'); if (!r || !bi) return;
+    const w = bi.offsetWidth, gap = (innerWidth - w) / 2;   // (the card is centred: left 50%, translateX(-50%))
+    r.style.setProperty('--recR', Math.round(14 - gap) + 'px'); }
+  addEventListener('resize', posRec);
   /* ---------- phones: the 「あそぶ」 sheet (2026-11-09) ----------
      A game whose full version has puzzles / lessons playable on the 3D table (PS_GAMES) keeps the card short: one 「あそぶ ▶」
      button (+ 2D). It opens a sheet from the bottom with three ways to play: 対局 (the mode tabs, level, side and time control —
