@@ -998,9 +998,13 @@ class Table3D {
     const pos = cam.position.clone().addScaledVector(q, d / q.dot(fwd)), e = new THREE.Euler().setFromQuaternion(cam.quaternion, 'YXZ');
     return { x: pos.x, y: pos.y, z: pos.z, rx: e.x, ry: e.y, rz: e.z, page: true };
   }
-  // the hand's pose: 0 = laying (fingers on the tile, the thumb beside it), 1 = pinching (the thumb under the tile, the forefinger on its face)
+  // the hand's pose: 0 = laying (fingers on the tile, the thumb beside it), 1 = pinching (2026-11-16: the tile held by its two sides — the thumb on the left, the forefinger and middle finger on the right)
   pinch(rig, k) { const K = buildHand.K; if (!K || rig.userData.pinch === k) return; rig.userData.pinch = k; const m = rig.children[0], sl = rig.children[1];
-    m.morphTargetInfluences[0] = k; sl.position.lerpVectors(K.pB, K.pA, k); sl.quaternion.copy(K.qB).slerp(K.qA, k); this.dirty = true; }
+    // (2026-11-16, ユーザー「もっと親指と人差し指で摘んでいる感じに」: the pinching pose now holds the tile by its two sides — the
+    // thumb on the left side, the forefinger and middle finger on the right. On the way between the two poses (a straight blend of
+    // the vertices) the fingers would cut through the tile's top edge, so the hand rises a little in the middle of the change.)
+    const lift = .42 * 4 * Math.max(0, k) * (1 - Math.min(1, k));
+    m.morphTargetInfluences[0] = k; m.position.y = lift; sl.position.lerpVectors(K.pB, K.pA, k); sl.position.y += lift; sl.quaternion.copy(K.qB).slerp(K.qA, k); this.dirty = true; }
   _top(rx) { const c = Math.cos(rx); return D / 2 + (H / 2 - D / 2) * c * c; }   // how far the tile's top is above its centre (standing: H/2, lying: D/2)
   // a discard (ユーザー 2026-11-14: the hand takes the tile out of the owner's own hand and puts it out): the hand comes in over
   // the hand tiles, down onto the tile where it stands (from: its pose there; null = where it is now), lifts it and lays it at `to`.
