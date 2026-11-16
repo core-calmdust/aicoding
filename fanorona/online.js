@@ -13,7 +13,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
 // or an in-browser mock (localStorage, shared between tabs) with ?mock=1 for testing.
 (function () {
   'use strict';
-  const CFG = window.FIREBASE_CONFIG || null;
+  let CFG = window.FIREBASE_CONFIG || null;
   const Q = new URLSearchParams(location.search);
   const MOCK = Q.has('mock');
   const FB_VER = '10.12.2';
@@ -93,11 +93,11 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     const disc = new Set(), recon = new Set(); let wasUp = false;
     f.ref('.info/connected').on('value', s => {
       const up = !!s.val();
-      if (up && wasUp === 'down') { disc.forEach(p => f.ref((window.OL_DB_PREFIX || '') + p).onDisconnect().remove()); recon.forEach(cb => { try { cb(); } catch (e) {} }); }
+      if (up && wasUp === 'down') { disc.forEach(p => f.ref((window.OL_DB_PREFIX || window.FIREBASE_ROOT || '') + p).onDisconnect().remove()); recon.forEach(cb => { try { cb(); } catch (e) {} }); }
       wasUp = up ? true : (wasUp ? 'down' : false);
     });
     // a page sharing this database with another game keeps all its data under its own node (window.OL_DB_PREFIX, e.g. 'alq/')
-    const PFX = window.OL_DB_PREFIX || '';
+    const PFX = window.OL_DB_PREFIX || window.FIREBASE_ROOT || '';   // (FIREBASE_ROOT: Fanorona itself under its own node of a shared database)
     const ref = p => f.ref(PFX ? PFX + String(p).replace(/^\/+/, '') : p);
     return {
       on(path, cb) { const r = ref(path), h = s => cb(s.val()); r.on('value', h); return () => r.off('value', h); },
@@ -194,6 +194,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
         const cur = await (window.OnlineSec && OnlineSec.authStart ? OnlineSec.authStart(auth) : new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); }).then(async u => { try { await auth.getRedirectResult(); } catch (e) { console.warn(e); } return u; }));   // (OnlineSec.authStart: recovers a Safari start stuck on an old redirect)
         authUser = auth.currentUser || cur || (await auth.signInAnonymously()).user;
         uid = authUser.uid;
+        if (window.OnlineSec && OnlineSec.rehome && await OnlineSec.rehome()) { CFG = window.FIREBASE_CONFIG; ready = null; return init(); }   // the shared database does not know this game's node yet: back to the game's previous project
         db = db || firebaseDB();
       }
       await loadProfile();

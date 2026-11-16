@@ -39,7 +39,7 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - パズル（同 gen_content.js、PZBook v2）：「N 手で駒を取れ」＝テーマ t2・t3・t4（駒を取れ）＋ corner（隅と辺）・double（テーマ別）、各20問。最短がちょうど N 手・初手は2通りまで・（2手は）効かない挟みが別にある局面だけ。
 - コーチ（coach.js、ja/en）：方針分類＝勝ち筋・2個挟む・挟む・助ける・守る・跳ぶ・寄せる・並べる／離して置く。置く段階は定跡ではなく原則（並べる・隅を避ける）で解説。
 - 振り返り解説：挟みを逃した・助けを逃した・挟まれる形を作った。
-- オンライン：Firebase プロジェクト未作成のため準備中（firebase-config.js が null）。作成後に secrules.py へ追加。
+- オンライン：準備中（Firebase は専用プロジェクトを作らず、タフルのプロジェクト tafl-multiplay の節 latrunculi/ に入れる（2026-11-16 統合））（firebase-config.js が null）。作成後に secrules.py へ追加。
 - 言語：**14言語**（2026-11-16。残り12言語は i18n-lt-more.js・coach-i18n.js・lux.json。言語メニューは app.js の SUPPORTED / window.LT_LANGS。検査：全言語でキー206・コーチ113の抜けなし、差し込み記号一致、PC／スマホで表示確認。zh の題名「罗马强盗棋」は定訳未確認）。
 
 ## 3D（フル機能版 ?skin=atlas、2026-11-16）
@@ -62,7 +62,7 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - レッスンの準備ステップ、piso・quintana のレッスン／パズル、ルール違いタブ。
 - 大百科：正式アイコン（icons3d.js のシーン＋書き出し。いまは仮の images/atlas/latrunculi.webp）、3D卓でのレート戦・パズル・レッスン（`atlas/app.js` RTG・`atlas/puzzles.js`・`atlas/lessons3d.js`。いまはフル機能版を開く）、種目カードの絵と説明を 2D のルールカードから作る `atlas/kindart.js`（2Dが14言語になってから。いまはアダプタ内の文言と簡易な絵）。
 - AI：評価と探索の強化、WASM 化、マルチスレッド、レート基準値の実測。
-- OG 画像（images/latrunculi.webp）の撮り直し、オンライン対戦（Firebase プロジェクト）。
+- OG 画像（images/latrunculi.webp）の撮り直し、オンライン対戦（tafl-multiplay の節 latrunculi/）。
 
 ## 保存キー
 - aicoding-latrunculi（設定・対局）、-lessons、-puzzles、-daily、-rated、-rules、latrunculi-online-name。

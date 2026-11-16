@@ -2,6 +2,37 @@
 
 対象は世界のボドゲ大全のオンライン対戦ゲーム、まいにち数独・すぴーど数独・さめが〜めのランキング、共通アカウントです。
 
+## 0.0 Firebase プロジェクトの統合（2026-11-16）：ルールの貼り替えとプロジェクトの削除
+
+無料の Spark プランはプロジェクトの作成数に上限があるため、オンライン対戦のゲームを系統ごとにまとめました（1つのDBに4ゲームまで。
+ルールの上限 256KB に対し1ゲーム約45KB）。同じDBのゲームは自分の節（`<node>/`）の下だけを使い、データは混ざりません。
+**移したゲームのレート・戦績は 1500 からやり直し**です（Firebase の UID がプロジェクトごとに違うため）。
+
+| 統合先のプロジェクト | ルートのゲーム | 節に入るゲーム | 貼り付けるルール |
+|---|---|---|---|
+| `shogi-multiplay` | 将棋 | チェス `chess/`・シャンチー `xiangqi/`・チャンギ `janggi/` | `shogi/database.rules.json` |
+| `reversi-multiplay` | リバーシ | 囲碁 `go/`・五目並べ `gomoku/`・ヘックス `hex/` | `reversi/database.rules.json` |
+| `checkers-multiplay` | チェッカー | ウゴルキ `ugolki/`・ファノロナ `fanorona/`・アルケルケ `alq/` | `checkers/database.rules.json` |
+| `tafl-multiplay` | タフル | アゴン `agon/`（今後：ラトルンクリ・狐とガチョウ） | `tafl/database.rules.json` |
+| `backgammon-multi` | バックギャモン | ウル `ur/`・セネト `senet/`（今後：パトリ） | `backgammon/database.rules.json` |
+| `ninemens-multiplay` | モリス | マンカラ `mancala/`・コネクトフォー `connect4/`・ドット＆ボックス `dots/` | `morris/database.rules.json` |
+| `konane-multiplay` | コナネ | （空き3。今後の新作用） | 変更なし |
+
+**手順**
+1. 上の6プロジェクトで「Realtime Database → ルール」に表のファイルの中身を全部貼って公開する（ルートのゲームの部分は今までと同じ）。
+2. それだけで切り替わります。公開前は、各ゲームが `<node>secv` を読めないことを検出して**元のプロジェクトで今までどおり動きます**
+   （`shared/onlinesec.js` の `rehome()`、元の設定は各 `firebase-config.js` の `FIREBASE_CONFIG_PREV`）。公開後は次に開いたときから統合先を使います。
+3. 数日たって古いキャッシュがなくなったら、各 `firebase-config.js` の `_PREV` の部分を消し、古いプロジェクト
+   （`chess-multiplay` `xiangqi-multiplay` `go-multiplay` `renju-multiplay` `hex-multiplay` `ugolki-multiplay` `fanorona-multi`
+   `agon-multiplay` `ur-multiplay` `senet-multiplay` `mankara-multiplay` `connect4-multiplay` `dot-and-box-multiplay`）を削除できます。
+   削除したプロジェクトの ID は30日間再利用できません。
+- 統合先の Authentication・承認済みドメイン・App Check はそのまま使えます（追加の設定は不要）。
+- 注意：同時接続 100（Spark）はプロジェクト単位なので、同じプロジェクトのゲームの合計になります。足りなくなったら Blaze（従量課金）にすると
+  1DB あたり 20万になり、1プロジェクトに複数のDBも持てます。
+- 新作のオンラインは専用プロジェクトを作らず、系統の近いプロジェクトに入れる（`secrules.py` の `host=('<ルートのゲーム>', '<node>')` と
+  `firebase-config.js` の `window.FIREBASE_ROOT = '<node>/'`）。1つのDBは4ゲームまで（`secrules.py` が超えると止まる）。
+- 配線の確認：`node shared/tools/roottest.js`（全ゲームを「公開後」「公開前」「通信不可」の3状態で読み込み、使うプロジェクトと全パスが節の下かを調べる）。
+
 ## 0. 現在の状態
 
 - 新しいクライアントのコードは `main` に公開済みです。
@@ -23,7 +54,7 @@
 - **貼り替えるまでは今までどおり動きます**（ページは `secf` が読めたときだけフィッシャーを選択肢に出します）。貼り替え後にページを開き直すと、持ち時間の選択肢に「フィッシャー」が出ます。
 - ほかのゲームのルールファイルは変わっていません（もともとフィッシャー方式）。
 
-## 1. ゲームごとの作業
+## 1. ゲームごとの作業（2026-11-16 の統合前の一覧。いまのプロジェクトは 0.0 の表）
 
 | ゲーム | Firebase projectId | (a) 貼り付けるルールファイル | (b) App Check |
 |---|---|---|---|

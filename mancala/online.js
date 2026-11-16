@@ -14,7 +14,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
 // or an in-browser mock (localStorage, shared between tabs) with ?mock=1 for testing.
 (function () {
   'use strict';
-  const CFG = window.FIREBASE_CONFIG || null;
+  let CFG = window.FIREBASE_CONFIG || null;
   const Q = new URLSearchParams(location.search);
   const MOCK = Q.has('mock');
   const FB_VER = '10.12.2';
@@ -74,6 +74,9 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
 
   function firebaseDB() {
     const f = firebase.database();
+    // a game sharing its Firebase project with others keeps everything under its own node (window.FIREBASE_ROOT, e.g. 'chess/'):
+    // rooms, players, ratings, chat and sync never mix with the other games of that database
+    const ROOT = window.FIREBASE_ROOT || '', at = p => ROOT + p;
     let offset = 0;
     f.ref('.info/serverTimeOffset').on('value', s => { offset = s.val() || 0; });
     // onDisconnect handlers fire once and are gone: after every reconnect (sleep, network change) register them again and let the app rewrite its presence
@@ -84,21 +87,21 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
       wasUp = up ? true : (wasUp ? 'down' : false);
     });
     return {
-      on(path, cb) { const r = f.ref(path), h = s => cb(s.val()); r.on('value', h); return () => r.off('value', h); },
-      get: async p => (await f.ref(p).get()).val(),
-      set: (p, v) => f.ref(p).set(v),
-      update: (p, v) => f.ref(p).update(v),
-      remove: p => f.ref(p).remove(),
+      on(path, cb) { const r = f.ref(at(path)), h = s => cb(s.val()); r.on('value', h); return () => r.off('value', h); },
+      get: async p => (await f.ref(at(p)).get()).val(),
+      set: (p, v) => f.ref(at(p)).set(v),
+      update: (p, v) => f.ref(at(p)).update(v),
+      remove: p => f.ref(at(p)).remove(),
       async txn(p, fn) {   // (one transaction at a time per path, each on the server's own answer: a second one queued on the first's optimistic result — the game-over mark right after the mating move — was sent with them as one write and the rules refused both, 2026-11-12)
-        const Q = window.__fbTxq || (window.__fbTxq = {}), run = (Q[p] || Promise.resolve()).then(() => f.ref(p).transaction(fn)), tail = Q[p] = run.catch(() => {});
+        const Q = window.__fbTxq || (window.__fbTxq = {}), run = (Q[p] || Promise.resolve()).then(() => f.ref(at(p)).transaction(fn)), tail = Q[p] = run.catch(() => {});
         try { const r = await run; return { committed: r.committed, value: r.snapshot.val() }; } finally { if (Q[p] === tail) delete Q[p]; }
       },
-      onDisconnectRemove: p => { disc.add(p); return f.ref(p).onDisconnect().remove(); },
-      cancelDisconnect: p => { disc.delete(p); return f.ref(p).onDisconnect().cancel(); },
+      onDisconnectRemove: p => { disc.add(at(p)); return f.ref(at(p)).onDisconnect().remove(); },
+      cancelDisconnect: p => { disc.delete(at(p)); return f.ref(at(p)).onDisconnect().cancel(); },
       onReconnect: cb => recon.add(cb),
       stamp: () => firebase.database.ServerValue.TIMESTAMP,
       now: () => Date.now() + offset,
-      push: p => f.ref(p).push().key,
+      push: p => f.ref(at(p)).push().key,
     };
   }
 
@@ -178,6 +181,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
         const cur = await (window.OnlineSec && OnlineSec.authStart ? OnlineSec.authStart(auth) : new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); }).then(async u => { try { await auth.getRedirectResult(); } catch (e) { console.warn(e); } return u; }));   // (OnlineSec.authStart: recovers a Safari start stuck on an old redirect)
         authUser = auth.currentUser || cur || (await auth.signInAnonymously()).user;
         uid = authUser.uid;
+        if (window.OnlineSec && OnlineSec.rehome && await OnlineSec.rehome()) { CFG = window.FIREBASE_CONFIG; ready = null; return init(); }   // the shared database does not know this game's node yet: back to the game's previous project
         db = db || firebaseDB();
       }
       await loadProfile();

@@ -12,7 +12,7 @@
 - デザイン：盤＝アカシア／メープル／ウォルナット／ローズウッド／モダン（無地）／ランバ（布・tools/gen_lamba.py のオリジナル柄）。駒＝木の玉／貝殻／石／翡翠／フラット／円盤。
 - レイアウト：PC はバックギャモン準拠（盤が上、情報行が下）。スマホ横向きは landtabs.js（右タブレール＋引き出し）。
 - コーチ：解析の深さ6以上の結果だけで推奨を出す（浅い読みの貪欲な取りを避ける）。
-- オンライン：Firebase プロジェクト fanorona-multi、App Check（reCAPTCHA Enterprise）。database.rules.json は shared/tools/secrules.py（fanorona: v=sivy/dimy/telo、持ち時間 8分+5秒／4分+3秒／2分+2秒）。指し手は3文字（from+1, to, 同じ from/to 内の番号）。共通アカウント（atlas-account.js GAME_AUTH）に登録済み。
+- オンライン：Firebase はチェッカーのプロジェクト checkers-multiplay の節 fanorona/（FIREBASE_ROOT）（2026-11-16 統合）、レートは 1500 からやり直し。ルールは checkers/database.rules.json（shared/tools/secrules.py（fanorona: v=sivy/dimy/telo、持ち時間 8分+5秒／4分+3秒／2分+2秒）。指し手は3文字（from+1, to, 同じ from/to 内の番号）。共通アカウント（atlas-account.js GAME_AUTH）に登録済み。
 - ポータル：shared/atlas.js・atlas/app.js（R3）に登録、タグ online / variants。
 
 ## 3D盤（2026-11-05）
