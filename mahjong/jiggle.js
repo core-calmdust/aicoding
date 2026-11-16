@@ -1,4 +1,4 @@
-// 雀華：ホームのキャラの絵を触ると、触った所が「ぷるん」と震える（ユーザー 2026-11-16）。
+// 雀華：ホームのキャラの絵を触ると、触った所が「ぷるん」と震える（ユーザー 2026-11-16）。顔は僅かに揺れる程度（amp .22）。
 // 触っている間だけ、絵を WebGL のキャンバスに描き替え、触った点のまわりを局所的にゆがめる：まず軽く押し込まれ（縮む）、
 // はね返って膨らみ、減衰しながら数回揺れて止まる（約0.9秒）。同時に最大4か所。揺れ終わると元の <img> に戻す。
 // キャンバスは <img> と同じマスク・影・呼吸のアニメ（位相も合わせる）を持つので、入れ替わりは目に見えない。
@@ -46,7 +46,7 @@ function draw(now) {
   hits = hits.filter(h => now - h.t0 < 1000);
   if (!hits.length) return stop();
   const J = new Float32Array(16), K = new Float32Array(16);
-  hits.slice(-4).forEach((h, i) => { const s = shape((now - h.t0) / 1000); J.set([h.u, h.v, h.r, 1], i * 4); K.set([s[0], s[1], s[2], 0], i * 4); });
+  hits.slice(-4).forEach((h, i) => { const s = shape((now - h.t0) / 1000), a = h.a; J.set([h.u, h.v, h.r, 1], i * 4); K.set([s[0] * a, s[1] * a, s[2] * a, 0], i * 4); });
   gl.viewport(0, 0, W, H); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
   gl.uniform1i(loc.T, 0); gl.uniform2f(loc.S, W, H); gl.uniform2f(loc.I, img.naturalWidth || 1080, img.naturalHeight || 1920);
   gl.uniform4fv(loc.J, J); gl.uniform4fv(loc.K, K); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -54,7 +54,7 @@ function draw(now) {
 }
 function stop() { cancelAnimationFrame(raf); raf = 0; hits = []; if (hostImg) hostImg.style.visibility = ''; if (cv) cv.style.display = 'none'; }
 // u, v: the touched point on the picture (0–1 of its own width and height); img: the <img> of the picture
-function poke(img, u, v) {
+function poke(img, u, v, amp = 1) {
   if (!img || !img.complete || !img.naturalWidth || u < 0 || u > 1 || v < 0 || v > 1) return;
   if (!cv && !setup()) return;
   const host = img.parentNode; if (cv.parentNode !== host) host.appendChild(cv);
@@ -62,7 +62,7 @@ function poke(img, u, v) {
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   if (texSrc !== img.currentSrc) { try { gl.bindTexture(gl.TEXTURE_2D, tex); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img); if (gl.mip) gl.generateMipmap(gl.TEXTURE_2D); texSrc = img.currentSrc; } catch (e) { return; } }
   hostImg = img;
-  hits.push({ u, v, r: .085, t0: performance.now() });
+  hits.push({ u, v, r: .085, a: amp, t0: performance.now() });
   if (!raf) {
     // the canvas takes the picture's place: the same breathing, at the same moment of it
     cv.style.display = 'block';
