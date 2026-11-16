@@ -1,10 +1,13 @@
-// node tools/gen_content.js [lessons] [puzzles] — builds lessons.json and puzzles.json (rule set g13).
+// node tools/gen_content.js [lessons] [puzzles] — builds lessons.json (rule set g15, the default: the geese never step
+// back; FG_RULE=… for another) and puzzles.json (rule set g13, the traditional rules; PZ_RULE=… for another).
 // Positions are random: the fox on any point, the geese scattered with a bias towards the fox. Every answer set is
 // computed by the engine (E.jumped: what a move takes; E.judge: the fox shut in; E.goalGood: forced within n moves
 // against every defence) and checked again before writing.
 const fs = require('fs'), path = require('path');
 const E = require('../engine.js');
-E.setRule('g13');
+const LS_RULE = process.env.FG_RULE || 'g15', PZ_RULE = process.env.PZ_RULE || 'g13';
+let RULE = LS_RULE;
+E.setRule(RULE);
 let seed = 20261117; const rand = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
 const ri = n => Math.floor(rand() * n);
 const dist = (a, b) => Math.max(Math.abs(E.RC[a][0] - E.RC[b][0]), Math.abs(E.RC[a][1] - E.RC[b][1]));
@@ -14,7 +17,7 @@ function randomPos(k, side, near) {
   let n = 0;
   for (let g = 0; n < k && g < 2000; g++) { const i = E.POINTS[ri(33)]; if (b[i] !== '.') continue; if (rand() < near * Math.min(1, (dist(i, fox) - 1) / 3)) continue; b[i] = 'g'; n++; }
   if (n < k) return null;
-  return { b: b.join(''), side, cap: 13 - k, n: 20, rule: 'g13' };
+  return { b: b.join(''), side, cap: E.RULES[RULE].geese - k, n: 20, rule: RULE };
 }
 const caps = m => E.jumped(m).length;
 const foxCanTake = pos => { const q = pos.clone(); q.side = 0; return q.foxMoves([]).some(m => caps(m)); };
@@ -27,7 +30,7 @@ const LESSON_DEFS = [
       const mx = Math.max(...L.map(caps)); if (mx < 2 || E.judge(pos).over) return null; const ok = L.filter(m => caps(m) === mx); if (ok.length !== 1) return null; return { s, ok }; } },
   { id: 'f_fork', course: 'basics', make() { const s = randomPos(8 + ri(4), 1, .4); if (!s) return null; const pos = E.Pos.from(s), L = pos.moves();
       if (L.length < 4 || L.some(m => caps(m)) || E.judge(pos).over) return null;
-      const ok = E.goalGood(s, [], 2, { goal: 'take' }, 'g13', 200000); if (!ok || ok.length > 2) return null; return { s, ok }; } },
+      const ok = E.goalGood(s, [], 2, { goal: 'take' }, RULE, 200000); if (!ok || ok.length > 2) return null; return { s, ok }; } },
   { id: 'g_safe', course: 'strategy', make() { const s = randomPos(9 + ri(4), 2, .5); if (!s) return null; const pos = E.Pos.from(s), L = pos.moves();
       if (L.length < 8 || !foxCanTake(pos) || E.judge(pos).over) return null;
       const ok = L.filter(m => { const q = pos.clone().play(m); return !E.judge(q).over && !q.foxMoves([]).some(x => caps(x)); }); if (ok.length < 1 || ok.length > 3) return null; return { s, ok }; } },
@@ -36,9 +39,10 @@ const LESSON_DEFS = [
       const ok = L.filter(m => E.judge(pos.clone().play(m)).winner === 2); if (ok.length !== 1) return null; return { s, ok }; } },
   { id: 'g_net', course: 'strategy', make() { const s = randomPos(8 + ri(5), 2, .9); if (!s) return null; const pos = E.Pos.from(s), L = pos.moves();
       if (E.judge(pos).over || L.some(m => E.judge(pos.clone().play(m)).winner === 2)) return null;
-      const ok = E.goalGood(s, [], 2, { goal: 'win' }, 'g13', 300000); if (!ok || ok.length > 2) return null; return { s, ok }; } },
+      const ok = E.goalGood(s, [], 2, { goal: 'win' }, RULE, 300000); if (!ok || ok.length > 2) return null; return { s, ok }; } },
 ];
 function genLessons() {
+  RULE = LS_RULE; E.setRule(RULE);
   const steps = [];
   for (const D of LESSON_DEFS) {
     const problems = [], seen = new Set();
@@ -46,7 +50,7 @@ function genLessons() {
     if (problems.length < 5) throw new Error('lesson ' + D.id + ': only ' + problems.length);
     steps.push({ id: D.id, course: D.course, problems }); console.log('lesson', D.id, problems.length);
   }
-  fs.writeFileSync(path.join(__dirname, '..', 'lessons.json'), JSON.stringify({ version: 1, steps, rampUi: {} }));
+  fs.writeFileSync(path.join(__dirname, '..', 'lessons.json'), JSON.stringify({ version: 1, rule: LS_RULE, steps, rampUi: {} }));
 }
 // a puzzle: the goal takes exactly n moves, the first move is unique (two at most)
 function tryPuzzle(side, goal, n, k, near) {
@@ -56,8 +60,8 @@ function tryPuzzle(side, goal, n, k, near) {
   if (side === 1 && pos.moves().some(m => caps(m))) return null;
   if (side === 2 && foxCanTake(pos)) return null;
   const G = { goal };
-  for (let j = 1; j < n; j++) if (E.goalGood(s, [], j, G, 'g13', 150000)) return null;
-  const good = E.goalGood(s, [], n, G, 'g13', n >= 4 ? 1500000 : 500000);
+  for (let j = 1; j < n; j++) if (E.goalGood(s, [], j, G, RULE, 150000)) return null;
+  const good = E.goalGood(s, [], n, G, RULE, n >= 4 ? 1500000 : 500000);
   if (!good || good.length > 2) return null;
   return { s, n, g: goal };
 }
@@ -69,6 +73,7 @@ const THEMES = [
   { id: 't3', grp: 'Tac', side: 1, goal: 'take', n: 3, k: [8, 11], near: .4 },
 ];
 function genPuzzles(count) {
+  RULE = PZ_RULE; E.setRule(RULE);
   const themes = [];
   for (const T of THEMES) {
     const puzzles = [], seen = new Set(), t0 = Date.now();
@@ -80,7 +85,7 @@ function genPuzzles(count) {
     console.log('theme', T.id, puzzles.length, ((Date.now() - t0) / 1000).toFixed(0) + 's');
     themes.push({ id: T.id, grp: T.grp, puzzles });
   }
-  fs.writeFileSync(path.join(__dirname, '..', 'puzzles.json'), JSON.stringify({ version: 1, rule: 'g13', kind: 'goal', daily: ['w2', 't2', 'w3', 't3', 'w2', 'w4', 't2'], themes }));
+  fs.writeFileSync(path.join(__dirname, '..', 'puzzles.json'), JSON.stringify({ version: 1, rule: PZ_RULE, kind: 'goal', daily: ['w2', 't2', 'w3', 't3', 'w2', 'w4', 't2'], themes }));
 }
 const what = process.argv.slice(2);
 if (!what.length || what.includes('lessons')) genLessons();

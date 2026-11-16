@@ -1,8 +1,9 @@
 /* =====================================================================
    Fox and Geese (the cross of 33 points) on the portal.
    · The board card (levels, sides, modes, 種目): Lv.1 … Lv.20 with the game's descriptions (foxgeese/i18n-fg*.js),
-     ratings = the game's RT_LV (foxgeese/app.js). 種目 = the full game's two rules (the card's "size" value:
-     13 = the traditional 13 geese · 17 = 17 geese that move only forward or sideways). 先手 = the fox (it moves first).
+     ratings = the game's RT_LV (foxgeese/app.js). 種目 = the full game's four rules (the card's "size" value:
+     15 = 15 geese that never step back (the default) · 17 = 17 geese that move only forward or sideways · 13 = the
+     traditional 13 geese (they may step back) · 113 = 13 geese that never step back). 先手 = the fox (it moves first).
    · Table play (ちゃぶ台で遊ぶ): start(ctx) plays on the 3D table itself with the full game's rules and AI —
      ../foxgeese/engine.js on the page (steps along the lines, the fox's jumps — several in one move, it may stop,
      capturing is never compulsory — the fox shut in, five geese or fewer, no draws: the third repetition or 60 quiet moves each is the fox's win) and the same file as
@@ -15,7 +16,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../foxgeese/', VER = '?v=3';   // same file / version as foxgeese/index.html → shared cache
+  const BASE = '../foxgeese/', VER = '?v=5';   // same file / version as foxgeese/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.FoxEngine) return Promise.resolve(window.FoxEngine);
@@ -44,23 +45,23 @@
     id: { n: ['Rubah', 'Angsa'], turn: 'Giliran {p}', win: '{p} menang', own: 'Pilih salah satu bidakmu', stuck: 'Bidak itu tidak bisa bergerak sekarang', move: 'Tidak bisa ke sana', more: 'Masih bisa melompat lagi. Untuk berhenti di sini, ketuk titik ini sekali lagi', wFew: 'Angsa tinggal lima atau kurang — rubah tidak bisa dikurung lagi', wTrap: 'Rubah tidak bisa bergerak', wStuck: 'Angsa tidak bisa bergerak', wQuiet: '60 langkah masing-masing tanpa tangkapan', wRep: 'Posisi yang sama tiga kali — pengulangan berarti kemenangan rubah', took: '{n} angsa sekaligus!' },
     tr: { n: ['Tilki', 'Kazlar'], turn: 'Sıra: {p}', win: 'Kazanan: {p}', own: 'Taşlarından birini seç', stuck: 'Bu taş şu an hareket edemez', move: 'Oraya gidemez', more: 'Atlamaya devam edebilir. Burada durmak için bu noktaya bir kez daha dokun', wFew: 'Beş ya da daha az kaz kaldı — artık tilkiyi kapatamazlar', wTrap: 'Tilki hareket edemiyor', wStuck: 'Kazlar hareket edemiyor', wQuiet: '60’er hamle taş alınmadı', wRep: 'Aynı konum üç kez oluştu — tekrar tilkinin galibiyetidir', took: 'Tek hamlede {n} kaz!' },
   };
-  // 種目: the two rules (names and descriptions as the full game's rule cards)
-  const RIDS = ['g13', 'g17'], RSZ = [13, 17];
+  // 種目: the four rules, in the full game's order (names and descriptions as its rule cards; g15 = the default)
+  const RIDS = ['g15', 'g17', 'g13', 'g13n'], RSZ = [15, 17, 13, 113];   // (113 = 13 geese that never step back; the old 13 / 17 keep their meaning)
   const RN = {
-    ja: { n: ['ガチョウ13羽', 'ガチョウ17羽'], d: ['昔からの形。ガチョウはどの線にも1歩、後ろにも下がれます。狐がやや有利。', 'ガチョウが4羽多いかわりに、前か横にしか進めません（斜め・後ろは不可）。ガチョウ有利。'] },
-    en: { n: ['13 geese', '17 geese'], d: ['The traditional game. The geese step along any line, backwards too. Slightly better for the fox.', 'Four more geese — but they move only forward or sideways (never diagonally or backwards). Better for the geese.'] },
-    zh: { n: ['13只鹅', '17只鹅'], d: ['传统玩法。鹅可沿任意线走一步，也能后退。狐狸略占优。', '多4只鹅，但只能向前或向两侧走（不能斜走、不能后退）。鹅占优。'] },
-    ko: { n: ['거위 13마리', '거위 17마리'], d: ['옛날부터의 형태. 거위는 어느 선으로든 한 칸, 뒤로도 물러날 수 있습니다. 여우가 조금 유리.', '거위가 4마리 많은 대신 앞이나 옆으로만 갑니다(대각선·뒤는 불가). 거위가 유리.'] },
-    es: { n: ['13 ocas', '17 ocas'], d: ['El juego tradicional. Las ocas dan un paso por cualquier línea, también hacia atrás. Ligera ventaja del zorro.', 'Cuatro ocas más, pero solo avanzan o van de lado (nunca en diagonal ni hacia atrás). Ventaja de las ocas.'] },
-    fr: { n: ['13 oies', '17 oies'], d: ['Le jeu traditionnel. Les oies avancent d’un pas sur n’importe quelle ligne, même en arrière. Léger avantage au renard.', 'Quatre oies de plus, mais elles ne vont que vers l’avant ou de côté (jamais en diagonale ni en arrière). Avantage aux oies.'] },
-    pt: { n: ['13 gansos', '17 gansos'], d: ['O jogo tradicional. Os gansos dão um passo por qualquer linha, também para trás. Leve vantagem da raposa.', 'Quatro gansos a mais, mas só andam para a frente ou para os lados (nunca na diagonal nem para trás). Vantagem dos gansos.'] },
-    de: { n: ['13 Gänse', '17 Gänse'], d: ['Das traditionelle Spiel. Die Gänse ziehen einen Schritt auf jeder Linie, auch rückwärts. Leichter Vorteil für den Fuchs.', 'Vier Gänse mehr – sie ziehen aber nur vorwärts oder seitwärts (nie diagonal oder rückwärts). Vorteil für die Gänse.'] },
-    hi: { n: ['13 कलहंस', '17 कलहंस'], d: ['पारंपरिक खेल। कलहंस किसी भी रेखा पर एक कदम चलते हैं, पीछे भी। लोमड़ी को थोड़ी बढ़त।', 'चार कलहंस ज़्यादा — पर वे सिर्फ़ आगे या बगल में चलते हैं (तिरछे या पीछे कभी नहीं)। कलहंसों को बढ़त।'] },
-    ar: { n: ['13 إوزة', '17 إوزة'], d: ['اللعبة التقليدية. يخطو الإوز خطوة على أي خط، وإلى الخلف أيضًا. أفضلية بسيطة للثعلب.', 'أربع إوزات إضافية، لكنها لا تتحرك إلا إلى الأمام أو إلى الجانب (لا قُطريًّا ولا إلى الخلف). الأفضلية للإوز.'] },
-    ru: { n: ['13 гусей', '17 гусей'], d: ['Традиционная игра. Гуси ходят на шаг по любой линии, в том числе назад. Небольшой перевес у лисы.', 'Гусей на четыре больше, но ходят они только вперёд или вбок (не по диагонали и не назад). Перевес у гусей.'] },
-    'zh-TW': { n: ['13隻鵝', '17隻鵝'], d: ['傳統玩法。鵝可沿任意線走一步，也能後退。狐狸略占優。', '多4隻鵝，但只能向前或向兩側走（不能斜走、不能後退）。鵝占優。'] },
-    id: { n: ['13 angsa', '17 angsa'], d: ['Permainan tradisional. Angsa melangkah di garis mana pun, juga mundur. Rubah sedikit diuntungkan.', 'Empat angsa lebih banyak — tetapi hanya boleh maju atau menyamping (tidak diagonal, tidak mundur). Angsa diuntungkan.'] },
-    tr: { n: ['13 kaz', '17 kaz'], d: ['Geleneksel oyun. Kazlar her çizgide bir adım atar, geriye de gidebilir. Tilki biraz avantajlı.', 'Dört kaz fazla — ama yalnızca ileri ya da yana giderler (çapraz ve geri yok). Kazlar avantajlı.'] },
+    ja: { n: ["15羽（後退なし）","17羽","13羽（伝統）","13羽（改変）"], d: ["おすすめの形。ガチョウは前・横・斜め前へ1歩。後ろと斜め後ろには下がれません。狐とガチョウの釣り合いがよいとされます。","ガチョウは17羽。前か横にしか進めません（斜め・後ろは不可）。ガチョウ有利。","原典を知りたい方向けの、いちばん古い形。ガチョウは後ろにも下がれるので対局が長引きやすく、このアプリでは同じ局面の3回目か、取り合いなしの60手ずつで狐の勝ちにします。","このアプリの改変ルール。13羽の並びのまま、ガチョウは15羽と同じく後ろに下がれません。"] },
+    en: { n: ["15 geese (no retreat)","17 geese","13 geese (traditional)","13 geese (no retreat)"], d: ["The recommended game. A goose steps forward, sideways or diagonally forward — never backwards or diagonally backwards. Said to be well balanced between fox and geese.","17 geese that move only forward or sideways (never diagonally or backwards). Better for the geese.","The oldest form, for those who want to know the original. The geese may step back too, so games can drag on; this app gives the game to the fox at the third repetition or after 60 moves each without a capture.","This app’s own variant: the 13-goose layout, but the geese never step back, as in the 15-goose game."] },
+    zh: { n: ["15只鹅（不后退）","17只鹅","13只鹅（传统）","13只鹅（不后退）"], d: ["推荐玩法。鹅可向前、向两侧或斜前方走一步，不能后退，也不能斜着后退。据说狐狸和鹅的实力比较均衡。","17只鹅，只能向前或向两侧走（不能斜走、不能后退）。鹅占优。","最古老的形式，适合想了解原版的人。鹅也能后退，对局容易拖长；本应用规定同一局面出现第三次，或双方各60步没有吃子时，判狐狸获胜。","本应用的改编规则：保留13只鹅的摆法，但鹅和15只鹅时一样不能后退。"] },
+    'zh-TW': { n: ["15隻鵝（不後退）","17隻鵝","13隻鵝（傳統）","13隻鵝（不後退）"], d: ["推薦玩法。鵝可向前、向兩側或斜前方走一步，不能後退，也不能斜著後退。據說狐狸和鵝的實力比較均衡。","17隻鵝，只能向前或向兩側走（不能斜走、不能後退）。鵝占優。","最古老的形式，適合想了解原版的人。鵝也能後退，對局容易拖長；本應用規定同一局面出現第三次，或雙方各60步沒有吃子時，判狐狸獲勝。","本應用的改編規則：保留13隻鵝的擺法，但鵝和15隻鵝時一樣不能後退。"] },
+    ko: { n: ["거위 15마리(후퇴 없음)","거위 17마리","거위 13마리(전통)","거위 13마리(후퇴 없음)"], d: ["추천 규칙. 거위는 앞·옆·대각선 앞으로 한 칸. 뒤나 대각선 뒤로는 물러날 수 없습니다. 여우와 거위의 균형이 좋다고 합니다.","거위 17마리. 앞이나 옆으로만 갈 수 있습니다(대각선·뒤는 불가). 거위가 유리.","원래 형태를 알고 싶은 분을 위한 가장 오래된 규칙. 거위가 뒤로도 물러날 수 있어 대국이 길어지기 쉬우므로, 이 앱에서는 같은 국면이 세 번째 나오거나 잡기 없이 60수씩 진행되면 여우의 승리로 합니다.","이 앱의 변형 규칙. 13마리 배치 그대로, 거위는 15마리 규칙처럼 뒤로 물러날 수 없습니다."] },
+    es: { n: ["15 ocas (sin retroceso)","17 ocas","13 ocas (tradicional)","13 ocas (sin retroceso)"], d: ["La forma recomendada. Una oca da un paso hacia delante, de lado o en diagonal hacia delante; nunca hacia atrás ni en diagonal hacia atrás. Se considera equilibrada entre zorro y ocas.","17 ocas que solo avanzan hacia delante o de lado (nunca en diagonal ni hacia atrás). Ventaja de las ocas.","La forma más antigua, para quien quiera conocer el original. Las ocas también pueden retroceder, así que las partidas se alargan; esta app da la victoria al zorro a la tercera repetición o tras 60 jugadas por bando sin capturas.","Variante propia de esta app: la colocación de 13 ocas, pero sin retroceder, como en el juego de 15."] },
+    fr: { n: ["15 oies (sans recul)","17 oies","13 oies (tradition)","13 oies (sans recul)"], d: ["La forme conseillée. Une oie avance d’un pas vers l’avant, sur le côté ou en diagonale vers l’avant — jamais en arrière ni en diagonale arrière. Réputée équilibrée entre le renard et les oies.","17 oies qui ne vont que vers l’avant ou sur le côté (jamais en diagonale ni en arrière). Avantage aux oies.","La forme la plus ancienne, pour qui veut connaître l’original. Les oies peuvent aussi reculer, si bien que la partie peut traîner ; cette app donne alors la victoire au renard à la troisième répétition ou après 60 coups chacun sans prise.","Variante propre à cette app : la disposition à 13 oies, mais sans jamais reculer, comme à 15."] },
+    pt: { n: ["15 gansos (sem recuo)","17 gansos","13 gansos (tradicional)","13 gansos (sem recuo)"], d: ["A forma recomendada. Um ganso anda um passo para a frente, para o lado ou na diagonal para a frente — nunca para trás nem na diagonal para trás. Considerada equilibrada entre raposa e gansos.","17 gansos que só andam para a frente ou para o lado (nunca na diagonal nem para trás). Vantagem dos gansos.","A forma mais antiga, para quem quer conhecer o original. Os gansos também podem recuar, então a partida pode se arrastar; este app dá a vitória à raposa na terceira repetição ou após 60 lances de cada lado sem capturas.","Variante própria deste app: a disposição de 13 gansos, mas sem recuar, como no jogo de 15."] },
+    de: { n: ["15 Gänse (kein Rückzug)","17 Gänse","13 Gänse (traditionell)","13 Gänse (kein Rückzug)"], d: ["Die empfohlene Form. Eine Gans zieht einen Schritt vorwärts, seitwärts oder schräg vorwärts – nie rückwärts oder schräg rückwärts. Gilt als ausgeglichen zwischen Fuchs und Gänsen.","17 Gänse, die nur vorwärts oder seitwärts ziehen (nie diagonal oder rückwärts). Vorteil für die Gänse.","Die älteste Form, für alle, die das Original kennenlernen wollen. Die Gänse dürfen auch zurück, deshalb ziehen sich Partien leicht hin; diese App wertet sie bei der dritten Wiederholung oder nach je 60 Zügen ohne Schlag als Sieg des Fuchses.","Eine eigene Variante dieser App: die Aufstellung mit 13 Gänsen, aber wie bei 15 Gänsen ohne Rückwärtszüge."] },
+    ru: { n: ["15 гусей (без отступления)","17 гусей","13 гусей (традиционные)","13 гусей (без отступления)"], d: ["Рекомендуемый вариант. Гусь ходит на шаг вперёд, вбок или по диагонали вперёд — никогда назад и не по диагонали назад. Считается равным для лисы и гусей.","17 гусей, которые ходят только вперёд или вбок (по диагонали и назад нельзя). Перевес у гусей.","Самый старый вариант — для тех, кто хочет узнать оригинал. Гуси могут ходить и назад, поэтому партия легко затягивается; здесь она достаётся лисе при третьем повторении позиции или после 60 ходов каждого без взятий.","Собственный вариант этого приложения: расстановка 13 гусей, но, как в игре с 15, без ходов назад."] },
+    tr: { n: ["15 kaz (geri adım yok)","17 kaz","13 kaz (geleneksel)","13 kaz (geri adım yok)"], d: ["Önerilen biçim. Kaz ileri, yana ya da çapraz ileri bir adım gider; asla geri ya da çapraz geri gidemez. Tilki ile kazlar arasında dengeli olduğu söylenir.","Yalnızca ileri ya da yana giden 17 kaz (çapraz ve geri yok). Kazlar avantajlı.","Aslını merak edenler için en eski biçim. Kazlar geriye de gidebildiği için oyun uzayabilir; bu uygulama aynı konumun üçüncü kez oluşmasında ya da taş alınmadan 60’ar hamlede tilkiyi kazanmış sayar.","Bu uygulamanın kendi çeşitlemesi: 13 kazlık diziliş, ama kazlar 15 kazlı oyundaki gibi geri gidemez."] },
+    id: { n: ["15 angsa (tanpa mundur)","17 angsa","13 angsa (tradisional)","13 angsa (tanpa mundur)"], d: ["Bentuk yang disarankan. Angsa melangkah maju, ke samping, atau diagonal maju — tidak pernah mundur atau diagonal mundur. Dikenal seimbang antara rubah dan angsa.","17 angsa yang hanya bisa maju atau ke samping (tidak diagonal, tidak mundur). Angsa diuntungkan.","Bentuk tertua, untuk yang ingin mengenal aslinya. Angsa juga boleh mundur sehingga permainan mudah berlarut; aplikasi ini memberi kemenangan pada rubah saat posisi sama muncul ketiga kalinya atau setelah 60 langkah masing-masing tanpa tangkapan.","Varian buatan aplikasi ini: susunan 13 angsa, tetapi angsa tidak boleh mundur, seperti pada 15 angsa."] },
+    hi: { n: ["15 कलहंस (पीछे नहीं)","17 कलहंस","13 कलहंस (पारंपरिक)","13 कलहंस (पीछे नहीं)"], d: ["सुझाया गया रूप। कलहंस आगे, बगल में या तिरछे आगे एक कदम चलता है — पीछे या तिरछे पीछे कभी नहीं। लोमड़ी और कलहंसों के बीच संतुलित माना जाता है।","17 कलहंस, जो सिर्फ़ आगे या बगल में चलते हैं (तिरछे या पीछे कभी नहीं)। कलहंसों को बढ़त।","सबसे पुराना रूप, मूल खेल जानने वालों के लिए। कलहंस पीछे भी हट सकते हैं, इसलिए खेल लंबा खिंच सकता है; यह ऐप ऐसे में तीसरी बार वही स्थिति आने पर या बिना पकड़ के 60-60 चालों के बाद लोमड़ी को जीत देता है।","इस ऐप का अपना रूप: 13 कलहंसों की जमावट, पर 15 वाले खेल की तरह कलहंस पीछे नहीं हट सकते।"] },
+    ar: { n: ["15 إوزة (بلا تراجع)","17 إوزة","13 إوزة (تقليدية)","13 إوزة (بلا تراجع)"], d: ["الشكل الموصى به. تخطو الإوزة إلى الأمام أو إلى الجانب أو قُطريًّا إلى الأمام، ولا تتراجع أبدًا إلى الخلف ولا قُطريًّا إلى الخلف. يُعدّ متوازنًا بين الثعلب والإوز.","17 إوزة لا تتحرك إلا إلى الأمام أو إلى الجانب (لا قطريًا ولا إلى الخلف). الأفضلية للإوز.","أقدم الأشكال، لمن يريد التعرّف على الأصل. يستطيع الإوز التراجع أيضًا، لذا قد تطول المباراة؛ ويمنح هذا التطبيق الفوز للثعلب عند تكرار الوضع للمرة الثالثة أو بعد 60 نقلة لكل طرف دون أخذ.","تعديل خاص بهذا التطبيق: ترتيب الـ13 إوزة نفسه، لكن الإوز لا يتراجع كما في لعبة الـ15."] },
   };
   const rn = l => RN[l] || RN.en, rix = z => Math.max(0, RSZ.indexOf(+z));
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
@@ -88,17 +89,28 @@
     s.textContent = `.fgtoast{position:fixed;left:50%;bottom:calc(var(--tbclear,18px) + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:10px 18px;border-radius:99px;background:#5d6a1f;color:#fff;font-weight:700;font-size:14px;text-align:center;box-shadow:0 10px 24px -10px rgba(0,0,0,.5);pointer-events:none}`;
     document.head.appendChild(s);
   }
-  const DK = ['background:radial-gradient(circle at 40% 35%,#f0a060,#b4502a 60%,#6a2a12)', 'background:radial-gradient(circle at 40% 35%,#fff,#f1e8d4 60%,#c9bd9f)'];
+  // the sides' icons (../foxgeese/img/ic-fox.svg · ic-goose.svg: the full game's turn icons) in the HUD and the side pulldown
+  const ICON = c => `../foxgeese/img/ic-${c === 1 ? 'fox' : 'goose'}.svg`;
+  const DK = [1, 2].map(c => `background:url(${ICON(c)}) center/contain no-repeat;border-radius:0;box-shadow:none`);
+  // the card's side choice (atlas/app.js: adapter.sideOpts / optInfo icon): your side and who moves first — 1 狐・先手 (the default) ·
+  // 3 狐・後手 · 2 ガチョウ・後手 · 4 ガチョウ・先手 (1 / 2 keep their old meaning: the fox moves first)
+  const SIDES = [[1, 1, 1], [3, 1, 2], [4, 2, 2], [2, 2, 1]];   // [value, your side, who moves first]
+  const ORD = {
+    ja: ['先手', '後手'], en: ['first', 'second'], zh: ['先手', '后手'], 'zh-TW': ['先手', '後手'], ko: ['선수', '후수'], es: ['primer turno', 'segundo turno'], fr: ['en premier', 'en second'],
+    pt: ['primeiro', 'segundo'], de: ['zuerst', 'als Zweites'], ru: ['ход первый', 'ход второй'], tr: ['ilk', 'ikinci'], id: ['jalan dulu', 'jalan kedua'], hi: ['पहले', 'बाद में'], ar: ['أولًا', 'ثانيًا'],
+  };
+  const sideOpts = l => { const X = TX[l] || TX.en, O = ORD[l] || ORD.en, dot = l === 'ja' || l === 'zh' || l === 'zh-TW' ? '・' : ' · '; return SIDES.map(([v, c, f]) => [v, X.n[c - 1] + dot + O[c === f ? 0 : 1]]); };
+  const sideOf = v => { const e = SIDES.find(x => x[0] === +v) || SIDES[0]; return { human: e[1], first: e[2] }; };
 
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, X = TX[ctx.lang] || TX.en, F3 = T3.foxgeese;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const N = 7, rule = RIDS[rix(ctx.size)], board = F3.board(); T3.show('foxgeese', board);
+    const N = 7, rule = RIDS[rix(ctx.size)] || RIDS[0], board = F3.board(); T3.show('foxgeese', board);
     const U = board.userData, Y = U.top - U.sink;
     const tall = innerHeight > innerWidth * 1.15;
     if (T3.fit) T3.fit(tall ? { w: U.W + .6, d: U.H + .8, y: U.top + .2, pitch: 1.0 } : { w: U.W + .3, d: U.H + .5, y: U.top + .2, pitch: 1.0 });
-    const pvp = ctx.mode === 'pvp';
-    const human = pvp ? 1 : ctx.side === 2 ? 2 : 1;   // 1 the fox (moves first) · 2 the geese
+    const pvp = ctx.mode === 'pvp', SD = sideOf(ctx.side);
+    const human = pvp ? 1 : SD.human, first = SD.first;   // human: 1 the fox · 2 the geese; first: who moves first (two players too)
     const pname = c => X.n[c - 1];
     let E = null;
     const xz = i => { const [r, c] = E.RC[i]; return U.pt(c, r); };   // (never turned: the geese are always on the near side)
@@ -152,7 +164,7 @@
     }
 
     /* ---------- position ---------- */
-    function refresh() { pos = E.replay(null, moves).pos; }
+    function refresh() { E.setFirst(first); pos = E.replay(null, moves).pos; }
     function hud(msg) {
       const num = c => pos ? (c === 1 ? pos.cap : pos.geese) : 0;   // the fox: geese taken · the geese: how many are left
       const side = c => `<span class="hs ${pos && pos.side + 1 === c && !over ? 'on' : ''}"><i class="dk" style="${DK[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${num(c)}</b></span>`;
@@ -198,7 +210,7 @@
     function commit(m) { busy = true; play(m, () => { busy = false; next(); }); }
     function next() {
       if (stopped) return;
-      const st = E.judge(pos, E.replay(null, moves).hashes);   // 同じ局面の3回目・取りのない60手ずつは狐の勝ち（引き分けなし）
+      E.setFirst(first); const st = E.judge(pos, E.replay(null, moves).hashes);   // 同じ局面の3回目・取りのない60手ずつは狐の勝ち（引き分けなし）
       if (st.over) return end(st);
       legal = pos.moves();
       showMarks();
@@ -216,19 +228,19 @@
     }
 
     /* ---------- AI: the game's engine worker ---------- */
-    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule }); return w; }
+    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule, first }); return w; }
     function aiMove() {
       thinking = true; hud(L.think);
       if (!worker) worker = newWorker();
       const id = ++jid, mvs = moves.slice();
       const reply = m => {
         if (stopped || id !== jid || over) return;
-        if (m == null || m < 0) { try { E.setRule(rule); m = E.think(null, mvs, Math.min(ctx.level, 6)).move; } catch (e) { m = -1; } }
+        if (m == null || m < 0) { try { E.setRule(rule); E.setFirst(first); m = E.think(null, mvs, Math.min(ctx.level, 6)).move; } catch (e) { m = -1; } }
         later(() => { if (id !== jid || over) return; thinking = false; if (m == null || !legal.includes(m)) m = legal[0]; commit(m); }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? null : r.move); };
       worker.onerror = () => { worker = null; reply(null); };
-      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule });
+      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule, first });
     }
 
     /* ---------- input ---------- */
@@ -274,7 +286,7 @@
       later(() => { busy = false; next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); E.setFirst(first); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
 
     const dbg = {
       at: i => { const [x, z] = xz(i); return T3.project(x, z, U.top); },
@@ -293,7 +305,7 @@
     }
     const api = {
       human: human - 1,
-      canUndo: () => myTurn() && moves.length >= undoN() && (pvp || moves.length - undoN() >= (human === 2 ? 1 : 0)),
+      canUndo: () => myTurn() && moves.length >= undoN() && (pvp || moves.length - undoN() >= (human !== first ? 1 : 0)),
       undo() { if (!api.canUndo()) return; timers.forEach(clearTimeout); timers.length = 0; jid++; deselect(); moves.splice(moves.length - undoN()); refresh(); rebuild(); ply++; busy = false; next(); },
       canHint: () => myTurn(),
       hint() {
@@ -309,7 +321,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule });
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule, first });
         });
       },
       canDraw: () => false,   // (there is no draw)
@@ -368,7 +380,7 @@
     const D = LVD[lang] || LVD.en, W = WHO[lang] || WHO.en;
     return { name: '', desc: D[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[Math.min(n, 20) - 1] };
   }
-  // the 種目 cards' pictures: the cross with its lines, the fox in the middle and the 13 / 17 geese
+  // the 種目 cards' pictures: the cross with its lines, the fox in the middle and the 15 / 17 / 13 geese
   function kindArt(sid, v) {
     const k = rix(v), u = 12, pd = 8, w = 6 * u + pd * 2, on = (x, y) => (x >= 2 && x <= 4) || (y >= 2 && y <= 4), P = (x, y) => `${pd + x * u} ${pd + y * u}`;
     let o = `<svg viewBox="0 0 ${w} ${w}" aria-hidden="true"><rect width="${w}" height="${w}" rx="6" fill="#6b4a2a"/><path d="M${pd + 2 * u - 6} ${pd - 6}h${2 * u + 12}v${2 * u}h${2 * u}v${2 * u + 12}h${-2 * u}v${2 * u}h${-2 * u - 12}v${-2 * u}h${-2 * u}v${-2 * u - 12}h${2 * u}z" fill="#c9a26a"/><g stroke="#5a3a1c" stroke-width=".8" fill="none">`;
@@ -376,10 +388,10 @@
       if (x < 6 && on(x + 1, y)) o += `<path d="M${P(x, y)}L${P(x + 1, y)}"/>`; if (y < 6 && on(x, y + 1)) o += `<path d="M${P(x, y)}L${P(x, y + 1)}"/>`;
       if ((x + y) % 2 === 0) { if (x < 6 && y < 6 && on(x + 1, y + 1)) o += `<path d="M${P(x, y)}L${P(x + 1, y + 1)}"/>`; if (x > 0 && y < 6 && on(x - 1, y + 1)) o += `<path d="M${P(x, y)}L${P(x - 1, y + 1)}"/>`; } }
     o += '</g>';
-    for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) if (on(x, y) && (y >= 4 || (k === 1 && y === 3 && (x < 2 || x > 4)))) o += `<circle cx="${pd + x * u}" cy="${pd + y * u}" r="3.6" fill="#f4ead6" stroke="#8a7550" stroke-width=".5"/>`;
+    for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) if (on(x, y) && (y >= 4 || (y === 3 && (RSZ[k] === 17 ? x < 2 || x > 4 : RSZ[k] === 15 && (x === 0 || x === 6))))) o += `<circle cx="${pd + x * u}" cy="${pd + y * u}" r="3.6" fill="#f4ead6" stroke="#8a7550" stroke-width=".5"/>`;
     return o + `<circle cx="${pd + 3 * u}" cy="${pd + 3 * u}" r="4.6" fill="#c8501e" stroke="#6a2a12" stroke-width=".6"/></svg>`;
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.foxgeese = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: RSZ, size0: 13, sizeLabel: () => 'Rules',
-    sizeName: (z, l) => rn(l).n[rix(z)], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[rix(v)] } : null, kindArt, levelInfo, start };
+  window.Atlas3D.foxgeese = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: RSZ, size0: 15, sizeLabel: () => 'Rules',
+    sideOpts, sizeName: (z, l) => rn(l).n[rix(z)], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[rix(v)] } : sid === 'bvSide' ? { icon: `<img src="${ICON(sideOf(v).human)}" alt="" style="width:20px;height:20px;vertical-align:-4px;margin-right:6px">` } : null, kindArt, levelInfo, start };
 })();
