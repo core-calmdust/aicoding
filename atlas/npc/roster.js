@@ -15,7 +15,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 25, shogi: 26, go: 32, reversi: 36, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 20, tafl: 25, ur: 20, senet: 20, morris: 10,
-    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, latrunculi: 20, foxgeese: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 23 };
+    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, latrunculi: 20, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 23 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -242,6 +242,15 @@
       b('villain', { a: 'wolf', c: [0x6a6a74, 0xe6e2dc, 0x2a2a38], hat: 'ushanka', hc: [0x5a4030, 0xe8dcc8], held: 'none', brow: 1 }, 'おおかみ|Sheep-chasing Wolf|追羊的狼|追羊的狼|양을쫓는늑대|Волк из «волка и овец»|भेड़ों वाला भेड़िया|ذئب الخراف'),
       b('lady', { a: 'bird', c: [0xfaf6ee, 0xffffff, 0x8a5ac8], beak: 0xe9902a, hat: 'tiara', held: 'fan', ex: ['necklace', 'cape'], cape: 0x8a5ac8 }, '女王陛下のガチョウ|Her Majesty’s Goose|女王陛下的鹅|女王陛下的鵝|여왕폐하의거위|Гусыня Её Величества|महारानी का कलहंस|إوزة جلالة الملكة'),
       b('king', { a: 'fox', c: [0xe07a30, 0xfff2e0, 0xd8a020], hat: 'bigcrown', held: 'orb', ex: ['cape', 'necklace'], cape: 0xb02a3a }, 'エドワード王ギツネ|King Edward Fox|爱德华国王狐|愛德華國王狐|에드워드왕여우|Лис король Эдуард|राजा एडवर्ड लोमड़|الملك إدوارد الثعلب'),
+    ],
+    patolli: [   // the Aztec game of beans and stakes: the beans, the reed mat, the red and blue pebbles, the two chroniclers (Sahagún, Durán), R. C. Bell's reconstruction of 1960, Macuilxochitl the god of games (claude/patolli-spec.md §0 — nothing beyond it)
+      b('sleepy', { a: 'bird', c: [0xc9a46a, 0xfff4dc, 0x12a4b8], beak: 0xe9902a, held: 'seeds' }, 'まめひろいのことり|Bean-picking Bird|拾豆小鸟|拾豆小鳥|콩줍는작은새|Птичка с бобами|फलियाँ चुनती चिड़िया|طائر يلتقط الفاصولياء'),
+      b('merchant', { a: 'rabbit', c: [0xe8d8b8, 0xfff8ea, 0xd8452c], hat: 'straw', hc: [0xd8bd7c, 0x1b120d], held: 'none', ex: ['scarf'], sc: 0xd8452c }, 'ござ編みウサギ|Mat-weaver Rabbit|编席兔|編蓆兔|돗자리짜는토끼|Кролик-циновщик|चटाई बुनता खरगोश|أرنب ناسج الحصير'),
+      b('trickster', { a: 'monkey', c: [0x8a6a4a, 0xf4e2c4, 0x2f6fb8], hat: 'bandana', hc: [0xc8402c], held: 'stone' }, '小石あつめのサル|Pebble-collector Monkey|拾石猴|拾石猴|조약돌모으는원숭이|Обезьянка с камешками|कंकड़ बटोरता बंदर|قرد جامع الحصى'),
+      b('scholar', { a: 'deer', c: [0xc89a64, 0xfff2dc, 0x12a4b8], held: 'book', ex: ['robe'], rc: 0x6a5a4a }, 'サアグンのシカ|Sahagún Deer|萨阿贡鹿|薩阿貢鹿|사아군사슴|Олень Саагун|साहागुन हिरन|الغزال ساهاغون'),
+      b('scholar', { a: 'owl', c: [0x7a6a5a, 0xf4e6cc, 0xd8452c], held: 'quill', ex: ['glasses', 'robe'], rc: 0x3a3430 }, 'デュランフクロウ|Durán Owl|杜兰猫头鹰|杜蘭貓頭鷹|두란부엉이|Сова Дуран|दुरान उल्लू|البومة دوران'),
+      b('sage', { a: 'bear', c: [0x9a7a5a, 0xf6e6cc, 0x12a4b8], hat: 'cap', hc: [0x5a4a3a], held: 'book', ex: ['glasses', 'scarf'], sc: 0x12a4b8 }, 'ベル先生グマ|Bell the Bear|贝尔熊先生|貝爾熊先生|벨선생곰|Медведь Белл|बेल भालू|الدب بيل'),
+      b('king', { a: 'jaguar', c: [0xe8b450, 0xfff4dc, 0x12a4b8], hat: 'flowers', held: 'orb', ex: ['cape', 'necklace'], cape: 0xd8452c }, '五の花マクイルショチトル|Macuilxochitl “Five Flower”|五花马奎尔索奇特尔|五花馬奎爾索奇特爾|다섯꽃마쿠일소치틀|Макуильшочитль «Пять Цветок»|पाँच फूल माकुइलशोचित्ल|ماكويلشوتشيتل «خمس زهرات»'),
     ],
     ludo: [
       b('sleepy', { a: 'monkey', c: [0xc8c0b8, 0xfff4ee, 0xff8a3a], held: 'die', ex: ['scarf'], sc: 0xff8a3a }, 'ラングールのこざる|Langur Kid|叶猴宝宝|葉猴寶寶|랑구르아기원숭이|Детёныш лангура|लंगूर शिशु|صغير اللانغور'),

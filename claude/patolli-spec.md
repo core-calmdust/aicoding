@@ -1,7 +1,7 @@
 # パトリ（patolli/）設計仕様
 
 世界のボドゲ大百科のヒストリカル枠。アステカの賭けのレースゲーム。構造の手本は同じ「サイコロのレース」の `ur/`（ウル王朝のゲーム）。
-状態：制作中（BETA・未掲載）。
+状態：**ALPHA で公開**（2026-11-16、大百科とトップページに登録。§6）。
 
 ## 0. 史料で確かなこと／復元であること（調査 2026-11-16）
 当時のルールは残っていない。画面の文章は必ずこの区別を守る。
@@ -56,7 +56,7 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 - AI：期待値探索（投げ d 回先）＋手数の見積もりによる形勢。Lv.1〜7＝手のあと0投、8〜15＝1投、16〜19＝2投、20＝3投先まで読む（1投読むだけで勝率 約65〜75%、2投目はベルでは差なし・広く知られたルールで65%、3投目は 52〜53%。Lv.20 の1手は平均 3〜4 ミリ秒）。弱いレベルは勝率差のソフトマックスでばらつく。
 - 検査：`node tools/selftest.js`（盤の形、ルールの要点、宝の総数が変わらないこと、自動対局が必ず終わること）。
 
-## 4. 画面（2D版 `patolli/`、2026-11-16。`ur/` を土台に移植。未掲載 BETA：トップページ・大百科には未登録。3D は §5）
+## 4. 画面（2D版 `patolli/`、2026-11-16。`ur/` を土台に移植。3D は §5、大百科への登録は §6）
 ### ファイル
 - `index.html`（画面と CSS）、`app.js`（対局・豆・宝の支払い・棋譜・設定・レート戦）、`app-learn.js`（ルール／レッスン／パズルの入口と進行）、`board2d.js`（盤・駒・豆。画像なしの SVG）、`worker.js`（AIの手・ヒント・振り返りを Worker で）、`landtabs.js`（スマホ横持ちの並び。下記）、`coach.js`＋`coach-i18n.js`、`rvbox.js`＋`rv-i18n.js`（振り返り・PC の振り返りボックスと検討）、`tour.js`（ルール）、`i18n.js`（`tools/gen_i18n.js` が作る）、`lessons.json`・`puzzles.json`・`lux.json`、`online.js`・`online-ui.js`・`online.css`・`i18n-online.js`・`firebase-config.js`（オンライン。下記）。
 - 道具 `patolli/tools/`：`selftest.js`（エンジン）、`learn_common.js`・`gen_puzzles.js`・`audit_puzzles.js`・`gen_lessons.js`・`check_lessons.js`、`learn_i18n.js`（レッスン・パズル・豆知識の ja・en 以外の12言語の表）、`rate_levels.js`（レート戦の各レベルのレート）、`gen_i18n.js`、`board2d-demo.html`、`icon.html`＋`make_icons.js`（仮アイコン）。
@@ -110,7 +110,7 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 - `think` の opts に `rand`（でたらめに指す割合）を足した。`d`・`temp`・`rand` は渡した項目だけがそのレベルの設定を上書きする（PROモード用）。`selftest.js` に「Lv.1＋深さ3 でもでたらめな手が残る／rand:0 で消える」の確認を足した。
 - `think`：ばらつきなし（Lv.19〜20）で勝率がまったく同じ手が並ぶとき、いつも先頭の駒を選んでいて Lv.18 より弱かった（400局で 33.5%）。同点の中から無作為に選ぶようにした。`selftest.js` に Lv.19 対 Lv.18 の確認を足した。
 
-## 5. フル3D（`patolli/?skin=atlas`、2026-11-16。大百科の一覧への登録は別作業）
+## 5. フル3D（`patolli/?skin=atlas`、2026-11-16。大百科の一覧への登録は §6）
 `ur/`・`foxgeese/` と同じ形。2D の DOM 盤（`#frame`）は透明のまま上に残り、タップ・行き先の印・矢印・すき間のラベルと数・支払いで飛ぶ玉はすべて DOM 側。three.js の盤と駒はその下に、DOM 盤とぴったり重ねて描く。
 ### ファイル
 - `atlas/models/patolli.js`（`Table3D.patolli`・`Table3D.MODELS.patolli`）：盤・駒・豆・宝の玉。**画像ファイルは使わず**、色とでこぼこ（法線マップ）は canvas で描く。
@@ -137,3 +137,30 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 - 宝の支払いの動き（玉が飛ぶ・「+n」）は DOM のまま（`view.animatePay`）。ルール（`tour.js`）の小さな盤は 2D のまま（スキンの CSS は `#board` の中だけに効かせる）。
 - マス全体を塗る 2D の印（直前の手・レッスンの光るマス）は、3D では駒を隠さないよう枠だけにする。
 - 確認用：`window.__ptSkin`（`built()`・`piece(side,k)`・`cell(r,c)`・`svg(x,y)`・`beans()`・`gems()`・`busy()`）。
+
+## 6. 大百科・トップページへの登録（2026-11-16、ALPHA。ウル・狐とガチョウと同じ形）
+- **台帳**：`shared/atlas.js` の GAMES（`alpha: true`、cat `hist`・also `race`、色 `#12a4b8`、released 2026-11-16、tags＝historical・ai・rated・daily・lessons・puzzles・variants・mobile。オンラインは Firebase 未作成なので `online` タグなし）と READ。total＝パズル200・レッスン9。名前は14言語（ja「パトリ」／en「Patolli」／zh・zh-TW「帕托利」／ko「파톨리」／ru「Патолли」／hi「पटोली」／ar「باتولي」）。
+- **文言の出どころ（大事）**：歴史・ルールの文は**新しく書かず、2D版の文をそのまま使う**（`patolli/tour.js` の紹介3文と各ページ、`patolli/lux.json` の豆知識9つ、`patolli/i18n.js` の対局の文言）。こうして 2D・3D・ヒストリア・ボスの台詞が同じ内容・同じ確からしさになる。直すときは 2D 側を先に直し、下の各ファイルの同じ文も合わせる。
+  - `atlas/i18n.js` の `about.patolli`＝紹介の「歴史」＋対局設定の注「ルールは R.C.ベル（1960）の復元と、現代に広まっているルール。当時のルールは伝わっていません。」（`ng.credit`。カードの説明欄は5行ぶんの高さしかないので、ほかのゲームと同じ長さに収める）、`hist.patolli`＝「文化」＋豆知識「当時のルールは残っていない／ベルの1960年の復元」。
+  - 新しく書いたのは枠の短い言葉だけ：一覧の一言（`atlas/gamelist-i18n.js`）、トップページの説明（`index.html` の `pt.title`・`pt.desc`）、更新情報の1行（`shared/atlas-updates.js`、14言語とも「（ALPHA）」）、ヒストリアの見出し・年表の行・案内役のひとこと、ボスの名前と肩書き。
+- **読み込み**：`atlas/lazy.js` に `models/patolli.js`・`games/patolli-kit.js`・`games/patolli.js`・`rules/patolli.js`。`atlas/app.js` の R3（アイコンは仮の `images/atlas/patolli.webp` のまま）と FULL_SKIN。レート戦タブは「相手：AI」だけで、押すとフル機能版（`patolli/?skin=atlas&mode=rated`）が開く（`online` タグがなく RTG にもないゲームの共通の動き）。
+- **3Dの道具箱**（`atlas/games/patolli-kit.js`、`window.PatolliKit.make(Table3D, opts)`）：ちゃぶ台対局とルールコースの共用。盤（`Table3D.patolli.board`、ルールを変えると作り直す `setRule`）、駒（`sync`・1マスずつ跳ねて進む `move`・取られた駒が待ちへ戻る）、豆5個（`roll`・`restBeans`、コース用に中央で大きく投げる `beansBig`）、宝の山（`gems`）と支払いの玉（`pay`）、印（`marks`）、タップの判定（`hit`＝マス／待ち・上がりのすき間／豆の場所）、盤の上の文字（`labels`＝宝の数と「待ち」「上がり」。DOM を投影位置に置く。盤が小さいときは数字だけ）。
+- **ちゃぶ台対局**（`atlas/games/patolli.js`）：エンジン（`../patolli/engine.js?v=` と Worker `../patolli/worker.js?v=` は **`patolli/index.html`・`patolli/app.js` と同じ番号**にする。いま 2）をそのまま使う。
+  - カードの「種目」＝ベルの復元（size 1・既定）／広く知られたルール（size 2）。フル機能版へは `&size=` で渡る（`atlas/skin/patolli.js` が rule に直す）。相手は AI Lv.1〜20（レートは `RT_LV`、説明は `lvd`）と二人対戦。手番の「先手／後手」＝どちらが先に投げるか。人はいつも手前（赤・side 0）。持ち時間はバックギャモンと同じ一覧（`clock: 'bg'`）。
+  - 進め方：［投げる］（豆の場所の横のボタン・HUD のボタン・盤のタップ・スペースキー）→ 光る駒**か、その行き先**を1回タップ（どの駒も1投げで動き方は1つなので、選ぶ→決めるの2段階にしない。待ちの駒は待ちのすき間、上がる駒は上がりのすき間でもよい）。行き先の色＝緑：ふつう／青：腕の先（もう一度）／赤：印のマス（払う）／黄：取る。
+  - 動かせない・0 の目は［パス］（1.7秒で自動）。宝の支払いは、エンジンの `ev` を順に、玉が山から山へ飛ぶ → 数字が変わる → 上に説明の帯、で見せる。広く知られたルールの回の切り替え（「第n回」）と破産、ベルの「6個上がり → 場を取る」まで。結果の欄は「終わり方 · 宝 a : b」。
+  - 待った＝2D と同じく「駒を動かした手」の直前（その目のまま選び直す。パスは飛ばす）。ヒント＝2投げ先の勝率でいちばん良い駒をオレンジで示す。投了・時間切れ。3D駒の切り替え（`atlas-pieces`）に追従。スマホ横持ちはウルと同じ `land: 'side'`。
+  - 文言（`TX`）は `patolli/i18n.js`・`patolli/tour.js` から**キーごとに写したもの**（14言語）。2D の文言を変えたらここも合わせる。
+  - 確認用：`window.__ptTable._debug`（`st()`・`phase()`・`legal()`・`force([n,…])`＝次の目を決める・`cell`／`slot`＝画面上の位置）。
+- **3Dルールコース**（`atlas/rules/patolli.js`、案内はダイスン、15ステップ）：2D のルール説明と**同じページ・同じ局面・同じ文**（`patolli/tour.js?v=` の `_TX` を読み込んで使う。番号は `patolli/index.html` と同じにする。いま 3）。紹介（自分の駒＝手前の赤をタップ。「当時のルールは伝わっていない／後世の復元」）→ 盤と道（最後のマスをタップ。注に「R.C.ベルの1960年の復元」）→ 豆（投げて印の数を答える）→ 最初の駒 →「1」で入る → 進む → 駒のいるマスには止まれない → 腕の先でもう一度 → 印のマスは払う → ちょうどで上がる → 動かせないとき（パス＝場へ1）→ 勝ち方 → 広く知られたルール①②③（52マス・「1」で入る／中央で取る／0の目の供え物）。どのステップにも実際の課題があり、目は決めてある。各ページの注（`<ページ>.n`）は本文の下に小さく出す。
+- **ヒストリア**（`atlas/historia/s/patolli.json`＋14言語、案内はダイスン `m-dice`）：§0 の「史料で確か」だけで構成し、段落は 2D の文をそのまま使う。年表＝16世紀（デュラン・サアグンの記録／スペイン人の禁止）→ 1878〜79年（タイラーのアジア起源**説**）→ 1960年（ベルの復元）→ いま（パチーシとは別々に生まれたとみるのが主流）。「52マス＝暦の52年周期」はカソの解釈・説として書く。**「書かない」一覧（僧が手を焼いた／テオティワカンの紀元前から）は入れていない**。マヤの盤（ティカル・コパン）にも触れていない（十字形の盤の話と混ざるため）。盤の図は十字（`grid`＋`mask`。X形は図を回さず注記で説明）。地図のピンは「メキシコ」1つ（spec にある地名だけ。伝わった道筋は史料にないので線は引かない）。`atlas/mapdata.js` にも同じ内容を足した。
+- **ボスと観戦キャラ**（`atlas/npc/roster.js`・`atlas/npc/t/<lang>.js`、14言語）：ボス7体＝まめひろいのことり → ござ編みウサギ → 小石あつめのサル → サアグンのシカ（豆は4個と書いた記録者）→ デュランフクロウ（ござにゴムで描いた盤を書き残した記録者）→ ベル先生グマ（1960年にルールを復元）→ 五の花マクイルショチトル（賽の神＝UR）。画像 `images/atlas/av/boss-patolli-<1〜7>-<0〜3>.webp`（`atlas/tools/bosses.html` で描いて 256px に）。豆知識4行は `lux.json` の文（名前の由来・ござとゴムの盤・賭けと身分・ルールは復元）。t2〜t4 にゲームごとの行は要らない。
+- **トップページ**：`index.html` の一覧（狐とガチョウの次、`alpha:true`、key `pt`）、アイコン `images/icons/patolli.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/patolli.webp`（`node tools/shots.js patolli`）。
+- **キャッシュ番号**：登録で上げたもの＝`shared/atlas.js`（読み込む全ページ。`patolli/`・`loa/`・`hitblow/` に残っていた古い番号も同じ値にそろえた）、`shared/atlas-updates.js`、`atlas/` の app・lazy・gamelist・gamelist-i18n・historia・worldmap・i18n（`node tools/i18n-split.js`）・npc/roster・npc/npc（中の `V`＝台詞ファイルの番号も）、`atlas/skin/common.js`（npc.js の番号を書いているので、読み込む全ページ）。
+- 機械的な確認：14言語のキー・{置き換え}・配列の長さの一致と「ja 以外にかなが無い」こと（新しい文言の表すべて）、`node --check`、JSON。
+
+## 7. 未着手（次の作業）
+- 大百科：正式アイコン（`atlas/icons3d.js`。いまは仮の `images/atlas/patolli.webp`）、3D卓でのレート戦・パズル・レッスン（いまはフル機能版を開く）、ベルの「進む向き：逆向き」の対局設定（3D卓は同じ向きだけ。道具箱は `state.dir` を見るので、カードに項目を足せば動く）。
+- ヒストリア：マヤの盤（古典期前期、ティカル・コパン）をどう扱うか（十字形のパトリとは別系統かもしれないので、いまは書いていない）。
+- オンライン対戦（Firebase `patolli-multiplay`、通信の形式をパトリ用に直す）、`shared/rulesoffer.js` へのパトリの行（いまは `app.js` の `fixRulesOffer()`）。
+- 2D の文言を変えたとき、3D 側の写し（`atlas/games/patolli.js` の `TX`、`atlas/i18n.js` の about／hist、ヒストリア、`atlas/npc/t/`）を作り直す道具がない（今回は手元のスクリプトで作った）。必要になったら `patolli/tools/` に置く。

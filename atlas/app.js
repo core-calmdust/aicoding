@@ -121,7 +121,7 @@
   }
 
   /* ---------- common renderers ---------- */
-  const R3 = new Set(['peg', 'reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom', 'crokinole', 'hockey', 'botao', 'amazons', 'shanghai', 'latrunculi', 'foxgeese']);   // images/atlas/<id>.webp exists
+  const R3 = new Set(['peg', 'reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom', 'crokinole', 'hockey', 'botao', 'amazons', 'shanghai', 'latrunculi', 'foxgeese', 'patolli']);   // images/atlas/<id>.webp exists
   const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'fanorona' || g.id === 'janggi' || g.id === 'morris' || g.id === 'peg' || g.id === 'shanghai' ? 11 : 10}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
@@ -1428,7 +1428,7 @@
     $('bvRtRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openRec(g, 'all', 'rt'); };
     $('bvLsK').addEventListener('change', () => { pref[id + ':lsk'] = $('bvLsK').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} const cl = $('bvi').querySelector('.R .act > a.btn'); if (cl && M() === 'lesson') cl.href = mx2d(g, 'lesson'); });
     // レート戦's time control: a picker button + list sheet (the same UI as the level); its list follows 相手
-    const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c; $('bvRtNote').hidden = !!c || opp === 'online'; if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
+    const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c; $('bvRtNote').hidden = !!c || opp === 'online' || !RTG[id]; /* (a rated game that opens the full game keeps that game's own clock — patolli: 30 s a move — so no "no clock" note) */ if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
     const rtNow = () => { const el = $('bvRtNow'); if (!el) return; const rec = $('bvRtRec'); if (rec) { if (rec.previousElementSibling !== el) { el.after(rec); rec.classList.add('rtrec'); } rec.hidden = !RTG[id] || M() !== 'rated'; }   /* (戦績 (the cup) sits right of the current rating, 2026-11-14) */ const ol = $('bvRtOpp').value === 'online'; const solo = !!el.closest('.rtonly'); el.hidden = !RTG[id] || M() !== 'rated' || (ol && olNowTxt(id) === null && !solo); /* (beside 種目: the right half, rated games only) */ if (!el.hidden) el.innerHTML = `<small>${esc(t('rec.rtNow'))}</small><b>${esc(ol ? olNowTxt(id) || UNPL[lang] || UNPL.en : rtNowTxt(id, $('bvVar') ? $('bvVar').dataset.v || '' : ''))}</b>`; };   // (online: the account's one online rating, as the full page last saw it — shogi/online.js cacheRt)
     const olNowTxt = id => { let o = null; try { o = JSON.parse(localStorage.getItem(id + '-online-rt') || 'null'); } catch (e) {} if (!o && id !== 'shogi') return null; return o && o.n > 0 && typeof o.r === 'number' ? 'R ' + o.r : UNPL[lang] || UNPL.en; };   // (null: a game whose full page does not save its online rating yet — no box)
     rtNowHook = rtNow; rtNow();
@@ -1521,7 +1521,7 @@
     };
     if (window.__bvModeRz) setTimeout(window.__bvModeRz, 0);
   }
-  const FULL_SKIN = { ludo: true, reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, janggi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true, amazons: true, latrunculi: true, foxgeese: true };
+  const FULL_SKIN = { ludo: true, reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, janggi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true, amazons: true, latrunculi: true, foxgeese: true, patolli: true };
   let lastKind;
   function startPlay(kind, over, sub) {   // over: 'puzzle' | 'lesson' — the 「あそぶ」 sheet opens the full game straight at its puzzles / lessons; sub: which part (the card's tabs, mxBind)
     if (renderPlace.close) renderPlace.close();
