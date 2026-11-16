@@ -154,19 +154,22 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
   /* ---------- 問題集: the パズル tab's 問題一覧 → a puzzle on the table → ★ recorded → 次の問題 ---------- */
   {
     const { p, ctx, shot } = await page('book', { width: 1280, height: 800 }, false);
-    await startMode(p, 'daily'); await tap(p, '[data-hbbook]'); await p.waitForTimeout(500); await shot('book-sheet');
-    const nSets = await p.evaluate(() => document.querySelectorAll('#hbBook .hbset').length), nTiles = await p.evaluate(() => document.querySelectorAll('#hbBook .hbset.open .hbgrid button').length);
-    ok(nSets === 10 && nTiles === 50, '問題一覧: 10 courses, the open one shows its 50 puzzles');
-    await tap(p, '#hbBook .hbset[data-set="n1"] .hbset-h'); await p.waitForTimeout(300); await tap(p, '#hbBook [data-go="n1:4"]');
+    await startMode(p, 'daily'); await tap(p, '[data-hbbook]'); await p.waitForTimeout(600); await shot('stage-map');
+    const M = await p.evaluate(() => ({ tabs: document.querySelectorAll('#hbMap .hbtab').length, lk: document.querySelectorAll('#hbMap .hbtab.lk').length, nodes: document.querySelectorAll('#hbMap .hbn').length, open: document.querySelectorAll('#hbMap .hbn:not(.lk)').length, gifts: document.querySelectorAll('#hbMap .hbn.g').length }));
+    ok(M.tabs === 10 && M.lk === 9 && M.nodes === 50 && M.open === 1 && M.gifts === 1, 'ステージマップ: 10 chapters (9 locked), 50 stages, only 1-1 open, the 1-10 gift shown ' + JSON.stringify(M));
+    await p.evaluate(() => document.querySelector('#hbMap [data-go="first:0"]').click());   // (the next stage pulses: not "stable" for a click)
     await p.waitForFunction(() => Atlas3D.hitblow._dbg && !Atlas3D.hitblow._dbg.busy(), null, { timeout: 30000 }); await p.waitForTimeout(800);
-    const d = await D(p); ok(d.cfg.n === 3 && d.hist.length >= 2 && d.hist.every(x => x.by === 2), 'a ナンバー puzzle starts with its clue rows');
+    const d = await D(p); ok(d.cfg.n === 4 && d.hist.length >= 2 && d.hist.every(x => x.by === 2), 'stage 1-1 starts with its clue rows');
     await play(p, d.secret, false);
-    await p.waitForSelector('#endc.on', { timeout: 15000 }); await p.waitForTimeout(400); await closeOv(p); await shot('book-end');
+    await p.waitForSelector('#endc.on', { timeout: 15000 }); await p.waitForTimeout(400); await closeOv(p); await shot('stage-end');
     const rec = await p.evaluate(() => JSON.parse(localStorage.getItem('aicoding-hitblow-pz3d') || '{}'));
-    ok(rec.n1 && rec.n1[4] === 3, 'solved in one without a hint: ★★★ recorded');
+    ok(rec.first && rec.first[0] === 3, 'solved in one without a hint: ★★★ recorded');
     await p.evaluate(() => document.querySelector('#eNext').click());
     await p.waitForFunction(() => Atlas3D.hitblow._dbg && !Atlas3D.hitblow._dbg.busy() && Atlas3D.hitblow._dbg.hist().length >= 2, null, { timeout: 30000 });
-    ok(/#6/.test(await p.evaluate(() => document.body.innerText)), '次の問題 opens the next one (#6)');
+    ok(/1-2/.test(await p.evaluate(() => document.body.innerText)), '次の問題 opens stage 1-2');
+    // the gift: clearing 1-10 gives the stage Atlamo (the portal adds res.grant to the wallet)
+    await p.evaluate(() => { const o = JSON.parse(localStorage.getItem('aicoding-hitblow-pz3d') || '{}'); o.first = o.first || {}; for (let i = 0; i < 9; i++) o.first[i] = o.first[i] || 1; localStorage.setItem('aicoding-hitblow-pz3d', JSON.stringify(o)); Atlas3D.hitblow.pending = { set: 'first', i: 9 }; });
+    await p.evaluate(() => document.querySelector('#tbar [data-a=resign]') && 0);
     await ctx.close();
   }
   /* ---------- the other boards: every 種目 builds and answers right ---------- */
