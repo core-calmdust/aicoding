@@ -104,7 +104,9 @@ function run(o, rar, opt = {}) {
       if (!blasted) blast();
       const u = (t - TB) / 1000;
       // white-out
-      const wo = Math.max(0, 1 - u / .5); if (wo > 0) { g.globalAlpha = wo * wo; g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.globalAlpha = wo * .6; g.fillStyle = C[1]; g.fillRect(0, 0, W, H); }
+      // (a white-out from the centre, gone in a third of a second — not a flat wash of colour)
+      const wo = Math.max(0, 1 - u / .35); if (wo > 0) { const R0 = Math.max(W, H); const wg = g.createRadialGradient(cx, cy, 0, cx, cy, R0 * (.4 + .8 * (1 - wo)));
+        wg.addColorStop(0, 'rgba(255,255,255,1)'); wg.addColorStop(.35, hexA(C[0], .9)); wg.addColorStop(.7, hexA(C[1], .45)); wg.addColorStop(1, hexA(C[2], 0)); g.globalAlpha = Math.pow(wo, 1.4); g.fillStyle = wg; g.fillRect(0, 0, W, H); }
       // the core of the light
       const ca = Math.max(0, 1 - u / 1.1), cr = (180 + 380 * ease(clamp(u / .4, 0, 1))) * s;
       g.globalAlpha = ca; g.drawImage(glow(C[1]), cx - cr, cy - cr, cr * 2, cr * 2); g.globalAlpha = ca * .9; g.drawImage(glow(C[0]), cx - cr * .4, cy - cr * .4, cr * .8, cr * .8);
