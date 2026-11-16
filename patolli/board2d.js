@@ -155,6 +155,53 @@
     return cellXY(state.rule, rc[0], rc[1]);
   }
   const ptXY = (state, q) => !q ? null : q.tray ? traySlot(q.side, q.tray, q.slot || 0) : q.spot ? spotOf(q.spot) : cellXY(state.rule, q.r, q.c);
+  /* ---------------- すき間の文字（待ち・上がり・宝・場）を、空いている幅に収める ----------------
+     長い言語（ロシア語「Клад: Красные」、トルコ語、ポルトガル語など）は腕の先や盤のふちに重なるので、
+     1行で少し縮めれば入るならそうし、足りなければ2行に分け、それでも足りなければ入るまで縮める。
+     幅はページの書体で実際に測る（canvas）。Node（selftest）では測れないので何もしない */
+  let fitCtx = null, fitFont = '';
+  const fitCache = new Map();
+  function fitBegin() {
+    if (typeof document === 'undefined' || !document.body) { fitCtx = null; return; }
+    try {
+      if (!fitCtx) { fitCtx = document.createElement('canvas').getContext('2d'); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => fitCache.clear()); }
+      const ff = getComputedStyle(document.body).fontFamily || 'sans-serif';
+      if (ff !== fitFont) { fitFont = ff; fitCache.clear(); }
+    } catch (e) { fitCtx = null; }
+  }
+  // 太さ 700・大きさ 100 での幅（単位あたりに直して使う）
+  function textW(str, size) {
+    if (!fitCtx) return 0;
+    let w = fitCache.get(str);
+    if (w == null) { fitCtx.font = `700 100px ${fitFont}`; w = fitCtx.measureText(str).width * 1.04; if (fitCache.size > 400) fitCache.clear(); fitCache.set(str, w); }
+    return w * size / 100;
+  }
+  // half(y0, y1)：その高さの帯で、中心 x から左右に使える幅の半分。
+  // places：置き場所の候補 [{ y, dir }]（先頭がふだんの場所。dir は2行にするとき伸ばす向き：-1 上、+1 下、0 は2行にしない）。
+  // ふだんの場所に1行で（9割までの縮小で）入ればそのまま。入らなければ、候補のうちいちばん大きい字で入るものを選ぶ
+  function fitText(str, x, size, half, places, attrs) {
+    str = String(str == null ? '' : str);
+    const one = (t, yy, f) => `<text x="${f1(x)}" y="${f1(yy)}" font-size="${f1(f)}" ${attrs}>${esc(t)}</text>`;
+    fitBegin();
+    if (!fitCtx || !str) return one(str, places[0].y, size);
+    const band = (yy, f) => Math.max(20, 2 * half(yy - f * .86, yy + f * .26));
+    let best = null;
+    const take = (k, bonus, draw) => { if (!best || k + bonus > best.score + .001) best = { score: k + bonus, draw }; };
+    for (let n = 0; n < places.length; n++) {
+      const { y, dir } = places[n], k1 = Math.min(1, band(y, size) / textW(str, size));
+      if (n === 0 && k1 >= .9) return one(str, y, size * k1);
+      take(k1, -n * .05, () => one(str, y, size * Math.max(.5, k1)));
+      if (!dir) continue;
+      // 2行：空白のうち、いちばん大きい字で入る所で分ける
+      for (let i = str.indexOf(' '); i > 0; i = str.indexOf(' ', i + 1)) {
+        const A = str.slice(0, i), B = str.slice(i + 1); if (!A.trim() || !B.trim()) continue;
+        let k = 1, ya = y, yb = y;
+        for (let it = 0; it < 3; it++) { const f = size * k, lh = f * 1.12; ya = dir < 0 ? y - lh : y; yb = dir < 0 ? y : y + lh; k = Math.min(1, k * Math.min(band(ya, f) / textW(A, f), band(yb, f) / textW(B, f))); }
+        take(k, -n * .05 - .08, () => { const f = size * Math.max(.5, k), lh = f * 1.12; return one(A, dir < 0 ? y - lh : y, f) + one(B, dir < 0 ? y : y + lh, f); });
+      }
+    }
+    return best.draw();
+  }
   function liveSVG(p, state, o, opt) {
     opt = opt || {};
     const g = geo(state.rule), u = g.u, Rr = g.R, D = BD[o.design] || BD.petate, pd = u * .74, lab = o.trayLabel || (k => '');
@@ -187,19 +234,19 @@
         const b = trayBox(sd, kind);
         if (o.trays !== false) {
           s += `<g class="pt-trayb" data-side="${sd}" data-kind="${kind}"><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="18" fill="${D.ink}" fill-opacity=".1" stroke="${D.ink}" stroke-opacity=".28" stroke-width="2" stroke-dasharray="${kind === 'goal' ? '0' : '6 5'}"/>` +
-            `<text x="${b.cx}" y="${b.ly + 7}" text-anchor="middle" font-size="24" font-weight="700" fill="${D.ink}" fill-opacity=".86" style="paint-order:stroke" stroke="${D.bg[0]}" stroke-opacity=".5" stroke-width="3">${esc(lab(kind))} ${list.length}</text></g>`;
+            fitText(lab(kind) + ' ' + list.length, b.cx, 24, () => Math.min(TX0 - 6, 482 - Math.abs(b.cx)), [{ y: b.ly + 7, dir: 0 }], `text-anchor="middle" font-weight="700" fill="${D.ink}" fill-opacity=".86" style="paint-order:stroke" stroke="${D.bg[0]}" stroke-opacity=".5" stroke-width="3"`) + `</g>`;
           list.forEach((k, j) => { const [x, y] = traySlot(sd, kind, j); s += pieceSVG(p, o.pieces, sd, x, y, TD, k, 'pt-pc pt-off', `data-side="${sd}" data-pos="${kind === 'start' ? 0 : Rr.goal}" data-piece="${k}"`); });
         }
       }
     }
-    // 宝：各自と場
+    // 宝：各自と場。名前はふだん数の外側（青は上、赤は下）。長くて入らない言語は、すき間の広い内側（数と場の間）に置き、要れば2行にする
     if (o.trays !== false && state.gold) {
       for (const [w, n, t] of [[1, state.gold[1], lab('gold1')], ['pool', state.pool, lab('pool')], [0, state.gold[0], lab('gold0')]]) {
         const [x, y] = spotOf(w), pool = w === 'pool';
         s += `<g class="pt-gold" data-w="${w}">` + (pool ? `<circle cx="${x}" cy="${y}" r="62" fill="${D.ink}" fill-opacity=".1" stroke="${D.ink}" stroke-opacity=".32" stroke-width="2" stroke-dasharray="5 5"/>` : '') +
           gemsSVG(p, x - (pool ? 0 : 34), y - (pool ? 16 : 0), n, pool ? 1 : .9) +
           `<text x="${x + (pool ? 0 : 22)}" y="${y + (pool ? 40 : 15)}" text-anchor="middle" font-size="${pool ? 40 : 44}" font-weight="800" fill="${D.ink}" style="paint-order:stroke" stroke="${D.bg[0]}" stroke-opacity=".6" stroke-width="4" font-family="'JetBrains Mono',ui-monospace,monospace">${n}</text>` +
-          (t ? `<text x="${x + (pool ? 0 : -4)}" y="${y + (pool ? -44 : w === 0 ? 52 : -34)}" text-anchor="middle" font-size="23" font-weight="700" fill="${D.ink}" fill-opacity=".86" style="paint-order:stroke" stroke="${D.bg[0]}" stroke-opacity=".5" stroke-width="3">${esc(t)}</text>` : '') + `</g>`;
+          (t ? fitText(t, x + (pool ? 0 : -4), 23, (ya, yb) => { const cx = x + (pool ? 0 : -4); return Math.min(480 - cx, cx - (Math.max(Math.abs(ya), Math.abs(yb)) + R2 * u * 1.07 + 8)); }, pool ? [{ y: y - 44, dir: 0 }] : w === 0 ? [{ y: y + 52, dir: 0 }, { y: y - 32, dir: -1 }] : [{ y: y - 34, dir: 0 }, { y: y + 43, dir: 1 }], `text-anchor="middle" font-weight="700" fill="${D.ink}" fill-opacity=".86" style="paint-order:stroke" stroke="${D.bg[0]}" stroke-opacity=".5" stroke-width="3"`) : '') + `</g>`;
       }
     }
     // 盤上の駒

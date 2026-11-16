@@ -103,7 +103,9 @@ a.snd{text-decoration:none}
 .frame{position:relative;width:var(--bw);aspect-ratio:1/1;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .board-wrap{position:absolute;inset:0}
 .board-wrap svg.pt-board{filter:drop-shadow(0 18px 24px rgba(0,0,0,.5))}
-/* 豆を投げる場所：X の左のすき間（board2d.js の SPOT.dock と同じ位置）。投げられるときは豆を片づけて「投げる」ボタンを出す */
+/* 豆を投げる場所：X の左のすき間（board2d.js の SPOT.dock と同じ位置）。投げられるときは豆を片づけて「投げる」ボタンを出す。
+   ボタンは字と高さに下限（13px・34px）があるので、盤が小さいとき（スマホ横持ちの小さい画面など）や名前の長い言語では、
+   すき間（.dice-dock の幅）より大きくなる分だけ全体を縮める（app.js fitRollPill → --rps） */
 .dice-dock{position:absolute;left:2.2%;top:37.5%;width:21.6%;height:25%;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto;cursor:pointer;border-radius:12px;transition:opacity .25s}
 .dice-dock .dice-host{position:absolute;inset:0 0 14% 0}
 .dice-dock .dice-cap{position:absolute;left:0;right:0;bottom:-2%;text-align:center;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;font-weight:800;font-size:clamp(13px, calc(var(--bw) * .03), 26px);line-height:1;color:#2a1d10;white-space:nowrap;text-shadow:0 0 6px rgba(255,244,214,.9),0 0 2px rgba(255,244,214,.9);min-height:1em}
@@ -112,7 +114,7 @@ html[data-bd=mosaic] .dice-dock .dice-cap, html[data-bd=night] .dice-dock .dice-
 .dice-dock.rolling .dice-host{opacity:1}
 .dice-dock.can:not(.rolling) .dice-host{opacity:0}
 .dice-dock.can:not(.rolling) .dice-cap{visibility:hidden}
-.dice-dock .roll-pill{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;
+.dice-dock .roll-pill{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--rps,1));display:flex;align-items:center;justify-content:center;
   min-width:86%;height:clamp(34px, calc(var(--bw) * .07), 56px);padding:0 .7em;box-sizing:border-box;border-radius:999px;
   background:linear-gradient(180deg,#27c0d0,#0c7f90);border:2px solid #052e34;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 5px 10px rgba(0,0,0,.45);
   font-family:'Zen Kaku Gothic New',sans-serif;font-weight:800;font-size:clamp(13px, calc(var(--bw) * .026), 22px);letter-spacing:.08em;white-space:nowrap;line-height:1;color:#fff;text-shadow:0 1px 2px rgba(0,40,46,.8);
@@ -121,7 +123,7 @@ html[data-bd=mosaic] .dice-dock .dice-cap, html[data-bd=night] .dice-dock .dice-
 @keyframes rpGlow{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 5px 10px rgba(0,0,0,.45),0 0 0 0 rgba(255,236,150,0)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 5px 10px rgba(0,0,0,.45),0 0 0 5px rgba(255,236,150,.5)}}
 body.no-anim .dice-dock.can .roll-pill{animation:none}
 .dice-dock .roll-pill:hover{filter:brightness(1.1)}
-.dice-dock .roll-pill:active,.dice-dock.press .roll-pill{transform:translate(-50%,-50%) translateY(2px) scale(.97);filter:brightness(.9)}
+.dice-dock .roll-pill:active,.dice-dock.press .roll-pill{transform:translate(-50%,-50%) translateY(2px) scale(calc(var(--rps,1) * .97));filter:brightness(.9)}
 .dice-dock .roll-pill:focus-visible{outline:2px solid #fff;outline-offset:3px}
 .dice-dock.rolling .roll-pill{display:none}
 .dice-dock:not(.can) .roll-pill{display:none}
@@ -405,8 +407,9 @@ html.ngt-land #newOverlay .modal.ngt-on > .ng-credit{max-width:calc(100% - 390px
 /* 盤6種・駒6種：端数の出ない並びにする（5+1 にしない）。欄の幅が 560px 以上なら 6×1、それより狭ければ 3×2。
    共通部品（shared/nglux.js・ngtabs.js）の auto-fill より優先させるため id で指定し、画面の幅ではなく欄の幅（コンテナクエリ）で決める */
 #newOverlay #fDesign, #newOverlay #fPieces{container-type:inline-size}
-#newOverlay .modal #bdRow, #newOverlay .modal #pcRow{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-@container (min-width: 560px){#newOverlay .modal #bdRow, #newOverlay .modal #pcRow{grid-template-columns:repeat(6,minmax(0,1fr))!important}}
+#newOverlay .modal #bdRow, #newOverlay .modal #pcRow, #newOverlay .modal:not(#_) #f3D .bdrow, #newOverlay .modal:not(#_) .a32-pc3 .bdrow{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+@container (min-width: 560px){#newOverlay .modal #bdRow, #newOverlay .modal #pcRow, #newOverlay .modal:not(#_) #f3D .bdrow, #newOverlay .modal:not(#_) .a32-pc3 .bdrow{grid-template-columns:repeat(6,minmax(0,1fr))!important}}
+/* （3Dスキンの「3D盤」「3D駒」の列 #f3D .bdrow / .a32-pc3 .bdrow も同じ並び） */
 /* タイルの名前は切らずに折り返す（英語などの長い名前） */
 #newOverlay .modal .dsg button > span:last-child{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere;text-align:center;line-height:1.25}
 /* ルールのカードの名前（「Bell’s reconstruction」など）も切らずに折り返す */
@@ -968,7 +971,7 @@ html.ngt-land #newOverlay .modal.ngt-on > .ng-credit{max-width:calc(100% - 390px
 <script src="../shared/fischer.js?v=1"></script>
 <script src="../shared/ruletour.js?v=30tw"></script>
 <script src="engine.js?v=2"></script>
-<script src="board2d.js?v=1"></script>
+<script src="board2d.js?v=2"></script>
 <script src="tour.js?v=3" onerror="window.__noTour=1"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
@@ -980,7 +983,7 @@ html.ngt-land #newOverlay .modal.ngt-on > .ng-credit{max-width:calc(100% - 390px
 <script src="../shared/onlinesec.js?v=2l14as1"></script>
 <script src="online.js?v=1"></script>
 <script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 <script src="rv-i18n.js?v=2"></script>
 <script src="rvbox.js?v=1"></script>
 <script src="../shared/luxintro.js?v=3"></script>
@@ -1000,7 +1003,7 @@ html.ngt-land #newOverlay .modal.ngt-on > .ng-credit{max-width:calc(100% - 390px
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // 念のため
-  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=3')).then(() => load('../atlas/table3d.js?v=180')).then(() => load('../atlas/tables3d.js?v=146')).then(() => load('../atlas/skin/common.js?v=108')).then(() => load('../atlas/models/patolli.js?v=1')).then(() => load('../atlas/skin/patolli.js?v=1'))
+  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=3')).then(() => load('../atlas/table3d.js?v=180')).then(() => load('../atlas/tables3d.js?v=146')).then(() => load('../atlas/skin/common.js?v=108')).then(() => load('../atlas/models/patolli.js?v=1')).then(() => load('../atlas/skin/patolli.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });   // 3Dのファイルが読めないとき：2Dのまま
 })();
 </script>

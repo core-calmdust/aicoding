@@ -47,6 +47,10 @@ html.atlas-fox .pieces .hov.p2{background:radial-gradient(circle at 40% 35%,#fff
 html.atlas-fox .reserve .rsv-plate{background:rgba(26,14,22,.84)!important;box-shadow:0 0 0 1px rgba(226,170,214,.45),0 2px 6px rgba(0,0,0,.35)!important;color:#f0d9e6!important}
 html.atlas-fox .reserve .rsv-plate .rsv-l b,html.atlas-fox .reserve .rsv-plate .rsv-w:not(.hot) b{color:#fff2dc!important}
 html.atlas-fox .reserve .rsv-plate .rsv-w:not(.hot){color:#f0d9e6!important;background:transparent!important}
+/* a game with clocks (rated / online): the two players one above the other — side by side the clock chip left no room for the names */
+html.atlas-skin.atlas-fox:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:not(:has(> .pl-info)):has(.clk:not(:empty)){grid-template-columns:minmax(0,1fr)!important;gap:6px!important}
+html.atlas-skin.atlas-fox:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:has(.clk:not(:empty)) > .player :is(.name, .nm){display:block!important;-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis;font-size:13.5px!important}
+html.atlas-skin.atlas-fox:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:has(.clk:not(:empty)) > .player .clk{font-size:14px!important}
 `;
   document.head.appendChild(st);
 
