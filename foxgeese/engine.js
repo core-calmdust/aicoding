@@ -25,7 +25,8 @@ const RULES = {
 };
 const RULE_ORDER = ['g13', 'g17'];
 const FOX_WINS_AT = 5;                // geese left: they can no longer shut the fox in
-const QUIET_MAX = 160;                // plies without a capture that end the game as a draw (this program's own rule)
+const QUIET_MAX = +((typeof process !== 'undefined' && process.env && process.env.FG_QUIET) || 120);   // plies without a capture after which the fox wins: the geese have failed to shut it in (this program's own rule, 60 moves each)
+const REP_MAX = 3;                    // the same position (same side to move) for the third time: the fox wins — the geese are making no progress (this program's own rule)
 const MAX_JUMPS = 7;
 let R = RULES.g13, RK = 'g13';
 const ON = new Uint8Array(NN), RC = [];
@@ -161,12 +162,15 @@ function replay(start, moves) {
   for (const m of moves) { pos.play(m); hashes.push(pos.h1); }
   return { pos, hashes };
 }
-// {over, winner, draw, why}: 'few' (five geese or fewer) | 'trap' (the fox cannot move) | 'stuck' (the geese cannot move) | 'quiet'
-function judge(pos) {
+// {over, winner, why}: 'few' (five geese or fewer) | 'trap' (the fox cannot move) | 'stuck' (the geese cannot move) |
+// 'quiet' (QUIET_MAX plies without a capture) | 'rep' (the position for the third time; needs the game's hashes from replay())
+// There is no draw: the geese have to shut the fox in, and a game that goes nowhere is the fox's.
+function judge(pos, hashes) {
   if (pos.geese <= FOX_WINS_AT) return { over: true, winner: P1, why: 'few' };
   if (!pos.side) { if (!pos.foxMoves([]).length) return { over: true, winner: P2, why: 'trap' }; }
   else if (!pos.gooseMoves([]).length) return { over: true, winner: P1, why: 'stuck' };
-  if (pos.quiet >= QUIET_MAX) return { over: true, winner: 0, draw: true, why: 'quiet' };
+  if (pos.quiet >= QUIET_MAX) return { over: true, winner: P1, why: 'quiet' };
+  if (hashes && hashes.length > 4) { const h = hashes[hashes.length - 1]; let n = 0; for (let i = hashes.length - 1; i >= 0; i -= 2) if (hashes[i] === h && ++n >= REP_MAX) return { over: true, winner: P1, why: 'rep' }; }
   return { over: false };
 }
 // ---------------------------------------------------------------- AI levels (20 steps: Lv.1 … Lv.20)
@@ -201,17 +205,19 @@ function evaluate(pos) {
   }
   v += loose * EW.loose - adv * EW.adv;
   v += RK === 'g13' ? 1210 : 1640;      // (centred: the start is about 0)
+  if (pos.quiet > 20) { const u = (pos.quiet - 20) / (QUIET_MAX - 20); v += u * u * 900; }   // the clock runs for the fox
   return pos.side ? -v : v;
 }
 // ---------------------------------------------------------------- search
 let nodes = 0, stop = false, tEnd = 0, nodeLimit = Infinity;
 const TT = new Map(), killers = [];
+let REP = null;                       // hash → times the position has already stood in the game (set by think / analyze)
+function setHist(hashes) { REP = null; if (!hashes) return; const c = new Map(); let any = false; for (const h of hashes) { const n = (c.get(h) || 0) + 1; c.set(h, n); if (n >= REP_MAX - 1) any = true; } if (any) { REP = c; TT.clear(); } }
 function kreset() { killers.length = 0; }
 function ttClear() { TT.clear(); }
 function terminal(pos, ply) {
   const j = judge(pos);
   if (!j.over) return null;
-  if (j.draw) return 0;
   return j.winner === pos.side + 1 ? WIN - ply : -WIN + ply;
 }
 function orderMoves(pos, L, ttm, ply) {
@@ -231,6 +237,7 @@ function search(pos, d, a, b, ply) {
   if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit)) stop = true;
   if (stop) return 0;
   const tv = terminal(pos, ply); if (tv !== null) return tv;
+  if (REP && ply > 0 && (REP.get(pos.h1) || 0) >= REP_MAX - 1) return pos.side ? -WIN + ply : WIN - ply;   // the third time: the fox wins
   if (d <= 0) return quiesce(pos, a, b, ply, 0);
   const e = TT.get(pos.h1), a0 = a;
   let ttm = -1;
@@ -326,7 +333,7 @@ function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
   const L = PRO_CFG || LEVELS[level] || LEVELS[10];
-  const { pos } = replay(start, moves);
+  const { pos, hashes } = replay(start, moves); setHist(hashes);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
   if (all.length === 1) return { move: all[0] };
@@ -350,7 +357,7 @@ function think(start, moves, level, rand, rule) {
 const kindOf = v => v > WINT ? 'win' : v < -WINT ? 'loss' : 'heur';
 function analyze(start, moves, ms, onProgress, rule) {
   if (rule) setRule(rule);
-  const { pos } = replay(start, moves);
+  const { pos, hashes } = replay(start, moves); setHist(hashes);
   nodes = 0; stop = false; tEnd = Date.now() + (ms || 1000); nodeLimit = Infinity; kreset();
   let list = [], depth = 0;
   const n = pos.moves().length;
@@ -416,6 +423,7 @@ function goalB(pos, k, me, G) {
 const goalOf = (pos, g) => ({ goal: g && g.goal || (pos.side ? 'win' : 'take'), gain: g && g.gain || 1, base: pos.cap });
 function goalGood(start, moves, n, g, rule, budget) {
   if (rule) setRule(rule);
+  setHist(null);
   const { pos } = replay(start, moves), me = pos.side + 1, G = g && g.base != null ? g : goalOf(pos, g), out = [];
   solveBudget = budget || 400000;
   for (const m of pos.moves()) {
@@ -432,6 +440,7 @@ function goalMin(start, moves, max, g, rule, budget) {
 }
 function goalReply(start, moves, n, G, rule) {
   if (rule) setRule(rule);
+  setHist(null);
   const { pos } = replay(start, moves), me = 2 - pos.side;
   let best = -1, bk = -1, bv = -Infinity;
   for (const m of pos.moves()) {

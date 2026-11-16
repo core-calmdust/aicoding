@@ -1,6 +1,6 @@
 # ルドゥス・ラトルンクロルム（latrunculi/）仕様
 
-URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒストリカル。**2026-11-16 時点は未掲載の BETA**：トップページ・大百科ポータルには未登録、URL 直打ちで遊べる）。テーマ色 #6a2358（ティリアン・パープル＝皇帝の紫。既存の赤・ワイン・青紫と被らない）。
+URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒストリカル、`also: ['chess']`。**ALPHA**（新作は ALPHA から。切り替えはユーザーの指示で）。2026-11-16 にトップページと大百科ポータルへ登録：下の「大百科への登録」）。テーマ色 #6a2358（ティリアン・パープル＝皇帝の紫。既存の赤・ワイン・青紫と被らない）。
 
 ## ルール（確実性優先：古代のルールは失われており、すべて現代の復元）
 出典（2026-11 確認）：Locus Ludi（フリブール大学）のルールシート「Ludus latrunculorum — Seneca variant / Piso variant」（U. Schädler 1994・2001 に基づく）、Wikipedia「Ludus latrunculorum」（ウァロ・オウィディウス・マルティアリス・『ピソ頌』・イシドルス・マクロビウス、ローマ時代ブリテンの 7×8・8×8・9×10 の盤、ヴィンドランダ、Museum Quintana のルール）。
@@ -40,18 +40,29 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - コーチ（coach.js、ja/en）：方針分類＝勝ち筋・2個挟む・挟む・助ける・守る・跳ぶ・寄せる・並べる／離して置く。置く段階は定跡ではなく原則（並べる・隅を避ける）で解説。
 - 振り返り解説：挟みを逃した・助けを逃した・挟まれる形を作った。
 - オンライン：Firebase プロジェクト未作成のため準備中（firebase-config.js が null）。作成後に secrules.py へ追加。
-- 言語：**ja・en のみ**（残り12言語は i18n-lt-more.js・coach-i18n.js に追加する。揃うまで言語メニューに出さない：app.js の SUPPORTED / window.LT_LANGS）。
+- 言語：**14言語**（2026-11-16。残り12言語は i18n-lt-more.js・coach-i18n.js・lux.json。言語メニューは app.js の SUPPORTED / window.LT_LANGS。検査：全言語でキー206・コーチ113の抜けなし、差し込み記号一致、PC／スマホで表示確認。zh の題名「罗马强盗棋」は定訳未確認）。
 
 ## 3D（フル機能版 ?skin=atlas、2026-11-16）
 - atlas/models/latrunculi.js：3D盤6種（Table3D.BOARDS.latrunculi、保存キー atlas-latrunculi-look）＝大理石（既定）・トラバーチン・屋根瓦・モザイクの床・くるみ材・斑岩。2Dの盤画像（latrunculi/img/bd-*・fr-*）を面と縁に貼り、格子の溝を法線マップで彫る。3D駒6種（Table3D.PIECES.latrunculi、atlas-latrunculi-pc3）＝黒と白のガラス（既定）・青と琥珀のガラス・骨と角・川の小石・青銅と銀の硬貨・素焼きの赤と白。`Table3D.latrunculi.turn(g, k)` で駒を裏返す。
 - atlas/skin/latrunculi.js：2Dページの駒（syncPieces / animateMove / .inc クラス）を3Dに写す。置く＝上から落ちる、移動＝滑る、跳び＝味方を越えて弧を描く、取る＝浮いて消える、挟まれた駒＝その場で跳ねて裏返る（助けられたら表に戻る）。デザインタブの「3D盤」「3D駒」は共通の `AtlasSkin.rows3d`。レート戦・レッスン・パズル・コーチは2Dと同じものがそのまま3D盤で動く。
 - サムネイル：atlas/img/boardic-latrunculi-*・board-latrunculi-*・pc3-latrunculi-*.webp（atlas/tools/boardicon.html?game=latrunculi&look=…[&pcs=…]）。
 
+## 大百科への登録（2026-11-16、コナネと同じ形）
+- **台帳**：`shared/atlas.js` の GAMES（`alpha: true`、released 2026-11-16、tags＝historical・ai・rated・daily・lessons・puzzles・variants・mobile。オンラインは Firebase 未作成なので `online` タグなし）と READ（パズル・レッスン・今日の一問・レート・ルール）。total＝パズル250・レッスン7。名前は14言語（ja「ルドゥス・ラトルンクロルム」／en「Ludus Latrunculorum」／zh「罗马兵棋」／ru「Латрункули」ほか）。
+- **文言（14言語）**：`atlas/i18n.js` の `about.latrunculi`・`hist.latrunculi`、`atlas/gamelist-i18n.js` の一言、`shared/atlas-updates.js` の公開行、トップページ `index.html` の `lt.title`・`lt.desc`。
+- **読み込み**：`atlas/lazy.js` に models／games／rules の3本。`atlas/app.js` の R3（アイコン images/atlas/latrunculi.webp は仮のまま）と FULL_SKIN。
+- **ちゃぶ台対局**（`atlas/games/latrunculi.js`）：エンジン（`../latrunculi/engine.js` をページと Worker で）そのままの3ルール。カードの「種目」＝シェードラー式・ピソ式・クインタナ式（size 1・2・3。フル機能版へは `&size=` で渡り、`atlas/skin/latrunculi.js` が rule に直す）。モードは 対戦（AI Lv.1〜20・二人で対戦）／レート戦・パズル・レッスンはフル機能版（`?skin=atlas`）を開く。入力は2Dと同じ（置く＝空きマス、動かす＝駒→行き先、取り除く駒が複数なら先に選ぶ・1個なら自動）。置く＝落ちる、1歩・クインタナの直進＝滑る、跳び＝味方を越える弧、挟まれた駒＝跳ねて裏返る（**裏返った駒には細い赤い輪**）、助けたら表に戻る、取る＝浮いて消える。HUD の数字は置く間＝残りの手持ち、そのあと＝取った数。待った・ヒント・投了。引き分けの申し込みはなし（引き分けは「取った数が同じ」で終わったときだけ）。3D駒の切り替え（`atlas-pieces`）に追従。
+- **3Dルールコース**（`atlas/rules/latrunculi.js`、案内はポーンひつじ `av/pawn-0`、11ステップ）：紹介 → 置く → 1歩 → 味方を跳び越える → 挟むと裏返る → 次の番に取る → 助ける → 隅 → 間に入っても安全 → 勝ち負け → 3つのルール。課題の正解はエンジンで判定。**3D盤には座標がないのでマス名を言わない**（「光っているマス」）。「タップ」は PC で「クリック」（shared/tapword.js）。
+- **ヒストリア**（`atlas/historia/s/latrunculi.json`＋14言語、案内は同じポーンひつじ）：この spec と 2D の紹介文にある事実だけで構成（ウァロ・オウィディウス・マルティアリス・『ピソ頌』・ブリテン島の盤・中世のチェスの名・シェードラーの復元・クインタナ博物館）。地図のピン＝ローマ・ブリテン島・フリブール・キュンツィング（`atlas/mapdata.js` にも同じ内容）。
+- **ボスと観戦キャラ**（`atlas/npc/roster.js`・`atlas/npc/t/<lang>.js`、14言語）：ボス7体（ローマのこひつじ → ガラス職人ネコ → 傭兵ギツネ → ウァロフクロウ → 詩人ことり → 軍団兵オオカミ → 名手ピソ・ライオン＝UR）。画像 `images/atlas/av/boss-latrunculi-<1〜7>-<0〜3>.webp`（atlas/tools/bosses.html で描画）。豆知識4行。
+- **トップページ**：`index.html` の一覧（セネトの次、`alpha:true`）、アイコン `images/icons/latrunculi.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/latrunculi.webp`（tools/shots.js）。
+- Praline のマーク（shared/praline-badge.js の一覧）には入れていない（1スレッドの JS エンジンのため）。mtsplit／tools/mtsim も対象外。
+
 ## 未着手（次の作業）
-- 残り12言語、レッスンの準備ステップ、piso・quintana のレッスン／パズル、ルール違いタブ。
-- 大百科：GAMES 登録・正式アイコン・地図・ヒストリア・ちゃぶ台対局（atlas/games）・3Dルールコース（atlas/rules）・NPC の台詞。
+- レッスンの準備ステップ、piso・quintana のレッスン／パズル、ルール違いタブ。
+- 大百科：正式アイコン（icons3d.js のシーン＋書き出し。いまは仮の images/atlas/latrunculi.webp）、3D卓でのレート戦・パズル・レッスン（`atlas/app.js` RTG・`atlas/puzzles.js`・`atlas/lessons3d.js`。いまはフル機能版を開く）、種目カードの絵と説明を 2D のルールカードから作る `atlas/kindart.js`（2Dが14言語になってから。いまはアダプタ内の文言と簡易な絵）。
 - AI：評価と探索の強化、WASM 化、マルチスレッド、レート基準値の実測。
-- トップページ掲載、OG 画像（images/latrunculi.webp）、アイコン（images/atlas/latrunculi.webp）。
+- OG 画像（images/latrunculi.webp）の撮り直し、オンライン対戦（Firebase プロジェクト）。
 
 ## 保存キー
 - aicoding-latrunculi（設定・対局）、-lessons、-puzzles、-daily、-rated、-rules、latrunculi-online-name。

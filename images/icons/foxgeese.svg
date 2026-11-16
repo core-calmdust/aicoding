@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- Fox and Geese: the middle of the cross-shaped oak board with its lines, the fox (two pointed ears) facing three geese -->
+  <defs>
+    <clipPath id="fg-c"><rect width="96" height="96" rx="20"/></clipPath>
+    <linearGradient id="fg-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c8c2c"/><stop offset="1" stop-color="#414b14"/></linearGradient>
+    <linearGradient id="fg-ok" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e3c48d"/><stop offset="1" stop-color="#c39a5c"/></linearGradient>
+    <radialGradient id="fg-f" cx=".4" cy=".32" r=".8"><stop offset="0" stop-color="#f08a4a"/><stop offset=".6" stop-color="#c8501e"/><stop offset="1" stop-color="#8a3210"/></radialGradient>
+    <radialGradient id="fg-g" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#f3ead8"/><stop offset="1" stop-color="#c9bc9d"/></radialGradient>
+  </defs>
+  <g clip-path="url(#fg-c)">
+    <rect width="96" height="96" fill="url(#fg-bg)"/>
+    <path d="M32 6h32v26h26v32H64v26H32V64H6V32h26z" fill="url(#fg-ok)"/>
+    <g stroke="#5a3a1c" stroke-width="1.5" fill="none" stroke-linecap="round">
+      <path d="M48 12v72M22 22v52M74 22v52M12 48h72M22 22h52M22 74h52M22 22l52 52M74 22L22 74"/>
+    </g>
+    <g fill="#5a3a1c"><circle cx="22" cy="22" r="2.2"/><circle cx="74" cy="22" r="2.2"/><circle cx="48" cy="48" r="2.2"/><circle cx="22" cy="48" r="2.2"/><circle cx="74" cy="48" r="2.2"/></g>
+    <ellipse cx="49" cy="33" rx="12" ry="3.2" fill="#000" opacity=".18"/>
+    <path d="M38 18l5 9h-9zM58 18l4 9h-9z" fill="#c8501e" stroke="#8a3210" stroke-width=".8" stroke-linejoin="round"/>
+    <circle cx="48" cy="24" r="11.5" fill="url(#fg-f)"/><path d="M42 27q6 6 12 0l-6 6z" fill="#fff3e2"/><circle cx="43.5" cy="22.5" r="1.5" fill="#2a1a10"/><circle cx="52.5" cy="22.5" r="1.5" fill="#2a1a10"/><circle cx="48" cy="29" r="1.3" fill="#2a1a10"/>
+    <g>
+      <ellipse cx="23" cy="80" rx="9" ry="2.6" fill="#000" opacity=".16"/><ellipse cx="49" cy="80" rx="9" ry="2.6" fill="#000" opacity=".16"/><ellipse cx="75" cy="80" rx="9" ry="2.6" fill="#000" opacity=".16"/>
+      <circle cx="22" cy="72" r="9" fill="url(#fg-g)"/><circle cx="48" cy="72" r="9" fill="url(#fg-g)"/><circle cx="74" cy="72" r="9" fill="url(#fg-g)"/>
+      <path d="M20 62l2-5 2 5zM46 62l2-5 2 5zM72 62l2-5 2 5z" fill="#e9902a"/>
+    </g>
+  </g>
+</svg>

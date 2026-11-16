@@ -2544,3 +2544,44 @@ html.lite :is(#home,#chara).aaa .aa-logo .lg-k::after{animation:none}
 #game .bf.rii::after{content:"";position:absolute;inset:-5px;border:2px solid #f3d48a;border-radius:calc(var(--bf, 52px) * .12 + 5px);pointer-events:none;will-change:opacity;animation:riiFade 1.4s ease-in-out infinite}
 @keyframes riiFade{50%{opacity:.3}}
 html.lite #game .bf.rii::after{animation:none}
+/* (2026-11-16, ユーザー: PC) the two skill plates stand exactly as tall as the portrait's frame, to its left: top with its top, bottom
+   with its bottom (each plate takes half, less the gap). The column is scaled (hz × .82) from its top-left corner, so its layout height
+   is the frame's height divided by that scale. */
+html.ds #game .me .sks{align-self:flex-start;transform-origin:top left;height:calc(var(--bf) / (var(--hz, 1) * .82))}
+html.ds #game .me .sks>.skb{flex:1 1 0;min-height:0;box-sizing:border-box}
+/* 読心 (ユーザー 2026-11-16): the same plate as 先読み, a row per other player */
+.mr-rows{display:flex;flex-direction:column;gap:clamp(8px, 1.4vmin, 14px);min-width:min(78vw, 420px)}
+.mr-r{display:flex;align-items:center;gap:clamp(10px, 1.6vmin, 16px);padding:6px 4px;border-top:1px solid rgba(232,206,140,.18);opacity:0;transform:translateY(10px);animation:pkIn .35s calc(.12s + var(--i) * .1s) cubic-bezier(.2,1.2,.4,1) forwards}
+.mr-r:first-child{border-top:0}
+.mr-r>img{flex:none;width:clamp(38px, calc(var(--GH, 700px) * .07), 56px);height:auto;aspect-ratio:1;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1.5px rgba(232,206,140,.8),0 0 0 4px rgba(10,6,20,.8)}
+.mr-n{flex:none;min-width:4.5em;font-family:var(--serif);font-weight:700;font-size:clamp(12px, calc(var(--GH, 700px) * .02), 15px);letter-spacing:.08em;color:#cfc2ea}
+.mr-s{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mr-s b{font-family:var(--serif);font-weight:800;font-size:clamp(16px, calc(var(--GH, 700px) * .03), 23px);letter-spacing:.12em;color:#f2ecff;white-space:nowrap}
+.mr-s b.tp{color:var(--gl2);text-shadow:0 0 12px rgba(232,206,140,.45)}
+.mr-w{display:flex;align-items:center;gap:4px;font-style:normal}
+.mr-w small{font-size:11px;letter-spacing:.12em;color:rgba(217,205,238,.7);margin-right:2px}
+.mr-r .tl{--tw:clamp(24px, calc(var(--GH, 700px) * .048), 38px)}
+.mr-sh{display:flex;gap:3px;margin-left:auto;font-style:normal}
+.mr-r .tl{margin:0;flex:none}
+.mr-w,.mr-sh{gap:5px}
+html.lp .mr-rows{gap:4px}
+html.lp .mr-r{padding:3px 4px}
+html.lp .mindpop .pk-box{gap:8px;padding:14px 28px 10px}
+/* (ユーザー 2026-11-16) the tiles start in one column for every row, each group headed 待ち / 手の内 */
+.mr-s{flex:none;width:5.6em;font-size:clamp(16px, calc(var(--GH, 700px) * .03), 23px)}
+.mr-s b{font-size:1em}
+.mr-ts{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-height:calc(clamp(24px, calc(var(--GH, 700px) * .048), 38px) * 1.35)}
+.mr-t{display:flex;align-items:center;gap:5px;font-style:normal}
+.mr-t small{font-size:11px;letter-spacing:.12em;color:rgba(217,205,238,.75);margin-right:3px;white-space:nowrap}
+.mr-t small{min-width:3.6em}
+/* (ユーザー 2026-11-16) the 読心 plate as a table: face | name | state | 待ち | 手の内 — one grid, each row a subgrid of it */
+.mr-rows{display:grid;grid-template-columns:auto auto auto minmax(4em, auto) minmax(4em, auto);column-gap:clamp(10px, 1.6vmin, 18px);row-gap:0}
+.mr-hd,.mr-r{display:grid;grid-template-columns:subgrid;grid-column:1 / -1;align-items:center}
+.mr-hd span{font-size:11.5px;letter-spacing:.16em;color:var(--gl2);padding-bottom:4px;border-bottom:1px solid rgba(232,206,140,.45)}
+.mr-hd span:empty{border-bottom-color:transparent}
+.mr-hd .w,.mr-hd .h,.mr-c{justify-self:stretch;text-align:left}
+.mr-r{gap:0;border-top:1px solid rgba(232,206,140,.18)}
+.mr-hd + .mr-r{border-top:0}
+.mr-s{width:auto}
+.mr-c{display:flex;align-items:center;gap:5px;min-height:calc(clamp(24px, calc(var(--GH, 700px) * .048), 38px) * 1.35)}
+.mr-no{font-style:normal;color:rgba(217,205,238,.3)}
