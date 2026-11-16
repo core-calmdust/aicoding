@@ -1293,15 +1293,17 @@
   homeMark(); addEventListener('pagehide', homeMark);
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
   // 戦績 (the cup): on phones under the ヒストリア pill (top left); on PC beside the place chip
-  // (2026-11-17 user: 戦績アイコンは見えてる画面の右下に、カードの動き・大きさと即連動して) the cup is a child of the card, set just above
-  // its top edge (CSS bottom: 100%) — so it moves in the same frame as the card's slide and growth; sideways it reaches out to the
-  // window's right edge (--recR: how far the card's right edge is from it)
-  function placeRec() { const r = $('bvRec'), bi = $('bvi'); if (!r || !bi) return;
-    r.classList.remove('inhd'); r.classList.add('bvrecf'); if (r.parentNode !== bi) bi.appendChild(r); posRec(); }
-  function posRec() { const r = $('bvRec'), bi = $('bvi'); if (!r || !bi) return;
-    const w = bi.offsetWidth, gap = (innerWidth - w) / 2;   // (the card is centred: left 50%, translateX(-50%))
-    r.style.setProperty('--recR', Math.round(14 - gap) + 'px'); }
+  // (2026-11-17 user: 戦績アイコンは見えてる画面の右下に、カードの動き・大きさと即連動して) the cup sits in the view (not inside the card:
+  // the card scrolls on phones and would clip it) just above the card's top edge. It is set from the card's layout box in a
+  // ResizeObserver callback — that runs after layout and before paint, so the cup moves in the very frame the card does (no rAF,
+  // no transition)
+  function placeRec() { const r = $('bvRec'), bv = $('bv'); if (!r || !bv) return;
+    r.classList.remove('inhd'); r.classList.add('bvrecf'); if (r.parentNode !== bv) bv.appendChild(r); posRec(); }
+  function posRec() { const r = $('bvRec'), bv = $('bv'), bi = $('bvi'); if (!r || !bv || !bi || r.parentNode !== bv) return;
+    let top = bi.offsetTop; for (let e = bi.offsetParent; e && e !== bv; e = e.offsetParent) top += e.offsetTop;
+    r.style.setProperty('bottom', Math.round(bv.clientHeight - top + 12) + 'px', 'important'); }
   addEventListener('resize', posRec);
+  try { const ro = new ResizeObserver(posRec); ro.observe($('bvi')); ro.observe($('bv')); } catch (e) {}
   /* ---------- phones: the 「あそぶ」 sheet (2026-11-09) ----------
      A game whose full version has puzzles / lessons playable on the 3D table (PS_GAMES) keeps the card short: one 「あそぶ ▶」
      button (+ 2D). It opens a sheet from the bottom with three ways to play: 対局 (the mode tabs, level, side and time control —
