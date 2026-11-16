@@ -543,7 +543,10 @@ function homeSay(e) {
   // (2026-11-16, ユーザー「タップしたところがぷるんと震える演出」) the touched place of the picture wobbles (jiggle.js) — in every language
   if (e && window.MJJiggle) { const im = e.target.closest('#pImg') && document.querySelector('#pImg img');
     if (im) { const r = uiRect(im), k = Math.max(r.width / 1080, r.height / 1920), [px, py] = uiPt(e.clientX, e.clientY);
-      MJJiggle.poke(im, (px - r.left - (r.width - 1080 * k) / 2) / (1080 * k), (py - r.top) / (1920 * k)); } }
+      const ju = (px - r.left - (r.width - 1080 * k) / 2) / (1080 * k), jv = (py - r.top) / (1920 * k);
+      // (2026-11-16, ユーザー「顔はぷるんを抑えて、僅かに揺れる程度」) her face only stirs a little
+      const zn = window.MJTouch && MJTouch.zone ? MJTouch.zone(c.id, ju, jv) : null;
+      MJJiggle.poke(im, ju, jv, zn === 'f' ? .22 : 1); } }
   if (e && window.MJTouch && I18N.lang === 'ja') { const im = e.target.closest('#pImg') && document.querySelector('#pImg img');
     if (im) { const r = uiRect(im), k = Math.max(r.width / 1080, r.height / 1920), w = 1080 * k, h = 1920 * k, [px, py] = uiPt(e.clientX, e.clientY);   // (the picture covers its box, held at the top, centred across)
       const u = (px - r.left - (r.width - w) / 2) / w, v = (py - r.top) / h; txt = MJTouch.line(c.id, MJTouch.zone(c.id, u, v)); at = [px, py]; } }
