@@ -242,7 +242,7 @@ class Pos {
         this.last[s] = f + 64 * t;
       } else this.last[s] = -1;
     }
-    this.quiet = took ? 0 : this.quiet + 1;
+    this.quiet = took || this.placing ? 0 : this.quiet + 1;   // 置く段階の手は「取りのない手」に数えない（数えると配置後10手ずつで終わっていた）
     this.side ^= 1; this.ply++;
     this.h1 ^= ZS1 ^ ZH1[0][this.hand[0]] ^ ZH1[1][this.hand[1]] ^ ZL1[0][this.last[0] + 1] ^ ZL1[1][this.last[1] + 1];
     this.h2 ^= ZS2 ^ ZH2[0][this.hand[0]] ^ ZH2[1][this.hand[1]] ^ ZL2[0][this.last[0] + 1] ^ ZL2[1][this.last[1] + 1];

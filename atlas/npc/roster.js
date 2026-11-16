@@ -15,7 +15,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 25, shogi: 26, go: 32, reversi: 36, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 20, tafl: 25, ur: 20, senet: 20, morris: 10,
-    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 23 };
+    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, latrunculi: 20, foxgeese: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 23 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -224,6 +224,24 @@
       b('cool', { a: 'hawk', c: [0x6a5a4a, 0xe8dcc8, 0xffd65a], beak: 0xffc040, held: 'stone' }, 'イオ鷹|\'Io Hawk|夏威夷鹰|夏威夷鷹|이오매|Ястреб ио|इओ बाज़|صقر إيو'),
       b('king', { a: 'bear', c: [0x8a6a50, 0xf4e2cc, 0xffd030], hat: 'helmet', hc: [0xffd030, 0xe83a3a], held: 'staff', ex: ['cape'], cape: 0xe83a3a }, 'カメハメハ大王グマ|Kamehameha Bear|卡美哈梅哈熊|卡美哈梅哈熊|카메하메하곰|Медведь Камехамеха|कामेहामेहा भालू|دب كاميهاميها'),
       b('priest', { a: 'lizard', c: [0xe84a3a, 0xffe0c8, 0xffc030], hat: 'flowers', held: 'orb', ex: ['cape', 'necklace'], cape: 0x2a2a38 }, '火の女神ペレ|Pele Fire Spirit|火之女神佩蕾|火之女神佩蕾|불의여신펠레|Огненная Пеле|अग्नि देवी पेले|روح النار بيليه'),
+    ],
+    latrunculi: [   // ancient Rome: the game of the soldiers (mercenaries); Varro's record, the poets, the master of the Laus Pisonis (claude/latrunculi-spec.md)
+      b('sleepy', { a: 'sheep', c: [0xf2ece0, 0xfff8ee, 0x8a2f72], held: 'stone', ex: ['scarf'], sc: 0x8a2f72 }, 'ローマのこひつじ|Roman Lamb|罗马小羊|羅馬小羊|로마아기양|Римский ягнёнок|रोमन मेमना|حمل روماني'),
+      b('merchant', { a: 'cat', c: [0xd8b890, 0xfff4e4, 0x3a8ad8], held: 'disc', ex: ['necklace'] }, 'ガラス職人ネコ|Glassmaker Cat|玻璃匠猫|玻璃匠貓|유리장인고양이|Кот-стеклодув|काँचकार बिल्ली|قط صانع الزجاج'),
+      b('trickster', { a: 'fox', c: [0xe8843a, 0xfff2e0, 0x6a2358], hat: 'bandana', hc: [0x6a2358], held: 'sword' }, '傭兵ギツネ|Mercenary Fox|佣兵狐|傭兵狐|용병여우|Лис-наёмник|भाड़े का लोमड़|ثعلب مرتزق'),
+      b('scholar', { a: 'owl', c: [0x9a7a5a, 0xf4e6cc, 0x6a2358], held: 'scroll', ex: ['glasses', 'robe'], rc: 0xf4f0e6 }, 'ウァロフクロウ|Varro Owl|瓦罗猫头鹰|瓦羅貓頭鷹|바로부엉이|Сова Варрон|वारो उल्लू|بومة فارّو'),
+      b('lady', { a: 'bird', c: [0xd8c8e8, 0xfff6fa, 0xc83a7a], hat: 'laurel', held: 'quill', ex: ['robe'], rc: 0xfaf4ea }, '詩人ことり|Poet Songbird|诗人小鸟|詩人小鳥|시인작은새|Птичка-поэт|कवि चिड़िया|طائر الشاعر'),
+      b('knight', { a: 'wolf', c: [0x8a8a92, 0xf0ece6, 0xc83a3a], hat: 'helmet', hc: [0xc8a040, 0xc83a3a], held: 'shield', ex: ['armor', 'cape'], cape: 0xc83a3a }, '軍団兵オオカミ|Legionary Wolf|军团兵狼|軍團兵狼|군단병늑대|Волк-легионер|सेनानी भेड़िया|ذئب الفيلق'),
+      b('king', { a: 'lion', c: [0xe8b860, 0xfff4dc, 0x6a2358], hat: 'laurel', held: 'disc', ex: ['cape', 'necklace', 'robe'], cape: 0x6a2358, rc: 0xfaf4ea }, '名手ピソ・ライオン|Piso the Master Lion|名手皮索狮|名手皮索獅|명수피소사자|Лев Пизон-мастер|उस्ताद पीसो शेर|الأسد بيزو الأستاذ'),
+    ],
+    foxgeese: [   // northern Europe's hunt game: geese and hens, the Icelandic saga, Edward IV's hounds, the wolf of "wolf and sheep", Queen Victoria (claude/foxgeese-spec.md)
+      b('sleepy', { a: 'bird', c: [0xf6f2e8, 0xffffff, 0xe9902a], beak: 0xe9902a, held: 'none' }, 'ねぼすけガチョウ|Sleepy Goose|瞌睡鹅|瞌睡鵝|잠꾸러기거위|Сонный гусь|ऊँघता कलहंस|الإوزة النعسانة'),
+      b('merchant', { a: 'bird', c: [0xc87a3a, 0xf6e2c0, 0xd83a3a], beak: 0xf0b030, hat: 'bonnet', held: 'seeds' }, '農場のめんどり|Farmyard Hen|农场母鸡|農場母雞|농장암탉|Курочка со двора|खेत की मुर्गी|دجاجة المزرعة'),
+      b('sage', { a: 'sheep', c: [0xe8e2d4, 0xfff8ee, 0x3a6a9a], held: 'book', ex: ['scarf'], sc: 0x3a6a9a }, 'サガのひつじ|Saga Sheep|萨迦绵羊|薩迦綿羊|사가의양|Овца саг|गाथा की भेड़|خروف الملاحم'),
+      b('knight', { a: 'dog', c: [0xc8a070, 0xfff2de, 0xc83a3a], held: 'none', ex: ['collar'] }, '王の猟犬|Royal Hound|国王的猎犬|國王的獵犬|왕의사냥개|Королевская гончая|शाही शिकारी कुत्ता|كلب الصيد الملكي'),
+      b('villain', { a: 'wolf', c: [0x6a6a74, 0xe6e2dc, 0x2a2a38], hat: 'ushanka', hc: [0x5a4030, 0xe8dcc8], held: 'none', brow: 1 }, 'おおかみ|Sheep-chasing Wolf|追羊的狼|追羊的狼|양을쫓는늑대|Волк из «волка и овец»|भेड़ों वाला भेड़िया|ذئب الخراف'),
+      b('lady', { a: 'bird', c: [0xfaf6ee, 0xffffff, 0x8a5ac8], beak: 0xe9902a, hat: 'tiara', held: 'fan', ex: ['necklace', 'cape'], cape: 0x8a5ac8 }, '女王陛下のガチョウ|Her Majesty’s Goose|女王陛下的鹅|女王陛下的鵝|여왕폐하의거위|Гусыня Её Величества|महारानी का कलहंस|إوزة جلالة الملكة'),
+      b('king', { a: 'fox', c: [0xe07a30, 0xfff2e0, 0xd8a020], hat: 'bigcrown', held: 'orb', ex: ['cape', 'necklace'], cape: 0xb02a3a }, 'エドワード王ギツネ|King Edward Fox|爱德华国王狐|愛德華國王狐|에드워드왕여우|Лис король Эдуард|राजा एडवर्ड लोमड़|الملك إدوارد الثعلب'),
     ],
     ludo: [
       b('sleepy', { a: 'monkey', c: [0xc8c0b8, 0xfff4ee, 0xff8a3a], held: 'die', ex: ['scarf'], sc: 0xff8a3a }, 'ラングールのこざる|Langur Kid|叶猴宝宝|葉猴寶寶|랑구르아기원숭이|Детёныш лангура|लंगूर शिशु|صغير اللانغور'),
