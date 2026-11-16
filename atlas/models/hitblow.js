@@ -155,8 +155,15 @@
     s.moveTo(x + r, z); s.lineTo(x + w - r, z); s.quadraticCurveTo(x + w, z, x + w, z + r); s.lineTo(x + w, z + d - r); s.quadraticCurveTo(x + w, z + d, x + w - r, z + d); s.lineTo(x + r, z + d); s.quadraticCurveTo(x, z + d, x, z + d - r); s.lineTo(x, z + r); s.quadraticCurveTo(x, z, x + r, z);
     const b = bev == null ? Math.min(.06, h * .3) : bev;
     const ex = new TT.ExtrudeGeometry(s, { depth: Math.max(.001, h - 2 * b), bevelEnabled: b > 0, bevelThickness: b, bevelSize: b, bevelSegments: LO() ? 2 : 3, curveSegments: LO() ? 5 : 8 });
-    ex.rotateX(-Math.PI / 2); ex.translate(0, b, 0); ex.scale(1, 1, -1);
+    ex.rotateX(-Math.PI / 2); ex.translate(0, b, 0);   // (no mirroring: a mirrored solid turns its faces inside out — the sides flickered with self-shadow, 2026-11-16)
     return ex;
+  }
+  // a rounded-rect ring (the lid's skirt): outer w × d, wall t, height h, standing on y = 0
+  function rframe(w, d, h, r, t) {
+    const TT = T(), rr2 = (x, z, w, d, r, s) => { s.moveTo(x + r, z); s.lineTo(x + w - r, z); s.quadraticCurveTo(x + w, z, x + w, z + r); s.lineTo(x + w, z + d - r); s.quadraticCurveTo(x + w, z + d, x + w - r, z + d); s.lineTo(x + r, z + d); s.quadraticCurveTo(x, z + d, x, z + d - r); s.lineTo(x, z + r); s.quadraticCurveTo(x, z, x + r, z); return s; };
+    const s = rr2(-w / 2, -d / 2, w, d, r, new TT.Shape()), hole = rr2(-w / 2 + t, -d / 2 + t, w - 2 * t, d - 2 * t, Math.max(.02, r - t), new TT.Path());
+    s.holes.push(hole);
+    const ex = new TT.ExtrudeGeometry(s, { depth: h, bevelEnabled: false, curveSegments: LO() ? 5 : 8 }); ex.rotateX(-Math.PI / 2); return ex;
   }
   function planeTop(w, d, map) {
     const TT = T(), p = new TT.PlaneGeometry(w, d); p.rotateX(-Math.PI / 2);
@@ -195,8 +202,10 @@
     // the lid (pivot on the far edge of the case)
     const hinge = new TT.Group(); hinge.position.set(Lt.caseX, BH + ch, Lt.caseZ - cd / 2); g.add(hinge);
     const lidG = new TT.Group(); lidG.position.set(0, 0, cd / 2); hinge.add(lidG);
-    const lid = X.mesh(geo('hbLid' + cfg.n, () => rbox(cw + .06, cd + .06, .22, .24, .06)), mat('hbLidM', () => X.M({ color: '#2a3478', roughness: .22, metalness: .5, clearcoat: 1, clearcoatRoughness: .08, bump: false })));
-    lidG.add(lid);
+    const lidM = mat('hbLidM', () => X.M({ color: '#2a3478', roughness: .22, metalness: .5, clearcoat: 1, clearcoatRoughness: .08, bump: false }));
+    const lid = X.mesh(geo('hbLid' + cfg.n, () => rbox(cw + .14, cd + .14, .22, .26, .06)), lidM); lidG.add(lid);
+    // the skirt: the lid comes down over the case like a cap (2026-11-16 user: ケースで覆い被さるように — no gap to see into from the side)
+    const skirt = X.mesh(geo('hbSkirt' + cfg.n, () => rframe(cw + .14, cd + .14, .17, .26, .06)), lidM); skirt.position.y = -.16; lidG.add(skirt);
     const lidFace = planeTop(cw - .16, cd - .16, mat('hbLidFace' + cfg.n, () => X.M({ map: lidTex(cfg.n, cw - .16, cd - .16), emissiveMap: lidTex(cfg.n, cw - .16, cd - .16), emissive: '#ffffff', emissiveIntensity: .55, roughness: .3, clearcoat: 1, clearcoatRoughness: .1, bump: false, transparent: false })));
     lidFace.material.emissive.set(0xffffff); lidFace.position.y = .224; lidG.add(lidFace);
     // the active row's glow (a soft bar under the row being filled) and the who-guessed lights

@@ -494,6 +494,38 @@
       for (let i = 0; i < 5; i++) { const t = (i + .5) / 5, d = ball(.075, dotM); d.position.set(p(2) + (p(0) - p(2)) * t, .7 + Math.sin(t * Math.PI) * 1.05, p(0) + (p(2) - p(0)) * t); g.add(d); }
       return g;
     },
+    hitblow() {   // a corner of the Midnight board (the 3D default): sockets with glass gems (a picture in each), the answer pins beside a row, a big gem with a heart coming down
+      const PATH = { flame: 'M12 2.6c.7 3.4 4.4 5.1 4.4 9.6a4.4 4.4 0 0 1-8.8 0c0-2 .9-3.3 2.1-4.4-.1 1.8.6 2.9 1.8 3.2-.6-2.8-.2-5.7.5-8.4z', bolt: 'M13.6 2 5 13.4h6.1L10 22l9-12.6h-6.2z', drop: 'M12 2.4c3.6 4.7 6.6 8.4 6.6 12.1a6.6 6.6 0 0 1-13.2 0c0-3.7 3-7.4 6.6-12.1z', heart: 'M12 20.6 4.3 13a4.7 4.7 0 0 1 6.6-6.6L12 7.5l1.1-1.1a4.7 4.7 0 0 1 6.6 6.6z', moon: 'M15.2 2.8a9 9 0 1 0 6 15.4 7.4 7.4 0 0 1-6-15.4z' };
+      const mix = (a, b, k) => { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), A = p(a), B = p(b); return '#' + A.map((x, i) => Math.round(x + (B[i] - x) * k).toString(16).padStart(2, '0')).join(''); };
+      const face = (col, ic) => M({ map: X.canvasTex('ichb-' + ic, 256, 256, (c, W) => {
+        const g = c.createRadialGradient(W * .42, W * .38, W * .04, W * .5, W * .5, W * .52); g.addColorStop(0, mix(col, '#ffffff', .5)); g.addColorStop(.4, col); g.addColorStop(.88, mix(col, '#050817', .5)); g.addColorStop(1, mix(col, '#050817', .7));
+        c.fillStyle = g; c.fillRect(0, 0, W, W); c.save(); c.translate(W / 2, W / 2); const k = W * .66 / 24; c.scale(k, k); c.translate(-12, -12.2);
+        const p = new Path2D(PATH[ic]); c.lineJoin = 'round'; c.strokeStyle = 'rgba(10,8,30,.35)'; c.lineWidth = 2.4; c.stroke(p); c.fillStyle = '#fff'; c.fill(p); c.restore();
+      }), roughness: .12, clearcoat: 1, clearcoatRoughness: .05, bump: false });
+      // a glass cabochon: a low dome whose picture is projected from above
+      const dome = (r, mat) => { const pts = []; for (let i = 0; i <= 18; i++) { const a = i / 18 * Math.PI / 2; pts.push(new T.Vector2(Math.cos(a) * r, Math.sin(a) * r * .78)); } pts.unshift(new T.Vector2(r * .9, -r * .12)); pts.unshift(new T.Vector2(.001, -r * .12));
+        const gl = new T.LatheGeometry(pts, 48), P = gl.attributes.position, uv = gl.attributes.uv; for (let i = 0; i < P.count; i++) uv.setXY(i, .5 + P.getX(i) / (2 * r) * .98, .5 - P.getZ(i) / (2 * r) * .98); gl.computeVertexNormals(); return mesh(gl, mat); };
+      const top = M({ map: X.canvasTex('ichb0', 512, 512, (c, W) => {
+        const g = c.createLinearGradient(0, 0, 0, W); g.addColorStop(0, '#22307a'); g.addColorStop(1, '#0e1440'); c.fillStyle = g; c.fillRect(0, 0, W, W);
+        c.strokeStyle = 'rgba(130,160,255,.08)'; c.lineWidth = 2; for (let i = 0; i < W; i += 32) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i, W); c.stroke(); c.beginPath(); c.moveTo(0, i); c.lineTo(W, i); c.stroke(); }
+        const u = W / 3;
+        for (let y = 0; y < 3; y++) for (let x = 0; x < 2; x++) { const cx = (x + .5) * u, cy = (y + .5) * u, r = u * .36, h = c.createRadialGradient(cx, cy + r * .25, r * .1, cx, cy, r); h.addColorStop(0, '#02030c'); h.addColorStop(.7, '#070b26'); h.addColorStop(1, '#2a3a90'); c.fillStyle = h; c.beginPath(); c.arc(cx, cy, r, 0, 7); c.fill(); c.strokeStyle = 'rgba(150,180,255,.6)'; c.lineWidth = 5; c.beginPath(); c.arc(cx, cy, r, 0, 7); c.stroke(); }
+        for (let y = 0; y < 3; y++) { const bx = 2.5 * u, by = (y + .5) * u; c.fillStyle = 'rgba(4,7,26,.7)'; c.beginPath(); c.roundRect ? c.roundRect(bx - u * .4, by - u * .4, u * .8, u * .8, 18) : c.rect(bx - u * .4, by - u * .4, u * .8, u * .8); c.fill();
+          for (let k = 0; k < 4; k++) { const px = bx + (k % 2 ? 1 : -1) * u * .2, py = by + (k < 2 ? -1 : 1) * u * .2; c.fillStyle = '#05081e'; c.beginPath(); c.arc(px, py, u * .1, 0, 7); c.fill(); } }
+        c.strokeStyle = 'rgba(120,170,255,.9)'; c.lineWidth = 8; c.strokeRect(6, 6, W - 12, W - 12);
+      }), roughness: .3 });
+      const g = boardChunk(3, 3.6, top, C(0x1a2258, { roughness: .3 }));
+      const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
+      const gem = (col, ic, sc) => { const o = new T.Group(); o.add(dome(.42, face(col, ic))); o.scale.setScalar(sc); return o; };
+      g.add(at(gem('#ff4f5e', 'flame', 1), p(0), .52, p(0))); g.add(at(gem('#ffcc33', 'bolt', 1), p(1), .52, p(0)));
+      g.add(at(gem('#3ea0ff', 'drop', 1), p(0), .52, p(1))); g.add(at(gem('#a97cff', 'moon', 1), p(1), .52, p(1)));
+      const pin = (hex, x, z) => { const b = ball(.15, C(hex, { roughness: .2, emissive: hex, emissiveIntensity: .45 }), .85); b.position.set(x, .6, z); g.add(b); };
+      const fx = p(2), d = S * .2;
+      [[0, '#a6e81f'], [1, '#a6e81f'], [2, '#f4f7ff']].forEach(([k, c]) => pin(c, fx + (k % 2 ? d : -d), p(0) + (k < 2 ? -d : d)));
+      [[0, '#a6e81f'], [1, '#f4f7ff'], [2, '#f4f7ff'], [3, '#f4f7ff']].forEach(([k, c]) => pin(c, fx + (k % 2 ? d : -d), p(1) + (k < 2 ? -d : d)));
+      g.add(at(gem('#ff76c4', 'heart', 1.9), p(1) - .1, 2.6, p(2) - .2, .36, 0, -.24));   // the big gem coming down into the last row
+      return g;
+    },
     patolli() {   // the crossing of the mat board (the 3D default): a woven reed mat with the track drawn in black rubber, the four middle squares; a big red pebble, a blue one, and the black beans with their white marks
       const top = M({ map: X.canvasTex('icpt1', 512, 512, (c, W) => {
         c.fillStyle = '#d8bd84'; c.fillRect(0, 0, W, W);

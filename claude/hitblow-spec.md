@@ -1,6 +1,6 @@
 # ヒット＆ブロー（hitblow）仕様
 
-**3D専用タイトル**（2026-11-16 ユーザー：3Dのゲームとして実装、2Dは廃止）。大百科ポータルの3D卓で遊ぶ。BETA。
+**3D専用タイトル**（2026-11-16 ユーザー：3Dのゲームとして実装、2Dは廃止）。大百科ポータルの3D卓で遊ぶ。**ALPHA**（2026-11-16 ユーザー：リリース直後は ALPHA。共通ルール addendum「新作は ALPHA から」）。
 URL：https://core-calmdust.github.io/aicoding/atlas/#games/hitblow （旧2Dページ `hitblow/` はここへ転送するだけ）。
 
 ## 構成
@@ -13,13 +13,13 @@ URL：https://core-calmdust.github.io/aicoding/atlas/#games/hitblow （旧2Dペ�
 | `hitblow/tools/test_3d.js` | 3D卓の通しテスト（playwright＋Chrome） |
 
 - 台帳：`shared/atlas.js` の GAMES（`only3d`、cat `puzzle`、色 #2b3683、タグ 定番・AI・レート戦・今日の一問・ルール違い）、READ（今日の一問の日数・連続、レート戦）。`shared/atlas-updates.js` に1行。
-- ポータル：`atlas/lazy.js` の組（engine・models・games）、`atlas/i18n.js` の `about.hitblow`・`hist.hitblow`（14言語）、`atlas/gamelist-i18n.js` の一言。アイコンは `images/icons/hitblow.svg`（平面）。
+- ポータル：`atlas/lazy.js` の組（engine・models・games）、`atlas/i18n.js` の `about.hitblow`・`hist.hitblow`（14言語）、`atlas/gamelist-i18n.js` の一言。アイコン：大百科は共通形式の3Dアイコン `images/atlas/hitblow.webp`（`atlas/icons3d.js` の `hitblow`：ミッドナイト盤の角、宝石のコマ4つと答えのピン、上から大きなハートの宝石。`atlas/tools/icons.html` → `atlas/tools/icon-post.py`、`atlas/app.js` の R3）、トップページ用の平面 `images/icons/hitblow.svg`。
 - `atlas/app.js` に足した汎用の仕組み（他のゲームでも使える）：
   - `adapter.modeName(m, lang)`・`modeNote(m, lang)`：独自のモードタブ（今日の一問）の名前と説明。
   - `adapter.dailyHtml(lang)`：今日の一問タブのボタン（#bvDaily）。押すと `adapter.pending` に EASY/HARD を入れて開始。このタブではスタートを隠す。
   - `session.inset()`：ゲームが画面下に自前のパネル（入力ドック）を出すとき、その高さ。盤はその上に収まるよう枠取りされる（アクションバーの帯と大きい方）。
   - `adapter.ortho`：対局中のカメラを真上・パースなしにする（`Table3D.play(true, { ortho: true })`）。
-- 未着手：トップページへの掲載、ルールコース（atlas/rules/）、3Dアイコン（icons3d.js）、ヒストリア、地図、ボス、オンライン。
+- 未着手：トップページへの掲載、ルールコース（atlas/rules/）、ヒストリア、地図、ボス、オンライン。
 
 ## ルール（1つの盤・1つの答えを交互に推理）
 - 答え（隠されたコードの並び）は1つ。2人が交互に1行ずつ予想を出し、両方が全部の行と答えを見られる。
@@ -57,7 +57,7 @@ URL：https://core-calmdust.github.io/aicoding/atlas/#games/hitblow （旧2Dペ�
 ## 画面
 - 盤「ミッドナイト」：深い紺の漆塗りの板に、ネオンの縁。行ごとに番号・穴・2×2のピン穴。行の左の小さな光が、その行を出した人（あなた／プレイヤー1＝ミント、AI／プレイヤー2＝ピンク、手がかり＝灰）。今入力している行はうっすら光る。
 - コマ：ガラスのカボション（ドーム）。中央に大きな柄（炎・稲妻・葉・しずく・月・ハート・星・結晶）。ナンバーは数字。色は 赤・黄・緑・青・紫・ピンク・オレンジ・シアン（ナンバーは数字ごとの色）。
-- 答えのケース：盤の奥。「？」の入った蓋。開始時にカタカタ揺れてから閉まり（コマをしまう演出）、終局で蓋が開いて答えのコマが跳ねる。
+- 答えのケース：盤の奥。「？」の入った蓋。蓋はケースより一回り大きく、縁（スカート）がケースの上側にかぶさる（横から中が見えない）。開始時にカタカタ揺れてから閉まり（コマをしまう演出）、終局で蓋が開いて答えのコマが跳ねる。
 - カメラ：対局中は真上・パースなし（2026-11-16 ユーザー）。
 - 入力ドック（画面下、アクションバーの上）：入力中の行の穴（押すと外す）と **OK**、その下に記号のパレット（重複なしの種目で使った記号は薄く）。盤の上の入力中のコマを押しても外せる。PCはキー（1〜8／数字は0〜9、Backspace、Enter）。
 - アクションバー：投了・ヒント（AI戦・対人・今日の一問。レート戦は不可）。待ったはなし（答えを見た後なので）。
