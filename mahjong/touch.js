@@ -77,7 +77,7 @@ const DATA = {}, loading = {}, bags = {};
 function add(id, note, o) { const d = DATA[id] = { note }; for (const k in o) d[k] = o[k].split('|').map(s => s.trim()).filter(Boolean); }
 // more(id, 種類, 'a|b|c')：add のあとに種類を足す（唇の台詞は各ファイルの末尾で足している）
 function more(id, k, txt) { const d = DATA[id] || (DATA[id] = {}); d[k] = txt.split('|').map(s => s.trim()).filter(Boolean); }
-const HAVE = ['violet', 'snow', 'peach', 'amber', 'crimson', 'chestnut', 'jade', 'gold', 'lapis', 'flame'];
+const HAVE = ['violet', 'snow', 'peach', 'amber', 'crimson', 'chestnut', 'jade', 'lapis', 'flame'];   // (2026-11-16: gold joined amber)
 function load(id) { const f = famOf(id); if (!f || loading[f] || HAVE.indexOf(f) < 0) return; loading[f] = true; const s = document.createElement('script'); s.src = (root.JANKA_TOUCH || 'touch/') + f + '.js?v=' + VER; s.async = true; document.head.appendChild(s); }
 // where on the picture (u, v: 0…1 of the whole picture) → the kind of place
 function zoneAt(id, u, v) { let best = null; for (const z of ZONES[id] || []) { const dx = (u - z[1]) / z[3], dy = (v - z[2]) / z[4]; if (dx * dx + dy * dy <= 1 && (best == null || ORDER[z[0]] < ORDER[best[0]])) best = z; } return best; }
@@ -91,6 +91,6 @@ function line(id, kind) {
   if (!bag || !bag.length) { bag = bags[key] = d[kind].map((_, i) => i); for (let i = bag.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [bag[i], bag[j]] = [bag[j], bag[i]]; } }
   return d[kind][bag.pop()];
 }
-const VER = 3;
+const VER = 4;
 root.MJTouch = { add, more, load, zone, zoneAt, line, data: DATA, zones: ZONES };
 })(window);
