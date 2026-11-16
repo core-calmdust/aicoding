@@ -224,37 +224,45 @@ def RG(q):                                     # つまむ形での手全体の�
 def _sg(chain, angles, amount, to):
     closer(chain, angles, amount, to); a = tipd(chain[-1], to); curl(chain, angles, amount); return amount if abs(tipd(chain[-1], to) - a) < 1e-9 else -amount
 PSP = (_sg(F4('ring'), (.3, .42, .1), .05, 'middle-finger-tip'), _sg(F4('pinky'), (.26, .36, .1), .16, 'ring-finger-tip'))
+# 2026-11-16（ユーザー「もっと親指と人差し指で摘んでいる感じに」）：つまむ形を、牌の両脇を挟む形に変える。
+# 寝かせた牌の左の側面（−x）に親指の腹、右の側面（+x）に人差し指（と中指）の腹を当て、上から挟む。上から見ても、親指と
+# 人差し指が牌を両側から挟んでいるのが分かる（以前は親指が牌の下に隠れ、人差し指が上面に乗るだけで、押さえているように見えた）。
+# 原点は今までどおり牌の上面の中心。親指と人差し指の指先の中点を、牌の厚みの半ばの高さに合わせる。
 def poseA(q):                                  # q: 親指 6 ＋ 人差し指の曲げ 3（中指は少しだけ深く）＋ 手全体のひねり・上げ下げ 2
-    thumbD(q); curl(F4('index'), q[6:9]); curl(F4('middle'), (q[6] + .03, q[7] + .03, q[8])); curl(F4('ring'), (.3, .42, .1), PSP[0]); curl(F4('pinky'), (.26, .36, .1), PSP[1])   # （つまむ形では薬指・小指を軽く握る：長い爪が卓や隣の牌に触れない）
+    thumbD(q); curl(F4('index'), q[6:9]); curl(F4('middle'), (q[6] + .05, q[7] + .05, q[8])); curl(F4('ring'), (.55, .7, .3), PSP[0]); curl(F4('pinky'), (.5, .7, .3), PSP[1])   # （薬指・小指は握り込む）
     Rs = np.stack([D[n][0] for n in names]); ts = np.stack([D[n][1] for n in names]); Pq = np.zeros_like(V)
     for c in range(4): Pq += JW[:, c][:, None] * (np.einsum('nij,nj->ni', Rs[JI[:, c]], V) + ts[JI[:, c]])
-    Rg = RG(q); X = pit(rig(Pq)) @ Rg.T; g = []
-    for f in ('index', 'middle'):
-        c = Rg @ pit(rig(tip(f + '-finger-tip'))); m = np.linalg.norm(X - c, axis=1) < .42; g.append(np.array([c[0], X[m][:, 1].min(), c[2] + .12]))
-    return X - (g[0] + g[1]) / 2 + OFF, (g[0] - g[1])[0] / 2, (g[0] + g[1]) / 2
+    Rg = RG(q); X = pit(rig(Pq)) @ Rg.T
+    ct = Rg @ pit(rig(tip('thumb-tip'))); ci = Rg @ pit(rig(tip('index-finger-tip'))); m = (ct + ci) / 2
+    g = m - np.array([0., -GAP / 2, 0.]) + OFF          # （爪や手首も同じ式 X − g + OFF で動かす：to_out）
+    return X - g + OFF, 0., g
 GAP = 0.78 / 0.84                              # 牌の厚み（リグの単位。実行時に手を .84 倍にしている）
 nth = isn & tm
+_idi = sum(np.where(JI[:, c] == idx[n], JW[:, c], 0) for c in range(4) for n in ('index-finger-phalanx-distal', 'index-finger-tip')) > .6
+_mdi = sum(np.where(JI[:, c] == idx[n], JW[:, c], 0) for c in range(4) for n in ('middle-finger-phalanx-distal', 'middle-finger-tip')) > .6
+def smax(v, k=.03): return float(k * np.log(np.sum(np.exp((v - v.max()) / k))) + v.max())
 def cost(q):
-    X, ipx, _g = poseA(q); Y = X[wdi]; ym = Y[:, 1].max(); w = np.exp((Y[:, 1] - ym) / .06); c = (Y[:, [0, 2]] * w[:, None]).sum(0) / w.sum()
-    foot = (np.abs(X[:, 0]) < .62) & (X[:, 2] < .42) & (X[:, 2] > -1.2) & (X[:, 1] > -GAP + .015)
-    ins = foot & np.where(tm, X[:, 1] < .35, X[:, 1] < -.05)                                          # 牌（親指は、その上の指にも）にめり込む分
-    d = RG(q) @ (pit(rig(tip('index-finger-tip'))) - pit(rig(tip('index-finger-phalanx-distal')))); d /= np.linalg.norm(d)
-    e = 12 * (ym + GAP) ** 2 + .6 * ((c - np.array([ipx * .5, .2])) ** 2).sum() + 40 * ((X[ins, 1] + GAP) ** 2).sum() / len(X) + .03 * float(np.sum(np.array(q[:3]) ** 2)) + .12 * q[9] ** 2 + .1 * q[10] ** 2
-    e += 3 * max(0., abs(d[1]) - .42) ** 2 + 2 * max(0., d[2] + .3) ** 2                             # 人差し指の先は寝かせて前（−z）へ向ける（腹で上面に添える）
-    dt = RG(q) @ (pit(rig(tip('thumb-tip'))) - pit(rig(tip('thumb-phalanx-distal')))); dt /= np.linalg.norm(dt)
-    e += 3 * max(0., abs(dt[1]) - .6) ** 2                                                           # 親指の先も寝かせる（腹で下面を支える。突き立てない）
-    e += 2 * max(0., Y[:, 2].mean() - .45) ** 2 + 2 * max(0., abs(Y[:, 0].mean()) - .5) ** 2         # 親指の先の節は牌の下に入っている
-    if nth.any(): e += 12 * max(0., X[nth, 1].mean() - (Y[:, 1].mean() - .12)) ** 2                    # 親指の爪は下（腹が上）
+    X, _, _g = poseA(q); TW, TL = .5, .68
+    T = X[wdi]; I = X[_idi]
+    tx = smax(T[:, 0]); ix = -smax(-I[:, 0])                                                         # 親指のいちばん右、人差し指のいちばん左
+    e = 90 * (tx + TW) ** 2 + 90 * (ix - TW) ** 2                                                    # それぞれ牌の左右の側面に触れる
+    for Y, sx in ((T, tx), (I, ix)):                                                                 # 触れている所は側面の中ほど
+        w = np.exp(-np.abs(Y[:, 0] - sx) / .04); c = (Y[:, 1:] * w[:, None]).sum(0) / w.sum()
+        e += 6 * (c[0] + GAP / 2) ** 2 + 3 * max(0., abs(c[1]) - .35) ** 2
+    box = (np.abs(X[:, 0]) < TW) & (np.abs(X[:, 2]) < TL) & (X[:, 1] < 0) & (X[:, 1] > -GAP)        # 肌が牌にめり込まない
+    if box.any():
+        Xb = X[box]; dpt = np.minimum.reduce([TW - np.abs(Xb[:, 0]), TL - np.abs(Xb[:, 2]), -Xb[:, 1], Xb[:, 1] + GAP])
+        e += 400 * float(np.sum(dpt ** 2)) / len(X)
+    nonf = ~(wdi | _idi | _mdi); e += 20 * float(np.mean(np.maximum(0., .12 - X[nonf & (np.abs(X[:, 0]) < .9) & (np.abs(X[:, 2]) < 1.)][:, 1]) ** 2)) if (nonf & (np.abs(X[:, 0]) < .9) & (np.abs(X[:, 2]) < 1.)).any() else 0.   # 手のひらは牌より上
     Rg = RG(q)
-    for f, dn, Pm, Fs, U2, _ft in NSH:                                                                    # 長い爪：牌にめり込まない、下へ垂れすぎない
+    for f, dn, Pm, Fs, U2, _ft in NSH:                                                                # 長い爪：牌にめり込まない、下へ垂れすぎない
         R, t = D[dn]; Xn = pit(rig(Pm @ R.T + t)) @ Rg.T - _g + OFF
-        if f in ('index', 'middle'):
-            m = (np.abs(Xn[:, 0]) < .56) & (np.abs(Xn[:, 2]) < .74) & (Xn[:, 1] > -GAP)
-            e += 150 * float(np.sum(np.maximum(0., .06 - Xn[m, 1]) ** 2)) / len(Xn)
-        if f == 'thumb':
-            m = (np.abs(Xn[:, 0]) < .56) & (np.abs(Xn[:, 2]) < .74)
-            e += 150 * float(np.sum(np.maximum(0., Xn[m, 1] + GAP + .05) ** 2)) / len(Xn)
-        if f in ('ring', 'pinky'): e += 6 * float(np.mean(np.maximum(0., -.3 - Xn[:, 1]) ** 2))
+        m = (np.abs(Xn[:, 0]) < TW) & (np.abs(Xn[:, 2]) < TL) & (Xn[:, 1] < 0) & (Xn[:, 1] > -GAP)
+        e += 150 * float(np.sum(np.minimum(TW - np.abs(Xn[m, 0]), Xn[m, 1] + GAP) ** 2)) / len(Xn)
+        e += 4 * float(np.mean(np.maximum(0., -GAP - .25 - Xn[:, 1]) ** 2))
+        if f == 'thumb': e += 3 * max(0., Xn[:, 0].mean() - (tx - .05)) ** 2                        # 親指の爪は外側（左）
+        if f == 'index': e += 3 * max(0., (ix + .05) - Xn[:, 0].mean()) ** 2                        # 人差し指の爪は外側（右）
+    e += .03 * float(np.sum(np.array(q[:3]) ** 2)) + .05 * q[9] ** 2 + .05 * q[10] ** 2
     return e
 rng = np.random.RandomState(7); cands = []
 def clampq(q): q = list(q); q[4] = min(1.2, max(-.3, q[4])); q[5] = min(1.0, max(-.3, q[5])); q[6:8] = [min(1.5, max(0., x)) for x in q[6:8]]; q[8] = min(1.2, max(-.32, q[8])); q[9] = min(.85, max(-.85, q[9])); q[10] = min(.8, max(-.8, q[10])); return q
@@ -275,7 +283,7 @@ for e0, q0 in cands[:6]:                       # よい出だしをいくつか�
 outA, _, gA = poseA(best[1]); YA = outA[wdi]; RgA = RG(best[1])
 DA = {n: (D[n][0].copy(), D[n][1].copy()) for n in names}            # つまむポーズの関節（長い爪を同じように動かすため）
 print('pinch: cost', round(best[0], 4), 'thumb top y', round(float(YA[:, 1].max()), 3), '(want', round(-GAP, 3), ')', 'q', np.round(best[1], 2))
-assert FAST or abs(YA[:, 1].max() + GAP) < .08, 'the thumb does not reach the underside of the tile'
+print('pinch: thumb right edge', round(float(YA[:, 0].max()), 3), 'index left edge', round(float(outA[_idi][:, 0].min()), 3))
 report('pinch', DA, outA, True)
 for n in names: D[n] = DB[n]
 
