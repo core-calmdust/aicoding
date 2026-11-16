@@ -16,7 +16,7 @@
   const L14 = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   // texts (14 languages; {n} etc. are filled in)
   const TX = {
-    ja: { r1: 'カラー', r1d: '6色から4つ。同じ色は使わない。', r2: 'カラー（重複あり）', r2d: '6色から4つ。同じ色を何度でも使える。', r3: 'ナンバー3', r3d: '0〜9の数字を3つ。同じ数字は使わない。', r4: 'ナンバー4', r4d: '0〜9の数字を4つ。同じ数字は使わない。', r5: 'エキスパート', r5d: '8色から5つ。同じ色を何度でも使える。',
+    ja: { rate: '勝率', r1: 'カラー', r1d: '6色から4つ。同じ色は使わない。', r2: 'カラー（重複あり）', r2d: '6色から4つ。同じ色を何度でも使える。', r3: 'ナンバー3', r3d: '0〜9の数字を3つ。同じ数字は使わない。', r4: 'ナンバー4', r4d: '0〜9の数字を4つ。同じ数字は使わない。', r5: 'エキスパート', r5d: '8色から5つ。同じ色を何度でも使える。',
       daily: '今日の一問', dailyNote: '手がかりの行がすでに盤に。決められた回数以内に答えを当てよう。毎日かわる2問。', easy: 'カラー・{n}回以内', hard: 'ナンバー4・{n}回以内',
       you: 'あなた', ai: 'AI', p1: 'プレイヤー1', p2: 'プレイヤー2', clue: '手がかり',
       yourTurn: 'あなたの番：{n}つ並べてOK', aiTurn: 'AIが考えています…', pTurn: '{p}の番', left: 'あと{n}回',
@@ -24,7 +24,7 @@
       allHit: 'ぜんぶヒット！', hint: 'これが有力', solvedRow: '{n}行目で正解', none: '時間切れ：だれも当てられず', ans: '答え',
       pWin: '{p}の勝ち', dWin: 'クリア！', dLose: '回数切れ…', dRes: '{n}回で正解（目安 {p}回）', dFail: '{n}回以内に当てられませんでした',
       lv: ['うっかり屋：前の答えをよく忘れる', '見習い：ときどき手がかりを見落とす', '推理好き：手がかりどおりに当てる', '名探偵：相手に手がかりを渡さない当て方'], who: ['はじめての人に', 'ルールに慣れたら', '推理に自信があれば', '腕試しに'] },
-    en: { r1: 'Colour', r1d: '4 of 6 colours, all different.', r2: 'Colour (repeats)', r2d: '4 of 6 colours; a colour may repeat.', r3: 'Number 3', r3d: '3 different digits, 0–9.', r4: 'Number 4', r4d: '4 different digits, 0–9.', r5: 'Expert', r5d: '5 of 8 colours; colours may repeat.',
+    en: { rate: 'Win rate', r1: 'Colour', r1d: '4 of 6 colours, all different.', r2: 'Colour (repeats)', r2d: '4 of 6 colours; a colour may repeat.', r3: 'Number 3', r3d: '3 different digits, 0–9.', r4: 'Number 4', r4d: '4 different digits, 0–9.', r5: 'Expert', r5d: '5 of 8 colours; colours may repeat.',
       daily: 'Daily puzzle', dailyNote: 'Clue rows are already on the board. Crack the code within the limit. Two new puzzles every day.', easy: 'Colour · within {n}', hard: 'Number 4 · within {n}',
       you: 'You', ai: 'AI', p1: 'Player 1', p2: 'Player 2', clue: 'Clue',
       yourTurn: 'Your turn: place {n}, then OK', aiTurn: 'The AI is thinking…', pTurn: "{p}'s turn", left: '{n} left',
@@ -32,7 +32,7 @@
       allHit: 'All hits!', hint: 'A strong guess', solvedRow: 'Cracked on row {n}', none: 'Out of rows: nobody cracked it', ans: 'Answer',
       pWin: '{p} wins', dWin: 'Solved!', dLose: 'Out of guesses…', dRes: 'Solved in {n} (par {p})', dFail: 'Not solved within {n}',
       lv: ['Forgetful: often forgets earlier answers', 'Apprentice: sometimes misses a clue', 'Sleuth: guesses by the clues', 'Master: guesses that give the rival little'], who: ['For first games', 'Once you know the rules', 'If you trust your logic', 'For a real test'] },
-    zh: { r1: '颜色', r1d: '6色中选4个，颜色不重复。', r2: '颜色（可重复）', r2d: '6色中选4个，颜色可重复。', r3: '数字3', r3d: '0〜9中3个不同数字。', r4: '数字4', r4d: '0〜9中4个不同数字。', r5: '专家', r5d: '8色中选5个，颜色可重复。',
+    zh: { rate: '胜率', r1: '颜色', r1d: '6色中选4个，颜色不重复。', r2: '颜色（可重复）', r2d: '6色中选4个，颜色可重复。', r3: '数字3', r3d: '0〜9中3个不同数字。', r4: '数字4', r4d: '0〜9中4个不同数字。', r5: '专家', r5d: '8色中选5个，颜色可重复。',
       daily: '每日一题', dailyNote: '盘上已有提示行。在限定次数内猜出答案。每天两题。', easy: '颜色・{n}次以内', hard: '数字4・{n}次以内',
       you: '你', ai: 'AI', p1: '玩家1', p2: '玩家2', clue: '提示',
       yourTurn: '你的回合：放好{n}个后按OK', aiTurn: 'AI思考中…', pTurn: '{p}的回合', left: '还剩{n}次',
@@ -40,7 +40,7 @@
       allHit: '全部命中！', hint: '推荐这一手', solvedRow: '第{n}行猜中', none: '行数用完：无人猜中', ans: '答案',
       pWin: '{p}获胜', dWin: '解开了！', dLose: '次数用完…', dRes: '{n}次猜中（标准{p}次）', dFail: '{n}次内未能猜中',
       lv: ['粗心：常忘记之前的结果', '学徒：偶尔漏看提示', '推理家：按提示来猜', '名侦探：少给对手线索'], who: ['适合初次', '熟悉规则后', '对推理有自信', '实力挑战'] },
-    'zh-TW': { r1: '顏色', r1d: '6色中選4個，顏色不重複。', r2: '顏色（可重複）', r2d: '6色中選4個，顏色可重複。', r3: '數字3', r3d: '0〜9中3個不同數字。', r4: '數字4', r4d: '0〜9中4個不同數字。', r5: '專家', r5d: '8色中選5個，顏色可重複。',
+    'zh-TW': { rate: '勝率', r1: '顏色', r1d: '6色中選4個，顏色不重複。', r2: '顏色（可重複）', r2d: '6色中選4個，顏色可重複。', r3: '數字3', r3d: '0〜9中3個不同數字。', r4: '數字4', r4d: '0〜9中4個不同數字。', r5: '專家', r5d: '8色中選5個，顏色可重複。',
       daily: '每日一題', dailyNote: '盤上已有提示列。在限定次數內猜出答案。每天兩題。', easy: '顏色・{n}次以內', hard: '數字4・{n}次以內',
       you: '你', ai: 'AI', p1: '玩家1', p2: '玩家2', clue: '提示',
       yourTurn: '你的回合：放好{n}個後按OK', aiTurn: 'AI思考中…', pTurn: '{p}的回合', left: '還剩{n}次',
@@ -48,7 +48,7 @@
       allHit: '全部命中！', hint: '推薦這一手', solvedRow: '第{n}列猜中', none: '列數用完：無人猜中', ans: '答案',
       pWin: '{p}獲勝', dWin: '解開了！', dLose: '次數用完…', dRes: '{n}次猜中（標準{p}次）', dFail: '{n}次內未能猜中',
       lv: ['粗心：常忘記之前的結果', '學徒：偶爾漏看提示', '推理家：照提示來猜', '名偵探：少給對手線索'], who: ['適合初次', '熟悉規則後', '對推理有自信', '實力挑戰'] },
-    ko: { r1: '컬러', r1d: '6색 중 4개, 같은 색은 쓰지 않음.', r2: '컬러(중복)', r2d: '6색 중 4개, 같은 색을 여러 번.', r3: '넘버3', r3d: '0〜9 중 서로 다른 숫자 3개.', r4: '넘버4', r4d: '0〜9 중 서로 다른 숫자 4개.', r5: '엑스퍼트', r5d: '8색 중 5개, 색 중복 가능.',
+    ko: { rate: '승률', r1: '컬러', r1d: '6색 중 4개, 같은 색은 쓰지 않음.', r2: '컬러(중복)', r2d: '6색 중 4개, 같은 색을 여러 번.', r3: '넘버3', r3d: '0〜9 중 서로 다른 숫자 3개.', r4: '넘버4', r4d: '0〜9 중 서로 다른 숫자 4개.', r5: '엑스퍼트', r5d: '8색 중 5개, 색 중복 가능.',
       daily: '오늘의 문제', dailyNote: '단서 줄이 이미 판에 있어요. 정해진 횟수 안에 맞혀 보세요. 매일 2문제.', easy: '컬러 · {n}회 이내', hard: '넘버4 · {n}회 이내',
       you: '나', ai: 'AI', p1: '플레이어1', p2: '플레이어2', clue: '단서',
       yourTurn: '내 차례: {n}개 놓고 OK', aiTurn: 'AI가 생각 중…', pTurn: '{p} 차례', left: '{n}회 남음',
@@ -56,7 +56,7 @@
       allHit: '전부 히트!', hint: '유력한 수', solvedRow: '{n}번째 줄에서 정답', none: '줄이 다 찼어요: 아무도 못 맞힘', ans: '정답',
       pWin: '{p} 승리', dWin: '클리어!', dLose: '횟수 초과…', dRes: '{n}회에 정답 (기준 {p}회)', dFail: '{n}회 안에 맞히지 못했어요',
       lv: ['덜렁이: 앞의 결과를 자주 잊음', '견습생: 가끔 단서를 놓침', '추리가: 단서대로 맞힘', '명탐정: 상대에게 단서를 덜 줌'], who: ['처음이라면', '규칙에 익숙해지면', '추리에 자신 있다면', '실력 시험'] },
-    es: { r1: 'Color', r1d: '4 de 6 colores, todos distintos.', r2: 'Color (con repetición)', r2d: '4 de 6 colores; se pueden repetir.', r3: 'Número 3', r3d: '3 cifras distintas, 0–9.', r4: 'Número 4', r4d: '4 cifras distintas, 0–9.', r5: 'Experto', r5d: '5 de 8 colores; se pueden repetir.',
+    es: { rate: '% victorias', r1: 'Color', r1d: '4 de 6 colores, todos distintos.', r2: 'Color (con repetición)', r2d: '4 de 6 colores; se pueden repetir.', r3: 'Número 3', r3d: '3 cifras distintas, 0–9.', r4: 'Número 4', r4d: '4 cifras distintas, 0–9.', r5: 'Experto', r5d: '5 de 8 colores; se pueden repetir.',
       daily: 'Reto del día', dailyNote: 'Ya hay filas de pistas en el tablero. Descifra el código dentro del límite. Dos retos nuevos cada día.', easy: 'Color · en {n}', hard: 'Número 4 · en {n}',
       you: 'Tú', ai: 'IA', p1: 'Jugador 1', p2: 'Jugador 2', clue: 'Pista',
       yourTurn: 'Tu turno: coloca {n} y pulsa OK', aiTurn: 'La IA está pensando…', pTurn: 'Turno de {p}', left: 'Quedan {n}',
@@ -64,7 +64,7 @@
       allHit: '¡Todo aciertos!', hint: 'Una buena jugada', solvedRow: 'Descifrado en la fila {n}', none: 'Sin filas: nadie lo descifró', ans: 'Respuesta',
       pWin: 'Gana {p}', dWin: '¡Resuelto!', dLose: 'Sin intentos…', dRes: 'Resuelto en {n} (par {p})', dFail: 'No resuelto en {n}',
       lv: ['Despistado: olvida respuestas', 'Aprendiz: a veces pasa por alto una pista', 'Detective: juega según las pistas', 'Maestro: da pocas pistas al rival'], who: ['Para empezar', 'Si ya sabes las reglas', 'Si confías en tu lógica', 'Para ponerte a prueba'] },
-    fr: { r1: 'Couleur', r1d: '4 couleurs sur 6, toutes différentes.', r2: 'Couleur (répétitions)', r2d: '4 couleurs sur 6 ; une couleur peut revenir.', r3: 'Nombre 3', r3d: '3 chiffres différents, 0–9.', r4: 'Nombre 4', r4d: '4 chiffres différents, 0–9.', r5: 'Expert', r5d: '5 couleurs sur 8 ; répétitions permises.',
+    fr: { rate: '% victoires', r1: 'Couleur', r1d: '4 couleurs sur 6, toutes différentes.', r2: 'Couleur (répétitions)', r2d: '4 couleurs sur 6 ; une couleur peut revenir.', r3: 'Nombre 3', r3d: '3 chiffres différents, 0–9.', r4: 'Nombre 4', r4d: '4 chiffres différents, 0–9.', r5: 'Expert', r5d: '5 couleurs sur 8 ; répétitions permises.',
       daily: 'Défi du jour', dailyNote: 'Des lignes d’indices sont déjà sur le plateau. Trouvez le code dans la limite. Deux défis par jour.', easy: 'Couleur · en {n}', hard: 'Nombre 4 · en {n}',
       you: 'Vous', ai: 'IA', p1: 'Joueur 1', p2: 'Joueur 2', clue: 'Indice',
       yourTurn: 'À vous : placez {n}, puis OK', aiTurn: 'L’IA réfléchit…', pTurn: 'Au tour de {p}', left: 'Encore {n}',
@@ -72,7 +72,7 @@
       allHit: 'Tout juste !', hint: 'Un bon essai', solvedRow: 'Trouvé à la ligne {n}', none: 'Plus de lignes : personne n’a trouvé', ans: 'Réponse',
       pWin: '{p} gagne', dWin: 'Résolu !', dLose: 'Plus d’essais…', dRes: 'Résolu en {n} (par {p})', dFail: 'Non résolu en {n}',
       lv: ['Étourdi : oublie souvent', 'Apprenti : rate parfois un indice', 'Détective : suit les indices', 'Maître : donne peu d’indices'], who: ['Pour débuter', 'Une fois les règles connues', 'Si vous aimez déduire', 'Pour un vrai test'] },
-    pt: { r1: 'Cor', r1d: '4 de 6 cores, todas diferentes.', r2: 'Cor (com repetição)', r2d: '4 de 6 cores; podem repetir.', r3: 'Número 3', r3d: '3 dígitos diferentes, 0–9.', r4: 'Número 4', r4d: '4 dígitos diferentes, 0–9.', r5: 'Especialista', r5d: '5 de 8 cores; podem repetir.',
+    pt: { rate: '% vitórias', r1: 'Cor', r1d: '4 de 6 cores, todas diferentes.', r2: 'Cor (com repetição)', r2d: '4 de 6 cores; podem repetir.', r3: 'Número 3', r3d: '3 dígitos diferentes, 0–9.', r4: 'Número 4', r4d: '4 dígitos diferentes, 0–9.', r5: 'Especialista', r5d: '5 de 8 cores; podem repetir.',
       daily: 'Desafio do dia', dailyNote: 'Já há linhas de pistas no tabuleiro. Decifre o código dentro do limite. Dois desafios por dia.', easy: 'Cor · em {n}', hard: 'Número 4 · em {n}',
       you: 'Você', ai: 'IA', p1: 'Jogador 1', p2: 'Jogador 2', clue: 'Pista',
       yourTurn: 'Sua vez: coloque {n} e OK', aiTurn: 'A IA está pensando…', pTurn: 'Vez de {p}', left: 'Faltam {n}',
@@ -80,7 +80,7 @@
       allHit: 'Tudo certo!', hint: 'Um bom palpite', solvedRow: 'Decifrado na linha {n}', none: 'Sem linhas: ninguém decifrou', ans: 'Resposta',
       pWin: '{p} vence', dWin: 'Resolvido!', dLose: 'Sem tentativas…', dRes: 'Resolvido em {n} (par {p})', dFail: 'Não resolvido em {n}',
       lv: ['Distraído: esquece respostas', 'Aprendiz: às vezes perde uma pista', 'Detetive: segue as pistas', 'Mestre: dá poucas pistas ao rival'], who: ['Para começar', 'Depois de saber as regras', 'Se confia na lógica', 'Para um teste real'] },
-    de: { r1: 'Farbe', r1d: '4 von 6 Farben, alle verschieden.', r2: 'Farbe (Wiederholung)', r2d: '4 von 6 Farben; Farben dürfen sich wiederholen.', r3: 'Zahl 3', r3d: '3 verschiedene Ziffern, 0–9.', r4: 'Zahl 4', r4d: '4 verschiedene Ziffern, 0–9.', r5: 'Experte', r5d: '5 von 8 Farben; Wiederholung erlaubt.',
+    de: { rate: 'Siegquote', r1: 'Farbe', r1d: '4 von 6 Farben, alle verschieden.', r2: 'Farbe (Wiederholung)', r2d: '4 von 6 Farben; Farben dürfen sich wiederholen.', r3: 'Zahl 3', r3d: '3 verschiedene Ziffern, 0–9.', r4: 'Zahl 4', r4d: '4 verschiedene Ziffern, 0–9.', r5: 'Experte', r5d: '5 von 8 Farben; Wiederholung erlaubt.',
       daily: 'Tagesrätsel', dailyNote: 'Hinweisreihen liegen schon auf dem Brett. Knacke den Code im Limit. Jeden Tag zwei neue.', easy: 'Farbe · in {n}', hard: 'Zahl 4 · in {n}',
       you: 'Du', ai: 'KI', p1: 'Spieler 1', p2: 'Spieler 2', clue: 'Hinweis',
       yourTurn: 'Du bist dran: {n} setzen, dann OK', aiTurn: 'Die KI denkt…', pTurn: '{p} ist dran', left: 'Noch {n}',
@@ -88,7 +88,7 @@
       allHit: 'Alles Treffer!', hint: 'Ein starker Tipp', solvedRow: 'Geknackt in Reihe {n}', none: 'Keine Reihen mehr: niemand hat es geknackt', ans: 'Lösung',
       pWin: '{p} gewinnt', dWin: 'Gelöst!', dLose: 'Keine Versuche mehr…', dRes: 'Gelöst in {n} (Par {p})', dFail: 'Nicht in {n} gelöst',
       lv: ['Vergesslich: vergisst oft Antworten', 'Lehrling: übersieht mal einen Hinweis', 'Spürnase: rät nach den Hinweisen', 'Meister: verrät dem Gegner wenig'], who: ['Für den Einstieg', 'Wenn du die Regeln kennst', 'Wenn du gern kombinierst', 'Als echte Probe'] },
-    ru: { r1: 'Цвета', r1d: '4 из 6 цветов, все разные.', r2: 'Цвета (с повтором)', r2d: '4 из 6 цветов; цвета могут повторяться.', r3: 'Числа 3', r3d: '3 разные цифры, 0–9.', r4: 'Числа 4', r4d: '4 разные цифры, 0–9.', r5: 'Эксперт', r5d: '5 из 8 цветов; повторы можно.',
+    ru: { rate: 'Процент побед', r1: 'Цвета', r1d: '4 из 6 цветов, все разные.', r2: 'Цвета (с повтором)', r2d: '4 из 6 цветов; цвета могут повторяться.', r3: 'Числа 3', r3d: '3 разные цифры, 0–9.', r4: 'Числа 4', r4d: '4 разные цифры, 0–9.', r5: 'Эксперт', r5d: '5 из 8 цветов; повторы можно.',
       daily: 'Задача дня', dailyNote: 'На доске уже есть ряды-подсказки. Разгадайте код за отведённое число ходов. Две задачи каждый день.', easy: 'Цвета · за {n}', hard: 'Числа 4 · за {n}',
       you: 'Вы', ai: 'ИИ', p1: 'Игрок 1', p2: 'Игрок 2', clue: 'Подсказка',
       yourTurn: 'Ваш ход: поставьте {n} и OK', aiTurn: 'ИИ думает…', pTurn: 'Ход: {p}', left: 'Осталось {n}',
@@ -96,7 +96,7 @@
       allHit: 'Все в точку!', hint: 'Сильный вариант', solvedRow: 'Разгадано в ряду {n}', none: 'Ряды кончились: никто не разгадал', ans: 'Ответ',
       pWin: 'Победа: {p}', dWin: 'Решено!', dLose: 'Попытки кончились…', dRes: 'Решено за {n} (норма {p})', dFail: 'Не решено за {n}',
       lv: ['Рассеянный: часто забывает ответы', 'Ученик: иногда упускает подсказку', 'Сыщик: следует подсказкам', 'Мастер: почти не помогает сопернику'], who: ['Для первых партий', 'Когда освоите правила', 'Если любите логику', 'Для серьёзной проверки'] },
-    tr: { r1: 'Renk', r1d: '6 renkten 4, hepsi farklı.', r2: 'Renk (tekrarlı)', r2d: '6 renkten 4; renk tekrar edebilir.', r3: 'Sayı 3', r3d: '0–9 arası 3 farklı rakam.', r4: 'Sayı 4', r4d: '0–9 arası 4 farklı rakam.', r5: 'Uzman', r5d: '8 renkten 5; tekrar olabilir.',
+    tr: { rate: 'Kazanma oranı', r1: 'Renk', r1d: '6 renkten 4, hepsi farklı.', r2: 'Renk (tekrarlı)', r2d: '6 renkten 4; renk tekrar edebilir.', r3: 'Sayı 3', r3d: '0–9 arası 3 farklı rakam.', r4: 'Sayı 4', r4d: '0–9 arası 4 farklı rakam.', r5: 'Uzman', r5d: '8 renkten 5; tekrar olabilir.',
       daily: 'Günün bulmacası', dailyNote: 'Tahtada ipucu satırları var. Kodu sınır içinde çöz. Her gün iki yeni bulmaca.', easy: 'Renk · {n} içinde', hard: 'Sayı 4 · {n} içinde',
       you: 'Sen', ai: 'YZ', p1: 'Oyuncu 1', p2: 'Oyuncu 2', clue: 'İpucu',
       yourTurn: 'Sıra sende: {n} koy, sonra OK', aiTurn: 'YZ düşünüyor…', pTurn: 'Sıra: {p}', left: '{n} kaldı',
@@ -104,7 +104,7 @@
       allHit: 'Hepsi isabet!', hint: 'Güçlü bir tahmin', solvedRow: '{n}. satırda çözüldü', none: 'Satır bitti: kimse çözemedi', ans: 'Cevap',
       pWin: '{p} kazandı', dWin: 'Çözüldü!', dLose: 'Hak bitti…', dRes: '{n} tahminde çözüldü (hedef {p})', dFail: '{n} içinde çözülemedi',
       lv: ['Dalgın: cevapları sık unutur', 'Çırak: bazen ipucunu kaçırır', 'Dedektif: ipuçlarına göre tahmin eder', 'Usta: rakibe az ipucu verir'], who: ['İlk oyunlar için', 'Kuralları öğrenince', 'Mantığına güveniyorsan', 'Gerçek bir sınav'] },
-    id: { r1: 'Warna', r1d: '4 dari 6 warna, semua berbeda.', r2: 'Warna (boleh ulang)', r2d: '4 dari 6 warna; warna boleh berulang.', r3: 'Angka 3', r3d: '3 angka berbeda, 0–9.', r4: 'Angka 4', r4d: '4 angka berbeda, 0–9.', r5: 'Ahli', r5d: '5 dari 8 warna; boleh berulang.',
+    id: { rate: 'Rasio menang', r1: 'Warna', r1d: '4 dari 6 warna, semua berbeda.', r2: 'Warna (boleh ulang)', r2d: '4 dari 6 warna; warna boleh berulang.', r3: 'Angka 3', r3d: '3 angka berbeda, 0–9.', r4: 'Angka 4', r4d: '4 angka berbeda, 0–9.', r5: 'Ahli', r5d: '5 dari 8 warna; boleh berulang.',
       daily: 'Teka-teki harian', dailyNote: 'Baris petunjuk sudah ada di papan. Tebak kodenya dalam batas. Dua teka-teki baru tiap hari.', easy: 'Warna · dalam {n}', hard: 'Angka 4 · dalam {n}',
       you: 'Kamu', ai: 'AI', p1: 'Pemain 1', p2: 'Pemain 2', clue: 'Petunjuk',
       yourTurn: 'Giliranmu: pasang {n}, lalu OK', aiTurn: 'AI sedang berpikir…', pTurn: 'Giliran {p}', left: 'Sisa {n}',
@@ -112,7 +112,7 @@
       allHit: 'Semua hit!', hint: 'Tebakan yang kuat', solvedRow: 'Terpecahkan di baris {n}', none: 'Baris habis: tak ada yang menebak', ans: 'Jawaban',
       pWin: '{p} menang', dWin: 'Terpecahkan!', dLose: 'Kesempatan habis…', dRes: 'Terpecahkan dalam {n} (par {p})', dFail: 'Tidak terpecahkan dalam {n}',
       lv: ['Pelupa: sering lupa jawaban', 'Murid: kadang melewatkan petunjuk', 'Detektif: menebak sesuai petunjuk', 'Ahli: sedikit memberi petunjuk ke lawan'], who: ['Untuk pemula', 'Setelah paham aturan', 'Kalau yakin dengan logikamu', 'Untuk ujian sungguhan'] },
-    hi: { r1: 'रंग', r1d: '6 में से 4 रंग, सब अलग।', r2: 'रंग (दोहराव)', r2d: '6 में से 4 रंग; रंग दोहरा सकते हैं।', r3: 'संख्या 3', r3d: '0–9 के 3 अलग अंक।', r4: 'संख्या 4', r4d: '0–9 के 4 अलग अंक।', r5: 'विशेषज्ञ', r5d: '8 में से 5 रंग; दोहराव संभव।',
+    hi: { rate: 'जीत दर', r1: 'रंग', r1d: '6 में से 4 रंग, सब अलग।', r2: 'रंग (दोहराव)', r2d: '6 में से 4 रंग; रंग दोहरा सकते हैं।', r3: 'संख्या 3', r3d: '0–9 के 3 अलग अंक।', r4: 'संख्या 4', r4d: '0–9 के 4 अलग अंक।', r5: 'विशेषज्ञ', r5d: '8 में से 5 रंग; दोहराव संभव।',
       daily: 'आज की पहेली', dailyNote: 'बोर्ड पर संकेत की पंक्तियाँ पहले से हैं। सीमा के भीतर कोड खोलें। रोज़ दो नई पहेलियाँ।', easy: 'रंग · {n} में', hard: 'संख्या 4 · {n} में',
       you: 'आप', ai: 'AI', p1: 'खिलाड़ी 1', p2: 'खिलाड़ी 2', clue: 'संकेत',
       yourTurn: 'आपकी बारी: {n} रखें, फिर OK', aiTurn: 'AI सोच रहा है…', pTurn: '{p} की बारी', left: '{n} बाकी',
@@ -120,7 +120,7 @@
       allHit: 'सब हिट!', hint: 'एक मज़बूत अनुमान', solvedRow: 'पंक्ति {n} में हल', none: 'पंक्तियाँ खत्म: कोई नहीं खोल पाया', ans: 'उत्तर',
       pWin: '{p} जीते', dWin: 'हल हो गया!', dLose: 'प्रयास खत्म…', dRes: '{n} में हल (मानक {p})', dFail: '{n} में हल नहीं हुआ',
       lv: ['भुलक्कड़: पिछले उत्तर भूल जाता है', 'नौसिखिया: कभी-कभी संकेत छोड़ देता है', 'जासूस: संकेतों के अनुसार', 'उस्ताद: विरोधी को कम संकेत देता है'], who: ['शुरुआत के लिए', 'नियम सीखने के बाद', 'तर्क पर भरोसा हो तो', 'असली परीक्षा'] },
-    ar: { r1: 'ألوان', r1d: '4 من 6 ألوان، كلها مختلفة.', r2: 'ألوان (مع تكرار)', r2d: '4 من 6 ألوان؛ يجوز التكرار.', r3: 'أرقام 3', r3d: '3 أرقام مختلفة من 0 إلى 9.', r4: 'أرقام 4', r4d: '4 أرقام مختلفة من 0 إلى 9.', r5: 'خبير', r5d: '5 من 8 ألوان؛ يجوز التكرار.',
+    ar: { rate: 'نسبة الفوز', r1: 'ألوان', r1d: '4 من 6 ألوان، كلها مختلفة.', r2: 'ألوان (مع تكرار)', r2d: '4 من 6 ألوان؛ يجوز التكرار.', r3: 'أرقام 3', r3d: '3 أرقام مختلفة من 0 إلى 9.', r4: 'أرقام 4', r4d: '4 أرقام مختلفة من 0 إلى 9.', r5: 'خبير', r5d: '5 من 8 ألوان؛ يجوز التكرار.',
       daily: 'لغز اليوم', dailyNote: 'صفوف التلميحات على اللوحة بالفعل. اكسر الرمز ضمن الحد. لغزان جديدان كل يوم.', easy: 'ألوان · في {n}', hard: 'أرقام 4 · في {n}',
       you: 'أنت', ai: 'الذكاء', p1: 'اللاعب 1', p2: 'اللاعب 2', clue: 'تلميح',
       yourTurn: 'دورك: ضع {n} ثم OK', aiTurn: 'الذكاء يفكر…', pTurn: 'دور {p}', left: 'باقٍ {n}',
@@ -181,7 +181,7 @@
 .hbpal button.used{opacity:.28}
 .hbpal.ten button{width:44px;height:44px}.hbpal.ten button svg{width:44px;height:44px}
 .hbpal .kb{position:absolute;opacity:0}
-#bvPz.hbdy{display:flex!important;flex-direction:column;gap:10px;align-items:stretch}#bvPz.hbdy[hidden]{display:none!important}.hbdy .hbd{width:100%;display:flex;align-items:center;gap:10px;justify-content:flex-start;white-space:nowrap}.hbdy .hbd small{margin-left:auto;font-size:13px;opacity:.8}
+#bvPz.hbdy{display:flex!important;flex-direction:column;gap:10px;align-items:stretch}#bvPz.hbdy[hidden]{display:none!important}.hbdy .hbd{width:100%;display:flex;align-items:center;gap:10px;justify-content:flex-start;white-space:nowrap}.hbdy .hbd small{margin-left:auto;font-size:13px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.2}.hbdy .hbd small>span{opacity:.8}.hbdy .hbr{font-size:12px;color:#2b3683}.hbdy .hbr i{font-style:normal;font-weight:600;opacity:.6;margin-left:2px}
 @media (max-width:420px){.hbpal button,.hbpal button svg{width:42px;height:42px}.hbpal.ten button,.hbpal.ten button svg{width:40px;height:40px}.hbok{width:72px;height:52px;font-size:18px}.hbdock{padding:8px 10px 10px}}`;
     document.head.appendChild(s);
   }
@@ -519,7 +519,9 @@
   // the daily tab's two buttons (atlas/app.js: #bvDaily; a click sets pending and starts)
   function dailyHtml(lang) {
     const E = window.HitBlowEngine; const lim = k => { try { const P = E && E.makeDaily(today(), k); return P ? P.limit : '?'; } catch (e) { return '?'; } };
-    return ['easy', 'hard'].map(k => `<button type="button" class="mxb pzd hbd${dailyDone(k) ? ' pzok' : ''}" data-daily="${k}"><span>${tx(lang, 'daily')}</span><em class="ez">${k.toUpperCase()}</em><small>${tx(lang, k, { n: lim(k) })}</small></button>`).join('');
+    // 勝率 (2026-11-16 user): the days solved / the days played, per EASY · HARD (each day's first try counts; a later solve of the day counts too)
+    const o = dread(), rate = k => { const d = Object.values(o[k] || {}), w = d.filter(x => x && x.win).length; return d.length ? `<b class="hbr">${tx(lang, 'rate')} ${Math.round(w / d.length * 100)}%<i>（${w}/${d.length}）</i></b>` : `<b class="hbr">${tx(lang, 'rate')} —</b>`; };
+    return ['easy', 'hard'].map(k => `<button type="button" class="mxb pzd hbd${dailyDone(k) ? ' pzok' : ''}" data-daily="${k}"><span>${tx(lang, 'daily')}</span><em class="ez">${k.toUpperCase()}</em><small><span>${tx(lang, k, { n: lim(k) })}</span>${rate(k)}</small></button>`).join('');
   }
   css();   // (the card's 今日の一問 buttons are styled before a game starts)
   window.Atlas3D = window.Atlas3D || {};

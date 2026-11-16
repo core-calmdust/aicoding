@@ -59,6 +59,7 @@
     botao: ["Tidur siang di pantai", "Pelanggan kios jalanan", "Jago menggiring", "Kiper tembok", "Banteng liar festival", "Peneliti buku aturan", "Terinspirasi pelukis penulis aturan pertama"],
     peg: ["Putri yang melompatkan kelereng di istana Louis XIV", "Astronom yang memikirkan cara menumpuk bola"],
     alquerque: ['Anak halaman Andalusia', 'Penjual karpet bermotif papan', 'Penulis Kitab Lagu', 'Pemburu langit gurun', 'Ksatria Kastilia', 'Nyonya taman istana', 'Raja yang memesan Kitab Permainan'],
+    hitblow: ["Murid yang baru dapat kaca pembesar", "Banteng dari Bulls and Cows, permainan kertas-pensil lama", "Jago menyembunyikan pin", "Datang dari Bletchley Park, kota para pemecah kode", "Taruh dulu, pikir belakangan", "Terinspirasi ilmuwan yang membuktikan semua kode terpecahkan dalam lima tebakan", "Terinspirasi kepala kantor pos penemu Mastermind"],
   },
   trivia: {
     chess: ['Catur diduga berasal dari chaturanga yang dimainkan di India sekitar abad ke-6.', 'Dulu ratu adalah bidak lemah yang hanya maju satu petak. Kekuatannya baru didapat akhir abad ke-15.', '«Skakmat» berasal dari bahasa Persia «shāh māt» — «raja tak berdaya».', 'Tahun 1997 komputer Deep Blue mengalahkan juara dunia — berita besar!'],
@@ -93,5 +94,6 @@
     botao: ["Sepak bola kancing lahir di Brasil — dulu dimainkan dengan kancing baju dan tutup botol.", "Kamu punya 12 sentuhan per penguasaan, maksimal 3 berturut-turut dengan satu kancing.", "Umumkan tembakan dulu! Gol tanpa pengumuman tidak sah.", "14 Februari adalah Hari Pemain Kancing di São Paulo."],
     peg: ["Sebuah ukiran Prancis tahun 1697 menggambarkan Putri Soubise bermain peg solitaire.", "Soal tengah di papan Inggris butuh minimal 18 langkah, jika rangkaian lompatan satu kelereng dihitung satu langkah.", "Tahun 1611 Kepler menduga menumpuk bola seperti tumpukan buah di pasar adalah cara terpadat. Baru terbukti di akhir abad ke-20!"],
     alquerque: ['Alquerque muncul dalam «Kitab Lagu» Arab abad ke-10.', 'Ia juga ada di Kitab Permainan yang dibuat untuk Alfonso X pada abad ke-13.', 'Disebut leluhur dam — keduanya menangkap dengan melompat.', 'Papannya garis dan titik; bidak bergerak dari titik ke titik di sepanjang garis.'],
+    hitblow: ["Papan hari ini berasal dari Mastermind, ciptaan Mordecai Meirowitz, kepala kantor pos Israel, pada 1970.", "Jauh sebelumnya sudah ada Bulls and Cows, permainan tebak angka dengan kertas dan pensil.", "Pada 1977 Donald Knuth membuktikan setiap kode 4 pin 6 warna bisa dipecahkan paling banyak dalam lima tebakan.", "4 dari 6 warna dengan pengulangan ada 6×6×6×6 = 1296 kode. Tanpa pengulangan, 360."],
   },
 } });

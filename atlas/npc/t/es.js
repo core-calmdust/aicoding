@@ -59,6 +59,7 @@
     botao: ["Siesta en la playa", "Habitual del puesto callejero", "As del regate", "Portero muralla", "El toro salvaje de la fiesta", "Investigador del reglamento", "Inspirado en el pintor que escribió las primeras reglas"],
     peg: ["La princesa que saltaba canicas en la corte de Luis XIV", "El astrónomo que pensó cómo apilar bolas"],
     alquerque: ['Niño de un patio andalusí', 'Vendedor de alfombras como el tablero', 'Autor del Libro de las Canciones', 'Cazador del cielo del desierto', 'Caballero castellano', 'Dama del jardín del palacio', 'El rey que mandó hacer el Libro de los juegos'],
+    hitblow: ["Aprendiz que acaba de recibir su lupa", "El toro de Toros y Vacas, el viejo juego de lápiz y papel", "Experto en esconder fichas", "Viene de Bletchley Park, la ciudad de los descifradores", "Pone gemas antes de pensar", "Inspirado en el sabio que demostró que todo código cae en cinco intentos", "Inspirado en el jefe de correos que inventó Mastermind"],
   },
   trivia: {
     chess: ['Se cree que el ajedrez desciende del chaturanga, jugado en la India hacia el siglo VI.', 'La dama era una pieza débil que se movía una casilla. Ganó sus poderes a finales del siglo XV.', '«Jaque mate» viene del persa «shāh māt»: «el rey está indefenso».', 'En 1997 la computadora Deep Blue venció al campeón del mundo: fue una gran noticia.'],
@@ -93,5 +94,6 @@
     botao: ["El fútbol de botones nació en Brasil: antes se jugaba con botones de camisa y chapas.", "Tienes 12 toques por posesión y no más de 3 seguidos con un botón.", "¡Primero anuncia el tiro! Un gol sin anunciar no vale.", "El 14 de febrero es el Día del Botonista en São Paulo."],
     peg: ["Un grabado francés de 1697 muestra a la princesa de Soubise jugando al solitario.", "El problema central del tablero inglés se resuelve en 18 movimientos como mínimo, contando una cadena de saltos de la misma pieza como uno.", "En 1611 Kepler supuso que apilar bolas como en una frutería es lo más compacto. ¡Se demostró a finales del siglo XX!"],
     alquerque: ['El alquerque aparece en el «Libro de las Canciones» árabe del siglo X.', 'También está en el Libro de los juegos hecho para Alfonso X en el siglo XIII.', 'Se le llama el antepasado de las damas: ambos capturan saltando.', 'El tablero son líneas y puntos; las piezas van de punto en punto por las líneas.'],
+    hitblow: ["El tablero de hoy viene de Mastermind, inventado en 1970 por Mordecai Meirowitz, jefe de correos israelí.", "Mucho antes existía Toros y Vacas, un juego de adivinar números con lápiz y papel.", "En 1977 Donald Knuth demostró que cualquier código de 4 fichas y 6 colores se resuelve en cinco intentos o menos.", "4 de 6 colores con repetición dan 6×6×6×6 = 1296 códigos. Sin repetir, 360."],
   },
 } });

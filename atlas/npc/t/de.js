@@ -59,6 +59,7 @@
     botao: ["Nickerchen am Strand", "Stammgast am Straßenstand", "Dribbelkünstler", "Torwart wie eine Mauer", "Der wilde Festochse", "Regelbuchforscher", "Nach dem Maler, der die ersten Regeln schrieb"],
     peg: ["Die Prinzessin, die am Hof Ludwigs XIV. Kugeln springen ließ", "Der Astronom, der überlegte, wie man Kugeln stapelt"],
     alquerque: ['Kind eines andalusischen Innenhofs', 'Teppichverkäufer mit Brettmuster', 'Autor des Buchs der Lieder', 'Jäger des Wüstenhimmels', 'Kastilischer Ritter', 'Dame des Palastgartens', 'Der König, der das Buch der Spiele schaffen ließ'],
+    hitblow: ["Ein Lehrling mit seiner ersten Lupe", "Der Bulle aus Bulls and Cows, dem alten Papier-und-Stift-Spiel", "Kann Stecker gut verstecken", "Kommt aus Bletchley Park, der Stadt der Codeknacker", "Setzt erst, denkt dann", "Nach dem Gelehrten, der zeigte: jeder Code fällt in fünf Versuchen", "Nach dem Postmeister, der Mastermind erfand"],
   },
   trivia: {
     chess: ['Schach stammt vermutlich vom Chaturanga ab, das um das 6. Jahrhundert in Indien gespielt wurde.', 'Die Dame war früher schwach und zog nur ein Feld. Ihre Kraft bekam sie Ende des 15. Jahrhunderts.', '»Schachmatt« kommt vom persischen »shāh māt« – »der König ist hilflos«.', '1997 schlug der Computer Deep Blue den Weltmeister – eine Riesennachricht.'],
@@ -93,5 +94,6 @@
     botao: ["Knopffußball stammt aus Brasilien — früher spielte man mit Hemdknöpfen und Kronkorken.", "Du hast 12 Berührungen pro Ballbesitz, höchstens 3 am Stück mit einem Knopf.", "Erst den Schuss ansagen! Ein Tor ohne Ansage zählt nicht.", "Der 14. Februar ist in São Paulo der Tag des Knopfspielers."],
     peg: ["Ein französischer Stich von 1697 zeigt die Prinzessin von Soubise beim Solitärspiel.", "Die Mittelaufgabe auf dem englischen Brett braucht mindestens 18 Züge, wenn eine Sprungkette derselben Kugel als ein Zug zählt.", "Kepler vermutete 1611, dass Kugeln wie beim Obsthändler gestapelt am dichtesten liegen. Bewiesen wurde das erst Ende des 20. Jahrhunderts!"],
     alquerque: ['Alquerque erscheint im arabischen »Buch der Lieder« aus dem 10. Jahrhundert.', 'Es steht auch im Buch der Spiele, das im 13. Jahrhundert für Alfons X. entstand.', 'Es gilt als Vorfahr des Damespiels – beide schlagen durch Springen.', 'Das Brett besteht aus Linien und Punkten; die Steine ziehen entlang der Linien von Punkt zu Punkt.'],
+    hitblow: ["Das heutige Brett stammt von Mastermind, 1970 erfunden vom israelischen Postmeister Mordecai Meirowitz.", "Lange davor gab es Bulls and Cows, ein Zahlenratespiel mit Papier und Stift.", "1977 zeigte Donald Knuth, dass jeder Code mit 4 Steckern und 6 Farben in höchstens fünf Versuchen lösbar ist.", "4 aus 6 Farben mit Wiederholung ergeben 6×6×6×6 = 1296 Codes. Ohne Wiederholung 360."],
   },
 } });

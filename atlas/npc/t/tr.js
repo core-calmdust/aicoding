@@ -59,6 +59,7 @@
     botao: ["Plajda şekerleme", "Seyyar tezgâhın müdavimi", "Çalım ustası", "Duvar gibi kaleci", "Festivalin azgın boğası", "Kural kitabı araştırmacısı", "İlk kuralları yazan ressamdan esinlenildi"],
     peg: ["XIV. Louis'nin sarayında bilye atlatan prenses", "Topların nasıl istifleneceğini düşünen gökbilimci"],
     alquerque: ['Endülüs avlusunun çocuğu', 'Tahta desenli halı satıcısı', 'Şarkılar Kitabı\'nın yazarı', 'Çöl göğünün avcısı', 'Kastilyalı şövalye', 'Saray bahçesinin hanımı', 'Oyunlar Kitabı\'nı yaptıran kral'],
+    hitblow: ["Büyütecini yeni almış bir çırak", "Eski kâğıt-kalem oyunu Bulls and Cows’un boğası", "Pimleri saklamakta usta", "Şifre kırıcıların kasabası Bletchley Park’tan geldi", "Önce koyar, sonra düşünür", "Her şifrenin beş tahminde çözüldüğünü gösteren bilginden esinlendi", "Mastermind’ı icat eden posta müdüründen esinlendi"],
   },
   trivia: {
     chess: ['Satrancın 6. yüzyıl civarında Hindistan\'da oynanan çaturangadan geldiği düşünülür.', 'Vezir eskiden tek kare giden zayıf bir taştı. Gücünü 15. yüzyılın sonunda kazandı.', '«Şah mat» Farsça «şâh mât» yani «şah çaresiz» sözünden gelir.', '1997\'de bilgisayar Deep Blue dünya şampiyonunu yendi — büyük haberdi.'],
@@ -93,5 +94,6 @@
     botao: ["Düğme futbolu Brezilya’da doğdu; eskiden gömlek düğmeleri ve şişe kapaklarıyla oynanırdı.", "Top sendeyken 12 dokunuşun var; bir düğmeyle art arda en çok 3.", "Önce şutunu ilan et! İlansız gol geçersiz.", "14 Şubat, São Paulo’da Düğme Oyuncusu Günü."],
     peg: ["1697 tarihli bir Fransız gravüründe Prenses de Soubise peg solitaire oynuyor.", "İngiliz tahtasının orta problemi, aynı bilyenin art arda atlayışları tek hamle sayılırsa en az 18 hamlede çözülür.", "Kepler 1611'de topları manav tezgâhı gibi dizmenin en sık istif olduğunu tahmin etti. Bu ancak 20. yüzyılın sonunda kanıtlandı!"],
     alquerque: ['Alquerque, 10. yüzyıldan Arapça «Şarkılar Kitabı»nda geçer.', '13. yüzyılda X. Alfonso için yapılan Oyunlar Kitabı\'nda da vardır.', 'Damanın atası denir — ikisi de atlayarak taş alır.', 'Tahta çizgiler ve noktalardan oluşur; taşlar çizgiler boyunca noktadan noktaya gider.'],
+    hitblow: ["Bugünkü tahta, 1970’te İsrailli posta müdürü Mordecai Meirowitz’in icat ettiği Mastermind’dan geliyor.", "Çok daha önce kâğıt kalemle oynanan sayı tahmini oyunu Bulls and Cows vardı.", "1977’de Donald Knuth, 4 pimli 6 renkli her şifrenin en fazla beş tahminde çözülebileceğini gösterdi.", "6 renkten 4, tekrar serbestse 6×6×6×6 = 1296 şifre. Tekrarsız 360."],
   },
 } });
