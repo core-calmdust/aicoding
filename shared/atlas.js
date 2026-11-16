@@ -343,7 +343,7 @@
       if (g.tags.includes('openings')) ladder(id, 'op', r.op || 0, [1, 10]);
       if (g.tags.includes('daily')) { ladder(id, 'dd', r.dl.days, [1, 7, 30]); add(id, 'st', 7, 2, r.dl.best, 7); }
       if (META.l3[id]) {          // played on the portal's 3D table (the level count: the portal's adapter, or remembered from it)
-        ladder(id, 'pw', r.p3.w, [1, 10]);
+        ladder(id, 'pw', r.p3.w + (r.p3.sw || 0), [1, 10]);
         const L = META.l3[id]; [Math.ceil(L / 2), L - 2, L].forEach((lv, i) => add(id, 'pv', lv, i + 1, r.p3.best >= lv ? 1 : 0, 1));
       }
       if (g.tags.includes('rated')) {
@@ -384,7 +384,9 @@
   // record a finished game played on the portal's 3D table
   function recordPlay(d, id, res) {
     d.plays = d.plays || {}; const p = d.plays[id] = d.plays[id] || { n: 0, w: 0, best: 0 };
-    p.n++; if (res.win) { p.w++; p.best = Math.max(p.best, res.level || 0); }
+    // a solo game's win (a puzzle, a stage, peg solitaire …) is not a win over the AI (2026-11-16): kept apart (sw), so the
+    // missions' "beat the AI" counts only real AI games; the 3D-win achievements still count both (w + sw)
+    p.n++; if (res.win) { if (res.solo) p.sw = (p.sw || 0) + 1; else { p.w++; p.best = Math.max(p.best, res.level || 0); } }
     save(d);
   }
   function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
