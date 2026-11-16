@@ -374,7 +374,11 @@ function fitCard() {
     pl.classList.remove('fade');
     if (cols.length) { const room = Math.min(...cols) - (offL(pl) + pl.offsetWidth) - 28;
       if (room > 0) { const max = w0 + room;
+        // (2026-11-16, ユーザー「ボックスは以前と同程度の長さで」) the stories are longer now: the width is measured without the story,
+        // which then wraps (and scrolls) inside it — the card stays as long as its skill lines need, as before
+        const st = info.querySelector('.pi-st'); if (st) st.style.display = 'none';
         pl.classList.add('meas'); const nat = pl.offsetWidth, text = info.offsetWidth; pl.classList.remove('meas');
+        if (st) st.style.display = '';
         const want = Math.round(nat + text * .25);
         if (nat <= max) { pl.style.width = Math.max(w0, Math.min(max, want)) + 'px'; pl.classList.add('fade'); } else pl.style.width = Math.round(max) + 'px'; } } }
   for (const k of [1, .94, .88, .82, .76]) { pl.style.setProperty('--pis', k); if (pl.offsetTop >= navB && info.scrollWidth <= info.clientWidth + 1 && info.offsetWidth >= 200) return; }   // (the whole card a little smaller until it clears the menu)
