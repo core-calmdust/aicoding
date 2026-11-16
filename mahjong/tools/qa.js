@@ -19,7 +19,7 @@ function staticChecks() {
   // every sound file the code names is there (2026-11-16: the second riichi track, bgm-riichi2)
   { const app = fs.readFileSync(path.join(MJ, 'app.js'), 'utf8'), names = [...app.matchAll(/file: '([\w-]+)'/g)].map(m => m[1]);
     const miss = names.filter(n => !fs.existsSync(path.join(MJ, '..', 'images', 'mahjong', 'snd', n + '.mp3')));
-    ok('music files present (' + names.length + ')', names.includes('bgm-riichi2') && !miss.length, miss.join(',')); }
+    ok('music files present (' + names.length + ')', ['bgm-riichi2', 'bgm-riichi3', 'bgm-main4'].every(n => names.includes(n)) && !miss.length, miss.join(',')); }
   // code swallowed by a comment (2026-11-16: an edit put `lx = TB.screenPose(...)` after a `//` on the same line — the player's
   // discard lost its page pose and the hand came from the table's edge). Flags a line comment that ends like a statement.
   const sus = [];
@@ -50,17 +50,17 @@ async function runtime() {
   const exe = fs.existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : undefined;
   const b = await pw.chromium.launch({ executablePath: exe, args: ['--no-sandbox', '--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
   const PC = { viewport: { width: 1600, height: 900 } }, SP = { viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 };
-  const page = async (o, set = {}, lang = 'ja') => {
+  const page = async (o, set = {}, lang = 'ja', q = '?fast') => {
     const ctx = await b.newContext({ ...o, locale: 'ja-JP' }); const p = await ctx.newPage(); p.errs = [];
     p.on('pageerror', e => p.errs.push(e.message)); await p.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
-    await p.goto(BASE + '?fast');
+    await p.goto(BASE + q);
     await p.evaluate(([s, l]) => { I18N.set(l); const D = JANKA.DB; D.coins = 99999; Object.assign(D.set, { mode: 'free', lite: false, skills: false, tap2: false }, s);
       D.chars = Object.assign({ yukino: { skills: ['mind:0'], use: 'mind:0', partner: 'hakuro' }, hakuro: { skills: ['wareme:0'], use: 'wareme:0' } }, D.chars); D.sel = 'yukino'; localStorage.setItem('janka-v1', JSON.stringify(D)); }, [set, lang]);
     await p.reload(); await p.waitForTimeout(1200); p.ctx = ctx; return p; };
   const myTurn = async p => { await p.evaluate(`void JANKA.startGame()`);
     await p.waitForFunction(`JANKA.UIS && JANKA.UIS.kind === 'turn' && document.querySelector('#hand .tl.drawn')`, null, { timeout: 120000 }); await p.waitForTimeout(1500);
     await p.waitForFunction(`JANKA.UIS.kind === 'turn'`, null, { timeout: 60000 }); };
-  const traceReach = `(()=>{const TB=JANKA.TB;window.__rc=null;const o=TB.reach.bind(TB);TB.reach=(g,seat,f,to)=>{const r=o(g,seat,f,to);if(seat===0&&!__rc){const rig=TB.hand(0);__rc={page:!!(f&&f.page),layer:rig.layers.isEnabled(1),hidden:!g.visible,fx:f?f.x:null,ghost:document.querySelectorAll('.tl.ghost').length,dist:Math.hypot(rig.position.x-g.position.x,rig.position.z-g.position.z)};const iv=setInterval(()=>{if(TB._ov&&TB._ov.g)__rc.ovTile=true},10);setTimeout(()=>{clearInterval(iv);__rc.ghostLater=document.querySelectorAll('.tl.ghost').length;__rc.ovTile=!!__rc.ovTile},5000)}return r}})()`;
+  const traceReach = `(()=>{const TB=JANKA.TB;window.__rc=null;const o=TB.reach.bind(TB);TB.reach=(g,seat,f,to)=>{const r=o(g,seat,f,to);if(seat===0&&!__rc){const rig=TB.hand(0);__rc={page:!!(f&&f.page),layer:rig.layers.isEnabled(1),hidden:!g.visible,fx:f?f.x:null,ghost:document.querySelectorAll('.tl.ghost').length,dist:Math.hypot(rig.position.x-g.position.x,rig.position.z-g.position.z)};const iv=setInterval(()=>{if(TB._ov&&TB._ov.g)__rc.ovTile=true;else if(g.visible&&!__rc.ovTile)__rc.shownEarly=true},10);setTimeout(()=>{clearInterval(iv);__rc.ghostLater=document.querySelectorAll('.tl.ghost').length;__rc.ovTile=!!__rc.ovTile},5000)}return r}})()`;
 
   if (want('discard')) { console.log('[discard] the player\'s own discard (tap, PC)');
     // 2026-11-16: the hand must take the very tile of the page's hand row (page pose, drawn over the page), the page's copy
@@ -70,9 +70,22 @@ async function runtime() {
     const r = await p.evaluate('__rc');
     ok('tap: the hand takes the tile from the hand row (page pose)', !!(r && r.page && r.layer), JSON.stringify(r));
     // (2026-11-16, ユーザー「ツモ牌を捨てるとき牌が二重っぽい」) the 3D tile is not drawn behind the page's copy before the hand takes it
-    ok('tap: no 3D tile behind the page copy until it is taken', !!(r && r.hidden), JSON.stringify(r));
+    ok('tap: no 3D tile behind the page copy until it is taken', !!(r && r.hidden && !r.shownEarly), JSON.stringify(r));   // (2026-11-16: checked over the whole wait — the river's layout had shown it again right after reach())
     ok('tap: the copy of the tile is shown, then gone when taken', !!(r && r.ghost === 1 && r.ghostLater === 0 && r.ovTile), r && `ghost ${r.ghost}→${r.ghostLater} ovTile ${r.ovTile}`);
     ok('no page errors (game, PC)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
+
+  if (want('discard')) { console.log('[discard] a dora put into the row glows only once settled');
+    // (2026-11-16, ユーザー「捨てた場所にドラが入る時、収まる前から光っていて違和感」)
+    const p = await page(PC, {}, 'ja', '?nofreeze'); await myTurn(p);
+    const r = await p.evaluate(`(async()=>{const G=JANKA.UIS.game,dr=+document.querySelector('#hand .tl.drawn').dataset.id,T=Math.floor(dr/4);
+      let ind=-1;for(let i=0;i<34;i++)if(MJ.doraOf(i)===T){ind=i;break}const o=G.doraInds.bind(G);G.doraInds=()=>o().concat([ind]);JANKA.renderHand&&JANKA.renderHand();
+      document.querySelector('#hand .hrow .tl[data-id]:nth-child(3)').click();
+      let el=null;for(let k=0;k<40&&!el;k++){await new Promise(r=>setTimeout(r,25));el=document.querySelector('#hand .hrow .tl[data-id="'+dr+'"]')}
+      if(!el)return 'not in row';const a=[el.classList.contains('dset'),getComputedStyle(el,'::before').visibility];
+      await new Promise(r=>setTimeout(r,1200));const e2=document.querySelector('#hand .hrow .tl[data-id="'+dr+'"]');
+      return a.concat([e2&&e2.classList.contains('dset'),e2&&getComputedStyle(e2,'::before').visibility])})()`);
+    ok('a dora put into the row: no glow while it settles, then it glows', Array.isArray(r) && r[0] === true && r[1] === 'hidden' && r[2] === false && r[3] === 'visible', JSON.stringify(r));
+    ok('no page errors (dora settle)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('drag')) { console.log('[drag] phone: slide a tile to the middle');
     const p = await page(SP); await myTurn(p); await p.evaluate(traceReach);
@@ -139,7 +152,7 @@ async function runtime() {
     ok('no page errors (jiggle)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('vfx')) { console.log('[vfx] the game\'s light effects: shown over the cut-in word, then cleaned up');
-    const p = await page(PC); await p.evaluate(`void JANKA.startGame()`);
+    const p = await page(PC, {}, 'ja', '?nofreeze'); await p.evaluate(`void JANKA.startGame()`);   // (not ?fast: a fast cut-in can be over before its light comes)
     // (the table must be dealt first: when the machine is busy 5 s was not always enough)
     await p.waitForFunction(`JANKA.UIS && JANKA.UIS.chars && JANKA.UIS.chars[1] && document.querySelector('#hand .tl')`, null, { timeout: 60000 }).catch(() => {}); await p.waitForTimeout(800);
     await p.evaluate(`(()=>{window.__vx=[];const o=VFX.burst;VFX.burst=(...a)=>{const r=o(...a);__vx.push([a[0],a[1],!!document.querySelector('.vfx-cv'),VFX.active()]);return r}})()`);
@@ -151,10 +164,16 @@ async function runtime() {
     const gone = await p.waitForFunction(`(()=>{const n=__vx.length;if(window.__vn!==n){window.__vn=n;window.__vt=performance.now()}return performance.now()-__vt>3000&&!document.querySelector('.vfx-cv')&&VFX.active()===0})()`, null, { timeout: 40000, polling: 200 }).then(() => true, () => false);
     ok('the effect canvas is removed afterwards', gone, gone ? '' : JSON.stringify(await p.evaluate(`[__vx.length, !!document.querySelector('.vfx-cv'), VFX.active()]`)));
     // (2026-11-16, ユーザー「スキルエフェクトもAAAに」) every skill's effect brings the light engine in at its moments, on the table
-    const sk = await p.evaluate(`(async()=>{const out=[];for(const id of MJSkillFx.ids){let n=0;const o=VFX.burst,o2=VFX.shock,o3=VFX.pull,o4=VFX.slash,o5=VFX.rise;
+    const sk = await p.evaluate(`(async()=>{let out=[];const one=async id=>{let n=0;const o=VFX.burst,o2=VFX.shock,o3=VFX.pull,o4=VFX.slash,o5=VFX.rise;
       const c=(f)=>(...a)=>{n++;return f(...a)};VFX.burst=c(o);VFX.shock=c(o2);VFX.pull=c(o3);VFX.slash=c(o4);VFX.rise=c(o5);
-      await MJSkillFx.play(id,0,JANKA.TB,{dur:600});await new Promise(r=>setTimeout(r,700));VFX.burst=o;VFX.shock=o2;VFX.pull=o3;VFX.slash=o4;VFX.rise=o5;if(!n)out.push(id)}return out})()`);
+      await MJSkillFx.play(id,0,JANKA.TB,{dur:600});await new Promise(r=>setTimeout(r,700));VFX.burst=o;VFX.shock=o2;VFX.pull=o3;VFX.slash=o4;VFX.rise=o5;return n};
+      for(const id of MJSkillFx.ids)if(!await one(id))out.push(id);
+      const again=[];for(const id of out)if(!await one(id))again.push(id);return again})()`);   // (once more for any whose effect the game's own events cut short)
     ok('skill effects: each one adds its light (vfx.js)', !sk.length, sk.join(','));
+    // (2026-11-16, ユーザー「GPU負荷を見た目を変えずに」) nothing in the game screen is animated by CSS for ever (the rays are set ~12/s)
+    const inf = await p.evaluate(`document.getAnimations().filter(a=>{if(a.playState!=='running'||!a.effect||a.effect.getTiming().iterations!==Infinity)return false;const r=a.effect.target.getBoundingClientRect();return r.width*r.height>innerWidth*innerHeight*.4}).map(a=>a.animationName)`);
+    ok('game: no never-ending CSS animation over the whole screen (GPU)', !inf.length, inf.join(','));
+    ok('game: the god rays move (set from app.js)', await p.evaluate(`!!document.querySelector('#game .rays').style.getPropertyValue('--g1')`));
     ok('no page errors (vfx)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('fonts')) { console.log('[fonts] every text in the Mincho');
