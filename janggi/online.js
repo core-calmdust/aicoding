@@ -13,7 +13,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
 // or an in-browser mock (localStorage, shared between tabs) with ?mock=1 for testing.
 (function () {
   'use strict';
-  const CFG = window.FIREBASE_CONFIG || null;
+  let CFG = window.FIREBASE_CONFIG || null;
   const Q = new URLSearchParams(location.search);
   const MOCK = Q.has('mock');
   const FB_VER = '10.12.2';
@@ -185,6 +185,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
         const cur = await (window.OnlineSec && OnlineSec.authStart ? OnlineSec.authStart(auth) : new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); }).then(async u => { try { await auth.getRedirectResult(); } catch (e) { console.warn(e); } return u; }));   // (OnlineSec.authStart: recovers a Safari start stuck on an old redirect)
         authUser = auth.currentUser || cur || (await auth.signInAnonymously()).user;
         uid = authUser.uid;
+        if (window.OnlineSec && OnlineSec.rehome && await OnlineSec.rehome()) { CFG = window.FIREBASE_CONFIG; ready = null; return init(); }   // the shared database does not know this game's node yet: back to the game's previous project
         db = db || firebaseDB();
       }
       await loadProfile();

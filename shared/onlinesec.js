@@ -23,7 +23,7 @@
   // page keeps working; the console tells why (enforcement in the console then decides whether requests are accepted).
   async function appCheck(app, siteKey, fbVer) {
     if (!siteKey || !app) return false;
-    const name = app.name || '[DEFAULT]';
+    const name = (app.name || '[DEFAULT]') + '|' + ((app.options && app.options.projectId) || '');   // (per project: rehome() may reopen the default app on another one)
     if (loaded[name]) return loaded[name];
     return (loaded[name] = (async () => {
       try {
@@ -40,6 +40,29 @@
         return true;
       } catch (e) { console.warn('App Check', e); return false; }
     })());
+  }
+
+  // ------------------------------------------------------------------ shared databases (several games in one Firebase project)
+  // A game moved into another game's project keeps everything under its own node (window.FIREBASE_ROOT, e.g. 'chess/'; Alquerque:
+  // window.OL_DB_PREFIX). That node only works once the shared project's rules (the host's <game>/database.rules.json, generated
+  // with that node) are published. Until then <node>secv is not readable: the page goes back to the project the game used before
+  // (window.FIREBASE_CONFIG_PREV / FIREBASE_APPCHECK_SITE_KEY_PREV / FIREBASE_ROOT_PREV), so nothing breaks while the rules are
+  // being pasted, and it moves over by itself on the first load after they are. A game without a previous project (new title)
+  // reports 'not-configured' (準備中). Called by <game>/online.js right after sign-in; true = reopen with window.FIREBASE_CONFIG.
+  async function rehome() {
+    const root = window.FIREBASE_ROOT || window.OL_DB_PREFIX || '';
+    if (!root || window.__fbRehomed) return false;
+    try { await firebase.database().ref(root + 'secv').get(); window.__fbRehomed = 'shared'; return false; }
+    catch (e) {
+      if (!/permission/i.test(String((e && e.code) || '') + ' ' + String((e && e.message) || e))) throw e;   // offline etc.: not a verdict
+      const prev = window.FIREBASE_CONFIG_PREV;
+      if (!prev) throw new Error('not-configured');
+      await firebase.app().delete();
+      window.FIREBASE_CONFIG = prev; window.FIREBASE_APPCHECK_SITE_KEY = window.FIREBASE_APPCHECK_SITE_KEY_PREV || null;
+      if (window.FIREBASE_ROOT) window.FIREBASE_ROOT = window.FIREBASE_ROOT_PREV || '';
+      window.__fbRehomed = 'prev';
+      return true;
+    }
   }
 
   // ------------------------------------------------------------------ protocol
@@ -283,5 +306,5 @@
     try { await within(auth.getRedirectResult(), 8000); } catch (e) { console.warn(e); }   // (back from the Google redirect; never waits for ever)
     return cur;
   }
-  window.OnlineSec = { FB, STALE, PAIR_MAX, WAIT, appCheck, detect, outcome, elo, kOf, make, xferOut, xferIn, msg, notice, authStart };
+  window.OnlineSec = { FB, STALE, PAIR_MAX, WAIT, appCheck, rehome, detect, outcome, elo, kOf, make, xferOut, xferIn, msg, notice, authStart };
 })();

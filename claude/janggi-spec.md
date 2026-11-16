@@ -25,8 +25,8 @@
 - レッスン：15ステップ×5問（はじめて7：車・馬・象・包・卒で取る／逃げる／1手詰め、戦術4：得な交換・両取り・王手で得・守る、詰み2：2手・3手詰め、終盤2：車と馬・卒2つ）。`jg dump`（自己対局の局面）→ `node janggi/tools/gen_lessons.js dump.txt tools/mates/run2.txt,tools/mates/run1.txt` で自動生成・エンジン検証（パズルと重複なし）。文言は tools/i18n_jg_lessons.json（14言語）。準備ステップ（ramp）はなし。
 
 ## オンライン
-- Firebase はシャンチーのプロジェクト（xiangqi-multiplay）を共用。データはすべて `janggi/` 配下（FIREBASE_ROOT）。
-- ルールは janggi/tools/make_rules.py で xiangqi のルール＋janggi サブツリーを生成した janggi/database.rules.json を公開（2026-11-07 公開済み）。
+- Firebase は将棋のプロジェクト（shogi-multiplay）を共用（2026-11-16 統合）。データはすべて `janggi/` 配下（FIREBASE_ROOT）。
+- ルールは shared/tools/secrules.py の janggi（シャンチーと同じ設定、host＝shogi）で shogi/database.rules.json に入る（janggi/tools/make_rules.py は廃止）。
 
 ## 3D（大百科）
 - atlas/models/janggi.js：木製の厚い盤＋八角形の駒（将が大、士・兵が小）。 駒面は八角の平らな辺が上下、文字は正立（CircleGeometry を rotateZ したら UV を位置から振り直す。rotateZ は UV ごと回るので文字が22.5°傾く）。icons3d.js の jgPiece も同じ。
