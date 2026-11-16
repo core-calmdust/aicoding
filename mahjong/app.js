@@ -422,7 +422,7 @@ function toast(msg, ms = 1800) {
 }
 function modal(html, cls = '') {
   const m = $('#modal');
-  m.className = 'modal ' + cls; m.innerHTML = `<div class="mbox">${html}</div>`; m.hidden = false;
+  m.className = 'modal ' + cls; m.innerHTML = `<div class="mbox">${html}</div>`; m.hidden = false; m.onclick = null;   // (onclick: a box's own way to close from outside, e.g. the settings)
   if (TB) TB.quiet = /\bstage\b/.test(cls);   // (a result over the whole table: the table's own animation rests behind it)
   requestAnimationFrame(() => m.classList.add('show'));
   return m.firstElementChild;
@@ -633,6 +633,8 @@ function openSettings() {
     <p class="st-note">${esc(t('liteNote'))}</p></div></div>
     <div class="cbtns"><button class="btn st-reset" data-a="reset">${esc(t('resetData'))}</button><button class="btn gold" data-a="close">${esc(t('close'))}</button></div>`;
   const box = modal(draw(), 'settings');
+  // (2026-11-16, ユーザー) a click outside the box closes it too
+  $('#modal').onclick = e => { if (e.target === $('#modal')) closeModal(); };
   box.addEventListener('input', e => {
     const r = e.target.closest('input[type=range]'); if (!r) return;
     const k = r.dataset.k; DB.set[k + 'Vol'] = r.value / 100; DB.set[k + 'On'] = true; DB.set.snd = true; save(); r.style.setProperty('--p', r.value + '%');
@@ -1350,12 +1352,12 @@ function layoutRiver(s, anim) {
   if (anim && s === ME && riv.length) { try {
     const el = document.querySelector(`#hand .tl[data-id="${riv[riv.length - 1].id}"]`), root = $('#game');
     const off = e => { let x = 0, y = 0; for (let n = e; n && n !== root; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; } return [x, y]; };
-    if (el && root.contains(el)) { const [ex, ey] = off(el), [sx, sy] = off($('#stage')); lx = TB.screenPose(ex + el.offsetWidth / 2 - sx, ey + el.offsetHeight / 2 - sy, el.offsetWidth);
+    if (el && root.contains(el)) { const [ex0, ey0] = off(el), [sx, sy] = off($('#stage')), ex = ex0 + (+el.dataset.ddx || 0), ey = ey0 + (+el.dataset.ddy || 0);   // (ddx/ddy: where a dragged tile was let go — phone) lx = TB.screenPose(ex + el.offsetWidth / 2 - sx, ey + el.offsetHeight / 2 - sy, el.offsetWidth);
       // (2026-11-16, ユーザー「スマホで捨てる牌が暗い四角になる」: until the hand has its fingers on it, the tile stays the page's own
       // tile — a copy left where it stood, while the row closes up — and the 3D tile (lit by the table's lights, so greyer than the
       // flat picture) takes over only when it is picked up)
       const hud = el.closest('.hud') || root, [hx, hy] = off(hud), gh = el.cloneNode(true);
-      gh.classList.remove('up', 'can', 'no'); gh.classList.add('ghost'); gh.querySelectorAll('kbd,.hit').forEach(n => n.remove());
+      gh.classList.remove('up', 'can', 'no', 'hdrag', 'hdrop'); gh.classList.add('ghost'); gh.querySelectorAll('kbd,.hit').forEach(n => n.remove());
       gh.style.cssText = `position:absolute;left:${ex - hx}px;top:${ey - hy}px;width:${el.offsetWidth}px;height:${el.offsetHeight}px;margin:0;pointer-events:none`;
       hud.appendChild(gh);
       const drop = () => { gh.remove(); if (TB.onPageTake === drop) TB.onPageTake = null; };
@@ -1483,7 +1485,36 @@ const handEl = $('#hand');
 const fine = matchMedia('(hover: hover) and (pointer: fine)');
 handEl.addEventListener('pointerover', e => { const el = e.target.closest('.tl[data-id]'); if (el && TB) TB.highlightType(T(+el.dataset.id)); });
 handEl.addEventListener('pointerleave', () => { if (TB) TB.highlightType(null); });
+// (2026-11-16, ユーザー「スマホ：捨てたい牌をタップだけでなく、画面中央までスライドしても捨てられるように」) on a phone a hand tile
+// can be dragged: it follows the finger, lights up once it is above the middle of the screen, and is discarded when let go there;
+// let go lower, it goes back. A tap still works as before (the drag starts only after the finger has moved 10px).
+let hDrag = null, hDragEnd = 0;
+handEl.addEventListener('pointerdown', e => {
+  if (!document.documentElement.classList.contains('lp')) return;
+  const el = e.target.closest('.tl[data-id]');
+  if (!el || !UIS || UIS.kind !== 'turn' || !UIS.resolve || el.classList.contains('no')) return;
+  const [x, y] = uiPt(e.clientX, e.clientY); hDrag = { el, id: +el.dataset.id, x, y, on: false, over: false, pid: e.pointerId };
+});
+addEventListener('pointermove', e => {
+  const d = hDrag; if (!d || e.pointerId !== d.pid) return;
+  const [x, y] = uiPt(e.clientX, e.clientY), dx = x - d.x, dy = y - d.y;
+  if (!d.on) { if (Math.hypot(dx, dy) < 10) return; d.on = true; d.el.classList.add('hdrag'); }
+  e.preventDefault();
+  d.dx = dx; d.dy = dy; d.el.style.transform = `translate(${dx}px,${dy}px) scale(1.12)`;
+  const H = $('#game').offsetHeight || innerHeight, over = y < H * .58 && !!UIS.resolve;
+  if (over !== d.over) { d.over = over; d.el.classList.toggle('hdrop', over); if (over) SND.pick(); }
+}, { passive: false });
+const hDragUp = e => {
+  const d = hDrag; if (!d || e.pointerId !== d.pid) return; hDrag = null;
+  if (!d.on) return;   // (a tap: the click handles it)
+  hDragEnd = performance.now();
+  if (d.over && UIS && UIS.resolve && UIS.kind === 'turn') { d.el.dataset.ddx = Math.round(d.dx); d.el.dataset.ddy = Math.round(d.dy); d.el.style.visibility = 'hidden'; doDiscard(d.id); return; }   // (the hand takes it where it was let go)
+  d.el.classList.remove('hdrag', 'hdrop'); d.el.classList.add('hback'); d.el.style.transform = '';
+  setTimeout(() => d.el.classList.remove('hback'), 260);
+};
+addEventListener('pointerup', hDragUp); addEventListener('pointercancel', hDragUp);
 handEl.addEventListener('click', e => {
+  if (performance.now() - hDragEnd < 400) return;   // (the end of a drag is not a tap)
   const el = e.target.closest('.tl[data-id]');
   if (!el || !UIS || UIS.kind !== 'turn' || !UIS.resolve) return;
   if (el.classList.contains('no')) return;

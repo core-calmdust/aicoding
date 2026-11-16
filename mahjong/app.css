@@ -2747,3 +2747,8 @@ html.lite .mbox.gs-quake{animation:none}
 .gshrine.blast{z-index:4}
 .gs-frag i{animation:gsFly 1.05s cubic-bezier(.25,.45,.35,1) both}
 .modal.gacham .gstage:has(.gshrine.blast),.modal.gacham .mbox.gs-quake{overflow:visible}
+/* (2026-11-16) phone: a hand tile dragged toward the middle to discard it */
+html.lp #hand .tl[data-id]{touch-action:none}
+#hand .tl.hdrag{position:relative;z-index:60;transition:none!important;filter:drop-shadow(0 10px 16px rgba(0,0,0,.5))}
+#hand .tl.hdrag.hdrop{filter:drop-shadow(0 0 10px rgba(255,214,120,.95)) drop-shadow(0 0 22px rgba(255,190,90,.6)) brightness(1.08)}
+#hand .tl.hback{transition:transform .25s cubic-bezier(.2,.9,.3,1.2)!important}
