@@ -220,6 +220,15 @@ async function runtime() {
     ok('game: the god rays move (set from app.js)', await p.evaluate(`!!document.querySelector('#game .rays').style.getPropertyValue('--g1')`));
     ok('no page errors (vfx)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
+  if (want('sound')) { console.log('[sound] music fetched during a game is unlocked by the next touch (phones)');
+    // (2026-11-17, ユーザー「リーチの曲で鳴らないのがありました（スマホ）」)
+    const p = await page(PC, { snd: true }, 'ja', '?nofreeze'); await p.mouse.click(640, 360); await p.waitForTimeout(400);
+    await p.evaluate(`JANKA.SND.newGame()`); await p.waitForFunction(`Object.values(JANKA.SND._trk).filter(B=>B.el&&B.g).length>=3`, null, { timeout: 15000 }).catch(() => {});
+    await p.mouse.click(5, 5); await p.waitForTimeout(800);
+    const r = await p.evaluate(`Object.entries(JANKA.SND._trk).filter(([k,B])=>B.el&&B.g).map(([k,B])=>[k,!!(B.ul||B.on),B.on||B.el.paused,B.on||B.g.gain.value===0])`);
+    ok('every music element is unlocked by a touch, silent and stopped unless playing', r.length >= 3 && r.every(x => x[1] && x[2] && x[3]), JSON.stringify(r));
+    ok('no page errors (sound)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
+
   if (want('fonts')) { console.log('[fonts] every text in the Mincho');
     const p = await page(PC); const fams = await p.evaluate(`[...new Set([...document.querySelectorAll('body *')].filter(e=>e.offsetWidth).map(e=>getComputedStyle(e).fontFamily))]`);
     ok('only Shippori Mincho B1', fams.length === 1 && /Shippori/.test(fams[0]), fams.join(' / ')); await p.ctx.close(); }
