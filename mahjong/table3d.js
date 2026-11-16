@@ -12,12 +12,15 @@ const BAKE_V = 3, BAKED = {};
 if (!/[?&]nobake\b/.test(location.search)) for (const n of ['felt', 'wood', 'woodb', 'stone']) { const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + n + '.webp?v=' + BAKE_V; BAKED[n] = im; }
 // (2026-11-15, ユーザー「スマホで落ちまくる」: memory) on a touch device the big pictures are kept at half size — on a phone's screen
 // the felt and the rails never show more than that — and once a picture that never changes is on the graphics card, the copy the
-// page kept of it is let go (lean). Desktop as before.
+// page kept of it is let go (lean). Desktop: full size as before, lean too (2026-11-16).
 const MOB = matchMedia('(pointer: coarse)').matches;
 function bakedCanvas(name) { const im = BAKED[name]; if (!im || !im.complete || !im.naturalWidth) return null;
   const f = MOB && name !== 'stone' ? .5 : 1, c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * f); c.height = Math.round(im.naturalHeight * f);
   c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); return c; }
-function lean(t) { if (!MOB || !t) return t; const prev = t.onUpdate; t.onUpdate = () => { if (prev) prev(); const c = t.image; if (c && c.getContext && c.width > 64) c.width = c.height = 1; t.onUpdate = null; }; return t; }
+// (2026-11-16, ユーザー「PCにも、見た目を変えない軽量化を」) lean now on a desktop too: the picture is on the graphics card, the page's copy
+// of it is only memory. Not with ?nobake (the baking tool reads the drawn pictures back).
+const LEAN = MOB || !/[?&]nobake\b/.test(location.search);
+function lean(t) { if (!LEAN || !t) return t; const prev = t.onUpdate; t.onUpdate = () => { if (prev) prev(); const c = t.image; if (c && c.getContext && c.width > 64) c.width = c.height = 1; t.onUpdate = null; }; return t; }
 const keepGen = (name, c) => { (root.JANKA_TEXGEN = root.JANKA_TEXGEN || {})[name] = c; };
 // ---- the table's own materials (2026-11-14, ユーザー: a more real automatic table — a quieter felt, real wood with rounded
 // edges, the lift seams of an automatic table, a real score unit) ----

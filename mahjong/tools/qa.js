@@ -16,6 +16,10 @@ function staticChecks() {
   console.log('[static]');
   const js = fs.readdirSync(MJ).filter(f => f.endsWith('.js'));
   for (const f of js) { try { execSync(`node --check ${JSON.stringify(path.join(MJ, f))}`, { stdio: 'pipe' }); ok('syntax ' + f, true); } catch (e) { ok('syntax ' + f, false, String(e.stderr).split('\n')[0]); } }
+  // every sound file the code names is there (2026-11-16: the second riichi track, bgm-riichi2)
+  { const app = fs.readFileSync(path.join(MJ, 'app.js'), 'utf8'), names = [...app.matchAll(/file: '([\w-]+)'/g)].map(m => m[1]);
+    const miss = names.filter(n => !fs.existsSync(path.join(MJ, '..', 'images', 'mahjong', 'snd', n + '.mp3')));
+    ok('music files present (' + names.length + ')', names.includes('bgm-riichi2') && !miss.length, miss.join(',')); }
   // code swallowed by a comment (2026-11-16: an edit put `lx = TB.screenPose(...)` after a `//` on the same line — the player's
   // discard lost its page pose and the hand came from the table's edge). Flags a line comment that ends like a statement.
   const sus = [];
@@ -135,10 +139,13 @@ async function runtime() {
     ok('no page errors (jiggle)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('vfx')) { console.log('[vfx] the game\'s light effects: shown over the cut-in word, then cleaned up');
-    const p = await page(PC); await p.evaluate(`void JANKA.startGame()`); await p.waitForTimeout(5000);
+    const p = await page(PC); await p.evaluate(`void JANKA.startGame()`);
+    // (the table must be dealt first: when the machine is busy 5 s was not always enough)
+    await p.waitForFunction(`JANKA.UIS && JANKA.UIS.chars && JANKA.UIS.chars[1] && document.querySelector('#hand .tl')`, null, { timeout: 60000 }).catch(() => {}); await p.waitForTimeout(800);
     await p.evaluate(`(()=>{window.__vx=[];const o=VFX.burst;VFX.burst=(...a)=>{const r=o(...a);__vx.push([a[0],a[1],!!document.querySelector('.vfx-cv'),VFX.active()]);return r}})()`);
     await p.evaluate(`void JANKA.cutin(1, 'ron')`); await p.waitForFunction('__vx.length > 0', null, { timeout: 10000 }).catch(() => {});   // (slow when the machine is busy)
     const on = await p.evaluate('__vx');   // (?fast shortens the cut-in, so the burst is caught as it is made)
+    if (!on.length) console.log('    (debug)', await p.evaluate(`[document.querySelector('#cutin').className, typeof VFX, !!(JANKA.UIS&&JANKA.UIS.chars), document.hidden, JANKA.UIS&&JANKA.UIS.kind]`));
     ok('a burst of light during the cut-in', on.length > 0 && on[0][2] && on[0][3] > 0, JSON.stringify(on));
     // (the game keeps playing — calls bring new bursts — so: once 3 s pass with no new burst, the canvas must be gone)
     const gone = await p.waitForFunction(`(()=>{const n=__vx.length;if(window.__vn!==n){window.__vn=n;window.__vt=performance.now()}return performance.now()-__vt>3000&&!document.querySelector('.vfx-cv')&&VFX.active()===0})()`, null, { timeout: 40000, polling: 200 }).then(() => true, () => false);
