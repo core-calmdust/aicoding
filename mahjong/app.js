@@ -1445,6 +1445,7 @@ function partnerFlash(s, pc, sk, t0) {
   const el = document.createElement('i'); el.className = 'ptn-in'; el.style.setProperty('--sc', f.sk ? f.sk.color : '#e8ce8c'); el.style.animationDelay = -el0 + 'ms';
   el.innerHTML = `<img src="${charImg(f.pc, 'face')}" alt=""><b>${esc(t('partner'))}</b><s style="animation-delay:${50 - el0}ms"></s>`;
   fr.appendChild(el); clearTimeout(f.tm); f.tm = setTimeout(() => { el.remove(); delete PFL[s]; }, 3000 - el0);
+  if (pc && window.VFX) { const q = VFX.at(fr), sc = Math.max(.35, fr.offsetWidth / 160), P2 = VFX.pal(f.sk ? f.sk.color : '#e8ce8c'); VFX.burst(q.x, q.y, { scale: sc, pal: P2, sparks: 16, embers: 8, flare: false, rings: 2, dur: 800 }); VFX.rise(q.x, q.y + fr.offsetHeight * .4, { scale: sc, pal: P2, n: 14 }); }
 }
 // (ユーザー 2026-11-15) the others' skill chips: what the skill does in a bubble — on hover, or on a tap (a touch screen; it closes by itself)
 document.addEventListener('click', e => { const w = e.target.closest('#game .opp .skw'); document.querySelectorAll('#game .opp .skw.tip').forEach(x => { if (x !== w) x.classList.remove('tip'); });
@@ -1803,6 +1804,7 @@ async function callout(s, text) {
   const el = $('#callout');
   const p = seatXY(s);
   el.className = 'callout pop'; el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+  if (window.VFX) { const st = VFX.at($('#stage')), sw = $('#stage'); VFX.burst(st.x - sw.offsetWidth / 2 + p.x, st.y - sw.offsetHeight / 2 + p.y, { scale: .55, pal: VFX.pal(UIS.chars[s].color), sparks: 18, embers: 6, flash: false, flare: false, dur: 700 }); }   // (2026-11-16: a small ring of light where the call is made)
   el.innerHTML = `<b>${esc(text)}</b>`;
   void el.offsetWidth; el.classList.add('show');
   await sleep(650);
@@ -1837,6 +1839,13 @@ async function cutin(s, kind, d) {
   el.hidden = false;
   void el.offsetWidth;
   el.classList.add('show');
+  // (2026-11-16, ユーザー「ガチャ演出で学んだ表現で、ゲーム中のエフェクトをAAA仕様に」) as the word lands: a burst of light behind it
+  // (vfx.js — glass rings, a soft flash, a thin flare, sparks and embers; tsumo / ron with petals), riichi cut by a slash of gold
+  if (window.VFX) setTimeout(() => { const w = el.querySelector('.ci-word'); if (!w || el.hidden) return; const p = VFX.at(w), k = 1.15 + rk * .12;
+    if (kind === 'riichi') { VFX.slash(p.x, p.y, { scale: k, pal: VFX.pal('#ffd56a') }); VFX.burst(p.x, p.y, { scale: k * .8, pal: VFX.pal('#ffd56a'), sparks: 26 + rk * 6, embers: 10, flare: false }); }
+    else if (kind === 'skill') VFX.burst(p.x, p.y, { scale: k, pal: VFX.pal(sk.color), sparks: 30 + rk * 8, embers: 12 + rk * 3 });
+    else VFX.burst(p.x, p.y, { scale: k * 1.15, pal: VFX.pal(rk >= 3 ? '#ffd56a' : c.color), sparks: 44 + rk * 10, embers: 16 + rk * 4, petals: rk >= 1 ? 10 + rk * 5 : 0, dur: 1100 });
+  }, 330);
   if (kind === 'riichi') SND.riichi(); else if (kind === 'skill') SND.skill(); else SND.ok();
   if (kind === 'riichi' || kind === 'tsumo' || kind === 'ron') SND.voice(kind);
   await sleep((kind === 'skill' ? 1700 : kind === 'riichi' ? 1450 : 1500) + [0, 0, 150, 350, 650][rk]);
@@ -1890,6 +1899,8 @@ async function showAgari(d, r, last) {
       <button class="btn gold nx">${t('next')}</button>
     </div>`, 'stage');
   if (lim) sleep(1000 + ys.length * 160).then(() => SND.limit(lv));
+  if (window.VFX) sleep(900 + ys.length * 160).then(() => { const tot = box && box.querySelector ? box.querySelector('.ag-pw') : document.querySelector('.agst .ag-pw'); if (!tot || !tot.isConnected) return; const p = VFX.at(tot);
+    VFX.burst(p.x, p.y, { scale: .9 + lv * .18, pal: VFX.pal(lv >= 3 ? '#ffd56a' : c.color), sparks: 24 + lv * 10, embers: 10 + lv * 4, petals: lv >= 2 ? 8 + lv * 5 : 0, flare: lv >= 2, dur: 1000 + lv * 120 }); });   // (2026-11-16: the points land in light)
   await waitClick(box, '.nx');
   void last;
 }

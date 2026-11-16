@@ -168,10 +168,10 @@
 .hbdock.on{opacity:1;pointer-events:auto}
 .hbdock.off .hbpal,.hbdock.off .hbok{opacity:.38;pointer-events:none}
 .hbrow{display:flex;align-items:center;gap:8px}
-.hbslots{flex:1;display:flex;justify-content:center;gap:8px;min-width:0;padding:6px 8px;border-radius:16px;background:rgba(4,7,26,.55);box-shadow:inset 0 2px 6px rgba(0,0,0,.6),inset 0 0 0 1px rgba(140,170,255,.18)}
-.hbslot{width:44px;height:44px;flex:none;border-radius:50%;border:0;padding:0;background:radial-gradient(circle at 50% 38%,#02030c 0 55%,#1a2560 86%,rgba(140,170,255,.25) 100%);box-shadow:inset 0 0 0 1.5px rgba(150,180,255,.35);cursor:pointer;display:grid;place-items:center}
+.hbslots{flex:1;display:flex;justify-content:center;gap:var(--hbg,8px);min-width:0;padding:6px 8px;border-radius:16px;background:rgba(4,7,26,.55);box-shadow:inset 0 2px 6px rgba(0,0,0,.6),inset 0 0 0 1px rgba(140,170,255,.18)}
+.hbslot{width:var(--hbs,54px);height:var(--hbs,54px);touch-action:none;flex:none;border-radius:50%;border:0;padding:0;background:radial-gradient(circle at 50% 38%,#02030c 0 55%,#1a2560 86%,rgba(140,170,255,.25) 100%);box-shadow:inset 0 0 0 1.5px rgba(150,180,255,.35);cursor:pointer;display:grid;place-items:center}
 .hbslot.cur{box-shadow:inset 0 0 0 2px #7df3d2,0 0 12px -2px #7df3d2}
-.hbslot svg{width:44px;height:44px;display:block}
+.hbslot svg{width:var(--hbs,54px);height:var(--hbs,54px);display:block;pointer-events:none}.hbslot.lift svg{opacity:.3}.hbslot.drop{box-shadow:inset 0 0 0 2px #fff,0 0 14px -2px #a6e81f}.hbpal button{touch-action:none}.hbghost{position:fixed;left:0;top:0;z-index:200;width:56px;height:56px;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.55))}.hbghost svg{width:56px;height:56px;display:block}
 .hbok{flex:none;width:84px;height:56px;border-radius:16px;border:1px solid #c9fff0;background:linear-gradient(180deg,#a4ffe6,#3fd3ac);color:#05302a;font:900 20px/1 "Outfit",system-ui,sans-serif;letter-spacing:.06em;cursor:pointer;box-shadow:0 4px 0 #1f8c72,0 0 18px -4px #7df3d2;white-space:nowrap}
 .hbok:disabled{background:linear-gradient(180deg,#3a4478,#262d5c);border-color:rgba(140,170,255,.35);color:rgba(220,228,255,.55);box-shadow:0 4px 0 #161b3e;cursor:default}
 .hbpal{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 10px;margin-top:10px}
@@ -181,8 +181,8 @@
 .hbpal button.used{opacity:.28}
 .hbpal.ten button{width:44px;height:44px}.hbpal.ten button svg{width:44px;height:44px}
 .hbpal .kb{position:absolute;opacity:0}
-#bvDaily{display:flex;flex-direction:column;gap:10px;align-items:stretch}#bvDaily[hidden]{display:none}#bvDaily .hbd{width:100%;display:flex;align-items:center;gap:10px;justify-content:flex-start;white-space:nowrap}#bvDaily .hbd small{margin-left:auto;font-size:13px;opacity:.8}
-@media (max-width:420px){.hbslot,.hbslot svg{width:40px;height:40px}.hbpal button,.hbpal button svg{width:42px;height:42px}.hbpal.ten button,.hbpal.ten button svg{width:40px;height:40px}.hbok{width:72px;height:52px;font-size:18px}.hbdock{padding:8px 10px 10px}}`;
+#bvPz.hbdy{display:flex!important;flex-direction:column;gap:10px;align-items:stretch}#bvPz.hbdy[hidden]{display:none!important}.hbdy .hbd{width:100%;display:flex;align-items:center;gap:10px;justify-content:flex-start;white-space:nowrap}.hbdy .hbd small{margin-left:auto;font-size:13px;opacity:.8}
+@media (max-width:420px){.hbpal button,.hbpal button svg{width:42px;height:42px}.hbpal.ten button,.hbpal.ten button svg{width:40px;height:40px}.hbok{width:72px;height:52px;font-size:18px}.hbdock{padding:8px 10px 10px}}`;
     document.head.appendChild(s);
   }
   // a gem as an SVG (the dock): the same picture as on the 3D gem
@@ -202,7 +202,7 @@
   function start(ctx) {
     css();
     const E = window.HitBlowEngine, T3 = ctx.Table3D, H = T3.hitblow, TH = window.THREE, lang = ctx.lang, t = (k, v) => tx(lang, k, v);
-    const mode = ctx.mode === 'daily' ? 'daily' : ctx.mode === 'pvp' ? 'pvp' : ctx.mode === 'rated' ? 'rated' : 'ai';
+    const mode = ctx.mode === 'daily' || ctx.mode === 'puzzle' ? 'daily' : ctx.mode === 'pvp' ? 'pvp' : ctx.mode === 'rated' ? 'rated' : 'ai';
     const AD = window.Atlas3D.hitblow, which = mode === 'daily' ? (AD.pending === 'hard' ? 'hard' : 'easy') : null; AD.pending = null;
     const P = which ? E.makeDaily(today(), which) : null;
     const z = P ? P.z : E.RULE_IDS.includes(+ctx.size) ? +ctx.size : 1;
@@ -216,7 +216,7 @@
     const board = H.board(cfg), U = board.userData, TOP = U.top, R = H.R;
     const hist = [];          // { g, h, b, by } — by: 0 / 1 (the seats), 2 = a clue of the daily puzzle
     const rowObjs = [];       // per row: { gems: [], pins: [] }
-    let input = [], over = false, busy = true, stopped = false, hintT = 0, ply = 0, hinted = false;
+    let input = [], cur = 0, over = false, busy = true, stopped = false, hintT = 0, ply = 0, hinted = false;
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const kick = ms => { if (T3.kick) T3.kick(ms || 150); };
     const anim = (dur, f, done) => { const t0 = performance.now(); (function s(n) { if (stopped) return; const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
@@ -243,8 +243,21 @@
     bv.appendChild(dock);
     const slotEls = [...dock.querySelectorAll('.hbslot')], okEl = dock.querySelector('.hbok'), palEls = [...dock.querySelectorAll('.hbpal button')];
     let dockH = 0;
+    // the slots of the dock are the size of the board's holes on the screen (2026-11-16 user), spaced like them
+    function sizeSlots() {
+      try {
+        const P = k => { const [x, zz] = U.slot(Math.max(0, row()), k), v = T3.project(x, zz, TOP); return [v.x, v.y]; };
+        const a = P(0), b = P(1), pitch = Math.hypot(b[0] - a[0], b[1] - a[1]); if (!(pitch > 4)) return;
+        const room = Math.min(560, innerWidth - 16) - 24 - 96 - 16;   // (the dock's width less its padding, OK and the slot tray's padding)
+        let hole = pitch * U.sock * 2, gap = pitch - hole;
+        const k = Math.min(1, room / (cfg.n * hole + (cfg.n - 1) * gap)); hole *= k; gap *= k;
+        hole = Math.max(34, Math.min(84, hole)); gap = Math.max(4, Math.min(24, gap));
+        dock.style.setProperty('--hbs', hole.toFixed(1) + 'px'); dock.style.setProperty('--hbg', gap.toFixed(1) + 'px');
+      } catch (e) {}
+    }
     function placeDock() {
       if (stopped) return;
+      sizeSlots();
       const r = dock.getBoundingClientRect(), h = r.height ? Math.round(innerHeight - r.top + 6) : 0;
       document.documentElement.style.setProperty('--hbdock', Math.round(innerHeight - r.top) + 'px');
       if (h !== dockH) { dockH = h; try { dispatchEvent(new Event('resize')); } catch (e) {} }
@@ -252,11 +265,15 @@
     const onResize = () => { frame(); requestAnimationFrame(placeDock); };
     addEventListener('resize', onResize);
     const myTurn = () => !over && !busy && (pvp || mode === 'daily' || turn === 0);
+    // the row being made: a slot per gem (null = empty) and the cursor (2026-11-16 user: tap a slot to put there · drag to move / swap)
+    const blank = () => Array(cfg.n).fill(null), count = () => input.filter(v => v != null).length, full = () => count() === cfg.n;
+    input = blank();
+    const nextFree = k => { for (let i = 0; i < cfg.n; i++) { const j = (k + i) % cfg.n; if (input[j] == null) return j; } return k; };
     function paintDock() {
       const can = myTurn();
       dock.classList.toggle('off', !can);
-      slotEls.forEach((el, k) => { const v = input[k]; el.innerHTML = v == null ? '' : gemSvg(kind, v, uid + 's' + k); el.classList.toggle('cur', can && k === input.length); });
-      okEl.disabled = !can || input.length < cfg.n;
+      slotEls.forEach((el, k) => { const v = input[k]; el.innerHTML = v == null ? '' : gemSvg(kind, v, uid + 's' + k); el.classList.toggle('cur', can && k === cur); el.classList.toggle('has', v != null); });
+      okEl.disabled = !can || !full();
       palEls.forEach((b, v) => b.classList.toggle('used', !cfg.rep && input.includes(v)));
     }
 
@@ -277,24 +294,63 @@
       }
       kick(200);
     }
-    function put(v) {
+    // put a gem at slot k (the cursor by default); in カラー a gem already in the row moves there instead of being refused
+    function put(v, at) {
       if (!myTurn()) return;
-      if (input.length >= cfg.n) { SFX.nope(); return; }
-      if (!cfg.rep && input.includes(v)) { SFX.nope(); toast(t('noDup', { k: t(kind === 'num' ? 'digit' : 'color') })); return; }
-      input.push(v); syncPending(); paintDock(); hintClear();
+      let k = at == null ? cur : at;
+      if (at == null && input[k] != null && full() && !picked) { SFX.nope(); return; }
+      if (!cfg.rep) { const j = input.indexOf(v); if (j >= 0 && j !== k) { if (at == null) { SFX.nope(); toast(t('noDup', { k: t(kind === 'num' ? 'digit' : 'color') })); return; } input[j] = null; } }
+      input[k] = v; cur = nextFree(k + 1); picked = false; syncPending(); paintDock(); hintClear();
     }
-    function take(k) { if (!myTurn() || input[k] == null) return; input.splice(k, 1); pending.forEach(m => { if (m) liftGem(m); }); pending.length = 0; syncPending(); SFX.lift(); paintDock(); }
+    function take(k) { if (!myTurn() || input[k] == null) return; input[k] = null; cur = k; syncPending(); SFX.lift(); paintDock(); }
+    function move(a, b) {   // drag a gem from slot a to b: swap (or move into an empty one)
+      if (!myTurn() || a === b || input[a] == null) return;
+      const t0 = input[b]; input[b] = input[a]; input[a] = t0; cur = nextFree(cur); if (input[cur] != null) cur = b;
+      syncPending(); SFX.lift(); paintDock(); hintClear();
+    }
+    function tapSlot(k) { if (!myTurn()) return; if (k === cur && input[k] != null) return take(k); cur = k; picked = true; try { SFX.tap && SFX.tap(); } catch (e) {} paintDock(); }
+    // drag: a gem of a slot (move / swap · dropped off the slots = out) or of the palette (onto a slot)
+    let drag = null, skipClick = false, picked = false;
+    const slotAt = (x, y) => { for (let k = 0; k < cfg.n; k++) { const r = slotEls[k].getBoundingClientRect(), m = 6; if (x >= r.left - m && x <= r.right + m && y >= r.top - m && y <= r.bottom + m) return k; } return -1; };
+    dock.addEventListener('pointerdown', e => {
+      const b = e.target.closest('.hbslot, .hbpal button'); if (!b || !myTurn() || e.button > 0) return;
+      const from = b.classList.contains('hbslot') ? { k: +b.dataset.k } : { v: +b.dataset.v };
+      if (from.k != null && input[from.k] == null) return;
+      drag = { from, x: e.clientX, y: e.clientY, id: e.pointerId, ghost: null, over: -1 };
+    });
+    addEventListener('pointermove', e => {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.ghost) {
+        if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8) return;
+        const v = drag.from.k != null ? input[drag.from.k] : drag.from.v; if (v == null) { drag = null; return; }
+        const gh = document.createElement('div'); gh.className = 'hbghost'; gh.innerHTML = gemSvg(kind, v, uid + 'gh'); document.body.appendChild(gh); drag.ghost = gh;
+        if (drag.from.k != null) slotEls[drag.from.k].classList.add('lift');
+      }
+      e.preventDefault();
+      drag.ghost.style.transform = `translate(${e.clientX - 28}px,${e.clientY - 28}px)`;
+      const o = slotAt(e.clientX, e.clientY); if (o !== drag.over) { slotEls.forEach((el, k) => el.classList.toggle('drop', k === o)); drag.over = o; }
+    }, { passive: false });
+    const endDrag = e => {
+      if (!drag || (e && e.pointerId !== drag.id)) return;
+      const d = drag; drag = null; if (!d.ghost) return;
+      d.ghost.remove(); slotEls.forEach(el => el.classList.remove('drop', 'lift')); skipClick = true; setTimeout(() => { skipClick = false; }, 0);
+      const o = e ? slotAt(e.clientX, e.clientY) : -1;
+      if (d.from.k != null) { if (o >= 0) move(d.from.k, o); else take(d.from.k); }
+      else if (o >= 0) put(d.from.v, o);
+    };
+    addEventListener('pointerup', endDrag); addEventListener('pointercancel', () => endDrag(null));
     dock.addEventListener('click', e => {
-      const b = e.target.closest('button'); if (!b) return; e.stopPropagation();
+      const b = e.target.closest('button'); if (!b) return; e.stopPropagation(); if (skipClick) return;
       if (b.classList.contains('hbok')) return submit();
-      if (b.classList.contains('hbslot')) return take(+b.dataset.k);
+      if (b.classList.contains('hbslot')) return tapSlot(+b.dataset.k);
       if (b.dataset.v != null) return put(+b.dataset.v);
     });
     function onKey(e) {
       if (stopped || e.metaKey || e.ctrlKey || e.altKey) return;
       const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.isContentEditable)) return;
       if (e.key === 'Enter') { if (!okEl.disabled) { e.preventDefault(); submit(); } return; }
-      if (e.key === 'Backspace') { if (input.length) { e.preventDefault(); take(input.length - 1); } return; }
+      if (e.key === 'Backspace') { const k = input[cur] != null ? cur : input.map((v, i) => v != null ? i : -1).filter(i => i >= 0).pop(); if (k != null && k >= 0) { e.preventDefault(); take(k); } return; }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); cur = (cur + (e.key === 'ArrowLeft' ? cfg.n - 1 : 1)) % cfg.n; paintDock(); return; }
       if (/^[0-9]$/.test(e.key)) { const d = +e.key, v = kind === 'num' ? d : d - 1; if (v >= 0 && v < C) { e.preventDefault(); put(v); } }
     }
     addEventListener('keydown', onKey);
@@ -321,7 +377,7 @@
       const r = row(), f = E.feedback(secret, g);
       hist.push({ g: g.slice(), h: f.h, b: f.b, by }); ply++;
       U.rowMark(r, by);
-      const gems = pending.slice(0, cfg.n); pending.length = 0; input = [];
+      const gems = pending.slice(0, cfg.n); pending.length = 0; input = blank(); cur = 0;
       const pins = pinsFor(r, f.h, f.b, fast ? 60 : 260);
       rowObjs[r] = { gems, pins };
       const wait = (fast ? 60 : 260) + (f.h + f.b) * 150 + (fast ? 80 : 320);
@@ -355,7 +411,7 @@
       placeRow(g, 230, () => commit(g, 1, after));
     }
     function submit() {
-      if (!myTurn() || input.length < cfg.n) { if (myTurn()) toast(t('need', { n: cfg.n })); return; }
+      if (!myTurn() || !full()) { if (myTurn()) toast(t('need', { n: cfg.n })); return; }
       if (hist.some(x => x.g.join() === input.join())) { SFX.nope(); toast(t('tried')); return; }
       busy = true; paintDock(); SFX.ok(); hintClear();
       commit(input.slice(), mode === 'daily' ? 0 : turn, after);
@@ -416,7 +472,7 @@
       const cands = E.candsOf(cfg, hist); if (!cands.length) return Promise.resolve(false);
       const g = mode === 'daily' ? E.bestGuess(cfg, cands, { rand: Math.random, full: false }).guess : E.raceBest(cfg, cands, Math.random);
       hinted = true;
-      input = []; pending.forEach(m => { if (m) liftGem(m); }); pending.length = 0;
+      input = blank(); cur = 0; pending.forEach(m => { if (m) liftGem(m); }); pending.length = 0;
       g.forEach((v, k) => later(() => { if (over) return; input[k] = v; syncPending(); paintDock(); }, k * 140));
       toast(t('hint'));
       return Promise.resolve(true);
@@ -436,7 +492,7 @@
       } else next();
     }), 450);
 
-    const dbg = { secret: () => secret.slice(), hist: () => hist.map(x => Object.assign({}, x)), cfg: () => Object.assign({}, cfg), turn: () => turn, busy: () => busy, over: () => over, input: () => input.slice(), put, take, submit, puzzle: () => P, U };
+    const dbg = { secret: () => secret.slice(), hist: () => hist.map(x => Object.assign({}, x)), cfg: () => Object.assign({}, cfg), turn: () => turn, busy: () => busy, over: () => over, input: () => input.filter(v => v != null), slots: () => input.slice(), cur: () => cur, put, take, submit, puzzle: () => P, U };
     window.Atlas3D.hitblow._dbg = dbg;
     return {
       get human() { return 0; },
@@ -448,7 +504,7 @@
       timeout(s) { if (!over) finish(s ^ 1, 'time'); },
       stop() {
         stopped = true; timers.forEach(clearTimeout); clearTimeout(toastTm); if (toastEl) toastEl.remove();
-        ctx.el.removeEventListener('click', onClick); removeEventListener('keydown', onKey); removeEventListener('resize', onResize);
+        ctx.el.removeEventListener('click', onClick); removeEventListener('keydown', onKey); removeEventListener('pointerup', endDrag); if (drag && drag.ghost) drag.ghost.remove(); removeEventListener('resize', onResize);
         dock.remove(); document.documentElement.style.removeProperty('--hbdock');
         if (window.Atlas3D.hitblow._dbg === dbg) delete window.Atlas3D.hitblow._dbg;
       },
@@ -458,6 +514,7 @@
 
   /* ---------- the card: 今日の一問 (EASY / HARD) on its own tab ---------- */
   const modeName = (m, lang) => m === 'daily' ? tx(lang, 'daily') : null;
+  const dailyNext = () => !dailyDone('easy') ? 'easy' : !dailyDone('hard') ? 'hard' : 'easy';   // (あそぶ in the パズル tab: today's first unsolved one)
   const modeNote = (m, lang) => m === 'daily' ? tx(lang, 'dailyNote') : null;
   // the daily tab's two buttons (atlas/app.js: #bvDaily; a click sets pending and starts)
   function dailyHtml(lang) {
@@ -466,6 +523,7 @@
   }
   css();   // (the card's 今日の一問 buttons are styled before a game starts)
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.hitblow = { ortho: true, levels: 20, sides: true, modes: ['ai', 'rated', 'pvp', 'daily'], table: true, tableModes: ['ai', 'pvp', 'daily'], kindFirst: true,
-    sizes: [1, 2, 3, 4, 5], size0: 1, sizeLabel: () => '', sizeName, optInfo, levelInfo, modeName, modeNote, dailyHtml, dailyDone, pending: null, start, TX, L14 };
+  // the card (2026-11-16 user: 将棋と同じカード): 対戦 (二人で対戦 = the top of 相手) · レート戦 · パズル (今日の一問 EASY / HARD) — adapter.mx
+  window.Atlas3D.hitblow = { ortho: true, mx: true, levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], kindFirst: true,
+    sizes: [1, 2, 3, 4, 5], size0: 1, sizeLabel: () => '', sizeName, optInfo, levelInfo, modeName, modeNote, dailyHtml, dailyDone, dailyNext, pending: null, start, TX, L14 };
 })();

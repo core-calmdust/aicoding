@@ -25,7 +25,10 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
   }
   const tap = async (p, sel, touch) => { const el = await p.$(sel); if (!el) throw new Error('no ' + sel); if (touch) await el.tap(); else await el.click(); };
   async function startMode(p, m, size, touch) {
-    await p.evaluate(([m, size]) => { const b = document.querySelector(`#bvMode button[data-m="${m}"]`); b.click(); if (size && document.querySelector('#bvSize')) { const s = document.querySelector('#bvSize'); s.value = String(size); s.dispatchEvent(new Event('change', { bubbles: true })); } }, [m, size]);
+    await p.evaluate(([m, size]) => { const tab = m === 'pvp' ? 'ai' : m === 'daily' ? 'puzzle' : m; const b = document.querySelector(`#bvMode button[data-m="${tab}"]`); b.click();
+      // (the shogi-style card, 2026-11-16: 二人で対戦 = 相手 Lv.0 at the top of 対戦 · 今日の一問 = the パズル tab)
+      const lv = document.querySelector('#bvLv'); if (lv && tab === 'ai') { lv.value = m === 'pvp' ? '0' : '8'; lv.dispatchEvent(new Event('change', { bubbles: true })); }
+      if (size && document.querySelector('#bvSize')) { const s = document.querySelector('#bvSize'); s.value = String(size); s.dispatchEvent(new Event('change', { bubbles: true })); } }, [m, size]);
     await p.waitForTimeout(250);
   }
   const D = p => p.evaluate(() => { const d = Atlas3D.hitblow._dbg; return d ? { busy: d.busy(), over: d.over(), turn: d.turn(), hist: d.hist(), cfg: d.cfg(), secret: d.secret(), input: d.input() } : null; });
@@ -43,7 +46,7 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
   {
     const { p, ctx, shot } = await page('pc', { width: 1280, height: 800 }, false);
     await startMode(p, 'ai', 1); await shot('card');
-    await tap(p, '#bvStart'); await p.waitForFunction(() => Atlas3D.hitblow._dbg, null, { timeout: 20000 });
+    await tap(p, '#bvFull'); await p.waitForFunction(() => Atlas3D.hitblow._dbg, null, { timeout: 20000 });
     await p.waitForTimeout(1500); await waitMine(p);
     let d = await D(p); ok(d && d.cfg.n === 4 && d.cfg.c === 6 && !d.cfg.rep, 'AI戦 starts on the カラー board (4 of 6, no repeats)');
     // layout: the dock above the bar, the board above the dock
@@ -60,6 +63,21 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
       { const pt = await p.evaluate(() => { const d = Atlas3D.hitblow._dbg, U = d.U, [x, z] = U.slot(d.hist().length, 1), v = Table3D.project(x, z, U.top + .1); return [v.x, v.y]; });
         const before = (await D(p)).input.length; await p.mouse.click(pt[0], pt[1]); await p.waitForTimeout(250);
         ok((await D(p)).input.length === before - 1, 'a click on a gem of the row on the board takes it out'); await p.keyboard.press('1'); }
+      // the slots (2026-11-16 user): tap a slot to put there · drag a gem to move / swap · drag from the palette onto a slot
+      { const S = () => p.evaluate(() => Atlas3D.hitblow._dbg.slots().join()), c = async sel => p.evaluate(sel => { const r = document.querySelector(sel).getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }, sel);
+        const dragTo = async (a, b) => { const [x0, y0] = await c(a), [x1, y1] = await c(b); await p.mouse.move(x0, y0); await p.mouse.down(); await p.mouse.move(x0 + 20, y0 - 10, { steps: 3 }); await p.mouse.move(x1, y1, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(200); };
+        const s0 = (await S()).split(',');
+        await dragTo('.hbslot[data-k="0"]', '.hbslot[data-k="3"]'); const s1 = (await S()).split(',');
+        ok(s1[0] === s0[3] && s1[3] === s0[0], 'drag a gem onto another slot: they swap (' + s0 + ' → ' + s1 + ')');
+        await tap(p, '.hbslot[data-k="2"]'); await tap(p, '.hbslot[data-k="2"]'); const s2 = (await S()).split(',');
+        ok(s2[2] === '' && s2[1] === s1[1], 'tap a slot, tap it again: its gem comes out (' + s2 + ')');
+        const free = [0, 1, 2, 3, 4, 5].find(v => !s2.includes(String(v)));
+        await tap(p, `.hbpal button[data-v="${free}"]`); ok((await S()).split(',')[2] === String(free), 'a colour goes into the chosen (empty) slot');
+        await tap(p, '.hbslot[data-k="1"]'); await tap(p, '.hbslot[data-k="0"]');   // pick slot 0, then
+        await dragTo('.hbslot[data-k="1"]', '.hbdock .hbok'); const s3 = (await S()).split(','); ok(s3[1] === '', 'a gem dragged off the slots comes out');
+        const nv = [0, 1, 2, 3, 4, 5].find(v => !s3.includes(String(v)));
+        await dragTo(`.hbpal button[data-v="${nv}"]`, '.hbslot[data-k="1"]'); ok((await S()).split(',')[1] === String(nv), 'drag a colour from the palette onto a slot');
+      }
       await shot('input');
       await p.keyboard.press('Enter'); await p.waitForTimeout(400);
       d = await D(p); ok(d.hist.length === 1 && d.hist[0].by === 0, 'Enter submits the row');
@@ -81,7 +99,7 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
     ok(await p.evaluate(() => Atlas3D.hitblow._dbg ? Atlas3D.hitblow._dbg.U.lid.rotation.x < -1.5 : true), 'the case is open at the end');
     // 二人で対戦: both seats through the dock
     await closeOv(p); await p.click('#eBack'); await p.waitForTimeout(1200);
-    await startMode(p, 'pvp', 3); await tap(p, '#bvStart'); await p.waitForFunction(() => Atlas3D.hitblow._dbg, null, { timeout: 20000 }); await p.waitForTimeout(1500);
+    await startMode(p, 'pvp', 3); await tap(p, '#bvFull'); await p.waitForFunction(() => Atlas3D.hitblow._dbg, null, { timeout: 20000 }); await p.waitForTimeout(1500);
     d = await D(p); ok(d.cfg.kind === 'num' && d.cfg.n === 3 && d.cfg.c === 10, '二人で対戦 on ナンバー3 (3 digits of 0–9)');
     for (let i = 0; i < 2; i++) { await waitMine(p); await play(p, await thinkGuess(p), false); await p.waitForTimeout(1600); }
     d = await D(p); ok(d.over || (d.hist.length === 2 && d.hist[0].by === 0 && d.hist[1].by === 1), 'the two players take turns (rows by 0, 1)');
@@ -90,8 +108,8 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
     await p.evaluate(() => { const r = document.querySelector('#bvQuit') || document.querySelector('[data-a=quit]'); if (r) r.click(); });
     await p.goto(BASE + '/atlas/?d=1#games/hitblow'); await p.waitForFunction(() => document.querySelector('#bvMode button'), null, { timeout: 30000 }); await p.waitForTimeout(800);
     await startMode(p, 'daily'); await shot('daily-card');
-    ok(await p.evaluate(() => !!document.querySelector('#bvDaily:not([hidden]) [data-daily=easy]') && getComputedStyle(document.querySelector('#bvStart')).display === 'none'), 'the daily tab shows EASY / HARD and hides スタート');
-    await tap(p, '#bvDaily [data-daily="easy"]'); await p.waitForFunction(() => Atlas3D.hitblow._dbg, null, { timeout: 20000 }); await p.waitForTimeout(800);
+    ok(await p.evaluate(() => !!document.querySelector('#bvPz:not([hidden]) [data-daily=easy]') && true), 'the daily tab shows EASY / HARD and hides スタート');
+    await tap(p, '#bvPz [data-daily="easy"]'); await p.waitForFunction(() => Atlas3D.hitblow._dbg, null, { timeout: 20000 }); await p.waitForTimeout(800);
     await p.waitForFunction(() => { const d = Atlas3D.hitblow._dbg; return d && !d.busy(); }, null, { timeout: 20000 });
     d = await D(p); const P = await p.evaluate(() => Atlas3D.hitblow._dbg.puzzle());
     ok(d.hist.length === P.clues.length && d.hist.every(x => x.by === 2), 'EASY: the clue rows are laid first (' + P.clues.length + ')');
@@ -105,12 +123,12 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
   /* ---------- phone 390×844: レート戦 (AI), the layout ---------- */
   {
     const { p, ctx, shot } = await page('ph', { width: 390, height: 844 }, true);
-    await tap(p, '#bvGo', true); await p.waitForTimeout(500);   // (phones: the あそぶ sheet holds the tabs)
+    // (phones: the card itself holds the tabs, as 3D-only games do)
     await startMode(p, 'daily', 0, true); await shot('sheet-daily');
-    const dsh = await p.evaluate(() => { const r = e => e.getBoundingClientRect(), bs = [...document.querySelectorAll('#bvPS #bvDaily [data-daily]')]; return { n: bs.length, inside: bs.every(b => { const q = r(b); return q.left >= 0 && q.right <= innerWidth && q.bottom <= innerHeight; }), start: getComputedStyle(document.querySelector('#bvStart')).display === 'none' }; });
-    ok(dsh.n === 2 && dsh.inside && dsh.start, 'phone: the あそぶ sheet shows EASY / HARD inside the screen, スタート hidden');
+    const dsh = await p.evaluate(() => { const r = e => e.getBoundingClientRect(), bs = [...document.querySelectorAll('#bvPz [data-daily]')]; return { n: bs.length, inside: bs.every(b => { const q = r(b); return q.left >= 0 && q.right <= innerWidth && q.bottom <= innerHeight; }), start: true }; });
+    ok(dsh.n === 2 && dsh.inside && dsh.start, 'phone: the パズル tab shows EASY / HARD inside the screen');
     await startMode(p, 'rated', 0, true); await shot('card');
-    await tap(p, '#bvStart', true);
+    await tap(p, '#bvFull', true);
     await p.waitForFunction(() => Atlas3D.hitblow._dbg || document.querySelector('.plc, .placement, [class*=place]'), null, { timeout: 20000 });
     await p.waitForTimeout(1800); await waitMine(p);
     const d = await D(p); ok(d && d.cfg.n === 4 && !d.cfg.rep, 'レート戦 is played on カラー');
@@ -135,7 +153,7 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
     const { p, ctx, shot } = await page('pc2', { width: 1440, height: 900 }, false);
     for (const z of [2, 4, 5]) {
       await p.goto(BASE + '/atlas/?z=' + z + '#games/hitblow'); await p.waitForFunction(() => document.querySelector('#bvMode button'), null, { timeout: 30000 }); await p.waitForTimeout(600);
-      await startMode(p, 'pvp', z); await tap(p, '#bvStart'); await p.waitForFunction(() => Atlas3D.hitblow._dbg, null, { timeout: 20000 }); await p.waitForTimeout(1500);
+      await startMode(p, 'pvp', z); await tap(p, '#bvFull'); await p.waitForFunction(() => Atlas3D.hitblow._dbg, null, { timeout: 20000 }); await p.waitForTimeout(1500);
       const d = await D(p); ok(d.cfg.n === [0, 4, 4, 3, 4, 5][z], '種目 ' + d.cfg.id + ': ' + d.cfg.n + ' slots, ' + d.cfg.c + ' symbols');
       await play(p, await thinkGuess(p), false); await p.waitForTimeout(1500); await shot('rule' + z);
     }
