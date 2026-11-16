@@ -59,6 +59,7 @@
     botao: ["Napping on the beach", "Street-stall regular", "Dribbling ace", "Brick-wall goalkeeper", "The festival’s wild ox", "Rule-book researcher", "Modelled on the painter who wrote the first rules"],
     peg: ["The princess who jumped marbles at the court of Louis XIV", "The astronomer who wondered how to stack balls"],
     alquerque: ['Child of an Andalusian courtyard', 'Seller of carpets like the board', 'Author of the Book of Songs', 'Hunter of the desert sky', 'Castilian knight', 'Lady of the palace garden', 'The king who commissioned the Book of Games'],
+    hitblow: ["An apprentice who just got a magnifying glass", "The bull of Bulls and Cows, the old pencil-and-paper game", "Good at hiding pins", "Came from Bletchley Park, the code-breakers’ town", "Puts gems down before thinking", "Modelled on the scholar who showed any code falls in five guesses", "Modelled on the postmaster who invented Mastermind"],
   },
   trivia: {
     chess: ['Chess is thought to descend from chaturanga, played in India around the 6th century.', 'The queen used to be a weak piece that moved one square. She got her modern powers in the late 15th century.', '"Checkmate" comes from the Persian "shāh māt" — "the king is helpless".', 'In 1997 the computer Deep Blue beat the world champion — it was huge news.'],
@@ -93,5 +94,6 @@
     botao: ["Futebol de botão was born in Brazil — people once played with shirt buttons and bottle caps.", "You get 12 touches each time you have the ball, and no more than 3 in a row with one button.", "Call your shot first! A goal without a call doesn’t count.", "14 February is Button Player’s Day in São Paulo state."],
     peg: ["A French engraving of 1697 shows the Princesse de Soubise playing peg solitaire.", "The central game on the English board takes at least 18 moves, counting a chain of jumps by one peg as a single move.", "In 1611 Kepler guessed that stacking balls like a greengrocer's pile packs them tightest. It was only proved at the end of the 20th century!"],
     alquerque: ['Alquerque appears in the 10th-century Arabic "Book of Songs".', 'It is also in the Book of Games made for Alfonso X of Spain in the 13th century.', 'It\'s called the ancestor of checkers — both capture by jumping.', 'The board is lines and points; pieces move along the lines from point to point.'],
+    hitblow: ["Today’s board comes from Mastermind, invented in 1970 by Mordecai Meirowitz, an Israeli postmaster.", "Long before that there was Bulls and Cows, a number-guessing game played with pencil and paper.", "In 1977 Donald Knuth showed that any 4-peg, 6-colour code can be solved in five guesses or fewer.", "4 of 6 colours with repeats gives 6×6×6×6 = 1,296 codes. Without repeats there are 360."],
   },
 } });

@@ -59,6 +59,7 @@
     botao: ["Cochilando na praia", "Freguês da barraquinha", "Craque do drible", "Goleiro paredão", "O boi bravo da festa", "Estudioso do livro de regras", "Inspirado no pintor que escreveu as primeiras regras"],
     peg: ["A princesa que saltava bolinhas na corte de Luís XIV", "O astrônomo que pensou em como empilhar bolas"],
     alquerque: ['Criança de um pátio andaluz', 'Vendedor de tapetes como o tabuleiro', 'Autor do Livro das Canções', 'Caçador do céu do deserto', 'Cavaleiro castelhano', 'Dama do jardim do palácio', 'O rei que mandou fazer o Livro dos Jogos'],
+    hitblow: ["Aprendiz que acabou de ganhar uma lupa", "O touro de Touros e Vacas, o velho jogo de lápis e papel", "Bom em esconder pinos", "Veio de Bletchley Park, a cidade dos decifradores", "Põe as gemas antes de pensar", "Inspirado no estudioso que mostrou que todo código cai em cinco tentativas", "Inspirado no chefe dos correios que inventou o Mastermind"],
   },
   trivia: {
     chess: ['Acredita-se que o xadrez descende do chaturanga, jogado na Índia por volta do século VI.', 'A dama era uma peça fraca que andava uma casa. Ganhou seus poderes no fim do século XV.', '«Xeque-mate» vem do persa «shāh māt»: «o rei está indefeso».', 'Em 1997 o computador Deep Blue venceu o campeão mundial — foi uma notícia enorme.'],
@@ -93,5 +94,6 @@
     botao: ["O futebol de botão nasceu no Brasil: antes se jogava com botões de camisa e tampinhas.", "São 12 toques por posse, e no máximo 3 seguidos com o mesmo botão.", "Avise o chute primeiro! Gol sem aviso não vale.", "14 de fevereiro é o Dia do Botonista em São Paulo."],
     peg: ["Uma gravura francesa de 1697 mostra a princesa de Soubise jogando resta um.", "O problema central do tabuleiro inglês leva no mínimo 18 lances, contando uma sequência de saltos da mesma peça como um só.", "Em 1611 Kepler supôs que empilhar bolas como numa banca de frutas é o mais compacto. Só foi provado no fim do século XX!"],
     alquerque: ['O alquerque aparece no «Livro das Canções» árabe do século X.', 'Também está no Livro dos Jogos feito para Afonso X no século XIII.', 'É chamado de antepassado das damas — ambos capturam saltando.', 'O tabuleiro é feito de linhas e pontos; as peças vão de ponto a ponto pelas linhas.'],
+    hitblow: ["O tabuleiro de hoje vem do Mastermind, criado em 1970 por Mordecai Meirowitz, chefe dos correios israelense.", "Muito antes já existia Touros e Vacas, um jogo de adivinhar números com lápis e papel.", "Em 1977, Donald Knuth mostrou que qualquer código de 4 pinos e 6 cores se resolve em até cinco tentativas.", "4 de 6 cores com repetição dão 6×6×6×6 = 1296 códigos. Sem repetir, 360."],
   },
 } });

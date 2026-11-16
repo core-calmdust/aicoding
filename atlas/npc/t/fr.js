@@ -59,6 +59,7 @@
     botao: ["Sieste sur la plage", "Habitué du stand de rue", "As du dribble", "Gardien-muraille", "Le bœuf fou de la fête", "Chercheur du règlement", "Inspiré du peintre auteur des premières règles"],
     peg: ["La princesse qui sautait les billes à la cour de Louis XIV", "L'astronome qui se demandait comment empiler des boules"],
     alquerque: ['Enfant d\'un patio andalou', 'Vendeur de tapis comme le plateau', 'Auteur du Livre des chansons', 'Chasseur du ciel du désert', 'Chevalier castillan', 'Dame du jardin du palais', 'Le roi qui fit faire le Livre des jeux'],
+    hitblow: ["Un apprenti qui vient d’avoir sa loupe", "Le taureau de Bulls and Cows, le vieux jeu papier-crayon", "Doué pour cacher les fiches", "Venu de Bletchley Park, la ville des casseurs de codes", "Pose les gemmes avant de réfléchir", "Inspiré du savant qui a montré que tout code tombe en cinq essais", "Inspiré du receveur des postes qui a inventé le Mastermind"],
   },
   trivia: {
     chess: ['Les échecs descendraient du chaturanga, joué en Inde vers le VIe siècle.', 'La dame était une pièce faible qui avançait d\'une case. Elle a gagné ses pouvoirs à la fin du XVe siècle.', '« Échec et mat » vient du persan « shāh māt » : « le roi est sans recours ».', 'En 1997, l\'ordinateur Deep Blue a battu le champion du monde : énorme nouvelle !'],
@@ -93,5 +94,6 @@
     botao: ["Le football de boutons est né au Brésil : on jouait avec des boutons de chemise et des capsules.", "Tu as 12 touches par possession, pas plus de 3 de suite avec un bouton.", "Annonce d’abord ton tir ! Un but non annoncé ne compte pas.", "Le 14 février, c’est la Journée du joueur de boutons à São Paulo."],
     peg: ["Une gravure française de 1697 montre la princesse de Soubise jouant au solitaire.", "Le problème central du plateau anglais se résout en 18 coups au minimum, en comptant une suite de sauts d'une même bille comme un seul coup.", "En 1611, Kepler a supposé qu'empiler des boules comme un étal de fruits était le plus compact. Ce n'est prouvé qu'à la fin du XXe siècle !"],
     alquerque: ['L\'alquerque apparaît dans le « Livre des chansons » arabe du Xe siècle.', 'Il figure aussi dans le Livre des jeux réalisé pour Alphonse X au XIIIe siècle.', 'On l\'appelle l\'ancêtre des dames : tous deux capturent en sautant.', 'Le plateau est fait de lignes et de points ; les pièces vont de point en point le long des lignes.'],
+    hitblow: ["Le plateau d’aujourd’hui vient du Mastermind, inventé en 1970 par Mordecai Meirowitz, receveur des postes israélien.", "Bien avant, on jouait à Bulls and Cows, un jeu de devinette de nombres au papier et au crayon.", "En 1977, Donald Knuth a montré que tout code de 4 fiches et 6 couleurs se trouve en cinq essais au plus.", "4 couleurs sur 6 avec répétitions : 6×6×6×6 = 1296 codes. Sans répétition, 360."],
   },
 } });

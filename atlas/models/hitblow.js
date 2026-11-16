@@ -52,8 +52,9 @@
       c.save(); c.translate(W / 2, W / 2);
       if (kind === 'num') {
         c.font = `800 ${W * .66}px "Outfit", "Zen Kaku Gothic New", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.shadowColor = 'rgba(255,255,255,.9)'; c.shadowBlur = W * .06; c.fillStyle = 'rgba(255,255,255,.96)'; c.fillText(String(v), 0, W * .03);
-        c.shadowBlur = 0; c.fillStyle = mix(col, '#ffffff', .2); c.globalAlpha = .35; c.fillText(String(v), 0, W * .03); c.globalAlpha = 1;
+        c.lineJoin = 'round'; c.strokeStyle = 'rgba(10,8,30,.55)'; c.lineWidth = W * .07; c.strokeText(String(v), 0, W * .03);   // (a dark edge: the digit reads under any light, 2026-11-16)
+        c.shadowColor = 'rgba(255,255,255,.6)'; c.shadowBlur = W * .03; c.fillStyle = '#ffffff'; c.fillText(String(v), 0, W * .03);
+        c.shadowBlur = 0;
       } else {
         const s = W * .64 / 24; c.scale(s, s); c.translate(-12, -12.2);   // (2026-11-16 user: 柄は大きめに)
         const p = new Path2D(ICONS[v]);
@@ -68,7 +69,7 @@
   function mix(a, b, k) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), A = p(a), B = p(b); return '#' + A.map((x, i) => Math.round(x + (B[i] - x) * k).toString(16).padStart(2, '0')).join(''); }
   const gemMat = (kind, v) => mat('gem' + kind + v, () => {
     const tx = gemTex(kind, v);
-    const m = X.M({ map: tx, emissiveMap: tx, emissive: '#ffffff', emissiveIntensity: .5, roughness: .1, clearcoat: 1, clearcoatRoughness: .04, bump: false, envMapIntensity: 1.6 });
+    const m = X.M({ map: tx, emissiveMap: tx, emissive: '#ffffff', emissiveIntensity: .78, roughness: .34, clearcoat: .35, clearcoatRoughness: .35, bump: false, envMapIntensity: .35 });   // (2026-11-16 user: the same in every room)
     m.emissive.set(0xffffff); return m;
   });
   // the cabochon: a low dome (lathe) whose UVs are projected from above — the picture sits flat on its face
@@ -94,7 +95,7 @@
   function pin(hit) {
     const TT = T();
     const m = X.mesh(geo('hbPin', () => { const s = new TT.SphereGeometry(PIN, LO() ? 12 : 18, LO() ? 8 : 12); s.scale(1, .8, 1); return s; }),
-      mat('hbPin' + (hit ? 'h' : 'b'), () => { const c = hit ? HIT : BLOW, m = X.M({ color: c, roughness: .18, clearcoat: 1, clearcoatRoughness: .1, emissive: c, emissiveIntensity: hit ? .75 : .32 }); m.emissive.convertSRGBToLinear(); return m; }));
+      mat('hbPin' + (hit ? 'h' : 'b'), () => { const c = hit ? HIT : BLOW, m = X.M({ color: c, roughness: .4, envMapIntensity: .3, emissive: c, emissiveIntensity: hit ? .75 : .32 }); m.emissive.convertSRGBToLinear(); return m; }));
     m.castShadow = false; return m;
   }
 
@@ -107,7 +108,9 @@
     const x0 = -W / 2 + side + lab, z0 = -L / 2 + top0 + caseD + .35;
     const slot = (r, k) => [x0 + (k + .5) * PITCH, z0 + (r + .5) * ROWP];
     const fbx = x0 + n * PITCH + gap + fbw / 2;
-    const pinPos = (r, k) => [fbx + (k % 2 ? .19 : -.19), z0 + (r + .5) * ROWP + (k < 2 ? -.19 : .19)];
+    // the answer pins: as many holes as gems in the row (2026-11-16 user) — 3: 2 over 1 · 4: 2 × 2 · 5: 3 over 2
+    const PP = { 3: [[-.19, -.17], [.19, -.17], [0, .19]], 4: [[-.19, -.19], [.19, -.19], [-.19, .19], [.19, .19]], 5: [[-.25, -.17], [0, -.17], [.25, -.17], [-.13, .19], [.13, .19]] }[n] || [[-.19, -.19], [.19, -.19], [-.19, .19], [.19, .19]];
+    const pinPos = (r, k) => { const q = PP[Math.min(k, PP.length - 1)]; return [fbx + q[0], z0 + (r + .5) * ROWP + q[1]]; };
     const labX = x0 - lab / 2, caseZ = -L / 2 + top0 + caseD / 2, caseW = n * PITCH + .5, caseX = x0 + n * PITCH / 2;
     return { n, rows, W, L, x0, z0, slot, pinPos, fbx, labX, caseZ, caseW, caseD, caseX };
   }
@@ -132,7 +135,7 @@
         for (let k = 0; k < Lt.n; k++) socket(c, px(Lt.slot(r, k)[0]), zc, PX * (R + .06));
         // the answer pins' plate
         rr(c, px(Lt.fbx - .42), zc - PX * .42, PX * .84, PX * .84, PX * .16); c.fillStyle = 'rgba(4,7,26,.55)'; c.fill(); c.strokeStyle = 'rgba(140,170,255,.22)'; c.lineWidth = 1.2; c.stroke();
-        for (let k = 0; k < 4; k++) { const [x, z] = Lt.pinPos(r, k); pinHole(c, px(x), pz(z), PX * .11); }
+        for (let k = 0; k < Lt.n; k++) { const [x, z] = Lt.pinPos(r, k); pinHole(c, px(x), pz(z), PX * (Lt.n > 4 ? .1 : .11)); }
       }
       // the case's bed (the case stands here)
       rr(c, px(Lt.caseX - Lt.caseW / 2 - .1), pz(Lt.caseZ - Lt.caseD / 2 - .05), PX * (Lt.caseW + .2), PX * (Lt.caseD + .1), PX * .25); c.fillStyle = 'rgba(0,0,0,.35)'; c.fill();
@@ -147,7 +150,7 @@
   }
   function pinHole(c, x, y, r) { const g = c.createRadialGradient(x, y + r * .3, 0, x, y, r); g.addColorStop(0, '#000'); g.addColorStop(.75, '#0b1030'); g.addColorStop(1, 'rgba(150,180,255,.35)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
 
-  const lacquer = () => mat('hbLacq', () => X.M({ color: '#10173c', roughness: .5, envMapIntensity: .45, bump: false }));
+  const lacquer = () => mat('hbLacq', () => X.M({ color: '#10173c', roughness: .7, envMapIntensity: .2, bump: false }));
   const neonMat = (c, k) => mat('hbNeon' + c, () => { const m = new (T().MeshBasicMaterial)({ color: c, toneMapped: false }); m.color.convertSRGBToLinear(); if (k) m.color.multiplyScalar(k); return m; });
   // a rounded rectangle extruded (the board, the case, the lid)
   function rbox(w, d, h, r, bev) {
@@ -174,7 +177,7 @@
     const TT = T(), Lt = layout(cfg), g = new TT.Group(), BH = TOP;
     // the slab: lacquered body, the printed top, a neon tube round the top edge
     const body = X.mesh(geo('hbBody' + cfg.n + 'x' + cfg.rows, () => rbox(Lt.W, Lt.L, BH, .38, .08)), lacquer()); g.add(body);
-    const top = planeTop(Lt.W - .16, Lt.L - .16, mat('hbTopM' + cfg.n + 'x' + cfg.rows, () => X.M({ map: topTex(cfg, Lt), roughness: .72, envMapIntensity: .3, bump: false })));   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
+    const top = planeTop(Lt.W - .16, Lt.L - .16, mat('hbTopM' + cfg.n + 'x' + cfg.rows, () => (() => { const tt = topTex(cfg, Lt), m = X.M({ map: tt, emissiveMap: tt, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; })()));   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
     top.position.y = BH + .002; top.receiveShadow = true; g.add(top);
     const rim = (() => {
       const w = Lt.W / 2 - .07, d = Lt.L / 2 - .07, r = .32, pts = [];
@@ -187,7 +190,7 @@
     // the case: a tray with the code's sockets, a lid on a hinge at its far edge
     const cw = Lt.caseW, cd = Lt.caseD - .2, ch = .34;
     const tray = new TT.Group(); tray.position.set(Lt.caseX, BH, Lt.caseZ); g.add(tray);
-    const shell = X.mesh(geo('hbCase' + cfg.n, () => rbox(cw, cd, ch, .22, .05)), mat('hbCaseM', () => X.M({ color: '#1a2150', roughness: .45, metalness: .25, envMapIntensity: .5, bump: false })));
+    const shell = X.mesh(geo('hbCase' + cfg.n, () => rbox(cw, cd, ch, .22, .05)), mat('hbCaseM', () => X.M({ color: '#1a2150', roughness: .65, metalness: .1, envMapIntensity: .25, bump: false })));
     tray.add(shell);
     const velvet = planeTop(cw - .2, cd - .22, mat('hbVelvet', () => X.M({ color: '#2a0f3a', roughness: .95, sheen: 1, sheenColor: new (T().Color)('#a070ff'), bump: false })));
     velvet.position.y = ch + .003; tray.add(velvet);
@@ -202,11 +205,11 @@
     // the lid (pivot on the far edge of the case)
     const hinge = new TT.Group(); hinge.position.set(Lt.caseX, BH + ch, Lt.caseZ - cd / 2); g.add(hinge);
     const lidG = new TT.Group(); lidG.position.set(0, 0, cd / 2); hinge.add(lidG);
-    const lidM = mat('hbLidM', () => X.M({ color: '#2a3478', roughness: .42, metalness: .3, envMapIntensity: .5, bump: false }));
+    const lidM = mat('hbLidM', () => X.M({ color: '#2a3478', roughness: .65, metalness: .1, envMapIntensity: .25, bump: false }));
     const lid = X.mesh(geo('hbLid' + cfg.n, () => rbox(cw + .14, cd + .14, .22, .26, .06)), lidM); lidG.add(lid);
     // the skirt: the lid comes down over the case like a cap (2026-11-16 user: ケースで覆い被さるように — no gap to see into from the side)
     const skirt = X.mesh(geo('hbSkirt' + cfg.n, () => rframe(cw + .14, cd + .14, .17, .26, .06)), lidM); skirt.position.y = -.16; lidG.add(skirt);
-    const lidFace = planeTop(cw - .16, cd - .16, mat('hbLidFace' + cfg.n, () => X.M({ map: lidTex(cfg.n, cw - .16, cd - .16), emissiveMap: lidTex(cfg.n, cw - .16, cd - .16), emissive: '#ffffff', emissiveIntensity: .55, roughness: .6, envMapIntensity: .3, bump: false, transparent: false })));
+    const lidFace = planeTop(cw - .16, cd - .16, mat('hbLidFace' + cfg.n, () => X.M({ map: lidTex(cfg.n, cw - .16, cd - .16), emissiveMap: lidTex(cfg.n, cw - .16, cd - .16), emissive: '#ffffff', emissiveIntensity: .6, roughness: .85, envMapIntensity: .12, bump: false, transparent: false })));
     lidFace.material.emissive.set(0xffffff); lidFace.position.y = .224; lidG.add(lidFace);
     // the active row's glow (a soft bar under the row being filled) and the who-guessed lights
     const act = new TT.Mesh(geo('hbAct' + cfg.n, () => { const p = new TT.PlaneGeometry(cfg.n * PITCH + .2, ROWP - .1); p.rotateX(-Math.PI / 2); return p; }), mat('hbActM', () => new TT.MeshBasicMaterial({ color: 0x7df3d2, transparent: true, opacity: .14, depthWrite: false, toneMapped: false })));
