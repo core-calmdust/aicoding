@@ -2764,3 +2764,16 @@ html:not([lang=ja]) :is(#home,#chara).aaa .aa-go .ag-k{letter-spacing:.16em;marg
 html:not([lang=ja]) :is(#home,#chara).aaa .pp-f,html:not([lang=ja]) #chara.ch2 .pp-f,html:not([lang=ja]) #home.aaa .aa-plate .pp-f{letter-spacing:.06em;white-space:nowrap}
 html:not([lang=ja]) :is(#home,#chara).aaa .pp-t,html:not([lang=ja]) #chara.ch2 .pp-t{letter-spacing:.08em}
 html:not([lang=ja]) .lm-t b{letter-spacing:.1em}
+/* (2026-11-16, ユーザー「画像を割るのはダサい。リッチなエフェクトで、AAAの仕事として入念に」) the pull: the light is drawn by gachafx.js on
+   a canvas over the whole screen; the shrine trembles harder, leans toward the viewer and glows, then is swallowed by the light */
+.gfx-cv{position:fixed;inset:0;width:100vw;height:100vh;z-index:10000;pointer-events:none}
+.gshrine .gs-door{position:absolute;width:1px;height:1px;pointer-events:none}
+.gshrine.go .gs-rays,.gshrine.go .gs-spark{display:none}
+.gshrine.go img{animation:gsShake3 1.3s cubic-bezier(.5,0,.9,.6) both,gsLit2 1.3s ease-in both}
+@keyframes gsShake3{0%{transform:none}15%{transform:translate(-1px,1px)}30%{transform:translate(2px,-1px) scale(1.01)}45%{transform:translate(-3px,2px) rotate(-.4deg) scale(1.02)}60%{transform:translate(4px,-2px) rotate(.5deg) scale(1.03)}72%{transform:translate(-5px,3px) rotate(-.7deg) scale(1.04)}84%{transform:translate(6px,-3px) rotate(.8deg) scale(1.05)}93%{transform:translate(-6px,2px) rotate(-.6deg) scale(1.06)}100%{transform:translate(0,-6px) scale(1.08)}}
+@keyframes gsLit2{0%{filter:drop-shadow(0 10px 24px rgba(0,0,0,.55)) brightness(1)}60%{filter:drop-shadow(0 0 30px var(--gc2)) brightness(1.2) contrast(1.05)}100%{filter:drop-shadow(0 0 70px var(--gc)) brightness(1.7) contrast(1.1)}}
+.gshrine.go .gs-glow{animation:gsGather 1.3s cubic-bezier(.6,0,.4,1) both}
+.gshrine.engulf img{animation:gsEngulf .55s cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes gsEngulf{0%{transform:translate(0,-6px) scale(1.08);filter:brightness(1.7);opacity:1}25%{filter:brightness(6) saturate(0);opacity:1}100%{transform:translate(0,-14px) scale(1.18);filter:brightness(9) saturate(0) blur(6px);opacity:0}}
+.gshrine.engulf .gs-glow{opacity:0!important;transition:opacity .2s}
+html.lite .gshrine.go img{animation:gsLit2 1.3s ease-in both}
