@@ -323,7 +323,8 @@
       let r = null; try { r = Table3D.modelRect && Table3D.modelRect(); } catch (e) {} if (!r) return null;
       const bv = document.getElementById('bv'), H = bv ? bv.clientHeight : innerHeight, gl = r.left, gr = innerWidth - r.right;
       if (Math.max(gl, gr) >= 300) { const left = gl >= gr, g = left ? gl : gr, w = Math.min(460, g - 32); return { cx: left ? g / 2 : r.right + g / 2, w, bot: Math.max(16, H - r.bottom) }; }
-      return { cx: innerWidth / 2, w: Math.min(420, innerWidth - 24), bot: H - r.top + 4 }; };
+      // no room beside the board (phones): one line at the very bottom, under the tray (2026-11-17 user: メインはゲームなので一行で、最下段に)
+      return { cx: innerWidth / 2, w: Math.min(440, innerWidth - 16), bot: 6, line: true }; };
     if (vsAI) window.__npcPlace = npcPlace;
     const myTurn = () => !over && !busy && (pvp || mode === 'daily' || turn === 0);
     // the row being made: a slot per gem (null = empty) and the cursor (2026-11-16 user: tap a slot to put there · drag to move / swap)
@@ -590,10 +591,10 @@
       // npc.js puts it over the action bar on phones (just above it on PCs), so the board + tray is framed above where it reaches
       // no action bar (2026-11-17 user: 画面下の投了とか不要、その分盤を大きく): やめる at the top ends the game; the board takes the room
       noBar: true, noUndo: true, noHint: true, noResign: true,
-      inset: () => innerWidth <= 600 ? 12 : 18,
+      inset: () => innerWidth <= 600 ? (vsAI && npcTop() ? 46 : 12) : 18,   // (phones, AI games: the Atlamo's one line under the tray)
       // the Atlamo's talk (AI games) goes beside the board where there is room (PC); on phones, where the board fills the width, at
       // the top over the HUD: a strip is kept free above the board so the talk never covers the case or the rows
-      insetTop: () => { if (!vsAI || !npcTop()) return 0; const h = window.__hudTop ? __hudTop() : 0; return h ? h + 46 : 0; },
+
       undo() {}, canUndo: () => false,
       hint, canHint: () => myTurn() && mode !== 'rated',
       canResign: () => !over,
