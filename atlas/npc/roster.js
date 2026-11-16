@@ -248,7 +248,7 @@
       b('merchant', { a: 'rabbit', c: [0xe8d8b8, 0xfff8ea, 0xd8452c], hat: 'straw', hc: [0xd8bd7c, 0x1b120d], held: 'none', ex: ['scarf'], sc: 0xd8452c }, 'ござ編みウサギ|Mat-weaver Rabbit|编席兔|編蓆兔|돗자리짜는토끼|Кролик-циновщик|चटाई बुनता खरगोश|أرنب ناسج الحصير'),
       b('trickster', { a: 'monkey', c: [0x8a6a4a, 0xf4e2c4, 0x2f6fb8], hat: 'bandana', hc: [0xc8402c], held: 'stone' }, '小石あつめのサル|Pebble-collector Monkey|拾石猴|拾石猴|조약돌모으는원숭이|Обезьянка с камешками|कंकड़ बटोरता बंदर|قرد جامع الحصى'),
       b('scholar', { a: 'deer', c: [0xc89a64, 0xfff2dc, 0x12a4b8], held: 'book', ex: ['robe'], rc: 0x6a5a4a }, '記録者のシカ|Chronicler Deer|记录者鹿|記錄者鹿|기록자사슴|Олень-летописец|इतिहास लिखता हिरन|الغزال المدوِّن'),
-      b('scholar', { a: 'owl', c: [0x7a6a5a, 0xf4e6cc, 0xd8452c], held: 'quill', ex: ['glasses', 'robe'], rc: 0x3a3430 }, '修道士フクロウ|Friar Owl|修士猫头鹰|修士貓頭鷹|수도사부엉이|Сова-монах|भिक्षु उल्लू|البومة الراهب'),
+      b('scholar', { a: 'owl', c: [0x7a6a5a, 0xf4e6cc, 0xd8452c], held: 'quill', ex: ['glasses', 'robe'], rc: 0x3a3430 }, '記録係のフクロウ|Scribe Owl|书记员猫头鹰|書記員貓頭鷹|기록원부엉이|Сова-писарь|लिपिक उल्लू|البومة الكاتبة'),
       b('sage', { a: 'bear', c: [0x9a7a5a, 0xf6e6cc, 0x12a4b8], hat: 'cap', hc: [0x5a4a3a], held: 'book', ex: ['glasses', 'scarf'], sc: 0x12a4b8 }, '復元家のクマ|Reconstructor Bear|复原家熊|復原家熊|복원가곰|Медведь-реконструктор|पुनर्रचना करता भालू|الدب المُعيد للبناء'),
       b('king', { a: 'jaguar', c: [0xe8b450, 0xfff4dc, 0x12a4b8], hat: 'flowers', held: 'orb', ex: ['cape', 'necklace'], cape: 0xd8452c }, '五の花マクイルショチトル|Macuilxochitl “Five Flower”|五花马奎尔索奇特尔|五花馬奎爾索奇特爾|다섯꽃마쿠일소치틀|Макуильшочитль «Пять Цветок»|पाँच फूल माकुइलशोचित्ल|ماكويلشوتشيتل «خمس زهرات»'),
     ],

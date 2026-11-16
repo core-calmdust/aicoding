@@ -14,7 +14,7 @@
 (function () {
   'use strict';
   const GUIDE = '../images/atlas/g-dice.webp', BASE = '../patolli/';
-  const EV = 'engine.js?v=2', TV = 'tour.js?v=3';   // the cache keys of patolli/index.html
+  const EV = 'engine.js?v=2', TV = 'tour.js?v=4';   // the cache keys of patolli/index.html
   const loadJS = (src, ok) => ok() ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
   // the portal's own words for the frame of the course (as atlas/rules/ur.js)
   const UI = {
@@ -32,6 +32,24 @@
     "id": {"name":"Dicepup","next":"Berikutnya","back":"Kembali","start":"Ayo main","again":"Lagi","done":"Berhasil!","pass":"Pass","wrong":"Belum tepat — coba lagi!","tapIt":"Ketuk tempat yang menyala","pickN":"Pilih angka di bawah","pressPass":"Tekan “Pass”"},
     "hi": {"name":"डाइसपप","next":"आगे","back":"पीछे","start":"खेलें","again":"फिर से","done":"बहुत अच्छे!","pass":"पास","wrong":"लगभग! फिर कोशिश करें","tapIt":"चमकती जगह छुएँ","pickN":"नीचे से एक संख्या चुनें","pressPass":"“पास” दबाएँ"},
     "ar": {"name":"دايس باب","next":"التالي","back":"رجوع","start":"لنلعب","again":"مرة أخرى","done":"أحسنت!","pass":"تمرير","wrong":"قريب! حاول مرة أخرى","tapIt":"المس المكان المضيء","pickN":"اختر رقمًا بالأسفل","pressPass":"اضغط «تمرير»"},
+  };
+  /* 「盤と道」: the 2D tour draws glowing arrows along the road, the 3D course a chain of dots (kit.marks.path, the last one
+     larger) — so the course says dots here (the rest of the page is the tour's own words) */
+  const B3 = {
+    "ja": {"board.b":"盤は X の形。あなたの駒は中央から入り、光る点の順に4本の腕を回って、中央へ戻ると上がりです。","board.ng":"点をたどった先、大きな点のついたいちばん最後のマスです"},
+    "en": {"board.b":"The board is an X. Your pieces enter from the centre, follow the glowing dots round all four arms, and go home when they are back at the centre.","board.ng":"Follow the dots to the very last square — the big dot"},
+    "zh": {"board.b":"棋盘呈X形。你的棋子从中央进入，按发光圆点的顺序绕过4条臂，回到中央就到达终点。","board.ng":"沿圆点找到最后一格（大圆点）"},
+    "zh-TW": {"board.b":"棋盤呈 X 形。你的棋子從中央進入，依發光圓點的順序繞過 4 條臂，回到中央就抵達終點。","board.ng":"沿著圓點走到最後一格（大圓點）"},
+    "ko": {"board.b":"판은 X자 모양입니다. 내 말은 중앙에서 들어와 빛나는 점을 따라 네 개의 팔을 돌고, 중앙으로 돌아오면 골인합니다.","board.ng":"점을 따라간 끝, 큰 점이 있는 맨 마지막 칸이에요"},
+    "es": {"board.b":"El tablero tiene forma de X. Tus fichas entran por el centro, recorren los cuatro brazos siguiendo los puntos brillantes y llegan a la meta al volver al centro.","board.ng":"Sigue los puntos hasta la última casilla, la del punto grande"},
+    "fr": {"board.b":"Le plateau a la forme d’un X. Vos pions entrent par le centre, parcourent les quatre bras en suivant les points lumineux et arrivent en revenant au centre.","board.ng":"Suivez les points jusqu’à la toute dernière case, celle du gros point"},
+    "pt": {"board.b":"O tabuleiro tem forma de X. Suas peças entram pelo centro, percorrem os quatro braços seguindo os pontos brilhantes e chegam ao voltar para o centro.","board.ng":"Siga os pontos até a última casa, a do ponto grande"},
+    "de": {"board.b":"Das Brett hat die Form eines X. Deine Steine kommen in der Mitte aufs Brett, laufen den leuchtenden Punkten nach durch alle vier Arme und sind im Ziel, wenn sie wieder in der Mitte ankommen.","board.ng":"Folge den Punkten bis zum allerletzten Feld – dem mit dem großen Punkt"},
+    "ru": {"board.b":"Доска имеет форму X. Ваши фишки входят из центра, обходят четыре луча по светящимся точкам и приходят домой, вернувшись в центр.","board.ng":"Идите по точкам до самой последней клетки — с большой точкой"},
+    "tr": {"board.b":"Tahta X biçimindedir. Taşların merkezden girer, parlayan noktaları izleyerek dört kolu dolaşır ve merkeze dönünce bitişe ulaşır.","board.ng":"Noktaları en son kareye, büyük noktalı kareye kadar izle"},
+    "id": {"board.b":"Papan berbentuk X. Bidakmu masuk dari tengah, mengelilingi keempat lengan mengikuti titik bercahaya, lalu finis saat kembali ke tengah.","board.ng":"Ikuti titik-titik sampai kotak paling akhir, yang bertitik besar"},
+    "hi": {"board.b":"बोर्ड X के आकार का है। आपके मोहरे बीच से आते हैं, चमकते बिंदुओं के क्रम में चारों भुजाओं का चक्कर लगाते हैं, और बीच में लौटने पर घर पहुँचते हैं।","board.ng":"बिंदुओं के साथ बिल्कुल आख़िरी खाने तक जाएँ — बड़े बिंदु वाला खाना"},
+    "ar": {"board.b":"اللوحة على شكل X. تدخل قطعك من الوسط وتدور حول الأذرع الأربع بترتيب النقاط المضيئة، وتصل إلى النهاية عند عودتها إلى الوسط.","board.ng":"اتبع النقاط حتى آخر مربع، صاحب النقطة الكبيرة"},
   };
   const PAT = { 0: [0, 0, 0, 0, 0], 1: [0, 0, 1, 0, 0], 2: [1, 0, 0, 0, 1], 3: [1, 0, 1, 0, 1], 4: [1, 1, 0, 1, 1], 10: [1, 1, 1, 1, 1] };
   /* the pages (patolli/tour.js PAGES): rule, p0 / p1 = the positions of your pieces (red, near) and the rival's (the rest wait),
@@ -57,10 +75,10 @@
   function start(ctx) {
     const T3 = ctx.Table3D, L = Object.assign({}, UI.en, UI[ctx.lang] || {});
     try { localStorage.setItem('aicoding-patolli-rules-seen', '1'); } catch (e) {}
-    let stopped = false, step = 0, played = false, busy = false, timers = [], E = null, TX = null, kit = null, st = null, n = null, k = 0, phase = '', againAt = 0;
+    let stopped = false, gen = 0, step = 0, played = false, busy = false, timers = [], E = null, TX = null, kit = null, st = null, n = null, k = 0, phase = '', againAt = 0;
     const later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const sleep = ms => new Promise(r => later(r, ms));
-    const T = (key, v) => { const D = (TX && (TX[ctx.lang] || TX.en)) || {}; let s = D[key]; if (s == null && TX) s = TX.en[key]; if (s == null) s = ''; if (v) s = s.replace(/\{(\w+)\}/g, (_, x) => v[x] != null ? v[x] : ''); return s; };
+    const T = (key, v) => { const D = (TX && (TX[ctx.lang] || TX.en)) || {}, D3 = B3[ctx.lang] || (TX && TX[ctx.lang] ? null : B3.en); let s = D3 && D3[key] != null ? D3[key] : D[key]; if (s == null && TX) s = TX.en[key]; if (s == null) s = ''; if (v) s = s.replace(/\{(\w+)\}/g, (_, x) => v[x] != null ? v[x] : ''); return s; };
     const AD = (window.Atlas3D && Atlas3D.patolli) || {}, SND = AD.SND || { put() {}, hop() {}, take() {}, roll() {}, beanHit() {}, coin() {}, again() {}, home() {} };
     const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -76,6 +94,7 @@
       + '.rgd .urp{display:inline-flex;align-items:center;gap:6px;padding:7px 18px;border-radius:99px;border:0;background:#12a4b8;color:#fff;font-weight:900;font-size:15px;cursor:pointer;box-shadow:0 3px 0 #0b6f7e;white-space:nowrap}.rgd .urp.ps{background:#d8452c;box-shadow:0 3px 0 #97301f}'
       + '.rgd .ptr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}'
       + '.rgd .ptn{display:block;margin-top:4px;font-size:.84em;line-height:1.5;color:#7a7f94;font-weight:600}'
+      + '.rgd .bub.capd{display:flex;flex-direction:column;box-sizing:border-box}.rgd .bub.capd .nm,.rgd .bub.capd .cnt{flex:none}.rgd .bub.capd .tx{flex:1 1 auto;min-height:0!important;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin}'
       + '.rgd .dots i{width:6px!important;height:6px!important;margin:0 1.5px!important}'
       + '@media (max-width:600px){.rgd .urh .tg span{font-size:11.5px!important}.rgd .dots i{width:4px!important;height:4px!important;margin:0 1px!important}}'
       + '@media (max-width:600px) and (max-height:900px){.rgd .tx{font-size:13.5px;line-height:1.5;min-height:0}.rgd .cnt{margin-top:4px}.rgd .cnt .tag{font-size:13px;padding:4px 12px}.rgd .urq button{padding:5px 0;font-size:16px}.rgd .ptn{font-size:.8em;line-height:1.4}}'
@@ -101,6 +120,7 @@
     let msgT = 0;
     function msg(html) { const m = $('.urm'); clearTimeout(msgT); m.innerHTML = html || ''; m.classList.toggle('on', !!html); if (html) msgT = setTimeout(() => m.classList.remove('on'), 3400); }
     const P = () => PAGES[step];
+    const gone = g => stopped || g !== gen;   // (every async path: after each await, return if the page changed meanwhile)
     const body = pg => pg.id === 'intro' ? `<b>${T('intro.t')}</b>　${T('intro.win')}` : `<b>${T(pg.id + '.t')}</b>　${T(pg.id + '.b')}${TX && TX.ja[pg.id + '.n'] ? `<span class="ptn">${T(pg.id + '.n')}</span>` : ''}`;
     const rollBtn = () => `<button type="button" class="urp" data-ptr="roll">${esc(T('roll'))}</button>`;
     const taskOf = pg => pg.id === 'intro' ? T('notMine') : T(pg.id + '.k');
@@ -121,8 +141,8 @@
     let lockW = 0;
     function lockH() {
       const bub = $('.bub'), tx = $('.tx'), cn = $('.cnt'), w = bub.clientWidth; if (!TX || !w || w === lockW) return; lockW = w;
-      const keep = [tx.innerHTML, cn.innerHTML]; bub.style.minHeight = ''; let mx = 0;
-      const meas = (t, c) => { tx.innerHTML = t; cn.innerHTML = c; mx = Math.max(mx, bub.offsetHeight); };
+      const keep = [tx.innerHTML, cn.innerHTML]; bub.style.minHeight = ''; bub.style.height = ''; bub.classList.remove('capd'); let mx = 0, fix = 0;
+      const meas = (t, c) => { tx.innerHTML = t; cn.innerHTML = c; mx = Math.max(mx, bub.offsetHeight); fix = Math.max(fix, bub.offsetHeight - tx.offsetHeight); };
       PAGES.forEach(pg => {
         const t = body(pg), kk = taskOf(pg);
         const list = [tag(`👆 ${kk}`), tag(`✓ ${T(pg.id + '.ok', { n: 3 })}`)];
@@ -133,7 +153,18 @@
         if (pg.id === 'intro') list.push(`<div class="urh"><div class="tg"><span>📍 ${T('intro.origin')}</span><span>👥 ${T('intro.players')}</span><span>⏱ ${T('intro.time')}</span></div>${tag(`👆 ${kk}`)}</div>`);
         list.forEach(c => meas(t, c));
       });
-      tx.innerHTML = keep[0]; cn.innerHTML = keep[1]; bub.style.minHeight = mx + 'px';
+      tx.innerHTML = keep[0]; cn.innerHTML = keep[1];
+      /* phones held upright: the tallest page in a long language (en, de, ru …) made the panel so tall that it covered the
+         bottom of the board — your own trays, which the tasks ask you to tap. There the panel is capped (about 35% of the
+         screen), the words scroll inside it, and the board is framed above the whole panel (data-fit-whole), so it always keeps the rest */
+      const phone = innerWidth <= 600 && innerHeight > innerWidth;
+      el.dataset.fitWhole = phone ? '1' : '';   // (the portal frames the board above the whole panel: atlas/app.js fitStage)
+      if (phone) {
+        const cap = Math.max(fix + 66, Math.round(innerHeight * .35));
+        if (mx > cap) { bub.style.height = cap + 'px'; bub.classList.add('capd'); mx = 0; }   // (a fixed height: the words take what the task below leaves)
+      }
+      if (mx) bub.style.minHeight = mx + 'px';
+      if (window.__fitStage) requestAnimationFrame(() => { if (!stopped) window.__fitStage(); });
     }
     addEventListener('resize', lockH);
 
@@ -169,10 +200,11 @@
 
     /* ---------- pages ---------- */
     function go(nn) {
+      gen++;   // a new page: an animation or throw still running for the page before stops at its next await (it checks gone())
       step = Math.max(0, Math.min(PAGES.length - 1, nn)); played = false; busy = false; phase = ''; n = null; k = 0; againAt = 0;
       timers.forEach(clearTimeout); timers = [];
       const pg = P(); lockH();
-      kit.setRule(pg.rule); st = ST(pg); kit.beansBig(false, 0); kit.sync(st); kit.restBeans(null); labels();
+      kit.cancel(); kit.setRule(pg.rule); st = ST(pg); kit.beansBig(false, 0); kit.sync(st); kit.restBeans(null); labels();
       phase = pg.kind === 'last' || pg.kind === 'mine' ? 'tap' : 'roll';
       say(body(pg));
       if (pg.id === 'intro') cnt(`<div class="urh"><div class="tg"><span>📍 ${T('intro.origin')}</span><span>👥 ${T('intro.players')}</span><span>⏱ ${T('intro.time')}</span></div>${tag(`👆 ${taskOf(pg)}`)}</div>`);
@@ -182,32 +214,33 @@
     }
     function ok(textKey, v) {
       played = true; busy = false; phase = 'done'; marks(); cnt(tag(`✓ ${T(textKey, v) || L.done}`, '#e8f8ee', '#16784a')); SND.home(); buttons();
-      if (!P().last) { const s0 = step; if (window.AtlasRgdTimer) AtlasRgdTimer($('[data-a=next]'), 2200, () => step === s0); later(() => { if (step === s0 && played) go(step + 1); }, 2200); }   // solved: on to the next page by itself (as every course)
+      if (!P().last) { const g0 = gen; if (window.AtlasRgdTimer) AtlasRgdTimer($('[data-a=next]'), 2200, () => gen === g0); later(() => { if (gen === g0 && played) go(step + 1); }, 2200); }   // solved: on to the next page by itself (as every course)
     }
     function ng(textKey, v, html) { msg(`<span>${html || (textKey ? T(textKey, v) : L.wrong)}</span>`); const b = $('.bub'); if (b.animate) b.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 300 }); }
     // the payments of a move / a pass (the engine's events), as on the table: beads fly, then the numbers change
-    async function pays(before, res) {
+    async function pays(before, res, g) {
       const sh = { gold: before.gold.slice(), pool: before.pool };
       for (const e of res.ev) {
         if (e.t !== 'pay' && e.t !== 'pot') continue;
         const from = e.t === 'pot' ? 'pool' : e.from;
-        SND.coin(); await kit.pay(from, e.to, e.amt); if (stopped) return;
+        SND.coin(); await kit.pay(from, e.to, e.amt); if (gone(g)) return false;
         if (from === 'pool') sh.pool -= e.amt; else sh.gold[from] -= e.amt;
         if (e.to === 'pool') sh.pool += e.amt; else sh.gold[e.to] += e.amt;
-        kit.gems(sh.gold, sh.pool); labels(sh); await sleep(300); if (stopped) return;
+        kit.gems(sh.gold, sh.pool); labels(sh); await sleep(300); if (gone(g)) return false;
       }
+      return !gone(g);
     }
     async function roll() {
       const pg = P(); if (phase !== 'roll' || busy || !pg.rolls) return;
-      busy = true; marks(); msg('');
+      busy = true; marks(); msg(''); const g = gen;
       const v = pg.rolls[Math.min(k, pg.rolls.length - 1)]; k++;
       kit.beansBig(true, 0);   // thrown large over the middle of the mat, where the marks can be counted
-      await kit.roll(0, PAT[v].slice().sort(() => Math.random() - .5)); if (stopped) return;
+      await kit.roll(0, PAT[v].slice().sort(() => Math.random() - .5)); if (gone(g)) return;
       n = v; busy = false;
       if (pg.kind === 'count') {   // how many beans show their white mark? (a choice)
         phase = 'count'; marks();
         cnt(`<div style="display:grid;gap:6px;width:100%"><b>${T('beans.k2')}</b><div class="urq">${[0, 1, 2, 3, 4, 5].map(x => `<button type="button" data-urn="${x}">${x}</button>`).join('')}</div></div>`);
-        $('.cnt').onclick = e => { const b = e.target.closest('[data-urn]'); if (!b || phase !== 'count') return; if (+b.dataset.urn === n) { $('.cnt').onclick = null; kit.beansBig(false); ok('beans.ok', { n }); } else ng('beans.ng'); };
+        $('.cnt').onclick = e => { const b = e.target.closest('[data-urn]'); if (!b || phase !== 'count') return; if (+b.dataset.urn === n && !gone(g)) { $('.cnt').onclick = null; kit.beansBig(false); ok('beans.ok', { n }); } else ng('beans.ng'); };
         buttons(); return;
       }
       if (pg.kind === 'pass') {   // nothing can move (or a zero): press Pass — the payment to the pool follows
@@ -217,13 +250,13 @@
       }
       phase = 'move';
       cnt(tag(`<span class="urn">= ${n}</span>　👆 ${pg.twice && k === 2 ? T('again.k2') : taskOf(pg)}`));
-      busy = true; await kit.beansBig(false); if (stopped) return; busy = false;   // the throw was seen large: the beans step aside, the mat is free for the move
+      busy = true; await kit.beansBig(false); if (gone(g)) return; busy = false;   // the throw was seen large: the beans step aside, the mat is free for the move
       marks(); buttons();
     }
     async function pass() {
       if (phase !== 'pass' || busy) return;
-      busy = true; const before = st, res = E.apply(st, null, n);
-      await pays(before, res); if (stopped) return;
+      busy = true; const g = gen, before = st, res = E.apply(st, null, n);
+      if (!await pays(before, res, g)) return;
       st = res.state; st.turn = 0; kit.sync(st); labels();
       ok(P().id + '.ok');
     }
@@ -238,11 +271,11 @@
     async function play(m) {
       const pg = P();
       if (pg.check) { const bad = pg.check(m, k); if (bad) { ng(bad); return; } }
-      busy = true; phase = 'anim'; kit.marks.clear(); msg('');
+      busy = true; phase = 'anim'; kit.marks.clear(); msg(''); const g = gen;
       await kit.move(0, m.from, m.to, { capture: m.capture, onStep: () => SND.hop(), onHit: () => SND.take(), onLand: () => (m.finish ? SND.home : SND.put)() });
-      if (stopped) return;
+      if (gone(g)) return;
       const before = st, r = E.apply(st, m, n);
-      await pays(before, r); if (stopped) return;
+      if (!await pays(before, r, g)) return;
       st = r.state; st.turn = 0; n = null; busy = false; kit.sync(st); labels();
       if (pg.twice && r.again && k < pg.rolls.length) {   // an arm end: throw again
         SND.again(); againAt = m.to; phase = 'roll';

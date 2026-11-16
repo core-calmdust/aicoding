@@ -15,6 +15,7 @@
        kit.marks.{ clear, cell, ring, dot, glow, tray, path, spot }
        kit.hit(event) → { r, c } | { tray: 'start' | 'goal', side } | null
        kit.projCell / projPiece / projSlot / projBean / projSpot → screen points (tests, the labels)
+       kit.cancel()                    stops every running animation where it is (then sync())
        kit.stop()
    World units = the 2D page's SVG units / 100: x to the right, z towards the near player (side 0, red). The squares are the
    engine's grid (PatolliEngine.coords → [row, col]) turned 45°, through the board's own userData.cell.
@@ -31,7 +32,8 @@
     const tall = innerHeight > innerWidth * 1.15;
     // framing: the whole mat (the trays, the beans and the stakes lie in the gaps of the X); the course looks straight down
     const fit0 = opts.top ? { w: 10.3, d: 10.3, y: 0, pitch: 1.5703 } : tall ? { w: 10.5, d: 11.4, up: .95, y: 0, pitch: 1.5 } : { w: 11, d: 10.9, y: 0, pitch: 1.32 };
-    const anim = (dur, f) => new Promise(res => { const t0 = performance.now(); (function s(n) { if (stopped) return res(); const k = Math.min(1, Math.max(0, (n - t0) / Math.max(1, dur))); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
+    let ep = 0;   // cancel(): every running animation stops where it is (the rules course turning a page mid-move); the caller then sync()s
+    const anim = (dur, f) => new Promise(res => { const t0 = performance.now(), e0 = ep; (function s(n) { if (stopped || e0 !== ep) return res(); const k = Math.min(1, Math.max(0, (n - t0) / Math.max(1, dur))); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
     const sleep = ms => new Promise(r => setTimeout(r, ms));
     const spd = () => Math.max(.4, opts.speed ? opts.speed() : 1);
     const RL = () => E.RULES[rule];
@@ -99,7 +101,7 @@
       anim(on ? 140 : 110, q => setH(o, h0 + (h1 - h0) * io(q)));
     }
     async function move(side, from, to, opt = {}) {
-      if (!last) return;
+      if (!last) return; const e0 = ep, off = () => stopped || e0 !== ep;
       const k = last.pos[side].findIndex(p => p === from); if (k < 0) return;
       const o = P[side][k], L = RL().L, sp = spd();
       const pts = [o.g.position.clone()];
@@ -112,12 +114,12 @@
         if (vk >= 0) vic = { o: P[op][vk], side: op, k: vk };
       }
       const H = .34, h0 = o.h;
-      await anim(140 / sp, q => setH(o, h0 + (H - h0) * io(q)));
+      await anim(140 / sp, q => setH(o, h0 + (H - h0) * io(q))); if (off()) return;
       const n = pts.length - 1, leg = (n > 6 ? 105 : n > 3 ? 135 : 170) / sp;
-      for (let i = 0; i < n && !stopped; i++) {
+      for (let i = 0; i < n && !off(); i++) {
         const a = pts[i], b = pts[i + 1], far = a.distanceTo(b) > U.u * 1.6;   // (from / to a tray: a longer arc)
         await anim(far ? leg * 2.2 : leg, q => { const e = io(q); o.g.position.set(a.x + (b.x - a.x) * e, Y, a.z + (b.z - a.z) * e); setH(o, H + Math.sin(q * Math.PI) * (far ? .5 : .07)); });
-        if (opt.onStep) opt.onStep(i + 1, n);
+        if (off()) return; if (opt.onStep) opt.onStep(i + 1, n);
       }
       let vp = null;
       if (vic && vic.o) {   // captured: up, over and down into its owner's waiting tray
@@ -125,13 +127,13 @@
         const [tx, , tz] = where(ns, vic.side, vic.k), vo = vic.o, s0 = vo.g.position.clone();
         if (opt.onHit) opt.onHit();
         vp = anim(560 / sp, q => { const e = io(q); vo.g.position.set(s0.x + (tx - s0.x) * e, Y, s0.z + (tz - s0.z) * e); setH(vo, Math.sin(q * Math.PI) * 1.0); })
-          .then(() => { setH(vo, 0); vo.pos = 0; });
+          .then(() => { if (!off()) { setH(vo, 0); vo.pos = 0; } });
         last.pos[vic.side][vic.k] = 0;
       }
-      await anim(140 / sp, q => setH(o, H * (1 - io(q))));
+      await anim(140 / sp, q => setH(o, H * (1 - io(q)))); if (off()) return;
       o.pos = to; last.pos[side][k] = to;
       if (opt.onLand) opt.onLand();
-      await anim(110 / sp, q => { const s = 1 + Math.sin(q * Math.PI) * .06; o.g.userData.p.scale.set(s, 1 / s, s); });
+      await anim(110 / sp, q => { const s = 1 + Math.sin(q * Math.PI) * .06; o.g.userData.p.scale.set(s, 1 / s, s); }); if (off()) return;
       o.g.userData.p.scale.set(1, 1, 1);
       if (vp) await vp;
     }
@@ -164,7 +166,7 @@
       const to = BEANS.map((b, i) => beanAt(i, on)), s1 = on ? BIG : 1, y1 = Y + (on ? .05 : 0);
       const set = e => BEANS.forEach((b, i) => { b.g.position.set(from[i][0] + (to[i][0] - from[i][0]) * e, y1 + Math.sin(e * Math.PI) * .4, from[i][1] + (to[i][1] - from[i][1]) * e); b.g.scale.setScalar(from[i][2] + (s1 - from[i][2]) * e); });
       if (!ms) { set(1); T3.kick(200); return Promise.resolve(); }
-      return anim(ms, q => set(io(q))).then(() => { set(1); T3.kick(200); });
+      const e0 = ep; return anim(ms, q => set(io(q))).then(() => { if (e0 === ep) { set(1); T3.kick(200); } });
     }
     async function roll(side, d) {
       ensureBeans();
@@ -175,7 +177,7 @@
       });
       const TP = K3.throwPlan(items, { dur: 900 / spd(), onHit: () => { if (opts.sfx) opts.sfx('beanHit'); } });
       if (opts.sfx) opts.sfx('roll');
-      await anim(TP.total, k => TP.frame(k * TP.total));
+      const e0 = ep; await anim(TP.total, k => TP.frame(k * TP.total)); if (e0 !== ep) return;
       TP.end(); BEANS.forEach(b => { b.sh.scale.set(1, 1, .7); });
       T3.kick(200);
     }
@@ -259,7 +261,7 @@
     const projXZ = (x, z) => project(x, Y, z);
 
     /* ---------- the words on the mat (DOM, placed by projection): the numbers of the three heaps, the names of the trays ---------- */
-    // labels(host, { gold0: [caption, n], gold1: [caption, n], pool: [caption, n], start0: [caption], goal0: …, start1: …, goal1: … })
+    // labels(host, { gold0: [caption, n], gold1: [caption, n], pool: [caption, n, 'r' = on one line], start0: [caption], goal0: …, start1: …, goal1: … })
     const LB = {}; let lbT = 0, lbCss = null, onPlace = null;
     function labels(host, map) {
       if (stopped) return;
@@ -268,6 +270,7 @@
         lbCss.textContent = '.ptl{position:absolute;left:0;top:0;z-index:1;pointer-events:none;display:flex;flex-direction:column;align-items:center;direction:ltr;gap:1px;font:800 11px/1.15 var(--font,system-ui),sans-serif;color:#fff8e4;text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.75);white-space:nowrap;text-align:center}'
           + '.ptl b{font:900 19px/1 var(--round,inherit);font-variant-numeric:tabular-nums}.ptl.t{font-size:10px;opacity:.92}.ptl.up b{animation:ptlU .5s ease-out}@keyframes ptlU{30%{transform:scale(1.5);color:#ffe27a}}'
           + '@media (max-width:560px){.ptl{font-size:9.5px}.ptl b{font-size:15px}.ptl.t{font-size:8.5px}}'
+          + '.ptl.r{flex-direction:row;align-items:baseline;gap:4px}'   // (.r: caption and number on one line — the pool on a small board)
           + '.ptl.c span{display:none}.ptl.c b{font-size:13px}.ptl.t.c{visibility:hidden}';   // (.c: a small board — the numbers alone)
         document.head.appendChild(lbCss); lbT = setInterval(place, 160);
       }
@@ -275,9 +278,10 @@
       for (const k in map) {
         let e = LB[k]; const v = map[k], num = v.length > 1;
         if (!e) { e = LB[k] = document.createElement('div'); e.className = 'ptl' + (num ? '' : ' t'); (host || document.body).appendChild(e); }
-        const h = num ? `<span>${esc(v[0])}</span><b>${v[1]}</b>` : esc(v[0]);
+        const h = num ? `<span>${esc(v[0]).replace(/\n/g, '<br>')}</span><b>${v[1]}</b>` : esc(v[0]);   // (\n: a second line — the round above the pool's name)
         if (num && e.dataset.n != null && e.dataset.n !== String(v[1])) { e.classList.remove('up'); void e.offsetWidth; e.classList.add('up'); }
         if (num) e.dataset.n = v[1];
+        e.classList.toggle('r', v[2] === 'r');
         if (e.dataset.h !== h) { e.dataset.h = h; e.innerHTML = h; }
       }
       place();
@@ -299,7 +303,7 @@
 
     return {
       get board() { return board; }, get U() { return U; }, get Y() { return Y; }, get rule() { return rule; }, tall, fit0, holder,
-      setRule, sync, setSet, move, lift, roll, restBeans, beansBig, isBig: () => big, pay, gems, marks, hit, project, projCell, projPiece, projSlot, projBean, projSpot, projXZ,
+      cancel: () => { ep++; T3.kick(200); }, setRule, sync, setSet, move, lift, roll, restBeans, beansBig, isBig: () => big, pay, gems, marks, hit, project, projCell, projPiece, projSlot, projBean, projSpot, projXZ,
       pieces: P, beans: BEANS, heaps: HEAPS, cellXZ, sleep, anim,
       beansUp: () => BEANS.map(b => K3.beanIsUp(b.d)),
       labels, place, onPlace(f) { onPlace = f; },

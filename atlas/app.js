@@ -1217,7 +1217,7 @@
       // phones (2026-11-15): the framing doesn't follow the bubble's text — the text box is counted as 4 lines whatever it holds
       // (a longer text may cover the board's edge: it is read, not played on), so the board stays put and as large as it can be
       let bt = p ? $('bv').clientHeight - p.offsetTop + 4 : 0;
-      const tx = p && matchMedia('(max-width: 819px)').matches && p.querySelector('.tx');
+      const tx = p && !p.dataset.fitWhole && matchMedia('(max-width: 819px)').matches && p.querySelector('.tx');   // (data-fit-whole: a course whose panel keeps one height on every page and scrolls its text — patolli: the board is framed above all of it)
       if (tx) { const lh = parseFloat(getComputedStyle(tx).lineHeight) || 25; bt += Math.round(4 * lh - tx.offsetHeight); }
       Table3D.setInset(bt, tp); return; }
     // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)

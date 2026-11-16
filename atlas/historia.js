@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 23;                     // data version (bump when historia/*.json change)
+  const V = 24;                     // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];   // (a game without text in a language falls back to English)
   const UI = {
@@ -719,9 +719,22 @@
       const mask = new Set((s.mask || []).map(a => a.join(',')));
       out.push(`<rect class="bd" x="${PD - 14}" y="${PD - 14}" width="${cols * cell + 28}" height="${rows * cell + 28}" rx="10" fill="${wood}"/>`);
       if (!pt) {
-        for (let j = 0; j < m; j++) for (let i = 0; i < n; i++) { if (mask.has(i + ',' + j)) continue; const dark = s.check && (i + j) % 2 === 1;
+        const ends = new Map((s.ends || []).map(([i, j, k]) => [i + ',' + j, k]));
+        for (let j = 0; j < m; j++) for (let i = 0; i < n; i++) { if (mask.has(i + ',' + j) || ends.has(i + ',' + j)) continue; const dark = s.check && (i + j) % 2 === 1;
           out.push(`<rect class="cl" style="--d:${(i + j) * 18}ms" x="${PD + i * cell}" y="${PD + j * cell}" width="${cell}" height="${cell}" fill="${dark ? (s.dark || '#8a5a32') : (s.light || 'rgba(255,255,255,.18)')}" stroke="${line}" stroke-width="${s.check ? 0 : 1.1}"/>`); }
         (s.marks || []).forEach(([i, j]) => out.push(`<rect class="cl" x="${PD + i * cell + 3}" y="${PD + j * cell + 3}" width="${cell - 6}" height="${cell - 6}" rx="4" fill="none" stroke="${line}" stroke-width="1.6" stroke-dasharray="3 2"/>`));
+        /* patolli (2026-11-16): ends = the rounded squares at the arm ends ([i, j, corner] — tl / tr / br / bl, the outer corner that is
+           rounded; a ring inside), tris = the squares marked with a black triangle (its point towards the centre of the board) */
+        ends.forEach((k, key) => { const [i, j] = key.split(',').map(Number), x = PD + i * cell, y = PD + j * cell, c = cell, r = c * .92;
+          const d = k === 'tl' ? `M${x + r} ${y}L${x + c} ${y}L${x + c} ${y + c}L${x} ${y + c}L${x} ${y + r}A${r} ${r} 0 0 1 ${x + r} ${y}Z`
+            : k === 'tr' ? `M${x} ${y}L${x + c - r} ${y}A${r} ${r} 0 0 1 ${x + c} ${y + r}L${x + c} ${y + c}L${x} ${y + c}Z`
+            : k === 'br' ? `M${x} ${y}L${x + c} ${y}L${x + c} ${y + c - r}A${r} ${r} 0 0 1 ${x + c - r} ${y + c}L${x} ${y + c}Z`
+            : `M${x} ${y}L${x + c} ${y}L${x + c} ${y + c}L${x + r} ${y + c}A${r} ${r} 0 0 1 ${x} ${y + c - r}Z`;
+          out.push(`<path class="cl" style="--d:${(i + j) * 18}ms" d="${d}" fill="${s.light || 'rgba(255,255,255,.18)'}" stroke="${line}" stroke-width="1.1"/><circle class="cl" cx="${x + c / 2}" cy="${y + c / 2}" r="${c * .28}" fill="none" stroke="${line}" stroke-width="1" opacity=".55"/>`); });
+        (s.tris || []).forEach(([i, j]) => { const cx = PD + i * cell + cell / 2, cy = PD + j * cell + cell / 2, h = cell * .36, ctr = PD + n * cell / 2, cty = PD + m * cell / 2;
+          const v = Math.abs(cx - ctr) < cell * 1.1, sx = v ? 0 : Math.sign(ctr - cx), sy = v ? Math.sign(cty - cy) : 0;   // (point towards the centre along the arm)
+          const pts = v ? [[cx, cy + sy * h], [cx - h, cy - sy * h], [cx + h, cy - sy * h]] : [[cx + sx * h, cy], [cx - sx * h, cy - h], [cx - sx * h, cy + h]];
+          out.push(`<polygon class="cl" style="--d:${(i + j) * 18 + 200}ms" points="${pts.map(p => p.map(q => q.toFixed(1)).join(',')).join(' ')}" fill="#1b120d"/>`); });
         (s.burn || []).forEach(([i, j]) => out.push(`<g class="cl" transform="translate(${PD + i * cell + cell / 2} ${PD + j * cell + cell / 2})"><rect x="${-cell / 2 + 2}" y="${-cell / 2 + 2}" width="${cell - 4}" height="${cell - 4}" rx="4" fill="#3a2a1c"/><path d="M${-cell * .26} ${cell * .26}L${cell * .2} ${-cell * .2}M${cell * .2} ${-cell * .2}l-7 1.5M${cell * .2} ${-cell * .2}l-1.5 7" stroke="#f0c46a" stroke-width="2.2" stroke-linecap="round" fill="none"/></g>`));   // amazons: a burnt square with its arrow
         (s.ros || []).forEach(([i, j]) => out.push(`<g class="cl" transform="translate(${X(i)} ${Y(j)})">${[0, 45, 90, 135].map(a => `<ellipse rx="11" ry="3.6" transform="rotate(${a})" fill="#d8423a" opacity=".75"/>`).join('')}<circle r="3" fill="#f5c23c"/></g>`));
         if (s.box) { const [bw, bh] = s.box; for (let i = 0; i <= n; i += bw) out.push(ln(PD + i * cell, PD, PD + i * cell, PD + m * cell, 'gl th')); for (let j = 0; j <= m; j += bh) out.push(ln(PD, PD + j * cell, PD + n * cell, PD + j * cell, 'gl th')); }
