@@ -16,6 +16,7 @@ const ROWS = [
 ["豆の目 {n}","Throw {n}","豆子点数 {n}","豆子點數 {n}","콩의 눈 {n}","Tirada {n}","Lancer {n}","Lançamento {n}","Wurf {n}","Бросок {n}","Atış {n}","Lemparan {n}","फलियों का अंक {n}","رمية الفاصولياء {n}"],
 ["正解！","Correct!","正确！","答對了！","정답!","¡Correcto!","Correct !","Correto!","Richtig!","Верно!","Doğru!","Benar!","सही!","صحيح!"],
 ["もっと良い手があります。","There is a better move.","还有更好的着法。","還有更好的走法。","더 좋은 수가 있습니다.","Hay una jugada mejor.","Il existe un meilleur coup.","Há um lance melhor.","Es gibt einen besseren Zug.","Есть ход лучше.","Daha iyi bir hamle var.","Ada langkah yang lebih baik.","इससे बेहतर चाल मौजूद है।","توجد نقلة أفضل."],
+["別の答えを考えてみましょう。","Have another look at the choices.","再看看其他选项吧。","再看看其他選項吧。","다른 보기도 살펴보세요.","Mira otra vez las opciones.","Regardez encore les réponses proposées.","Olhe de novo para as opções.","Schau dir die Antworten noch einmal an.","Посмотрите на варианты ещё раз.","Seçeneklere bir daha bak.","Coba lihat lagi pilihannya.","विकल्पों को एक बार फिर देखें।","انظر إلى الخيارات مرة أخرى."],
 ["いちばん良い手","Best move","最佳着法","最佳走法","최선수","Mejor jugada","Meilleur coup","Melhor lance","Bester Zug","Лучший ход","En iyi hamle","Langkah terbaik","सबसे अच्छी चाल","أفضل نقلة"],
 ["答えを見る","Show answer","看答案","看答案","정답 보기","Ver respuesta","Voir la réponse","Ver resposta","Lösung zeigen","Ответ","Cevabı göster","Lihat jawaban","उत्तर देखें","عرض الحل"],
 ["ヒント","Hint","提示","提示","힌트","Pista","Indice","Dica","Tipp","Подсказка","İpucu","Petunjuk","संकेत","تلميح"],

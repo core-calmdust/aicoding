@@ -62,6 +62,8 @@ let ken = null;           // PC review box: exploring { base, plies, roll }
 let busyToken = 0, thinking = 0, animating = false, gameOverShown = false;
 let HB = null, view = null, dice2d = null;
 let wpPaused = false;
+// 進行中の動き（投げる・駒・宝の支払い・AIの考慮）を止める：busyToken を進めたら、animating・thinking・payView も必ず戻す
+function cancelBusy() { busyToken++; thinking = 0; animating = false; payView = null; }
 const evalCache = new Map();
 function newGameObj(rule, first, human, dir) { return { rule, first, human, dir: dir || [1, 1], plies: [], roll: null, undoLeft: 2, end: null, id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }; }
 const line = () => ken ? game.plies.slice(0, ken.base).concat(ken.plies) : game.plies;
@@ -84,6 +86,19 @@ function statusAt(i) {
   return { over: false };
 }
 const overNow = () => statusAt(game.plies.length).over;
+// 投了・時間切れ・レート戦の放棄で終わったとき：勝った側が場を取る（盤の上の勝負はエンジンが ev 'pot' で渡す。こちらは棋譜の外なので表示のときに足す）
+function potAward(i) {
+  if (!game || !game.end || ken || special || i < game.plies.length) return null;
+  const st = posAt(game.plies.length); if (st.winner >= 0 || !st.pool) return null;
+  return { to: game.end.winner, amt: st.pool };
+}
+function viewState(i) { const st = posAt(i), a = potAward(i); if (!a) return st; const s2 = E.clone(st); s2.gold[a.to] += a.amt; s2.pool = 0; return s2; }
+// 盤の外の終わり方（投了・時間切れ）：進行中の動きを止めて結果へ
+function endGame(winner, why) {
+  cancelBusy();
+  game.end = { winner, why }; game.roll = null; game.proll = null; cur = game.plies.length; reviewing = false;
+  save(); update(); onGameEnd();
+}
 const curState = () => special ? special.state : posAt(cur);
 function isAI(side) { return !special && !ken && (settings.mode === 'watch' || (settings.mode === 'ai' && side !== game.human)); }
 function levelFor(side) { if (rgame) return rgame.lv; return settings.mode === 'watch' ? (side === 0 ? settings.level : settings.level2) : settings.level; }
@@ -92,7 +107,7 @@ const OL = () => settings.mode === 'online' && !special && !ken && typeof olMyTu
 const myTurnHuman = () => { if (OL()) return olMyTurn(); const st = curState(); return !special ? (atLatest() && !overNow() && !isAI(st.turn) && (!reviewing || ken)) : true; };
 // 宝の支払いを見せている間は、宝の数だけ払う前の数で描く（commit の showEvents）
 let payView = null;
-const shownState = () => { const st = curState(); return payView && payView.tok === busyToken && st ? Object.assign({}, st, { gold: payView.gold, pool: payView.pool }) : st; };
+const shownState = () => { const st = special ? special.state : viewState(cur); return payView && payView.tok === busyToken && st ? Object.assign({}, st, { gold: payView.gold, pool: payView.pool }) : st; };
 // レースの残り（全部上げるまでのマスの数）と、中央で取られる確率（広く知られたルールだけ）
 function race(st) { const R = E.RULES[st.rule]; return { pips: [0, 1].map(s => st.pos[s].reduce((a, i) => a + (i > R.L ? 0 : R.goal - i), 0)) }; }
 function hitRisk(st, side) {
@@ -112,7 +127,7 @@ function setRoll(r) { if (special) { special.n = r ? r.n : null; special.dice = 
 function save() {
   if (settings.mode === 'online') { if (typeof olSaveLocal === 'function') olSaveLocal(); return; }   // (the online game is not saved here: the local one is kept)
   try {
-    const d = { v: 1, settings, game: game && !special ? { rule: game.rule, first: game.first, human: game.human, dir: game.dir, plies: game.plies, roll: game.roll, undoLeft: game.undoLeft, end: game.end, id: game.id, fz: game.fz || null, mode: settings.mode, level: settings.level, level2: settings.level2 } : null, rgame };
+    const d = { v: 1, settings, game: game && !special ? { rule: game.rule, first: game.first, human: game.human, dir: game.dir, plies: game.plies, roll: game.roll, proll: game.proll || null, undoLeft: game.undoLeft, end: game.end, id: game.id, fz: game.fz || null, mode: settings.mode, level: settings.level, level2: settings.level2 } : null, rgame };
     localStorage.setItem(STORE, JSON.stringify(d));
   } catch (e) {}
 }
@@ -126,6 +141,8 @@ function load() {
     game = Object.assign(newGameObj(RULES.includes(d.game.rule) ? d.game.rule : 'bell', d.game.first || 0, d.game.human || 0, d.game.dir), d.game);
     rgame = d.rgame || null;
     cur = game.plies.length;
+    if (!game.roll && pendingRoll() && !game.end) game.roll = pendingRoll();   // 投げた動きの途中で閉じた：その目のまま続ける
+    game.proll = null;
     try { posAt(cur); } catch (e) { game = null; }
   }
   return !!game;
@@ -160,11 +177,11 @@ let aiW = null, jobSeq = 0;
 const jobs = new Map();
 function worker() {
   if (aiW === false) return null;
-  if (!aiW) { try { aiW = new Worker('worker.js?v=1'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; jobs.forEach(j => j({ error: 'worker' })); }; } catch (e) { aiW = false; return null; } }
+  if (!aiW) { try { aiW = new Worker('worker.js?v=2'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; jobs.forEach(j => j({ error: 'worker' })); }; } catch (e) { aiW = false; return null; } }
   return aiW;
 }
-const thinkHere = (st, n, level, cfg) => { const m = cfg ? E.think(st, n, 20, { d: cfg.d, temp: cfg.temp }) : E.think(st, n, level); return m ? { from: m.from, to: m.to } : null; };
-function think(st, n, level, cfg) {   // cfg＝PROモードの { d: 先を読む投げの数, temp: 手のばらつき }
+const thinkHere = (st, n, level, cfg) => { const m = cfg ? E.think(st, n, level, { d: cfg.d, temp: cfg.temp, rand: cfg.rand }) : E.think(st, n, level); return m ? { from: m.from, to: m.to } : null; };
+function think(st, n, level, cfg) {   // cfg＝PROモードの { d: 先を読む投げの数, temp: 手のばらつき, rand: でたらめに指す割合 }（選んだレベルに重ねる）
   return new Promise(res => {
     const w = worker();
     if (!w) { setTimeout(() => res(thinkHere(st, n, level, cfg)), 30); return; }
@@ -399,15 +416,15 @@ function renderInfo() {
   if (window.PatolliRv) PatolliRv.update();
 }
 function hbInfo() {
-  const st = curState(), r = curRoll();
+  const st = shownState(), r = curRoll();
   let h = '';
   if (special) h = `<span class="hb-chip">${esc(special.title || '')}</span>`;
   else {
     h += `<span class="hb-chip">${esc(t('rule.' + game.rule))}</span>`;
     const sta = statusAt(cur);
     if (!sta.over) h += `<span class="hb-chip"><span class="pdisc p${st.turn}"></span>${esc(t('hb.turn', { s: playerName(st.turn) }))}${r ? ` · <b>${r.n}</b>` : ''}</span>`;
-    if (settings.eval && !rtLive() && !olNoEval()) { const w = lightWp(cur); h += `<span class="hb-chip">${esc(t('eval'))} <b>${Math.round(w * 100)}%</b> <small>${esc(sideName(0))}</small></span>`; }
-    h += `<span class="hb-chip">${esc(t('tray.pool'))} <b>${st.pool}</b></span>`;
+    if (settings.eval && !rtLive() && !olNoEval()) { const w = lightWp(cur); h += `<span class="hb-chip opt">${esc(t('eval'))} <b>${Math.round(w * 100)}%</b> <small>${esc(sideName(0))}</small></span>`; }
+    h += `<span class="hb-chip opt">${esc(t('tray.pool'))} <b>${st.pool}</b></span>`;   // （opt：入りきらないときは丸ごと外す。場の数は盤と右欄にも出ている）
     if (rgame) h += `<span class="hb-chip">${esc(t('ng.rated'))} · ${esc(LV(rgame.lv))}</span>`;
   }
   HB.setInfo(h);
@@ -441,29 +458,33 @@ function renderGraph() {
     `<path d="${area}" fill="url(#gg)"/><path d="${d}" fill="none" stroke="#ffb59f" stroke-width="1.6" vector-effect="non-scaling-stroke"/>` +
     `<line class="cur" x1="${x(Math.min(cur, N))}" x2="${x(Math.min(cur, N))}" y1="0" y2="${H}" vector-effect="non-scaling-stroke"/>`;
 }
-// 宝の動き（エンジンの ev）を棋譜の文にする：「場へ1」「青へ2」「場の8を獲得」「第2回へ」
+// 宝の動き（エンジンの ev）を棋譜の文にする：「場へ1」「青へ2」「赤が場の8を獲得」（だれが取ったかを必ず書く）「第2回へ」
 function evText(ev) {
-  return ev.map(e => e.t === 'pay' ? (e.to === 'pool' ? t('ev.pool', { a: e.amt }) : t('ev.pay', { s: sideName(e.to), a: e.amt })) : e.t === 'pot' ? t('ev.pot', { a: e.amt }) : e.t === 'round' ? t('ev.round', { n: e.round }) : '').filter(Boolean);
+  return ev.map(e => e.t === 'pay' ? (e.to === 'pool' ? t('ev.pool', { a: e.amt }) : t('ev.pay', { s: sideName(e.to), a: e.amt })) : e.t === 'pot' ? t('ev.pot', { s: sideName(e.to), a: e.amt }) : e.t === 'round' ? t('ev.round', { n: e.round }) : '').filter(Boolean);
 }
 function plyText(st, p, html) {
   const sn = sideName(p.s), fm = p.m ? fullMove(st, p.m, p.n) : null;
   let ev = []; try { ev = evText(E.apply(st, fm, p.n).ev); } catch (e) {}
-  const pay = ev.length ? (html ? ` <span class="g">${esc(ev.join('・'))}</span>` : '（' + ev.join('・') + '）') : '';
-  if (!p.m) return `${sn} ${p.n}${t('sep')}${t('k.pass')}${pay}`;
+  const cjk = /^(ja|zh|ko)/.test(LANG), sepv = cjk ? '・' : ' · ';   // 宝の動きの区切り（日中韓は中黒、ほかは · ）
+  const pay = ev.length ? (html ? `<span class="g">${esc(ev.join(sepv))}</span>` : (cjk ? '（' + ev.join(sepv) + '）' : ' (' + ev.join(sepv) + ')')) : '';
+  if (!p.m) return html ? `<span class="m">${esc(sn)} ${p.n}${t('sep')}${esc(t('k.pass'))}</span>${pay}` : `${sn} ${p.n}${t('sep')}${t('k.pass')}${pay}`;
   const rl = E.RULES[st.rule], a = p.m.from === 0 ? t('k.enter') : String(p.m.from), b = p.m.to >= rl.goal ? t('k.home') : String(p.m.to);
-  let s = `${sn} ${p.n}${t('sep')}${a}→${b}`;
+  let s = `${html ? esc(sn) : sn} ${p.n}${t('sep')}${a}→${b}`;
   if (fm && fm.capture) s += html ? ` <span class="x">×${esc(t('k.cap'))}</span>` : ' ×' + t('k.cap');
   if (p.ag) s += html ? ` <span class="r">↻</span>` : ' ↻';
-  return s + pay;
+  return html ? `<span class="m">${s}</span>${pay}` : s + pay;
 }
 let kifuKey = '';
 function renderKifu() {
   const el = $('#kifu'); if (special) { if (kifuKey !== 'sp') { kifuKey = 'sp'; el.innerHTML = `<div class="empty">${esc(t('kifu.special'))}</div>`; } return; }
   const L = ken ? game.plies.slice(0, ken.base) : line(), q = window.PatolliRv ? PatolliRv.quality : () => '';   // (explore moves are not recorded)
-  const k = LANG + '|' + L.length + '|' + cur + '|' + (ken ? 'k' : '') + '|' + (window.PatolliRv ? PatolliRv.ver() : 0);
+  const k = LANG + '|' + L.length + '|' + cur + '|' + (ken ? 'k' : '') + '|' + (game.end ? game.end.why + game.end.winner : '') + '|' + (window.PatolliRv ? PatolliRv.ver() : 0);
   if (k === kifuKey) return; kifuKey = k;
-  if (!L.length) { el.innerHTML = `<div class="empty">${esc(t('kifu.empty'))}</div>`; return; }
-  el.innerHTML = L.map((p, i) => { const qq = q(i); return `<button data-i="${i + 1}" class="${i + 1 === cur ? 'cur' : ''} ${qq === 'bad' ? 'q-bad' : qq === 'dubious' ? 'q-dub' : ''}"><em>${i + 1}</em><i class="s${p.s}"></i><span>${plyText(posAt(i), p, true)}</span></button>`; }).join('');
+  if (!L.length && !game.end) { el.innerHTML = `<div class="empty">${esc(t('kifu.empty'))}</div>`; return; }
+  const aw = potAward(L.length), sta = ken ? { over: false } : statusAt(L.length);
+  el.innerHTML = L.map((p, i) => { const qq = q(i); return `<button data-i="${i + 1}" class="${i + 1 === cur ? 'cur' : ''} ${qq === 'bad' ? 'q-bad' : qq === 'dubious' ? 'q-dub' : ''}"><em>${i + 1}</em><i class="s${p.s}"></i><span class="tx">${plyText(posAt(i), p, true)}</span></button>`; }).join('') +
+    // 盤の外で終わったとき（投了・時間切れ）：終わり方と、場を取った側を最後の行に
+    (game.end && sta.over && !ken ? `<div class="end"><span class="m">${esc(t('res.why.' + (sta.why || 'home')))}</span>${aw ? `<span class="g">${esc(t('ev.pot', { s: sideName(aw.to), a: aw.amt }))}</span>` : ''}</div>` : '');
   const c = el.querySelector('.cur'); if (c) { const top = c.offsetTop - el.offsetTop; if (top < el.scrollTop || top > el.scrollTop + el.clientHeight - 24) el.scrollTop = top - el.clientHeight / 2; }
 }
 $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
@@ -473,8 +494,8 @@ function recordText() {
   const head = `${t('title')} — ${t('rule.' + game.rule)}${game.rule === 'bell' && game.dir[1] < 0 ? ' / ' + t('ng.dirOpp') : ''}\n${sideName(0)}: ${playerName(0)} / ${sideName(1)}: ${playerName(1)}\n`;
   const body = L.map((p, i) => `${i + 1}. ${plyText(posAt(i), p, false)}`).join('\n');
   const sta = statusAt(L.length);
-  const fin = posAt(L.length);
-  return head + body + (sta.over ? `\n${t('st.over', { s: sideName(sta.winner) })}` : '') + `\n${t('rec.gold', { a: sideName(0), x: fin.gold[0], b: sideName(1), y: fin.gold[1], p: fin.pool })}\n`;
+  const fin = viewState(L.length), aw = potAward(L.length);
+  return head + body + (sta.over ? `\n${t('st.over', { s: sideName(sta.winner) })}${sta.why && sta.why !== 'home' && sta.why !== 'broke' ? ' — ' + t('res.why.' + sta.why) : ''}` : '') + (aw ? `\n${t('ev.pot', { s: sideName(aw.to), a: aw.amt })}` : '') + `\n${t('rec.gold', { a: sideName(0), x: fin.gold[0], b: sideName(1), y: fin.gold[1], p: fin.pool })}\n`;
 }
 
 // ====================================================================== clock (1手30秒)
@@ -531,7 +552,7 @@ setInterval(() => {
     const left = fzLeft(st.turn);
     renderClock();
     if (window.CountTick) CountTick.feed(left, 'mv');
-    if (left <= 0) { busyToken++; z.left[st.turn] = 0; z.used = 0; game.end = { winner: 1 - st.turn, why: 'time' }; game.roll = null; save(); update(); onGameEnd(); }
+    if (left <= 0) { z.left[st.turn] = 0; z.used = 0; endGame(1 - st.turn, 'time'); }
     return;
   }
   if (!game || !clockOn() || animating) return;
@@ -539,7 +560,7 @@ setInterval(() => {
   const st = curState(), left = clockSec() * 1000 - (Date.now() - clockStart);
   renderClock();
   if (window.CountTick) CountTick.feed(Math.max(0, left), 'mv');
-  if (left <= 0) { busyToken++; game.end = { winner: 1 - st.turn, why: 'time' }; game.roll = null; save(); update(); onGameEnd(); }
+  if (left <= 0) endGame(1 - st.turn, 'time');
 }, 250);
 
 // ====================================================================== flow
@@ -547,15 +568,22 @@ function update() { renderBoard(); renderInfo(); }
 function renderAll() { renderBoard(); renderInfo(); }
 async function doRoll() {
   if (!canRollNow()) return;
-  const r0 = OL() ? null : E.rollDice(Math.random), r = OL() ? olRoll() : { d: r0.dice, n: r0.n };
+  const r = OL() ? olRoll() : (!special && !ken && pendingRoll()) || newRoll();
   if (!r) return;
   const tok = busyToken; animating = true; hintMove = null; renderInfo();
+  const mine = !special && !ken && !OL(); if (mine) pendRoll(r);   // 目は決まった瞬間に保存（動きの途中で読み込み直しても投げ直せない）
   snd('roll');
   await PatolliSkinHooks.animateRoll(r.d);
-  animating = false; if (tok !== busyToken) return;
-  setRoll(r); if (!special && !ken) save();
+  if (tok !== busyToken) return;   // （止めた側が animating を戻している。目は game.proll に残る）
+  animating = false;
+  setRoll(r); if (mine) { game.proll = null; save(); }
   afterRoll(tok);
 }
+// 決まったけれどまだ見せ終わっていない目（game.proll＝{ d, n, at: そのときの手数 }）。動きの途中で読み込み直す・棋譜を見に行くなどで
+// 止まっても、同じ目が出る（投げ直しはできない）。レート戦も同じ道を通る
+function newRoll() { const r0 = E.rollDice(Math.random); return { d: r0.dice, n: r0.n }; }
+function pendRoll(r) { game.proll = { d: r.d, n: r.n, at: game.plies.length }; save(); }
+function pendingRoll() { const p = game && game.proll; return p && p.at === game.plies.length && Array.isArray(p.d) ? { d: p.d, n: p.n } : null; }
 // 0の目・動かせる駒がないときに場へ払う数（ルールによる）
 function passFee(st, n) { const R = E.RULES[st.rule], fee = n ? R.penStuck : R.zeroOffer; return Math.min(fee, st.gold[st.turn]); }
 function afterRoll(tok) {
@@ -604,14 +632,14 @@ async function commit(m) {
   const tok = ++busyToken; animating = true; hoverMove = null; hintMove = null; coachHover = null;
   renderBoard();
   if (fm) { await PatolliSkinHooks.animateMove(st.turn, fm.from, fm.to, { capture: fm.capture, speed: SPD() }); snd(fm.capture ? 'cap' : fm.finish ? 'home' : 'place'); }
-  if (tok !== busyToken) { animating = false; return; }
+  if (tok !== busyToken) return;   // （止めた側が animating を戻している：cancelBusy）
   const res = E.apply(st, fm, r.n);
   const sp = special;
   if (sp) { if (fm) sp.last = moveMarks(st, st.turn, fm, res.state); sp.state = res.state; sp.n = null; sp.dice = null; }
   else {
     const ply = { s: st.turn, d: r.d, n: r.n, m: fm ? { from: fm.from, to: fm.to } : null, ag: !!res.again };
     if (ken) { ken.plies.push(ply); ken.roll = null; cur = lineLen(); }
-    else { game.plies = game.plies.slice(0, cur); game.plies.push(ply); game.roll = null; cur = game.plies.length; reviewing = false; if (window.PatolliRv) PatolliRv.invalidate(); save(); }
+    else { game.plies = game.plies.slice(0, cur); game.plies.push(ply); game.roll = null; game.proll = null; cur = game.plies.length; reviewing = false; if (window.PatolliRv) PatolliRv.invalidate(); save(); }
   }
   await showEvents(st, fm, res, tok);
   if (tok !== busyToken) return;
@@ -635,11 +663,12 @@ async function afterPosition() {
     const lastP = game.plies[cur - 1], preWait = settings.mode === 'watch' ? 520 : lastP && lastP.ag ? 380 : 0;   // AIの着手は即時：観戦と「もう一度」の案内のときだけ間を取る
     if (preWait) { await sleep(preWait / SPD()); if (tok !== busyToken) return; }
     if (!game.roll) {
-      const r0 = E.rollDice(Math.random), r = { d: r0.dice, n: r0.n };
-      thinking = 0; animating = true; renderInfo(); snd('roll');
-      await PatolliSkinHooks.animateRoll(r.d); animating = false;
+      const r = pendingRoll() || newRoll();
+      thinking = 0; animating = true; renderInfo(); pendRoll(r); snd('roll');
+      await PatolliSkinHooks.animateRoll(r.d);
       if (tok !== busyToken) return;
-      game.roll = r; save(); renderAll();
+      animating = false;
+      game.roll = r; game.proll = null; save(); renderAll();
     }
     const r = game.roll, ms = r.n ? E.legalMoves(st, r.n) : [];
     if (!ms.length) { thinking = 0; afterRoll(tok); return; }
@@ -698,7 +727,7 @@ document.addEventListener('keydown', e => {
 
 // ====================================================================== new game / end
 function newGame(rated) {
-  busyToken++; thinking = 0; animating = false; ken = null; wpPaused = false; payView = null;
+  cancelBusy(); ken = null; wpPaused = false;
   if (window.PatolliLearn) PatolliLearn.exitSpecial(true);
   const first = settings.color === 'r' ? (Math.random() < .5 ? 0 : 1) : settings.mode === 'ai' && settings.color === '1' ? 1 : 0;
   rgame = rated || null;
@@ -718,9 +747,9 @@ function onGameEnd() {
   const youWin = settings.mode === 'ai' && sta.winner === game.human, aiWin = settings.mode === 'ai' && sta.winner !== game.human;
   snd(aiWin ? 'lose' : 'win');
   $('#resultDisc').innerHTML = `<span class="pdisc p${sta.winner}"></span>`;
-  const fin = posAt(game.plies.length);
+  const fin = viewState(game.plies.length), aw = potAward(game.plies.length);
   $('#resultTitle').textContent = youWin ? t('res.youWin') : aiWin ? t('res.aiWin') : t('res.pWin', { s: settings.mode === 'watch' ? playerName(sta.winner) : sideName(sta.winner) });
-  let sub = esc(t('res.why.' + (sta.why || 'home'))) + '<br>' + esc(t('res.sub', { n: game.plies.length })) + `<span class="res-gold"><span><i class="pdisc p0"></i>${esc(sideName(0))} <b>${fin.gold[0]}</b></span><span><i class="pdisc p1"></i>${esc(sideName(1))} <b>${fin.gold[1]}</b></span>${fin.pool ? `<span>${esc(t('tray.pool'))} <b>${fin.pool}</b></span>` : ''}</span>`;
+  let sub = esc(t('res.why.' + (sta.why || 'home'))) + '<br>' + esc(t('res.sub', { n: game.plies.length })) + (aw ? '<br>' + esc(t('ev.pot', { s: sideName(aw.to), a: aw.amt })) : '') + `<span class="res-gold"><span><i class="pdisc p0"></i>${esc(sideName(0))} <b>${fin.gold[0]}</b></span><span><i class="pdisc p1"></i>${esc(sideName(1))} <b>${fin.gold[1]}</b></span>${fin.pool ? `<span>${esc(t('tray.pool'))} <b>${fin.pool}</b></span>` : ''}</span>`;
   if (rgame) { const rx = rtSettle(sta); if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${esc(rtRank(rx.now))}`; }
   else if (settings.mode === 'ai') sub += '<br>' + esc(t('res.vs', { name: LV(settings.level) }));
   $('#resultSub').innerHTML = sub;
@@ -742,24 +771,31 @@ $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); if (window.
 // ---- undo (待った): vs the AI twice per game (rated: never); two players: any number; AI vs AI: pause / resume
 function canUndo() {
   if (special || ken || !game || rgame || animating) return false;
-  if (settings.mode === 'pvp') return game.plies.length > 0 && !overNow();
+  if (settings.mode === 'pvp') return game.plies.some(p => p.m) && !overNow();   // （パスしかないうちは戻すものがない）
   if (settings.mode !== 'ai' || game.undoLeft <= 0 || overNow()) return false;
   return game.plies.some(p => p.s === game.human && p.m);
 }
 function undo() {
   if (wpActive()) { wpToggle(); return; }
   if (!canUndo()) return;
-  busyToken++; thinking = 0; animating = false; payView = null;
+  // 戻る先は「駒を動かした手」の直前（その目で選び直せる）。パス（0の目・動かせる駒がない）は選ぶ余地がないので飛ばしてさかのぼる
+  // （パスの直前で止まると、目だけ戻って誰も動かせないまま固まる）。AI戦は自分の手、二人対戦はどちらの手でも
   let i = game.plies.length - 1;
-  if (settings.mode === 'ai') { while (i >= 0 && !(game.plies[i].s === game.human && game.plies[i].m)) i--; if (i < 0) return; game.undoLeft--; }
+  const ai = settings.mode === 'ai';
+  while (i >= 0 && !(game.plies[i].m && (!ai || game.plies[i].s === game.human))) i--;
+  if (i < 0) return;
+  cancelBusy(); hintMove = null; hoverMove = null;
+  if (ai) game.undoLeft--;
   const p = game.plies[i];
-  game.plies = game.plies.slice(0, i); game.roll = { d: p.d, n: p.n }; cur = i; reviewing = false; gameOverShown = false;
+  game.plies = game.plies.slice(0, i); game.roll = { d: p.d, n: p.n }; game.proll = null; game.end = null; cur = i; reviewing = false; gameOverShown = false;
   if (window.PatolliRv) PatolliRv.invalidate();
-  save(); update(); toast(settings.mode === 'ai' ? t('undo.left', { n: game.undoLeft }) : t('undo.done'));
+  save(); update(); toast(ai ? t('undo.left', { n: game.undoLeft }) : t('undo.done'));
+  // 念のため：戻した目で動かせる駒がなければ（起きないはず）、ふつうの流れでパスへ進める
+  if (!E.legalMoves(posAt(cur), game.roll.n).length) afterRoll(busyToken);
 }
 function wpActive() { return settings.mode === 'watch' && !special && !!game; }
 function wpRender() { if (!window.WatchPause) return; const on = wpActive() && !overNow(); WatchPause.set($('#btnUndo'), on ? (wpPaused ? 'resume' : 'pause') : null, LANG); if (on) $('#btnUndo').disabled = false; }
-function wpToggle() { if (!wpActive() || overNow()) return; wpPaused = !wpPaused; if (wpPaused) { busyToken++; thinking = 0; renderInfo(); } else { cur = game.plies.length; reviewing = false; update(); afterPosition(); } }
+function wpToggle() { if (!wpActive() || overNow()) return; wpPaused = !wpPaused; if (wpPaused) { cancelBusy(); update(); } else { cur = game.plies.length; reviewing = false; update(); afterPosition(); } }
 // ---- hint
 function canHint() { return settings.mode !== 'online' && !special && !ken && !!game && !rgame && atLatest() && !overNow() && myTurnHuman() && !animating; }
 async function hint() {
@@ -778,7 +814,7 @@ function canResign() { if (settings.mode === 'online') return typeof olLive === 
 function resign() {
   if (settings.mode === 'online') { if (typeof olResignAsk === 'function') olResignAsk(); return; }
   if (!canResign()) return;
-  const go = () => { busyToken++; thinking = 0; const loser = settings.mode === 'ai' ? game.human : curState().turn; game.end = { winner: 1 - loser, why: 'resign' }; game.roll = null; cur = game.plies.length; reviewing = false; save(); update(); onGameEnd(); };
+  const go = () => { const loser = settings.mode === 'ai' ? game.human : posAt(game.plies.length).turn; endGame(1 - loser, 'resign'); };
   if (window.Resign) Resign.confirm({ lang: LANG }).then(ok => { if (ok) go(); }); else if (confirm(t('resign.q'))) go();
 }
 $('#btnUndo').onclick = undo;
@@ -798,7 +834,7 @@ function viewAt(i) {
   if (special || !game) return;
   if (ken && window.PatolliRv) PatolliRv.kenStop();
   i = Math.max(0, Math.min(game.plies.length, i)); if (i === cur && !reviewing) return;
-  busyToken++; thinking = 0; animating = false; hintMove = null; payView = null;
+  cancelBusy(); hintMove = null;
   cur = i; reviewing = i !== game.plies.length;
   update();
   if (!reviewing) afterPosition();
@@ -829,7 +865,7 @@ function resumeHere() {
   if (!reviewing || special || !game) return;
   if (rgame) { viewAt(game.plies.length); return; }
   const p = game.plies[cur];
-  game.plies = game.plies.slice(0, cur); game.end = null; game.roll = null; reviewing = false; gameOverShown = false;
+  game.plies = game.plies.slice(0, cur); game.end = null; game.roll = null; game.proll = null; reviewing = false; gameOverShown = false;
   if (window.PatolliRv) PatolliRv.invalidate();
   save(); update(); afterPosition();
 }
@@ -886,7 +922,7 @@ document.addEventListener('click', e => {
   e.preventDefault(); e.stopImmediatePropagation();
   $('#rtConfirmText').textContent = t('rt.abandonQ'); $('#rtConfirmYes').textContent = t('rt.abandonYes');
   showOverlay('#rtConfirm');
-  $('#rtConfirmYes').onclick = () => { hideOverlay('#rtConfirm'); busyToken++; game.end = { winner: 1 - game.human, why: 'abandon' }; game.roll = null; save(); const sta = statusAt(game.plies.length); recordGame(sta); const x = rtSettle(sta); gameOverShown = true; if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3000); update(); rtPass = true; try { b.click(); } finally { rtPass = false; } };
+  $('#rtConfirmYes').onclick = () => { hideOverlay('#rtConfirm'); cancelBusy(); game.end = { winner: 1 - game.human, why: 'abandon' }; game.roll = null; game.proll = null; cur = game.plies.length; reviewing = false; save(); const sta = statusAt(game.plies.length); recordGame(sta); const x = rtSettle(sta); gameOverShown = true; if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3000); update(); rtPass = true; try { b.click(); } finally { rtPass = false; } };
 }, true);
 $('#rtConfirmNo').onclick = () => hideOverlay('#rtConfirm');
 
@@ -960,7 +996,8 @@ $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; $('#levelName
 $('#bdRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.design = b.dataset.v; designPickers(); setDesign(draft.design, draft.pieces); };
 $('#pcRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.pieces = b.dataset.v; designPickers(); setDesign(draft.design, draft.pieces); };
 // PROモード（shared/proset.js、共通ルール「対局設定の Pro モード」）：AIの強さの横。AIと対戦／AI同士だけ（レート戦には出さない）。
-// 読みの深さ（手のあとに読む投げの数＝engine.js の LEVELS の d）と手のばらつき（ソフトマックスの温度）。worker.js が Lv.20 に重ねて使う
+// 読みの深さ（手のあとに読む投げの数＝engine.js の LEVELS の d）と手のばらつき（ソフトマックスの温度）。選んだレベルの設定に重ねて使う（ur と同じ）：
+// 変えた項目だけが上書きされる。深さだけ変えた Lv.1〜3 は「でたらめに指す割合」が残り、ばらつきを自分で決めたときはその割合を 0 にする
 const PRO_TEMP = [0, 0.012, 0.06];   // 手のばらつき なし／小／大
 const PRO_UNIT = { depth: { ja: '投げ先', en: 'throws', zh: '掷', 'zh-TW': '擲', ko: '번 앞', es: 'tiradas', fr: 'lancers', pt: 'lances', de: 'Würfe', ru: 'бросков', tr: 'atış', id: 'lemparan', hi: 'फेंक', ar: 'رميات' } };
 const proDefaults = lv => { const L = E.LEVELS[lv - 1] || E.LEVELS[19]; return { limit: { k: 'depth', v: L.d }, var: L.rand || L.temp >= 0.04 ? 2 : L.temp > 0 ? 1 : 0 }; };
@@ -977,7 +1014,7 @@ function proFor(side) {
 function proCfg(side) {
   const e = proFor(side); if (!e) return null;
   const L = E.LEVELS[levelFor(side) - 1] || E.LEVELS[19], v = e.changed.includes('var');
-  return { d: e.limit.v, temp: v ? PRO_TEMP[e.var] : L.temp };
+  return { d: e.limit.v, temp: v ? PRO_TEMP[e.var] : L.temp, rand: v ? 0 : L.rand };
 }
 function proTag(side) { return proFor(side) ? ' PRO' : ''; }
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
@@ -1008,7 +1045,7 @@ $('#rsRestart').onclick = () => { hideOverlay('#resumeOverlay'); openNewDialog()
 $('#rsResume').onclick = () => { hideOverlay('#resumeOverlay'); openNewDialog(true); };   // the settings dialog in resume mode
 // going on from the shown (or latest) position with the mode / side / strength chosen in the resume dialog
 function resumeWith() {
-  busyToken++; thinking = 0; animating = false; wpPaused = false; payView = null;
+  cancelBusy(); wpPaused = false;
   if (settings.mode === 'ai' && settings.color !== 'r') game.human = settings.color === '1' ? 1 : 0;
   hideOverlay('#resultOverlay');
   if (reviewing) resumeHere(); else { gameOverShown = false; save(); relayout(); update(); afterPosition(); }
@@ -1034,7 +1071,7 @@ mqV.addEventListener ? mqV.addEventListener('change', () => relayout()) : mqV.ad
 
 // ====================================================================== dialogs: outside click, title, tabs
 function dismissOverlay(o) {
-  const OUT = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', puzzleOverlay: '#pzClose', resumeOverlay: '#rsCancel', olOverlay: '#olClose', rtConfirm: '#rtConfirmNo' };
+  const OUT = { newOverlay: '#btnCancelNew', resultOverlay: '#btnReview', puzzleOverlay: '#pzClose', resumeOverlay: '#rsCancel', copyOverlay: '#copyClose', olOverlay: '#olClose', rtConfirm: '#rtConfirmNo' };
   if (o.id === 'rulesOverlay') { if (window.PatolliLearn) PatolliLearn.closeRules(); else o.classList.remove('show'); return; }
   if (o.id === 'lessonOverlay') { const b = $('#lessonDoneView:not(.hidden)') ? $('#btnLessonQuit2') : $('#btnLessonClose'); if (b) b.click(); return; }
   const b = OUT[o.id] && $(OUT[o.id]); if (b) b.click(); else o.classList.remove('show');
@@ -1077,7 +1114,13 @@ if (HB) HB.onChange(() => relayout(true));
 if (window.RecordExport) RecordExport.attach({ btn: '#btnShare', key: GID, title: t('meta.title'), lang: () => LANG, toast: m => toast(m), empty: () => !game.plies.length,
   formats: () => [{ id: 'txt', label: t('fmt.txt'), ext: 'txt', meta: 'self', text: () => recordText() }],
   sides: () => [{ label: sideName(0), name: playerName(0), tag: 'Red' }, { label: sideName(1), name: playerName(1), tag: 'Blue' }] });
-$('#btnCopy').onclick = () => { if (!game.plies.length) { toast(t('kifu.empty')); return; } const tx = recordText(); (navigator.clipboard ? navigator.clipboard.writeText(tx) : Promise.reject()).then(() => toast(t('copied'))).catch(() => toast(t('copied'))); };
+$('#btnCopy').onclick = () => { if (!game.plies.length) { toast(t('kifu.empty')); return; } const tx = recordText(); (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(tx) : Promise.reject()).then(() => toast(t('copied'))).catch(() => copyFallback(tx)); };
+// コピーできなかったとき（権限がない・古いブラウザ）：「コピーしました」とは言わず、棋譜を選べる形で見せる（自分でコピーできる）
+function copyFallback(tx) {
+  $('#copyText').value = tx; showOverlay('#copyOverlay');
+  setTimeout(() => { const el = $('#copyText'); try { el.focus(); el.select(); } catch (e) {} }, 60);
+}
+$('#copyClose').onclick = () => hideOverlay('#copyOverlay');
 relayout(true);
 update();
 if (hadSave) { if (overNow()) gameOverShown = true; afterPosition(); }

@@ -172,7 +172,8 @@ for (let lv = 1; lv <= 20; lv++) {
 function think(s, n, level, opts) {
   const o = opts || {}, rng = o.rng || Math.random, L = LEVELS[Math.max(1, Math.min(20, level | 0)) - 1];
   const ms = legalMoves(s, n); if (!ms.length) return null; if (ms.length === 1) return ms[0];
-  if (L.rand && rng() < L.rand) return ms[Math.floor(rng() * ms.length)];
+  const rand = o.rand != null ? o.rand : L.rand;   // opts（d・temp・rand）はそのレベルの設定に重ねる：渡した項目だけが変わる（PROモード）
+  if (rand && rng() < rand) return ms[Math.floor(rng() * ms.length)];
   const ev = o.ev || evaluate(s, n, o.d != null ? o.d : L.d), temp = o.temp != null ? o.temp : L.temp;
   // ばらつきなし（Lv.19〜20）：勝率がまったく同じ手が並ぶときは、その中から無作為に選ぶ（いつも先頭の駒だけを動かすと、Lv.18 より弱くなる）
   if (!temp) { const top = ev.filter(e => ev[0].wp - e.wp < 1e-9); return top[top.length > 1 ? Math.floor(rng() * top.length) : 0].move; }

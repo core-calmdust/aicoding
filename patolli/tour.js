@@ -100,6 +100,70 @@
     ar: {"intro.t":"باتولي","intro.origin":"المكسيك (الأزتك)","intro.players":"2","intro.time":"نحو 20 دقيقة","intro.hist":"لعبة مراهنة لعبها الأزتك. بحسب مدوَّنات القرن السادس عشر (دوران، ساهاغون)، كانت تُرسم لوحة على شكل X بالمطاط السائل على حصيرة، وتُتخذ حصى حمراء وزرقاء قطعاً، ويُتقدَّم برمي حبّات فاصولياء عليها علامات. واسم اللعبة نفسه مأخوذ من الفاصولياء (باتولي).","intro.win":"لاعبان، لكل منهما ست قطع. تُرمى خمس حبّات فاصولياء، وتتقدّم القطع بعدد العلامات الظاهرة وتدور حول اللوحة دورة، والفائز أول من يُوصل قطعه الست كلها. قواعد ذلك الزمن لم تصل إلينا، وما يُلعب هنا إعادة بناء لاحقة.","intro.cult":"كان يلعبها الناس من كل الطبقات وترافقها رهانات كبيرة. ويُقال إن اللاعبين كانوا ينادون باسم ماكويلشوتشيتل («خمس زهرات») إله الألعاب وهم يرمون الفاصولياء. وقد حظر الإسبان اللعبة وأحرقوا الحصر والفاصولياء (دوران).","roll":"ارمِ","pass":"تمرير","first":"اضغط «ارمِ» أولاً","pick":"المس القطعة التي تحركها","again":"يمكنك الرمي مرة أخرى!","noMove":"لا يمكن تحريك هذه القطعة","own":"هناك قطعة لك، لا يمكنك التوقف عليها","opp":"هناك قطعة للخصم، فلا يمكنك التوقف عليها","over":"بالرمية {n} تتجاوز النهاية (الرقم المطابق فقط)","need1":"عند وجود قطع لك على اللوحة لا يُدخِل إلا الرقم 1","notMine":"قطعك هي الحمراء (الجهة القريبة)","tWait":"الانتظار","tHome":"النهاية","tPool":"الصندوق","tYou":"كنزك","tOpp":"كنز الخصم","board.t":"اللوحة والمسار","board.b":"اللوحة على شكل X. تدخل قطعك من الوسط وتدور حول الأذرع الأربع بترتيب الأسهم المضيئة، وتصل إلى النهاية عند عودتها إلى الوسط.","board.k":"المس آخر مربع في المسار (المربع 59)","board.ok":"هذا هو المربع الأخير. خطوة واحدة أخرى وتصل!","board.ng":"اتبع الأسهم حتى آخر مربع","beans.t":"رمي الفاصولياء","beans.b":"بدلاً من النرد تُرمى خمس حبّات فاصولياء. تتقدّم بعدد الحبّات التي تظهر علامتها البيضاء. إذا ظهرت على الخمس كلها فالنتيجة 10، وإذا لم تظهر على أي حبّة فلا تقدّم.","beans.k":"اضغط «ارمِ» ثم أجب عن عدد العلامات البيضاء","beans.k2":"كم حبّة تظهر عليها العلامة البيضاء؟","beans.ok":"صحيح! تتقدم {n} مربعات","beans.ng":"عُدَّ الحبّات التي عليها نقطة بيضاء","enter.t":"إدخال القطعة الأولى","enter.b":"ما دامت اللوحة خالية من قطعك، يمكنك إدخال قطعة بأي رمية. تدخل إلى المربع الذي يبعد على المسار بعدد الرمية.","enter.k":"ارمِ، ثم المس قطعة منتظرة لإدخالها","enter.ok":"دخلت! من هنا تسير على المسار","enter1.t":"من القطعة الثانية: الدخول بالرقم 1","enter1.b":"عند وجود قطع لك على اللوحة لا تدخل القطعة المنتظرة إلا بالرقم 1. تُحرَّك قطعة واحدة في كل رمية.","enter1.k":"ارمِ، ثم أدخل قطعة منتظرة","enter1.ok":"دخلت بالرقم 1. تبدأ من المربع 1","enter1.ng":"هذه المرة، جرّب إدخال قطعة منتظرة","move.t":"التقدم","move.b":"القطعة التي على اللوحة تتقدّم على المسار بعدد الرمية. أنت تختار القطعة التي تحرّكها. إن وُجدت قطعة قادرة على الحركة فالتحريك واجب.","move.k":"ارمِ، ثم قدّم قطعة على اللوحة","move.ok":"تقدمت على المسار","own.t":"لا توقّف على مربع فيه قطعة","own.b":"لا يمكنك التوقف على مربع فيه قطعة، لك أو للخصم (المرور فوقها مسموح). القطعة التي لا تجد مربعاً تتوقف عليه لا تتحرك.","own.k":"ارمِ، ثم حرّك قطعة قادرة على الحركة","own.ok":"صحيح! كانت هي القطعة الوحيدة القادرة على الحركة","again.t":"مرة أخرى عند طرف الذراع","again.b":"إذا توقفت على أحد المربعات المستديرة الثمانية عند أطراف الأذرع ترمي مرة أخرى.","again.k":"توقّف على المربع المضيء وارمِ مرة أخرى","again.k2":"مرة أخرى! ارمِ وحرّك أي قطعة","again.ok":"حركتان في دور واحد","again.ng":"اختر القطعة التي تتوقف عند طرف الذراع (المربع المضيء)","pen.t":"المربع المعلَّم يكلّفك من الكنز","pen.b":"إذا توقفت على أحد المربعات الثمانية المعلَّمة بمثلث أسود تدفع للخصم 2 من كنزك. هذه اللعبة تُلعب بالمراهنة على الكنز.","pen.k":"ارمِ، ثم جرّب تحريك القطعة","pen.ok":"توقفت القطعة على مربع معلَّم فدفعت 2 للخصم. في العادة يُستحسن تجنّب هذا المربع","goal.t":"الوصول بالرقم المطابق","goal.b":"النهاية هي الخطوة التي تلي المربع الأخير. لا تصل إلا بالرقم المطابق. مع كل قطعة تصل تأخذ 1 من الخصم.","goal.k":"ارمِ، ثم أوصِل قطعة","goal.ok":"وصلت! أخذت 1 من الخصم","goal.ng":"اختر القطعة التي تبلغ النهاية بالضبط","stuck.t":"عند تعذّر الحركة","stuck.b":"إذا لم تستطع أي قطعة التحرك بالرمية، تدفع 1 إلى الصندوق وينتقل الدور إلى الخصم. الرمية 0 تنقل الدور بلا دفع.","stuck.k":"جرّب الرمي","stuck.k2":"لا توجد قطعة تستطيع الحركة. اضغط «مرّر»","stuck.ok":"دفعت 1 إلى الصندوق. الدور للخصم","win.t":"طريقة الفوز","win.b":"الفائز أول من يُوصل قطعه الست كلها، ويأخذ كل ما في الصندوق. بقيت لك قطعة واحدة!","win.k":"ارمِ، ثم أوصِل قطعتك الأخيرة","win.ok":"وصلت الست، وفزت! وما في الصندوق لك أيضاً","win.ng":"القطعة التي تبلغ النهاية هي قطعتك الأخيرة","pop1.t":"القواعد الشائعة ①","pop1.b":"من هنا مجموعة القواعد الأخرى، «القواعد الشائعة». اللوحة 52 مربعاً، ولا تدخل القطعة إلا بالرقم 1 دائماً. مكان الدخول مربع في الوسط.","pop1.k":"ارمِ، ثم أدخل قطعة منتظرة","pop1.ok":"دخلت إلى مربع الانطلاق في الوسط","pop2.t":"القواعد الشائعة ②","pop2.b":"في المربعات الأربعة الوسطى فقط يمكنك التوقف على مربع فيه قطعة للخصم وأسرها. القطعة المأسورة تعود إلى الانتظار ويدفع صاحبها 1.","pop2.k":"ارمِ، ثم قم بأسر قطعة الخصم في الوسط","pop2.ok":"أسرتها! عادت قطعة الخصم إلى الانتظار وأخذت 1","pop2.ng":"اختر القطعة التي تتوقف تماماً على قطعة الخصم في الوسط","pop3.t":"القواعد الشائعة ③","pop3.b":"الرمية 0 تضع 1 في الصندوق قرباناً (يكون لمن يُتمّ تلك الجولة). المربع المعلَّم يكلّف 1 للخصم. تفوز إذا نفد كنز الخصم.","pop3.k":"جرّب الرمي","pop3.k2":"جاءت الرمية 0. اضغط «مرّر»","pop3.ok":"قدّمت 1 قرباناً إلى الصندوق. الدور للخصم"},
   };
 
+  // 各ページの本文の下に小さく出す注（2026-11-16 追加）。仕様 §1：既定のルールはベルの復元であること、
+  // 史料にも復元にもなく「このゲームで決めたこと」（印のマスの位置・出発マス・宝が足りないときの払い方）を、ルールの説明に必ず書く。
+  // 並び：ja en zh zh-TW ko es fr pt de ru tr id hi ar（足すときは14言語すべて）
+  const NOTE_LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
+  const NOTES = {
+    'board.n': ['ここで最初に覚えるルールは、R.C.ベルが1960年に示した復元です（本人も「知られていることが少なすぎる」と断った提案）。',
+      'The rules you learn first are R. C. Bell’s reconstruction of 1960 — a proposal, as he said himself, since too little is known.',
+      '这里首先学习的规则，是R.C.贝尔在1960年提出的复原（他本人也说明“已知的事情太少”，只是一个提案）。',
+      '這裡首先學習的規則，是 R.C.貝爾在 1960 年提出的復原（他本人也說明「已知的事情太少」，只是一個提案）。',
+      '여기서 먼저 배우는 규칙은 R. C. 벨이 1960년에 제시한 복원입니다(본인도 "알려진 것이 너무 적다"고 밝힌 제안).',
+      'Las reglas que aprendes primero son la reconstrucción que R. C. Bell propuso en 1960 (él mismo advirtió que se sabe demasiado poco).',
+      'Les règles apprises en premier sont la reconstitution proposée par R. C. Bell en 1960 (lui-même précisait que l’on en sait trop peu).',
+      'As regras que você aprende primeiro são a reconstrução proposta por R. C. Bell em 1960 (ele mesmo avisou que se sabe muito pouco).',
+      'Zuerst lernst du die Rekonstruktion, die R. C. Bell 1960 vorschlug (er selbst merkte an, dass zu wenig bekannt ist).',
+      'Сначала вы изучаете реконструкцию, предложенную Р. К. Беллом в 1960 году (он сам оговаривал, что известно слишком мало).',
+      'İlk öğrendiğin kurallar, R. C. Bell’in 1960’ta önerdiği rekonstrüksiyondur (kendisi de bilinenlerin çok az olduğunu belirtmiştir).',
+      'Aturan yang kamu pelajari lebih dulu adalah rekonstruksi usulan R. C. Bell tahun 1960 (ia sendiri menyatakan bahwa terlalu sedikit yang diketahui).',
+      'यहाँ पहले जो नियम सीखते हैं, वे आर. सी. बेल का 1960 का पुनर्निर्माण हैं (उन्होंने स्वयं कहा था कि इस खेल के बारे में बहुत कम ज्ञात है)।',
+      'القواعد التي تتعلّمها أولاً هي إعادة البناء التي اقترحها آر. سي. بيل عام 1960 (وقد نبّه هو نفسه إلى أن المعروف عنها قليل جداً).'],
+    'enter.n': ['このゲームでの決まり：2人の出発マスは、向かい合う中央のマスにしています。',
+      'This game’s own choice: the two players’ entry squares are the centre squares facing each other.',
+      '本游戏的约定：两人的出发格设在中央彼此相对的两格。',
+      '本遊戲的約定：兩人的出發格設在中央彼此相對的兩格。',
+      '이 게임에서 정한 것: 두 사람의 출발 칸은 서로 마주 보는 중앙 칸으로 했습니다.',
+      'Decisión propia de este juego: las casillas de salida de los dos jugadores son las casillas centrales que quedan enfrentadas.',
+      'Choix propre à ce jeu : les cases de départ des deux joueurs sont les cases centrales qui se font face.',
+      'Decisão própria deste jogo: as casas de saída dos dois jogadores são as casas centrais que ficam frente a frente.',
+      'Eigene Festlegung dieses Spiels: Die Startfelder der beiden Spieler sind die einander gegenüberliegenden Mittelfelder.',
+      'Решение этой игры: стартовые клетки двух игроков — центральные клетки, лежащие друг напротив друга.',
+      'Bu oyunun kendi kararı: iki oyuncunun başlangıç kareleri, merkezde karşı karşıya duran karelerdir.',
+      'Ketentuan permainan ini sendiri: kotak awal kedua pemain adalah kotak tengah yang saling berhadapan.',
+      'इस खेल का अपना निर्णय: दोनों खिलाड़ियों के शुरुआती खाने बीच के आमने-सामने वाले खाने रखे गए हैं।',
+      'اختيار خاص بهذه اللعبة: مربعا البداية للاعبَين هما المربعان المتقابلان في الوسط.'],
+    'pen.n': ['このゲームでの決まり：印のマスは、各腕の先から数えて4つ目の2マスに置いています（図によって位置が違います）。',
+      'This game’s own choice: the marked squares are the two squares fourth from the end of each arm (their place differs from one drawing to another).',
+      '本游戏的约定：记号格设在每条臂从臂端数起第4排的两格（不同的图上位置并不一致）。',
+      '本遊戲的約定：記號格設在每條臂從臂端數起第 4 排的兩格（不同的圖上位置並不一致）。',
+      '이 게임에서 정한 것: 표시 칸은 각 팔의 끝에서 세어 네 번째에 있는 두 칸으로 했습니다(그림마다 위치가 다릅니다).',
+      'Decisión propia de este juego: las casillas marcadas son las dos que quedan en cuarto lugar contando desde el extremo de cada brazo (su posición varía según el dibujo).',
+      'Choix propre à ce jeu : les cases marquées sont les deux cases situées au quatrième rang à partir du bout de chaque bras (leur place varie selon les dessins).',
+      'Decisão própria deste jogo: as casas marcadas são as duas que ficam em quarto lugar a contar da ponta de cada braço (a posição varia conforme o desenho).',
+      'Eigene Festlegung dieses Spiels: Markiert sind die beiden Felder, die vom Ende jedes Arms aus an vierter Stelle liegen (je nach Zeichnung liegen sie anders).',
+      'Решение этой игры: клетки с меткой — две клетки, четвёртые от конца каждого луча (на разных рисунках они расположены по-разному).',
+      'Bu oyunun kendi kararı: işaretli kareler, her kolun ucundan sayınca dördüncü sıradaki iki karedir (çizimden çizime yerleri değişir).',
+      'Ketentuan permainan ini sendiri: kotak bertanda adalah dua kotak keempat dihitung dari ujung tiap lengan (letaknya berbeda-beda menurut gambar).',
+      'इस खेल का अपना निर्णय: निशान वाले खाने हर भुजा के सिरे से गिनने पर चौथे स्थान के दो खाने रखे गए हैं (अलग-अलग चित्रों में इनकी जगह अलग है)।',
+      'اختيار خاص بهذه اللعبة: المربعات المعلَّمة هي المربعان الرابعان عدّاً من طرف كل ذراع (ويختلف موضعها من رسم إلى آخر).'],
+    'win.n': ['このゲームでの決まり：宝が足りないときは、持っている分だけ払います。',
+      'This game’s own choice: a player who is short pays only what they have.',
+      '本游戏的约定：财宝不够时，只支付手头有的部分。',
+      '本遊戲的約定：財寶不夠時，只支付手上有的部分。',
+      '이 게임에서 정한 것: 보물이 모자랄 때는 가진 만큼만 지불합니다.',
+      'Decisión propia de este juego: quien no tiene suficiente tesoro paga solo lo que tiene.',
+      'Choix propre à ce jeu : un joueur à court de trésor ne paie que ce qu’il a.',
+      'Decisão própria deste jogo: quem não tem tesouro suficiente paga só o que tem.',
+      'Eigene Festlegung dieses Spiels: Wer zu wenig Schatz hat, zahlt nur, was er hat.',
+      'Решение этой игры: если сокровищ не хватает, игрок платит только то, что у него есть.',
+      'Bu oyunun kendi kararı: hazinesi yetmeyen oyuncu yalnızca elindeki kadarını öder.',
+      'Ketentuan permainan ini sendiri: pemain yang hartanya kurang hanya membayar sebanyak yang ia punya.',
+      'इस खेल का अपना निर्णय: खज़ाना कम पड़े तो खिलाड़ी उतना ही देता है जितना उसके पास है।',
+      'اختيار خاص بهذه اللعبة: من لا يكفي كنزه يدفع ما لديه فقط.'],
+  };
+  for (const k in NOTES) NOTE_LANGS.forEach((l, i) => { TX[l][k] = NOTES[k][i]; });
+
   const O = { lang: 'ja', design: 'petate', pieces: 'pebble', speed: 1 };
   const lang = () => { const l = typeof O.lang === 'function' ? O.lang() : O.lang; return TX[l] ? l : 'en'; };
   const T = (k, v) => { let s = TX[lang()][k]; if (s == null) s = TX.en[k]; if (s == null) s = k; if (v) s = s.replace(/\{(\w+)\}/g, (_, x) => v[x] != null ? v[x] : ''); return s; };
@@ -129,6 +193,8 @@
 @keyframes pttGlow{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 4px 9px rgba(0,0,0,.45),0 0 0 0 rgba(255,236,150,0)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 4px 9px rgba(0,0,0,.45),0 0 0 5px rgba(255,236,150,.55)}}
 .ptt-btn.ptt-pass{background:linear-gradient(180deg,#f08a6a,#c0432b);border-color:#4a160c}
 .ptt{container-type:inline-size}
+/* 本文の下の注（ベルの復元であること・このゲームでの決まり）：本文より小さく、控えめな色 */
+.rt-body p.ptt-note{font-size:.86em;line-height:1.6;color:var(--muted,#cbb);opacity:.92}
 .ptt-choice{display:flex;gap:8px;justify-content:center;margin:6px 0 0;flex-wrap:wrap}
 .rt-row .ptt-choice{justify-content:flex-start}
 .ptt-choice button{min-width:44px;padding:6px 12px;border-radius:10px;border:1px solid var(--line,rgba(255,255,255,.2));background:rgba(255,255,255,.06);color:var(--text,#eee);font:700 16px/1.2 inherit;cursor:pointer}
@@ -337,7 +403,7 @@
     if (id === 'pop3') return PH.pop3 ? T('pop3.k2') : T('pop3.k');
     return T(id + '.k');
   };
-  const ALL = PAGES.map(P => Object.assign({ title: () => T(P.id + '.t'), body: () => `<p>${T(P.id + '.b')}</p>`, task: taskOf(P.id), teardown }, P));
+  const ALL = PAGES.map(P => Object.assign({ title: () => T(P.id + '.t'), body: () => `<p>${T(P.id + '.b')}</p>` + (TX.ja[P.id + '.n'] ? `<p class="ptt-note">${T(P.id + '.n')}</p>` : ''), task: taskOf(P.id), teardown }, P));
   ALL.unshift({ id: 'intro', title: () => T('intro.t'), body: '', html: () => RuleTour.intro({ lang: lang(), img: '../images/patolli.webp', origin: T('intro.origin'), players: T('intro.players'), time: T('intro.time'), history: T('intro.hist'), win: T('intro.win'), culture: T('intro.cult') }) });
 
   /* ---------------- 入口 ---------------- */

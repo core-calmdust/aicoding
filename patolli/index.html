@@ -206,8 +206,8 @@ body.reviewing .sbox .rollbtn{display:none}
 @media (pointer: coarse){.rollbtn kbd{display:none}}
 
 /* ---------------------------------------------------------------- eval / graph / nav */
-.evalrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
-.evalrow .val{font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;font-size:12.5px;text-align:end;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.evalrow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:2px 8px}   /* （数字が見出しの横に入りきらない言語では次の行へ） */
+.evalrow .val{max-width:100%;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;font-size:12.5px;text-align:end;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
 .evalbar{position:relative;height:10px;border-radius:6px;background:linear-gradient(90deg,var(--p1b),var(--p1c));overflow:hidden;border:1px solid rgba(255,255,255,.08)}
 .evalbar .fill{position:absolute;inset:0 auto 0 0;width:50%;background:linear-gradient(90deg,var(--p0c),var(--p0b));transition:width .5s ease}
 .evalbar .mid{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:rgba(111,219,228,.8)}
@@ -224,12 +224,16 @@ body.rated-live #evalCard .evalrow .val, body.rated-live #evalCard .evalbar, bod
 
 /* ---------------------------------------------------------------- kifu */
 .kifu-card{display:flex;flex-direction:column;min-height:0}
-.kifu{flex:1;min-height:0;overflow-y:auto;display:grid;align-content:start;grid-auto-rows:min-content;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px;line-height:1.45;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;font-size:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;max-height:200px}
-.kifu button{min-height:24px;flex:none;padding:3px 6px;border-radius:5px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-align:start}
+/* 1手1行（1列）。宝の動き（.g）は同じ行に収まらなければ次の行へ折り返す：長い言語でも文が切れない（2列・nowrap だと英語などで「1 t」のように途切れた） */
+.kifu{flex:1;min-height:0;overflow-y:auto;display:grid;align-content:start;grid-auto-rows:min-content;grid-template-columns:minmax(0,1fr);gap:2px;line-height:1.45;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;font-size:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;max-height:200px}
+.kifu button, .kifu .end{min-height:24px;flex:none;padding:3px 6px;border-radius:5px;color:var(--muted);display:flex;align-items:baseline;gap:6px;text-align:start;min-width:0}
+.kifu button .tx, .kifu .end{flex:1 1 auto;min-width:0;display:flex;flex-wrap:wrap;column-gap:10px;overflow-wrap:anywhere}
+.kifu .m{white-space:nowrap}
+.kifu .end{padding-inline-start:calc(6px + 1.9em + 6px + 8px + 6px);color:var(--text);border-top:1px solid var(--line);border-radius:0;margin-top:2px}
 .kifu button em{font-style:normal;color:var(--dim);font-size:.85em;min-width:1.9em;text-align:end}
-.kifu button i{width:8px;height:8px;border-radius:50%;flex:none}
+.kifu button i{width:8px;height:8px;border-radius:50%;flex:none;align-self:center}
 .kifu button i.s0{background:var(--p0b)}.kifu button i.s1{background:var(--p1b)}
-.kifu button .x{color:#ff9b8f}.kifu button .r{color:var(--accent)}.kifu button .g{color:#f0cf8a}
+.kifu button .x{color:#ff9b8f}.kifu button .r{color:var(--accent)}.kifu .g{color:#f0cf8a}
 .kifu button:hover{background:rgba(255,255,255,.05);color:var(--text)}
 .kifu button.cur{background:rgba(18,164,184,.16);color:var(--accent)}
 .kifu button.q-bad{box-shadow:inset 0 -2px 0 #ff6b5b}.kifu button.q-dub{box-shadow:inset 0 -2px 0 #f2c060}
@@ -283,6 +287,20 @@ body:is(.in-lesson,.in-puzzle) .cb-bar{padding-bottom:2px}
 .lesson-actions button:hover:not(:disabled){color:var(--text);border-color:var(--brass2)}
 .lesson-actions button.go{background:linear-gradient(180deg,#5fd3de,#1193a6);border-color:transparent;color:#03191d;font-weight:800}
 .lesson-actions button:disabled{opacity:.35;cursor:default}
+
+/* 文字を切らない（shared/cardbar.js・pzbook.js の既定より優先）：
+   ［次の問題］はアイコンの列の横に入りきらなければ次の行へ回す（縮めて文字や矢印を欠けさせない） */
+#puzzleCard .cb-bar, #lessonCard .cb-bar{flex-wrap:wrap!important}   /* （cardbar.js の .cb-cmp は nowrap：長い言語で［次の問題］が欠ける） */
+#puzzleCard .cb-bar .cb-main, #lessonCard .cb-bar .cb-main{flex:1 0 auto;max-width:100%}
+#puzzleCard .cb-bar .cb-main > button, #lessonCard .cb-bar .cb-main > button{flex:1 0 auto;overflow:visible;text-overflow:clip}
+/* パズル一覧：カテゴリ名・テーマ名は省略（…）せず折り返す */
+#pzLevels .pbh-tabs button .nm{white-space:normal;overflow:visible;text-overflow:clip;text-align:center;line-height:1.25;overflow-wrap:anywhere}
+#pzLevels .pbh-nm, #pzLevelHead .pbh-nm{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3;overflow-wrap:anywhere}
+#pzLevels .pbh-top{align-items:flex-start}
+#pzLevels .pb-cont small{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+/* 結果のボタン：狭い画面では折り返す（3つが横に入りきらない言語がある） */
+#resultOverlay .modal-actions{flex-wrap:wrap}
+#resultOverlay .modal-actions .mbtn{flex:1 1 auto}
 
 /* ---------------------------------------------------------------- coach card (shared/coachkit.js styles + ours) */
 .ck-card{overflow-y:auto}
@@ -365,17 +383,33 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
   #newOverlay .modal:not(.ngt-on) #ruleCards .gpick{top:12px;right:12px;width:24px;height:24px;font-size:13px}
 }
 .modal.ngt-on #ruleCards .gart{padding:6px!important}
+/* 対局設定で「オンライン」を選んだとき：準備中の案内（⌛ の箱 .ol-setup）がこのダイアログの中に出るので、同じ文の短い説明（#fOlInfo）は出さない（2回出ていた） */
+#newOverlay:has(.ol-setup) #fOlInfo{display:none!important}
+/* スマホ横持ちの対局設定（shared/ngtabs.js の html.ngt-land）：右端のタブ名は省略（…）せず、小さめの字で折り返す。
+   下のクレジットは右下に固定のボタンの下にもぐらないよう、ボタンの左の幅に収める */
+html.ngt-land #newOverlay .modal.ngt-on .ngt-bar button{overflow:visible}
+html.ngt-land #newOverlay .modal.ngt-on .ngt-bar button > span{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.15;font-size:10px;letter-spacing:-.01em}
+html.ngt-land #newOverlay .modal.ngt-on .ngt-bar button{padding-inline:2px}
+html:is([lang=ja],[lang=zh],[lang="zh-TW"],[lang=ko]).ngt-land #newOverlay .modal.ngt-on .ngt-bar button > span{font-size:12px}
+html[lang=ru].ngt-land #newOverlay .modal.ngt-on .ngt-bar button > span{font-size:9.5px;letter-spacing:-.04em}   /* 「Оформление」が1行に入る大きさ */
+html.ngt-land #newOverlay .modal.ngt-on > .ng-credit{max-width:calc(100% - 390px);text-align:start;margin-inline:12px auto}
 /* design tiles */
 .dsg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .dsg button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 4px 7px;border-radius:11px;border:1px solid var(--line);background:rgba(0,0,0,.2);font-size:11.5px;color:var(--muted);min-width:0}
 .dsg button.sel{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 1px rgba(111,219,228,.35)}
 .dsg button svg,.dsg button img{width:100%;height:auto;border-radius:6px}
-.dsg button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.dsg button span{max-width:100%}
 .dsg.pcs button .pp{display:block;width:74%;padding:2px 0}
 .dsg.pcs button .pp i{width:30px;height:30px;border-radius:50%;background-size:200% 100%;background-repeat:no-repeat;box-shadow:0 2px 4px rgba(0,0,0,.5)}
-/* 盤6種・駒6種：PC は 6×1、スマホは 3×2（端数の出ない並び） */
-#newOverlay .modal .dsg{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-@media (min-width: 900px){#newOverlay .modal .dsg{grid-template-columns:repeat(6,minmax(0,1fr))!important}}
+/* 盤6種・駒6種：端数の出ない並びにする（5+1 にしない）。欄の幅が 560px 以上なら 6×1、それより狭ければ 3×2。
+   共通部品（shared/nglux.js・ngtabs.js）の auto-fill より優先させるため id で指定し、画面の幅ではなく欄の幅（コンテナクエリ）で決める */
+#newOverlay #fDesign, #newOverlay #fPieces{container-type:inline-size}
+#newOverlay .modal #bdRow, #newOverlay .modal #pcRow{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+@container (min-width: 560px){#newOverlay .modal #bdRow, #newOverlay .modal #pcRow{grid-template-columns:repeat(6,minmax(0,1fr))!important}}
+/* タイルの名前は切らずに折り返す（英語などの長い名前） */
+#newOverlay .modal .dsg button > span:last-child{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere;text-align:center;line-height:1.25}
+/* ルールのカードの名前（「Bell’s reconstruction」など）も切らずに折り返す */
+#newOverlay #ruleCards .ngt-gcard > b{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere;line-height:1.25}
 
 /* rules / lessons / puzzles (tabbed list dialog, fixed size) */
 .ls-tabs{margin-bottom:16px}
@@ -446,6 +480,9 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
 .lesson-intro .dg{max-width:520px;margin:10px auto}
 .pz-grid,#pzGrid{margin-top:8px}
 .pb-tile .th svg{display:block;width:100%;height:auto}
+/* 問題の並び：タイルの最小幅を盤の絵（SVG の元の大きさ）に引きずらせない（5列が箱からはみ出して、段どうしが重なっていた） */
+#pzGrid .pb-tiles > *{min-width:0}
+#pzGrid .pb-tile .th, #pzGrid .pb-tile .th .mb{display:block;min-width:0;max-width:100%}
 
 
 /* ================================================================ layouts */
@@ -514,8 +551,8 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
   .brand{order:0}
   .controls{order:1}
   .board-area{order:3;gap:8px}
-  body.in-lesson .lesson-card{order:-3}
-  body.in-puzzle .puzzle-card{order:-3!important}   /* スマホ：パズルのカードは盤の上（共通ルール 2026-11-10） */
+  /* スマホ：レッスン・パズルのカードは、タイトルとメニューの下・盤のすぐ上（共通ルール 2026-11-10「パズルカードを盤の上に」。
+     order:-3 だとタイトルより上に出てしまうので、レッスンと同じ order:2 にそろえる＝下の行） */
   body:is(.in-lesson,.in-puzzle) .side-in{display:contents}
   body:is(.in-lesson,.in-puzzle) .side-in > :is(.lesson-card,.puzzle-card){order:2;flex:none;overflow:visible}
   .app > *, .board-area > *{flex-shrink:0}
@@ -544,6 +581,110 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
   .brand h1{font-size:19px}
   .snd{width:28px;height:26px}
   .sbox{min-height:48px;padding:7px 10px}
+}
+/* スマホを横に持ったとき（landtabs.js → html.pt-land。ur の横持ちの並びを正方形の盤に合わせたもの）：
+   盤は左に、高さいっぱいの正方形（右の欄に 236px は残す）。右の欄は上から タイトル・メニュー（アイコンだけ）・相手・自分・状態（投げるボタン）。
+   右端にタブの列（コーチ／形勢・棋譜／ルール・レッスン／戦績／オンライン）。タブの箱は右の欄の上に引き出しで出る（盤は隠れない幅なら、開いたまま遊べる）。
+   レッスン・パズルの間は、そのカードを右の欄に出したままにする（タブの列は隠す） */
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
+  html.pt-land, html.pt-land body{height:100%!important;overflow:hidden!important;overscroll-behavior:none}
+  html.pt-land{--lvh:100vh;--ltw:300px;--tp:34px;--sl:env(safe-area-inset-left);--sr:env(safe-area-inset-right);--rail:58px}
+  @supports (height:100dvh){html.pt-land{--lvh:100dvh}}
+  html.pt-land{--bw:min(calc(var(--lvh) - 12px), calc(100vw - var(--rail) - 236px - 16px - max(8px, var(--sr)) - max(10px, var(--sl))))!important}
+  html.pt-land body.lt-on .app{display:grid!important;position:static!important;height:var(--lvh)!important;min-height:0!important;max-width:none!important;margin:0!important;box-sizing:border-box;overflow:hidden;
+    padding:6px max(8px, var(--sr)) 6px max(10px, var(--sl))!important;gap:6px 8px!important;
+    grid-template-columns:var(--bw) minmax(0,1fr) auto var(--rail)!important;grid-template-rows:var(--tp) var(--tp) auto auto auto minmax(0,1fr)!important;
+    grid-template-areas:"board bl br rl" "board ct ct rl" "board op op rl" "board me me rl" "board sb sb rl" "board xx xx rl"!important}
+  html.pt-land body.lt-on .app > .side, html.pt-land body.lt-on .side-in, html.pt-land body.lt-on .side > .brand, html.pt-land body.lt-on .board-area{display:contents!important}
+  html.pt-land body.lt-on .brand-l{grid-area:bl;align-self:center;min-width:0}
+  html.pt-land body.lt-on .brand-l .series{display:none}
+  html.pt-land body.lt-on .brand-l h1{font-size:17px!important;margin:0;white-space:nowrap}
+  html.pt-land body.lt-on .brand-r{grid-area:br;justify-self:end;display:flex;align-items:center;gap:4px}
+  html.pt-land body.lt-on .brand-r > :is(button, a){width:34px!important;height:32px!important;min-width:0;padding:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:8px!important;flex:none}
+  html.pt-land body.lt-on .brand-r > :is(button, a) svg{width:17px!important;height:17px!important}
+  html.pt-land body.lt-on .brand-r #langSel{width:74px!important;max-width:74px;height:32px!important;font-size:12px;padding:0 4px}
+  html.pt-land body.lt-on .controls{grid-area:ct;display:flex!important;flex-direction:row;gap:4px!important;align-items:center;justify-content:flex-start;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;min-width:0;overflow:hidden}
+  html.pt-land body.lt-on .controls::before{display:none}
+  html.pt-land body.lt-on .controls .btn span{display:none!important}
+  html.pt-land body.lt-on .controls .btn{padding:0!important;flex:none!important;width:42px!important;height:32px!important;gap:0!important;border-radius:8px!important;justify-content:center}
+  html.pt-land body.lt-on .controls .btn svg{width:17px!important;height:17px!important}
+  html.pt-land body.lt-on .controls :is(#btnLesson, #btnPuzzle, #btnRules){display:none!important}
+  html.pt-land body.lt-on :is(.pl-col, .info-line, .mtabs, .mt-strip, #itNav, #itCoachRest){display:none!important}
+  /* 盤（左・高さいっぱい）と、右の欄の対局者・状態 */
+  html.pt-land body.lt-on .frame{grid-area:board;align-self:center;justify-self:center;margin:0!important}
+  html.pt-land body.lt-on .board-area > .player{width:auto!important;max-width:none;min-width:0;padding:6px 10px!important}
+  html.pt-land body.lt-on .board-area > .player:not(.frame ~ .player){grid-area:op}
+  html.pt-land body.lt-on .board-area > .frame ~ .player{grid-area:me}
+  html.pt-land body.lt-on .board-area > .sbox{grid-area:sb;width:auto!important;max-width:none;min-width:0;min-height:46px;padding:6px 10px;flex-wrap:wrap}
+  html.pt-land body.lt-on .board-area > .sbox .st small{display:none}
+  html.pt-land body.lt-on .board-area > .sbox .rollbtn{padding:8px 12px}
+  /* タブの列 */
+  html.pt-land body.lt-on #ltRail{grid-area:rl;display:flex;flex-direction:column;justify-content:center;gap:4px;align-self:stretch;min-height:0;overflow-y:auto;scrollbar-width:none;
+    padding:4px 0;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--line);position:relative;z-index:61}
+  html.pt-land body.lt-on #ltRail button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:50px;padding:4px 2px;border-radius:9px;
+    color:var(--muted);font-size:9.5px;line-height:1.15;letter-spacing:0;white-space:nowrap;position:relative;-webkit-tap-highlight-color:transparent}
+  html.pt-land body.lt-on #ltRail button[hidden]{display:none}
+  html.pt-land body.lt-on #ltRail button span{display:block;max-width:100%;white-space:pre;text-align:center;line-height:1.15}
+  html.pt-land body.lt-on #ltRail svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  html.pt-land body.lt-on #ltRail button.sel{color:var(--accent);background:rgba(18,164,184,.16)}
+  html.pt-land body.lt-on #ltRail button.sel::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:2px;border-radius:2px;background:var(--accent)}
+  /* 引き出し：右の欄の上（タイトルとメニューの2行は残す） */
+  html.pt-land body.lt-on #ltPanel{position:fixed;top:calc(var(--tp) * 2 + 18px);bottom:6px;right:calc(max(8px, var(--sr)) + var(--rail) + 6px);width:var(--ltw);max-width:calc(100vw - 90px);z-index:60;box-sizing:border-box;
+    display:flex;flex-direction:column;gap:8px;padding:8px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+    background:linear-gradient(180deg,rgba(47,32,24,.98),rgba(23,15,11,.98));border:1px solid rgba(18,164,184,.35);border-radius:14px;box-shadow:-18px 0 40px -10px rgba(0,0,0,.8);
+    transform:translateX(calc(100% + 80px));transition:transform .32s cubic-bezier(.2,1.25,.4,1);will-change:transform}
+  html.pt-land body.lt-on.lt-open #ltPanel{transform:translateX(0)}
+  html.pt-land body.lt-on #ltPanel.drag{transition:none}
+  html.pt-land body.lt-on:not(.lt-open):not([data-ltpin]) #ltPanel:not(.drag){visibility:hidden;transition:transform .32s cubic-bezier(.2,1.25,.4,1),visibility 0s .32s}
+  html.pt-land body.lt-on #ltPanel > *{flex:none;width:auto!important;max-width:none!important;margin:0!important;grid-area:auto!important;order:0!important}
+  html.pt-land body.lt-on #ltPanel > [data-ltc]{display:none!important}
+  html.pt-land body.lt-on[data-lt=coach]:not([data-ltpin]) #ltPanel > #coachCard:not(.hidden), html.pt-land body.lt-on[data-lt=coach]:not([data-ltpin]) #ltPanel > #reviewCard.show{display:block!important}
+  html.pt-land body.lt-on.lt-ckrest[data-lt=coach]:not([data-ltpin]) #ltPanel > #ltCoachRest{display:block!important}
+  html.pt-land body.lt-on[data-lt=ek]:not([data-ltpin]) #ltPanel > #evalCard{display:flex!important;flex-direction:column}
+  html.pt-land body.lt-on[data-lt=ek]:not([data-ltpin]) #ltPanel > .kifu-card{display:flex!important;flex-direction:column;flex:1 1 auto!important;min-height:140px!important}
+  html.pt-land body.lt-on #ltPanel #evalCard .graph{height:36px!important;min-height:0;margin-top:6px}
+  html.pt-land body.lt-on #ltPanel #evalCard{padding:8px 12px}
+  html.pt-land body.lt-on #ltPanel .kifu{max-height:none;overflow:visible}
+  html.pt-land body.lt-on #ltPanel .card{padding:10px 12px}
+  /* ルール・レッスンのタブ：ルール／レッスン／パズルの3つの小さな入口 */
+  html.pt-land body.lt-on[data-lt=learn]:not([data-ltpin]) #ltPanel > #ltLearn{display:flex!important}
+  html.pt-land body.lt-on[data-lt=learn]:not([data-ltpin]) #ltPanel{width:auto!important;min-width:0;top:calc(50% - 104px)!important;bottom:auto!important;padding:8px!important}
+  html.pt-land body.lt-on #ltLearn{flex-direction:column;align-items:center;gap:10px}
+  html.pt-land body.lt-on #ltLearn h3{display:none}
+  html.pt-land body.lt-on #ltLearn button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:62px;height:58px;padding:4px 6px;box-sizing:border-box;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);font-family:inherit;font-size:10.5px;font-weight:700;white-space:nowrap;text-align:center;cursor:pointer}
+  html.pt-land body.lt-on #ltLearn button svg{width:22px;height:22px;flex:none;fill:none;stroke:var(--accent);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  html.pt-land body.lt-on #ltLearn button > span{display:block}
+  html.pt-land body.lt-on #ltLearn button small{display:none}
+  /* レッスン・パズルの間：カードを右の欄に出したまま（引き出しではない）。タブの列は隠して、その幅もカードに使う */
+  html.pt-land body.lt-on[data-ltpin] #ltRail{display:none}
+  html.pt-land body.lt-on[data-ltpin] #ltPanel{position:static;grid-row:3 / 7;grid-column:2 / 5;align-self:stretch;transform:none;transition:none;visibility:visible;box-shadow:none;width:auto;max-width:none;min-height:0;background:none;border:0;padding:0}
+  html.pt-land body.lt-on[data-ltpin].in-lesson #ltPanel > .lesson-card, html.pt-land body.lt-on[data-ltpin].in-puzzle #ltPanel > .puzzle-card{display:block!important;flex:1 1 auto;min-height:0;overflow-y:auto}
+  html.pt-land body.lt-on[data-ltpin] :is(.lesson-card,.puzzle-card) h3{font-size:16px;margin:0 0 4px}
+  html.pt-land body.lt-on[data-ltpin] :is(.lesson-prompt,.pz-goal){font-size:13px;line-height:1.6}
+  /* 戦績・オンライン：引き出しと同じ場所に出す */
+  html.pt-land body.lt-on.lt-rec .grc-ov{inset:calc(var(--tp) * 2 + 18px) calc(max(8px, var(--sr)) + var(--rail) + 6px) 6px auto!important;width:var(--ltw)!important;padding:0!important;background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;z-index:60!important;align-items:stretch!important;animation:ltIn .32s cubic-bezier(.2,1.25,.4,1)}
+  html.pt-land body.lt-on.lt-rec .grc{width:100%!important;max-width:none!important;max-height:100%!important;border-radius:14px;box-shadow:-18px 0 40px -10px rgba(0,0,0,.8)}
+  html.pt-land body.lt-on.lt-rec .grc-hd{padding:10px 12px 6px} html.pt-land body.lt-on.lt-rec .grc-hd h2{font-size:17px}
+  html.pt-land body.lt-on.lt-rec .grc-tabs button{font-size:12px;padding:5px 10px;white-space:nowrap}
+  html.pt-land body.lt-on.lt-rec .grc-sum b{font-size:28px}
+  html.pt-land body.lt-on.lt-rec .grc-ft button{font-size:13px;padding:8px 14px;white-space:nowrap}
+  html.pt-land body.lt-on.lt-rec .grc-ft [data-act=close]{display:none!important}
+  @keyframes ltIn{from{transform:translateX(calc(100% + 80px))}to{transform:none}}
+  html.pt-land body.lt-on.mtab-online .dock{left:auto!important;right:calc(max(8px, var(--sr)) + var(--rail) + 6px)!important;top:calc(var(--tp) * 2 + 18px)!important;bottom:6px!important;width:var(--ltw);border-radius:14px;border:1px solid rgba(18,164,184,.35);z-index:60!important;animation:ltIn .32s cubic-bezier(.2,1.25,.4,1)}
+  html.pt-land body.ol-soon .dock{display:none!important}
+  html.pt-land body.ol-soon:not(.no-online) .app{padding-bottom:6px!important}
+  /* 手の送り（|< < ▶ > >|）：右の欄のいちばん下 */
+  html.pt-land body.lt-on #ltPanel #navBar{display:none!important}
+  html.pt-land body.lt-on #ltNav{display:none}
+  html.pt-land body.lt-on.lt-nav:not([data-ltpin]) #ltNav{display:flex;grid-area:xx;align-self:end;justify-self:center;margin:0;padding:5px 6px;gap:4px;flex-wrap:nowrap;white-space:nowrap;box-sizing:border-box;
+    background:rgba(23,15,11,.92);border:1px solid rgba(18,164,184,.35);border-radius:12px}
+  html.pt-land body.lt-on #ltNav button{flex:none;width:40px;height:30px}
+  /* アラビア語：並び（盤が左・タブの列が右端・引き出しは右から）は他の言語と同じにして、箱の中の文字だけ右から左へ
+     （引き出しとスワイプの向きが右端前提なので、全体を左右反転させない） */
+  html[lang=ar].pt-land body.lt-on .app{direction:ltr}
+  html[lang=ar].pt-land body.lt-on :is(.brand-l, .board-area > .player, .board-area > .sbox, #ltPanel, #ltRail button){direction:rtl}
+  /* ダイアログはタブの列・引き出しより上 */
+  html.pt-land .overlay{z-index:80}
 }
 </style>
 <link rel="stylesheet" href="online.css?v=1">
@@ -791,6 +932,16 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
   </div>
 </div>
 
+<!-- 棋譜をコピーできなかったとき：選べる形で見せる -->
+<div class="overlay" id="copyOverlay">
+  <div class="modal" style="width:min(520px,100%)">
+    <h2 data-i18n="copy.failTitle"></h2>
+    <p style="font-size:13.5px;color:var(--muted);line-height:1.7;margin:-6px 0 10px" data-i18n="copy.failNote"></p>
+    <textarea id="copyText" readonly dir="auto" spellcheck="false" style="width:100%;height:min(46vh,300px);box-sizing:border-box;resize:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.28);color:var(--text);font:12.5px/1.6 'JetBrains Mono','Zen Kaku Gothic New',monospace"></textarea>
+    <div class="modal-actions"><button class="mbtn" id="copyClose" data-i18n="close"></button></div>
+  </div>
+</div>
+
 <!-- continue / restart -->
 <div class="overlay" id="resumeOverlay">
   <div class="modal" style="width:min(480px,100%)">
@@ -804,7 +955,7 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
   </div>
 </div>
 
-<script src="i18n.js?v=2"></script>
+<script src="i18n.js?v=3"></script>
 <script src="i18n-online.js?v=1"></script>
 <script src="../shared/pzbook.js?v=8l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
@@ -815,9 +966,9 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/fischer.js?v=1"></script>
 <script src="../shared/ruletour.js?v=30tw"></script>
-<script src="engine.js?v=1"></script>
+<script src="engine.js?v=2"></script>
 <script src="board2d.js?v=1"></script>
-<script src="tour.js?v=2" onerror="window.__noTour=1"></script>
+<script src="tour.js?v=3" onerror="window.__noTour=1"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/record.js?v=16"></script>
@@ -828,12 +979,13 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
 <script src="../shared/onlinesec.js?v=2l14as1"></script>
 <script src="online.js?v=1"></script>
 <script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script>
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 <script src="rv-i18n.js?v=2"></script>
 <script src="rvbox.js?v=1"></script>
 <script src="../shared/luxintro.js?v=3"></script>
-<script src="app-learn.js?v=2"></script>
+<script src="app-learn.js?v=3"></script>
 <script src="online-ui.js?v=1"></script>
+<script src="landtabs.js?v=1"></script>
 <script src="../shared/pickdrop.js?v=8l14"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>

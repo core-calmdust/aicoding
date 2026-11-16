@@ -48,4 +48,12 @@ for (const id of ['bell', 'popular']) for (const [la, lb] of [[1, 1], [10, 10], 
   for (let g = 0; g < G; g++) { let s = E.newGame('bell', { first: g & 1 }); while (s.winner < 0) { const d = E.rollDice(rnd); s = E.apply(s, E.think(s, d.n, s.turn === 0 ? 19 : 18, { rng: rnd }), d.n).state; } if (s.winner === 0) w++; }
   console.log('bell Lv19 vs Lv18', w + '-' + (G - w)); assert(w / G > 0.44, 'Lv19 should not be weaker than Lv18: ' + w + '/' + G);
 }
+{ // PROモード：think の opts は選んだレベルに重ねる。深さだけ変えた Lv.1 は「でたらめに指す」割合（0.6）が残り、rand:0 を渡すと消える
+  const s = E.newGame('bell'); s.pos = [[0, 3, 9, 20, 31, 40], [0, 5, 14, 26, 37, 50]]; s.turn = 0;
+  const ms = E.legalMoves(s, 2), best = E.evaluate(s, 2, 3)[0].move; assert(ms.length >= 3);
+  const count = o => { const rnd = rng(4242); let k = 0; for (let i = 0; i < 400; i++) if (E.think(s, 2, 1, Object.assign({ rng: rnd }, o)).from !== best.from) k++; return k; };
+  const keep = count({ d: 3, temp: 0 }), off = count({ d: 3, temp: 0, rand: 0 });
+  console.log('PRO on Lv.1: not-best moves', keep + '/400 (level rand kept)', off + '/400 (rand: 0)');
+  assert(keep > 80, 'PRO depth on Lv.1 must keep the random moves of the level'); assert.strictEqual(off, 0, 'rand: 0 must switch them off');
+}
 console.log('selftest OK');

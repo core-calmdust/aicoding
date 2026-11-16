@@ -6,8 +6,8 @@
 (function () {
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles', PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', LS_CAT = STORE + '-ls-cat';
 let LESSONS = null, PUZZLES = null;
-const lessonsReady = fetch('lessons.json?v=2').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
-const puzzlesReady = fetch('puzzles.json?v=2').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=3').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 const LL = o => o == null ? '' : typeof o === 'string' ? o : (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja || '');
 const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v && v[k] !== undefined ? v[k] : '');
 const UI = (D, k, v) => fill(D && D.ui && D.ui[k] ? LL(D.ui[k]) : k, v);
@@ -24,7 +24,7 @@ const cardBox = () => (mqPC.matches ? null : $('#boardArea'));
 
 // ---------------------------------------------------------------- special board
 function enterSpecial(o) {
-  busyToken++; thinking = 0; animating = false; hintMove = null; coachHover = null;
+  cancelBusy(); hintMove = null; coachHover = null;
   if (ken && window.PatolliRv) PatolliRv.kenStop();
   special = Object.assign({ state: null, n: null, dice: null, marks: [], hint: null, last: null, canRoll: false, msg: '', title: '' }, o);
   special.state = norm(o.state);
@@ -36,7 +36,7 @@ function exitSpecial(silent) {
   if (window.CardBar) CardBar.cancelAuto();
   const had = !!special; special = null; lesson = null; puzzle = null;
   document.body.classList.remove('in-lesson', 'in-puzzle');
-  if (!silent && had) { busyToken++; update(); afterPosition(); }
+  if (!silent && had) { cancelBusy(); update(); afterPosition(); }
 }
 function quitSpecial() { exitSpecial(); }
 
@@ -144,6 +144,9 @@ function startLesson(id) {
   loadItem();
 }
 const lsItem = () => lesson.phase === 'ramp' ? lesson.step.ramp[lesson.i] : lesson.step.problems[lesson.i];
+// 準備（ramp）で扱える問題の種類。tools/check_lessons.js がこの行を読み、lessons.json の準備がすべてこの中にあるか（＝最後まで進めるか）を確かめる。
+// 種類を足すときは、下の lessonMove／renderLessonCard に進め方を書いてから、ここに足す
+const RAMP_KINDS = ['explain', 'try:move', 'try:choice'];
 function loadItem() {
   const it = lsItem(), D = LESSONS;
   lesson.hint = 0; lesson.done = false; lesson.wrong = false; lesson.tries = 0;
@@ -190,17 +193,23 @@ function renderLessonCard() {
   const D = LESSONS, s = lesson.step, it = lsItem(), ramp = lesson.phase === 'ramp';
   $('#lsStep').textContent = ramp ? UI(D, 'rampStep', { i: lesson.i + 1, n: s.ramp.length }) : `${LL(s.title)} · ${lesson.i + 1}/${s.problems.length}`;
   $('#lsDots').innerHTML = ramp ? '' : s.problems.map((_, i) => { const v = lesson.scores[i]; return `<i class="${v == null ? '' : v >= 20 ? 'ok' : v > 0 ? 'part' : 'ng'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
-  $('#lsTitle').textContent = ramp ? LL(it.t) : LL(s.title);
+  $('#lsTitle').textContent = ramp && it.k === 'explain' ? LL(it.t) : LL(s.title);   // 練習の問いは下の本文に出す（見出しと同じ文を2回出さない）
   let pr = '';
-  if (ramp) pr = it.k === 'explain' ? LL(it.body) : `<p>${esc(LL(it.t))}</p>` + (it.n != null ? `<p><b>${esc(UI(D, 'roll', { n: it.n }))}</b></p>` : '') + `<p style="font-size:12px;color:var(--dim)">${esc(UI(D, 'rampNote'))}</p>`;
+  if (ramp) pr = it.k === 'explain' ? LL(it.body) : `<p>${esc(LL(it.t))}</p>` + (it.kind !== 'choice' && it.n != null ? `<p><b>${esc(UI(D, 'roll', { n: it.n }))}</b></p>` : '') + `<p style="font-size:12px;color:var(--dim)">${esc(UI(D, 'rampNote'))}</p>`;
   else pr = `<p>${esc(it.kind === 'choice' ? (LL(it.q) || UI(D, 'qChoice')) : (it.q ? LL(it.q) : UI(D, 'qMove', { n: it.n })))}</p>`;
   $('#lsPrompt').innerHTML = pr;
   const ch = $('#lsChoices');
-  if (!ramp && it.kind === 'choice') {
+  if (it.k !== 'explain' && it.kind === 'choice') {   // 選ぶ問題（準備の練習でも、採点の問題でも）
     ch.innerHTML = it.opts.map((o, i) => `<button data-i="${i}" class="${lesson.done && i === it.ans ? 'ok' : ''}">${esc(LL(o))}</button>`).join('');
     ch.onclick = e => { const b = e.target.closest('button'); if (!b || lesson.done) return; const i = +b.dataset.i;
-      if (i === it.ans) { lesson.done = true; const pts = score(); lesson.scores[lesson.i] = pts; snd('ok'); fb(`<b class="ok">${esc(UI(D, 'correct'))}</b> ${esc(MSG(D, it.why))} <b>${esc(UI(D, 'score', { n: pts }))}</b>`); renderLessonCard(); if (window.CardBar) CardBar.autoNext({ ok: () => lesson && lesson.done, btn: '#lsNext', ms: 1800 }); }
-      else { lesson.wrong = true; b.classList.add('ng'); snd('ng'); fb(`<b class="ng">${esc(UI(D, 'wrong'))}</b> ${esc(UI(D, 'rampRetry'))}`); } };
+      if (i === it.ans) {
+        lesson.done = true; snd('ok');
+        if (ramp) fb(`<b class="ok">${esc(UI(D, 'rampGood'))}</b> ${esc(LL(it.g))}`);   // 準備：採点しない。正解で「次へ」が押せる
+        else { const pts = score(); lesson.scores[lesson.i] = pts; fb(`<b class="ok">${esc(UI(D, 'correct'))}</b> ${esc(MSG(D, it.why))} <b>${esc(UI(D, 'score', { n: pts }))}</b>`); }
+        renderLessonCard(); if (window.CardBar) CardBar.autoNext({ ok: () => lesson && lesson.done, btn: '#lsNext', ms: 1800 });
+      }
+      // 選ぶ問題は「手」ではないので「もっと良い手があります」とは言わない
+      else { lesson.wrong = true; lesson.tries++; b.classList.add('ng'); snd('ng'); fb(`<b class="ng">${esc(UI(D, 'wrongChoice'))}</b>`); } };   // （「もう一度考えてみよう」は同じ意味の文が続くので足さない）
   } else { ch.innerHTML = ''; ch.onclick = null; }
   if (!lesson.done && !lesson.wrong && lesson.hint === 0) fb('');
   const nx = $('#lsNext');
@@ -326,6 +335,7 @@ function puzzleMove(m) {
   Pz.failed = true; snd('ng');
   const ng = Pz.P.ng && Pz.P.ng[String(m.from)];
   pzStatus(`<b class="ng">${esc(UI(D, 'wrong'))}</b> ${esc(ng ? MSG(D, ng) : UI(D, 'rampRetry'))}`);
+  renderPuzzleCard();   // ［やり直す］を押せるようにする
   return false;
 }
 function pzStatus(h) { $('#pzStatus').innerHTML = h; }

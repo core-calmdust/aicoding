@@ -99,6 +99,7 @@ const UI = {
   roll: { ja: '豆の目 {n}', en: 'Throw {n}' },
   correct: { ja: '正解！', en: 'Correct!' },
   wrong: { ja: 'もっと良い手があります。', en: 'There is a better move.' },
+  wrongChoice: { ja: '別の答えを考えてみましょう。', en: 'Have another look at the choices.' },   // 選ぶ問題用（「手」ではないので wrong は使わない。「まちがい」とも言わない）
   best: { ja: 'いちばん良い手', en: 'Best move' }, answer: { ja: '答えを見る', en: 'Show answer' }, hint: { ja: 'ヒント', en: 'Hint' }, next: { ja: '次へ', en: 'Next' },
   pass: { ja: '合格！', en: 'Passed!' }, score: { ja: '{n}点', en: '{n} pts' }, needPass: { ja: '100点満点・75点以上で合格です。', en: '100 points in all; 75 to pass.' },
   rampStep: { ja: '準備 {i}/{n}', en: 'Warm-up {i}/{n}' }, rampMain: { ja: '採点問題へ', en: 'To the scored problems' }, rampSkip: { ja: '準備をとばす', en: 'Skip the warm-up' },
