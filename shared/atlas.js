@@ -92,7 +92,7 @@
       name: N("狐とガチョウ", "Fox and Geese", "狐狸与鹅", "여우와 거위", "El zorro y las ocas", "Le renard et les oies", "A raposa e os gansos", "Fuchs und Gänse", "लोमड़ी और कलहंस", "الثعلب والإوز", "Лиса и гуси", "狐狸與鵝", "Rubah dan Angsa", "Tilki ve Kazlar") },
     { id: 'patolli', cat: 'hist', also: ['race'], store: ['aicoding-patolli', 'patolli-online-name'], href: 'patolli/', color: '#12a4b8', alpha: true, released: '2026-11-16', tags: ['historical', 'ai', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 200, ls: 9 },
       name: N("パトリ", "Patolli", "帕托利", "파톨리", "Patolli", "Patolli", "Patolli", "Patolli", "पटोली", "باتولي", "Патолли", "帕托利", "Patolli", "Patolli") },
-    { id: 'ludo', cat: 'race', also: ['hist'], store: ['aicoding-ludo'], href: 'ludo/', color: '#d9473b', released: '2026-11-08', tags: ['classic', 'ai', 'rated', 'lessons', 'variants', 'mobile'], total: { ls: 10 },
+    { id: 'ludo', cat: 'race', also: ['hist'], store: ['aicoding-ludo', 'ludo-online-name'], href: 'ludo/', color: '#d9473b', released: '2026-11-08', tags: ['classic', 'ai', 'online', 'rated', 'lessons', 'variants', 'mobile'], total: { ls: 10 },
       name: N('ルドー・パチーシ', 'Ludo & Pachisi', '鲁多与帕棋西', '루도 & 파치시', 'Ludo y Pachisi', 'Ludo et Pachisi', 'Ludo e Pachisi', 'Ludo & Pachisi', 'लूडो और पचीसी', 'لودو وباتشيسي', 'Лудо и Пачиси', '魯多與帕奇西', 'Ludo & Pachisi', 'Ludo ve Pachisi') },
     { id: 'carrom', cat: 'action', store: ['aicoding-carrom'], href: 'atlas/#games/carrom', only3d: true, color: '#c23a7a', released: '2026-11-09', tags: ['classic', 'ai', 'mobile'], total: {},
       name: N('キャロム', 'Carrom', '克朗棋', '캐롬', 'Carrom', 'Carrom', 'Carrom', 'Carrom', 'कैरम', 'كيرم', 'Карром', '克朗棋', 'Karambol', 'Carrom') },

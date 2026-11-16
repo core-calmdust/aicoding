@@ -1357,7 +1357,7 @@
   // (online rated games exist only where the full game or the adapter has them: the rest offer the AI alone)
   const SOON = { ja: 'オンライン（準備中）', en: 'Online (soon)', zh: '在线（准备中）', 'zh-TW': '線上（準備中）', ko: '온라인 (준비 중)', es: 'En línea (pronto)', fr: 'En ligne (bientôt)', pt: 'Online (em breve)', de: 'Online (bald)', hi: 'ऑनलाइन (जल्द)', ar: 'عبر الإنترنت (قريبًا)', ru: 'Онлайн (скоро)', id: 'Online (segera)', tr: 'Çevrim içi (yakında)' };
   RTG.hitblow.randSide = true;   // (ヒット＆ブロー: the second guesser has one more row of clues — sides at random, 2026-11-16)
-  const RT_NO_ONLINE = { janggi: 1, mancala: 1, dots: 1, ludo: 1, carrom: 1, crokinole: 1, hockey: 1, botao: 1, hitblow: 1 };
+  const RT_NO_ONLINE = { janggi: 1, mancala: 1, dots: 1, carrom: 1, crokinole: 1, hockey: 1, botao: 1, hitblow: 1 };
   // 種目 (2026-11-12): each variant has a rating of its own — the standard game keeps the full game's store, a variant 'mini'
   // is stored under '<key>:mini' (the 3D table only; the same ladder of levels, which the variants map onto their own AI steps)
   const rtKey = (id, v) => RTG[id].key + (v ? ':' + v : '');

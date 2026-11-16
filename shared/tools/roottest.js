@@ -12,7 +12,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm'), cp = require('child_process');
 const ROOT = path.join(__dirname, '..', '..');
 const GAMES = ['shogi', 'chess', 'xiangqi', 'janggi', 'reversi', 'go', 'gomoku', 'hex', 'checkers', 'ugolki', 'fanorona', 'alquerque',
-  'tafl', 'agon', 'backgammon', 'ur', 'senet', 'morris', 'mancala', 'connect4', 'dots', 'konane', 'amazons'];
+  'tafl', 'agon', 'backgammon', 'ur', 'senet', 'morris', 'mancala', 'connect4', 'dots', 'konane', 'amazons', 'ludo'];
 const SOON = ['foxgeese', 'latrunculi', 'patolli'];   // online play not written yet: the config stays null
 const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
@@ -100,7 +100,7 @@ async function run(game, mode) {
   // every path written / read after the project is settled is under the node (the probe on the shared project is the only stray one)
   const seen = log.filter(l => l.pid === exp.pid && !/^\.info\//.test(l.path));
   if (seen.length < 3) out.bad.push('too few paths recorded: ' + seen.length);
-  seen.forEach(l => { if (exp.root ? l.path.indexOf(exp.root) !== 0 : /^(chess|xiangqi|janggi|go|gomoku|hex|ugolki|fanorona|alq|agon|ur|senet|mancala|connect4|dots|amazons)\//.test(l.path)) out.bad.push('path ' + l.path + ' (want ' + (exp.root || 'root') + ')'); });
+  seen.forEach(l => { if (exp.root ? l.path.indexOf(exp.root) !== 0 : /^(chess|xiangqi|janggi|go|gomoku|hex|ugolki|fanorona|alq|agon|ur|senet|mancala|connect4|dots|amazons|ludo)\//.test(l.path)) out.bad.push('path ' + l.path + ' (want ' + (exp.root || 'root') + ')'); });
   const stray = log.filter(l => l.pid !== exp.pid && !/^\.info\//.test(l.path) && !/secv$/.test(l.path));
   stray.forEach(l => out.bad.push('stray ' + l.pid + ':' + l.path));
   out.n = seen.length;
