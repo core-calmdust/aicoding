@@ -88,5 +88,22 @@ for (const k of E.DIFFS) {
   const cfg = E.PRESETS.hard, s = [1, 5, 5, 0, 7], g0 = [0, 0, 1, 2, 3], f = E.feedback(s, g0), t0 = Date.now(); E.reviewStep(cfg, [{ g: g0, h: f.h, b: f.b }, { g: g0, h: f.h, b: f.b }], 1, E.rng(2)); const ms = Date.now() - t0;
   ok(ms < 300, 'one review step in むずかしい: ' + ms + ' ms');
 }
+// ---------- 3D table: the race on one board (atlas/games/hitblow.js) ----------
+{
+  const r3 = E.rng('race-test'), z1 = E.rule(1);
+  const winRate = (la, lb, z, n) => { const c = E.rule(z); let w = 0; for (let i = 0; i < n; i++) { const x = E.race(c, E.randomCode(c, r3), la, lb, i & 1, r3, c.rows); w += x.w === 0 ? 1 : x.w < 0 ? .5 : 0; } return w / n; };
+  const lad = [[1, 15], [6, 15], [11, 15], [20, 15]].map(([a, b]) => winRate(a, b, 1, 400));
+  console.log('race vs Lv.15 (カラー): Lv.1 ' + (lad[0] * 100).toFixed(0) + '%  Lv.6 ' + (lad[1] * 100).toFixed(0) + '%  Lv.11 ' + (lad[2] * 100).toFixed(0) + '%  Lv.20 ' + (lad[3] * 100).toFixed(0) + '%');
+  ok(lad[0] < lad[1] && lad[1] < lad[2] && lad[2] < lad[3] + .05 && lad[3] > .5, 'race: the levels get stronger, Lv.20 beats Lv.15');
+  for (const z of E.RULE_IDS) { const c = E.rule(z); let worst = 0; for (let i = 0; i < 6; i++) { const t0 = Date.now(); E.aiRace(c, [], 20, r3); const sec = E.randomCode(c, r3), op = E.opener(c), f0 = E.feedback(sec, op); const g = f0.h === c.n ? sec : E.raceBest(c, E.candsOf(c, [{ g: op, h: f0.h, b: f0.b }]), r3); worst = Math.max(worst, Date.now() - t0); ok(E.validCode(c, g), 'race guess is a valid code (' + c.id + ')'); } console.log('race decision ' + c.id + ': worst ' + worst + ' ms'); ok(worst < 600, 'race decision under 0.6 s (' + c.id + ')'); }
+  for (const w of ['easy', 'hard']) for (const d of ['2026-11-16', '2026-11-17', '2027-01-01', '2027-06-30']) {
+    const P = E.makeDaily(d, w); ok(!!P, 'daily ' + w + ' ' + d + ' exists');
+    if (!P) continue;
+    const c = E.rule(P.z), cands = E.candsOf(c, P.clues);
+    ok(P.clues.every(x => { const f = E.feedback(P.secret, x.g); return f.h === x.h && f.b === x.b && f.h < c.n; }) && cands.some(i => E.codeOf(c, i).join() === P.secret.join()), 'daily ' + w + ' ' + d + ': the clues are true and leave the answer (' + cands.length + ' candidates, limit ' + P.limit + ')');
+    const sd = E.solverDepth(c, P.clues, r3); ok(sd.worst <= P.limit, 'daily ' + w + ' ' + d + ': solvable within the limit for every candidate');
+  }
+}
+
 console.log(fail ? 'FAILED (' + fail + ')' : 'ALL OK');
 process.exit(fail ? 1 : 0);

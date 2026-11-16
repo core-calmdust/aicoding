@@ -2585,3 +2585,216 @@ html.lp .mindpop .pk-box{gap:8px;padding:14px 28px 10px}
 .mr-s{width:auto}
 .mr-c{display:flex;align-items:center;gap:5px;min-height:calc(clamp(24px, calc(var(--GH, 700px) * .048), 38px) * 1.35)}
 .mr-no{font-style:normal;color:rgba(217,205,238,.3)}
+/* (2026-11-16, ユーザー「得点表示を半透明にしてめちゃくちゃ高級感のある感じに」) the points panels: dark lacquered glass over the table
+   (translucent, the table blurred behind), a fine double gold line with small corner marks, a gold hairline under the name instead
+   of the solid band, the rank and the points set in the serif — 1st in gold leaf. A slow glint crosses each panel once. */
+.mvst .mv-p{border:0;border-radius:3px;overflow:visible;
+  background:radial-gradient(120% 90% at 50% -20%,rgba(232,206,140,.13),transparent 60%),linear-gradient(180deg,rgba(26,20,44,.42),rgba(10,8,22,.6));
+  -webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%);
+  box-shadow:inset 0 0 0 1px rgba(232,206,140,.75),inset 0 0 0 calc(var(--u)*.55) rgba(10,8,22,.35),inset 0 0 0 calc(var(--u)*.65) rgba(232,206,140,.28),0 calc(var(--u)*1.6) calc(var(--u)*4) rgba(0,0,0,.5)}
+.mvst .mv-p::before{content:"";position:absolute;inset:calc(var(--u)*-.5);pointer-events:none;
+  background:
+    linear-gradient(var(--gl2),var(--gl2)) left top/calc(var(--u)*2.4) 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) left top/1.5px calc(var(--u)*2.4) no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) right top/calc(var(--u)*2.4) 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) right top/1.5px calc(var(--u)*2.4) no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) left bottom/calc(var(--u)*2.4) 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) left bottom/1.5px calc(var(--u)*2.4) no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) right bottom/calc(var(--u)*2.4) 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) right bottom/1.5px calc(var(--u)*2.4) no-repeat}
+.mvst .mv-p::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:3px;
+  background:linear-gradient(105deg,transparent 35%,rgba(255,240,205,.16) 48%,rgba(255,240,205,.05) 55%,transparent 65%) no-repeat;background-size:260% 100%;background-position:120% 0;
+  animation:mvGlint 1.6s calc(.35s + var(--gi, 0) * .12s) ease-out both}
+@keyframes mvGlint{to{background-position:-60% 0}}
+.mvst .mv-p.p1{--gi:1}.mvst .mv-p.p2{--gi:2}.mvst .mv-p.p3{--gi:3}
+.mvst .mv-n{left:6%;right:31%;height:32%;border-bottom:1px solid transparent;border-image:linear-gradient(90deg,rgba(232,206,140,.7),rgba(232,206,140,.15) 85%,transparent) 1}
+.mvst .mv-n b{color:#f6edd6;letter-spacing:.14em;text-shadow:0 1px 0 rgba(0,0,0,.6)}
+.mvst .mv-n b small{color:var(--gl2);opacity:.85;letter-spacing:.06em}
+.mvst .mv-f{top:7%;right:5%;border:0;border-radius:2px;box-shadow:0 0 0 1px rgba(232,206,140,.9),0 0 0 calc(var(--u)*.45) rgba(10,8,22,.8),0 0 0 calc(var(--u)*.55) rgba(232,206,140,.35),0 calc(var(--u)*.8) calc(var(--u)*2) rgba(0,0,0,.55)}
+.mvst .mv-v{color:#fbf5e6;font-weight:700;letter-spacing:.02em;text-shadow:0 0 calc(var(--u)*2) rgba(232,206,140,.18),0 calc(var(--u)*.3) calc(var(--u)*.8) rgba(0,0,0,.7)}
+.mvst .mv-r{font-weight:700;letter-spacing:.04em}
+.mvst .mv-r.r0{background:linear-gradient(180deg,#fff3c4 0%,#f3d27a 38%,#c99a3c 62%,#f6dd96 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 calc(var(--u)*1.2) rgba(255,190,80,.45))}
+.mvst .mv-r.r1{color:#e4e8f2}.mvst .mv-r.r2{color:#e6b7a2}.mvst .mv-r.r3{color:#a9cfc4}
+.mvst .mv-d{font-family:var(--serif);font-weight:700;letter-spacing:.04em}
+.mvst .mv-p.up .mv-d{color:#9fe8c0;text-shadow:0 0 calc(var(--u)*1.4) rgba(120,230,170,.35)}
+.mvst .mv-p.dn .mv-d{color:#f2a3ad;text-shadow:0 0 calc(var(--u)*1.4) rgba(240,120,140,.3)}
+.mvst .mv-p.win{box-shadow:inset 0 0 0 1px #f7e2a8,inset 0 0 0 calc(var(--u)*.55) rgba(10,8,22,.35),inset 0 0 0 calc(var(--u)*.65) rgba(247,226,168,.45),0 0 calc(var(--u)*3.5) rgba(255,205,110,.42),0 calc(var(--u)*1.6) calc(var(--u)*4) rgba(0,0,0,.5)}
+html.lite .mvst .mv-p::after{animation:none;opacity:0}
+/* (2026-11-16, ユーザー「重要な情報（スキル部分）以外の半透明感をもう少し強く」) the character's info panel lets her picture show through
+   more (lighter tint, the blur kept); the skill boxes stay solid lacquer, and the panel's own text gets a soft shadow to stay readable */
+#chara.ch2 .ch-info{background:linear-gradient(270deg,rgba(8,5,18,.62),rgba(8,5,18,.46));-webkit-backdrop-filter:blur(14px) saturate(120%);backdrop-filter:blur(14px) saturate(120%)}
+#chara.ch2 .ch-info :is(.pp-n,.pp-t,.pp-f,.ci-h,.pprof,.ptn-cost,.ptn-nm,.ptn-name,h3){text-shadow:0 1px 2px rgba(0,0,0,.75),0 0 12px rgba(0,0,0,.45)}
+#chara.ch2 .pskill{box-shadow:inset 0 0 0 3px var(--lq2),inset 0 0 0 4px rgba(232,206,140,.25),0 6px 18px rgba(0,0,0,.35)}
+/* (2026-11-16, ユーザー) the profile at the top left and the coins and buttons at the top right share one top line */
+#home.aaa .aa-top{align-items:flex-start}
+/* (2026-11-16, ユーザー) the longer STORY: where it does not fit, it scrolls in its place (a thin gold bar) */
+#chara.ch2 .pprof.scroll{overflow-y:auto;overscroll-behavior:contain;padding-right:6px;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent)}
+#home.aaa .pp-info .pi-st{max-height:5.1em;overflow-y:auto;overscroll-behavior:contain;padding-right:6px}
+:is(#chara.ch2 .pprof,#home.aaa .pp-info .pi-st,html.lp #chara.ch2 .ci-pane){scrollbar-width:thin;scrollbar-color:rgba(232,206,140,.55) transparent}
+:is(#chara.ch2 .pprof,#home.aaa .pp-info .pi-st)::-webkit-scrollbar{width:4px}
+:is(#chara.ch2 .pprof,#home.aaa .pp-info .pi-st)::-webkit-scrollbar-thumb{background:rgba(232,206,140,.55);border-radius:2px}
+/* (2026-11-16, ユーザー「設定ボックスも他のボックス同様、高級感のあるデザインに」) the settings (and the reset question): the same dark
+   lacquered glass as the points panels — translucent with the screen blurred behind, a fine double gold line and small gold corner
+   hooks, the title in the serif over a gold hairline, the labels as small gold capitals of the panel, the controls set in lacquer */
+.modal:is(.settings,.reset) .mbox{position:relative;border:0;border-radius:4px;overflow:visible;padding:30px 34px 26px;
+  background:radial-gradient(120% 70% at 50% -10%,rgba(232,206,140,.14),transparent 60%),linear-gradient(180deg,rgba(26,20,44,.66),rgba(10,8,22,.8));
+  -webkit-backdrop-filter:blur(14px) saturate(130%);backdrop-filter:blur(14px) saturate(130%);
+  box-shadow:inset 0 0 0 1px rgba(232,206,140,.75),inset 0 0 0 5px rgba(10,8,22,.35),inset 0 0 0 6px rgba(232,206,140,.28),0 24px 60px rgba(0,0,0,.6)}
+.modal:is(.settings,.reset) .mbox::before{content:"";position:absolute;inset:-6px;pointer-events:none;
+  background:
+    linear-gradient(var(--gl2),var(--gl2)) left top/22px 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) left top/1.5px 22px no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) right top/22px 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) right top/1.5px 22px no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) left bottom/22px 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) left bottom/1.5px 22px no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) right bottom/22px 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) right bottom/1.5px 22px no-repeat}
+.modal:is(.settings,.reset) h2{font-family:var(--serif);font-weight:800;letter-spacing:.3em;color:var(--gl2);text-align:center;margin:0 0 20px;padding-bottom:12px;
+  border-bottom:1px solid transparent;border-image:linear-gradient(90deg,transparent,rgba(232,206,140,.75),transparent) 1;text-shadow:0 0 18px rgba(232,206,140,.25)}
+.modal.settings .st-row small{font-family:var(--serif);font-weight:700;letter-spacing:.18em;color:rgba(232,206,140,.85);display:flex;justify-content:space-between;align-items:baseline}
+.modal.settings .st-row small b{font-family:var(--serif);color:#f6edd6;letter-spacing:.04em}
+.modal.settings .seg,.modal.settings .st-v{border-radius:3px;background:rgba(8,5,18,.55);border:1px solid rgba(232,206,140,.22);box-shadow:inset 0 1px 6px rgba(0,0,0,.4)}
+.modal.settings .seg button{border-radius:2px;color:rgba(230,220,245,.7);letter-spacing:.12em}
+.modal.settings .seg button.on{color:var(--gl2)}
+.modal.settings .st-m{border-radius:3px}
+.modal.settings .st-note{font-family:var(--serif);color:rgba(220,210,240,.65);letter-spacing:.04em}
+.modal.settings .cbtns{margin-top:18px;padding-top:16px;border-top:1px solid transparent;border-image:linear-gradient(90deg,transparent,rgba(232,206,140,.4),transparent) 1}
+.modal.settings .st-reset{background:transparent;border:1px solid rgba(240,140,150,.45);border-radius:2px;color:#f2a3ad;font-family:var(--serif);letter-spacing:.16em}
+.modal.settings .cbtns .btn.gold{border-radius:2px}
+html.lp .modal:is(.settings,.reset) .mbox{padding:18px 22px 14px}
+html.lp .modal:is(.settings,.reset) h2{margin-bottom:12px;padding-bottom:8px}
+html.lp .modal.settings .cbtns{margin-top:10px;padding-top:10px}
+.modal.reset .cbtns .btn{border-radius:2px;font-family:var(--serif);letter-spacing:.14em}
+/* ---- the gacha's shrine (2026-11-16, ユーザー) ---- */
+.modal.gacham .gstage .gshrine{position:absolute;left:0;right:0;top:14px;bottom:70px;display:grid;place-items:center;pointer-events:none}
+.modal.gacham .gstage:has(.gpick) .gshrine{top:118px}
+html.lp .modal.gacham .gstage .gshrine{top:8px;bottom:46px}
+html.lp .modal.gacham .gstage:has(.gpick) .gshrine{top:82px}
+.gshrine .gs-in{position:absolute;inset:0}
+.gshrine img{position:absolute;inset:0;margin:auto;display:block;max-height:100%;max-width:92%;width:auto;height:auto;object-fit:contain;filter:drop-shadow(0 10px 24px rgba(0,0,0,.55)) drop-shadow(0 0 30px rgba(255,190,120,.12));animation:gsFloat 6s ease-in-out infinite}
+@keyframes gsFloat{50%{transform:translateY(-3px)}}
+/* the light of the doorway (the offering box sits at 50% / 76% of the picture) */
+.gshrine .gs-glow{position:absolute;left:50%;top:66%;width:34%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,236,190,.55),rgba(255,200,120,.18) 40%,transparent 70%);mix-blend-mode:screen;opacity:.55;animation:gsBreath 3.4s ease-in-out infinite}
+@keyframes gsBreath{50%{opacity:.85;transform:translate(-50%,-50%) scale(1.08)}}
+.gshrine .gs-rays,.gshrine .gs-spark{position:absolute;inset:0;pointer-events:none;opacity:0}
+/* a pull */
+.gshrine{--gc:#ffffff;--gc2:rgba(255,255,255,.45)}
+.gshrine.r-R{--gc:#8cc8ff;--gc2:rgba(110,180,255,.5)}
+.gshrine.r-SR{--gc:#d6a2ff;--gc2:rgba(190,120,255,.55)}
+.gshrine.r-SSR{--gc:#ffe08a;--gc2:rgba(255,200,70,.6)}
+.gshrine.r-UR{--gc:#ffffff;--gc2:rgba(255,160,230,.6)}
+.gshrine.go img{animation:gsShake .9s ease-in .05s both,gsLit 1.6s ease-in both}
+@keyframes gsShake{0%,100%{transform:none}10%{transform:translate(-1px,1px)}20%{transform:translate(2px,0)}30%{transform:translate(-2px,-1px)}40%{transform:translate(2px,1px)}50%{transform:translate(-3px,0)}60%{transform:translate(3px,-1px)}70%{transform:translate(-3px,1px)}80%{transform:translate(3px,0)}90%{transform:translate(-2px,0)}}
+@keyframes gsLit{0%{filter:drop-shadow(0 10px 24px rgba(0,0,0,.55)) brightness(1)}55%{filter:drop-shadow(0 0 26px var(--gc2)) brightness(1.15)}100%{filter:drop-shadow(0 0 60px var(--gc)) brightness(1.9) saturate(.8)}}
+.gshrine.go .gs-glow{animation:gsGather 1.6s cubic-bezier(.6,0,.4,1) both;background:radial-gradient(circle,#fff,var(--gc) 22%,var(--gc2) 45%,transparent 70%);opacity:1}
+@keyframes gsGather{0%{transform:translate(-50%,-50%) scale(.6);opacity:.4}55%{transform:translate(-50%,-50%) scale(1.3);opacity:1}100%{transform:translate(-50%,-50%) scale(7);opacity:1}}
+.gshrine.go .gs-rays{left:50%;top:calc(var(--gy, 62%));width:220%;aspect-ratio:1;inset:auto;transform:translate(-50%,-50%);border-radius:50%;
+  background:repeating-conic-gradient(from 0deg,transparent 0deg 7deg,var(--gc2) 9deg 11deg,transparent 13deg 22deg);
+  -webkit-mask-image:radial-gradient(circle,#000 8%,rgba(0,0,0,.6) 30%,transparent 62%);mask-image:radial-gradient(circle,#000 8%,rgba(0,0,0,.6) 30%,transparent 62%);
+  mix-blend-mode:screen;animation:gsRays 1.6s ease-out .35s both}
+@keyframes gsRays{0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.4)}35%{opacity:1}100%{opacity:1;transform:translate(-50%,-50%) rotate(40deg) scale(1.15)}}
+.gshrine.go .gs-spark{background:
+    radial-gradient(2px 2px at 20% 80%,var(--gc),transparent),radial-gradient(2px 2px at 35% 70%,#fff,transparent),radial-gradient(3px 3px at 48% 85%,var(--gc),transparent),
+    radial-gradient(2px 2px at 60% 75%,#fff,transparent),radial-gradient(3px 3px at 72% 82%,var(--gc),transparent),radial-gradient(2px 2px at 82% 72%,#fff,transparent),
+    radial-gradient(2px 2px at 28% 92%,#fff,transparent),radial-gradient(3px 3px at 66% 94%,var(--gc),transparent),radial-gradient(2px 2px at 54% 66%,#fff,transparent);
+  animation:gsSpark 1.4s ease-out .3s both}
+@keyframes gsSpark{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(-55%)}}
+.gshrine.go.r-UR .gs-rays,.gshrine.go.r-UR .gs-glow{filter:hue-rotate(0deg);animation-name:gsRays,gsHue;animation-duration:1.6s,1.2s;animation-iteration-count:1,infinite;animation-timing-function:ease-out,linear}
+.gshrine.go.r-UR .gs-glow{animation-name:gsGather,gsHue;animation-timing-function:cubic-bezier(.6,0,.4,1),linear;animation-delay:0s,0s}
+.gshrine.go.r-UR .gs-rays{background:repeating-conic-gradient(from 0deg,transparent 0deg 7deg,rgba(255,120,200,.6) 9deg 11deg,transparent 13deg 22deg,rgba(120,200,255,.6) 31deg 33deg,transparent 35deg 44deg)}
+@keyframes gsHue{to{filter:hue-rotate(360deg)}}
+.gstage .gs-flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 62%,#fff,rgba(255,255,255,.9) 35%,rgba(255,255,255,.6));animation:gsFlash 1.65s ease-in both;z-index:3}
+.gstage .gs-flash.r-SSR{background:radial-gradient(circle at 50% 62%,#fff,#fff3c8 35%,rgba(255,220,140,.7))}
+.gstage .gs-flash.r-UR{background:radial-gradient(circle at 50% 62%,#fff,#ffe6fa 35%,rgba(200,230,255,.75))}
+@keyframes gsFlash{0%,78%{opacity:0}92%{opacity:1}100%{opacity:1}}
+/* the cards come out of the light: the flash fades over them */
+.gstage .gcards{animation:gsAfter .5s ease-out both}
+@keyframes gsAfter{from{filter:brightness(2.2)}}
+html.lite .gshrine img,html.lite .gshrine .gs-glow{animation:none}
+html.lite .gshrine.go .gs-rays,html.lite .gshrine.go .gs-spark{display:none}
+html:not(.lp) .modal.gacham .gstage:has(.gshrine){min-height:min(440px, calc(100vh - 330px))}
+html.lp .modal.gacham .gstage:has(.gshrine){min-height:0}
+.gshrine .gs-glow{width:calc(var(--gw, 100%) * .34)}
+/* (2026-11-16, ユーザー「もっとド派手に。神社が吹っ飛ぶくらい」) the pull, bigger: build-up 1.15 s, the blast, the cards at 2.2 s */
+.gshrine.go img{animation:gsShake2 1.15s ease-in both,gsLit 1.15s ease-in both}
+@keyframes gsShake2{0%{transform:none}10%{transform:translate(-1px,1px)}20%{transform:translate(2px,-1px)}30%{transform:translate(-3px,1px) rotate(-.3deg)}40%{transform:translate(3px,-2px) rotate(.4deg)}50%{transform:translate(-4px,2px) rotate(-.5deg)}60%{transform:translate(5px,-2px) rotate(.6deg)}70%{transform:translate(-6px,3px) rotate(-.8deg)}80%{transform:translate(7px,-3px) rotate(.9deg)}90%{transform:translate(-8px,2px) rotate(-1deg) scale(1.02)}100%{transform:translate(0,-4px) scale(1.06)}}
+.gshrine.go .gs-glow{animation-duration:1.15s}
+.gshrine.go .gs-rays{animation:gsRays2 2.2s ease-out .25s both}
+@keyframes gsRays2{0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.3)}30%{opacity:1}50%{opacity:1;transform:translate(-50%,-50%) rotate(50deg) scale(1)}70%{opacity:1;transform:translate(-50%,-50%) rotate(80deg) scale(1.9)}100%{opacity:0;transform:translate(-50%,-50%) rotate(120deg) scale(2.4)}}
+.gstage .gs-pillar{position:absolute;left:50%;bottom:22%;width:9%;height:0;transform:translateX(-50%);pointer-events:none;z-index:2;border-radius:50% 50% 0 0;
+  background:linear-gradient(0deg,#fff,rgba(255,255,255,.9) 30%,rgba(255,240,210,.5) 70%,transparent);box-shadow:0 0 30px 12px rgba(255,235,190,.6),0 0 80px 30px rgba(255,210,140,.35);mix-blend-mode:screen;animation:gsPillar 1.7s cubic-bezier(.3,0,.2,1) .5s both}
+@keyframes gsPillar{0%{height:0;opacity:0;width:3%}35%{height:90%;opacity:1;width:9%}55%{height:140%;width:22%;opacity:1}100%{height:160%;width:40%;opacity:0}}
+.gstage .gs-ring{position:absolute;left:50%;top:62%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:3px solid rgba(255,255,255,.95);box-shadow:0 0 18px rgba(255,230,180,.9),inset 0 0 18px rgba(255,230,180,.7);pointer-events:none;z-index:3;opacity:0;animation:gsRing .9s ease-out 1.15s both}
+.gstage .gs-ring.b{border-width:2px;animation-delay:1.3s;animation-duration:1.1s}
+@keyframes gsRing{0%{opacity:1;transform:scale(.2)}100%{opacity:0;transform:scale(40)}}
+.gstage .gs-flash{animation:gsFlash2 2.2s ease-out both}
+@keyframes gsFlash2{0%,50%{opacity:0}53%{opacity:1}66%{opacity:.9}90%{opacity:.15}100%{opacity:0}}
+/* the shrine blown apart */
+.gshrine.blast img{visibility:hidden}
+.gshrine.blast .gs-glow{opacity:0!important}
+.gs-frag{position:absolute;z-index:2;pointer-events:none}
+.gs-frag i{position:absolute;background-repeat:no-repeat;will-change:transform,opacity;animation:gsFly 1s cubic-bezier(.15,.7,.3,1) both;filter:brightness(1.7) drop-shadow(0 0 12px rgba(255,220,160,.8))}
+@keyframes gsFly{0%{transform:none;opacity:1}70%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(var(--s));opacity:0}}
+/* the whole screen: a flash and a quake */
+.gs-screen{position:fixed;inset:0;z-index:10000;pointer-events:none;opacity:0;mix-blend-mode:screen;background:radial-gradient(circle at 50% 55%,#fff,rgba(255,255,255,.85) 30%,rgba(255,255,255,.35) 70%);animation:gsScr 2.2s ease-out both}
+.gs-screen.r-SSR{background:radial-gradient(circle at 50% 55%,#fff,rgba(255,236,170,.9) 30%,rgba(255,190,80,.45) 70%)}
+.gs-screen.r-SR{background:radial-gradient(circle at 50% 55%,#fff,rgba(220,170,255,.85) 30%,rgba(150,90,255,.4) 70%)}
+.gs-screen.r-R{background:radial-gradient(circle at 50% 55%,#fff,rgba(170,215,255,.85) 30%,rgba(90,160,255,.4) 70%)}
+.gs-screen.r-UR{background:conic-gradient(from 0deg at 50% 55%,#ff8ad8,#ffd66a,#8affc2,#8ad2ff,#c08aff,#ff8ad8);animation:gsScr 2.2s ease-out both,gsHue .8s linear infinite}
+@keyframes gsScr{0%,50%{opacity:0}53%{opacity:.95}62%{opacity:.6}100%{opacity:0}}
+.mbox.gs-quake{animation:gsQuake .7s cubic-bezier(.3,0,.3,1) both}
+@keyframes gsQuake{0%{transform:none}10%{transform:translate(-14px,8px) rotate(-.6deg)}20%{transform:translate(12px,-10px) rotate(.6deg)}30%{transform:translate(-10px,6px)}40%{transform:translate(9px,-6px) rotate(.3deg)}55%{transform:translate(-6px,4px)}70%{transform:translate(4px,-2px)}85%{transform:translate(-2px,1px)}100%{transform:none}}
+html.lite .gs-frag i{animation-duration:.6s;filter:none}
+html.lite .gstage .gs-pillar,html.lite .gstage .gs-ring{display:none}
+html.lite .mbox.gs-quake{animation:none}
+/* (the blast's flash is short, and the pieces of the shrine fly in front of it, so the shrine is seen to be blown apart) */
+@keyframes gsFlash2{0%,50%{opacity:0}53%{opacity:.9}60%{opacity:.45}76%{opacity:.12}100%{opacity:0}}
+@keyframes gsScr{0%,50%{opacity:0}53%{opacity:.85}59%{opacity:.3}72%{opacity:0}100%{opacity:0}}
+.gshrine.blast{z-index:4}
+.gs-frag i{animation:gsFly 1.05s cubic-bezier(.25,.45,.35,1) both}
+.modal.gacham .gstage:has(.gshrine.blast),.modal.gacham .mbox.gs-quake{overflow:visible}
+/* (2026-11-16) phone: a hand tile dragged toward the middle to discard it */
+html.lp #hand .tl[data-id]{touch-action:none}
+#hand .tl.hdrag{position:relative;z-index:60;transition:none!important;filter:drop-shadow(0 10px 16px rgba(0,0,0,.5))}
+#hand .tl.hdrag.hdrop{filter:drop-shadow(0 0 10px rgba(255,214,120,.95)) drop-shadow(0 0 22px rgba(255,190,90,.6)) brightness(1.08)}
+#hand .tl.hback{transition:transform .25s cubic-bezier(.2,.9,.3,1.2)!important}
+/* (2026-11-16, ユーザー「フォントは全部完全に明朝で統一」) every text in the game is set in the Mincho (Shippori Mincho B1) — the Gothic of the
+   UI, the Latin display face, the brush face of the cut-ins and the monospaced digits all give way to it */
+:root{--ui:var(--serif)}
+*,*::before,*::after{font-family:var(--serif)!important}
+/* (2026-11-16, ユーザー「英語のレイアウト崩れを精査」) English (and any language but Japanese): the wide letter-spacing made for kanji is
+   narrowed where Latin words ran off or broke — the title's subtitle, the Start button, the sisters' name on the cards */
+html:not([lang=ja]) :is(#home,#chara).aaa .aa-logo .lg-sub{letter-spacing:.1em;margin-right:-.1em;font-size:21px;white-space:normal;text-align:center;max-width:100%}
+html.lp:not([lang=ja]) :is(#home,#chara).aaa .aa-logo .lg-sub{font-size:16px}
+html:not([lang=ja]) :is(#home,#chara).aaa .aa-go .ag-k{letter-spacing:.16em;margin-right:-.16em}
+html:not([lang=ja]) :is(#home,#chara).aaa .pp-f,html:not([lang=ja]) #chara.ch2 .pp-f,html:not([lang=ja]) #home.aaa .aa-plate .pp-f{letter-spacing:.06em;white-space:nowrap}
+html:not([lang=ja]) :is(#home,#chara).aaa .pp-t,html:not([lang=ja]) #chara.ch2 .pp-t{letter-spacing:.08em}
+html:not([lang=ja]) .lm-t b{letter-spacing:.1em}
+/* (2026-11-16, ユーザー「画像を割るのはダサい。リッチなエフェクトで、AAAの仕事として入念に」) the pull: the light is drawn by gachafx.js on
+   a canvas over the whole screen; the shrine trembles harder, leans toward the viewer and glows, then is swallowed by the light */
+.gfx-cv{position:fixed;inset:0;width:100vw;height:100vh;z-index:10000;pointer-events:none}
+.gshrine .gs-door{position:absolute;width:1px;height:1px;pointer-events:none}
+.gshrine.go .gs-rays,.gshrine.go .gs-spark{display:none}
+.gshrine.go img{animation:gsShake3 1.3s cubic-bezier(.5,0,.9,.6) both,gsLit2 1.3s ease-in both}
+@keyframes gsShake3{0%{transform:none}15%{transform:translate(-1px,1px)}30%{transform:translate(2px,-1px) scale(1.01)}45%{transform:translate(-3px,2px) rotate(-.4deg) scale(1.02)}60%{transform:translate(4px,-2px) rotate(.5deg) scale(1.03)}72%{transform:translate(-5px,3px) rotate(-.7deg) scale(1.04)}84%{transform:translate(6px,-3px) rotate(.8deg) scale(1.05)}93%{transform:translate(-6px,2px) rotate(-.6deg) scale(1.06)}100%{transform:translate(0,-6px) scale(1.08)}}
+@keyframes gsLit2{0%{filter:drop-shadow(0 10px 24px rgba(0,0,0,.55)) brightness(1)}60%{filter:drop-shadow(0 0 30px var(--gc2)) brightness(1.2) contrast(1.05)}100%{filter:drop-shadow(0 0 70px var(--gc)) brightness(1.7) contrast(1.1)}}
+.gshrine.go .gs-glow{animation:gsGather 1.3s cubic-bezier(.6,0,.4,1) both}
+.gshrine.engulf img{animation:gsEngulf .55s cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes gsEngulf{0%{transform:translate(0,-6px) scale(1.08);filter:brightness(1.7);opacity:1}25%{filter:brightness(6) saturate(0);opacity:1}100%{transform:translate(0,-14px) scale(1.18);filter:brightness(9) saturate(0) blur(6px);opacity:0}}
+.gshrine.engulf .gs-glow{opacity:0!important;transition:opacity .2s}
+html.lite .gshrine.go img{animation:gsLit2 1.3s ease-in both}
+/* (2026-11-16) the touched place wobbles: jiggle.js draws the picture on this canvas while it moves — the same box, mask, shadow and breathing as the <img> */
+:is(#home,#chara).aaa .aa-ch .jig{position:absolute;inset:0;width:100%;height:100%;display:none;pointer-events:none;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 70%,transparent 96%),linear-gradient(90deg,transparent 0%,#000 24%,#000 76%,transparent 100%);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(180deg,#000 0%,#000 70%,transparent 96%),linear-gradient(90deg,transparent 0%,#000 24%,#000 76%,transparent 100%);mask-composite:intersect;
+  filter:drop-shadow(0 0 30px rgba(0,0,0,.6));animation:aaBreath 6s ease-in-out infinite;transform-origin:50% 100%}
+html.lite :is(#home,#chara).aaa .aa-ch .jig{animation:none}
+/* (2026-11-16) a partner's skill: her face steps in at the seat */
+#game .bf .frame .ptn-in{position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:inherit;overflow:visible;animation:ptnIn 3s ease both}
+#game .bf .frame .ptn-in img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;box-shadow:0 0 0 2px var(--sc),0 0 18px 4px color-mix(in srgb,var(--sc) 70%,transparent)}
+#game .bf .frame .ptn-in b{position:absolute;left:50%;bottom:-2px;transform:translate(-50%,50%);padding:1px 7px;border-radius:2px;white-space:nowrap;font-size:10px;letter-spacing:.12em;color:#fff;background:color-mix(in srgb,var(--sc) 80%,#000);box-shadow:0 0 10px color-mix(in srgb,var(--sc) 70%,transparent)}
+#game .bf .frame .ptn-in s{position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--sc);opacity:0;animation:ptnRing .9s ease-out .05s both}
+@keyframes ptnIn{0%{opacity:0;transform:scale(1.25);filter:brightness(2.4)}12%{opacity:1;transform:scale(1);filter:brightness(1.4)}25%{filter:none}85%{opacity:1}100%{opacity:0}}
+@keyframes ptnRing{0%{opacity:.95;transform:scale(.8)}100%{opacity:0;transform:scale(1.9)}}
+/* (2026-11-16) dan ranks: points lost and a rank lost */
+.rk-g.neg,.fn-foot .rk-g.neg{color:#f2a3ad}
+.rk-dn{font-style:normal;font-family:var(--serif);font-weight:800;color:#fff;background:linear-gradient(90deg,#3a4a7a,#5a6aa0);padding:.1em .7em;border-radius:2px;letter-spacing:.12em}
+.rk-b small:has(.rk-pp){display:grid;grid-template-columns:auto auto;justify-content:center;gap:2px 14px;max-width:100%}
+.rk-pp{white-space:nowrap;color:#f3d68e}.rk-pp.neg{color:#f2a3ad}
+/* (2026-11-16) the character screen: her picture can be touched too (owned characters) */
+#chara.ch2 .aa-ch:not(.lock){cursor:pointer}
+#chara.aaa #chSay{z-index:6}

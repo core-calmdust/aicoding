@@ -333,7 +333,7 @@ function charImg(c, kind) {          // kind: 'full' | 'bust' | 'face' | 'thumb'
     g.font = `800 ${W * .09}px "Shippori Mincho B1", serif`;
     g.fillText(c.name.ja, cx, cy + R * 1.62);
     g.fillStyle = 'rgba(255,255,255,.6)';
-    g.font = `700 ${Math.max(10, W * .04)}px "Zen Kaku Gothic New", sans-serif`;
+    g.font = `800 ${Math.max(10, W * .04)}px "Shippori Mincho B1", serif`;
     g.fillText(t('noArt'), cx, H - W * .07);
   }
   const u = cv.toDataURL('image/webp', .85);
@@ -374,7 +374,14 @@ function fitCard() {
     pl.classList.remove('fade');
     if (cols.length) { const room = Math.min(...cols) - (offL(pl) + pl.offsetWidth) - 28;
       if (room > 0) { const max = w0 + room;
+        // (2026-11-16, ユーザー「ボックスは以前と同程度の長さで」) the stories are longer now: the width is measured without the story,
+        // which then wraps (and scrolls) inside it — the card stays as long as its skill lines need, as before
+        // (2026-11-16, ユーザー「文章を追加する前のサイズに戻して」) measured with the story it had before — the sisters' one line —
+        // so the card is exactly as long as it was; the longer story then wraps (and scrolls) inside it
+        const st = info.querySelector('.pi-st'), stTx = st && st.textContent, fam = MJChars.families[MJChars.get(DB.sel).family];
+        if (st && fam) st.textContent = L(fam.profile);
         pl.classList.add('meas'); const nat = pl.offsetWidth, text = info.offsetWidth; pl.classList.remove('meas');
+        if (st) st.textContent = stTx;
         const want = Math.round(nat + text * .25);
         if (nat <= max) { pl.style.width = Math.max(w0, Math.min(max, want)) + 'px'; pl.classList.add('fade'); } else pl.style.width = Math.round(max) + 'px'; } } }
   for (const k of [1, .94, .88, .82, .76]) { pl.style.setProperty('--pis', k); if (pl.offsetTop >= navB && info.scrollWidth <= info.clientWidth + 1 && info.offsetWidth >= 200) return; }   // (the whole card a little smaller until it clears the menu)
@@ -386,8 +393,14 @@ function fitCard() {
 // box or the right-hand column changes size, on a full-screen change, and when the web fonts arrive.
 function refitCard() {
   const go = () => { if (!$('#home').hidden) fitCard(); };
-  go(); cancelAnimationFrame(refitCard.f); refitCard.f = requestAnimationFrame(go); clearTimeout(refitCard.t); refitCard.t = setTimeout(go, 350);
+  // (2026-11-16, ユーザー「サイズ変更やフルスク切り替えで横長になりすぎる。随時チェックを」) a browser's full-screen switch and a
+  // window being dragged settle over a second or more: the card is fitted again and again until the size has stayed put
+  go(); cancelAnimationFrame(refitCard.f); refitCard.f = requestAnimationFrame(go);
+  (refitCard.ts || []).forEach(clearTimeout); refitCard.ts = [120, 350, 700, 1200, 2000].map(ms => setTimeout(go, ms));
 }
+if (window.visualViewport) visualViewport.addEventListener('resize', () => refitCard());
+addEventListener('orientationchange', () => refitCard());
+addEventListener('pageshow', () => refitCard());
 function skillChip(key, cls = '', attrs = '') {
   const k = MJSkills.parse(key), sk = MJSkills.get(k.id);
   return `<span class="skc st${k.tier} ${cls}" style="--sc:${sk.color}" ${attrs}><i>${icon(sk.icon)}</i><b>${esc(L(sk.name))}</b><em>${MJSkills.TIERS[k.tier]}</em></span>`;
@@ -419,6 +432,11 @@ function toast(msg, ms = 1800) {
 function modal(html, cls = '') {
   const m = $('#modal');
   m.className = 'modal ' + cls; m.innerHTML = `<div class="mbox">${html}</div>`; m.hidden = false;
+  // (2026-11-16, ユーザー「ガチャも、ほかの各種ボックスも全部、空いている所をクリックしたら戻れるように」) a click on the empty space
+  // around a box presses the box's own close button (its own way of closing — the gacha redraws the home, and so on). Boxes with no
+  // close button (a question that must be answered, the results over the table) are left alone.
+  m.onclick = e => { if (e.target !== m || (m.firstElementChild && m.firstElementChild.busy)) return;
+    const x = m.querySelector('[data-a=close], .mbox > .x, .mbox > * > .x, header .x'); if (x) x.click(); };
   if (TB) TB.quiet = /\bstage\b/.test(cls);   // (a result over the whole table: the table's own animation rests behind it)
   requestAnimationFrame(() => m.classList.add('show'));
   return m.firstElementChild;
@@ -446,9 +464,11 @@ function renderHome() {
   $('#coinBox .coin').innerHTML = IC.coin;
   // the menu down the left (ユーザー 2026-11-14: only the system's buttons stay at the top right; the rest are here)
   const mi = (ic, lab, sub) => `<i class="lm-i">${ic}</i><span class="lm-t"><b>${esc(lab)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>`;
-  $('#btnGacha').innerHTML = mi(IC.gacha, t('gacha'), 'GACHA'); $('#btnColl').innerHTML = mi(IC.collection, t('chars'), 'CHARACTERS');
-  $('#btnStats').innerHTML = mi(IC.stats, t('record'), 'RECORD');   // (ユーザー 2026-11-14: 戦績 and スタッツ are one menu, 「戦績」 — the game log opens from inside it)
-  $('#btnRated').innerHTML = mi(IC.rank, t('rated'), 'RANKED');
+  // (2026-11-16, ユーザー「英語のレイアウト崩れ」) in English the small capitals under each menu item only repeat its name: left out
+  const ja = I18N.lang === 'ja', en2 = w => ja ? w : '';
+  $('#btnGacha').innerHTML = mi(IC.gacha, t('gacha'), en2('GACHA')); $('#btnColl').innerHTML = mi(IC.collection, t('chars'), en2('CHARACTERS'));
+  $('#btnStats').innerHTML = mi(IC.stats, t('record'), en2('RECORD'));   // (ユーザー 2026-11-14: 戦績 and スタッツ are one menu, 「戦績」 — the game log opens from inside it)
+  $('#btnRated').innerHTML = mi(IC.rank, t('rated'), en2('RANKED'));
   document.querySelectorAll('#luxMenu [data-soon]').forEach(b => { b.innerHTML = mi(IC[b.dataset.soon] || '', t(b.dataset.soon), t('soon')); });
   sndIcons(); applyLite();
   const c = MJChars.get(DB.sel);
@@ -522,23 +542,42 @@ $('#aaBanner').addEventListener('click', () => { SND.pick(); openGacha(); });
 let sayT = 0;
 // a screen point in the frame the UI is laid out in (see uiRect: on a phone held upright #root is turned 90°)
 function uiPt(x, y) { return document.documentElement.classList.contains('rot') ? [y, innerWidth - x] : [x, y]; }
-function homeSay(e) {
-  const c = MJChars.get(DB.sel); let txt = null, at = null;
-  // (ユーザー 2026-11-15) where she was touched decides what she says (touch.js: about a hundred lines each, Japanese only)
-  if (e && window.MJTouch && I18N.lang === 'ja') { const im = e.target.closest('#pImg') && document.querySelector('#pImg img');
-    if (im) { const r = uiRect(im), k = Math.max(r.width / 1080, r.height / 1920), w = 1080 * k, h = 1920 * k, [px, py] = uiPt(e.clientX, e.clientY);   // (the picture covers its box, held at the top, centred across)
-      const u = (px - r.left - (r.width - w) / 2) / w, v = (py - r.top) / h; txt = MJTouch.line(c.id, MJTouch.zone(c.id, u, v)); at = [px, py]; } }
+// (2026-11-16, ユーザー「キャラ一覧画面のキャラが表示されている部分でも触れるように」) one routine for her picture on the home screen
+// and on the character screen: o = { c: the character, img, hit: whether the tap was on the picture, root: the screen, say: its bubble,
+// span(W, offL): the [left, right] the bubble must stay within }
+function charSay(e, o) {
+  const c = o.c; let txt = null, at = null;
+  const im = e && o.hit ? o.img : null;
+  // where she was touched: (ユーザー 2026-11-16) the touched place wobbles (jiggle.js, every language) — chest and hips 100% · the
+  // face and the hair around it 10% · arms, legs, the belly and everywhere else 30%; (ユーザー 2026-11-15) what she says
+  // (touch.js: about a hundred lines each, Japanese only)
+  if (im) { const r = uiRect(im), k = Math.max(r.width / 1080, r.height / 1920), w = 1080 * k, h = 1920 * k, [px, py] = uiPt(e.clientX, e.clientY);   // (the picture covers its box, held at the top, centred across)
+    const u = (px - r.left - (r.width - w) / 2) / w, v = (py - r.top) / h, zn = window.MJTouch && MJTouch.zone ? MJTouch.zone(c.id, u, v) : null;
+    if (window.MJJiggle) MJJiggle.poke(im, u, v, { c: 1, h: 1, f: .1, k: .1 }[zn] ?? .3);
+    at = [px, py];   // (the bubble by the touched place, whichever line she says)
+    if (window.MJTouch && I18N.lang === 'ja') txt = MJTouch.line(c.id, zn); }
   if (!txt) { const ks = Object.keys(c.lines || {}); if (!ks.length) return; txt = L(c.lines[ks[(Math.random() * ks.length) | 0]]); }
   SND.say();
-  const el = $('#aaSay'); el.textContent = txt; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-  // the bubble comes up beside the place touched, kept inside the picture's column — never over the right-hand column
+  const el = o.say; el.textContent = txt; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  // the bubble comes up beside the place touched, kept inside the picture's column
   // (ユーザー 2026-11-16, phone: it covered the play settings — the touch point was read in the screen's frame, not the turned UI's)
-  if (at) { const home = $('#home'), hr = uiRect(home), z = hr.width / home.offsetWidth || 1, x = (at[0] - hr.left) / z, y = (at[1] - hr.top) / z, W = home.offsetWidth, H = home.offsetHeight;
-    const offL = n => { let v = 0; while (n && n !== home) { v += n.offsetLeft; n = n.offsetParent; } return v; };
-    const colL = Math.min(W * .66, ...['#aaBanner', '.aa-play'].map(q => home.querySelector(q)).filter(n => n && n.offsetWidth).map(n => offL(n) - 12));
-    el.style.left = Math.max(W * .2, Math.min(colL - el.offsetWidth, x + 24)) + 'px'; el.style.top = Math.max(70, Math.min(H * .7, y - el.offsetHeight - 14)) + 'px'; }
+  if (at) { const root = o.root, hr = uiRect(root), z = hr.width / root.offsetWidth || 1, x = (at[0] - hr.left) / z, y = (at[1] - hr.top) / z, W = root.offsetWidth, H = root.offsetHeight;
+    const offL = n => { let v = 0; while (n && n !== root) { v += n.offsetLeft; n = n.offsetParent; } return v; };
+    const [lo, hi] = o.span(W, offL);
+    el.style.left = Math.max(lo, Math.min(hi - el.offsetWidth, x + 24)) + 'px'; el.style.top = Math.max(70, Math.min(H * .7, y - el.offsetHeight - 14)) + 'px'; }
   else el.style.left = el.style.top = '';
-  clearTimeout(sayT); sayT = setTimeout(() => { el.classList.remove('on'); }, Math.max(2600, 1400 + txt.length * 90));
+  clearTimeout(o.say._t); o.say._t = setTimeout(() => { el.classList.remove('on'); }, Math.max(2600, 1400 + txt.length * 90));
+}
+function homeSay(e) {
+  const home = $('#home');
+  charSay(e, { c: MJChars.get(DB.sel), img: document.querySelector('#pImg img'), hit: !!(e && e.target.closest('#pImg')), root: home, say: $('#aaSay'),
+    span: (W, offL) => [W * .2, Math.min(W * .66, ...['#aaBanner', '.aa-play'].map(q => home.querySelector(q)).filter(n => n && n.offsetWidth).map(n => offL(n) - 12))] });
+}
+function charaSay(e) {
+  const c = MJChars.get(chView), art = $('#chArt'), im = art.querySelector('.aa-ch:not(.lock) img');
+  if (!c || !owns(c.id) || !im || !e.target.closest('.aa-ch')) return;
+  charSay(e, { c, img: im, hit: true, root: $('#chara'), say: $('#chSay'), span: (W, offL) => { const l = offL(art), info = $('#chInfo'), list = document.querySelector('#chara .ch-list, #chList');
+    return [Math.max(l + 10, list && list.offsetWidth ? offL(list) + list.offsetWidth + 12 : 0), Math.min(l + art.offsetWidth - 10, info && info.offsetWidth ? offL(info) - 14 : W)]; } });
 }
 // the room: specks of light drifting in the warm air (ユーザー 2026-11-14: not vector dots — real light). Pre-rendered soft sprites
 // drawn additively: a few large out-of-focus bokeh discs far in front, fine motes in the light that twinkle (the brightest
@@ -629,6 +668,8 @@ function openSettings() {
     <p class="st-note">${esc(t('liteNote'))}</p></div></div>
     <div class="cbtns"><button class="btn st-reset" data-a="reset">${esc(t('resetData'))}</button><button class="btn gold" data-a="close">${esc(t('close'))}</button></div>`;
   const box = modal(draw(), 'settings');
+  // (2026-11-16, ユーザー) a click outside the box closes it too
+  $('#modal').onclick = e => { if (e.target === $('#modal')) closeModal(); };
   box.addEventListener('input', e => {
     const r = e.target.closest('input[type=range]'); if (!r) return;
     const k = r.dataset.k; DB.set[k + 'Vol'] = r.value / 100; DB.set[k + 'On'] = true; DB.set.snd = true; save(); r.style.setProperty('--p', r.value + '%');
@@ -699,6 +740,8 @@ addEventListener('resize', fitRoot);
 addEventListener('resize', refitCard);   // (after fitRoot: the stage first, then the card on it)
 for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, refitCard);
 if (window.ResizeObserver) { const ro = new ResizeObserver(refitCard); for (const q of ['#home', '#home .aa-play', '#aaBanner', '#home nav']) { const e = document.querySelector(q); if (e) ro.observe(e); } }
+// (2026-11-16) and every few seconds while the home is on, a quiet check: if the window's size changed without an event, fit again
+{ let last = ''; setInterval(() => { if ($('#home').hidden || document.hidden) return; const k = innerWidth + 'x' + innerHeight + ':' + ($('#home').clientWidth || 0); if (k !== last) { last = k; refitCard(); } }, 1500); }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(refitCard);
 addEventListener('orientationchange', () => setTimeout(fitRoot, 120));
 $('#btnStart').addEventListener('click', () => { SND.unlock(); startGame(DB.set.mode !== 'free' ? { ranked: true, len: DB.set.len } : {}); });
@@ -720,14 +763,14 @@ function rankBar(pt) {
   return `<div class="rk-bar"><i style="--f:${f.toFixed(3)}"></i></div><small class="rk-nx">${n ? esc(t('rkNext', { r: rkName(n), n: n.pt - pt })) : esc(t('rkTop'))}</small>`;
 }
 function rankStrip(rk) {
-  return `<div class="rk-strip ${rk.ups.length ? 'up' : ''}">${rankBadge(rk.r1)}<span class="rk-g">${esc(t('rkGain', { n: rk.gain }))}</span>
-    <span class="rk-pt">${DB.rank.pt} pt</span>${rk.ups.length ? `<em class="rk-up">${esc(t('rkUp'))}</em>` : ''}<div class="rk-sb">${rankBar(DB.rank.pt)}</div></div>`;
+  return `<div class="rk-strip ${rk.ups.length ? 'up' : ''} ${rk.down ? 'dn' : ''}">${rankBadge(rk.r1)}<span class="rk-g ${rk.gain < 0 ? 'neg' : ''}">${esc(t('rkGain', { n: (rk.gain > 0 ? '+' : rk.gain < 0 ? '−' : '±') + Math.abs(rk.gain) }))}</span>
+    <span class="rk-pt">${DB.rank.pt} pt</span>${rk.ups.length ? `<em class="rk-up">${esc(t('rkUp'))}</em>` : ''}${rk.down ? `<em class="rk-dn">${esc(t('rkDown'))}</em>` : ''}<div class="rk-sb">${rankBar(DB.rank.pt)}</div></div>`;
 }
 function openRanked() {
   SND.pick();
   const pt = DB.rank.pt, cur = MJRank.at(pt), nx = MJRank.next(pt);
   const nextGift = MJRank.list.find(x => x.reward && x.i > cur.i);
-  const P = MJRank.POINTS, lvName = MJRank.botName(pt, t('lv'));
+  const lvName = MJRank.botName(pt, t('lv'));
   const veiled = MJRank.list.some(x => !rkSeen(x));
   const rows = (veiled ? `<div class="rk-row rk-veil">${rankBadge(MJRank.list[MJRank.list.length - 1], 'sm')}<span class="rk-vt">${esc(t('rkVeil'))}</span></div>` : '') +
     MJRank.list.filter(rkSeen).reverse().map(x => {
@@ -743,10 +786,9 @@ function openRanked() {
           <div class="rk-pts"><b>${pt}</b> pt <small>${esc(t('rkGames', { n: DB.rank.games }))}</small></div>
           ${rankBar(pt)}
           ${nextGift ? `<div class="rk-ng"><span class="rk-gimg rk-sil">${frame(MJChars.get(nextGift.reward), 'silf', 'fr-lock')}</span><span><small>${esc(t('rkNextGift'))}</small><b>？？？</b><em>${esc(t('rkGiftAt', { r: rkName(nextGift), n: Math.max(0, nextGift.pt - pt) }))}</em></span></div>` : ''}
-          <p class="rk-rule">${esc(t('rkRule', { lv: lvName }))}</p>
+          <p class="rk-rule">${esc(t('rkRule', { lv: lvName }))}${pt >= MJRank.FLOOR ? '' : ''}</p>
           <div class="rk-go">
-            <button class="go rk-b" data-len="east"><b>${esc(t('east'))}</b><small>${[0, 1, 2].map(i => `${esc(t('rank')[i])} +${P.east[i]}`).join(' ・ ')}</small></button>
-            <button class="go rk-b" data-len="south"><b>${esc(t('south'))}</b><small>${[0, 1, 2].map(i => `${esc(t('rank')[i])} +${P.south[i]}`).join(' ・ ')}</small></button>
+            ${['east', 'south'].map(len => { const T = MJRank.table(pt, len); return `<button class="go rk-b" data-len="${len}"><b>${esc(t(len))}</b><small>${[0, 1, 2, 3].filter(i => T[i] !== 0).map(i => `<span class="rk-pp ${T[i] < 0 ? 'neg' : ''}">${esc(t('rank')[i])} ${T[i] > 0 ? '+' : '−'}${Math.abs(T[i])}</span>`).join('')}</small></button>`; }).join('')}
           </div>
         </div>
         <div class="rk-ladder" id="rkLadder">${rows}</div>
@@ -806,7 +848,7 @@ function openGacha() {
     <div class="gacha">
       <h2>${t('gacha')}<small>GACHA</small></h2>
       <div class="gcoins">${icon('coin')}<b id="gCoins">${DB.coins.toLocaleString()}</b></div>
-      <div class="gstage" id="gStage">${gPickHTML()}<div class="gorb"></div><p class="grates">${t('charRates')} UR 1% ・ SSR 4% ・ SR 15% ・ R 35% ・ N 45%<br>${t('skillRates')} SSR 3% ・ SR 12% ・ R 30% ・ N 55%<br><small>${t('tenth')}</small></p></div>
+      <div class="gstage" id="gStage">${gPickHTML()}${gShrineHTML()}<p class="grates">${t('charRates')} UR 1% ・ SSR 4% ・ SR 15% ・ R 35% ・ N 45%<br>${t('skillRates')} SSR 3% ・ SR 12% ・ R 30% ・ N 55%<br><small>${t('tenth')}</small></p></div>
       <div class="gbtns">
         <button class="btn" data-n="1"><b>${esc(t('pull1', { n: '' }).replace(/[（(]\s*[）)]/, '').trim())}</b><small>${icon('coin')}${COST1}</small></button>
         <button class="btn gold" data-n="10"><b>${esc(t('pull10', { n: '' }).replace(/[（(]\s*[）)]/, '').trim())}</b><small>${icon('coin')}${COST10.toLocaleString()}</small></button>
@@ -836,12 +878,34 @@ function openGacha() {
     b.busy = false;
   });
 }
+// (2026-11-16, ユーザー「ガチャのページの画像はこの社に。引くときは派手に光らせて演出を」) the shrine of the 雀神 stands on the
+// gacha stage. A pull: the shrine trembles as light gathers in its doorway, rays burst out from it in the colour of the best
+// rarity drawn (N white, R blue, SR violet, SSR gold, UR every colour), sparks fly up, and a flash fills the stage — then the cards.
+function gShrineHTML(cls = '') {
+  return `<div class="gshrine ${cls}"><div class="gs-in"><img src="${ASSETS}shrine.webp" alt="" draggable="false"><i class="gs-glow"></i></div><i class="gs-rays"></i><i class="gs-spark"></i></div>`;
+}
 async function showPulls(got) {
   const st = $('#gStage');
   const best = got.reduce((a, g) => RANK_I(g.c.rarity) > RANK_I(a) ? g.c.rarity : a, 'N');
-  st.innerHTML = `<div class="gorb spin r-${best}"></div>`;
+  // (2026-11-16, ユーザー「神社が吹っ飛ぶくらいド派手に — 画像を割るのではなく、リッチなエフェクトで。AAAの仕事として」) the light itself
+  // is drawn by gachafx.js on a canvas over the whole screen (the charge, the blast, sparks, petals, rings, flares); here the shrine
+  // trembles and glows (CSS), is swallowed by the light at the blast, the box quakes, and the cards come at 2.1 s.
+  st.innerHTML = gShrineHTML('go r-' + best);
   SND.gacha(best);
-  await sleep(1100);
+  const box = st.closest('.mbox'), sh = st.querySelector('.gshrine'), img = sh && sh.querySelector('img');
+  let fx = null;
+  if (img && window.GachaFX) {
+    if (!img.complete) await new Promise(r => { img.onload = img.onerror = r; setTimeout(r, 400); });
+    const mk = document.createElement('i'); mk.className = 'gs-door';
+    mk.style.cssText = `left:${img.offsetLeft + img.offsetWidth / 2}px;top:${img.offsetTop + img.offsetHeight * .66}px`; sh.querySelector('.gs-in').appendChild(mk);
+    const r = mk.getBoundingClientRect(), ir = img.getBoundingClientRect();
+    fx = GachaFX.run({ x: r.left, y: r.top, w: Math.max(ir.width, ir.height) }, best, { lite: !!DB.set.lite });
+  }
+  await sleep(window.GachaFX ? GachaFX.TB : 1300);
+  if (sh) sh.classList.add('engulf'); if (box && !DB.set.lite) box.classList.add('gs-quake');
+  SND.gacha(best);
+  await sleep(800);
+  if (box) box.classList.remove('gs-quake');
   st.innerHTML = `<div class="gcards n${got.length}">${got.map((g, i) => `
     <div class="gc frame fr-${g.c.rarity}" style="--d:${i * 110}ms;--c:${g.c.color};--c2:${g.c.color2}">
       <div class="gci"><img src="${charImg(g.c, 'bust')}" alt=""><i class="fx-sh"></i></div>
@@ -895,6 +959,7 @@ function renderChara() {
     $('#chBlur').src = own ? full : '';   // (a locked character: nothing of her shows, not even blurred behind)
     $('#chBlur').style.visibility = own ? '' : 'hidden';
     $('#chArt').classList.remove('in'); void $('#chArt').offsetWidth; $('#chArt').classList.add('in');
+    { const sy = $('#chSay'); if (sy) { sy.classList.remove('on'); sy.hidden = true; } if (own && window.MJTouch && I18N.lang === 'ja') MJTouch.load(c.id); }
   }
   const sisters = MJChars.list.filter(x => x.family === c.family && x.id !== c.id);
   const o = DB.chars[c.id], uk = own ? useKey(c.id) : null;
@@ -946,7 +1011,11 @@ function renderChara() {
   ch.style.setProperty('--dl', /^(ja|zh|ko)/.test(I18N.lang) ? 3 : 5);   // (lines kept for a skill's description: the longest one in this language)
   { const info = $('#chInfo'); info.classList.remove('tight', 'tight2');
     if (!info.classList.contains('tabs')) {   // (the phone's tabs scroll inside their pane instead)
-    if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight');
+    // (2026-11-16, ユーザー「STORYを長く、収まらなければその場でスクロール」) her story no longer gives way: it keeps what room is
+    // left (at least three lines) and scrolls inside itself; only then do the small labels and the size of her name give way
+    const st = info.querySelector('.pprof'); if (st) { st.style.maxHeight = ''; st.classList.remove('scroll'); }
+    if (st && info.scrollHeight > info.clientHeight + 2) { const lh = parseFloat(getComputedStyle(st).lineHeight) || 24;
+      st.style.maxHeight = Math.max(lh * 3, st.offsetHeight - (info.scrollHeight - info.clientHeight) - 4) + 'px'; st.classList.add('scroll'); }
     if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight2'); }
     info.scrollTop = keepScroll;
     if (!pt && canPick) { const q = info.querySelector('.ptn'); if (q && q.offsetTop + q.offsetHeight > info.scrollTop + info.clientHeight) info.scrollTop = Math.max(0, q.offsetTop - 60); } }   // (the call to pick a partner is never left below the fold)
@@ -962,7 +1031,7 @@ function renderChara() {
   };
 }
 addEventListener('resize', () => { if (!$('#chara').hidden) renderChara(); });
-$('#chArt').addEventListener('click', e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } else if (e.target.closest('[data-a=rated]')) { SND.pick(); openRanked(); } });
+$('#chArt').addEventListener('click', e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } else if (e.target.closest('[data-a=rated]')) { SND.pick(); openRanked(); } else charaSay(e); });
 $('#chTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; chTab = b.dataset.tab; SND.pick(); renderChara(); });
 // (ユーザー 2026-11-15: no 「許婚にする」 button) the character picked in the list becomes the 許婚 at once, when she is owned;
 // one not owned yet is only looked at (the 許婚 stays who she was)
@@ -1259,6 +1328,7 @@ async function onEvent(ev, d) {
     case 'skill': {
       if (d.cost > 0) SND.stick();   // (the points go into the pot)
       await cutin(d.seat, 'skill', d);
+      if (d.slot && d.by) partnerFlash(d.seat, d.by, MJSkills.get(d.skill));   // (ユーザー 2026-11-16: a partner's skill — her face comes on at the seat too)
       if (FAST >= 1 && window.MJSkillFx && TB) { SND.skillFx(d.skill); await MJSkillFx.play(d.skill, d.seat, TB, { lite: !!DB.set.lite }); }   // (ユーザー 2026-11-15: after the picture and the words, the skill's own effect over the table — skillfx.js)
       refreshTable(); renderBadges();
       if (d.seat === ME) {
@@ -1317,12 +1387,13 @@ function layoutRiver(s, anim) {
   if (anim && s === ME && riv.length) { try {
     const el = document.querySelector(`#hand .tl[data-id="${riv[riv.length - 1].id}"]`), root = $('#game');
     const off = e => { let x = 0, y = 0; for (let n = e; n && n !== root; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; } return [x, y]; };
-    if (el && root.contains(el)) { const [ex, ey] = off(el), [sx, sy] = off($('#stage')); lx = TB.screenPose(ex + el.offsetWidth / 2 - sx, ey + el.offsetHeight / 2 - sy, el.offsetWidth);
+    if (el && root.contains(el)) { const [ex0, ey0] = off(el), [sx, sy] = off($('#stage')), ex = ex0 + (+el.dataset.ddx || 0), ey = ey0 + (+el.dataset.ddy || 0);   // (ddx/ddy: where a dragged tile was let go — phone)
+      lx = TB.screenPose(ex + el.offsetWidth / 2 - sx, ey + el.offsetHeight / 2 - sy, el.offsetWidth);
       // (2026-11-16, ユーザー「スマホで捨てる牌が暗い四角になる」: until the hand has its fingers on it, the tile stays the page's own
       // tile — a copy left where it stood, while the row closes up — and the 3D tile (lit by the table's lights, so greyer than the
       // flat picture) takes over only when it is picked up)
       const hud = el.closest('.hud') || root, [hx, hy] = off(hud), gh = el.cloneNode(true);
-      gh.classList.remove('up', 'can', 'no'); gh.classList.add('ghost'); gh.querySelectorAll('kbd,.hit').forEach(n => n.remove());
+      gh.classList.remove('up', 'can', 'no', 'hdrag', 'hdrop'); gh.classList.add('ghost'); gh.querySelectorAll('kbd,.hit').forEach(n => n.remove());
       gh.style.cssText = `position:absolute;left:${ex - hx}px;top:${ey - hy}px;width:${el.offsetWidth}px;height:${el.offsetHeight}px;margin:0;pointer-events:none`;
       hud.appendChild(gh);
       const drop = () => { gh.remove(); if (TB.onPageTake === drop) TB.onPageTake = null; };
@@ -1358,7 +1429,22 @@ function renderBadges() {
         <span class="bk">${s === ME && g.rules.skills ? '' : chips ? `<span class="fxs">${chips}</span>` : ''}${DB.set.skills && g.rules.skills && !(s === ME) ? `<span class="skws">${[0, 1].map(i => oppSkill(g, s, i)).join('')}</span>` : ''}</span></div>`;
     if (s === ME) renderMe(html, chips, fx.map(k => L(MJSkills.get(k).name)));   // (ユーザー 2026-11-15: the player's own skill marks — the effects in force, the seal's lock — sit inside the skill plate, not under the portrait; the plate already shows the skill itself)
     else $('#opp' + s).innerHTML = html;
+    if (PFL[s]) partnerFlash(s);
   }
+}
+// (2026-11-16, ユーザー「パートナーのスキルを使ったときはパートナーの画像と演出を」) after the cut-in (which shows the partner), the
+// partner also steps in at the seat: her face fades in over the seat's portrait with a burst of the skill's colour and a ring of
+// light, stays while the skill's effect plays over the table, then gives the seat back
+// (the seats are redrawn while it shows — renderBadges puts it back, at the same moment of its animation)
+const PFL = {};
+function partnerFlash(s, pc, sk, t0) {
+  if (pc) PFL[s] = { pc, sk, t0: performance.now() };
+  const f = PFL[s]; if (!f) return; const el0 = performance.now() - f.t0; if (el0 >= 3000) { delete PFL[s]; return; }
+  const host = s === ME ? $('#mePanel') : $('#opp' + s), fr = host && host.querySelector('.bf .frame'); if (!fr) return;
+  fr.querySelectorAll('.ptn-in').forEach(n => n.remove());
+  const el = document.createElement('i'); el.className = 'ptn-in'; el.style.setProperty('--sc', f.sk ? f.sk.color : '#e8ce8c'); el.style.animationDelay = -el0 + 'ms';
+  el.innerHTML = `<img src="${charImg(f.pc, 'face')}" alt=""><b>${esc(t('partner'))}</b><s style="animation-delay:${50 - el0}ms"></s>`;
+  fr.appendChild(el); clearTimeout(f.tm); f.tm = setTimeout(() => { el.remove(); delete PFL[s]; }, 3000 - el0);
 }
 // (ユーザー 2026-11-15) the others' skill chips: what the skill does in a bubble — on hover, or on a tap (a touch screen; it closes by itself)
 document.addEventListener('click', e => { const w = e.target.closest('#game .opp .skw'); document.querySelectorAll('#game .opp .skw.tip').forEach(x => { if (x !== w) x.classList.remove('tip'); });
@@ -1450,7 +1536,36 @@ const handEl = $('#hand');
 const fine = matchMedia('(hover: hover) and (pointer: fine)');
 handEl.addEventListener('pointerover', e => { const el = e.target.closest('.tl[data-id]'); if (el && TB) TB.highlightType(T(+el.dataset.id)); });
 handEl.addEventListener('pointerleave', () => { if (TB) TB.highlightType(null); });
+// (2026-11-16, ユーザー「スマホ：捨てたい牌をタップだけでなく、画面中央までスライドしても捨てられるように」) on a phone a hand tile
+// can be dragged: it follows the finger, lights up once it is above the middle of the screen, and is discarded when let go there;
+// let go lower, it goes back. A tap still works as before (the drag starts only after the finger has moved 10px).
+let hDrag = null, hDragEnd = 0;
+handEl.addEventListener('pointerdown', e => {
+  if (!document.documentElement.classList.contains('lp')) return;
+  const el = e.target.closest('.tl[data-id]');
+  if (!el || !UIS || UIS.kind !== 'turn' || !UIS.resolve || el.classList.contains('no')) return;
+  const [x, y] = uiPt(e.clientX, e.clientY); hDrag = { el, id: +el.dataset.id, x, y, on: false, over: false, pid: e.pointerId };
+});
+addEventListener('pointermove', e => {
+  const d = hDrag; if (!d || e.pointerId !== d.pid) return;
+  const [x, y] = uiPt(e.clientX, e.clientY), dx = x - d.x, dy = y - d.y;
+  if (!d.on) { if (Math.hypot(dx, dy) < 10) return; d.on = true; d.el.classList.add('hdrag'); }
+  e.preventDefault();
+  d.dx = dx; d.dy = dy; d.el.style.transform = `translate(${dx}px,${dy}px) scale(1.12)`;
+  const H = $('#game').offsetHeight || innerHeight, over = y < H * .58 && !!UIS.resolve;
+  if (over !== d.over) { d.over = over; d.el.classList.toggle('hdrop', over); if (over) SND.pick(); }
+}, { passive: false });
+const hDragUp = e => {
+  const d = hDrag; if (!d || e.pointerId !== d.pid) return; hDrag = null;
+  if (!d.on) return;   // (a tap: the click handles it)
+  hDragEnd = performance.now();
+  if (d.over && UIS && UIS.resolve && UIS.kind === 'turn') { d.el.dataset.ddx = Math.round(d.dx); d.el.dataset.ddy = Math.round(d.dy); d.el.style.visibility = 'hidden'; doDiscard(d.id); return; }   // (the hand takes it where it was let go)
+  d.el.classList.remove('hdrag', 'hdrop'); d.el.classList.add('hback'); d.el.style.transform = '';
+  setTimeout(() => d.el.classList.remove('hback'), 260);
+};
+addEventListener('pointerup', hDragUp); addEventListener('pointercancel', hDragUp);
 handEl.addEventListener('click', e => {
+  if (performance.now() - hDragEnd < 400) return;   // (the end of a drag is not a tap)
   const el = e.target.closest('.tl[data-id]');
   if (!el || !UIS || UIS.kind !== 'turn' || !UIS.resolve) return;
   if (el.classList.contains('no')) return;
@@ -1662,6 +1777,9 @@ async function roundBanner(g) {
   const big = ja ? `<i>${esc(t('round')[g.round])}</i><span>${KN[g.kyoku]}局</span>` : `<span>${esc(t('kyoku', { w: t('round')[g.round], n: g.kyoku + 1 }))}</span>`;
   const dealer = UIS && UIS.chars ? UIS.chars[g.dealer] : null;
   const sub = [g.honba ? t('honba', { n: g.honba }) : '', dealer ? `${t('dealerOf', { n: L(dealer.name) })}` : ''].filter(Boolean).join('　·　');
+  // (2026-11-16, ユーザー「東N局の帯が中央だったり右下だったり」) the call-outs (ポン, ロン …) leave their seat's position on the element:
+  // cleared here, so the band is always in the centre
+  el.style.left = el.style.top = '';
   el.className = 'callout rbn'; el.innerHTML = `<div class="rbn-band"><div class="rbn-big">${big}</div>${sub ? `<small>${esc(sub)}</small>` : ''}</div>`;
   void el.offsetWidth; el.classList.add('show');
   await sleep(1700);
@@ -1669,6 +1787,7 @@ async function roundBanner(g) {
 }
 async function banner(text) {
   const el = $('#callout');
+  el.style.left = el.style.top = '';   // (centred: see roundBanner)
   el.className = 'callout banner'; el.innerHTML = `<b>${esc(text)}</b>`;
   void el.offsetWidth; el.classList.add('show');
   await sleep(1100);
@@ -1872,12 +1991,12 @@ async function showFinal(d) {
   // 段位戦: the points, promotions and their rewards
   let rk = null;
   if (UIS.ranked && !AUTO) {
-    const gain = MJRank.POINTS[UIS.ranked.len][myRank], before = DB.rank.pt, r0 = MJRank.at(before);
-    DB.rank.pt += gain; DB.rank.games++;
-    const r1 = MJRank.at(DB.rank.pt), ups = MJRank.list.slice(r0.i + 1, r1.i + 1), gifts = [];
+    const before = DB.rank.pt, r0 = MJRank.at(before), ap = MJRank.apply(before, UIS.ranked.len, myRank), gain = ap.gain;
+    DB.rank.pt = ap.pt; DB.rank.games++;
+    const r1 = MJRank.at(DB.rank.pt), ups = MJRank.list.slice(r0.i + 1, r1.i + 1), gifts = [], down = r1.i < r0.i;
     for (const u of MJRank.list.slice(1, r1.i + 1)) if (u.reward && !owns(u.reward))   // (any reward of a rank reached and not yet held)
       { const k = rollSkillKey(); DB.chars[u.reward] = { skills: [k], use: k }; gifts.push(u.reward); }
-    rk = { gain, before, r0, r1, ups, gifts };
+    rk = { gain, before, r0, r1, ups, gifts, down };
   }
   // 対局履歴 (ユーザー 2026-11-15: the log is part of 戦績, not the shared dialog): the last 200 finished games
   if (!AUTO) { const L0 = DB.hist = DB.hist || [];
@@ -1998,5 +2117,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, askDealSkill, roundBanner };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
 })();

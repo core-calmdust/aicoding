@@ -108,6 +108,9 @@ tanuki-（いま使っているデータ `tanuki-.nnue-pytorch-2024-07-30.1` の
 - §3.2 の道具を用意した：`shogi/tools/nnue/dlrelabel.py`・`dlrelabel.sh`（onnxruntime＋CoreML、無償の GCT モデル）。
 - 教師モデルの条件：GCT（dlshogi WCSC31 版に同梱の `model-0000225kai.onnx`、10ブロック）は配布ページに利用条件の記載なし。dlshogi の `dr2_exhi`（15ブロック）は、私的利用は自由・学習用の棋譜生成は可、商用利用・直接の対局・再配布・追加学習は不可（https://tadaoyamaoka.hatenablog.com/entry/2021/08/17/000710 ）。
 
+- **§3.2（DL 系の評価値で付け直す）も、512 幅では改善なし**（2026-11-16）：1.5億局面を GCT で付け直して学習、300ms・480局で −3（−33 〜 +28）。240局で +58 と出たのは偶然だった。採否の対局は480局以上にする。
+- ここまでで学習データ側の案はすべて効果なし。次は §4 の探索の定数の調整（`shogi/tools/match/spsa.py`）、そのあと §2 のネットの形。
+
 ## 出典
 
 - つようら王11mini/micro：やねうら王公式 https://yaneuraou.yaneu.com/2026/10/14/tsuyou-11-mini-micro-released-under-mit-license/ 、窓の杜 https://forest.watch.impress.co.jp/docs/news/2148597.html 、評価関数タイプの一覧 https://github.com/yaneurao/YaneuraOu/wiki/やねうら王のインストール手順

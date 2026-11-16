@@ -4,11 +4,16 @@
 // Board: the 33 points of the cross-shaped board, kept in a 7×7 grid: index = r * 7 + c, r = 0 the top row (7), c = 0 file a.
 // Rows 0-1 and 5-6 have the three middle points only. Lines join every point to its orthogonal neighbours; the points
 // with (r + c) even also have diagonals (the Alquerque pattern, so the centre has eight lines).
-// P1 = the Fox (one piece, starts in the middle, moves first), P2 = the Geese (they start on the near side).
-// Rule sets (claude/foxgeese-spec.md has the sources):
-//   g13 — the traditional game: 13 geese, they move one step along any line (backwards too)
-//   g17 — 17 geese (the two outer points of the middle row on each side as well): they move one step straight forward
-//         or sideways only — never backwards, never diagonally
+// P1 = the Fox (one piece, starts in the middle, moves first by default), P2 = the Geese (they start on the near side).
+// Who moves first at the starting position is a setting (setFirst: the fox by default, or the geese); a position spec
+// (lessons, puzzles) always carries its own side to move.
+// Rule sets, in the order of every list (claude/foxgeese-spec.md has the sources):
+//   g15  — the default: 15 geese (the 13 + the two end points of the middle row, a4 and g4); they move one step along
+//          any line forward, sideways or diagonally forward — never backwards, never diagonally backwards
+//   g17  — 17 geese (the two outer points of the middle row on each side as well): they move one step straight forward
+//          or sideways only — never backwards, never diagonally
+//   g13  — the traditional game: 13 geese, they move one step along any line (backwards too)
+//   g13n — this program's variant: the 13 geese of g13 with the movement of g15 (no step backwards)
 // The fox moves one step along any line, or jumps over an adjacent goose onto the empty point straight beyond it and
 // takes it; it may go on jumping in the same move, and it may stop. Capturing is never compulsory.
 // The geese win when the fox cannot move. The fox wins when five geese or fewer are left, or when the geese cannot move.
@@ -20,15 +25,19 @@ const P1 = 1, P2 = 2;                 // P1 = Fox, P2 = Geese
 const WIN = 30000, WINT = 29000;
 const N = 7, NN = 49;
 const RULES = {
-  g13: { geese: 13, back: true, diag: true },
+  g15: { geese: 15, back: false, diag: true },
   g17: { geese: 17, back: false, diag: false },
+  g13: { geese: 13, back: true, diag: true },
+  g13n: { geese: 13, back: false, diag: true },
 };
-const RULE_ORDER = ['g13', 'g17'];
+const RULE_ORDER = ['g15', 'g17', 'g13', 'g13n'];
+const DEFAULT_RULE = 'g15';
 const FOX_WINS_AT = 5;                // geese left: they can no longer shut the fox in
 const QUIET_MAX = +((typeof process !== 'undefined' && process.env && process.env.FG_QUIET) || 120);   // plies without a capture after which the fox wins: the geese have failed to shut it in (this program's own rule, 60 moves each)
 const REP_MAX = 3;                    // the same position (same side to move) for the third time: the fox wins — the geese are making no progress (this program's own rule)
 const MAX_JUMPS = 7;
-let R = RULES.g13, RK = 'g13';
+let R = RULES[DEFAULT_RULE], RK = DEFAULT_RULE;
+let FIRST = 0;                        // the side to move at the starting position: 0 the fox (the default), 1 the geese
 const ON = new Uint8Array(NN), RC = [];
 const NBR = [];                       // NBR[i] = [[neighbour, beyond (or -1), dr, dc], …] along the lines
 for (let i = 0; i < NN; i++) { const r = Math.floor(i / 7), c = i % 7; RC.push([r, c]); ON[i] = (r >= 2 && r <= 4) || (c >= 2 && c <= 4) ? 1 : 0; }
@@ -43,7 +52,8 @@ for (let i = 0; i < NN; i++) {
     out.push([r1 * 7 + c1, b, dr, dc]);
   }
 }
-function setRule(k) { RK = RULES[k] ? k : 'g13'; R = RULES[RK]; }
+function setRule(k) { RK = RULES[k] ? k : DEFAULT_RULE; R = RULES[RK]; }
+function setFirst(p) { FIRST = p === P2 ? 1 : 0; }
 // ---------------------------------------------------------------- zobrist
 let seed = 0x2b7e1516;
 function rnd() { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed; }
@@ -64,13 +74,14 @@ function jumped(m) {
   for (let k = 1; k < p.length; k++) { const a = p[k - 1], b = p[k], ra = RC[a], rb = RC[b]; if (Math.abs(ra[0] - rb[0]) === 2 || Math.abs(ra[1] - rb[1]) === 2) out.push((ra[0] + rb[0]) / 2 * 7 + (ra[1] + rb[1]) / 2); }
   return out;
 }
-const START = { g13: [], g17: [] };
-for (let i = 0; i < NN; i++) if (ON[i] && RC[i][0] >= 4) { START.g13.push(i); START.g17.push(i); }
-START.g17.push(21, 22, 26, 27);       // a4 b4 f4 g4
+const START = { g15: [], g17: [], g13: [], g13n: [] };
+for (let i = 0; i < NN; i++) if (ON[i] && RC[i][0] >= 4) for (const k in START) START[k].push(i);   // the near arm and the row above it (13)
+START.g15.push(21, 27);               // + a4 g4 (the two end points of the middle row)
+START.g17.push(21, 22, 26, 27);       // + a4 b4 f4 g4
 
 class Pos {
   constructor() { this.sq = new Int8Array(NN); this.fox = 24; this.side = 0; this.ply = 0; this.quiet = 0; this.cap = 0; this.reset(); }
-  reset() { this.sq.fill(0); for (const i of START[RK]) this.sq[i] = P2; this.fox = 24; this.sq[24] = P1; this.side = 0; this.ply = 0; this.quiet = 0; this.cap = 0; this.rehash(); }
+  reset() { this.sq.fill(0); for (const i of START[RK]) this.sq[i] = P2; this.fox = 24; this.sq[24] = P1; this.side = FIRST; this.ply = 0; this.quiet = 0; this.cap = 0; this.rehash(); }
   // spec: { b: 49 chars ('.' empty, 'f' the fox, 'g' a goose; anything on the 16 unused squares is ignored), side: 1 | 2,
   //         cap: geese taken so far, n: plies played, q: plies without a capture } or null (the start)
   static from(spec) {
@@ -187,6 +198,8 @@ function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = r
 // The geese: how far up the board they have come and how tightly they stand (a goose with a friend straight behind
 // it on every line cannot be jumped).
 const EW = { goose: 100, room: 6, jump: 26, loose: 4, adv: 5, area: 9 };
+// each rule's centring constant: the start position (the fox to move) comes out near 0 — measured with the terms below
+const EV0 = { g15: 1400, g17: 1640, g13: 1210, g13n: 1210 };
 // the empty points the fox can walk to (steps only): the pen the geese are closing
 const _seen = new Uint8Array(NN), _stack = new Int16Array(NN);
 function foxArea(pos) {
@@ -204,7 +217,7 @@ function evaluate(pos) {
     for (const [n, b] of NBR[i]) if (b >= 0 && !sq[n] && !sq[b]) { loose++; break; }   // an empty line through it: it can be jumped once the fox gets beside it
   }
   v += loose * EW.loose - adv * EW.adv;
-  v += RK === 'g13' ? 1210 : 1640;      // (centred: the start is about 0)
+  v += EV0[RK];                         // (centred: the start is about 0)
   if (pos.quiet > 20) { const u = (pos.quiet - 20) / (QUIET_MAX - 20); v += u * u * 900; }   // the clock runs for the fox
   return pos.side ? -v : v;
 }
@@ -458,8 +471,8 @@ function goalReply(start, moves, n, G, rule) {
   return { move: best, need: bk };
 }
 
-setRule('g13');
-const API = { N, NN, P1, P2, WIN, WINT, QUIET_MAX, FOX_WINS_AT, RULES, RULE_ORDER, get rule() { return RK; }, get R() { return R; }, setRule,
+setRule(DEFAULT_RULE);
+const API = { N, NN, P1, P2, WIN, WINT, QUIET_MAX, FOX_WINS_AT, RULES, RULE_ORDER, DEFAULT_RULE, get rule() { return RK; }, get R() { return R; }, setRule, setFirst, get first() { return FIRST ? P2 : P1; },
   RC, ON, POINTS, NBR, START, sqAt, sqName, pack, mRm: () => -1, path: (pos, m) => path(m === undefined ? pos : m), mv, mFrom, mTo, jumped, Pos, effect, captured, name, parse, replay, judge,
   LEVELS, think, analyze, cands, pvOf, evaluate, foxArea, kindOf, EW, goalGood, goalMin, goalReply, goalOf, goalMet, ttClear,
   get nodes() { return nodes; } };
@@ -468,7 +481,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
   self.onmessage = e => {
     const m = e.data;
     try {
-      setRule(m.rule || 'g13');
+      setRule(m.rule || DEFAULT_RULE); setFirst(m.first);
       if (m.type === 'think') { PRO_CFG = m.cfg || null; let r; try { r = think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } self.postMessage({ id: m.id, type: 'result', ...r, nodes }); }
       else if (m.type === 'analyze') {
         const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
