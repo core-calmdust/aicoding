@@ -1362,10 +1362,11 @@
   let rtCur = null;   // the rated game being played on the table: { gid, R } (leaving it before the end = a loss, as in the full games)
   const rtTc = (id, opp) => { const L = rtList(id, opp); if (!L) return null; return L.find(c => c.id === pref[id + ':rtTc:' + opp]) || L[0]; };
   function mxPanels(g) {
-    const id = g.id, opp = RTG[id] ? rtOpp(id) : 'online', lsk = pref[id + ':lsk'] === 'open' && !NO_OPEN3D[id] ? 'open' : 'list';
+    const fullRt = !RTG[g.id] && !(g.tags || []).includes('online');   // レート戦が AI 相手だけで、フル機能版で打つゲーム（オンライン未対応：ラトルンクロルム・狐とガチョウ）
+    const id = g.id, opp = RTG[id] ? rtOpp(id) : fullRt ? 'ai' : 'online', lsk = pref[id + ':lsk'] === 'open' && !NO_OPEN3D[id] ? 'open' : 'list';
     const daily = id === 'shogi' ? [['d1', '★', t('bv.pz.d1')], ['d2', '☆', t('bv.pz.d2')]] : id === 'gomoku' ? [] : [['d1', '★', t('bv.pz.dc')]];   // (gomoku: no puzzle of the day in the full game)
     const rtOnly = !(window.Atlas3D && Atlas3D[id] && Atlas3D[id].variants) && !!RTG[id];   // (games without 種目: 相手 → 時間 → 現在のレート (+ 戦績, the cup, on its right) — 2026-11-15; games with 種目 keep shogi's 種目｜レート｜cup row)
-    return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp">${RTG[id] ? `<option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option>` : ''}<option value="online" ${opp === 'online' || !RTG[id] ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><span class="hb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 3 3.6M16 6h2.5a2.5 2.5 0 0 1-3 3.6"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/></svg></span></button></div>`
+    return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp">${RTG[id] || fullRt ? `<option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option>` : ''}${fullRt ? '' : `<option value="online" ${opp === 'online' || !RTG[id] ? 'selected' : ''}>${esc(t('bv.online'))}</option>`}</select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><span class="hb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 3 3.6M16 6h2.5a2.5 2.5 0 0 1-3 3.6"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/></svg></span></button></div>`
       + `<label id="bvRtTcL">${t('tc.h')}<button type="button" class="lvpick" id="bvRtTc"></button></label>${rtOnly ? '<div class="opts vopts rtonly"><span class="rtnow2" id="bvRtNow" hidden></span></div>' : ''}<div class="mxnote" id="bvRtNote" hidden>${esc(t('bv.rtNoTc'))}</div></div>`
       + `<div class="opts mxp${pz3dOf(id) ? '' : ' mxoff'}" id="bvPz" hidden>${daily.map(([k, ic, lb]) => `<button type="button" class="mxb${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
       + `<div class="opts mxp${ls3dOf(id) ? '' : ' mxoff'}" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option>${NO_OPEN3D[id] ? '' : `<option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option>`}</select></label><button type="button" class="mxb mxwide" id="bvLsList"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
@@ -1397,7 +1398,7 @@
     const f = $('bvFull'), tb = $('bvTable'), cl = $('bvi').querySelector('.R .act > a.btn'), act = $('bvi').querySelector('.R .act'); if (!f || !tb) return;
     const set = (el, a, b) => { el.innerHTML = `<b>${a}</b>${b ? `<small>${b}</small>` : ''}`; };
     // every tab the same (2026-11-10): red あそぶ = here on the 3D table · brown フル機能で遊ぶ · white 2Dで遊ぶ
-    const online = m === 'rated' && $('bvRtOpp') && $('bvRtOpp').value === 'online';
+    const online = m === 'rated' && $('bvRtOpp') && ($('bvRtOpp').value === 'online' || !RTG[bvGame.id]);
     set(f, esc(t('ps.go')) + ' ▶', esc(online ? t('bv.lsSub') : t(m === 'puzzle' ? 'bv.pzContSub' : m === 'lesson' ? 'bv.lsSub3d' : 'bv.tableSub')));
     const off = (m === 'puzzle' && !pz3dOf(g.id)) || (m === 'lesson' && !ls3dOf(g.id)) || (online && !RTG[g.id]);   // (only in the full game: one フル機能で遊ぶ)
     f.classList.toggle('mxgone', off); f.parentNode.classList.toggle('mxone', off);
@@ -1407,7 +1408,7 @@
   }
   function mxBind(g, ad) {
     const id = g.id, M = () => $('bvMode') ? $('bvMode').dataset.v : 'ai';
-    $('bvFull').onclick = () => { const m = M(); if (m === 'puzzle') startPuzzle(); else if (m === 'lesson') startLesson3D($('bvLsK').value); else if (m === 'rated' && $('bvRtOpp').value === 'online') startPlay('full'); else startPlay('table'); };   // あそぶ (here)
+    $('bvFull').onclick = () => { const m = M(); if (m === 'puzzle') startPuzzle(); else if (m === 'lesson') startLesson3D($('bvLsK').value); else if (m === 'rated' && ($('bvRtOpp').value === 'online' || !RTG[id])) startPlay('full'); else startPlay('table'); };   // あそぶ (here)
     $('bvTable').onclick = () => { const m = M(); if (m === 'puzzle') startPlay('full', 'puzzle', 'cont'); else if (m === 'lesson') startPlay('full', 'lesson', $('bvLsK').value); else startPlay('full'); };   // フル機能で遊ぶ
     $('bvLsList').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} lessonSheet(g, $('bvLsK').value); };
     $('bvPz').onclick = e => { const b = e.target.closest('[data-pz]'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} const k = b.dataset.pz; if (k === 'list') puzzleSheet(g); else startPuzzle({ daily: k }); } };   // (on the 3D table, 2026-11-11)

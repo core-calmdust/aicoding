@@ -5,7 +5,7 @@
      13 = the traditional 13 geese · 17 = 17 geese that move only forward or sideways). 先手 = the fox (it moves first).
    · Table play (ちゃぶ台で遊ぶ): start(ctx) plays on the 3D table itself with the full game's rules and AI —
      ../foxgeese/engine.js on the page (steps along the lines, the fox's jumps — several in one move, it may stop,
-     capturing is never compulsory — the fox shut in, five geese or fewer, the 80-move rule) and the same file as
+     capturing is never compulsory — the fox shut in, five geese or fewer, no draws: the third repetition or 60 quiet moves each is the fox's win) and the same file as
      a Worker (levels 1..20), asked as foxgeese/app.js asks it.
      Input as on the page: tap a piece and the point it goes to. The fox's jumps are tapped one landing at a time;
      to stop where it could jump on, tap that landing point (or the fox) once more.
@@ -15,7 +15,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../foxgeese/', VER = '?v=1';   // same file / version as foxgeese/index.html → shared cache
+  const BASE = '../foxgeese/', VER = '?v=3';   // same file / version as foxgeese/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.FoxEngine) return Promise.resolve(window.FoxEngine);
@@ -29,20 +29,20 @@
   // n: the sides · turn / win (two players) · own / stuck / move: a tap that does nothing · more: the fox could jump on ·
   // wFew / wTrap / wStuck / wQuiet: why the game ended · took: geese taken in one move
   const TX = {
-    ja: { n: ['狐', 'ガチョウ'], turn: '{p}の番', win: '{p}の勝ち', own: '自分の駒を選んでください', stuck: 'その駒はいま動かせません', move: 'そこへは動かせません', more: 'まだ跳べるよ。ここで止まるなら同じ点をもう一度タップ', wFew: 'ガチョウが5羽以下になった（もう狐を囲めない）', wTrap: '狐が動けなくなった', wStuck: 'ガチョウが動けなくなった', wQuiet: '取り合いのないまま80手ずつ進んだ', took: '{n}羽続けて取った！' },
-    en: { n: ['Fox', 'Geese'], turn: '{p} to move', win: '{p} wins', own: 'Pick one of your pieces', stuck: 'That piece cannot move now', move: 'It cannot go there', more: 'It can jump on. To stop here, tap this point once more', wFew: 'Five geese or fewer are left — they can no longer shut the fox in', wTrap: 'The fox cannot move', wStuck: 'The geese cannot move', wQuiet: '80 moves each without a capture', took: '{n} geese in one move!' },
-    zh: { n: ['狐狸', '鹅'], turn: '轮到{p}', win: '{p}胜', own: '请选择自己的棋子', stuck: '这枚棋子现在不能动', move: '不能走到那里', more: '还可以继续跳。想停在这里，就再点一次这个点', wFew: '鹅只剩5只或更少（已围不住狐狸）', wTrap: '狐狸动不了了', wStuck: '鹅动不了了', wQuiet: '双方各80步没有吃子', took: '连吃{n}只！' },
-    ko: { n: ['여우', '거위'], turn: '{p} 차례', win: '{p} 승리', own: '내 말을 고르세요', stuck: '그 말은 지금 움직일 수 없습니다', move: '그곳으로는 갈 수 없습니다', more: '더 뛸 수 있어요. 여기서 멈추려면 같은 점을 한 번 더 탭', wFew: '거위가 5마리 이하가 되었다(더는 여우를 가둘 수 없다)', wTrap: '여우가 움직일 수 없게 되었다', wStuck: '거위가 움직일 수 없게 되었다', wQuiet: '잡기 없이 80수씩 진행되었다', took: '{n}마리 연속으로 잡았다!' },
-    es: { n: ['Zorro', 'Ocas'], turn: 'Turno: {p}', win: 'Gana: {p}', own: 'Elige una de tus piezas', stuck: 'Esa pieza no puede moverse ahora', move: 'No puede ir ahí', more: 'Puede seguir saltando. Para parar aquí, toca este punto otra vez', wFew: 'Quedan cinco ocas o menos: ya no pueden encerrar al zorro', wTrap: 'El zorro no puede moverse', wStuck: 'Las ocas no pueden moverse', wQuiet: '80 jugadas por bando sin capturas', took: '¡{n} ocas de una vez!' },
-    fr: { n: ['Renard', 'Oies'], turn: 'Trait : {p}', win: 'Victoire : {p}', own: 'Choisissez une de vos pièces', stuck: 'Cette pièce ne peut pas bouger maintenant', move: 'Elle ne peut pas aller là', more: 'Il peut encore sauter. Pour s’arrêter ici, touchez ce point une fois de plus', wFew: 'Il reste cinq oies ou moins : elles ne peuvent plus enfermer le renard', wTrap: 'Le renard ne peut plus bouger', wStuck: 'Les oies ne peuvent plus bouger', wQuiet: '80 coups chacun sans prise', took: '{n} oies d’un coup !' },
-    pt: { n: ['Raposa', 'Gansos'], turn: 'Vez: {p}', win: 'Vitória: {p}', own: 'Escolha uma de suas peças', stuck: 'Essa peça não pode se mover agora', move: 'Ela não pode ir para aí', more: 'Ela pode continuar saltando. Para parar aqui, toque neste ponto mais uma vez', wFew: 'Restam cinco gansos ou menos: já não conseguem cercar a raposa', wTrap: 'A raposa não pode se mover', wStuck: 'Os gansos não podem se mover', wQuiet: '80 lances de cada lado sem capturas', took: '{n} gansos de uma vez!' },
-    de: { n: ['Fuchs', 'Gänse'], turn: 'Am Zug: {p}', win: 'Sieg: {p}', own: 'Wähle eine deiner Figuren', stuck: 'Diese Figur kann gerade nicht ziehen', move: 'Dorthin kann sie nicht', more: 'Er kann weiterspringen. Zum Anhalten tippe diesen Punkt noch einmal an', wFew: 'Nur noch fünf Gänse oder weniger – sie können den Fuchs nicht mehr einsperren', wTrap: 'Der Fuchs kann nicht mehr ziehen', wStuck: 'Die Gänse können nicht mehr ziehen', wQuiet: 'Je 80 Züge ohne Schlag', took: '{n} Gänse in einem Zug!' },
-    hi: { n: ['लोमड़ी', 'कलहंस'], turn: '{p} की बारी', win: '{p} की जीत', own: 'अपना एक मोहरा चुनो', stuck: 'वह मोहरा अभी नहीं चल सकता', move: 'वहाँ नहीं जा सकता', more: 'लोमड़ी और कूद सकती है। यहीं रुकना हो तो इसी बिंदु को एक बार और टैप करो', wFew: 'पाँच या कम कलहंस बचे — अब वे लोमड़ी को घेर नहीं सकते', wTrap: 'लोमड़ी हिल नहीं सकती', wStuck: 'कलहंस हिल नहीं सकते', wQuiet: 'दोनों की 80-80 चालें बिना किसी कब्ज़े के', took: 'एक चाल में {n} कलहंस!' },
-    ar: { n: ['الثعلب', 'الإوز'], turn: 'دور {p}', win: 'فوز {p}', own: 'اختر إحدى قطعك', stuck: 'هذه القطعة لا تستطيع الحركة الآن', move: 'لا يمكنها الذهاب إلى هناك', more: 'يستطيع الثعلب متابعة القفز. للتوقف هنا المس هذه النقطة مرة أخرى', wFew: 'بقيت خمس إوزات أو أقل: لم تعد تستطيع حصار الثعلب', wTrap: 'الثعلب لا يستطيع الحركة', wStuck: 'الإوز لا يستطيع الحركة', wQuiet: '80 نقلة لكل طرف بلا أخذ', took: '{n} إوزات في نقلة واحدة!' },
-    ru: { n: ['Лиса', 'Гуси'], turn: 'Ход: {p}', win: 'Победа: {p}', own: 'Выберите свою фигуру', stuck: 'Эта фигура сейчас не может ходить', move: 'Туда пойти нельзя', more: 'Можно прыгать дальше. Чтобы остановиться здесь, нажмите эту точку ещё раз', wFew: 'Гусей осталось пять или меньше — лису уже не запереть', wTrap: 'Лиса не может ходить', wStuck: 'Гуси не могут ходить', wQuiet: 'По 80 ходов без взятий', took: '{n} гусей за один ход!' },
-    'zh-TW': { n: ['狐狸', '鵝'], turn: '輪到{p}', win: '{p}獲勝', own: '請選擇自己的棋子', stuck: '這顆棋子現在不能動', move: '不能走到那裡', more: '還可以繼續跳。想停在這裡，就再點一次這個點', wFew: '鵝只剩5隻或更少（已圍不住狐狸）', wTrap: '狐狸動不了了', wStuck: '鵝動不了了', wQuiet: '雙方各80步沒有吃子', took: '連吃{n}隻！' },
-    id: { n: ['Rubah', 'Angsa'], turn: 'Giliran {p}', win: '{p} menang', own: 'Pilih salah satu bidakmu', stuck: 'Bidak itu tidak bisa bergerak sekarang', move: 'Tidak bisa ke sana', more: 'Masih bisa melompat lagi. Untuk berhenti di sini, ketuk titik ini sekali lagi', wFew: 'Angsa tinggal lima atau kurang — rubah tidak bisa dikurung lagi', wTrap: 'Rubah tidak bisa bergerak', wStuck: 'Angsa tidak bisa bergerak', wQuiet: '80 langkah masing-masing tanpa tangkapan', took: '{n} angsa sekaligus!' },
-    tr: { n: ['Tilki', 'Kazlar'], turn: 'Sıra: {p}', win: 'Kazanan: {p}', own: 'Taşlarından birini seç', stuck: 'Bu taş şu an hareket edemez', move: 'Oraya gidemez', more: 'Atlamaya devam edebilir. Burada durmak için bu noktaya bir kez daha dokun', wFew: 'Beş ya da daha az kaz kaldı — artık tilkiyi kapatamazlar', wTrap: 'Tilki hareket edemiyor', wStuck: 'Kazlar hareket edemiyor', wQuiet: '80’er hamle taş alınmadı', took: 'Tek hamlede {n} kaz!' },
+    ja: { n: ['狐', 'ガチョウ'], turn: '{p}の番', win: '{p}の勝ち', own: '自分の駒を選んでください', stuck: 'その駒はいま動かせません', move: 'そこへは動かせません', more: 'まだ跳べるよ。ここで止まるなら同じ点をもう一度タップ', wFew: 'ガチョウが5羽以下になった（もう狐を囲めない）', wTrap: '狐が動けなくなった', wStuck: 'ガチョウが動けなくなった', wQuiet: '取り合いのないまま60手ずつ進んだ', wRep: '同じ局面が3回現れた（千日手は狐の勝ち）', took: '{n}羽続けて取った！' },
+    en: { n: ['Fox', 'Geese'], turn: '{p} to move', win: '{p} wins', own: 'Pick one of your pieces', stuck: 'That piece cannot move now', move: 'It cannot go there', more: 'It can jump on. To stop here, tap this point once more', wFew: 'Five geese or fewer are left — they can no longer shut the fox in', wTrap: 'The fox cannot move', wStuck: 'The geese cannot move', wQuiet: '60 moves each without a capture', wRep: 'The same position three times — repetition is the fox’s win', took: '{n} geese in one move!' },
+    zh: { n: ['狐狸', '鹅'], turn: '轮到{p}', win: '{p}胜', own: '请选择自己的棋子', stuck: '这枚棋子现在不能动', move: '不能走到那里', more: '还可以继续跳。想停在这里，就再点一次这个点', wFew: '鹅只剩5只或更少（已围不住狐狸）', wTrap: '狐狸动不了了', wStuck: '鹅动不了了', wQuiet: '双方各60步没有吃子', wRep: '同一局面出现了三次——重复局面判狐狸获胜', took: '连吃{n}只！' },
+    ko: { n: ['여우', '거위'], turn: '{p} 차례', win: '{p} 승리', own: '내 말을 고르세요', stuck: '그 말은 지금 움직일 수 없습니다', move: '그곳으로는 갈 수 없습니다', more: '더 뛸 수 있어요. 여기서 멈추려면 같은 점을 한 번 더 탭', wFew: '거위가 5마리 이하가 되었다(더는 여우를 가둘 수 없다)', wTrap: '여우가 움직일 수 없게 되었다', wStuck: '거위가 움직일 수 없게 되었다', wQuiet: '잡기 없이 60수씩 진행되었다', wRep: '같은 국면이 세 번 나왔다 — 반복은 여우의 승리', took: '{n}마리 연속으로 잡았다!' },
+    es: { n: ['Zorro', 'Ocas'], turn: 'Turno: {p}', win: 'Gana: {p}', own: 'Elige una de tus piezas', stuck: 'Esa pieza no puede moverse ahora', move: 'No puede ir ahí', more: 'Puede seguir saltando. Para parar aquí, toca este punto otra vez', wFew: 'Quedan cinco ocas o menos: ya no pueden encerrar al zorro', wTrap: 'El zorro no puede moverse', wStuck: 'Las ocas no pueden moverse', wQuiet: '60 jugadas por bando sin capturas', wRep: 'La misma posición tres veces: la repetición es victoria del zorro', took: '¡{n} ocas de una vez!' },
+    fr: { n: ['Renard', 'Oies'], turn: 'Trait : {p}', win: 'Victoire : {p}', own: 'Choisissez une de vos pièces', stuck: 'Cette pièce ne peut pas bouger maintenant', move: 'Elle ne peut pas aller là', more: 'Il peut encore sauter. Pour s’arrêter ici, touchez ce point une fois de plus', wFew: 'Il reste cinq oies ou moins : elles ne peuvent plus enfermer le renard', wTrap: 'Le renard ne peut plus bouger', wStuck: 'Les oies ne peuvent plus bouger', wQuiet: '60 coups chacun sans prise', wRep: 'La même position trois fois : la répétition donne la victoire au renard', took: '{n} oies d’un coup !' },
+    pt: { n: ['Raposa', 'Gansos'], turn: 'Vez: {p}', win: 'Vitória: {p}', own: 'Escolha uma de suas peças', stuck: 'Essa peça não pode se mover agora', move: 'Ela não pode ir para aí', more: 'Ela pode continuar saltando. Para parar aqui, toque neste ponto mais uma vez', wFew: 'Restam cinco gansos ou menos: já não conseguem cercar a raposa', wTrap: 'A raposa não pode se mover', wStuck: 'Os gansos não podem se mover', wQuiet: '60 lances de cada lado sem capturas', wRep: 'A mesma posição três vezes: a repetição dá a vitória à raposa', took: '{n} gansos de uma vez!' },
+    de: { n: ['Fuchs', 'Gänse'], turn: 'Am Zug: {p}', win: 'Sieg: {p}', own: 'Wähle eine deiner Figuren', stuck: 'Diese Figur kann gerade nicht ziehen', move: 'Dorthin kann sie nicht', more: 'Er kann weiterspringen. Zum Anhalten tippe diesen Punkt noch einmal an', wFew: 'Nur noch fünf Gänse oder weniger – sie können den Fuchs nicht mehr einsperren', wTrap: 'Der Fuchs kann nicht mehr ziehen', wStuck: 'Die Gänse können nicht mehr ziehen', wQuiet: 'Je 60 Züge ohne Schlag', wRep: 'Dieselbe Stellung zum dritten Mal – Wiederholung ist ein Sieg des Fuchses', took: '{n} Gänse in einem Zug!' },
+    hi: { n: ['लोमड़ी', 'कलहंस'], turn: '{p} की बारी', win: '{p} की जीत', own: 'अपना एक मोहरा चुनो', stuck: 'वह मोहरा अभी नहीं चल सकता', move: 'वहाँ नहीं जा सकता', more: 'लोमड़ी और कूद सकती है। यहीं रुकना हो तो इसी बिंदु को एक बार और टैप करो', wFew: 'पाँच या कम कलहंस बचे — अब वे लोमड़ी को घेर नहीं सकते', wTrap: 'लोमड़ी हिल नहीं सकती', wStuck: 'कलहंस हिल नहीं सकते', wQuiet: 'दोनों की 60-60 चालें बिना किसी कब्ज़े के', wRep: 'वही स्थिति तीन बार आई — दोहराव पर लोमड़ी की जीत', took: 'एक चाल में {n} कलहंस!' },
+    ar: { n: ['الثعلب', 'الإوز'], turn: 'دور {p}', win: 'فوز {p}', own: 'اختر إحدى قطعك', stuck: 'هذه القطعة لا تستطيع الحركة الآن', move: 'لا يمكنها الذهاب إلى هناك', more: 'يستطيع الثعلب متابعة القفز. للتوقف هنا المس هذه النقطة مرة أخرى', wFew: 'بقيت خمس إوزات أو أقل: لم تعد تستطيع حصار الثعلب', wTrap: 'الثعلب لا يستطيع الحركة', wStuck: 'الإوز لا يستطيع الحركة', wQuiet: '60 نقلة لكل طرف بلا أخذ', wRep: 'تكرر الوضع نفسه ثلاث مرات — التكرار فوز للثعلب', took: '{n} إوزات في نقلة واحدة!' },
+    ru: { n: ['Лиса', 'Гуси'], turn: 'Ход: {p}', win: 'Победа: {p}', own: 'Выберите свою фигуру', stuck: 'Эта фигура сейчас не может ходить', move: 'Туда пойти нельзя', more: 'Можно прыгать дальше. Чтобы остановиться здесь, нажмите эту точку ещё раз', wFew: 'Гусей осталось пять или меньше — лису уже не запереть', wTrap: 'Лиса не может ходить', wStuck: 'Гуси не могут ходить', wQuiet: 'По 60 ходов без взятий', wRep: 'Позиция повторилась трижды — повторение означает победу лисы', took: '{n} гусей за один ход!' },
+    'zh-TW': { n: ['狐狸', '鵝'], turn: '輪到{p}', win: '{p}獲勝', own: '請選擇自己的棋子', stuck: '這顆棋子現在不能動', move: '不能走到那裡', more: '還可以繼續跳。想停在這裡，就再點一次這個點', wFew: '鵝只剩5隻或更少（已圍不住狐狸）', wTrap: '狐狸動不了了', wStuck: '鵝動不了了', wQuiet: '雙方各60步沒有吃子', wRep: '同一局面出現了三次——重複局面判狐狸獲勝', took: '連吃{n}隻！' },
+    id: { n: ['Rubah', 'Angsa'], turn: 'Giliran {p}', win: '{p} menang', own: 'Pilih salah satu bidakmu', stuck: 'Bidak itu tidak bisa bergerak sekarang', move: 'Tidak bisa ke sana', more: 'Masih bisa melompat lagi. Untuk berhenti di sini, ketuk titik ini sekali lagi', wFew: 'Angsa tinggal lima atau kurang — rubah tidak bisa dikurung lagi', wTrap: 'Rubah tidak bisa bergerak', wStuck: 'Angsa tidak bisa bergerak', wQuiet: '60 langkah masing-masing tanpa tangkapan', wRep: 'Posisi yang sama tiga kali — pengulangan berarti kemenangan rubah', took: '{n} angsa sekaligus!' },
+    tr: { n: ['Tilki', 'Kazlar'], turn: 'Sıra: {p}', win: 'Kazanan: {p}', own: 'Taşlarından birini seç', stuck: 'Bu taş şu an hareket edemez', move: 'Oraya gidemez', more: 'Atlamaya devam edebilir. Burada durmak için bu noktaya bir kez daha dokun', wFew: 'Beş ya da daha az kaz kaldı — artık tilkiyi kapatamazlar', wTrap: 'Tilki hareket edemiyor', wStuck: 'Kazlar hareket edemiyor', wQuiet: '60’er hamle taş alınmadı', wRep: 'Aynı konum üç kez oluştu — tekrar tilkinin galibiyetidir', took: 'Tek hamlede {n} kaz!' },
   };
   // 種目: the two rules (names and descriptions as the full game's rule cards)
   const RIDS = ['g13', 'g17'], RSZ = [13, 17];
@@ -198,7 +198,7 @@
     function commit(m) { busy = true; play(m, () => { busy = false; next(); }); }
     function next() {
       if (stopped) return;
-      const st = E.judge(pos);
+      const st = E.judge(pos, E.replay(null, moves).hashes);   // 同じ局面の3回目・取りのない60手ずつは狐の勝ち（引き分けなし）
       if (st.over) return end(st);
       legal = pos.moves();
       showMarks();
@@ -208,7 +208,7 @@
     }
     function end(st) {
       over = true; busy = false; clear(mv); if (ctx.onTurn) ctx.onTurn(-1);
-      const draw = !!st.draw, why = X[{ few: 'wFew', trap: 'wTrap', stuck: 'wStuck', quiet: 'wQuiet' }[st.why]] || '';
+      const draw = !!st.draw, why = X[{ few: 'wFew', trap: 'wTrap', stuck: 'wStuck', quiet: 'wQuiet', rep: 'wRep' }[st.why]] || '';
       if (pvp) { const wt = draw ? L.draw : X.win.replace('{p}', pname(st.winner)); hud(wt); later(() => ctx.onEnd({ win: false, draw, level: ctx.level, score: why, pvp: true, winnerText: wt }), 700); return; }
       const win = !draw && st.winner === human;
       hud(draw ? L.draw : win ? L.win : L.lose);
@@ -244,8 +244,8 @@
       const me = pos.side + 1;
       if (sel) {
         const k = sel.pre.length, at = sel.pre[k - 1];
-        if (k > 1 && (i === at || i === sel.from)) { const m = sel.cands.find(x => E.path(x).length === k); if (m != null) { commit(m); return; } }   // stop here
-        const go = sel.cands.filter(x => E.path(x).length > k && E.path(x)[k] === i);
+        const go = sel.cands.filter(x => E.path(x).length > k && E.path(x)[k] === i);   // 続きの手を先に見る（出発点へ戻る連続跳びもある）
+        if (k > 1 && !go.length && i === at) { const m = sel.cands.find(x => E.path(x).length === k); if (m != null) { commit(m); return; } }   // stop here: 今いる点をもう一度
         if (go.length) {
           if (go.length === 1 && E.path(go[0]).length === k + 1) { commit(go[0]); return; }   // nothing beyond: the move is complete
           sel.pre.push(i); sel.cands = go; drawSel(); SND.lift(); toast(X.more); return;   // the fox could jump on from there
@@ -312,7 +312,7 @@
           hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule });
         });
       },
-      canDraw: () => false,   // (a draw only comes from the 80-move rule)
+      canDraw: () => false,   // (there is no draw)
       canResign: () => !!pos && !over,
       resign() { if (pos && !over) finish(pvp ? pos.side + 1 : human, 'resign'); },
       timeout(side) { finish(side + 1, 'time'); },
