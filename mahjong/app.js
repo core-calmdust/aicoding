@@ -1317,7 +1317,16 @@ function layoutRiver(s, anim) {
   if (anim && s === ME && riv.length) { try {
     const el = document.querySelector(`#hand .tl[data-id="${riv[riv.length - 1].id}"]`), root = $('#game');
     const off = e => { let x = 0, y = 0; for (let n = e; n && n !== root; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; } return [x, y]; };
-    if (el && root.contains(el)) { const [ex, ey] = off(el), [sx, sy] = off($('#stage')); lx = TB.screenPose(ex + el.offsetWidth / 2 - sx, ey + el.offsetHeight / 2 - sy, el.offsetWidth); }
+    if (el && root.contains(el)) { const [ex, ey] = off(el), [sx, sy] = off($('#stage')); lx = TB.screenPose(ex + el.offsetWidth / 2 - sx, ey + el.offsetHeight / 2 - sy, el.offsetWidth);
+      // (2026-11-16, ユーザー「スマホで捨てる牌が暗い四角になる」: until the hand has its fingers on it, the tile stays the page's own
+      // tile — a copy left where it stood, while the row closes up — and the 3D tile (lit by the table's lights, so greyer than the
+      // flat picture) takes over only when it is picked up)
+      const hud = el.closest('.hud') || root, [hx, hy] = off(hud), gh = el.cloneNode(true);
+      gh.classList.remove('up', 'can', 'no'); gh.classList.add('ghost'); gh.querySelectorAll('kbd,.hit').forEach(n => n.remove());
+      gh.style.cssText = `position:absolute;left:${ex - hx}px;top:${ey - hy}px;width:${el.offsetWidth}px;height:${el.offsetHeight}px;margin:0;pointer-events:none`;
+      hud.appendChild(gh);
+      const drop = () => { gh.remove(); if (TB.onPageTake === drop) TB.onPageTake = null; };
+      TB.onPageTake = drop; setTimeout(drop, 1200); }
   } catch (e) {} }
   TB.layoutRiver(s, riv, anim, lx);
 }

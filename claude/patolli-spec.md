@@ -154,7 +154,7 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 - **文言の出どころ（大事）**：歴史・ルールの文は**新しく書かず、2D版の文をそのまま使う**（`patolli/tour.js` の紹介3文と各ページ、`patolli/lux.json` の豆知識9つ、`patolli/i18n.js` の対局の文言）。こうして 2D・3D・ヒストリア・ボスの台詞が同じ内容・同じ確からしさになる。直すときは 2D 側を先に直し、下の各ファイルの同じ文も合わせる。
   - `atlas/i18n.js` の `about.patolli`＝紹介の「歴史」＋対局設定の注「ルールは R.C.ベル（1960）の復元と、現代に広まっているルール。当時のルールは伝わっていません。」（`ng.credit`。カードの説明欄は5行ぶんの高さしかないので、ほかのゲームと同じ長さに収める）、`hist.patolli`＝「文化」＋豆知識「当時のルールは残っていない／ベルの1960年の復元」。
   - 新しく書いたのは枠の短い言葉だけ：一覧の一言（`atlas/gamelist-i18n.js`）、トップページの説明（`index.html` の `pt.title`・`pt.desc`）、更新情報の1行（`shared/atlas-updates.js`、14言語とも「（ALPHA）」）、ヒストリアの見出し・年表の行・案内役のひとこと、ボスの名前と肩書き。
-- **読み込み**：`atlas/lazy.js` に `models/patolli.js`・`games/patolli-kit.js`・`games/patolli.js`・`rules/patolli.js`。`atlas/app.js` の R3（アイコンは仮の `images/atlas/patolli.webp` のまま）と FULL_SKIN。レート戦タブは「相手：AI」だけで、押すとフル機能版（`patolli/?skin=atlas&mode=rated`）が開く（`online` タグがなく RTG にもないゲームの共通の動き）。
+- **読み込み**：`atlas/lazy.js` に `models/patolli.js`・`games/patolli-kit.js`・`games/patolli.js`・`rules/patolli.js`。`atlas/app.js` の R3 と FULL_SKIN。レート戦タブは「相手：AI」だけで、押すとフル機能版（`patolli/?skin=atlas&mode=rated`）が開く（`online` タグがなく RTG にもないゲームの共通の動き）。
 - **3Dの道具箱**（`atlas/games/patolli-kit.js`、`window.PatolliKit.make(Table3D, opts)`）：ちゃぶ台対局とルールコースの共用。盤（`Table3D.patolli.board`、ルールを変えると作り直す `setRule`）、駒（`sync`・1マスずつ跳ねて進む `move`・取られた駒が待ちへ戻る）、豆5個（`roll`・`restBeans`、コース用に中央で大きく投げる `beansBig`）、宝の山（`gems`）と支払いの玉（`pay`）、印（`marks`）、タップの判定（`hit`＝マス／待ち・上がりのすき間／豆の場所）、盤の上の文字（`labels`＝宝の数と「待ち」「上がり」。DOM を投影位置に置く。盤が小さいときは数字だけ）。
 - **ちゃぶ台対局**（`atlas/games/patolli.js`）：エンジン（`../patolli/engine.js?v=` と Worker `../patolli/worker.js?v=` は **`patolli/index.html`・`patolli/app.js` と同じ番号**にする。いま 2）をそのまま使う。
   - カードの「種目」＝ベルの復元（size 1・既定）／広く知られたルール（size 2）。フル機能版へは `&size=` で渡る（`atlas/skin/patolli.js` が rule に直す）。相手は AI Lv.1〜20（レートは `RT_LV`、説明は `lvd`）と二人対戦。手番の「先手／後手」＝どちらが先に投げるか。人はいつも手前（赤・side 0）。持ち時間はバックギャモンと同じ一覧（`clock: 'bg'`）。
@@ -169,9 +169,10 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 - **トップページ**：`index.html` の一覧（狐とガチョウの次、`alpha:true`、key `pt`）、アイコン `images/icons/patolli.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/patolli.webp`（`node tools/shots.js patolli`）。
 - **キャッシュ番号**：登録で上げたもの＝`shared/atlas.js`（読み込む全ページ。`patolli/`・`loa/`・`hitblow/` に残っていた古い番号も同じ値にそろえた）、`shared/atlas-updates.js`、`atlas/` の app・lazy・gamelist・gamelist-i18n・historia・worldmap・i18n（`node tools/i18n-split.js`）・npc/roster・npc/npc（中の `V`＝台詞ファイルの番号も）、`atlas/skin/common.js`（npc.js の番号を書いているので、読み込む全ページ）。
 - 機械的な確認：14言語のキー・{置き換え}・配列の長さの一致と「ja 以外にかなが無い」こと（新しい文言の表すべて）、`node --check`、JSON。
+- **大百科アイコン（2026-11-16）**：`atlas/icons3d.js` の ICONS.patolli を `atlas/tools/icons.html`（1920px で描画）→ `atlas/tools/icon-post.py` で `images/atlas/patolli.webp`（320×320、共通の位置規定どおり）。`atlas/app.js` の R3 に登録、画像の `?v=12`。
 
 ## 7. 未着手（次の作業）
-- 大百科：正式アイコン（`atlas/icons3d.js`。いまは仮の `images/atlas/patolli.webp`）、3D卓でのレート戦・パズル・レッスン（いまはフル機能版を開く）、ベルの「進む向き：逆向き」の対局設定（3D卓は同じ向きだけ。道具箱は `state.dir` を見るので、カードに項目を足せば動く）。
+- 大百科：3D卓でのレート戦・パズル・レッスン（いまはフル機能版を開く）、ベルの「進む向き：逆向き」の対局設定（3D卓は同じ向きだけ。道具箱は `state.dir` を見るので、カードに項目を足せば動く）。
 - ヒストリア：マヤの盤（古典期前期、ティカル・コパン）をどう扱うか（十字形のパトリとは別系統かもしれないので、いまは書いていない）。
 - オンライン対戦（Firebase `patolli-multiplay`、通信の形式をパトリ用に直す）、`shared/rulesoffer.js` へのパトリの行（いまは `app.js` の `fixRulesOffer()`）。
 - 2D の文言を変えたとき、3D 側の写し（`atlas/games/patolli.js` の `TX`、`atlas/i18n.js` の about／hist、ヒストリア、`atlas/npc/t/`）を作り直す道具がない（今回は手元のスクリプトで作った）。必要になったら `patolli/tools/` に置く。
