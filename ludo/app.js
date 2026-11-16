@@ -253,7 +253,7 @@ function renderPlayers() {
   $('#players').innerHTML = s.seats.map(seat => {
     const home = s.pos[seat].filter(p => p >= LAST).length;
     const team = s.rule === 'pachisi' ? `<span class="tm">${t('p.team')} ${s.team[seat] ? 'B' : 'A'}</span>` : '';
-    return `<div class="seat${seat === s.turn && !s.over ? ' on' : ''}"><span class="dot" style="background:${seatColor(seat)}"></span><div style="min-width:0"><div class="nm">${seatName(seat)}${team}</div><div class="sb">${colName(seat)}</div></div><span class="hm">${t('p.home', { n: home, m: 4 })}</span>${G.mode === 'online' ? `<span class="pclk" id="olClk${seat}"></span>` : ''}</div>`;
+    return `<div class="seat${seat === s.turn && !s.over ? ' on' : ''}"><span class="dot" style="background:${seatColor(seat)}"></span><div style="min-width:0"><div class="nm">${seatName(seat)}${team}</div><div class="sb">${colName(seat)}</div></div><span class="hm">${t('p.home', { n: home, m: 4 })}</span>${G.mode === 'online' && typeof olSeatExtra === 'function' ? olSeatExtra(seat) : ''}</div>`;
   }).join('') + houseTagsInPlay();
   if (G.mode === 'online' && typeof olClockRender === 'function') olClockRender();   // (the 30 s of the side to act, online-ui.js)
 }
@@ -348,7 +348,7 @@ function afterThrow(my) {
   }
   if (humanSeat(seat)) {
     const ks = [...new Set(real.map(m => m.k))];
-    if (settings.autoPick && real.length === 1 && !moves.some(m => m.pass)) { setTimeout(() => { if (my === token) commit(real[0]); }, 260 * SPD()); return; }
+    if (settings.autoPick && real.length === 1 && !moves.some(m => m.pass) && !(G.mode === 'online' && typeof olNoAutoPick === 'function' && olNoAutoPick())) { setTimeout(() => { if (my === token) commit(real[0]); }, 260 * SPD()); return; }
     ks.forEach(k => pcEls[seat + ',' + k].classList.add('can')); zMoves(seat, real);
     $('#btnPass').classList.toggle('hidden', !moves.some(m => m.pass));
     setStatus(t('st.pick', { v: thr.dice ? (G.state.left || thr.dice).join(' + ') : thr.v }));

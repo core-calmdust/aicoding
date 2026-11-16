@@ -293,3 +293,49 @@ html.atlas-skin .ol-lux .ol-ph{color:#b07a1e!important}
 :is(#dock, #onlineOverlay, #profOverlay, #olConfirm) :is(p, h3, h4){margin-top:0;margin-bottom:0}
 #onlineOverlay .ol-setup .ol-note{margin:0}
 @media (max-width: 759px){ #onlineOverlay > .modal{padding:20px 14px} }
+/* ---------- the 10-second rule (2026-11-16, online-ui.js olTimer*): the ring by the name, the bar in the throw card, the ring
+   round the cup, the penalty pips, the auto-throw / penalty toasts and the red flash ---------- */
+.seat .olpen{display:inline-flex;gap:3px;align-items:center;margin-inline-start:8px;flex:none;padding:3px 5px;border-radius:99px;background:rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.seat .olpen i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.13);box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
+.seat .olpen i.x{background:radial-gradient(circle at 35% 30%,#ffc2b7,#ef4a35 55%,#8e1b10);box-shadow:0 0 6px rgba(255,80,60,.85)}
+.seat .olpen i.x.new{animation:olPip .6s cubic-bezier(.3,1.7,.5,1)}
+@keyframes olPip{0%{transform:scale(2.6);opacity:0;filter:brightness(2)}60%{opacity:1}100%{transform:none;filter:none}}
+.seat .olt{display:none}
+.seat .olt.on{display:grid;place-items:center;position:relative;width:30px;height:30px;margin-inline-start:8px;flex:none;border-radius:50%;
+  background:conic-gradient(var(--c,#7fd6a4) calc(var(--p,1) * 1turn), rgba(255,255,255,.1) 0);filter:drop-shadow(0 0 4px color-mix(in srgb, var(--c,#7fd6a4) 55%, transparent))}
+.seat .olt.on::before{content:'';position:absolute;inset:3px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#2b2350,#17122b)}
+.seat .olt b{position:relative;font:700 12.5px/1 'JetBrains Mono',monospace;color:var(--c,#7fd6a4);font-variant-numeric:tabular-nums}
+.seat .olt.on.low{animation:oltBeat 1s ease-in-out infinite}
+@keyframes oltBeat{0%,100%{transform:scale(1)}12%{transform:scale(1.18)}30%{transform:scale(1)}}
+.seat .olt.on:not(.mine){opacity:.85}
+#players.olshake{animation:olShake .5s cubic-bezier(.36,.07,.19,.97)}
+@keyframes olShake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(3px)}30%,50%,70%{transform:translateX(-5px)}40%,60%{transform:translateX(5px)}}
+body.in-online #throwCard{flex-wrap:wrap}
+.olbar{display:none;flex:1 0 100%;order:9;margin:2px 2px 0}
+body.in-online:not(.ol-over) .olbar{display:block}
+.olbar:not(.on){visibility:hidden}
+.olbar .lb{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12px;line-height:1.3;color:var(--muted);margin-bottom:5px}
+.olbar .lb span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.olbar .lb b{font:700 13px 'JetBrains Mono',monospace;color:var(--c,#7fd6a4);font-variant-numeric:tabular-nums}
+.olbar .tr{height:6px;border-radius:4px;background:rgba(0,0,0,.38);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.olbar .tr i{display:block;height:100%;width:calc(var(--p,1) * 100%);border-radius:4px;background:linear-gradient(90deg, color-mix(in srgb, var(--c,#7fd6a4) 75%, #000), var(--c,#7fd6a4) 70%, color-mix(in srgb, var(--c,#7fd6a4) 50%, #fff));box-shadow:0 0 10px color-mix(in srgb, var(--c,#7fd6a4) 70%, transparent)}
+.olbar.low .lb span{color:var(--text)}
+.olbar.low .tr i{animation:olBarGlow .5s ease-in-out infinite alternate}
+@keyframes olBarGlow{to{filter:brightness(1.5)}}
+#bsvg #gOlT{pointer-events:none}
+#bsvg #gOlT circle{fill:none;stroke-width:.17}
+#bsvg #gOlT .bg{stroke:rgba(20,14,40,.45);stroke-width:.27}
+#bsvg #gOlT .fg{stroke-linecap:round;filter:drop-shadow(0 0 .1px #fff) drop-shadow(0 0 .22px rgba(255,255,255,.5));transition:stroke .3s}
+#bsvg #gOlT:not(.mine){opacity:.6}
+#bsvg #gOlT.low .fg{animation:olRingBlink .5s ease-in-out infinite alternate}
+@keyframes olRingBlink{to{stroke-width:.24}}
+html.atlas-ludo3d #bsvg #gOlT{display:none}
+.toast.ol-auto{border-color:#86c9ff;color:#d6eeff;background:linear-gradient(180deg,rgba(20,48,92,.95),rgba(12,26,58,.95));box-shadow:0 0 24px rgba(90,170,255,.45)}
+.toast.ol-pen{border-color:#ff6a55;color:#fff;background:linear-gradient(180deg,rgba(168,26,14,.96),rgba(96,10,6,.96));box-shadow:0 0 34px rgba(255,60,40,.6);animation:olToastHit .5s cubic-bezier(.3,1.5,.5,1)}
+@keyframes olToastHit{0%{transform:translate(-50%,-50%) scale(1.45)}40%{transform:translate(-50%,-50%) scale(.94) rotate(-1.5deg)}70%{transform:translate(-50%,-50%) scale(1.03) rotate(1deg)}100%{transform:translate(-50%,-50%) scale(1)}}
+@media (max-width:600px){.toast.ol-pen,.toast.ol-auto{white-space:normal;width:max-content;max-width:88vw;text-align:center;font-size:15px;border-radius:18px}}
+#frame.ol-penfx::after{content:'';position:absolute;inset:-2px;border-radius:14px;pointer-events:none;z-index:4;box-shadow:inset 0 0 0 4px rgba(255,80,60,.95),inset 0 0 70px rgba(255,40,20,.6);animation:olFlash 1s ease-out forwards}
+@keyframes olFlash{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+html.atlas-skin .seat .olt.on::before{background:#fffaf0}
+html.atlas-skin .seat .olpen{background:#f3e6c8}
+html.atlas-skin .seat .olpen i:not(.x){background:#e4d3ae}
