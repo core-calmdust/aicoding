@@ -2752,3 +2752,7 @@ html.lp #hand .tl[data-id]{touch-action:none}
 #hand .tl.hdrag{position:relative;z-index:60;transition:none!important;filter:drop-shadow(0 10px 16px rgba(0,0,0,.5))}
 #hand .tl.hdrag.hdrop{filter:drop-shadow(0 0 10px rgba(255,214,120,.95)) drop-shadow(0 0 22px rgba(255,190,90,.6)) brightness(1.08)}
 #hand .tl.hback{transition:transform .25s cubic-bezier(.2,.9,.3,1.2)!important}
+/* (2026-11-16, ユーザー「フォントは全部完全に明朝で統一」) every text in the game is set in the Mincho (Shippori Mincho B1) — the Gothic of the
+   UI, the Latin display face, the brush face of the cut-ins and the monospaced digits all give way to it */
+:root{--ui:var(--serif)}
+*,*::before,*::after{font-family:var(--serif)!important}
