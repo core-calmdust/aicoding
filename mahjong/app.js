@@ -193,7 +193,7 @@ const SND = (() => {
   function rebuild() { stale = false; const old = ac; if (!old) return false;
     const pos = {};
     for (const k in TRK) { const B = TRK[k]; if (B.el) { pos[k] = B.el.currentTime; try { B.el.pause(); B.el.removeAttribute('src'); B.el.load(); } catch (e) {} }
-      clearTimeout(B.t); B.el = null; B.g = null; B.on = false; if (B.url && !B.url.startsWith('blob:')) B.url = null; }
+      clearTimeout(B.t); B.el = null; B.g = null; B.on = false; B.ul = false; if (B.url && !B.url.startsWith('blob:')) B.url = null; }
     try { old.close(); } catch (e) {}
     ac = null; seB = bgB = null;
     const a = ctx(); if (!a) return true;
@@ -278,7 +278,13 @@ const SND = (() => {
     // brings back the context and the music that should be playing
     revive() { if (stale && !document.hidden && rebuild()) return; const a = ac; if (!a || document.hidden || !on()) return;
       if (a.state !== 'running' && a.state !== 'closed') { const p = a.resume(); if (p && p.catch) p.catch(() => {}); }
-      for (const k in TRK) { const B = TRK[k]; if (B.el && B.on && B.el.paused) { const p = B.el.play(); if (p && p.catch) p.catch(() => {}); } } },
+      for (const k in TRK) { const B = TRK[k]; if (B.el && B.on && B.el.paused) { const p = B.el.play(); if (p && p.catch) p.catch(() => {}); } }
+      // (2026-11-17, ユーザー「リーチの曲で鳴らないのがありました（スマホ）」) a phone's browser (iOS) lets a sound element start only if it has
+      // once been started by a touch: a track fetched during the game (the riichi tracks are drawn and fetched as they come) and first
+      // wanted when another player declares riichi — no touch — stayed silent. Each new element is started and stopped at the
+      // player's next touch, silently (its gain is 0 while it is not the track playing); from then on it may start at any time.
+      for (const k in TRK) { const B = TRK[k]; if (B.el && B.g && !B.ul && !B.on) { B.ul = true; const p = B.el.play();
+        if (p && p.then) p.then(() => { if (!B.on) B.el.pause(); }, () => { B.ul = false; }); else if (!B.on) B.el.pause(); } } },
     levels,   // after the sound is switched back on
     call: () => { tone(520, .16, 'square', .06); tone(780, .2, 'square', .05, .08); },
     riichi: () => { tone(880, .5, 'sine', .14); tone(1320, .7, 'sine', .1, .08); tone(1760, .9, 'sine', .06, .16); },
