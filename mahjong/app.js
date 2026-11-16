@@ -220,8 +220,16 @@ const SND = (() => {
         B.on = true; clearTimeout(B.t); if (B.restart) B.el.currentTime = 0;
         const p = B.el.play(); if (p && p.catch) p.catch(() => {});
         fade(B, B.vol, k === 'main' ? 1.6 : .8);
-      } else if (B.on) { B.on = false; fade(B, 0, 1.4); clearTimeout(B.t); B.t = setTimeout(() => { if (!B.on && B.el) B.el.pause(); }, 1500); }
-    } }
+      } else if (B.on) { B.on = false; fade(B, 0, 1.4); clearTimeout(B.t); B.t = setTimeout(() => { B.t = 0; if (!B.on && B.el) { B.el.pause(); if (!keep(k)) drop(B); } }, 1500); }
+    }
+    // and any other track held but no longer wanted that is not fading out (one never played — the title when the sound began in a game)
+    for (const k in TRK) { const B = TRK[k]; if (B.el && !B.on && !B.t && !keep(k)) drop(B); } }
+  // (2026-11-17, ユーザー「リーチ（演出？）でアプリが再起動。メモリ負荷を洗って」) a track no longer wanted is let go once faded out — its
+  // file in memory and its player — so a game does not gather every track it has played (a phone's browser closes a page that
+  // holds too much). Kept: the one wanted, this hand's and the next hand's game track, this and the next riichi track, the results'.
+  function keep(k) { return k === want || k === mainKey || k === nextMain || k === riichiKey || k === nextRii || k === 'score'; }
+  function drop(B) { try { B.el.removeAttribute('src'); B.el.load(); } catch (e) {} try { if (B.g) B.g.disconnect(); } catch (e) {}
+    B.el = null; B.g = null; B.ul = false; if (B.url && B.url.startsWith('blob:')) URL.revokeObjectURL(B.url); B.url = null; }
   // each recording's level, measured (ffmpeg astats RMS peak / EBU R128) and evened out (ユーザー 2026-11-14: the volumes at their best):
   // the tile clacks soft (they come often, ≈ −25 dB), the sticks a little above (≈ −20), the voices clear on top (≈ −12)
   const GAIN = { tile1: .65, tile2: .62, tile3: .6, stick1: .95, stick2: .63, stick3: .67,
@@ -639,7 +647,7 @@ function hfxSprites() {
 function homeFx() {
   const cv = $('#aaFx'); if (!cv) return;
   const on = !$('#home').hidden && !DB.set.lite;
-  if (!on) { HFX.run = false; const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); return; }
+  if (!on) { HFX.run = false; cv.width = cv.height = 1; return; }   // (2026-11-17: memory — the canvas's pixels let go while the home is not shown)
   if (HFX.run) return; HFX.run = true;
   if (!HFX.spr) HFX.spr = hfxSprites();
   const g = cv.getContext('2d'), S = HFX.spr;
@@ -658,7 +666,7 @@ function homeFx() {
     if (!HFX.run) return;
     if (now - lastDraw < 31) { requestAnimationFrame(step); return; }
     lastDraw = now;
-    if ($('#home').hidden || DB.set.lite) { HFX.run = false; g.clearRect(0, 0, cv.width, cv.height); return; }
+    if ($('#home').hidden || DB.set.lite) { HFX.run = false; cv.width = cv.height = 1; return; }
     const W = cv.clientWidth, H = cv.clientHeight, dpr = Math.min(1.5, devicePixelRatio || 1);
     if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     const dt = Math.min(50, now - last) / 1000; last = now;
