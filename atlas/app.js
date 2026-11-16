@@ -1292,9 +1292,18 @@
   homeMark(); addEventListener('pagehide', homeMark);
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
   // 戦績 (the cup): on phones under the ヒストリア pill (top left); on PC beside the place chip
-  function placeRec() { const r = $('bvRec'), hw = $('bvHistW'), td = $('bvTodW'); if (!r || !hw || !td || r.classList.contains('inhd')) return;
-    if (matchMedia('(max-width: 819px)').matches) { if (r.parentNode !== hw) hw.appendChild(r); } else if (r.parentNode !== td) $('bvPlBtn').after(r); }   // phones: under ヒストリア, left-aligned (2026-11-10)
+  // (2026-11-17 user: 戦績アイコンは見えてる画面の右下に、ボックスサイズが変わると追従) the cup sits at the bottom right of the
+  // 3D view that shows — just above the card — and moves with the card as it grows or shrinks (PC and phones)
+  function placeRec() { const r = $('bvRec'), bv = $('bv'); if (!r || !bv) return;
+    r.classList.remove('inhd'); r.classList.add('bvrecf'); if (r.parentNode !== bv) bv.appendChild(r); posRec(); if (typeof posRecSoon === 'function') posRecSoon(); }
+  function posRec() { const r = $('bvRec'), bv = $('bv'), bi = $('bvi'); if (!r || !bv || !bi) return;
+    const I = bi.getBoundingClientRect(), vh = window.visualViewport ? visualViewport.height : innerHeight, top = I.height ? I.top : vh - 16;
+    r.style.setProperty('--recb', Math.max(12, Math.round(vh - top + 12)) + 'px'); }
   addEventListener('resize', placeRec);
+  // the card slides and grows: follow it for a moment after anything changes (its size: ResizeObserver; its slide: transitionend)
+  let recRaf = 0, recN = 0; const posRecSoon = () => { recN = 50; if (!recRaf) { const f = () => { posRec(); recRaf = --recN > 0 ? requestAnimationFrame(f) : 0; }; recRaf = requestAnimationFrame(f); } };
+  try { new ResizeObserver(posRecSoon).observe($('bvi')); } catch (e) {}
+  $('bvi').addEventListener('transitionend', posRecSoon); addEventListener('resize', posRecSoon);
   /* ---------- phones: the 「あそぶ」 sheet (2026-11-09) ----------
      A game whose full version has puzzles / lessons playable on the 3D table (PS_GAMES) keeps the card short: one 「あそぶ ▶」
      button (+ 2D). It opens a sheet from the bottom with three ways to play: 対局 (the mode tabs, level, side and time control —
@@ -1309,7 +1318,7 @@
     // two rows on the right: ルール, then 戦績 → ヒストリア (with its label) under it (2026-11-10)
     const col = document.createElement('div'); col.className = 'hdcol'; ru.before(col);
     const sub = document.createElement('div'); sub.className = 'hdsub'; col.append(ru, sub);
-    [rb, hb].forEach(b => { if (b) { b.classList.add('inhd'); sub.appendChild(b); } });
+    [hb].forEach(b => { if (b) { b.classList.add('inhd'); sub.appendChild(b); } }); placeRec();   // (戦績 stays at the view's bottom right)
   }
   const PS_GAMES = new Proxy({}, { get: (_, id) => !!FULL_SKIN[id] });   // (2026-11-16: every game with a full 3D version — the same あそぶ sheet as shogi)
   const pzDone = (id, k) => { try { return !!(window.AtlasPuzzles && AtlasPuzzles.done && AtlasPuzzles.done(id, k)); } catch (e) { return false; } };   // (today's puzzle solved: a ✓ on its button, 2026-11-13)
