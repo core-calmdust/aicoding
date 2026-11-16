@@ -54,7 +54,8 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
     let d = await D(p); ok(d && d.cfg.n === 4 && d.cfg.c === 6 && !d.cfg.rep, 'AI戦 starts on the カラー board (4 of 6, no repeats)');
     // layout: the dock above the bar, the board above the dock
     const L = await p.evaluate(() => { const r = e => e && e.getBoundingClientRect(), dk = (() => { const d = Atlas3D.hitblow._dbg, T = d.TU, P = (x, z) => Table3D.project(x, z, d.U.top), a = P(-T.W / 2, T.z0), b = P(T.W / 2, T.z0 + T.D); return { top: Math.min(a.y, b.y), bottom: Math.max(a.y, b.y), left: Math.min(a.x, b.x), right: Math.max(a.x, b.x) }; })(), tb = r(document.querySelector('#tbar')); const m = Table3D.modelRect && Table3D.modelRect(); return { dk: dk && [dk.top, dk.bottom, dk.left, dk.right], tb: tb && [tb.top, tb.bottom], m: m && [m.top, m.bottom, m.left, m.right], vh: innerHeight, vw: innerWidth }; });
-    ok(L.dk && L.tb && L.dk[1] <= L.tb[0] + 1, 'the 3D tray sits above the action bar (' + L.dk[1].toFixed(0) + ' ≤ ' + L.tb[0].toFixed(0) + ')');
+    // (2026-11-17 user: no action bar in this game — the board takes its room)
+    { const nb = await p.evaluate(() => !document.querySelector('#bv').classList.contains('tbon')); ok(nb && L.dk && L.dk[1] <= L.vh && L.dk[1] >= L.vh - 80, 'no action bar; the 3D tray reaches near the bottom (' + L.dk[1].toFixed(0) + ' / ' + L.vh + ')'); }
     ok(L.m && Math.abs(L.m[1] - L.dk[1]) < 30 && L.m[0] >= 0, 'the board and its tray are framed as one (model bottom ' + L.m[1].toFixed(0) + ', tray bottom ' + L.dk[1].toFixed(0) + ', board top ' + L.m[0].toFixed(0) + ')');
     // input: a repeated colour is refused, Backspace takes one out, Enter submits
     if (d.turn === 0) {
@@ -137,17 +138,16 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
     const d = await D(p); ok(d && d.cfg.n === 4 && !d.cfg.rep, 'レート戦 is played on カラー');
     const L = await p.evaluate(() => { const r = e => e && e.getBoundingClientRect(), dk = (() => { const d = Atlas3D.hitblow._dbg, T = d.TU, P = (x, z) => Table3D.project(x, z, d.U.top), a = P(-T.W / 2, T.z0), b = P(T.W / 2, T.z0 + T.D); return { top: Math.min(a.y, b.y), bottom: Math.max(a.y, b.y), left: Math.min(a.x, b.x), right: Math.max(a.x, b.x) }; })(), tb = r(document.querySelector('#tbar')), m = Table3D.modelRect && Table3D.modelRect(); const wrapped = [...document.querySelectorAll('#tbar button')].filter(x => x.offsetParent).some(x => { const tw = document.createTreeWalker(x, NodeFilter.SHOW_TEXT); let n; while ((n = tw.nextNode())) { if (!n.textContent.trim()) continue; const g = document.createRange(); g.selectNodeContents(n); if (new Set([...g.getClientRects()].map(q => Math.round(q.top / 4))).size > 1) return true; } return false; }); return { dk: dk && [dk.top, dk.bottom, dk.left, dk.right], tb: tb && [tb.top, tb.bottom], m: m && [m.top, m.bottom, m.left, m.right], vw: innerWidth, wrapped, sx: document.documentElement.scrollWidth > innerWidth + 1 }; });
     ok(L.dk[2] >= 0 && L.dk[3] <= L.vw + .5, 'phone: the 3D tray is inside the screen');
-    ok(L.dk[1] <= L.tb[0] + 1, 'phone: the 3D tray sits above the action bar');
+    { const [nb, vh] = await p.evaluate(() => [!document.querySelector('#bv').classList.contains('tbon'), innerHeight]); ok(nb && L.dk[1] <= vh && L.dk[1] >= vh - 60, 'phone: no action bar; the 3D tray reaches near the bottom (' + L.dk[1].toFixed(0) + ' / ' + vh + ')'); }
     ok(L.m && Math.abs(L.m[1] - L.dk[1]) < 30 && L.m[2] >= -2 && L.m[3] <= L.vw + 2, 'phone: the board and tray are framed across the width (' + L.m.map(x => x.toFixed(0)).join(',') + ')');
     ok(!L.wrapped && !L.sx, 'phone: no button text wrapped, no sideways scroll');
     if (d.turn === 0) { await play(p, await thinkGuess(p), true); await p.waitForTimeout(500); }
     await waitMine(p); await shot('rated');
-    // resign = a loss, the rating moves
-    await p.evaluate(() => { const b = document.querySelector('#tbar [data-a=resign]'); b && b.click(); }); await p.waitForTimeout(400);
-    await p.evaluate(() => { const bs = [...document.querySelectorAll('button')].filter(b => b.offsetParent && /^はい$/.test(b.textContent.trim())); bs[0] && bs[0].click(); });
-    await p.waitForSelector('#endc.on', { timeout: 15000 });
+    // やめる mid-game = a loss, the rating moves (no 投了 button in this game)
+    await p.evaluate(() => { const b = document.querySelector('#bvQuit'); b && b.click(); }); await p.waitForTimeout(400);
+    await p.waitForTimeout(600);   // (やめる in a rated game: settled as a loss — atlas/app.js stopSession 'abandon')
     const rt = await p.evaluate(() => JSON.parse(localStorage.getItem('atlas-rated-hitblow') || 'null'));
-    ok(rt && rt.n === 1 && rt.l === 1, 'レート戦: resigning counts as a rated loss');
+    ok(rt && rt.n === 1 && rt.l === 1, 'レート戦: leaving mid-game (やめる) counts as a rated loss');
     await shot('rated-end');
     await ctx.close();
   }
@@ -169,7 +169,6 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
     ok(/1-2/.test(await p.evaluate(() => document.body.innerText)), '次の問題 opens stage 1-2');
     // the gift: clearing 1-10 gives the stage Atlamo (the portal adds res.grant to the wallet)
     await p.evaluate(() => { const o = JSON.parse(localStorage.getItem('aicoding-hitblow-pz3d') || '{}'); o.first = o.first || {}; for (let i = 0; i < 9; i++) o.first[i] = o.first[i] || 1; localStorage.setItem('aicoding-hitblow-pz3d', JSON.stringify(o)); Atlas3D.hitblow.pending = { set: 'first', i: 9 }; });
-    await p.evaluate(() => document.querySelector('#tbar [data-a=resign]') && 0);
     await ctx.close();
   }
   /* ---------- the other boards: every 種目 builds and answers right ---------- */

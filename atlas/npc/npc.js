@@ -320,6 +320,9 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     const place = () => {
       try { const l = o.left && o.left(); el.style.left = l ? Math.round(l[0]) + 'px' : ''; el.style.width = l ? `min(600px, ${Math.round(l[1] - 24)}px)` : ''; } catch (e) {}
       try { const b = o.bottom ? o.bottom(el) : tableBottom(el); if (b != null) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
+      // a game that says where its talk goes (window.__npcPlace(el) → { cx, w, bot }: the bubble's centre x, its width, its bottom
+      // above the window's bottom) — ヒット＆ブロー 2026-11-17 user: アトラモの演出はサイドに振って邪魔にならないように
+      try { const P = !o.body && window.__npcPlace && window.__npcPlace(el); if (P) { el.style.left = Math.round(P.cx) + 'px'; el.style.width = Math.round(P.w) + 'px'; el.style.setProperty('--npc-bot', Math.round(P.bot) + 'px'); } } catch (e) {}
     };
     // the window resized while talking: placed again at once, and once more after the 3D view has framed the board anew (2026-11-12)
     let rzT = 0, rzF = 0;

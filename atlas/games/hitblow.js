@@ -317,6 +317,14 @@
     const C = cfg.c, uid = 'hbg' + Math.random().toString(36).slice(2, 7);
     const onResize = () => frame();
     addEventListener('resize', onResize);
+    // where the Atlamo talks (atlas/npc/npc.js reads window.__npcPlace): beside the board when a side has room, else over the top
+    function npcTop() { try { const r = Table3D.modelRect && Table3D.modelRect(); if (!r) return innerWidth < 760; return Math.max(r.left, innerWidth - r.right) < 300; } catch (e) { return true; } }
+    const npcPlace = el => { if (!vsAI || stopped) return null;
+      let r = null; try { r = Table3D.modelRect && Table3D.modelRect(); } catch (e) {} if (!r) return null;
+      const bv = document.getElementById('bv'), H = bv ? bv.clientHeight : innerHeight, gl = r.left, gr = innerWidth - r.right;
+      if (Math.max(gl, gr) >= 300) { const left = gl >= gr, g = left ? gl : gr, w = Math.min(460, g - 32); return { cx: left ? g / 2 : r.right + g / 2, w, bot: Math.max(16, H - r.bottom) }; }
+      return { cx: innerWidth / 2, w: Math.min(420, innerWidth - 24), bot: H - r.top + 4 }; };
+    if (vsAI) window.__npcPlace = npcPlace;
     const myTurn = () => !over && !busy && (pvp || mode === 'daily' || turn === 0);
     // the row being made: a slot per gem (null = empty) and the cursor (2026-11-16 user: tap a slot to put there · drag to move / swap)
     const blank = () => Array(cfg.n).fill(null), count = () => input.filter(v => v != null).length, full = () => count() === cfg.n;
@@ -580,8 +588,12 @@
       get human() { return 0; },
       // room under the board for the Atlamo's speech bubble (2026-11-16 user: the talk must not cover the tray) — AI games only;
       // npc.js puts it over the action bar on phones (just above it on PCs), so the board + tray is framed above where it reaches
-      inset: () => { if (!vsAI) return 0; const bar = document.querySelector('.bv .tbar'); if (!bar || !bar.getClientRects().length) return 0;
-        const r = bar.getBoundingClientRect(), ph = innerWidth <= 600; return Math.round(innerHeight - (ph ? r.bottom : r.top) + (ph ? 104 : 140)); },
+      // no action bar (2026-11-17 user: 画面下の投了とか不要、その分盤を大きく): やめる at the top ends the game; the board takes the room
+      noBar: true, noUndo: true, noHint: true, noResign: true,
+      inset: () => innerWidth <= 600 ? 12 : 18,
+      // the Atlamo's talk (AI games) goes beside the board where there is room (PC); on phones, where the board fills the width, at
+      // the top over the HUD: a strip is kept free above the board so the talk never covers the case or the rows
+      insetTop: () => { if (!vsAI || !npcTop()) return 0; const h = window.__hudTop ? __hudTop() : 0; return h ? h + 46 : 0; },
       undo() {}, canUndo: () => false,
       hint, canHint: () => myTurn() && mode !== 'rated',
       canResign: () => !over,
@@ -589,7 +601,7 @@
       timeout(s) { if (!over) finish(s ^ 1, 'time'); },
       stop() {
         stopped = true; timers.forEach(clearTimeout); clearTimeout(toastTm); if (toastEl) toastEl.remove();
-        ctx.el.removeEventListener('click', onClick); removeEventListener('keydown', onKey); ctx.el.removeEventListener('pointerdown', onDown, true); removeEventListener('pointermove', onMove); removeEventListener('pointerup', onUp); removeEventListener('pointercancel', onCancel); if (drag && drag.ghost) drag.ghost.remove(); removeEventListener('resize', onResize);
+        ctx.el.removeEventListener('click', onClick); removeEventListener('keydown', onKey); if (window.__npcPlace === npcPlace) window.__npcPlace = null; ctx.el.removeEventListener('pointerdown', onDown, true); removeEventListener('pointermove', onMove); removeEventListener('pointerup', onUp); removeEventListener('pointercancel', onCancel); if (drag && drag.ghost) drag.ghost.remove(); removeEventListener('resize', onResize);
         if (window.Atlas3D.hitblow._dbg === dbg) delete window.Atlas3D.hitblow._dbg;
       },
       _debug: dbg,
