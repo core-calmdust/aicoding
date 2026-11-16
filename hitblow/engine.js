@@ -169,7 +169,130 @@ function reviewStep(cfg, hist, i, rand) {
   return { ok: consistent(cfg, prev, x.g), before: cands.length, after, exp: mine.exp, best: Math.min(best.exp, mine.exp) };
 }
 
-const api = { PRESETS, DIFFS, OPENERS, rng, hashStr, space, idxOf, codeOf, validCode, feedback, randomCode, localDate, dailyCode, dayBefore,
+// ---------- 3D table (atlas/games/hitblow.js, 2026-11-16): the 種目 and the race on one shared board ----------
+// Both players guess the SAME hidden code on one board, taking turns (rows alternate); each sees every row and its answer.
+// The first to get all hits wins; when the rows run out, a draw. 種目 = adapter sizes 1..5.
+const RULES = [null,
+  { id: 'color', n: 4, c: 6, rep: false, kind: 'color', rows: 10 },    // カラー: 6 colours, 4 different (the classic Japanese ヒット＆ブロー)
+  { id: 'dup', n: 4, c: 6, rep: true, kind: 'color', rows: 10 },       // カラー（重複あり）: the 1970s board game's rule
+  { id: 'num3', n: 3, c: 10, rep: false, kind: 'num', rows: 10 },      // ナンバー3: three different digits 0–9
+  { id: 'num4', n: 4, c: 10, rep: false, kind: 'num', rows: 12 },      // ナンバー4: four different digits 0–9
+  { id: 'expert', n: 5, c: 8, rep: true, kind: 'color', rows: 12 },    // エキスパート: 5 pegs, 8 colours, repeats
+];
+const RULE_IDS = [1, 2, 3, 4, 5];
+function rule(z) { return RULES[z] || RULES[1]; }
+// ---------- the race AI ----------
+// In a race on one shared board every answer teaches both players, so the best guess is not the most informative one: it
+// is the candidate that gives the best chance to win — now, or later if the opponent does not hit it on the next turn.
+// raceValue(S) = the chance that the player to move wins from the candidate set S (both play this way; exact for small S):
+//   max over g in S of  1/|S| + Σ over answers p (not all hits) of |p|/|S| · (1 − raceValue(p)).
+// Measured (tools/test_engine.js): this beats a random candidate ~54–55% of races, the most informative candidate ~60%.
+const RV = new Map();
+function splitBy(sp, S, g) {
+  const m = new Map(), win = sp.n * (sp.n + 1);
+  for (let i = 0; i < S.length; i++) { const k = fbIdx(sp, S[i], g); if (k === win) continue; let a = m.get(k); if (!a) m.set(k, a = []); a.push(S[i]); }
+  return m;
+}
+function raceValue(sp, S) {
+  if (S.length <= 1) return S.length;
+  if (S.length > 30) return 0.5 + 0.5 / S.length;   // (large sets: the shape of the small ones)
+  const key = sp.key + ':' + Array.prototype.join.call(S, ',');
+  const hit = RV.get(key); if (hit != null) return hit;
+  let best = 0;
+  for (let i = 0; i < S.length && best < 1 - 1e-12; i++) {
+    let v = 1 / S.length;
+    for (const p of splitBy(sp, S, S[i]).values()) v += p.length / S.length * (1 - raceValue(sp, p));
+    if (v > best) best = v;
+  }
+  if (RV.size > 60000) RV.clear();
+  RV.set(key, best); return best;
+}
+function raceBest(cfg, cands, rand) {
+  const sp = space(cfg), N = cands.length;
+  if (N <= 2) return codeOf(cfg, cands[0]);
+  const S = N > 2000 ? sample(cands, 2000, rand) : cands, sc = N / S.length;
+  const pool = N > 220 ? sample(cands, 220, rand) : cands;
+  let bg = pool[0], bv = -1;
+  for (let i = 0; i < pool.length; i++) {
+    let v = 1 / N;
+    for (const p of splitBy(sp, S, pool[i]).values()) { const n = p.length * sc; v += n / N * (1 - (n <= 30 && sc === 1 ? raceValue(sp, Int32Array.from(p)) : 0.5 + 0.5 / n)); }
+    v += rand() * 1e-9;
+    if (v > bv) { bv = v; bg = pool[i]; }
+  }
+  return codeOf(cfg, bg);
+}
+// the race levels (Lv.1–20): Lv.1–15 forget part of the answers on the board (each row is kept with a probability that grows
+// from 10% to 94%), so their guesses can contradict what is known; Lv.16–17 guess a random code that can still be the answer;
+// Lv.18–19 sometimes, Lv.20 always, play the race search above.
+function raceKeep(lv) { return lv >= 16 ? 1 : 0.10 + (lv - 1) * 0.06; }
+function aiRace(cfg, hist, level, rand) {
+  rand = rand || Math.random;
+  if (!hist.length) return level >= 18 ? opener(cfg) : randomCode(cfg, rand);
+  const tried = {}; for (const x of hist) tried[idxOf(cfg, x.g)] = 1;
+  if (level < 16) {
+    const keep = raceKeep(level), used = hist.filter(() => rand() < keep), cands = candsOf(cfg, used);
+    for (let t = 0; t < 40; t++) { const g = cands[Math.floor(rand() * cands.length)]; if (!tried[g]) return codeOf(cfg, g); }
+  }
+  const cands = candsOf(cfg, hist);
+  if (!cands.length) return randomCode(cfg, rand);
+  if (level >= 20 || (level >= 18 && rand() < (level - 17) * 0.35)) return raceBest(cfg, cands, rand);
+  return codeOf(cfg, cands[Math.floor(rand() * cands.length)]);
+}
+// a race between two levels on one secret: → { w: 0 | 1 | -1 (draw), rows }
+function race(cfg, secret, la, lb, first, rand, rows, memo) {
+  const hist = []; rows = rows || 60; let s = first ? 1 : 0;
+  for (let t = 0; t < rows; t++) {
+    const g = aiRace(cfg, hist, s ? lb : la, rand), f = feedback(secret, g);
+    if (f.h === cfg.n) return { w: s, rows: t + 1 };
+    hist.push({ g, h: f.h, b: f.b }); s ^= 1;
+  }
+  return { w: -1, rows };
+}
+// the number of guesses the greedy solver needs from a set of candidates, for every one of them as the answer: { worst, mean }
+function solverDepth(cfg, hist, rand) {
+  const cands = candsOf(cfg, hist); let worst = 0, sum = 0; const memo = new Map();
+  for (let i = 0; i < cands.length; i++) {
+    const secret = codeOf(cfg, cands[i]), h = hist.slice(); let t = 0;
+    for (;;) { t++; const key = h.map(x => x.g.join('') + x.h + x.b).join('|'); let g = memo.get(key);
+      if (!g) { g = bestGuess(cfg, candsOf(cfg, h), { rand: rng('sd:' + key), full: false, budget: 300000 }).guess; memo.set(key, g); }
+      const f = feedback(secret, g); if (f.h === cfg.n || t > 12) break; h.push({ g, h: f.h, b: f.b }); }
+    worst = Math.max(worst, t); sum += t;
+  }
+  return { worst, mean: cands.length ? sum / cands.length : 0, n: cands.length };
+}
+// 今日の一問 (EASY / HARD): a fixed puzzle per local date — the answer and a few clue rows already on the board (guesses made
+// by a "ghost" player, with their answers); solve it within the limit. EASY: カラー, a handful of candidates left, a roomy limit;
+// HARD: ナンバー4, a few dozen candidates left, the limit = the greedy solver's worst case. Same on every device (seeded).
+const DAILY = {
+  easy: { z: 1, lo: 3, hi: 9, extra: 1 },
+  hard: { z: 4, lo: 14, hi: 48, extra: 0 },
+};
+const dailyMemo = {};
+function makeDaily(dateKey, which) {
+  const k = which === 'hard' ? 'hard' : 'easy', id = k + ':' + dateKey; if (dailyMemo[id]) return dailyMemo[id];
+  const D = DAILY[k], cfg = rule(D.z);
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const r = rng('hb3d-daily:' + id + ':' + attempt), secret = randomCode(cfg, r), clues = [];
+    let cands = allCands(cfg);
+    for (let t = 0; t < 6 && cands.length > D.hi; t++) {
+      // a plausible earlier guess: one of the candidates left (as a player would), picked at random among a few that cut well
+      let best = null, bn = Infinity;
+      for (let j = 0; j < 6; j++) {
+        const g = codeOf(cfg, cands[Math.floor(r() * cands.length)]), f = feedback(secret, g); if (f.h === cfg.n) continue;
+        const left = filterCands(cfg, cands, g, f.h, f.b).length;
+        if (left >= D.lo && (left < bn || best == null)) { best = { g, h: f.h, b: f.b }; bn = left; }
+      }
+      if (!best) break;
+      clues.push(best); cands = filterCands(cfg, cands, best.g, best.h, best.b);
+    }
+    if (cands.length < D.lo || cands.length > D.hi || clues.length < 2) continue;
+    const d = solverDepth(cfg, clues, r);
+    const P = { which: k, date: dateKey, z: D.z, cfg, secret, clues, cands: cands.length, limit: d.worst + D.extra, par: d.worst };
+    return (dailyMemo[id] = P);
+  }
+  return null;
+}
+const api = { RULES, RULE_IDS, rule, aiRace, raceBest, raceValue, raceKeep, race, solverDepth, makeDaily, DAILY, PRESETS, DIFFS, OPENERS, rng, hashStr, space, idxOf, codeOf, validCode, feedback, randomCode, localDate, dailyCode, dayBefore,
   allCands, filterCands, candsOf, consistent, rate, bestGuess, opener, aiGuess, solve, reviewStep, keepProb, smartProb };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.HitBlowEngine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
