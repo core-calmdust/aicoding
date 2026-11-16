@@ -22,6 +22,7 @@
   /* ---------- page: the DOM board's pictures become invisible (taps and marks stay) ---------- */
   const st = document.createElement('style');
   st.textContent = `
+html.atlas-latr #fPieces{display:none!important}   /* 2Dの駒の欄は2D表示のときだけ（チェッカーと同じ。3Dの駒は共通部品が別の箱に出す） */
 html.atlas-latr .frame{background:transparent!important;box-shadow:none!important;border:0!important}
 html.atlas-latr .frame::before,html.atlas-latr .frame::after,html.atlas-latr .board::after,html.atlas-latr .board::before{display:none!important}
 html.atlas-latr .board{background:none!important;box-shadow:none!important}
@@ -205,7 +206,7 @@ html.atlas-skin.atlas-latr:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon)
   /* ---------- the new-game dialog's design tab: 「3D盤」「3D駒」 rows under the 2D boards (shared AtlasSkin.rows3d) ---------- */
   { const row = document.getElementById('bdRow'), h = row && (row.closest('.field') || row.parentNode), is3 = () => !V || V.is3d();
     const go3 = () => { if (V && !V.is3d()) V.set(true); try { mirror(); } catch (e) {} };
-    const R3 = AtlasSkin.rows3d && h ? AtlasSkin.rows3d({ id: 'latrunculi', host: h, is3, clear: row, board: go3, piece: go3 }) : null;
+    const R3 = AtlasSkin.rows3d && h ? AtlasSkin.rows3d({ id: 'latrunculi', host: h, is3, clear: row, board: go3, piece: go3, p3: { ja: '3D駒', en: '3D pieces', zh: '3D棋子', 'zh-TW': '3D棋子', ko: '3D 말', es: 'Piezas 3D', fr: 'Pièces 3D', pt: 'Peças 3D', de: '3D-Figuren', ru: '3D-фигуры', tr: '3D taşlar', id: 'Bidak 3D', hi: '3D मोहरे', ar: 'قطع ثلاثية الأبعاد' } }) : null;
     if (row && R3) row.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(() => R3.paint(), 0); } }, true);   // a 2D board: the 2D page
     if (R3 && typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { R3.paint(); } catch (e) {} return r; }; }
     addEventListener('storage', e => { if (e.key === 'atlas-latrunculi-look' || e.key === 'atlas-latrunculi-pc3') { try { mirror(); } catch (x) {} if (R3) R3.paint(); } });
