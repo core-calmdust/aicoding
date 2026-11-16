@@ -85,6 +85,11 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   }
   const newSt = v => { const E = window.LudoEngine; return v === 'pachisi' ? E.newGame({ rule: 'pachisi', players: 2 }) : E.newGame({ rule: 'ludo', players: 2, house: Object.assign({}, E.HOUSE) }); };
   const sideToMove = st => st.ctrl[st.turn];                        // 0 / 1 (Pachisi: each player holds two seats)
+  // the 10-second rule (2026-11-16): an idle player's own client throws for it after 10 s and, 10 s later, moves a piece for it — a
+  // penalty. The piece: from the mover's reveal of that throw (both sides know it once written, nobody can choose it), among the
+  // real moves (a forced pass is never a penalty). Three penalties in a row lose the game (why 'idle'); a move of one's own resets them.
+  const PEN_MAX = 3;
+  function penIdx(x, ms) { const reals = []; ms.forEach((m, i) => { if (!m.pass) reals.push(i); }); return reals.length ? reals[parseInt(sha256(x + ':idle').slice(0, 8), 16) % reals.length] : -1; }
   const winSide = st => { const x = st.seats.find(q => st.team[q] === st.winner); return x == null ? -1 : st.ctrl[x]; };
 
   // ---------------------------------------------------------------- rules (shared by both clients and spectators)
@@ -104,13 +109,13 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   function replay0(v, s, base) {
     const E = window.LudoEngine;
     const toks = s ? s.split('.') : [];
-    const out = base ? Object.assign({}, base, { plies: base.plies.slice(), revs: [base.revs[0].slice(), base.revs[1].slice()], commit: base.commit.slice() })
-      : { ok: true, bad: -1, n: 0, plies: [], st: newSt(v), over: false, win: undefined, why: '', actor: 0, need: 'c', idx: 1, revs: [[], []], commit: [null, null] };
+    const out = base ? Object.assign({}, base, { plies: base.plies.slice(), revs: [base.revs[0].slice(), base.revs[1].slice()], commit: base.commit.slice(), pen: base.pen.slice() })
+      : { ok: true, bad: -1, n: 0, plies: [], st: newSt(v), over: false, win: undefined, why: '', actor: 0, need: 'c', idx: 1, revs: [[], []], commit: [null, null], pen: [0, 0], idleLost: -1 };
     const prev = base ? base.prev.slice() : [null, null];
     const next = () => {
       if (!out.commit[0]) return ['c', 0];
       if (!out.commit[1]) return ['c', 1];
-      if (out.st.over) return ['', -1];
+      if (out.st.over || out.idleLost >= 0) return ['', -1];
       const m = sideToMove(out.st), o = 1 - m;
       return out.revs[o].length < out.idx ? ['r', o] : ['m', m];
     };
@@ -121,19 +126,25 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
       if (ty === 'c') { if (tk.length !== 17) { fail(); break; } out.commit[side] = prev[side] = x; out.n++; continue; }
       if (H(x) !== prev[side]) { fail(); break; }
       if (ty === 'r') { if (tk.length !== 17) { fail(); break; } prev[side] = x; out.revs[side].push(x); out.n++; continue; }
-      // m: the mover's reveal + move (the index of the move in the engine's list)
-      if (tk.length !== 18) { fail(); break; }
+      // m: the mover's reveal + move (the index of the move in the engine's list) [+ a flag: 'a' thrown automatically after 10 s,
+      // 'p' a penalty — the move is the one penIdx picks]
+      if (tk.length !== 18 && !(tk.length === 19 && (tk[18] === 'a' || tk[18] === 'p'))) { fail(); break; }
+      const pf = tk[18] || '';
       prev[side] = x; out.revs[side].push(x);
       const st = out.st, thr = diceOf(out.revs[0][out.idx - 1], out.revs[1][out.idx - 1], out.idx, st), ms = E.legalMoves(st, thr), mi = parseInt(tk[17], 36);
       if (!(mi >= 0 && mi < ms.length)) { fail(); break; }
       const res = E.apply(st, ms[mi], thr);
       if (res.cont) { fail(); break; }                                       // (two dice are a house rule: never online)
-      out.plies.push({ seat: st.turn, side, thr, mi, m: ms[mi], s0: st, ag: !!res.again });
+      if (pf === 'p') { if (penIdx(x, ms) !== mi) { fail(); break; } out.pen[side]++; }
+      else if (ms.some(m => !m.pass)) out.pen[side] = 0;                    // (a forced pass neither counts nor resets)
+      if (out.pen[side] >= PEN_MAX) out.idleLost = side;
+      out.plies.push({ seat: st.turn, side, thr, mi, m: ms[mi], s0: st, ag: !!res.again, pf, pen: out.pen.slice() });
       out.st = res.state; out.idx++; out.n++;
     }
     out.prev = prev;
     const [need, side] = next(); out.need = need; out.actor = side;
-    if (out.st.over) { out.over = true; out.win = winSide(out.st) + 1; out.why = 'home'; }
+    if (out.idleLost >= 0) { out.over = true; out.win = 2 - out.idleLost; out.why = 'idle'; }
+    else if (out.st.over) { out.over = true; out.win = winSide(out.st) + 1; out.why = 'home'; }
     return out;
   }
   const turnOf = R => (R.over ? 0 : R.actor + 1);   // 1 / 2 = the side that must write next
@@ -755,6 +766,12 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     const mine = chainFor(gid)[R.idx], oth = R.revs[1 - s][R.idx - 1];
     return s === 0 ? diceOf(mine, oth, R.idx, R.st) : diceOf(oth, mine, R.idx, R.st);
   }
+  // the penalty move of the throw I am to make now (its index in LudoEngine.legalMoves; -1: no real move)
+  function penaltyPick(g, gid, ms) {
+    const s = sideNo(g, uid) - 1, R = replay(g.v, g.moves);
+    if (s < 0 || !R.ok || R.over || R.actor !== s || R.need !== 'm') return -1;
+    return penIdx(chainFor(gid)[R.idx], ms);
+  }
   const keyOk = (g, gid) => { const s = sideNo(g, uid) - 1, R = replay(g.v, g.moves); return s < 0 || !R.commit[s] || R.commit[s] === chainFor(gid)[0]; };
 
   // ---------------------------------------------------------------- games
@@ -769,7 +786,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   // write the record's next tokens of mine: the waiting commit / reveal (auto), or — when it is my throw — my reveal + the move
   // (mi = the index of the move in LudoEngine.legalMoves for that throw); n = tokens already seen (guards against double sends / races).
   // The same write carries my following commit / reveal when the turn passes to the other side. A write that ends the game sets the result.
-  async function act(gid, n, mi) {
+  async function act(gid, n, mi, flag) {
     const r = await db.txn('games/' + gid, g => {
       if (g === null) return null;
       if (g.status !== 'play' || !varOk(g.v)) return;
@@ -781,7 +798,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
       const add = tk => { moves = moves ? moves + '.' + tk : tk; R = replay(g.v, moves); };
       if (R.need === 'm') {
         if (!(mi >= 0 && mi < 36)) return;                                    // a move needs the player's choice
-        add('m' + chainFor(gid)[R.idx] + Number(mi).toString(36));
+        add('m' + chainFor(gid)[R.idx] + Number(mi).toString(36) + (flag === 'a' || flag === 'p' ? flag : ''));
         if (!R.ok) return;                                                    // illegal move
       } else if (mi !== undefined) return;
       const a = autoToks(Object.assign({}, g, { moves }), gid, R, s);
@@ -904,6 +921,6 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     account, google, logout, onAuth, pull, push,
     get uid() { return uid; }, get profile() { return profile; }, get ready() { return !!(db && uid && profile && dkey); }, now: () => (db ? db.now() : Date.now()),
     get secure() { return secure(); }, secMsg: k => (window.OnlineSec ? OnlineSec.msg(k) : ''),
-    _sha: sha256, _diceOf: diceOf,
+    _sha: sha256, _diceOf: diceOf, PEN_MAX, penaltyPick: (g, gid, ms) => (dkey ? penaltyPick(g, gid, ms) : -1),
   };
 })();

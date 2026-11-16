@@ -30,7 +30,7 @@ const olOn = () => !!(ON && ON.available) && !olNotCfg;
 const olEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const GLOGO = '<svg class="glogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
 const olClock = ms => { const s = Math.ceil(Math.max(0, ms) / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-const tcText = () => t('ol.tcFmtD', { s: ON.DELAY / 1000 });
+const tcText = () => t('ol.tc10');   // (the 10-second rule: 10 s to throw, 10 s to move — the timer below)
 const varName2 = v => t('rule.' + (ON.VARIANTS.includes(v) ? v : ON.DEF_V)) + ' · ' + t('ol.2p');
 const showOv = id => $(id).classList.add('show');
 const hideOv = id => $(id).classList.remove('show');
@@ -193,7 +193,7 @@ function olRender(v) {
     const R = ON.room;
     B.innerHTML = `<div class="ol-me"><input id="olName" maxlength="16" value="${olEsc(P.name)}" aria-label="${olEsc(t('pf.name'))}"><div class="ol-r"><small>${t('ol.rating')}</small><b>${P.rating}</b><small>${t('ol.record', { w: P.wins || 0, l: P.losses || 0, d: P.draws || 0 })}</small></div></div><div class="ol-grid ol-lux"><section class="ol-col ol-pane"><h3 class="ol-ph">${olx('paneRated')}<small>${olx('paneRatedSub')}</small></h3>
       <div class="ol-tcbox"><div class="ol-tcl">${t('ng.rule')} · ${t('ol.tc')}</div>${olVarSeg()}</div>
-      <details class="ol-rulesd"><summary>${olx('rulesMore')}</summary><p class="ol-note small">${t('ol.findDesc')}</p></details>
+      <details class="ol-rulesd"><summary>${olx('rulesMore')}</summary><p class="ol-note small">${t('ol.findDesc')} ${t('ol.timerRule')}</p></details>
       ${olHistHtml()}
       <div class="ol-sub">${t('ol.rank')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>
       <div class="ol-acts ol-bot"><button class="mbtn go" id="olFind">${t('ol.find')}</button></div>
@@ -406,6 +406,8 @@ async function olPlayRemote(p) {
     if (m.pass) { const w = m.forfeit ? t('st.three') : t('st.nomove'); setStatus(w); if (!ms.some(x => !x.pass)) toast(w, 900); await olSleep(420 * Math.sqrt(SPD())); }
     else await olSleep(260 * SPD());
     if (!net || net.gid !== gid) return;
+    if (p.pf === 'p') olPenFx(false, p.side, p.pen[p.side]);
+    else if (p.pf === 'a') olToast(t('ol.oppAuto', { p: olName(p.side) }), 'auto', 1300);
     olRemote = true; try { await commit(m); } finally { olRemote = false; }
   } catch (e) { console.warn(e); }
   finally { if (net && net.gid === gid) { net.busy = false; setTimeout(() => { olCatchUp(); if (net && net.done && net.game) olEndBoard(net.game); }, 0); } }
@@ -424,12 +426,16 @@ function olThrow() { if (!olCanMove()) return null; return ON.myDice(net.game, n
 // my move: written together with my next reveal before it is played on the board; false = not now
 function olSend(m) {
   if (!olCanMove() || !G.thr) return false;
-  const ms = E.legalMoves(G.state, G.thr), key = olMoveKey(m);
+  const ms = E.legalMoves(G.state, G.thr), key = olMoveKey(m), R = olR(), tk = net.gid + ':' + R.n;
   let mi = ms.indexOf(m); if (mi < 0) mi = ms.findIndex(x => olMoveKey(x) === key);
+  const pen = net.penKey === tk && net.penMi >= 0;
+  if (pen) mi = net.penMi;
   if (mi < 0) return false;
-  const gid = net.gid, R = olR();
+  const flag = pen ? 'p' : net.autoKey === tk ? 'a' : '', gid = net.gid;
+  net.penKey = null;
+  if (pen) olPenFx(true, olSide(), (R.pen[olSide()] || 0) + 1);
   net.pending = true;
-  ON.act(gid, R.n, mi).then(ok => {
+  ON.act(gid, R.n, mi, flag).then(ok => {
     if (!net || net.gid !== gid) return;
     net.pending = false;
     if (!ok) { toast(t('ol.moveFail'), 1800); const r2 = olR(); if (!busy && r2) olSetBoard(net.game, r2); }
@@ -441,7 +447,7 @@ const olName = side => { const g = net && net.game; return g ? ((side === 0 ? g.
 function olSeatName(seat) {
   const g = net && net.game; if (!g || !G) return '…';
   const side = olSideOf(G.state.ctrl[seat]), r = side === 0 ? g.br : g.wr, mine = !net.spectate && side === olSide();
-  return olName(side) + (typeof r === 'number' && !matchMedia('(max-width: 600px)').matches ? ' (' + r + ')' : '') + (mine ? ' · ' + t('p.you') : '');   // (phones: no room for the rating)
+  return olName(side) + (mine ? ' · ' + t('p.you') : '');   // (the ratings: in the game's info line above the position card — the row keeps room for the penalty pips and the timer)
 }
 // a turn on the board (app.js step): my throw is offered once both parts of it are known; the other side's turn is shown
 function olStep(my) {
@@ -463,20 +469,95 @@ function olEnd(g) {
   const ls = ON.sideNo(g, g.loser); if (!ls) return null;
   return { winner: 2 - ls, why: g.status };
 }
-function olEndBoard(g) { if (olEnd(g) && G && G.mode === 'online') { $('#btnRoll').disabled = true; cupDraw(-1, null); setStatus(''); clearMarks(); } }
+function olEndBoard(g) { if ((olEnd(g) || (g && g.status === 'over' && g.why === 'idle')) && G && G.mode === 'online') { $('#btnRoll').disabled = true; cupDraw(-1, null); setStatus(''); clearMarks(); } }
 // the 30 s of the side that must write next, in its player row (the seat to move; the other side's first seat while it reveals)
 // + timeout / abandonment claims
-function olClockRender() {
-  document.querySelectorAll('#players .pclk').forEach(el => { el.textContent = ''; el.classList.remove('low', 'ol-move'); });
-  if (!net || !net.game || !G || G.mode !== 'online') return;
-  const g = net.game, live = g.status === 'play' && !net.done, R = olR(), tm = live && R.ok && !R.over ? R.actor : -1, now = ON.now();
-  if (tm < 0 || (net.pending && tm === olSide())) return;
-  const c = olCtrlOf(tm), st = G.state, seat = st.ctrl[st.turn] === c ? st.turn : st.seats.find(x => st.ctrl[x] === c);
-  const el = document.getElementById('olClk' + seat); if (!el) return;
-  const k = ON.clockOf(g, tm === 0 ? 'b' : 'w', true, now), left = Math.max(0, k.delay + k.main);
-  el.textContent = olClock(left); el.classList.add('ol-move'); el.classList.toggle('low', left <= 10000);
-  if (!net.spectate && tm === olSide() && window.CountTick) CountTick.feed(left, 'ol' + R.n);   // time signal on my own clock
+// ---------------------------------------------------------------- the 10-second rule (2026-11-16, online games only)
+// My turn: 10 s to throw — then my own client throws for me (the record marks the move 'a'); 10 s to move after the throw — then a
+// piece is moved for me (a penalty, 'p': the piece online.js picks from my reveal, so both sides can check it). Three penalties in
+// a row lose the game (online.js replay: why 'idle'); a move of my own resets them. A forced pass is never a penalty.
+// The other side's turn: its time is shown up to the latest moment its windows can end (its throw happens on its own screen). Every window also ends a few
+// seconds before the record's 30 s per action (free in secrules: the backstop when a tab is gone), counted from the last write.
+// The look: a ring by the player's name (the seat to move), a bar in the throw card with what happens next, a ring round the
+// cup on the board; ticks in the last 3 s of my own windows; a chime + toast on an auto throw; a buzzer, a red flash, the
+// player's penalty pips (●●○ beside each name) and a toast on a penalty.
+const OLT = { roll: 10000, move: 10000, srvRoll: 14000, srvMove: 26000 };
+let olT = null, olTRaf = 0;
+function olSfx(k, x) {
+  (window.__olSfx = window.__olSfx || []).push({ k, x, t: Date.now() });
+  if (k === 'tick') { tone(x === 1 ? 1245 : x === 2 ? 1046 : 880, .07, 'square', .045); if (x === 1) setTimeout(() => tone(1245, .05, 'square', .03), 90); }
+  else if (k === 'auto') { tone(523, .1, 'triangle', .07); setTimeout(() => tone(784, .1, 'triangle', .07), 85); setTimeout(() => tone(1046, .16, 'triangle', .06), 170); }
+  else if (k === 'pen') { tone(233, .22, 'sawtooth', .075); setTimeout(() => tone(175, .28, 'sawtooth', .075), 130); setTimeout(() => tone(117, .4, 'square', .055), 290); try { if (navigator.vibrate) navigator.vibrate([70, 50, 140]); } catch (e) {} }
+  else if (k === 'oppPen') { tone(440, .12, 'triangle', .055); setTimeout(() => tone(330, .2, 'triangle', .05), 120); }
 }
+{ const _toast = toast; toast = function (msg, ms) { const el = $('#toast'); el.classList.remove('ol-auto', 'ol-pen'); return _toast(msg, ms); }; }
+function olToast(msg, kind, ms) { toast(msg, ms || 1600); const el = $('#toast'); if (kind) { void el.offsetWidth; el.classList.add('ol-' + kind); } }
+// a penalty on the board: mine (the send) or the other side's (its recorded ply); n = penalties in a row now
+function olPenFx(mine, side, n) {
+  olSfx(mine ? 'pen' : 'oppPen');
+  olToast(mine ? t('ol.penalty', { n }) + (n === ON.PEN_MAX - 1 ? ' ' + t('ol.penWarn') : '') : t('ol.oppPenalty', { p: olName(side), n }), 'pen', 2400);
+  const fr = $('#frame'); if (fr) { fr.classList.remove('ol-penfx'); void fr.offsetWidth; fr.classList.add('ol-penfx'); setTimeout(() => fr.classList.remove('ol-penfx'), 1000); }
+  net.penShow = { side, n, t: Date.now() };
+  const pl = $('#players'); if (pl) { pl.classList.remove('olshake'); void pl.offsetWidth; pl.classList.add('olshake'); setTimeout(() => pl.classList.remove('olshake'), 700); }
+  renderPlayers();
+}
+// penalties in a row per side, as the board shows it now (the record's count after the ply on view)
+function olPenNow() { const R = olR(); if (!R || !G) return [0, 0]; const p = R.plies[G.plies.length - 1]; return G.plies.length ? (p ? p.pen : R.pen) : [0, 0]; }
+// beside each name: the penalty pips and the countdown ring (app.js renderPlayers)
+function olSeatExtra(seat) {
+  const side = olSideOf(G.state.ctrl[seat]), n = olPenNow()[side] || 0, fresh = net && net.penShow && net.penShow.side === side && Date.now() - net.penShow.t < 900;
+  return `<span class="olpen${n ? ' on' : ''}" title="${olEsc(t('ol.penTip'))}">${[0, 1, 2].map(i => `<i class="${i < n ? 'x' + (fresh && i === n - 1 ? ' new' : '') : ''}"></i>`).join('')}</span><span class="olt" id="olClk${seat}"><b></b></span>`;
+}
+function olTimerSet(x) { olT = x; if (x) x.ticks = new Set(); olTimerPaint(); if (x && !olTRaf) olTRaf = requestAnimationFrame(olTimerFrame); }
+function olTimerFrame() { olTRaf = 0; olTimerPaint(); if (olT) olTRaf = requestAnimationFrame(olTimerFrame); }
+function olTimerPaint() {
+  let bar = $('#olBar');
+  if (!bar) { $('#throwCard').insertAdjacentHTML('beforeend', '<div class="olbar" id="olBar" aria-live="off"><div class="lb"><span></span><b></b></div><div class="tr"><i></i></div></div>'); bar = $('#olBar'); }
+  document.querySelectorAll('#players .olt.on').forEach(el => { if (!olT || el.id !== 'olClk' + olT.seat) el.classList.remove('on', 'low'); });
+  let ring = svg.querySelector('#gOlT');
+  if (!olT || !G || G.mode !== 'online') { bar.classList.remove('on', 'low'); if (ring) ring.remove(); return; }
+  const now = Date.now(), left = Math.max(0, olT.end - now), p = Math.max(0, Math.min(1, left / Math.max(1, olT.end - olT.start))), sec = Math.ceil(left / 1000);
+  const c = p > .5 ? '#7fd6a4' : p > .3 ? '#f4b042' : '#ff6a55', low = left <= 3000;
+  const el = document.getElementById('olClk' + olT.seat);
+  if (el) { el.classList.add('on'); el.classList.toggle('low', low); el.classList.toggle('mine', !!olT.mine); el.style.setProperty('--p', p.toFixed(4)); el.style.setProperty('--c', c); const b = el.firstChild, sv = left > 0 ? String(sec) : '…'; if (b && b.textContent !== sv) b.textContent = sv; }
+  bar.classList.add('on'); bar.classList.toggle('low', low); bar.style.setProperty('--p', p.toFixed(4)); bar.style.setProperty('--c', c);
+  const lb = olT.kind === 'roll' ? t('ol.tRoll', { s: sec }) : olT.kind === 'move' ? t('ol.tMove', { s: sec }) : t('ol.tOpp', { p: olName(olSideOf(G.state.ctrl[olT.seat])) });
+  const sp = bar.querySelector('.lb span'), sb = bar.querySelector('.lb b');
+  const sv = left > 0 ? sec + 's' : '…'; if (sp.textContent !== lb) sp.textContent = lb; if (sb.textContent !== sv) sb.textContent = sv;
+  // the ring round the cup / the yard of the seat to move (2D board)
+  if (!ring) { ring = document.createElementNS('http://www.w3.org/2000/svg', 'g'); ring.id = 'gOlT'; ring.innerHTML = '<circle class="bg" r="1.32"/><circle class="fg" r="1.32" pathLength="100"/>'; svg.appendChild(ring); }
+  const [x, y] = cupSpot(olT.seat); ring.setAttribute('transform', `translate(${x} ${y}) rotate(-90)`);
+  ring.classList.toggle('low', low); ring.classList.toggle('mine', !!olT.mine);
+  const fg = ring.lastChild; fg.style.stroke = c; fg.setAttribute('stroke-dasharray', `${(p * 100).toFixed(2)} 100`);
+}
+// every 100 ms: start / follow the window of the turn on the board, throw / move for me when mine runs out
+function olTimerTick() {
+  if (!net || !net.game || !G || G.mode !== 'online' || net.done || net.game.status !== 'play' || SP) { if (olT) olTimerSet(null); return; }
+  const R = olR();
+  if (!R || !R.ok || R.over || R.need !== 'm' || net.busy) { if (olT) olTimerSet(null); return; }
+  const key = net.gid + ':' + R.n, seat = R.st.turn, mine = !net.spectate && R.actor === olSide(), now = Date.now();
+  if (G.plies.length !== R.plies.length || G.state.turn !== seat) { if (olT) olTimerSet(null); return; }   // (the board is still playing a ply)
+  const gt = now - Math.max(0, ON.now() - (net.game.t || ON.now()));      // the last write, on this clock
+  if (!mine) { if (!olT || olT.key !== key) olTimerSet({ key, kind: 'opp', seat, start: gt, end: gt + OLT.srvMove }); return; }   // (the other side's latest: its windows end by then)
+  if (net.pending) { if (olT) olTimerSet(null); return; }
+  if (!G.thr) {
+    if (!olT || olT.key !== key || olT.kind !== 'roll') { if (busy || !olThrow()) return; olTimerSet({ key, kind: 'roll', seat, mine: true, start: now, end: Math.max(now + 2000, Math.min(now + OLT.roll, gt + OLT.srvRoll)) }); }
+  } else if (!olT || olT.key !== key || olT.kind !== 'move') olTimerSet({ key, kind: 'move', seat, mine: true, start: now, end: Math.max(now + 2000, Math.min(now + OLT.move, gt + OLT.srvMove)) });
+  const left = olT.end - now;
+  for (const k of [3, 2, 1]) if (left <= k * 1000 && left > (k - 1) * 1000 && !olT.ticks.has(k)) { olT.ticks.add(k); olSfx('tick', k); }
+  if (left > 0 || busy) return;
+  if (olT.kind === 'roll') { if (doRoll()) { net.autoKey = key; olSfx('auto'); olToast(t('ol.autoRoll'), 'auto', 1600); } return; }
+  // the move window ran out: the penalty move (none when there is no real move — the forced pass goes out by itself)
+  if (net.penKey === key) return;
+  const ms = E.legalMoves(G.state, G.thr), pi = ON.penaltyPick(net.game, net.gid, ms);
+  if (pi < 0) return;
+  net.penKey = key; net.penMi = pi;
+  commit(ms[pi]).then(() => { if (net && net.penKey === key) net.penKey = null; });   // (not sent — busy: tried again on the next tick)
+}
+setInterval(olTimerTick, 100);
+// after an automatic throw the single move is not played for me (autoPick): an idle player gets the penalty
+function olNoAutoPick() { const R = olR(); return !!(net && R && net.autoKey === net.gid + ':' + R.n); }
+function olClockRender() { olTimerPaint(); }
 function olClockTick() {
   if (!net || !net.game) return;
   olClockRender();
@@ -497,7 +578,7 @@ function olWatchRender() {
   const g = net.game, w = net.watchers || 0;
   el.classList.remove('hidden'); el.classList.toggle('pl', !net.spectate);
   if (net.spectate) el.innerHTML = `<span class="wl">${t('ol.watching')}</span><span class="wi">${olEsc(g.bn)} vs ${olEsc(g.wn)} · ${olEsc(varName2(g.v))} · ${t('ol.watchers', { n: w })}</span><button id="olWatchStop">${t('ol.watchStop')}</button>`;
-  else el.innerHTML = `<span class="wi">${t(g.rated ? 'ol.rated' : 'ol.friendly')} · ${olEsc(varName2(g.v))} · ${olEsc(tcText())}${w ? ' · ' + t('ol.watchers', { n: w }) : ''}</span>${net.done ? `<button id="olWatchStop">${t('ol.leaveGame')}</button>` : ''}`;
+  else el.innerHTML = `<span class="wi">${olEsc(g.bn)} (${g.br}) vs ${olEsc(g.wn)} (${g.wr}) · ${t(g.rated ? 'ol.rated' : 'ol.friendly')} · ${olEsc(varName2(g.v))} · ${olEsc(tcText())}${w ? ' · ' + t('ol.watchers', { n: w }) : ''}</span>${net.done ? `<button id="olWatchStop">${t('ol.leaveGame')}</button>` : ''}`;
   const b = $('#olWatchStop'); if (b) b.onclick = () => olDetach();
 }
 // ---------------------------------------------------------------- the end of an online game
@@ -505,6 +586,7 @@ function olWhy(g, me) {
   const loserNo = g.loser ? ON.sideNo(g, g.loser) : 0, p = loserNo ? olName(loserNo - 1) : '';
   if (g.status === 'resign') return g.loser === ON.uid ? t('ol.youResigned') : me > 0 ? t('ol.oppResigned') : t('ol.wResign', { p });
   if (g.status === 'timeout') return g.loser === ON.uid ? t('ol.youTimeout') : me > 0 ? t('ol.oppTimeout') : t('ol.wTime', { p });
+  if (g.status === 'over' && g.why === 'idle') { const ls = 3 - (g.win || 0); return ls === me ? t('ol.youIdle') : me > 0 ? t('ol.oppIdle') : t('ol.wIdle', { p: olName(ls - 1) }); }
   if (g.status === 'abandon') return g.loser === ON.uid ? t('ol.youAbandon') : me > 0 ? t('ol.oppAbandon') : t('ol.wAbandon', { p });
   return t('ol.home');
 }
