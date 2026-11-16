@@ -83,6 +83,10 @@ html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:
 html.atlas-skin #f3D > label.pc3l{margin-top:12px}
 html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:8px}
 html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at 50% 40%,#5a6a5c,#26302a);padding:6%;box-sizing:border-box}
+/* a game with clocks (rated / online): the two players one above the other — side by side the clock chip left no room for the names (as foxgeese, 2026-11-16) */
+html.atlas-skin.atlas-amazons:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:not(:has(> .pl-info)):has(.clk:not(:empty)){grid-template-columns:minmax(0,1fr)!important;gap:6px!important}
+html.atlas-skin.atlas-amazons:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:has(.clk:not(:empty)) > .player :is(.name, .nm){display:block!important;-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis;font-size:13.5px!important}
+html.atlas-skin.atlas-amazons:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:has(.clk:not(:empty)) > .player .clk{font-size:14px!important;min-width:4em!important;text-align:center!important;font-variant-numeric:tabular-nums}
 `;
   document.head.appendChild(st);
   // the portal skin's 3D rule that moves the page down inside .app (html.atlas-skin:not(.atlas-2d) .app{padding-top: … + 64px}) is

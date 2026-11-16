@@ -54,6 +54,10 @@ html.atlas-konane #fPieces{display:none!important}
 html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#eef8f5;border:2px solid #bfe3da}
 html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#0f6f66;margin:0 0 8px}
 html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px}
+/* a game with clocks (rated / online): the two players one above the other — side by side the clock chip left no room for the names (as foxgeese, 2026-11-16) */
+html.atlas-skin.atlas-konane:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:not(:has(> .pl-info)):has(.clk:not(:empty)){grid-template-columns:minmax(0,1fr)!important;gap:6px!important}
+html.atlas-skin.atlas-konane:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:has(.clk:not(:empty)) > .player :is(.name, .nm){display:block!important;-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis;font-size:13.5px!important}
+html.atlas-skin.atlas-konane:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:has(.clk:not(:empty)) > .player .clk{font-size:14px!important;min-width:4em!important;text-align:center!important;font-variant-numeric:tabular-nums}
 `;
   document.head.appendChild(st);
 
