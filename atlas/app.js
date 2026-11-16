@@ -919,7 +919,7 @@
     const PZX = !MX && id === 'peg' && !!(ad && window.AtlasPuzzles && AtlasPuzzles.has(id));
     // a game with its own stages (上海, 2026-11-13): フリー · ステージ — the adapter draws the stage panel and its map (adapter.stages)
     const STX = !MX && !PZX && !!(ad && ad.stages);
-    const modes = MX ? mxModes(id, g, ad) : PZX ? ['ai', 'puzzle'] : STX ? ['ai', 'stage'] : ad && ad.modes, mode = modes && modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
+    const modes = MX ? mxModes(id, g, ad) : PZX ? ['ai', 'puzzle'] : STX ? ['ai', 'stage'] : ad && ad.modes && RTG[id] && !ad.modes.includes('rated') ? [ad.modes[0], 'rated'].concat(ad.modes.slice(1)) : ad && ad.modes, mode = modes && modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
     // board size (go): on the same row as the time control when there is one
     // 種目 first (mancala · morris, 2026-11-15, as shogi): 種目 (+ its own setting: 種の数) → 相手 → 時間
     const KF = !!(ad && ad.kindFirst), KL = KIND[lang] || KIND.en;
@@ -971,6 +971,7 @@
         $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai';
         if ($('bvTcRow')) $('bvTcRow').hidden = !(ad.tableModes || ['ai']).includes(m);   // the time control is for table play only
         $('bvMNote').textContent = m === 'ai' ? '' : t('bv.m.' + m + 'Note');
+        if (m === 'rated' && RTG[id]) $('bvMNote').innerHTML += `<span class="rtnow3"><small>${esc(t('rec.rtNow'))}</small><b>${esc(rtNowTxt(id, ''))}</b></span>`;   // (3D-only games, 2026-11-16: the current rating under the note)
       };
       let bodyH = 0;
       const measure = () => { body.style.height = 'auto'; bodyH = 0; modes.forEach(m => { layout(m); $('bvMNote').style.flex = 'none'; bodyH = Math.max(bodyH, body.offsetHeight); }); $('bvMNote').style.flex = ''; body.style.height = bodyH + 'px'; };
@@ -1300,7 +1301,7 @@
     hex: [{ id: 's9', size: 9, main: 180, inc: 3 }, { id: 's11', size: 11, main: 300, inc: 5 }, { id: 's13', size: 13, main: 420, inc: 5 }],   // (hex/online.js TC: the board size decides the clock, 2026-11-15)
     backgammon: [{ id: 'g1', main: 180, dly: 12 }] };   // (backgammon/online.js FORMATS.g1: the rated single game without the cube — 12 s free per action, then a 3-minute reserve. Rated games against the AI as well since 2026-11-15: RTG.backgammon)   // (xiangqi/online.js TC: one clock, 2026-11-14)   // (checkers/online.js TC: one clock, 2026-11-14)
   const rtList = (id, opp) => opp === 'online' ? OTC[id] : RTG[id] ? [RTG[id].tc] : null;   // (the AI's rated games: the full game's fixed clock)
-  const rtOpp = id => pref[id + ':rtOpp'] === 'online' ? 'online' : 'ai';
+  const rtOpp = id => pref[id + ':rtOpp'] === 'online' && !RT_NO_ONLINE[id] ? 'online' : 'ai';
   /* ---------- rated games against the AI on the 3D table (2026-11-10): the same record as the full game (its localStorage store,
      its ladder of level ratings, its placement — shared/placement.js — and Elo K), so a rated game here counts there too ---------- */
   const RTG = {
@@ -1332,6 +1333,18 @@
     chess: { key: 'aicoding-chess-rated', start: 1000, flag: 'lvv', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },
       lv: [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2150, 2295, 2385, 2495, 2705, 2885, 2985, 3075, 3160, 3240, 3305, 3370, 3440] },
   };
+  /* the other games against the AI (2026-11-16 ユーザー：レート戦でvs CPU戦がないゲームに全部追加): their full games keep no rated record
+     against the AI, so the 3D table keeps its own ('atlas-rated-<id>'), no clock, one rating per game whatever the 種目. Each level's
+     rating is an estimate along a curve from the weakest to the strongest level (not measured yet); games with dice or real-time
+     shots have a narrower spread, since luck and the hand take a part in every result */
+  const rtLadder = (n, a, b) => [0].concat(Array.from({ length: n }, (_, i) => Math.round((a + (b - a) * Math.pow(i / (n - 1), 1.15)) / 5) * 5));
+  [['janggi', 20, 400, 2200], ['ugolki', 23, 350, 1900], ['mancala', 10, 400, 1800], ['dots', 10, 400, 1800], ['ur', 20, 600, 1500], ['fanorona', 20, 400, 2000],
+   ['konane', 23, 350, 2000], ['senet', 20, 600, 1400], ['agon', 23, 350, 1800], ['alquerque', 20, 400, 1900], ['ludo', 20, 700, 1300],
+   ['carrom', 20, 450, 1700], ['crokinole', 20, 450, 1700], ['hockey', 20, 400, 1800], ['botao', 20, 450, 1700]].forEach(([id, n, a, b]) => {
+    if (!RTG[id]) RTG[id] = { key: 'atlas-rated-' + id, start: 1000, flag: 'f', off: 0, from: 1, tc: { id: 'rt' }, lv: rtLadder(n, a, b), own: true };
+  });
+  // (online rated games exist only where the full game or the adapter has them: the rest offer the AI alone)
+  const RT_NO_ONLINE = { janggi: 1, mancala: 1, dots: 1, ludo: 1, carrom: 1, crokinole: 1, hockey: 1, botao: 1 };
   // 種目 (2026-11-12): each variant has a rating of its own — the standard game keeps the full game's store, a variant 'mini'
   // is stored under '<key>:mini' (the 3D table only; the same ladder of levels, which the variants map onto their own AI steps)
   const rtKey = (id, v) => RTG[id].key + (v ? ':' + v : '');
@@ -1366,7 +1379,7 @@
     const id = g.id, opp = RTG[id] ? rtOpp(id) : fullRt ? 'ai' : 'online', lsk = pref[id + ':lsk'] === 'open' && !NO_OPEN3D[id] ? 'open' : 'list';
     const daily = id === 'shogi' ? [['d1', '★', t('bv.pz.d1')], ['d2', '☆', t('bv.pz.d2')]] : id === 'gomoku' ? [] : [['d1', '★', t('bv.pz.dc')]];   // (gomoku: no puzzle of the day in the full game)
     const rtOnly = !(window.Atlas3D && Atlas3D[id] && Atlas3D[id].variants) && !!RTG[id];   // (games without 種目: 相手 → 時間 → 現在のレート (+ 戦績, the cup, on its right) — 2026-11-15; games with 種目 keep shogi's 種目｜レート｜cup row)
-    return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp">${RTG[id] || fullRt ? `<option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option>` : ''}${fullRt ? '' : `<option value="online" ${opp === 'online' || !RTG[id] ? 'selected' : ''}>${esc(t('bv.online'))}</option>`}</select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><span class="hb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 3 3.6M16 6h2.5a2.5 2.5 0 0 1-3 3.6"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/></svg></span></button></div>`
+    return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp">${RTG[id] || fullRt ? `<option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option>` : ''}${fullRt || RT_NO_ONLINE[id] ? '' : `<option value="online" ${opp === 'online' || !RTG[id] ? 'selected' : ''}>${esc(t('bv.online'))}</option>`}</select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><span class="hb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.5a2.5 2.5 0 0 0 3 3.6M16 6h2.5a2.5 2.5 0 0 1-3 3.6"/><path d="M12 13v3.5M8.5 20h7M10 16.5h4l.5 3.5h-5z"/></svg></span></button></div>`
       + `<label id="bvRtTcL">${t('tc.h')}<button type="button" class="lvpick" id="bvRtTc"></button></label>${rtOnly ? '<div class="opts vopts rtonly"><span class="rtnow2" id="bvRtNow" hidden></span></div>' : ''}<div class="mxnote" id="bvRtNote" hidden>${esc(t('bv.rtNoTc'))}</div></div>`
       + `<div class="opts mxp${pz3dOf(id) ? '' : ' mxoff'}" id="bvPz" hidden>${daily.map(([k, ic, lb]) => `<button type="button" class="mxb${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
       + `<div class="opts mxp${ls3dOf(id) ? '' : ' mxoff'}" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option>${NO_OPEN3D[id] ? '' : `<option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option>`}</select></label><button type="button" class="mxb mxwide" id="bvLsList"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
@@ -1538,7 +1551,7 @@
         const pk = rtPickG(g.id, S); rtR = { id: 'p3' + Date.now().toString(36), lv: pk.lv, or: pk.or, r: S.r, v: rv || undefined }; level = pk.lv + RTG[g.id].off;
       }
     }
-    const side = rtR && RTG[g.id].randSide ? (Math.random() < .5 ? 1 : 2) : $('bvSide') ? +$('bvSide').value : 1, size = rtR && RTG[g.id].size ? RTG[g.id].size : $('bvSize') ? +$('bvSize').value : 0;   // (go's rated games: 9×9, as the full game; tafl: the side at random)
+    const side = rtR && RTG[g.id].randSide ? (Math.random() < .5 ? 1 : 2) : $('bvSide') ? +$('bvSide').value : 1, size = rtR && (RTG[g.id].size || RTG[g.id].own && ad.size0) ? RTG[g.id].size || ad.size0 : $('bvSize') ? +$('bvSize').value : 0;   // (the rated games added 2026-11-16: the standard 種目, ad.size0)   // (go's rated games: 9×9, as the full game; tafl: the side at random)
     if (rtR) rtR.side = side;
     if (!rtR) pref[g.id + ':lv'] = level; if (!(rtR && RTG[g.id].randSide)) pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
     lastKind = kind;
