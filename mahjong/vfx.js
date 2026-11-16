@@ -47,7 +47,9 @@ function at(el) { const r = el.getBoundingClientRect(), hr = host().getBoundingC
 function ring(x, y, r, lw, a, c, sq = 1) { if (r < 2 || a <= 0) return; g.save(); g.translate(x, y); g.scale(1, sq);
   const bw = lw * 6, rg = g.createRadialGradient(0, 0, Math.max(0, r - bw), 0, 0, r + bw * .4);
   rg.addColorStop(0, hexA(c, 0)); rg.addColorStop(.7, hexA(c, .18)); rg.addColorStop(.86, 'rgba(255,255,255,.24)'); rg.addColorStop(1, hexA(c, 0));
-  g.globalAlpha = a; g.fillStyle = rg; g.beginPath(); g.arc(0, 0, r + bw * .4, 0, 7); g.fill();
+  // (2026-11-16, ユーザー「負荷を見た目を変えずに削減」) only the band is filled: inside r − bw the gradient is fully transparent, so the
+  // hole is cut out of the path (the same pixels, a fraction of the area for a wide ring)
+  const ri = Math.max(0, r - bw); g.globalAlpha = a; g.fillStyle = rg; g.beginPath(); g.arc(0, 0, r + bw * .4, 0, 6.2832); if (ri > 1) { g.moveTo(ri, 0); g.arc(0, 0, ri, 0, 6.2832, true); } g.fill();
   g.globalAlpha = a * .8; g.lineWidth = Math.max(.7, lw * .35); g.strokeStyle = '#fff'; g.beginPath(); g.arc(0, 0, r, 0, 7); g.stroke(); g.restore(); }
 
 // a burst of light: o = { pal, scale (1 = a call), sparks, embers, petals, flare, flash, rings, dur }

@@ -151,10 +151,11 @@ const SND = (() => {
   // main2 −13.9, main3 −13.4; riichi ≈ −24: riichi −12.3; the results of a hand ≈ −24: score −14.9)
   const TRK = {
     title: { file: 'bgm-title', vol: .42, restart: true },
-    main: { file: 'bgm-main', vol: .45, restart: false },
-    main2: { file: 'bgm-main2', vol: .25, restart: false },
-    main3: { file: 'bgm-main3', vol: .235, restart: false },
-    main4: { file: 'bgm-main4', vol: .26, restart: false },   // (2026-11-16, ユーザー「forbidden echoes を通常BGMに」: −14.3 LUFS → ≈ −26)
+    // (2026-11-16, ユーザー「通常BGMの音量を0.9に（リーチの曲などを際立たせるため）」: the game's tracks ×0.9)
+    main: { file: 'bgm-main', vol: .45 * .9, restart: false },
+    main2: { file: 'bgm-main2', vol: .25 * .9, restart: false },
+    main3: { file: 'bgm-main3', vol: .235 * .9, restart: false },
+    main4: { file: 'bgm-main4', vol: .26 * .9, restart: false },   // (2026-11-16, ユーザー「forbidden echoes を通常BGMに」: −14.3 LUFS → ≈ −26)
     riichi: { file: 'bgm-riichi', vol: .26, restart: true },
     riichi2: { file: 'bgm-riichi2', vol: .182, restart: true },   // (2026-11-16, ユーザー「リーチ2BGM」: −9.2 LUFS → ≈ −24 like the first)
     riichi3: { file: 'bgm-riichi3', vol: .184, restart: true },   // (同日「リーチ3」: −9.3 LUFS → ≈ −24)
