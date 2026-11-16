@@ -2783,3 +2783,10 @@ html.lite .gshrine.go img{animation:gsLit2 1.3s ease-in both}
   mask-image:linear-gradient(180deg,#000 0%,#000 70%,transparent 96%),linear-gradient(90deg,transparent 0%,#000 24%,#000 76%,transparent 100%);mask-composite:intersect;
   filter:drop-shadow(0 0 30px rgba(0,0,0,.6));animation:aaBreath 6s ease-in-out infinite;transform-origin:50% 100%}
 html.lite :is(#home,#chara).aaa .aa-ch .jig{animation:none}
+/* (2026-11-16) a partner's skill: her face steps in at the seat */
+#game .bf .frame .ptn-in{position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:inherit;overflow:visible;animation:ptnIn 3s ease both}
+#game .bf .frame .ptn-in img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;box-shadow:0 0 0 2px var(--sc),0 0 18px 4px color-mix(in srgb,var(--sc) 70%,transparent)}
+#game .bf .frame .ptn-in b{position:absolute;left:50%;bottom:-2px;transform:translate(-50%,50%);padding:1px 7px;border-radius:2px;white-space:nowrap;font-size:10px;letter-spacing:.12em;color:#fff;background:color-mix(in srgb,var(--sc) 80%,#000);box-shadow:0 0 10px color-mix(in srgb,var(--sc) 70%,transparent)}
+#game .bf .frame .ptn-in s{position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--sc);opacity:0;animation:ptnRing .9s ease-out .05s both}
+@keyframes ptnIn{0%{opacity:0;transform:scale(1.25);filter:brightness(2.4)}12%{opacity:1;transform:scale(1);filter:brightness(1.4)}25%{filter:none}85%{opacity:1}100%{opacity:0}}
+@keyframes ptnRing{0%{opacity:.95;transform:scale(.8)}100%{opacity:0;transform:scale(1.9)}}
