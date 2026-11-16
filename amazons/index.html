@@ -277,7 +277,7 @@ body.rated-live #evalCard .evalrow,body.rated-live #evalCard .evalbar,body.rated
 .kifu-head .label{font-size:12px;color:var(--muted);letter-spacing:.1em}
 .kifu-head button{font-size:11px;color:var(--dim);padding:2px 6px;border-radius:5px}
 .kifu-head button:hover{color:var(--text)}
-.kifu{display:grid;align-content:start;grid-auto-rows:min-content;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:3px;max-height:150px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.kifu{display:grid;align-content:start;grid-auto-rows:min-content;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:3px;max-height:150px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 .kifu button{padding:3px 6px;border-radius:5px;color:var(--muted);display:flex;align-items:center;justify-content:flex-start;gap:5px;white-space:nowrap;overflow:hidden}
 .kifu button em{font-style:normal;color:var(--dim);font-size:.85em;min-width:1.6em;text-align:right}
 .kifu button i{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
@@ -1017,6 +1017,13 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 .card.players .player > .top{flex:1;min-width:0}
 .card.players .player > .status, .card.players .player .count small{display:none!important}
 .card.players .player > .count{margin:0!important;font-size:clamp(20px, 2vw, 28px)!important;line-height:1}
+/* 持ち時間のある対局（レート戦・オンライン）：横に2人並べると時計の分だけ名前の幅が足りない（「K…」「A…」）ので、
+   時計が出ている間は2人を上下に並べる。1行＝石・名前（R と側）・時計・数（foxgeese / latrunculi と同じ、2026-11-16） */
+.card.players:has(.clk:not(:empty)){flex-direction:column!important;gap:6px!important}
+.card.players:has(.clk:not(:empty)) .player{flex:none!important;padding:6px 12px!important}
+.card.players:has(.clk:not(:empty)) .player > .top{display:flex!important;align-items:center;gap:8px}
+.card.players:has(.clk:not(:empty)) .player .name{flex:1 1 auto;min-width:0;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;transform:none!important}
+.card.players:has(.clk:not(:empty)) .player .clk{position:static!important;transform:none!important;margin-left:auto;flex:none;font-size:14px;padding:1px 7px;line-height:1.5;min-width:4em;text-align:center;font-variant-numeric:tabular-nums}
 /* reserve rows: the series' faces, not a code font */
 .reserve .rsv-l{font-family:'Shippori Mincho B1',serif;font-weight:800;letter-spacing:.02em}
 .reserve .rsv-l b{font-size:calc(var(--cell) * .3)}
@@ -1398,7 +1405,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=3')).then(() => load('../atlas/table3d.js?v=183')).then(() => load('../atlas/tables3d.js?v=146')).then(() => load('../atlas/skin/common.js?v=110')).then(() => load('../atlas/models/amazons.js?v=7')).then(() => load('../atlas/skin/amazons.js?v=23'))
+  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=3')).then(() => load('../atlas/table3d.js?v=183')).then(() => load('../atlas/tables3d.js?v=146')).then(() => load('../atlas/skin/common.js?v=110')).then(() => load('../atlas/models/amazons.js?v=7')).then(() => load('../atlas/skin/amazons.js?v=25'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

@@ -125,3 +125,7 @@ Mac の実測でコナネは 55〜67万局面／秒と遅かった（ウゴル�
 ## WebAssembly の SIMD 版（2026-11-15）
 - `core-wasm.js` に SIMD 版（`KN_WASM`、-msimd128）と SIMD なし版（`KN_WASM0`）の2つを入れ、`engine.js` は先に SIMD 版を試す（`KN_NOSIMD=1` で Node でなし版を確認）。`core_mt.wasm` も SIMD 版。結果は同じ（`tools/check_wasm.js dump` の 213 探索が SIMD あり／なしで完全一致）、作業機で同じ局面数の探索が ×1.11〜1.18 速い。
 - 同じ測り方で、ウゴルキは ×1.04〜1.06、アゴンは ×0.99（差なし）だったので、この2つは SIMD 版にしていない（`claude/praline-spec.md`）。リバーシ・アマゾンズは前から SIMD 版。
+
+## 対局者の箱（2026-11-16）
+- **持ち時間のある対局（レート戦・オンライン）は対局者の2人を上下に並べる**（foxgeese / latrunculi と同じ `.card.players:has(.clk:not(:empty))`、2D と大百科スキンの両方）。横並びでは時計の分だけ名前が「K…」まで縮んでいた。時計は `min-width:4em`・等幅数字で2行の位置をそろえる（「9:53」と「10:00」で箱の幅が変わらない）。
+
