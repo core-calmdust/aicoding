@@ -35,6 +35,16 @@ LEGACY_STALE = 3600000  # the same for records without hb (older clients), by cr
 ROOM_EXPIRED = 60000    # an unjoined room this long past its expiry may be deleted by anyone
 PRES_GONE = 300000      # presence: t older than this = owner gone
 
+# Shared projects (2026-11-16, claude/online-security-setup.md): the Spark plan limits the number of projects, so the games are
+# grouped by family into a few databases. host = (host game, node): the game has no rules file of its own; its rules are written
+# into <host game>/database.rules.json under <node>/ (the page sets window.FIREBASE_ROOT = '<node>/'; Alquerque: OL_DB_PREFIX).
+# The host game keeps its data at the root. At most MAX_SHARED games per database (the published rules must stay under 256 KiB;
+# one game is about 45 KB). Groups: shogi ← chess, xiangqi, janggi · reversi ← go, gomoku, hex · checkers ← ugolki, fanorona,
+# alquerque · tafl ← agon (+ latrunculi, foxgeese once their online play is written) · backgammon ← ur, senet (+ patolli) ·
+# morris ← mancala, connect4, dots · konane (alone; three free places for new titles).
+MAX_SHARED = 4
+RULES_MAX = 256 * 1024
+
 # per game: first = field of the side that moves first; alt = strict alternation of moves; tckey = record field naming the
 # time control; tcs = {key: (main, byo, inc)}; legacy_byo = per-move limit of records without a time control (None: none);
 # free = free seconds per action (backgammon delay); extra immutable primitive fields; draw / abandon = statuses offered;
@@ -50,9 +60,9 @@ GAMES = {
     'shogi': dict(first='b', alt=True, tckey='tc', tcs={'fast': (300000, 30000, 0), 'long': (600000, 30000, 0), 'blitz': (0, 30000, 0), 'fis': (300000, 0, 10000)},
                   legacy_byo=90000, free=0, imm=['tc', 'v', 'sd'], draw=False, abandon=False, hist=False, moves_max=4000, bg=False, fisprobe=True,
                   variant=('v', ['random', 'nigyoku', 'heian9', 'heian98', 'heian8', 'mini', 'judkins', 'goro', 'micro', 'hasami'], True)),
-    'chess': dict(first='w', alt=True, tckey='tc', tcs={'blitz': (180000, 0, 2000), 'rapid': (600000, 0, 5000), 'classical': (900000, 0, 10000)},
+    'chess': dict(host=('shogi', 'chess'), first='w', alt=True, tckey='tc', tcs={'blitz': (180000, 0, 2000), 'rapid': (600000, 0, 5000), 'classical': (900000, 0, 10000)},
                   legacy_byo=None, free=0, imm=['tc'], draw=True, abandon=False, hist=False, moves_max=6000, bg=False),
-    'gomoku': dict(first='w', alt=True, tckey='tc', tcs={'blitz': (180000, 0, 2000), 'rapid': (600000, 0, 5000), 'classical': (900000, 0, 10000)},
+    'gomoku': dict(host=('reversi', 'gomoku'), first='w', alt=True, tckey='tc', tcs={'blitz': (180000, 0, 2000), 'rapid': (600000, 0, 5000), 'classical': (900000, 0, 10000)},
                    legacy_byo=None, free=0, imm=['tc'], draw=False, abandon=False, hist=False, moves_max=6000, bg=False),
     'checkers': dict(first='b', alt=True, tckey='tc', tcs={'english': (300000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
                      draw=True, abandon=True, hist=True, moves_max=6000, bg=False, variant=('v', ['english'])),
@@ -64,32 +74,35 @@ GAMES = {
                    variant=('v', ['six', 'nine', 'twelve'])),
     # Go: v = board size; moves are 2 characters each (pass '__'); no draw offers (komi 6.5 online); the game ends by two passes
     # and is settled as status 'over' with win / why 'score' / pts / dead (both clients count; the res reports must agree)
-    'go': dict(first='b', alt=True, tckey='tc', tcs={'9': (300000, 0, 5000), '13': (600000, 0, 10000), '19': (1200000, 0, 15000)},
+    'go': dict(host=('reversi', 'go'), first='b', alt=True, tckey='tc', tcs={'9': (300000, 0, 5000), '13': (600000, 0, 10000), '19': (1200000, 0, 15000)},
                legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=3000, bg=False,
                variant=('v', ['9', '13', '19'])),
-    'dots': dict(first='b', alt=False, tckey='tc', tcs={'s3': (60000, 0, 3000), 's4': (120000, 0, 3000), 's5': (180000, 0, 3000)},
+    'dots': dict(host=('morris', 'dots'), first='b', alt=False, tckey='tc', tcs={'s3': (60000, 0, 3000), 's4': (120000, 0, 3000), 's5': (180000, 0, 3000)},
                  legacy_byo=None, free=0, imm=['tc', 'n'], draw=False, abandon=False, hist=False, moves_max=400, bg=False),
-    'connect4': dict(first='b', alt=True, tckey='tc', tcs={'std': (120000, 0, 3000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
+    'connect4': dict(host=('morris', 'connect4'), first='b', alt=True, tckey='tc', tcs={'std': (120000, 0, 3000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
                      draw=True, abandon=True, hist=True, moves_max=42, bg=False, variant=('v', ['std'])),
     'backgammon': dict(first=None, alt=False, tckey='f', tcs={'g1': (180000, 0, 0), 'm3': (360000, 0, 0), 'm5': (600000, 0, 0), 'm7': (840000, 0, 0)},
                        legacy_byo=None, free=12000, imm=['f', 'ml', 'cube', 'cr', 'cu', 'gi', 'mid', 'pv'], draw=False, abandon=True,
                        hist=True, moves_max=20000, bg=True),
-    'mancala': dict(first='b', alt=False, nt=True, tckey='tc', tcs={r + n: ((300000 if n == '6' else 180000), 0, 0) for r in ('kalah', 'basic', 'easy', 'sunka') for n in ('4', '6')},
+    'mancala': dict(host=('morris', 'mancala'), first='b', alt=False, nt=True, tckey='tc', tcs={r + n: ((300000 if n == '6' else 180000), 0, 0) for r in ('kalah', 'basic', 'easy', 'sunka') for n in ('4', '6')},
                     legacy_byo=None, free=5000, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=2000, bg=False,
                     variant=('v', [r + n for r in ('kalah', 'basic', 'easy', 'sunka') for n in ('4', '6')])),
     # Xiangqi: one time control (10 min + 5 s); b = red (moves first). Was a hand-edited copy of the checkers file (wrong clock limits)
-    'xiangqi': dict(first='b', alt=True, tckey='tc', tcs={'standard': (600000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
+    'xiangqi': dict(host=('shogi', 'xiangqi'), first='b', alt=True, tckey='tc', tcs={'standard': (600000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
+                    draw=True, abandon=True, hist=True, moves_max=6000, bg=False, variant=('v', ['standard'])),
+    # Janggi: the same settings as Xiangqi (was janggi/tools/make_rules.py, a copy of the Xiangqi rules under janggi/)
+    'janggi': dict(host=('shogi', 'janggi'), first='b', alt=True, tckey='tc', tcs={'standard': (600000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
                     draw=True, abandon=True, hist=True, moves_max=6000, bg=False, variant=('v', ['standard'])),
     # Hex: v = board size ('s9' / 's11' / 's13', swap rule always on); moves are 2 characters each (swap 'P_'); no draws
-    'hex': dict(first='b', alt=True, tckey='tc', tcs={'s9': (180000, 0, 3000), 's11': (300000, 0, 5000), 's13': (420000, 0, 5000)},
+    'hex': dict(host=('reversi', 'hex'), first='b', alt=True, tckey='tc', tcs={'s9': (180000, 0, 3000), 's11': (300000, 0, 5000), 's13': (420000, 0, 5000)},
                 legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=400, bg=False,
                 variant=('v', ['s9', 's11', 's13'])),
     # Fanorona: v = board ('sivy' 9x5 Fanoron-Tsivy, 'dimy' 5x5, 'telo' 3x3); b = White (moves first)
-    'fanorona': dict(first='b', alt=True, tckey='tc', tcs={'sivy': (480000, 0, 5000), 'dimy': (240000, 0, 3000), 'telo': (120000, 0, 2000)},
+    'fanorona': dict(host=('checkers', 'fanorona'), first='b', alt=True, tckey='tc', tcs={'sivy': (480000, 0, 5000), 'dimy': (240000, 0, 3000), 'telo': (120000, 0, 2000)},
                      legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
                      variant=('v', ['sivy', 'dimy', 'telo'])),
-    # Ugolki: own project "ugolki-multiplay"; v = tc = 'c33' / 'c34' / 'c44' / 'diag'; b = the first player (White); moves are 3 K64 chars each
-    'ugolki': dict(first='b', alt=True, tckey='tc', tcs={'c33': (300000, 0, 5000), 'c34': (300000, 0, 5000), 'c44': (420000, 0, 5000), 'diag': (300000, 0, 5000)},
+    # Ugolki: v = tc = 'c33' / 'c34' / 'c44' / 'diag'; b = the first player (White); moves are 3 K64 chars each
+    'ugolki': dict(host=('checkers', 'ugolki'), first='b', alt=True, tckey='tc', tcs={'c33': (300000, 0, 5000), 'c34': (300000, 0, 5000), 'c44': (420000, 0, 5000), 'diag': (300000, 0, 5000)},
                    legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
                    variant=('v', ['c33', 'c34', 'c44', 'diag'])),
     # Kōnane: own project "konane-multiplay"; v = tc = 's8' / 's6' (10x10 is offline only); b = Black (moves first);
@@ -97,24 +110,24 @@ GAMES = {
     'konane': dict(first='b', alt=True, tckey='tc', tcs={'s8': (300000, 0, 5000), 's6': (180000, 0, 3000)},
                    legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=600, bg=False,
                    variant=('v', ['s8', 's6'])),
-    # Agon: own project "agon-multiplay"; v = tc = 'std' / 'place'; b = the first player (White); moves are 3 K64 chars each (pass //4)
-    'agon': dict(first='b', alt=True, tckey='tc', tcs={'std': (420000, 0, 5000), 'place': (480000, 0, 5000)},
+    # Agon: v = tc = 'std' / 'place'; b = the first player (White); moves are 3 K64 chars each (pass //4)
+    'agon': dict(host=('tafl', 'agon'), first='b', alt=True, tckey='tc', tcs={'std': (420000, 0, 5000), 'place': (480000, 0, 5000)},
                  legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
                  variant=('v', ['std', 'place'])),
-    # Royal Game of Ur: own project "ur-multiplay"; v = tc = 'finkel' / 'blitz' / 'masters'; b = Light (moves first). Extra turns
+    # Royal Game of Ur: v = tc = 'finkel' / 'blitz' / 'masters'; b = Light (moves first). Extra turns
     # (rosettes, blitz captures) and the dice commit–reveal tokens (the side not to move reveals first): nt names the next writer;
     # every action has 30 s (free) and no reserve; dkey: sync/<uid>/k keeps the private dice key (as backgammon)
-    'ur': dict(first='b', alt=False, nt=True, dkey=True, tckey='tc', tcs={'finkel': (0, 0, 0), 'blitz': (0, 0, 0), 'masters': (0, 0, 0)},
+    'ur': dict(host=('backgammon', 'ur'), first='b', alt=False, nt=True, dkey=True, tckey='tc', tcs={'finkel': (0, 0, 0), 'blitz': (0, 0, 0), 'masters': (0, 0, 0)},
                legacy_byo=None, free=30000, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=30000, bg=False,
                variant=('v', ['finkel', 'blitz', 'masters'])),
-    # Senet: own project "senet-multiplay"; v = tc = 'std' (5 pieces) / 'long' (7); b = Light (moves first). As ur: extra throws
+    # Senet: v = tc = 'std' (5 pieces) / 'long' (7); b = Light (moves first). As ur: extra throws
     # (1 / 4 / 5) and the stick commit–reveal tokens: nt names the next writer; every action has 30 s (free), no reserve; dkey
-    'senet': dict(first='b', alt=False, nt=True, dkey=True, tckey='tc', tcs={'std': (0, 0, 0), 'long': (0, 0, 0)},
+    'senet': dict(host=('backgammon', 'senet'), first='b', alt=False, nt=True, dkey=True, tckey='tc', tcs={'std': (0, 0, 0), 'long': (0, 0, 0)},
                   legacy_byo=None, free=30000, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=30000, bg=False,
                   variant=('v', ['std', 'long'])),
-    # Alquerque: in the Fanorona project under the node alq/ (its own players / ratings / lobby / games; the page reuses the
+    # Alquerque: under the node alq/ of the Checkers project (its own players / ratings / lobby / games; the page reuses the
     # fanorona/ scripts with window.OL_DB_PREFIX = 'alq/'): v = 'alq'; b = the first player
-    'alquerque': dict(host=('fanorona', 'alq'), first='b', alt=True, tckey='tc', tcs={'alq': (300000, 0, 5000), 'alqf': (300000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
+    'alquerque': dict(host=('checkers', 'alq'), first='b', alt=True, tckey='tc', tcs={'alq': (300000, 0, 5000), 'alqf': (300000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
                       draw=True, abandon=True, hist=True, moves_max=6000, bg=False, variant=('v', ['alq', 'alqf'])),
 }
 
@@ -517,6 +530,11 @@ def nested(name, P, node):
 
 
 def main():
+    for gn, GP in GAMES.items():   # a host is never hosted itself, and the nodes of one database are distinct
+        if 'host' in GP:
+            assert GP['host'][0] in GAMES and 'host' not in GAMES[GP['host'][0]], gn
+    nodes = [GP['host'] for GP in GAMES.values() if 'host' in GP]
+    assert len(nodes) == len(set(nodes))
     check = '--check' in sys.argv
     only = [a for a in sys.argv[1:] if not a.startswith('--')]
     for name, P in GAMES.items():
@@ -530,6 +548,8 @@ def main():
             if GP.get('host', (None,))[0] == name:
                 R['rules'][GP['host'][1]] = nested(gn, GP, GP['host'][1])
         txt = json.dumps(R, indent=2, ensure_ascii=False) + '\n'
+        shared = [gn for gn, GP in GAMES.items() if GP.get('host', (None,))[0] == name]
+        assert len(shared) + 1 <= MAX_SHARED and len(txt.encode('utf-8')) < RULES_MAX * 0.9, (name, shared, len(txt))
         cur = open(path, encoding='utf-8').read() if os.path.exists(path) else ''
         if check:
             print(('same  ' if cur == txt else 'DIFF  ') + path)

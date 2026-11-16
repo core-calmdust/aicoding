@@ -34,7 +34,7 @@ URL: https://core-calmdust.github.io/aicoding/go/ （2026-10-22 main に公開�
 - puzzles.json：詰碁10テーマ×50＝500問（取る・シチョウゲタ・ウッテガエシ・生き/殺し1手3手・5手以上・攻め合い・手筋）。ソルバー tsumego.js（GoTsumego.solve/reached）、生成 tools/gen-tsumego.mjs、検証 tools/test-tsumego.mjs。対象の石に△印。今日の一問あり。
 
 ## オンライン
-- Firebase プロジェクト go-multiplay（asia-southeast1）。ルールは go/database.rules.json（secrules.py 生成の改ざん対策版）。App Check は reCAPTCHA Enterprise サイトキー設定済み（強制は確認済みリクエストが十分になってから Realtime Database のみ）。共通アカウントの GAME_AUTH に 'go' 追加済み。
+- Firebase はリバーシのプロジェクト reversi-multiplay の節 go/（FIREBASE_ROOT）（2026-11-16 統合）。ルールは reversi/database.rules.json に入る（secrules.py 生成の改ざん対策版）。App Check は reCAPTCHA Enterprise サイトキー設定済み（強制は確認済みリクエストが十分になってから Realtime Database のみ）。共通アカウントの GAME_AUTH に 'go' 追加済み。
 - online.js（window.GoOnline）／online-ui.js。日本ルール・コミ6.5固定、盤 v=9/13/19、フィッシャー（9路5分+5秒、13路10分+10秒、19路20分+15秒）。手は K64 2文字（パス '__'）。
 - パス2回後は両クライアントが軽量ネットで死に石判定→先着がトランザクションで結果確定、res/<uid> 一致でレート反映。
 - 公開前テストの匿名プロフィール「Player5761」が1件 players に残っている（コンソールで削除可）。
