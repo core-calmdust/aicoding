@@ -19,6 +19,17 @@
     if (d && d.set) Object.defineProperty(HTMLElement.prototype, 'title', { configurable: true, enumerable: d.enumerable, get: d.get, set(v) { if (this.getAttribute('title') === String(v)) return; d.set.call(this, v); } });
   } catch (e) {}
 })();
+// Phones / in-app browsers (2026-11-17): X's (and other apps') in-app browser reports document.hasFocus() === false until the
+// first tap, so a page opened from a link stayed frozen (the portal's 3D view never drew until the menu was touched). On a
+// touch-only device or in an in-app browser "in front" simply means "not hidden": hasFocus() follows document.hidden there,
+// for this gate and for every other check in the pages.
+(function () {
+  try {
+    const ua = navigator.userAgent || '', mm = q => !!(window.matchMedia && matchMedia(q).matches);
+    const inApp = /\bTwitter\b|FBAN|FBAV|Instagram|\bLine\/|LIFF|MicroMessenger|KAKAOTALK|Threads|\bwv\b/i.test(ua);
+    if (inApp || (mm('(pointer: coarse)') && !mm('(any-pointer: fine)'))) Document.prototype.hasFocus = function () { return !this.hidden; };
+  } catch (e) {}
+})();
 (function () {
   if (window.__focusGate) return;
   window.__focusGate = { frozen: false };
