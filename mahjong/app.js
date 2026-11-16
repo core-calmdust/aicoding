@@ -1308,6 +1308,7 @@ async function onEvent(ev, d) {
     case 'skill': {
       if (d.cost > 0) SND.stick();   // (the points go into the pot)
       await cutin(d.seat, 'skill', d);
+      if (d.slot && d.by) partnerFlash(d.seat, d.by, MJSkills.get(d.skill));   // (ユーザー 2026-11-16: a partner's skill — her face comes on at the seat too)
       if (FAST >= 1 && window.MJSkillFx && TB) { SND.skillFx(d.skill); await MJSkillFx.play(d.skill, d.seat, TB, { lite: !!DB.set.lite }); }   // (ユーザー 2026-11-15: after the picture and the words, the skill's own effect over the table — skillfx.js)
       refreshTable(); renderBadges();
       if (d.seat === ME) {
@@ -1408,7 +1409,22 @@ function renderBadges() {
         <span class="bk">${s === ME && g.rules.skills ? '' : chips ? `<span class="fxs">${chips}</span>` : ''}${DB.set.skills && g.rules.skills && !(s === ME) ? `<span class="skws">${[0, 1].map(i => oppSkill(g, s, i)).join('')}</span>` : ''}</span></div>`;
     if (s === ME) renderMe(html, chips, fx.map(k => L(MJSkills.get(k).name)));   // (ユーザー 2026-11-15: the player's own skill marks — the effects in force, the seal's lock — sit inside the skill plate, not under the portrait; the plate already shows the skill itself)
     else $('#opp' + s).innerHTML = html;
+    if (PFL[s]) partnerFlash(s);
   }
+}
+// (2026-11-16, ユーザー「パートナーのスキルを使ったときはパートナーの画像と演出を」) after the cut-in (which shows the partner), the
+// partner also steps in at the seat: her face fades in over the seat's portrait with a burst of the skill's colour and a ring of
+// light, stays while the skill's effect plays over the table, then gives the seat back
+// (the seats are redrawn while it shows — renderBadges puts it back, at the same moment of its animation)
+const PFL = {};
+function partnerFlash(s, pc, sk, t0) {
+  if (pc) PFL[s] = { pc, sk, t0: performance.now() };
+  const f = PFL[s]; if (!f) return; const el0 = performance.now() - f.t0; if (el0 >= 3000) { delete PFL[s]; return; }
+  const host = s === ME ? $('#mePanel') : $('#opp' + s), fr = host && host.querySelector('.bf .frame'); if (!fr) return;
+  fr.querySelectorAll('.ptn-in').forEach(n => n.remove());
+  const el = document.createElement('i'); el.className = 'ptn-in'; el.style.setProperty('--sc', f.sk ? f.sk.color : '#e8ce8c'); el.style.animationDelay = -el0 + 'ms';
+  el.innerHTML = `<img src="${charImg(f.pc, 'face')}" alt=""><b>${esc(t('partner'))}</b><s style="animation-delay:${50 - el0}ms"></s>`;
+  fr.appendChild(el); clearTimeout(f.tm); f.tm = setTimeout(() => { el.remove(); delete PFL[s]; }, 3000 - el0);
 }
 // (ユーザー 2026-11-15) the others' skill chips: what the skill does in a bubble — on hover, or on a tap (a touch screen; it closes by itself)
 document.addEventListener('click', e => { const w = e.target.closest('#game .opp .skw'); document.querySelectorAll('#game .opp .skw.tip').forEach(x => { if (x !== w) x.classList.remove('tip'); });
@@ -2081,5 +2097,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, askDealSkill, roundBanner };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
 })();
