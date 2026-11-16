@@ -98,6 +98,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
 @media (max-width:520px){.npc-float{width:min(420px,calc(100vw - 24px));gap:7px}.npc-float .npc-pic{width:46px;height:46px}.npc-float .npc-bub{padding:6px 11px 8px;border-radius:15px}.npc-float .npc-nm b{font-size:12.5px}.npc-float .npc-tag{font-size:10px}.npc-float .npc-ttl{font-size:10.5px}.npc-float .npc-tx{font-size:13px;line-height:1.5}.npc-float .npc-ttl:empty + .npc-tx{min-height:0}}
 .npc-float.on .npc-pic,.npc-float.on .npc-bub{pointer-events:auto;cursor:pointer}
 .npc-float.on{opacity:1;transform:translate(-50%,0)}
+.npc-float.npc-line{gap:6px;align-items:center}.npc-float.npc-line .npc-pic{width:30px;height:30px;flex:none}.npc-float.npc-line .npc-bub{flex:1;min-width:0;padding:5px 12px;border-radius:99px}.npc-float.npc-line .npc-bub::before,.npc-float.npc-line .npc-bub::after{display:none}.npc-float.npc-line .npc-nm,.npc-float.npc-line .npc-ttl{display:none}.npc-float.npc-line .npc-tx{font-size:12.5px;line-height:1.45;min-height:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* a one-line strip (window.__npcPlace → line: true; ヒット＆ブロー on phones, 2026-11-17) */
 .bv > .npc-float{position:absolute;z-index:4}
 .npc-float.npc-skin{z-index:45}
 .npc-float .npc-bub{box-shadow:0 4px 0 #f0e2c4,0 14px 24px -14px rgba(80,40,0,.5)}
@@ -322,7 +323,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       try { const b = o.bottom ? o.bottom(el) : tableBottom(el); if (b != null) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
       // a game that says where its talk goes (window.__npcPlace(el) → { cx, w, bot }: the bubble's centre x, its width, its bottom
       // above the window's bottom) — ヒット＆ブロー 2026-11-17 user: アトラモの演出はサイドに振って邪魔にならないように
-      try { const P = !o.body && window.__npcPlace && window.__npcPlace(el); if (P) { el.style.left = Math.round(P.cx) + 'px'; el.style.width = Math.round(P.w) + 'px'; el.style.setProperty('--npc-bot', Math.round(P.bot) + 'px'); } } catch (e) {}
+      try { const P = !o.body && window.__npcPlace && window.__npcPlace(el); el.classList.toggle('npc-line', !!(P && P.line)); if (P) { el.style.left = Math.round(P.cx) + 'px'; el.style.width = Math.round(P.w) + 'px'; el.style.setProperty('--npc-bot', Math.round(P.bot) + 'px'); } } catch (e) {}
     };
     // the window resized while talking: placed again at once, and once more after the 3D view has framed the board anew (2026-11-12)
     let rzT = 0, rzF = 0;
