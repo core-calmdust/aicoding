@@ -135,6 +135,11 @@ async function runtime() {
     // (the game keeps playing — calls bring new bursts — so: once 3 s pass with no new burst, the canvas must be gone)
     const gone = await p.waitForFunction(`(()=>{const n=__vx.length;if(window.__vn!==n){window.__vn=n;window.__vt=performance.now()}return performance.now()-__vt>3000&&!document.querySelector('.vfx-cv')&&VFX.active()===0})()`, null, { timeout: 40000, polling: 200 }).then(() => true, () => false);
     ok('the effect canvas is removed afterwards', gone, gone ? '' : JSON.stringify(await p.evaluate(`[__vx.length, !!document.querySelector('.vfx-cv'), VFX.active()]`)));
+    // (2026-11-16, ユーザー「スキルエフェクトもAAAに」) every skill's effect brings the light engine in at its moments, on the table
+    const sk = await p.evaluate(`(async()=>{const out=[];for(const id of MJSkillFx.ids){let n=0;const o=VFX.burst,o2=VFX.shock,o3=VFX.pull,o4=VFX.slash,o5=VFX.rise;
+      const c=(f)=>(...a)=>{n++;return f(...a)};VFX.burst=c(o);VFX.shock=c(o2);VFX.pull=c(o3);VFX.slash=c(o4);VFX.rise=c(o5);
+      await MJSkillFx.play(id,0,JANKA.TB,{dur:600});await new Promise(r=>setTimeout(r,700));VFX.burst=o;VFX.shock=o2;VFX.pull=o3;VFX.slash=o4;VFX.rise=o5;if(!n)out.push(id)}return out})()`);
+    ok('skill effects: each one adds its light (vfx.js)', !sk.length, sk.join(','));
     ok('no page errors (vfx)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('fonts')) { console.log('[fonts] every text in the Mincho');
