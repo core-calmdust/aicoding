@@ -13,7 +13,7 @@ void main(){
   for(int i=0;i<4;i++){ vec4 j=J[i]; if(j.w<=0.)continue;
     vec2 d=(uv-j.xy)*asp; float r=j.z; float f=exp(-dot(d,d)/(r*r));
     // (2026-11-16, ユーザー「該当するエリア以外はぷるんしないように」) only inside the touched place: its ellipse, soft at the edge
-    vec4 m=M[i]; vec2 e=(uv-m.xy)/m.zw; f*=1.-smoothstep(.55,1.,length(e));
+    vec4 m=M[i]; vec2 e=(uv-m.xy)/m.zw; f*=1.-smoothstep(.8,1.3,length(e));   // (同日、ユーザー「エリアが狭い、広めに」: full to 80% of the ellipse, fading out to 130% — a little past its edge)
     // K: x = radial (− pinch / + bulge), y = vertical bounce, z = sideways sway
     o+= -d/asp*f*K[i].x + vec2(K[i].z, K[i].y)*f*r; }
   uv+=o;
@@ -66,7 +66,7 @@ function poke(img, u, v, amp = 1, z) {
   if (texSrc !== img.currentSrc) { try { gl.bindTexture(gl.TEXTURE_2D, tex); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img); if (gl.mip) gl.generateMipmap(gl.TEXTURE_2D); texSrc = img.currentSrc; } catch (e) { return; } }
   hostImg = img;
   const m = z ? [z[1], z[2], z[3], z[4]] : [u, v, .045, .045 * 1080 / 1920];
-  hits.push({ u, v, r: Math.min(.085, Math.max(.03, Math.min(m[2], m[3] * 1920 / 1080) * 1.1)), a: amp, m, t0: performance.now() });
+  hits.push({ u, v, r: Math.min(.17, Math.max(.03, Math.min(m[2], m[3] * 1920 / 1080) * 1.15)), a: amp, m, t0: performance.now() });   // (the swell as wide as the place itself)
   if (!raf) {
     // the canvas takes the picture's place: the same breathing, at the same moment of it
     cv.style.display = 'block';
