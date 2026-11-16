@@ -112,13 +112,17 @@ function rigDora(g, s) {
 
 // gacha weights (%) for skill rarity
 const TIERS = ['N', 'R', 'SR', 'SSR'];
+// (2026-11-16, ユーザー「スキルのレアリティに少しだけコスト差を（最大10％程度）」) a rarer skill costs a little more: N ±0, R +3%, SR +6%,
+// SSR (the top) +10%, to 50 points (never over +10%: rounded down when rounding up would pass it). The free first use stays free.
+const COST_K = [1, 1.03, 1.06, 1.1];
+const costOf = (base, tier) => { const v = base * (COST_K[tier | 0] || 1), r = Math.round(v / 50) * 50; return r > base * 1.1 + 1e-6 ? Math.floor(v / 50) * 50 : r; };
 const TIER_W = [55, 30, 12, 3];
 // Points one use is worth at tier N (paired BOT simulation, tools/skill-value.js, 2026-10-23). The 2nd-use cost is set
 // to about this value. Mind Read and Foresight are information a BOT barely uses but a person can (knowing every
 // opponent's waits is near-perfect defence), so their costs are set by hand well above the BOT value: 2000 / 1000.
 const VALUE = {wareme: 1033, hanup: 547, guard: 658, shugi: 718, pot: 671, doraplus: 807, lure: 1399, mind: 530, peek: 0, swap: 440, seal: 547};
 const val = (sk, t) => sk.P[Math.max(0, Math.min(3, t | 0))];
-const MJSkills = { list: SKILLS, get: id => BY[id], value: VALUE, TIERS, TIER_W, val,
+const MJSkills = { list: SKILLS, get: id => BY[id], value: VALUE, TIERS, TIER_W, COST_K, costOf, val,
   key: (id, t) => `${id}:${t | 0}`, parse: k => { const [id, t] = String(k).split(':'); return { id, tier: +t || 0 }; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = MJSkills;
 else root.MJSkills = MJSkills;

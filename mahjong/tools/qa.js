@@ -16,6 +16,10 @@ function staticChecks() {
   console.log('[static]');
   const js = fs.readdirSync(MJ).filter(f => f.endsWith('.js'));
   for (const f of js) { try { execSync(`node --check ${JSON.stringify(path.join(MJ, f))}`, { stdio: 'pipe' }); ok('syntax ' + f, true); } catch (e) { ok('syntax ' + f, false, String(e.stderr).split('\n')[0]); } }
+  // a skill's rarity adds a little to its cost (2026-11-16): never less for a rarer one, the top at most about +10%
+  { const S = require(path.join(MJ, 'skills.js')), bad = [];
+    for (const sk of S.list) { const c = [0, 1, 2, 3].map(t => S.costOf(sk.cost, t)); if (c.some((x, i) => i && x < c[i - 1]) || c[3] > sk.cost * 1.1 + 1e-6 || c[0] !== sk.cost) bad.push(sk.id + ':' + c.join('/')); }
+    ok('skill cost by rarity (N = base, rising a little, SSR ≤ ~+10%)', !bad.length, bad.join(' ')); }
   // every sound file the code names is there (2026-11-16: the second riichi track, bgm-riichi2)
   { const app = fs.readFileSync(path.join(MJ, 'app.js'), 'utf8'), names = [...app.matchAll(/file: '([\w-]+)'/g)].map(m => m[1]);
     const miss = names.filter(n => !fs.existsSync(path.join(MJ, '..', 'images', 'mahjong', 'snd', n + '.mp3')));
