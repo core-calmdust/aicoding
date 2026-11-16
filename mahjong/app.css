@@ -2585,3 +2585,34 @@ html.lp .mindpop .pk-box{gap:8px;padding:14px 28px 10px}
 .mr-s{width:auto}
 .mr-c{display:flex;align-items:center;gap:5px;min-height:calc(clamp(24px, calc(var(--GH, 700px) * .048), 38px) * 1.35)}
 .mr-no{font-style:normal;color:rgba(217,205,238,.3)}
+/* (2026-11-16, ユーザー「得点表示を半透明にしてめちゃくちゃ高級感のある感じに」) the points panels: dark lacquered glass over the table
+   (translucent, the table blurred behind), a fine double gold line with small corner marks, a gold hairline under the name instead
+   of the solid band, the rank and the points set in the serif — 1st in gold leaf. A slow glint crosses each panel once. */
+.mvst .mv-p{border:0;border-radius:3px;overflow:visible;
+  background:radial-gradient(120% 90% at 50% -20%,rgba(232,206,140,.13),transparent 60%),linear-gradient(180deg,rgba(26,20,44,.42),rgba(10,8,22,.6));
+  -webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%);
+  box-shadow:inset 0 0 0 1px rgba(232,206,140,.75),inset 0 0 0 calc(var(--u)*.55) rgba(10,8,22,.35),inset 0 0 0 calc(var(--u)*.65) rgba(232,206,140,.28),0 calc(var(--u)*1.6) calc(var(--u)*4) rgba(0,0,0,.5)}
+.mvst .mv-p::before{content:"";position:absolute;inset:calc(var(--u)*-.5);pointer-events:none;
+  background:
+    linear-gradient(var(--gl2),var(--gl2)) left top/calc(var(--u)*2.4) 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) left top/1.5px calc(var(--u)*2.4) no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) right top/calc(var(--u)*2.4) 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) right top/1.5px calc(var(--u)*2.4) no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) left bottom/calc(var(--u)*2.4) 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) left bottom/1.5px calc(var(--u)*2.4) no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) right bottom/calc(var(--u)*2.4) 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) right bottom/1.5px calc(var(--u)*2.4) no-repeat}
+.mvst .mv-p::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:3px;
+  background:linear-gradient(105deg,transparent 35%,rgba(255,240,205,.16) 48%,rgba(255,240,205,.05) 55%,transparent 65%) no-repeat;background-size:260% 100%;background-position:120% 0;
+  animation:mvGlint 1.6s calc(.35s + var(--gi, 0) * .12s) ease-out both}
+@keyframes mvGlint{to{background-position:-60% 0}}
+.mvst .mv-p.p1{--gi:1}.mvst .mv-p.p2{--gi:2}.mvst .mv-p.p3{--gi:3}
+.mvst .mv-n{left:6%;right:31%;height:32%;border-bottom:1px solid transparent;border-image:linear-gradient(90deg,rgba(232,206,140,.7),rgba(232,206,140,.15) 85%,transparent) 1}
+.mvst .mv-n b{color:#f6edd6;letter-spacing:.14em;text-shadow:0 1px 0 rgba(0,0,0,.6)}
+.mvst .mv-n b small{color:var(--gl2);opacity:.85;letter-spacing:.06em}
+.mvst .mv-f{top:7%;right:5%;border:0;border-radius:2px;box-shadow:0 0 0 1px rgba(232,206,140,.9),0 0 0 calc(var(--u)*.45) rgba(10,8,22,.8),0 0 0 calc(var(--u)*.55) rgba(232,206,140,.35),0 calc(var(--u)*.8) calc(var(--u)*2) rgba(0,0,0,.55)}
+.mvst .mv-v{color:#fbf5e6;font-weight:700;letter-spacing:.02em;text-shadow:0 0 calc(var(--u)*2) rgba(232,206,140,.18),0 calc(var(--u)*.3) calc(var(--u)*.8) rgba(0,0,0,.7)}
+.mvst .mv-r{font-weight:700;letter-spacing:.04em}
+.mvst .mv-r.r0{background:linear-gradient(180deg,#fff3c4 0%,#f3d27a 38%,#c99a3c 62%,#f6dd96 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 calc(var(--u)*1.2) rgba(255,190,80,.45))}
+.mvst .mv-r.r1{color:#e4e8f2}.mvst .mv-r.r2{color:#e6b7a2}.mvst .mv-r.r3{color:#a9cfc4}
+.mvst .mv-d{font-family:var(--serif);font-weight:700;letter-spacing:.04em}
+.mvst .mv-p.up .mv-d{color:#9fe8c0;text-shadow:0 0 calc(var(--u)*1.4) rgba(120,230,170,.35)}
+.mvst .mv-p.dn .mv-d{color:#f2a3ad;text-shadow:0 0 calc(var(--u)*1.4) rgba(240,120,140,.3)}
+.mvst .mv-p.win{box-shadow:inset 0 0 0 1px #f7e2a8,inset 0 0 0 calc(var(--u)*.55) rgba(10,8,22,.35),inset 0 0 0 calc(var(--u)*.65) rgba(247,226,168,.45),0 0 calc(var(--u)*3.5) rgba(255,205,110,.42),0 calc(var(--u)*1.6) calc(var(--u)*4) rgba(0,0,0,.5)}
+html.lite .mvst .mv-p::after{animation:none;opacity:0}
