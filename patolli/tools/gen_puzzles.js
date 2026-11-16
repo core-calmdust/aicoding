@@ -51,5 +51,6 @@ for (const rule of ['bell', 'popular']) {
   for (const t of ths) { const pz = make(t, got[t.kind]); console.log(t.id, pz.length + '/' + t.n); out.themes.push({ id: t.id, cat: t.cat, rule, name: t.name, desc: t.desc, hint: t.hint, puzzles: pz }); }
 }
 out.themes.sort((a, b) => THEMES.findIndex(t => t.id === a.id) - THEMES.findIndex(t => t.id === b.id));
+C.TR.fill(out);   // テーマ名・説明・ヒントなどに残りの12言語を足す（tools/learn_i18n.js）
 fs.writeFileSync(path.join(__dirname, '..', 'puzzles.json'), JSON.stringify(out));
 console.log('puzzles.json', out.themes.reduce((a, t) => a + t.puzzles.length, 0), 'puzzles');

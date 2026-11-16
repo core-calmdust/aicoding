@@ -10,7 +10,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 const STORE = 'aicoding-patolli';
 const GID = 'patolli';
 const RULES = ['bell', 'popular'];
-const SUPPORTED = ['ja', 'en'];   // 言語メニューに出すのは、このゲームの文言がそろった言語だけ（残り12言語は i18n.js に足してからここへ）
+const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];   // 言語メニューに出す言語（文言は14言語そろっている。足すときは claude/patolli-spec.md §4「言語」のすべての場所に）
 const LV_MAX = 20;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

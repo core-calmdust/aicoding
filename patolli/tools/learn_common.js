@@ -73,7 +73,7 @@ function ngOf(st, n, kind, ev) {
   }
   return out;
 }
-// 文言（ja / en）。{a}＝最善手の勝率、{b}＝次善、{x}＝選んだ手の勝率
+// 文言（ここには ja / en を書く。残りの12言語は learn_i18n.js の表から TR.fill が足す）。{a}＝最善手の勝率、{b}＝次善、{x}＝選んだ手の勝率
 const MSG = {
   'w.again': { ja: '腕の先のマスに止まって、もう一度投げられます。勝率 {a}%（次善 {b}%）。', en: 'It lands on an arm end, so you throw again. Win chance {a}% (next best {b}%).' },
   'w.enter': { ja: '「1」の目は6回に1回ほど。入れられるときに入れておくと、次から使える目が増えます。勝率 {a}%（次善 {b}%）。', en: 'A 1 comes only about one throw in six. Entering now gives you more usable throws later. Win chance {a}% (next best {b}%).' },
@@ -106,4 +106,5 @@ const UI = {
   look: { ja: '光っているマス・赤い輪のマスを見てみよう。', en: 'Look at the glowing and red-ringed squares.' }, ans: { ja: '答え：{m}', en: 'Answer: {m}' },
   enter: { ja: '入場', en: 'enter' }, home: { ja: '上がり', en: 'home' },
 };
-module.exports = { E, rng, norm, pack, unpack, hitRisk, riskAfter, stuckProb, stuckAfter, kindOf, positions, judge, pct, cellOf, lookOf, whyOf, ngOf, MSG, UI };
+const TR = require('./learn_i18n.js'); TR.fill(MSG); TR.fill(UI);   // 12言語を足す
+module.exports = { TR, E, rng, norm, pack, unpack, hitRisk, riskAfter, stuckProb, stuckAfter, kindOf, positions, judge, pct, cellOf, lookOf, whyOf, ngOf, MSG, UI };

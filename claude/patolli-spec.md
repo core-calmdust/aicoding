@@ -57,7 +57,7 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 ## 4. 画面（2D版 `patolli/`、2026-11-16。`ur/` を土台に移植。未掲載 BETA：トップページ・大百科には未登録、3D は未着手）
 ### ファイル
 - `index.html`（画面と CSS）、`app.js`（対局・豆・宝の支払い・棋譜・設定・レート戦）、`app-learn.js`（ルール／レッスン／パズルの入口と進行）、`board2d.js`（盤・駒・豆。画像なしの SVG）、`worker.js`（AIの手・ヒント・振り返りを Worker で）、`coach.js`＋`coach-i18n.js`、`rvbox.js`＋`rv-i18n.js`（振り返り・PC の振り返りボックスと検討）、`tour.js`（ルール）、`i18n.js`（`tools/gen_i18n.js` が作る）、`lessons.json`・`puzzles.json`・`lux.json`、`online.js`・`online-ui.js`・`online.css`・`i18n-online.js`・`firebase-config.js`（オンライン。下記）。
-- 道具 `patolli/tools/`：`selftest.js`（エンジン）、`learn_common.js`・`gen_puzzles.js`・`audit_puzzles.js`・`gen_lessons.js`・`check_lessons.js`、`rate_levels.js`（レート戦の各レベルのレート）、`gen_i18n.js`、`board2d-demo.html`、`icon.html`＋`make_icons.js`（仮アイコン）。
+- 道具 `patolli/tools/`：`selftest.js`（エンジン）、`learn_common.js`・`gen_puzzles.js`・`audit_puzzles.js`・`gen_lessons.js`・`check_lessons.js`、`learn_i18n.js`（レッスン・パズル・豆知識の ja・en 以外の12言語の表）、`rate_levels.js`（レート戦の各レベルのレート）、`gen_i18n.js`、`board2d-demo.html`、`icon.html`＋`make_icons.js`（仮アイコン）。
 - 保存キー：`aicoding-patolli`（設定・対局）、`aicoding-patolli-rated`、`aicoding-patolli-lessons`、`aicoding-patolli-puzzles`、`aicoding-patolli-daily`、`aicoding-patolli-rules`（ルールの進み）・`aicoding-patolli-rules-seen`、`aicoding-patolli-pz-last`／`-pz-tab`／`-ls-cat`、戦績は `atlas-rec-patolli`。
 
 ### 配色
@@ -91,7 +91,8 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 - コーチ（`coach.js`）：勝率・レースの差・宝・上がった数、推奨方針、候補手と方針（上がる／取る／もう一度／印のマス／逃げる／入場／中央へ／前進）、ヒント（「1」でしか入れない・動かせない確率・腕の先や印のマスに届く目・中央で取られる確率・豆の確率）、前の手の評価。
 
 ### 言語
-- いまは **ja・en だけ**（言語メニューもこの2つ）。残り12言語は `tools/gen_i18n.js` の OVER、`tour.js` の TX、`coach.js`（`coach-i18n.js`）、`rvbox.js`（`rv-i18n.js`）、`learn_common.js` の MSG・UI と各生成スクリプトの文に同じキーで足し、そろったら `app.js` の `SUPPORTED` と `index.html` の `#langSel` に出す。
+- **14言語**（ja en zh zh-TW ko es fr pt de ru tr id hi ar。言語メニュー＝`app.js` の `SUPPORTED` と `index.html` の `#langSel`）。文言の置き場所：`tools/gen_i18n.js` の OVER（→ `node tools/gen_i18n.js` で `i18n.js`。OVER にないキーは `ur/i18n.js` の同じ言語から引く）、`tour.js` の TX、`coach.js`（ja・en）＋`coach-i18n.js`（残り12言語）、`rvbox.js`（ja・en）＋`rv-i18n.js`（残り12言語）、レッスン・パズル・豆知識は生成スクリプトに ja・en を書き、残り12言語は `tools/learn_i18n.js` の表（ja と en の組で引く）から `fill()` が足す（→ `gen_puzzles.js`・`gen_lessons.js` を実行）。文言を足す・変えるときは14言語すべてに入れる。
+- 訳語：宝＝各言語の「宝・財宝」（zh 财宝／ko 보물／es tesoro／fr trésor／pt tesouro／de Schatz／ru сокровища／tr hazine／id harta／hi खज़ाना／ar الكنز）、場＝賭けの「ポット」（奖池／판돈／pozo／pot／pote／Pott／банк／pot／pot／पॉट／الصندوق）、上がり＝ウルのゴールと同じ語、駒・マス・相手・勝率・取る もウルと同じ語。ゲーム名は Patolli（zh・zh-TW 帕托利／ko 파톨리／ru Патолли／hi पटोली／ar باتولي）。歴史の文は ja と同じ確からしさ（「〜という説」「ベルの復元」「伝わっていない」）のまま訳す。
 
 ### エンジンに入れた直し（2026-11-16、画面の作業中に見つけたもの）
 - `think`：ばらつきなし（Lv.19〜20）で勝率がまったく同じ手が並ぶとき、いつも先頭の駒を選んでいて Lv.18 より弱かった（400局で 33.5%）。同点の中から無作為に選ぶようにした。`selftest.js` に Lv.19 対 Lv.18 の確認を足した。

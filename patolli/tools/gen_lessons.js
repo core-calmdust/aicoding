@@ -111,6 +111,7 @@ for (const L of LESSONS) {
   console.log(L.id, 'ok');
 }
 const order = out.cats.flatMap(c => c.steps); out.steps.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+C.TR.fill(out);   // 題・本文・ヒントなどに残りの12言語を足す（tools/learn_i18n.js）
 fs.writeFileSync(path.join(__dirname, '..', 'lessons.json'), JSON.stringify(out));
 // ---- lux.json：レッスンのページ（shared/luxintro.js）の見出しの文言と豆知識。事実は claude/patolli-spec.md §0 にあるものだけ
 const LUX = {
@@ -131,5 +132,6 @@ const LUX = {
   },
   openings: {},
 };
+C.TR.fill(LUX.lessons); Object.assign(LUX.ui, C.TR.LUX_UI);   // 豆知識と見出しの残り12言語
 fs.writeFileSync(path.join(__dirname, '..', 'lux.json'), JSON.stringify(LUX));
 console.log('lessons.json', out.steps.length, 'lessons; lux.json');
