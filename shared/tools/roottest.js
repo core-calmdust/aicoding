@@ -4,14 +4,15 @@
 // Each <game>/firebase-config.js + shared/onlinesec.js + <game>/online.js is loaded into a sandbox with a fake Firebase SDK that
 // records every database path. For every game:
 //   published  — the shared project's rules know the game's node: every path is in the shared project, under the node
-//   pending    — they do not yet (<node>secv is refused): the page reopens on the game's previous project, with the previous node
+//   pending    — they do not yet (<node>secv is refused): the page reopens on the game's previous project, with the previous node;
+//                a new title without a previous project (no FIREBASE_CONFIG_PREV) stops with 'not-configured' (the page shows 準備中)
 //   offline    — the probe fails for another reason: no fallback (the error is reported, the project is not switched)
 // and, for all of them: the group of a project is at most MAX games, the nodes are those of shared/tools/secrules.py.
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm'), cp = require('child_process');
 const ROOT = path.join(__dirname, '..', '..');
 const GAMES = ['shogi', 'chess', 'xiangqi', 'janggi', 'reversi', 'go', 'gomoku', 'hex', 'checkers', 'ugolki', 'fanorona', 'alquerque',
-  'tafl', 'agon', 'backgammon', 'ur', 'senet', 'morris', 'mancala', 'connect4', 'dots', 'konane'];
+  'tafl', 'agon', 'backgammon', 'ur', 'senet', 'morris', 'mancala', 'connect4', 'dots', 'konane', 'amazons'];
 const SOON = ['foxgeese', 'latrunculi', 'patolli'];   // online play not written yet: the config stays null
 const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
@@ -87,13 +88,19 @@ async function run(game, mode) {
     if (out.final !== want.pid) out.bad.push('offline: project switched to ' + out.final);
     return out;
   }
+  if (mode === 'pending' && want.root && !prev) {   // a new title in a shared project: 準備中 until the rules are published
+    if (!err || !/not-configured/.test(out.err)) out.bad.push('pending without a previous project: want not-configured, got ' + (out.err || 'no error'));
+    if (out.final !== want.pid) out.bad.push('pending: project switched to ' + out.final);
+    log.filter(l => l.pid === want.pid && !/^\.info\//.test(l.path) && l.path.indexOf(want.root) !== 0).forEach(l => out.bad.push('path ' + l.path + ' (want ' + want.root + ')'));
+    return out;
+  }
   if (err) { out.bad.push('init failed: ' + out.err); return out; }
   if (!exp) { out.bad.push('no previous project'); return out; }
   if (out.final !== exp.pid) out.bad.push('project ' + out.final + ' ≠ ' + exp.pid);
   // every path written / read after the project is settled is under the node (the probe on the shared project is the only stray one)
   const seen = log.filter(l => l.pid === exp.pid && !/^\.info\//.test(l.path));
   if (seen.length < 3) out.bad.push('too few paths recorded: ' + seen.length);
-  seen.forEach(l => { if (exp.root ? l.path.indexOf(exp.root) !== 0 : /^(chess|xiangqi|janggi|go|gomoku|hex|ugolki|fanorona|alq|agon|ur|senet|mancala|connect4|dots)\//.test(l.path)) out.bad.push('path ' + l.path + ' (want ' + (exp.root || 'root') + ')'); });
+  seen.forEach(l => { if (exp.root ? l.path.indexOf(exp.root) !== 0 : /^(chess|xiangqi|janggi|go|gomoku|hex|ugolki|fanorona|alq|agon|ur|senet|mancala|connect4|dots|amazons)\//.test(l.path)) out.bad.push('path ' + l.path + ' (want ' + (exp.root || 'root') + ')'); });
   const stray = log.filter(l => l.pid !== exp.pid && !/^\.info\//.test(l.path) && !/secv$/.test(l.path));
   stray.forEach(l => out.bad.push('stray ' + l.pid + ':' + l.path));
   out.n = seen.length;

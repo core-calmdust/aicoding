@@ -41,7 +41,7 @@ PRES_GONE = 300000      # presence: t older than this = owner gone
 # The host game keeps its data at the root. At most MAX_SHARED games per database (the published rules must stay under 256 KiB;
 # one game is about 45 KB). Groups: shogi ← chess, xiangqi, janggi · reversi ← go, gomoku, hex · checkers ← ugolki, fanorona,
 # alquerque · tafl ← agon (+ latrunculi, foxgeese once their online play is written) · backgammon ← ur, senet (+ patolli) ·
-# morris ← mancala, connect4, dots · konane (alone; three free places for new titles).
+# morris ← mancala, connect4, dots · konane ← amazons (two free places for new titles).
 MAX_SHARED = 4
 RULES_MAX = 256 * 1024
 
@@ -110,6 +110,11 @@ GAMES = {
     'konane': dict(first='b', alt=True, tckey='tc', tcs={'s8': (300000, 0, 5000), 's6': (180000, 0, 3000)},
                    legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=600, bg=False,
                    variant=('v', ['s8', 's6'])),
+    # Amazons: under the node amazons/ of the Kōnane project (konane-multiplay); v = tc = 'std' (10x10, the only board);
+    # b = White (moves first); moves are 6 K64 chars each (from, to, arrow: two chars per square 0–99); at most 92 moves; no draws
+    'amazons': dict(host=('konane', 'amazons'), first='b', alt=True, tckey='tc', tcs={'std': (600000, 0, 5000)},
+                    legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=600, bg=False,
+                    variant=('v', ['std'])),
     # Agon: v = tc = 'std' / 'place'; b = the first player (White); moves are 3 K64 chars each (pass //4)
     'agon': dict(host=('tafl', 'agon'), first='b', alt=True, tckey='tc', tcs={'std': (420000, 0, 5000), 'place': (480000, 0, 5000)},
                  legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,

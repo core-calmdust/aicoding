@@ -138,7 +138,7 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
 - 振り返り解説：最善／悪くない／疑問手／悪手と、陣地の損・自分のアマゾンが囲まれかけた・相手を閉じ込めるチャンス。PC振り返りボックス（候補手・読み筋・検討モード）。
 - 対局設定：ルールが1つなので「ゲーム」タブなし（ルール｜デザイン）。
 - コーチ（coach.js ＋ coach-i18n.js、14言語）：要約チップ（形勢・陣地・動けるマス）、推奨方針、分かれ道（方針：勝ち筋／動けなくする／閉じ込める／逃げる／道をふさぐ／壁を作る／中央へ／陣地を広げる、各候補の手のあとの陣地）、考え方のヒント（閉じ込めのチャンス・囲まれそうなアマゾン・部屋の分かれ方・中央・元のマスへの矢…）、前の手の評価。出典は coach.js の冒頭。
-- スマホ下タブ：コーチ｜形勢｜棋譜｜戦績（オンラインなし。#mtabs を index.html に置く）。
+- スマホ下タブ：コーチ｜形勢｜棋譜｜戦績｜オンライン（コナネと同じ。#mtabs は online-ui.js が作る）。
 - レッスン（tools/gen_lessons.js → lessons.json、文章は i18n-am-ls.js（ja/en）・i18n-am-ls-more.js（zh/zh-TW/ko/es/fr/pt/de）・i18n-am-ls-more2.js（ru/tr/id/hi/ar））：
   - コース「はじめてのアマゾンズ」b_queen（クイーンの動き）・b_arrow（矢を放つ）・b_block（飛び越えられない）・b_win（動けなくしたら勝ち）、「作戦」s_trap（閉じ込める）・s_escape（囲まれる前に逃げる）・s_wall（壁でいちばん大きい部屋を取る）・s_fill（部屋を無駄なく埋める）。
   - 各ステップ：準備（考え方の説明 explain＋例題 try、採点なし。ヒントは 考え方→見るマス→答え）→ 本番5問（白番、1問20点、75点以上で合格、保存 aicoding-amazons-lessons）。正解手（ok）はすべてルールから計算（エンジンの評価は使わない）。問題の印 mk（目標マス・閉じ込める相手・逃がす自分のアマゾン（赤）・壁のすき間）。
@@ -158,8 +158,16 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
   - フル機能版のパズルカードのボタン（ヒント・やり直し・答え・一覧）は上のメニュー（対局・待った…）と同じ49×48px（文字10px）、「次の問題」も高さ48px・13px（2026-11-11 ユーザー指定）。目標の文は1行に収まる大きさ（最大14px）、「次の問題」はその右に8pxあけて同じ高さの角丸の箱（丸いピルにしない、14px）。.cb-main の余分な幅は詰める（atlas/skin/amazons.js、2026-11-11 ユーザー指定2回）。
   - 入口：ボタン「パズル」（レッスンの右）、新規対局の「パズル」、ルール｜レッスン｜パズルのタブ。
 
+## オンライン対戦（2026-11-16、コナネの online.js / online-ui.js / online.css / i18n-online.js を移植）
+- Firebase はコナネの系統のプロジェクト `konane-multiplay` を共用し、節 `amazons/` の下だけを使う（`amazons/firebase-config.js` の `window.FIREBASE_ROOT = 'amazons/'`、設定値・App Check のサイトキーはコナネと同じ。もとのプロジェクトがないので `FIREBASE_CONFIG_PREV` はない）。ルールは `shared/tools/secrules.py` の GAMES `'amazons'`（`host=('konane', 'amazons')`）で `konane/database.rules.json` に入る。**ユーザーがその konane のルールを konane-multiplay に貼って公開するまでは `OnlineSec.rehome()` が 'not-configured' を返し、オンラインは「準備中」**（ドックは「準備中」と［詳細］、下タブのオンラインは準備中のダイアログ。AI戦・レート戦・レッスン・パズルはそのまま）。準備中だったことは `amazons-online-nc` に覚え、次からは最初から準備中の表示で始めて裏で確かめ直す（公開されていればその場で通常のオンラインに切り替わる。部屋のリンクで開いた場合はそのまま参加）。
+- ルール：盤は10×10の1種（v = tc = 'std'）、持ち時間はフィッシャー **10分＋1手5秒**（1局は最大92手＝片側46手、AI のレート戦は5分＋3秒だが人どうしは考える時間を長めに）。b＝白（先手）。引き分けはない（引分提案なし、`draw=False`）。放棄あり、履歴あり、手番は厳密に交互（`alt`、記録の `lm`）。
+- 手の記録：**1手6文字**の K64（移動元・移動先・矢のマスを各2文字、マス番号 0〜99 を `K64[i >> 6] + K64[i & 63]`）。最大92手＝552文字で `moves_max=600`。両者・観戦者は `AmazonsEngine` で再生し（`Pos.isLegal`）、違法な手は受け付けない（online.js `replay`）。
+- 画面・流れはコナネと同じ（2026-11-12 のオンライン画面：名前とレートの帯、「レート戦」「部屋で対戦」の2枚、ロビーに戻る、観戦、再戦、Google 連携と同期）。オンライン欄の色はアマゾンズのテーマ色（深緑、輪はアクセント #d6ec86）。保存キーは `amazons-online-*`・`amazons-sync-meta`・`amazons-profile-asked`、モックは `?mock=1`（`amazons-mockdb:`）。
+- 確認：`node shared/tools/roottest.js`（公開後＝amazons/ の下だけ、公開前＝not-configured、通信不可）、モックの2タブでレート戦（対戦成立→両者の手→投了→両者のレート ±10）と鍵付きの部屋（コードで参加）、PC 1440×900・1280×720・スマホ 390×844 でコナネと同じ配置。
+
 ## 未実装（今後）
-- オンライン対戦。3手以上の「動けなくせ」。
+- 3手以上の「動けなくせ」。
+- オンライン対戦の UPDATES の1行（konane のルールが公開されて実際に遊べるようになってから）。
 - 3Dルールコース・ヒストリア・地図・ボス。
 
 ## 3D（大百科の3D盤、フル機能版スキン amazons/?skin=atlas）
@@ -190,6 +198,7 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
 ## 保存キー
 - atlas-amazons-look（3D盤）、atlas-amazons-pc3（3D駒）、atlas-amazons-view（3D / 2D 表示）。
 - aicoding-amazons（設定・対局）、-rated、-rules、-lessons、-puzzles、-pz-last、-pz-tab、-daily、aicoding-amazons-rules-seen。
+- オンライン：amazons-online-name・-v・-rk・-live:<uid>・-nc（準備中だった印）、amazons-sync-meta、amazons-profile-asked。
 - AIのボス（2026-11-11 ユーザー指定「他のゲームと同じようにレベルボスを。アマゾンの感じを前面に」、`atlas/npc/roster.js` の amazons、全23レベル＝8体）：アマゾンの熱帯雨林の生き物と、ギリシア神話の女戦士アマゾネス。みんな弓か火矢を持つ（`atlas/avatars/sp-boss.js` に弓 `bow`・火矢 `arrow` の持ち物と、斑点のある `jaguar` を追加）。Lv.1〜3 オオカワウソ（火矢）・4〜6 リスザルの射手（羽根飾り・弓）・7〜9 オオハシ商人・10〜12 ヤドクガエル（花・弓）・13〜15 オウギワシ（弓）・16〜18 ジャガー戦士（兜・鎧・弓）・19〜21 ペンテシレイア（白馬、兜・盾・赤いマント）・22〜23 女王ヒッポリュテ（ジャガー、王冠・弓・マント、UR）。称号・まめちしき（考案1988年アルゼンチンのワルテル・ザムカウスカス、1992年 El Acertijo 初出、ルール、コンピューター・オリンピアード）は `atlas/npc/t/<lang>.js` に14言語。画像は `images/atlas/av/boss-amazons-<1〜8>-<0〜3>.webp`（atlas/tools/bosses.html で書き出し）。
 
 ## ヒストリア・ルールコース・地図・スクリーンショット（2026-11-11）

@@ -29,6 +29,7 @@ function posAt(i) {
 // {over, winner, draw, why}
 function statusAt(i) {
   if (manualEnd && !kenSw && manualEnd.n === moves.length && i === moves.length && !lesson && !puzzle && settings.mode !== 'online') return manualEnd;
+  if (settings.mode === 'online' && !kenSw && window.olOver && i === moves.length && !lesson && !puzzle) { const o = olOver(); if (o) return o; }   // (online: resign / timeout / abandon end the game — online-ui.js)
   if (rgame && rgame.over && !kenSw && i === moves.length && !lesson && !puzzle) return rgame.over;
   return E.judge(posAt(i).pos);
 }
