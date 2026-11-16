@@ -24,6 +24,8 @@
 <script src="../models/konane.js"></script>
 <script src="../models/latrunculi.js"></script>
 <script src="../models/foxgeese.js"></script>
+<script src="../../patolli/engine.js"></script>
+<script src="../models/patolli.js"></script>
 <script src="../models/amazons.js"></script>
 <script src="../../peg/engine.js"></script>
 <script src="../models/peg.js"></script>
@@ -49,7 +51,7 @@
   if (q.get('pcs') && X.PIECES[id]) X.PIECES[id].set(q.get('pcs'));   // (a piece set too: chess)
   if (id === 'senet' && look) try { localStorage.setItem('aicoding-senet', JSON.stringify({ settings: { design: look } })); } catch (e) {}
   X.mount(document.getElementById('gl'));
-  const g = X.MODELS[id](id === 'senet' || id === 'amazons' || id === 'shogi' || id === 'checkers' || id === 'xiangqi' || ((id === 'chess' || id === 'reversi' || id === 'go' || id === 'gomoku' || id === 'hex' || id === 'latrunculi' || id === 'foxgeese') && !q.get('pcs')));   // (amazons: the board alone, without the showcase's game)
+  const g = X.MODELS[id](id === 'senet' || id === 'amazons' || id === 'shogi' || id === 'checkers' || id === 'xiangqi' || ((id === 'chess' || id === 'reversi' || id === 'go' || id === 'gomoku' || id === 'hex' || id === 'latrunculi' || id === 'foxgeese' || id === 'patolli') && !q.get('pcs')));   // (amazons: the board alone, without the showcase's game)
   if (id === 'dots') g.children.slice(1).forEach(c => g.remove(c));   // (dots: the page with its game, without the pens)
   X.show(id, g, { still: true }); X.quiet(true); X.snap();
   setTimeout(() => { X.kick(3000); setTimeout(() => (window.AtlasTexGen ? AtlasTexGen.settle() : Promise.resolve()).then(() => { X.kick(1500); setTimeout(shoot, 1200); }), 5000); }, 800);   // (waits for the procedural textures)
