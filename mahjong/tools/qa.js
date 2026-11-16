@@ -57,9 +57,10 @@ async function runtime() {
     await p.evaluate(([s, l]) => { I18N.set(l); const D = JANKA.DB; D.coins = 99999; Object.assign(D.set, { mode: 'free', lite: false, skills: false, tap2: false }, s);
       D.chars = Object.assign({ yukino: { skills: ['mind:0'], use: 'mind:0', partner: 'hakuro' }, hakuro: { skills: ['wareme:0'], use: 'wareme:0' } }, D.chars); D.sel = 'yukino'; localStorage.setItem('janka-v1', JSON.stringify(D)); }, [set, lang]);
     await p.reload(); await p.waitForTimeout(1200); p.ctx = ctx; return p; };
-  const myTurn = async p => { await p.evaluate(`void JANKA.startGame()`);
+  // (2026-11-16) a call (ポン・チー) asked of the player before her turn is passed, or the wait would stall
+  const myTurn = async p => { await p.evaluate(`void JANKA.startGame()`); await p.evaluate(`window.__skipCalls=setInterval(()=>{if(JANKA.UIS&&JANKA.UIS.kind==='call'){const b=document.querySelector('#acts .skip');if(b)b.click()}},300)`);
     await p.waitForFunction(`JANKA.UIS && JANKA.UIS.kind === 'turn' && document.querySelector('#hand .tl.drawn')`, null, { timeout: 120000 }); await p.waitForTimeout(1500);
-    await p.waitForFunction(`JANKA.UIS.kind === 'turn'`, null, { timeout: 60000 }); };
+    await p.waitForFunction(`JANKA.UIS.kind === 'turn'`, null, { timeout: 60000 }); await p.evaluate('clearInterval(__skipCalls)'); };
   const traceReach = `(()=>{const TB=JANKA.TB;window.__rc=null;const o=TB.reach.bind(TB);TB.reach=(g,seat,f,to)=>{const r=o(g,seat,f,to);if(seat===0&&!__rc){const rig=TB.hand(0);__rc={page:!!(f&&f.page),layer:rig.layers.isEnabled(1),hidden:!g.visible,shape:(()=>{const gh=document.querySelector('.tl.ghost'),h=document.querySelector('#hand .hrow .tl[data-id]');if(!gh||!h)return null;const a=getComputedStyle(gh),c=getComputedStyle(h);const nr=(x,y)=>Math.abs(parseFloat(x)-parseFloat(y))<.1,ok=nr(a.borderTopLeftRadius,c.borderTopLeftRadius)&&a.boxShadow===c.boxShadow&&nr(getComputedStyle(gh.querySelector('img')).borderTopLeftRadius,getComputedStyle(h.querySelector('img')).borderTopLeftRadius);return ok||[a.borderTopLeftRadius,c.borderTopLeftRadius,a.boxShadow,c.boxShadow,getComputedStyle(gh.querySelector('img')).borderTopLeftRadius,getComputedStyle(h.querySelector('img')).borderTopLeftRadius].join(' | ')})(),fx:f?f.x:null,ghost:document.querySelectorAll('.tl.ghost').length,dist:Math.hypot(rig.position.x-g.position.x,rig.position.z-g.position.z)};const iv=setInterval(()=>{if(TB._ov&&TB._ov.g)__rc.ovTile=true;else if(g.visible&&!__rc.ovTile)__rc.shownEarly=true},10);setTimeout(()=>{clearInterval(iv);__rc.ghostLater=document.querySelectorAll('.tl.ghost').length;__rc.ovTile=!!__rc.ovTile},5000)}return r}})()`;
 
   if (want('discard')) { console.log('[discard] the player\'s own discard (tap, PC)');
@@ -97,6 +98,16 @@ async function runtime() {
     await p.mouse.click(box[0], box[1]); await p.waitForTimeout(400);
     ok('results: a click on an empty spot goes on', await p.evaluate('__mv') === 1);
     ok('no page errors (results click)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
+
+  if (want('discard')) { console.log('[discard] another player\'s すり替え: the new tile stands in her row (no reach to the centre)');
+    // (2026-11-16, ユーザー「スキル使用の後、盤面の中央に手を伸ばして斜めに自分の方へ戻す謎のアクション」)
+    const p = await page(PC); await myTurn(p);
+    const r = await p.evaluate(`(async()=>{const G=JANKA.G,TB=JANKA.TB,s=1,P=G.P[s],old=P.hand[P.hand.length-1],nw=G.wall[G.livePos+3];
+      TB.layoutHand(s,P.hand.slice(0,-1),old);P.hand[P.hand.length-1]=nw;
+      await JANKA._ev('skill',{seat:s,slot:0,skill:'swap',tier:0,cost:0,info:{from:old,to:nw},scores:G.scores.slice(),kyotaku:G.kyotaku,char:G.chars[s]});
+      const n=TB.tile(nw),o=TB.tile(old);return [n.visible,Math.round(Math.hypot(n.position.x,n.position.z)*10)/10,o.visible,JANKA.UIS.drawnBy[s]===nw]})()`);
+    ok('すり替え by another: the new tile stands in her row, the old one is gone', r[0] === true && r[1] > 6 && r[2] === false && r[3] === true, JSON.stringify(r));
+    ok('no page errors (swap)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('drag')) { console.log('[drag] phone: slide a tile to the middle');
     const p = await page(SP); await myTurn(p); await p.evaluate(traceReach);
