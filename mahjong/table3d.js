@@ -1187,7 +1187,8 @@ class Table3D {
       // river, the river took its tile back and hid it)
       if (it.r.taken) continue;
       const g = this.tile(it.r.id), lx = it.lx + shift[it.row], lz = it.lz + back[it.row], last = animLast && it.i === river.length - 1;
-      const anim = last ? { reach: seat, from: g.visible && g.userData.pose === 'stand' ? null : fromLx && typeof fromLx === 'object' ? fromLx : this.handOrigin(seat, fromLx) }   // (the hand takes the tile out of the owner's hand)
+      const anim = last && fromLx && fromLx.direct ? { from: fromLx, dur: 230 }   // (a phone drag: straight to the river, no hand)
+        : last ? { reach: seat, from: g.visible && g.userData.pose === 'stand' ? null : fromLx && typeof fromLx === 'object' ? fromLx : this.handOrigin(seat, fromLx) }   // (the hand takes the tile out of the owner's hand)
         : (g.visible && g.userData.rseat === seat && g.userData.target && Math.hypot(g.userData.target.x - this.local(seat, lx, lz).x, g.userData.target.z - this.local(seat, lx, lz).z) > .01 ? { dur: 240, level: true } : null);   // (a row moved aside slides there)
       this.place(g, seat, lx, lz, it.side ? 'side' : 'flat', anim);
       g.userData.rseat = seat;
