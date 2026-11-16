@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 24;                     // data version (bump when historia/*.json change)
+  const V = 25;                     // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];   // (a game without text in a language falls back to English)
   const UI = {
@@ -29,7 +29,7 @@
   const GUIDE = { shogi: 'm-shogi', chess: 'm-knight', reversi: 'm-disc', sudoku: 'm-tile', speedsudoku: 'av/tile-2', samegame: 'av/hippo-0', jailbreak: 'av/mole-0',
     poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', agon: 'av/teddy-0', fanorona: 'av/monkey-0',
     alquerque: 'av/camel-0', xiangqi: 'av/ryuou-0', tafl: 'av/seal-0', go: 'av/goke-0', gomoku: 'm-stone', dots: 'm-dot', connect4: 'm-plop', mancala: 'm-gem',
-    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0', ludo: 'av/monkey-1', carrom: 'av/otter-1', crokinole: 'av/beaver-1', hockey: 'av/seal-1', botao: 'av/disc-1', amazons: 'av/frog-0', peg: 'av/marble-2', shanghai: 'av/peacock-0', latrunculi: 'av/pawn-0', foxgeese: 'av/duck-0', patolli: 'm-dice' };
+    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0', ludo: 'av/monkey-1', carrom: 'av/otter-1', crokinole: 'av/beaver-1', hockey: 'av/seal-1', botao: 'av/disc-1', amazons: 'av/frog-0', peg: 'av/marble-2', shanghai: 'av/peacock-0', latrunculi: 'av/pawn-0', foxgeese: 'av/duck-0', patolli: 'm-dice', hitblow: 'av/owl-1' };
   const guideSrc = id => '../images/atlas/' + (GUIDE[id] || 'm-tile') + '.webp';
   const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/><path d="M7 8h2M15 8h2M7 11h2M15 11h2"/></svg>';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -50,7 +50,7 @@
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
   // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
-  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi ludo carrom crokinole hockey botao amazons peg shanghai latrunculi foxgeese patolli'.split(' ')), has = id => IDS.has(id);
+  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi ludo carrom crokinole hockey botao amazons peg shanghai latrunculi foxgeese patolli hitblow'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
@@ -909,6 +909,33 @@
         body += `<g class="pc" style="--d:${dd + 500 + i * 90}ms">${g}</g>`;
       });
       (s.arrows || []).forEach(([a, b, c2, d2], i) => { body += `<path class="ar" pathLength="1" style="--d:${dd + (s.pcs || []).length * 90 + 700 + i * 300}ms" d="M${X(a)} ${Yy(b)}L${X(c2)} ${Yy(d2)}" marker-end="url(#hsArr2)"/>`; });
+    } else if (T === 'hitblow') {   // hit & blow (2026-11-16): the midnight board — the answer case at the top ("?", or the answer when s.open), rows of jewel pegs
+      // (each row a string of symbol indices 0-7 in the game's colours), and each row's 2×2 pins worked out from s.ans: hits (lime) first, then blows (white).
+      // The light left of a row alternates mint / pink: the two players take turns on the one board.
+      const HC = ['#ff4f5e', '#ffcc33', '#3fd97a', '#3ea0ff', '#a97cff', '#ff76c4', '#ff9940', '#38e0e6'];
+      const ans = String(s.ans || '0123'), n = ans.length, rows = s.rows || [], cell = 32, lw = 14, pw = 34, cH = 40;
+      const bw = lw + n * cell + pw + 16, bh = cH + 16 + rows.length * cell + 10; W = bw + PD * 2; H = bh + PD * 2;
+      const X = i => PD + lw + 8 + i * cell + cell / 2, Yr = r => PD + cH + 18 + r * cell + cell / 2, R = cell * .36;
+      const gem = (x, y, c, d) => { const f = HC[+c] || HC[0]; return `<g class="pc" style="--d:${d}ms"><circle cx="${x}" cy="${y}" r="${R}" fill="${f}" stroke="rgba(255,255,255,.55)" stroke-width="1.4"/><circle cx="${x - R * .32}" cy="${y - R * .34}" r="${R * .3}" fill="#fff" opacity=".45"/></g>`; };
+      out.push(`<rect class="bd" x="${PD}" y="${PD}" width="${bw}" height="${bh}" rx="12" fill="${s.bg || '#141d4c'}" stroke="#7fa2ff" stroke-width="2"/>`);
+      // the answer case
+      const cx0 = X(0) - cell / 2 + 2, cw = n * cell - 4;
+      out.push(`<rect class="cl" x="${cx0}" y="${PD + 8}" width="${cw}" height="${cH - 4}" rx="8" fill="#2a3478" stroke="#c38bff" stroke-width="1.6"/>`);
+      if (s.open) [...ans].forEach((c, i) => { body += gem(X(i), PD + 8 + (cH - 4) / 2, c, dd + rows.length * (n + 1) * 70 + 300 + i * 120); });
+      else body += `<text class="cl" x="${cx0 + cw / 2}" y="${PD + 8 + (cH - 4) / 2 + 8}" text-anchor="middle" font-size="22" fill="#e8dcff">${Array(n).fill('?').join(' ')}</text>`;
+      rows.forEach((row, r) => {
+        const y = Yr(r), g = String(row), d0 = dd + r * (n + 1) * 70;
+        out.push(`<circle class="cl" style="--d:${r * 40}ms" cx="${PD + lw / 2 + 4}" cy="${y}" r="3.6" fill="${r % 2 ? '#ff7ac8' : '#7df3d2'}"/>`);
+        for (let i = 0; i < n; i++) out.push(`<circle class="cl" style="--d:${r * 40}ms" cx="${X(i)}" cy="${y}" r="${R * .8}" fill="#060a22" stroke="rgba(120,150,255,.45)" stroke-width="1"/>`);
+        let hit = 0, blow = 0; const ca = {}, cg = {};
+        for (let i = 0; i < n; i++) { if (g[i] === ans[i]) hit++; else { ca[ans[i]] = (ca[ans[i]] || 0) + 1; cg[g[i]] = (cg[g[i]] || 0) + 1; } }
+        for (const k in cg) blow += Math.min(cg[k], ca[k] || 0);
+        const pins = Array(hit).fill(HC.length).concat(Array(blow).fill(-1)), px = PD + lw + 8 + n * cell + 8;
+        for (let q = 0; q < 4; q++) { const x = px + (q % 2) * 13 + 4, yy = y - 6.5 + Math.floor(q / 2) * 13, p = pins[q];
+          out.push(`<circle class="cl" style="--d:${r * 40}ms" cx="${x}" cy="${yy}" r="3" fill="#000" opacity=".55"/>`);
+          if (p !== undefined) body += `<circle class="cl" style="--d:${d0 + n * 70 + 120 + q * 60}ms" cx="${x}" cy="${yy}" r="4.4" fill="${p === -1 ? '#f4f7ff' : '#a6e81f'}" stroke="rgba(0,0,0,.35)" stroke-width=".8"/>`; }
+        for (let i = 0; i < n; i++) body += gem(X(i), y, g[i], d0 + i * 70);
+      });
     } else if (T === 'c4') {
       const n = s.w || 7, m = s.h || 6, S = 30; W = n * S + PD * 2; H = m * S + PD * 2;
       body += `<rect x="${PD - 6}" y="${PD - 6}" width="${n * S + 12}" height="${m * S + 12}" rx="10" fill="#2f6fd8"/>`;
