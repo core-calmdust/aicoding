@@ -426,7 +426,7 @@ function skillBlock(key, lite) {
   return `<div class="pskill st${k.tier}" style="--sc:${sk.color}"><i>${icon(sk.icon)}</i><div>
     <b>${esc(L(sk.name))} <em class="sr">${MJSkills.TIERS[k.tier]}</em> <em class="tm">${t('timing_' + (sk.timing || 'turn'))}</em></b>
     <span>${esc(L(sk.desc(v)))}</span>
-    ${lite ? '' : `<small class="cl">${esc(t(sk.noFree ? 'costLineNF' : 'costLine', { n: (sk.cost || 1000).toLocaleString(), h: ((sk.cost || 1000) / 2).toLocaleString() }))}</small>`}</div></div>`;
+    ${lite ? '' : `<small class="cl">${esc(t(sk.noFree ? 'costLineNF' : 'costLine', { n: MJSkills.costOf(sk.cost || 1000, k.tier).toLocaleString(), h: (MJSkills.costOf(sk.cost || 1000, k.tier) / 2).toLocaleString() }))}</small>`}</div></div>`;
 }
 
 // ---------------------------------------------------------------- tile html

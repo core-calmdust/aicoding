@@ -62,7 +62,7 @@ class MJGame {
     const sl = this.slot(s, i | 0), sk = sl && sl.sk;
     const noFree = !!(sk && sk.noFree);
     if (!noFree && !this.skillFree[s]) return 0;
-    const base = (this.rules.costs && sk && this.rules.costs[sk.id]) || (sk && sk.cost) || 1000;
+    const base = SK.costOf ? SK.costOf((this.rules.costs && sk && this.rules.costs[sk.id]) || (sk && sk.cost) || 1000, sl.tier) : ((this.rules.costs && sk && this.rules.costs[sk.id]) || (sk && sk.cost) || 1000);   // (the skill's rarity adds a little: skills.js COST_K)
     // rules.costSplit (on by default; off = one count for both, as before): each skill's cost rises with its own paid uses only —
     // base, ×2, ×4 … (封じ: half, base, ×2 …); the one free use of the game is still shared
     if (this.rules.costSplit) { const p = this.paidUses ? this.paidUses[s][i | 0] : 0; return (noFree ? base / 2 : base) * Math.pow(2, p); }
