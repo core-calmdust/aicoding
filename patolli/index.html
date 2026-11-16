@@ -4,6 +4,7 @@
 <script>try { const S = (JSON.parse(localStorage.getItem('aicoding-patolli') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.design || 'petate'; document.documentElement.dataset.pcs = S.pieces || 'pebble'; } catch (e) {}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2l14"><script src="../atlas/skin/loading.js?v=4l14"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <script src="../shared/latinfs.js?v=1l14"></script>
 <script src="../shared/focusgate.js?v=4ol"></script>
 <script src="../shared/phonesnd.js?v=2l14"></script>
@@ -828,7 +829,7 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
 <script src="../shared/onlinesec.js?v=2l14as1"></script>
 <script src="online.js?v=1"></script>
 <script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script>
-<script src="app.js?v=1"></script>
+<script src="app.js?v=2"></script>
 <script src="rv-i18n.js?v=1"></script>
 <script src="rvbox.js?v=1"></script>
 <script src="../shared/luxintro.js?v=3"></script>
@@ -838,7 +839,19 @@ html:not([lang=ja]):not([lang=zh]):not([lang="zh-TW"]):not([lang=ko]) .result-bi
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
 <script src="../shared/resumeng.js?v=1l14"></script>
-<!-- 大百科（?skin=atlas）の3D盤は別作業。できたら ur/index.html と同じ形でここに読み込みを足す -->
+<!-- 世界のボドゲ大百科のスキン：patolli/?skin=atlas — 3D盤6種・3D駒6種（atlas/models/patolli.js ＋ atlas/skin/patolli.js）。DOM の盤は透明のまま上に残り、タップと印を受ける（claude/patolli-spec.md §5） -->
+<script>
+(function () {
+  if (!/[?&]skin=atlas\b/.test(location.search)) return;
+  document.documentElement.classList.add('atlas-skin');
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=91l14'; document.head.appendChild(css);
+  const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
+  const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
+  if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // 念のため
+  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=3')).then(() => load('../atlas/table3d.js?v=180')).then(() => load('../atlas/tables3d.js?v=146')).then(() => load('../atlas/skin/common.js?v=108')).then(() => load('../atlas/models/patolli.js?v=1')).then(() => load('../atlas/skin/patolli.js?v=1'))
+    .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });   // 3Dのファイルが読めないとき：2Dのまま
+})();
+</script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261115hst" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=fa2l14" defer></script>
