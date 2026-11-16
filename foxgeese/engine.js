@@ -33,7 +33,7 @@ const RULES = {
 const RULE_ORDER = ['g15', 'g17', 'g13', 'g13n'];
 const DEFAULT_RULE = 'g15';
 const FOX_WINS_AT = 5;                // geese left: they can no longer shut the fox in
-const QUIET_MAX = +((typeof process !== 'undefined' && process.env && process.env.FG_QUIET) || 120);   // plies without a capture after which the fox wins: the geese have failed to shut it in (this program's own rule, 60 moves each)
+const QUIET_MAX = +((typeof process !== 'undefined' && process.env && process.env.FG_QUIET) || 60);   // (30 moves each — 2026-11-17: measured with tools/match.js, see claude/foxgeese-spec.md)   // plies without a capture after which the fox wins: the geese have failed to shut it in (this program's own rule, 60 moves each)
 const REP_MAX = 3;                    // the same position (same side to move) for the third time: the fox wins — the geese are making no progress (this program's own rule)
 const MAX_JUMPS = 7;
 let R = RULES[DEFAULT_RULE], RK = DEFAULT_RULE;
