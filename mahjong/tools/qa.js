@@ -107,6 +107,13 @@ async function runtime() {
     const on = await p.evaluate(`[document.querySelector('#pImg img').style.visibility, getComputedStyle(document.querySelector('#pImg .jig')||document.body).display]`);
     await p.waitForTimeout(1600); const off = await p.evaluate(`[document.querySelector('#pImg img').style.visibility, getComputedStyle(document.querySelector('#pImg .jig')).display]`);
     ok('the canvas takes over while it wobbles, the picture comes back', on[0] === 'hidden' && on[1] === 'block' && off[0] === '' && off[1] === 'none', on + ' → ' + off);
+    // (2026-11-16) the character screen's picture can be touched as well: a line in its bubble and the wobble
+    await p.evaluate(`document.querySelector('#btnColl').click()`); await p.waitForTimeout(1200);
+    const cb = await (await p.$('#chArt .aa-ch img')).boundingBox(); await p.mouse.click(cb.x + cb.width * .5, cb.y + cb.height * .4); await p.waitForTimeout(150);
+    const ch = await p.evaluate(`[!document.querySelector('#chSay').hidden && document.querySelector('#chSay').textContent.length > 0, getComputedStyle(document.querySelector('#chArt .jig')||document.body).display]`);
+    ok('character screen: a line and the wobble on a touch', ch[0] && ch[1] === 'block', ch.join(','));
+    const sr = await p.evaluate(`(()=>{const s=document.querySelector('#chSay').getBoundingClientRect(),i=document.querySelector('#chInfo').getBoundingClientRect();return s.right<=i.left+2})()`);
+    ok('character screen: the bubble stays clear of the info panel', sr);
     ok('no page errors (jiggle)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('fonts')) { console.log('[fonts] every text in the Mincho');

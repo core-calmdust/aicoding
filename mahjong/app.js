@@ -542,31 +542,42 @@ $('#aaBanner').addEventListener('click', () => { SND.pick(); openGacha(); });
 let sayT = 0;
 // a screen point in the frame the UI is laid out in (see uiRect: on a phone held upright #root is turned 90°)
 function uiPt(x, y) { return document.documentElement.classList.contains('rot') ? [y, innerWidth - x] : [x, y]; }
-function homeSay(e) {
-  const c = MJChars.get(DB.sel); let txt = null, at = null;
-  // (ユーザー 2026-11-15) where she was touched decides what she says (touch.js: about a hundred lines each, Japanese only)
-  // (2026-11-16, ユーザー「タップしたところがぷるんと震える演出」) the touched place of the picture wobbles (jiggle.js) — in every language
-  if (e && window.MJJiggle) { const im = e.target.closest('#pImg') && document.querySelector('#pImg img');
-    if (im) { const r = uiRect(im), k = Math.max(r.width / 1080, r.height / 1920), [px, py] = uiPt(e.clientX, e.clientY);
-      const ju = (px - r.left - (r.width - 1080 * k) / 2) / (1080 * k), jv = (py - r.top) / (1920 * k);
-      // (2026-11-16, ユーザー) how much it wobbles, by where she was touched (touch.js zones): chest and hips 100% · the face and the
-      // hair around it 10% · arms, legs, the belly and everywhere else 30%
-      const zn = window.MJTouch && MJTouch.zone ? MJTouch.zone(c.id, ju, jv) : null;
-      MJJiggle.poke(im, ju, jv, { c: 1, h: 1, f: .1, k: .1 }[zn] ?? .3); } }
-  if (e && window.MJTouch && I18N.lang === 'ja') { const im = e.target.closest('#pImg') && document.querySelector('#pImg img');
-    if (im) { const r = uiRect(im), k = Math.max(r.width / 1080, r.height / 1920), w = 1080 * k, h = 1920 * k, [px, py] = uiPt(e.clientX, e.clientY);   // (the picture covers its box, held at the top, centred across)
-      const u = (px - r.left - (r.width - w) / 2) / w, v = (py - r.top) / h; txt = MJTouch.line(c.id, MJTouch.zone(c.id, u, v)); at = [px, py]; } }
+// (2026-11-16, ユーザー「キャラ一覧画面のキャラが表示されている部分でも触れるように」) one routine for her picture on the home screen
+// and on the character screen: o = { c: the character, img, hit: whether the tap was on the picture, root: the screen, say: its bubble,
+// span(W, offL): the [left, right] the bubble must stay within }
+function charSay(e, o) {
+  const c = o.c; let txt = null, at = null;
+  const im = e && o.hit ? o.img : null;
+  // where she was touched: (ユーザー 2026-11-16) the touched place wobbles (jiggle.js, every language) — chest and hips 100% · the
+  // face and the hair around it 10% · arms, legs, the belly and everywhere else 30%; (ユーザー 2026-11-15) what she says
+  // (touch.js: about a hundred lines each, Japanese only)
+  if (im) { const r = uiRect(im), k = Math.max(r.width / 1080, r.height / 1920), w = 1080 * k, h = 1920 * k, [px, py] = uiPt(e.clientX, e.clientY);   // (the picture covers its box, held at the top, centred across)
+    const u = (px - r.left - (r.width - w) / 2) / w, v = (py - r.top) / h, zn = window.MJTouch && MJTouch.zone ? MJTouch.zone(c.id, u, v) : null;
+    if (window.MJJiggle) MJJiggle.poke(im, u, v, { c: 1, h: 1, f: .1, k: .1 }[zn] ?? .3);
+    at = [px, py];   // (the bubble by the touched place, whichever line she says)
+    if (window.MJTouch && I18N.lang === 'ja') txt = MJTouch.line(c.id, zn); }
   if (!txt) { const ks = Object.keys(c.lines || {}); if (!ks.length) return; txt = L(c.lines[ks[(Math.random() * ks.length) | 0]]); }
   SND.say();
-  const el = $('#aaSay'); el.textContent = txt; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-  // the bubble comes up beside the place touched, kept inside the picture's column — never over the right-hand column
+  const el = o.say; el.textContent = txt; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  // the bubble comes up beside the place touched, kept inside the picture's column
   // (ユーザー 2026-11-16, phone: it covered the play settings — the touch point was read in the screen's frame, not the turned UI's)
-  if (at) { const home = $('#home'), hr = uiRect(home), z = hr.width / home.offsetWidth || 1, x = (at[0] - hr.left) / z, y = (at[1] - hr.top) / z, W = home.offsetWidth, H = home.offsetHeight;
-    const offL = n => { let v = 0; while (n && n !== home) { v += n.offsetLeft; n = n.offsetParent; } return v; };
-    const colL = Math.min(W * .66, ...['#aaBanner', '.aa-play'].map(q => home.querySelector(q)).filter(n => n && n.offsetWidth).map(n => offL(n) - 12));
-    el.style.left = Math.max(W * .2, Math.min(colL - el.offsetWidth, x + 24)) + 'px'; el.style.top = Math.max(70, Math.min(H * .7, y - el.offsetHeight - 14)) + 'px'; }
+  if (at) { const root = o.root, hr = uiRect(root), z = hr.width / root.offsetWidth || 1, x = (at[0] - hr.left) / z, y = (at[1] - hr.top) / z, W = root.offsetWidth, H = root.offsetHeight;
+    const offL = n => { let v = 0; while (n && n !== root) { v += n.offsetLeft; n = n.offsetParent; } return v; };
+    const [lo, hi] = o.span(W, offL);
+    el.style.left = Math.max(lo, Math.min(hi - el.offsetWidth, x + 24)) + 'px'; el.style.top = Math.max(70, Math.min(H * .7, y - el.offsetHeight - 14)) + 'px'; }
   else el.style.left = el.style.top = '';
-  clearTimeout(sayT); sayT = setTimeout(() => { el.classList.remove('on'); }, Math.max(2600, 1400 + txt.length * 90));
+  clearTimeout(o.say._t); o.say._t = setTimeout(() => { el.classList.remove('on'); }, Math.max(2600, 1400 + txt.length * 90));
+}
+function homeSay(e) {
+  const home = $('#home');
+  charSay(e, { c: MJChars.get(DB.sel), img: document.querySelector('#pImg img'), hit: !!(e && e.target.closest('#pImg')), root: home, say: $('#aaSay'),
+    span: (W, offL) => [W * .2, Math.min(W * .66, ...['#aaBanner', '.aa-play'].map(q => home.querySelector(q)).filter(n => n && n.offsetWidth).map(n => offL(n) - 12))] });
+}
+function charaSay(e) {
+  const c = MJChars.get(chView), art = $('#chArt'), im = art.querySelector('.aa-ch:not(.lock) img');
+  if (!c || !owns(c.id) || !im || !e.target.closest('.aa-ch')) return;
+  charSay(e, { c, img: im, hit: true, root: $('#chara'), say: $('#chSay'), span: (W, offL) => { const l = offL(art), info = $('#chInfo'), list = document.querySelector('#chara .ch-list, #chList');
+    return [Math.max(l + 10, list && list.offsetWidth ? offL(list) + list.offsetWidth + 12 : 0), Math.min(l + art.offsetWidth - 10, info && info.offsetWidth ? offL(info) - 14 : W)]; } });
 }
 // the room: specks of light drifting in the warm air (ユーザー 2026-11-14: not vector dots — real light). Pre-rendered soft sprites
 // drawn additively: a few large out-of-focus bokeh discs far in front, fine motes in the light that twinkle (the brightest
@@ -948,6 +959,7 @@ function renderChara() {
     $('#chBlur').src = own ? full : '';   // (a locked character: nothing of her shows, not even blurred behind)
     $('#chBlur').style.visibility = own ? '' : 'hidden';
     $('#chArt').classList.remove('in'); void $('#chArt').offsetWidth; $('#chArt').classList.add('in');
+    { const sy = $('#chSay'); if (sy) { sy.classList.remove('on'); sy.hidden = true; } if (own && window.MJTouch && I18N.lang === 'ja') MJTouch.load(c.id); }
   }
   const sisters = MJChars.list.filter(x => x.family === c.family && x.id !== c.id);
   const o = DB.chars[c.id], uk = own ? useKey(c.id) : null;
@@ -1019,7 +1031,7 @@ function renderChara() {
   };
 }
 addEventListener('resize', () => { if (!$('#chara').hidden) renderChara(); });
-$('#chArt').addEventListener('click', e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } else if (e.target.closest('[data-a=rated]')) { SND.pick(); openRanked(); } });
+$('#chArt').addEventListener('click', e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } else if (e.target.closest('[data-a=rated]')) { SND.pick(); openRanked(); } else charaSay(e); });
 $('#chTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; chTab = b.dataset.tab; SND.pick(); renderChara(); });
 // (ユーザー 2026-11-15: no 「許婚にする」 button) the character picked in the list becomes the 許婚 at once, when she is owned;
 // one not owned yet is only looked at (the 許婚 stays who she was)

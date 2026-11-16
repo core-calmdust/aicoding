@@ -2795,3 +2795,6 @@ html.lite :is(#home,#chara).aaa .aa-ch .jig{animation:none}
 .rk-dn{font-style:normal;font-family:var(--serif);font-weight:800;color:#fff;background:linear-gradient(90deg,#3a4a7a,#5a6aa0);padding:.1em .7em;border-radius:2px;letter-spacing:.12em}
 .rk-b small:has(.rk-pp){display:grid;grid-template-columns:auto auto;justify-content:center;gap:2px 14px;max-width:100%}
 .rk-pp{white-space:nowrap;color:#f3d68e}.rk-pp.neg{color:#f2a3ad}
+/* (2026-11-16) the character screen: her picture can be touched too (owned characters) */
+#chara.ch2 .aa-ch:not(.lock){cursor:pointer}
+#chara.aaa #chSay{z-index:6}
