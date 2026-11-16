@@ -2756,3 +2756,11 @@ html.lp #hand .tl[data-id]{touch-action:none}
    UI, the Latin display face, the brush face of the cut-ins and the monospaced digits all give way to it */
 :root{--ui:var(--serif)}
 *,*::before,*::after{font-family:var(--serif)!important}
+/* (2026-11-16, ユーザー「英語のレイアウト崩れを精査」) English (and any language but Japanese): the wide letter-spacing made for kanji is
+   narrowed where Latin words ran off or broke — the title's subtitle, the Start button, the sisters' name on the cards */
+html:not([lang=ja]) :is(#home,#chara).aaa .aa-logo .lg-sub{letter-spacing:.1em;margin-right:-.1em;font-size:21px;white-space:normal;text-align:center;max-width:100%}
+html.lp:not([lang=ja]) :is(#home,#chara).aaa .aa-logo .lg-sub{font-size:16px}
+html:not([lang=ja]) :is(#home,#chara).aaa .aa-go .ag-k{letter-spacing:.16em;margin-right:-.16em}
+html:not([lang=ja]) :is(#home,#chara).aaa .pp-f,html:not([lang=ja]) #chara.ch2 .pp-f,html:not([lang=ja]) #home.aaa .aa-plate .pp-f{letter-spacing:.06em;white-space:nowrap}
+html:not([lang=ja]) :is(#home,#chara).aaa .pp-t,html:not([lang=ja]) #chara.ch2 .pp-t{letter-spacing:.08em}
+html:not([lang=ja]) .lm-t b{letter-spacing:.1em}
