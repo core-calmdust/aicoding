@@ -140,7 +140,7 @@
     let SF = PZ ? PZ.sfen : VR ? VA.sfen(VR) + ' b - 1' : VAR === 'random' ? randomStart() : START;
     let zoomOn = true, region = null, zbtn = null, pzSol = PZ ? PZ.sol || [] : [], pan = [0, 0], zEase = false;   // zEase: zoom in / out glides (≈0.4 s) instead of cutting (2026-11-10)   // (詰将棋 zoom: declared before layout() first runs)
     let hc = PZ ? (SF.split(' ')[1] === 'w' ? 1 : 0) : pvp ? 0 : ctx.side === 2 ? 1 : 0, ac = hc ^ 1;         // engine colours: 0 = sente (black), 1 = gote
-    const lvIdx = Math.max(0, Math.min(LEVELS.length - 1, (ctx.level || 8) - 1)), LV = LEVELS[lvIdx];
+    const lvIdx = Math.max(0, Math.min(LEVELS.length - 1, (window.Atlas3D && Atlas3D.shogi && Atlas3D.shogi.engLv ? Atlas3D.shogi.engLv(ctx.level || 8) : ctx.level || 8) - 1)), LV = LEVELS[lvIdx];
     const vIdx = Math.round(lvIdx * 18 / (LEVELS.length - 1)), VLVL = VR ? vLevel(vIdx, VR) : null;   // (the variants: the level's place on their own 19 steps)
     const newPos = () => VR === 'mini' ? new MiniShogi() : VR === 'hasami' ? new HasamiShogi() : VR ? VShogi.make(VR) : new E.Position();
     const BASEV = VR === 'micro' ? { 1: 1, 3: 1, 4: 4, 2: 4, 7: 7, 6: 7, 5: 5, 9: 5 } : null;   // (マイクロ将棋: a captured piece goes to the hand as its front face)

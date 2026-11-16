@@ -135,7 +135,7 @@
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.move); };
       worker.onerror = () => { worker = null; reply(-1); };
-      worker.postMessage({ type: 'think', id, moves: mv, level: ctx.level });
+      worker.postMessage({ type: 'think', id, moves: mv, level: engLv(ctx.level) });
     }
 
     /* ---------- input: a column ---------- */
@@ -242,7 +242,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, moves: mv, level: Math.max(6, Math.min(7, ctx.level + 2)) });
+          hintW.postMessage({ type: 'think', id: j, moves: mv, level: Math.max(6, Math.min(7, lvOld(ctx.level) + 2)) });
         });
       },
       canResign: () => !over,
@@ -263,7 +263,7 @@
 
   /* ---------- the board card ---------- */
   const LVN = {"ja":{"lv":["","入門","初級","初級+","中級","中級+","上級","達人","完全読み"],"lvd":["","ときどき見落とす","2手読み","4手読み","6手読み","8手読み","12手読み・終盤は読み切り","約1秒・勝敗を読み切る","完全プレイ（1手目から最善・先手なら必勝）"]},"en":{"lv":["","Beginner","Novice","Novice+","Intermediate","Intermediate+","Advanced","Expert","Perfect"],"lvd":["","sometimes misses things","2-ply search","4-ply search","6-ply search","8-ply search","12-ply, solves the endgame","~1 s, solves win/loss","perfect play from move 1 (unbeatable as first)"]},"zh":{"lv":["","入门","初级","初级+","中级","中级+","高级","达人","完全计算"],"lvd":["","偶尔会看漏","搜索2步","搜索4步","搜索6步","搜索8步","搜索12步・残局完全计算","约1秒・算清胜负","完美对弈（从第1步起最优・先手必胜）"]},"ko":{"lv":["","입문","초급","초급+","중급","중급+","상급","달인","완전 해석"],"lvd":["","가끔 놓침","2수 읽기","4수 읽기","6수 읽기","8수 읽기","12수 읽기・종반 완전 해석","약 1초・승패 해석","완전 플레이 (1수부터 최선・선수면 필승)"]},"es":{"lv":["","Principiante","Novato","Novato+","Intermedio","Intermedio+","Avanzado","Experto","Perfecto"],"lvd":["","a veces se le escapan cosas","búsqueda a 2 plies","búsqueda a 4 plies","búsqueda a 6 plies","búsqueda a 8 plies","12 plies, resuelve el final","~1 s, resuelve victoria/derrota","juego perfecto desde la 1.ª jugada (imbatible como primero)"]},"fr":{"lv":["","Débutant","Novice","Novice+","Intermédiaire","Intermédiaire+","Avancé","Expert","Parfait"],"lvd":["","rate parfois des choses","recherche à 2 demi-coups","recherche à 4 demi-coups","recherche à 6 demi-coups","recherche à 8 demi-coups","12 demi-coups, résout la finale","~1 s, résout gain/perte","jeu parfait dès le 1er coup (imbattable en premier)"]},"pt":{"lv":["","Iniciante","Novato","Novato+","Intermediário","Intermediário+","Avançado","Expert","Perfeito"],"lvd":["","às vezes deixa passar coisas","busca de 2 lances","busca de 4 lances","busca de 6 lances","busca de 8 lances","12 lances, resolve o final","~1 s, resolve vitória/derrota","jogo perfeito desde o 1º lance (imbatível jogando primeiro)"]},"de":{"lv":["","Anfänger","Neuling","Neuling+","Mittel","Mittel+","Fortgeschritten","Experte","Perfekt"],"lvd":["","übersieht manchmal etwas","2 Halbzüge Suche","4 Halbzüge Suche","6 Halbzüge Suche","8 Halbzüge Suche","12 Halbzüge, löst das Endspiel","~1 s, löst Sieg/Niederlage","perfektes Spiel ab dem 1. Zug (als Anziehender unschlagbar)"]},"hi":{"lv":["","शुरुआती","नौसिखिया","नौसिखिया+","मध्यम","मध्यम+","उन्नत","विशेषज्ञ","परफ़ेक्ट"],"lvd":["","कभी-कभी चूक जाता है","2-प्लाई खोज","4-प्लाई खोज","6-प्लाई खोज","8-प्लाई खोज","12-प्लाई, एंडगेम हल करता है","~1 से., जीत/हार हल करता है","पहली चाल से परफ़ेक्ट खेल (पहले खेलकर अजेय)"]},"ar":{"lv":["","مبتدئ","مستجد","مستجد+","متوسط","متوسط+","متقدم","خبير","مثالي"],"lvd":["","يفوّت أشياء أحياناً","بحث بعمق 2","بحث بعمق 4","بحث بعمق 6","بحث بعمق 8","عمق 12، يحل النهاية","~1 ث، يحسم الفوز/الخسارة","لعب مثالي من النقلة الأولى (لا يُهزم إذا بدأ)"]}, "ru": { "lv": ["", "Начальный", "Новичок", "Новичок+", "Средний", "Средний+", "Продвинутый", "Эксперт", "Идеал"], "lvd": ["", "иногда упускает", "поиск на 2 полухода", "поиск на 4 полухода", "поиск на 6 полуходов", "поиск на 8 полуходов", "12 полуходов, решает эндшпиль", "~1 с, решает исход", "идеальная игра с 1-го хода (непобедим первым)"] }, "zh-TW": { "lv": ["", "入門", "初級", "初級+", "中級", "中級+", "高級", "最高級", "完美"], "lvd": ["", "有時會漏看", "2層搜尋", "4層搜尋", "6層搜尋", "8層搜尋", "12層，解開殘局", "約1秒，算出勝負", "從第1手起完美對弈（先手無敵）"] }, "id": { "lv": ["", "Pemula", "Dasar", "Dasar+", "Menengah", "Menengah+", "Mahir", "Ahli", "Sempurna"], "lvd": ["", "kadang melewatkan", "pencarian 2 lapis", "pencarian 4 lapis", "pencarian 6 lapis", "pencarian 8 lapis", "12 lapis, memecahkan akhir permainan", "~1 dtk, memecahkan menang/kalah", "permainan sempurna sejak langkah 1 (tak terkalahkan sebagai pertama)"] }, "tr": { "lv": ["", "Başlangıç", "Acemi", "Acemi+", "Orta", "Orta+", "İleri", "Uzman", "Kusursuz"], "lvd": ["", "bazen kaçırır", "2 katmanlı arama", "4 katmanlı arama", "6 katmanlı arama", "8 katmanlı arama", "12 katman, oyunsonunu çözer", "~1 sn, galibiyet/yenilgiyi çözer", "1. hamleden kusursuz oyun (ilk oynarken yenilmez)"] }};
-  const RATING = [0, 100, 1115, 1435, 1995, 2100, 2205, 2500, 2700];   // connect4 RT_LV (rated.js)
+  const RATING = [0, 100, 610, 1115, 1435, 1995, 2100, 2205, 2500, 2700];   // connect4 RT_LV (rated.js)
   const W5 = (a, b, c, d, e) => [a, a, b, b, c, c, d, e];
   const WHO = {
     ja: W5('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '最強レベル（完全読み）'),
@@ -281,10 +281,23 @@
     id: W5('untuk pemula', 'setelah tahu aturannya', 'mulai terbiasa', 'untuk pemain kuat', 'yang terkuat (permainan sempurna)'),
     tr: W5('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'en güçlüsü (kusursuz oyun)'),
   };
-  function levelInfo(n, lang) {   // n = 1..8
+  // 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–8 are the levels people play (steps
+  // added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+  // level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+  const LVX = [[1], [1, 2, 0.5], [2], [3], [4], [5], [6], [7], [8]], LV_HUMAN = 8, LV_MIG = [1, 3, 4, 5, 6, 7, 8, 9];   // LV_MIG: an old level → the new one (saved settings)
+  const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+  const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+  const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+  const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+  function levelInfo0(n, lang) {   // n = 1..8
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;
     return { name: L.lv[n], desc: L.lvd[n], rating: RATING[n], who: W[n - 1] };
+  }  function levelInfo(n, lang) {   // the levels people see → the engine's (LVX); 天上 above LV_HUMAN
+    const x = Object.assign({}, levelInfo0(lvOld(n), lang)), mix = (LVX[n - 1] || []).length > 1; x.rating = RATING[n];
+    if (n > LV_HUMAN) x.name = tenjoName(n, lang); else if (x.name && /^Lv\.\d+$/.test(x.name)) x.name = 'Lv.' + n; else if (x.name && mix) { const a = x.name, b = levelInfo0(LVX[n - 1][1], lang).name; x.name = /\+$/.test(a) && b ? b + '−' : a + '+'; }
+    return x;
   }
+
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.connect4 = { names: l => (TX[l] || TX.en).n, levels: 8, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.connect4 = { names: l => (TX[l] || TX.en).n, levels: 9, reward: 8, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
 })();

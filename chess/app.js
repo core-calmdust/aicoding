@@ -83,7 +83,7 @@ function hanging(pos, color) {
 
 // ====================================================================== state
 const STORE = 'aicoding-chess';
-const settings = { mode: 'ai', color: 1, level: 12, level2: 12, lvv: 2, style: '', anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '', flip: false, skin: 'classic', pcs: 'std', coach: true };
+const settings = { lvV17: 1, mode: 'ai', color: 1, level: 12, level2: 12, lvv: 2, style: '', anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '', flip: false, skin: 'classic', pcs: 'std', coach: true };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.split('-')[0] === c) || 'en'; }
 let LANG = detectLang();
@@ -138,10 +138,19 @@ const olx = k => { const L = typeof LANG === 'string' ? LANG : (document.documen
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI'; // the word "AI" in player labels (ru / tr use their own abbreviation)
-const LV = i => t('lv')[i];
+// 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–25 are the levels people play (steps
+// added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+// level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+const LVX = [[1], [2], [3], [3, 4, 0.5], [4], [4, 5, 0.5], [5], [5, 6, 0.5], [6], [6, 7, 0.5], [7], [7, 8, 0.5], [8], [8, 9, 0.5], [9], [10], [11], [12], [12, 13, 0.5], [13], [14], [15], [16], [16, 17, 0.5], [17], [18], [19], [20], [21], [22], [23], [24], [25]], LV_HUMAN = 25, LV_MIG = [1, 2, 3, 5, 7, 9, 11, 13, 15, 16, 17, 18, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 32, 33];   // LV_MIG: an old level → the new one (saved settings)
+const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+const lvMixName = (n, nm) => { const s = LVX[(n | 0) - 1] || [n]; if (s.length < 3) return nm(s[0]); const a = nm(s[0]); return /\+$/.test(a) ? nm(s[1]) + '−' : a + '+'; };   // a step between two: lower+ (or upper− when the lower already ends in +)
+const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+const LV = i => i > LV_HUMAN ? tenjoName(i, LANG) : lvMixName(i, k => t('lv')[k]);
 // level description: how the AI plays + its rating on this site's scale (RT_LV)
 function LVD(i) {
-  const L = E.LEVELS[i] || {}, nf = n => n.toLocaleString(LANG === 'ar' || LANG === 'hi' ? 'en' : LANG);
+  const L = E.LEVELS[lvOld(i)] || {}, nf = n => n.toLocaleString(LANG === 'ar' || LANG === 'hi' ? 'en' : LANG);
   const how = L.blunder >= 0.1 ? t('lvd.blunder') : L.noise !== undefined ? t('lvd.ply', { n: L.d }) : L.wnodes ? t('lvd.nodes', { n: nf(L.wnodes) }) : t('lvd.sec', { n: (L.ms / 1000).toLocaleString(LANG === 'ar' || LANG === 'hi' ? 'en' : LANG) });
   return how + ' · ' + t('lvd.r', { r: RT_LV[i] });
 }
@@ -175,6 +184,10 @@ function load() {
     Object.assign(settings, d.settings || {});
     const oldLv = !d.settings || d.settings.lvv !== 2;
     if (oldLv) { settings.level = lvMap(settings.level); settings.level2 = lvMap(settings.level2); settings.lvv = 2; if (d.rated && d.rated.lv) d.rated.lv = lvMap(d.rated.lv); }
+    if (d.settings && !d.settings.lvV17) {   // (2026-11-17: the levels were renumbered — 天上)
+      ['level', 'level2'].forEach(k => { if (settings[k] >= 1) settings[k] = LV_MIG[settings[k] - 1] || settings[k]; });
+      settings.lvV17 = 1; try { d.settings = Object.assign({}, d.settings, { level: settings.level, level2: settings.level2, lvV17: 1 }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
+    }
     if (settings.mode === 'online') settings.mode = 'ai';
     if (Array.isArray(d.moves) && validMoves(d.moves)) {
       moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
@@ -257,7 +270,7 @@ const PONDER = window.Ponder && MTP ? Ponder.attach({ mtp: MTP,
     if (aiReply && aiReply.key === keyOf(cur) && aiReply.reply) {
       try { const p = E.replay(startFen, mv).pos, m = p.fromUci(aiReply.reply); if (m && p.legal().includes(m) && E.replay(startFen, mv.concat([m])).pos.legal().length) { mv = mv.concat([m]); target = keyOf(cur) + (cur ? ',' : '') + m; } } catch (e) {}
     }
-    return { msg: { type: 'think', fen: startFen, moves: mv, level: levelFor(pdAI()), cfg, mtThreads: pc.threads }, target };
+    return { msg: { type: 'think', fen: startFen, moves: mv, level: engLv(levelFor(pdAI())), cfg, mtThreads: pc.threads }, target };
   } }) : null;
 
 // ====================================================================== sound
@@ -733,7 +746,7 @@ async function maybeAI(tok) {
     const u = styleMove(E.uciSeq(moves.slice(0, cur)));
     if (u) { const pos = E.replay(null, moves.slice(0, cur)).pos; res = { move: pos.fromUci(u), book: true }; }
   }
-  if (!res) res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: levelFor(p), cfg: proCfg(levelFor(p), p) });
+  if (!res) res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: engLv(levelFor(p)), cfg: proCfg(levelFor(p), p) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const wait = (settings.mode === 'watch' ? 650 : animating ? moveDur() : 0) - (Date.now() - t0);   // AIの着手は即時：前の手のアニメが終わるのを待つだけ（定跡・作戦の手も同じ。観戦だけ間を取る）
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
@@ -1159,7 +1172,7 @@ $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — never in rated
 // games. The changed values make a level of their own (engine.js: think with cfg, the same keys as LEVELS).
-const PRO_DEF = lv => { const L = E.LEVELS[lv] || E.LEVELS[12];
+const PRO_DEF = lv => { const L = E.LEVELS[lvOld(lv)] || E.LEVELS[12];
   return { limit: L.noise !== undefined ? { k: 'depth', v: L.d } : L.wnodes ? { k: 'nodes', v: L.wnodes } : { k: 'time', v: L.ms / 1000 },
     threads: !L.wnodes && L.noise === undefined && L.ms > 0 ? ProSet.defThreads() : 1, ponder: false, book: !!L.book, var: L.noise === undefined ? 0 : L.noise >= 100 ? 2 : 1, eval: 'nnue' }; };
 var PRO = window.ProSet ? ProSet.init({ game: 'chess', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
@@ -1175,7 +1188,7 @@ var PRO2 = window.ProSet ? ProSet.init({ game: 'chess-w2', field: '#fLevel2', la
 function proCfg(lv, p) { const PRO = settings.mode === 'watch' && p !== undefined && p !== P1 && window.PRO2 ? window.PRO2 : window.PRO;
   if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
   const e = PRO.get(lv); if (!e) return null;
-  const L = E.LEVELS[lv] || E.LEVELS[12], c = { book: !!e.book, d: 64 };
+  const L = E.LEVELS[lvOld(lv)] || E.LEVELS[12], c = { book: !!e.book, d: 64 };
   if (e.limit.k === 'depth') c.d = e.limit.v; else if (e.limit.k === 'nodes') c.wnodes = e.limit.v; else c.ms = Math.round(e.limit.v * 1000);
   if (e.var) { if (!e.changed.includes('var') && L.noise !== undefined) { c.noise = L.noise; if (L.blunder) c.blunder = L.blunder; } else c.noise = e.var === 1 ? 25 : 70; }
   if (e.eval === 'hand') c.hand = 1;
@@ -1250,7 +1263,7 @@ function styleMove(ucis) {
 // player's rating (mostly close, sometimes clearly stronger or weaker). 10 min + 5 s per move; leaving a game in progress loses it.
 let rgame = null;
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
-const RT_LV = [0, 100, 245, 385, 530, 675, 865, 1105, 1250, 1440, 1535, 1635, 1730, 1970, 2105, 2195, 2300, 2500, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400];   // 13–25 raised 2026-11-09 for the new NNUE (about 0.5× its self-play gain over the old net; MODEL_CARD.md「評価関数 v2」). 18–25 (2026-11-08, re-spaced to about twice the time per step): interpolated from the Stockfish measurements of Lv.17 / the old 0.5 s level, then the time-doubling matches (MODEL_CARD.md「最上位レベル」)
+const RT_LV = [0, 100, 245, 385, 460, 530, 600, 675, 770, 865, 985, 1105, 1180, 1250, 1345, 1440, 1535, 1635, 1730, 1850, 1970, 2105, 2195, 2300, 2400, 2500, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400];   // 13–25 raised 2026-11-09 for the new NNUE (about 0.5× its self-play gain over the old net; MODEL_CARD.md「評価関数 v2」). 18–25 (2026-11-08, re-spaced to about twice the time per step): interpolated from the Stockfish measurements of Lv.17 / the old 0.5 s level, then the time-doubling matches (MODEL_CARD.md「最上位レベル」)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

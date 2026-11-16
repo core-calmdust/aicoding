@@ -142,7 +142,7 @@
       const id = ++jid, t0 = Date.now(), mvs = moves.slice();
       const reply = m => {
         if (stopped || id !== jid || over) return;
-        if (m === undefined || m === null || m < 0) { try { m = E.think(RULE, START, mvs, Math.min(ctx.level, 6)).move; } catch (e) { m = -1; } }   // the worker failed: a quick search on the page
+        if (m === undefined || m === null || m < 0) { try { m = E.think(RULE, START, mvs, Math.min(lvOld(ctx.level), 6)).move; } catch (e) { m = -1; } }   // the worker failed: a quick search on the page
         later(() => {
           if (id !== jid || over) return;
           if (!(m >= 0) || !pos.moves().includes(m)) { busy = false; hud(''); return; }
@@ -151,7 +151,7 @@
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? -1 : r.move); };
       worker.onerror = () => { worker = null; reply(-1); };
-      worker.postMessage({ type: 'think', id, variant: RULE, start: START, moves: mvs, level: ctx.level });
+      worker.postMessage({ type: 'think', id, variant: RULE, start: START, moves: mvs, level: engLv(ctx.level) });
     }
 
     /* ---------- input: tap a point (placing), a piece then a point (moving / flying), then the piece to take ---------- */
@@ -314,7 +314,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, variant: RULE, start: START, moves: mvs, level: Math.max(8, Math.min(9, ctx.level + 2)) });
+          hintW.postMessage({ type: 'think', id: j, variant: RULE, start: START, moves: mvs, level: Math.max(8, Math.min(9, lvOld(ctx.level) + 2)) });
         });
       },
       // 引き分け（ポータルの操作バー）：2人対局は合意で draw()。AI 対局は offerDraw() → 'yes' / 'no' / 'wait'
@@ -330,7 +330,7 @@
           if (!hintW) hintW = new Worker(BASE + 'engine.js' + VER);
           hintW.onmessage = e => { const r = e.data; if (r.type !== 'result' || r.id !== j) return; res(!stopped && !over && moves.length === mvs.length && typeof r.v === 'number' && -r.v <= 0 ? 'yes' : 'no'); };   // r.v: the side to move (you) — the AI's view is -v
           hintW.onerror = () => { hintW = null; res('no'); };
-          hintW.postMessage({ type: 'think', id: j, variant: RULE, start: START, moves: mvs, level: Math.max(8, Math.min(9, ctx.level + 2)) });
+          hintW.postMessage({ type: 'think', id: j, variant: RULE, start: START, moves: mvs, level: Math.max(8, Math.min(9, lvOld(ctx.level) + 2)) });
         });
       },
       draw() { if (pos && !over) finish(-1, 'draw'); },
@@ -352,7 +352,7 @@
 
   /* ---------- the board card ---------- */
   const LVN = {"ja":{"lv":["","入門","初級","初級+","中級","中級+","上級","上級+","達人","名人","最強"],"lvd":["","ときどき見落とす","1手読み","2手読み","3手読み","4手読み","5手読み","6手読み","約0.7秒・8手読み","約1.5秒・深読み","約3秒・最深読み"]},"en":{"lv":["","Novice","Beginner","Beginner+","Intermediate","Intermediate+","Advanced","Advanced+","Expert","Master","Strongest"],"lvd":["","misses things now and then","1-ply","2-ply","3-ply","4-ply","5-ply","6-ply","≈0.7 s, 8-ply","≈1.5 s, deep search","≈3 s, deepest search"]},"zh":{"lv":["","入门","初级","初级+","中级","中级+","高级","高级+","专家","大师","最强"],"lvd":["","偶尔会看漏","1步","2步","3步","4步","5步","6步","约0.7秒・8步","约1.5秒・深度计算","约3秒・最深计算"]},"ko":{"lv":["","입문","초급","초급+","중급","중급+","상급","상급+","달인","명인","최강"],"lvd":["","가끔 놓친다","1수 읽기","2수 읽기","3수 읽기","4수 읽기","5수 읽기","6수 읽기","약 0.7초・8수 읽기","약 1.5초・깊은 읽기","약 3초・가장 깊은 읽기"]},"es":{"lv":["","Novato","Principiante","Principiante+","Intermedio","Intermedio+","Avanzado","Avanzado+","Experto","Maestro","Máximo"],"lvd":["","a veces se le escapan cosas","1 jugada","2 jugadas","3 jugadas","4 jugadas","5 jugadas","6 jugadas","≈0,7 s, 8 jugadas","≈1,5 s, búsqueda profunda","≈3 s, la más profunda"]},"fr":{"lv":["","Novice","Débutant","Débutant+","Intermédiaire","Intermédiaire+","Avancé","Avancé+","Expert","Maître","Maximal"],"lvd":["","laisse parfois passer des choses","1 coup","2 coups","3 coups","4 coups","5 coups","6 coups","≈0,7 s, 8 coups","≈1,5 s, recherche profonde","≈3 s, la plus profonde"]},"pt":{"lv":["","Novato","Iniciante","Iniciante+","Intermediário","Intermediário+","Avançado","Avançado+","Especialista","Mestre","Máximo"],"lvd":["","às vezes deixa passar","1 lance","2 lances","3 lances","4 lances","5 lances","6 lances","≈0,7 s, 8 lances","≈1,5 s, busca profunda","≈3 s, a mais profunda"]},"de":{"lv":["","Neuling","Anfänger","Anfänger+","Mittel","Mittel+","Fortgeschritten","Fortgeschritten+","Experte","Meister","Maximal"],"lvd":["","übersieht manchmal etwas","1 Halbzug","2 Halbzüge","3 Halbzüge","4 Halbzüge","5 Halbzüge","6 Halbzüge","≈0,7 s, 8 Halbzüge","≈1,5 s, tiefe Suche","≈3 s, tiefste Suche"]},"hi":{"lv":["","नौसिखिया","शुरुआती","शुरुआती+","मध्यम","मध्यम+","उन्नत","उन्नत+","विशेषज्ञ","उस्ताद","सबसे मज़बूत"],"lvd":["","कभी-कभी चूक जाता है","1 चाल","2 चालें","3 चालें","4 चालें","5 चालें","6 चालें","≈0.7 से, 8 चालें","≈1.5 से, गहरी खोज","≈3 से, सबसे गहरी खोज"]},"ar":{"lv":["","مبتدئ جدًا","مبتدئ","مبتدئ+","متوسط","متوسط+","متقدم","متقدم+","خبير","أستاذ","الأقوى"],"lvd":["","يغفل أحيانًا","نقلة واحدة","نقلتان","3 نقلات","4 نقلات","5 نقلات","6 نقلات","≈0.7 ث، 8 نقلات","≈1.5 ث، بحث عميق","≈3 ث، أعمق بحث"]}, "ru": { "lv": ["", "Новичок", "Начальный", "Начальный+", "Средний", "Средний+", "Продвинутый", "Продвинутый+", "Эксперт", "Мастер", "Сильнейший"], "lvd": ["", "иногда упускает", "1 полуход", "2 полухода", "3 полухода", "4 полухода", "5 полуходов", "6 полуходов", "≈0,7 с, 8 полуходов", "≈1,5 с, глубокий поиск", "≈3 с, самый глубокий поиск"] }, "zh-TW": { "lv": ["", "初學", "入門", "入門+", "中級", "中級+", "高級", "高級+", "專家", "大師", "最強"], "lvd": ["", "偶爾會漏看", "1層", "2層", "3層", "4層", "5層", "6層", "約0.7秒，8層", "約1.5秒，深入搜尋", "約3秒，最深搜尋"] }, "id": { "lv": ["", "Pemula", "Dasar", "Dasar+", "Menengah", "Menengah+", "Mahir", "Mahir+", "Ahli", "Master", "Terkuat"], "lvd": ["", "kadang melewatkan", "1 lapis", "2 lapis", "3 lapis", "4 lapis", "5 lapis", "6 lapis", "≈0,7 dtk, 8 lapis", "≈1,5 dtk, pencarian mendalam", "≈3 dtk, pencarian terdalam"] }, "tr": { "lv": ["", "Acemi", "Başlangıç", "Başlangıç+", "Orta", "Orta+", "İleri", "İleri+", "Uzman", "Usta", "En güçlü"], "lvd": ["", "ara sıra kaçırır", "1 katman", "2 katman", "3 katman", "4 katman", "5 katman", "6 katman", "≈0,7 sn, 8 katman", "≈1,5 sn, derin arama", "≈3 sn, en derin arama"] }};
-  const RATING = [0, 100, 325, 825, 1270, 1550, 1665, 1830, 2335, 2500, 2700];   // morris RT_LV (rated games)
+  const RATING = [0, 100, 325, 825, 1270, 1550, 1665, 1830, 2080, 2335, 2500, 2700];   // morris RT_LV (rated games)
   const W6 = (a, b, c, d, e, f) => [a, a, b, b, c, c, d, d, e, f];
   const WHO = {
     ja: W6('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
@@ -370,10 +370,23 @@
     id: W6('untuk pemula', 'setelah tahu aturannya', 'mulai terbiasa', 'untuk pemain kuat', 'sulit bahkan bagi ahli', 'yang terkuat'),
     tr: W6('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'uzmanlar için bile zor', 'en güçlüsü'),
   };
-  function levelInfo(n, lang) {   // n = 1..10
+  // 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–10 are the levels people play (steps
+  // added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+  // level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+  const LVX = [[1], [2], [3], [4], [5], [6], [7], [7, 8, 0.5], [8], [9], [10]], LV_HUMAN = 10, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11];   // LV_MIG: an old level → the new one (saved settings)
+  const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+  const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+  const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+  const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+  function levelInfo0(n, lang) {   // n = 1..10
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;
     return { name: L.lv[n], desc: L.lvd[n], rating: RATING[n], who: W[n - 1] };
+  }  function levelInfo(n, lang) {   // the levels people see → the engine's (LVX); 天上 above LV_HUMAN
+    const x = Object.assign({}, levelInfo0(lvOld(n), lang)), mix = (LVX[n - 1] || []).length > 1; x.rating = RATING[n];
+    if (n > LV_HUMAN) x.name = tenjoName(n, lang); else if (x.name && /^Lv\.\d+$/.test(x.name)) x.name = 'Lv.' + n; else if (x.name && mix) { const a = x.name, b = levelInfo0(LVX[n - 1][1], lang).name; x.name = /\+$/.test(a) && b ? b + '−' : a + '+'; }
+    return x;
   }
+
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.morris = { kindFirst: true, sizes: [9, 12, 6], size0: 9, sizeLabel: l => rtx(l).L, sizeName: (z, l) => rtx(l).n[RIX[RULE_OF[z] || 'nine']], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rtx(l).d[RIX[RULE_OF[+v] || 'nine']] } : null, levels: 10, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.morris = { kindFirst: true, sizes: [9, 12, 6], size0: 9, sizeLabel: l => rtx(l).L, sizeName: (z, l) => rtx(l).n[RIX[RULE_OF[z] || 'nine']], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rtx(l).d[RIX[RULE_OF[+v] || 'nine']] } : null, levels: 11, reward: 10, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };   // table: start() plays on the chabudai itself
 })();

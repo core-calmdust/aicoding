@@ -227,12 +227,12 @@
       const id = ++jid, t0 = Date.now(), mvs = moves.slice();
       const reply = m => {
         if (stopped || id !== jid || over) return;
-        if (m == null || m < 0) { try { m = E.think(null, mvs, Math.min(ctx.level, 6)).move; } catch (e) { m = -1; } }
+        if (m == null || m < 0) { try { m = E.think(null, mvs, Math.min(lvOld(ctx.level), 6)).move; } catch (e) { m = -1; } }
         later(() => { if (id !== jid || over) return; thinking = false; if (m == null || !legal.includes(m)) m = legal[0]; commit(m); }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? null : r.move); };
       worker.onerror = () => { worker = null; reply(null); };
-      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule });
+      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: engLv(ctx.level), rule });
     }
 
     /* ---------- input ---------- */
@@ -310,7 +310,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule });
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, lvOld(ctx.level) + 2)), rule });
         });
       },
       // 引き分け（ポータルの操作バー）：2人対局は合意で draw()。AI 対局は offerDraw() → 'yes' / 'no' / 'wait'
@@ -326,7 +326,7 @@
           if (!hintW) hintW = newWorker();
           hintW.onmessage = e => { const r = e.data; if (r.type !== 'result' || r.id !== j) return; res(!stopped && !over && moves.length === mvs.length && typeof r.v === 'number' && -r.v <= 0 ? 'yes' : 'no'); };   // r.v: the side to move (you) — the AI's view is -v
           hintW.onerror = () => { hintW = null; res('no'); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule });
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, lvOld(ctx.level) + 2)), rule });
         });
       },
       draw() { if (pos && !over) finish(-1, 'draw'); },
@@ -363,7 +363,7 @@
     id: ['Pemula: menuju takhta tapi melewatkan tangkapan', 'Dasar–menengah: melihat tangkapan beberapa langkah ke depan', 'Mahir: memperhitungkan pemindahan dan cincin sekitar takhta', 'Ahli: pencarian mendalam yang membuka jalan sang ratu'],
     tr: ['Başlangıç: tahta yönelir ama almaları kaçırır', 'Acemi–orta: birkaç hamle ilerideki almaları görür', 'İleri: yeniden yerleştirmeleri ve taht çevresini hesaplar', 'Uzman: kraliçenin yolunu açan derin arama'],
   };
-  const RATING = [0, 100, 260, 415, 575, 730, 890, 1045, 1205, 1365, 1520, 1680, 1835, 1995, 2095, 2170, 2245, 2310, 2375, 2435, 2500, 2700, 2800, 2900];   // agon RT_LV (rated games)
+  const RATING = [0, 100, 260, 415, 575, 730, 890, 1045, 1205, 1285, 1365, 1520, 1600, 1680, 1835, 1915, 1995, 2095, 2170, 2245, 2310, 2375, 2435, 2500, 2700, 2800, 2900];   // agon RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
@@ -382,11 +382,24 @@
     tr: W7('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'uzmanlar için bile zor', 'en güçlüsü'),
   };
   const LVD_TOP = { ja: '最強：全CPUコアで長時間、深く読む', en: 'Strongest: long, deep search on every CPU core', zh: '最强：用所有CPU核心长时间深入计算', 'zh-TW': '最強：用所有CPU核心長時間深入計算', ko: '최강: 모든 CPU 코어로 오래, 깊이 읽음', es: 'Máximo: búsqueda larga y profunda con todos los núcleos', fr: 'Ultime : calcul long et profond sur tous les cœurs', pt: 'Máximo: busca longa e profunda com todos os núcleos', de: 'Höchststufe: lange, tiefe Suche auf allen CPU-Kernen', ru: 'Сильнейший: долгий глубокий расчёт на всех ядрах', tr: 'En güçlü: tüm CPU çekirdekleriyle uzun, derin arama', id: 'Terkuat: pencarian panjang dan dalam dengan semua inti CPU', hi: 'सबसे मज़बूत: सभी CPU कोर पर लंबी, गहरी खोज', ar: 'الأقوى: بحث طويل وعميق بكل أنوية المعالج' };   // (Lv.21〜23, 2026-11-09)
-  function levelInfo(n, lang) {
+  // 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–23 are the levels people play (steps
+  // added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+  // level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+  const LVX = [[1], [2], [3], [4], [5], [6], [7], [8], [8, 9, 0.5], [9], [10], [10, 11, 0.5], [11], [12], [12, 13, 0.5], [13], [14], [15], [16], [17], [18], [19], [20], [21], [22], [23]], LV_HUMAN = 23, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];   // LV_MIG: an old level → the new one (saved settings)
+  const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+  const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+  const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+  const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+  function levelInfo0(n, lang) {
     const D = LVD[lang] || LVD.en, W = WHO[lang] || WHO.en;
     return { name: '', desc: n > 20 ? LVD_TOP[lang] || LVD_TOP.en : D[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[Math.min(n, 20) - 1] };
+  }  function levelInfo(n, lang) {   // the levels people see → the engine's (LVX); 天上 above LV_HUMAN
+    const x = Object.assign({}, levelInfo0(lvOld(n), lang)); x.rating = RATING[n];
+    if (n > LV_HUMAN) x.name = tenjoName(n, lang); else if (x.name && /^Lv\.\d+$/.test(x.name)) x.name = 'Lv.' + n;
+    return x;
   }
+
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.agon = { levels: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: [1, 2], size0: 1, sizeLabel: l => rn(l).L,
+  window.Atlas3D.agon = { levels: 26, reward: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: [1, 2], size0: 1, sizeLabel: l => rn(l).L,
     sizeName: (z, l) => rn(l).n[(+z || 1) - 1], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[(+v || 1) - 1] } : null, levelInfo, start };
 })();

@@ -233,7 +233,7 @@
       const id = ++jid, t0 = Date.now(), mvs = moves.slice();
       const reply = m => {
         if (stopped || id !== jid || over) return;
-        if (m == null || m < 0) { try { m = E.think(START, mvs, ctx.level, v).move; } catch (e) { m = -1; } }   // the worker failed: the page's (JS) search
+        if (m == null || m < 0) { try { m = E.think(START, mvs, lvOld(ctx.level), v).move; } catch (e) { m = -1; } }   // the worker failed: the page's (JS) search
         later(() => {
           if (id !== jid || over) return;
           thinking = false;
@@ -243,7 +243,7 @@
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? -1 : r.move); };
       worker.onerror = () => { worker = null; reply(-1); };
-      worker.postMessage({ type: 'think', id, start: START, moves: mvs, level: ctx.level, v });
+      worker.postMessage({ type: 'think', id, start: START, moves: mvs, level: engLv(ctx.level), v });
     }
 
     /* ---------- input ---------- */
@@ -378,7 +378,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, start: START, moves: mvs, level: Math.max(13, Math.min(16, ctx.level + 2)), v });
+          hintW.postMessage({ type: 'think', id: j, start: START, moves: mvs, level: Math.max(13, Math.min(16, lvOld(ctx.level) + 2)), v });
         });
       },
       // 引き分け（ポータルの操作バー）：2人対局は合意で draw()。AI 対局は offerDraw() → 'yes' / 'no' / 'wait'
@@ -394,7 +394,7 @@
           if (!hintW) hintW = new Worker(BASE + 'engine.js' + VER);
           hintW.onmessage = e => { const r = e.data; if (r.type !== 'result' || r.id !== j) return; res(!stopped && !over && moves.length === mvs.length && typeof r.v === 'number' && -r.v <= 0 ? 'yes' : 'no'); };   // r.v: the side to move (you) — the AI's view is -v
           hintW.onerror = () => { hintW = null; res('no'); };
-          hintW.postMessage({ type: 'think', id: j, start: START, moves: mvs, level: Math.max(13, Math.min(16, ctx.level + 2)), v });
+          hintW.postMessage({ type: 'think', id: j, start: START, moves: mvs, level: Math.max(13, Math.min(16, lvOld(ctx.level) + 2)), v });
         });
       },
       draw() { if (pos && !over) finish(-1, 'draw'); },
@@ -415,12 +415,25 @@
   }
 
   /* ---------- the board card ---------- */
-  const RATING = [100, 230, 340, 470, 655, 735, 810, 920, 1050, 1135, 1255, 1400, 1505, 1620, 1735, 1965, 2105, 2240, 2400, 2500, 2700, 2800, 2900, 3000, 3100];   // tafl RT_LV (rated games; Lv.21–25 since 2026-11-08)
-  function levelInfo(i, lang) {   // i = 1..25 (the game's level: 15 kyu … 1 kyu, 1 dan … 5 dan, Lv.21–25)
+  const RATING = [100, 230, 340, 470, 560, 655, 735, 810, 920, 1050, 1135, 1255, 1330, 1400, 1505, 1620, 1735, 1850, 1965, 2035, 2105, 2240, 2320, 2400, 2500, 2700, 2800, 2900, 3000, 3100];   // tafl RT_LV (rated games; Lv.21–25 since 2026-11-08)
+  // 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–25 are the levels people play (steps
+  // added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+  // level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+  const LVX = [[1], [2], [3], [4], [4, 5, 0.5], [5], [6], [7], [8], [9], [10], [11], [11, 12, 0.5], [12], [13], [14], [15], [15, 16, 0.5], [16], [16, 17, 0.5], [17], [18], [18, 19, 0.5], [19], [20], [21], [22], [23], [24], [25]], LV_HUMAN = 25, LV_MIG = [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 19, 21, 22, 24, 25, 26, 27, 28, 29, 30];   // LV_MIG: an old level → the new one (saved settings)
+  const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+  const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+  const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+  const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+  function levelInfo0(i, lang) {   // i = 1..25 (the game's level: 15 kyu … 1 kyu, 1 dan … 5 dan, Lv.21–25)
     const L = TX[lang] || TX.en;
     return { name: 'Lv.' + i, desc: '', rating: RATING[i - 1] };
+  }  function levelInfo(n, lang) {   // the levels people see → the engine's (LVX); 天上 above LV_HUMAN
+    const x = Object.assign({}, levelInfo0(lvOld(n), lang)); x.rating = RATING[n - 1];
+    if (n > LV_HUMAN) x.name = tenjoName(n, lang); else if (x.name && /^Lv\.\d+$/.test(x.name)) x.name = 'Lv.' + n;
+    return x;
   }
+
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.tafl = { levels: 25, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizePick: true, sizes: [11, 111, 112, 9, 7, 71], size0: 11, sizeLabel: l => SIZE_L[l] || SIZE_L.en,
+  window.Atlas3D.tafl = { levels: 30, reward: 25, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizePick: true, sizes: [11, 111, 112, 9, 7, 71], size0: 11, sizeLabel: l => SIZE_L[l] || SIZE_L.en,
     sizeName: (z, l) => rn(l).n[RIDS.indexOf(VAR[z] || 'copenhagen')], optInfo: (sid, v, l) => sid === 'bvSize' && VAR[+v] ? { sub: rn(l).d[RIDS.indexOf(VAR[+v])] } : null, levelInfo, start };   // table: start() plays on the chabudai itself
 })();
