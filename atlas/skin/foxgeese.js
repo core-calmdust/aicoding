@@ -70,7 +70,7 @@ html.atlas-skin.atlas-fox:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) 
       draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (side === 1 || side === 2) draft.color = side;
       if (lv >= 1 && lv <= 20) draft.level = lv;
-      { const q = new URLSearchParams(location.search), R = q.get('rule') || { 13: 'g13', 17: 'g17' }[+q.get('size')]; if (E.RULE_ORDER.includes(R) && draft.mode !== 'rated') draft.rule = R; }   // (the portal card's 種目: size 13 · 17 = the number of geese)
+      { const q = new URLSearchParams(location.search), R = q.get('rule') || { 15: 'g15', 17: 'g17', 13: 'g13', 113: 'g13n' }[+q.get('size')]; if (E.RULE_ORDER.includes(R) && draft.mode !== 'rated') draft.rule = R; }   // (the portal card's 種目: size 15 · 17 · 13 = the number of geese, 113 = 13 geese without stepping back; old size=13 / 17 links keep their meaning)
       segSync(); document.getElementById('btnStart').click();
       return true;
     },

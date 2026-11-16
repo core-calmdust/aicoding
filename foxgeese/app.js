@@ -10,13 +10,13 @@ const mFrom = E.mFrom, mTo = E.mTo, mRm = E.mRm;
 const pathStarts = (m, pre) => { const p = E.path(m); return pre.every((x, k) => p[k] === x); };
 const hopsOf = (pos, m) => Math.max(0, E.path(pos, m).length - 1);   // squares along the move: 1 = a step, 2+ = leaps (a slide counts 1)
 const NS_ = () => E.N, NN_ = () => E.NN;   // board size of the current rule (6 / 8 / 10)
-let gv = 'g13';
+let gv = E.DEFAULT_RULE;            // the rule set in play (g15 = 15 geese, no retreat: the default)
 let HB = null;                        // PC header bar (shared/headerbar.js)
 let startSpec = null;                 // lesson / puzzle start position (null = the normal starting position)
 let moves = [];                       // game record (move numbers, see engine.js)
 let cur = 0;                          // number of moves shown
 let flip = false;                     // board seen from Black's side (Black at the bottom)
-function setVariant(k) { gv = RULE_ORDER.includes(k || settings.rule) ? (k || settings.rule) : 'g13'; settings.rule = gv; E.setRule(gv); anaCache.clear(); document.documentElement.dataset.rule = gv; }
+function setVariant(k) { gv = RULE_ORDER.includes(k || settings.rule) ? (k || settings.rule) : E.DEFAULT_RULE; settings.rule = gv; E.setRule(gv); anaCache.clear(); document.documentElement.dataset.rule = gv; }
 const startKey = () => gv + ':' + (startSpec ? JSON.stringify(startSpec) : '');
 const keyOf = i => startKey() + '|' + moves.slice(0, i).join(',');
 let posCache = { key: '' };
@@ -42,7 +42,7 @@ const isPass = m => m < 0;
 
 // ====================================================================== state
 const STORE = 'aicoding-foxgeese';
-const settings = { mode: 'ai', rule: 'g13', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'oak', pcs: 'wood' };
+const settings = { mode: 'ai', rule: E.DEFAULT_RULE, color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'oak', pcs: 'wood' };
 const SUPPORTED_ALL = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 // the languages whose game texts are complete (i18n-fg.js / i18n-fg-more.js: a language without its own 'title' is not offered)
 const SUPPORTED = SUPPORTED_ALL.filter(l => l === 'ja' || l === 'en' || (window.FG_LANGS || []).includes(l));
@@ -112,7 +112,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=3';
+const ENGINE_URL = 'engine.js?v=4';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -972,7 +972,7 @@ function designApply() {
   if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'wood';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }
-function designSpec() { return ruleStart('g13'); }
+function designSpec() { return ruleStart(E.DEFAULT_RULE); }
 function designPickers() {
   const r1 = $('#bdRow'), r2 = $('#pcRow'); if (!r1 || !r2) return;
   const sp = designSpec();
@@ -1056,7 +1056,7 @@ function tourPage(id, spec, o) {
     id, title: () => t('tr.' + id + '.t'), body: () => t('tr.' + id + '.b').split('\n').map(x => `<p>${x}</p>`).join(''),
     task: () => t('tr.' + id + '.task'),
     setup(api) {
-      const rl = spec.rule || 'g13', keep = E.rule;
+      const rl = spec.rule || E.DEFAULT_RULE, keep = E.rule;   // (the tour teaches the default rules: the geese never step back)
       const W = f => { E.setRule(rl); try { return f(); } finally { E.setRule(keep); } };
       const pos = W(() => E.Pos.from(spec)), me = pos.turn;
       const st = { sel: -1, trail: [], last: -1, took: [], busy: false, done: false };
@@ -1115,8 +1115,8 @@ const sq8 = nm => sqIdxN(nm);
 const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/foxgeese.webp?v=1', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
 const TOUR_PAGES = [
   introPage(),
-  // the board: 33 points, the fox in the middle, 13 geese on the near side
-  tourRead('board', () => tourPic(ruleStart('g13'), { marks: { [sq8('d4')]: 'ok' } })),
+  // the board: 33 points, the fox in the middle, 15 geese on the near side (the default rules)
+  tourRead('board', () => tourPic(ruleStart(E.DEFAULT_RULE), { marks: { [sq8('d4')]: 'ok' } })),
   // the fox steps along a line
   tourPage('fstep', specOf({ f: 'd4', g: ['a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'c2', 'd2', 'e2', 'c1', 'd1', 'e1'], side: P1 }), { check: (m, pos, before, fx) => fx.path.length === 2 && !fx.takes.length ? 'ok' : t('tr.fstep.ng') }),
   // the fox jumps over a goose and takes it
@@ -1131,7 +1131,7 @@ const TOUR_PAGES = [
   tourPage('trap', specOf({ f: 'd7', g: ['c7', 'e7', 'c6', 'e6', 'd5', 'd4', 'c5', 'e5', 'b5'], side: P2, cap: 4 }), { marks: ['d6'], check: (m, pos) => E.judge(pos).winner === P2 ? 'ok' : t('tr.trap.ng') }),
   // the fox wins: five geese or fewer
   tourRead('foxwin', () => tourPic(specOf({ f: 'd4', g: ['c3', 'e3', 'd2', 'c1', 'e1'], cap: 8 }))),
-  // the two rule sets
+  // the four rule sets
   tourRead('vars', () => `<div class="tour-pic tour-vars">${RULE_ORDER.map(r => `<figure>${miniSVG(ruleStart(r), { cls: '' })}<figcaption>${t('rule.' + r)}</figcaption></figure>`).join('')}</div>`),
 ];
 const TOUR_VARS = TOUR_PAGES.findIndex(p => p.id === 'vars');
@@ -1161,14 +1161,14 @@ function segSync() {
   const m = draft.mode, game = m === 'ai' || m === 'pvp' || m === 'watch';
   $('#fRatedInfo').classList.toggle('hidden', m !== 'rated');
   if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml();
-  $('#fRules').classList.toggle('hidden', !(game || m === 'rated' || m === 'online'));
-  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleArt(r), { cls: 'gmini' })}</span><b>${t('rule.' + r)}</b><p>${r === 'g13' ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
+  $('#fRules').classList.toggle('hidden', !(game || m === 'online'));   // (rated games: always the default rules, g15 — named on the rating card)
+  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleArt(r), { cls: 'gmini' })}</span><b>${t('rule.' + r)}</b><p>${r === E.DEFAULT_RULE ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
   $('#fColor').classList.toggle('hidden', m !== 'ai');
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
   $('#fDisplay').classList.toggle('hidden', !game);
   $('#fInfo').classList.toggle('hidden', game || m === 'rated');
-  $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc') : m === 'puzzle' ? t('pz.desc') : '';
+  $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc') : m === 'puzzle' ? t('pz.desc') + ' ' + t('pz.rule') : '';
   $('#btnStart').textContent = m === 'lesson' ? t('ng.toLessons') : m === 'puzzle' ? t('ng.toPuzzles') : m === 'rated' ? t('rt.start') : t('start');
   $('#levelLabel').textContent = m === 'watch' ? t('ng.level1') : t('ng.level');
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
@@ -1196,7 +1196,7 @@ $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
 // the ルール button on every card (shared/ngtabs.js): the tutorial, or the board-size page
 $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
-$('#ruleCards').ngtRules = r => openRules(null, r === 'g13' ? 0 : TOUR_VARS);
+$('#ruleCards').ngtRules = r => openRules(null, r === E.DEFAULT_RULE ? 0 : TOUR_VARS);
 function ruleStart(r) { const keep = E.rule; E.setRule(r); const sp = E.Pos.from(null).spec(); E.setRule(keep); return sp; }
 // the picture of a rule set on its card: what makes it different (a blocked counter and a leap / a capture / the two rows)
 function ruleArt(r) { return ruleStart(r); }
@@ -1235,7 +1235,7 @@ $('#btnStart').onclick = () => {
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
   Object.assign(settings, { eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, num: $('#optNum').checked });
-  if (draft.mode === 'rated') { rtStart(draft.rule); return; }
+  if (draft.mode === 'rated') { rtStart(); return; }
   if (draft.resume) { resumeWith(); return; }
   exitSpecial();
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2 });
@@ -1308,8 +1308,9 @@ function rtForfeit() {
   if (x) toast(t('rt.abandoned', { o: x.old, n: x.now, d: rtD(x.d) }), 3200);
   return x;
 }
-function rtStart(rule) {
-  if (rule) { setVariant(rule); drawLines(); }
+// rated games are always played with the default rules (15 geese, no retreat); RT_LV was measured on the 13 geese
+function rtStart() {
+  setVariant(E.DEFAULT_RULE); drawLines();
   if (Placement.gate(rtLoad(), rtStore, () => rtStart())) return;
   const S = rtLoad(), pk = rtPick(S.r);
   exitSpecial();
@@ -1320,7 +1321,7 @@ function rtStart(rule) {
 function rtStatsHtml() {
   const S = rtLoad(), h = S.hist.slice(-10).reverse();
   let html = `<div class="rt-card"><div class="rt-head"><span class="rt-lbl">${t('rt.title')}</span><b class="rt-r">R ${S.r}</b><span class="rt-rank">${rtRank(S.r)}</span>${Placement.on(S) ? Placement.badge(S) : S.n < 10 ? `<span class="rt-prov">${t('rt.prov')}</span>` : ''}</div>`;
-  html += `<div class="rt-rec">${S.n ? t('rt.rec', { n: S.n, w: S.w, l: S.l, d: S.d }) : t('rt.none')}</div>`;
+  html += `<div class="rt-rec">${S.n ? t('rt.rec', { n: S.n, w: S.w, l: S.l, d: S.d }) : t('rt.none')}</div><div class="rt-rec">${t('ng.rules')}: ${t('rule.' + E.DEFAULT_RULE)}</div>`;
   html += Placement.note(S);
   const sp = S.hist.slice(-30);
   if (sp.length >= 2) {
@@ -1349,7 +1350,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=3').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=4').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
@@ -1458,7 +1459,7 @@ $('#btnLessonRetry').onclick = () => { if (lesson && lesson.virt) startPractice(
 $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
 function enterSpecial(spec) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; stopPlay();
-  { const rl = spec && spec.rule || 'g13'; if (gv !== rl) { gv = rl; E.setRule(rl); drawLines(); } }
+  { const rl = spec && spec.rule || 'g13'; /* (content without a rule is the old 13-geese content) */ if (gv !== rl) { gv = rl; E.setRule(rl); drawLines(); } }
   startSpec = spec;
   moves = []; cur = 0; reviewing = false; hintList = null; lessonMarks = []; labelList = null; evals = [];
 }
@@ -1796,7 +1797,7 @@ document.addEventListener('click', e => { if (stTimer && !e.target.closest('[dat
 $('#lsFb').addEventListener('click', e => {
   if (!e.target.closest('#lsPlayHere') || !lesson || !lesson.study) return;
   const mv = lesson.g.study.line.slice(0, lesson.i), side = mv.length % 2 === 0 ? P1 : P2;
-  savedGame = null; exitSpecial(); setVariant('g13'); drawLines();
+  savedGame = null; exitSpecial(); setVariant(settings.rule); drawLines();
   busyToken++; cancelWorker('ai'); cancelWorker('ana');
   Object.assign(settings, { mode: 'ai' }); humanColor = side; rgame = null;
   moves = mv; cur = mv.length; evals = []; reviewing = false; gameOverShown = false;
@@ -1875,7 +1876,7 @@ async function openPuzzles() {
   const cont = PZBook.resume(idx.map(i => ({ key: String(i), recs: pzRecs(Ts[i], pr), cat: Ts[i].grp })), PZ_LAST);
   const box = $('#pzLevels');
   box.innerHTML = PZBook.home({
-    title: t('pz.title'), lead: t('pz.desc'), all: idx.map(i => pzRecs(Ts[i], pr)),
+    title: t('pz.title'), lead: t('pz.desc') + ' ' + t('pz.rule'), all: idx.map(i => pzRecs(Ts[i], pr)),
     cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: t('pz.th.' + Ts[+cont.key].id) },
     daily: dl ? [{ key: '1', board: pzThumbOf(Ts[dl.L], dl.j, dl.date).board, title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: di.today, go: t('daily.go'),
       sub: `${t('pz.th.' + Ts[dl.L].id)} · 🔥 ${t('daily.streak', { n: di.streak })}${di.best > 1 ? ' · ' + t('daily.best', { n: di.best }) : ''}` }] : [],
