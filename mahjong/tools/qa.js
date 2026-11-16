@@ -60,7 +60,7 @@ async function runtime() {
   const myTurn = async p => { await p.evaluate(`void JANKA.startGame()`);
     await p.waitForFunction(`JANKA.UIS && JANKA.UIS.kind === 'turn' && document.querySelector('#hand .tl.drawn')`, null, { timeout: 120000 }); await p.waitForTimeout(1500);
     await p.waitForFunction(`JANKA.UIS.kind === 'turn'`, null, { timeout: 60000 }); };
-  const traceReach = `(()=>{const TB=JANKA.TB;window.__rc=null;const o=TB.reach.bind(TB);TB.reach=(g,seat,f,to)=>{const r=o(g,seat,f,to);if(seat===0&&!__rc){const rig=TB.hand(0);__rc={page:!!(f&&f.page),layer:rig.layers.isEnabled(1),hidden:!g.visible,fx:f?f.x:null,ghost:document.querySelectorAll('.tl.ghost').length,dist:Math.hypot(rig.position.x-g.position.x,rig.position.z-g.position.z)};const iv=setInterval(()=>{if(TB._ov&&TB._ov.g)__rc.ovTile=true;else if(g.visible&&!__rc.ovTile)__rc.shownEarly=true},10);setTimeout(()=>{clearInterval(iv);__rc.ghostLater=document.querySelectorAll('.tl.ghost').length;__rc.ovTile=!!__rc.ovTile},5000)}return r}})()`;
+  const traceReach = `(()=>{const TB=JANKA.TB;window.__rc=null;const o=TB.reach.bind(TB);TB.reach=(g,seat,f,to)=>{const r=o(g,seat,f,to);if(seat===0&&!__rc){const rig=TB.hand(0);__rc={page:!!(f&&f.page),layer:rig.layers.isEnabled(1),hidden:!g.visible,shape:(()=>{const gh=document.querySelector('.tl.ghost'),h=document.querySelector('#hand .hrow .tl[data-id]');if(!gh||!h)return null;const a=getComputedStyle(gh),c=getComputedStyle(h);const nr=(x,y)=>Math.abs(parseFloat(x)-parseFloat(y))<.1,ok=nr(a.borderTopLeftRadius,c.borderTopLeftRadius)&&a.boxShadow===c.boxShadow&&nr(getComputedStyle(gh.querySelector('img')).borderTopLeftRadius,getComputedStyle(h.querySelector('img')).borderTopLeftRadius);return ok||[a.borderTopLeftRadius,c.borderTopLeftRadius,a.boxShadow,c.boxShadow,getComputedStyle(gh.querySelector('img')).borderTopLeftRadius,getComputedStyle(h.querySelector('img')).borderTopLeftRadius].join(' | ')})(),fx:f?f.x:null,ghost:document.querySelectorAll('.tl.ghost').length,dist:Math.hypot(rig.position.x-g.position.x,rig.position.z-g.position.z)};const iv=setInterval(()=>{if(TB._ov&&TB._ov.g)__rc.ovTile=true;else if(g.visible&&!__rc.ovTile)__rc.shownEarly=true},10);setTimeout(()=>{clearInterval(iv);__rc.ghostLater=document.querySelectorAll('.tl.ghost').length;__rc.ovTile=!!__rc.ovTile},5000)}return r}})()`;
 
   if (want('discard')) { console.log('[discard] the player\'s own discard (tap, PC)');
     // 2026-11-16: the hand must take the very tile of the page's hand row (page pose, drawn over the page), the page's copy
@@ -70,6 +70,8 @@ async function runtime() {
     const r = await p.evaluate('__rc');
     ok('tap: the hand takes the tile from the hand row (page pose)', !!(r && r.page && r.layer), JSON.stringify(r));
     // (2026-11-16, ユーザー「ツモ牌を捨てるとき牌が二重っぽい」) the 3D tile is not drawn behind the page's copy before the hand takes it
+    // (2026-11-16, ユーザー「捨て牌の形が一瞬長方形に」) the copy has the row's rounded corners and purple edge
+    ok('tap: the copy keeps the tile\'s rounded shape', !!(r && r.shape === true), JSON.stringify(r && r.shape));
     ok('tap: no 3D tile behind the page copy until it is taken', !!(r && r.hidden && !r.shownEarly), JSON.stringify(r));   // (2026-11-16: checked over the whole wait — the river's layout had shown it again right after reach())
     ok('tap: the copy of the tile is shown, then gone when taken', !!(r && r.ghost === 1 && r.ghostLater === 0 && r.ovTile), r && `ghost ${r.ghost}→${r.ghostLater} ovTile ${r.ovTile}`);
     ok('no page errors (game, PC)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
@@ -86,6 +88,15 @@ async function runtime() {
       return a.concat([e2&&e2.classList.contains('dset'),e2&&getComputedStyle(e2,'::before').visibility])})()`);
     ok('a dora put into the row: no glow while it settles, then it glows', Array.isArray(r) && r[0] === true && r[1] === 'hidden' && r[2] === false && r[3] === 'visible', JSON.stringify(r));
     ok('no page errors (dora settle)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
+
+  if (want('discard')) { console.log('[discard] the results: a click anywhere goes on');
+    // (2026-11-16, ユーザー「得点計算画面でも次へを押さず、画面の適当なところクリックでページ送り」)
+    const p = await page(PC); await myTurn(p);
+    await p.evaluate(`window.__mv=0;void JANKA.showMoves({scores:[26000,24000,25000,25000],delta:[1000,-1000,0,0]},{win:[0]}).then(()=>{__mv=1})`);   // (void: not waited for here)
+    await p.waitForTimeout(900); const box = await p.evaluate(`(()=>{const r=document.querySelector('#modal').getBoundingClientRect();return [r.left+r.width*.5,r.top+r.height*.06]})()`);
+    await p.mouse.click(box[0], box[1]); await p.waitForTimeout(400);
+    ok('results: a click on an empty spot goes on', await p.evaluate('__mv') === 1);
+    ok('no page errors (results click)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('drag')) { console.log('[drag] phone: slide a tile to the middle');
     const p = await page(SP); await myTurn(p); await p.evaluate(traceReach);

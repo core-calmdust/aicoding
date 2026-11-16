@@ -1430,7 +1430,9 @@ function layoutRiver(s, anim) {
       // flat picture) takes over only when it is picked up)
       const hud = el.closest('.hud') || root, [hx, hy] = off(hud), gh = el.cloneNode(true);
       gh.classList.remove('up', 'can', 'no', 'hdrag', 'hdrop'); gh.classList.add('ghost'); gh.querySelectorAll('kbd,.hit').forEach(n => n.remove());
-      gh.style.cssText = `position:absolute;left:${ex - hx}px;top:${ey - hy}px;width:${el.offsetWidth}px;height:${el.offsetHeight}px;margin:0;pointer-events:none`;
+      // (2026-11-16, ユーザー「捨て牌の形が一瞬長方形になる。牌の角丸を踏襲して」) the copy lives outside the hand row, where the row's tile
+      // size (--tw, which sets the rounded corners) and its purple edge (box-shadow) do not reach: both are carried over
+      gh.style.cssText = `position:absolute;left:${ex - hx}px;top:${ey - hy}px;width:${el.offsetWidth}px;height:${el.offsetHeight}px;margin:0;pointer-events:none;--tw:${parseFloat(getComputedStyle(el).width)}px;border-radius:${getComputedStyle(el).borderRadius};box-shadow:${getComputedStyle(el).boxShadow}`;
       hud.appendChild(gh);
       const drop = () => { gh.remove(); if (TB.onPageTake === drop) TB.onPageTake = null; };
       TB.onPageTake = drop; setTimeout(drop, 1200); }
@@ -1900,7 +1902,13 @@ function scoreRows(d, winners) {
   }).join('')}</div>`;
   void g;
 }
-function waitClick(box, sel) { return new Promise(res => { const b = box.querySelector(sel); b.onclick = () => { SND.pick(); res(); }; if (AUTO) sleep(1600).then(res); }); }
+// any: (2026-11-16, ユーザー「得点計算画面でも次へを押さず、画面の適当なところクリックでページ送り」) a click anywhere on the screen
+// does it too (not on another button; not in the first moment, so a click meant for the table does not skip the results)
+function waitClick(box, sel, any) { return new Promise(res => { const b = box.querySelector(sel), m = $('#modal'), t0 = performance.now(); let done = false;
+  const go = () => { if (done) return; done = true; SND.pick(); if (any) m.removeEventListener('click', onAny); res(); };
+  const onAny = e => { if (performance.now() - t0 < 400 || (e.target.closest('button, a, input, [data-a]') && !e.target.closest(sel))) return; go(); };
+  b.onclick = e => { e.stopPropagation(); go(); }; if (any) m.addEventListener('click', onAny);
+  if (AUTO) sleep(1600).then(() => { if (!done) { done = true; if (any) m.removeEventListener('click', onAny); res(); } }); }); }
 
 // ---- the end of a hand (2026-11-14, ユーザー: the basic plan) ----
 //  1  the win: the winner's character large, the hand, the yaku one by one, the points large        (showAgari, one per winner)
@@ -1937,7 +1945,7 @@ async function showAgari(d, r, last) {
   if (lim) sleep(1000 + ys.length * 160).then(() => SND.limit(lv));
   if (window.VFX) sleep(900 + ys.length * 160).then(() => { const tot = box && box.querySelector ? box.querySelector('.ag-pw') : document.querySelector('.agst .ag-pw'); if (!tot || !tot.isConnected) return; const p = VFX.at(tot);
     VFX.burst(p.x, p.y, { scale: .9 + lv * .18, pal: VFX.pal(lv >= 3 ? '#ffd56a' : c.color), sparks: 24 + lv * 10, embers: 10 + lv * 4, petals: lv >= 2 ? 8 + lv * 5 : 0, flare: lv >= 2, dur: 1000 + lv * 120 }); });   // (2026-11-16: the points land in light)
-  await waitClick(box, '.nx');
+  await waitClick(box, '.nx', true);
   void last;
 }
 // the points move. o.title: a heading (流局 …) · o.tags[seat]: a word on the panel (テンパイ / ノーテン) · o.win: the winners' seats
@@ -2004,7 +2012,7 @@ async function showMoves(d, o = {}) {
     box.querySelectorAll('.mv-p').forEach(el => { const s = +el.dataset.s; el.querySelector('.mv-v').textContent = (Math.round((before[s] + d.delta[s] * e) / 100) * 100).toLocaleString(); });
     if (kk < 1) requestAnimationFrame(step); else { box.classList.add('done'); done(); }
   })(performance.now()); });
-  await waitClick(box, '.nx');
+  await waitClick(box, '.nx', true);
   closeModal();
 }
 async function showRyuukyoku(d) {
