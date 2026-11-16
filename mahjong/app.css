@@ -2629,3 +2629,32 @@ html.lite .mvst .mv-p::after{animation:none;opacity:0}
 :is(#chara.ch2 .pprof,#home.aaa .pp-info .pi-st,html.lp #chara.ch2 .ci-pane){scrollbar-width:thin;scrollbar-color:rgba(232,206,140,.55) transparent}
 :is(#chara.ch2 .pprof,#home.aaa .pp-info .pi-st)::-webkit-scrollbar{width:4px}
 :is(#chara.ch2 .pprof,#home.aaa .pp-info .pi-st)::-webkit-scrollbar-thumb{background:rgba(232,206,140,.55);border-radius:2px}
+/* (2026-11-16, ユーザー「設定ボックスも他のボックス同様、高級感のあるデザインに」) the settings (and the reset question): the same dark
+   lacquered glass as the points panels — translucent with the screen blurred behind, a fine double gold line and small gold corner
+   hooks, the title in the serif over a gold hairline, the labels as small gold capitals of the panel, the controls set in lacquer */
+.modal:is(.settings,.reset) .mbox{position:relative;border:0;border-radius:4px;overflow:visible;padding:30px 34px 26px;
+  background:radial-gradient(120% 70% at 50% -10%,rgba(232,206,140,.14),transparent 60%),linear-gradient(180deg,rgba(26,20,44,.66),rgba(10,8,22,.8));
+  -webkit-backdrop-filter:blur(14px) saturate(130%);backdrop-filter:blur(14px) saturate(130%);
+  box-shadow:inset 0 0 0 1px rgba(232,206,140,.75),inset 0 0 0 5px rgba(10,8,22,.35),inset 0 0 0 6px rgba(232,206,140,.28),0 24px 60px rgba(0,0,0,.6)}
+.modal:is(.settings,.reset) .mbox::before{content:"";position:absolute;inset:-6px;pointer-events:none;
+  background:
+    linear-gradient(var(--gl2),var(--gl2)) left top/22px 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) left top/1.5px 22px no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) right top/22px 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) right top/1.5px 22px no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) left bottom/22px 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) left bottom/1.5px 22px no-repeat,
+    linear-gradient(var(--gl2),var(--gl2)) right bottom/22px 1.5px no-repeat,linear-gradient(var(--gl2),var(--gl2)) right bottom/1.5px 22px no-repeat}
+.modal:is(.settings,.reset) h2{font-family:var(--serif);font-weight:800;letter-spacing:.3em;color:var(--gl2);text-align:center;margin:0 0 20px;padding-bottom:12px;
+  border-bottom:1px solid transparent;border-image:linear-gradient(90deg,transparent,rgba(232,206,140,.75),transparent) 1;text-shadow:0 0 18px rgba(232,206,140,.25)}
+.modal.settings .st-row small{font-family:var(--serif);font-weight:700;letter-spacing:.18em;color:rgba(232,206,140,.85);display:flex;justify-content:space-between;align-items:baseline}
+.modal.settings .st-row small b{font-family:var(--serif);color:#f6edd6;letter-spacing:.04em}
+.modal.settings .seg,.modal.settings .st-v{border-radius:3px;background:rgba(8,5,18,.55);border:1px solid rgba(232,206,140,.22);box-shadow:inset 0 1px 6px rgba(0,0,0,.4)}
+.modal.settings .seg button{border-radius:2px;color:rgba(230,220,245,.7);letter-spacing:.12em}
+.modal.settings .seg button.on{color:var(--gl2)}
+.modal.settings .st-m{border-radius:3px}
+.modal.settings .st-note{font-family:var(--serif);color:rgba(220,210,240,.65);letter-spacing:.04em}
+.modal.settings .cbtns{margin-top:18px;padding-top:16px;border-top:1px solid transparent;border-image:linear-gradient(90deg,transparent,rgba(232,206,140,.4),transparent) 1}
+.modal.settings .st-reset{background:transparent;border:1px solid rgba(240,140,150,.45);border-radius:2px;color:#f2a3ad;font-family:var(--serif);letter-spacing:.16em}
+.modal.settings .cbtns .btn.gold{border-radius:2px}
+html.lp .modal:is(.settings,.reset) .mbox{padding:18px 22px 14px}
+html.lp .modal:is(.settings,.reset) h2{margin-bottom:12px;padding-bottom:8px}
+html.lp .modal.settings .cbtns{margin-top:10px;padding-top:10px}
+.modal.reset .cbtns .btn{border-radius:2px;font-family:var(--serif);letter-spacing:.14em}
