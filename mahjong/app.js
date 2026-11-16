@@ -376,14 +376,14 @@ function fitCard() {
       if (room > 0) { const max = w0 + room;
         // (2026-11-16, ユーザー「ボックスは以前と同程度の長さで」) the stories are longer now: the width is measured without the story,
         // which then wraps (and scrolls) inside it — the card stays as long as its skill lines need, as before
-        const st = info.querySelector('.pi-st'); if (st) st.style.display = 'none';
+        // (2026-11-16, ユーザー「文章を追加する前のサイズに戻して」) measured with the story it had before — the sisters' one line —
+        // so the card is exactly as long as it was; the longer story then wraps (and scrolls) inside it
+        const st = info.querySelector('.pi-st'), stTx = st && st.textContent, fam = MJChars.families[MJChars.get(DB.sel).family];
+        if (st && fam) st.textContent = L(fam.profile);
         pl.classList.add('meas'); const nat = pl.offsetWidth, text = info.offsetWidth; pl.classList.remove('meas');
-        if (st) st.style.display = '';
+        if (st) st.textContent = stTx;
         const want = Math.round(nat + text * .25);
-        // (2026-11-16, ユーザー「横長になりすぎる」— in English the skill lines are long) never wider than about half the window:
-        // past that the lines wrap inside the card
-        const cap = Math.max(w0, Math.round(W * .52 - nav.offsetLeft));
-        if (nat <= max) { pl.style.width = Math.max(w0, Math.min(max, want, cap)) + 'px'; pl.classList.add('fade'); } else pl.style.width = Math.round(Math.min(max, cap)) + 'px'; } } }
+        if (nat <= max) { pl.style.width = Math.max(w0, Math.min(max, want)) + 'px'; pl.classList.add('fade'); } else pl.style.width = Math.round(max) + 'px'; } } }
   for (const k of [1, .94, .88, .82, .76]) { pl.style.setProperty('--pis', k); if (pl.offsetTop >= navB && info.scrollWidth <= info.clientWidth + 1 && info.offsetWidth >= 200) return; }   // (the whole card a little smaller until it clears the menu)
   pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
 }
@@ -459,9 +459,11 @@ function renderHome() {
   $('#coinBox .coin').innerHTML = IC.coin;
   // the menu down the left (ユーザー 2026-11-14: only the system's buttons stay at the top right; the rest are here)
   const mi = (ic, lab, sub) => `<i class="lm-i">${ic}</i><span class="lm-t"><b>${esc(lab)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>`;
-  $('#btnGacha').innerHTML = mi(IC.gacha, t('gacha'), 'GACHA'); $('#btnColl').innerHTML = mi(IC.collection, t('chars'), 'CHARACTERS');
-  $('#btnStats').innerHTML = mi(IC.stats, t('record'), 'RECORD');   // (ユーザー 2026-11-14: 戦績 and スタッツ are one menu, 「戦績」 — the game log opens from inside it)
-  $('#btnRated').innerHTML = mi(IC.rank, t('rated'), 'RANKED');
+  // (2026-11-16, ユーザー「英語のレイアウト崩れ」) in English the small capitals under each menu item only repeat its name: left out
+  const ja = I18N.lang === 'ja', en2 = w => ja ? w : '';
+  $('#btnGacha').innerHTML = mi(IC.gacha, t('gacha'), en2('GACHA')); $('#btnColl').innerHTML = mi(IC.collection, t('chars'), en2('CHARACTERS'));
+  $('#btnStats').innerHTML = mi(IC.stats, t('record'), en2('RECORD'));   // (ユーザー 2026-11-14: 戦績 and スタッツ are one menu, 「戦績」 — the game log opens from inside it)
+  $('#btnRated').innerHTML = mi(IC.rank, t('rated'), en2('RANKED'));
   document.querySelectorAll('#luxMenu [data-soon]').forEach(b => { b.innerHTML = mi(IC[b.dataset.soon] || '', t(b.dataset.soon), t('soon')); });
   sndIcons(); applyLite();
   const c = MJChars.get(DB.sel);

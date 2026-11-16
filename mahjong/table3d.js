@@ -1315,8 +1315,10 @@ class Table3D {
       g.fillStyle = scr; g.beginPath(); g.arc(0, 0, 268, 0, 7); g.fill();
       g.fillStyle = '#8fe6ff'; g.shadowColor = '#3ab8ff'; g.shadowBlur = em ? 24 : 12;
       // (ユーザー 2026-11-14: only the round and the tiles left here — the pot and the counters are in the box with the dora)
-      g.font = '800 124px "Shippori Mincho B1", serif'; g.fillText(`${WN[I.round]}${I.kyoku + 1}局`, 0, -72);
-      g.font = '800 58px "Shippori Mincho B1", serif'; g.fillText('余', -118, 74);
+      // (2026-11-16, ユーザー「英語のレイアウト崩れ」) in English: 'East 1' and 'left' (the kanji winds and 局/余 in Japanese)
+      const JA = !window.I18N || I18N.lang === 'ja';
+      if (JA) { g.font = '800 124px "Shippori Mincho B1", serif'; g.fillText(`${WN[I.round]}${I.kyoku + 1}局`, 0, -72); g.font = '800 58px "Shippori Mincho B1", serif'; g.fillText('余', -118, 74); }
+      else { g.font = '800 104px "Shippori Mincho B1", serif'; g.fillText(`${['East', 'South', 'West', 'North'][I.round]} ${I.kyoku + 1}`, 0, -72); g.font = '800 40px "Shippori Mincho B1", serif'; g.fillText('left', -128, 74); }
       const lf = String(I.left).padStart(2, ' '); for (let i = 0; i < 2; i++) seg7(g, -56 + i * 94, 18, 68, 112, lf[i], '#8fe6ff', em ? null : 'rgba(143,230,255,.06)');
       g.shadowBlur = 0;
       if (!em) { const gl = g.createLinearGradient(0, -268, 0, 50); gl.addColorStop(0, 'rgba(255,255,255,.16)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gl; g.beginPath(); g.arc(0, 0, 268, PI, 2 * PI); g.fill(); }   // the glass
@@ -1422,7 +1424,7 @@ class Table3D {
   }
   _conText() { const el = this._chud, I = this.info; if (!el || !I) return;
     if (this._cscore) this._cscore.forEach((d, side) => { d.textContent = String(I.scores[side]); d.classList.toggle('on', I.turn === side); });
-    el.querySelector('b').textContent = `${['東', '南', '西', '北'][I.round]}${I.kyoku + 1}局`; el.querySelector('em').textContent = String(I.left); }
+    el.querySelector('b').textContent = !window.I18N || I18N.lang === 'ja' ? `${['東', '南', '西', '北'][I.round]}${I.kyoku + 1}局` : `${['East', 'South', 'West', 'North'][I.round]} ${I.kyoku + 1}`; el.querySelector('em').textContent = String(I.left); }
   // quality: 'high' | 'lite'. Lite drops shadows and renders at 1x pixel ratio.
   setQuality(q) {
     const lite = q === 'lite'; this.lite = lite;
