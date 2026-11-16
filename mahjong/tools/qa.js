@@ -117,12 +117,19 @@ async function runtime() {
     // (2026-11-16, ユーザー「文章が省略になってるので全文見せるように」) the partner's cost note is shown in full, never cut with …
     const cn = await p.evaluate(`(()=>{const c=document.querySelector('#chInfo .ptn-cost');if(!c)return 'none';const g=getComputedStyle(c);return g.display!=='none'&&g.textOverflow!=='ellipsis'&&c.scrollWidth<=c.clientWidth+1&&c.scrollHeight<=c.clientHeight+1})()`);
     ok('character screen: the partner cost note is shown in full', cn === true, String(cn));
+    // (2026-11-16, ユーザー「唇に触れたときは許婚として愛を語る台詞を1キャラ10種」) every character has a lips place on her picture,
+    // above the face, and ten lines for it
+    const lp = await p.evaluate(`(async()=>{const ids=MJChars.all?MJChars.all().map(c=>c.id):Object.keys(MJTouch.zones);for(const id of ids)MJTouch.load(id);
+      for(let i=0;i<60&&ids.some(id=>!MJTouch.data[id]);i++)await new Promise(r=>setTimeout(r,100));
+      const bad=[];for(const id of ids){const z=(MJTouch.zones[id]||[]).find(z=>z[0]==='m'),d=MJTouch.data[id];
+        if(!z||MJTouch.zone(id,z[1],z[2])!=='m'||!d||!d.m||d.m.length!==10||!MJTouch.line(id,'m'))bad.push(id)}return [ids.length,bad]})()`);
+    ok('lips: a place and ten lines for every character', lp[0] >= 58 && !lp[1].length, JSON.stringify(lp));
     ok('no page errors (jiggle)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('vfx')) { console.log('[vfx] the game\'s light effects: shown over the cut-in word, then cleaned up');
     const p = await page(PC); await p.evaluate(`void JANKA.startGame()`); await p.waitForTimeout(5000);
     await p.evaluate(`(()=>{window.__vx=[];const o=VFX.burst;VFX.burst=(...a)=>{const r=o(...a);__vx.push([a[0],a[1],!!document.querySelector('.vfx-cv'),VFX.active()]);return r}})()`);
-    await p.evaluate(`void JANKA.cutin(1, 'ron')`); await p.waitForTimeout(1500);
+    await p.evaluate(`void JANKA.cutin(1, 'ron')`); await p.waitForFunction('__vx.length > 0', null, { timeout: 10000 }).catch(() => {});   // (slow when the machine is busy)
     const on = await p.evaluate('__vx');   // (?fast shortens the cut-in, so the burst is caught as it is made)
     ok('a burst of light during the cut-in', on.length > 0 && on[0][2] && on[0][3] > 0, JSON.stringify(on));
     // (the game keeps playing — calls bring new bursts — so: once 3 s pass with no new burst, the canvas must be gone)
