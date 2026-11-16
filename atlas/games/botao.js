@@ -276,8 +276,8 @@
 .btcall{position:fixed;left:50%;top:calc(128px + var(--sat,env(safe-area-inset-top)));transform:translateX(-50%);z-index:86;display:flex;gap:10px}.btcall[hidden]{display:none}.btcall button{border:0;border-radius:99px;padding:13px 26px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;background:${THEME};color:#fff;box-shadow:0 4px 0 #456f12,0 8px 20px rgba(0,0,0,.3);white-space:nowrap}.btcall button.alt{background:#fff;color:#1d2133;box-shadow:0 4px 0 #c8ccd8,0 8px 20px rgba(0,0,0,.25)}.btcall button:disabled{opacity:.45;cursor:default}
 .bthow{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px}.bthow-c{background:#fff;color:#1d2133;border-radius:24px;box-shadow:0 0 0 4px ${THEME},0 18px 50px rgba(0,0,0,.45);padding:22px 22px 18px;width:min(460px,100%);max-height:100%;overflow:auto}.bthow h2{margin:0 0 14px;font-size:24px;font-weight:900;text-align:center;color:${THEME}}.bthow ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.bthow li{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:800;line-height:1.35}.bthow li i{flex:none;width:40px;height:40px;border-radius:50%;background:#eef6e0;color:${THEME};display:flex;align-items:center;justify-content:center;font-style:normal;font-size:20px;font-weight:900}.bthow label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 6px;font-size:16px;font-weight:800;cursor:pointer}.bthow label input{width:20px;height:20px;accent-color:${THEME}}.bthow .n{margin:0 0 14px;font-size:13px;font-weight:700;color:#6b7083;text-align:center}.bthow button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:${THEME};color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}
 @media (min-width:900px) and (min-height:560px) and (hover:hover){.bthow-c{width:min(820px,64vw);padding:28px 34px 22px}.bthow h2{font-size:30px}.bthow li{font-size:21px}.bthow li i{width:48px;height:48px;font-size:24px}}
-.btflip{position:fixed;left:calc(16px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));z-index:40;width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.94);color:#2b3044;box-shadow:0 4px 14px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.btflip svg{width:28px;height:28px}.btflip.on{background:${THEME};color:#fff}.btview{left:calc(80px + env(safe-area-inset-left))}
-@media (max-width:560px){.btview{left:auto;right:calc(16px + env(safe-area-inset-right))}.hud .btp{padding:3px 7px;font-size:12px}.hud .btp .nm{display:none}.hud .btm{font-size:12px}.bttoast{font-size:14px;padding:9px 16px;border-radius:18px}.bttask{font-size:13px;padding:7px 14px;white-space:normal;border-radius:18px;line-height:1.35;width:max-content;max-width:88vw}.btcall{top:calc(118px + var(--sat,env(safe-area-inset-top)))}.btcall button{font-size:16px;padding:11px 20px}}`;
+.btflip{position:fixed;left:calc(16px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));z-index:40;width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.94);color:#2b3044;box-shadow:0 4px 14px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.btflip svg{width:28px;height:28px}.btflip.on{background:${THEME};color:#fff}.btview{left:calc(16px + env(safe-area-inset-left))}
+@media (max-width:560px){.btview{left:auto;right:calc(16px + env(safe-area-inset-right))}.hud .btp{padding:3px 7px;font-size:12px}.hud .btp .nm{display:none}.hud .btm{font-size:12px}.bttoast{font-size:14px;padding:9px 16px;border-radius:18px}.bttask{font-size:13px;padding:7px 14px;white-space:nowrap;border-radius:18px;line-height:1.35;width:max-content;max-width:94vw;overflow:hidden;text-overflow:ellipsis}.btcall{top:calc(118px + var(--sat,env(safe-area-inset-top)))}.btcall button{font-size:16px;padding:11px 20px}}`;
     document.head.appendChild(css);
     const HK = 'atlas-botao-howto';
     const howtoOn = () => { try { return localStorage.getItem(HK) !== 'off'; } catch (e) { return true; } };
@@ -301,12 +301,14 @@
     // to follow the ball on an upright phone, and covered the buttons there)
     let taskT = 0;
     const narrow = () => innerWidth < 700 && innerHeight > innerWidth;
+    // one line (2026-11-17 ユーザー：一行で): the font steps down until the line fits
+    function taskFit() { taskEl.style.fontSize = ''; taskEl.style.whiteSpace = 'nowrap'; if (taskEl.hidden) return; let f = parseFloat(getComputedStyle(taskEl).fontSize) || 15; while (taskEl.scrollWidth > taskEl.clientWidth + 1 && f > 10) { f -= .5; taskEl.style.fontSize = f + 'px'; } }
     function taskPlace() {
       if (taskEl.hidden) return;
       const hud = document.querySelector('.bv.playing .hud') || document.querySelector('.hud'), r = hud && hud.offsetParent ? hud.getBoundingClientRect() : null;
       taskEl.style.top = r && r.bottom > 0 && r.bottom < innerHeight / 2 ? Math.round(r.bottom + 8) + 'px' : '';
     }
-    const task = m => { if (stopped) return; taskEl.textContent = m || ''; taskEl.hidden = !m; clearInterval(taskT); taskPlace(); if (m) taskT = setInterval(taskPlace, 500); };   // (the bar's height can change: a second line)
+    const task = m => { if (stopped) return; taskEl.textContent = m || ''; taskEl.hidden = !m; taskFit(); clearInterval(taskT); taskPlace(); if (m) taskT = setInterval(taskPlace, 500); };   // (the bar's height can change: a second line)
     const callEl = document.createElement('div'); callEl.className = 'btcall'; callEl.hidden = true;
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => callEl.addEventListener(k, e => e.stopPropagation()));
     (document.getElementById('bv') || document.body).appendChild(callEl);
@@ -812,7 +814,7 @@
 
     /* ---------- 盤面反転 and the view switch ---------- */
     const FK = 'atlas-flip-botao';
-    let flipped = false; try { flipped = localStorage.getItem(FK) === '1'; } catch (e) {}
+    let flipped = false;   // (2026-11-17 ユーザー：回転ボタンも使わないので不要 — the flip button and the F key are gone; the view is always from your end)
     let viewA = 0, viewRaf = 0;
     function viewTo(base, now) {
       if (base == null) base = pvp && st && st.pos === 1 && !over ? Math.PI : 0;
@@ -835,7 +837,7 @@
     function flip() { if (stopped) return; flipped = !flipped; try { localStorage.setItem(FK, flipped ? '1' : '0'); } catch (e) {} flipSync(); cancel(); viewTo(); }
     flipBtn.addEventListener('click', e => { e.preventDefault(); flip(); });
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => flipBtn.addEventListener(k, e => e.stopPropagation()));
-    flipSync(); layer.appendChild(flipBtn);
+    flipSync();
     viewTo(0, true);
     const viewBtn = document.createElement('button'); viewBtn.type = 'button'; viewBtn.className = 'btflip btview';
     const ICO_WHOLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="1.5"/><path d="M5 12h14"/><circle cx="12" cy="12" r="2.6"/></svg>';
@@ -845,7 +847,7 @@
     viewBtn.addEventListener('click', e => { e.preventDefault(); toggleView(); });
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => viewBtn.addEventListener(k, e => e.stopPropagation()));
     viewSync(); layer.appendChild(viewBtn);
-    const onFlipKey = e => { if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return; if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) flip(); else if ((e.key === 'v' || e.key === 'V') && !e.ctrlKey && !e.metaKey && !e.altKey) toggleView(); };
+    const onFlipKey = e => { if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return; if (false) flip(); else if ((e.key === 'v' || e.key === 'V') && !e.ctrlKey && !e.metaKey && !e.altKey) toggleView(); };
     document.addEventListener('keydown', onFlipKey);
 
     /* ---------- go ---------- */
