@@ -154,8 +154,10 @@ const SND = (() => {
     main: { file: 'bgm-main', vol: .45, restart: false },
     main2: { file: 'bgm-main2', vol: .25, restart: false },
     main3: { file: 'bgm-main3', vol: .235, restart: false },
+    main4: { file: 'bgm-main4', vol: .26, restart: false },   // (2026-11-16, ユーザー「forbidden echoes を通常BGMに」: −14.3 LUFS → ≈ −26)
     riichi: { file: 'bgm-riichi', vol: .26, restart: true },
     riichi2: { file: 'bgm-riichi2', vol: .182, restart: true },   // (2026-11-16, ユーザー「リーチ2BGM」: −9.2 LUFS → ≈ −24 like the first)
+    riichi3: { file: 'bgm-riichi3', vol: .184, restart: true },   // (同日「リーチ3」: −9.3 LUFS → ≈ −24)
     score: { file: 'score-jingle', vol: .35, restart: true, once: true },   // (ユーザー 2026-11-15: a short piece, once per results screen — no loop)
   };
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
@@ -199,10 +201,17 @@ const SND = (() => {
     music(want); return true; }
   function fade(B, to, sec) { const a = ac; if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(to, t + sec); } else if (B.el) B.el.volume = to; }
   let want = 'title';   // the track that should be playing (the title screen's to begin with) (kept while the sound is off, so it comes back when switched on)
-  // the game's music (ユーザー 2026-11-14): one of the three tracks, drawn at random for each game ('main' asks for this game's one)
-  let mainKey = 'main', riichiKey = 'riichi';   // (the riichi track too: one of two, drawn for each game)
+  // the game's music (ユーザー 2026-11-14): one of the four tracks (2026-11-16: + main4), drawn at random for each game ('main' asks for this game's one)
+  // (2026-11-16, ユーザー「1ゲームの中でもランダムで切り替わって欲しい」) a new track is drawn for every hand (the game's tracks) and for every
+  // riichi that starts the riichi music (another riichi in the same hand keeps it) — never the one just heard. The next one is drawn
+  // ahead and fetched in the background, so it is in memory when it is wanted.
+  const MAINS = ['main', 'main2', 'main3', 'main4'], RIIS = ['riichi', 'riichi2', 'riichi3'];
+  const draw = (list, not) => { const l = list.filter(k => k !== not); return l[(Math.random() * l.length) | 0]; };
+  let mainKey = 'main', riichiKey = 'riichi', nextMain = draw(MAINS), nextRii = draw(RIIS), handT = 0;
   function music(name) {
-    if (name === 'main') name = mainKey; else if (name === 'riichi') name = riichiKey;
+    clearTimeout(handT);
+    if (name === 'main') name = mainKey;
+    else if (name === 'riichi') { if (RIIS.includes(want)) name = want; else { riichiKey = nextRii; nextRii = draw(RIIS, riichiKey); if (on()) fetchTrk(nextRii); name = riichiKey; } }
     want = name; const a = ctx(); if (!a) return;
     for (const k in TRK) { const B = TRK[k];
       if (k === name && on()) {
@@ -253,7 +262,12 @@ const SND = (() => {
     music,
     resume: () => music(want),
     score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music('score'); },   // (once per results screen, from its top)
-    newGame() { mainKey = ['main', 'main2', 'main3'][(Math.random() * 3) | 0]; riichiKey = Math.random() < .5 ? 'riichi' : 'riichi2'; if (on()) { fetchTrk(mainKey); fetchTrk(riichiKey); fetchTrk('score'); } },
+    newGame() { nextMain = draw(MAINS, mainKey); nextRii = draw(RIIS, riichiKey); if (on()) { fetchTrk(nextMain); fetchTrk(nextRii); fetchTrk('score'); } },
+    // a hand begins: this hand's track (drawn ahead), after a short quiet (ユーザー 2026-11-16「得点表示から次の局の通常BGMまで少し間を」 —
+    // the results' piece fades out, then about 1.6 s of silence)
+    handStart() { mainKey = nextMain; nextMain = draw(MAINS, mainKey); if (on()) { fetchTrk(mainKey); fetchTrk(nextMain); }
+      if (MAINS.includes(want) || want === 'title') { music('main'); return; }   // (from the title, or already playing: at once)
+      music(null); handT = setTimeout(() => music('main'), 1600); },
     // the window behind / in front again: the sound stops and comes back where it was
     gate(off) { const a = ac; if (!a) return;
       if (off) { if (a.state === 'running') a.suspend(); for (const k in TRK) if (TRK[k].el && TRK[k].on) TRK[k].el.pause(); }
@@ -583,6 +597,23 @@ function charaSay(e) {
 // the room: specks of light drifting in the warm air (ユーザー 2026-11-14: not vector dots — real light). Pre-rendered soft sprites
 // drawn additively: a few large out-of-focus bokeh discs far in front, fine motes in the light that twinkle (the brightest
 // throw a faint star), everything soft-edged and warm. A small 2D canvas, only while the home is on screen; none in light mode.
+// (2026-11-16, ユーザー「GPU負荷を、見た目を変えずに」) the game's god rays (app.css #game .rays): their slow breathing and the two
+// dust glints, set ~12 times a second instead of a CSS animation composited every frame. The curves are the CSS ones: breathing
+// .7 → 1 → .7 over 18 s (9 s each way, ease-in-out), glint 0 → 1 → 0 over 3.2 s with a small shift, the second over 4.1 s, 1.7 s ahead.
+(function raysTick() {
+  const ez = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;   // (close to CSS ease-in-out)
+  const wave = (t, T) => { const u = ((t % T) + T) % T / T; return u < .5 ? ez(u * 2) : ez((1 - u) * 2); };
+  let el = null;
+  setInterval(() => {
+    if (document.hidden || document.documentElement.classList.contains('fz')) return;
+    const g = document.getElementById('game'); if (!g || g.hidden) return;
+    if (!el || !el.isConnected) el = g.querySelector('.rays'); if (!el) return;
+    const t = performance.now() / 1000, a = wave(t, 3.2), b = wave(t + 1.7, 4.1);
+    el.style.setProperty('--rb', (.7 + .3 * wave(t, 18)).toFixed(3));
+    el.style.setProperty('--g1', a.toFixed(3)); el.style.setProperty('--m1', a.toFixed(3));
+    el.style.setProperty('--g2', b.toFixed(3)); el.style.setProperty('--m2', b.toFixed(3));
+  }, 83);
+})();
 const HFX = { run: false, parts: [], spr: null };
 function hfxSprites() {
   const mk = (n, draw) => { const c = document.createElement('canvas'); c.width = c.height = n; draw(c.getContext('2d'), n / 2); return c; };
@@ -1286,7 +1317,7 @@ async function onEvent(ev, d) {
   switch (ev) {
     case 'game-start': renderBadges(); break;
     case 'hand-start': {
-      SND.music('main');
+      SND.handStart();
       TB.hideAll();
       UIS.intel = null; $('#intel').hidden = true;
       refreshTable(); renderBadges(); renderHand(); layoutAll();

@@ -86,7 +86,7 @@ void main(){
 function initGL() {
   if (GL !== null) return GL;
   const cv = document.createElement('canvas');
-  const gl = cv.getContext('webgl', { premultipliedAlpha: true, preserveDrawingBuffer: true, alpha: true, antialias: false });
+  const gl = cv.getContext('webgl', { premultipliedAlpha: true, preserveDrawingBuffer: false, alpha: true, antialias: false });   // (each picture is copied out right after it is drawn, in the same task: nothing needs keeping — 2026-11-16, GPU)
   if (!gl) return (GL = false);
   const sh = (t, src) => { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.warn(gl.getShaderInfoLog(s)); return null; } return s; };
   const vs = sh(gl.VERTEX_SHADER, VS), fs = sh(gl.FRAGMENT_SHADER, FS);
@@ -121,7 +121,9 @@ function render(it, t) {
   const W = Math.round((w + PAD * 2) * dpr), H = Math.round((h + PAD * 2) * dpr);
   if (it.cv.width !== W || it.cv.height !== H) { it.cv.width = W; it.cv.height = H; }
   const { cv, gl, u } = GL;
-  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  // (2026-11-16, ユーザー「GPU負荷を、見た目を変えずに」) the shared GL canvas only grows: frames of different sizes no longer
+  // reallocate it at every draw — each is drawn in its bottom-left corner and that corner is copied out
+  if (cv.width < W || cv.height < H) { cv.width = Math.max(cv.width, W); cv.height = Math.max(cv.height, H); }
   gl.viewport(0, 0, W, H);
   gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
   gl.uniform2f(u.size, W, H);
@@ -134,7 +136,7 @@ function render(it, t) {
   gl.uniform1f(u.seed, it.seed);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   it.ctx.clearRect(0, 0, W, H);
-  it.ctx.drawImage(cv, 0, 0);
+  it.ctx.drawImage(cv, 0, cv.height - H, W, H, 0, 0, W, H);
 }
 
 function loop(now) {

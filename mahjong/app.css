@@ -2800,3 +2800,10 @@ html.lite :is(#home,#chara).aaa .aa-ch .jig{animation:none}
 #chara.aaa #chSay{z-index:6}
 /* (2026-11-16) vfx.js: the light of the game's effects, over everything (only while an effect plays) */
 .vfx-cv{position:absolute;left:0;top:0;width:100%;height:100%;z-index:90;pointer-events:none}
+/* (2026-11-16, ユーザー「GPU負荷を、見た目を変えずに」) the god rays and their dust: three full-screen layers that were animated by CSS —
+   composited 60 times a second through the whole game, keeping the GPU awake while the table sleeps. The same curves are now
+   set about 12 times a second from app.js (raysTick: the breathing 9 s, the two glints 3.2 s and 4.1 s) — they move so slowly that
+   it looks the same. */
+#game .rays{animation:none!important;opacity:var(--rb,.85)}
+#game .rays::before{animation:none!important;opacity:var(--g1,0);transform:translate(calc(var(--m1,0) * .4%),calc(var(--m1,0) * .6%))}
+#game .rays::after{animation:none!important;opacity:var(--g2,0);transform:translate(calc(var(--m2,0) * .4%),calc(var(--m2,0) * .6%))}
