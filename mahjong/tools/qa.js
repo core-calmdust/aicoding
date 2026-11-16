@@ -56,7 +56,7 @@ async function runtime() {
   const myTurn = async p => { await p.evaluate(`void JANKA.startGame()`);
     await p.waitForFunction(`JANKA.UIS && JANKA.UIS.kind === 'turn' && document.querySelector('#hand .tl.drawn')`, null, { timeout: 120000 }); await p.waitForTimeout(1500);
     await p.waitForFunction(`JANKA.UIS.kind === 'turn'`, null, { timeout: 60000 }); };
-  const traceReach = `(()=>{const TB=JANKA.TB;window.__rc=null;const o=TB.reach.bind(TB);TB.reach=(g,seat,f,to)=>{const r=o(g,seat,f,to);if(seat===0&&!__rc){const rig=TB.hand(0);__rc={page:!!(f&&f.page),layer:rig.layers.isEnabled(1),fx:f?f.x:null,ghost:document.querySelectorAll('.tl.ghost').length,dist:Math.hypot(rig.position.x-g.position.x,rig.position.z-g.position.z)};const iv=setInterval(()=>{if(TB._ov&&TB._ov.g)__rc.ovTile=true},10);setTimeout(()=>{clearInterval(iv);__rc.ghostLater=document.querySelectorAll('.tl.ghost').length;__rc.ovTile=!!__rc.ovTile},5000)}return r}})()`;
+  const traceReach = `(()=>{const TB=JANKA.TB;window.__rc=null;const o=TB.reach.bind(TB);TB.reach=(g,seat,f,to)=>{const r=o(g,seat,f,to);if(seat===0&&!__rc){const rig=TB.hand(0);__rc={page:!!(f&&f.page),layer:rig.layers.isEnabled(1),hidden:!g.visible,fx:f?f.x:null,ghost:document.querySelectorAll('.tl.ghost').length,dist:Math.hypot(rig.position.x-g.position.x,rig.position.z-g.position.z)};const iv=setInterval(()=>{if(TB._ov&&TB._ov.g)__rc.ovTile=true},10);setTimeout(()=>{clearInterval(iv);__rc.ghostLater=document.querySelectorAll('.tl.ghost').length;__rc.ovTile=!!__rc.ovTile},5000)}return r}})()`;
 
   if (want('discard')) { console.log('[discard] the player\'s own discard (tap, PC)');
     // 2026-11-16: the hand must take the very tile of the page's hand row (page pose, drawn over the page), the page's copy
@@ -65,6 +65,8 @@ async function runtime() {
     await p.evaluate(`document.querySelector('#hand .hrow .tl[data-id]:nth-child(5)').click()`); await p.waitForFunction(`window.__rc && __rc.ghostLater !== undefined`, null, { timeout: 12000 }).catch(() => {});
     const r = await p.evaluate('__rc');
     ok('tap: the hand takes the tile from the hand row (page pose)', !!(r && r.page && r.layer), JSON.stringify(r));
+    // (2026-11-16, ユーザー「ツモ牌を捨てるとき牌が二重っぽい」) the 3D tile is not drawn behind the page's copy before the hand takes it
+    ok('tap: no 3D tile behind the page copy until it is taken', !!(r && r.hidden), JSON.stringify(r));
     ok('tap: the copy of the tile is shown, then gone when taken', !!(r && r.ghost === 1 && r.ghostLater === 0 && r.ovTile), r && `ghost ${r.ghost}→${r.ghostLater} ovTile ${r.ovTile}`);
     ok('no page errors (game, PC)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
@@ -87,6 +89,12 @@ async function runtime() {
     ok('round band in the middle after a call-out', Math.abs(y - 450) < 30, 'y ' + Math.round(y)); await p.ctx.close(); }
 
   if (want('home')) { console.log('[home] name card, top line, settings');
+    // (2026-11-16, ユーザー「戦績：タブによってボックスのサイズが変化するので固定（最大で）」) the record panel keeps one size on every tab
+    for (const vp of [PC, { viewport: { width: 1400, height: 1000 } }]) { const p = await page(vp);
+      await p.evaluate(`document.querySelector('#btnStats').click()`); await p.waitForTimeout(700);
+      const sz = await p.evaluate(`(async()=>{const o=[];for(const b of document.querySelectorAll('.pstats .ps-tabs button')){b.click();await new Promise(r=>setTimeout(r,250));
+        const m=document.querySelector('.pstats .ps-main').getBoundingClientRect();o.push(Math.round(m.width)+'x'+Math.round(m.height))}return o})()`);
+      ok(`record: one panel size on every tab (${vp.viewport.width}x${vp.viewport.height})`, sz.length > 1 && sz.every(x => x === sz[0]), sz.join(' ')); await p.ctx.close(); }
     for (const lang of ['ja', 'en']) {
       const p = await page(PC, {}, lang);
       const w0 = await p.evaluate(`document.querySelector('#partner').offsetWidth`);
@@ -117,17 +125,29 @@ async function runtime() {
     // (2026-11-16, ユーザー「文章が省略になってるので全文見せるように」) the partner's cost note is shown in full, never cut with …
     const cn = await p.evaluate(`(()=>{const c=document.querySelector('#chInfo .ptn-cost');if(!c)return 'none';const g=getComputedStyle(c);return g.display!=='none'&&g.textOverflow!=='ellipsis'&&c.scrollWidth<=c.clientWidth+1&&c.scrollHeight<=c.clientHeight+1})()`);
     ok('character screen: the partner cost note is shown in full', cn === true, String(cn));
+    // (2026-11-16, ユーザー「唇に触れたときは許婚として愛を語る台詞を1キャラ10種」) every character has a lips place on her picture,
+    // above the face, and ten lines for it
+    const lp = await p.evaluate(`(async()=>{const ids=MJChars.all?MJChars.all().map(c=>c.id):Object.keys(MJTouch.zones);for(const id of ids)MJTouch.load(id);
+      for(let i=0;i<60&&ids.some(id=>!MJTouch.data[id]);i++)await new Promise(r=>setTimeout(r,100));
+      const bad=[];for(const id of ids){const z=(MJTouch.zones[id]||[]).find(z=>z[0]==='m'),d=MJTouch.data[id];
+        if(!z||MJTouch.zone(id,z[1],z[2])!=='m'||!d||!d.m||d.m.length!==10||!MJTouch.line(id,'m'))bad.push(id)}return [ids.length,bad]})()`);
+    ok('lips: a place and ten lines for every character', lp[0] >= 58 && !lp[1].length, JSON.stringify(lp));
     ok('no page errors (jiggle)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('vfx')) { console.log('[vfx] the game\'s light effects: shown over the cut-in word, then cleaned up');
     const p = await page(PC); await p.evaluate(`void JANKA.startGame()`); await p.waitForTimeout(5000);
     await p.evaluate(`(()=>{window.__vx=[];const o=VFX.burst;VFX.burst=(...a)=>{const r=o(...a);__vx.push([a[0],a[1],!!document.querySelector('.vfx-cv'),VFX.active()]);return r}})()`);
-    await p.evaluate(`void JANKA.cutin(1, 'ron')`); await p.waitForTimeout(1500);
+    await p.evaluate(`void JANKA.cutin(1, 'ron')`); await p.waitForFunction('__vx.length > 0', null, { timeout: 10000 }).catch(() => {});   // (slow when the machine is busy)
     const on = await p.evaluate('__vx');   // (?fast shortens the cut-in, so the burst is caught as it is made)
     ok('a burst of light during the cut-in', on.length > 0 && on[0][2] && on[0][3] > 0, JSON.stringify(on));
     // (the game keeps playing — calls bring new bursts — so: once 3 s pass with no new burst, the canvas must be gone)
     const gone = await p.waitForFunction(`(()=>{const n=__vx.length;if(window.__vn!==n){window.__vn=n;window.__vt=performance.now()}return performance.now()-__vt>3000&&!document.querySelector('.vfx-cv')&&VFX.active()===0})()`, null, { timeout: 40000, polling: 200 }).then(() => true, () => false);
     ok('the effect canvas is removed afterwards', gone, gone ? '' : JSON.stringify(await p.evaluate(`[__vx.length, !!document.querySelector('.vfx-cv'), VFX.active()]`)));
+    // (2026-11-16, ユーザー「スキルエフェクトもAAAに」) every skill's effect brings the light engine in at its moments, on the table
+    const sk = await p.evaluate(`(async()=>{const out=[];for(const id of MJSkillFx.ids){let n=0;const o=VFX.burst,o2=VFX.shock,o3=VFX.pull,o4=VFX.slash,o5=VFX.rise;
+      const c=(f)=>(...a)=>{n++;return f(...a)};VFX.burst=c(o);VFX.shock=c(o2);VFX.pull=c(o3);VFX.slash=c(o4);VFX.rise=c(o5);
+      await MJSkillFx.play(id,0,JANKA.TB,{dur:600});await new Promise(r=>setTimeout(r,700));VFX.burst=o;VFX.shock=o2;VFX.pull=o3;VFX.slash=o4;VFX.rise=o5;if(!n)out.push(id)}return out})()`);
+    ok('skill effects: each one adds its light (vfx.js)', !sk.length, sk.join(','));
     ok('no page errors (vfx)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('fonts')) { console.log('[fonts] every text in the Mincho');

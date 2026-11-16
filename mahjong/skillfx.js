@@ -191,7 +191,12 @@ void main(){
   else if(uMode<4.5)c=pot(q,t); else if(uMode<5.5)c=doraplus(q,t); else if(uMode<6.5)c=lure(q,t); else if(uMode<7.5)c=mind(p,q,px,t,hole);
   else if(uMode<8.5)c=peek(q,t); else if(uMode<9.5)c=swap_(q,t); else c=seal(q,p,t);
   c=1.-exp(-max(c,0.)*1.15);
-  float dim=.34*ss(0.,.1,t)*(1.-ss(.72,1.,t)), a=clamp(max(c.r,max(c.g,c.b))*.8+dim+hole*(1.-ss(.76,1.,t)),0.,1.);
+  // (ユーザー 2026-11-16「スキルエフェクトもAAAに」) glints sparkle where the light is strong; the table is dimmed like a stage —
+  // more at the edges of the screen than where the effect is
+  float lum=max(c.r,max(c.g,c.b)); vec2 gc=floor(px/7.); float tw=step(.985,h21(gc+floor(t*14.)))*ss(.25,.6,lum);
+  c+=mix(c,vec3(1.),.6)*tw*.8;
+  vec2 vq=gl_FragCoord.xy/uRes-.5; float vig=ss(.15,.75,length(vq*vec2(1.,1.25)));
+  float dim=(.26+.3*vig)*ss(0.,.1,t)*(1.-ss(.72,1.,t)), a=clamp(max(c.r,max(c.g,c.b))*.8+dim+hole*(1.-ss(.76,1.,t)),0.,1.);
   gl_FragColor=vec4(c,a);
 }`;
 let cv = null, gl = null, prog = null, U = null, raf = 0, cur = null, dead = false;
@@ -225,7 +230,43 @@ function homography(src, dst) {
     for (let r = 0; r < 8; r++) if (r !== c) { const f = A[r][c] / A[c][c]; for (let k = c; k < 9; k++) A[r][k] -= f * A[c][k]; } }
   const h = A.map((r, i) => r[8] / r[i]); return [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], 1];
 }
-function stop() { cancelAnimationFrame(raf); raf = 0; cur = null; if (cv) cv.style.display = 'none'; }
+let cues = [];
+function stop() { cancelAnimationFrame(raf); raf = 0; cur = null; cues.forEach(clearTimeout); cues = []; if (cv) cv.style.display = 'none'; }
+// (ユーザー 2026-11-16「スキルエフェクトもAAAに」) over the shader's light on the cloth, the language of the gacha's light (vfx.js) at
+// each skill's moments: a soft flash where it strikes, glass shock rings lying on the table (flattened by its perspective), sparks with
+// drag, rising embers, streams drawn in. Light mode keeps only the rings (vfx.js).
+const COL = { wareme: '#8fa8ff', hanup: '#ff7a3d', guard: '#5ab0ff', shugi: '#ffd76a', pot: '#ffab4d', doraplus: '#ffc23d', lure: '#3dd68c', mind: '#ff6fb5', peek: '#7fd3ff', swap: '#9aa7ff', seal: '#c6a0ff' };
+function choreo(id, seat, tb, dur) {
+  const V = window.VFX; if (!V || !V.at) return;
+  const W = tb.host.clientWidth || 1, H = tb.host.clientHeight || 1, hc = V.at(tb.host);
+  const Q = (s, x, z) => { const p = tb.project(s, x, z); return [hc.x - W / 2 + p.x, hc.y - H / 2 + p.y]; };
+  const a = Q(0, -3, 0), b = Q(0, 3, 0), c = Q(0, 0, -3), d = Q(0, 0, 3), wpx = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const sq = Math.max(.2, Math.min(1, Math.hypot(d[0] - c[0], d[1] - c[1]) / wpx)), k = Math.max(.45, Math.min(1.4, wpx / 260));
+  const pl = V.pal(COL[id]), at = (u, f) => cues.push(setTimeout(f, u * dur));
+  const C = Q(seat, 0, 0), me = Q(seat, 0, 6.6), others = [1, 2, 3].map(j => Q((seat + j) % 4, 0, 6.6));
+  const B = (p, o) => V.burst(p[0], p[1], Object.assign({ pal: pl, scale: k, sq }, o)), S = (p, o) => V.shock(p[0], p[1], Object.assign({ pal: pl, scale: k, sq }, o));
+  switch (id) {
+    case 'wareme': for (const u of [.02, .18, .34]) at(u, () => B(me, { sparks: 26, embers: 4, rings: 1, flare: u > .3, dur: 600, scale: k * .8 }));
+      at(.4, () => { S(me, { r: 300, n: 2 }); V.rise(me[0], me[1], { pal: V.pal('#b06cff'), n: 14, scale: k }); }); break;
+    case 'hanup': for (let i = 0; i < 5; i++) at(.04 * i, () => V.rise(...Q(seat, -6 + i * 3, 6.4), { pal: pl, n: 10, scale: k * 1.2 }));
+      at(.42, () => B(C, { sparks: 34, embers: 18, flare: false, scale: k * 1.1 })); at(.46, () => S(C, { r: 340 })); break;
+    case 'guard': { const g = Q(seat, 0, 3.6); at(.08, () => S(g, { r: 220, n: 2 })); at(.42, () => { S(g, { r: 300, n: 1, dur: 900 }); B(g, { sparks: 18, embers: 6, rings: 0, flare: true, scale: k * .9 }); }); break; }
+    case 'shugi': at(.12, () => B(C, { sparks: 30, embers: 20, petals: 18, petalCols: ['#ffe7a8', '#fff3d0', '#ffd76a', '#ffffff'], flare: true, scale: k * 1.1 })); at(.16, () => S(C, { r: 360 }));
+      at(.5, () => V.rise(me[0], me[1], { pal: pl, n: 16, scale: k * 1.2 })); break;
+    case 'pot': at(.08, () => S(C, { r: 260, n: 2 })); at(.12, () => V.pull(C[0], C[1], { pal: pl, n: 30, around: 300 * k, sq, dur: 520 }));
+      at(.5, () => V.pull(me[0], me[1], { pal: pl, n: 26, from: [C], bend: 60 * k, dur: 420 })); at(.82, () => B(me, { sparks: 28, embers: 14, flare: true, scale: k })); break;
+    case 'doraplus': at(.06, () => B(C, { sparks: 48, embers: 18, flare: true, scale: k * 1.25, dur: 1000 })); at(.1, () => S(C, { r: 420, n: 3, dur: 900 })); break;
+    case 'lure': at(.06, () => V.pull(me[0], me[1], { pal: pl, n: 34, from: others.concat([Q(seat, -7, -2), Q(seat, 7, -2)]), bend: 80 * k, dur: 700 }));
+      at(.7, () => { B(me, { sparks: 24, embers: 12, flare: false, scale: k }); S(me, { r: 220 }); }); break;
+    case 'mind': for (const u of [.06, .26, .46]) at(u, () => S(C, { r: 300, n: 1, dur: 760 }));
+      at(.1, () => B(Q(seat, 0, -1.3), { sparks: 16, embers: 10, rings: 0, flare: true, scale: k * .9 }));
+      at(.62, () => others.forEach(o => B(o, { sparks: 10, embers: 4, rings: 1, flare: false, scale: k * .6, dur: 600 }))); break;
+    case 'peek': at(.02, () => V.slash(me[0], me[1], { pal: pl, angle: 0, scale: k * 1.2 }));
+      at(.4, () => V.slash(C[0], C[1], { pal: pl, angle: 0, scale: k })); at(.3, () => S(C, { r: 200, n: 2 })); break;
+    case 'swap': at(.44, () => { B(C, { sparks: 34, embers: 10, flare: true, scale: k, pal: V.pal('#40ffd8') }); B(C, { sparks: 20, embers: 6, rings: 0, flare: false, flash: false, scale: k * .8 }); S(C, { r: 360 }); }); break;
+    case 'seal': at(.02, () => S(C, { r: 220, n: 2 })); at(.4, () => { B(C, { sparks: 40, embers: 16, flare: true, scale: k * 1.2 }); S(C, { r: 440, n: 3, dur: 900 }); }); break;
+  }
+}
 // tb: the Table3D (host: its element; project(seat, lx, lz): a place on the table → px in the host)
 function play(id, seat, tb, opt) {
   const mode = IDS.indexOf(id); if (mode < 0 || !tb || !tb.host || !init(tb.host)) return Promise.resolve();
@@ -242,6 +283,7 @@ function play(id, seat, tb, opt) {
   gl.uniformMatrix3fv(U.uH, false, [Hm[0], Hm[3], Hm[6], Hm[1], Hm[4], Hm[7], Hm[2], Hm[5], Hm[8]]);
   const dur = opt.dur || 1000,   // (ユーザー 2026-11-15: shorter)
     t0 = performance.now(), me = cur = {};
+  try { choreo(id, seat, tb, dur); } catch (e) { console.warn('skillfx choreo:', e.message); }
   return new Promise(res => { let told = false;
     const frame = now => { if (cur !== me) { if (!told) res(); return; }
       const t = Math.min(1, (now - t0) / dur);

@@ -3,7 +3,7 @@
 // 案じる言葉・戦いへの意気込み・日々のひとこと。台詞はキャラ1人あたり約100個、姉妹ごとのファイル（touch/<姉妹>.js）に分けてあり、
 // 選んでいるキャラの姉妹のぶんだけ読み込む。日本語のみ（ほかの言語では従来の決め台詞）。
 // 当たり判定 ZONES：絵（1080×1920）の中の楕円 [種類, 中心x, 中心y, 半径x, 半径y]（0〜1）。上にあるものが優先（手 → 顔 → 胸 → 腰 → 髪 → 脚）。
-// 種類：f 顔 / k 髪 / c 胸 / h 腰 / t 手 / l 脚 / n 国 / b 戦い / d 日々
+// 種類：m 唇 / f 顔 / k 髪 / c 胸 / h 腰 / t 手 / l 脚 / n 国 / b 戦い / d 日々
 (function (root) {
 'use strict';
 const ZONES = {
@@ -66,11 +66,17 @@ const ZONES = {
   homura:[['f',.62,.27,.11,.07],['c',.55,.45,.28,.10],['t',.90,.47,.10,.10],['l',.45,.70,.30,.12],['k',.70,.15,.20,.06]],
   yuhi:[['f',.38,.28,.13,.08],['c',.55,.47,.28,.10],['h',.60,.68,.25,.08],['t',.65,.20,.10,.05],['k',.30,.15,.20,.07]]
 };
-const ORDER = { t: 0, f: 1, c: 2, h: 3, k: 4, l: 5 };
+// (ユーザー 2026-11-16) 唇：許婚としてプレイヤーへの愛を語る台詞（1キャラ10個）。唇は顔の中の小さな楕円で、手より優先。
+// 位置は絵を見て1人ずつ合わせた（口が膝や肩で隠れている絵は、隠れる手前の位置）
+const LIPS = {shion:[0.579,0.270],sumire:[0.390,0.228],fujino:[0.513,0.325],kikyo:[0.400,0.178],ayame:[0.422,0.190],rindo:[0.589,0.194],aoi:[0.479,0.306],yugiri:[0.571,0.360],kaoru:[0.545,0.343],ajisai:[0.581,0.294],yukino:[0.444,0.259],mashiro:[0.720,0.198],hyouka:[0.570,0.219],koyuki:[0.410,0.233],hakuro:[0.520,0.193],rikka:[0.346,0.228],kasumi:[0.520,0.363],hatsuyuki:[0.548,0.366],ginka:[0.600,0.233],shirayuri:[0.499,0.278],momoka:[0.620,0.214],sakurako:[0.597,0.193],botan:[0.618,0.223],nadeshiko:[0.600,0.209],shakuyaku:[0.632,0.182],haruka:[0.518,0.294],karin:[0.596,0.314],mio:[0.570,0.341],natsume:[0.709,0.265],renge:[0.802,0.299],kohaku:[0.627,0.267],anzu:[0.491,0.295],yuzu:[0.620,0.359],mitsu:[0.630,0.233],nana:[0.650,0.193],tsubaki:[0.480,0.233],momiji:[0.566,0.214],akane:[0.480,0.247],shuon:[0.545,0.288],shiori:[0.404,0.214],kaede:[0.547,0.316],kurumi:[0.620,0.193],komachi:[0.580,0.354],midori:[0.547,0.253],wakaba:[0.536,0.221],moegi:[0.450,0.238],kinka:[0.499,0.201],yamabuki:[0.616,0.242],himawari:[0.423,0.183],ruri:[0.550,0.263],ai:[0.523,0.213],sora:[0.550,0.203],nagisa:[0.534,0.394],akari:[0.550,0.339],hina:[0.648,0.379],matsuri:[0.641,0.356],homura:[0.620,0.308],yuhi:[0.439,0.324]};
+for (const id in LIPS) if (ZONES[id]) ZONES[id].unshift(['m', LIPS[id][0], LIPS[id][1], .035, .017]);
+const ORDER = { m: -1, t: 0, f: 1, c: 2, h: 3, k: 4, l: 5 };
 const famOf = id => { const c = root.MJChars && root.MJChars.get(id); return c && c.family; };   // (the family's file holds its sisters' lines)
 const DATA = {}, loading = {}, bags = {};
 // add(id, 性格のメモ, { f: 'a|b|c', … })
 function add(id, note, o) { const d = DATA[id] = { note }; for (const k in o) d[k] = o[k].split('|').map(s => s.trim()).filter(Boolean); }
+// more(id, 種類, 'a|b|c')：add のあとに種類を足す（唇の台詞は各ファイルの末尾で足している）
+function more(id, k, txt) { const d = DATA[id] || (DATA[id] = {}); d[k] = txt.split('|').map(s => s.trim()).filter(Boolean); }
 const HAVE = ['violet', 'snow', 'peach', 'amber', 'crimson', 'chestnut', 'jade', 'gold', 'lapis', 'flame'];
 function load(id) { const f = famOf(id); if (!f || loading[f] || HAVE.indexOf(f) < 0) return; loading[f] = true; const s = document.createElement('script'); s.src = (root.JANKA_TOUCH || 'touch/') + f + '.js?v=' + VER; s.async = true; document.head.appendChild(s); }
 // where on the picture (u, v: 0…1 of the whole picture) → the kind of place
@@ -84,6 +90,6 @@ function line(id, kind) {
   if (!bag || !bag.length) { bag = bags[key] = d[kind].map((_, i) => i); for (let i = bag.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [bag[i], bag[j]] = [bag[j], bag[i]]; } }
   return d[kind][bag.pop()];
 }
-const VER = 2;
-root.MJTouch = { add, load, zone, line, data: DATA, zones: ZONES };
+const VER = 3;
+root.MJTouch = { add, more, load, zone, line, data: DATA, zones: ZONES };
 })(window);

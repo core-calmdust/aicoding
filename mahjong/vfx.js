@@ -53,14 +53,14 @@ function ring(x, y, r, lw, a, c, sq = 1) { if (r < 2 || a <= 0) return; g.save()
 // a burst of light: o = { pal, scale (1 = a call), sparks, embers, petals, flare, flash, rings, dur }
 function burst(x, y, o = {}) {
   const L = lite(), K = (phone() ? .55 : 1) * (L ? 0 : 1), s = o.scale || 1, C = o.pal || pal();
-  FX.push({ k: 'burst', x, y, s, C, t0: performance.now(), dur: o.dur || 900, rings: o.rings ?? 2, flare: !L && o.flare !== false, flash: !L && o.flash !== false, veil: !L && !!o.veil });
+  FX.push({ k: 'burst', x, y, s, C, sq: o.sq || 1, t0: performance.now(), dur: o.dur || 900, rings: o.rings ?? 2, flare: !L && o.flare !== false, flash: !L && o.flash !== false, veil: !L && !!o.veil });
   for (let i = 0; i < Math.round((o.sparks ?? 40) * K); i++) { const a = rnd(0, 6.283), v = rnd(260, 980) * s;
     P.push({ k: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * .85 - rnd(0, 140) * s, life: 0, max: rnd(.45, 1), w: rnd(1, 2.4) * Math.sqrt(s), c: C[(Math.random() * 3) | 0] }); }
   for (let i = 0; i < Math.round((o.embers ?? 14) * K); i++) { const a = rnd(0, 6.283), v = rnd(30, 200) * s;
     P.push({ k: 'ember', x: x + rnd(-14, 14) * s, y: y + rnd(-10, 10) * s, vx: Math.cos(a) * v, vy: Math.sin(a) * v - rnd(40, 140) * s, life: 0, max: rnd(.9, 1.8), r: rnd(2.5, 6) * s, f: rnd(0, 9), c: C[(Math.random() * 2) | 0] }); }
   for (let i = 0; i < Math.round((o.petals ?? 0) * K); i++) { const a = rnd(0, 6.283), v = rnd(160, 620) * s;
     P.push({ k: 'petal', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * .8 - rnd(60, 260) * s, life: 0, max: rnd(1.6, 2.6), r: rnd(5, 10) * s, rot: rnd(0, 6.3), vr: rnd(-6, 6), ph: rnd(0, 6.3), vp: rnd(4, 9),
-      c: ['#ffd0e2', '#ffffff', '#ffe7a8', '#ffb4cf'][(Math.random() * 4) | 0] }); }
+      c: (o.petalCols || ['#ffd0e2', '#ffffff', '#ffe7a8', '#ffb4cf'])[(Math.random() * (o.petalCols || [0, 0, 0, 0]).length) | 0] }); }
   start();
 }
 // a slash of light across a point (riichi): a long thin streak drawn out from one side, its glass afterglow, a few sparks off it
@@ -79,6 +79,23 @@ function rise(x, y, o = {}) {
   start();
 }
 
+// a shock ring on the table (skills): glass rings only, flattened by the table's perspective (sq), r: how far they run
+function shock(x, y, o = {}) {
+  const s = o.scale || 1, C = o.pal || pal();
+  FX.push({ k: 'shock', x, y, s, C, sq: o.sq || .4, r: o.r || 260, n: o.n || 2, t0: performance.now(), dur: o.dur || 800 });
+  start();
+}
+// streams of light drawn in to a point (skills that take: 総取り, 引き寄せ): o = { pal, n, from: [[x, y], …] or around (radius), dur }
+function pull(tx, ty, o = {}) {
+  if (lite()) return; const C = o.pal || pal(), n = Math.round((o.n ?? 26) * (phone() ? .55 : 1)), d = (o.dur || 650) / 1000;
+  for (let i = 0; i < n; i++) { let sx, sy;
+    if (o.from) { const f = o.from[i % o.from.length]; sx = f[0] + rnd(-60, 60); sy = f[1] + rnd(-30, 30); }
+    else { const a = rnd(0, 6.283), r = (o.around || 300) * rnd(.6, 1.1); sx = tx + Math.cos(a) * r; sy = ty + Math.sin(a) * r * (o.sq || .5); }
+    const bend = rnd(-1, 1) * (o.bend ?? 90);
+    P.push({ k: 'home', x0: sx, y0: sy, tx, ty, bend, x: sx, y: sy, px: sx, py: sy, life: -rnd(0, d * .45), max: d * rnd(.55, .8), w: rnd(1, 2.4), c: C[(Math.random() * 2) | 0] }); }
+  start();
+}
+
 function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   if (!FX.length && !P.length) { raf = 0; g.clearRect(0, 0, W, H); if (cv.parentNode) cv.remove(); return; }
@@ -90,13 +107,17 @@ function frame(now) {
       if (f.flash) { const fa = Math.max(0, 1 - u / .22), fr = (120 + 260 * ease(u)) * s; g.globalAlpha = .55 * fa * fa; g.drawImage(glow(C[0]), x - fr, y - fr, fr * 2, fr * 2); }
       const ca = Math.max(0, 1 - u / .7), cr = (60 + 140 * ease(clamp(u / .3, 0, 1))) * s;
       g.globalAlpha = ca * .55; g.drawImage(glow(C[1]), x - cr, y - cr, cr * 2, cr * 2); g.globalAlpha = ca * .6; g.drawImage(glow(C[0]), x - cr * .35, y - cr * .35, cr * .7, cr * .7);
-      if (f.rings > 0) ring(x, y, ease(u) * 260 * s, 5 * s * (1 - u * .7), (1 - u) * .75, C[1]);
-      if (f.rings > 1 && u > .08) ring(x, y, ease((u - .08) / .92) * 180 * s, 4 * s * (1 - u * .7), (1 - u) * .55, C[2], .32);
+      if (f.rings > 0) ring(x, y, ease(u) * 260 * s, 5 * s * (1 - u * .7), (1 - u) * .75, C[1], f.sq);
+      if (f.rings > 1 && u > .08) ring(x, y, ease((u - .08) / .92) * 180 * s, 4 * s * (1 - u * .7), (1 - u) * .55, C[2], f.sq * .32);
       if (f.flare && u < .6) { const fa = 1 - u / .6, fl = (180 + 220 * u) * s; g.save(); g.translate(x, y); g.rotate(.4 + u * .8);
         for (let k = 0; k < 4; k++) { const q = k / 4 * Math.PI, len = fl * (k % 2 ? .5 : 1);
           for (const [w, a] of [[6 * s, .1], [2.2 * s, .32], [.9, .75]]) { g.globalAlpha = fa * a; g.strokeStyle = a > .7 ? '#fff' : C[1]; g.lineWidth = w; g.lineCap = 'round'; g.beginPath(); g.moveTo(-Math.cos(q) * len, -Math.sin(q) * len); g.lineTo(Math.cos(q) * len, Math.sin(q) * len); g.stroke(); } }
         g.restore();
         g.save(); g.translate(x, y); g.scale(6, .14); const lr = 70 * s; g.globalAlpha = fa * .7; g.drawImage(glow(C[1]), -lr, -lr, lr * 2, lr * 2); g.restore(); }
+    } else if (f.k === 'shock') {
+      for (let k = 0; k < f.n; k++) { const v = (u - k * .14) / (1 - k * .14); if (v <= 0) continue;
+        ring(x, y, ease(v) * f.r * s, (6 - k * 2) * s * (1 - v * .7), (1 - v) * (k ? .5 : .8), k ? C[2] : C[1], f.sq); }
+      if (u < .35) { const fa = 1 - u / .35, fr = 90 * s; g.globalAlpha = fa * .5; g.save(); g.translate(x, y); g.scale(1, f.sq); g.drawImage(glow(C[0]), -fr, -fr, fr * 2, fr * 2); g.restore(); }
     } else if (f.k === 'slash') {
       const L = 520 * s, head = ease(clamp(u / .35, 0, 1)), tail = ease(clamp((u - .15) / .85, 0, 1)), ca = Math.cos(f.a), sa = Math.sin(f.a);
       const x0 = x - ca * L, y0 = y - sa * L, xh = x0 + ca * 2 * L * head, yh = y0 + sa * 2 * L * head, xt = x0 + ca * 2 * L * tail * .9, yt = y0 + sa * 2 * L * tail * .9;
@@ -113,11 +134,16 @@ function frame(now) {
       g.beginPath(); g.moveTo(p.x - p.vx / sp * len, p.y - p.vy / sp * len); g.lineTo(p.x, p.y); g.stroke(); }
     else if (p.k === 'ember') { const dr = Math.exp(-1.3 * dt); p.vx *= dr; p.vy = p.vy * dr - 24 * dt; p.x += p.vx * dt + Math.sin(p.life * 3 + p.f) * 10 * dt; p.y += p.vy * dt;
       const fl = .6 + .4 * Math.sin(p.life * 16 + p.f), r = p.r * (1 - lk * .5); g.globalAlpha = Math.min(1, p.life * 6) * (1 - lk) * fl * .9; g.drawImage(glow(p.c), p.x - r * 2, p.y - r * 2, r * 4, r * 4); }
+    else if (p.k === 'home') { const e = lk * lk * (3 - 2 * lk), nx = -(p.ty - p.y0), ny = p.tx - p.x0, nl = Math.hypot(nx, ny) || 1, b = Math.sin(e * 3.1416) * p.bend;
+      p.px = p.x; p.py = p.y; p.x = p.x0 + (p.tx - p.x0) * e + nx / nl * b; p.y = p.y0 + (p.ty - p.y0) * e + ny / nl * b;
+      const al = Math.min(1, lk * 5) * (1 - Math.max(0, lk - .85) / .15); g.globalAlpha = .85 * al; g.strokeStyle = lk > .8 ? '#fff' : p.c; g.lineWidth = p.w; g.lineCap = 'round';
+      let dx = p.x - p.px, dy = p.y - p.py; const dl = Math.hypot(dx, dy) * 4, cap = 46; if (dl > cap) { dx *= cap / dl; dy *= cap / dl; } g.beginPath(); g.moveTo(p.x - dx * 4, p.y - dy * 4);   // (a slow frame must not draw a long line) g.lineTo(p.x, p.y); g.stroke();
+      g.globalAlpha = .5 * al; const r = 5 + p.w * 2; g.drawImage(glow(p.c), p.x - r, p.y - r, r * 2, r * 2); }
     else if (p.k === 'petal') { const dr = Math.exp(-1.5 * dt); p.vx = p.vx * dr + Math.sin(p.life * 2.2 + p.ph) * 40 * dt; p.vy = p.vy * dr + 120 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
       g.save(); g.globalCompositeOperation = 'source-over'; g.globalAlpha = Math.min(1, (1 - lk) * 1.6) * .72; g.translate(p.x, p.y); g.rotate(p.rot); g.scale(Math.cos(p.life * p.vp + p.ph), 1);
       g.fillStyle = p.c; g.beginPath(); g.moveTo(0, -p.r); g.bezierCurveTo(p.r * .9, -p.r * .7, p.r * .75, p.r * .6, 0, p.r); g.bezierCurveTo(-p.r * .75, p.r * .6, -p.r * .9, -p.r * .7, 0, -p.r); g.fill(); g.restore(); }
   }
   raf = requestAnimationFrame(frame);
 }
-window.VFX = { burst, slash, rise, at, pal, active: () => FX.length + P.length };
+window.VFX = { burst, slash, rise, shock, pull, at, pal, active: () => FX.length + P.length };
 })();
