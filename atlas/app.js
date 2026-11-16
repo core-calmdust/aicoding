@@ -209,7 +209,7 @@
     if (pr.dl && pr.dl.days) tiles.push([t('pg.dl'), t('pg.days', { n: pr.dl.days }), pr.dl.best ? t('rec.bestRun', { n: pr.dl.best }) : '']);
     if (pr.hd) tiles.push([t('rec.hands'), pr.hd.toLocaleString(), '']);
     if (pr.sw) tiles.push([t('rec.solved'), pr.sw.toLocaleString(), '']);
-    if (pr.p3 && pr.p3.n) tiles.push([t('rec.m.t3d'), t('rec.wins', { n: pr.p3.w }), pr.p3.best ? t('rec.bestLv', { n: pr.p3.best }) : '']);
+    if (pr.p3 && pr.p3.n) tiles.push([t('rec.m.t3d'), t('rec.wins', { n: pr.p3.w + (pr.p3.sw || 0) }), pr.p3.best ? t('rec.bestLv', { n: pr.p3.best }) : '']);
     const achs = ACH.filter(a => a.gid === g.id).sort((a, b) => (b.done - a.done) || (a.done ? b.tier - a.tier : (b.have / b.need) - (a.have / a.need)));
     const ad = achs.filter(a => a.done).length;
     // three tabs along the bottom: 戦績 (the games) · あそびの記録 (progress) · 実績 (achievements) — only those with something to show
