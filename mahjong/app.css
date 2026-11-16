@@ -2807,3 +2807,10 @@ html.lite :is(#home,#chara).aaa .aa-ch .jig{animation:none}
 #game .rays{animation:none!important;opacity:var(--rb,.85)}
 #game .rays::before{animation:none!important;opacity:var(--g1,0);transform:translate(calc(var(--m1,0) * .4%),calc(var(--m1,0) * .6%))}
 #game .rays::after{animation:none!important;opacity:var(--g2,0);transform:translate(calc(var(--m2,0) * .4%),calc(var(--m2,0) * .6%))}
+/* (2026-11-16, ユーザー「ドラが手牌に収まった時に光らせる」) a dora put into the row after a discard: no glow while it settles (dset),
+   then the glow fades in (dshow) and pulses as before */
+#hand .tl.dora.dset::before,#hand .tl.dora.dset .dg{visibility:hidden}
+#hand .tl.dora.dshow::before{animation:doraIn .45s ease-out both,doraPulse 2.8s ease-in-out .45s infinite}
+#hand .tl.dora.dshow .dg{animation:dgIn .45s ease-out both}
+@keyframes doraIn{from{opacity:0}to{opacity:.75}}
+@keyframes dgIn{from{opacity:0}to{opacity:1}}

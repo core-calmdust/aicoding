@@ -74,6 +74,19 @@ async function runtime() {
     ok('tap: the copy of the tile is shown, then gone when taken', !!(r && r.ghost === 1 && r.ghostLater === 0 && r.ovTile), r && `ghost ${r.ghost}→${r.ghostLater} ovTile ${r.ovTile}`);
     ok('no page errors (game, PC)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
+  if (want('discard')) { console.log('[discard] a dora put into the row glows only once settled');
+    // (2026-11-16, ユーザー「捨てた場所にドラが入る時、収まる前から光っていて違和感」)
+    const p = await page(PC, {}, 'ja', '?nofreeze'); await myTurn(p);
+    const r = await p.evaluate(`(async()=>{const G=JANKA.UIS.game,dr=+document.querySelector('#hand .tl.drawn').dataset.id,T=Math.floor(dr/4);
+      let ind=-1;for(let i=0;i<34;i++)if(MJ.doraOf(i)===T){ind=i;break}const o=G.doraInds.bind(G);G.doraInds=()=>o().concat([ind]);JANKA.renderHand&&JANKA.renderHand();
+      document.querySelector('#hand .hrow .tl[data-id]:nth-child(3)').click();
+      let el=null;for(let k=0;k<40&&!el;k++){await new Promise(r=>setTimeout(r,25));el=document.querySelector('#hand .hrow .tl[data-id="'+dr+'"]')}
+      if(!el)return 'not in row';const a=[el.classList.contains('dset'),getComputedStyle(el,'::before').visibility];
+      await new Promise(r=>setTimeout(r,1200));const e2=document.querySelector('#hand .hrow .tl[data-id="'+dr+'"]');
+      return a.concat([e2&&e2.classList.contains('dset'),e2&&getComputedStyle(e2,'::before').visibility])})()`);
+    ok('a dora put into the row: no glow while it settles, then it glows', Array.isArray(r) && r[0] === true && r[1] === 'hidden' && r[2] === false && r[3] === 'visible', JSON.stringify(r));
+    ok('no page errors (dora settle)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
+
   if (want('drag')) { console.log('[drag] phone: slide a tile to the middle');
     const p = await page(SP); await myTurn(p); await p.evaluate(traceReach);
     const el = await p.$('#hand .hrow .tl[data-id]'); const bx = await el.boundingBox(); const cx = bx.x + bx.width / 2, cy = bx.y + bx.height / 2;

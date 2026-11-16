@@ -1337,7 +1337,11 @@ async function onEvent(ev, d) {
       layoutRiver(d.seat, true);   // (the tile's sound plays when it lands — TB.onTileLand)
       // (others: the hand tidies the row after laying the tile — the drawn tile goes to its place, or the row is pushed together. ユーザー 2026-11-14)
       if (d.seat !== ME) { const dr = UIS.drawnBy[d.seat]; TB.sortAfterDiscard(d.seat, p.hand, dr != null && !d.tsumogiri && p.hand.includes(dr) ? dr : null); }
-      else { clearActs(); renderHand(); }
+      else { const ins = d.tsumogiri ? null : UIS.drawn; clearActs(); renderHand();
+        // (2026-11-16, ユーザー「捨てた場所にドラが入る時、収まる前から光って違和感」) the drawn tile goes into its place in the row while
+        // the hand is still taking the discard out: if it is a dora its glow waits until the hand has the tile away, then fades in
+        const el = ins != null && document.querySelector(`#hand .hrow .tl.dora[data-id="${ins}"]`);
+        if (el) { el.classList.add('dset'); setTimeout(() => { el.classList.remove('dset'); el.classList.add('dshow'); }, FAST < 1 ? 80 : 650); } }
       UIS.drawnBy[d.seat] = null;
       await sleep(d.seat === ME ? 600 : 700);   // (ユーザー 2026-11-14: the next player's draw showed while the hand was still putting the tile out — wait until it is about down)
       break;
