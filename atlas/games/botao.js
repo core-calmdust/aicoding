@@ -297,30 +297,16 @@
     function bigGoal(txt) { goalEl.textContent = txt; goalEl.classList.add('on'); later(() => goalEl.classList.remove('on'), 1700); }
     const powEl = document.createElement('div'); powEl.className = 'btpow'; powEl.hidden = true; document.body.appendChild(powEl);
     const taskEl = document.createElement('div'); taskEl.className = 'bttask'; taskEl.hidden = true; document.body.appendChild(taskEl);
-    // On a phone held upright the pill at the top covers the far goal and its keeper (2026-11-15 ユーザー：メッセージがキーパーと被る、
-    // プレイヤー下に): there it sits just below the ball / your selected button, kept clear of the bottom bar, and follows the view
+    // The pill sits right under the score bar (2026-11-17 ユーザー：メッセージがいずれにせよじゃま、基本上部メニューのすぐ下に — it used
+    // to follow the ball on an upright phone, and covered the buttons there)
     let taskT = 0;
     const narrow = () => innerWidth < 700 && innerHeight > innerWidth;
     function taskPlace() {
-      if (taskEl.hidden || !narrow() || !st) { taskEl.style.top = ''; return; }
-      let yy = -1; const pts = [[st.ball.x, st.ball.y]]; if (sel >= 0 && st.b[sel]) pts.push([st.b[sel].x, st.b[sel].y]);
-      for (const [x, y] of pts) { const p = scr(x, y); if (p && p.y > yy) yy = p.y; }
-      if (yy < 0) { taskEl.style.top = ''; return; }
-      // (2026-11-17 ユーザー：メッセージがプレイヤーのコマと被る、バランスの良い位置に): of the heights between the score bar and the
-      // bottom bar, the one that covers the fewest buttons (both sides) and the ball — near below the ball when that is clear
-      const h = taskEl.offsetHeight || 44, w = taskEl.offsetWidth || innerWidth * .8, x0 = (innerWidth - w) / 2, x1 = x0 + w, lo = 90, hi = Math.max(lo, innerHeight - 240 - h);
-      const C = []; const add = (x, y, r) => { const p = scr(x, y), q = scr(x + r, y); if (p && q) C.push([p.x, p.y, Math.max(8, Math.hypot(q.x - p.x, q.y - p.y)) + 6]); };
-      for (let i = 0; i < st.b.length; i++) if (st.b[i] && !st.b[i].off) add(st.b[i].x, st.b[i].y, D.RB || 2.5);
-      add(st.ball.x, st.ball.y, (D.RBALL || 1) * 2.2);
-      const want = Math.max(lo, Math.min(hi, yy + 52)); let best = want, bc = 1e9;
-      for (let y = lo; y <= hi; y += 6) {
-        let c = Math.abs(y - want) * .02;
-        for (const [cx, cy, r] of C) { const dx = Math.max(x0 - cx, 0, cx - x1), dy = Math.max(y - cy, 0, cy - (y + h)); const d = Math.hypot(dx, dy); if (d < r) c += 10 + (r - d); }
-        if (c < bc) { bc = c; best = y; }
-      }
-      taskEl.style.top = Math.round(best) + 'px';
+      if (taskEl.hidden) return;
+      const hud = document.querySelector('.bv.playing .hud') || document.querySelector('.hud'), r = hud && hud.offsetParent ? hud.getBoundingClientRect() : null;
+      taskEl.style.top = r && r.bottom > 0 && r.bottom < innerHeight / 2 ? Math.round(r.bottom + 8) + 'px' : '';
     }
-    const task = m => { if (stopped) return; taskEl.textContent = m || ''; taskEl.hidden = !m; clearInterval(taskT); taskPlace(); if (m && narrow()) taskT = setInterval(taskPlace, 250); };
+    const task = m => { if (stopped) return; taskEl.textContent = m || ''; taskEl.hidden = !m; clearInterval(taskT); taskPlace(); if (m) taskT = setInterval(taskPlace, 500); };   // (the bar's height can change: a second line)
     const callEl = document.createElement('div'); callEl.className = 'btcall'; callEl.hidden = true;
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => callEl.addEventListener(k, e => e.stopPropagation()));
     (document.getElementById('bv') || document.body).appendChild(callEl);
