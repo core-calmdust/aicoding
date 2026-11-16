@@ -41,7 +41,7 @@ PRES_GONE = 300000      # presence: t older than this = owner gone
 # The host game keeps its data at the root. At most MAX_SHARED games per database (the published rules must stay under 256 KiB;
 # one game is about 45 KB). Groups: shogi ← chess, xiangqi, janggi · reversi ← go, gomoku, hex · checkers ← ugolki, fanorona,
 # alquerque · tafl ← agon (+ latrunculi, foxgeese once their online play is written) · backgammon ← ur, senet (+ patolli) ·
-# morris ← mancala, connect4, dots · konane ← amazons (two free places for new titles).
+# morris ← mancala, connect4, dots · konane ← amazons, ludo (one free place for new titles).
 MAX_SHARED = 4
 RULES_MAX = 256 * 1024
 
@@ -130,6 +130,13 @@ GAMES = {
     'senet': dict(host=('backgammon', 'senet'), first='b', alt=False, nt=True, dkey=True, tckey='tc', tcs={'std': (0, 0, 0), 'long': (0, 0, 0)},
                   legacy_byo=None, free=30000, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=30000, bg=False,
                   variant=('v', ['std', 'long'])),
+    # Ludo & Pachisi (two players only): under the node ludo/ of the Kōnane project. v = tc = 'ludo' / 'pachisi'; b = seat 0
+    # (moves first). As ur: extra throws (Ludo: a 6, a capture, a piece home; Pachisi: graces, captures) and the dice / cowrie
+    # commit–reveal tokens: nt names the next writer; every action has 30 s (free), no reserve; dkey. A Pachisi game takes up to
+    # ~800 throws (~37 characters each)
+    'ludo': dict(host=('konane', 'ludo'), first='b', alt=False, nt=True, dkey=True, tckey='tc', tcs={'ludo': (0, 0, 0), 'pachisi': (0, 0, 0)},
+                 legacy_byo=None, free=30000, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=60000, bg=False,
+                 variant=('v', ['ludo', 'pachisi'])),
     # Alquerque: under the node alq/ of the Checkers project (its own players / ratings / lobby / games; the page reuses the
     # fanorona/ scripts with window.OL_DB_PREFIX = 'alq/'): v = 'alq'; b = the first player
     'alquerque': dict(host=('checkers', 'alq'), first='b', alt=True, tckey='tc', tcs={'alq': (300000, 0, 5000), 'alqf': (300000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],

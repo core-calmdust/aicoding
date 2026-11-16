@@ -37,6 +37,7 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
     skip: 'pcg|\\.pc\\b|gCup|cupb|\\.dest|zbtn|\\.shown|\\.dd\\b',
     start(lv, side, mode) {
       if (typeof openNew !== 'function' || !document.getElementById('btnStart')) return null;
+      if (mode === 'online') { if (typeof window.openOnline !== 'function') return null; window.openOnline(); return true; }   // (the portal card's レート戦 → オンライン: the online dialog, online-ui.js)
       openNew();
       try {
         draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';

@@ -19,7 +19,8 @@ const DEF = { rule: 'ludo', mode: 'ai', players: 4, first: '0', level: 8, speed:
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) {}
 const settings = Object.assign({}, DEF, saved.settings || {}); settings.design = Object.assign({}, DEF.design, (saved.settings || {}).design || {});
 let G = null, SP = null, SP_commit = null, VIEW = null;   // VIEW: a past position on view (the move navigation, review.js)   // SP: a lesson / puzzle on the board (app-learn.js)   // { opts, mode, level, state, thr (current throw or null), log: [], hist: [] }
-function save() { if (SP) return; try { localStorage.setItem(STORE, JSON.stringify({ settings, game: G && { opts: G.opts, mode: G.mode, level: G.level, state: G.state, thr: G.thr, log: G.log, hist: G.hist.slice(-60), plies: (G.plies || []).slice(-700), id: G.id, rated: G.rated || null, resShown: !!G.resShown, recorded: !!G.recorded } })); } catch (e) {} }
+// (an online game on the board — online-ui.js — is never saved here: the local game it replaced is kept, window.__olLocal)
+function save() { if (SP) return; const g = G && G.mode === 'online' ? (window.__olLocal || null) : G; try { localStorage.setItem(STORE, JSON.stringify({ settings, game: g && { opts: g.opts, mode: g.mode, level: g.level, state: g.state, thr: g.thr, log: g.log, hist: g.hist.slice(-60), plies: (g.plies || []).slice(-700), id: g.id, rated: g.rated || null, resShown: !!g.resShown, recorded: !!g.recorded } })); } catch (e) {} }
 
 /* ---------- sound ---------- */
 let AC = null; const ac = () => { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; } catch (e) { return null; } };
@@ -32,9 +33,10 @@ const sHome = () => [523, 659, 784].forEach((f, i) => setTimeout(() => tone(f, .
 /* ---------- names ---------- */
 const colName = seat => t('c.' + G.state.rule + '.' + seat);
 const seatColor = seat => B.COL[G.state.rule][seat][0];
-function humanSeat(seat) { if (!G) return false; if (G.mode === 'pvp') return true; if (G.mode === 'watch') return false; return G.state.ctrl[seat] === 0; }
+function humanSeat(seat) { if (!G) return false; if (G.mode === 'pvp') return true; if (G.mode === 'online') return typeof olHuman === 'function' && olHuman(seat); if (G.mode === 'watch') return false; return G.state.ctrl[seat] === 0; }
 function seatName(seat) {
   const c = G.state.ctrl[seat];
+  if (G.mode === 'online' && typeof olSeatName === 'function') return olSeatName(seat);   // (online-ui.js: the players' names and ratings)
   if (G.mode === 'pvp') return t('p.player', { n: c + 1 });
   if (G.mode === 'ai' && c === 0) return t('p.you');
   return t('p.ai', { n: G.level }) + (G.pro ? ' PRO' : '');
@@ -251,8 +253,9 @@ function renderPlayers() {
   $('#players').innerHTML = s.seats.map(seat => {
     const home = s.pos[seat].filter(p => p >= LAST).length;
     const team = s.rule === 'pachisi' ? `<span class="tm">${t('p.team')} ${s.team[seat] ? 'B' : 'A'}</span>` : '';
-    return `<div class="seat${seat === s.turn && !s.over ? ' on' : ''}"><span class="dot" style="background:${seatColor(seat)}"></span><div style="min-width:0"><div class="nm">${seatName(seat)}${team}</div><div class="sb">${colName(seat)}</div></div><span class="hm">${t('p.home', { n: home, m: 4 })}</span></div>`;
+    return `<div class="seat${seat === s.turn && !s.over ? ' on' : ''}"><span class="dot" style="background:${seatColor(seat)}"></span><div style="min-width:0"><div class="nm">${seatName(seat)}${team}</div><div class="sb">${colName(seat)}</div></div><span class="hm">${t('p.home', { n: home, m: 4 })}</span>${G.mode === 'online' ? `<span class="pclk" id="olClk${seat}"></span>` : ''}</div>`;
   }).join('') + houseTagsInPlay();
+  if (G.mode === 'online' && typeof olClockRender === 'function') olClockRender();   // (the 30 s of the side to act, online-ui.js)
 }
 // the house rules of the game being played (ludo, changed from the usual) as tags under the players (2026-11-09)
 function houseTagsInPlay() {
@@ -292,6 +295,7 @@ function step() {
   if (s.over) { setStatus(''); $('#btnRoll').disabled = true; zFocus(null); gameOver(); cRender(); return; }
   const seat = s.turn, human = humanSeat(seat);
   if (G.thr) { if (!CUP.mode) cupDraw(seat, 'dice', G.thr); afterThrow(my); return; }   // (a reload after the throw: its dice by the cup put aside)
+  if (G.mode === 'online') { if (typeof olStep === 'function') olStep(my); cRender(); return; }   // (online-ui.js: my throw once both parts of it are known)
   zSeat(seat);
   // (2026-11-09) the first throw of a game: a little bubble floats over the cup — 「サイコロをクリック！」 (タップ on touch screens) — until
   // the player throws; once per game, not with auto roll
@@ -306,8 +310,13 @@ function step() {
   }
   cRender();
 }
-function doRoll() {
-  if (busy || !G || G.state.over || G.thr) return;
+// forced: a given throw (online: my throw from the commit–reveal chains, or the other side's recorded throw); done: called instead of
+// afterThrow (online-ui.js plays the other side's recorded move). → false when no throw is made now
+function doRoll(forced, done) {
+  if (busy || !G || G.state.over || G.thr) return false;
+  if (!forced || typeof forced.v !== 'number') forced = null;
+  if (typeof done !== 'function') done = null;
+  if (G.mode === 'online' && !forced) { forced = typeof olThrow === 'function' ? olThrow() : null; if (!forced) return false; }
   if (VIEW && window.LudoRv) LudoRv.toLatest();
   const my = ++token; busy = true;
   $('#btnRoll').disabled = true; sRattle();
@@ -320,15 +329,17 @@ function doRoll() {
   if (cup) { setTimeout(() => { if (my === token) cupDraw(seat, 'flip'); }, T1); setTimeout(() => { if (my === token) { cupDraw(seat, 'down'); tone(150, .08, 'sine', .08); } }, T1 + T2); }
   setTimeout(() => {
     clearInterval(iv); if (my !== token || !G) return;
-    G.thr = E.rollThrow(G.state); showThrow(G.thr); cupDraw(seat, 'lift', G.thr); save(); busy = false;
-    afterThrow(my);
+    G.thr = forced ? Object.assign({}, forced) : E.rollThrow(G.state); showThrow(G.thr); cupDraw(seat, 'lift', G.thr); save(); busy = false;
+    if (done) done(); else afterThrow(my);
   }, T1 + T2 + T3);
+  return true;
 }
 function afterThrow(my) {
   const s = G.state, thr = G.thr, seat = s.turn;
   showThrow(thr); token = my = ++token;
   moves = E.legalMoves(s, thr);
   const real = moves.filter(m => !m.pass);
+  if (!real.length && G.mode === 'online' && !humanSeat(seat)) return;   // (online: the other side's recorded pass — online-ui.js plays it)
   if (!real.length) {   // forced pass (or three sixes)
     const m = moves[0] || { pass: true };
     setStatus(m.forfeit ? t('st.three') : t('st.nomove')); toast(m.forfeit ? t('st.three') : t('st.nomove'), 900);
@@ -342,7 +353,7 @@ function afterThrow(my) {
     $('#btnPass').classList.toggle('hidden', !moves.some(m => m.pass));
     setStatus(t('st.pick', { v: thr.dice ? (G.state.left || thr.dice).join(' + ') : thr.v }));
     cRender();
-  } else {
+  } else if (G.mode !== 'online') {   // (online: the other side's move comes from the record — online-ui.js)
     const r = E.think(s, thr, G.level, Math.random, G.pro || null);   // (G.pro: PRO mode)
     if (G.mode === 'watch') setTimeout(() => { if (my === token) commit(r.move); }, 240 * SPD());   // AIの着手は即時（観戦だけ間を取る）
     else commit(r.move);
@@ -350,7 +361,9 @@ function afterThrow(my) {
 }
 async function commit(m) {
   if (SP) { SP_commit(m); return; }
-  if (busy) return; busy = true; const my = ++token;
+  if (busy) return;
+  if (G.mode === 'online' && !(typeof olRemote !== 'undefined' && olRemote) && !(typeof olSend === 'function' && olSend(m))) return;   // (online: my move goes out first — online-ui.js)
+  busy = true; const my = ++token;
   clearMarks(); $('#btnPass').classList.add('hidden');
   const g0 = G, s0 = G.state, thr = G.thr, seat = s0.turn;
   if (humanSeat(seat) && G.mode === 'ai') G.hist.push({ state: s0, thr, log: G.log.length, pl: G.plies.length });
@@ -406,7 +419,7 @@ $('#btnUndo').onclick = () => {
   token++; busy = false; placeAll(); renderKifu(); save(); step();
 };
 $('#btnHint').onclick = () => {
-  if (!G || !G.thr || !humanSeat(G.state.turn) || busy || G.rated) { toast(t('hint.wait')); return; }
+  if (!G || !G.thr || !humanSeat(G.state.turn) || busy || G.rated || G.mode === 'online') { toast(t('hint.wait')); return; }
   const r = E.think(G.state, G.thr, 20, () => .5);
   if (!r.move || r.move.pass) { toast(t('hint.pass')); return; }
   pcEls[G.state.turn + ',' + r.move.k].classList.add('hint'); toast(t('hint.best'));
@@ -420,6 +433,7 @@ $('#btnResign').onclick = () => {
 
 /* ---------- result ---------- */
 function gameOver() {
+  if (G.mode === 'online') return;   // (online-ui.js records the game and shows its result)
   if (!G.recorded) { G.recorded = true; recordGame(); save(); }
   if (!G.resShown) { G.resShown = true; save(); showResult(); }
 }

@@ -137,8 +137,10 @@ html.hb-on .throw .shown:not(.cw){width:60px;height:60px}html.hb-on .throw .show
   .side{grid-area:side}
   .frame{width:min(100%, calc(100vh - 110px), 860px)}
   html:is(.hb-on,.hb-atlas){--vh:calc(100vh - var(--hb-h, 56px));--bd:min(calc(var(--vh) - 40px), calc(100vw - var(--side) - 24px - 64px), 1040px)}
-  html:is(.hb-on,.hb-atlas).ol-dock{--vh:calc(100vh - var(--hb-h, 56px) - 46px)}
-  @supports (height:100dvh){html:is(.hb-on,.hb-atlas){--vh:calc(100dvh - var(--hb-h, 56px))}html:is(.hb-on,.hb-atlas).ol-dock{--vh:calc(100dvh - var(--hb-h, 56px) - 46px)}}
+  /* the online dock: its bar + the folded chat strip (108px); 46px while online play is not open (html.ol-soon) */
+  html:is(.hb-on,.hb-atlas).ol-dock{--vh:calc(100vh - var(--hb-h, 56px) - 108px)}
+  html:is(.hb-on,.hb-atlas).ol-dock.ol-soon{--vh:calc(100vh - var(--hb-h, 56px) - 46px)}
+  @supports (height:100dvh){html:is(.hb-on,.hb-atlas){--vh:calc(100dvh - var(--hb-h, 56px))}html:is(.hb-on,.hb-atlas).ol-dock{--vh:calc(100dvh - var(--hb-h, 56px) - 108px)}html:is(.hb-on,.hb-atlas).ol-dock.ol-soon{--vh:calc(100dvh - var(--hb-h, 56px) - 46px)}}
   html:is(.hb-on,.hb-atlas) body{overflow:hidden}
   html:is(.hb-on,.hb-atlas) .top{display:none}
   html:is(.hb-on,.hb-atlas) .app{max-width:none;margin:0;height:var(--vh);grid-template-columns:var(--bd) var(--side);grid-template-areas:"board side";justify-content:center;align-content:center;align-items:stretch;gap:0 24px;padding:20px 32px}
@@ -152,24 +154,7 @@ html.hb-on .throw .shown:not(.cw){width:60px;height:60px}html.hb-on .throw .show
   /* the portal skin (?skin=atlas): its bar is 64px, and the 3D board's wooden frame reaches a little past the SVG board */
   html.hb-atlas{--hb-h:64px;--bd:min(calc(var(--vh) - 84px), calc(100vw - var(--side) - 24px - 120px), 1000px)}
 }
-/* ---------- the online dock (online-soon.js): 準備中 — a bar along the bottom off touch screens; phones: the オンライン tab ---------- */
-.dock{display:none}
-@media not all and (pointer: coarse){
-  .dock{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;height:46px;background:linear-gradient(180deg,#221b3d,#130f22);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,0,0,.4)}
-}
-.dock-bar{display:flex;align-items:center;gap:10px;height:46px;padding:0 18px;cursor:pointer;flex:1;min-width:0}
-.dk-dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex:none}
-.dk-title{font-size:13px;letter-spacing:.08em;white-space:nowrap;font-weight:700}
-.dk-stat{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.dk-sp{flex:1}
-.dk-btn{font-size:12.5px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--text);white-space:nowrap;flex:none}
-.dk-btn:hover{border-color:var(--accent)}
-@media (pointer: coarse){
-  body:not(.no-online) .mtabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;height:calc(50px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
-  .mtabs button{flex:1;font-size:13px;letter-spacing:.06em}
-  body:not(.no-online) .app{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
-}
-#olSoon p{font-size:14.5px;line-height:1.8;color:var(--muted);margin:0 0 10px}#olSoon .ols-1{color:var(--text);font-weight:600}
+/* ---------- the online dock, the phones' オンライン tab, the online dialog: online.css (online-ui.js) ---------- */
 /* ---------- dialogs ---------- */
 .overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(8,6,16,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .2s;padding:16px}
 .overlay.show{opacity:1;pointer-events:auto}
@@ -436,6 +421,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 @media (max-width:560px){.ls-cats{grid-auto-flow:row;grid-template-columns:1fr 1fr}.ls-cats button{flex-direction:row!important;justify-content:flex-start;padding:7px 8px!important}.ls-cats button .nm{flex:1;text-align:start}}
 
 </style>
+<link rel="stylesheet" href="online.css?v=1">
 </head>
 <body>
 <div class="app">
@@ -582,6 +568,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 </div>
 
 <script src="i18n.js?v=6"></script>
+<script src="i18n-online.js?v=1"></script>
 <script src="../shared/rulesoffer.js?v=18l14k"></script>
 <script src="../shared/headerbar.js?v=63"></script>
 <script src="../shared/lessonkeys.js?v=3"></script>
@@ -591,26 +578,30 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="board2d.js?v=7"></script>
 <script src="board-art.js?v=3"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
-<script src="coach.js?v=3sq-ls"></script>
+<script src="coach.js?v=4sq-ls"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="../shared/record.js?v=16"></script>
 <script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/mtworkers.js?v=4"></script>
 <script src="mt.js?v=4"></script>
 <script src="house.js?v=7"></script>
-<script src="app.js?v=25-pro"></script>
+<script src="app.js?v=26-ol"></script>
 <script src="review.js?v=3-mt"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="rated.js?v=2"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/luxintro.js?v=3"></script><script src="app-learn.js?v=5-lx1"></script>
+<script src="firebase-config.js?v=1"></script>
+<script src="../shared/onlinesec.js?v=2l14as1sh1"></script>
+<script src="../shared/tick.js?v=2l14"></script>
+<script src="online.js?v=1"></script>
+<script src="online-ui.js?v=1"></script>
 <script src="../shared/cardbar.js?v=15l14"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script><script src="../shared/ngdisp.js?v=1-nd1"></script>
-<script src="../shared/atlas.js?v=20261116hb1am1" defer></script>
+<script src="../shared/atlas.js?v=20261116hb1am1ld1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=4l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
-<script src="online-soon.js?v=2"></script>
 <script src="../shared/infotabs.js?v=24" defer></script>
 <!-- World Board Game Atlas portal skin: ludo/?skin=atlas — the 3D board (atlas/models/ludo.js + atlas/skin/ludo.js), the SVG board stays on top for taps (all features kept) -->
 <script>
@@ -621,7 +612,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=3')).then(() => load('../atlas/table3d.js?v=183')).then(() => load('../atlas/tables3d.js?v=146')).then(() => load('../atlas/skin/common.js?v=110')).then(() => load('../atlas/models/ludo.js?v=9')).then(() => load('../atlas/skin/ludo.js?v=12'))
+  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=3')).then(() => load('../atlas/table3d.js?v=183')).then(() => load('../atlas/tables3d.js?v=146')).then(() => load('../atlas/skin/common.js?v=110')).then(() => load('../atlas/models/ludo.js?v=9')).then(() => load('../atlas/skin/ludo.js?v=13'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
