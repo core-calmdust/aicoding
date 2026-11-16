@@ -73,3 +73,4 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - 盤の右下の案内（`#prompt`）は1行のまま、入らなければ字を小さくする（`app.js` の `fitPrompt`、8px まで）。「…」で切らない。
 - **既知の課題**：スマホ横持ち（844×390）の 3D スキン（`?skin=atlas`）は、大百科のヘッダー（64px）が残り、盤の下が切れる（盤は高さいっぱいに作られるがヘッダーの分だけ下にずれる）。`konane/` の 3D スキンも同じ状態なので、共通の作り（`ur/` の横持ちのような、ヘッダーを細いピルにする並び）を決めてから直す。2D の横持ちは盤が高さいっぱいに入り、遊べる。
 - 3D スキンの PC のヘッダー：ゲーム名が長くてロゴの欄が狭くなり、下の英字（World Board Game Atlas）の右が切れていたので、欄の幅に合わせて字を小さくする（`atlas/skin/latrunculi.js`）。
+- **大百科アイコン（2026-11-16）**：`atlas/icons3d.js` の ICONS.latrunculi を `atlas/tools/icons.html`（1920px で描画）→ `atlas/tools/icon-post.py` で `images/atlas/latrunculi.webp`（320×320、共通の位置規定どおり）。`atlas/app.js` の R3 に登録、画像の `?v=12`。
