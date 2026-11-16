@@ -122,7 +122,7 @@
 
   /* ---------- common renderers ---------- */
   const R3 = new Set(['peg', 'reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom', 'crokinole', 'hockey', 'botao', 'hitblow', 'amazons', 'shanghai', 'latrunculi', 'foxgeese', 'patolli']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'latrunculi' || g.id === 'foxgeese' || g.id === 'patolli' || g.id === 'hitblow' ? 12 : g.id === 'fanorona' || g.id === 'janggi' || g.id === 'morris' || g.id === 'peg' || g.id === 'shanghai' ? 11 : 10}` : `../${g.icon}`;
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'hitblow' ? 13 : g.id === 'latrunculi' || g.id === 'foxgeese' || g.id === 'patolli' ? 12 : g.id === 'fanorona' || g.id === 'janggi' || g.id === 'morris' || g.id === 'peg' || g.id === 'shanghai' ? 11 : 10}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');

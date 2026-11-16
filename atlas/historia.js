@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 25;                     // data version (bump when historia/*.json change)
+  const V = 26;                     // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];   // (a game without text in a language falls back to English)
   const UI = {
@@ -910,7 +910,7 @@
       });
       (s.arrows || []).forEach(([a, b, c2, d2], i) => { body += `<path class="ar" pathLength="1" style="--d:${dd + (s.pcs || []).length * 90 + 700 + i * 300}ms" d="M${X(a)} ${Yy(b)}L${X(c2)} ${Yy(d2)}" marker-end="url(#hsArr2)"/>`; });
     } else if (T === 'hitblow') {   // hit & blow (2026-11-16): the midnight board — the answer case at the top ("?", or the answer when s.open), rows of jewel pegs
-      // (each row a string of symbol indices 0-7 in the game's colours), and each row's 2×2 pins worked out from s.ans: hits (lime) first, then blows (white).
+      // (each row a string of symbol indices 0-7 in the game's colours), and each row's 2×2 pins worked out from s.ans: hits (pink) first, then blows (white).
       // The light left of a row alternates mint / pink: the two players take turns on the one board.
       const HC = ['#ff4f5e', '#ffcc33', '#3fd97a', '#3ea0ff', '#a97cff', '#ff76c4', '#ff9940', '#38e0e6'];
       const ans = String(s.ans || '0123'), n = ans.length, rows = s.rows || [], cell = 32, lw = 14, pw = 34, cH = 40;
@@ -933,7 +933,7 @@
         const pins = Array(hit).fill(HC.length).concat(Array(blow).fill(-1)), px = PD + lw + 8 + n * cell + 8;
         for (let q = 0; q < 4; q++) { const x = px + (q % 2) * 13 + 4, yy = y - 6.5 + Math.floor(q / 2) * 13, p = pins[q];
           out.push(`<circle class="cl" style="--d:${r * 40}ms" cx="${x}" cy="${yy}" r="3" fill="#000" opacity=".55"/>`);
-          if (p !== undefined) body += `<circle class="cl" style="--d:${d0 + n * 70 + 120 + q * 60}ms" cx="${x}" cy="${yy}" r="4.4" fill="${p === -1 ? '#f4f7ff' : '#a6e81f'}" stroke="rgba(0,0,0,.35)" stroke-width=".8"/>`; }
+          if (p !== undefined) body += `<circle class="cl" style="--d:${d0 + n * 70 + 120 + q * 60}ms" cx="${x}" cy="${yy}" r="4.4" fill="${p === -1 ? '#f4f7ff' : '#ff5aa8'}" stroke="rgba(0,0,0,.35)" stroke-width=".8"/>`; }
         for (let i = 0; i < n; i++) body += gem(X(i), y, g[i], d0 + i * 70);
       });
     } else if (T === 'c4') {

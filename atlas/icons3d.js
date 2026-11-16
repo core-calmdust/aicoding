@@ -521,8 +521,8 @@
       g.add(at(gem('#3ea0ff', 'drop', 1), p(0), .52, p(1))); g.add(at(gem('#a97cff', 'moon', 1), p(1), .52, p(1)));
       const pin = (hex, x, z) => { const b = ball(.15, C(hex, { roughness: .2, emissive: hex, emissiveIntensity: .45 }), .85); b.position.set(x, .6, z); g.add(b); };
       const fx = p(2), d = S * .2;
-      [[0, '#a6e81f'], [1, '#a6e81f'], [2, '#f4f7ff']].forEach(([k, c]) => pin(c, fx + (k % 2 ? d : -d), p(0) + (k < 2 ? -d : d)));
-      [[0, '#a6e81f'], [1, '#f4f7ff'], [2, '#f4f7ff'], [3, '#f4f7ff']].forEach(([k, c]) => pin(c, fx + (k % 2 ? d : -d), p(1) + (k < 2 ? -d : d)));
+      [[0, '#ff5aa8'], [1, '#ff5aa8'], [2, '#f4f7ff']].forEach(([k, c]) => pin(c, fx + (k % 2 ? d : -d), p(0) + (k < 2 ? -d : d)));
+      [[0, '#ff5aa8'], [1, '#f4f7ff'], [2, '#f4f7ff'], [3, '#f4f7ff']].forEach(([k, c]) => pin(c, fx + (k % 2 ? d : -d), p(1) + (k < 2 ? -d : d)));
       g.add(at(gem('#ff76c4', 'heart', 1.9), p(1) - .1, 2.6, p(2) - .2, .36, 0, -.24));   // the big gem coming down into the last row
       return g;
     },

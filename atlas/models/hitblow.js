@@ -37,7 +37,7 @@
   const COLORS = ['#ff4f5e', '#ffcc33', '#3fd97a', '#3ea0ff', '#a97cff', '#ff76c4', '#ff9940', '#38e0e6'];
   // the ナンバー gems: clear glass tinted per digit, the digit inside
   const DIGIT = ['#9fb3ff', '#ff6b7a', '#ffb347', '#ffe066', '#7ee08a', '#4fd6c8', '#58a8ff', '#a48bff', '#ff8fd8', '#e8edf7'];
-  const HIT = '#a6e81f', BLOW = '#f4f7ff';
+  const HIT = '#ff5aa8', BLOW = '#f4f7ff';   // (hit: pink — 2026-11-17 user: 今の色だと見づらいのでピンクと白で)
 
   /* ---------- the gem's face: a planar picture seen from above (colour, depth, the picture, a soft inner light) ---------- */
   function gemTex(kind, v) {
