@@ -80,7 +80,8 @@ function more(id, k, txt) { const d = DATA[id] || (DATA[id] = {}); d[k] = txt.sp
 const HAVE = ['violet', 'snow', 'peach', 'amber', 'crimson', 'chestnut', 'jade', 'gold', 'lapis', 'flame'];
 function load(id) { const f = famOf(id); if (!f || loading[f] || HAVE.indexOf(f) < 0) return; loading[f] = true; const s = document.createElement('script'); s.src = (root.JANKA_TOUCH || 'touch/') + f + '.js?v=' + VER; s.async = true; document.head.appendChild(s); }
 // where on the picture (u, v: 0…1 of the whole picture) → the kind of place
-function zone(id, u, v) { let best = null; for (const z of ZONES[id] || []) { const dx = (u - z[1]) / z[3], dy = (v - z[2]) / z[4]; if (dx * dx + dy * dy <= 1 && (best == null || ORDER[z[0]] < ORDER[best])) best = z[0]; } return best; }
+function zoneAt(id, u, v) { let best = null; for (const z of ZONES[id] || []) { const dx = (u - z[1]) / z[3], dy = (v - z[2]) / z[4]; if (dx * dx + dy * dy <= 1 && (best == null || ORDER[z[0]] < ORDER[best[0]])) best = z; } return best; }
+function zone(id, u, v) { const z = zoneAt(id, u, v); return z ? z[0] : null; }
 // a line for that place (null: not loaded yet, or nothing for it). Each list is gone through in a shuffled order before it repeats.
 function line(id, kind) {
   const d = DATA[id]; if (!d) { load(id); return null; }
@@ -91,5 +92,5 @@ function line(id, kind) {
   return d[kind][bag.pop()];
 }
 const VER = 3;
-root.MJTouch = { add, more, load, zone, line, data: DATA, zones: ZONES };
+root.MJTouch = { add, more, load, zone, zoneAt, line, data: DATA, zones: ZONES };
 })(window);

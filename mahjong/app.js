@@ -567,8 +567,8 @@ function charSay(e, o) {
   // face and the hair around it 10% · arms, legs, the belly and everywhere else 30%; (ユーザー 2026-11-15) what she says
   // (touch.js: about a hundred lines each, Japanese only)
   if (im) { const r = uiRect(im), k = Math.max(r.width / 1080, r.height / 1920), w = 1080 * k, h = 1920 * k, [px, py] = uiPt(e.clientX, e.clientY);   // (the picture covers its box, held at the top, centred across)
-    const u = (px - r.left - (r.width - w) / 2) / w, v = (py - r.top) / h, zn = window.MJTouch && MJTouch.zone ? MJTouch.zone(c.id, u, v) : null;
-    if (window.MJJiggle) MJJiggle.poke(im, u, v, { c: 1, h: 1, f: .1, k: .1, m: .1 }[zn] ?? .3);
+    const u = (px - r.left - (r.width - w) / 2) / w, v = (py - r.top) / h, zr = window.MJTouch && MJTouch.zoneAt ? MJTouch.zoneAt(c.id, u, v) : null, zn = zr ? zr[0] : null;
+    if (window.MJJiggle) MJJiggle.poke(im, u, v, { c: 1, h: 1, f: .1, k: .1, m: .1 }[zn] ?? .3, zr);
     at = [px, py];   // (the bubble by the touched place, whichever line she says)
     if (window.MJTouch && I18N.lang === 'ja') txt = MJTouch.line(c.id, zn); }
   if (!txt) { const ks = Object.keys(c.lines || {}); if (!ks.length) return; txt = L(c.lines[ks[(Math.random() * ks.length) | 0]]); }
