@@ -1220,7 +1220,7 @@
       // phones (2026-11-15): the framing doesn't follow the bubble's text — the text box is counted as 4 lines whatever it holds
       // (a longer text may cover the board's edge: it is read, not played on), so the board stays put and as large as it can be
       let bt = p ? $('bv').clientHeight - p.offsetTop + 4 : 0;
-      const tx = p && matchMedia('(max-width: 819px)').matches && p.querySelector('.tx');
+      const tx = p && !p.dataset.fitWhole && matchMedia('(max-width: 819px)').matches && p.querySelector('.tx');   // (data-fit-whole: a course whose panel keeps one height on every page and scrolls its text — patolli: the board is framed above all of it)
       if (tx) { const lh = parseFloat(getComputedStyle(tx).lineHeight) || 25; bt += Math.round(4 * lh - tx.offsetHeight); }
       Table3D.setInset(bt, tp); return; }
     // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)
@@ -1445,7 +1445,7 @@
     $('bvRtRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openRec(g, 'all', 'rt'); };
     $('bvLsK').addEventListener('change', () => { pref[id + ':lsk'] = $('bvLsK').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} const cl = $('bvi').querySelector('.R .act > a.btn'); if (cl && M() === 'lesson') cl.href = mx2d(g, 'lesson'); });
     // レート戦's time control: a picker button + list sheet (the same UI as the level); its list follows 相手
-    const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c || !!(Atlas3D[id] && Atlas3D[id].mx); $('bvRtNote').hidden = !!c || opp === 'online' || !!(Atlas3D[id] && Atlas3D[id].mx); if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
+    const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c || !!(Atlas3D[id] && Atlas3D[id].mx); $('bvRtNote').hidden = !!c || opp === 'online' || !!(Atlas3D[id] && Atlas3D[id].mx) || !RTG[id]; /* (a rated game that opens the full game keeps that game's own clock — patolli: 30 s a move — so no "no clock" note) */ if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
     const rtNow = () => { const el = $('bvRtNow'); if (!el) return; const rec = $('bvRtRec'); if (rec) { if (rec.previousElementSibling !== el) { el.after(rec); rec.classList.add('rtrec'); } rec.hidden = !RTG[id] || M() !== 'rated'; }   /* (戦績 (the cup) sits right of the current rating, 2026-11-14) */ const ol = $('bvRtOpp').value === 'online'; const solo = !!el.closest('.rtonly'); el.hidden = !RTG[id] || M() !== 'rated' || (ol && olNowTxt(id) === null && !solo); /* (beside 種目: the right half, rated games only) */ if (!el.hidden) el.innerHTML = `<small>${esc(t('rec.rtNow'))}</small><b>${esc(ol ? olNowTxt(id) || UNPL[lang] || UNPL.en : rtNowTxt(id, $('bvVar') ? $('bvVar').dataset.v || '' : rtRuleV(id)))}</b>`; };   // (online: the account's one online rating, as the full page last saw it — shogi/online.js cacheRt)
     const olNowTxt = id => { let o = null; try { o = JSON.parse(localStorage.getItem(id + '-online-rt') || 'null'); } catch (e) {} if (!o && id !== 'shogi') return null; return o && o.n > 0 && typeof o.r === 'number' ? 'R ' + o.r : UNPL[lang] || UNPL.en; };   // (null: a game whose full page does not save its online rating yet — no box)
     rtNowHook = rtNow; rtNow();
@@ -1538,7 +1538,7 @@
     };
     if (window.__bvModeRz) setTimeout(window.__bvModeRz, 0);
   }
-  const FULL_SKIN = { ludo: true, reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, janggi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true, amazons: true, latrunculi: true, foxgeese: true };
+  const FULL_SKIN = { ludo: true, reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, janggi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true, amazons: true, latrunculi: true, foxgeese: true, patolli: true };
   let lastKind;
   function startPlay(kind, over, sub) {   // over: 'puzzle' | 'lesson' — the 「あそぶ」 sheet opens the full game straight at its puzzles / lessons; sub: which part (the card's tabs, mxBind)
     if (renderPlace.close) renderPlace.close();
