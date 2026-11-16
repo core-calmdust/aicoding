@@ -1367,6 +1367,12 @@ async function onEvent(ev, d) {
       if (d.slot && d.by) partnerFlash(d.seat, d.by, MJSkills.get(d.skill));   // (ユーザー 2026-11-16: a partner's skill — her face comes on at the seat too)
       if (FAST >= 1 && window.MJSkillFx && TB) { SND.skillFx(d.skill); await MJSkillFx.play(d.skill, d.seat, TB, { lite: !!DB.set.lite }); }   // (ユーザー 2026-11-15: after the picture and the words, the skill's own effect over the table — skillfx.js)
       refreshTable(); renderBadges();
+      // (2026-11-16, ユーザー「スキル使用の後、盤面の中央に手を伸ばして斜めに自分の方へ戻す謎のアクション」) すり替え by another player: the
+      // tile drawn is now a different one — the new tile had never been placed on the table (it stood at the table's centre, unseen), so
+      // the hand tidying the row after the discard reached for it there. It is put where the drawn tile stands, the old one goes back
+      // to the wall, and it is the drawn tile from now on.
+      if (d.info && d.info.to != null && d.info.from != null) { UIS.drawnBy[d.seat] = d.info.to;
+        if (d.seat !== ME) { TB.tile(d.info.from).visible = false; TB.layoutHand(d.seat, g.P[d.seat].hand.filter(x => x !== d.info.to), d.info.to); } }
       if (d.seat === ME) {
         if (d.info.peek) await peekPop(d.info.peek);   // (ユーザー 2026-11-15: shown once, mid-screen — remembered, not kept in the box)
         if (d.info.read) await mindPop(d.info.read);   // (ユーザー 2026-11-16: like 先読み — shown once, mid-screen, then gone)
@@ -2172,5 +2178,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
+window.JANKA = { _ev: (e, d) => onEvent(e, d), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
 })();
