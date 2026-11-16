@@ -97,6 +97,13 @@ async function runtime() {
       ok(`${lang}: settings close on a click outside`, await p.evaluate(`document.querySelector('#modal').hidden`));
       ok(`${lang}: no page errors (home)`, !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); } }
 
+  if (want('jiggle')) { console.log('[jiggle] a tap on her picture wobbles, then the picture is back');
+    const p = await page(PC); const bb = await (await p.$('#pImg img')).boundingBox(); await p.mouse.click(bb.x + bb.width * .5, bb.y + bb.height * .3); await p.waitForTimeout(80);
+    const on = await p.evaluate(`[document.querySelector('#pImg img').style.visibility, getComputedStyle(document.querySelector('#pImg .jig')||document.body).display]`);
+    await p.waitForTimeout(1600); const off = await p.evaluate(`[document.querySelector('#pImg img').style.visibility, getComputedStyle(document.querySelector('#pImg .jig')).display]`);
+    ok('the canvas takes over while it wobbles, the picture comes back', on[0] === 'hidden' && on[1] === 'block' && off[0] === '' && off[1] === 'none', on + ' → ' + off);
+    ok('no page errors (jiggle)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
+
   if (want('fonts')) { console.log('[fonts] every text in the Mincho');
     const p = await page(PC); const fams = await p.evaluate(`[...new Set([...document.querySelectorAll('body *')].filter(e=>e.offsetWidth).map(e=>getComputedStyle(e).fontFamily))]`);
     ok('only Shippori Mincho B1', fams.length === 1 && /Shippori/.test(fams[0]), fams.join(' / ')); await p.ctx.close(); }
