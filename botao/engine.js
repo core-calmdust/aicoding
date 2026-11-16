@@ -420,7 +420,8 @@
       lv, dirs: lv < 4 ? 8 : lv < 9 ? 12 : lv < 15 ? 18 : 24, pows: lv < 6 ? 3 : 4, reach: 22 + k * 22,
       angSd: (2.4 - Math.pow(k, .8) * 2.1) * Math.PI / 180, vSd: .07 - k * .045,   // a weak hand is still a hand: it aims, a little off (2026-11-15: 4.6° looked random)
       robust: lv < 8 ? 3 : lv < 15 ? 4 : 5, pickTop: lv <= 3 ? 4 : lv <= 7 ? 2 : 1,
-      shotBar: .22 + k * .06,          // how sure of a goal it wants before declaring a shot (its own hand counted in)
+      shotBar: .30 - k * .18,          // how sure of a goal it wants before declaring a shot (its own hand counted in) — a strong side
+                                       // shoots more readily (2026-11-16 ユーザー：上位レベルでもシュートに消極的・緊張感がない; was .22 + k·.06)
       keepSd: 6 - k * 5.4,             // the goalkeeper's placing error (cm)
       defend: k,                       // weight on its own shape when the ball is lost
     };
@@ -608,15 +609,23 @@
     }
     return out;
   }
-  // the attacker's shots at goal (the keeper already set): aim at points across the mouth
+  // the attacker's shots at goal (the keeper already set): aim at points across the mouth. The ghost-ball aim is off by a
+  // little on a cut (the button slows, the contact throws the ball), so a strong side also tries the aim a touch either side
+  // and lets the simulation say which goes in (2026-11-16 ユーザー：上位レベルでもゴール前でシュートを狙わない — most of its
+  // straight-line shots went wide or into the keeper, so it judged every chance hopeless)
   function shotCands(s, sk) {
     const t = s.pos, gy = goalY(1 - t), out = [];
+    const step = sk.lv < 8 ? .5 : .2, offs = sk.lv < 8 ? [0] : sk.lv < 14 ? [-.035, 0, .035] : [-.06, -.03, 0, .03, .06];
     for (let i = t * 10; i < t * 10 + 10; i++) {
       if (!canFlick(s, i)) continue;
       const d = Math.hypot(s.b[i].x - s.ball.x, s.b[i].y - s.ball.y); if (d > sk.reach + RB) continue;
-      for (let k = -1; k <= 1.001; k += sk.lv < 8 ? .5 : .25) for (const v of [120, 165, 200]) {
-        const th = Math.atan2(gy + (t === 0 ? -2 : 2) - s.ball.y, k * (ghw(s) - 1.2) - s.ball.x), c = aimAt(s, i, th, v);
-        if (c) { c.v = Math.min(VMAX, c.v); out.push(c); }
+      for (let k = -1; k <= 1.001; k += step) {
+        const th0 = Math.atan2(gy + (t === 0 ? -2 : 2) - s.ball.y, k * (ghw(s) - 1.2) - s.ball.x);
+        for (const o of offs) {
+          const th = th0 + o;
+          for (const v of [165, 200]) { const c = aimAt(s, i, th, v); if (c) { c.v = Math.min(VMAX, c.v); out.push(c); } }
+          if (sk.lv >= 8) { const c = aimRoll(s, i, th, 110); if (c) out.push(c); }
+        }
       }
     }
     return out;
@@ -629,10 +638,13 @@
     if (canShoot(s)) {
       // the keeper is set after the call, so the chance is averaged over a few keepers (one guess was too hopeful:
       // the AI kept calling shots it then put into the keeper's hands)
-      let pSum = 0; const KN = 3;
-      for (let q = 0; q < KN; q++) { const pred = clone(s); pred.shot = true; keeperFor(pred, 1 - p, Math.min(20, level + 2), (seed || 1) + 3 + q * 101, true); const sh = bestShot(pred, sk, R); pSum += sh ? sh.p : 0; }
-      const pr = pSum / KN, need = sk.shotBar * (s.rem <= 2 ? .55 : s.rem <= 4 ? .8 : 1);
-      if (pr >= need) return { declare: true, p: pr };
+      let pSum = 0, any = false; const KN = 3;
+      for (let q = 0; q < KN; q++) { const pred = clone(s); pred.shot = true; keeperFor(pred, 1 - p, Math.min(14, level + 2), (seed || 1) + 3 + q * 101, true); const sh = bestShot(pred, sk, R); if (sh) any = true; pSum += sh ? sh.p : 0; }   // (a keeper as well set as a good player's: a perfect one made every chance look hopeless)
+      // the bar comes down as the chance runs out: few touches left, the half (or the match) nearly over, the ball close in
+      // front of goal (2026-11-16: with the half's last flick in front of goal the AI still passed)
+      const left = (s.halfLen || 1e9) - (s.clock || 0), dG = Math.hypot(s.ball.x, s.ball.y - goalY(1 - p));
+      const pr = pSum / KN, need = sk.shotBar * (s.rem <= 2 ? .5 : s.rem <= 4 ? .75 : 1) * (left <= 2 ? .1 : left <= 5 ? .5 : 1) * (dG < 35 ? .75 : 1);
+      if (any && (pr >= need || left <= 1)) return { declare: true, p: pr };   // (the half's last flick: any shot beats none)
     }
     let cs = candidates(s, sk);
     if (!cs.length) cs = candidates(s, Object.assign({}, sk, { reach: 95 }));   // nobody near the ball: a long run at it

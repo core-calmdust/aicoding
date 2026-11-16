@@ -7,7 +7,7 @@
    · Controls: tap / click one of your buttons to pick it (the one nearest the ball is picked for you), then pull back from
      it like a slingshot and let go. You aim the BALL (2026-11-15 ユーザー: 玉の方向とはじく方向がバラバラで直感的でない):
      the pull points the ball's way, E.ballAim finds the button's run that sends it there, and the green line is the ball's
-     path to its first knock (E.ballPath). Dots: the button's run to the ball. A gold cone floats over the ball.
+     path to its first knock (E.ballPath). Dots: the button's run to the ball. A chubby star with a face bobs over the ball.
    · The view (2026-11-15): drag an empty spot (or with the right mouse button anywhere) to move it, the wheel / a pinch
      to zoom, the arrow keys to move it, C to come back; it follows the ball again at the next flick. V: near / whole.
      「シュート宣言」 (or S) calls a shot when the ball is in the attacking half; the defender then sets the goalkeeper in
@@ -184,12 +184,24 @@
       for (const a of [a1, a2]) bar(st.ball.x + Math.cos(a) * 1.5, st.ball.y + Math.sin(a) * 1.5, st.ball.x + Math.cos(a) * R0, st.ball.y + Math.sin(a) * R0, .25, limited ? MAT.no : MAT.fanL, .02);
     }
     function disc(x, y, r, mat) { const m = new TH.Mesh(GEO.disc, mat), [a, b] = wx(x, y); m.position.set(a, Y + .01, b); m.scale.set(r * K, 1, r * K); m.renderOrder = 3; gd.add(m); return m; }
-    // the ball's marker: a little cone floating over the ball, always in view (the ball itself is small on the big table)
-    const beacon = new TH.Mesh(new TH.ConeGeometry(1.15 * K, 2.2 * K, 18), new TH.MeshBasicMaterial({ color: 0xffd34d, transparent: true, opacity: .95, toneMapped: false, depthTest: false, depthWrite: false }));
-    beacon.rotation.x = Math.PI; beacon.renderOrder = 9; beacon.visible = false; board.add(beacon);
+    // the ball's marker, always in view (the ball itself is small on the big table): a chubby little star with a face, bobbing
+    // over the ball and facing you (2026-11-16 ユーザー：ボールの上のマークを可愛い感じに — was a gold cone)
+    const starTex = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d'), P = [];
+      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 25 : 50; P.push([64 + Math.cos(a) * r, 62 + Math.sin(a) * r]); }
+      const star = () => { g.beginPath(); P.forEach(([x, y], k) => k ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); };
+      g.lineJoin = 'round'; star(); g.lineWidth = 22; g.strokeStyle = '#ffffff'; g.stroke(); g.lineWidth = 12; g.strokeStyle = '#ffc93a'; g.stroke(); g.fillStyle = '#ffd84d'; g.fill();
+      g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(52, 44, 7, 4, -.6, 0, Math.PI * 2); g.fill();   // (a shine)
+      g.fillStyle = '#3a2a1a'; for (const x of [53, 75]) { g.beginPath(); g.ellipse(x, 66, 4, 5.5, 0, 0, Math.PI * 2); g.fill(); }   // (eyes)
+      g.fillStyle = '#ffffff'; for (const x of [54.5, 76.5]) { g.beginPath(); g.arc(x, 64, 1.6, 0, Math.PI * 2); g.fill(); }
+      g.strokeStyle = '#3a2a1a'; g.lineWidth = 2.6; g.lineCap = 'round'; g.beginPath(); g.arc(64, 72, 5, .25 * Math.PI, .75 * Math.PI); g.stroke();   // (a smile)
+      g.fillStyle = 'rgba(255,120,140,.55)'; for (const x of [45, 83]) { g.beginPath(); g.ellipse(x, 75, 5, 3, 0, 0, Math.PI * 2); g.fill(); }   // (cheeks)
+      const t = new TH.CanvasTexture(cv); t.colorSpace = TH.SRGBColorSpace; return t; })();
+    const beacon = new TH.Sprite(new TH.SpriteMaterial({ map: starTex, transparent: true, toneMapped: false, depthTest: false, depthWrite: false }));
+    beacon.renderOrder = 9; beacon.visible = false; board.add(beacon);
     let beaconOn = false;
     function beaconAt(on) { beaconOn = !!on && !!st && !over; beacon.visible = beaconOn; if (beaconOn) beaconPut(); kick(100); }
-    function beaconPut() { if (!st) return; const [a, b] = wx(st.ball.x, st.ball.y), sc = whole ? 1.8 : 1, bob = Math.sin(performance.now() / 260) * .5; beacon.scale.setScalar(sc); beacon.position.set(a, Y + (D.RBALL * 2 + 2.6 * sc + bob) * K, b); }
+    function beaconPut() { if (!st) return; const now = performance.now(), [a, b] = wx(st.ball.x, st.ball.y), sc = whole ? 1.8 : 1, hop = Math.abs(Math.sin(now / 320)), sq = 1 + (1 - hop) * .08;
+      beacon.scale.set(3.4 * sc * K * sq, 3.4 * sc * K / sq, 1); beacon.material.rotation = Math.sin(now / 520) * .18; beacon.position.set(a, Y + (D.RBALL * 2 + 2.4 * sc + hop * 1.1) * K, b); }   // (a little hop, squashing a touch at the bottom, and a sway)
     function boxArea(B) { const m = new TH.Mesh(GEO.bar, MAT.box), [a, b] = wx((B.x0 + B.x1) / 2, (B.y0 + B.y1) / 2); m.position.set(a, Y + .006, b); m.scale.set((B.x1 - B.x0 + 2 * D.KHW) * K, 1, (B.y1 - B.y0 + 2 * D.KHD) * K); m.renderOrder = 3; gd.add(m); }
     // the flick your pull makes: you point where the BALL goes (the opposite of the pull); the button's run follows from it
     const distOf = pw => 2 + pw * 150;   // the pull: how far the ball should roll (cm) — the end mark follows your hand
@@ -199,8 +211,10 @@
     // what a flick would do — directions only, the crokinole way (2026-11-15 ユーザー：ボールは大体どっちへ進むかわかればよい、
     // クロキノールそのままの方がいい): the button goes where you aim (the arrow, drawn in showGuides); dots to what it meets
     // first and a ring there; from the ball, a gold arrow the way it leaves. Red: it meets an opponent's piece first (a foul).
-    function arrow(x, y, a, len, mat, w) {
-      const x1 = x + Math.cos(a) * len, y1 = y + Math.sin(a) * len; bar(x, y, x1, y1, w, mat, .03);
+    // the ball's way: round dots (2026-11-16 ユーザー：ボールの軌道を点線に) and a head
+    function dotPath(x0, y0, x1, y1, mat, r) { const len = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.floor(len / 1.7)); for (let i = 0; i <= n; i++) { const m = disc(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n, r || .42, mat); m.position.y += .02; m.renderOrder = 4; } }
+    function arrow(x, y, a, len, mat, w, dotted) {
+      const x1 = x + Math.cos(a) * len, y1 = y + Math.sin(a) * len; if (dotted) dotPath(x + Math.cos(a) * (D.RBALL + .8), y + Math.sin(a) * (D.RBALL + .8), x1, y1, mat); else bar(x, y, x1, y1, w, mat, .03);
       for (const s2 of [-1, 1]) { const b2 = a + Math.PI + s2 * .5; bar(x1, y1, x1 + Math.cos(b2) * 2.2, y1 + Math.sin(b2) * 2.2, w, mat, .03); }
     }
     // no ring where it lands (2026-11-15 ユーザー：飛ばした先の丸い表示は不要): the dots run as far as the button slides on its
@@ -209,7 +223,7 @@
       const b = st.b[mv.i], tr = E.aimTrace(st, mv.i, mv.ang), slide = mv.v * mv.v / (2 * D.DEC_B) + D.RB, k = Math.min(tr.k, slide);
       dots(b.x, b.y, b.x + Math.cos(mv.ang) * k, b.y + Math.sin(mv.ang) * k, matBtn, .42);
       if (tr.k <= slide) {
-        if (tr.what === 'ball') arrow(st.ball.x, st.ball.y, Math.atan2(st.ball.y - tr.gy, st.ball.x - tr.gx), 14, matBall, .6);
+        if (tr.what === 'ball') arrow(st.ball.x, st.ball.y, Math.atan2(st.ball.y - tr.gy, st.ball.x - tr.gx), 14, matBall, .6, true);
         else if (tr.what != null) { const o = st.b[tr.what]; if (o && E.team(tr.what) !== E.team(mv.i)) flat(o.x, o.y, D.RB + .9, MAT.no); }
       }
       // where your button comes to rest (2026-11-15 ユーザー：コマの飛び先は表示したほうがいい — worked out with the real knocks;
@@ -235,7 +249,7 @@
         const g = new TH.RingGeometry((ORBIT - .3) * K, (ORBIT + .3) * K, 48, 1, -(a0 + len), len); g.rotateX(-Math.PI / 2);
         const zm = new TH.Mesh(g, MAT.boxL), [zx, zz] = wx(bx, by); zm.position.set(zx, Y + .008, zz); zm.renderOrder = 3; zm.userData.own = g; gd.add(zm);
         if (!aim) { const b = st.b[st.taker], a = Math.atan2(by - b.y, bx - b.x), L = 30;
-          dots(bx + Math.cos(a) * (D.RBALL + 1), by + Math.sin(a) * (D.RBALL + 1), bx + Math.cos(a) * L, by + Math.sin(a) * L, MAT.ball, .6);
+          dotPath(bx + Math.cos(a) * (D.RBALL + 1), by + Math.sin(a) * (D.RBALL + 1), bx + Math.cos(a) * L, by + Math.sin(a) * L, MAT.ball);
           arrow(bx + Math.cos(a) * L, by + Math.sin(a) * L, a, .01, MAT.ball, .6); }
       }
       if (aim && sel >= 0) {
@@ -316,7 +330,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=13'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=14'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -883,7 +897,7 @@
         document.querySelectorAll('.bpk').forEach(e => e.remove());
         neonReset(); TRAIL.forEach(m => { board.remove(m); m.material.dispose(); }); TRAIL.length = 0;
         if (U && U.goalWidth) U.goalWidth(0);
-        stopped = true; tok++; timers.forEach(clearTimeout); board.remove(beacon); beacon.geometry.dispose(); beacon.material.dispose(); clearInterval(pulseT); clearInterval(clkT); clearInterval(keeperT);
+        stopped = true; tok++; timers.forEach(clearTimeout); board.remove(beacon); beacon.material.dispose(); starTex.dispose(); clearInterval(pulseT); clearInterval(clkT); clearInterval(keeperT);
         ctx.el.removeEventListener('pointerdown', pd); ctx.el.removeEventListener('pointermove', pm); ctx.el.removeEventListener('pointerup', pu); ctx.el.removeEventListener('pointercancel', pu);
         removeEventListener('pointermove', wm, true); removeEventListener('pointerup', wu, true); removeEventListener('pointercancel', wu, true);
         NZ.forEach(([k, f]) => document.removeEventListener(k, f, { capture: true })); HTML.classList.remove('hand-on'); HTML.classList.remove('hand-drag');
@@ -899,5 +913,5 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.botao = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 50, rule, optInfo, sizeLabel, sizeName, levelInfo, start, TXT, SX, L14 };
+  window.Atlas3D.botao = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, mx: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 50, rule, optInfo, sizeLabel, sizeName, levelInfo, start, TXT, SX, L14 };
 })();
