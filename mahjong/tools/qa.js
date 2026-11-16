@@ -116,6 +116,17 @@ async function runtime() {
     ok('character screen: the bubble stays clear of the info panel', sr);
     ok('no page errors (jiggle)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
+  if (want('vfx')) { console.log('[vfx] the game\'s light effects: shown over the cut-in word, then cleaned up');
+    const p = await page(PC); await p.evaluate(`void JANKA.startGame()`); await p.waitForTimeout(5000);
+    await p.evaluate(`(()=>{window.__vx=[];const o=VFX.burst;VFX.burst=(...a)=>{const r=o(...a);__vx.push([a[0],a[1],!!document.querySelector('.vfx-cv'),VFX.active()]);return r}})()`);
+    await p.evaluate(`void JANKA.cutin(1, 'ron')`); await p.waitForTimeout(1500);
+    const on = await p.evaluate('__vx');   // (?fast shortens the cut-in, so the burst is caught as it is made)
+    ok('a burst of light during the cut-in', on.length > 0 && on[0][2] && on[0][3] > 0, JSON.stringify(on));
+    // (the game keeps playing — calls bring new bursts — so: once 3 s pass with no new burst, the canvas must be gone)
+    const gone = await p.waitForFunction(`(()=>{const n=__vx.length;if(window.__vn!==n){window.__vn=n;window.__vt=performance.now()}return performance.now()-__vt>3000&&!document.querySelector('.vfx-cv')&&VFX.active()===0})()`, null, { timeout: 40000, polling: 200 }).then(() => true, () => false);
+    ok('the effect canvas is removed afterwards', gone, gone ? '' : JSON.stringify(await p.evaluate(`[__vx.length, !!document.querySelector('.vfx-cv'), VFX.active()]`)));
+    ok('no page errors (vfx)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
+
   if (want('fonts')) { console.log('[fonts] every text in the Mincho');
     const p = await page(PC); const fams = await p.evaluate(`[...new Set([...document.querySelectorAll('body *')].filter(e=>e.offsetWidth).map(e=>getComputedStyle(e).fontFamily))]`);
     ok('only Shippori Mincho B1', fams.length === 1 && /Shippori/.test(fams[0]), fams.join(' / ')); await p.ctx.close(); }
