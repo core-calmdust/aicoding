@@ -251,7 +251,7 @@ function olLive() { return !!(net && !net.spectate && !net.done && net.game && n
 function olClearLive(gid) { try { const s = JSON.parse(localStorage.getItem(olLiveKey()) || 'null'); if (s && s.gid === gid) localStorage.removeItem(olLiveKey()); } catch (e) {} }
 function startOnlineGame(gid, spec) {
   if (net && net.gid === gid && !!net.spectate === !!spec) return;
-  const saved = net ? net.saved : { gv, moves, cur, evals, humanColor, mode: settings.mode, rgame };
+  const saved = net ? net.saved : { gv, first: gfirst, moves, cur, evals, humanColor, mode: settings.mode, rgame };
   if (net) olDetach(true);
   if (lesson || puzzle) exitSpecial();
   ['#onlineOverlay', '#resultOverlay', '#newOverlay', '#resumeOverlay', '#lessonOverlay', '#puzzleOverlay', '#olConfirm', '#profOverlay', '#rtConfirm', '#rulesOverlay'].forEach(hideOv);
@@ -280,7 +280,7 @@ function olDetach(keepMode) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; sel = null; hintList = null;
   settings.mode = s.mode === 'online' ? 'pvp' : s.mode;
   setVariant(s.gv); startSpec = null; drawLines();
-  moves = s.moves; cur = s.cur; evals = s.evals; humanColor = s.humanColor; rgame = s.rgame; reviewing = cur !== moves.length;
+  setFirst(s.first); moves = s.moves; cur = s.cur; evals = s.evals; humanColor = s.humanColor; rgame = s.rgame; reviewing = cur !== moves.length;
   gameOverShown = statusAt(moves.length).over;
   update(false); olWatchRender(); dockRender(); afterPosition();
 }
@@ -303,7 +303,8 @@ function onNetGame(gid, g) {
   const remote = st.moves;
   if (first || gv !== g.v) {
     setVariant(g.v); startSpec = null; drawLines();
-    moves = remote.slice(); cur = moves.length; reviewing = false; evals = []; humanColor = net.me > 0 ? net.me : P1;
+    setFirst(P1); moves = remote.slice(); cur = moves.length;   // (online games: the fox moves first)
+    reviewing = false; evals = []; humanColor = net.me > 0 ? net.me : P1;
     update(false);
   } else if (prefixOf(moves, remote)) {
     const extra = remote.slice(moves.length);

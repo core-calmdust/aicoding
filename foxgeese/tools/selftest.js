@@ -15,6 +15,10 @@ p.side = 1; { const L = p.moves().map(m => E.name(p, m)); assert(noBack(p) && L.
 E.setRule('g13n'); p = new E.Pos(); assert(p.geese === 13 && E.START.g13n.join() === E.START.g13.join(), 'g13n start = g13');
 // a goose in the open centre: g13 has all 8 lines, g15 / g13n only the 5 forward / sideways ones, g17 the 3 orthogonal ones
 { const B2 = Array(49).fill('.'); B2[24] = 'g'; B2[3] = 'f'; for (const [r, n] of [['g13', 8], ['g15', 5], ['g13n', 5], ['g17', 3]]) { E.setRule(r); const q2 = E.Pos.from({ b: B2.join(''), side: 2, cap: 0 }); assert(q2.moves().length === n && (r === 'g13' || noBack(q2)), r + ' goose on d4: ' + q2.moves().length + ' moves'); } }
+// who moves first: the geese can start (setFirst); a spec keeps its own side; the AI answers as the fox after the geese's first move
+E.setRule('g15'); E.setFirst(E.P2); p = new E.Pos(); assert(p.side === 1 && p.turn === E.P2 && E.first === E.P2, 'geese first: the geese to move');
+{ const m0 = p.moves()[0], r = E.think(null, [m0], 3, rand, 'g15'); const q3 = new E.Pos().play(m0); assert(q3.moves().includes(r.move) && q3.side === 0, 'geese first: the fox replies with a legal move'); }
+assert(E.Pos.from({ b: new E.Pos().spec().b, side: E.P2 }).side === 1 && E.Pos.from({ b: new E.Pos().spec().b, side: E.P1 }).side === 0 && (E.setFirst(E.P1), new E.Pos().side === 0), 'fox first again');
 E.setRule('g13');
 // a double jump: fox d4, geese d5 and c6?  d4 x d6 needs d5 goose, d6 empty; then d6 x b6 over c6
 const B = Array(49).fill('.'); const S = (nm, ch) => { B[(7 - +nm[1]) * 7 + 'abcdefg'.indexOf(nm[0])] = ch; };

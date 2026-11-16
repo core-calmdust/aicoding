@@ -11,7 +11,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/av/duck-0.webp', ENG = '../foxgeese/engine.js?v=4', N = 7;
+  const GUIDE = '../images/atlas/av/duck-0.webp', ENG = '../foxgeese/engine.js?v=5', N = 7;
   const loadEngine = () => window.FoxEngine ? Promise.resolve(window.FoxEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.FoxEngine ? res(window.FoxEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
   const G13 = ['a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'c2', 'd2', 'e2', 'c1', 'd1', 'e1'], G15 = G13.concat(['a4', 'g4']);   // (the start of the default rules, g15)
   // f: the fox's point · g: the geese ('a1' … 'g7': files from the left, rank 1 nearest) · side: 2 = the geese are to move ·

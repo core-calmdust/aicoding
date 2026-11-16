@@ -16,7 +16,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../foxgeese/', VER = '?v=4';   // same file / version as foxgeese/index.html → shared cache
+  const BASE = '../foxgeese/', VER = '?v=5';   // same file / version as foxgeese/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.FoxEngine) return Promise.resolve(window.FoxEngine);
@@ -89,7 +89,18 @@
     s.textContent = `.fgtoast{position:fixed;left:50%;bottom:calc(var(--tbclear,18px) + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:10px 18px;border-radius:99px;background:#5d6a1f;color:#fff;font-weight:700;font-size:14px;text-align:center;box-shadow:0 10px 24px -10px rgba(0,0,0,.5);pointer-events:none}`;
     document.head.appendChild(s);
   }
-  const DK = ['background:radial-gradient(circle at 40% 35%,#f0a060,#b4502a 60%,#6a2a12)', 'background:radial-gradient(circle at 40% 35%,#fff,#f1e8d4 60%,#c9bd9f)'];
+  // the sides' icons (../foxgeese/img/ic-fox.svg · ic-goose.svg: the full game's turn icons) in the HUD and the side pulldown
+  const ICON = c => `../foxgeese/img/ic-${c === 1 ? 'fox' : 'goose'}.svg`;
+  const DK = [1, 2].map(c => `background:url(${ICON(c)}) center/contain no-repeat;border-radius:0;box-shadow:none`);
+  // the card's side choice (atlas/app.js: adapter.sideOpts / optInfo icon): your side and who moves first — 1 狐・先手 (the default) ·
+  // 3 狐・後手 · 2 ガチョウ・後手 · 4 ガチョウ・先手 (1 / 2 keep their old meaning: the fox moves first)
+  const SIDES = [[1, 1, 1], [3, 1, 2], [4, 2, 2], [2, 2, 1]];   // [value, your side, who moves first]
+  const ORD = {
+    ja: ['先手', '後手'], en: ['first', 'second'], zh: ['先手', '后手'], 'zh-TW': ['先手', '後手'], ko: ['선수', '후수'], es: ['primer turno', 'segundo turno'], fr: ['en premier', 'en second'],
+    pt: ['primeiro', 'segundo'], de: ['zuerst', 'als Zweites'], ru: ['ход первый', 'ход второй'], tr: ['ilk', 'ikinci'], id: ['jalan dulu', 'jalan kedua'], hi: ['पहले', 'बाद में'], ar: ['أولًا', 'ثانيًا'],
+  };
+  const sideOpts = l => { const X = TX[l] || TX.en, O = ORD[l] || ORD.en, dot = l === 'ja' || l === 'zh' || l === 'zh-TW' ? '・' : ' · '; return SIDES.map(([v, c, f]) => [v, X.n[c - 1] + dot + O[c === f ? 0 : 1]]); };
+  const sideOf = v => { const e = SIDES.find(x => x[0] === +v) || SIDES[0]; return { human: e[1], first: e[2] }; };
 
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, X = TX[ctx.lang] || TX.en, F3 = T3.foxgeese;
@@ -98,8 +109,8 @@
     const U = board.userData, Y = U.top - U.sink;
     const tall = innerHeight > innerWidth * 1.15;
     if (T3.fit) T3.fit(tall ? { w: U.W + .6, d: U.H + .8, y: U.top + .2, pitch: 1.0 } : { w: U.W + .3, d: U.H + .5, y: U.top + .2, pitch: 1.0 });
-    const pvp = ctx.mode === 'pvp';
-    const human = pvp ? 1 : ctx.side === 2 ? 2 : 1;   // 1 the fox (moves first) · 2 the geese
+    const pvp = ctx.mode === 'pvp', SD = sideOf(ctx.side);
+    const human = pvp ? 1 : SD.human, first = SD.first;   // human: 1 the fox · 2 the geese; first: who moves first (two players too)
     const pname = c => X.n[c - 1];
     let E = null;
     const xz = i => { const [r, c] = E.RC[i]; return U.pt(c, r); };   // (never turned: the geese are always on the near side)
@@ -153,7 +164,7 @@
     }
 
     /* ---------- position ---------- */
-    function refresh() { pos = E.replay(null, moves).pos; }
+    function refresh() { E.setFirst(first); pos = E.replay(null, moves).pos; }
     function hud(msg) {
       const num = c => pos ? (c === 1 ? pos.cap : pos.geese) : 0;   // the fox: geese taken · the geese: how many are left
       const side = c => `<span class="hs ${pos && pos.side + 1 === c && !over ? 'on' : ''}"><i class="dk" style="${DK[c - 1]}"></i>${pvp ? pname(c) : c === human ? L.you : L.ai}<b>${num(c)}</b></span>`;
@@ -199,7 +210,7 @@
     function commit(m) { busy = true; play(m, () => { busy = false; next(); }); }
     function next() {
       if (stopped) return;
-      const st = E.judge(pos, E.replay(null, moves).hashes);   // 同じ局面の3回目・取りのない60手ずつは狐の勝ち（引き分けなし）
+      E.setFirst(first); const st = E.judge(pos, E.replay(null, moves).hashes);   // 同じ局面の3回目・取りのない60手ずつは狐の勝ち（引き分けなし）
       if (st.over) return end(st);
       legal = pos.moves();
       showMarks();
@@ -217,19 +228,19 @@
     }
 
     /* ---------- AI: the game's engine worker ---------- */
-    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule }); return w; }
+    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule, first }); return w; }
     function aiMove() {
       thinking = true; hud(L.think);
       if (!worker) worker = newWorker();
       const id = ++jid, mvs = moves.slice();
       const reply = m => {
         if (stopped || id !== jid || over) return;
-        if (m == null || m < 0) { try { E.setRule(rule); m = E.think(null, mvs, Math.min(ctx.level, 6)).move; } catch (e) { m = -1; } }
+        if (m == null || m < 0) { try { E.setRule(rule); E.setFirst(first); m = E.think(null, mvs, Math.min(ctx.level, 6)).move; } catch (e) { m = -1; } }
         later(() => { if (id !== jid || over) return; thinking = false; if (m == null || !legal.includes(m)) m = legal[0]; commit(m); }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? null : r.move); };
       worker.onerror = () => { worker = null; reply(null); };
-      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule });
+      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule, first });
     }
 
     /* ---------- input ---------- */
@@ -275,7 +286,7 @@
       later(() => { busy = false; next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; E.setRule(rule); E.setFirst(first); if (!pvp) worker = newWorker(); begin(); }).catch(() => hud('⚠'));
 
     const dbg = {
       at: i => { const [x, z] = xz(i); return T3.project(x, z, U.top); },
@@ -294,7 +305,7 @@
     }
     const api = {
       human: human - 1,
-      canUndo: () => myTurn() && moves.length >= undoN() && (pvp || moves.length - undoN() >= (human === 2 ? 1 : 0)),
+      canUndo: () => myTurn() && moves.length >= undoN() && (pvp || moves.length - undoN() >= (human !== first ? 1 : 0)),
       undo() { if (!api.canUndo()) return; timers.forEach(clearTimeout); timers.length = 0; jid++; deselect(); moves.splice(moves.length - undoN()); refresh(); rebuild(); ply++; busy = false; next(); },
       canHint: () => myTurn(),
       hint() {
@@ -310,7 +321,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule });
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule, first });
         });
       },
       canDraw: () => false,   // (there is no draw)
@@ -382,5 +393,5 @@
   }
   window.Atlas3D = window.Atlas3D || {};
   window.Atlas3D.foxgeese = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: RSZ, size0: 15, sizeLabel: () => 'Rules',
-    sizeName: (z, l) => rn(l).n[rix(z)], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[rix(v)] } : null, kindArt, levelInfo, start };
+    sideOpts, sizeName: (z, l) => rn(l).n[rix(z)], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[rix(v)] } : sid === 'bvSide' ? { icon: `<img src="${ICON(sideOf(v).human)}" alt="" style="width:20px;height:20px;vertical-align:-4px;margin-right:6px">` } : null, kindArt, levelInfo, start };
 })();

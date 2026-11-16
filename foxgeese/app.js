@@ -16,8 +16,10 @@ let startSpec = null;                 // lesson / puzzle start position (null = 
 let moves = [];                       // game record (move numbers, see engine.js)
 let cur = 0;                          // number of moves shown
 let flip = false;                     // board seen from Black's side (Black at the bottom)
+let gfirst = P1;                      // who moves first in this game (P1 the fox = the default, or P2 the geese); lessons / puzzles carry their own side to move
+function setFirst(p) { gfirst = p === P2 ? P2 : P1; E.setFirst(gfirst); if (typeof anaCache !== 'undefined') anaCache.clear(); }
 function setVariant(k) { gv = RULE_ORDER.includes(k || settings.rule) ? (k || settings.rule) : E.DEFAULT_RULE; settings.rule = gv; E.setRule(gv); anaCache.clear(); document.documentElement.dataset.rule = gv; }
-const startKey = () => gv + ':' + (startSpec ? JSON.stringify(startSpec) : '');
+const startKey = () => gv + ':' + (startSpec ? JSON.stringify(startSpec) : 'f' + gfirst);
 const keyOf = i => startKey() + '|' + moves.slice(0, i).join(',');
 let posCache = { key: '' };
 function posAt(i) {
@@ -42,7 +44,7 @@ const isPass = m => m < 0;
 
 // ====================================================================== state
 const STORE = 'aicoding-foxgeese';
-const settings = { mode: 'ai', rule: E.DEFAULT_RULE, color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'oak', pcs: 'wood' };
+const settings = { mode: 'ai', rule: E.DEFAULT_RULE, first: P1, color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'oak', pcs: 'wood' };
 const SUPPORTED_ALL = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 // the languages whose game texts are complete (i18n-fg.js / i18n-fg-more.js: a language without its own 'title' is not offered)
 const SUPPORTED = SUPPORTED_ALL.filter(l => l === 'ja' || l === 'en' || (window.FG_LANGS || []).includes(l));
@@ -93,6 +95,8 @@ function load() {
     if (!(settings.level >= 1 && settings.level <= LV_MAX)) settings.level = 6;
     if (!(settings.level2 >= 1 && settings.level2 <= LV_MAX)) settings.level2 = 6;
     setVariant(d.rule || settings.rule);
+    if (settings.color !== P2) settings.color = P1;   // (the old 「ランダム」 choice: the side pulldown has the fox and the geese)
+    setFirst(d.first);
     if (Array.isArray(d.moves)) {
       startSpec = null;
       if (!validMoves(d.moves)) return false;
@@ -107,12 +111,12 @@ function load() {
 function save() {
   if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp' }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, end: manualEnd })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, first: gfirst, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, end: manualEnd })); } catch (e) {}
 }
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=4';
+const ENGINE_URL = 'engine.js?v=5';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -160,14 +164,14 @@ function request(which, msg, onProgress) {
     return (async () => { const t0 = Date.now(); while (!P.pool('ai') && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 100)); return request(which, Object.assign({}, msg, { waited: 1 }), onProgress); })();
   }
   const cp = cOn && mtWants(which, msg) && MCP.pool(which === 'ai' ? 'ai' : null);
-  if (cp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return cp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  if (cp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, first: gfirst, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return cp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
-  if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, first: gfirst, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
 }
 function requestW(which, msg, onProgress) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : anaW;
-  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ start: startSpec, rule: gv, ...msg, id }); });
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ start: startSpec, rule: gv, first: gfirst, ...msg, id }); });
 }
 function cancelWorker(which) {
   if (MTP) MTP.cancel(which);
@@ -560,7 +564,7 @@ function renderGraph() {
 function renderKifu() {
   const k = $('#kifu');
   if (!moves.length) { k.innerHTML = `<div class="empty">${t('kifu.empty')}</div>`; return; }
-  const s0 = startSpec ? startSpec.side : P1;
+  const s0 = posAt(0).pos.turn;
   let html = '';
   for (let i = 1; i <= moves.length; i++) {
     const p = (i - 1) % 2 === 0 ? s0 : 3 - s0;
@@ -666,7 +670,7 @@ function newGame(rated) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; wpPaused = false;
   rgame = null; rtHold = false; settings.rsNoRec = false;
   if (rated) rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() });
-  startSpec = null;
+  startSpec = null; setFirst(rated ? P1 : settings.first);   // (rated games: the fox always moves first, the sides are drawn)
   if (settings.mode === 'ai') humanColor = rated ? (Math.random() < 0.5 ? P1 : P2) : settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
   moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; sel = null; manualEnd = null; aiVals = []; drawAsked = -99;
   hideOverlay('#resultOverlay');
@@ -1157,13 +1161,12 @@ let draft = {};
 function levelLabelHTML(v) { return `${LV(v)}<small>${LVD(v)}</small>`; }
 function segSync() {
   document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
-  document.querySelectorAll('#segColor button').forEach(b => b.classList.toggle('sel', +b.dataset.v === draft.color));
   const m = draft.mode, game = m === 'ai' || m === 'pvp' || m === 'watch';
   $('#fRatedInfo').classList.toggle('hidden', m !== 'rated');
   if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml();
   $('#fRules').classList.toggle('hidden', !(game || m === 'online'));   // (rated games: always the default rules, g15 — named on the rating card)
   $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleArt(r), { cls: 'gmini' })}</span><b>${t('rule.' + r)}</b><p>${r === E.DEFAULT_RULE ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
-  $('#fColor').classList.toggle('hidden', m !== 'ai');
+  $('#fColor').classList.toggle('hidden', !game); ordSync();
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
   $('#fDisplay').classList.toggle('hidden', !game);
@@ -1175,8 +1178,8 @@ function segSync() {
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
 }
 function openNewDialog(resume) {
-  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color, level: settings.level, level2: settings.level2, rule: settings.rule };
-  if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = humanColor; }   // 「ここから再開」: the same dialog, only what fits going on from this position
+  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color === P2 ? P2 : P1, first: settings.first === P2 ? P2 : P1, level: settings.level, level2: settings.level2, rule: settings.rule };
+  if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = humanColor; draft.first = gfirst; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat; $('#optNum').checked = settings.num;
   if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fRules' }); else ResumeNG.close(); }
   segSync(); designPickers(); showOverlay('#newOverlay');
@@ -1184,7 +1187,7 @@ function openNewDialog(resume) {
 // 「ここから再開」 with the chosen settings: the position and the moves up to it are kept, who is to move stays
 function resumeWith() {
   const pm = settings.mode, ph = humanColor;
-  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2 });
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2 });   // (who moved first stays: the game goes on)
   stopPlay(); busyToken++; cancelWorker('ai'); thinking = 0; animating = false; wpPaused = false; sel = null;
   if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
   if (settings.mode === 'ai' && (pm !== 'ai' || ph !== humanColor)) settings.rsNoRec = true;   // taken over midway: not a game of the player's for the record
@@ -1200,7 +1203,29 @@ $('#ruleCards').ngtRules = r => openRules(null, r === E.DEFAULT_RULE ? 0 : TOUR_
 function ruleStart(r) { const keep = E.rule; E.setRule(r); const sp = E.Pos.from(null).spec(); E.setRule(keep); return sp; }
 // the picture of a rule set on its card: what makes it different (a blocked counter and a leap / a capture / the two rows)
 function ruleArt(r) { return ruleStart(r); }
-$('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
+// your side and who moves first — one pulldown (vs the AI: 狐・先手 / 狐・後手 / ガチョウ・先手 / ガチョウ・後手; two players and
+// AI vs AI: only who moves first; 「ここから再開」: the order of the game on the board stays). The icons: img/ic-fox.svg / ic-goose.svg
+const fgIcon = p => `<img class="fgic" src="img/ic-${p === P1 ? 'fox' : 'goose'}.svg" alt="">`;
+function ordOpts() {
+  const m = draft.mode, firsts = draft.resume ? [draft.first] : [P1, P2];
+  if (m === 'ai') { const o = []; for (const c of [P1, P2]) for (const f of c === P1 ? firsts : firsts.slice().reverse()) o.push({ c, f, html: `${fgIcon(c)}<span>${escHb(t('ord.opt', { p: pname(c), o: t(c === f ? 'ord.first' : 'ord.second') }))}</span>` }); return o; }
+  return firsts.map(f => ({ c: draft.color, f, html: `${fgIcon(f)}<span>${escHb(t('ord.optPvp', { p: pname(f) }))}</span>` }));
+}
+function ordSync() {
+  const dd = $('#ddOrder'); if (!dd) return;
+  $('#ordLabel').textContent = t(draft.mode === 'ai' ? 'ord.label' : 'ord.labelPvp');
+  const L = ordOpts(), isSel = o => o.f === draft.first && (draft.mode !== 'ai' || o.c === draft.color), cur = L.find(isSel) || L[0];
+  dd.querySelector('.pd-cur').innerHTML = cur ? cur.html : '';
+  dd.querySelector('[role=listbox]').innerHTML = L.map((o, i) => `<button type="button" role="option" class="pd-opt${isSel(o) ? ' sel' : ''}" data-i="${i}" aria-selected="${isSel(o)}"><span class="pd-lb">${o.html}</span><svg class="pd-ck" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>`).join('');
+  dd._opts = L;
+}
+$('#ddOrder').addEventListener('click', e => {
+  const dd = $('#ddOrder'), op = e.target.closest('.pd-opt');
+  e.stopPropagation();
+  if (op) { const o = dd._opts[+op.dataset.i]; if (o) { draft.color = o.c; draft.first = o.f; } dd.classList.remove('open'); dd.querySelector('.pd-btn').setAttribute('aria-expanded', 'false'); segSync(); return; }
+  if (e.target.closest('.pd-btn')) { const on = !dd.classList.contains('open'); dd.classList.toggle('open', on); dd.querySelector('.pd-btn').setAttribute('aria-expanded', String(on)); }
+});
+document.addEventListener('click', e => { const dd = $('#ddOrder'); if (dd && dd.classList.contains('open') && !dd.contains(e.target)) { dd.classList.remove('open'); dd.querySelector('.pd-btn').setAttribute('aria-expanded', 'false'); } });
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
 // AI vs AI, never rated. ProSet.ladder() turns the changed values into a step of this engine's ladder (engine.js think: cfg).
@@ -1238,7 +1263,7 @@ $('#btnStart').onclick = () => {
   if (draft.mode === 'rated') { rtStart(); return; }
   if (draft.resume) { resumeWith(); return; }
   exitSpecial();
-  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2 });
+  Object.assign(settings, { mode: draft.mode, color: draft.color, first: draft.first, level: draft.level, level2: draft.level2 });
   setVariant(draft.rule); drawLines();
   newGame();
 };
@@ -1310,7 +1335,7 @@ function rtForfeit() {
 }
 // rated games are always played with the default rules (15 geese, no retreat); RT_LV was measured on the 13 geese
 function rtStart() {
-  setVariant(E.DEFAULT_RULE); drawLines();
+  setVariant(E.DEFAULT_RULE); drawLines();   // (newGame(rated) also puts the fox first: the rated games keep the traditional order)
   if (Placement.gate(rtLoad(), rtStore, () => rtStart())) return;
   const S = rtLoad(), pk = rtPick(S.r);
   exitSpecial();
@@ -1356,7 +1381,7 @@ function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) |
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
 let introIdx = 0;
 let savedGame = null;
-function stashGame() { if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor }; }
+function stashGame() { if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor, first: gfirst }; }
 function exitSpecial() {
   if (window.SeqPrac) SeqPrac.stop();
   if (!lesson && !puzzle) return;
@@ -1365,7 +1390,7 @@ function exitSpecial() {
   if (gv !== settings.rule) { setVariant(settings.rule); drawLines(); }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false;
   startSpec = null;
-  if (savedGame) { moves = savedGame.moves; cur = savedGame.cur; evals = savedGame.evals; humanColor = savedGame.humanColor; savedGame = null; }
+  if (savedGame) { setFirst(savedGame.first); moves = savedGame.moves; cur = savedGame.cur; evals = savedGame.evals; humanColor = savedGame.humanColor; savedGame = null; }
   else { moves = []; cur = 0; evals = []; }
   reviewing = cur !== moves.length; hintList = null;
   gameOverShown = gameOver(moves.length);
@@ -2281,24 +2306,26 @@ function decMoves(s, start) {
 function parseGameText(v) {
   v = (v || '').trim();
   const h = v.match(/#(.*)$/);
-  if (h) { const q = new URLSearchParams(h[1]); if (!q.has('k')) return null; const rl = q.get('r'); if (rl && RULE_ORDER.includes(rl)) { setVariant(rl); drawLines(); } const list = decMoves(q.get('k') || ''); if (!list) return null; return { list, n: q.has('n') ? parseInt(q.get('n'), 10) : undefined }; }
+  if (h) { const q = new URLSearchParams(h[1]); if (!q.has('k')) return null; const rl = q.get('r'); if (rl && RULE_ORDER.includes(rl)) { setVariant(rl); drawLines(); } const first = q.get('f') === '2' ? P2 : P1, keep = gfirst; setFirst(first); const list = decMoves(q.get('k') || ''); setFirst(keep); if (!list) return null; return { list, first, n: q.has('n') ? parseInt(q.get('n'), 10) : undefined }; }   // (&f=2: the geese moved first)
   const rm = v.match(/\[Variant\s+"(\w+)"\]/); if (rm && RULE_ORDER.includes(rm[1])) { setVariant(rm[1]); drawLines(); }
+  // who moved first: the [First "Geese"] tag, or a record that starts with 「1...」 (the geese's move); without either the fox
+  const fm = v.match(/\[First\s+"(\w+)"\]/), first = fm ? (/^g/i.test(fm[1]) ? P2 : P1) : /^\s*(\[[^\]]*\]\s*)*1\.\.\./.test(v) ? P2 : P1;
   v = v.replace(/\[[^\]]*\]/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/\d+\.(\.\.)?/g, ' ').replace(/(^|\s)(\*|1-0|0-1|1\/2-1\/2)(?=\s|$)/g, ' ');
   const toks = v.split(/[\s,;]+/).filter(Boolean);
   if (!toks.length) return null;
-  const pos = E.Pos.from(null), out = [];
+  const keep = gfirst; setFirst(first); const pos = E.Pos.from(null); setFirst(keep); const out = [];
   for (let k = 0; k < toks.length; k++) {
-    if (!/^[a-j](10|[1-9])(-[a-j](10|[1-9]))*$/i.test(toks[k])) return { bad: k + 1 };
-    const m = E.parse(pos, toks[k]); if (m == null) return { bad: k + 1 };
+    if (!/^[a-j](10|[1-9])([-x][a-j](10|[1-9]))*$/i.test(toks[k])) return { bad: k + 1 };
+    const m = E.parse(pos, toks[k]); if (m == null || m < 0) return { bad: k + 1 };
     pos.play(m); out.push(m);
   }
-  return { list: out };
+  return { list: out, first };
 }
-function openLoaded(list, n) {
+function openLoaded(list, n, first) {
   ['#resultOverlay', '#newOverlay', '#lessonOverlay', '#puzzleOverlay', '#pasteOverlay'].forEach(hideOverlay);
   if (lesson || puzzle) { savedGame = null; exitSpecial(); }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); rvCancel(); rv = null; rvOpen = false; thinking = 0; animating = false;
-  settings.mode = 'pvp'; rgame = null; startSpec = null;
+  settings.mode = 'pvp'; rgame = null; startSpec = null; setFirst(first);
   moves = list; evals = []; hintList = null;
   cur = n === undefined || isNaN(n) ? moves.length : Math.max(0, Math.min(moves.length, n));
   reviewing = cur !== moves.length; gameOverShown = gameOver(moves.length);
@@ -2308,7 +2335,7 @@ function loadText(v) {
   const r = parseGameText(v);
   if (!r) { toast(t('paste.invalid'), 2200); return false; }
   if (r.bad) { toast(t('paste.bad', { n: r.bad }), 2500); return false; }
-  openLoaded(r.list, r.n); toast(t('paste.loaded', { n: r.list.length }), 1800);
+  openLoaded(r.list, r.n, r.first); toast(t('paste.loaded', { n: r.list.length }), 1800);
   return true;
 }
 function loadFromHash() {
@@ -2318,14 +2345,14 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#r=' + gv + '&k=' + encMoves(moves) + (cur < moves.length ? '&n=' + cur : ''); }
+function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#r=' + gv + (gfirst === P2 ? '&f=2' : '') + '&k=' + encMoves(moves) + (cur < moves.length ? '&n=' + cur : ''); }
 // 共有: a PGN-like record (a removal "d4", a jump "f4-d4", a double jump "f4-d4-b4"), a position line, URL, diagram
 function knPos(pos) { const L = p => { const o = []; for (let i = 0; i < NN_(); i++) if (pos.owner(i) === p) o.push(E.sqName(i)); return o.join(','); }; return `${pos.side ? 'W' : 'B'}:B${L(1)}:W${L(2)}`; }
 function knRec() {
   const st = statusAt(moves.length), res = st.over ? (st.draw ? '1/2-1/2' : st.winner === P1 ? '1-0' : '0-1') : '*';
   const tk = recordText().split(' ');
   const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`, q = v => String(v || '?').replace(/["\\]/g, '');
-  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/foxgeese"]\n[Date "${date}"]\n[Fox "${q(playerName(P1))}"]\n[Geese "${q(playerName(P2))}"]\n[Result "${res}"]\n[Variant "${gv}"]\n\n${tk.concat([res]).join(' ')}\n`;
+  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/foxgeese"]\n[Date "${date}"]\n[Fox "${q(playerName(P1))}"]\n[Geese "${q(playerName(P2))}"]\n[Result "${res}"]\n[Variant "${gv}"]\n${gfirst === P2 ? '[First "Geese"]\n' : ''}\n${tk.concat([res]).join(' ')}\n`;
 }
 async function knDiagram(mode) {
   const RX = RecordExport, N = NS_(), S = Math.round(480 / N), B = S * N, pos = posAt(cur).pos;

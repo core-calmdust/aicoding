@@ -68,7 +68,7 @@ html.atlas-skin.atlas-fox:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) 
       if (typeof openNewDialog !== 'function' || typeof draft !== 'object' || typeof segSync !== 'function' || !document.getElementById('btnStart')) return null;
       openNewDialog();
       draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
-      if (side === 1 || side === 2) draft.color = side;
+      if (side >= 1 && side <= 4) { draft.color = side % 2 ? 1 : 2; draft.first = side >= 3 ? 2 : 1; }   // (the portal's side: 1 狐・先手 · 2 ガチョウ・後手 · 3 狐・後手 · 4 ガチョウ・先手 — 3 / 4: the geese move first)
       if (lv >= 1 && lv <= 20) draft.level = lv;
       { const q = new URLSearchParams(location.search), R = q.get('rule') || { 15: 'g15', 17: 'g17', 13: 'g13', 113: 'g13n' }[+q.get('size')]; if (E.RULE_ORDER.includes(R) && draft.mode !== 'rated') draft.rule = R; }   // (the portal card's 種目: size 15 · 17 · 13 = the number of geese, 113 = 13 geese without stepping back; old size=13 / 17 links keep their meaning)
       segSync(); document.getElementById('btnStart').click();

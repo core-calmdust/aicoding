@@ -4,7 +4,9 @@
 // Board: the 33 points of the cross-shaped board, kept in a 7×7 grid: index = r * 7 + c, r = 0 the top row (7), c = 0 file a.
 // Rows 0-1 and 5-6 have the three middle points only. Lines join every point to its orthogonal neighbours; the points
 // with (r + c) even also have diagonals (the Alquerque pattern, so the centre has eight lines).
-// P1 = the Fox (one piece, starts in the middle, moves first), P2 = the Geese (they start on the near side).
+// P1 = the Fox (one piece, starts in the middle, moves first by default), P2 = the Geese (they start on the near side).
+// Who moves first at the starting position is a setting (setFirst: the fox by default, or the geese); a position spec
+// (lessons, puzzles) always carries its own side to move.
 // Rule sets, in the order of every list (claude/foxgeese-spec.md has the sources):
 //   g15  — the default: 15 geese (the 13 + the two end points of the middle row, a4 and g4); they move one step along
 //          any line forward, sideways or diagonally forward — never backwards, never diagonally backwards
@@ -35,6 +37,7 @@ const QUIET_MAX = +((typeof process !== 'undefined' && process.env && process.en
 const REP_MAX = 3;                    // the same position (same side to move) for the third time: the fox wins — the geese are making no progress (this program's own rule)
 const MAX_JUMPS = 7;
 let R = RULES[DEFAULT_RULE], RK = DEFAULT_RULE;
+let FIRST = 0;                        // the side to move at the starting position: 0 the fox (the default), 1 the geese
 const ON = new Uint8Array(NN), RC = [];
 const NBR = [];                       // NBR[i] = [[neighbour, beyond (or -1), dr, dc], …] along the lines
 for (let i = 0; i < NN; i++) { const r = Math.floor(i / 7), c = i % 7; RC.push([r, c]); ON[i] = (r >= 2 && r <= 4) || (c >= 2 && c <= 4) ? 1 : 0; }
@@ -50,6 +53,7 @@ for (let i = 0; i < NN; i++) {
   }
 }
 function setRule(k) { RK = RULES[k] ? k : DEFAULT_RULE; R = RULES[RK]; }
+function setFirst(p) { FIRST = p === P2 ? 1 : 0; }
 // ---------------------------------------------------------------- zobrist
 let seed = 0x2b7e1516;
 function rnd() { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed; }
@@ -77,7 +81,7 @@ START.g17.push(21, 22, 26, 27);       // + a4 b4 f4 g4
 
 class Pos {
   constructor() { this.sq = new Int8Array(NN); this.fox = 24; this.side = 0; this.ply = 0; this.quiet = 0; this.cap = 0; this.reset(); }
-  reset() { this.sq.fill(0); for (const i of START[RK]) this.sq[i] = P2; this.fox = 24; this.sq[24] = P1; this.side = 0; this.ply = 0; this.quiet = 0; this.cap = 0; this.rehash(); }
+  reset() { this.sq.fill(0); for (const i of START[RK]) this.sq[i] = P2; this.fox = 24; this.sq[24] = P1; this.side = FIRST; this.ply = 0; this.quiet = 0; this.cap = 0; this.rehash(); }
   // spec: { b: 49 chars ('.' empty, 'f' the fox, 'g' a goose; anything on the 16 unused squares is ignored), side: 1 | 2,
   //         cap: geese taken so far, n: plies played, q: plies without a capture } or null (the start)
   static from(spec) {
@@ -468,7 +472,7 @@ function goalReply(start, moves, n, G, rule) {
 }
 
 setRule(DEFAULT_RULE);
-const API = { N, NN, P1, P2, WIN, WINT, QUIET_MAX, FOX_WINS_AT, RULES, RULE_ORDER, DEFAULT_RULE, get rule() { return RK; }, get R() { return R; }, setRule,
+const API = { N, NN, P1, P2, WIN, WINT, QUIET_MAX, FOX_WINS_AT, RULES, RULE_ORDER, DEFAULT_RULE, get rule() { return RK; }, get R() { return R; }, setRule, setFirst, get first() { return FIRST ? P2 : P1; },
   RC, ON, POINTS, NBR, START, sqAt, sqName, pack, mRm: () => -1, path: (pos, m) => path(m === undefined ? pos : m), mv, mFrom, mTo, jumped, Pos, effect, captured, name, parse, replay, judge,
   LEVELS, think, analyze, cands, pvOf, evaluate, foxArea, kindOf, EW, goalGood, goalMin, goalReply, goalOf, goalMet, ttClear,
   get nodes() { return nodes; } };
@@ -477,7 +481,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
   self.onmessage = e => {
     const m = e.data;
     try {
-      setRule(m.rule || DEFAULT_RULE);
+      setRule(m.rule || DEFAULT_RULE); setFirst(m.first);
       if (m.type === 'think') { PRO_CFG = m.cfg || null; let r; try { r = think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } self.postMessage({ id: m.id, type: 'result', ...r, nodes }); }
       else if (m.type === 'analyze') {
         const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
