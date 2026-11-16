@@ -38,7 +38,7 @@ function mvAt(i) { return mvName(moves[i]); }
 
 // ====================================================================== state
 const STORE = 'aicoding-go';
-const settings = { mode: 'ai', color: 1, level: 9, level2: 9, anim: true, sound: true, hint: false, eval: true, last: true, coord: true, coordAll: false, num: false, atari: false, lang: '', bd: 'kaya', st: 'classic', size: 19, rule: 'jp', ha: 0, komi: 'auto', tap: 'auto', terr: false };
+const settings = { lvV17: 1, mode: 'ai', color: 1, level: 9, level2: 9, anim: true, sound: true, hint: false, eval: true, last: true, coord: true, coordAll: false, num: false, atari: false, lang: '', bd: 'kaya', st: 'classic', size: 19, rule: 'jp', ha: 0, komi: 'auto', tap: 'auto', terr: false };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -49,12 +49,23 @@ const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 25 steps labelled with the ranks measured on 19x19 against KataGo's human-like model (MODEL_CARD.md):
 // 18級 … 1級, 初段 … 八段, then the strongest. 11級 and 8級 sit halfway between their neighbours' settings (not measured).
 const RANKS = [null, 'k18', 'k17', 'k16', 'k15', 'k14', 'k13', 'k12', 'k11', 'k10', 'k9', 'k8', 'k7', 'k6', 'k5', 'k4', 'k3', 'k2', 'k1', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 't1', 't2', 't3', 't4', 't5', 't6'];   // t2–t6 = 最強 I–V (28–32): time with every thread
-const LV_MAX = RANKS.length - 1;
+const LV_MAX = RANKS.length - 1 + 5;   // (+ 5: the steps added below 天上, 2026-11-17)
 // rank as a number: 18級 = -17 … 1級 = 0, 初段 = 1 … 八段 = 8, beyond = 9+
 const rankVal = i => { const r = RANKS[Math.max(1, Math.min(LV_MAX, i))]; const v = +r.slice(1); return r[0] === 'k' ? 1 - v : r[0] === 'd' ? v : 8 + v; };
-const LV = i => { const r = RANKS[Math.max(1, Math.min(LV_MAX, i))], v = +r.slice(1); return r[0] === 'k' ? t('lv.kyu', { n: v }) : r[0] === 'd' ? t('lv.dan' + v) : t('lv.top' + v); };
+// 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–32 are the levels people play (steps
+// added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+// level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+const LVX = [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [18, 19, 0.5], [19], [19, 20, 0.5], [20], [20, 21, 0.5], [21], [21, 22, 0.5], [22], [22, 23, 0.5], [23], [24], [25], [26], [27], [28], [29], [30], [31], [32]], LV_HUMAN = 32, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37];   // LV_MIG: an old level → the new one (saved settings)
+const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+const lvMixName = (n, nm) => { const s = LVX[(n | 0) - 1] || [n]; if (s.length < 3) return nm(s[0]); const a = nm(s[0]); return /\+$/.test(a) ? nm(s[1]) + '−' : a + '+'; };   // a step between two: lower+ (or upper− when the lower already ends in +)
+const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+const LV = i => i > LV_HUMAN ? tenjoName(i, LANG) : lvMixName(i, LV0);
+const LV0 = i => { const r = RANKS[Math.max(1, Math.min(LV_MAX, i))], v = +r.slice(1); return r[0] === 'k' ? t('lv.kyu', { n: v }) : r[0] === 'd' ? t('lv.dan' + v) : t('lv.top' + v); };
 const LV_TIME = { 28: 1.25, 29: 2.5, 30: 5, 31: 10, 32: 20 };   // seconds per move of the timed levels (= engine.js LEVELS timed)
-const LVD = i => { if (LV_TIME[i]) return t('lvd.t', { s: LV_TIME[i] }); const v = rankVal(i); return t('lvd')[v <= -12 ? 0 : v <= -6 ? 1 : v <= 0 ? 2 : v <= 5 ? 3 : 4]; };
+const LVD = i => LVD0(lvOld(i));
+const LVD0 = i => { if (LV_TIME[i]) return t('lvd.t', { s: LV_TIME[i] }); const v = rankVal(i); return t('lvd')[v <= -12 ? 0 : v <= -6 ? 1 : v <= 0 ? 2 : v <= 5 ? 3 : 4]; };
 // points: 3.5 → "3目半" / "3.5"
 function pts(x) { x = Math.abs(Math.round(x * 2) / 2); return t('u.pts', { n: LANG === 'ja' ? (x % 1 ? Math.floor(x) + '目半' : x + '目') : (x % 1 ? x.toFixed(1) : String(x)) }).replace('目目', '目'); }
 const fmtLead = v => (v >= 0 ? '+' : '−') + (Math.round(Math.abs(v) * 10) / 10).toFixed(1);
@@ -91,6 +102,10 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (d.settings && !d.settings.lvV17) {   // (2026-11-17: the levels were renumbered — 天上)
+      ['level', 'level2'].forEach(k => { if (settings[k] >= 1) settings[k] = LV_MIG[settings[k] - 1] || settings[k]; });
+      settings.lvV17 = 1; try { d.settings = Object.assign({}, d.settings, { level: settings.level, level2: settings.level2, lvV17: 1 }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
+    }
     if (window.PhoneSnd && PhoneSnd.phone) settings.sound = true;   // phones: the silent switch decides (shared/phonesnd.js)
     if (settings.mode === 'online') settings.mode = 'pvp';
     if (!(settings.level >= 1 && settings.level <= LV_MAX)) settings.level = 9;
@@ -625,7 +640,7 @@ async function maybeAI(tok) {
   const p = toMoveAt(cur);
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); svg.classList.remove('can');
-  const t0 = Date.now(), lv = levelFor(p);
+  const t0 = Date.now(), lv = engLv(levelFor(p));
   // the timed levels just after the page opened: wait for the threads once (up to 4 s) instead of starting on one thread
   if (lv >= 28 && MTP && !proCfg(lv, p) && !MTP.pool('ai')) { await Promise.race([MTP.ready(), new Promise(r => setTimeout(r, 4000))]); if (tok !== busyToken) return; }
   const job = () => request({ type: 'think', preempt: true, ...jobBase(startSpec, moves.slice(0, cur)), level: lv, time: rtLive() ? (lv >= 28 ? rtTimedBudget() : rtAiTime()) : undefined, params: proCfg(lv, p) || undefined });
@@ -648,7 +663,7 @@ function aiResigns(p, res) {
   if (lv < 4 || cur < n * n * 0.35) return false;
   const wr = res.wr, lead = res.lead;   // AI's view
   const k = cur;
-  const lost = (wr < 0.03 && lead < -(rankVal(lv) >= 1 ? 8 : 20)) || lead < -(n * n * 0.25);
+  const lost = (wr < 0.03 && lead < -(rankVal(lvOld(lv)) >= 1 ? 8 : 20)) || lead < -(n * n * 0.25);
   aiVals[k] = wr;
   if (!lost) return false;
   const prev = aiVals.slice(0, k).filter(x => typeof x === 'number').slice(-2);
@@ -1119,7 +1134,7 @@ const RT_STORE = STORE + '-rated', RT_START = 1000, RT_SIZE = 9, RT_CLOCK = { ba
 // アマ最強 2700; the timed levels 最強 I–V above it by their measured steps (Elo, extrapolated: MODEL_CARD.md「最上位レベル」)
 const TOP_RT = [2700, 2800, 2900, 3000, 3100, 3200];
 const egfOf = i => { const v = rankVal(i); return v <= 5 ? 2000 + 100 * v : v <= 8 ? 2500 + 50 * (v - 5) : TOP_RT[v - 9]; };
-const RT_LV = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2350, 2400, 2450, 2500, 2700, 2800, 2900, 3000, 3100];   // (2026-11-17: the common scale — 覚えたて ≈ 100, アマ最強 Lv.27 = プロ 2500, 天上 Lv.28–32 2700+; was egfOf)
+const RT_LV = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1850, 1900, 1950, 2000, 2050, 2100, 2150, 2200, 2250, 2300, 2350, 2400, 2450, 2500, 2700, 2800, 2900, 3000, 3100];   // (2026-11-17: the common scale — 覚えたて ≈ 100, アマ最強 Lv.27 = プロ 2500, 天上 Lv.28–32 2700+; was egfOf)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

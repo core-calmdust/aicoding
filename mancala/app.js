@@ -14,7 +14,17 @@ function t(k, v) {
   if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : '');
   return x;
 }
-const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
+// 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–10 are the levels people play (steps
+// added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+// level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+const LVX = [[1], [2], [3], [4], [5], [6], [7], [8], [8, 9, 0.5], [9], [10]], LV_HUMAN = 10, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11];   // LV_MIG: an old level → the new one (saved settings)
+const LV_MAX = LVX.length;
+const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+const lvMixName = (n, nm) => { const s = LVX[(n | 0) - 1] || [n]; if (s.length < 3) return nm(s[0]); const a = nm(s[0]); return /\+$/.test(a) ? nm(s[1]) + '−' : a + '+'; };   // a step between two: lower+ (or upper− when the lower already ends in +)
+const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+const LV = i => i > LV_HUMAN ? tenjoName(i, LANG) : lvMixName(i, k => t('lv')[k]), LVD = i => t('lvd')[lvOld(i)];
 const RULE_ORDER = ['basic', 'easy', 'kalah', 'sunka', 'oware', 'mangala', 'bohnen', 'ayo'];   // 'basic' is shown as "Normal"
 // the ゲーム tab: two rows of four — the store-sowing rules, then traditional rules of the world
 const RULE_GROUPS = [['kalah', ['basic', 'easy', 'kalah', 'sunka']], ['world', ['oware', 'mangala', 'bohnen', 'ayo']]];
@@ -32,7 +42,7 @@ function applyI18n() {
 
 // ====================================================================== state
 const STORE = 'aicoding-mancala-v1';
-const settings = { mode: 'ai', rules: 'kalah', seeds: 4, color: 0, level: 5, level2: 8, eval: true, anim: true, speed: 'normal', skin: 'luxe', coach: true, preview: true, sound: true, hint: false, lang: '' };
+const settings = { lvV17: 1, mode: 'ai', rules: 'kalah', seeds: 4, color: 0, level: 5, level2: 8, eval: true, anim: true, speed: 'normal', skin: 'luxe', coach: true, preview: true, sound: true, hint: false, lang: '' };
 let game = { rules: 'kalah', seeds: 4, moves: [], human: 0, setup: null };
 let P = [];              // positions (engine replay)
 let cur = 0;             // number of moves shown
@@ -79,6 +89,10 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (d.settings && !d.settings.lvV17) {   // (2026-11-17: the levels were renumbered — 天上)
+      ['level', 'level2'].forEach(k => { if (settings[k] >= 1) settings[k] = LV_MIG[settings[k] - 1] || settings[k]; });
+      settings.lvV17 = 1; try { d.settings = Object.assign({}, d.settings, { level: settings.level, level2: settings.level2, lvV17: 1 }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
+    }
     if (!E.RULES[settings.rules]) settings.rules = 'kalah';
     if (settings.mode === 'online') settings.mode = 'pvp';
     if (d.game && E.RULES[d.game.rules] && [4, 6].includes(d.game.seeds) && Array.isArray(d.game.moves)) {
@@ -943,7 +957,7 @@ async function maybeAI(tok) {
   const p = shownPos(), side = p.side, idx = cur;
   thinking = side; renderInfo();
   const t0 = performance.now();
-  const res = await request('ai', { type: 'move', ...posMsg(p, game.rules), level: levelFor(side), cfg: proCfg(levelFor(side), side) });
+  const res = await request('ai', { type: 'move', ...posMsg(p, game.rules), level: engLv(levelFor(side)), cfg: proCfg(levelFor(side), side) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = -1; renderInfo(); } return; }
   if (res.value !== undefined && res.value !== null) evals[idx] = { v: side === 0 ? res.value : -res.value, exact: !!res.exact };
   const wait = (settings.mode === 'watch' ? 600 : 0) - (performance.now() - t0);   // AIの着手は即時：前の種まきアニメは終わっている（もう一回の案内もアニメの中）。観戦だけ間を取る
@@ -1300,12 +1314,12 @@ function proGet(lv, PRO = window.PRO) { if (!PRO || !(settings.mode === 'ai' || 
 function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
 function proCfg(lv, p) {
   const e = proGet(lv, settings.mode === 'watch' && p !== undefined && p !== 0 && window.PRO2 ? window.PRO2 : window.PRO); if (!e) return null;
-  const L = E.LEVELS[lv] || E.LEVELS[5];
+  const L = E.LEVELS[lvOld(lv)] || E.LEVELS[5];
   const th = MTP ? { threads: e.threads || 1 } : {};
   if (e.limit.k === 'time') return Object.assign({ kind: 'time', ms: Math.round(e.limit.v * 1000) }, th);
   return Object.assign({ kind: 'depth', depth: e.limit.v, noise: !e.var ? 0 : !e.changed.includes('var') && L.kind === 'depth' ? L.noise : e.var === 1 ? 30 : 140 }, th);
 }
-document.querySelectorAll('.lvbtn').forEach(b => b.onclick = () => { const k = b.dataset.t, d = +b.dataset.d; draft[k] = Math.max(1, Math.min(10, draft[k] + d)); segSync(); sTick(); });
+document.querySelectorAll('.lvbtn').forEach(b => b.onclick = () => { const k = b.dataset.t, d = +b.dataset.d; draft[k] = Math.max(1, Math.min(LV_MAX, draft[k] + d)); segSync(); sTick(); });
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => { $('#newOverlay').classList.remove('show'); maybeRotTip(); };
 $('#btnStart').onclick = () => {

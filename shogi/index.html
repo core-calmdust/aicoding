@@ -1787,9 +1787,9 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
     </div>
     <div class="field" id="fClock"><label data-i18n="ng.clock"></label><div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button><button data-v="4" id="btnFis"></button></div><div id="fisPick" class="hidden"></div></div>
     </div><div class="ng-col">
-    <div class="field" id="fLevel"><label id="lblLevel" data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="0" max="25" id="rngLevel"><div class="lv-row"><div class="level-name" id="levelName"></div><label class="cs-wrap" id="csWrap1"><span></span><select class="cs-sel" data-nopd></select></label></div></div></div>
+    <div class="field" id="fLevel"><label id="lblLevel" data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="0" max="29" id="rngLevel"><div class="lv-row"><div class="level-name" id="levelName"></div><label class="cs-wrap" id="csWrap1"><span></span><select class="cs-sel" data-nopd></select></label></div></div></div>
     <div class="field note" id="lvNote" style="margin-top:-8px" data-i18n="lvr.note"></div>
-    <div class="field hidden" id="fLevel2"><label data-i18n="ng.level2"></label><div class="level-wrap"><input type="range" min="0" max="25" id="rngLevel2"><div class="lv-row"><div class="level-name" id="levelName2"></div><label class="cs-wrap" id="csWrap2"><span></span><select class="cs-sel" data-nopd></select></label></div></div></div>
+    <div class="field hidden" id="fLevel2"><label data-i18n="ng.level2"></label><div class="level-wrap"><input type="range" min="0" max="29" id="rngLevel2"><div class="lv-row"><div class="level-name" id="levelName2"></div><label class="cs-wrap" id="csWrap2"><span></span><select class="cs-sel" data-nopd></select></label></div></div></div>
     <div class="field" id="fOpts"><label data-i18n="ng.options"></label>
       <div class="checks">
         <label><input type="checkbox" id="optLegal"><span data-i18n="ng.legal"></span></label>
@@ -2028,14 +2028,26 @@ const COACH_MS = 2400, COACH_NODES = 1000000;          // coach card / hint: tim
 // the coach / hint candidates: engine.js 'coach' (the full search of the strong levels); the variant worker only knows 'analyze'
 const coachMsg = (idx, n) => Variants.eng(game.variant) ? { type: 'analyze', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 1500, top: n } }
   : { type: 'coach', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: COACH_MS, nodes: COACH_NODES, n } };
+// 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–26 are the levels people play (steps
+// added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+// level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+const LVX = [[1], [1, 2, 0.5], [2], [2, 3, 0.5], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [17, 18, 0.5], [18], [18, 19, 0.5], [19], [20], [21], [22], [23], [24], [25], [26]], LV_HUMAN = 26, LV_MIG = [1, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 23, 24, 25, 26, 27, 28, 29, 30];   // LV_MIG: an old level → the new one (saved settings)
+const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+const lvMixName = (n, nm) => { const s = LVX[(n | 0) - 1] || [n]; if (s.length < 3) return nm(s[0]); const a = nm(s[0]); return /\+$/.test(a) ? nm(s[1]) + '−' : a + '+'; };   // a step between two: lower+ (or upper− when the lower already ends in +)
+const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+// (shogi counts its levels from 0: index i is level i + 1)
+const LV_N = LVX.length, engIx = i => engLv(i + 1) - 1, oldIx = i => lvOld(i + 1) - 1;
+const LVN = i => i + 1 > LV_HUMAN ? tenjoName(i + 1, LANG) : lvMixName(i + 1, k => t('lv')[k - 1] || ''), LVDN = i => t('lvd')[oldIx(i)] || '';
 const LV_DEFAULT = 7;                                    // 10級
 const LV_OLD = [0, 1, 2, 4, 6, 9, 13, 16, 17, 18];       // old Lv.1–10 (saved settings / rated history before the rank steps) → step
 const lvMig = v => typeof v === 'number' && v >= 0 ? LV_OLD[Math.min(9, Math.round(v))] : LV_DEFAULT;
-const lvClamp = v => typeof v === 'number' && v >= 0 && v < LEVELS.length ? Math.round(v) : LV_DEFAULT;
+const lvClamp = v => typeof v === 'number' && v >= 0 && v < LV_N ? Math.round(v) : LV_DEFAULT;
 
 // ====================================================================== i18n / state
 const STORE = 'shogi-kaya-v1', LSTORE = 'shogi-kaya-lessons-v1';
-const settings = { mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 3, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: '2kanji_3d', skin: 'kaya', skinV: 2, variant: '', heianB: '8' };
+const settings = { lvV17: 1, mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 3, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: '2kanji_3d', skin: 'kaya', skinV: 2, variant: '', heianB: '8' };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const f = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(f)) return 'zh-TW'; const n = f.slice(0, 2); return SUPPORTED.includes(n) ? n : 'en'; }
 let LANG = detectLang();
@@ -2085,6 +2097,11 @@ function load() {
     { const m3 = v => v === 19 ? 20 : v === 20 ? 22 : v;
       if (settings.lvv !== 3) { settings.level = m3(settings.level); settings.level2 = m3(settings.level2); settings.lvv = 3; }
       if (d.game && d.game.rated && d.game.rated.k !== 3) { d.game.rated.lv = m3(d.game.rated.lv); d.game.rated.k = 3; } }
+    if (d.settings && !d.settings.lvV17) {   // (2026-11-17: the levels were renumbered — 天上; index = level − 1)
+      ['level', 'level2'].forEach(k => { if (settings[k] >= 0) settings[k] = (LV_MIG[settings[k]] || settings[k] + 1) - 1; });
+      if (d.game && d.game.rated && d.game.rated.lv >= 0) d.game.rated.lv = (LV_MIG[d.game.rated.lv] || d.game.rated.lv + 1) - 1;
+      settings.lvV17 = 1; try { d.settings = Object.assign({}, d.settings, { level: settings.level, level2: settings.level2, lvV17: 1 }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
+    }
     if (d.game && d.game.start) { game = d.game; cur = game.moves.length; return true; }
   } catch (e) {}
   return false;
@@ -2727,7 +2744,7 @@ function playerName(c) {
   if (settings.mode === 'online') { const g = net && net.game; if (!g) return '…'; return (c === net.me ? t('you') + ' · ' : '') + (c === 0 ? g.bn : g.wn) + ' (' + (c === 0 ? g.br : g.wr) + ')'; }
   if (settings.mode === 'pvp') return cname(c);
   const cs = window.CpuStyle && game ? CpuStyle.tag(game, c, t) : '';
-  const lvN = i => game && game.variant && Variants.eng(game.variant) ? Variants.lvName(i) : t('lv')[i];
+  const lvN = i => game && game.variant && Variants.eng(game.variant) ? Variants.lvName(i) : LVN(i);
   if (settings.mode === 'watch') return aiP() + lvN(c === 0 ? settings.level : settings.level2) + (proCfg(c === 0 ? settings.level : settings.level2, c) ? ' PRO' : '') + cs;
   if (game && game.rated) return c === game.human ? t('you') + ' · R' + game.rated.my : aiP() + rtLvName(game.rated.lv) + ' · R' + game.rated.or;
   return c === game.human ? t('you') : aiP() + lvN(settings.level) + (proCfg(settings.level) ? ' PRO' : '') + cs;
@@ -3003,7 +3020,7 @@ async function schedule() {
     setStatus(side, t('thinking'), true);
     const t0 = performance.now();
     await weightsReady; if (token !== busyToken) return;
-    const pc = proCfg(levelOf(side), side), lv = pc ? pc.opts : LEVELS[levelOf(side)];   // PRO mode: a level of its own
+    const pc = proCfg(levelOf(side), side), lv = pc ? pc.opts : LEVELS[engIx(levelOf(side))];   // PRO mode: a level of its own
     let bm = null, bmLbl = 'book';
     if (window.CpuStyle && CpuStyle.active(game, side, idx)) {   // chosen strategy (cpu-style.js): consistent book move / plan move / null = engine
       const r = await CpuStyle.move({ E, P, game, side, ply: idx, book: (pc ? pc.book : levelOf(side) >= 2) ? BOOK : null, think: (mv, o) => aiCall({ type: 'think', sfen: game.start, moves: mv, opts: o }) });
@@ -3018,7 +3035,7 @@ async function schedule() {
       return;
     }
     if (!pc && lv.mt && MTP) { await Promise.race([MTP.ready(), sleep(4000)]); if (token !== busyToken) return; }   // the timed top steps: wait for the threads once (just after the page opened)
-    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: Variants.eng(game.variant) ? Variants.levelOpts(game.rated ? Math.round(game.rated.lv * 18 / 25) : levelOf(side), game.variant) : lv, ...(pc && (pc.threads > 1 || pc.ponder) ? { mtThreads: pc.threads, ...(pc.ponder ? { mtPonder: 1 } : {}) } : !pc && lv.mt ? { mtAll: 1 } : {}) }, m => {
+    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: Variants.eng(game.variant) ? Variants.levelOpts(game.rated ? Math.round(game.rated.lv * 18 / (LV_N - 1)) : levelOf(side), game.variant) : lv, ...(pc && (pc.threads > 1 || pc.ponder) ? { mtThreads: pc.threads, ...(pc.ponder ? { mtPonder: 1 } : {}) } : !pc && lv.mt ? { mtAll: 1 } : {}) }, m => {
       if (token === busyToken) setStatus(side, rtLive() ? t('thinking.d', { d: m.depth }) : `${t('thinking.d', { d: m.depth })}  ${fmtScore(m.score)}`, true);
     });
     if (!res || token !== busyToken) return;
@@ -3112,7 +3129,7 @@ function recordGame() {
   const o = game.over, h = game.human;
   if (o.ply < 2 && o.reason === 'resign') return;   // (resigned before playing: not a game)
   Object.defineProperty(game, 'recorded', { value: true, enumerable: true, writable: true, configurable: true });
-  const lvN = i => Variants.eng(game.variant) ? Variants.lvName(i) : t('lv')[i];
+  const lvN = i => Variants.eng(game.variant) ? Variants.lvName(i) : LVN(i);
   const vn = game.variant ? ' · ' + Variants.vName(game.variant) : '';
   const pro = !game.rated && proCfg(settings.level), opp = game.rated ? 'AI ' + rtLvName(game.rated.lv) : 'AI ' + lvN(settings.level) + (pro ? ' PRO' : '') + vn;
   const why = o.reason === 'mate' ? t('res.mate', { n: o.ply }) : o.reason === 'resign' ? t('res.resign', { n: o.ply }) : t('res.' + o.reason);
@@ -3295,7 +3312,7 @@ document.addEventListener('click', e => { if (sel && !e.target.closest('.board')
 // Each AI level has a fixed rating on a Shogi Club 24-like scale (100 points per kyu, see MODEL_CARD.md); the opponent is picked
 // around the player's rating (mostly close, sometimes clearly stronger or weaker) and the result moves the rating (Elo).
 const RT_STORE = 'shogi-rated-v1', RT_START = 900, RT_CLOCK = 2;      // RT_CLOCK: 10 min + 30 s byoyomi (CLOCKS[2])
-const RT_LV = [100, 255, 405, 510, 610, 715, 815, 915, 1020, 1120, 1225, 1325, 1430, 1530, 1630, 1735, 1835, 1990, 2195, 2295, 2400, 2500, 2700, 2800, 2900, 3000];   // per step (入門 … 六段・七段・八段・九段; 七段〜九段 added 2026-11-08 from the time-doubling matches, MODEL_CARD.md)
+const RT_LV = [100, 180, 255, 330, 405, 510, 610, 715, 815, 915, 1020, 1120, 1225, 1325, 1430, 1530, 1630, 1735, 1835, 1910, 1990, 2090, 2195, 2295, 2400, 2500, 2700, 2800, 2900, 3000];   // per step (入門 … 六段・七段・八段・九段; 七段〜九段 added 2026-11-08 from the time-doubling matches, MODEL_CARD.md)
 // 種目 (2026-11-12): each variant has a rating of its own — the standard game under RT_STORE, a variant under RT_STORE + ':' + its
 // key ('mini', 'heian8', 'random' …; the same store as the portal's 3D table). v omitted: the variant of the game being set up / played
 const rtV = v => v !== undefined ? v || '' : (game && game.rated && !game.over ? game.variant || '' : (window.Variants ? Variants.forGame() : '')) || '';
@@ -3314,7 +3331,7 @@ function rtRank(r) {
   return t('rt.rank', { r: k });
 }
 const rtD = d => (d >= 0 ? '+' : '−') + Math.abs(d);
-const rtLvName = lv => t('lv')[lv] || '?';
+const rtLvName = lv => LVN(lv) || '?';
 // opponent: target = rating + offset (80%: within ±100, 10%: +150..+300 stronger, 10%: −150..−300 weaker) → nearest level
 function rtPick(r, rnd = Math.random, vk) {
   { const S0 = rtLoad(vk); if (Placement.on(S0)) return Placement.pick(S0, RT_LV.map((x, i) => [i, x])); }
@@ -3439,8 +3456,8 @@ function updDialog() {
   $('#handiNote').classList.toggle('hidden', !dlg.handicap);
   $('#lblLevel').textContent = t(dlg.mode === 'watch' ? 'ng.level1' : 'ng.level');
   const lv = +$('#rngLevel').value, lv2 = +$('#rngLevel2').value;
-  $('#levelName').innerHTML = `${t('lv')[lv]}<small>${t('lvd')[lv]}</small>`;
-  $('#levelName2').innerHTML = `${t('lv')[lv2]}<small>${t('lvd')[lv2]}</small>`;
+  $('#levelName').innerHTML = `${LVN(lv)}<small>${LVDN(lv)}</small>`;
+  $('#levelName2').innerHTML = `${LVN(lv2)}<small>${LVDN(lv2)}</small>`;
   // online: always 平手 with random sente/gote and a 90 s move limit, so hide those settings
   const ol = dlg.mode === 'online';
   $('#fOnlineInfo').classList.toggle('hidden', !ol);
@@ -3556,7 +3573,7 @@ $('#segHandi').onclick = e => { const b = e.target.closest('button'); if (b) { d
 $('#rngLevel').oninput = updDialog; $('#rngLevel2').oninput = updDialog;
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — standard shogi
 // (and ランダム将棋, which keeps these levels) against the AI / AI vs AI, never rated. The changed values make engine opts of their own.
-const PRO_DEF = lv => { const L = LEVELS[lv] || LEVELS[LV_DEFAULT];
+const PRO_DEF = lv => { const L = LEVELS[oldIx(lv)] || LEVELS[LV_DEFAULT];
   return { limit: L.noise ? { k: 'depth', v: L.depth } : L.nodes ? { k: 'nodes', v: L.nodes } : { k: 'time', v: (L.time || 1000) / 1000 }, threads: L.mt ? ProSet.defThreads() : 1, ponder: false,
     book: lv >= 2, var: !L.noise ? 0 : L.noise >= 60 ? 2 : 1, eval: L.noise || L.linear ? 'hand' : 'nnue', resign: !L.noise }; };
 const proVariantEng = () => { const c = document.querySelector('#newOverlay .ngt-gcard.sel[data-v]'); return !!(c && c.dataset.v && window.Variants && Variants.eng(c.dataset.v)); };
@@ -3575,7 +3592,7 @@ function proCfg(lv, side) {
   const PRO = settings.mode === 'watch' && side === 1 ? PRO2 : window.PRO;   // (AI同士: 後手AI has its own)
   if (!PRO || !game || game.rated || !(settings.mode === 'ai' || settings.mode === 'watch') || (game.variant && window.Variants && Variants.eng(game.variant))) return null;
   const e = PRO.get(lv); if (!e) return null;
-  const L = LEVELS[lv] || LEVELS[LV_DEFAULT], o = {};
+  const L = LEVELS[oldIx(lv)] || LEVELS[LV_DEFAULT], o = {};
   if (e.limit.k === 'depth') o.depth = e.limit.v; else if (e.limit.k === 'nodes') o.nodes = e.limit.v; else o.time = Math.round(e.limit.v * 1000);
   if (e.var) { o.noise = !e.changed.includes('var') && L.noise ? L.noise : e.var === 1 ? 30 : 80; if (L.greedy && !e.changed.includes('var')) o.greedy = 1; if (e.eval === 'nnue') o.nnue = 1; }
   else if (e.eval === 'hand') o.linear = 1;

@@ -260,7 +260,7 @@
     T3.show('mancala', board);
     let pzOn = false, pzW = null, pzJ = 0;
     const PZ = ctx.pz || null;   // PZ: a puzzle / lesson position driven by atlas/puzzles.js · lessons3d.js (no AI: ctx.pz.moved decides; you sow the near row)
-    const TOP = G.TOP, level = Math.max(1, Math.min(10, +ctx.level || 5)), SEEDS = seedsOf(+ctx.size || 4);
+    const TOP = G.TOP, level = Math.max(1, Math.min(11, +ctx.level || 5)), SEEDS = seedsOf(+ctx.size || 4);
     let RULES = PZ && PZ.spec ? PZ.spec.rules || 'kalah' : ruleOfSize(+ctx.size || 4);
     const pvp = !PZ && ctx.mode === 'pvp', human = PZ ? 0 : pvp ? 0 : ctx.side === 2 ? 1 : 0, ai = 1 - human;
     const pname = s => s ? t('bv.second') : t('bv.first');
@@ -323,7 +323,7 @@
       // the landscape layout's names and message (the full game's store labels: "AI 中級+ · 後手", "あなた · 先手")
       ov.querySelectorAll('.mcl-n').forEach(e => {
         const c = +e.dataset.s, me = pvp ? side === c && !over : c === human;
-        e.textContent = pvp ? pname(c) : (c === human ? L.you : `${L.ai} ${(LV[lang] || LV.en)[level]}`) + ' · ' + pname(c);
+        e.textContent = pvp ? pname(c) : (c === human ? L.you : `${L.ai} ${(LV[lang] || LV.en)[lvOld(level)]}`) + ' · ' + pname(c);
         e.classList.toggle('me', me);
       });
       ov.querySelector('.mcl-m').textContent = msg || '';
@@ -356,7 +356,7 @@
         const m = e.data; if (m.type !== 'move' || m.id !== j || stopped || j !== aiJ || over) return;
         setTimeout(() => { if (stopped || j !== aiJ || over) return; if (m.move >= 0) play(m.move, ai); }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
-      worker.postMessage({ type: 'move', id: j, b: Array.from(b), side: ai, rules: RULES, level });
+      worker.postMessage({ type: 'move', id: j, b: Array.from(b), side: ai, rules: RULES, level: engLv(level) });
     }
     function end() {
       over = true; busy = false; hideHint(); showGlows(); if (ctx.onTurn) ctx.onTurn(-1);
@@ -482,11 +482,24 @@
     return api;
   }
 
-  function levelInfo(n, lang) {
+  // 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–10 are the levels people play (steps
+  // added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+  // level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+  const LVX = [[1], [2], [3], [4], [5], [6], [7], [8], [8, 9, 0.5], [9], [10]], LV_HUMAN = 10, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11];   // LV_MIG: an old level → the new one (saved settings)
+  const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+  const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+  const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+  const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+  function levelInfo0(n, lang) {
     const a = LV[lang] || LV.en, d = LVD[lang] || LVD.en, w = WHO[lang] || WHO.en;
     return { name: a[n], desc: d[n], rating: 0, who: w[WG[n]] };
+  }  function levelInfo(n, lang) {   // the levels people see → the engine's (LVX); 天上 above LV_HUMAN
+    const x = Object.assign({}, levelInfo0(lvOld(n), lang)), mix = (LVX[n - 1] || []).length > 1; x.rating = x.rating;
+    if (n > LV_HUMAN) x.name = tenjoName(n, lang); else if (x.name && /^Lv\.\d+$/.test(x.name)) x.name = 'Lv.' + n; else if (x.name && mix) { const a = x.name, b = levelInfo0(LVX[n - 1][1], lang).name; x.name = /\+$/.test(a) && b ? b + '−' : a + '+'; }
+    return x;
   }
+
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.mancala = { kindFirst: true, kit, levels: 10, land: 'bar', sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [].concat(...RIDS.map(r => RSZ[r])), size0: codeOf('kalah', 4), rule, optInfo,
+  window.Atlas3D.mancala = { kindFirst: true, kit, levels: 11, reward: 10, land: 'bar', sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'bg', sizes: [].concat(...RIDS.map(r => RSZ[r])), size0: codeOf('kalah', 4), rule, optInfo,
     sizeLabel: l => SEEDS_L[l] || SEEDS_L.en, sizeName: (z, l) => (SEEDS_N[l] || SEEDS_N.en).replace('{n}', seedsOf(z)), levelInfo, start };   // table: start() plays on the chabudai itself
 })();

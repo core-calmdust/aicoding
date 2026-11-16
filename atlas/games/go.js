@@ -192,7 +192,7 @@
     function aiMove() {
       busy = true; hud(L.think);
       const t0 = Date.now(), k = moves.length;
-      request({ type: 'think', preempt: true, level: ctx.level }).then(res => {
+      request({ type: 'think', preempt: true, level: engLv(ctx.level) }).then(res => {
         if (stopped || over || moves.length !== k) return;
         let m = res && typeof res.move === 'number' ? res.move : R.PASS;
         if (res && typeof res.wr === 'number') aiWr[k] = res.wr;
@@ -203,7 +203,7 @@
     }
     // the AI resigns when hopeless (dan levels sooner, kyu levels only when far behind) — like go/app.js
     function aiResigns(res) {
-      const lv = ctx.level, k = moves.length;
+      const lv = lvOld(ctx.level), k = moves.length;
       if (lv < 4 || k < n * n * .35) return false;
       const lost = (res.wr < .03 && res.lead < -(lv >= 16 ? 8 : 20)) || res.lead < -(n * n * .25);
       if (!lost) return false;
@@ -374,11 +374,24 @@
   const RANKS = [null, 'k18', 'k17', 'k16', 'k15', 'k14', 'k13', 'k12', 'k11', 'k10', 'k9', 'k8', 'k7', 'k6', 'k5', 'k4', 'k3', 'k2', 'k1', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 't1', 't2', 't3', 't4', 't5', 't6'];
   const LV_TIME = { 28: 1.25, 29: 2.5, 30: 5, 31: 10, 32: 20 };   // the timed levels 最強 I–V (go/engine.js; here on one thread — the table page is not isolated)
   const TOP_RT = [2700, 2800, 2900, 3000, 3100, 3200];   // アマ最強, 最強 I–V (= go/app.js TOP_RT)
-  function levelInfo(i, lang) {   // i = 1..32
+  // 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–32 are the levels people play (steps
+  // added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+  // level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+  const LVX = [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [18, 19, 0.5], [19], [19, 20, 0.5], [20], [20, 21, 0.5], [21], [21, 22, 0.5], [22], [22, 23, 0.5], [23], [24], [25], [26], [27], [28], [29], [30], [31], [32]], LV_HUMAN = 32, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37];   // LV_MIG: an old level → the new one (saved settings)
+  const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+  const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+  const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+  const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+  function levelInfo0(i, lang) {   // i = 1..32
     const L = LVN[lang] || LVN.en, r = RANKS[i], v = +r.slice(1), rv = r[0] === 'k' ? 1 - v : r[0] === 'd' ? v : 8 + v;
     const name = r[0] === 'k' ? L.kyu.replace('{n}', v) : r[0] === 'd' ? L.dan[v - 1] : L.top[v - 1];
     return { name, desc: '', rating: rv <= 5 ? 2000 + 100 * rv : rv <= 8 ? 2500 + 50 * (rv - 5) : TOP_RT[rv - 9] /* EGF scale, as go/app.js */, who: LV_TIME[i] ? L.lvdt.replace('{s}', LV_TIME[i]) : L.lvd[rv <= -12 ? 0 : rv <= -6 ? 1 : rv <= 0 ? 2 : rv <= 5 ? 3 : 4] };
+  }  function levelInfo(n, lang) {   // the levels people see → the engine's (LVX); 天上 above LV_HUMAN
+    const x = Object.assign({}, levelInfo0(lvOld(n), lang)), mix = (LVX[n - 1] || []).length > 1; x.rating = x.rating;
+    if (n > LV_HUMAN) x.name = tenjoName(n, lang); else if (x.name && /^Lv\.\d+$/.test(x.name)) x.name = 'Lv.' + n; else if (x.name && mix) { const a = x.name, b = levelInfo0(LVX[n - 1][1], lang).name; x.name = /\+$/.test(a) && b ? b + '−' : a + '+'; }
+    return x;
   }
+
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.go = { levels: 32, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'byo', sizes: [9, 13, 19], sizeLabel: l => SIZE_L[l] || SIZE_L.en, levelInfo, start };   // table: start() plays on the chabudai itself
+  window.Atlas3D.go = { levels: 37, reward: 32, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'byo', sizes: [9, 13, 19], sizeLabel: l => SIZE_L[l] || SIZE_L.en, levelInfo, start };   // table: start() plays on the chabudai itself
 })();
