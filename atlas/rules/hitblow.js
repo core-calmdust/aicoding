@@ -1,7 +1,7 @@
 /* =====================================================================
    ヒット＆ブロー rules — a guided tour on the 3D table (the Midnight board, atlas/models/hitblow.js, seen straight down as in
    play), told by the Cub Detective Bunny (the Lv.1–3 Atlamo, av/boss-hitblow-1-0).
-   A short course: the code under the case's lid · a first guess with the real input tray · hit (lime) and blow (white),
+   A short course: the code under the case's lid · a first guess with the real input tray · hit (pink) and blow (white),
    explained with the lid peeked open · the pins never say which gem they mean · a guided deduction (two clue rows → the
    learner lines up the answer) · one board, two players taking turns · the five rules (a ナンバー4 board) · the daily
    puzzle and the puzzle book. Every answer is the game's own (../hitblow/engine.js feedback()).
@@ -32,7 +32,7 @@
       s: [
       { say: 'こんにちは、<b>みならい探偵ウサギ</b>だよ！ 奥のケースの<b>？の蓋の下</b>に宝石が4つ。その並びを当てるのが<b>ヒット＆ブロー</b>。耳をあてても聞こえないから、推理でいこう！' },
       { say: 'まずは予想を1行。トレイの宝石を<b>4つタップ</b>して、<b>OK</b>をタップ。同じ色は1行に1回だけ。当てずっぽうでいいの、ぼくもいつもそう！', done: 'ピンが出た！ 行の右の<b>小さなピン</b>が、ケースからの答えだよ。' },
-      { say: 'ないしょでケースを開けちゃった！ <b>色も場所もぴったり</b>なら<b>ヒット</b>＝<b>黄緑のピン</b>。<b>色はあるけど場所ちがい</b>なら<b>ブロー</b>＝<b>白いピン</b>。輪っかの色でたしかめてね。' },
+      { say: 'ないしょでケースを開けちゃった！ <b>色も場所もぴったり</b>なら<b>ヒット</b>＝<b>ピンクのピン</b>。<b>色はあるけど場所ちがい</b>なら<b>ブロー</b>＝<b>白いピン</b>。輪っかの色でたしかめてね。' },
       { say: '本番は蓋が閉じたまま。ピンは<b>ヒットが先</b>に並ぶだけで、<b>どの宝石のことかは言わない</b>の。そこを考えるのが探偵の腕の見せどころ！ あれ、ルーペがくもってきた…' },
       { say: '推理しよう！ 1行目は<b>白いピンが4つ</b>：色はこの4つで、全部場所ちがい。2行目の<b>光る2つは1行目と同じ場所</b>だからヒットじゃない。答えを並べてOK！', done: '事件解決！ ケースの中身とぴったり。これが推理の楽しさだよ！' },
       { say: '本番は<b>1つの盤を2人で交互に</b>。相手の行も丸見えだから、<b>相手の予想も手がかり</b>になるの。先に全部ヒットで勝ち、行が尽きたら引き分け。あっ、先を越された！' },
@@ -43,7 +43,7 @@
       s: [
       { say: "Hi, I'm the <b>Cub Detective Bunny</b>! Under the <b>？ lid of the case</b> at the far end, four gems are hiding. Guess their order — that's <b>Hit & Blow</b>. Pressing my ears to it won't help, so let's use logic!" },
       { say: 'First, one guess. <b>Tap 4 gems</b> in the tray below to line them up, then tap <b>OK</b>. Each colour only once per row. A wild guess is fine — I do it all the time!', done: 'Pins popped up! The <b>little pins</b> right of the row are the case’s answer.' },
-      { say: 'I peeked in the case, shh! <b>Right colour, right place</b> is a <b>hit</b> — a <b>lime pin</b>. <b>Right colour, wrong place</b> is a <b>blow</b> — a <b>white pin</b>. Check the colours of the rings!' },
+      { say: 'I peeked in the case, shh! <b>Right colour, right place</b> is a <b>hit</b> — a <b>pink pin</b>. <b>Right colour, wrong place</b> is a <b>blow</b> — a <b>white pin</b>. Check the colours of the rings!' },
       { say: 'In a real game the lid stays shut. The pins just line up, <b>hits first</b>, and <b>never say which gem they mean</b>. Working that out is the detective’s job! Hmm, my magnifier is fogging up…' },
       { say: 'Let’s deduce! Row 1 has <b>4 white pins</b>: these four colours, all in the wrong places. In row 2 the <b>two glowing gems sit where they did in row 1</b>, so the hits are the two on the left. Line up the answer and tap OK!', done: 'Case closed! It matches the case exactly. That’s the fun of deduction!' },
       { say: 'In a real game <b>two players take turns on one board</b>. You see the rival’s rows and pins too, so <b>their guesses are clues for you</b>. First to all hits wins; out of rows is a draw. Oh no, they beat me to it!' },
@@ -54,7 +54,7 @@
       s: [
       { say: '你好，我是<b>见习侦探兔</b>！远处盒子的<b>“？”盖子下面</b>藏着4颗宝石。猜出它们的顺序，就是<b>Hit & Blow</b>。把耳朵贴上去也听不到，所以要靠推理！' },
       { say: '先猜一行。<b>点击下方托盘里的4颗宝石</b>排好，再点<b>OK</b>。同一种颜色一行只能用一次。随便猜也没关系，我也总是这样！', done: '小钉出来了！行右边的<b>小钉</b>就是盒子给的回答。' },
-      { say: '我偷偷打开了盒子，嘘！<b>颜色和位置都对</b>是<b>命中（Hit）</b>＝<b>黄绿色的小钉</b>。<b>颜色对但位置不对</b>是<b>偏离（Blow）</b>＝<b>白色的小钉</b>。看看圆环的颜色吧！' },
+      { say: '我偷偷打开了盒子，嘘！<b>颜色和位置都对</b>是<b>命中（Hit）</b>＝<b>粉色的小钉</b>。<b>颜色对但位置不对</b>是<b>偏离（Blow）</b>＝<b>白色的小钉</b>。看看圆环的颜色吧！' },
       { say: '正式比赛时盖子一直关着。小钉只是<b>命中排在前面</b>，<b>不会告诉你是哪颗宝石</b>。想出这一点正是侦探的本事！咦，我的放大镜起雾了…' },
       { say: '来推理吧！第1行有<b>4颗白钉</b>：颜色就是这4种，但位置全错。第2行<b>发光的2颗和第1行位置相同</b>，所以命中的是左边2颗。排好答案按OK！', done: '破案啦！和盒子里的一模一样。这就是推理的乐趣！' },
       { say: '正式比赛是<b>两个人轮流用同一块盘</b>。对手的行和小钉也看得见，所以<b>对手的猜测也是你的线索</b>。先全部命中者胜，行用完就是平局。啊，被抢先了！' },
@@ -65,7 +65,7 @@
       s: [
       { say: '你好，我是<b>見習偵探兔</b>！遠處盒子的<b>「？」蓋子下面</b>藏著4顆寶石。猜出它們的順序，就是<b>Hit & Blow</b>。把耳朵貼上去也聽不到，所以要靠推理！' },
       { say: '先猜一列。<b>點擊下方托盤裡的4顆寶石</b>排好，再點<b>OK</b>。同一種顏色一列只能用一次。隨便猜也沒關係，我也總是這樣！', done: '小釘出來了！列右邊的<b>小釘</b>就是盒子給的回答。' },
-      { say: '我偷偷打開了盒子，噓！<b>顏色和位置都對</b>是<b>命中（Hit）</b>＝<b>黃綠色的小釘</b>。<b>顏色對但位置不對</b>是<b>偏離（Blow）</b>＝<b>白色的小釘</b>。看看圓環的顏色吧！' },
+      { say: '我偷偷打開了盒子，噓！<b>顏色和位置都對</b>是<b>命中（Hit）</b>＝<b>粉色的小釘</b>。<b>顏色對但位置不對</b>是<b>偏離（Blow）</b>＝<b>白色的小釘</b>。看看圓環的顏色吧！' },
       { say: '正式比賽時蓋子一直關著。小釘只是<b>命中排在前面</b>，<b>不會告訴你是哪顆寶石</b>。想出這一點正是偵探的本事！咦，我的放大鏡起霧了…' },
       { say: '來推理吧！第1列有<b>4顆白釘</b>：顏色就是這4種，但位置全錯。第2列<b>發光的2顆和第1列位置相同</b>，所以命中的是左邊2顆。排好答案按OK！', done: '破案啦！和盒子裡的一模一樣。這就是推理的樂趣！' },
       { say: '正式比賽是<b>兩個人輪流用同一塊盤</b>。對手的列和小釘也看得見，所以<b>對手的猜測也是你的線索</b>。先全部命中者勝，列用完就是平手。啊，被搶先了！' },
@@ -76,7 +76,7 @@
       s: [
       { say: '안녕, 나는 <b>견습탐정토끼</b>야! 저 안쪽 케이스의 <b>？ 뚜껑 아래</b>에 보석 4개가 숨어 있어. 그 순서를 맞히는 게 <b>히트 앤 블로</b>. 귀를 대도 안 들리니까 추리로 가자!' },
       { say: '먼저 예상을 한 줄. 아래 트레이의 보석을 <b>4개 탭</b>해서 늘어놓고 <b>OK</b>를 탭해. 같은 색은 한 줄에 한 번만. 찍어도 괜찮아, 나도 늘 그래!', done: '핀이 나왔어! 줄 오른쪽의 <b>작은 핀</b>이 케이스의 대답이야.' },
-      { say: '몰래 케이스를 열어 버렸어, 쉿! <b>색도 자리도 딱 맞으면</b> <b>히트</b>＝<b>연두색 핀</b>. <b>색은 있는데 자리가 다르면</b> <b>블로</b>＝<b>흰 핀</b>. 고리 색으로 확인해 봐!' },
+      { say: '몰래 케이스를 열어 버렸어, 쉿! <b>색도 자리도 딱 맞으면</b> <b>히트</b>＝<b>분홍색 핀</b>. <b>색은 있는데 자리가 다르면</b> <b>블로</b>＝<b>흰 핀</b>. 고리 색으로 확인해 봐!' },
       { say: '실전에서는 뚜껑이 닫혀 있어. 핀은 <b>히트부터 모아서</b> 놓일 뿐, <b>어느 보석 얘기인지는 안 알려 줘</b>. 그걸 알아내는 게 탐정의 실력이지! 어라, 돋보기에 김이 서렸네…' },
       { say: '추리해 보자! 1번째 줄은 <b>흰 핀 4개</b>: 색은 이 4가지인데 전부 자리가 달라. 2번째 줄의 <b>빛나는 2개는 1번째 줄과 같은 자리</b>니까 히트는 왼쪽 2개. 답을 늘어놓고 OK!', done: '사건 해결! 케이스 안과 똑같아. 이게 추리의 재미야!' },
       { say: '실전은 <b>판 하나를 둘이 번갈아</b> 써. 상대의 줄과 핀도 다 보이니까 <b>상대의 예상도 단서</b>가 돼. 먼저 전부 히트하면 승리, 줄을 다 쓰면 무승부. 앗, 선수를 뺏겼다!' },
@@ -87,7 +87,7 @@
       s: [
       { say: '¡Hola, soy la <b>Conejita detective</b>! Bajo la <b>tapa con ？ de la caja</b>, al fondo, se esconden cuatro gemas. Adivinar su orden es <b>Hit & Blow</b>. Pegar las orejas no sirve, ¡así que a deducir!' },
       { say: 'Primero, una apuesta. <b>Toca 4 gemas</b> de la bandeja de abajo para ponerlas en fila y toca <b>OK</b>. Cada color, una vez por fila. Adivinar a lo loco vale: ¡yo lo hago siempre!', done: '¡Salieron clavijas! Las <b>clavijas pequeñas</b> a la derecha de la fila son la respuesta de la caja.' },
-      { say: '¡He espiado la caja, chis! <b>Color y sitio correctos</b> es un <b>hit</b>: <b>clavija verde lima</b>. <b>Color correcto en otro sitio</b> es un <b>blow</b>: <b>clavija blanca</b>. ¡Mira el color de los aros!' },
+      { say: '¡He espiado la caja, chis! <b>Color y sitio correctos</b> es un <b>hit</b>: <b>clavija rosa</b>. <b>Color correcto en otro sitio</b> es un <b>blow</b>: <b>clavija blanca</b>. ¡Mira el color de los aros!' },
       { say: 'En la partida la tapa sigue cerrada. Las clavijas solo se ordenan, <b>hits primero</b>, y <b>nunca dicen de qué gema hablan</b>. ¡Averiguarlo es cosa de detectives! Ay, se me empaña la lupa…' },
       { say: '¡A deducir! La fila 1 tiene <b>4 clavijas blancas</b>: son estos cuatro colores, todos fuera de sitio. En la fila 2 las <b>dos gemas que brillan están donde en la fila 1</b>, así que los hits son las dos de la izquierda. ¡Ordena la respuesta y pulsa OK!', done: '¡Caso resuelto! Coincide con la caja. ¡Esa es la gracia de deducir!' },
       { say: 'En la partida, <b>dos jugadores usan un solo tablero por turnos</b>. Ves las filas y clavijas del rival, así que <b>sus intentos también son pistas</b>. Gana quien acierte todo primero; sin filas, empate. ¡Ay, se me adelantó!' },
@@ -98,7 +98,7 @@
       s: [
       { say: 'Coucou, je suis le <b>Lapin détective</b> ! Sous le <b>couvercle ？ de l’écrin</b>, au fond, se cachent quatre gemmes. Deviner leur ordre, c’est <b>Hit & Blow</b>. Coller mes oreilles n’y fait rien : place à la logique !' },
       { say: 'D’abord, un essai. <b>Touche 4 gemmes</b> du plateau du bas pour les aligner, puis touche <b>OK</b>. Chaque couleur une fois par ligne. Au hasard, c’est permis : moi, je fais toujours ça !', done: 'Des fiches ! Les <b>petites fiches</b> à droite de la ligne sont la réponse de l’écrin.' },
-      { say: 'J’ai jeté un œil dans l’écrin, chut ! <b>Bonne couleur, bonne place</b> : un <b>hit</b>, <b>fiche vert citron</b>. <b>Bonne couleur, mauvaise place</b> : un <b>blow</b>, <b>fiche blanche</b>. Regarde la couleur des anneaux !' },
+      { say: 'J’ai jeté un œil dans l’écrin, chut ! <b>Bonne couleur, bonne place</b> : un <b>hit</b>, <b>fiche rose</b>. <b>Bonne couleur, mauvaise place</b> : un <b>blow</b>, <b>fiche blanche</b>. Regarde la couleur des anneaux !' },
       { say: 'En vraie partie, le couvercle reste fermé. Les fiches se rangent juste, <b>hits d’abord</b>, et <b>ne disent jamais de quelle gemme il s’agit</b>. Le trouver, c’est le métier de détective ! Oh, ma loupe s’embue…' },
       { say: 'Déduisons ! La ligne 1 a <b>4 fiches blanches</b> : ces quatre couleurs, toutes mal placées. Dans la ligne 2, les <b>deux gemmes qui brillent sont à la même place qu’en ligne 1</b>, donc les hits sont les deux de gauche. Aligne la réponse et touche OK !', done: 'Affaire résolue ! C’est exactement l’écrin. Voilà le plaisir de la déduction !' },
       { say: 'En vraie partie, <b>deux joueurs se partagent un plateau, chacun son tour</b>. On voit les lignes et fiches de l’autre : <b>ses essais sont aussi des indices</b>. Le premier à tout trouver gagne ; plus de lignes, match nul. Oh non, doublé !' },
@@ -109,7 +109,7 @@
       s: [
       { say: 'Oi, eu sou o <b>Coelho detetive</b>! Sob a <b>tampa com ？ do estojo</b>, lá no fundo, há quatro gemas escondidas. Adivinhar a ordem delas é o <b>Hit & Blow</b>. Encostar as orelhas não adianta, então vamos de lógica!' },
       { say: 'Primeiro, um palpite. <b>Toque em 4 gemas</b> da bandeja de baixo para enfileirá-las e toque em <b>OK</b>. Cada cor uma vez por linha. Chutar vale — eu chuto sempre!', done: 'Saíram pinos! Os <b>pininhos</b> à direita da linha são a resposta do estojo.' },
-      { say: 'Espiei o estojo, psiu! <b>Cor e lugar certos</b> é um <b>hit</b>: <b>pino verde-limão</b>. <b>Cor certa no lugar errado</b> é um <b>blow</b>: <b>pino branco</b>. Confira a cor dos anéis!' },
+      { say: 'Espiei o estojo, psiu! <b>Cor e lugar certos</b> é um <b>hit</b>: <b>pino rosa</b>. <b>Cor certa no lugar errado</b> é um <b>blow</b>: <b>pino branco</b>. Confira a cor dos anéis!' },
       { say: 'No jogo de verdade a tampa fica fechada. Os pinos só se alinham, <b>hits primeiro</b>, e <b>nunca dizem de qual gema falam</b>. Descobrir isso é trabalho de detetive! Ih, minha lupa embaçou…' },
       { say: 'Vamos deduzir! A linha 1 tem <b>4 pinos brancos</b>: são essas quatro cores, todas fora do lugar. Na linha 2 as <b>duas gemas que brilham estão onde estavam na linha 1</b>, então os hits são as duas da esquerda. Monte a resposta e toque em OK!', done: 'Caso resolvido! Igualzinho ao estojo. Essa é a graça de deduzir!' },
       { say: 'No jogo de verdade <b>dois jogadores usam um só tabuleiro, revezando</b>. Você vê as linhas e pinos do rival, então <b>os palpites dele também são pistas</b>. Vence quem acertar tudo primeiro; sem linhas, empate. Ah, ele chegou antes!' },
@@ -120,7 +120,7 @@
       s: [
       { say: 'Hallo, ich bin das <b>Detektiv-Häschen</b>! Unter dem <b>？-Deckel des Kästchens</b> hinten liegen vier Edelsteine versteckt. Ihre Reihenfolge erraten – das ist <b>Hit & Blow</b>. Lauschen mit den Ohren hilft nicht, also: Logik!' },
       { say: 'Zuerst ein Tipp. <b>Tippe 4 Steine</b> in der Schale unten an, um sie aufzureihen, dann tippe <b>OK</b>. Jede Farbe einmal pro Reihe. Raten ist erlaubt – mache ich ständig!', done: 'Stecker! Die <b>kleinen Stecker</b> rechts der Reihe sind die Antwort des Kästchens.' },
-      { say: 'Ich hab heimlich ins Kästchen geschaut, pssst! <b>Richtige Farbe, richtiger Platz</b> ist ein <b>Hit</b> – ein <b>hellgrüner Stecker</b>. <b>Richtige Farbe, falscher Platz</b> ist ein <b>Blow</b> – ein <b>weißer Stecker</b>. Sieh dir die Ringe an!' },
+      { say: 'Ich hab heimlich ins Kästchen geschaut, pssst! <b>Richtige Farbe, richtiger Platz</b> ist ein <b>Hit</b> – ein <b>rosa Stecker</b>. <b>Richtige Farbe, falscher Platz</b> ist ein <b>Blow</b> – ein <b>weißer Stecker</b>. Sieh dir die Ringe an!' },
       { say: 'Im echten Spiel bleibt der Deckel zu. Die Stecker liegen nur da, <b>Hits zuerst</b>, und <b>verraten nie, welcher Stein gemeint ist</b>. Das herauszufinden ist Detektivarbeit! Huch, meine Lupe beschlägt…' },
       { say: 'Kombinieren wir! Reihe 1 hat <b>4 weiße Stecker</b>: genau diese vier Farben, alle am falschen Platz. In Reihe 2 liegen die <b>zwei leuchtenden Steine wie in Reihe 1</b>, also sind die Hits die zwei links. Leg die Lösung und tippe OK!', done: 'Fall gelöst! Genau wie im Kästchen. Das ist der Spaß am Kombinieren!' },
       { say: 'Im echten Spiel <b>teilen sich zwei ein Brett und ziehen abwechselnd</b>. Du siehst die Reihen und Stecker des Gegners – <b>seine Tipps sind auch deine Hinweise</b>. Wer zuerst alles trifft, gewinnt; keine Reihen mehr: unentschieden. Oh nein, zu spät!' },
@@ -131,7 +131,7 @@
       s: [
       { say: 'Привет, я <b>Зайчик-сыщик</b>! Под <b>крышкой с «？»</b> у шкатулки в дальнем конце спрятаны четыре камня. Угадать их порядок — это и есть <b>Hit & Blow</b>. Прикладывать уши бесполезно, так что — логика!' },
       { say: 'Сначала догадка. <b>Нажми на 4 камня</b> в лотке внизу, чтобы выстроить ряд, и нажми <b>OK</b>. Каждый цвет — один раз в ряду. Наугад можно — я всегда так делаю!', done: 'Появились штырьки! <b>Маленькие штырьки</b> справа от ряда — ответ шкатулки.' },
-      { say: 'Я тайком заглянул в шкатулку, тсс! <b>Цвет и место верные</b> — это <b>хит</b>, <b>салатовый штырёк</b>. <b>Цвет есть, но место другое</b> — это <b>блоу</b>, <b>белый штырёк</b>. Сверь по цвету колец!' },
+      { say: 'Я тайком заглянул в шкатулку, тсс! <b>Цвет и место верные</b> — это <b>хит</b>, <b>розовый штырёк</b>. <b>Цвет есть, но место другое</b> — это <b>блоу</b>, <b>белый штырёк</b>. Сверь по цвету колец!' },
       { say: 'В настоящей игре крышка закрыта. Штырьки просто стоят, <b>сначала хиты</b>, и <b>никогда не говорят, о каком камне речь</b>. Догадаться — работа сыщика! Ой, лупа запотела…' },
       { say: 'Давай рассуждать! В ряду 1 <b>4 белых штырька</b>: цвета эти четыре, но все не на месте. В ряду 2 <b>два светящихся камня стоят там же, где в ряду 1</b>, значит, хиты — два слева. Выстрой ответ и нажми OK!', done: 'Дело раскрыто! Точно как в шкатулке. Вот в чём радость рассуждений!' },
       { say: 'В настоящей игре <b>двое по очереди играют на одной доске</b>. Ряды и штырьки соперника видны, так что <b>его догадки — тоже твои подсказки</b>. Кто первым угадает всё, побеждает; ряды кончились — ничья. Ой, меня опередили!' },
@@ -142,7 +142,7 @@
       s: [
       { say: 'Merhaba, ben <b>Dedektif Tavşan</b>! En arkadaki kutunun <b>？ kapağının altında</b> dört mücevher saklı. Sıralarını bulmak: işte <b>Hit & Blow</b>. Kulağımı dayasam da duyulmuyor, o yüzden mantık!' },
       { say: 'Önce bir tahmin. Alttaki tepsiden <b>4 mücevhere dokunup</b> sıraya koy, sonra <b>OK</b>’e dokun. Her renk satırda bir kez. Rastgele de olur, ben hep öyle yapıyorum!', done: 'Pimler çıktı! Satırın sağındaki <b>küçük pimler</b> kutunun cevabı.' },
-      { say: 'Gizlice kutuya baktım, şşş! <b>Renk de yer de doğru</b>ysa <b>hit</b>: <b>açık yeşil pim</b>. <b>Renk var ama yer yanlış</b>sa <b>blow</b>: <b>beyaz pim</b>. Halkaların rengine bak!' },
+      { say: 'Gizlice kutuya baktım, şşş! <b>Renk de yer de doğru</b>ysa <b>hit</b>: <b>pembe pim</b>. <b>Renk var ama yer yanlış</b>sa <b>blow</b>: <b>beyaz pim</b>. Halkaların rengine bak!' },
       { say: 'Gerçek oyunda kapak kapalı kalır. Pimler sadece dizilir, <b>önce hitler</b>, ve <b>hangi mücevherden söz ettiğini asla söylemez</b>. Bunu çözmek dedektifin işi! Eyvah, büyütecim buğulandı…' },
       { say: 'Hadi çıkarım yapalım! 1. satırda <b>4 beyaz pim</b> var: renkler bu dördü, hepsi yanlış yerde. 2. satırda <b>parlayan iki taş 1. satırdakiyle aynı yerde</b>, yani hitler soldaki ikisi. Cevabı diz ve OK’e dokun!', done: 'Dava çözüldü! Kutudakiyle birebir aynı. İşte çıkarımın keyfi!' },
       { say: 'Gerçek oyunda <b>iki oyuncu tek tahtayı sırayla kullanır</b>. Rakibin satırları ve pimleri de görünür, yani <b>onun tahminleri de senin ipucun</b>. Önce hepsini isabet ettiren kazanır; satır biterse berabere. Eyvah, önce o buldu!' },
@@ -153,7 +153,7 @@
       s: [
       { say: 'Halo, aku <b>Kelinci Detektif</b>! Di bawah <b>tutup ？ kotak</b> di ujung sana tersembunyi empat permata. Menebak urutannya, itulah <b>Hit & Blow</b>. Menempelkan telinga tidak membantu, jadi pakai logika!' },
       { say: 'Pertama, satu tebakan. <b>Ketuk 4 permata</b> di baki bawah untuk menyusunnya, lalu ketuk <b>OK</b>. Tiap warna sekali per baris. Asal tebak juga boleh, aku selalu begitu!', done: 'Pinnya muncul! <b>Pin kecil</b> di kanan baris adalah jawaban dari kotak.' },
-      { say: 'Aku mengintip kotaknya, sst! <b>Warna dan tempat benar</b> itu <b>hit</b>: <b>pin hijau limau</b>. <b>Warna ada tapi tempatnya salah</b> itu <b>blow</b>: <b>pin putih</b>. Cek warna cincinnya!' },
+      { say: 'Aku mengintip kotaknya, sst! <b>Warna dan tempat benar</b> itu <b>hit</b>: <b>pin merah muda</b>. <b>Warna ada tapi tempatnya salah</b> itu <b>blow</b>: <b>pin putih</b>. Cek warna cincinnya!' },
       { say: 'Di permainan sungguhan tutupnya tetap tertutup. Pin hanya berjajar, <b>hit dulu</b>, dan <b>tak pernah bilang permata mana yang dimaksud</b>. Memecahkannya itulah tugas detektif! Aduh, kaca pembesarku berembun…' },
       { say: 'Ayo menyimpulkan! Baris 1 punya <b>4 pin putih</b>: warnanya empat ini, semua di tempat yang salah. Di baris 2 <b>dua permata yang bersinar ada di tempat yang sama dengan baris 1</b>, jadi hitnya dua di kiri. Susun jawabannya dan ketuk OK!', done: 'Kasus terpecahkan! Persis seperti isi kotak. Itulah serunya menyimpulkan!' },
       { say: 'Di permainan sungguhan <b>dua pemain bergantian memakai satu papan</b>. Baris dan pin lawan juga terlihat, jadi <b>tebakannya juga petunjukmu</b>. Yang pertama semua hit menang; baris habis berarti seri. Yah, aku keduluan!' },
@@ -164,7 +164,7 @@
       s: [
       { say: 'नमस्ते, मैं <b>नौसिखिया जासूस खरगोश</b> हूँ! दूर वाले डिब्बे के <b>？ ढक्कन के नीचे</b> चार रत्न छिपे हैं। उनका क्रम बूझना ही <b>हिट एंड ब्लो</b> है। कान लगाने से कुछ नहीं सुनता, तो तर्क से चलें!' },
       { say: 'पहले एक अनुमान। नीचे की ट्रे के <b>4 रत्नों पर टैप</b> करके उन्हें लाइन में रखो, फिर <b>OK</b> पर टैप करो। हर रंग पंक्ति में एक बार। तुक्का भी चलेगा — मैं तो हमेशा यही करता हूँ!', done: 'पिनें निकल आईं! पंक्ति के दाईं ओर की <b>छोटी पिनें</b> डिब्बे का जवाब हैं।' },
-      { say: 'मैंने चुपके से डिब्बे में झाँक लिया, श्श! <b>रंग और जगह दोनों सही</b> तो <b>हिट</b> — <b>हरी-पीली पिन</b>। <b>रंग है पर जगह ग़लत</b> तो <b>ब्लो</b> — <b>सफ़ेद पिन</b>। छल्लों का रंग देखो!' },
+      { say: 'मैंने चुपके से डिब्बे में झाँक लिया, श्श! <b>रंग और जगह दोनों सही</b> तो <b>हिट</b> — <b>गुलाबी पिन</b>। <b>रंग है पर जगह ग़लत</b> तो <b>ब्लो</b> — <b>सफ़ेद पिन</b>। छल्लों का रंग देखो!' },
       { say: 'असली खेल में ढक्कन बंद रहता है। पिनें बस <b>पहले हिट</b> के क्रम में लगती हैं और <b>कभी नहीं बतातीं कि बात किस रत्न की है</b>। यही पता लगाना जासूस का काम है! अरे, मेरा आवर्धक काँच धुँधला गया…' },
       { say: 'चलो सोचें! पंक्ति 1 में <b>4 सफ़ेद पिनें</b>: रंग यही चार हैं, पर सब ग़लत जगह। पंक्ति 2 के <b>चमकते दो रत्न पंक्ति 1 वाली जगह पर ही हैं</b>, तो हिट बाईं ओर के दो हैं। जवाब लगाओ और OK करो!', done: 'केस सुलझ गया! डिब्बे से हूबहू मेल। यही है तर्क का मज़ा!' },
       { say: 'असली खेल में <b>दो खिलाड़ी एक ही बोर्ड पर बारी-बारी</b> खेलते हैं। विरोधी की पंक्तियाँ और पिनें भी दिखती हैं, तो <b>उसके अनुमान भी तुम्हारे सुराग</b> हैं। पहले सब हिट करने वाला जीतता है; पंक्तियाँ ख़त्म तो ड्रॉ। अरे, वह आगे निकल गया!' },
@@ -175,7 +175,7 @@
       s: [
       { say: 'مرحبًا، أنا <b>الأرنب المحقق المبتدئ</b>! تحت <b>غطاء «？» للعلبة</b> في الطرف البعيد تختبئ أربع جواهر. تخمين ترتيبها هو <b>هِت آند بلو</b>. إلصاق أذنيّ لا يفيد، فلنستخدم المنطق!' },
       { say: 'أولًا تخمين واحد. <b>المس 4 جواهر</b> في الصينية بالأسفل لتصفّها، ثم المس <b>OK</b>. كل لون مرة واحدة في الصف. التخمين العشوائي مسموح، فأنا أفعله دائمًا!', done: 'ظهرت الأوتاد! <b>الأوتاد الصغيرة</b> يمين الصف هي جواب العلبة.' },
-      { say: 'تلصصت على العلبة، صه! <b>اللون والمكان صحيحان</b> = <b>هِت</b>: <b>وتد أخضر ليموني</b>. <b>اللون موجود لكن المكان خطأ</b> = <b>بلو</b>: <b>وتد أبيض</b>. انظر إلى لون الحلقات!' },
+      { say: 'تلصصت على العلبة، صه! <b>اللون والمكان صحيحان</b> = <b>هِت</b>: <b>وتد وردي</b>. <b>اللون موجود لكن المكان خطأ</b> = <b>بلو</b>: <b>وتد أبيض</b>. انظر إلى لون الحلقات!' },
       { say: 'في اللعب الحقيقي يبقى الغطاء مغلقًا. الأوتاد تُصفّ فقط، <b>الهِت أولًا</b>، و<b>لا تخبرك أبدًا بأي جوهرة تقصد</b>. اكتشاف ذلك عمل المحقق! أوه، عدستي المكبّرة غشّاها البخار…' },
       { say: 'لنستنتج! في الصف 1 <b>4 أوتاد بيضاء</b>: الألوان هي هذه الأربعة، وكلها في غير مكانها. في الصف 2 <b>الجوهرتان المضيئتان في المكان نفسه كما في الصف 1</b>، إذن الهِت هما اللتان على اليسار. رتّب الجواب والمس OK!', done: 'حُلّت القضية! مطابق تمامًا لما في العلبة. هذه متعة الاستنتاج!' },
       { say: 'في اللعب الحقيقي <b>يتناوب لاعبان على لوحة واحدة</b>. ترى صفوف خصمك وأوتاده أيضًا، لذا <b>تخميناته أدلة لك</b>. من يصيب كل شيء أولًا يفوز، وإن نفدت الصفوف فتعادل. آه، سبقني!' },
@@ -303,8 +303,8 @@
     function showTask() {
       clearMarks(); const st = STEPS[step];
       if (st.mark === 'case') box(Lt.caseX, Lt.caseZ, Lt.caseW + .55, Lt.caseD + .2, 0x7df3d2, TOP + .02);
-      if (st.mark === 'hb' && rowsOn[0]) {   // the peek: lime = hit, white = blow, on the row and on the code in the case
-        rowsOn[0].g.forEach((v, k) => { const hit = secret[k] === v, j = secret.indexOf(v); if (j < 0) return; const c = hit ? 0xa6e81f : 0xffffff, [x, zz] = U.slot(0, k); ring(x, zz, c, TOP + .02); const [cx, , cz] = U.caseSlot(j); ring(cx, cz, c, U.caseSlot(j)[1] + H.R * .9); });
+      if (st.mark === 'hb' && rowsOn[0]) {   // the peek: pink = hit, white = blow, on the row and on the code in the case
+        rowsOn[0].g.forEach((v, k) => { const hit = secret[k] === v, j = secret.indexOf(v); if (j < 0) return; const c = hit ? 0xff5aa8 : 0xffffff, [x, zz] = U.slot(0, k); ring(x, zz, c, TOP + .02); const [cx, , cz] = U.caseSlot(j); ring(cx, cz, c, U.caseSlot(j)[1] + H.R * .9); });
       }
       if (st.mark === 'pins' && rowsOn[0]) box(Lt.fbx, U.rowZ(0), 1.02, 1.02, 0x7df3d2, TOP + .02);
       if (st.mark === 'same' && rowsOn[1] && !played) [0, 1].forEach(r => [2, 3].forEach(k => { const [x, zz] = U.slot(r, k); ring(x, zz, 0x8fd8ff, TOP + .02); }));
