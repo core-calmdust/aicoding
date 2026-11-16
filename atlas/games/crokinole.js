@@ -71,7 +71,11 @@
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, E = window.CrokinoleEngine, D = E.DIM, SND = AC().SND;
     const lang = ctx.lang, L = TXT[lang] || TXT.en;
     const tx = (k, o) => { let s = L[k] != null ? L[k] : (TXT.en[k] != null ? TXT.en[k] : k); if (o) for (const q in o) s = s.split('{' + q + '}').join(o[q]); return s; };
-    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), mode = +ctx.size === 100 ? '100' : 'r4';
+    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6));
+    // online (2026-11-16, atlas/online3d.js — as carrom): M = the game, me = this device's side (0 = the record's b, the first shooter);
+    // the shooter's write carries the shot and the result, the other side plays the shot back and then takes the written state
+    const M = ctx.mode === 'online' && ctx.online ? ctx.online : null, online = !!M, me = M ? M.me : 0;
+    const mode = online ? (M.v === 'p100' ? '100' : 'r4') : +ctx.size === 100 ? '100' : 'r4';
     const youFirst = (+ctx.side || 1) === 1;
     const BDL = (T3.BOARDS && T3.BOARDS.crokinole) ? T3.BOARDS.crokinole.list : ['marq', 'classic', 'modern', 'mcm', 'winter', 'neon'];
     let look = T3.BOARDS && T3.BOARDS.crokinole ? T3.BOARDS.crokinole.get() : 'marq';
@@ -80,7 +84,7 @@
     let U = board.userData; const Y = U.top, K = U.K, W = 2 * U.RO;
     // (2026-11-10) each board's hand: the wobble's character (Atlas3D.carrom FEEL); the classic board keeps the standard feel
     const CFEEL = { classic: 'std', marq: 'aim', modern: 'precise', mcm: 'hard', winter: 'power', neon: 'finest' };
-    let feel = AC().feelOf(CFEEL[look]);
+    let feel = AC().feelOf(online ? 'std' : CFEEL[look]);   // (online: one hand for both players, whatever the board)
     function setLook(v) {   // (before the game: the pieces are swapped inside the group on the table — T3.show() would move the camera)
       if (v === look) return; look = v; feel = AC().feelOf(CFEEL[v]);
       try { if (T3.setBoard) T3.setBoard('crokinole', v); } catch (e) {}
@@ -97,9 +101,11 @@
     let sx = 0, aimAng = -Math.PI / 2, aimPow = 0, drag = null, speedUp = 1, told = false;
     const hist = [], timers = [];
     const later = (f, ms) => { const my = tok; timers.push(setTimeout(() => { if (!stopped && my === tok) f(); }, ms)); };
-    const human = p => pvp || p === 0;
+    const human = p => pvp || p === me;
+    const OT = k => window.Online3D ? Online3D.tr(lang, k) : k;
+    let applied = 0, trans = false, needSync = false, olT = 0, rx = 0;   // online: shots of the record played here · a new round being laid · a refused write
     const COLN = { ja: ['赤', '黒'], en: ['Red', 'Black'], zh: ['红', '黑'], 'zh-TW': ['紅', '黑'], ko: ['빨강', '검정'], es: ['Rojo', 'Negro'], fr: ['Rouge', 'Noir'], pt: ['Vermelho', 'Preto'], de: ['Rot', 'Schwarz'], ru: ['Красные', 'Чёрные'], tr: ['Kırmızı', 'Siyah'], id: ['Merah', 'Hitam'], hi: ['लाल', 'काला'], ar: ['الأحمر', 'الأسود'] };
-    const nameOf = p => pvp ? (COLN[lang] || COLN.en)[p] : p === 0 ? t('p.you') : t('p.ai');
+    const nameOf = p => online ? M.names[p] : pvp ? (COLN[lang] || COLN.en)[p] : p === 0 ? t('p.you') : t('p.ai');
     const kick = ms => { if (T3.kick) T3.kick(ms || 150); };
     const wx = (x, y) => U.xz(x, y);
     const by = (p, x) => E.baseY(p, x);
@@ -171,7 +177,7 @@
 
     /* ---------- HUD (the carrom look: .crp pills, .crtoast, the how-to card) ---------- */
     const css = document.createElement('style');
-    css.textContent = '.hud .ckp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.62;white-space:nowrap}.hud .ckp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .ckp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .ckp b{font-size:14px}.hud .ckp small{font-weight:700;opacity:.75}.hud .ckm{display:flex;flex-direction:column;align-items:center;min-width:0;font-weight:800;font-size:13px;line-height:1.25;max-width:44vw;text-align:center}.hud .ckm small{font-size:11px;font-weight:700;opacity:.7;white-space:nowrap}.hud .ckm span{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.cktask{position:fixed;left:50%;top:calc(80px + env(safe-area-inset-top));transform:translateX(-50%);z-index:85;max-width:min(92vw,480px);padding:8px 18px;border-radius:99px;background:rgba(255,255,255,.96);color:#1d2133;font-weight:900;font-size:15px;pointer-events:none;text-align:center;white-space:nowrap;box-shadow:0 0 0 2.5px #b8742a,0 6px 18px rgba(0,0,0,.25)}.cktask[hidden]{display:none}.cktoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px #b8742a,0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.cktoast.good{color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.cktoast.bad{color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}.ckpow{position:fixed;z-index:6;pointer-events:none;padding:4px 10px;border-radius:99px;background:rgba(20,22,34,.82);color:#fff;font-weight:900;font-size:14px;transform:translate(-50%,-150%);white-space:nowrap}.ckhow{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px}.ckhow-c{background:#fff;color:#1d2133;border-radius:24px;box-shadow:0 0 0 4px #b8742a,0 18px 50px rgba(0,0,0,.45);padding:22px 22px 18px;width:min(440px,100%);max-height:100%;overflow:auto}.ckhow h2{margin:0 0 14px;font-size:24px;font-weight:900;text-align:center;color:#b8742a}.ckhow ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.ckhow li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}.ckhow li i{flex:none;width:40px;height:40px;border-radius:50%;background:#f8ead8;color:#b8742a;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:22px;font-weight:900}.ckhow .u{margin:12px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center}.ckhow label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 6px;font-size:16px;font-weight:800;cursor:pointer}.ckhow label input{width:20px;height:20px;accent-color:#b8742a}.ckhow .n{margin:0 0 14px;font-size:13px;font-weight:700;color:#6b7083;text-align:center}.ckhow button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:#b8742a;color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}.ckflip{position:fixed;left:calc(16px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));z-index:40;width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.94);color:#2b3044;box-shadow:0 4px 14px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.ckflip svg{width:28px;height:28px}.ckflip.on{background:#b8742a;color:#fff}.ckview{left:calc(80px + env(safe-area-inset-left))}@media (max-width:560px){.ckview{left:auto;right:calc(16px + env(safe-area-inset-right))}.hud .ckp{padding:3px 7px;font-size:12px}.hud .ckp .nm{display:none}.hud .ckm{font-size:12px}.cktoast{font-size:14px;padding:9px 16px;border-radius:18px}}';
+    css.textContent = '.hud .ckp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.62;white-space:nowrap}.hud .ckp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .ckp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .ckp b{font-size:14px}.hud .ckp small{font-weight:700;opacity:.75}.hud .ckm{display:flex;flex-direction:column;align-items:center;min-width:0;font-weight:800;font-size:13px;line-height:1.25;max-width:44vw;text-align:center}.hud .ckm small{font-size:11px;font-weight:700;opacity:.7;white-space:nowrap}.hud .ckm span{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.cktask{position:fixed;left:50%;top:calc(80px + env(safe-area-inset-top));transform:translateX(-50%);z-index:85;max-width:min(92vw,480px);padding:8px 18px;border-radius:99px;background:rgba(255,255,255,.96);color:#1d2133;font-weight:900;font-size:15px;pointer-events:none;text-align:center;white-space:nowrap;box-shadow:0 0 0 2.5px #b8742a,0 6px 18px rgba(0,0,0,.25)}.cktask[hidden]{display:none}.cktoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px #b8742a,0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.cktoast.good{color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.cktoast.bad{color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}.ckpow{position:fixed;z-index:6;pointer-events:none;padding:4px 10px;border-radius:99px;background:rgba(20,22,34,.82);color:#fff;font-weight:900;font-size:14px;transform:translate(-50%,-150%);white-space:nowrap}.ckhow{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px}.ckhow-c{background:#fff;color:#1d2133;border-radius:24px;box-shadow:0 0 0 4px #b8742a,0 18px 50px rgba(0,0,0,.45);padding:22px 22px 18px;width:min(440px,100%);max-height:100%;overflow:auto}.ckhow h2{margin:0 0 14px;font-size:24px;font-weight:900;text-align:center;color:#b8742a}.ckhow ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.ckhow li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}.ckhow li i{flex:none;width:40px;height:40px;border-radius:50%;background:#f8ead8;color:#b8742a;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:22px;font-weight:900}.ckhow .u{margin:12px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center}.ckhow label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 6px;font-size:16px;font-weight:800;cursor:pointer}.ckhow label input{width:20px;height:20px;accent-color:#b8742a}.ckhow .n{margin:0 0 14px;font-size:13px;font-weight:700;color:#6b7083;text-align:center}.ckhow button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:#b8742a;color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}.ckflip{position:fixed;left:calc(16px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));z-index:40;width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.94);color:#2b3044;box-shadow:0 4px 14px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.ckflip svg{width:28px;height:28px}.ckflip[hidden]{display:none}.ckflip.on{background:#b8742a;color:#fff}.ckview{left:calc(80px + env(safe-area-inset-left))}@media (max-width:560px){.ckview{left:auto;right:calc(16px + env(safe-area-inset-right))}.hud .ckp{padding:3px 7px;font-size:12px}.hud .ckp .nm{display:none}.hud .ckm{font-size:12px}.cktoast{font-size:14px;padding:9px 16px;border-radius:18px}}.hud .olck{font-style:normal;font-family:Fredoka,sans-serif;font-weight:600;font-size:14px;min-width:30px;padding:2px 8px;border-radius:99px;background:#2b3044;color:#fff;text-align:center}.hud .olck.low{background:#e5533f}';
     document.head.appendChild(css);
     const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const HK = 'atlas-crokinole-howto';
@@ -200,7 +206,12 @@
       if (stopped || !st) return;
       const tl = E.tally(st);
       const pill = p => `<span class="ckp ${st.turn === p && !over && !st.roundOver ? 'on' : ''}"><i style="background:${dotCol(p)}"></i><span class="nm">${esc(nameOf(p))}</span><b>${tl[p]}</b><small>${esc(tx('left', { n: st.left[p] }))}</small></span>`;
-      const sc = `<small>${esc(tx('next', { n: st.round }))} · ${esc(tx('score', { a: st.score[1], b: st.score[0] }))}</small>`;
+      const L0 = online ? 1 - me : 1, R0 = 1 - L0;   // (online: the opponent left, you right)
+      const sc = `<small>${esc(tx('next', { n: st.round }))} · ${esc(tx('score', { a: st.score[L0], b: st.score[R0] }))}</small>`;
+      if (online) {   // the shot's clock (server time) beside the side to shoot
+        const tm = !over && !trans ? M.toMove() : -1, left = M.left(), ck = q => q === tm ? `<em class="olck${left <= 10000 ? ' low' : ''}">${Math.ceil(left / 1000)}</em>` : '';
+        ctx.hud(pill(L0) + ck(L0) + `<span class="ckm">${sc}<span>${esc(msg)}</span></span>` + pill(R0) + ck(R0)); return;
+      }
       ctx.hud(pill(1) + `<span class="ckm">${sc}<span>${esc(msg)}</span></span>` + pill(0));
     }
     // what to do this shot ("hit an opponent's disc" / "reach the 15 circle"): a pill above the board, not in the HUD
@@ -295,24 +306,78 @@
     }
 
     /* ---------- the flow ---------- */
-    async function shoot(shot) {
+    // auth (online): the opponent's shot — its written result ({ st, m, f }) or 'local' (a shot followed by more of theirs: only the
+    // last one's result is in the record, so this one is resolved here and the board is set right after the last)
+    async function shoot(shot, auth) {
       if (over || stopped || busy) return;
       busy = true; phase = 'anim'; clearGuides(); drag = null; hintShot = null; powEl.hidden = true;
-      const p = st.turn, s0 = st;
+      const p = st.turn, s0 = st, my = tok;
+      if (online && !auth) shot = M.quant(shot);   // (the shot as it goes on the wire: both sides simulate exactly this one)
       SND.flick();
       const sim = E.simulate(s0, p, shot, { frames: true });
+      let r = E.resolve(s0, sim);
+      if (online && !auth) {   // my shot: its result is the game's — written at once, while it plays back here and there
+        const pay = { st: r.s, m: r.msg, f: r.foul ? 1 : 0, tw: r.tw };
+        r = Object.assign({}, r, { s: JSON.parse(M.pack(pay)).st });
+        const i = applied; applied++;
+        M.send(i, shot, pay, r.s.roundOver && !r.s.over ? E.nextRound(r.s).turn : r.s.turn, r.s.over ? { win: winOf(r.s), why: 'board' } : null).then(ok => { if (!ok && !stopped) { needSync = true; if (!busy && !trans) resync(); } });
+      } else if (auth && auth !== 'local') r = { s: auth.st, msg: Array.isArray(auth.m) ? auth.m : [], foul: !!auth.f, tw: Array.isArray(auth.tw) ? auth.tw : [0, 0] };
       speedUp = 1; say('');
-      await playback(sim); if (stopped) return;
-      const r = E.resolve(s0, sim);
+      await playback(sim); if (stopped || my !== tok) return;
       pcs[sim.shooter] = hand1; hand1 = null;
       st = r.s; ply++;
       const off = r.s.pcs.map((m, i) => !m.on && sim.fin[i] && sim.fin[i].on ? i : -1).filter(i => i >= 0);
-      await toDitch(off); if (stopped) return;
+      await toDitch(off); if (stopped || my !== tok) return;
       syncAll(); busy = false;
+      if (needSync) return resync();
       const lead = r.foul ? r.msg[0] : r.tw[p] ? 'tw' : r.msg.includes('hit') ? 'hit' : '';
       if (lead && lead !== 'round') { toast(tx(lead), r.foul ? 'bad' : 'good'); if (r.foul) SND.bad(); else if (r.tw[p]) SND.good(); }
-      if (st.roundOver) return later(roundEnd, 700);
+      if (st.roundOver) { trans = true; return later(roundEnd, 700); }
       later(next, 800);
+    }
+    // online: the record's winner of a finished state (1 = b, 2 = w, 0 = a draw)
+    const winOf = s => s.winner === 0 ? 1 : s.winner === 1 ? 2 : 0;
+    function pump() {
+      if (!online || stopped || over || busy || trans) return;
+      if (applied < M.n) { if (phase === 'remote' || phase === 'wait') remoteNext(); return; }
+      if (M.g.status !== 'play') finishOnline();
+    }
+    function shotOk(sh) { return sh && isFinite(sh.x) && isFinite(sh.ang) && isFinite(sh.v) && Math.abs(sh.x) <= D.QX + .5 && sh.v >= 0 && sh.v <= E.VMAX * 1.01; }
+    function stateOk(s, s0) {   // the written state is well-formed and follows on from the one before (one more disc, the same colours)
+      try {
+        if (!s || !Array.isArray(s.pcs) || s.pcs.length !== s0.pcs.length + 1 || (s.turn !== 0 && s.turn !== 1) || !Array.isArray(s.left) || !Array.isArray(s.score) || !Array.isArray(s.tw)) return false;
+        if (!s.left.every(n => Number.isInteger(n) && n >= 0 && n <= 8) || s.left[0] + s.left[1] !== s0.left[0] + s0.left[1] - 1 || s.round !== s0.round || s.score[0] < s0.score[0] || s.score[1] < s0.score[1]) return false;
+        return s.pcs.every((m, i) => m.id === i && (i < s0.pcs.length ? m.c === s0.pcs[i].c : m.c === s0.turn) && typeof m.on === 'boolean' && isFinite(m.x) && isFinite(m.y) && Math.hypot(m.x, m.y) <= D.RB + 3);
+      } catch (e) { return false; }
+    }
+    function bad() { toast(OT('illegal'), 'bad'); SND.bad(); busy = false; phase = 'wait'; M.dispute(); }
+    async function remoteNext() {
+      const i = applied, last = i === M.n - 1, shot = M.shot(i), pay = last ? M.payload() : null;
+      applied++;
+      if (!shotOk(shot) || (pay && !stateOk(pay.st, st))) return bad();
+      busy = true; phase = 'anim'; const my = tok, p = st.turn;
+      await slideDisc(p, rx, shot.x, 360); if (stopped || my !== tok) return;
+      clearGuides(); const tr = E.aimTrace(st, p, shot.x, shot.ang); dots(shot.x, by(p, shot.x), tr.gx, tr.gy, MAT.path); kick(150);
+      await new Promise(r => later(r, 380)); if (stopped || my !== tok) return;
+      busy = false; shoot(shot, pay || 'local');
+    }
+    // a write of mine was refused (time up, a race): the board is set to what the record says
+    function fromRecord() {
+      const pay = M.payload(); applied = M.n;
+      if (pay && pay.st) { st = pay.st; if (st.roundOver && !st.over && M.g.status === 'play') st = E.nextRound(st); }
+      else st = E.newRound({ first: 0, mode });
+      clearDiscs(); syncAll(); st.pcs.forEach((m, i) => { if (!m.on) pcs[i].visible = false; });
+    }
+    function resync() { needSync = false; tok++; busy = false; trans = false; drag = null; clearGuides(); toast(OT('moveFail'), 'bad'); fromRecord(); later(next, 400); }
+    function finishOnline() {
+      const R = M.result(); if (over || !R) return;
+      tok++; over = true; phase = 'over'; busy = false; trans = false; clearGuides(); task(''); hand.cancel(); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = viewBtn.hidden = true; clearInterval(olT);
+      const why = R.why, reason = why === 'resign' ? (R.mine ? 'youResigned' : 'oppResigned') : why === 'timeout' ? (R.mine ? 'youTimeout' : 'oppTimeout') : why === 'abandon' ? (R.mine ? 'youAbandon' : 'oppAbandon') : why === 'bad' ? 'illegal' : '';
+      const own = why === 'board' && st && st.over ? (winOf(st) === 0 ? .5 : winOf(st) === me + 1 ? 1 : 0) : why === 'board' ? null : undefined;
+      const rt = M.finish(own);
+      hud(); (R.s === 1 ? SND.win : R.s === 0 ? SND.bad : SND.good)();
+      say(t(R.s === 1 ? 'res.win' : R.s === 0 ? 'res.lose' : 'res.draw'));
+      later(() => ctx.onEnd({ online: true, win: R.s === 1, draw: R.s === .5, level: 0, score: tx('score', { a: st.score[me], b: st.score[1 - me] }), why: reason ? OT(reason) : '', rt, rated: M.rated, opp: M.names[1 - me], side: me }), why === 'board' ? 1300 : 350);
     }
     function onTurn() { if (ctx.onTurn) ctx.onTurn(st.turn === 0 ? 0 : 1, { human: human(st.turn), ply }); }
     const turnSay = () => { const p = st.turn, need = st.pcs.some(m => m.on && m.c !== p) ? tx('must') : tx('open'); say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn')); task(need); };
@@ -321,15 +386,21 @@
       hintShot = null; clearGuides(); onTurn();
       const p = st.turn;
       if (pvp) viewTo();
+      if (online && applied >= M.n && M.g.status !== 'play') return finishOnline();
       newHand(p);
       if (human(p)) {
-        if (!pvp) hist.push({ st: E.clone(st) });
+        if (!pvp && !online) hist.push({ st: E.clone(st) });
         sx = E.nearestFree(st, p, sx || 0);
         placeMesh(hand1, sx, by(p, sx));
         phase = 'place'; turnSay();
-        if (!told && howtoOn()) howtoCard(() => {}); told = true;
+        if (!told && howtoOn() && !online) howtoCard(() => {}); told = true;
         showGuides(); pulse();
         return;
+      }
+      if (online) {   // the opponent's shot: played back when it comes
+        phase = 'remote'; say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) }));
+        rx = E.nearestFree(st, p, 0); placeMesh(hand1, rx, by(p, rx)); kick(150);
+        return pump();
       }
       phase = 'ai'; say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) }));   // phones: just "AI's turn" (the longer line wraps)
       const x0 = E.nearestFree(st, p, 0); placeMesh(hand1, x0, by(p, x0));
@@ -345,12 +416,15 @@
     function roundEnd() {
       const t2 = st.roundPts, w = t2[0] > t2[1] ? 0 : t2[1] > t2[0] ? 1 : -1;
       hud();
-      const line = tx('round', { n: st.round, a: t2[1], b: t2[0] }) + '\n' + (w < 0 ? tx('tie') : tx('roundWin', { p: nameOf(w) }));
+      const L0 = online ? 1 - me : 1;   // (the HUD's left side first)
+      const line = tx('round', { n: st.round, a: t2[L0], b: t2[1 - L0] }) + '\n' + (w < 0 ? tx('tie') : tx('roundWin', { p: nameOf(w) }));
       if (!st.over) {
-        toast(line, w === 0 || (pvp && w >= 0) ? 'good' : w < 0 ? '' : 'bad'); (w === 1 && !pvp ? SND.bad : SND.good)();
-        later(() => { st = E.nextRound(st); clearDiscs(); syncAll(); toast(tx('next', { n: st.round })); hist.length = 0; later(next, 900); }, 2600);
+        toast(line, w === me || (pvp && w >= 0) ? 'good' : w < 0 ? '' : 'bad'); (w === 1 - me && !pvp ? SND.bad : SND.good)();
+        trans = true;   // (online: the next round's first shot waits until the round is laid here too)
+        later(() => { st = E.nextRound(st); clearDiscs(); syncAll(); toast(tx('next', { n: st.round })); hist.length = 0; trans = false; later(next, 900); }, 2600);
         return;
       }
+      if (online) { trans = false; phase = 'wait'; toast(line, w === me ? 'good' : w < 0 ? '' : 'bad'); return pump(); }   // (the end is the record's: written with the last shot)
       over = true; phase = 'over'; clearGuides(); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = viewBtn.hidden = true; if (pvp) viewTo(0);
       SND.win();
       const score = tx('score', { a: st.score[0], b: st.score[1] }), mw = st.winner;
@@ -363,7 +437,7 @@
     /* ---------- your hand (the carrom hand, along the arc) ---------- */
     const toCm = e => { const q = T3.pick(e, Y + .03); return q ? { x: q.x / K, y: q.z / K } : null; };
     function moveDisc(x) { const nx = E.nearestFree(st, st.turn, x); if (Math.abs(nx - sx) > .001) { sx = nx; placeMesh(hand1, sx, by(st.turn, sx)); kick(100); } }
-    const canAim = () => !cardEl && !stopped && !over && !busy && phase === 'place' && !!st && human(st.turn);
+    const canAim = () => !cardEl && !stopped && !over && !busy && phase === 'place' && !!st && human(st.turn) && !(online && M.left() <= 0);
     const hand = AC().Hand({
       el: ctx.el, toCm, canAim,
       sign: () => st && st.turn === 1 ? -1 : 1,
@@ -384,7 +458,7 @@
     let flipped = false; try { flipped = localStorage.getItem(FK) === '1'; } catch (e) {}
     let viewA = 0, viewRaf = 0;
     function viewTo(base, now) {
-      if (base == null) base = pvp && st && st.turn === 1 && !over ? Math.PI : 0;
+      if (base == null) base = (pvp && st && st.turn === 1 && !over) || (online && me === 1) ? Math.PI : 0;   // (online: your own side at the bottom)
       let to = base + (flipped ? Math.PI : 0); to = ((to % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
       if (!T3.turn) return;
       cancelAnimationFrame(viewRaf);
@@ -405,7 +479,7 @@
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => flipBtn.addEventListener(k, e => e.stopPropagation()));
     const layer = document.getElementById('bv') || document.body;
     neonTick(); flipSync(); layer.appendChild(flipBtn);
-    viewTo(0, true);
+    viewTo(undefined, true);
     const VIEWT = { ja: ['上から見る', '斜めから見る'], en: ['View from above', 'View at an angle'], zh: ['从上方看', '斜着看'], 'zh-TW': ['從上方看', '斜著看'], ko: ['위에서 보기', '비스듬히 보기'], es: ['Vista desde arriba', 'Vista en ángulo'], fr: ['Vue de dessus', 'Vue en biais'], pt: ['Ver de cima', 'Ver em ângulo'], de: ['Von oben', 'Schräg von oben'], ru: ['Вид сверху', 'Вид под углом'], tr: ['Üstten bak', 'Açılı bak'], id: ['Lihat dari atas', 'Lihat miring'], hi: ['ऊपर से देखें', 'तिरछा देखें'], ar: ['عرض من الأعلى', 'عرض مائل'] };
     const viewBtn = document.createElement('button'); viewBtn.type = 'button'; viewBtn.className = 'ckflip ckview';
     const ICO_TOP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.2"/></svg>';
@@ -421,7 +495,7 @@
       if (stopped || phase !== 'place' || !st || !human(st.turn) || drag) return;
       if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
       const d = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0; if (!d) return;
-      e.preventDefault(); moveDisc(sx + d * (e.shiftKey ? .25 : 1) * (st.turn === 1 && pvp ? -1 : 1) * (flipped ? -1 : 1)); showGuides();
+      e.preventDefault(); moveDisc(sx + d * (e.shiftKey ? .25 : 1) * (st.turn === 1 && (pvp || online) ? -1 : 1) * (flipped ? -1 : 1)); showGuides();
     };
     document.addEventListener('keydown', onKey);
     const prevTouch = ctx.el.style.touchAction; ctx.el.style.touchAction = 'none';
@@ -429,8 +503,16 @@
     /* ---------- go ---------- */
     // (2026-11-10) first the controls (unless turned off), then the board picker, then the game
     const goNow = () => { st = E.newRound({ first: youFirst ? 0 : 1, mode }); syncAll(); hud(); later(next, 650); };
+    // online: straight in (no how-to card, no board picker — the shot's clock is running); a resumed game starts from the record
+    function goOnline() {
+      fromRecord(); told = true; hud();
+      M.on(() => { pump(); if (!over) hud(); });
+      olT = setInterval(() => { if (stopped || over) return; hud(); if (M.toMove() === me && phase === 'place' && window.CountTick) CountTick.feed(M.left(), 'ol'); }, 250);
+      later(next, 650);
+    }
     const pick = () => { if (stopped) return; AC().BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'crokinole') : k, thumb: k => T3.boardThumb ? T3.boardThumb('crokinole', k) : '', pick: k => new URL('img/pick/crokinole-' + k + '.webp?v=1', location.href).href, color: '#b8742a', onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
-    if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
+    if (online) goOnline();
+    else if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
 
     const myTurn = () => !stopped && !over && !busy && st && human(st.turn) && phase === 'place';
     function finish(why) {
@@ -440,8 +522,8 @@
       say(t('res.lose')); setTimeout(() => { if (!stopped) ctx.onEnd(pvp ? { win: false, draw: false, level, score: r, pvp: true, winnerText: r } : { win: false, draw: false, level, score: r }); }, 200);
     }
     const api = {
-      human: 0,
-      canUndo: () => !pvp && myTurn() && hist.length > 1,
+      human: 0, noUndo: online, noHint: online,
+      canUndo: () => !pvp && !online && myTurn() && hist.length > 1,
       undo() {
         if (!api.canUndo()) return;
         tok++; hist.pop(); const h = hist.pop(); st = E.clone(h.st); busy = false; drag = null;
@@ -450,7 +532,7 @@
         syncAll(); st.pcs.forEach((m, i) => { if (!m.on) pcs[i].visible = false; });
         next();
       },
-      canHint: () => myTurn(),
+      canHint: () => !online && myTurn(),
       hint() {
         if (!api.canHint()) return Promise.resolve(false);
         const my = tok; say('💡…');
@@ -461,9 +543,10 @@
         });
       },
       canResign: () => !stopped && !over && !!st,
-      resign() { finish('resign'); },
-      timeout() { finish('time'); },
+      resign() { if (online) { M.resign(); return; } finish('resign'); },   // (online: the record's resignation ends it, on both sides)
+      timeout() { if (online) return; finish('time'); },
       stop() { document.querySelectorAll(".bpk").forEach(e => e.remove());
+        if (online) { if (!over && M.g && M.g.status === 'play') M.resign(); M.stop(); clearInterval(olT); }   // (leaving a game in progress = resigning it)
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulseT);
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
@@ -471,12 +554,12 @@
         cancelAnimationFrame(viewRaf); cancelAnimationFrame(waveT); cancelAnimationFrame(flashRaf); flipBtn.remove(); viewBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
-      _debug: { st: () => st, phase: () => phase, shoot: (x, ang, pw) => { if (phase !== 'place') return false; sx = E.nearestFree(st, st.turn, x); shoot({ x: sx, ang, v: vOf(pw) }); return true; }, shootRaw: sh => { if (phase !== 'place') return false; sx = sh.x; shoot(sh); return true; }, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, disc: () => sx },
+      _debug: { st: () => st, phase: () => phase, online: () => online ? { me, applied, n: M.n, status: M.g && M.g.status, over, k: D.K || 1 } : null, shootRaw2: sh => { if (phase !== 'place') return false; shoot(sh); return true; }, shoot: (x, ang, pw) => { if (phase !== 'place') return false; sx = E.nearestFree(st, st.turn, x); shoot({ x: sx, ang, v: vOf(pw) }); return true; }, shootRaw: sh => { if (phase !== 'place') return false; sx = sh.x; shoot(sh); return true; }, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, disc: () => sx },
     };
     window.__crokinoleTable = api;
     return api;
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.crokinole = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 4, sizeLabel, sizeName, levelInfo, start, TXT, howFor, howtoFor };
+  window.Atlas3D.crokinole = { online: { lens: l => [['r4', sizeName(4, l)], ['p100', sizeName(100, l)]] }, levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 4, sizeLabel, sizeName, levelInfo, start, TXT, howFor, howtoFor };
 })();

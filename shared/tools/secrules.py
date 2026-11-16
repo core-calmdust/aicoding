@@ -44,6 +44,10 @@ PRES_GONE = 300000      # presence: t older than this = owner gone
 # morris ← mancala, connect4, dots · konane ← amazons, ludo (one free place for new titles).
 MAX_SHARED = 4
 RULES_MAX = 256 * 1024
+# Host-only databases (2026-11-16): a project whose root has no game — only the nodes of the games that name it as their host.
+# name → the rules file to paste (written like the hosts' <game>/database.rules.json). 'flick' = connect4-multiplay re-used
+# for the flick games (carrom/, crokinole/; claude/online-security-setup.md 0.0).
+HOSTS = {'flick': 'shared/flick.database.rules.json'}
 
 # per game: first = field of the side that moves first; alt = strict alternation of moves; tckey = record field naming the
 # time control; tcs = {key: (main, byo, inc)}; legacy_byo = per-move limit of records without a time control (None: none);
@@ -141,6 +145,18 @@ GAMES = {
     # fanorona/ scripts with window.OL_DB_PREFIX = 'alq/'): v = 'alq'; b = the first player
     'alquerque': dict(host=('checkers', 'alq'), first='b', alt=True, tckey='tc', tcs={'alq': (300000, 0, 5000), 'alqf': (300000, 0, 5000)}, legacy_byo=None, free=0, imm=['tc', 'v'],
                       draw=True, abandon=True, hist=True, moves_max=6000, bg=False, variant=('v', ['alq', 'alqf'])),
+    # Flick games (2026-11-16): Carrom and Crokinole, the 3D-only titles (atlas/games/<id>.js + atlas/online3d.js). A database of their own
+    # with no game at the root (HOSTS 'flick': the re-used project connect4-multiplay). The shooter's client is authoritative: every
+    # action appends its shot to moves and writes the resulting state (s, a JSON string) in the same write — s changes only together
+    # with a move (state=True). Extra turns (carrom: your own man in; crokinole: rounds) → nt names the next writer. Every shot has
+    # 45 s (free), no reserve. v = tc = the game length (carrom b1 / m25, crokinole r4 / p100); k = the men's scale both clients use
+    # (carrom on phones 1.35, CarromEngine.setScale), immutable. Draws: a crokinole game tied after 8 rounds ends 'over' with 0.5 + 0.5.
+    'carrom': dict(host=('flick', 'carrom'), first='b', alt=False, nt=True, tckey='tc', tcs={'b1': (0, 0, 0), 'm25': (0, 0, 0)},
+                   legacy_byo=None, free=45000, imm=['tc', 'v', 'k'], draw=False, abandon=True, hist=True, moves_max=20000, bg=False,
+                   variant=('v', ['b1', 'm25']), state=True),
+    'crokinole': dict(host=('flick', 'crokinole'), first='b', alt=False, nt=True, tckey='tc', tcs={'r4': (0, 0, 0), 'p100': (0, 0, 0)},
+                      legacy_byo=None, free=45000, imm=['tc', 'v', 'k'], draw=False, abandon=True, hist=True, moves_max=20000, bg=False,
+                      variant=('v', ['r4', 'p100']), state=True),
 }
 
 
@@ -368,7 +384,8 @@ def build(name, P):
                  "newData.child('t').val() === data.child('t').val()", "newData.child('mb').val() === data.child('mb').val()",
                  "newData.child('mw').val() === data.child('mw').val()",
                  "newData.child('mo').val() === data.child('mo').val()" if P['bg'] else None,
-                 "newData.child('nt').val() === data.child('nt').val()" if NT else None)
+                 "newData.child('nt').val() === data.child('nt').val()" if NT else None,
+                 "newData.child('s').val() === data.child('s').val()" if P.get('state') else None)
     imm_fields = ['b', 'w', 'bn', 'wn', 'br', 'wr', 'rated', 'created', 'room', 'host'] + P['imm']
     immut = AND(*[f"newData.child('{f}').val() === data.child('{f}').val()" for f in imm_fields],
                 *([f"newData.child('sc').child('{i}').val() === data.child('sc').child('{i}').val()" for i in (0, 1)] if P['bg'] else []))
@@ -376,8 +393,9 @@ def build(name, P):
     keeps = AND(keep('res', 'b'), keep('res', 'w'), keep('j', 'b'), keep('j', 'w'))
     tstamp = f"(!({tmoved}) || (newData.child('t').val() === now && newData.child('lm').val() === auth.uid))"
     lm_keep = f"({tmoved} || newData.child('lm').val() === data.child('lm').val())"
+    state_keep = f"({moved} || newData.child('s').val() === data.child('s').val())" if P.get('state') else None   # the state changes only with a move
     update = AND(immut, keeps, tstamp, lm_keep,
-                 f"(data.child('status').val() !== 'play' ? {frozen} : {AND('newData.child(' + q('moves') + ').val().beginsWith(data.child(' + q('moves') + ').val())', leave_play, turn, clock_on_move, clock_keep, draw_flag)})")
+                 f"(data.child('status').val() !== 'play' ? {frozen} : {AND('newData.child(' + q('moves') + ').val().beginsWith(data.child(' + q('moves') + ').val())', leave_play, turn, clock_on_move, clock_keep, draw_flag, state_keep)})")
     # creation
     bn = "newData.child('b').val()"
     wn = "newData.child('w').val()"
@@ -414,7 +432,9 @@ def build(name, P):
                  f"newData.child('{vfield[0]}').isString() && newData.child('{vfield[0]}').val().matches(/^({'|'.join(vfield[1])})$/)" +
                  ("))" if len(vfield) > 2 and vfield[2] else "")) if vfield else None,
                 "(!newData.child('sd').exists() || (newData.child('sd').isString() && newData.child('sd').val().length <= 32))" if name == 'shogi' else None,
-                "newData.child('n').isNumber() && newData.child('n').val() >= 2 && newData.child('n').val() <= 6" if name == 'dots' else None)
+                "newData.child('n').isNumber() && newData.child('n').val() >= 2 && newData.child('n').val() <= 6" if name == 'dots' else None,
+                "(!newData.child('s').exists() || (newData.child('s').isString() && newData.child('s').val().length <= 6000))" if P.get('state') else None,
+                "newData.child('k').isNumber() && newData.child('k').val() >= 1 && newData.child('k').val() <= 1.5" if P.get('state') else None)
     part = "(data.child('b').val() === auth.uid || data.child('w').val() === auth.uid)"
     games = {
         '$gid': {
@@ -544,24 +564,26 @@ def nested(name, P, node):
 def main():
     for gn, GP in GAMES.items():   # a host is never hosted itself, and the nodes of one database are distinct
         if 'host' in GP:
-            assert GP['host'][0] in GAMES and 'host' not in GAMES[GP['host'][0]], gn
+            h = GP['host'][0]
+            assert (h in GAMES and 'host' not in GAMES[h] and h not in HOSTS) or (h in HOSTS and h not in GAMES), gn
     nodes = [GP['host'] for GP in GAMES.values() if 'host' in GP]
     assert len(nodes) == len(set(nodes))
     check = '--check' in sys.argv
     only = [a for a in sys.argv[1:] if not a.startswith('--')]
-    for name, P in GAMES.items():
-        if 'host' in P:
+    for name, P in list(GAMES.items()) + [(h, None) for h in HOSTS]:
+        if P is not None and 'host' in P:
             continue
         if only and name not in only:
             continue
-        path = os.path.join(ROOT, name, 'database.rules.json')
-        R = build(name, P)
+        # a host-only database (HOSTS): no game at the root, only the nodes below
+        path = os.path.join(ROOT, name, 'database.rules.json') if P is not None else os.path.join(ROOT, HOSTS[name])
+        R = build(name, P) if P is not None else {'rules': {}}
         for gn, GP in GAMES.items():   # games that share this database under their own node
             if GP.get('host', (None,))[0] == name:
                 R['rules'][GP['host'][1]] = nested(gn, GP, GP['host'][1])
         txt = json.dumps(R, indent=2, ensure_ascii=False) + '\n'
         shared = [gn for gn, GP in GAMES.items() if GP.get('host', (None,))[0] == name]
-        assert len(shared) + 1 <= MAX_SHARED and len(txt.encode('utf-8')) < RULES_MAX * 0.9, (name, shared, len(txt))
+        assert len(shared) + (1 if P is not None else 0) <= MAX_SHARED and len(txt.encode('utf-8')) < RULES_MAX * 0.9, (name, shared, len(txt))
         cur = open(path, encoding='utf-8').read() if os.path.exists(path) else ''
         if check:
             print(('same  ' if cur == txt else 'DIFF  ') + path)

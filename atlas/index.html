@@ -1964,7 +1964,8 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .lvs-l button .meter{display:flex;align-items:flex-end;gap:2px}.lvs-l button .meter i{width:3px;border-radius:2px;background:#e6dcc6}.lvs-l button .meter i.on{background:linear-gradient(#ffb03a,#ff6a3d)}
 .lvsheet:not(.tcsheet) .lvs-in{width:min(640px,100%);max-height:min(88vh,860px)}
 /* 種目 (shogi variants, 2026-11-12): a picker with the board drawn small, and a sheet of cards — each variant's start position, name, size, rule in a line */
-.bvi .vopts{flex-wrap:nowrap}.bvi .vrow{flex:1 1 100%!important;min-width:0}.bvi .vpick{justify-content:flex-start}.bvi .vpick .vico{flex:none;height:30px;width:auto;max-width:40px;margin:-4px 0;filter:drop-shadow(0 1px 1px rgba(90,60,20,.25))}.bvi .vpick i{margin-inline-start:auto}
+.bvi .vopts{flex-wrap:nowrap}
+.bvi .olopp{display:flex;flex-wrap:nowrap!important;align-items:center;gap:10px}.bvi .olopp[hidden]{display:none}.bvi .olopp > label{flex:none!important}.bvi .olopp .rtnow2{flex:1 1 auto;align-self:stretch;min-height:40px}.bvi .olopp .rtnow2:empty{visibility:hidden}.bvi .olopp .rtnow2{justify-content:center}.bvi .olopp .rtnow2 small{display:none}.bvi .olopp .sidetg button[disabled]{opacity:.6;cursor:default}.bvi .olopp .olsoon{display:inline-block;margin-inline-start:5px;padding:1px 6px;border-radius:99px;background:#efe3c8;font-size:10.5px;font-weight:800;vertical-align:1px}   /* (相手 AI / オンライン + the rating: 3D-only games with online play, 2026-11-16) */.bvi .vrow{flex:1 1 100%!important;min-width:0}.bvi .vpick{justify-content:flex-start}.bvi .vpick .vico{flex:none;height:30px;width:auto;max-width:40px;margin:-4px 0;filter:drop-shadow(0 1px 1px rgba(90,60,20,.25))}.bvi .vpick i{margin-inline-start:auto}
 @media (min-width:820px){.bvi .vpick .vico{height:36px;max-width:46px}}
 .vsheet .lvs-in{width:min(820px,100%)!important}
 .vsheet .vgrps{overflow:auto;min-height:0;flex:1 1 auto;padding-bottom:12px}.vsheet .vgrps .lvs-l{overflow:visible;max-height:none;flex:none}
@@ -2272,7 +2273,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=375"></script>
+<script src="lazy.js?v=376"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=40"></script>
 <script src="lessons3d.js?v=67"></script>
@@ -2294,7 +2295,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=38"></script>
 <script src="avtalk.js?v=3"></script>
-<script src="app.js?v=421"></script>
+<script src="app.js?v=422"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>

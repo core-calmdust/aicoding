@@ -908,6 +908,7 @@
     // shogi / chess on PC (2026-11-10): the tabs are 対戦 · レート戦 · パズル · レッスン — 二人で対戦 is the first choice of the 相手 list
     const MX = !!(ad && ad.table && (FULL_SKIN[id] || ad.mx) && !ad.stages && id !== 'peg');   // (adapter.mx, 2026-11-16: a 3D-only game laid out the same way — フチボウ)
     const MXR = MX && !!(ad && ad.mx && ad.rule);   // (its rule = 種目 on top; the length row (時間 / 得点) last, changed in place when the rule changes)   // (2026-11-16: every game with a full 3D version — 対戦 (二人で対戦 in 相手) · レート戦 · パズル · レッスン, as shogi)   // (phones too, 2026-11-13: レート戦 vs AI or online, パズル, レッスン)
+    const OL3 = !MX && !!(ad && ad.online && window.Online3D);   // (3D-only games with online play on the table — carrom, crokinole 2026-11-16: 相手 AI / オンライン in the レート戦 tab)
     const lv = MX && pref[id + ':mode'] === 'pvp' ? 0 : pref[id + ':lv'] || 1, side = pref[id + ':side'] || 1;
     const vcur = ad && ad.variants && ad.variants.list.includes(pref[id + ':var']) ? pref[id + ':var'] : '';   // 種目 (shogi: its variants, 2026-11-12)
     // a game's rule (adapter.rule — フチボウ・ジ・ボタン 2026-11-15: 手数制 · 点数制 · PK戦): a pulldown whose choice decides the
@@ -932,7 +933,7 @@
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       <p class="bvab">${esc(t('about.' + id))}</p>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : STX ? esc(ad.modeName(m, lang)) : PZX ? (m === 'puzzle' ? t('pg.pz') : PEG_FREE[lang] || PEG_FREE.en) : (ad && ad.modeName && ad.modeName(m, lang)) || t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}${ad.variants ? `<div class="opts vopts" id="bvVarRow"><label class="vrow">${esc(ad.variants.label(lang))}<button type="button" class="lvpick vpick" id="bvVar" data-v="${esc(vcur)}"></button></label><span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}${KF ? `<div class="opts rulerow kindrow">${ruleHtml}${sizeOnly}</div>` : MXR ? `<div class="opts vopts rulerow kindrow mxkind">${ruleHtml}<span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}<div class="opts" id="bvOpts">${ad.levels ? `<label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>` : ''}
+      </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : STX ? esc(ad.modeName(m, lang)) : PZX ? (m === 'puzzle' ? t('pg.pz') : PEG_FREE[lang] || PEG_FREE.en) : (ad && ad.modeName && ad.modeName(m, lang)) || t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${OL3 ? `<div class="opts olopp" id="bvOlRow" hidden><label>${t('bv.opp')}<select id="bvRtOpp"><option value="ai" ${rtOpp(id) === 'ai' ? 'selected' : ''}>AI</option><option value="online" ${rtOpp(id) === 'online' ? 'selected' : ''}${ol3Soon(id) ? ' disabled' : ''}>${esc(ol3Soon(id) ? SOON[lang] || SOON.en : t('bv.online'))}</option></select></label><span class="rtnow2" id="bvOl3Now"></span></div>` : ''}${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}${ad.variants ? `<div class="opts vopts" id="bvVarRow"><label class="vrow">${esc(ad.variants.label(lang))}<button type="button" class="lvpick vpick" id="bvVar" data-v="${esc(vcur)}"></button></label><span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}${KF ? `<div class="opts rulerow kindrow">${ruleHtml}${sizeOnly}</div>` : MXR ? `<div class="opts vopts rulerow kindrow mxkind">${ruleHtml}<span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}<div class="opts" id="bvOpts">${ad.levels ? `<label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>` : ''}
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"${ad.sideOpts ? ' data-pick="drop"' : ''}>${(ad.sideOpts ? ad.sideOpts(lang) : [[1, t('bv.first')], [2, t('bv.second')]]).map(([v, n]) => `<option value="${v}" ${side === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>` : ''}
         ${ad.sizes && !(ad.table && TCS[ad.clock]) && !ad.house && !RU && !KF ? sizeHtml : ''}${ad.house ? `<button type="button" class="hrb" id="bvHouse"><span>${esc(ad.house.label(lang))}</span><b></b><i aria-hidden="true">⚙</i></button>` : ''}</div>
         ${RU && !KF && !MXR ? `<div class="opts rulerow">${ruleHtml}</div>${!(ad.table && TCS[ad.clock]) ? `<div class="opts szrow">${sizeOnly}</div>` : ''}` : ''}
@@ -974,8 +975,12 @@
         $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai';
         if ($('bvDaily')) { $('bvDaily').hidden = m !== 'daily'; if ($('bvStart')) $('bvStart').style.display = m === 'daily' ? 'none' : ''; }   // (ヒット＆ブロー 今日の一問: EASY / HARD start from their own buttons, 2026-11-16)
         if ($('bvTcRow')) $('bvTcRow').hidden = !(ad.tableModes || ['ai']).includes(m);   // the time control is for table play only
-        $('bvMNote').textContent = m === 'ai' ? '' : (ad.modeNote && ad.modeNote(m, lang)) || t('bv.m.' + m + 'Note');
-        if (m === 'rated' && RTG[id]) $('bvMNote').innerHTML += `<span class="rtnow3"><small>${esc(t('rec.rtNow'))}</small><b>${esc(rtNowTxt(id, ''))}</b></span>`;   // (3D-only games, 2026-11-16: the current rating under the note)
+        const ol3 = OL3 && m === 'rated' && $('bvRtOpp') && $('bvRtOpp').value === 'online';
+        if ($('bvOlRow')) $('bvOlRow').hidden = m !== 'rated';
+        $('bvMNote').textContent = m === 'ai' ? '' : ol3 ? Online3D.tr(lang, 'ngDesc') : (ad.modeNote && ad.modeNote(m, lang)) || t('bv.m.' + m + 'Note');
+        if (m === 'rated' && RTG[id] && !OL3) $('bvMNote').innerHTML += `<span class="rtnow3"><small>${esc(t('rec.rtNow'))}</small><b>${esc(rtNowTxt(id, ''))}</b></span>`;   // (3D-only games, 2026-11-16: the current rating under the note)
+        if (OL3 && $('bvOl3Now')) $('bvOl3Now').innerHTML = `<small>${esc(t('rec.rtNow'))}</small><b>${esc(ol3 ? olNowTxt(id) || UNPL[lang] || UNPL.en : rtNowTxt(id, ''))}</b>`;   // (online games: the rating beside 相手 — the AI's or the online one)
+        if (OL3 && m === 'rated' && $('bvMode').dataset.v === 'rated') ol3Probe(g);   // (only once the tab is open: it signs in to the game's database)
       };
       let bodyH = 0;
       const measure = () => { body.style.height = 'auto'; bodyH = 0; modes.forEach(m => { layout(m); $('bvMNote').style.flex = 'none'; bodyH = Math.max(bodyH, body.offsetHeight); }); $('bvMNote').style.flex = ''; body.style.height = bodyH + 'px'; };
@@ -995,6 +1000,9 @@
     if ($('bvRules')) $('bvRules').onclick = startRules;
     if ($('bvVar') && ad && ad.variants) varBind(g, ad);   // (a game without variants: a #bvVar still in the page is the card sliding out — 2026-11-13, phones: shogi → its neighbour broke the card)
     if (MX) mxBind(g, ad);
+    if (OL3 && ol3Soon(id)) ol3Paint();
+    if (OL3 && $('bvRtOpp')) $('bvRtOpp').addEventListener('change', () => { pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} if (window.__bvModeRz) window.__bvModeRz(); });
+    if (OL3 && !ol3Linked && QS0.get('room')) { ol3Linked = true; const code = QS0.get('room'); setTimeout(() => { if (bvGame === g) openOnline3D(g, code); }, 400); }   // (a room link: ?room=CODE#games/<id>)
     $('bvRec').setAttribute('aria-label', t('rec.btn')); $('bvRec').title = t('rec.btn'); $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };   // (the cup: phones right of the ヒストリア pill, PC beside the place chip)
     placeRec();
     } catch (e) { console.error(e); }   // (2026-11-16: whatever fails above, the phone drawer below is still set up — a card left half-built showed everything open)
@@ -1312,7 +1320,36 @@
     hex: [{ id: 's9', size: 9, main: 180, inc: 3 }, { id: 's11', size: 11, main: 300, inc: 5 }, { id: 's13', size: 13, main: 420, inc: 5 }],   // (hex/online.js TC: the board size decides the clock, 2026-11-15)
     backgammon: [{ id: 'g1', main: 180, dly: 12 }] };   // (backgammon/online.js FORMATS.g1: the rated single game without the cube — 12 s free per action, then a 3-minute reserve. Rated games against the AI as well since 2026-11-15: RTG.backgammon)   // (xiangqi/online.js TC: one clock, 2026-11-14)   // (checkers/online.js TC: one clock, 2026-11-14)
   const rtList = (id, opp) => opp === 'online' ? OTC[id] : RTG[id] ? [RTG[id].tc] : null;   // (the AI's rated games: the full game's fixed clock)
-  const rtOpp = id => pref[id + ':rtOpp'] === 'online' && !RT_NO_ONLINE[id] ? 'online' : 'ai';
+  const rtOpp = id => pref[id + ':rtOpp'] === 'online' && !RT_NO_ONLINE[id] && !ol3Soon(id) ? 'online' : 'ai';
+  const olNowTxt = id => { let o = null; try { o = JSON.parse(localStorage.getItem(id + '-online-rt') || 'null'); } catch (e) {} if (!o && id !== 'shogi' && !(window.Atlas3D && Atlas3D[id] && Atlas3D[id].online)) return null; return o && o.n > 0 && typeof o.r === 'number' ? 'R ' + o.r : UNPL[lang] || UNPL.en; };   // (null: a game whose full page does not save its online rating yet — no box)
+  /* ---------- online play on the table (3D-only games: atlas/online3d.js, 2026-11-16). The card asks the game's database once
+     whether its rules are published (Online3D.probe): until then the option reads オンライン（準備中） and cannot be chosen. ---------- */
+  const QS0 = new URLSearchParams(location.search), OL3S = {};
+  let ol3Linked = false, olMatch = null;
+  const ol3Soon = id => OL3S[id] === 'soon';
+  function ol3Probe(g) {
+    const id = g.id; if (OL3S[id] || !window.Online3D) return; OL3S[id] = 'asking';
+    Online3D.probe(id).then(r => {
+      OL3S[id] = r; if (r !== 'soon' || bvGame !== g) return;
+      const sel = $('bvRtOpp'); if (!sel) return;
+      const o = sel.querySelector('option[value="online"]'); o.disabled = true; o.textContent = SOON[lang] || SOON.en;
+      if (sel.value === 'online') { sel.value = 'ai'; pref[id + ':rtOpp'] = 'ai'; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} }
+      ol3Paint();
+      if (window.__bvModeRz) window.__bvModeRz();
+    });
+  }
+  // the toggle's オンライン while the rules are not published: the word, with 準備中 small beside it (the row keeps room for the rating)
+  function ol3Paint() {
+    const sel = $('bvRtOpp'), tg = sel && sel.nextElementSibling; if (!tg || !tg.classList.contains('sidetg')) return;
+    tg.innerHTML = [...sel.options].map(x => `<button type="button" data-v="${x.value}" class="${x.value === sel.value ? 'on' : ''}"${x.disabled ? ' disabled' : ''}>${x.value === 'online' && x.disabled ? `${esc(t('bv.online'))}<small class="olsoon">${esc(Online3D.tr(lang, 'soon'))}</small>` : esc(x.textContent)}</button>`).join('');
+  }
+  // the lobby (atlas/online3d.js) over the card; a matched game starts on the table (startPlay with olMatch)
+  function openOnline3D(g, join) {
+    const ad = Atlas3D[g.id]; if (!ad || !window.Online3D) return;
+    if (window.AtlasSfx) try { AtlasSfx.tap(); } catch (x) {}
+    Online3D.open({ game: g.id, lang, title: gname(g), color: g.color, lenLabel: ad.sizeLabel ? ad.sizeLabel(lang) : '', lens: ad.online.lens(lang), join,
+      onStart: m => { if (bvGame !== g) openBoard(g.id); olMatch = m; setTimeout(() => startPlay('table'), bvGame === g ? 0 : 500); } });
+  }
   /* ---------- rated games against the AI on the 3D table (2026-11-10): the same record as the full game (its localStorage store,
      its ladder of level ratings, its placement — shared/placement.js — and Elo K), so a rated game here counts there too ---------- */
   const RTG = {
@@ -1357,7 +1394,7 @@
   // (online rated games exist only where the full game or the adapter has them: the rest offer the AI alone)
   const SOON = { ja: 'オンライン（準備中）', en: 'Online (soon)', zh: '在线（准备中）', 'zh-TW': '線上（準備中）', ko: '온라인 (준비 중)', es: 'En línea (pronto)', fr: 'En ligne (bientôt)', pt: 'Online (em breve)', de: 'Online (bald)', hi: 'ऑनलाइन (जल्द)', ar: 'عبر الإنترنت (قريبًا)', ru: 'Онлайн (скоро)', id: 'Online (segera)', tr: 'Çevrim içi (yakında)' };
   RTG.hitblow.randSide = true;   // (ヒット＆ブロー: the second guesser has one more row of clues — sides at random, 2026-11-16)
-  const RT_NO_ONLINE = { janggi: 1, mancala: 1, dots: 1, carrom: 1, crokinole: 1, hockey: 1, botao: 1, hitblow: 1 };
+  const RT_NO_ONLINE = { janggi: 1, mancala: 1, dots: 1, hockey: 1, botao: 1, hitblow: 1 };   // (carrom, crokinole: online on the table since 2026-11-16 — Atlas3D[id].online)
   // 種目 (2026-11-12): each variant has a rating of its own — the standard game keeps the full game's store, a variant 'mini'
   // is stored under '<key>:mini' (the 3D table only; the same ladder of levels, which the variants map onto their own AI steps)
   const rtKey = (id, v) => RTG[id].key + (v ? ':' + v : '');
@@ -1447,7 +1484,6 @@
     // レート戦's time control: a picker button + list sheet (the same UI as the level); its list follows 相手
     const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c || !!(Atlas3D[id] && Atlas3D[id].mx); $('bvRtNote').hidden = !!c || opp === 'online' || !!(Atlas3D[id] && Atlas3D[id].mx) || !RTG[id]; /* (a rated game that opens the full game keeps that game's own clock — patolli: 30 s a move — so no "no clock" note) */ if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
     const rtNow = () => { const el = $('bvRtNow'); if (!el) return; const rec = $('bvRtRec'); if (rec) { if (rec.previousElementSibling !== el) { el.after(rec); rec.classList.add('rtrec'); } rec.hidden = !RTG[id] || M() !== 'rated'; }   /* (戦績 (the cup) sits right of the current rating, 2026-11-14) */ const ol = $('bvRtOpp').value === 'online'; const solo = !!el.closest('.rtonly'); el.hidden = !RTG[id] || M() !== 'rated' || (ol && olNowTxt(id) === null && !solo); /* (beside 種目: the right half, rated games only) */ if (!el.hidden) el.innerHTML = `<small>${esc(t('rec.rtNow'))}</small><b>${esc(ol ? olNowTxt(id) || UNPL[lang] || UNPL.en : rtNowTxt(id, $('bvVar') ? $('bvVar').dataset.v || '' : rtRuleV(id)))}</b>`; };   // (online: the account's one online rating, as the full page last saw it — shogi/online.js cacheRt)
-    const olNowTxt = id => { let o = null; try { o = JSON.parse(localStorage.getItem(id + '-online-rt') || 'null'); } catch (e) {} if (!o && id !== 'shogi') return null; return o && o.n > 0 && typeof o.r === 'number' ? 'R ' + o.r : UNPL[lang] || UNPL.en; };   // (null: a game whose full page does not save its online rating yet — no box)
     rtNowHook = rtNow; rtNow();
     $('bvRtOpp').addEventListener('change', () => { rtNow(); pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); mxLayout(M()); });
     paint();
@@ -1556,7 +1592,9 @@
       return;
     }
     if (pend3d) { pend3d.then(() => startPlay(kind)); return; }   // the board isn't on the table yet
-    let level = $('bvLv') ? +$('bvLv').value : 0, pmode = $('bvMode') ? $('bvMode').dataset.v : 'ai';
+    const olM = olMatch; olMatch = null;   // (a matched online game: atlas/online3d.js)
+    if (!olM && ad.online && window.Online3D && $('bvMode') && $('bvMode').dataset.v === 'rated' && $('bvRtOpp') && $('bvRtOpp').value === 'online') { openOnline3D(g); return; }   // (レート戦 · オンライン: the lobby first)
+    let level = $('bvLv') ? +$('bvLv').value : 0, pmode = olM ? 'online' : $('bvMode') ? $('bvMode').dataset.v : 'ai';
     if (pmode === 'ai' && level === 0) { pmode = 'pvp'; level = pref[g.id + ':lv'] || 1; }   // (shogi / chess: 相手 二人で対戦)
     let rtR = null;
     if (pmode === 'rated') {   // レート戦 on the table: the opponent from the player's rating (the full game's ladder and record)
@@ -1570,10 +1608,10 @@
     }
     const side = rtR && RTG[g.id].randSide ? (Math.random() < .5 ? 1 : 2) : $('bvSide') ? +$('bvSide').value : 1, size = rtR && (RTG[g.id].size || RTG[g.id].own && !ad.rule && ad.size0) ? RTG[g.id].size || ad.size0 : $('bvSize') ? +$('bvSize').value : 0;   // (the rated games added 2026-11-16: the standard 種目, ad.size0)   // (go's rated games: 9×9, as the full game; tafl: the side at random)
     if (rtR) rtR.side = side;
-    if (!rtR) pref[g.id + ':lv'] = level; if (!(rtR && RTG[g.id].randSide)) pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+    if (!olM) { if (!rtR) pref[g.id + ':lv'] = level; if (!(rtR && RTG[g.id].randSide)) pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {} }
     lastKind = kind;
     const tc = tcOf(ad, $('bvTc') ? $('bvTc').dataset.v : pref[g.id + ':tc']), tcT = new URLSearchParams(location.search).get('tcTest');
-    const clock = tcT ? { id: 'test', byo: +tcT } : rtR ? RTG[g.id].tc : tc;   // (tests: ?tcTest=5 → 5 s per move; rated: the full game's rated clock)
+    const clock = olM ? null : tcT ? { id: 'test', byo: +tcT } : rtR ? RTG[g.id].tc : tc;   // (online: the shot's clock is the record's, in the adapter's HUD)   // (tests: ?tcTest=5 → 5 s per move; rated: the full game's rated clock)
     if ($('bvTc')) { pref[g.id + ':tc'] = $('bvTc').dataset.v; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {} }
     $('bv').classList.add('playing'); $('endc').classList.remove('on');
     LAND.game(ad.land || ''); fitStage();
@@ -1603,12 +1641,13 @@
   }
 
     const variant = bvVarEl(g) ? bvVarEl(g).dataset.v || '' : '';   // (rated games too: each variant its own rating)
-    session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, variant, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; hudFit(); if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
+    session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, variant, mode: pmode, online: olM, bar: true, hud: h => { $('hud').innerHTML = h; hudFit(); if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
       onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); if (npcT && session === sess && info) npcT.turn(info.ply); },
       onEnd: res => {
         if (session === sess) TB.end();
         const rtX = rtR && rtCur && rtCur.R === rtR ? rtSettleG(g.id, rtR, res.draw ? .5 : res.win ? 1 : 0, String(res.score || '').replace(/<[^>]*>/g, '').slice(0, 40)) : null;
-        if (!res.pvp) { A_.recordPlay(W, g.id, res); recPush(g.id, { mode: pmode === 'rated' ? 'rated' : 'ai', res: res.draw ? 'd' : res.win ? 'w' : 'l', side: side % 2 === 0 ? 1 : 0, opp: res.solo ? res.opp : 'AI Lv.' + (res.level || level) + (variant && ad.variants ? ' · ' + ad.variants.name(variant, lang) : ''), key: res.solo ? res.key : (pmode === 'rated' ? 'rt:' : 'ai:') + (res.level || level) + (variant ? ':' + variant : ''), ...(ad.variants ? { v: variant || 'hon', vn: ad.variants.name(variant, lang) } : {}), why: res.solo ? res.why : String(res.score || '').replace(/<[^>]*>/g, '').slice(0, 60), via: '3d' }); }
+        if (res.online) { A_.recordPlay(W, g.id, Object.assign({}, res, { solo: true }));   /* (a win over a person is not a win over the AI: kept with the solo wins — shared/atlas.js recordPlay) */ recPush(g.id, { mode: 'online', res: res.draw ? 'd' : res.win ? 'w' : 'l', side: res.side ? 1 : 0, opp: res.opp || '?', key: 'ol', why: String(res.why || res.score || '').slice(0, 60), via: '3d' }); }   // (online, atlas/online3d.js)
+        else if (!res.pvp) { A_.recordPlay(W, g.id, res); recPush(g.id, { mode: pmode === 'rated' ? 'rated' : 'ai', res: res.draw ? 'd' : res.win ? 'w' : 'l', side: side % 2 === 0 ? 1 : 0, opp: res.solo ? res.opp : 'AI Lv.' + (res.level || level) + (variant && ad.variants ? ' · ' + ad.variants.name(variant, lang) : ''), key: res.solo ? res.key : (pmode === 'rated' ? 'rt:' : 'ai:') + (res.level || level) + (variant ? ':' + variant : ''), ...(ad.variants ? { v: variant || 'hon', vn: ad.variants.name(variant, lang) } : {}), why: res.solo ? res.why : String(res.score || '').replace(/<[^>]*>/g, '').slice(0, 60), via: '3d' }); }
         if (res.grant && res.grant.length) { W = A_.load(); res.grant.forEach(id => { if (!W.owned.includes(id)) W.owned.push(id); }); A_.save(W); }   // (a solo game's goals: Atlamo — peg solitaire, 2026-11-14)
         refresh();   // two players on one device: no win / loss for the player's record
         if (npcT && session === sess && !res.pvp) { npcT.end(res); W = A_.load(); refresh(); }   // (a boss beaten: its N / R / SR was added to the saved wallet)
@@ -1616,11 +1655,14 @@
           if (session !== sess) return;
           TB.hide();
           const head = res.solo ? (res.win ? '🎉 ' : '') + res.title : res.pvp ? (res.draw ? t('res.draw') : '🎉 ' + (res.winnerText || res.score || '')) : (res.win ? '🎉 ' : '') + t(res.draw ? 'res.draw' : res.win ? 'res.win' : 'res.lose');
-          $('endc').innerHTML = `<h3>${esc(head)}</h3>${res.score && !(res.pvp && !res.winnerText && !res.draw) ? `<div class="sc">${esc(res.score)}</div>` : ''}${res.best ? `<div class="gnote gbest">${esc(res.best).replace(/\n/g, '<br>')}</div>` : ''}${res.goal ? `<div class="gnote ggoal">${esc(res.goal).replace(/\n/g, '<br>')}</div>` : ''}${res.pvp || res.solo ? '' : `<div class="gnote">Lv.${res.level}</div>`}${rtX ? `<div class="rtres"><b>R ${rtX.old} → ${rtX.now}</b><i class="${rtX.d >= 0 ? 'up' : 'dn'}">${rtX.d >= 0 ? '+' : '−'}${Math.abs(rtX.d)}</i></div>` : ''}
+          $('endc').innerHTML = `<h3>${esc(head)}</h3>${res.score && !(res.pvp && !res.winnerText && !res.draw) ? `<div class="sc">${esc(res.score)}</div>` : ''}${res.best ? `<div class="gnote gbest">${esc(res.best).replace(/\n/g, '<br>')}</div>` : ''}${res.goal ? `<div class="gnote ggoal">${esc(res.goal).replace(/\n/g, '<br>')}</div>` : ''}${res.online && res.why ? `<div class="gnote">${esc(res.why)}</div>` : ''}${res.pvp || res.solo || res.online ? '' : `<div class="gnote">Lv.${res.level}</div>`}${res.online && res.rated ? '<div class="rtres" id="olRt"><b>…</b></div>' : ''}${rtX ? `<div class="rtres"><b>R ${rtX.old} → ${rtX.now}</b><i class="${rtX.d >= 0 ? 'up' : 'dn'}">${rtX.d >= 0 ? '+' : '−'}${Math.abs(rtX.d)}</i></div>` : ''}
             <div class="eacts${res.next ? ' e3' : ''}" style="display:flex;gap:10px;flex-wrap:nowrap;justify-content:center"><button class="btn ghost" id="eBack">${t('bv.quit')}</button><button class="btn${res.again && res.again.cls ? ' ' + res.again.cls : ''}" id="eAgain">${res.again ? esc(res.again.label) : t('bv.again')}</button>${res.next ? `<button class="btn" id="eNext">${esc(res.next.label)} ▶</button>` : ''}</div>`;
           $('endc').classList.add('on'); if (res.win || (res.pvp && !res.draw)) confetti(120);
+          if (res.online && res.rated && res.rt) res.rt.then(x => { const el = $('olRt'); if (!el || session !== sess) return; if (x && x.rated && typeof x.now === 'number') { const d = x.now - x.old; el.innerHTML = `<b>R ${x.old} → ${x.now}</b><i class="${d >= 0 ? 'up' : 'dn'}">${d >= 0 ? '+' : '−'}${Math.abs(d)}</i>`; } else el.innerHTML = `<small>${esc(window.OnlineSec ? OnlineSec.msg(x && x.note || 'void') : '')}</small>`; }).catch(() => {});   // (the settlement: shared/onlinesec.js — both reports, then the rating)
           try { SFX[res.draw ? 'draw' : res.win || res.pvp ? 'win' : res.solo ? 'draw' : 'lose'](); } catch (e) {}   // (respects the sound setting)
           const restart = pre => { stopSession(); Table3D.show(g.id); if (pre) pre(); setTimeout(() => startPlay(lastKind), 50); };
+          if (res.online) res.again = { label: Online3D.tr(lang, 'toLobby'), go: () => { stopSession(); openBoard(g.id); setTimeout(() => openOnline3D(g), 450); } };   // (online: ロビーに戻る)
+          if (res.online) $('eAgain').textContent = res.again.label;
           $('eAgain').onclick = () => { if (res.again) res.again.go(restart); else restart(); };   // (res.again: the adapter's own second button — 上海's stages: マップへ opens the star map, which restarts with the stage picked there)
           if (res.next && $('eNext')) $('eNext').onclick = () => { stopSession(); Table3D.show(g.id); res.next.go(); setTimeout(() => startPlay(lastKind), 50); };   // (上海's stages: 次のステージ)
           $('eBack').onclick = () => openBoard(g.id);
@@ -1702,7 +1744,7 @@
       }
       // buttons
       const can = k => !!(S && !ended && S[k] && S[k]());
-      btn('undo').disabled = !can('canUndo');
+      btn('undo').disabled = !can('canUndo'); btn('undo').hidden = !!S.noUndo; btn('hint').hidden = !!S.noHint;   // (online games: no 待った / ヒント)
       { const vb = btn('view'), V = S.view; vb.hidden = !V; if (V) { vb.disabled = ended; vb.classList.toggle('on', !!V.on()); const h = `${V.icon}<span>${esc(V.label())}</span>`; if (vb._h !== h) { vb.innerHTML = h; vb._h = h; vb.setAttribute('aria-label', vb.textContent); vb.title = vb.textContent; } } }   // (session.view = { icon, label(), on(), toggle() }: the adapter's own button right of 待った — 上海: 真上から見る)
       btn('hint').disabled = hinting || !can('canHint'); btn('hint').classList.toggle('busy', hinting);
       btn('resign').disabled = ended || (S.canResign ? !S.canResign() : false); btn('resign').hidden = !!S.noResign;

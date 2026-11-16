@@ -294,7 +294,15 @@
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, E = window.CarromEngine, D = E.DIM;
     const lang = ctx.lang, L = TXT[lang] || TXT.en;
     const tx = (k, o) => { let s = L[k] != null ? L[k] : (TXT.en[k] != null ? TXT.en[k] : k); if (o) for (const q in o) s = s.split('{' + q + '}').join(o[q]); return s; };
-    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), target = +ctx.size === 25 ? 25 : 0;
+    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6));
+    // online (2026-11-16, atlas/online3d.js): M = the game (Online3D.match) — me = the side this device plays (0 = the record's b, who
+    // breaks first); the shooter's client is authoritative (its write carries the shot and the result), the other side plays the
+    // shot back from the same start and then takes the written state. Both use the record's men scale (k) for the whole game.
+    const M = ctx.mode === 'online' && ctx.online ? ctx.online : null, online = !!M, me = M ? M.me : 0;
+    const target = online ? (M.v === 'm25' ? 25 : 0) : +ctx.size === 25 ? 25 : 0;
+    const K0 = D.K0 = D.K0 || D.K;   // (the device's own scale: the lobby offers it, the game may play a larger one)
+    if (online && Math.abs(M.k - D.K) > 1e-6) E.setScale(M.k);
+    const MS = online ? D.K / K0 : 1;   // (the 3D men were made at the device's scale: scaled to the game's)
     const youFirst = (+ctx.side || 1) === 1;
     const BDL = (T3.BOARDS && T3.BOARDS.carrom) ? T3.BOARDS.carrom.list : ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'];
     let look = T3.BOARDS && T3.BOARDS.carrom ? T3.BOARDS.carrom.get() : 'neon';
@@ -303,7 +311,7 @@
     let U = board.userData; const Y = U.top, K = U.K, W = 2 * (U.S + 7 * K);
     // (2026-11-10) each board's hand: the wobble's character (see FEEL); the classic board keeps the standard feel
     const CFEEL = { classic: 'std', neon: 'power', modern: 'precise', rajasthan: 'aim', bauhaus: 'hard', tycoon: 'finest' };
-    let feel = feelOf(CFEEL[look]);
+    let feel = feelOf(online ? 'std' : CFEEL[look]);   // (online: one hand for both players, whatever the board)
     function setLook(v) {   // (before the game: the board's pieces are swapped inside the group on the table — T3.show() would move the camera)
       if (v === look) return; look = v; feel = feelOf(CFEEL[v]);
       try { if (T3.setBoard) T3.setBoard('carrom', v); } catch (e) {}
@@ -321,15 +329,17 @@
     let sx = 0, aimAng = -Math.PI / 2, aimPow = 0, drag = null, speedUp = 1, told = false;
     const hist = [], timers = [];
     const later = (f, ms) => { const my = tok; timers.push(setTimeout(() => { if (!stopped && my === tok) f(); }, ms)); };
-    const human = p => pvp || p === 0;
-    const nameOf = p => pvp ? tx(E.colOf(st, p)) : p === 0 ? t('p.you') : t('p.ai');
+    const human = p => pvp || p === me;
+    const nameOf = p => online ? M.names[p] : pvp ? tx(E.colOf(st, p)) : p === 0 ? t('p.you') : t('p.ai');
+    const OT = k => window.Online3D ? Online3D.tr(lang, k) : k;
+    let applied = 0, trans = false, needSync = false, olT = 0, rx = 0;   // online: shots of the record played here · a new board being laid · a refused write
     const kick = ms => { if (T3.kick) T3.kick(ms || 150); };
     const wx = (x, y) => U.xz(x, y);
 
     /* ---------- the men and the striker ---------- */
     const pcs = [];   // index = engine id
     let striker = null;
-    function mk(c, r) { const g = c === 's' ? U.striker() : U.piece(c), sh = T3.contact(r * 1.15, .42); sh.position.y = .004; g.add(sh); board.add(g); return g; }
+    function mk(c, r) { const g = c === 's' ? U.striker() : U.piece(c), sh = T3.contact(r * 1.15, .42); sh.position.y = .004; g.add(sh); g.scale.set(MS, 1, MS); board.add(g); return g; }
     function placeMesh(g, x, y, h) { const [a, b] = wx(x, y); g.position.set(a, Y + (h || 0), b); }
     function build() {
       pcs.forEach(g => board.remove(g)); pcs.length = 0;
@@ -337,7 +347,7 @@
       if (!striker) striker = mk('s', U.RS);
       kick(300);
     }
-    function syncAll() { st.pcs.forEach((m, i) => { const g = pcs[i]; g.visible = m.on; g.scale.setScalar(1); if (m.on) placeMesh(g, m.x, m.y); }); kick(200); }
+    function syncAll() { st.pcs.forEach((m, i) => { const g = pcs[i]; g.visible = m.on; g.scale.set(MS, 1, MS); if (m.on) placeMesh(g, m.x, m.y); }); kick(200); }
 
     /* ---------- the guides: the base line glow, the aim arrow, the dotted path to the first man, the ghost striker ---------- */
     const gd = new TH.Group(); board.add(gd);
@@ -381,7 +391,7 @@
 
     /* ---------- HUD ---------- */
     const css = document.createElement('style');
-    css.textContent = '.hud .crp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.62;white-space:nowrap}.hud .crp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .crp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .crp b{font-size:14px}.hud .crp .q{width:11px;height:11px;background:#c3271f}.hud .crm{font-weight:800;font-size:13px;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px #c23a7a,0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.crtoast.good{background:#fff;color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.crtoast.bad{background:#fff;color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}.crpow{position:fixed;z-index:6;pointer-events:none;padding:4px 10px;border-radius:99px;background:rgba(20,22,34,.82);color:#fff;font-weight:900;font-size:14px;transform:translate(-50%,-150%);white-space:nowrap}.crhow{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px}.crhow-c{background:#fff;color:#1d2133;border-radius:24px;box-shadow:0 0 0 4px #c23a7a,0 18px 50px rgba(0,0,0,.45);padding:22px 22px 18px;width:min(440px,100%);max-height:100%;overflow:auto}.crhow h2{margin:0 0 14px;font-size:24px;font-weight:900;text-align:center;color:#c23a7a}.crhow ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.crhow li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}.crhow li i{flex:none;width:40px;height:40px;border-radius:50%;background:#fbe3ee;color:#c23a7a;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:22px;font-weight:900}.crhow .u{margin:12px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center}.crhow label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 6px;font-size:16px;font-weight:800;cursor:pointer}.crhow label input{width:20px;height:20px;accent-color:#c23a7a}.crhow .n{margin:0 0 14px;font-size:13px;font-weight:700;color:#6b7083;text-align:center}.crhow button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:#c23a7a;color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}.crflip{position:fixed;left:calc(16px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));z-index:40;width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.94);color:#2b3044;box-shadow:0 4px 14px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.crflip svg{width:28px;height:28px}.crflip.on{background:#c23a7a;color:#fff}.crview{left:calc(80px + env(safe-area-inset-left))}@media (max-width:560px){.crview{left:auto;right:calc(16px + env(safe-area-inset-right))}.hud .crp{padding:3px 7px;font-size:12px}.hud .crp .nm{display:none}.crtoast{font-size:14px;padding:9px 16px;border-radius:18px}}';
+    css.textContent = '.hud .crp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.62;white-space:nowrap}.hud .crp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .crp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .crp b{font-size:14px}.hud .olck{font-style:normal;font-family:Fredoka,sans-serif;font-weight:600;font-size:14px;min-width:30px;padding:2px 8px;border-radius:99px;background:#2b3044;color:#fff;text-align:center}.hud .olck.low{background:#e5533f}.hud .crp .q{width:11px;height:11px;background:#c3271f}.hud .crm{font-weight:800;font-size:13px;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px #c23a7a,0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.crtoast.good{background:#fff;color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.crtoast.bad{background:#fff;color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}.crpow{position:fixed;z-index:6;pointer-events:none;padding:4px 10px;border-radius:99px;background:rgba(20,22,34,.82);color:#fff;font-weight:900;font-size:14px;transform:translate(-50%,-150%);white-space:nowrap}.crhow{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px}.crhow-c{background:#fff;color:#1d2133;border-radius:24px;box-shadow:0 0 0 4px #c23a7a,0 18px 50px rgba(0,0,0,.45);padding:22px 22px 18px;width:min(440px,100%);max-height:100%;overflow:auto}.crhow h2{margin:0 0 14px;font-size:24px;font-weight:900;text-align:center;color:#c23a7a}.crhow ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.crhow li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}.crhow li i{flex:none;width:40px;height:40px;border-radius:50%;background:#fbe3ee;color:#c23a7a;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:22px;font-weight:900}.crhow .u{margin:12px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center}.crhow label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 6px;font-size:16px;font-weight:800;cursor:pointer}.crhow label input{width:20px;height:20px;accent-color:#c23a7a}.crhow .n{margin:0 0 14px;font-size:13px;font-weight:700;color:#6b7083;text-align:center}.crhow button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:#c23a7a;color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}.crflip{position:fixed;left:calc(16px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));z-index:40;width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.94);color:#2b3044;box-shadow:0 4px 14px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.crflip svg{width:28px;height:28px}.crflip[hidden]{display:none}.crflip.on{background:#c23a7a;color:#fff}.crview{left:calc(80px + env(safe-area-inset-left))}@media (max-width:560px){.crview{left:auto;right:calc(16px + env(safe-area-inset-right))}.hud .crp{padding:3px 7px;font-size:12px}.hud .crp .nm{display:none}.crtoast{font-size:14px;padding:9px 16px;border-radius:18px}}';
     document.head.appendChild(css);
     const HK = 'atlas-carrom-howto';
     const howtoOn = () => { try { return localStorage.getItem(HK) !== 'off'; } catch (e) { return true; } };
@@ -410,7 +420,11 @@
       if (stopped || !st) return;
       const pill = p => { const c = E.colOf(st, p), dueN = st.due[p];
         return `<span class="crp ${st.turn === p && !over ? 'on' : ''}"><i style="background:${dotCol(c)}"></i><span class="nm">${esc(nameOf(p))}</span><b>${9 - st.pk[c]}</b>${st.queen.st === 'cov' && st.queen.by === p ? '<i class="q"></i>' : ''}${dueN ? `<small>⚠${dueN}</small>` : ''}</span>`; };
-      const sc = target ? `<span class="crm">${esc(tx('score', { a: st.score[0], b: st.score[1] }))}</span>` : '';
+      const sc = target ? `<span class="crm">${esc(tx('score', { a: st.score[me], b: st.score[1 - me] }))}</span>` : '';
+      if (online) {   // the opponent left, you right; the shot's clock (server time) on the side to shoot
+        const tm = !over && !trans ? M.toMove() : -1, left = M.left(), ck = q => q === tm ? `<em class="olck${left <= 10000 ? ' low' : ''}">${Math.ceil(left / 1000)}</em>` : '';
+        ctx.hud(pill(1 - me) + ck(1 - me) + sc + `<span class="crm">${esc(msg)}</span>` + pill(me) + ck(me)); return;
+      }
       ctx.hud(pill(1) + sc + `<span class="crm">${esc(msg)}</span>` + pill(0));
     }
     const say = m => { msg = m || ''; hud(); };
@@ -517,20 +531,31 @@
 
     /* ---------- the flow ---------- */
     const codeText = (c, r) => c === 'brk.miss' ? tx(c, { n: 3 - r.s.brk.tries }) : tx(c);
-    async function stroke(shot) {
+    // auth (online): the opponent's shot — its written result ({ st, m, a, f, b }) or 'local' (a shot followed by more of theirs:
+    // only the last one's result is in the record, so this one is resolved here and the board is set right after the last)
+    async function stroke(shot, auth) {
       if (over || stopped || busy) return;
       busy = true; phase = 'anim'; clearGuides(); drag = null; hintShot = null; powEl.hidden = true;
-      const p = st.turn, s0 = st;
+      const p = st.turn, s0 = st, my = tok;
+      if (online && !auth) shot = M.quant(shot);   // (the shot as it goes on the wire: both sides simulate exactly this one)
       SND.flick();
       const sim = E.simulate(s0, p, shot, { frames: true });
+      let r = E.resolve(s0, sim);
+      if (online && !auth) {   // my shot: its result is the game's — written at once, while it plays back here and there
+        const pay = { st: r.s, m: r.msg, a: r.again ? 1 : 0, f: r.foul ? 1 : 0, b: boardNo };
+        r = Object.assign({}, r, { s: JSON.parse(M.pack(pay)).st });   // (the rounded state, the same as the other side gets)
+        const fin = r.s.over && (!target || E.matchOver(r.s, target) || boardNo >= 8);
+        const i = applied; applied++;
+        M.send(i, shot, pay, r.s.over ? E.nextBoard(r.s).turn : r.s.turn, fin ? { win: winOf(r.s), why: 'board' } : null).then(ok => { if (!ok && !stopped) { needSync = true; if (!busy && !trans) resync(); } });
+      } else if (auth && auth !== 'local') r = { s: auth.st, msg: Array.isArray(auth.m) ? auth.m : [], again: !!auth.a, foul: !!auth.f };
       speedUp = 1; say('');
-      await playback(sim); if (stopped) return;
-      const r = E.resolve(s0, sim);
+      await playback(sim); if (stopped || my !== tok) return;
       const back = r.s.pcs.map((m, i) => (m.on && !sim.fin[i].on) || (m.on && (Math.abs(m.x - sim.fin[i].x) > .01 || Math.abs(m.y - sim.fin[i].y) > .01)) ? i : -1).filter(i => i >= 0);
       st = r.s; ply++;
       if (!sim.striker.on) striker.visible = false;
-      await dropIn(back); if (stopped) return;
+      await dropIn(back); if (stopped || my !== tok) return;
       syncAll(); busy = false;
+      if (needSync) return resync();
       const lead = r.msg.find(c => c !== 'own' && c !== 'opp') || r.msg[0];
       const good = r.msg.includes('own') || r.msg.includes('q.cov') || r.msg.includes('q.pend');
       if (lead && !st.over) { toast(codeText(lead, r), r.foul ? 'bad' : good ? 'good' : ''); if (r.foul) SND.bad(); else if (good) SND.good(); }
@@ -538,25 +563,79 @@
       if (st.over) return boardEnd();
       later(next, r.again ? 650 : 900);
     }
+    // online: the record's winner of a finished state (1 = b, 2 = w, 0 = a draw)
+    const winOf = s => target ? (s.score[0] > s.score[1] ? 1 : s.score[1] > s.score[0] ? 2 : 0) : s.winner === 0 ? 1 : 2;
+    // the opponent's shots, one after another as they come (a look along the line, then the flick)
+    function pump() {
+      if (!online || stopped || over || busy || trans) return;
+      if (applied < M.n) { if (phase === 'remote' || phase === 'wait') remoteNext(); return; }
+      if (M.g.status !== 'play') finishOnline();
+    }
+    function shotOk(sh) { return sh && isFinite(sh.x) && isFinite(sh.ang) && isFinite(sh.v) && Math.abs(sh.x) <= D.BX + .5 && sh.v >= 0 && sh.v <= E.VMAX * 1.01; }
+    function stateOk(s, s0) {   // the written state is well-formed and follows on from the one before (the same men, colours, counts in range)
+      try {
+        if (!s || !Array.isArray(s.pcs) || s.pcs.length !== s0.pcs.length || (s.turn !== 0 && s.turn !== 1) || !Array.isArray(s.score) || !s.pk || !Array.isArray(s.due)) return false;
+        if (s.col[0] !== s0.col[0] || s.col[1] !== s0.col[1] || s.score[0] < s0.score[0] || s.score[1] < s0.score[1]) return false;
+        if (!['w', 'b'].every(c => Number.isInteger(s.pk[c]) && s.pk[c] >= 0 && s.pk[c] <= 9)) return false;
+        return s.pcs.every((m, i) => m.id === i && m.c === s0.pcs[i].c && typeof m.on === 'boolean' && isFinite(m.x) && isFinite(m.y) && Math.abs(m.x) <= 37 && Math.abs(m.y) <= 37);
+      } catch (e) { return false; }
+    }
+    function bad() { toast(OT('illegal'), 'bad'); SND.bad(); busy = false; phase = 'wait'; M.dispute(); }
+    async function remoteNext() {
+      const i = applied, last = i === M.n - 1, shot = M.shot(i), pay = last ? M.payload() : null;
+      applied++;
+      if (!shotOk(shot) || (pay && !stateOk(pay.st, st))) return bad();
+      busy = true; phase = 'anim'; const my = tok, p = st.turn;
+      await slideStriker(p, rx, shot.x, 360); if (stopped || my !== tok) return;
+      clearGuides(); const tr = E.aimTrace(st, p, shot.x, shot.ang); dots(shot.x, E.baseY(p), tr.gx, tr.gy, MAT.path); kick(150);
+      await sleepUntil(performance.now() + 380); if (stopped || my !== tok) return;
+      busy = false; stroke(shot, pay || 'local');
+    }
+    // a write of mine was refused (time up, a race): the board is set to what the record says
+    function resync() {
+      needSync = false; tok++; busy = false; trans = false; drag = null; clearGuides();
+      toast(OT('moveFail'), 'bad');
+      const pay = M.payload(); applied = M.n;
+      if (pay && pay.st) { st = pay.st; boardNo = pay.b || 1; if (st.over && M.g.status === 'play') { st = E.nextBoard(st); boardNo++; } }
+      build(); syncAll(); later(next, 400);
+    }
+    function finishOnline() {
+      const R = M.result(); if (over || !R) return;
+      tok++; over = true; phase = 'over'; busy = false; clearGuides(); hand.cancel(); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = viewBtn.hidden = true; clearInterval(olT);
+      const why = R.why, reason = why === 'resign' ? (R.mine ? 'youResigned' : 'oppResigned') : why === 'timeout' ? (R.mine ? 'youTimeout' : 'oppTimeout') : why === 'abandon' ? (R.mine ? 'youAbandon' : 'oppAbandon') : why === 'bad' ? 'illegal' : '';
+      // my own view of a game that ended on the board (the state both sides hold): the result each side reports
+      const own = why === 'board' && st && st.over ? (winOf(st) === 0 ? .5 : winOf(st) === me + 1 ? 1 : 0) : why === 'board' ? null : undefined;
+      const rt = M.finish(own);
+      hud(); (R.s === 1 ? SND.win : R.s === 0 ? SND.bad : SND.good)();
+      say(t(R.s === 1 ? 'res.win' : R.s === 0 ? 'res.lose' : 'res.draw'));
+      const score = target ? tx('score', { a: st.score[me], b: st.score[1 - me] }) : st && st.over ? tx('board', { p: nameOf(st.winner), n: st.points }) : '';
+      later(() => ctx.onEnd({ online: true, win: R.s === 1, draw: R.s === .5, level: 0, score, why: reason ? OT(reason) : '', rt, rated: M.rated, opp: M.names[1 - me], side: me }), why === 'board' ? 1300 : 350);
+    }
     function onTurn() { if (ctx.onTurn) ctx.onTurn(st.turn === 0 ? 0 : 1, { human: human(st.turn), ply }); }
     async function next() {
       if (over || stopped) return;
       hintShot = null; clearGuides(); onTurn();
       const p = st.turn;
       if (pvp) viewTo();
+      if (online && applied >= M.n && M.g.status !== 'play') return finishOnline();
       if (human(p)) {
-        if (!pvp) hist.push({ st: E.clone(st), boardNo });
+        if (!pvp && !online) hist.push({ st: E.clone(st), boardNo });
         sx = E.nearestFree(st, p, sx || 0);
         striker.visible = true; placeMesh(striker, sx, E.baseY(p));
         phase = 'place';
         // the HUD keeps a short status; the how-to goes up top once (and for every break)
         say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn'));
         const brk = () => tx('brk').replace(/([!！¡])\s*/, '$1\n');   // 「ブレイク！」 on a line of its own
-        if (!told && howtoOn()) howtoCard(() => { if (!stopped && !st.brk.done) toast(brk()); });
+        if (!told && howtoOn() && !online) howtoCard(() => { if (!stopped && !st.brk.done) toast(brk()); });
         else if (!st.brk.done) toast(brk());
         told = true;
         showGuides(); pulse();
         return;
+      }
+      if (online) {   // the opponent's shot: played back when it comes
+        phase = 'remote'; say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) }));
+        rx = E.nearestFree(st, p, 0); striker.visible = true; placeMesh(striker, rx, E.baseY(p)); kick(150);
+        return pump();
       }
       phase = 'ai'; say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) }));   // phones: just "AI's turn" (the longer line wraps)
       const x0 = E.nearestFree(st, p, 0); striker.visible = true; placeMesh(striker, x0, E.baseY(p));
@@ -575,10 +654,12 @@
       const w = st.winner, txtB = tx('board', { p: nameOf(w), n: st.points });
       hud();
       if (target && !E.matchOver(st, target) && boardNo < 8) {
-        toast(txtB, w === 0 || pvp ? 'good' : 'bad'); (w === 0 || pvp ? SND.good : SND.bad)();
-        later(() => { boardNo++; st = E.nextBoard(st); build(); syncAll(); toast(tx('next', { n: boardNo })); hist.length = 0; later(next, 900); }, 2200);
+        toast(txtB, w === me || pvp ? 'good' : 'bad'); (w === me || pvp ? SND.good : SND.bad)();
+        trans = true;   // (online: the next breaker's shot waits until the new board is laid here too)
+        later(() => { boardNo++; st = E.nextBoard(st); build(); syncAll(); toast(tx('next', { n: boardNo })); hist.length = 0; trans = false; later(next, 900); }, 2200);
         return;
       }
+      if (online) { phase = 'wait'; toast(txtB, w === me ? 'good' : 'bad'); return pump(); }   // (the end is the record's: written with the last shot)
       over = true; phase = 'over'; clearGuides(); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = viewBtn.hidden = true; if (pvp) viewTo(0);
       SND.win();
       const score = target ? tx('score', { a: st.score[0], b: st.score[1] }) : txtB;
@@ -591,7 +672,7 @@
     /* ---------- your hand (Hand above: the same in the rules tour) ---------- */
     const toCm = e => { const q = T3.pick(e, Y + .03); return q ? { x: q.x / K, y: q.z / K } : null; };
     function moveStriker(x) { const nx = E.nearestFree(st, st.turn, x); if (Math.abs(nx - sx) > .001) { sx = nx; placeMesh(striker, sx, E.baseY(st.turn)); kick(100); } }
-    const canAim = () => !cardEl && !stopped && !over && !busy && phase === 'place' && !!st && human(st.turn);
+    const canAim = () => !cardEl && !stopped && !over && !busy && phase === 'place' && !!st && human(st.turn) && !(online && M.left() <= 0);
     const hand = Hand({
       el: ctx.el, toCm, canAim,
       sign: () => st && st.turn === 1 ? -1 : 1,
@@ -613,7 +694,7 @@
     let flipped = false; try { flipped = localStorage.getItem(FK) === '1'; } catch (e) {}
     let viewA = 0, viewRaf = 0;
     function viewTo(base, now) {   // base: the two-player turn (π for the far side); the flip adds π
-      if (base == null) base = pvp && st && st.turn === 1 && !over ? Math.PI : 0;
+      if (base == null) base = (pvp && st && st.turn === 1 && !over) || (online && me === 1) ? Math.PI : 0;   // (online: your own side at the bottom)
       let to = base + (flipped ? Math.PI : 0); to = ((to % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
       if (!T3.turn) return;
       cancelAnimationFrame(viewRaf);
@@ -633,7 +714,7 @@
     flipBtn.addEventListener('click', e => { e.preventDefault(); flip(); });
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => flipBtn.addEventListener(k, e => e.stopPropagation()));
     neonTick(); flipSync(); (document.getElementById('bv') || document.body).appendChild(flipBtn);   // (inside the board view's own layer, over its canvas)
-    viewTo(0, true);   // (a flip chosen last time shows at once)
+    viewTo(undefined, true);   // (a flip chosen last time shows at once)
     const VIEWT = { ja: ['上から見る', '斜めから見る'], en: ['View from above', 'View at an angle'], zh: ['从上方看', '斜着看'], 'zh-TW': ['從上方看', '斜著看'], ko: ['위에서 보기', '비스듬히 보기'], es: ['Vista desde arriba', 'Vista en ángulo'], fr: ['Vue de dessus', 'Vue en biais'], pt: ['Ver de cima', 'Ver em ângulo'], de: ['Von oben', 'Schräg von oben'], ru: ['Вид сверху', 'Вид под углом'], tr: ['Üstten bak', 'Açılı bak'], id: ['Lihat dari atas', 'Lihat miring'], hi: ['ऊपर से देखें', 'तिरछा देखें'], ar: ['عرض من الأعلى', 'عرض مائل'] };
     const viewBtn = document.createElement('button'); viewBtn.type = 'button'; viewBtn.className = 'crflip crview';
     const ICO_TOP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="1.5"/><circle cx="12" cy="12" r="2.2"/></svg>';
@@ -649,7 +730,7 @@
       if (stopped || phase !== 'place' || !st || !human(st.turn) || drag) return;
       if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
       const d = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0; if (!d) return;
-      e.preventDefault(); moveStriker(sx + d * (e.shiftKey ? .25 : 1) * (st.turn === 1 && pvp ? -1 : 1) * (flipped ? -1 : 1)); showGuides();
+      e.preventDefault(); moveStriker(sx + d * (e.shiftKey ? .25 : 1) * (st.turn === 1 && (pvp || online) ? -1 : 1) * (flipped ? -1 : 1)); showGuides();
     };
     document.addEventListener('keydown', onKey);
     const prevTouch = ctx.el.style.touchAction; ctx.el.style.touchAction = 'none';
@@ -657,8 +738,19 @@
     /* ---------- go ---------- */
     // (2026-11-10) first the controls (unless turned off), then the board picker, then the game
     const goNow = () => { st = E.newBoard({ first: youFirst ? 0 : 1 }); build(); striker.visible = true; placeMesh(striker, 0, E.baseY(st.turn)); later(next, 650); };
+    // online: straight in (no how-to card, no board picker — the shot's clock is running). A resumed game starts from the record.
+    function goOnline() {
+      const pay = M.payload(); applied = M.n;
+      if (pay && pay.st) { st = pay.st; boardNo = pay.b || 1; if (st.over && M.g.status === 'play') { st = E.nextBoard(st); boardNo++; } }
+      else st = E.newBoard({ first: 0 });
+      build(); striker.visible = true; placeMesh(striker, E.nearestFree(st, st.turn, 0), E.baseY(st.turn)); told = true;
+      M.on(() => { pump(); if (!over) hud(); });
+      olT = setInterval(() => { if (stopped || over) return; hud(); const l = M.left(); if (M.toMove() === me && phase === 'place' && window.CountTick) CountTick.feed(l, 'ol'); }, 250);
+      later(next, 650);
+    }
     const pick = () => { if (stopped) return; BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'carrom') : k, thumb: k => T3.boardThumb ? T3.boardThumb('carrom', k) : '', pick: k => new URL('img/pick/carrom-' + k + '.webp?v=1', location.href).href, color: '#c23a7a', onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
-    if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
+    if (online) goOnline();
+    else if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
 
     const myTurn = () => !stopped && !over && !busy && st && human(st.turn) && phase === 'place';
     function finish(why) {
@@ -668,14 +760,14 @@
       say(t('res.lose')); setTimeout(() => { if (!stopped) ctx.onEnd(pvp ? { win: false, draw: false, level, score: r, pvp: true, winnerText: r } : { win: false, draw: false, level, score: r }); }, 200);
     }
     const api = {
-      human: 0,
-      canUndo: () => !pvp && myTurn() && hist.length > 1,
+      human: 0, noUndo: online, noHint: online,
+      canUndo: () => !pvp && !online && myTurn() && hist.length > 1,
       undo() {
         if (!api.canUndo()) return;
         tok++; hist.pop(); const h = hist.pop(); st = E.clone(h.st); boardNo = h.boardNo; busy = false; drag = null;
         syncAll(); next();
       },
-      canHint: () => myTurn(),
+      canHint: () => !online && myTurn(),
       hint() {
         if (!api.canHint()) return Promise.resolve(false);
         const my = tok;
@@ -690,9 +782,10 @@
         });
       },
       canResign: () => !stopped && !over && !!st,
-      resign() { finish('resign'); },
-      timeout() { finish('time'); },
+      resign() { if (online) { M.resign(); return; } finish('resign'); },   // (online: the record's resignation ends it, on both sides)
+      timeout() { if (online) return; finish('time'); },
       stop() { document.querySelectorAll(".bpk").forEach(e => e.remove());
+        if (online) { if (!over && M.g && M.g.status === 'play') M.resign(); M.stop(); clearInterval(olT); if (Math.abs(D.K - K0) > 1e-6) E.setScale(K0); }   // (leaving a game in progress = resigning it, as the rated games)
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulseT);
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
@@ -700,12 +793,12 @@
         cancelAnimationFrame(viewRaf); cancelAnimationFrame(waveT); cancelAnimationFrame(flashRaf); flipBtn.remove(); viewBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
-      _debug: { st: () => st, phase: () => phase, shoot: (x, ang, pw) => { if (phase !== 'place') return false; sx = E.nearestFree(st, st.turn, x); stroke({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }); return true; }, setStriker: x => { moveStriker(x); showGuides(); }, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, striker: () => sx, pc: i => i === st.pcs.length ? striker : pcs[i] },
+      _debug: { st: () => st, phase: () => phase, online: () => online ? { me, applied, n: M.n, status: M.g && M.g.status, over, k: D.K || 1 } : null, shootRaw2: sh => { if (phase !== 'place') return false; stroke(sh); return true; }, shoot: (x, ang, pw) => { if (phase !== 'place') return false; sx = E.nearestFree(st, st.turn, x); stroke({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }); return true; }, setStriker: x => { moveStriker(x); showGuides(); }, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, striker: () => sx, pc: i => i === st.pcs.length ? striker : pcs[i] },
     };
     window.__carromTable = api;
     return api;
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.carrom = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 1, sizeLabel, sizeName, levelInfo, start, SND, TXT, Hand, HOW, HOWTO, how, BoardPick, feelOf };
+  window.Atlas3D.carrom = { online: { lens: l => [['b1', sizeName(1, l)], ['m25', sizeName(25, l)]] }, levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 1, sizeLabel, sizeName, levelInfo, start, SND, TXT, Hand, HOW, HOWTO, how, BoardPick, feelOf };
 })();

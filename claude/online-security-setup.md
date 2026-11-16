@@ -17,6 +17,7 @@
 | `backgammon-multi` | バックギャモン | ウル `ur/`・セネト `senet/`（今後：パトリ） | `backgammon/database.rules.json` |
 | `ninemens-multiplay` | モリス | マンカラ `mancala/`・コネクトフォー `connect4/`・ドット＆ボックス `dots/` | `morris/database.rules.json` |
 | `konane-multiplay` | コナネ | アマゾンズ `amazons/`（2026-11-16 追加。もとのプロジェクトはないので、公開までは「準備中」）・ルドー・パチーシ `ludo/`（2026-11-16 追加、同じく公開までは「準備中」） | `konane/database.rules.json` |
+| `connect4-multiplay`（おはじき系。旧コネクトフォーのプロジェクトを再利用、2026-11-16） | （なし） | キャロム `carrom/`・クロキノール `crokinole/`（空き2） | `shared/flick.database.rules.json` |
 
 **手順**
 1. 上の7プロジェクトで「Realtime Database → ルール」に表のファイルの中身を全部貼って公開する（ルートのゲームの部分は今までと同じ）。
@@ -25,13 +26,21 @@
    （`shared/onlinesec.js` の `rehome()`、元の設定は各 `firebase-config.js` の `FIREBASE_CONFIG_PREV`）。公開後は次に開いたときから統合先を使います。
 3. 数日たって古いキャッシュがなくなったら、各 `firebase-config.js` の `_PREV` の部分を消し、古いプロジェクト
    （`chess-multiplay` `xiangqi-multiplay` `go-multiplay` `renju-multiplay` `hex-multiplay` `ugolki-multiplay` `fanorona-multi`
-   `agon-multiplay` `ur-multiplay` `senet-multiplay` `mankara-multiplay` `connect4-multiplay` `dot-and-box-multiplay`）を削除できます。
+   `agon-multiplay` `ur-multiplay` `senet-multiplay` `mankara-multiplay` `dot-and-box-multiplay`）を削除できます。
+   **`connect4-multiplay` は削除しない**（おはじき系のデータベースとして使い続ける。下の「おはじき系」）。
    削除したプロジェクトの ID は30日間再利用できません。
 - 統合先の Authentication・承認済みドメイン・App Check はそのまま使えます（追加の設定は不要）。
 - 注意：同時接続 100（Spark）はプロジェクト単位なので、同じプロジェクトのゲームの合計になります。足りなくなったら Blaze（従量課金）にすると
   1DB あたり 20万になり、1プロジェクトに複数のDBも持てます。
 - 新作のオンラインは専用プロジェクトを作らず、系統の近いプロジェクトに入れる（`secrules.py` の `host=('<ルートのゲーム>', '<node>')` と
   `firebase-config.js` の `window.FIREBASE_ROOT = '<node>/'`）。1つのDBは4ゲームまで（`secrules.py` が超えると止まる）。
+- **おはじき系（`connect4-multiplay`、2026-11-16）**：キャロム・クロキノールのオンライン（大百科の3D卓、`atlas/online3d.js`）。ルートにゲームのない
+  データベース（`secrules.py` の `HOSTS = {'flick': 'shared/flick.database.rules.json'}`。各ゲームは `host=('flick', '<node>')`）。
+  手順（**モリスの系統＝`ninemens-multiplay` のルールを公開して、コネクトフォーが移ったあとに**）：
+  1. `connect4-multiplay` の「Realtime Database → データ」でルートの︙から**データを全部削除**する（旧コネクトフォーのレート・対局。コネクトフォーは ninemens-multiplay の `connect4/` で 1500 からやり直し済み）。
+  2. 「ルール」に `shared/flick.database.rules.json` の中身を全部貼って公開する（`https://raw.githubusercontent.com/core-calmdust/aicoding/main/shared/flick.database.rules.json`）。
+  3. （任意）プロジェクトの表示名を「flick-multiplay」などに変える（projectId は変わらないので設定ファイルはそのまま）。Authentication（匿名・Google）、承認済みドメイン、App Check のキーは今のままでよい。
+  - 公開前は各ゲームのカードで「オンライン（準備中）」と出て選べない（前のプロジェクトがないので `rehome()` の戻り先はなく、節 `<node>secv` が読めないことで判定）。公開後は次に開いたときから使える。
 - 配線の確認：`node shared/tools/roottest.js`（全ゲームを「公開後」「公開前」「通信不可」の3状態で読み込み、使うプロジェクトと全パスが節の下かを調べる）。
 
 ## 0. 現在の状態
@@ -151,6 +160,7 @@
 ## 3. まだ可能なこと（サーバー側の検証が必要）
 
 - **不正な手の検出**：ルールでは盤面の正しさまで判定できません。リバーシのパス、ドット＆ボックスの連続手番、バックギャモンの手番も、ルールでは厳密に縛れません。
+- **おはじき系（キャロム・クロキノール）の物理**：打った側の端末が結果の局面を書き、相手はそれに合わせます（物理は端末ごとにビット単位で一致しないため）。ルールで守れるのは手番（`nt`）・1打45秒・局面は打った時しか変えられない・記録の不変項目（`k` など）まで。受け取った側は局面の形（駒の数・色・範囲・ショットの範囲）を確かめ、おかしければ「食い違い」で終わらせます（レート対象外）が、**もっともらしい嘘の結果（入っていない駒を入れたことにする等）は見抜けません**。サーバーで再計算するには Cloud Functions（下の §4）が必要です。
 - **改造クライアントによる「無効化」**：盤上の終局でわざと食い違う結果を申告すれば、その対局をレート対象外にできます。レートを**得る**ことはできませんが、負けを無効にすることはできます。
 - **複数アカウント**：匿名ログインで別アカウントを作ること自体は止められません（新規は 1500 から、相手のレートへの影響は半分）。
 - **ランキング系**：まいにち数独、すぴーど数独、さめが〜めのスコアは自己申告で、ルールでは範囲と書き込み回数のチェックだけです。
