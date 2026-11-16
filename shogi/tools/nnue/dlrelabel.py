@@ -58,7 +58,8 @@ def main():
     data = np.memmap(a.inp, dtype=PSV, mode='r')
 
     from multiprocessing import Pool
-    pool = Pool(a.workers) if a.workers > 1 else None
+    import signal
+    pool = Pool(a.workers, initializer=signal.signal, initargs=(signal.SIGINT, signal.SIG_IGN)) if a.workers > 1 else None   # Ctrl+C: only the main process answers
     B = a.batch; GROUP = B * max(1, a.workers)          # one round: a batch per worker
     t0 = time.time(); n0 = done; so_, sn_, soo, snn, son, cnt = 0.0, 0.0, 0.0, 0.0, 0.0, 0
     with open(a.out, 'ab') as fo:
@@ -90,4 +91,5 @@ def main():
         print(f'old vs new scores on {cnt} positions (clipped to +-3000): correlation {c:.3f}, mean |old| {math.sqrt(soo / cnt):.0f} (rms), mean |new| {math.sqrt(snn / cnt):.0f} (rms)')
 
 if __name__ == '__main__':
-    main()
+    try: main()
+    except KeyboardInterrupt: print('\nstopped (the same command continues from here)'); os._exit(0)

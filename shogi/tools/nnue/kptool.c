@@ -168,6 +168,7 @@ static int cmd_usi(void) {
     else if (!strcmp(line, "isready")) printf("readyok\n");
     else if (!strncmp(line, "setoption name Nodes value ", 27)) nodeLim = atoi(line + 27);
     else if (!strncmp(line, "setoption name TimeMs value ", 28)) timeMs = atoi(line + 28);
+    else if (!strncmp(line, "setoption name Param", 20)) { int k, v; if (sscanf(line + 20, "%d value %d", &k, &v) == 2) set_param(k, v); }   /* a search parameter (engine.c set_param): for tools/match/spsa.py */
     else if (!strcmp(line, "usinewgame")) { tt_clear(); reset_search(); }
     else if (!strncmp(line, "position startpos", 17)) {
       nh = 0; setStart(); char *p = strstr(line, "moves");
