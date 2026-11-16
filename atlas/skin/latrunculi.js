@@ -47,6 +47,10 @@ html.atlas-latr .pieces .hov.p2{background:radial-gradient(circle at 40% 35%,#ff
 html.atlas-latr .reserve .rsv-plate{background:rgba(26,14,22,.84)!important;box-shadow:0 0 0 1px rgba(226,170,214,.45),0 2px 6px rgba(0,0,0,.35)!important;color:#f0d9e6!important}
 html.atlas-latr .reserve .rsv-plate .rsv-l b,html.atlas-latr .reserve .rsv-plate .rsv-w:not(.hot) b{color:#fff2dc!important}
 html.atlas-latr .reserve .rsv-plate .rsv-w:not(.hot){color:#f0d9e6!important;background:transparent!important}
+/* a game with clocks (rated / online): the two players one above the other — side by side the clock chip left no room for the names */
+html.atlas-skin.atlas-latr:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:not(:has(> .pl-info)):has(.clk:not(:empty)){grid-template-columns:minmax(0,1fr)!important;gap:6px!important}
+html.atlas-skin.atlas-latr:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:has(.clk:not(:empty)) > .player :is(.name, .nm){display:block!important;-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis;font-size:13.5px!important}
+html.atlas-skin.atlas-latr:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:has(.clk:not(:empty)) > .player .clk{font-size:14px!important}
 `;
   document.head.appendChild(st);
 
@@ -206,6 +210,13 @@ html.atlas-latr .reserve .rsv-plate .rsv-w:not(.hot){color:#f0d9e6!important;bac
     if (R3 && typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { R3.paint(); } catch (e) {} return r; }; }
     addEventListener('storage', e => { if (e.key === 'atlas-latrunculi-look' || e.key === 'atlas-latrunculi-pc3') { try { mirror(); } catch (x) {} if (R3) R3.paint(); } });
   }
+
+  // the portal bar: this game's name is long (ラトルンクロルム + the seven menu buttons), so the brand is squeezed and its small
+  // English line under the title was cut at the right ("World Board Game Atl"): it steps down with the title
+  { const bar = document.querySelector('.atlas-top'), sm = bar && bar.querySelector('.atlas-brand small'), sp = sm && sm.parentNode;
+    if (sm) { const fit = () => { sm.style.fontSize = ''; sm.style.letterSpacing = ''; if (!sm.getClientRects().length) return; const cw = sp.clientWidth; if (cw > 0 && sm.scrollWidth > cw + .5) { sm.style.letterSpacing = '.02em'; if (sm.scrollWidth > cw + .5) sm.style.fontSize = Math.max(7, parseFloat(getComputedStyle(sm).fontSize) * cw / sm.scrollWidth * .98).toFixed(2) + 'px'; } };
+      const later = () => setTimeout(fit, 80); later(); setTimeout(fit, 1500); addEventListener('resize', later); if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
+      const sel = document.getElementById('langSel'); if (sel) sel.addEventListener('change', () => setTimeout(fit, 200)); } }
 
   window.__ltSkin = { pieces: () => P3.size, turned: () => [...P3.values()].filter(o => o.inc).length, built: () => built, at: i => { const [x, z] = xz(i); return T3.project(x, z, Y); } };
 })();

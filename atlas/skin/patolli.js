@@ -45,8 +45,55 @@ html.atlas-patolli .fx-glow{display:none!important}
 html.atlas-skin.atlas-patolli:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:not(:has(> .pl-info)){grid-template-columns:minmax(0,1fr)!important;gap:6px!important}
 html.atlas-skin.atlas-patolli:not(.atlas-2d) body:not(#_) .card.players > .player > div:not(.status){flex:1 1 auto;min-width:0}
 html.atlas-skin.atlas-patolli:not(.atlas-2d) body:not(#_) .card.players > .player .name{font-size:14px!important;-webkit-line-clamp:1!important}
-html.atlas-patolli #poolInfo{color:#5a6078!important}
+/* the status box stands on the dark wood of the table: a cream card as the players' (its texts are the portal's dark ink) */
+html.atlas-patolli .sbox{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;border-radius:16px!important;box-shadow:0 10px 24px -16px rgba(80,40,0,.55)!important;color:#2b3044!important}
+html.atlas-patolli #stText{color:#2b3044!important}
+html.atlas-patolli #stText small{color:#5a6078!important;opacity:1!important}
+html.atlas-patolli #poolInfo{color:#4a5068!important;background:rgba(255,253,247,.95);border:2px solid #fff;border-radius:99px;padding:3px 14px!important;box-shadow:0 10px 24px -16px rgba(80,40,0,.55)}
 html.atlas-patolli #poolInfo b{color:#2b3044!important}
+/* phones held sideways (the page's landtabs.js → html.pt-land; as atlas/skin/ur.js): the portal bar is a slim pill in the first row of
+   the right column (logo · name · icons) where the 2D page has its title, the menu icons as cream pills under it, the players /
+   status / rail / drawer in the cream portal look on the wood. The board keeps the 2D page's square on the left. */
+@media (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-height: 560px), (min-aspect-ratio: 1/1) and (pointer: coarse) and (max-width: 900px){
+  html.atlas-skin.atlas-patolli.pt-land .app, html.atlas-skin.atlas-patolli.pt-land.hb-atlas .app{padding-top:6px!important}
+  html.atlas-skin.atlas-patolli.pt-land body{padding-top:0!important}
+  /* the 3D canvas (#atlasGL, absolute) hangs in .board-area, which has no box here (display:contents): its containing block would be the
+     page itself, and the part of the canvas left of the screen made the page 28px wider — in Arabic (right-to-left) the whole layout
+     then stood 28px to the right, the tab rail cut off. With the body as its containing block the body's overflow:hidden clips it */
+  html.atlas-skin.atlas-patolli.pt-land body{position:relative}
+  html.atlas-patolli.pt-land body.lt-on :is(.brand-l, .brand-r){display:none!important}
+  html.atlas-patolli.pt-land .app > .atlas-top{position:relative;z-index:6;grid-row:1;grid-column:2 / 4;top:auto;left:auto;right:auto;height:32px;width:auto;max-width:100%;box-sizing:border-box;min-width:0;gap:4px;padding:0 3px 0 2px;background:rgba(255,246,226,.94);backdrop-filter:none;-webkit-backdrop-filter:none;border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);align-self:center;justify-self:start}
+  html.atlas-patolli.pt-land .atlas-top .sp{flex:0 0 4px;min-width:0}
+  html.atlas-patolli.pt-land .atlas-brand{gap:6px;flex:0 1 auto;min-width:0}
+  html.atlas-patolli.pt-land .atlas-brand img{width:26px;height:26px;flex:none}
+  html.atlas-patolli.pt-land .atlas-brand span{flex-direction:row;align-items:baseline;gap:7px;white-space:nowrap;min-width:0}
+  html.atlas-patolli.pt-land .atlas-brand b{font-size:12.5px;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  html.atlas-patolli.pt-land .atlas-brand small{display:none}
+  html.atlas-patolli.pt-land .atlas-coin{display:none}
+  html.atlas-patolli.pt-land .atlas-gname{display:block;flex:none;font-style:normal;font-weight:900;font-size:13px;color:#0d6f80;white-space:nowrap}
+  html.atlas-patolli.pt-land :is(.atlas-ic,.atlas-lbtn){height:26px;min-width:30px;width:30px;padding:0;border-width:1.5px;box-shadow:0 2px 0 #efe3c8;flex:none;justify-content:center}
+  html.atlas-patolli.pt-land :is(.atlas-ic,.atlas-lbtn) svg{width:15px;height:15px}
+  html.atlas-patolli.pt-land .atlas-lbtn b{display:none}
+  html.atlas-patolli.pt-land .atlas-lpop{top:34px;right:0;z-index:90}
+  html.atlas-skin.atlas-patolli.pt-land body.lt-on:not(#_) .card.controls:not(#_){position:relative!important;top:auto!important;left:auto!important;right:auto!important;gap:5px!important;overflow:visible!important;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  html.atlas-patolli.pt-land body.lt-on .controls .btn{width:38px!important;height:30px!important;padding:0!important;border-radius:99px!important;background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)!important;color:var(--text)!important}
+  html.atlas-patolli.pt-land body.lt-on .controls .btn.primary{background:#ff5d5d!important;color:#fff!important;border-color:#ff5d5d!important;box-shadow:0 3px 0 #d93c3c!important}
+  html.atlas-patolli.pt-land body.lt-on .controls .btn.primary svg{stroke:#fff!important}
+  html.atlas-patolli.pt-land body.lt-on:not(#_) .controls .btn:disabled{opacity:1!important;color:#bdb5a4!important;box-shadow:none!important}
+  html.atlas-patolli.pt-land body.lt-on .board-area > .sbox{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;border-radius:16px!important;box-shadow:0 10px 24px -16px rgba(80,40,0,.55)!important;color:var(--text)!important}
+  html.atlas-patolli.pt-land body.lt-on #ltRail{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;box-shadow:0 3px 0 rgba(150,110,50,.35)}
+  html.atlas-patolli.pt-land body.lt-on #ltRail button{color:#6a7088!important;opacity:1!important}
+  html.atlas-patolli.pt-land body.lt-on #ltRail button.sel{color:#d93c3c!important;background:#fff3d8!important}
+  html.atlas-patolli.pt-land body.lt-on #ltRail button.sel::before{background:#d93c3c!important}
+  html.atlas-patolli.pt-land body.lt-on #ltPanel{background:#fffaf0!important;border:2px solid #fff!important;box-shadow:-18px 0 40px -14px rgba(80,40,0,.55)!important}
+  html.atlas-patolli.pt-land body.lt-on[data-ltpin] #ltPanel{background:none!important;border:0!important;box-shadow:none!important}
+  html.atlas-patolli.pt-land body.lt-on #ltLearn button{background:#fff!important;border:2px solid #efe3c8!important;color:var(--text)!important}
+  html.atlas-patolli.pt-land body.lt-on #ltLearn button svg{stroke:#d93c3c!important}
+  html.atlas-patolli.pt-land body.lt-on.mtab-online .ol-pane{background:#fffaf0!important;border:2px solid #fff!important;color:var(--text)}
+  html.atlas-patolli.pt-land body.lt-on.mtab-online .ol-pane h3{color:#2b3044!important}
+  html.atlas-patolli.pt-land body.lt-on.mtab-online .ol-pane p{color:#5a6078!important}
+  html.atlas-patolli.pt-land body.lt-on.lt-nav #ltNav{background:rgba(255,253,247,.96)!important;border:2px solid #fff!important;box-shadow:0 6px 18px -8px rgba(80,40,0,.55)!important}
+}
 /* phones / narrow: the menu buttons are round chips (skin.css): labels on one line; the players' cards in the cream portal look */
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html.atlas-patolli .controls{gap:5px!important}
@@ -57,7 +104,6 @@ html.atlas-patolli #poolInfo b{color:#2b3044!important}
   html.atlas-patolli .board-area > .player .sub{color:#6a7088!important}
   html.atlas-patolli .board-area > .player .sub b{color:#2b3044!important}
   html.atlas-patolli .board-area > .player .home small{color:#7a7f94!important}
-  html.atlas-patolli #stText small{color:#6a7088!important}
 }
 `;
   document.head.appendChild(st);
@@ -338,6 +384,14 @@ html.atlas-patolli #poolInfo b{color:#2b3044!important}
     if (row && R3) row.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(() => R3.paint(), 0); } }, true);   // a 2D board: the 2D page
     if (R3 && typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { R3.paint(); } catch (e) {} return r; }; }
   }
+
+  // the game's name in the portal pill (phones held sideways, as atlas/skin/ur.js)
+  { const bar = document.querySelector('.atlas-top'), brand = bar && bar.querySelector('.atlas-brand span');
+    if (brand && !brand.querySelector('.atlas-gname')) {
+      const g = document.createElement('em'); g.className = 'atlas-gname'; brand.appendChild(g);
+      const paint = () => { const t = document.getElementById('brandTitle') || document.querySelector('h1 [data-i18n=title]') || document.querySelector('.brand-l h1'); g.textContent = t ? t.textContent.trim() : ''; };
+      paint(); const sel = document.getElementById('langSel'); if (sel) sel.addEventListener('change', () => setTimeout(paint, 60));
+    } }
 
   // test hooks (Playwright)
   const scr = (x, z, y) => { const v = new THREE.Vector3(x, y == null ? Y : y, z); return T3.project(v.x, v.z, v.y); };

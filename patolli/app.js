@@ -1068,6 +1068,21 @@ function relayout(force) {
   pl.classList.toggle('hidden', !pc);
   requestAnimationFrame(() => renderBoard());
 }
+// 盤の上の「投げる」ボタン：すき間（#diceDock の幅）より大きいときは、その分だけ全体を縮める（盤といっしょに小さくなる）
+function fitRollPill() {
+  const dock = $('#diceDock'), pill = $('#rollPill'); if (!dock || !pill) return;
+  const dw = dock.clientWidth, dh = dock.clientHeight, pw = pill.offsetWidth, ph = pill.offsetHeight;
+  if (!dw || !pw) return;
+  const k = Math.min(1, dw / pw, dh * .5 / ph);
+  pill.style.setProperty('--rps', k >= .995 ? '1' : k.toFixed(3));
+}
+{ const dock = $('#diceDock'), pill = $('#rollPill');
+  if (dock && pill) {
+    if (window.ResizeObserver) new ResizeObserver(fitRollPill).observe(dock);
+    new MutationObserver(fitRollPill).observe(pill, { childList: true, characterData: true, subtree: true });
+    addEventListener('resize', fitRollPill);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitRollPill);
+  } }
 mqPC.addEventListener ? mqPC.addEventListener('change', () => relayout()) : mqPC.addListener(() => relayout());
 mqV.addEventListener ? mqV.addEventListener('change', () => relayout()) : mqV.addListener(() => relayout());
 
