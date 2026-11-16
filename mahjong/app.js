@@ -380,7 +380,10 @@ function fitCard() {
         pl.classList.add('meas'); const nat = pl.offsetWidth, text = info.offsetWidth; pl.classList.remove('meas');
         if (st) st.style.display = '';
         const want = Math.round(nat + text * .25);
-        if (nat <= max) { pl.style.width = Math.max(w0, Math.min(max, want)) + 'px'; pl.classList.add('fade'); } else pl.style.width = Math.round(max) + 'px'; } } }
+        // (2026-11-16, ユーザー「横長になりすぎる」— in English the skill lines are long) never wider than about half the window:
+        // past that the lines wrap inside the card
+        const cap = Math.max(w0, Math.round(W * .52 - nav.offsetLeft));
+        if (nat <= max) { pl.style.width = Math.max(w0, Math.min(max, want, cap)) + 'px'; pl.classList.add('fade'); } else pl.style.width = Math.round(Math.min(max, cap)) + 'px'; } } }
   for (const k of [1, .94, .88, .82, .76]) { pl.style.setProperty('--pis', k); if (pl.offsetTop >= navB && info.scrollWidth <= info.clientWidth + 1 && info.offsetWidth >= 200) return; }   // (the whole card a little smaller until it clears the menu)
   pl.classList.remove('wide'); pl.style.left = pl.style.width = '';
 }
@@ -390,8 +393,14 @@ function fitCard() {
 // box or the right-hand column changes size, on a full-screen change, and when the web fonts arrive.
 function refitCard() {
   const go = () => { if (!$('#home').hidden) fitCard(); };
-  go(); cancelAnimationFrame(refitCard.f); refitCard.f = requestAnimationFrame(go); clearTimeout(refitCard.t); refitCard.t = setTimeout(go, 350);
+  // (2026-11-16, ユーザー「サイズ変更やフルスク切り替えで横長になりすぎる。随時チェックを」) a browser's full-screen switch and a
+  // window being dragged settle over a second or more: the card is fitted again and again until the size has stayed put
+  go(); cancelAnimationFrame(refitCard.f); refitCard.f = requestAnimationFrame(go);
+  (refitCard.ts || []).forEach(clearTimeout); refitCard.ts = [120, 350, 700, 1200, 2000].map(ms => setTimeout(go, ms));
 }
+if (window.visualViewport) visualViewport.addEventListener('resize', () => refitCard());
+addEventListener('orientationchange', () => refitCard());
+addEventListener('pageshow', () => refitCard());
 function skillChip(key, cls = '', attrs = '') {
   const k = MJSkills.parse(key), sk = MJSkills.get(k.id);
   return `<span class="skc st${k.tier} ${cls}" style="--sc:${sk.color}" ${attrs}><i>${icon(sk.icon)}</i><b>${esc(L(sk.name))}</b><em>${MJSkills.TIERS[k.tier]}</em></span>`;
@@ -705,6 +714,8 @@ addEventListener('resize', fitRoot);
 addEventListener('resize', refitCard);   // (after fitRoot: the stage first, then the card on it)
 for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, refitCard);
 if (window.ResizeObserver) { const ro = new ResizeObserver(refitCard); for (const q of ['#home', '#home .aa-play', '#aaBanner', '#home nav']) { const e = document.querySelector(q); if (e) ro.observe(e); } }
+// (2026-11-16) and every few seconds while the home is on, a quiet check: if the window's size changed without an event, fit again
+{ let last = ''; setInterval(() => { if ($('#home').hidden || document.hidden) return; const k = innerWidth + 'x' + innerHeight + ':' + ($('#home').clientWidth || 0); if (k !== last) { last = k; refitCard(); } }, 1500); }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(refitCard);
 addEventListener('orientationchange', () => setTimeout(fitRoot, 120));
 $('#btnStart').addEventListener('click', () => { SND.unlock(); startGame(DB.set.mode !== 'free' ? { ranked: true, len: DB.set.len } : {}); });
