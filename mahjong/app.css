@@ -2212,7 +2212,7 @@ html.ds #game .opp .bk .skw i.sk{width:18px;height:18px;padding:3px}
 #chara.ch2 .ptn .pskill span{font-size:13px;line-height:1.5}
 #chara.ch2 .ch-info{width:420px;gap:9px}
 #chara.ch2 .pp-lead{letter-spacing:.14em;text-indent:0;white-space:nowrap}
-#chara.ch2 .ch-info.tight2 .skpick small,#chara.ch2 .ch-info.tight2 .ptn-cost,#chara.ch2 .ch-info.tight2 .ci-rule{display:none}
+#chara.ch2 .ch-info.tight2 .skpick small,#chara.ch2 .ch-info.tight2 .ci-rule{display:none}
 #chara.ch2 .ch-info.tight2 .pp-n{font-size:46px}
 #chara.ch2 .ch-info.tight2 .pskill .cl{margin-top:2px}
 #chara.ch2 .ch-info.tight2{gap:7px}
@@ -2260,8 +2260,7 @@ html.lp #chara.ch2 .chsel.on{font-size:12.5px;letter-spacing:.08em;white-space:n
 #chara.ch2 .ptn .ptn-box>*{flex:1;min-width:0;margin:0;box-sizing:border-box}
 #chara.ch2 .ptn .ptn-empty,#chara.ch2 .ptn .ptn-same{display:flex;align-items:center;justify-content:center;text-align:center;padding:8px 16px;border:1px dashed rgba(232,206,140,.3);border-radius:4px;font-size:13.5px;line-height:1.6;color:#b9acd6}
 #chara.ch2 .ptn .ptn-same{color:#ffb9a8}
-#chara.ch2 .ptn .ptn-cost{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:18px;line-height:18px}
-#chara.ch2 .ch-info.tight2 .ptn-cost{display:none}
+#chara.ch2 .ptn .ptn-cost{white-space:normal;overflow:visible;height:auto;line-height:1.5}   /* (ユーザー 2026-11-16: 省略せず全文を見せる — 2行に折り返す) */
 html.lp #chara.ch2 .ptn .ptn-who .ptn-cue b{font-size:13px;letter-spacing:.02em}
 html.lp #chara.ch2 .ptn .ptn-who .ptn-cue small{display:none}
 /* (ユーザー 2026-11-15) the partner's skill is shown even when it is the same as hers (it cannot be brought: dimmed, with the reason) */

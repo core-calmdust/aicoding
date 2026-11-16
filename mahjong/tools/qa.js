@@ -114,6 +114,9 @@ async function runtime() {
     ok('character screen: a line and the wobble on a touch', ch[0] && ch[1] === 'block', ch.join(','));
     const sr = await p.evaluate(`(()=>{const s=document.querySelector('#chSay').getBoundingClientRect(),i=document.querySelector('#chInfo').getBoundingClientRect();return s.right<=i.left+2})()`);
     ok('character screen: the bubble stays clear of the info panel', sr);
+    // (2026-11-16, ユーザー「文章が省略になってるので全文見せるように」) the partner's cost note is shown in full, never cut with …
+    const cn = await p.evaluate(`(()=>{const c=document.querySelector('#chInfo .ptn-cost');if(!c)return 'none';const g=getComputedStyle(c);return g.display!=='none'&&g.textOverflow!=='ellipsis'&&c.scrollWidth<=c.clientWidth+1&&c.scrollHeight<=c.clientHeight+1})()`);
+    ok('character screen: the partner cost note is shown in full', cn === true, String(cn));
     ok('no page errors (jiggle)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('vfx')) { console.log('[vfx] the game\'s light effects: shown over the cut-in word, then cleaned up');
