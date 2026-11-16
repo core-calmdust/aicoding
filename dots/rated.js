@@ -13,9 +13,9 @@
 const RT_STORE = 'dots-rated-v1', RT_CUR = 'dots-rated-cur-v1', RT_START = 1000;
 // index = level 1..10. 3×3: Lv6+ play perfectly (measured), 4×4: Lv9–10 perfect, 5×5: provisional (Lv9/10 measured against Lv8 and the previous Lv9/10)
 const RT_LV = {
-  3: [0, 100, 805, 1405, 1705, 2375, 2500, 2500, 2500, 2700, 2800],
-  4: [0, 100, 680, 1170, 1430, 1950, 2140, 2270, 2500, 2700, 2800],
-  5: [0, 100, 710, 1225, 1495, 2000, 2165, 2305, 2500, 2700, 2800],
+  3: [0, 100, 450, 805, 1105, 1405, 1705, 2375, 2500, 2500, 2500, 2700, 2800],
+  4: [0, 100, 390, 680, 925, 1170, 1430, 1950, 2140, 2270, 2500, 2700, 2800],
+  5: [0, 100, 405, 710, 970, 1225, 1495, 2000, 2165, 2305, 2500, 2700, 2800],
 };
 const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
 const put = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -27,7 +27,7 @@ function rtLoad() {
   return s;
 }
 const rtD = d => (d >= 0 ? '+' : '−') + Math.abs(d);
-const lvName = lv => `Lv.${lv} ${t('lv')[lv]}`;
+const lvName = lv => `Lv.${lv} ${LVN(lv)}`;
 let RT = get(RT_CUR, null);
 if (RT && !RT.id) RT = null;
 // opponent: target = rating + offset (80%: within ±100, 10%: +150..+300 stronger, 10%: −150..−300 weaker) -> nearest level
@@ -35,7 +35,7 @@ function rtPick(r, n) {
   { const S0 = rtLoad(); if (Placement.on(S0)) return Placement.pick(S0, (RT_LV[n] || RT_LV[4]).map((x, i) => [i, x]).slice(1)); }
   const T = RT_LV[n] || RT_LV[4], u = Math.random(), v = Math.random();
   const off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100, target = r + off;
-  let lv = 1; for (let i = 2; i <= 10; i++) if (Math.abs(T[i] - target) < Math.abs(T[lv] - target)) lv = i;
+  let lv = 1; for (let i = 2; i < T.length; i++) if (Math.abs(T[i] - target) < Math.abs(T[lv] - target)) lv = i;
   const diff = T[lv] - r;
   return { lv, or: T[lv], tag: diff > 150 ? 'up' : diff < -150 ? 'down' : 'even' };
 }
@@ -125,7 +125,7 @@ showResult = function () {
   if (!rtGame() || !SF || !SF.over || !$('#resultOverlay').classList.contains('show')) return;
   const x = rtSettleBoard(); if (!x) return;
   const sub = $('#resultSub');
-  sub.innerHTML = (SF.resigned >= 0 ? esc(t('ol.youResigned')) + ' · ' : '') + esc(t('res.vs', { name: t('lv')[RT.lv], lv: RT.lv, n: game.n })) + `<br>${x.pl ? Placement.resHtml(x.pl) : `<span class="rt-res">R ${x.old} → <b>${x.now}</b> <span class="${x.d >= 0 ? 'up' : 'down'}">(${rtD(x.d)})</span></span>`}<br><small class="rt-ressub">${esc(t('rt.opp', { lv: lvName(RT.lv), r: RT.or }))}</small>`;
+  sub.innerHTML = (SF.resigned >= 0 ? esc(t('ol.youResigned')) + ' · ' : '') + esc(t('res.vs', { name: LVN(RT.lv), lv: RT.lv, n: game.n })) + `<br>${x.pl ? Placement.resHtml(x.pl) : `<span class="rt-res">R ${x.old} → <b>${x.now}</b> <span class="${x.d >= 0 ? 'up' : 'down'}">(${rtD(x.d)})</span></span>`}<br><small class="rt-ressub">${esc(t('rt.opp', { lv: lvName(RT.lv), r: RT.or }))}</small>`;
   renderInfo();
 };
 segSync = function () {

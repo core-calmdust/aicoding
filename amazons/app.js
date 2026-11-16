@@ -43,7 +43,7 @@ function movers(pos) { const out = [], p = pos.turn; for (let k = 0; k < 8; k++)
 
 // ====================================================================== state
 const STORE = 'aicoding-amazons';
-const settings = { mode: 'ai', rule: 'std', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'temple', pcs: 'cameo' };
+const settings = { lvV17: 1, mode: 'ai', rule: 'std', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'temple', pcs: 'cameo' };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -51,9 +51,18 @@ const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" i
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 20 steps, Lv.1 … Lv.20
-const LV_MAX = 23;   // (Lv.21〜23: the top levels on every thread)
-const LV = i => 'Lv.' + i;   // levels 1 … 20 (kyu / dan names are kept for the Japanese games: shogi, go, gomoku)
-const LVD = i => t('lvd')[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : 3];
+const LV_MAX = 26;   // (Lv.21〜23: the top levels on every thread)
+// 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–23 are the levels people play (steps
+// added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+// level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+const LVX = [[1], [2], [3], [4], [5], [6], [7], [7, 8, 0.5], [8], [8, 9, 0.5], [9], [10], [11], [12], [13], [13, 14, 0.5], [14], [15], [16], [17], [18], [19], [20], [21], [22], [23]], LV_HUMAN = 23, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];   // LV_MIG: an old level → the new one (saved settings)
+const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+const LV = i => i > LV_HUMAN ? tenjoName(i, LANG) : 'Lv.' + i;   // levels 1 … 20 (kyu / dan names are kept for the Japanese games: shogi, go, gomoku)
+const LVD = i => LVD0(lvOld(i));
+const LVD0 = i => t('lvd')[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : 3];
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
@@ -86,6 +95,10 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (d.settings && !d.settings.lvV17) {   // (2026-11-17: the levels were renumbered — 天上)
+      ['level', 'level2'].forEach(k => { if (settings[k] >= 1) settings[k] = LV_MIG[settings[k] - 1] || settings[k]; });
+      settings.lvV17 = 1; try { d.settings = Object.assign({}, d.settings, { level: settings.level, level2: settings.level2, lvV17: 1 }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
+    }
     if (settings.mode === 'online') settings.mode = 'pvp';
     if (!(settings.level >= 1 && settings.level <= LV_MAX)) settings.level = 6;
     if (!(settings.level2 >= 1 && settings.level2 <= LV_MAX)) settings.level2 = 6;
@@ -799,7 +812,7 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now(), shown = moves.slice(0, cur);
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p), p) || rtCap(levelFor(p)) });
+  const el = engLv(levelFor(p)), res = await request('ai', { type: 'think', moves: shown, level: el, cfg: proCfg(levelFor(p), p) || rtCap(el) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const prevDur = cur > 0 ? moveDur(moves[cur - 1], posAt(cur - 1).pos) : 0;
   const wait = (settings.mode === 'watch' ? Math.max(700, prevDur + 120) : animating ? prevDur : 0) - (Date.now() - t0);   // AIの着手は即時：前の手のアニメが終わるのを待つだけ（観戦だけ間を取る）
@@ -1293,7 +1306,7 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // AI vs AI, never rated. ProSet.ladder() turns the changed values into a step of this engine's ladder (engine.js think: cfg).
 // (2026-11-14) Lv.8 values its best 10 moves at depth 3 with noise 200 (claude/amazons-spec.md「レベルの測り直し」); ProSet takes its
 // mildest noise of「ばらつき」from the last noisy level, so it sees Lv.8's old 25 and proCfg gives Lv.8 its own 200 back
-const PRO_LV = E.LEVELS.map((L, i) => i === 8 && L && L.d >= 3 ? Object.assign({}, L, { noise: 25 }) : L);
+const PRO_LV = Array.from({ length: LV_MAX + 1 }, (_, n) => n ? E.LEVELS[lvOld(n)] : null).map((L, i) => i === 8 && L && L.d >= 3 ? Object.assign({}, L, { noise: 25 }) : L);
 const PRO_L = window.ProSet ? ProSet.ladder(PRO_LV, { dmax: 20, nmax: 20000000 }) : null;
 // the search: MCTS (the default of Lv.16〜23 since 2026-11-14) or alpha-beta (Lv.9〜15); a depth limit is always the alpha-beta search
 const PRO_ALGO = { key: 'algo', type: 'choice', group: 'read', when: e => e.limit && e.limit.k !== 'depth',
@@ -1371,7 +1384,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step (a first estimate from short matches of neighbouring levels on the work machine; to be measured on the
 // user's Mac): about +110 per step at the bottom, smaller at the top
-const RT_LV = [0, 100, 165, 280, 395, 435, 470, 560, 830, 1110, 1200, 1250, 1290, 1445, 1740, 1920, 2155, 2295, 2385, 2450, 2500, 2700, 2800, 2900];   // (2026-11-15: Lv.16〜23 +45, the MCTS's v3 evaluation and final move — claude/amazons-spec.md「評価 v3 と最後の手の選び方」) (2026-11-14, claude/amazons-spec.md「レベルの測り直し」: measured — native self-play of neighbouring levels at their own limits on one thread, a Bradley–Terry fit from Lv.1 = 350, the flat Lv.10〜12 evened out; Lv.21〜23 extrapolated from Lv.19 → 20. With several threads Lv.19〜23 read more and are stronger than these)
+const RT_LV = [0, 100, 165, 280, 395, 435, 470, 560, 695, 830, 970, 1110, 1200, 1250, 1290, 1445, 1590, 1740, 1920, 2155, 2295, 2385, 2450, 2500, 2700, 2800, 2900];   // (2026-11-15: Lv.16〜23 +45, the MCTS's v3 evaluation and final move — claude/amazons-spec.md「評価 v3 と最後の手の選び方」) (2026-11-14, claude/amazons-spec.md「レベルの測り直し」: measured — native self-play of neighbouring levels at their own limits on one thread, a Bradley–Terry fit from Lv.1 = 350, the flat Lv.10〜12 evened out; Lv.21〜23 extrapolated from Lv.19 → 20. With several threads Lv.19〜23 read more and are stronger than these)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

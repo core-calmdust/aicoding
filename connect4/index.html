@@ -1099,14 +1099,14 @@ body .info-line{font-size:12.5px}
     <div class="field" id="fLevel">
       <label id="levelLabel"></label>
       <div class="level-wrap">
-        <input type="range" min="1" max="8" step="1" id="levelRange">
+        <input type="range" min="1" max="9" step="1" id="levelRange">
         <div class="level-name" id="levelName"></div>
       </div>
     </div>
     <div class="field hidden" id="fLevel2">
       <label data-i18n="ng.level2"></label>
       <div class="level-wrap">
-        <input type="range" min="1" max="8" step="1" id="levelRange2">
+        <input type="range" min="1" max="9" step="1" id="levelRange2">
         <div class="level-name" id="levelName2"></div>
       </div>
     </div>
@@ -1289,7 +1289,7 @@ const canDrop = (moves, c) => gridOf(moves)[c].length < ROWS;
 
 // ====================================================================== state
 const STORE = 'aicoding-connect4-v2';
-const settings = { pro: null, pro2: null, mode: 'ai', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, coach: true, lang: '' };
+const settings = { lvV17: 1, pro: null, pro2: null, mode: 'ai', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, coach: true, lang: '' };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -1336,7 +1336,16 @@ function t(k, v) {
 }
 function tRaw(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
-const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
+// 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–8 are the levels people play (steps
+// added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+// level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+const LVX = [[1], [1, 2, 0.5], [2], [3], [4], [5], [6], [7], [8]], LV_HUMAN = 8, LV_MIG = [1, 3, 4, 5, 6, 7, 8, 9];   // LV_MIG: an old level → the new one (saved settings)
+const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+const lvMixName = (n, nm) => { const s = LVX[(n | 0) - 1] || [n]; if (s.length < 3) return nm(s[0]); const a = nm(s[0]); return /\+$/.test(a) ? nm(s[1]) + '−' : a + '+'; };   // a step between two: lower+ (or upper− when the lower already ends in +)
+const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+const LV = i => i > LV_HUMAN ? tenjoName(i, LANG) : lvMixName(i, k => t('lv')[k]), LVD = i => t('lvd')[lvOld(i)];
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
@@ -1361,6 +1370,10 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (d.settings && !d.settings.lvV17) {   // (2026-11-17: the levels were renumbered — 天上)
+      ['level', 'level2'].forEach(k => { if (settings[k] >= 1) settings[k] = LV_MIG[settings[k] - 1] || settings[k]; });
+      settings.lvV17 = 1; try { d.settings = Object.assign({}, d.settings, { level: settings.level, level2: settings.level2, lvV17: 1 }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
+    }
     if (settings.mode === 'online') settings.mode = 'pvp';
     if (typeof d.moves === 'string' && /^[1-7]*$/.test(d.moves)) {
       // validate
@@ -1818,7 +1831,7 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); hitsEl.classList.remove('can');
   const t0 = Date.now();
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(p) });
+  const res = await request('ai', { type: 'think', moves: shown, level: engLv(levelFor(p)), cfg: proCfg(p) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const wait = settings.mode === 'watch' ? 650 - (Date.now() - t0) : dropEndAt - performance.now();   // AIの着手は即時：前の駒が落ち切るのを待つだけ（観戦だけ間を取る）
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
@@ -2177,7 +2190,7 @@ function proFor(p) {
 }
 function proCfg(p) {
   const e = proFor(p); if (!e) return null;
-  const L = C4_LV[levelFor(p)] || C4_LV[5], o = {}, ch = k => e.changed.includes(k);
+  const L = C4_LV[lvOld(levelFor(p))] || C4_LV[5], o = {}, ch = k => e.changed.includes(k);
   if (ch('limit')) {
     if (e.limit.k === 'time') { const ms = Math.round(e.limit.v * 1000); Object.assign(o, { depth: 42, time: ms, solve: Math.round(ms * 0.8), solveLate: 0 }); }
     else Object.assign(o, { depth: e.limit.v, time: 0, solve: 0, solveLate: 0 });
@@ -3413,7 +3426,7 @@ document.addEventListener('keydown', e => {
   navGo(k);
 });
 </script>
-<script src="rated.js?v=20261108l14-ai1"></script><!-- レーティング戦 -->
+<script src="rated.js?v=20261109l14-ai1"></script><!-- レーティング戦 -->
 <script src="online-ui.js?v=20261031ckplx1c"></script><!-- オンライン対戦・Google連携 -->
 <!-- World Board Game Atlas portal skin: connect4/?skin=atlas — 3D leather & walnut tile tower (tiles fall between the rails), guide speech bubbles, portal look (all features kept) -->
 <script>

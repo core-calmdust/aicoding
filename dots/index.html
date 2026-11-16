@@ -1036,11 +1036,11 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
     </div>
     <div class="field" id="fLevel">
       <label id="levelLabel"></label>
-      <div class="level-wrap"><input type="range" min="1" max="10" step="1" id="levelRange"><div class="level-name" id="levelName"></div></div>
+      <div class="level-wrap"><input type="range" min="1" max="12" step="1" id="levelRange"><div class="level-name" id="levelName"></div></div>
     </div>
     <div class="field hidden" id="fLevel2">
       <label data-i18n="ng.levelB"></label>
-      <div class="level-wrap"><input type="range" min="1" max="10" step="1" id="levelRange2"><div class="level-name" id="levelName2"></div></div>
+      <div class="level-wrap"><input type="range" min="1" max="12" step="1" id="levelRange2"><div class="level-name" id="levelName2"></div></div>
     </div>
     <div class="field" id="fDisplay">
       <label data-i18n="ng.display"></label>
@@ -1189,7 +1189,7 @@ function applyI18n() {
 }
 
 // ====================================================================== state
-const settings = { pro: null, pro2: null, mode: 'ai', size: 4, order: 0, level: 5, level2: 6, sound: true, eval: true, anim: true, lang: '', coach: true };
+const settings = { lvV17: 1, pro: null, pro2: null, mode: 'ai', size: 4, order: 0, level: 5, level2: 6, sound: true, eval: true, anim: true, lang: '', coach: true };
 // game: n, moves[], human (player index of the human in 'ai' mode), setup {edges, owners} for lessons/puzzles
 let game = { n: 4, moves: [], human: 0, setup: null };
 let S = null;              // derived state (see compute)
@@ -1230,6 +1230,10 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (d.settings && !d.settings.lvV17) {   // (2026-11-17: the levels were renumbered — 天上)
+      ['level', 'level2'].forEach(k => { if (settings[k] >= 1) settings[k] = LV_MIG[settings[k] - 1] || settings[k]; });
+      settings.lvV17 = 1; try { d.settings = Object.assign({}, d.settings, { level: settings.level, level2: settings.level2, lvV17: 1 }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
+    }
     if (settings.mode === 'online') settings.mode = 'pvp';
     if (d.game && [3, 4, 5].includes(d.game.n) && Array.isArray(d.game.moves)) { game = { n: d.game.n, moves: d.game.moves.slice(), human: d.game.human | 0, setup: null, resigned: d.game.resigned }; return true; }
   } catch (e) {}
@@ -1245,8 +1249,8 @@ function save() {
 function playerName(i) {
   if (lesson || puzzle) return learnPlayerName(i);
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(i);
-  if (settings.mode === 'ai') return i === game.human ? t('you') : AIW() + ' ' + t('lv')[settings.level] + proTag(i);
-  if (settings.mode === 'watch') return (i === 0 ? t('aiA') : t('aiB')) + ' ' + t('lv')[i === 0 ? settings.level : settings.level2] + proTag(i);
+  if (settings.mode === 'ai') return i === game.human ? t('you') : AIW() + ' ' + LVN(settings.level) + proTag(i);
+  if (settings.mode === 'watch') return (i === 0 ? t('aiA') : t('aiB')) + ' ' + LVN(i === 0 ? settings.level : settings.level2) + proTag(i);
   return i === 0 ? t('pA') : t('pB');
 }
 // person icon for human players, robot icon for AI players (2-player: both people, AI vs AI: both robots)
@@ -1286,6 +1290,16 @@ function canHumanMove() {
   if (settings.mode === 'online') return !!(window.olCanMove && olCanMove());
   return !aiPending;
 }
+// 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–10 are the levels people play (steps
+// added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
+// level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+const LVX = [[1], [1, 2, 0.5], [2], [2, 3, 0.5], [3], [4], [5], [6], [7], [8], [9], [10]], LV_HUMAN = 10, LV_MIG = [1, 3, 5, 6, 7, 8, 9, 10, 11, 12];   // LV_MIG: an old level → the new one (saved settings)
+const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+const lvMixName = (n, nm) => { const s = LVX[(n | 0) - 1] || [n]; if (s.length < 3) return nm(s[0]); const a = nm(s[0]); return /\+$/.test(a) ? nm(s[1]) + '−' : a + '+'; };   // a step between two: lower+ (or upper− when the lower already ends in +)
+const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+const LVN = i => i > LV_HUMAN ? tenjoName(i, LANG) : lvMixName(i, k => t('lv')[k]), LVDN = i => t('lvd')[lvOld(i)];
 function levelFor(pl) { return settings.mode === 'watch' ? (pl === 0 ? settings.level : settings.level2) : settings.level; }
 const letters = 'abcdef';
 function edgeName(e) {
@@ -1485,7 +1499,7 @@ function renderInfo() {
   $('#btnResign').disabled = !canResign();
   $('#btnHint').disabled = !canHumanMove() || settings.mode === 'watch' || settings.mode === 'online';
   $('#btnSound').classList.toggle('on', settings.sound);
-  $('#infoLine').textContent = game.n + '×' + game.n + ' · ' + (settings.mode === 'pvp' ? t('ng.pvp') : settings.mode === 'watch' ? t('ng.watch') : 'Lv.' + settings.level + ' ' + t('lv')[settings.level]);
+  $('#infoLine').textContent = game.n + '×' + game.n + ' · ' + (settings.mode === 'pvp' ? t('ng.pvp') : settings.mode === 'watch' ? t('ng.watch') : 'Lv.' + settings.level + ' ' + LVN(settings.level));
   svg.classList.toggle('can-move', canHumanMove());
   if (window.olAfterInfo) olAfterInfo();
   queueMicrotask(hbInfo);   // after rated.js has set body.rated-live
@@ -1541,7 +1555,7 @@ function aiTurn() {
   const last = S.log[S.log.length - 1];
   const delay = settings.mode === 'watch' || puzzle ? (last && last.k ? 300 : 480) : (last && settings.anim ? 260 : 0);   // AIの着手は即時：前の線を引くアニメ（.26s）が終わるのを待つだけ（観戦・パズルは今までの間）
   const t0 = performance.now();
-  const lv = puzzle ? 8 : levelFor(S.turn);
+  const lv = puzzle ? 8 : engLv(levelFor(S.turn));
   const before = { rem: S.G.B - S.p.filled, sc: S.scores.slice(), pl: S.turn };
   askAI(lv, puzzle ? null : proCfg(S.turn)).then(r => {
     if (tok !== busy) return;
@@ -1662,7 +1676,7 @@ function showResult() {
   $('#resultTitle').textContent = title;
   $('#res0').textContent = a; $('#res1').textContent = b;
   $('#resSw0').innerHTML = iconSvg(0); $('#resSw1').innerHTML = iconSvg(1);
-  $('#resultSub').textContent = (SF.resigned >= 0 ? (settings.mode === 'ai' ? t('ol.youResigned') : t('ol.wResign', { p: shortName(SF.resigned) })) + ' · ' : '') + (settings.mode === 'ai' ? t('res.vs', { name: t('lv')[settings.level], lv: settings.level, n: game.n }) : t('res.pvp', { n: game.n }));
+  $('#resultSub').textContent = (SF.resigned >= 0 ? (settings.mode === 'ai' ? t('ol.youResigned') : t('ol.wResign', { p: shortName(SF.resigned) })) + ' · ' : '') + (settings.mode === 'ai' ? t('res.vs', { name: LVN(settings.level), lv: settings.level, n: game.n }) : t('res.pvp', { n: game.n }));
   playChime(win);
   $('#resultOverlay').classList.add('show');
   recordGame();
@@ -1675,7 +1689,7 @@ function recordGame() {
   game.recorded = true;
   const rated = !!(window.rtGame && rtGame()), lv = levelFor(1 - h);
   const res = SF.resigned >= 0 ? (SF.resigned === h ? 'l' : 'w') : SF.scores[h] > SF.scores[1 - h] ? 'w' : SF.scores[h] < SF.scores[1 - h] ? 'l' : 'd';
-  GameRecord.add({ mode: rated ? 'rated' : 'ai', res, side: h, opp: 'AI Lv.' + lv + ' ' + t('lv')[lv] + (rated ? '' : proTag(1 - h)) + ' · ' + game.n + '×' + game.n, key: (rated ? 'rt:' : proFor(1 - h) ? 'ai:pro' : 'ai:') + lv + ':' + game.n, n: game.moves.length, why: SF.resigned >= 0 ? t('ol.youResigned') : SF.scores[h] + '–' + SF.scores[1 - h] });
+  GameRecord.add({ mode: rated ? 'rated' : 'ai', res, side: h, opp: 'AI Lv.' + lv + ' ' + LVN(lv) + (rated ? '' : proTag(1 - h)) + ' · ' + game.n + '×' + game.n, key: (rated ? 'rt:' : proFor(1 - h) ? 'ai:pro' : 'ai:') + lv + ':' + game.n, n: game.moves.length, why: SF.resigned >= 0 ? t('ol.youResigned') : SF.scores[h] + '–' + SF.scores[1 - h] });
 }
 $('#btnReview').onclick = () => $('#resultOverlay').classList.remove('show');
 $('#btnResAnalyze').onclick = () => { $('#resultOverlay').classList.remove('show'); runReview(); };
@@ -1725,8 +1739,8 @@ function segSync() {
   $('#fPuzzleInfo').classList.toggle('hidden', m !== 'puzzle');
   $('#levelLabel').textContent = t(m === 'watch' ? 'ng.levelA' : 'ng.level');
   $('#levelRange').value = draft.level; $('#levelRange2').value = draft.level2;
-  $('#levelName').innerHTML = `Lv.${draft.level} ${t('lv')[draft.level]} <small>${t('lvd')[draft.level]}</small>`;
-  $('#levelName2').innerHTML = `Lv.${draft.level2} ${t('lv')[draft.level2]} <small>${t('lvd')[draft.level2]}</small>`;
+  $('#levelName').innerHTML = `Lv.${draft.level} ${LVN(draft.level)} <small>${LVDN(draft.level)}</small>`;
+  $('#levelName2').innerHTML = `Lv.${draft.level2} ${LVN(draft.level2)} <small>${LVDN(draft.level2)}</small>`;
   $('#optEval').checked = draft.eval; $('#optAnim').checked = draft.anim;
   $('#btnStart').textContent = m === 'lesson' ? t('ls.title') : m === 'puzzle' ? t('pz.title') : t('start');
   skinPicker();
@@ -2307,7 +2321,7 @@ document.querySelector('#rsRestart').onclick = () => { document.querySelector('#
 document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if ((window.rtGame && rtGame()) || settings.mode === 'online') { if (viewPly !== null) viewAt(null); return; } openNew(true); };   // the settings dialog in resume mode (rated games go on as they are)
 </script>
 <script src="online-ui.js?v=20261031rsplx1c"></script>
-<script src="rated.js?v=20261022rsg-ai1"></script><!-- learn-ui: レーティング戦 -->
+<script src="rated.js?v=20261023rsg-ai1"></script><!-- learn-ui: レーティング戦 -->
 <!-- World Board Game Atlas portal skin: dots/?skin=atlas — 3D spiral notebook with red / blue ballpoint lines, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {

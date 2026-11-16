@@ -631,6 +631,13 @@
     if (M[n]) pref['reversi:lv'] = M[n];
     pref['reversi:lvV'] = 4; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
   }
+  // 2026-11-17 (天上): the games whose top levels became 天上 got steps added below them — the levels were renumbered
+  // (each game's LV_MIG: the old level → the new one). The card's saved choice follows once.
+  if (pref.lvV17 !== 1) {
+    const MIG = {"konane":[1,2,3,4,5,6,8,9,10,11,13,14,15,16,17,18,19,20,22,23,24,25,26],"ugolki":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,22,23,24,25,26],"agon":[1,2,3,4,5,6,7,8,10,11,13,14,16,17,18,19,20,21,22,23,24,25,26],"amazons":[1,2,3,4,5,6,7,9,11,12,13,14,15,17,18,19,20,21,22,23,24,25,26],"tafl":[1,2,3,4,6,7,8,9,10,11,12,14,15,16,17,19,21,22,24,25,26,27,28,29,30],"chess":[1,2,3,5,7,9,11,13,15,16,17,18,20,21,22,23,25,26,27,28,29,30,31,32,33],"shogi":[1,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,23,24,25,26,27,28,29,30],"go":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,22,24,26,28,29,30,31,32,33,34,35,36,37],"connect4":[1,3,4,5,6,7,8,9],"mancala":[1,2,3,4,5,6,7,8,10,11],"dots":[1,3,5,6,7,8,9,10,11,12],"morris":[1,2,3,4,5,6,7,9,10,11,12]};
+    Object.keys(MIG).forEach(g => ['lv', 'lv2'].forEach(k => { const n = Math.round(+pref[g + ':' + k]) || 0; if (n >= 1 && MIG[g][n - 1]) pref[g + ':' + k] = MIG[g][n - 1]; }));
+    pref.lvV17 = 1; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+  }
   // the textures of the room and of each board are drawn in workers (texgen.js): the work is tagged per board,
   // and a board is only shown once its pictures are done (texReady)
   const TG = window.AtlasTexGen;
@@ -1214,7 +1221,7 @@
   }
   // 天上 (2026-11-17, ユーザー：人間が明らかに勝てないレベルは天上): the levels above TENJO[id] are beyond what people beat — named
   // 天上 Ⅰ, Ⅱ … like reversi's (which names its own). The rating shown is the rated games' ladder (RTG), on the common scale.
-  const TENJO = { chess: 17, shogi: 22, go: 27, tafl: 20, amazons: 20, konane: 20, ugolki: 20, agon: 20, connect4: 7, morris: 9, dots: 8, mancala: 9 };
+  const TENJO = new Proxy({}, { get: (_, id) => id !== 'reversi' && window.AtlasNPC && AtlasNPC.CEL ? AtlasNPC.CEL[id] : undefined });   // (2026-11-17: the last level people play, AtlasNPC.CEL)
   const TJ_H = { ja: '天上', en: 'Celestial', zh: '天上', 'zh-TW': '天上', ko: '천상', es: 'Celestial', fr: 'Céleste', pt: 'Celestial', de: 'Himmlisch', hi: 'दिव्य', ar: 'سماوي', ru: 'Небесный', id: 'Surgawi', tr: 'Semavi' };
   const TJ_RF = ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ'], TJ_RA = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
   function lvInfo(ad, id, n, lang) {
@@ -1375,11 +1382,11 @@
      its ladder of level ratings, its placement — shared/placement.js — and Elo K), so a rated game here counts there too ---------- */
   const RTG = {
     shogi: { key: 'shogi-rated-v1', start: 900, flag: 'k', off: 1, from: 0, tc: { id: 'rt', main: 600, byo: 30 },
-      lv: [100, 255, 405, 510, 610, 715, 815, 915, 1020, 1120, 1225, 1325, 1430, 1530, 1630, 1735, 1835, 1990, 2195, 2295, 2400, 2500, 2700, 2800, 2900, 3000] },
+      lv: [100, 180, 255, 330, 405, 510, 610, 715, 815, 915, 1020, 1120, 1225, 1325, 1430, 1530, 1630, 1735, 1835, 1910, 1990, 2090, 2195, 2295, 2400, 2500, 2700, 2800, 2900, 3000] },
     reversi: { key: 'reversi-rated-v1', start: 1000, flag: 'lvV', off: 0, from: 1, tc: { id: 'rt', main: 600, byo: 30 },   // (reversi/index.html RT_LV / RT_CLOCK)
       lv: (window.Atlas3D && Atlas3D.reversi && Atlas3D.reversi.ratings) || [0, 100, 150, 225, 300, 390, 515, 630, 705, 780, 860, 945, 1070, 1165, 1260, 1360, 1460, 1585, 1710, 1805, 1900, 1990, 2080, 2145, 2210, 2270, 2310, 2400, 2500, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400], flagV: 4 },   // (= RT_LV, Lv.1–28 since #1692)
     go: { key: 'aicoding-go-rated', start: 1000, flag: 'k3', off: 0, from: 1, size: 9, tc: { id: 'rt', main: 300, byo: 20 },   // (go/app.js RT_STORE / RT_LV (EGF) / RT_SIZE 9 / RT_CLOCK, 2026-11-13)
-      lv: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2350, 2400, 2450, 2500, 2700, 2800, 2900, 3000, 3100] },
+      lv: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1850, 1900, 1950, 2000, 2050, 2100, 2150, 2200, 2250, 2300, 2350, 2400, 2450, 2500, 2700, 2800, 2900, 3000, 3100] },
     xiangqi: { key: 'aicoding-xiangqi-rated', start: 1000, flag: 'k', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },   // (xiangqi/app.js RT_STORE / RT_LV / RT_CLOCK, 2026-11-14)
       lv: [0, 100, 195, 355, 485, 625, 820, 985, 1155, 1280, 1530, 1635, 1695, 1805, 1925, 2065, 2165, 2205, 2230, 2430, 2500] },
     checkers: { key: 'aicoding-checkers-rated', start: 1000, flag: 'k', off: 0, from: 1, tc: { id: 'rt', main: 300, inc: 3 },   // (checkers/app.js RT_STORE / RT_LV / RT_CLOCK, 2026-11-14)
@@ -1389,18 +1396,18 @@
     hex: { key: 'aicoding-hex-rated', start: 1000, flag: 'f', off: 0, from: 1, size: 11, tc: { id: 'rt', main: 300, inc: 3 },   // (hex/app.js RT_STORE / RT_LV / rtClock: 11×11 with the swap rule, 5 min + 3 s, 2026-11-15)
       lv: [0, 100, 270, 440, 695, 950, 1205, 1510, 1705, 1805, 1950, 2015, 2075, 2130, 2160, 2190, 2220, 2285, 2345, 2405, 2500] },
     tafl: { key: 'aicoding-tafl-rated', start: 1000, flag: 'f', off: 0, from: 1, size: 11, randSide: true, tc: { id: 'rt', main: 420, inc: 4 },   // (tafl/app.js RT_STORE / RT_LV / RT_CLOCK: Copenhagen, sides at random, 7 min + 4 s, 2026-11-15)
-      lv: [0, 100, 230, 340, 470, 655, 735, 810, 920, 1050, 1135, 1255, 1400, 1505, 1620, 1735, 1965, 2105, 2240, 2400, 2500, 2700, 2800, 2900, 3000, 3100],
+      lv: [0, 100, 230, 340, 470, 560, 655, 735, 810, 920, 1050, 1135, 1255, 1330, 1400, 1505, 1620, 1735, 1850, 1965, 2035, 2105, 2240, 2320, 2400, 2500, 2700, 2800, 2900, 3000, 3100],
       adj: (lv, side) => { const A = [0, 30, 30, 30, 30, 70, 70, 70, 70, 70, 200, 350]; const a = A[Math.max(1, Math.min(11, lv || 1))]; return side === 2 ? a : -a; } },   // (RT_SIDE: the defenders are expected to score more)
     morris: { key: 'aicoding-morris-rated', start: 1000, flag: 'f', off: 0, from: 1, size: 9, tc: { id: 'rt', main: 300, inc: 3 },   // (morris/index.html RT_STORE / RT_LV / RT_CLOCK: Nine Men's Morris, 5 min + 3 s, 2026-11-16)
-      lv: [0, 100, 325, 825, 1270, 1550, 1665, 1830, 2335, 2500, 2700] },
+      lv: [0, 100, 325, 825, 1270, 1550, 1665, 1830, 2080, 2335, 2500, 2700] },
     connect4: { key: 'c4-rated-v1', start: 1000, flag: 'f', off: 0, from: 1, tc: { id: 'rt' },   // (connect4/rated.js RT_STORE / RT_LV, no clock, 2026-11-15)
-      lv: [0, 100, 1115, 1435, 1995, 2100, 2205, 2500, 2700] },
+      lv: [0, 100, 610, 1115, 1435, 1995, 2100, 2205, 2500, 2700] },
     amazons: { key: 'aicoding-amazons-rated', start: 1000, flag: 'f', off: 0, from: 1, tc: { id: 'rt', main: 300, inc: 3 },   // (amazons/app.js RT_STORE / RT_LV / RT_CLOCK 5 min + 3 s, 2026-11-15)
-      lv: [0, 100, 165, 280, 395, 435, 470, 560, 830, 1110, 1200, 1250, 1290, 1445, 1740, 1920, 2155, 2295, 2385, 2450, 2500, 2700, 2800, 2900] },
+      lv: [0, 100, 165, 280, 395, 435, 470, 560, 695, 830, 970, 1110, 1200, 1250, 1290, 1445, 1590, 1740, 1920, 2155, 2295, 2385, 2450, 2500, 2700, 2800, 2900] },
     backgammon: { key: 'aicoding-backgammon-v2-rated', start: 1000, flag: 'v', flagV: 1, off: 0, from: 1, tc: { id: 'rt' },   // (backgammon/app.js RT_STORE / rt-levels.js, 2026-11-15: one game without the cube, no clock — as the full game's rated game against the AI)
       lv: [0, 400, 1035, 1350, 1600, 1730, 1800, 1840, 1850, 1890, 1900] },
     chess: { key: 'aicoding-chess-rated', start: 1000, flag: 'lvv', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },
-      lv: [0, 100, 245, 385, 530, 675, 865, 1105, 1250, 1440, 1535, 1635, 1730, 1970, 2105, 2195, 2300, 2500, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400] },
+      lv: [0, 100, 245, 385, 460, 530, 600, 675, 770, 865, 985, 1105, 1180, 1250, 1345, 1440, 1535, 1635, 1730, 1850, 1970, 2105, 2195, 2300, 2400, 2500, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400] },
   };
   /* the other games against the AI (2026-11-16 ユーザー：レート戦でvs CPU戦がないゲームに全部追加): their full games keep no rated record
      against the AI, so the 3D table keeps its own ('atlas-rated-<id>'), no clock, one rating per game whatever the 種目. Each level's
@@ -1411,15 +1418,15 @@
   // hand (dice, shots) have no 天上 and a narrower spread. claude/game-conventions-addendum.md「AIレートの共通の目盛り」
   const OWN_LV = {
     "janggi": [0, 100, 195, 350, 475, 610, 805, 965, 1130, 1255, 1495, 1600, 1660, 1765, 1885, 2020, 2120, 2155, 2185, 2430, 2500],
-    "ugolki": [0, 100, 240, 380, 525, 665, 805, 945, 1085, 1225, 1370, 1510, 1650, 1790, 1880, 1950, 2015, 2070, 2130, 2445, 2500, 2700, 2800, 2900],
+    "ugolki": [0, 100, 240, 380, 525, 665, 805, 945, 1085, 1225, 1370, 1510, 1650, 1790, 1880, 1950, 2015, 2070, 2130, 2210, 2290, 2365, 2445, 2500, 2700, 2800, 2900],
     "fanorona": [0, 100, 260, 415, 575, 730, 890, 1045, 1205, 1365, 1520, 1680, 1835, 1995, 2095, 2170, 2245, 2310, 2375, 2435, 2500],
-    "konane": [0, 100, 245, 395, 540, 685, 830, 980, 1125, 1270, 1415, 1565, 1710, 1855, 1950, 2020, 2090, 2150, 2205, 2440, 2500, 2700, 2800, 2900],
-    "agon": [0, 100, 260, 415, 575, 730, 890, 1045, 1205, 1365, 1520, 1680, 1835, 1995, 2095, 2170, 2245, 2310, 2375, 2435, 2500, 2700, 2800, 2900],
+    "konane": [0, 100, 245, 395, 540, 685, 830, 905, 980, 1125, 1270, 1415, 1490, 1565, 1710, 1855, 1950, 2020, 2090, 2150, 2205, 2320, 2440, 2500, 2700, 2800, 2900],
+    "agon": [0, 100, 260, 415, 575, 730, 890, 1045, 1205, 1285, 1365, 1520, 1600, 1680, 1835, 1915, 1995, 2095, 2170, 2245, 2310, 2375, 2435, 2500, 2700, 2800, 2900],
     "ur": [0, 500, 675, 715, 780, 835, 900, 1005, 1070, 1150, 1225, 1285, 1375, 1455, 1505, 1565, 1620, 1670, 1680, 1690, 1700],
     "ludo": [0, 500, 590, 710, 825, 915, 1010, 1100, 1190, 1260, 1330, 1400, 1470, 1525, 1575, 1610, 1630, 1655, 1675, 1690, 1700],
     "senet": [0, 500, 605, 720, 810, 905, 975, 1075, 1160, 1230, 1310, 1360, 1410, 1480, 1530, 1565, 1615, 1645, 1665, 1685, 1700],
-    "mancala": [0, 100, 320, 585, 875, 1180, 1500, 1825, 2160, 2500, 2700],
-    "dots": [0, 100, 355, 670, 1005, 1360, 1730, 2110, 2500, 2700, 2800],
+    "mancala": [0, 100, 320, 585, 875, 1180, 1500, 1825, 2160, 2330, 2500, 2700],
+    "dots": [0, 100, 390, 680, 925, 1170, 1430, 1950, 2140, 2270, 2500, 2700, 2800],
     "alquerque": [0, 100, 180, 280, 385, 500, 615, 740, 860, 990, 1115, 1245, 1380, 1515, 1650, 1790, 1930, 2070, 2210, 2355, 2500],
     "carrom": [0, 300, 360, 435, 515, 600, 690, 780, 870, 965, 1060, 1160, 1260, 1360, 1465, 1565, 1670, 1775, 1885, 1990, 2100],
     "crokinole": [0, 300, 360, 435, 515, 600, 690, 780, 870, 965, 1060, 1160, 1260, 1360, 1465, 1565, 1670, 1775, 1885, 1990, 2100],
