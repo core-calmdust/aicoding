@@ -5,8 +5,8 @@
    · Modes (the card's tabs): AI戦 · レート戦 (atlas/app.js RTG, own record) · 対人 (two players, one device) · 今日の一問
      (EASY / HARD: a puzzle of the day — clue rows already on the board, crack the code within the limit; ../hitblow/engine.js
      makeDaily). 種目 (adapter sizes 1..5 = HitBlowEngine.RULES): カラー · カラー（重複あり）· ナンバー3 · ナンバー4 · エキスパート.
-   · Input: the dock at the bottom (the slots of the row being made + OK, the palette) — tap a gem to put it in the next free
-     slot, tap a slot (in the dock or on the board) to take it out; on PCs also the keys (1–8 / 0–9, Backspace, Enter).
+   · Input: the tray joined to the board in 3D (model tray(): the row being made + OK, the palette) — tap a gem to put it in the
+     chosen slot, tap a slot to choose it (again: take it out), drag to move / swap / take out; on PCs also the keys.
    · The answer pins: ヒット = yellow-green, ブロー = white, 2×2 beside each row. The hidden code waits in a jewel case at the
      far end of the board (lid marked ？), shaken and locked at the start, opened at the end.
    · The board: atlas/models/hitblow.js (Table3D.hitblow). Rendering on demand (animations kick Table3D).
@@ -16,7 +16,7 @@
   const L14 = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   // texts (14 languages; {n} etc. are filled in)
   const TX = {
-    ja: { rate: '勝率', r1: 'カラー', r1d: '6色から4つ。同じ色は使わない。', r2: 'カラー（重複あり）', r2d: '6色から4つ。同じ色を何度でも使える。', r3: 'ナンバー3', r3d: '0〜9の数字を3つ。同じ数字は使わない。', r4: 'ナンバー4', r4d: '0〜9の数字を4つ。同じ数字は使わない。', r5: 'エキスパート', r5d: '8色から5つ。同じ色を何度でも使える。',
+    ja: { book: "問題集", list: "問題一覧", tgf: "はじめての推理", tg1: "入門", tgx: "ぴったり", c1: "答えはもう1つに決まる", cn: "答えの候補 {a}〜{b}通り", nx: "次の問題", again: "もう一度", within: "{n}回以内", prog: "{a}/{b}問クリア", stars: "★ {a}/{b}", cont: "続きから", bkNote: "手がかりの行から答えを推理する問題が10コース・500問。", rate: '勝率', r1: 'カラー', r1d: '6色から4つ。同じ色は使わない。', r2: 'カラー（重複あり）', r2d: '6色から4つ。同じ色を何度でも使える。', r3: 'ナンバー3', r3d: '0〜9の数字を3つ。同じ数字は使わない。', r4: 'ナンバー4', r4d: '0〜9の数字を4つ。同じ数字は使わない。', r5: 'エキスパート', r5d: '8色から5つ。同じ色を何度でも使える。',
       daily: '今日の一問', dailyNote: '手がかりの行がすでに盤に。決められた回数以内に答えを当てよう。毎日かわる2問。', easy: 'カラー・{n}回以内', hard: 'ナンバー4・{n}回以内',
       you: 'あなた', ai: 'AI', p1: 'プレイヤー1', p2: 'プレイヤー2', clue: '手がかり',
       yourTurn: 'あなたの番：{n}つ並べてOK', aiTurn: 'AIが考えています…', pTurn: '{p}の番', left: 'あと{n}回',
@@ -24,7 +24,7 @@
       allHit: 'ぜんぶヒット！', hint: 'これが有力', solvedRow: '{n}行目で正解', none: '時間切れ：だれも当てられず', ans: '答え',
       pWin: '{p}の勝ち', dWin: 'クリア！', dLose: '回数切れ…', dRes: '{n}回で正解（目安 {p}回）', dFail: '{n}回以内に当てられませんでした',
       lv: ['うっかり屋：前の答えをよく忘れる', '見習い：ときどき手がかりを見落とす', '推理好き：手がかりどおりに当てる', '名探偵：相手に手がかりを渡さない当て方'], who: ['はじめての人に', 'ルールに慣れたら', '推理に自信があれば', '腕試しに'] },
-    en: { rate: 'Win rate', r1: 'Colour', r1d: '4 of 6 colours, all different.', r2: 'Colour (repeats)', r2d: '4 of 6 colours; a colour may repeat.', r3: 'Number 3', r3d: '3 different digits, 0–9.', r4: 'Number 4', r4d: '4 different digits, 0–9.', r5: 'Expert', r5d: '5 of 8 colours; colours may repeat.',
+    en: { book: "Puzzle book", list: "All puzzles", tgf: "First steps", tg1: "Intro", tgx: "Exact", c1: "Only one answer fits", cn: "{a}–{b} possible answers", nx: "Next puzzle", again: "Retry", within: "within {n}", prog: "{a}/{b} solved", stars: "★ {a}/{b}", cont: "Continue", bkNote: "500 puzzles in 10 courses: work out the code from the clue rows.", rate: 'Win rate', r1: 'Colour', r1d: '4 of 6 colours, all different.', r2: 'Colour (repeats)', r2d: '4 of 6 colours; a colour may repeat.', r3: 'Number 3', r3d: '3 different digits, 0–9.', r4: 'Number 4', r4d: '4 different digits, 0–9.', r5: 'Expert', r5d: '5 of 8 colours; colours may repeat.',
       daily: 'Daily puzzle', dailyNote: 'Clue rows are already on the board. Crack the code within the limit. Two new puzzles every day.', easy: 'Colour · within {n}', hard: 'Number 4 · within {n}',
       you: 'You', ai: 'AI', p1: 'Player 1', p2: 'Player 2', clue: 'Clue',
       yourTurn: 'Your turn: place {n}, then OK', aiTurn: 'The AI is thinking…', pTurn: "{p}'s turn", left: '{n} left',
@@ -32,7 +32,7 @@
       allHit: 'All hits!', hint: 'A strong guess', solvedRow: 'Cracked on row {n}', none: 'Out of rows: nobody cracked it', ans: 'Answer',
       pWin: '{p} wins', dWin: 'Solved!', dLose: 'Out of guesses…', dRes: 'Solved in {n} (par {p})', dFail: 'Not solved within {n}',
       lv: ['Forgetful: often forgets earlier answers', 'Apprentice: sometimes misses a clue', 'Sleuth: guesses by the clues', 'Master: guesses that give the rival little'], who: ['For first games', 'Once you know the rules', 'If you trust your logic', 'For a real test'] },
-    zh: { rate: '胜率', r1: '颜色', r1d: '6色中选4个，颜色不重复。', r2: '颜色（可重复）', r2d: '6色中选4个，颜色可重复。', r3: '数字3', r3d: '0〜9中3个不同数字。', r4: '数字4', r4d: '0〜9中4个不同数字。', r5: '专家', r5d: '8色中选5个，颜色可重复。',
+    zh: { book: "题库", list: "题目一览", tgf: "初次推理", tg1: "入门", tgx: "刚好", c1: "答案已只剩1种", cn: "答案候选 {a}〜{b} 种", nx: "下一题", again: "再来一次", within: "{n}次以内", prog: "已解 {a}/{b}", stars: "★ {a}/{b}", cont: "继续", bkNote: "根据提示行推理答案，10个课程共500题。", rate: '胜率', r1: '颜色', r1d: '6色中选4个，颜色不重复。', r2: '颜色（可重复）', r2d: '6色中选4个，颜色可重复。', r3: '数字3', r3d: '0〜9中3个不同数字。', r4: '数字4', r4d: '0〜9中4个不同数字。', r5: '专家', r5d: '8色中选5个，颜色可重复。',
       daily: '每日一题', dailyNote: '盘上已有提示行。在限定次数内猜出答案。每天两题。', easy: '颜色・{n}次以内', hard: '数字4・{n}次以内',
       you: '你', ai: 'AI', p1: '玩家1', p2: '玩家2', clue: '提示',
       yourTurn: '你的回合：放好{n}个后按OK', aiTurn: 'AI思考中…', pTurn: '{p}的回合', left: '还剩{n}次',
@@ -40,7 +40,7 @@
       allHit: '全部命中！', hint: '推荐这一手', solvedRow: '第{n}行猜中', none: '行数用完：无人猜中', ans: '答案',
       pWin: '{p}获胜', dWin: '解开了！', dLose: '次数用完…', dRes: '{n}次猜中（标准{p}次）', dFail: '{n}次内未能猜中',
       lv: ['粗心：常忘记之前的结果', '学徒：偶尔漏看提示', '推理家：按提示来猜', '名侦探：少给对手线索'], who: ['适合初次', '熟悉规则后', '对推理有自信', '实力挑战'] },
-    'zh-TW': { rate: '勝率', r1: '顏色', r1d: '6色中選4個，顏色不重複。', r2: '顏色（可重複）', r2d: '6色中選4個，顏色可重複。', r3: '數字3', r3d: '0〜9中3個不同數字。', r4: '數字4', r4d: '0〜9中4個不同數字。', r5: '專家', r5d: '8色中選5個，顏色可重複。',
+    'zh-TW': { book: "題庫", list: "題目一覽", tgf: "初次推理", tg1: "入門", tgx: "剛好", c1: "答案已只剩1種", cn: "答案候選 {a}〜{b} 種", nx: "下一題", again: "再來一次", within: "{n}次以內", prog: "已解 {a}/{b}", stars: "★ {a}/{b}", cont: "繼續", bkNote: "根據提示行推理答案，10個課程共500題。", rate: '勝率', r1: '顏色', r1d: '6色中選4個，顏色不重複。', r2: '顏色（可重複）', r2d: '6色中選4個，顏色可重複。', r3: '數字3', r3d: '0〜9中3個不同數字。', r4: '數字4', r4d: '0〜9中4個不同數字。', r5: '專家', r5d: '8色中選5個，顏色可重複。',
       daily: '每日一題', dailyNote: '盤上已有提示列。在限定次數內猜出答案。每天兩題。', easy: '顏色・{n}次以內', hard: '數字4・{n}次以內',
       you: '你', ai: 'AI', p1: '玩家1', p2: '玩家2', clue: '提示',
       yourTurn: '你的回合：放好{n}個後按OK', aiTurn: 'AI思考中…', pTurn: '{p}的回合', left: '還剩{n}次',
@@ -48,7 +48,7 @@
       allHit: '全部命中！', hint: '推薦這一手', solvedRow: '第{n}列猜中', none: '列數用完：無人猜中', ans: '答案',
       pWin: '{p}獲勝', dWin: '解開了！', dLose: '次數用完…', dRes: '{n}次猜中（標準{p}次）', dFail: '{n}次內未能猜中',
       lv: ['粗心：常忘記之前的結果', '學徒：偶爾漏看提示', '推理家：照提示來猜', '名偵探：少給對手線索'], who: ['適合初次', '熟悉規則後', '對推理有自信', '實力挑戰'] },
-    ko: { rate: '승률', r1: '컬러', r1d: '6색 중 4개, 같은 색은 쓰지 않음.', r2: '컬러(중복)', r2d: '6색 중 4개, 같은 색을 여러 번.', r3: '넘버3', r3d: '0〜9 중 서로 다른 숫자 3개.', r4: '넘버4', r4d: '0〜9 중 서로 다른 숫자 4개.', r5: '엑스퍼트', r5d: '8색 중 5개, 색 중복 가능.',
+    ko: { book: "문제집", list: "문제 목록", tgf: "첫 추리", tg1: "입문", tgx: "딱 맞게", c1: "답이 하나로 정해져 있어", cn: "답 후보 {a}~{b}가지", nx: "다음 문제", again: "다시 하기", within: "{n}회 이내", prog: "{a}/{b}문제 클리어", stars: "★ {a}/{b}", cont: "이어서", bkNote: "단서 줄로 답을 추리하는 문제가 10코스·500문제.", rate: '승률', r1: '컬러', r1d: '6색 중 4개, 같은 색은 쓰지 않음.', r2: '컬러(중복)', r2d: '6색 중 4개, 같은 색을 여러 번.', r3: '넘버3', r3d: '0〜9 중 서로 다른 숫자 3개.', r4: '넘버4', r4d: '0〜9 중 서로 다른 숫자 4개.', r5: '엑스퍼트', r5d: '8색 중 5개, 색 중복 가능.',
       daily: '오늘의 문제', dailyNote: '단서 줄이 이미 판에 있어요. 정해진 횟수 안에 맞혀 보세요. 매일 2문제.', easy: '컬러 · {n}회 이내', hard: '넘버4 · {n}회 이내',
       you: '나', ai: 'AI', p1: '플레이어1', p2: '플레이어2', clue: '단서',
       yourTurn: '내 차례: {n}개 놓고 OK', aiTurn: 'AI가 생각 중…', pTurn: '{p} 차례', left: '{n}회 남음',
@@ -56,7 +56,7 @@
       allHit: '전부 히트!', hint: '유력한 수', solvedRow: '{n}번째 줄에서 정답', none: '줄이 다 찼어요: 아무도 못 맞힘', ans: '정답',
       pWin: '{p} 승리', dWin: '클리어!', dLose: '횟수 초과…', dRes: '{n}회에 정답 (기준 {p}회)', dFail: '{n}회 안에 맞히지 못했어요',
       lv: ['덜렁이: 앞의 결과를 자주 잊음', '견습생: 가끔 단서를 놓침', '추리가: 단서대로 맞힘', '명탐정: 상대에게 단서를 덜 줌'], who: ['처음이라면', '규칙에 익숙해지면', '추리에 자신 있다면', '실력 시험'] },
-    es: { rate: '% victorias', r1: 'Color', r1d: '4 de 6 colores, todos distintos.', r2: 'Color (con repetición)', r2d: '4 de 6 colores; se pueden repetir.', r3: 'Número 3', r3d: '3 cifras distintas, 0–9.', r4: 'Número 4', r4d: '4 cifras distintas, 0–9.', r5: 'Experto', r5d: '5 de 8 colores; se pueden repetir.',
+    es: { book: "Libro de retos", list: "Todos los retos", tgf: "Primeros pasos", tg1: "Inicio", tgx: "Justo", c1: "Solo encaja una respuesta", cn: "{a}–{b} respuestas posibles", nx: "Siguiente", again: "Reintentar", within: "en {n}", prog: "{a}/{b} resueltos", stars: "★ {a}/{b}", cont: "Continuar", bkNote: "500 retos en 10 cursos: deduce el código con las filas de pistas.", rate: '% victorias', r1: 'Color', r1d: '4 de 6 colores, todos distintos.', r2: 'Color (con repetición)', r2d: '4 de 6 colores; se pueden repetir.', r3: 'Número 3', r3d: '3 cifras distintas, 0–9.', r4: 'Número 4', r4d: '4 cifras distintas, 0–9.', r5: 'Experto', r5d: '5 de 8 colores; se pueden repetir.',
       daily: 'Reto del día', dailyNote: 'Ya hay filas de pistas en el tablero. Descifra el código dentro del límite. Dos retos nuevos cada día.', easy: 'Color · en {n}', hard: 'Número 4 · en {n}',
       you: 'Tú', ai: 'IA', p1: 'Jugador 1', p2: 'Jugador 2', clue: 'Pista',
       yourTurn: 'Tu turno: coloca {n} y pulsa OK', aiTurn: 'La IA está pensando…', pTurn: 'Turno de {p}', left: 'Quedan {n}',
@@ -64,7 +64,7 @@
       allHit: '¡Todo aciertos!', hint: 'Una buena jugada', solvedRow: 'Descifrado en la fila {n}', none: 'Sin filas: nadie lo descifró', ans: 'Respuesta',
       pWin: 'Gana {p}', dWin: '¡Resuelto!', dLose: 'Sin intentos…', dRes: 'Resuelto en {n} (par {p})', dFail: 'No resuelto en {n}',
       lv: ['Despistado: olvida respuestas', 'Aprendiz: a veces pasa por alto una pista', 'Detective: juega según las pistas', 'Maestro: da pocas pistas al rival'], who: ['Para empezar', 'Si ya sabes las reglas', 'Si confías en tu lógica', 'Para ponerte a prueba'] },
-    fr: { rate: '% victoires', r1: 'Couleur', r1d: '4 couleurs sur 6, toutes différentes.', r2: 'Couleur (répétitions)', r2d: '4 couleurs sur 6 ; une couleur peut revenir.', r3: 'Nombre 3', r3d: '3 chiffres différents, 0–9.', r4: 'Nombre 4', r4d: '4 chiffres différents, 0–9.', r5: 'Expert', r5d: '5 couleurs sur 8 ; répétitions permises.',
+    fr: { book: "Recueil", list: "Tous les défis", tgf: "Premiers pas", tg1: "Initiation", tgx: "Pile", c1: "Une seule réponse possible", cn: "{a} à {b} réponses possibles", nx: "Défi suivant", again: "Rejouer", within: "en {n}", prog: "{a}/{b} résolus", stars: "★ {a}/{b}", cont: "Continuer", bkNote: "500 défis en 10 parcours : trouvez le code grâce aux lignes d’indices.", rate: '% victoires', r1: 'Couleur', r1d: '4 couleurs sur 6, toutes différentes.', r2: 'Couleur (répétitions)', r2d: '4 couleurs sur 6 ; une couleur peut revenir.', r3: 'Nombre 3', r3d: '3 chiffres différents, 0–9.', r4: 'Nombre 4', r4d: '4 chiffres différents, 0–9.', r5: 'Expert', r5d: '5 couleurs sur 8 ; répétitions permises.',
       daily: 'Défi du jour', dailyNote: 'Des lignes d’indices sont déjà sur le plateau. Trouvez le code dans la limite. Deux défis par jour.', easy: 'Couleur · en {n}', hard: 'Nombre 4 · en {n}',
       you: 'Vous', ai: 'IA', p1: 'Joueur 1', p2: 'Joueur 2', clue: 'Indice',
       yourTurn: 'À vous : placez {n}, puis OK', aiTurn: 'L’IA réfléchit…', pTurn: 'Au tour de {p}', left: 'Encore {n}',
@@ -72,7 +72,7 @@
       allHit: 'Tout juste !', hint: 'Un bon essai', solvedRow: 'Trouvé à la ligne {n}', none: 'Plus de lignes : personne n’a trouvé', ans: 'Réponse',
       pWin: '{p} gagne', dWin: 'Résolu !', dLose: 'Plus d’essais…', dRes: 'Résolu en {n} (par {p})', dFail: 'Non résolu en {n}',
       lv: ['Étourdi : oublie souvent', 'Apprenti : rate parfois un indice', 'Détective : suit les indices', 'Maître : donne peu d’indices'], who: ['Pour débuter', 'Une fois les règles connues', 'Si vous aimez déduire', 'Pour un vrai test'] },
-    pt: { rate: '% vitórias', r1: 'Cor', r1d: '4 de 6 cores, todas diferentes.', r2: 'Cor (com repetição)', r2d: '4 de 6 cores; podem repetir.', r3: 'Número 3', r3d: '3 dígitos diferentes, 0–9.', r4: 'Número 4', r4d: '4 dígitos diferentes, 0–9.', r5: 'Especialista', r5d: '5 de 8 cores; podem repetir.',
+    pt: { book: "Livro de desafios", list: "Todos os desafios", tgf: "Primeiros passos", tg1: "Início", tgx: "Exato", c1: "Só uma resposta serve", cn: "{a}–{b} respostas possíveis", nx: "Próximo", again: "Repetir", within: "em {n}", prog: "{a}/{b} resolvidos", stars: "★ {a}/{b}", cont: "Continuar", bkNote: "500 desafios em 10 cursos: descubra o código pelas linhas de pistas.", rate: '% vitórias', r1: 'Cor', r1d: '4 de 6 cores, todas diferentes.', r2: 'Cor (com repetição)', r2d: '4 de 6 cores; podem repetir.', r3: 'Número 3', r3d: '3 dígitos diferentes, 0–9.', r4: 'Número 4', r4d: '4 dígitos diferentes, 0–9.', r5: 'Especialista', r5d: '5 de 8 cores; podem repetir.',
       daily: 'Desafio do dia', dailyNote: 'Já há linhas de pistas no tabuleiro. Decifre o código dentro do limite. Dois desafios por dia.', easy: 'Cor · em {n}', hard: 'Número 4 · em {n}',
       you: 'Você', ai: 'IA', p1: 'Jogador 1', p2: 'Jogador 2', clue: 'Pista',
       yourTurn: 'Sua vez: coloque {n} e OK', aiTurn: 'A IA está pensando…', pTurn: 'Vez de {p}', left: 'Faltam {n}',
@@ -80,7 +80,7 @@
       allHit: 'Tudo certo!', hint: 'Um bom palpite', solvedRow: 'Decifrado na linha {n}', none: 'Sem linhas: ninguém decifrou', ans: 'Resposta',
       pWin: '{p} vence', dWin: 'Resolvido!', dLose: 'Sem tentativas…', dRes: 'Resolvido em {n} (par {p})', dFail: 'Não resolvido em {n}',
       lv: ['Distraído: esquece respostas', 'Aprendiz: às vezes perde uma pista', 'Detetive: segue as pistas', 'Mestre: dá poucas pistas ao rival'], who: ['Para começar', 'Depois de saber as regras', 'Se confia na lógica', 'Para um teste real'] },
-    de: { rate: 'Siegquote', r1: 'Farbe', r1d: '4 von 6 Farben, alle verschieden.', r2: 'Farbe (Wiederholung)', r2d: '4 von 6 Farben; Farben dürfen sich wiederholen.', r3: 'Zahl 3', r3d: '3 verschiedene Ziffern, 0–9.', r4: 'Zahl 4', r4d: '4 verschiedene Ziffern, 0–9.', r5: 'Experte', r5d: '5 von 8 Farben; Wiederholung erlaubt.',
+    de: { book: "Rätselbuch", list: "Alle Rätsel", tgf: "Erste Schritte", tg1: "Einstieg", tgx: "Genau", c1: "Nur eine Lösung passt", cn: "{a}–{b} mögliche Lösungen", nx: "Nächstes Rätsel", again: "Nochmal", within: "in {n}", prog: "{a}/{b} gelöst", stars: "★ {a}/{b}", cont: "Weiter", bkNote: "500 Rätsel in 10 Kursen: Knacke den Code anhand der Hinweisreihen.", rate: 'Siegquote', r1: 'Farbe', r1d: '4 von 6 Farben, alle verschieden.', r2: 'Farbe (Wiederholung)', r2d: '4 von 6 Farben; Farben dürfen sich wiederholen.', r3: 'Zahl 3', r3d: '3 verschiedene Ziffern, 0–9.', r4: 'Zahl 4', r4d: '4 verschiedene Ziffern, 0–9.', r5: 'Experte', r5d: '5 von 8 Farben; Wiederholung erlaubt.',
       daily: 'Tagesrätsel', dailyNote: 'Hinweisreihen liegen schon auf dem Brett. Knacke den Code im Limit. Jeden Tag zwei neue.', easy: 'Farbe · in {n}', hard: 'Zahl 4 · in {n}',
       you: 'Du', ai: 'KI', p1: 'Spieler 1', p2: 'Spieler 2', clue: 'Hinweis',
       yourTurn: 'Du bist dran: {n} setzen, dann OK', aiTurn: 'Die KI denkt…', pTurn: '{p} ist dran', left: 'Noch {n}',
@@ -88,7 +88,7 @@
       allHit: 'Alles Treffer!', hint: 'Ein starker Tipp', solvedRow: 'Geknackt in Reihe {n}', none: 'Keine Reihen mehr: niemand hat es geknackt', ans: 'Lösung',
       pWin: '{p} gewinnt', dWin: 'Gelöst!', dLose: 'Keine Versuche mehr…', dRes: 'Gelöst in {n} (Par {p})', dFail: 'Nicht in {n} gelöst',
       lv: ['Vergesslich: vergisst oft Antworten', 'Lehrling: übersieht mal einen Hinweis', 'Spürnase: rät nach den Hinweisen', 'Meister: verrät dem Gegner wenig'], who: ['Für den Einstieg', 'Wenn du die Regeln kennst', 'Wenn du gern kombinierst', 'Als echte Probe'] },
-    ru: { rate: 'Процент побед', r1: 'Цвета', r1d: '4 из 6 цветов, все разные.', r2: 'Цвета (с повтором)', r2d: '4 из 6 цветов; цвета могут повторяться.', r3: 'Числа 3', r3d: '3 разные цифры, 0–9.', r4: 'Числа 4', r4d: '4 разные цифры, 0–9.', r5: 'Эксперт', r5d: '5 из 8 цветов; повторы можно.',
+    ru: { book: "Сборник задач", list: "Все задачи", tgf: "Первые шаги", tg1: "Начало", tgx: "Впритык", c1: "Подходит лишь один ответ", cn: "Возможных ответов: {a}–{b}", nx: "Следующая", again: "Ещё раз", within: "за {n}", prog: "Решено {a}/{b}", stars: "★ {a}/{b}", cont: "Продолжить", bkNote: "500 задач в 10 курсах: разгадайте код по строкам-подсказкам.", rate: 'Процент побед', r1: 'Цвета', r1d: '4 из 6 цветов, все разные.', r2: 'Цвета (с повтором)', r2d: '4 из 6 цветов; цвета могут повторяться.', r3: 'Числа 3', r3d: '3 разные цифры, 0–9.', r4: 'Числа 4', r4d: '4 разные цифры, 0–9.', r5: 'Эксперт', r5d: '5 из 8 цветов; повторы можно.',
       daily: 'Задача дня', dailyNote: 'На доске уже есть ряды-подсказки. Разгадайте код за отведённое число ходов. Две задачи каждый день.', easy: 'Цвета · за {n}', hard: 'Числа 4 · за {n}',
       you: 'Вы', ai: 'ИИ', p1: 'Игрок 1', p2: 'Игрок 2', clue: 'Подсказка',
       yourTurn: 'Ваш ход: поставьте {n} и OK', aiTurn: 'ИИ думает…', pTurn: 'Ход: {p}', left: 'Осталось {n}',
@@ -96,7 +96,7 @@
       allHit: 'Все в точку!', hint: 'Сильный вариант', solvedRow: 'Разгадано в ряду {n}', none: 'Ряды кончились: никто не разгадал', ans: 'Ответ',
       pWin: 'Победа: {p}', dWin: 'Решено!', dLose: 'Попытки кончились…', dRes: 'Решено за {n} (норма {p})', dFail: 'Не решено за {n}',
       lv: ['Рассеянный: часто забывает ответы', 'Ученик: иногда упускает подсказку', 'Сыщик: следует подсказкам', 'Мастер: почти не помогает сопернику'], who: ['Для первых партий', 'Когда освоите правила', 'Если любите логику', 'Для серьёзной проверки'] },
-    tr: { rate: 'Kazanma oranı', r1: 'Renk', r1d: '6 renkten 4, hepsi farklı.', r2: 'Renk (tekrarlı)', r2d: '6 renkten 4; renk tekrar edebilir.', r3: 'Sayı 3', r3d: '0–9 arası 3 farklı rakam.', r4: 'Sayı 4', r4d: '0–9 arası 4 farklı rakam.', r5: 'Uzman', r5d: '8 renkten 5; tekrar olabilir.',
+    tr: { book: "Bulmaca kitabı", list: "Tüm bulmacalar", tgf: "İlk adımlar", tg1: "Giriş", tgx: "Tam", c1: "Tek bir cevap uyuyor", cn: "{a}–{b} olası cevap", nx: "Sonraki", again: "Tekrar", within: "{n} içinde", prog: "{a}/{b} çözüldü", stars: "★ {a}/{b}", cont: "Devam et", bkNote: "10 kursta 500 bulmaca: ipucu satırlarından şifreyi bul.", rate: 'Kazanma oranı', r1: 'Renk', r1d: '6 renkten 4, hepsi farklı.', r2: 'Renk (tekrarlı)', r2d: '6 renkten 4; renk tekrar edebilir.', r3: 'Sayı 3', r3d: '0–9 arası 3 farklı rakam.', r4: 'Sayı 4', r4d: '0–9 arası 4 farklı rakam.', r5: 'Uzman', r5d: '8 renkten 5; tekrar olabilir.',
       daily: 'Günün bulmacası', dailyNote: 'Tahtada ipucu satırları var. Kodu sınır içinde çöz. Her gün iki yeni bulmaca.', easy: 'Renk · {n} içinde', hard: 'Sayı 4 · {n} içinde',
       you: 'Sen', ai: 'YZ', p1: 'Oyuncu 1', p2: 'Oyuncu 2', clue: 'İpucu',
       yourTurn: 'Sıra sende: {n} koy, sonra OK', aiTurn: 'YZ düşünüyor…', pTurn: 'Sıra: {p}', left: '{n} kaldı',
@@ -104,7 +104,7 @@
       allHit: 'Hepsi isabet!', hint: 'Güçlü bir tahmin', solvedRow: '{n}. satırda çözüldü', none: 'Satır bitti: kimse çözemedi', ans: 'Cevap',
       pWin: '{p} kazandı', dWin: 'Çözüldü!', dLose: 'Hak bitti…', dRes: '{n} tahminde çözüldü (hedef {p})', dFail: '{n} içinde çözülemedi',
       lv: ['Dalgın: cevapları sık unutur', 'Çırak: bazen ipucunu kaçırır', 'Dedektif: ipuçlarına göre tahmin eder', 'Usta: rakibe az ipucu verir'], who: ['İlk oyunlar için', 'Kuralları öğrenince', 'Mantığına güveniyorsan', 'Gerçek bir sınav'] },
-    id: { rate: 'Rasio menang', r1: 'Warna', r1d: '4 dari 6 warna, semua berbeda.', r2: 'Warna (boleh ulang)', r2d: '4 dari 6 warna; warna boleh berulang.', r3: 'Angka 3', r3d: '3 angka berbeda, 0–9.', r4: 'Angka 4', r4d: '4 angka berbeda, 0–9.', r5: 'Ahli', r5d: '5 dari 8 warna; boleh berulang.',
+    id: { book: "Buku teka-teki", list: "Semua teka-teki", tgf: "Langkah pertama", tg1: "Pengenalan", tgx: "Pas", c1: "Hanya satu jawaban cocok", cn: "{a}–{b} jawaban mungkin", nx: "Berikutnya", again: "Ulangi", within: "dalam {n}", prog: "{a}/{b} selesai", stars: "★ {a}/{b}", cont: "Lanjutkan", bkNote: "500 teka-teki dalam 10 kursus: temukan kodenya dari baris petunjuk.", rate: 'Rasio menang', r1: 'Warna', r1d: '4 dari 6 warna, semua berbeda.', r2: 'Warna (boleh ulang)', r2d: '4 dari 6 warna; warna boleh berulang.', r3: 'Angka 3', r3d: '3 angka berbeda, 0–9.', r4: 'Angka 4', r4d: '4 angka berbeda, 0–9.', r5: 'Ahli', r5d: '5 dari 8 warna; boleh berulang.',
       daily: 'Teka-teki harian', dailyNote: 'Baris petunjuk sudah ada di papan. Tebak kodenya dalam batas. Dua teka-teki baru tiap hari.', easy: 'Warna · dalam {n}', hard: 'Angka 4 · dalam {n}',
       you: 'Kamu', ai: 'AI', p1: 'Pemain 1', p2: 'Pemain 2', clue: 'Petunjuk',
       yourTurn: 'Giliranmu: pasang {n}, lalu OK', aiTurn: 'AI sedang berpikir…', pTurn: 'Giliran {p}', left: 'Sisa {n}',
@@ -112,7 +112,7 @@
       allHit: 'Semua hit!', hint: 'Tebakan yang kuat', solvedRow: 'Terpecahkan di baris {n}', none: 'Baris habis: tak ada yang menebak', ans: 'Jawaban',
       pWin: '{p} menang', dWin: 'Terpecahkan!', dLose: 'Kesempatan habis…', dRes: 'Terpecahkan dalam {n} (par {p})', dFail: 'Tidak terpecahkan dalam {n}',
       lv: ['Pelupa: sering lupa jawaban', 'Murid: kadang melewatkan petunjuk', 'Detektif: menebak sesuai petunjuk', 'Ahli: sedikit memberi petunjuk ke lawan'], who: ['Untuk pemula', 'Setelah paham aturan', 'Kalau yakin dengan logikamu', 'Untuk ujian sungguhan'] },
-    hi: { rate: 'जीत दर', r1: 'रंग', r1d: '6 में से 4 रंग, सब अलग।', r2: 'रंग (दोहराव)', r2d: '6 में से 4 रंग; रंग दोहरा सकते हैं।', r3: 'संख्या 3', r3d: '0–9 के 3 अलग अंक।', r4: 'संख्या 4', r4d: '0–9 के 4 अलग अंक।', r5: 'विशेषज्ञ', r5d: '8 में से 5 रंग; दोहराव संभव।',
+    hi: { book: "पहेली पुस्तक", list: "सभी पहेलियाँ", tgf: "पहले क़दम", tg1: "परिचय", tgx: "ठीक-ठीक", c1: "सिर्फ़ एक उत्तर बचा है", cn: "{a}–{b} संभावित उत्तर", nx: "अगली पहेली", again: "फिर से", within: "{n} में", prog: "{a}/{b} हल", stars: "★ {a}/{b}", cont: "जारी रखें", bkNote: "10 कोर्स में 500 पहेलियाँ: संकेत पंक्तियों से कोड निकालें।", rate: 'जीत दर', r1: 'रंग', r1d: '6 में से 4 रंग, सब अलग।', r2: 'रंग (दोहराव)', r2d: '6 में से 4 रंग; रंग दोहरा सकते हैं।', r3: 'संख्या 3', r3d: '0–9 के 3 अलग अंक।', r4: 'संख्या 4', r4d: '0–9 के 4 अलग अंक।', r5: 'विशेषज्ञ', r5d: '8 में से 5 रंग; दोहराव संभव।',
       daily: 'आज की पहेली', dailyNote: 'बोर्ड पर संकेत की पंक्तियाँ पहले से हैं। सीमा के भीतर कोड खोलें। रोज़ दो नई पहेलियाँ।', easy: 'रंग · {n} में', hard: 'संख्या 4 · {n} में',
       you: 'आप', ai: 'AI', p1: 'खिलाड़ी 1', p2: 'खिलाड़ी 2', clue: 'संकेत',
       yourTurn: 'आपकी बारी: {n} रखें, फिर OK', aiTurn: 'AI सोच रहा है…', pTurn: '{p} की बारी', left: '{n} बाकी',
@@ -120,7 +120,7 @@
       allHit: 'सब हिट!', hint: 'एक मज़बूत अनुमान', solvedRow: 'पंक्ति {n} में हल', none: 'पंक्तियाँ खत्म: कोई नहीं खोल पाया', ans: 'उत्तर',
       pWin: '{p} जीते', dWin: 'हल हो गया!', dLose: 'प्रयास खत्म…', dRes: '{n} में हल (मानक {p})', dFail: '{n} में हल नहीं हुआ',
       lv: ['भुलक्कड़: पिछले उत्तर भूल जाता है', 'नौसिखिया: कभी-कभी संकेत छोड़ देता है', 'जासूस: संकेतों के अनुसार', 'उस्ताद: विरोधी को कम संकेत देता है'], who: ['शुरुआत के लिए', 'नियम सीखने के बाद', 'तर्क पर भरोसा हो तो', 'असली परीक्षा'] },
-    ar: { rate: 'نسبة الفوز', r1: 'ألوان', r1d: '4 من 6 ألوان، كلها مختلفة.', r2: 'ألوان (مع تكرار)', r2d: '4 من 6 ألوان؛ يجوز التكرار.', r3: 'أرقام 3', r3d: '3 أرقام مختلفة من 0 إلى 9.', r4: 'أرقام 4', r4d: '4 أرقام مختلفة من 0 إلى 9.', r5: 'خبير', r5d: '5 من 8 ألوان؛ يجوز التكرار.',
+    ar: { book: "كتاب الألغاز", list: "كل الألغاز", tgf: "الخطوات الأولى", tg1: "مدخل", tgx: "بالضبط", c1: "تبقى إجابة واحدة فقط", cn: "{a}–{b} إجابات محتملة", nx: "اللغز التالي", again: "أعد", within: "خلال {n}", prog: "حُلّ {a}/{b}", stars: "★ {a}/{b}", cont: "تابع", bkNote: "500 لغز في 10 مسارات: استنتج الشفرة من صفوف التلميحات.", rate: 'نسبة الفوز', r1: 'ألوان', r1d: '4 من 6 ألوان، كلها مختلفة.', r2: 'ألوان (مع تكرار)', r2d: '4 من 6 ألوان؛ يجوز التكرار.', r3: 'أرقام 3', r3d: '3 أرقام مختلفة من 0 إلى 9.', r4: 'أرقام 4', r4d: '4 أرقام مختلفة من 0 إلى 9.', r5: 'خبير', r5d: '5 من 8 ألوان؛ يجوز التكرار.',
       daily: 'لغز اليوم', dailyNote: 'صفوف التلميحات على اللوحة بالفعل. اكسر الرمز ضمن الحد. لغزان جديدان كل يوم.', easy: 'ألوان · في {n}', hard: 'أرقام 4 · في {n}',
       you: 'أنت', ai: 'الذكاء', p1: 'اللاعب 1', p2: 'اللاعب 2', clue: 'تلميح',
       yourTurn: 'دورك: ضع {n} ثم OK', aiTurn: 'الذكاء يفكر…', pTurn: 'دور {p}', left: 'باقٍ {n}',
@@ -134,6 +134,16 @@
   const today = () => window.HitBlowEngine ? HitBlowEngine.localDate() : new Date().toISOString().slice(0, 10);
   const DKEY = 'aicoding-hitblow-daily3d';
   const dread = () => { try { return JSON.parse(localStorage.getItem(DKEY) || '{}') || {}; } catch (e) { return {}; } };
+  // 問題集 (engine BOOK: 10 sets × 50): best ★ per puzzle in 'aicoding-hitblow-pz3d' { set: { i: 1..3 } }
+  const BKEY = 'aicoding-hitblow-pz3d';
+  const bread = () => { try { return JSON.parse(localStorage.getItem(BKEY) || '{}') || {}; } catch (e) { return {}; } };
+  const SETTAG = { first: 'tgf', c2: 'tg1', c4: 'tgx', d2: 'tgx', n1: 'tgf' };
+  const setName = (set, lang) => { const S = window.HitBlowEngine && HitBlowEngine.BOOK.find(x => x.id === set); if (!S) return set; return tx(lang, 'r' + S.z) + (SETTAG[set] ? ' · ' + tx(lang, SETTAG[set]) : ''); };
+  const nextOf = (set, i) => { const E = window.HitBlowEngine; if (!E) return null; const B = bread(), k = E.BOOK.findIndex(x => x.id === set);
+    for (let j = i + 1; j < E.BOOK_N; j++) if (!(B[set] && B[set][j])) return { set, i: j };
+    for (let q = k + 1; q < E.BOOK.length; q++) { const s2 = E.BOOK[q].id; for (let j = 0; j < E.BOOK_N; j++) if (!(B[s2] && B[s2][j])) return { set: s2, i: j }; }
+    return i + 1 < E.BOOK_N ? { set, i: i + 1 } : null; };
+  const firstOpen = () => { const E = window.HitBlowEngine; if (!E) return { set: 'first', i: 0 }; const B = bread(); for (const S of E.BOOK) for (let j = 0; j < E.BOOK_N; j++) if (!(B[S.id] && B[S.id][j])) return { set: S.id, i: j }; return { set: 'first', i: 0 }; };
   const dailyDone = k => { const o = dread(); return !!(o[k] && o[k][today()] && o[k][today()].win); };
 
   /* ---------- sounds (the portal's sound switch): glass on lacquer, a tick per pin, a rattle in the case ---------- */
@@ -162,7 +172,7 @@
   function css() {
     if (cssDone) return; cssDone = true;
     const s = document.createElement('style');
-    s.textContent = `.hbtoast{position:fixed;left:50%;bottom:calc(var(--hbdock,180px) + 10px);transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:10px 18px;border-radius:99px;background:#1b2257;border:1px solid rgba(140,170,255,.5);color:#eef2ff;font-weight:800;font-size:14.5px;text-align:center;box-shadow:0 10px 30px -12px rgba(30,40,120,.8);pointer-events:none;animation:hbt .25s ease-out}
+    s.textContent = `.hbtoast{position:fixed;left:50%;bottom:calc(var(--tbh,70px) + 24px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:10px 18px;border-radius:99px;background:#1b2257;border:1px solid rgba(140,170,255,.5);color:#eef2ff;font-weight:800;font-size:14.5px;text-align:center;box-shadow:0 10px 30px -12px rgba(30,40,120,.8);pointer-events:none;animation:hbt .25s ease-out}
 @keyframes hbt{from{opacity:0;transform:translate(-50%,8px)}}
 .hbdock{position:absolute;z-index:4;left:50%;transform:translateX(-50%);bottom:calc(var(--tbh,70px) + 4px + env(safe-area-inset-bottom));width:min(560px,calc(100vw - 16px));padding:10px 12px 12px;border-radius:22px;background:linear-gradient(180deg,rgba(26,34,92,.94),rgba(10,14,44,.96));border:1px solid rgba(140,170,255,.4);box-shadow:0 0 0 1px rgba(0,0,0,.3),0 18px 40px -16px rgba(10,14,60,.9),inset 0 1px 0 rgba(255,255,255,.08);color:#eef2ff;font-family:inherit;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none}
 .hbdock.on{opacity:1;pointer-events:auto}
@@ -181,7 +191,7 @@
 .hbpal button.used{opacity:.28}
 .hbpal.ten button{width:44px;height:44px}.hbpal.ten button svg{width:44px;height:44px}
 .hbpal .kb{position:absolute;opacity:0}
-#bvPz.hbdy{display:flex!important;flex-direction:column;gap:10px;align-items:stretch}#bvPz.hbdy[hidden]{display:none!important}.hbdy .hbd{width:100%;display:flex;align-items:center;gap:10px;justify-content:flex-start;white-space:nowrap}.hbdy .hbd small{margin-left:auto;font-size:13px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.2}.hbdy .hbd small>span{opacity:.8}.hbdy .hbr{font-size:12px;color:#2b3683}.hbdy .hbr i{font-style:normal;font-weight:600;opacity:.6;margin-left:2px}
+.hbbkb i{font-style:normal;font-size:18px;opacity:.7}.hbbk{position:fixed;inset:0;z-index:120;background:rgba(20,16,10,.38);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s}.hbbk.on{opacity:1}.hbbk-in{width:min(620px,100vw);max-height:min(88vh,860px);display:flex;flex-direction:column;background:#fbf7ee;border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25);transform:translateY(30px);transition:transform .22s;overflow:hidden;color:#2b2a35}.hbbk.on .hbbk-in{transform:none}@media (min-width:820px){.hbbk{align-items:center}.hbbk-in{border-radius:24px}}.hbbk-h{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 6px;font-size:19px}.hbbk-x{border:0;background:#efe8d6;width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer}.hbbk-top{display:flex;gap:12px;align-items:center;padding:6px 18px 12px}.hbbk-top>div{flex:1;min-width:0}.hbbk-top small{display:block;font-size:12px;opacity:.65;margin-top:6px;line-height:1.35}.hbbk-p{display:flex;justify-content:space-between;font-weight:800;font-size:14px;margin-bottom:6px}.hbbk-p span{color:#c99a12}.hbbar{display:block;height:8px;border-radius:9px;background:#eae2cd;overflow:hidden}.hbbar i{display:block;height:100%;background:linear-gradient(90deg,#7df3d2,#2b3683)}.hbbk-go{flex:none;border:0;border-radius:16px;padding:10px 16px;background:#ff5a5a;color:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 0 #c43c3c;display:flex;flex-direction:column;align-items:center;gap:2px}.hbbk-go small{font-size:11px;opacity:.9;font-weight:700}.hbbk-l{overflow:auto;padding:0 14px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}.hbset{background:#fff;border-radius:16px;box-shadow:0 2px 0 #e8dfc8,inset 0 0 0 1.5px #efe6d0}.hbset.open{box-shadow:0 2px 0 #e8dfc8,inset 0 0 0 2px #2b3683}.hbset-h{width:100%;display:flex;align-items:center;gap:10px;border:0;background:none;padding:10px 12px;font:inherit;color:inherit;cursor:pointer;text-align:left}.hbic{flex:none;display:flex;width:62px;height:28px;position:relative}.hbic svg{width:28px;height:28px;margin-right:-11px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}.hbset-t{flex:1;min-width:0;display:flex;flex-direction:column}.hbset-t b{font-size:15px}.hbset-t small{font-size:12px;opacity:.65}.hbset-n{flex:none;width:74px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:12px}.hbset-n .hbbar{width:100%;height:6px}.hbset-v{font-style:normal;opacity:.45;transition:transform .2s}.hbset.open .hbset-v{transform:rotate(180deg)}.hbgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:0 12px 12px}.hbgrid[hidden]{display:none}.hbgrid button{border:0;border-radius:12px;background:#f3eedf;padding:7px 0 5px;font:inherit;color:#2b2a35;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}.hbgrid button b{font-size:15px}.hbgrid button i{font-style:normal;font-size:10px;letter-spacing:1px;color:#cfc4a6}.hbgrid button.ok{background:#e5f6ee}.hbgrid button.ok i{color:#e0a800}.hbgrid button.nx{box-shadow:inset 0 0 0 2px #ff5a5a}@media (min-width:560px){.hbgrid{grid-template-columns:repeat(10,1fr)}}#bvPz.hbdy{display:flex!important;flex-direction:column;gap:10px;align-items:stretch}#bvPz.hbdy[hidden]{display:none!important}.hbdy .hbd{width:100%;display:flex;align-items:center;gap:10px;justify-content:flex-start;white-space:nowrap}.hbdy .hbd small{margin-left:auto;font-size:13px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.2}.hbdy .hbd small>span{opacity:.8}.hbdy .hbr{font-size:12px;color:#2b3683}.hbdy .hbr i{font-style:normal;font-weight:600;opacity:.6;margin-left:2px}
 @media (max-width:420px){.hbpal button,.hbpal button svg{width:42px;height:42px}.hbpal.ten button,.hbpal.ten button svg{width:40px;height:40px}.hbok{width:72px;height:52px;font-size:18px}.hbdock{padding:8px 10px 10px}}`;
     document.head.appendChild(s);
   }
@@ -203,8 +213,11 @@
     css();
     const E = window.HitBlowEngine, T3 = ctx.Table3D, H = T3.hitblow, TH = window.THREE, lang = ctx.lang, t = (k, v) => tx(lang, k, v);
     const mode = ctx.mode === 'daily' || ctx.mode === 'puzzle' ? 'daily' : ctx.mode === 'pvp' ? 'pvp' : ctx.mode === 'rated' ? 'rated' : 'ai';
-    const AD = window.Atlas3D.hitblow, which = mode === 'daily' ? (AD.pending === 'hard' ? 'hard' : 'easy') : null; AD.pending = null;
-    const P = which ? E.makeDaily(today(), which) : null;
+    const AD = window.Atlas3D.hitblow, pend = AD.pending || AD.lastPend; AD.pending = null;
+    const bk = mode === 'daily' && pend && typeof pend === 'object' ? pend : null;   // 問題集 { set, i }
+    const which = mode === 'daily' ? (bk ? 'book' : pend === 'hard' ? 'hard' : 'easy') : null;
+    if (mode === 'daily') AD.lastPend = bk ? { set: bk.set, i: bk.i } : which;   // (もう一度 replays the same puzzle)
+    const P = bk ? E.makePuzzle(bk.set, bk.i) : which ? E.makeDaily(today(), which) : null;
     const z = P ? P.z : E.RULE_IDS.includes(+ctx.size) ? +ctx.size : 1;
     const cfg = Object.assign({}, E.rule(z)); if (P) cfg.rows = P.clues.length + P.limit;
     const kind = cfg.kind, level = Math.max(1, Math.min(20, ctx.level || 1));
@@ -214,6 +227,7 @@
     const first = turn;
     const secret = P ? P.secret.slice() : E.randomCode(cfg, Math.random);
     const board = H.board(cfg), U = board.userData, TOP = U.top, R = H.R;
+    const TR = H.tray(cfg), TU = TR.userData; board.add(TR);   // (2026-11-16 user: the input on the same 3D as the board)
     const hist = [];          // { g, h, b, by } — by: 0 / 1 (the seats), 2 = a clue of the daily puzzle
     const rowObjs = [];       // per row: { gems: [], pins: [] }
     let input = [], cur = 0, over = false, busy = true, stopped = false, hintT = 0, ply = 0, hinted = false;
@@ -228,53 +242,26 @@
     /* the board on the table, framed whole from the player's side */
     T3.show('hitblow', board);
     // straight down, without perspective (2026-11-16 user: パースをつけない — adapter.ortho, atlas/app.js Table3D.play(true, { ortho }))
-    const frame = () => { if (!T3.fit) return; T3.fit({ w: U.W + .2, d: U.L - .1, y: TOP + .25, pitch: 1.5703 }); };
+    const frame = () => { if (!T3.fit) return; T3.fit({ w: U.W + .2, d: U.L + .14 + TU.D - .1, y: TOP + .25, pitch: 1.5703, cz: (TU.D + .14) / 2 }); };
     frame();
     // the hidden code waits in the case (under the lid)
     const caseGems = secret.map((v, k) => { const m = H.gem(kind, v), [x, y, zz] = U.caseSlot(k); m.position.set(x, y, zz); board.add(m); return m; });
 
-    /* ---------- the dock ---------- */
-    const bv = document.getElementById('bv') || document.body;
-    const dock = document.createElement('div'); dock.className = 'hbdock';
+    /* ---------- the input tray (3D, joined to the board: model tray()) ---------- */
     const C = cfg.c, uid = 'hbg' + Math.random().toString(36).slice(2, 7);
-    dock.innerHTML = `<div class="hbrow"><div class="hbslots">${Array.from({ length: cfg.n }, (_, k) => `<button type="button" class="hbslot" data-k="${k}" aria-label="${k + 1}"></button>`).join('')}</div><button type="button" class="hbok" disabled>OK</button></div>`
-      + `<div class="hbpal${C > 8 ? ' ten' : ''}">${Array.from({ length: C }, (_, v) => `<button type="button" data-v="${v}" aria-label="${kind === 'num' ? v : v + 1}">${gemSvg(kind, v, uid + v)}</button>`).join('')}</div>`;
-    if (C > 8) dock.querySelector('.hbpal').style.cssText = 'max-width:300px;margin-left:auto;margin-right:auto';
-    bv.appendChild(dock);
-    const slotEls = [...dock.querySelectorAll('.hbslot')], okEl = dock.querySelector('.hbok'), palEls = [...dock.querySelectorAll('.hbpal button')];
-    let dockH = 0;
-    // the slots of the dock are the size of the board's holes on the screen (2026-11-16 user), spaced like them
-    function sizeSlots() {
-      try {
-        const P = k => { const [x, zz] = U.slot(Math.max(0, row()), k), v = T3.project(x, zz, TOP); return [v.x, v.y]; };
-        const a = P(0), b = P(1), pitch = Math.hypot(b[0] - a[0], b[1] - a[1]); if (!(pitch > 4)) return;
-        const room = Math.min(560, innerWidth - 16) - 24 - 96 - 16;   // (the dock's width less its padding, OK and the slot tray's padding)
-        let hole = pitch * U.sock * 2, gap = pitch - hole;
-        const k = Math.min(1, room / (cfg.n * hole + (cfg.n - 1) * gap)); hole *= k; gap *= k;
-        hole = Math.max(34, Math.min(84, hole)); gap = Math.max(4, Math.min(24, gap));
-        dock.style.setProperty('--hbs', hole.toFixed(1) + 'px'); dock.style.setProperty('--hbg', gap.toFixed(1) + 'px');
-      } catch (e) {}
-    }
-    function placeDock() {
-      if (stopped) return;
-      sizeSlots();
-      const r = dock.getBoundingClientRect(), h = r.height ? Math.round(innerHeight - r.top + 6) : 0;
-      document.documentElement.style.setProperty('--hbdock', Math.round(innerHeight - r.top) + 'px');
-      if (h !== dockH) { dockH = h; try { dispatchEvent(new Event('resize')); } catch (e) {} }
-    }
-    const onResize = () => { frame(); requestAnimationFrame(placeDock); };
+    const onResize = () => frame();
     addEventListener('resize', onResize);
     const myTurn = () => !over && !busy && (pvp || mode === 'daily' || turn === 0);
     // the row being made: a slot per gem (null = empty) and the cursor (2026-11-16 user: tap a slot to put there · drag to move / swap)
     const blank = () => Array(cfg.n).fill(null), count = () => input.filter(v => v != null).length, full = () => count() === cfg.n;
     input = blank();
     const nextFree = k => { for (let i = 0; i < cfg.n; i++) { const j = (k + i) % cfg.n; if (input[j] == null) return j; } return k; };
+    const shown = [];
     function paintDock() {
       const can = myTurn();
-      dock.classList.toggle('off', !can);
-      slotEls.forEach((el, k) => { const v = input[k]; el.innerHTML = v == null ? '' : gemSvg(kind, v, uid + 's' + k); el.classList.toggle('cur', can && k === cur); el.classList.toggle('has', v != null); });
-      okEl.disabled = !can || !full();
-      palEls.forEach((b, v) => b.classList.toggle('used', !cfg.rep && input.includes(v)));
+      for (let k = 0; k < cfg.n; k++) { const v = drag && drag.ghost && drag.from.k === k ? null : input[k]; if (shown[k] !== v) { TU.put(k, v); shown[k] = v; } }
+      TU.cursor(can ? cur : -1); TU.okOn(can && full()); TU.off(!can);
+      TU.usedAll(cfg.rep ? [] : input.filter(v => v != null)); kick(160);
     }
 
     /* ---------- the row being made, on the board ---------- */
@@ -310,45 +297,61 @@
     }
     function tapSlot(k) { if (!myTurn()) return; if (k === cur && input[k] != null) return take(k); cur = k; picked = true; try { SFX.tap && SFX.tap(); } catch (e) {} paintDock(); }
     // drag: a gem of a slot (move / swap · dropped off the slots = out) or of the palette (onto a slot)
-    let drag = null, skipClick = false, picked = false;
-    const slotAt = (x, y) => { for (let k = 0; k < cfg.n; k++) { const r = slotEls[k].getBoundingClientRect(), m = 6; if (x >= r.left - m && x <= r.right + m && y >= r.top - m && y <= r.bottom + m) return k; } return -1; };
-    dock.addEventListener('pointerdown', e => {
-      const b = e.target.closest('.hbslot, .hbpal button'); if (!b || !myTurn() || e.button > 0) return;
-      const from = b.classList.contains('hbslot') ? { k: +b.dataset.k } : { v: +b.dataset.v };
-      if (from.k != null && input[from.k] == null) return;
-      drag = { from, x: e.clientX, y: e.clientY, id: e.pointerId, ghost: null, over: -1 };
-    });
-    addEventListener('pointermove', e => {
+    // the tray on the screen (the flat top view: Table3D.project): what a point hits — a palette gem, a socket, OK
+    let drag = null, picked = false;
+    const scr = (x, z, y) => { const v = T3.project(x, z, y == null ? TOP + .1 : y); return [v.x, v.y]; };
+    const ppu = () => { const a = scr(0, TU.zc), b = scr(1, TU.zc); return Math.hypot(b[0] - a[0], b[1] - a[1]); };
+    function hitAt(x, y) {
+      const u = ppu();
+      for (let k = 0; k < cfg.n; k++) { const [sx, sy] = scr(...TU.sock(k)); if (Math.hypot(x - sx, y - sy) < (R + .12) * u) return { k }; }
+      for (let v = 0; v < C; v++) { const [sx, sy] = scr(...TU.pal(v)); if (Math.hypot(x - sx, y - sy) < Math.min(TU.pp * .5, R * TU.gemS * 1.2) * u) return { v }; }
+      const [ox, oy] = scr(TU.ok[0], TU.ok[1], TOP + .2); if (Math.abs(x - ox) < TU.ok[2] / 2 * u + 4 && Math.abs(y - oy) < TU.ok[3] / 2 * u + 4) return { ok: 1 };
+      return null;
+    }
+    const slotAt = (x, y) => { const h = hitAt(x, y); return h && h.k != null ? h.k : -1; };
+    function onDown(e) {
+      if (stopped || e.button > 0) return;
+      const h = hitAt(e.clientX, e.clientY); if (!h) return;
+      e.stopPropagation(); if (e.cancelable) e.preventDefault();
+      if (!myTurn()) return;
+      drag = { from: h, x: e.clientX, y: e.clientY, id: e.pointerId, ghost: null, over: -1 };
+    }
+    function onMove(e) {
       if (!drag || e.pointerId !== drag.id) return;
+      const f = drag.from;
       if (!drag.ghost) {
-        if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8) return;
-        const v = drag.from.k != null ? input[drag.from.k] : drag.from.v; if (v == null) { drag = null; return; }
-        const gh = document.createElement('div'); gh.className = 'hbghost'; gh.innerHTML = gemSvg(kind, v, uid + 'gh'); document.body.appendChild(gh); drag.ghost = gh;
-        if (drag.from.k != null) slotEls[drag.from.k].classList.add('lift');
+        if (f.ok || Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8) return;
+        const v = f.k != null ? input[f.k] : f.v; if (v == null || (f.v != null && !cfg.rep && input.includes(v) && false)) return;
+        const sz = Math.round(R * 2 * (f.v != null ? TU.gemS : 1) * ppu() * 1.05);
+        const gh = document.createElement('div'); gh.className = 'hbghost'; gh.style.width = gh.style.height = sz + 'px'; gh.innerHTML = gemSvg(kind, v, uid + 'gh'); document.body.appendChild(gh); drag.ghost = gh; drag.sz = sz;
+        paintDock();
       }
       e.preventDefault();
-      drag.ghost.style.transform = `translate(${e.clientX - 28}px,${e.clientY - 28}px)`;
-      const o = slotAt(e.clientX, e.clientY); if (o !== drag.over) { slotEls.forEach((el, k) => el.classList.toggle('drop', k === o)); drag.over = o; }
-    }, { passive: false });
-    const endDrag = e => {
+      drag.ghost.style.transform = `translate(${e.clientX - drag.sz / 2}px,${e.clientY - drag.sz / 2}px)`;
+      const o = slotAt(e.clientX, e.clientY); if (o !== drag.over) { drag.over = o; if (o >= 0) TU.cursor(o); else TU.cursor(myTurn() ? cur : -1); kick(120); }
+    }
+    function onUp(e) {
       if (!drag || (e && e.pointerId !== drag.id)) return;
-      const d = drag; drag = null; if (!d.ghost) return;
-      d.ghost.remove(); slotEls.forEach(el => el.classList.remove('drop', 'lift')); skipClick = true; setTimeout(() => { skipClick = false; }, 0);
+      const d = drag; drag = null;
+      if (!d.ghost) {   // a tap
+        const h = e && hitAt(e.clientX, e.clientY); if (!h) return;
+        if (d.from.ok && h.ok) return submit();
+        if (d.from.k != null && h.k === d.from.k) return tapSlot(h.k);
+        if (d.from.v != null && h.v === d.from.v) return put(h.v);
+        return;
+      }
+      d.ghost.remove();
       const o = e ? slotAt(e.clientX, e.clientY) : -1;
       if (d.from.k != null) { if (o >= 0) move(d.from.k, o); else take(d.from.k); }
       else if (o >= 0) put(d.from.v, o);
-    };
-    addEventListener('pointerup', endDrag); addEventListener('pointercancel', () => endDrag(null));
-    dock.addEventListener('click', e => {
-      const b = e.target.closest('button'); if (!b) return; e.stopPropagation(); if (skipClick) return;
-      if (b.classList.contains('hbok')) return submit();
-      if (b.classList.contains('hbslot')) return tapSlot(+b.dataset.k);
-      if (b.dataset.v != null) return put(+b.dataset.v);
-    });
+      paintDock();
+    }
+    const onCancel = () => { if (drag && drag.ghost) drag.ghost.remove(); drag = null; paintDock(); };
+    ctx.el.addEventListener('pointerdown', onDown, true); addEventListener('pointermove', onMove, { passive: false }); addEventListener('pointerup', onUp); addEventListener('pointercancel', onCancel);
     function onKey(e) {
       if (stopped || e.metaKey || e.ctrlKey || e.altKey) return;
       const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.isContentEditable)) return;
-      if (e.key === 'Enter') { if (!okEl.disabled) { e.preventDefault(); submit(); } return; }
+      if (e.key === 'Enter') { if (myTurn() && full()) { e.preventDefault(); submit(); } return; }
       if (e.key === 'Backspace') { const k = input[cur] != null ? cur : input.map((v, i) => v != null ? i : -1).filter(i => i >= 0).pop(); if (k != null && k >= 0) { e.preventDefault(); take(k); } return; }
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); cur = (cur + (e.key === 'ArrowLeft' ? cfg.n - 1 : 1)) % cfg.n; paintDock(); return; }
       if (/^[0-9]$/.test(e.key)) { const d = +e.key, v = kind === 'num' ? d : d - 1; if (v >= 0 && v < C) { e.preventDefault(); put(v); } }
@@ -391,7 +394,7 @@
 
     /* ---------- the flow ---------- */
     function hud(msg) {
-      if (mode === 'daily') { ctx.hud(`<span class="hs on"><i class="dk" style="background:#7df3d2"></i>${which.toUpperCase()}</span><span class="hm">${msg || ''}</span><span class="hs"><i class="dk" style="background:#8f98c8"></i>${t('left', { n: Math.max(0, cfg.rows - hist.length) })}</span>`); return; }
+      if (mode === 'daily') { ctx.hud(`<span class="hs on"><i class="dk" style="background:#7df3d2"></i>${bk ? esc(setName(bk.set, lang)) + ' #' + (bk.i + 1) : which.toUpperCase()}</span><span class="hm">${msg || ''}</span><span class="hs"><i class="dk" style="background:#8f98c8"></i>${t('left', { n: Math.max(0, cfg.rows - hist.length) })}</span>`); return; }
       const pill = s => `<span class="hs ${turn === s && !over ? 'on' : ''}"><i class="dk" style="background:${s ? '#ff7ac8' : '#7df3d2'}"></i>${esc(name(s))}</span>`;
       ctx.hud(`${pill(0)}<span class="hm">${msg || ''}</span>${pill(1)}`);
     }
@@ -445,6 +448,16 @@
       const rows = hist.filter(x => x.by !== 2).length;
       hud(w >= 0 && why !== 'resign' ? t('solvedRow', { n: hist.length }) : why === 'resign' ? '' : t('none'));
       later(() => {
+        if (mode === 'daily' && bk) {   // 問題集: ★ = solved · ★★ no hint · ★★★ no hint and within par; the best kept
+          const win = w === 0 && why !== 'resign', st = win ? 1 + (hinted ? 0 : 1) + (!hinted && rows <= P.par ? 1 : 0) : 0, B = bread();
+          B[bk.set] = B[bk.set] || {}; if (st > (B[bk.set][bk.i] || 0)) B[bk.set][bk.i] = st;
+          try { localStorage.setItem(BKEY, JSON.stringify(B)); } catch (e) {}
+          const nx = nextOf(bk.set, bk.i);
+          ctx.onEnd({ solo: true, win, draw: false, level: 0, title: setName(bk.set, lang) + ' #' + (bk.i + 1) + ' ' + t(win ? 'dWin' : 'dLose'), score: win ? t('dRes', { n: rows, p: P.par }) + '  ' + '★'.repeat(st) + '☆'.repeat(3 - st) : t('dFail', { n: P.limit }), best: kind === 'num' && !win ? t('ans') + ' ' + secret.join('') : '', opp: t('book') + ' ' + setName(bk.set, lang), key: 'pz-' + bk.set, why: win ? 'win' : why || 'out',
+            again: { label: t('again'), go: restart => restart(() => { AD.pending = { set: bk.set, i: bk.i }; }) },
+            next: nx ? { label: t('nx'), go: () => { AD.pending = nx; } } : null });
+          return;
+        }
         if (mode === 'daily') {
           const win = w === 0 && why !== 'resign', o = dread(), d = today();
           o[which] = o[which] || {}; if (win || !o[which][d]) o[which][d] = { n: rows, win, limit: P.limit };
@@ -456,7 +469,8 @@
             if (!D.days[d]) { D.streak = D.last === E.dayBefore(d) ? (D.streak || 0) + 1 : D.last === d ? D.streak || 1 : 1; D.days[d] = 1; D.last = d; D.best = Math.max(D.best || 0, D.streak); }
             try { localStorage.setItem('aicoding-hitblow-daily', JSON.stringify(D)); } catch (e) {}
           }
-          ctx.onEnd({ solo: true, win, draw: false, level: 0, title: (which === 'hard' ? 'HARD ' : 'EASY ') + t(win ? 'dWin' : 'dLose'), score: win ? t('dRes', { n: rows, p: P.par }) : t('dFail', { n: P.limit }), best: kind === 'num' ? t('ans') + ' ' + secret.join('') : '', opp: t('daily') + ' ' + which.toUpperCase(), key: 'daily-' + which, why: win ? 'win' : why || 'out' });
+          ctx.onEnd({ solo: true, win, draw: false, level: 0, title: (which === 'hard' ? 'HARD ' : 'EASY ') + t(win ? 'dWin' : 'dLose'), score: win ? t('dRes', { n: rows, p: P.par }) : t('dFail', { n: P.limit }), best: kind === 'num' ? t('ans') + ' ' + secret.join('') : '', opp: t('daily') + ' ' + which.toUpperCase(), key: 'daily-' + which, why: win ? 'win' : why || 'out',
+            again: { label: t('again'), go: restart => restart(() => { AD.pending = which; }) } });
           return;
         }
         const draw = w < 0, win = !pvp && w === 0;
@@ -483,7 +497,6 @@
 
     /* the start: the case is shaken and locked; a daily puzzle lays its clue rows down first */
     hud(''); paintDock();
-    requestAnimationFrame(() => { dock.classList.add('on'); placeDock(); later(placeDock, 400); later(placeDock, 1200); });
     later(() => shakeCase(() => {
       if (P) {
         let i = 0;
@@ -492,11 +505,11 @@
       } else next();
     }), 450);
 
-    const dbg = { secret: () => secret.slice(), hist: () => hist.map(x => Object.assign({}, x)), cfg: () => Object.assign({}, cfg), turn: () => turn, busy: () => busy, over: () => over, input: () => input.filter(v => v != null), slots: () => input.slice(), cur: () => cur, put, take, submit, puzzle: () => P, U };
+    const dbg = { secret: () => secret.slice(), hist: () => hist.map(x => Object.assign({}, x)), cfg: () => Object.assign({}, cfg), turn: () => turn, busy: () => busy, over: () => over, input: () => input.filter(v => v != null), slots: () => input.slice(), cur: () => cur, TU, U, put, take, submit, puzzle: () => P, U };
     window.Atlas3D.hitblow._dbg = dbg;
     return {
       get human() { return 0; },
-      inset: () => dockH,
+      inset: () => 0,
       undo() {}, canUndo: () => false,
       hint, canHint: () => myTurn() && mode !== 'rated',
       canResign: () => !over,
@@ -504,8 +517,7 @@
       timeout(s) { if (!over) finish(s ^ 1, 'time'); },
       stop() {
         stopped = true; timers.forEach(clearTimeout); clearTimeout(toastTm); if (toastEl) toastEl.remove();
-        ctx.el.removeEventListener('click', onClick); removeEventListener('keydown', onKey); removeEventListener('pointerup', endDrag); if (drag && drag.ghost) drag.ghost.remove(); removeEventListener('resize', onResize);
-        dock.remove(); document.documentElement.style.removeProperty('--hbdock');
+        ctx.el.removeEventListener('click', onClick); removeEventListener('keydown', onKey); ctx.el.removeEventListener('pointerdown', onDown, true); removeEventListener('pointermove', onMove); removeEventListener('pointerup', onUp); removeEventListener('pointercancel', onCancel); if (drag && drag.ghost) drag.ghost.remove(); removeEventListener('resize', onResize);
         if (window.Atlas3D.hitblow._dbg === dbg) delete window.Atlas3D.hitblow._dbg;
       },
       _debug: dbg,
@@ -514,18 +526,50 @@
 
   /* ---------- the card: 今日の一問 (EASY / HARD) on its own tab ---------- */
   const modeName = (m, lang) => m === 'daily' ? tx(lang, 'daily') : null;
-  const dailyNext = () => !dailyDone('easy') ? 'easy' : !dailyDone('hard') ? 'hard' : 'easy';   // (あそぶ in the パズル tab: today's first unsolved one)
+  const dailyNext = () => !dailyDone('easy') ? 'easy' : !dailyDone('hard') ? 'hard' : firstOpen();   // (あそぶ in the パズル tab: today's first unsolved one)
   const modeNote = (m, lang) => m === 'daily' ? tx(lang, 'dailyNote') : null;
+  // 問題一覧 (the パズル tab's button): 10 courses; a course opens its 50 puzzles with their ★ (go(pending) starts one on the table)
+  function bookSheet(lang, go) {
+    const E = window.HitBlowEngine; if (!E) return;
+    const old = document.getElementById('hbBook'); if (old) old.remove();
+    const B = bread(), T = (k, v) => tx(lang, k, v), esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    const cnt = set => { const o = B[set] || {}; let a = 0, st = 0; for (let j = 0; j < E.BOOK_N; j++) if (o[j]) { a++; st += o[j]; } return { a, st }; };
+    let A = 0, ST = 0; E.BOOK.forEach(S => { const c = cnt(S.id); A += c.a; ST += c.st; });
+    const tot = E.BOOK.length * E.BOOK_N, fo = firstOpen();
+    const ic = S => { const R = E.rule(S.z), k = R.kind; return `<span class="hbic">${[0, 1, 2].map(j => gemSvg(k, (j * 3 + S.z) % R.c, 'hbk' + S.id + j)).join('')}</span>`; };
+    const sh = document.createElement('div'); sh.id = 'hbBook'; sh.className = 'hbbk';
+    sh.innerHTML = `<div class="hbbk-in" role="dialog" aria-label="${esc(T('list'))}"><div class="hbbk-h"><b>${esc(T('list'))}</b><button type="button" class="hbbk-x" aria-label="✕">✕</button></div>
+      <div class="hbbk-top"><div><div class="hbbk-p">${esc(T('prog', { a: A, b: tot }))}<span>${esc(T('stars', { a: ST, b: tot * 3 }))}</span></div><div class="hbbar"><i style="width:${A / tot * 100}%"></i></div><small>${esc(T('bkNote'))}</small></div>
+      <button type="button" class="hbbk-go" data-go="${fo.set}:${fo.i}">${esc(T('cont'))} ▶<small>${esc(setName(fo.set, lang))} #${fo.i + 1}</small></button></div>
+      <div class="hbbk-l">${E.BOOK.map(S => { const c = cnt(S.id); return `<div class="hbset" data-set="${S.id}"><button type="button" class="hbset-h">${ic(S)}<span class="hbset-t"><b>${esc(setName(S.id, lang))}</b><small>${esc(S.hi <= 1 ? T('c1') : T('cn', { a: S.lo, b: S.hi }))}</small></span><span class="hbset-n"><b>${c.a}/${E.BOOK_N}</b><span class="hbbar"><i style="width:${c.a / E.BOOK_N * 100}%"></i></span></span><i class="hbset-v">▾</i></button><div class="hbgrid" hidden></div></div>`; }).join('')}</div></div>`;
+    document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
+    const close = () => { sh.classList.remove('on'); setTimeout(() => sh.remove(), 220); };
+    const open = el => { const set = el.dataset.set, gd = el.querySelector('.hbgrid'), o = B[set] || {};
+      if (!gd.innerHTML) gd.innerHTML = Array.from({ length: E.BOOK_N }, (_, j) => `<button type="button" data-go="${set}:${j}" class="${o[j] ? 'ok' : ''}${set === fo.set && j === fo.i ? ' nx' : ''}"><b>${j + 1}</b><i>${o[j] ? '★'.repeat(o[j]) + '☆'.repeat(3 - o[j]) : '☆☆☆'}</i></button>`).join('');
+      const on = gd.hidden; sh.querySelectorAll('.hbgrid').forEach(x => { x.hidden = true; x.parentNode.classList.remove('open'); }); gd.hidden = !on; el.classList.toggle('open', on);
+      if (on) setTimeout(() => el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 30); };
+    sh.addEventListener('click', e => {
+      const g = e.target.closest('[data-go]'); if (g) { const [set, i] = g.dataset.go.split(':'); close(); go({ set, i: +i }); return; }
+      const h = e.target.closest('.hbset-h'); if (h) { open(h.parentNode); return; }
+      if (e.target === sh || e.target.closest('.hbbk-x')) close();
+    });
+    open(sh.querySelector(`.hbset[data-set="${fo.set}"]`));
+  }
+  function bookBtn(lang) {   // the パズル tab's 問題一覧 button, with the book's progress
+    const E = window.HitBlowEngine; if (!E) return '';
+    const B = bread(); let a = 0; for (const k in B) a += Object.keys(B[k] || {}).length; const tot = E.BOOK.length * E.BOOK_N;
+    return `<button type="button" class="mxb hbd hbbkb" data-hbbook="1"><i>▦</i><span>${tx(lang, 'list')}</span><small><span>${tx(lang, 'prog', { a, b: tot })}</span></small></button>`;
+  }
   // the daily tab's two buttons (atlas/app.js: #bvDaily; a click sets pending and starts)
   function dailyHtml(lang) {
     const E = window.HitBlowEngine; const lim = k => { try { const P = E && E.makeDaily(today(), k); return P ? P.limit : '?'; } catch (e) { return '?'; } };
     // 勝率 (2026-11-16 user): the days solved / the days played, per EASY · HARD (each day's first try counts; a later solve of the day counts too)
     const o = dread(), rate = k => { const d = Object.values(o[k] || {}), w = d.filter(x => x && x.win).length; return d.length ? `<b class="hbr">${tx(lang, 'rate')} ${Math.round(w / d.length * 100)}%<i>（${w}/${d.length}）</i></b>` : `<b class="hbr">${tx(lang, 'rate')} —</b>`; };
-    return ['easy', 'hard'].map(k => `<button type="button" class="mxb pzd hbd${dailyDone(k) ? ' pzok' : ''}" data-daily="${k}"><span>${tx(lang, 'daily')}</span><em class="ez">${k.toUpperCase()}</em><small><span>${tx(lang, k, { n: lim(k) })}</span>${rate(k)}</small></button>`).join('');
+    return ['easy', 'hard'].map(k => `<button type="button" class="mxb pzd hbd${dailyDone(k) ? ' pzok' : ''}" data-daily="${k}"><span>${tx(lang, 'daily')}</span><em class="ez">${k.toUpperCase()}</em><small><span>${tx(lang, k, { n: lim(k) })}</span>${rate(k)}</small></button>`).join('') + bookBtn(lang);
   }
   css();   // (the card's 今日の一問 buttons are styled before a game starts)
   window.Atlas3D = window.Atlas3D || {};
   // the card (2026-11-16 user: 将棋と同じカード): 対戦 (二人で対戦 = the top of 相手) · レート戦 · パズル (今日の一問 EASY / HARD) — adapter.mx
   window.Atlas3D.hitblow = { ortho: true, mx: true, levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], kindFirst: true,
-    sizes: [1, 2, 3, 4, 5], size0: 1, sizeLabel: () => '', sizeName, optInfo, levelInfo, modeName, modeNote, dailyHtml, dailyDone, dailyNext, pending: null, start, TX, L14 };
+    sizes: [1, 2, 3, 4, 5], size0: 1, sizeLabel: () => '', sizeName, optInfo, levelInfo, modeName, modeNote, dailyHtml, dailyDone, dailyNext, bookSheet, pending: null, start, TX, L14 };
 })();

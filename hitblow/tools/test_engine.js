@@ -105,5 +105,12 @@ for (const k of E.DIFFS) {
   }
 }
 
+// 問題集: 10 sets × 50, each built, its clues right, the answer still a candidate, the count in the set's range, the 500 all different
+{ const seen = new Set(); let bad = 0, n = 0;
+  for (const S of E.BOOK) for (let i = 0; i < E.BOOK_N; i++) { const P = E.makePuzzle(S.id, i); n++;
+    if (!P || !P.clues.every(c => { const f = E.feedback(P.secret, c.g); return f.h === c.h && f.b === c.b; }) || E.candsOf(P.cfg, P.clues).length !== P.cands || P.cands < S.lo || P.cands > S.hi || P.limit < P.par || P.limit > 8) { bad++; continue; }
+    seen.add(S.id + P.secret.join() + P.clues.map(c => c.g.join()).join('|')); }
+  ok(!bad && seen.size === n && n === 500, '問題集: ' + n + ' puzzles, all right and all different (' + seen.size + ')'); }
+
 console.log(fail ? 'FAILED (' + fail + ')' : 'ALL OK');
 process.exit(fail ? 1 : 0);

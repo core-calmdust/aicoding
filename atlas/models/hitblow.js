@@ -226,6 +226,69 @@
       active: r => { act.visible = r != null && r >= 0; if (act.visible) act.position.z = Lt.z0 + (r + .5) * ROWP; }, W: Lt.W, L: Lt.L, top: BH, pitch: PITCH, sock: R + .06, _s: Math.max(Lt.W, Lt.L) / 2, _rb: Math.max(Lt.W, Lt.L) / 2 };
     return g;
   }
+  // the input tray (2026-11-16 user: ゲーム盤と入力ボックスを同じ3Dに): a slab joined to the board's near edge, only while playing —
+  // the row being made (sockets under the board's columns, the cursor ring), OK on the pins' column, and the palette (bigger gems).
+  // Coordinates are the board's. userData: D (depth), z0, sock(k) → [x, z], pal(v) → [x, z], ok → [x, z, w, d], gemS (palette scale),
+  // put(k, v|null), cursor(k|-1), okOn(bool), used(v, bool), off(bool)
+  function tray(cfg, Lt0) {
+    const TT = T(), Lt = Lt0 || layout(cfg), g = new TT.Group(), BH = TOP, n = cfg.n, C = cfg.c;
+    const per = C > 8 ? Math.ceil(C / 2) : C, prow = Math.ceil(C / per);
+    const pp = Math.min(1.2, (Lt.W - .7) / per), gemS = Math.min(1.3, pp / (2 * R) * .86);
+    const rowH = 1.25, palH = pp * .98, D = .3 + rowH + prow * palH + .3, z0 = Lt.L / 2 + .14, zc = z0 + D / 2;
+    const sz = z0 + .3 + rowH / 2, sock = k => [Lt.slot(0, k)[0], sz];
+    const pal = v => { const r = Math.floor(v / per), q = v % per, m = Math.min(per, C - r * per); return [(q - (m - 1) / 2) * pp, z0 + .3 + rowH + (r + .5) * palH]; };
+    const okW = .98, okD = .82, ok = [Lt.fbx, sz, okW, okD];
+    const PX = 80, tex = X.canvasTex('hbTray' + n + 'c' + C, Math.round((Lt.W - .16) * PX), Math.round((D - .16) * PX), (c, W, H) => {
+      const px = x => (x + (Lt.W - .16) / 2) * PX, pz = z => (z - (zc - (D - .16) / 2)) * PX;
+      const gr = c.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#141d4c'); gr.addColorStop(1, '#0a0f2c'); c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      c.strokeStyle = 'rgba(130,160,255,.06)'; c.lineWidth = 1; for (let x = 0; x < W; x += PX * .25) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); } for (let y = 0; y < H; y += PX * .25) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
+      // the row's well: as the board's play field, a neon line round it
+      const fx0 = px(Lt.x0 - .3), fx1 = px(Lt.x0 + n * PITCH + .3), f0 = pz(sz - rowH / 2 + .08), f1 = pz(sz + rowH / 2 - .08);
+      rr(c, fx0, f0, fx1 - fx0, f1 - f0, PX * .3); c.fillStyle = 'rgba(2,4,18,.55)'; c.fill(); c.strokeStyle = 'rgba(120,170,255,.5)'; c.lineWidth = PX * .03; c.shadowColor = '#6f8cff'; c.shadowBlur = PX * .15; c.stroke(); c.shadowBlur = 0;
+      for (let k = 0; k < n; k++) { const [x, z] = sock(k); socket(c, px(x), pz(z), PX * (R + .06)); }
+      // the palette's bed
+      const b0 = pz(z0 + .3 + rowH - .02), b1 = pz(z0 + D - .2);
+      rr(c, px(-Lt.W / 2 + .3), b0, PX * (Lt.W - .6), b1 - b0, PX * .3); c.fillStyle = 'rgba(0,0,0,.28)'; c.fill(); c.strokeStyle = 'rgba(140,170,255,.18)'; c.lineWidth = 1.5; c.stroke();
+      for (let v = 0; v < C; v++) { const [x, z] = pal(v); const r = PX * R * gemS * 1.02, gg = c.createRadialGradient(px(x), pz(z) + r * .2, r * .2, px(x), pz(z), r * 1.1); gg.addColorStop(0, 'rgba(0,0,0,.6)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gg; c.beginPath(); c.arc(px(x), pz(z), r * 1.1, 0, 7); c.fill(); }
+    });
+    const body = X.mesh(geo('hbTrayB' + n + 'c' + C, () => rbox(Lt.W, D, BH, .38, .08)), lacquer()); body.position.z = zc; g.add(body);
+    const top = planeTop(Lt.W - .16, D - .16, mat('hbTrayT' + n + 'c' + C, () => { const m = X.M({ map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; }));
+    top.position.set(0, BH + .002, zc); g.add(top);
+    const rim = (() => { const w = Lt.W / 2 - .07, d = D / 2 - .07, r = .32, pts = [];
+      const arc = (cx, cz, a0) => { for (let i = 0; i <= 6; i++) { const a = a0 + i / 6 * Math.PI / 2; pts.push(new TT.Vector3(cx + Math.cos(a) * r, 0, cz + Math.sin(a) * r)); } };
+      arc(w - r, d - r, 0); arc(-w + r, d - r, Math.PI / 2); arc(-w + r, -d + r, Math.PI); arc(w - r, -d + r, Math.PI * 1.5);
+      const t = new TT.Mesh(geo('hbTrayRim' + n + 'c' + C, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true), LO() ? 60 : 120, .028, 6, true)), neonMat('#7fa2ff', 1.5)); t.position.set(0, BH + .01, zc); return t; })();
+    g.add(rim);
+    // OK: a raised key with its label (lit mint when the row is full)
+    const okTex = on => X.canvasTex('hbOk' + (on ? 1 : 0), 160, 134, (c, W, H) => {
+      const gr = c.createLinearGradient(0, 0, 0, H); if (on) { gr.addColorStop(0, '#a8ffe6'); gr.addColorStop(1, '#4fd6b0'); } else { gr.addColorStop(0, '#2c3672'); gr.addColorStop(1, '#1e2756'); }
+      c.fillStyle = gr; c.fillRect(0, 0, W, H);
+      c.font = '900 64px "Outfit", system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = on ? '#0d3a33' : 'rgba(180,195,255,.55)'; c.fillText('OK', W / 2, H / 2 + 3);
+    });
+    const okM = on => mat('hbOkM' + (on ? 1 : 0), () => { const t = okTex(on), m = X.M({ map: t, emissiveMap: t, emissive: '#ffffff', emissiveIntensity: on ? .75 : .45, roughness: .6, envMapIntensity: .15, bump: false }); m.emissive.set(0xffffff); return m; });
+    const okG = new TT.Group(); okG.position.set(ok[0], BH, ok[1]); g.add(okG);
+    const okBody = X.mesh(geo('hbOkB', () => rbox(okW, okD, .16, .16, .04)), mat('hbOkBM', () => X.M({ color: '#1a2150', roughness: .6, envMapIntensity: .2, bump: false }))); okG.add(okBody);
+    const okFace = planeTop(okW - .1, okD - .1, okM(false)); okFace.position.y = .165; okG.add(okFace);
+    const okGlow = new TT.Mesh(geo('hbOkGl', () => { const p = new TT.PlaneGeometry(okW + .3, okD + .3); p.rotateX(-Math.PI / 2); return p; }), mat('hbOkGlM', () => new TT.MeshBasicMaterial({ color: 0x7df3d2, transparent: true, opacity: .22, depthWrite: false, toneMapped: false })));
+    okGlow.position.y = .004; okGlow.visible = false; okGlow.renderOrder = 1; okG.add(okGlow);
+    // the cursor: a mint ring round the socket a gem goes into
+    const ring = new TT.Mesh(geo('hbCur', () => { const r = new TT.RingGeometry(R + .08, R + .15, 40); r.rotateX(-Math.PI / 2); return r; }), neonMat('#7df3d2', 1.6)); ring.position.y = BH + .012; ring.visible = false; g.add(ring);
+    // the palette gems (their own materials: a used colour dims)
+    const pgs = [];
+    for (let v = 0; v < C; v++) { const m = gem(cfg.kind, v), [x, z] = pal(v); m.position.set(x, BH + .02, z); m.scale.setScalar(gemS); m.userData.pv = v;
+      m.traverse(o => { if (o.material) { o.material = o.material.clone(); o.userData.e0 = o.material.emissiveIntensity; } }); g.add(m); pgs.push(m); }
+    const dim = (m, k) => m.traverse(o => { if (o.material && o.material.color) { if (o.userData.c0 == null) o.userData.c0 = o.material.color.clone(); o.material.color.copy(o.userData.c0).multiplyScalar(k); if (o.userData.e0 != null) o.material.emissiveIntensity = o.userData.e0 * k; } });
+    const usedS = new Set(); let isOff = false;
+    const paint = () => pgs.forEach((m, v) => { const u = usedS.has(v); dim(m, isOff ? .4 : u ? .3 : 1); m.position.y = BH + (u ? -.06 : .02); });
+    const placed = [];
+    g.userData = { D, z0, zc, W: Lt.W, sock, pal, ok, gemS, pp,
+      put(k, v) { if (placed[k]) { g.remove(placed[k]); placed[k] = null; } if (v == null) return; const m = gem(cfg.kind, v), [x, z] = sock(k); m.position.set(x, BH - R * .12, z); g.add(m); placed[k] = m; },
+      cursor(k) { ring.visible = k >= 0; if (k >= 0) { const [x, z] = sock(k); ring.position.x = x; ring.position.z = z; } },
+      okOn(on) { okFace.material = okM(!!on); okGlow.visible = !!on; okG.position.y = BH + (on ? .03 : 0); },
+      used(v, u) { if (u) usedS.add(v); else usedS.delete(v); paint(); }, usedAll(set) { usedS.clear(); set.forEach(v => usedS.add(v)); paint(); },
+      off(o) { isOff = !!o; paint(); }, palGem: v => pgs[v] };
+    return g;
+  }
   function lidTex(n, w, d) {
     const PX = 96;
     return X.canvasTex('hbLidT' + n, Math.round(w * PX), Math.round(d * PX), (c, W, H) => {
@@ -254,5 +317,5 @@
     });
     return g;   // (no lit row on the showcase: only while playing, 2026-11-16 user)
   };
-  X.hitblow = { board, gem, pin, layout, ICONS, STROKE, COLORS, DIGIT, HIT, BLOW, R, TOP, mix };
+  X.hitblow = { board, tray, gem, pin, layout, ICONS, STROKE, COLORS, DIGIT, HIT, BLOW, R, TOP, mix };
 })();
