@@ -48,7 +48,7 @@
       name: N('ペグソリテール', 'Peg Solitaire', '孔明棋', '페그 솔리테르', 'Solitario de clavijas', 'Solitaire', 'Resta Um', 'Solitär', 'पेग सॉलिटेयर', 'سوليتير الأوتاد', 'Солитер', '孔明棋', 'Peg Solitaire', 'Peg Solitaire') },
     { id: 'shanghai', cat: 'puzzle', store: ['aicoding-shanghai'], href: 'atlas/#games/shanghai', only3d: true, color: '#1f6a4c', released: '2026-11-13', tags: ['classic', 'puzzles', 'variants', 'mobile'], total: { pz: 720 },
       name: N('上海', 'Shanghai', '上海麻将', '상하이', 'Shanghái', 'Shanghai', 'Xangai', 'Shanghai', 'शंघाई', 'شنغهاي', 'Шанхай', '上海麻將', 'Shanghai', 'Şanghay') },
-    { id: 'hitblow', cat: 'puzzle', store: ['aicoding-hitblow'], href: 'atlas/#games/hitblow', only3d: true, color: '#2b3683', released: '2026-11-16', tags: ['classic', 'ai', 'rated', 'daily', 'variants', 'mobile'], total: {}, alpha: true,
+    { id: 'hitblow', cat: 'deduce', store: ['aicoding-hitblow'], href: 'atlas/#games/hitblow', only3d: true, color: '#2b3683', released: '2026-11-16', tags: ['classic', 'ai', 'rated', 'daily', 'variants', 'mobile'], total: {}, alpha: true,
       name: N('ヒット＆ブロー', 'Hit & Blow', '猜数字·猜颜色', '히트 앤 블로', 'Hit & Blow', 'Hit & Blow', 'Hit & Blow', 'Hit & Blow', 'हिट एंड ब्लो', 'هِت آند بلو', 'Быки и коровы', '猜數字·猜顏色', 'Hit & Blow', 'Hit & Blow') },
     { id: 'checkers', cat: 'chess', store: ['aicoding-checkers', 'checkers-online-name'], href: 'checkers/', color: '#8e2a3c', released: '2026-10-21', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 13 },
       name: N('チェッカー V2', 'Checkers V2', '跳棋（国际跳棋·英式） V2', '체커 V2', 'Damas V2', 'Dames anglaises V2', 'Damas V2', 'Dame V2', 'चेकर्स V2', 'الداما V2', 'Шашки V2', '西洋跳棋（英式） V2', 'Dam V2', 'Dama V2') },
@@ -109,7 +109,7 @@
   ];
   GAMES.forEach(g => { g.icon = 'images/icons/' + (g.id === 'speedsudoku' ? 'speed-sudoku' : g.id) + '.svg'; });
   // cat: home-grid category chip — chess (shogi/chess-like) · line (line-up & territory) · race (dice race & sowing) · hist (historical: ancient games recreated) · puzzle
-  const CATS = ['chess', 'line', 'race', 'hist', 'action', 'puzzle', 'card'];
+  const CATS = ['chess', 'line', 'race', 'hist', 'action', 'puzzle', 'deduce', 'card'];   // (deduce 推理・数あて: ヒット＆ブロー, 2026-11-16)
   // sound effects on/off for every page of the series (localStorage 'atlas-sfx': '0' = off)
   const sfxOn = () => { try { return localStorage.getItem('atlas-sfx') !== '0'; } catch (e) { return true; } };
   // store: localStorage key prefixes that belong to the game. The shared account (shared/atlas-account.js)
@@ -390,7 +390,9 @@
   function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
   // coins are derived, so nothing can be earned twice: achievements + login bonus + duplicate refunds − spent
   // (2026-11-14) a game's own play rewards, also derived: 上海 pays ¢10 for every ★ won on its stages (atlas/games/shanghai.js)
-  const PLAY_COINS = { shanghai: () => { const d = J('aicoding-shanghai') || {}; return (starsOf(d.st) + Object.values(d.cs || {}).reduce((a, c) => a + starsOf(c.st), 0)) * 10; } };
+  // (2026-11-16) ヒット＆ブローのステージ: ¢10 for every ★ (atlas/games/hitblow.js, 'aicoding-hitblow-pz3d' { set: { i: ★ } })
+  const hbStars = () => { const d = J('aicoding-hitblow-pz3d') || {}; let n = 0; for (const k in d) if (k[0] !== '_' && d[k] && typeof d[k] === 'object') for (const i in d[k]) n += +d[k][i] || 0; return n; };
+  const PLAY_COINS = { hitblow: () => hbStars() * 10, shanghai: () => { const d = J('aicoding-shanghai') || {}; return (starsOf(d.st) + Object.values(d.cs || {}).reduce((a, c) => a + starsOf(c.st), 0)) * 10; } };
   const playCoins = () => Object.values(PLAY_COINS).reduce((s, f) => s + (f() || 0), 0);
   function coins(W, A) {
     const ach = A.filter(a => a.done).reduce((s, a) => s + TIER_COINS[a.tier], 0), pc = playCoins();
