@@ -1,6 +1,6 @@
 /* AI bosses & table talk — 简体中文. {me} = the speaker's name */
 (window.AtlasNPC = window.AtlasNPC || {}).T = Object.assign(window.AtlasNPC.T || {}, { zh: {
-  ui: { boss: '首领', watch: '观战', trivia: '小知识', got: '获得了{name}（SR）！', beat: '打败了{name}！', gacha: '扭蛋里还有SSR・UR的{name}哦…！' },
+  ui: { boss: '首领', watch: '观战', trivia: '小知识', got: '获得了{name}（SR）！', beat: '赢了{name}！', gacha: '扭蛋里还有SSR・UR的{name}哦…！' },
   voice: {
     god: { greet: ['我是{me}。正面反面，我都看得见。'], lead: ['呵呵，棋盘在我眼里早已黑白分明。', '从天上看，每个角落都清清楚楚。'], even: ['哦？地上竟有这样的棋手。'], behind: ['哎呀…正反两面换过来了。', '嗯，连神也没算到的一手。'], losing: ['这…天地都要翻过来了！'], gain: ['来，翻过去吧。'], slip: ['哦，好棋。我的云都晃了一下。', '嗯，把我的光环碰歪了。'], win: ['黑白已分。下次再登上天来吧。'], lose: ['了不起…！竟然超越了神。你的名字将刻在天上。', '我认输。今天被翻过来的是我。'], draw: ['平局。正反两面，各占一半。'] },
     king: { greet: ['朕乃{me}。好好见识棋盘之王的威力吧！'], lead: ['哈哈，跪下吧！', '朕的胜利已成定局。'], even: ['哦，还挺有两下子嘛。'], behind: ['什么？朕竟被压制了？', '可恶，侍卫们在干什么！'], losing: ['这、这一定是哪里弄错了…！'], gain: ['看见了吗，这就是王者的一手！'], slip: ['哼，好无礼的一手…！', '可恶，朕的王冠都歪了！'], win: ['哈哈，朕赢了！欢迎再来挑战。'], lose: ['哼…了不起。今天就算朕输了。', '可恶…朕擦亮王冠再来！'], draw: ['平局吗。好吧，赏你个夸奖。'] },
