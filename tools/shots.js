@@ -39,7 +39,7 @@ const GAMES = {
   reversi: { img: 'reversi_v4.webp', zoom: .84 }, go: {}, gomoku: {}, dots: { zoom: .84 }, connect4: { img: 'connect4_v2.webp', zoom: .84 }, morris: { zoom: .84 },
   amazons: {}, peg: {}, shanghai: {}, hex: {}, latrunculi: {}, foxgeese: {}, patolli: {}, mancala: { zoom: .8 }, backgammon: { img: 'backgammon_v2.webp' },
   sudoku: { path: 'sudoku/' }, speedsudoku: { img: 'speed-sudoku.webp', path: 'speed-sudoku/' }, samegame: { fx: .62 }, jailbreak: {},
-  poker: {}, baccarat: {}, blackjack: {}, solitaire: {},
+  poker: {}, baccarat: {}, blackjack: {}, solitaire: {}, carrom: {}, crokinole: {}, hockey: {}, botao: {},   // (the 3D-only games: their images/ files are 3D play screens, 1200×900)
 };
 
 /* ---------- generic helpers (run in the page) ---------- */
