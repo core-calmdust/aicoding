@@ -119,10 +119,16 @@ async function runtime() {
     const el = await p.$('#hand .hrow .tl[data-id]'); const bx = await el.boundingBox(); const cx = bx.x + bx.width / 2, cy = bx.y + bx.height / 2;
     await p.mouse.move(cx, cy); await p.mouse.down(); await p.mouse.move(cx, cy - 40, { steps: 4 }); await p.mouse.up(); await p.waitForTimeout(400);
     ok('short slide: the tile goes back, still my turn', await p.evaluate(`JANKA.UIS.kind === 'turn'`));
+    const n0 = await p.evaluate(`JANKA.G.P[0].river.length`);
     await p.mouse.move(cx, cy); await p.mouse.down(); await p.mouse.move(cx, 390 * .35, { steps: 8 });
     const lit = await p.evaluate(`!!document.querySelector('#hand .tl.hdrop')`); await p.mouse.up(); await p.waitForTimeout(1200);
-    const r = await p.evaluate('__rc');
-    ok('long slide: lit, discarded, the hand takes it where it was let go', lit && !!(r && r.page && r.layer), JSON.stringify(r));
+    const r = await p.evaluate('__rc'), n1 = await p.evaluate(`JANKA.G.P[0].river.length`), ghost = await p.evaluate(`document.querySelectorAll('.tl.ghost').length`);
+    // (2026-11-16, ユーザー「スマホ:スライドして牌を捨てた際は自分の手のアニメーションを省略して、そのまま捨て牌に置く」) no hand, no page copy
+    ok('long slide: lit, discarded straight into the river (no hand, no page copy)', lit && !r && n1 === n0 + 1 && !ghost, JSON.stringify({ r, n0, n1, ghost }));
+    // a tap still has the hand take the tile
+    await p.waitForFunction(`JANKA.UIS.kind === 'turn'`, null, { timeout: 90000 }).catch(() => {});
+    await p.evaluate(traceReach); await p.evaluate(`document.querySelector('#hand .hrow .tl[data-id]:not(.no)').click()`); await p.waitForTimeout(1200);
+    const r2 = await p.evaluate('__rc'), k2 = await p.evaluate(`[JANKA.UIS.kind, JANKA.G.P[0].river.length, JANKA.DB.set.tap2]`); ok('a tap: the hand still takes the tile', !!(r2 && r2.page), JSON.stringify([r2, k2]));
     ok('no page errors (game, phone)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('banner')) { console.log('[banner] the round band is centred');

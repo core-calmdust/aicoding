@@ -1431,6 +1431,9 @@ function layoutRiver(s, anim) {
     const off = e => { let x = 0, y = 0; for (let n = e; n && n !== root; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; } return [x, y]; };
     if (el && root.contains(el)) { const [ex0, ey0] = off(el), [sx, sy] = off($('#stage')), ex = ex0 + (+el.dataset.ddx || 0), ey = ey0 + (+el.dataset.ddy || 0);   // (ddx/ddy: where a dragged tile was let go — phone)
       lx = TB.screenPose(ex + el.offsetWidth / 2 - sx, ey + el.offsetHeight / 2 - sy, el.offsetWidth);
+      // (2026-11-16, ユーザー「スマホ:スライドして牌を捨てた際は自分の手のアニメーションを省略して、そのまま捨て牌に置く」) a tile let
+      // go by a drag goes straight from where the finger left it to its place in the river — no hand, no copy of the page's tile
+      if (el.dataset.ddx != null) { lx.direct = true; delete el.dataset.ddx; delete el.dataset.ddy; throw 0; }
       // (2026-11-16, ユーザー「スマホで捨てる牌が暗い四角になる」: until the hand has its fingers on it, the tile stays the page's own
       // tile — a copy left where it stood, while the row closes up — and the 3D tile (lit by the table's lights, so greyer than the
       // flat picture) takes over only when it is picked up)
