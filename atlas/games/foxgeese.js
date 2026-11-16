@@ -16,7 +16,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../foxgeese/', VER = '?v=5';   // same file / version as foxgeese/index.html → shared cache
+  const BASE = '../foxgeese/', VER = '?v=6';   // same file / version as foxgeese/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.FoxEngine) return Promise.resolve(window.FoxEngine);
