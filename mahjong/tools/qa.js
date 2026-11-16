@@ -117,6 +117,8 @@ async function runtime() {
     const p = await page(PC); await p.evaluate(`document.querySelector('#btnGacha').click()`); await p.waitForTimeout(500);
     await p.evaluate(`document.querySelector('.gbtns [data-n="10"]').click()`); await p.waitForTimeout(4000);
     ok('10 cards shown', await p.evaluate(`document.querySelectorAll('#gStage .gc').length`) === 10);
+    await p.mouse.click(8, 450); await p.waitForTimeout(300);
+    ok('the gacha closes on a click outside', await p.evaluate(`document.querySelector('#modal').hidden`));
     ok('the effect canvas is gone afterwards', await p.evaluate(`!document.querySelector('.gfx-cv')`));
     ok('no page errors (gacha)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 

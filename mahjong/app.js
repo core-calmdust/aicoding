@@ -431,7 +431,12 @@ function toast(msg, ms = 1800) {
 }
 function modal(html, cls = '') {
   const m = $('#modal');
-  m.className = 'modal ' + cls; m.innerHTML = `<div class="mbox">${html}</div>`; m.hidden = false; m.onclick = null;   // (onclick: a box's own way to close from outside, e.g. the settings)
+  m.className = 'modal ' + cls; m.innerHTML = `<div class="mbox">${html}</div>`; m.hidden = false;
+  // (2026-11-16, ユーザー「ガチャも、ほかの各種ボックスも全部、空いている所をクリックしたら戻れるように」) a click on the empty space
+  // around a box presses the box's own close button (its own way of closing — the gacha redraws the home, and so on). Boxes with no
+  // close button (a question that must be answered, the results over the table) are left alone.
+  m.onclick = e => { if (e.target !== m || (m.firstElementChild && m.firstElementChild.busy)) return;
+    const x = m.querySelector('[data-a=close], .mbox > .x, .mbox > * > .x, header .x'); if (x) x.click(); };
   if (TB) TB.quiet = /\bstage\b/.test(cls);   // (a result over the whole table: the table's own animation rests behind it)
   requestAnimationFrame(() => m.classList.add('show'));
   return m.firstElementChild;
@@ -545,9 +550,9 @@ function homeSay(e) {
     if (im) { const r = uiRect(im), k = Math.max(r.width / 1080, r.height / 1920), [px, py] = uiPt(e.clientX, e.clientY);
       const ju = (px - r.left - (r.width - 1080 * k) / 2) / (1080 * k), jv = (py - r.top) / (1920 * k);
       // (2026-11-16, ユーザー) how much it wobbles, by where she was touched (touch.js zones): chest and hips 100% · the face and the
-      // hair around it 10% · arms, legs, the belly and everywhere else 50%
+      // hair around it 10% · arms, legs, the belly and everywhere else 30%
       const zn = window.MJTouch && MJTouch.zone ? MJTouch.zone(c.id, ju, jv) : null;
-      MJJiggle.poke(im, ju, jv, { c: 1, h: 1, f: .1, k: .1 }[zn] ?? .5); } }
+      MJJiggle.poke(im, ju, jv, { c: 1, h: 1, f: .1, k: .1 }[zn] ?? .3); } }
   if (e && window.MJTouch && I18N.lang === 'ja') { const im = e.target.closest('#pImg') && document.querySelector('#pImg img');
     if (im) { const r = uiRect(im), k = Math.max(r.width / 1080, r.height / 1920), w = 1080 * k, h = 1920 * k, [px, py] = uiPt(e.clientX, e.clientY);   // (the picture covers its box, held at the top, centred across)
       const u = (px - r.left - (r.width - w) / 2) / w, v = (py - r.top) / h; txt = MJTouch.line(c.id, MJTouch.zone(c.id, u, v)); at = [px, py]; } }
