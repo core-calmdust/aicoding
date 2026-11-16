@@ -52,7 +52,7 @@ for (let i = 0; i < NN; i++) {
     out.push([r1 * 7 + c1, b, dr, dc]);
   }
 }
-function setRule(k) { RK = RULES[k] ? k : DEFAULT_RULE; R = RULES[RK]; }
+function setRule(k) { RK = RULES[k] ? k : DEFAULT_RULE; R = RULES[RK]; setGooseTable(); }
 function setFirst(p) { FIRST = p === P2 ? 1 : 0; }
 // ---------------------------------------------------------------- zobrist
 let seed = 0x2b7e1516;
@@ -207,7 +207,82 @@ function foxArea(pos) {
   while (top) { const a = _stack[--top]; for (const [x] of NBR[a]) if (!sq[x] && !_seen[x]) { _seen[x] = 1; n++; _stack[top++] = x; } }
   return n;
 }
+// flat tables for the fast evaluation: NB (the neighbours of each point), OP (the lines through a point: take-off / landing),
+// GM (the points a goose may step to under the current rule; set by setRule)
+const ROW = new Int8Array(NN); for (let i = 0; i < NN; i++) ROW[i] = RC[i][0];
+const NB0 = new Int16Array(NN + 1), NBF = [], OP0 = new Int16Array(NN + 1), OPT = [], OPL = [];
+for (let i = 0; i < NN; i++) {
+  NB0[i] = NBF.length; OP0[i] = OPT.length;
+  for (const [x, , dr, dc] of NBR[i]) { NBF.push(x); const o = NBR[i].find(e => e[2] === -dr && e[3] === -dc); if (o) { OPT.push(x); OPL.push(o[0]); } }
+}
+NB0[NN] = NBF.length; OP0[NN] = OPT.length;
+const NBA = Int8Array.from(NBF), OPTA = Int8Array.from(OPT), OPLA = Int8Array.from(OPL);
+const GM0 = new Int16Array(NN + 1); let GMA = new Int8Array(0);
+function setGooseTable() {
+  const out = [];
+  for (let i = 0; i < NN; i++) { GM0[i] = out.length; for (const [x, , dr, dc] of NBR[i]) { if (!R.diag && dr && dc) continue; if (!R.back && dr > 0) continue; out.push(x); } }
+  GM0[NN] = out.length; GMA = Int8Array.from(out);
+}
+// The no-retreat rules (g15 / g17 / g13n): the geese can never come back, so a pen that leaks behind them can never be closed.
+//   area   — the empty points the fox can walk to (the pen), weighted much more than in g13
+//   esc    — the fox can walk to a point behind every goose (a row no goose can reach any more): the net is broken for good
+//   deep   — pen points on rows that only a few geese (on that row or behind it) can still reach
+//   threat — a goose with an empty landing point behind it whose take-off point the fox can walk to: the nearer, the worse
+//   ahead  — geese that have gone past the fox's row (they can never come back to close the pen behind it): per row past it
+//   lone   — a goose already above the fox's row with no other goose next to it (passed: it cannot help and the fox picks it off)
+//   tempo  — the geese running out of moves (no retreat: a goose that has to move into a jump is a goose lost; no moves = the fox wins)
+const EWN = { area: 20, esc: 450, t1: 34, t2: 12, t3: 4, adv: 0, lone: 22, tempo: 14, deep: 10, ahead: 20 };
+if (typeof process !== 'undefined' && process.env && process.env.FG_EWN) Object.assign(EWN, JSON.parse(process.env.FG_EWN));   // (tuning runs in Node)
+const _dist = new Int8Array(NN), _rowN = new Int8Array(7), _q = new Int8Array(NN);
+const EV0N = { g15: 1130, g17: 1370, g13: 0, g13n: 890 };   // the start (the fox to move) comes out at 0
+function evaluateN(pos) {
+  const sq = pos.sq, f = pos.fox;
+  _dist.fill(-1); _rowN.fill(0);
+  let geese = 0, gMax = -1;
+  for (let k = 0; k < 33; k++) { const i = POINTS[k]; if (sq[i] === P2) { const r = ROW[i]; _rowN[r]++; geese++; if (r > gMax) gMax = r; } }
+  for (let r = 5; r >= 0; r--) _rowN[r] += _rowN[r + 1];        // geese on this row or behind it: the only ones that can still reach it
+  // the fox's walk: distances (steps) to every empty point it can reach
+  let head = 0, top = 0, area = 0, esc = ROW[f] > gMax ? 1 : 0, deep = 0, room = 0, jumps = 0;
+  _dist[f] = 0; _q[top++] = f;
+  while (head < top) {
+    const a = _q[head++], d = _dist[a] + 1;
+    for (let k = NB0[a], e = NB0[a + 1]; k < e; k++) {
+      const x = NBA[k]; if (sq[x] || _dist[x] >= 0) continue;
+      _dist[x] = d; area++; if (d === 1) room++;
+      const r = ROW[x]; if (r > gMax) esc = 1; else if (_rowN[r] < 4) deep += 4 - _rowN[r];
+      _q[top++] = x;
+    }
+  }
+  let thr = 0, adv = 0, lone = 0, gm = 0, ahead = 0;
+  const fr = ROW[f];
+  for (let k = 0; k < 33; k++) {
+    const i = POINTS[k]; if (sq[i] !== P2) continue;
+    const ri = ROW[i];
+    if (ri >= fr) adv += 6 - ri; else { adv += 6 - fr; ahead += fr - ri; }
+    // the nearest take-off point from which the fox could jump this goose (the landing behind it empty)
+    let best = 9;
+    for (let o = OP0[i], e = OP0[i + 1]; o < e; o++) {
+      const t = OPTA[o], l = OPLA[o]; if (sq[l]) continue;
+      if (t === f) { jumps++; continue; }
+      const d = _dist[t]; if (d > 0 && d < best) best = d;
+    }
+    if (best === 1) thr += EWN.t1; else if (best === 2) thr += EWN.t2; else if (best < 9) thr += EWN.t3;
+    let friend = 0;
+    for (let n = NB0[i], e = NB0[i + 1]; n < e; n++) if (sq[NBA[n]] === P2) { friend = 1; break; }
+    for (let n = GM0[i], e = GM0[i + 1]; n < e; n++) if (!sq[GMA[n]]) gm++;
+    if (ri < fr && !friend) lone++;
+  }
+  const u = pos.quiet > 20 ? (pos.quiet - 20) / (QUIET_MAX - 20) : 0;
+  let v = -geese * EW.goose + room * EW.room + jumps * EW.jump * (pos.side ? .5 : 1);
+  v += area * EWN.area * (1 + u) + esc * (EWN.esc + area * 10) + deep * EWN.deep;
+  v += thr - adv * EWN.adv + lone * EWN.lone + ahead * EWN.ahead;
+  if (gm < 4) v += (4 - gm) * EWN.tempo * (gm === 0 ? 3 : 1);
+  v += EV0N[RK];
+  if (u > 0) v += u * u * 500;   // the clock runs for the fox
+  return pos.side ? -v : v;
+}
 function evaluate(pos) {
+  if (!R.back) return evaluateN(pos);
   const sq = pos.sq;
   let v = -pos.geese * EW.goose + pos.foxRoom() * EW.room + pos.foxJumps() * EW.jump * (pos.side ? .5 : 1) + foxArea(pos) * EW.area;
   let loose = 0, adv = 0;
@@ -223,7 +298,11 @@ function evaluate(pos) {
 }
 // ---------------------------------------------------------------- search
 let nodes = 0, stop = false, tEnd = 0, nodeLimit = Infinity;
-const TT = new Map(), killers = [];
+// the transposition table: a fixed typed-array table (no garbage to collect; replaced on every store)
+const TTB = 18, TTN = 1 << TTB, TTM = TTN - 1;
+const TT = { k1: new Uint32Array(TTN), k2: new Uint32Array(TTN), v: new Int32Array(TTN), m: new Float64Array(TTN), d: new Int8Array(TTN), f: new Int8Array(TTN), clear() { this.k1.fill(0); this.k2.fill(0); this.d.fill(-1); } };
+TT.clear();
+const killers = [];
 let REP = null;                       // hash → times the position has already stood in the game (set by think / analyze)
 function setHist(hashes) { REP = null; if (!hashes) return; const c = new Map(); let any = false; for (const h of hashes) { const n = (c.get(h) || 0) + 1; c.set(h, n); if (n >= REP_MAX - 1) any = true; } if (any) { REP = c; TT.clear(); } }
 function kreset() { killers.length = 0; }
@@ -252,15 +331,16 @@ function search(pos, d, a, b, ply) {
   const tv = terminal(pos, ply); if (tv !== null) return tv;
   if (REP && ply > 0 && (REP.get(pos.h1) || 0) >= REP_MAX - 1) return pos.side ? -WIN + ply : WIN - ply;   // the third time: the fox wins
   if (d <= 0) return quiesce(pos, a, b, ply, 0);
-  const e = TT.get(pos.h1), a0 = a;
+  const ti = pos.h1 & TTM, a0 = a;
   let ttm = -1;
-  if (e && e.h2 === pos.h2) {
-    ttm = e.m;
-    if (e.d >= d) {
-      let v = e.v; if (v > WINT) v -= ply; else if (v < -WINT) v += ply;
-      if (e.f === 0) return v;
-      if (e.f === 1 && v >= b) return v;
-      if (e.f === 2 && v <= a) return v;
+  if (TT.k1[ti] === pos.h1 && TT.k2[ti] === pos.h2 && TT.d[ti] >= 0) {
+    ttm = TT.m[ti];
+    if (TT.d[ti] >= d) {
+      let v = TT.v[ti]; if (v > WINT) v -= ply; else if (v < -WINT) v += ply;
+      const fl = TT.f[ti];
+      if (fl === 0) return v;
+      if (fl === 1 && v >= b) return v;
+      if (fl === 2 && v <= a) return v;
     }
   }
   const L = orderMoves(pos, pos.moves(), ttm, ply);
@@ -279,9 +359,8 @@ function search(pos, d, a, b, ply) {
     if (v > a) a = v;
     if (a >= b) { const k = killers[ply] || (killers[ply] = [-1, -1]); if (k[0] !== m) { k[1] = k[0]; k[0] = m; } break; }
   }
-  if (TT.size > 700000) TT.clear();
   let sv = best; if (sv > WINT) sv += ply; else if (sv < -WINT) sv -= ply;
-  TT.set(pos.h1, { h2: pos.h2, d, v: sv, m: bm, f: best <= a0 ? 2 : best >= b ? 1 : 0 });
+  TT.k1[ti] = pos.h1; TT.k2[ti] = pos.h2; TT.d[ti] = d; TT.v[ti] = Math.round(sv); TT.m[ti] = bm; TT.f[ti] = best <= a0 ? 2 : best >= b ? 1 : 0;
   return best;
 }
 // quiet search: the fox's jumps
