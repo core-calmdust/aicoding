@@ -406,7 +406,18 @@ function renderPrompt() {
     else if (!startSpec && pos.quiet >= E.QUIET_MAX - 30) s = t('pr.quiet', { n: Math.ceil((E.QUIET_MAX - pos.quiet) / 2) });
   }
   el.textContent = s; el.classList.toggle('show', !!s);
+  fitPrompt();
 }
+// the prompt is one line beside the reserve plate: when the board is small (a phone held sideways) or the language is long, the
+// text steps down until it fits (never cut with an ellipsis)
+function fitPrompt() {
+  const el = $('#prompt'); if (!el) return;
+  el.style.fontSize = ''; el.style.letterSpacing = '';
+  if (!el.textContent || el.scrollWidth <= el.clientWidth + .5) return;
+  el.style.letterSpacing = '0';
+  for (let i = 0; i < 4 && el.scrollWidth > el.clientWidth + .5; i++) { const fs = parseFloat(getComputedStyle(el).fontSize), k = el.clientWidth / el.scrollWidth; if (fs <= 8) break; el.style.fontSize = Math.max(8, fs * k * .98).toFixed(2) + 'px'; }
+}
+window.addEventListener('resize', () => requestAnimationFrame(fitPrompt));
 // value label for an engine value (mover's view)
 function valLabel(v) {
   if (v > WINT) return { cls: 'win', big: t('h.win'), small: v < WINT + 1000 ? t('h.in', { n: (WIN - v + 1) >> 1 }) : '' };
