@@ -56,7 +56,7 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 - AI：期待値探索（投げ d 回先）＋手数の見積もりによる形勢。Lv.1〜7＝手のあと0投、8〜15＝1投、16〜19＝2投、20＝3投先まで読む（1投読むだけで勝率 約65〜75%、2投目はベルでは差なし・広く知られたルールで65%、3投目は 52〜53%。Lv.20 の1手は平均 3〜4 ミリ秒）。弱いレベルは勝率差のソフトマックスでばらつく。
 - 検査：`node tools/selftest.js`（盤の形、ルールの要点、宝の総数が変わらないこと、自動対局が必ず終わること）。
 
-## 4. 画面（2D版 `patolli/`、2026-11-16。`ur/` を土台に移植。未掲載 BETA：トップページ・大百科には未登録、3D は未着手）
+## 4. 画面（2D版 `patolli/`、2026-11-16。`ur/` を土台に移植。未掲載 BETA：トップページ・大百科には未登録。3D は §5）
 ### ファイル
 - `index.html`（画面と CSS）、`app.js`（対局・豆・宝の支払い・棋譜・設定・レート戦）、`app-learn.js`（ルール／レッスン／パズルの入口と進行）、`board2d.js`（盤・駒・豆。画像なしの SVG）、`worker.js`（AIの手・ヒント・振り返りを Worker で）、`landtabs.js`（スマホ横持ちの並び。下記）、`coach.js`＋`coach-i18n.js`、`rvbox.js`＋`rv-i18n.js`（振り返り・PC の振り返りボックスと検討）、`tour.js`（ルール）、`i18n.js`（`tools/gen_i18n.js` が作る）、`lessons.json`・`puzzles.json`・`lux.json`、`online.js`・`online-ui.js`・`online.css`・`i18n-online.js`・`firebase-config.js`（オンライン。下記）。
 - 道具 `patolli/tools/`：`selftest.js`（エンジン）、`learn_common.js`・`gen_puzzles.js`・`audit_puzzles.js`・`gen_lessons.js`・`check_lessons.js`、`learn_i18n.js`（レッスン・パズル・豆知識の ja・en 以外の12言語の表）、`rate_levels.js`（レート戦の各レベルのレート）、`gen_i18n.js`、`board2d-demo.html`、`icon.html`＋`make_icons.js`（仮アイコン）。
@@ -109,3 +109,31 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 ### エンジンに入れた直し（2026-11-16、画面の作業中に見つけたもの）
 - `think` の opts に `rand`（でたらめに指す割合）を足した。`d`・`temp`・`rand` は渡した項目だけがそのレベルの設定を上書きする（PROモード用）。`selftest.js` に「Lv.1＋深さ3 でもでたらめな手が残る／rand:0 で消える」の確認を足した。
 - `think`：ばらつきなし（Lv.19〜20）で勝率がまったく同じ手が並ぶとき、いつも先頭の駒を選んでいて Lv.18 より弱かった（400局で 33.5%）。同点の中から無作為に選ぶようにした。`selftest.js` に Lv.19 対 Lv.18 の確認を足した。
+
+## 5. フル3D（`patolli/?skin=atlas`、2026-11-16。大百科の一覧への登録は別作業）
+`ur/`・`foxgeese/` と同じ形。2D の DOM 盤（`#frame`）は透明のまま上に残り、タップ・行き先の印・矢印・すき間のラベルと数・支払いで飛ぶ玉はすべて DOM 側。three.js の盤と駒はその下に、DOM 盤とぴったり重ねて描く。
+### ファイル
+- `atlas/models/patolli.js`（`Table3D.patolli`・`Table3D.MODELS.patolli`）：盤・駒・豆・宝の玉。**画像ファイルは使わず**、色とでこぼこ（法線マップ）は canvas で描く。
+- `atlas/skin/patolli.js`：ページとの橋渡し（`window.PatolliSkin3D`）。
+- `atlas/tables3d.js`：`BOARDS.patolli`・`PIECES.patolli`・盤の名前 `NG.patolli`（14言語）・`BG2D.patolli`。
+- `patolli/index.html` の末尾：`?skin=atlas` のとき three.js → `table3d.js` → `tables3d.js` → `skin/common.js` → `models/patolli.js` → `skin/patolli.js` の順に読む。読めなければ 2D のまま。先頭に読み込み中の幕（`atlas/skin/loading.js`）。
+- サムネイル：`atlas/img/boardic-patolli-<盤>.webp`（真上から盤だけ・512）、`board-patolli-<盤>.webp`（斜めから駒つき・640×480）、`pc3-patolli-<駒>.webp`（駒の寄り・640×428）。どれも `atlas/tools/boardicon.html?game=patolli&look=<盤>[&pcs=<駒>&w=&h=&el=52]`（駒の寄りは `&cam=2.45,2.3,-.5,2.5,.12,-2.56`）で描いて webp にする。
+### 座標
+- ワールドの1＝2D の SVG の 100（枠は 10×10、盤は 9.92×9.92）。x＝右、z＝手前。マスの位置は**エンジンの腕の長さから**作る（`RULES[rule].arm`：bell 7＝60マス、popular 6＝52マス）ので、ルールを変えると盤を作り直す。すき間の置き場（待ち・上がり・宝・豆）は `board2d.js` の `traySlot`・`SPOT` と同じ数字。
+- カメラは真上から（`AtlasSkin.init` の `persp: 4`、`alignTo(10, 盤の上面)`）。1440×900・1280×720・390×844 で、全マス・すき間・四隅の DOM と3D のずれは 0px（Playwright で確認）。
+### 盤6種・駒6種（**id は 2D のデザインと同じ**。`settings.design`／`settings.pieces` を 2D・3D で共有する）
+- 盤：`petate` ござ（2/2 の綾織り＋盛り上がった黒いゴムの線・縁かがり。既定）／`hide` 鹿革（四隅で引っぱった形・染めた線）／`stone` 石板（厚い板・刻んだ線）／`codex` 絵文書（樹皮紙・赤い枠）／`mosaic` トルコ石（モザイクの小片・金と赤・金の縁）／`night` 夜（星空・光る線＝発光マップ）。
+- 駒：`pebble` 赤と青の小石（1個ずつ形が違う。既定）／`maize` とうもろこしの粒／`obsidian` 貝の円盤と割った黒曜石／`jade` 赤い石とひすいの穴あき玉／`clay` 素焼きと石墨の円盤／`gold` 金とトルコ石の玉。
+- 豆：黒い豆5個、片面に白い点。投げた側（手前／奥）から飛び込み、転がって、出た目の面を上にして止まる（`throwPlan`、ウルのさいころと同じ動き）。「投げる」ボタンが出ている間は 2D と同じく片づける。
+- 宝：トルコ石の玉の山を**実際の数だけ**（37個まで）。数字とラベルは DOM。
+- 3D と 2D で設定を分けない理由：側の呼び名（赤／青、白／黒 …）や一覧のミニ盤が駒・盤の id で決まるため。
+### デザインタブ
+- 盤の箱に「3D｜2D」の切り替え（`AtlasSkin.rows3d` ＋ 共通の `splitDesign`）。3D の盤・駒を選ぶと 3D 表示、2D の盤を選ぶと枠の中が 2D の盤になる（`html.atlas-2d`、保存キー `atlas-patolli-view`）。どちらも `setDesign()` を通る。
+### フック（`patolli/app.js` の「3D skin hooks」）
+- `PatolliSkin3D.sync(state, view, shown)`：`renderBoard()` のたび。`shown`＝宝の支払いを見せている間の、払う前の宝（`shownState()`）。駒（両側・両方向・待ち・上がり）、宝の山、豆を写す。
+- `PatolliSkin3D.animateMove(side, from, to, { capture, speed })`：道なりに1マスずつ跳ねて進む（腕の先を回り、中央を通る。待ち・上がりのすき間へは大きな弧）。取り（広く知られたルール）は、取られた駒が持ち主の待ちへ弧を描いて戻る。
+- `PatolliSkin3D.animateRoll(d)`：豆を投げる。
+- `animateMove`／`animateRoll` が **`false` を返したら 2D の演出をする**（3D スキンの中で 2D 盤を表示中）。
+- 宝の支払いの動き（玉が飛ぶ・「+n」）は DOM のまま（`view.animatePay`）。ルール（`tour.js`）の小さな盤は 2D のまま（スキンの CSS は `#board` の中だけに効かせる）。
+- マス全体を塗る 2D の印（直前の手・レッスンの光るマス）は、3D では駒を隠さないよう枠だけにする。
+- 確認用：`window.__ptSkin`（`built()`・`piece(side,k)`・`cell(r,c)`・`svg(x,y)`・`beans()`・`gems()`・`busy()`）。

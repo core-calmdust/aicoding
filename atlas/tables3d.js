@@ -224,6 +224,10 @@
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
     // fox and geese (atlas/models/foxgeese.js, 2026-11-16): 'atlas-foxgeese-look' — オーク材 (the default) · 石盤 · リネン · 牧場 · ナイト · ペーパー
     foxgeese: { list: ['oak', 'slate', 'linen', 'meadow', 'night', 'paper'], get: () => { const v = ls.get('atlas-foxgeese-look'); return BOARDS.foxgeese.list.includes(v) ? v : 'oak'; }, set: k => ls.set('atlas-foxgeese-look', k) },
+    // patolli (atlas/models/patolli.js, 2026-11-16): the 2D page's own board design ('aicoding-patolli' settings.design), as peg — ござ (the default) · 鹿革 · 石板 · 絵文書 · トルコ石 · 夜
+    patolli: { list: ['petate', 'hide', 'stone', 'codex', 'mosaic', 'night'],
+      get: () => { try { const d = (JSON.parse(ls.get('aicoding-patolli') || '{}').settings || {}).design; return BOARDS.patolli.list.includes(d) ? d : 'petate'; } catch (e) { return 'petate'; } },
+      set: k => { try { const o = JSON.parse(ls.get('aicoding-patolli') || '{}') || {}; o.settings = o.settings || {}; o.settings.design = k; ls.set('aicoding-patolli', JSON.stringify(o)); } catch (e) {} } },
     // ludus latrunculorum (atlas/models/latrunculi.js, 2026-11-16): 'atlas-latrunculi-look' — 大理石 (the default) · トラバーチン · 屋根瓦 · モザイク · くるみ材 · 斑岩
     latrunculi: { list: ['marble', 'travertine', 'tile', 'mosaic', 'wood', 'porphyry'], get: () => { const v = ls.get('atlas-latrunculi-look'); return BOARDS.latrunculi.list.includes(v) ? v : 'marble'; }, set: k => ls.set('atlas-latrunculi-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
@@ -265,7 +269,14 @@
     ui: (k, lang) => (CKN[lang] || CKN.en)[{ you: 8, opp: 9, head: 10 }[k]],
   } };
   // a game's own board names (the board is part of its game, so no '3D'): table hockey
-  const NG = { foxgeese: {
+  const NG = { patolli: {
+    petate: { ja: 'ござ', en: 'Reed mat', zh: '草席', 'zh-TW': '草蓆', ko: '돗자리', es: 'Petate', fr: 'Natte tressée', pt: 'Esteira', de: 'Flechtmatte', ru: 'Плетёная циновка', tr: 'Hasır', id: 'Tikar anyaman', hi: 'चटाई', ar: 'حصير' },
+    hide: { ja: '鹿革', en: 'Deerskin', zh: '鹿皮', 'zh-TW': '鹿皮', ko: '사슴 가죽', es: 'Piel de venado', fr: 'Peau de cerf', pt: 'Pele de veado', de: 'Hirschleder', ru: 'Оленья кожа', tr: 'Geyik derisi', id: 'Kulit rusa', hi: 'हिरण की खाल', ar: 'جلد الغزال' },
+    stone: { ja: '石板', en: 'Stone slab', zh: '石板', 'zh-TW': '石板', ko: '석판', es: 'Losa de piedra', fr: 'Dalle de pierre', pt: 'Laje de pedra', de: 'Steinplatte', ru: 'Каменная плита', tr: 'Taş levha', id: 'Lempeng batu', hi: 'पत्थर की पटिया', ar: 'لوح حجري' },
+    codex: { ja: '絵文書', en: 'Codex', zh: '手抄本', 'zh-TW': '手抄本', ko: '코덱스', es: 'Códice', fr: 'Codex', pt: 'Códice', de: 'Kodex', ru: 'Кодекс', tr: 'Kodeks', id: 'Kodeks', hi: 'कोडेक्स', ar: 'مخطوطة' },
+    mosaic: { ja: 'トルコ石', en: 'Turquoise', zh: '绿松石', 'zh-TW': '綠松石', ko: '터키석', es: 'Turquesa', fr: 'Turquoise', pt: 'Turquesa', de: 'Türkis', ru: 'Бирюза', tr: 'Turkuaz', id: 'Pirus', hi: 'फ़िरोज़ा', ar: 'فيروز' },
+    night: { ja: '夜', en: 'Night', zh: '夜色', 'zh-TW': '夜色', ko: '밤', es: 'Noche', fr: 'Nuit', pt: 'Noite', de: 'Nacht', ru: 'Ночь', tr: 'Gece', id: 'Malam', hi: 'रात', ar: 'ليل' } },
+    foxgeese: {
     oak: { ja: 'オーク材', en: 'Oak', zh: '橡木', 'zh-TW': '橡木', ko: '오크', es: 'Roble', fr: 'Chêne', pt: 'Carvalho', de: 'Eiche', ru: 'Дуб', tr: 'Meşe', id: 'Kayu ek', hi: 'ओक', ar: 'بلوط' },
     slate: { ja: '石盤とチョーク', en: 'Slate & chalk', zh: '石板与粉笔', 'zh-TW': '石板與粉筆', ko: '석판과 분필', es: 'Pizarra y tiza', fr: 'Ardoise et craie', pt: 'Ardósia e giz', de: 'Schiefer & Kreide', ru: 'Грифельная доска и мел', tr: 'Arduvaz ve tebeşir', id: 'Batu tulis & kapur', hi: 'स्लेट और चॉक', ar: 'لوح أردواز وطباشير' },
     linen: { ja: 'リネンの刺しゅう', en: 'Stitched linen', zh: '亚麻刺绣', 'zh-TW': '亞麻刺繡', ko: '리넨 자수', es: 'Lino bordado', fr: 'Lin brodé', pt: 'Linho bordado', de: 'Besticktes Leinen', ru: 'Вышитый лён', tr: 'İşlemeli keten', id: 'Linen bersulam', hi: 'कढ़ाईदार लिनन', ar: 'كتان مطرّز' },
@@ -477,6 +488,19 @@
       brush: { ja: '筆', en: 'Ink brushes', zh: '毛笔', 'zh-TW': '毛筆', ko: '붓', es: 'Pinceles de tinta', fr: 'Pinceaux à encre', pt: 'Pincéis de tinta', de: 'Tuschepinsel', ru: 'Кисти для туши', tr: 'Mürekkep fırçaları', id: 'Kuas tinta', hi: 'स्याही ब्रश', ar: 'فرش حبر' },
     } };
   // morris (atlas/models/morris.js, 2026-11-15): 'atlas-morris-pc3'
+  // patolli (atlas/models/patolli.js SETS, 2026-11-16): the 2D page's own piece design ('aicoding-patolli' settings.pieces)
+  PIECES.patolli = { list: ['pebble', 'maize', 'obsidian', 'jade', 'clay', 'gold'],
+    get: () => { try { const d = (JSON.parse(ls.get('aicoding-patolli') || '{}').settings || {}).pieces; return PIECES.patolli.list.includes(d) ? d : 'pebble'; } catch (e) { return 'pebble'; } },
+    set: k => { try { const o = JSON.parse(ls.get('aicoding-patolli') || '{}') || {}; o.settings = o.settings || {}; o.settings.pieces = k; ls.set('aicoding-patolli', JSON.stringify(o)); } catch (e) {} },
+    thumb: k => new URL('img/pc3-patolli-' + k + '.webp?v=1', ME).href,
+    names: {
+      pebble: { ja: '赤と青の小石', en: 'Red & blue pebbles', zh: '红蓝小石子', 'zh-TW': '紅藍小石子', ko: '빨강과 파랑 조약돌', es: 'Guijarros rojos y azules', fr: 'Galets rouges et bleus', pt: 'Seixos vermelhos e azuis', de: 'Rote & blaue Kiesel', ru: 'Красная и синяя галька', tr: 'Kırmızı ve mavi çakıllar', id: 'Kerikil merah & biru', hi: 'लाल और नीले कंकड़', ar: 'حصى أحمر وأزرق' },
+      maize: { ja: 'とうもろこし', en: 'Maize kernels', zh: '玉米粒', 'zh-TW': '玉米粒', ko: '옥수수 알', es: 'Granos de maíz', fr: 'Grains de maïs', pt: 'Grãos de milho', de: 'Maiskörner', ru: 'Зёрна кукурузы', tr: 'Mısır taneleri', id: 'Biji jagung', hi: 'मक्के के दाने', ar: 'حبات الذرة' },
+      obsidian: { ja: '黒曜石と貝', en: 'Obsidian & shell', zh: '黑曜石与贝壳', 'zh-TW': '黑曜石與貝殼', ko: '흑요석과 조개', es: 'Obsidiana y concha', fr: 'Obsidienne et coquillage', pt: 'Obsidiana e concha', de: 'Obsidian & Muschel', ru: 'Обсидиан и раковина', tr: 'Obsidyen ve deniz kabuğu', id: 'Obsidian & kerang', hi: 'ओब्सीडियन और सीप', ar: 'سبج وصدف' },
+      jade: { ja: 'ひすいと赤い石', en: 'Jade & red stone', zh: '翡翠与红石', 'zh-TW': '翡翠與紅石', ko: '비취와 붉은 돌', es: 'Jade y piedra roja', fr: 'Jade et pierre rouge', pt: 'Jade e pedra vermelha', de: 'Jade & roter Stein', ru: 'Нефрит и красный камень', tr: 'Yeşim ve kırmızı taş', id: 'Giok & batu merah', hi: 'जेड और लाल पत्थर', ar: 'يشم وحجر أحمر' },
+      clay: { ja: '素焼き', en: 'Fired clay', zh: '素烧陶', 'zh-TW': '素燒陶', ko: '초벌구이', es: 'Arcilla cocida', fr: 'Terre cuite', pt: 'Barro cozido', de: 'Gebrannter Ton', ru: 'Обожжённая глина', tr: 'Pişmiş kil', id: 'Tanah liat bakar', hi: 'पकी मिट्टी', ar: 'طين محروق' },
+      gold: { ja: '金とトルコ石', en: 'Gold & turquoise', zh: '黄金与绿松石', 'zh-TW': '黃金與綠松石', ko: '금과 터키석', es: 'Oro y turquesa', fr: 'Or et turquoise', pt: 'Ouro e turquesa', de: 'Gold & Türkis', ru: 'Золото и бирюза', tr: 'Altın ve turkuaz', id: 'Emas & pirus', hi: 'सोना और फ़िरोज़ा', ar: 'ذهب وفيروز' },
+    } };
   // fox and geese (atlas/models/foxgeese.js SETS, 2026-11-16): 'atlas-foxgeese-pc3'
   PIECES.foxgeese = { list: ['wood', 'marble', 'pewter', 'paint', 'bronze', 'clay'], get: () => { const v = ls.get('atlas-foxgeese-pc3'); return PIECES.foxgeese.list.includes(v) ? v : 'wood'; }, set: k => ls.set('atlas-foxgeese-pc3', k),
     thumb: k => new URL('img/pc3-foxgeese-' + k + '.webp?v=1', ME).href,
@@ -625,6 +649,7 @@
     senet: ["#130c07", "radial-gradient(1100px 620px at 18% -12%, rgba(31, 143, 168, 0.22), transparent 62%), radial-gradient(900px 600px at 110% 115%, rgba(214, 150, 60, 0.16), transparent 60%)"],
     ur: ["#080d26", "radial-gradient(1100px 620px at 18% -12%, rgba(42, 63, 158, 0.55), transparent 62%), radial-gradient(900px 600px at 110% 115%, rgba(142, 42, 28, 0.28), transparent 60%), radial-gradient(1px 1px at 12% 22%, rgba(255, 240, 200, 0.6), transparent), radial-gradient(1px 1px at 78% 12%, rgba(255, 240, 200, 0.5), transparent), radial-gradient(1.4px 1.4px at 64% 30%, rgba(255, 240, 200, 0.45), transparent), radial-gradient(1px 1px at 36% 8%, rgba(255, 240, 200, 0.5), transparent)"],
     agon: ["#0e0907", "radial-gradient(1200px 700px at 28% -10%, #3a1d12, transparent 60%), radial-gradient(900px 600px at 110% 110%, #24120b, transparent 60%)"],
+    patolli: ["#170f0b", "radial-gradient(1100px 620px at 14% -14%, rgba(18, 164, 184, 0.26) 0%, transparent 62%), radial-gradient(900px 600px at 112% 116%, rgba(216, 69, 44, 0.24) 0%, transparent 60%), repeating-linear-gradient(45deg, rgba(216, 189, 124, 0.035) 0 6px, transparent 6px 12px)"],
     foxgeese: ["#12150a", "radial-gradient(1200px 700px at 28% -10%, #424b17, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3a2414, transparent 60%)"],
     latrunculi: ["#180a16", "radial-gradient(1200px 700px at 28% -10%, #4c1c40, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3a1a14, transparent 60%)"],
     konane: ["#03201f", "radial-gradient(1200px 700px at 28% -10%, #0c5a55, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3a2414, transparent 60%)"],

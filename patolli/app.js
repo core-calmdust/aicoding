@@ -336,18 +336,20 @@ function toast(msg, ms) { const el = $('#toast'); el.textContent = msg; el.class
 window.toast = toast;
 
 // ====================================================================== 3D skin hooks
-// 3D（大百科フル機能版 ?skin=atlas）は別作業。window.PatolliSkin3D があればその関数を使い、なければ2Dの演出（ur と同じ形の受け口）
-function skinSync() { const S = window.PatolliSkin3D; if (S && S.sync) { try { S.sync(curState(), view); } catch (e) { console.error(e); } } }
+// 3D（大百科フル機能版 ?skin=atlas、atlas/skin/patolli.js）。window.PatolliSkin3D があればその関数を使い、なければ2Dの演出（ur と同じ形の受け口）
+//   sync(state, view, shown)：shown＝宝の支払いを見せている間の、払う前の宝の数（shownState）
+//   animateMove / animateRoll が false を返したら「3Dでは扱わない」（3Dスキンの中で2D盤を表示中）→ 2Dの演出をする
+function skinSync() { const S = window.PatolliSkin3D; if (S && S.sync) { try { S.sync(curState(), view, shownState()); } catch (e) { console.error(e); } } }
 window.PatolliSkinHooks = {
-  sync: st => { const S = window.PatolliSkin3D; if (S && S.sync) S.sync(st || curState(), view); },
+  sync: st => { const S = window.PatolliSkin3D; if (S && S.sync) S.sync(st || curState(), view, st || shownState()); },
   async animateMove(side, from, to, info) {
     const S = window.PatolliSkin3D;
-    if (S && S.animateMove) { try { await S.animateMove(side, from, to, info || {}); return; } catch (e) { console.error(e); } }
+    if (S && S.animateMove) { try { if (await S.animateMove(side, from, to, info || {}) !== false) return; } catch (e) { console.error(e); } }
     if (animOn()) await view.animateMove(side, from, to, Object.assign({ speed: SPD() }, info || {}));
   },
   async animateRoll(d) {
     const S = window.PatolliSkin3D;
-    if (S && S.animateRoll) { try { await S.animateRoll(d); dice2d.show(d); return; } catch (e) { console.error(e); } }
+    if (S && S.animateRoll) { try { if (await S.animateRoll(d) !== false) { if (!dice2d) renderDice(); dice2d.show(d); return; } } catch (e) { console.error(e); } }
     if (!dice2d) renderDice();
     if (!animOn()) { dice2d.show(d); return; }
     const dock = $('#diceDock'); dock.classList.add('rolling');
