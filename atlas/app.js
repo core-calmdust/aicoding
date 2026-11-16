@@ -1234,7 +1234,7 @@
     // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)
     let top = 0; for (let e = card; e; e = e.offsetParent) top += e.offsetTop;
     if (!card.offsetParent) top = card.getBoundingClientRect().top;
-    Table3D.setInset(playing ? Math.max((window.__tbar ? __tbar.band : 0) + (innerWidth >= 820 ? Math.round(innerHeight * .035) : 0), session && session.inset ? session.inset() : 0) : !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4, playing ? (window.__land && __land.top()) || (window.__hudTop ? __hudTop() : 0) : 0);   // playing: the board is framed above the action bar
+    Table3D.setInset(playing ? Math.max((window.__tbar ? __tbar.band : 0) + (innerWidth >= 820 ? Math.round(innerHeight * .035) : 0), session && session.inset ? session.inset() : 0) : !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4, playing ? Math.max((window.__land && __land.top()) || (window.__hudTop ? __hudTop() : 0), session && session.insetTop ? session.insetTop() : 0) : 0);   // (session.insetTop: room the game keeps at the top — ヒット＆ブロー's Atlamo talk on phones)   // playing: the board is framed above the action bar
     $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - top) + 'px');
   }
   addEventListener('resize', () => fitStage());
@@ -1807,7 +1807,7 @@
         C.left = [0, 1].map(() => C.tc ? (C.tc.main || 0) * 1000 : 0); C.show = [0, 1].map(s => !!C.tc && (C.pvp || s === human));
         if (window.CountTick) { CountTick.reset(); CountTick.setMuted(() => !SFX.on); }
         paint(); ck.forEach(el => { el.hidden = true; el._t = ''; });
-        $('bv').classList.add('tbon'); sync(); place(); setTimeout(place, 60);
+        $('bv').classList.toggle('tbon', !sess.noBar); sync(); place(); setTimeout(place, 60);   // (session.noBar: a game with no 待った / 投了 / ヒント — the bar is not shown and the board takes its room; ヒット＆ブロー 2026-11-17)
         clearInterval(iv); iv = setInterval(() => { if (S) sync(); }, 200);
         if (!ro && window.ResizeObserver) { ro = new ResizeObserver(() => { if (S) place(); }); ro.observe(bar); ro.observe($('hud')); }
       },
