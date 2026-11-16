@@ -1017,15 +1017,15 @@ class Table3D {
     // (2026-11-16, ユーザー「ツモ牌を捨てるとき牌が二重っぽい」: the 3D tile stood at the page pose on the table's canvas too, behind the
     // page's copy; being a box seen in perspective its side showed round the copy — most plainly by the drawn tile, which has no
     // neighbours to cover it. It is now not drawn at all until the hand takes it, when the page's copy goes in the same frame.)
-    if (f.page) { rig.traverse(o => o.layers.enable(1)); this._ov = { g: null, rig }; g.visible = false; }
+    if (f.page) { rig.traverse(o => o.layers.enable(1)); this._ov = { g: null, rig }; g.visible = false; g.userData.hold = true; }
     this._tilt(rig, 0, 0); this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(r.x, r.y, r.z);
     // (the first frame of the overlay uploads its textures and builds its shaders: draw it once before the clock starts, or
     // that pause would eat the movement — it is timed, not counted in frames. The player's own discard is also a little slower, to be seen.)
     if (f.page) { const R2 = this._over2(); g.visible = true; this._solo(g, true); this.camera.layers.set(1); R2.render(this.scene, this.camera); this.camera.layers.set(0); this._solo(g, false); g.visible = false; R2.render(this.scene, this.camera); }
     // (ユーザー 2026-11-14: it should be plain where the tile is taken from — the others' too. The hand comes down on the tile
     // where it stands in the row, lifts it straight up out of the row, then carries it to the river; the row closes afterwards.)
-    const go = () => { if (g.userData.target !== to) return this._handBack(seat);
-      if (f.page) { g.visible = true; if (this._ov && this._ov.rig === rig && !this._ov.g) { this._solo(g, true); this._ov.g = g; } if (this.onPageTake) this.onPageTake();
+    const go = () => { if (g.userData.target !== to) { if (g.userData.hold) { g.userData.hold = false; g.visible = !g.userData.taken; } return this._handBack(seat); }
+      if (f.page) { g.userData.hold = false; g.visible = true; if (this._ov && this._ov.rig === rig && !this._ov.g) { this._solo(g, true); this._ov.g = g; } if (this.onPageTake) this.onPageTake();
         return this.tween(g, to, 440, f, seat, () => this._land('river', seat)); }
       // (ユーザー 2026-11-14: pinched between the thumb and the forefinger — as the tile comes up out of the row it is turned flat,
       // the thumb going under it and the forefinger lying on its face; so it is carried, and the thumb slips out as it is laid down)
@@ -1148,7 +1148,7 @@ class Table3D {
     this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 300, then: () => this.tween(g, to, 420, from, seat, landed), path: 'in' });
     this.dirty = true;
   }
-  hideAll() { if (this._callG) this.markCall(null); if (this.sorting) for (const S of this.sorting) if (S) clearTimeout(S.timer); this.sorting = []; for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this.onPageTake) this.onPageTake(); if (this._ov) { if (this._ov.g) this._solo(this._ov.g, false); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
+  hideAll() { if (this._callG) this.markCall(null); if (this.sorting) for (const S of this.sorting) if (S) clearTimeout(S.timer); this.sorting = []; for (const g of this.tiles.values()) { g.visible = false; g.userData.hold = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this.onPageTake) this.onPageTake(); if (this._ov) { if (this._ov.g) this._solo(this._ov.g, false); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
 
   layoutRiver(seat, river, animLast, fromLx) {   // fromLx: where the player's own discard stood — a pose from screenPose() (the tile of the page's hand row), or a place along the near edge
     // (ユーザー 2026-11-14: the far seat's discards looked stuck to each other — a little air between the tiles. The row is
@@ -1192,7 +1192,7 @@ class Table3D {
       this.place(g, seat, lx, lz, it.side ? 'side' : 'flat', anim);
       g.userData.rseat = seat;
       g.userData.taken = !!it.r.taken;
-      g.visible = !it.r.taken;
+      g.visible = !it.r.taken && !g.userData.hold;   // (the player's own discard stays unseen until the hand takes it — reach(); 2026-11-16: this line had shown it again at once)
       this.setTileLook(g, it.r.dim ? 'dim' : 'normal');
     }
   }

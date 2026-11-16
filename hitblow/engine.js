@@ -270,11 +270,38 @@ const DAILY = {
 const dailyMemo = {};
 function makeDaily(dateKey, which) {
   const k = which === 'hard' ? 'hard' : 'easy', id = k + ':' + dateKey; if (dailyMemo[id]) return dailyMemo[id];
-  const D = DAILY[k], cfg = rule(D.z);
-  for (let attempt = 0; attempt < 60; attempt++) {
-    const r = rng('hb3d-daily:' + id + ':' + attempt), secret = randomCode(cfg, r), clues = [];
+  const P = genPuzzle('hb3d-daily:' + id, DAILY[k]); if (P) { P.which = k; P.date = dateKey; }
+  return (dailyMemo[id] = P);
+}
+// 問題集 (2026-11-16 user: パズルをたくさん): 10 sets × 50 — the same kind of puzzle as 今日の一問 (clue rows on the board, solve
+// within the limit), seeded by set and number, so every device gets the same 500. lo..hi: the candidates left after the clues;
+// extra: rows over the greedy solver's worst case (0 = exactly its worst case: "ぴったり").
+const BOOK = [
+  { id: 'first', z: 1, lo: 1, hi: 1, extra: 0 },   // カラー: the clues leave one answer — find it in one row
+  { id: 'c2', z: 1, lo: 2, hi: 4, extra: 1 },
+  { id: 'c3', z: 1, lo: 5, hi: 12, extra: 1 },
+  { id: 'c4', z: 1, lo: 10, hi: 24, extra: 0 },
+  { id: 'd1', z: 2, lo: 2, hi: 10, extra: 1 },   // 重複あり
+  { id: 'd2', z: 2, lo: 12, hi: 36, extra: 0 },
+  { id: 'n1', z: 3, lo: 1, hi: 1, extra: 0 },   // ナンバー3: one answer left
+  { id: 'n2', z: 3, lo: 4, hi: 16, extra: 0 },
+  { id: 'n4', z: 4, lo: 14, hi: 48, extra: 0 },   // ナンバー4 (as HARD)
+  { id: 'x', z: 5, lo: 6, hi: 24, extra: 0 },   // エキスパート
+];
+const BOOK_N = 50, bookMemo = {};
+const BOOK_SALT = { 'first:21': 1 };   // (a re-seed: it came out the same as first:19 — hitblow/tools/test_engine.js checks the 500 are all different)
+function makePuzzle(set, i) {
+  const S = BOOK.find(x => x.id === set); if (!S || !(i >= 0 && i < BOOK_N)) return null;
+  const id = set + ':' + i; if (bookMemo[id]) return bookMemo[id];
+  const P = genPuzzle('hb3d-pz:' + id + (BOOK_SALT[id] ? ':' + BOOK_SALT[id] : ''), S); if (P) { P.set = set; P.i = i; }
+  return (bookMemo[id] = P);
+}
+function genPuzzle(seed, D) {
+  const cfg = rule(D.z), maxClues = D.hi <= 1 ? 8 : 6;
+  for (let attempt = 0; attempt < 80; attempt++) {
+    const r = rng(seed + ':' + attempt), secret = randomCode(cfg, r), clues = [];
     let cands = allCands(cfg);
-    for (let t = 0; t < 6 && cands.length > D.hi; t++) {
+    for (let t = 0; t < maxClues && cands.length > D.hi; t++) {
       // a plausible earlier guess: one of the candidates left (as a player would), picked at random among a few that cut well
       let best = null, bn = Infinity;
       for (let j = 0; j < 6; j++) {
@@ -287,12 +314,11 @@ function makeDaily(dateKey, which) {
     }
     if (cands.length < D.lo || cands.length > D.hi || clues.length < 2) continue;
     const d = solverDepth(cfg, clues, r);
-    const P = { which: k, date: dateKey, z: D.z, cfg, secret, clues, cands: cands.length, limit: d.worst + D.extra, par: d.worst };
-    return (dailyMemo[id] = P);
+    return { z: D.z, cfg, secret, clues, cands: cands.length, limit: d.worst + D.extra, par: d.worst };
   }
   return null;
 }
-const api = { RULES, RULE_IDS, rule, aiRace, raceBest, raceValue, raceKeep, race, solverDepth, makeDaily, DAILY, PRESETS, DIFFS, OPENERS, rng, hashStr, space, idxOf, codeOf, validCode, feedback, randomCode, localDate, dailyCode, dayBefore,
+const api = { RULES, RULE_IDS, rule, aiRace, raceBest, raceValue, raceKeep, race, solverDepth, makeDaily, DAILY, makePuzzle, BOOK, BOOK_N, PRESETS, DIFFS, OPENERS, rng, hashStr, space, idxOf, codeOf, validCode, feedback, randomCode, localDate, dailyCode, dayBefore,
   allCands, filterCands, candsOf, consistent, rate, bestGuess, opener, aiGuess, solve, reviewStep, keepProb, smartProb };
 if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.HitBlowEngine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
