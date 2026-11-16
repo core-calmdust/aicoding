@@ -940,7 +940,7 @@ function resumeHere() {
 const RT_STORE = STORE + '-rated', RT_START = 1000;
 // rating of each AI level: Elo from the engine's self-play against Lv.10 (senet/tools/ladder.js, 500 games per level, 200 for
 // Lv.19/20, smoothed to a monotone curve; Lv.10 anchored at 1000). The throw sticks decide much of a game, so the steps are small
-const RT_LV = [0, 831, 853, 877, 896, 915, 930, 951, 969, 983, 1000, 1010, 1021, 1035, 1046, 1053, 1063, 1070, 1074, 1078, 1081];
+const RT_LV = [0, 500, 605, 720, 810, 905, 975, 1075, 1160, 1230, 1310, 1360, 1410, 1480, 1530, 1565, 1615, 1645, 1665, 1685, 1700];
 function rtLoad() { let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {} if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] }; if (!Array.isArray(s.hist)) s.hist = []; return s; }
 function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
 function rtRank(r) { let k = 0; for (let i = 1; i <= LV_MAX; i++) if (r >= RT_LV[i] - 5) k = i; return k ? LV(k) : t('rt.below'); }

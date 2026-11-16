@@ -933,7 +933,7 @@
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       <p class="bvab">${esc(t('about.' + id))}</p>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : STX ? esc(ad.modeName(m, lang)) : PZX ? (m === 'puzzle' ? t('pg.pz') : PEG_FREE[lang] || PEG_FREE.en) : (ad && ad.modeName && typeof ad.modeName(m, lang) === 'string' && ad.modeName(m, lang)) || t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${OL3 ? `<div class="opts olopp" id="bvOlRow" hidden><label>${t('bv.opp')}<select id="bvRtOpp"><option value="ai" ${rtOpp(id) === 'ai' ? 'selected' : ''}>AI</option><option value="online" ${rtOpp(id) === 'online' ? 'selected' : ''}${ol3Soon(id) ? ' disabled' : ''}>${esc(ol3Soon(id) ? SOON[lang] || SOON.en : t('bv.online'))}</option></select></label><span class="rtnow2" id="bvOl3Now"></span></div>` : ''}${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}${ad.variants ? `<div class="opts vopts" id="bvVarRow"><label class="vrow">${esc(ad.variants.label(lang))}<button type="button" class="lvpick vpick" id="bvVar" data-v="${esc(vcur)}"></button></label><span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}${KF ? `<div class="opts rulerow kindrow">${ruleHtml}${sizeOnly}</div>` : MXR ? `<div class="opts vopts rulerow kindrow mxkind">${ruleHtml}<span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}<div class="opts" id="bvOpts">${ad.levels ? `<label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>` : ''}
+      </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : STX ? esc(ad.modeName(m, lang)) : PZX ? (m === 'puzzle' ? t('pg.pz') : PEG_FREE[lang] || PEG_FREE.en) : (ad && ad.modeName && typeof ad.modeName(m, lang) === 'string' && ad.modeName(m, lang)) || t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${OL3 ? `<div class="opts olopp" id="bvOlRow" hidden><label>${t('bv.opp')}<select id="bvRtOpp"><option value="ai" ${rtOpp(id) === 'ai' ? 'selected' : ''}>AI</option><option value="online" ${rtOpp(id) === 'online' ? 'selected' : ''}${ol3Soon(id) ? ' disabled' : ''}>${esc(ol3Soon(id) ? SOON[lang] || SOON.en : t('bv.online'))}</option></select></label><span class="rtnow2" id="bvOl3Now"></span></div>` : ''}${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}${ad.variants ? `<div class="opts vopts" id="bvVarRow"><label class="vrow">${esc(ad.variants.label(lang))}<button type="button" class="lvpick vpick" id="bvVar" data-v="${esc(vcur)}"></button></label><span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}${KF ? `<div class="opts rulerow kindrow">${ruleHtml}${sizeOnly}</div>` : MXR ? `<div class="opts vopts rulerow kindrow mxkind">${ruleHtml}<span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}<div class="opts" id="bvOpts">${ad.levels ? `<label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(lvInfo(ad, id, i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(lvInfo(ad, id, i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>` : ''}
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"${ad.sideOpts ? ' data-pick="drop"' : ''}>${(ad.sideOpts ? ad.sideOpts(lang) : [[1, t('bv.first')], [2, t('bv.second')]]).map(([v, n]) => `<option value="${v}" ${side === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>` : ''}
         ${ad.sizes && !(ad.table && TCS[ad.clock]) && !ad.house && !RU && !KF ? sizeHtml : ''}${ad.house ? `<button type="button" class="hrb" id="bvHouse"><span>${esc(ad.house.label(lang))}</span><b></b><i aria-hidden="true">⚙</i></button>` : ''}</div>
         ${RU && !KF && !MXR ? `<div class="opts rulerow">${ruleHtml}</div>${!(ad.table && TCS[ad.clock]) ? `<div class="opts szrow">${sizeOnly}</div>` : ''}` : ''}
@@ -1144,7 +1144,7 @@
       bt.onclick = () => {
         const max = ad.levels, cur = +sel.value;
         const sh = document.createElement('div'); sh.className = 'lvsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t(MX ? 'bv.opp' : 'bv.level'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">${[...sel.options].map(o => {
-          const n = +o.value, x = ad.levelInfo && n ? ad.levelInfo(n, lang) : null;
+          const n = +o.value, x = ad.levelInfo && n ? lvInfo(ad, id, n, lang) : null;
           if (!n) return `<div class="lvs-sec first" aria-hidden="true"><span>${esc(t('bv.friends'))}</span></div><button type="button" role="option" data-v="0" class="lvs-boss lvpvp${n === cur ? ' on' : ''}">${PVP_SVG}<div><b>${esc(t('bv.m.pvp'))}</b><small>${esc(t('bv.pvpSub'))}</small></div></button><div class="lvs-sec" aria-hidden="true"><span>${esc(t('bv.atlamo'))}</span></div>`;   // (the characters' name, アトラモ, heads the AI opponents, 2026-11-11)   // (a colour box like the bosses' heads, two friends hand in hand — 2026-11-10)   // (shogi / chess: 二人で対戦 heads the 相手 list)
           return bossHead(id, n, cur) + `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${bossRw(id, n)}${esc(lvNm(x, n, lang, max))}${bossOwn(id, n) ? '<i class="lvck" aria-label="cleared">✓</i>' : ''}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small><em>${esc(x.who)}</em>${x.desc ? ` · ${esc(x.desc)}` : ''}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
         document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
@@ -1168,7 +1168,7 @@
       };
     }
     if (ad && ad.levelInfo && $('bvLvInfo')) {   // how strong is this level?
-      const show = () => { const n = +$('bvLv').value; if (!n) { $('bvLvInfo').innerHTML = `<b>${esc(t('bv.m.pvp'))}</b><small>${esc(t('bv.pvpSub'))}</small>`; return; } const x = ad.levelInfo(n, lang), max = ad.levels;
+      const show = () => { const n = +$('bvLv').value; if (!n) { $('bvLvInfo').innerHTML = `<b>${esc(t('bv.m.pvp'))}</b><small>${esc(t('bv.pvpSub'))}</small>`; return; } const x = lvInfo(ad, id, n, lang), max = ad.levels;
         $('bvLvInfo').innerHTML = `<span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(6 + 20 * (i + 1) / max)}px;width:${max > 12 ? 3 : 5}px"></i>`).join('')}</span><b>${esc(x.who)}</b><small>${esc(x.desc)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>`; };
       $('bvLv').addEventListener('change', show); show();
       if ($('bvi').classList.contains('fold')) { const w = $('bvLvInfo').parentNode; if (w.classList.contains('lvw')) w.style.height = '0px'; }
@@ -1211,6 +1211,18 @@
     N.ensure(N.lang()).then(() => { const T = N.T && (N.T[N.lang()] || N.T.en), L = T && T.bosses && T.bosses[g]; if (!L) return;
       sh.querySelectorAll('.lvs-boss:not(.lvpvp)').forEach(h => {   // (not 二人で対戦: its subtitle was blanked here)
       const s = h.querySelector('small'); if (s) s.textContent = L[+h.dataset.bi] || ''; }); }).catch(() => {});
+  }
+  // 天上 (2026-11-17, ユーザー：人間が明らかに勝てないレベルは天上): the levels above TENJO[id] are beyond what people beat — named
+  // 天上 Ⅰ, Ⅱ … like reversi's (which names its own). The rating shown is the rated games' ladder (RTG), on the common scale.
+  const TENJO = { chess: 17, shogi: 22, go: 27, tafl: 20, amazons: 20, konane: 20, ugolki: 20, agon: 20, connect4: 7, morris: 9, dots: 8, mancala: 9 };
+  const TJ_H = { ja: '天上', en: 'Celestial', zh: '天上', 'zh-TW': '天上', ko: '천상', es: 'Celestial', fr: 'Céleste', pt: 'Celestial', de: 'Himmlisch', hi: 'दिव्य', ar: 'سماوي', ru: 'Небесный', id: 'Surgawi', tr: 'Semavi' };
+  const TJ_RF = ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ'], TJ_RA = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+  function lvInfo(ad, id, n, lang) {
+    const x = ad.levelInfo(n, lang); if (!x) return x;
+    const y = Object.assign({}, x), c = TENJO[id], R = RTG[id];
+    if (c && n > c) { const k = n - c - 1, cjk = /^(ja|zh|zh-TW)$/.test(lang); y.name = (TJ_H[lang] || TJ_H.en) + (cjk ? TJ_RF[k] : ' ' + TJ_RA[k]); }
+    if (R && 'rating' in x) { const r = R.lv[n - (R.off || 0)]; if (r != null) y.rating = r; }
+    return y;
   }
   function lvNm(x, n, lang, max) {
     if (!x || !x.name) return '';
@@ -1354,43 +1366,59 @@
      its ladder of level ratings, its placement — shared/placement.js — and Elo K), so a rated game here counts there too ---------- */
   const RTG = {
     shogi: { key: 'shogi-rated-v1', start: 900, flag: 'k', off: 1, from: 0, tc: { id: 'rt', main: 600, byo: 30 },
-      lv: [150, 300, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900] },
+      lv: [100, 255, 405, 510, 610, 715, 815, 915, 1020, 1120, 1225, 1325, 1430, 1530, 1630, 1735, 1835, 1990, 2195, 2295, 2400, 2500, 2700, 2800, 2900, 3000] },
     reversi: { key: 'reversi-rated-v1', start: 1000, flag: 'lvV', off: 0, from: 1, tc: { id: 'rt', main: 600, byo: 30 },   // (reversi/index.html RT_LV / RT_CLOCK)
-      lv: (window.Atlas3D && Atlas3D.reversi && Atlas3D.reversi.ratings) || [0, 10, 50, 110, 170, 240, 340, 430, 490, 550, 615, 680, 780, 855, 930, 1010, 1090, 1190, 1290, 1365, 1440, 1511, 1582, 1634, 1687, 1732, 1767, 1837, 1916, 1954, 1991, 2017, 2054, 2067, 2084, 2140, 2201], flagV: 4 },   // (= RT_LV, Lv.1–28 since #1692)
+      lv: (window.Atlas3D && Atlas3D.reversi && Atlas3D.reversi.ratings) || [0, 100, 150, 225, 300, 390, 515, 630, 705, 780, 860, 945, 1070, 1165, 1260, 1360, 1460, 1585, 1710, 1805, 1900, 1990, 2080, 2145, 2210, 2270, 2310, 2400, 2500, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400], flagV: 4 },   // (= RT_LV, Lv.1–28 since #1692)
     go: { key: 'aicoding-go-rated', start: 1000, flag: 'k3', off: 0, from: 1, size: 9, tc: { id: 'rt', main: 300, byo: 20 },   // (go/app.js RT_STORE / RT_LV (EGF) / RT_SIZE 9 / RT_CLOCK, 2026-11-13)
-      lv: [0, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400, 2500, 2550, 2600, 2650, 2700, 2800, 2900, 3000, 3100, 3200] },
+      lv: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2350, 2400, 2450, 2500, 2700, 2800, 2900, 3000, 3100] },
     xiangqi: { key: 'aicoding-xiangqi-rated', start: 1000, flag: 'k', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },   // (xiangqi/app.js RT_STORE / RT_LV / RT_CLOCK, 2026-11-14)
-      lv: [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1977, 2087, 2212, 2302, 2337, 2362, 2537, 2602] },
+      lv: [0, 100, 195, 355, 485, 625, 820, 985, 1155, 1280, 1530, 1635, 1695, 1805, 1925, 2065, 2165, 2205, 2230, 2430, 2500] },
     checkers: { key: 'aicoding-checkers-rated', start: 1000, flag: 'k', off: 0, from: 1, tc: { id: 'rt', main: 300, inc: 3 },   // (checkers/app.js RT_STORE / RT_LV / RT_CLOCK, 2026-11-14)
-      lv: [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2320, 2370] },
+      lv: [0, 100, 255, 410, 570, 725, 880, 1040, 1195, 1350, 1505, 1660, 1820, 1975, 2075, 2150, 2225, 2290, 2350, 2440, 2500] },
     gomoku: { key: 'aicoding-gomoku-rated', start: 1000, flag: 'k', off: 0, from: 1, size: 1, tc: { id: 'rt', main: 600, inc: 5 },   // (gomoku/app.js RT_STORE / RT_LV / RT_CLOCK, 2026-11-13)
-      lv: [0, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2400, 2600, 2800] },
+      lv: [0, 100, 200, 305, 405, 510, 610, 715, 815, 915, 1020, 1120, 1225, 1325, 1430, 1530, 1685, 1885, 2090, 2295, 2500] },
     hex: { key: 'aicoding-hex-rated', start: 1000, flag: 'f', off: 0, from: 1, size: 11, tc: { id: 'rt', main: 300, inc: 3 },   // (hex/app.js RT_STORE / RT_LV / rtClock: 11×11 with the swap rule, 5 min + 3 s, 2026-11-15)
-      lv: [0, 630, 740, 850, 1015, 1180, 1345, 1545, 1670, 1735, 1830, 1870, 1910, 1945, 1965, 1985, 2005, 2045, 2085, 2125, 2185] },
+      lv: [0, 100, 270, 440, 695, 950, 1205, 1510, 1705, 1805, 1950, 2015, 2075, 2130, 2160, 2190, 2220, 2285, 2345, 2405, 2500] },
     tafl: { key: 'aicoding-tafl-rated', start: 1000, flag: 'f', off: 0, from: 1, size: 11, randSide: true, tc: { id: 'rt', main: 420, inc: 4 },   // (tafl/app.js RT_STORE / RT_LV / RT_CLOCK: Copenhagen, sides at random, 7 min + 4 s, 2026-11-15)
-      lv: [0, 450, 570, 670, 790, 960, 1030, 1100, 1200, 1320, 1400, 1510, 1640, 1740, 1845, 1950, 2160, 2290, 2410, 2560, 2650, 2695, 2735, 2765, 2795, 2825],
+      lv: [0, 100, 230, 340, 470, 655, 735, 810, 920, 1050, 1135, 1255, 1400, 1505, 1620, 1735, 1965, 2105, 2240, 2400, 2500, 2700, 2800, 2900, 3000, 3100],
       adj: (lv, side) => { const A = [0, 30, 30, 30, 30, 70, 70, 70, 70, 70, 200, 350]; const a = A[Math.max(1, Math.min(11, lv || 1))]; return side === 2 ? a : -a; } },   // (RT_SIDE: the defenders are expected to score more)
     morris: { key: 'aicoding-morris-rated', start: 1000, flag: 'f', off: 0, from: 1, size: 9, tc: { id: 'rt', main: 300, inc: 3 },   // (morris/index.html RT_STORE / RT_LV / RT_CLOCK: Nine Men's Morris, 5 min + 3 s, 2026-11-16)
-      lv: [0, 350, 550, 1000, 1400, 1650, 1750, 1900, 2350, 2500, 2550] },
+      lv: [0, 100, 325, 825, 1270, 1550, 1665, 1830, 2335, 2500, 2700] },
     connect4: { key: 'c4-rated-v1', start: 1000, flag: 'f', off: 0, from: 1, tc: { id: 'rt' },   // (connect4/rated.js RT_STORE / RT_LV, no clock, 2026-11-15)
-      lv: [0, 400, 780, 900, 1110, 1150, 1190, 1300, 1480] },
+      lv: [0, 100, 1115, 1435, 1995, 2100, 2205, 2500, 2700] },
     amazons: { key: 'aicoding-amazons-rated', start: 1000, flag: 'f', off: 0, from: 1, tc: { id: 'rt', main: 300, inc: 3 },   // (amazons/app.js RT_STORE / RT_LV / RT_CLOCK 5 min + 3 s, 2026-11-15)
-      lv: [0, 350, 400, 490, 580, 610, 640, 710, 920, 1140, 1210, 1250, 1280, 1400, 1630, 1770, 1955, 2065, 2135, 2185, 2225, 2255, 2285, 2305] },
+      lv: [0, 100, 165, 280, 395, 435, 470, 560, 830, 1110, 1200, 1250, 1290, 1445, 1740, 1920, 2155, 2295, 2385, 2450, 2500, 2700, 2800, 2900] },
     backgammon: { key: 'aicoding-backgammon-v2-rated', start: 1000, flag: 'v', flagV: 1, off: 0, from: 1, tc: { id: 'rt' },   // (backgammon/app.js RT_STORE / rt-levels.js, 2026-11-15: one game without the cube, no clock — as the full game's rated game against the AI)
-      lv: [0, 100, 650, 920, 1135, 1250, 1310, 1345, 1350, 1385, 1395] },
+      lv: [0, 400, 1035, 1350, 1600, 1730, 1800, 1840, 1850, 1890, 1900] },
     chess: { key: 'aicoding-chess-rated', start: 1000, flag: 'lvv', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },
-      lv: [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2150, 2295, 2385, 2495, 2705, 2885, 2985, 3075, 3160, 3240, 3305, 3370, 3440] },
+      lv: [0, 100, 245, 385, 530, 675, 865, 1105, 1250, 1440, 1535, 1635, 1730, 1970, 2105, 2195, 2300, 2500, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400] },
   };
   /* the other games against the AI (2026-11-16 ユーザー：レート戦でvs CPU戦がないゲームに全部追加): their full games keep no rated record
      against the AI, so the 3D table keeps its own ('atlas-rated-<id>'), no clock, one rating per game whatever the 種目. Each level's
      rating is an estimate along a curve from the weakest to the strongest level (not measured yet); games with dice or real-time
      shots have a narrower spread, since luck and the hand take a part in every result */
-  const rtLadder = (n, a, b) => [0].concat(Array.from({ length: n }, (_, i) => Math.round((a + (b - a) * Math.pow(i / (n - 1), 1.15)) / 5) * 5));
-  [['janggi', 20, 400, 2200], ['ugolki', 23, 350, 1900], ['mancala', 10, 400, 1800], ['dots', 10, 400, 1800], ['ur', 20, 600, 1500], ['fanorona', 20, 400, 2000],
-   ['konane', 23, 350, 2000], ['senet', 20, 600, 1400], ['agon', 23, 350, 1800], ['alquerque', 20, 400, 1900], ['ludo', 20, 700, 1300],
-   ['carrom', 20, 450, 1700], ['crokinole', 20, 450, 1700], ['hockey', 20, 400, 1800], ['botao', 20, 450, 1700], ['hitblow', 20, 450, 1500]].forEach(([id, n, a, b]) => {
-    if (!RTG[id]) RTG[id] = { key: 'atlas-rated-' + id, start: 1000, flag: 'f', off: 0, from: 1, tc: { id: 'rt' }, lv: rtLadder(n, a, b), own: true };
-  });
+  // (2026-11-17) every ladder on one common scale: ルール覚えたて ≈ 100 (Lv.1: someone who just learned the rules wins), the highest
+  // level people play = プロ 2500, and the 天上 levels (AtlasNPC.CEL: beyond what people can beat) 2700, 2800 … Games of luck or of the
+  // hand (dice, shots) have no 天上 and a narrower spread. claude/game-conventions-addendum.md「AIレートの共通の目盛り」
+  const OWN_LV = {
+    "janggi": [0, 100, 195, 350, 475, 610, 805, 965, 1130, 1255, 1495, 1600, 1660, 1765, 1885, 2020, 2120, 2155, 2185, 2430, 2500],
+    "ugolki": [0, 100, 240, 380, 525, 665, 805, 945, 1085, 1225, 1370, 1510, 1650, 1790, 1880, 1950, 2015, 2070, 2130, 2445, 2500, 2700, 2800, 2900],
+    "fanorona": [0, 100, 260, 415, 575, 730, 890, 1045, 1205, 1365, 1520, 1680, 1835, 1995, 2095, 2170, 2245, 2310, 2375, 2435, 2500],
+    "konane": [0, 100, 245, 395, 540, 685, 830, 980, 1125, 1270, 1415, 1565, 1710, 1855, 1950, 2020, 2090, 2150, 2205, 2440, 2500, 2700, 2800, 2900],
+    "agon": [0, 100, 260, 415, 575, 730, 890, 1045, 1205, 1365, 1520, 1680, 1835, 1995, 2095, 2170, 2245, 2310, 2375, 2435, 2500, 2700, 2800, 2900],
+    "ur": [0, 500, 675, 715, 780, 835, 900, 1005, 1070, 1150, 1225, 1285, 1375, 1455, 1505, 1565, 1620, 1670, 1680, 1690, 1700],
+    "ludo": [0, 500, 590, 710, 825, 915, 1010, 1100, 1190, 1260, 1330, 1400, 1470, 1525, 1575, 1610, 1630, 1655, 1675, 1690, 1700],
+    "senet": [0, 500, 605, 720, 810, 905, 975, 1075, 1160, 1230, 1310, 1360, 1410, 1480, 1530, 1565, 1615, 1645, 1665, 1685, 1700],
+    "mancala": [0, 100, 320, 585, 875, 1180, 1500, 1825, 2160, 2500, 2700],
+    "dots": [0, 100, 355, 670, 1005, 1360, 1730, 2110, 2500, 2700, 2800],
+    "alquerque": [0, 100, 180, 280, 385, 500, 615, 740, 860, 990, 1115, 1245, 1380, 1515, 1650, 1790, 1930, 2070, 2210, 2355, 2500],
+    "carrom": [0, 300, 360, 435, 515, 600, 690, 780, 870, 965, 1060, 1160, 1260, 1360, 1465, 1565, 1670, 1775, 1885, 1990, 2100],
+    "crokinole": [0, 300, 360, 435, 515, 600, 690, 780, 870, 965, 1060, 1160, 1260, 1360, 1465, 1565, 1670, 1775, 1885, 1990, 2100],
+    "hockey": [0, 300, 360, 435, 515, 600, 690, 780, 870, 965, 1060, 1160, 1260, 1360, 1465, 1565, 1670, 1775, 1885, 1990, 2100],
+    "botao": [0, 300, 360, 435, 515, 600, 690, 780, 870, 965, 1060, 1160, 1260, 1360, 1465, 1565, 1670, 1775, 1885, 1990, 2100],
+    "hitblow": [0, 400, 450, 515, 580, 650, 725, 800, 875, 955, 1035, 1115, 1200, 1285, 1370, 1455, 1545, 1630, 1720, 1810, 1900]
+  };
+  Object.keys(OWN_LV).forEach(id => { if (!RTG[id]) RTG[id] = { key: 'atlas-rated-' + id, start: 1000, flag: 'f', off: 0, from: 1, tc: { id: 'rt' }, lv: OWN_LV[id], own: true }; });
   // (online rated games exist only where the full game or the adapter has them: the rest offer the AI alone)
   const SOON = { ja: 'オンライン（準備中）', en: 'Online (soon)', zh: '在线（准备中）', 'zh-TW': '線上（準備中）', ko: '온라인 (준비 중)', es: 'En línea (pronto)', fr: 'En ligne (bientôt)', pt: 'Online (em breve)', de: 'Online (bald)', hi: 'ऑनलाइन (जल्द)', ar: 'عبر الإنترنت (قريبًا)', ru: 'Онлайн (скоро)', id: 'Online (segera)', tr: 'Çevrim içi (yakında)' };
   RTG.hitblow.randSide = true;   // (ヒット＆ブロー: the second guesser has one more row of clues — sides at random, 2026-11-16)

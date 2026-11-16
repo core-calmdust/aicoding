@@ -1137,7 +1137,7 @@ $('#btnStart').onclick = () => {
 let rgame = null;
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
 // rating of each step on a kyu / dan scale (100 points per kyu: 15級 = 400-499 … 1級 = 1800-1899, then 200 per dan)
-const RT_LV = [0, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2400, 2600, 2800];
+const RT_LV = [0, 100, 200, 305, 405, 510, 610, 715, 815, 915, 1020, 1120, 1225, 1325, 1430, 1530, 1685, 1885, 2090, 2295, 2500];
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

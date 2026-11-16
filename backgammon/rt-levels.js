@@ -4,4 +4,4 @@
 // of games won: 1→2 +548, 2→3 +268, 3→4 +215, 4→5 +115, 5→6 +63, 6→7 +35, 7→8 ±0 (the 0-ply net vs its 1-ply search),
 // 7→9 +47 / 7→10 +23 (120 games each, ±30: the 2-ply levels taken as one step above, 10 ≥ 9). The dice keep the strong
 // levels close together.
-window.BG_RT_LV = [0, 100, 650, 920, 1135, 1250, 1310, 1345, 1350, 1385, 1395];
+window.BG_RT_LV = [0, 400, 1035, 1350, 1600, 1730, 1800, 1840, 1850, 1890, 1900];

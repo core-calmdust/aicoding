@@ -29,7 +29,7 @@ tr: { "ng.rated": "Puanlı oyun", "rt.title": "Puanın", "rt.prov": "geçici", "
 for (const l in RT_I18N) if (I18N[l]) Object.assign(I18N[l], RT_I18N[l]);
 const RT_STORE = 'c4-rated-v1', RT_CUR = 'c4-rated-cur-v1', RT_START = 1000;
 // index = level 1..8 (measured level against level, Lv8 plays perfectly: see RATING.md)
-const RT_LV = [0, 400, 780, 900, 1110, 1150, 1190, 1300, 1480];
+const RT_LV = [0, 100, 1115, 1435, 1995, 2100, 2205, 2500, 2700];
 const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
 const put = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

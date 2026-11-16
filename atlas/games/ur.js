@@ -46,7 +46,7 @@
     tr: ['İlk oyun', 'Kuralları biliyor', 'Birkaç oyun oynadı', 'Düzenli oyuncu', 'Güçlü oyuncu', 'Uzman', 'Usta'],
   };
   // the game's measured rating of each AI level (ur/app.js RT_LV)
-  const RATING = [0, 600, 660, 715, 725, 735, 800, 865, 930, 990, 1070, 1155, 1240, 1325, 1375, 1430, 1485, 1535, 1550, 1570, 1610];
+  const RATING = [0, 500, 570, 635, 650, 660, 740, 815, 890, 965, 1060, 1160, 1260, 1360, 1420, 1485, 1550, 1610, 1630, 1650, 1700];
   function levelInfo(n, lang) {
     const name = 'Lv.' + n;
     const d = LVD[lang] || LVD.en, w = WHO[lang] || WHO.en;

@@ -1177,7 +1177,7 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo)
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
 // rating of each AI step on the kyu / dan scale, from the calibration matches (tools/native.c match, see MODEL_CARD.md)
-const RT_LV = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1977, 2087, 2212, 2302, 2337, 2362, 2537, 2602];   // (2026-11-13, search v2: Lv.19-20 +50, an estimate)
+const RT_LV = [0, 100, 195, 355, 485, 625, 820, 985, 1155, 1280, 1530, 1635, 1695, 1805, 1925, 2065, 2165, 2205, 2230, 2430, 2500];   // (2026-11-13, search v2: Lv.19-20 +50, an estimate)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

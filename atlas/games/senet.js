@@ -39,7 +39,7 @@
     id: ['Permainan pertama', 'Tahu aturannya', 'Pernah main beberapa kali', 'Pemain rutin', 'Pemain kuat', 'Ahli', 'Master'],
     tr: ['İlk oyun', 'Kuralları biliyor', 'Birkaç oyun oynadı', 'Düzenli oyuncu', 'Güçlü oyuncu', 'Uzman', 'Usta'],
   };
-  const RATING = [0, 831, 853, 877, 896, 915, 930, 951, 969, 983, 1000, 1010, 1021, 1035, 1046, 1053, 1063, 1070, 1074, 1078, 1081];   // senet/app.js RT_LV
+  const RATING = [0, 500, 605, 720, 810, 905, 975, 1075, 1160, 1230, 1310, 1360, 1410, 1480, 1530, 1565, 1615, 1645, 1665, 1685, 1700];   // senet/app.js RT_LV
   function levelInfo(n, lang) {
     const d = LVD[lang] || LVD.en, w = WHO[lang] || WHO.en;
     return { name: 'Lv.' + n, desc: d[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: w[n <= 2 ? 0 : n <= 5 ? 1 : n <= 8 ? 2 : n <= 11 ? 3 : n <= 15 ? 4 : n <= 18 ? 5 : 6] };

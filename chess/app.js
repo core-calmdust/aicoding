@@ -1250,7 +1250,7 @@ function styleMove(ucis) {
 // player's rating (mostly close, sometimes clearly stronger or weaker). 10 min + 5 s per move; leaving a game in progress loses it.
 let rgame = null;
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
-const RT_LV = [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2150, 2295, 2385, 2495, 2705, 2885, 2985, 3075, 3160, 3240, 3305, 3370, 3440];   // 13–25 raised 2026-11-09 for the new NNUE (about 0.5× its self-play gain over the old net; MODEL_CARD.md「評価関数 v2」). 18–25 (2026-11-08, re-spaced to about twice the time per step): interpolated from the Stockfish measurements of Lv.17 / the old 0.5 s level, then the time-doubling matches (MODEL_CARD.md「最上位レベル」)
+const RT_LV = [0, 100, 245, 385, 530, 675, 865, 1105, 1250, 1440, 1535, 1635, 1730, 1970, 2105, 2195, 2300, 2500, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400];   // 13–25 raised 2026-11-09 for the new NNUE (about 0.5× its self-play gain over the old net; MODEL_CARD.md「評価関数 v2」). 18–25 (2026-11-08, re-spaced to about twice the time per step): interpolated from the Stockfish measurements of Lv.17 / the old 0.5 s level, then the time-doubling matches (MODEL_CARD.md「最上位レベル」)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
