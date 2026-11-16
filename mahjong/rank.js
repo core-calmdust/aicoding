@@ -23,7 +23,8 @@ const REWARD = { 2: 'nagisa', 4: 'karin', 6: 'hatsuyuki', 8: 'natsume', 10: 'hom
 const LIST = RAW.map(([pt, name, tier], i) => ({ i, pt, name, tier, reward: REWARD[i] || null }));
 const POINTS = { east: [8, 2, 1, 0], south: [16, 4, 2, 0] };
 // [1st, 2nd, 3rd, 4th] in an East game from 初段 by the badge's tier (an East-South game: ×2)
-const DAN = { dan: [8, 3, -2, -5], dan2: [8, 3, -3, -7], t1: [8, 3, -4, -9], t2: [8, 3, -5, -11], t3: [8, 3, -6, -13] };
+// (2026-11-16, ユーザー「減点がきつい。段位が上がって楽しいを土台に」) small losses: even with every place equally often the points still climb
+const DAN = { dan: [8, 3, 0, -2], dan2: [8, 3, -1, -3], t1: [8, 3, -1, -4], t2: [8, 3, -2, -5], t3: [8, 3, -2, -6] };
 const FLOOR = 120;   // 初段
 function table(pt, len) { const r = at(pt), m = len === 'south' ? 2 : 1; return DAN[r.tier] ? DAN[r.tier].map(v => v * m) : POINTS[len]; }
 // the points a place earns now (pt: before the game) and the new total (never below 初段 once reached)
