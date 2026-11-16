@@ -849,9 +849,28 @@ function gShrineHTML(cls = '') {
 async function showPulls(got) {
   const st = $('#gStage');
   const best = got.reduce((a, g) => RANK_I(g.c.rarity) > RANK_I(a) ? g.c.rarity : a, 'N');
-  st.innerHTML = `${gShrineHTML('go r-' + best)}<i class="gs-flash r-${best}"></i>`;
+  // (2026-11-16, ユーザー「もっとド派手に。神社が吹っ飛ぶくらい」) the build-up (1.15 s): the shrine shakes harder and harder, light
+  // gathers in its doorway, a pillar of light goes up, rays spin out. The blast: the whole screen flashes and quakes, rings of light
+  // run out, and the shrine is blown apart — its picture in 12 pieces flying off and turning — then the cards (at 2.2 s).
+  st.innerHTML = `${gShrineHTML('go r-' + best)}<i class="gs-pillar"></i><i class="gs-ring"></i><i class="gs-ring b"></i><i class="gs-flash r-${best}"></i>`;
   SND.gacha(best);
-  await sleep(1650);
+  const box = st.closest('.mbox'), scr = document.createElement('i'); scr.className = 'gs-screen r-' + best; document.body.appendChild(scr);
+  await sleep(1150);
+  const sh = st.querySelector('.gshrine'), img = sh && sh.querySelector('img');
+  if (img && img.offsetWidth) {
+    const C = 4, R = 3, fr = document.createElement('div'); fr.className = 'gs-frag';
+    fr.style.cssText = `left:${img.offsetLeft}px;top:${img.offsetTop}px;width:${img.offsetWidth}px;height:${img.offsetHeight}px`;
+    let h = '';
+    for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) {
+      const cx = (i + .5) / C - .5, cy = (j + .5) / R - .62, a = Math.atan2(cy, cx), d = 380 + Math.random() * 320;
+      h += `<i style="left:${i * 100 / C}%;top:${j * 100 / R}%;width:${100 / C}%;height:${100 / R}%;background-image:url(${img.src});background-size:${C * 100}% ${R * 100}%;background-position:${i * 100 / (C - 1)}% ${j * 100 / (R - 1)}%;--dx:${(Math.cos(a) * d).toFixed(0)}px;--dy:${(Math.sin(a) * d - 120).toFixed(0)}px;--r:${((Math.random() - .5) * 140).toFixed(0)}deg;--s:${(1.1 + Math.random() * .5).toFixed(2)}"></i>`;
+    }
+    fr.innerHTML = h; sh.querySelector('.gs-in').appendChild(fr);
+    sh.classList.add('blast'); if (box) box.classList.add('gs-quake');
+    SND.gacha(best);
+  }
+  await sleep(1050);
+  scr.remove(); if (box) box.classList.remove('gs-quake');
   st.innerHTML = `<div class="gcards n${got.length}">${got.map((g, i) => `
     <div class="gc frame fr-${g.c.rarity}" style="--d:${i * 110}ms;--c:${g.c.color};--c2:${g.c.color2}">
       <div class="gci"><img src="${charImg(g.c, 'bust')}" alt=""><i class="fx-sh"></i></div>
