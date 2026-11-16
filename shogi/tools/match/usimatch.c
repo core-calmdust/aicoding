@@ -1,6 +1,7 @@
 /* usimatch: the site's shogi AI (engine.c + an NNUE file, native build) against a USI engine (e.g. Gikou with DepthLimit).
    build: cc -O3 -DNATIVE -o usimatch usimatch.c            (add -DNUE_H=512 for a 512-wide net)
-   usage: usimatch <nnue.bin> <our nodes | Nms> <usi engine path> <engine dir> <games> [--opt "Name=Value"]... [--byoyomi ms] [--openings file]
+   usage: usimatch <nnue.bin> <our nodes | Nms> <usi engine path> <engine dir> <games> [--opt "Name=Value"]... [--byoyomi ms] [--openings file] [--param k=v]...
+     --param k=v: a search parameter of our side (engine.c set_param); the other side, if it is kptool: --opt "Param<k>=v"
             [--threads N] [--fischer baseMs,incMs]
    --threads N (a build with -DMT -lpthread): our side searches on N threads, the multi-thread search of the site (engine_mt.wasm:
      Young Brothers Wait on the first 10 threads, Lazy SMP past them), the helpers asleep while the other engine thinks.
@@ -152,6 +153,7 @@ int main(int argc, char **argv) {
     if (!strcmp(argv[a], "--opt") && nopt < 32) opts[nopt++] = argv[++a];
     else if (!strcmp(argv[a], "--byoyomi")) byo = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--openings")) opf = argv[++a];
+    else if (!strcmp(argv[a], "--param")) { int k, v; if (sscanf(argv[++a], "%d=%d", &k, &v) == 2) set_param(k, v); }   /* our side's search parameter (engine.c set_param) */
     else if (!strcmp(argv[a], "--threads")) nThreads = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--fischer")) { if (sscanf(argv[++a], "%d,%d", &fBase, &fInc) != 2 || fBase <= 0) { fprintf(stderr, "--fischer baseMs,incMs\n"); return 1; } }
   }
