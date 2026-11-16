@@ -946,7 +946,11 @@ function renderChara() {
   ch.style.setProperty('--dl', /^(ja|zh|ko)/.test(I18N.lang) ? 3 : 5);   // (lines kept for a skill's description: the longest one in this language)
   { const info = $('#chInfo'); info.classList.remove('tight', 'tight2');
     if (!info.classList.contains('tabs')) {   // (the phone's tabs scroll inside their pane instead)
-    if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight');
+    // (2026-11-16, ユーザー「STORYを長く、収まらなければその場でスクロール」) her story no longer gives way: it keeps what room is
+    // left (at least three lines) and scrolls inside itself; only then do the small labels and the size of her name give way
+    const st = info.querySelector('.pprof'); if (st) { st.style.maxHeight = ''; st.classList.remove('scroll'); }
+    if (st && info.scrollHeight > info.clientHeight + 2) { const lh = parseFloat(getComputedStyle(st).lineHeight) || 24;
+      st.style.maxHeight = Math.max(lh * 3, st.offsetHeight - (info.scrollHeight - info.clientHeight) - 4) + 'px'; st.classList.add('scroll'); }
     if (info.scrollHeight > info.clientHeight + 2) info.classList.add('tight2'); }
     info.scrollTop = keepScroll;
     if (!pt && canPick) { const q = info.querySelector('.ptn'); if (q && q.offsetTop + q.offsetHeight > info.scrollTop + info.clientHeight) info.scrollTop = Math.max(0, q.offsetTop - 60); } }   // (the call to pick a partner is never left below the fold)
