@@ -931,11 +931,11 @@
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       <p class="bvab">${esc(t('about.' + id))}</p>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : STX ? esc(ad.modeName(m, lang)) : PZX ? (m === 'puzzle' ? t('pg.pz') : PEG_FREE[lang] || PEG_FREE.en) : t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}${ad.variants ? `<div class="opts vopts" id="bvVarRow"><label class="vrow">${esc(ad.variants.label(lang))}<button type="button" class="lvpick vpick" id="bvVar" data-v="${esc(vcur)}"></button></label><span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}${KF ? `<div class="opts rulerow kindrow">${ruleHtml}${sizeOnly}</div>` : ''}<div class="opts" id="bvOpts">${ad.levels ? `<label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>` : ''}
+      </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : STX ? esc(ad.modeName(m, lang)) : PZX ? (m === 'puzzle' ? t('pg.pz') : PEG_FREE[lang] || PEG_FREE.en) : (ad && ad.modeName && ad.modeName(m, lang)) || t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}${ad.variants ? `<div class="opts vopts" id="bvVarRow"><label class="vrow">${esc(ad.variants.label(lang))}<button type="button" class="lvpick vpick" id="bvVar" data-v="${esc(vcur)}"></button></label><span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}${KF ? `<div class="opts rulerow kindrow">${ruleHtml}${sizeOnly}</div>` : ''}<div class="opts" id="bvOpts">${ad.levels ? `<label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>` : ''}
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}
         ${ad.sizes && !(ad.table && TCS[ad.clock]) && !ad.house && !RU && !KF ? sizeHtml : ''}${ad.house ? `<button type="button" class="hrb" id="bvHouse"><span>${esc(ad.house.label(lang))}</span><b></b><i aria-hidden="true">⚙</i></button>` : ''}</div>
         ${RU && !KF ? `<div class="opts rulerow">${ruleHtml}</div>${!(ad.table && TCS[ad.clock]) ? `<div class="opts szrow">${sizeOnly}</div>` : ''}` : ''}
-        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes && !KF ? (RU ? sizeOnly : sizeHtml) : ''}</div>` : ''}${MX ? mxPanels(g, ad) : PZX ? `<div class="opts mxp" id="bvPz" hidden>${[['d1', ''], ['d2', '<em class="ez">EASY</em>']].map(([k, ez]) => `<button type="button" class="mxb pzd${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><span>${esc(t('bv.pz.dc'))}</span>${ez}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>` : STX ? `<div class="opts shstg" id="bvStg" hidden>${ad.stagePanel(lang)}</div>` : ''}</div>${ad.house && ad.sizes && !KF ? `<div class="opts szrow" id="bvSzRow">${sizeHtml}</div>` : ''}` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' || g.id === 'amazons' || g.id === 'peg' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span><em class="extph">${esc(EXT_PH[lang] || EXT_PH.en)}</em></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span><em class="extph">${esc(EXT_PH[lang] || EXT_PH.en)}</em></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
+        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes && !KF ? (RU ? sizeOnly : sizeHtml) : ''}</div>` : ''}${MX ? mxPanels(g, ad) : PZX ? `<div class="opts mxp" id="bvPz" hidden>${[['d1', ''], ['d2', '<em class="ez">EASY</em>']].map(([k, ez]) => `<button type="button" class="mxb pzd${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><span>${esc(t('bv.pz.dc'))}</span>${ez}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>` : STX ? `<div class="opts shstg" id="bvStg" hidden>${ad.stagePanel(lang)}</div>` : ''}${ad.dailyHtml ? `<div class="opts mxp hbdy" id="bvDaily" hidden>${ad.dailyHtml(lang)}</div>` : ''}</div>${ad.house && ad.sizes && !KF ? `<div class="opts szrow" id="bvSzRow">${sizeHtml}</div>` : ''}` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' || g.id === 'amazons' || g.id === 'peg' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span><em class="extph">${esc(EXT_PH[lang] || EXT_PH.en)}</em></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span><em class="extph">${esc(EXT_PH[lang] || EXT_PH.en)}</em></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${esc(placeT('play'))}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button>${g.only3d ? '' : `<a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}`}</div></div></div>`;   // (only3d: a game made for the 3D table alone — carrom — has no 2D page)
@@ -954,6 +954,7 @@
       paint(); if ($('bvSize')) $('bvSize').addEventListener('change', paint);
     }
     if (PZX && $('bvPz')) $('bvPz').onclick = e => { const b = e.target.closest('[data-pz]'); if (!b) return; try { SFX.tap && SFX.tap(); } catch (x) {} if (b.dataset.pz === 'list') puzzleSheet(g); else startPuzzle({ daily: b.dataset.pz }); };
+    if ($('bvDaily')) $('bvDaily').onclick = e => { const b = e.target.closest('[data-daily]'); if (!b) return; try { SFX.tap && SFX.tap(); } catch (x) {} ad.pending = b.dataset.daily; startPlay(); };
     if ($('bvTable')) $('bvTable').onclick = () => startPlay('table');
     if ($('bvFull')) $('bvFull').onclick = () => startPlay('full');
     if ($('bvMode')) {   // AI / rated / two players: only the AI game has a level and a side to pick
@@ -962,15 +963,16 @@
       const body = $('bvMBody');
       const layout = m => {
         if ($('bvVarRow')) $('bvVarRow').hidden = !(m === 'ai' || m === 'pvp' || m === 'rated');
-        { const kr = $('bvMBody') && $('bvMBody').querySelector('.kindrow'); if (kr) kr.hidden = m === 'puzzle' || m === 'lesson' || m === 'stage' || m === 'rated'; }   // (種目 first: not for puzzles / lessons, nor rated games — their rule set is fixed: tafl Copenhagen, ur Finkel …)   // (online games too: every variant, 2026-11-12)
+        { const kr = $('bvMBody') && $('bvMBody').querySelector('.kindrow'); if (kr) kr.hidden = m === 'puzzle' || m === 'lesson' || m === 'stage' || m === 'rated' || m === 'daily'; }   // (種目 first: not for puzzles / lessons, nor rated games — their rule set is fixed: tafl Copenhagen, ur Finkel …)   // (online games too: every variant, 2026-11-12)
         if (rtNowHook) rtNowHook();   // (種目: AI games, two players, rated games against the AI)
         requestAnimationFrame(lblAlign);   // (the names' column, after the rows of this mode show)
         if (MX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvTcRow')) $('bvTcRow').hidden = m !== 'ai'; mxLayout(m); return; }
         if (PZX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvPz')) $('bvPz').hidden = m !== 'puzzle'; return; }
         if (STX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvStg')) $('bvStg').hidden = m !== 'stage'; return; }
         $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai';
+        if ($('bvDaily')) { $('bvDaily').hidden = m !== 'daily'; if ($('bvStart')) $('bvStart').style.display = m === 'daily' ? 'none' : ''; }   // (ヒット＆ブロー 今日の一問: EASY / HARD start from their own buttons, 2026-11-16)
         if ($('bvTcRow')) $('bvTcRow').hidden = !(ad.tableModes || ['ai']).includes(m);   // the time control is for table play only
-        $('bvMNote').textContent = m === 'ai' ? '' : t('bv.m.' + m + 'Note');
+        $('bvMNote').textContent = m === 'ai' ? '' : (ad.modeNote && ad.modeNote(m, lang)) || t('bv.m.' + m + 'Note');
         if (m === 'rated' && RTG[id]) $('bvMNote').innerHTML += `<span class="rtnow3"><small>${esc(t('rec.rtNow'))}</small><b>${esc(rtNowTxt(id, ''))}</b></span>`;   // (3D-only games, 2026-11-16: the current rating under the note)
       };
       let bodyH = 0;
@@ -1215,7 +1217,7 @@
     // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)
     let top = 0; for (let e = card; e; e = e.offsetParent) top += e.offsetTop;
     if (!card.offsetParent) top = card.getBoundingClientRect().top;
-    Table3D.setInset(playing ? (window.__tbar ? __tbar.band : 0) + (innerWidth >= 820 ? Math.round(innerHeight * .035) : 0) : !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4, playing ? (window.__land && __land.top()) || (window.__hudTop ? __hudTop() : 0) : 0);   // playing: the board is framed above the action bar
+    Table3D.setInset(playing ? Math.max((window.__tbar ? __tbar.band : 0) + (innerWidth >= 820 ? Math.round(innerHeight * .035) : 0), session && session.inset ? session.inset() : 0) : !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4, playing ? (window.__land && __land.top()) || (window.__hudTop ? __hudTop() : 0) : 0);   // playing: the board is framed above the action bar
     $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - top) + 'px');
   }
   addEventListener('resize', () => fitStage());
@@ -1340,11 +1342,12 @@
   const rtLadder = (n, a, b) => [0].concat(Array.from({ length: n }, (_, i) => Math.round((a + (b - a) * Math.pow(i / (n - 1), 1.15)) / 5) * 5));
   [['janggi', 20, 400, 2200], ['ugolki', 23, 350, 1900], ['mancala', 10, 400, 1800], ['dots', 10, 400, 1800], ['ur', 20, 600, 1500], ['fanorona', 20, 400, 2000],
    ['konane', 23, 350, 2000], ['senet', 20, 600, 1400], ['agon', 23, 350, 1800], ['alquerque', 20, 400, 1900], ['ludo', 20, 700, 1300],
-   ['carrom', 20, 450, 1700], ['crokinole', 20, 450, 1700], ['hockey', 20, 400, 1800], ['botao', 20, 450, 1700]].forEach(([id, n, a, b]) => {
+   ['carrom', 20, 450, 1700], ['crokinole', 20, 450, 1700], ['hockey', 20, 400, 1800], ['botao', 20, 450, 1700], ['hitblow', 20, 450, 1500]].forEach(([id, n, a, b]) => {
     if (!RTG[id]) RTG[id] = { key: 'atlas-rated-' + id, start: 1000, flag: 'f', off: 0, from: 1, tc: { id: 'rt' }, lv: rtLadder(n, a, b), own: true };
   });
   // (online rated games exist only where the full game or the adapter has them: the rest offer the AI alone)
-  const RT_NO_ONLINE = { janggi: 1, mancala: 1, dots: 1, ludo: 1, carrom: 1, crokinole: 1, hockey: 1, botao: 1 };
+  RTG.hitblow.randSide = true;   // (ヒット＆ブロー: the second guesser has one more row of clues — sides at random, 2026-11-16)
+  const RT_NO_ONLINE = { janggi: 1, mancala: 1, dots: 1, ludo: 1, carrom: 1, crokinole: 1, hockey: 1, botao: 1, hitblow: 1 };
   // 種目 (2026-11-12): each variant has a rating of its own — the standard game keeps the full game's store, a variant 'mini'
   // is stored under '<key>:mini' (the 3D table only; the same ladder of levels, which the variants map onto their own AI steps)
   const rtKey = (id, v) => RTG[id].key + (v ? ':' + v : '');
@@ -1612,7 +1615,7 @@
       } });
     TB.on(sess, clock, pmode === 'pvp' ? -1 : sess.human != null ? sess.human : side === 2 ? 1 : 0); tbOn = true;   // the human's HUD pill (left when playing first, unless the adapter says)
     LAND.sync();
-    Table3D.play(true);   // after start(): the adapter puts its own board on the table
+    Table3D.play(true, ad.ortho ? { ortho: true } : undefined);   // after start(): the adapter puts its own board on the table (ad.ortho: straight down, no perspective — ヒット＆ブロー)
   }
   let npcT = null;
   function stopSession() { if (rtCur && !rtCur.R.done) { const c = rtCur; rtCur = null; rtSettleG(c.gid, c.R, 0, 'abandon'); } rtCur = null; if (npcT) { npcT.kill(); npcT = null; } TB.off(); if (session) { session.stop(); session = null; } LAND.game(''); $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
