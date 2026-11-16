@@ -6,6 +6,7 @@
 <script src="../shared/phonesnd.js?v=2"></script>
 <title>WYRMSPHERE (PRE-ALPHA)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<script src="../shared/safetop.js?v=2"></script>
 <meta name="description" content="竜に乗って変化し続ける洞窟を翔けるレールシューター。照準で最大8体をロックし、離してホーミング弾を放つ。命中のたびに和音が鳴り、敵を倒すとステージが進化する。">
 <meta name="author" content="CALMDUST">
 <link rel="icon" href="../comet-plus/favicon.svg" type="image/svg+xml">
@@ -31,7 +32,7 @@ body.mob #game{left:0;top:0;width:100%;height:100%;transform:none}
 #game.aim{cursor:none}
 html.nocur,html.nocur *{cursor:none!important} /* キーボード・コントローラで遊んでいる間はポインタを消す */
 .ui{position:absolute;pointer-events:none;z-index:5}
-#hud{top:max(14px,env(safe-area-inset-top));left:0;right:0;text-align:center;transition:opacity .3s}
+#hud{top:max(14px,var(--sat,env(safe-area-inset-top)));left:0;right:0;text-align:center;transition:opacity .3s}
 #score{font-weight:900;font-size:clamp(44px,7cqw,76px);letter-spacing:.04em;line-height:1;
   background:linear-gradient(180deg,#fff 20%,var(--cy));-webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 0 10px rgba(95,242,255,.55)) drop-shadow(0 0 2px rgba(255,79,216,.7))}
@@ -72,9 +73,9 @@ html.nocur,html.nocur *{cursor:none!important} /* キーボード・コントロ
 .btn{position:absolute;z-index:7;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;pointer-events:auto;cursor:pointer;
   background:rgba(12,10,36,.55);border:1px solid rgba(155,107,255,.45);color:#dfe9ff;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-#home{top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left))}
-#snd{top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right))}
-#fs{top:max(12px,env(safe-area-inset-top));right:calc(max(12px,env(safe-area-inset-right)) + 54px)}
+#home{top:max(12px,var(--sat,env(safe-area-inset-top)));left:max(12px,env(safe-area-inset-left))}
+#snd{top:max(12px,var(--sat,env(safe-area-inset-top)));right:max(12px,env(safe-area-inset-right))}
+#fs{top:max(12px,var(--sat,env(safe-area-inset-top)));right:calc(max(12px,env(safe-area-inset-right)) + 54px)}
 body.mob #fs,body.mob .pc{display:none}
 #snd .x{display:none}#snd.off .x{display:inline}#snd.off .w{display:none}
 .alpha{position:absolute;left:max(14px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));z-index:7;font-size:10px;letter-spacing:.3em;color:rgba(184,255,240,.6);pointer-events:none}

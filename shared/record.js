@@ -46,7 +46,7 @@ function add(r) {
   if ((ov && ov.classList.contains('show')) || inl) render();
 }
 const CSS = `
-.grc-ov{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.grc-ov{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:max(16px,var(--sat,env(safe-area-inset-top))) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .grc-ov.show{display:flex}
 .grc{--gw:#4f86c6;--gl:#c4524b;--gd:#6b665e;--gm:var(--muted,#b9b0a2);--gx:var(--text,#f1ead9);--ga:var(--accent,#d8b56a);--gc:rgba(255,255,255,.035);--gb:rgba(255,255,255,.08);
   width:min(720px,100%);height:min(880px,100%);display:flex;flex-direction:column;background:linear-gradient(180deg,color-mix(in srgb,var(--panel,#1d1712) 92%,#fff 8%),var(--panel,#1d1712) 140px);
@@ -137,7 +137,7 @@ html[dir=rtl] .grc-vp,html[lang=ar] .grc-vp{right:auto;left:0}
 }
 /* phone portrait: a compact summary (ring beside the counts), tighter rows, a slim footer — more of the tables on screen */
 @media (max-width:560px) and (orientation: portrait){
-  .grc-ov{padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))}
+  .grc-ov{padding:max(10px,var(--sat,env(safe-area-inset-top))) 10px max(10px,env(safe-area-inset-bottom))}
   .grc{height:100%;border-radius:16px}
   .grc-hd{padding:12px 14px 8px;gap:10px}.grc-hd h2{font-size:17px}.grc-hd .grc-ic{width:32px;height:32px;border-radius:10px}.grc-hd svg{width:18px;height:18px}.grc-x{width:32px;height:32px}
   .grc-tabs{margin:0 14px 2px;max-width:calc(100% - 28px)}.grc-tabs button{padding:6px 14px;font-size:13px}
@@ -157,7 +157,7 @@ html[dir=rtl] .grc-vp,html[lang=ar] .grc-vp{right:auto;left:0}
 }
 /* phone landscape: short and wide — a slim header, the summary card on the left (it stays put), the tables scroll on the right */
 @media (orientation: landscape) and (max-height: 520px){
-  .grc-ov{padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+  .grc-ov{padding:max(8px,var(--sat,env(safe-area-inset-top))) max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
   .grc{width:min(900px,100%);height:100%;border-radius:16px;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;align-items:center}
   .grc > *{grid-column:1 / -1}
   .grc-hd{grid-column:1;grid-row:1;padding:8px 6px 8px 14px;gap:9px}.grc-hd h2{font-size:16px;flex:none}.grc-hd .grc-ic{width:30px;height:30px;border-radius:9px}.grc-hd svg{width:17px;height:17px}
@@ -186,7 +186,7 @@ html[dir=rtl] .grc,html[lang=ar] .grc{direction:rtl}
   body.it-on .grc-menu, body.it-on .grc-ic{display:none!important}
   body.it-on .grc-card{display:block}
   /* (2026-11-13) the 戦績 tab as the online tab: a page of its own over the game, above the tab bar — no scrolling to it */
-  body.it-on[data-it=rec]:not(.mtab-online) .grc-card{position:fixed!important;left:0!important;right:0!important;top:0!important;bottom:var(--it-b,calc(50px + env(safe-area-inset-bottom)))!important;z-index:44!important;margin:0!important;border-radius:0!important;border:0!important;overflow-y:auto!important;overscroll-behavior:contain;background:var(--a-paper,var(--bg,#14100c))!important;padding-top:env(safe-area-inset-top)!important}
+  body.it-on[data-it=rec]:not(.mtab-online) .grc-card{position:fixed!important;left:0!important;right:0!important;top:0!important;bottom:var(--it-b,calc(50px + env(safe-area-inset-bottom)))!important;z-index:44!important;margin:0!important;border-radius:0!important;border:0!important;overflow-y:auto!important;overscroll-behavior:contain;background:var(--a-paper,var(--bg,#14100c))!important;padding-top:var(--sat,env(safe-area-inset-top))!important}
   html.atlas-skin body.it-on[data-it=rec]:not(.mtab-online) .grc-card{background:radial-gradient(circle at 1px 1px,rgba(200,150,60,.16) 1.4px,transparent 1.6px) 0 0/22px 22px,#fffaf0!important}
 }
 .grc-card{display:none;padding:0!important;overflow:hidden}

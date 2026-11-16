@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="../shared/safetop.js?v=2"></script>
 <script src="../shared/latinfs.js?v=1"></script>
 <script src="../shared/focusgate.js?v=4ol"></script>
 <script src="../shared/phonesnd.js?v=2"></script>
@@ -13,7 +14,7 @@
 <meta http-equiv="Cache-Control" content="no-cache">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Fredoka:wght@500;600;700&family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+Devanagari:wght@500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="gamelist.css?v=11">
+<link rel="stylesheet" href="gamelist.css?v=12">
 <style>
 :root{
   --cream:#fff6e2; --paper:#fffdf7; --ink:#2b3044; --ink2:#6a7088; --line:#efe3c8;
@@ -232,18 +233,18 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
    in a game it is the quit button); under it the place chip and 戦績 in their order — in a game only the icon row (2026-11-10) */
 .bvtop{display:none}
 @media (hover:hover) and (pointer:fine) and (min-width:900px){
-  .bvtop{position:absolute;z-index:6;top:calc(12px + env(safe-area-inset-top));inset-inline-end:14px;display:flex;align-items:center;gap:12px}
+  .bvtop{position:absolute;z-index:6;top:calc(12px + var(--sat,env(safe-area-inset-top)));inset-inline-end:14px;display:flex;align-items:center;gap:12px}
   .bvtop .lpop{top:54px;inset-inline-end:52px}
   .bv.bvt #bvClose,.bv.bvt #bvQuit{display:none!important}
-  .bv.bvt .bvtod{top:calc(12px + env(safe-area-inset-top));inset-inline-end:auto;inset-inline-start:max(14px,env(safe-area-inset-left))}   /* 場所・戦績: top left (2026-11-10) */
-  .bv.bvt .bvhw{top:calc(70px + env(safe-area-inset-top))}   /* (ヒストリア under them) */
-  .bv.bvt.playing .bvhw{top:calc(12px + env(safe-area-inset-top))}
-  .bv.bvt .bvplm{top:calc(62px + env(safe-area-inset-top));inset-inline-end:auto;inset-inline-start:14px}
+  .bv.bvt .bvtod{top:calc(12px + var(--sat,env(safe-area-inset-top)));inset-inline-end:auto;inset-inline-start:max(14px,env(safe-area-inset-left))}   /* 場所・戦績: top left (2026-11-10) */
+  .bv.bvt .bvhw{top:calc(70px + var(--sat,env(safe-area-inset-top)))}   /* (ヒストリア under them) */
+  .bv.bvt.playing .bvhw{top:calc(12px + var(--sat,env(safe-area-inset-top)))}
+  .bv.bvt .bvplm{top:calc(62px + var(--sat,env(safe-area-inset-top)));inset-inline-end:auto;inset-inline-start:14px}
 }
 .bv.on{display:block;animation:fadeIn .25s}
 #bv,#bv *:not(#gl):not(#gl *){touch-action:pan-x pan-y}.psheet,.psheet *,.lvsheet,.lvsheet *{touch-action:pan-x pan-y}#gl{position:absolute;inset:0;touch-action:none}
 #gl canvas{display:block;width:100%!important;height:100%!important}
-.bv .x{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:14px;z-index:3}
+.bv .x{position:absolute;top:calc(12px + var(--sat,env(safe-area-inset-top)));inset-inline-end:14px;z-index:3}
 /* info card: always docked at the bottom; on wide screens it spans the width in two columns */
 .bvi{position:absolute;z-index:2;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(1080px,calc(100% - 24px));padding:16px 18px;border-radius:26px;background:rgba(255,253,247,.96);border:2px solid #fff;box-shadow:0 18px 40px -18px rgba(80,40,0,.55);transition:transform .45s cubic-bezier(.3,1.3,.5,1),opacity .3s}
 .bv.playing .bvi{transform:translateX(-50%) translateY(140%);opacity:0;pointer-events:none}
@@ -278,7 +279,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
   .bvi .act .btn.sm{font-size:16px;padding:12px 20px}
   .bvi .soon{font-size:16px;margin-top:0}
 }
-.hud{position:absolute;z-index:2;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-160%);display:flex;align-items:center;gap:8px;padding:6px;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 10px 24px -12px rgba(80,40,0,.5);transition:transform .45s cubic-bezier(.3,1.3,.5,1);max-width:calc(100% - 120px)}
+.hud{position:absolute;z-index:2;top:calc(12px + var(--sat,env(safe-area-inset-top)));left:50%;transform:translateX(-50%) translateY(-160%);display:flex;align-items:center;gap:8px;padding:6px;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 10px 24px -12px rgba(80,40,0,.5);transition:transform .45s cubic-bezier(.3,1.3,.5,1);max-width:calc(100% - 120px)}
 .bv.playing .hud{transform:translateX(-50%)}
 @media (max-width:560px){
   .hud{top:auto;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(160%);max-width:calc(100% - 20px)}
@@ -293,13 +294,13 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 @keyframes hudpopIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 .dk{width:18px;height:18px;border-radius:50%;display:inline-block;box-shadow:inset 0 -2px 0 rgba(0,0,0,.2)}
 .dk.b{background:#24262d}.dk.w{background:#f6f3ea;border:1px solid #d9d2bf}
-.bv .quit{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));inset-inline-start:14px;display:none}
+.bv .quit{position:absolute;z-index:3;top:calc(12px + var(--sat,env(safe-area-inset-top)));inset-inline-start:14px;display:none}
 .bv.playing .quit{display:inline-flex}
 /* in a game (and the rules tour) only 'quit' is shown, where the × sits */
 .bv.playing .x,.bv.playing .bvtod{display:none!important}
-.bvhw{position:absolute;z-index:4;top:calc(12px + env(safe-area-inset-top));inset-inline-start:max(14px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:10px;align-items:flex-start}.bvhw .bvhist{position:static;inset:auto}.bv.playing .bvhw{display:none!important}.bv.hist .bvhw .bvrecb{opacity:0!important;pointer-events:none!important}   /* phones: 戦績 right of the ヒストリア pill (app.js placeRec; PC keeps it by the place chip) (2026-11-09) */
+.bvhw{position:absolute;z-index:4;top:calc(12px + var(--sat,env(safe-area-inset-top)));inset-inline-start:max(14px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:10px;align-items:flex-start}.bvhw .bvhist{position:static;inset:auto}.bv.playing .bvhw{display:none!important}.bv.hist .bvhw .bvrecb{opacity:0!important;pointer-events:none!important}   /* phones: 戦績 right of the ヒストリア pill (app.js placeRec; PC keeps it by the place chip) (2026-11-09) */
 /* time-of-day picker (own UI), left of the × */
-.bvtod{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:62px;z-index:4;display:flex;gap:8px;align-items:center}
+.bvtod{position:absolute;top:calc(12px + var(--sat,env(safe-area-inset-top)));inset-inline-end:62px;z-index:4;display:flex;gap:8px;align-items:center}
 .bvtod #bvTodBtn,.bvtod #bvTodMenu{display:none!important}   /* 時間帯 lives in the place panel now (one chip for the place, 明るさ and 時間帯) */
 .plp .plbr + .pltodh{margin-top:14px}
 .plbr.pltod button i{box-shadow:0 0 0 1px rgba(0,0,0,.1)!important}
@@ -311,7 +312,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .bvrecb .hb-ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round}
 .bvplb img{width:36px;height:26px;border-radius:13px;object-fit:cover;flex:none;box-shadow:0 0 0 1.5px rgba(0,0,0,.08)}
 .bvplb span{font-size:14px;white-space:nowrap}
-.bvplm{position:absolute;z-index:5;top:calc(62px + env(safe-area-inset-top));inset-inline-end:14px;width:min(calc(100% - 28px),660px);padding:14px 16px 16px;border-radius:22px;background:#fff;border:2px solid var(--line);box-shadow:0 4px 0 var(--line),0 18px 36px -14px rgba(60,40,10,.4);animation:todIn .16s ease-out}
+.bvplm{position:absolute;z-index:5;top:calc(62px + var(--sat,env(safe-area-inset-top)));inset-inline-end:14px;width:min(calc(100% - 28px),660px);padding:14px 16px 16px;border-radius:22px;background:#fff;border:2px solid var(--line);box-shadow:0 4px 0 var(--line),0 18px 36px -14px rgba(60,40,10,.4);animation:todIn .16s ease-out}
 .bvplm[hidden]{display:none!important}
 .plp .plh{display:flex;align-items:baseline;gap:10px;font:900 16px var(--round,inherit);color:var(--ink);margin:0 2px 9px}
 .plp .plh small{font:700 14px var(--round,inherit);color:var(--ink2)}
@@ -350,7 +351,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
   .plcb img{height:56px;aspect-ratio:auto;border-radius:9px}   /* (a fixed height: iOS let the 3/2 box grow tall and the panel ran off the top) */
   .plcb span{display:block;min-height:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .plp .plh{margin-bottom:7px;font-size:15px}.plp .plh + .plrow + .plh,.plp .plbr + .pltodh{margin-top:10px}
-  .bvplm{max-height:calc(100% - 80px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain}   /* (and if it is still too tall: it scrolls) */
+  .bvplm{max-height:calc(100% - 80px - var(--sat,env(safe-area-inset-top)) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain}   /* (and if it is still too tall: it scrolls) */
   .plbr{gap:2px}.plbr button{font-size:14px;padding:10px 4px}.plbr button i{margin-inline-end:5px}   /* 「とても明るい」 fits on a phone */
   .plbr.pltod button{font-size:13px;padding-inline:2px}.plbr.pltod button i{margin-inline-end:3px}   /* five times of day in a row */
   .bvplb span{max-width:7.5em;overflow:hidden;text-overflow:ellipsis}
@@ -362,13 +363,13 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 @media (max-width:760px){ .dgrid > .plp .plrow{display:grid;overflow:visible;margin:0;padding:0} .dgrid > .plp .plcb{flex:none} }
 .dgrid > .plp .plnote{margin:10px 2px 0;font-size:14px;color:var(--ink2)}
 /* 明るさ during table play (app.js renderPlace): a small segmented pill at the top left, only while playing */
-.bvbrp{display:none;position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-start:12px;z-index:6;align-items:center;gap:2px;padding:3px;border-radius:20px;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line)}
+.bvbrp{display:none;position:absolute;top:calc(12px + var(--sat,env(safe-area-inset-top)));inset-inline-start:12px;z-index:6;align-items:center;gap:2px;padding:3px;border-radius:20px;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line)}
 .bv.playing .bvbrp{display:flex}.bv.playing.pland .bvbrp,.bv.hist .bvbrp,.bv.rules .bvbrp{display:none}
 /* phones, while playing (2026-11-09): the room's brightness is set in the room, not at the table — no switch; the turn HUD takes its place
    at the top left (clear of やめる at the top right), and the creatures' talk below is a size smaller */
 @media (max-width:560px){
   .bv.playing .bvbrp{display:none!important}
-  .bv.playing:not(.land) .hud{top:calc(12px + env(safe-area-inset-top))!important;bottom:auto!important;left:calc(12px + env(safe-area-inset-left))!important;right:auto!important;transform:none!important;max-width:calc(100% - 112px - env(safe-area-inset-left) - env(safe-area-inset-right))!important;overflow:hidden;gap:4px!important;padding:4px!important}
+  .bv.playing:not(.land) .hud{top:calc(12px + var(--sat,env(safe-area-inset-top)))!important;bottom:auto!important;left:calc(12px + env(safe-area-inset-left))!important;right:auto!important;transform:none!important;max-width:calc(100% - 112px - env(safe-area-inset-left) - env(safe-area-inset-right))!important;overflow:hidden;gap:4px!important;padding:4px!important}
   .bv.playing:not(.land) .hud .hs{padding:5px 8px!important;font-size:12px!important}.bv.playing .hud .hm{font-size:11.5px!important}
   [dir=rtl] .bv.playing:not(.land) .hud{left:auto!important;right:calc(12px + env(safe-area-inset-right))!important}
   .npc-float{width:min(360px,calc(100vw - 32px))!important}.npc-float .npc-pic{width:38px!important;height:38px!important}.npc-float .npc-bub{padding:5px 10px 6px!important}.npc-float .npc-tx{font-size:12px!important;line-height:1.45!important}.npc-float .npc-nm b{font-size:11.5px!important}
@@ -441,7 +442,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
    mirroring the HUD column on the right (turned: rotated with the view, along the top edge of the portrait screen) */
 .tbar.col,.tbar.col .tbtns{flex-direction:column}
 .bv.bgwide .tbar.col{left:calc(8px + env(safe-area-inset-left));top:50%;bottom:auto;transform:translateY(-50%)}
-.bv.land .tbar.col{left:50%;top:calc(8px + env(safe-area-inset-top));bottom:auto;transform-origin:0 0;transform:rotate(90deg) translate(0,-50%)}
+.bv.land .tbar.col{left:50%;top:calc(8px + var(--sat,env(safe-area-inset-top)));bottom:auto;transform-origin:0 0;transform:rotate(90deg) translate(0,-50%)}
 .tbar.col button{min-width:0;width:52px;height:48px;padding:0}
 .tbar.col .tclk{min-width:0;width:56px}
 @media (max-width:560px),(max-height:560px){.tbar.col button{width:48px;height:44px;font-size:9.5px}.tbar.col .tclk{width:52px;height:34px;font-size:15px}}
@@ -1176,7 +1177,7 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 .plic{flex:none;height:26px;width:30px;padding:0;border-radius:99px;border:1.5px solid #efe3c8;background:#fff;display:inline-grid;place-items:center;box-shadow:0 2px 0 #efe3c8;color:#2b3044;cursor:pointer}
 .plic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 /* 'pill' (backgammon): row 1 = the slim pill + the player chips, row 2 = the status line + the menu icons */
-.bv.pl-pill .pl{top:calc(4px + env(safe-area-inset-top));left:calc(6px + env(safe-area-inset-left));right:calc(6px + env(safe-area-inset-right));grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:32px 30px;gap:6px 5px}
+.bv.pl-pill .pl{top:calc(4px + var(--sat,env(safe-area-inset-top)));left:calc(6px + env(safe-area-inset-left));right:calc(6px + env(safe-area-inset-right));grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:32px 30px;gap:6px 5px}
 .bv.pl-pill .plb{grid-row:1;grid-column:1;min-width:0;height:32px;display:flex;align-items:center;gap:4px;padding:0 3px 0 2px;margin-inline-end:3px;background:rgba(255,246,226,.94);border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);box-sizing:border-box}
 .bv.pl-pill .plb .plt{margin-inline-start:2px}
 .bv.pl-pill #hud > .hs{grid-row:1;height:32px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 10px 0 7px;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 3px 0 rgba(150,110,50,.35);font:700 12px var(--font,sans-serif);color:#6a7088}
@@ -1193,7 +1194,7 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 .bv.pl-pill .tbar button svg{width:16px;height:16px;stroke-width:2.2}
 .bv.pl-pill .tbar button:disabled{opacity:1;color:#bdb5a4;box-shadow:none}
 /* 'bar' (mancala): one full-width bar — logo | the menu (icon + label) | sound · やめる; the rest is on the board */
-.bv.pl-bar .pl{top:0;left:0;right:0;height:calc(46px + env(safe-area-inset-top));box-sizing:border-box;padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));grid-template-columns:auto minmax(0,1fr) auto auto;gap:8px;background:rgba(255,246,226,.92);border-bottom:2px solid #efe3c8;box-shadow:0 4px 14px -10px rgba(80,40,0,.4);pointer-events:auto}
+.bv.pl-bar .pl{top:0;left:0;right:0;height:calc(46px + var(--sat,env(safe-area-inset-top)));box-sizing:border-box;padding:var(--sat,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));grid-template-columns:auto minmax(0,1fr) auto auto;gap:8px;background:rgba(255,246,226,.92);border-bottom:2px solid #efe3c8;box-shadow:0 4px 14px -10px rgba(80,40,0,.4);pointer-events:auto}
 .bv.pl-bar .plb{display:contents}
 .bv.pl-bar .plb img{grid-column:1;width:28px;height:28px}
 .bv.pl-bar .plb .plt,.bv.pl-bar .plb .sp,.bv.pl-bar #hud{display:none}
@@ -1207,7 +1208,7 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 .bv.pl-bar .tbar button:disabled{opacity:.45}
 @media (max-width:620px){.bv.pl-bar .tbar button span{display:none}}
 /* 'side' (ur): row 1 = the slim pill + the menu icons, the player cards in a column at the left (the full game's landscape page) */
-.bv.pl-side .pl{top:calc(4px + env(safe-area-inset-top));left:calc(6px + env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));grid-template-columns:auto auto;grid-template-rows:34px minmax(0,1fr);gap:8px 6px;align-items:center;justify-content:start}
+.bv.pl-side .pl{top:calc(4px + var(--sat,env(safe-area-inset-top)));left:calc(6px + env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));grid-template-columns:auto auto;grid-template-rows:34px minmax(0,1fr);gap:8px 6px;align-items:center;justify-content:start}
 .bv.pl-side .plb{grid-row:1;grid-column:1;min-width:0;max-width:calc(50vw - 20px);height:34px;display:flex;align-items:center;gap:4px;padding:0 3px 0 2px;background:rgba(255,246,226,.94);border:2px solid #fff;border-radius:99px;box-shadow:0 3px 0 rgba(150,110,50,.35);box-sizing:border-box}
 .bv.pl-side .plb .plt{margin-inline:2px 6px}
 .bv.pl-side .plb .sp{display:none}
@@ -1228,7 +1229,7 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 .bv.pl-side #hud .urc-b{min-height:38px;display:grid;place-items:center;border-radius:12px;background:#f3ead8;box-shadow:inset 0 1px 2px rgba(120,90,40,.18);padding:3px;box-sizing:border-box;font:700 11.5px var(--font,sans-serif);color:#6a7088;text-align:center;line-height:1.3}
 .bv.pl-side #hud .urc-b .urb{width:100%;height:36px;padding:0;border-radius:99px;background:#fff;border:2.5px solid #3557c9;color:#24409e;font:900 15px var(--font,sans-serif);letter-spacing:.12em;box-shadow:0 3px 0 #24409e;cursor:pointer;white-space:nowrap}
 .bv.pl-side #hud .urc-b .urb:active{transform:translateY(2px);box-shadow:0 1px 0 #24409e}
-html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% + min(86px,12vw))}
+html.bv-pland .urtoast{top:calc(52px + var(--sat,env(safe-area-inset-top)));left:calc(50% + min(86px,12vw))}
 /* mancala (games/mancala.js): the names above the stores and the turn message on the middle line, as the full game's landscape board */
 .mcl{display:none}
 .bv.pland .mcl.on{display:block;position:absolute;inset:0;z-index:3;pointer-events:none}
@@ -1332,7 +1333,7 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
   .bvi .L .tags{gap:8px}
   .bvi .L .pgl{gap:10px 12px}
 }
-.bvnav{position:absolute;z-index:3;top:max(calc((100% - var(--bvcard,0px)) / 2), calc(env(safe-area-inset-top) + 112px));transform:translateY(-50%);width:52px;height:52px;border-radius:50%;border:2px solid rgba(255,255,255,.8);background:rgba(255,253,247,.72);box-shadow:0 6px 16px -8px rgba(80,40,0,.55);display:grid;place-items:center;cursor:pointer;color:var(--ink);transition:opacity .25s,background .2s}   /* (no backdrop blur over the live 3D canvas: it is re-blurred every frame) */
+.bvnav{position:absolute;z-index:3;top:max(calc((100% - var(--bvcard,0px)) / 2), calc(var(--sat,env(safe-area-inset-top)) + 112px));transform:translateY(-50%);width:52px;height:52px;border-radius:50%;border:2px solid rgba(255,255,255,.8);background:rgba(255,253,247,.72);box-shadow:0 6px 16px -8px rgba(80,40,0,.55);display:grid;place-items:center;cursor:pointer;color:var(--ink);transition:opacity .25s,background .2s}   /* (no backdrop blur over the live 3D canvas: it is re-blurred every frame) */
 .bvnav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
 .bvnav:hover{background:rgba(255,253,247,.9)}.bvnav:active{transform:translateY(-50%) scale(.92)}
 .bvnav.prev{left:max(12px,env(safe-area-inset-left))}.bvnav.next{right:max(12px,env(safe-area-inset-right))}
@@ -2021,7 +2022,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 /* 戦績 (records) page — opened from a game's card (2026-11-09) */
 .bvi .recb{margin-left:8px}.bvi .rulesb.ph + .recb.ph{margin-left:6px!important}.bvi .recb.ph{margin-left:auto!important}
 [dir=rtl] .bvi .recb{margin-left:0;margin-right:8px}
-.recov{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));background:rgba(30,26,40,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s}
+.recov{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;padding:max(14px,var(--sat,env(safe-area-inset-top))) 14px max(14px,env(safe-area-inset-bottom));background:rgba(30,26,40,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s}
 .recov.on{opacity:1;pointer-events:auto}
 .recp{width:min(760px,100%);max-height:100%;display:flex;flex-direction:column;background:var(--paper);border:3px solid var(--line);border-radius:30px;box-shadow:0 8px 0 var(--line),0 30px 70px rgba(30,20,10,.3);overflow:hidden;transform:translateY(14px) scale(.98);transition:transform .26s cubic-bezier(.2,.9,.3,1.2);color:var(--ink)}
 .recov.on .recp{transform:none}
@@ -2232,7 +2233,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="npc/roster.js?v=13"></script>
 <script src="art.js?v=18"></script>
 <script src="../shared/atlas-updates.js?v=39"></script>
-<script src="../shared/atlas.js?v=20261116hb2am1ld1"></script>
+<script src="../shared/atlas.js?v=20261117hb2am1ld1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
 <script src="i18n/v.js?v=20261118m1"></script>
@@ -2273,12 +2274,12 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=376"></script>
+<script src="lazy.js?v=377"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=40"></script>
 <script src="lessons3d.js?v=67"></script>
-<script src="missions.js?v=8"></script>
-<link rel="stylesheet" href="historia.css?v=15">
+<script src="missions.js?v=9"></script>
+<link rel="stylesheet" href="historia.css?v=16">
 <script src="historia.js?v=47"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=5"></script>
@@ -2293,8 +2294,8 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=44"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=40"></script>
-<script src="npc/npc.js?v=39"></script>
-<script src="avtalk.js?v=3"></script>
+<script src="npc/npc.js?v=40"></script>
+<script src="avtalk.js?v=4"></script>
 <script src="app.js?v=422"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>

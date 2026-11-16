@@ -134,7 +134,7 @@
     css.textContent = ''
       + '.ptdk{position:fixed;left:0;top:0;z-index:85;padding:12px 22px;min-height:42px;border:0;border-radius:999px;font:900 16px/1 var(--font,system-ui),sans-serif;color:#fff;background:linear-gradient(#ff7a6a,#ff5d5d);box-shadow:0 4px 0 #d93c3c,0 8px 18px rgba(0,0,0,.35);cursor:pointer;white-space:nowrap;animation:ptdkP 1.4s ease-in-out infinite}@keyframes ptdkP{50%{filter:brightness(1.12)}}'
       + '.hud .urb{padding:8px 16px;font-size:15px;white-space:nowrap;box-shadow:0 3px 0 var(--coral2)}'
-      + '.pttoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:9px 18px;border-radius:18px;background:#2b3044;color:#fff;font-weight:900;font-size:14px;line-height:1.35;box-shadow:0 8px 22px rgba(0,0,0,.3);pointer-events:none;animation:ptT .25s ease-out;text-align:center}@keyframes ptT{from{transform:translate(-50%,-8px);opacity:0}}'
+      + '.pttoast{position:fixed;left:50%;top:calc(76px + var(--sat,env(safe-area-inset-top)));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:9px 18px;border-radius:18px;background:#2b3044;color:#fff;font-weight:900;font-size:14px;line-height:1.35;box-shadow:0 8px 22px rgba(0,0,0,.3);pointer-events:none;animation:ptT .25s ease-out;text-align:center}@keyframes ptT{from{transform:translate(-50%,-8px);opacity:0}}'
       + '@media (max-width:560px){.hud .urb{padding:7px 11px;font-size:13px}.ptdk{padding:10px 16px;font-size:14px;min-height:38px}}';
     document.head.appendChild(css);
     function labels() {
