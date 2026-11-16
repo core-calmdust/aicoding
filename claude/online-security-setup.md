@@ -16,10 +16,11 @@
 | `tafl-multiplay` | タフル | アゴン `agon/`（今後：ラトルンクリ・狐とガチョウ） | `tafl/database.rules.json` |
 | `backgammon-multi` | バックギャモン | ウル `ur/`・セネト `senet/`（今後：パトリ） | `backgammon/database.rules.json` |
 | `ninemens-multiplay` | モリス | マンカラ `mancala/`・コネクトフォー `connect4/`・ドット＆ボックス `dots/` | `morris/database.rules.json` |
-| `konane-multiplay` | コナネ | （空き3。今後の新作用） | 変更なし |
+| `konane-multiplay` | コナネ | アマゾンズ `amazons/`（2026-11-16 追加。もとのプロジェクトはないので、公開までは「準備中」） | `konane/database.rules.json` |
 
 **手順**
-1. 上の6プロジェクトで「Realtime Database → ルール」に表のファイルの中身を全部貼って公開する（ルートのゲームの部分は今までと同じ）。
+1. 上の7プロジェクトで「Realtime Database → ルール」に表のファイルの中身を全部貼って公開する（ルートのゲームの部分は今までと同じ）。
+   konane-multiplay はアマゾンズのオンライン（新規）のため。貼るまではアマゾンズのオンラインは「準備中」と表示されます（ほかは何も変わりません）。
 2. それだけで切り替わります。公開前は、各ゲームが `<node>secv` を読めないことを検出して**元のプロジェクトで今までどおり動きます**
    （`shared/onlinesec.js` の `rehome()`、元の設定は各 `firebase-config.js` の `FIREBASE_CONFIG_PREV`）。公開後は次に開いたときから統合先を使います。
 3. 数日たって古いキャッシュがなくなったら、各 `firebase-config.js` の `_PREV` の部分を消し、古いプロジェクト
