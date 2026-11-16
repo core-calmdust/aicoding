@@ -262,13 +262,14 @@
 
 ## 14. オンライン
 
-- Firebase プロジェクトは**系統ごとに共用**（2026-11-16、Spark の作成数の上限のため）：shogi-multiplay（将棋・チェス・シャンチー・チャンギ）、reversi-multiplay（リバーシ・囲碁・五目並べ・ヘックス）、checkers-multiplay（チェッカー・ウゴルキ・ファノロナ・アルケルケ）、tafl-multiplay（タフル・アゴン）、backgammon-multi（バックギャモン・ウル・セネト）、ninemens-multiplay（モリス・マンカラ・コネクトフォー・ドット＆ボックス）、konane-multiplay（コナネ・アマゾンズ・ルドー）。ルートのゲーム以外は自分の節の下だけを使う（`firebase-config.js` の `window.FIREBASE_ROOT = '<node>/'`、ルールはルートのゲームの `database.rules.json` に `secrules.py` の `host` で入る）。1DBは4ゲームまで。**新作は専用プロジェクトを作らず系統の近いところへ入れる**。手順は `claude/online-security-setup.md` の 0.0。Authentication は匿名＋Google、承認済みドメインに `core-calmdust.github.io`、Realtime Database は asia-southeast1。
+- Firebase プロジェクトは**系統ごとに共用**（2026-11-16、Spark の作成数の上限のため）：shogi-multiplay（将棋・チェス・シャンチー・チャンギ）、reversi-multiplay（リバーシ・囲碁・五目並べ・ヘックス）、checkers-multiplay（チェッカー・ウゴルキ・ファノロナ・アルケルケ）、tafl-multiplay（タフル・アゴン）、backgammon-multi（バックギャモン・ウル・セネト）、ninemens-multiplay（モリス・マンカラ・コネクトフォー・ドット＆ボックス）、konane-multiplay（コナネ・アマゾンズ・ルドー）、connect4-multiplay（おはじき系：キャロム・クロキノール、ルートにゲームなし＝`secrules.py` の HOSTS、ルール `shared/flick.database.rules.json`。2026-11-16）。ルートのゲーム以外は自分の節の下だけを使う（`firebase-config.js` の `window.FIREBASE_ROOT = '<node>/'`、ルールはルートのゲームの `database.rules.json` に `secrules.py` の `host` で入る）。1DBは4ゲームまで。**新作は専用プロジェクトを作らず系統の近いところへ入れる**。手順は `claude/online-security-setup.md` の 0.0。Authentication は匿名＋Google、承認済みドメインに `core-calmdust.github.io`、Realtime Database は asia-southeast1。
 - **改ざん対策**（必須）：DBルールは `shared/tools/secrules.py` で生成（手で直さない）、クライアントは `shared/onlinesec.js` で精算。レート等は終局済みレート戦の精算でしか変えられない（K以内、同一相手1日3局まで、新規相手はK半分）。盤上の終局は両者の `res/<uid>` 申告一致で有効。新ゲームは `secrules.py` の GAMES に追加 → 生成 → エミュレーターテスト → 公開。手順は `claude/online-security-setup.md`。
 - `firebase-config.js` に `FIREBASE_APPCHECK_SITE_KEY`（reCAPTCHA Enterprise、null＝無効、'v3:' で旧v3）。
 - **部屋・ロビーの後始末**：`hb`（サーバー時刻）を持ち主が60秒ごと更新、3分以上更新なしは非表示＆見つけた人が削除。削除は「消してから cancelDisconnect」、pagehide でも削除。終局後3分放置の部屋は募集中に戻す。
 - チャットは3秒に1回。グローバル／ゲーム別を選べる方針。ポータルと2D版はクロスプレイ。
 - Google連携中のメールアドレスは**一部を伏せて表示**（全ゲーム・ポータル）。
 - オンライン未実装のゲームは「準備中」表記で進めてよい。画面下のオンライン欄もゲームのテーマ色に揃える。
+- **3D専用ゲームのオンライン（2026-11-16、キャロム・クロキノール）**：2D版がないので大百科の3D卓で対戦する。共通部品 `atlas/online3d.js`（`Online3D.net(game)` がバックエンド＝各ゲームの online.js と同じ形・同じルール生成、`Online3D.open` がロビー、`Online3D.match` が1局）＋ アダプタの `ctx.mode === 'online'`（`ctx.online`）と `Atlas3D[id].online`。カードの「レート戦」タブに「相手 AI ｜ オンライン」。物理が端末で一致しないゲームは**打った側が正**（ショットと結果の局面を1回で書き、相手は再生してから合わせる）。詳細は addendum「3D卓のオンライン対戦」。
 
 ---
 

@@ -14,6 +14,12 @@ const ROOT = path.join(__dirname, '..', '..');
 const GAMES = ['shogi', 'chess', 'xiangqi', 'janggi', 'reversi', 'go', 'gomoku', 'hex', 'checkers', 'ugolki', 'fanorona', 'alquerque',
   'tafl', 'agon', 'backgammon', 'ur', 'senet', 'morris', 'mancala', 'connect4', 'dots', 'konane', 'amazons', 'ludo'];
 const SOON = ['foxgeese', 'latrunculi', 'patolli'];   // online play not written yet: the config stays null
+// games whose online play is not a <game>/online.js page script (2026-11-16): the 3D-only flick games run atlas/online3d.js
+// (Online3D.net(game) is their API). They live in a host-only database (secrules.py HOSTS: no game at its root) and have no
+// previous project: before their rules are published they must end in 'not-configured' (the card shows 準備中).
+const FLICK = { carrom: 1, crokinole: 1 };
+GAMES.push(...Object.keys(FLICK));
+const scriptOf = g => g === 'alquerque' ? 'fanorona/online.js' : FLICK[g] ? 'atlas/online3d.js' : g + '/online.js';
 const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 function sandbox(game, mode) {
@@ -76,8 +82,8 @@ async function run(game, mode) {
   // the SDK is "already loaded": online.js must not fetch it; App Check is skipped (no site key in the sandbox)
   S.FIREBASE_APPCHECK_SITE_KEY = null; S.FIREBASE_APPCHECK_SITE_KEY_PREV = null;
   vm.runInContext(read('shared/onlinesec.js'), S);
-  vm.runInContext(read((game === 'alquerque' ? 'fanorona' : game) + '/online.js'), S);
-  const api = Object.keys(S).map(k => S[k]).find(v => v && typeof v === 'object' && typeof v.init === 'function' && 'configured' in v);
+  vm.runInContext(read(scriptOf(game)), S);
+  const api = FLICK[game] ? S.Online3D && S.Online3D.net(game) : Object.keys(S).map(k => S[k]).find(v => v && typeof v === 'object' && typeof v.init === 'function' && 'configured' in v);
   if (!api) throw new Error('no online API');
   let err = null;
   try { await Promise.race([api.init(), new Promise((_, rej) => setTimeout(() => rej(new Error('init hung')), 4000))]); } catch (e) { err = e; }
@@ -100,7 +106,7 @@ async function run(game, mode) {
   // every path written / read after the project is settled is under the node (the probe on the shared project is the only stray one)
   const seen = log.filter(l => l.pid === exp.pid && !/^\.info\//.test(l.path));
   if (seen.length < 3) out.bad.push('too few paths recorded: ' + seen.length);
-  seen.forEach(l => { if (exp.root ? l.path.indexOf(exp.root) !== 0 : /^(chess|xiangqi|janggi|go|gomoku|hex|ugolki|fanorona|alq|agon|ur|senet|mancala|connect4|dots|amazons|ludo)\//.test(l.path)) out.bad.push('path ' + l.path + ' (want ' + (exp.root || 'root') + ')'); });
+  seen.forEach(l => { if (exp.root ? l.path.indexOf(exp.root) !== 0 : /^(chess|xiangqi|janggi|go|gomoku|hex|ugolki|fanorona|alq|agon|ur|senet|mancala|connect4|dots|amazons|ludo|carrom|crokinole)\//.test(l.path)) out.bad.push('path ' + l.path + ' (want ' + (exp.root || 'root') + ')'); });
   const stray = log.filter(l => l.pid !== exp.pid && !/^\.info\//.test(l.path) && !/secv$/.test(l.path));
   stray.forEach(l => out.bad.push('stray ' + l.pid + ':' + l.path));
   out.n = seen.length;
@@ -120,17 +126,22 @@ async function run(game, mode) {
   }
   for (const g of SOON) { const S = {}; S.window = S; vm.runInNewContext(read(g + '/firebase-config.js'), S); if (S.FIREBASE_CONFIG !== null) { fail++; console.log('FAIL', g, 'config should stay null until its online play is written'); } }
   // the groups match shared/tools/secrules.py (which game is under which node of which host), at most 4 games per database
-  const py = "import json,sys;sys.path.insert(0,'shared/tools');import secrules as s;print(json.dumps({g:list(p['host']) for g,p in s.GAMES.items() if 'host' in p}))";
-  const hosts = JSON.parse(cp.execFileSync('python3', ['-c', py], { cwd: ROOT }).toString());
+  const py = "import json,sys;sys.path.insert(0,'shared/tools');import secrules as s;print(json.dumps({'g':{g:list(p['host']) for g,p in s.GAMES.items() if 'host' in p},'h':getattr(s,'HOSTS',{})}))";
+  const PY = JSON.parse(cp.execFileSync('python3', ['-c', py], { cwd: ROOT }).toString()), hosts = PY.g, HOSTONLY = PY.h;
   Object.entries(groups).forEach(([pid, list]) => {
     if (list.length > 4) { fail++; console.log('FAIL', pid, 'has', list.length, 'games'); }
-    const host = list.find(x => !x.includes(':'));
-    if (!host) { fail++; console.log('FAIL', pid, 'has no host game at the root'); return; }
+    let host = list.find(x => !x.includes(':'));
+    if (!host) {   // a host-only database (secrules.py HOSTS): every game is under a node, all naming the same pseudo host
+      const hs = [...new Set(list.map(x => (hosts[x.split(':')[0]] || [])[0]))];
+      if (hs.length !== 1 || !HOSTONLY[hs[0]]) { fail++; console.log('FAIL', pid, 'has no host game at the root and no host-only rules', hs); return; }
+      host = hs[0];
+    }
     list.filter(x => x.includes(':')).forEach(x => {
       const [g, node] = x.split(':'), h = hosts[g];
       if (!h || h[0] !== host || h[1] + '/' !== node) { fail++; console.log('FAIL', g, 'config', host + '/' + node, 'secrules', h); }
     });
-    const rules = JSON.parse(read(host + '/database.rules.json')).rules;
+    const rules = JSON.parse(read(HOSTONLY[host] || host + '/database.rules.json')).rules;
+    if (HOSTONLY[host] && Object.keys(rules).some(k => !list.some(x => x.endsWith(':' + k + '/')))) { fail++; console.log('FAIL', host, 'host-only rules have a node no game uses (or a game at the root)', Object.keys(rules)); }
     list.filter(x => x.includes(':')).forEach(x => { const node = x.split(':')[1].slice(0, -1); if (!rules[node] || !rules[node].secv) { fail++; console.log('FAIL', host, 'rules lack node', node); } });
     console.log(pid.padEnd(22), list.join('  '));
   });
