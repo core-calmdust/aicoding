@@ -743,14 +743,14 @@ function rankBar(pt) {
   return `<div class="rk-bar"><i style="--f:${f.toFixed(3)}"></i></div><small class="rk-nx">${n ? esc(t('rkNext', { r: rkName(n), n: n.pt - pt })) : esc(t('rkTop'))}</small>`;
 }
 function rankStrip(rk) {
-  return `<div class="rk-strip ${rk.ups.length ? 'up' : ''}">${rankBadge(rk.r1)}<span class="rk-g">${esc(t('rkGain', { n: rk.gain }))}</span>
-    <span class="rk-pt">${DB.rank.pt} pt</span>${rk.ups.length ? `<em class="rk-up">${esc(t('rkUp'))}</em>` : ''}<div class="rk-sb">${rankBar(DB.rank.pt)}</div></div>`;
+  return `<div class="rk-strip ${rk.ups.length ? 'up' : ''} ${rk.down ? 'dn' : ''}">${rankBadge(rk.r1)}<span class="rk-g ${rk.gain < 0 ? 'neg' : ''}">${esc(t('rkGain', { n: (rk.gain > 0 ? '+' : rk.gain < 0 ? '−' : '±') + Math.abs(rk.gain) }))}</span>
+    <span class="rk-pt">${DB.rank.pt} pt</span>${rk.ups.length ? `<em class="rk-up">${esc(t('rkUp'))}</em>` : ''}${rk.down ? `<em class="rk-dn">${esc(t('rkDown'))}</em>` : ''}<div class="rk-sb">${rankBar(DB.rank.pt)}</div></div>`;
 }
 function openRanked() {
   SND.pick();
   const pt = DB.rank.pt, cur = MJRank.at(pt), nx = MJRank.next(pt);
   const nextGift = MJRank.list.find(x => x.reward && x.i > cur.i);
-  const P = MJRank.POINTS, lvName = MJRank.botName(pt, t('lv'));
+  const lvName = MJRank.botName(pt, t('lv'));
   const veiled = MJRank.list.some(x => !rkSeen(x));
   const rows = (veiled ? `<div class="rk-row rk-veil">${rankBadge(MJRank.list[MJRank.list.length - 1], 'sm')}<span class="rk-vt">${esc(t('rkVeil'))}</span></div>` : '') +
     MJRank.list.filter(rkSeen).reverse().map(x => {
@@ -766,10 +766,9 @@ function openRanked() {
           <div class="rk-pts"><b>${pt}</b> pt <small>${esc(t('rkGames', { n: DB.rank.games }))}</small></div>
           ${rankBar(pt)}
           ${nextGift ? `<div class="rk-ng"><span class="rk-gimg rk-sil">${frame(MJChars.get(nextGift.reward), 'silf', 'fr-lock')}</span><span><small>${esc(t('rkNextGift'))}</small><b>？？？</b><em>${esc(t('rkGiftAt', { r: rkName(nextGift), n: Math.max(0, nextGift.pt - pt) }))}</em></span></div>` : ''}
-          <p class="rk-rule">${esc(t('rkRule', { lv: lvName }))}</p>
+          <p class="rk-rule">${esc(t('rkRule', { lv: lvName }))}${pt >= MJRank.FLOOR ? '' : ''}</p>
           <div class="rk-go">
-            <button class="go rk-b" data-len="east"><b>${esc(t('east'))}</b><small>${[0, 1, 2].map(i => `${esc(t('rank')[i])} +${P.east[i]}`).join(' ・ ')}</small></button>
-            <button class="go rk-b" data-len="south"><b>${esc(t('south'))}</b><small>${[0, 1, 2].map(i => `${esc(t('rank')[i])} +${P.south[i]}`).join(' ・ ')}</small></button>
+            ${['east', 'south'].map(len => { const T = MJRank.table(pt, len); return `<button class="go rk-b" data-len="${len}"><b>${esc(t(len))}</b><small>${[0, 1, 2, 3].filter(i => T[i] !== 0).map(i => `<span class="rk-pp ${T[i] < 0 ? 'neg' : ''}">${esc(t('rank')[i])} ${T[i] > 0 ? '+' : '−'}${Math.abs(T[i])}</span>`).join('')}</small></button>`; }).join('')}
           </div>
         </div>
         <div class="rk-ladder" id="rkLadder">${rows}</div>
@@ -1971,12 +1970,12 @@ async function showFinal(d) {
   // 段位戦: the points, promotions and their rewards
   let rk = null;
   if (UIS.ranked && !AUTO) {
-    const gain = MJRank.POINTS[UIS.ranked.len][myRank], before = DB.rank.pt, r0 = MJRank.at(before);
-    DB.rank.pt += gain; DB.rank.games++;
-    const r1 = MJRank.at(DB.rank.pt), ups = MJRank.list.slice(r0.i + 1, r1.i + 1), gifts = [];
+    const before = DB.rank.pt, r0 = MJRank.at(before), ap = MJRank.apply(before, UIS.ranked.len, myRank), gain = ap.gain;
+    DB.rank.pt = ap.pt; DB.rank.games++;
+    const r1 = MJRank.at(DB.rank.pt), ups = MJRank.list.slice(r0.i + 1, r1.i + 1), gifts = [], down = r1.i < r0.i;
     for (const u of MJRank.list.slice(1, r1.i + 1)) if (u.reward && !owns(u.reward))   // (any reward of a rank reached and not yet held)
       { const k = rollSkillKey(); DB.chars[u.reward] = { skills: [k], use: k }; gifts.push(u.reward); }
-    rk = { gain, before, r0, r1, ups, gifts };
+    rk = { gain, before, r0, r1, ups, gifts, down };
   }
   // 対局履歴 (ユーザー 2026-11-15: the log is part of 戦績, not the shared dialog): the last 200 finished games
   if (!AUTO) { const L0 = DB.hist = DB.hist || [];

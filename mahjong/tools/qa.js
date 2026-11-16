@@ -25,6 +25,11 @@ function staticChecks() {
     if (/\)\s*[\w$.]+\s*=\s*[\w$.]+\(.*\);\s*$/.test(c) || /;\s*\}?\s*$/.test(c) && /[\w$]+\s*\(.*\)\s*;/.test(c) && /=|\.\w+\(/.test(c) && !/^\s*\(/.test(c)) sus.push(`${f}:${i + 1}`);
   });
   ok('no code hidden in comments', !sus.length, sus.join(' '));
+  // 段位戦 (2026-11-16): kyu ranks only add up; from 初段 3rd/4th lose, ranks can be lost, never below 初段
+  try { const w = {}; new Function('window', fs.readFileSync(path.join(MJ, 'rank.js'), 'utf8'))(w); const R = w.MJRank;
+    const c = [[100, 'east', 3, 0], [125, 'east', 3, -5], [120, 'east', 3, 0], [140, 'east', 3, -5], [260, 'south', 3, -14], [50, 'south', 0, 16]];
+    const bad = c.filter(([pt, len, pl, g]) => R.apply(pt, len, pl).gain !== g).map(x => x.join('/'));
+    ok('ranked points (kyu add only, dan ±, floor 初段)', !bad.length, bad.join(' ')); } catch (e) { ok('ranked points', false, e.message); }
   // a changed script or style must have its ?v= raised in index.html (CLAUDE.md) — compared with origin/main
   try {
     const diff = execSync('git diff --name-only origin/main -- mahjong', { cwd: ROOT }).toString().split('\n').filter(Boolean).map(f => path.basename(f));
