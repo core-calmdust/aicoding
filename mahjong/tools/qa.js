@@ -56,7 +56,7 @@ async function runtime() {
   const myTurn = async p => { await p.evaluate(`void JANKA.startGame()`);
     await p.waitForFunction(`JANKA.UIS && JANKA.UIS.kind === 'turn' && document.querySelector('#hand .tl.drawn')`, null, { timeout: 120000 }); await p.waitForTimeout(1500);
     await p.waitForFunction(`JANKA.UIS.kind === 'turn'`, null, { timeout: 60000 }); };
-  const traceReach = `(()=>{const TB=JANKA.TB;window.__rc=null;const o=TB.reach.bind(TB);TB.reach=(g,seat,f,to)=>{const r=o(g,seat,f,to);if(seat===0&&!__rc){const rig=TB.hand(0);__rc={page:!!(f&&f.page),layer:rig.layers.isEnabled(1),fx:f?f.x:null,ghost:document.querySelectorAll('.tl.ghost').length,dist:Math.hypot(rig.position.x-g.position.x,rig.position.z-g.position.z)};const iv=setInterval(()=>{if(TB._ov&&TB._ov.g)__rc.ovTile=true},10);setTimeout(()=>{clearInterval(iv);__rc.ghostLater=document.querySelectorAll('.tl.ghost').length;__rc.ovTile=!!__rc.ovTile},5000)}return r}})()`;
+  const traceReach = `(()=>{const TB=JANKA.TB;window.__rc=null;const o=TB.reach.bind(TB);TB.reach=(g,seat,f,to)=>{const r=o(g,seat,f,to);if(seat===0&&!__rc){const rig=TB.hand(0);__rc={page:!!(f&&f.page),layer:rig.layers.isEnabled(1),hidden:!g.visible,fx:f?f.x:null,ghost:document.querySelectorAll('.tl.ghost').length,dist:Math.hypot(rig.position.x-g.position.x,rig.position.z-g.position.z)};const iv=setInterval(()=>{if(TB._ov&&TB._ov.g)__rc.ovTile=true},10);setTimeout(()=>{clearInterval(iv);__rc.ghostLater=document.querySelectorAll('.tl.ghost').length;__rc.ovTile=!!__rc.ovTile},5000)}return r}})()`;
 
   if (want('discard')) { console.log('[discard] the player\'s own discard (tap, PC)');
     // 2026-11-16: the hand must take the very tile of the page's hand row (page pose, drawn over the page), the page's copy
@@ -65,6 +65,8 @@ async function runtime() {
     await p.evaluate(`document.querySelector('#hand .hrow .tl[data-id]:nth-child(5)').click()`); await p.waitForFunction(`window.__rc && __rc.ghostLater !== undefined`, null, { timeout: 12000 }).catch(() => {});
     const r = await p.evaluate('__rc');
     ok('tap: the hand takes the tile from the hand row (page pose)', !!(r && r.page && r.layer), JSON.stringify(r));
+    // (2026-11-16, ユーザー「ツモ牌を捨てるとき牌が二重っぽい」) the 3D tile is not drawn behind the page's copy before the hand takes it
+    ok('tap: no 3D tile behind the page copy until it is taken', !!(r && r.hidden), JSON.stringify(r));
     ok('tap: the copy of the tile is shown, then gone when taken', !!(r && r.ghost === 1 && r.ghostLater === 0 && r.ovTile), r && `ghost ${r.ghost}→${r.ghostLater} ovTile ${r.ovTile}`);
     ok('no page errors (game, PC)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
