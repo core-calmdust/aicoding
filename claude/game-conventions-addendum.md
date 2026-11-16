@@ -54,6 +54,7 @@
 ## 新作は ALPHA から（規定・2026-11-15）
 - **これから公開する新作は、リリース当初は ALPHA 版にする**（2026-11-15 ユーザー指示。BETA の規定より優先）。フチボウ・ジ・ボタンから適用。既存の BETA タイトル（チャンギ等）はそのまま。
 - 付け方：トップページ `index.html` のゲーム定義に `alpha:true`（アイコン左上の ALPHA と詳細パネルの「アルファ版」タグ。開発室の LAB に移す必要はない）、ポータル `shared/atlas.js` の GAMES に `alpha: true`（大百科の ALPHA バッジ。BETA と同じく単独で、NEW・ORIGINAL・UPDATE の代わりに出る。`badges()`：ALPHA → BETA → NEW → …）。UPDATES の公開行は「（ALPHA）」。
+- **開発室（`index.html` の `LAB`）の並び順**（ユーザー指定 2026-11-17）：麻雀（ALPHA）→ NUMBERLANDS → WYRMSPHERE → 将棋デッキ（overkill）。
 - ALPHA → BETA → 正式版の切り替えはユーザーが指示する（Claude の判断で変えない）。
 - **3D専用のタイトル、作り直したタイトルも同じ**（2026-11-16 ユーザー再指示、ヒット＆ブローを3D専用で出し直したとき）：公開した直後は ALPHA。BETA を付けて出さない。
 
