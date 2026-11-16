@@ -2623,3 +2623,9 @@ html.lite .mvst .mv-p::after{animation:none;opacity:0}
 #chara.ch2 .pskill{box-shadow:inset 0 0 0 3px var(--lq2),inset 0 0 0 4px rgba(232,206,140,.25),0 6px 18px rgba(0,0,0,.35)}
 /* (2026-11-16, ユーザー) the profile at the top left and the coins and buttons at the top right share one top line */
 #home.aaa .aa-top{align-items:flex-start}
+/* (2026-11-16, ユーザー) the longer STORY: where it does not fit, it scrolls in its place (a thin gold bar) */
+#chara.ch2 .pprof.scroll{overflow-y:auto;overscroll-behavior:contain;padding-right:6px;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent)}
+#home.aaa .pp-info .pi-st{max-height:5.1em;overflow-y:auto;overscroll-behavior:contain;padding-right:6px}
+:is(#chara.ch2 .pprof,#home.aaa .pp-info .pi-st,html.lp #chara.ch2 .ci-pane){scrollbar-width:thin;scrollbar-color:rgba(232,206,140,.55) transparent}
+:is(#chara.ch2 .pprof,#home.aaa .pp-info .pi-st)::-webkit-scrollbar{width:4px}
+:is(#chara.ch2 .pprof,#home.aaa .pp-info .pi-st)::-webkit-scrollbar-thumb{background:rgba(232,206,140,.55);border-radius:2px}
