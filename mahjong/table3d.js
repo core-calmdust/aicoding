@@ -12,12 +12,15 @@ const BAKE_V = 3, BAKED = {};
 if (!/[?&]nobake\b/.test(location.search)) for (const n of ['felt', 'wood', 'woodb', 'stone']) { const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + n + '.webp?v=' + BAKE_V; BAKED[n] = im; }
 // (2026-11-15, ユーザー「スマホで落ちまくる」: memory) on a touch device the big pictures are kept at half size — on a phone's screen
 // the felt and the rails never show more than that — and once a picture that never changes is on the graphics card, the copy the
-// page kept of it is let go (lean). Desktop as before.
+// page kept of it is let go (lean). Desktop: full size as before, lean too (2026-11-16).
 const MOB = matchMedia('(pointer: coarse)').matches;
 function bakedCanvas(name) { const im = BAKED[name]; if (!im || !im.complete || !im.naturalWidth) return null;
   const f = MOB && name !== 'stone' ? .5 : 1, c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * f); c.height = Math.round(im.naturalHeight * f);
   c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); return c; }
-function lean(t) { if (!MOB || !t) return t; const prev = t.onUpdate; t.onUpdate = () => { if (prev) prev(); const c = t.image; if (c && c.getContext && c.width > 64) c.width = c.height = 1; t.onUpdate = null; }; return t; }
+// (2026-11-16, ユーザー「PCにも、見た目を変えない軽量化を」) lean now on a desktop too: the picture is on the graphics card, the page's copy
+// of it is only memory. Not with ?nobake (the baking tool reads the drawn pictures back).
+const LEAN = MOB || !/[?&]nobake\b/.test(location.search);
+function lean(t) { if (!LEAN || !t) return t; const prev = t.onUpdate; t.onUpdate = () => { if (prev) prev(); const c = t.image; if (c && c.getContext && c.width > 64) c.width = c.height = 1; t.onUpdate = null; }; return t; }
 const keepGen = (name, c) => { (root.JANKA_TEXGEN = root.JANKA_TEXGEN || {})[name] = c; };
 // ---- the table's own materials (2026-11-14, ユーザー: a more real automatic table — a quieter felt, real wood with rounded
 // edges, the lift seams of an automatic table, a real score unit) ----
@@ -1011,15 +1014,18 @@ class Table3D {
     const out = this.local(seat, 0, 3.4), r = { x: f.x + out.x, y: f.y + 2.6, z: f.z + out.z };   // from behind and above the tile
     // (the tile of the page's hand row: drawn over the page too — the hand from now, the tile once the hand has it: until then the page
     // shows its own copy of the tile there, see app.js layoutRiver)
-    if (f.page) { rig.traverse(o => o.layers.enable(1)); this._ov = { g: null, rig }; }
+    // (2026-11-16, ユーザー「ツモ牌を捨てるとき牌が二重っぽい」: the 3D tile stood at the page pose on the table's canvas too, behind the
+    // page's copy; being a box seen in perspective its side showed round the copy — most plainly by the drawn tile, which has no
+    // neighbours to cover it. It is now not drawn at all until the hand takes it, when the page's copy goes in the same frame.)
+    if (f.page) { rig.traverse(o => o.layers.enable(1)); this._ov = { g: null, rig }; g.visible = false; }
     this._tilt(rig, 0, 0); this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(r.x, r.y, r.z);
     // (the first frame of the overlay uploads its textures and builds its shaders: draw it once before the clock starts, or
     // that pause would eat the movement — it is timed, not counted in frames. The player's own discard is also a little slower, to be seen.)
-    if (f.page) { const R2 = this._over2(); this._solo(g, true); this.camera.layers.set(1); R2.render(this.scene, this.camera); this.camera.layers.set(0); this._solo(g, false); R2.render(this.scene, this.camera); }
+    if (f.page) { const R2 = this._over2(); g.visible = true; this._solo(g, true); this.camera.layers.set(1); R2.render(this.scene, this.camera); this.camera.layers.set(0); this._solo(g, false); g.visible = false; R2.render(this.scene, this.camera); }
     // (ユーザー 2026-11-14: it should be plain where the tile is taken from — the others' too. The hand comes down on the tile
     // where it stands in the row, lifts it straight up out of the row, then carries it to the river; the row closes afterwards.)
     const go = () => { if (g.userData.target !== to) return this._handBack(seat);
-      if (f.page) { if (this._ov && this._ov.rig === rig && !this._ov.g) { this._solo(g, true); this._ov.g = g; } if (this.onPageTake) this.onPageTake();
+      if (f.page) { g.visible = true; if (this._ov && this._ov.rig === rig && !this._ov.g) { this._solo(g, true); this._ov.g = g; } if (this.onPageTake) this.onPageTake();
         return this.tween(g, to, 440, f, seat, () => this._land('river', seat)); }
       // (ユーザー 2026-11-14: pinched between the thumb and the forefinger — as the tile comes up out of the row it is turned flat,
       // the thumb going under it and the forefinger lying on its face; so it is carried, and the thumb slips out as it is laid down)
@@ -1315,8 +1321,10 @@ class Table3D {
       g.fillStyle = scr; g.beginPath(); g.arc(0, 0, 268, 0, 7); g.fill();
       g.fillStyle = '#8fe6ff'; g.shadowColor = '#3ab8ff'; g.shadowBlur = em ? 24 : 12;
       // (ユーザー 2026-11-14: only the round and the tiles left here — the pot and the counters are in the box with the dora)
-      g.font = '800 124px "Shippori Mincho B1", serif'; g.fillText(`${WN[I.round]}${I.kyoku + 1}局`, 0, -72);
-      g.font = '700 58px "Zen Kaku Gothic New", sans-serif'; g.fillText('余', -118, 74);
+      // (2026-11-16, ユーザー「英語のレイアウト崩れ」) in English: 'East 1' and 'left' (the kanji winds and 局/余 in Japanese)
+      const JA = !window.I18N || I18N.lang === 'ja';
+      if (JA) { g.font = '800 124px "Shippori Mincho B1", serif'; g.fillText(`${WN[I.round]}${I.kyoku + 1}局`, 0, -72); g.font = '800 58px "Shippori Mincho B1", serif'; g.fillText('余', -118, 74); }
+      else { g.font = '800 104px "Shippori Mincho B1", serif'; g.fillText(`${['East', 'South', 'West', 'North'][I.round]} ${I.kyoku + 1}`, 0, -72); g.font = '800 40px "Shippori Mincho B1", serif'; g.fillText('left', -128, 74); }
       const lf = String(I.left).padStart(2, ' '); for (let i = 0; i < 2; i++) seg7(g, -56 + i * 94, 18, 68, 112, lf[i], '#8fe6ff', em ? null : 'rgba(143,230,255,.06)');
       g.shadowBlur = 0;
       if (!em) { const gl = g.createLinearGradient(0, -268, 0, 50); gl.addColorStop(0, 'rgba(255,255,255,.16)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gl; g.beginPath(); g.arc(0, 0, 268, PI, 2 * PI); g.fill(); }   // the glass
@@ -1422,7 +1430,7 @@ class Table3D {
   }
   _conText() { const el = this._chud, I = this.info; if (!el || !I) return;
     if (this._cscore) this._cscore.forEach((d, side) => { d.textContent = String(I.scores[side]); d.classList.toggle('on', I.turn === side); });
-    el.querySelector('b').textContent = `${['東', '南', '西', '北'][I.round]}${I.kyoku + 1}局`; el.querySelector('em').textContent = String(I.left); }
+    el.querySelector('b').textContent = !window.I18N || I18N.lang === 'ja' ? `${['東', '南', '西', '北'][I.round]}${I.kyoku + 1}局` : `${['East', 'South', 'West', 'North'][I.round]} ${I.kyoku + 1}`; el.querySelector('em').textContent = String(I.left); }
   // quality: 'high' | 'lite'. Lite drops shadows and renders at 1x pixel ratio.
   setQuality(q) {
     const lite = q === 'lite'; this.lite = lite;

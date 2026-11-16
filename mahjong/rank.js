@@ -1,6 +1,7 @@
 // 段位戦 (ranked play, ユーザー 2026-11-14): the ladder after 麻雀天聖's 段位戦 — 見習い, 10級 … 1級, 初段 … 十段, then titles that
-// grow grander rank by rank, up to 雀神. Points only add up (no demotion): 1st/2nd/3rd/4th = 8/2/1/0 in an East game,
-// 16/4/2/0 in an East-South game. Every second rank gives a reward character (the summer series, not in the gacha).
+// grow grander rank by rank, up to 雀神. In the kyu ranks points only add up: 1st/2nd/3rd/4th = 8/2/1/0 in an East game,
+// 16/4/2/0 in an East-South game. From 初段 (2026-11-16, ユーザー「段まで行くとレートの＋−もついて降級もするように」) 3rd and 4th lose
+// points — more the higher the rank — and a rank can be lost; never below 初段 (FLOOR). Every second rank gives a reward character (the summer series, not in the gacha).
 (function (root) {
 'use strict';
 const L = (ja, en) => ({ ja, en });
@@ -21,6 +22,13 @@ const REWARD = { 2: 'nagisa', 4: 'karin', 6: 'hatsuyuki', 8: 'natsume', 10: 'hom
   18: 'yuhi', 20: 'aoi', 22: 'shirayuri', 24: 'yugiri', 26: 'ginka', 28: 'renge', 30: 'ajisai' };
 const LIST = RAW.map(([pt, name, tier], i) => ({ i, pt, name, tier, reward: REWARD[i] || null }));
 const POINTS = { east: [8, 2, 1, 0], south: [16, 4, 2, 0] };
+// [1st, 2nd, 3rd, 4th] in an East game from 初段 by the badge's tier (an East-South game: ×2)
+// (2026-11-16, ユーザー「減点がきつい。段位が上がって楽しいを土台に」) small losses: even with every place equally often the points still climb
+const DAN = { dan: [8, 3, 0, -2], dan2: [8, 3, -1, -3], t1: [8, 3, -1, -4], t2: [8, 3, -2, -5], t3: [8, 3, -2, -6] };
+const FLOOR = 120;   // 初段
+function table(pt, len) { const r = at(pt), m = len === 'south' ? 2 : 1; return DAN[r.tier] ? DAN[r.tier].map(v => v * m) : POINTS[len]; }
+// the points a place earns now (pt: before the game) and the new total (never below 初段 once reached)
+function apply(pt, len, place) { const g = table(pt, len)[place]; let np = pt + g; if (pt >= FLOOR) np = Math.max(FLOOR, np); return { gain: np - pt, pt: np }; }
 function at(pt) { let r = LIST[0]; for (const x of LIST) if (pt >= x.pt) r = x; return r; }
 function next(pt) { return LIST.find(x => x.pt > pt) || null; }
 // (2026-11-14, ユーザー: not the same level over and over — fine steps): a fractional level 0〜4 that climbs with every point:
@@ -30,5 +38,5 @@ const CURVE = [[0, 0], [100, 0.6], [230, 1.5], [450, 2.6], [1000, 4]];
 function botLv(pt) { for (let k = 1; k < CURVE.length; k++) { const [x0, y0] = CURVE[k - 1], [x1, y1] = CURVE[k]; if (pt <= x1) return +(y0 + (y1 - y0) * Math.max(0, pt - x0) / (x1 - x0)).toFixed(3); } return 4; }
 // the strength as shown: the nearest level's name and the exact value
 function botName(pt, lvNames) { const v = botLv(pt); return `${lvNames[Math.max(0, Math.min(4, Math.floor(v + .0001)))]} Lv${v.toFixed(1)}`; }
-root.MJRank = { list: LIST, at, next, botLv, botName, POINTS, REWARD };
+root.MJRank = { list: LIST, at, next, botLv, botName, POINTS, REWARD, table, apply, FLOOR };
 })(window);

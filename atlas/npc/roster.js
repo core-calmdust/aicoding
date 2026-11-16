@@ -15,7 +15,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 25, shogi: 26, go: 32, reversi: 36, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 20, tafl: 25, ur: 20, senet: 20, morris: 10,
-    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, latrunculi: 20, foxgeese: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 23 };
+    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, latrunculi: 20, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 23, hitblow: 20 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -243,6 +243,15 @@
       b('lady', { a: 'bird', c: [0xfaf6ee, 0xffffff, 0x8a5ac8], beak: 0xe9902a, hat: 'tiara', held: 'fan', ex: ['necklace', 'cape'], cape: 0x8a5ac8 }, '女王陛下のガチョウ|Her Majesty’s Goose|女王陛下的鹅|女王陛下的鵝|여왕폐하의거위|Гусыня Её Величества|महारानी का कलहंस|إوزة جلالة الملكة'),
       b('king', { a: 'fox', c: [0xe07a30, 0xfff2e0, 0xd8a020], hat: 'bigcrown', held: 'orb', ex: ['cape', 'necklace'], cape: 0xb02a3a }, 'エドワード王ギツネ|King Edward Fox|爱德华国王狐|愛德華國王狐|에드워드왕여우|Лис король Эдуард|राजा एडवर्ड लोमड़|الملك إدوارد الثعلب'),
     ],
+    patolli: [   // the Aztec game of beans and stakes: the beans, the reed mat, the red and blue pebbles, the two chroniclers (Sahagún, Durán), R. C. Bell's reconstruction of 1960, Macuilxochitl the god of games (claude/patolli-spec.md §0 — nothing beyond it)
+      b('sleepy', { a: 'bird', c: [0xc9a46a, 0xfff4dc, 0x12a4b8], beak: 0xe9902a, held: 'seeds' }, 'まめひろいのことり|Bean-picking Bird|拾豆小鸟|拾豆小鳥|콩줍는작은새|Птичка с бобами|फलियाँ चुनती चिड़िया|طائر يلتقط الفاصولياء'),
+      b('merchant', { a: 'rabbit', c: [0xe8d8b8, 0xfff8ea, 0xd8452c], hat: 'straw', hc: [0xd8bd7c, 0x1b120d], held: 'none', ex: ['scarf'], sc: 0xd8452c }, 'ござ編みウサギ|Mat-weaver Rabbit|编席兔|編蓆兔|돗자리짜는토끼|Кролик-циновщик|चटाई बुनता खरगोश|أرنب ناسج الحصير'),
+      b('trickster', { a: 'monkey', c: [0x8a6a4a, 0xf4e2c4, 0x2f6fb8], hat: 'bandana', hc: [0xc8402c], held: 'stone' }, '小石あつめのサル|Pebble-collector Monkey|拾石猴|拾石猴|조약돌모으는원숭이|Обезьянка с камешками|कंकड़ बटोरता बंदर|قرد جامع الحصى'),
+      b('scholar', { a: 'deer', c: [0xc89a64, 0xfff2dc, 0x12a4b8], held: 'book', ex: ['robe'], rc: 0x6a5a4a }, '記録者のシカ|Chronicler Deer|记录者鹿|記錄者鹿|기록자사슴|Олень-летописец|इतिहास लिखता हिरन|الغزال المدوِّن'),
+      b('scholar', { a: 'owl', c: [0x7a6a5a, 0xf4e6cc, 0xd8452c], held: 'quill', ex: ['glasses', 'robe'], rc: 0x3a3430 }, '記録係のフクロウ|Scribe Owl|书记员猫头鹰|書記員貓頭鷹|기록원부엉이|Сова-писарь|लिपिक उल्लू|البومة الكاتبة'),
+      b('sage', { a: 'bear', c: [0x9a7a5a, 0xf6e6cc, 0x12a4b8], hat: 'cap', hc: [0x5a4a3a], held: 'book', ex: ['glasses', 'scarf'], sc: 0x12a4b8 }, '復元家のクマ|Reconstructor Bear|复原家熊|復原家熊|복원가곰|Медведь-реконструктор|पुनर्रचना करता भालू|الدب المُعيد للبناء'),
+      b('king', { a: 'jaguar', c: [0xe8b450, 0xfff4dc, 0x12a4b8], hat: 'flowers', held: 'orb', ex: ['cape', 'necklace'], cape: 0xd8452c }, '五の花マクイルショチトル|Macuilxochitl “Five Flower”|五花马奎尔索奇特尔|五花馬奎爾索奇特爾|다섯꽃마쿠일소치틀|Макуильшочитль «Пять Цветок»|पाँच फूल माकुइलशोचित्ल|ماكويلشوتشيتل «خمس زهرات»'),
+    ],
     ludo: [
       b('sleepy', { a: 'monkey', c: [0xc8c0b8, 0xfff4ee, 0xff8a3a], held: 'die', ex: ['scarf'], sc: 0xff8a3a }, 'ラングールのこざる|Langur Kid|叶猴宝宝|葉猴寶寶|랑구르아기원숭이|Детёныш лангура|लंगूर शिशु|صغير اللانغور'),
       b('merchant', { a: 'camel', c: [0xd8b080, 0xfff0dc, 0xe83a5a], hat: 'turban', hc: [0xe83a5a, 0xffd65a], held: 'die' }, 'ラジャスタンラクダ|Rajasthan Camel|拉贾斯坦骆驼|拉賈斯坦駱駝|라자스탄낙타|Раджастханский верблюд|राजस्थानी ऊँट|جمل راجستان'),
@@ -296,6 +305,18 @@
       b('knight', { a: 'horse', c: [0xe8d8c0, 0xfff6ea, 0xd8a040], hat: 'helmet', hc: [0xd8a040, 0xc8ccd8], held: 'sword', ex: ['armor', 'horsemane'] }, 'カスティーリャ騎士ウマ|Castilian Knight Horse|卡斯蒂利亚骑士马|卡斯提亞騎士馬|카스티야기사말|Кастильский конь-рыцарь|कास्टिलियन शूरवीर घोड़ा|حصان الفارس القشتالي'),
       b('lady', { a: 'deer', c: [0xe0b080, 0xfff4e6, 0x3a6ad8], hat: 'tiara', held: 'fan', ex: ['necklace'] }, 'アルハンブラのガゼル|Alhambra Gazelle|阿尔罕布拉羚羊|阿爾罕布拉羚羊|알함브라가젤|Газель Альгамбры|अलहम्ब्रा हिरणी|غزالة الحمراء'),
       b('king', { a: 'lion', c: [0xf0c070, 0xfff4e0, 0x9a2a24], hat: 'crown', held: 'book', ex: ['cape', 'longbeard'], bc: 0x6a4a3a, cape: 0x9a2a24 }, 'アルフォンソ賢王ライオン|Alfonso the Wise Lion|智者阿方索狮|智者阿方索獅|현왕알폰소사자|Лев Альфонсо Мудрый|बुद्धिमान अल्फ़ोंसो शेर|أسد ألفونسو الحكيم'),
+    ],
+    // ヒット＆ブロー (2026-11-16): code-breakers — a cub detective, the bull of the old pencil game Bulls & Cows, a fox who hides
+    // the pins, a Bletchley Park falcon, a wild-guess frog, Knuth's owl (any code in five guesses, 1977), and Meirowitz, the
+    // postmaster who made Mastermind (1970).
+    hitblow: [
+      b('sleepy', { a: 'rabbit', c: [0xf4ece4, 0xffffff, 0x2b3683], hat: 'beret', hc: [0x6a5a48], held: 'book', ex: ['scarf'], sc: 0x2b3683 }, 'みならい探偵ウサギ|Cub Detective Bunny|见习侦探兔|見習偵探兔|견습탐정토끼|Зайчик-сыщик|नौसिखिया जासूस खरगोश|الأرنب المحقق المبتدئ'),
+      b('merchant', { a: 'bull', c: [0x9a6a48, 0xf4e2c8, 0xd83a4a], hat: 'cap', hc: [0xd83a4a], held: 'quill', ex: ['scarf'] }, 'ブルズアンドカウズうし|Bulls-and-Cows Bull|公牛母牛牛|公牛母牛牛|불스앤카우스소|Бык «Быки и коровы»|बुल्स एंड काउज़ बैल|ثور الثيران والأبقار'),
+      b('trickster', { a: 'fox', c: [0xff9a4a, 0xfff4e6, 0x7a4ad8], hat: 'tophat', hc: [0x2a2a38, 0x7a4ad8], held: 'piece', mouth: 'w' }, 'ピンかくしギツネ|Pin-Hiding Fox|藏钉狐|藏釘狐|핀숨김여우|Лис-прятальщик|पिन छिपाने वाली लोमड़ी|ثعلب إخفاء الدبابيس'),
+      b('cool', { a: 'hawk', c: [0x8a7a6a, 0xf4e6d0, 0x2b3683], beak: 0xffc040, held: 'scroll', ex: ['scarf', 'glasses'], sc: 0x2b3683 }, 'ブレッチリーのハヤブサ|Bletchley Falcon|布莱切利隼|布萊切利隼|블레츨리송골매|Блетчлийский сокол|ब्लेचली बाज़|صقر بليتشلي'),
+      b('hothead', { a: 'frog', c: [0x3ac85a, 0xd8f8c8, 0xf5c518], hat: 'bandana', hc: [0xf5c518], held: 'piece', mouth: 'w' }, 'あてずっぽうガエル|Wild-Guess Frog|乱猜蛙|亂猜蛙|찍기개구리|Лягушка-наугад|अंदाज़ेबाज़ मेंढक|ضفدع التخمين'),
+      b('scholar', { a: 'owl', c: [0x9a8a7a, 0xf4eadc, 0x2b3683], held: 'book', ex: ['glasses', 'longbeard'], bc: 0xe8e0d8 }, 'クヌースフクロウ|Knuth Owl|高德纳猫头鹰|高德納貓頭鷹|크누스부엉이|Сова Кнут|नुथ उल्लू|بومة كنوث'),
+      b('king', { a: 'lion', c: [0xf0c070, 0xfff4e0, 0x2b3683], hat: 'cap', hc: [0x2b3683, 0xffd65a], held: 'scroll', ex: ['mustache', 'cape'], cape: 0x2b3683 }, 'メイロヴィッツ局長ライオン|Postmaster Meirowitz Lion|梅罗维茨局长狮|梅羅維茨局長獅|메이로비츠국장사자|Лев-почтмейстер Мейровиц|पोस्टमास्टर मेइरोविट्ज़ शेर|الأسد مدير البريد ميروفيتس'),
     ],
     // peg solitaire (2026-11-14): no AI — the two Atlamo come with the goals of a game without hints (atlas/games/peg.js):
     // N 3 or fewer left · R one left · SR one left on ◎. The flat boards give the princess's, the pyramid Kepler's (UR in the gacha).
