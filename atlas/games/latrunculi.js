@@ -389,7 +389,7 @@
     id: ['Pemula: hanya melihat satu langkah', 'Dasar–menengah: menyadari bidak yang akan terapit', 'Mahir: membaca pertarungan beberapa langkah ke depan', 'Ahli: membaca dalam dan menangkap lebih dulu'],
     tr: ['Başlangıç: yalnızca bir hamle ileriye bakar', 'Acemi–orta: sıkışmak üzere olan taşları fark eder', 'İleri: mücadeleyi birkaç hamle ileriye okur', 'Uzman: derin okur ve önce alır'],
   };
-  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2450, 2500];   // latrunculi RT_LV (rated games; not measured yet — see the spec)
+  const RATING = [0, 100, 245, 395, 540, 685, 830, 980, 1125, 1270, 1415, 1565, 1710, 1855, 1950, 2020, 2090, 2150, 2205, 2440, 2500];   // latrunculi RT_LV (rated games; not measured yet — see the spec)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),

@@ -3295,7 +3295,7 @@ document.addEventListener('click', e => { if (sel && !e.target.closest('.board')
 // Each AI level has a fixed rating on a Shogi Club 24-like scale (100 points per kyu, see MODEL_CARD.md); the opponent is picked
 // around the player's rating (mostly close, sometimes clearly stronger or weaker) and the result moves the rating (Elo).
 const RT_STORE = 'shogi-rated-v1', RT_START = 900, RT_CLOCK = 2;      // RT_CLOCK: 10 min + 30 s byoyomi (CLOCKS[2])
-const RT_LV = [150, 300, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900];   // per step (入門 … 六段・七段・八段・九段; 七段〜九段 added 2026-11-08 from the time-doubling matches, MODEL_CARD.md)
+const RT_LV = [100, 255, 405, 510, 610, 715, 815, 915, 1020, 1120, 1225, 1325, 1430, 1530, 1630, 1735, 1835, 1990, 2195, 2295, 2400, 2500, 2700, 2800, 2900, 3000];   // per step (入門 … 六段・七段・八段・九段; 七段〜九段 added 2026-11-08 from the time-doubling matches, MODEL_CARD.md)
 // 種目 (2026-11-12): each variant has a rating of its own — the standard game under RT_STORE, a variant under RT_STORE + ':' + its
 // key ('mini', 'heian8', 'random' …; the same store as the portal's 3D table). v omitted: the variant of the game being set up / played
 const rtV = v => v !== undefined ? v || '' : (game && game.rated && !game.over ? game.variant || '' : (window.Variants ? Variants.forGame() : '')) || '';

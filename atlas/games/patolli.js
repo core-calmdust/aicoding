@@ -47,7 +47,7 @@
     "ar": ["أول مباراة","يعرف القواعد","لعب بضع مباريات","لاعب معتاد","لاعب قوي","خبير","أستاذ"],
   };
   // the game's measured rating of each AI level (patolli/app.js RT_LV)
-  const RATING = [0, 800, 810, 820, 850, 860, 885, 895, 920, 935, 950, 990, 1010, 1050, 1085, 1130, 1190, 1230, 1270, 1345, 1375];
+  const RATING = [0, 500, 520, 540, 605, 625, 675, 700, 750, 780, 815, 895, 940, 1020, 1095, 1190, 1315, 1395, 1480, 1635, 1700];
   const tx = l => TX[l] || TX.en;
   function levelInfo(n, lang) {
     const d = tx(lang).lvd, w = WHO[lang] || WHO.en;

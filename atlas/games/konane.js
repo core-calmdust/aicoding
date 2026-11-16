@@ -323,7 +323,7 @@
     id: ['Pemula: hanya melihat langkah di depannya', 'Dasar–menengah: menghitung beberapa langkah ke depan', 'Mahir: tahu kapan berhenti dan kapan lanjut', 'Ahli: membaca akhir permainan secara dalam'],
     tr: ['Başlangıç: yalnızca önündeki hamleyi görür', 'Acemi–orta: birkaç hamle ileriyi sayar', 'İleri: ne zaman durup ne zaman devam edeceğini bilir', 'Uzman: oyunsonlarını derin okur'],
   };
-  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2450, 2500, 2610, 2700, 2715];   // konane RT_LV (rated games)
+  const RATING = [0, 100, 245, 395, 540, 685, 830, 980, 1125, 1270, 1415, 1565, 1710, 1855, 1950, 2020, 2090, 2150, 2205, 2440, 2500, 2700, 2800, 2900];   // konane RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),

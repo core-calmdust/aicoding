@@ -363,7 +363,7 @@
     id: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Pemula: sering melewatkan ancaman lawan', 'Dasar–klub: membuat jembatan, memblok ancaman langsung', 'Mahir: membaca tangga dan sambungan paksa', 'Ahli: pencarian mendalam (berpikir lebih lama)'] },
     tr: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Acemi: rakibin tehditlerini sık kaçırır', 'Başlangıç–kulüp: köprü kurar, doğrudan tehditleri keser', 'İleri: merdivenleri ve zorunlu bağlantıları okur', 'Uzman: derin arama (daha uzun düşünür)'] },
   };
-  const RATING = [0, 630, 740, 850, 1015, 1180, 1345, 1545, 1670, 1735, 1830, 1870, 1910, 1945, 1965, 1985, 2005, 2045, 2085, 2125, 2185];   // hex RT_LV (rated games)
+  const RATING = [0, 100, 270, 440, 695, 950, 1205, 1510, 1705, 1805, 1950, 2015, 2075, 2130, 2160, 2190, 2220, 2285, 2345, 2405, 2500];   // hex RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, b, b, b, c, c, c, d, d, d, e, e, e, e, e, e, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
