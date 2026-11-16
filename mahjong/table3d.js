@@ -1316,7 +1316,7 @@ class Table3D {
       g.fillStyle = '#8fe6ff'; g.shadowColor = '#3ab8ff'; g.shadowBlur = em ? 24 : 12;
       // (ユーザー 2026-11-14: only the round and the tiles left here — the pot and the counters are in the box with the dora)
       g.font = '800 124px "Shippori Mincho B1", serif'; g.fillText(`${WN[I.round]}${I.kyoku + 1}局`, 0, -72);
-      g.font = '700 58px "Zen Kaku Gothic New", sans-serif'; g.fillText('余', -118, 74);
+      g.font = '800 58px "Shippori Mincho B1", serif'; g.fillText('余', -118, 74);
       const lf = String(I.left).padStart(2, ' '); for (let i = 0; i < 2; i++) seg7(g, -56 + i * 94, 18, 68, 112, lf[i], '#8fe6ff', em ? null : 'rgba(143,230,255,.06)');
       g.shadowBlur = 0;
       if (!em) { const gl = g.createLinearGradient(0, -268, 0, 50); gl.addColorStop(0, 'rgba(255,255,255,.16)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gl; g.beginPath(); g.arc(0, 0, 268, PI, 2 * PI); g.fill(); }   // the glass

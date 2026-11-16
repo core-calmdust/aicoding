@@ -333,7 +333,7 @@ function charImg(c, kind) {          // kind: 'full' | 'bust' | 'face' | 'thumb'
     g.font = `800 ${W * .09}px "Shippori Mincho B1", serif`;
     g.fillText(c.name.ja, cx, cy + R * 1.62);
     g.fillStyle = 'rgba(255,255,255,.6)';
-    g.font = `700 ${Math.max(10, W * .04)}px "Zen Kaku Gothic New", sans-serif`;
+    g.font = `800 ${Math.max(10, W * .04)}px "Shippori Mincho B1", serif`;
     g.fillText(t('noArt'), cx, H - W * .07);
   }
   const u = cv.toDataURL('image/webp', .85);
