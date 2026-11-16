@@ -148,3 +148,4 @@ winProb(state, d)；evaluate(state, n, d) → [{ move, wp }]；think(state, n, l
 - 宝の支払いの動き（玉が飛ぶ・「+n」）は DOM のまま（`view.animatePay`）。ルール（`tour.js`）の小さな盤は 2D のまま（スキンの CSS は `#board` の中だけに効かせる）。
 - マス全体を塗る 2D の印（直前の手・レッスンの光るマス）は、3D では駒を隠さないよう枠だけにする。
 - 確認用：`window.__ptSkin`（`built()`・`piece(side,k)`・`cell(r,c)`・`svg(x,y)`・`beans()`・`gems()`・`busy()`）。
+- **大百科アイコン（2026-11-16）**：`atlas/icons3d.js` の ICONS.patolli を `atlas/tools/icons.html`（1920px で描画）→ `atlas/tools/icon-post.py` で `images/atlas/patolli.webp`（320×320、共通の位置規定どおり）。`atlas/app.js` の R3 に登録、画像の `?v=12`。

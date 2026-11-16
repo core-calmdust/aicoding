@@ -452,6 +452,70 @@
       for (let i = 0; i < 6; i++) { const t = (i + .5) / 6, d = ball(.085, dotM); d.position.set(p(0) + (p(2) - p(0)) * t, .7 + Math.sin(t * Math.PI) * 1.35, p(1)); g.add(d); }
       return g;
     },
+    latrunculi() {   // a corner of the white marble board (the 3D default): glass counters — a white one enclosed between two dark ones, a big dark counter coming down to close the line
+      const top = M({ map: X.canvasTex('iclt1', 512, 512, (c, W) => {
+        c.fillStyle = '#ece7dc'; c.fillRect(0, 0, W, W);
+        let sd = 11; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+        for (let k = 0; k < 26; k++) { c.strokeStyle = `rgba(${r() < .5 ? '150,144,136' : '196,186,170'},${.18 + r() * .22})`; c.lineWidth = 1 + r() * 5; c.beginPath(); let x = r() * W, y = r() * W; c.moveTo(x, y); for (let i = 0; i < 6; i++) { x += (r() - .3) * 130; y += (r() - .5) * 110; c.lineTo(x, y); } c.stroke(); }   // veins
+        c.strokeStyle = '#7d756a'; c.lineWidth = 9; const st = W / 3; for (let i = 1; i < 3; i++) { c.beginPath(); c.moveTo(i * st, 0); c.lineTo(i * st, W); c.stroke(); c.beginPath(); c.moveTo(0, i * st); c.lineTo(W, i * st); c.stroke(); }
+      }), roughness: .28 });
+      const g = boardChunk(3, 3.6, top, C(0x4e1c38, { roughness: .55 }));   // the theme's Tyrian purple, darkened like stained wood
+      const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
+      const dark = C(0x1c2540, { roughness: .08 }), light = C(0xf4f6f0, { roughness: .1 });
+      const cnt = (m, sc) => { const o = new T.Group(); o.add(puck(.5, .3, m, .5)); o.scale.setScalar(sc); return o; };
+      g.add(at(cnt(dark, .8), p(0), .5, p(1))); g.add(at(cnt(light, .8), p(1), .5, p(1))); g.add(at(cnt(light, .8), p(2), .5, p(0))); g.add(at(cnt(dark, .8), p(0), .5, p(2)));
+      const ring = mesh(new T.TorusGeometry(.5, .05, 10, 44), gloss(0xe0452c)); ring.rotation.x = Math.PI / 2; g.add(at(ring, p(1), .56, p(1), Math.PI / 2));   // the enclosed counter
+      g.add(at(cnt(dark, 1.4), p(2) - .45, 2.05, p(1) - .35, .3, 0, -.3));   // coming down on the empty square right of the white one
+      return g;
+    },
+    foxgeese() {   // the middle of the oak cross board (the 3D default): lines and diagonals through nine points; a big fox leaping over a goose, two more geese waiting
+      const top = M({ map: X.canvasTex('icfg1', 512, 512, (c, W) => {
+        c.fillStyle = '#c2925a'; c.fillRect(0, 0, W, W);
+        let sd = 7; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+        for (let k = 0; k < 90; k++) { c.strokeStyle = `rgba(${r() < .5 ? '120,78,38' : '226,190,140'},${.1 + r() * .16})`; c.lineWidth = 1 + r() * 3; const y = r() * W; c.beginPath(); c.moveTo(0, y); c.bezierCurveTo(W * .3, y + (r() - .5) * 26, W * .7, y + (r() - .5) * 26, W, y + (r() - .5) * 14); c.stroke(); }   // grain
+        const a = W / 6, b = W / 2, d = W - a; c.strokeStyle = '#4a2c12'; c.lineWidth = 12; c.lineCap = 'round';
+        for (const v of [a, b, d]) { c.beginPath(); c.moveTo(v, a); c.lineTo(v, d); c.stroke(); c.beginPath(); c.moveTo(a, v); c.lineTo(d, v); c.stroke(); }
+        c.beginPath(); c.moveTo(a, a); c.lineTo(d, d); c.moveTo(d, a); c.lineTo(a, d); c.stroke();
+        c.fillStyle = '#4a2c12'; for (const x of [a, b, d]) for (const y of [a, b, d]) { c.beginPath(); c.arc(x, y, 20, 0, 7); c.fill(); }
+      }), roughness: .55 });
+      const g = boardChunk(3, 3.6, top, M({ map: X.wood('icfgw', '#5a3a1c', '#3a2410') }));
+      const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
+      const goose = sc => { const o = new T.Group(), m = C(0xf6f1e4, { roughness: .5 }), body = ball(.46, m, .86); body.position.y = .38; o.add(body);
+        const bill = mesh(new T.ConeGeometry(.12, .3, 16), C(0xf09a24, { roughness: .4 })); bill.rotation.x = Math.PI / 2; bill.position.set(0, .5, .5); o.add(bill);
+        for (const sx of [-1, 1]) { const e = ball(.045, C(0x14110e, { roughness: .3 })); e.position.set(sx * .17, .58, .37); o.add(e); }
+        o.scale.setScalar(sc); return o; };
+      const fox = sc => { const o = new T.Group(), m = C(0xd9602c, { roughness: .45 }), body = ball(.5, m, .9); body.position.y = .42; o.add(body);
+        for (const sx of [-1, 1]) { const e = mesh(new T.ConeGeometry(.17, .36, 18), m); e.position.set(sx * .28, .92, -.04); e.rotation.z = -sx * .25; o.add(e); const e2 = ball(.05, C(0x14110e, { roughness: .3 })); e2.position.set(sx * .19, .56, .42); o.add(e2); }
+        const muz = ball(.22, C(0xfbf3e6, { roughness: .5 }), .8); muz.position.set(0, .34, .36); o.add(muz); const nose = ball(.06, C(0x14110e, { roughness: .3 })); nose.position.set(0, .42, .56); o.add(nose);
+        o.scale.setScalar(sc); return o; };
+      g.add(at(goose(.8), p(1), .5, p(1), 0, .5)); g.add(at(goose(.8), p(0), .5, p(1), 0, .9)); g.add(at(goose(.8), p(2), .5, p(2), 0, .2));
+      g.add(at(fox(1.25), p(1) + .05, 2.0, p(1) - .05, .25, .6, -.2));   // over the goose in the middle, towards the empty point
+      const dotM = gloss(0xe0452c);
+      for (let i = 0; i < 5; i++) { const t = (i + .5) / 5, d = ball(.075, dotM); d.position.set(p(2) + (p(0) - p(2)) * t, .7 + Math.sin(t * Math.PI) * 1.05, p(0) + (p(2) - p(0)) * t); g.add(d); }
+      return g;
+    },
+    patolli() {   // the crossing of the mat board (the 3D default): a woven reed mat with the track drawn in black rubber, the four middle squares; a big red pebble, a blue one, and the black beans with their white marks
+      const top = M({ map: X.canvasTex('icpt1', 512, 512, (c, W) => {
+        c.fillStyle = '#d8bd84'; c.fillRect(0, 0, W, W);
+        const w = 16; for (let y = 0; y < W; y += w) for (let x = 0; x < W; x += w) { const v = ((x / w + y / w) & 1); c.fillStyle = v ? 'rgba(120,88,40,.16)' : 'rgba(255,240,200,.16)'; c.fillRect(x, y, w, w); c.fillStyle = 'rgba(90,64,28,.12)'; if (v) c.fillRect(x, y, w, 2); else c.fillRect(x, y, 2, w); }   // weave
+        const u = W / 6, a = 2 * u, b = 4 * u;
+        c.fillStyle = '#ecd9a8'; c.fillRect(a, 0, 2 * u, W); c.fillRect(0, a, W, 2 * u);
+        c.fillStyle = '#d9844f'; c.fillRect(a, a, 2 * u, 2 * u);
+        c.strokeStyle = '#1b1712'; c.lineWidth = 10; c.lineJoin = 'round';
+        c.beginPath(); c.moveTo(a, 0); c.lineTo(a, a); c.lineTo(0, a); c.moveTo(b, 0); c.lineTo(b, a); c.lineTo(W, a); c.moveTo(a, W); c.lineTo(a, b); c.lineTo(0, b); c.moveTo(b, W); c.lineTo(b, b); c.lineTo(W, b); c.stroke();
+        c.lineWidth = 7; c.beginPath(); c.moveTo(3 * u, 0); c.lineTo(3 * u, W); c.moveTo(0, 3 * u); c.lineTo(W, 3 * u);
+        for (const k of [1, 2, 4, 5]) { c.moveTo(a, k * u); c.lineTo(b, k * u); c.moveTo(k * u, a); c.lineTo(k * u, b); } c.stroke();
+        c.fillStyle = '#1b1712'; c.beginPath(); c.moveTo(a, 0); c.lineTo(3 * u, u / 2); c.lineTo(a, u); c.fill(); c.beginPath(); c.moveTo(W, b); c.lineTo(W - u / 2, 3 * u); c.lineTo(W - u, b); c.fill();   // marked squares
+      }), roughness: .85 });
+      const g = boardChunk(3, 3.6, top, C(0xb9975a, { roughness: .9 }));
+      const U = 3.1 / 6, q = i => -1.55 + U * (i + .5);
+      const pebble = (hex, sc) => { const o = new T.Group(), m = ball(.5, C(hex, { roughness: .28 }), .5); m.position.y = .25; m.scale.x = 1.12; o.add(m); o.scale.setScalar(sc); return o; };
+      const bean = (sc, up) => { const o = new T.Group(), m = ball(.3, C(0x1a1613, { roughness: .35 }), .55); m.scale.z = 1.5; m.position.y = .17; o.add(m); if (up) { const d = ball(.07, C(0xfbf6ea, { roughness: .5 }), .5); d.position.y = .33; o.add(d); } o.scale.setScalar(sc); return o; };
+      g.add(at(pebble(0x2f63c9, .62), q(2), .5, q(0))); g.add(at(pebble(0xc8362b, .62), q(5), .5, q(3))); g.add(at(pebble(0x2f63c9, .62), q(3), .5, q(5)));
+      g.add(at(pebble(0xc8362b, 1.3), q(2) + .1, 1.6, q(2) + .1, .25, 0, -.3));   // the big red pebble coming down on the crossing
+      g.add(at(bean(.9, true), q(0) + .1, .5, q(5) - .1, 0, .6)); g.add(at(bean(.9, false), q(5) - .15, .5, q(0) + .2, 0, -.4)); g.add(at(bean(.9, true), q(0) + .25, .5, q(0) + .3, 0, 1.2));
+      return g;
+    },
     senet() {   // a corner of Tutankhamun's senet box: ivory squares in ebony with the House of Beauty (three nefer) and the House of Water; a big ivory spool hopping over to them, an ebony cone and a throw stick
       const top = M({ map: X.canvasTex('icsn1', 512, 512, (c, W) => {
         c.fillStyle = '#1c120b'; c.fillRect(0, 0, W, W);
