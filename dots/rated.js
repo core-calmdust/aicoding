@@ -13,9 +13,9 @@
 const RT_STORE = 'dots-rated-v1', RT_CUR = 'dots-rated-cur-v1', RT_START = 1000;
 // index = level 1..10. 3×3: Lv6+ play perfectly (measured), 4×4: Lv9–10 perfect, 5×5: provisional (Lv9/10 measured against Lv8 and the previous Lv9/10)
 const RT_LV = {
-  3: [0, 240, 640, 980, 1150, 1530, 1600, 1600, 1600, 1600, 1600],
-  4: [0, 190, 590, 930, 1110, 1470, 1600, 1690, 1850, 1950, 2000],
-  5: [0, 200, 600, 940, 1120, 1450, 1560, 1650, 1780, 1970, 2040],
+  3: [0, 100, 805, 1405, 1705, 2375, 2500, 2500, 2500, 2700, 2800],
+  4: [0, 100, 680, 1170, 1430, 1950, 2140, 2270, 2500, 2700, 2800],
+  5: [0, 100, 710, 1225, 1495, 2000, 2165, 2305, 2500, 2700, 2800],
 };
 const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
 const put = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };

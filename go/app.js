@@ -1119,7 +1119,7 @@ const RT_STORE = STORE + '-rated', RT_START = 1000, RT_SIZE = 9, RT_CLOCK = { ba
 // アマ最強 2700; the timed levels 最強 I–V above it by their measured steps (Elo, extrapolated: MODEL_CARD.md「最上位レベル」)
 const TOP_RT = [2700, 2800, 2900, 3000, 3100, 3200];
 const egfOf = i => { const v = rankVal(i); return v <= 5 ? 2000 + 100 * v : v <= 8 ? 2500 + 50 * (v - 5) : TOP_RT[v - 9]; };
-const RT_LV = [0].concat(Array.from({ length: LV_MAX }, (_, i) => egfOf(i + 1)));
+const RT_LV = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2350, 2400, 2450, 2500, 2700, 2800, 2900, 3000, 3100];   // (2026-11-17: the common scale — 覚えたて ≈ 100, アマ最強 Lv.27 = プロ 2500, 天上 Lv.28–32 2700+; was egfOf)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

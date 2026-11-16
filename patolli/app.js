@@ -876,7 +876,7 @@ function resumeHere() {
 const RT_STORE = STORE + '-rated', RT_START = 1000;
 // 各レベルのAIのレート：tools/rate_levels.js の自己対局（ベルの復元、隣り合うレベルどうし各800局）の勝率から。Lv.1 を 800 に固定。
 // 豆の運が大きいので1段ごとの差は小さい（読む投げの数が増える Lv.8・16・20 と、ばらつきが減る上の段で差がつく）
-const RT_LV = [0, 800, 810, 820, 850, 860, 885, 895, 920, 935, 950, 990, 1010, 1050, 1085, 1130, 1190, 1230, 1270, 1345, 1375];
+const RT_LV = [0, 500, 520, 540, 605, 625, 675, 700, 750, 780, 815, 895, 940, 1020, 1095, 1190, 1315, 1395, 1480, 1635, 1700];
 function rtLoad() { let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {} if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] }; if (!Array.isArray(s.hist)) s.hist = []; return s; }
 function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
 function rtRank(r) { let k = 0; for (let i = 1; i <= LV_MAX; i++) if (r >= RT_LV[i] - 25) k = i; return k ? LV(k) : t('rt.below'); }

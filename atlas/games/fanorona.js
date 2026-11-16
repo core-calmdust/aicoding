@@ -484,7 +484,7 @@
     id: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Pemula: kadang memberikan bidak', 'Dasar–menengah: membaca beberapa langkah ke depan', 'Mahir: membaca pertukaran tangkapan secara dalam', 'Dan: membaca dalam, melihat tangkapan balasan'] },
     tr: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Başlangıç: bazen taş kaptırır', 'Acemi–orta: birkaç hamle ileriyi okur', 'İleri: alma değişimlerini derin okur', 'Dan: derin okuma, karşı almaları görür'] },
   };
-  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350];   // fanorona RT_LV (rated games)
+  const RATING = [0, 100, 260, 415, 575, 730, 890, 1045, 1205, 1365, 1520, 1680, 1835, 1995, 2095, 2170, 2245, 2310, 2375, 2435, 2500];   // fanorona RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),

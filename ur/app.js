@@ -842,7 +842,7 @@ function resumeHere() {
 const RT_STORE = STORE + '-rated', RT_START = 1000;
 // rating of each AI level: Elo from the final engine's self-play (ur/tools/RULES-RESEARCH.md, adjacent levels, 4000 games each,
 // L1 anchored at 500). The dice luck keeps the steps small; L18–L20 are within the noise of each other (L20 ≈ perfect play)
-const RT_LV = [0, 500, 635, 665, 715, 760, 810, 890, 940, 1000, 1060, 1105, 1175, 1235, 1275, 1320, 1365, 1400, 1410, 1418, 1425];
+const RT_LV = [0, 500, 675, 715, 780, 835, 900, 1005, 1070, 1150, 1225, 1285, 1375, 1455, 1505, 1565, 1620, 1670, 1680, 1690, 1700];
 function rtLoad() { let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {} if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] }; if (!Array.isArray(s.hist)) s.hist = []; return s; }
 function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
 function rtRank(r) { let k = 0; for (let i = 1; i <= LV_MAX; i++) if (r >= RT_LV[i] - 25) k = i; return k ? LV(k) : t('rt.below'); }

@@ -5,7 +5,7 @@
 'use strict';
 (function () {
 const RT_STORE = STORE + '-rated', RT_START = 1000, LV_MAX = 20;
-const RT_LV = [0, 640, 680, 730, 780, 820, 860, 900, 940, 970, 1000, 1030, 1060, 1085, 1105, 1120, 1130, 1140, 1150, 1155, 1160];
+const RT_LV = [0, 500, 590, 710, 825, 915, 1010, 1100, 1190, 1260, 1330, 1400, 1470, 1525, 1575, 1610, 1630, 1655, 1675, 1690, 1700];
 const LV = n => 'Lv.' + n;
 function load() { let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {} if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] }; if (!Array.isArray(s.hist)) s.hist = []; return s; }
 function store(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }

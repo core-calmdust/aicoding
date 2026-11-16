@@ -1186,7 +1186,7 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo, Copenhagen rules)
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 420000, inc: 4000 };
 // rating of each AI step (15級 = 450): measured by self-play of adjacent levels, both sides, smoothed (MODEL_CARD.md)
-const RT_LV = [0, 450, 570, 670, 790, 960, 1030, 1100, 1200, 1320, 1400, 1510, 1640, 1740, 1845, 1950, 2160, 2290, 2410, 2560, 2650, 2695, 2735, 2765, 2795, 2825];   // 2026-11: Lv.8 up with the learned evaluation (Copenhagen); Lv.21–25 (2026-11-08) estimated from node-doubling matches, MODEL_CARD.md
+const RT_LV = [0, 100, 230, 340, 470, 655, 735, 810, 920, 1050, 1135, 1255, 1400, 1505, 1620, 1735, 1965, 2105, 2240, 2400, 2500, 2700, 2800, 2900, 3000, 3100];   // 2026-11: Lv.8 up with the learned evaluation (Copenhagen); Lv.21–25 (2026-11-08) estimated from node-doubling matches, MODEL_CARD.md
 // the defenders' advantage at equal strength (Elo, fitted from the same self-play per level, smoothed): a player who takes the
 // defenders is expected to score as if RT_SIDE_LV[level] points stronger; it grows with the level (strong attackers rarely break through)
 const RT_SIDE_LV = [0, 30, 30, 30, 30, 70, 70, 70, 70, 70, 200, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350];
