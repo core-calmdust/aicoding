@@ -1666,6 +1666,9 @@ async function roundBanner(g) {
   const big = ja ? `<i>${esc(t('round')[g.round])}</i><span>${KN[g.kyoku]}局</span>` : `<span>${esc(t('kyoku', { w: t('round')[g.round], n: g.kyoku + 1 }))}</span>`;
   const dealer = UIS && UIS.chars ? UIS.chars[g.dealer] : null;
   const sub = [g.honba ? t('honba', { n: g.honba }) : '', dealer ? `${t('dealerOf', { n: L(dealer.name) })}` : ''].filter(Boolean).join('　·　');
+  // (2026-11-16, ユーザー「東N局の帯が中央だったり右下だったり」) the call-outs (ポン, ロン …) leave their seat's position on the element:
+  // cleared here, so the band is always in the centre
+  el.style.left = el.style.top = '';
   el.className = 'callout rbn'; el.innerHTML = `<div class="rbn-band"><div class="rbn-big">${big}</div>${sub ? `<small>${esc(sub)}</small>` : ''}</div>`;
   void el.offsetWidth; el.classList.add('show');
   await sleep(1700);
@@ -1673,6 +1676,7 @@ async function roundBanner(g) {
 }
 async function banner(text) {
   const el = $('#callout');
+  el.style.left = el.style.top = '';   // (centred: see roundBanner)
   el.className = 'callout banner'; el.innerHTML = `<b>${esc(text)}</b>`;
   void el.offsetWidth; el.classList.add('show');
   await sleep(1100);
