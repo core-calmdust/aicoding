@@ -130,8 +130,9 @@ async function runtime() {
     // (2026-11-16, ユーザー「スマホ:スライドして牌を捨てた際は自分の手のアニメーションを省略して、そのまま捨て牌に置く」) no hand, no page copy
     ok('long slide: lit, discarded straight into the river (no hand, no page copy)', lit && !r && n1 === n0 + 1 && !ghost, JSON.stringify({ r, n0, n1, ghost }));
     // a tap still has the hand take the tile
-    await p.waitForFunction(`JANKA.UIS.kind === 'turn'`, null, { timeout: 90000 }).catch(() => {});
-    await p.evaluate(traceReach); await p.evaluate(`document.querySelector('#hand .hrow .tl[data-id]:not(.no)').click()`); await p.waitForTimeout(1200);
+    // (the player's next turn: she holds a drawn tile again — right after the slide the state can still read 'turn')
+    await p.waitForFunction(`JANKA.UIS.kind === 'turn' && JANKA.G.P[0].hand.length % 3 === 2 && !!document.querySelector('#hand .tl.drawn')`, null, { timeout: 90000 }).catch(() => {}); await p.waitForTimeout(400);
+    await p.evaluate(traceReach); await p.evaluate(`document.querySelector('#hand .hrow .tl[data-id]:not(.no)').click()`); await p.waitForFunction('!!window.__rc', null, { timeout: 6000 }).catch(() => {});   // (slow when the machine is busy)
     const r2 = await p.evaluate('__rc'), k2 = await p.evaluate(`[JANKA.UIS.kind, JANKA.G.P[0].river.length, JANKA.DB.set.tap2]`); ok('a tap: the hand still takes the tile', !!(r2 && r2.page), JSON.stringify([r2, k2]));
     ok('no page errors (game, phone)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
@@ -220,13 +221,29 @@ async function runtime() {
     ok('game: the god rays move (set from app.js)', await p.evaluate(`!!document.querySelector('#game .rays').style.getPropertyValue('--g1')`));
     ok('no page errors (vfx)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
+  if (want('memory')) { console.log('[memory] a phone: no layer or canvas holds more pixels than shows');
+    // (2026-11-17, ユーザー「リーチ（演出？）でアプリが再起動。メモリ負荷を洗って」)
+    const p = await page(SP); await p.evaluate(`void JANKA.startGame()`); await p.waitForTimeout(4000);
+    ok('the home specks canvas lets its pixels go during a game', await p.evaluate(`(()=>{const c=document.querySelector('#aaFx');return !c||c.width*c.height<=1})()`));
+    const m = await p.evaluate(`(()=>{const c=document.querySelector('#cutin'),pr=document.createElement('div');pr.className='ci-rays';c.appendChild(pr);
+      const r=Math.round(parseFloat(getComputedStyle(pr).width)/Math.max(innerWidth,innerHeight)*100);pr.remove();
+      return [getComputedStyle(document.querySelector('#cutin .ci-lines')||Object.assign(c.appendChild(document.createElement('i')),{className:'ci-lines'})).inset, r, Math.round(Math.hypot(innerWidth,innerHeight)/Math.max(innerWidth,innerHeight)*100)]})()`);
+    ok('cut-in: the speed lines are the band\'s size and one stripe; the rays just cover the screen as they turn', m[0] === '0px -100px 0px 0px' && m[1] <= 120 && m[1] >= m[2], JSON.stringify(m));
+    ok('no page errors (memory)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
+
   if (want('sound')) { console.log('[sound] music fetched during a game is unlocked by the next touch (phones)');
     // (2026-11-17, ユーザー「リーチの曲で鳴らないのがありました（スマホ）」)
     const p = await page(PC, { snd: true }, 'ja', '?nofreeze'); await p.mouse.click(640, 360); await p.waitForTimeout(400);
-    await p.evaluate(`JANKA.SND.newGame()`); await p.waitForFunction(`Object.values(JANKA.SND._trk).filter(B=>B.el&&B.g).length>=3`, null, { timeout: 15000 }).catch(() => {});
+    await p.evaluate(`JANKA.SND.newGame()`); await p.waitForFunction(`Object.values(JANKA.SND._trk).filter(B=>B.el&&B.g).length>=3&&!Object.values(JANKA.SND._trk).some(B=>B.getting)`, null, { timeout: 20000 }).catch(() => {});   // (every fetch done before the touch)
     await p.mouse.click(5, 5); await p.waitForTimeout(800);
     const r = await p.evaluate(`Object.entries(JANKA.SND._trk).filter(([k,B])=>B.el&&B.g).map(([k,B])=>[k,!!(B.ul||B.on),B.on||B.el.paused,B.on||B.g.gain.value===0])`);
     ok('every music element is unlocked by a touch, silent and stopped unless playing', r.length >= 3 && r.every(x => x[1] && x[2] && x[3]), JSON.stringify(r));
+    // (2026-11-17, ユーザー「リーチ（演出？）でアプリが再起動。メモリ負荷を洗って」) tracks no longer wanted are let go: a game does not
+    // gather every track it has played
+    for (let h = 0; h < 4; h++) { await p.evaluate(`JANKA.SND.handStart()`); await p.waitForTimeout(2200); await p.evaluate(`JANKA.SND.music('riichi')`); await p.waitForTimeout(2200); }
+    await p.evaluate(`JANKA.SND.music(null)`); await p.waitForTimeout(1800);
+    const held = await p.evaluate(`Object.entries(JANKA.SND._trk).filter(([k,B])=>B.el||B.url).map(([k])=>k)`);
+    ok('music: at most this hand\'s and the next tracks are held (≤ 5)', held.length <= 5 && !held.includes('title'), held.join(' '));
     ok('no page errors (sound)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('fonts')) { console.log('[fonts] every text in the Mincho');

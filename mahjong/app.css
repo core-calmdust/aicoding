@@ -2815,3 +2815,10 @@ html.lite :is(#home,#chara).aaa .aa-ch .jig{animation:none}
 #hand .tl.dora.dshow .dg{animation:dgIn .45s ease-out both}
 @keyframes doraIn{from{opacity:0}to{opacity:.75}}
 @keyframes dgIn{from{opacity:0}to{opacity:1}}
+/* (2026-11-17, ユーザー「リーチ（演出？）でアプリが再起動。メモリ負荷を洗って」) the cut-in's layers held far more pixels than shows:
+   - the speed lines were twice the band each way (inset:-50%) inside a band that clips — now the band's size and one stripe more
+     (they move by one stripe, 90px): the same picture, about a quarter of the pixels
+   - the turning rays (SR and up) were 180vmax square; on a phone (a long screen) 116vmax already covers the screen's corners as
+     they turn: the same picture, well under half the pixels (at a phone's 3× pixels, 83 MB → 35 MB) */
+.ci-lines{inset:0 -100px 0 0}
+html:not(.ds) .ci-rays{width:116vmax;height:116vmax;margin:-58vmax 0 0 -58vmax}
