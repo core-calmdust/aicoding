@@ -334,6 +334,7 @@ html.atlas-patolli #poolInfo b{color:#2b3044!important}
     const R3 = AtlasSkin.rows3d && h ? AtlasSkin.rows3d({ id: 'patolli', host: h, is3, clear: row, p3: P3L,
       board: k => { try { draft.design = k; } catch (e) {} repaint(); go3(); },
       piece: k => { try { draft.pieces = k; } catch (e) {} repaint(); go3(); } }) : null;
+    { const r3 = document.querySelector('#f3D .bdrow:not(.pc3)'); if (r3) r3.classList.add('dsg'); }   // (the page's own grid of design tiles: 3 across on a phone, 6 on a PC)
     if (row && R3) row.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(() => R3.paint(), 0); } }, true);   // a 2D board: the 2D page
     if (R3 && typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { R3.paint(); } catch (e) {} return r; }; }
   }
