@@ -262,7 +262,7 @@
 
 ## 14. オンライン
 
-- ゲームごとに Firebase プロジェクト（例：`shogi-multiplay` `chess-multiplay` `checkers-multiplay` `ugolki-multiplay` `agon-multiplay` `ur-multiplay` `xiangqi-multiplay` `tafl-multiplay` `hex-multiplay`…）。Authentication は匿名＋Google、承認済みドメインに `core-calmdust.github.io`、Realtime Database は asia-southeast1。
+- Firebase プロジェクトは**系統ごとに共用**（2026-11-16、Spark の作成数の上限のため）：shogi-multiplay（将棋・チェス・シャンチー・チャンギ）、reversi-multiplay（リバーシ・囲碁・五目並べ・ヘックス）、checkers-multiplay（チェッカー・ウゴルキ・ファノロナ・アルケルケ）、tafl-multiplay（タフル・アゴン）、backgammon-multi（バックギャモン・ウル・セネト）、ninemens-multiplay（モリス・マンカラ・コネクトフォー・ドット＆ボックス）、konane-multiplay（コナネ）。ルートのゲーム以外は自分の節の下だけを使う（`firebase-config.js` の `window.FIREBASE_ROOT = '<node>/'`、ルールはルートのゲームの `database.rules.json` に `secrules.py` の `host` で入る）。1DBは4ゲームまで。**新作は専用プロジェクトを作らず系統の近いところへ入れる**。手順は `claude/online-security-setup.md` の 0.0。Authentication は匿名＋Google、承認済みドメインに `core-calmdust.github.io`、Realtime Database は asia-southeast1。
 - **改ざん対策**（必須）：DBルールは `shared/tools/secrules.py` で生成（手で直さない）、クライアントは `shared/onlinesec.js` で精算。レート等は終局済みレート戦の精算でしか変えられない（K以内、同一相手1日3局まで、新規相手はK半分）。盤上の終局は両者の `res/<uid>` 申告一致で有効。新ゲームは `secrules.py` の GAMES に追加 → 生成 → エミュレーターテスト → 公開。手順は `claude/online-security-setup.md`。
 - `firebase-config.js` に `FIREBASE_APPCHECK_SITE_KEY`（reCAPTCHA Enterprise、null＝無効、'v3:' で旧v3）。
 - **部屋・ロビーの後始末**：`hb`（サーバー時刻）を持ち主が60秒ごと更新、3分以上更新なしは非表示＆見つけた人が削除。削除は「消してから cancelDisconnect」、pagehide でも削除。終局後3分放置の部屋は募集中に戻す。
@@ -369,7 +369,7 @@
 **準備**
 - [ ] ルール・歴史・定跡・用語をリサーチ（確実な事実のみ）
 - [ ] 全ゲームの配色を確認し、被らないテーマ色を決める
-- [ ] Firebase プロジェクト（オンラインあり時）：ユーザーに作成を依頼 → `secrules.py` GAMES 追加 → ルール生成・テスト
+- [ ] Firebase（オンラインあり時）：系統の近い共用プロジェクトに入れる（`secrules.py` GAMES に `host` 付きで追加 → ルール生成 → `node shared/tools/roottest.js` → ユーザーにルールの貼り替えを依頼）
 
 **画面**
 - [ ] `HeaderBar.init`、メニュー順（対局＞待った＞投了＞ヒント＞ルール＞レッスン＞パズル）

@@ -75,7 +75,7 @@
 - コーチ・振り返り解説はルール別の文言（オワレ：`i18n-oware.js`、他3ルール：`i18n-world.js` の RULE ＋共通 WCOACH / WRV。`MANCALA_RULE_TX[rule]` を上から順に引き、無ければカラハの文言）。
 
 ## 未対応
-- オンライン対戦の世界の伝統ルール4種（`online.js` の RULES と Firebase の `database.rules.json` の v の許可リストが4ルールのまま。追加するときは両方を変え、DBルールのデプロイが必要）。
+- オンライン対戦の世界の伝統ルール4種（`online.js` の RULES と Firebase のルール（2026-11-16 からモリスのプロジェクト ninemens-multiplay の節 mancala/、`morris/database.rules.json`）の v の許可リストが4ルールのまま。追加するときは両方を変え、DBルールのデプロイが必要）。
 - 世界の伝統ルールのレッスン・パズル・定跡。
 
 ## 対局設定の Pro モード（2026-11-08）

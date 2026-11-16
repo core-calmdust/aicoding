@@ -33,7 +33,7 @@ URL: https://core-calmdust.github.io/aicoding/checkers/ ／ 旧版 checker.html 
 - 隣接レベルの対戦結果と RT_LV（レート基準：15級450、+125ずつ、1級2090、四段2320、五段2370。四段・五段は 2026-11-14 の探索 v2 で +20）は checkers/MODEL_CARD.md。
 
 ## オンライン
-- Firebase（匿名＋Googleログイン、Realtime Database）。Firebaseプロジェクト checkers-multiplay（asia-southeast1）。database.rules.json の v は ^(english)$。
+- Firebase（匿名＋Googleログイン、Realtime Database）。Firebaseプロジェクト checkers-multiplay（asia-southeast1）。ウゴルキ・ファノロナ・アルケルケも同じDBの節（ugolki/・fanorona/・alq/）を使い、ルールは checkers/database.rules.json にまとめて入る（2026-11-16 統合）。database.rules.json の v は ^(english)$。
 - 1手 = K64 3文字（元・先・同じ元/先の合法手の中の番号）。?mock=1 で localStorage のモック（2タブで対戦テスト可）。
 
 ## データ

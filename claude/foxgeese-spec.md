@@ -77,7 +77,7 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
 - レッスン6（tools/gen_content.js、正解集合はエンジンで計算。**2026-11-16 に g15（既定ルール）で作り直し**：lessons.json の `rule`・各問の `s.rule`＝g15。`FG_RULE=…` で別ルール）：狐3（取れるガチョウを探す・続けて取る・2羽を同時に狙う）、ガチョウ3（跳ばれない・閉じ込める・2手で閉じ込める）。各5問。準備ステップ（ramp）は未実装。
 - パズル（PZBook v2、**g13＝13羽（伝統）のまま**。`puzzles.json` の `rule`。一覧の説明と設定の案内に「パズルは13羽（伝統）のルールです」と出す（`pz.rule`）。作り直すときは `PZ_RULE=…`）：閉じ込めろ＝w2・w3・w4（ガチョウ番）、取れ＝t2・t3（狐番）。最短がちょうど N 手・初手は2通りまで。正解でない手を「ミス」とは言わず、手数切れまで指せる。
 - コーチ（ja/en）：狐＝勝ち筋・続けて取る・取る・2羽を狙う・狙う・広い所へ・位置を変える／ガチョウ＝閉じ込める・守る・詰める・形を整える・誘う。
-- オンライン：Firebase プロジェクト未作成のため準備中。言語：**14言語**（2026-11-16。残り12言語は i18n-fg-more.js・coach-i18n.js・lux.json、`window.FG_LANGS`。全言語でキー182・コーチ118の抜けなし。2026-11-16 の4ルール・手番選択の追加後はキー194・コーチ118、PC／スマホで表示確認）。コーチの要約の札は長い言語で折り返す（index.html の `.ck-sum span`）。
+- オンライン：準備中（Firebase は専用プロジェクトを作らず、タフルのプロジェクト tafl-multiplay の節 foxgeese/ に入れる（2026-11-16 統合））。言語：**14言語**（2026-11-16。残り12言語は i18n-fg-more.js・coach-i18n.js・lux.json、`window.FG_LANGS`。全言語でキー182・コーチ118の抜けなし。2026-11-16 の4ルール・手番選択の追加後はキー194・コーチ118、PC／スマホで表示確認）。コーチの要約の札は長い言語で折り返す（index.html の `.ck-sum span`）。
 
 ## 3D（フル機能版 ?skin=atlas、2026-11-16）
 - atlas/models/foxgeese.js：3D盤6種（オーク材＝既定・石盤とチョーク・リネンの刺しゅう・牧場・ナイト・ペーパー、保存キー atlas-foxgeese-look）と3D駒6種（木＝既定・ガラス・ピューター・塗り・青銅と銀・素焼き、atlas-foxgeese-pc3）。狐は耳のある頭、ガチョウはくちばしのある丸い体。atlas/skin/foxgeese.js が2Dページの駒を3Dに写す。
@@ -98,7 +98,7 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
 - レート戦の基準値 RT_LV（Lv ごとのレート）は **g13 のころの値**のまま（レート戦は 2026-11-16 から g15）。2026-11-16 のガチョウ AI 強化（engine.js v6）で上位レベルのガチョウの強さが大きく変わったので、g15 で測り直す。
 - `online.js` の VARIANTS が他ゲーム（s8/s6）の流用のまま（Firebase 未作成で動いていない）。オンラインを作るときに g15 などへ直す。
 - 大百科：正式アイコン（icons3d.js。いまは仮の images/atlas/foxgeese.webp）、3D卓でのレート戦・パズル・レッスン（いまはフル機能版を開く）、種目カードを 2D のルールカードから作る `atlas/kindart.js`。
-- AI の強化（狐側：要塞・時間切れ狙い。完全解析、WASM）、レート基準値の実測。オンライン対戦（Firebase プロジェクト）。
+- AI の強化（狐側：要塞・時間切れ狙い。完全解析、WASM）、レート基準値の実測。オンライン対戦（tafl-multiplay の節 foxgeese/）。
 
 ## 保存キー
 - aicoding-foxgeese（設定・対局）、-lessons、-puzzles、-daily、-rated、-rules、foxgeese-online-name。

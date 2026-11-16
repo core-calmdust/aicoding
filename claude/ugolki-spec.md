@@ -28,7 +28,7 @@ URL: https://core-calmdust.github.io/aicoding/ugolki/ ／ トップは「チェ�
 - AI の序盤ブック（2026-11-15）：`ugolki/book-<ルール>.json`（c33・c34・c44・diag。`shared/tools/genbook.js ugolki --rule <r> --plies 4 --ms 5000 --margin 10`）。book 付きのレベル（四段以上）が初期配置からの6手目まで使い、無い局面は前のままその場で分析。
 - パズル＝勝ち切りパズル（2026-11-04、tools/gen_duel.js → build_duel.py、生データ tools/duel_raw.jsonl）：実戦の終盤局面（手数・40/80手ルールそのまま、生成時は中盤にランダム手を混ぜて形を多様化）で「手番側が N 手以内に勝て、相手も最善で粘る」。勝ちの初手は1〜2通り、素直な手（いちばん大きく前進する手）では勝てないものだけ。多様性：同じ正解手は1テーマ2題まで、正解手＋陣地の空きマスが同じ問題は1題、同じ正解手は連続させない。テーマ7＝2手（白黒混合・8題、2手は形の種類が少ないため）、白番／黒番 × 3（やさしい）、4（ふつう）、5（むずかしい）、計144問。誤答は solver で即判定して戻し正解を表示。ヒント3段階、答えの再生あり。
 - コーチ（coach.js / coach-i18n.js 10言語）。
-- オンライン：Firebase ugolki-multiplay（firebase-config.js、App Check キー設定済み）、ルールは shared/tools/secrules.py の ugolki → ugolki/database.rules.json。
+- オンライン：Firebase はチェッカーのプロジェクト checkers-multiplay の節 ugolki/（2026-11-16 統合）、ルールは shared/tools/secrules.py の ugolki → checkers/database.rules.json。
 - 3D（ポータルのフル機能版）は未対応。ポータルのアイコンは atlas/icons3d.js の ugolki()（グジェリ盤と gzhelPiece）。
 
 ## 保存キー
