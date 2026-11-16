@@ -147,7 +147,7 @@
   }
   function pinHole(c, x, y, r) { const g = c.createRadialGradient(x, y + r * .3, 0, x, y, r); g.addColorStop(0, '#000'); g.addColorStop(.75, '#0b1030'); g.addColorStop(1, 'rgba(150,180,255,.35)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
 
-  const lacquer = () => mat('hbLacq', () => X.M({ color: '#10173c', roughness: .2, clearcoat: 1, clearcoatRoughness: .1, bump: false }));
+  const lacquer = () => mat('hbLacq', () => X.M({ color: '#10173c', roughness: .5, envMapIntensity: .45, bump: false }));
   const neonMat = (c, k) => mat('hbNeon' + c, () => { const m = new (T().MeshBasicMaterial)({ color: c, toneMapped: false }); m.color.convertSRGBToLinear(); if (k) m.color.multiplyScalar(k); return m; });
   // a rounded rectangle extruded (the board, the case, the lid)
   function rbox(w, d, h, r, bev) {
@@ -174,7 +174,7 @@
     const TT = T(), Lt = layout(cfg), g = new TT.Group(), BH = TOP;
     // the slab: lacquered body, the printed top, a neon tube round the top edge
     const body = X.mesh(geo('hbBody' + cfg.n + 'x' + cfg.rows, () => rbox(Lt.W, Lt.L, BH, .38, .08)), lacquer()); g.add(body);
-    const top = planeTop(Lt.W - .16, Lt.L - .16, mat('hbTopM' + cfg.n + 'x' + cfg.rows, () => X.M({ map: topTex(cfg, Lt), roughness: .26, clearcoat: .8, clearcoatRoughness: .14, bump: false })));
+    const top = planeTop(Lt.W - .16, Lt.L - .16, mat('hbTopM' + cfg.n + 'x' + cfg.rows, () => X.M({ map: topTex(cfg, Lt), roughness: .72, envMapIntensity: .3, bump: false })));   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
     top.position.y = BH + .002; top.receiveShadow = true; g.add(top);
     const rim = (() => {
       const w = Lt.W / 2 - .07, d = Lt.L / 2 - .07, r = .32, pts = [];
@@ -187,7 +187,7 @@
     // the case: a tray with the code's sockets, a lid on a hinge at its far edge
     const cw = Lt.caseW, cd = Lt.caseD - .2, ch = .34;
     const tray = new TT.Group(); tray.position.set(Lt.caseX, BH, Lt.caseZ); g.add(tray);
-    const shell = X.mesh(geo('hbCase' + cfg.n, () => rbox(cw, cd, ch, .22, .05)), mat('hbCaseM', () => X.M({ color: '#1a2150', roughness: .25, metalness: .35, clearcoat: 1, clearcoatRoughness: .12, bump: false })));
+    const shell = X.mesh(geo('hbCase' + cfg.n, () => rbox(cw, cd, ch, .22, .05)), mat('hbCaseM', () => X.M({ color: '#1a2150', roughness: .45, metalness: .25, envMapIntensity: .5, bump: false })));
     tray.add(shell);
     const velvet = planeTop(cw - .2, cd - .22, mat('hbVelvet', () => X.M({ color: '#2a0f3a', roughness: .95, sheen: 1, sheenColor: new (T().Color)('#a070ff'), bump: false })));
     velvet.position.y = ch + .003; tray.add(velvet);
@@ -202,11 +202,11 @@
     // the lid (pivot on the far edge of the case)
     const hinge = new TT.Group(); hinge.position.set(Lt.caseX, BH + ch, Lt.caseZ - cd / 2); g.add(hinge);
     const lidG = new TT.Group(); lidG.position.set(0, 0, cd / 2); hinge.add(lidG);
-    const lidM = mat('hbLidM', () => X.M({ color: '#2a3478', roughness: .22, metalness: .5, clearcoat: 1, clearcoatRoughness: .08, bump: false }));
+    const lidM = mat('hbLidM', () => X.M({ color: '#2a3478', roughness: .42, metalness: .3, envMapIntensity: .5, bump: false }));
     const lid = X.mesh(geo('hbLid' + cfg.n, () => rbox(cw + .14, cd + .14, .22, .26, .06)), lidM); lidG.add(lid);
     // the skirt: the lid comes down over the case like a cap (2026-11-16 user: ケースで覆い被さるように — no gap to see into from the side)
     const skirt = X.mesh(geo('hbSkirt' + cfg.n, () => rframe(cw + .14, cd + .14, .17, .26, .06)), lidM); skirt.position.y = -.16; lidG.add(skirt);
-    const lidFace = planeTop(cw - .16, cd - .16, mat('hbLidFace' + cfg.n, () => X.M({ map: lidTex(cfg.n, cw - .16, cd - .16), emissiveMap: lidTex(cfg.n, cw - .16, cd - .16), emissive: '#ffffff', emissiveIntensity: .55, roughness: .3, clearcoat: 1, clearcoatRoughness: .1, bump: false, transparent: false })));
+    const lidFace = planeTop(cw - .16, cd - .16, mat('hbLidFace' + cfg.n, () => X.M({ map: lidTex(cfg.n, cw - .16, cd - .16), emissiveMap: lidTex(cfg.n, cw - .16, cd - .16), emissive: '#ffffff', emissiveIntensity: .55, roughness: .6, envMapIntensity: .3, bump: false, transparent: false })));
     lidFace.material.emissive.set(0xffffff); lidFace.position.y = .224; lidG.add(lidFace);
     // the active row's glow (a soft bar under the row being filled) and the who-guessed lights
     const act = new TT.Mesh(geo('hbAct' + cfg.n, () => { const p = new TT.PlaneGeometry(cfg.n * PITCH + .2, ROWP - .1); p.rotateX(-Math.PI / 2); return p; }), mat('hbActM', () => new TT.MeshBasicMaterial({ color: 0x7df3d2, transparent: true, opacity: .14, depthWrite: false, toneMapped: false })));
@@ -249,8 +249,7 @@
       for (let i = 0; i < f.b; i++, k++) { const p = pin(false), [x, z] = U.pinPos(r, k); p.position.set(x, U.top + .03, z); g.add(p); }
       U.rowMark(r, r % 2);
     });
-    U.active(3);
-    return g;
+    return g;   // (no lit row on the showcase: only while playing, 2026-11-16 user)
   };
   X.hitblow = { board, gem, pin, layout, ICONS, STROKE, COLORS, DIGIT, HIT, BLOW, R, TOP, mix };
 })();
