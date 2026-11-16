@@ -810,7 +810,7 @@ function openGacha() {
     <div class="gacha">
       <h2>${t('gacha')}<small>GACHA</small></h2>
       <div class="gcoins">${icon('coin')}<b id="gCoins">${DB.coins.toLocaleString()}</b></div>
-      <div class="gstage" id="gStage">${gPickHTML()}<div class="gorb"></div><p class="grates">${t('charRates')} UR 1% ・ SSR 4% ・ SR 15% ・ R 35% ・ N 45%<br>${t('skillRates')} SSR 3% ・ SR 12% ・ R 30% ・ N 55%<br><small>${t('tenth')}</small></p></div>
+      <div class="gstage" id="gStage">${gPickHTML()}${gShrineHTML()}<p class="grates">${t('charRates')} UR 1% ・ SSR 4% ・ SR 15% ・ R 35% ・ N 45%<br>${t('skillRates')} SSR 3% ・ SR 12% ・ R 30% ・ N 55%<br><small>${t('tenth')}</small></p></div>
       <div class="gbtns">
         <button class="btn" data-n="1"><b>${esc(t('pull1', { n: '' }).replace(/[（(]\s*[）)]/, '').trim())}</b><small>${icon('coin')}${COST1}</small></button>
         <button class="btn gold" data-n="10"><b>${esc(t('pull10', { n: '' }).replace(/[（(]\s*[）)]/, '').trim())}</b><small>${icon('coin')}${COST10.toLocaleString()}</small></button>
@@ -840,12 +840,18 @@ function openGacha() {
     b.busy = false;
   });
 }
+// (2026-11-16, ユーザー「ガチャのページの画像はこの社に。引くときは派手に光らせて演出を」) the shrine of the 雀神 stands on the
+// gacha stage. A pull: the shrine trembles as light gathers in its doorway, rays burst out from it in the colour of the best
+// rarity drawn (N white, R blue, SR violet, SSR gold, UR every colour), sparks fly up, and a flash fills the stage — then the cards.
+function gShrineHTML(cls = '') {
+  return `<div class="gshrine ${cls}"><div class="gs-in"><img src="${ASSETS}shrine.webp" alt="" draggable="false"><i class="gs-glow"></i></div><i class="gs-rays"></i><i class="gs-spark"></i></div>`;
+}
 async function showPulls(got) {
   const st = $('#gStage');
   const best = got.reduce((a, g) => RANK_I(g.c.rarity) > RANK_I(a) ? g.c.rarity : a, 'N');
-  st.innerHTML = `<div class="gorb spin r-${best}"></div>`;
+  st.innerHTML = `${gShrineHTML('go r-' + best)}<i class="gs-flash r-${best}"></i>`;
   SND.gacha(best);
-  await sleep(1100);
+  await sleep(1650);
   st.innerHTML = `<div class="gcards n${got.length}">${got.map((g, i) => `
     <div class="gc frame fr-${g.c.rarity}" style="--d:${i * 110}ms;--c:${g.c.color};--c2:${g.c.color2}">
       <div class="gci"><img src="${charImg(g.c, 'bust')}" alt=""><i class="fx-sh"></i></div>

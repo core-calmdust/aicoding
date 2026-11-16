@@ -2658,3 +2658,54 @@ html.lp .modal:is(.settings,.reset) .mbox{padding:18px 22px 14px}
 html.lp .modal:is(.settings,.reset) h2{margin-bottom:12px;padding-bottom:8px}
 html.lp .modal.settings .cbtns{margin-top:10px;padding-top:10px}
 .modal.reset .cbtns .btn{border-radius:2px;font-family:var(--serif);letter-spacing:.14em}
+/* ---- the gacha's shrine (2026-11-16, ユーザー) ---- */
+.modal.gacham .gstage .gshrine{position:absolute;left:0;right:0;top:14px;bottom:70px;display:grid;place-items:center;pointer-events:none}
+.modal.gacham .gstage:has(.gpick) .gshrine{top:118px}
+html.lp .modal.gacham .gstage .gshrine{top:8px;bottom:46px}
+html.lp .modal.gacham .gstage:has(.gpick) .gshrine{top:82px}
+.gshrine .gs-in{position:absolute;inset:0}
+.gshrine img{position:absolute;inset:0;margin:auto;display:block;max-height:100%;max-width:92%;width:auto;height:auto;object-fit:contain;filter:drop-shadow(0 10px 24px rgba(0,0,0,.55)) drop-shadow(0 0 30px rgba(255,190,120,.12));animation:gsFloat 6s ease-in-out infinite}
+@keyframes gsFloat{50%{transform:translateY(-3px)}}
+/* the light of the doorway (the offering box sits at 50% / 76% of the picture) */
+.gshrine .gs-glow{position:absolute;left:50%;top:66%;width:34%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,236,190,.55),rgba(255,200,120,.18) 40%,transparent 70%);mix-blend-mode:screen;opacity:.55;animation:gsBreath 3.4s ease-in-out infinite}
+@keyframes gsBreath{50%{opacity:.85;transform:translate(-50%,-50%) scale(1.08)}}
+.gshrine .gs-rays,.gshrine .gs-spark{position:absolute;inset:0;pointer-events:none;opacity:0}
+/* a pull */
+.gshrine{--gc:#ffffff;--gc2:rgba(255,255,255,.45)}
+.gshrine.r-R{--gc:#8cc8ff;--gc2:rgba(110,180,255,.5)}
+.gshrine.r-SR{--gc:#d6a2ff;--gc2:rgba(190,120,255,.55)}
+.gshrine.r-SSR{--gc:#ffe08a;--gc2:rgba(255,200,70,.6)}
+.gshrine.r-UR{--gc:#ffffff;--gc2:rgba(255,160,230,.6)}
+.gshrine.go img{animation:gsShake .9s ease-in .05s both,gsLit 1.6s ease-in both}
+@keyframes gsShake{0%,100%{transform:none}10%{transform:translate(-1px,1px)}20%{transform:translate(2px,0)}30%{transform:translate(-2px,-1px)}40%{transform:translate(2px,1px)}50%{transform:translate(-3px,0)}60%{transform:translate(3px,-1px)}70%{transform:translate(-3px,1px)}80%{transform:translate(3px,0)}90%{transform:translate(-2px,0)}}
+@keyframes gsLit{0%{filter:drop-shadow(0 10px 24px rgba(0,0,0,.55)) brightness(1)}55%{filter:drop-shadow(0 0 26px var(--gc2)) brightness(1.15)}100%{filter:drop-shadow(0 0 60px var(--gc)) brightness(1.9) saturate(.8)}}
+.gshrine.go .gs-glow{animation:gsGather 1.6s cubic-bezier(.6,0,.4,1) both;background:radial-gradient(circle,#fff,var(--gc) 22%,var(--gc2) 45%,transparent 70%);opacity:1}
+@keyframes gsGather{0%{transform:translate(-50%,-50%) scale(.6);opacity:.4}55%{transform:translate(-50%,-50%) scale(1.3);opacity:1}100%{transform:translate(-50%,-50%) scale(7);opacity:1}}
+.gshrine.go .gs-rays{left:50%;top:calc(var(--gy, 62%));width:220%;aspect-ratio:1;inset:auto;transform:translate(-50%,-50%);border-radius:50%;
+  background:repeating-conic-gradient(from 0deg,transparent 0deg 7deg,var(--gc2) 9deg 11deg,transparent 13deg 22deg);
+  -webkit-mask-image:radial-gradient(circle,#000 8%,rgba(0,0,0,.6) 30%,transparent 62%);mask-image:radial-gradient(circle,#000 8%,rgba(0,0,0,.6) 30%,transparent 62%);
+  mix-blend-mode:screen;animation:gsRays 1.6s ease-out .35s both}
+@keyframes gsRays{0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.4)}35%{opacity:1}100%{opacity:1;transform:translate(-50%,-50%) rotate(40deg) scale(1.15)}}
+.gshrine.go .gs-spark{background:
+    radial-gradient(2px 2px at 20% 80%,var(--gc),transparent),radial-gradient(2px 2px at 35% 70%,#fff,transparent),radial-gradient(3px 3px at 48% 85%,var(--gc),transparent),
+    radial-gradient(2px 2px at 60% 75%,#fff,transparent),radial-gradient(3px 3px at 72% 82%,var(--gc),transparent),radial-gradient(2px 2px at 82% 72%,#fff,transparent),
+    radial-gradient(2px 2px at 28% 92%,#fff,transparent),radial-gradient(3px 3px at 66% 94%,var(--gc),transparent),radial-gradient(2px 2px at 54% 66%,#fff,transparent);
+  animation:gsSpark 1.4s ease-out .3s both}
+@keyframes gsSpark{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(-55%)}}
+.gshrine.go.r-UR .gs-rays,.gshrine.go.r-UR .gs-glow{filter:hue-rotate(0deg);animation-name:gsRays,gsHue;animation-duration:1.6s,1.2s;animation-iteration-count:1,infinite;animation-timing-function:ease-out,linear}
+.gshrine.go.r-UR .gs-glow{animation-name:gsGather,gsHue;animation-timing-function:cubic-bezier(.6,0,.4,1),linear;animation-delay:0s,0s}
+.gshrine.go.r-UR .gs-rays{background:repeating-conic-gradient(from 0deg,transparent 0deg 7deg,rgba(255,120,200,.6) 9deg 11deg,transparent 13deg 22deg,rgba(120,200,255,.6) 31deg 33deg,transparent 35deg 44deg)}
+@keyframes gsHue{to{filter:hue-rotate(360deg)}}
+.gstage .gs-flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 62%,#fff,rgba(255,255,255,.9) 35%,rgba(255,255,255,.6));animation:gsFlash 1.65s ease-in both;z-index:3}
+.gstage .gs-flash.r-SSR{background:radial-gradient(circle at 50% 62%,#fff,#fff3c8 35%,rgba(255,220,140,.7))}
+.gstage .gs-flash.r-UR{background:radial-gradient(circle at 50% 62%,#fff,#ffe6fa 35%,rgba(200,230,255,.75))}
+@keyframes gsFlash{0%,78%{opacity:0}92%{opacity:1}100%{opacity:1}}
+/* the cards come out of the light: the flash fades over them */
+.gstage .gcards{animation:gsAfter .5s ease-out both}
+@keyframes gsAfter{from{filter:brightness(2.2)}}
+html.lite .gshrine img,html.lite .gshrine .gs-glow{animation:none}
+html.lite .gshrine.go .gs-rays,html.lite .gshrine.go .gs-spark{display:none}
+html:not(.lp) .modal.gacham .gstage:has(.gshrine){min-height:min(440px, calc(100vh - 330px))}
+html.lp .modal.gacham .gstage:has(.gshrine){min-height:0}
+.gshrine .gs-glow{width:calc(var(--gw, 100%) * .34)}
