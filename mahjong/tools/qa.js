@@ -139,9 +139,16 @@ async function runtime() {
       ok(`${lang}: no page errors (home)`, !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); } }
 
   if (want('jiggle')) { console.log('[jiggle] a tap on her picture wobbles, then the picture is back');
-    const p = await page(PC); const bb = await (await p.$('#pImg img')).boundingBox(); await p.mouse.click(bb.x + bb.width * .5, bb.y + bb.height * .3); await p.waitForTimeout(80);
+    const p = await page(PC); await p.evaluate(`(()=>{window.__pk=[];const o=MJJiggle.poke;MJJiggle.poke=(...a)=>{__pk.push(a.slice(1));return o(...a)}})()`);
+    const bb = await (await p.$('#pImg img')).boundingBox(); await p.mouse.click(bb.x + bb.width * .5, bb.y + bb.height * .3); await p.waitForTimeout(80);
     const on = await p.evaluate(`[document.querySelector('#pImg img').style.visibility, getComputedStyle(document.querySelector('#pImg .jig')||document.body).display]`);
     await p.waitForTimeout(1600); const off = await p.evaluate(`[document.querySelector('#pImg img').style.visibility, getComputedStyle(document.querySelector('#pImg .jig')).display]`);
+    // (2026-11-16, ユーザー「該当するエリア以外はぷるんしないように」) a touch on a place passes that place's ellipse: the wobble stays in it
+    const pk = await p.evaluate(`(()=>{const id=JANKA.DB.sel,z=MJTouch.zones[id].find(z=>z[0]==='m');const r=document.querySelector('#pImg img').getBoundingClientRect(),k=Math.max(r.width/1080,r.height/1920),w=1080*k;
+      return [z, r.left+(r.width-w)/2+z[1]*w, r.top+z[2]*1920*k]})()`);
+    await p.waitForTimeout(1300); await p.mouse.click(pk[1], pk[2]); await p.waitForTimeout(80);
+    const last = await p.evaluate('__pk[__pk.length-1]');
+    ok('wobble: the touched place (lips) is passed to the wobble', !!(last && last[3] && last[3][0] === 'm'), JSON.stringify(last));
     ok('the canvas takes over while it wobbles, the picture comes back', on[0] === 'hidden' && on[1] === 'block' && off[0] === '' && off[1] === 'none', on + ' → ' + off);
     // (2026-11-16) the character screen's picture can be touched as well: a line in its bubble and the wobble
     await p.evaluate(`document.querySelector('#btnColl').click()`); await p.waitForTimeout(1200);

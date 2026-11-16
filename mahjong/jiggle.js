@@ -5,13 +5,15 @@
 (function () {
 'use strict';
 const VS = 'attribute vec2 p;varying vec2 q;void main(){q=p*.5+.5;q.y=1.-q.y;gl_Position=vec4(p,0.,1.);}';
-const FS = `precision highp float;varying vec2 q;uniform sampler2D T;uniform vec2 S;uniform vec2 I;uniform vec4 J[4];uniform vec4 K[4];
+const FS = `precision highp float;varying vec2 q;uniform sampler2D T;uniform vec2 S;uniform vec2 I;uniform vec4 J[4];uniform vec4 K[4];uniform vec4 M[4];
 void main(){
   float k=max(S.x/I.x,S.y/I.y);vec2 iw=I*k;vec2 px=q*S;
   vec2 uv=vec2((px.x-(S.x-iw.x)*.5)/iw.x,px.y/iw.y);
   vec2 asp=vec2(1.,I.y/I.x);vec2 o=vec2(0.);
   for(int i=0;i<4;i++){ vec4 j=J[i]; if(j.w<=0.)continue;
     vec2 d=(uv-j.xy)*asp; float r=j.z; float f=exp(-dot(d,d)/(r*r));
+    // (2026-11-16, ユーザー「該当するエリア以外はぷるんしないように」) only inside the touched place: its ellipse, soft at the edge
+    vec4 m=M[i]; vec2 e=(uv-m.xy)/m.zw; f*=1.-smoothstep(.55,1.,length(e));
     // K: x = radial (− pinch / + bulge), y = vertical bounce, z = sideways sway
     o+= -d/asp*f*K[i].x + vec2(K[i].z, K[i].y)*f*r; }
   uv+=o;
@@ -29,7 +31,7 @@ function setup() {
   gl.useProgram(prog);
   const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
   const pl = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(pl); gl.vertexAttribPointer(pl, 2, gl.FLOAT, false, 0, 0);
-  for (const n of ['T', 'S', 'I', 'J', 'K']) loc[n] = gl.getUniformLocation(prog, n);
+  for (const n of ['T', 'S', 'I', 'J', 'K', 'M']) loc[n] = gl.getUniformLocation(prog, n);
   tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.mip = GL2;   // (WebGL 2: mipmaps for a picture drawn much smaller than its file — as sharp as the <img>)
   for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, GL2 ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
@@ -45,16 +47,17 @@ function draw(now) {
   const W = cv.width, H = cv.height;
   hits = hits.filter(h => now - h.t0 < 1000);
   if (!hits.length) return stop();
-  const J = new Float32Array(16), K = new Float32Array(16);
-  hits.slice(-4).forEach((h, i) => { const s = shape((now - h.t0) / 1000), a = h.a; J.set([h.u, h.v, h.r, 1], i * 4); K.set([s[0] * a, s[1] * a, s[2] * a, 0], i * 4); });
+  const J = new Float32Array(16), K = new Float32Array(16), M = new Float32Array(16);
+  hits.slice(-4).forEach((h, i) => { const s = shape((now - h.t0) / 1000), a = h.a; J.set([h.u, h.v, h.r, 1], i * 4); K.set([s[0] * a, s[1] * a, s[2] * a, 0], i * 4); M.set(h.m, i * 4); });
   gl.viewport(0, 0, W, H); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
   gl.uniform1i(loc.T, 0); gl.uniform2f(loc.S, W, H); gl.uniform2f(loc.I, img.naturalWidth || 1080, img.naturalHeight || 1920);
-  gl.uniform4fv(loc.J, J); gl.uniform4fv(loc.K, K); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  gl.uniform4fv(loc.J, J); gl.uniform4fv(loc.K, K); gl.uniform4fv(loc.M, M); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   raf = requestAnimationFrame(draw);
 }
 function stop() { cancelAnimationFrame(raf); raf = 0; hits = []; if (hostImg) hostImg.style.visibility = ''; if (cv) cv.style.display = 'none'; }
 // u, v: the touched point on the picture (0–1 of its own width and height); img: the <img> of the picture
-function poke(img, u, v, amp = 1) {
+// z: the touched place's ellipse [kind, cx, cy, rx, ry] (touch.js) — the wobble stays inside it; none: a small spot round the point
+function poke(img, u, v, amp = 1, z) {
   if (!img || !img.complete || !img.naturalWidth || u < 0 || u > 1 || v < 0 || v > 1) return;
   if (!cv && !setup()) return;
   const host = img.parentNode; if (cv.parentNode !== host) host.appendChild(cv);
@@ -62,7 +65,8 @@ function poke(img, u, v, amp = 1) {
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
   if (texSrc !== img.currentSrc) { try { gl.bindTexture(gl.TEXTURE_2D, tex); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img); if (gl.mip) gl.generateMipmap(gl.TEXTURE_2D); texSrc = img.currentSrc; } catch (e) { return; } }
   hostImg = img;
-  hits.push({ u, v, r: .085, a: amp, t0: performance.now() });
+  const m = z ? [z[1], z[2], z[3], z[4]] : [u, v, .045, .045 * 1080 / 1920];
+  hits.push({ u, v, r: Math.min(.085, Math.max(.03, Math.min(m[2], m[3] * 1920 / 1080) * 1.1)), a: amp, m, t0: performance.now() });
   if (!raf) {
     // the canvas takes the picture's place: the same breathing, at the same moment of it
     cv.style.display = 'block';
