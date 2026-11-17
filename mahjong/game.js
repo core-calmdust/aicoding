@@ -435,10 +435,14 @@ class MJGame {
     const answers = new Array(opts.length).fill(null);
     const isBot = i => !this.agents[opts[i].seat].interactive;
     await Promise.all(opts.map((o, i) => isBot(i) ? this.agents[o.seat].react(this, o.seat, o).then(a => { answers[i] = a; }) : null));
-    const botRon = opts.some((o, i) => isBot(i) && o.canRon && answers[i] && answers[i].act === 'ron');
+    // (2026-11-18, ユーザー「二人同時に（手番順に）ロンしてしまう」) 頭ハネ: only the first ron after the discarder wins, so the player is
+    // asked for a ron only when they sit before every BOT that rons
+    const ord = q => (q - from + 4) % 4;
+    const botRons = opts.filter((o, i) => isBot(i) && o.canRon && answers[i] && answers[i].act === 'ron').map(o => ord(o.seat));
+    const botRon = botRons.length > 0, botFirst = botRon ? Math.min(...botRons) : 9;
     await Promise.all(opts.map((o, i) => {
       if (isBot(i)) return null;
-      if (botRon) return o.canRon ? this.agents[o.seat].react(this, o.seat, { seat: o.seat, tile: o.tile, from: o.from, canRon: true, ronRes: o.ronRes }).then(a => { answers[i] = a; }) : null;
+      if (botRon) return o.canRon && ord(o.seat) < botFirst ? this.agents[o.seat].react(this, o.seat, { seat: o.seat, tile: o.tile, from: o.from, canRon: true, ronRes: o.ronRes }).then(a => { answers[i] = a; }) : null;
       return this.agents[o.seat].react(this, o.seat, o).then(a => { answers[i] = a; });
     }));
     // ron(s)
@@ -449,8 +453,8 @@ class MJGame {
     });
     if (rons.length === 3) { await this.abort('sanchahou'); return { end: true }; }
     if (rons.length) {
-      rons.sort((a, b) => ((a - from + 4) % 4) - ((b - from + 4) % 4));
-      await this.agari(rons, from, false, { ronId: id });
+      rons.sort((a, b) => ord(a) - ord(b));
+      await this.agari(rons.slice(0, 1), from, false, { ronId: id });   // 頭ハネ (no double ron)
       return { end: true };
     }
     this.settleRiichi(from);
@@ -538,7 +542,8 @@ class MJGame {
       const ans = await Promise.all(opts.map(o => this.agents[o.seat].react(this, o.seat, o)));
       const rons = opts.filter((o, i) => ans[i] && ans[i].act === 'ron').map(o => o.seat);
       opts.forEach((o, i) => { if (!(ans[i] && ans[i].act === 'ron')) { this.P[o.seat].furitenTemp = true; if (this.P[o.seat].riichi) this.P[o.seat].furitenRiichi = true; } });
-      if (rons.length) { await this.agari(rons, s, false, { ronId: id, chankan: true }); return { end: true }; }
+      rons.sort((a, b) => ((a - s + 4) % 4) - ((b - s + 4) % 4));   // 頭ハネ for a chankan too (2026-11-18)
+      if (rons.length) { await this.agari(rons.slice(0, 1), s, false, { ronId: id, chankan: true }); return { end: true }; }
     }
     p.hand.splice(p.hand.indexOf(id), 1);
     const m = p.melds.find(m => m.type === 'pon' && m.t === t);
