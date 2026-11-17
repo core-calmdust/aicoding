@@ -75,28 +75,28 @@
   // the cabochon: a low dome (lathe) whose UVs are projected from above — the picture sits flat on its face
   function domeGeo() {
     return geo('hbDome', () => {
-      const TT = T(), pts = [], n = LO() ? 10 : 16, H = R * .82;
+      const TT = T(), pts = [], n = LO() ? 7 : 10, H = R * .82;
       for (let i = 0; i <= n; i++) { const a = i / n * Math.PI / 2; pts.push(new TT.Vector2(Math.cos(a) * R, Math.sin(a) * H)); }
       pts.unshift(new TT.Vector2(R * .9, -R * .14)); pts.unshift(new TT.Vector2(0.001, -R * .14));   // (bottom → top: the faces look outward)
-      const gl = new TT.LatheGeometry(pts, LO() ? 24 : 40), P = gl.attributes.position, uv = gl.attributes.uv;
+      const gl = new TT.LatheGeometry(pts, LO() ? 20 : 28), P = gl.attributes.position, uv = gl.attributes.uv;
       for (let i = 0; i < P.count; i++) uv.setXY(i, .5 + P.getX(i) / (2 * R) * .98, .5 - P.getZ(i) / (2 * R) * .98);
       uv.needsUpdate = true; gl.computeVertexNormals(); return gl;
     });
   }
   function gem(kind, v) {
     const TT = T(), g = new TT.Group();
-    const d = X.mesh(domeGeo(), gemMat(kind, v)); d.castShadow = true; d.receiveShadow = false; g.add(d);
+    const d = X.mesh(domeGeo(), gemMat(kind, v)); d.castShadow = true; d.receiveShadow = false; d.renderOrder = 3; g.add(d);   // (after the wells: it sits down in one)
     // a sharp highlight (a small bright cap off the top)
-    const hl = new TT.Mesh(geo('hbHl', () => { const s = new TT.SphereGeometry(R * .2, 12, 8); s.scale(1, .45, .8); return s; }), mat('hbHlM', () => new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .55, depthWrite: false })));
-    hl.position.set(-R * .34, R * .66, -R * .3); g.add(hl);
+    const hl = new TT.Mesh(geo('hbHl', () => { const s = new TT.SphereGeometry(R * .2, 8, 5); s.scale(1, .45, .8); return s; }), mat('hbHlM', () => new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .55, depthWrite: false })));
+    hl.position.set(-R * .34, R * .66, -R * .3); hl.renderOrder = 3; g.add(hl);
     g.userData = { kind, v, h: R * .82 };
     return g;
   }
   function pin(hit) {
     const TT = T();
-    const m = X.mesh(geo('hbPin', () => { const s = new TT.SphereGeometry(PIN, LO() ? 12 : 18, LO() ? 8 : 12); s.scale(1, .8, 1); return s; }),
+    const m = X.mesh(geo('hbPin', () => { const s = new TT.SphereGeometry(PIN, LO() ? 10 : 12, LO() ? 6 : 8); s.scale(1, .8, 1); return s; }),
       mat('hbPin' + (hit ? 'h' : 'b'), () => { const c = hit ? HIT : BLOW, m = X.M({ color: c, roughness: .4, envMapIntensity: .3, emissive: c, emissiveIntensity: hit ? .75 : .32 }); m.emissive.convertSRGBToLinear(); return m; }));
-    m.castShadow = false; return m;
+    m.castShadow = false; m.renderOrder = 3; return m;
   }
 
   /* ---------- the board ---------- */
@@ -150,6 +150,31 @@
   }
   function pinHole(c, x, y, r) { const g = c.createRadialGradient(x, y + r * .3, 0, x, y, r); g.addColorStop(0, '#000'); g.addColorStop(.75, '#0b1030'); g.addColorStop(1, 'rgba(150,180,255,.35)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
 
+  // the wells (2026-11-17 user: ボールやピンが入る穴を穴っぽく): the printed top keeps its holes, and a well is drawn into each one —
+  // a disc at the surface marks the hole in the stencil (only where nothing stands in front of it), then the well's inside
+  // (a dark frustum seen from within: its back faces) is painted there whatever the top's depth, so it reads as a real hole
+  // and a gem or a pin sits down in it. Two draw calls for all of them once the table merges the static meshes.
+  const SREF = 3;
+  const wellTex = () => X.canvasTex('hbWellT', 4, 64, (c, W, H) => { H = H || 64; const g = c.createLinearGradient(0, H, 0, 0); g.addColorStop(0, '#04071c'); g.addColorStop(.3, '#060a26'); g.addColorStop(.7, '#121b52'); g.addColorStop(1, '#34449a'); c.fillStyle = g; c.fillRect(0, 0, W, H); });
+  const wellMat = () => mat('hbWellM', () => { const TT = T(); return new TT.MeshBasicMaterial({ map: wellTex(), side: TT.BackSide, depthFunc: TT.AlwaysDepth, depthWrite: true,
+    stencilWrite: true, stencilRef: SREF, stencilFunc: TT.EqualStencilFunc, stencilZPass: TT.KeepStencilOp, stencilFail: TT.KeepStencilOp, stencilZFail: TT.KeepStencilOp }); });
+  const maskMat = () => mat('hbWellMask', () => { const TT = T(); return new TT.MeshBasicMaterial({ colorWrite: false, depthWrite: false,
+    stencilWrite: true, stencilRef: SREF, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp }); });
+  function wellGeo(r, d) {
+    return geo('hbWell' + r.toFixed(3) + 'd' + d, () => {
+      // a bowl: a small flat floor, the wall curving up to the rim — from above the wall shows as a ring growing lighter to the lip
+      const TT = T(), pts = [new TT.Vector2(.001, -d)];   // (bottom → top: outward faces)
+      for (let i = 0; i <= 4; i++) { const a = i / 4 * Math.PI / 2; pts.push(new TT.Vector2(r * (.45 + .55 * Math.sin(a)), -d * Math.cos(a))); }
+      return new TT.LatheGeometry(pts, LO() ? 16 : 22);
+    });
+  }
+  function well(parent, x, y, z, r, d) {
+    const TT = T();
+    const m = new TT.Mesh(geo('hbMask' + r.toFixed(3), () => { const c = new TT.CircleGeometry(r, LO() ? 16 : 22); c.rotateX(-Math.PI / 2); return c; }), maskMat());
+    m.position.set(x, y + .003, z); m.renderOrder = 1; parent.add(m);
+    const w = new TT.Mesh(wellGeo(r, d), wellMat()); w.position.set(x, y + .002, z); w.renderOrder = 2; parent.add(w);
+  }
+
   const lacquer = () => mat('hbLacq', () => X.M({ color: '#10173c', roughness: .7, envMapIntensity: .2, bump: false }));
   const neonMat = (c, k) => mat('hbNeon' + c, () => { const m = new (T().MeshBasicMaterial)({ color: c, toneMapped: false }); m.color.convertSRGBToLinear(); if (k) m.color.multiplyScalar(k); return m; });
   // a rounded rectangle extruded (the board, the case, the lid)
@@ -157,7 +182,7 @@
     const TT = T(), s = new TT.Shape(), x = -w / 2, z = -d / 2;
     s.moveTo(x + r, z); s.lineTo(x + w - r, z); s.quadraticCurveTo(x + w, z, x + w, z + r); s.lineTo(x + w, z + d - r); s.quadraticCurveTo(x + w, z + d, x + w - r, z + d); s.lineTo(x + r, z + d); s.quadraticCurveTo(x, z + d, x, z + d - r); s.lineTo(x, z + r); s.quadraticCurveTo(x, z, x + r, z);
     const b = bev == null ? Math.min(.06, h * .3) : bev;
-    const ex = new TT.ExtrudeGeometry(s, { depth: Math.max(.001, h - 2 * b), bevelEnabled: b > 0, bevelThickness: b, bevelSize: b, bevelSegments: LO() ? 2 : 3, curveSegments: LO() ? 5 : 8 });
+    const ex = new TT.ExtrudeGeometry(s, { depth: Math.max(.001, h - 2 * b), bevelEnabled: b > 0, bevelThickness: b, bevelSize: b, bevelSegments: 2, curveSegments: LO() ? 4 : 6 });
     ex.rotateX(-Math.PI / 2); ex.translate(0, b, 0);   // (no mirroring: a mirrored solid turns its faces inside out — the sides flickered with self-shadow, 2026-11-16)
     return ex;
   }
@@ -166,7 +191,7 @@
     const TT = T(), rr2 = (x, z, w, d, r, s) => { s.moveTo(x + r, z); s.lineTo(x + w - r, z); s.quadraticCurveTo(x + w, z, x + w, z + r); s.lineTo(x + w, z + d - r); s.quadraticCurveTo(x + w, z + d, x + w - r, z + d); s.lineTo(x + r, z + d); s.quadraticCurveTo(x, z + d, x, z + d - r); s.lineTo(x, z + r); s.quadraticCurveTo(x, z, x + r, z); return s; };
     const s = rr2(-w / 2, -d / 2, w, d, r, new TT.Shape()), hole = rr2(-w / 2 + t, -d / 2 + t, w - 2 * t, d - 2 * t, Math.max(.02, r - t), new TT.Path());
     s.holes.push(hole);
-    const ex = new TT.ExtrudeGeometry(s, { depth: h, bevelEnabled: false, curveSegments: LO() ? 5 : 8 }); ex.rotateX(-Math.PI / 2); return ex;
+    const ex = new TT.ExtrudeGeometry(s, { depth: h, bevelEnabled: false, curveSegments: LO() ? 4 : 6 }); ex.rotateX(-Math.PI / 2); return ex;
   }
   function planeTop(w, d, map) {
     const TT = T(), p = new TT.PlaneGeometry(w, d); p.rotateX(-Math.PI / 2);
@@ -179,10 +204,12 @@
     const body = X.mesh(geo('hbBody' + cfg.n + 'x' + cfg.rows, () => rbox(Lt.W, Lt.L, BH, .38, .08)), lacquer()); g.add(body);
     const top = planeTop(Lt.W - .16, Lt.L - .16, mat('hbTopM' + cfg.n + 'x' + cfg.rows, () => (() => { const tt = topTex(cfg, Lt), m = X.M({ map: tt, emissiveMap: tt, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; })()));   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
     top.position.y = BH + .002; top.receiveShadow = true; g.add(top);
+    const pr = Lt.n > 4 ? .1 : .11;
+    for (let r = 0; r < Lt.rows; r++) { for (let k = 0; k < Lt.n; k++) { const [x, z] = Lt.slot(r, k); well(g, x, BH, z, R + .03, .16); const [px, pz] = Lt.pinPos(r, k); well(g, px, BH, pz, pr * .92, .08); } }
     const rim = (() => {
       const w = Lt.W / 2 - .07, d = Lt.L / 2 - .07, r = .31, pts = [];
       rimPts(pts, w, d, r);
-      const t = new TT.Mesh(geo('hbRim' + cfg.n + 'x' + cfg.rows, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length * 2, LO() ? 300 : 600), .028, 6, true)), neonMat('#7fa2ff', 1.5));
+      const t = new TT.Mesh(geo('hbRim' + cfg.n + 'x' + cfg.rows, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length, LO() ? 160 : 260), .028, 5, true)), neonMat('#7fa2ff', 1.5));
       t.position.y = BH + .01; return t;
     })();
     g.add(rim);
@@ -196,7 +223,7 @@
     const caseSlots = [];
     for (let k = 0; k < cfg.n; k++) {
       const x = (k + .5 - cfg.n / 2) * PITCH;
-      const cup = X.mesh(geo('hbCup', () => { const c = new TT.CircleGeometry(R + .06, 28); c.rotateX(-Math.PI / 2); return c; }), mat('hbCupM', () => new TT.MeshBasicMaterial({ color: 0x07040e, transparent: true, opacity: .75, depthWrite: false })));
+      const cup = X.mesh(geo('hbCup', () => { const c = new TT.CircleGeometry(R + .06, 20); c.rotateX(-Math.PI / 2); return c; }), mat('hbCupM', () => new TT.MeshBasicMaterial({ color: 0x07040e, transparent: true, opacity: .75, depthWrite: false })));
       cup.position.set(x, ch + .006, 0); cup.renderOrder = 1; tray.add(cup);
       caseSlots.push([Lt.caseX + x, BH + ch - R * .36, Lt.caseZ]);   // (low enough to stay inside the closed lid)
     }
@@ -218,7 +245,7 @@
       if (marks[r]) { g.remove(marks[r]); marks[r] = null; }
       if (who == null) return;
       const c = who === 0 ? '#7df3d2' : who === 1 ? '#ff7ac8' : '#8f98c8';
-      const m = new TT.Mesh(geo('hbMark', () => new TT.CylinderGeometry(.07, .07, .03, 16)), neonMat(c, 1.2));
+      const m = new TT.Mesh(geo('hbMark', () => new TT.CylinderGeometry(.07, .07, .03, 12)), neonMat(c, 1.2));
       m.position.set(Lt.labX - .26, BH + .02, Lt.z0 + (r + .5) * ROWP); g.add(m); marks[r] = m;
     };
     g.userData = { cfg, rows: cfg.rows, slot: Lt.slot, pinPos: Lt.pinPos, caseSlot: k => caseSlots[k], lid: hinge, rowZ: r => Lt.z0 + (r + .5) * ROWP, rowMark,
@@ -232,8 +259,8 @@
   // the neon line round a rounded slab (2026-11-17 user: 青いラインをボードの形状と同様に角丸に): the corners are true quarter circles
   // (24 steps each) and the straight sides are sampled densely too, so the spline neither cuts the corners nor bulges on the sides
   function rimPts(pts, w, d, r) {
-    const V = (x, z) => pts.push(new (T().Vector3)(x, 0, z)), side = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.ceil(L / .12)); for (let i = 1; i < n; i++) V(x0 + (x1 - x0) * i / n, z0 + (z1 - z0) * i / n); };
-    const arc = (cx, cz, a0) => { for (let i = 0; i <= 24; i++) { const a = a0 + i / 24 * Math.PI / 2; V(cx + Math.cos(a) * r, cz + Math.sin(a) * r); } };
+    const V = (x, z) => pts.push(new (T().Vector3)(x, 0, z)), side = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.ceil(L / .3)); for (let i = 1; i < n; i++) V(x0 + (x1 - x0) * i / n, z0 + (z1 - z0) * i / n); };
+    const arc = (cx, cz, a0) => { for (let i = 0; i <= 12; i++) { const a = a0 + i / 12 * Math.PI / 2; V(cx + Math.cos(a) * r, cz + Math.sin(a) * r); } };
     arc(w - r, d - r, 0); side(w - r, d, -w + r, d); arc(-w + r, d - r, Math.PI / 2); side(-w, d - r, -w, -d + r);
     arc(-w + r, -d + r, Math.PI); side(-w + r, -d, w - r, -d); arc(w - r, -d + r, Math.PI * 1.5); side(w, -d + r, w, d - r);
   }
@@ -261,9 +288,10 @@
     const body = X.mesh(geo('hbTrayB' + n + 'c' + C, () => rbox(Lt.W, D, BH, .38, .08)), lacquer()); body.position.z = zc; g.add(body);
     const top = planeTop(Lt.W - .16, D - .16, mat('hbTrayT' + n + 'c' + C, () => { const m = X.M({ map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; }));
     top.position.set(0, BH + .002, zc); g.add(top);
+    for (let k = 0; k < n; k++) { const [x, z] = sock(k); well(g, x, BH, z, R + .03, .16); }
     const rim = (() => { const w = Lt.W / 2 - .07, d = D / 2 - .07, r = .31, pts = [];
       rimPts(pts, w, d, r);
-      const t = new TT.Mesh(geo('hbTrayRim' + n + 'c' + C, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length * 2, LO() ? 300 : 600), .028, 6, true)), neonMat('#7fa2ff', 1.5)); t.position.set(0, BH + .01, zc); return t; })();
+      const t = new TT.Mesh(geo('hbTrayRim' + n + 'c' + C, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length, LO() ? 160 : 260), .028, 5, true)), neonMat('#7fa2ff', 1.5)); t.position.set(0, BH + .01, zc); return t; })();
     g.add(rim);
     // OK: a raised key with its label (lit mint when the row is full)
     const okTex = on => X.canvasTex('hbOk' + (on ? 1 : 0), 160, 134, (c, W, H) => {
@@ -278,7 +306,7 @@
     const okGlow = new TT.Mesh(geo('hbOkGl', () => { const p = new TT.PlaneGeometry(okW + .3, okD + .3); p.rotateX(-Math.PI / 2); return p; }), mat('hbOkGlM', () => new TT.MeshBasicMaterial({ color: 0x7df3d2, transparent: true, opacity: .22, depthWrite: false, toneMapped: false })));
     okGlow.position.y = .004; okGlow.visible = false; okGlow.renderOrder = 1; okG.add(okGlow);
     // the cursor: a mint ring round the socket a gem goes into
-    const ring = new TT.Mesh(geo('hbCur', () => { const r = new TT.RingGeometry(R + .08, R + .15, 40); r.rotateX(-Math.PI / 2); return r; }), neonMat('#7df3d2', 1.6)); ring.position.y = BH + .012; ring.visible = false; g.add(ring);
+    const ring = new TT.Mesh(geo('hbCur', () => { const r = new TT.RingGeometry(R + .08, R + .15, 32); r.rotateX(-Math.PI / 2); return r; }), neonMat('#7df3d2', 1.6)); ring.position.y = BH + .012; ring.visible = false; g.add(ring);
     // the palette gems (their own materials: a used colour dims)
     const pgs = [];
     for (let v = 0; v < C; v++) { const m = gem(cfg.kind, v), [x, z] = pal(v); m.position.set(x, BH + .02, z); m.scale.setScalar(gemS); m.userData.pv = v;
@@ -317,8 +345,8 @@
     rows.forEach((code, r) => {
       code.forEach((v, k) => { const m = gem('color', v), [x, z] = U.slot(r, k); m.position.set(x, U.top - R * .12, z); g.add(m); });
       const f = E.feedback(secret, code); let k = 0;
-      for (let i = 0; i < f.h; i++, k++) { const p = pin(true), [x, z] = U.pinPos(r, k); p.position.set(x, U.top + .03, z); g.add(p); }
-      for (let i = 0; i < f.b; i++, k++) { const p = pin(false), [x, z] = U.pinPos(r, k); p.position.set(x, U.top + .03, z); g.add(p); }
+      for (let i = 0; i < f.h; i++, k++) { const p = pin(true), [x, z] = U.pinPos(r, k); p.position.set(x, U.top + .01, z); g.add(p); }
+      for (let i = 0; i < f.b; i++, k++) { const p = pin(false), [x, z] = U.pinPos(r, k); p.position.set(x, U.top + .01, z); g.add(p); }
       U.rowMark(r, r % 2);
     });
     return g;   // (no lit row on the showcase: only while playing, 2026-11-16 user)
