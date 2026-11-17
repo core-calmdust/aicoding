@@ -83,13 +83,92 @@
       uv.needsUpdate = true; gl.computeVertexNormals(); return gl;
     });
   }
-  function gem(kind, v) {
-    const TT = T(), g = new TT.Group();
-    const d = X.mesh(domeGeo(), gemMat(kind, v)); d.castShadow = true; d.receiveShadow = false; g.add(d);
-    // a sharp highlight (a small bright cap off the top)
-    const hl = new TT.Mesh(geo('hbHl', () => { const s = new TT.SphereGeometry(R * .2, 6, 4); s.scale(1, .45, .8); return s; }), mat('hbHlM', () => new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .55, depthWrite: false })));
-    hl.position.set(-R * .34, R * .66, -R * .3); g.add(hl);
-    g.userData = { kind, v, h: R * .82 };
+  /* ---------- the pieces of each board (2026-11-17 user: 駒もそれぞれに合ったものを) — the colours and the pictures stay
+     (they are the code), the thing they are made of changes: midnight · glass cabochons; casino · poker chips; doodle · matte
+     clay buttons with a felt-pen picture; fruit · a fruit for each colour with a sticker on it; cipher · typewriter keys with
+     a brass rim; vault · anodised metal knobs on a chrome collar. All sit in the same holes (base at y = −0.14 R). */
+  const colOf = (kind, v) => kind === 'num' ? DIGIT[v] : COLORS[v];
+  function icon(c, W, kind, v, o) {   // the picture (or the digit) at the face's centre: o = { fill, edge, ew, glow, k (size), dx, dy }
+    c.save(); c.translate(W / 2 + (o.dx || 0) * W, W / 2 + (o.dy || 0) * W);
+    if (kind === 'num') {
+      c.font = `800 ${W * .62 * (o.k || 1)}px "Outfit", "Zen Kaku Gothic New", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+      if (o.edge) { c.strokeStyle = o.edge; c.lineWidth = W * (o.ew || .07); c.strokeText(String(v), 0, W * .03 * (o.k || 1)); }
+      if (o.glow) { c.shadowColor = o.glow; c.shadowBlur = W * .03; } c.fillStyle = o.fill; c.fillText(String(v), 0, W * .03 * (o.k || 1));
+    } else {
+      const sc = W * .6 * (o.k || 1) / 24; c.scale(sc, sc); c.translate(-12, -12.2); const p = new Path2D(ICONS[v]); c.lineJoin = c.lineCap = 'round';
+      if (o.edge) { c.strokeStyle = o.edge; c.lineWidth = (o.ew || .1) * 26; c.stroke(p); }
+      if (o.glow) { c.shadowColor = o.glow; c.shadowBlur = 8; }
+      if (STROKE[v]) { c.strokeStyle = o.fill; c.lineWidth = 2; c.globalAlpha = .35; c.fillStyle = o.fill; c.fill(p); c.globalAlpha = 1; c.stroke(p); } else { c.fillStyle = o.fill; c.fill(p); }
+    }
+    c.restore();
+  }
+  const FACE = {
+    casino(c, W, kind, v) { const col = colOf(kind, v); c.fillStyle = mix(col, '#000000', .12); c.fillRect(0, 0, W, W);
+      c.fillStyle = '#fbf6ea'; for (let i = 0; i < 8; i++) { c.save(); c.translate(W / 2, W / 2); c.rotate(i / 8 * Math.PI * 2); c.fillRect(W * .38, -W * .055, W * .12, W * .11); c.restore(); }
+      c.fillStyle = mix(col, '#000000', .05); c.beginPath(); c.arc(W / 2, W / 2, W * .33, 0, 7); c.fill();
+      c.strokeStyle = '#fbf6ea'; c.lineWidth = W * .022; c.setLineDash([W * .05, W * .035]); c.beginPath(); c.arc(W / 2, W / 2, W * .33, 0, 7); c.stroke(); c.setLineDash([]);
+      icon(c, W, kind, v, { fill: '#ffffff', edge: 'rgba(0,0,0,.5)', ew: .12, k: .72 }); },
+    doodle(c, W, kind, v) { const col = colOf(kind, v); c.fillStyle = mix(col, '#ffffff', .1); c.fillRect(0, 0, W, W);
+      const R2 = rnd(41 + v); c.strokeStyle = mix(col, '#000000', .18); c.lineWidth = W * .012; for (let i = -W; i < W; i += W * .06) { c.beginPath(); c.moveTo(i + (R2() - .5) * 6, W); c.lineTo(i + W + (R2() - .5) * 6, 0); c.stroke(); }
+      pencilCircle(c, W / 2, W / 2, W * .44, R2, 'rgba(25,25,30,.85)', W * .03, 1.12);
+      icon(c, W, kind, v, { fill: '#ffffff', edge: 'rgba(20,20,25,.95)', ew: .16, k: .8 }); },
+    fruit(c, W, kind, v) { const col = colOf(kind, v), g = c.createRadialGradient(W * .38, W * .34, W * .03, W * .5, W * .5, W * .55); g.addColorStop(0, mix(col, '#ffffff', .5)); g.addColorStop(.45, col); g.addColorStop(1, mix(col, '#2a0a0a', .45)); c.fillStyle = g; c.fillRect(0, 0, W, W);
+      const R2 = rnd(53 + v); c.fillStyle = mix(col, '#fff6c0', .5); for (let i = 0; i < 70; i++) { const a = R2() * 7, r = Math.sqrt(R2()) * W * .48; c.globalAlpha = .35; c.beginPath(); c.arc(W / 2 + Math.cos(a) * r, W / 2 + Math.sin(a) * r, W * .006, 0, 7); c.fill(); } c.globalAlpha = 1;
+      // the sticker (a little oval label, a bit forward of the stem)
+      c.save(); c.translate(W * .5, W * .56); c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(W * .012, W * .018, W * .25, W * .2, 0, 0, 7); c.fill(); c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(0, 0, W * .25, W * .2, 0, 0, 7); c.fill(); c.strokeStyle = mix(col, '#000000', .1); c.lineWidth = W * .014; c.beginPath(); c.ellipse(0, 0, W * .215, W * .165, 0, 0, 7); c.stroke(); c.restore();
+      icon(c, W, kind, v, { fill: mix(col, '#000000', .18), k: .52, dy: .06 }); },
+    cipher(c, W, kind, v) { const col = colOf(kind, v), g = c.createRadialGradient(W * .42, W * .38, W * .03, W * .5, W * .5, W * .5); g.addColorStop(0, mix(col, '#fffbe8', .35)); g.addColorStop(.6, mix(col, '#000000', .05)); g.addColorStop(1, mix(col, '#2a1d0e', .5)); c.fillStyle = g; c.fillRect(0, 0, W, W);
+      brass(c, W / 2, W / 2, W * .41, W * .5); c.strokeStyle = 'rgba(60,40,10,.6)'; c.lineWidth = 2; c.beginPath(); c.arc(W / 2, W / 2, W * .41, 0, 7); c.stroke();
+      icon(c, W, kind, v, { fill: '#ffffff', edge: 'rgba(42,29,14,.75)', ew: .12, k: .72 }); },
+    vault(c, W, kind, v) { const col = colOf(kind, v), g = c.createLinearGradient(0, 0, W, W); g.addColorStop(0, mix(col, '#ffffff', .35)); g.addColorStop(.5, mix(col, '#000000', .25)); g.addColorStop(1, mix(col, '#ffffff', .15)); c.fillStyle = g; c.fillRect(0, 0, W, W);
+      for (let r = W * .02; r < W * .5; r += W * .012) { c.strokeStyle = `rgba(255,255,255,${((r * 37) % 7) / 70})`; c.lineWidth = 1; c.beginPath(); c.arc(W / 2, W / 2, r, 0, 7); c.stroke(); }
+      icon(c, W, kind, v, { fill: 'rgba(240,244,248,.95)', edge: 'rgba(0,0,0,.45)', ew: .1, k: .7 }); },
+  };
+  const faceMat = (look, kind, v, o) => mat('gem' + look + kind + v, () => {
+    const tx = X.canvasTex('hbGem' + look + kind + v, 256, 256, (c, W) => FACE[look](c, W, kind, v));
+    const m = X.M(Object.assign({ map: tx, emissiveMap: tx, emissive: '#ffffff', emissiveIntensity: .6, roughness: .5, bump: false, envMapIntensity: .3 }, o)); m.emissive.set(0xffffff); return m;
+  });
+  const PIECE_GEO = {
+    chipSide: () => geo('hbChipS', () => { const c = new (T().CylinderGeometry)(R * .96, R * .96, R * .5, LO() ? 16 : 22, 1, true); c.translate(0, -R * .14 + R * .25, 0); return c; }),
+    disc: (r, y, k) => geo('hbDisc' + k, () => { const c = new (T().CircleGeometry)(r, LO() ? 16 : 22); c.rotateX(-Math.PI / 2); c.translate(0, y, 0); return c; }),
+    fruit: () => geo('hbFruit', () => {   // a squat sphere with a dimple at the stem; UVs from above (the face's picture)
+      const TT = T(), Rf = R * .92, k = .78, pts = [], n = LO() ? 6 : 8;
+      for (let i = 0; i <= n; i++) { const a = -Math.PI / 2 + i / n * Math.PI, x = Math.max(.001, Math.cos(a) * Rf), y = -R * .14 + (Math.sin(a) + 1) * Rf * k; pts.push(new TT.Vector2(x, i === n ? y - Rf * .05 : y)); }
+      const gl = new TT.LatheGeometry(pts, LO() ? 14 : 18), P = gl.attributes.position, uv = gl.attributes.uv;
+      for (let i = 0; i < P.count; i++) uv.setXY(i, .5 + P.getX(i) / (2 * Rf) * .98, .5 - P.getZ(i) / (2 * Rf) * .98);
+      uv.needsUpdate = true; gl.computeVertexNormals(); return gl; }),
+  };
+  function gem(kind, v, look) {
+    const TT = T(), g = new TT.Group(); look = lookNow(look);
+    let h = R * .82;
+    if (look === 'casino') {   // a poker chip: edge stripes on the side, the picture on the face
+      const side = X.mesh(PIECE_GEO.chipSide(), mat('hbChipSM' + kind + v, () => { const tx = X.canvasTex('hbChipSide' + kind + v, 256, 32, (c, W, H) => { H = H || 32; c.fillStyle = mix(colOf(kind, v), '#000000', .12); c.fillRect(0, 0, W, H); c.fillStyle = '#fbf6ea'; for (let i = 0; i < 8; i++) c.fillRect(i * W / 8 + W / 32, 0, W / 16, H); }); const m = X.M({ map: tx, emissiveMap: tx, emissive: '#ffffff', emissiveIntensity: .3, roughness: .55, bump: false }); m.emissive.set(0xffffff); return m; }));
+      const top = X.mesh(PIECE_GEO.disc(R * .96, -R * .14 + R * .5, 'chip'), faceMat('casino', kind, v, { roughness: .45, emissiveIntensity: .34 }));
+      side.castShadow = top.castShadow = true; g.add(side, top); h = R * .36;
+    } else if (look === 'fruit') {   // a fruit, stem and leaf (the lemon is longer)
+      const f = X.mesh(PIECE_GEO.fruit(), faceMat('fruit', kind, v, { roughness: .35, clearcoat: .6, clearcoatRoughness: .25, emissiveIntensity: .55 })); f.castShadow = true; g.add(f);
+      if (kind !== 'num' && v === 1) f.scale.set(1.12, .95, .92);
+      const top = -R * .14 + R * .92 * .78 * 2 - R * .92 * .2;
+      const stem = new TT.Mesh(geo('hbStem', () => new TT.CylinderGeometry(R * .035, R * .05, R * .3, 5)), mat('hbStemM', () => X.M({ color: '#6b4524', roughness: .8, bump: false }))); stem.position.set(0, top + R * .02, -R * .5); stem.rotation.x = -.5; g.add(stem);
+      const leaf = new TT.Mesh(geo('hbLeaf', () => { const s = new TT.SphereGeometry(R * .2, 6, 3); s.scale(1, .18, .5); return s; }), mat('hbLeafM', () => X.M({ color: '#4fae3a', roughness: .5, bump: false }))); leaf.position.set(R * .2, top + R * .02, -R * .52); leaf.rotation.set(0, .5, .2); g.add(leaf);
+      h = top + R * .1;
+    } else if (look === 'cipher') {   // a typewriter key: a black stem, a cap with a brass rim and the picture under glass
+      const stem = X.mesh(geo('hbKeyStem', () => { const c = new TT.CylinderGeometry(R * .38, R * .42, R * .3, 10); c.translate(0, -R * .14 + R * .15, 0); return c; }), mat('hbKeyStemM', () => X.M({ color: '#16140f', roughness: .6, bump: false })));
+      const rim = X.mesh(geo('hbKeyRim', () => { const c = new TT.CylinderGeometry(R * .92, R * .92, R * .2, LO() ? 16 : 22, 1, true); c.translate(0, R * .16 + R * .1, 0); return c; }), mat('hbKeyRimM', () => X.M({ color: '#c9a24e', metalness: 1, roughness: .3, envMapIntensity: 1.1, bump: false })));
+      const top = X.mesh(PIECE_GEO.disc(R * .92, R * .36, 'key'), faceMat('cipher', kind, v, { roughness: .2, clearcoat: .8, clearcoatRoughness: .1, emissiveIntensity: .4 }));
+      stem.castShadow = rim.castShadow = top.castShadow = true; g.add(stem, rim, top); h = R * .36;
+    } else if (look === 'vault') {   // an anodised knob on a chrome collar
+      const d = X.mesh(domeGeo(), faceMat('vault', kind, v, { metalness: .75, roughness: .28, envMapIntensity: .9, emissiveIntensity: .42 })); d.castShadow = true; g.add(d);
+      const col = X.mesh(geo('hbCollar', () => { const c = new TT.CylinderGeometry(R * 1.02, R * 1.04, R * .16, LO() ? 16 : 22, 1, true); c.translate(0, -R * .06, 0); return c; }), mat('hbCollarM', () => X.M({ color: '#dfe4e8', metalness: 1, roughness: .2, envMapIntensity: 1.2, bump: false }))); g.add(col);
+    } else if (look === 'doodle') {   // a matte clay button with a felt-pen picture
+      const d = X.mesh(domeGeo(), faceMat('doodle', kind, v, { roughness: .9, emissiveIntensity: .58, envMapIntensity: .1 })); d.castShadow = true; d.scale.set(1, .75, 1); g.add(d); h = R * .62;
+    } else {
+      const d = X.mesh(domeGeo(), gemMat(kind, v)); d.castShadow = true; d.receiveShadow = false; g.add(d);
+      // a sharp highlight (a small bright cap off the top)
+      const hl = new TT.Mesh(geo('hbHl', () => { const s = new TT.SphereGeometry(R * .2, 6, 4); s.scale(1, .45, .8); return s; }), mat('hbHlM', () => new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .55, depthWrite: false })));
+      hl.position.set(-R * .34, R * .66, -R * .3); g.add(hl);
+    }
+    g.userData = { kind, v, h, look };
     return g;
   }
   function pin(hit) {
@@ -257,7 +336,10 @@
     // カジノ: green baize with gold lines, the row numbers on poker chips, a mahogany rail with a brass edge; a black-and-gold case
     casino: {
       bg(c, W, H, PX) { const g = c.createRadialGradient(W * .5, H * .45, PX, W * .5, H * .5, Math.max(W, H) * .7); g.addColorStop(0, '#1f8a4c'); g.addColorStop(.7, '#12693a'); g.addColorStop(1, '#0b4d2a'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-        const R = rnd(7); for (let i = 0; i < W * H / 40; i++) { c.fillStyle = R() < .5 ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.04)'; c.fillRect(R() * W, R() * H, 1, 1); } },
+        // the felt (2026-11-17 user: フェルトっぽく): soft cloudy patches, then a dense nap of short fibres in every direction
+        const R = rnd(7);
+        for (let i = 0; i < 70; i++) { const x = R() * W, y = R() * H, r = PX * (.4 + R() * 1.2), gg = c.createRadialGradient(x, y, 0, x, y, r); gg.addColorStop(0, R() < .5 ? 'rgba(0,0,0,.07)' : 'rgba(120,230,160,.06)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gg; c.fillRect(x - r, y - r, r * 2, r * 2); }
+        c.lineCap = 'round'; for (let i = 0; i < W * H / 9; i++) { const x = R() * W, y = R() * H, a = R() * Math.PI * 2, l = 1.5 + R() * 3.5, v = R(); c.strokeStyle = v < .45 ? 'rgba(0,30,10,.18)' : v < .9 ? 'rgba(150,240,180,.1)' : 'rgba(230,255,235,.16)'; c.lineWidth = .7; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke(); } },
       field(c, x, y, w, h, PX, fill) { rr(c, x, y, w, h, PX * .3); if (fill) { c.fillStyle = 'rgba(0,40,18,.25)'; c.fill(); } c.strokeStyle = '#e9c76a'; c.lineWidth = PX * .028; c.stroke(); rr(c, x + PX * .07, y + PX * .07, w - PX * .14, h - PX * .14, PX * .24); c.lineWidth = PX * .012; c.strokeStyle = 'rgba(233,199,106,.7)'; c.stroke(); },
       rowLine: 'rgba(233,199,106,.22)',
       num(c, x, y, s, PX, r) { const rad = PX * .27, col = r % 2 ? '#1c1c1c' : '#c3202b'; c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.arc(x + 2, y + 3, rad, 0, 7); c.fill(); c.fillStyle = col; c.beginPath(); c.arc(x, y, rad, 0, 7); c.fill();
@@ -269,11 +351,12 @@
       pin(c, x, y, r) { c.fillStyle = 'rgba(0,25,10,.7)'; c.beginPath(); c.arc(x, y, r * 1.12, 0, 7); c.fill(); c.strokeStyle = 'rgba(233,199,106,.75)'; c.lineWidth = r * .1; c.beginPath(); c.arc(x, y, r * 1.12, 0, 7); c.stroke(); },
       bed(c, x, y, w, h, PX) { rr(c, x, y, w, h, PX * .25); c.fillStyle = 'rgba(0,30,12,.4)'; c.fill(); c.strokeStyle = 'rgba(233,199,106,.5)'; c.lineWidth = PX * .015; c.stroke(); },
       title(c, x, y, PX) { c.font = `italic 700 ${PX * .3}px "Cormorant Garamond", Georgia, serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#e9c76a'; c.fillText('♠  HIT  ♦  BLOW  ♣', x, y); },
-      deco(c, W, H, PX, A) { c.fillStyle = 'rgba(233,199,106,.16)'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `${PX * .42}px Georgia, serif`; A.forEach(([x, y], i) => c.fillText('♠♥♦♣'[i % 4], x, y)); },
+      deco(c, W, H, PX, A) { c.fillStyle = 'rgba(233,199,106,.3)'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `${PX * .4}px Georgia, "Segoe UI Symbol", "Noto Sans Symbols", serif`;   // (all four suits round the case — the ♣ had gone to a corner, 2026-11-17 user)
+        [[A[0][0], A[0][1] - PX * .3, '♠'], [A[0][0], A[0][1] + PX * .3, '♣'], [A[1][0], A[1][1], '♥'], [A[2][0], A[2][1], '♦']].forEach(([x, y, ch]) => c.fillText(ch, x, y)); },
       lid(c, W, H, n, PX) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1f1f1f'); g.addColorStop(1, '#0d0d0d'); c.fillStyle = g; c.fillRect(0, 0, W, H);
         c.strokeStyle = '#e9c76a'; c.lineWidth = 3; rr(c, 7, 7, W - 14, H - 14, PX * .14); c.stroke(); c.lineWidth = 1.2; rr(c, 14, 14, W - 28, H - 28, PX * .1); c.stroke();
         c.save(); c.translate(0, H / 2); for (let k = 0; k < n; k++) { const x = (k + .5) / n * W, w2 = PX * .32, h2 = PX * .46; c.fillStyle = '#f7f1e3'; rr(c, x - w2, -h2, w2 * 2, h2 * 2, PX * .06); c.fill(); c.strokeStyle = '#c3202b'; c.lineWidth = 2; rr(c, x - w2 + 4, -h2 + 4, w2 * 2 - 8, h2 * 2 - 8, PX * .04); c.stroke(); qmark(c, x, PX * .1, '#c3202b'); } c.restore(); },
-      body: { c: '#5c1e12', r: .38, cc: .5 }, wall: { c: '#0a3a1f', r: .95 }, caseC: { c: '#161616', r: .4, m: .1 }, lidC: { c: '#1c1c1c', r: .35, m: .15 }, velvet: { c: '#5a0f18', sheen: '#ff6070' },
+      topM: { roughness: 1, envMapIntensity: .05, sheen: .8, sheenColor: '#7fe0a4', sheenRoughness: .9 }, body: { c: '#5c1e12', r: .38, cc: .5 }, wall: { c: '#0a3a1f', r: .95 }, caseC: { c: '#161616', r: .4, m: .1 }, lidC: { c: '#1c1c1c', r: .35, m: .15 }, velvet: { c: '#5a0f18', sheen: '#ff6070' },
       trim: { k: 'metal', c: '#e3bd62' }, rim: { k: 'metal', c: '#e0b85a' }, glow: .4, okOff: ['#14472a', '#0d331e', 'rgba(233,199,106,.75)'],
     },
     // 落書き: a page of a school notebook — ruled lines, the red margin, pencil rings, doodles in coloured pens; a cardboard body
@@ -361,6 +444,7 @@
       trim: { k: 'metal', c: '#d9dee3' }, rim: { k: 'metal', c: '#d9dee3' }, glow: .36, okOff: ['#59616a', '#3c434a', 'rgba(235,240,245,.8)'],
     },
   };
+  const topOpts = (S, o) => { const t = S.topM; if (!t) return o; const r = Object.assign(o, t); if (t.sheenColor) r.sheenColor = new (T().Color)(t.sheenColor); return r; };
   const LOOKS = ['midnight', 'casino', 'doodle', 'fruit', 'cipher', 'vault'];
   const lookNow = k => LOOKS.includes(k) ? k : (X.BOARDS && X.BOARDS.hitblow ? X.BOARDS.hitblow.get() : 'midnight');
   const skinMat = (k, o) => mat('hbS' + k, () => X.M({ color: o.c, roughness: o.r == null ? .7 : o.r, metalness: o.m || 0, clearcoat: o.cc || 0, clearcoatRoughness: .3, envMapIntensity: o.m ? .8 : .2, bump: false }));
@@ -373,7 +457,7 @@
     const body = X.mesh(geo('hbBody' + cfg.n + 'x' + cfg.rows, () => rbox(Lt.W, Lt.L, BH - HOLE, .38, .08)), bodyM); body.receiveShadow = true; g.add(body);
     const pr = Lt.n > 4 ? .1 : .11, holes = [];
     for (let r = 0; r < Lt.rows; r++) for (let k = 0; k < Lt.n; k++) { const [x, z] = Lt.slot(r, k); holes.push([x, z, R + .03, LO() ? 16 : 20]); const [px, pz] = Lt.pinPos(r, k); holes.push([px, pz, pr, LO() ? 8 : 10]); }
-    const top = new TT.Mesh(plate(Lt.W - .16, Lt.L - .16, .3, holes, 'B' + cfg.n + 'x' + cfg.rows, Lt.W, Lt.L), [mat('hbTopM' + look + cfg.n + 'x' + cfg.rows, () => (() => { const tt = topTex(cfg, Lt, look), m = X.M({ map: tt, emissiveMap: tt, emissive: '#ffffff', emissiveIntensity: S.glow, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; })()), wallM]);   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
+    const top = new TT.Mesh(plate(Lt.W - .16, Lt.L - .16, .3, holes, 'B' + cfg.n + 'x' + cfg.rows, Lt.W, Lt.L), [mat('hbTopM' + look + cfg.n + 'x' + cfg.rows, () => (() => { const tt = topTex(cfg, Lt, look), m = X.M(topOpts(S, { map: tt, emissiveMap: tt, emissive: '#ffffff', emissiveIntensity: S.glow, roughness: .9, envMapIntensity: .12, bump: false })); m.emissive.set(0xffffff); return m; })()), wallM]);   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
     top.position.y = BH - HOLE; top.receiveShadow = true; g.add(top);
     const floor = planeTop(Lt.W - .2, Lt.L - .2, wallM); floor.position.y = BH - HOLE + .002; floor.receiveShadow = true; g.add(floor);   // (the holes' floor: the skin's own, not the body's)
     const rim = (() => {
@@ -396,7 +480,7 @@
       const x = (k + .5 - cfg.n / 2) * PITCH;
       const cup = X.mesh(geo('hbCup', () => { const c = new TT.CircleGeometry(R + .06, 20); c.rotateX(-Math.PI / 2); return c; }), mat('hbCupM', () => new TT.MeshBasicMaterial({ color: 0x07040e, transparent: true, opacity: .75, depthWrite: false })));
       cup.position.set(x, ch + .006, 0); cup.renderOrder = 1; tray.add(cup);
-      caseSlots.push([Lt.caseX + x, BH + ch - R * .36, Lt.caseZ]);   // (low enough to stay inside the closed lid)
+      caseSlots.push([Lt.caseX + x, BH + ch - R * .36 - (look === 'fruit' ? R * .45 : 0), Lt.caseZ]);   // (low enough to stay inside the closed lid — the fruit stands taller: it sits down in the velvet)
     }
     const trim = new TT.Mesh(geo('hbTrim' + cfg.n, () => { const b = new TT.BoxGeometry(cw - .1, .03, .03); return b; }), rimMat(look, S.trim)); trim.position.set(0, ch * .55, cd / 2 + .005); tray.add(trim);
     // the lid (pivot on the far edge of the case)
@@ -457,7 +541,7 @@
       for (let v = 0; v < C; v++) { const [x, z] = pal(v); const r = PX * R * gemS * 1.02, gg = c.createRadialGradient(px(x), pz(z) + r * .2, r * .2, px(x), pz(z), r * 1.1); gg.addColorStop(0, 'rgba(0,0,0,.45)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gg; c.beginPath(); c.arc(px(x), pz(z), r * 1.1, 0, 7); c.fill(); }
     });
     const body = X.mesh(geo('hbTrayB' + n + 'c' + C, () => rbox(Lt.W, D, BH - HOLE, .38, .08)), bodyM); body.position.z = zc; body.receiveShadow = true; g.add(body);
-    const top = new TT.Mesh(plate(Lt.W - .16, D - .16, .3, Array.from({ length: n }, (_, k) => [sock(k)[0], sock(k)[1] - zc, R + .03, LO() ? 16 : 20]), 'T' + n + 'c' + C), [mat('hbTrayT' + look + n + 'c' + C, () => { const m = X.M({ map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: S.glow, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; }), wallM]);
+    const top = new TT.Mesh(plate(Lt.W - .16, D - .16, .3, Array.from({ length: n }, (_, k) => [sock(k)[0], sock(k)[1] - zc, R + .03, LO() ? 16 : 20]), 'T' + n + 'c' + C), [mat('hbTrayT' + look + n + 'c' + C, () => { const m = X.M(topOpts(S, { map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: S.glow, roughness: .9, envMapIntensity: .12, bump: false })); m.emissive.set(0xffffff); return m; }), wallM]);
     top.position.set(0, BH - HOLE, zc); top.receiveShadow = true; g.add(top);
     const floor = planeTop(Lt.W - .2, D - .2, wallM); floor.position.set(0, BH - HOLE + .002, zc); floor.receiveShadow = true; g.add(floor);
     const rim = (() => { const w = Lt.W / 2 - .07, d = D / 2 - .07, r = .31, pts = [];
@@ -480,14 +564,14 @@
     const ring = new TT.Mesh(geo('hbCur', () => { const r = new TT.RingGeometry(R + .08, R + .15, 32); r.rotateX(-Math.PI / 2); return r; }), neonMat('#7df3d2', 1.6)); ring.position.y = BH + .012; ring.visible = false; g.add(ring);
     // the palette gems (their own materials: a used colour dims)
     const pgs = [];
-    for (let v = 0; v < C; v++) { const m = gem(cfg.kind, v), [x, z] = pal(v); m.position.set(x, BH + .02, z); m.scale.setScalar(gemS); m.userData.pv = v;
+    for (let v = 0; v < C; v++) { const m = gem(cfg.kind, v, look), [x, z] = pal(v); m.position.set(x, BH + .02, z); m.scale.setScalar(gemS); m.userData.pv = v;
       m.traverse(o => { if (o.material) { o.material = o.material.clone(); o.userData.e0 = o.material.emissiveIntensity; } }); g.add(m); pgs.push(m); }
     const dim = (m, k) => m.traverse(o => { if (o.material && o.material.color) { if (o.userData.c0 == null) o.userData.c0 = o.material.color.clone(); o.material.color.copy(o.userData.c0).multiplyScalar(k); if (o.userData.e0 != null) o.material.emissiveIntensity = o.userData.e0 * k; } });
     const usedS = new Set(); let isOff = false;
     const paint = () => pgs.forEach((m, v) => { const u = usedS.has(v); dim(m, isOff ? .4 : u ? .3 : 1); m.position.y = BH + (u ? -.06 : .02); });
     const placed = [];
     g.userData = { D, z0, zc, W: Lt.W, sock, pal, ok, gemS, pp,
-      put(k, v) { if (placed[k]) { g.remove(placed[k]); placed[k] = null; } if (v == null) return; const m = gem(cfg.kind, v), [x, z] = sock(k); m.position.set(x, BH - R * .12, z); g.add(m); placed[k] = m; },
+      put(k, v) { if (placed[k]) { g.remove(placed[k]); placed[k] = null; } if (v == null) return; const m = gem(cfg.kind, v, look), [x, z] = sock(k); m.position.set(x, BH - R * .12, z); g.add(m); placed[k] = m; },
       cursor(k) { ring.visible = k >= 0; if (k >= 0) { const [x, z] = sock(k); ring.position.x = x; ring.position.z = z; } },
       okOn(on) { okFace.material = okM(!!on); okGlow.visible = !!on; okG.position.y = BH + (on ? .03 : 0); },
       used(v, u) { if (u) usedS.add(v); else usedS.delete(v); paint(); }, usedAll(set) { usedS.clear(); set.forEach(v => usedS.add(v)); paint(); },
@@ -506,7 +590,7 @@
     const g = board(cfg, live ? undefined : lookNow()), U = g.userData; if (live || !E) return g;
     const secret = [3, 0, 5, 1], rows = [[0, 1, 2, 3], [4, 3, 0, 5], [3, 5, 1, 0]];
     rows.forEach((code, r) => {
-      code.forEach((v, k) => { const m = gem('color', v), [x, z] = U.slot(r, k); m.position.set(x, U.top - R * .12, z); g.add(m); });
+      code.forEach((v, k) => { const m = gem('color', v, U.look), [x, z] = U.slot(r, k); m.position.set(x, U.top - R * .12, z); g.add(m); });
       const f = E.feedback(secret, code); let k = 0;
       for (let i = 0; i < f.h; i++, k++) { const p = pin(true), [x, z] = U.pinPos(r, k); p.position.set(x, U.top - .02, z); g.add(p); }
       for (let i = 0; i < f.b; i++, k++) { const p = pin(false), [x, z] = U.pinPos(r, k); p.position.set(x, U.top - .02, z); g.add(p); }
