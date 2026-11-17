@@ -95,11 +95,11 @@
   function sub(s, h) {
     // mallets move toward their targets at a limited speed
     for (let i = 0; i < 2; i++) {
-      const m = s.mal[i], vmax = (m.aiCap ? MALLET_V * m.aiCap : MALLET_HUMAN) * (m.slow > 0 ? .3 : 1), dx = m.tx - m.x, dy = m.ty - m.y, d = Math.hypot(dx, dy);
+      const m = s.mal[i], vmax = (m.aiCap ? Math.min(MALLET_V * m.aiCap, m.aiV || 1e9) : MALLET_HUMAN) * (m.slow > 0 ? .3 : 1), dx = m.tx - m.x, dy = m.ty - m.y, d = Math.hypot(dx, dy);
       if (m.aiCap) {
         // (2026-11-10) the AI's hand: it speeds up and slows down like an arm (limited acceleration, easing into the target),
         // so it never darts or jitters at an unnatural speed
-        const acc = 1500 + 2500 * m.aiCap, want = d > 1e-6 ? Math.min(vmax, Math.sqrt(2 * acc * d) * .9) : 0;
+        const acc = m.aiA || 1500 + 2500 * m.aiCap, want = d > 1e-6 ? Math.min(vmax, Math.sqrt(2 * acc * d) * .9) : 0;
         const wx = d > 1e-6 ? dx / d * want : 0, wy = d > 1e-6 ? dy / d * want : 0;
         let ax = wx - (m.vx || 0), ay = wy - (m.vy || 0); const al = Math.hypot(ax, ay), lim = acc * h; if (al > lim) { ax *= lim / al; ay *= lim / al; }
         m.vx = (m.vx || 0) + ax; m.vy = (m.vy || 0) + ay; m.x += m.vx * h; m.y += m.vy * h;
@@ -225,11 +225,14 @@
   }
 
   /* ---------- AI (Lv.1–20) ---------- */
+  // (2026-11-17 ユーザー：上位は人間が勝てない・マレットを異様に高速で動かすのが不気味) the AI's hand has a human top speed and
+  // acceleration (it was up to 600 cm/s, 4000 cm/s² — over 300 cm/s in play, five table lengths a second)
+  let AIV0 = 120, AIV1 = 110, AIA0 = 1400, AIA1 = 1800, AIP = .5;
   function aiSkill(level) {
     const k0 = Math.pow((Math.max(1, Math.min(20, level)) - 1) / 19, 1.35);   // (eased: the first levels stay gentle)
     const k = k0 * (1 - .2 * Math.pow(k0, 3));   // (2026-11-13: Lv.16–20 were too strong — the top eased; Lv.20 ≈ the old Lv.17)
     // (2026-11-10) much weaker at the low end: slower to react, less exact, attacks less, and now and then looks away
-    return { cap: .22 + .78 * Math.pow(k, 1.1), react: .4 - .37 * Math.pow(k, .7), err: 6 - 5.4 * k, attack: .45 + .45 * k, bank: level >= 9, lead: .6 + .4 * k, lapse: .1 * Math.pow(1 - k, 1.5), plan: .15 + .85 * Math.pow(k, .8) };   // (2026-11-10: Lv.1 a little more able — it moves, defends and plays the puck, just slowly)
+    return { cap: .22 + .78 * Math.pow(k, 1.1), react: .4 - .37 * Math.pow(k, .7), err: 6 - 5.4 * k, attack: .45 + .45 * k, bank: level >= 9, lead: .6 + .4 * k, lapse: .1 * Math.pow(1 - k, 1.5), plan: .15 + AIP * Math.pow(k, .8), vmax: AIV0 + AIV1 * k, acc: AIA0 + AIA1 * k };   // (2026-11-10: Lv.1 a little more able — it moves, defends and plays the puck, just slowly)
   }
   // where a puck will cross the line y = yl (bouncing off the side walls), or null
   function cross(p, yl) {
@@ -294,7 +297,7 @@
   // mem: the AI's own memory between frames ({ seen, at, plan })
   function aiTarget(s, side, level, mem, dt) {
     const sk = aiSkill(level), m = s.mal[side], sg = side === 0 ? 1 : -1, home = { x: 0, y: sg * (L / 2 - 6) };
-    m.aiCap = sk.cap;
+    m.aiCap = sk.cap; m.aiV = sk.vmax; m.aiA = sk.acc;
     mem.cool = (mem.cool || 0) - dt;
     // lapses (low levels): for a moment it stops following the puck and drifts home
     mem.lapseT = (mem.lapseT || 0) - dt; mem.lapseNext = (mem.lapseNext == null ? 1 + Math.random() * 2 : mem.lapseNext) - dt;
@@ -385,7 +388,7 @@
 
   // a target clamped to the bounds of a side's mallet (its own half, inside the walls) — the relative mouse / touchpad control
   function clampXY(s, side, x, y) { const m = { r: s.mal[side].r, tx: x, ty: y }; clampMal(m, side); return { tx: m.tx, ty: m.ty }; }
-  const API = { clampXY, DIM, MODES, BOARDS, ITEMS, PORTAL, PR, BUMPERS, BR, BAR, newMatch, step, serve, aiTarget, aiSkill, rng, has };
+  const API = { setAI(a) { [AIV0, AIV1, AIA0, AIA1, AIP] = a; }, clampXY, DIM, MODES, BOARDS, ITEMS, PORTAL, PR, BUMPERS, BR, BAR, newMatch, step, serve, aiTarget, aiSkill, rng, has };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   root.HockeyEngine = API;
 })(typeof self !== 'undefined' ? self : this);
