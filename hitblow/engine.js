@@ -221,16 +221,20 @@ function raceBest(cfg, cands, rand) {
   }
   return codeOf(cfg, bg);
 }
-// the race levels (Lv.1–20): Lv.1–15 forget part of the answers on the board (each row is kept with a probability that grows
-// from 10% to 94%), so their guesses can contradict what is known; Lv.16–17 guess a random code that can still be the answer;
-// Lv.18–19 sometimes, Lv.20 always, play the race search above.
-function raceKeep(lv) { return lv >= 16 ? 1 : 0.10 + (lv - 1) * 0.06; }
+// the race levels (Lv.1–20). Lv.1–7 forget part of the answers on the board (each row is kept with a probability from 10% to 40%);
+// Lv.8–17 (2026-11-17 user: Lv.15くらいで大体6問で当てられて終わる — the old Lv.12–17 all played about as well as Lv.20) look only at
+// the last three rows and keep each with 60% → 95%, so the climb to the top is spread over the upper levels; Lv.18–19 sometimes,
+// Lv.20 always, play the race search above. Measured against a fair human-like player (tools: win rate, colour): Lv.1 6% · Lv.5 30% ·
+// Lv.10 ~35% · Lv.15 ~55% · Lv.17 ~62% · Lv.18 76% · Lv.20 80% (before: Lv.10 51% · Lv.14 71% · Lv.15–17 70–76%).
+const RACE_UP = [.6, .63, .66, .7, .74, .78, .82, .86, .92, .85];   // Lv.8–17 (Lv.17: the last four rows)
+function raceKeep(lv) { return lv >= 18 ? 1 : lv >= 8 ? RACE_UP[lv - 8] : 0.10 + (lv - 1) * 0.05; }
+function raceWin(lv) { return lv === 17 ? 4 : lv >= 8 && lv < 18 ? 3 : 1e9; }
 function aiRace(cfg, hist, level, rand) {
   rand = rand || Math.random;
   if (!hist.length) return level >= 18 ? opener(cfg) : randomCode(cfg, rand);
   const tried = {}; for (const x of hist) tried[idxOf(cfg, x.g)] = 1;
-  if (level < 16) {
-    const keep = raceKeep(level), used = hist.filter(() => rand() < keep), cands = candsOf(cfg, used);
+  if (level < 18) {
+    const keep = raceKeep(level), used = hist.slice(-raceWin(level)).filter(() => rand() < keep), cands = candsOf(cfg, used);
     for (let t = 0; t < 40; t++) { const g = cands[Math.floor(rand() * cands.length)]; if (!tried[g]) return codeOf(cfg, g); }
   }
   const cands = candsOf(cfg, hist);
