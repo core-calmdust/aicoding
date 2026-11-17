@@ -212,9 +212,16 @@
   }
   // the card's ring (2026-11-18 user: 進み具合の数字をやめて実績の達成率に、押すと実績一覧へ): this game's achievements done / all,
   // a gold medal in the middle so it reads as 実績; a button that opens the records sheet on its 実績 tab
+  // a game's achievements done, in % (the card's ring, the home grid's bars and the games list — 2026-11-18 user: 実績達成度に)
+  const achPct = g => { const L = ACH.filter(a => a.gid === g.id); return L.length ? Math.round(L.filter(a => a.done).length / L.length * 100) : 0; };
   function achRing(g) {
     const L = ACH.filter(a => a.gid === g.id), done = L.filter(a => a.done).length, pct = L.length ? Math.round(done / L.length * 100) : 0, r = 22, c = 2 * Math.PI * r, lab = `${t('tab.ach')} ${done}/${L.length}`;
-    return `<button type="button" class="ring achr" id="bvAchR" aria-label="${esc(lab)}" title="${esc(lab)}"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="${r}" fill="none" stroke="#efe8d6" stroke-width="6"/>${pct ? `<circle cx="26" cy="26" r="${r}" fill="none" stroke="#e8b23a" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * pct / 100} ${c}"/>` : ''}</svg><span class="achm">${medalSvg(done && done === L.length ? 3 : 2)}</span><b>${pct}%</b></button>`;
+    return `<button type="button" class="ring achr" id="bvAchR" aria-label="${esc(lab)}" title="${esc(lab)}">${achRingIn(g)}</button>`;
+  }
+  // the ring's inside (also the phones' corner button: 2026-11-18 user: スマホの実績アイコンも同じスタイルに)
+  function achRingIn(g) {
+    const L = ACH.filter(a => a.gid === g.id), done = L.filter(a => a.done).length, pct = L.length ? Math.round(done / L.length * 100) : 0, r = 22, c = 2 * Math.PI * r;
+    return `<svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="${r}" fill="none" stroke="#efe8d6" stroke-width="6"/>${pct ? `<circle cx="26" cy="26" r="${r}" fill="none" stroke="${g.color}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * pct / 100} ${c}"/>` : ''}</svg><span class="achm">${medalSvg(done && done === L.length ? 3 : 2)}</span><b>${pct}%</b>`;
   }
   function medalSvg(tier) {
     const c = [['#e8a46a', '#b8703a'], ['#e3e8f0', '#9aa6b8'], ['#ffd84d', '#d79a1c'], ['#c9f1ff', '#7f8cff']][tier];
@@ -684,7 +691,7 @@
       <span class="lab"><span class="n">${esc(t('rnd.n'))}</span><span class="pr"><i style="width:100%"></i></span></span></button>` : '';
     $('iconGrid').innerHTML = rnd + list.map(g => { const b = A_.badges(g)[0];
       return `<button class="ic" data-g="${g.id}" style="--c:${g.color}"><span class="art"><span class="no">${gno(g)}</span>${artImg(g)}</span>${b ? `<span class="bdg">${badgeHtml(b)}</span>` : ''}
-        <span class="lab"><span class="n">${esc(gname(g))}</span><span class="pr"><i style="width:${P[g.id].pct}%"></i></span></span></button>`; }).join('');
+        <span class="lab"><span class="n">${esc(gname(g))}</span><span class="pr" title="${esc(t('tab.ach'))} ${achPct(g)}%"><i style="width:${achPct(g)}%"></i></span></span></button>`; }).join('');
     $('gNone').hidden = !!list.length; $('gNone').textContent = t('search.none');
     $('iconGrid').querySelectorAll('[data-g]').forEach(b => { b.onclick = () => flyOpen(b.dataset.g, b.querySelector('img')); });
     if ($('rndTile')) $('rndTile').onclick = () => rollRandom(list);
@@ -1140,7 +1147,7 @@
     if (OL3 && $('bvRtOpp')) $('bvRtOpp').addEventListener('change', () => { pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} if (window.__bvModeRz) window.__bvModeRz(); });
     if (OL3 && !ol3Linked && QS0.get('room')) { ol3Linked = true; const code = QS0.get('room'); setTimeout(() => { if (bvGame === g) openOnline3D(g, code); }, 400); }   // (a room link: ?room=CODE#games/<id>)
     { const ar = $('bvAchR'); if (ar) ar.onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g, null, 'ach'); }; }
-    $('bvRec').setAttribute('aria-label', t('rec.btn')); $('bvRec').title = t('rec.btn'); $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };   // (the cup: phones right of the ヒストリア pill, PC beside the place chip)
+    { const rb = $('bvRec'), L = ACH.filter(a => a.gid === g.id), lab = `${t('tab.ach')} ${L.filter(a => a.done).length}/${L.length}`; rb.classList.add('achc'); rb.innerHTML = `<span class="ring achr">${achRingIn(g)}</span>`; rb.setAttribute('aria-label', lab); rb.title = lab; rb.onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g, null, 'ach'); }; }   // (the cup: phones right of the ヒストリア pill, PC beside the place chip)
     placeRec();
     } catch (e) { console.error(e); }   // (2026-11-16: whatever fails above, the phone drawer below is still set up — a card left half-built showed everything open)
     // phones: a grab handle on the card — swipe down (or tap) folds away the tags and progress, leaving the game settings; swipe up opens it again
@@ -2574,7 +2581,7 @@
       hasRules: () => true,
       // the 3D rules tour on the table where the game has one; otherwise the 2D game opens straight on its own rules (shared/rulelink.js)
       onRules: id => { if ((window.AtlasRules && AtlasRules[id]) || (window.AtlasLazy && AtlasLazy.hasRules(id))) { openBoard(id).then(() => { if (glOK && window.AtlasRules && AtlasRules[id]) startRules(true); }); return; } const g = A_.GAMES.find(x => x.id === id); if (g) location.href = '../' + g.href + '?rules=1'; }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
-      pct: g => P[g.id].pct, tags: A_.TAGS, cats: A_.CATS });
+      pct: g => achPct(g), tags: A_.TAGS, cats: A_.CATS });
     $('gNone2').hidden = !!list.length; $('gNone2').textContent = t('search.none');
     $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });
   }
