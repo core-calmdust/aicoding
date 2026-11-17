@@ -131,7 +131,7 @@
         const zc = pz(Lt.z0 + (r + .5) * ROWP);
         if (r) { c.strokeStyle = 'rgba(140,170,255,.13)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(fx0 + PX * .15, pz(Lt.z0 + r * ROWP)); c.lineTo(fx1 - PX * .15, pz(Lt.z0 + r * ROWP)); c.stroke(); }
         // the row number
-        c.font = `700 ${PX * .32}px "Outfit", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = 'rgba(200,214,255,.6)'; c.fillText(String(r + 1), px(Lt.labX + .12), zc + PX * .01);
+        c.font = `700 ${PX * .32}px "Outfit", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = 'rgba(200,214,255,.6)'; { c.textBaseline = 'alphabetic'; const tm = c.measureText(String(r + 1)); c.fillText(String(r + 1), px(Lt.labX + .12), zc + (tm.actualBoundingBoxAscent - tm.actualBoundingBoxDescent) / 2); }   // (the digits' own box on the row's centre line, as the gems and the who-lights — 'middle' set them low, 2026-11-17 user)
         for (let k = 0; k < Lt.n; k++) socket(c, px(Lt.slot(r, k)[0]), zc, PX * (R + .06));
         // the answer pins' plate
         rr(c, px(Lt.fbx - .42), zc - PX * .42, PX * .84, PX * .84, PX * .16); c.fillStyle = 'rgba(4,7,26,.55)'; c.fill(); c.strokeStyle = 'rgba(140,170,255,.22)'; c.lineWidth = 1.2; c.stroke();
@@ -155,14 +155,14 @@
   // so each hole is a short lacquered wall down to the body's top (the floor) — ordinary geometry, right from every angle.
   // The printed top goes on the slab's face (its UVs set as the old flat top's); the walls and the floor are the lacquer.
   const HOLE = .1;
-  function plate(w, d, r, holes, key) {
+  function plate(w, d, r, holes, key, uw = w, ud = d) {   // (uw × ud: the area the face's picture covers, centred)
     return geo('hbPlate' + key, () => {
       const TT = T(), s = new TT.Shape(), x = -w / 2, z = -d / 2;
       s.moveTo(x + r, z); s.lineTo(x + w - r, z); s.quadraticCurveTo(x + w, z, x + w, z + r); s.lineTo(x + w, z + d - r); s.quadraticCurveTo(x + w, z + d, x + w - r, z + d); s.lineTo(x + r, z + d); s.quadraticCurveTo(x, z + d, x, z + d - r); s.lineTo(x, z + r); s.quadraticCurveTo(x, z, x + r, z);
       holes.forEach(([hx, hz, hr, n]) => { const p = new TT.Path(); for (let i = 0; i < n; i++) { const a = -i / n * Math.PI * 2; p[i ? 'lineTo' : 'moveTo'](hx + Math.cos(a) * hr, -hz + Math.sin(a) * hr); } p.closePath(); s.holes.push(p); });   // (shape y = −world z)
       const ex = new TT.ExtrudeGeometry(s, { depth: HOLE, bevelEnabled: false, curveSegments: LO() ? 3 : 5 });
       const P = ex.attributes.position, uv = ex.attributes.uv, cap = ex.groups[0];
-      for (let i = cap.start; i < cap.start + cap.count; i++) uv.setXY(i, (P.getX(i) + w / 2) / w, (P.getY(i) + d / 2) / d);
+      for (let i = cap.start; i < cap.start + cap.count; i++) uv.setXY(i, (P.getX(i) + uw / 2) / uw, (P.getY(i) + ud / 2) / ud);
       uv.needsUpdate = true;
       // the slab's underside is never seen (it lies on the body): keep only its face and walls
       const keep = [], walls = ex.groups[1];
@@ -202,7 +202,7 @@
     const body = X.mesh(geo('hbBody' + cfg.n + 'x' + cfg.rows, () => rbox(Lt.W, Lt.L, BH - HOLE, .38, .08)), lacquer()); body.receiveShadow = true; g.add(body);
     const pr = Lt.n > 4 ? .1 : .11, holes = [];
     for (let r = 0; r < Lt.rows; r++) for (let k = 0; k < Lt.n; k++) { const [x, z] = Lt.slot(r, k); holes.push([x, z, R + .03, LO() ? 16 : 20]); const [px, pz] = Lt.pinPos(r, k); holes.push([px, pz, pr, LO() ? 8 : 10]); }
-    const top = new TT.Mesh(plate(Lt.W - .16, Lt.L - .16, .3, holes, 'B' + cfg.n + 'x' + cfg.rows), [mat('hbTopM' + cfg.n + 'x' + cfg.rows, () => (() => { const tt = topTex(cfg, Lt), m = X.M({ map: tt, emissiveMap: tt, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; })()), lacquer()]);   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
+    const top = new TT.Mesh(plate(Lt.W - .16, Lt.L - .16, .3, holes, 'B' + cfg.n + 'x' + cfg.rows, Lt.W, Lt.L), [mat('hbTopM' + cfg.n + 'x' + cfg.rows, () => (() => { const tt = topTex(cfg, Lt), m = X.M({ map: tt, emissiveMap: tt, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; })()), lacquer()]);   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
     top.position.y = BH - HOLE; top.receiveShadow = true; g.add(top);
     const rim = (() => {
       const w = Lt.W / 2 - .07, d = Lt.L / 2 - .07, r = .31, pts = [];
