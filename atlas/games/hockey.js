@@ -649,5 +649,5 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.hockey = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, mx: true, rule, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 7, sizeLabel, sizeName, levelInfo, start, MODE_TXT: M, ICON, modeName, SND };
+  window.Atlas3D.hockey = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, mx: true, aiOnly: true, rule, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 7, sizeLabel, sizeName, levelInfo, start, MODE_TXT: M, ICON, modeName, SND };
 })();
