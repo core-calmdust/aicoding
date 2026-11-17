@@ -15,7 +15,7 @@
 - **正式版（2026-11-10）**：BETA を外した（`index.html` の `beta:1`、`shared/atlas.js` の `beta: true`）。更新情報に「正式版に」の行（14言語）。
 - 台帳：`shared/atlas.js` の GAMES（`only3d`、`cat: 'action'`、テーマ色 #2f6fd0）。トップページ：GAMES に `key:'th'`、`images/hockey.webp`（topdown.html、縦長の卓を正方形に収める）、アイコン `images/icons/hockey.svg`、ポータルのアイコン `images/atlas/hockey.webp`（icons3d.js）、一覧 `atlas/shots/hockey.webp`、盤のサムネイル `atlas/img/board-hockey-<look>.webp`。
 - 地図（mapdata.js）：トロント・シカゴ近郊・スウェーデン・デンマーク・日本。一覧のひとこと `tl.hockey`、紹介 `about.hockey`・`hist.hockey`（i18n.js）。
-- AIのボス7体（npc/roster.js）：リンクのペンギン・ゲーセンのカワウソ・パックさばきギツネ・ゴーリーウルフ・スラップショットうし・エアテーブル博士・マンロー大王グマ（1932年トロントの卓上ホッケーの作者がモチーフ）。肩書きとまめちしきは npc/t/<lang>.js。
+- AIのボス7体（npc/roster.js）：リンクペン・ゲーセンオッタ・パックツネ・ゴーリーガミ・スラップモー・エアホッホー・マンローベア（1932年トロントの卓上ホッケーの作者がモチーフ）。肩書きとまめちしきは npc/t/<lang>.js。
 
 ## リンクと物理（cm）
 - 遊ぶ面 40×62cm（x 横、y 縦。プレイヤー0＝赤＝手前 +y、プレイヤー1＝黄＝奥 −y）。両端の壁の中央に幅13cmのすき間＝ゴール。

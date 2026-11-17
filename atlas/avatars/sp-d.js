@@ -76,9 +76,9 @@
     v: [{}, { hue: [165, .85, .04, [TILE]], acc: [['bow', 0xff7f9e, 0xff5f8a]] }, { hue: [-50, 1, .05, [TILE]], acc: [['scarf', 0x6fb8ff, 0x8a76ff]] }, { finish: 'rainbow', acc: ['crown'] }],
   });
 
-  /* ---------- 2. ビーだまスライム (UR) ---------- */
+  /* ---------- 2. ビーダマライム (UR) ---------- */
   D('marble', {
-    name: { ja: 'ビーだまスライム', en: 'Marblob' },
+    name: { ja: 'ビーダマライム', en: 'Marblob' },
     desc: { ja: 'うずまき模様のビー玉をだいじに抱えるぷるぷるスライム。', en: 'A wobbly slime drop cuddling its favourite swirly glass marble.' },
     ur: true,
     build(opt) {
@@ -98,9 +98,9 @@
     v: [{}, { hue: [150, 1.1, .02], acc: [['star', 0xffd34f]] }, { hue: [70, .9, .02], opt: { notip: true }, acc: [['beret', 0xffd34f, 0xff9a4a]] }, { opt: { ur: true } }],
   });
 
-  /* ---------- 3. オハジキクラゲ ---------- */
+  /* ---------- 3. オハジクラ ---------- */
   D('jelly', {
-    name: { ja: 'オハジキクラゲ', en: 'Chiplyfish' },
+    name: { ja: 'オハジクラ', en: 'Chiplyfish' },
     desc: { ja: '触手の先がパステルのおはじき。はじくとチリンと鳴る。', en: 'Its tentacles end in pastel ohajiki chips that clink when flicked.' },
     build() {
       const g = new T.Group(), P = soft(0xff9cc8, { under: 0xb8a8ff, uk: .5, glow: .05, rim: .25 }), Pl = soft(0xffe0ee, { under: 0xd8c8ff, uk: .4, glow: .05 });
@@ -124,10 +124,10 @@
     v: [{}, { hue: [170, 1.2, -.04], acc: [['bow', 0xffd34f, 0xff9a4a]] }, { hue: [-90, 1.2, -.04], acc: [['beret', 0x6fb8ff, 0x8a76ff]] }, { finish: 'night', acc: ['tiara'] }],
   });
 
-  /* ---------- 4. ケンダマレッサー ---------- */
+  /* ---------- 4. ケンダッサー ---------- */
   const WOOD = 0xf0c890, KBALL = 0xff6670;
   D('redpanda', {
-    name: { ja: 'ケンダマレッサー', en: 'Kendamapanda' },
+    name: { ja: 'ケンダッサー', en: 'Kendamapanda' },
     desc: { ja: 'けん玉名人のレッサーパンダ。とめけんが決まるとしっぽを振る。', en: 'A red panda kendama ace — its ringed tail wags when the ball lands.' },
     build() {
       const g = new T.Group(), O = soft(0xf38d55, { under: 0xff7a8a, uk: .45 }), Od = soft(0xd8704a, { under: 0xb85a7a, uk: .4 }), dk = soft(0x9a5848, { under: 0x7a4a8a, uk: .4 }),
@@ -164,10 +164,10 @@
     v: [{}, { hue: [190, .8, .02, [WOOD, KBALL]], acc: [['flower', 0xffffff]] }, { hue: [-95, .85, .05, [WOOD, KBALL]], acc: [['scarf', 0xffd34f, 0xff9a4a]] }, { finish: 'mint', acc: ['tiara'] }],
   });
 
-  /* ---------- 5. スゴロクカエル ---------- */
+  /* ---------- 5. スゴロケロ ---------- */
   const SQ = 0xfff0d2;
   D('frog', {
-    name: { ja: 'スゴロクカエル', en: 'Sugorofrog' },
+    name: { ja: 'スゴロケロ', en: 'Sugorofrog' },
     desc: { ja: 'すごろくのマスにちょこんと座るカエル。サイコロをふればぴょんと進む。', en: 'A frog perched on a sugoroku square — roll the die and it hops ahead.' },
     build() {
       const g = new T.Group(), G = soft(0x92dc7c, { under: 0x6fc8d8, uk: .45 }), cr = soft(0xfffadc, { under: 0xd8f0a0, uk: .4 }), Wt = soft(0xffffff, { under: 0xc8d8ff, uk: .4 }),
@@ -200,10 +200,10 @@
     v: [{}, { hue: [-55, 1, .02, [SQ]], acc: [['bow', 0xff7f9e, 0xff5f8a]] }, { hue: [-115, 1, .06, [SQ]], acc: [['beret', 0x6fb8ff, 0x8a76ff]] }, { finish: 'sky', acc: ['crown'] }],
   });
 
-  /* ---------- 6. フクワライおばけ ---------- */
+  /* ---------- 6. フクワラブー ---------- */
   const GW = 0xfffbff, GU = 0xc8c0ff;
   D('ghost', {
-    name: { ja: 'フクワライおばけ', en: 'Fukuboo' },
+    name: { ja: 'フクワラブー', en: 'Fukuboo' },
     desc: { ja: '福笑いのパーツをばらまくおばけ。自分の顔はいつもきちんと。', en: 'A ghost that scatters fukuwarai face parts — its own face stays neat.' },
     build() {
       const g = new T.Group(), Wm = soft(GW, { under: GU, uk: .5, glow: .04 }), paper = soft(0xfff8ec, { under: 0xffd8c8, uk: .35, rough: .85 });
@@ -240,7 +240,7 @@
 
   /* ---------- 7. ダルマオトシ (UR) ---------- */
   D('daruma', {
-    name: { ja: 'ダルマオトシ', en: 'Darumadrop' },
+    name: { ja: 'ダルマットン', en: 'Darumadrop' },
     desc: { ja: 'たたかれても落ちないだるまの子。コーンと抜けてもすまし顔。', en: 'A daruma-otoshi tot — knock a block out and it just lands with a calm smile.' },
     ur: true,
     build(opt) {
@@ -268,13 +268,13 @@
     v: [{}, { hue: [150, .9, .04], acc: [['flower', 0xffffff]] }, { hue: [-120, .9, .04], acc: [['beret', 0xffd34f, 0xff9a4a]] }, { opt: { ur: true } }],
   });
 
-  /* ---------- 8. ボールアシカ ---------- */
+  /* ---------- 8. ビンゴップ ---------- */
   const bingoM = () => M({ roughness: .3, clearcoat: .5, clearcoatRoughness: .2, map: K.X.canvasTex('spd-bingo', 256, 128, (c, W, H) => {
     c.fillStyle = '#ff8fa8'; c.fillRect(0, 0, W, H); c.fillStyle = '#ffffff'; c.fillRect(0, H * .44, W, H * .12);
     [W * .25, W * .75].forEach(x => { c.fillStyle = '#ffffff'; c.beginPath(); c.arc(x, H / 2, 34, 0, 7); c.fill(); c.fillStyle = '#2a2233'; c.font = '900 46px Fredoka, "Arial Rounded MT Bold", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('7', x, H / 2 + 3); });
   }) });
   D('sealion', {
-    name: { ja: 'ボールアシカ', en: 'Bingopup' },
+    name: { ja: 'ビンゴップ', en: 'Bingopup' },
     desc: { ja: 'ビンゴの玉を鼻にのせるアシカの子。数字が出るとひれで拍手。', en: 'A sea lion pup balancing a bingo ball on its nose — claps when its number is called.' },
     build() {
       const g = new T.Group(), S = soft(0xa8c2ea, { under: 0xc8a8ff, uk: .45 }), cr = soft(0xfff4ea, { under: 0xd8d8ff, uk: .4 }), Sd = soft(0x8aa8dc, { under: 0xb89aff, uk: .4 });
@@ -299,9 +299,9 @@
     v: [{}, { hue: [50, 1, .02], acc: [['bow', 0xff7f9e, 0xff5f8a]] }, { hue: [-65, 1, .02], acc: [['scarf', 0xff6b7a, 0xd85a9a]] }, { finish: 'sakura', acc: ['crown'] }],
   });
 
-  /* ---------- 9. ハコヤドカリ ---------- */
+  /* ---------- 9. ハコヤド ---------- */
   D('hermit', {
-    name: { ja: 'ハコヤドカリ', en: 'Boxhermit' },
+    name: { ja: 'ハコヤド', en: 'Boxhermit' },
     desc: { ja: 'ボードゲームの箱をおうちにするヤドカリ。ふたのすき間からサイコロがのぞく。', en: 'A hermit crab living in a board-game box — a die peeks out under the lid.' },
     build() {
       const g = new T.Group(), C = soft(0xff9a7a, { under: 0xff7aa8, uk: .45 }), Cd = soft(0xf2826e, { under: 0xd860a0, uk: .4 }), Wt = soft(0xfffaf3, { under: 0xffd0dc }),

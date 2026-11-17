@@ -14,9 +14,9 @@
   // sub-part surface for eyes on patches: one ellipsoid per side, centred on the eye spot
   const patchSurf = (pc, PR, gap, v) => (u, vv) => { const s = Math.sign(u) || 1; return ell(V3(s * pc[0], pc[1], pc[2]), PR)(u - s * gap, vv - v); };
 
-  /* 1. ルークゾウ — baby elephant with a soft rook tower on its back */
+  /* 1. ルケファン — baby elephant with a soft rook tower on its back */
   D('rook', {
-    name: { ja: 'ルークゾウ', en: 'Rookephant' },
+    name: { ja: 'ルケファン', en: 'Rookephant' },
     desc: { ja: '背中にルークの塔をのせた子ゾウ。まっすぐ進むのが得意。', en: 'A baby elephant carrying a rook tower. Loves going straight.' },
     ur: true,
     build(opt, tier) {
@@ -55,9 +55,9 @@
     v: [{}, { hue: [150, .9, .02], acc: [['bow', 0xff7f9e, 0xff5f8a]] }, { hue: [-75, 1, .02], acc: [['beret', 0x6fb8ff, 0x8a76ff]] }, { acc: ['crown'] }],
   });
 
-  /* 2. ビショップアルパカ — alpaca whose wool is a bishop's mitre */
+  /* 2. ビショパカ — alpaca whose wool is a bishop's mitre */
   D('bishop', {
-    name: { ja: 'ビショップアルパカ', en: 'Bishpaca' },
+    name: { ja: 'ビショパカ', en: 'Bishpaca' },
     desc: { ja: 'ビショップ形のもこもこ頭のアルパカ。ななめ歩きが好き。', en: 'An alpaca with bishop-shaped wool. Prefers walking diagonally.' },
     build(opt, tier) {
       const g = new T.Group(), Wl = soft(0xfff4e8, { under: 0xd8c4ff, uk: .5 }), skin = soft(0xffe2c4, { under: 0xffb8b0, uk: .4 }), mitre = soft(0xc8b4ff, { under: 0xff9fcf, uk: .5 }), dark = soft(0x7e66c8, { rough: .9 });
@@ -88,9 +88,9 @@
     v: [{}, { hue: [120, 1, 0], acc: [['star', 0xffd34f]] }, { hue: [-110, 1.1, .02], acc: [['scarf', 0xff6b7a, 0xd85a9a]] }, { finish: 'pearl', acc: ['crown'] }],
   });
 
-  /* 3. ポーンひつじ — a lamb that is a chess pawn */
+  /* 3. ポンメェ — a lamb that is a chess pawn */
   D('pawn', {
-    name: { ja: 'ポーンひつじ', en: 'Pawnlamb' },
+    name: { ja: 'ポンメェ', en: 'Pawnlamb' },
     desc: { ja: 'ポーンの形のふわふわ羊。一歩ずつ前へ、いつかは女王に。', en: 'A pawn-shaped woolly lamb. One step at a time, someday a queen.' },
     build(opt, tier) {
       const g = new T.Group(), Wl = soft(0xffe6b8, { under: 0xc8b8ff, uk: .5 }), skin = soft(0xffd8c8, { under: 0xffa8b8, uk: .4 }), col = soft(0x8ab0ff, { under: 0xa88aff, uk: .45 }), hoof = soft(0x8a7a9a, { rough: .7 });
@@ -179,9 +179,9 @@
     v: [{}, { map: { 0xc4b8ea: 0xffbe96, 0xff9fc0: 0xff8fa8 }, acc: [['star', 0xffd34f]] }, { map: { 0xc4b8ea: 0x9fd2ff, 0xff9fc0: 0xb49aff }, acc: [['scarf', 0xffd34f, 0xff9a4a]] }, { finish: 'sakura', acc: ['tiara'] }],
   });
 
-  /* 6. ウラオモテパンダ — a panda hugging a big reversi disc */
+  /* 6. ウラオモパン — a panda hugging a big reversi disc */
   D('flippanda', {
-    name: { ja: 'ウラオモテパンダ', en: 'Flipanda' },
+    name: { ja: 'ウラオモパン', en: 'Flipanda' },
     desc: { ja: 'リバーシの石にすわるパンダ。白黒どちらの味方でもある。', en: 'A panda on a reversi disc — happily on both sides.' },
     build(opt, tier) {
       const g = new T.Group(), Wt = soft(0xfbf9f4, { under: 0xd6dcff, uk: .45 }), Bk = soft(0x353849, { under: 0x6a70b0, uk: .5, rim: .3, sheen: 0xaab4ff, sheenK: .3 }), pink = soft(0xffb3c6);
@@ -209,9 +209,9 @@
     v: [{}, { map: { 0x353849: 0x9a6ad0, 0x6a70b0: 0xff8fc8 }, acc: [['bow', 0x6fb8ff, 0x8a76ff]] }, { map: { 0x353849: 0x3f7fb8, 0x6a70b0: 0x6ad0c0, 0xfbf9f4: 0xfff3dc }, acc: [['scarf', 0xff6b7a, 0xd85a9a]] }, { finish: 'sakura', acc: ['crown'] }],
   });
 
-  /* 7. ゴケタヌキ — a tanuki peeking out of a go-stone bowl, lid for a hat */
+  /* 7. ゴケヌキ — a tanuki peeking out of a go-stone bowl, lid for a hat */
   D('goke', {
-    name: { ja: 'ゴケタヌキ', en: 'Gokenuki' },
+    name: { ja: 'ゴケヌキ', en: 'Gokenuki' },
     desc: { ja: '碁笥にかくれてふたをかぶるたぬき。石をこっそり数えている。', en: 'A tanuki hiding in a go bowl, wearing the lid. Secretly counting stones.' },
     build(opt, tier) {
       const g = new T.Group(), wood = soft(0xe2a868, { under: 0xc07a6a, uk: .45, sheen: 0xffe0b0 }), inner = soft(0x9a6048, { rough: .95, rim: .05 }), ring = soft(0xc8854e, { under: 0xa86a5a, uk: .4 });
@@ -252,9 +252,9 @@
     v: [{}, { hue: [-30, 1, .04], acc: [['flower', 0xffffff]] }, { hue: [170, .8, .06], acc: [['star', 0xffd34f]] }, { finish: 'mint', acc: ['crown'] }],
   });
 
-  /* 8. レンジュリス — a squirrel with five go stones in a row along its tail */
+  /* 8. レンジリル — a squirrel with five go stones in a row along its tail */
   D('renju', {
-    name: { ja: 'レンジュリス', en: 'Renjirrel' },
+    name: { ja: 'レンジリル', en: 'Renjirrel' },
     desc: { ja: 'しっぽに碁石を五つ並べたリス。五連ができると胸をはる。', en: 'A squirrel with five stones in a row on its tail. Proud of its five.' },
     build(opt, tier) {
       const g = new T.Group(), O = soft(0xffa978, { under: 0xff8fb0, uk: .45 }), cream = soft(0xfff3e4, { under: 0xffd2c8, uk: .4 }), tail = soft(0xffbf8a, { under: 0xff9fc0, uk: .5 }), tip = soft(0xfff0dc, { under: 0xffc8d8, uk: .4 });
@@ -285,9 +285,9 @@
     v: [{}, { hue: [140, .9, .02], acc: [['bow', 0xff7f9e, 0xff5f8a]] }, { hue: [-90, .9, .04], acc: [['scarf', 0x6fb8ff, 0x8a76ff]] }, { finish: 'night', acc: ['tiara'] }],
   });
 
-  /* 9. スナドケイラクダ — a baby camel whose humps are an hourglass */
+  /* 9. サラサラクダ — a baby camel whose humps are an hourglass */
   D('camel', {
-    name: { ja: 'スナドケイラクダ', en: 'Sandglass Camel' },
+    name: { ja: 'サラサラクダ', en: 'Sandromedary' },
     desc: { ja: 'こぶが砂時計の子ラクダ。持ち時間はいつもぴったり。', en: 'A baby camel whose humps are an hourglass. Never runs out of time.' },
     build(opt, tier) {
       const g = new T.Group(), C = soft(0xf6cf98, { under: 0xff9fae, uk: .45 }), cream = soft(0xfff4e2, { under: 0xffd6c8, uk: .4 }), wood = fixed(0xc98452, { under: 0xa86a7a, uk: .4, rough: .7 }), hoof = soft(0xb0806a);
@@ -326,9 +326,9 @@
     v: [{}, { hue: [170, .7, .04], acc: [['flower', 0xffffff]] }, { hue: [-60, .9, .02], acc: [['scarf', 0x6fb8ff, 0x8a76ff]] }, { finish: 'pearl', acc: ['crown'] }],
   });
 
-  /* 10. チエノワヘビ — a snake threaded through two linked felt puzzle rings */
+  /* 10. チエノニョロ — a snake threaded through two linked felt puzzle rings */
   D('ringsnake', {
-    name: { ja: 'チエノワヘビ', en: 'Puzzlesnake' },
+    name: { ja: 'チエノニョロ', en: 'Puzzlesnake' },
     desc: { ja: '知恵の輪にからまったへび。ほどき方は本人も知らない。', en: 'A snake tangled in puzzle rings. Even it does not know the trick.' },
     build(opt, tier) {
       const g = new T.Group(), Sk = soft(0x9ad8ff, { under: 0xb48aff, uk: .5 }), belly = soft(0xfff6e0, { under: 0xffd6c8, uk: .4 }), spot = soft(0x6fb0f0, { under: 0x8a76ff, uk: .4 });

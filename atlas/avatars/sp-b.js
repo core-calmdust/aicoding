@@ -64,9 +64,9 @@
   function drawHeart(c, x, y, s) { c.beginPath(); c.moveTo(x, y + .5 * s); c.bezierCurveTo(x + .16 * s, y + .3 * s, x + .52 * s, y + .1 * s, x + .5 * s, y - .16 * s); c.bezierCurveTo(x + .48 * s, y - .44 * s, x + .16 * s, y - .52 * s, x, y - .26 * s); c.bezierCurveTo(x - .16 * s, y - .52 * s, x - .48 * s, y - .44 * s, x - .5 * s, y - .16 * s); c.bezierCurveTo(x - .52 * s, y + .1 * s, x - .16 * s, y + .3 * s, x, y + .5 * s); c.closePath(); }
   const feet = (g, mat, x, z, r = [.15, .09, .19], y = .08) => [-1, 1].forEach(s => blob(g, mat, [s * x, y, z], r));
 
-  /* 1. ジョーカーネコ — a kitten jester: three-pointed soft hat with bells, a pleated ruff, harlequin diamonds */
+  /* 1. ジョーカニャ — a kitten jester: three-pointed soft hat with bells, a pleated ruff, harlequin diamonds */
   D('joker', {
-    name: { ja: 'ジョーカーネコ', en: 'Jesterkit' },
+    name: { ja: 'ジョーカニャ', en: 'Jesterkit' },
     desc: { ja: '鈴つき道化ぼうしの子ねこ。切り札はいつもこの子。', en: 'A jester kitten with jingling bells — always the trump card.' },
     ur: true,
     build(opt, tier) {
@@ -113,9 +113,9 @@
     v: [{}, { hue: [150, .9, 0], acc: [['flower', 0xffffff]] }, { hue: [-70, 1, 0], acc: [] }, {}],
   });
 
-  /* 2. ハートハリネズミ — a hedgehog with soft rounded spikes and a heart on its forehead */
+  /* 2. ハリハート — a hedgehog with soft rounded spikes and a heart on its forehead */
   D('hedgehog', {
-    name: { ja: 'ハートハリネズミ', en: 'Hearthog' },
+    name: { ja: 'ハリハート', en: 'Hearthog' },
     desc: { ja: 'おでこにハートのハリネズミ。トゲはぜんぶふわふわ。', en: 'A hedgehog with a heart on its forehead and squishy spikes.' },
     build() {
       const g = new T.Group();
@@ -147,9 +147,9 @@
     v: [{}, { hue: [150, .85, 0], acc: ['bow'] }, { hue: [-90, .95, .02], acc: ['beret'] }, { finish: 'pearl', acc: ['tiara'] }],
   });
 
-  /* 3. スペードモモンガ — a flying squirrel gliding with its arms out, spade-suit tail */
+  /* 3. スペモモ — a flying squirrel gliding with its arms out, spade-suit tail */
   D('momonga', {
-    name: { ja: 'スペードモモンガ', en: 'Spadeglider' },
+    name: { ja: 'スペモモ', en: 'Spadeglider' },
     desc: { ja: 'スペードのしっぽでかじを取る、ふわりと飛ぶモモンガ。', en: 'A flying squirrel that steers with its spade-shaped tail.' },
     build() {
       const g = new T.Group();
@@ -179,9 +179,9 @@
     v: [{}, { hue: [-150, 1.3, 0], acc: [['star', 0xffd34f]] }, { hue: [120, 1.3, -.02], acc: ['beret'] }, { finish: 'night', acc: ['crown'] }],
   });
 
-  /* 4. クローバーコアラ — a koala whose ears are club-suit clovers, big soft nose */
+  /* 4. コアローバー — a koala whose ears are club-suit clovers, big soft nose */
   D('koala', {
-    name: { ja: 'クローバーコアラ', en: 'Clubkoala' },
+    name: { ja: 'コアローバー', en: 'Clubkoala' },
     desc: { ja: 'クローバーの耳をもつコアラ。四つ葉をさがしてうとうと。', en: 'A koala with clover-club ears, dozing while it looks for luck.' },
     build() {
       const g = new T.Group();
@@ -242,9 +242,9 @@
     v: [{}, { hue: [-160, .7, .04], acc: ['bow'] }, { hue: [70, .9, 0], acc: ['beret'] }, { finish: 'sky', acc: ['crown'] }],
   });
 
-  /* 6. ハナフダシカ — a spotted fawn on a hanafuda card, a red momiji leaf by its antler nubs */
+  /* 6. フダジカ — a spotted fawn on a hanafuda card, a red momiji leaf by its antler nubs */
   D('deer', {
-    name: { ja: 'ハナフダシカ', en: 'Fudafawn' },
+    name: { ja: 'フダジカ', en: 'Fudafawn' },
     desc: { ja: '花札の上でおすまし。角にもみじを一枚かざった小鹿。', en: 'A fawn posing on a hanafuda card, a maple leaf by its tiny antlers.' },
     build() {
       const g = new T.Group();
@@ -281,9 +281,9 @@
     v: [{}, { hue: [-40, 1, .06], acc: [['flower', 0xffffff]] }, { hue: [160, .7, .04], acc: [['scarf', 0x6fb8ff, 0x8a76ff]] }, { finish: 'sakura', acc: ['halo'] }],
   });
 
-  /* 7. メンコアザラシ — a round seal pup holding a star-pattern menko card */
+  /* 7. メンコザラシ — a round seal pup holding a star-pattern menko card */
   D('seal', {
-    name: { ja: 'メンコアザラシ', en: 'Menkoseal' },
+    name: { ja: 'メンコザラシ', en: 'Menkoseal' },
     desc: { ja: 'ほしもようのメンコが宝物。ぺちんと返すのが得意。', en: 'Its star menko card is its treasure — great at flipping them.' },
     build() {
       const g = new T.Group();
@@ -314,9 +314,9 @@
     v: [{}, { map: { 0xf4f6ff: 0xffe2ea, 0xd8e0f6: 0xffc0d2 }, acc: ['bow'] }, { map: { 0xf4f6ff: 0xc4d8f6, 0xd8e0f6: 0x98b4e8 }, hue: [-120, 1, 0], acc: ['beret'] }, { finish: 'pearl', acc: ['tiara'] }],
   });
 
-  /* 8. ドミノダック — a duckling with domino wings, standing on a domino tile */
+  /* 8. ドミダック — a duckling with domino wings, standing on a domino tile */
   D('duck', {
-    name: { ja: 'ドミノダック', en: 'Dominoduck' },
+    name: { ja: 'ドミダック', en: 'Dominoduck' },
     desc: { ja: 'ドミノの羽をもつアヒルの子。ならべて倒すのが大好き。', en: 'A duckling with domino wings. Loves lining them up and toppling them.' },
     build() {
       const g = new T.Group();
@@ -385,10 +385,10 @@
     v: [{}, { hue: [-25, .6, .12, COIN], acc: [['flower', 0xffffff]] }, { hue: [200, .7, .04, COIN], acc: ['beret'] }, {}],
   });
 
-  /* 10. もじブタ — a piglet with wooden letter tiles (A and B) — a word-game fan */
+  /* 10. モジブー — a piglet with wooden letter tiles (A and B) — a word-game fan */
   const WOOD = [0xf3d39a];
   D('piglet', {
-    name: { ja: 'もじブタ', en: 'Wordpig' },
+    name: { ja: 'モジブー', en: 'Wordpig' },
     desc: { ja: '文字タイルをならべてことばを作る子ブタ。まだABだけ。', en: 'A piglet who builds words from letter tiles — so far just A and B.' },
     build() {
       const g = new T.Group();

@@ -131,10 +131,10 @@
     v: [{}, { hue: [-30, 1, .02, [0xfff4ea, 0x8ad0ff]], acc: [['bow', 0xffffff, 0xff9ab8]] }, { hue: [-200, .9, .02, [0xfff4ea, 0x8ad0ff]], acc: [['flower', 0xffd34f]] }, { finish: 'sakura', acc: ['tiara'] }],
   });
 
-  /* ---------- 秋: モミジギツネ ---------- */
+  /* ---------- 秋: モミジコン ---------- */
   const FX = 0xf0a050;
   D('momiji', {
-    name: { ja: 'モミジギツネ', en: 'Maplefox' },
+    name: { ja: 'モミジコン', en: 'Maplefox' },
     desc: { ja: '紅葉の山道に住むきつねの子。いつももみじを一枚持ち歩く。', en: 'A fox kit from the autumn mountain path — never without its maple leaf.' },
     build() {
       const g = new T.Group(), Fx = soft(FX, { under: 0xffc070, uk: .45 }), W = soft(0xfff6ea, { under: 0xffe0c8, uk: .4 }), dk = soft(0x8a4a3a, { rough: .6 });
@@ -208,10 +208,10 @@
     v: [{}, { hue: [-70, .9, .02, [0xe8885a, 0xfff6d8]], acc: [['bow', 0xff7f9e, 0xff5f8a]] }, { hue: [60, .9, .02, [0xe8885a, 0xfff6d8]], acc: [['beret', 0xffd34f, 0xff9a4a]] }, { finish: 'pearl', acc: ['tiara'] }],
   });
 
-  /* ---------- おもちゃ: ブリキロボ ---------- */
+  /* ---------- おもちゃ: ブリキン ---------- */
   const RB = 0x8ab8e8;
   D('buriki', {
-    name: { ja: 'ブリキロボ', en: 'Tinbot' },
+    name: { ja: 'ブリキン', en: 'Tinbot' },
     desc: { ja: 'おもちゃ箱から出てきたブリキのロボット。背中のネジで元気いっぱい。', en: 'A tin robot out of the toy box — wind the key on its back and off it goes.' },
     build() {
       const g = new T.Group(), B = soft(RB, { under: 0xc8d8ff, uk: .4, rough: .35 }), Rd = soft(0xff6a6a, { under: 0xffa08a, uk: .35 }), Y = soft(0xffd65a, { under: 0xffa84a, uk: .35, glow: .05 }), sv = soft(0xdde4f0, { rough: .3 });
