@@ -2017,6 +2017,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .vsheet .vgrps{overflow:auto;min-height:0;flex:1 1 auto;padding-bottom:12px}.vsheet .vgrps .lvs-l{overflow:visible;max-height:none;flex:none}
 .vgh{display:flex;align-items:center;gap:10px;margin:10px 16px 2px;font-weight:900;font-size:14px;color:var(--ink)}.vgh::after{content:'';flex:1;height:2px;border-radius:2px;background:var(--line)}
 .bvi .vopts{display:flex;align-items:stretch;gap:10px}.bvi .vopts .vrow{flex:1 1 50%!important}
+.bvi #bvMBody .mxrow.aionly > label{flex:0 0 auto!important;width:var(--lbw,auto)!important;min-width:0!important;max-width:none!important}.bvi .mxrow.aionly .rtnow2{flex:1 1 auto}@media (max-width:600px){.bvi .mxrow.aionly .rtnow2 small{display:none}}
 .bvi .rtnow2{flex:1 1 50%;min-width:0;display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:10px;padding:6px 14px;border-radius:16px;background:#fff;border:2px solid var(--line);line-height:1.1}.bvi .rtnow2[hidden]{display:none}.bvi .rtnow2 small{flex:none;font-size:13px;font-weight:800;color:var(--ink2);white-space:nowrap}.bvi .rtnow2 b{min-width:0;font-size:20px;font-weight:900;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:end}   /* 現在のレート: the label on the left, the value on the right (2026-11-13) */
 /* (games with a 種目 row — shogi: every box the same height and every gap the same, in each tab, 2026-11-12) */
 .bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)){--bh:38px;--bg:10px}.bvi #bvOlRow{--bh:38px;gap:10px}@media (min-width:820px){.bvi #bvOlRow{--bh:48px;gap:12px}}
@@ -2321,7 +2322,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=410"></script>
+<script src="lazy.js?v=411"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=40"></script>
 <script src="lessons3d.js?v=67"></script>
@@ -2343,7 +2344,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=43"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=441"></script>
+<script src="app.js?v=442"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
