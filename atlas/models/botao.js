@@ -106,13 +106,12 @@
         if (look === 'night' && inF) k += (Math.floor((cy + H) / 13.9) % 2 ? 9 : -6) + (N(x / 1.5, y / 40, 4) - .5) * 10;   // the mowing stripes
         if (look === 'retro') k += (N(x / 160, y / 160, 6) - .5) * 30 + (N(x / 9, y / 9, 7) > .82 ? -12 : 0);   // old paint, stains
         if (look === 'praia' && inF) k = (Math.random() - .5) * 26 + (N(x / 4, y / 4, 2) - .5) * 18;   // sand grain
-        if (look === 'madeira') {   // (2026-11-17 ユーザー：板の境目は見せず、木目が伝わるリアルさで) one flat-sawn sheet: growth rings
-          // running the length with cathedral arches, latewood lines, fibres and pores (as table3d's woodTop, turned along the pitch)
-          const uu = y / Hh, vv = x / S - .5, A = inF ? [226, 194, 146] : [140, 92, 54], Bc = inF ? [168, 116, 68] : [72, 42, 22];
-          const cath = Math.sqrt(vv * vv + Math.pow(.09 + (uu - .55) * .12, 2)), wob = (N(uu * 1.3, vv * 2.4, 3) - .5) * .09 + (N(uu * 6, vv * 9, 2) - .5) * .012;
-          const f = ((Math.abs(vv) * .35 + cath * .65 + wob) * 30) % 1, late = Math.exp(-Math.pow((f - .78) / .06, 2)) + .35 * Math.exp(-Math.pow((f - .78) / .2, 2));
-          let tt = .18 + late * .45 + (N(uu * 5, x * .55, 2) - .5) * .3 + (N(uu * 40, x * 2.2, 1) - .5) * .12 + (N(uu * 1.5, vv * 1.5, 4) - .5) * .2;
-          if (late > .4 && N(uu * 300, x * 1.4, 1) > .78) tt += .12;
+        if (look === 'madeira') {   // (2026-11-17 ユーザー：継ぎ目なし → 木目がきつすぎ → 化粧板っぽく) a sliced veneer sheet: fine, mostly
+          // straight grain running the length, low contrast, a soft sheen of figure; no strong rings or pores
+          const uu = y / Hh, vv = x / S - .5, A = inF ? [222, 192, 146] : [132, 88, 52], Bc = inF ? [196, 158, 108] : [104, 66, 36];
+          const wob = (N(uu * 1.2, vv * 3, 3) - .5) * .05, f = ((vv + wob) * 70) % 1;
+          const line = Math.exp(-Math.pow((((f % 1) + 1) % 1 - .5) / .12, 2));
+          let tt = .3 + line * .22 + (N(uu * 3, x * .35, 2) - .5) * .22 + (N(uu * 30, x * 1.6, 1) - .5) * .08 + (N(uu * 1.1, vv * 1.4, 4) - .5) * .25;
           tt = Math.max(0, Math.min(1, tt)); const i = (y * S + x) * 4;
           d[i] = A[0] + (Bc[0] - A[0]) * tt; d[i + 1] = A[1] + (Bc[1] - A[1]) * tt; d[i + 2] = A[2] + (Bc[2] - A[2]) * tt; d[i + 3] = 255; continue;
         }
