@@ -547,6 +547,11 @@
     if (m) { const N = +m[1]; el.innerHTML = '10<sup>0</sup>'; const sup = el.querySelector('sup'); tween(1300, k => { sup.textContent = fmt(N * k); }); return; }
     const N = parseFloat(raw.replace(/,/g, '')); if (!isFinite(N)) { el.textContent = raw; return; }
     const dec = (raw.split('.')[1] || '').length, yr = /^\d{4}$/.test(raw);   // 4-digit numbers (years) are not grouped
+    // (2026-11-18 ユーザー：カウントアップで下の文字がブレまくる・スマホ) the number keeps the width of its final value while it
+    // counts (the line around it and the text below stay put): measured once with the final text, digits all of one width
+    const fin = dec ? N.toFixed(dec) : yr ? String(N) : fmt(N);
+    el.style.fontVariantNumeric = 'tabular-nums'; el.style.display = 'inline-block'; el.style.textAlign = 'end'; el.textContent = fin;
+    const w = el.getBoundingClientRect().width; if (w) el.style.minWidth = Math.ceil(w) + 'px';
     tween(1300, k => { el.textContent = dec ? (N * k).toFixed(dec) : yr ? String(Math.round(N * k)) : fmt(N * k); });
   }
   function tween(ms, f) { const t0 = performance.now(); const step = now => { const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 4); f(k >= 1 ? 1 : e); if (k < 1 && on) requestAnimationFrame(step); }; requestAnimationFrame(step); }
