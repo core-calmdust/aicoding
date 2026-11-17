@@ -102,9 +102,9 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
 - **文言（14言語）**：`atlas/i18n.js` の `about.foxgeese`・`hist.foxgeese`、`atlas/gamelist-i18n.js` の一言、`shared/atlas-updates.js` の公開行、トップページ `index.html` の `fg.title`・`fg.desc`。
 - **読み込み**：`atlas/lazy.js` に models／games／rules の3本。`atlas/app.js` の R3（アイコン images/atlas/foxgeese.webp は仮のまま）と FULL_SKIN。
 - **ちゃぶ台対局**（`atlas/games/foxgeese.js`）：エンジン（`../foxgeese/engine.js` をページと Worker で）そのままの4ルール。カードの「種目」＝15羽（後退なし、既定）・17羽・13羽（伝統）・13羽（改変）（size 15・17・13・113。フル機能版へは `&size=` で渡り、`atlas/skin/foxgeese.js` が rule に直す）。手番は上の「手番の選択」。盤は回さない（ガチョウがいつも手前）。モードは 対戦（AI Lv.1〜20・二人で対戦）／レート戦・パズル・レッスンはフル機能版を開く。狐の連続跳びは着地点を1つずつタップし、まだ跳べる所で止まるときは同じ点（か狐）をもう一度タップ。HUD の数字は狐＝取った数、ガチョウ＝残りの数。待った・ヒント・投了。3D駒の切り替え（`atlas-pieces`）に追従。
-- **3Dルールコース**（`atlas/rules/foxgeese.js`、案内はドミノダック `av/duck-0`、10ステップ）：紹介 → 盤と駒 → 狐の動き → 跳び越えて取る → 続けて跳ぶ → ガチョウの動き → 後ろを守る → ガチョウの勝ち → 狐の勝ち → 4つのルール。エンジンは g15（ガチョウは後退しない）、盤・最後のステップは15羽の配置。課題の正解はエンジンで判定。3D盤には座標がないので点の名前を言わない（「光っている点」）。
+- **3Dルールコース**（`atlas/rules/foxgeese.js`、案内はドミダック `av/duck-0`、10ステップ）：紹介 → 盤と駒 → 狐の動き → 跳び越えて取る → 続けて跳ぶ → ガチョウの動き → 後ろを守る → ガチョウの勝ち → 狐の勝ち → 4つのルール。エンジンは g15（ガチョウは後退しない）、盤・最後のステップは15羽の配置。課題の正解はエンジンで判定。3D盤には座標がないので点の名前を言わない（「光っている点」）。
 - **ヒストリア**（`atlas/historia/s/foxgeese.json`＋14言語）：この spec と 2D の紹介文にある事実だけで構成（『グレティルのサガ』のハラタフル・遅くとも14世紀・エドワード4世の駒・ヴィクトリア女王・「狐とめんどり」「狼と羊」・ペグ・ソリテールと同じ盤・13羽と17羽）。盤の図は十字形（`atlas/historia.js` の grid に `cross` を追加）。地図のピン＝アイスランド・イングランド・フランス・ロシア（伝わった道筋は資料にないので線は引かない）。
-- **ボスと観戦キャラ**（`atlas/npc/roster.js`・`atlas/npc/t/<lang>.js`、14言語）：ボス7体（ねぼすけガチョウ → 農場のめんどり → サガのひつじ → 王の猟犬 → おおかみ → 女王陛下のガチョウ → エドワード王ギツネ＝UR）。画像 `images/atlas/av/boss-foxgeese-<1〜7>-<0〜3>.webp`。豆知識4行。
+- **ボスと観戦キャラ**（`atlas/npc/roster.js`・`atlas/npc/t/<lang>.js`、14言語）：ボス7体（ネボガチョ → ハタケッコ → サガメェ → ロイヤルワン → オイカケガミ → マジェスグース → エドワツネ＝UR）。画像 `images/atlas/av/boss-foxgeese-<1〜7>-<0〜3>.webp`。豆知識4行。
 - **トップページ**：`index.html` の一覧（ラトルンクロルムの次、`alpha:true`）、アイコン `images/icons/foxgeese.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/foxgeese.webp`。
 - Praline のマーク・mtsplit／tools/mtsim は対象外（1スレッドの JS エンジン）。
 
