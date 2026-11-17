@@ -2175,6 +2175,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 
 /* (2026-11-18) phones, the short card: ルール · あそぶ + the 実績 ring; the sheet: the place's button in pink across, 2D | フル機能 (coffee) */
 .bvi .act.act2.pach{grid-template-columns:1fr auto;align-items:center}
+#bvi:has(.act.pach) #bvAchR{display:none!important}   /* (2026-11-18 ユーザー：開くと実績アイコンが二重 — the one beside あそぶ stays) */
 .bvi .act.pach > #bvGo{grid-column:auto}
 .bvi .act #bvRec.inact{position:static!important;margin:0!important;box-shadow:0 4px 0 var(--line)!important;border:2px solid var(--line)!important;width:60px!important;min-width:60px!important;height:60px!important}
 .ps-act.ps3row{grid-template-columns:1fr 1fr}
