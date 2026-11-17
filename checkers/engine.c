@@ -1166,12 +1166,24 @@ static void mtPublish(int d, int v, const Move *m) {   // a finished iteration o
   if (threadId && d >= gGoal && gGoalKey == rootKey) gHit = rootKey;
 }
 #endif
+// time management (2026-11-17, -DTM=0: the fixed rule "stop once 55% of the time is used"): by time, the move gets a soft
+// target that grows while the best move changes or the value falls and shrinks while it holds; the hard end is TM_HARD x the time
+#ifndef TM
+#define TM 1
+#endif
+#ifndef TM_HARD
+#define TM_HARD 1.8
+#endif
+#ifndef TM_BASE
+#define TM_BASE 0.45
+#endif
 static void bestN(int maxDepth, int ms, u64 nodeLim) {
 #ifdef MT
   if (threadId == 0)
 #endif
   setV2(V2_FORCE ? V2_FORCE > 0 : nodeLim == 0);
-  beginSearch(ms); nodeLimit_on = nodeLim > 0; nodeLimit = nodeLim; nodeMask = nodeLimit_on && nodeLim < 100000 ? 127 : 2047;
+  double tm0 = now(), tmInst = 0; int tmOn = TM && ms > 0 && nodeLim == 0; Move tmPrev = { 0 }; int tmPv = 0, tmHave = 0;
+  beginSearch(tmOn ? (int)(ms * TM_HARD) : ms); nodeLimit_on = nodeLim > 0; nodeLimit = nodeLim; nodeMask = nodeLimit_on && nodeLim < 100000 ? 127 : 2047;
   if (rootN == 0) { IO[0] = -1; IO[1] = 0; IO[2] = -WIN; IO[3] = 0; return; }
   Move bm = rootL[0]; int bv = 0, bd = 0;
   if (rootN == 1) { writeMove(IO, &bm); IO[2] = 0; IO[3] = 0; IO[4] = 0; return; }
@@ -1208,7 +1220,15 @@ static void bestN(int maxDepth, int ms, u64 nodeLim) {
     progress(d, 1);
     if (v > WINT && WIN - v <= d) break;   // a forced win found
     if (v < -WINT && WIN + v <= d) break;
-    if (ms > 0 && d > 1 && now() > tEnd - ms * 0.45) break;   // the next iteration would most likely not finish
+    if (tmOn) {
+      tmInst *= 0.5;
+      if (tmHave && !sameMove(&bm, &tmPrev)) tmInst += 1.0;
+      double drop = tmHave && v < tmPv - 20 ? (tmPv - v > 80 ? 1.0 : 0.5) : 0;
+      tmPrev = bm; tmPv = v; tmHave = 1;
+      double f = TM_BASE * (1 + tmInst) * (1 + drop) * (d < 8 ? 1.5 : 1);
+      if (f > TM_HARD * 0.6) f = TM_HARD * 0.6;
+      if (d > 1 && now() - tm0 > ms * f) break;
+    } else if (ms > 0 && d > 1 && now() > tEnd - ms * 0.45) break;   // the next iteration would most likely not finish
 #ifdef MT
     if (gStop) break;
 #endif

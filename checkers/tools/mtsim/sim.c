@@ -70,9 +70,10 @@ static void egLoad(const char *fn) {
   int fd = open(fn, O_RDONLY); if (fd < 0) { fprintf(stderr, "no egdb %s\n", fn); return; }
   off_t len = lseek(fd, 0, SEEK_END);
   const u8 *m = mmap(0, (size_t)len, PROT_READ, MAP_SHARED, fd, 0); close(fd);
-  if (m == MAP_FAILED || memcmp(m, "CKDB", 4)) { fprintf(stderr, "bad egdb %s\n", fn); return; }
+  int z = m != MAP_FAILED && !memcmp(m, "CKZ3", 4), z2 = m != MAP_FAILED && !memcmp(m, "CKZ2", 4);   // (2026-11-17: compressed tables)
+  if (m == MAP_FAILED || (memcmp(m, "CKDB", 4) && !z && !z2)) { fprintf(stderr, "bad egdb %s\n", fn); return; }
   u32 nc; memcpy(&nc, m + 4, 4); const u8 *d = m + 8 + (size_t)nc * 8;
-  for (u32 i = 0; i < nc; i++) { const u8 *h = m + 8 + (size_t)i * 8; u32 l; memcpy(&l, h + 4, 4); if (h[0] + h[1] + h[2] + h[3] <= DBMAX) eg_add(h[0], h[1], h[2], h[3], d); d += l; }
+  for (u32 i = 0; i < nc; i++) { const u8 *h = m + 8 + (size_t)i * 8; u32 l; memcpy(&l, h + 4, 4); if (h[0] + h[1] + h[2] + h[3] <= DBMAX) { if (z) eg_addz3(h[0], h[1], h[2], h[3], d); else if (z2) eg_addz(h[0], h[1], h[2], h[3], d); else eg_add(h[0], h[1], h[2], h[3], d); } d += l; }
 }
 int main(int argc, char **argv) {
   FILE *f = fopen("pos.txt", "r"); static char line[65536];
@@ -86,6 +87,7 @@ int main(int argc, char **argv) {
   FILE *nf = fopen("evalnet.bin", "rb"); int len = (int)fread(N2BUF, 1, sizeof(N2BUF), nf); fclose(nf);
   if (!net2_load(len)) { fprintf(stderr, "bad net\n"); return 1; }
   egLoad("egdb4.bin");
+  if (getenv("SIM_V2")) V2_FORCE = atoi(getenv("SIM_V2"));   // (2026-11-17) 1: search v2 also in the budget runs (as the page by time)
   int T[16], nt = 0, maxT = 1; for (char *t = strtok(argv[1], ","); t; t = strtok(0, ",")) { T[nt] = atoi(t); if (T[nt] > maxT) maxT = T[nt]; nt++; }
   double budget = atof(argv[2]) * 1e6; const char *onlyS = argc > 3 ? argv[3] : "-1"; int only = atoi(onlyS);
   int DELAY = argc > 4 ? atoi(argv[4]) : 1;
