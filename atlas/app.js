@@ -1297,12 +1297,14 @@
   // the card scrolls on phones and would clip it) just above the card's top edge. It is set from the card's layout box in a
   // ResizeObserver callback — that runs after layout and before paint, so the cup moves in the very frame the card does (no rAF,
   // no transition)
+  // PC keeps the cup where it was, beside the place chip (2026-11-17 ユーザー：PCは元のまま、右下はスマホの対応)
   function placeRec() { const r = $('bvRec'), bv = $('bv'); if (!r || !bv) return;
+    if (!matchMedia('(max-width: 819px)').matches) { const pb = $('bvPlBtn'); r.classList.remove('bvrecf', 'inhd'); r.style.removeProperty('bottom'); if (pb && r.previousElementSibling !== pb) pb.after(r); return; }
     r.classList.remove('inhd'); r.classList.add('bvrecf'); if (r.parentNode !== bv) bv.appendChild(r); posRec(); }
   function posRec() { const r = $('bvRec'), bv = $('bv'), bi = $('bvi'); if (!r || !bv || !bi || r.parentNode !== bv) return;
     let top = bi.offsetTop; for (let e = bi.offsetParent; e && e !== bv; e = e.offsetParent) top += e.offsetTop;
     r.style.setProperty('bottom', Math.round(bv.clientHeight - top + 12) + 'px', 'important'); }
-  addEventListener('resize', posRec);
+  addEventListener('resize', placeRec);   // (crossing 819px moves the cup between the PC and the phone places)
   try { const ro = new ResizeObserver(posRec); ro.observe($('bvi')); ro.observe($('bv')); } catch (e) {}
   /* ---------- phones: the 「あそぶ」 sheet (2026-11-09) ----------
      A game whose full version has puzzles / lessons playable on the 3D table (PS_GAMES) keeps the card short: one 「あそぶ ▶」
