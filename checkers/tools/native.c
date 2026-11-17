@@ -98,9 +98,13 @@ static void egLoad(const char *fn) {
   int fd = open(fn, O_RDONLY); if (fd < 0) { fprintf(stderr, "no egdb %s\n", fn); return; }
   off_t len = lseek(fd, 0, SEEK_END);
   const u8 *m = mmap(0, (size_t)len, PROT_READ, MAP_SHARED, fd, 0); close(fd);
-  if (m == MAP_FAILED || memcmp(m, "CKDB", 4)) { fprintf(stderr, "bad egdb %s\n", fn); return; }
+  // (2026-11-17) also the site's compressed files ("CKZ2" / "CKZ3", tools/egpack.c: gunzip of egdb4.bin.gz, egdb5.bin.gz, …)
+  int z3 = m != MAP_FAILED && !memcmp(m, "CKZ3", 4), z2 = m != MAP_FAILED && !memcmp(m, "CKZ2", 4);
+  if (m == MAP_FAILED || (memcmp(m, "CKDB", 4) && !z3 && !z2)) { fprintf(stderr, "bad egdb %s\n", fn); return; }
   u32 nc; memcpy(&nc, m + 4, 4); const u8 *d = m + 8 + (size_t)nc * 8;
-  for (u32 i = 0; i < nc; i++) { const u8 *h = m + 8 + (size_t)i * 8; u32 l; memcpy(&l, h + 4, 4); if (h[0] + h[1] + h[2] + h[3] <= DBMAX) eg_add(h[0], h[1], h[2], h[3], d); d += l; }
+  for (u32 i = 0; i < nc; i++) { const u8 *h = m + 8 + (size_t)i * 8; u32 l; memcpy(&l, h + 4, 4);
+    if (h[0] + h[1] + h[2] + h[3] <= DBMAX) { if (z3) eg_addz3(h[0], h[1], h[2], h[3], d); else if (z2) eg_addz(h[0], h[1], h[2], h[3], d); else eg_add(h[0], h[1], h[2], h[3], d); }
+    d += l; }
   fprintf(stderr, "egdb: %u classes, up to %d pieces\n", nc, egMaxN);
 }
 static int cmdMatch(int argc, char **argv) {
@@ -359,7 +363,7 @@ static int cmdEgsample(int argc, char **argv) {
 
 int main(int argc, char **argv) {
   initGeo(); initCB();
-  if (getenv("EGDB")) egLoad(getenv("EGDB"));
+  if (getenv("EGDB")) { static char eb[4096]; snprintf(eb, sizeof eb, "%s", getenv("EGDB")); for (char *t = strtok(eb, ":"); t; t = strtok(0, ":")) egLoad(t); }   // (several files: a:b:c)
   static Net gnet; if (getenv("NETFILE")) { gnet = loadNet(getenv("NETFILE")); useNetW(&gnet); }
   if (argc > 1 && !strcmp(argv[1], "perft")) {
     Pos p = startPos(); int D = argc > 2 ? atoi(argv[2]) : 8;
