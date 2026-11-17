@@ -301,16 +301,21 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NB, JP, RC, sqAt, bit, popc, bitsOf
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.CheckersEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261116z3';
+  const V = 'v=20261117e6';
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The network sits in the engine's
   // own (shared) tables; the endgame databases go into the shared memory above every thread's slot. The rest is the usual API.
   const MTL = /[?&]mt=1\b/.test(self.location.search || '');
-  let readyP = null, egTop = 0, egLoad = null, eg5P = null;
+  let readyP = null, egTop = 0, egLoad = null, eg5P = null, eg6P = null;
   // the 5-piece classes (2026-11-15, compressed and probed in place, tools/egpack.c: 2.7 MB download, 4.6 MB of memory): loaded
   // at the first search of a level that thinks by time (四段・五段・PRO's upper steps) or an analysis; up to 4 pieces at once.
   const wantEg5 = m => (m.type === 'analyze' || m.type === 'cands' ||
     (m.type === 'think' && (() => { const L = m.cfg || LEVELS[m.level] || {}; return (L.ms >= 1000 && !L.nk) || L.nk >= 500; })()));
+  // the 6-piece classes (2026-11-17, CKZ3: 52 MB download, 83 MB of memory, +9 Elo [0, 18] over 3000 games): a computer only,
+  // at the first search of 五段, a PRO step of 2.5 s / 2M positions or more, or an analysis
+  const NAV = self.navigator || {}, EG6_OK = !/Mobi|Android|iPhone|iPad|iPod/i.test(NAV.userAgent || '') && !(NAV.maxTouchPoints > 1 && /Mac/.test(NAV.userAgent || '')) && !(NAV.deviceMemory < 8);
+  const wantEg6 = m => EG6_OK && (m.type === 'analyze' || m.type === 'cands' ||
+    (m.type === 'think' && (() => { const L = m.cfg || LEVELS[m.level] || {}; return (L.ms >= 2500 && !L.nk) || L.nk >= 2000; })()));
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     // SIMD build when the browser supports it (about 1.8x faster with the learned evaluation)
@@ -358,7 +363,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   self.onmessage = e => {
     const m = e.data;
     if (m && m.type === 'mtinit') return;
-    queue = queue.then(() => readyP).then(() => { if (egLoad && !eg5P && wantEg5(m)) eg5P = egLoad('egdb5.bin.gz').catch(() => {}); return eg5P; }).catch(() => {}).then(() => {
+    queue = queue.then(() => readyP).then(() => { if (egLoad && !eg5P && wantEg5(m)) eg5P = egLoad('egdb5.bin.gz').catch(() => {}); if (eg5P && !eg6P && wantEg6(m)) eg6P = eg5P.then(() => egLoad('egdb6.bin.gz')).catch(() => {}); return eg6P || eg5P; }).catch(() => {}).then(() => {
       try {
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {
