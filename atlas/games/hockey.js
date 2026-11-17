@@ -428,8 +428,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     const SW = 1;
     function scr2field(dx, dy) { return sideways() ? [SW * dy, -SW * dx] : [dx, dy]; }
     // a held mallet: it runs at up to KV cm/s (KSLOW while slowed), reaching it in a fraction of a second, and stops as quickly
-    // (2026-11-17 ユーザー：キーボード入力が高速すぎて機能していない — it used to leap 360 cm/s at once across a 62 cm table)
-    const KV = 115, KSLOW = 42, KACC = 1000, kv = [[0, 0], [0, 0]];
+    // (2026-11-17 ユーザー：キーボード入力が高速すぎて機能していない — it used to leap 360 cm/s at once across a 62 cm table; 115 → 80 cm/s the same day: ベースのスピードが早くて操作しにくい)
+    const KV = 80, KSLOW = 32, KACC = 900, kv = [[0, 0], [0, 0]];
     const held = [!mouseCtl, pvp];   // (the sides steered by keys / a pad all the time; with the mouse the keys still help side 0)
     const padSide = !pvp ? 0 : ctrl === 2 ? 1 : -1;   // (two players by keyboard: no pad)
     function axes(dt) {
