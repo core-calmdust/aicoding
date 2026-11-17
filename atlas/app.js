@@ -130,15 +130,26 @@
     pop.querySelectorAll('[data-o]').forEach(b => b.onclick = e => {
       e.stopPropagation(); const k = b.dataset.o;
       if (k === 'snd') $('sfxBtn').click(); else if (k === 'npc') $('npcBtn').click(); else if (k === 'fs') fsToggle();
-      else if (k === 'lang') { optOpen(false); openLang(true); return; }
+      else if (k === 'lang') { if (langSide()) { const on = $('langPop').hidden; openLang(on); if (on) langCascade(b); return; } optOpen(false); openLang(true); return; }
       optPaint();
     });
+  }
+  // PC (2026-11-17 ユーザー：言語は設定ボックスから連なるように): the language list opens beside the box, level with its row — a
+  // cascading menu; the box stays open. Phones keep the list in place of the box.
+  const langSide = () => matchMedia('(min-width: 820px) and (hover: hover) and (pointer: fine)').matches;
+  function langCascade(row) {
+    const lp = $('langPop'), op = $('optPop'); if (!lp || !op) return;
+    lp.classList.add('lcas'); row.classList.add('on'); row.setAttribute('aria-expanded', 'true');
+    const o = op.getBoundingClientRect(), r = row.getBoundingClientRect(), w = lp.offsetWidth, h = lp.offsetHeight, rtl = document.documentElement.dir === 'rtl';
+    const x = rtl ? Math.min(innerWidth - w - 8, o.right + 10) : Math.max(8, o.left - w - 10), y = Math.max(8, Math.min(innerHeight - h - 8, r.top - 10));
+    lp.style.left = x + 'px'; lp.style.top = y + 'px';
   }
   function optOpen(on) {
     const pop = $('optPop'), btn = $('optBtn'); if (!pop) return;
     if (on === undefined) on = pop.hidden;
     pop.hidden = !on; btn.setAttribute('aria-expanded', on); btn.setAttribute('aria-label', ot('t')); btn.title = ot('t');
     if (on) { if (!$('langPop').hidden) openLang(false); optPaint(); }
+    else if ($('langPop').classList.contains('lcas')) openLang(false);
   }
   if ($('optBtn')) {
     $('optBtn').onclick = e => { e.stopPropagation(); optOpen(); };
@@ -3011,6 +3022,7 @@
     if (on === undefined) on = pop.hidden;
     if (on) pop.innerHTML = [...$('langSel').options].map(o => `<button type="button" role="option" data-l="${o.value}" aria-selected="${o.value === lang}"><b>${esc(o.text)}</b><small>${o.value === 'zh-TW' ? 'TW' : o.value.toUpperCase()} · ${LNAME[o.value]}</small></button>`).join('');
     pop.hidden = !on; btn.setAttribute('aria-expanded', on);
+    if (!on && pop.classList.contains('lcas')) { pop.classList.remove('lcas'); pop.style.left = pop.style.top = ''; const r = document.querySelector('#optPop .orow[data-o="lang"]'); if (r) { r.classList.remove('on'); r.removeAttribute('aria-expanded'); } }
     pop.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { openLang(false); if (b.dataset.l !== lang) { $('langSel').value = b.dataset.l; $('langSel').dispatchEvent(new Event('change')); } });
   }
   $('langBtn').onclick = e => { e.stopPropagation(); openLang(); };
