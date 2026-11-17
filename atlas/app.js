@@ -553,7 +553,7 @@
       const one = items.map(([u, w]) => `<span class="ul-i" style="--c:${w.color}"><span class="ul-a">${w.art}</span><span class="ul-x"><span class="ul-h"><b>${esc(w.name)}</b><span class="ul-d">${esc(fmtDate(u[0]))}</span></span><span class="ul-t">${esc(headline(utx(u)))}</span></span></span>`).join(sep) + sep;   // picture + two lines (name · date / a short headline)
       el.innerHTML = `<span class="ul-k">NEW</span><span class="ul-v"><span class="ul-tr"><span class="ul-g">${one}</span><span class="ul-g" aria-hidden="true">${one}</span></span></span>${fresh ? '<i class="ul-dot" aria-hidden="true"></i>' : ''}<span class="ul-ch" aria-hidden="true">›</span>`;
       el.setAttribute('aria-label', t('upd.more') + ': ' + items.map(([u, w]) => w.name).join(', '));
-      el.onclick = openUpdSheet;
+      el.onclick = () => openUpdSheet();
       el.style.setProperty('--ud', Math.max(16, el.querySelector('.ul-g').textContent.length * .2).toFixed(1) + 's');   // (a guess until it can be measured)
     }
     // one copy runs past at ~40px/s: measured once the ticker is on screen (it is display:none on PC and on the map / きせかえ)
@@ -571,31 +571,73 @@
       const day = new Intl.DateTimeFormat(lang, { day: 'numeric' }).formatToParts(dt).find(p => p.type === 'day');
       return { n: day ? day.value : String(dt.getDate()), m: dt.toLocaleDateString(lang, { month: 'long' }), w: dt.toLocaleDateString(lang, { weekday: 'long' }) };
     } catch (e) { return { n: String(dt.getDate()), m: String(dt.getMonth() + 1), w: '' }; } };
-  // atlas/updnews.js (0.9 MB: the "what was this day?" lines) loads when the sheet is first opened (2026-11-10)
-  let newsP = null;
-  function openUpdSheet() {
-    if (window.AtlasMissions) AtlasMissions.page('news');
-    if (!window.AtlasNews) { if (!newsP) newsP = new Promise(res => { const sc = document.createElement('script'); sc.src = 'updnews.js?v=7'; sc.onload = sc.onerror = res; document.head.appendChild(sc); }); newsP.then(openUpdSheet0); return; }
-    openUpdSheet0();
+  // the "what was this day?" lines: one file per language (atlas/updnews/<lang>.js, ~70 KB; tools/updnews-split.js from
+  // atlas/updnews.js), loaded when the sheet is first opened in that language (2026-11-17; it was all 14 at once, 0.9 MB)
+  const UPDNEWS_V = 1, newsPL = {};
+  const newsLoad = l => newsPL[l] || (newsPL[l] = new Promise(res => { const sc = document.createElement('script'); sc.src = 'updnews/' + l + '.js?v=' + UPDNEWS_V; sc.onload = sc.onerror = res; document.head.appendChild(sc); }));
+  // the archive (ユーザー指定 2026-11-17：一定期間を過ぎた更新はアーカイブ、並べ替えできるように): lines older than 14 days live in
+  // shared/atlas-updates-archive.js (tools/news-archive.js), loaded only when its button is pressed; sorted newest / oldest / by game
+  let arcP = null;
+  const arcLoad = () => arcP || (arcP = new Promise(res => { const sc = document.createElement('script'); sc.src = '../shared/atlas-updates-archive.js?v=' + ARC_V; sc.onload = sc.onerror = () => res(window.ATLAS_UPDATES_ARCHIVE || []); document.head.appendChild(sc); }));
+  const ARC_V = 1;
+  const ARCT = {
+    ja: ['過去の更新を見る', 'アーカイブ', '最近の更新', '新しい順', '古い順', 'ゲーム別'],
+    en: ['See older updates', 'Archive', 'Recent updates', 'Newest', 'Oldest', 'By game'],
+    zh: ['查看以往的更新', '归档', '最近的更新', '最新', '最早', '按游戏'],
+    'zh-TW': ['查看以往的更新', '封存', '最近的更新', '最新', '最早', '依遊戲'],
+    ko: ['지난 업데이트 보기', '아카이브', '최근 업데이트', '최신순', '오래된 순', '게임별'],
+    es: ['Ver novedades anteriores', 'Archivo', 'Novedades recientes', 'Más recientes', 'Más antiguas', 'Por juego'],
+    fr: ['Voir les anciennes nouveautés', 'Archives', 'Nouveautés récentes', 'Plus récentes', 'Plus anciennes', 'Par jeu'],
+    pt: ['Ver novidades anteriores', 'Arquivo', 'Novidades recentes', 'Mais recentes', 'Mais antigas', 'Por jogo'],
+    de: ['Ältere Neuigkeiten', 'Archiv', 'Neueste Updates', 'Neueste', 'Älteste', 'Nach Spiel'],
+    ru: ['Смотреть старые обновления', 'Архив', 'Последние обновления', 'Сначала новые', 'Сначала старые', 'По играм'],
+    tr: ['Eski güncellemeleri gör', 'Arşiv', 'Son güncellemeler', 'En yeni', 'En eski', 'Oyuna göre'],
+    id: ['Lihat pembaruan lama', 'Arsip', 'Pembaruan terbaru', 'Terbaru', 'Terlama', 'Per game'],
+    hi: ['पुराने अपडेट देखें', 'संग्रह', 'हाल के अपडेट', 'नए पहले', 'पुराने पहले', 'खेल के अनुसार'],
+    ar: ['عرض التحديثات السابقة', 'الأرشيف', 'آخر التحديثات', 'الأحدث', 'الأقدم', 'حسب اللعبة'],
+  };
+  const at = i => (ARCT[lang] || ARCT.en)[i];
+  let arcSort = 'new'; try { arcSort = localStorage.getItem('atlas-upd-sort') || 'new'; } catch (e) {}
+  function openUpdSheet(view) {
+    if (window.AtlasMissions && !view) AtlasMissions.page('news');
+    Promise.all([newsLoad(lang), view ? arcLoad() : null]).then(([, arc]) => openUpdSheet0(view ? arc : null));
   }
-  function openUpdSheet0() {
-    try { localStorage.setItem(UPD_SEEN, updKey(A_.UPDATES[0])); } catch (e) {}
-    const dot = document.querySelector('#updLine .ul-dot'); if (dot) dot.remove();
-    const N = NEWS(), days = [];
-    A_.UPDATES.forEach(u => { const w = updWhat(u); if (!w) return; const last = days[days.length - 1];
-      if (last && last.d === u[0]) last.items.push([u, w]); else days.push({ d: u[0], items: [[u, w]] }); });
-    // a new title released that day takes the headline card (common rule 2026-11-08: 新作タイトルを一番大きく), the rest keep their order
-    const isRel = ([u, w]) => !!(w.g && w.g.released === u[0]);
-    days.forEach(d => { const r = d.items.filter(isRel); if (r.length) d.items = [...r, ...d.items.filter(x => !isRel(x))]; });
-    const row = ([u, w], i) => { const tg = updTags(u).map(k => `<i class="utg t-${k}">${esc(nl(N.TAGS[k]))}</i>`).join('');
-      return `<button type="button" class="usr${i ? '' : ' hl'}" ${w.g ? `data-g="${w.g.id}"` : `data-tab="${w.tab}"`} style="--c:${w.color}"><span class="usi">${w.art}</span><span class="ust"><span class="ush"><b>${esc(w.name)}</b></span>${tg ? `<span class="utgs">${tg}</span>` : ''}<span class="usp">${esc(utx(u))}</span></span></button>`; };
-    const body = days.map(({ d, items }) => { const p = dParts(d), f = nl(N.FACTS[d.slice(5)]), fresh = A_.daysSince(d) <= 14;
-      return `<section class="udy"><h4 class="udh"><span class="udn">${esc(p.n)}</span><span class="udm"><b>${esc(p.m)}</b><small>${esc(p.w)}</small></span><span class="udr" aria-hidden="true"></span>${fresh ? '<span class="udnew">NEW</span>' : ''}</h4>`
-        + (f ? `<p class="udf"><b>${esc(nl(N.LABEL))}</b><span>${esc(f)}</span></p>` : '')
-        + `<div class="udg${items.length === 1 ? ' one' : ''}">${items.map(row).join('')}</div></section>`; }).join('');
-    openSheet(`<div class="ush"><h3>${esc(t('upd.more'))}</h3><button type="button" class="icbtn usx" aria-label="${esc(t('g.close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="usl">${body}</div>`, 'updsh');
+  function openUpdSheet0(arc) {
+    if (!arc) { try { localStorage.setItem(UPD_SEEN, updKey(A_.UPDATES[0])); } catch (e) {} const dot = document.querySelector('#updLine .ul-dot'); if (dot) dot.remove(); }
+    const N = NEWS();
+    const row = ([u, w], i, dateOnly) => { const tg = updTags(u).map(k => `<i class="utg t-${k}">${esc(nl(N.TAGS[k]))}</i>`).join('');
+      const head = dateOnly ? `<b>${esc(new Date(u[0] + 'T00:00:00').toLocaleDateString(lang, { year: 'numeric', month: 'short', day: 'numeric' }))}</b>` : `<b>${esc(w.name)}</b>`;
+      return `<button type="button" class="usr${i || dateOnly ? '' : ' hl'}${dateOnly ? ' usd' : ''}" ${w.g ? `data-g="${w.g.id}"` : `data-tab="${w.tab}"`} style="--c:${w.color}">${dateOnly ? '' : `<span class="usi">${w.art}</span>`}<span class="ust"><span class="ush">${head}</span>${tg ? `<span class="utgs">${tg}</span>` : ''}<span class="usp">${esc(utx(u))}</span></span></button>`; };
+    // by day, under a date masthead (a new title released that day takes the headline card — common rule 2026-11-08)
+    const byDay = L => { const days = [];
+      L.forEach(u => { const w = updWhat(u); if (!w) return; const last = days[days.length - 1]; if (last && last.d === u[0]) last.items.push([u, w]); else days.push({ d: u[0], items: [[u, w]] }); });
+      const isRel = ([u, w]) => !!(w.g && w.g.released === u[0]);
+      days.forEach(d => { const r = d.items.filter(isRel); if (r.length) d.items = [...r, ...d.items.filter(x => !isRel(x))]; });
+      return days.map(({ d, items }) => { const p = dParts(d), f = nl(N.FACTS[d.slice(5)]), fresh = A_.daysSince(d) <= 14;
+        return `<section class="udy"><h4 class="udh"><span class="udn">${esc(p.n)}</span><span class="udm"><b>${esc(p.m)}</b><small>${esc(p.w)}</small></span><span class="udr" aria-hidden="true"></span>${fresh ? '<span class="udnew">NEW</span>' : ''}</h4>`
+          + (f ? `<p class="udf"><b>${esc(nl(N.LABEL))}</b><span>${esc(f)}</span></p>` : '')
+          + `<div class="udg${items.length === 1 ? ' one' : ''}">${items.map((x, i) => row(x, i)).join('')}</div></section>`; }).join(''); };
+    // by game: one section a game (its picture and name), its lines newest first; games in the order of their latest line
+    const byGame = L => { const G = new Map();
+      L.forEach(u => { const w = updWhat(u); if (!w) return; if (!G.has(u[1])) G.set(u[1], { w, items: [] }); G.get(u[1]).items.push([u, w]); });
+      return [...G.values()].map(({ w, items }) => `<section class="udy ugm"><h4 class="udh ugh" style="--c:${w.color}"><span class="usi">${w.art}</span><span class="udm"><b>${esc(w.name)}</b></span><span class="udr" aria-hidden="true"></span></h4>`
+        + `<div class="udg one">${items.map(x => row(x, 0, true)).join('')}</div></section>`).join(''); };
+    let body, head;
+    const X = `<button type="button" class="icbtn usx" aria-label="${esc(t('g.close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`;
+    if (!arc) {
+      head = `<h3>${esc(t('upd.more'))}</h3>${X}`;
+      body = byDay(A_.UPDATES) + `<button type="button" class="uarc"><svg viewBox="0 0 24 24"><path d="M4 7h16v3H4zM5.5 10v9h13v-9M10 13.5h4"/></svg><span>${esc(at(0))}</span><i>›</i></button>`;
+    } else {
+      head = `<button type="button" class="icbtn usb" aria-label="${esc(at(2))}" title="${esc(at(2))}"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h3>${esc(at(1))}</h3>${X}`;
+      const seg = `<div class="uso" role="radiogroup">${['new', 'old', 'game'].map((k, i) => `<button type="button" role="radio" data-s="${k}" aria-checked="${arcSort === k}">${esc(at(3 + i))}</button>`).join('')}</div>`;
+      body = seg + (arcSort === 'game' ? byGame(arc) : byDay(arcSort === 'old' ? [...arc].reverse() : arc));
+    }
+    openSheet(`<div class="ush">${head}</div><div class="usl">${body}</div>`, 'updsh');
     const sh = $('sheet');
     sh.querySelector('.usx').onclick = closeSheet;
+    if (sh.querySelector('.usb')) sh.querySelector('.usb').onclick = () => openUpdSheet0(null);
+    if (sh.querySelector('.uarc')) sh.querySelector('.uarc').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openUpdSheet(true); };
+    sh.querySelectorAll('.uso [data-s]').forEach(b => { b.onclick = () => { arcSort = b.dataset.s; try { localStorage.setItem('atlas-upd-sort', arcSort); } catch (x) {} openUpdSheet0(arc); }; });
     sh.querySelectorAll('.usr').forEach(b => { b.onclick = () => { closeSheet(); if (b.dataset.g) flyOpen(b.dataset.g, null); else go(b.dataset.tab); }; });
   }
 
