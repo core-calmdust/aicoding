@@ -247,7 +247,7 @@
       sel = from; const k1 = st.pos[0].indexOf(from); if (k1 >= 0) kit.lift(0, k1, true); marks();
     }
     $('[data-a=next]').onclick = () => { if (P().last && played) ctx.onStart(); else go(step + 1); };
-    $('[data-a=back]').onclick = () => { if (step) go(step - 1); else if (ctx.onExit) ctx.onExit(); };
+    $('[data-a=back]').onclick = () => { if ((!step || P().last) && ctx.onExit) ctx.onExit(); else if (step) go(step - 1); };   // (the last page's もどる: back to the 3D view — the common rule, 2026-11-17)
     ctx.el.addEventListener('click', onClick);
     const onKey = e => {
       if (e.target.closest && e.target.closest('input,textarea,select,[contenteditable]')) return;

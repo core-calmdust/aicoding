@@ -678,7 +678,7 @@
     }) : null;
     const prevTouch = ctx.el.style.touchAction; ctx.el.style.touchAction = 'none';
     $('[data-a=next]').onclick = () => { if (P().last) ctx.onStart(); else if (P().kind === 'demo' && !played) demo(); else go(step + 1); };
-    $('[data-a=back]').onclick = () => { if (step) go(step - 1); else if (ctx.onExit) ctx.onExit(); };
+    $('[data-a=back]').onclick = () => { if ((!step || P().last) && ctx.onExit) ctx.onExit(); else if (step) go(step - 1); };   // (the last page's もどる: back to the 3D view — the common rule, 2026-11-17)
     const onKey = e => {
       if (e.target.closest && e.target.closest('input,textarea,select,[contenteditable]')) return;
       if (e.key === 'Enter' || e.key === 'ArrowRight') { e.stopPropagation(); e.preventDefault(); const nx = $('[data-a=next]'); if (!nx.disabled && !(e.key === 'ArrowRight' && P().last)) nx.click(); }
