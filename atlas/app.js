@@ -1052,7 +1052,7 @@
     // board size (go): on the same row as the time control when there is one
     // 種目 first (mancala · morris, 2026-11-15, as shogi): 種目 (+ its own setting: 種の数) → 相手 → 時間
     const KF = !!(ad && ad.kindFirst), KL = KIND[lang] || KIND.en;
-    const ruleHtml = RU ? `<label>${esc(KF || MXR ? KL : RU.label(lang))}<select id="bvRuleSel" data-pick="drop">${RU.list.map(v => `<option value="${esc(v)}" ${v === rcur ? 'selected' : ''}>${esc(RU.name(v, lang))}</option>`).join('')}</select></label>` : '';
+    const ruleHtml = RU ? `<label>${esc((KF || MXR) && !RU.ownLabel ? KL : RU.label(lang))}<select id="bvRuleSel" data-pick="drop">${RU.list.map(v => `<option value="${esc(v)}" ${v === rcur ? 'selected' : ''}>${esc(RU.name(v, lang))}</option>`).join('')}</select></label>` : '';
     const sizeOnly = ad && ad.sizes ? `<label>${esc(KF && !RU && !ad.kindOwn ? KL : ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${SZS.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : ''
     const sizeHtml = sizeOnly ? ruleHtml + sizeOnly : '';
     headIcons(false);   // (ヒストリア / 戦績 back out of the old card before it is rebuilt)
