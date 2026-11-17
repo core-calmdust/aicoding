@@ -65,8 +65,12 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
       await p.keyboard.press('1'); await p.keyboard.press('4'); await p.keyboard.press('6');
       // a tap on a gem of the row on the board takes it out (picking works with the flat top view)
       { const pt = await p.evaluate(() => { const d = Atlas3D.hitblow._dbg, U = d.U, [x, z] = U.slot(d.hist().length, 1), v = Table3D.project(x, z, U.top + .1); return [v.x, v.y]; });
-        const before = (await D(p)).input.length; await p.mouse.click(pt[0], pt[1]); await p.waitForTimeout(250);
-        ok((await D(p)).input.length === before - 1, 'a click on a gem of the row on the board takes it out'); await p.keyboard.press('1'); }
+        const before = (await D(p)).input.length; await p.mouse.click(pt[0], pt[1]); await p.waitForTimeout(250); await p.mouse.click(pt[0], pt[1]); await p.waitForTimeout(250);
+        ok((await D(p)).input.length === before - 1, 'clicking a gem of the row on the board twice takes it out (the first click chooses it)');
+        // an empty hole on the board moves the cursor there (2026-11-17)
+        const pt0 = await p.evaluate(() => { const d = Atlas3D.hitblow._dbg, U = d.U, [x, z] = U.slot(d.hist().length, 3), v = Table3D.project(x, z, U.top + .1); return [v.x, v.y]; });
+        await p.mouse.click(pt0[0], pt0[1]); await p.waitForTimeout(200); ok(await p.evaluate(() => Atlas3D.hitblow._dbg.cur()) === 3, 'a click on a hole of the row on the board moves the cursor there');
+        await p.mouse.click(pt[0], pt[1]); await p.waitForTimeout(200); await p.keyboard.press('1'); }
       // the slots (2026-11-16 user): tap a slot to put there · drag a gem to move / swap · drag from the palette onto a slot
       { const S = () => p.evaluate(() => Atlas3D.hitblow._dbg.slots().join()), c = sel => trayPt(p, sel);
         const dragTo = async (a, b) => { const [x0, y0] = await c(a), [x1, y1] = await c(b); await p.mouse.move(x0, y0); await p.mouse.down(); await p.mouse.move(x0 + 20, y0 - 10, { steps: 3 }); await p.mouse.move(x1, y1, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(200); };
@@ -138,7 +142,7 @@ let fail = 0; const ok = (c, m) => { if (!c) fail++; console.log((c ? 'ok  ' : '
     const d = await D(p); ok(d && d.cfg.n === 4 && !d.cfg.rep, 'レート戦 is played on カラー');
     const L = await p.evaluate(() => { const r = e => e && e.getBoundingClientRect(), dk = (() => { const d = Atlas3D.hitblow._dbg, T = d.TU, P = (x, z) => Table3D.project(x, z, d.U.top), a = P(-T.W / 2, T.z0), b = P(T.W / 2, T.z0 + T.D); return { top: Math.min(a.y, b.y), bottom: Math.max(a.y, b.y), left: Math.min(a.x, b.x), right: Math.max(a.x, b.x) }; })(), tb = r(document.querySelector('#tbar')), m = Table3D.modelRect && Table3D.modelRect(); const wrapped = [...document.querySelectorAll('#tbar button')].filter(x => x.offsetParent).some(x => { const tw = document.createTreeWalker(x, NodeFilter.SHOW_TEXT); let n; while ((n = tw.nextNode())) { if (!n.textContent.trim()) continue; const g = document.createRange(); g.selectNodeContents(n); if (new Set([...g.getClientRects()].map(q => Math.round(q.top / 4))).size > 1) return true; } return false; }); return { dk: dk && [dk.top, dk.bottom, dk.left, dk.right], tb: tb && [tb.top, tb.bottom], m: m && [m.top, m.bottom, m.left, m.right], vw: innerWidth, wrapped, sx: document.documentElement.scrollWidth > innerWidth + 1 }; });
     ok(L.dk[2] >= 0 && L.dk[3] <= L.vw + .5, 'phone: the 3D tray is inside the screen');
-    { const [nb, vh] = await p.evaluate(() => [!document.querySelector('#bv').classList.contains('tbon'), innerHeight]); ok(nb && L.dk[1] <= vh && L.dk[1] >= vh - 100, 'phone: no action bar; the 3D tray reaches near the bottom, the Atlamo's one line under it (' + L.dk[1].toFixed(0) + ' / ' + vh + ')'); }
+    { const [nb, vh] = await p.evaluate(() => [!document.querySelector('#bv').classList.contains('tbon'), innerHeight]); ok(nb && L.dk[1] <= vh && L.dk[1] >= vh - 100, 'phone: no action bar; the 3D tray reaches near the bottom, the Atlamo one-line talk under it (' + L.dk[1].toFixed(0) + ' / ' + vh + ')'); }
     ok(L.m && Math.abs(L.m[1] - L.dk[1]) < 30 && L.m[2] >= -2 && L.m[3] <= L.vw + 2, 'phone: the board and tray are framed across the width (' + L.m.map(x => x.toFixed(0)).join(',') + ')');
     ok(!L.wrapped && !L.sx, 'phone: no button text wrapped, no sideways scroll');
     if (d.turn === 0) { await play(p, await thinkGuess(p), true); await p.waitForTimeout(500); }
