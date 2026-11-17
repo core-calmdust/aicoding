@@ -170,19 +170,27 @@
     pear: () => geo('hbPear', () => { const TT = T(), pts = [[.001, 0], [.42, .03], [.64, .17], [.69, .36], [.62, .55], [.47, .72], [.37, .9], [.31, 1.05], [.23, 1.19], [.09, 1.29], [.001, 1.31]].map(([x, y]) => new TT.Vector2(x * R, -R * .14 + y * R)); const gl = new TT.LatheGeometry(pts, LO() ? 12 : 16), P = gl.attributes.position, uv = gl.attributes.uv; for (let i = 0; i < P.count; i++) uv.setXY(i, .5 + P.getX(i) / (1.4 * R) * .98, .5 - P.getZ(i) / (1.4 * R) * .98); uv.needsUpdate = true; gl.computeVertexNormals(); return gl; }),
     // a round brilliant (2026-11-17 user: ブリリアントカットの宝石っぽく): table · 8 star facets · 8 bezels · 16 upper girdle facets · girdle ·
     // 16 lower girdle and 8 pavilion mains to the culet — flat triangles, so each facet catches the light on its own
-    jewel: () => geo('hbJewelB3', () => {
-      const TT = T(), N = 8, P = [], tri = (a, b, c) => P.push(...a, ...b, ...c), at = (r, y, a) => [Math.cos(a) * r, y, Math.sin(a) * r], d = Math.PI / N;
-      const yG = R * .16, yS = R * .4, yT = R * .56, rG = R * .96, rS = R * .82, rT = R * .64, yC = -R * .14, yP = R * .0;
+    // a diamond's round brilliant (2026-11-17 user: カットをダイアモンドっぽく), in its usual proportions (table 56% of the width, crown
+    // ~16%, a thin girdle, a deep pavilion): an octagonal table; 8 star facets; 8 kite bezels; 16 upper girdle facets on a girdle round
+    // to 32 points; the pavilion's 8 mains and 16 lower girdle facets down to the culet. Each facet is flat and tilted its own way —
+    // the stars shallower, the upper girdles steeper — so the light breaks up across the crown as a diamond's does.
+    jewel: () => geo('hbDiamond2', () => {
+      const TT = T(), N = 8, d = Math.PI / N, P = [], tri = (a, b, c) => P.push(...a, ...b, ...c), at = (r, y, a) => [Math.cos(a) * r, y, Math.sin(a) * r];
+      const rG = R * .97, yG = R * .14, yGb = R * .08, rT = R * .55, yT = R * .47, rS = R * .76, yS = R * .37, yC = -R * .14, rL = R * .52, yL = -R * .02;
+      const G = k => at(rG, yG, k * d / 2), Gb = k => at(rG, yGb, k * d / 2);   // girdle: 32 points (k = 0..31), main facets at k = 4i
       for (let i = 0; i < N; i++) {
-        const a = i * 2 * d, tA = at(rT, yT, a), tB = at(rT, yT, a + 2 * d), mid = at(rS, yS, a + d), g0 = at(rG, yG, a), g1 = at(rG, yG, a + d), g2 = at(rG, yG, a + 2 * d), cT = [0, yT, 0];
-        tri(cT, tB, tA);                                   // the table (under the printed face)
-        tri(tA, tB, mid);                                  // star facet
-        tri(tA, mid, g0); tri(mid, tB, g2);                // the bezel (kite) as two
-        tri(g0, mid, g1); tri(g1, mid, g2);                // upper girdle facets
-        const p1 = at(rG * .55, yP, a + d * .5), p2 = at(rG * .55, yP, a + d * 1.5), cul = [0, yC, 0];
-        tri(g1, g0, p1); tri(g2, g1, p2); tri(p1, g0, cul); tri(p2, p1, cul); tri(g2, p2, cul);   // lower girdle and pavilion
+        const a = i * 2 * d, T0 = at(rT, yT, a), T1 = at(rT, yT, a + 2 * d), S = at(rS, yS, a + d), Sp = at(rS, yS, a - d), cT = [0, yT, 0], k0 = i * 4;
+        tri(cT, T1, T0);                                           // the table
+        tri(T0, T1, S);                                            // star facet
+        tri(T0, S, G(k0)); tri(T0, G(k0), Sp);                     // the bezel kite (T0 · S · girdle main · previous star)
+        tri(S, G(k0 + 1), G(k0)); tri(S, G(k0 + 2), G(k0 + 1));    // upper girdle facets, two per side of the star, the girdle round
+        tri(S, G(k0 + 3), G(k0 + 2)); tri(S, G(k0 + 4), G(k0 + 3));
+        for (let k = k0; k < k0 + 4; k++) { const A = G(k), B = G(k + 1), C = Gb(k), D = Gb(k + 1); tri(A, B, D); tri(A, D, C); }   // the girdle band
+        const L = at(rL, yL, a + d), cul = [0, yC, 0];            // pavilion: lower girdle facets to a point half way, the mains to the culet
+        tri(Gb(k0), Gb(k0 + 1), L); tri(Gb(k0 + 1), Gb(k0 + 2), L); tri(Gb(k0 + 2), Gb(k0 + 3), L); tri(Gb(k0 + 3), Gb(k0 + 4), L);
+        tri(L, Gb(k0 + 4), cul); tri(Gb(k0), L, cul);
       }
-      const gl = new TT.BufferGeometry(); gl.setAttribute('position', new TT.Float32BufferAttribute(P, 3)); const U = []; for (let i = 0; i < P.length; i += 3) U.push(.5 + P[i] / (2 * R) * 1.7, .5 - P[i + 2] / (2 * R) * 1.7 + P[i + 1] / R * .6); gl.setAttribute('uv', new TT.Float32BufferAttribute(U, 2)); gl.computeVertexNormals(); return gl; }),   // (UVs: the fire's rainbow speckle, different on every facet)
+      const gl = new TT.BufferGeometry(); gl.setAttribute('position', new TT.Float32BufferAttribute(P, 3)); const U = [], h = rnd(131); for (let t = 0; t < P.length / 9; t++) { const u = h(), v = h(); U.push(u, v, u, v, u, v); }   /* (one texel per facet: the fire tints whole facets, not streaks) */ gl.setAttribute('uv', new TT.Float32BufferAttribute(U, 2)); gl.computeVertexNormals(); return gl; }),
     coinSide: (r, h) => geo('hbCoinSide' + r.toFixed(3), () => { const c = new (T().CylinderGeometry)(r, r, h, LO() ? 16 : 22, 1, true); c.translate(0, -R * .14 + h / 2, 0); return c; }),
     fruit: () => geo('hbFruit', () => {   // a squat sphere with a dimple at the stem; UVs from above (the face's picture)
       const TT = T(), Rf = R * .92, k = .78, pts = [], n = LO() ? 6 : 8;
@@ -215,7 +223,7 @@
     } else if (look === 'vault') {   // a cut jewel (2026-11-17 user: 駒は宝石をモチーフに): eight crown facets round the table, the pavilion under the girdle
       const jm = mat('hbJewel2' + kind + v, () => { const c = colOf(kind, v), m = X.M({ color: c, roughness: 0, metalness: .45, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 4.2, emissive: c, emissiveIntensity: .3, flatShading: true, side: T().DoubleSide, bump: false }); m.emissive.convertSRGBToLinear(); if ('ior' in m) m.ior = 2.4; if ('specularIntensity' in m) m.specularIntensity = 1; return m; });
       const body = X.mesh(PIECE_GEO.jewel(), jm); body.castShadow = true; g.add(body);
-      const table = X.mesh(PIECE_GEO.disc(R * .6, R * .56 + .004, 'jewelT3'), faceMat('vault', kind, v, { roughness: .02, clearcoat: 1, emissiveIntensity: .55, envMapIntensity: 2.4, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); g.add(table);
+      const table = X.mesh(geo('hbDiamondT', () => { const c = new TT.CircleGeometry(R * .55, 8); c.rotateX(-Math.PI / 2); c.translate(0, R * .47 + .004, 0); return c; }), faceMat('vault', kind, v, { roughness: .02, clearcoat: 1, emissiveIntensity: .55, envMapIntensity: 2.4, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); g.add(table);
       // fire (2026-11-17 user: 煌めきがまだ全然弱い): a thin skin over the crown facets that adds rainbow light, and star flashes that
       // light up and die as the viewing angle sweeps across each facet (computed per frame from the camera, plus a slow twinkle)
       const fire = new TT.Mesh(PIECE_GEO.jewel(), mat('hbFire', () => new TT.MeshBasicMaterial({ map: fireTex(), transparent: true, opacity: .55, blending: TT.AdditiveBlending, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })));
@@ -223,13 +231,13 @@
       const fx = new TT.Group(); fx.userData.keep = true; g.add(fx);   // (kept apart from the static merge: it moves)
       const sm = new TT.SpriteMaterial({ map: sparkTex(), color: 0xffffff, transparent: true, depthWrite: false, depthTest: true, blending: TT.AdditiveBlending, toneMapped: false });
       const wp = new TT.Vector3(), cp = new TT.Vector3();
-      [[.5, .46, -.22, 0], [-.36, .5, .42, 2.1], [.12, .6, .48, 4.2], [-.4, .4, -.38, 1.1], [.3, .62, .05, 3.3]].forEach(([x, y, z, ph], i) => {
+      [[.62, .3, -.28, 0], [-.42, .36, .5, 2.1], [.15, .49, .38, 4.2], [-.55, .28, -.4, 1.1], [.32, .5, .02, 3.3], [.05, .32, -.72, 5.1]].forEach(([x, y, z, ph], i) => {
         const st = new TT.Sprite(sm.clone()); st.position.set(x * R, y * R + .01, z * R); st.renderOrder = 3; fx.add(st);
         st.onBeforeRender = (rn, sc, cam) => { st.getWorldPosition(wp); cp.copy(cam.position).sub(wp).normalize(); const a = Math.atan2(cp.x, cp.z) * 3 + cp.y * 7 + ph, t = performance.now() / 1000;
           const k = Math.pow(Math.max(0, Math.cos(a)), 6) * .85 + Math.pow(Math.max(0, Math.sin(t * (1.3 + i * .37) + ph * 2)), 12) * .7;
           st.material.opacity = Math.min(1, k); const sz = R * (.35 + k * .75) * (st.parent && st.parent.parent ? 1 : 1); st.scale.set(sz, sz, 1); };
       });
-      h = R * .56;
+      h = R * .47;
     } else if (look === 'doodle') {   // a coin of corrugated card with white paper on top
       const side = X.mesh(PIECE_GEO.coinSide(R * .92, R * .34), mat('hbCardSide', () => X.M({ map: cardSideTex(), roughness: .95, bump: false })));
       const top = X.mesh(PIECE_GEO.disc(R * .92, -R * .14 + R * .34, 'card'), faceMat('doodle', kind, v, { roughness: .95, emissiveIntensity: .42, envMapIntensity: .05 }));
@@ -596,7 +604,7 @@
       cup.position.set(x, ch + .006, 0); cup.renderOrder = 1; tray.add(cup);
       // each piece stands on the velvet, but no higher than fits under the closed lid (2026-11-17 user: 答えの中身が入ってない — the flat
       // pieces (fruit tokens, card coins, chips) had been sunk under the velvet, where nothing showed when the lid opened)
-      const topH = { midnight: .82, casino: .36, doodle: .2, fruit: .22, cipher: .44, vault: .6 }[look] * R;
+      const topH = { midnight: .82, casino: .36, doodle: .2, fruit: .22, cipher: .44, vault: .5 }[look] * R;
       caseSlots.push([Lt.caseX + x, Math.min(BH + ch + R * .14 + .004, BH + ch + .2 - topH), Lt.caseZ]);   // (low enough to stay inside the closed lid — the fruit stands taller: it sits down in the velvet)
     }
     const trim = new TT.Mesh(geo('hbTrim' + cfg.n, () => { const b = new TT.BoxGeometry(cw - .1, .03, .03); return b; }), rimMat(look, S.trim)); trim.position.set(0, ch * .55, cd / 2 + .005); tray.add(trim);
