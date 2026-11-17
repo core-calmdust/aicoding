@@ -128,6 +128,35 @@ int main(int argc, char **argv) {
   init();
   if (!loadNet(argv[1])) return 1;
   nue_enable(1);
+#ifdef SEARCH_STATS
+  if (!strcmp(argv[2], "stat")) {   /* usimatch <net> stat <nodes | dN> <openings> [positions]: what the one-thread search does (build with -DSEARCH_STATS) */
+    int lim = argv[3][0] == 'd' ? 0 : atoi(argv[3]), dep = argv[3][0] == 'd' ? atoi(argv[3] + 1) : 0, np = argc > 5 ? atoi(argv[5]) : 8;
+    FILE *f = fopen(argv[4], "r"); if (!f) { perror(argv[4]); return 1; }
+    char line[2048]; int n = 0; double dsum = 0, nsum = 0, ebf = 0; int ne = 0;
+    for (int k = 0; k < np && fgets(line, sizeof line, f); k++) {
+      nh = 0; setStart(); char *p = line, tok[16]; int q;
+      while (sscanf(p, " %15s%n", tok, &q) == 1) { p += q; int m = fromUsi(tok); if (!m) break; hist[nh++] = m; play_move(m); }
+      tt_clear(); reset_search();
+      for (int i = 0; i < 24; i++) { replay(); int m = root_search(0, 0, 3000); if (!m) break; hist[nh++] = m; }   /* into the middle game */
+      /* nodes of each iteration (a fresh table each time): the growth per ply */
+      double prev = 0;
+      for (int d = (dep ? dep : 1); d <= (dep ? dep : 30); d++) {
+        replay(); tt_clear(); reset_search();
+        stQ = stProbe = stHit = stTTcut = stCut = stCut1 = stCutTT = stCutIdx = stChkExt = stNull = stNullOk = stLmr = stLmrRe = stStore = stEvict = stRfp = stPv = stMoves = 0;
+        root_search(0, d, 0);
+        double nn = (u32)res[2];
+        if (!dep) { if (prev > 20000 && nn > prev) { ebf += nn / prev; ne++; } prev = nn; if (nn < lim) continue; }
+        dsum += d; nsum += nn; n++;
+        printf("pos %d: depth %d  nodes %.0f  qsearch %.0f%%  table: hit %.0f%% of probes, cut %.0f%%, lost entries %.0f%% of stores  first-move cut %.0f%% (table move %.0f%%, mean place %.2f)  null ok %.0f%%  reduced %.0f%% of moves, re-searched %.0f%%  check ext %.1f%% of moves  rfp %.0f%% of nodes\n", k, d, nn,
+          100.0 * stQ / nn, 100.0 * stHit / (stProbe + 1), 100.0 * stTTcut / (stProbe + 1), 100.0 * stEvict / (stStore + 1), 100.0 * stCut1 / (stCut + 1), 100.0 * stCutTT / (stCut + 1), (double)stCutIdx / (stCut + 1),
+          100.0 * stNullOk / (stNull + 1), 100.0 * stLmr / (stMoves + 1), 100.0 * stLmrRe / (stLmr + 1), 100.0 * stChkExt / (stMoves + 1), 100.0 * stRfp / (stProbe + 1));
+        break;
+      }
+    }
+    printf("mean: depth %.2f  nodes %.0f  growth per ply x%.2f (TT_BITS %d)\n", n ? dsum / n : 0, n ? nsum / n : 0, ne ? ebf / ne : 0, TT_BITS);
+    return 0;
+  }
+#endif
   if (!strcmp(argv[2], "bench")) {
     double ms = atof(argv[3]); nThreads = atoi(argv[4]); if (nThreads < 1) nThreads = 1;
 #ifdef MT

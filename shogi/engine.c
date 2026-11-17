@@ -1044,10 +1044,18 @@ static int mate3(void) {
   return 0;
 }
 /* ------------------------------------------------------------------ search */
+#ifdef SEARCH_STATS   /* (tools/match/usimatch.c "stat": counters of the one-thread search; no effect on the search) */
+static long long stQ, stProbe, stHit, stTTcut, stCut, stCut1, stCutTT, stCutIdx, stChkExt, stNull, stNullOk, stLmr, stLmrRe, stStore, stEvict, stRfp, stPv, stMoves;
+#define ST(x) (x)
+#else
+#define ST(x) ((void)0)
+#endif
 #define MATE 30000
 #define INF 32000
 #define MAXPLY 64
-#define TT_BITS 20
+#ifndef TT_BITS
+#define TT_BITS 20   /* (the one-thread table: 2^20 entries x 12 bytes; -DTT_BITS for tests) */
+#endif
 #define TT_SIZE (1 << TT_BITS)
 #define TT_MASK (TT_SIZE - 1)
 typedef struct { i32 key, move, data; } TTEntry;   /* one entry in one place: a probe touches one cache line */
@@ -1234,6 +1242,7 @@ static void spLoadPos(const SPt *s, int top, int fresh) {
 #else
 static void store(int depth, double score, int flag, int move, int ply) {
   int i = hl & TT_MASK;
+  ST(stStore++); ST(stEvict += (tt[i].key != hh && tt[i].key != 0 && ((u32)tt[i].data >> 26) == (u32)ttAge));   /* (another position of this search in the slot: one of the two is lost) */
   if (tt[i].key == hh || ((tt[i].data >> 16) & 255) <= depth + 2 || (((u32)tt[i].data >> 26) != (u32)ttAge)) {
     if (score > MATE - MAXPLY) score += ply; else if (score < -MATE + MAXPLY) score -= ply;
     if (!move && tt[i].key == hh) move = tt[i].move;
@@ -1310,7 +1319,7 @@ static int pickFast(i32 *moves, i32 *scores, int n, int i, PickBlocks *pk) {
   return moves[i];
 }
 static double qsearch(double alpha, double beta, int ply, int qd) {
-  nodes++;
+  nodes++; ST(stQ++);
   if (timeUp()) return 0;
   int inChk = inCheck();
   histChk[hn - 1] = inChk ? 1 : 0;
@@ -1388,13 +1397,14 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
 #else
 #define TTI tt[ti]
 #endif
+  ST(stProbe++); ST(stPv += pvNode);
   if (!ex && TTI.key == hh) {
-    ttm = TTI.move;
+    ttm = TTI.move; ST(stHit++);
     int d = TTI.data, td = (d >> 16) & 255, fl = (d >> 24) & 3;
     int ts = (i32)((u32)d << 16) >> 16;
     if (ts > MATE - MAXPLY) ts -= ply; else if (ts < -MATE + MAXPLY) ts += ply;
     if (!pvNode && td >= depth && ply > 0) {
-      if (fl == F_EXACT || (fl == F_LOWER && ts >= beta) || (fl == F_UPPER && ts <= alpha)) return ts;
+      if (fl == F_EXACT || (fl == F_LOWER && ts >= beta) || (fl == F_UPPER && ts <= alpha)) { ST(stTTcut++); return ts; }
     }
     ttD = td; ttF = fl; ttS = ts;
   }
@@ -1410,7 +1420,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
   evSt[ply] = rawEval;
   int improving = P[24] && !inChk && ply >= 2 && (evSt[ply - 2] == -INF || rawEval > evSt[ply - 2]);
   if (P[25] && !inChk && ttD >= 0 && ((ttF == F_LOWER && ttS > staticEval) || (ttF == F_UPPER && ttS < staticEval) || ttF == F_EXACT) && (ttS < 0 ? -ttS : ttS) < MATE - MAXPLY) staticEval = ttS;
-  if (!pvNode && !inChk && !ex && depth <= rfpDepth && staticEval - rfpMargin * (depth - improving) >= beta && (beta < 0 ? -beta : beta) < MATE - MAXPLY) return staticEval;
+  if (!pvNode && !inChk && !ex && depth <= rfpDepth && staticEval - rfpMargin * (depth - improving) >= beta && (beta < 0 ? -beta : beta) < MATE - MAXPLY) { ST(stRfp++); return staticEval; }
   if (P[10] && !pvNode && !inChk && !ex && depth <= 2 && staticEval + P[10] * depth < alpha) {
     double v = qsearch(alpha, beta, ply, 0);
     if (v < alpha) return v;
@@ -1419,11 +1429,11 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
     int R;
     if (nullAdapt) { int x = (int)((staticEval - beta) / 250); R = 3 + depth / 5 + (x < 2 ? x : 2); }
     else R = 2 + (depth >= 7 ? 1 : 0);
-    doNull();
+    doNull(); ST(stNull++);
     double v = -search(depth - 1 - R, -beta, -beta + 1, ply + 1, 0, 0);
     undoNull();
     if (stopFlag) return 0;
-    if (v >= beta && v < MATE - MAXPLY) return v;
+    if (v >= beta && v < MATE - MAXPLY) { ST(stNullOk++); return v; }
   }
   if (P[23] && !pvNode && !inChk && !ex && depth >= 5 && (beta < 0 ? -beta : beta) < MATE - MAXPLY) {   /* ProbCut */
     double rb = beta + P[23];
@@ -1610,6 +1620,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
     int givesChk = inCheck();
     int ext = givesChk && ply < rootDepth * 2 && (P[11] || seeAfterCheck(m) >= 0) ? 1 : 0;
     if (sext > 0) ext = 1; else if (sext < 0 && !ext) ext = -1;
+    ST(stMoves++); ST(stChkExt += (ext > 0 && givesChk));
     double v;
     int nd = depth - 1 + ext;
     if (LGA == 1) v = -search(nd, -beta, -alpha, ply + 1, pvNode, 1);
@@ -1627,8 +1638,9 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
         if (r < 0) r = 0;
         if (r > depth - 2) r = depth - 2;
       }
+      ST(stLmr += (r > 0));
       v = -search(nd - r, -alpha - 1, -alpha, ply + 1, 0, 1);
-      if (v > alpha && r) v = -search(nd, -alpha - 1, -alpha, ply + 1, 0, 1);
+      if (v > alpha && r) { ST(stLmrRe++); v = -search(nd, -alpha - 1, -alpha, ply + 1, 0, 1); }
       if (v > alpha && v < beta) v = -search(nd, -beta, -alpha, ply + 1, 1, 1);
     }
 #undef LGA
@@ -1647,6 +1659,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
         for (int j = ply + 1; j < pvLen[ply + 1]; j++) pvTable[ply * MAXPLY + j] = pvTable[(ply + 1) * MAXPLY + j];
         pvLen[ply] = imax(ply + 1, pvLen[ply + 1]);
         if (v >= beta) {
+          ST(stCut++); ST(stCut1 += (legal == 1)); ST(stCutTT += (m == ttm)); ST(stCutIdx += legal);
           if (quiet) {
             if (killers[ply * 2] != m) { killers[ply * 2 + 1] = killers[ply * 2]; killers[ply * 2] = m; }
             if (P[6] && sp > 0 && stMove[sp - 1]) { int pt = (stMove[sp - 1] >> 7) & 127; counterMv[board[pt] * 81 + pt] = m; }
