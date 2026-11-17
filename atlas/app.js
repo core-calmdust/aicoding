@@ -1324,6 +1324,10 @@
     if (window.AtlasGameList && AtlasGameList.sheetActions) { AtlasGameList.sheetActions($('bvi'), t); fitStage(); }   // PC: ヒストリア under ルール + ring; tags on one quiet line
     playSheet(g, ad, r);
     if (!ad) menuSheet(g);
+    if (!ad && matchMedia('(max-width: 819px)').matches) {   // (2026-11-18 ユーザー：カードゲーム・パズルも実績アイコンをカードの中に) the ring beside あそぶ
+      const act = $('bvi').querySelector('.R .act'), rc = $('bvRec');
+      if (act && rc) { act.classList.add('pach', 'noad'); rc.classList.add('inact'); rc.classList.remove('bvrecf'); rc.style.removeProperty('bottom'); const a = act.querySelector(':scope > a.btn.big'); if (a) a.after(rc); else act.append(rc); }
+    }
   }
   // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)
   // a level's name: kyu / dan for the Japanese games (shogi, go, gomoku); the games numbered Lv.1 … Lv.N (their name is 'Lv.N')
@@ -1707,8 +1711,11 @@
   function playSheet(g, ad, r) {
     const old = $('bvPS'); if (old) old.remove();
     const ST = !!(ad && !FULL_SKIN[g.id] && $('bvStart') && $('bvMode'));   // (2026-11-16: 上海 · ペグ … — a game with its own modes on the card: the same あそぶ sheet, its スタート inside)
-    if (!ad || !(ST || (PS_GAMES[g.id] && FULL_SKIN[g.id])) || !matchMedia('(max-width: 819px)').matches) return;
-    const act = $('bvi').querySelector('.R .act'); if (!act || !(ST || $('bvFull'))) return;
+    // (2026-11-18 ユーザー：最初から情報たくさんのカードも あそぶ・ルール・実績 の形に揃える) every 3D game on phones: the 3D-only
+    // ones too (ホッケー · キャロム … · a game with a plain スタート) — SB: the game's own スタート button plays (no full version)
+    if (!ad || !matchMedia('(max-width: 819px)').matches) return;
+    const SB = !FULL_SKIN[g.id] && !!$('bvStart');
+    const act = $('bvi').querySelector('.R .act'); if (!act || !(SB || $('bvFull'))) return;
     // headIcons(true);   // (ヒストリア / 戦績 in the card: tried, back to the top left for now — 2026-11-10)
     const row = (k, ic, lb, a, b) => `<button type="button" class="ps-row" data-k="${k}"><span class="ps-ic" style="--c:${g.color}">${ic}</span><span class="ps-tx"><b>${esc(lb)}</b><small>${esc(t(k === 'puzzle' && window.AtlasPuzzles && AtlasPuzzles.has(g.id) && ad.table ? 'ps.here' : 'ps.full'))}</small></span>${b ? `<span class="ps-pg"><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><em>${Math.min(a, b).toLocaleString()}/${b.toLocaleString()}</em></span>` : ''}<i class="ps-cv"></i></button>`;
     const PZI = '<svg viewBox="0 0 24 24"><path d="M10 3h4v2.2a1.8 1.8 0 1 0 3.6 0V3H21v6h-2.2a1.8 1.8 0 1 0 0 3.6H21V21h-6v-2.2a1.8 1.8 0 1 0-3.6 0V21H3v-6h2.2a1.8 1.8 0 1 0 0-3.6H3V3h7z"/></svg>';
@@ -1716,13 +1723,13 @@
     const ps = document.createElement('div'); ps.className = 'psheet'; ps.id = 'bvPS';
     ps.innerHTML = `<div class="ps-in bvi" role="dialog" aria-label="${esc(t('ps.h'))}"><div class="ps-main"><div class="ps-h">${esc(t('ps.h'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div>
       <div class="ps-sec"><div class="ps-t">${esc(t('ps.vs'))}</div><div class="ps-body"></div><div class="ps-act"></div></div>
-      ${$('bvMxProg') || ST ? '' : g.total.pz ? row('puzzle', PZI, t('pg.pz'), r.pz || 0, g.total.pz) : ''}${$('bvMxProg') || ST ? '' : g.total.ls ? row('lesson', LSI, t('pg.ls'), r.ls || 0, g.total.ls) : ''}</div><div class="ps-subv" hidden></div></div>`;
+      ${$('bvMxProg') || SB || !FULL_SKIN[g.id] ? '' : g.total.pz ? row('puzzle', PZI, t('pg.pz'), r.pz || 0, g.total.pz) : ''}${$('bvMxProg') || SB || !FULL_SKIN[g.id] ? '' : g.total.ls ? row('lesson', LSI, t('pg.ls'), r.ls || 0, g.total.ls) : ''}</div><div class="ps-subv" hidden></div></div>`;
     $('bv').appendChild(ps);
     const body = ps.querySelector('.ps-body'), pa = ps.querySelector('.ps-act');
     ['bvMode', 'bvMBody', 'bvSzRow'].forEach(i => { if ($(i)) body.appendChild($(i)); });
-    if (ST) { pa.append($('bvStart')); $('bvStart').classList.add('pk', 'psone'); }
+    if (SB) { pa.append($('bvStart')); $('bvStart').classList.add('pk', 'psone'); }
     else pa.append($('bvFull')); if ($('bvTable')) pa.append($('bvTable'));
-    if (!ST && !$('bvMxProg') && $('bvTable')) {   // (games without the パズル / レッスン tabs, 2026-11-16: the same pair as shogi — gold あそぶ ▶ (this 3D table) · red フル機能で遊ぶ)
+    if (!SB && FULL_SKIN[g.id] && !$('bvMxProg') && $('bvTable')) {   // (games without the パズル / レッスン tabs, 2026-11-16: the same pair as shogi — gold あそぶ ▶ (this 3D table) · red フル機能で遊ぶ)
       const tb = $('bvTable'), f = $('bvFull'); pa.prepend(tb); tb.classList.add('psgo'); f.classList.add('psfull');
       tb.innerHTML = `<b>${esc(t('ps.go'))} ▶</b><small>${esc(t('bv.tableSub'))}</small>`; f.innerHTML = `<b>${esc(t('bv.full'))}</b><small>${esc(t('bv.fullSub2'))}</small>`;
     }
@@ -1733,13 +1740,14 @@
     // (2026-11-18 ユーザー：スマホのカードの大改修) 2Dで遊ぶ moves into the あそびかた sheet: on top the place's own button in the
     // pink (ちゃぶ台で遊ぶ …), under it 2D on the left and フル機能で遊ぶ in the coffee colour on the right. The card keeps ルール and
     // あそぶ, and the 実績 ring (the cup that floated over the 3D view) sits beside あそぶ.
-    if (cls) {
-      cls.id = 'bv2d'; cls.classList.add('ps2d'); if (!cls.querySelector('b')) cls.innerHTML = `<b>${cls.innerHTML}</b>`;
+    {
       act.classList.add('psolo', 'pach');
       const rc = $('bvRec'); if (rc) { rc.classList.add('inact'); rc.classList.remove('bvrecf'); rc.style.removeProperty('bottom'); act.append(rc); }
-      const MXg = !!$('bvMxProg'), here = ST ? $('bvStart') : MXg ? $('bvFull') : $('bvTable'), full = ST ? null : MXg ? $('bvTable') : $('bvFull');
-      if (here) { here.classList.add('ps3d'); here.classList.remove('psone'); if (!MXg) here.innerHTML = `<b>${esc(placeT('play'))} ▶</b><small>${esc(t('bv.tableSub'))}</small>`; pa.append(here); }
-      pa.append(cls); if (full) { full.classList.add('psfx'); pa.append(full); } else cls.classList.add('psw');
+      const MXg = !!$('bvMxProg'), F = !!FULL_SKIN[g.id], here = SB ? $('bvStart') : !F || MXg ? $('bvFull') : $('bvTable'), full = SB || !F ? null : MXg ? $('bvTable') : $('bvFull');
+      if (!F && !SB && $('bvTable')) $('bvTable').hidden = true;   // (a 3D-only game: no full version)
+      if (here) { here.classList.add('ps3d'); here.classList.remove('psone'); if (!MXg && (!SB || !(ad.stagePanel || ad.freeBind))) here.innerHTML = `<b>${esc(placeT('play'))} ▶</b><small>${esc(t('bv.tableSub'))}</small>`; pa.append(here); }
+      if (cls) { cls.id = 'bv2d'; cls.classList.add('ps2d'); if (!cls.querySelector('b')) cls.innerHTML = `<b>${cls.innerHTML}</b>`; pa.append(cls); }
+      if (full) { full.classList.add('psfx'); pa.append(full); } else if (cls) cls.classList.add('psw');
       pa.classList.add('ps3row');
     }
     // パズル / レッスン (2026-11-11): the sheet keeps its size and turns into that part's page (← back), with the PC card's three buttons:
