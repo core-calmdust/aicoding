@@ -66,6 +66,9 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.95);border-
 .hd{position:relative}
 .lpop{position:absolute;top:62px;inset-inline-end:60px;z-index:60;width:276px;padding:8px;border-radius:24px;background:#fffdf7;border:2px solid var(--line);box-shadow:0 6px 0 var(--line),0 24px 40px -18px rgba(80,40,0,.5);display:grid;grid-template-columns:1fr 1fr;gap:6px;transform-origin:85% 0;animation:lpIn .22s cubic-bezier(.3,1.5,.5,1)}
 .lpop[hidden]{display:none}
+.lpop.lcas,.bvtop .lpop.lcas{position:fixed;inset-inline-end:auto;right:auto;z-index:61;transform-origin:100% 20%;animation:lcIn .2s cubic-bezier(.3,1.4,.5,1)}html[dir=rtl] .lpop.lcas{transform-origin:0 20%}
+@keyframes lcIn{from{opacity:0;transform:translateX(10px) scale(.96)}}html[dir=rtl] .lpop.lcas{animation-name:lcInR}@keyframes lcInR{from{opacity:0;transform:translateX(-10px) scale(.96)}}
+.orow.on{background:#ffe9b0;box-shadow:inset 0 0 0 2px var(--sun)}
 /* the settings box (2026-11-17 ユーザー：右上の設定を歯車にまとめる) */
 #sfxBtn,#npcBtn,#langBtn{display:none!important}
 .optb svg{width:22px;height:22px;transition:transform .35s cubic-bezier(.3,1.5,.5,1)}
@@ -2326,7 +2329,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=42"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=438"></script>
+<script src="app.js?v=439"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
