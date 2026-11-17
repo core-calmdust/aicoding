@@ -4,6 +4,9 @@
 # First run: clones YaneuraOu (the commit below) into $WORK (default ~/shogi-yo-ours), applies tools/match/yo-ours.patch
 # (a "MATERIAL_LEVEL 100" evaluation that reads our NUEQ net and computes it from scratch at every call: slow, so compare
 # at equal nodes, not time) and builds it. The evaluation was checked equal to engine.c's on 2000 positions.
+# OURABL=<bits>: parts of YaneuraOu's search switched off, to measure what each is worth (1 null move, 2 LMR, 4 the pruning
+# in the move loop, 8 futility at the child node, 16 razoring, 32 ProbCut, 64 singular extension, 128 IIR, 256 quiet ordering
+# by the main and the 1- and 2-ply continuation history only, 512 no history in the quiet ordering, 1024 no correction history).
 # OURSCALE (percent, default 100): the value handed to YaneuraOu's search (its margins are tuned to its own nets' scale).
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd); SHOGI=$(cd "$HERE/../.." && pwd)
