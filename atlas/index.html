@@ -1967,7 +1967,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .lvsheet:not(.tcsheet) .lvs-in{width:min(640px,100%);max-height:min(88vh,860px)}
 /* 種目 (shogi variants, 2026-11-12): a picker with the board drawn small, and a sheet of cards — each variant's start position, name, size, rule in a line */
 .bvi .vopts{flex-wrap:nowrap}
-.bvi .olopp{display:flex;flex-wrap:nowrap!important;align-items:center;gap:10px}.bvi .olopp[hidden]{display:none}.bvi .olopp > label{flex:none!important}.bvi .olopp .rtnow2{flex:1 1 auto;align-self:stretch;min-height:40px}.bvi .olopp .rtnow2:empty{visibility:hidden}.bvi .olopp .rtnow2{justify-content:center}.bvi .olopp .rtnow2 small{display:none}.bvi .olopp .sidetg button[disabled]{opacity:.6;cursor:default}.bvi .olopp .olsoon{display:inline-block;margin-inline-start:5px;padding:1px 6px;border-radius:99px;background:#efe3c8;font-size:10.5px;font-weight:800;vertical-align:1px}   /* (相手 AI / オンライン + the rating: 3D-only games with online play, 2026-11-16) */.bvi .vrow{flex:1 1 100%!important;min-width:0}.bvi .vpick{justify-content:flex-start}.bvi .vpick .vico{flex:none;height:30px;width:auto;max-width:40px;margin:-4px 0;filter:drop-shadow(0 1px 1px rgba(90,60,20,.25))}.bvi .vpick i{margin-inline-start:auto}
+.bvi .olrows{display:flex;flex-direction:column;gap:10px}.bvi .olrows[hidden]{display:none}.bvi .olopp{display:flex;flex-wrap:nowrap!important;align-items:center;gap:10px;margin:0}.bvi #bvOlRow .olopp > label{flex:1 1 auto!important;min-width:0;display:flex;align-items:center;gap:8px;white-space:nowrap}.bvi #bvOlRow .sidetg{flex:1 1 auto!important}.bvi #bvOlRow .sidetg > button{flex:1 1 0!important}.bvi #bvOlRow .rtnow2{justify-content:center;box-sizing:border-box;min-height:0;height:var(--bh,48px);padding-block:0;overflow:hidden}.bvi #bvOlRow .rtonly{min-height:0}.bvi #bvOlRow .rtonly > .rtrec{min-height:0;height:var(--bh,48px)}.bvi #bvOlRow .sidetg{height:var(--bh,48px);box-sizing:border-box}.bvi #bvOlRow .rtnow2 small{display:none}.bvi .olrows .rtonly{display:flex;align-items:stretch;gap:10px}.bvi .olrows .rtonly > .rtrec{flex:none;align-self:stretch;height:auto;min-height:var(--bh,48px)}.bvi .olopp .sidetg button[disabled]{opacity:.6;cursor:default}.bvi .olopp .olsoon{display:inline-block;margin-inline-start:5px;padding:1px 6px;border-radius:99px;background:#efe3c8;font-size:10.5px;font-weight:800;vertical-align:1px}   /* (相手 AI / オンライン + the rating: 3D-only games with online play, 2026-11-16) */.bvi .vrow{flex:1 1 100%!important;min-width:0}.bvi .vpick{justify-content:flex-start}.bvi .vpick .vico{flex:none;height:30px;width:auto;max-width:40px;margin:-4px 0;filter:drop-shadow(0 1px 1px rgba(90,60,20,.25))}.bvi .vpick i{margin-inline-start:auto}
 @media (min-width:820px){.bvi .vpick .vico{height:36px;max-width:46px}}
 .vsheet .lvs-in{width:min(820px,100%)!important}
 @media (min-width:820px){   /* 種目のポップアップを大きく（2026-11-17 ユーザー：もう少し大きく、見やすく） */
@@ -1979,7 +1979,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi .vopts{display:flex;align-items:stretch;gap:10px}.bvi .vopts .vrow{flex:1 1 50%!important}
 .bvi .rtnow2{flex:1 1 50%;min-width:0;display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:10px;padding:6px 14px;border-radius:16px;background:#fff;border:2px solid var(--line);line-height:1.1}.bvi .rtnow2[hidden]{display:none}.bvi .rtnow2 small{flex:none;font-size:13px;font-weight:800;color:var(--ink2);white-space:nowrap}.bvi .rtnow2 b{min-width:0;font-size:20px;font-weight:900;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:end}   /* 現在のレート: the label on the left, the value on the right (2026-11-13) */
 /* (games with a 種目 row — shogi: every box the same height and every gap the same, in each tab, 2026-11-12) */
-.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)){--bh:38px;--bg:10px}
+.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)){--bh:38px;--bg:10px}.bvi #bvOlRow{--bh:38px;gap:10px}@media (min-width:820px){.bvi #bvOlRow{--bh:48px;gap:12px}}
 @media (min-width:820px){.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)){--bh:48px;--bg:12px}}
 .bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)){gap:var(--bg)}
 .bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .opts{gap:var(--bg) 14px!important}
@@ -2255,7 +2255,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 </script>
 <script src="gamelist-i18n.js?v=20261116m1"></script>
 <script src="img/tex/baked.js?v=3"></script>
-<script src="table3d.js?v=183"></script>
+<script src="table3d.js?v=184"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
@@ -2279,7 +2279,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=387"></script>
+<script src="lazy.js?v=388"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=40"></script>
 <script src="lessons3d.js?v=67"></script>
@@ -2301,7 +2301,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=42"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=434"></script>
+<script src="app.js?v=435"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>

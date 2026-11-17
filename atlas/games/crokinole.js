@@ -75,6 +75,7 @@
     // online (2026-11-16, atlas/online3d.js — as carrom): M = the game, me = this device's side (0 = the record's b, the first shooter);
     // the shooter's write carries the shot and the result, the other side plays the shot back and then takes the written state
     const M = ctx.mode === 'online' && ctx.online ? ctx.online : null, online = !!M, me = M ? M.me : 0;
+    if (online && T3.live) T3.live(true);   // (online: keeps playing while the window is behind; off at the end / on leaving)
     const mode = online ? (M.v === 'p100' ? '100' : 'r4') : +ctx.size === 100 ? '100' : 'r4';
     const youFirst = (+ctx.side || 1) === 1;
     const BDL = (T3.BOARDS && T3.BOARDS.crokinole) ? T3.BOARDS.crokinole.list : ['marq', 'classic', 'modern', 'mcm', 'winter', 'neon'];
@@ -173,7 +174,7 @@
       kick(120);
     }
     let pulseT = 0;
-    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus() || (T3.decoOn && !T3.decoOn())) return; let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(1.12 + Math.sin((performance.now() - t0) / 230) * .1); any = true; } }); if (any) kick(80); }, 60); }
+    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !(document.hasFocus() || (T3.isLive && T3.isLive())) || (T3.decoOn && !T3.decoOn())) return; let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(1.12 + Math.sin((performance.now() - t0) / 230) * .1); any = true; } }); if (any) kick(80); }, 60); }
 
     /* ---------- HUD (the carrom look: .crp pills, .crtoast, the how-to card) ---------- */
     const css = document.createElement('style');
@@ -241,7 +242,7 @@
     function neonTick() {   // (2026-11-11, as carrom: the frame loop, the board looked up on every frame — a neon board picked after the start froze while aiming)
       cancelAnimationFrame(waveT); if (stopped) return;
       const step = () => { if (stopped) return; waveT = requestAnimationFrame(step);
-        if (U && U.look === 'neon' && !document.hidden && document.hasFocus() && (!T3.decoOn || T3.decoOn() || document.documentElement.classList.contains('hand-drag'))) kick(160); };
+        if (U && U.look === 'neon' && !document.hidden && (document.hasFocus() || (T3.isLive && T3.isLive())) && (!T3.decoOn || T3.decoOn() || document.documentElement.classList.contains('hand-drag'))) kick(160); };
       waveT = requestAnimationFrame(step);
     }
 
@@ -377,6 +378,7 @@
       const rt = M.finish(own);
       hud(); (R.s === 1 ? SND.win : R.s === 0 ? SND.bad : SND.good)();
       say(t(R.s === 1 ? 'res.win' : R.s === 0 ? 'res.lose' : 'res.draw'));
+      if (T3.live) T3.live(false);
       later(() => ctx.onEnd({ online: true, win: R.s === 1, draw: R.s === .5, level: 0, score: tx('score', { a: st.score[me], b: st.score[1 - me] }), why: reason ? OT(reason) : '', rt, rated: M.rated, opp: M.names[1 - me], side: me }), why === 'board' ? 1300 : 350);
     }
     function onTurn() { if (ctx.onTurn) ctx.onTurn(st.turn === 0 ? 0 : 1, { human: human(st.turn), ply }); }
@@ -546,7 +548,7 @@
       resign() { if (online) { M.resign(); return; } finish('resign'); },   // (online: the record's resignation ends it, on both sides)
       timeout() { if (online) return; finish('time'); },
       stop() { document.querySelectorAll(".bpk").forEach(e => e.remove());
-        if (online) { if (!over && M.g && M.g.status === 'play') M.resign(); M.stop(); clearInterval(olT); }   // (leaving a game in progress = resigning it)
+        if (online) { if (!over && M.g && M.g.status === 'play') M.resign(); M.stop(); clearInterval(olT); if (T3.live) T3.live(false); }   // (leaving a game in progress = resigning it)
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulseT);
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;

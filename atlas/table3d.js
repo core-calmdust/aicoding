@@ -1918,7 +1918,13 @@
   // anything that would change it (a resize: the side panel narrows the window, a move, the camera following the board) still
   // draws, in a short burst of frames that then stops again (the canvas is cleared by a resize, so it must be drawn once more)
   let blurBurst = 0;
-  addEventListener('blur', () => { blurred = true; blurBurst = performance.now() + 400; wake(); }); addEventListener('focus', () => { blurred = false; kick(300); });
+  // live (2026-11-17 ユーザー：マルチプレイの時はフォーカスを外していてもプレイが続くように、終了したら元に戻す): an online game in progress
+  // keeps drawing every frame while the window is behind another one — the opponent's shots, the clocks. Off again when it ends.
+  let live = false;
+  addEventListener('blur', () => { if (live) return; blurred = true; blurBurst = performance.now() + 400; wake(); }); addEventListener('focus', () => { blurred = false; kick(300); });
+  function setLive(on) { live = !!on; document.documentElement.classList.toggle('t3-live', live); if (document.body) document.body.classList.toggle('in-online', live);   // (body.in-online: the shared focus gate (shared/focusgate.js) never freezes time / frames while it is on — the same rule as the full games' online play)
+    if (live) { blurred = false; kick(300); } else if (!document.hasFocus()) { blurred = true; blurBurst = performance.now() + 400; wake(); }
+    try { dispatchEvent(new Event('t3live')); } catch (e) {} }
   // on-demand rendering (shared rule for every 3D skin): a frame is drawn only while something moves —
   // a kick(ms) from an animation, a changed board rect / canvas size, or dirty; otherwise the GPU stays idle
   let lastKey = null, kickUntil = 0, dirty = true, lastDraw = 0;
@@ -2438,5 +2444,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { refit: () => { cw = ch = 0; resize(); }, prefetch, preUpload, unprepare, swap, swapCancel, drawNow, placeOff: PLACE_OFF, fitRect, modelRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { live: setLive, isLive: () => live, refit: () => { cw = ch = 0; resize(); }, prefetch, preUpload, unprepare, swap, swapCancel, drawNow, placeOff: PLACE_OFF, fitRect, modelRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
