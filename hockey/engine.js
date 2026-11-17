@@ -227,12 +227,12 @@
   /* ---------- AI (Lv.1–20) ---------- */
   // (2026-11-17 ユーザー：上位は人間が勝てない・マレットを異様に高速で動かすのが不気味) the AI's hand has a human top speed and
   // acceleration (it was up to 600 cm/s, 4000 cm/s² — over 300 cm/s in play, five table lengths a second)
-  let AIV0 = 120, AIV1 = 110, AIA0 = 1400, AIA1 = 1800, AIP = .5;
+  let AIV0 = 120, AIV1 = 110, AIA0 = 1400, AIA1 = 1800, AIP = .5, AIH = .7, AIN = .25;
   function aiSkill(level) {
     const k0 = Math.pow((Math.max(1, Math.min(20, level)) - 1) / 19, 1.35);   // (eased: the first levels stay gentle)
     const k = k0 * (1 - .2 * Math.pow(k0, 3));   // (2026-11-13: Lv.16–20 were too strong — the top eased; Lv.20 ≈ the old Lv.17)
     // (2026-11-10) much weaker at the low end: slower to react, less exact, attacks less, and now and then looks away
-    return { cap: .22 + .78 * Math.pow(k, 1.1), react: .4 - .37 * Math.pow(k, .7), err: 6 - 5.4 * k, attack: .45 + .45 * k, bank: level >= 9, lead: .6 + .4 * k, lapse: .1 * Math.pow(1 - k, 1.5), plan: .15 + AIP * Math.pow(k, .8), vmax: AIV0 + AIV1 * k, acc: AIA0 + AIA1 * k };   // (2026-11-10: Lv.1 a little more able — it moves, defends and plays the puck, just slowly)
+    return { cap: .22 + .78 * Math.pow(k, 1.1), react: .4 - .37 * Math.pow(k, .7), err: 6 - 5.4 * k, attack: .45 + .45 * k, bank: level >= 9, lead: .6 + .4 * k, lapse: .1 * Math.pow(1 - k, 1.5), plan: AIP * Math.pow(k, 1.2), vmax: AIV0 + AIV1 * k, acc: AIA0 + AIA1 * k };   // (2026-11-10: Lv.1 a little more able — it moves, defends and plays the puck, just slowly)
   }
   // where a puck will cross the line y = yl (bouncing off the side walls), or null
   function cross(p, yl) {
@@ -312,11 +312,14 @@
     let p = null, best = -1e9;
     for (const q of seen) { const toward = q.vy * sg, inHalf = q.y * sg > 0, sc = (toward > 0 ? toward + 200 : 0) + (inHalf ? 120 - Math.abs(q.y - m.y) : -Math.abs(q.y)); if (sc > best) { best = sc; p = q; } }
     if (mem.err == null || mem.cool <= 0) { mem.err = (Math.random() - .5) * 2 * sk.err; mem.cool = .5; }
-    const inHalf = p.y * sg > 0, slow = Math.hypot(p.vx, p.vy) < 70, trk = tricky(s) && Math.random() < sk.plan;
+    const inHalf = p.y * sg > 0, slow = Math.hypot(p.vx, p.vy) < 70, trk = tricky(s) && mem.use;
     let coming = p.vy * sg > 20;
     // a tricky board: the puck's real path (a bumper / the bar / a warp hole can turn it back toward its goal)
-    if (tricky(s) && !(inHalf && slow) && sk.plan > .25) {
-      const yl = sg * (L / 2 - 7), r = simPuck(s, p, 1.4, yl);
+    // (2026-11-17 ユーザー：今のAIに人間が勝つのは無理、旧AIを少し強化する程度で) it reads the board only now and then (held
+    // for 0.6 s), a short way ahead, and its planned shots are not exact
+    mem.useT = (mem.useT || 0) - dt; if (mem.useT <= 0) { mem.useT = .6; mem.use = Math.random() < sk.plan; }
+    if (trk && !(inHalf && slow)) {
+      const yl = sg * (L / 2 - 7), r = simPuck(s, p, AIH, yl);
       if (r.k === 'line' && (r.vy || 0) * sg > 0) { mem.defX = r.x; mem.defT = .15; }
     }
     mem.defT = (mem.defT || 0) - dt;
@@ -356,10 +359,10 @@
       if (!mem.dodge && sk.bank && mem.bankSide === 1) { const wx = Math.sign(p.x || 1) * W / 2; gx = 2 * wx - gx; }
       let ax = gx - p.x, ay = gy - p.y, al = Math.hypot(ax, ay), ux = ax / al, uy = ay / al;
       // a tricky board: the shot that gets through (held a moment, re-planned when the puck has moved)
-      if (trk || (mem.plan && tricky(s))) {
+      if (trk) {
         if (!mem.plan || mem.planT <= 0 || Math.hypot(mem.plan.px - p.x, mem.plan.py - p.y) > 3) {
           const t0 = Math.min(.6, Math.hypot(m.x - p.x, m.y - p.y) / (MALLET_V * sk.cap * .25));
-          const b = planShot(s, p, side, t0); mem.plan = { ux: b.ux, uy: b.uy, px: p.x, py: p.y }; mem.planT = .35;
+          const b = planShot(s, p, side, t0); const na = Math.atan2(b.uy, b.ux) + (Math.random() - .5) * 2 * (AIN * (1.2 - sk.lead)); mem.plan = { ux: Math.cos(na), uy: Math.sin(na), px: p.x, py: p.y }; mem.planT = .35;
         }
         mem.planT -= dt; ux = mem.plan.ux; uy = mem.plan.uy;
       }
@@ -388,7 +391,7 @@
 
   // a target clamped to the bounds of a side's mallet (its own half, inside the walls) — the relative mouse / touchpad control
   function clampXY(s, side, x, y) { const m = { r: s.mal[side].r, tx: x, ty: y }; clampMal(m, side); return { tx: m.tx, ty: m.ty }; }
-  const API = { setAI(a) { [AIV0, AIV1, AIA0, AIA1, AIP] = a; }, clampXY, DIM, MODES, BOARDS, ITEMS, PORTAL, PR, BUMPERS, BR, BAR, newMatch, step, serve, aiTarget, aiSkill, rng, has };
+  const API = { setAI(a) { [AIV0, AIV1, AIA0, AIA1, AIP, AIH, AIN] = a; }, clampXY, DIM, MODES, BOARDS, ITEMS, PORTAL, PR, BUMPERS, BR, BAR, newMatch, step, serve, aiTarget, aiSkill, rng, has };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   root.HockeyEngine = API;
 })(typeof self !== 'undefined' ? self : this);
