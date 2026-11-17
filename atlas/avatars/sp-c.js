@@ -45,7 +45,7 @@
 
   /* 1. つみきビーバー — beaver stacking wooden toy blocks */
   D('beaver', {
-    name: { ja: 'ツミキビーバー', en: 'Blockbeaver' },
+    name: { ja: 'ツミキーバー', en: 'Blockbeaver' },
     desc: { ja: 'つみきを高く積むのが大好き。しっぽでトントン整える。', en: 'Loves stacking toy blocks and pats them neat with its tail.' },
     build() {
       const g = new T.Group(), F = soft(0xdda06c, { under: 0xff9a9a, uk: .45 }), cr = soft(0xffeedb, { under: 0xffd0c8, uk: .4 }), tailM = soft(0xa9785c, { under: 0x8a72d0, uk: .5 }), pink = soft(0xffb3c0);
@@ -78,9 +78,9 @@
   });
   function nose(g, s) { blob(g, inkSoft(), [s.p.x, s.p.y, s.p.z], [.085, .06, .05]); }
 
-  /* 2. タワーカタツムリ — snail with a Tower-of-Hanoi shell (UR) */
+  /* 2. タワツムリ — snail with a Tower-of-Hanoi shell (UR) */
   D('snail', {
-    name: { ja: 'タワーカタツムリ', en: 'Towersnail' },
+    name: { ja: 'タワツムリ', en: 'Towersnail' },
     desc: { ja: 'せなかの輪っかを一枚ずつ、小さい順に積みかえる。', en: 'Moves the rings on its back one by one, never big on small.' },
     ur: true,
     build(opt, tier) {
@@ -103,7 +103,7 @@
     v: [{}, { hue: [140, .9, 0], acc: ['bow'] }, { hue: [-90, 1, .02], acc: ['bell'] }, { acc: ['crown'] }],
   });
 
-  /* 3. キューブカバ — baby hippo with a 3×3 colour-cube puzzle */
+  /* 3. キュービッポ — baby hippo with a 3×3 colour-cube puzzle */
   function stickerMat(key, cols) {
     return decal('c-cube-' + key, 192, 192, (c, W) => {
       c.clearRect(0, 0, W, W); const s = W / 3;
@@ -111,7 +111,7 @@
     });
   }
   D('hippo', {
-    name: { ja: 'キューブカバ', en: 'Cubehippo' },
+    name: { ja: 'キュービッポ', en: 'Cubehippo' },
     desc: { ja: 'フェルトの六面パズルをくるくる。そろうとにっこり。', en: 'Twists its felt colour cube round and round, all smiles when it lines up.' },
     build() {
       const g = new T.Group(), F = soft(0xc6b4f2, { under: 0xff9fcf, uk: .45 }), muz = soft(0xffd6e4, { under: 0xffaec8, uk: .4 }), felt = soft(0xfff6ea, { under: 0xd6dcff, uk: .45 });
@@ -139,9 +139,9 @@
     v: [{}, { hue: [-130, 1.1, .02], acc: [['flower', 0xffffff]] }, { hue: [100, 1.3, 0], acc: [['beret', 0x6fb8ff, 0x8a76ff]] }, { finish: 'sky', acc: ['tiara'] }],
   });
 
-  /* 4. メイロモグラ — mole with digging paws and a maze board */
+  /* 4. メイログラ — mole with digging paws and a maze board */
   D('mole', {
-    name: { ja: 'メイロモグラ', en: 'Mazemole' },
+    name: { ja: 'メイログラ', en: 'Mazemole' },
     desc: { ja: '地下トンネルで鍛えた迷路名人。ゴールまで一直線。', en: 'A maze master trained in its tunnels — straight to the goal.' },
     build() {
       const g = new T.Group(), F = soft(0x9d90d4, { under: 0xff9fc8, uk: .45 }), pk = soft(0xffb3c6, { under: 0xff8aa8, uk: .45 }), claw = soft(0xfff3e4, { under: 0xffd6c8 }), wood = soft(0xf0cf98, { under: 0xd8a070, uk: .4 });
@@ -179,7 +179,7 @@
     v: [{}, { hue: [150, 1.3, 0], acc: [['star', 0xffd34f]] }, { hue: [-130, .9, .06], acc: ['pawnhat'] }, { finish: 'night', acc: ['crown'] }],
   });
 
-  /* 5. オリガミツル — a plush folded-paper crane */
+  /* 5. オリヅルン — a plush folded-paper crane */
   const craneWing = (sh, k) => { sh.moveTo(0, .06); sh.lineTo(k * .9, .82); sh.quadraticCurveTo(k * 1.04, .92, k * .98, .74); sh.lineTo(k * .44, -.12); sh.quadraticCurveTo(k * .2, -.22, 0, -.08); sh.closePath(); };
   const craneDecal = () => decal('c-crane2', 256, 256, (c, W) => {
     c.clearRect(0, 0, W, W); const P = (x, y) => [x / 1.04 * W, (1 - (y + .22) / 1.14) * W];
@@ -193,7 +193,7 @@
     [[.36, .14], [.56, .34], [.74, .52], [.5, .08], [.66, .24]].forEach(([x, y]) => { const [px, py] = P(x, y); for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; c.beginPath(); c.arc(px + Math.cos(a) * 7, py + Math.sin(a) * 7, 5.5, 0, 7); c.fill(); } c.fillStyle = 'rgba(255,200,90,.95)'; c.beginPath(); c.arc(px, py, 3.5, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.9)'; });
   });
   D('crane', {
-    name: { ja: 'オリガミツル', en: 'Origrane' },
+    name: { ja: 'オリヅルン', en: 'Origrane' },
     desc: { ja: '紙から生まれたやわらかい鶴。千羽そろうと願いがかなう。', en: 'A soft crane born from paper. A thousand together grant a wish.' },
     build() {
       const g = new T.Group(), P = soft(0xffb6c9, { under: 0xffcf9a, uk: .45 }), Wt = soft(0xfffaf4, { under: 0xffd6e4, uk: .4 }), Y = soft(0xffd27a, { under: 0xffa060 }), red = soft(0xff6670, { under: 0xff4f8a });
@@ -213,9 +213,9 @@
     v: [{}, { hue: [170, .8, .02], acc: [['flower', 0xffffff]] }, { hue: [-150, .8, .04], acc: [['scarf', 0xff6b7a, 0xd85a9a]] }, { finish: 'pearl', acc: ['tiara'] }],
   });
 
-  /* 6. アヤトリヤギ — goat kid making a cat's cradle */
+  /* 6. アヤトリメェ — goat kid making a cat's cradle */
   D('goat', {
-    name: { ja: 'アヤトリヤギ', en: 'Cradlegoat' },
+    name: { ja: 'アヤトリメェ', en: 'Cradlegoat' },
     desc: { ja: 'ひづめで器用にあやとり。ほうき、はしご、なんでも作る。', en: 'Makes string figures with nimble hooves — brooms, ladders, anything.' },
     build() {
       const g = new T.Group(), W = soft(0xfff6ec, { under: 0xd8c8ff, uk: .5 }), horn = soft(0xf2c98a, { under: 0xffa080, uk: .4 }), hoof = soft(0xa892d6, { under: 0xff9fcf, uk: .4 }), muz = soft(0xffe6ea, { under: 0xffc4d6, uk: .4 }), yarn = soft(0xff6b8a, { under: 0xd85a9a, uk: .3, rough: .7, glow: .05 });
@@ -243,7 +243,7 @@
 
   /* 7. タケトンボ — chibi dragonfly with a bamboo-copter on its head */
   D('dragonfly', {
-    name: { ja: 'タケトンボ', en: 'Coptrafly' },
+    name: { ja: 'タケトンボン', en: 'Coptrafly' },
     desc: { ja: '頭の竹とんぼをくるっと回して、ふわりと飛びたつ。', en: 'Spins the bamboo-copter on its head and floats off.' },
     build() {
       const g = new T.Group(), G = soft(0x8fe0c4, { under: 0x7cb8ff, uk: .5 }), St = soft(0x7fb6ff, { under: 0x8a76ff, uk: .45 }), wing = soft(0xe2f4ff, { under: 0xc8c8ff, uk: .4, glow: .1, rim: .35, sheen: 0xffffff, sheenK: .6 }), bam = soft(0xe6cf86, { under: 0xa8c070, uk: .4, sheen: 0xfff3c0 });
@@ -317,9 +317,9 @@
     v: [{}, { hue: [-120, .9, .04], acc: ['bow'] }, { hue: [150, .9, .04], acc: [['scarf', 0xffd34f, 0xff9a4a]] }, { acc: ['crown'] }],
   });
 
-  /* 9. ヨーヨーサル — little monkey with a yo-yo */
+  /* 9. ヨーヨッキー — little monkey with a yo-yo */
   D('monkey', {
-    name: { ja: 'ヨーヨーサル', en: 'Yoyomonk' },
+    name: { ja: 'ヨーヨッキー', en: 'Yoyomonk' },
     desc: { ja: 'ヨーヨーの技は百八つ。いちばん得意なのは犬のさんぽ。', en: 'Knows a hundred yo-yo tricks; walking the dog is its favourite.' },
     build() {
       const g = new T.Group(), F = soft(0xe8a878, { under: 0xff9fb8, uk: .45 }), cr = soft(0xfff0dc, { under: 0xffd0c8, uk: .4 }), pk = soft(0xffb3c0);
@@ -352,9 +352,9 @@
     v: [{}, { hue: [170, .8, .04], acc: [['star', 0xffd34f]] }, { hue: [75, .9, .04], acc: ['dicehat'] }, { finish: 'sakura', acc: ['halo'] }],
   });
 
-  /* 10. テディクマ — the classic plush teddy (UR) */
+  /* 10. テディントン — the classic plush teddy (UR) */
   D('teddy', {
-    name: { ja: 'テディクマ', en: 'Teddybear' },
+    name: { ja: 'テディントン', en: 'Teddington' },
     desc: { ja: 'おもちゃ箱のリーダー。つぎあてとボタンは冒険のしるし。', en: 'Leader of the toy box. Its patch and button are badges of adventure.' },
     ur: true,
     build() {

@@ -1,6 +1,6 @@
 /* =====================================================================
    ヒット＆ブロー rules — a guided tour on the 3D table (the Midnight board, atlas/models/hitblow.js, seen straight down as in
-   play), told by the Cub Detective Bunny (the Lv.1–3 Atlamo, av/boss-hitblow-1-0).
+   play), told by Bunlock (the Lv.1–3 Atlamo, av/boss-hitblow-1-0).
    A short course: the code under the case's lid · a first guess with the real input tray · hit (pink) and blow (white),
    explained with the lid peeked open · the pins never say which gem they mean · a guided deduction (two clue rows → the
    learner lines up the answer) · one board, two players taking turns · the five rules (a ナンバー4 board) · the daily
@@ -28,9 +28,9 @@
   const MINE0 = { g: [3, 1, 0, 2], sec: [3, 0, 5, 1] };   // (the peek's row when the learner's own is not there: 1 hit · 2 blows)
 
   const TXT = {
-    ja: { name: 'みならい探偵ウサギ', next: 'つぎへ', back: 'もどる', start: '遊んでみる', again: 'もういちど', tap: '4つ並べてOK', dup: '同じ色は1行に1回だけだよ', tried: 'その並びはもう出てるよ', retry: 'おしい！ 光る2つはヒットじゃないから、2行目の右の2つを入れかえてみて！', reset: '行がなくなっちゃった。はじめからもう一回！',
+    ja: { name: 'ピョンロック', next: 'つぎへ', back: 'もどる', start: '遊んでみる', again: 'もういちど', tap: '4つ並べてOK', dup: '同じ色は1行に1回だけだよ', tried: 'その並びはもう出てるよ', retry: 'おしい！ 光る2つはヒットじゃないから、2行目の右の2つを入れかえてみて！', reset: '行がなくなっちゃった。はじめからもう一回！',
       s: [
-      { say: 'こんにちは、<b>みならい探偵ウサギ</b>だよ！ 奥のケースの<b>？の蓋の下</b>に宝石が4つ。その並びを当てるのが<b>ヒット＆ブロー</b>。耳をあてても聞こえないから、推理でいこう！' },
+      { say: 'こんにちは、<b>ピョンロック</b>だよ！ 奥のケースの<b>？の蓋の下</b>に宝石が4つ。その並びを当てるのが<b>ヒット＆ブロー</b>。耳をあてても聞こえないから、推理でいこう！' },
       { say: 'まずは予想を1行。トレイの宝石を<b>4つタップ</b>して、<b>OK</b>をタップ。同じ色は1行に1回だけ。当てずっぽうでいいの、ぼくもいつもそう！', done: 'ピンが出た！ 行の右の<b>小さなピン</b>が、ケースからの答えだよ。' },
       { say: 'ないしょでケースを開けちゃった！ <b>色も場所もぴったり</b>なら<b>ヒット</b>＝<b>ピンクのピン</b>。<b>色はあるけど場所ちがい</b>なら<b>ブロー</b>＝<b>白いピン</b>。輪っかの色でたしかめてね。' },
       { say: '本番は蓋が閉じたまま。ピンは<b>ヒットが先</b>に並ぶだけで、<b>どの宝石のことかは言わない</b>の。そこを考えるのが探偵の腕の見せどころ！ あれ、ルーペがくもってきた…' },
@@ -39,9 +39,9 @@
       { say: '種目は5つ：<b>カラー</b>、同じ色もOKの<b>重複あり</b>、数字の<b>ナンバー3・4</b>、8色から5つの<b>エキスパート</b>。これはナンバー4、考え方は同じ。数はニンジンで数えてるの！' },
       { say: '<b>今日の一問</b>は灰色の<b>手がかりの行</b>つきで、決められた回数で当てるパズル。<b>問題集</b>には500問！ さあ、事件のはじまりだよ。遊んでみよう！' },
     ] },
-    en: { name: 'Cub Detective Bunny', next: 'Next', back: 'Back', start: "Let's play", again: 'Again', tap: 'Place 4, then OK', dup: 'Each colour only once per row!', tried: "That row's already on the board", retry: 'So close! The glowing two can\'t be hits — try row 2 with its right two swapped!', reset: 'Out of rows! Let’s start this one over',
+    en: { name: 'Bunlock', next: 'Next', back: 'Back', start: "Let's play", again: 'Again', tap: 'Place 4, then OK', dup: 'Each colour only once per row!', tried: "That row's already on the board", retry: 'So close! The glowing two can\'t be hits — try row 2 with its right two swapped!', reset: 'Out of rows! Let’s start this one over',
       s: [
-      { say: "Hi, I'm the <b>Cub Detective Bunny</b>! Under the <b>？ lid of the case</b> at the far end, four gems are hiding. Guess their order — that's <b>Hit & Blow</b>. Pressing my ears to it won't help, so let's use logic!" },
+      { say: "Hi, I'm <b>Bunlock</b>! Under the <b>？ lid of the case</b> at the far end, four gems are hiding. Guess their order — that's <b>Hit & Blow</b>. Pressing my ears to it won't help, so let's use logic!" },
       { say: 'First, one guess. <b>Tap 4 gems</b> in the tray below to line them up, then tap <b>OK</b>. Each colour only once per row. A wild guess is fine — I do it all the time!', done: 'Pins popped up! The <b>little pins</b> right of the row are the case’s answer.' },
       { say: 'I peeked in the case, shh! <b>Right colour, right place</b> is a <b>hit</b> — a <b>pink pin</b>. <b>Right colour, wrong place</b> is a <b>blow</b> — a <b>white pin</b>. Check the colours of the rings!' },
       { say: 'In a real game the lid stays shut. The pins just line up, <b>hits first</b>, and <b>never say which gem they mean</b>. Working that out is the detective’s job! Hmm, my magnifier is fogging up…' },
@@ -50,9 +50,9 @@
       { say: 'There are 5 rules: <b>Colour</b>, <b>Colour (repeats)</b> where a colour may come back, <b>Number 3 and Number 4</b> with digits, and <b>Expert</b>, 5 of 8 colours. This is Number 4 — same thinking. I count in carrots!' },
       { say: 'The <b>daily puzzle</b> starts with grey <b>clue rows</b> already on the board — crack it within the limit. The <b>puzzle book</b> has 500 more! A new case awaits. Let’s play!' },
     ] },
-    zh: { name: '见习侦探兔', next: '下一步', back: '返回', start: '开始玩', again: '再来一次', tap: '放好4个再按OK', dup: '同一种颜色一行只能用一次哦', tried: '这个排列已经出现过啦', retry: '差一点！发光的2颗不是命中，试试把第2行右边2颗对调！', reset: '行用完啦，从头再来一次！',
+    zh: { name: '侦探兔兔', next: '下一步', back: '返回', start: '开始玩', again: '再来一次', tap: '放好4个再按OK', dup: '同一种颜色一行只能用一次哦', tried: '这个排列已经出现过啦', retry: '差一点！发光的2颗不是命中，试试把第2行右边2颗对调！', reset: '行用完啦，从头再来一次！',
       s: [
-      { say: '你好，我是<b>见习侦探兔</b>！远处盒子的<b>“？”盖子下面</b>藏着4颗宝石。猜出它们的顺序，就是<b>Hit & Blow</b>。把耳朵贴上去也听不到，所以要靠推理！' },
+      { say: '你好，我是<b>侦探兔兔</b>！远处盒子的<b>“？”盖子下面</b>藏着4颗宝石。猜出它们的顺序，就是<b>Hit & Blow</b>。把耳朵贴上去也听不到，所以要靠推理！' },
       { say: '先猜一行。<b>点击下方托盘里的4颗宝石</b>排好，再点<b>OK</b>。同一种颜色一行只能用一次。随便猜也没关系，我也总是这样！', done: '小钉出来了！行右边的<b>小钉</b>就是盒子给的回答。' },
       { say: '我偷偷打开了盒子，嘘！<b>颜色和位置都对</b>是<b>命中（Hit）</b>＝<b>粉色的小钉</b>。<b>颜色对但位置不对</b>是<b>偏离（Blow）</b>＝<b>白色的小钉</b>。看看圆环的颜色吧！' },
       { say: '正式比赛时盖子一直关着。小钉只是<b>命中排在前面</b>，<b>不会告诉你是哪颗宝石</b>。想出这一点正是侦探的本事！咦，我的放大镜起雾了…' },
@@ -61,9 +61,9 @@
       { say: '规则有5种：<b>颜色</b>、颜色可重复的<b>颜色（可重复）</b>、用数字的<b>数字3・数字4</b>，还有8色选5个的<b>专家</b>。这是数字4，思路一样。我都用胡萝卜来数数！' },
       { say: '<b>每日一题</b>一开始盘上就有灰色的<b>提示行</b>，要在限定次数内猜中。<b>题库</b>还有500题！新案件来了，开始玩吧！' },
     ] },
-    'zh-TW': { name: '見習偵探兔', next: '下一步', back: '返回', start: '開始玩', again: '再來一次', tap: '放好4個再按OK', dup: '同一種顏色一列只能用一次喔', tried: '這個排列已經出現過啦', retry: '差一點！發光的2顆不是命中，試試把第2列右邊2顆對調！', reset: '列用完啦，從頭再來一次！',
+    'zh-TW': { name: '偵探兔兔', next: '下一步', back: '返回', start: '開始玩', again: '再來一次', tap: '放好4個再按OK', dup: '同一種顏色一列只能用一次喔', tried: '這個排列已經出現過啦', retry: '差一點！發光的2顆不是命中，試試把第2列右邊2顆對調！', reset: '列用完啦，從頭再來一次！',
       s: [
-      { say: '你好，我是<b>見習偵探兔</b>！遠處盒子的<b>「？」蓋子下面</b>藏著4顆寶石。猜出它們的順序，就是<b>Hit & Blow</b>。把耳朵貼上去也聽不到，所以要靠推理！' },
+      { say: '你好，我是<b>偵探兔兔</b>！遠處盒子的<b>「？」蓋子下面</b>藏著4顆寶石。猜出它們的順序，就是<b>Hit & Blow</b>。把耳朵貼上去也聽不到，所以要靠推理！' },
       { say: '先猜一列。<b>點擊下方托盤裡的4顆寶石</b>排好，再點<b>OK</b>。同一種顏色一列只能用一次。隨便猜也沒關係，我也總是這樣！', done: '小釘出來了！列右邊的<b>小釘</b>就是盒子給的回答。' },
       { say: '我偷偷打開了盒子，噓！<b>顏色和位置都對</b>是<b>命中（Hit）</b>＝<b>粉色的小釘</b>。<b>顏色對但位置不對</b>是<b>偏離（Blow）</b>＝<b>白色的小釘</b>。看看圓環的顏色吧！' },
       { say: '正式比賽時蓋子一直關著。小釘只是<b>命中排在前面</b>，<b>不會告訴你是哪顆寶石</b>。想出這一點正是偵探的本事！咦，我的放大鏡起霧了…' },
@@ -72,9 +72,9 @@
       { say: '規則有5種：<b>顏色</b>、顏色可重複的<b>顏色（可重複）</b>、用數字的<b>數字3・數字4</b>，還有8色選5個的<b>專家</b>。這是數字4，思路一樣。我都用紅蘿蔔來數數！' },
       { say: '<b>每日一題</b>一開始盤上就有灰色的<b>提示列</b>，要在限定次數內猜中。<b>題庫</b>還有500題！新案件來了，開始玩吧！' },
     ] },
-    ko: { name: '견습탐정토끼', next: '다음', back: '이전', start: '놀아 보기', again: '다시 하기', tap: '4개 놓고 OK', dup: '같은 색은 한 줄에 한 번만!', tried: '그 배열은 이미 나왔어', retry: '아깝다! 빛나는 2개는 히트가 아니니까, 2번째 줄의 오른쪽 2개를 바꿔 봐!', reset: '줄이 다 찼어. 처음부터 다시!',
+    ko: { name: '퐁록', next: '다음', back: '이전', start: '놀아 보기', again: '다시 하기', tap: '4개 놓고 OK', dup: '같은 색은 한 줄에 한 번만!', tried: '그 배열은 이미 나왔어', retry: '아깝다! 빛나는 2개는 히트가 아니니까, 2번째 줄의 오른쪽 2개를 바꿔 봐!', reset: '줄이 다 찼어. 처음부터 다시!',
       s: [
-      { say: '안녕, 나는 <b>견습탐정토끼</b>야! 저 안쪽 케이스의 <b>？ 뚜껑 아래</b>에 보석 4개가 숨어 있어. 그 순서를 맞히는 게 <b>히트 앤 블로</b>. 귀를 대도 안 들리니까 추리로 가자!' },
+      { say: '안녕, 나는 <b>퐁록</b>이야! 저 안쪽 케이스의 <b>？ 뚜껑 아래</b>에 보석 4개가 숨어 있어. 그 순서를 맞히는 게 <b>히트 앤 블로</b>. 귀를 대도 안 들리니까 추리로 가자!' },
       { say: '먼저 예상을 한 줄. 아래 트레이의 보석을 <b>4개 탭</b>해서 늘어놓고 <b>OK</b>를 탭해. 같은 색은 한 줄에 한 번만. 찍어도 괜찮아, 나도 늘 그래!', done: '핀이 나왔어! 줄 오른쪽의 <b>작은 핀</b>이 케이스의 대답이야.' },
       { say: '몰래 케이스를 열어 버렸어, 쉿! <b>색도 자리도 딱 맞으면</b> <b>히트</b>＝<b>분홍색 핀</b>. <b>색은 있는데 자리가 다르면</b> <b>블로</b>＝<b>흰 핀</b>. 고리 색으로 확인해 봐!' },
       { say: '실전에서는 뚜껑이 닫혀 있어. 핀은 <b>히트부터 모아서</b> 놓일 뿐, <b>어느 보석 얘기인지는 안 알려 줘</b>. 그걸 알아내는 게 탐정의 실력이지! 어라, 돋보기에 김이 서렸네…' },
@@ -83,9 +83,9 @@
       { say: '종목은 5가지. <b>컬러</b> 말고도 같은 색을 여러 번 쓰는 <b>컬러(중복)</b>, 숫자로 하는 <b>넘버3·넘버4</b>, 8색 중 5개인 <b>엑스퍼트</b>. 이건 넘버4, 생각하는 법은 같아. 나는 당근으로 숫자를 세!' },
       { say: '<b>오늘의 문제</b>는 회색 <b>단서 줄</b>이 처음부터 놓여 있고, 정해진 횟수 안에 맞히는 퍼즐. <b>문제집</b>에는 500문제! 자, 사건의 시작이야. 놀아 보자!' },
     ] },
-    es: { name: 'Conejita detective', next: 'Siguiente', back: 'Atrás', start: 'Jugar', again: 'Otra vez', tap: 'Pon 4 y pulsa OK', dup: '¡Cada color solo una vez por fila!', tried: 'Esa fila ya está en el tablero', retry: '¡Casi! Las dos que brillan no pueden ser hits: prueba la fila 2 cambiando las dos de la derecha.', reset: '¡Se acabaron las filas! Empecemos de nuevo',
+    es: { name: 'Bunlock', next: 'Siguiente', back: 'Atrás', start: 'Jugar', again: 'Otra vez', tap: 'Pon 4 y pulsa OK', dup: '¡Cada color solo una vez por fila!', tried: 'Esa fila ya está en el tablero', retry: '¡Casi! Las dos que brillan no pueden ser hits: prueba la fila 2 cambiando las dos de la derecha.', reset: '¡Se acabaron las filas! Empecemos de nuevo',
       s: [
-      { say: '¡Hola, soy la <b>Conejita detective</b>! Bajo la <b>tapa con ？ de la caja</b>, al fondo, se esconden cuatro gemas. Adivinar su orden es <b>Hit & Blow</b>. Pegar las orejas no sirve, ¡así que a deducir!' },
+      { say: '¡Hola, soy <b>Bunlock</b>! Bajo la <b>tapa con ？ de la caja</b>, al fondo, se esconden cuatro gemas. Adivinar su orden es <b>Hit & Blow</b>. Pegar las orejas no sirve, ¡así que a deducir!' },
       { say: 'Primero, una apuesta. <b>Toca 4 gemas</b> de la bandeja de abajo para ponerlas en fila y toca <b>OK</b>. Cada color, una vez por fila. Adivinar a lo loco vale: ¡yo lo hago siempre!', done: '¡Salieron clavijas! Las <b>clavijas pequeñas</b> a la derecha de la fila son la respuesta de la caja.' },
       { say: '¡He espiado la caja, chis! <b>Color y sitio correctos</b> es un <b>hit</b>: <b>clavija rosa</b>. <b>Color correcto en otro sitio</b> es un <b>blow</b>: <b>clavija blanca</b>. ¡Mira el color de los aros!' },
       { say: 'En la partida la tapa sigue cerrada. Las clavijas solo se ordenan, <b>hits primero</b>, y <b>nunca dicen de qué gema hablan</b>. ¡Averiguarlo es cosa de detectives! Ay, se me empaña la lupa…' },
@@ -94,9 +94,9 @@
       { say: 'Hay 5 reglas: <b>Color</b>, <b>Color (con repetición)</b>, <b>Número 3 y Número 4</b> con cifras, y <b>Experto</b>, 5 de 8 colores. Esto es Número 4: se piensa igual. ¡Yo cuento con zanahorias!' },
       { say: 'El <b>reto del día</b> empieza con <b>filas de pistas</b> grises ya en el tablero: descífralo dentro del límite. ¡Y el <b>libro de retos</b> tiene 500! Un nuevo caso nos espera. ¡A jugar!' },
     ] },
-    fr: { name: 'Lapin détective', next: 'Suivant', back: 'Retour', start: 'Jouer', again: 'Encore', tap: 'Place 4 gemmes, puis OK', dup: 'Chaque couleur une seule fois par ligne !', tried: 'Cette ligne est déjà sur le plateau', retry: 'Presque ! Les deux qui brillent ne sont pas des hits : essaie la ligne 2 en échangeant les deux de droite.', reset: 'Plus de lignes ! On recommence celle-ci',
+    fr: { name: 'Bunlock', next: 'Suivant', back: 'Retour', start: 'Jouer', again: 'Encore', tap: 'Place 4 gemmes, puis OK', dup: 'Chaque couleur une seule fois par ligne !', tried: 'Cette ligne est déjà sur le plateau', retry: 'Presque ! Les deux qui brillent ne sont pas des hits : essaie la ligne 2 en échangeant les deux de droite.', reset: 'Plus de lignes ! On recommence celle-ci',
       s: [
-      { say: 'Coucou, je suis le <b>Lapin détective</b> ! Sous le <b>couvercle ？ de l’écrin</b>, au fond, se cachent quatre gemmes. Deviner leur ordre, c’est <b>Hit & Blow</b>. Coller mes oreilles n’y fait rien : place à la logique !' },
+      { say: 'Coucou, je suis <b>Bunlock</b> ! Sous le <b>couvercle ？ de l’écrin</b>, au fond, se cachent quatre gemmes. Deviner leur ordre, c’est <b>Hit & Blow</b>. Coller mes oreilles n’y fait rien : place à la logique !' },
       { say: 'D’abord, un essai. <b>Touche 4 gemmes</b> du plateau du bas pour les aligner, puis touche <b>OK</b>. Chaque couleur une fois par ligne. Au hasard, c’est permis : moi, je fais toujours ça !', done: 'Des fiches ! Les <b>petites fiches</b> à droite de la ligne sont la réponse de l’écrin.' },
       { say: 'J’ai jeté un œil dans l’écrin, chut ! <b>Bonne couleur, bonne place</b> : un <b>hit</b>, <b>fiche rose</b>. <b>Bonne couleur, mauvaise place</b> : un <b>blow</b>, <b>fiche blanche</b>. Regarde la couleur des anneaux !' },
       { say: 'En vraie partie, le couvercle reste fermé. Les fiches se rangent juste, <b>hits d’abord</b>, et <b>ne disent jamais de quelle gemme il s’agit</b>. Le trouver, c’est le métier de détective ! Oh, ma loupe s’embue…' },
@@ -105,9 +105,9 @@
       { say: 'Il y a 5 règles : <b>Couleur</b>, <b>Couleur (répétitions)</b>, <b>Nombre 3 et Nombre 4</b> avec des chiffres, et <b>Expert</b>, 5 couleurs sur 8. Voici Nombre 4 : même raisonnement. Moi, je compte en carottes !' },
       { say: 'Le <b>défi du jour</b> commence avec des <b>lignes d’indices</b> grises déjà posées : trouve le code dans la limite. Le <b>recueil</b> en a 500 ! Une nouvelle enquête t’attend. On joue !' },
     ] },
-    pt: { name: 'Coelho detetive', next: 'Próximo', back: 'Voltar', start: 'Jogar', again: 'De novo', tap: 'Coloque 4 e OK', dup: 'Cada cor só uma vez por linha!', tried: 'Essa linha já está no tabuleiro', retry: 'Quase! As duas que brilham não são hits: tente a linha 2 trocando as duas da direita.', reset: 'Acabaram as linhas! Vamos recomeçar esta',
+    pt: { name: 'Bunlock', next: 'Próximo', back: 'Voltar', start: 'Jogar', again: 'De novo', tap: 'Coloque 4 e OK', dup: 'Cada cor só uma vez por linha!', tried: 'Essa linha já está no tabuleiro', retry: 'Quase! As duas que brilham não são hits: tente a linha 2 trocando as duas da direita.', reset: 'Acabaram as linhas! Vamos recomeçar esta',
       s: [
-      { say: 'Oi, eu sou o <b>Coelho detetive</b>! Sob a <b>tampa com ？ do estojo</b>, lá no fundo, há quatro gemas escondidas. Adivinhar a ordem delas é o <b>Hit & Blow</b>. Encostar as orelhas não adianta, então vamos de lógica!' },
+      { say: 'Oi, eu sou <b>Bunlock</b>! Sob a <b>tampa com ？ do estojo</b>, lá no fundo, há quatro gemas escondidas. Adivinhar a ordem delas é o <b>Hit & Blow</b>. Encostar as orelhas não adianta, então vamos de lógica!' },
       { say: 'Primeiro, um palpite. <b>Toque em 4 gemas</b> da bandeja de baixo para enfileirá-las e toque em <b>OK</b>. Cada cor uma vez por linha. Chutar vale — eu chuto sempre!', done: 'Saíram pinos! Os <b>pininhos</b> à direita da linha são a resposta do estojo.' },
       { say: 'Espiei o estojo, psiu! <b>Cor e lugar certos</b> é um <b>hit</b>: <b>pino rosa</b>. <b>Cor certa no lugar errado</b> é um <b>blow</b>: <b>pino branco</b>. Confira a cor dos anéis!' },
       { say: 'No jogo de verdade a tampa fica fechada. Os pinos só se alinham, <b>hits primeiro</b>, e <b>nunca dizem de qual gema falam</b>. Descobrir isso é trabalho de detetive! Ih, minha lupa embaçou…' },
@@ -116,9 +116,9 @@
       { say: 'São 5 regras: <b>Cor</b>, <b>Cor (com repetição)</b>, <b>Número 3 e Número 4</b> com dígitos, e <b>Especialista</b>, 5 de 8 cores. Este é o Número 4: mesmo raciocínio. Eu conto em cenouras!' },
       { say: 'O <b>desafio do dia</b> já começa com <b>linhas de pistas</b> cinzentas no tabuleiro: decifre dentro do limite. O <b>livro de desafios</b> tem 500! Um novo caso espera. Vamos jogar!' },
     ] },
-    de: { name: 'Detektiv-Häschen', next: 'Weiter', back: 'Zurück', start: 'Los spielen', again: 'Nochmal', tap: '4 setzen, dann OK', dup: 'Jede Farbe nur einmal pro Reihe!', tried: 'Diese Reihe liegt schon auf dem Brett', retry: 'Knapp! Die zwei leuchtenden sind keine Hits – probier Reihe 2 mit den rechten zwei vertauscht!', reset: 'Keine Reihen mehr! Wir fangen diese neu an',
+    de: { name: 'Bunlock', next: 'Weiter', back: 'Zurück', start: 'Los spielen', again: 'Nochmal', tap: '4 setzen, dann OK', dup: 'Jede Farbe nur einmal pro Reihe!', tried: 'Diese Reihe liegt schon auf dem Brett', retry: 'Knapp! Die zwei leuchtenden sind keine Hits – probier Reihe 2 mit den rechten zwei vertauscht!', reset: 'Keine Reihen mehr! Wir fangen diese neu an',
       s: [
-      { say: 'Hallo, ich bin das <b>Detektiv-Häschen</b>! Unter dem <b>？-Deckel des Kästchens</b> hinten liegen vier Edelsteine versteckt. Ihre Reihenfolge erraten – das ist <b>Hit & Blow</b>. Lauschen mit den Ohren hilft nicht, also: Logik!' },
+      { say: 'Hallo, ich bin <b>Bunlock</b>! Unter dem <b>？-Deckel des Kästchens</b> hinten liegen vier Edelsteine versteckt. Ihre Reihenfolge erraten – das ist <b>Hit & Blow</b>. Lauschen mit den Ohren hilft nicht, also: Logik!' },
       { say: 'Zuerst ein Tipp. <b>Tippe 4 Steine</b> in der Schale unten an, um sie aufzureihen, dann tippe <b>OK</b>. Jede Farbe einmal pro Reihe. Raten ist erlaubt – mache ich ständig!', done: 'Stecker! Die <b>kleinen Stecker</b> rechts der Reihe sind die Antwort des Kästchens.' },
       { say: 'Ich hab heimlich ins Kästchen geschaut, pssst! <b>Richtige Farbe, richtiger Platz</b> ist ein <b>Hit</b> – ein <b>rosa Stecker</b>. <b>Richtige Farbe, falscher Platz</b> ist ein <b>Blow</b> – ein <b>weißer Stecker</b>. Sieh dir die Ringe an!' },
       { say: 'Im echten Spiel bleibt der Deckel zu. Die Stecker liegen nur da, <b>Hits zuerst</b>, und <b>verraten nie, welcher Stein gemeint ist</b>. Das herauszufinden ist Detektivarbeit! Huch, meine Lupe beschlägt…' },
@@ -127,9 +127,9 @@
       { say: 'Es gibt 5 Regeln: <b>Farbe</b>, <b>Farbe (Wiederholung)</b>, <b>Zahl 3 und Zahl 4</b> mit Ziffern und <b>Experte</b>, 5 von 8 Farben. Das hier ist Zahl 4 – gleiches Denken. Ich zähle in Möhren!' },
       { say: 'Das <b>Tagesrätsel</b> beginnt mit grauen <b>Hinweisreihen</b> auf dem Brett – knacke es im Limit. Im <b>Rätselbuch</b> warten 500! Ein neuer Fall wartet. Los geht’s!' },
     ] },
-    ru: { name: 'Зайчик-сыщик', next: 'Далее', back: 'Назад', start: 'Играть', again: 'Ещё раз', tap: 'Поставь 4 и OK', dup: 'Каждый цвет — один раз в ряду!', tried: 'Такой ряд уже есть на доске', retry: 'Почти! Два светящихся — не хиты: попробуй ряд 2, поменяв местами два правых.', reset: 'Ряды кончились! Начнём заново',
+    ru: { name: 'Банлок', next: 'Далее', back: 'Назад', start: 'Играть', again: 'Ещё раз', tap: 'Поставь 4 и OK', dup: 'Каждый цвет — один раз в ряду!', tried: 'Такой ряд уже есть на доске', retry: 'Почти! Два светящихся — не хиты: попробуй ряд 2, поменяв местами два правых.', reset: 'Ряды кончились! Начнём заново',
       s: [
-      { say: 'Привет, я <b>Зайчик-сыщик</b>! Под <b>крышкой с «？»</b> у шкатулки в дальнем конце спрятаны четыре камня. Угадать их порядок — это и есть <b>Hit & Blow</b>. Прикладывать уши бесполезно, так что — логика!' },
+      { say: 'Привет, я <b>Банлок</b>! Под <b>крышкой с «？»</b> у шкатулки в дальнем конце спрятаны четыре камня. Угадать их порядок — это и есть <b>Hit & Blow</b>. Прикладывать уши бесполезно, так что — логика!' },
       { say: 'Сначала догадка. <b>Нажми на 4 камня</b> в лотке внизу, чтобы выстроить ряд, и нажми <b>OK</b>. Каждый цвет — один раз в ряду. Наугад можно — я всегда так делаю!', done: 'Появились штырьки! <b>Маленькие штырьки</b> справа от ряда — ответ шкатулки.' },
       { say: 'Я тайком заглянул в шкатулку, тсс! <b>Цвет и место верные</b> — это <b>хит</b>, <b>розовый штырёк</b>. <b>Цвет есть, но место другое</b> — это <b>блоу</b>, <b>белый штырёк</b>. Сверь по цвету колец!' },
       { say: 'В настоящей игре крышка закрыта. Штырьки просто стоят, <b>сначала хиты</b>, и <b>никогда не говорят, о каком камне речь</b>. Догадаться — работа сыщика! Ой, лупа запотела…' },
@@ -138,9 +138,9 @@
       { say: 'Правил 5: <b>Цвета</b>, <b>Цвета (с повтором)</b>, <b>Числа 3 и Числа 4</b> с цифрами и <b>Эксперт</b> — 5 из 8 цветов. Это Числа 4 — думать так же. А я считаю морковками!' },
       { say: '<b>Задача дня</b> начинается с серых <b>рядов-подсказок</b> на доске — разгадай код за отведённые ходы. В <b>сборнике</b> ещё 500! Новое дело ждёт. Играем!' },
     ] },
-    tr: { name: 'Dedektif Tavşan', next: 'Sonraki', back: 'Geri', start: 'Oyna', again: 'Tekrar', tap: '4 koy, sonra OK', dup: 'Her renk satırda bir kez!', tried: 'Bu satır zaten tahtada', retry: 'Az kaldı! Parlayan ikisi hit olamaz: 2. satırın sağdaki ikisinin yerini değiştir!', reset: 'Satırlar bitti! Bunu baştan alalım',
+    tr: { name: 'Bunlock', next: 'Sonraki', back: 'Geri', start: 'Oyna', again: 'Tekrar', tap: '4 koy, sonra OK', dup: 'Her renk satırda bir kez!', tried: 'Bu satır zaten tahtada', retry: 'Az kaldı! Parlayan ikisi hit olamaz: 2. satırın sağdaki ikisinin yerini değiştir!', reset: 'Satırlar bitti! Bunu baştan alalım',
       s: [
-      { say: 'Merhaba, ben <b>Dedektif Tavşan</b>! En arkadaki kutunun <b>？ kapağının altında</b> dört mücevher saklı. Sıralarını bulmak: işte <b>Hit & Blow</b>. Kulağımı dayasam da duyulmuyor, o yüzden mantık!' },
+      { say: 'Merhaba, ben <b>Bunlock</b>! En arkadaki kutunun <b>？ kapağının altında</b> dört mücevher saklı. Sıralarını bulmak: işte <b>Hit & Blow</b>. Kulağımı dayasam da duyulmuyor, o yüzden mantık!' },
       { say: 'Önce bir tahmin. Alttaki tepsiden <b>4 mücevhere dokunup</b> sıraya koy, sonra <b>OK</b>’e dokun. Her renk satırda bir kez. Rastgele de olur, ben hep öyle yapıyorum!', done: 'Pimler çıktı! Satırın sağındaki <b>küçük pimler</b> kutunun cevabı.' },
       { say: 'Gizlice kutuya baktım, şşş! <b>Renk de yer de doğru</b>ysa <b>hit</b>: <b>pembe pim</b>. <b>Renk var ama yer yanlış</b>sa <b>blow</b>: <b>beyaz pim</b>. Halkaların rengine bak!' },
       { say: 'Gerçek oyunda kapak kapalı kalır. Pimler sadece dizilir, <b>önce hitler</b>, ve <b>hangi mücevherden söz ettiğini asla söylemez</b>. Bunu çözmek dedektifin işi! Eyvah, büyütecim buğulandı…' },
@@ -149,9 +149,9 @@
       { say: '5 kural var: <b>Renk</b>, <b>Renk (tekrarlı)</b>, rakamlarla <b>Sayı 3 ve Sayı 4</b> ve 8 renkten 5’lik <b>Uzman</b>. Bu Sayı 4: düşünce aynı. Ben havuçla sayarım!' },
       { say: '<b>Günün bulmacası</b>, tahtada hazır gri <b>ipucu satırlarıyla</b> başlar: sınır içinde çöz. <b>Bulmaca kitabında</b> 500 tane var! Yeni bir dava bekliyor. Haydi oynayalım!' },
     ] },
-    id: { name: 'Kelinci Detektif', next: 'Lanjut', back: 'Kembali', start: 'Main', again: 'Lagi', tap: 'Pasang 4, lalu OK', dup: 'Tiap warna sekali saja per baris!', tried: 'Baris itu sudah ada di papan', retry: 'Hampir! Dua yang bersinar bukan hit — coba baris 2 dengan dua di kanan ditukar!', reset: 'Barisnya habis! Kita ulang dari awal',
+    id: { name: 'Bunlock', next: 'Lanjut', back: 'Kembali', start: 'Main', again: 'Lagi', tap: 'Pasang 4, lalu OK', dup: 'Tiap warna sekali saja per baris!', tried: 'Baris itu sudah ada di papan', retry: 'Hampir! Dua yang bersinar bukan hit — coba baris 2 dengan dua di kanan ditukar!', reset: 'Barisnya habis! Kita ulang dari awal',
       s: [
-      { say: 'Halo, aku <b>Kelinci Detektif</b>! Di bawah <b>tutup ？ kotak</b> di ujung sana tersembunyi empat permata. Menebak urutannya, itulah <b>Hit & Blow</b>. Menempelkan telinga tidak membantu, jadi pakai logika!' },
+      { say: 'Halo, aku <b>Bunlock</b>! Di bawah <b>tutup ？ kotak</b> di ujung sana tersembunyi empat permata. Menebak urutannya, itulah <b>Hit & Blow</b>. Menempelkan telinga tidak membantu, jadi pakai logika!' },
       { say: 'Pertama, satu tebakan. <b>Ketuk 4 permata</b> di baki bawah untuk menyusunnya, lalu ketuk <b>OK</b>. Tiap warna sekali per baris. Asal tebak juga boleh, aku selalu begitu!', done: 'Pinnya muncul! <b>Pin kecil</b> di kanan baris adalah jawaban dari kotak.' },
       { say: 'Aku mengintip kotaknya, sst! <b>Warna dan tempat benar</b> itu <b>hit</b>: <b>pin merah muda</b>. <b>Warna ada tapi tempatnya salah</b> itu <b>blow</b>: <b>pin putih</b>. Cek warna cincinnya!' },
       { say: 'Di permainan sungguhan tutupnya tetap tertutup. Pin hanya berjajar, <b>hit dulu</b>, dan <b>tak pernah bilang permata mana yang dimaksud</b>. Memecahkannya itulah tugas detektif! Aduh, kaca pembesarku berembun…' },
@@ -160,9 +160,9 @@
       { say: 'Ada 5 aturan: <b>Warna</b>, <b>Warna (boleh ulang)</b>, <b>Angka 3 dan Angka 4</b> dengan digit, dan <b>Ahli</b>, 5 dari 8 warna. Ini Angka 4: cara berpikirnya sama. Aku berhitung pakai wortel!' },
       { say: '<b>Teka-teki harian</b> dimulai dengan <b>baris petunjuk</b> abu-abu yang sudah ada di papan: pecahkan dalam batas. <b>Buku teka-teki</b> punya 500 lagi! Kasus baru menunggu. Ayo main!' },
     ] },
-    hi: { name: 'नौसिखिया जासूस खरगोश', next: 'आगे', back: 'पीछे', start: 'खेलो', again: 'फिर से', tap: '4 रखो, फिर OK', dup: 'हर रंग एक पंक्ति में बस एक बार!', tried: 'यह पंक्ति बोर्ड पर पहले से है', retry: 'बस ज़रा सा! चमकते दो हिट नहीं हो सकते — पंक्ति 2 के दाएँ दो की जगह बदलकर देखो!', reset: 'पंक्तियाँ ख़त्म! इसे फिर से शुरू करें',
+    hi: { name: 'बनलॉक', next: 'आगे', back: 'पीछे', start: 'खेलो', again: 'फिर से', tap: '4 रखो, फिर OK', dup: 'हर रंग एक पंक्ति में बस एक बार!', tried: 'यह पंक्ति बोर्ड पर पहले से है', retry: 'बस ज़रा सा! चमकते दो हिट नहीं हो सकते — पंक्ति 2 के दाएँ दो की जगह बदलकर देखो!', reset: 'पंक्तियाँ ख़त्म! इसे फिर से शुरू करें',
       s: [
-      { say: 'नमस्ते, मैं <b>नौसिखिया जासूस खरगोश</b> हूँ! दूर वाले डिब्बे के <b>？ ढक्कन के नीचे</b> चार रत्न छिपे हैं। उनका क्रम बूझना ही <b>हिट एंड ब्लो</b> है। कान लगाने से कुछ नहीं सुनता, तो तर्क से चलें!' },
+      { say: 'नमस्ते, मैं <b>बनलॉक</b> हूँ! दूर वाले डिब्बे के <b>？ ढक्कन के नीचे</b> चार रत्न छिपे हैं। उनका क्रम बूझना ही <b>हिट एंड ब्लो</b> है। कान लगाने से कुछ नहीं सुनता, तो तर्क से चलें!' },
       { say: 'पहले एक अनुमान। नीचे की ट्रे के <b>4 रत्नों पर टैप</b> करके उन्हें लाइन में रखो, फिर <b>OK</b> पर टैप करो। हर रंग पंक्ति में एक बार। तुक्का भी चलेगा — मैं तो हमेशा यही करता हूँ!', done: 'पिनें निकल आईं! पंक्ति के दाईं ओर की <b>छोटी पिनें</b> डिब्बे का जवाब हैं।' },
       { say: 'मैंने चुपके से डिब्बे में झाँक लिया, श्श! <b>रंग और जगह दोनों सही</b> तो <b>हिट</b> — <b>गुलाबी पिन</b>। <b>रंग है पर जगह ग़लत</b> तो <b>ब्लो</b> — <b>सफ़ेद पिन</b>। छल्लों का रंग देखो!' },
       { say: 'असली खेल में ढक्कन बंद रहता है। पिनें बस <b>पहले हिट</b> के क्रम में लगती हैं और <b>कभी नहीं बतातीं कि बात किस रत्न की है</b>। यही पता लगाना जासूस का काम है! अरे, मेरा आवर्धक काँच धुँधला गया…' },
@@ -171,9 +171,9 @@
       { say: '5 नियम हैं: <b>रंग</b>, <b>रंग (दोहराव)</b>, अंकों वाले <b>संख्या 3 और संख्या 4</b>, और 8 में से 5 रंगों वाला <b>विशेषज्ञ</b>। यह संख्या 4 है — सोचने का ढंग वही। मैं तो गाजरों से गिनता हूँ!' },
       { say: '<b>आज की पहेली</b> बोर्ड पर पहले से रखी धूसर <b>संकेत पंक्तियों</b> से शुरू होती है — सीमा के भीतर कोड खोलो। <b>पहेली पुस्तक</b> में 500 और! नया केस इंतज़ार में है। चलो खेलें!' },
     ] },
-    ar: { name: 'الأرنب المحقق المبتدئ', next: 'التالي', back: 'رجوع', start: 'العب', again: 'مرة أخرى', tap: 'ضع 4 ثم OK', dup: 'كل لون مرة واحدة في الصف!', tried: 'هذا الصف موجود على اللوحة', retry: 'قريب جدًا! المضيئتان ليستا هِت: جرّب الصف 2 بعد تبديل الاثنتين على اليمين!', reset: 'انتهت الصفوف! لنبدأ من جديد',
+    ar: { name: 'بنلوك', next: 'التالي', back: 'رجوع', start: 'العب', again: 'مرة أخرى', tap: 'ضع 4 ثم OK', dup: 'كل لون مرة واحدة في الصف!', tried: 'هذا الصف موجود على اللوحة', retry: 'قريب جدًا! المضيئتان ليستا هِت: جرّب الصف 2 بعد تبديل الاثنتين على اليمين!', reset: 'انتهت الصفوف! لنبدأ من جديد',
       s: [
-      { say: 'مرحبًا، أنا <b>الأرنب المحقق المبتدئ</b>! تحت <b>غطاء «？» للعلبة</b> في الطرف البعيد تختبئ أربع جواهر. تخمين ترتيبها هو <b>هِت آند بلو</b>. إلصاق أذنيّ لا يفيد، فلنستخدم المنطق!' },
+      { say: 'مرحبًا، أنا <b>بنلوك</b>! تحت <b>غطاء «？» للعلبة</b> في الطرف البعيد تختبئ أربع جواهر. تخمين ترتيبها هو <b>هِت آند بلو</b>. إلصاق أذنيّ لا يفيد، فلنستخدم المنطق!' },
       { say: 'أولًا تخمين واحد. <b>المس 4 جواهر</b> في الصينية بالأسفل لتصفّها، ثم المس <b>OK</b>. كل لون مرة واحدة في الصف. التخمين العشوائي مسموح، فأنا أفعله دائمًا!', done: 'ظهرت الأوتاد! <b>الأوتاد الصغيرة</b> يمين الصف هي جواب العلبة.' },
       { say: 'تلصصت على العلبة، صه! <b>اللون والمكان صحيحان</b> = <b>هِت</b>: <b>وتد وردي</b>. <b>اللون موجود لكن المكان خطأ</b> = <b>بلو</b>: <b>وتد أبيض</b>. انظر إلى لون الحلقات!' },
       { say: 'في اللعب الحقيقي يبقى الغطاء مغلقًا. الأوتاد تُصفّ فقط، <b>الهِت أولًا</b>، و<b>لا تخبرك أبدًا بأي جوهرة تقصد</b>. اكتشاف ذلك عمل المحقق! أوه، عدستي المكبّرة غشّاها البخار…' },

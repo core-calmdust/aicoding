@@ -52,9 +52,9 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - **文言（14言語）**：`atlas/i18n.js` の `about.latrunculi`・`hist.latrunculi`、`atlas/gamelist-i18n.js` の一言、`shared/atlas-updates.js` の公開行、トップページ `index.html` の `lt.title`・`lt.desc`。
 - **読み込み**：`atlas/lazy.js` に models／games／rules の3本。`atlas/app.js` の R3（アイコン images/atlas/latrunculi.webp は仮のまま）と FULL_SKIN。
 - **ちゃぶ台対局**（`atlas/games/latrunculi.js`）：エンジン（`../latrunculi/engine.js` をページと Worker で）そのままの3ルール。カードの「種目」＝シェードラー式・ピソ式・クインタナ式（size 1・2・3。フル機能版へは `&size=` で渡り、`atlas/skin/latrunculi.js` が rule に直す）。モードは 対戦（AI Lv.1〜20・二人で対戦）／レート戦・パズル・レッスンはフル機能版（`?skin=atlas`）を開く。入力は2Dと同じ（置く＝空きマス、動かす＝駒→行き先、取り除く駒が複数なら先に選ぶ・1個なら自動）。置く＝落ちる、1歩・クインタナの直進＝滑る、跳び＝味方を越える弧、挟まれた駒＝跳ねて裏返る（**裏返った駒には細い赤い輪**）、助けたら表に戻る、取る＝浮いて消える。HUD の数字は置く間＝残りの手持ち、そのあと＝取った数。待った・ヒント・投了。引き分けの申し込みはなし（引き分けは「取った数が同じ」で終わったときだけ）。3D駒の切り替え（`atlas-pieces`）に追従。
-- **3Dルールコース**（`atlas/rules/latrunculi.js`、案内はポーンひつじ `av/pawn-0`、11ステップ）：紹介 → 置く → 1歩 → 味方を跳び越える → 挟むと裏返る → 次の番に取る → 助ける → 隅 → 間に入っても安全 → 勝ち負け → 3つのルール。課題の正解はエンジンで判定。**3D盤には座標がないのでマス名を言わない**（「光っているマス」）。「タップ」は PC で「クリック」（shared/tapword.js）。
-- **ヒストリア**（`atlas/historia/s/latrunculi.json`＋14言語、案内は同じポーンひつじ）：この spec と 2D の紹介文にある事実だけで構成（ウァロ・オウィディウス・マルティアリス・『ピソ頌』・ブリテン島の盤・中世のチェスの名・シェードラーの復元・クインタナ博物館）。地図のピン＝ローマ・ブリテン島・フリブール・キュンツィング（`atlas/mapdata.js` にも同じ内容）。
-- **ボスと観戦キャラ**（`atlas/npc/roster.js`・`atlas/npc/t/<lang>.js`、14言語）：ボス7体（ローマのこひつじ → ガラス職人ネコ → 傭兵ギツネ → ウァロフクロウ → 詩人ことり → 軍団兵オオカミ → 名手ピソ・ライオン＝UR）。画像 `images/atlas/av/boss-latrunculi-<1〜7>-<0〜3>.webp`（atlas/tools/bosses.html で描画）。豆知識4行。
+- **3Dルールコース**（`atlas/rules/latrunculi.js`、案内はポンメェ `av/pawn-0`、11ステップ）：紹介 → 置く → 1歩 → 味方を跳び越える → 挟むと裏返る → 次の番に取る → 助ける → 隅 → 間に入っても安全 → 勝ち負け → 3つのルール。課題の正解はエンジンで判定。**3D盤には座標がないのでマス名を言わない**（「光っているマス」）。「タップ」は PC で「クリック」（shared/tapword.js）。
+- **ヒストリア**（`atlas/historia/s/latrunculi.json`＋14言語、案内は同じポンメェ）：この spec と 2D の紹介文にある事実だけで構成（ウァロ・オウィディウス・マルティアリス・『ピソ頌』・ブリテン島の盤・中世のチェスの名・シェードラーの復元・クインタナ博物館）。地図のピン＝ローマ・ブリテン島・フリブール・キュンツィング（`atlas/mapdata.js` にも同じ内容）。
+- **ボスと観戦キャラ**（`atlas/npc/roster.js`・`atlas/npc/t/<lang>.js`、14言語）：ボス7体（ロマメェ → ガラスニャン → ヨウヘイツネ → ウァロホー → シジンチュン → レギオガミ → ピソオン＝UR）。画像 `images/atlas/av/boss-latrunculi-<1〜7>-<0〜3>.webp`（atlas/tools/bosses.html で描画）。豆知識4行。
 - **トップページ**：`index.html` の一覧（セネトの次、`alpha:true`）、アイコン `images/icons/latrunculi.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/latrunculi.webp`（tools/shots.js）。
 - Praline のマーク（shared/praline-badge.js の一覧）には入れていない（1スレッドの JS エンジンのため）。mtsplit／tools/mtsim も対象外。
 
