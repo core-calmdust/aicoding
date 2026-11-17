@@ -1069,7 +1069,7 @@
     const sizeOnly = ad && ad.sizes ? `<label>${esc(KF && !RU && !ad.kindOwn ? KL : ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${SZS.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : ''
     const sizeHtml = sizeOnly ? ruleHtml + sizeOnly : '';
     headIcons(false);   // (ヒストリア / 戦績 back out of the old card before it is rebuilt)
-    { const rc = $('bvRec'); if (rc && rc.parentNode === $('bvi')) $('bv').appendChild(rc); }   // (the cup rides on the card: keep it out of the rebuild)
+    { const rc = $('bvRec'); if (rc && $('bvi').contains(rc)) { rc.classList.remove('inact'); $('bv').appendChild(rc); } }   // (the cup rides on the card: keep it out of the rebuild)
     $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${achRing(g)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       <p class="bvab">${esc(t('about.' + id))}</p>
@@ -1436,6 +1436,7 @@
   // PC keeps the cup where it was, beside the place chip (2026-11-17 ユーザー：PCは元のまま、右下はスマホの対応)
   function placeRec() { const r = $('bvRec'), bv = $('bv'); if (!r || !bv) return;
     if (!matchMedia('(max-width: 819px)').matches) { const pb = $('bvPlBtn'); r.classList.add('pcoff'); r.classList.remove('bvrecf', 'inhd');   /* (PC: the cup is gone — the card's 実績 ring opens the sheet, 2026-11-18 user) */ r.style.removeProperty('bottom'); if (pb && r.previousElementSibling !== pb) pb.after(r); return; }
+    if (r.classList.contains('inact')) { r.classList.remove('pcoff'); return; }   // (on the card beside あそぶ)
     r.classList.remove('inhd', 'pcoff'); r.classList.add('bvrecf'); if (r.parentNode !== bv) bv.appendChild(r); posRec(); }
   function posRec() { const r = $('bvRec'), bv = $('bv'), bi = $('bvi'); if (!r || !bv || !bi || r.parentNode !== bv) return;
     let top = bi.offsetTop; for (let e = bi.offsetParent; e && e !== bv; e = e.offsetParent) top += e.offsetTop;
@@ -1647,11 +1648,12 @@
     if (m === 'rated' && window.Online3D && Atlas3D[g.id] && Atlas3D[g.id].online) { ol3Probe(g); if (ol3Soon(g.id)) ol3Paint(); }   // (a 3D-only game laid out as shogi's with online play — フチボウ 2026-11-17: the rules' probe, as the other online games)
     mxProg(m);
     lblAlign();
-    const f = $('bvFull'), tb = $('bvTable'), cl = $('bvi').querySelector('.R .act > a.btn'), act = $('bvi').querySelector('.R .act'); if (!f || !tb) return;
+    const f = $('bvFull'), tb = $('bvTable'), cl = $('bv2d') || $('bvi').querySelector('.R .act > a.btn'), act = $('bvi').querySelector('.R .act'); if (!f || !tb) return;
     const set = (el, a, b) => { el.innerHTML = `<b>${a}</b>${b ? `<small>${b}</small>` : ''}`; };
     // every tab the same (2026-11-10): red あそぶ = here on the 3D table · brown フル機能で遊ぶ · white 2Dで遊ぶ
     const online = m === 'rated' && $('bvRtOpp') && ($('bvRtOpp').value === 'online' || !RTG[bvGame.id]);
-    set(f, esc(t('ps.go')) + ' ▶', esc(online ? t('bv.lsSub') : t(m === 'puzzle' ? 'bv.pzContSub' : m === 'lesson' ? 'bv.lsSub3d' : 'bv.tableSub')));
+    set(f, esc(f.classList.contains('ps3d') && !online ? placeT('play') : t('ps.go')) + ' ▶', esc(online ? t('bv.lsSub') : t(m === 'puzzle' ? 'bv.pzContSub' : m === 'lesson' ? 'bv.lsSub3d' : 'bv.tableSub')));   // (the phone sheet: the place's name, 2026-11-18)
+    f.classList.toggle('psonl', online);
     const off = (m === 'puzzle' && !pz3dOf(g.id)) || (m === 'lesson' && !ls3dOf(g.id)) || (online && !RTG[g.id]);   // (only in the full game: one フル機能で遊ぶ)
     f.classList.toggle('mxgone', off); f.parentNode.classList.toggle('mxone', off);
     set(tb, esc(t('bv.full')), esc(t('bv.fullSub2'))); tb.classList.add('mxfull'); tb.style.display = ''; tb.disabled = false;
@@ -1667,7 +1669,7 @@
     $('bvLsList').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} lessonSheet(g, $('bvLsK').value); };
     $('bvPz').onclick = e => { if (ownPz && ad.bookSheet && e.target.closest('[data-hbbook]')) { try { SFX.tap && SFX.tap(); } catch (x) {} ad.bookSheet(lang, k => ownGo(k)); return; } const d = e.target.closest('[data-daily]'); if (d) { try { SFX.tap && SFX.tap(); } catch (x) {} ownGo(d.dataset.daily); return; } const b = e.target.closest('[data-pz]'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} const k = b.dataset.pz; if (k === 'list') puzzleSheet(g); else startPuzzle({ daily: k }); } };   // (on the 3D table, 2026-11-11)
     $('bvRtRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openRec(g, 'all', 'rt'); };
-    $('bvLsK').addEventListener('change', () => { pref[id + ':lsk'] = $('bvLsK').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} const cl = $('bvi').querySelector('.R .act > a.btn'); if (cl && M() === 'lesson') cl.href = mx2d(g, 'lesson'); });
+    $('bvLsK').addEventListener('change', () => { pref[id + ':lsk'] = $('bvLsK').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} const cl = $('bv2d') || $('bvi').querySelector('.R .act > a.btn'); if (cl && M() === 'lesson') cl.href = mx2d(g, 'lesson'); });
     // レート戦's time control: a picker button + list sheet (the same UI as the level); its list follows 相手
     const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c || !!(Atlas3D[id] && Atlas3D[id].mx); $('bvRtNote').hidden = !!c || opp === 'online' || !!(Atlas3D[id] && Atlas3D[id].mx) || !RTG[id]; /* (a rated game that opens the full game keeps that game's own clock — patolli: 30 s a move — so no "no clock" note) */ if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
     const rtNow = () => { const el = $('bvRtNow'); if (!el) return; const rec = $('bvRtRec'); if (rec) { if (rec.previousElementSibling !== el) { el.after(rec); rec.classList.add('rtrec'); } rec.hidden = !RTG[id] || M() !== 'rated'; }   /* (戦績 (the cup) sits right of the current rating, 2026-11-14) */ const ol = $('bvRtOpp').value === 'online'; const solo = !!el.closest('.rtonly'); el.hidden = !RTG[id] || M() !== 'rated' || (ol && olNowTxt(id) === null && !solo); /* (beside 種目: the right half, rated games only) */ if (!el.hidden) el.innerHTML = `<small>${esc(t('rec.rtNow'))}</small><b>${esc(ol ? olNowTxt(id) || UNPL[lang] || UNPL.en : rtNowTxt(id, $('bvVar') ? $('bvVar').dataset.v || '' : rtRuleV(id)))}</b>`; };   // (online: the account's one online rating, as the full page last saw it — shogi/online.js cacheRt)
@@ -1724,11 +1726,22 @@
       const tb = $('bvTable'), f = $('bvFull'); pa.prepend(tb); tb.classList.add('psgo'); f.classList.add('psfull');
       tb.innerHTML = `<b>${esc(t('ps.go'))} ▶</b><small>${esc(t('bv.tableSub'))}</small>`; f.innerHTML = `<b>${esc(t('bv.full'))}</b><small>${esc(t('bv.fullSub2'))}</small>`;
     }
-    const cls = $('bvi').querySelector('.R .act > a.btn');   // 2Dで遊ぶ stays on the card
+    const cls = $('bvi').querySelector('.R .act > a.btn');
     act.className = 'act act2';
     const go = document.createElement('button'); go.className = 'btn big'; go.id = 'bvGo'; go.textContent = t('ps.go') + ' ▶'; act.prepend(go);
     if (!cls) act.classList.add('psolo');   // (a 3D-only game, no 2D page — carrom, crokinole …: あそぶ across the whole row, 2026-11-16)
-    if (cls) { cls.querySelectorAll('small').forEach(x => x.remove()); cls.classList.remove('pk'); }
+    // (2026-11-18 ユーザー：スマホのカードの大改修) 2Dで遊ぶ moves into the あそびかた sheet: on top the place's own button in the
+    // pink (ちゃぶ台で遊ぶ …), under it 2D on the left and フル機能で遊ぶ in the coffee colour on the right. The card keeps ルール and
+    // あそぶ, and the 実績 ring (the cup that floated over the 3D view) sits beside あそぶ.
+    if (cls) {
+      cls.id = 'bv2d'; cls.classList.add('ps2d'); if (!cls.querySelector('b')) cls.innerHTML = `<b>${cls.innerHTML}</b>`;
+      act.classList.add('psolo', 'pach');
+      const rc = $('bvRec'); if (rc) { rc.classList.add('inact'); rc.classList.remove('bvrecf'); rc.style.removeProperty('bottom'); act.append(rc); }
+      const MXg = !!$('bvMxProg'), here = ST ? $('bvStart') : MXg ? $('bvFull') : $('bvTable'), full = ST ? null : MXg ? $('bvTable') : $('bvFull');
+      if (here) { here.classList.add('ps3d'); here.classList.remove('psone'); if (!MXg) here.innerHTML = `<b>${esc(placeT('play'))} ▶</b><small>${esc(t('bv.tableSub'))}</small>`; pa.append(here); }
+      pa.append(cls); if (full) { full.classList.add('psfx'); pa.append(full); } else cls.classList.add('psw');
+      pa.classList.add('ps3row');
+    }
     // パズル / レッスン (2026-11-11): the sheet keeps its size and turns into that part's page (← back), with the PC card's three buttons:
     // red あそぶ (here on the 3D table) · brown フル機能で遊ぶ · white 2Dで遊ぶ
     const inn = ps.querySelector('.ps-in'), main = ps.querySelector('.ps-main'), sv = ps.querySelector('.ps-subv');
@@ -2472,7 +2485,8 @@
       // a new place or brightness (here, the きせかえ tab, or a full game's デザイン tab in another tab of the browser): every label follows
       addEventListener('atlas-table', () => {
         renderPlace();
-        const tb = $('bvTable'), b = tb && !tb.classList.contains('psgo') && tb.querySelector('b'); if (b) b.textContent = placeT('play');
+        const tb = $('bvTable'), b = tb && !tb.classList.contains('psgo') && !tb.classList.contains('ps3d') && tb.querySelector('b'); if (b) b.textContent = placeT('play');
+        const h3 = document.querySelector('.ps-act .ps3d:not(.psonl) b'); if (h3) h3.textContent = placeT('play') + ' ▶';
         const go = document.querySelector('#today [data-go]'); if (go) go.textContent = placeT('go') + ' ▶';
         if (page === 'dress' && dKind === 'table') renderDress();
         else if (!$('bv').classList.contains('on')) render(page);   // (the updates list names the place too; under the board view it is redrawn on close)
