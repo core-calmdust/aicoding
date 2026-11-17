@@ -24,6 +24,9 @@ function staticChecks() {
   { const app = fs.readFileSync(path.join(MJ, 'app.js'), 'utf8'), names = [...app.matchAll(/file: '([\w-]+)'/g)].map(m => m[1]);
     const miss = names.filter(n => !fs.existsSync(path.join(MJ, '..', 'images', 'mahjong', 'snd', n + '.mp3')));
     ok('music files present (' + names.length + ')', ['bgm-riichi2', 'bgm-riichi3', 'bgm-main4'].every(n => names.includes(n)) && !miss.length, miss.join(',')); }
+  // (2026-11-18) the call choices (chi/pon/kan/ron) open with a light sound
+  { const app = fs.readFileSync(path.join(MJ, 'app.js'), 'utf8'), m = app.match(/function myCall\(o, res\) \{([\s\S]{0,200})/);
+    ok('call choices play SND.callAsk', /callAsk: \(\) =>/.test(app) && !!m && /SND\.callAsk\(\)/.test(m[1])); }
   // code swallowed by a comment (2026-11-16: an edit put `lx = TB.screenPose(...)` after a `//` on the same line — the player's
   // discard lost its page pose and the hand came from the table's edge). Flags a line comment that ends like a statement.
   const sus = [];
@@ -99,8 +102,10 @@ async function runtime() {
     const p = await page(PC); await myTurn(p);
     await p.evaluate(`window.__mv=0;void JANKA.showMoves({scores:[26000,24000,25000,25000],delta:[1000,-1000,0,0]},{win:[0]}).then(()=>{__mv=1})`);   // (void: not waited for here)
     await p.waitForTimeout(900); const box = await p.evaluate(`(()=>{const r=document.querySelector('#modal').getBoundingClientRect();return [r.left+r.width*.5,r.top+r.height*.06]})()`);
-    await p.mouse.click(box[0], box[1]); await p.waitForTimeout(400);
-    ok('results: a click on an empty spot goes on', await p.evaluate('__mv') === 1);
+    // (2026-11-18) the click is taken only after the scores have counted up (+0.4 s); under SwiftShader that can run past 0.9 s, so
+    // click again every 0.5 s (as a player would) until it goes on, up to 5 s
+    let mv = 0; for (let i = 0; i < 10 && !mv; i++) { await p.mouse.click(box[0], box[1]); await p.waitForTimeout(500); mv = await p.evaluate('__mv'); }
+    ok('results: a click on an empty spot goes on', mv === 1);
     ok('no page errors (results click)', !p.errs.length, p.errs.join(' | ')); await p.ctx.close(); }
 
   if (want('discard')) { console.log('[discard] another player\'s すり替え: the new tile stands in her row (no reach to the centre)');

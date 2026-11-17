@@ -305,6 +305,8 @@ const SND = (() => {
     skill: () => { tone(300, .5, 'sawtooth', .05, 0, 1200); tone(1200, .6, 'sine', .1, .3); },
     ok: () => { tone(988, .25, 'sine', .12); tone(1319, .5, 'sine', .1, .12); },
     pick: () => tone(660, .06, 'triangle', .06),
+    // (2026-11-18, ユーザー「チーやポンの選択肢が出る時に軽い効果音」) a light two-note rise, softer than the pick
+    callAsk: () => { tone(784, .09, 'triangle', .07); tone(1046, .14, 'sine', .06, .07); },
     // (ユーザー 2026-11-15: the sound when she is touched and speaks was drowned by the music) the same short tone as pick, a little louder
     say: () => tone(660, .07, 'triangle', .11),   // (ユーザー 2026-11-15: the chime stood out too much — the old pick sound, only a little louder)
     gacha: r => { const b = r === 'SSR' ? 4 : r === 'SR' ? 3 : 2; for (let i = 0; i < b + 2; i++) tone(500 + i * 180, .3, 'triangle', .1, i * .07); },
@@ -1706,7 +1708,7 @@ function myTurn(o, res) {
 }
 function myCall(o, res) {
   UIS.kind = 'call'; UIS.opts = o;
-  clearActs();
+  clearActs(); SND.callAsk();
   let done = false;
   const finish = a => { if (done) return; done = true; clearActs(); TB.markCall(null); UIS.kind = null; UIS.opts = null; res(a); };
   if (o.canRon) btn(t('ron'), 'win', () => finish({ act: 'ron' }), 'win');
