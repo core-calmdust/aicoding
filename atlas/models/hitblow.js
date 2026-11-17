@@ -91,7 +91,7 @@
   function icon(c, W, kind, v, o) {   // the picture (or the digit) at the face's centre: o = { fill, edge, ew, glow, k (size), dx, dy }
     c.save(); c.translate(W / 2 + (o.dx || 0) * W, W / 2 + (o.dy || 0) * W);
     if (kind === 'num') {
-      c.font = `800 ${W * .62 * (o.k || 1)}px "Outfit", "Zen Kaku Gothic New", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+      c.font = o.font ? o.font(W * .62 * (o.k || 1)) : `800 ${W * .62 * (o.k || 1)}px "Outfit", "Zen Kaku Gothic New", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
       if (o.edge) { c.strokeStyle = o.edge; c.lineWidth = W * (o.ew || .07); c.strokeText(String(v), 0, W * .03 * (o.k || 1)); }
       if (o.glow) { c.shadowColor = o.glow; c.shadowBlur = W * .03; } c.fillStyle = o.fill; c.fillText(String(v), 0, W * .03 * (o.k || 1));
     } else {
@@ -114,24 +114,21 @@
       c.fillStyle = col; c.beginPath(); for (let i = 0; i <= 28; i++) { const a = i / 28 * Math.PI * 2, r = W * (.41 + (R2() - .5) * .035); i ? c.lineTo(W / 2 + Math.cos(a) * r, W / 2 + Math.sin(a) * r) : c.moveTo(W / 2 + Math.cos(a) * r, W / 2 + Math.sin(a) * r); } c.closePath(); c.fill();
       c.strokeStyle = mix(col, '#000000', .2); c.lineWidth = W * .016; c.globalAlpha = .55; for (let i = 0; i < 9; i++) { const y = W * (.22 + i * .07); c.beginPath(); c.moveTo(W * .2 + R2() * 8, y + R2() * 4); c.lineTo(W * .8 - R2() * 8, y + W * .03 + R2() * 4); c.stroke(); } c.globalAlpha = 1;
       pencilCircle(c, W / 2, W / 2, W * .43, R2, 'rgba(25,25,30,.9)', W * .028, 1.1);
-      icon(c, W, kind, v, { fill: '#ffffff', edge: 'rgba(20,20,25,.95)', ew: .16, k: .7 }); },
+      icon(c, W, kind, v, { fill: '#ffffff', edge: 'rgba(20,20,25,.95)', ew: .13, k: .7, font: px => `700 ${px * 1.05}px "Comic Sans MS","Chalkboard SE","Marker Felt",cursive` }); },   // (digits by hand too, 2026-11-17 user)
     // くだもの: the fruit's skin seen from above (its own pattern), a small sticker with the picture in front
-    fruit(c, W, kind, v) { const col = colOf(kind, v), F = FRUIT_OF(kind, v), R2 = rnd(53 + v), g = c.createRadialGradient(W * .4, W * .36, W * .03, W * .5, W * .5, W * .56);
-      g.addColorStop(0, mix(col, '#ffffff', .45)); g.addColorStop(.5, col); g.addColorStop(1, mix(col, '#1a0a05', .45)); c.fillStyle = g; c.fillRect(0, 0, W, W);
-      if (F === 'melon') { c.strokeStyle = 'rgba(240,255,220,.6)'; c.lineWidth = W * .012; for (let i = 0; i < 26; i++) { c.beginPath(); let x = R2() * W, y = R2() * W; c.moveTo(x, y); for (let k = 0; k < 5; k++) { x += (R2() - .5) * W * .16; y += (R2() - .5) * W * .16; c.lineTo(x, y); } c.stroke(); } }
-      else if (F === 'orange' || F === 'lemon') { for (let i = 0; i < 500; i++) { c.fillStyle = R2() < .5 ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.12)'; c.beginPath(); c.arc(R2() * W, R2() * W, W * .006, 0, 7); c.fill(); } }
-      else if (F === 'peach') { c.strokeStyle = mix(col, '#7a1030', .45); c.lineWidth = W * .02; c.beginPath(); c.moveTo(W * .5, W * .08); c.quadraticCurveTo(W * .42, W * .5, W * .5, W * .92); c.stroke(); const f = c.createRadialGradient(W * .7, W * .3, 0, W * .7, W * .3, W * .4); f.addColorStop(0, 'rgba(255,240,120,.35)'); f.addColorStop(1, 'rgba(255,240,120,0)'); c.fillStyle = f; c.fillRect(0, 0, W, W); }
-      else if (F === 'apple' || F === 'pear') { c.strokeStyle = 'rgba(255,240,180,.18)'; c.lineWidth = W * .01; for (let i = 0; i < 40; i++) { const a = R2() * 7, r0 = W * (.1 + R2() * .2); c.beginPath(); c.moveTo(W / 2 + Math.cos(a) * r0, W / 2 + Math.sin(a) * r0); c.lineTo(W / 2 + Math.cos(a) * (r0 + W * .15), W / 2 + Math.sin(a) * (r0 + W * .15)); c.stroke(); } }
-      else if (F === 'blueberry') { c.fillStyle = 'rgba(220,230,255,.18)'; c.fillRect(0, 0, W, W); }
-      // the sticker (a little oval label in front)
-      c.save(); c.translate(W * .5, W * .73); c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(W * .01, W * .012, W * .16, W * .12, 0, 0, 7); c.fill(); c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(0, 0, W * .16, W * .12, 0, 0, 7); c.fill(); c.strokeStyle = mix(col, '#000000', .1); c.lineWidth = W * .01; c.beginPath(); c.ellipse(0, 0, W * .135, W * .095, 0, 0, 7); c.stroke(); c.restore();
-      icon(c, W, kind, v, { fill: mix(col, '#000000', .15), k: .32, dy: .23 }); },
+    // くだもの: a token with the fruit drawn flat (2026-11-17 user: 上から見たら何かわからない → 2D風で), its picture or digit on a badge
+    fruit(c, W, kind, v) { const col = colOf(kind, v), F = FRUIT_OF(kind, v);
+      const bg = c.createRadialGradient(W * .45, W * .4, W * .05, W * .5, W * .5, W * .55); bg.addColorStop(0, '#fffaf0'); bg.addColorStop(1, mix(col, '#fff3dc', .78)); c.fillStyle = bg; c.fillRect(0, 0, W, W);
+      c.strokeStyle = col; c.lineWidth = W * .035; c.beginPath(); c.arc(W / 2, W / 2, W * .455, 0, 7); c.stroke();
+      c.save(); c.translate(W * .5, W * .47); FRUIT2D[F](c, W * .62, col); c.restore();
+      const bx = W * .72, by = W * .72, br = W * .14; c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.arc(bx + 2, by + 3, br, 0, 7); c.fill(); c.fillStyle = '#ffffff'; c.beginPath(); c.arc(bx, by, br, 0, 7); c.fill(); c.strokeStyle = col; c.lineWidth = W * .018; c.stroke();
+      icon(c, W, kind, v, { fill: mix(col, '#000000', .2), k: kind === 'num' ? .36 : .3, dx: .22, dy: .22 }); },
     // 暗号機: an old typewriter key — a printed paper label under a glass, in a nickel ring with a dark bezel; aged and a bit sepia
     cipher(c, W, kind, v) { const col = mix(colOf(kind, v), '#8a6a3a', .16), R2 = rnd(61 + v);
       const g = c.createRadialGradient(W * .45, W * .42, W * .02, W * .5, W * .5, W * .44); g.addColorStop(0, mix(col, '#f4e6c4', .25)); g.addColorStop(1, mix(col, '#3a2a14', .35)); c.fillStyle = g; c.fillRect(0, 0, W, W);
       for (let i = 0; i < 900; i++) { c.fillStyle = R2() < .5 ? 'rgba(60,40,10,.07)' : 'rgba(255,245,220,.06)'; c.fillRect(R2() * W, R2() * W, 1.5, 1.5); }
       c.strokeStyle = 'rgba(240,226,190,.75)'; c.lineWidth = W * .012; c.beginPath(); c.arc(W / 2, W / 2, W * .36, 0, 7); c.stroke();
-      icon(c, W, kind, v, { fill: '#f3e7c8', edge: 'rgba(40,25,8,.55)', ew: .1, k: .56 });
+      icon(c, W, kind, v, { fill: '#f6ecd2', edge: 'rgba(40,25,8,.7)', ew: .12, k: .68 });
       const v2 = c.createRadialGradient(W / 2, W / 2, W * .25, W / 2, W / 2, W * .45); v2.addColorStop(0, 'rgba(60,40,10,0)'); v2.addColorStop(1, 'rgba(60,40,10,.35)'); c.fillStyle = v2; c.fillRect(0, 0, W, W);
       c.fillStyle = '#121110'; c.beginPath(); c.arc(W / 2, W / 2, W * .5, 0, 7); c.arc(W / 2, W / 2, W * .43, 0, 7, true); c.fill(); },
     // 金庫: the table of a cut jewel — the colour deep in the stone, the picture etched light
@@ -139,8 +136,24 @@
       c.strokeStyle = 'rgba(255,255,255,.25)'; c.lineWidth = W * .01; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + Math.PI / 8; c.beginPath(); c.moveTo(W / 2, W / 2); c.lineTo(W / 2 + Math.cos(a) * W * .6, W / 2 + Math.sin(a) * W * .6); c.stroke(); }
       icon(c, W, kind, v, { fill: 'rgba(255,255,255,.92)', edge: mix(col, '#000000', .55), ew: .1, k: .62, glow: 'rgba(255,255,255,.7)' }); },
   };
+  const shade = (col, k) => mix(col, k > 0 ? '#ffffff' : '#200808', Math.abs(k));
+  const blob = (c, s, col, path) => { const g = c.createRadialGradient(-s * .15, -s * .18, s * .04, 0, 0, s * .6); g.addColorStop(0, shade(col, .5)); g.addColorStop(.55, col); g.addColorStop(1, shade(col, -.35)); c.fillStyle = g; path(); c.fill(); c.strokeStyle = shade(col, -.5); c.lineWidth = s * .03; c.stroke(); };
+  const leaf2 = (c, x, y, s, a) => { c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = '#5bb547'; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(s * .25, -s * .2, s * .5, 0); c.quadraticCurveTo(s * .25, s * .2, 0, 0); c.fill(); c.strokeStyle = '#2f7a2a'; c.lineWidth = s * .03; c.stroke(); c.beginPath(); c.moveTo(0, 0); c.lineTo(s * .45, 0); c.stroke(); c.restore(); };
+  const stem2 = (c, x0, y0, x1, y1, s) => { c.strokeStyle = '#6b4524'; c.lineWidth = s * .06; c.lineCap = 'round'; c.beginPath(); c.moveTo(x0, y0); c.quadraticCurveTo((x0 + x1) / 2 + s * .05, (y0 + y1) / 2, x1, y1); c.stroke(); };
+  const shine = (c, x, y, w, h) => { c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.ellipse(x, y, w, h, -.5, 0, 7); c.fill(); };
+  const FRUIT2D = {
+    apple(c, s, col) { blob(c, s, col, () => { c.beginPath(); c.moveTo(0, -s * .3); c.bezierCurveTo(s * .25, -s * .48, s * .56, -s * .35, s * .5, s * .05); c.bezierCurveTo(s * .45, s * .4, s * .2, s * .52, 0, s * .42); c.bezierCurveTo(-s * .2, s * .52, -s * .45, s * .4, -s * .5, s * .05); c.bezierCurveTo(-s * .56, -s * .35, -s * .25, -s * .48, 0, -s * .3); c.closePath(); }); stem2(c, 0, -s * .28, s * .05, -s * .52, s); leaf2(c, s * .04, -s * .45, s * .5, -.4); shine(c, -s * .25, -s * .1, s * .08, s * .14); },
+    lemon(c, s, col) { blob(c, s, col, () => { c.beginPath(); c.moveTo(-s * .55, 0); c.quadraticCurveTo(-s * .48, -s * .4, 0, -s * .36); c.quadraticCurveTo(s * .48, -s * .4, s * .55, 0); c.quadraticCurveTo(s * .48, s * .4, 0, s * .36); c.quadraticCurveTo(-s * .48, s * .4, -s * .55, 0); c.closePath(); }); leaf2(c, -s * .1, -s * .33, s * .45, -2.6); shine(c, -s * .2, -s * .14, s * .14, s * .06); },
+    melon(c, s, col) { blob(c, s, col, () => { c.beginPath(); c.arc(0, s * .03, s * .46, 0, 7); }); c.save(); c.beginPath(); c.arc(0, s * .03, s * .44, 0, 7); c.clip(); c.strokeStyle = 'rgba(255,255,235,.7)'; c.lineWidth = s * .025; const R2 = rnd(77); for (let i = 0; i < 16; i++) { c.beginPath(); let x = (R2() - .5) * s, y = (R2() - .5) * s; c.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (R2() - .5) * s * .3; y += (R2() - .5) * s * .3; c.lineTo(x, y); } c.stroke(); } c.restore(); c.strokeStyle = '#6b4524'; c.lineWidth = s * .06; c.lineCap = 'round'; c.beginPath(); c.moveTo(0, -s * .42); c.lineTo(0, -s * .56); c.moveTo(-s * .12, -s * .56); c.lineTo(s * .12, -s * .56); c.stroke(); },
+    blueberry(c, s, col) { [[-.2, .12], [.22, .14], [0, -.16]].forEach(([x, y]) => { c.save(); c.translate(x * s, y * s); blob(c, s * .62, col, () => { c.beginPath(); c.arc(0, 0, s * .25, 0, 7); }); c.fillStyle = shade(col, -.55); for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(a) * s * .08, Math.sin(a) * s * .08); c.lineTo(Math.cos(a + .6) * s * .03, Math.sin(a + .6) * s * .03); c.fill(); } shine(c, -s * .1, -s * .1, s * .05, s * .03); c.restore(); }); leaf2(c, s * .05, -s * .38, s * .4, -.6); },
+    grape(c, s, col) { stem2(c, 0, -s * .38, s * .06, -s * .56, s); leaf2(c, s * .05, -s * .45, s * .45, -.3); [[0, -.28], [-.18, -.28], [.18, -.28], [-.27, -.06], [-.09, -.06], [.09, -.06], [.27, -.06], [-.18, .16], [0, .16], [.18, .16], [-.09, .36], [.09, .36]].forEach(([x, y]) => { c.save(); c.translate(x * s, y * s); blob(c, s * .5, col, () => { c.beginPath(); c.arc(0, 0, s * .11, 0, 7); }); shine(c, -s * .04, -s * .04, s * .03, s * .02); c.restore(); }); },
+    peach(c, s, col) { blob(c, s, col, () => { c.beginPath(); c.moveTo(0, -s * .32); c.bezierCurveTo(s * .55, -s * .5, s * .62, s * .2, 0, s * .45); c.bezierCurveTo(-s * .62, s * .2, -s * .55, -s * .5, 0, -s * .32); c.closePath(); }); c.strokeStyle = shade(col, -.35); c.lineWidth = s * .03; c.beginPath(); c.moveTo(0, -s * .3); c.quadraticCurveTo(-s * .12, s * .05, 0, s * .42); c.stroke(); const f = c.createRadialGradient(s * .2, -s * .1, 0, s * .2, -s * .1, s * .35); f.addColorStop(0, 'rgba(255,230,120,.45)'); f.addColorStop(1, 'rgba(255,230,120,0)'); c.fillStyle = f; c.fillRect(-s * .5, -s * .5, s, s); leaf2(c, s * .02, -s * .32, s * .42, -.5); leaf2(c, -s * .02, -s * .32, s * .4, -2.7); },
+    orange(c, s, col) { blob(c, s, col, () => { c.beginPath(); c.arc(0, s * .02, s * .46, 0, 7); }); const R2 = rnd(91); c.fillStyle = shade(col, -.25); for (let i = 0; i < 60; i++) { const a = R2() * 7, r = Math.sqrt(R2()) * s * .42; c.beginPath(); c.arc(Math.cos(a) * r, s * .02 + Math.sin(a) * r, s * .012, 0, 7); c.fill(); } c.fillStyle = '#4c9a36'; c.beginPath(); for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + k / 5 * Math.PI * 2; c.lineTo(Math.cos(a) * s * .08, -s * .4 + Math.sin(a) * s * .05); c.lineTo(Math.cos(a + .6) * s * .03, -s * .4 + Math.sin(a + .6) * s * .02); } c.fill(); leaf2(c, s * .04, -s * .42, s * .42, -.4); shine(c, -s * .2, -s * .12, s * .1, s * .06); },
+    pear(c, s, col) { blob(c, s, col, () => { c.beginPath(); c.moveTo(0, -s * .42); c.bezierCurveTo(s * .16, -s * .42, s * .18, -s * .18, s * .28, -s * .02); c.bezierCurveTo(s * .5, s * .22, s * .38, s * .5, 0, s * .5); c.bezierCurveTo(-s * .38, s * .5, -s * .5, s * .22, -s * .28, -s * .02); c.bezierCurveTo(-s * .18, -s * .18, -s * .16, -s * .42, 0, -s * .42); c.closePath(); }); stem2(c, 0, -s * .4, s * .06, -s * .58, s); leaf2(c, s * .04, -s * .5, s * .4, -.3); shine(c, -s * .14, s * .1, s * .06, s * .12); },
+  };
   const FRUITS_BY = ['apple', 'lemon', 'melon', 'blueberry', 'grape', 'peach', 'orange', 'pear'];   // by colour: 赤・黄・緑・青・紫・ピンク・橙・水色
-  const FRUIT_OF = (kind, v) => FRUITS_BY[v % 8];
+  const FRUITS_NUM = ['blueberry', 'apple', 'orange', 'lemon', 'melon', 'pear', 'blueberry', 'grape', 'peach', 'peach'];   // the digits' tints: 0 藤 · 1 赤 · 2 橙 · 3 黄 · 4 緑 · 5 青緑 · 6 青 · 7 紫 · 8 ピンク · 9 白（白桃）
+  const FRUIT_OF = (kind, v) => kind === 'num' ? FRUITS_NUM[v] : FRUITS_BY[v % 8];
   const faceMat = (look, kind, v, o) => mat('gem' + look + kind + v, () => {
     const tx = X.canvasTex('hbGem' + look + kind + v, 256, 256, (c, W) => FACE[look](c, W, kind, v));
     const m = X.M(Object.assign({ map: tx, emissiveMap: tx, emissive: '#ffffff', emissiveIntensity: .6, roughness: .5, bump: false, envMapIntensity: .3 }, o)); m.emissive.set(0xffffff); return m;
@@ -151,7 +164,21 @@
     disc: (r, y, k) => geo('hbDisc' + k, () => { const c = new (T().CircleGeometry)(r, LO() ? 16 : 22); c.rotateX(-Math.PI / 2); c.translate(0, y, 0); return c; }),
     round: () => geo('hbRound', () => { const q = new (T().SphereGeometry)(R * .66, LO() ? 10 : 14, LO() ? 7 : 9); q.translate(0, R * .66 - R * .14, 0); const P = q.attributes.position, uv = q.attributes.uv; for (let i = 0; i < P.count; i++) uv.setXY(i, .5 + P.getX(i) / (2 * R * .66) * .98, .5 - P.getZ(i) / (2 * R * .66) * .98); uv.needsUpdate = true; return q; }),
     pear: () => geo('hbPear', () => { const TT = T(), pts = [[.001, 0], [.42, .03], [.64, .17], [.69, .36], [.62, .55], [.47, .72], [.37, .9], [.31, 1.05], [.23, 1.19], [.09, 1.29], [.001, 1.31]].map(([x, y]) => new TT.Vector2(x * R, -R * .14 + y * R)); const gl = new TT.LatheGeometry(pts, LO() ? 12 : 16), P = gl.attributes.position, uv = gl.attributes.uv; for (let i = 0; i < P.count; i++) uv.setXY(i, .5 + P.getX(i) / (1.4 * R) * .98, .5 - P.getZ(i) / (1.4 * R) * .98); uv.needsUpdate = true; gl.computeVertexNormals(); return gl; }),
-    jewel: () => geo('hbJewelG', () => { const TT = T(), pts = [new TT.Vector2(.001, -R * .14), new TT.Vector2(R * .9, R * .1), new TT.Vector2(R * .96, R * .22), new TT.Vector2(R * .78, R * .5), new TT.Vector2(R * .52, R * .62), new TT.Vector2(.001, R * .62)]; const gl = new TT.LatheGeometry(pts, 8); return gl.toNonIndexed(); }),
+    // a round brilliant (2026-11-17 user: ブリリアントカットの宝石っぽく): table · 8 star facets · 8 bezels · 16 upper girdle facets · girdle ·
+    // 16 lower girdle and 8 pavilion mains to the culet — flat triangles, so each facet catches the light on its own
+    jewel: () => geo('hbJewelB', () => {
+      const TT = T(), N = 8, P = [], tri = (a, b, c) => P.push(...a, ...b, ...c), at = (r, y, a) => [Math.cos(a) * r, y, Math.sin(a) * r], d = Math.PI / N;
+      const yG = R * .16, yS = R * .4, yT = R * .56, rG = R * .96, rS = R * .78, rT = R * .54, yC = -R * .14, yP = R * .0;
+      for (let i = 0; i < N; i++) {
+        const a = i * 2 * d, tA = at(rT, yT, a), tB = at(rT, yT, a + 2 * d), mid = at(rS, yS, a + d), g0 = at(rG, yG, a), g1 = at(rG, yG, a + d), g2 = at(rG, yG, a + 2 * d), cT = [0, yT, 0];
+        tri(cT, tB, tA);                                   // the table (under the printed face)
+        tri(tA, tB, mid);                                  // star facet
+        tri(tA, mid, g0); tri(mid, tB, g2);                // the bezel (kite) as two
+        tri(g0, mid, g1); tri(g1, mid, g2);                // upper girdle facets
+        const p1 = at(rG * .55, yP, a + d * .5), p2 = at(rG * .55, yP, a + d * 1.5), cul = [0, yC, 0];
+        tri(g1, g0, p1); tri(g2, g1, p2); tri(p1, g0, cul); tri(p2, p1, cul); tri(g2, p2, cul);   // lower girdle and pavilion
+      }
+      const gl = new TT.BufferGeometry(); gl.setAttribute('position', new TT.Float32BufferAttribute(P, 3)); gl.computeVertexNormals(); return gl; }),
     coinSide: (r, h) => geo('hbCoinSide' + r.toFixed(3), () => { const c = new (T().CylinderGeometry)(r, r, h, LO() ? 16 : 22, 1, true); c.translate(0, -R * .14 + h / 2, 0); return c; }),
     fruit: () => geo('hbFruit', () => {   // a squat sphere with a dimple at the stem; UVs from above (the face's picture)
       const TT = T(), Rf = R * .92, k = .78, pts = [], n = LO() ? 6 : 8;
@@ -167,49 +194,28 @@
       const side = X.mesh(PIECE_GEO.chipSide(), mat('hbChipSM' + kind + v, () => { const tx = X.canvasTex('hbChipSide' + kind + v, 256, 32, (c, W, H) => { H = H || 32; c.fillStyle = mix(colOf(kind, v), '#000000', .12); c.fillRect(0, 0, W, H); c.fillStyle = '#fbf6ea'; for (let i = 0; i < 8; i++) c.fillRect(i * W / 8 + W / 32, 0, W / 16, H); }); const m = X.M({ map: tx, emissiveMap: tx, emissive: '#ffffff', emissiveIntensity: .3, roughness: .55, bump: false }); m.emissive.set(0xffffff); return m; }));
       const top = X.mesh(PIECE_GEO.disc(R * .96, -R * .14 + R * .5, 'chip'), faceMat('casino', kind, v, { roughness: .45, emissiveIntensity: .34 }));
       side.castShadow = top.castShadow = true; g.add(side, top); h = R * .36;
-    } else if (look === 'fruit') {   // a fruit of the colour's own kind (2026-11-17 user: コマも果物をモチーフに): 赤 りんご · 黄 レモン · 緑 メロン · 青 ブルーベリー · 紫 ぶどう · ピンク もも · 橙 みかん · 水色 洋なし
-      const F = FRUIT_OF(kind, v), fm = faceMat('fruit', kind, v, { roughness: F === 'peach' ? .75 : F === 'grape' || F === 'blueberry' ? .3 : .35, clearcoat: F === 'peach' ? 0 : .5, clearcoatRoughness: .25, emissiveIntensity: .5 });
-      const leafM = mat('hbLeafM', () => X.M({ color: '#4fae3a', roughness: .5, bump: false })), stemM = mat('hbStemM', () => X.M({ color: '#6b4524', roughness: .8, bump: false }));
-      const fg = new TT.Group(); fg.scale.setScalar(1.25); fg.position.y = R * .035; g.add(fg);   // (a size that fills the hole as the other pieces do)
-      const add = (geom, m, x, y, z) => { const o = X.mesh(geom, m); o.position.set(x || 0, y || 0, z || 0); o.castShadow = true; fg.add(o); return o; };
-      const stem = (y, z, tilt) => { const o = add(geo('hbStem', () => new TT.CylinderGeometry(R * .035, R * .05, R * .3, 5)), stemM, 0, y, z); o.rotation.x = tilt || 0; return o; };
-      const leaf = (x, y, z, ry) => { const o = add(geo('hbLeaf', () => { const q = new TT.SphereGeometry(R * .22, 6, 3); q.scale(1, .16, .48); return q; }), leafM, x, y, z); o.rotation.set(0, ry || .5, .25); return o; };
-      if (F === 'grape') {   // a little bunch: four below, three on top, a stem
-        const bm = geo('hbGrape', () => { const q = new TT.SphereGeometry(R * .34, LO() ? 7 : 9, LO() ? 5 : 6); q.translate(0, R * .34 - R * .14, 0); return q; });
-        [[-.3, 0, -.3], [.3, 0, -.3], [-.3, 0, .3], [.3, 0, .3], [0, .5, -.12], [-.22, .5, .2], [.22, .5, .2]].forEach(([x, y, z]) => add(bm, fm, x * R, y * R, z * R));
-        stem(R * 1.25, -R * .1, -.3); h = R * 1.5;
-      } else if (F === 'lemon') {   // longer, a nub at each end
-        const b = add(PIECE_GEO.round(), fm); b.scale.set(1.18, .82, .86);
-        const nub = geo('hbNub', () => { const q = new TT.ConeGeometry(R * .14, R * .22, 6); q.rotateZ(-Math.PI / 2); return q; });
-        add(nub, fm, R * 1.16, R * .6, 0); const n2 = add(nub, fm, -R * 1.16, R * .6, 0); n2.rotation.z = Math.PI; h = R * 1.1;
-      } else if (F === 'blueberry') {   // small and dark with the five-pointed crown on top
-        const b = add(PIECE_GEO.round(), fm); b.scale.set(.86, .7, .86);
-        const cr = geo('hbCrown', () => { const q = new TT.ConeGeometry(R * .07, R * .16, 4); return q; }), crM = mat('hbCrownM', () => X.M({ color: '#1e2a52', roughness: .7, bump: false }));
-        for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2, o = add(cr, crM, Math.cos(a) * R * .16, R * .98, Math.sin(a) * R * .16); o.rotation.set(Math.sin(a) * .7, 0, -Math.cos(a) * .7); }
-        h = R * .95;
-      } else if (F === 'pear') {   // the pear's waist and narrow top
-        add(PIECE_GEO.pear(), fm); stem(R * 1.27, 0, .3); leaf(R * .18, R * 1.22, -R * .05, .9); h = R * 1.3;
-      } else {   // apple · melon · peach · orange: a round fruit, each with its own top
-        const b = add(PIECE_GEO.round(), fm);
-        if (F === 'melon') { b.scale.set(1.02, .92, 1.02); const t = add(geo('hbMelonT', () => new TT.CylinderGeometry(R * .04, R * .04, R * .32, 5)), stemM, 0, R * 1.32, 0); t.rotation.z = Math.PI / 2; stem(R * 1.24, 0, 0); }
-        else if (F === 'orange') { b.scale.set(1, .86, 1); add(geo('hbCalyx', () => { const q = new TT.CylinderGeometry(R * .12, R * .14, R * .05, 5); return q; }), leafM, 0, R * 1.08, 0); }
-        else if (F === 'peach') { b.scale.set(1, .96, .94); leaf(R * .22, R * 1.27, -R * .1, .3); leaf(-R * .2, R * 1.25, -R * .12, 2.6); }
-        else { stem(R * 1.3, -R * .03, -.2); leaf(R * .2, R * 1.28, -R * .08, .5); }
-        h = R * 1.55;
-      }
+    } else if (look === 'fruit') {   // a round wooden token with the fruit drawn on it (2026-11-17 user: 2D風の表示で)
+      const col = colOf(kind, v);
+      const side = X.mesh(PIECE_GEO.coinSide(R * .93, R * .36), mat('hbFruitSide' + kind + v, () => X.M({ color: mix(col, '#ffffff', .25), roughness: .55, bump: false })));
+      const lip = X.mesh(geo('hbFruitLip', () => { const c = new TT.TorusGeometry(R * .9, R * .04, 4, LO() ? 16 : 22); c.rotateX(Math.PI / 2); c.translate(0, -R * .14 + R * .36, 0); return c; }), mat('hbFruitLipM' + kind + v, () => X.M({ color: mix(col, '#ffffff', .4), roughness: .45, bump: false })));
+      const top = X.mesh(PIECE_GEO.disc(R * .93, -R * .14 + R * .36 + .002, 'fruitT'), faceMat('fruit', kind, v, { roughness: .5, emissiveIntensity: .45 }));
+      side.castShadow = top.castShadow = true; g.add(side, lip, top); h = R * .22;
     } else if (look === 'cipher') {   // an old typewriter key (2026-11-17 user: もっとレトロ感): a nickel ring round a paper label under a glass dome, on a bent lever stem
-      const nickel = mat('hbNickelM', () => X.M({ color: '#b9b2a2', metalness: 1, roughness: .38, envMapIntensity: .9, bump: false }));
-      const stem = X.mesh(geo('hbKeyStem2', () => { const c = new TT.CylinderGeometry(R * .12, R * .12, R * .5, 6); c.translate(0, -R * .14 + R * .25, 0); return c; }), nickel);
+      const nickel = mat('hbNickelM', () => X.M({ color: '#d8d2c2', metalness: 1, roughness: .12, envMapIntensity: 1.7, bump: false }));   // (glossy, 2026-11-17 user: 金属の部分を金属っぽく光沢)
+      const stem = X.mesh(geo('hbKeyStem3', () => { const c = new TT.CylinderGeometry(R * .12, R * .12, R * .36, 6); c.translate(0, -R * .14 + R * .18, 0); return c; }), nickel);
       const rim = X.mesh(geo('hbKeyRim2', () => { const c = new TT.CylinderGeometry(R * .9, R * .94, R * .24, LO() ? 16 : 22, 1, true); c.translate(0, R * .1 + R * .12, 0); return c; }), nickel);
       const lip = X.mesh(geo('hbKeyLip', () => { const c = new TT.TorusGeometry(R * .9, R * .045, 4, LO() ? 16 : 22); c.rotateX(Math.PI / 2); c.translate(0, R * .34, 0); return c; }), nickel);
       const face = X.mesh(PIECE_GEO.disc(R * .9, R * .32, 'key2'), faceMat('cipher', kind, v, { roughness: .6, emissiveIntensity: .55 }));
-      const glass = new TT.Mesh(geo('hbKeyGlass', () => { const q = new TT.SphereGeometry(R * .9, LO() ? 14 : 18, 4, 0, Math.PI * 2, 0, .45); q.scale(1, .5, 1); q.translate(0, R * .32 - R * .9 * .5 * Math.cos(.45), 0); return q; }), mat('hbKeyGlassM', () => X.M({ color: '#ffffff', roughness: .05, metalness: 0, clearcoat: 1, transparent: true, opacity: .12, envMapIntensity: 1.4, bump: false, depthWrite: false })));
+      const glass = new TT.Mesh(geo('hbKeyGlass', () => { const q = new TT.SphereGeometry(R * .9, LO() ? 14 : 18, 4, 0, Math.PI * 2, 0, .45); q.scale(1, .5, 1); q.translate(0, R * .32 - R * .9 * .5 * Math.cos(.45), 0); return q; }), mat('hbKeyGlassM2', () => X.M({ color: '#ffffff', roughness: .08, metalness: 0, transparent: true, opacity: .07, envMapIntensity: .5, bump: false, depthWrite: false })));
       stem.castShadow = rim.castShadow = face.castShadow = true; g.add(stem, rim, lip, face, glass); h = R * .42;
     } else if (look === 'vault') {   // a cut jewel (2026-11-17 user: 駒は宝石をモチーフに): eight crown facets round the table, the pavilion under the girdle
-      const jm = mat('hbJewel' + kind + v, () => { const c = colOf(kind, v), m = X.M({ color: c, roughness: .08, metalness: .1, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.6, emissive: c, emissiveIntensity: .32, flatShading: true, bump: false }); m.emissive.convertSRGBToLinear(); return m; });
+      const jm = mat('hbJewel' + kind + v, () => { const c = colOf(kind, v), m = X.M({ color: c, roughness: .02, metalness: .25, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 2.6, emissive: c, emissiveIntensity: .22, flatShading: true, side: T().DoubleSide, bump: false }); m.emissive.convertSRGBToLinear(); if ('ior' in m) m.ior = 2.4; return m; });
       const body = X.mesh(PIECE_GEO.jewel(), jm); body.castShadow = true; g.add(body);
-      const table = X.mesh(PIECE_GEO.disc(R * .52, R * .62, 'jewelT'), faceMat('vault', kind, v, { roughness: .05, clearcoat: 1, emissiveIntensity: .55, envMapIntensity: 1.2 })); g.add(table);
-      h = R * .62;
+      const table = X.mesh(PIECE_GEO.disc(R * .5, R * .56 + .004, 'jewelT2'), faceMat('vault', kind, v, { roughness: .02, clearcoat: 1, emissiveIntensity: .5, envMapIntensity: 1.6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); g.add(table);   // (lifted off the stone's table: the two had fought — the flicker)
+      // a few sparkles: tiny bright stars on the crown that twinkle as the light moves across them
+      const sp = mat('hbSpark', () => new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85, depthWrite: false, toneMapped: false }));
+      [[.42, .5, -.2, 1], [-.3, .52, .38, .7], [.1, .58, .42, .55]].forEach(([x, y, z, k]) => { const st = new TT.Mesh(geo('hbStar', () => { const q = new TT.PlaneGeometry(R * .26, R * .035); const q2 = q.clone(); q2.rotateZ(Math.PI / 2); const m = new TT.BufferGeometry(); const a = q.toNonIndexed().attributes.position.array, b = q2.toNonIndexed().attributes.position.array, all = new Float32Array(a.length + b.length); all.set(a); all.set(b, a.length); m.setAttribute('position', new TT.BufferAttribute(all, 3)); m.rotateX(-Math.PI / 2); return m; }), sp); st.position.set(x * R, y * R + .006, z * R); st.scale.setScalar(k); st.rotation.y = x * 3; st.renderOrder = 2; g.add(st); });
+      h = R * .56;
     } else if (look === 'doodle') {   // a coin of corrugated card with white paper on top
       const side = X.mesh(PIECE_GEO.coinSide(R * .92, R * .34), mat('hbCardSide', () => X.M({ map: cardSideTex(), roughness: .95, bump: false })));
       const top = X.mesh(PIECE_GEO.disc(R * .92, -R * .14 + R * .34, 'card'), faceMat('doodle', kind, v, { roughness: .95, emissiveIntensity: .42, envMapIntensity: .05 }));
@@ -342,7 +348,7 @@
   const wob = (c, pts, R, amp) => { c.beginPath(); pts.forEach(([x, y], i) => { const j = (R() - .5) * amp, k = (R() - .5) * amp; i ? c.lineTo(x + j, y + k) : c.moveTo(x + j, y + k); }); };
   const pencilCircle = (c, x, y, r, R, col, lw, turns = 1.08) => { c.strokeStyle = col; c.lineWidth = lw; c.lineCap = 'round'; c.beginPath(); const n = 40, a0 = R() * 7, dr = (R() - .5) * r * .08; for (let i = 0; i <= n * turns; i++) { const a = a0 + i / n * Math.PI * 2, rr2 = r + dr * i / n + (R() - .5) * r * .03; i ? c.lineTo(x + Math.cos(a) * rr2, y + Math.sin(a) * rr2) : c.moveTo(x + Math.cos(a) * rr2, y + Math.sin(a) * rr2); } c.stroke(); };
   const pencilRect = (c, x, y, w, h, R, col, lw) => { c.strokeStyle = col; c.lineWidth = lw; c.lineCap = c.lineJoin = 'round'; const seg = (x0, y0, x1, y1) => { const n = 12, pts = []; for (let i = 0; i <= n; i++) pts.push([x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n]); wob(c, pts, R, lw * 1.4); c.stroke(); }; seg(x - 3, y, x + w + 4, y + 2); seg(x + w, y - 3, x + w - 1, y + h + 3); seg(x + w + 3, y + h, x - 2, y + h - 1); seg(x, y + h + 3, x + 1, y - 4); };
-  const brass = (c, x, y, r0, r1) => { const g = c.createLinearGradient(x - r1, y - r1, x + r1, y + r1); g.addColorStop(0, '#f6dd96'); g.addColorStop(.45, '#c99a45'); g.addColorStop(.7, '#8a6224'); g.addColorStop(1, '#e8c477'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r1, 0, 7); c.arc(x, y, r0, 0, 7, true); c.fill(); };
+  const brass = (c, x, y, r0, r1) => { const g = c.createLinearGradient(x - r1, y - r1, x + r1, y + r1); g.addColorStop(0, '#fff3c4'); g.addColorStop(.18, '#f0c868'); g.addColorStop(.42, '#a87a30'); g.addColorStop(.62, '#5e4012'); g.addColorStop(.8, '#d9ad55'); g.addColorStop(.9, '#fff0b8'); g.addColorStop(1, '#c08f3c'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r1, 0, 7); c.arc(x, y, r0, 0, 7, true); c.fill(); };
   const chrome = (c, x, y, r0, r1) => { const g = c.createLinearGradient(x, y - r1, x, y + r1); g.addColorStop(0, '#ffffff'); g.addColorStop(.35, '#b9c1c9'); g.addColorStop(.55, '#5e666f'); g.addColorStop(.8, '#cfd6dd'); g.addColorStop(1, '#8c949c'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r1, 0, 7); c.arc(x, y, r0, 0, 7, true); c.fill(); };
   const screw = (c, x, y, r) => { const g = c.createRadialGradient(x - r * .3, y - r * .3, r * .1, x, y, r); g.addColorStop(0, '#fff4c8'); g.addColorStop(.6, '#b88a3a'); g.addColorStop(1, '#5a3e14'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.strokeStyle = 'rgba(40,25,5,.8)'; c.lineWidth = r * .25; c.beginPath(); c.moveTo(x - r * .65, y - r * .2); c.lineTo(x + r * .65, y + r * .2); c.stroke(); };
   const rivet = (c, x, y, r) => { const g = c.createRadialGradient(x - r * .35, y - r * .35, r * .1, x, y, r); g.addColorStop(0, '#ffffff'); g.addColorStop(.5, '#aab2ba'); g.addColorStop(1, '#4a525a'); c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.arc(x + r * .2, y + r * .3, r, 0, 7); c.fill(); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); };
@@ -407,10 +413,17 @@
       bed(c, x, y, w, h, PX) { rr(c, x, y, w, h, PX * .25); c.fillStyle = 'rgba(0,30,12,.4)'; c.fill(); c.strokeStyle = 'rgba(233,199,106,.5)'; c.lineWidth = PX * .015; c.stroke(); },
       title(c, x, y, PX) { c.font = `italic 700 ${PX * .3}px "Cormorant Garamond", Georgia, serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#e9c76a'; c.fillText('♠  HIT  ♦  BLOW  ♣', x, y); },
       deco(c, W, H, PX, A) { c.fillStyle = 'rgba(233,199,106,.3)'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `${PX * .4}px Georgia, "Segoe UI Symbol", "Noto Sans Symbols", serif`;   // (all four suits round the case — the ♣ had gone to a corner, 2026-11-17 user)
-        [[A[0][0], A[0][1] - PX * .3, '♠'], [A[0][0], A[0][1] + PX * .3, '♣'], [A[1][0], A[1][1], '♥'], [A[2][0], A[2][1], '♦']].forEach(([x, y, ch]) => c.fillText(ch, x, y)); },
+        [[A[0][0], A[0][1] - PX * .3, '♠'], [A[0][0], A[0][1] + PX * .3, '♣'], [A[1][0], A[0][1] - PX * .3, '♥'], [A[1][0], A[0][1] + PX * .3, '♦']].forEach(([x, y, ch]) => c.fillText(ch, x, y)); },
       lid(c, W, H, n, PX) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1f1f1f'); g.addColorStop(1, '#0d0d0d'); c.fillStyle = g; c.fillRect(0, 0, W, H);
         c.strokeStyle = '#e9c76a'; c.lineWidth = 3; rr(c, 7, 7, W - 14, H - 14, PX * .14); c.stroke(); c.lineWidth = 1.2; rr(c, 14, 14, W - 28, H - 28, PX * .1); c.stroke();
-        c.save(); c.translate(0, H / 2); for (let k = 0; k < n; k++) { const x = (k + .5) / n * W, w2 = PX * .32, h2 = PX * .46; c.fillStyle = '#f7f1e3'; rr(c, x - w2, -h2, w2 * 2, h2 * 2, PX * .06); c.fill(); c.strokeStyle = '#c3202b'; c.lineWidth = 2; rr(c, x - w2 + 4, -h2 + 4, w2 * 2 - 8, h2 * 2 - 8, PX * .04); c.stroke(); qmark(c, x, PX * .1, '#c3202b'); } c.restore(); },
+        // the hidden code as playing cards (2026-11-17 user: ？をもっとカジノっぽく): a cream card, a red-and-gold double border, a suit and ？ in the
+        // corners as a card's index, and a big serif ？ in gold-edged red in the middle
+        c.save(); c.translate(0, H / 2); for (let k = 0; k < n; k++) { const x = (k + .5) / n * W, w2 = PX * .32, h2 = PX * .46, suit = '♠♥♦♣'[k % 4], red = suit === '♥' || suit === '♦', ink = red ? '#c3202b' : '#1c1c1c';
+          c.fillStyle = 'rgba(0,0,0,.4)'; rr(c, x - w2 + 3, -h2 + 4, w2 * 2, h2 * 2, PX * .06); c.fill(); c.fillStyle = '#f7f1e3'; rr(c, x - w2, -h2, w2 * 2, h2 * 2, PX * .06); c.fill();
+          c.strokeStyle = '#c9a24e'; c.lineWidth = 2; rr(c, x - w2 + 4, -h2 + 4, w2 * 2 - 8, h2 * 2 - 8, PX * .04); c.stroke(); c.strokeStyle = ink; c.lineWidth = 1; rr(c, x - w2 + 7, -h2 + 7, w2 * 2 - 14, h2 * 2 - 14, PX * .03); c.stroke();
+          c.fillStyle = ink; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `700 ${PX * .12}px Georgia, serif`; c.fillText('?', x - w2 + PX * .09, -h2 + PX * .1); c.fillText(suit, x - w2 + PX * .09, -h2 + PX * .21);
+          c.save(); c.translate(x + w2 - PX * .09, h2 - PX * .1); c.rotate(Math.PI); c.fillText('?', 0, 0); c.fillText(suit, 0, PX * .11); c.restore();
+          c.font = `italic 700 ${PX * .5}px "Cormorant Garamond", Georgia, serif`; c.lineWidth = PX * .025; c.strokeStyle = '#c9a24e'; c.strokeText('?', x, PX * .02); c.fillStyle = ink; c.fillText('?', x, PX * .02); } c.restore(); },
       topM: { roughness: 1, envMapIntensity: .03, sheen: .35, sheenColor: '#2f8f55', sheenRoughness: 1 }, body: { c: '#5c1e12', r: .38, cc: .5 }, wall: { c: '#0a3a1f', r: .95 }, caseC: { c: '#161616', r: .4, m: .1 }, lidC: { c: '#1c1c1c', r: .35, m: .15 }, velvet: { c: '#5a0f18', sheen: '#ff6070' },
       trim: { k: 'metal', c: '#e3bd62' }, rim: { k: 'metal', c: '#e0b85a' }, glow: .24, chips: true, okOff: ['#14472a', '#0d331e', 'rgba(233,199,106,.75)'],
     },
@@ -432,7 +445,7 @@
         const R = rnd(5); c.save(); c.translate(0, H / 2); for (let k = 0; k < n; k++) { const x = (k + .5) / n * W; c.strokeStyle = DOODLE_INK[k % 4]; c.lineWidth = PX * .03; DOODLE[2](c, x, 0, PX * .62); } c.restore();
         pencilRect(c, 8, 8, W - 16, H - 16, R, 'rgba(60,60,70,.6)', 2.5); },
       body: { c: '#c9a46c', r: .95 }, wall: { c: '#a8865a', r: .95 }, caseC: { c: '#e2483f', r: .7 }, lidC: { c: '#f2efe4', r: .85 }, velvet: { c: '#d9d4c4' },
-      trim: { k: 'matte', c: '#2b4fa8' }, rim: { k: 'none' }, glow: .32, okOff: ['#f3eee0', '#e2dccb', '#2b4fa8'],
+      trim: { k: 'matte', c: '#2b4fa8' }, rim: { k: 'none' }, okFont: '700 62px "Comic Sans MS","Chalkboard SE","Marker Felt",cursive', glow: .32, okOff: ['#f3eee0', '#e2dccb', '#2b4fa8'],
     },
     // くだもの: a fruit-stand crate — pale wood, a cream face with citrus slices round the sockets, berries and leaves in the margins
     fruit: {
@@ -441,7 +454,7 @@
       field(c, x, y, w, h, PX, fill) { rr(c, x, y, w, h, PX * .3); if (fill) { c.fillStyle = 'rgba(255,255,255,.45)'; c.fill(); } c.strokeStyle = '#7cc35a'; c.lineWidth = PX * .03; c.setLineDash([PX * .1, PX * .07]); c.stroke(); c.setLineDash([]); },
       rowLine: 'rgba(124,195,90,.22)',
       num(c, x, y, s, PX, r) { FRUIT.leaf(c, x - PX * .02, y, PX * .78, -.25); numText(c, s, x - PX * .02, y, `800 ${PX * .26}px "Outfit", system-ui, sans-serif`, '#ffffff'); },
-      sock(c, x, y, r, k) { const [rind, pulp] = FRUITS[k % FRUITS.length]; c.fillStyle = rind; c.beginPath(); c.arc(x, y, r * 1.28, 0, 7); c.fill(); c.fillStyle = '#fffaf0'; c.beginPath(); c.arc(x, y, r * 1.2, 0, 7); c.fill(); c.fillStyle = pulp; for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; c.beginPath(); c.arc(x, y, r * 1.15, a + .05, a + Math.PI / 5 - .05); c.arc(x, y, r * .95, a + Math.PI / 5 - .05, a + .05, true); c.closePath(); c.fill(); } },
+      sock(c, x, y, r, k) { const [rind, pulp] = FRUITS[k % FRUITS.length]; c.fillStyle = rind; c.beginPath(); c.arc(x, y, r * 1.14, 0, 7); c.fill(); c.fillStyle = '#fffaf0'; c.beginPath(); c.arc(x, y, r * 1.09, 0, 7); c.fill(); c.fillStyle = pulp; for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; c.beginPath(); c.arc(x, y, r * 1.06, a + .05, a + Math.PI / 5 - .05); c.arc(x, y, r * .95, a + Math.PI / 5 - .05, a + .05, true); c.closePath(); c.fill(); } },   // (thin: the rings ran into each other, 2026-11-17 user)
       plate(c, x, y, w, h, PX) { rr(c, x, y, w, h, PX * .2); c.fillStyle = '#ffd9c8'; c.fill(); c.strokeStyle = '#ff9f87'; c.lineWidth = PX * .02; c.stroke(); },
       pin(c, x, y, r) { c.fillStyle = '#b2513a'; c.beginPath(); c.arc(x, y, r * 1.15, 0, 7); c.fill(); },
       bed(c, x, y, w, h, PX) { rr(c, x, y, w, h, PX * .3); c.fillStyle = 'rgba(124,195,90,.16)'; c.fill(); c.strokeStyle = '#7cc35a'; c.lineWidth = PX * .02; c.setLineDash([PX * .1, PX * .07]); c.stroke(); c.setLineDash([]); },
@@ -503,7 +516,7 @@
   const LOOKS = ['midnight', 'casino', 'doodle', 'fruit', 'cipher', 'vault'];
   const lookNow = k => LOOKS.includes(k) ? k : (X.BOARDS && X.BOARDS.hitblow ? X.BOARDS.hitblow.get() : 'midnight');
   const skinMat = (k, o) => mat('hbS' + k, () => X.M({ color: o.c, roughness: o.r == null ? .7 : o.r, metalness: o.m || 0, clearcoat: o.cc || 0, clearcoatRoughness: .3, envMapIntensity: o.m ? .8 : .2, bump: false }));
-  const rimMat = (key, o) => o.k === 'neon' ? neonMat(o.c, 1.5) : o.k === 'metal' ? mat('hbRimM' + o.c, () => X.M({ color: o.c, metalness: 1, roughness: .28, envMapIntensity: 1.1, bump: false })) : mat('hbRimMt' + o.c, () => X.M({ color: o.c, roughness: .6, bump: false }));
+  const rimMat = (key, o) => o.k === 'neon' ? neonMat(o.c, 1.5) : o.k === 'metal' ? mat('hbRimM' + o.c, () => X.M({ color: o.c, metalness: 1, roughness: .14, envMapIntensity: 1.7, bump: false })) : mat('hbRimMt' + o.c, () => X.M({ color: o.c, roughness: .6, bump: false }));
 
   function board(cfg, look) {
     const TT = T(), Lt = layout(cfg), g = new TT.Group(), BH = TOP; look = lookNow(look); const S = SKINS[look];
@@ -544,7 +557,7 @@
       const x = (k + .5 - cfg.n / 2) * PITCH;
       const cup = X.mesh(geo('hbCup', () => { const c = new TT.CircleGeometry(R + .06, 20); c.rotateX(-Math.PI / 2); return c; }), mat('hbCupM', () => new TT.MeshBasicMaterial({ color: 0x07040e, transparent: true, opacity: .75, depthWrite: false })));
       cup.position.set(x, ch + .006, 0); cup.renderOrder = 1; tray.add(cup);
-      caseSlots.push([Lt.caseX + x, BH + ch - R * .36 - (look === 'fruit' ? R * .8 : 0), Lt.caseZ]);   // (low enough to stay inside the closed lid — the fruit stands taller: it sits down in the velvet)
+      caseSlots.push([Lt.caseX + x, BH + ch - R * .36 - 0, Lt.caseZ]);   // (low enough to stay inside the closed lid — the fruit stands taller: it sits down in the velvet)
     }
     const trim = new TT.Mesh(geo('hbTrim' + cfg.n, () => { const b = new TT.BoxGeometry(cw - .1, .03, .03); return b; }), rimMat(look, S.trim)); trim.position.set(0, ch * .55, cd / 2 + .005); tray.add(trim);
     // the lid (pivot on the far edge of the case)
@@ -613,12 +626,12 @@
       const t = new TT.Mesh(geo('hbTrayRim' + n + 'c' + C, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length, LO() ? 120 : 160), .028, 4, true)), rimMat(look, S.rim)); t.position.set(0, BH + .01, zc); t.visible = S.rim.k !== 'none'; return t; })();
     g.add(rim);
     // OK: a raised key with its label (lit mint when the row is full)
-    const okTex = on => X.canvasTex('hbOk' + (on ? 1 : look), 160, 134, (c, W, H) => {
+    const okTex = on => X.canvasTex('hbOk' + (on ? (S.okFont ? look + 1 : 1) : look), 160, 134, (c, W, H) => {
       const gr = c.createLinearGradient(0, 0, 0, H); if (on) { gr.addColorStop(0, '#a8ffe6'); gr.addColorStop(1, '#4fd6b0'); } else { gr.addColorStop(0, S.okOff[0]); gr.addColorStop(1, S.okOff[1]); }
       c.fillStyle = gr; c.fillRect(0, 0, W, H);
-      c.font = '900 64px "Outfit", system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = on ? '#0d3a33' : S.okOff[2]; c.fillText('OK', W / 2, H / 2 + 3);
+      c.font = S.okFont || '900 64px "Outfit", system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = on ? '#0d3a33' : S.okOff[2]; c.fillText('OK', W / 2, H / 2 + 3);
     });
-    const okM = on => mat('hbOkM' + (on ? 1 : look), () => { const t = okTex(on), m = X.M({ map: t, emissiveMap: t, emissive: '#ffffff', emissiveIntensity: on ? .75 : .45, roughness: .6, envMapIntensity: .15, bump: false }); m.emissive.set(0xffffff); return m; });
+    const okM = on => mat('hbOkM' + (on ? (S.okFont ? look + 1 : 1) : look), () => { const t = okTex(on), m = X.M({ map: t, emissiveMap: t, emissive: '#ffffff', emissiveIntensity: on ? .75 : .45, roughness: .6, envMapIntensity: .15, bump: false }); m.emissive.set(0xffffff); return m; });
     const okG = new TT.Group(); okG.position.set(ok[0], BH, ok[1]); g.add(okG);
     const okBody = X.mesh(geo('hbOkB', () => rbox(okW, okD, .16, .16, .04)), skinMat('case' + look, S.caseC)); okG.add(okBody);
     const okFace = planeTop(okW - .1, okD - .1, okM(false)); okFace.position.y = .165; okG.add(okFace);
