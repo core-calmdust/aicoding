@@ -15,6 +15,7 @@ set -e
 HERE=$(cd "$(dirname "$0")" && pwd); SHOGI=$(cd "$HERE/../.." && pwd)
 WORK=${WORK:-$HOME/shogi-kp-work}; export WORK
 KMAP=${KMAP:-k9}; H=${H:-512}; EPOCHS=${EPOCHS:-4}; LR=${LR:-0.0001}; LAMBDA=${LAMBDA:-0.75}; OSCALE=${OSCALE:-0.805}; OB=${OB:-1}
+L1=${L1:-0}; L2=${L2:-32}; MI=${MI:-0}      # L1 > 0: a small MLP beside the linear output (the first MI units of each side (default all) -> L1 -> L2 -> 1; the native tools only for now)
 MNODES=${MNODES:-30000}; MTIME=${MTIME-300ms}; MGAMES=${MGAMES:-20}
 NC=$(getconf _NPROCESSORS_ONLN); P=${P:-$((NC > 2 ? NC - 1 : 1))}; THREADS=${THREADS:-$NC}
 case $KMAP in k1) KB=1 ;; k3) KB=3 ;; k9) KB=9 ;; k81) KB=81 ;; *) KB=$(( $(tr -s ' \n' '\n' < "$KMAP" | sort -n | tail -1) + 1 )) ;; esac
@@ -44,10 +45,11 @@ VALOPT=""; V=${VAL:-$WORK/val.bin}; [ -s "$V" ] && VALOPT="--val $V"
 CHECKDATA=${V:-train.bin}; [ -s "$CHECKDATA" ] || CHECKDATA=train.bin
 
 # 2. training (the current net goes into the shared copy: the first epoch starts from the current strength)
+MLPOPT=""; [ "$L1" != 0 ] && MLPOPT="--l1 $L1 --l2 $L2 --mi $MI"
 INITOPT="--init $WORK/cur.bin"; [ "$INIT" = none ] && INITOPT=""; [ -n "$INIT" ] && [ "$INIT" != none ] && INITOPT="--init $INIT"
 if [ ! -f train.done ]; then
   log "== training: $KMAP ($KB buckets), H $H, $EPOCHS epochs, $OB output bucket(s)"
-  ./trainkp train.bin kp.bin --kb $KMAP --hidden $H --epochs $EPOCHS --lr $LR --lambda $LAMBDA --oscale $OSCALE --ob $OB --threads $THREADS $VALOPT $INITOPT $TRAIN_OPTS 2>&1 | tee -a train.log
+  ./trainkp train.bin kp.bin --kb $KMAP --hidden $H --epochs $EPOCHS --lr $LR --lambda $LAMBDA --oscale $OSCALE --ob $OB --threads $THREADS $VALOPT $INITOPT $MLPOPT $TRAIN_OPTS 2>&1 | tee -a train.log
   # a failed training stops here (and is not marked as done: the same command starts it again)
   if [ "${PIPESTATUS[0]}" != 0 ] || [ ! -s kp.bin ]; then log "training failed (see the message above); nothing was trained"; exit 1; fi
   touch train.done
@@ -60,9 +62,10 @@ printf 'scale HalfKP:  ' | tee -a log.txt; ./trainkp --scale kp.bin "$CHECKDATA"
 tr '\r' '\n' < train.log | grep "^epoch" | tail -1 | sed 's/^/train: /' | tee -a log.txt
 
 # 3. the engine evaluates the net exactly as the trainer and as an independent Python implementation
+KP=$(bash "$HERE/build-kp.sh" "$WORK" kp.bin | tail -1)      # (the engine for this net: an MLP net has its sizes in the build)
 ./trainkp --check kp.bin "$CHECKDATA" 2000 dump.txt > check-train.txt
 "$KP" evalpos kp.bin "$CHECKDATA" 2000 > check-engine.txt
-OKPY=skip; if python3 -c "import numpy" 2> /dev/null; then python3 "$HERE/kpcheck.py" kp.bin dump.txt > check-py.txt; cmp -s check-train.txt check-py.txt && OKPY=same || OKPY=DIFFERENT; fi
+OKPY=skip; if [ "$L1" = 0 ] && python3 -c "import numpy" 2> /dev/null; then python3 "$HERE/kpcheck.py" kp.bin dump.txt > check-py.txt; cmp -s check-train.txt check-py.txt && OKPY=same || OKPY=DIFFERENT; fi
 if cmp -s check-train.txt check-engine.txt && [ "$OKPY" != DIFFERENT ]; then log "check: trainer = engine (= Python: $OKPY) on 2000 positions"; else log "check: MISMATCH (python: $OKPY) - send check-*.txt"; exit 1; fi
 "$KP" walk kp.bin "$CHECKDATA" 2000 | tee -a log.txt
 

@@ -12,14 +12,16 @@ OUT=${1:?usage: build-kp.sh <out folder> [net]}; mkdir -p "$OUT"
 KB=${KB:-9}; H=${H:-512}
 if [ -n "$2" ] && [ -f "$2" ]; then
   MAGIC=$(od -An -t x4 -N 4 "$2" | tr -d ' ')
-  if [ "$MAGIC" = 4b45554e ] || [ "$MAGIC" = 4f45554e ]; then H=$(od -An -t d4 -j 4 -N 4 "$2" | tr -d ' '); KB=$(od -An -t d4 -j 12 -N 4 "$2" | tr -d ' '); fi
+  if [ "$MAGIC" = 4b45554e ] || [ "$MAGIC" = 4f45554e ] || [ "$MAGIC" = 4d45554e ]; then H=$(od -An -t d4 -j 4 -N 4 "$2" | tr -d ' '); KB=$(od -An -t d4 -j 12 -N 4 "$2" | tr -d ' '); fi
+  # NUEM: an MLP beside the linear output (trainkp --l1): its sizes go into the build
+  if [ "$MAGIC" = 4d45554e ]; then L1=$(od -An -t d4 -j 16 -N 4 "$2" | tr -d ' '); L2=$(od -An -t d4 -j 20 -N 4 "$2" | tr -d ' '); MI=$(od -An -t d4 -j 24 -N 4 "$2" | tr -d ' '); MLP="-DNUE_L1=$L1 -DNUE_L2=$L2 -DNUE_MI=$MI"; MTAG="-m$MI-$L1-$L2"; fi
 fi
 CUR_H=$(gzip -dc "$SHOGI/nnue.bin.gz" | od -An -t d4 -j 4 -N 4 | tr -d ' ')
 cc -O3 -w -o "$OUT/prep" "$HERE/prep.c"
 cc -O3 -w -o "$OUT/trainkp" "$HERE/trainkp.c" -lpthread -lm
 cc -O3 -DNATIVE -DNUE_H=$CUR_H -w -o "$OUT/usimatch" "$SHOGI/tools/match/usimatch.c"
-cc -O3 -DNATIVE -DNUE_KB=$KB -DNUE_H=$H -w -o "$OUT/kptool-$KB-$H" "$HERE/kptool.c"
+cc -O3 -DNATIVE -DNUE_KB=$KB -DNUE_H=$H $MLP -w -o "$OUT/kptool-$KB-$H$MTAG" "$HERE/kptool.c"
 if [ -n "$WASM" ]; then
   clang --target=wasm32 -O3 -nostdlib -fno-builtin -w -Wl,--no-entry -Wl,--export-dynamic -msimd128 -DNUE_KB=$KB -DNUE_H=$H -o "$OUT/engine_kp.wasm" "$SHOGI/engine.c"
 fi
-echo "$OUT/kptool-$KB-$H"
+echo "$OUT/kptool-$KB-$H$MTAG"
