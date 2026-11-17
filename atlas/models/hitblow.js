@@ -75,28 +75,28 @@
   // the cabochon: a low dome (lathe) whose UVs are projected from above — the picture sits flat on its face
   function domeGeo() {
     return geo('hbDome', () => {
-      const TT = T(), pts = [], n = LO() ? 7 : 10, H = R * .82;
+      const TT = T(), pts = [], n = LO() ? 5 : 6, H = R * .82;
       for (let i = 0; i <= n; i++) { const a = i / n * Math.PI / 2; pts.push(new TT.Vector2(Math.cos(a) * R, Math.sin(a) * H)); }
       pts.unshift(new TT.Vector2(R * .9, -R * .14)); pts.unshift(new TT.Vector2(0.001, -R * .14));   // (bottom → top: the faces look outward)
-      const gl = new TT.LatheGeometry(pts, LO() ? 20 : 28), P = gl.attributes.position, uv = gl.attributes.uv;
+      const gl = new TT.LatheGeometry(pts, LO() ? 16 : 20), P = gl.attributes.position, uv = gl.attributes.uv;
       for (let i = 0; i < P.count; i++) uv.setXY(i, .5 + P.getX(i) / (2 * R) * .98, .5 - P.getZ(i) / (2 * R) * .98);
       uv.needsUpdate = true; gl.computeVertexNormals(); return gl;
     });
   }
   function gem(kind, v) {
     const TT = T(), g = new TT.Group();
-    const d = X.mesh(domeGeo(), gemMat(kind, v)); d.castShadow = true; d.receiveShadow = false; d.renderOrder = 3; g.add(d);   // (after the wells: it sits down in one)
+    const d = X.mesh(domeGeo(), gemMat(kind, v)); d.castShadow = true; d.receiveShadow = false; g.add(d);
     // a sharp highlight (a small bright cap off the top)
-    const hl = new TT.Mesh(geo('hbHl', () => { const s = new TT.SphereGeometry(R * .2, 8, 5); s.scale(1, .45, .8); return s; }), mat('hbHlM', () => new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .55, depthWrite: false })));
-    hl.position.set(-R * .34, R * .66, -R * .3); hl.renderOrder = 3; g.add(hl);
+    const hl = new TT.Mesh(geo('hbHl', () => { const s = new TT.SphereGeometry(R * .2, 6, 4); s.scale(1, .45, .8); return s; }), mat('hbHlM', () => new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .55, depthWrite: false })));
+    hl.position.set(-R * .34, R * .66, -R * .3); g.add(hl);
     g.userData = { kind, v, h: R * .82 };
     return g;
   }
   function pin(hit) {
     const TT = T();
-    const m = X.mesh(geo('hbPin', () => { const s = new TT.SphereGeometry(PIN, LO() ? 10 : 12, LO() ? 6 : 8); s.scale(1, .8, 1); return s; }),
+    const m = X.mesh(geo('hbPin', () => { const s = new TT.SphereGeometry(PIN, LO() ? 8 : 10, LO() ? 5 : 6); s.scale(1, .8, 1); return s; }),
       mat('hbPin' + (hit ? 'h' : 'b'), () => { const c = hit ? HIT : BLOW, m = X.M({ color: c, roughness: .4, envMapIntensity: .3, emissive: c, emissiveIntensity: hit ? .75 : .32 }); m.emissive.convertSRGBToLinear(); return m; }));
-    m.castShadow = false; m.renderOrder = 3; return m;
+    m.castShadow = false; return m;
   }
 
   /* ---------- the board ---------- */
@@ -150,29 +150,27 @@
   }
   function pinHole(c, x, y, r) { const g = c.createRadialGradient(x, y + r * .3, 0, x, y, r); g.addColorStop(0, '#000'); g.addColorStop(.75, '#0b1030'); g.addColorStop(1, 'rgba(150,180,255,.35)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
 
-  // the wells (2026-11-17 user: ボールやピンが入る穴を穴っぽく): the printed top keeps its holes, and a well is drawn into each one —
-  // a disc at the surface marks the hole in the stencil (only where nothing stands in front of it), then the well's inside
-  // (a dark frustum seen from within: its back faces) is painted there whatever the top's depth, so it reads as a real hole
-  // and a gem or a pin sits down in it. Two draw calls for all of them once the table merges the static meshes.
-  const SREF = 3;
-  const wellTex = () => X.canvasTex('hbWellT', 4, 64, (c, W, H) => { H = H || 64; const g = c.createLinearGradient(0, H, 0, 0); g.addColorStop(0, '#04071c'); g.addColorStop(.3, '#060a26'); g.addColorStop(.7, '#121b52'); g.addColorStop(1, '#34449a'); c.fillStyle = g; c.fillRect(0, 0, W, H); });
-  const wellMat = () => mat('hbWellM', () => { const TT = T(); return new TT.MeshBasicMaterial({ map: wellTex(), side: TT.BackSide, depthFunc: TT.AlwaysDepth, depthWrite: true,
-    stencilWrite: true, stencilRef: SREF, stencilFunc: TT.EqualStencilFunc, stencilZPass: TT.KeepStencilOp, stencilFail: TT.KeepStencilOp, stencilZFail: TT.KeepStencilOp }); });
-  const maskMat = () => mat('hbWellMask', () => { const TT = T(); return new TT.MeshBasicMaterial({ colorWrite: false, depthWrite: false,
-    stencilWrite: true, stencilRef: SREF, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp }); });
-  function wellGeo(r, d) {
-    return geo('hbWell' + r.toFixed(3) + 'd' + d, () => {
-      // a bowl: a small flat floor, the wall curving up to the rim — from above the wall shows as a ring growing lighter to the lip
-      const TT = T(), pts = [new TT.Vector2(.001, -d)];   // (bottom → top: outward faces)
-      for (let i = 0; i <= 4; i++) { const a = i / 4 * Math.PI / 2; pts.push(new TT.Vector2(r * (.45 + .55 * Math.sin(a)), -d * Math.cos(a))); }
-      return new TT.LatheGeometry(pts, LO() ? 16 : 22);
+  // the holes are real (2026-11-17 user: 穴っぽく → ブラックホールみたいで不自然・角度で被る → ボールが収まる程度の深さで、どの角度からも綺麗に):
+  // the board's top is a slab of its own (HOLE deep) with the sockets and the pin holes cut through it, standing on the body,
+  // so each hole is a short lacquered wall down to the body's top (the floor) — ordinary geometry, right from every angle.
+  // The printed top goes on the slab's face (its UVs set as the old flat top's); the walls and the floor are the lacquer.
+  const HOLE = .1;
+  function plate(w, d, r, holes, key) {
+    return geo('hbPlate' + key, () => {
+      const TT = T(), s = new TT.Shape(), x = -w / 2, z = -d / 2;
+      s.moveTo(x + r, z); s.lineTo(x + w - r, z); s.quadraticCurveTo(x + w, z, x + w, z + r); s.lineTo(x + w, z + d - r); s.quadraticCurveTo(x + w, z + d, x + w - r, z + d); s.lineTo(x + r, z + d); s.quadraticCurveTo(x, z + d, x, z + d - r); s.lineTo(x, z + r); s.quadraticCurveTo(x, z, x + r, z);
+      holes.forEach(([hx, hz, hr, n]) => { const p = new TT.Path(); for (let i = 0; i < n; i++) { const a = -i / n * Math.PI * 2; p[i ? 'lineTo' : 'moveTo'](hx + Math.cos(a) * hr, -hz + Math.sin(a) * hr); } p.closePath(); s.holes.push(p); });   // (shape y = −world z)
+      const ex = new TT.ExtrudeGeometry(s, { depth: HOLE, bevelEnabled: false, curveSegments: LO() ? 3 : 5 });
+      const P = ex.attributes.position, uv = ex.attributes.uv, cap = ex.groups[0];
+      for (let i = cap.start; i < cap.start + cap.count; i++) uv.setXY(i, (P.getX(i) + w / 2) / w, (P.getY(i) + d / 2) / d);
+      uv.needsUpdate = true;
+      // the slab's underside is never seen (it lies on the body): keep only its face and walls
+      const keep = [], walls = ex.groups[1];
+      for (let i = cap.start; i < cap.start + cap.count; i += 3) if (P.getZ(i) > HOLE / 2 || P.getZ(i + 1) > HOLE / 2 || P.getZ(i + 2) > HOLE / 2) keep.push(i, i + 1, i + 2);
+      const nc = keep.length; for (let i = walls.start; i < walls.start + walls.count; i++) keep.push(i);
+      ex.setIndex(keep); ex.clearGroups(); ex.addGroup(0, nc, 0); ex.addGroup(nc, keep.length - nc, 1);
+      ex.rotateX(-Math.PI / 2); return ex;
     });
-  }
-  function well(parent, x, y, z, r, d) {
-    const TT = T();
-    const m = new TT.Mesh(geo('hbMask' + r.toFixed(3), () => { const c = new TT.CircleGeometry(r, LO() ? 16 : 22); c.rotateX(-Math.PI / 2); return c; }), maskMat());
-    m.position.set(x, y + .003, z); m.renderOrder = 1; parent.add(m);
-    const w = new TT.Mesh(wellGeo(r, d), wellMat()); w.position.set(x, y + .002, z); w.renderOrder = 2; parent.add(w);
   }
 
   const lacquer = () => mat('hbLacq', () => X.M({ color: '#10173c', roughness: .7, envMapIntensity: .2, bump: false }));
@@ -201,15 +199,15 @@
   function board(cfg) {
     const TT = T(), Lt = layout(cfg), g = new TT.Group(), BH = TOP;
     // the slab: lacquered body, the printed top, a neon tube round the top edge
-    const body = X.mesh(geo('hbBody' + cfg.n + 'x' + cfg.rows, () => rbox(Lt.W, Lt.L, BH, .38, .08)), lacquer()); g.add(body);
-    const top = planeTop(Lt.W - .16, Lt.L - .16, mat('hbTopM' + cfg.n + 'x' + cfg.rows, () => (() => { const tt = topTex(cfg, Lt), m = X.M({ map: tt, emissiveMap: tt, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; })()));   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
-    top.position.y = BH + .002; top.receiveShadow = true; g.add(top);
-    const pr = Lt.n > 4 ? .1 : .11;
-    for (let r = 0; r < Lt.rows; r++) { for (let k = 0; k < Lt.n; k++) { const [x, z] = Lt.slot(r, k); well(g, x, BH, z, R + .03, .16); const [px, pz] = Lt.pinPos(r, k); well(g, px, BH, pz, pr * .92, .08); } }
+    const body = X.mesh(geo('hbBody' + cfg.n + 'x' + cfg.rows, () => rbox(Lt.W, Lt.L, BH - HOLE, .38, .08)), lacquer()); body.receiveShadow = true; g.add(body);
+    const pr = Lt.n > 4 ? .1 : .11, holes = [];
+    for (let r = 0; r < Lt.rows; r++) for (let k = 0; k < Lt.n; k++) { const [x, z] = Lt.slot(r, k); holes.push([x, z, R + .03, LO() ? 16 : 20]); const [px, pz] = Lt.pinPos(r, k); holes.push([px, pz, pr, LO() ? 8 : 10]); }
+    const top = new TT.Mesh(plate(Lt.W - .16, Lt.L - .16, .3, holes, 'B' + cfg.n + 'x' + cfg.rows), [mat('hbTopM' + cfg.n + 'x' + cfg.rows, () => (() => { const tt = topTex(cfg, Lt), m = X.M({ map: tt, emissiveMap: tt, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; })()), lacquer()]);   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
+    top.position.y = BH - HOLE; top.receiveShadow = true; g.add(top);
     const rim = (() => {
       const w = Lt.W / 2 - .07, d = Lt.L / 2 - .07, r = .31, pts = [];
       rimPts(pts, w, d, r);
-      const t = new TT.Mesh(geo('hbRim' + cfg.n + 'x' + cfg.rows, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length, LO() ? 160 : 260), .028, 5, true)), neonMat('#7fa2ff', 1.5));
+      const t = new TT.Mesh(geo('hbRim' + cfg.n + 'x' + cfg.rows, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length, LO() ? 120 : 160), .028, 4, true)), neonMat('#7fa2ff', 1.5));
       t.position.y = BH + .01; return t;
     })();
     g.add(rim);
@@ -285,13 +283,12 @@
       rr(c, px(-Lt.W / 2 + .3), b0, PX * (Lt.W - .6), b1 - b0, PX * .3); c.fillStyle = 'rgba(0,0,0,.28)'; c.fill(); c.strokeStyle = 'rgba(140,170,255,.18)'; c.lineWidth = 1.5; c.stroke();
       for (let v = 0; v < C; v++) { const [x, z] = pal(v); const r = PX * R * gemS * 1.02, gg = c.createRadialGradient(px(x), pz(z) + r * .2, r * .2, px(x), pz(z), r * 1.1); gg.addColorStop(0, 'rgba(0,0,0,.6)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gg; c.beginPath(); c.arc(px(x), pz(z), r * 1.1, 0, 7); c.fill(); }
     });
-    const body = X.mesh(geo('hbTrayB' + n + 'c' + C, () => rbox(Lt.W, D, BH, .38, .08)), lacquer()); body.position.z = zc; g.add(body);
-    const top = planeTop(Lt.W - .16, D - .16, mat('hbTrayT' + n + 'c' + C, () => { const m = X.M({ map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; }));
-    top.position.set(0, BH + .002, zc); g.add(top);
-    for (let k = 0; k < n; k++) { const [x, z] = sock(k); well(g, x, BH, z, R + .03, .16); }
+    const body = X.mesh(geo('hbTrayB' + n + 'c' + C, () => rbox(Lt.W, D, BH - HOLE, .38, .08)), lacquer()); body.position.z = zc; body.receiveShadow = true; g.add(body);
+    const top = new TT.Mesh(plate(Lt.W - .16, D - .16, .3, Array.from({ length: n }, (_, k) => [sock(k)[0], sock(k)[1] - zc, R + .03, LO() ? 16 : 20]), 'T' + n + 'c' + C), [mat('hbTrayT' + n + 'c' + C, () => { const m = X.M({ map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; }), lacquer()]);
+    top.position.set(0, BH - HOLE, zc); top.receiveShadow = true; g.add(top);
     const rim = (() => { const w = Lt.W / 2 - .07, d = D / 2 - .07, r = .31, pts = [];
       rimPts(pts, w, d, r);
-      const t = new TT.Mesh(geo('hbTrayRim' + n + 'c' + C, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length, LO() ? 160 : 260), .028, 5, true)), neonMat('#7fa2ff', 1.5)); t.position.set(0, BH + .01, zc); return t; })();
+      const t = new TT.Mesh(geo('hbTrayRim' + n + 'c' + C, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length, LO() ? 120 : 160), .028, 4, true)), neonMat('#7fa2ff', 1.5)); t.position.set(0, BH + .01, zc); return t; })();
     g.add(rim);
     // OK: a raised key with its label (lit mint when the row is full)
     const okTex = on => X.canvasTex('hbOk' + (on ? 1 : 0), 160, 134, (c, W, H) => {
@@ -345,8 +342,8 @@
     rows.forEach((code, r) => {
       code.forEach((v, k) => { const m = gem('color', v), [x, z] = U.slot(r, k); m.position.set(x, U.top - R * .12, z); g.add(m); });
       const f = E.feedback(secret, code); let k = 0;
-      for (let i = 0; i < f.h; i++, k++) { const p = pin(true), [x, z] = U.pinPos(r, k); p.position.set(x, U.top + .01, z); g.add(p); }
-      for (let i = 0; i < f.b; i++, k++) { const p = pin(false), [x, z] = U.pinPos(r, k); p.position.set(x, U.top + .01, z); g.add(p); }
+      for (let i = 0; i < f.h; i++, k++) { const p = pin(true), [x, z] = U.pinPos(r, k); p.position.set(x, U.top - .02, z); g.add(p); }
+      for (let i = 0; i < f.b; i++, k++) { const p = pin(false), [x, z] = U.pinPos(r, k); p.position.set(x, U.top - .02, z); g.add(p); }
       U.rowMark(r, r % 2);
     });
     return g;   // (no lit row on the showcase: only while playing, 2026-11-16 user)

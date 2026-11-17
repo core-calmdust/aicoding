@@ -539,7 +539,7 @@
     /* ---------- answering a row ---------- */
     function pinsFor(r, h, b, d0) {
       const out = []; let k = 0;
-      const add = (hit, i) => { const m = H.pin(hit), [x, zz] = U.pinPos(r, k++); m.position.set(x, TOP + .01, zz); m.scale.setScalar(.001); board.add(m); out.push(m);
+      const add = (hit, i) => { const m = H.pin(hit), [x, zz] = U.pinPos(r, k++); m.position.set(x, TOP - .02, zz); m.scale.setScalar(.001); board.add(m); out.push(m);
         later(() => { (hit ? SFX.hit : SFX.blow)(0); anim(220, q => m.scale.setScalar(Math.max(.001, back(q)))); }, d0 + i * 150); };
       for (let i = 0; i < h; i++) add(true, i);
       for (let i = 0; i < b; i++) add(false, h + i);
