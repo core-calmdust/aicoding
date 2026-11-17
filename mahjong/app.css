@@ -2825,3 +2825,7 @@ html:not(.ds) .ci-rays{width:116vmax;height:116vmax;margin:-58vmax 0 0 -58vmax}
 /* (2026-11-17, ユーザー「勝利カードのコインマークの大きさが小さすぎる」) the coin mark was a fixed 24px beside text that grows with the
    screen: it is sized with the text now — the drawn coin (a ring inside its box) about as tall as the figures, a bolder line, a soft glow */
 .fn-foot .earn>svg,.fnst .earn>svg{width:1.45em;height:1.45em;flex:none;stroke-width:2.2;filter:drop-shadow(0 0 .25em rgba(255,210,74,.45))}
+
+/* (2026-11-18, ユーザー「左右のキャラアイコンの位置をもう少し下げる」) */
+html.ds #game #opp1,html.ds #game #opp3{top:calc(var(--gi) + var(--rbh, 140px) * var(--hz, 1) + 34px + 6.5vh)}
+/* phone (html.lp) stays: lower would run into the player's portrait and the call buttons */
