@@ -571,7 +571,10 @@
       const x = (k + .5 - cfg.n / 2) * PITCH;
       const cup = X.mesh(geo('hbCup', () => { const c = new TT.CircleGeometry(R + .06, 20); c.rotateX(-Math.PI / 2); return c; }), mat('hbCupM', () => new TT.MeshBasicMaterial({ color: 0x07040e, transparent: true, opacity: .75, depthWrite: false })));
       cup.position.set(x, ch + .006, 0); cup.renderOrder = 1; tray.add(cup);
-      caseSlots.push([Lt.caseX + x, BH + ch - R * .36 - 0, Lt.caseZ]);   // (low enough to stay inside the closed lid — the fruit stands taller: it sits down in the velvet)
+      // each piece stands on the velvet, but no higher than fits under the closed lid (2026-11-17 user: 答えの中身が入ってない — the flat
+      // pieces (fruit tokens, card coins, chips) had been sunk under the velvet, where nothing showed when the lid opened)
+      const topH = { midnight: .82, casino: .36, doodle: .2, fruit: .22, cipher: .44, vault: .6 }[look] * R;
+      caseSlots.push([Lt.caseX + x, Math.min(BH + ch + R * .14 + .004, BH + ch + .2 - topH), Lt.caseZ]);   // (low enough to stay inside the closed lid — the fruit stands taller: it sits down in the velvet)
     }
     const trim = new TT.Mesh(geo('hbTrim' + cfg.n, () => { const b = new TT.BoxGeometry(cw - .1, .03, .03); return b; }), rimMat(look, S.trim)); trim.position.set(0, ch * .55, cd / 2 + .005); tray.add(trim);
     // the lid (pivot on the far edge of the case)
