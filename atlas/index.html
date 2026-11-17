@@ -598,6 +598,10 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .ring{flex:none;margin-left:auto;width:52px;height:52px;position:relative;display:grid;place-items:center;font-family:var(--round);font-weight:700;font-size:13px}
 [dir=rtl] .ring{margin-left:0;margin-right:auto}
 .ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+/* the card's 実績 ring (2026-11-18): a button — a medal over the percentage; the PC cup at the top is gone (#bvRec.pcoff) */
+.ring.achr{border:0;background:none;padding:0;cursor:pointer;color:inherit;font:inherit;font-family:var(--round);font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1;transition:transform .15s}.ring.achr:hover{transform:scale(1.07)}.ring.achr:active{transform:scale(.96)}.ring.achr:focus-visible{outline:2px solid #e8b23a;outline-offset:3px;border-radius:50%}
+.ring.achr .achm{position:relative;display:block;width:42%;height:42%;margin-top:-2px}.ring.achr .achm svg{position:static;inset:auto;transform:none;width:100%;height:100%;display:block}.ring.achr b{position:relative;font-size:.82em;color:#7a5410;margin-top:1px}
+#bvRec.pcoff{display:none!important}
 .pgl{display:grid;grid-template-columns:auto 1fr auto;gap:5px 8px;align-items:center;font-size:12.5px;font-weight:700;color:var(--ink2)}
 .pgl b{font-family:var(--round);color:var(--ink);font-size:12.5px;text-align:end}
 
@@ -2344,7 +2348,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=43"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=443"></script>
+<script src="app.js?v=444"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>

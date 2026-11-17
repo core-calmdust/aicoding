@@ -210,6 +210,12 @@
     const r = 22, c = 2 * Math.PI * r;
     return `<span class="ring"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="${r}" fill="none" stroke="#efe8d6" stroke-width="6"/><circle cx="26" cy="26" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * pct / 100} ${c}"/></svg>${pct}%</span>`;
   }
+  // the card's ring (2026-11-18 user: 進み具合の数字をやめて実績の達成率に、押すと実績一覧へ): this game's achievements done / all,
+  // a gold medal in the middle so it reads as 実績; a button that opens the records sheet on its 実績 tab
+  function achRing(g) {
+    const L = ACH.filter(a => a.gid === g.id), done = L.filter(a => a.done).length, pct = L.length ? Math.round(done / L.length * 100) : 0, r = 22, c = 2 * Math.PI * r, lab = `${t('tab.ach')} ${done}/${L.length}`;
+    return `<button type="button" class="ring achr" id="bvAchR" aria-label="${esc(lab)}" title="${esc(lab)}"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="${r}" fill="none" stroke="#efe8d6" stroke-width="6"/>${pct ? `<circle cx="26" cy="26" r="${r}" fill="none" stroke="#e8b23a" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * pct / 100} ${c}"/>` : ''}</svg><span class="achm">${medalSvg(done && done === L.length ? 3 : 2)}</span><b>${pct}%</b></button>`;
+  }
   function medalSvg(tier) {
     const c = [['#e8a46a', '#b8703a'], ['#e3e8f0', '#9aa6b8'], ['#ffd84d', '#d79a1c'], ['#c9f1ff', '#7f8cff']][tier];
     return `<svg class="medal" viewBox="0 0 46 46"><path d="M14 2h7l4 14h-7zM32 2h-7l-4 14h7z" fill="${tier === 3 ? '#a17cff' : '#ff6b6b'}"/><circle cx="23" cy="28" r="15" fill="${c[1]}"/><circle cx="23" cy="27" r="13" fill="${c[0]}"/><path d="M23 19l2.4 5l5.4.6-4 3.7 1.1 5.3-4.9-2.7-4.9 2.7 1.1-5.3-4-3.7 5.4-.6z" fill="#fff" opacity=".85"/></svg>`;
@@ -1057,7 +1063,7 @@
     const sizeHtml = sizeOnly ? ruleHtml + sizeOnly : '';
     headIcons(false);   // (ヒストリア / 戦績 back out of the old card before it is rebuilt)
     { const rc = $('bvRec'); if (rc && rc.parentNode === $('bvi')) $('bv').appendChild(rc); }   // (the cup rides on the card: keep it out of the rebuild)
-    $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${ring(r.pct, g.color)}</div>
+    $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${achRing(g)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       <p class="bvab">${esc(t('about.' + id))}</p>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
@@ -1133,6 +1139,7 @@
     if (OL3 && $('bvOl3Rec')) $('bvOl3Rec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openRec(g, 'all', 'rt'); };
     if (OL3 && $('bvRtOpp')) $('bvRtOpp').addEventListener('change', () => { pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} if (window.__bvModeRz) window.__bvModeRz(); });
     if (OL3 && !ol3Linked && QS0.get('room')) { ol3Linked = true; const code = QS0.get('room'); setTimeout(() => { if (bvGame === g) openOnline3D(g, code); }, 400); }   // (a room link: ?room=CODE#games/<id>)
+    { const ar = $('bvAchR'); if (ar) ar.onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g, null, 'ach'); }; }
     $('bvRec').setAttribute('aria-label', t('rec.btn')); $('bvRec').title = t('rec.btn'); $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };   // (the cup: phones right of the ヒストリア pill, PC beside the place chip)
     placeRec();
     } catch (e) { console.error(e); }   // (2026-11-16: whatever fails above, the phone drawer below is still set up — a card left half-built showed everything open)
@@ -1421,8 +1428,8 @@
   // no transition)
   // PC keeps the cup where it was, beside the place chip (2026-11-17 ユーザー：PCは元のまま、右下はスマホの対応)
   function placeRec() { const r = $('bvRec'), bv = $('bv'); if (!r || !bv) return;
-    if (!matchMedia('(max-width: 819px)').matches) { const pb = $('bvPlBtn'); r.classList.remove('bvrecf', 'inhd'); r.style.removeProperty('bottom'); if (pb && r.previousElementSibling !== pb) pb.after(r); return; }
-    r.classList.remove('inhd'); r.classList.add('bvrecf'); if (r.parentNode !== bv) bv.appendChild(r); posRec(); }
+    if (!matchMedia('(max-width: 819px)').matches) { const pb = $('bvPlBtn'); r.classList.add('pcoff'); r.classList.remove('bvrecf', 'inhd');   /* (PC: the cup is gone — the card's 実績 ring opens the sheet, 2026-11-18 user) */ r.style.removeProperty('bottom'); if (pb && r.previousElementSibling !== pb) pb.after(r); return; }
+    r.classList.remove('inhd', 'pcoff'); r.classList.add('bvrecf'); if (r.parentNode !== bv) bv.appendChild(r); posRec(); }
   function posRec() { const r = $('bvRec'), bv = $('bv'), bi = $('bvi'); if (!r || !bv || !bi || r.parentNode !== bv) return;
     let top = bi.offsetTop; for (let e = bi.offsetParent; e && e !== bv; e = e.offsetParent) top += e.offsetTop;
     r.style.setProperty('bottom', Math.round(bv.clientHeight - top + 12) + 'px', 'important'); }
