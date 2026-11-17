@@ -239,6 +239,8 @@
     crokinole: { list: ['marq', 'classic', 'modern', 'mcm', 'winter', 'neon'], get: () => { const v = ls.get('atlas-crokinole-look'); return ['classic', 'modern', 'mcm', 'winter', 'neon'].includes(v) ? v : 'marq'; }, set: k => ls.set('atlas-crokinole-look', k) },
     // futebol de botão (3D only, 2026-11-14): 'atlas-botao-look' ('classic' the default | 'retro' | 'night' | 'praia' | 'madeira' | 'neon')
     botao: { list: ['classic', 'retro', 'night', 'praia', 'madeira', 'neon'], get: () => { const v = ls.get('atlas-botao-look'); return ['retro', 'night', 'praia', 'madeira', 'neon'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-botao-look', k) },
+    // hit & blow (3D only, atlas/models/hitblow.js SKINS, 2026-11-17): 'atlas-hitblow-look' — ミッドナイト (the default) · カジノ · 落書き · くだもの · 暗号機 · 金庫
+    hitblow: { list: ['midnight', 'casino', 'doodle', 'fruit', 'cipher', 'vault'], get: () => { const v = ls.get('atlas-hitblow-look'); return BOARDS.hitblow.list.includes(v) ? v : 'midnight'; }, set: k => ls.set('atlas-hitblow-look', k) },
     // ludo (atlas/models/ludo.js, atlas/skin/ludo.js): 'atlas-ludo-look' ('classic' the default | 'marble' | 'street' | 'peg' | 'mondrian' | 'cutout'); pachisi keeps its cloth
     ludo: { list: ['classic', 'peg', 'street', 'mondrian', 'cutout', 'marble'], get: () => { const v = ls.get('atlas-ludo-look'); return ['marble', 'street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
   };
@@ -269,7 +271,14 @@
     ui: (k, lang) => (CKN[lang] || CKN.en)[{ you: 8, opp: 9, head: 10 }[k]],
   } };
   // a game's own board names (the board is part of its game, so no '3D'): table hockey
-  const NG = { patolli: {
+  const NG = { hitblow: {
+    midnight: { ja: 'ミッドナイト', en: 'Midnight', zh: '午夜', 'zh-TW': '午夜', ko: '미드나이트', es: 'Medianoche', fr: 'Minuit', pt: 'Meia-noite', de: 'Mitternacht', ru: 'Полночь', tr: 'Gece yarısı', id: 'Tengah malam', hi: 'आधी रात', ar: 'منتصف الليل' },
+    casino: { ja: 'カジノ', en: 'Casino', zh: '赌场', 'zh-TW': '賭場', ko: '카지노', es: 'Casino', fr: 'Casino', pt: 'Cassino', de: 'Casino', ru: 'Казино', tr: 'Kumarhane', id: 'Kasino', hi: 'कसीनो', ar: 'كازينو' },
+    doodle: { ja: '落書きノート', en: 'Doodle notebook', zh: '涂鸦笔记本', 'zh-TW': '塗鴉筆記本', ko: '낙서 노트', es: 'Cuaderno de garabatos', fr: 'Cahier de gribouillis', pt: 'Caderno de rabiscos', de: 'Kritzelheft', ru: 'Тетрадь с каракулями', tr: 'Karalama defteri', id: 'Buku coretan', hi: 'चित्रकारी वाली कॉपी', ar: 'دفتر الخربشات' },
+    fruit: { ja: 'くだもの', en: 'Fruit stand', zh: '水果摊', 'zh-TW': '水果攤', ko: '과일 가게', es: 'Frutería', fr: 'Étal de fruits', pt: 'Banca de frutas', de: 'Obststand', ru: 'Фруктовая лавка', tr: 'Meyve tezgâhı', id: 'Lapak buah', hi: 'फलों का ठेला', ar: 'كشك الفاكهة' },
+    cipher: { ja: '暗号機', en: 'Cipher machine', zh: '密码机', 'zh-TW': '密碼機', ko: '암호기', es: 'Máquina de cifrado', fr: 'Machine à chiffrer', pt: 'Máquina de cifra', de: 'Chiffriermaschine', ru: 'Шифровальная машина', tr: 'Şifre makinesi', id: 'Mesin sandi', hi: 'कूट मशीन', ar: 'آلة التشفير' },
+    vault: { ja: '金庫', en: 'Bank vault', zh: '保险库', 'zh-TW': '保險庫', ko: '금고', es: 'Caja fuerte', fr: 'Coffre-fort', pt: 'Cofre', de: 'Tresor', ru: 'Сейф', tr: 'Kasa', id: 'Brankas', hi: 'तिजोरी', ar: 'خزنة' },
+  }, patolli: {
     petate: { ja: 'ござ', en: 'Reed mat', zh: '草席', 'zh-TW': '草蓆', ko: '돗자리', es: 'Petate', fr: 'Natte tressée', pt: 'Esteira', de: 'Flechtmatte', ru: 'Плетёная циновка', tr: 'Hasır', id: 'Tikar anyaman', hi: 'चटाई', ar: 'حصير' },
     hide: { ja: '鹿革', en: 'Deerskin', zh: '鹿皮', 'zh-TW': '鹿皮', ko: '사슴 가죽', es: 'Piel de venado', fr: 'Peau de cerf', pt: 'Pele de veado', de: 'Hirschleder', ru: 'Оленья кожа', tr: 'Geyik derisi', id: 'Kulit rusa', hi: 'हिरण की खाल', ar: 'جلد الغزال' },
     stone: { ja: '石板', en: 'Stone slab', zh: '石板', 'zh-TW': '石板', ko: '석판', es: 'Losa de piedra', fr: 'Dalle de pierre', pt: 'Laje de pedra', de: 'Steinplatte', ru: 'Каменная плита', tr: 'Taş levha', id: 'Lempeng batu', hi: 'पत्थर की पटिया', ar: 'لوح حجري' },
