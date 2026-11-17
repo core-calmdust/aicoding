@@ -2822,3 +2822,6 @@ html.lite :is(#home,#chara).aaa .aa-ch .jig{animation:none}
      they turn: the same picture, well under half the pixels (at a phone's 3× pixels, 83 MB → 35 MB) */
 .ci-lines{inset:0 -100px 0 0}
 html:not(.ds) .ci-rays{width:116vmax;height:116vmax;margin:-58vmax 0 0 -58vmax}
+/* (2026-11-17, ユーザー「勝利カードのコインマークの大きさが小さすぎる」) the coin mark was a fixed 24px beside text that grows with the
+   screen: it is sized with the text now — the drawn coin (a ring inside its box) about as tall as the figures, a bolder line, a soft glow */
+.fn-foot .earn>svg,.fnst .earn>svg{width:1.45em;height:1.45em;flex:none;stroke-width:2.2;filter:drop-shadow(0 0 .25em rgba(255,210,74,.45))}
