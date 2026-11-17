@@ -160,6 +160,9 @@
     const m = X.M(Object.assign({ map: tx, emissiveMap: tx, emissive: '#ffffff', emissiveIntensity: .6, roughness: .5, bump: false, envMapIntensity: .3 }, o)); m.emissive.set(0xffffff); return m;
   });
   const cardSideTex = () => X.canvasTex('hbCardSideT', 256, 32, (c, W, H) => { H = H || 32; c.fillStyle = '#c69a5c'; c.fillRect(0, 0, W, H); c.fillStyle = '#fbfaf4'; c.fillRect(0, 0, W, H * .2); c.strokeStyle = '#8a6430'; c.lineWidth = 1.5; c.beginPath(); for (let x = 0; x <= W; x += 2) c.lineTo(x, H * .58 + Math.sin(x * .35) * H * .2); c.stroke(); c.fillStyle = '#b8894a'; c.fillRect(0, H * .22, W, 1.5); c.fillRect(0, H * .92, W, 2); });
+  const sparkTex = () => X.canvasTex('hbSparkT', 128, 128, (c, W) => { const g = c.createRadialGradient(W / 2, W / 2, 0, W / 2, W / 2, W / 2); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.12, 'rgba(255,255,255,.75)'); g.addColorStop(.35, 'rgba(200,230,255,.18)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, W, W);
+    c.save(); c.translate(W / 2, W / 2); [[0, 1, .5], [Math.PI / 2, 1, .5], [Math.PI / 4, .55, .25], [-Math.PI / 4, .55, .25]].forEach(([a, l, w]) => { c.save(); c.rotate(a); const gl = c.createLinearGradient(-W / 2 * l, 0, W / 2 * l, 0); gl.addColorStop(0, 'rgba(255,255,255,0)'); gl.addColorStop(.5, 'rgba(255,255,255,1)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gl; c.beginPath(); c.ellipse(0, 0, W / 2 * l, W * .02 * w * 2, 0, 0, 7); c.fill(); c.restore(); }); c.restore(); });
+  const fireTex = () => X.canvasTex('hbFireT', 64, 64, (c, W) => { const R2 = rnd(97); for (let y = 0; y < W; y += 4) for (let x = 0; x < W; x += 4) { const h = Math.floor(R2() * 360), on = R2() < .35; c.fillStyle = on ? `hsla(${h},100%,65%,${(.4 + R2() * .6).toFixed(2)})` : 'rgba(0,0,0,0)'; c.fillRect(x, y, 4, 4); } });
   const PIECE_GEO = {
     chipSide: () => geo('hbChipS', () => { const c = new (T().CylinderGeometry)(R * .96, R * .96, R * .5, LO() ? 16 : 22, 1, true); c.translate(0, -R * .14 + R * .25, 0); return c; }),
     disc: (r, y, k) => geo('hbDisc' + k, () => { const c = new (T().CircleGeometry)(r, LO() ? 16 : 22); c.rotateX(-Math.PI / 2); c.translate(0, y, 0); return c; }),
@@ -167,7 +170,7 @@
     pear: () => geo('hbPear', () => { const TT = T(), pts = [[.001, 0], [.42, .03], [.64, .17], [.69, .36], [.62, .55], [.47, .72], [.37, .9], [.31, 1.05], [.23, 1.19], [.09, 1.29], [.001, 1.31]].map(([x, y]) => new TT.Vector2(x * R, -R * .14 + y * R)); const gl = new TT.LatheGeometry(pts, LO() ? 12 : 16), P = gl.attributes.position, uv = gl.attributes.uv; for (let i = 0; i < P.count; i++) uv.setXY(i, .5 + P.getX(i) / (1.4 * R) * .98, .5 - P.getZ(i) / (1.4 * R) * .98); uv.needsUpdate = true; gl.computeVertexNormals(); return gl; }),
     // a round brilliant (2026-11-17 user: ブリリアントカットの宝石っぽく): table · 8 star facets · 8 bezels · 16 upper girdle facets · girdle ·
     // 16 lower girdle and 8 pavilion mains to the culet — flat triangles, so each facet catches the light on its own
-    jewel: () => geo('hbJewelB2', () => {
+    jewel: () => geo('hbJewelB3', () => {
       const TT = T(), N = 8, P = [], tri = (a, b, c) => P.push(...a, ...b, ...c), at = (r, y, a) => [Math.cos(a) * r, y, Math.sin(a) * r], d = Math.PI / N;
       const yG = R * .16, yS = R * .4, yT = R * .56, rG = R * .96, rS = R * .82, rT = R * .64, yC = -R * .14, yP = R * .0;
       for (let i = 0; i < N; i++) {
@@ -179,7 +182,7 @@
         const p1 = at(rG * .55, yP, a + d * .5), p2 = at(rG * .55, yP, a + d * 1.5), cul = [0, yC, 0];
         tri(g1, g0, p1); tri(g2, g1, p2); tri(p1, g0, cul); tri(p2, p1, cul); tri(g2, p2, cul);   // lower girdle and pavilion
       }
-      const gl = new TT.BufferGeometry(); gl.setAttribute('position', new TT.Float32BufferAttribute(P, 3)); gl.computeVertexNormals(); return gl; }),
+      const gl = new TT.BufferGeometry(); gl.setAttribute('position', new TT.Float32BufferAttribute(P, 3)); const U = []; for (let i = 0; i < P.length; i += 3) U.push(.5 + P[i] / (2 * R) * 1.7, .5 - P[i + 2] / (2 * R) * 1.7 + P[i + 1] / R * .6); gl.setAttribute('uv', new TT.Float32BufferAttribute(U, 2)); gl.computeVertexNormals(); return gl; }),   // (UVs: the fire's rainbow speckle, different on every facet)
     coinSide: (r, h) => geo('hbCoinSide' + r.toFixed(3), () => { const c = new (T().CylinderGeometry)(r, r, h, LO() ? 16 : 22, 1, true); c.translate(0, -R * .14 + h / 2, 0); return c; }),
     fruit: () => geo('hbFruit', () => {   // a squat sphere with a dimple at the stem; UVs from above (the face's picture)
       const TT = T(), Rf = R * .92, k = .78, pts = [], n = LO() ? 6 : 8;
@@ -210,12 +213,22 @@
       const glass = new TT.Mesh(geo('hbKeyGlass', () => { const q = new TT.SphereGeometry(R * .9, LO() ? 14 : 18, 4, 0, Math.PI * 2, 0, .45); q.scale(1, .5, 1); q.translate(0, R * .32 - R * .9 * .5 * Math.cos(.45), 0); return q; }), mat('hbKeyGlassM2', () => X.M({ color: '#ffffff', roughness: .08, metalness: 0, transparent: true, opacity: .07, envMapIntensity: .5, bump: false, depthWrite: false })));
       stem.castShadow = rim.castShadow = face.castShadow = true; g.add(stem, rim, lip, face, glass); h = R * .42;
     } else if (look === 'vault') {   // a cut jewel (2026-11-17 user: 駒は宝石をモチーフに): eight crown facets round the table, the pavilion under the girdle
-      const jm = mat('hbJewel' + kind + v, () => { const c = colOf(kind, v), m = X.M({ color: c, roughness: .02, metalness: .25, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 2.6, emissive: c, emissiveIntensity: .22, flatShading: true, side: T().DoubleSide, bump: false }); m.emissive.convertSRGBToLinear(); if ('ior' in m) m.ior = 2.4; return m; });
+      const jm = mat('hbJewel2' + kind + v, () => { const c = colOf(kind, v), m = X.M({ color: c, roughness: 0, metalness: .45, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 4.2, emissive: c, emissiveIntensity: .3, flatShading: true, side: T().DoubleSide, bump: false }); m.emissive.convertSRGBToLinear(); if ('ior' in m) m.ior = 2.4; if ('specularIntensity' in m) m.specularIntensity = 1; return m; });
       const body = X.mesh(PIECE_GEO.jewel(), jm); body.castShadow = true; g.add(body);
-      const table = X.mesh(PIECE_GEO.disc(R * .6, R * .56 + .004, 'jewelT3'), faceMat('vault', kind, v, { roughness: .02, clearcoat: 1, emissiveIntensity: .5, envMapIntensity: 1.6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); g.add(table);   // (lifted off the stone's table: the two had fought — the flicker)
-      // a few sparkles: tiny bright stars on the crown that twinkle as the light moves across them
-      const sp = mat('hbSpark', () => new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85, depthWrite: false, toneMapped: false }));
-      [[.42, .5, -.2, 1], [-.3, .52, .38, .7], [.1, .58, .42, .55]].forEach(([x, y, z, k]) => { const st = new TT.Mesh(geo('hbStar', () => { const q = new TT.PlaneGeometry(R * .26, R * .035); const q2 = q.clone(); q2.rotateZ(Math.PI / 2); const m = new TT.BufferGeometry(); const a = q.toNonIndexed().attributes.position.array, b = q2.toNonIndexed().attributes.position.array, all = new Float32Array(a.length + b.length); all.set(a); all.set(b, a.length); m.setAttribute('position', new TT.BufferAttribute(all, 3)); m.rotateX(-Math.PI / 2); return m; }), sp); st.position.set(x * R, y * R + .006, z * R); st.scale.setScalar(k); st.rotation.y = x * 3; st.renderOrder = 2; g.add(st); });
+      const table = X.mesh(PIECE_GEO.disc(R * .6, R * .56 + .004, 'jewelT3'), faceMat('vault', kind, v, { roughness: .02, clearcoat: 1, emissiveIntensity: .55, envMapIntensity: 2.4, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); g.add(table);
+      // fire (2026-11-17 user: 煌めきがまだ全然弱い): a thin skin over the crown facets that adds rainbow light, and star flashes that
+      // light up and die as the viewing angle sweeps across each facet (computed per frame from the camera, plus a slow twinkle)
+      const fire = new TT.Mesh(PIECE_GEO.jewel(), mat('hbFire', () => new TT.MeshBasicMaterial({ map: fireTex(), transparent: true, opacity: .55, blending: TT.AdditiveBlending, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })));
+      fire.scale.setScalar(1.002); fire.renderOrder = 2; g.add(fire);
+      const fx = new TT.Group(); fx.userData.keep = true; g.add(fx);   // (kept apart from the static merge: it moves)
+      const sm = new TT.SpriteMaterial({ map: sparkTex(), color: 0xffffff, transparent: true, depthWrite: false, depthTest: true, blending: TT.AdditiveBlending, toneMapped: false });
+      const wp = new TT.Vector3(), cp = new TT.Vector3();
+      [[.5, .46, -.22, 0], [-.36, .5, .42, 2.1], [.12, .6, .48, 4.2], [-.4, .4, -.38, 1.1], [.3, .62, .05, 3.3]].forEach(([x, y, z, ph], i) => {
+        const st = new TT.Sprite(sm.clone()); st.position.set(x * R, y * R + .01, z * R); st.renderOrder = 3; fx.add(st);
+        st.onBeforeRender = (rn, sc, cam) => { st.getWorldPosition(wp); cp.copy(cam.position).sub(wp).normalize(); const a = Math.atan2(cp.x, cp.z) * 3 + cp.y * 7 + ph, t = performance.now() / 1000;
+          const k = Math.pow(Math.max(0, Math.cos(a)), 6) * .85 + Math.pow(Math.max(0, Math.sin(t * (1.3 + i * .37) + ph * 2)), 12) * .7;
+          st.material.opacity = Math.min(1, k); const sz = R * (.35 + k * .75) * (st.parent && st.parent.parent ? 1 : 1); st.scale.set(sz, sz, 1); };
+      });
       h = R * .56;
     } else if (look === 'doodle') {   // a coin of corrugated card with white paper on top
       const side = X.mesh(PIECE_GEO.coinSide(R * .92, R * .34), mat('hbCardSide', () => X.M({ map: cardSideTex(), roughness: .95, bump: false })));
@@ -483,20 +496,18 @@
         [[PX * .22, PX * .22], [W - PX * .22, PX * .22], [PX * .22, H - PX * .22], [W - PX * .22, H - PX * .22]].forEach(([x, y]) => screw(c, x, y, PX * .07)); },
       field(c, x, y, w, h, PX, fill) { rr(c, x, y, w, h, PX * .12); if (fill) { c.fillStyle = 'rgba(0,0,0,.3)'; c.fill(); } c.strokeStyle = '#b8914a'; c.lineWidth = PX * .018; c.stroke(); },
       rowLine: 'rgba(184,145,74,.18)',
-      num(c, x, y, s, PX) { const w = PX * .44, h = PX * .34; const g = c.createLinearGradient(x - w / 2, y - h / 2, x + w / 2, y + h / 2); g.addColorStop(0, '#f2d48a'); g.addColorStop(.5, '#b8863c'); g.addColorStop(1, '#e3bd6a'); c.fillStyle = g; rr(c, x - w / 2, y - h / 2, w, h, PX * .04); c.fill(); c.strokeStyle = 'rgba(60,40,10,.6)'; c.lineWidth = 1; c.stroke();
-        numText(c, s, x, y, `700 ${PX * .22}px "Courier New", ui-monospace, monospace`, '#2a1d0e'); },
+      num(c, x, y, s, PX) { const w = PX * .46, h = PX * .36; c.fillStyle = 'rgba(0,0,0,.45)'; rr(c, x - w / 2 + 2, y - h / 2 + 3, w, h, PX * .04); c.fill(); },   // (the plate itself is real brass — board(): S.plates3d)
       sock(c, x, y, r) { c.fillStyle = 'rgba(0,0,0,.5)'; c.beginPath(); c.arc(x + r * .05, y + r * .08, r * 1.24, 0, 7); c.fill(); brass(c, x, y, r * .99, r * 1.2); c.strokeStyle = 'rgba(60,40,10,.6)'; c.lineWidth = 1; c.beginPath(); c.arc(x, y, r * 1.2, 0, 7); c.stroke(); },
       plate(c, x, y, w, h, PX) { rr(c, x, y, w, h, PX * .06); c.fillStyle = '#0f0f0d'; c.fill(); c.strokeStyle = '#8a6a34'; c.lineWidth = PX * .014; c.stroke(); [[x + PX * .07, y + PX * .07], [x + w - PX * .07, y + PX * .07], [x + PX * .07, y + h - PX * .07], [x + w - PX * .07, y + h - PX * .07]].forEach(([a, b]) => screw(c, a, b, PX * .035)); },
       pin(c, x, y, r) { brass(c, x, y, r * .98, r * 1.3); },
       bed(c, x, y, w, h, PX) { rr(c, x, y, w, h, PX * .12); c.fillStyle = 'rgba(0,0,0,.35)'; c.fill(); c.strokeStyle = 'rgba(184,145,74,.6)'; c.lineWidth = PX * .014; c.stroke(); },
-      title(c, x, y, PX) { const w = PX * 2.6, h = PX * .34; const g = c.createLinearGradient(x - w / 2, y - h / 2, x + w / 2, y + h / 2); g.addColorStop(0, '#f2d48a'); g.addColorStop(.5, '#b8863c'); g.addColorStop(1, '#e3bd6a'); c.fillStyle = g; rr(c, x - w / 2, y - h / 2, w, h, PX * .05); c.fill(); screw(c, x - w / 2 + PX * .12, y, PX * .045); screw(c, x + w / 2 - PX * .12, y, PX * .045);
-        numText(c, 'HIT · BLOW  CHIFFRIER', x, y, `700 ${PX * .17}px "Courier New", ui-monospace, monospace`, '#2a1d0e'); },
+      title(c, x, y, PX) { const w = PX * 2.6, h = PX * .34; c.fillStyle = 'rgba(0,0,0,.45)'; rr(c, x - w / 2 + 2, y - h / 2 + 3, w, h, PX * .05); c.fill(); },
       deco(c, W, H, PX, A) { A.forEach(([x, y], i) => { c.font = `700 ${PX * .2}px "Courier New", monospace`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = 'rgba(184,145,74,.32)'; c.fillText('QWERTZUIOASDFGHJKPYXCVBNML'.substr((i * 5) % 22, 4).split('').join(' '), x, y); }); },
       lid(c, W, H, n, PX) { c.fillStyle = '#1b1a17'; c.fillRect(0, 0, W, H); const R = rnd(29); for (let i = 0; i < W * H / 14; i++) { c.fillStyle = R() < .5 ? 'rgba(0,0,0,.35)' : 'rgba(255,255,240,.05)'; c.fillRect(R() * W, R() * H, 2, 2); }
         c.save(); c.translate(0, H / 2); for (let k = 0; k < n; k++) { const x = (k + .5) / n * W, w2 = PX * .3, h2 = PX * .4; brass(c, x, 0, 0, 0); const g = c.createLinearGradient(0, -h2, 0, h2); g.addColorStop(0, '#6b5a3a'); g.addColorStop(.25, '#efe4c8'); g.addColorStop(.75, '#efe4c8'); g.addColorStop(1, '#6b5a3a'); c.fillStyle = '#b8863c'; rr(c, x - w2 - 4, -h2 - 4, w2 * 2 + 8, h2 * 2 + 8, 6); c.fill(); c.fillStyle = g; c.fillRect(x - w2, -h2, w2 * 2, h2 * 2); qmark(c, x, PX * .09, '#2a1d0e'); } c.restore();
         screw(c, 14, 14, 6); screw(c, W - 14, 14, 6); screw(c, 14, H - 14, 6); screw(c, W - 14, H - 14, 6); },
       body: { c: '#6e4524', r: .5, cc: .35 }, wall: { c: '#121110', r: .8 }, caseC: { c: '#5a381c', r: .5, cc: .3 }, lidC: { c: '#1c1b18', r: .7 }, velvet: { c: '#1d2a1f', sheen: '#6f9a70' },
-      trim: { k: 'metal', c: '#c9a24e' }, rim: { k: 'metal', c: '#c9a24e' }, rings: { c: '#d8ae58' }, glow: .42, okOff: ['#2a2723', '#151412', 'rgba(232,200,130,.8)'],
+      trim: { k: 'metal', c: '#c9a24e' }, rim: { k: 'metal', c: '#c9a24e' }, rings: { c: '#d8ae58' }, plates3d: true, glow: .42, okOff: ['#2a2723', '#151412', 'rgba(232,200,130,.8)'],
     },
     // 金庫: a bank vault — brushed steel, rivets round the edge, chrome-ringed sockets, engraved numbers; the lid is the safe's dial
     vault: {
@@ -550,6 +561,18 @@
     if (S.rings) { const rm = mat('hbRingM' + look, () => X.M({ color: S.rings.c, metalness: 1, roughness: .16, envMapIntensity: 2, bump: false }));
       const big = geo('hbRingB', () => { const q = new TT.TorusGeometry(R + .075, .042, 4, LO() ? 18 : 26); q.rotateX(Math.PI / 2); q.scale(1, .45, 1); return q; }), small = geo('hbRingS' + pr, () => { const q = new TT.TorusGeometry(pr + .03, .02, 3, LO() ? 10 : 14); q.rotateX(Math.PI / 2); q.scale(1, .5, 1); return q; });
       for (let r = 0; r < Lt.rows; r++) for (let k = 0; k < Lt.n; k++) { const [x, z] = Lt.slot(r, k); const o = new TT.Mesh(big, rm); o.position.set(x, BH + .006, z); g.add(o); const [px, pz] = Lt.pinPos(r, k); const q = new TT.Mesh(small, rm); q.position.set(px, BH + .004, pz); g.add(q); } }
+    // cipher: the number plates and the name plate are real brass (2026-11-17 user: HIT BLOW〜の部分や左のナンバーも金属光沢), the lettering
+    // stamped dark into them — the metal catches the light as the view turns
+    if (S.plates3d) {
+      const plate = (key, w, d, draw) => { const m = mat('hbPlate' + key, () => { const tx = X.canvasTex('hbPlateT' + key, Math.round(w * 200), Math.round(d * 200), (c, W, H) => { H = H || Math.round(d * 200); const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#ffe7a8'); g.addColorStop(.5, '#e2b860'); g.addColorStop(1, '#f6d690'); c.fillStyle = g; c.fillRect(0, 0, W, H); draw(c, W, H); }); return X.M({ map: tx, metalness: 1, roughness: .2, envMapIntensity: 2.2, bump: false }); });
+        const bm = mat('hbPlateBody', () => X.M({ color: '#d6a94e', metalness: 1, roughness: .22, envMapIntensity: 2.2, bump: false }));
+        const o = new TT.Group(), b = X.mesh(geo('hbPlateG' + w + 'x' + d, () => rbox(w, d, .03, .04, .008)), bm); b.castShadow = true; o.add(b);
+        const f = planeTop(w - .03, d - .03, m); f.position.y = .0315; o.add(f); return o; };   // (the face as a plane of its own: the extruded box's UVs are in metres, the lettering had gone off it)
+      const etch = (c, s, W, H, k) => { c.font = `700 ${H * k}px "Courier New", ui-monospace, monospace`; c.textAlign = 'center'; c.textBaseline = 'alphabetic'; const tm = c.measureText(s), y = H / 2 + (tm.actualBoundingBoxAscent - tm.actualBoundingBoxDescent) / 2; c.fillStyle = 'rgba(255,250,220,.7)'; c.fillText(s, W / 2 + 1, y + 1.5); c.fillStyle = '#2a1d0e'; c.fillText(s, W / 2, y); };
+      const screwAt = (c, x, y, r) => screw(c, x, y, r);
+      for (let r = 0; r < Lt.rows; r++) { const p = plate('n' + r, .46, .36, (c, W, H) => etch(c, String(r + 1), W, H, .62)); p.position.set(Lt.labX + .12, BH, Lt.z0 + (r + .5) * ROWP); g.add(p); }
+      const tw = 2.6 * .7, td = .34 * .7, tp = plate('title', tw, td, (c, W, H) => { etch(c, 'HIT · BLOW  CHIFFRIER', W, H, .5); screwAt(c, H * .5, H / 2, H * .16); screwAt(c, W - H * .5, H / 2, H * .16); }); tp.position.set(0, BH, Lt.z0 + Lt.rows * ROWP + .245); g.add(tp);
+    }
     // casino: the row numbers are real poker chips, two stacked (2026-11-17 user: 左側のカジノチップが立体感ある方がいい)
     if (S.chips) for (let r = 0; r < Lt.rows; r++) {
       const red = !(r % 2), side = mat('hbRowChipS' + (red ? 'r' : 'k'), () => { const tx = X.canvasTex('hbRowChipSide' + (red ? 'r' : 'k'), 128, 16, (c, W, H) => { H = H || 16; c.fillStyle = red ? '#b81d28' : '#1b1b1b'; c.fillRect(0, 0, W, H); c.fillStyle = '#f4efe2'; for (let i = 0; i < 6; i++) c.fillRect(i * W / 6 + W / 24, 0, W / 12, H); }); return X.M({ map: tx, roughness: .5, bump: false }); });
