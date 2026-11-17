@@ -111,6 +111,9 @@ tanuki-（いま使っているデータ `tanuki-.nnue-pytorch-2024-07-30.1` の
 - **§3.2（DL 系の評価値で付け直す）も、512 幅では改善なし**（2026-11-16）：1.5億局面を GCT で付け直して学習、300ms・480局で −3（−33 〜 +28）。240局で +58 と出たのは偶然だった。採否の対局は480局以上にする。
 - ここまでで学習データ側の案はすべて効果なし。次は §4 の探索の定数の調整（`shogi/tools/match/spsa.py`）、そのあと §2 のネットの形。
 
+- **§4（探索の定数の SPSA）は採用**（2026-11-17）：1手100ms・約7200局の調整で、300ms・1440局 +22（+4 〜 +39）。前の値は同じ局面数の対局で決めたもので、時間で区切ると枝刈りが強すぎた。
+- §2 の第一歩として、線形の出力の横に小さな中間層を足す形を学習器と対局ツールに入れた（`trainkp --l1 16 --mi 128`、`shogi/tools/TRAIN.md`）。Mac での 300ms の対局で採否を決める。
+
 ## 出典
 
 - つようら王11mini/micro：やねうら王公式 https://yaneuraou.yaneu.com/2026/10/14/tsuyou-11-mini-micro-released-under-mit-license/ 、窓の杜 https://forest.watch.impress.co.jp/docs/news/2148597.html 、評価関数タイプの一覧 https://github.com/yaneurao/YaneuraOu/wiki/やねうら王のインストール手順

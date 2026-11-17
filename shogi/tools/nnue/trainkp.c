@@ -51,6 +51,9 @@
 #define MAGIC_Q 0x5145554E
 #define MAGIC_O 0x4F45554E
 #define NB_MAX 8
+#define MAGIC_M 0x4D45554E                 /* NUEM: a small MLP beside the linear output (--l1 N1 [--l2 N2]) */
+#define ACLIP 1.98f                        /* MLP weights as int8 / 64 */
+#define CCLIP 500.f
 static int H = 256, NTH = 4, BS = 16384, KB = 9, FACT = 1, OB = 1;   /* OB: output buckets (1, or 8 = engine.c nueBucket) */
 static long ROWS;                           /* KB * BASE (+ BASE for the shared copy) */
 static uint8_t KMAP[84];
@@ -58,6 +61,12 @@ static float LAMBDA = 0.75f;
 static float LEND = 0.f; static int LPLY = 0;   /* --lambda-end / --lambda-ply: the weight of the score goes from --lambda at ply 0 to --lambda-end at that ply */
 static float OSCALE = 1.f;                 /* --oscale: the net's output is OSCALE x the data's scale (the site's search is tuned to 0.805) */
 static float *W1, *B1, *W2, *B2;
+/* the MLP head (N1 > 0): c = clamp(acc, 0, 1) of both sides (2H) -> N1 (clamp 0..1) -> N2 (clamp 0..1) -> 1, added to the
+   linear output. Its last layer starts at zero, so a net started from the site's net evaluates exactly as it at first. */
+static int N1 = 0, N2 = 32, MI = 0;         /* MI: the MLP reads the first MI units of each side (--mi, default all H) */
+static float *MA, *Ma, *MB, *Md, *MC;      /* A[N1][2H], a[N1], B[N2][N1], d[N2], C[N2] */
+static float *mMA, *vMA, *mMa, *vMa, *mMB, *vMB, *mMd, *vMd, *mMC, *vMC;
+static float **gMA, **gMa, **gMB, **gMd, **gMC;
 static float *mW1, *vW1, *mB1, *vB1, *mW2, *vW2, *mB2, *vB2;
 static float **gW1, **gB1, **gW2, **gB2;
 static uint8_t **touch;                     /* per thread: rows of W1 with a gradient in this batch */
@@ -103,7 +112,16 @@ static inline float target(const PSV *r) {
   if (LPLY > 0) { float f = 1.f - (float)r->ply / LPLY; if (f < 0) f = 0; lam = LEND + (LAMBDA - LEND) * f; }   /* --lambda-ply */
   return lam * e + (1 - lam) * w;
 }
-static float forward(const Pos *p, uint32_t *fu, int *nu, uint32_t *ft, int *nt, float *au, float *at, int *bk) {
+/* the MLP's forward pass: mb = c[2H], h1[N1], h2[N2] (kept for the gradient) */
+static float mlp_fwd(const float *au, const float *at, float *mb) {
+  float *c = mb, *h1 = mb + 2 * MI, *h2 = h1 + N1;
+  for (int i = 0; i < MI; i++) { c[i] = au[i] < 0 ? 0 : au[i] > 1 ? 1 : au[i]; c[MI + i] = at[i] < 0 ? 0 : at[i] > 1 ? 1 : at[i]; }
+  for (int j = 0; j < N1; j++) { const float *w = MA + (size_t)j * 2 * MI; float z = Ma[j]; for (int i = 0; i < 2 * MI; i++) z += c[i] * w[i]; h1[j] = z < 0 ? 0 : z > 1 ? 1 : z; }
+  float m = 0;
+  for (int k = 0; k < N2; k++) { const float *w = MB + (size_t)k * N1; float z = Md[k]; for (int j = 0; j < N1; j++) z += h1[j] * w[j]; h2[k] = z < 0 ? 0 : z > 1 ? 1 : z; m += h2[k] * MC[k]; }
+  return m;
+}
+static float forward(const Pos *p, uint32_t *fu, int *nu, uint32_t *ft, int *nt, float *au, float *at, int *bk, float *mb) {
   *nu = feats(p, p->side, fu, FACT); *nt = feats(p, p->side ^ 1, ft, FACT);
   memcpy(au, B1, H * 4); memcpy(at, B1, H * 4);
   for (int k = 0; k < *nu; k++) { const float *w = W1 + (size_t)fu[k] * H; for (int i = 0; i < H; i++) au[i] += w[i]; }
@@ -112,6 +130,7 @@ static float forward(const Pos *p, uint32_t *fu, int *nu, uint32_t *ft, int *nt,
   float o = B2[b];
   for (int i = 0; i < H; i++) { float x = au[i] < 0 ? 0 : au[i] > 1 ? 1 : au[i]; o += x * x * w2[i]; }
   for (int i = 0; i < H; i++) { float x = at[i] < 0 ? 0 : at[i] > 1 ? 1 : at[i]; o += x * x * w2[H + i]; }
+  if (N1) o += mlp_fwd(au, at, mb);
   return o;
 }
 
@@ -120,20 +139,37 @@ static void *grad_job(void *arg) {
   Job *j = arg; int tid = j->tid;
   float *gw1 = gW1[tid], *gb1 = gB1[tid], *gw2 = gW2[tid], *gb2 = gB2[tid]; uint8_t *tc = touch[tid];
   float *au = malloc(H * 4), *at = malloc(H * 4), *du = malloc(H * 4), *dt = malloc(H * 4);
+  float *mb = N1 ? malloc((size_t)(2 * MI + N1 + N2) * 4) : NULL, *dc = N1 ? malloc((size_t)2 * MI * 4) : NULL, dz1[256], dz2[256];
+  float *gma = N1 ? gMA[tid] : NULL;
   uint32_t fu[96], ft[96]; int nu, nt, bk; double loss = 0;
   for (long k = j->b0; k < j->b0 + j->n; k++) {
     const PSV *r = &D[k]; Pos p;
     if (psv_decode(r, &p)) continue;
-    float o = forward(&p, fu, &nu, ft, &nt, au, at, &bk), pr = sigm(o / OSCALE), t = target(r), e = pr - t;
+    float o = forward(&p, fu, &nu, ft, &nt, au, at, &bk, mb), pr = sigm(o / OSCALE), t = target(r), e = pr - t;
     loss += e * e;
     float g = 2 * e * pr * (1 - pr) / BS / OSCALE;
+    if (N1) {   /* the MLP's gradients; dc = d loss / d c (added to du / dt below) */
+      const float *c = mb, *h1 = mb + 2 * MI, *h2 = h1 + N1;
+      for (int j = 0; j < N1; j++) dz1[j] = 0;
+      for (int k = 0; k < N2; k++) {
+        gMC[tid][k] += g * h2[k];
+        float d2 = (h2[k] > 0 && h2[k] < 1) ? g * MC[k] : 0; dz2[k] = d2;
+        if (d2 != 0) { gMd[tid][k] += d2; float *gb = gMB[tid] + (size_t)k * N1; const float *w = MB + (size_t)k * N1; for (int j = 0; j < N1; j++) { gb[j] += d2 * h1[j]; dz1[j] += d2 * w[j]; } }
+      }
+      memset(dc, 0, (size_t)2 * MI * 4);
+      for (int j = 0; j < N1; j++) {
+        float d1 = (h1[j] > 0 && h1[j] < 1) ? dz1[j] : 0; if (d1 == 0) continue;
+        gMa[tid][j] += d1; float *ga = gma + (size_t)j * 2 * MI; const float *w = MA + (size_t)j * 2 * MI;
+        for (int i = 0; i < 2 * MI; i++) { ga[i] += d1 * c[i]; dc[i] += d1 * w[i]; }
+      }
+    }
     float *gw2b = gw2 + (size_t)bk * 2 * H; const float *w2b = W2 + (size_t)bk * 2 * H;
     for (int i = 0; i < H; i++) {
       float x = au[i], y = at[i];
       float cx = x < 0 ? 0 : x > 1 ? 1 : x, cy = y < 0 ? 0 : y > 1 ? 1 : y;
       gw2b[i] += g * cx * cx; gw2b[H + i] += g * cy * cy;
-      du[i] = (x > 0 && x < 1) ? g * w2b[i] * 2 * x : 0;
-      dt[i] = (y > 0 && y < 1) ? g * w2b[H + i] * 2 * y : 0;
+      du[i] = (x > 0 && x < 1) ? g * w2b[i] * 2 * x + (dc && i < MI ? dc[i] : 0) : 0;
+      dt[i] = (y > 0 && y < 1) ? g * w2b[H + i] * 2 * y + (dc && i < MI ? dc[MI + i] : 0) : 0;
       gb1[i] += du[i] + dt[i];
     }
     gb2[bk] += g;
@@ -141,7 +177,7 @@ static void *grad_job(void *arg) {
     for (int q = 0; q < nt; q++) { float *w = gw1 + (size_t)ft[q] * H; tc[ft[q]] = 1; for (int i = 0; i < H; i++) w[i] += dt[i]; }
   }
   tLoss[tid] = loss;
-  free(au); free(at); free(du); free(dt);
+  free(au); free(at); free(du); free(dt); free(mb); free(dc);
   return NULL;
 }
 static void adam1(float *w, float *g, float *m, float *v, size_t i0, size_t i1, float lr, float c1, float c2, float clip) {
@@ -180,17 +216,28 @@ static void step(long b0, int it, float lr) {
   adam1(W2, gW2[0], mW2, vW2, 0, (size_t)OB * 2 * H, lr, c1, c2, W2CLIP);
   adam1(B2, gB2[0], mB2, vB2, 0, OB, lr, c1, c2, 1e9f);
   memset(gB1[0], 0, H * 4); memset(gW2[0], 0, (size_t)OB * 2 * H * 4); memset(gB2[0], 0, OB * 4);
+  if (N1) {
+    const size_t na = (size_t)N1 * 2 * MI, nb = (size_t)N2 * N1;
+    for (int t = 1; t < NTH; t++) {
+      for (size_t i = 0; i < na; i++) { gMA[0][i] += gMA[t][i]; gMA[t][i] = 0; } for (size_t i = 0; i < nb; i++) { gMB[0][i] += gMB[t][i]; gMB[t][i] = 0; }
+      for (int i = 0; i < N1; i++) { gMa[0][i] += gMa[t][i]; gMa[t][i] = 0; } for (int i = 0; i < N2; i++) { gMd[0][i] += gMd[t][i]; gMd[t][i] = 0; gMC[0][i] += gMC[t][i]; gMC[t][i] = 0; }
+    }
+    adam1(MA, gMA[0], mMA, vMA, 0, na, lr, c1, c2, ACLIP); adam1(Ma, gMa[0], mMa, vMa, 0, N1, lr, c1, c2, 1e9f);
+    adam1(MB, gMB[0], mMB, vMB, 0, nb, lr, c1, c2, ACLIP); adam1(Md, gMd[0], mMd, vMd, 0, N2, lr, c1, c2, 1e9f);
+    adam1(MC, gMC[0], mMC, vMC, 0, N2, lr, c1, c2, CCLIP);
+    memset(gMA[0], 0, na * 4); memset(gMB[0], 0, nb * 4); memset(gMa[0], 0, N1 * 4); memset(gMd[0], 0, N2 * 4); memset(gMC[0], 0, N2 * 4);
+  }
 }
 
 typedef struct { const PSV *v; long n; double l, le; long c; } VJob;
 static void *val_job(void *arg) {
-  VJob *j = arg; float *au = malloc(H * 4), *at = malloc(H * 4); uint32_t fu[96], ft[96]; int nu, nt, bk;
+  VJob *j = arg; float *au = malloc(H * 4), *at = malloc(H * 4), *mb = N1 ? malloc((size_t)(2 * MI + N1 + N2) * 4) : NULL; uint32_t fu[96], ft[96]; int nu, nt, bk;
   for (long k = 0; k < j->n; k++) {
     const PSV *r = &j->v[k]; Pos p; if (psv_decode(r, &p) || psv_in_check(&p)) continue;
-    float pr = sigm(forward(&p, fu, &nu, ft, &nt, au, at, &bk) / OSCALE), e = pr - target(r), ee = pr - sigm(r->score / 600.f);
+    float pr = sigm(forward(&p, fu, &nu, ft, &nt, au, at, &bk, mb) / OSCALE), e = pr - target(r), ee = pr - sigm(r->score / 600.f);
     j->l += e * e; j->le += ee * ee; j->c++;
   }
-  free(au); free(at); return NULL;
+  free(au); free(at); free(mb); return NULL;
 }
 static void validate(const PSV *v, long n, double *l, double *le) {
   pthread_t th[256]; VJob jb[256]; double a = 0, b = 0; long c = 0;
@@ -203,7 +250,7 @@ static int rq(float x, float s, int lim) { long v = lrintf(x * s); return v > li
 static void save(const char *path) {
   char tmp[1100]; snprintf(tmp, sizeof tmp, "%s.tmp", path);
   FILE *f = fopen(tmp, "wb"); if (!f) { perror(tmp); return; }
-  int32_t hd[5] = { OB > 1 ? MAGIC_O : MAGIC_K, H, KB * BASE, KB, OB }; fwrite(hd, 4, OB > 1 ? 5 : 4, f); fwrite(KMAP, 1, 84, f);
+  int32_t hd[7] = { N1 ? MAGIC_M : OB > 1 ? MAGIC_O : MAGIC_K, H, KB * BASE, KB, N1 ? N1 : OB, N2, MI }; fwrite(hd, 4, N1 ? 7 : OB > 1 ? 5 : 4, f); fwrite(KMAP, 1, 84, f);
   int16_t *row = malloc((size_t)H * 2);
   for (long r = 0; r < (long)KB * BASE; r++) {
     const float *w = W1 + (size_t)r * H, *sh = FACT ? W1 + ((size_t)KB * BASE + r % BASE) * H : NULL;
@@ -214,29 +261,48 @@ static void save(const char *path) {
   for (int i = 0; i < H; i++) { int32_t b = rq(B1[i], QA, 32767); fwrite(&b, 4, 1, f); }
   for (int i = 0; i < OB * 2 * H; i++) { int16_t w = (int16_t)rq(W2[i], QB, 32767); fwrite(&w, 2, 1, f); }
   for (int i = 0; i < OB; i++) { int32_t b2 = (int32_t)lrint((double)B2[i] * QA * QB); fwrite(&b2, 4, 1, f); }
+  if (N1) {   /* A int8[N1][2 MI], a int32[N1], B int8[N2][N1], d int32[N2], C int16[N2]: weights x 64, biases x QA x 64 */
+    for (size_t i = 0; i < (size_t)N1 * 2 * MI; i++) { int8_t w = (int8_t)rq(MA[i], QB, 127); fwrite(&w, 1, 1, f); }
+    for (int i = 0; i < N1; i++) { int32_t b = (int32_t)lrint((double)Ma[i] * QA * QB); fwrite(&b, 4, 1, f); }
+    for (size_t i = 0; i < (size_t)N2 * N1; i++) { int8_t w = (int8_t)rq(MB[i], QB, 127); fwrite(&w, 1, 1, f); }
+    for (int i = 0; i < N2; i++) { int32_t b = (int32_t)lrint((double)Md[i] * QA * QB); fwrite(&b, 4, 1, f); }
+    for (int i = 0; i < N2; i++) { int16_t w = (int16_t)rq(MC[i], QB, 32767); fwrite(&w, 2, 1, f); }
+  }
   fclose(f); rename(tmp, path);
 }
 /* checkpoint: everything needed to continue exactly */
 static void save_ckpt(const char *path, int ep, long b, int it, long start) {
   char tmp[1100]; snprintf(tmp, sizeof tmp, "%s.tmp", path);
   FILE *f = fopen(tmp, "wb"); if (!f) { perror(tmp); return; }
-  long hd[8] = { 0x4B43 + (OB - 1) * 0x10000L, H, ROWS, ep, b, it, start, (long)rs }; fwrite(hd, sizeof(long), 8, f);
+  long hd[8] = { 0x4B43 + (OB - 1) * 0x10000L + ((long)N1 << 24) + ((long)(N1 ? N2 : 0) << 36) + ((long)(N1 ? MI : 0) << 48), H, ROWS, ep, b, it, start, (long)rs }; fwrite(hd, sizeof(long), 8, f);
   size_t n1 = (size_t)ROWS * H;
   fwrite(W1, 4, n1, f); fwrite(mW1, 4, n1, f); fwrite(vW1, 4, n1, f);
   fwrite(B1, 4, H, f); fwrite(mB1, 4, H, f); fwrite(vB1, 4, H, f);
   size_t n2 = (size_t)OB * 2 * H;
   fwrite(W2, 4, n2, f); fwrite(mW2, 4, n2, f); fwrite(vW2, 4, n2, f);
   fwrite(B2, 4, OB, f); fwrite(mB2, 4, OB, f); fwrite(vB2, 4, OB, f);
+  if (N1) {
+    const size_t na = (size_t)N1 * 2 * MI, nb = (size_t)N2 * N1;
+    fwrite(MA, 4, na, f); fwrite(mMA, 4, na, f); fwrite(vMA, 4, na, f); fwrite(Ma, 4, N1, f); fwrite(mMa, 4, N1, f); fwrite(vMa, 4, N1, f);
+    fwrite(MB, 4, nb, f); fwrite(mMB, 4, nb, f); fwrite(vMB, 4, nb, f); fwrite(Md, 4, N2, f); fwrite(mMd, 4, N2, f); fwrite(vMd, 4, N2, f);
+    fwrite(MC, 4, N2, f); fwrite(mMC, 4, N2, f); fwrite(vMC, 4, N2, f);
+  }
   fclose(f); rename(tmp, path);
 }
 static int load_ckpt(const char *path, int *ep, long *b, int *it, long *start) {
   FILE *f = fopen(path, "rb"); if (!f) return 0;
-  long hd[8]; if (fread(hd, sizeof(long), 8, f) != 8 || hd[0] != 0x4B43 + (OB - 1) * 0x10000L || hd[1] != H || hd[2] != ROWS) { fprintf(stderr, "%s: a checkpoint of other settings (delete it to start over)\n", path); exit(1); }
+  long hd[8]; if (fread(hd, sizeof(long), 8, f) != 8 || hd[0] != 0x4B43 + (OB - 1) * 0x10000L + ((long)N1 << 24) + ((long)(N1 ? N2 : 0) << 36) + ((long)(N1 ? MI : 0) << 48) || hd[1] != H || hd[2] != ROWS) { fprintf(stderr, "%s: a checkpoint of other settings (delete it to start over)\n", path); exit(1); }
   size_t n1 = (size_t)ROWS * H, n2 = (size_t)OB * 2 * H; int ok = 1;
   ok &= fread(W1, 4, n1, f) == n1 && fread(mW1, 4, n1, f) == n1 && fread(vW1, 4, n1, f) == n1;
   ok &= fread(B1, 4, H, f) == (size_t)H && fread(mB1, 4, H, f) == (size_t)H && fread(vB1, 4, H, f) == (size_t)H;
   ok &= fread(W2, 4, n2, f) == n2 && fread(mW2, 4, n2, f) == n2 && fread(vW2, 4, n2, f) == n2;
   ok &= fread(B2, 4, OB, f) == (size_t)OB && fread(mB2, 4, OB, f) == (size_t)OB && fread(vB2, 4, OB, f) == (size_t)OB;
+  if (N1) {
+    const size_t na = (size_t)N1 * 2 * MI, nb = (size_t)N2 * N1, a1 = N1, a2 = N2;
+    ok &= fread(MA, 4, na, f) == na && fread(mMA, 4, na, f) == na && fread(vMA, 4, na, f) == na && fread(Ma, 4, a1, f) == a1 && fread(mMa, 4, a1, f) == a1 && fread(vMa, 4, a1, f) == a1;
+    ok &= fread(MB, 4, nb, f) == nb && fread(mMB, 4, nb, f) == nb && fread(vMB, 4, nb, f) == nb && fread(Md, 4, a2, f) == a2 && fread(mMd, 4, a2, f) == a2 && fread(vMd, 4, a2, f) == a2;
+    ok &= fread(MC, 4, a2, f) == a2 && fread(mMC, 4, a2, f) == a2 && fread(vMC, 4, a2, f) == a2;
+  }
   fclose(f); if (!ok) { fprintf(stderr, "%s: short checkpoint\n", path); exit(1); }
   *ep = (int)hd[3]; *b = hd[4]; *it = (int)hd[5]; *start = hd[6]; rs = (unsigned long long)hd[7];
   return 1;
@@ -277,11 +343,16 @@ static int check(int argc, char **argv) {
   FILE *f = fopen(argv[2], "rb"); if (!f) { perror(argv[2]); return 1; }
   int32_t hd[4], nb = 1; if (fread(hd, 4, 3, f) != 3) return 1;
   if (hd[0] == MAGIC_Q) { KB = 1; memset(KMAP, 0, sizeof KMAP); }   /* the site's net: one bucket */
-  else if ((hd[0] != MAGIC_K && hd[0] != MAGIC_O) || fread(hd + 3, 4, 1, f) != 1) { fprintf(stderr, "not a NUEK / NUEO / NUEQ net\n"); return 1; }
-  else { KB = hd[3]; if (hd[0] == MAGIC_O && (fread(&nb, 4, 1, f) != 1 || nb < 1 || nb > NB_MAX)) return 1; if (fread(KMAP, 1, 84, f) != 84) return 1; }
+  else if ((hd[0] != MAGIC_K && hd[0] != MAGIC_O && hd[0] != MAGIC_M) || fread(hd + 3, 4, 1, f) != 1) { fprintf(stderr, "not a NUEK / NUEO / NUEM / NUEQ net\n"); return 1; }
+  else { KB = hd[3]; if (hd[0] == MAGIC_O && (fread(&nb, 4, 1, f) != 1 || nb < 1 || nb > NB_MAX)) return 1; if (hd[0] == MAGIC_M) { int32_t m[3]; if (fread(m, 4, 3, f) != 3 || m[0] < 1 || m[0] > 256 || m[1] < 1 || m[1] > 256 || m[2] < 1 || m[2] > hd[1]) return 1; N1 = m[0]; N2 = m[1]; MI = m[2]; } if (fread(KMAP, 1, 84, f) != 84) return 1; }
   int h = hd[1], in = hd[2]; int scale = !strcmp(argv[1], "--scale");
   int16_t *w1 = malloc((size_t)in * h * 2); int32_t *b1 = malloc(h * 4); int16_t *w2a = malloc((size_t)nb * h * 4); int32_t b2a[NB_MAX];
   if (fread(w1, 2, (size_t)in * h, f) != (size_t)in * h || fread(b1, 4, h, f) != (size_t)h || fread(w2a, 2, (size_t)nb * 2 * h, f) != (size_t)nb * 2 * h || fread(b2a, 4, nb, f) != (size_t)nb) { fprintf(stderr, "short net\n"); return 1; }
+  int8_t *qa = NULL, *qb = NULL; int32_t *qab = NULL, *qd = NULL; int16_t *qc = NULL;
+  if (N1) {
+    qa = malloc((size_t)N1 * 2 * MI); qab = malloc(N1 * 4); qb = malloc((size_t)N2 * N1); qd = malloc(N2 * 4); qc = malloc(N2 * 2);
+    if (fread(qa, 1, (size_t)N1 * 2 * MI, f) != (size_t)N1 * 2 * MI || fread(qab, 4, N1, f) != (size_t)N1 || fread(qb, 1, (size_t)N2 * N1, f) != (size_t)N2 * N1 || fread(qd, 4, N2, f) != (size_t)N2 || fread(qc, 2, N2, f) != (size_t)N2) { fprintf(stderr, "short net\n"); return 1; }
+  }
   fclose(f);
   long n; const PSV *d = mapf(argv[3], &n); long want = atol(argv[4]);
   FILE *dump = argc > 5 && !scale ? fopen(argv[5], "w") : NULL;
@@ -299,6 +370,12 @@ static int check(int argc, char **argv) {
     long long sum = 0; const int ob = obucket(&p, nb); const int16_t *w2 = w2a + (size_t)ob * 2 * h; const int32_t b2 = b2a[ob];
     for (int c = 0; c < 2; c++) for (int i = 0; i < h; i++) { int x = acc[c * h + i] < 0 ? 0 : acc[c * h + i] > QA ? QA : acc[c * h + i]; sum += (long long)x * x * w2[c * h + i]; }
     long long v = sum / QA + b2;
+    if (N1) {   /* the MLP in integers, as engine.c nueMlp */
+      int h1[256], m = 0;
+      for (int j = 0; j < N1; j++) { int z = qab[j]; const int8_t *w = qa + (size_t)j * 2 * MI; for (int i = 0; i < 2 * MI; i++) { int a = acc[(i < MI ? 0 : h - MI) + i], x = a < 0 ? 0 : a > QA ? QA : a; z += x * w[i]; } z >>= 6; h1[j] = z < 0 ? 0 : z > QA ? QA : z; }
+      for (int k = 0; k < N2; k++) { int z = qd[k]; const int8_t *w = qb + (size_t)k * N1; for (int j = 0; j < N1; j++) z += h1[j] * w[j]; z >>= 6; z = z < 0 ? 0 : z > QA ? QA : z; m += z * qc[k]; }
+      v += m;
+    }
     if (scale) { ev[shown] = (float)((double)v / (QA * QB)); sc[shown] = d[k].score / 600.f; shown++; continue; }
     printf("%.6f\n", (double)v * 600 / (QA * QB));
     if (dump) { for (int s = 0; s < 81; s++) fprintf(dump, "%d ", p.board[s]); for (int i = 0; i < 16; i++) fprintf(dump, "%d ", p.hand[i]); fprintf(dump, "%d\n", p.side); }
@@ -353,6 +430,9 @@ int main(int argc, char **argv) {
     else if (!strcmp(argv[a], "--lambda-ply")) LPLY = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--oscale")) OSCALE = atof(argv[++a]);
     else if (!strcmp(argv[a], "--ob")) OB = atoi(argv[++a]);
+    else if (!strcmp(argv[a], "--l1")) N1 = atoi(argv[++a]);
+    else if (!strcmp(argv[a], "--l2")) N2 = atoi(argv[++a]);
+    else if (!strcmp(argv[a], "--mi")) MI = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--batch")) BS = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--threads")) NTH = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--val")) valp = argv[++a];
@@ -362,6 +442,8 @@ int main(int argc, char **argv) {
   }
   if (!set_kmap(kb)) return 1;
   if (OB != 1 && OB != NB_MAX) { fprintf(stderr, "--ob: 1 or %d\n", NB_MAX); return 1; }
+  if (N1 && MI <= 0) MI = H;
+  if (N1 && (OB != 1 || N1 < 1 || N1 > 256 || N2 < 1 || N2 > 256 || MI > H || MI % 16 || N1 % 8)) { fprintf(stderr, "--l1: a multiple of 8, --l2: 1..256, --mi: a multiple of 16 up to --hidden, and not with --ob\n"); return 1; }
   FACT = KB > 1; ROWS = (long)(KB + FACT) * BASE;
   if (NTH > 256) NTH = 256; if (NTH < 1) NTH = 1;
   long N; D = mapf(data, &N); if (maxn && maxn < N) N = maxn;
@@ -377,6 +459,16 @@ int main(int argc, char **argv) {
   gW1 = malloc(NTH * sizeof(float *)); gB1 = malloc(NTH * sizeof(float *)); gW2 = malloc(NTH * sizeof(float *)); gB2 = malloc(NTH * sizeof(float *));
   touch = malloc(NTH * sizeof(uint8_t *)); tLoss = calloc(NTH, sizeof(double));
   for (int t = 0; t < NTH; t++) { gW1[t] = fz(n1); gB1[t] = fz(H); gW2[t] = fz(n2o); gB2[t] = fz(OB); touch[t] = zalloc(ROWS); }
+  if (N1) {
+    const size_t na = (size_t)N1 * 2 * MI, nb = (size_t)N2 * N1;
+    MA = fz(na); mMA = fz(na); vMA = fz(na); Ma = fz(N1); mMa = fz(N1); vMa = fz(N1); MB = fz(nb); mMB = fz(nb); vMB = fz(nb); Md = fz(N2); mMd = fz(N2); vMd = fz(N2); MC = fz(N2); mMC = fz(N2); vMC = fz(N2);
+    gMA = malloc(NTH * sizeof(float *)); gMa = malloc(NTH * sizeof(float *)); gMB = malloc(NTH * sizeof(float *)); gMd = malloc(NTH * sizeof(float *)); gMC = malloc(NTH * sizeof(float *));
+    for (int t = 0; t < NTH; t++) { gMA[t] = fz(na); gMa[t] = fz(N1); gMB[t] = fz(nb); gMd[t] = fz(N2); gMC[t] = fz(N2); }
+    /* the hidden units start inside their linear range; the last layer at zero (the evaluation starts as without the MLP) */
+    for (size_t i = 0; i < na; i++) MA[i] = randn() * 0.03f * sqrtf((float)H / MI); for (int i = 0; i < N1; i++) Ma[i] = 0.5f;
+    for (size_t i = 0; i < nb; i++) MB[i] = randn() * 0.15f; for (int i = 0; i < N2; i++) Md[i] = 0.5f;
+    fprintf(stderr, "MLP head: %d (the first %d units of each side) -> %d -> %d -> 1 beside the linear output\n", 2 * MI, MI, N1, N2);
+  }
   char ck[1100]; snprintf(ck, sizeof ck, "%s.ckpt", outp);
   int ep0 = 0, it = 0; long bres = 0, start = -1;
   if (load_ckpt(ck, &ep0, &bres, &it, &start)) fprintf(stderr, "resumed from %s: epoch %d, batch %ld\n", ck, ep0 + 1, bres);
