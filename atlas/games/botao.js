@@ -521,7 +521,7 @@
     // what the side with the ball should do now
     function taskLine() {
       if (st.shot) return tx('shootNow');
-      if (st.restart && RESTART[st.restart] && st.rem === 12) return tx(RESTART[st.restart]) + ' — ' + tx(E.canPlace(st) && human(st.pos) ? 'placeTask' : 'pick');
+      if (st.restart && RESTART[st.restart] && st.rem === 12) { const pl = E.canPlace(st) && human(st.pos); return mousey() ? tx(RESTART[st.restart]) + ' — ' + tx(pl ? 'placeTask' : 'pick') : tx(pl ? 'placeTaskT' : 'pick'); }   // (phones: the task alone, short — 2026-11-17 ユーザー：キーパーのボール表記はカット)
       if (E.canShoot(st)) return tx('canShoot');
       return tx('pick');
     }
