@@ -299,6 +299,7 @@
     // breaks first); the shooter's client is authoritative (its write carries the shot and the result), the other side plays the
     // shot back from the same start and then takes the written state. Both use the record's men scale (k) for the whole game.
     const M = ctx.mode === 'online' && ctx.online ? ctx.online : null, online = !!M, me = M ? M.me : 0;
+    if (online && T3.live) T3.live(true);   // (online: keeps playing while the window is behind; off at the end / on leaving)
     const target = online ? (M.v === 'm25' ? 25 : 0) : +ctx.size === 25 ? 25 : 0;
     const K0 = D.K0 = D.K0 || D.K;   // (the device's own scale: the lobby offers it, the game may play a larger one)
     if (online && Math.abs(M.k - D.K) > 1e-6) E.setScale(M.k);
@@ -387,7 +388,7 @@
       kick(120);
     }
     let pulseT = 0;
-    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus() || (T3.decoOn && !T3.decoOn())) return;   /* (the ring stands still while the window is not in front: no frames then) */ let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(1.12 + Math.sin((performance.now() - t0) / 230) * .1); any = true; } }); if (any) kick(80); }, 60); }
+    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !(document.hasFocus() || (T3.isLive && T3.isLive())) || (T3.decoOn && !T3.decoOn())) return;   /* (the ring stands still while the window is not in front: no frames then) */ let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(1.12 + Math.sin((performance.now() - t0) / 230) * .1); any = true; } }); if (any) kick(80); }, 60); }
 
     /* ---------- HUD ---------- */
     const css = document.createElement('style');
@@ -461,7 +462,7 @@
       // colours stood still while aiming; the board is looked up on every frame, so a board picked after this started counts too
       cancelAnimationFrame(waveT); if (stopped) return;
       const step = () => { if (stopped) return; waveT = requestAnimationFrame(step);
-        if (board && U && U.look === 'neon' && !document.hidden && document.hasFocus() && (!T3.decoOn || T3.decoOn() || document.documentElement.classList.contains('hand-drag'))) kick(160); };
+        if (board && U && U.look === 'neon' && !document.hidden && (document.hasFocus() || (T3.isLive && T3.isLive())) && (!T3.decoOn || T3.decoOn() || document.documentElement.classList.contains('hand-drag'))) kick(160); };
       waveT = requestAnimationFrame(step);
     }
 
@@ -609,6 +610,7 @@
       hud(); (R.s === 1 ? SND.win : R.s === 0 ? SND.bad : SND.good)();
       say(t(R.s === 1 ? 'res.win' : R.s === 0 ? 'res.lose' : 'res.draw'));
       const score = target ? tx('score', { a: st.score[me], b: st.score[1 - me] }) : st && st.over ? tx('board', { p: nameOf(st.winner), n: st.points }) : '';
+      if (T3.live) T3.live(false);
       later(() => ctx.onEnd({ online: true, win: R.s === 1, draw: R.s === .5, level: 0, score, why: reason ? OT(reason) : '', rt, rated: M.rated, opp: M.names[1 - me], side: me }), why === 'board' ? 1300 : 350);
     }
     function onTurn() { if (ctx.onTurn) ctx.onTurn(st.turn === 0 ? 0 : 1, { human: human(st.turn), ply }); }
@@ -785,7 +787,7 @@
       resign() { if (online) { M.resign(); return; } finish('resign'); },   // (online: the record's resignation ends it, on both sides)
       timeout() { if (online) return; finish('time'); },
       stop() { document.querySelectorAll(".bpk").forEach(e => e.remove());
-        if (online) { if (!over && M.g && M.g.status === 'play') M.resign(); M.stop(); clearInterval(olT); if (Math.abs(D.K - K0) > 1e-6) E.setScale(K0); }   // (leaving a game in progress = resigning it, as the rated games)
+        if (online) { if (!over && M.g && M.g.status === 'play') M.resign(); M.stop(); clearInterval(olT); if (T3.live) T3.live(false); if (Math.abs(D.K - K0) > 1e-6) E.setScale(K0); }   // (leaving a game in progress = resigning it, as the rated games)
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulseT);
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
