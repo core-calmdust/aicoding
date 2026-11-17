@@ -17,7 +17,7 @@
 | `backgammon-multi` | バックギャモン | ウル `ur/`・セネト `senet/`（今後：パトリ） | `backgammon/database.rules.json` |
 | `ninemens-multiplay` | モリス | マンカラ `mancala/`・コネクトフォー `connect4/`・ドット＆ボックス `dots/` | `morris/database.rules.json` |
 | `konane-multiplay` | コナネ | アマゾンズ `amazons/`（2026-11-16 追加。もとのプロジェクトはないので、公開までは「準備中」）・ルドー・パチーシ `ludo/`（2026-11-16 追加、同じく公開までは「準備中」） | `konane/database.rules.json` |
-| `connect4-multiplay`（おはじき系。旧コネクトフォーのプロジェクトを再利用、2026-11-16） | （なし） | キャロム `carrom/`・クロキノール `crokinole/`（空き2） | `shared/flick.database.rules.json` |
+| `connect4-multiplay`（表示名 **Flick-Action-Group**、2026-11-17 改名。プロジェクトIDは変わらない。おはじき系。旧コネクトフォーのプロジェクトを再利用、2026-11-16） | （なし） | キャロム `carrom/`・クロキノール `crokinole/`・フチボウ `botao/`（2026-11-17、ルール公開済み）（空き1） | `shared/flick.database.rules.json` |
 
 **手順**
 1. 上の7プロジェクトで「Realtime Database → ルール」に表のファイルの中身を全部貼って公開する（ルートのゲームの部分は今までと同じ）。
@@ -34,7 +34,7 @@
   1DB あたり 20万になり、1プロジェクトに複数のDBも持てます。
 - 新作のオンラインは専用プロジェクトを作らず、系統の近いプロジェクトに入れる（`secrules.py` の `host=('<ルートのゲーム>', '<node>')` と
   `firebase-config.js` の `window.FIREBASE_ROOT = '<node>/'`）。1つのDBは4ゲームまで（`secrules.py` が超えると止まる）。
-- **おはじき系（`connect4-multiplay`、2026-11-16）**：キャロム・クロキノールのオンライン（大百科の3D卓、`atlas/online3d.js`）。ルートにゲームのない
+- **おはじき系（`connect4-multiplay`＝表示名 Flick-Action-Group、2026-11-16）**：キャロム・クロキノール・フチボウのオンライン（大百科の3D卓、`atlas/online3d.js`）。ルートにゲームのない
   データベース（`secrules.py` の `HOSTS = {'flick': 'shared/flick.database.rules.json'}`。各ゲームは `host=('flick', '<node>')`）。
   手順（**モリスの系統＝`ninemens-multiplay` のルールを公開して、コネクトフォーが移ったあとに**）：
   1. `connect4-multiplay` の「Realtime Database → データ」でルートの︙から**データを全部削除**する（旧コネクトフォーのレート・対局。コネクトフォーは ninemens-multiplay の `connect4/` で 1500 からやり直し済み）。
