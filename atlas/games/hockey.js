@@ -16,7 +16,7 @@
   const LG = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   // [ja, en, zh, zh-TW, ko, es, fr, pt, de, ru, tr, id, hi, ar]
   const S = {
-    len: ['何点先取', 'Goals to win', '先得分数', '先得分數', '선취 점수', 'Goles para ganar', 'Buts pour gagner', 'Gols para vencer', 'Tore zum Sieg', 'Голов до победы', 'Kazanmak için gol', 'Gol untuk menang', 'जीत के लिए गोल', 'أهداف للفوز'],
+    len: ['点数', 'Goals to win', '先得分数', '先得分數', '선취 점수', 'Goles para ganar', 'Buts pour gagner', 'Gols para vencer', 'Tore zum Sieg', 'Голов до победы', 'Kazanmak için gol', 'Gol untuk menang', 'जीत के लिए गोल', 'أهداف للفوز'],
     npt: ['{n}点', '{n}', '{n}分', '{n}分', '{n}점', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}'],
     first: ['{n}点先取', 'First to {n}', '先得{n}分', '先得{n}分', '{n}점 선취', 'A {n} goles', 'En {n} buts', 'Até {n} gols', 'Bis {n} Tore', 'До {n} голов', '{n} gole kadar', 'Sampai {n} gol', '{n} गोल तक', 'حتى {n} أهداف'],
     pickB: ['盤を選ぶ', 'Choose a board', '选择台面', '選擇台面', '보드 선택', 'Elige un tablero', 'Choisis un plateau', 'Escolha um tabuleiro', 'Brett wählen', 'Выбери поле', 'Masa seç', 'Pilih papan', 'बोर्ड चुनें', 'اختر اللوحة'],
@@ -93,9 +93,21 @@
   const li = l => Math.max(0, LG.indexOf(l)), tr = (k, l) => { const a = S[k]; return a ? (a[li(l)] || a[1]) : k; };
   const modeName = (m, l) => ((M[m] || M.classic)[li(l)] || M[m][1]);
   function levelInfo(n, lang) { const b = n <= 3 ? 0 : n <= 8 ? 1 : n <= 14 ? 2 : 3; return { name: 'Lv.' + n, desc: (LVD[lang] || LVD.en)[b], who: (WHO[lang] || WHO.en)[b] }; }
-  const SIZES = [5, 7, 10];
-  const sizeName = (z, l) => tr('npt', l).replace('{n}', z);
+  // 操作 (2026-11-17 ユーザー：マウス（1人用）／キーボード／ゲームパッドから選ぶ): the card's first row (adapter.rule), and the
+  // size value says both — control × 100 + goals (mouse 5 / 7 / 10, keyboard 105 …, gamepad 205 …)
+  const GOALS = [5, 7, 10], CTRL = ['mouse', 'key', 'pad'];
+  const SIZES = [].concat(...CTRL.map((c, i) => GOALS.map(n => i * 100 + n)));
+  const sizeName = (z, l) => tr('npt', l).replace('{n}', z % 100);
   const sizeLabel = l => tr('len', l);
+  const CTRL_T = {
+    ja: ['操作', 'マウス（1人用）', 'キーボード', 'ゲームパッド'], en: ['Controls', 'Mouse (1 player)', 'Keyboard', 'Gamepad'], zh: ['操作', '鼠标（单人）', '键盘', '手柄'], 'zh-TW': ['操作', '滑鼠（單人）', '鍵盤', '手把'],
+    ko: ['조작', '마우스(1인용)', '키보드', '게임패드'], es: ['Controles', 'Ratón (1 jugador)', 'Teclado', 'Mando'], fr: ['Commandes', 'Souris (1 joueur)', 'Clavier', 'Manette'], pt: ['Controles', 'Mouse (1 jogador)', 'Teclado', 'Controle'],
+    de: ['Steuerung', 'Maus (1 Spieler)', 'Tastatur', 'Gamepad'], ru: ['Управление', 'Мышь (1 игрок)', 'Клавиатура', 'Геймпад'], tr: ['Kontrol', 'Fare (1 oyuncu)', 'Klavye', 'Oyun kolu'], id: ['Kontrol', 'Mouse (1 pemain)', 'Keyboard', 'Gamepad'],
+    hi: ['नियंत्रण', 'माउस (1 खिलाड़ी)', 'कीबोर्ड', 'गेमपैड'], ar: ['التحكم', 'الفأرة (لاعب واحد)', 'لوحة المفاتيح', 'ذراع التحكم'],
+  };
+  const ct = (l, i) => (CTRL_T[l] || CTRL_T.en)[i];
+  const rule = { label: l => ct(l, 0), ownLabel: true, list: CTRL, name: (v, l) => ct(l, CTRL.indexOf(v) + 1),
+    sizes: v => GOALS.map(n => Math.max(0, CTRL.indexOf(v)) * 100 + n), size0: v => Math.max(0, CTRL.indexOf(v)) * 100 + 7, of: z => CTRL[Math.floor(z / 100)] || 'mouse' };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   /* ---------- sounds (WebAudio, the portal's sound switch) ---------- */
@@ -123,7 +135,13 @@
 
   function start(ctx) {
     const T3 = ctx.Table3D, E = window.HockeyEngine, D = E.DIM, lang = ctx.lang;
-    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), target = SIZES.includes(+ctx.size) ? +ctx.size : 7;
+    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), size = SIZES.includes(+ctx.size) ? +ctx.size : 7, target = size % 100;
+    // the controls (2026-11-17): 0 mouse (1 player only — two players with the mouse play by keyboard), 1 keyboard, 2 gamepad.
+    // Keyboard / gamepad mallets move at a held speed (not the old near-instant jump), Space (2P right: < >, pad X / A) slows them
+    let ctrl = Math.floor(size / 100); if (pvp && ctrl === 0) ctrl = 1;
+    const mouseCtl = ctrl === 0;
+    // the AI against keys / a pad: a little gentler than against the mouse (a mouse swings much faster)
+    const aiLv = mouseCtl ? level : Math.max(1, Math.round(level * .85));
     // the touchpad note on the controls card (PCs): a heading line, then how — like carrom / crokinole
     const PADT = [['ノートPCのタッチパッドなら：', '指をすべらせるだけでパッドが動く（クリック不要）'], ['On a laptop touchpad:', 'just glide a finger and the mallet follows (no clicking)'], ['笔记本触控板：', '手指滑动即可移动球拍（不用点击）'], ['筆電觸控板：', '手指滑動即可移動球拍（不用點擊）'], ['노트북 터치패드라면:', '손가락을 미끄러뜨리기만 하면 패드가 움직인다 (클릭 불필요)'], ['Con el panel táctil del portátil:', 'desliza el dedo y el mazo te sigue (sin clic)'], ['Sur le pavé tactile d’un portable :', 'glisse le doigt, le maillet suit (sans clic)'], ['No touchpad do notebook:', 'deslize o dedo e o batedor acompanha (sem clicar)'], ['Mit dem Touchpad am Laptop:', 'einfach den Finger gleiten lassen, der Schläger folgt (ohne Klick)'], ['На тачпаде ноутбука:', 'просто веди пальцем — бита следует (без щелчка)'], ['Dizüstü dokunmatik yüzeyde:', 'parmağını kaydır, tokmak takip eder (tıklama yok)'], ['Dengan touchpad laptop:', 'cukup geser jari, pemukul mengikuti (tanpa klik)'], ['लैपटॉप टचपैड पर:', 'बस उँगली फिसलाओ, मैलेट पीछे-पीछे चलेगा (क्लिक नहीं)'], ['على لوحة لمس الحاسوب المحمول:', 'مرّر إصبعك فقط وتتبعه المضرب (بلا نقر)']];
     const BKT = ['もどる', 'Back', '返回', '返回', '돌아가기', 'Volver', 'Retour', 'Voltar', 'Zurück', 'Назад', 'Geri', 'Kembali', 'वापस', 'رجوع'];
@@ -331,7 +349,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     let lastM = null;
     // (2026-11-12) the pointer is locked while a match is on (Pointer Lock): the moves keep coming at the screen's edge too — a
     // touchpad stroke that reached the bottom of the monitor left the mallet unable to go further back. Esc frees it (and pauses).
-    const canLock = !pvp && !!ctx.el.requestPointerLock && matchMedia('(hover:hover) and (pointer:fine)').matches;
+    const canLock = !pvp && mouseCtl && !!ctx.el.requestPointerLock && matchMedia('(hover:hover) and (pointer:fine)').matches;
     const locked = () => document.pointerLockElement === ctx.el;
     const lock = () => { if (!canLock || locked()) return; try { const r = ctx.el.requestPointerLock({ unadjustedMovement: false }); if (r && r.catch) r.catch(() => {}); } catch (e) {} };
     const unlock = () => { if (locked()) try { document.exitPointerLock(); } catch (e) {} };
@@ -364,6 +382,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     }
     function onMove(e) {
       if (phase !== 'play') { lastM = null; return; }
+      if (!mouseCtl && e.pointerType === 'mouse') return;   // (keyboard / gamepad play: the mouse does not steer)
       if (locked() && !pvp) { if (e.pointerType === 'mouse' || !e.pointerType) onLocked(e); return; }
       if (e.pointerType === 'mouse' && !ptr.has(e.pointerId) && !pvp) {
         const prev = lastM; lastM = { clientX: e.clientX, clientY: e.clientY };
@@ -393,11 +412,14 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     addEventListener('wheel', noWheel, { capture: true, passive: false });
     const curCss = document.createElement('style'); curCss.textContent = 'html.hk-play #gl,html.hk-play #gl *,html.hk-play #bv canvas{cursor:none!important}'; document.head.appendChild(curCss);
     const keys = new Set(), keyUsed = [false, false], src = ['', ''];
-    const KEYMAP = pvp ? { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [1, 0, -1], ArrowDown: [1, 0, 1], ArrowLeft: [1, -1, 0], ArrowRight: [1, 1, 0] }
-      : { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [0, 0, -1], ArrowDown: [0, 0, 1], ArrowLeft: [0, -1, 0], ArrowRight: [0, 1, 0] };
+    // keys: 1 player — WASD or the arrows, Space slow. Two players by keyboard — left (red): WASD + Space, right (yellow): the
+    // arrows + < / >. Keyboard vs gamepad — the keyboard (WASD or arrows + Space) is red, the pad (stick / d-pad, X or A slow) yellow
+    const K1 = { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [0, 0, -1], ArrowDown: [0, 0, 1], ArrowLeft: [0, -1, 0], ArrowRight: [0, 1, 0] };
+    const KEYMAP = pvp && ctrl === 1 ? { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [1, 0, -1], ArrowDown: [1, 0, 1], ArrowLeft: [1, -1, 0], ArrowRight: [1, 1, 0] } : K1;
+    const SLOWKEY = pvp && ctrl === 1 ? { Space: 0, Comma: 1, Period: 1 } : { Space: 0 };
     const onKey = e => {
       if (e.target && /input|textarea/i.test(e.target.tagName)) return;
-      if (KEYMAP[e.code]) { if (e.type === 'keydown') keys.add(e.code); else keys.delete(e.code); e.preventDefault(); return; }
+      if (KEYMAP[e.code] || SLOWKEY[e.code] != null) { if (e.type === 'keydown') keys.add(e.code); else keys.delete(e.code); e.preventDefault(); return; }
       if (e.type === 'keydown' && (e.code === 'KeyP' || e.code === 'Escape') && phase === 'play') { paused ? resume() : pause(); }
     };
     addEventListener('keydown', onKey); addEventListener('keyup', onKey);
@@ -405,22 +427,33 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     // screen directions → field directions (the sideways table is turned a quarter: SW = the turn's sign, set by a test)
     const SW = 1;
     function scr2field(dx, dy) { return sideways() ? [SW * dy, -SW * dx] : [dx, dy]; }
+    // a held mallet: it runs at up to KV cm/s (KSLOW while slowed), reaching it in a fraction of a second, and stops as quickly
+    // (2026-11-17 ユーザー：キーボード入力が高速すぎて機能していない — it used to leap 360 cm/s at once across a 62 cm table)
+    const KV = 115, KSLOW = 42, KACC = 1000, kv = [[0, 0], [0, 0]];
+    const held = [!mouseCtl, pvp];   // (the sides steered by keys / a pad all the time; with the mouse the keys still help side 0)
+    const padSide = !pvp ? 0 : ctrl === 2 ? 1 : -1;   // (two players by keyboard: no pad)
     function axes(dt) {
-      const sp = 60;   // (the target leads the mallet by sp·dt·6 cm: about 360 cm/s at full deflection)
-      const vel = [[0, 0], [0, 0]];
-      keys.forEach(c => { const [side, dx, dy] = KEYMAP[c]; vel[side][0] += dx; vel[side][1] += dy; });
-      let pads = []; try { pads = [...(navigator.getGamepads ? navigator.getGamepads() : [])].filter(Boolean); } catch (e) {}
-      pads.forEach((gp, i) => {
-        const side = pvp ? (pads.length === 1 ? 1 : i % 2) : 0;
-        let ax = gp.axes[0] || 0, ay = gp.axes[1] || 0; const dz = .16; if (Math.hypot(ax, ay) < dz) { ax = 0; ay = 0; }
-        const b = gp.buttons || []; if (b[14] && b[14].pressed) ax = -1; if (b[15] && b[15].pressed) ax = 1; if (b[12] && b[12].pressed) ay = -1; if (b[13] && b[13].pressed) ay = 1;
-        if (ax || ay) { vel[side][0] += ax; vel[side][1] += ay; }
-      });
+      const dir = [[0, 0], [0, 0]], slow = [false, false], act = [false, false];
+      keys.forEach(c => { if (SLOWKEY[c] != null) { slow[SLOWKEY[c]] = true; return; } const k = KEYMAP[c]; if (!k) return; dir[k[0]][0] += k[1]; dir[k[0]][1] += k[2]; act[k[0]] = true; });
+      if (padSide >= 0) {
+        let pads = []; try { pads = [...(navigator.getGamepads ? navigator.getGamepads() : [])].filter(Boolean); } catch (e) {}
+        pads.forEach(gp => {
+          let ax = gp.axes[0] || 0, ay = gp.axes[1] || 0; const dz = .16; if (Math.hypot(ax, ay) < dz) { ax = 0; ay = 0; }
+          const b = gp.buttons || []; if (b[14] && b[14].pressed) ax = -1; if (b[15] && b[15].pressed) ax = 1; if (b[12] && b[12].pressed) ay = -1; if (b[13] && b[13].pressed) ay = 1;
+          if ((b[0] && b[0].pressed) || (b[2] && b[2].pressed)) slow[padSide] = true;
+          if (ax || ay) { dir[padSide][0] += ax; dir[padSide][1] += ay; act[padSide] = true; }
+        });
+      }
       for (let side = 0; side < 2; side++) {
-        const [vx, vy] = vel[side]; if (!vx && !vy) continue;
-        keyUsed[side] = true; src[side] = 'key';
-        const m = s.mal[side], [fx, fy] = scr2field(vx, vy), l = Math.max(1, Math.hypot(fx, fy)), k = sp * dt * 6;
-        tgt[side] = { tx: m.x + fx / l * k, ty: m.y + fy / l * k };
+        if (!held[side] && !act[side] && !kv[side][0] && !kv[side][1]) continue;
+        const [vx, vy] = dir[side], n = Math.hypot(vx, vy), mag = Math.min(1, n), [fx, fy] = n ? scr2field(vx / n, vy / n) : [0, 0];
+        const want = mag * (slow[side] ? KSLOW : KV), tx = fx * want, ty = fy * want, v = kv[side];
+        let ax = tx - v[0], ay = ty - v[1]; const al = Math.hypot(ax, ay), lim = KACC * 1.6 * dt; if (al > lim) { ax *= lim / al; ay *= lim / al; }
+        v[0] += ax; v[1] += ay;
+        if (act[side]) { keyUsed[side] = true; src[side] = 'key'; }
+        const m = s.mal[side], x = m.x + v[0] * dt, y = m.y + v[1] * dt;
+        tgt[side] = E.clampXY ? E.clampXY(s, side, x, y) : { tx: x, ty: y };
+        const t = tgt[side]; if (Math.abs(t.tx - x) > 1e-3) v[0] = 0; if (Math.abs(t.ty - y) > 1e-3) v[1] = 0;   // (stopped by the rail / the centre line)
       }
     }
     // the mode menu with a gamepad: stick / d-pad to choose, A (or Start) to begin
@@ -437,7 +470,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
 
     /* ---------- the mode menu ---------- */
     let menuEl = null;
-    let howOff = false; try { howOff = localStorage.getItem('atlas-hockey-howto') === 'off'; } catch (e) {}
+    const HOWK_KEY = 'atlas-hockey-howto' + (mouseCtl ? '' : '-' + CTRL[ctrl] + (pvp ? '2' : ''));   // (each control has its own card: 2026-11-17)
+    let howOff = false; try { howOff = localStorage.getItem(HOWK_KEY) === 'off'; } catch (e) {}
     function pickMode(m) { setLook(m); if (menuEl) { menuEl.querySelectorAll('[data-m]').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); const d = menuEl.querySelector('.sel'); if (d) d.textContent = boardTxt(m, lang)[1]; } SND.click(); }
     function showMenu() {
       phase = 'menu';
@@ -453,10 +487,10 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     function begin() {
       lock();   // (the 試合開始 click: the pointer is held for the match)
       if (!menuEl) return;
-      const nv = menuEl.querySelector('#hkNever'); if (nv && nv.checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} }
+      const nv = menuEl.querySelector('#hkNever'); if (nv && nv.checked) { howOff = true; try { localStorage.setItem(HOWK_KEY, 'off'); } catch (e) {} }
       menuEl.remove(); menuEl = null; mode = look;
       // (the pace grows with the AI level; 2 players: a little brisker)
-      s = E.newMatch({ board: look, target, first: 0, speed: pvp ? 1.2 : 1 + .4 * (level - 1) / 19 }); setupMode(); hud(); sync(performance.now()); kick(300); barFit();
+      s = E.newMatch({ board: look, target, first: 0, speed: pvp ? (mouseCtl ? 1.2 : 1.05) : (1 + .4 * (aiLv - 1) / 19) * (mouseCtl ? 1 : .92) }); setupMode(); hud(); sync(performance.now()); kick(300); barFit();
       phase = 'count'; let n = 3;
       const tick = () => { if (stopped) return; if (n > 0) { big(String(n)); SND.beep(false); n--; later(tick, 600); } else { big('GO!', 'g', 600); SND.beep(true); phase = 'play'; document.documentElement.classList.add('hk-play'); last = performance.now(); loop(last); } };
       tick();
@@ -464,17 +498,35 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     // (2026-11-12) the pointer lock: told on the controls card (mouse)
     const ESCT = ["ESCで一時停止、クリックで再開。", "ESC pauses, a click resumes.", "按 ESC 暂停，点击继续。", "按 ESC 暫停，點擊繼續。", "ESC로 일시 정지, 클릭하면 재개.", "ESC pausa; clic para seguir.", "Échap met en pause ; clic pour reprendre.", "ESC pausa; clique para continuar.", "ESC pausiert, Klick setzt fort.", "ESC — пауза, щелчок — продолжить.", "ESC duraklatır; devam için tıkla.", "ESC menjeda; klik untuk lanjut.", "ESC से रुकता है; जारी रखने के लिए क्लिक करें।", "ESC للإيقاف المؤقت، وانقر للمتابعة."];   // (2026-11-13: only what to do — no note about the cursor)
     // (2026-11-10) the controls first (until 'don't show again'), then the board menu
+    // (2026-11-17) the keys for the keyboard / gamepad controls: [1P keyboard, 2P left, 2P right, 2P keyboard side, 2P pad side, 1P pad]
+    const KEYT = {
+      ja: ['WASD か矢印キーで移動。スペースを押している間はゆっくり', '左（赤）：WASDで移動、スペースでゆっくり', '右（黄）：矢印キーで移動、< か > でゆっくり', 'キーボード（赤）：WASD か矢印キーで移動、スペースでゆっくり', 'ゲームパッド（黄）：スティックか十字ボタンで移動、X か A でゆっくり', 'スティックか十字ボタンで移動。X か A を押している間はゆっくり'],
+      en: ['WASD or the arrow keys to move; hold Space to go slowly', 'Left (red): WASD to move, Space to go slowly', 'Right (yellow): arrow keys to move, < or > to go slowly', 'Keyboard (red): WASD or arrows to move, Space to go slowly', 'Gamepad (yellow): stick or d-pad to move, X or A to go slowly', 'Stick or d-pad to move; hold X or A to go slowly'],
+      zh: ['WASD 或方向键移动，按住空格键慢速移动', '左（红）：WASD 移动，空格键慢速', '右（黄）：方向键移动，< 或 > 慢速', '键盘（红）：WASD 或方向键移动，空格键慢速', '手柄（黄）：摇杆或十字键移动，X 或 A 慢速', '摇杆或十字键移动，按住 X 或 A 慢速移动'],
+      'zh-TW': ['WASD 或方向鍵移動，按住空白鍵慢速移動', '左（紅）：WASD 移動，空白鍵慢速', '右（黃）：方向鍵移動，< 或 > 慢速', '鍵盤（紅）：WASD 或方向鍵移動，空白鍵慢速', '手把（黃）：搖桿或十字鍵移動，X 或 A 慢速', '搖桿或十字鍵移動，按住 X 或 A 慢速移動'],
+      ko: ['WASD나 방향키로 이동, 스페이스를 누르는 동안 천천히', '왼쪽(빨강): WASD로 이동, 스페이스로 천천히', '오른쪽(노랑): 방향키로 이동, < 나 > 로 천천히', '키보드(빨강): WASD나 방향키로 이동, 스페이스로 천천히', '게임패드(노랑): 스틱이나 십자 버튼으로 이동, X나 A로 천천히', '스틱이나 십자 버튼으로 이동, X나 A를 누르는 동안 천천히'],
+      es: ['WASD o las flechas para moverte; mantén Espacio para ir despacio', 'Izquierda (rojo): WASD para moverte, Espacio para ir despacio', 'Derecha (amarillo): flechas para moverte, < o > para ir despacio', 'Teclado (rojo): WASD o flechas para moverte, Espacio para ir despacio', 'Mando (amarillo): stick o cruceta para moverte, X o A para ir despacio', 'Stick o cruceta para moverte; mantén X o A para ir despacio'],
+      fr: ['ZQSD/WASD ou les flèches pour bouger ; maintiens Espace pour ralentir', 'Gauche (rouge) : WASD pour bouger, Espace pour ralentir', 'Droite (jaune) : flèches pour bouger, < ou > pour ralentir', 'Clavier (rouge) : WASD ou flèches pour bouger, Espace pour ralentir', 'Manette (jaune) : stick ou croix pour bouger, X ou A pour ralentir', 'Stick ou croix pour bouger ; maintiens X ou A pour ralentir'],
+      pt: ['WASD ou as setas para mover; segure Espaço para ir devagar', 'Esquerda (vermelho): WASD para mover, Espaço para ir devagar', 'Direita (amarelo): setas para mover, < ou > para ir devagar', 'Teclado (vermelho): WASD ou setas para mover, Espaço para ir devagar', 'Controle (amarelo): analógico ou direcional para mover, X ou A para ir devagar', 'Analógico ou direcional para mover; segure X ou A para ir devagar'],
+      de: ['WASD oder Pfeiltasten zum Bewegen; Leertaste halten für langsam', 'Links (rot): WASD bewegen, Leertaste langsam', 'Rechts (gelb): Pfeiltasten bewegen, < oder > langsam', 'Tastatur (rot): WASD oder Pfeile bewegen, Leertaste langsam', 'Gamepad (gelb): Stick oder Steuerkreuz bewegen, X oder A langsam', 'Stick oder Steuerkreuz zum Bewegen; X oder A halten für langsam'],
+      ru: ['WASD или стрелки — движение; удерживайте пробел, чтобы двигаться медленно', 'Слева (красный): WASD — движение, пробел — медленно', 'Справа (жёлтый): стрелки — движение, < или > — медленно', 'Клавиатура (красный): WASD или стрелки, пробел — медленно', 'Геймпад (жёлтый): стик или крестовина, X или A — медленно', 'Стик или крестовина — движение; удерживайте X или A, чтобы медленно'],
+      tr: ['WASD veya ok tuşlarıyla hareket; yavaşlamak için Boşluk’u basılı tut', 'Sol (kırmızı): WASD ile hareket, Boşluk ile yavaş', 'Sağ (sarı): ok tuşlarıyla hareket, < veya > ile yavaş', 'Klavye (kırmızı): WASD veya oklar ile hareket, Boşluk ile yavaş', 'Oyun kolu (sarı): çubuk veya yön tuşlarıyla hareket, X veya A ile yavaş', 'Çubuk veya yön tuşlarıyla hareket; yavaşlamak için X veya A’yı basılı tut'],
+      id: ['WASD atau tombol panah untuk bergerak; tahan Spasi untuk pelan', 'Kiri (merah): WASD bergerak, Spasi untuk pelan', 'Kanan (kuning): tombol panah bergerak, < atau > untuk pelan', 'Keyboard (merah): WASD atau panah bergerak, Spasi untuk pelan', 'Gamepad (kuning): stik atau D-pad bergerak, X atau A untuk pelan', 'Stik atau D-pad untuk bergerak; tahan X atau A untuk pelan'],
+      hi: ['WASD या तीर कुंजियों से चलाएँ; धीरे चलाने के लिए स्पेस दबाए रखें', 'बाएँ (लाल): WASD से चलाएँ, स्पेस से धीरे', 'दाएँ (पीला): तीर कुंजियों से चलाएँ, < या > से धीरे', 'कीबोर्ड (लाल): WASD या तीर से चलाएँ, स्पेस से धीरे', 'गेमपैड (पीला): स्टिक या डी-पैड से चलाएँ, X या A से धीरे', 'स्टिक या डी-पैड से चलाएँ; धीरे के लिए X या A दबाए रखें'],
+      ar: ['WASD أو الأسهم للتحريك، واضغط مطوّلًا على المسافة للإبطاء', 'اليسار (الأحمر): WASD للتحريك، والمسافة للإبطاء', 'اليمين (الأصفر): الأسهم للتحريك، و< أو > للإبطاء', 'لوحة المفاتيح (الأحمر): WASD أو الأسهم، والمسافة للإبطاء', 'ذراع التحكم (الأصفر): العصا أو الأزرار الاتجاهية، وX أو A للإبطاء', 'العصا أو الأزرار الاتجاهية للتحريك، واضغط مطوّلًا على X أو A للإبطاء'],
+    };
     function howFirst() {
       if (howOff) { showMenu(); return; }
       // (2026-11-10) the same card as carrom / crokinole: title, the steps with round icons, 'don't show again', OK
       const H = HOW[lang] || HOW.en, mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
       const dev = (H[1].split(/[／·・|]/).map(x => x.trim()).filter(Boolean)[mouse ? 0 : 1] || H[1]).trim();
-      const steps = [['🏒', H[0]], [mouse ? '🖱' : '👆', dev]].concat(mouse ? [['⌨', H[2]], ['⎋', ESCT[li(lang)] || ESCT[1]]] : []).concat([['⚡', H[3]]]);
+      const KT = (KEYT[lang] || KEYT.en), kl = !mouseCtl ? (pvp ? (ctrl === 1 ? [['⌨', KT[1]], ['⌨', KT[2]]] : [['⌨', KT[3]], ['🎮', KT[4]]]) : [[ctrl === 2 ? '🎮' : '⌨', KT[ctrl === 2 ? 5 : 0]]]) : null;
+      const steps = kl ? [['🏒', H[0]]].concat(kl, [['⚡', H[3]]]) : [['🏒', H[0]], [mouse ? '🖱' : '👆', dev]].concat(mouse ? [['⌨', H[2]], ['⎋', ESCT[li(lang)] || ESCT[1]]] : []).concat([['⚡', H[3]]]);
       const el = document.createElement('div'); el.className = 'hkhw'; el.dir = lang === 'ar' ? 'rtl' : 'ltr'; menuEl = null;
-      el.innerHTML = `<div class="hkhw-c" role="dialog" aria-modal="true"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2><ol>${steps.map(([ic, x]) => `<li><i>${ic}</i><span>${esc(x)}</span></li>`).join('')}</ol>${mouse ? `<p class="u pad">💻 <b>${esc((PADT[li(lang)] || PADT[1])[0])}</b><br>${esc((PADT[li(lang)] || PADT[1])[1])}</p>` : ''}<label><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="ok">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
+      el.innerHTML = `<div class="hkhw-c" role="dialog" aria-modal="true"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2><ol>${steps.map(([ic, x]) => `<li><i>${ic}</i><span>${esc(x)}</span></li>`).join('')}</ol>${mouse && mouseCtl ? `<p class="u pad">💻 <b>${esc((PADT[li(lang)] || PADT[1])[0])}</b><br>${esc((PADT[li(lang)] || PADT[1])[1])}</p>` : ''}<label><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="ok">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
       ['pointerdown', 'pointermove', 'pointerup'].forEach(k => el.addEventListener(k, e => e.stopPropagation()));
       document.body.appendChild(el); howEl = el;
-      el.querySelector('.ok').onclick = () => { if (el.querySelector('#hkNever').checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} } el.remove(); howEl = null; if (!stopped) showMenu(); };
+      el.querySelector('.ok').onclick = () => { if (el.querySelector('#hkNever').checked) { howOff = true; try { localStorage.setItem(HOWK_KEY, 'off'); } catch (e) {} } el.remove(); howEl = null; if (!stopped) showMenu(); };
     }
     let howEl = null;
     howFirst();
@@ -494,7 +546,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       const dt = Math.min(.034, Math.max(0, (now - last) / 1000)); last = now;
       if (paused || document.hidden) return;
       axes(dt);
-      const inp = [tgt[0], pvp ? tgt[1] : E.aiTarget(s, 1, level, mem, dt)];
+      const inp = [tgt[0], pvp ? tgt[1] : E.aiTarget(s, 1, aiLv, mem, dt)];
       E.step(s, dt, inp);
       for (const e of s.ev) onEvent(e);
       sync(now); kick(120);
@@ -547,5 +599,5 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.hockey = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 7, sizeLabel, sizeName, levelInfo, start, MODE_TXT: M, ICON, modeName, SND };
+  window.Atlas3D.hockey = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, mx: true, rule, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 7, sizeLabel, sizeName, levelInfo, start, MODE_TXT: M, ICON, modeName, SND };
 })();
