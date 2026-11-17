@@ -2288,6 +2288,7 @@
     rulesFromList = fromList === true;
     if (pend3d) { pend3d.then(() => startRules(fromList)); return; }   // the board isn't on the table yet
     const g = bvGame; stopSession();
+    try { localStorage.setItem('aicoding-' + g.id + '-rules-seen', '1'); } catch (e) {}   // (2026-11-17: opening the 3D rules course counts as 学んだ for every game — some courses never set it)
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasRules[g.id].start({ el: $('gl'), Table3D, lang, panel: $('bv'),
       onStart: () => { stopSession(); if (!FULL_SKIN[g.id] && !(window.Atlas3D && Atlas3D[g.id])) { location.href = '../' + g.href; return; } startPlay(Atlas3D[g.id] && Atlas3D[g.id].table ? 'table' : undefined); },   // (a game without a table or a full skin: its own page)
