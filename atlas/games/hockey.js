@@ -192,7 +192,7 @@
 .hkhw ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
 .hkhw li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}
 .hkhw li i{flex:none;width:40px;height:40px;border-radius:50%;background:#e3edfb;color:#2f6fd0;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:20px;font-weight:900}
-.hkhw li span{white-space:normal}html .hkhw li{white-space:normal!important}
+.hkhw li span{white-space:normal}html .hkhw .hkgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:14px 0}.hkhw .hkg{border:2px solid #e3e9f6;border-radius:16px;padding:10px 12px 12px;background:#f8faff}.hkhw .hkg h3{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:16px;font-weight:900}.hkhw .hkg h3 b{width:14px;height:14px;border-radius:50%;flex:none}.hkhw .hkg h3 span{margin-inline-start:auto;font-size:13px;font-weight:800;color:#2f6fd0;background:#e3edfb;border-radius:99px;padding:3px 10px}.hkhw .hkg ol{gap:8px}.hkhw .hkg li{font-size:15px}.hkhw .hkg li i{width:32px;height:32px;font-size:16px}.hkdev .hkhw-c,.hkhw-c.wide{width:min(620px,100%)}.hkhw li{white-space:normal!important}
 .hkhw .u{margin:14px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center;line-height:1.7}
 .hkhw label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 14px;font-size:16px;font-weight:800;cursor:pointer}
 .hkhw label input{width:20px;height:20px;accent-color:#2f6fd0}
@@ -593,11 +593,15 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       const parts = (txt, ic) => txt.split(/\s*[、，,;；。،]\s*/).filter(Boolean).map((p, i) => [i === 0 ? ic : i === 1 ? '🐢' : '💥', i && lang === 'ar' ? p.replace(/^و(?=\S)/, '') : p]);
       const strip = t => t.replace(/^[^：:]*[：:]\s*/, '');
       const devLines = (d, side) => { const L = d === 'kA' ? parts(KT[0], '⌨') : d === 'kL' ? parts(strip(KT[1]), '⌨') : d === 'kR' ? parts(strip(KT[2]), '⌨') : d[0] === 'p' ? parts(KT[5], '🎮') : [['🖱', dev]];
-        if (pvp) L[0] = [L[0][0], tr(side ? 'p2' : 'p1', lang) + ' — ' + L[0][1]]; return L; };
-      const kl = !mouseCtl ? devLines(devs[0], 0).concat(pvp ? devLines(devs[1], 1) : []) : null;
-      const steps = kl ? [['🏒', H[0]]].concat(kl, [['⚡', H[3]]]) : [['🏒', H[0]], [mouse ? '🖱' : '👆', dev]].concat(mouse ? [['⌨', H[2]], ['⎋', ESCT[li(lang)] || ESCT[1]]] : []).concat([['⚡', H[3]]]);
+        if (pvp && d === 'm') L[0] = [L[0][0], strip(L[0][1])]; return L; };   // (two players: the device is in the group's head)
+      const kl = !mouseCtl && !pvp ? devLines(devs[0], 0) : null;
+      // (2026-11-17 ユーザー：選択したデバイスの操作方法を分けて見やすく) two players: one box per player, its colour, its device, its rows
+      const DT = DEVT[lang] || DEVT.en, dName = d => d === 'kA' ? DT[1] : d === 'kL' ? DT[2] : d === 'kR' ? DT[3] : d === 'm' ? DT[5] : DT[4].replace('{n}', d === 'pA' ? 1 : +d.slice(1) + 1);
+      const lr = r => `<li><i>${r[0]}</i><span>${esc(r[1])}</span></li>`;
+      const grp = pvp ? `<div class="hkgs">${[0, 1].map(side => `<div class="hkg"><h3><b style="background:${side ? '#f2c230' : '#e5493a'}"></b>${esc(tr(side ? 'p2' : 'p1', lang))}<span>${devs[side] === 'm' ? '🖱' : devs[side][0] === 'p' ? '🎮' : '⌨'} ${esc(dName(devs[side]))}</span></h3><ol>${devLines(devs[side], side).map(lr).join('')}</ol></div>`).join('')}</div>` : '';
+      const steps = pvp ? null : kl ? [['🏒', H[0]]].concat(kl, [['⚡', H[3]]]) : [['🏒', H[0]], [mouse ? '🖱' : '👆', dev]].concat(mouse ? [['⌨', H[2]], ['⎋', ESCT[li(lang)] || ESCT[1]]] : []).concat([['⚡', H[3]]]);
       const el = document.createElement('div'); el.className = 'hkhw'; el.dir = lang === 'ar' ? 'rtl' : 'ltr'; menuEl = null;
-      el.innerHTML = `<div class="hkhw-c" role="dialog" aria-modal="true"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2><ol>${steps.map(([ic, x]) => `<li><i>${ic}</i><span>${esc(x)}</span></li>`).join('')}</ol>${mouse && mouseCtl ? `<p class="u pad">💻 <b>${esc((PADT[li(lang)] || PADT[1])[0])}</b><br>${esc((PADT[li(lang)] || PADT[1])[1])}</p>` : ''}<label><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="ok">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
+      el.innerHTML = `<div class="hkhw-c${pvp ? ' wide' : ''}" role="dialog" aria-modal="true"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2>${pvp ? `<ol>${lr(['🏒', H[0]])}</ol>${grp}<ol>${lr(['⚡', H[3]])}</ol>` : `<ol>${steps.map(([ic, x]) => `<li><i>${ic}</i><span>${esc(x)}</span></li>`).join('')}</ol>`}${mouse && mouseCtl ? `<p class="u pad">💻 <b>${esc((PADT[li(lang)] || PADT[1])[0])}</b><br>${esc((PADT[li(lang)] || PADT[1])[1])}</p>` : ''}<label><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="ok">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
       ['pointerdown', 'pointermove', 'pointerup'].forEach(k => el.addEventListener(k, e => e.stopPropagation()));
       document.body.appendChild(el); howEl = el;
       el.querySelector('.ok').onclick = () => { if (el.querySelector('#hkNever').checked) { howOff = true; try { localStorage.setItem(HOWK_KEY, 'off'); } catch (e) {} } el.remove(); howEl = null; if (!stopped) showMenu(); };
