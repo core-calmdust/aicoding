@@ -481,6 +481,31 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
         const t = tgt[side]; if (Math.abs(t.tx - x) > 1e-3) v[0] = 0; if (Math.abs(t.ty - y) > 1e-3) v[1] = 0;   // (stopped by the rail / the centre line)
       }
     }
+    // the AI against keys / a pad (2026-11-17 ユーザー：BOTがキーボード・パッドでは動けない動きをしている): it moves like a held
+    // mallet too — the same top speed and pick-up, no arm swing — and it attacks (the same dash) when the puck is close in its
+    // half, more often the stronger it is. Its target still comes from the engine's AI.
+    const bv = [0, 0]; let bAtk = 0, bCd = 0, bDir = [0, 0];
+    function botKey(t, dt) {
+      const m = s.mal[1]; m.aiCap = 0;   // (moved here exactly, as a player's mallet: the engine's arm model is for the mouse game)
+      bCd = Math.max(0, bCd - dt);
+      if (bAtk > 0) {
+        bAtk = Math.max(0, bAtk - dt); bv[0] = bDir[0] * (bAtk ? ATK_V : KV); bv[1] = bDir[1] * (bAtk ? ATK_V : KV);
+      } else {
+        let near = null, nd = 1e9; (s.pucks || []).forEach(p => { const d = Math.hypot(p.x - m.x, p.y - m.y); if (d < nd) { nd = d; near = p; } });
+        const rate = .6 + 2.4 * (aiLv - 1) / 19;   // (attacks a second, when it can)
+        if (near && !bCd && near.y < -2 && nd < 13 && near.y > m.y - 3 && Math.random() < rate * dt) {
+          const l = nd || 1; bDir = [(near.x - m.x) / l, (near.y - m.y) / l]; bAtk = ATK_T; bCd = ATK_CD + .25; bv[0] = bDir[0] * ATK_V; bv[1] = bDir[1] * ATK_V;
+        } else {
+          const dx = (t ? t.tx : m.x) - m.x, dy = (t ? t.ty : m.y) - m.y, d = Math.hypot(dx, dy), want = Math.min(KV, d * 9);
+          const wx = d > 1e-3 ? dx / d * want : 0, wy = d > 1e-3 ? dy / d * want : 0;
+          let ax = wx - bv[0], ay = wy - bv[1]; const al = Math.hypot(ax, ay), lim = KACC * 1.6 * dt; if (al > lim) { ax *= lim / al; ay *= lim / al; }
+          bv[0] += ax; bv[1] += ay;
+        }
+      }
+      const x = m.x + bv[0] * dt, y = m.y + bv[1] * dt, c = E.clampXY ? E.clampXY(s, 1, x, y) : { tx: x, ty: y };
+      if (Math.abs(c.tx - x) > 1e-3) bv[0] = 0; if (Math.abs(c.ty - y) > 1e-3) bv[1] = 0;
+      return c;
+    }
     // the mode menu with a gamepad: stick / d-pad to choose, A (or Start) to begin
     let padHeld = true, padNav = 0, padRaf = 0;
     function padMenu() {
@@ -571,7 +596,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       const dt = Math.min(.034, Math.max(0, (now - last) / 1000)); last = now;
       if (paused || document.hidden) return;
       axes(dt);
-      const inp = [tgt[0], pvp ? tgt[1] : E.aiTarget(s, 1, aiLv, mem, dt)];
+      const inp = [tgt[0], pvp ? tgt[1] : !mouseCtl ? botKey(E.aiTarget(s, 1, aiLv, mem, dt), dt) : E.aiTarget(s, 1, aiLv, mem, dt)];
       E.step(s, dt, inp);
       for (const e of s.ev) onEvent(e);
       sync(now); kick(120);
