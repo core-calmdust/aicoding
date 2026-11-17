@@ -99,7 +99,7 @@
     const want = { x: x - Math.cos(a) * dd, y: y - Math.sin(a) * dd };
     if (kind === 'throw' || kind === 'corner') { const sx = Math.sign(x) || 1; if (kind === 'throw') { want.x = x + sx * dd; want.y = y; } else { want.x = x + sx * dd * .7; want.y = y + Math.sign(y) * dd * .7; } }
     const p = freeSpot(s, best, want.x, want.y); s.b[best].x = p.x; s.b[best].y = p.y;
-    s.taker = best;
+    s.taker = best; clearPath(s);
   }
   // the taker's place at a restart is the player's choice (2026-11-15 ユーザー：ボールの位置は決まっていても、蹴るコマの位置は
   // ルール上自由に決められないの？): anywhere round the ball from touching it (+0.6 cm) to TAKER_FAR away, on the table,
@@ -113,6 +113,23 @@
     if (s.restart === 'corner') return [Math.atan2(Math.sign(s.ball.y), Math.sign(s.ball.x)), Math.PI / 4];
     return null;
   }
+  // a keeper never stands in the taker's way at a restart (2026-11-17 ユーザー：プレイヤーの軌道にキーパーがいる場合は当たらない位置へ):
+  // off the line from the taker to the ball (either keeper), and off the ball's way on for 25 cm (the taker's own keeper)
+  function clearPath(s) {
+    const i = s.taker; if (i == null || !s.k || s.restart === 'pen') return;
+    const b = s.b[i], bx = s.ball.x, by = s.ball.y, d = Math.hypot(bx - b.x, by - b.y) || 1, ux = (bx - b.x) / d, uy = (by - b.y) / d;
+    const on = (k, x0, y0, x1, y1, r) => { for (let q = 0; q <= 1; q += .04) { const x = x0 + (x1 - x0) * q, y = y0 + (y1 - y0) * q; if (Math.abs(x - k.x) < KHW + r && Math.abs(y - k.y) < KHD + r) return true; } return false; };
+    const blocks = (t, k) => on(k, b.x, b.y, bx + ux * RB, by + uy * RB, RB + .4) || (t === team(i) && on(k, bx, by, bx + ux * 25, by + uy * 25, RBALL + .4));
+    for (let t = 0; t < 2; t++) {
+      const k0 = s.k[t]; if (!k0 || !blocks(t, k0)) continue;
+      let best = null;
+      for (let m = 1; m <= 40 && !best; m++) for (const sx of [1, -1]) for (const dy of [0, 1.5, -1.5, 3, -3]) {
+        const c = { k: s.k.slice(), b: s.b, ball: s.ball, restart: s.restart }, k = setKeeper(c, t, k0.x + sx * m * .75, k0.y + dy);
+        if (!blocks(t, k) && (!best || Math.hypot(k.x - k0.x, k.y - k0.y) < Math.hypot(best.x - k0.x, best.y - k0.y))) best = k;
+      }
+      if (best) s.k[t] = best;
+    }
+  }
   function setTaker(s, x, y) {
     const i = s.taker; if (i == null) return;
     let dx = x - s.ball.x, dy = y - s.ball.y, d = Math.hypot(dx, dy); if (d < .01) { dx = 0; dy = 1; d = 1; }
@@ -123,7 +140,7 @@
     }
     const r = Math.max(TAKER_NEAR, Math.min(TAKER_FAR, d)), p = freeSpot(s, i, s.ball.x + dx / d * r, s.ball.y + dy / d * r);
     if (Math.hypot(p.x - s.ball.x, p.y - s.ball.y) < RB + RBALL + .2) return;   // (freeSpot pushed it onto the ball: keep the old place)
-    s.b[i].x = p.x; s.b[i].y = p.y;
+    s.b[i].x = p.x; s.b[i].y = p.y; clearPath(s);
   }
   // the AI's taker place: a few spots round the ball, each judged by the best flick the taker then has
   function placeFor(s, level, seed) {

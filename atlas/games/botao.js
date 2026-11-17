@@ -330,7 +330,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../botao/worker.js?v=14'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../botao/worker.js?v=15'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.move || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function ask(msgO, local) {
       return new Promise(res => {
         const run = () => setTimeout(() => res(local()), 30);
@@ -734,7 +734,12 @@
       const panStart = () => { drag = { id: e.pointerId, kind: 'pan', last: { clientX: e.clientX, clientY: e.clientY } }; try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} document.documentElement.classList.add('hand-drag'); e.preventDefault(); };
       if (e.pointerType === 'mouse' && e.button !== 0) { panStart(); return; }
       if (!canAim() || !q) { if (phase !== 'anim') panStart(); return; }
-      const i = btnAt(q, e.pointerType === 'mouse' ? 1 : 3.2);
+      // a restart on a touch screen (2026-11-17 ユーザー：向き変えとキックが混ざって操作しにくい): only a press right on the taker
+      // pulls it; a drag anywhere else round the ball swings it (the taker under your finger follows the angle)
+      const ft = freeTaker() && e.pointerType !== 'mouse';
+      let i = btnAt(q, e.pointerType === 'mouse' ? 1 : 3.2);
+      if (ft && i === st.taker && Math.hypot(q.x - st.b[i].x, q.y - st.b[i].y) > D.RB + .6) i = -1;
+      if (ft && i < 0 && Math.hypot(q.x - st.ball.x, q.y - st.ball.y) < ORBIT + 26) { pdrag = true; orbitTo(q); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); return; }
       if (i >= 0) {
         if (!E.canFlick(st, i)) { toast(tx('limit3'), 'bad'); return; }
         sel = i; hintMove = null;
