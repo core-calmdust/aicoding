@@ -2175,7 +2175,11 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 
 /* (2026-11-18) phones, the short card: ルール · あそぶ + the 実績 ring; the sheet: the place's button in pink across, 2D | フル機能 (coffee) */
 .bvi .act.act2.pach{grid-template-columns:1fr auto;align-items:center}
-#bvi:has(.act.pach) #bvAchR{display:none!important}   /* (2026-11-18 ユーザー：開くと実績アイコンが二重 — the one beside あそぶ stays) */
+#bvi:has(.act.pach) #bvAchR{display:none!important}
+.ps-act > [hidden]{display:none!important}
+.bvi .act.pach.noad{display:grid!important;grid-template-columns:1fr auto;align-items:center;gap:10px}
+.bvi .act.pach.noad > :not(a.btn.big):not(#bvRec){grid-column:1 / -1}
+.bvi .act.pach.noad > a.btn.big{min-width:0;max-width:none;width:100%}   /* (2026-11-18 ユーザー：開くと実績アイコンが二重 — the one beside あそぶ stays) */
 .bvi .act.pach > #bvGo{grid-column:auto}
 .bvi .act #bvRec.inact{position:static!important;margin:0!important;box-shadow:0 4px 0 var(--line)!important;border:2px solid var(--line)!important;width:60px!important;min-width:60px!important;height:60px!important}
 .ps-act.ps3row{grid-template-columns:1fr 1fr}
@@ -2362,7 +2366,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=43"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=449"></script>
+<script src="app.js?v=450"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
