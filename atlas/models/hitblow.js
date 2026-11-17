@@ -180,10 +180,9 @@
     const top = planeTop(Lt.W - .16, Lt.L - .16, mat('hbTopM' + cfg.n + 'x' + cfg.rows, () => (() => { const tt = topTex(cfg, Lt), m = X.M({ map: tt, emissiveMap: tt, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; })()));   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
     top.position.y = BH + .002; top.receiveShadow = true; g.add(top);
     const rim = (() => {
-      const w = Lt.W / 2 - .07, d = Lt.L / 2 - .07, r = .32, pts = [];
-      const arc = (cx, cz, a0) => { for (let i = 0; i <= 6; i++) { const a = a0 + i / 6 * Math.PI / 2; pts.push(new TT.Vector3(cx + Math.cos(a) * r, 0, cz + Math.sin(a) * r)); } };
-      arc(w - r, d - r, 0); arc(-w + r, d - r, Math.PI / 2); arc(-w + r, -d + r, Math.PI); arc(w - r, -d + r, Math.PI * 1.5);
-      const t = new TT.Mesh(geo('hbRim' + cfg.n + 'x' + cfg.rows, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true), LO() ? 80 : 160, .028, 6, true)), neonMat('#7fa2ff', 1.5));
+      const w = Lt.W / 2 - .07, d = Lt.L / 2 - .07, r = .31, pts = [];
+      rimPts(pts, w, d, r);
+      const t = new TT.Mesh(geo('hbRim' + cfg.n + 'x' + cfg.rows, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length * 2, LO() ? 300 : 600), .028, 6, true)), neonMat('#7fa2ff', 1.5));
       t.position.y = BH + .01; return t;
     })();
     g.add(rim);
@@ -230,6 +229,14 @@
   // the row being made (sockets under the board's columns, the cursor ring), OK on the pins' column, and the palette (bigger gems).
   // Coordinates are the board's. userData: D (depth), z0, sock(k) → [x, z], pal(v) → [x, z], ok → [x, z, w, d], gemS (palette scale),
   // put(k, v|null), cursor(k|-1), okOn(bool), used(v, bool), off(bool)
+  // the neon line round a rounded slab (2026-11-17 user: 青いラインをボードの形状と同様に角丸に): the corners are true quarter circles
+  // (24 steps each) and the straight sides are sampled densely too, so the spline neither cuts the corners nor bulges on the sides
+  function rimPts(pts, w, d, r) {
+    const V = (x, z) => pts.push(new (T().Vector3)(x, 0, z)), side = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.ceil(L / .12)); for (let i = 1; i < n; i++) V(x0 + (x1 - x0) * i / n, z0 + (z1 - z0) * i / n); };
+    const arc = (cx, cz, a0) => { for (let i = 0; i <= 24; i++) { const a = a0 + i / 24 * Math.PI / 2; V(cx + Math.cos(a) * r, cz + Math.sin(a) * r); } };
+    arc(w - r, d - r, 0); side(w - r, d, -w + r, d); arc(-w + r, d - r, Math.PI / 2); side(-w, d - r, -w, -d + r);
+    arc(-w + r, -d + r, Math.PI); side(-w + r, -d, w - r, -d); arc(w - r, -d + r, Math.PI * 1.5); side(w, -d + r, w, d - r);
+  }
   function tray(cfg, Lt0) {
     const TT = T(), Lt = Lt0 || layout(cfg), g = new TT.Group(), BH = TOP, n = cfg.n, C = cfg.c;
     const per = C > 8 ? Math.ceil(C / 2) : C, prow = Math.ceil(C / per);
@@ -254,10 +261,9 @@
     const body = X.mesh(geo('hbTrayB' + n + 'c' + C, () => rbox(Lt.W, D, BH, .38, .08)), lacquer()); body.position.z = zc; g.add(body);
     const top = planeTop(Lt.W - .16, D - .16, mat('hbTrayT' + n + 'c' + C, () => { const m = X.M({ map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: .55, roughness: .9, envMapIntensity: .12, bump: false }); m.emissive.set(0xffffff); return m; }));
     top.position.set(0, BH + .002, zc); g.add(top);
-    const rim = (() => { const w = Lt.W / 2 - .07, d = D / 2 - .07, r = .32, pts = [];
-      const arc = (cx, cz, a0) => { for (let i = 0; i <= 6; i++) { const a = a0 + i / 6 * Math.PI / 2; pts.push(new TT.Vector3(cx + Math.cos(a) * r, 0, cz + Math.sin(a) * r)); } };
-      arc(w - r, d - r, 0); arc(-w + r, d - r, Math.PI / 2); arc(-w + r, -d + r, Math.PI); arc(w - r, -d + r, Math.PI * 1.5);
-      const t = new TT.Mesh(geo('hbTrayRim' + n + 'c' + C, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true), LO() ? 60 : 120, .028, 6, true)), neonMat('#7fa2ff', 1.5)); t.position.set(0, BH + .01, zc); return t; })();
+    const rim = (() => { const w = Lt.W / 2 - .07, d = D / 2 - .07, r = .31, pts = [];
+      rimPts(pts, w, d, r);
+      const t = new TT.Mesh(geo('hbTrayRim' + n + 'c' + C, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length * 2, LO() ? 300 : 600), .028, 6, true)), neonMat('#7fa2ff', 1.5)); t.position.set(0, BH + .01, zc); return t; })();
     g.add(rim);
     // OK: a raised key with its label (lit mint when the row is full)
     const okTex = on => X.canvasTex('hbOk' + (on ? 1 : 0), 160, 134, (c, W, H) => {
