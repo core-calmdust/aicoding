@@ -91,6 +91,7 @@
   function icon(c, W, kind, v, o) {   // the picture (or the digit) at the face's centre: o = { fill, edge, ew, glow, k (size), dx, dy }
     c.save(); c.translate(W / 2 + (o.dx || 0) * W, W / 2 + (o.dy || 0) * W);
     if (kind === 'num') {
+      o = Object.assign({}, o, { k: o.kn || Math.min(1.05, (o.k || 1) * 1.35) });   // (the digits larger than the pictures: they were too small to read, 2026-11-17 user)
       c.font = o.font ? o.font(W * .62 * (o.k || 1)) : `800 ${W * .62 * (o.k || 1)}px "Outfit", "Zen Kaku Gothic New", system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
       if (o.edge) { c.strokeStyle = o.edge; c.lineWidth = W * (o.ew || .07); c.strokeText(String(v), 0, W * .03 * (o.k || 1)); }
       if (o.glow) { c.shadowColor = o.glow; c.shadowBlur = W * .03; } c.fillStyle = o.fill; c.fillText(String(v), 0, W * .03 * (o.k || 1));
@@ -107,7 +108,7 @@
       c.fillStyle = '#fbf6ea'; for (let i = 0; i < 8; i++) { c.save(); c.translate(W / 2, W / 2); c.rotate(i / 8 * Math.PI * 2); c.fillRect(W * .38, -W * .055, W * .12, W * .11); c.restore(); }
       c.fillStyle = mix(col, '#000000', .05); c.beginPath(); c.arc(W / 2, W / 2, W * .33, 0, 7); c.fill();
       c.strokeStyle = '#fbf6ea'; c.lineWidth = W * .022; c.setLineDash([W * .05, W * .035]); c.beginPath(); c.arc(W / 2, W / 2, W * .33, 0, 7); c.stroke(); c.setLineDash([]);
-      icon(c, W, kind, v, { fill: '#ffffff', edge: 'rgba(0,0,0,.5)', ew: .12, k: .72 }); },
+      icon(c, W, kind, v, { fill: '#ffffff', edge: 'rgba(0,0,0,.5)', ew: .12, k: .72, kn: .85 }); },
     // 落書き: a coin of card with white paper glued on — a felt-pen blob of the colour, the picture on it (2026-11-17 user: コイン状で段ボールに白い紙を貼ったような)
     doodle(c, W, kind, v) { const col = colOf(kind, v), R2 = rnd(41 + v * 7); c.fillStyle = '#fbfaf4'; c.fillRect(0, 0, W, W);
       for (let i = 0; i < 260; i++) { c.fillStyle = 'rgba(120,100,60,.06)'; c.fillRect(R2() * W, R2() * W, 2, 2); }
@@ -121,20 +122,20 @@
       const bg = c.createRadialGradient(W * .45, W * .4, W * .05, W * .5, W * .5, W * .55); bg.addColorStop(0, '#fffaf0'); bg.addColorStop(1, mix(col, '#fff3dc', .78)); c.fillStyle = bg; c.fillRect(0, 0, W, W);
       c.strokeStyle = col; c.lineWidth = W * .035; c.beginPath(); c.arc(W / 2, W / 2, W * .455, 0, 7); c.stroke();
       c.save(); c.translate(W * .5, W * .47); FRUIT2D[F](c, W * .62, col); c.restore();
-      const bx = W * .72, by = W * .72, br = W * .14; c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.arc(bx + 2, by + 3, br, 0, 7); c.fill(); c.fillStyle = '#ffffff'; c.beginPath(); c.arc(bx, by, br, 0, 7); c.fill(); c.strokeStyle = col; c.lineWidth = W * .018; c.stroke();
-      icon(c, W, kind, v, { fill: mix(col, '#000000', .2), k: kind === 'num' ? .36 : .3, dx: .22, dy: .22 }); },
+      const big = kind === 'num', bx = W * (big ? .7 : .72), by = W * (big ? .7 : .72), br = W * (big ? .22 : .14); c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.arc(bx + 2, by + 3, br, 0, 7); c.fill(); c.fillStyle = '#ffffff'; c.beginPath(); c.arc(bx, by, br, 0, 7); c.fill(); c.strokeStyle = col; c.lineWidth = W * .018; c.stroke();
+      icon(c, W, kind, v, { fill: mix(col, '#000000', .25), k: .3, kn: .6, dx: .2, dy: .2 }); },
     // 暗号機: an old typewriter key — a printed paper label under a glass, in a nickel ring with a dark bezel; aged and a bit sepia
     cipher(c, W, kind, v) { const col = mix(colOf(kind, v), '#8a6a3a', .16), R2 = rnd(61 + v);
       const g = c.createRadialGradient(W * .45, W * .42, W * .02, W * .5, W * .5, W * .44); g.addColorStop(0, mix(col, '#f4e6c4', .25)); g.addColorStop(1, mix(col, '#3a2a14', .35)); c.fillStyle = g; c.fillRect(0, 0, W, W);
       for (let i = 0; i < 900; i++) { c.fillStyle = R2() < .5 ? 'rgba(60,40,10,.07)' : 'rgba(255,245,220,.06)'; c.fillRect(R2() * W, R2() * W, 1.5, 1.5); }
       c.strokeStyle = 'rgba(240,226,190,.75)'; c.lineWidth = W * .012; c.beginPath(); c.arc(W / 2, W / 2, W * .36, 0, 7); c.stroke();
-      icon(c, W, kind, v, { fill: '#f6ecd2', edge: 'rgba(40,25,8,.7)', ew: .12, k: .68 });
+      icon(c, W, kind, v, { fill: '#f6ecd2', edge: 'rgba(40,25,8,.7)', ew: .12, k: .68, kn: .85 });
       const v2 = c.createRadialGradient(W / 2, W / 2, W * .25, W / 2, W / 2, W * .45); v2.addColorStop(0, 'rgba(60,40,10,0)'); v2.addColorStop(1, 'rgba(60,40,10,.35)'); c.fillStyle = v2; c.fillRect(0, 0, W, W);
       c.fillStyle = '#121110'; c.beginPath(); c.arc(W / 2, W / 2, W * .5, 0, 7); c.arc(W / 2, W / 2, W * .43, 0, 7, true); c.fill(); },
     // 金庫: the table of a cut jewel — the colour deep in the stone, the picture etched light
     vault(c, W, kind, v) { const col = colOf(kind, v), g = c.createRadialGradient(W * .45, W * .4, W * .02, W * .5, W * .5, W * .55); g.addColorStop(0, mix(col, '#ffffff', .55)); g.addColorStop(.5, col); g.addColorStop(1, mix(col, '#000000', .45)); c.fillStyle = g; c.fillRect(0, 0, W, W);
       c.strokeStyle = 'rgba(255,255,255,.25)'; c.lineWidth = W * .01; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + Math.PI / 8; c.beginPath(); c.moveTo(W / 2, W / 2); c.lineTo(W / 2 + Math.cos(a) * W * .6, W / 2 + Math.sin(a) * W * .6); c.stroke(); }
-      icon(c, W, kind, v, { fill: 'rgba(255,255,255,.92)', edge: mix(col, '#000000', .55), ew: .1, k: .62, glow: 'rgba(255,255,255,.7)' }); },
+      icon(c, W, kind, v, { fill: 'rgba(255,255,255,.95)', edge: mix(col, '#000000', .6), ew: .12, k: .7, kn: 1.0, glow: 'rgba(255,255,255,.7)' }); },
   };
   const shade = (col, k) => mix(col, k > 0 ? '#ffffff' : '#200808', Math.abs(k));
   const blob = (c, s, col, path) => { const g = c.createRadialGradient(-s * .15, -s * .18, s * .04, 0, 0, s * .6); g.addColorStop(0, shade(col, .5)); g.addColorStop(.55, col); g.addColorStop(1, shade(col, -.35)); c.fillStyle = g; path(); c.fill(); c.strokeStyle = shade(col, -.5); c.lineWidth = s * .03; c.stroke(); };
@@ -166,9 +167,9 @@
     pear: () => geo('hbPear', () => { const TT = T(), pts = [[.001, 0], [.42, .03], [.64, .17], [.69, .36], [.62, .55], [.47, .72], [.37, .9], [.31, 1.05], [.23, 1.19], [.09, 1.29], [.001, 1.31]].map(([x, y]) => new TT.Vector2(x * R, -R * .14 + y * R)); const gl = new TT.LatheGeometry(pts, LO() ? 12 : 16), P = gl.attributes.position, uv = gl.attributes.uv; for (let i = 0; i < P.count; i++) uv.setXY(i, .5 + P.getX(i) / (1.4 * R) * .98, .5 - P.getZ(i) / (1.4 * R) * .98); uv.needsUpdate = true; gl.computeVertexNormals(); return gl; }),
     // a round brilliant (2026-11-17 user: ブリリアントカットの宝石っぽく): table · 8 star facets · 8 bezels · 16 upper girdle facets · girdle ·
     // 16 lower girdle and 8 pavilion mains to the culet — flat triangles, so each facet catches the light on its own
-    jewel: () => geo('hbJewelB', () => {
+    jewel: () => geo('hbJewelB2', () => {
       const TT = T(), N = 8, P = [], tri = (a, b, c) => P.push(...a, ...b, ...c), at = (r, y, a) => [Math.cos(a) * r, y, Math.sin(a) * r], d = Math.PI / N;
-      const yG = R * .16, yS = R * .4, yT = R * .56, rG = R * .96, rS = R * .78, rT = R * .54, yC = -R * .14, yP = R * .0;
+      const yG = R * .16, yS = R * .4, yT = R * .56, rG = R * .96, rS = R * .82, rT = R * .64, yC = -R * .14, yP = R * .0;
       for (let i = 0; i < N; i++) {
         const a = i * 2 * d, tA = at(rT, yT, a), tB = at(rT, yT, a + 2 * d), mid = at(rS, yS, a + d), g0 = at(rG, yG, a), g1 = at(rG, yG, a + d), g2 = at(rG, yG, a + 2 * d), cT = [0, yT, 0];
         tri(cT, tB, tA);                                   // the table (under the printed face)
@@ -211,7 +212,7 @@
     } else if (look === 'vault') {   // a cut jewel (2026-11-17 user: 駒は宝石をモチーフに): eight crown facets round the table, the pavilion under the girdle
       const jm = mat('hbJewel' + kind + v, () => { const c = colOf(kind, v), m = X.M({ color: c, roughness: .02, metalness: .25, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 2.6, emissive: c, emissiveIntensity: .22, flatShading: true, side: T().DoubleSide, bump: false }); m.emissive.convertSRGBToLinear(); if ('ior' in m) m.ior = 2.4; return m; });
       const body = X.mesh(PIECE_GEO.jewel(), jm); body.castShadow = true; g.add(body);
-      const table = X.mesh(PIECE_GEO.disc(R * .5, R * .56 + .004, 'jewelT2'), faceMat('vault', kind, v, { roughness: .02, clearcoat: 1, emissiveIntensity: .5, envMapIntensity: 1.6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); g.add(table);   // (lifted off the stone's table: the two had fought — the flicker)
+      const table = X.mesh(PIECE_GEO.disc(R * .6, R * .56 + .004, 'jewelT3'), faceMat('vault', kind, v, { roughness: .02, clearcoat: 1, emissiveIntensity: .5, envMapIntensity: 1.6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); g.add(table);   // (lifted off the stone's table: the two had fought — the flicker)
       // a few sparkles: tiny bright stars on the crown that twinkle as the light moves across them
       const sp = mat('hbSpark', () => new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85, depthWrite: false, toneMapped: false }));
       [[.42, .5, -.2, 1], [-.3, .52, .38, .7], [.1, .58, .42, .55]].forEach(([x, y, z, k]) => { const st = new TT.Mesh(geo('hbStar', () => { const q = new TT.PlaneGeometry(R * .26, R * .035); const q2 = q.clone(); q2.rotateZ(Math.PI / 2); const m = new TT.BufferGeometry(); const a = q.toNonIndexed().attributes.position.array, b = q2.toNonIndexed().attributes.position.array, all = new Float32Array(a.length + b.length); all.set(a); all.set(b, a.length); m.setAttribute('position', new TT.BufferAttribute(all, 3)); m.rotateX(-Math.PI / 2); return m; }), sp); st.position.set(x * R, y * R + .006, z * R); st.scale.setScalar(k); st.rotation.y = x * 3; st.renderOrder = 2; g.add(st); });
@@ -423,7 +424,7 @@
           c.strokeStyle = '#c9a24e'; c.lineWidth = 2; rr(c, x - w2 + 4, -h2 + 4, w2 * 2 - 8, h2 * 2 - 8, PX * .04); c.stroke(); c.strokeStyle = ink; c.lineWidth = 1; rr(c, x - w2 + 7, -h2 + 7, w2 * 2 - 14, h2 * 2 - 14, PX * .03); c.stroke();
           c.fillStyle = ink; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `700 ${PX * .12}px Georgia, serif`; c.fillText('?', x - w2 + PX * .09, -h2 + PX * .1); c.fillText(suit, x - w2 + PX * .09, -h2 + PX * .21);
           c.save(); c.translate(x + w2 - PX * .09, h2 - PX * .1); c.rotate(Math.PI); c.fillText('?', 0, 0); c.fillText(suit, 0, PX * .11); c.restore();
-          c.font = `italic 700 ${PX * .5}px "Cormorant Garamond", Georgia, serif`; c.lineWidth = PX * .025; c.strokeStyle = '#c9a24e'; c.strokeText('?', x, PX * .02); c.fillStyle = ink; c.fillText('?', x, PX * .02); } c.restore(); },
+          c.font = `700 ${PX * .5}px "Cormorant Garamond", Georgia, serif`; c.lineWidth = PX * .025;   /* (upright: the italic looked tilted, 2026-11-17 user) */ c.strokeStyle = '#c9a24e'; c.strokeText('?', x, PX * .02); c.fillStyle = ink; c.fillText('?', x, PX * .02); } c.restore(); },
       topM: { roughness: 1, envMapIntensity: .03, sheen: .35, sheenColor: '#2f8f55', sheenRoughness: 1 }, body: { c: '#5c1e12', r: .38, cc: .5 }, wall: { c: '#0a3a1f', r: .95 }, caseC: { c: '#161616', r: .4, m: .1 }, lidC: { c: '#1c1c1c', r: .35, m: .15 }, velvet: { c: '#5a0f18', sheen: '#ff6070' },
       trim: { k: 'metal', c: '#e3bd62' }, rim: { k: 'metal', c: '#e0b85a' }, glow: .24, chips: true, okOff: ['#14472a', '#0d331e', 'rgba(233,199,106,.75)'],
     },
@@ -464,7 +465,16 @@
         c.save(); c.translate(0, H / 2); for (let k = 0; k < n; k++) { const x = (k + .5) / n * W; FRUIT.slice(c, x, 0, PX * .78, ...FRUITS[k % FRUITS.length]); qmark(c, x, PX * .09, '#ffffff'); } c.restore();
         c.strokeStyle = '#ff8a1e'; c.lineWidth = 3; c.setLineDash([10, 7]); rr(c, 8, 8, W - 16, H - 16, PX * .14); c.stroke(); c.setLineDash([]); },
       body: { c: '#e2bf86', r: .7 }, wall: { c: '#c79a5e', r: .8 }, caseC: { c: '#c98f4a', r: .75 }, lidC: { c: '#ffd34a', r: .6 }, velvet: { c: '#7cc35a', sheen: '#d8ff9a' },
-      trim: { k: 'matte', c: '#ec3f6a' }, rim: { k: 'matte', c: '#7cc35a' }, glow: .3, okOff: ['#fff1cf', '#ffe2a6', '#c06a1e'],
+      trim: { k: 'matte', c: '#ec3f6a' }, rim: { k: 'matte', c: '#7cc35a' }, glow: .3, okOff: ['#fff1cf', '#ffe2a6', '#c06a1e'], okBody: { c: '#7cc35a', r: .6 },
+      // the OK key as the board (2026-11-17 user: OKのボタンとフォントを盤のイメージと合わせて): a cream face with a stitched green edge, an
+      // orange slice behind the letters, O in orange and K in green with a white edge; when the row is full it ripens — the face turns
+      // to orange juice and the letters go white
+      okDraw(c, W, H, on) { const g = c.createLinearGradient(0, 0, 0, H); if (on) { g.addColorStop(0, '#ffc25a'); g.addColorStop(1, '#ff8a1e'); } else { g.addColorStop(0, '#fff6df'); g.addColorStop(1, '#ffe7c2'); } c.fillStyle = g; c.fillRect(0, 0, W, H);
+        c.strokeStyle = on ? '#fff3d6' : '#7cc35a'; c.lineWidth = 5; c.setLineDash([12, 8]); rr(c, 9, 9, W - 18, H - 18, 18); c.stroke(); c.setLineDash([]);
+        c.save(); c.globalAlpha = on ? .35 : .5; FRUIT.slice(c, W / 2, H / 2, H * .82, on ? '#ffffff' : '#ff9a1e', on ? '#ffe7a0' : '#ffd27a'); c.restore();
+        FRUIT.leaf(c, W * .82, H * .2, H * .3, -.6);
+        c.font = '900 62px "Outfit", system-ui, sans-serif'; c.textBaseline = 'middle'; c.textAlign = 'left'; c.lineJoin = 'round'; const wO = c.measureText('O').width, wK = c.measureText('K').width, x0 = W / 2 - (wO + wK) / 2;
+        [['O', x0, on ? '#ffffff' : '#ff8a1e'], ['K', x0 + wO, on ? '#ffffff' : '#56b33a']].forEach(([ch, x, col]) => { c.strokeStyle = on ? '#e0661a' : '#ffffff'; c.lineWidth = 10; c.strokeText(ch, x, H / 2 + 4); c.fillStyle = col; c.fillText(ch, x, H / 2 + 4); }); },
     },
     // 暗号機: a 1920s cipher machine — an oak box, a black crackle-paint face, brass-ringed sockets and brass number plates,
     // screws in the corners; the lid shows three rotor windows
@@ -486,7 +496,7 @@
         c.save(); c.translate(0, H / 2); for (let k = 0; k < n; k++) { const x = (k + .5) / n * W, w2 = PX * .3, h2 = PX * .4; brass(c, x, 0, 0, 0); const g = c.createLinearGradient(0, -h2, 0, h2); g.addColorStop(0, '#6b5a3a'); g.addColorStop(.25, '#efe4c8'); g.addColorStop(.75, '#efe4c8'); g.addColorStop(1, '#6b5a3a'); c.fillStyle = '#b8863c'; rr(c, x - w2 - 4, -h2 - 4, w2 * 2 + 8, h2 * 2 + 8, 6); c.fill(); c.fillStyle = g; c.fillRect(x - w2, -h2, w2 * 2, h2 * 2); qmark(c, x, PX * .09, '#2a1d0e'); } c.restore();
         screw(c, 14, 14, 6); screw(c, W - 14, 14, 6); screw(c, 14, H - 14, 6); screw(c, W - 14, H - 14, 6); },
       body: { c: '#6e4524', r: .5, cc: .35 }, wall: { c: '#121110', r: .8 }, caseC: { c: '#5a381c', r: .5, cc: .3 }, lidC: { c: '#1c1b18', r: .7 }, velvet: { c: '#1d2a1f', sheen: '#6f9a70' },
-      trim: { k: 'metal', c: '#c9a24e' }, rim: { k: 'metal', c: '#c9a24e' }, glow: .42, okOff: ['#2a2723', '#151412', 'rgba(232,200,130,.8)'],
+      trim: { k: 'metal', c: '#c9a24e' }, rim: { k: 'metal', c: '#c9a24e' }, rings: { c: '#d8ae58' }, glow: .42, okOff: ['#2a2723', '#151412', 'rgba(232,200,130,.8)'],
     },
     // 金庫: a bank vault — brushed steel, rivets round the edge, chrome-ringed sockets, engraved numbers; the lid is the safe's dial
     vault: {
@@ -536,6 +546,10 @@
       t.position.y = BH + .01; return t;
     })();
     g.add(rim);
+    // cipher: the brass round each socket and pin hole is real metal (a flat torus), so it glints as the view moves
+    if (S.rings) { const rm = mat('hbRingM' + look, () => X.M({ color: S.rings.c, metalness: 1, roughness: .16, envMapIntensity: 2, bump: false }));
+      const big = geo('hbRingB', () => { const q = new TT.TorusGeometry(R + .075, .042, 4, LO() ? 18 : 26); q.rotateX(Math.PI / 2); q.scale(1, .45, 1); return q; }), small = geo('hbRingS' + pr, () => { const q = new TT.TorusGeometry(pr + .03, .02, 3, LO() ? 10 : 14); q.rotateX(Math.PI / 2); q.scale(1, .5, 1); return q; });
+      for (let r = 0; r < Lt.rows; r++) for (let k = 0; k < Lt.n; k++) { const [x, z] = Lt.slot(r, k); const o = new TT.Mesh(big, rm); o.position.set(x, BH + .006, z); g.add(o); const [px, pz] = Lt.pinPos(r, k); const q = new TT.Mesh(small, rm); q.position.set(px, BH + .004, pz); g.add(q); } }
     // casino: the row numbers are real poker chips, two stacked (2026-11-17 user: 左側のカジノチップが立体感ある方がいい)
     if (S.chips) for (let r = 0; r < Lt.rows; r++) {
       const red = !(r % 2), side = mat('hbRowChipS' + (red ? 'r' : 'k'), () => { const tx = X.canvasTex('hbRowChipSide' + (red ? 'r' : 'k'), 128, 16, (c, W, H) => { H = H || 16; c.fillStyle = red ? '#b81d28' : '#1b1b1b'; c.fillRect(0, 0, W, H); c.fillStyle = '#f4efe2'; for (let i = 0; i < 6; i++) c.fillRect(i * W / 6 + W / 24, 0, W / 12, H); }); return X.M({ map: tx, roughness: .5, bump: false }); });
@@ -620,20 +634,22 @@
     const body = X.mesh(geo('hbTrayB' + n + 'c' + C, () => rbox(Lt.W, D, BH - HOLE, .38, .08)), bodyM); body.position.z = zc; body.receiveShadow = true; g.add(body);
     const top = new TT.Mesh(plate(Lt.W - .16, D - .16, .3, Array.from({ length: n }, (_, k) => [sock(k)[0], sock(k)[1] - zc, R + .03, LO() ? 16 : 20]), 'T' + n + 'c' + C), [mat('hbTrayT' + look + n + 'c' + C, () => { const m = X.M(topOpts(S, { map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: S.glow, roughness: .9, envMapIntensity: .12, bump: false })); m.emissive.set(0xffffff); return m; }), wallM]);
     top.position.set(0, BH - HOLE, zc); top.receiveShadow = true; g.add(top);
+    if (S.rings) { const rm = mat('hbRingM' + look, () => X.M({ color: S.rings.c, metalness: 1, roughness: .16, envMapIntensity: 2, bump: false })), big = geo('hbRingB', () => { const q = new TT.TorusGeometry(R + .075, .042, 4, LO() ? 18 : 26); q.rotateX(Math.PI / 2); q.scale(1, .45, 1); return q; }); for (let k = 0; k < n; k++) { const [x, z] = sock(k), o = new TT.Mesh(big, rm); o.position.set(x, BH + .006, z); g.add(o); } }
     const floor = planeTop(Lt.W - .2, D - .2, wallM); floor.position.set(0, BH - HOLE + .002, zc); floor.receiveShadow = true; g.add(floor);
     const rim = (() => { const w = Lt.W / 2 - .07, d = D / 2 - .07, r = .31, pts = [];
       rimPts(pts, w, d, r);
       const t = new TT.Mesh(geo('hbTrayRim' + n + 'c' + C, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length, LO() ? 120 : 160), .028, 4, true)), rimMat(look, S.rim)); t.position.set(0, BH + .01, zc); t.visible = S.rim.k !== 'none'; return t; })();
     g.add(rim);
     // OK: a raised key with its label (lit mint when the row is full)
-    const okTex = on => X.canvasTex('hbOk' + (on ? (S.okFont ? look + 1 : 1) : look), 160, 134, (c, W, H) => {
+    const okOwn = S.okFont || S.okDraw, okTex = on => X.canvasTex('hbOk' + (on ? (okOwn ? look + 1 : 1) : look), 160, 134, (c, W, H) => {
+      if (S.okDraw) { S.okDraw(c, W, H || 134, on); return; }
       const gr = c.createLinearGradient(0, 0, 0, H); if (on) { gr.addColorStop(0, '#a8ffe6'); gr.addColorStop(1, '#4fd6b0'); } else { gr.addColorStop(0, S.okOff[0]); gr.addColorStop(1, S.okOff[1]); }
       c.fillStyle = gr; c.fillRect(0, 0, W, H);
       c.font = S.okFont || '900 64px "Outfit", system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = on ? '#0d3a33' : S.okOff[2]; c.fillText('OK', W / 2, H / 2 + 3);
     });
-    const okM = on => mat('hbOkM' + (on ? (S.okFont ? look + 1 : 1) : look), () => { const t = okTex(on), m = X.M({ map: t, emissiveMap: t, emissive: '#ffffff', emissiveIntensity: on ? .75 : .45, roughness: .6, envMapIntensity: .15, bump: false }); m.emissive.set(0xffffff); return m; });
+    const okM = on => mat('hbOkM' + (on ? (okOwn ? look + 1 : 1) : look), () => { const t = okTex(on), m = X.M({ map: t, emissiveMap: t, emissive: '#ffffff', emissiveIntensity: on ? .75 : .45, roughness: .6, envMapIntensity: .15, bump: false }); m.emissive.set(0xffffff); return m; });
     const okG = new TT.Group(); okG.position.set(ok[0], BH, ok[1]); g.add(okG);
-    const okBody = X.mesh(geo('hbOkB', () => rbox(okW, okD, .16, .16, .04)), skinMat('case' + look, S.caseC)); okG.add(okBody);
+    const okBody = X.mesh(geo('hbOkB', () => rbox(okW, okD, .16, .16, .04)), skinMat(S.okBody ? 'okb' + look : 'case' + look, S.okBody || S.caseC)); okG.add(okBody);
     const okFace = planeTop(okW - .1, okD - .1, okM(false)); okFace.position.y = .165; okG.add(okFace);
     const okGlow = new TT.Mesh(geo('hbOkGl', () => { const p = new TT.PlaneGeometry(okW + .3, okD + .3); p.rotateX(-Math.PI / 2); return p; }), mat('hbOkGlM', () => new TT.MeshBasicMaterial({ color: 0x7df3d2, transparent: true, opacity: .22, depthWrite: false, toneMapped: false })));
     okGlow.position.y = .004; okGlow.visible = false; okGlow.renderOrder = 1; okG.add(okGlow);
