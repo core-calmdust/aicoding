@@ -95,7 +95,7 @@
       if (v === look) return; neonReset(); look = v; feel = AC().feelOf(CFEEL[v]);
       try { if (T3.setBoard) T3.setBoard('botao', v); } catch (e) {}
       const nb = T3.MODELS.botao(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c)); board.userData = nb.userData; U = board.userData; goalW();
-      build(); syncAll(); neonTick(); if (T3.kick) T3.kick(500);
+      build(); syncAll(); neonTick(); scoreBoards(); if (T3.kick) T3.kick(500);
     }
 
     /* ---------- the camera: following the ball (an angled close view) or the whole table from above ---------- */
@@ -320,6 +320,7 @@
     }
     const dotCol = p => U.dot ? U.dot(p) : (p === 0 ? '#d4352a' : '#e9e6dc');
     function hud() {
+      scoreBoards();
       if (stopped || !st) return;
       const pill = p => `<span class="btp ${st.pos === p && !over ? 'on' : ''}"><i style="background:${dotCol(p)}"></i><span class="nm">${esc(nameOf(p))}</span><b>${st.score[p]}</b></span>`;
       const top = st.pk ? tx('pkHud', { n: st.pk.n }) + ' ' + [0, 1].map(t => st.pk.k[t].map(x => x ? '●' : '×').join('') || '−').join(' | ') : st.goals ? tx('to', { n: st.goals }) : tx(st.half === 1 ? 'first' : 'second') + ' ' + tx('left', { n: Math.max(0, st.halfLen - st.clock) });
@@ -352,8 +353,8 @@
     let waveT = 0, flashT = 0, strobeT = 0;
     const TRAIL = [];
     const PAL8 = ['#fcfcfc', '#f8b800', '#f83800', '#d800cc', '#0078f8', '#00b800'];
-    function neonFlash(k) { flashT = Math.max(flashT, performance.now() + 120 * (k || 1)); }
-    function neonStrobe() { strobeT = performance.now() + 1800; }
+    function neonFlash() {}   // (2026-11-17 ユーザー：当たったときに画面が一瞬明るくなる演出はカット)
+    function neonStrobe() {}   // (the goal's flashing pitch: cut too, 2026-11-17)
     let trailRaf = 0, trailLast = null;
     function trailPaint(m, now) {
       const k = (now - m.userData.t0) / 650; if (k >= 1) { m.visible = false; return; }
@@ -386,7 +387,27 @@
     // the materials are shared (the board picker, the showcase): put them back as the model made them
     function neonReset() {
       const M = U && U.mats; if (!M || U.look !== 'neon') return;
-      M.top.emissive.setRGB(.45, .45, .45); if (M.edge) { M.edge.emissive.set('#fcfcfc').convertSRGBToLinear(); M.edge.emissiveIntensity = 1; } if (M.post) { M.post.emissive.set('#fcfcfc').convertSRGBToLinear(); M.post.emissiveIntensity = .35; }
+      M.top.emissive.setRGB(.12, .12, .12); if (M.edge) { M.edge.emissive.set('#fcfcfc').convertSRGBToLinear(); M.edge.emissiveIntensity = .5; } if (M.post) { M.post.emissive.set('#fcfcfc').convertSRGBToLinear(); M.post.emissiveIntensity = .2; }
+    }
+    // the 8-bit stands' scoreboards show the score (2026-11-17): a small pixel canvas laid over each board in the top
+    const SB = { meshes: [], key: '' };
+    function sbDrop() { SB.meshes.forEach(m => { board.remove(m); m.geometry.dispose(); }); if (SB.meshes.length) { SB.meshes[0].material.dispose(); SB.tex.dispose(); } SB.meshes = []; SB.key = ''; }
+    function scoreBoards() {
+      if (SB.U !== U) { sbDrop(); SB.U = U; }
+      if (stopped || !U || !U.scoreBoards || !st) { SB.meshes.forEach(m => { m.visible = false; }); return; }
+      const key = st.score[0] + '-' + st.score[1]; if (SB.meshes.length && SB.key === key && SB.meshes[0].visible) return; SB.key = key;
+      if (!SB.meshes.length) {
+        SB.cv = document.createElement('canvas'); SB.cv.width = 29; SB.cv.height = 7;
+        SB.tex = new TH.CanvasTexture(SB.cv); SB.tex.magFilter = SB.tex.minFilter = TH.NearestFilter; SB.tex.generateMipmaps = false; SB.tex.colorSpace = TH.SRGBColorSpace;
+        const mat = new TH.MeshBasicMaterial({ map: SB.tex, toneMapped: false, color: new TH.Color(.8, .8, .8) });
+        U.scoreBoards.forEach(r => {
+          const P = [[r.x, r.y], [r.x + r.w, r.y], [r.x, r.y + r.h], [r.x + r.w, r.y + r.h]].map(([x, y]) => { const [a, b] = wx(x, y); return [a, Y + .004, b]; });
+          const geo = new TH.BufferGeometry(); geo.setAttribute('position', new TH.Float32BufferAttribute(P.flat(), 3));
+          geo.setAttribute('uv', new TH.Float32BufferAttribute([0, 1, 1, 1, 0, 0, 1, 0], 2)); geo.setIndex([0, 2, 1, 1, 2, 3]);
+          const m = new TH.Mesh(geo, mat); m.renderOrder = 2; m.material.side = TH.DoubleSide; board.add(m); SB.meshes.push(m);
+        });
+      }
+      U.drawScore(SB.cv.getContext('2d'), st.score[0], st.score[1]); SB.tex.needsUpdate = true; SB.meshes.forEach(m => { m.visible = true; }); kick(100);
     }
     function neonTick() {
       cancelAnimationFrame(waveT); if (stopped) TRAIL.forEach(m => { m.visible = false; }); if (stopped || !U || U.look !== 'neon') return;
@@ -397,10 +418,10 @@
         const key = st + '|' + strobe + '|' + fl; if (key === lastKey) return; lastKey = key;   // (only on a new step)
         // the pitch: a blink on a knock, the palette on a goal
         if (strobe) { c.set(PAL8[st % PAL8.length]).convertSRGBToLinear(); M.top.emissive.copy(c).multiplyScalar(.8); }
-        else M.top.emissive.setRGB(fl ? .85 : .45, fl ? .85 : .45, fl ? .85 : .45);
+        else M.top.emissive.setRGB(.12, .12, .12);
         // the rail's strip marches through the palette; the goal frames blink on a goal
-        if (M.edge && st !== lastStep) { M.edge.emissive.set(PAL8[st % PAL8.length]).convertSRGBToLinear(); M.edge.emissiveIntensity = 1; }
-        if (M.post) { M.post.emissive.set(strobe ? PAL8[(st + 2) % PAL8.length] : '#fcfcfc').convertSRGBToLinear(); M.post.emissiveIntensity = strobe ? 1 : .35; }
+        if (M.edge && st !== lastStep) { M.edge.emissive.set(PAL8[st % PAL8.length]).convertSRGBToLinear(); M.edge.emissiveIntensity = .5; }
+        if (M.post) { M.post.emissive.set(strobe ? PAL8[(st + 2) % PAL8.length] : '#fcfcfc').convertSRGBToLinear(); M.post.emissiveIntensity = strobe ? .5 : .2; }
         lastStep = st; kick(160); };
       waveT = requestAnimationFrame(step);
     }
@@ -902,7 +923,7 @@
         document.querySelectorAll('.bpk').forEach(e => e.remove());
         neonReset(); TRAIL.forEach(m => { board.remove(m); m.material.dispose(); }); TRAIL.length = 0;
         if (U && U.goalWidth) U.goalWidth(0);
-        stopped = true; tok++; timers.forEach(clearTimeout); board.remove(beacon); beacon.material.dispose(); starTex.dispose(); clearInterval(pulseT); clearInterval(clkT); clearInterval(keeperT);
+        stopped = true; sbDrop(); tok++; timers.forEach(clearTimeout); board.remove(beacon); beacon.material.dispose(); starTex.dispose(); clearInterval(pulseT); clearInterval(clkT); clearInterval(keeperT);
         ctx.el.removeEventListener('pointerdown', pd); ctx.el.removeEventListener('pointermove', pm); ctx.el.removeEventListener('pointerup', pu); ctx.el.removeEventListener('pointercancel', pu);
         removeEventListener('pointermove', wm, true); removeEventListener('pointerup', wu, true); removeEventListener('pointercancel', wu, true);
         NZ.forEach(([k, f]) => document.removeEventListener(k, f, { capture: true })); HTML.classList.remove('hand-on'); HTML.classList.remove('hand-drag');

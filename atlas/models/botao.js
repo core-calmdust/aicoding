@@ -106,7 +106,16 @@
         if (look === 'night' && inF) k += (Math.floor((cy + H) / 13.9) % 2 ? 9 : -6) + (N(x / 1.5, y / 40, 4) - .5) * 10;   // the mowing stripes
         if (look === 'retro') k += (N(x / 160, y / 160, 6) - .5) * 30 + (N(x / 9, y / 9, 7) > .82 ? -12 : 0);   // old paint, stains
         if (look === 'praia' && inF) k = (Math.random() - .5) * 26 + (N(x / 4, y / 4, 2) - .5) * 18;   // sand grain
-        if (look === 'madeira') { const plank = Math.floor((cx + TX) / (inF ? 9.5 : 4)), w = N(plank * 13.1 + x / 900, y / 7, 5); k = (w - .5) * 22 + (N(plank, 0, 9) - .5) * 26 + (Math.random() - .5) * 5; }
+        if (look === 'madeira') {   // (2026-11-17 ユーザー：板の境目は見せず、木目が伝わるリアルさで) one flat-sawn sheet: growth rings
+          // running the length with cathedral arches, latewood lines, fibres and pores (as table3d's woodTop, turned along the pitch)
+          const uu = y / Hh, vv = x / S - .5, A = inF ? [226, 194, 146] : [140, 92, 54], Bc = inF ? [168, 116, 68] : [72, 42, 22];
+          const cath = Math.sqrt(vv * vv + Math.pow(.09 + (uu - .55) * .12, 2)), wob = (N(uu * 1.3, vv * 2.4, 3) - .5) * .09 + (N(uu * 6, vv * 9, 2) - .5) * .012;
+          const f = ((Math.abs(vv) * .35 + cath * .65 + wob) * 30) % 1, late = Math.exp(-Math.pow((f - .78) / .06, 2)) + .35 * Math.exp(-Math.pow((f - .78) / .2, 2));
+          let tt = .18 + late * .45 + (N(uu * 5, x * .55, 2) - .5) * .3 + (N(uu * 40, x * 2.2, 1) - .5) * .12 + (N(uu * 1.5, vv * 1.5, 4) - .5) * .2;
+          if (late > .4 && N(uu * 300, x * 1.4, 1) > .78) tt += .12;
+          tt = Math.max(0, Math.min(1, tt)); const i = (y * S + x) * 4;
+          d[i] = A[0] + (Bc[0] - A[0]) * tt; d[i + 1] = A[1] + (Bc[1] - A[1]) * tt; d[i + 2] = A[2] + (Bc[2] - A[2]) * tt; d[i + 3] = 255; continue;
+        }
         const i = (y * S + x) * 4; d[i] = b[0] + k; d[i + 1] = b[1] + k; d[i + 2] = b[2] + k * (look === 'praia' ? .8 : 1.05); d[i + 3] = 255;
       }
       g.putImageData(img, 0, 0);
@@ -172,7 +181,7 @@
     return mat('btm' + look, () => {
       const TT = T(), neon = look === 'neon';
       const top = phys({ map: topTex(look), color: '#ffffff', roughness: look === 'madeira' ? .42 : look === 'praia' ? .95 : neon ? 1 : .88, metalness: 0, clearcoat: look === 'madeira' ? .6 : undefined, clearcoatRoughness: look === 'madeira' ? .35 : undefined });
-      if (neon) { top.emissiveMap = top.map; top.emissive = new TT.Color(.45, .45, .45); }   // (8-bit: the screen's own light)
+      if (neon) { top.color = new TT.Color(.8, .8, .8); top.emissiveMap = top.map; top.emissive = new TT.Color(.12, .12, .12); }   // (2026-11-17 ユーザー：少し明るすぎ → 抑えめ)   // (8-bit: the screen's own light)
       let rail;
       if (look === 'classic') { const w = X.wood('btImbuia', '#7a4a26', '#3e2412', SZ(1024), SZ(256), .9); w.wrapS = w.wrapT = TT.RepeatWrapping; rail = phys({ map: w, color: '#ffffff', roughness: .38, clearcoat: .8, clearcoatRoughness: .25 }); }
       else if (look === 'retro') { const w = X.wood('btPine', '#d8b47c', '#a87a44', SZ(1024), SZ(256), .7); w.wrapS = w.wrapT = TT.RepeatWrapping; rail = phys({ map: w, color: '#ffffff', roughness: .6 }); }
@@ -185,7 +194,7 @@
       }
       const edge = look === 'night' ? phys({ color: '#f4f4f4', roughness: .4 }) : look === 'praia' ? phys({ color: '#1f5fae', roughness: .4 }) : neon ? (() => { const m = phys({ color: '#000000', roughness: 1 }); m.emissive = lin(NES.w); m.emissiveIntensity = 1; return m; })() : null;
       const post = phys({ color: neon ? '#e8f8ff' : look === 'madeira' ? '#efe2c4' : '#f8f8f6', roughness: .3, metalness: look === 'madeira' ? 0 : .1, clearcoat: .6 });
-      if (neon) { post.color = lin(NES.w); post.roughness = 1; post.emissive = lin(NES.w); post.emissiveIntensity = .35; }
+      if (neon) { post.color = lin(NES.w); post.roughness = 1; post.emissive = lin(NES.w); post.emissiveIntensity = .2; }
       const netTex = X.canvasTex('btNet' + (neon ? 'n' : ''), 128, 128, (g, S) => { g.clearRect(0, 0, S, S); g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = neon ? 16 : 6; for (let k = 0; k <= 4; k++) { const p = k * S / 4; g.beginPath(); g.moveTo(p, 0); g.lineTo(p, S); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(S, p); g.stroke(); } });
       netTex.wrapS = netTex.wrapT = TT.RepeatWrapping; netTex.repeat.set(5, 2); if (neon) PIX(netTex);
       const net = new TT.MeshStandardMaterial({ map: netTex, transparent: true, alphaTest: .3, side: TT.DoubleSide, roughness: .9, depthWrite: true });
@@ -236,7 +245,7 @@
   }
   function button(look, side, n) {
     const TT = T(), g = new TT.Group(), neon = look === 'neon', [body] = TEAM[look][side];
-    const bm = mat('btBody' + look + side, () => { if (neon) { const m = phys({ color: body, roughness: 1, metalness: 0 }); m.flatShading = true; m.emissive = lin(body); m.emissiveIntensity = .3; return m; } return phys({ color: body, roughness: look === 'retro' ? .5 : look === 'madeira' ? .3 : .16, clearcoat: look === 'retro' ? .3 : 1, clearcoatRoughness: .12 }); });
+    const bm = mat('btBody' + look + side, () => { if (neon) { const m = phys({ color: body, roughness: 1, metalness: 0 }); m.flatShading = true; m.emissive = lin(body); m.emissiveIntensity = .12; return m; } return phys({ color: body, roughness: look === 'retro' ? .5 : look === 'madeira' ? .3 : .16, clearcoat: look === 'retro' ? .3 : 1, clearcoatRoughness: .12 }); });
     const b = new TT.Mesh(buttonGeo(look), bm); b.castShadow = true; g.add(b);
     const cm = mat('btCrestM' + look + side + '_' + n, () => { const m = new TT.MeshStandardMaterial({ map: crestTex(look, side, n), transparent: true, roughness: .35 }); if (neon) { m.roughness = 1; m.emissiveMap = m.map; m.emissive = new TT.Color(1, 1, 1); m.emissiveIntensity = .4; } return m; });
     const cr = neon ? new TT.Mesh(geo('bt8CrestG', () => { const q = new TT.PlaneGeometry(RB * K * 1.62, RB * K * 1.62); q.rotateX(-Math.PI / 2); return q; }), cm) : new TT.Mesh(geo('btCrestG', () => { const q = new TT.CircleGeometry(RB * K * .74, 30); q.rotateX(-Math.PI / 2); return q; }), cm);
@@ -251,7 +260,7 @@
     const m = mat('btBall' + look, () => {
       if (look === 'neon') {   // 8-bit: a blocky ball, white with black pixel patches
         const tex = PIX(X.canvasTex('bt8Ball', 16, 8, (g) => { g.fillStyle = NES.w; g.fillRect(0, 0, 16, 8); g.fillStyle = NES.k; [[1, 1], [5, 3], [9, 1], [13, 3], [3, 5], [7, 6], [11, 5], [15, 6]].forEach(([x, y]) => g.fillRect(x, y, 2, 2)); }));
-        const q = phys({ map: tex, color: '#ffffff', roughness: 1 }); q.flatShading = true; q.emissiveMap = tex; q.emissive = lin('#ffffff'); q.emissiveIntensity = .35; return q;
+        const q = phys({ map: tex, color: '#ffffff', roughness: 1 }); q.flatShading = true; q.emissiveMap = tex; q.emissive = lin('#ffffff'); q.emissiveIntensity = .15; return q;
       }
       const base = look === 'night' ? '#fff8d8' : look === 'praia' ? '#ffe14a' : look === 'neon' ? '#ffffff' : '#f6f3ea';
       const tex = X.canvasTex('btBallT' + look, 256, 128, (g, S) => {
@@ -267,7 +276,7 @@
         }
         g.putImageData(im, 0, 0);
       });
-      const q = phys({ map: tex, color: '#ffffff', roughness: .55, clearcoat: .4 }); if (look === 'neon') { q.emissiveMap = tex; q.emissive = lin('#ffffff'); q.emissiveIntensity = .7; } return q;
+      const q = phys({ map: tex, color: '#ffffff', roughness: .55, clearcoat: .4 }); if (look === 'neon') { q.emissiveMap = tex; q.emissive = lin('#ffffff'); q.emissiveIntensity = .35; } return q;
     });
     const s = new TT.Mesh(look === 'neon' ? geo('bt8BallG', () => new TT.SphereGeometry(RBALL * K, 8, 6)) : geo('btBallG', () => new TT.SphereGeometry(RBALL * K, LO() ? 12 : 18, LO() ? 9 : 14)), m); s.position.y = RBALL * K; s.castShadow = true; g.add(s);
     g.userData = { r: RBALL };
@@ -276,7 +285,7 @@
   // the goalkeeper: a block 8 × 3.5 × 1.6 cm in the side's colour, the number 1 on its back
   function keeper(look, side) {
     const TT = T(), g = new TT.Group(), [body, gr, ink] = TEAM[look][side], neon = look === 'neon';
-    const bm = mat('btKeep' + look + side, () => { if (neon) { const m = phys({ color: body, roughness: 1 }); m.emissive = lin(body); m.emissiveIntensity = .3; return m; } return phys({ color: body, roughness: look === 'retro' ? .55 : .22, clearcoat: look === 'retro' ? .2 : .9, clearcoatRoughness: .15 }); });
+    const bm = mat('btKeep' + look + side, () => { if (neon) { const m = phys({ color: body, roughness: 1 }); m.emissive = lin(body); m.emissiveIntensity = .12; return m; } return phys({ color: body, roughness: look === 'retro' ? .55 : .22, clearcoat: look === 'retro' ? .2 : .9, clearcoatRoughness: .15 }); });
     const box = new TT.Mesh(geo('btKeepG', () => { const q = new TT.BoxGeometry(2 * KHW * K, KH * K, 2 * KHD * K, 1, 1, 1); return q; }), bm); box.position.y = KH * K / 2; box.castShadow = true; g.add(box);
     const lab = mat('btKeepL' + look + side, () => { if (neon) { const tx = PIX(X.canvasTex('bt8Keep' + side, 16, 7, (c) => { c.fillStyle = gr; c.fillRect(0, 0, 16, 7); c.fillStyle = body; c.fillRect(1, 1, 14, 5); pixNum(c, 1, 6.5, 1, 1, NES.w); })); const m = new TT.MeshStandardMaterial({ map: tx, roughness: 1 }); m.emissiveMap = tx; m.emissive = new TT.Color(1, 1, 1); m.emissiveIntensity = .4; return m; }
       const m = new TT.MeshStandardMaterial({ map: X.canvasTex('btKeepT' + look + side, 256, 112, (c, S) => { c.fillStyle = gr; c.fillRect(0, 0, S, 112); c.strokeStyle = ink; c.lineWidth = 10; c.strokeRect(5, 5, S - 10, 102); c.fillStyle = ink; c.font = '900 84px "Fredoka", system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('1', S / 2, 60); }), roughness: .4 }); if (neon) { m.emissiveMap = m.map; m.emissive = new TT.Color(1, 1, 1); m.emissiveIntensity = .8; } return m; });
@@ -321,6 +330,14 @@
     const U = g.userData;
     U.top = TOP; U.K = K; U.look = look; U.mats = BM; U.W = OW * K; U.L = OL * K;
     U.xz = (x, y) => [x * K, y * K];
+    // the 8-bit stands' scoreboards (2026-11-17 ユーザー：得点をスコア表にも): where they are on the table (cm) and how one is drawn
+    // (29×7 px) — the game lays a small live copy over each
+    if (look === 'neon') {
+      const Hh = Math.round(TL);
+      U.scoreBoards = [1, -1].map(sg => { const y = sg > 0 ? Hh - 8 : 3, x0 = TX + sg * 30 - 12; return { x: x0 - 2 - TX, y: y - 1 - TY, w: 29, h: 7 }; });
+      U.drawScore = (g, a, b) => { g.imageSmoothingEnabled = false; g.fillStyle = NES.k; g.fillRect(0, 0, 29, 7); const d = (n, x, c) => pixNum(g, n, x, 1, 1, c);
+        d(1, 2, NES.red); d(a % 10, 8, NES.w); g.fillStyle = NES.w; g.fillRect(13, 3, 2, 1); d(b % 10, 17, NES.w); d(2, 24, NES.blue); };
+    }
     U.button = (side, n) => button(look, side, n); U.ball = () => ball(look); U.keeper = side => keeper(look, side);
     U.dot = side => DOT[look][side];
     // the goal's inside width (cm): the PK shoot-out widens it (the posts and side nets move out, the bar and nets stretch)
