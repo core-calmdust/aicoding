@@ -168,7 +168,8 @@
     const w = PLACE_W[l]; return w ? s.replace(w[0], w[1]) : s;
   }
   const updText = (u, l) => placeWord(l === 'ja' ? u[2] : l === 'en' ? u[3] : (u[4] && u[4][l]) || u[3], l);
-  const lastUpdate = id => (UPDATES.find(u => u[1] === id) || [])[0] || null;
+  const UPD_LAST = window.ATLAS_UPD_LAST || {};   // (games whose latest line is archived: shared/atlas-updates-archive.js, tools/news-archive.js 2026-11-17)
+  const lastUpdate = id => (UPDATES.find(u => u[1] === id) || [])[0] || UPD_LAST[id] || null;
   // Badges — at most 2, in this priority (common rules 2026-11-08, claude/game-conventions-addendum.md):
   //   ALPHA    g.alpha (alone, like BETA; new titles start as alpha from 2026-11-15, then beta, until the owner says)
   //   BETA     g.beta (alone: it takes the place of NEW, ORIGINAL and UPDATE)
@@ -205,7 +206,7 @@
   }
   // games ordered by the changelog (UPDATES is newest first); games without entries keep registry order
   function byUpdate() {
-    const rank = id => { const k = UPDATES.findIndex(u => u[1] === id); return k < 0 ? 1e9 : k; };
+    const rank = id => { const k = UPDATES.findIndex(u => u[1] === id); return k >= 0 ? k : UPD_LAST[id] ? 1e8 - +UPD_LAST[id].replace(/-/g, '') / 1e3 : 1e9; };   // (archived: after the recent ones, newest first)
     return GAMES.map((g, i) => ({ g, i, k: rank(g.id) })).sort((a, b) => a.k - b.k || a.i - b.i).map(x => x.g);
   }
 
