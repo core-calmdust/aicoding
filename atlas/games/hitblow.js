@@ -362,6 +362,41 @@
 
   function levelInfo(n, lang) { const b = n <= 5 ? 0 : n <= 11 ? 1 : n <= 17 ? 2 : 3; return { name: 'Lv.' + n, desc: tx(lang, 'lv')[b], who: tx(lang, 'who')[b] }; }
   const sizeName = (z, l) => tx(l, RN(z));
+  // the 種目 cards' pictures (2026-11-18 user: 同じアイコンが並んでいるので個別の画像に): the board's row for each rule — the hidden code's
+  // lid with ？, a row of the rule's pieces and the answer pins. カラー: four different colours · 重複あり: colours that repeat (linked) ·
+  // ナンバー3 / 4: digit gems · エキスパート: five from eight colours, a crown
+  const KCOL = ['#ff4f5e', '#ffcc33', '#3fd97a', '#3ea0ff', '#a97cff', '#ff76c4', '#ff9940', '#38e0e6'], KDIG = ['#9fb3ff', '#ff6b7a', '#ffb347', '#ffe066', '#7ee08a', '#4fd6c8', '#58a8ff', '#a48bff', '#ff8fd8', '#e8edf7'];
+  let kuid = 0;
+  function kindArt(sid, v) {
+    if (sid !== 'bvSize') return '';
+    const k = +v || 1, id = 'hk' + (++kuid), H = window.Table3D && Table3D.hitblow, IC = H && H.ICONS, ST = H && H.STROKE;
+    const row = { 1: [0, 1, 2, 3], 2: [0, 3, 0, 3], 3: [3, 7, 1], 4: [5, 2, 8, 0], 5: [6, 7, 0, 4, 1] }[k] || [0, 1, 2, 3], num = k === 3 || k === 4, n = row.length;
+    const W = 100, gw = n === 5 ? 13.6 : n === 3 ? 20 : 16.4, gap = n === 5 ? 2 : n === 3 ? 6 : 3.4, x0 = (W - (n * gw + (n - 1) * gap)) / 2, y = 64, r = gw / 2;
+    const bg = k === 5 ? ['#3a2468', '#1c1240'] : ['#fff6e2', '#f2e3c4'];
+    let o = `<svg viewBox="0 0 ${W} ${W}" aria-hidden="true"><defs><linearGradient id="${id}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${bg[0]}"/><stop offset="1" stop-color="${bg[1]}"/></linearGradient>
+      <linearGradient id="${id}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3a8c"/><stop offset="1" stop-color="#121a4c"/></linearGradient>
+      <radialGradient id="${id}h" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></radialGradient></defs>
+      <rect width="${W}" height="${W}" rx="10" fill="url(#${id}b)"/>`;
+    if (k === 5) for (let i = 0; i < 14; i++) o += `<circle cx="${(i * 37) % 97 + 2}" cy="${(i * 23) % 14 + 3}" r="${i % 3 ? .7 : 1.1}" fill="#fff" opacity=".7"/>`;
+    // the slab
+    o += `<rect x="6" y="20" width="88" height="66" rx="10" fill="#0b1030" opacity=".35" transform="translate(1.5 3)"/><rect x="6" y="20" width="88" height="66" rx="10" fill="url(#${id}s)"/><rect x="9" y="23" width="82" height="60" rx="8" fill="none" stroke="#7fa2ff" stroke-width="1.2" opacity=".8"/>`;
+    // the hidden code: the lid with ？ (top left), the answer pins (top right)
+    const lw = n * 9 + 6; o += `<rect x="13" y="28" width="${lw}" height="14" rx="4" fill="#2a3478" stroke="#c38bff" stroke-width=".9"/>`;
+    for (let i = 0; i < n; i++) o += `<text x="${13 + 3 + 9 * i + 4.5}" y="38.6" text-anchor="middle" font-family="Outfit,system-ui,sans-serif" font-weight="800" font-size="10" fill="#e8dcff">?</text>`;
+    const px = 79, py = 35, pins = k === 5 ? [[-5, -3, 1], [0, -3, 1], [5, -3, 0], [-2.5, 3, 0], [2.5, 3, 2]] : n === 3 ? [[-3, -3, 1], [3, -3, 0], [0, 3, 2]] : [[-3, -3, 1], [3, -3, 1], [-3, 3, 0], [3, 3, 2]];
+    o += `<rect x="${px - 10}" y="${py - 8}" width="20" height="16" rx="4" fill="#060a24" opacity=".75"/>`;
+    pins.forEach(([dx, dy, t]) => { o += `<circle cx="${px + dx}" cy="${py + dy}" r="2.2" fill="${t === 1 ? '#ff5aa8' : t === 0 ? '#f4f7ff' : '#0b1030'}" stroke="${t === 2 ? '#3a4a8a' : 'none'}" stroke-width=".6"/>`; });
+    // the row of pieces
+    row.forEach((c, i) => { const cx = x0 + r + i * (gw + gap), col = num ? KDIG[c] : KCOL[c];
+      o += `<circle cx="${cx}" cy="${y + 1.4}" r="${r}" fill="#000" opacity=".3"/><circle cx="${cx}" cy="${y}" r="${r}" fill="${col}"/><circle cx="${cx}" cy="${y}" r="${r}" fill="url(#${id}h)"/>`;
+      if (num) o += `<text x="${cx}" y="${y + r * .44}" text-anchor="middle" font-family="Outfit,system-ui,sans-serif" font-weight="900" font-size="${r * 1.3}" fill="#fff" stroke="rgba(10,8,30,.5)" stroke-width="1.1" paint-order="stroke">${c}</text>`;
+      else if (IC) { const sc = r * 1.15 / 24; o += `<g transform="translate(${cx - 12 * sc} ${y - 12.2 * sc}) scale(${sc})"><path d="${IC[c]}" fill="${ST && ST[c] ? 'rgba(255,255,255,.35)' : '#fff'}" stroke="${ST && ST[c] ? '#fff' : 'none'}" stroke-width="2" stroke-linejoin="round"/></g>`; } });
+    // 重複あり: the repeats linked by a dashed arc
+    if (k === 2) { const cx = i => x0 + r + i * (gw + gap); o += `<path d="M${cx(0)} ${y - r - 1.2}Q${(cx(0) + cx(2)) / 2} ${y - r - 8} ${cx(2)} ${y - r - 1.2}" fill="none" stroke="#ff7a86" stroke-width="1.4" stroke-dasharray="2.2 1.6"/><path d="M${cx(1)} ${y + r + 1.2}Q${(cx(1) + cx(3)) / 2} ${y + r + 8} ${cx(3)} ${y + r + 1.2}" fill="none" stroke="#6fb8ff" stroke-width="1.4" stroke-dasharray="2.2 1.6"/>`; }
+    // エキスパート: a crown
+    if (k === 5) o += `<g transform="translate(74 3)"><path d="M0 12 L2 2 L7 7 L11 0 L15 7 L20 2 L22 12Z" fill="#ffd84d" stroke="#b88a1c" stroke-width="1" stroke-linejoin="round"/><circle cx="11" cy="0" r="1.6" fill="#ff76c4"/><circle cx="2" cy="2" r="1.3" fill="#3ea0ff"/><circle cx="20" cy="2" r="1.3" fill="#3fd97a"/></g>`;
+    return o + '</svg>';
+  }
   const optInfo = (sid, v, l) => sid === 'bvSize' ? { sub: tx(l, RN(+v || 1) + 'd') } : null;
 
   /* ---------- a game on the table ---------- */
@@ -769,5 +804,5 @@
   window.Atlas3D = window.Atlas3D || {};
   // the card (2026-11-16 user: 将棋と同じカード): 対戦 (二人で対戦 = the top of 相手) · レート戦 · パズル (今日の一問 EASY / HARD) — adapter.mx
   window.Atlas3D.hitblow = { ortho: true, mx: true, levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], kindFirst: true,
-    sizes: [1, 2, 3, 4, 5], size0: 1, sizeLabel: () => '', sizeName, optInfo, levelInfo, modeName, modeNote, dailyHtml, dailyDone, dailyNext, bookSheet, pending: null, start, TX, L14 };
+    sizes: [1, 2, 3, 4, 5], size0: 1, sizeLabel: () => '', sizeName, optInfo, kindArt, levelInfo, modeName, modeNote, dailyHtml, dailyDone, dailyNext, bookSheet, pending: null, start, TX, L14 };
 })();
