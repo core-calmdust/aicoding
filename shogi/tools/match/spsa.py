@@ -96,7 +96,9 @@ def main():
             # the other side: the engine's own defaults (nothing sent; a tuned parameter of the table is sent as its default)
             B = {k: defaults[k] for k in cand if k in defaults} if i % 2 == 0 else B
             A = {k: defaults[k] for k in cand if k in defaults} if i % 2 == 1 else A
-            ps.append((play(a.work, site, um, kp, ms, A, B, a.games, lines, f't{i}'), i % 2 == 0))
+            # nodes per move: each process a little more (+131 each). The search is deterministic, and the 100 openings give
+            # only 100 different pairs of games: without this, processes with the same openings would play the same games.
+            ps.append((play(a.work, site, um, kp, ms - 131 * i if ms < 0 else ms, A, B, a.games, lines, f't{i}'), i % 2 == 0))
         W = L = D = 0
         for (p, fn), candInUm in ps:
             w, l, d = result(p, fn)

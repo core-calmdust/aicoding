@@ -27,9 +27,9 @@ function staticChecks() {
   // (2026-11-18) the call choices (chi/pon/kan/ron) open with a light sound
   { const app = fs.readFileSync(path.join(MJ, 'app.js'), 'utf8'), m = app.match(/function myCall\(o, res\) \{([\s\S]{0,200})/);
     ok('call choices play SND.callAsk', /callAsk: \(\) =>/.test(app) && !!m && /SND\.callAsk\(\)/.test(m[1])); }
-  // (2026-11-18) 頭ハネ: two rons on one tile → only the first after the discarder wins (BOT games, tools/headbump.js)
-  try { const r = execSync(`node ${JSON.stringify(path.join(MJ, 'tools', 'headbump.js'))} ${JSON.stringify(MJ)}`, { stdio: 'pipe', timeout: 400000 }).toString().trim();
-    ok('頭ハネ: one winner on a double ron', true, r); } catch (e) { ok('頭ハネ: one winner on a double ron', false, String(e.stdout || e.message).trim()); }
+  // (2026-11-18) ダブロンあり: two rons on one tile → both win, in turn order from the discarder (BOT games, tools/doubleron.js)
+  try { const r = execSync(`node ${JSON.stringify(path.join(MJ, 'tools', 'doubleron.js'))} ${JSON.stringify(MJ)}`, { stdio: 'pipe', timeout: 400000 }).toString().trim();
+    ok('ダブロン: both win on a double ron', true, r); } catch (e) { ok('ダブロン: both win on a double ron', false, String(e.stdout || e.message).trim()); }
   // code swallowed by a comment (2026-11-16: an edit put `lx = TB.screenPose(...)` after a `//` on the same line — the player's
   // discard lost its page pose and the hand came from the table's edge). Flags a line comment that ends like a statement.
   const sus = [];
