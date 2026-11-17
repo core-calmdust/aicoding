@@ -416,9 +416,14 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     // arrows + < / >. Keyboard vs gamepad — the keyboard (WASD or arrows + Space) is red, the pad (stick / d-pad, X or A slow) yellow
     const K1 = { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [0, 0, -1], ArrowDown: [0, 0, 1], ArrowLeft: [0, -1, 0], ArrowRight: [0, 1, 0] };
     const KEYMAP = pvp && ctrl === 1 ? { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [1, 0, -1], ArrowDown: [1, 0, 1], ArrowLeft: [1, -1, 0], ArrowRight: [1, 1, 0] } : K1;
-    const SLOWKEY = pvp && ctrl === 1 ? { Space: 0, Comma: 1, Period: 1 } : { Space: 0 };
+    // slow (held) and attack (a press: a dash at the puck) — 2026-11-17 ユーザー: 1P Shift slow / Space attack; 2P left B / N,
+    // right < / >; the pad A slow / X attack
+    const SLOWKEY = pvp && ctrl === 1 ? { KeyB: 0, Comma: 1 } : { ShiftLeft: 0, ShiftRight: 0 };
+    const ATKKEY = pvp && ctrl === 1 ? { KeyN: 0, Period: 1 } : { Space: 0 };
+    const atkReq = [false, false];
     const onKey = e => {
       if (e.target && /input|textarea/i.test(e.target.tagName)) return;
+      if (ATKKEY[e.code] != null) { if (e.type === 'keydown' && !e.repeat && phase === 'play' && !paused) atkReq[ATKKEY[e.code]] = true; e.preventDefault(); return; }
       if (KEYMAP[e.code] || SLOWKEY[e.code] != null) { if (e.type === 'keydown') keys.add(e.code); else keys.delete(e.code); e.preventDefault(); return; }
       if (e.type === 'keydown' && (e.code === 'KeyP' || e.code === 'Escape') && phase === 'play') { paused ? resume() : pause(); }
     };
@@ -430,6 +435,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     // a held mallet: it runs at up to KV cm/s (KSLOW while slowed), reaching it in a fraction of a second, and stops as quickly
     // (2026-11-17 ユーザー：キーボード入力が高速すぎて機能していない — it used to leap 360 cm/s at once across a 62 cm table; 115 → 80 cm/s the same day: ベースのスピードが早くて操作しにくい)
     const KV = 80, KSLOW = 32, KACC = 900, kv = [[0, 0], [0, 0]];
+    // the attack: a short dash (ATK_T s at ATK_V cm/s) straight at the nearest puck — a hard, fast shot; then a cool-down
+    const ATK_V = 240, ATK_T = .16, ATK_CD = .55, atk = [0, 0], atkCd = [0, 0], atkDir = [[0, 0], [0, 0]], padAtk = [false, false];
     const held = [!mouseCtl, pvp];   // (the sides steered by keys / a pad all the time; with the mouse the keys still help side 0)
     const padSide = !pvp ? 0 : ctrl === 2 ? 1 : -1;   // (two players by keyboard: no pad)
     function axes(dt) {
@@ -440,11 +447,29 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
         pads.forEach(gp => {
           let ax = gp.axes[0] || 0, ay = gp.axes[1] || 0; const dz = .16; if (Math.hypot(ax, ay) < dz) { ax = 0; ay = 0; }
           const b = gp.buttons || []; if (b[14] && b[14].pressed) ax = -1; if (b[15] && b[15].pressed) ax = 1; if (b[12] && b[12].pressed) ay = -1; if (b[13] && b[13].pressed) ay = 1;
-          if ((b[0] && b[0].pressed) || (b[2] && b[2].pressed)) slow[padSide] = true;
+          if (b[0] && b[0].pressed) slow[padSide] = true;
+          const xb = !!(b[2] && b[2].pressed); if (xb && !padAtk[padSide] && phase === 'play') atkReq[padSide] = true; padAtk[padSide] = xb;
           if (ax || ay) { dir[padSide][0] += ax; dir[padSide][1] += ay; act[padSide] = true; }
         });
       }
       for (let side = 0; side < 2; side++) {
+        atkCd[side] = Math.max(0, atkCd[side] - dt);
+        if (atkReq[side]) {   // the dash starts: at the nearest puck (none on the table — straight ahead)
+          atkReq[side] = false;
+          if (!atkCd[side] && !atk[side]) {
+            const m = s.mal[side]; let best = null, bd = 1e9; (s.pucks || []).forEach(p => { const d = Math.hypot(p.x - m.x, p.y - m.y); if (d < bd) { bd = d; best = p; } });
+            let dx = best ? best.x - m.x : 0, dy = best ? best.y - m.y : (side === 0 ? -1 : 1); const l = Math.hypot(dx, dy) || 1; atkDir[side] = [dx / l, dy / l];
+            atk[side] = ATK_T; atkCd[side] = ATK_CD; keyUsed[side] = true; src[side] = 'key'; SND.click && SND.click();
+          }
+        }
+        if (atk[side] > 0) {
+          atk[side] = Math.max(0, atk[side] - dt); const v = kv[side];
+          v[0] = atkDir[side][0] * ATK_V; v[1] = atkDir[side][1] * ATK_V;
+          if (!atk[side]) { v[0] = atkDir[side][0] * KV; v[1] = atkDir[side][1] * KV; }   // (out of the dash at walking pace)
+          const m = s.mal[side], x = m.x + v[0] * dt, y = m.y + v[1] * dt;
+          tgt[side] = E.clampXY ? E.clampXY(s, side, x, y) : { tx: x, ty: y };
+          continue;
+        }
         if (!held[side] && !act[side] && !kv[side][0] && !kv[side][1]) continue;
         const [vx, vy] = dir[side], n = Math.hypot(vx, vy), mag = Math.min(1, n), [fx, fy] = n ? scr2field(vx / n, vy / n) : [0, 0];
         const want = mag * (slow[side] ? KSLOW : KV), tx = fx * want, ty = fy * want, v = kv[side];
@@ -500,20 +525,20 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     // (2026-11-10) the controls first (until 'don't show again'), then the board menu
     // (2026-11-17) the keys for the keyboard / gamepad controls: [1P keyboard, 2P left, 2P right, 2P keyboard side, 2P pad side, 1P pad]
     const KEYT = {
-      ja: ['WASD か矢印キーで移動。スペースを押している間はゆっくり', '左（赤）：WASDで移動、スペースでゆっくり', '右（黄）：矢印キーで移動、< か > でゆっくり', 'キーボード（赤）：WASD か矢印キーで移動、スペースでゆっくり', 'ゲームパッド（黄）：スティックか十字ボタンで移動、X か A でゆっくり', 'スティックか十字ボタンで移動。X か A を押している間はゆっくり'],
-      en: ['WASD or the arrow keys to move; hold Space to go slowly', 'Left (red): WASD to move, Space to go slowly', 'Right (yellow): arrow keys to move, < or > to go slowly', 'Keyboard (red): WASD or arrows to move, Space to go slowly', 'Gamepad (yellow): stick or d-pad to move, X or A to go slowly', 'Stick or d-pad to move; hold X or A to go slowly'],
-      zh: ['WASD 或方向键移动，按住空格键慢速移动', '左（红）：WASD 移动，空格键慢速', '右（黄）：方向键移动，< 或 > 慢速', '键盘（红）：WASD 或方向键移动，空格键慢速', '手柄（黄）：摇杆或十字键移动，X 或 A 慢速', '摇杆或十字键移动，按住 X 或 A 慢速移动'],
-      'zh-TW': ['WASD 或方向鍵移動，按住空白鍵慢速移動', '左（紅）：WASD 移動，空白鍵慢速', '右（黃）：方向鍵移動，< 或 > 慢速', '鍵盤（紅）：WASD 或方向鍵移動，空白鍵慢速', '手把（黃）：搖桿或十字鍵移動，X 或 A 慢速', '搖桿或十字鍵移動，按住 X 或 A 慢速移動'],
-      ko: ['WASD나 방향키로 이동, 스페이스를 누르는 동안 천천히', '왼쪽(빨강): WASD로 이동, 스페이스로 천천히', '오른쪽(노랑): 방향키로 이동, < 나 > 로 천천히', '키보드(빨강): WASD나 방향키로 이동, 스페이스로 천천히', '게임패드(노랑): 스틱이나 십자 버튼으로 이동, X나 A로 천천히', '스틱이나 십자 버튼으로 이동, X나 A를 누르는 동안 천천히'],
-      es: ['WASD o las flechas para moverte; mantén Espacio para ir despacio', 'Izquierda (rojo): WASD para moverte, Espacio para ir despacio', 'Derecha (amarillo): flechas para moverte, < o > para ir despacio', 'Teclado (rojo): WASD o flechas para moverte, Espacio para ir despacio', 'Mando (amarillo): stick o cruceta para moverte, X o A para ir despacio', 'Stick o cruceta para moverte; mantén X o A para ir despacio'],
-      fr: ['ZQSD/WASD ou les flèches pour bouger ; maintiens Espace pour ralentir', 'Gauche (rouge) : WASD pour bouger, Espace pour ralentir', 'Droite (jaune) : flèches pour bouger, < ou > pour ralentir', 'Clavier (rouge) : WASD ou flèches pour bouger, Espace pour ralentir', 'Manette (jaune) : stick ou croix pour bouger, X ou A pour ralentir', 'Stick ou croix pour bouger ; maintiens X ou A pour ralentir'],
-      pt: ['WASD ou as setas para mover; segure Espaço para ir devagar', 'Esquerda (vermelho): WASD para mover, Espaço para ir devagar', 'Direita (amarelo): setas para mover, < ou > para ir devagar', 'Teclado (vermelho): WASD ou setas para mover, Espaço para ir devagar', 'Controle (amarelo): analógico ou direcional para mover, X ou A para ir devagar', 'Analógico ou direcional para mover; segure X ou A para ir devagar'],
-      de: ['WASD oder Pfeiltasten zum Bewegen; Leertaste halten für langsam', 'Links (rot): WASD bewegen, Leertaste langsam', 'Rechts (gelb): Pfeiltasten bewegen, < oder > langsam', 'Tastatur (rot): WASD oder Pfeile bewegen, Leertaste langsam', 'Gamepad (gelb): Stick oder Steuerkreuz bewegen, X oder A langsam', 'Stick oder Steuerkreuz zum Bewegen; X oder A halten für langsam'],
-      ru: ['WASD или стрелки — движение; удерживайте пробел, чтобы двигаться медленно', 'Слева (красный): WASD — движение, пробел — медленно', 'Справа (жёлтый): стрелки — движение, < или > — медленно', 'Клавиатура (красный): WASD или стрелки, пробел — медленно', 'Геймпад (жёлтый): стик или крестовина, X или A — медленно', 'Стик или крестовина — движение; удерживайте X или A, чтобы медленно'],
-      tr: ['WASD veya ok tuşlarıyla hareket; yavaşlamak için Boşluk’u basılı tut', 'Sol (kırmızı): WASD ile hareket, Boşluk ile yavaş', 'Sağ (sarı): ok tuşlarıyla hareket, < veya > ile yavaş', 'Klavye (kırmızı): WASD veya oklar ile hareket, Boşluk ile yavaş', 'Oyun kolu (sarı): çubuk veya yön tuşlarıyla hareket, X veya A ile yavaş', 'Çubuk veya yön tuşlarıyla hareket; yavaşlamak için X veya A’yı basılı tut'],
-      id: ['WASD atau tombol panah untuk bergerak; tahan Spasi untuk pelan', 'Kiri (merah): WASD bergerak, Spasi untuk pelan', 'Kanan (kuning): tombol panah bergerak, < atau > untuk pelan', 'Keyboard (merah): WASD atau panah bergerak, Spasi untuk pelan', 'Gamepad (kuning): stik atau D-pad bergerak, X atau A untuk pelan', 'Stik atau D-pad untuk bergerak; tahan X atau A untuk pelan'],
-      hi: ['WASD या तीर कुंजियों से चलाएँ; धीरे चलाने के लिए स्पेस दबाए रखें', 'बाएँ (लाल): WASD से चलाएँ, स्पेस से धीरे', 'दाएँ (पीला): तीर कुंजियों से चलाएँ, < या > से धीरे', 'कीबोर्ड (लाल): WASD या तीर से चलाएँ, स्पेस से धीरे', 'गेमपैड (पीला): स्टिक या डी-पैड से चलाएँ, X या A से धीरे', 'स्टिक या डी-पैड से चलाएँ; धीरे के लिए X या A दबाए रखें'],
-      ar: ['WASD أو الأسهم للتحريك، واضغط مطوّلًا على المسافة للإبطاء', 'اليسار (الأحمر): WASD للتحريك، والمسافة للإبطاء', 'اليمين (الأصفر): الأسهم للتحريك، و< أو > للإبطاء', 'لوحة المفاتيح (الأحمر): WASD أو الأسهم، والمسافة للإبطاء', 'ذراع التحكم (الأصفر): العصا أو الأزرار الاتجاهية، وX أو A للإبطاء', 'العصا أو الأزرار الاتجاهية للتحريك، واضغط مطوّلًا على X أو A للإبطاء'],
+      ja: ['WASD か矢印キーで移動、SHIFT でスロー、スペースでアタック（パックへ突進して強く打つ）', '左（赤）：WASD で移動、B でスロー、N でアタック', '右（黄）：矢印キーで移動、< でスロー、> でアタック', 'キーボード（赤）：WASD か矢印で移動、SHIFT でスロー、スペースでアタック', 'ゲームパッド（黄）：スティックか十字で移動、A でスロー、X でアタック', 'スティックか十字ボタンで移動、A でスロー、X でアタック（パックへ突進して強く打つ）'],
+      en: ['WASD or arrows to move, Shift to go slowly, Space to attack (dash at the puck for a hard shot)', 'Left (red): WASD to move, B slow, N attack', 'Right (yellow): arrows to move, < slow, > attack', 'Keyboard (red): WASD or arrows to move, Shift slow, Space attack', 'Gamepad (yellow): stick or d-pad to move, A slow, X attack', 'Stick or d-pad to move, A to go slowly, X to attack (dash at the puck for a hard shot)'],
+      zh: ['WASD 或方向键移动，SHIFT 慢速，空格键突击（冲向冰球用力击出）', '左（红）：WASD 移动，B 慢速，N 突击', '右（黄）：方向键移动，< 慢速，> 突击', '键盘（红）：WASD 或方向键移动，SHIFT 慢速，空格键突击', '手柄（黄）：摇杆或十字键移动，A 慢速，X 突击', '摇杆或十字键移动，A 慢速，X 突击（冲向冰球用力击出）'],
+      'zh-TW': ['WASD 或方向鍵移動，SHIFT 慢速，空白鍵突擊（衝向冰球用力擊出）', '左（紅）：WASD 移動，B 慢速，N 突擊', '右（黃）：方向鍵移動，< 慢速，> 突擊', '鍵盤（紅）：WASD 或方向鍵移動，SHIFT 慢速，空白鍵突擊', '手把（黃）：搖桿或十字鍵移動，A 慢速，X 突擊', '搖桿或十字鍵移動，A 慢速，X 突擊（衝向冰球用力擊出）'],
+      ko: ['WASD나 방향키로 이동, SHIFT로 천천히, 스페이스로 어택(퍽으로 돌진해 세게 친다)', '왼쪽(빨강): WASD 이동, B 천천히, N 어택', '오른쪽(노랑): 방향키 이동, < 천천히, > 어택', '키보드(빨강): WASD나 방향키 이동, SHIFT 천천히, 스페이스 어택', '게임패드(노랑): 스틱이나 십자 버튼 이동, A 천천히, X 어택', '스틱이나 십자 버튼으로 이동, A로 천천히, X로 어택(퍽으로 돌진해 세게 친다)'],
+      es: ['WASD o flechas para moverte, Mayús para ir despacio, Espacio para atacar (lánzate al disco y golpea fuerte)', 'Izquierda (rojo): WASD moverse, B despacio, N atacar', 'Derecha (amarillo): flechas moverse, < despacio, > atacar', 'Teclado (rojo): WASD o flechas, Mayús despacio, Espacio atacar', 'Mando (amarillo): stick o cruceta, A despacio, X atacar', 'Stick o cruceta para moverte, A despacio, X para atacar (lánzate al disco y golpea fuerte)'],
+      fr: ['WASD ou flèches pour bouger, Maj pour ralentir, Espace pour attaquer (fonce sur le palet pour frapper fort)', 'Gauche (rouge) : WASD bouger, B ralentir, N attaquer', 'Droite (jaune) : flèches bouger, < ralentir, > attaquer', 'Clavier (rouge) : WASD ou flèches, Maj ralentir, Espace attaquer', 'Manette (jaune) : stick ou croix, A ralentir, X attaquer', 'Stick ou croix pour bouger, A pour ralentir, X pour attaquer (fonce sur le palet pour frapper fort)'],
+      pt: ['WASD ou setas para mover, Shift para ir devagar, Espaço para atacar (avance no disco e bata forte)', 'Esquerda (vermelho): WASD mover, B devagar, N atacar', 'Direita (amarelo): setas mover, < devagar, > atacar', 'Teclado (vermelho): WASD ou setas, Shift devagar, Espaço atacar', 'Controle (amarelo): analógico ou direcional, A devagar, X atacar', 'Analógico ou direcional para mover, A devagar, X para atacar (avance no disco e bata forte)'],
+      de: ['WASD oder Pfeile zum Bewegen, Umschalt langsam, Leertaste Angriff (zum Puck stürmen und hart schlagen)', 'Links (rot): WASD bewegen, B langsam, N Angriff', 'Rechts (gelb): Pfeile bewegen, < langsam, > Angriff', 'Tastatur (rot): WASD oder Pfeile, Umschalt langsam, Leertaste Angriff', 'Gamepad (gelb): Stick oder Steuerkreuz, A langsam, X Angriff', 'Stick oder Steuerkreuz bewegen, A langsam, X Angriff (zum Puck stürmen und hart schlagen)'],
+      ru: ['WASD или стрелки — движение, Shift — медленно, пробел — атака (рывок к шайбе и сильный удар)', 'Слева (красный): WASD, B — медленно, N — атака', 'Справа (жёлтый): стрелки, < — медленно, > — атака', 'Клавиатура (красный): WASD или стрелки, Shift — медленно, пробел — атака', 'Геймпад (жёлтый): стик или крестовина, A — медленно, X — атака', 'Стик или крестовина — движение, A — медленно, X — атака (рывок к шайбе и сильный удар)'],
+      tr: ['WASD veya oklarla hareket, Shift ile yavaş, Boşluk ile atak (paka atılıp sert vur)', 'Sol (kırmızı): WASD hareket, B yavaş, N atak', 'Sağ (sarı): oklar hareket, < yavaş, > atak', 'Klavye (kırmızı): WASD veya oklar, Shift yavaş, Boşluk atak', 'Oyun kolu (sarı): çubuk veya yön tuşları, A yavaş, X atak', 'Çubuk veya yön tuşlarıyla hareket, A yavaş, X atak (paka atılıp sert vur)'],
+      id: ['WASD atau panah untuk bergerak, Shift untuk pelan, Spasi untuk serang (melesat ke puck dan pukul keras)', 'Kiri (merah): WASD gerak, B pelan, N serang', 'Kanan (kuning): panah gerak, < pelan, > serang', 'Keyboard (merah): WASD atau panah, Shift pelan, Spasi serang', 'Gamepad (kuning): stik atau D-pad, A pelan, X serang', 'Stik atau D-pad untuk bergerak, A pelan, X serang (melesat ke puck dan pukul keras)'],
+      hi: ['WASD या तीर से चलाएँ, Shift से धीरे, स्पेस से अटैक (पक पर झपटकर ज़ोर से मारें)', 'बाएँ (लाल): WASD चलाएँ, B धीरे, N अटैक', 'दाएँ (पीला): तीर चलाएँ, < धीरे, > अटैक', 'कीबोर्ड (लाल): WASD या तीर, Shift धीरे, स्पेस अटैक', 'गेमपैड (पीला): स्टिक या डी-पैड, A धीरे, X अटैक', 'स्टिक या डी-पैड से चलाएँ, A से धीरे, X से अटैक (पक पर झपटकर ज़ोर से मारें)'],
+      ar: ['WASD أو الأسهم للتحريك، وShift للإبطاء، والمسافة للهجوم (اندفع نحو القرص واضربه بقوة)', 'اليسار (الأحمر): WASD للتحريك، وB للإبطاء، وN للهجوم', 'اليمين (الأصفر): الأسهم للتحريك، و< للإبطاء، و> للهجوم', 'لوحة المفاتيح (الأحمر): WASD أو الأسهم، وShift للإبطاء، والمسافة للهجوم', 'ذراع التحكم (الأصفر): العصا أو الأزرار الاتجاهية، وA للإبطاء، وX للهجوم', 'العصا أو الأزرار الاتجاهية للتحريك، وA للإبطاء، وX للهجوم (اندفع نحو القرص واضربه بقوة)'],
     };
     function howFirst() {
       if (howOff) { showMenu(); return; }
