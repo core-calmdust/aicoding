@@ -523,8 +523,11 @@
       const r = t(why === 'time' ? 'act.timeout' : 'act.resigned');
       say(t('res.lose')); setTimeout(() => { if (!stopped) ctx.onEnd(pvp ? { win: false, draw: false, level, score: r, pvp: true, winnerText: r } : { win: false, draw: false, level, score: r }); }, 200);
     }
+    // no action bar (2026-11-17): on phones the Atlamo's line sits just above the round buttons in the bottom corners (PC: as in every game)
+    const npcPlace = () => innerWidth <= 600 ? { cx: innerWidth / 2, w: innerWidth - 24, bot: 70 } : null;
+    if (!pvp && !online) window.__npcPlace = npcPlace;
     const api = {
-      human: 0, noUndo: online, noHint: online,
+      human: 0, noBar: true, noUndo: true, noHint: true, noResign: true, inset: () => !pvp && !online ? (innerWidth >= 820 ? 76 : 96) : 0,   // (2026-11-17 ユーザー：投了バーは不要 — no 待った / 投了 / ヒント bar; the table takes its room, the Atlamo talks there)
       canUndo: () => !pvp && !online && myTurn() && hist.length > 1,
       undo() {
         if (!api.canUndo()) return;
@@ -547,7 +550,7 @@
       canResign: () => !stopped && !over && !!st,
       resign() { if (online) { M.resign(); return; } finish('resign'); },   // (online: the record's resignation ends it, on both sides)
       timeout() { if (online) return; finish('time'); },
-      stop() { document.querySelectorAll(".bpk").forEach(e => e.remove());
+      stop() { if (window.__npcPlace === npcPlace) window.__npcPlace = null; document.querySelectorAll(".bpk").forEach(e => e.remove());
         if (online) { if (!over && M.g && M.g.status === 'play') M.resign(); M.stop(); clearInterval(olT); if (T3.live) T3.live(false); }   // (leaving a game in progress = resigning it)
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulseT);
         hand.stop();

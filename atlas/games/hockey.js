@@ -191,14 +191,14 @@
 .hktoast{position:fixed;left:50%;top:calc(80px + var(--sat,env(safe-area-inset-top)));transform:translateX(-50%);z-index:90;padding:9px 20px;border-radius:99px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 2.5px #2f6fd0,0 8px 20px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap;-webkit-user-select:none;user-select:none}
 .hkbig{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:90;font-weight:900;font-size:min(16vw,92px);color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.25),0 0 24px rgba(255,255,255,.6);pointer-events:none;animation:hkPop .6s cubic-bezier(.2,1.6,.4,1);-webkit-user-select:none;user-select:none;white-space:nowrap}
 .hkbig.g{color:#ffd23a;-webkit-text-stroke:2px #b5651d}@keyframes hkPop{from{transform:translate(-50%,-50%) scale(.3);opacity:0}}
-/* the boss / watcher talk: kept down in the action bar's row, never over the rink (PC: beside the bar; phones (2026-11-11): over the bar itself — the taps still reach its buttons) */
-html.hk-on #bv > .npc-float{left:calc(50% + 145px)!important;right:auto!important;width:min(440px,calc(50% - 165px))!important;bottom:calc(14px + env(safe-area-inset-bottom))!important;transform:translateY(10px);gap:8px!important;align-items:center!important}
+/* the boss / watcher talk on phones (2026-11-11): over the action bar itself — the taps still reach its buttons. PCs (2026-11-17 ユーザー：投了ボタンなどは不要): no bar (noBar) and the talk as in every other game */
+@media (max-width:760px){html.hk-on #bv > .npc-float{left:calc(50% + 145px)!important;right:auto!important;width:min(440px,calc(50% - 165px))!important;bottom:calc(14px + env(safe-area-inset-bottom))!important;transform:translateY(10px);gap:8px!important;align-items:center!important}
 html.hk-on #bv > .npc-float.on{transform:none}
 html.hk-on #bv > .npc-float .npc-pic{width:58px!important;height:58px!important}
 html.hk-on #bv > .npc-float .npc-bub{padding:6px 12px 7px!important;border-radius:16px!important;max-height:74px;overflow:hidden}
 html.hk-on #bv > .npc-float .npc-bub::before,html.hk-on #bv > .npc-float .npc-bub::after{bottom:auto!important;top:50%;margin-top:-9px}
 html.hk-on #bv > .npc-float .npc-nm b{font-size:13px!important}html.hk-on #bv > .npc-float .npc-tag{font-size:10.5px!important}html.hk-on #bv > .npc-float .npc-ttl{display:none}
-html.hk-on #bv > .npc-float .npc-tx{font-size:14px!important;line-height:1.4!important;min-height:0!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html.hk-on #bv > .npc-float .npc-tx{font-size:14px!important;line-height:1.4!important;min-height:0!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 @media (max-width:760px){html.hk-on #bv > .npc-float{left:10px!important;right:10px!important;width:auto!important;bottom:var(--hk-barb,14px)!important;min-height:var(--hk-barh,61px);z-index:60!important;pointer-events:none}
 html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}html.hk-on #bv > .npc-float .npc-bub{padding:4px 12px 5px!important;max-height:none;min-height:var(--hk-barh,61px);box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;flex:1}html.hk-on #bv > .npc-float .npc-nm{display:flex;margin-bottom:1px}html.hk-on #bv > .npc-float .npc-nm b{font-size:12px!important}html.hk-on #bv > .npc-float .npc-tag{font-size:10px!important}html.hk-on #bv > .npc-float .npc-tx{font-size:12.5px!important;line-height:1.35!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 .hkfx{position:fixed;z-index:80;pointer-events:none;font-weight:900;font-size:15px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 10px rgba(255,120,40,.9);transform:translate(-50%,-50%);animation:hkUp .8s ease-out forwards;white-space:nowrap;-webkit-user-select:none;user-select:none}@keyframes hkUp{to{transform:translate(-50%,-180%);opacity:0}}`;
@@ -520,14 +520,19 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       later(() => ctx.onEnd(pvp ? { win: false, draw: false, level, score, pvp: true, winnerText: tr('win', lang).replace('{p}', names[w]) } : { win: w === 0, draw: false, level, score }), 700);
     }
 
+    // PC (2026-11-17): no action bar — the Atlamo talks at the bottom right, beside the rink (not over the near goal); a window too
+    // narrow for that puts it in the middle as in the other games (atlas/npc/npc.js reads window.__npcPlace)
+    const npcPlace = () => { if (innerWidth <= 760) return null; const r = T3.modelRect && T3.modelRect(); if (!r) return null; const room = innerWidth - r.right - 28; if (room < 300) return null; const w = Math.min(470, room - 12); return { cx: r.right + 16 + room / 2, w, bot: 6 }; };
+    if (!pvp) window.__npcPlace = npcPlace;
     const api = {
-      human: 0,
+      human: 0, noBar: !matchMedia('(max-width:760px)').matches,    // (PC: no 待った / 投了 / ヒント bar — the Atlamo talks there instead, 2026-11-17)
       canUndo: () => false, undo() {},
       canHint: () => false, hint() { return Promise.resolve(false); },
       canResign: () => !stopped && !over,
       resign() { if (over) return; over = true; cancelAnimationFrame(raf); if (menuEl) { menuEl.remove(); menuEl = null; } const sc = s ? `${s.score[0]} − ${s.score[1]}` : '0 − 0'; ctx.onEnd(pvp ? { win: false, draw: false, level, score: sc, pvp: true, winnerText: tr('win', lang).replace('{p}', names[1]) } : { win: false, draw: false, level, score: sc }); },
       timeout() {},
       stop() {
+        if (window.__npcPlace === npcPlace) window.__npcPlace = null;
         stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); timers.forEach(clearTimeout);
         unlock(); escBadge(false); document.removeEventListener('pointerlockchange', onLockChange); ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointermove', onMoveW, true); removeEventListener('mouseout', onOutW); if (raw) ctx.el.removeEventListener('pointerrawupdate', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
         removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur); removeEventListener('focus', onFocus);
