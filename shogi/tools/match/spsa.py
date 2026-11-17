@@ -8,6 +8,12 @@
   python3 tools/match/spsa.py test [--work ~/shogi-spsa] [--ms 300 | --nodes N] [--procs 6] [--games 80] [--set "2=80,16=120"]
       a match of a setting (default: the tuned values in spsa.json, rounded) against the engine's defaults; Elo with a 95% range.
 
+Switches that are off by default and can be tried with test --set (engine.c set_param):
+  24=1 "improving" (less pruning / more reduction by the trend of the static evaluation), 25=1 the table's score as the static
+  evaluation, 19=<depth> singular extension from this depth (20: its margin per depth, default 2; 21: 1 = multi-cut),
+  10=<margin> razoring, 6=1 countermove ordering, 18=<depth> futility up to this depth (default 2), 26=<depth> late move
+  pruning up to this depth (default 3), 13=<depth> the reduction without a table move from this depth.
+
 Both sides are the same engine: one in usimatch (--param), one in kptool over USI (Param<k>); which setting sits in which
 program alternates, so a difference between the two programs cancels. Time per move, not nodes: these constants trade
 nodes for depth, so only time shows what they are worth. Run nothing else heavy at the same time.
