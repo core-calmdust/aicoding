@@ -31,8 +31,9 @@ assert a in s
 s = s.replace(a, "  stopFlag = 0; nodes = 0; simNext = simQT; tEnd")
 # delayed table stores
 s = s.replace("static inline void ttLoad(u64 key, TTE *e) {", "static inline void ttLoadS(u64 key, TTE *e) {", 1)
-s = s.replace("static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {\n  TTX", "static void ttStoreS(u64 key, int d, int flag, int v, const Move *m, int ply) {\n  TTX", 1)
-end = "  bk[j].a = a; bk[j].b = b; bk[j].kx = key ^ a ^ b;\n}\n"
+# (2026-11-17: the table is praline_tt.h's since 2026-11-15)
+s = s.replace("static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {\n  int hit", "static void ttStoreS(u64 key, int d, int flag, int v, const Move *m, int ply) {\n  int hit", 1)
+end = "  plttWrite(x, key, a, b);\n}\n"
 assert s.count(end) == 1
 s = s.replace(end, end + r'''
 #define PEND_MAX 16384

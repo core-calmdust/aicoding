@@ -220,6 +220,7 @@ const wMove = (ft, cap) => mv(ft & 31, (ft >> 5) & 31, cap >>> 0);
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: wMove(r[2 + 3 * i], r[3 + 3 * i]), v: r[4 + 3 * i] }); return L; }
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 
+let BOOK = null;      // the opening book (book.json, made on a Mac by shared/tools/genbook.js checkers; 2026-11-17). Missing: live analysis
 let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
 function think(start, moves, level, rand) {
   rand = rand || Math.random;
@@ -246,6 +247,8 @@ function think(start, moves, level, rand) {
     return { move: best, v: vals[0].v };
   }
   // opening variety for the top levels: in the first plies pick among moves within a few points of the best
+  const bk = L.book && !start && BOOK && BOOK.pos[moves.join(',')];
+  if (bk && bk.length) { const good = bk.filter(e => e[1] >= bk[0][1] - 8); const e = good[Math.floor(rand() * good.length)]; if (all.includes(e[0])) return { move: e[0], v: bk[0][1], book: 1 }; }
   if (L.book && moves.length < 8 && !start) {
     WX.analyze(Math.max(300, (L.ms || 500) * 0.8), 40);
     const vals = wList(), good = vals.filter(e => e.v >= vals[0].v - 8);
@@ -301,7 +304,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NB, JP, RC, sqAt, bit, popc, bitsOf
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.CheckersEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261117e6';
+  const V = 'v=20261117tm';
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The network sits in the engine's
   // own (shared) tables; the endgame databases go into the shared memory above every thread's slot. The rest is the usual API.
@@ -314,6 +317,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   // the 6-piece classes (2026-11-17, CKZ3: 52 MB download, 83 MB of memory, +9 Elo [0, 18] over 3000 games): a computer only,
   // at the first search of 五段, a PRO step of 2.5 s / 2M positions or more, or an analysis
   const NAV = self.navigator || {}, EG6_OK = !/Mobi|Android|iPhone|iPad|iPod/i.test(NAV.userAgent || '') && !(NAV.maxTouchPoints > 1 && /Mac/.test(NAV.userAgent || '')) && !(NAV.deviceMemory < 8);
+  const bookP = typeof fetch === 'function' ? fetch(new URL('book.json?' + V, self.location.href)).then(r => r.ok ? r.json() : null).then(b => { BOOK = b; }).catch(() => {}) : null;
   const wantEg6 = m => EG6_OK && (m.type === 'analyze' || m.type === 'cands' ||
     (m.type === 'think' && (() => { const L = m.cfg || LEVELS[m.level] || {}; return (L.ms >= 2500 && !L.nk) || L.nk >= 2000; })()));
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
@@ -363,7 +367,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   self.onmessage = e => {
     const m = e.data;
     if (m && m.type === 'mtinit') return;
-    queue = queue.then(() => readyP).then(() => { if (egLoad && !eg5P && wantEg5(m)) eg5P = egLoad('egdb5.bin.gz').catch(() => {}); if (eg5P && !eg6P && wantEg6(m)) eg6P = eg5P.then(() => egLoad('egdb6.bin.gz')).catch(() => {}); return eg6P || eg5P; }).catch(() => {}).then(() => {
+    queue = queue.then(() => Promise.all([readyP, bookP])).then(() => { if (egLoad && !eg5P && wantEg5(m)) eg5P = egLoad('egdb5.bin.gz').catch(() => {}); if (eg5P && !eg6P && wantEg6(m)) eg6P = eg5P.then(() => egLoad('egdb6.bin.gz')).catch(() => {}); return eg6P || eg5P; }).catch(() => {}).then(() => {
       try {
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {

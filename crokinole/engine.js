@@ -262,8 +262,9 @@
     return out;
   }
   // (2026-11-13: the top levels a little softer — above Lv.12 each step counts ¾: Lv.20 ≈ the old Lv.18)
+  // (2026-11-17 ユーザー：Lv.12 から上も少し抑えて／Lv12も) above Lv.11 each step now counts ½: Lv.12 ≈ 11.5, Lv.20 ≈ the first version's Lv.15.5
   function skill(level) {
-    const L = Math.max(1, Math.min(20, level)), e = L <= 12 ? L : 12 + (L - 12) * .75, k = (e - 1) / 19;
+    const L = Math.max(1, Math.min(20, level)), e = L <= 11 ? L : 11 + (L - 11) * .5, k = (e - 1) / 19;
     return { n: Math.round(8 + 150 * k * k + 20 * k), robust: e >= 11 ? (e >= 17 ? 5 : 3) : 0, angSd: (3.6 * Math.pow(1 - k, 1.5) + .3) * Math.PI / 180, vSd: .14 * Math.pow(1 - k, 1.3) + .03, pickTop: level <= 3 ? 4 : level <= 6 ? 2 : 1 };
   }
   function jitter(shot, sk, R) { return { x: shot.x, ang: shot.ang + gauss(R) * sk.angSd, v: Math.max(25, shot.v * (1 + gauss(R) * sk.vSd)) }; }
