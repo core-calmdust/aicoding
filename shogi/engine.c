@@ -1063,6 +1063,11 @@ typedef struct { i32 key, move, data; } TTEntry;   /* one entry in one place: a 
 #ifndef MT
 static TTEntry tt[TT_SIZE];
 #endif
+#if defined(NATIVE) && !defined(MT)
+#define SEARCH2 1   /* (search v5, set_param 44: the native one-thread tools only for now; not in the wasm builds) */
+typedef struct { u32 key; i16 score, eval; unsigned short move; u8 depth, fl; } TT2E;   /* fl: bound | pv << 2 | age << 3 */
+static TT2E tt2[TT_SIZE];
+#endif
 static int ttAge = 0;
 #define F_EXACT 1
 #define F_LOWER 2
@@ -1119,7 +1124,12 @@ typedef i32 Move;   /* (a move is an int here) */
 #include "../shared/praline/praline.h"
 EXPORT(tt_clear) void tt_clear(void) { memset(PL_TT, 0, sizeof PL_TT); memset(busyT, 0, sizeof busyT); }
 #else
-EXPORT(tt_clear) void tt_clear(void) { memset(tt, 0, sizeof tt); }
+EXPORT(tt_clear) void tt_clear(void) {
+  memset(tt, 0, sizeof tt);
+#ifdef SEARCH2
+  memset(tt2, 0, sizeof tt2);
+#endif
+}
 #endif
 
 #define NBUF (MAXPLY + 32)
@@ -1132,9 +1142,9 @@ static TLS int rootDepth = 1;
 /* tunables (same defaults as engine.js) */
 static int useMate1 = 1, rfpDepth = 8, rfpMargin = 112, nullAdapt = 1, histMalus = 0;   /* (2026-11-17: SPSA at 100 ms per move, tools/match/spsa.py: depth 6 -> 8, margin 90 -> 112, [9] 6000 -> 6749, [12] 4 -> 7, [16] 100 -> 123, [23] 200 -> 162, [27] 60 -> 85, LMR divisor 2.0 -> 2.03: +22 Elo at 300 ms over 1440 games) */
 /* before:   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
-static int P[64] = {[5] = 1, [7] = 1, [9] = 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = 85};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
+static int P[96] = {[5] = 1, [7] = 1, [9] = 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = 85};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
 static void lmrInit(double div);
-EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 64) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
+EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 96) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
    P5 log-LMR, P6 counter-move ordering, P7 quiet checks in first qsearch ply, P10 razoring, P11 extend all checks, P12 LMP base;
    search v3 (2026-11-08, MODEL_CARD.md): P22 history v2 (gravity, malus, continuation history; on), P23 ProbCut margin (200, on),
@@ -1390,7 +1400,286 @@ static double qsearch(double alpha, double beta, int ply, int qd) {
   }
   return best;
 }
+
+/* ---- search v5 ("search2", set_param 44 = 1; claude/shogi-search-comparison.md): one search written to the plan of the
+   Stockfish family, its parts made for each other — a table with the static evaluation, used in the quiescence search too;
+   history for quiet moves and for captures; losing captures after the quiet moves; pruning and reductions in the move loop
+   at every depth. One thread only for now (the MT build keeps the old search). Its numbers (P45..P63, 0 = the default in
+   brackets):
+   P45 late move pruning: 1 on (count (3 + depth^2) / (2 - improving) * P43 / 100)       P46 futility: lmrDepth < P46 (0 off)
+   P47 / P48 its margin: P47 + P48 * lmrDepth [100, 120]     P49 quiet SEE: < -P49 * lmrDepth^2 (0 off)
+   P50 capture SEE: < -P50 * depth (0 off)                   P51 history pruning: < -P51 * depth at lmrDepth < 4 (0 off)
+   P52 null move reduction base [4]                          P53 no table move: a ply less from depth P53 (0 off)
+   P54 more reduction at cut nodes [0]                       P55 check extension: 0 as before (safe checks), 1 none
+   P56 reductions from move P56 + 1 [1]                      P57 captures: 0 not reduced, 1 reduced a ply less than quiet moves
+   P58 razoring margin per depth (0 off)                     P60 1: no table in the quiescence search
+   P61 1: the table's value does not replace the static evaluation      P62 1: a ply more reduction when not improving
+   P64 1: checking moves and moves out of check are not reduced         P65 1: the old null move reduction (3 + depth / 5 + up to 2)
+   P66 reductions only from depth P66 [2]                               P67 1: the table's static evaluation is not reused */
+#define TT2_NOEVAL (-32768)
+#ifdef SEARCH2
+static i16 capH[16 * 81 * 16];   /* captures: [moving piece type][to][captured type] */
+static inline TT2E *tt2Probe(int *hit) {
+  TT2E *e = &tt2[hl & TT_MASK & ~1];
+  if (e[0].key == (u32)hh && e[0].fl) { *hit = 1; return e; }
+  if (e[1].key == (u32)hh && e[1].fl) { *hit = 1; return e + 1; }
+  *hit = 0; return e;
+}
+static void tt2Store(int depth, double score, int flag, int move, int ply, double ev, int pv) {
+  TT2E *e = &tt2[hl & TT_MASK & ~1], *w;
+  if (e[0].key == (u32)hh && e[0].fl) w = e; else if (e[1].key == (u32)hh && e[1].fl) w = e + 1;
+  else { const int a0 = e[0].fl ? e[0].depth - ((e[0].fl >> 3) != (ttAge & 31) ? 8 : 0) : -100, a1 = e[1].fl ? e[1].depth - ((e[1].fl >> 3) != (ttAge & 31) ? 8 : 0) : -100; w = a0 <= a1 ? e : e + 1; w->move = 0; }
+  if (w->key == (u32)hh && w->fl && flag != F_EXACT && depth + 3 < w->depth && (w->fl >> 3) == (ttAge & 31)) { if (move && !w->move) w->move = (unsigned short)move; return; }   /* (a much deeper entry of this search stays) */
+  if (score > MATE - MAXPLY) score += ply; else if (score < -MATE + MAXPLY) score -= ply;
+  if (move || w->key != (u32)hh) w->move = (unsigned short)move;
+  w->key = (u32)hh; w->score = (i16)score; w->eval = ev <= -INF + 1 ? TT2_NOEVAL : (i16)ev; w->depth = (u8)(depth < 0 ? 0 : depth); w->fl = (u8)(flag | (pv ? 4 : 0) | ((ttAge & 31) << 3));
+}
+static inline int capIdx(int m) { return ((typeOf(board[m & 127]) * 81 + ((m >> 7) & 127)) << 4) + typeOf(board[(m >> 7) & 127]); }
+/* the order of the captures (and the promotions the capture list holds): table move, winning or even captures by victim
+   and capture history, promotions; the losing ones negative (they wait until after the quiet moves) */
+static void order2Caps(i32 *moves, i32 *scores, int n, int ttm) {
+  for (int i = 0; i < n; i++) {
+    int m = moves[i], f = m & 127, cap = board[(m >> 7) & 127];
+    if (m == ttm) { scores[i] = 1 << 30; continue; }
+    if (cap) { int sv = see(m); scores[i] = sv < 0 ? -10000000 + sv : 100000000 + VALUE[typeOf(cap)] * 16 + (f > 80 ? 0 : capH[capIdx(m)]); }
+    else scores[i] = 90000000 + VALUE[typeOf(board[f]) + 8] - VALUE[typeOf(board[f])];
+  }
+}
+static double qsearch2(double alpha, double beta, int ply, int pvNode, int qd) {
+  nodes++;
+  if (timeUp()) return 0;
+  const int inChk = inCheck();
+  histChk[hn - 1] = inChk ? 1 : 0;
+  if (ply >= MAXPLY + 20) return evaluate();
+  int hit = 0, ttm = 0; double ttS = 0, raw = -INF; int ttF = 0;
+  if (!P[60]) {
+    TT2E *e = tt2Probe(&hit);
+    if (hit) {
+      ttm = e->move; ttF = e->fl & 3; ttS = e->score;
+      if (ttS > MATE - MAXPLY) ttS -= ply; else if (ttS < -MATE + MAXPLY) ttS += ply;
+      if (!pvNode && (ttF == F_EXACT || (ttF == F_LOWER && ttS >= beta) || (ttF == F_UPPER && ttS <= alpha))) return ttS;
+      if (e->eval != TT2_NOEVAL && !P[67]) raw = e->eval;
+    }
+  }
+  double best = -INF; const double alpha0 = alpha; int bestMove = 0;
+  if (!inChk) {
+    if (raw <= -INF + 1) raw = evaluate();
+    best = raw;
+    if (hit && !P[61] && (ttS < 0 ? -ttS : ttS) < MATE - MAXPLY && (ttF == F_EXACT || (ttF == F_LOWER && ttS > best) || (ttF == F_UPPER && ttS < best))) best = ttS;
+    if (best >= beta) { if (!hit && !P[60]) tt2Store(0, best, F_LOWER, 0, ply, raw, 0); return best; }
+    if (best > alpha) alpha = best;
+  }
+  i32 *moves = moveBuf[ply], *scores = scoreBuf[ply];
+  EvMask ev; if (inChk) evMask(&ev);
+  int n = inChk ? genEv(moves, 0, &ev) : gen(moves, 1);
+  if (inChk) orderMoves(moves, scores, n, ttm, ply); else order2Caps(moves, scores, n, ttm);
+  int legal = 0;
+  PickBlocks *pk = &pkT[ply]; pk->nb = 0;
+  for (int i = 0; i < n; i++) {
+    int m = pickFast(moves, scores, n, i, pk);
+    if (!inChk) {
+      int cap = board[(m >> 7) & 127];
+      if (scores[i] < 0) break;   /* (the losing captures; the list is in order) */
+      if (cap && raw + VALUE[typeOf(cap)] * 2 + 200 < alpha && !((m >> 14) & 1)) continue;
+      if (!cap && see(m) < 0) continue;
+      doMove(m);
+      if (!legalAfter(m, 0)) { undoMove(); continue; }
+    } else {
+      int lg = evOK(&ev, m) ? evLegal(&ev, m) : 0; if (!lg) continue;
+      doMove(m);
+      if (lg == 2 && !legalAfter(m, 1)) { undoMove(); continue; }
+    }
+    legal++;
+    double v = -qsearch2(-beta, -alpha, ply + 1, pvNode, qd + 1);
+    undoMove();
+    if (stopFlag) return 0;
+    if (v > best) { best = v; if (v > alpha) { alpha = v; bestMove = m; if (v >= beta) break; } }
+  }
+  if (inChk && !legal) return -MATE + ply;
+  if (P[7] && !inChk && qd == 0 && best < beta) {   /* quiet checking moves (incl. drops) at the first quiescence ply */
+    i32 *qm = quietBuf[ply];
+    int nn = genChecks(qm);
+    for (int i = 0; i < nn; i++) {
+      int m = qm[i];
+      if (!givesCheckPre(m)) continue;
+      doMove(m);
+      if (!inCheck() || !legalAfter(m, 0)) { undoMove(); continue; }
+      if (seeAfterCheck(m) < 0) { undoMove(); continue; }
+      double v = -qsearch2(-beta, -alpha, ply + 1, pvNode, qd + 1);
+      undoMove();
+      if (stopFlag) return 0;
+      if (v > best) { best = v; if (v > alpha) { alpha = v; bestMove = m; if (v >= beta) break; } }
+    }
+  }
+  if (!P[60]) tt2Store(0, best, best >= beta ? F_LOWER : best > alpha0 ? F_EXACT : F_UPPER, bestMove, ply, raw, pvNode);
+  return best;
+}
+static double search2(int depth, double alpha, double beta, int ply, int pvNode, int cutNode) {
+  pvLen[ply] = ply;
+  if (depth <= 0) return qsearch2(alpha, beta, ply, pvNode, 0);
+  nodes++;
+  if (timeUp()) return 0;
+  const int inChk = inCheck();
+  histChk[hn - 1] = inChk ? 1 : 0;
+  { double rep; if (repetition(ply, &rep)) return rep; }
+  if (alpha < -MATE + ply) alpha = -MATE + ply;
+  if (beta > MATE - ply - 1) beta = MATE - ply - 1;
+  if (alpha >= beta) return alpha;
+  if (ply >= MAXPLY - 1) return evaluate();
+  const int ex = exclM[ply];
+  int hit = 0, ttm = 0, ttD = -1, ttF = 0, ttPv = pvNode; double ttS = 0, rawEval = -INF;
+  if (!ex) {
+    TT2E *e = tt2Probe(&hit);
+    if (hit) {
+      ttm = e->move; ttD = e->depth; ttF = e->fl & 3; ttS = e->score; ttPv |= (e->fl >> 2) & 1;
+      if (ttS > MATE - MAXPLY) ttS -= ply; else if (ttS < -MATE + MAXPLY) ttS += ply;
+      if (!pvNode && ttD >= depth && (ttF == F_EXACT || (ttF == F_LOWER && ttS >= beta) || (ttF == F_UPPER && ttS <= alpha))) return ttS;
+      if (e->eval != TT2_NOEVAL && !P[67]) rawEval = e->eval;
+    }
+  }
+  if (!inChk && useMate1 && !ex) {
+    int mm = mate1(mateBuf[ply]);
+    if (mm) { double v = MATE - ply - 1; tt2Store(depth, v, F_EXACT, mm, ply, -INF, pvNode); pvTable[ply * MAXPLY + ply] = mm; pvLen[ply] = ply + 1; return v; }
+  }
+  if (inChk) rawEval = -INF; else if (rawEval <= -INF + 1) rawEval = evaluate();
+  evSt[ply] = rawEval;
+  double eval = rawEval;
+  if (!inChk && hit && !P[61] && (ttS < 0 ? -ttS : ttS) < MATE - MAXPLY && (ttF == F_EXACT || (ttF == F_LOWER && ttS > eval) || (ttF == F_UPPER && ttS < eval))) eval = ttS;
+  const int improving = !inChk && ply >= 2 && (evSt[ply - 2] > -INF + 1 ? rawEval > evSt[ply - 2] : ply >= 4 && evSt[ply - 4] > -INF + 1 ? rawEval > evSt[ply - 4] : 1);
+  const int wasNull = sp > 0 && ckS[sp - 1] < 0;
+  if (!pvNode && !inChk && !ex) {
+    if (P[58] && depth <= 3 && eval + P[58] * depth < alpha) { double v = qsearch2(alpha, beta, ply, 0, 0); if (v < alpha) return v; }
+    if (depth <= rfpDepth && eval - rfpMargin * (depth - (P[24] ? improving : 0)) >= beta && (beta < 0 ? -beta : beta) < MATE - MAXPLY) return eval;
+    if (!wasNull && depth >= 3 && eval >= beta) {
+      int x = (int)((eval - beta) / 250); const int R = P[65] ? 3 + depth / 5 + (x < 2 ? x : 2) : (P[52] ? P[52] : 4) + depth / 3 + (x < 3 ? x : 3);
+      doNull();
+      double v = -search2(depth - 1 - R, -beta, -beta + 1, ply + 1, 0, !cutNode);
+      undoNull();
+      if (stopFlag) return 0;
+      if (v >= beta && v < MATE - MAXPLY) return v;
+    }
+  }
+  if (P[53] && !ttm && !ex && depth >= P[53] && (pvNode || cutNode)) depth--;
+  i32 *moves = moveBuf[ply], *scores = scoreBuf[ply], *qmoves = quietBuf[ply], *qscores = quietScore[ply], *tq = triedQ[ply];
+  int tc[32], ntc = 0;
+  double best = -INF; int bestMove = 0, legal = 0, nq = 0, mc = 0, skipQuiets = 0;
+  const double origAlpha = alpha;
+  const int us = side;
+  int stage = 0, i1 = 0, n1 = 0, i2 = 0, n2 = 0, bad = 0;
+  PickBlocks *pk = &pkT[ply]; pk->nb = 0;
+  EvMask ev; if (inChk) evMask(&ev);
+  if (!(ttm && isPseudo(ttm))) { ttm = 0; stage = 1; }
+  for (;;) {
+    int m, sc = 0;
+    if (stage == 0) { m = ttm; stage = 1; }
+    else if (stage == 1) {
+      if (i1 == 0 && n1 == 0) { n1 = inChk ? genEv(moves, 1, &ev) : gen(moves, 1); if (inChk) orderMoves(moves, scores, n1, 0, ply); else order2Caps(moves, scores, n1, 0); if (!n1) { stage = 2; continue; } }
+      if (i1 >= n1) { stage = 2; continue; }
+      m = pickFast(moves, scores, n1, i1++, pk); sc = scores[i1 - 1];
+      if (!inChk && sc < 0) { i1--; bad = 1; stage = 2; continue; }
+      if (m == ttm) continue;
+    } else if (stage <= 3) {
+      if (stage == 2) {
+        if (skipQuiets) { stage = 4; continue; }
+        int all = inChk ? genEv(qmoves, 0, &ev) : gen(qmoves, 0); n2 = 0;
+        for (int k = 0; k < all; k++) {
+          int x = qmoves[k], tx = (x >> 7) & 127;
+          if (board[tx] || x == ttm) continue;
+          if ((x >> 14) & 1) { int tt_ = typeOf(board[x & 127]); if (tt_ == FU || tt_ == KA || tt_ == HI) continue; }
+          qmoves[n2++] = x;
+        }
+        orderMoves(qmoves, qscores, n2, 0, ply);
+        pk->nb = 0; stage = 3;
+      }
+      if (i2 >= n2 || skipQuiets) { stage = 4; continue; }
+      m = pickFast(qmoves, qscores, n2, i2++, pk); sc = qscores[i2 - 1];
+    } else {
+      if (!bad || i1 >= n1) break;
+      m = pick(moves, scores, n1, i1++); sc = scores[i1 - 1];
+      if (m == ttm) continue;
+    }
+    if (m == ex) continue;
+    const int to = (m >> 7) & 127, cap = board[to], quiet = !cap && !((m >> 14) & 1);
+    mc++;
+    int hv = 0;
+    if (quiet) hv = quietHist(us, m);
+    /* pruning in the move loop: one legal move is in, the node is not a lost one */
+    if (ply > 0 && legal > 0 && !inChk && best > -MATE + MAXPLY) {
+      const int r0 = LMRT[depth < 63 ? depth : 63][mc < 63 ? mc : 63], ld0 = depth - 1 - r0, ld = ld0 < 0 ? 0 : ld0;
+      if (quiet) {
+        int skip = 0;
+        if (P[45] && !pvNode && mc >= (3 + depth * depth) * (P[43] ? P[43] : 100) / 100 / (2 - improving)) { skip = 1; skipQuiets = 1; }
+        else if (P[51] && ld < 4 && hv < -P[51] * depth) skip = 1;
+        else if (P[46] && !pvNode && ld < P[46] && rawEval + (P[47] ? P[47] : 100) + (P[48] ? P[48] : 120) * ld <= alpha) skip = 1;
+        else if (P[49] && ld < 8 && see(m) < -P[49] * ld * ld) skip = 2;
+        if (skip == 2) continue;
+        if (skip) { if (!givesCheckPre(m)) continue; if (!chkFast) { doMove(m); int chk = inCheck(); undoMove(); if (!chk) continue; } }
+      } else if (P[50] && cap && m != ttm && sc < 0 && see(m) < -P[50] * depth) continue;
+    }
+    int capI = cap && (m & 127) <= 80 ? capIdx(m) : -1;
+    if (inChk) {
+      int lg = evOK(&ev, m) ? evLegal(&ev, m) : 0; if (!lg) continue;
+      doMove(m);
+      if (lg == 2 && !legalAfter(m, 1)) { undoMove(); continue; }
+    } else {
+      doMove(m);
+      if (!legalAfter(m, 0)) { undoMove(); continue; }
+    }
+    legal++;
+    const int givesChk = inCheck();
+    int ext = !P[55] && givesChk && ply < rootDepth * 2 && (P[11] || seeAfterCheck(m) >= 0) ? 1 : 0;
+    const int nd = depth - 1 + ext;
+    double v = 0; int full = 0;
+    if (depth >= (P[66] ? P[66] : 2) && legal > (P[56] ? P[56] : 1) && (quiet || P[57] || sc < 0) && !(P[64] && (inChk || givesChk))) {
+      int r = LMRT[depth < 63 ? depth : 63][legal < 63 ? legal : 63];
+      if (quiet) { if (m == killers[ply * 2] || m == killers[ply * 2 + 1]) r--; r -= hv / (P[9] ? P[9] : 6000); }
+      else r--;
+      if (pvNode) r--;
+      if (ttPv && !pvNode) r--;
+      if (cutNode) r += P[54];
+      if (P[62] && !improving) r++;
+      if (givesChk) r--;
+      if (inChk) r--;
+      if (r < 0) r = 0;
+      int d = nd - r; if (d < 1) d = 1;
+      v = -search2(d, -alpha - 1, -alpha, ply + 1, 0, 1);
+      if (v > alpha && d < nd) v = -search2(nd, -alpha - 1, -alpha, ply + 1, 0, !cutNode);
+      full = pvNode && v > alpha;
+    } else if (!pvNode || legal > 1) { v = -search2(nd, -alpha - 1, -alpha, ply + 1, 0, !cutNode); full = pvNode && v > alpha; }
+    else full = 1;
+    if (full && !stopFlag) v = -search2(nd, -beta, -alpha, ply + 1, 1, 0);
+    undoMove();
+    if (stopFlag) return 0;
+    if (quiet) { if (nq < 1000) tq[nq++] = m; } else if (capI >= 0 && ntc < 32) tc[ntc++] = capI;
+    if (v > best) {
+      best = v; bestMove = m;
+      if (v > alpha) {
+        alpha = v;
+        pvTable[ply * MAXPLY + ply] = m;
+        for (int j = ply + 1; j < pvLen[ply + 1]; j++) pvTable[ply * MAXPLY + j] = pvTable[(ply + 1) * MAXPLY + j];
+        pvLen[ply] = imax(ply + 1, pvLen[ply + 1]);
+        if (v >= beta) {
+          int b = (P[42] ? P[42] : 170) * depth - 80; if (b > 1600) b = 1600;
+          if (quiet) {
+            if (killers[ply * 2] != m) { killers[ply * 2 + 1] = killers[ply * 2]; killers[ply * 2] = m; }
+            histUpd(us, m, b);
+            for (int k = 0; k < nq; k++) if (tq[k] != m) histUpd(us, tq[k], -b);
+          } else if (capI >= 0) gravS(&capH[capI], b);
+          for (int k = 0; k < ntc; k++) if (tc[k] != capI) gravS(&capH[tc[k]], -b);
+          break;
+        }
+      }
+    }
+  }
+  if (!legal) return ex ? alpha : inChk ? -MATE + ply : (best > -INF + 1 ? best : -MATE + ply);
+  if (!ex) tt2Store(depth, best, best >= beta ? F_LOWER : best > origAlpha ? F_EXACT : F_UPPER, bestMove, ply, rawEval, ttPv);
+  return best;
+}
+#endif
 static double search(int depth, double alpha, double beta, int ply, int pvNode, int allowNull) {
+#ifdef SEARCH2
+  if (P[44]) return search2(depth, alpha, beta, ply, pvNode == 1, pvNode != 1);
+#endif
   const int cutNode = pvNode == 2; if (cutNode) pvNode = 0;   /* (pvNode: 1 PV, 2 expected cut node, 0 other; only P39 uses the kind) */
   pvLen[ply] = ply;
   if (depth <= 0) return qsearch(alpha, beta, ply, 0);
@@ -2187,7 +2476,11 @@ EXPORT(init) void init(void) {
   for (int i = 0; i < 2 * 8 * 20; i++) { const unsigned long long r = rnd64(); ZHD_L[i] = (i32)r; ZHD_H[i] = (i32)(r >> 32); }
   { const unsigned long long r = rnd64(); ZSIDE_L = (i32)r; ZSIDE_H = (i32)(r >> 32); }
 }
-EXPORT(reset_search) void reset_search(void) { memset(history, 0, sizeof history); memset(killers, 0, sizeof killers); memset(contH, 0, sizeof contH); }
+EXPORT(reset_search) void reset_search(void) { memset(history, 0, sizeof history); memset(killers, 0, sizeof killers); memset(contH, 0, sizeof contH); 
+#ifdef SEARCH2
+  memset(capH, 0, sizeof capH);
+#endif
+}
 
 #ifdef MT
 /* ------------------------------------------------------------------ threads (engine_mt.wasm, see pro/) */
