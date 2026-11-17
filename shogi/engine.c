@@ -1045,6 +1045,7 @@ static int mate3(void) {
 }
 /* ------------------------------------------------------------------ search */
 #ifdef SEARCH_STATS   /* (tools/match/usimatch.c "stat": counters of the one-thread search; no effect on the search) */
+static long long stCutK[3][8], stCutD[3], stCutDS[3];   /* cut-offs: [table move / capture or promotion / quiet][place 1, 2, 3, 4-6, 7-10, 11-20, 21-40, 41+]; quiet cuts by depth 1-3 / 4-7 / 8+: count, sum of places */
 static long long stQ, stProbe, stHit, stTTcut, stCut, stCut1, stCutTT, stCutIdx, stChkExt, stNull, stNullOk, stLmr, stLmrRe, stStore, stEvict, stRfp, stPv, stMoves;
 #define ST(x) (x)
 #else
@@ -1148,7 +1149,11 @@ EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else 
    P35 no table move: one ply less from depth P35 (instead of the search for one at PV nodes)
    P36 check extension: 1 none, 2 at PV nodes only, 3 only up to depth 6
    P37 reductions from the move after P37 (default 3);  P38 also for captures (1: losing ones, 2: all)
-   P39 cut nodes (the node kind passed down: pvNode = 2): P39 more plies of reduction there */
+   P39 cut nodes (the node kind passed down: pvNode = 2): P39 more plies of reduction there
+   P40 the captures that lose material (SEE < 0) after the quiet moves, not before them
+   P41 quiet moves that give check first among the quiet moves (+P41 * 1000 in the order)
+   P42 history bonus linear in the depth: min(P42 * depth - 80, 1600) instead of min(16 * depth^2, 1600)
+   P43 the move count of P29 times P43 / 100 (300: three times as many moves before the pruning) */
 static double ln_(double x) { int k = 0; while (x > 1.5) { x *= 0.5; k++; } double z = (x - 1) / (x + 1), z2 = z * z, t = z, r = 0; for (int i = 1; i < 40; i += 2) { r += t / i; t *= z2; } return 2 * r + k * 0.6931471805599453; }
 static i8 LMRT[64][64];
 static void lmrInit(double div) { for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) LMRT[d][n] = (i8)(0.6 + ln_(d) * ln_(n) / div); }
@@ -1288,7 +1293,7 @@ static void orderMoves(i32 *moves, i32 *scores, int n, int ttm, int ply) {
     else if (m == k0) sc = 80000002;
     else if (m == k1) sc = 80000001;
     else if (P[6] && sp > 0 && stMove[sp - 1] && m == counterMv[board[(stMove[sp - 1] >> 7) & 127] * 81 + ((stMove[sp - 1] >> 7) & 127)]) sc = 79000000;
-    else sc = quietHist(us, m);
+    else { sc = quietHist(us, m); if (P[41] && chkFast && givesCheckPre(m)) sc += P[41] * 1000; }
     scores[i] = sc;
   }
 }
@@ -1477,7 +1482,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
   double best = -INF; int bestMove = 0, legal = 0, nq = 0;
   double origAlpha = alpha;
   int us = side;
-  int stage = 0, i1 = 0, n1 = 0, i2 = 0, n2 = 0;
+  int stage = 0, i1 = 0, n1 = 0, i2 = 0, n2 = 0, badCap = 0;
   PickBlocks *pk = &pkT[ply]; pk->nb = 0;
   EvMask ev; if (inChk) evMask(&ev);
   if (!(ttm && isPseudo(ttm))) { ttm = 0; stage = 1; }
@@ -1548,7 +1553,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
           if (killers[ply * 2] != bm) { killers[ply * 2 + 1] = killers[ply * 2]; killers[ply * 2] = bm; }
           if (P[6] && sp > 0 && stMove[sp - 1]) { int pt = (stMove[sp - 1] >> 7) & 127; counterMv[board[pt] * 81 + pt] = bm; }
           if (P[22]) {
-            int b = depth * depth * 16; if (b > 1600) b = 1600;
+            int b = P[42] ? P[42] * depth - 80 : depth * depth * 16; if (b > 1600) b = 1600;
             histUpd(us, bm, b);
             for (int k = 0; k < nq; k++) if (tq[k] != bm) histUpd(us, tq[k], -b);
           } else {
@@ -1570,6 +1575,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
       if (i1 == 0 && n1 == 0) { n1 = inChk ? genEv(moves, 1, &ev) : gen(moves, 1); orderMoves(moves, scores, n1, 0, ply); if (!n1) { stage = 2; continue; } }
       if (i1 >= n1) { stage = 2; continue; }
       m = pickFast(moves, scores, n1, i1++, pk);
+      if (P[40] && !inChk && scores[i1 - 1] < 0) { i1--; badCap = 1; stage = 2; continue; }   /* (P40: the losing captures wait) */
       if (m == ttm) continue;
     } else {
       if (stage == 2) {
@@ -1587,9 +1593,17 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
       if (i2 >= n2) { if (kDef >= nDef) break; m = defM[kDef]; lgb = defL[kDef++]; redo = 1; }
       else
 #else
+      if (i2 >= n2 && badCap) {   /* (P40; the one-thread loop) the quiet moves are done: the losing captures */
+        if (i1 >= n1) break;
+        m = pick(moves, scores, n1, i1++);
+        if (m == ttm) continue;
+      } else {
       if (i2 >= n2) break;
 #endif
       m = pickFast(qmoves, qscores, n2, i2++, pk);
+#ifndef MT
+      }
+#endif
     }
     int to = (m >> 7) & 127, cap = board[to], quiet = !cap && !((m >> 14) & 1);
     if (!pvNode && !inChk && quiet && LGB > 0 && depth <= (P[18] ? P[18] : 2) && staticEval + (P[16] ? P[16] : 150) * depth + 100 <= alpha) {
@@ -1608,7 +1622,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
       if (quiet) {
         int skip = 0;
         const int ld0 = depth - 1 - LMRT[depth < 63 ? depth : 63][LGB < 63 ? LGB : 63], ld = ld0 < 0 ? 0 : ld0;
-        if (P[29] && !pvNode && LGB >= (3 + depth * depth) / ((2 - imp) * P[29])) skip = 1;
+        if (P[29] && !pvNode && LGB >= (3 + depth * depth) * (P[43] ? P[43] : 100) / 100 / ((2 - imp) * P[29])) skip = 1;
         else if (P[30] && !pvNode && ld < P[30] && staticEval + (P[31] ? P[31] : 100) + (P[32] ? P[32] : 120) * ld <= alpha) skip = 1;
         else if (P[33] && ld < 8 && see(m) < -P[33] * ld * ld) skip = 2;
         if (skip == 2) continue;
@@ -1689,11 +1703,15 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
         pvLen[ply] = imax(ply + 1, pvLen[ply + 1]);
         if (v >= beta) {
           ST(stCut++); ST(stCut1 += (legal == 1)); ST(stCutTT += (m == ttm)); ST(stCutIdx += legal);
+#ifdef SEARCH_STATS
+          { const int pl = (ttm ? 1 : 0) + i1 + i2, b_ = pl <= 3 ? pl - 1 : pl <= 6 ? 3 : pl <= 10 ? 4 : pl <= 20 ? 5 : pl <= 40 ? 6 : 7, k_ = m == ttm ? 0 : !quiet ? 1 : 2;   /* (place: in the order the moves were taken, the pruned ones counted) */
+            stCutK[k_][b_ < 0 ? 0 : b_]++; if (k_ == 2) { const int d_ = depth < 4 ? 0 : depth < 8 ? 1 : 2; stCutD[d_]++; stCutDS[d_] += pl; } }
+#endif
           if (quiet) {
             if (killers[ply * 2] != m) { killers[ply * 2 + 1] = killers[ply * 2]; killers[ply * 2] = m; }
             if (P[6] && sp > 0 && stMove[sp - 1]) { int pt = (stMove[sp - 1] >> 7) & 127; counterMv[board[pt] * 81 + pt] = m; }
             if (P[22]) {
-              int b = depth * depth * 16; if (b > 1600) b = 1600;
+              int b = P[42] ? P[42] * depth - 80 : depth * depth * 16; if (b > 1600) b = 1600;
               histUpd(us, m, b);
               for (int k = 0; k < nq; k++) if (tq[k] != m) histUpd(us, tq[k], -b);
             } else {
@@ -1758,7 +1776,7 @@ static void spCutoff(const SPt *s, int i) {
   const int ply = s->ply, us = side;
   if (killers[ply * 2] != m) { killers[ply * 2 + 1] = killers[ply * 2]; killers[ply * 2] = m; }
   if (P[6] && sp > 0 && stMove[sp - 1]) { int pt = (stMove[sp - 1] >> 7) & 127; counterMv[board[pt] * 81 + pt] = m; }
-  if (P[22]) { int b = s->depth * s->depth * 16; if (b > 1600) b = 1600; histUpd(us, m, b); }
+  if (P[22]) { int b = P[42] ? P[42] * s->depth - 80 : s->depth * s->depth * 16; if (b > 1600) b = 1600; histUpd(us, m, b); }
   else {
     int hi = ((us * 88 + (m & 127)) * 81 + ((m >> 7) & 127)) * 2 + ((m >> 14) & 1);
     history[hi] += s->depth * s->depth;

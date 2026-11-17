@@ -131,8 +131,9 @@ int main(int argc, char **argv) {
 #ifdef SEARCH_STATS
   if (!strcmp(argv[2], "stat")) {   /* usimatch <net> stat <nodes | dN> <openings> [positions]: what the one-thread search does (build with -DSEARCH_STATS) */
     int lim = argv[3][0] == 'd' ? 0 : atoi(argv[3]), dep = argv[3][0] == 'd' ? atoi(argv[3] + 1) : 0, np = argc > 5 ? atoi(argv[5]) : 8;
+    { const char *ps = getenv("PARAMS"); int k, v, q; while (ps && sscanf(ps, "%d=%d%n", &k, &v, &q) == 2) { set_param(k, v); ps += q; if (*ps == ',') ps++; } }   /* PARAMS="40=1,42=170": search parameters */
     FILE *f = fopen(argv[4], "r"); if (!f) { perror(argv[4]); return 1; }
-    char line[2048]; int n = 0; double dsum = 0, nsum = 0, ebf = 0; int ne = 0;
+    char line[2048]; int n = 0; double dsum = 0, nsum = 0, ebf = 0; int ne = 0; static long long stCutKsum[3][8], stCutDsum[3], stCutDSsum[3];
     for (int k = 0; k < np && fgets(line, sizeof line, f); k++) {
       nh = 0; setStart(); char *p = line, tok[16]; int q;
       while (sscanf(p, " %15s%n", tok, &q) == 1) { p += q; int m = fromUsi(tok); if (!m) break; hist[nh++] = m; play_move(m); }
@@ -142,11 +143,14 @@ int main(int argc, char **argv) {
       double prev = 0;
       for (int d = (dep ? dep : 1); d <= (dep ? dep : 30); d++) {
         replay(); tt_clear(); reset_search();
+        memset(stCutK, 0, sizeof stCutK); memset(stCutD, 0, sizeof stCutD); memset(stCutDS, 0, sizeof stCutDS);
         stQ = stProbe = stHit = stTTcut = stCut = stCut1 = stCutTT = stCutIdx = stChkExt = stNull = stNullOk = stLmr = stLmrRe = stStore = stEvict = stRfp = stPv = stMoves = 0;
         root_search(0, d, 0);
         double nn = (u32)res[2];
         if (!dep) { if (prev > 20000 && nn > prev) { ebf += nn / prev; ne++; } prev = nn; if (nn < lim) continue; }
         dsum += d; nsum += nn; n++;
+        for (int k = 0; k < 3; k++) for (int b = 0; b < 8; b++) stCutKsum[k][b] += stCutK[k][b]; for (int d2 = 0; d2 < 3; d2++) { stCutDsum[d2] += stCutD[d2]; stCutDSsum[d2] += stCutDS[d2]; }
+        { fprintf(stderr, "position startpos moves"); for (int i = 0; i < nh; i++) { char u[8]; toUsi(hist[i], u); fprintf(stderr, " %s", u); } fprintf(stderr, "\n"); }   /* (the position, for another engine) */
         printf("pos %d: depth %d  nodes %.0f  qsearch %.0f%%  table: hit %.0f%% of probes, cut %.0f%%, lost entries %.0f%% of stores  first-move cut %.0f%% (table move %.0f%%, mean place %.2f)  null ok %.0f%%  reduced %.0f%% of moves, re-searched %.0f%%  check ext %.1f%% of moves  rfp %.0f%% of nodes\n", k, d, nn,
           100.0 * stQ / nn, 100.0 * stHit / (stProbe + 1), 100.0 * stTTcut / (stProbe + 1), 100.0 * stEvict / (stStore + 1), 100.0 * stCut1 / (stCut + 1), 100.0 * stCutTT / (stCut + 1), (double)stCutIdx / (stCut + 1),
           100.0 * stNullOk / (stNull + 1), 100.0 * stLmr / (stMoves + 1), 100.0 * stLmrRe / (stLmr + 1), 100.0 * stChkExt / (stMoves + 1), 100.0 * stRfp / (stProbe + 1));
@@ -154,6 +158,10 @@ int main(int argc, char **argv) {
       }
     }
     printf("mean: depth %.2f  nodes %.0f  growth per ply x%.2f (TT_BITS %d)\n", n ? dsum / n : 0, n ? nsum / n : 0, ne ? ebf / ne : 0, TT_BITS);
+    { static const char *nm[3] = { "table move", "capture", "quiet" }; long long tot = 0; for (int k = 0; k < 3; k++) for (int b = 0; b < 8; b++) tot += stCutKsum[k][b];
+      for (int k = 0; k < 3; k++) { long long t = 0; for (int b = 0; b < 8; b++) t += stCutKsum[k][b]; const long long *c = stCutKsum[k];
+        printf("cut by %-10s %5.1f%% of cuts; place 1: %4.1f%% 2: %4.1f%% 3: %4.1f%% 4-6: %4.1f%% 7-10: %4.1f%% 11-20: %4.1f%% 21-40: %4.1f%% 41+: %4.1f%%\n", nm[k], 100.0 * t / (tot + 1), 100.0 * c[0] / (t + 1), 100.0 * c[1] / (t + 1), 100.0 * c[2] / (t + 1), 100.0 * c[3] / (t + 1), 100.0 * c[4] / (t + 1), 100.0 * c[5] / (t + 1), 100.0 * c[6] / (t + 1), 100.0 * c[7] / (t + 1)); }
+      static const char *dn[3] = { "depth 1-3", "depth 4-7", "depth 8+" }; for (int d = 0; d < 3; d++) printf("%s: quiet cut moves %lld, mean place %.2f\n", dn[d], stCutDsum[d], (double)stCutDSsum[d] / (stCutDsum[d] + 1)); }
     return 0;
   }
 #endif

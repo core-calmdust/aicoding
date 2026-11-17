@@ -93,8 +93,9 @@ def main():
         for i in range(a.procs):
             r = (i * a.games // 2) % len(ops); lines = ops[r:] + ops[:r]
             A, B = (cand, {}) if i % 2 == 0 else ({}, cand)          # the candidate sits in usimatch in half the processes
-            B = {k: B.get(k, defaults.get(k, 0)) for k in set(cand)} if i % 2 == 0 else B
-            A = {k: A.get(k, defaults.get(k, 0)) for k in set(cand)} if i % 2 == 1 else A
+            # the other side: the engine's own defaults (nothing sent; a tuned parameter of the table is sent as its default)
+            B = {k: defaults[k] for k in cand if k in defaults} if i % 2 == 0 else B
+            A = {k: defaults[k] for k in cand if k in defaults} if i % 2 == 1 else A
             ps.append((play(a.work, site, um, kp, ms, A, B, a.games, lines, f't{i}'), i % 2 == 0))
         W = L = D = 0
         for (p, fn), candInUm in ps:
