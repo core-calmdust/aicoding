@@ -443,7 +443,11 @@
       const p = toBoard(p0), c = Math.floor((p.x + FW / 2) / CW), r = Math.floor((p.z + FH / 2) / CH);
       if (c >= 0 && c < NW && r >= 0 && r < NH) return { sq: sqAt(c, r) };
       const who = meWho();
-      for (const h of hand[who]) if (Math.abs(p.x - h.g.position.x) < .42 && Math.abs(p.z - h.g.position.z) < .5) return { hand: h.t, who };
+      // (2026-11-18 ユーザー：スマホ将棋3Dで持ち駒がうまく選べない) the pieces in hand rest at KH — on phones on the table, far below
+      // the board's face — so they are picked on their own height (the board's plane put the tap well off them), the nearest within reach
+      const q0 = KH === Y ? p0 : T3.pick(e, KH * SC), q = q0 ? toBoard(q0) : p; let best = null, bd = 1e9;
+      for (const h of hand[who]) { const dx = Math.abs(q.x - h.g.position.x), dz = Math.abs(q.z - h.g.position.z); if (dx < .5 && dz < .62 && dx + dz < bd) { bd = dx + dz; best = h; } }
+      if (best) return { hand: best.t, who };
       return null;
     }
     function tryMove(to) {
