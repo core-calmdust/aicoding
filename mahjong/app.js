@@ -2208,5 +2208,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { _ev: (e, d) => onEvent(e, d), _overMyRiver: (x, y) => overMyRiver(x, y), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
+window.JANKA = { _final: d => showFinal(d), _ev: (e, d) => onEvent(e, d), _overMyRiver: (x, y) => overMyRiver(x, y), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
 })();
