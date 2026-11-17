@@ -292,7 +292,7 @@
       for (let r = 0; r < Lt.rows; r++) {
         const zc = pz(Lt.z0 + (r + .5) * ROWP);
         if (r && S.rowLine) { c.strokeStyle = S.rowLine; c.lineWidth = 1.2; c.beginPath(); c.moveTo(fx0 + PX * .15, pz(Lt.z0 + r * ROWP)); c.lineTo(fx1 - PX * .15, pz(Lt.z0 + r * ROWP)); c.stroke(); }
-        S.num(c, px(Lt.labX + .12), zc, String(r + 1), PX, r);   // (each draws the digits' own box on the row's centre line, as the gems and the who-lights, 2026-11-17 user)
+        S.num(c, px(Lt.labX + .12), zc, String(r + 1), PX, r, Lt.rows);   // (each draws the digits' own box on the row's centre line, as the gems and the who-lights, 2026-11-17 user)
         for (let k = 0; k < Lt.n; k++) S.sock(c, px(Lt.slot(r, k)[0]), zc, PX * (R + .03), k, r);
         S.plate(c, px(Lt.fbx - .42), zc - PX * .42, PX * .84, PX * .84, PX);
         for (let k = 0; k < Lt.n; k++) { const [x, z] = Lt.pinPos(r, k); S.pin(c, px(x), pz(z), PX * (Lt.n > 4 ? .1 : .11)); }
@@ -311,10 +311,15 @@
   // so each hole is a short lacquered wall down to the body's top (the floor) — ordinary geometry, right from every angle.
   // The printed top goes on the slab's face (its UVs set as the old flat top's); the walls and the floor are the lacquer.
   const HOLE = .1;
+  // a rounded rectangle with true quarter-circle corners (2026-11-17 user: 四隅を綺麗な角丸に — the quadratic corners were flattened and coarse)
+  function rrPath(p, x, z, w, d, r) { const A = (cx, cz, a0) => { const n = 10; for (let i = 0; i <= n; i++) { const a = a0 + i / n * Math.PI / 2; p.lineTo(cx + Math.cos(a) * r, cz + Math.sin(a) * r); } };
+    p.moveTo(x + r, z); p.lineTo(x + w - r, z); A(x + w - r, z + r, -Math.PI / 2); p.lineTo(x + w, z + d - r); A(x + w - r, z + d - r, 0); p.lineTo(x + r, z + d); A(x + r, z + d - r, Math.PI / 2); p.lineTo(x, z + r); A(x + r, z + r, Math.PI); return p; }
+  // the holes' floor: the same rounded shape (a plain rectangle's corners had stuck out past the rounded top)
+  function rplane(w, d, r, m) { const TT = T(), s = rrPath(new TT.Shape(), -w / 2, -d / 2, w, d, r), g = new TT.ShapeGeometry(s); g.rotateX(-Math.PI / 2); return new TT.Mesh(g, m); }
   function plate(w, d, r, holes, key, uw = w, ud = d) {   // (uw × ud: the area the face's picture covers, centred)
     return geo('hbPlate' + key, () => {
       const TT = T(), s = new TT.Shape(), x = -w / 2, z = -d / 2;
-      s.moveTo(x + r, z); s.lineTo(x + w - r, z); s.quadraticCurveTo(x + w, z, x + w, z + r); s.lineTo(x + w, z + d - r); s.quadraticCurveTo(x + w, z + d, x + w - r, z + d); s.lineTo(x + r, z + d); s.quadraticCurveTo(x, z + d, x, z + d - r); s.lineTo(x, z + r); s.quadraticCurveTo(x, z, x + r, z);
+      rrPath(s, x, z, w, d, r);
       holes.forEach(([hx, hz, hr, n]) => { const p = new TT.Path(); for (let i = 0; i < n; i++) { const a = -i / n * Math.PI * 2; p[i ? 'lineTo' : 'moveTo'](hx + Math.cos(a) * hr, -hz + Math.sin(a) * hr); } p.closePath(); s.holes.push(p); });   // (shape y = −world z)
       const ex = new TT.ExtrudeGeometry(s, { depth: HOLE, bevelEnabled: false, curveSegments: LO() ? 3 : 5 });
       const P = ex.attributes.position, uv = ex.attributes.uv, cap = ex.groups[0];
@@ -334,7 +339,7 @@
   // a rounded rectangle extruded (the board, the case, the lid)
   function rbox(w, d, h, r, bev) {
     const TT = T(), s = new TT.Shape(), x = -w / 2, z = -d / 2;
-    s.moveTo(x + r, z); s.lineTo(x + w - r, z); s.quadraticCurveTo(x + w, z, x + w, z + r); s.lineTo(x + w, z + d - r); s.quadraticCurveTo(x + w, z + d, x + w - r, z + d); s.lineTo(x + r, z + d); s.quadraticCurveTo(x, z + d, x, z + d - r); s.lineTo(x, z + r); s.quadraticCurveTo(x, z, x + r, z);
+    rrPath(s, x, z, w, d, r);
     const b = bev == null ? Math.min(.06, h * .3) : bev;
     const ex = new TT.ExtrudeGeometry(s, { depth: Math.max(.001, h - 2 * b), bevelEnabled: b > 0, bevelThickness: b, bevelSize: b, bevelSegments: 2, curveSegments: LO() ? 4 : 6 });
     ex.rotateX(-Math.PI / 2); ex.translate(0, b, 0);   // (no mirroring: a mirrored solid turns its faces inside out — the sides flickered with self-shadow, 2026-11-16)
@@ -342,7 +347,7 @@
   }
   // a rounded-rect ring (the lid's skirt): outer w × d, wall t, height h, standing on y = 0
   function rframe(w, d, h, r, t) {
-    const TT = T(), rr2 = (x, z, w, d, r, s) => { s.moveTo(x + r, z); s.lineTo(x + w - r, z); s.quadraticCurveTo(x + w, z, x + w, z + r); s.lineTo(x + w, z + d - r); s.quadraticCurveTo(x + w, z + d, x + w - r, z + d); s.lineTo(x + r, z + d); s.quadraticCurveTo(x, z + d, x, z + d - r); s.lineTo(x, z + r); s.quadraticCurveTo(x, z, x + r, z); return s; };
+    const TT = T(), rr2 = (x, z, w, d, r, s) => { rrPath(s, x, z, w, d, r); return s; };
     const s = rr2(-w / 2, -d / 2, w, d, r, new TT.Shape()), hole = rr2(-w / 2 + t, -d / 2 + t, w - 2 * t, d - 2 * t, Math.max(.02, r - t), new TT.Path());
     s.holes.push(hole);
     const ex = new TT.ExtrudeGeometry(s, { depth: h, bevelEnabled: false, curveSegments: LO() ? 4 : 6 }); ex.rotateX(-Math.PI / 2); return ex;
@@ -382,7 +387,7 @@
     berry(c, x, y, s) { c.fillStyle = '#ef3d4f'; c.beginPath(); c.moveTo(x, y + s * .55); c.bezierCurveTo(x - s * .55, y + s * .1, x - s * .45, y - s * .4, x, y - s * .3); c.bezierCurveTo(x + s * .45, y - s * .4, x + s * .55, y + s * .1, x, y + s * .55); c.fill(); c.fillStyle = '#ffe9a8'; for (let i = 0; i < 7; i++) { const a = i * 2.3, rr2 = s * (.12 + (i % 3) * .1); c.beginPath(); c.ellipse(x + Math.cos(a) * rr2, y + Math.sin(a) * rr2 * .9 + s * .05, s * .03, s * .045, 0, 0, 7); c.fill(); } c.fillStyle = '#4fae3a'; for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + (i - 2) * .55; c.beginPath(); c.ellipse(x + Math.cos(a) * s * .17, y - s * .32 + Math.sin(a) * s * .08, s * .14, s * .06, a, 0, 7); c.fill(); } },
     lemon(c, x, y, s) { c.fillStyle = '#ffd83a'; c.beginPath(); c.ellipse(x, y, s * .5, s * .36, -.3, 0, 7); c.fill(); c.fillStyle = '#ffd83a'; c.beginPath(); c.ellipse(x + s * .46, y - s * .16, s * .1, s * .07, -.3, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.ellipse(x - s * .15, y - s * .12, s * .16, s * .06, -.3, 0, 7); c.fill(); c.fillStyle = '#5bb547'; c.beginPath(); c.ellipse(x - s * .42, y - s * .3, s * .16, s * .07, .6, 0, 7); c.fill(); },
     slice(c, x, y, s, rind = '#ff9a1e', pulp = '#ffc861') { c.fillStyle = rind; c.beginPath(); c.arc(x, y, s * .5, 0, 7); c.fill(); c.fillStyle = '#fff6df'; c.beginPath(); c.arc(x, y, s * .43, 0, 7); c.fill(); c.fillStyle = pulp; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; c.beginPath(); c.moveTo(x + Math.cos(a + .08) * s * .05, y + Math.sin(a + .08) * s * .05); c.arc(x, y, s * .39, a + .08, a + Math.PI / 4 - .08); c.closePath(); c.fill(); } },
-    leaf(c, x, y, s, a = 0) { c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = '#6cc04a'; c.beginPath(); c.moveTo(-s * .5, 0); c.quadraticCurveTo(0, -s * .38, s * .5, 0); c.quadraticCurveTo(0, s * .38, -s * .5, 0); c.fill(); c.strokeStyle = '#3f8a2e'; c.lineWidth = s * .05; c.beginPath(); c.moveTo(-s * .45, 0); c.lineTo(s * .45, 0); c.stroke(); c.restore(); },
+    leaf(c, x, y, s, a = 0, col = '#6cc04a', vein = '#3f8a2e') { c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = col; c.beginPath(); c.moveTo(-s * .5, 0); c.quadraticCurveTo(0, -s * .38, s * .5, 0); c.quadraticCurveTo(0, s * .38, -s * .5, 0); c.fill(); c.strokeStyle = vein; c.lineWidth = s * .05; c.beginPath(); c.moveTo(-s * .45, 0); c.lineTo(s * .45, 0); c.stroke(); c.restore(); },
   };
   const FRUITS = [['#ff9a1e', '#ffc861'], ['#56b33a', '#b8e86a'], ['#ec3f6a', '#ff8ea4'], ['#8a5a2a', '#9fd24e'], ['#f2c400', '#ffe982']];   // orange · lime · grapefruit · kiwi · lemon (by column)
   // doodles for the notebook board
@@ -475,7 +480,8 @@
         c.fillStyle = 'rgba(255,170,120,.12)'; for (let y = 0; y < H; y += PX * .5) for (let x = (y / (PX * .5)) % 2 ? PX * .25 : 0; x < W; x += PX * .5) { c.beginPath(); c.arc(x, y, PX * .05, 0, 7); c.fill(); } },
       field(c, x, y, w, h, PX, fill) { rr(c, x, y, w, h, PX * .3); if (fill) { c.fillStyle = 'rgba(255,255,255,.45)'; c.fill(); } c.strokeStyle = '#7cc35a'; c.lineWidth = PX * .03; c.setLineDash([PX * .1, PX * .07]); c.stroke(); c.setLineDash([]); },
       rowLine: 'rgba(124,195,90,.22)',
-      num(c, x, y, s, PX, r) { FRUIT.leaf(c, x - PX * .02, y, PX * .78, -.25); numText(c, s, x - PX * .02, y, `800 ${PX * .26}px "Outfit", system-ui, sans-serif`, '#ffffff'); },
+      num(c, x, y, s, PX, r, n) { const LEAF = ['#9be15a', '#6cc04a', '#3f9a3a', '#b8c934', '#f2c12e', '#f2922a', '#e2552f', '#b8322e'], t = (n > 1 ? r / (n - 1) : 0) * (LEAF.length - 1), i0 = Math.floor(t), col = mix(LEAF[i0], LEAF[Math.min(LEAF.length - 1, i0 + 1)], t - i0);   // (the leaves turn as the rows go by — fresh green to autumn red, 2026-11-18 user)
+        FRUIT.leaf(c, x - PX * .02, y, PX * .78, -.25, col, mix(col, '#1c3a10', .45)); numText(c, s, x - PX * .02, y, `800 ${PX * .26}px "Outfit", system-ui, sans-serif`, '#ffffff'); },
       sock(c, x, y, r, k) { const [rind, pulp] = FRUITS[k % FRUITS.length]; c.fillStyle = rind; c.beginPath(); c.arc(x, y, r * 1.14, 0, 7); c.fill(); c.fillStyle = '#fffaf0'; c.beginPath(); c.arc(x, y, r * 1.09, 0, 7); c.fill(); c.fillStyle = pulp; for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; c.beginPath(); c.arc(x, y, r * 1.06, a + .05, a + Math.PI / 5 - .05); c.arc(x, y, r * .95, a + Math.PI / 5 - .05, a + .05, true); c.closePath(); c.fill(); } },   // (thin: the rings ran into each other, 2026-11-17 user)
       plate(c, x, y, w, h, PX) { rr(c, x, y, w, h, PX * .2); c.fillStyle = '#ffd9c8'; c.fill(); c.strokeStyle = '#ff9f87'; c.lineWidth = PX * .02; c.stroke(); },
       pin(c, x, y, r) { c.fillStyle = '#b2513a'; c.beginPath(); c.arc(x, y, r * 1.15, 0, 7); c.fill(); },
@@ -519,9 +525,13 @@
     },
     // 金庫: a bank vault — brushed steel, rivets round the edge, chrome-ringed sockets, engraved numbers; the lid is the safe's dial
     vault: {
-      bg(c, W, H, PX) { const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#b9c1c9'); g.addColorStop(.5, '#dfe4e8'); g.addColorStop(1, '#a3abb4'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-        const R = rnd(31); for (let y = 0; y < H; y += 1.5) { c.fillStyle = `rgba(${R() < .5 ? '255,255,255' : '40,48,56'},${(R() * .09).toFixed(3)})`; c.fillRect(0, y, W, 1); }
-        for (let x = PX * .3; x < W - PX * .2; x += PX * .6) { rivet(c, x, PX * .2, PX * .055); rivet(c, x, H - PX * .2, PX * .055); } for (let y = PX * .8; y < H - PX * .5; y += PX * .6) { rivet(c, PX * .2, y, PX * .055); rivet(c, W - PX * .2, y, PX * .055); } },
+      // duralumin (2026-11-18 user: 盤面の質感をより金属（ジュラルミン）っぽく): a cool pale aluminium, rolled lengthwise — long fine
+      // streaks and a soft sheen band; the material itself is metal, so the room's light slides across it. The screws are 3D (board(): S.screws3d)
+      bg(c, W, H, PX) { const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#c9d0d6'); g.addColorStop(.35, '#eef1f3'); g.addColorStop(.55, '#d3d9de'); g.addColorStop(.8, '#f2f4f5'); g.addColorStop(1, '#bfc6cd'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+        const R = rnd(31); for (let i = 0; i < W * 1.2; i++) { const x = R() * W, a = R() * .1; c.fillStyle = `rgba(${R() < .5 ? '255,255,255' : '60,70,82'},${a.toFixed(3)})`; c.fillRect(x, 0, 1 + R() * 1.5, H); }
+        for (let y = 0; y < H; y += 3) { c.fillStyle = `rgba(255,255,255,${(R() * .05).toFixed(3)})`; c.fillRect(0, y, W, 1); }
+        for (let x = PX * .3; x < W - PX * .2; x += PX * .6) { [[x, PX * .2], [x, H - PX * .2]].forEach(([a, b]) => { c.fillStyle = 'rgba(30,36,42,.28)'; c.beginPath(); c.arc(a + 1.5, b + 2, PX * .07, 0, 7); c.fill(); }); }
+        for (let y = PX * .8; y < H - PX * .5; y += PX * .6) { [[PX * .2, y], [W - PX * .2, y]].forEach(([a, b]) => { c.fillStyle = 'rgba(30,36,42,.28)'; c.beginPath(); c.arc(a + 1.5, b + 2, PX * .07, 0, 7); c.fill(); }); } },
       field(c, x, y, w, h, PX, fill) { rr(c, x, y, w, h, PX * .1); if (fill) { c.fillStyle = 'rgba(40,48,56,.12)'; c.fill(); } c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = PX * .02; c.save(); c.translate(1.5, 1.5); c.stroke(); c.restore(); c.strokeStyle = 'rgba(30,36,42,.55)'; c.stroke(); },
       rowLine: 'rgba(30,36,42,.18)',
       num(c, x, y, s, PX) { const f = `800 ${PX * .3}px "Outfit", system-ui, sans-serif`; numText(c, s, x + 1.2, y + 1.6, f, 'rgba(255,255,255,.85)'); numText(c, s, x, y, f, 'rgba(36,42,50,.8)'); },
@@ -537,10 +547,18 @@
         for (let i = 0; i < 40; i++) { const a = i / 40 * Math.PI * 2 - Math.PI / 2, l = i % 4 ? .08 : .15; c.lineWidth = i % 4 ? 1 : 2; c.beginPath(); c.moveTo(cx + Math.cos(a) * rd * .76, cy + Math.sin(a) * rd * .76); c.lineTo(cx + Math.cos(a) * rd * (.76 - l), cy + Math.sin(a) * rd * (.76 - l)); c.stroke(); if (!(i % 4)) c.fillText(String(i / 4), cx + Math.cos(a) * rd * .5, cy + Math.sin(a) * rd * .5); }
         chrome(c, cx, cy, 0, rd * .26); qmark(c, cx, rd * .06, '#2a3036'); c.save(); c.translate(0, cy); [-1, 1].forEach(s => { for (let k = 0; k < Math.ceil(n / 2); k++) { const x = cx + s * (rd + PX * .35 + k * PX * .62); if (x < PX * .3 || x > W - PX * .3) continue; c.fillStyle = '#20262c'; rr(c, x - PX * .22, -PX * .26, PX * .44, PX * .52, 5); c.fill(); qmark(c, x, PX * .07, '#9fe3ff', '#59c8ff'); } }); c.restore();
         [[12, 12], [W - 12, 12], [12, H - 12], [W - 12, H - 12]].forEach(([x, y]) => rivet(c, x, y, 5)); },
-      body: { c: '#3b4148', r: .4, m: .65 }, wall: { c: '#2a2f35', r: .5, m: .5 }, caseC: { c: '#2c3137', r: .4, m: .6 }, lidC: { c: '#4a525b', r: .35, m: .7 }, velvet: { c: '#1b2a4a', sheen: '#6f8cff' },
+      topM: { metalness: .55, roughness: .3, envMapIntensity: 1.3 }, screws3d: true, body: { c: '#8f979f', r: .3, m: .85 }, wall: { c: '#3a4047', r: .5, m: .5 }, caseC: { c: '#2c3137', r: .4, m: .6 }, lidC: { c: '#4a525b', r: .35, m: .7 }, velvet: { c: '#1b2a4a', sheen: '#6f8cff' },
       trim: { k: 'metal', c: '#d9dee3' }, rim: { k: 'metal', c: '#d9dee3' }, glow: .36, okOff: ['#59616a', '#3c434a', 'rgba(235,240,245,.8)'],
     },
   };
+  // a cross-head screw: a low chrome dome with the slot cut in (2026-11-18 user: ビスを本物っぽく立体的に)
+  function screws(g, w, d, zc, PX, y) {
+    const TT = T(), W = Math.round(w * PX), H = Math.round(d * PX), m = mat('hbScrewM', () => { const tx = X.canvasTex('hbScrewT', 64, 64, (c, S) => { const gr = c.createRadialGradient(S * .38, S * .34, S * .04, S / 2, S / 2, S / 2); gr.addColorStop(0, '#ffffff'); gr.addColorStop(.55, '#c3cad1'); gr.addColorStop(1, '#6d757e'); c.fillStyle = gr; c.fillRect(0, 0, S, S); c.strokeStyle = '#2a3036'; c.lineWidth = S * .1; c.lineCap = 'round'; c.beginPath(); c.moveTo(S * .3, S / 2); c.lineTo(S * .7, S / 2); c.moveTo(S / 2, S * .3); c.lineTo(S / 2, S * .7); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = S * .03; c.beginPath(); c.moveTo(S * .32, S / 2 + S * .05); c.lineTo(S * .68, S / 2 + S * .05); c.stroke(); }); return X.M({ map: tx, metalness: .9, roughness: .22, envMapIntensity: 1.8, bump: false }); });
+    const geoS = geo('hbScrew', () => { const q = new TT.SphereGeometry(.06, LO() ? 8 : 12, 4, 0, Math.PI * 2, 0, Math.PI / 2); q.scale(1, .45, 1); const P = q.attributes.position, uv = q.attributes.uv; for (let i = 0; i < P.count; i++) uv.setXY(i, .5 + P.getX(i) / .12, .5 - P.getZ(i) / .12); uv.needsUpdate = true; return q; });
+    const at = (px, py) => { const o = new TT.Mesh(geoS, m); o.position.set(px / PX - w / 2, y, zc + py / PX - d / 2); o.rotation.y = (px * 7 + py * 3) % 6.28; o.castShadow = true; g.add(o); };
+    for (let x = PX * .3; x < W - PX * .2; x += PX * .6) { at(x, PX * .2); at(x, H - PX * .2); }
+    for (let yy = PX * .8; yy < H - PX * .5; yy += PX * .6) { at(PX * .2, yy); at(W - PX * .2, yy); }
+  }
   const topOpts = (S, o) => { const t = S.topM; if (!t) return o; const r = Object.assign(o, t); if (t.sheenColor) r.sheenColor = new (T().Color)(t.sheenColor); return r; };
   const LOOKS = ['midnight', 'casino', 'doodle', 'fruit', 'cipher', 'vault'];
   const lookNow = k => LOOKS.includes(k) ? k : (X.BOARDS && X.BOARDS.hitblow ? X.BOARDS.hitblow.get() : 'midnight');
@@ -556,15 +574,16 @@
     for (let r = 0; r < Lt.rows; r++) for (let k = 0; k < Lt.n; k++) { const [x, z] = Lt.slot(r, k); holes.push([x, z, R + .03, LO() ? 16 : 20]); const [px, pz] = Lt.pinPos(r, k); holes.push([px, pz, pr, LO() ? 8 : 10]); }
     const top = new TT.Mesh(plate(Lt.W - .16, Lt.L - .16, .3, holes, 'B' + cfg.n + 'x' + cfg.rows, Lt.W, Lt.L), [mat('hbTopM' + look + cfg.n + 'x' + cfg.rows, () => (() => { const tt = topTex(cfg, Lt, look), m = X.M(topOpts(S, { map: tt, emissiveMap: tt, emissive: '#ffffff', emissiveIntensity: S.glow, roughness: .9, envMapIntensity: .12, bump: false })); m.emissive.set(0xffffff); return m; })()), wallM]);   // (matte: the room's lamp glared on the glossy top, 2026-11-16)
     top.position.y = BH - HOLE; top.receiveShadow = true; g.add(top);
-    const floor = planeTop(Lt.W - .2, Lt.L - .2, wallM); floor.position.y = BH - HOLE + .002; floor.receiveShadow = true; g.add(floor);   // (the holes' floor: the skin's own, not the body's)
+    const floor = rplane(Lt.W - .2, Lt.L - .2, .28, wallM); floor.position.y = BH - HOLE + .002; floor.receiveShadow = true; g.add(floor);   // (the holes' floor: the skin's own, not the body's)
     const rim = (() => {
       const w = Lt.W / 2 - .07, d = Lt.L / 2 - .07, r = .31, pts = [];
       rimPts(pts, w, d, r);
-      const t = new TT.Mesh(geo('hbRim' + cfg.n + 'x' + cfg.rows, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length, LO() ? 120 : 160), .028, 4, true)), rimMat(look, S.rim));
+      const t = new TT.Mesh(geo('hbRim2' + cfg.n + 'x' + cfg.rows, () => rimTube(pts)), rimMat(look, S.rim));
       t.visible = S.rim.k !== 'none';
       t.position.y = BH + .01; return t;
     })();
     g.add(rim);
+    if (S.screws3d) screws(g, Lt.W, Lt.L, 0, LO() ? 56 : 84, BH + .002);
     // cipher: the brass round each socket and pin hole is real metal (a flat torus), so it glints as the view moves
     if (S.rings) { const rm = mat('hbRingM' + look, () => X.M({ color: S.rings.c, metalness: 1, roughness: .16, envMapIntensity: 2, bump: false }));
       const big = geo('hbRingB', () => { const q = new TT.TorusGeometry(R + .075, .042, 4, LO() ? 18 : 26); q.rotateX(Math.PI / 2); q.scale(1, .45, 1); return q; }), small = geo('hbRingS' + pr, () => { const q = new TT.TorusGeometry(pr + .03, .02, 3, LO() ? 10 : 14); q.rotateX(Math.PI / 2); q.scale(1, .5, 1); return q; });
@@ -639,10 +658,18 @@
   // the neon line round a rounded slab (2026-11-17 user: 青いラインをボードの形状と同様に角丸に): the corners are true quarter circles
   // (24 steps each) and the straight sides are sampled densely too, so the spline neither cuts the corners nor bulges on the sides
   function rimPts(pts, w, d, r) {
-    const V = (x, z) => pts.push(new (T().Vector3)(x, 0, z)), side = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.ceil(L / .3)); for (let i = 1; i < n; i++) V(x0 + (x1 - x0) * i / n, z0 + (z1 - z0) * i / n); };
+    const V = (x, z) => pts.push(new (T().Vector3)(x, 0, z)), side = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.ceil(L / .6)); for (let i = 1; i < n; i++) V(x0 + (x1 - x0) * i / n, z0 + (z1 - z0) * i / n); };
     const arc = (cx, cz, a0) => { for (let i = 0; i <= 12; i++) { const a = a0 + i / 12 * Math.PI / 2; V(cx + Math.cos(a) * r, cz + Math.sin(a) * r); } };
     arc(w - r, d - r, 0); side(w - r, d, -w + r, d); arc(-w + r, d - r, Math.PI / 2); side(-w, d - r, -w, -d + r);
     arc(-w + r, -d + r, Math.PI); side(-w + r, -d, w - r, -d); arc(w - r, -d + r, Math.PI * 1.5); side(w, -d + r, w, d - r);
+  }
+  // the rim tube follows the points by their index, not by length: each corner's 12 steps get 12 segments (by length the long sides took
+  // nearly all of them and the corners came out as cut-off chamfers — 2026-11-18 user: 四隅のフレームを綺麗な角丸に)
+  function rimTube(pts) {
+    const TT = T(), n = pts.length, C = new TT.Curve();
+    C.getPoint = (t, o) => { const f = ((t % 1) + 1) % 1 * n, i = Math.floor(f) % n, j = (i + 1) % n, k = f - Math.floor(f); return (o || new TT.Vector3()).copy(pts[i]).lerp(pts[j], k); };
+    C.getPointAt = C.getPoint; C.getTangentAt = (t, o) => C.getTangent(t, o);
+    return new TT.TubeGeometry(C, n * (LO() ? 1 : 2), .028, 4, true);
   }
   function tray(cfg, Lt0, look) {
     const TT = T(), Lt = Lt0 || layout(cfg), g = new TT.Group(), BH = TOP, n = cfg.n, C = cfg.c; look = lookNow(look); const S = SKINS[look];
@@ -669,10 +696,11 @@
     const top = new TT.Mesh(plate(Lt.W - .16, D - .16, .3, Array.from({ length: n }, (_, k) => [sock(k)[0], sock(k)[1] - zc, R + .03, LO() ? 16 : 20]), 'T' + n + 'c' + C), [mat('hbTrayT' + look + n + 'c' + C, () => { const m = X.M(topOpts(S, { map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: S.glow, roughness: .9, envMapIntensity: .12, bump: false })); m.emissive.set(0xffffff); return m; }), wallM]);
     top.position.set(0, BH - HOLE, zc); top.receiveShadow = true; g.add(top);
     if (S.rings) { const rm = mat('hbRingM' + look, () => X.M({ color: S.rings.c, metalness: 1, roughness: .16, envMapIntensity: 2, bump: false })), big = geo('hbRingB', () => { const q = new TT.TorusGeometry(R + .075, .042, 4, LO() ? 18 : 26); q.rotateX(Math.PI / 2); q.scale(1, .45, 1); return q; }); for (let k = 0; k < n; k++) { const [x, z] = sock(k), o = new TT.Mesh(big, rm); o.position.set(x, BH + .006, z); g.add(o); } }
-    const floor = planeTop(Lt.W - .2, D - .2, wallM); floor.position.set(0, BH - HOLE + .002, zc); floor.receiveShadow = true; g.add(floor);
+    const floor = rplane(Lt.W - .2, D - .2, .28, wallM); floor.position.set(0, BH - HOLE + .002, zc); floor.receiveShadow = true; g.add(floor);
+    if (S.screws3d) screws(g, Lt.W - .16, D - .16, zc, 80, BH + .002);
     const rim = (() => { const w = Lt.W / 2 - .07, d = D / 2 - .07, r = .31, pts = [];
       rimPts(pts, w, d, r);
-      const t = new TT.Mesh(geo('hbTrayRim' + n + 'c' + C, () => new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true, 'catmullrom', .05), Math.min(pts.length, LO() ? 120 : 160), .028, 4, true)), rimMat(look, S.rim)); t.position.set(0, BH + .01, zc); t.visible = S.rim.k !== 'none'; return t; })();
+      const t = new TT.Mesh(geo('hbTrayRim2' + n + 'c' + C, () => rimTube(pts)), rimMat(look, S.rim)); t.position.set(0, BH + .01, zc); t.visible = S.rim.k !== 'none'; return t; })();
     g.add(rim);
     // OK: a raised key with its label (lit mint when the row is full)
     const okOwn = S.okFont || S.okDraw, okTex = on => X.canvasTex('hbOk' + (on ? (okOwn ? look + 1 : 1) : look), 160, 134, (c, W, H) => {
