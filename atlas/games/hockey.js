@@ -16,7 +16,7 @@
   const LG = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   // [ja, en, zh, zh-TW, ko, es, fr, pt, de, ru, tr, id, hi, ar]
   const S = {
-    len: ['何点先取', 'Goals to win', '先得分数', '先得分數', '선취 점수', 'Goles para ganar', 'Buts pour gagner', 'Gols para vencer', 'Tore zum Sieg', 'Голов до победы', 'Kazanmak için gol', 'Gol untuk menang', 'जीत के लिए गोल', 'أهداف للفوز'],
+    len: ['点数', 'Goals to win', '先得分数', '先得分數', '선취 점수', 'Goles para ganar', 'Buts pour gagner', 'Gols para vencer', 'Tore zum Sieg', 'Голов до победы', 'Kazanmak için gol', 'Gol untuk menang', 'जीत के लिए गोल', 'أهداف للفوز'],
     npt: ['{n}点', '{n}', '{n}分', '{n}分', '{n}점', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}'],
     first: ['{n}点先取', 'First to {n}', '先得{n}分', '先得{n}分', '{n}점 선취', 'A {n} goles', 'En {n} buts', 'Até {n} gols', 'Bis {n} Tore', 'До {n} голов', '{n} gole kadar', 'Sampai {n} gol', '{n} गोल तक', 'حتى {n} أهداف'],
     pickB: ['盤を選ぶ', 'Choose a board', '选择台面', '選擇台面', '보드 선택', 'Elige un tablero', 'Choisis un plateau', 'Escolha um tabuleiro', 'Brett wählen', 'Выбери поле', 'Masa seç', 'Pilih papan', 'बोर्ड चुनें', 'اختر اللوحة'],
@@ -93,9 +93,21 @@
   const li = l => Math.max(0, LG.indexOf(l)), tr = (k, l) => { const a = S[k]; return a ? (a[li(l)] || a[1]) : k; };
   const modeName = (m, l) => ((M[m] || M.classic)[li(l)] || M[m][1]);
   function levelInfo(n, lang) { const b = n <= 3 ? 0 : n <= 8 ? 1 : n <= 14 ? 2 : 3; return { name: 'Lv.' + n, desc: (LVD[lang] || LVD.en)[b], who: (WHO[lang] || WHO.en)[b] }; }
-  const SIZES = [5, 7, 10];
-  const sizeName = (z, l) => tr('npt', l).replace('{n}', z);
+  // 操作 (2026-11-17 ユーザー：マウス（1人用）／キーボード／ゲームパッドから選ぶ): the card's first row (adapter.rule), and the
+  // size value says both — control × 100 + goals (mouse 5 / 7 / 10, keyboard 105 …, gamepad 205 …)
+  const GOALS = [5, 7, 10], CTRL = ['mouse', 'key', 'pad'];
+  const SIZES = [].concat(...CTRL.map((c, i) => GOALS.map(n => i * 100 + n)));
+  const sizeName = (z, l) => tr('npt', l).replace('{n}', z % 100);
   const sizeLabel = l => tr('len', l);
+  const CTRL_T = {
+    ja: ['操作', 'マウス（1人用）', 'キーボード', 'ゲームパッド'], en: ['Controls', 'Mouse (1 player)', 'Keyboard', 'Gamepad'], zh: ['操作', '鼠标（单人）', '键盘', '手柄'], 'zh-TW': ['操作', '滑鼠（單人）', '鍵盤', '手把'],
+    ko: ['조작', '마우스(1인용)', '키보드', '게임패드'], es: ['Controles', 'Ratón (1 jugador)', 'Teclado', 'Mando'], fr: ['Commandes', 'Souris (1 joueur)', 'Clavier', 'Manette'], pt: ['Controles', 'Mouse (1 jogador)', 'Teclado', 'Controle'],
+    de: ['Steuerung', 'Maus (1 Spieler)', 'Tastatur', 'Gamepad'], ru: ['Управление', 'Мышь (1 игрок)', 'Клавиатура', 'Геймпад'], tr: ['Kontrol', 'Fare (1 oyuncu)', 'Klavye', 'Oyun kolu'], id: ['Kontrol', 'Mouse (1 pemain)', 'Keyboard', 'Gamepad'],
+    hi: ['नियंत्रण', 'माउस (1 खिलाड़ी)', 'कीबोर्ड', 'गेमपैड'], ar: ['التحكم', 'الفأرة (لاعب واحد)', 'لوحة المفاتيح', 'ذراع التحكم'],
+  };
+  const ct = (l, i) => (CTRL_T[l] || CTRL_T.en)[i];
+  const rule = { label: l => ct(l, 0), ownLabel: true, list: CTRL, name: (v, l) => ct(l, CTRL.indexOf(v) + 1),
+    sizes: v => GOALS.map(n => Math.max(0, CTRL.indexOf(v)) * 100 + n), size0: v => Math.max(0, CTRL.indexOf(v)) * 100 + 7, of: z => CTRL[Math.floor(z / 100)] || 'mouse' };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   /* ---------- sounds (WebAudio, the portal's sound switch) ---------- */
@@ -123,7 +135,13 @@
 
   function start(ctx) {
     const T3 = ctx.Table3D, E = window.HockeyEngine, D = E.DIM, lang = ctx.lang;
-    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), target = SIZES.includes(+ctx.size) ? +ctx.size : 7;
+    const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), size = SIZES.includes(+ctx.size) ? +ctx.size : 7, target = size % 100;
+    // the controls (2026-11-17): 0 mouse (1 player only — two players with the mouse play by keyboard), 1 keyboard, 2 gamepad.
+    // Keyboard / gamepad mallets move at a held speed (not the old near-instant jump), Space (2P right: < >, pad X / A) slows them
+    let ctrl = Math.floor(size / 100); if (pvp && ctrl === 0) ctrl = 1;
+    const mouseCtl = ctrl === 0;
+    // the AI against keys / a pad: a little gentler than against the mouse (a mouse swings much faster)
+    const aiLv = mouseCtl ? level : Math.max(1, Math.round(level * .85));
     // the touchpad note on the controls card (PCs): a heading line, then how — like carrom / crokinole
     const PADT = [['ノートPCのタッチパッドなら：', '指をすべらせるだけでパッドが動く（クリック不要）'], ['On a laptop touchpad:', 'just glide a finger and the mallet follows (no clicking)'], ['笔记本触控板：', '手指滑动即可移动球拍（不用点击）'], ['筆電觸控板：', '手指滑動即可移動球拍（不用點擊）'], ['노트북 터치패드라면:', '손가락을 미끄러뜨리기만 하면 패드가 움직인다 (클릭 불필요)'], ['Con el panel táctil del portátil:', 'desliza el dedo y el mazo te sigue (sin clic)'], ['Sur le pavé tactile d’un portable :', 'glisse le doigt, le maillet suit (sans clic)'], ['No touchpad do notebook:', 'deslize o dedo e o batedor acompanha (sem clicar)'], ['Mit dem Touchpad am Laptop:', 'einfach den Finger gleiten lassen, der Schläger folgt (ohne Klick)'], ['На тачпаде ноутбука:', 'просто веди пальцем — бита следует (без щелчка)'], ['Dizüstü dokunmatik yüzeyde:', 'parmağını kaydır, tokmak takip eder (tıklama yok)'], ['Dengan touchpad laptop:', 'cukup geser jari, pemukul mengikuti (tanpa klik)'], ['लैपटॉप टचपैड पर:', 'बस उँगली फिसलाओ, मैलेट पीछे-पीछे चलेगा (क्लिक नहीं)'], ['على لوحة لمس الحاسوب المحمول:', 'مرّر إصبعك فقط وتتبعه المضرب (بلا نقر)']];
     const BKT = ['もどる', 'Back', '返回', '返回', '돌아가기', 'Volver', 'Retour', 'Voltar', 'Zurück', 'Назад', 'Geri', 'Kembali', 'वापस', 'رجوع'];
@@ -191,14 +209,14 @@
 .hktoast{position:fixed;left:50%;top:calc(80px + var(--sat,env(safe-area-inset-top)));transform:translateX(-50%);z-index:90;padding:9px 20px;border-radius:99px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 2.5px #2f6fd0,0 8px 20px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap;-webkit-user-select:none;user-select:none}
 .hkbig{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:90;font-weight:900;font-size:min(16vw,92px);color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.25),0 0 24px rgba(255,255,255,.6);pointer-events:none;animation:hkPop .6s cubic-bezier(.2,1.6,.4,1);-webkit-user-select:none;user-select:none;white-space:nowrap}
 .hkbig.g{color:#ffd23a;-webkit-text-stroke:2px #b5651d}@keyframes hkPop{from{transform:translate(-50%,-50%) scale(.3);opacity:0}}
-/* the boss / watcher talk: kept down in the action bar's row, never over the rink (PC: beside the bar; phones (2026-11-11): over the bar itself — the taps still reach its buttons) */
-html.hk-on #bv > .npc-float{left:calc(50% + 145px)!important;right:auto!important;width:min(440px,calc(50% - 165px))!important;bottom:calc(14px + env(safe-area-inset-bottom))!important;transform:translateY(10px);gap:8px!important;align-items:center!important}
+/* the boss / watcher talk on phones (2026-11-11): over the action bar itself — the taps still reach its buttons. PCs (2026-11-17 ユーザー：投了ボタンなどは不要): no bar (noBar) and the talk as in every other game */
+@media (max-width:760px){html.hk-on #bv > .npc-float{left:calc(50% + 145px)!important;right:auto!important;width:min(440px,calc(50% - 165px))!important;bottom:calc(14px + env(safe-area-inset-bottom))!important;transform:translateY(10px);gap:8px!important;align-items:center!important}
 html.hk-on #bv > .npc-float.on{transform:none}
 html.hk-on #bv > .npc-float .npc-pic{width:58px!important;height:58px!important}
 html.hk-on #bv > .npc-float .npc-bub{padding:6px 12px 7px!important;border-radius:16px!important;max-height:74px;overflow:hidden}
 html.hk-on #bv > .npc-float .npc-bub::before,html.hk-on #bv > .npc-float .npc-bub::after{bottom:auto!important;top:50%;margin-top:-9px}
 html.hk-on #bv > .npc-float .npc-nm b{font-size:13px!important}html.hk-on #bv > .npc-float .npc-tag{font-size:10.5px!important}html.hk-on #bv > .npc-float .npc-ttl{display:none}
-html.hk-on #bv > .npc-float .npc-tx{font-size:14px!important;line-height:1.4!important;min-height:0!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html.hk-on #bv > .npc-float .npc-tx{font-size:14px!important;line-height:1.4!important;min-height:0!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 @media (max-width:760px){html.hk-on #bv > .npc-float{left:10px!important;right:10px!important;width:auto!important;bottom:var(--hk-barb,14px)!important;min-height:var(--hk-barh,61px);z-index:60!important;pointer-events:none}
 html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}html.hk-on #bv > .npc-float .npc-bub{padding:4px 12px 5px!important;max-height:none;min-height:var(--hk-barh,61px);box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;flex:1}html.hk-on #bv > .npc-float .npc-nm{display:flex;margin-bottom:1px}html.hk-on #bv > .npc-float .npc-nm b{font-size:12px!important}html.hk-on #bv > .npc-float .npc-tag{font-size:10px!important}html.hk-on #bv > .npc-float .npc-tx{font-size:12.5px!important;line-height:1.35!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
 .hkfx{position:fixed;z-index:80;pointer-events:none;font-weight:900;font-size:15px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 10px rgba(255,120,40,.9);transform:translate(-50%,-50%);animation:hkUp .8s ease-out forwards;white-space:nowrap;-webkit-user-select:none;user-select:none}@keyframes hkUp{to{transform:translate(-50%,-180%);opacity:0}}`;
@@ -331,7 +349,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     let lastM = null;
     // (2026-11-12) the pointer is locked while a match is on (Pointer Lock): the moves keep coming at the screen's edge too — a
     // touchpad stroke that reached the bottom of the monitor left the mallet unable to go further back. Esc frees it (and pauses).
-    const canLock = !pvp && !!ctx.el.requestPointerLock && matchMedia('(hover:hover) and (pointer:fine)').matches;
+    const canLock = !pvp && mouseCtl && !!ctx.el.requestPointerLock && matchMedia('(hover:hover) and (pointer:fine)').matches;
     const locked = () => document.pointerLockElement === ctx.el;
     const lock = () => { if (!canLock || locked()) return; try { const r = ctx.el.requestPointerLock({ unadjustedMovement: false }); if (r && r.catch) r.catch(() => {}); } catch (e) {} };
     const unlock = () => { if (locked()) try { document.exitPointerLock(); } catch (e) {} };
@@ -364,6 +382,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     }
     function onMove(e) {
       if (phase !== 'play') { lastM = null; return; }
+      if (!mouseCtl && e.pointerType === 'mouse') return;   // (keyboard / gamepad play: the mouse does not steer)
       if (locked() && !pvp) { if (e.pointerType === 'mouse' || !e.pointerType) onLocked(e); return; }
       if (e.pointerType === 'mouse' && !ptr.has(e.pointerId) && !pvp) {
         const prev = lastM; lastM = { clientX: e.clientX, clientY: e.clientY };
@@ -393,11 +412,19 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     addEventListener('wheel', noWheel, { capture: true, passive: false });
     const curCss = document.createElement('style'); curCss.textContent = 'html.hk-play #gl,html.hk-play #gl *,html.hk-play #bv canvas{cursor:none!important}'; document.head.appendChild(curCss);
     const keys = new Set(), keyUsed = [false, false], src = ['', ''];
-    const KEYMAP = pvp ? { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [1, 0, -1], ArrowDown: [1, 0, 1], ArrowLeft: [1, -1, 0], ArrowRight: [1, 1, 0] }
-      : { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [0, 0, -1], ArrowDown: [0, 0, 1], ArrowLeft: [0, -1, 0], ArrowRight: [0, 1, 0] };
+    // keys: 1 player — WASD or the arrows, Space slow. Two players by keyboard — left (red): WASD + Space, right (yellow): the
+    // arrows + < / >. Keyboard vs gamepad — the keyboard (WASD or arrows + Space) is red, the pad (stick / d-pad, X or A slow) yellow
+    const K1 = { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [0, 0, -1], ArrowDown: [0, 0, 1], ArrowLeft: [0, -1, 0], ArrowRight: [0, 1, 0] };
+    const KEYMAP = pvp && ctrl === 1 ? { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [1, 0, -1], ArrowDown: [1, 0, 1], ArrowLeft: [1, -1, 0], ArrowRight: [1, 1, 0] } : K1;
+    // slow (held) and attack (a press: a dash at the puck) — 2026-11-17 ユーザー: 1P Shift slow / Space attack; 2P left B / N,
+    // right < / >; the pad A slow / X attack
+    const SLOWKEY = pvp && ctrl === 1 ? { KeyB: 0, Comma: 1 } : { ShiftLeft: 0, ShiftRight: 0 };
+    const ATKKEY = pvp && ctrl === 1 ? { KeyN: 0, Period: 1 } : { Space: 0 };
+    const atkReq = [false, false];
     const onKey = e => {
       if (e.target && /input|textarea/i.test(e.target.tagName)) return;
-      if (KEYMAP[e.code]) { if (e.type === 'keydown') keys.add(e.code); else keys.delete(e.code); e.preventDefault(); return; }
+      if (ATKKEY[e.code] != null) { if (e.type === 'keydown' && !e.repeat && phase === 'play' && !paused) atkReq[ATKKEY[e.code]] = true; e.preventDefault(); return; }
+      if (KEYMAP[e.code] || SLOWKEY[e.code] != null) { if (e.type === 'keydown') keys.add(e.code); else keys.delete(e.code); e.preventDefault(); return; }
       if (e.type === 'keydown' && (e.code === 'KeyP' || e.code === 'Escape') && phase === 'play') { paused ? resume() : pause(); }
     };
     addEventListener('keydown', onKey); addEventListener('keyup', onKey);
@@ -405,23 +432,79 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     // screen directions → field directions (the sideways table is turned a quarter: SW = the turn's sign, set by a test)
     const SW = 1;
     function scr2field(dx, dy) { return sideways() ? [SW * dy, -SW * dx] : [dx, dy]; }
+    // a held mallet: it runs at up to KV cm/s (KSLOW while slowed), reaching it in a fraction of a second, and stops as quickly
+    // (2026-11-17 ユーザー：キーボード入力が高速すぎて機能していない — it used to leap 360 cm/s at once across a 62 cm table; 115 → 80 cm/s the same day: ベースのスピードが早くて操作しにくい)
+    const KV = 80, KSLOW = 32, KACC = 900, kv = [[0, 0], [0, 0]];
+    // the attack: a short dash (ATK_T s at ATK_V cm/s) straight at the nearest puck — a hard, fast shot; then a cool-down
+    const ATK_V = 240, ATK_T = .16, ATK_CD = .55, atk = [0, 0], atkCd = [0, 0], atkDir = [[0, 0], [0, 0]], padAtk = [false, false];
+    const held = [!mouseCtl, pvp];   // (the sides steered by keys / a pad all the time; with the mouse the keys still help side 0)
+    const padSide = !pvp ? 0 : ctrl === 2 ? 1 : -1;   // (two players by keyboard: no pad)
     function axes(dt) {
-      const sp = 60;   // (the target leads the mallet by sp·dt·6 cm: about 360 cm/s at full deflection)
-      const vel = [[0, 0], [0, 0]];
-      keys.forEach(c => { const [side, dx, dy] = KEYMAP[c]; vel[side][0] += dx; vel[side][1] += dy; });
-      let pads = []; try { pads = [...(navigator.getGamepads ? navigator.getGamepads() : [])].filter(Boolean); } catch (e) {}
-      pads.forEach((gp, i) => {
-        const side = pvp ? (pads.length === 1 ? 1 : i % 2) : 0;
-        let ax = gp.axes[0] || 0, ay = gp.axes[1] || 0; const dz = .16; if (Math.hypot(ax, ay) < dz) { ax = 0; ay = 0; }
-        const b = gp.buttons || []; if (b[14] && b[14].pressed) ax = -1; if (b[15] && b[15].pressed) ax = 1; if (b[12] && b[12].pressed) ay = -1; if (b[13] && b[13].pressed) ay = 1;
-        if (ax || ay) { vel[side][0] += ax; vel[side][1] += ay; }
-      });
-      for (let side = 0; side < 2; side++) {
-        const [vx, vy] = vel[side]; if (!vx && !vy) continue;
-        keyUsed[side] = true; src[side] = 'key';
-        const m = s.mal[side], [fx, fy] = scr2field(vx, vy), l = Math.max(1, Math.hypot(fx, fy)), k = sp * dt * 6;
-        tgt[side] = { tx: m.x + fx / l * k, ty: m.y + fy / l * k };
+      const dir = [[0, 0], [0, 0]], slow = [false, false], act = [false, false];
+      keys.forEach(c => { if (SLOWKEY[c] != null) { slow[SLOWKEY[c]] = true; return; } const k = KEYMAP[c]; if (!k) return; dir[k[0]][0] += k[1]; dir[k[0]][1] += k[2]; act[k[0]] = true; });
+      if (padSide >= 0) {
+        let pads = []; try { pads = [...(navigator.getGamepads ? navigator.getGamepads() : [])].filter(Boolean); } catch (e) {}
+        pads.forEach(gp => {
+          let ax = gp.axes[0] || 0, ay = gp.axes[1] || 0; const dz = .16; if (Math.hypot(ax, ay) < dz) { ax = 0; ay = 0; }
+          const b = gp.buttons || []; if (b[14] && b[14].pressed) ax = -1; if (b[15] && b[15].pressed) ax = 1; if (b[12] && b[12].pressed) ay = -1; if (b[13] && b[13].pressed) ay = 1;
+          if (b[0] && b[0].pressed) slow[padSide] = true;
+          const xb = !!(b[2] && b[2].pressed); if (xb && !padAtk[padSide] && phase === 'play') atkReq[padSide] = true; padAtk[padSide] = xb;
+          if (ax || ay) { dir[padSide][0] += ax; dir[padSide][1] += ay; act[padSide] = true; }
+        });
       }
+      for (let side = 0; side < 2; side++) {
+        atkCd[side] = Math.max(0, atkCd[side] - dt);
+        if (atkReq[side]) {   // the dash starts: at the nearest puck (none on the table — straight ahead)
+          atkReq[side] = false;
+          if (!atkCd[side] && !atk[side]) {
+            const m = s.mal[side]; let best = null, bd = 1e9; (s.pucks || []).forEach(p => { const d = Math.hypot(p.x - m.x, p.y - m.y); if (d < bd) { bd = d; best = p; } });
+            let dx = best ? best.x - m.x : 0, dy = best ? best.y - m.y : (side === 0 ? -1 : 1); const l = Math.hypot(dx, dy) || 1; atkDir[side] = [dx / l, dy / l];
+            atk[side] = ATK_T; atkCd[side] = ATK_CD; keyUsed[side] = true; src[side] = 'key'; SND.click && SND.click();
+          }
+        }
+        if (atk[side] > 0) {
+          atk[side] = Math.max(0, atk[side] - dt); const v = kv[side];
+          v[0] = atkDir[side][0] * ATK_V; v[1] = atkDir[side][1] * ATK_V;
+          if (!atk[side]) { v[0] = atkDir[side][0] * KV; v[1] = atkDir[side][1] * KV; }   // (out of the dash at walking pace)
+          const m = s.mal[side], x = m.x + v[0] * dt, y = m.y + v[1] * dt;
+          tgt[side] = E.clampXY ? E.clampXY(s, side, x, y) : { tx: x, ty: y };
+          continue;
+        }
+        if (!held[side] && !act[side] && !kv[side][0] && !kv[side][1]) continue;
+        const [vx, vy] = dir[side], n = Math.hypot(vx, vy), mag = Math.min(1, n), [fx, fy] = n ? scr2field(vx / n, vy / n) : [0, 0];
+        const want = mag * (slow[side] ? KSLOW : KV), tx = fx * want, ty = fy * want, v = kv[side];
+        let ax = tx - v[0], ay = ty - v[1]; const al = Math.hypot(ax, ay), lim = KACC * 1.6 * dt; if (al > lim) { ax *= lim / al; ay *= lim / al; }
+        v[0] += ax; v[1] += ay;
+        if (act[side]) { keyUsed[side] = true; src[side] = 'key'; }
+        const m = s.mal[side], x = m.x + v[0] * dt, y = m.y + v[1] * dt;
+        tgt[side] = E.clampXY ? E.clampXY(s, side, x, y) : { tx: x, ty: y };
+        const t = tgt[side]; if (Math.abs(t.tx - x) > 1e-3) v[0] = 0; if (Math.abs(t.ty - y) > 1e-3) v[1] = 0;   // (stopped by the rail / the centre line)
+      }
+    }
+    // the AI against keys / a pad (2026-11-17 ユーザー：BOTがキーボード・パッドでは動けない動きをしている): it moves like a held
+    // mallet too — the same top speed and pick-up, no arm swing — and it attacks (the same dash) when the puck is close in its
+    // half, more often the stronger it is. Its target still comes from the engine's AI.
+    const bv = [0, 0]; let bAtk = 0, bCd = 0, bDir = [0, 0];
+    function botKey(t, dt) {
+      const m = s.mal[1]; m.aiCap = 0;   // (moved here exactly, as a player's mallet: the engine's arm model is for the mouse game)
+      bCd = Math.max(0, bCd - dt);
+      if (bAtk > 0) {
+        bAtk = Math.max(0, bAtk - dt); bv[0] = bDir[0] * (bAtk ? ATK_V : KV); bv[1] = bDir[1] * (bAtk ? ATK_V : KV);
+      } else {
+        let near = null, nd = 1e9; (s.pucks || []).forEach(p => { const d = Math.hypot(p.x - m.x, p.y - m.y); if (d < nd) { nd = d; near = p; } });
+        const rate = .6 + 2.4 * (aiLv - 1) / 19;   // (attacks a second, when it can)
+        if (near && !bCd && near.y < -2 && nd < 13 && near.y > m.y - 3 && Math.random() < rate * dt) {
+          const l = nd || 1; bDir = [(near.x - m.x) / l, (near.y - m.y) / l]; bAtk = ATK_T; bCd = ATK_CD + .25; bv[0] = bDir[0] * ATK_V; bv[1] = bDir[1] * ATK_V;
+        } else {
+          const dx = (t ? t.tx : m.x) - m.x, dy = (t ? t.ty : m.y) - m.y, d = Math.hypot(dx, dy), want = Math.min(KV, d * 9);
+          const wx = d > 1e-3 ? dx / d * want : 0, wy = d > 1e-3 ? dy / d * want : 0;
+          let ax = wx - bv[0], ay = wy - bv[1]; const al = Math.hypot(ax, ay), lim = KACC * 1.6 * dt; if (al > lim) { ax *= lim / al; ay *= lim / al; }
+          bv[0] += ax; bv[1] += ay;
+        }
+      }
+      const x = m.x + bv[0] * dt, y = m.y + bv[1] * dt, c = E.clampXY ? E.clampXY(s, 1, x, y) : { tx: x, ty: y };
+      if (Math.abs(c.tx - x) > 1e-3) bv[0] = 0; if (Math.abs(c.ty - y) > 1e-3) bv[1] = 0;
+      return c;
     }
     // the mode menu with a gamepad: stick / d-pad to choose, A (or Start) to begin
     let padHeld = true, padNav = 0, padRaf = 0;
@@ -437,7 +520,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
 
     /* ---------- the mode menu ---------- */
     let menuEl = null;
-    let howOff = false; try { howOff = localStorage.getItem('atlas-hockey-howto') === 'off'; } catch (e) {}
+    const HOWK_KEY = 'atlas-hockey-howto' + (mouseCtl ? '' : '-' + CTRL[ctrl] + (pvp ? '2' : ''));   // (each control has its own card: 2026-11-17)
+    let howOff = false; try { howOff = localStorage.getItem(HOWK_KEY) === 'off'; } catch (e) {}
     function pickMode(m) { setLook(m); if (menuEl) { menuEl.querySelectorAll('[data-m]').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); const d = menuEl.querySelector('.sel'); if (d) d.textContent = boardTxt(m, lang)[1]; } SND.click(); }
     function showMenu() {
       phase = 'menu';
@@ -453,10 +537,10 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     function begin() {
       lock();   // (the 試合開始 click: the pointer is held for the match)
       if (!menuEl) return;
-      const nv = menuEl.querySelector('#hkNever'); if (nv && nv.checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} }
+      const nv = menuEl.querySelector('#hkNever'); if (nv && nv.checked) { howOff = true; try { localStorage.setItem(HOWK_KEY, 'off'); } catch (e) {} }
       menuEl.remove(); menuEl = null; mode = look;
       // (the pace grows with the AI level; 2 players: a little brisker)
-      s = E.newMatch({ board: look, target, first: 0, speed: pvp ? 1.2 : 1 + .4 * (level - 1) / 19 }); setupMode(); hud(); sync(performance.now()); kick(300); barFit();
+      s = E.newMatch({ board: look, target, first: 0, speed: pvp ? (mouseCtl ? 1.2 : 1.05) : (1 + .4 * (aiLv - 1) / 19) * (mouseCtl ? 1 : .92) }); setupMode(); hud(); sync(performance.now()); kick(300); barFit();
       phase = 'count'; let n = 3;
       const tick = () => { if (stopped) return; if (n > 0) { big(String(n)); SND.beep(false); n--; later(tick, 600); } else { big('GO!', 'g', 600); SND.beep(true); phase = 'play'; document.documentElement.classList.add('hk-play'); last = performance.now(); loop(last); } };
       tick();
@@ -464,17 +548,35 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     // (2026-11-12) the pointer lock: told on the controls card (mouse)
     const ESCT = ["ESCで一時停止、クリックで再開。", "ESC pauses, a click resumes.", "按 ESC 暂停，点击继续。", "按 ESC 暫停，點擊繼續。", "ESC로 일시 정지, 클릭하면 재개.", "ESC pausa; clic para seguir.", "Échap met en pause ; clic pour reprendre.", "ESC pausa; clique para continuar.", "ESC pausiert, Klick setzt fort.", "ESC — пауза, щелчок — продолжить.", "ESC duraklatır; devam için tıkla.", "ESC menjeda; klik untuk lanjut.", "ESC से रुकता है; जारी रखने के लिए क्लिक करें।", "ESC للإيقاف المؤقت، وانقر للمتابعة."];   // (2026-11-13: only what to do — no note about the cursor)
     // (2026-11-10) the controls first (until 'don't show again'), then the board menu
+    // (2026-11-17) the keys for the keyboard / gamepad controls: [1P keyboard, 2P left, 2P right, 2P keyboard side, 2P pad side, 1P pad]
+    const KEYT = {
+      ja: ['WASD か矢印キーで移動、SHIFT でスロー、スペースでアタック（パックへ突進して強く打つ）', '左（赤）：WASD で移動、B でスロー、N でアタック', '右（黄）：矢印キーで移動、< でスロー、> でアタック', 'キーボード（赤）：WASD か矢印で移動、SHIFT でスロー、スペースでアタック', 'ゲームパッド（黄）：スティックか十字で移動、A でスロー、X でアタック', 'スティックか十字ボタンで移動、A でスロー、X でアタック（パックへ突進して強く打つ）'],
+      en: ['WASD or arrows to move, Shift to go slowly, Space to attack (dash at the puck for a hard shot)', 'Left (red): WASD to move, B slow, N attack', 'Right (yellow): arrows to move, < slow, > attack', 'Keyboard (red): WASD or arrows to move, Shift slow, Space attack', 'Gamepad (yellow): stick or d-pad to move, A slow, X attack', 'Stick or d-pad to move, A to go slowly, X to attack (dash at the puck for a hard shot)'],
+      zh: ['WASD 或方向键移动，SHIFT 慢速，空格键突击（冲向冰球用力击出）', '左（红）：WASD 移动，B 慢速，N 突击', '右（黄）：方向键移动，< 慢速，> 突击', '键盘（红）：WASD 或方向键移动，SHIFT 慢速，空格键突击', '手柄（黄）：摇杆或十字键移动，A 慢速，X 突击', '摇杆或十字键移动，A 慢速，X 突击（冲向冰球用力击出）'],
+      'zh-TW': ['WASD 或方向鍵移動，SHIFT 慢速，空白鍵突擊（衝向冰球用力擊出）', '左（紅）：WASD 移動，B 慢速，N 突擊', '右（黃）：方向鍵移動，< 慢速，> 突擊', '鍵盤（紅）：WASD 或方向鍵移動，SHIFT 慢速，空白鍵突擊', '手把（黃）：搖桿或十字鍵移動，A 慢速，X 突擊', '搖桿或十字鍵移動，A 慢速，X 突擊（衝向冰球用力擊出）'],
+      ko: ['WASD나 방향키로 이동, SHIFT로 천천히, 스페이스로 어택(퍽으로 돌진해 세게 친다)', '왼쪽(빨강): WASD 이동, B 천천히, N 어택', '오른쪽(노랑): 방향키 이동, < 천천히, > 어택', '키보드(빨강): WASD나 방향키 이동, SHIFT 천천히, 스페이스 어택', '게임패드(노랑): 스틱이나 십자 버튼 이동, A 천천히, X 어택', '스틱이나 십자 버튼으로 이동, A로 천천히, X로 어택(퍽으로 돌진해 세게 친다)'],
+      es: ['WASD o flechas para moverte, Mayús para ir despacio, Espacio para atacar (lánzate al disco y golpea fuerte)', 'Izquierda (rojo): WASD moverse, B despacio, N atacar', 'Derecha (amarillo): flechas moverse, < despacio, > atacar', 'Teclado (rojo): WASD o flechas, Mayús despacio, Espacio atacar', 'Mando (amarillo): stick o cruceta, A despacio, X atacar', 'Stick o cruceta para moverte, A despacio, X para atacar (lánzate al disco y golpea fuerte)'],
+      fr: ['WASD ou flèches pour bouger, Maj pour ralentir, Espace pour attaquer (fonce sur le palet pour frapper fort)', 'Gauche (rouge) : WASD bouger, B ralentir, N attaquer', 'Droite (jaune) : flèches bouger, < ralentir, > attaquer', 'Clavier (rouge) : WASD ou flèches, Maj ralentir, Espace attaquer', 'Manette (jaune) : stick ou croix, A ralentir, X attaquer', 'Stick ou croix pour bouger, A pour ralentir, X pour attaquer (fonce sur le palet pour frapper fort)'],
+      pt: ['WASD ou setas para mover, Shift para ir devagar, Espaço para atacar (avance no disco e bata forte)', 'Esquerda (vermelho): WASD mover, B devagar, N atacar', 'Direita (amarelo): setas mover, < devagar, > atacar', 'Teclado (vermelho): WASD ou setas, Shift devagar, Espaço atacar', 'Controle (amarelo): analógico ou direcional, A devagar, X atacar', 'Analógico ou direcional para mover, A devagar, X para atacar (avance no disco e bata forte)'],
+      de: ['WASD oder Pfeile zum Bewegen, Umschalt langsam, Leertaste Angriff (zum Puck stürmen und hart schlagen)', 'Links (rot): WASD bewegen, B langsam, N Angriff', 'Rechts (gelb): Pfeile bewegen, < langsam, > Angriff', 'Tastatur (rot): WASD oder Pfeile, Umschalt langsam, Leertaste Angriff', 'Gamepad (gelb): Stick oder Steuerkreuz, A langsam, X Angriff', 'Stick oder Steuerkreuz bewegen, A langsam, X Angriff (zum Puck stürmen und hart schlagen)'],
+      ru: ['WASD или стрелки — движение, Shift — медленно, пробел — атака (рывок к шайбе и сильный удар)', 'Слева (красный): WASD, B — медленно, N — атака', 'Справа (жёлтый): стрелки, < — медленно, > — атака', 'Клавиатура (красный): WASD или стрелки, Shift — медленно, пробел — атака', 'Геймпад (жёлтый): стик или крестовина, A — медленно, X — атака', 'Стик или крестовина — движение, A — медленно, X — атака (рывок к шайбе и сильный удар)'],
+      tr: ['WASD veya oklarla hareket, Shift ile yavaş, Boşluk ile atak (paka atılıp sert vur)', 'Sol (kırmızı): WASD hareket, B yavaş, N atak', 'Sağ (sarı): oklar hareket, < yavaş, > atak', 'Klavye (kırmızı): WASD veya oklar, Shift yavaş, Boşluk atak', 'Oyun kolu (sarı): çubuk veya yön tuşları, A yavaş, X atak', 'Çubuk veya yön tuşlarıyla hareket, A yavaş, X atak (paka atılıp sert vur)'],
+      id: ['WASD atau panah untuk bergerak, Shift untuk pelan, Spasi untuk serang (melesat ke puck dan pukul keras)', 'Kiri (merah): WASD gerak, B pelan, N serang', 'Kanan (kuning): panah gerak, < pelan, > serang', 'Keyboard (merah): WASD atau panah, Shift pelan, Spasi serang', 'Gamepad (kuning): stik atau D-pad, A pelan, X serang', 'Stik atau D-pad untuk bergerak, A pelan, X serang (melesat ke puck dan pukul keras)'],
+      hi: ['WASD या तीर से चलाएँ, Shift से धीरे, स्पेस से अटैक (पक पर झपटकर ज़ोर से मारें)', 'बाएँ (लाल): WASD चलाएँ, B धीरे, N अटैक', 'दाएँ (पीला): तीर चलाएँ, < धीरे, > अटैक', 'कीबोर्ड (लाल): WASD या तीर, Shift धीरे, स्पेस अटैक', 'गेमपैड (पीला): स्टिक या डी-पैड, A धीरे, X अटैक', 'स्टिक या डी-पैड से चलाएँ, A से धीरे, X से अटैक (पक पर झपटकर ज़ोर से मारें)'],
+      ar: ['WASD أو الأسهم للتحريك، وShift للإبطاء، والمسافة للهجوم (اندفع نحو القرص واضربه بقوة)', 'اليسار (الأحمر): WASD للتحريك، وB للإبطاء، وN للهجوم', 'اليمين (الأصفر): الأسهم للتحريك، و< للإبطاء، و> للهجوم', 'لوحة المفاتيح (الأحمر): WASD أو الأسهم، وShift للإبطاء، والمسافة للهجوم', 'ذراع التحكم (الأصفر): العصا أو الأزرار الاتجاهية، وA للإبطاء، وX للهجوم', 'العصا أو الأزرار الاتجاهية للتحريك، وA للإبطاء، وX للهجوم (اندفع نحو القرص واضربه بقوة)'],
+    };
     function howFirst() {
       if (howOff) { showMenu(); return; }
       // (2026-11-10) the same card as carrom / crokinole: title, the steps with round icons, 'don't show again', OK
       const H = HOW[lang] || HOW.en, mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
       const dev = (H[1].split(/[／·・|]/).map(x => x.trim()).filter(Boolean)[mouse ? 0 : 1] || H[1]).trim();
-      const steps = [['🏒', H[0]], [mouse ? '🖱' : '👆', dev]].concat(mouse ? [['⌨', H[2]], ['⎋', ESCT[li(lang)] || ESCT[1]]] : []).concat([['⚡', H[3]]]);
+      const KT = (KEYT[lang] || KEYT.en), kl = !mouseCtl ? (pvp ? (ctrl === 1 ? [['⌨', KT[1]], ['⌨', KT[2]]] : [['⌨', KT[3]], ['🎮', KT[4]]]) : [[ctrl === 2 ? '🎮' : '⌨', KT[ctrl === 2 ? 5 : 0]]]) : null;
+      const steps = kl ? [['🏒', H[0]]].concat(kl, [['⚡', H[3]]]) : [['🏒', H[0]], [mouse ? '🖱' : '👆', dev]].concat(mouse ? [['⌨', H[2]], ['⎋', ESCT[li(lang)] || ESCT[1]]] : []).concat([['⚡', H[3]]]);
       const el = document.createElement('div'); el.className = 'hkhw'; el.dir = lang === 'ar' ? 'rtl' : 'ltr'; menuEl = null;
-      el.innerHTML = `<div class="hkhw-c" role="dialog" aria-modal="true"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2><ol>${steps.map(([ic, x]) => `<li><i>${ic}</i><span>${esc(x)}</span></li>`).join('')}</ol>${mouse ? `<p class="u pad">💻 <b>${esc((PADT[li(lang)] || PADT[1])[0])}</b><br>${esc((PADT[li(lang)] || PADT[1])[1])}</p>` : ''}<label><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="ok">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
+      el.innerHTML = `<div class="hkhw-c" role="dialog" aria-modal="true"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2><ol>${steps.map(([ic, x]) => `<li><i>${ic}</i><span>${esc(x)}</span></li>`).join('')}</ol>${mouse && mouseCtl ? `<p class="u pad">💻 <b>${esc((PADT[li(lang)] || PADT[1])[0])}</b><br>${esc((PADT[li(lang)] || PADT[1])[1])}</p>` : ''}<label><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="ok">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
       ['pointerdown', 'pointermove', 'pointerup'].forEach(k => el.addEventListener(k, e => e.stopPropagation()));
       document.body.appendChild(el); howEl = el;
-      el.querySelector('.ok').onclick = () => { if (el.querySelector('#hkNever').checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} } el.remove(); howEl = null; if (!stopped) showMenu(); };
+      el.querySelector('.ok').onclick = () => { if (el.querySelector('#hkNever').checked) { howOff = true; try { localStorage.setItem(HOWK_KEY, 'off'); } catch (e) {} } el.remove(); howEl = null; if (!stopped) showMenu(); };
     }
     let howEl = null;
     howFirst();
@@ -494,7 +596,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       const dt = Math.min(.034, Math.max(0, (now - last) / 1000)); last = now;
       if (paused || document.hidden) return;
       axes(dt);
-      const inp = [tgt[0], pvp ? tgt[1] : E.aiTarget(s, 1, level, mem, dt)];
+      const inp = [tgt[0], pvp ? tgt[1] : !mouseCtl ? botKey(E.aiTarget(s, 1, aiLv, mem, dt), dt) : E.aiTarget(s, 1, aiLv, mem, dt)];
       E.step(s, dt, inp);
       for (const e of s.ev) onEvent(e);
       sync(now); kick(120);
@@ -520,14 +622,19 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       later(() => ctx.onEnd(pvp ? { win: false, draw: false, level, score, pvp: true, winnerText: tr('win', lang).replace('{p}', names[w]) } : { win: w === 0, draw: false, level, score }), 700);
     }
 
+    // PC (2026-11-17): no action bar — the Atlamo talks at the bottom right, beside the rink (not over the near goal); a window too
+    // narrow for that puts it in the middle as in the other games (atlas/npc/npc.js reads window.__npcPlace)
+    const npcPlace = () => { if (innerWidth <= 760) return null; const r = T3.modelRect && T3.modelRect(); if (!r) return null; const room = innerWidth - r.right - 28; if (room < 300) return null; const w = Math.min(470, room - 12); return { cx: r.right + 16 + room / 2, w, bot: 6 }; };
+    if (!pvp) window.__npcPlace = npcPlace;
     const api = {
-      human: 0,
+      human: 0, noBar: !matchMedia('(max-width:760px)').matches,    // (PC: no 待った / 投了 / ヒント bar — the Atlamo talks there instead, 2026-11-17)
       canUndo: () => false, undo() {},
       canHint: () => false, hint() { return Promise.resolve(false); },
       canResign: () => !stopped && !over,
       resign() { if (over) return; over = true; cancelAnimationFrame(raf); if (menuEl) { menuEl.remove(); menuEl = null; } const sc = s ? `${s.score[0]} − ${s.score[1]}` : '0 − 0'; ctx.onEnd(pvp ? { win: false, draw: false, level, score: sc, pvp: true, winnerText: tr('win', lang).replace('{p}', names[1]) } : { win: false, draw: false, level, score: sc }); },
       timeout() {},
       stop() {
+        if (window.__npcPlace === npcPlace) window.__npcPlace = null;
         stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); timers.forEach(clearTimeout);
         unlock(); escBadge(false); document.removeEventListener('pointerlockchange', onLockChange); ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointermove', onMoveW, true); removeEventListener('mouseout', onOutW); if (raw) ctx.el.removeEventListener('pointerrawupdate', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
         removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur); removeEventListener('focus', onFocus);
@@ -542,5 +649,5 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.hockey = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 7, sizeLabel, sizeName, levelInfo, start, MODE_TXT: M, ICON, modeName, SND };
+  window.Atlas3D.hockey = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, mx: true, rule, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 7, sizeLabel, sizeName, levelInfo, start, MODE_TXT: M, ICON, modeName, SND };
 })();
