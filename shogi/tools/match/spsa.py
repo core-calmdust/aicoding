@@ -5,7 +5,7 @@
       each iteration: every parameter is moved up or down by its step at random (theta+ / theta-), <procs> pairs of games
       (the same opening, colours swapped) are played between the two settings, and each parameter moves a little towards
       the side that won. State in <work>/spsa.json after every iteration: stop with Ctrl+C, the same command continues.
-  python3 tools/match/spsa.py test [--work ~/shogi-spsa] [--ms 300] [--procs 6] [--games 80] [--set "2=80,16=120"]
+  python3 tools/match/spsa.py test [--work ~/shogi-spsa] [--ms 300 | --nodes N] [--procs 6] [--games 80] [--set "2=80,16=120"]
       a match of a setting (default: the tuned values in spsa.json, rounded) against the engine's defaults; Elo with a 95% range.
 
 Both sides are the same engine: one in usimatch (--param), one in kptool over USI (Param<k>); which setting sits in which
@@ -15,16 +15,16 @@ nodes for depth, so only time shows what they are worth. Run nothing else heavy 
 import argparse, json, math, os, random, subprocess, sys, tempfile, time
 
 HERE = os.path.dirname(os.path.abspath(__file__)); SHOGI = os.path.dirname(os.path.dirname(HERE))
-# name, set_param index, the engine's default, min, max, step (the size of one trial move)
+# name, set_param index, the engine's default (keep in step with engine.c), min, max, step (the size of one trial move)
 PARAMS = [
-    ('rfpMargin',   2,   90,   40,  200,  10),     # reverse futility: margin per depth
-    ('rfpDepth',    1,    6,    3,   10,   1),     # ... up to this depth
-    ('futMargin',  16,  100,   40,  250,  12),     # futility of quiet moves: margin per depth
-    ('lmpBase',    12,    4,    2,   12,   1),     # late move pruning: moves before it starts
-    ('probCut',    23,  200,  100,  400,  20),     # ProbCut margin
-    ('aspDelta',   27,   60,   20,  150,   8),     # aspiration window
-    ('histLmr',     9, 6000, 2000, 16000, 500),    # history's weight in the reductions (divisor)
-    ('lmrDiv',     17,  200,  130,  320,  12),     # reductions: ln(depth) * ln(move number) / (this / 100)
+    ('rfpMargin',   2,  112,   40,  200,  10),     # reverse futility: margin per depth
+    ('rfpDepth',    1,    8,    3,   10,   1),     # ... up to this depth
+    ('futMargin',  16,  123,   40,  250,  12),     # futility of quiet moves: margin per depth
+    ('lmpBase',    12,    7,    2,   12,   1),     # late move pruning: moves before it starts
+    ('probCut',    23,  162,  100,  400,  20),     # ProbCut margin
+    ('aspDelta',   27,   85,   20,  150,   8),     # aspiration window
+    ('histLmr',     9, 6749, 2000, 16000, 500),    # history's weight in the reductions (divisor)
+    ('lmrDiv',     17,  203,  130,  320,  12),     # reductions: ln(depth) * ln(move number) / (this / 100)
 ]
 
 def build(work):
@@ -40,7 +40,7 @@ def build(work):
 def play(work, site, um, kp, ms, setA, setB, games, opening_lines, tag):
     """usimatch plays setA, kptool plays setB; returns a Popen and the file with the openings"""
     f = tempfile.NamedTemporaryFile('w', suffix=f'-{tag}.txt', delete=False); f.write(''.join(opening_lines)); f.close()
-    cmd = [um, site, f'{ms}ms', kp, work, str(games), '--openings', f.name, '--opt', f'TimeMs={ms}']
+    cmd = [um, site, f'{ms}ms', kp, work, str(games), '--openings', f.name, '--opt', f'TimeMs={ms}'] if ms > 0 else [um, site, str(-ms), kp, work, str(games), '--openings', f.name, '--opt', f'Nodes={-ms}']
     for k, v in setA.items(): cmd += ['--param', f'{k}={v}']
     for k, v in setB.items(): cmd += ['--opt', f'Param{k}={v}']
     env = dict(os.environ, KPNET=site)
@@ -69,6 +69,7 @@ def main():
     ap.add_argument('--procs', type=int, default=6); ap.add_argument('--iters', type=int, default=600)
     ap.add_argument('--lr', type=float, default=0.5); ap.add_argument('--games', type=int, default=80); ap.add_argument('--set', default='')
     ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--nodes', type=int, default=0, help='test: nodes per move instead of time (what the node-limited levels see)')
     a = ap.parse_args()
     site, um, kp = build(a.work)
     ops = [x for x in open(os.path.join(HERE, 'openings.txt')) if len(x) > 3]
@@ -76,12 +77,12 @@ def main():
     defaults = {k: d for _, k, d, _, _, _ in PARAMS}
 
     if a.mode == 'test':
-        ms = a.ms or 300
+        ms = -a.nodes if a.nodes else (a.ms or 300)
         if a.set: cand = {int(x.split('=')[0]): int(x.split('=')[1]) for x in a.set.split(',')}
         else:
             st = json.load(open(state_f)); cand = {k: int(round(st['theta'][n])) for n, k, _, _, _, _ in PARAMS}
         cand = {k: v for k, v in cand.items() if defaults.get(k) != v}
-        print('candidate:', ', '.join(f'{k}={v}' for k, v in sorted(cand.items())) or '(the defaults)', f' vs the defaults, {ms} ms, {a.games * a.procs} games', flush=True)
+        print('candidate:', ', '.join(f'{k}={v}' for k, v in sorted(cand.items())) or '(the defaults)', f' vs the defaults, {ms} ms, {a.games * a.procs} games' if ms > 0 else f' vs the defaults, {-ms} nodes, {a.games * a.procs} games', flush=True)
         ps = []
         for i in range(a.procs):
             r = (i * a.games // 2) % len(ops); lines = ops[r:] + ops[:r]

@@ -1068,8 +1068,9 @@ static TLS i32 nodes; static TLS int stopFlag; static TLS double deadline; stati
 static TLS i32 pvTable[MAXPLY * MAXPLY], pvLen[MAXPLY];
 static TLS int rootDepth = 1;
 /* tunables (same defaults as engine.js) */
-static int useMate1 = 1, rfpDepth = 6, rfpMargin = 90, nullAdapt = 1, histMalus = 0;   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
-static int P[32] = {[5] = 1, [7] = 1, [12] = 4, [14] = 1, [16] = 100, [22] = 1, [23] = 200};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
+static int useMate1 = 1, rfpDepth = 8, rfpMargin = 112, nullAdapt = 1, histMalus = 0;   /* (2026-11-17: SPSA at 100 ms per move, tools/match/spsa.py: depth 6 -> 8, margin 90 -> 112, [9] 6000 -> 6749, [12] 4 -> 7, [16] 100 -> 123, [23] 200 -> 162, [27] 60 -> 85, LMR divisor 2.0 -> 2.03: +22 Elo at 300 ms over 1440 games) */
+/* before:   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
+static int P[32] = {[5] = 1, [7] = 1, [9] = 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = 85};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
 static void lmrInit(double div);
 EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 32) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
@@ -2067,7 +2068,7 @@ EXPORT(init) void init(void) {
     A1[c][p * 8 + d] = STEP[p * 8 + d] || SLIDE[p * 8 + d]; AS[c][p * 8 + d] = SLIDE[p * 8 + d];
   }
   for (int p = 0; p < 32; p++) { NDIRS[p] = 0; for (int d = 0; d < 8; d++) { if (STEP[p * 8 + d]) DIRS[p][NDIRS[p]++] = d; if (SLIDE[p * 8 + d]) DIRS[p][NDIRS[p]++] = d | 8; } }
-  lmrInit(2.0);
+  lmrInit(2.03);
   zseed = 0x2545F4914F6CDD1DULL;
   for (int i = 0; i < 81 * 32; i++) { const unsigned long long r = rnd64(); ZB_L[i] = (i32)r; ZB_H[i] = (i32)(r >> 32); }
   for (int i = 0; i < 2 * 8 * 20; i++) { const unsigned long long r = rnd64(); ZHD_L[i] = (i32)r; ZHD_H[i] = (i32)(r >> 32); }
