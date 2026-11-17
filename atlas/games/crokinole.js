@@ -491,7 +491,7 @@
     viewBtn.addEventListener('click', e => { e.preventDefault(); toggleView(); });
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => viewBtn.addEventListener(k, e => e.stopPropagation()));
     viewSync(); layer.appendChild(viewBtn);
-    const onFlipKey = e => { if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) flip(); };
+    const onFlipKey = e => { if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); flip(); } };   // (preventDefault: the Atlas's F = full screen stands aside)
     document.addEventListener('keydown', onFlipKey);
     const onKey = e => {
       if (stopped || phase !== 'place' || !st || !human(st.turn) || drag) return;

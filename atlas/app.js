@@ -86,6 +86,73 @@
   }
   if ($('npcBtn')) $('npcBtn').onclick = () => { const N = window.AtlasNPC; if (!N || !N.on) return; N.setOn(!N.on()); npcIcon(); toast($('npcBtn').title); };
 
+  /* ---------- the settings box (2026-11-17 ユーザー：右上の設定項目を歯車にまとめる・フルスクリーン（F キー）も) ----------
+     The gear opens a box: sound, character talk, language and full screen (also the F key). The old buttons stay (hidden):
+     the rows press them, so their handlers and the phone menu keep working. */
+  const OPT = {
+    ja: { t: '設定', snd: 'サウンド', lang: '言語', fs: 'フルスクリーン', key: 'キーでも切り替え' },
+    en: { t: 'Settings', snd: 'Sound', lang: 'Language', fs: 'Full screen', key: 'key also toggles it' },
+    zh: { t: '设置', snd: '声音', lang: '语言', fs: '全屏', key: '键也可切换' },
+    'zh-TW': { t: '設定', snd: '聲音', lang: '語言', fs: '全螢幕', key: '鍵也可切換' },
+    ko: { t: '설정', snd: '사운드', lang: '언어', fs: '전체 화면', key: '키로도 전환' },
+    es: { t: 'Ajustes', snd: 'Sonido', lang: 'Idioma', fs: 'Pantalla completa', key: 'también con la tecla' },
+    fr: { t: 'Réglages', snd: 'Son', lang: 'Langue', fs: 'Plein écran', key: 'aussi avec la touche' },
+    pt: { t: 'Configurações', snd: 'Som', lang: 'Idioma', fs: 'Tela cheia', key: 'também com a tecla' },
+    de: { t: 'Einstellungen', snd: 'Ton', lang: 'Sprache', fs: 'Vollbild', key: 'auch mit Taste' },
+    ru: { t: 'Настройки', snd: 'Звук', lang: 'Язык', fs: 'Полный экран', key: 'также клавишей' },
+    tr: { t: 'Ayarlar', snd: 'Ses', lang: 'Dil', fs: 'Tam ekran', key: 'tuşuyla da açılır' },
+    id: { t: 'Pengaturan', snd: 'Suara', lang: 'Bahasa', fs: 'Layar penuh', key: 'juga dengan tombol' },
+    hi: { t: 'सेटिंग्स', snd: 'ध्वनि', lang: 'भाषा', fs: 'फ़ुल स्क्रीन', key: 'कुंजी से भी' },
+    ar: { t: 'الإعدادات', snd: 'الصوت', lang: 'اللغة', fs: 'ملء الشاشة', key: 'أو بمفتاح' },
+  };
+  const ot = k => (OPT[lang] || OPT.en)[k];
+  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+  const fsOk = () => !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  function fsToggle() {
+    const d = document.documentElement;
+    try { if (fsEl()) (document.exitFullscreen || document.webkitExitFullscreen).call(document); else (d.requestFullscreen || d.webkitRequestFullscreen).call(d); } catch (e) {}
+  }
+  const OI = {
+    lang: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>',
+    fs: '<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+    fsOff: '<svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>',
+  };
+  function optPaint() {
+    const pop = $('optPop'); if (!pop || pop.hidden) return;
+    const N = window.AtlasNPC, npcOk = N && N.on, lname = ($('langSel').selectedOptions[0] || {}).text || lang;
+    const row = (k, icon, label, sub, right, chk) => `<button type="button" class="orow" data-o="${k}"${chk == null ? '' : ` role="switch" aria-checked="${chk}"`}><span class="oi">${icon}</span><span class="ot"><b>${esc(label)}</b>${sub ? `<small>${sub}</small>` : ''}</span>${right}</button>`;
+    pop.innerHTML = `<h4><i>${$('optBtn').innerHTML}</i>${esc(ot('t'))}</h4>`
+      + row('snd', $('sfxBtn').innerHTML, ot('snd'), '', '<span class="osw"></span>', SFX.on)
+      + (npcOk ? row('npc', $('npcBtn').innerHTML, N.LABEL[lang] || N.LABEL.en, '', '<span class="osw"></span>', N.on()) : '')
+      + row('lang', OI.lang, ot('lang'), '', `<span class="oval">${esc(lname)} ›</span>`)
+      + (fsOk() ? row('fs', fsEl() ? OI.fsOff : OI.fs, ot('fs'), matchMedia('(any-pointer: fine)').matches ? `<kbd>F</kbd>${esc(ot('key'))}` : '', '<span class="osw"></span>', !!fsEl()) : '');
+    pop.setAttribute('aria-label', ot('t'));
+    pop.querySelectorAll('[data-o]').forEach(b => b.onclick = e => {
+      e.stopPropagation(); const k = b.dataset.o;
+      if (k === 'snd') $('sfxBtn').click(); else if (k === 'npc') $('npcBtn').click(); else if (k === 'fs') fsToggle();
+      else if (k === 'lang') { optOpen(false); openLang(true); return; }
+      optPaint();
+    });
+  }
+  function optOpen(on) {
+    const pop = $('optPop'), btn = $('optBtn'); if (!pop) return;
+    if (on === undefined) on = pop.hidden;
+    pop.hidden = !on; btn.setAttribute('aria-expanded', on); btn.setAttribute('aria-label', ot('t')); btn.title = ot('t');
+    if (on) { if (!$('langPop').hidden) openLang(false); optPaint(); }
+  }
+  if ($('optBtn')) {
+    $('optBtn').onclick = e => { e.stopPropagation(); optOpen(); };
+    document.addEventListener('click', e => { const p = $('optPop'); if (e.isTrusted && p && !p.hidden && !p.contains(e.target)) optOpen(false); });   // (isTrusted: the rows press the hidden buttons)
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('optPop').hidden) optOpen(false); });
+    ['fullscreenchange', 'webkitfullscreenchange'].forEach(k => document.addEventListener(k, optPaint));
+    // F: full screen anywhere in the Atlas (a game that uses F itself — carrom's flip — takes it first and stops it here)
+    addEventListener('keydown', e => {
+      if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey || (e.key !== 'f' && e.key !== 'F')) return;
+      const tg = e.target; if (tg && (/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName) || tg.isContentEditable)) return;
+      if (!fsOk()) return; e.preventDefault(); fsToggle();
+    });
+  }
+
   /* ---------- tabs ---------- */
   const ICO = {
     home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5h4v5"/>',
@@ -2184,7 +2251,7 @@
   // PC: the header's icons go into the 3D view while it is open (the same buttons, moved: their handlers come along) and back
   // when it closes; the × closes the view, or quits the game / rules tour being played (2026-11-10)
   { const bv = $('bv'), top = $('bvTop'), X = $('bvX'), MQ = matchMedia('(hover:hover) and (pointer:fine) and (min-width:900px)');
-    const ids = ['coinPill', 'sfxBtn', 'npcBtn', 'langBtn', 'langPop'];
+    const ids = ['coinPill', 'optBtn', 'optPop', 'langPop'];
     let home = null;
     const sync = () => {
       const on = bv.classList.contains('on') && MQ.matches;
@@ -2920,6 +2987,7 @@
     l.onload = () => { if (document.fonts) document.fonts.ready.then(() => { try { fitBrand(); if (page === 'home') renderHero(true); } catch (e) {} }); };
   }
   function applyLang() {
+    if ($('optBtn')) { $('optBtn').setAttribute('aria-label', ot('t')); $('optBtn').title = ot('t'); }
     zhFont();
     document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     const title = t('title');
