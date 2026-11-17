@@ -121,6 +121,8 @@ html.hb-on .throw .shown:not(.cw){width:60px;height:60px}html.hb-on .throw .show
 .throw .val{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:700;color:var(--accent);line-height:1}
 .throw .vsub{font-size:12px;color:var(--muted);margin-top:3px}
 .throw .acts{display:flex;flex-direction:column;gap:6px}
+/* the turn's message sits in the dice card, under the dice (2026-11-17 user: サイコロ下のシステムメッセージを同じボックスに) */
+.throw{flex-wrap:wrap;row-gap:8px}.throw .status{flex:1 0 100%;padding:8px 2px 0;border-top:1px solid rgba(255,255,255,.08)}.throw .status:empty{display:none}
 .rollbtn{height:46px;min-width:108px;padding:0 16px;border-radius:13px;border:1px solid #f8d07e;background:linear-gradient(180deg,#f6c25c,#e09a2a);color:#2a1600;font-weight:800;font-size:17px;cursor:pointer;box-shadow:0 4px 0 #9a6410}
 .rollbtn:disabled{filter:grayscale(.7);opacity:.5;cursor:default;box-shadow:none}
 .passbtn{height:34px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);cursor:pointer;font-size:13px}
@@ -462,8 +464,8 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
       <div class="shown" id="shown"></div>
       <div class="tv"><div class="val" id="tval">—</div><div class="vsub" id="tsub"></div></div>
       <div class="acts"><button class="rollbtn" id="btnRoll"></button><button class="passbtn hidden" id="btnPass" data-i18n="btn.pass"></button></div>
+      <div class="status" id="status" aria-live="polite"></div>
     </div>
-    <div class="status" id="status" aria-live="polite"></div>
     <div class="card seats" id="players"></div>
     <div class="card ck-card hidden" id="coachCard" aria-live="polite"></div>
     <div class="card review-card" id="reviewCard" data-itc="coach">
