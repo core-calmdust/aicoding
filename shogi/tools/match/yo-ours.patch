@@ -11,6 +11,109 @@ index 0740dea..96035ad 100644
  			// evaluate()のために利きが必要。
  			#define LONG_EFFECT_LIBRARY
  		#endif
+diff --git a/source/engine/yaneuraou-engine/yaneuraou-search.cpp b/source/engine/yaneuraou-engine/yaneuraou-search.cpp
+index d254d82..8b3e07a 100644
+--- a/source/engine/yaneuraou-engine/yaneuraou-search.cpp
++++ b/source/engine/yaneuraou-engine/yaneuraou-search.cpp
+@@ -65,6 +65,9 @@
+ #include "../../eval/nnue/evaluate_nnue.h"
+ #endif
+ 
++#include <cstdlib>
++// (experiment) OURABL: bits switch parts of the search off, to measure what each is worth
++static const unsigned ABL = getenv("OURABL") ? (unsigned)strtoul(getenv("OURABL"), nullptr, 0) : 0;
+ namespace YaneuraOu {
+ 
+ using namespace Search;
+@@ -2776,7 +2779,7 @@ SYSV_ABI Value Search::YaneuraOuWorker::search(
+     (ss + 2)->cutoffCnt = 0;
+     (ss + 1)->priorNMPFailHigh = 0;
+ 
+-    const auto correctionValue = correction_value(*this, pos, ss);
++    const auto correctionValue = (ABL & 1024) ? 0 : correction_value(*this, pos, ss);
+ 
+ 	// -----------------------
+     // Step 4. Transposition table lookup
+@@ -3395,7 +3398,7 @@ SYSV_ABI Value Search::YaneuraOuWorker::search(
+     // 評価値が非常に低いallNodeでは通常探索を省き、qsearchの値を返す。
+     // 詰み探索モードでは、この枝刈りを行わない。
+ 
+-    if (allNode && eval < alpha - 342 * depth && !seekMate)
++    if (!(ABL & 16) && allNode && eval < alpha - 342 * depth && !seekMate)
+         return qsearch<NonPV>(pos, ss, alpha, beta);
+ 
+ 	// -----------------------
+@@ -3417,7 +3420,7 @@ SYSV_ABI Value Search::YaneuraOuWorker::search(
+ 			Stockfish10でnonPVにのみの適用に変更になった。
+ 	*/
+ 
+-    if (!ss->ttPv && depth < (seekMate ? 6 : 19) && eval >= beta && (!ttData.move || ttCapture)
++    if (!(ABL & 8) && !ss->ttPv && depth < (seekMate ? 6 : 19) && eval >= beta && (!ttData.move || ttCapture)
+         && !is_loss(beta) && !is_win(eval))
+     {
+         Value futilityMult = std::min(45 + depth * 4, 85);
+@@ -3446,7 +3449,7 @@ SYSV_ABI Value Search::YaneuraOuWorker::search(
+     // -----------------------
+ 
+     //  🖊 evalがbetaを超えているので1手パスしてもbetaは超えそう。だからnull moveを試す
+-    if (cutNode
++    if (!(ABL & 1) && cutNode
+         && ss->staticEval + 50 * ss->priorNMPFailHigh >= beta - 13 * depth - 47 * improving + 365
+         && !excludedMove
+ #if STOCKFISH
+@@ -3537,7 +3540,7 @@ SYSV_ABI Value Search::YaneuraOuWorker::search(
+     // 十分な探索深さがある場合、置換表（TTMove）に手がないPVノードやCutノードについては探索深さを削減する。
+     //（*Scaler）IIR をよりアグレッシブにすると、スケーリング効率が悪化する。
+ 
+-    if (!ss->followPV && !allNode && depth >= 6 && !ttData.move)
++    if (!(ABL & 128) && !ss->followPV && !allNode && depth >= 6 && !ttData.move)
+         depth--;
+         
+ 	// -----------------------
+@@ -3555,7 +3558,7 @@ SYSV_ABI Value Search::YaneuraOuWorker::search(
+     // probCutに使うbeta値。
+     probCutBeta = beta + 241 - 64 * improving;
+ 
+-	if (depth >= 3
++	if (!(ABL & 32) && depth >= 3
+         && !is_decisive(beta)
+         // If value from transposition table is lower than probCutBeta, don't attempt
+         // probCut there
+@@ -3757,7 +3760,7 @@ moves_loop:  // When in check, search starts here
+ 
+         // 📊 【計測資料 7.】 浅い深さでの枝刈りを行なうときに王手がかかっていないことを条件に入れる/入れない
+ 
+-        if (!rootNode
++        if (!(ABL & 4) && !rootNode
+ #if STOCKFISH
+             && pos.non_pawn_material(us)
+ #endif
+@@ -3916,7 +3919,7 @@ moves_loop:  // When in check, search starts here
+ 		*/
+ 
+ 		// singular延長をするnodeであるか。
+-        if (!rootNode && move == ttData.move && !excludedMove && depth >= 6 + ss->ttPv
++        if (!(ABL & 64) && !rootNode && move == ttData.move && !excludedMove && depth >= 6 + ss->ttPv
+             && is_valid(ttData.value) && !is_decisive(ttData.value) && (ttData.bound & BOUND_LOWER)
+             && ttData.depth >= depth - 3 && !is_shuffling(move, ss, pos) && !seekMate)
+         {
+@@ -4132,6 +4135,7 @@ moves_loop:  // When in check, search starts here
+ 
+         // Apply the computed LMR
+         // 計算したLMRを適用する。
++        if (ABL & 2) r = 0;
+         if (depth >= 2 && moveCount > 1)
+         {
+             /*
+@@ -4898,7 +4902,7 @@ Value Search::YaneuraOuWorker::qsearch(Position& pos, Stack* ss, Value alpha, Va
+         bestValue = futilityBase = -VALUE_INFINITE;
+     else
+     {
+-        const auto correctionValue = correction_value(*this, pos, ss);
++        const auto correctionValue = (ABL & 1024) ? 0 : correction_value(*this, pos, ss);
+ 
+ 		if (ss->ttHit)
+         {
 diff --git a/source/eval/material/evaluate_material.cpp b/source/eval/material/evaluate_material.cpp
 index d4d7715..afe7c68 100644
 --- a/source/eval/material/evaluate_material.cpp
@@ -69,3 +172,25 @@ index d4d7715..afe7c68 100644
  #endif // MATERIAL_LEVEL
  
  } // namespace Eval
+diff --git a/source/movepick.cpp b/source/movepick.cpp
+index bc3d220..0444c17 100644
+--- a/source/movepick.cpp
++++ b/source/movepick.cpp
+@@ -7,6 +7,8 @@
+ #include "misc.h"
+ #include "position.h"
+ 
++#include <cstdlib>
++static const unsigned ABLM = getenv("OURABL") ? (unsigned)strtoul(getenv("OURABL"), nullptr, 0) : 0;
+ namespace YaneuraOu {
+ #if !STOCKFISH
+ using Eval::PieceValue;
+@@ -422,6 +424,8 @@ ExtMove* MovePicker::generate_and_score() {
+                 value += 2048 * int((*lowPlyHistory)[ply][m.raw()]) / (256 * (1 + ply));
+ #endif
+ 
++            if (ABLM & 512) value = ((pos.check_squares(pt) & to) && pos.see_ge(m, -75)) * 16384;
++            else if (ABLM & 256) value = (512 * int((*mainHistory)[us][m.raw()]) + 256 * int((*continuationHistory[0])[pc][to]) + 256 * int((*continuationHistory[1])[pc][to])) / 256 + ((pos.check_squares(pt) & to) && pos.see_ge(m, -75)) * 16384;
+             m.value = value;
+ 
+         }

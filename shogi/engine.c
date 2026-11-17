@@ -1131,14 +1131,24 @@ static TLS int rootDepth = 1;
 /* tunables (same defaults as engine.js) */
 static int useMate1 = 1, rfpDepth = 8, rfpMargin = 112, nullAdapt = 1, histMalus = 0;   /* (2026-11-17: SPSA at 100 ms per move, tools/match/spsa.py: depth 6 -> 8, margin 90 -> 112, [9] 6000 -> 6749, [12] 4 -> 7, [16] 100 -> 123, [23] 200 -> 162, [27] 60 -> 85, LMR divisor 2.0 -> 2.03: +22 Elo at 300 ms over 1440 games) */
 /* before:   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
-static int P[32] = {[5] = 1, [7] = 1, [9] = 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = 85};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
+static int P[64] = {[5] = 1, [7] = 1, [9] = 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = 85};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
 static void lmrInit(double div);
-EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 32) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
+EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 64) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
    P5 log-LMR, P6 counter-move ordering, P7 quiet checks in first qsearch ply, P10 razoring, P11 extend all checks, P12 LMP base;
    search v3 (2026-11-08, MODEL_CARD.md): P22 history v2 (gravity, malus, continuation history; on), P23 ProbCut margin (200, on),
    P9 its LMR history divisor; tried and left off: P19/P20/P21 singular extension (min depth / margin / multi-cut, negative ext),
-   P24 "improving", P25 table score as static eval, P26 LMP max depth, P27 aspiration window */
+   P24 "improving", P25 table score as static eval, P26 LMP max depth, P27 aspiration window;
+   search v4 (2026-11-17, claude/shogi-search-comparison.md: the methods of the Stockfish family, each behind a switch, off by
+   default; the one-thread loop only for now — the split points of the MT build do not have them yet):
+   P28 null move: reduction = P28 + depth / 3 + min((eval - beta) / 250, 3)
+   P29 late move pruning at every depth: after (3 + depth^2) / (2 - improving) moves (P29 = 1; 2: the count halved again)
+   P30 futility of quiet moves by the reduced depth: lmrDepth < P30 and eval + P31 + P32 * lmrDepth <= alpha (P31 100, P32 120)
+   P33 quiet moves that lose material: SEE < -P33 * lmrDepth^2;  P34 captures: SEE < -P34 * depth
+   P35 no table move: one ply less from depth P35 (instead of the search for one at PV nodes)
+   P36 check extension: 1 none, 2 at PV nodes only, 3 only up to depth 6
+   P37 reductions from the move after P37 (default 3);  P38 also for captures (1: losing ones, 2: all)
+   P39 cut nodes (the node kind passed down: pvNode = 2): P39 more plies of reduction there */
 static double ln_(double x) { int k = 0; while (x > 1.5) { x *= 0.5; k++; } double z = (x - 1) / (x + 1), z2 = z * z, t = z, r = 0; for (int i = 1; i < 40; i += 2) { r += t / i; t *= z2; } return 2 * r + k * 0.6931471805599453; }
 static i8 LMRT[64][64];
 static void lmrInit(double div) { for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) LMRT[d][n] = (i8)(0.6 + ln_(d) * ln_(n) / div); }
@@ -1376,6 +1386,7 @@ static double qsearch(double alpha, double beta, int ply, int qd) {
   return best;
 }
 static double search(int depth, double alpha, double beta, int ply, int pvNode, int allowNull) {
+  const int cutNode = pvNode == 2; if (cutNode) pvNode = 0;   /* (pvNode: 1 PV, 2 expected cut node, 0 other; only P39 uses the kind) */
   pvLen[ply] = ply;
   if (depth <= 0) return qsearch(alpha, beta, ply, 0);
   nodes++;
@@ -1418,7 +1429,8 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
   }
   double rawEval = inChk ? -INF : evaluate(), staticEval = rawEval;
   evSt[ply] = rawEval;
-  int improving = P[24] && !inChk && ply >= 2 && (evSt[ply - 2] == -INF || rawEval > evSt[ply - 2]);
+  const int imp = !inChk && ply >= 2 && (evSt[ply - 2] == -INF || rawEval > evSt[ply - 2]);
+  int improving = P[24] && imp;
   if (P[25] && !inChk && ttD >= 0 && ((ttF == F_LOWER && ttS > staticEval) || (ttF == F_UPPER && ttS < staticEval) || ttF == F_EXACT) && (ttS < 0 ? -ttS : ttS) < MATE - MAXPLY) staticEval = ttS;
   if (!pvNode && !inChk && !ex && depth <= rfpDepth && staticEval - rfpMargin * (depth - improving) >= beta && (beta < 0 ? -beta : beta) < MATE - MAXPLY) { ST(stRfp++); return staticEval; }
   if (P[10] && !pvNode && !inChk && !ex && depth <= 2 && staticEval + P[10] * depth < alpha) {
@@ -1427,10 +1439,11 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
   }
   if (!pvNode && !inChk && !ex && allowNull && depth >= 3 && staticEval >= beta) {
     int R;
-    if (nullAdapt) { int x = (int)((staticEval - beta) / 250); R = 3 + depth / 5 + (x < 2 ? x : 2); }
+    if (P[28]) { int x = (int)((staticEval - beta) / 250); R = P[28] + depth / 3 + (x < 3 ? x : 3); }
+    else if (nullAdapt) { int x = (int)((staticEval - beta) / 250); R = 3 + depth / 5 + (x < 2 ? x : 2); }
     else R = 2 + (depth >= 7 ? 1 : 0);
     doNull(); ST(stNull++);
-    double v = -search(depth - 1 - R, -beta, -beta + 1, ply + 1, 0, 0);
+    double v = -search(depth - 1 - R, -beta, -beta + 1, ply + 1, cutNode ? 0 : 2, 0);
     undoNull();
     if (stopFlag) return 0;
     if (v >= beta && v < MATE - MAXPLY) { ST(stNullOk++); return v; }
@@ -1451,7 +1464,8 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
       if (v >= rb) { store(depth - 3, v, F_LOWER, m, ply); return v; }
     }
   }
-  if (!ttm && pvNode && depth >= 4) {
+  if (P[35] && !ttm && !ex && depth >= P[35]) depth--;
+  else if (!ttm && pvNode && depth >= 4) {
     search(depth - 2, alpha, beta, ply, 1, 0);
 #ifdef MT
     ttGet(&tx);
@@ -1590,6 +1604,17 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
       if (!givesCheckPre(m)) continue;
       if (!chkFast) { doMove(m); int chk = inCheck(); undoMove(); if (!chk) continue; }   /* (else givesCheckPre was exact) */
     }
+    if ((P[29] | P[30] | P[33] | P[34]) && ply > 0 && !inChk && LGB > 0 && best > -MATE + MAXPLY) {   /* search v4: see the list at set_param */
+      if (quiet) {
+        int skip = 0;
+        const int ld0 = depth - 1 - LMRT[depth < 63 ? depth : 63][LGB < 63 ? LGB : 63], ld = ld0 < 0 ? 0 : ld0;
+        if (P[29] && !pvNode && LGB >= (3 + depth * depth) / ((2 - imp) * P[29])) skip = 1;
+        else if (P[30] && !pvNode && ld < P[30] && staticEval + (P[31] ? P[31] : 100) + (P[32] ? P[32] : 120) * ld <= alpha) skip = 1;
+        else if (P[33] && ld < 8 && see(m) < -P[33] * ld * ld) skip = 2;
+        if (skip == 2) continue;
+        if (skip) { if (!givesCheckPre(m)) continue; if (!chkFast) { doMove(m); int chk = inCheck(); undoMove(); if (!chk) continue; } }
+      } else if (P[34] && cap && depth <= 8 && m != ttm && see(m) < -P[34] * depth) continue;
+    }
     int sext = 0;
     if (P[19] && m == ttm && ply > 0 && !ex && depth >= P[19] && ttD >= depth - 3 && (ttF == F_LOWER || ttF == F_EXACT) && (ttS < 0 ? -ttS : ttS) < MATE - MAXPLY && ply < rootDepth * 2) {
       double sb = ttS - (P[20] ? P[20] : 2) * depth;   /* singular extension: is the table move the only good one? */
@@ -1619,28 +1644,32 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
     legal++;
     int givesChk = inCheck();
     int ext = givesChk && ply < rootDepth * 2 && (P[11] || seeAfterCheck(m) >= 0) ? 1 : 0;
+    if (ext && P[36] && (P[36] == 1 || (P[36] == 2 && !pvNode) || (P[36] == 3 && depth > 6))) ext = 0;
     if (sext > 0) ext = 1; else if (sext < 0 && !ext) ext = -1;
     ST(stMoves++); ST(stChkExt += (ext > 0 && givesChk));
     double v;
     int nd = depth - 1 + ext;
-    if (LGA == 1) v = -search(nd, -beta, -alpha, ply + 1, pvNode, 1);
+    if (LGA == 1) v = -search(nd, -beta, -alpha, ply + 1, pvNode ? 1 : cutNode ? 0 : 2, 1);
     else {
       int r = 0;
-      if (depth >= 3 && quiet && !inChk && !givesChk && LGA > 3) {
+      if (depth >= 3 && !inChk && !givesChk && LGA > (P[37] ? P[37] : 3) && (quiet || (P[38] && cap && (P[38] == 2 || scores[i1 ? i1 - 1 : 0] < 0)))) {
         if (P[5]) {
           r = LMRT[depth < 63 ? depth : 63][LGA < 63 ? LGA : 63];
           if (m == killers[ply * 2] || m == killers[ply * 2 + 1]) r--;
-          if (P[22]) { undoMove(); int hv = quietHist(us, m); doMove(m); r -= hv / (P[9] ? P[9] : 6000); }
+          if (!quiet) ;
+          else if (P[22]) { undoMove(); int hv = quietHist(us, m); doMove(m); r -= hv / (P[9] ? P[9] : 6000); }
           else { i32 hv = history[((us * 88 + (m & 127)) * 81 + to) * 2 + ((m >> 14) & 1)]; if (hv > 2000) r--; else if (hv == 0) r++; }
           if (P[24] && !improving) r++;
         } else r = 1 + (LGA > 8 ? 1 : 0) + (depth >= 8 ? 1 : 0);
+        if (!quiet) r--;   /* (P38: a capture, one ply less than a quiet move in its place) */
         if (pvNode) r--;
+        if (cutNode) r += P[39];
         if (r < 0) r = 0;
         if (r > depth - 2) r = depth - 2;
       }
       ST(stLmr += (r > 0));
-      v = -search(nd - r, -alpha - 1, -alpha, ply + 1, 0, 1);
-      if (v > alpha && r) { ST(stLmrRe++); v = -search(nd, -alpha - 1, -alpha, ply + 1, 0, 1); }
+      v = -search(nd - r, -alpha - 1, -alpha, ply + 1, 2, 1);
+      if (v > alpha && r) { ST(stLmrRe++); v = -search(nd, -alpha - 1, -alpha, ply + 1, cutNode ? 0 : 2, 1); }
       if (v > alpha && v < beta) v = -search(nd, -beta, -alpha, ply + 1, 1, 1);
     }
 #undef LGA
