@@ -58,19 +58,30 @@
     const tx = (k, o) => { let s = L[k] != null ? L[k] : (TXT.en[k] != null ? TXT.en[k] : k); if (o) for (const q in o) s = s.split('{' + q + '}').join(o[q]); return s; };
     const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), size = SIZES.includes(+ctx.size) ? +ctx.size : 50;
     const youFirst = (+ctx.side || 1) === 1;
+    // online (2026-11-17, atlas/online3d.js, as carrom): M = the game, me = this device's side (0 = the record's b, who kicks off).
+    // The mover's client is authoritative: every action is one token — a flick (x = the button 0–19; 20 + button + the taker's
+    // place round the ball /1000 at a restart), a shot call (x = 45) or the keeper set by the defender (x = 46, v = its place) —
+    // written with the resulting state ({ st, m: message codes, ph: 'k' waiting for the keeper / 's' for the shot }). The other
+    // side plays the token back from the same state and then takes st. No PK shoot-out online (m50 / g3).
+    const M = ctx.mode === 'online' && ctx.online ? ctx.online : null, online = !!M, me = M ? M.me : 0;
+    if (online && T3.live) T3.live(true);
+    const OT = k => window.Online3D ? Online3D.tr(lang, k) : k;
     const BDL = (T3.BOARDS && T3.BOARDS.botao) ? T3.BOARDS.botao.list : ['classic', 'retro', 'night', 'praia', 'madeira', 'neon'];
     let look = T3.BOARDS && T3.BOARDS.botao ? T3.BOARDS.botao.get() : 'classic';
     const board = T3.MODELS.botao(true, look); T3.show('botao', board);
     let modelKids = new Set(board.children);
     let U = board.userData; const Y = U.top, K = U.K;
     const CFEEL = { classic: 'std', retro: 'hard', night: 'precise', praia: 'power', madeira: 'aim', neon: 'finest' };
-    let feel = AC().feelOf(CFEEL[look]);
+    let feel = AC().feelOf(online ? 'std' : CFEEL[look]);   // (online: one hand for both players, whatever the table)
     let st = null, phase = 'wait', over = false, stopped = false, busy = false, tok = 0, msg = '', ply = 0;
     let sel = -1, hov = -1, aim = null, hintMove = null, speedUp = 1, told = false;
     const hist = [], timers = [];
     const later = (f, ms) => { const my = tok; timers.push(setTimeout(() => { if (!stopped && my === tok) f(); }, ms)); };
-    const human = p => pvp || p === 0;
-    const nameOf = p => pvp ? tx(p === 0 ? 'home' : 'away') : p === 0 ? t('p.you') : t('p.ai');
+    const human = p => online ? p === me : pvp || p === 0;
+    const ME = online ? me : 0, solo = !pvp;   // (the side whose good news is good: you — online too)
+    const nameOf = p => online ? M.names[p] : pvp ? tx(p === 0 ? 'home' : 'away') : p === 0 ? t('p.you') : t('p.ai');
+    const rot = () => pvp ? !!(st && st.pos === 1 && !over) : online && me === 1;   // the table turned round (the far side at the bottom)
+    let applied = 0, needSync = false, olT = 0, tkBase = null, tkC = -1, rwait = '';   // online: tokens of the record played here · a refused write · the restart's base state, the taker's place code
     const kick = ms => { if (T3.kick) T3.kick(ms || 150); };
     const wx = (x, y) => U.xz(x, y);
 
@@ -92,7 +103,7 @@
       kick(200);
     }
     function setLook(v) {
-      if (v === look) return; neonReset(); look = v; feel = AC().feelOf(CFEEL[v]);
+      if (v === look) return; neonReset(); look = v; feel = AC().feelOf(online ? 'std' : CFEEL[v]);
       try { if (T3.setBoard) T3.setBoard('botao', v); } catch (e) {}
       const nb = T3.MODELS.botao(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c)); board.userData = nb.userData; U = board.userData; goalW();
       build(); syncAll(); neonTick(); scoreBoards(); if (T3.kick) T3.kick(500);
@@ -110,15 +121,15 @@
         if (pan.x || pan.y) { const [cx, cz] = wx(pan.x, pan.y); o.cx = cx; o.cz = cz; }
         T3.fit(o); return;
       }
-      const att = phase === 'keeper' ? 0 : st ? (E.fwd(st.pos) * (pvp && st.pos === 1 ? -1 : 1)) : -1;
+      const att = phase === 'keeper' ? 0 : st ? (E.fwd(st.pos) * (rot() ? -1 : 1)) : -1;
       const wc = Math.max((port() ? 58 : 92), span.x * 1.35 + 24), dc = Math.max((port() ? 76 : 62), span.y * 1.3 + 26);
       // the view never runs far past the end of the table (near a goal it used to show half a screen of the room)
       // (the far end looks longer in perspective, so it gets the tighter limit)
-      const topSg = ((pvp && st && st.pos === 1) !== flipped) ? 1 : -1, near = D.H + (port() ? 2 : 6) - dc / 2, far = D.H + (port() ? -4 : 5) - dc / 2;
+      const topSg = (rot() !== flipped) ? 1 : -1, near = D.H + (port() ? 2 : 6) - dc / 2, far = D.H + (port() ? -4 : 5) - dc / 2;
       const ex = roomy ? 30 : 0, yMin = -Math.max(0, (topSg < 0 ? far : near) + ex), yMax = Math.max(0, (topSg < 0 ? near : far) + ex), xLim = Math.max(0, D.HW + 12 + ex - wc / 2);
       const ax = Math.max(-xLim, Math.min(xLim, camAt.x + pan.x)), ay = Math.max(yMin, Math.min(yMax, camAt.y + pan.y + att * (port() ? 6 : 4)));
       // near the goal at the bottom of the screen the camera looks down more steeply (the net would hide the keeper)
-      const nearY = (pvp && st && st.pos === 1 ? -1 : 1) * (flipped ? -1 : 1) * ay, steep = Math.max(0, Math.min(1, (nearY - 40) / 30));
+      const nearY = (rot() ? -1 : 1) * (flipped ? -1 : 1) * ay, steep = Math.max(0, Math.min(1, (nearY - 40) / 30));
       const w = wc * K, d = dc * K, [cx, cz] = wx(ax, ay);
       T3.fit({ w, d, y: Y, pitch: (port() ? .98 : .92) + steep * .36, cx, cz, ease: !!ease, ek: ease === 'slow' ? .035 : .08 });
     }
@@ -268,7 +279,7 @@
 
     /* ---------- HUD, toasts, the call button ---------- */
     const css = document.createElement('style');
-    css.textContent = `.hud .btp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.66;white-space:nowrap}.hud .btp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .btp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .btp b{font-size:17px}.hud .btm{display:flex;flex-direction:column;align-items:center;min-width:0;font-weight:800;font-size:13px;line-height:1.25;max-width:44vw;text-align:center}.hud .btm small{font-size:11.5px;font-weight:800;opacity:.75;white-space:nowrap}.hud .btm span{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    css.textContent = `.hud .olck{font-style:normal;font-family:Fredoka,sans-serif;font-weight:600;font-size:14px;min-width:30px;padding:2px 8px;border-radius:99px;background:#2b3044;color:#fff;text-align:center}.hud .olck.low{background:#e5533f}.hud .btp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.66;white-space:nowrap}.hud .btp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .btp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .btp b{font-size:17px}.hud .btm{display:flex;flex-direction:column;align-items:center;min-width:0;font-weight:800;font-size:13px;line-height:1.25;max-width:44vw;text-align:center}.hud .btm small{font-size:11.5px;font-weight:800;opacity:.75;white-space:nowrap}.hud .btm span{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .bttask{position:fixed;left:50%;top:calc(80px + var(--sat,env(safe-area-inset-top)));transform:translateX(-50%);z-index:85;max-width:min(92vw,560px);padding:8px 18px;border-radius:20px;background:rgba(255,255,255,.96);color:#1d2133;font-weight:900;font-size:15px;line-height:1.35;pointer-events:none;text-align:center;width:max-content;box-sizing:border-box;text-wrap:balance;box-shadow:0 0 0 2.5px ${THEME},0 6px 18px rgba(0,0,0,.25)}.bttask[hidden]{display:none}
 .bttoast{position:fixed;left:50%;top:calc(76px + var(--sat,env(safe-area-inset-top)));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px ${THEME},0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.bttoast.good{color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.bttoast.bad{color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}
 .btgoal{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);z-index:92;pointer-events:none;font:900 clamp(54px,11vw,120px)/1 "Fredoka",system-ui,sans-serif;color:#ffd84a;letter-spacing:.04em;text-shadow:0 4px 0 #b8741a,0 10px 30px rgba(0,0,0,.45);opacity:0;transition:transform .35s cubic-bezier(.2,1.6,.4,1),opacity .25s;white-space:nowrap}.btgoal.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
@@ -325,6 +336,10 @@
       const pill = p => `<span class="btp ${st.pos === p && !over ? 'on' : ''}"><i style="background:${dotCol(p)}"></i><span class="nm">${esc(nameOf(p))}</span><b>${st.score[p]}</b></span>`;
       const top = st.pk ? tx('pkHud', { n: st.pk.n }) + ' ' + [0, 1].map(t => st.pk.k[t].map(x => x ? '●' : '×').join('') || '−').join(' | ') : st.goals ? tx('to', { n: st.goals }) : tx(st.half === 1 ? 'first' : 'second') + ' ' + tx('left', { n: Math.max(0, st.halfLen - st.clock) });
       const sub = `<small>${esc(top)}${st.pk ? '' : ' · ' + esc(tx('touch', { n: st.rem }))}</small>`;   // (a penalty has no touches to count)
+      if (online) {   // the opponent left, you right; the action's clock (server time) beside the side to move
+        const tm = !over && !needSync ? M.toMove() : -1, left = M.left(), ck = q => q === tm ? `<em class="olck${left <= 10000 ? ' low' : ''}">${Math.ceil(left / 1000)}</em>` : '';
+        ctx.hud(pill(1 - me) + ck(1 - me) + `<span class="btm">${sub}<span>${esc(msg)}</span></span>` + pill(me) + ck(me)); return;
+      }
       ctx.hud(pill(1) + `<span class="btm">${sub}<span>${esc(msg)}</span></span>` + pill(0));
     }
     const say = m => { msg = m || ''; hud(); };
@@ -478,41 +493,57 @@
     /* ---------- the flow ---------- */
     const vOf = pw => E.powV(pw), powOf = v => E.vPow(v);
     const RESTART = { kick: 'kick', fk: 'fk', ifk: 'ifk', throw: 'throw', corner: 'corner', gk: 'gk', pen: 'pen', keeper: 'keeperball2' };
-    async function flick(move) {
+    // auth (online): the opponent's flick — its written result ({ st, m }) or 'local' (more of theirs follow: resolved here)
+    async function flick(move, auth) {
       if (over || stopped || busy) return;
       busy = true; phase = 'anim'; clearGuides(); aim = null; hintMove = null; powEl.hidden = true; callBar(null); task(''); beaconAt(false); drag = null; pan = { x: 0, y: 0 };
       if (st.pk && pkDive) { const d = 1 - st.pos; E.setKeeper(st, d, pkDive.x, pkDive.y); keeperSlide(d, st.k[d], 260); pkDive = null; }   // the AI keeper dives as you flick
-      const s0 = st, p = s0.pos;
+      const s0 = st, p = s0.pos, my = tok;
+      let wire = null;
+      if (online && !auth) {   // my flick as it goes on the wire (both sides simulate exactly this one)
+        const q = M.quant({ x: tkC >= 0 && move.i === st.taker && E.canPlace(st) ? 20 + move.i + tkC / 1000 : move.i, ang: move.ang, v: Math.max(0, Math.min(D.VMAX, move.v)) });
+        wire = q; move = { i: move.i, ang: q.ang, v: q.v };
+      }
       SND.flick();
       const sim = E.simulate(s0, move, { frames: true });
-      speedUp = 1; say('');
-      const gone = await playback(sim); if (stopped) return;
-      const r = E.resolve(s0, sim);
-      ply++;
+      let r = E.resolve(s0, sim);
       // the halves are counted in flicks, not minutes (2026-11-15 ユーザー：時間制だと問題が多い → 行動回数制)
       if (!r.s.goals) r.s.clock = Math.min(r.s.halfLen, (s0.clock || 0) + 1);
+      if (wire) {   // my flick's result is the game's — written at once, while it plays back here and there
+        const pay = { st: r.s, m: r.msg }, rs = JSON.parse(M.pack(pay)).st, fin = halfOf(rs);
+        r = Object.assign({}, r, { s: rs });
+        const i = applied; applied++;
+        M.send(i, wire, pay, fin.pos, fin.over ? { win: fin.winner < 0 ? 0 : fin.winner + 1, why: 'board' } : null).then(ok => { if (!ok && !stopped) { needSync = true; if (!busy) resync(); } });
+      } else if (auth && auth !== 'local') {
+        const g = [0, 1].find(t => auth.st.score[t] > s0.score[t]);
+        r = { s: auth.st, msg: Array.isArray(auth.m) && auth.m.length ? auth.m : r.msg, goal: g == null ? -1 : g, foul: Array.isArray(auth.m) && auth.m.length ? auth.m.includes('foul') : r.foul, change: auth.st.pos !== s0.pos };
+      }
+      speedUp = 1; say('');
+      const gone = await playback(sim); if (stopped || my !== tok) return;
+      ply++;
       const lead = r.msg[0];
       if (s0.pk) return pkResult(s0, r, p);
       if (r.goal >= 0) {
         SX.goal(); bigGoal(tx(lead === 'own' ? 'own' : 'goal'));
         st = r.s; hud();
-        toast(tx('scored', { p: nameOf(r.goal), a: st.score[0], b: st.score[1] }), r.goal === 0 || pvp ? 'good' : 'bad');
-        await new Promise(res => later(res, 1900)); if (stopped) return;
+        toast(tx('scored', { p: nameOf(r.goal), a: st.score[0], b: st.score[1] }), r.goal === ME || pvp ? 'good' : 'bad');
+        await new Promise(res => later(res, 1900)); if (stopped || my !== tok) return;
         if (st.over) { busy = false; return end(); }
-        await glideTo(st, 900); if (stopped) return;
+        await glideTo(st, 900); if (stopped || my !== tok) return;
         busy = false; follow(st.ball.x, st.ball.y, false); syncAll(); if (clockOut()) return; later(next, 500); void gone; return;
       }
       st = r.s;
       if (r.foul) { SX.whistle(2, .2); toast(tx(r.msg.includes('pen') ? 'penFoul' : 'foul') + '\n' + tx(RESTART[st.restart] || 'fk'), 'bad'); }
       else if (lead === 'nogoal') { SX.whistle(1); toast(tx('nogoal'), 'bad'); }
-      else if (lead === 'save') { SX.ooh(); toast(tx('save'), p === 0 && !pvp ? 'bad' : 'good'); }
+      else if (lead === 'save') { SX.ooh(); toast(tx('save'), p === ME && solo ? 'bad' : 'good'); }
       else if (lead === 'miss') { SX.ooh(); toast(tx('miss')); }
       else if (['throw', 'corner', 'gk'].includes(lead)) { SX.whistle(1, .22); toast(tx(lead)); }
       else if (lead === 'touches') { SX.whistle(1, .22); toast(tx('touchesOut'), 'bad'); }
       else if (lead === 'furada' || lead === 'ownfirst' || lead === 'lost' || lead === 'keeperball') toast(tx(lead), human(p) && !pvp ? 'bad' : '');
       else if (lead === 'three') toast(tx('three'), 'bad');
-      await glideTo(st, 600); if (stopped) return;
+      await glideTo(st, 600); if (stopped || my !== tok) return;
       syncAll(); busy = false;
+      if (needSync) return resync();
       if (st.over) return end();
       if (clockOut()) return;
       later(next, r.change ? 650 : 250);
@@ -537,6 +568,12 @@
       const p = st.pos;
       if (pvp) viewTo();
       follow(st.ball.x, st.ball.y, true);
+      tkC = -1; tkBase = null; rwait = '';
+      if (online && applied >= M.n && M.g.status !== 'play') return finishOnline();
+      if (online && !human(p)) {   // the opponent's action: played back when it comes
+        phase = 'remote'; rwait = 'a'; sel = -1; callBar(null); task(''); say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) }));
+        return pump();
+      }
       if (E.canPlace(st) && !st.placed && !human(p)) {
         // a restart: the AI works out where its taker stands round the ball, then flicks (yours swings round the ball with
         // the mouse — or a drag round the ball on a touch screen — until you flick: no separate step)
@@ -546,11 +583,12 @@
         if (q) { const i = st.taker; E.setTaker(st, q.x, q.y); await slidePiece(i, st.b[i]); if (stopped || my0 !== tok) return; }
       }
       if (human(p)) {
-        if (!pvp && !st.shot) hist.push({ st: E.clone(st), ply });
+        if (!pvp && !online && !st.shot) hist.push({ st: E.clone(st), ply });
+        if (online && E.canPlace(st)) tkBase = E.clone(st);   // (online: the taker's place is always set from here, as the other side will)
         sel = E.canPlace(st) ? st.taker : autoSel(); phase = 'aim'; frameBallAnd(sel, true);
         say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn')); task(taskLine());
         callBar(E.canShoot(st) ? 'shot' : null);
-        if (!told && howtoOn()) howtoCard(() => {}); told = true;
+        if (!told && howtoOn() && !online) howtoCard(() => {}); told = true;
         showGuides(); pulse();
         return;
       }
@@ -619,8 +657,15 @@
     }
     // the taker's place from a pointer: round the ball at ORBIT, on the side of the pointer
     const ORBIT = D.RB + D.RBALL + 3;
-    const freeTaker = () => phase === 'aim' && st && !over && human(st.pos) && E.canPlace(st) && sel === st.taker;
-    function orbitTo(q) { const dx = q.x - st.ball.x, dy = q.y - st.ball.y, d = Math.hypot(dx, dy); if (d < .5) return; E.setTaker(st, st.ball.x + dx / d * ORBIT, st.ball.y + dy / d * ORBIT); syncAll(); showGuides(); }
+    const freeTaker = () => phase === 'aim' && st && !over && human(st.pos) && E.canPlace(st) && sel === st.taker && !(online && !tkBase);   // (online: not once the shot is called)
+    function orbitTo(q) {
+      const dx = q.x - st.ball.x, dy = q.y - st.ball.y, d = Math.hypot(dx, dy); if (d < .5) return;
+      if (online && tkBase) {   // online: the place as a code (1/998 of a turn round the ball), set from the turn's start — the other side does the same
+        tkC = Math.round((Math.atan2(dy, dx) + Math.PI) / (2 * Math.PI) * 998); const a = tkC / 998 * 2 * Math.PI - Math.PI;
+        st = E.clone(tkBase); E.setTaker(st, st.ball.x + Math.cos(a) * ORBIT, st.ball.y + Math.sin(a) * ORBIT);
+      } else E.setTaker(st, st.ball.x + dx / d * ORBIT, st.ball.y + dy / d * ORBIT);
+      syncAll(); showGuides();
+    }
     // a button glides to its new place (the AI's taker)
     function slidePiece(i, to) {
       const m = bt[i]; if (!m) return Promise.resolve();
@@ -634,6 +679,12 @@
       callBar(null); aim = null; hintMove = null; clearGuides();
       SX.whistle(1, .16); toast(tx('called', { p: nameOf(st.pos) }));
       st = E.clone(st); st.shot = true;
+      if (online) {   // the call is an action of its own: the defender sets the keeper next
+        const tc = E.canPlace(st) ? tkC : -1; tkC = -1; tkBase = null;   // (the taker's place, if it was moved, goes with the call)
+        const pay = { st, ph: 'k' }; st = JSON.parse(M.pack(pay)).st;
+        const i = applied; applied++;
+        M.send(i, { x: 45, ang: 0, v: tc + 1 }, pay, 1 - st.pos, null).then(ok => { if (!ok && !stopped) { needSync = true; if (!busy) resync(); } });
+      }
       await setKeeperPhase();
     }
     async function aiDeclare() {
@@ -648,6 +699,7 @@
     const PK_LANE = () => { const r = Math.random(); return r < .37 ? -1 : r < .74 ? 1 : 0; };
     async function setKeeperPhase() {
       const d = 1 - st.pos, my = tok; keeperSide = d; pkShot = null; pkDive = null; pkLive = false;
+      if (online && !human(d)) { phase = 'remote'; rwait = 'k'; callBar(null); task(''); say(tx('aiKeeper', { p: nameOf(d) })); return pump(); }
       if (st.pk && !human(st.pos)) {
         // the AI shooter: its shot against a keeper on a side it guesses (so it does not simply aim past where yours stands)
         phase = 'ai'; say(tx('think', { p: nameOf(st.pos) }));
@@ -684,10 +736,19 @@
     }
     function keeperDone() {
       if (stopped || phase !== 'keeper') return;
-      clearInterval(keeperT); callBar(null); clearGuides(); afterKeeper();
+      clearInterval(keeperT); callBar(null); clearGuides();
+      if (online) {   // the keeper's place on the wire (0.1 mm): x = 46, v = across·100000 + along
+        const d = keeperSide, k = st.k[d], A = Math.round((k.x + 50) * 100), B = Math.round((k.y + 100) * 100);
+        E.setKeeper(st, d, A / 100 - 50, B / 100 - 100); put(kp[d], st.k[d].x, st.k[d].y);
+        const pay = { st, ph: 's' }; st = JSON.parse(M.pack(pay)).st;
+        const i = applied; applied++;
+        M.send(i, { x: 46, ang: 0, v: A * 100000 + B }, pay, st.pos, null).then(ok => { if (!ok && !stopped) { needSync = true; if (!busy) resync(); } });
+      }
+      afterKeeper();
     }
     async function afterKeeper() {
       const p = st.pos, my = tok;
+      if (online && !human(p)) { phase = 'remote'; rwait = 's'; task(''); say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) })); return pump(); }
       if (human(p)) { if (pvp) viewTo(); phase = 'aim'; sel = autoSel(); say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn')); task(tx('shootNow')); frameBallAnd(sel, true); showGuides(); pulse(); return; }
       phase = 'ai'; say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) })); task('');
       if (pkShot) { const m = pkShot; pkShot = null; return aiFlick(m, my, true); }
@@ -708,6 +769,7 @@
       return true;
     }
     function end() {
+      if (online) { phase = 'wait'; clearGuides(); callBar(null); task(''); beaconAt(false); SX.whistle(3, .3); hud(); return pump(); }   // (the end is the record's: written with the last flick)
       over = true; phase = 'over'; clearGuides(); callBar(null); task(''); clearInterval(clkT); beaconAt(false); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = viewBtn.hidden = true; if (pvp) viewTo(0);
       SX.whistle(3, .3); hud();
       const score = tx('score', { a: st.score[0], b: st.score[1] }), w = st.winner;
@@ -716,10 +778,91 @@
       later(() => ctx.onEnd({ win: w === 0, draw: w < 0, level, score }), 1400);
     }
 
+    /* ---------- online: the opponent's actions, a refused write, the end ---------- */
+    // a state with half time due (the flick that ended the first half): what both sides go on from
+    function halfOf(s) { if (s.over || s.goals || s.clock < s.halfLen) return s; const h = E.timeUp(s).s; if (!h.over) h.clock = 0; return h; }
+    function pump() {
+      if (!online || stopped || over || busy) return;
+      if (applied < M.n) { if (phase === 'remote' || phase === 'wait') remoteNext(); return; }
+      if (M.g.status !== 'play') finishOnline();
+    }
+    // the written state is well-formed and follows on from the one before (the same game, the score never going down)
+    function stateOk(s, s0) {
+      try {
+        const pt = q => q && isFinite(q.x) && isFinite(q.y) && Math.abs(q.x) <= 80 && Math.abs(q.y) <= 110;
+        if (!s || !Array.isArray(s.b) || s.b.length !== 20 || !Array.isArray(s.k) || s.k.length !== 2 || !pt(s.ball) || !s.b.every(pt) || !s.k.every(pt)) return false;
+        if ((s.pos !== 0 && s.pos !== 1) || !Array.isArray(s.score) || s.goals !== s0.goals || s.halfLen !== s0.halfLen) return false;
+        return [0, 1].every(t => Number.isInteger(s.score[t]) && s.score[t] >= s0.score[t] && s.score[t] <= s0.score[t] + 1);
+      } catch (e) { return false; }
+    }
+    function bad() { toast(OT('illegal'), 'bad'); SND.bad(); busy = false; phase = 'wait'; M.dispute(); }
+    const pause = ms => new Promise(r => later(r, ms));
+    async function remoteNext() {
+      const i = applied, last = i === M.n - 1, sh = M.shot(i), pay = last ? M.payload() : null;
+      applied++;
+      if (!sh || !isFinite(sh.x) || !isFinite(sh.ang) || !isFinite(sh.v) || (pay && !stateOk(pay.st, st))) return bad();
+      const my = tok, p = st.pos, code = Math.round(sh.x * 1000), w = rwait;
+      if (code === 45000) {   // the shot is called: I set my keeper (or a later action of theirs follows)
+        const tc = Math.round(sh.v) - 1;
+        if (w !== 'a' || st.shot || !E.canShoot(st) || tc > 998 || (tc >= 0 && !E.canPlace(st))) return bad();
+        if (tc >= 0) { busy = true; const a = tc / 998 * 2 * Math.PI - Math.PI, ti = st.taker; st = E.clone(st); E.setTaker(st, st.ball.x + Math.cos(a) * ORBIT, st.ball.y + Math.sin(a) * ORBIT); await slidePiece(ti, st.b[ti]); if (stopped || my !== tok) return; busy = false; }
+        SX.whistle(1, .16); toast(tx('called', { p: nameOf(p) }));
+        if (pay) st = pay.st; else { st = E.clone(st); st.shot = true; }
+        syncAll(); return setKeeperPhase();
+      }
+      if (code === 46000) {   // their keeper
+        if (w !== 'k') return bad();
+        const V = Math.round(sh.v), d = keeperSide; busy = true;
+        E.setKeeper(st, d, Math.floor(V / 100000) / 100 - 50, (V % 100000) / 100 - 100);
+        await keeperSlide(d, st.k[d]); if (stopped || my !== tok) return;
+        if (pay) st = pay.st;
+        syncAll(); busy = false; return afterKeeper();
+      }
+      // a flick (at a restart, with the taker's place round the ball)
+      let bi = -1, tc = -1;
+      if (code >= 0 && code < 20000 && code % 1000 === 0) bi = code / 1000;
+      else if (code >= 20000 && code < 40000) { bi = Math.floor((code - 20000) / 1000); tc = (code - 20000) % 1000; }
+      if (bi < p * 10 || bi >= p * 10 + 10 || tc > 998 || (w !== 'a' && w !== 's') || sh.v < 0 || sh.v > D.VMAX * 1.01) return bad();
+      if (tc >= 0 && (w !== 'a' || !E.canPlace(st) || bi !== st.taker)) return bad();
+      busy = true;
+      if (tc >= 0) { const a = tc / 998 * 2 * Math.PI - Math.PI; st = E.clone(st); E.setTaker(st, st.ball.x + Math.cos(a) * ORBIT, st.ball.y + Math.sin(a) * ORBIT); await slidePiece(bi, st.b[bi]); if (stopped || my !== tok) return; syncAll(); }
+      if (!E.canFlick(st, bi)) { busy = false; return bad(); }
+      const mv = { i: bi, ang: sh.ang, v: sh.v };
+      clearGuides(); pan = { x: 0, y: 0 }; frameBallAnd(bi, true); const b = st.b[bi]; flat(b.x, b.y, D.RB + 1.2, MAT.sel); drawMove(mv, MAT.aiPath, MAT.aiBall); kick(150);
+      await pause(700); if (stopped || my !== tok) return;
+      busy = false; flick(mv, pay || 'local');
+    }
+    // the record as it stands: its state (half time applied) and what it waits for ('k' the keeper, 's' the shot)
+    function loadPay() {
+      const pay = M.payload(); applied = M.n;
+      if (pay && pay.st) st = halfOf(pay.st);
+      return pay && st && st.shot ? pay.ph || '' : '';
+    }
+    function route(ph) { if (stopped || over) return; if (ph === 'k') setKeeperPhase(); else if (ph === 's') { keeperSide = 1 - st.pos; afterKeeper(); } else next(); }
+    // a write of mine was refused (time up, a race): the table is set to what the record says
+    function resync() {
+      needSync = false; tok++; busy = false; drag = null; clearGuides(); callBar(null); clearInterval(keeperT);
+      toast(OT('moveFail'), 'bad');
+      const ph = loadPay(); syncAll(); hud(); later(() => route(ph), 400);
+    }
+    function finishOnline() {
+      const R = M.result(); if (over || !R) return;
+      tok++; over = true; phase = 'over'; busy = false; clearGuides(); callBar(null); task(''); clearInterval(keeperT); beaconAt(false); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = viewBtn.hidden = true; clearInterval(olT);
+      const why = R.why, reason = why === 'resign' ? (R.mine ? 'youResigned' : 'oppResigned') : why === 'timeout' ? (R.mine ? 'youTimeout' : 'oppTimeout') : why === 'abandon' ? (R.mine ? 'youAbandon' : 'oppAbandon') : why === 'bad' ? 'illegal' : '';
+      // my own view of a game that ended on the table (the state both sides hold): the result each side reports
+      const own = why === 'board' && st && st.over ? (st.winner < 0 ? .5 : st.winner === me ? 1 : 0) : why === 'board' ? null : undefined;
+      const rt = M.finish(own);
+      hud(); (R.s === 1 ? SND.win : R.s === 0 ? SND.bad : SND.good)();
+      say(t(R.s === 1 ? 'res.win' : R.s === 0 ? 'res.lose' : 'res.draw'));
+      const score = st ? tx('score', { a: st.score[me], b: st.score[1 - me] }) : '';
+      if (T3.live) T3.live(false);
+      later(() => ctx.onEnd({ online: true, win: R.s === 1, draw: R.s === .5, level: 0, score, why: reason ? OT(reason) : '', rt, rated: M.rated, opp: M.names[1 - me], side: me }), why === 'board' ? 1300 : 350);
+    }
+
     /* ---------- your hand: pick a button, pull back from it, let go ---------- */
     const toCm = e => { const q = T3.pick(e, Y + .02); return q ? { x: q.x / K, y: q.z / K } : null; };
     const scr = (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); };
-    const canAim = () => !cardEl && !stopped && !over && !busy && phase === 'aim' && !!st && human(st.pos);
+    const canAim = () => !cardEl && !stopped && !over && !busy && phase === 'aim' && !!st && human(st.pos) && !(online && M.left() <= 0);
     function btnAt(q, slack) {
       let best = -1, bd = 1e9;
       for (let i = st.pos * 10; i < st.pos * 10 + 10; i++) { const d = Math.hypot(st.b[i].x - q.x, st.b[i].y - q.y); if (d < D.RB + slack && d < bd) { bd = d; best = i; } }
@@ -843,7 +986,7 @@
     let flipped = false;   // (2026-11-17 ユーザー：回転ボタンも使わないので不要 — the flip button and the F key are gone; the view is always from your end)
     let viewA = 0, viewRaf = 0;
     function viewTo(base, now) {
-      if (base == null) base = pvp && st && st.pos === 1 && !over ? Math.PI : 0;
+      if (base == null) base = rot() ? Math.PI : 0;
       let to = base + (flipped ? Math.PI : 0); to = ((to % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
       if (!T3.turn) return;
       cancelAnimationFrame(viewRaf);
@@ -888,7 +1031,18 @@
     };
     camFit(false); neonTick();
     const pick = () => { if (stopped) return; AC().BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'botao') : k, thumb: k => T3.boardThumb ? T3.boardThumb('botao', k) : '', pick: k => new URL('img/pick/botao-' + k + '.webp?v=4', location.href).href, color: THEME, onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
-    if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
+    // online: straight in (no how-to card, no table picker — the clock is running). A resumed game starts from the record.
+    function goOnline() {
+      const ph = loadPay();
+      if (!st) st = E.newMatch({ first: 0, goals: M.v === 'g3' ? 3 : 0, half: M.v === 'g3' ? 999 : 50 });
+      told = true; syncAll(); hud(); follow(st.ball.x, st.ball.y, false); pulse(); viewTo(undefined, true);
+      M.on(() => { pump(); if (!over) hud(); });
+      olT = setInterval(() => { if (stopped || over) return; hud(); const l = M.left(); if (M.toMove() === me && (phase === 'aim' || phase === 'keeper') && window.CountTick) CountTick.feed(l, 'ol'); }, 250);
+      if (!M.n) { SX.whistle(1, .5); toast(tx('kick')); }
+      later(() => route(ph), 900);
+    }
+    if (online) goOnline();
+    else if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
 
     const myTurn = () => !stopped && !over && !busy && st && human(st.pos) && phase === 'aim';
     function finish(why) {
@@ -898,14 +1052,14 @@
       say(t('res.lose')); setTimeout(() => { if (!stopped) ctx.onEnd(pvp ? { win: false, draw: false, level, score: r, pvp: true, winnerText: r } : { win: false, draw: false, level, score: r }); }, 200);
     }
     const api = {
-      human: 0,
-      canUndo: () => !pvp && myTurn() && hist.length > 1 && !st.shot && !st.pk,
+      human: 0, noUndo: online, noHint: online,
+      canUndo: () => !pvp && !online && myTurn() && hist.length > 1 && !st.shot && !st.pk,
       undo() {
         if (!api.canUndo()) return;
         tok++; hist.pop(); const h = hist.pop(); st = E.clone(h.st); ply = h.ply; busy = false; drag = null;
         syncAll(); next();
       },
-      canHint: () => myTurn(),
+      canHint: () => !online && myTurn(),
       hint() {
         if (!api.canHint()) return Promise.resolve(false);
         const my = tok; say('💡…');
@@ -917,9 +1071,10 @@
         });
       },
       canResign: () => !stopped && !over && !!st,
-      resign() { finish('resign'); },
-      timeout() { finish('time'); },
+      resign() { if (online) { M.resign(); return; } finish('resign'); },   // (online: the record's resignation ends it, on both sides)
+      timeout() { if (online) return; finish('time'); },
       stop() {
+        if (online) { if (!over && M.g && M.g.status === 'play') M.resign(); M.stop(); clearInterval(olT); if (T3.live) T3.live(false); }   // (leaving a game in progress = resigning it)
         document.querySelectorAll('.bpk').forEach(e => e.remove());
         neonReset(); TRAIL.forEach(m => { board.remove(m); m.material.dispose(); }); TRAIL.length = 0;
         if (U && U.goalWidth) U.goalWidth(0);
@@ -932,12 +1087,12 @@
         cancelAnimationFrame(viewRaf); cancelAnimationFrame(waveT); flipBtn.remove(); viewBtn.remove(); if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
-      _debug: { pk: () => ({ pkLive, phase, keeperSide, pkShot: !!pkShot }), st: () => st, phase: () => phase, set: s => { st = s; syncAll(); hud(); }, flick: (i, ang, pw) => { if (phase !== 'aim') return false; sel = i; flick({ i, ang, v: vOf(pw) }); return true; }, flickRaw: m => { if (phase !== 'aim') return false; flick(m); return true; }, declare: () => declare(), keeperDone: () => keeperDone(), aiDeclare: () => aiDeclare(), at: (x, y) => scr(x, y), next: () => next() },
+      _debug: { online: () => online ? { me, applied, n: M.n, status: M.g && M.g.status, over, phase, rwait } : null, pk: () => ({ pkLive, phase, keeperSide, pkShot: !!pkShot }), st: () => st, phase: () => phase, set: s => { st = s; syncAll(); hud(); }, flick: (i, ang, pw) => { if (phase !== 'aim') return false; sel = i; flick({ i, ang, v: vOf(pw) }); return true; }, flickRaw: m => { if (phase !== 'aim') return false; flick(m); return true; }, declare: () => declare(), keeperDone: () => keeperDone(), aiDeclare: () => aiDeclare(), at: (x, y) => scr(x, y), next: () => next() },
     };
     window.__botaoTable = api;
     return api;
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.botao = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, mx: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 50, rule, optInfo, sizeLabel, sizeName, levelInfo, start, TXT, SX, L14 };
+  window.Atlas3D.botao = { online: { lens: l => [['m50', sizeName(50, l)], ['g3', sizeName(103, l)]] }, levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, mx: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 50, rule, optInfo, sizeLabel, sizeName, levelInfo, start, TXT, SX, L14 };
 })();

@@ -157,6 +157,12 @@ GAMES = {
     'crokinole': dict(host=('flick', 'crokinole'), first='b', alt=False, nt=True, tckey='tc', tcs={'r4': (0, 0, 0), 'p100': (0, 0, 0)},
                       legacy_byo=None, free=45000, imm=['tc', 'v', 'k'], draw=False, abandon=True, hist=True, moves_max=20000, bg=False,
                       variant=('v', ['r4', 'p100']), state=True),
+    # Futebol de Botão (2026-11-17, atlas/games/botao.js): every action is a token — a flick, a shot call, the defender's keeper —
+    # with the resulting state; nt = the side to act next (the defender after a call). v = tc = m50 (halves of 50 flicks, may end
+    # level: 'over' with 0.5 + 0.5) / g3 (first to 3 goals). No PK shoot-out online.
+    'botao': dict(host=('flick', 'botao'), first='b', alt=False, nt=True, tckey='tc', tcs={'m50': (0, 0, 0), 'g3': (0, 0, 0)},
+                  legacy_byo=None, free=45000, imm=['tc', 'v', 'k'], draw=False, abandon=True, hist=True, moves_max=20000, bg=False,
+                  variant=('v', ['m50', 'g3']), state=True),
 }
 
 

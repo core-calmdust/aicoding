@@ -1,5 +1,5 @@
 /* =====================================================================
-   Online3D — online play for the flick games on the portal's 3D table (carrom, crokinole; 2026-11-16).
+   Online3D — online play for the flick games on the portal's 3D table (carrom, crokinole; 2026-11-16 — botao 2026-11-17).
    Two people over Firebase Realtime Database, rated (Elo, the anti-tamper settlement of shared/onlinesec.js) or in rooms.
    · Database: the "flick games" group (claude/online-security-setup.md 0.0) — each game under its own node (<game>/firebase-config.js:
      window.FIREBASE_ROOT), rules shared/flick.database.rules.json (shared/tools/secrules.py, host 'flick'). Until they are
@@ -27,7 +27,7 @@
   const ROOM_TTL = 10 * 60000, HIST_N = 50;
   const LIVE_BEAT = 60000, LIVE_STALE = 180000, LEGACY_STALE = 3600000, PRES_GONE = 300000, SWEEP_MARGIN = 20000, PRES_BEAT = 60000, PRES_STALE = 150000;
   // per game: the game lengths offered online (record v = tc), the default
-  const GAMES = { carrom: { V: ['b1', 'm25'], def: 'b1' }, crokinole: { V: ['r4', 'p100'], def: 'r4' } };
+  const GAMES = { carrom: { V: ['b1', 'm25'], def: 'b1' }, crokinole: { V: ['r4', 'p100'], def: 'r4' }, botao: { V: ['m50', 'g3'], def: 'm50' } };   // (botao 2026-11-17: halves of 50 flicks / first to 3)
 
   // the lobby's words (14 languages; most of them the 2D games' online strings, konane/i18n-online.js, and their panel titles)
   const OLT = {
