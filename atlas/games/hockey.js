@@ -570,7 +570,10 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       // (2026-11-10) the same card as carrom / crokinole: title, the steps with round icons, 'don't show again', OK
       const H = HOW[lang] || HOW.en, mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
       const dev = (H[1].split(/[／·・|]/).map(x => x.trim()).filter(Boolean)[mouse ? 0 : 1] || H[1]).trim();
-      const KT = (KEYT[lang] || KEYT.en), kl = !mouseCtl ? (pvp ? (ctrl === 1 ? [['⌨', KT[1]], ['⌨', KT[2]]] : [['⌨', KT[3]], ['🎮', KT[4]]]) : [[ctrl === 2 ? '🎮' : '⌨', KT[ctrl === 2 ? 5 : 0]]]) : null;
+      const KT = (KEYT[lang] || KEYT.en);
+      // (2026-11-17 ユーザー：1行にまとめないで複数行に) each control sentence is split at its commas: move · slow · attack, one row each
+      const parts = (txt, ic) => txt.split(/\s*[、，,;；。،]\s*/).filter(Boolean).map((p, i) => [i === 0 ? ic : i === 1 ? '🐢' : '💥', i && lang === 'ar' ? p.replace(/^و(?=\S)/, '') : p]);
+      const kl = !mouseCtl ? (pvp ? (ctrl === 1 ? parts(KT[1], '⌨').concat(parts(KT[2], '⌨')) : parts(KT[3], '⌨').concat(parts(KT[4], '🎮'))) : parts(KT[ctrl === 2 ? 5 : 0], ctrl === 2 ? '🎮' : '⌨')) : null;
       const steps = kl ? [['🏒', H[0]]].concat(kl, [['⚡', H[3]]]) : [['🏒', H[0]], [mouse ? '🖱' : '👆', dev]].concat(mouse ? [['⌨', H[2]], ['⎋', ESCT[li(lang)] || ESCT[1]]] : []).concat([['⚡', H[3]]]);
       const el = document.createElement('div'); el.className = 'hkhw'; el.dir = lang === 'ar' ? 'rtl' : 'ltr'; menuEl = null;
       el.innerHTML = `<div class="hkhw-c" role="dialog" aria-modal="true"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2><ol>${steps.map(([ic, x]) => `<li><i>${ic}</i><span>${esc(x)}</span></li>`).join('')}</ol>${mouse && mouseCtl ? `<p class="u pad">💻 <b>${esc((PADT[li(lang)] || PADT[1])[0])}</b><br>${esc((PADT[li(lang)] || PADT[1])[1])}</p>` : ''}<label><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="ok">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
