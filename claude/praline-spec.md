@@ -453,5 +453,5 @@ Many cores (nuts) held together by shared memory (caramel).
 ## 囲碁：GPU（WebGPU）でネットを計算（2026-11-18、PRO の「計算」）
 - PRO に「計算：CPU / GPU」（既定 CPU。ブラウザに WebGPU があるときだけ表示。GPU のときスレッド数は灰色）。GPU を選ぶと AI の読みはスレッドのプールでなく1スレッドのワーカーで、葉を 16 局面ずつまとめて GPU で評価する。
 - engine.c（1スレッドの版）：`gpu_collect(B)`（仮想損失をつけて B 回下り、評価中でない葉の入力 FEAT・GLOB・PAT をバッファへ。終局は即採点して `gpu_imm`）→ ページが GPU で計算して `gpu_out` に書く → `gpu_apply(n)`（展開して値を戻す）。`gpu_cpu(n)` は同じバッチを CPU で（試験・GPU が失敗したときの代わり）。`evaluate` を `features` / `map_out`、`expand` を `expand_out` に分けただけで、通常の探索は前と全一致（同じ乱数で 150 回の探索の結果の md5 が一致）。
-- `go/gpunet.js`：ネットのファイル（GONN v2）を JS で読み、WGSL の畳み込み（2026-11-19：64×64 の区画を共有メモリで計算する行列積の形。最初の1出力1スレッドの版は M4 Pro で 217 評価/秒・CPU 1スレッドの約2.9倍で頭打ち）・BN+ReLU・ステムの加算・global pooling＋FC・ヘッドを順に流す。SwiftShader（作業機）で CPU の出力との差は最大 6e-5。
+- `go/gpunet.js`：ネットのファイル（GONN v2）を JS で読み、WGSL の畳み込み（2026-11-19：64×64 の区画を共有メモリで計算する行列積の形。最初の1出力1スレッドの版は M4 Pro で 217 評価/秒・CPU 1スレッドの約2.9倍で頭打ち → 区画の版で 16 局面 879・64 局面 1008 評価/秒（約12〜13倍）。続けて読み込みの割り算をループの外へ、共有メモリを vec4 で読む）・BN+ReLU・ステムの加算・global pooling＋FC・ヘッドを順に流す。SwiftShader（作業機）で CPU の出力との差は最大 6e-5。
 - `go/gpu-bench.html`：CPU と GPU（まとめる数 1〜64）の評価/秒と一致を測る。速さは機械しだい（作業機の SwiftShader は CPU の 1/100）なので、実機で測ってから既定や 16 を見直す。
