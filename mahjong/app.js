@@ -72,7 +72,8 @@ function rollSkillKey() {
   const sk = MJSkills.list[(Math.random() * MJSkills.list.length) | 0];
   return MJSkills.key(sk.id, tier);
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} }
+let SAVE_OFF = false;   // (cloud.js has put the cloud's data in place and the page is reloading)
+function save() { if (SAVE_OFF) return; try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} if (window.JankaCloud) JankaCloud.touched(); }
 
 // ---------------------------------------------------------------- icons
 const IC = {
@@ -280,9 +281,9 @@ const SND = (() => {
     _trk: TRK, _rebuild: () => rebuild(), _ac: () => ac,
     music,
     resume: () => music(want),
-    // (once per results screen, from its top) (ユーザー 2026-11-18「点数計算に入る時のBGMを少しだけ遅らせて」: 0.45 s after the screen opens;
+    // (once per results screen, from its top) (ユーザー 2026-11-18「点数計算に入る時のBGMを少しだけ遅らせて」: 0.35 s after the screen opens;
     // any other music asked for meanwhile cancels it, as music() clears handT)
-    score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music(null); handT = setTimeout(() => music('score'), 450); },
+    score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music(null); handT = setTimeout(() => music('score'), 350); },   // (0.45 s → 0.35 s, ユーザー 2026-11-18「あと0.1s早く」)
     newGame() { nextMain = draw(MAINS, mainKey); nextRii = draw(RIIS, riichiKey); if (on()) { fetchTrk(nextMain); fetchTrk(nextRii); fetchTrk('score'); } },
     // a hand begins: this hand's track (drawn ahead), after a short quiet (ユーザー 2026-11-16「得点表示から次の局の通常BGMまで少し間を」 —
     // the results' piece fades out, then about 1.6 s of silence)
@@ -2233,6 +2234,59 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// ---------------------------------------------------------------- cloud save (cloud.js, ユーザー 2026-11-18)
+// A card at the top of the play box on the home: not linked → what it is for and 「Google で連携」; linked → the account, when it
+// last synced, 今すぐ同期 / 解除. When this device and the cloud both have progress, the player picks which one to keep.
+function saveSummary(str) {
+  let d = {}; try { d = JSON.parse(str) || {}; } catch (e) {}
+  return { chars: Object.keys(d.chars || {}).length, coins: d.coins ?? 0, games: (d.stats && d.stats.games) || 0, pt: (d.rank && d.rank.pt) || 0 };
+}
+function cloudAsk(a, b, tc) {
+  const card = (k, s, sub) => `<button class="cl-pick" data-a="${k}"><b>${esc(t(k === 'local' ? 'cloudLocal' : 'cloudCloud'))}</b>${sub ? `<small>${esc(sub)}</small>` : ''}
+    <dl><dt>${esc(t('sumGames'))}</dt><dd>${s.games}</dd><dt>${esc(t('sumChars'))}</dt><dd>${s.chars}</dd><dt>${esc(t('sumCoins'))}</dt><dd>${s.coins.toLocaleString()}</dd><dt>${esc(t('sumPt'))}</dt><dd>${s.pt}</dd></dl><span class="btn gold">${esc(t('cloudUse'))}</span></button>`;
+  return new Promise(res => {
+    const b0 = modal(`<h3 class="cl-h">${esc(t('cloudAskT'))}</h3><p class="cl-d">${esc(t('cloudAskD'))}</p><div class="cl-two">${card('local', a)}${card('cloud', b, t('cloudSaved', { t: new Date(tc).toLocaleString() }))}</div><div class="cbtns"><button class="btn" data-a="later">${esc(t('cloudLater'))}</button></div>`, 'small cloudq');
+    b0.addEventListener('click', e => { const x = e.target.closest('[data-a]'); if (!x) return; closeModal(); res(x.dataset.a === 'later' ? null : x.dataset.a); });
+  });
+}
+const IC_G = '<svg class="cl-g" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+const IC_CLOUD = '<svg viewBox="0 0 24 24"><path d="M7 18h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.4 9.1 4.5 4.5 0 0 0 7 18z"/><path d="M9.5 13.5l2 2 3.5-4"/></svg>';
+function renderCloud(st) {
+  const el = $('#aaCloud'); if (!el) return;
+  if (!st.available) { el.hidden = true; return; }
+  el.hidden = false;
+  const hm = ts => { const d = new Date(ts), now = new Date(); return d.toDateString() === now.toDateString() ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString(); };
+  const errL = st.err ? `<small class="cl-err">${esc(t('cloudErr_' + st.err))}</small>` : '';
+  if (!st.user) {
+    el.className = 'aa-cloud off';
+    el.innerHTML = `<span class="cl-ic">${IC_CLOUD}</span><span class="cl-tx"><b>${esc(t('cloudT'))}</b>${errL || `<small>${esc(t('cloudD'))}</small>`}</span>
+      <button class="cl-go" id="clIn" ${st.busy ? 'disabled' : ''}>${IC_G}<span>${esc(st.busy ? t('cloudBusy') : t('cloudBtn'))}</span></button>`;
+  } else {
+    el.className = 'aa-cloud on';
+    el.innerHTML = `${st.user.photo ? `<img class="cl-av" src="${esc(st.user.photo)}" alt="" referrerpolicy="no-referrer">` : `<span class="cl-ic">${IC_CLOUD}</span>`}
+      <span class="cl-tx"><b><i class="cl-dot"></i>${esc(t('cloudOn'))}<em>${esc(st.user.email)}</em></b>${errL || `<small>${esc(st.busy ? t('cloudBusy') : st.last ? t('cloudLast', { t: hm(st.last) }) : '')}</small>`}</span>
+      <button class="cl-sm" id="clSync" ${st.busy ? 'disabled' : ''} title="${esc(t('cloudSync'))}" aria-label="${esc(t('cloudSync'))}"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-14.3 4.9M4 12a8 8 0 0 1 14.3-4.9"/><path d="M18.5 3v4.2h-4.2M5.5 21v-4.2h4.2"/></svg></button>
+      <button class="cl-sm cl-out" id="clOut">${esc(t('cloudOff'))}</button>`;
+  }
+  const i = $('#clIn'), s = $('#clSync'), o = $('#clOut');
+  if (i) i.onclick = () => { SND.pick(); JankaCloud.signIn(); };
+  if (s) s.onclick = () => { SND.pick(); JankaCloud.sync(); };
+  if (o) o.onclick = async () => { SND.pick(); if (await confirmBox(t('cloudOffQ'))) JankaCloud.signOut(); };
+}
+function cloudInit() {
+  if (!window.JankaCloud) return;
+  JankaCloud.init({
+    key: KEY, summary: saveSummary,
+    local: () => { if (SAVE_OFF) return localStorage.getItem(KEY) || ''; const s = JSON.stringify(DB); try { localStorage.setItem(KEY, s); } catch (e) {} return s; },
+    fresh: str => { const s = saveSummary(str); return s.games === 0 && s.chars <= 1 && s.pt === 0; },
+    ask: (a, b, tc) => cloudAsk(a, b, tc),
+    // (the settings stay this device's own — sound, light mode, volumes)
+    // (nothing of this page may be saved after it: the page's DB is the old one until the reload)
+    apply: str => { SAVE_OFF = true; try { const r = JSON.parse(str); r.set = DB.set; localStorage.setItem(KEY, JSON.stringify(r)); } catch (e) {} location.reload(); },
+  });
+  JankaCloud.on(renderCloud);
+}
+
 // ---------------------------------------------------------------- boot
 // animated frame effects follow whatever large frames are on screen
 let ffxT = 0;
@@ -2241,5 +2295,6 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
+cloudInit();
 window.JANKA = { _final: d => showFinal(d), _ev: (e, d) => onEvent(e, d), _overMyRiver: (x, y) => overMyRiver(x, y), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
 })();
