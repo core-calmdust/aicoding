@@ -1335,9 +1335,11 @@ async function startGame(opt = {}) {
   UIS = { ranked: ranked ? { len } : null, lv, chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
   const agents = LSN ? [new LessonHuman(), new LessonBot(), new LessonBot(), new LessonBot()] : [auto ? new AutoMe(lv) : new Human(), new SlowBot(lv), new SlowBot(lv), new SlowBot(lv)];
-  G = LSN ? new MJLessons.LessonGame({ agents, chars, rules: { length: 'east', skills: !!LSN.pos.skills }, ui: onEvent, seed: [...LSN.id].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0, oya: 0, pos: LSN.pos })
-    : new MJGame({ agents, chars, rules: { length: len, skills }, ui: onEvent });
-  UIS.lesson = LSN ? { ls: LSN, beats: LSN.beats.slice(), n: LSN.beats.length, miss: new Set(), cur: null, until: 0 } : null;
+  // a lesson: its example, then its practice problems (ls.drills), one hand each at the same table; the score counts them all
+  const STG = LSN ? [{ pos: LSN.pos, beats: LSN.beats, intro: LSN.intro, end: LSN.end }].concat(LSN.drills || []) : null;
+  const lsGame = (st, i) => new MJLessons.LessonGame({ agents, chars, rules: { length: 'east', skills: !!st.pos.skills }, ui: onEvent, seed: ([...LSN.id].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) + i * 977) >>> 0, oya: 0, pos: st.pos });
+  G = LSN ? lsGame(STG[0], 0) : new MJGame({ agents, chars, rules: { length: len, skills }, ui: onEvent });
+  UIS.lesson = LSN ? { ls: LSN, stg: STG, si: 0, beats: STG[0].beats.slice(), intro: STG[0].intro || [], end: STG[0].end, n: STG.reduce((a, st) => a + st.beats.length, 0), k: 0, miss: new Set(), cur: null, until: 0 } : null;
   UIS.game = G;
   TB.setSleeves(chars.map(c => c.color), chars.map(c => c.nail));   // (each seat's sleeve in her sisters' colour)
   $('#gSnd').innerHTML = IC.gear; $('#gExit').innerHTML = IC.exit;
@@ -1347,7 +1349,20 @@ async function startGame(opt = {}) {
   const g0 = G;
   try { await G.run(); } catch (e) { if (e !== 'abort') { console.error(e); toast('Error: ' + e.message, 5000); } }
   if (g0 !== G) return;
-  if (LSN) await lessonDone();
+  if (LSN) {
+    const L = UIS.lesson; L.g = g0;
+    for (let i = 1; i < STG.length; i++) {
+      // 小町's last words, then the next problem on a fresh deal (the first time: a word that the problems begin)
+      await guideWait(L.lastGood || '', t('lsNextQ'), null, true); if (!UIS || UIS.lesson !== L || G !== L.g) return;
+      if (i === 1) { await guideWait(t('lsDrillsGo').replace('{n}', STG.length - 1), t('lsStart'), null); if (!UIS || UIS.lesson !== L || G !== L.g) return; }
+      L.lastGood = null; lessonGuide(null); TB.hideAll();
+      const st = STG[i]; L.si = i; L.beats = st.beats.slice(); L.intro = st.intro || []; L.end = st.end || 'beats';
+      const gi = L.g = G = lsGame(st, i); UIS.game = G;
+      try { await G.run(); } catch (e) { if (e !== 'abort') { console.error(e); toast('Error: ' + e.message, 5000); } }
+      if (G !== gi || !UIS || UIS.lesson !== L) return;
+    }
+    await lessonDone();
+  }
 }
 // a seat's face → that player's stats
 $('#game .hud').addEventListener('click', e => {
@@ -2283,7 +2298,7 @@ class LessonHuman extends Human {
     const L = UIS.lesson, b = L && L.beats[0] && L.beats[0].on === 'turn' ? L.beats.shift() : null;
     if (!b) {   // (no question here: the turn plays itself)
       await sleep(500);
-      if (o.canTsumo && L && L.ls.end === 'hand') return { act: 'tsumo' };
+      if (o.canTsumo && L && L.end === 'hand') return { act: 'tsumo' };
       return { act: 'discard', id: o.drawn ?? g.P[s].hand[g.P[s].hand.length - 1] };
     }
     return this.ask(b, () => super.turn(g, s, o), g);
@@ -2297,22 +2312,23 @@ class LessonHuman extends Human {
     const L = UIS.lesson;
     const wait = L.until - performance.now(); if (wait > 0) await sleep(wait);   // (the last answer's words stay a moment)
     if (!UIS || UIS.lesson !== L) throw 'abort';
-    L.cur = b; clearHint();
-    lessonGuide({ text: I18N.L(b.say), hint: true, step: L.n - L.beats.length });
+    L.cur = b; clearHint(); L.k++;
+    lessonGuide({ text: I18N.L(b.say), hint: true });
     for (;;) {
       const a = await get();
       if (!UIS || UIS.lesson !== L) throw 'abort';
       if (MJLessons.check(b, a, g, ME)) {
         SND.ok && SND.ok(); clearHint(); L.cur = null;
-        const good = I18N.L(b.good || '') || '';
-        lessonGuide({ text: good, good: true, step: L.n - L.beats.length });
+        const good = (b.explain ? MJLessons.explain(b, a.id >> 2, g, ME, I18N.lang === 'ja') : '') || I18N.L(b.good || '') || '';
+        lessonGuide({ text: good, good: true });
         L.until = performance.now() + Math.min(4800, 1600 + good.length * 45);
         L.lastGood = good;
-        if (!L.beats.length && L.ls.end === 'beats') g.halt = true;
+        if (!L.beats.length && L.end === 'beats') g.halt = true;
         return a;
       }
       L.miss.add(b); clearHint();
-      lessonGuide({ text: I18N.L(b.bad || '') || t('lsWrong'), bad: true, hint: true, step: L.n - L.beats.length, again: I18N.L(b.say) });
+      const why = b.explain && a && a.id != null ? MJLessons.explain(b, a.id >> 2, g, ME, I18N.lang === 'ja') : '';
+      lessonGuide({ text: why || I18N.L(b.bad || '') || t('lsWrong'), bad: true, hint: true, again: I18N.L(b.say) });
     }
   }
 }
@@ -2338,6 +2354,12 @@ function applyHint() {
 }
 { const rh0 = renderHand; renderHand = function (...a) { const r = rh0.apply(this, a); applyHint(); const g = $('#lsGuide'); if (g) placeGuide(g); return r; }; }
 // the guide's panel: o = { text, step, hint, good, bad, next (→ a promise resolved by 次へ) } or null to hide
+// the header's step: 'k / n' in a one-hand lesson; with problems: 例題, then 問題 i / 6 ・ やさしい
+function lsStep(L) {
+  if (L.stg.length < 2) return L.k ? ` ・ ${Math.min(L.k, L.n)} / ${L.n}` : '';
+  if (!L.si) return ' ・ ' + t('lsExample');
+  const st = L.stg[L.si]; return ` ・ ${t('lsQ')} ${L.si} / ${L.stg.length - 1}${st.lv != null ? ' ・ ' + I18N.L(MJLessons.LV[st.lv]) : ''}`;
+}
 function lessonGuide(o) {
   let el = $('#lsGuide');
   if (!o) { if (el) el.remove(); return; }
@@ -2346,7 +2368,7 @@ function lessonGuide(o) {
   const c = MJChars.get(GUIDE);
   el.className = 'ls-guide' + (o.good ? ' good' : '') + (o.bad ? ' bad' : '');
   el.innerHTML = `<img class="lg-face" src="${charImg(c, 'face')}" alt="">
-    <div class="lg-bub"><div class="lg-top"><b>${esc(I18N.L(c.name))}</b><small>${esc(I18N.L(L.ls.title))}${o.step != null ? ` ・ ${o.step} / ${L.n}` : ''}</small><button class="lg-quit" id="lgQuit">${esc(t('lsQuit'))}</button></div>
+    <div class="lg-bub"><div class="lg-top"><b>${esc(I18N.L(c.name))}</b><small>${esc(I18N.L(L.ls.title))}${esc(lsStep(L))}</small><button class="lg-quit" id="lgQuit">${esc(t('lsQuit'))}</button></div>
       <p>${esc(o.text)}${o.again ? `<span class="lg-again">${esc(o.again)}</span>` : ''}</p>
       ${o.hint || o.next ? `<div class="lg-btns">${o.hint ? `<button class="btn" id="lgHint">${esc(t('lsHint'))}</button>` : ''}${o.next ? `<button class="btn gold" id="lgNext">${esc(o.next)}<kbd>Enter</kbd></button>` : ''}</div>` : ''}</div>`;
   placeGuide(el); guideDodge();
@@ -2375,14 +2397,15 @@ function guideWait(text, label, step, good) {
   return new Promise(res => {
     lessonGuide({ text, next: label, step, good });
     const go = () => { removeEventListener('keydown', key, true); SND.pick(); res(); };
-    const key = e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); go(); } };
+    const key = e => { if (!document.getElementById('lgNext')) { removeEventListener('keydown', key, true); return; }   // (the lesson was left: this wait is over)
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); go(); } };
     addEventListener('keydown', key, true);
     const b = $('#lgNext'); if (b) b.onclick = go;
   });
 }
 async function lessonIntro() {
   const L = UIS && UIS.lesson; if (!L) return;
-  const pages = L.ls.intro || [];
+  const pages = L.intro || [];
   for (let i = 0; i < pages.length; i++) { if (!UIS || UIS.lesson !== L) throw 'abort'; await guideWait(I18N.L(pages[i]), i === pages.length - 1 ? t('lsStart') : t('lsNext')); }
 }
 const LS_ALL = () => MJLessons.RULES.concat(MJLessons.LESSONS);
@@ -2395,7 +2418,7 @@ async function lessonDone() {
   await sleep(450);
   if (!UIS || UIS.lesson !== L) return;
   // (ユーザー 2026-11-19「最後のメッセージを読む前に結果が出る」) 小町's last words stay until 次へ / Enter, then the result
-  if (L.lastGood) { await guideWait(L.lastGood, t('lsNext'), L.n, true); if (!UIS || UIS.lesson !== L) return; }
+  if (L.lastGood) { await guideWait(L.lastGood, t('lsNext'), null, true); if (!UIS || UIS.lesson !== L) return; }
   lessonGuide(null);
   const b = modal(`<div class="ls-res ${pass ? 'ok' : ''}"><img class="lr-face" src="${charImg(MJChars.get(GUIDE), 'face')}" alt=""><h3>${esc(pass ? t('lsPass') : t('lsFail'))}</h3>
     <div class="lr-sc"><b>${score}</b><small>/100</small></div><p class="lr-say">${esc(t(score >= 100 ? 'lsSay100' : pass ? 'lsSayPass' : 'lsSayFail'))}</p><p class="lr-t">${esc(I18N.L(ls.title))}</p><p class="lr-p">${esc(I18N.L(ls.point))}</p><small class="lr-line">${esc(t('lsPassLine'))}</small>
@@ -2434,7 +2457,7 @@ function openLessons(tab, cat0) {
     return `<button class="${c.id === lsCat ? 'on' : ''}" data-cat="${c.id}" style="--cc:${LS_COL[c.id]}"><i></i>${esc(I18N.L(c.name))}<small>${passN(l)}/${l.length}</small></button>`; }).join('')}</div>`;
   const cards = `<p class="lx-cdesc" style="--cc:${LS_COL[lsCat]}">${esc(I18N.L(cat.desc))}</p><div class="lx-cards ${list.length > 6 ? 'c4' : ''}">${list.map((ls, i) => { const r = rec[ls.id];
     return `<button class="lx-card ${r && r.pass ? 'done' : ''}" data-id="${ls.id}" style="--cc:${LS_COL[ls.cat]}"><span class="lx-no">${String(i + 1).padStart(2, '0')}</span>${fan(ls)}
-      <b>${esc(I18N.L(ls.title))}</b><small>${esc(I18N.L(ls.point))}</small><span class="lx-ft2">${starRow(lsStars(r))}<em>${r ? t('lsScore', { n: r.best }) : esc(t('lsNew'))}</em></span></button>`; }).join('')}</div>`;
+      <b>${esc(I18N.L(ls.title))}</b><small>${esc(I18N.L(ls.point))}</small>${ls.drills ? `<i class="lx-qn">${esc(t('lsQn', { n: ls.drills.length + 1 }))}</i>` : ''}<span class="lx-ft2">${starRow(lsStars(r))}<em>${r ? t('lsScore', { n: r.best }) : esc(t('lsNew'))}</em></span></button>`; }).join('')}</div>`;
   const html = `<div class="lx">
     <aside class="lx-side"><img class="lx-art" src="${charImg(g, 'bust')}" alt=""><div class="lx-say"><b>${esc(I18N.L(g.name))}</b>${esc(say)}</div>
       <div class="lx-prog">${ring(done, all.length)}<span><b>${done}</b><small>/ ${all.length}</small></span><em>${esc(t('lsPassed'))}</em></div></aside>

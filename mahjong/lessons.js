@@ -396,6 +396,63 @@ const LESSONS = [
     { me: '234m456p78s99s567s', drawn: '1z', scores: [29000, 30000, 21000, 20000], left: 50 }, L('1位とはたった1000点差。どんなアガリでも逆転ですよ！ 速くアガれる1枚を捨てましょう！', 'You\'re 1,000 behind first — any win flips it! Discard for speed.'), L('正解！ テンパイを取って、すぐアガりを狙いましょう♪', 'Right! Take tenpai and win fast.'), { best: 'shanten' }),
 ];
 
-root.MJLessons = { LessonGame, check, hintTypes, bestDiscards, discardTable, RULES, LESSONS, CATS };
+// ---------------------------------------------------------------- practice problems (drills.js, tools/gen-drills.js)
+// (ユーザー 2026-11-19「1レッスンあたりの内容が薄い。問題が続く感じに、難易度の変化をつけて」) after a lesson's example, six problems
+// made and judged by the tool (2 easy · 2 normal · 2 hard). 小町 explains each answer with the numbers: the tiles that help after the
+// right discard, and how many fewer the tempting one keeps.
+const LV = [L('やさしい', 'easy'), L('ふつう', 'normal'), L('むずかしい', 'hard')];
+const DSAY = {
+  e1: [L('ひとりぼっちの字牌、どれでしょう？ いらない1枚を捨てちゃいましょう！', 'Which honour is all alone? Discard the tile you need least.'),
+    L('いちばん使い道のない牌はどれかな？ 1枚捨ててみて！', 'Which tile is least useful? Discard it.'),
+    L('むずかしめです！ 受け入れがいちばん広く残る1枚は、どれでしょう？', 'A harder one! Which discard keeps the most tiles useful?')],
+  e2: [L('ひとりぼっちの牌がいくつか。端と真ん中、どっちを手放します？', 'A few lone tiles. An edge tile or a middle one — which goes?'),
+    L('ひとりぼっちの数牌、どれを捨てるのがいちばんお得？', 'Which lone number tile is the best to throw?'),
+    L('むずかしめ！ 受け入れがいちばん広く残る1枚を探してみて。', 'A harder one! Find the discard that keeps the most tiles useful.')],
+  e3: [L('形がひとつ多すぎます！ どの形を崩しましょう？', 'One shape too many! Which shape do you break?'),
+    L('両面と嵌張、残すならどっち？ 1枚捨ててみて！', 'Two-sided or gap — which do you keep? Discard one.'),
+    L('むずかしめです！ 崩す形を選んで、受け入れをいちばん広く。', 'A harder one! Break the shape that keeps acceptance widest.')],
+  e4: [L('辺張と両面、残すならどっち？ いらない1枚を捨てましょう！', 'Edge or two-sided — which do you keep? Discard one.'),
+    L('形が多すぎます。いちばん弱い形はどれでしょう？', 'Too many shapes. Which is the weakest?'),
+    L('むずかしめ！ 弱い形を見つけて、受け入れを広く残しましょう。', 'A harder one! Find the weak shape and keep acceptance wide.')],
+  e5: [L('一向聴です！ テンパイになれる牌がいちばん多くなる1枚は？', 'One away! Which discard leaves the most ways to tenpai?'),
+    L('受け入れ枚数、数えてみましょう。いちばん広くなる1枚を！', 'Count the tiles that help. Leave the widest shape.'),
+    L('むずかしめです！ 似た形がいっぱい…いちばん広いのはどれ？', 'A harder one! Many similar shapes — which leaves the most?')],
+  e6: [L('捨てたらテンパイになる牌があります。見つけてみて！', 'One discard makes you tenpai. Find it!'),
+    L('テンパイにできる1枚、どれでしょう？', 'Which discard makes you tenpai?'),
+    L('むずかしめ！ 形をよーく見て…テンパイになる1枚はどれ？', 'A harder one! Look closely at the shapes — which discard gives tenpai?')],
+};
+function attachDrills(D) {
+  if (!D) return;
+  for (const ls of LESSONS) { const ds = D[ls.id]; if (!ds || !DSAY[ls.id]) continue;
+    ls.drills = ds.map(d => ({ lv: d.lv, end: 'beats', intro: [], pos: { me: d.me, drawn: d.drawn, dora: d.dora },
+      beats: [{ on: 'turn', say: DSAY[ls.id][d.lv], ok: ls.id === 'e6' ? { best: 'shanten' } : BEST, explain: true }] })); }
+}
+attachDrills(root.MJDrills || (typeof require !== 'undefined' ? (() => { try { return require('./drills.js'); } catch (e) { return null; } })() : null));
+// a tile's name in the guide's words
+const tName = (t, ja) => t >= 27 ? (ja ? '東南西北白發中' : '')[t - 27] || ['East', 'South', 'West', 'North', 'White', 'Green', 'Red'][t - 27]
+  : (t % 9 + 1) + (ja ? '萬筒索' : '')[(t / 9) | 0] + (ja ? '' : ' ' + ['characters', 'dots', 'bamboo'][(t / 9) | 0]);
+// the words after an answer (right or wrong), counted on the table as it is (14 tiles in hand)
+function explain(beat, t, g, s, ja) {
+  const tb = discardTable(g, s), row = tb.find(x => x[0] === t), sh = Math.min(...tb.map(x => x[1]));
+  if (!row) return '';
+  const kinds = d => { const p = g.P[s], c = MJ.countsIds(p.hand); c[d]--; const sh0 = MJ.shanten(c, p.melds.length), out = [];
+    for (let x = 0; x < 34; x++) if (c[x] < 4) { c[x]++; if (MJ.shanten(c, p.melds.length) < sh0) out.push(x); c[x]--; } return out; };
+  const nm = x => tName(x, ja);
+  if (beat.ok && beat.ok.best === 'shanten') {
+    if (row[1] === sh) { const w = kinds(t); return ja ? `テンパイです！ ${nm(t)}を切って、待ちは${w.map(nm).join('・')}（${row[2]}枚）♪` : `Tenpai! Discarding the ${nm(t)}, you wait on ${w.map(nm).join(', ')} (${row[2]} tiles).`; }
+    return ja ? `${nm(t)}を切ると、まだテンパイじゃないんです…。テンパイになる牌を探してみて！` : `Discarding the ${nm(t)} isn't tenpai yet. Look for the tile that is.`;
+  }
+  const at = tb.filter(x => x[1] === sh), best = Math.max(...at.map(x => x[2]));
+  if (row[1] === sh && row[2] === best) {
+    const k = kinds(t).length, others = at.filter(x => x[2] < best).sort((a, b) => b[2] - a[2]), o = others[0];
+    let txt = ja ? `正解！ ${nm(t)}を切ると、受け入れは${k}種${best}枚。` : `Right! Discarding the ${nm(t)} leaves ${k} kinds, ${best} tiles that help.`;
+    if (o) txt += ja ? ` ${nm(o[0])}を切ると${o[2]}枚なので、${best - o[2]}枚お得です♪` : ` The ${nm(o[0])} would leave ${o[2]} — ${best - o[2]} fewer.`;
+    return txt;
+  }
+  if (row[1] > sh) return ja ? `${nm(t)}を切ると、テンパイから1歩遠くなっちゃいます…！ もう一回！` : `Discarding the ${nm(t)} takes you a step further from tenpai. Try again!`;
+  return ja ? `${nm(t)}を切ると受け入れは${row[2]}枚。もっと広くなる牌がありますよ！` : `The ${nm(t)} leaves ${row[2]} tiles that help. One discard leaves more!`;
+}
+
+root.MJLessons = { LessonGame, check, hintTypes, bestDiscards, discardTable, explain, tName, attachDrills, LV, RULES, LESSONS, CATS };
 if (typeof module !== 'undefined' && module.exports) module.exports = root.MJLessons;
 })(typeof window !== 'undefined' ? window : globalThis);
