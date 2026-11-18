@@ -20,7 +20,7 @@
   /* ---------- page: the DOM board's pictures become invisible (taps and marks stay) ---------- */
   const st = document.createElement('style');
   st.textContent = `
-html.atlas-fox #fPieces{display:none!important}   /* 2Dの駒の欄は2D表示のときだけ（チェッカーと同じ。3Dの駒は共通部品が別の箱に出す） */
+html.atlas-fox #fPieces{display:none!important}   /* (the 2D 駒 field: shown again by common.js as the 駒 box with its 3D | 2D switch — .a32-pcown, 2026-11-19) */
 html.atlas-fox .frame{background:transparent!important;box-shadow:none!important;border:0!important}
 html.atlas-fox .frame::before,html.atlas-fox .frame::after,html.atlas-fox .board::after,html.atlas-fox .board::before{display:none!important}
 html.atlas-fox .board{background:none!important;box-shadow:none!important}
@@ -46,7 +46,8 @@ html.atlas-fox .pieces .hov::before,html.atlas-fox .pieces .hov::after,html.atla
 html.atlas-fox .pieces .hov.p1{background:radial-gradient(circle at 40% 35%,#5a6070,#1c2230 60%,#0b0d12)!important}
 html.atlas-fox .pieces .hov.p2{background:radial-gradient(circle at 40% 35%,#fff,#eef0ea 60%,#c4cbc4)!important}
 html.atlas-fox .reserve .rsv-plate{background:rgba(26,14,22,.84)!important;box-shadow:0 0 0 1px rgba(226,170,214,.45),0 2px 6px rgba(0,0,0,.35)!important;color:#f0d9e6!important}
-html.atlas-fox .reserve .rsv-plate .rsv-l b,html.atlas-fox .reserve .rsv-plate .rsv-w:not(.hot) b{color:#fff2dc!important}
+html.atlas-fox .reserve .rsv-plate .rsv-l b,html.atlas-fox .reserve .rsv-plate .rsv-w:not(.hot) b,html.atlas-fox .reserve .rsv-plate.rsv-q:not(.lo) b{color:#fff2dc!important}
+html.atlas-fox .reserve .rsv-plate.rsv-q.lo,html.atlas-fox .reserve .rsv-plate.rsv-q.lo b{color:#ff9a88!important}   /* (the quiet-move clock: the same light figures, red in the last 10 — 2026-11-19) */
 html.atlas-fox .reserve .rsv-plate .rsv-w:not(.hot){color:#f0d9e6!important;background:transparent!important}
 /* a game with clocks (rated / online): the two players one above the other — side by side the clock chip left no room for the names */
 html.atlas-skin.atlas-fox:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:not(:has(> .pl-info)):has(.clk:not(:empty)){grid-template-columns:minmax(0,1fr)!important;gap:6px!important}
@@ -186,6 +187,7 @@ html.atlas-skin.atlas-fox:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) 
     const go3 = () => { if (V && !V.is3d()) V.set(true); try { mirror(); } catch (e) {} };
     const R3 = AtlasSkin.rows3d && h ? AtlasSkin.rows3d({ id: 'foxgeese', host: h, is3, clear: row, board: go3, piece: go3, p3: { ja: '3D駒', en: '3D pieces', zh: '3D棋子', 'zh-TW': '3D棋子', ko: '3D 말', es: 'Piezas 3D', fr: 'Pièces 3D', pt: 'Peças 3D', de: '3D-Figuren', ru: '3D-фигуры', tr: '3D taşlar', id: 'Bidak 3D', hi: '3D मोहरे', ar: 'قطع ثلاثية الأبعاد' } }) : null;
     if (row && R3) row.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(() => R3.paint(), 0); } }, true);   // a 2D board: the 2D page
+    { const pr = document.getElementById('pcRow'); if (pr && R3) pr.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(() => R3.paint(), 0); } }, true); }   // a 2D piece set too (2026-11-19: the 駒 box has 3D | 2D now)
     if (R3 && typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { R3.paint(); } catch (e) {} return r; }; }
     addEventListener('storage', e => { if (e.key === 'atlas-foxgeese-look' || e.key === 'atlas-foxgeese-pc3') { try { mirror(); } catch (x) {} if (R3) R3.paint(); } });
   }

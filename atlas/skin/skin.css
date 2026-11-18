@@ -656,6 +656,7 @@ html.atlas-skin body:not(#_) .modal .a32{display:inline-flex!important;width:aut
 html.atlas-skin .a32 > button{min-width:64px;padding:5px 14px!important;border:0!important;border-radius:99px!important;background:transparent!important;font-weight:900!important;font-size:14px!important;color:#6a7088!important;box-shadow:none!important;cursor:pointer}
 html.atlas-skin .a32 > button.sel{background:var(--a-tile)!important;color:#2b3044!important;box-shadow:0 3px 0 #efe3c8!important}
 html.atlas-skin .a32-off:not(#_):not(#_):not(#_){display:none!important}
+html.atlas-skin #newOverlay .field.a32-pcown:not(.hidden):not([hidden]):not(#_){display:block!important}   /* (2026-11-19: the 駒 box with its 3D | 2D switch, also where a skin hid the 2D 駒 field in 3D) */
 html.atlas-skin #f3D.a32-box{margin:0!important;padding:0!important;border:0!important;background:none!important}
 html.atlas-skin #f3D.a32-box > label:not(.pc3l){display:none!important}
 html.atlas-skin .a32-pc3 > label.pc3l{display:none!important}

@@ -435,11 +435,11 @@
     const por = M('delftB', { map: delftTex(), color: '#ffffff', roughness: .18, clearcoat: 1, clearcoatRoughness: .08 });
     const prof = [V2(0, 0), V2(.22, 0), V2(.23, .02), V2(.2, .05), V2(.21, .1), V2(.26, .2), V2(.27, .28), V2(.25, .36), V2(.215, .42), V2(.205, .45), V2(.2, .462), V2(0, .465)].map(p => V2(p.x * s, p.y * s));
     g.add(mesh(G('dBell' + col, () => new TT.LatheGeometry(prof, seg(40))), por));
-    g.add(mesh(G('dCap' + col, () => { const q = new TT.CircleGeometry(.198 * s, seg(40)); q.rotateX(-Math.PI / 2); return q; }), M('delftC' + col, { map: picTex('pc-delft-' + (fox ? 'f' : 'g'), '#f4f6fa'), color: '#ffffff', roughness: .18, clearcoat: 1, clearcoatRoughness: .08 }), 0, .4655 * s + .001, 0));
+    g.add(mesh(G('dCap2' + col, () => { const q = new TT.CircleGeometry(.198 * s, seg(40)), UV = q.attributes.uv; for (let i = 0; i < UV.count; i++) UV.setXY(i, .5 + (UV.getX(i) - .5) * .74, .5 + (UV.getY(i) - .5) * .74); q.rotateX(-Math.PI / 2); return q; }) /* (the plate's motif filling the crown: easier to read from above, 2026-11-19 user) */, M('delftC' + col, { map: picTex('pc-delft-' + (fox ? 'f' : 'g'), '#f4f6fa'), color: '#ffffff', roughness: .18, clearcoat: 1, clearcoatRoughness: .08 }), 0, .4655 * s + .001, 0));
     if (fox) {   // the fox's lid has a knob: a little porcelain fox sitting on it, cobalt ears, tail tip and eyes
       const wh = M('delftW', { color: '#f6f8fc', roughness: .1, clearcoat: 1, clearcoatRoughness: .04, envMapIntensity: 1.4 }), bl = M('delftBl', { color: '#1d3b8a', roughness: .12, clearcoat: 1, clearcoatRoughness: .05 });
-      const k = new TT.Group(); k.position.y = .465 * s; g.add(k);
-      k.add(mesh(G('dkBase', () => new TT.CylinderGeometry(.07, .09, .025, seg(24))), bl, 0, .0125, 0));
+      const k = new TT.Group(); k.position.y = .465 * s; g.add(k); k.scale.setScalar(1.15);
+      k.add(mesh(G('dkBase2', () => new TT.CylinderGeometry(.15, .17, .02, seg(32))), bl, 0, .01, 0));   // (a cobalt crown under the fox: the fox's piece reads at once from above)
       const body = mesh(G('dkBody', () => new TT.SphereGeometry(.085, seg(24), seg(16))), wh, 0, .1, -.01); body.scale.set(.85, 1.15, .95); k.add(body);
       k.add(mesh(G('dkHead', () => new TT.SphereGeometry(.06, seg(22), seg(14))), wh, 0, .215, .025));
       k.add(mesh(G('dkSnout', () => { const q = new TT.ConeGeometry(.032, .085, seg(14)); q.rotateX(Math.PI / 2); return q; }), wh, 0, .205, .09));
