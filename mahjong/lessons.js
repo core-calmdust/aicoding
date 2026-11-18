@@ -203,7 +203,8 @@ const RULES = [
   { id: 'r5', title: L('役がないとアガれない', 'You need a yaku'), point: L('リーチ・タンヤオ・役牌', 'Riichi, all simples, honour pungs'),
     intro: [
       L('ここで大事なお約束！ アガるには「役（ヤク）」が1つ以上必要なんです。形がそろってても、役がないとアガれません…！', 'One important rule: to win you need at least one "yaku". The right shape alone isn\'t enough.'),
-      L('まずは覚えやすい3つから。①リーチ：鳴かずにテンパイしたら宣言！ ②タンヤオ：2〜8の数牌だけで作る！ ③役牌：白・發・中や、自分の風・場の風を3枚そろえる！', 'Three easy ones: ① Riichi — declare it when you\'re tenpai without calls. ② All simples (tanyao) — only 2 to 8. ③ Honour pung — three dragons, or your own / the round\'s wind.') ],
+      L('まずは覚えやすい3つから。①リーチ：鳴かずにテンパイしたら宣言！ ②タンヤオ：2〜8の数牌だけで作る！ ③役牌：白・發・中や、自分の風・場の風を3枚そろえる！', 'Three easy ones: ① Riichi — declare it when you\'re tenpai without calls. ② All simples (tanyao) — only 2 to 8. ③ Honour pung — three dragons, or your own / the round\'s wind.'),
+      L('「自分の風」は、自分の席の風のこと！ 親が東で、親の右どなりが南、向かいが西、左どなりが北。自分の絵の横に出てる字がそれです！ 「場の風」は今の場の風で、東場なら東、南場なら南。真ん中の「東1局」の東がそれですね。どっちにも当てはまる風（東場の親の東など）なら、役が2つ分になってお得ですよ♪', '"Your wind" is your seat\'s wind: the dealer is East, the dealer\'s right is South, across is West, left is North — it\'s the letter by your portrait. "The round\'s wind" is East in the East round and South in the South round, as shown in the centre ("East 1"). A wind that is both (East for the dealer in the East round) counts twice!') ],
     pos: { me: '234m456p678s33p57s', drawn: '9s', draws: { 0: ['6s'] } },
     beats: [
       { on: 'turn', say: L('この手、2〜8の牌ばっかりですね。タンヤオを狙って、1・9の牌を捨てちゃいましょう！', 'This hand is nearly all 2–8. Go for all simples: discard the 1 or 9.'), ok: { d: '9s' },

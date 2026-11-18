@@ -1818,7 +1818,7 @@ $('#game').addEventListener('click', e => {
   // (a tap that picked a hand tile re-drew the hand: its target is no longer in the page, and must not count as a tap on the table —
   // that let go of the tile at once, so on a phone nothing could be discarded, 2026-11-15)
   if (!e.target.isConnected) return;
-  if (UIS && UIS.kind === 'turn' && UIS.resolve && !e.target.closest('#hand, #acts, #chiPick, .tbtns, #skBtn, #dealAsk, .opp, #mePanel, #meBadge, .me, #khelp, #rbox, .modal')) {
+  if (UIS && UIS.kind === 'turn' && UIS.resolve && !e.target.closest('#hand, #acts, #chiPick, .tbtns, #skBtn, #dealAsk, .opp, #mePanel, #meBadge, .me, #khelp, #rbox, .modal, #lsGuide')) {
     // (2026-11-15, ユーザー「スマホ、どこをタップしても牌を捨ててしまう」) only with a mouse: on a touch screen a tap on the table
     // just lets go of the picked tile
     if (!fine.matches) { if (UIS.picked != null) { UIS.picked = null; renderHand(); TB.highlightType(null); } return; }
@@ -1827,7 +1827,7 @@ $('#game').addEventListener('click', e => {
     return;
   }
   if (!UIS || UIS.kind !== 'call') return;
-  if (e.target.closest('#acts, #chiPick, .tbtns, #mePanel .sks, #dealAsk')) return;
+  if (e.target.closest('#acts, #chiPick, .tbtns, #mePanel .sks, #dealAsk, #lsGuide')) return;   // (ユーザー 2026-11-19: a click on the lesson panel — やめる・ヒント — passed the call / discarded the drawn tile)
   const s = $('#acts .skip'); if (s) s.click();
 });
 
@@ -2349,13 +2349,28 @@ function lessonGuide(o) {
     <div class="lg-bub"><div class="lg-top"><b>${esc(I18N.L(c.name))}</b><small>${esc(I18N.L(L.ls.title))}${o.step != null ? ` ・ ${o.step} / ${L.n}` : ''}</small><button class="lg-quit" id="lgQuit">${esc(t('lsQuit'))}</button></div>
       <p>${esc(o.text)}${o.again ? `<span class="lg-again">${esc(o.again)}</span>` : ''}</p>
       ${o.hint || o.next ? `<div class="lg-btns">${o.hint ? `<button class="btn" id="lgHint">${esc(t('lsHint'))}</button>` : ''}${o.next ? `<button class="btn gold" id="lgNext">${esc(o.next)}<kbd>Enter</kbd></button>` : ''}</div>` : ''}</div>`;
-  placeGuide(el);
+  placeGuide(el); guideDodge();
   const q = $('#lgQuit'); if (q) q.onclick = async () => { SND.pick(); if (await confirmBox(t('exitQ'))) { quitGame(); openLessons(L.ls.cat ? 'l' : 'r', L.ls.cat); } };
   const h = $('#lgHint'); if (h) h.onclick = showHint;
 }
 // (ユーザー 2026-11-18「最上部は見にくいので可能な限り下側」) just above the player's hand, between the player's portrait (left) and the
 // drawn-tile slot (right — the call / win buttons come up there)
 function placeGuide(el) { el.style.left = el.style.top = el.style.width = el.style.transform = ''; }   // (2026-11-19: placed by CSS — it follows resizes and full screen)
+// (ユーザー 2026-11-19「ツモボタンと被っちゃう」) when the call / win buttons come up under the panel, lift it above them
+function guideDodge() {
+  const g = $('#lsGuide'); if (!g) return;
+  const a = $('#acts'), hud = $('#game .hud');
+  g.style.transition = 'none'; g.style.setProperty('--lgLift', '0px'); void g.offsetHeight;   // measure from the resting place, not mid-slide
+  requestAnimationFrame(() => { g.style.transition = ''; });
+  if (!a || !a.children.length || !hud) return;
+  const ar = a.getBoundingClientRect(), gr = g.getBoundingClientRect(), hr = hud.getBoundingClientRect();
+  if (!ar.width || ar.left >= gr.right || ar.right <= gr.left || ar.top >= gr.bottom || ar.bottom <= gr.top) return;
+  const k = hr.height ? hud.offsetHeight / hr.height : 1;
+  g.style.setProperty('--lgLift', Math.ceil((gr.bottom - ar.top) * k + 12) + 'px');
+}
+{ let q = 0; const kick = () => { cancelAnimationFrame(q); q = requestAnimationFrame(guideDodge); };
+  new MutationObserver(kick).observe($('#acts'), { childList: true, attributes: true, attributeFilter: ['class', 'style'] });
+  addEventListener('resize', kick); }
 function guideWait(text, label, step, good) {
   return new Promise(res => {
     lessonGuide({ text, next: label, step, good });
