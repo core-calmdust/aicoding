@@ -120,7 +120,7 @@ class MJGame {
     if (last) {
       if (dealerKeeps) {
         // agari-yame / tenpai-yame: dealer is top with >= return points
-        if (this.ranking()[0] === 3 && this.scores[3] >= this.rules.ret) { this.over = true; return; }
+        if (this.ranking()[0] === this.dealer && this.scores[this.dealer] >= this.rules.ret) { this.over = true; return; }   // (2026-11-18: was seat 3 fixed, so it only ended when the dealer happened to be seat 3)
         return;
       }
       if (top >= this.rules.ret) { this.over = true; return; }
