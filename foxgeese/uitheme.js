@@ -82,7 +82,7 @@
       const k = st[i]; if (!k.startsWith('--')) continue;
       const v = st.getPropertyValue(k); if (!v || !/#[0-9a-f]{3,8}\b|rgba?\(/i.test(v)) continue;
       let role = /sh\b|shadow|glow|-psh/.test(k) ? 'sh' : /bd\b|border|line|rim|-pbd/.test(k) ? 'bd' : /bg\b|panel|card|fill|wash|back|felt|-pbg/.test(k) ? 'bg' : /fg\b|text|ink|txt/.test(k) ? 'fg' : null;
-      if (!role) { const m0 = v.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/i), c0 = m0 && parse(m0[0]); role = c0 && lum(c0) < .45 ? 'bg' : 'fg'; }
+      if (!role) { const m0 = v.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/i), c0 = m0 && parse(m0[0]); role = c0 && (c0[3] < .35 || lum(c0) < .45) ? 'bg' : 'fg'; }   // (a faint tint is a background — e.g. the record dialog's --gc: 2026-11-18 fix)
       if (role === 'sh' && mode !== 'meadow') continue;
       const n = mapAll(v, mode, role); if (n) out.push(`${k}:${n}`);
     }
