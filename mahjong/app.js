@@ -17,11 +17,21 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 
 // ---------------------------------------------------------------- save
 const KEY = 'janka-v1';
+// (ユーザー 2026-11-18「軽い抑止」) the save carries a signature of its contents. A save changed outside the game (the browser's tools)
+// no longer matches: it is marked (tamper) — such a save is not uploaded to the cloud and the home says so once. Absurd values are
+// put back in range. It only stops casual editing (the key is in this file), as was explained to the user.
+const SIG_SALT = 'janka:7f3c:雀華', SIG_FLAG = 'janka-sv';
+const fnv = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+function sigOf(o) { const r = Object.assign({}, o); delete r.sig; const j = JSON.stringify(r); return fnv(SIG_SALT + j) + fnv(j + SIG_SALT); }
+function packSave(o) { delete o.sig; o.sig = sigOf(o); try { localStorage.setItem(SIG_FLAG, '1'); } catch (e) {} return JSON.stringify(o); }
 let DB = load();
 function load() {
   let d = null;
   try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+  let signed = false; try { signed = localStorage.getItem(SIG_FLAG) === '1'; } catch (e) {}
+  if (d && (d.sig ? d.sig !== sigOf(d) : signed && Object.keys(d).length > 1)) d.tamper = true;
   if (!d) d = {};
+  delete d.sig;
   d.coins = d.coins ?? 3000;
   // owned characters: { id: { skills: ['wareme:2', …], use: 'wareme:2' } } (skill id : skill tier)
   if (!d.chars) {
@@ -45,6 +55,12 @@ function load() {
   if (!d.pstats) d.pstats = { v: MJStats.V, skill: MJStats.blank(), std: MJStats.blank(), chars: {}, old: d.stats.games ? Object.assign(MJStats.blank(), { games: d.stats.games, rank: d.stats.rank.slice() }) : null };
   MJStats.fix(d.pstats.skill); MJStats.fix(d.pstats.std); d.pstats.chars = d.pstats.chars || {};
   d.rank = Object.assign({ pt: 0, games: 0 }, d.rank || {});   // 段位戦: the points (they only add up)
+  // values back in range (the light check against edited saves)
+  const n = (v, hi) => Math.max(0, Math.min(hi, Math.floor(+v) || 0));
+  d.coins = n(d.coins, 99999999); d.rank.pt = n(d.rank.pt, 9999999); d.rank.games = n(d.rank.games, 9999999);
+  for (const id in d.chars) { const o = d.chars[id]; o.skills = (Array.isArray(o.skills) ? o.skills : []).filter(k => { try { const k2 = MJSkills.parse(k); return !!(k2 && MJSkills.get(k2.id) && k2.tier >= 0 && k2.tier < MJSkills.TIERS.length); } catch (e) { return false; } }); if (!o.skills.length) delete d.chars[id]; }
+  if (!Object.keys(d.chars).length) { const st = MJChars.starter, k = MJSkills.key(st.skill, st.tier); d.chars[st.id] = { skills: [k], use: k }; }
+  if (!d.chars[d.sel]) d.sel = Object.keys(d.chars)[0];
   return d;
 }
 const owns = id => !!DB.chars[id];
@@ -73,7 +89,7 @@ function rollSkillKey() {
   return MJSkills.key(sk.id, tier);
 }
 let SAVE_OFF = false;   // (cloud.js has put the cloud's data in place and the page is reloading)
-function save() { if (SAVE_OFF) return; try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {} if (window.JankaCloud) JankaCloud.touched(); }
+function save() { if (SAVE_OFF) return; try { localStorage.setItem(KEY, packSave(DB)); } catch (e) {} if (window.JankaCloud) JankaCloud.touched(); }
 
 // ---------------------------------------------------------------- icons
 const IC = {
@@ -765,7 +781,7 @@ function resetData() {
   b.addEventListener('click', e => {
     const a = e.target.closest('[data-a]'); if (!a) return;
     if (a.dataset.a !== 'yes') { closeModal(); openSettings(); return; }
-    try { localStorage.setItem(KEY, JSON.stringify({ set: DB.set })); } catch (e) {}
+    try { localStorage.setItem(KEY, packSave({ set: DB.set })); } catch (e) {}
     location.reload();
   });
 }
@@ -2285,12 +2301,13 @@ function cloudInit() {
   if (!window.JankaCloud) return;
   JankaCloud.init({
     key: KEY, summary: saveSummary,
-    local: () => { if (SAVE_OFF) return localStorage.getItem(KEY) || ''; const s = JSON.stringify(DB); try { localStorage.setItem(KEY, s); } catch (e) {} return s; },
+    local: () => { if (SAVE_OFF) return localStorage.getItem(KEY) || ''; const s = packSave(DB); try { localStorage.setItem(KEY, s); } catch (e) {} return s; },
+    blocked: () => !!DB.tamper,   // (an edited save is not uploaded)
     fresh: str => { const s = saveSummary(str); return s.games === 0 && s.chars <= 1 && s.pt === 0; },
     ask: (a, b, tc) => cloudAsk(a, b, tc),
     // (the settings stay this device's own — sound, light mode, volumes)
     // (nothing of this page may be saved after it: the page's DB is the old one until the reload)
-    apply: str => { SAVE_OFF = true; try { const r = JSON.parse(str); r.set = DB.set; localStorage.setItem(KEY, JSON.stringify(r)); } catch (e) {} location.reload(); },
+    apply: str => { SAVE_OFF = true; try { const r = JSON.parse(str); const ok = !r.sig || r.sig === sigOf(r); r.set = DB.set; if (!ok) r.tamper = true; localStorage.setItem(KEY, packSave(r)); } catch (e) {} location.reload(); },
   });
   JankaCloud.on(renderCloud);
   $('#btnCloud').addEventListener('click', openCloud);
@@ -2305,5 +2322,6 @@ MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   /
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
 cloudInit();
-window.JANKA = { _final: d => showFinal(d), _ev: (e, d) => onEvent(e, d), _overMyRiver: (x, y) => overMyRiver(x, y), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
+if (DB.tamper) { let shown = false; try { shown = sessionStorage.getItem('janka-tn') === '1'; sessionStorage.setItem('janka-tn', '1'); } catch (e) {} if (!shown) setTimeout(() => toast(t('tamperNote'), 4500), 1200); }
+window.JANKA = { _save: () => save(), _final: d => showFinal(d), _ev: (e, d) => onEvent(e, d), _overMyRiver: (x, y) => overMyRiver(x, y), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
 })();
