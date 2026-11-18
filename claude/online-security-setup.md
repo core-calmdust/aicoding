@@ -26,7 +26,8 @@
    （`shared/onlinesec.js` の `rehome()`、元の設定は各 `firebase-config.js` の `FIREBASE_CONFIG_PREV`）。公開後は次に開いたときから統合先を使います。
 3. 数日たって古いキャッシュがなくなったら、各 `firebase-config.js` の `_PREV` の部分を消し、古いプロジェクト
    （`chess-multiplay` `xiangqi-multiplay` `go-multiplay` `renju-multiplay` `hex-multiplay` `ugolki-multiplay` `fanorona-multi`
-   `agon-multiplay` `ur-multiplay` `senet-multiplay` `mankara-multiplay` `dot-and-box-multiplay`）を削除できます。
+   `ur-multiplay` `senet-multiplay` `mankara-multiplay` `dot-and-box-multiplay`）を削除できます。
+   **`agon-multiplay` は削除しない**（2026-11-18 から雀華 `mahjong/` のセーブ連携専用、ルールは `mahjong/database.rules.json`）。
    **`connect4-multiplay` は削除しない**（おはじき系のデータベースとして使い続ける。下の「おはじき系」）。
    削除したプロジェクトの ID は30日間再利用できません。
 - 統合先の Authentication・承認済みドメイン・App Check はそのまま使えます（追加の設定は不要）。

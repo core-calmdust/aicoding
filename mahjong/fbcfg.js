@@ -1,15 +1,16 @@
-// 雀華：セーブデータのクラウド連携（Google アカウント）に使う Firebase の設定（2026-11-18、ユーザー「別のゲームで空いている DB を使う」）。
-// だつごく！スライド（jailbreak/）の Firebase プロジェクト "jailbreak-slider" を借りる。データは janka/sync/<uid> = { d: セーブの JSON, t: ms }。
-// 使う前に一度だけ：Firebase コンソール → jailbreak-slider → Realtime Database → ルール に jailbreak/database.rules.json の内容を貼って公開
-// （janka ノードを含む版）。Authentication の Google ログインと承認済みドメイン core-calmdust.github.io は jailbreak で設定済み。
+// 雀華：セーブデータのクラウド連携（Google アカウント）に使う Firebase の設定（2026-11-18、ユーザー「丸々空いている DB を使う」）。
+// アゴンをタフルのプロジェクトにまとめた後、まるごと空いた "agon-multiplay" を雀華専用に使う（**削除しないこと**）。
+// データは janka/sync/<uid> = { d: セーブの JSON, t: ms }。ルールは mahjong/database.rules.json。
+// 使う前に一度だけ：Firebase コンソール → agon-multiplay → Realtime Database → ルール に mahjong/database.rules.json の内容を貼って公開。
+// Authentication の Google ログイン・承認済みドメイン core-calmdust.github.io・App Check は、アゴンで設定済みのものをそのまま使う。
 // Web の設定値は公開前提のもの。アクセスは Realtime Database のルール（自分の uid のノードだけ読み書き可）で守る。
 window.JANKA_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDgHloSiLlcIjCYb6JjohnQT69BaTiQ0T8",
-  authDomain: "jailbreak-slider.firebaseapp.com",
-  databaseURL: "https://jailbreak-slider-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "jailbreak-slider",
-  storageBucket: "jailbreak-slider.firebasestorage.app",
-  messagingSenderId: "487363897259",
-  appId: "1:487363897259:web:b00bfabedd531e955254ee"
+  apiKey: "AIzaSyBL0sHFK6adNnigp0Tl5fnD0SzcIZ-WEdY",
+  authDomain: "agon-multiplay.firebaseapp.com",
+  databaseURL: "https://agon-multiplay-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "agon-multiplay",
+  storageBucket: "agon-multiplay.firebasestorage.app",
+  messagingSenderId: "474281869256",
+  appId: "1:474281869256:web:330c0e3a554276913bcafd"
 };
-window.JANKA_APPCHECK_SITE_KEY = '6LceZAUuAAAAAMq1-4wVvHYxWfrj0I5Sn20Ui7fn';   // jailbreak と同じ reCAPTCHA Enterprise のサイトキー
+window.JANKA_APPCHECK_SITE_KEY = '6LcvcxEuAAAAABxu1SHP-whFX7TxH2-GGe6C5QOC';   // アゴンと同じ reCAPTCHA Enterprise のサイトキー
