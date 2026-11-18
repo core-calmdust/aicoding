@@ -195,39 +195,49 @@ void M(vec2 p, inout Mat m){ float rt; vec3 c = fwood(p, hexc(84., 48., 26.), he
 
   // ================================================================ abstract: a matte plaster sheet with large flat shapes in Roman colours —
   // an arch, the sun, a half moon — printed over each other; the grid a fine charcoal line
-  // v4 (2026-11-19, user: the white sheet of the first version was better, but its earth colours are too close to other games):
-  // the same sheet and shapes, recoloured as paper cut-outs — ultramarine, blush pink, charcoal, warm grey and a small lemon sun
+  // v5 (2026-11-19, user: more abstract — a white sheet with a fine geometric line pattern): overlapping circles on a triangular
+  // lattice (the "flower" pattern) drawn in hairlines of pale grey inside a large ring; a handful of petals filled in colour,
+  // scattered (ultramarine, coral, lime, charcoal, mist grey); the grid in thin mid grey over it
   B.abstract = {
-    ao: '.03', aok: '0.',
+    ao: '.02', aok: '0.',
     glsl: `
-float aa(float d){ return smoothstep(.004, -.004, d); }
-float sdArch(vec2 p, vec2 base, float hw, float top){   // a round arch standing on base (y down): a box and a half disc
-  float rect = sdBox(p, vec2(base.x, (base.y + top + hw - .1) * .5), vec2(hw, (base.y - top - hw + .1) * .5));
-  float disc = length(p - vec2(base.x, top + hw)) - hw;
-  return min(rect, max(disc, p.y - (top + hw) + .05));
+const float A = 1.;                    // the lattice spacing = the circles' radius (cells)
+vec2 lat(vec2 ij){ return vec2(4.) + A * vec2(ij.x + .5 * ij.y, .8660254 * ij.y); }
+float flower(vec2 p){                  // distance to the nearest circle outline
+  vec2 q = p - 4.; float j0 = floor(q.y / (.8660254 * A)), d = 9.;
+  for (float j = j0 - 2.; j <= j0 + 2.; j++) { float i0 = floor(q.x / A - .5 * j);
+    for (float i = i0 - 2.; i <= i0 + 2.; i++) d = min(d, abs(length(p - lat(vec2(i, j))) - A)); }
+  return d;
 }
-vec3 shapes(vec2 p, vec3 c){
-  vec3 terra = hexc(52., 78., 170.), ochre = hexc(236., 186., 182.), sage = hexc(156., 184., 210.), teal = hexc(236., 200., 72.), rose = hexc(176., 172., 164.);
-  float tex = .95 + .07 * vn(p * 140.) + .03 * fbm(p * 3.);
-  c = mix(c, sage * tex, aa(length(p - vec2(-.2, 6.3)) - 2.1));
-  c = mix(c, ochre * tex, aa(sdArch(p, vec2(5.55, 8.2), 1.3, 3.1)));
-  c = mix(c, terra * tex, aa(length(p - vec2(2.6, 2.5)) - 1.75));
-  c = mix(c, rose * tex, aa(max(length(p - vec2(8.1, 3.9)) - 1.6, -(length(p - vec2(7.5, 3.9)) - 1.2))));
-  c = mix(c, teal * tex, aa(length(p - vec2(6.6, 1.35)) - .5));
-  return c;
+mat2 R60 = mat2(.5, .8660254, -.8660254, .5);
+float petal(vec2 p, vec2 o, vec2 q){   // the lens between lattice points o and q (signed: < 0 inside)
+  vec2 O = lat(o), P = lat(q), d = P - O, L = O + R60 * d, Rr = O + transpose(R60) * d;
+  return max(length(p - L) - A, length(p - Rr) - A);
 }
-float H(vec2 p){ return .001 * (vn(p * 90.) - .5) + .0012 * fbm(p * 10.); }
+float aa(float d, float w){ return smoothstep(w, -w, d); }
+float H(vec2 p){ return .0005 * (vn(p * 160.) - .5); }
 void M(vec2 p, inout Mat m){
-  vec3 c = hexc(238., 231., 218.) * (.975 + .03 * vn(p * vec2(160., 40.)) * .5 + .03 * vn(p * vec2(40., 170.)) * .5) * (.985 + .03 * fbm(p * 1.5));
-  c = shapes(p, c);
-  float ink = smoothstep(.013, .007, gridDist(p));
-  c = mix(c, hexc(40., 38., 38.) * (.92 + .1 * vn(p * 200.)), ink);
-  m.alb = c; m.spec = .12; m.gloss = .1; m.metal = 0.;
+  vec3 c = hexc(246., 246., 243.) * (.992 + .012 * vn(p * 200.));
+  float rr = length(p - 4.);
+  float inside = aa(rr - 3.75, .004);
+  float fl = flower(p);
+  c = mix(c, hexc(214., 214., 212.), smoothstep(.009, .004, fl) * inside);
+  c = mix(c, hexc(206., 206., 204.), smoothstep(.009, .004, abs(rr - 3.75)) + smoothstep(.008, .003, abs(rr - 3.92)));
+  // petals in colour, scattered over the pattern
+  c = mix(c, hexc(40., 140., 214.), aa(petal(p, vec2(-2., 1.), vec2(-1., 1.)), .006));
+  c = mix(c, hexc(236., 104., 78.), aa(petal(p, vec2(1., -2.), vec2(1., -1.)), .006));
+  c = mix(c, hexc(150., 206., 84.), aa(petal(p, vec2(1., 1.), vec2(1., 2.)), .006));
+  c = mix(c, hexc(52., 52., 56.), aa(petal(p, vec2(-1., -1.), vec2(-2., -1.)), .006));
+  c = mix(c, hexc(206., 212., 216.), aa(petal(p, vec2(2., -1.), vec2(3., -1.)), .006));
+  c = mix(c, hexc(206., 212., 216.), aa(petal(p, vec2(-1., 2.), vec2(-2., 3.)), .006));
+  float g = smoothstep(.009, .005, gridDist(p));
+  c = mix(c, hexc(120., 122., 128.), g * .85);
+  m.alb = c; m.spec = .1; m.gloss = .15; m.metal = 0.;
 }`,
   };
   F.abstract = { glsl: `
-float H(vec2 p){ return .0012 * (vn(p * 120., vec2(120.)) - .5); }
-void M(vec2 p, inout Mat m){ m.alb = hexc(46., 46., 50.) * (.95 + .08 * vn(p * 240., vec2(240.)) + .04 * fbmP(p * 5., vec2(5.))); m.spec = .1; m.gloss = .1; m.metal = 0.; }` };
+float H(vec2 p){ return .0008 * (vn(p * 120., vec2(120.)) - .5); }
+void M(vec2 p, inout Mat m){ m.alb = hexc(70., 74., 78.) * (.97 + .05 * vn(p * 240., vec2(240.))); m.spec = .2; m.gloss = .3; m.metal = 0.; }` };
 
   // ================================================================ lux: squares of lapis lazuli and Calacatta marble set in gold
   B.lux = {

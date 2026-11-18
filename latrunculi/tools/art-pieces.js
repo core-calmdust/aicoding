@@ -380,7 +380,7 @@ void mat(vec3 p, vec3 n, inout PMat m){
     : `vec3 c = mix(hexc(240., 236., 228.), hexc(222., 216., 204.), smoothstep(.3, .8, fbm3(p * 2.6)));
   c = mix(c, hexc(186., 180., 168.), (1. - smoothstep(.0, .025, abs(fbm3(p * 2. + 4.) - .5))) * .15);
   m.alb = c; m.spec = .4; m.gloss = ${under ? '.22' : '.55'}; m.emit = c * .08;`}
-  ${under ? 'm.alb = mix(m.alb, m.alb * .6, smoothstep(.03, .005, abs(length(p.xy) - .5)));' : 'float rr = length(p.xy), rv = smoothstep(.15, .5, rel(p.xy * 1.15)), fld = smoothstep(.72, .66, rr); m.alb *= mix(1., mix(' + (dark ? '.55' : '.8') + ', ' + (dark ? '1.45' : '1.08') + ', rv), fld); m.gloss = mix(m.gloss, m.gloss + .2, rv * fld);'}
+  ${under ? 'm.alb = mix(m.alb, m.alb * .6, smoothstep(.03, .005, abs(length(p.xy) - .5)));' : 'float rr = length(p.xy), rv = smoothstep(.15, .5, rel(p.xy * 1.15)), fld = smoothstep(.72, .66, rr); m.alb *= mix(1., mix(' + (dark ? '.55' : '.8') + ', ' + (dark ? '1.45' : '1.08') + ', rv), fld); m.gloss = mix(m.gloss, m.gloss + .2, rv * fld);' + (dark ? ' float rim = smoothstep(.05, .3, rel(p.xy * 1.15)) * (1. - smoothstep(.45, .8, rel(p.xy * 1.15))) * fld; m.alb = mix(m.alb, hexc(176., 172., 166.), rim * .75); m.alb = mix(m.alb, hexc(96., 94., 92.), rv * fld * .5);' : '')}
 }`;
   P['helm-b'] = { glsl: HELM(1, 0), tex: { tPc: helmRelief }, texSize: 1024 }; P['helm-w'] = { glsl: HELM(0, 0), tex: { tPc: helmRelief }, texSize: 1024 };
   P['helm-bx'] = { glsl: HELM(1, 1), tex: { tPc: helmRelief }, texSize: 1024 }; P['helm-wx'] = { glsl: HELM(0, 1), tex: { tPc: helmRelief }, texSize: 1024 };

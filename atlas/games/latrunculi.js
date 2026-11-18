@@ -15,7 +15,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../latrunculi/', VER = '?v=3';   // same file / version as latrunculi/index.html → shared cache
+  const BASE = '../latrunculi/', VER = '?v=4';   // same file / version as latrunculi/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.LatrEngine) return Promise.resolve(window.LatrEngine);

@@ -198,6 +198,8 @@ function candInfo(list, f, pos) {
   }
   const seen = new Set(), dirs = [];
   for (const it of items) { if (seen.has(it.k.k) && dirs.length) continue; seen.add(it.k.k); dirs.push(it); if (dirs.length >= 3) break; }
+  // 2026-11-19 (user: only one candidate was shown): when the top moves share one plan, fill up to three with the next best
+  for (const it of items) { if (dirs.length >= 3) break; if (!dirs.includes(it) && it.drop <= .3) dirs.push(it); }
   const close = dirs.filter(d => d.drop <= 0.05), second = items[1] ? items[1].drop : null;
   return { items, dirs, best: items[0], branch: close.length >= 2 && best < WINT, sharp: second != null && second >= 0.12 && best < WINT ? pctS(second) : '', only: second != null && second >= 0.25, forced: L.length === 1 };
 }
@@ -263,7 +265,7 @@ function render() {
   if (LatrCoach.sw) LatrCoach.sw.sync();
   const rv = !!document.querySelector('#reviewCard.show');
   const over = moves.length > 0 && gameOver(moves.length), playing = !over && cur === moves.length && !reviewing;
-  const on = active(), can = usable() && (playing || (over && !rv));
+  const on = active(), can = usable() && !rv && (playing || over);   // the review (分析) takes the coach's place; 閉じる brings the coach back
   const resting = restNow(rv, can);
   card.classList.toggle('ck-rest', resting);
   if (resting) {
