@@ -1,0 +1,69 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>latrunculi art</title>
+<!-- Renders the 2D art of Ludus Latrunculorum with GLSL (procedural, lit from the upper left) — driven by tools/gen_art2.py.
+     ?k=board-<key> (the 8×8 playing surface, the grid baked in) · frame-<key> (a seamless tile for the frame)
+     · piece-<set>-<b|w|bx|wx> (a piece seen from above, transparent)  &s=<pixels>
+     Shader sources: tools/art-lib.js (noise, lighting) and tools/art-boards.js / tools/art-pieces.js (one function per design). -->
+<body style="margin:0;background:#777">
+<canvas id="c"></canvas>
+<script src="art-lib.js"></script>
+<script src="art-boards.js"></script>
+<script src="art-pieces.js"></script>
+<script>
+(async function () {
+  const q = new URLSearchParams(location.search), k = q.get('k') || 'board-oak', S = +(q.get('s') || 1024);
+  const cv = document.getElementById('c'); cv.width = S; cv.height = S;
+  const gl = cv.getContext('webgl2', { preserveDrawingBuffer: true, premultipliedAlpha: false, alpha: true, antialias: false });
+  const [kind, ...rest] = k.split('-'), key = rest.join('-');
+  const job = kind === 'piece' ? ART_PIECES(key) : ART_BOARDS(kind, key);
+  // textures (SVG art drawn into a canvas): job.tex = { name: svgString, ... }
+  const texs = [];
+  for (const [name, svg] of Object.entries(job.tex || {})) {
+    const img = new Image(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    await img.decode();
+    const c2 = document.createElement('canvas'); c2.width = c2.height = job.texSize || 2048; c2.getContext('2d').drawImage(img, 0, 0, c2.width, c2.height);
+    const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c2);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    texs.push([name, t]);
+  }
+  const vs = `#version 300 es
+in vec2 a; void main(){ gl_Position = vec4(a, 0., 1.); }`;
+  const fs = `#version 300 es
+precision highp float; precision highp int;
+uniform vec2 uRes; uniform float uAA;
+${texs.map(([n]) => `uniform sampler2D ${n};`).join('\n')}
+out vec4 outC;
+${ART_LIB}
+${job.glsl}
+void main(){
+  vec4 acc = vec4(0.); float n = uAA;
+  for (float i = 0.; i < 4.; i++) for (float j = 0.; j < 4.; j++) {
+    if (i >= n || j >= n) continue;
+    vec2 fc = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) - .5 + (vec2(i, j) + .5) / n;
+    vec4 c = shadeAt(fc / uRes);           // uv: 0..1, y down
+    acc += vec4(c.rgb * c.a, c.a);
+  }
+  acc /= n * n;
+  outC = acc.a > 0. ? vec4(pow(clamp(acc.rgb / acc.a, 0., 1.), vec3(1. / 2.2)), acc.a) : vec4(0.);
+}`;
+  const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) { const e = gl.getShaderInfoLog(o); document.title = 'ERR ' + e; console.log(e); throw e; } return o; };
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr);
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) { document.title = 'ERR link ' + gl.getProgramInfoLog(pr); return; }
+  gl.useProgram(pr);
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  gl.uniform2f(gl.getUniformLocation(pr, 'uRes'), S, S); gl.uniform1f(gl.getUniformLocation(pr, 'uAA'), +(q.get('aa') || job.aa || 3));
+  texs.forEach(([n, t], i) => { gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, t); gl.uniform1i(gl.getUniformLocation(pr, n), i); });
+  gl.viewport(0, 0, S, S); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.SCISSOR_TEST);
+  const strip = Math.max(16, Math.round(S / 24));
+  for (let y = 0; y < S; y += strip) { gl.scissor(0, y, S, strip); gl.drawArrays(gl.TRIANGLES, 0, 3); gl.finish(); await new Promise(r => setTimeout(r, 0)); }
+  window.__png = cv.toDataURL('image/png');
+  document.title = 'done';
+})().catch(e => { document.title = 'ERR ' + e; });
+</script>
