@@ -2035,10 +2035,18 @@ async function showMoves(d, o = {}) {
     if (tb - ta < .08) { const c = (ta + tb) / 2; ta = c - .04; tb = c + .04; }
     const t0 = ta, t1 = tb, p0 = at(t0), p1 = at(t1), pm = at((t0 + t1) / 2), q2 = [2 * pm[0] - (p0[0] + p1[0]) / 2, 2 * pm[1] - (p0[1] + p1[1]) / 2];
     const dp = `M${p0[0].toFixed(1)} ${p0[1].toFixed(1)} Q${q2[0].toFixed(1)} ${q2[1].toFixed(1)} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`;
-    h += `<path class="mv-a" id="mvp${k}" style="--k:${k}" pathLength="1" d="${dp}" fill="none" stroke="#eaffff" stroke-width="${(u * 1.5).toFixed(1)}" stroke-linecap="round" marker-end="url(#mvh)" filter="url(#mvg)"/>`;
-    // (ユーザー 2026-11-14: something is sent along the arrow — quietly: a soft glint slides down it to the receiver, over and over)
-    { const b0 = (.62 + k * .08).toFixed(2);
-      h += `<path d="${dp}" pathLength="1" fill="none" stroke="#ffffff" stroke-opacity=".8" stroke-width="${(u * 1).toFixed(1)}" stroke-linecap="round" stroke-dasharray=".1 .9" stroke-dashoffset="1" opacity="0"><animate attributeName="stroke-dashoffset" from="1.1" to="0" dur="1.3s" begin="${b0}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.9;.9;0" keyTimes="0;.15;.75;1" dur="1.3s" begin="${b0}s" repeatCount="indefinite"/></path>`; }
+    // (ユーザー 2026-11-18) the arrow as a run of chevrons 「＞＞＞＞」 along the curve, each turned with it; they come in one after
+    // another from the payer, then a light runs down them to the receiver, over and over
+    { const L = (() => { let l = 0, q = p0; for (let i = 1; i <= 40; i++) { const tt = t0 + (t1 - t0) * i / 40, r = at(tt); l += Math.hypot(r[0] - q[0], r[1] - q[1]); q = r; } return l; })();
+      const sz = u * 2.6, n = Math.max(3, Math.min(9, Math.round(L / (sz * 1.55)))), w = (sz * .55).toFixed(1);
+      h += `<g class="mv-a" filter="url(#mvg)">`;
+      for (let i = 0; i < n; i++) {
+        const tt = t0 + (t1 - t0) * (n === 1 ? .5 : i / (n - 1)), c = at(tt), e2 = at(Math.min(1, tt + .01)), e1 = at(Math.max(0, tt - .01));
+        const ang = Math.atan2(e2[1] - e1[1], e2[0] - e1[0]) * 180 / Math.PI, dl = (.15 + k * .08 + i * .06).toFixed(2), fl = (.75 + k * .08).toFixed(2);
+        h += `<path class="mv-cv" style="--d:${dl}s" d="M${(-sz * .45).toFixed(1)} ${(-sz * .6).toFixed(1)} L${(sz * .35).toFixed(1)} 0 L${(-sz * .45).toFixed(1)} ${(sz * .6).toFixed(1)}" transform="translate(${c[0].toFixed(1)} ${c[1].toFixed(1)}) rotate(${ang.toFixed(1)})"
+          fill="none" stroke="#eaffff" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"><animate attributeName="opacity" values="0;1" dur=".18s" begin="${dl}s" fill="freeze"/><animate attributeName="stroke" values="#eaffff;#ffffff;#9fe8ff;#eaffff" keyTimes="0;.1;.3;1" dur="1.2s" begin="${(+fl + i * 1.2 / n * .6).toFixed(2)}s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="1;1;.45;1" keyTimes="0;.1;.35;1" dur="1.2s" begin="${(+fl + i * 1.2 / n * .6).toFixed(2)}s" repeatCount="indefinite"/></path>`;
+      }
+      h += `</g>`; }
     k++;
   }
   svg.innerHTML = h;
