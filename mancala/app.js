@@ -1303,22 +1303,31 @@ var PRO = window.ProSet ? ProSet.init({ game: 'mancala', lang: () => LANG, level
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; const d = L.kind === 'time' ? { limit: { k: 'time', v: L.ms / 1000 }, var: 0 } : L.kind === 'depth' ? { limit: { k: 'depth', v: L.depth }, var: !L.noise ? 0 : L.noise >= 100 ? 2 : 1 } : { limit: { k: 'depth', v: 1 }, var: 2 }; if (MTP) d.threads = L.kind === 'time' ? ProSet.maxThreads() : 1; return d; },
   // threads (本編のマルチスレッド, shared/mtsplit.js): with a time or a depth; the default is every thread for the levels that think by time
-  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30] } }].concat(MTP ? [{ key: 'threads' }] : [], [{ key: 'var', when: e => e.limit.k === 'depth' }]) }) : null;
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30] } }].concat(MTP ? [{ key: 'threads' }, { key: 'ponder' }] : [], [{ key: 'var', when: e => e.limit.k === 'depth' }]) }) : null;
 // AI同士: the second AI has a PRO of its own beside its level (#fLevel2), as reversi / shogi (2026-11-14)
 var PRO2 = window.ProSet ? ProSet.init({ game: 'mancala-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
   store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } },
   defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; const d = L.kind === 'time' ? { limit: { k: 'time', v: L.ms / 1000 }, var: 0 } : L.kind === 'depth' ? { limit: { k: 'depth', v: L.depth }, var: !L.noise ? 0 : L.noise >= 100 ? 2 : 1 } : { limit: { k: 'depth', v: 1 }, var: 2 }; if (MTP) d.threads = L.kind === 'time' ? ProSet.maxThreads() : 1; return d; },
   // threads (本編のマルチスレッド, shared/mtsplit.js): with a time or a depth; the default is every thread for the levels that think by time
-  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30] } }].concat(MTP ? [{ key: 'threads' }] : [], [{ key: 'var', when: e => e.limit.k === 'depth' }]) }) : null;
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30] } }].concat(MTP ? [{ key: 'threads' }, { key: 'ponder' }] : [], [{ key: 'var', when: e => e.limit.k === 'depth' }]) }) : null;
 function proGet(lv, PRO = window.PRO) { if (!PRO || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
 function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
 function proCfg(lv, p) {
   const e = proGet(lv, settings.mode === 'watch' && p !== undefined && p !== 0 && window.PRO2 ? window.PRO2 : window.PRO); if (!e) return null;
   const L = E.LEVELS[lvOld(lv)] || E.LEVELS[5];
-  const th = MTP ? { threads: e.threads || 1 } : {};
+  const th = MTP ? { threads: e.threads || 1, ponder: !!e.ponder } : {};
   if (e.limit.k === 'time') return Object.assign({ kind: 'time', ms: Math.round(e.limit.v * 1000) }, th);
   return Object.assign({ kind: 'depth', depth: e.limit.v, noise: !e.var ? 0 : !e.changed.includes('var') && L.kind === 'depth' ? L.noise : e.var === 1 ? 30 : 140 }, th);
 }
+// PRO's 先読み (ponder, shared/ponder.js, 2026-11-18): on the human's turn engine_mt.wasm's threads read on from the human's position
+// (every reply then gets into the shared table the AI's own search uses: a step with threads > 1 on an isolated page)
+const PONDER = window.Ponder && MCP ? Ponder.attach({ mtp: MCP,
+  want: () => { if (!MTEngine.on() || settings.mode !== 'ai' || lesson || puzzle || reviewing || wpPaused || animating || thinking !== -1 || cur !== game.moves.length || game.resigned != null || inStudy()) return false;
+    const p = shownPos(); if (p.over || p.side !== game.human) return false;
+    const c = proCfg(levelFor(1 - game.human), 1 - game.human); return !!(c && c.ponder && c.threads > 1 && (c.kind === 'time' || !c.noise)); },
+  key: () => game.rules + '|' + JSON.stringify(game.setup || null) + '|' + game.moves.slice(0, cur).join(','),
+  job: cap => { const ai = 1 - game.human, c = proCfg(levelFor(ai), ai); if (!c || c.threads < 2) return null;
+    return { msg: { type: 'move', ...posMsg(shownPos(), game.rules), level: engLv(levelFor(ai)), cfg: { kind: 'time', ms: cap, threads: c.threads }, mtThreads: c.threads } }; } }) : null;
 document.querySelectorAll('.lvbtn').forEach(b => b.onclick = () => { const k = b.dataset.t, d = +b.dataset.d; draft[k] = Math.max(1, Math.min(LV_MAX, draft[k] + d)); segSync(); sTick(); });
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => { $('#newOverlay').classList.remove('show'); maybeRotTip(); };

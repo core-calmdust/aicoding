@@ -1259,13 +1259,21 @@ const PRO_L = window.ProSet ? ProSet.ladder(E.LEVELS, { dmax: 30, nmax: 50000000
 var PRO = PRO_L ? ProSet.init({ game: GID, lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.defThreads() : 1 }) : PRO_L.defaults,
-  params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
+  params: MTP ? [PRO_L.params[0], { key: 'threads' }, { key: 'ponder' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
 // AI同士: the second AI has a PRO of its own beside its level (#fLevel2), as reversi / shogi (2026-11-14)
 var PRO2 = PRO_L ? ProSet.init({ game: GID + '-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
   store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } },
   defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.defThreads() : 1 }) : PRO_L.defaults,
-  params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
-function proCfg(lv, p) { const PRO = settings.mode === 'watch' && p !== undefined && p !== P1 && window.PRO2 ? window.PRO2 : window.PRO; if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {}) : null; }
+  params: MTP ? [PRO_L.params[0], { key: 'threads' }, { key: 'ponder' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
+function proCfg(lv, p) { const PRO = settings.mode === 'watch' && p !== undefined && p !== P1 && window.PRO2 ? window.PRO2 : window.PRO; if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1, ponder: !!e.ponder } : {}) : null; }
+// PRO's 先読み (ponder, shared/ponder.js, 2026-11-18): on the human's turn the threads read on from the human's position (every reply
+// then gets into the shared table the AI's own search uses: only when that search runs on the threads — a step with threads > 1)
+const pdAI = () => humanColor === P1 ? P2 : P1;
+const PONDER = window.Ponder && MTP ? Ponder.attach({ mtp: MTP,
+  want: () => { if (settings.mode !== 'ai' || rgame || lesson || puzzle || reviewing || wpPaused || thinking || cur !== moves.length || isAIColor(toMoveAt(cur)) || gameOver(cur)) return false; const c = proCfg(levelFor(pdAI())); return !!(c && c.ponder && c.s && c.threads > 1); },
+  key: () => keyOf(cur),
+  job: cap => { const c = proCfg(levelFor(pdAI())); if (!c || !c.s || c.threads < 2) return null; const cfg = Object.assign({}, c, { d: 99, ms: cap }); delete cfg.nk; delete cfg.dx; delete cfg.book;
+    return { msg: { start: startSpec, rule: gv, type: 'think', moves: moves.slice(0, cur), level: levelFor(pdAI()), cfg, mtThreads: c.threads } }; } }) : null;
 function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');

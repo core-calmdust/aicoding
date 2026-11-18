@@ -14,7 +14,11 @@ const R = self.GoRules, PASS = -1;
 
 let simd = true;
 try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
-const WASM = simd ? 'engine_simd.wasm?v=3' : 'engine.wasm?v=3';
+// (2026-11-18) relaxed SIMD (f32x4.relaxed_madd: the convolutions' multiply-adds in one instruction, ~15% faster a net evaluation):
+// engine_rsimd.wasm where the browser has it (Chrome / Edge / Firefox; not Safari yet), else the SIMD build as before
+let rsimd = false;
+try { rsimd = simd && WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 7, 5, 1, 1, 102, 0, 0, 10, 61, 1, 59, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 133, 2, 11])); } catch (e) { rsimd = false; }
+const WASM = rsimd ? 'engine_rsimd.wasm?v=1' : simd ? 'engine_simd.wasm?v=3' : 'engine.wasm?v=3';
 const NETS = { light: 'net_light.bin.gz?v=1', strong: 'net_strong.bin.gz?v=1' };
 const inst = {};          // name -> { E, mem }
 const loading = {};

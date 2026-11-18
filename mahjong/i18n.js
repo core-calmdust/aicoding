@@ -55,6 +55,15 @@ const S = {
     lineH: 'Lines', dealQ: 'Use “{name}” this hand?', use: 'Use', notUse: 'Skip', dealOnly: 'Chosen at the deal', tapChange: 'Tap to change', back: 'Back', riichiNo: 'No riichi', useThis: 'Pick the skill for this game', ownedSkills: 'Skills', newSkill: 'New skill!', charRates: 'Characters', skillRates: 'Skills', tenth: '10th pull of ×10: SR or better character. A character you already have learns a new skill', sisters: 'Sisters', riichiWhy_sealed: 'An opponent used Seal: no riichi this hand', riichiWhy_points: 'You need at least 1000 points to riichi', riichiWhy_wall: 'Fewer than 4 tiles left: no riichi',
   },
 };
+// クラウド連携（2026-11-18）
+Object.assign(S.ja, { cloudT: '進行状況をクラウドに保存', cloudD: 'Google アカウントで連携すると、機種変更や別の端末でも続きから遊べます', cloudBtn: 'Google で連携', cloudOn: '連携中', cloudSync: '今すぐ同期', cloudOff: '解除',
+  cloudBusy: '同期中…', cloudLast: '同期 {t}', cloudErr_rules: 'クラウド連携は準備中です', cloudErr_net: '通信できませんでした。あとでもう一度お試しください', cloudErr_fail: '連携できませんでした',
+  cloudOffQ: '連携を解除しますか？（この端末のデータはそのまま残ります）', cloudAskT: 'どちらのデータで遊びますか？', cloudAskD: 'この端末とクラウドで進行が違います。選ばなかった方のデータは上書きされます。',
+  cloudLocal: 'この端末', cloudCloud: 'クラウド', cloudUse: 'これで遊ぶ', cloudLater: 'あとで決める', sumChars: 'キャラ', sumGames: '対局数', sumCoins: 'コイン', sumPt: '段位pt', cloudSaved: '{t} に保存', cloudShort: 'データ連携', cloudErr_tamper: 'セーブデータが書き換えられているため、クラウドに保存できません', tamperNote: 'セーブデータがゲームの外で書き換えられています。クラウド保存は使えません' });
+Object.assign(S.en, { cloudT: 'Save your progress', cloudD: 'Link your Google account to keep playing on a new phone or another device', cloudBtn: 'Link with Google', cloudOn: 'Linked', cloudSync: 'Sync now', cloudOff: 'Unlink',
+  cloudBusy: 'Syncing…', cloudLast: 'Synced {t}', cloudErr_rules: 'Cloud saving is not ready yet', cloudErr_net: 'Could not connect. Please try again later', cloudErr_fail: 'Could not link',
+  cloudOffQ: 'Unlink? (The data on this device stays as it is)', cloudAskT: 'Which data do you want to play with?', cloudAskD: 'This device and the cloud have different progress. The one you do not pick is overwritten.',
+  cloudLocal: 'This device', cloudCloud: 'Cloud', cloudUse: 'Play with this', cloudLater: 'Decide later', sumChars: 'Characters', sumGames: 'Games', sumCoins: 'Coins', sumPt: 'Rank pt', cloudSaved: 'Saved {t}', cloudShort: 'Cloud save', cloudErr_tamper: 'This save was edited outside the game and cannot be saved to the cloud', tamperNote: 'This save was edited outside the game. Cloud saving is disabled' });
 const YAKU = {
   ja: { riichi: '立直', dbl_riichi: 'ダブル立直', ippatsu: '一発', tsumo: '門前清自摸和', pinfu: '平和', tanyao: '断幺九', iipeikou: '一盃口',
     haku: '役牌 白', hatsu: '役牌 發', chun: '役牌 中', seat_wind: '自風牌', round_wind: '場風牌', haitei: '海底摸月', houtei: '河底撈魚', rinshan: '嶺上開花', chankan: '槍槓',

@@ -156,7 +156,7 @@ const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L
 // core.c now, and on these threads the helpers take moves at its split points (Praline's Young Brothers Wait in core_mt.wasm,
 // claude/amazons-spec.md「αβ を C に」). Without an isolated page (no shared memory): shared/mtsplit.js's workers as before (each
 // with its own core: the root moves and the main line shared out, no shared table).
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=9', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB); initial ≥ its declared 617 pages
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=10', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB); initial ≥ its declared 617 pages
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: () => ({}) }) : null;
 const mcJob = msg => msg.type === 'think' && (msg.cfg ? !!(msg.cfg.s && msg.cfg.mc) : !!(E.LEVELS[msg.level] || {}).mc);
 // the MCTS's default thread count (2026-11-10): the performance cores (shared/mtengine.js perfThreads — 10 of the user's M4 Pro's
@@ -1319,7 +1319,7 @@ var PRO = PRO_L ? ProSet.init({ game: 'amazons', lang: () => LANG, level: () => 
   // threads (本編のマルチスレッド, shared/mtsplit.js): with any limit of the search; the default is the levels' own count for the
   // levels that think by time, else one
   defaults: lv => Object.assign(PRO_L.defaults(lv), MTP ? { threads: !mtLevel(lv) ? 1 : (E.LEVELS[lv] || {}).mc ? ProSet.defThreads() : Math.min(ProSet.maxThreads(), MTSplit.autoThreads()) } : {}, { algo: (E.LEVELS[lv] || {}).mc ? 'mc' : 'ab' }),   // (threads: the levels' own count — the MCTS levels (Lv.19〜23) the performance cores (mcThreads), the alpha-beta ones min(cores − 1, 7) + 1: on the user's Mac 14 threads were slower than 8, 2026-11-09)
-  params: (MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params).concat([PRO_ALGO]) }) : null;
+  params: (MTP ? [PRO_L.params[0], { key: 'threads' }, { key: 'ponder' }].concat(PRO_L.params.slice(1)) : PRO_L.params).concat([PRO_ALGO]) }) : null;
 // a rated game (5 min + 3 s): the timed top levels (Lv.21〜) never think longer than the clock allows — about a twentieth of the
 // time left plus most of the increment (on every thread, as without the cap)
 function rtCap(lv) {
@@ -1331,18 +1331,26 @@ function rtCap(lv) {
 var PRO2 = PRO_L ? ProSet.init({ game: 'amazons-w', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
   store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } },
   defaults: lv => Object.assign(PRO_L.defaults(lv), MTP ? { threads: !mtLevel(lv) ? 1 : (E.LEVELS[lv] || {}).mc ? ProSet.defThreads() : Math.min(ProSet.maxThreads(), MTSplit.autoThreads()) } : {}, { algo: (E.LEVELS[lv] || {}).mc ? 'mc' : 'ab' }),
-  params: (MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params).concat([PRO_ALGO]) }) : null;
+  params: (MTP ? [PRO_L.params[0], { key: 'threads' }, { key: 'ponder' }].concat(PRO_L.params.slice(1)) : PRO_L.params).concat([PRO_ALGO]) }) : null;
 function proCfg(lv, p) {
   const P = settings.mode === 'watch' && p === P2 ? PRO2 : PRO;   // (AI同士: the second AI's own PRO)
   if (!P || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
   const e = P.get(lv); if (!e) return null;
-  const c = Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {});
+  const c = Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1, ponder: !!e.ponder } : {});
   if (e.algo === 'mc' && c.s && !c.dx) c.mc = 1;   // (the MCTS with a time or evaluation limit)
   if (lv === 8 && !c.s && PRO_LV[8] !== E.LEVELS[8] && c.noise === PRO_LV[8].noise && !(e.changed || []).includes('var')) c.noise = E.LEVELS[8].noise;
   if (c.s && (E.LEVELS[lv] || {}).ev) c.ev = 1;   // (the alpha-beta search with the level's evaluation: v2 from Lv.13, claude/amazons-spec.md「レベルの測り直し（2026-11-14）」)
   return c;
 }
 function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
+// PRO's 先読み (ponder, shared/ponder.js, 2026-11-18): on the human's turn core_mt.wasm's threads read on from the human's position with
+// the alpha-beta search (every reply then gets into the shared table the AI's own search uses: a step with threads > 1, not the MCTS)
+const pdAI = () => humanColor === P1 ? P2 : P1;
+const PONDER = window.Ponder && MCP ? Ponder.attach({ mtp: MCP,
+  want: () => { if (!MTEngine.on() || settings.mode !== 'ai' || rgame || lesson || puzzle || reviewing || wpPaused || thinking || cur !== moves.length || isAIColor(toMoveAt(cur)) || gameOver(cur)) return false; const c = proCfg(levelFor(pdAI())); return !!(c && c.ponder && c.s && !c.mc && c.threads > 1); },
+  key: () => keyOf(cur),
+  job: cap => { const c = proCfg(levelFor(pdAI())); if (!c || !c.s || c.mc || c.threads < 2) return null; const cfg = Object.assign({}, c, { d: 99, ms: cap }); delete cfg.nk; delete cfg.dx; delete cfg.book;
+    return { msg: { start: startSpec, rule: gv, type: 'think', moves: moves.slice(0, cur), level: levelFor(pdAI()), cfg, mtThreads: c.threads } }; } }) : null;
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 // 表示 options in the options (gear), in the game's own box (2026-11-14, as reversi / shogi): they work at once; the dialog keeps
 // its checkboxes (hidden), which the game still reads when a game starts

@@ -270,6 +270,13 @@ static int ladder(Board *b, int lp, int def, int defToMove, int depth) {
 
 typedef float v4 __attribute__((vector_size(16)));
 typedef float v4u __attribute__((vector_size(16), aligned(4)));
+/* (2026-11-18) the multiply-adds of the convolutions: one fused instruction with relaxed SIMD (engine_rsimd.wasm, engine_mt_rsimd.wasm:
+   -mrelaxed-simd; the page picks them when the browser has it), else a multiply then an add as before (the other builds unchanged) */
+#if defined(__wasm_relaxed_simd__)
+#define MADD(acc, a, b) ((acc) = __builtin_wasm_relaxed_madd_f32x4((a), (b), (acc)))
+#else
+#define MADD(acc, a, b) ((acc) += (a) * (b))
+#endif
 typedef int i4 __attribute__((vector_size(16)));
 
 typedef struct { float *s, *b; } BN;
@@ -510,10 +517,10 @@ static void conv_run(const Conv *c, const float *in, float *out, int accum) {
           v4 w1 = __builtin_shufflevector(w, w, 1, 1, 1, 1);
           v4 w2 = __builtin_shufflevector(w, w, 2, 2, 2, 2);
           v4 w3 = __builtin_shufflevector(w, w, 3, 3, 3, 3);
-          a0 += x0 * w0; b0 += x1 * w0;
-          a1 += x0 * w1; b1 += x1 * w1;
-          a2 += x0 * w2; b2 += x1 * w2;
-          a3 += x0 * w3; b3 += x1 * w3;
+          MADD(a0, x0, w0); MADD(b0, x1, w0);
+          MADD(a1, x0, w1); MADD(b1, x1, w1);
+          MADD(a2, x0, w2); MADD(b2, x1, w2);
+          MADD(a3, x0, w3); MADD(b3, x1, w3);
         }
       }
       v4 *A[4] = {&a0, &a1, &a2, &a3}, *Bv[4] = {&b0, &b1, &b2, &b3};
@@ -584,10 +591,10 @@ static void wino_run(const Conv *c, const float *in, float *out, int accum) {
           bp += cop;
           float x0 = A0[ci], x1 = A1_[ci], x2 = A2_[ci], x3 = A3_[ci];
           v4 s0 = {x0, x0, x0, x0}, s1 = {x1, x1, x1, x1}, s2 = {x2, x2, x2, x2}, s3 = {x3, x3, x3, x3};
-          c00 += s0 * b0; c01 += s0 * b1;
-          c10 += s1 * b0; c11 += s1 * b1;
-          c20 += s2 * b0; c21 += s2 * b1;
-          c30 += s3 * b0; c31 += s3 * b1;
+          MADD(c00, s0, b0); MADD(c01, s0, b1);
+          MADD(c10, s1, b0); MADD(c11, s1, b1);
+          MADD(c20, s2, b0); MADD(c21, s2, b1);
+          MADD(c30, s3, b0); MADD(c31, s3, b1);
         }
         float *mp = M + t * cop + co;
         *(v4 *)(mp) = c00; *(v4 *)(mp + 4) = c01;

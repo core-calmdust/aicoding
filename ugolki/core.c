@@ -95,7 +95,23 @@ typedef struct { u64 kw, a; } TTS;
 static TTS TTB[1 << TT_BITS];
 static volatile int ttCount; static int abExact = 1;
 EXPORT(ttclear) void ttclear(void) { for (unsigned i = 0; i < (1u << TT_BITS); i++) { TTB[i].kw = 0; TTB[i].a = 0; } ttCount = 0; }
+// (2026-11-18) several threads: Praline's bucket table (praline_tt.h, 4 entries of { key ^ a ^ c, a, c = the search's generation }) in
+// the same memory, kept from search to search (the Map's table was cleared past half before a search: the threads' work of the move
+// before and PRO's 先読み were lost) — the deeper / newer entries stay. One thread (abExact): the Map semantics as before.
+static int ttGen;
+#define PL_TT_BITS (TT_BITS - 3)
+#define PL_TT_WAYS 4
+#define PL_TT_WORDS 3
+#define PL_TT_IN TTB
+#define PL_TT_USED(w, c) ((w) >> 63)
+#define PL_TT_SCORE(w, c) (!((w) >> 63) ? -1000 : (int)(signed char)((w) & 255) - ((c) != (u64)ttGen ? 8 : 0))
+#include "../shared/praline/praline_tt.h"
 static int tlook(u32 h1, u32 h2, int *d, int *f, int *v, int *m, int *ply) {
+  if (!abExact) { u64 a, c; if (!plttFind((u64)h1 | (u64)h2 << 32, h1, &a, &c)) return 0;
+    if (!(a >> 63) || ((a >> 49) & 0x3FFF) != (h2 & 0x3FFF)) return 0;
+    *d = (int)(signed char)(a & 255); *f = (int)((a >> 8) & 3); *v = (int)(short)(unsigned short)((a >> 10) & 0xFFFF); *m = (int)((a >> 26) & 0x1FFF); *ply = (int)((a >> 39) & 0x3FF);
+    return 1;
+  }
   const u64 want = (u64)h1 | (u64)h2 << 32; const unsigned M = (1u << TT_BITS) - 1;
   for (unsigned i = (h1 * 2654435761u) & M, k = 0; k <= M; i = (i + 1) & M, k++) {
     u64 kw = __atomic_load_n(&TTB[i].kw, __ATOMIC_ACQUIRE);
@@ -113,6 +129,7 @@ static void tset(u32 h1, u32 h2, int d, int v, int f, int m, int ply) {
   if (abExact && ttCount > 600000) ttclear();
   const u64 want = (u64)h1 | (u64)h2 << 32; const unsigned M = (1u << TT_BITS) - 1;
   const u64 a = (u64)(u8)(signed char)d | (u64)(f & 3) << 8 | (u64)(unsigned short)(short)v << 10 | (u64)(m & 0x1FFF) << 26 | (u64)(ply & 0x3FF) << 39 | (u64)(h2 & 0x3FFF) << 49 | 1ull << 63;
+  if (!abExact) { int hit; u64 ow, oc; u64 *e = plttSlot((u64)h1 | (u64)h2 << 32, h1, &hit, &ow, &oc); plttWrite(e, (u64)h1 | (u64)h2 << 32, a, (u64)ttGen); return; }
   for (unsigned i = (h1 * 2654435761u) & M, k = 0; k <= M && (abExact || k < 256); i = (i + 1) & M, k++) {
     u64 kw = __atomic_load_n(&TTB[i].kw, __ATOMIC_ACQUIRE);
     if (!kw) {
@@ -565,7 +582,7 @@ EXPORT(aomp) int *aomp(void) { return AOM; }
 EXPORT(aovp) int *aovp(void) { return AOV; }
 #ifdef MT
 // ---- the threads (core_mt.wasm: shared/mtengine.js, the lead engine.js?…&mt=1, the helpers mt-helper.js)
-EXPORT(ab_threads) void ab_threads(int n) { abExact = n <= 1; if (!abExact && ttCount > (int)((1u << TT_BITS) / 2)) ttclear(); }
+EXPORT(ab_threads) void ab_threads(int n) { const int ex = n <= 1; if (ex != abExact) ttclear(); abExact = ex; if (!ex) ttGen = (ttGen + 1) & 255; }   // (2026-11-18: the two tables share the memory: cleared when the mode changes; several threads: a new generation a search)
 EXPORT(set_tend) void set_tend(double t) { tEnd = t; }
 EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
 #ifndef NATIVE

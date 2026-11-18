@@ -153,7 +153,7 @@ const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladde
 // (2026-11-11) On an isolated page the threads are core_mt.wasm's instead (shared/mtengine.js: the lead engine.js?…&mt=1, the helpers
 // mt-helper.js): Praline's Young Brothers Wait in C splits every node of the search (and the root), one table in the shared memory
 // (claude/ugolki-spec.md「αβ を C に」). mtsplit.js stays for a page that is not isolated, and while that pool is busy.
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=5', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // (initial ≥ its declared 528 pages)
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=6', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // (initial ≥ its declared 528 pages)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: () => ({}) }) : null;
 const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L.nk); };   // a level that thinks by time
 function mtWants(which, msg) {
@@ -1175,14 +1175,14 @@ var PRO = PRO_L ? ProSet.init({ game: 'ugolki', lang: () => LANG, level: () => d
   // threads (本編のマルチスレッド, shared/mtsplit.js): with any limit of the search; the default is the levels' own count for the
   // levels that think by time, else one
   defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.defThreads() : 1 }) : PRO_L.defaults,   // (threads: up to the performance cores, MTEngine.perfThreads() — 10 on the user's Mac — as the other games; 2026-11-11, the Mac's bench-all: 10 threads as fast as 8 or faster. Before: min(cores − 1, 7) + 1 = 8)
-  params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
+  params: MTP ? [PRO_L.params[0], { key: 'threads' }, { key: 'ponder' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
 // AI同士: the second AI has a PRO of its own beside its level (#fLevel2), as reversi / shogi (2026-11-14)
 var PRO2 = PRO_L ? ProSet.init({ game: 'ugolki-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
   store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } },
   // threads (本編のマルチスレッド, shared/mtsplit.js): with any limit of the search; the default is the levels' own count for the
   // levels that think by time, else one
   defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.defThreads() : 1 }) : PRO_L.defaults,   // (threads: up to the performance cores, MTEngine.perfThreads() — 10 on the user's Mac — as the other games; 2026-11-11, the Mac's bench-all: 10 threads as fast as 8 or faster. Before: min(cores − 1, 7) + 1 = 8)
-  params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
+  params: MTP ? [PRO_L.params[0], { key: 'threads' }, { key: 'ponder' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
 // a rated game (5 min + 3 s): the timed top levels (Lv.21〜) never think longer than the clock allows — about a twentieth of the
 // time left plus most of the increment (on every thread, as without the cap)
 function rtCap(lv) {
@@ -1190,7 +1190,15 @@ function rtCap(lv) {
   const left = rtClockLeft(toMoveAt(moves.length) - 1), ms = Math.min(L.ms, Math.max(800, left / 20 + RT_CLOCK.inc * 0.8));
   return ms >= L.ms ? null : Object.assign({}, L, { ms, threads: MTP && MTSplit.on() ? 1 + MTSplit.helpers() : 1 });
 }
-function proCfg(lv, p) { const PRO = settings.mode === 'watch' && p !== undefined && p !== P1 && window.PRO2 ? window.PRO2 : window.PRO; if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {}) : null; }
+function proCfg(lv, p) { const PRO = settings.mode === 'watch' && p !== undefined && p !== P1 && window.PRO2 ? window.PRO2 : window.PRO; if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1, ponder: !!e.ponder } : {}) : null; }
+// PRO's 先読み (ponder, shared/ponder.js, 2026-11-18): on the human's turn the threads read on from the human's position (every reply
+// then gets into the shared table the AI's own search uses: only when that search runs on the threads — a step with threads > 1)
+const pdAI = () => humanColor === P1 ? P2 : P1;
+const PONDER = window.Ponder && MCP ? Ponder.attach({ mtp: MCP,
+  want: () => { if (!MTEngine.on() || settings.mode !== 'ai' || rgame || lesson || puzzle || reviewing || wpPaused || thinking || cur !== moves.length || isAIColor(toMoveAt(cur)) || gameOver(cur)) return false; const c = proCfg(levelFor(pdAI())); return !!(c && c.ponder && c.s && c.threads > 1); },
+  key: () => keyOf(cur),
+  job: cap => { const c = proCfg(levelFor(pdAI())); if (!c || !c.s || c.threads < 2) return null; const cfg = Object.assign({}, c, { d: 99, ms: cap }); delete cfg.nk; delete cfg.dx; delete cfg.book;
+    return { msg: { start: startSpec, rule: gv, type: 'think', moves: moves.slice(0, cur), level: levelFor(pdAI()), cfg, mtThreads: c.threads } }; } }) : null;
 function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');

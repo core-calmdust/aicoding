@@ -128,7 +128,7 @@ function save() {
 
 // ====================================================================== engine worker (one worker; newer jobs pre-empt older ones)
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=10';
+const ENGINE_URL = 'engine.js?v=11';
 const COARSE = matchMedia('(pointer: coarse)').matches;
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
@@ -158,7 +158,8 @@ function jobBase(spec, list) { return { spec: spec || { n: game.n }, moves: list
 // levels 1–27 are decided by visits (21–27) or one net evaluation (1–20): they stay on the one-thread worker (strength
 // unchanged); the timed levels 28–32 (rated games too) and a PRO search with more than one thread use the pool. The whole-game review keeps its own worker (W2).
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB); slot: TLS ~0.3 MB + a deep stack (ladders)
+  wasm: (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 7, 5, 1, 1, 102, 0, 0, 10, 61, 1, 59, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 133, 2, 11])) ? 'engine_mt_rsimd.wasm?v=1' : 'engine_mt.wasm?v=1'; } catch (e) { return 'engine_mt.wasm?v=1'; } })(),   // (2026-11-18: relaxed SIMD where the browser has it)
+  lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB); slot: TLS ~0.3 MB + a deep stack (ladders)
   imports: mem => ({ env: { memory: mem } }),
   help: m => (m.type === 'think' || m.type === 'analyze') ? {} : null,   // (the helpers join the trees the lead opens: nothing to send)
   isDone: m => m.type === 'done',

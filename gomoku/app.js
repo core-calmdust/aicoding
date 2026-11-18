@@ -1094,13 +1094,13 @@ var PRO = window.ProSet ? ProSet.init({ game: 'gomoku', lang: () => LANG, level:
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return L.noise !== undefined ? { limit: { k: 'time', v: L.ms / 1000 }, var: L.blunder ? 2 : 1, vct: 0, threads: 1 } : { limit: L.nodes ? { k: 'nodes', v: L.nodes } : { k: 'time', v: (L.ms || 1000) / 1000 }, var: 0, vct: L.vct || 0, threads: 1 }; },
   params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 20], nodes: [1000, 5000000] } }, { key: 'vct', type: 'int', group: 'read', min: 0, max: 21, step: 1, label: { ja: '勝ち筋の読み（VCT）', en: 'Threat search (VCT)', zh: '连续冲四活三计算（VCT）', 'zh-TW': '連續衝四活三計算（VCT）', ko: '승리 수순 탐색(VCT)', es: 'Búsqueda de amenazas (VCT)', fr: 'Recherche de menaces (VCT)', pt: 'Busca de ameaças (VCT)', de: 'Drohungssuche (VCT)', ru: 'Поиск угроз (VCT)', tr: 'Tehdit araması (VCT)', id: 'Pencarian ancaman (VCT)', hi: 'ख़तरा खोज (VCT)', ar: 'بحث التهديدات (VCT)' }, help: { ja: '四や三を続けて勝ち切る手順を何手先まで探すか。0 で探しません。', en: 'How many moves ahead to look for a forced win by fours and threes. 0 = off.', zh: '向前搜索多少步以冲四、活三连续取胜。0 为不搜索。', 'zh-TW': '向前搜尋多少步以衝四、活三連續取勝。0 為不搜尋。', ko: '4와 3을 이어 이기는 수순을 몇 수 앞까지 찾을지. 0이면 찾지 않음.', es: 'Cuántas jugadas por delante busca una victoria forzada con cuatros y treses. 0 = no.', fr: 'Jusqu’à combien de coups chercher une victoire forcée par des quatre et des trois. 0 = non.', pt: 'Quantos lances à frente procurar uma vitória forçada com quatros e três. 0 = não.', de: 'Wie viele Züge voraus ein erzwungener Gewinn mit Vierern und Dreiern gesucht wird. 0 = aus.', ru: 'На сколько ходов вперёд искать форсированную победу четвёрками и тройками. 0 — нет.', tr: 'Dörtlü ve üçlülerle zorlayıcı kazancın kaç hamle ileri aranacağı. 0 = kapalı.', id: 'Berapa langkah ke depan mencari kemenangan paksa dengan empat dan tiga. 0 = mati.', hi: 'चौकों और तिकड़ों से मजबूर जीत कितनी चाल आगे तक खोजें। 0 = बंद।', ar: 'كم نقلة إلى الأمام يبحث عن فوز إجباري بالرباعيات والثلاثيات. 0 = إيقاف.' }, unit: ProSet.T['u.ply'], when: e => !e.var },
-    { key: 'var', when: e => e.limit.k === 'time' }].concat(MTP ? [{ key: 'threads' }] : []) }) : null;
+    { key: 'var', when: e => e.limit.k === 'time' }].concat(MTP ? [{ key: 'threads' }, { key: 'ponder' }] : []) }) : null;
 // AI同士: the second AI has a PRO of its own beside its level (#fLevel2), as reversi / shogi (2026-11-14)
 var PRO2 = window.ProSet ? ProSet.init({ game: 'gomoku-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
   store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } },
   defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return L.noise !== undefined ? { limit: { k: 'time', v: L.ms / 1000 }, var: L.blunder ? 2 : 1, vct: 0, threads: 1 } : { limit: L.nodes ? { k: 'nodes', v: L.nodes } : { k: 'time', v: (L.ms || 1000) / 1000 }, var: 0, vct: L.vct || 0, threads: 1 }; },
   params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 20], nodes: [1000, 5000000] } }, { key: 'vct', type: 'int', group: 'read', min: 0, max: 21, step: 1, label: { ja: '勝ち筋の読み（VCT）', en: 'Threat search (VCT)', zh: '连续冲四活三计算（VCT）', 'zh-TW': '連續衝四活三計算（VCT）', ko: '승리 수순 탐색(VCT)', es: 'Búsqueda de amenazas (VCT)', fr: 'Recherche de menaces (VCT)', pt: 'Busca de ameaças (VCT)', de: 'Drohungssuche (VCT)', ru: 'Поиск угроз (VCT)', tr: 'Tehdit araması (VCT)', id: 'Pencarian ancaman (VCT)', hi: 'ख़तरा खोज (VCT)', ar: 'بحث التهديدات (VCT)' }, help: { ja: '四や三を続けて勝ち切る手順を何手先まで探すか。0 で探しません。', en: 'How many moves ahead to look for a forced win by fours and threes. 0 = off.', zh: '向前搜索多少步以冲四、活三连续取胜。0 为不搜索。', 'zh-TW': '向前搜尋多少步以衝四、活三連續取勝。0 為不搜尋。', ko: '4와 3을 이어 이기는 수순을 몇 수 앞까지 찾을지. 0이면 찾지 않음.', es: 'Cuántas jugadas por delante busca una victoria forzada con cuatros y treses. 0 = no.', fr: 'Jusqu’à combien de coups chercher une victoire forcée par des quatre et des trois. 0 = non.', pt: 'Quantos lances à frente procurar uma vitória forçada com quatros e três. 0 = não.', de: 'Wie viele Züge voraus ein erzwungener Gewinn mit Vierern und Dreiern gesucht wird. 0 = aus.', ru: 'На сколько ходов вперёд искать форсированную победу четвёрками и тройками. 0 — нет.', tr: 'Dörtlü ve üçlülerle zorlayıcı kazancın kaç hamle ileri aranacağı. 0 = kapalı.', id: 'Berapa langkah ke depan mencari kemenangan paksa dengan empat dan tiga. 0 = mati.', hi: 'चौकों और तिकड़ों से मजबूर जीत कितनी चाल आगे तक खोजें। 0 = बंद।', ar: 'كم نقلة إلى الأمام يبحث عن فوز إجباري بالرباعيات والثلاثيات. 0 = إيقاف.' }, unit: ProSet.T['u.ply'], when: e => !e.var },
-    { key: 'var', when: e => e.limit.k === 'time' }].concat(MTP ? [{ key: 'threads' }] : []) }) : null;
+    { key: 'var', when: e => e.limit.k === 'time' }].concat(MTP ? [{ key: 'threads' }, { key: 'ponder' }] : []) }) : null;
 function proGet(lv, PRO = window.PRO) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
 function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
 function proCfg(lv, p) {
@@ -1113,9 +1113,17 @@ function proCfg(lv, p) {
   }
   const c = { vct: e.vct || 0, defend: e.vct ? L.defend || 3 : 0, vctNodes: L.vctNodes, ms: 600000 };
   if (e.limit.k === 'time') c.ms = Math.round(e.limit.v * 1000); else if (e.limit.k === 'nodes') c.nodes = e.limit.v; else c.d = e.limit.v;
-  if (MTP) c.threads = e.threads || 1;   // (本編のマルチスレッド: PRO's thread count with any limit of the search)
+  if (MTP) { c.threads = e.threads || 1; c.ponder = !!e.ponder; }   // (本編のマルチスレッド: PRO's thread count with any limit of the search)
   return c;
 }
+// PRO's 先読み (ponder, shared/ponder.js, 2026-11-18): on the human's turn the threads read on from the human's position (every reply
+// then gets into the shared table the AI's own search uses: a step with threads > 1)
+const pdAI = () => humanColor === P1 ? P2 : P1;
+const PONDER = window.Ponder && MTP ? Ponder.attach({ mtp: MTP,
+  want: () => { if (settings.mode !== 'ai' || rgame || lesson || puzzle || reviewing || wpPaused || thinking || cur !== moves.length || isAIColor(toMoveAt(cur)) || gameOver(cur)) return false; const c = proCfg(levelFor(pdAI())); return !!(c && c.ponder && c.noise === undefined && c.threads > 1); },
+  key: () => keyOf(cur),
+  job: cap => { const c = proCfg(levelFor(pdAI())); if (!c || c.noise !== undefined || c.threads < 2) return null; const cfg = Object.assign({}, c, { ms: cap }); delete cfg.nodes; delete cfg.d;
+    return { msg: { rule, start: startPos, type: 'think', moves: moves.slice(0, cur), level: levelFor(pdAI()), cfg, mtThreads: c.threads } }; } }) : null;
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
