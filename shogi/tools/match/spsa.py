@@ -33,7 +33,7 @@ TABLES['v4'] = [
     ('histLmr',     9, 6749, 2000, 16000, 500),    # history's weight in the reductions (divisor)
     ('lmrDiv',     17,  203,  130,  320,  12),     # reductions: ln(depth) * ln(move number) / (this / 100)
 ]
-# search v5 (set_param 44, the new search function): run with --table v5 --base "44=1,45=1,53=6,62=1"
+# search v5 (set_param 44, the new search function): run with --table v5 --base "44=1,45=1,62=1"
 TABLES['v5'] = [
     ('lmpScale',   43,  800,  200, 4000, 150),     # late move pruning: its move count, percent
     ('razor',      58,  300,  100,  700,  40),     # razoring margin per depth
@@ -41,6 +41,7 @@ TABLES['v5'] = [
     ('fut0',       47,  100,   10,  300,  20),     # ... margin
     ('fut1',       48,  120,   40,  300,  15),     # ... per reduced depth
     ('nullBase',   52,    4,    2,    7,   1),     # null move reduction
+    ('iirDepth',   53,    4,    2,    9,   1),     # no table move: a ply less from this depth (battery-v7: 4 +119, 6 +97, 8 +53)
     ('rfpMargin',   2,  112,   40,  220,  10),
     ('rfpDepth',    1,    8,    3,   14,   1),
     ('histLmr',     9, 6749, 2000, 16000, 600),
