@@ -1642,10 +1642,45 @@
   function lblAlign() {
     const mb = $('bvMBody'); if (!mb) return;
     mb.querySelectorAll('label').forEach(l => { const n = l.firstChild; if (n && n.nodeType === 3 && n.textContent.trim()) { const sp = document.createElement('span'); sp.className = 'lbt'; sp.textContent = n.textContent.trim(); l.replaceChild(sp, n); } });
-    const L = [...mb.querySelectorAll('.lbt')].filter(x => { const l = x.parentElement; const f = l.parentElement && [...l.parentElement.children].find(c => !c.hidden); const first = f === l; x.classList.toggle('lbt1', first); return first; });   // (only a row's first name: a second one inside a row, like 手番, stays as it is) mb.style.removeProperty('--lbw'); L.forEach(x => { x.style.minWidth = ''; });
-    const w = Math.max(0, ...L.filter(x => x.offsetParent).map(x => Math.ceil(x.getBoundingClientRect().width)));
-    if (w) mb.style.setProperty('--lbw', w + 'px');
-    const o = $('bvOpts'); if (o && !o.hidden) { o.classList.remove('wrap2'); const pk = [...o.querySelectorAll(':scope > label:first-child :is(.lvpick, select)')].find(x => x.offsetParent); if (pk && pk.getBoundingClientRect().width < 110) o.classList.add('wrap2'); }   // (a long side picker in another language: it goes under the level, lined up with the settings)
+    // (2026-11-18 ユーザー：どの言語でも右側のボックスの位置をそろえる) a row's first name — and also a name that starts a line of its own
+    // after the row wrapped (ludo's 人数 under 種目) — takes the column's width; a second name inside a line (手番) stays as it is
+    const all = [...mb.querySelectorAll('.lbt')];
+    all.forEach(x => x.classList.remove('lbt1')); mb.querySelectorAll('label.ln1').forEach(l => l.classList.remove('ln1')); mb.style.removeProperty('--lbw');
+    const rl = l => Math.round(l.getBoundingClientRect().left), rr = el => el.getBoundingClientRect();
+    const firstOf = x => { const l = x.parentElement, row = l && l.parentElement; if (!row) return false;
+      const f = [...row.children].find(c => !c.hidden); if (f === l) return true;
+      if (!x.offsetParent) return false; const ltr = getComputedStyle(row).direction !== 'rtl';
+      return ltr ? Math.abs(rl(l) - Math.round(rr(row).left)) < 3 : Math.abs(Math.round(rr(l).right) - Math.round(rr(row).right)) < 3; };
+    const mark = () => { all.forEach(x => x.classList.remove('lbt1')); const L = all.filter(firstOf); L.forEach(x => x.classList.add('lbt1'));
+      const w = Math.max(0, ...L.filter(x => x.offsetParent).map(x => Math.ceil(x.getBoundingClientRect().width))); if (w) mb.style.setProperty('--lbw', w + 'px'); return L; };
+    // ludo's ハウスルール: beside the 種目 picker when there is one (2026-11-18 ユーザー)
+    { const hb = $('bvHouse'), kr = mb.querySelector('.kindrow'), kl = kr && kr.querySelector(':scope > label'); if (hb && kl && hb.parentElement !== kr) { kl.after(hb); kr.classList.add('hashb'); } }
+    let L = mark();
+    // a picker that cannot show what it holds (Lv. · ✓ · its Atlamo · ▾, a clock's name …) beside a second setting — a long word in
+    // another language, a narrow panel: the rest of that row goes to lines of its own, the names in the names' column (2026-11-18)
+    const need = pk => { const cs = getComputedStyle(pk), gap = parseFloat(cs.columnGap) || 6, kids = [...pk.children].filter(c => c.offsetParent || c.tagName === 'I');
+      return kids.reduce((n, c) => n + Math.max(c.scrollWidth, c.getBoundingClientRect().width), 0) + gap * Math.max(0, kids.length - 1) + (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0) + 6; };
+    let re = false;
+    mb.querySelectorAll('.opts').forEach(o => { if (o.hidden || !o.offsetParent) return; o.classList.remove('wrap2'); });
+    mb.querySelectorAll('.opts').forEach(o => { if (o.hidden || !o.offsetParent) return;
+      const vis = [...o.children].filter(c => !c.hidden && c.offsetParent); if (vis.length < 2) return;
+      const pk = [...vis[0].querySelectorAll('.lvpick')].find(x => x.offsetParent); if (!pk) return;
+      if (pk.getBoundingClientRect().width < Math.max(o.id === 'bvOpts' ? 110 : 64, need(pk))) { o.classList.add('wrap2'); re = true; } });
+    if (re) L = mark();
+    { const f = L.find(x => x.offsetParent), c = f && f.parentElement && [...f.parentElement.children].find(e => e !== f && e.tagName !== 'SELECT' && e.offsetParent);   // (where the settings start: a row without a name, such as carrom's 先手/後手, lines up there)
+      if (c) mb.style.setProperty('--lbx', Math.round(Math.abs(c.getBoundingClientRect()[getComputedStyle(mb).direction === 'rtl' ? 'right' : 'left'] - f.parentElement.getBoundingClientRect()[getComputedStyle(mb).direction === 'rtl' ? 'right' : 'left'])) + 'px'); }
+    // toggles whose words do not fit (German 80 Schnipser …): tighter, then a size smaller
+    mb.querySelectorAll('.sidetg').forEach(tg => { tg.classList.remove('tg1', 'tg2'); if (!tg.offsetParent) return;
+      const over = () => [...tg.children].some(b => b.scrollWidth > b.clientWidth + 1) || tg.scrollWidth > tg.clientWidth + 1;
+      if (over()) { tg.classList.add('tg1'); if (over()) tg.classList.add('tg2'); } });
+    // a name alone on its line: its choices run to the right edge as the others (人数 · 試合 …)
+    L.forEach(x => { const l = x.parentElement, row = l.parentElement; if (!x.offsetParent || !row) return; const r = rr(l);
+      const alone = ![...row.children].some(c => c !== l && !c.hidden && c.offsetParent && (() => { const q = rr(c); return q.bottom > r.top + 2 && q.top < r.bottom - 2; })());
+      if (alone && l.querySelector(':scope > .sidetg')) l.classList.add('ln1'); });
+    if (!mb._ro && window.ResizeObserver) {   // (the panel's width changes — a resized window, a web font arriving: laid out again)
+      let lw = mb.clientWidth, q = 0; mb._ro = new ResizeObserver(() => { const cw = mb.clientWidth; if (cw === lw || q) return; lw = cw; q = requestAnimationFrame(() => { q = 0; lblAlign(); }); }); mb._ro.observe(mb);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (mb.isConnected) lblAlign(); });
+    }
   }
   function mxLayout(m) {
     const g = bvGame; if (!g) return;
