@@ -2550,6 +2550,9 @@ html.lite #game .bf.rii::after{animation:none}
    is the frame's height divided by that scale. */
 html.ds #game .me .sks{align-self:flex-start;transform-origin:top left;height:calc(var(--bf) / (var(--hz, 1) * .82))}
 html.ds #game .me .sks>.skb{flex:1 1 0;min-height:0;box-sizing:border-box}
+/* (ユーザー 2026-11-18) with one skill only, the plate is not stretched to the frame's height: it keeps the size of one of the two, at the bottom */
+html.ds #game .me .sks.one{justify-content:flex-end}
+html.ds #game .me .sks.one>.skb{flex:0 0 calc((100% - 7px) / 2)}
 /* 読心 (ユーザー 2026-11-16): the same plate as 先読み, a row per other player */
 .mr-rows{display:flex;flex-direction:column;gap:clamp(8px, 1.4vmin, 14px);min-width:min(78vw, 420px)}
 .mr-r{display:flex;align-items:center;gap:clamp(10px, 1.6vmin, 16px);padding:6px 4px;border-top:1px solid rgba(232,206,140,.18);opacity:0;transform:translateY(10px);animation:pkIn .35s calc(.12s + var(--i) * .1s) cubic-bezier(.2,1.2,.4,1) forwards}

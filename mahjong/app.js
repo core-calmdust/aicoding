@@ -1544,7 +1544,7 @@ function renderMe(badgeHtml, chips, fxNames) {
   };
   $('#mePanel').innerHTML = `
     <div class="mb">${badgeHtml}</div>
-    ${skillsOn ? `<div class="sks">${plate(1)}${plate(0)}</div>` : ''}`;
+    ${skillsOn ? (pls => `<div class="sks ${pls.filter(Boolean).length < 2 ? 'one' : ''}">${pls.join('')}</div>`)([plate(1), plate(0)]) : ''}`;
   const box = $('#mePanel .sks');
   { const me = $('#mePanel'); if (me) me.style.setProperty('--skw', (box ? box.offsetWidth : 0) + 'px'); }   // (the skill plates are drawn enlarged on a desktop, by --hz: the portrait is kept clear of them in CSS, so it stays right when the window changes)
   if (box) box.onclick = async e => {
