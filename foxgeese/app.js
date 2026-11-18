@@ -10,6 +10,7 @@ const mFrom = E.mFrom, mTo = E.mTo, mRm = E.mRm;
 const pathStarts = (m, pre) => { const p = E.path(m); return pre.every((x, k) => p[k] === x); };
 const hopsOf = (pos, m) => Math.max(0, E.path(pos, m).length - 1);   // squares along the move: 1 = a step, 2+ = leaps (a slide counts 1)
 const NS_ = () => E.N, NN_ = () => E.NN;   // board size of the current rule (6 / 8 / 10)
+let gq = E.DEFAULT_QUIET;           // the quiet-move limit in play (moves each without a capture before the fox wins)
 let gv = E.DEFAULT_RULE;            // the rule set in play (g15 = 15 geese, no retreat: the default)
 let HB = null;                        // PC header bar (shared/headerbar.js)
 let startSpec = null;                 // lesson / puzzle start position (null = the normal starting position)
@@ -18,8 +19,9 @@ let cur = 0;                          // number of moves shown
 let flip = false;                     // board seen from Black's side (Black at the bottom)
 let gfirst = P1;                      // who moves first in this game (P1 the fox = the default, or P2 the geese); lessons / puzzles carry their own side to move
 function setFirst(p) { gfirst = p === P2 ? P2 : P1; E.setFirst(gfirst); if (typeof anaCache !== 'undefined') anaCache.clear(); }
+function setQuietG(n) { gq = E.QUIET_OPTS.includes(+n) ? +n : E.DEFAULT_QUIET; E.setQuiet(gq); if (typeof anaCache !== 'undefined') anaCache.clear(); }   // the quiet-move limit in play, moves each (2026-11-19: 30 / 40 / 50, the default 40)
 function setVariant(k) { gv = RULE_ORDER.includes(k || settings.rule) ? (k || settings.rule) : E.DEFAULT_RULE; settings.rule = gv; E.setRule(gv); anaCache.clear(); document.documentElement.dataset.rule = gv; }
-const startKey = () => gv + ':' + (startSpec ? JSON.stringify(startSpec) : 'f' + gfirst);
+const startKey = () => gv + ':' + gq + ':' + (startSpec ? JSON.stringify(startSpec) : 'f' + gfirst);
 const keyOf = i => startKey() + '|' + moves.slice(0, i).join(',');
 let posCache = { key: '' };
 function posAt(i) {
@@ -44,14 +46,14 @@ const isPass = m => m < 0;
 
 // ====================================================================== state
 const STORE = 'aicoding-foxgeese';
-const settings = { mode: 'ai', rule: E.DEFAULT_RULE, first: P1, color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'meadow', pcs: 'cute', dv: 2 };
+const settings = { mode: 'ai', rule: E.DEFAULT_RULE, first: P1, color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'meadow', pcs: 'cute', dv: 2, quiet: 40 };
 const SUPPORTED_ALL = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 // the languages whose game texts are complete (i18n-fg.js / i18n-fg-more.js: a language without its own 'title' is not offered)
 const SUPPORTED = SUPPORTED_ALL.filter(l => l === 'ja' || l === 'en' || (window.FG_LANGS || []).includes(l));
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return SUPPORTED.includes('zh-TW') ? 'zh-TW' : 'en'; const l = ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; return SUPPORTED.includes(l) ? l : 'en'; }
 let LANG = detectLang();
 const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
-function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
+function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (typeof x === 'string' && x.indexOf('{q}') >= 0 && !(v && v.q !== undefined)) x = x.replace(/\{q\}/g, gq);   /* (the quiet-move limit in play) */ if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 20 steps, Lv.1 … Lv.20
 const LV_MAX = 20;   // (Lv.21〜23: the top levels on every thread, 2026-11-09)
@@ -96,7 +98,7 @@ function load() {
     if (!(settings.level2 >= 1 && settings.level2 <= LV_MAX)) settings.level2 = 6;
     setVariant(d.rule || settings.rule);
     if (settings.color !== P2) settings.color = P1;   // (the old 「ランダム」 choice: the side pulldown has the fox and the geese)
-    setFirst(d.first);
+    setFirst(d.first); if (!E.QUIET_OPTS.includes(settings.quiet)) settings.quiet = E.DEFAULT_QUIET; setQuietG(d.quiet || settings.quiet);   // (saves before 2026-11-19 had no limit stored: the new default)
     if (Array.isArray(d.moves)) {
       startSpec = null;
       if (!validMoves(d.moves)) return false;
@@ -111,12 +113,12 @@ function load() {
 function save() {
   if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp' }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, first: gfirst, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, end: manualEnd })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, first: gfirst, quiet: gq, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, end: manualEnd })); } catch (e) {}
 }
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=10';
+const ENGINE_URL = 'engine.js?v=11';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -166,14 +168,14 @@ function request(which, msg, onProgress) {
     return (async () => { const t0 = Date.now(); while (!P.pool('ai') && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 100)); return request(which, Object.assign({}, msg, { waited: 1 }), onProgress); })();
   }
   const cp = cOn && mtWants(which, msg) && MCP.pool(which === 'ai' ? 'ai' : null);
-  if (cp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, first: gfirst, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return cp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  if (cp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, first: gfirst, quiet: gq, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return cp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
-  if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, first: gfirst, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, first: gfirst, quiet: gq, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
 }
 function requestW(which, msg, onProgress) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : anaW;
-  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ start: startSpec, rule: gv, first: gfirst, ...msg, id }); });
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ start: startSpec, rule: gv, first: gfirst, quiet: gq, ...msg, id }); });
 }
 function cancelWorker(which) {
   if (MTP) MTP.cancel(which);
@@ -545,6 +547,7 @@ function hbInfo(pos, st) {
   let h = `<span class="hb-chip"><i class="pdisc p${st.over ? (st.winner || tm) : tm}"></i><b>${escHb(st.over ? (st.winner ? t('hb.won', { c: pname(st.winner) }) : t('res.draw')) : pos.placing ? t('hb.place', { c: pname(tm) }) : t('hb.turn', { c: pname(tm) }))}</b></span>`;
   for (const p of [P1, P2]) h += `<span class="hb-chip cnt"><i class="pdisc p${p}"></i><b>${p === P1 ? pos.cap : pos.geese}</b><small>${escHb(t(p === P1 ? 'pcs.fox' : 'pcs.geese'))}</small></span>`;
   h += `<span class="hb-chip opt">${escHb(t('rule.' + gv))}</span>`;
+  if (gq !== E.DEFAULT_QUIET) h += `<span class="hb-chip opt">${escHb(t('ng.quietN', { n: gq }))}</span>`;
   const evOn = settings.eval && !lesson && !puzzle && !rtLive() && !(window.olLive && olLive());
   if (evOn && $('#evalText').textContent && $('#evalText').textContent !== '—') h += `<span class="hb-chip opt">${escHb(t('eval'))} <b>${escHb($('#evalText').textContent)}</b></span>`;
   if (puzzle) h += `<span class="hb-chip">${escHb(PZBook.t('movesLeft', { n: Math.max(0, puzzle.n - puzzle.used) }))}</span>`;
@@ -679,7 +682,7 @@ function newGame(rated) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; wpPaused = false;
   rgame = null; rtHold = false; settings.rsNoRec = false;
   if (rated) rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() });
-  startSpec = null; setFirst(rated ? P1 : settings.first);   // (rated games: the fox always moves first, the sides are drawn)
+  startSpec = null; setFirst(rated ? P1 : settings.first); setQuietG(rated ? E.DEFAULT_QUIET : settings.quiet);   // (rated games: the fox always moves first, the sides are drawn; the default quiet-move limit)
   if (settings.mode === 'ai') humanColor = rated ? (Math.random() < 0.5 ? P1 : P2) : settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
   moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; sel = null; manualEnd = null; aiVals = []; drawAsked = -99;
   hideOverlay('#resultOverlay');
@@ -1166,6 +1169,8 @@ function segSync() {
   if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml();
   $('#fRules').classList.toggle('hidden', !(game || m === 'online'));   // (rated games: always the default rules, g15 — named on the rating card)
   $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleArt(r), { cls: 'gmini' })}</span><b>${t('rule.' + r)}</b><p>${r === E.DEFAULT_RULE ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
+  $('#fQuiet').classList.toggle('hidden', !game);   // (rated and online games: always the default limit)
+  document.querySelectorAll('#segQuiet button').forEach(b => { const n = +b.dataset.v; b.classList.toggle('sel', n === draft.quiet); b.innerHTML = escHb(t('ng.quietN', { n })) + (n === E.DEFAULT_QUIET ? `<small class="q-std"> ${escHb(t('rule.std'))}</small>` : ''); });
   $('#fColor').classList.toggle('hidden', !game); ordSync();
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
@@ -1178,10 +1183,10 @@ function segSync() {
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
 }
 function openNewDialog(resume) {
-  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color === P2 ? P2 : P1, first: settings.first === P2 ? P2 : P1, level: settings.level, level2: settings.level2, rule: settings.rule };
+  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color === P2 ? P2 : P1, first: settings.first === P2 ? P2 : P1, level: settings.level, level2: settings.level2, rule: settings.rule, quiet: settings.quiet };
   if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = humanColor; draft.first = gfirst; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat; $('#optNum').checked = settings.num;
-  if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fRules' }); else ResumeNG.close(); }
+  if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fRules, #fQuiet' }); else ResumeNG.close(); }
   segSync(); designPickers(); showOverlay('#newOverlay');
 }
 // 「ここから再開」 with the chosen settings: the position and the moves up to it are kept, who is to move stays
@@ -1196,6 +1201,7 @@ function resumeWith() {
 }
 $('#bdRow').addEventListener('click', e => { const b = e.target.closest('button[data-bd]'); if (!b) return; settings.bd = b.dataset.bd; designApply(); designPickers(); save(); });
 $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[data-pcs]'); if (!b) return; settings.pcs = b.dataset.pcs; designApply(); designPickers(); save(); });
+$('#segQuiet').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.quiet = +b.dataset.v; segSync(); } };
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
 // the ルール button on every card (shared/ngtabs.js): the tutorial, or the board-size page
 $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b) { draft.rule = b.dataset.r; segSync(); } };
@@ -1263,7 +1269,7 @@ $('#btnStart').onclick = () => {
   if (draft.mode === 'rated') { rtStart(); return; }
   if (draft.resume) { resumeWith(); return; }
   exitSpecial();
-  Object.assign(settings, { mode: draft.mode, color: draft.color, first: draft.first, level: draft.level, level2: draft.level2 });
+  Object.assign(settings, { mode: draft.mode, color: draft.color, first: draft.first, level: draft.level, level2: draft.level2, quiet: draft.quiet });
   setVariant(draft.rule); drawLines();
   newGame();
 };
@@ -1381,7 +1387,7 @@ function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) |
 function pzProgress() { let pr; try { pr = JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } return pzMigrate(pr); }
 let introIdx = 0;
 let savedGame = null;
-function stashGame() { if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor, first: gfirst }; }
+function stashGame() { if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor, first: gfirst, quiet: gq }; }
 function exitSpecial() {
   if (window.SeqPrac) SeqPrac.stop();
   if (!lesson && !puzzle) return;
@@ -1390,8 +1396,8 @@ function exitSpecial() {
   if (gv !== settings.rule) { setVariant(settings.rule); drawLines(); }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false;
   startSpec = null;
-  if (savedGame) { setFirst(savedGame.first); moves = savedGame.moves; cur = savedGame.cur; evals = savedGame.evals; humanColor = savedGame.humanColor; savedGame = null; }
-  else { moves = []; cur = 0; evals = []; }
+  if (savedGame) { setFirst(savedGame.first); setQuietG(savedGame.quiet); moves = savedGame.moves; cur = savedGame.cur; evals = savedGame.evals; humanColor = savedGame.humanColor; savedGame = null; }
+  else { moves = []; cur = 0; evals = []; setQuietG(settings.quiet); }
   reviewing = cur !== moves.length; hintList = null;
   gameOverShown = gameOver(moves.length);
 }
@@ -1485,6 +1491,7 @@ $('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : intr
 function enterSpecial(spec) {
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; stopPlay();
   { const rl = spec && spec.rule || 'g13'; /* (content without a rule is the old 13-geese content) */ if (gv !== rl) { gv = rl; E.setRule(rl); drawLines(); } }
+  setQuietG(E.DEFAULT_QUIET);   // (lessons and puzzles: the default limit)
   startSpec = spec;
   moves = []; cur = 0; reviewing = false; hintList = null; lessonMarks = []; labelList = null; evals = [];
 }
@@ -2077,7 +2084,7 @@ async function runReview() {
       const i = next++, pk = startKey() + '|' + game.slice(0, i).join(',');
       let list = anaCache.get(pk);
       if (!list) {
-        const res = await new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve }); w.postMessage({ type: 'analyze', start: st0, rule: gv, first: f0, moves: game.slice(0, i), time: i < 10 ? 500 : 800, id }); });   // (first: 2026-11-18 fix — without it a game the geese began was replayed with the fox to move, and no move was found)
+        const res = await new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve }); w.postMessage({ type: 'analyze', start: st0, rule: gv, first: f0, quiet: gq, moves: game.slice(0, i), time: i < 10 ? 500 : 800, id }); });   // (first: 2026-11-18 fix — without it a game the geese began was replayed with the fox to move, and no move was found)
         if (rv !== run || !res) return;
         list = res.list; anaCache.set(pk, list);
       }
@@ -2266,7 +2273,7 @@ function rvbUpdate() {
     const playedM = !ken && cur < moves.length ? moves[cur] : -1;
     BOX.update({
       key, over, k: 5,
-      req: { start: startSpec, rule: gv, first: gfirst, moves: moves.slice(0, cur), time: 1200, k: 5, plies: 7 },
+      req: { start: startSpec, rule: gv, first: gfirst, quiet: gq, moves: moves.slice(0, cur), time: 1200, k: 5, plies: 7 },
       seed: !ken && rv.list[at] ? rv.list[at] : null,
       sub: over ? '' : t('hb.turn', { c: pname(me) }),
       left: ken ? () => kenSwap(() => rvbKenLeft(key)) : () => rvbLeft(),
@@ -2304,9 +2311,9 @@ function decMoves(s, start) {
 }
 // "1. d4 e4 2. f4-d4 c4-e4 ..." or a share URL (#r=<rule>&k=<moves>)
 function parseGameText(v) {
-  v = (v || '').trim();
+  v = (v || '').trim(); const vq = v;
   const h = v.match(/#(.*)$/);
-  if (h) { const q = new URLSearchParams(h[1]); if (!q.has('k')) return null; const rl = q.get('r'); if (rl && RULE_ORDER.includes(rl)) { setVariant(rl); drawLines(); } const first = q.get('f') === '2' ? P2 : P1, keep = gfirst; setFirst(first); const list = decMoves(q.get('k') || ''); setFirst(keep); if (!list) return null; return { list, first, n: q.has('n') ? parseInt(q.get('n'), 10) : undefined }; }   // (&f=2: the geese moved first)
+  if (h) { const q = new URLSearchParams(h[1]); if (!q.has('k')) return null; const rl = q.get('r'); if (rl && RULE_ORDER.includes(rl)) { setVariant(rl); drawLines(); } const first = q.get('f') === '2' ? P2 : P1, keep = gfirst; setFirst(first); const list = decMoves(q.get('k') || ''); setFirst(keep); if (!list) return null; return { list, first, quiet: q.get('q'), n: q.has('n') ? parseInt(q.get('n'), 10) : undefined }; }   // (&q=30/50: a non-default quiet-move limit)   // (&f=2: the geese moved first)
   const rm = v.match(/\[Variant\s+"(\w+)"\]/); if (rm && RULE_ORDER.includes(rm[1])) { setVariant(rm[1]); drawLines(); }
   // who moved first: the [First "Geese"] tag, or a record that starts with 「1...」 (the geese's move); without either the fox
   const fm = v.match(/\[First\s+"(\w+)"\]/), first = fm ? (/^g/i.test(fm[1]) ? P2 : P1) : /^\s*(\[[^\]]*\]\s*)*1\.\.\./.test(v) ? P2 : P1;
@@ -2319,13 +2326,14 @@ function parseGameText(v) {
     const m = E.parse(pos, toks[k]); if (m == null || m < 0) return { bad: k + 1 };
     pos.play(m); out.push(m);
   }
-  return { list: out, first };
+  const qm = vq.match(/\[QuietLimit\s+"(\d+)"\]/);
+  return { list: out, first, quiet: qm && qm[1] };
 }
-function openLoaded(list, n, first) {
+function openLoaded(list, n, first, quiet) {
   ['#resultOverlay', '#newOverlay', '#lessonOverlay', '#puzzleOverlay', '#pasteOverlay'].forEach(hideOverlay);
   if (lesson || puzzle) { savedGame = null; exitSpecial(); }
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); rvCancel(); rv = null; rvOpen = false; thinking = 0; animating = false;
-  settings.mode = 'pvp'; rgame = null; startSpec = null; setFirst(first);
+  settings.mode = 'pvp'; rgame = null; startSpec = null; setFirst(first); setQuietG(quiet);
   moves = list; evals = []; hintList = null;
   cur = n === undefined || isNaN(n) ? moves.length : Math.max(0, Math.min(moves.length, n));
   reviewing = cur !== moves.length; gameOverShown = gameOver(moves.length);
@@ -2335,7 +2343,7 @@ function loadText(v) {
   const r = parseGameText(v);
   if (!r) { toast(t('paste.invalid'), 2200); return false; }
   if (r.bad) { toast(t('paste.bad', { n: r.bad }), 2500); return false; }
-  openLoaded(r.list, r.n, r.first); toast(t('paste.loaded', { n: r.list.length }), 1800);
+  openLoaded(r.list, r.n, r.first, r.quiet); toast(t('paste.loaded', { n: r.list.length }), 1800);
   return true;
 }
 function loadFromHash() {
@@ -2345,14 +2353,14 @@ function loadFromHash() {
   return loadText('#' + h);
 }
 window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) loadFromHash(); });
-function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#r=' + gv + (gfirst === P2 ? '&f=2' : '') + '&k=' + encMoves(moves) + (cur < moves.length ? '&n=' + cur : ''); }
+function shareUrl() { return startSpec ? '' : location.origin + location.pathname + '#r=' + gv + (gfirst === P2 ? '&f=2' : '') + (gq !== E.DEFAULT_QUIET ? '&q=' + gq : '') + '&k=' + encMoves(moves) + (cur < moves.length ? '&n=' + cur : ''); }
 // 共有: a PGN-like record (a removal "d4", a jump "f4-d4", a double jump "f4-d4-b4"), a position line, URL, diagram
 function knPos(pos) { const L = p => { const o = []; for (let i = 0; i < NN_(); i++) if (pos.owner(i) === p) o.push(E.sqName(i)); return o.join(','); }; return `${pos.side ? 'W' : 'B'}:B${L(1)}:W${L(2)}`; }
 function knRec() {
   const st = statusAt(moves.length), res = st.over ? (st.draw ? '1/2-1/2' : st.winner === P1 ? '1-0' : '0-1') : '*';
   const tk = recordText().split(' ');
   const d = new Date(), date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`, q = v => String(v || '?').replace(/["\\]/g, '');
-  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/foxgeese"]\n[Date "${date}"]\n[Fox "${q(playerName(P1))}"]\n[Geese "${q(playerName(P2))}"]\n[Result "${res}"]\n[Variant "${gv}"]\n${gfirst === P2 ? '[First "Geese"]\n' : ''}\n${tk.concat([res]).join(' ')}\n`;
+  return `[Event "World Board Game Atlas"]\n[Site "core-calmdust.github.io/aicoding/foxgeese"]\n[Date "${date}"]\n[Fox "${q(playerName(P1))}"]\n[Geese "${q(playerName(P2))}"]\n[Result "${res}"]\n[Variant "${gv}"]\n${gq !== E.DEFAULT_QUIET ? `[QuietLimit "${gq}"]\n` : ''}${gfirst === P2 ? '[First "Geese"]\n' : ''}\n${tk.concat([res]).join(' ')}\n`;
 }
 async function knDiagram(mode) {
   const RX = RecordExport, N = NS_(), S = Math.round(480 / N), B = S * N, pos = posAt(cur).pos;

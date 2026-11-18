@@ -22,7 +22,7 @@ function escaped(pos) {
 if (process.env.FG_MS) for (const X of [E, EG]) X.LEVELS[19] = { s: 1, ms: +process.env.FG_MS };
 for (let g = 0; g < +ng; g++) {
   for (const X of [E, EG]) { X.setRule(rule); X.setFirst(X.P1); X.ttClear(); }
-  const pos = new E.Pos(), moves = [], hs = [pos.h1]; let j;
+  const pos = new E.Pos(), moves = [], hs = [pos.h1]; let j, gmq = 0;
   while (!(j = E.judge(pos, hs)).over && moves.length < 600) {
     let m;
     if (moves.length < 2) { const L = pos.moves(); m = L[Math.floor(rand() * L.length)]; }
@@ -31,11 +31,12 @@ for (let g = 0; g < +ng; g++) {
       m = r.move;
       if (pos.side) { res.msGeese += dt; ngm++; res.maxMsGeese = Math.max(res.maxMsGeese, dt); } else { res.msFox += dt; nf++; res.maxMsFox = Math.max(res.maxMsFox, dt); }
     }
-    moves.push(m); pos.play(m); hs.push(pos.h1);
+    moves.push(m); pos.play(m); hs.push(pos.h1); if (pos.quiet > (res._mq || 0)) res._mq = pos.quiet; gmq = Math.max(gmq, pos.quiet);
   }
   if (j.winner === E.P1) res.foxWins++; else res.geeseWins++;
   res.why[j.why] = (res.why[j.why] || 0) + 1; res.plies += moves.length;
   if ((j.why === 'quiet' || j.why === 'rep') && escaped(pos)) res.escaped = (res.escaped || 0) + 1;
+  if (process.env.FG_DUMP) console.error(JSON.stringify({ w: j.winner === E.P1 ? 'fox' : 'geese', why: j.why, plies: moves.length, maxq: gmq, endq: pos.quiet, geese: pos.geese }));
   if (process.env.FG_VERBOSE) console.error(g, j.winner === 1 ? 'fox' : 'geese', j.why, moves.length, 'geese left', pos.geese);
 }
 res.plies = Math.round(res.plies / +ng); res.msFox = Math.round(res.msFox / Math.max(1, nf)); res.msGeese = Math.round(res.msGeese / Math.max(1, ngm));
