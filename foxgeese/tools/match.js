@@ -18,6 +18,8 @@ function escaped(pos) {
   while (st.length) { const a = st.pop(); if (E.RC[a][0] > gMax) return true; for (const [x] of E.NBR[a]) if (!pos.sq[x] && !seen.has(x)) { seen.add(x); st.push(x); } }
   return false;
 }
+// FG_MS: both engines' Lv.19 thinks for this many ms per move (equal-time comparisons)
+if (process.env.FG_MS) for (const X of [E, EG]) X.LEVELS[19] = { s: 1, ms: +process.env.FG_MS };
 for (let g = 0; g < +ng; g++) {
   for (const X of [E, EG]) { X.setRule(rule); X.setFirst(X.P1); X.ttClear(); }
   const pos = new E.Pos(), moves = [], hs = [pos.h1]; let j;
