@@ -1142,7 +1142,12 @@ static TLS int rootDepth = 1;
 /* tunables (same defaults as engine.js) */
 static int useMate1 = 1, rfpDepth = 8, rfpMargin = 112, nullAdapt = 1, histMalus = 0;   /* (2026-11-17: SPSA at 100 ms per move, tools/match/spsa.py: depth 6 -> 8, margin 90 -> 112, [9] 6000 -> 6749, [12] 4 -> 7, [16] 100 -> 123, [23] 200 -> 162, [27] 60 -> 85, LMR divisor 2.0 -> 2.03: +22 Elo at 300 ms over 1440 games) */
 /* before:   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
-static int P[96] = {[5] = 1, [7] = 1, [9] = 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = 85};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
+/* (2026-11-18: search v4's switches on, measured together on the Mac against the search before: +73 Elo at 300k nodes and +70
+   at 300 ms per move, 480 different games each. 24 improving, 28 = 4 null move reduction, 29 + 43 = 300 late move pruning at
+   every depth, 30 = 8 futility by the reduced depth, 35 = 6 a ply less without a table move, 37 = 1 reductions from the second
+   move, 38 losing captures reduced, 40 losing captures after the quiet moves, 42 = 170 history bonus linear in the depth.) */
+static int P[96] = {[5] = 1, [7] = 1, [9] = 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = 85,
+                    [24] = 1, [28] = 4, [29] = 1, [30] = 8, [35] = 6, [37] = 1, [38] = 1, [40] = 1, [42] = 170, [43] = 300};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
 static void lmrInit(double div);
 EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 96) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
@@ -1797,6 +1802,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
             if (i1 == 0 && n1 == 0) { n1 = inChk ? genEv(moves, 1, &ev) : gen(moves, 1); orderMoves(moves, scores, n1, 0, ply); if (!n1) { stage = 2; continue; } }
             if (i1 >= n1) { stage = 2; continue; }
             m2 = pickFast(moves, scores, n1, i1++, pk);
+            if (P[40] && !inChk && scores[i1 - 1] < 0) { i1--; badCap = 1; stage = 2; continue; }
             if (m2 == ttm) continue;
             lb = lg2;
           } else {
@@ -1811,10 +1817,20 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
               orderMoves(qmoves, qscores, n2, 0, ply);
               pk->nb = 0; stage = 3;
             }
-            if (i2 >= n2) { if (kDef >= nDef) break; m2 = defM[kDef]; lb = defL[kDef++]; }
+            if (i2 >= n2) {
+              if (badCap && i1 < n1) { m2 = pick(moves, scores, n1, i1++); if (m2 == ttm) continue; lb = lg2; }
+              else { if (kDef >= nDef) break; m2 = defM[kDef]; lb = defL[kDef++]; }
+            }
             else { m2 = pickFast(qmoves, qscores, n2, i2++, pk); lb = lg2; }
           }
           const int quiet2 = !board[(m2 >> 7) & 127] && !((m2 >> 14) & 1);
+          if ((P[29] | P[30]) && ply > 0 && !inChk && quiet2 && lb > 0 && best > -MATE + MAXPLY) {   /* (search v4, as the loop below) */
+            const int ld0 = depth - 1 - LMRT[depth < 63 ? depth : 63][lb < 63 ? lb : 63], ld = ld0 < 0 ? 0 : ld0;
+            if ((P[29] && !pvNode && lb >= (3 + depth * depth) * (P[43] ? P[43] : 100) / 100 / ((2 - imp) * P[29])) || (P[30] && !pvNode && ld < P[30] && staticEval + (P[31] ? P[31] : 100) + (P[32] ? P[32] : 120) * ld <= alpha)) {
+              if (!givesCheckPre(m2)) continue;
+              if (!chkFast) { doMove(m2); int chk = inCheck(); undoMove(); if (!chk) continue; }
+            }
+          }
           if (!pvNode && !inChk && quiet2 && lb > 0 && depth <= (P[18] ? P[18] : 2) && staticEval + (P[16] ? P[16] : 150) * depth + 100 <= alpha) {
             if (!givesCheckPre(m2)) continue;
             doMove(m2); int ok = legalAfter(m2, inChk), chk = ok && inCheck(); undoMove();
@@ -1878,21 +1894,19 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
         orderMoves(qmoves, qscores, n2, 0, ply);
         pk->nb = 0; stage = 3;
       }
+      if (i2 >= n2) {
+        if (badCap && i1 < n1) {   /* (P40) the quiet moves are done: the losing captures */
+          m = pick(moves, scores, n1, i1++);
+          if (m == ttm) continue;
+        } else {
 #ifdef MT
-      if (i2 >= n2) { if (kDef >= nDef) break; m = defM[kDef]; lgb = defL[kDef++]; redo = 1; }
-      else
+          if (kDef >= nDef) break;
+          m = defM[kDef]; lgb = defL[kDef++]; redo = 1;
 #else
-      if (i2 >= n2 && badCap) {   /* (P40; the one-thread loop) the quiet moves are done: the losing captures */
-        if (i1 >= n1) break;
-        m = pick(moves, scores, n1, i1++);
-        if (m == ttm) continue;
-      } else {
-      if (i2 >= n2) break;
+          break;
 #endif
-      m = pickFast(qmoves, qscores, n2, i2++, pk);
-#ifndef MT
-      }
-#endif
+        }
+      } else m = pickFast(qmoves, qscores, n2, i2++, pk);
     }
     int to = (m >> 7) & 127, cap = board[to], quiet = !cap && !((m >> 14) & 1);
     if (!pvNode && !inChk && quiet && LGB > 0 && depth <= (P[18] ? P[18] : 2) && staticEval + (P[16] ? P[16] : 150) * depth + 100 <= alpha) {
@@ -2027,6 +2041,7 @@ static double spSearch(SPt *s, int i, double a) {
   const double b = s->beta; const int m = s->mv[i], LGA = s->lg[i], ply = s->ply, depth = s->depth, us = side, inChk = inCheck();
   const int quiet = !board[(m >> 7) & 127] && !((m >> 14) & 1);
   const int hv = !s->root && P[5] && P[22] && quiet ? quietHist(us, m) : 0;   /* (the loop takes it with the move undone) */
+  const int redCap = !s->root && P[38] && !inChk && board[(m >> 7) & 127] && (P[38] == 2 || see(m) < 0);   /* (P38: a capture that is reduced) */
   doMove(m);
   const u64 mkKey = ttKey(); const int mk = depth >= BUSY_D ? busySet(mkKey) : -1;
   double v;
@@ -2038,14 +2053,16 @@ static double spSearch(SPt *s, int i, double a) {
     const int givesChk = inCheck();
     const int ext = givesChk && ply < rootDepth * 2 && (P[11] || seeAfterCheck(m) >= 0) ? 1 : 0;
     const int nd = depth - 1 + ext; int r = 0;
-    if (depth >= 3 && quiet && !inChk && !givesChk && LGA > 3) {
+    if (depth >= 3 && (quiet || redCap) && !inChk && !givesChk && LGA > (P[37] ? P[37] : 3)) {
       if (P[5]) {
         r = LMRT[depth < 63 ? depth : 63][LGA < 63 ? LGA : 63];
         if (m == killers[ply * 2] || m == killers[ply * 2 + 1]) r--;
-        if (P[22]) r -= hv / (P[9] ? P[9] : 6000);
+        if (!quiet) ;
+        else if (P[22]) r -= hv / (P[9] ? P[9] : 6000);
         else { i32 h = history[((us * 88 + (m & 127)) * 81 + ((m >> 7) & 127)) * 2 + ((m >> 14) & 1)]; if (h > 2000) r--; else if (h == 0) r++; }
         if (P[24] && !s->improving) r++;
       } else r = 1 + (LGA > 8 ? 1 : 0) + (depth >= 8 ? 1 : 0);
+      if (!quiet) r--;
       if (s->pv) r--;
       if (r < 0) r = 0;
       if (r > depth - 2) r = depth - 2;
