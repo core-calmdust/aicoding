@@ -19,7 +19,7 @@
 | 将棋（詰将棋） | shogi/tools/fun.js（検証 tools/tsume/solve.js） | 70 | 47（残り90：主に9手以上。実戦詰将棋は対象外） |
 | アマゾンズ | amazons/tools/fun.js（2026-11-11、版2で全問入れ替え。同日 w2・w3・t2 を作り直し、t3・d2 を追加） | 70 | 163（w2・w3・t2・t3・e3 各30、d2 13） |
 | アルケルケ | alquerque/tools/fun.js（2026-11-14 新設。生成 gen_puzzles.js が採用時に使う） | 70 | 新規 240（8テーマ×30） |
-| 雀華（レッスンの練習問題） | mahjong/tools/gen-drills.js（2026-11-19 新設。生成と評価を一体で、drills.js に書く。中身は mahjong-spec.md） | 70 | 新規 36（牌効率6レッスン×6） |
+| 雀華（レッスンの練習問題） | mahjong/tools/gen-drills.js（2026-11-19 新設。生成と評価を一体で、drills.js に書く。中身は mahjong-spec.md） | 70 | 新規 72（牌効率・待ち 12レッスン×6） |
 | すぴーど数独 | 対象外（面白さは変則ルール側が主なので） | — | — |
 
 ## 入れ替えの決まり
