@@ -432,7 +432,7 @@
   /* ---------- AI ---------- */
   // the level: candidates searched, the hand's wobble, how far it looks
   function skill(lv) {
-    lv = Math.max(1, Math.min(20, lv | 0)); const k = (lv - 1) / 19;
+    lv = Math.max(1, Math.min(20, +lv || 1)); const k = (lv - 1) / 19;   // (a fraction too: the levels' table, lvMap)
     return {
       lv, dirs: lv < 4 ? 8 : lv < 9 ? 12 : lv < 15 ? 18 : 24, pows: lv < 6 ? 3 : 4, reach: 22 + k * 22,
       angSd: (2.4 - Math.pow(k, .8) * 2.1) * Math.PI / 180, vSd: .07 - k * .045,   // a weak hand is still a hand: it aims, a little off (2026-11-15: 4.6° looked random)
@@ -731,7 +731,11 @@
     const c = clone(s); return setKeeper(c, t, k.x, k.y);
   }
 
-  const api = { VB_RATIO, powV, vPow, _int: { candidates: (s, sk) => candidates(s, sk), evaluate: (a, b, c, d) => evaluate(a, b, c, d), attackValue: (a, b, c, d) => attackValue(a, b, c, d), skill: l => skill(l) }, DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor, aimTrace, wobble, perform, think, skill, speedFor, aimAt, canPlace, setTaker, simCore, takerArc, placeFor, TAKER_NEAR, TAKER_FAR, aimRoll, ballAim, aimCone, ballPath, ballSpeedFor, rollOf, clone, laneOpen };
+  // レベルの段差をそろえる (2026-11-18 ユーザー：天井は今のまま、段差を均等に): Lv.1–20 → the AI's own strength scale (the old levels),
+  // measured by AI-against-AI matches so that every step is about the same gain in strength. The table is the old level each level plays at.
+  const LVMAP = [1, 2.22, 3.44, 4.74, 6.1, 7.46, 8.74, 9.97, 11.2, 12.34, 13.34, 14.33, 15.32, 16.2, 16.83, 17.47, 18.1, 18.73, 19.37, 20];
+  const lvMap = l => { const L = Math.max(1, Math.min(20, +l || 1)), i = Math.min(18, Math.floor(L) - 1), f = L - 1 - i; return LVMAP[i] + (LVMAP[i + 1] - LVMAP[i]) * f; };
+  const api = { VB_RATIO, powV, vPow, _int: { candidates: (s, sk) => candidates(s, sk), evaluate: (a, b, c, d) => evaluate(a, b, c, d), attackValue: (a, b, c, d) => attackValue(a, b, c, d), skill: l => skill(lvMap(l)) }, DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor: (s, t, l, sd, set) => keeperFor(s, t, lvMap(l), sd, set), aimTrace, wobble, perform: (sh, l, sd) => perform(sh, lvMap(l), sd), think: (s, l, sd) => think(s, lvMap(l), sd), skill: l => skill(lvMap(l)), speedFor, aimAt, canPlace, setTaker, simCore, takerArc, placeFor: (s, l, sd) => placeFor(s, lvMap(l), sd), TAKER_NEAR, TAKER_FAR, aimRoll, ballAim, aimCone, ballPath, ballSpeedFor, rollOf, clone, laneOpen };
   root.BotaoEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : this);

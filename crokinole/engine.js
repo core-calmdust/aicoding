@@ -319,7 +319,11 @@
     return { k: wall, gx: x + dx * wall, gy: y + dy * wall, man: -1 };
   }
 
-  const API = { DIM, DECEL, VMAX, newRound, newBoard, nextRound, nextBoard, matchOver, clone, baseY, onBoard, startFree, nearestFree, simulate, resolve, think, perform, wobble, skill, aimTrace, value, tally, rng, evaluate };
+  // レベルの段差をそろえる (2026-11-18 ユーザー：天井は今のまま、段差を均等に): Lv.1–20 → the AI's own strength scale (the old levels),
+  // measured by AI-against-AI matches so that every step is about the same gain in strength. The table is the old level each level plays at.
+  const LVMAP = [1, 1.64, 2.56, 3.33, 3.83, 4.66, 5.66, 6.66, 7.56, 8.67, 9.48, 10.09, 10.45, 10.77, 11.22, 11.81, 12.95, 14.38, 15.93, 18];
+  const lvMap = l => { const L = Math.max(1, Math.min(20, +l || 1)), i = Math.min(18, Math.floor(L) - 1), f = L - 1 - i; return LVMAP[i] + (LVMAP[i + 1] - LVMAP[i]) * f; };
+  const API = { DIM, DECEL, VMAX, newRound, newBoard, nextRound, nextBoard, matchOver, clone, baseY, onBoard, startFree, nearestFree, simulate, resolve, think: (s, l, sd, o) => think(s, lvMap(l), sd, o), perform: (sh, l, sd) => perform(sh, lvMap(l), sd), wobble, skill: l => skill(lvMap(l)), aimTrace, value, tally, rng, evaluate };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   root.CrokinoleEngine = API;
 })(typeof self !== 'undefined' ? self : this);
