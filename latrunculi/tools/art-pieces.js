@@ -237,17 +237,24 @@ void mat(vec3 p, vec3 n, inout PMat m){
 
   // ================================================================ abstract: flat matte tokens with an inlaid arch — charcoal with a terracotta
   // arch, bone-white with a charcoal arch; turned over = only the ring is left
+  // v2 (2026-11-19, user: the abstract counters with the flower too): flat matte tokens with the six-petal flower of the board
+  // inlaid — charcoal with a flower in two pale greys, bone white with a flower in two mid greys; turned over = only the ring is left
   const ABS = (dark, ring) => `
-float sdArch2(vec2 p){ float r = .26; vec2 q = p - vec2(0., .1); float box = max(abs(q.x) - r, abs(q.y - .02) - .2); float top = length(q - vec2(0., -.18)) - r; return min(box, max(top, q.y + .13)); }
+mat2 R60 = mat2(.5, .8660254, -.8660254, .5);
+float petalD(vec2 p, vec2 d){ vec2 L = R60 * d, Rr = transpose(R60) * d; float a = length(d); return max(length(p - L) - a, length(p - Rr) - a); }
+// the flower: six lenses from the centre, radius .56; returns vec2(distance, which petal)
+vec2 flower(vec2 p){ float best = 9., k = 0.; for (int i = 0; i < 6; i++){ float an = float(i) * 1.0471976 + 1.5707963; vec2 d = .56 * vec2(cos(an), sin(an)); float e = petalD(p, d); if (e < best){ best = e; k = float(i); } } return vec2(best, k); }
 float map(vec3 p){
   float d = sdCyl(p, .88, .17, .1);
-  ${ring ? 'd = smax(d, -(length(p.xy) - .5), .06);' : ''}
+  ${ring ? 'd = smax(d, -(length(p.xy) - .5), .06);' : 'd += .006 * smoothstep(.01, -.01, flower(p.xy).x) * step(.1, p.z);'}
   return d;
 }
 void mat(vec3 p, vec3 n, inout PMat m){
-  vec3 base = ${dark ? 'hexc(46., 44., 44.)' : 'hexc(238., 230., 214.)'}, ink = ${dark ? 'hexc(206., 112., 80.)' : 'hexc(46., 44., 44.)'};
+  vec3 base = ${dark ? 'hexc(44., 44., 46.)' : 'hexc(240., 236., 228.)'};
   vec3 c = base * (.96 + .06 * vn3(p * 60.));
-  ${ring ? '' : 'c = mix(c, ink, smoothstep(.006, -.006, sdArch2(p.xy)) * step(.1, p.z));'}
+  ${ring ? '' : `vec2 f = flower(p.xy);
+  vec3 pa = ${dark ? 'hexc(196., 198., 202.)' : 'hexc(140., 142., 148.)'}, pb = ${dark ? 'hexc(150., 152., 158.)' : 'hexc(186., 188., 194.)'};
+  c = mix(c, mod(f.y, 2.) < .5 ? pa : pb, smoothstep(.008, -.008, f.x) * step(.1, p.z));`}
   m.alb = c; m.spec = .18; m.gloss = .16;
 }`;
   P['abstract-b'] = { glsl: ABS(1, 0) }; P['abstract-w'] = { glsl: ABS(0, 0) };
