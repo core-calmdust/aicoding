@@ -763,9 +763,29 @@ static int ttGrow(void) {   // (one thread) twice the slots, every entry moved (
 }
 #endif
 typedef struct { int d, v, f; Move m; } TTE;
+#ifdef MT
+// (2026-11-18) several threads: Praline's bucket table (praline_tt.h, 4 entries of { key ^ a ^ c, a, c = the search's generation }) in
+// the same memory, kept from search to search (the Map's table was cleared past half before a search: the threads' work of the move
+// before and PRO's 先読み were lost) — the deeper / newer entries stay. One thread (abExact): the Map semantics as before.
+static int ttGen;
+#define PL_TT_BITS (TT_BITS - 3)
+#define PL_TT_WAYS 4
+#define PL_TT_WORDS 3
+#define PL_TT_IN TTB
+#define PL_TT_USED(w, c) ((w) >> 63)
+#define PL_TT_SCORE(w, c) (!((w) >> 63) ? -1000 : (int)(((w) >> 23) & 255) - ((c) != (u64)ttGen ? 8 : 0))
+#include "../shared/praline/praline_tt.h"
+#endif
 static int ttGet(TTE *e) {
   if (!TTp) return 0;
   const u64 want = (u64)H1 | (u64)H2 << 32;
+#ifdef MT
+  if (!abExact) { u64 a, c; if (!plttFind(want, H1, &a, &c)) return 0;
+    if (!(a >> 63) || ((a >> 47) & 0xFFFF) != (H2 & 0xFFFF)) return 0;
+    e->m = (Move)(a & 0x1FFFFF); e->f = (int)((a >> 21) & 3); e->d = (int)((a >> 23) & 255); e->v = (int)(short)(unsigned short)((a >> 31) & 0xFFFF);
+    return 1;
+  }
+#endif
   for (unsigned i = H1 & ttMask, k = 0; k <= ttMask; i = (i + 1) & ttMask, k++) {
     u64 kw = __atomic_load_n(&TTp[i].kw, __ATOMIC_ACQUIRE);
     if (!kw) return 0;
@@ -786,6 +806,9 @@ static void ttPut(int d, int v, int f, Move m, int ply) {
 #endif
   const u64 want = (u64)H1 | (u64)H2 << 32;
   const u64 a = (u64)(m & 0x1FFFFF) | (u64)(f & 3) << 21 | (u64)(d > 255 ? 255 : d < 0 ? 0 : d) << 23 | (u64)(unsigned short)(short)sv << 31 | (u64)(H2 & 0xFFFF) << 47 | 1ull << 63;
+#ifdef MT
+  if (!abExact) { int hit; u64 ow, oc; u64 *e = plttSlot(want, H1, &hit, &ow, &oc); plttWrite(e, want, a, (u64)ttGen); return; }
+#endif
   for (unsigned i = H1 & ttMask, k = 0; k <= ttMask && (abExact || k < 256u); i = (i + 1) & ttMask, k++) {
     u64 kw = __atomic_load_n(&TTp[i].kw, __ATOMIC_ACQUIRE);
     if (!kw) {
@@ -1027,10 +1050,13 @@ EXPORT(ab_root) void ab_root(int side, double h1, double h2, int n) {
 // the analysis's depths); threads 1 = the exact one-thread tables. Read back with ab_nodes / ab_evals / ab_stopped.
 EXPORT(ab_sync) void ab_sync(double nodes_, double evals_, double tEnd_, double evalLimit_, int stop_, int threads) {
   init(); initBB();
-  nodes = (unsigned long long)nodes_; abEv = 0; evBase = evals_; tEnd = tEnd_; evalLimit = evalLimit_; stopFlag = stop_ ? 1 : 0; abExact = threads <= 1;
+  nodes = (unsigned long long)nodes_; abEv = 0; evBase = evals_; tEnd = tEnd_; evalLimit = evalLimit_; stopFlag = stop_ ? 1 : 0;
 #ifdef MT
+  { const int ex = threads <= 1; if (ex != abExact) ttClear(); abExact = ex; if (!ex) ttGen = (ttGen + 1) & 255; }   // (2026-11-18: the two tables share the memory)
   abEvFl = 0; __atomic_store_n(&gEvN, 0, __ATOMIC_RELAXED);
-  if (!abExact) { if (ttCount > (int)(ttMask / 2)) ttClear(); if (ccCount > (int)(ccMask / 2)) ccClear(); }   // (several threads: never mid-search)
+  if (!abExact) { if (ccCount > (int)(ccMask / 2)) ccClear(); }   // (several threads: never mid-search)
+#else
+  abExact = threads <= 1;
 #endif
 }
 EXPORT(ab_evals) double ab_evals(void) { return evTotal(); }

@@ -18,6 +18,7 @@
 //     plttFind(key, idx, &w, &c) → 1 / 0      key's entry in bucket idx (idx & mask): its words
 //     plttSlot(key, idx, &hit, &w, &c) → e    the entry to write: key's own (hit = 1, its words), else the lowest PL_TT_SCORE
 //     plttWrite(e, key, w, c)                 e[1] = w (, e[2] = c), then e[0] = key ^ w (^ c)
+//     PL_TT_IN            optional: an array of the game's (big enough) to hold the table instead of PL_TT's own
 //   The key and the index are separate (a game may index by one half of its key, e.g. morris h1, and check the whole key).
 #ifndef PRALINE_TT_H
 #define PRALINE_TT_H
@@ -44,7 +45,12 @@
 #endif
 #define PL_TT_MASK ((1u << PL_TT_BITS) - 1)
 #define PL_TT_STRIDE (PL_TT_WAYS * PL_TT_WORDS)
+#ifndef PL_TT_IN   // (PL_TT_IN array: the table in the game's own array, e.g. the same memory as another table used in another mode)
 static u64 PL_TT[(1u << PL_TT_BITS) * PL_TT_STRIDE];
+#else
+#define PL_TT ((u64 *)(PL_TT_IN))
+_Static_assert(sizeof(PL_TT_IN) >= (1u << PL_TT_BITS) * PL_TT_STRIDE * 8, "praline_tt.h: PL_TT_IN too small");
+#endif
 static inline int plttFind(u64 key, u64 idx, u64 *w, u64 *c) {
   const u64 *bk = &PL_TT[(idx & PL_TT_MASK) * PL_TT_STRIDE];
   for (int j = 0; j < PL_TT_WAYS; j++) {
