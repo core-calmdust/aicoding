@@ -141,7 +141,7 @@ html[data-ui=meadow] .modal{background:#fffdf6;box-shadow:0 0 0 3px #d3e8b6,0 24
 html[data-ui=meadow] .overlay{background:rgba(90,120,60,.32)}
 html[data-ui=meadow] :is(.mbtn.go,#btnStart,.mbtn.primary){background:linear-gradient(180deg,#ffa25a,#ee7a2c)!important;color:#fff!important;box-shadow:0 6px 14px -6px rgba(200,100,30,.6),inset 0 -2px 0 rgba(150,60,10,.25)!important;border:0!important}
 html[data-ui=meadow] .lines .num{font-family:'Zen Maru Gothic',system-ui,sans-serif}
-html[data-ui=meadow] .reserve :is(.rsv-l,.rsv-w,.rsv-plate){font-family:'Zen Maru Gothic',system-ui,sans-serif;font-weight:900}
+html[data-ui=meadow] .reserve :is(.rsv-l,.rsv-w,.rsv-plate),html[data-ui=meadow] .reserve .rsv-plate :is(.rsv-l,.rsv-w,.rsv-q) b,html[data-ui=meadow] .reserve .rsv-plate.rsv-q b{font-family:'Zen Maru Gothic',system-ui,sans-serif!important;font-weight:900}
 `;
   if (!document.getElementById('fg-meadow-font')) {   // the rounded face of the meadow UI
     const f = document.createElement('link'); f.id = 'fg-meadow-font'; f.rel = 'stylesheet';
