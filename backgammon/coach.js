@@ -476,7 +476,7 @@ function render() {
   // a button that starts it
   const rv = !!document.querySelector('#reviewCard.show');
   const L0 = usable() || watching() ? live() : null, playing = !!(usable() && L0 && L0.latest && !L0.st.over);
-  const can = (usable() && (playing || (L0 && L0.latest && L0.st.over && !rv))) || !!(watching() && L0 && L0.latest && L0.st.over && !rv), on = active();
+  const can = !rv && ((usable() && (playing || (L0 && L0.latest && L0.st.over))) || !!(watching() && L0 && L0.latest && L0.st.over)), on = active();   // the review (分析) takes the coach's place (2026-11-19)
   const was = card.className;
   // lessons, puzzles, opening practice, rated games, AI vs AI, studies, the editor: the box (and the phone tab) stays, says
   // the coach is resting, and computes / marks nothing (online games keep their own screen)

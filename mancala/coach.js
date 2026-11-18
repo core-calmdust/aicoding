@@ -392,7 +392,7 @@ function render() {
   // coach tab shows the review instead; before the review exists, a short note with a button to start it
   const rvOn = !!document.querySelector('#reviewCard.show');
   const playing = !!(usable() && !overNow() && cur === game.moves.length && !reviewing);
-  const can = (usable() && (playing || (overNow() && !rvOn))) || (watchOver() && !rvOn), on = active();
+  const can = !rvOn && ((usable() && (playing || overNow())) || watchOver()), on = active();   // the review (分析) takes the coach's place (2026-11-19)
   // lessons, puzzles, opening practice, rated games, AI vs AI, studies, the editor: the box (and the phone tab) stays, says
   // the coach is resting, and computes / marks nothing (online games keep their own screen)
   const resting = restNow(rvOn, can);

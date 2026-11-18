@@ -217,7 +217,7 @@ function render() {
   if (LudoCoach.sw) LudoCoach.sw.sync();
   const rv = !!document.querySelector('#reviewCard.show');
   const over = !!G && G.state.over, playing = !!G && !over && !VIEW;
-  const can = usable() && (playing || (over && !rv));
+  const can = usable() && !rv && (playing || (over));
   const resting = !can && !rv && !!G && (!!SP || !!G.rated || G.mode === 'watch' || (G.mode === 'online' && !document.body.classList.contains('ol-over')));
   if (resting) { card.classList.remove('hidden'); card.classList.add('ck-off'); document.body.classList.add('ck-tab'); return put(CoachKit.lessonRest ? CoachKit.lessonRest(card, `<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('rest'))}</p>`) : `<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('rest'))}</p>`); }
   const on = active();

@@ -445,7 +445,7 @@ function render() {
   // shows the review instead (#reviewCard, data-itc="coach"); before the review exists, a short note with a button to start it
   const rvc = document.getElementById('reviewCard'), rv = !!(rvc && rvc.classList.contains('show')) && usable();
   const over = statusAt(moves.length).over, playing = !over && cur === moves.length && !reviewing;
-  const can = usable() && (playing || (over && !rv)), on = can && !!settings.coach;
+  const can = usable() && !rv && (playing || (over)), on = can && !!settings.coach;
   // lessons, puzzles, opening practice, rated games, AI vs AI, studies, the editor: the box (and the phone tab) stays, says
   // the coach is resting, and computes / marks nothing (online games keep their own screen)
   const resting = restNow(rv, can);

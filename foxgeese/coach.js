@@ -255,7 +255,7 @@ function render() {
   if (FoxCoach.sw) FoxCoach.sw.sync();
   const rv = !!document.querySelector('#reviewCard.show');
   const over = moves.length > 0 && gameOver(moves.length), playing = !over && cur === moves.length && !reviewing;
-  const on = active(), can = usable() && (playing || (over && !rv));
+  const on = active(), can = usable() && !rv && (playing || (over));
   const resting = restNow(rv, can);
   card.classList.toggle('ck-rest', resting);
   if (resting) {

@@ -443,7 +443,7 @@ function render() {
   // shows the review card instead; before the review exists, a short note with a button that starts it (shared/COACH.md §5)
   const rv = !!document.querySelector('#reviewCard.show');
   const over = overNow(), playing = !over && cur === positions.length - 1 && !reviewing;
-  const on = active(), can = usable() && (playing || (over && !rv && positions.length > 1));
+  const on = active(), can = usable() && !rv && (playing || (over && positions.length > 1));
   // lessons, puzzles, opening study, rated games, AI vs AI, the review-box study: the box (and the phone tab) stays, says the
   // coach is resting, and computes / marks nothing
   const resting = !can && !(rv && usable()) && !net && !!(lesson || puzzle || rbS || rtGame() || settings.mode === 'watch');
