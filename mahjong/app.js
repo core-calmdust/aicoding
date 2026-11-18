@@ -188,7 +188,9 @@ const SND = (() => {
     riichi3: { file: 'bgm-riichi3', vol: .184, restart: true },   // (同日「リーチ3」: −9.3 LUFS → ≈ −24)
     score: { file: 'score-jingle', vol: .35, restart: true, once: true },
     // (ユーザー 2026-11-19: the rules / lessons music, from the list through every lesson, as long as 次へ goes on: −15.4 LUFS → ≈ −22 like the title)
-    lesson: { file: 'bgm-lesson', vol: .47, restart: false },   // (ユーザー 2026-11-15: a short piece, once per results screen — no loop)
+    lesson: { file: 'bgm-lesson', vol: .47, restart: false },
+    // (同日、ユーザー「ルール曲はこちらに（前のは気が散る）」: the rules course's own, acoustic guitar: −16.2 LUFS → ≈ −22)
+    rules: { file: 'bgm-rules', vol: .52, restart: false },   // (ユーザー 2026-11-15: a short piece, once per results screen — no loop)
   };
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
@@ -305,7 +307,7 @@ const SND = (() => {
     // (ユーザー 2026-11-19「ゲーム中からトップに戻ったときのBGMを少しだけ遅らせて」) the game's music stops, the title's comes 0.5 s later
     // (ユーザー 2026-11-19「一覧はタイトル曲、ルールページに移ってから少し間を開けて流れ始める」) the lesson's music after a short quiet;
     // already playing (the next lesson) it simply carries on
-    lessonLater() { if (want === 'lesson') return; music(null); handT = setTimeout(() => music('lesson'), 700); },
+    lessonLater(k = 'lesson') { if (want === k) return; music(null); handT = setTimeout(() => music(k), 700); },
     titleLater() { music(null); handT = setTimeout(() => music('title'), 500); },
     newGame() { nextMain = draw(MAINS, mainKey); nextRii = draw(RIIS, riichiKey); if (on()) { fetchTrk(nextMain); fetchTrk(nextRii); fetchTrk('score'); } },
     // a hand begins: this hand's track (drawn ahead), after a short quiet (ユーザー 2026-11-16「得点表示から次の局の通常BGMまで少し間を」 —
@@ -1303,7 +1305,7 @@ const AUTO = /[?&]auto/.test(location.search);
 
 async function startGame(opt = {}) {
   if (window.MJ && MJ.clearCache) MJ.clearCache();   // (a fresh game: the memo tables start empty, so they never pile up across games)
-  if (opt.lesson) SND.lessonLater(); else SND.newGame();   // opt.ranked: a 段位戦 game, opt.len its length (a lesson: its own music, carried on)
+  if (opt.lesson) SND.lessonLater(opt.lesson.cat ? 'lesson' : 'rules'); else SND.newGame();   // opt.ranked: a 段位戦 game, opt.len its length (a lesson: its own music, carried on)
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
   if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = (kind, seat) => { SND.tile(); if (kind === 'river' && UIS.landWait && UIS.landWait.seat === seat) UIS.landWait.done(); }; TB.warm(); }
