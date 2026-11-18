@@ -79,7 +79,7 @@
   const why = e => /permission|PERMISSION/.test(String(e && (e.code || e.message))) ? 'rules' : /popup-closed|cancelled-popup|user-cancelled/.test(String(e && e.code)) ? '' : /network|offline|unavailable/i.test(String(e && (e.code || e.message))) ? 'net' : 'fail';
 
   // ---------------------------------------------------------------- sync
-  async function push(local) { const t = Date.now(); await B.put({ d: local, t }); setMeta({ uid: user.uid, t, h: hash(local) }); last = t; }
+  async function push(local) { if (O.blocked && O.blocked()) { err = 'tamper'; return; } const t = Date.now(); await B.put({ d: local, t }); setMeta({ uid: user.uid, t, h: hash(local) }); last = t; }
   function take(remote) { gone = true; setMeta({ uid: user.uid, t: remote.t, h: hash(remote.d) }); last = remote.t; O.apply(remote.d); }
   async function sync(opt = {}) {
     if (!B || !user || busy || gone) return;   // (gone: the cloud's data is in place and the page reloads)
