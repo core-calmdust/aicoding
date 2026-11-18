@@ -2371,7 +2371,7 @@ async function lessonDone() {
   if (!UIS || UIS.lesson !== L) return;
   lessonGuide(null);
   const b = modal(`<div class="ls-res ${pass ? 'ok' : ''}"><img class="lr-face" src="${charImg(MJChars.get(GUIDE), 'face')}" alt=""><h3>${esc(pass ? t('lsPass') : t('lsFail'))}</h3>
-    <div class="lr-sc"><b>${score}</b><small>/100</small></div><p class="lr-t">${esc(I18N.L(ls.title))}</p><p class="lr-p">${esc(I18N.L(ls.point))}</p><small class="lr-line">${esc(t('lsPassLine'))}</small>
+    <div class="lr-sc"><b>${score}</b><small>/100</small></div><p class="lr-say">${esc(t(score >= 100 ? 'lsSay100' : pass ? 'lsSayPass' : 'lsSayFail'))}</p><p class="lr-t">${esc(I18N.L(ls.title))}</p><p class="lr-p">${esc(I18N.L(ls.point))}</p><small class="lr-line">${esc(t('lsPassLine'))}</small>
     <div class="cbtns"><button class="btn" data-a="list">${esc(t('lsList'))}</button><button class="btn" data-a="again">${esc(t('lsAgain'))}</button>${next ? `<button class="btn gold" data-a="next">${esc(t('lsNextL'))}</button>` : ''}</div></div>`, 'small lsres');
   b.addEventListener('click', e => { const a = e.target.closest('[data-a]'); if (!a) return; SND.pick(); closeModal();
     quitGame();
@@ -2410,7 +2410,7 @@ function openLessons(tab, cat0) {
       <b>${esc(I18N.L(ls.title))}</b><small>${esc(I18N.L(ls.point))}</small><span class="lx-ft2">${starRow(lsStars(r))}<em>${r ? t('lsScore', { n: r.best }) : esc(t('lsNew'))}</em></span></button>`; }).join('')}</div>`;
   const html = `<div class="lx">
     <aside class="lx-side"><img class="lx-art" src="${charImg(g, 'bust')}" alt=""><div class="lx-say"><b>${esc(I18N.L(g.name))}</b>${esc(say)}</div>
-      <div class="lx-prog">${ring(done, all.length)}<span><b>${done}</b><small>/ ${all.length}</small></span><em>${esc(t('lsPass').replace(/[！!]/, ''))}</em></div></aside>
+      <div class="lx-prog">${ring(done, all.length)}<span><b>${done}</b><small>/ ${all.length}</small></span><em>${esc(t('lsPassed'))}</em></div></aside>
     <section class="lx-main"><header class="lx-h"><h2>${esc(t('lsListT'))}</h2><button class="x" data-a="close" aria-label="close">✕</button></header>
       <nav class="lx-tabs"><button class="${lsTab === 'r' ? 'on' : ''}" data-tab="r">${IC.rules}<span><b>${esc(t('lsRules'))}</b><small>${passN(R)} / ${R.length}</small></span></button>
         <button class="${lsTab === 'l' ? 'on' : ''}" data-tab="l">${IC.lesson}<span><b>${esc(t('lsLessons'))}</b><small>${passN(LL)} / ${LL.length}</small></span></button></nav>

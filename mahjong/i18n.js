@@ -56,12 +56,12 @@ const S = {
   },
 };
 // ルールコース・レッスン（2026-11-18）
-Object.assign(S.ja, { lsHint: 'ヒント', lsNext: '次へ', lsStart: 'はじめる', lsQuit: 'レッスンをやめる', lsRules: 'ルール', lsLessons: 'レッスン', lsPass: '合格！', lsFail: 'もう一息！', lsScore: '{n}点',
-  lsAgain: 'もう一度', lsNextL: '次へ進む', lsList: '一覧へ', lsCourse: 'ルールコース', lsCourseD: '麻雀の遊び方を、実際の卓で1つずつ覚えます。上から順に進めましょう。', lsNew: '未挑戦', lsWrong: 'おしい！ もう一度考えてみましょう。',
-  lsListT: 'ルール・レッスン', lsListD: '小町といっしょに、実際の卓で遊びながら覚えます', lsPassN: '{a} / {b} 合格', lsPassLine: '75点以上で合格', lsHand: '局の結果を見たら、レッスンのまとめに進みます' });
+Object.assign(S.ja, { lsHint: 'ヒント', lsNext: '次へ', lsStart: 'はじめる', lsQuit: 'レッスンをやめる', lsRules: 'ルール', lsLessons: 'レッスン', lsPass: '合格です！', lsFail: 'もうちょっと！', lsScore: '{n}点',
+  lsAgain: 'もう一度', lsNextL: '次へ進む', lsList: '一覧へ', lsCourse: 'ルールコース', lsCourseD: '麻雀の遊び方を、実際の卓で1つずつ覚えます。上から順に進めましょう。', lsNew: '未挑戦', lsWrong: 'あれれ、ちょっと違うみたいです…！ もう一回いきましょっ。',
+  lsListT: 'ルール・レッスン', lsListD: '小町といっしょに、実際の卓で遊びながら覚えます', lsPassN: '{a} / {b} 合格', lsPassLine: '75点以上で合格', lsHand: '局の結果を見たら、レッスンのまとめに進みます', lsPassed: '合格', lsSay100: 'かんぺきです！ さすがですね♪', lsSayPass: 'やりましたね、合格です！ この調子で次もいきましょっ。', lsSayFail: 'だいじょうぶ、もう一回やればきっとできますよ！ わたしも最初はそうでした。' });
 Object.assign(S.en, { lsHint: 'Hint', lsNext: 'Next', lsStart: 'Start', lsQuit: 'Quit lesson', lsRules: 'Rules', lsLessons: 'Lessons', lsPass: 'Passed!', lsFail: 'Almost!', lsScore: '{n} pts',
   lsAgain: 'Again', lsNextL: 'Next', lsList: 'List', lsCourse: 'Rules course', lsCourseD: 'Learn how mahjong works step by step at a real table. Go from the top.', lsNew: 'New', lsWrong: 'Close! Think again.',
-  lsListT: 'Rules & lessons', lsListD: 'Learn by playing at a real table with Komachi', lsPassN: '{a} / {b} passed', lsPassLine: '75 or more to pass', lsHand: 'After the result, the lesson summary follows' });
+  lsListT: 'Rules & lessons', lsListD: 'Learn by playing at a real table with Komachi', lsPassN: '{a} / {b} passed', lsPassLine: '75 or more to pass', lsHand: 'After the result, the lesson summary follows', lsPassed: 'passed', lsSay100: 'Perfect! You\'re amazing♪', lsSayPass: 'You did it — passed! Let\'s keep going.', lsSayFail: 'Don\'t worry, you\'ll get it next time! I was the same at first.' });
 // クラウド連携（2026-11-18）
 Object.assign(S.ja, { cloudT: '進行状況をクラウドに保存', cloudD: 'Google アカウントで連携すると、機種変更や別の端末でも続きから遊べます', cloudBtn: 'Google で連携', cloudOn: '連携中', cloudSync: '今すぐ同期', cloudOff: '解除',
   cloudBusy: '同期中…', cloudLast: '同期 {t}', cloudErr_rules: 'クラウド連携は準備中です', cloudErr_net: '通信できませんでした。あとでもう一度お試しください', cloudErr_fail: '連携できませんでした',
