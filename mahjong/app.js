@@ -2352,7 +2352,7 @@ function placeGuide(el) {
   const top = tiles.length ? Math.min(...tiles.map(e => uiRect(e).top)) : H.bottom - 120;
   const l = mp && mp.offsetWidth ? X(uiRect(mp).right) + 14 : 14;
   const last = tiles.length ? uiRect(tiles[tiles.length - 1]) : null, r = last ? X(last.left) - 14 : hud.offsetWidth - 14;
-  const w = Math.max(300, Math.min(680, r - l));
+  const w = Math.max(300, Math.min(Math.max(680, innerHeight * 1.05), r - l));   // (wider on big screens, where the words are bigger)
   el.style.transform = 'none'; el.style.width = w + 'px';
   el.style.left = Math.max(8, l + Math.max(0, (r - l - w) / 2)) + 'px';
   el.style.top = Math.max(8, Y(top) - el.offsetHeight - 12) + 'px';
@@ -2390,26 +2390,45 @@ async function lessonDone() {
     else if (a.dataset.a === 'next') startGame({ lesson: next });
     else openLessons(ls.cat ? 'l' : 'r', ls.cat); });
 }
-// the list: ルール (the course, in order) | レッスン (by category). Cards with the position's tiles, the best score, 合格.
+// the list (ユーザー 2026-11-19「業務ツールっぽい羅列でアガらない。デザイン性を高く」): a room of its own — 小町 large at the left with
+// a word and the overall progress (a ring), the right: two big tabs; ルール = a road of ten medallions joined by a gold line (passed:
+// gold with a check, the next one glowing), レッスン = categories in their own colours and lacquered cards with a fan of the hand's
+// tiles and stars (75 ★, 90 ★★, 100 ★★★).
 let lsTab = 'r', lsCat = 'eff';
+const LS_COL = { eff: '#62b8ff', wait: '#6fe0a6', yaku: '#f3c766', def: '#9aa8ff', score: '#ff8fb5', push: '#ff9d62' };
+const lsStars = r => !r ? 0 : r.best >= 100 ? 3 : r.best >= 90 ? 2 : r.pass ? 1 : 0;
+const starRow = n => `<span class="lx-st">${[0, 1, 2].map(i => `<i class="${i < n ? 'on' : ''}">★</i>`).join('')}</span>`;
 function openLessons(tab, cat0) {
   if (tab) lsTab = tab; if (cat0) lsCat = cat0;
-  const rec = DB.lessons || {};
-  const tiles = ls => { const ty = MJ.parse(ls.pos.me).concat(ls.pos.drawn ? MJ.parse(ls.pos.drawn) : []); return ty.slice(0, 14).map(x => typeHTML(x, 'xs')).join(''); };
-  const card = (ls, k) => { const r = rec[ls.id];
-    return `<button class="lsc ${r && r.pass ? 'pass' : ''}" data-id="${ls.id}"><span class="lsc-n">${ls.cat ? '' : 'STEP '}${k + 1}</span><span class="lsc-st">${r ? (r.pass ? '✓ ' : '') + t('lsScore', { n: r.best }) : esc(t('lsNew'))}</span>
-      <b>${esc(I18N.L(ls.title))}</b><small>${esc(I18N.L(ls.point))}</small><span class="lsc-tl">${tiles(ls)}</span><i class="lsc-bar"><i style="width:${r ? r.best : 0}%"></i></i></button>`; };
-  const list = lsTab === 'r' ? MJLessons.RULES : MJLessons.LESSONS.filter(x => x.cat === lsCat);
-  const passN = l => l.filter(x => rec[x.id] && rec[x.id].pass).length;
-  const cat = MJLessons.CATS.find(c => c.id === lsCat);
-  const html = `<header class="ls-h"><div><h2>${esc(t('lsListT'))}</h2><small>${esc(t('lsListD'))}</small></div><button class="x" data-a="close" aria-label="close">✕</button></header>
-    <div class="ls-tabs"><button class="${lsTab === 'r' ? 'on' : ''}" data-tab="r">${esc(t('lsRules'))}<small>${passN(MJLessons.RULES)}/${MJLessons.RULES.length}</small></button><button class="${lsTab === 'l' ? 'on' : ''}" data-tab="l">${esc(t('lsLessons'))}<small>${passN(MJLessons.LESSONS)}/${MJLessons.LESSONS.length}</small></button></div>
-    ${lsTab === 'l' ? `<div class="ls-cats">${MJLessons.CATS.map(c => { const l = MJLessons.LESSONS.filter(x => x.cat === c.id); return `<button class="${c.id === lsCat ? 'on' : ''}" data-cat="${c.id}">${esc(I18N.L(c.name))}<small>${passN(l)}/${l.length}</small></button>`; }).join('')}</div>` : ''}
-    <div class="ls-head"><b>${esc(lsTab === 'r' ? t('lsCourse') : I18N.L(cat.name))}</b><small>${esc(lsTab === 'r' ? t('lsCourseD') : I18N.L(cat.desc))}</small><span>${esc(t('lsPassN', { a: passN(list), b: list.length }))}</span><i class="lsc-bar"><i style="width:${100 * passN(list) / list.length}%"></i></i></div>
-    <div class="ls-grid">${list.map(card).join('')}</div>`;
-  const b = modal(html, 'lessons');
+  const rec = DB.lessons || {}, R = MJLessons.RULES, LL = MJLessons.LESSONS, all = R.concat(LL);
+  const passN = l => l.filter(x => rec[x.id] && rec[x.id].pass).length, done = passN(all);
+  const g = MJChars.get(GUIDE);
+  const say = passN(R) === 0 ? (I18N.lang === 'ja' ? 'まずはルールコースから。いっしょに卓に着きましょう！' : 'Start with the rules course — let\'s sit down together!')
+    : passN(R) < R.length ? (I18N.lang === 'ja' ? 'その調子です！ 次のステップに進みましょう。' : 'Keep it up! On to the next step.')
+    : done < all.length ? (I18N.lang === 'ja' ? 'ルールはばっちり！ レッスンで腕を磨きましょう。' : 'You know the rules! Sharpen your play in the lessons.')
+    : (I18N.lang === 'ja' ? '全部合格です！ もう立派な雀士ですね。' : 'Everything passed — a true player now!');
+  const ring = (n, d) => { const C = 2 * Math.PI * 34, f = d ? n / d : 0; return `<svg viewBox="0 0 80 80" class="lx-ring"><circle cx="40" cy="40" r="34" class="bg"/><circle cx="40" cy="40" r="34" class="fg" stroke-dasharray="${(C * f).toFixed(1)} ${C.toFixed(1)}"/></svg>`; };
+  const fan = ls => { const ty = MJ.parse(ls.pos.me).concat(ls.pos.drawn ? MJ.parse(ls.pos.drawn) : []), pick = ty.filter((x, i) => i % 2 === 0).slice(0, 7), m = (pick.length - 1) / 2;
+    return `<span class="lx-fan">${pick.map((x, i) => `<span class="lx-ft" style="--r:${((i - m) * 7).toFixed(1)}deg;--y:${(Math.abs(i - m) * 3).toFixed(1)}px">${typeHTML(x, 'xs')}</span>`).join('')}</span>`; };
+  const nextR = R.find(x => !(rec[x.id] && rec[x.id].pass));
+  const road = `<ol class="lx-road">${R.map((ls, i) => { const r = rec[ls.id], st = r && r.pass ? 'done' : ls === nextR ? 'next' : '';
+    return `<li class="lx-node ${st}" data-id="${ls.id}" tabindex="0"><span class="lx-med"><b>${i + 1}</b>${st === 'done' ? '<i class="ck">✓</i>' : ''}</span><span class="lx-nt"><b>${esc(I18N.L(ls.title))}</b><small>${esc(I18N.L(ls.point))}</small>${starRow(lsStars(r))}</span></li>`; }).join('')}</ol>`;
+  const cat = MJLessons.CATS.find(c => c.id === lsCat), list = LL.filter(x => x.cat === lsCat);
+  const cats = `<div class="lx-cats">${MJLessons.CATS.map(c => { const l = LL.filter(x => x.cat === c.id);
+    return `<button class="${c.id === lsCat ? 'on' : ''}" data-cat="${c.id}" style="--cc:${LS_COL[c.id]}"><i></i>${esc(I18N.L(c.name))}<small>${passN(l)}/${l.length}</small></button>`; }).join('')}</div>`;
+  const cards = `<p class="lx-cdesc" style="--cc:${LS_COL[lsCat]}">${esc(I18N.L(cat.desc))}</p><div class="lx-cards">${list.map((ls, i) => { const r = rec[ls.id];
+    return `<button class="lx-card ${r && r.pass ? 'done' : ''}" data-id="${ls.id}" style="--cc:${LS_COL[ls.cat]}"><span class="lx-no">${String(i + 1).padStart(2, '0')}</span>${fan(ls)}
+      <b>${esc(I18N.L(ls.title))}</b><small>${esc(I18N.L(ls.point))}</small><span class="lx-ft2">${starRow(lsStars(r))}<em>${r ? t('lsScore', { n: r.best }) : esc(t('lsNew'))}</em></span></button>`; }).join('')}</div>`;
+  const html = `<div class="lx">
+    <aside class="lx-side"><img class="lx-art" src="${charImg(g, 'bust')}" alt=""><div class="lx-say"><b>${esc(I18N.L(g.name))}</b>${esc(say)}</div>
+      <div class="lx-prog">${ring(done, all.length)}<span><b>${done}</b><small>/ ${all.length}</small></span><em>${esc(t('lsPass').replace(/[！!]/, ''))}</em></div></aside>
+    <section class="lx-main"><header class="lx-h"><h2>${esc(t('lsListT'))}</h2><button class="x" data-a="close" aria-label="close">✕</button></header>
+      <nav class="lx-tabs"><button class="${lsTab === 'r' ? 'on' : ''}" data-tab="r">${IC.rules}<span><b>${esc(t('lsRules'))}</b><small>${passN(R)} / ${R.length}</small></span></button>
+        <button class="${lsTab === 'l' ? 'on' : ''}" data-tab="l">${IC.lesson}<span><b>${esc(t('lsLessons'))}</b><small>${passN(LL)} / ${LL.length}</small></span></button></nav>
+      <div class="lx-body">${lsTab === 'r' ? `<p class="lx-cdesc">${esc(t('lsCourseD'))}</p>${road}` : cats + cards}</div></section></div>`;
+  const b = modal(html, 'lessons lxm');
   b.addEventListener('click', e => {
-    const tb = e.target.closest('[data-tab]'), ct = e.target.closest('[data-cat]'), c = e.target.closest('.lsc'), x = e.target.closest('[data-a=close]');
+    const tb = e.target.closest('[data-tab]'), ct = e.target.closest('[data-cat]'), c = e.target.closest('.lx-card, .lx-node'), x = e.target.closest('[data-a=close]');
     if (tb) { SND.pick(); openLessons(tb.dataset.tab); }
     else if (ct) { SND.pick(); openLessons('l', ct.dataset.cat); }
     else if (c) { SND.pick(); const ls = LS_ALL().find(q => q.id === c.dataset.id); closeModal(); startGame({ lesson: ls }); }
