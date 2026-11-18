@@ -61,7 +61,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>スレッド</th><th>局面数/秒</th><th>1スレッド比</th><th>平均の深さ</th><th>解析：同じ深さまで</th><th>速さ（解析）</th><th>解析の一致</th><th>基準と一致</th><th>起動</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="../shared/mtengine.js?v=12"></script>
+<script src="../shared/mtengine.js?v=13"></script>
 <script src="engine.js?v=20261115nn"></script>
 <script>
 'use strict';
@@ -73,7 +73,7 @@ const RULE = i => i % 2 ? 'standard' : 'renju';
 const ENG = 'engine.js?v=20261115nn';
 // the same pools as app.js: C = core_mt.wasm (the lead engine.js?…&mt=1, the helpers mt-helper.js), JavaScript = engine_mt.wasm (?nowasm)
 const POOLS = {
-  c: { wasm: 'core_mt.wasm?v=1', lead: ENG + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 384, maximum: 16384,
+  c: { wasm: 'core_mt.wasm?v=2', lead: ENG + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 384, maximum: 16384,
     imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
     help: m => m.type === 'think' || m.type === 'analyze' ? {} : null },
   js: { wasm: 'engine_mt.wasm?v=3', lead: ENG + '&nowasm=1&mt=1', helper: ENG + '&nowasm=1&mt=2', slot: 1 << 20, initial: 512, maximum: 4096,

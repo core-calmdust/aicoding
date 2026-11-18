@@ -425,3 +425,10 @@ Many cores (nuts) held together by shared memory (caramel).
 - `shared/tools/genbook.js <game>`：初期局面から、各局面をサイトのエンジン（Worker の分析）で `--ms` ミリ秒調べ、最善から `--margin` 点以内の手を記録し、上位 `--k` 手を `--plies` 手先まで広げる。出力 `{v, game, rule, ms, margin, plies, k, pos: {キー: [[手, 評価], …]}}`。エンジンは記録の中から最善に近い手を乱数で選ぶ。`--starts all`（チャンギ：16通りの配置）・`--merge 既存ファイル`。
 - 対応：チャンギ（`janggi/book.json`）、ウゴルキ（`ugolki/book-<ルール>.json`）。アマゾン・コナネ・アゴンには book 付きのレベルが無く、ヘックスは既に初手の表（bookMove）がある。
 
+## 待ち方の改善：パーキング（2026-11-18）
+- **手の空いた補助の待ち方**（`praline_ybw.h`）：`mt_idle` で参加できる分割点も二度読みする手もない空振りが `PL_PARK_SPIN`（2048）回続いたら、`memory.atomic.wait32` で眠る（最長 `PL_PARK_NS`＝0.2ms）。分割点を開いた持ち主（`spRun`）が眠っている補助を起こす（`plWake`：`memory.atomic.notify`）。短い隙間は今までどおり回って待つので、参加の遅れは同じ。長い隙間（深い節の最初の手を持ち主がひとりで読む間、探索の終わり際）に全コアが回り続けない＝発熱・スマホの電池・big.LITTLE のほかのスレッドの取り分のため。探索の結果は変わらない（補助がいつ見直すかだけ）。
+- **分割点のロック**：`spLock` を test-and-test-and-set に（取れなかったスレッドは自分のキャッシュの読みで待ち、比較交換を連打しない）。
+- wasm のスレッド版だけ（`__wasm_atomics__`）。シミュレータ（ネイティブ）と `-DPL_NO_PARK` では入らない。実行中は `mt_park(0)` で切れる：ページの **`?park=0`**（`shared/mtengine.js` がページ自身のインスタンスから呼ぶ。フラグは共有メモリ）で前の待ち方と比べられる（例 `xiangqi/bench.html?park=0`）。
+- 作り直した `engine_mt.wasm`／`core_mt.wasm`：シャンチー・チャンギ・チェッカー・タフル・モリス・ファノロナ（アルケルケ）・チェス・マンカラ・アマゾンズ・ウゴルキ・アゴン・コナネ・五目並べ（将棋・リバーシは別の作業中のため次にその wasm を作るときに入る）。宣言するメモリのページ数は前と同じ。
+- **一致の確認**：1スレッドは配信中の版と全一致（`tools/mtsim/wasm1.js`：シャンチー・チャンギ・タフル深さ9／チェス深さ11、モリス `check_wasm.js` 深さ13、チェッカー・ファノロナ bench の12局面・深さ12、マンカラ `mtcheck.js` 425件、ウゴルキ・アゴン・コナネ `check_ab.js`、アマゾンズ `check_ab.js quick`）。実スレッド：マンカラ `mtcheck.js 3`（解けた8局面が1スレッドと同じ）、五目並べ `check-mt.js 1,2`（手10/10一致）、アマゾンズ MCTS `mt_node.js check 1 2`。headless Chrome の `engine-health.html` で全ゲーム「分離○・オン・組が動作」。シミュレータ（`tools/mtsim`、チャンギ）も生成・実行できる。
+- **未確認**：速さ・発熱への効果は実機でしか分からない（作業機は2コア共用）。Mac で `bench-all.html` と各 `bench.html?park=0` を並べて測る。遅くなるゲームがあれば `PL_PARK_SPIN` を上げるか、そのゲームだけ `-DPL_NO_PARK`。

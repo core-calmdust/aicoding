@@ -60,7 +60,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>スレッド</th><th>局面数/秒</th><th>1スレッド比</th><th>平均の深さ</th><th>同じ深さまで</th><th>速さ（深さ）</th><th>基準と一致</th><th>起動</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="../shared/mtengine.js?v=12"></script>
+<script src="../shared/mtengine.js?v=13"></script>
 <script src="engine.js?v=20261111kb4-zf1"></script>
 <script>
 'use strict';
@@ -80,7 +80,7 @@ const ENG = 'engine.js?v=20261111kb4-zf1';
 // (2026-11-12) ?ybw=N: the YBW helpers for the comparison (mt-helper.js: default 7 = the first 8 threads YBW (9 before 2026-11-12), Lazy SMP beyond;
 // 1 = v2, 0 = every helper Lazy SMP)
 const YBW = (q => q && /^\d+$/.test(q) ? +q : null)(new URLSearchParams(location.search).get('ybw'));
-const POOL = { wasm: 'engine_mt.wasm?v=6', lead: ENG + '&mt=1', helper: 'mt-helper.js?v=4' + (YBW !== null ? '&ybw=' + YBW : ''), slot: 2 << 20, initial: 1152, maximum: 16384,
+const POOL = { wasm: 'engine_mt.wasm?v=7', lead: ENG + '&mt=1', helper: 'mt-helper.js?v=4' + (YBW !== null ? '&ybw=' + YBW : ''), slot: 2 << 20, initial: 1152, maximum: 16384,
   imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
   help: m => { if (m.type !== 'think') return null; const p = E.Pos.fromFEN(m.fen || E.START), u = []; for (const x of m.moves || []) { u.push(p.uci(x)); p.make(x); } return { setup: (m.fen || E.START) + (u.length ? ' moves ' + u.join(' ') : '') }; } };
 const think = (moves, cfg, threads) => ({ type: 'think', fen: null, moves, level: 20, cfg: cfg.d < 99 ? { d: cfg.d } : { ms: cfg.ms }, mtThreads: threads });
