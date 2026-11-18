@@ -11,7 +11,7 @@ table{border-collapse:collapse;margin-top:16px}td,th{padding:6px 14px;border-bot
 <button id="go">計測する</button>
 <table id="t"><tr><th>計算</th><th>まとめる数</th><th>評価 / 秒</th><th>CPU比</th></tr></table>
 <div id="log"></div>
-<script src="gpunet.js?v=4"></script>
+<script src="gpunet.js?v=5"></script>
 <script>
 const RX = [0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 7, 5, 1, 1, 102, 0, 0, 10, 61, 1, 59, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 133, 2, 11];
 const log = s => { document.getElementById('log').textContent += s + '\n'; };
@@ -34,17 +34,20 @@ document.getElementById('go').onclick = async () => {
   let t0 = performance.now(), k = 0; while (performance.now() - t0 < 3000) { E.gpu_cpu(4); k += 4; }
   const cpu = k / ((performance.now() - t0) / 1000); E.gpu_cpu(nb); const ref = new Float32Array(E.memory.buffer, E.gpu_out(), nb * 727).slice();
   row('CPU（' + (rx ? 'relaxed SIMD' : 'SIMD') + '）', '1', cpu.toFixed(1), '×1.00');
-  const g = await GoGPU.create(raw, 64);
-  if (!g) { log('WebGPU が使えません（このブラウザ / 端末では GPU は選べません）。'); return; }
-  log('GPU: ' + (g.info || '(名前不明)'));
-  for (const B of [1, 8, 16, 32, 64]) {
-    await g.run(feat, glob, pat, B);   // (warm-up)
-    let t = performance.now(), n = 0; while (performance.now() - t < 3000) { await g.run(feat, glob, pat, B); n += B; }
-    const r = n / ((performance.now() - t) / 1000);
-    row('GPU', String(B), r.toFixed(1), '×' + (r / cpu).toFixed(2));
+  for (const f16 of [false, true]) {
+    const g = await GoGPU.create(raw, 64, { f16 });
+    const nm = f16 ? 'GPU（16ビット）' : 'GPU';
+    if (!g) { log(f16 ? '16ビット計算（shader-f16）はこの GPU では使えません。' : 'WebGPU が使えません（このブラウザ / 端末では GPU は選べません）。'); if (f16) break; return; }
+    if (!f16) log('GPU: ' + (g.info || '(名前不明)'));
+    for (const B of [1, 8, 16, 32, 64]) {
+      await g.run(feat, glob, pat, B);   // (warm-up)
+      let t = performance.now(), n = 0; while (performance.now() - t < 3000) { await g.run(feat, glob, pat, B); n += B; }
+      const r = n / ((performance.now() - t) / 1000);
+      row(nm, String(B), r.toFixed(1), '×' + (r / cpu).toFixed(2));
+    }
+    const out = await g.run(feat, glob, pat, nb); let m = 0; for (let i = 0; i < nb * 727; i++) m = Math.max(m, Math.abs(out[i] - ref[i]));
+    log(nm + ' と CPU の出力の最大差: ' + m.toExponential(2) + (m < 1e-3 ? '（一致）' : m < 1e-1 ? '（16ビットの誤差の範囲）' : '（大きい：不具合の可能性）'));
   }
-  const out = await g.run(feat, glob, pat, nb); let m = 0; for (let i = 0; i < nb * 727; i++) m = Math.max(m, Math.abs(out[i] - ref[i]));
-  log('GPU と CPU の出力の最大差: ' + m.toExponential(2) + (m < 1e-3 ? '（一致）' : '（大きい：不具合の可能性）'));
   log('対局の GPU は 16 局面ずつまとめて計算します（PRO の「計算」→ GPU）。');
 };
 </script>

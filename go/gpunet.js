@@ -78,16 +78,19 @@
   // (2026-11-19) the convolutions as a tiled matrix product: out[co][n] = sum_k W[co][k] * im2col[k][n] over k = (ci, tap) and
   // n = (batch, position) — a workgroup computes a 64 x 64 tile through shared memory, each thread 4 x 4 (the first version, one
   // output a thread, ran at ~0.3 TFLOPS on an M4 Pro)
-  const CONV = `
-struct P { cin: u32, cout: u32, k: u32, accum: u32, inC: u32, outC: u32, outOff: u32, pad: u32 };
+  // (2026-11-19) fused: the input's batch norm + ReLU (P_.bn = 1: relu(x s + b) of each input channel as it is loaded — the separate
+  // pass wrote and read every plane once more); f16: the shared tiles and products in half precision, sums in float32
+  const mkConv = f16 => `${f16 ? 'enable f16;' : ''}
+struct P { cin: u32, cout: u32, k: u32, accum: u32, inC: u32, outC: u32, outOff: u32, bn: u32 };
 struct NB { n: u32, pad0: u32, pad1: u32, pad2: u32 };
 @group(0) @binding(0) var<uniform> P_: P;
 @group(0) @binding(1) var<storage, read> inp: array<f32>;
 @group(0) @binding(2) var<storage, read> w: array<f32>;
 @group(0) @binding(3) var<storage, read_write> outp: array<f32>;
 @group(0) @binding(4) var<uniform> NB_: NB;
-var<workgroup> As: array<vec4<f32>, 256>;   // [16 k][64 m] (four m a vector: one shared read for four)
-var<workgroup> Bs: array<vec4<f32>, 256>;   // [16 k][64 n]
+@group(0) @binding(5) var<storage, read> sb: array<f32>;   // the input's bn: s[cin], b[cin]
+var<workgroup> As: array<vec4<${f16 ? 'f16' : 'f32'}>, 256>;   // [16 k][64 m] (four m a vector: one shared read for four)
+var<workgroup> Bs: array<vec4<${f16 ? 'f16' : 'f32'}>, 256>;   // [16 k][64 n]
 @compute @workgroup_size(16, 16)
 fn main(@builtin(local_invocation_id) l: vec3<u32>, @builtin(workgroup_id) wg: vec3<u32>) {
   let tid = l.y * 16u + l.x;
@@ -113,14 +116,14 @@ fn main(@builtin(local_invocation_id) l: vec3<u32>, @builtin(workgroup_id) wg: v
     for (var j = 0u; j < 4u; j++) {
       if (kOK && mOK[j]) { av[j] = w[wB[j] + gk]; }
       let yy = ny[j] + dy; let xx = nx[j] + dx;
-      if (kOK && nOK[j] && yy >= 0 && yy < 19 && xx >= 0 && xx < 19) { bv[j] = inp[iB[j] + ci * 361u + u32(yy * 19 + xx)]; }
+      if (kOK && nOK[j] && yy >= 0 && yy < 19 && xx >= 0 && xx < 19) { var v = inp[iB[j] + ci * 361u + u32(yy * 19 + xx)]; if (P_.bn == 1u) { v = max(v * sb[ci] + sb[P_.cin + ci], 0.0); } bv[j] = v; }
     }
-    As[kr * 16u + tid % 16u] = av;
-    Bs[kr * 16u + tid % 16u] = bv;
+    As[kr * 16u + tid % 16u] = ${f16 ? 'vec4<f16>(av)' : 'av'};
+    Bs[kr * 16u + tid % 16u] = ${f16 ? 'vec4<f16>(bv)' : 'bv'};
     workgroupBarrier();
     for (var k = 0u; k < 16u; k++) {
       let a = As[k * 16u + l.y]; let bb = Bs[k * 16u + l.x];
-      acc[0] += a.x * bb; acc[1] += a.y * bb; acc[2] += a.z * bb; acc[3] += a.w * bb;
+      acc[0] += ${f16 ? 'vec4<f32>(a.x * bb)' : 'a.x * bb'}; acc[1] += ${f16 ? 'vec4<f32>(a.y * bb)' : 'a.y * bb'}; acc[2] += ${f16 ? 'vec4<f32>(a.z * bb)' : 'a.z * bb'}; acc[3] += ${f16 ? 'vec4<f32>(a.w * bb)' : 'a.w * bb'};
     }
     workgroupBarrier();
   }
@@ -236,11 +239,14 @@ fn main(@builtin(local_invocation_id) l: vec3<u32>, @builtin(workgroup_id) wg: v
   }
 }`;
   // ---------------------------------------------------------------- the runner
-  async function create(netBytes, maxB) {
+  async function create(netBytes, maxB, opt) {
+    opt = opt || {};
     try {
       if (typeof navigator === 'undefined' || !navigator.gpu) return null;
       const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }); if (!adapter) return null;
-      const dev = await adapter.requestDevice({ requiredLimits: { maxStorageBufferBindingSize: Math.min(adapter.limits.maxStorageBufferBindingSize, 1 << 30), maxBufferSize: Math.min(adapter.limits.maxBufferSize, 1 << 30) } });
+      const f16 = !!opt.f16 && adapter.features.has('shader-f16');
+      if (opt.f16 && !f16) return null;
+      const dev = await adapter.requestDevice({ requiredFeatures: f16 ? ['shader-f16'] : [], requiredLimits: { maxStorageBufferBindingSize: Math.min(adapter.limits.maxStorageBufferBindingSize, 1 << 30), maxBufferSize: Math.min(adapter.limits.maxBufferSize, 1 << 30) } });
       const net = parse(netBytes), C = net.C, hc = net.hc, gc = net.gc, bc = net.bc;
       const SU = GPUBufferUsage.STORAGE, CD = GPUBufferUsage.COPY_DST, CS = GPUBufferUsage.COPY_SRC;
       const buf = (n, u) => dev.createBuffer({ size: Math.max(16, ((n * 4) + 15) & ~15), usage: u });
@@ -248,38 +254,36 @@ fn main(@builtin(local_invocation_id) l: vec3<u32>, @builtin(workgroup_id) wg: v
       const cat = (...a) => { let n = 0; for (const x of a) n += x.length; const o = new Float32Array(n); let k = 0; for (const x of a) { o.set(x, k); k += x.length; } return o; };
       const mod = code => dev.createShaderModule({ code });
       const pipe = code => dev.createComputePipeline({ layout: 'auto', compute: { module: mod(code), entryPoint: 'main' } });
-      const P = { conv: pipe(CONV), bn: pipe(BNRELU), stem: pipe(STEMADD), pool: pipe(POOLADD), tail: pipe(TAIL) };
+      const P = { conv: pipe(mkConv(f16)), bn: pipe(BNRELU), stem: pipe(STEMADD), pool: pipe(POOLADD), tail: pipe(TAIL) };
       const uni = arr => { const b = dev.createBuffer({ size: 16 * Math.ceil(arr.length * 4 / 16), usage: GPUBufferUsage.UNIFORM | CD }); dev.queue.writeBuffer(b, 0, new Uint32Array(arr)); return b; };
       const bind = (p, list) => dev.createBindGroup({ layout: p.getBindGroupLayout(0), entries: list.map((b, i) => ({ binding: i, resource: { buffer: b } })) });
       // activations
       const planes = c => buf(maxB * c * NP, SU | CD);
       const FEAT = planes(NSP), GLOB = buf(maxB * 2, SU | CD), PAT = buf(maxB * NP, SU | CD);
-      const X = planes(C), A1 = planes(C), H1 = planes(C), H2 = planes(C), H3 = planes(C), HP = planes(3 * hc), HPB = planes(3 * hc);
+      const X = planes(C), H1 = planes(C), H2 = planes(C), H3 = planes(C), HP = planes(3 * hc), HPB = planes(3 * hc);
       const NBU = dev.createBuffer({ size: 16, usage: GPUBufferUsage.UNIFORM | CD });
       const OUT = buf(maxB * OUTN, SU | CS), READ = dev.createBuffer({ size: maxB * OUTN * 4, usage: GPUBufferUsage.MAP_READ | CD });
       const ops = [];   // { p, bg, gx, gy, perB } — dispatched in order, z = the batch
-      const conv = (cv, inp, inC, out, outC, accum, outOff = 0) => ops.push({ p: P.conv, bg: bind(P.conv, [uni([cv.cin, cv.cout, cv.k, accum ? 1 : 0, inC, outC, outOff, 0]), inp, data(cv.w), out, NBU]), mm: Math.ceil(cv.cout / 64) });
+      const NOBN = data(new Float32Array(4));
+      const conv = (cv, inp, inC, out, outC, accum, b) => ops.push({ p: P.conv, bg: bind(P.conv, [uni([cv.cin, cv.cout, cv.k, accum ? 1 : 0, inC, outC, 0, b ? 1 : 0]), inp, data(cv.w), out, NBU, b ? data(cat(b.s, b.b)) : NOBN]), mm: Math.ceil(cv.cout / 64) });   // (b: the input's bn + relu, fused)
       const bnr = (b, inp, out, c) => ops.push({ p: P.bn, bg: bind(P.bn, [uni([c, 0, 0, 0]), inp, data(cat(b.s, b.b)), out]), gx: Math.ceil(NP / WG), gy: c });
       conv(net.stem, FEAT, NSP, X, C, 0);
       ops.push({ p: P.stem, bg: bind(P.stem, [uni([C, 0, 0, 0]), GLOB, PAT, data(cat(net.gfw, net.gfb)), data(net.emb), X]), gx: Math.ceil(NP / WG), gy: C });
       for (const k of net.blk) {
         if (k.kind === 0) {
-          bnr(k.bn_in, X, A1, C); conv(k.cin, A1, C, H1, bc, 0);
-          bnr(k.n1b1, H1, H2, bc); conv(k.n1c1, H2, bc, H3, bc, 0);
-          bnr(k.n1b2, H3, H2, bc); conv(k.n1c2, H2, bc, H1, bc, 1);
-          bnr(k.n2b1, H1, H2, bc); conv(k.n2c1, H2, bc, H3, bc, 0);
-          bnr(k.n2b2, H3, H2, bc); conv(k.n2c2, H2, bc, H1, bc, 1);
-          bnr(k.bn_out, H1, H2, bc); conv(k.cout, H2, bc, X, C, 1);
+          conv(k.cin, X, C, H1, bc, 0, k.bn_in);
+          conv(k.n1c1, H1, bc, H3, bc, 0, k.n1b1); conv(k.n1c2, H3, bc, H1, bc, 1, k.n1b2);
+          conv(k.n2c1, H1, bc, H3, bc, 0, k.n2b1); conv(k.n2c2, H3, bc, H1, bc, 1, k.n2b2);
+          conv(k.cout, H1, bc, X, C, 1, k.bn_out);
         } else {
-          bnr(k.bn1, X, A1, C); conv(k.creg, A1, C, H1, C, 0); conv(k.cpool, A1, C, H2, gc, 0);
+          conv(k.creg, X, C, H1, C, 0, k.bn1); conv(k.cpool, X, C, H2, gc, 0, k.bn1);
           bnr(k.bnp, H2, H3, gc);
           ops.push({ p: P.pool, bg: bind(P.pool, [uni([C, gc, 0, 0]), H3, data(cat(k.fcw, k.fcb)), H1]), gx: 1, gy: C, wg: true });
-          bnr(k.bn2, H1, H2, C); conv(k.c2, H2, C, X, C, 1);
+          conv(k.c2, H1, C, X, C, 1, k.bn2);
         }
       }
-      bnr(net.trunk, X, A1, C);
       // the three heads as one 1x1 convolution (3 hc outputs), then their bn + relu
-      conv({ cin: C, cout: 3 * hc, k: 1, w: cat(net.pcw, net.vcw, net.ocw) }, A1, C, HP, 3 * hc, 0);
+      conv({ cin: C, cout: 3 * hc, k: 1, w: cat(net.pcw, net.vcw, net.ocw) }, X, C, HP, 3 * hc, 0, net.trunk);
       bnr({ s: cat(net.pbn.s, net.vbn.s, net.obn.s), b: cat(net.pbn.b, net.vbn.b, net.obn.b) }, HP, HPB, 3 * hc);
       const tw = cat(net.pow, [net.pob], net.ppw, [net.ppb], net.v1w, net.v1b, net.vvw, net.vvb, net.vsw, [net.vsb], net.oow, [net.oob]);
       const tailOp = { p: P.tail, bg: bind(P.tail, [uni([hc, 0, 0, 0]), HPB, data(tw), OUT]) };
@@ -304,7 +308,7 @@ fn main(@builtin(local_invocation_id) l: vec3<u32>, @builtin(workgroup_id) wg: v
         const r = busy.then(go); busy = r.catch(() => {}); return r;
       }
       let lost = false; dev.lost.then(() => { lost = true; });
-      return { run, maxB, get lost() { return lost; }, info: adapter.info ? (adapter.info.description || adapter.info.vendor + ' ' + adapter.info.architecture) : '' };
+      return { run, maxB, f16, get lost() { return lost; }, info: adapter.info ? (adapter.info.description || adapter.info.vendor + ' ' + adapter.info.architecture) : '' };
     } catch (e) { console.warn('[gpunet]', e); return null; }
   }
   self.GoGPU = { create, parse };
