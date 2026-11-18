@@ -837,7 +837,7 @@ body .info-line{font-size:12.5px}
 .board{background:var(--bdImg,none) center/100% 100% no-repeat}
 /* 2D designs (2026-11-18, tools/gen_art2.py → img/2d/): the boards carry their own lines and points (burnt grooves and drilled
    holes, gold inlay, printed ink, garden paths, pecked grooves, painted cobalt), so the page's line layer is hidden; the 3D boards
-   (atlas/models/foxgeese.js) keep using the older img/bd-*.webp / fr-*.webp. --bdEdge: the thin rim round the board. */
+   (atlas/models/foxgeese.js) has its own 3D designs after these (2026-11-19). --bdEdge: the thin rim round the board. */
 html[data-bd] .lines :is(.grv,.grv-hl,.pt,.off){display:none}
 html[data-bd] .board::after{display:none}
 html[data-bd] .board{border-radius:calc(var(--cell) * .06);box-shadow:0 0 0 calc(var(--cell) * .025) var(--bdEdge,#000),0 calc(var(--cell) * .05) calc(var(--cell) * .2) rgba(0,0,0,.55)}
@@ -1404,7 +1404,7 @@ html[data-bd=meadow] .reserve .rsv-plate.rsv-q.lo b, html[data-bd=bauhaus] .rese
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=3')).then(() => load('../atlas/table3d.js?v=184')).then(() => load('../atlas/tables3d.js?v=146')).then(() => load('../atlas/skin/common.js?v=113')).then(() => load('../atlas/models/foxgeese.js?v=1')).then(() => load('../atlas/skin/foxgeese.js?v=8'))
+  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=3')).then(() => load('../atlas/table3d.js?v=184')).then(() => load('../atlas/tables3d.js?v=158')).then(() => load('../atlas/skin/common.js?v=113')).then(() => load('../atlas/models/foxgeese.js?v=2')).then(() => load('../atlas/skin/foxgeese.js?v=9'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
