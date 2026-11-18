@@ -127,3 +127,11 @@ cc -O3 -o rvmatch rvmatch.c -ldl -lz -lm
 ./rvtrain train pairs.bin games.bin deep.bin:3 --out weights_v5b.bin.gz --init weights_v5m.bin.gz --threads 10
 ```
 対局棋譜の終局石差よりは正確ですが、量が全体の1%未満なので効果は小さい見込みです。
+
+## 設定の組み合わせを同じ時間で比べる（frontier.js、2026-11-19）
+`rvmatch` は各側の「考えた時間」も出すようになりました。`frontier.js` は、たくさんの設定（深さ・t・読み切り・終局まで読む範囲・終局読みの誤差幅）を今の Lv.28 と対局させ、Elo と時間の表を作ります（止めても続きから）。手順と見方は `claude/reversi-mac-verification.md`。
+```sh
+node frontier.js run --plan stage1 --n 1000     # stage2（組み合わせ）、extreme（今の10〜100倍の時間）
+node frontier.js table
+```
+- `rvmatch match … --engine a.so --engine-b b.so`：別々にビルドしたエンジンどうしの対局（例：`-DENDK=130` で終局読みの誤差幅を 1.3倍にしたもの。`frontier.js` が自動で作ります）。`ENDK` を付けないビルドは今までと同じバイナリです。
