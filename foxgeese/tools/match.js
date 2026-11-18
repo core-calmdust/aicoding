@@ -20,12 +20,14 @@ function escaped(pos) {
 }
 // FG_MS: both engines' Lv.19 thinks for this many ms per move (equal-time comparisons)
 if (process.env.FG_MS) for (const X of [E, EG]) X.LEVELS[19] = { s: 1, ms: +process.env.FG_MS };
+// FG_RANDPLIES=1,3: these plies are random instead of the first two (e.g. only the geese's first two moves: the fox's opening book is tested)
+const RP = process.env.FG_RANDPLIES ? process.env.FG_RANDPLIES.split(',').map(Number) : null;
 for (let g = 0; g < +ng; g++) {
   for (const X of [E, EG]) { X.setRule(rule); X.setFirst(X.P1); X.ttClear(); }
   const pos = new E.Pos(), moves = [], hs = [pos.h1]; let j, gmq = 0;
   while (!(j = E.judge(pos, hs)).over && moves.length < 600) {
     let m;
-    if (moves.length < 2) { const L = pos.moves(); m = L[Math.floor(rand() * L.length)]; }
+    if (RP ? RP.includes(moves.length) : moves.length < 2) { const L = pos.moves(); m = L[Math.floor(rand() * L.length)]; }
     else {
       const X = pos.side ? EG : E, t = Date.now(), r = X.think(null, moves, pos.side ? +gl : +fl, rand, rule), dt = Date.now() - t;
       m = r.move;
