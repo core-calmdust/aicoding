@@ -2412,7 +2412,7 @@ function openLessons(tab, cat0) {
     return `<span class="lx-fan">${pick.map((x, i) => `<span class="lx-ft" style="--r:${((i - m) * 7).toFixed(1)}deg;--y:${(Math.abs(i - m) * 3).toFixed(1)}px">${typeHTML(x, 'xs')}</span>`).join('')}</span>`; };
   const nextR = R.find(x => !(rec[x.id] && rec[x.id].pass));
   const road = `<ol class="lx-road">${R.map((ls, i) => { const r = rec[ls.id], st = r && r.pass ? 'done' : ls === nextR ? 'next' : '';
-    return `<li class="lx-node ${st}" data-id="${ls.id}" tabindex="0"><span class="lx-med"><b>${i + 1}</b>${st === 'done' ? '<i class="ck">✓</i>' : ''}</span><span class="lx-nt"><b>${esc(I18N.L(ls.title))}</b><small>${esc(I18N.L(ls.point))}</small>${starRow(lsStars(r))}</span></li>`; }).join('')}</ol>`;
+    return `<li class="lx-node ${st}" data-id="${ls.id}" tabindex="0"><span class="lx-med"><b>${i + 1}</b>${st === 'done' ? '<i class="ck">✓</i>' : ''}</span><span class="lx-nt"><span class="lx-nh"><b>${esc(I18N.L(ls.title))}</b>${starRow(lsStars(r))}</span><small>${esc(I18N.L(ls.point))}</small></span></li>`; }).join('')}</ol>`;
   const cat = MJLessons.CATS.find(c => c.id === lsCat), list = LL.filter(x => x.cat === lsCat);
   const cats = `<div class="lx-cats">${MJLessons.CATS.map(c => { const l = LL.filter(x => x.cat === c.id);
     return `<button class="${c.id === lsCat ? 'on' : ''}" data-cat="${c.id}" style="--cc:${LS_COL[c.id]}"><i></i>${esc(I18N.L(c.name))}<small>${passN(l)}/${l.length}</small></button>`; }).join('')}</div>`;
@@ -2426,6 +2426,10 @@ function openLessons(tab, cat0) {
       <nav class="lx-tabs"><button class="${lsTab === 'r' ? 'on' : ''}" data-tab="r">${IC.rules}<span><b>${esc(t('lsRules'))}</b><small>${passN(R)} / ${R.length}</small></span></button>
         <button class="${lsTab === 'l' ? 'on' : ''}" data-tab="l">${IC.lesson}<span><b>${esc(t('lsLessons'))}</b><small>${passN(LL)} / ${LL.length}</small></span></button></nav>
       <div class="lx-body">${lsTab === 'r' ? `<p class="lx-cdesc">${esc(t('lsCourseD'))}</p>${road}` : cats + cards}</div></section></div>`;
+  // (ユーザー 2026-11-19「クリックするたびにボックスが縮んで大きくなるアニメーションをカット」) a tab / category changes the box's
+  // contents in place; only the first opening has the box's entrance
+  const m = $('#modal'), cur = !m.hidden && m.classList.contains('lxm') && m.querySelector('.mbox');
+  if (cur) { const sc = cur.querySelector('.lx-body'); cur.innerHTML = html; return; }
   const b = modal(html, 'lessons lxm');
   b.addEventListener('click', e => {
     const tb = e.target.closest('[data-tab]'), ct = e.target.closest('[data-cat]'), c = e.target.closest('.lx-card, .lx-node'), x = e.target.closest('[data-a=close]');

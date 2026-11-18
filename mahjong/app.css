@@ -3055,3 +3055,21 @@ html:not(.lp) #game .ls-guide .lg-top small,html:not(.lp) #game .ls-guide .lg-qu
 html:not(.lp) #game .ls-guide .lg-again{font-size:max(13px,2.1vh)}
 html:not(.lp) #game .ls-guide .lg-btns .btn{font-size:max(13px,1.9vh);padding:.5em 1.3em}
 html:not(.lp) #game .ls-guide .lg-bub{padding:max(10px,1.5vh) max(14px,2vh)}
+/* ルールの道のり：2列×5段、メダルの右に名前（ユーザー 2026-11-19「文字の改行が細かく入る」） */
+.lx-road{grid-template-columns:1fr 1fr;grid-template-rows:repeat(5,auto);grid-auto-flow:column;column-gap:28px;row-gap:14px}
+.lx-node{flex-direction:row;align-items:center;gap:16px;text-align:left;padding:6px 12px 6px 6px;border-radius:99px;transition:background .2s}
+.lx-node:hover{background:rgba(232,206,140,.06)}
+.lx-node::after{display:none}
+.lx-node:not(:nth-child(5n))::before{content:"";position:absolute;left:41px;top:calc(50% + 36px);height:calc(100% - 58px);width:2px;background:linear-gradient(180deg,rgba(232,206,140,.55),rgba(232,206,140,.15))}
+.lx-node.done:not(:nth-child(5n))::before{background:linear-gradient(180deg,#f2d793,#b8954a)}
+.lx-node:not(:nth-child(5n))::after{display:none}
+.lx-med{flex:none}
+.lx-nt{align-items:flex-start;gap:4px;min-width:0;flex:1}
+.lx-nh{display:flex;align-items:center;gap:10px;min-width:0;max-width:100%}
+.lx-nh b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px}
+.lx-nh .lx-st{flex:none}
+.lx-nt small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-size:12.5px}
+html.lp .lx-road{column-gap:12px;row-gap:6px}
+html.lp .lx-node{gap:10px;padding:3px 8px 3px 3px}
+html.lp .lx-node:not(:nth-child(5n))::before{left:30px;top:calc(50% + 26px);height:calc(100% - 46px)}
+html.lp .lx-nh b{font-size:13.5px}
