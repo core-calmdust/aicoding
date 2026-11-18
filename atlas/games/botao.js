@@ -41,13 +41,13 @@
   const SX = (() => {
     let C = null;
     const ac = () => { try { if (localStorage.getItem('atlas-sfx') === '0') return null; } catch (e) {} try { C = C || window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume(); return C; } catch (e) { return null; } };
-    const at = f => { const a = ac(); if (a) try { f(a, a.currentTime + .005); } catch (e) {} };
+    const at = (f, when) => { const a = ac(); if (a) try { f(a, Math.max(a.currentTime + .005, when || 0)); } catch (e) {} };
     const whistle = (a, t, dur, n) => { for (let k = 0; k < (n || 1); k++) { const t0 = t + k * (dur + .08), o = a.createOscillator(), lfo = a.createOscillator(), lg = a.createGain(), g = a.createGain(); o.type = 'sine'; o.frequency.value = 2750; lfo.frequency.value = 38; lg.gain.value = 140; lfo.connect(lg).connect(o.frequency); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.06, t0 + .02); g.gain.setValueAtTime(.06, t0 + dur - .04); g.gain.linearRampToValueAtTime(0, t0 + dur); o.connect(g).connect(a.destination); o.start(t0); lfo.start(t0); o.stop(t0 + dur + .02); lfo.stop(t0 + dur + .02); } };
     const crowd = (a, t, dur, vol) => { const n = a.createBufferSource(), b = a.createBuffer(1, a.sampleRate * dur | 0, a.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) { const k = i / d.length; d[i] = (Math.random() * 2 - 1) * Math.min(1, k * 6) * Math.pow(1 - k, 1.6); } n.buffer = b; const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = .7; const g = a.createGain(); g.gain.value = vol; n.connect(bp).connect(g).connect(a.destination); n.start(t); };
     return {
       whistle: (n, dur) => at((a, t) => whistle(a, t, dur || .28, n || 1)),
       goal: () => at((a, t) => { whistle(a, t, .45, 1); crowd(a, t + .05, 2.4, .5); }),
-      net: () => at((a, t) => { const n = a.createBufferSource(), b = a.createBuffer(1, a.sampleRate * .25 | 0, a.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3); n.buffer = b; const f = a.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2400; const g = a.createGain(); g.gain.value = .35; n.connect(f).connect(g).connect(a.destination); n.start(t); }),
+      net: when => at((a, t) => { const n = a.createBufferSource(), b = a.createBuffer(1, a.sampleRate * .25 | 0, a.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3); n.buffer = b; const f = a.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2400; const g = a.createGain(); g.gain.value = .35; n.connect(f).connect(g).connect(a.destination); n.start(t); }, when),
       ooh: () => at((a, t) => crowd(a, t, 1.1, .22)),
     };
   })();
@@ -442,10 +442,12 @@
     }
 
     /* ---------- playing a flick back ---------- */
+    const LOOK = .15;
+    const knock = (e, when) => { if ((e.k === 'hit' || e.k === 'ball') && e.v > 6) SND.hit(e.v * (e.k === 'ball' ? .55 : 1), when); else if ((e.k === 'rim' || e.k === 'post' || e.k === 'keep') && e.v > 10) SND.cush(e.v * .7, when); else if (e.k === 'goal') SX.net(when); };
     function playback(sim) {
       return new Promise(done => {
         const F = sim.frames, t0 = performance.now();
-        let ev = 0, el = 0, last = t0, gone = false;
+        let ev = 0, evS = 0, el = 0, last = t0, gone = false;
         (function step() {
           if (stopped) return done();
           const now = performance.now(); el += Math.max(0, now - last) / 1000 * speedUp; last = now;
@@ -456,9 +458,13 @@
           if (fi === 0) trailLast = null; if (Math.hypot(bx - f0[40], by - f0[41]) > .05) neonTrail(bx, by);
           const dd = Math.hypot(bx - f0[40], by - f0[41]); if (dd > 1e-4 && ballG.children[0]) { const ax = new TH.Vector3(f0[41] - by, 0, bx - f0[40]).normalize(); ballG.children[0].rotateOnWorldAxis(ax, dd / D.RBALL * -1); }
           follow(bx, by, 'slow');
+          // the knocks are put on the audio clock up to LOOK s ahead of the picture (2026-11-18 ユーザー：スマホで効果音が遅れる — a slow
+          // frame on a phone held each sound back until the next frame); without a running audio clock, as the picture passes them
+          const an = SND.now ? SND.now() : 0;
+          if (an) while (evS < sim.events.length && sim.events[evS].t <= el + LOOK * speedUp) { const e = sim.events[evS++]; knock(e, an + .02 + Math.max(0, (e.t - el) / speedUp)); }
           while (ev < sim.events.length && sim.events[ev].t <= el) {
-            const e = sim.events[ev++];
-            if ((e.k === 'hit' || e.k === 'ball') && e.v > 6) { SND.hit(e.v * (e.k === 'ball' ? .55 : 1)); neonFlash(Math.min(3, e.v / 40)); } else if ((e.k === 'rim' || e.k === 'post' || e.k === 'keep') && e.v > 10) { SND.cush(e.v * .7); neonFlash(1); } else if (e.k === 'goal') { SX.net(); gone = true; neonStrobe(); }
+            const e = sim.events[ev++]; if (ev > evS) { evS = ev; knock(e); }
+            if ((e.k === 'hit' || e.k === 'ball') && e.v > 6) neonFlash(Math.min(3, e.v / 40)); else if ((e.k === 'rim' || e.k === 'post' || e.k === 'keep') && e.v > 10) neonFlash(1); else if (e.k === 'goal') { gone = true; neonStrobe(); }
           }
           kick(120);
           if (fi < F.length - 1) requestAnimationFrame(step); else done(gone);
@@ -889,6 +895,7 @@
     const ptrs = new Set();
     const nearSel = (e, q) => { if (sel < 0) return false; const b = st.b[sel], p = scr(b.x, b.y); return Math.hypot(q.x - b.x, q.y - b.y) < D.RB + 3 || (p && Math.hypot(p.x - e.clientX, p.y - e.clientY) < 46); };
     function pd(e) {
+      try { if (SND.now) SND.now(); } catch (x) {}   // (a touch wakes the audio clock before the flick: its first knocks are not held back)
       ptrs.add(e.pointerId);
       if (ptrs.size > 1) { if (drag) cancel(); return; }
       if (phase === 'anim' && !stopped) { speedUp = 3; return; }

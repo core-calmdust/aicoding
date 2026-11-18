@@ -22,6 +22,7 @@
     pickB: ['盤を選ぶ', 'Choose a board', '选择台面', '選擇台面', '보드 선택', 'Elige un tablero', 'Choisis un plateau', 'Escolha um tabuleiro', 'Brett wählen', 'Выбери поле', 'Masa seç', 'Pilih papan', 'बोर्ड चुनें', 'اختر اللوحة'],
     pick: ['モードを選ぶ', 'Choose a mode', '选择模式', '選擇模式', '모드 선택', 'Elige un modo', 'Choisis un mode', 'Escolha um modo', 'Modus wählen', 'Выбери режим', 'Mod seç', 'Pilih mode', 'मोड चुनो', 'اختر نمطًا'],
     play: ['スタート', 'Start', '开始', '開始', '시작', 'Empezar', 'Jouer', 'Começar', 'Los', 'Старт', 'Başla', 'Mulai', 'शुरू', 'ابدأ'],
+    top: ['真上から', 'Top view', '俯视', '俯視', '위에서', 'Cenital', 'Dessus', 'De cima', 'Von oben', 'Сверху', 'Üstten', 'Dari atas', 'ऊपर से', 'من الأعلى'],
     you: ['あなた', 'You', '你', '你', '나', 'Tú', 'Toi', 'Você', 'Du', 'Вы', 'Sen', 'Kamu', 'आप', 'أنت'],
     ai: ['AI', 'AI', 'AI', 'AI', 'AI', 'IA', 'IA', 'IA', 'KI', 'ИИ', 'YZ', 'AI', 'AI', 'الذكاء'],
     p1: ['赤', 'Red', '红', '紅', '빨강', 'Rojo', 'Rouge', 'Vermelho', 'Rot', 'Красный', 'Kırmızı', 'Merah', 'लाल', 'الأحمر'],
@@ -105,9 +106,12 @@
     de: ['Steuerung', 'Maus (1 Spieler)', 'Tastatur', 'Gamepad'], ru: ['Управление', 'Мышь (1 игрок)', 'Клавиатура', 'Геймпад'], tr: ['Kontrol', 'Fare (1 oyuncu)', 'Klavye', 'Oyun kolu'], id: ['Kontrol', 'Mouse (1 pemain)', 'Keyboard', 'Gamepad'],
     hi: ['नियंत्रण', 'माउस (1 खिलाड़ी)', 'कीबोर्ड', 'गेमपैड'], ar: ['التحكم', 'الفأرة (لاعب واحد)', 'لوحة المفاتيح', 'ذراع التحكم'],
   };
+  // スマホ（タッチだけの端末）は指でなぞる一択 (ユーザー 2026-11-18): the row stays, greyed out, and reads スライド
+  const SLIDE = { ja: 'スライド', en: 'Slide', zh: '滑动', 'zh-TW': '滑動', ko: '슬라이드', es: 'Deslizar', fr: 'Glisser', pt: 'Deslizar', de: 'Wischen', ru: 'Свайп', tr: 'Kaydırma', id: 'Geser', hi: 'स्लाइड', ar: 'سحب' };
+  const touchOnly = () => { try { return matchMedia('(pointer: coarse)').matches && !matchMedia('(any-pointer: fine)').matches; } catch (e) { return false; } };
   const ct = (l, i) => (CTRL_T[l] || CTRL_T.en)[i];
-  const rule = { label: l => ct(l, 0), ownLabel: true, list: CTRL, name: (v, l) => ct(l, CTRL.indexOf(v) + 1),
-    sizes: v => GOALS.map(n => Math.max(0, CTRL.indexOf(v)) * 100 + n), size0: v => Math.max(0, CTRL.indexOf(v)) * 100 + 7, of: z => CTRL[Math.floor(z / 100)] || 'mouse' };
+  const rule = { label: l => ct(l, 0), ownLabel: true, list: CTRL, lock: () => touchOnly() ? { v: 'mouse', name: l => SLIDE[l] || SLIDE.en } : null, name: (v, l) => ct(l, CTRL.indexOf(v) + 1),
+    sizes: v => GOALS.map(n => Math.max(0, CTRL.indexOf(v)) * 100 + n), size0: v => Math.max(0, CTRL.indexOf(v)) * 100 + 5, of: z => CTRL[Math.floor(z / 100)] || 'mouse' };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   /* ---------- sounds (WebAudio, the portal's sound switch) ---------- */
@@ -159,10 +163,29 @@
     let U = board.userData; const Y = U.top, K = U.K, TH = window.THREE;
     const port = () => innerHeight > innerWidth * 1.05;
     const sideways = () => pvp && !port();   // two players on a wide screen: the table across the screen, red on the left
-    const fitNow = () => {
+    // 真上から (スマホのバー、ユーザー 2026-11-18: 待った・投了・ヒントの代わりに真上から見るスイッチ). remembered
+    let topOn = false; try { topOn = localStorage.getItem('atlas-hockey-top') === '1'; } catch (e) {}
+    // (the switch glides: the game draws every frame with Table3D.drawNow, which gives the table's own easing no time — so the
+    //  framing is stepped here, ~0.45 s ease-in-out between the two views)
+    const view = () => topOn && !sideways()
+      ? (port() ? { w: U.OW * K + .3, d: U.OL * K + .3, y: Y, pitch: 1.56 } : { w: U.OW * K + .5, d: U.OL * K + .4, y: Y, pitch: 1.56 })
+      : (port() ? { w: U.OW * K + .3, d: U.OL * K * .92, y: Y, pitch: 1.05 } : { w: U.OW * K + .6, d: U.OL * K + .4, y: Y, pitch: .98 });
+    let fitShown = null, glideRaf = 0;
+    const fitNow = ez => {
       if (!T3.fit) return;
-      if (sideways()) { if (T3.turn) T3.turn(-Math.PI / 2); T3.fit({ w: U.OL * K + .4, d: U.OW * K + .6, y: Y, pitch: 1.18 }); }
-      else { if (T3.turn) T3.turn(null); T3.fit(port() ? { w: U.OW * K + .3, d: U.OL * K * .92, y: Y, pitch: 1.05 } : { w: U.OW * K + .6, d: U.OL * K + .4, y: Y, pitch: .98 }); }
+      cancelAnimationFrame(glideRaf); glideRaf = 0;
+      if (sideways()) { if (T3.turn) T3.turn(-Math.PI / 2); fitShown = null; T3.fit({ w: U.OL * K + .4, d: U.OW * K + .6, y: Y, pitch: 1.18 }); return; }
+      if (T3.turn) T3.turn(null);
+      const to = view();
+      if (!ez || !fitShown) { fitShown = to; T3.fit(to); return; }
+      const from = fitShown, t0 = performance.now(), D = 450;
+      const step = () => {
+        const k = Math.min(1, (performance.now() - t0) / D), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2, o = {};
+        for (const q in to) o[q] = from[q] + (to[q] - from[q]) * e;
+        fitShown = o; T3.fit(o); kick(120);
+        if (k < 1 && !stopped) glideRaf = requestAnimationFrame(step); else glideRaf = 0;
+      };
+      step();
     };
     fitNow();
     const onResize = () => fitNow(); addEventListener('resize', onResize);
@@ -694,14 +717,16 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     if (!pvp) window.__npcPlace = npcPlace;
     const api = {
       human: 0, noBar: !matchMedia('(max-width:760px)').matches,    // (PC: no 待った / 投了 / ヒント bar — the Atlamo talks there instead, 2026-11-17)
-      canUndo: () => false, undo() {},
+      canUndo: () => false, undo() {}, noUndo: true, noHint: true, noResign: true,   // (スマホのバーは真上からスイッチだけ — 投了は「やめる」で足りる, 2026-11-18)
+      view: { icon: '<svg viewBox="0 0 24 24"><rect x="5" y="13.5" width="14" height="7.5" rx="1.6"/><path d="M12 3v7"/><path d="M8.6 6.8 12 10.2l3.4-3.4"/></svg>', label: () => tr('top', lang), on: () => topOn,
+        toggle() { topOn = !topOn; try { localStorage.setItem('atlas-hockey-top', topOn ? '1' : '0'); } catch (e) {} fitNow(true); kick(900); setTimeout(barFit, 450); } },
       canHint: () => false, hint() { return Promise.resolve(false); },
       canResign: () => !stopped && !over,
       resign() { if (over) return; over = true; cancelAnimationFrame(raf); if (menuEl) { menuEl.remove(); menuEl = null; } const sc = s ? `${s.score[0]} − ${s.score[1]}` : '0 − 0'; ctx.onEnd(pvp ? { win: false, draw: false, level, score: sc, pvp: true, winnerText: tr('win', lang).replace('{p}', names[1]) } : { win: false, draw: false, level, score: sc }); },
       timeout() {},
       stop() {
         if (window.__npcPlace === npcPlace) window.__npcPlace = null;
-        stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); timers.forEach(clearTimeout);
+        stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); cancelAnimationFrame(glideRaf); timers.forEach(clearTimeout);
         unlock(); escBadge(false); document.removeEventListener('pointerlockchange', onLockChange); ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointermove', onMoveW, true); removeEventListener('mouseout', onOutW); if (raw) ctx.el.removeEventListener('pointerrawupdate', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
         removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur); removeEventListener('focus', onFocus);
         ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); if (howEl) howEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());
@@ -715,5 +740,5 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.hockey = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, mx: true, aiOnly: true, rule, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 7, sizeLabel, sizeName, levelInfo, start, MODE_TXT: M, ICON, modeName, SND };
+  window.Atlas3D.hockey = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, mx: true, aiOnly: true, rule, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 5, sizeLabel, sizeName, levelInfo, start, MODE_TXT: M, ICON, modeName, SND };
 })();

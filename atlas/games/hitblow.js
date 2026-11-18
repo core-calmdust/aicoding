@@ -433,7 +433,11 @@
     /* the board on the table, framed whole from the player's side */
     T3.show('hitblow', board);
     // straight down, without perspective (2026-11-16 user: パースをつけない — adapter.ortho, atlas/app.js Table3D.play(true, { ortho }))
-    const frame = () => { if (!T3.fit) return; T3.fit({ w: U.W + .2, d: U.L + .14 + TU.D - .1, y: TOP + .25, pitch: 1.5703, cz: (TU.D + .14) / 2 }); };
+    // スマホの縦画面 (2026-11-18 ユーザー: 標準サイズをもっと大きく): the board ~1.18× — from under the HUD to the bottom edge
+    // (the Atlamo's line at the bottom when it is on: a little less, so the palette stays clear of it)
+    const npcOn = () => { try { return !!(window.AtlasNPC && AtlasNPC.on && AtlasNPC.on()); } catch (e) { return false; } };
+    const zk = () => (innerWidth <= 760 && innerHeight > innerWidth * 1.2 ? 1 / (npcOn() ? 1.1 : 1.18) : 1);
+    const frame = () => { if (!T3.fit) return; const k = zk(), up = k < 1 && npcOn() ? .025 * (U.L + TU.D) : 0; T3.fit({ w: U.W + .2, d: (U.L + .14 + TU.D - .1) * k, y: TOP + .25, pitch: 1.5703, cz: (TU.D + .14) / 2 + up }); };
     frame();
     // the hidden code waits in the case (under the lid)
     const caseGems = secret.map((v, k) => { const m = H.gem(kind, v), [x, y, zz] = U.caseSlot(k); m.position.set(x, y, zz); board.add(m); return m; });
