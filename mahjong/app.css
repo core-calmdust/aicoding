@@ -3076,3 +3076,5 @@ html.lp .lx-nh b{font-size:13.5px}
 /* 小町の吹き出し：画面の左右中央、自分の手牌のすぐ上（CSSだけで置く：全画面の切り替えや窓の大きさの変化にも追従。ユーザー 2026-11-19） */
 #game .ls-guide{left:50%;top:auto;bottom:calc(var(--th) * 1.5 + 26px);transform:translateX(-50%);width:min(max(680px,105vh),calc(100% - 2 * (var(--bf) + 130px)));min-width:300px}
 html.lp #game .ls-guide{top:auto;width:min(560px,calc(100% - 2 * (var(--bf) + 60px)))}
+.modal.lsres .lr-say{margin:2px 0 4px;padding:8px 14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(232,206,140,.25);font-size:14px;line-height:1.6;color:#f4eefe;max-width:360px}
+.modal.lsres .mbox{width:min(500px,94vw);max-width:none}
