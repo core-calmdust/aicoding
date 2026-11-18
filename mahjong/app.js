@@ -117,6 +117,7 @@ const IC = {
   fsOff: '<svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>',
   gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5"/><circle cx="12" cy="12" r="6.6"/></svg>',
   rated: '<svg viewBox="0 0 24 24"><path d="M4 20V14h4v6M10 20V9h4v11M16 20V4h4v16M3 20h18"/></svg>',
+  online: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>',
   lesson: '<svg viewBox="0 0 24 24"><path d="M3 6.5 12 3l9 3.5-9 3.5z"/><path d="M7 8.3V13c0 1.6 2.2 3 5 3s5-1.4 5-3V8.3M21 6.5V12"/></svg>',
   rules: '<svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8.5 12h7M8.5 15.5h7"/></svg>',
   chest: '<svg viewBox="0 0 24 24"><path d="M3 10h18v10H3zM3 10a9 5 0 0 1 18 0"/><path d="M11 13h2v3h-2z"/></svg>',
@@ -539,7 +540,7 @@ function renderHome() {
   $('#btnGacha').innerHTML = mi(IC.gacha, t('gacha'), en2('GACHA')); $('#btnColl').innerHTML = mi(IC.collection, t('chars'), en2('CHARACTERS'));
   $('#btnStats').innerHTML = mi(IC.stats, t('record'), en2('RECORD'));   // (ユーザー 2026-11-14: 戦績 and スタッツ are one menu, 「戦績」 — the game log opens from inside it)
   $('#btnRated').innerHTML = mi(IC.rank, t('rated'), en2('RANKED'));
-  $('#btnLesson').innerHTML = mi(IC.lesson, t('lsLessons'), en2('LESSON')); $('#btnRules').innerHTML = mi(IC.rules, t('lsRules'), en2('RULES'));   // (2026-11-18: the lessons are in)
+  $('#btnLesson').innerHTML = mi(IC.lesson, t('lsLessons'), en2('LESSON')); $('#btnOnline').innerHTML = mi(IC.online, I18N.lang === 'ja' ? 'オンライン' : 'Online', en2('ONLINE')); $('#btnRules').innerHTML = mi(IC.rules, t('lsRules'), en2('RULES'));   // (2026-11-18: the lessons are in)
   document.querySelectorAll('#luxMenu [data-soon]').forEach(b => { b.innerHTML = mi(IC[b.dataset.soon] || '', t(b.dataset.soon), t('soon')); });
   sndIcons(); applyLite();
   const c = MJChars.get(DB.sel);
@@ -744,6 +745,7 @@ $('#home').addEventListener('pointermove', e => { const r = $('#home').getBoundi
 // entering the home: the pieces come in one after another
 function homeEnter() { const h = $('#home'); h.classList.remove('enter'); void h.offsetWidth; h.classList.add('enter'); homeFx(); }
 $('#btnLesson').addEventListener('click', () => { SND.pick(); openLessons('l'); });
+$('#btnOnline').addEventListener('click', () => { SND.pick(); if (window.JankaOnline) JankaOnline.open(); });
 $('#btnRules').addEventListener('click', () => { SND.pick(); openLessons('r'); });
 $('#luxMenu').addEventListener('click', e => { if (e.target.closest('[data-soon]')) { SND.pick(); toast(t('soon')); } });
 // settings (the gear at the top right): language, sound, light mode
@@ -1329,18 +1331,19 @@ async function startGame(opt = {}) {
     return seatChar(c, key, sis, k2);
   });
   const LSN = opt.lesson || null;   // (a lesson: fixed seats — the player, and three young sisters at the table)
-  const chars = LSN ? [LSN.pos.skills ? seatChar(MJChars.get('komachi'), MJSkills.key('swap', 0)) : me, ...['rikka', 'haruka', 'nana'].map(id => seatChar(MJChars.get(id), rollSkillKey()))] : [me, ...others];
+  const ON = opt.online || null;   // (online, as the host: online.js gives the seats — the players' own characters, BOTs in the empty seats — and the agents)
+  const chars = ON ? ON.chars : LSN ? [LSN.pos.skills ? seatChar(MJChars.get('komachi'), MJSkills.key('swap', 0)) : me, ...['rikka', 'haruka', 'nana'].map(id => seatChar(MJChars.get(id), rollSkillKey()))] : [me, ...others];
   chars.concat(chars.map(c => c.partner).filter(Boolean)).forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); if (im.decode) im.decode().catch(() => {}); });   // cut-in art, loaded and decoded in advance
   const ranked = !!opt.ranked, len = ranked ? opt.len : DB.set.len, lv = ranked ? MJRank.botLv(DB.rank.pt) : DB.set.lv, skills = ranked ? true : DB.set.skills;
   UIS = { ranked: ranked ? { len } : null, lv, chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
-  const agents = LSN ? [new LessonHuman(), new LessonBot(), new LessonBot(), new LessonBot()] : [auto ? new AutoMe(lv) : new Human(), new SlowBot(lv), new SlowBot(lv), new SlowBot(lv)];
+  const agents = ON ? ON.agents(new Human(), lvx => new SlowBot(lvx)) : LSN ? [new LessonHuman(), new LessonBot(), new LessonBot(), new LessonBot()] : [auto ? new AutoMe(lv) : new Human(), new SlowBot(lv), new SlowBot(lv), new SlowBot(lv)];
   // a lesson: its example, then its practice problems (ls.drills), one hand each at the same table; the score counts them all
   const STG = LSN ? [{ pos: LSN.pos, beats: LSN.beats, intro: LSN.intro, end: LSN.end }].concat(LSN.drills || []) : null;
   const lsGame = (st, i) => new MJLessons.LessonGame({ agents, chars, rules: { length: 'east', skills: !!st.pos.skills }, ui: onEvent, seed: ([...LSN.id].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) + i * 977) >>> 0, oya: 0, pos: st.pos });
-  G = LSN ? lsGame(STG[0], 0) : new MJGame({ agents, chars, rules: { length: len, skills }, ui: onEvent });
+  G = ON ? new MJGame({ agents, chars, rules: { length: ON.len, skills: true }, ui: ON.ui(onEvent) }) : LSN ? lsGame(STG[0], 0) : new MJGame({ agents, chars, rules: { length: len, skills }, ui: onEvent });
   UIS.lesson = LSN ? { ls: LSN, stg: STG, si: 0, beats: STG[0].beats.slice(), intro: STG[0].intro || [], end: STG[0].end, n: STG.reduce((a, st) => a + st.beats.length, 0), k: 0, miss: new Set(), cur: null, until: 0 } : null;
-  UIS.game = G;
+  UIS.game = G; UIS.online = ON;
   TB.setSleeves(chars.map(c => c.color), chars.map(c => c.nail));   // (each seat's sleeve in her sisters' colour)
   $('#gSnd').innerHTML = IC.gear; $('#gExit').innerHTML = IC.exit;
   $('#gKeys').innerHTML = IC.keys; $('#gKeys').title = t('keysT'); $('#gKeys').setAttribute('aria-label', t('keysT')); showKeys(false);
@@ -1364,6 +1367,29 @@ async function startGame(opt = {}) {
     await lessonDone();
   }
 }
+// online, as a guest: the same table, but the game is the host's — G is a mirror (online.js) that the host's events keep up to date,
+// and the player's own decisions are asked by the host and sent back
+async function startRemote(ON) {
+  if (window.MJ && MJ.clearCache) MJ.clearCache();
+  SND.newGame();
+  $('#home').hidden = true; $('#game').hidden = false;
+  closeModal();
+  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = (kind, seat) => { SND.tile(); if (kind === 'river' && UIS.landWait && UIS.landWait.seat === seat) UIS.landWait.done(); }; TB.warm(); }
+  TB.resume(); requestAnimationFrame(() => dispatchEvent(new Event('resize')));
+  TB.hideAll();
+  const chars = ON.chars;
+  chars.concat(chars.map(c => c.partner).filter(Boolean)).forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); if (im.decode) im.decode().catch(() => {}); });
+  UIS = { ranked: null, lv: 3, chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv: 3 }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
+  G = ON.mirror; UIS.game = G; UIS.online = ON;
+  TB.setSleeves(chars.map(c => c.color), chars.map(c => c.nail));
+  $('#gSnd').innerHTML = IC.gear; $('#gExit').innerHTML = IC.exit;
+  $('#gKeys').innerHTML = IC.keys; $('#gKeys').title = t('keysT'); $('#gKeys').setAttribute('aria-label', t('keysT')); showKeys(false);
+  $('#khelp').innerHTML = t('keys');
+  sndIcons();
+  const g0 = G;
+  try { await ON.run(onEvent, new Human()); } catch (e) { if (e !== 'abort') { console.error(e); toast('Error: ' + e.message, 5000); } }
+  if (g0 !== G) return;
+}
 // a seat's face → that player's stats
 $('#game .hud').addEventListener('click', e => {
   const o = e.target.closest('.opp, .me .mb'); if (!o || !UIS) return;
@@ -1375,6 +1401,7 @@ $('#gKeys').addEventListener('click', e => { e.stopPropagation(); SND.pick(); sh
 document.addEventListener('pointerdown', e => { if ($('#khelp').classList.contains('open') && !e.target.closest('#khelp, #gKeys')) showKeys(false); }, true);
 $('#gExit').addEventListener('click', async () => {
   if (!(await confirmBox(t('exitQ')))) return;
+  if (UIS && UIS.online && window.JankaOnline) JankaOnline.leave(UIS.online);
   quitGame();
 });
 function quitGame() { if (window.MJSkillFx) MJSkillFx.stop();
@@ -1394,7 +1421,7 @@ function quitGame() { if (window.MJSkillFx) MJSkillFx.stop();
 async function onEvent(ev, d) {
   if (!UIS || UIS.abort || UIS.game !== G) throw 'abort';
   const g = G;
-  UIS.track.on(ev, d, g);
+  try { UIS.track.on(ev, d, g); } catch (e) { if (!UIS.online) throw e; }   // (online, a guest: the table is a mirror of the host's — the counters may miss a field)
   if (ev === 'agari' || ev === 'ryuukyoku' || ev === 'game-end') closeStats();
   switch (ev) {
     case 'game-start': renderBadges(); break;
@@ -2156,7 +2183,7 @@ async function showFinal(d) {
   // (ユーザー 2026-11-15) a big win pays more: 10 coins for every full 1,000 points over the starting 25,000
   const over = Math.max(0, Math.floor((d.scores[ME] - 25000) / 1000)), sbonus = over * 10, coins = base + bonus + sbonus;
   DB.coins += coins; DB.stats.games++; DB.stats.rank[myRank]++;
-  if (!AUTO) {   // スタッツ: this game's counters into the mode's total, and the place under the character played
+  if (!AUTO && !UIS.online) {   // スタッツ: this game's counters into the mode's total, and the place under the character played
     MJStats.add(DB.pstats[G.rules.skills ? 'skill' : 'std'], UIS.track.seat[ME]);
     const pc = DB.pstats.chars[UIS.chars[ME].id] = DB.pstats.chars[UIS.chars[ME].id] || { g: 0, r: [0, 0, 0, 0] };
     pc.g++; pc.r[myRank]++;
@@ -2172,12 +2199,14 @@ async function showFinal(d) {
     rk = { gain, before, r0, r1, ups, gifts, down };
   }
   // 対局履歴 (ユーザー 2026-11-15: the log is part of 戦績, not the shared dialog): the last 200 finished games
-  if (!AUTO) { const L0 = DB.hist = DB.hist || [];
+  if (!AUTO && !UIS.online) { const L0 = DB.hist = DB.hist || [];
     L0.push({ t: Date.now(), len: G.rules.length, sk: G.rules.skills ? 1 : 0, rk: UIS.ranked ? 1 : 0, ch: UIS.chars[ME].id, pl: myRank, sc: G.scores[ME],
       g: rk ? rk.gain : null, rn: rk ? rk.r1.i : null, h: UIS.track.seat[ME].hands, w: UIS.track.seat[ME].wins });
     if (L0.length > 200) L0.splice(0, L0.length - 200); }
   save();
-  recordGame(d, myRank);
+  if (!UIS.online) recordGame(d, myRank);
+  let olx = '';   // (online: each player's name and, in a rated game, the rating change)
+  if (UIS.online && window.JankaOnline) olx = await JankaOnline.finalNote(UIS.online, d, myRank);
   const w = UIS.chars[rank[0]];
   const box = modal(`
     <div class="agst fnst" style="--c:${w.color};--c2:${w.color2}">
@@ -2186,8 +2215,8 @@ async function showFinal(d) {
       <div class="agst-who"><b>${esc(L(w.name))}</b><span>${t('rank')[0]}</span></div>
       <div class="agst-main">
         <h2 class="fn-t">${t('final')}</h2>
-        <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" data-ps="${s}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
-        <div class="fn-foot">${rk ? rankStrip(rk) : '<span></span>'}<div class="earn">${icon('coin')} ${t('earned', { n: coins })}${bonus ? `<small class="rbonus">${esc(t('rarBonus', { r: myR, p: Math.round(bonusP * 100), n: bonus }))}</small>` : ''}${sbonus ? `<small class="rbonus">${esc(t('scoreBonus', { n: sbonus, k: (over * 1000).toLocaleString() }))}</small>` : ''}</div>
+        <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" data-ps="${s}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : UIS.online && UIS.online.names && UIS.online.names[s] ? ` <small>(${esc(UIS.online.names[s])})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
+        <div class="fn-foot">${rk ? rankStrip(rk) : olx || '<span></span>'}<div class="earn">${icon('coin')} ${t('earned', { n: coins })}${bonus ? `<small class="rbonus">${esc(t('rarBonus', { r: myR, p: Math.round(bonusP * 100), n: bonus }))}</small>` : ''}${sbonus ? `<small class="rbonus">${esc(t('scoreBonus', { n: sbonus, k: (over * 1000).toLocaleString() }))}</small>` : ''}</div>
           <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div></div>
       </div>
     </div>`, 'stage');
@@ -2200,7 +2229,8 @@ async function showFinal(d) {
       if (rk && (rk.ups.length || rk.gifts.length)) await showPromotion(rk);   // (a rank gained: its own screen, and the reward characters)
       closeModal();
       const again = UIS.ranked;
-      if (a.dataset.a === 'home') quitGame(); else { UIS.abort = true; startGame(again ? { ranked: true, len: again.len } : {}); }
+      if (UIS.online) { const on = UIS.online; quitGame(); if (window.JankaOnline) JankaOnline.after(on, a.dataset.a === 'again'); }
+      else if (a.dataset.a === 'home') quitGame(); else { UIS.abort = true; startGame(again ? { ranked: true, len: again.len } : {}); }
       res();
     })();
   }));
@@ -2552,5 +2582,5 @@ document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬�
 renderHome(); homeEnter();
 cloudInit();
 if (DB.tamper) { let shown = false; try { shown = sessionStorage.getItem('janka-tn') === '1'; sessionStorage.setItem('janka-tn', '1'); } catch (e) {} if (!shown) setTimeout(() => toast(t('tamperNote'), 4500), 1200); }
-window.JANKA = { _save: () => save(), _final: d => showFinal(d), _ev: (e, d) => onEvent(e, d), _overMyRiver: (x, y) => overMyRiver(x, y), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
+window.JANKA = { startRemote, mySeat, seatChar, rollSkillKey, toast, modal, closeModal, confirmBox, esc, charImg, get ME() { return ME; }, _save: () => save(), _final: d => showFinal(d), _ev: (e, d) => onEvent(e, d), _overMyRiver: (x, y) => overMyRiver(x, y), get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion, peekPop, mindPop, showMoves, partnerFlash, askDealSkill, roundBanner };
 })();
