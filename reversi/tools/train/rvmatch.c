@@ -95,7 +95,7 @@ static int think(Eng *E, u64 P, u64 O) {
   }
   if (doExact) {
     order(mv, n, pri); int g = (int)lrint(sc / 100.0); g = g > 60 ? 60 : g < -60 ? -60 : g; int lo = g - 3, hi = g + 3;
-    for (;;) { st(E); const int v = rootPVS(E, P, O, mv, n, 0, 1, lo, hi, &bm); if (v <= lo && lo > -65) { hi = v + 1; lo = -65; } else if (v >= hi && hi < 65) { lo = v - 1; hi = 65; } else break; }
+    for (;;) { st(E); const int v = rootPVS(E, P, O, mv, n, 0, 1, lo, hi, &bm); if (v <= lo && lo > -65) { hi = v + 1; lo = v - 2 < -65 ? -65 : v - 2; } else if (v >= hi && hi < 65) { lo = v - 1; hi = v + 2 > 65 ? 65 : v + 2; } else break; }   /* (engine.js ASP_STEP) */
   } else if (e <= E->wld) {
     order(mv, n, pri); int b2; st(E); const int v = rootPVS(E, P, O, mv, n, 0, 1, -1, 1, &b2);
     if (v > 0 || (v == 0 && sc < 0)) bm = b2;
