@@ -67,22 +67,143 @@ vec3 wood3(vec3 p, vec3 a, vec3 b, float f, float seed){
   return c;
 }`;
   // ---------------------------------------------------------------- wood: a beech ball for each goose; a cherry fox, its face burnt in
-  P['wood-g'] = { glsl: WOOD3 + `
-float map(vec3 p){ return length(p) - .9; }
-void mat(vec3 p, vec3 n, inout PMat m){ m.alb = wood3(p, hexc(234., 206., 162.), hexc(204., 166., 116.), 9., 1.3); m.spec = .45; m.gloss = .42; }` };
+  
+  
+  // ---------------------------------------------------------------- side view (2026-11-18 v2: the user wanted the wooden and the luxury
+  // pieces as figures seen from the side): the figure stands on a round plinth, facing right; the camera looks slightly down.
+  // World: z up, the plinth's top at z = 0, the viewer on the −y side. The point of the board is the plinth's centre (ANCHOR in app.js).
+  const SIDE = `
+const float ELEV = .32;   // the camera's tilt (radians)
+const float WS = .9;      // world units per half picture
+const vec3 CEN = vec3(0., 0., .6);
+float sdRCone(vec3 p, vec3 a, vec3 b, float r1, float r2){   // a capsule whose radius goes from r1 to r2
+  vec3 ba = b - a, pa = p - a; float h = clamp(dot(pa, ba) / dot(ba, ba), 0., 1.); return length(pa - ba * h) - mix(r1, r2, h); }
+float sdCyl(vec3 p, float r, float h, float rr){ vec2 d = vec2(length(p.xy) - r + rr, abs(p.z) - h + rr); return min(max(d.x, d.y), 0.) + length(max(d, 0.)) - rr; }
+float plinth(vec3 p){ return sdCyl(p - vec3(0., 0., -.07), .6, .07, .03); }
+float foxBody(vec3 p){
+  float d = sdEll(p - vec3(-.14, 0., .42), vec3(.33, .25, .42));                      // haunch and back
+  d = smin(d, sdEll(p - vec3(.1, 0., .55), vec3(.19, .19, .33)), .12);                   // chest
+  vec3 q = p; q.y = abs(q.y);
+  d = smin(d, sdRCone(q, vec3(.15, .08, .45), vec3(.2, .08, .03), .065, .05), .05);     // front legs
+  d = smin(d, sdEll(q - vec3(-.12, .17, .2), vec3(.24, .1, .2)), .08);                   // hind legs folded
+  d = smin(d, sdEll(p - vec3(.17, 0., 1.), vec3(.19, .16, .17)), .1);                     // head
+  d = smin(d, sdRCone(p, vec3(.24, 0., .98), vec3(.5, 0., .91), .1, .03), .06);           // snout
+  d = smin(d, sdRCone(p, vec3(.15, -.07, 1.1), vec3(.12, -.09, 1.4), .08, .012), .04);   // ears: the near one and, behind it, the far one
+  d = smin(d, sdRCone(p, vec3(.03, .07, 1.08), vec3(-.04, .09, 1.36), .08, .012), .04);
+  // the brush of a tail, curled round the front of the plinth
+  d = smin(d, sdRCone(p, vec3(-.42, .0, .3), vec3(-.46, -.2, .12), .13, .14), .1);
+  d = smin(d, sdRCone(p, vec3(-.36, -.22, .1), vec3(-.02, -.34, .09), .14, .12), .08);
+  d = smin(d, sdRCone(p, vec3(-.02, -.34, .09), vec3(.3, -.28, .08), .12, .05), .06);
+  return d;
+}
+float gooseBody(vec3 p){
+  float d = sdEll(p - vec3(-.06, 0., .36), vec3(.46, .27, .27));                       // body
+  d = smin(d, sdEll(p - vec3(-.46, 0., .5), vec3(.16, .1, .07)), .1);                     // the tail, cocked up
+  d = smin(d, sdRCone(p, vec3(.24, 0., .48), vec3(.33, 0., .82), .1, .075), .1);          // neck
+  d = smin(d, sdRCone(p, vec3(.33, 0., .82), vec3(.3, 0., 1.04), .075, .07), .05);
+  d = smin(d, sdEll(p - vec3(.35, 0., 1.08), vec3(.14, .09, .1)), .06);                   // head
+  d = smin(d, sdRCone(p, vec3(.44, 0., 1.06), vec3(.62, 0., 1.02), .045, .018), .03);    // bill
+  vec3 q = p; q.y = abs(q.y);
+  d = smin(d, sdEll(q - vec3(-.08, .2, .43), vec3(.33, .07, .17)), .06);                  // folded wings
+  return d;
+}
+float calcAO(vec3 p, vec3 n){ float o = 0., w = 1.; for (int i = 1; i <= 5; i++){ float h = .02 + .06 * float(i); o += w * (h - map(p + n * h)); w *= .7; } return clamp(1. - 2.2 * o, .3, 1.); }
+vec3 nrm(vec3 p){ vec2 e = vec2(.0015, 0.); return normalize(vec3(map(p + e.xyy) - map(p - e.xyy), map(p + e.yxy) - map(p - e.yxy), map(p + e.yyx) - map(p - e.yyx))); }
+vec4 shadeAt(vec2 uv){
+  vec2 s = uv * 2. - 1.;
+  vec3 F = vec3(0., cos(ELEV), -sin(ELEV)), Rr = vec3(1., 0., 0.), U = vec3(0., sin(ELEV), cos(ELEV));
+  vec3 o = CEN + (s.x * Rr - s.y * U) * WS - F * 3.;
+  float t = 0.; bool hit = false; vec3 p;
+  for (int i = 0; i < 200; i++){ p = o + F * t; float d = map(p); if (d < .0006){ hit = true; break; } t += d * .85; if (t > 7.) break; }
+  if (!hit) return vec4(0.);
+  vec3 n = nrm(p);
+  PMat m = PMat(vec3(.5), .4, .5, 0., vec3(0.));
+  mat(p, n, m);
+  n = m.alb.r < -1. ? n : bendN(p, n);
+  float ao = calcAO(p, n);
+  // the light: up, to the left and a little towards the viewer; shadows
+  vec3 Lw = normalize(vec3(-.55, -.45, .75));
+  float sh = 1., tt = .02; for (int i = 0; i < 48; i++){ float h = map(p + n * .004 + Lw * tt); sh = min(sh, 10. * h / tt); tt += clamp(h, .01, .12); if (sh < .02 || tt > 2.5) break; } sh = clamp(sh, 0., 1.);
+  // into the camera's frame (x right, y down, z towards the viewer) for the shared lighting
+  vec3 nc = vec3(dot(n, Rr), -dot(n, U), -dot(n, F));
+  vec3 Lc = vec3(dot(Lw, Rr), -dot(Lw, U), -dot(Lw, F));
+  vec3 V = vec3(0., 0., 1.), H = normalize(Lc + V);
+  float dif = max(dot(nc, Lc), 0.) * (.35 + .65 * sh) * .95 + .3 * (.5 + .5 * nc.z);
+  vec3 R = reflect(-V, nc);
+  vec3 env = mix(studioBlur(R), studio(R), m.gloss);
+  float fr = .04 + .96 * pow(1. - max(nc.z, 0.), 5.);
+  float shin = mix(8., 600., m.gloss * m.gloss);
+  float sp = pow(max(dot(nc, H), 0.), shin) * (shin + 8.) / 50. * (.3 + .7 * sh);
+  vec3 c = m.alb * dif * ao * (1. - m.metal) + mix(vec3(m.spec * (fr + .02)), mix(m.alb, m.alb * m.alb * 1.2, .35), m.metal) * (env * mix(.6, 1.1, m.gloss) * (1. + m.metal * .7) + sp) * ao;
+  return vec4(c + m.emit, 1.);
+}`;
+  // chisel marks for the carved wood: the normal tilts a little across each gouge
+  const CARVE = `vec3 bendN(vec3 p, vec3 n){ vec3 c = p * 9.; vec3 g = vec3(vn3(c + 1.7) - .5, vn3(c + 7.3) - .5, vn3(c + 3.1) - .5); return normalize(n + g * .22); }`;
+  // flat facets (a cut stone / a hammered surface): every cell of a 3D Voronoi pattern takes one normal
+  const FACET = `
+vec3 bendN(vec3 p, vec3 n){
+  if (p.z < .005) return n;   // (the plinth stays smooth)
+  vec3 i = floor(p * 3.4), f = fract(p * 3.4); float best = 9.; vec3 fp = p;
+  for (int z = -1; z <= 1; z++) for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++){ vec3 g = vec3(x, y, z); vec3 o = vec3(h31(i + g), h31(i + g + 19.1), h31(i + g + 37.7)); float d = length(g + o - f); if (d < best){ best = d; fp = (i + g + o) / 3.4; } }
+  fp -= nrm(fp) * map(fp);    // the cell's point, brought onto the surface
+  return normalize(mix(n, nrm(fp), .96));
+}`;
   P['wood-f'] = { glsl: WOOD3 + `
-float map(vec3 p){ return foxHead(FX(p)) * 1.04; }
+float plinth(vec3 p); float foxBody(vec3 p); float gooseBody(vec3 p); void mat(vec3 p, vec3 n, inout PMat m);
+float map(vec3 p){ return min(plinth(p), foxBody(p)); }
+${SIDE.replace('vec4 shadeAt', CARVE + '\nvec4 shadeAt')}
 void mat(vec3 p, vec3 n, inout PMat m){
-  vec3 q = FX(p);
-  vec3 c = wood3(q, hexc(222., 104., 40.), hexc(170., 66., 22.), 6., 2.7);
-  float burn = 0.;
-  burn = max(burn, smoothstep(.15, -.15, foxEye(q.xy)));
-  burn = max(burn, smoothstep(.2, -.2, foxNose(q)) * step(.4, q.z));
-  burn = max(burn, smoothstep(.25, -.25, earIn(q.xy)) * .8);
-  burn = max(burn, smoothstep(.02, .0, abs(q.x) - .006 * (1. - smoothstep(.4, .62, q.y))) * step(.56, q.y) * step(q.y, .66) * .9);
-  c = mix(c, hexc(44., 20., 10.), burn * .92);
-  c = mix(c, hexc(236., 196., 150.), smoothstep(.3, .0, length((q.xy - vec2(0., .44)) / vec2(.32, .2)) - .5) * .35 * (1. - burn));   // a paler muzzle (lighter wood)
-  m.alb = c; m.spec = .5; m.gloss = .48;
+  if (p.z < .002) { m.alb = wood3(p * 1.5, hexc(92., 58., 34.), hexc(58., 34., 18.), 7., 5.); m.spec = .5; m.gloss = .45; return; }
+  vec3 c = wood3(p.zxy * 1.3, hexc(222., 112., 52.), hexc(176., 74., 30.), 6., 2.7);
+  c = mix(c, hexc(246., 222., 190.), smoothstep(.16, .26, -p.y - .0) * step(p.z, .2) * smoothstep(.1, .3, p.x) * .9);        // the pale tip of the tail
+  c = mix(c, hexc(246., 222., 190.), smoothstep(.06, .0, length((p.xz - vec2(.3, .88)) / vec2(.22, .12)) - 1.) * .75);      // the white muzzle and throat
+  c = mix(c, hexc(60., 30., 14.), smoothstep(.02, .0, length((p.xz - vec2(.28, 1.05)) / vec2(.045, .025)) - 1.) * step(p.y, 0.)); // the eye (burnt in)
+  c = mix(c, hexc(40., 20., 10.), smoothstep(.02, .0, length(p.xz - vec2(.51, .91)) - .035));                                // the nose
+  c = mix(c, hexc(60., 30., 14.), smoothstep(.0, -.02, p.z - .12) * smoothstep(.02, .0, abs(p.x - .2) - .07) * .7);          // dark socks
+  m.alb = c; m.spec = .45; m.gloss = .42;
+}` };
+  P['wood-g'] = { glsl: WOOD3 + `
+float plinth(vec3 p); float foxBody(vec3 p); float gooseBody(vec3 p); void mat(vec3 p, vec3 n, inout PMat m);
+float map(vec3 p){ return min(plinth(p), gooseBody(p)); }
+${SIDE.replace('vec4 shadeAt', CARVE + '\nvec4 shadeAt')}
+void mat(vec3 p, vec3 n, inout PMat m){
+  if (p.z < .002) { m.alb = wood3(p * 1.5, hexc(92., 58., 34.), hexc(58., 34., 18.), 7., 5.); m.spec = .5; m.gloss = .45; return; }
+  vec3 c = wood3(p.zxy * 1.3, hexc(238., 214., 176.), hexc(212., 178., 132.), 8., 1.3);
+  c = mix(c, hexc(220., 120., 40.), smoothstep(.03, .0, sdRCone(p, vec3(.44, 0., 1.06), vec3(.62, 0., 1.02), .045, .018) - .004));   // the painted bill
+  c = mix(c, hexc(40., 26., 16.), smoothstep(.02, .0, length((p.xz - vec2(.39, 1.11)) / vec2(.03, .03)) - 1.) * step(p.y, 0.));     // the eye
+  c *= 1. - .08 * smoothstep(.6, 1., abs(sin((p.x + p.z * .4) * 40.))) * step(abs(p.y), .3) * step(.3, p.z) * step(p.x, .2);   // carved feather lines
+  m.alb = c; m.spec = .45; m.gloss = .42;
+}` };
+  // luxury: faceted sculptures — a gold fox and a goose of white marble with a gold bill — on onyx plinths ringed with gold
+  const LUXPL = `
+bool plin(vec3 p){ return p.z < .002; }
+void plinMat(vec3 p, inout PMat m){ float r = length(p.xy); if (r > .57 || p.z > -.02 && r > .5) { m.alb = hexc(255., 206., 128.); m.metal = 1.; m.spec = 1.; m.gloss = .85; return; }
+  m.alb = mix(hexc(10., 10., 12.), hexc(36., 34., 36.), smoothstep(.45, .7, fbm3(p * 4.))); m.spec = 1.; m.gloss = .92; }`;
+  P['lux-f'] = { glsl: `
+float plinth(vec3 p); float foxBody(vec3 p); float gooseBody(vec3 p); void mat(vec3 p, vec3 n, inout PMat m);
+float map(vec3 p){ return min(plinth(p), foxBody(p)); }
+${SIDE.replace('vec4 shadeAt', FACET + '\nvec4 shadeAt')}
+${LUXPL}
+void mat(vec3 p, vec3 n, inout PMat m){
+  if (plin(p)) { plinMat(p, m); return; }
+  m.alb = hexc(255., 210., 130.); m.metal = 1.; m.spec = 1.; m.gloss = .97;
+  float eye = smoothstep(.02, .0, length((p.xz - vec2(.28, 1.05)) / vec2(.045, .028)) - 1.) * step(p.y, 0.);
+  if (eye > .5) { m.alb = hexc(170., 10., 30.); m.metal = 0.; m.spec = 1.4; m.gloss = .95; m.emit = hexc(255., 40., 60.) * .35; }
+}` };
+  P['lux-g'] = { glsl: `
+float plinth(vec3 p); float foxBody(vec3 p); float gooseBody(vec3 p); void mat(vec3 p, vec3 n, inout PMat m);
+float map(vec3 p){ return min(plinth(p), gooseBody(p)); }
+${SIDE.replace('vec4 shadeAt', FACET + '\nvec4 shadeAt')}
+${LUXPL}
+void mat(vec3 p, vec3 n, inout PMat m){
+  if (plin(p)) { plinMat(p, m); return; }
+  float bill = smoothstep(.02, .0, sdRCone(p, vec3(.44, 0., 1.06), vec3(.62, 0., 1.02), .045, .018) - .006);
+  vec3 c = mix(hexc(250., 248., 242.), hexc(230., 228., 222.), smoothstep(.4, .8, fbm3(p * 3.)));
+  c = mix(c, hexc(170., 166., 160.), (1. - smoothstep(.0, .008, abs(fbm3(p * 2.2 + 4.) - .5))) * .3);   // a faint vein of the marble
+  m.alb = c; m.spec = .3; m.gloss = .8; m.emit = c * .34;   // a little light inside the white stone
+  if (bill > .5) { m.alb = hexc(255., 202., 120.); m.metal = 1.; m.spec = 1.; m.gloss = .9; }
+  float eye = smoothstep(.02, .0, length((p.xz - vec2(.39, 1.11)) / vec2(.028, .028)) - 1.) * step(p.y, 0.);
+  if (eye > .5) { m.alb = hexc(20., 18., 20.); m.spec = 1.; m.gloss = .95; }
 }` };
   // ---------------------------------------------------------------- bauhaus: painted wooden blocks (geese: orange squares, the fox: a teal diamond)
   P['bauhaus-g'] = { glsl: `
@@ -92,66 +213,42 @@ void mat(vec3 p, vec3 n, inout PMat m){ m.alb = hexc(236., 104., 42.) * (.97 + .
 float map(vec3 p){ vec3 q = p; q.xy = rot(.785398) * q.xy; return sdRBox(q - vec3(0., 0., -.15), vec3(.66, .66, .58), .08); }
 void mat(vec3 p, vec3 n, inout PMat m){ m.alb = hexc(24., 118., 124.) * (.97 + .04 * vn3(p * 40.)); m.spec = .3; m.gloss = .28; }` };
   // ---------------------------------------------------------------- lux: pearls for the geese, a solid gold fox with ruby eyes
-  P['lux-g'] = { glsl: `
-float map(vec3 p){ return length(p) - .9 + .004 * (vn3(p * 6.) - .5); }
-void mat(vec3 p, vec3 n, inout PMat m){
-  float g = 1. - n.z;
-  vec3 c = mix(hexc(236., 228., 216.), hexc(232., 206., 212.), smoothstep(.1, .8, g));
-  float ang = atan(n.y, n.x);
-  c = mix(c, hexc(204., 226., 222.), smoothstep(.45, .95, g) * (.5 + .5 * sin(ang * 2. + 1.)) * .55);
-  c = mix(c, hexc(240., 214., 190.), smoothstep(.4, .9, g) * (.5 + .5 * sin(ang * 3. - .7)) * .35);
-  c *= .9 + .08 * vn3(p * 5.);
-  m.alb = c * .82; m.spec = 1.6; m.gloss = .9;
-  m.emit = hexc(255., 236., 236.) * .07 * smoothstep(.0, .7, n.z);   // the soft inner glow of nacre
-}` };
-  P['lux-f'] = { glsl: `
-float eyeGem(vec3 p){ vec3 q = p; q.x = abs(q.x); return length((q - vec3(.22, -.02, .3)) / vec3(1., .6, 1.)) - .08; }
-float map(vec3 p){ vec3 q = FX(p); return min(foxHead(q), eyeGem(q)) * 1.04; }
-void mat(vec3 p, vec3 n, inout PMat m){
-  vec3 q = FX(p);
-  if (eyeGem(q) < .004){ m.alb = hexc(170., 8., 28.); m.spec = 1.4; m.gloss = .95; m.emit = hexc(255., 40., 60.) * .45 * smoothstep(.2, 1., n.z); return; }
-  vec3 gold = hexc(255., 204., 120.);
-  // engraved fur: fine lines sweeping back from the muzzle
-  float fur = smoothstep(.75, 1., abs(sin(atan(q.y - .45, q.x) * 26. + length(q.xy - vec2(0., .45)) * 8.))) * step(q.y, .2) * (1. - step(.0, -earIn(q.xy)));
-  gold *= 1. - .25 * fur;
-  if (foxNose(q) < 0. && q.z > .4) { m.alb = hexc(18., 16., 16.); m.spec = 1.; m.gloss = .9; return; }
-  m.alb = mix(gold, gold * hexc(255., 200., 170.), smoothstep(.1, -.2, earIn(q.xy)) * .4); m.metal = 1.; m.spec = 1.; m.gloss = .86 - fur * .2;
-}` };
+  
+  
   // ---------------------------------------------------------------- norse: bone pieces with ring-and-dot carving; a fox carved in amber
+  
+  
+  // ---------------------------------------------------------------- norse (v2): plain domed bone pieces with one carved ring; the fox an
+  // abstract drop of amber, pointed like a fox's head
   P['norse-g'] = { glsl: `
-float ringDot(vec2 q){   // ring-and-dot marks: one in the middle, six round it
-  float d = abs(length(q) - .2); d = min(d, length(q) - .055);
-  for (int i = 0; i < 6; i++){ float a = float(i) * PI / 3. + .3; vec2 c = vec2(cos(a), sin(a)) * .56; d = min(d, abs(length(q - c) - .11)); d = min(d, length(q - c) - .03); }
-  return d;
-}
 float map(vec3 p){
-  float d = sdEll(p, vec3(.9, .9, .62));
-  d += .016 * smoothstep(.022, .006, ringDot(p.xy)) * step(.0, p.z);
-  d += .006 * (vn3(p * 9.) - .5);
+  float d = sdEll(p, vec3(.9, .9, .6));
+  float r = length(p.xy);
+  d += .014 * smoothstep(.026, .008, abs(r - .56)) * step(.0, p.z);
+  d += .005 * (vn3(p * 9.) - .5);
   return d;
 }
 void mat(vec3 p, vec3 n, inout PMat m){
-  vec3 c = mix(hexc(230., 218., 190.), hexc(206., 186., 146.), smoothstep(.3, .8, fbm3(p * 2.5)));
-  c *= 1. - .18 * smoothstep(.75, .95, vn3(p * vec3(30., 4., 4.)));   // the grain of the bone
-  float g = smoothstep(.026, .008, ringDot(p.xy));
-  c = mix(c, hexc(92., 70., 46.), g * .85);
-  c = mix(c, c * .82, smoothstep(.5, 1., length(p.xy)) * .5);
-  m.alb = c; m.spec = .5; m.gloss = .4;
+  vec3 c = mix(hexc(232., 220., 192.), hexc(208., 188., 148.), smoothstep(.3, .8, fbm3(p * 2.5)));
+  c *= 1. - .14 * smoothstep(.78, .96, vn3(p * vec3(30., 4., 4.)));   // the grain of the bone
+  c = mix(c, hexc(110., 86., 58.), smoothstep(.03, .01, abs(length(p.xy) - .56)) * .8);
+  c = mix(c, c * .84, smoothstep(.55, 1., length(p.xy)) * .5);
+  m.alb = c; m.spec = .5; m.gloss = .42;
 }` };
   P['norse-f'] = { glsl: `
-float map(vec3 p){ return foxHead(FX(p)) * 1.04; }
+float map(vec3 p){   // amber smoothed into the bare shape of a fox's head: wide brow, two ears, a narrow chin (seen from above)
+  float d = sdEll(p - vec3(0., -.06, 0.), vec3(.62, .46, .44));
+  d = smin(d, sdEll(p - vec3(0., .5, -.02), vec3(.2, .22, .26)), .38);
+  vec3 q = p; q.x = abs(q.x);
+  d = smin(d, sdEll(q - vec3(.44, -.48, -.04), vec3(.17, .24, .2)), .2);
+  return d;
+}
 void mat(vec3 p, vec3 n, inout PMat m){
-  vec3 q = FX(p);
-  float burn = max(smoothstep(.15, -.15, foxEye(q.xy)), smoothstep(.2, -.2, foxNose(q)) * step(.4, q.z));
-  float thick = pow(max(n.z, 0.), 1.4);                          // a crude thickness: the face is deep, the silhouette thin
-  float through = .55 + .45 * (1. - max(dot(n, LDIR), 0.));      // light passes through to the far side
-  float cloud = fbm3(q * 2.4 + 4.);
-  vec3 deep = hexc(92., 26., 2.), honey = hexc(250., 158., 34.), pale = hexc(255., 214., 120.);
-  vec3 c = mix(deep, honey, smoothstep(.05, .85, thick * through + (cloud - .5) * .35));
+  float thick = pow(max(n.z, 0.), 1.3), through = .55 + .45 * (1. - max(dot(n, LDIR), 0.)), cloud = fbm3(p * 2.6 + 4.);
+  vec3 deep = hexc(96., 28., 2.), honey = hexc(250., 158., 34.), pale = hexc(255., 216., 124.);
+  vec3 c = mix(deep, honey, smoothstep(.05, .85, thick * through + (cloud - .5) * .4));
   c = mix(c, pale, smoothstep(.75, 1., thick * through + cloud * .2) * .6);
-  c = mix(c, deep * .5, smoothstep(.2, -.2, earIn(q.xy)) * .4);
-  m.alb = hexc(60., 20., 2.) * .3; m.spec = 1.3; m.gloss = .94;
-  m.emit = mix(c * .62, hexc(30., 10., 2.), burn * .9);
+  m.alb = hexc(60., 20., 2.) * .3; m.spec = 1.3; m.gloss = .94; m.emit = c * .62;
 }` };
   // ---------------------------------------------------------------- delft: glazed porcelain discs painted in cobalt
   const DELFT = `
@@ -171,7 +268,8 @@ void mat(vec3 p, vec3 n, inout PMat m){
   vec3 c = hexc(240., 243., 246.);
   float k = paintOf(p);
   c = mix(c, mix(hexc(126., 152., 206.), hexc(22., 46., 126.), smoothstep(.15, .95, k)), smoothstep(.02, .3, k));
-  m.alb = c; m.spec = .9; m.gloss = .92;
+  c *= 1. - .1 * smoothstep(.7, .9, length(p.xy));   // the glaze thickens at the rim
+  m.alb = c; m.spec = 1.5; m.gloss = .97;
 }`;
   const delftPiece = (fox) => {
     const D = '#000', W = '#fff';
@@ -223,6 +321,7 @@ vec4 shadeAt(vec2 uv){ vec4 t = texture(tPc, uv); return vec4(pow(t.rgb, vec3(2.
   window.ART_PIECES = function (key) {
     const p = P[key];
     if (p.raw) return { glsl: p.raw, tex: p.tex, texSize: p.texSize, aa: p.aa };
+    if (/vec4 shadeAt/.test(p.glsl)) return { glsl: COMMON + p.glsl, tex: p.tex, texSize: p.texSize, aa: 3 };
     return { glsl: COMMON + LIT + p.glsl + TEMPLATE, tex: p.tex, texSize: p.texSize, aa: 3 };
   };
 })();

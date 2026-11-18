@@ -31,14 +31,14 @@ vec3 woodCol(vec2 q, float seed, vec3 early, vec3 lateC, float ringW, vec2 P, ou
   // q: x along the grain, y across (cell units); P: period for seamless tiles (0 = none)
   float y0 = (P.x > 0. ? .5 : .0) + (h21(vec2(seed, 3.)) - .5) * .8;
   float wob = P.x > 0. ? fbmP(vec2(q.x * .35 / P.x * P.x, seed), vec2(P.x * .35, 0.)) : fbm(vec2(q.x * .22 + seed * 7., seed));
-  float dep = .9 + 2.2 * wob;
+  float dep = 1.7 + 1.4 * wob;
   float dy = q.y - y0 + .25 * (P.x > 0. ? fbmP(q * vec2(.5, 1.5) + seed, P * vec2(.5, 1.5)) : fbm(q * vec2(.35, 1.2) + seed * 3.)) ;
   float r = sqrt(dy * dy * 2.4 + dep * dep);
-  float ring = r / ringW + .9 * (P.x > 0. ? fbmP(q * vec2(.8, 3.) + seed * 2., P * vec2(.8, 3.)) : fbm(q * vec2(.6, 2.6) + seed * 5.));
+  float ring = r / ringW + .55 * (P.x > 0. ? fbmP(q * vec2(.8, 3.) + seed * 2., P * vec2(.8, 3.)) : fbm(q * vec2(.6, 2.6) + seed * 5.));
   float t = fract(ring); ringT = t;
   float late = smoothstep(.62, .9, t) * (1. - smoothstep(.97, 1., t));
   vec3 c = mix(early, lateC, late * .32 + smoothstep(.88, .985, t) * (1. - smoothstep(.985, 1., t)) * .3);
-  c *= .94 + .1 * fbm(q * vec2(.25, .9) + seed * 4.);   // broad, quiet colour drift
+  c *= .96 + .06 * fbm(q * vec2(.25, .9) + seed * 4.);   // broad, quiet colour drift
   // fine streaks along the grain and pores (dense in the early wood of oak)
   float st = P.x > 0. ? vn(q * vec2(1.2, 70.) + seed, P * vec2(1.2, 70.)) : vn(q * vec2(1.4, 80.) + seed);
   c *= .93 + .12 * st;
@@ -259,7 +259,7 @@ float paintL(vec2 p){   // the lines, painted with a brush: width and load vary 
   float w = .026 + .006 * sin(li.z * 3.1 + li.y * 1.7) + .004 * (vn(vec2(li.z * 4., li.y * 9.)) - .5);
   return smoothstep(w + .005, w - .004, li.x);
 }
-float H(vec2 p){ return .0012 * (fbm(p * 3.) - .5) + .0006 * (vn(p * 45.) - .5) - .002 * smoothstep(.02, .0, cell2(p * 18.) - .015) + edgeRound(p, .1); }
+float H(vec2 p){ return .0022 * (fbm(p * 2.2) - .5) + .0006 * (vn(p * 45.) - .5) - .002 * smoothstep(.02, .0, cell2(p * 18.) - .015) + .002 * paintL(p) + edgeRound(p, .14); }
 void M(vec2 p, inout Mat m){
   vec3 c = mix(hexc(238., 241., 243.), hexc(228., 233., 238.), fbm(p * 1.3));
   float L = paintL(p);
@@ -279,7 +279,13 @@ void M(vec2 p, inout Mat m){
   dens = max(dens, clamp(pic * wash + pool * .5 * tx.a, 0., 1.));
   vec3 cob = mix(hexc(126., 152., 206.), hexc(24., 48., 128.), smoothstep(.1, .95, dens));
   c = mix(c, cob, smoothstep(.02, .3, dens));
-  m.alb = c; m.spec = .7; m.gloss = .9; m.metal = 0.;
+  m.alb = c; m.spec = 1.1; m.gloss = .96; m.metal = 0.;
+}
+vec3 POST(vec2 p, vec3 c, Mat m, vec3 n){
+  // the glaze mirrors a window: a soft diagonal band and a sharp narrow one, broken by the waviness of the glaze
+  float k = p.x * .8 + p.y * .6 + (n.x * 6. + n.y * 6.);
+  float w = exp(-pow((k - 2.3) / .9, 2.)) * .07 + exp(-pow((k - 3.3) / .14, 2.)) * .09;
+  return c + vec3(w) * vec3(.95, .97, 1.);
 }`,
   };
   // ---------------------------------------------------------------- SVG art used as textures (2048 px = the whole board, 1 cell = 2048/7)
@@ -421,7 +427,7 @@ void M(vec2 p, inout Mat m){ m.alb = hexc(38., 38., 40.) * (.94 + .1 * vn(p * 24
 float H(vec2 p){ return .002 * (vn(p * vec2(4., 90.), vec2(4., 90.)) - .5); }
 void M(vec2 p, inout Mat m){ float rt; vec3 c = fwood(p, hexc(236., 202., 156.), hexc(208., 164., 114.), 7., 3., rt);
   m.alb = c; m.spec = .3; m.gloss = .25; m.metal = 0.; }` };
-  F.norse = { glsl: FWOOD + `
+  F.norseOLD = { glsl: FWOOD + `
 float H(vec2 p){ float rt; fwood(p, vec3(0.), vec3(1.), 8., 5., rt); return .006 * smoothstep(.5, 1., rt) + .003 * (vn(p * vec2(6., 160.), vec2(6., 160.)) - .5); }
 void M(vec2 p, inout Mat m){ float rt; vec3 c = fwood(p, hexc(136., 132., 122.), hexc(74., 70., 64.), 8., 5., rt);
   m.alb = c; m.spec = .15; m.gloss = .12; m.metal = 0.; }` };
@@ -429,6 +435,14 @@ void M(vec2 p, inout Mat m){ float rt; vec3 c = fwood(p, hexc(136., 132., 122.),
 float H(vec2 p){ return .001 * (vn(p * vec2(4., 120.), vec2(4., 120.)) - .5); }
 void M(vec2 p, inout Mat m){ float rt; vec3 c = fwood(p, hexc(58., 42., 30.), hexc(24., 16., 10.), 10., 9., rt);
   m.alb = c; m.spec = .6; m.gloss = .6; m.metal = 0.; }` };
+  F.norse = { glsl: `
+float H(vec2 p){ return .006 * (fbmP(p * 6., vec2(6.)) - .5) + .004 * (vn(p * 60., vec2(60.)) - .5) + .002 * (vn(p * 150., vec2(150.)) - .5); }
+void M(vec2 p, inout Mat m){
+  vec3 c = mix(hexc(104., 110., 102.), hexc(146., 148., 136.), smoothstep(.3, .7, fbmP(p * 3., vec2(3.))));
+  c = mix(c, hexc(140., 120., 94.), smoothstep(.55, .78, fbmP(p * 2. + 5., vec2(2.))) * .3);
+  c = mix(c, hexc(44., 46., 44.), smoothstep(.8, .92, vn(p * 90., vec2(90.))) * .6);
+  c = mix(c, hexc(200., 198., 190.), smoothstep(.84, .95, vn(p * 70. + 3., vec2(70.))) * .45);
+  m.alb = c; m.spec = .25; m.gloss = .14; m.metal = 0.; }` };
   window.ART_BOARDS = function (kind, key) {
     const post = g => /vec3 POST\(/.test(g) ? g : g + `\nvec3 POST(vec2 p, vec3 c, Mat m, vec3 n){ return c; }\n`;
     if (kind === 'frame') {
