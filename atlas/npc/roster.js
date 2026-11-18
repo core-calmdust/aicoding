@@ -30,6 +30,8 @@
       b('hothead', { a: 'lion', c: [0xf0c070, 0xfff4e0, 0xc8702a], hat: 'tophat', hc: [0x2a2a38, 0xc83a4a], held: 'piece', ex: ['cape?'] }, 'モーフィオン|Morphion|莫菲昂|莫菲昂|모피온|Морфион|मॉर्फ़ियन|مورفيون'),
       b('king', { a: 'bear', c: [0x8a6a50, 0xf4e2cc, 0x6a3ad8], hat: 'crown', held: 'staff', ex: ['longbeard', 'cape'], bc: 0xd8d0c8, cape: 0x6a3ad8 }, 'シュタベア|Steinbear|斯坦熊熊|斯坦熊熊|슈타베어|Штайнбер|स्टाइनबेयर|شتاينبير'),
       b('lady', { a: 'bird', c: [0xfbfaf4, 0xffffff, 0xff8fb0], beak: 0xff9a3a, hat: 'laurel', hc: [0x8ad87a], hat2: 'halo', held: 'orb', ex: ['necklace', 'cape'], cape: 0xb88aff }, 'カイッスワン|Caisswan|凯莎鹅|凱莎鵝|카이스완|Кайсвон|कैस्वान|كايسوان'),
+      // (2026-11-19: the celestial levels — Pegasus, the winged horse — the knight that leaps, given wings. Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'horse', c: [0xdfe4ff, 0xffffff, 0xffc84a], hat: 'laurel', hc: [0xffd65a], hat2: 'halo', held: 'piece', ex: ['horsemane', 'angelwings', 'robe'], rc: 0xfffdf6 }, 'ペガナイト|Pegaknight|天马骑士|天馬騎士|페가나이트|Пеганайт|पेगानाइट|بيغانايت'), { cel: 1 }),
     ],
     shogi: [
       b('sleepy', { a: 'cat', c: [0xf8e8d0, 0xffffff, 0xff8fb0], hat: 'eboshi', held: 'shogi' }, 'ヘイアンニャ|Heiankit|平安喵|平安喵|헤이안냐|Хэйанкит|हेयानकिट|هيانكيت'),
@@ -41,6 +43,8 @@
       b('king', { a: 'tanuki', c: [0x9a7a5a, 0xf4e6d0, 0x8a3ad8], hat: 'kabuto', hc: [0x2a2a38, 0xffd65a], held: 'fan', ex: ['cape'], cape: 0x8a3ad8 }, 'イエヤスヌキ|Ieyasunuki|家康狸狸|家康狸狸|이에야스누키|Иэясунуки|इएयासुनुकी|إيياسونوكي'),
       b('samurai', { a: 'wolf', c: [0x8a8aa0, 0xf0f0f6, 0xc83a4a], hat: 'kabuto', hc: [0xc83a4a, 0xffd65a], held: 'katana', ex: ['armor'], ac: 0xc83a4a }, 'オシロガミ|Shirowolf|御城嗷|御城嗷|오시로가미|Шировулф|शिरोवुल्फ़|شيرووولف'),
       b('villain', { a: 'dragon', c: [0x6a3ad8, 0xe8d8ff, 0xffd65a], hat: 'bigcrown', held: 'shogi', ex: ['cape'], cape: 0x2a1a4a }, 'ギョクドラ|Gyokudra|玉龙宝|玉龍寶|교쿠도라|Гёкудра|ग्योकुड्रा|غيوكودرا'),
+      // (2026-11-19: the celestial levels — the moon rabbit of the moon palace (Tsukuyomi, the moon god). Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'rabbit', c: [0xfbfaf4, 0xffffff, 0xffd65a], hat: 'tiara', hc: [0xffd65a], hat2: 'halo', held: 'shogi', ex: ['angelwings', 'robe', 'necklace'], rc: 0xe8e0ff }, 'ツクヨミウサ|Tsukuyobun|月读兔兔|月讀兔兔|쓰쿠요미우사|Цукуёбан|त्सुकुयोबन|تسوكويوبن'), { cel: 1 }),
     ],
     go: [
       b('sleepy', { a: 'panda', c: [0xfbfaf4, 0xffffff, 0xff8fb0], held: 'stone', ex: ['scarf'], sc: 0xff8fb0 }, 'タンシュパン|Danzhupan|丹朱团团|丹朱團團|단슈판|Даньчжупан|दानझूपैन|دانجوبان'),
@@ -54,6 +58,8 @@
       b('king', { a: 'lion', c: [0xf0c870, 0xfff4e0, 0xffc030], hat: 'bigcrown', held: 'orb', ex: ['robe'], rc: 0xffc030 }, 'ギョウテイオン|Yaolion|尧帝狮宝|堯帝獅寶|교테이온|Яолион|याओलायन|ياوليون'),
       b('sage', { a: 'tiger', c: [0xffa040, 0xfff4e6, 0x2a2a38], hat: 'halo', held: 'staff', ex: ['longbeard'] }, 'テントラ|Tentiger|天元虎虎|天元虎虎|덴토라|Тентайгер|टेनटाइगर|تينتايغر'),
       b('villain', { a: 'dragon', c: [0x26262e, 0xfbfaf4, 0xfbfaf4], hat: 'bigcrown', held: 'orb', ex: ['cape'], cape: 0xfbfaf4 }, 'ハクコクリュウ|Yinyangon|黑白龙仙|黑白龍仙|하쿠코쿠류|Иньянгон|यिनयांगॉन|يينيانغون'),
+      // (2026-11-19: the celestial levels — a white dove in a black robe, alighting on tengen (the centre point). Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'bird', c: [0xfbfaf4, 0xffffff, 0x2b2b36], beak: 0xff9a7a, hat: 'laurel', hc: [0x8ad87a], hat2: 'halo', held: 'stone', ex: ['angelwings', 'robe'], rc: 0x2b2b36 }, 'テンゲンバト|Tengendove|天元鸽鸽|天元鴿鴿|덴겐바토|Тэнгендав|टेंगेनडव|تينغيندوف'), { cel: 1 }),
     ],
     reversi: [
       b('trickster', { a: 'sheep', c: [0xfffaf2, 0xffffff, 0x3a9a5a], hat: 'beret', hc: [0x3a9a5a], held: 'disc' }, 'ロンドメェ|Londolamb|伦敦咩|倫敦咩|론도메|Лондолэмб|लंदोलैम्ब|لوندولامب'),
@@ -117,6 +123,8 @@
       b('hothead', { a: 'goat', c: [0xf0ece0, 0xffffff, 0xffd65a], hat: 'viking', held: 'hammer' }, 'トールメェ|Thorbaa|雷神咩|雷神咩|토르메|Торбэ|थॉरबा|ثوربا'),
       b('king', { a: 'bear', c: [0x8a6a50, 0xf4e2cc, 0xc83a4a], hat: 'crown', held: 'staff', ex: ['longbeard', 'cape'], bc: 0xe8a060, cape: 0xc83a4a }, 'フネフィベア|Hnefibear|赫尼熊熊|赫尼熊熊|흐네피베어|Хнефибер|ह्नेफ़ीबेयर|هنيفيبير'),
       b('sage', { a: 'hawk', c: [0x8a7a6a, 0xf4ece0, 0x3a3a68], beak: 0xffc040, hat: 'helmet', hc: [0xfff4dc, 0xc8ccd8], held: 'staff', ex: ['cape', 'longbeard'], cape: 0x3a3a68 }, 'オーディグル|Odeagle|奥丁鹰鹰|奧丁鷹鷹|오디구루|Одигл|ओडीगल|أوديغل'),
+      // (2026-11-19: the celestial levels — a Valkyrie (the swan maidens of Norse myth) who leads the king to the heavens. Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'bird', c: [0xfbfaf4, 0xffffff, 0x6ab0ff], beak: 0xffa040, hat: 'viking', hc: [0xc8ccd8, 0xffd65a], hat2: 'halo', held: 'shield', ex: ['angelwings', 'armor'], ac: 0xc8ccd8 }, 'ヴァルキスワン|Valkyswan|女武神鹅|女武神鵝|발키스완|Валкисвон|वाल्कीस्वान|فالكيسوان'), { cel: 1 }),
     ],
     ur: [
       b('sleepy', { a: 'sheep', c: [0xfffaf2, 0xffffff, 0x3a6ad8], held: 'pyramid', ex: ['necklace'] }, 'シュメメェ|Sumelamb|苏美咩|蘇美咩|슈메메|Сумелэмб|सुमेलैम्ब|سوميلامب'),
@@ -141,23 +149,31 @@
       b('priest', { a: 'mouse', c: [0xc8c0b8, 0xfff4ee, 0x7a5a3a], hat: 'hood', hc: [0x7a5a3a], held: 'book', ex: ['robe'], rc: 0x7a5a3a }, 'カイロウチュー|Cloistchu|回廊吱吱|回廊吱吱|가이로추|Клойсчу|क्लॉइस्चू|كلويستشو'),
       b('hothead', { a: 'bear', c: [0x8a6a50, 0xf4e2cc, 0xc83a4a], hat: 'viking', held: 'shield', ex: ['beard'], bc: 0xd8902a }, 'ゴクスタベア|Gokstabear|戈克熊熊|戈克熊熊|고쿠스타베어|Гокстабер|गोक्स्टाबेयर|غوكستابير'),
       b('villain', { a: 'hawk', c: [0x8a6a4a, 0xf4e6d0, 0xc83a4a], beak: 0xffc040, hat: 'laurel', held: 'sword', ex: ['cape', 'armor'], cape: 0xc83a4a }, 'カエサーグル|Caesagle|凯撒鹰鹰|凱撒鷹鷹|가에사구루|Цезигл|सीज़ीगल|سيزيغل'),
+      // (2026-11-19: the celestial levels — Mercury, the swift messenger of the Roman gods. Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'fox', c: [0xffb060, 0xfff4e6, 0x6ab0ff], hat: 'feathers', hc: [0xffffff, 0xffd65a], hat2: 'halo', held: 'piece', ex: ['angelwings', 'scarf'], sc: 0x6ab0ff }, 'メルクリンコ|Mercurfox|墨丘狐狐|墨丘狐狐|메르쿠린코|Меркурфокс|मर्करफ़ॉक्स|ميركورفوكس'), { cel: 1 }),
     ],
     connect4: [
       b('sleepy', { a: 'penguin', c: [0x3a4a6a, 0xfbfaf4, 0xffd65a], hat: 'cap', hc: [0xe83a3a], held: 'disc' }, 'オモチャペン|Toyguin|玩具企企|玩具企企|오모차펜|Тойгвин|टॉयग्विन|تويغوين'),
       b('pirate', { a: 'bird', c: [0x46c870, 0xf0ffe8, 0xe83a3a], beak: 0xffb03a, hat: 'tricorne', held: 'disc', ex: ['scarf'], sc: 0xe83a3a }, 'キャプロット|Captarrot|船长鹦鹦|船長鸚鸚|캬푸롯토|Каптаррот|कैप्टारॉट|كابتاروت'),
       b('villain', { a: 'lizard', c: [0x8a5ad8, 0xe8dcff, 0xffd65a], hat: 'helmet', hc: [0xffd65a, 0xc8ccd8], held: 'orb', ex: ['cape', 'glasses'], cape: 0x2a1a4a }, 'カイセキザード|Solvizard|解析蜥蜥|解析蜥蜥|가이세키자도|Солвизард|सॉल्विज़र्ड|سولفيزارد'),
+      // (2026-11-19: the celestial levels — the Great Bear in the night sky, linking four stars into a constellation. Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'bear', c: [0x3a4a8a, 0xe8ecff, 0xffd65a], hat: 'crown', hc: [0xffd65a], hat2: 'halo', held: 'disc', ex: ['angelwings', 'necklace'] }, 'オオグマセイザ|Ursangel|大熊星宝|大熊星寶|오오구마세이자|Урсанжел|उर्सेंजेल|أورسانجل'), { cel: 1 }),
     ],
     dots: [
       b('sleepy', { a: 'mouse', c: [0xe0d8d0, 0xfff6f0, 0x3a8ad8], held: 'book', ex: ['scarf'], sc: 0x3a8ad8 }, 'ハジッコチュー|Notechu|本子吱吱|本子吱吱|하짓코추|Ноутчу|नोटचू|نوتتشو'),
       b('trickster', { a: 'cat', c: [0xffb8a0, 0xfff4ee, 0x3a6ad8], hat: 'beret', hc: [0x2a3a6a], held: 'quill', ex: ['scarf'], sc: 0xe83a3a }, 'ピポピニャン|Pipopurr|皮波喵|皮波喵|피포피냥|Пипопурр|पिपोपर|بيبوبر'),
       b('scholar', { a: 'goat', c: [0xf0ece0, 0xffffff, 0x2a2a38], hat: 'tophat', held: 'book', ex: ['mustache'], bc: 0x5a4030 }, 'リュカメェ|Lucabaa|卢卡咩|盧卡咩|류카메|Люкабэ|लूकाबा|لوكابا'),
       b('sage', { a: 'turtle', c: [0x9ad0a0, 0xfff4dc, 0x5a7ad8], hat: 'wizard', hc: [0x5a7ad8, 0xffd65a], held: 'staff', ex: ['longbeard'] }, 'クサリコウラ|Chainshell|长链龟仙|長鏈龜仙|구사리코라|Чейншелл|चेनशेल|تشينشيل'),
+      // (2026-11-19: the celestial levels — a cupid who draws the lines that close the boxes. Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'squirrel', c: [0xffa8b8, 0xfff4f6, 0xff5a8a], hat: 'flowers', hc: [0xff8fb0, 0xffd65a], hat2: 'halo', held: 'quill', ex: ['angelwings'] }, 'キューピリン|Cupirrel|丘比栗栗|丘比栗栗|큐피린|Купирел|क्यूपिरल|كيوبيريل'), { cel: 1 }),
     ],
     mancala: [
       b('sleepy', { a: 'goat', c: [0xe8d8c0, 0xfff6ea, 0x46a070], held: 'seeds', ex: ['scarf'], sc: 0x46a070 }, 'サバンメェ|Savabaa|草原咩|草原咩|사반메|Савабэ|सवाबा|سافابا'),
       b('merchant', { a: 'boar', c: [0x9a7a6a, 0xf0dcd0, 0xff9a3a], hat: 'straw', hc: [0xf0d080, 0xff9a3a], held: 'seeds' }, 'イボシシ|Warthie|疣猪猪|疣豬豬|이보시시|Уорти|वॉर्थी|وورثي'),
       b('cool', { a: 'cat', c: [0xf0c060, 0xfff4e0, 0x2a8a4a], held: 'seeds', ex: ['scarf', 'necklace'], sc: 0xffc030 }, 'アシャンティピョウ|Ashantipard|阿散豹豹|阿散豹豹|아샨티효|Ашантипард|अशांतीपार्ड|أشانتيبارد'),
       b('king', { a: 'lion', c: [0xe8b060, 0xfff0d8, 0x2a8a4a], hat: 'bigcrown', held: 'seeds', ex: ['robe', 'cape'], rc: 0xffc030, cape: 0x2a8a4a }, 'バオラオン|Baolion|巴奥狮宝|巴奧獅寶|바오라온|Баолион|बाओलायन|باوليون'),
+      // (2026-11-19: the celestial levels — Thoth, the ibis-headed god of wisdom and counting. Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'ibis', c: [0xfbfaf4, 0xffffff, 0x2a6ad8], beak: 0x2a2a38, hat: 'nemes', hc: [0x2a6ad8, 0xffd65a], hat2: 'halo', held: 'seeds', ex: ['angelwings', 'collar'], cc: 0x2a6ad8 }, 'トトイビス|Thothibis|托特鹮鹮|托特䴉䴉|토토이비스|Тотибис|थोथिबिस|تحوتيبس'), { cel: 1 }),
     ],
     backgammon: [
       b('sleepy', { a: 'rabbit', c: [0xe8d0a8, 0xfff6ea, 0xd8a040], hat: 'turban', hc: [0xd8a040, 0xffd65a], held: 'die' }, 'ヤケマチピョン|Burnbun|焦城兔兔|焦城兔兔|야케마치퐁|Бёрнбан|बर्नबन|بيرنبن'),
@@ -192,6 +208,8 @@
       b('trickster', { a: 'cat', c: [0x3a3440, 0x5a5466, 0x8a3ad8], hat: 'hood', hc: [0x8a3ad8], held: 'broom', mouth: 'w' }, 'ババヤニャン|Babayagat|芭芭喵|芭芭喵|바바야냥|Бабаягат|बाबायागैट|باباياغات'),
       b('knight', { a: 'bear', c: [0x7a5a46, 0xf0dcc8, 0xd83a4a], hat: 'helmet', hc: [0xd83a4a, 0xffd65a], held: 'sword', ex: ['armor', 'cape'], cape: 0xd83a4a }, 'ボガトベア|Bogatbear|勇士熊熊|勇士熊熊|보가토베어|Богатбер|बोगाटबेयर|بوغاتبير'),
       b('villain', { a: 'wolf', c: [0x5a5a6a, 0xc8c8d8, 0x46e0a0], hat: 'bigcrown', held: 'orb', ex: ['cape'], cape: 0x2a2a38 }, 'コシェルフ|Koscholf|科西狼狼|科西狼狼|고셰루프|Кощольф|कोशोल्फ़|كوشولف'),
+      // (2026-11-19: the celestial levels — the Firebird (Zhar-ptitsa) of Russian tales, flying corner to corner. Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'bird', c: [0xff7a3a, 0xffd65a, 0xff3d3d], beak: 0xffd65a, hat: 'kokoshnik', hc: [0xffd65a, 0xff3d6e], hat2: 'halo', held: 'piece', ex: ['angelwings', 'crest'] }, 'ジャルプティ|Zharbird|火鸟鸟|火鳥鳥|자르프티|Жарптах|ज़ारबर्ड|زاربيرد'), { cel: 1 }),
     ],
     agon: [
       b('sleepy', { a: 'mouse', c: [0xe0d8d0, 0xfff6f0, 0xff8fb0], hat: 'bonnet', hc: [0xfff4f8, 0xff8fb0], held: 'piece' }, 'ボンネチュー|Bonnetchu|软帽吱吱|軟帽吱吱|본네추|Боннетчу|बॉनेटचू|بونيتشو'),
@@ -202,6 +220,8 @@
       b('cool', { a: 'bird', c: [0x2a8ad8, 0xc8e8ff, 0x46c890], beak: 0x5a5a6a, held: 'fan', ex: ['crest'] }, 'クリスタジャク|Crystafan|水晶孔孔|水晶孔孔|구리스타자쿠|Кристафан|क्रिस्टाफ़ैन|كريستافان'),
       b('hothead', { a: 'bull', c: [0xc8703a, 0xf4dcc0, 0x3a6ad8], hat: 'tophat', hc: [0x3a3a48, 0xd83a4a], held: 'flag', ex: ['scarf'], sc: 0x3a6ad8 }, 'ジョン・ブル|John Bull|约翰牛|約翰牛|존불|Джон Булль|जॉन बुल|جون بول'),
       b('lady', { a: 'lion', c: [0xf0c070, 0xfff4e0, 0x6a3ad8], hat: 'bigcrown', held: 'staff', ex: ['cape', 'necklace'], cape: 0x6a3ad8 }, 'ヴィクトリオン|Victorion|维多狮宝|維多獅寶|빅토리온|Викторион|विक्टोरियन|فيكتوريون'),
+      // (2026-11-19: the celestial levels — a seraph seated at the heart of the hexagon board. Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'sheep', c: [0xfffaf2, 0xffffff, 0xb88aff], hat: 'tiara', hc: [0xffd65a], hat2: 'halo', held: 'hex', ex: ['wool', 'angelwings', 'robe'], rc: 0xf0e8ff }, 'ヘクセラフ|Hexeraph|六角天咩|六角天咩|헥세라프|Гексераф|हेक्सेराफ़|هيكسيراف'), { cel: 1 }),
     ],
     // amazons (2026-11-11 the user: the Amazon feel up front) — the rainforest of the Amazon and the Amazon warriors of the Greek
     // myths: bows and the game's fire arrows; the top two are the myths' queens Penthesilea and Hippolyta
@@ -214,6 +234,8 @@
       b('knight', { a: 'jaguar', c: [0xe8b058, 0xfff2d8, 0xc83a3a], hat: 'helmet', hc: [0xc83a3a, 0xd8c8a0], held: 'bow', ex: ['armor', 'necklace'] }, 'ジャガウォー|Jaguarrior|豹勇勇|豹勇勇|자가워|Джагуаррио|जगुआरियर|جاغواريور'),
       b('hothead', { a: 'horse', c: [0xf4f0e8, 0xfffaf2, 0xb83a3a], hat: 'helmet', hc: [0xb83a3a, 0xd8b048], held: 'shield', ex: ['armor', 'cape'], cape: 0xb83a3a, brow: 1 }, 'ペンテシレイア|Penthesilea|彭忒西勒亚|彭忒西勒亞|펜테실레이아|Пентесилея|पेंथेसिलिया|بنثيسيليا'),
       b('king', { a: 'jaguar', c: [0xf0b850, 0xfff4dc, 0xd8a020], hat: 'crown', held: 'bow', ex: ['cape', 'necklace', 'armor'], cape: 0x2a8a5a }, 'ヒッポリュテ|Hippolyta|希波吕忒|希波呂忒|히폴리테|Ипполита|हिप्पोलिटा|هيبوليتا'),
+      // (2026-11-19: the celestial levels — Artemis, the hunting goddess with her sacred deer — the arrows. Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'deer', c: [0xe8c8a0, 0xfff4e6, 0x8ad8ff], hat: 'laurel', hc: [0xffd65a], hat2: 'halo', held: 'bow', ex: ['angelwings', 'robe'], rc: 0xf4f0ff }, 'アルテミジカ|Artemideer|阿尔忒鹿|阿爾忒鹿|아르테미지카|Артемидир|आर्टेमिडियर|أرتيميدير'), { cel: 1 }),
     ],
     konane: [
       b('sleepy', { a: 'seal', c: [0x9aa0aa, 0xe8ecf0, 0xff8fb0], hat: 'flowers', held: 'stone' }, 'モンザラシ|Monkseel|僧海豹豹|僧海豹豹|몬자라시|Монксил|मंकसील|مونكسيل'),
@@ -224,6 +246,8 @@
       b('cool', { a: 'hawk', c: [0x6a5a4a, 0xe8dcc8, 0xffd65a], beak: 0xffc040, held: 'stone' }, 'イオホーク|Iohawk|伊奥鹰鹰|伊奧鷹鷹|이오호크|Иохок|इओहॉक|إيوهوك'),
       b('king', { a: 'bear', c: [0x8a6a50, 0xf4e2cc, 0xffd030], hat: 'helmet', hc: [0xffd030, 0xe83a3a], held: 'staff', ex: ['cape'], cape: 0xe83a3a }, 'カメハメベア|Kamehabear|卡美熊熊|卡美熊熊|가메하메베어|Камехабер|कामेहाबेयर|كاميهابير'),
       b('priest', { a: 'lizard', c: [0xe84a3a, 0xffe0c8, 0xffc030], hat: 'flowers', held: 'orb', ex: ['cape', 'necklace'], cape: 0x2a2a38 }, 'ペレ|Pele|佩蕾|佩蕾|펠레|Пеле|पेले|بيليه'),
+      // (2026-11-19: the celestial levels — the pueo owl, a Hawaiian guardian spirit (ʻaumakua), with a lei. Gacha-only UR, no rewards for a win)
+      Object.assign(b('angel', { a: 'owl', c: [0xc8a070, 0xfff4e2, 0x2a2a38], hat: 'flowers', hc: [0xff8fb0, 0xffd65a], hat2: 'halo', held: 'stone', ex: ['angelwings', 'necklace'] }, 'プエオカミ|Pueowl|普埃奥咕|普埃奧咕|푸에오카미|Пуэоул|पुएओउल|بويوول'), { cel: 1 }),
     ],
     latrunculi: [   // ancient Rome: the game of the soldiers (mercenaries); Varro's record, the poets, the master of the Laus Pisonis (claude/latrunculi-spec.md)
       b('sleepy', { a: 'sheep', c: [0xf2ece0, 0xfff8ee, 0x8a2f72], held: 'stone', ex: ['scarf'], sc: 0x8a2f72 }, 'ロマメェ|Romabaa|罗马咩|羅馬咩|로마메|Ромабэ|रोमाबा|رومابا'),
@@ -339,7 +363,7 @@
   A.tier = (g, lv) => { if (A.isCel(g, lv)) return -1; const i = A.band(g, lv); return i < 0 ? 2 : Math.max(0, Math.min(2, (Math.max(1, lv | 0) - 1) - i * 3)); };
   A.range = (g, i) => {
     const L = A.BOSSES[g], top = A.LEVELS[g] || 20, human = A.CEL[g] || top;
-    if (L && L[i] && L[i].cel) return `Lv.${human + 1}–${top}`;
+    if (L && L[i] && L[i].cel) return human + 1 >= top ? 'Lv.' + top : `Lv.${human + 1}–${top}`;
     const lo = i * 3 + 1, hi = Math.min(human, i * 3 + 3); return lo === hi ? 'Lv.' + lo : `Lv.${lo}–${hi}`; };
   // the 50 gacha creatures: how they talk when they come to watch (default: cute)
   A.VOICE = { shogi: 'samurai', knight: 'knight', disc: 'sleepy', tile: 'scholar', stone: 'cool', dot: 'cute', plop: 'cute', gem: 'merchant', dice: 'hothead', owl: 'trickster', crab: 'pirate',
