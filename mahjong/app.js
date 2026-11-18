@@ -2345,20 +2345,7 @@ function lessonGuide(o) {
 }
 // (ユーザー 2026-11-18「最上部は見にくいので可能な限り下側」) just above the player's hand, between the player's portrait (left) and the
 // drawn-tile slot (right — the call / win buttons come up there)
-function placeGuide(el) {
-  const hud = el.offsetParent; if (!hud) return;
-  const H = uiRect(hud), k = hud.offsetWidth / H.width, X = x => (x - H.left) * k, Y = y => (y - H.top) * k;
-  const tiles = [...document.querySelectorAll('#hand .tl[data-id]')], mp = $('#mePanel .mb') || $('#mePanel');
-  const top = tiles.length ? Math.min(...tiles.map(e => uiRect(e).top)) : H.bottom - 120;
-  const l = mp && mp.offsetWidth ? X(uiRect(mp).right) + 14 : 14;
-  const last = tiles.length ? uiRect(tiles[tiles.length - 1]) : null, r = last ? X(last.left) - 14 : hud.offsetWidth - 14;
-  // (ユーザー 2026-11-19「会話ボックスの横位置がセンターに来るように」) centred on the screen, as wide as fits between the two bounds
-  const c = hud.offsetWidth / 2, half = Math.min(c - l, r - c);
-  const w = Math.max(300, Math.min(Math.max(680, innerHeight * 1.05), 2 * half));   // (wider on big screens, where the words are bigger)
-  el.style.transform = 'none'; el.style.width = w + 'px';
-  el.style.left = Math.max(8, c - w / 2) + 'px';
-  el.style.top = Math.max(8, Y(top) - el.offsetHeight - 12) + 'px';
-}
+function placeGuide(el) { el.style.left = el.style.top = el.style.width = el.style.transform = ''; }   // (2026-11-19: placed by CSS — it follows resizes and full screen)
 function guideWait(text, label, step) {
   return new Promise(res => {
     lessonGuide({ text, next: label, step });
