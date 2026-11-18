@@ -586,6 +586,9 @@ static int search1(u64 P, u64 O, u64 m, int alpha, int beta, int ply, int ttMove
   }
   return best;
 }
+#ifdef MPC_NONEST
+static TLS int mpcProbe;
+#endif
 static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int passed) {
   CHECK_NODES()
   if (END_SW) {
@@ -633,22 +636,40 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
     ttStore(tk, h, 1, bm, v > alpha ? v : -32767, v < beta ? v : 32767);
     return v;
   }
+#ifdef MPC_NONEST   /* (a test build, tools/train/frontier.js: no Multi-ProbCut inside a probe — Egaroucid's way) */
+  if (MPC_ON && !mpcProbe && depth >= MPC_MIN && beta - alpha == 1 && MPC_A > 0) {
+#else
   if (MPC_ON && depth >= MPC_MIN && beta - alpha == 1 && MPC_A > 0) {
+#endif
     int empties = 64 - pc(P | O), ds = 2 * (depth >> 2) + (depth & 1);
     int sig = (int)(MPC_T * (MPC_A + MPC_B * depth + MPC_C * empties));
 #ifdef ENDK   /* (a test build only, tools/train/rvmatch --engine-b: the width of the search to the end of the game ×ENDK/100 — claude/reversi-mac-verification.md) */
     if (depth >= empties) sig = sig * ENDK / 100;
 #endif
     int hb = beta + sig;
+#ifdef MPC_PRE   /* (a test build: a probe is tried only when the static evaluation is within MPC_PRE (1/100 disc) of its bound — Edax's way) */
+    const int e0 = evalAt(ply, P, O);
+#define MPC_TRY_HI (e0 >= beta - MPC_PRE)
+#define MPC_TRY_LO (e0 <= alpha + MPC_PRE)
+#else
     const int e0 = ds == 0 ? evalAt(ply, P, O) : 0;   /* (v8: the probe of depth 0 once for both bounds) */
-    if (hb < 30000) {
-      int v = ds == 0 ? e0 : searchI(P, O, ds, hb - 1, hb, ply, passed);
+#define MPC_TRY_HI 1
+#define MPC_TRY_LO 1
+#endif
+#ifdef MPC_NONEST
+#define MPC_PROBE(call) (mpcProbe++, pv_ = (call), mpcProbe--, pv_)
+    int pv_;
+#else
+#define MPC_PROBE(call) (call)
+#endif
+    if (hb < 30000 && MPC_TRY_HI) {
+      int v = ds == 0 ? e0 : MPC_PROBE(searchI(P, O, ds, hb - 1, hb, ply, passed));
       if (aborted) return 0;
       if (v >= hb) return beta;
     }
     int lb = alpha - sig;
-    if (lb > -30000) {
-      int v = ds == 0 ? e0 : searchI(P, O, ds, lb, lb + 1, ply, passed);
+    if (lb > -30000 && MPC_TRY_LO) {
+      int v = ds == 0 ? e0 : MPC_PROBE(searchI(P, O, ds, lb, lb + 1, ply, passed));
       if (aborted) return 0;
       if (v <= lb) return alpha;
     }

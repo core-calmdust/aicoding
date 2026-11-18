@@ -1415,3 +1415,6 @@ Edax の約2.0倍、Egaroucid の約2.8倍の時間。Edax との差は、局面
 
 ## Praline のパーキングを取り込み（2026-11-19）
 `engine_mt.wasm` を今の `shared/praline/` で作り直した（`?v=16`）：手の空いた補助が、仕事のない間は短く回ったあと眠る（`claude/praline-spec.md`「待ち方の改善：パーキング」）。エンジンのソース（`engine.c`）は変更なし、`engine.wasm`（1スレッド）は同じバイナリ。1スレッドの読みは前と全一致（`tools/mt-one.js --quick`）、2スレッドの終盤（`tools/mt-bench.js 20 6`）は石差が一致。速さへの効果は Mac の `bench.html` と `bench.html?park=0` で確かめる（`claude/reversi-mac-verification.md` 検証D）。
+
+## 検証計画の見直し（2026-11-19、将棋の記録と突き合わせ）
+将棋の探索の比較（`claude/shogi-search-comparison.md`）で成果の出たやり方に合わせて、`claude/reversi-mac-verification.md` の検証A を直した：Edax を同じ表に載せる物差し（`tools/edax-anchor.js`）、深い基準（Lv.31・Lv.34）での計測、枝刈りの仕組みの切り替え（テスト用ビルド `-DMPC_NONEST`・`-DMPC_PRE=…`、`frontier.js --plan mech`）。テスト用の切り替えを付けないビルドは、`engine.wasm`・`engine_mt.wasm` とも前と同じバイナリ。

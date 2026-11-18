@@ -20,34 +20,58 @@ cc -O3 -o rvmatch rvmatch.c -ldl -lz -lm          # 2026-11-19 に「考えた�
 ls op10.bin                                        # なければ: ./rvmatch openings pairs.bin op10.bin
 ```
 
-## 検証A：読みの設定の組み合わせ（`tools/train/frontier.js`）
-どの設定も、今の Lv.28（深さ13・完全読み20・勝敗読み22・終局まで読む26・t 1.5）を相手に同じ序盤から対局し、**Elo と考えた時間**を表にします。
-「同じ時間を深さだけに使った場合」より何 Elo 上かで並べるので、時間あたりで得な設定がわかります。止めても同じコマンドで続きから再開します。
+## 検証A：読みの設定の組み合わせ（`tools/train/frontier.js`・`tools/edax-anchor.js`）
+### 将棋の記録（`claude/shogi-search-comparison.md`）から取り入れたこと（2026-11-19 見直し）
+将棋で成果が出たやり方と突き合わせて、最初の案を次のように直した。
+1. **外の物差しを先に置く**：将棋は「同じ評価関数でやねうら王の探索に載せ替える」実測で、差が探索にあると確定してから進めた。最初の案は自前どうしの対局だけだったので、**Edax を同じ表に載せる**（A0）。自前の設定が Edax の線にどこまで近いか・どの時間帯で離れるかが分かる。
+2. **深い読みで測る**：将棋では、浅い条件（2万局面）で「弱くなる」と出た枝刈りが、深い条件（30万局面）で逆転した。リバーシのこれまでの結論（t を下げても同じ、など）は 1手100ms や Lv.28（深さ13）の浅い条件のもの。**基準を Lv.31（深さ20）・Lv.34（深さ25）にした計測を必ず行い**、採否はそちらで決める。
+3. **数値だけでなく仕組みも組み合わせる**：将棋では「単独では −133 の枝刈りが、ほかの仕組みと組んで基準をゆるめると働いた」。数値（深さ・t・範囲）だけでなく、**枝刈りのまわりの仕組み**（試しの読みの中では枝刈りしない＝Egaroucid、静的評価で試すかどうかを決める＝Edax）を t と一緒に動かす計画（mech）を足した。
+4. **対局の数え方**：将棋では同じ対局を重ねて数えていた誤りがあった。`rvmatch` は別々の序盤（`op10.bin` は3,000個）を先後入れ替えて使い、誤差は序盤の組ごとに出すので、この問題はない。**`--n` は 3000 以下にする。**
+5. **1つずつの段が終わったら同時調整**：良い向きが分かった数値は、深い条件で同時に動かして合わせる（将棋の SPSA に当たる。道具はまだなく、A3 までの結果を見てから作る）。
 
+### 設定の意味
 | 設定 | 意味 |
 |---|---|
 | d（深さ） | 中盤の読みの深さ |
 | t | 中盤と「終局まで読む」の枝刈りの強さ（小さいほど強く切る。今は 1.5、Edax・Egaroucid の中盤は約1.1） |
 | x（完全読み／勝敗読み） | 読み切りを始める空きマス |
 | e（終局まで読む） | この空きマス以下で、確率つきで終局まで読む |
-| k（ENDK） | 終局まで読むときの誤差幅を何%にするか（今は 100。実測では幅が足りていないので 130〜200 を試す。`engine.c` のテスト用ビルド） |
+| k（ENDK） | 終局まで読むときの誤差幅を何%にするか（今は 100。実測では幅が足りていないので 130〜200 を試す） |
+| nn（MPC_NONEST） | 試しの読みの中では枝刈りをしない（Egaroucid の方式） |
+| p（MPC_PRE） | 静的評価が境から p/100 石以内のときだけ試しの読みをする（Edax の方式） |
 
+k・nn・p は `engine.c` のテスト用ビルド（`frontier.js` が自動で作る。付けなければ公開中の wasm と同じバイナリ）。
+
+### A0：Edax を物差しに（最初に）
+```sh
+# Edax を用意（https://github.com/abulmo/edax-reversi を make build。bin/ に実行ファイルと data/eval.dat）
+cd reversi
+EDAX=~/edax-reversi/bin/mEdax-arm64 node tools/edax-anchor.js --levels 12,15,18,21 --base lv28 --n 150
+EDAX=~/edax-reversi/bin/mEdax-arm64 node tools/edax-anchor.js --levels 15,18,21,24 --base lv31 --n 100
+```
+- 出力：Edax の各レベルの Elo（基準に対して）と、双方の考えた時間。A1 以降の表と同じ基準なので、「同じ時間で Edax が何 Elo 上か」が読める。
+- 自前は wasm の1スレッド、Edax はネイティブ（1スレッド）。Edax は1手ごとに起動するので、時間は Edax が表示する読みの時間を使う。
+
+### A1〜A4：自前の設定（どれも `--base lv28` と `--base lv31` の両方。余裕があれば `lv34`）
 ```sh
 cd reversi/tools/train
-# 1) 1つずつ変える（33設定）：それぞれの「時間2倍あたりの Elo」
-caffeinate -i node frontier.js run --plan stage1 --n 1000
-# 2) 組み合わせ（t 2通り × 深さ 3通り × 終局読み 2通り × 誤差幅 2通り × 読み切り 2通り＝47設定）
-caffeinate -i node frontier.js run --plan stage2 --n 1000
-# 3) 今の10〜100倍の時間を使う設定（6設定。1局が長いので局数は少なめ）
-caffeinate -i node frontier.js run --plan extreme --n 150 --out frontier-extreme.jsonl
-node frontier.js table                    # いつでも途中経過の表
+caffeinate -i node frontier.js run --plan stage1 --base lv28 --n 1000     # A1：1つずつ変える（35設定）
+caffeinate -i node frontier.js run --plan mech   --base lv28 --n 1000     # A2：枝刈りの仕組み × t × 深さ（35設定）
+caffeinate -i node frontier.js run --plan stage2 --base lv28 --n 1000     # A3：数値の組み合わせ（47設定）
+caffeinate -i node frontier.js run --plan stage1 --base lv31 --n 300      # 深い基準で同じことを（1局が長いので局数は少なめ）
+caffeinate -i node frontier.js run --plan mech   --base lv31 --n 300
+caffeinate -i node frontier.js run --plan stage2 --base lv31 --n 300
+caffeinate -i node frontier.js run --plan extreme --base lv31 --n 100     # A4：今の10〜100倍の時間
+node frontier.js table --base lv31                                         # いつでも途中経過の表（--base ごとに別のファイル）
 ```
-- 時間の目安（概算。実測で変わる）：1) 2〜4時間、2) 6〜12時間、3) 半日〜1日。夜に1つずつ。
+- 結果は `frontier-lv28.jsonl`・`frontier-lv31.jsonl` に1行ずつ足される。止めても同じコマンドで続きから。
+- 時間の目安（概算。実測で変わる）：lv28 の3つで半日〜1日、lv31 の3つで1〜3日、extreme で1日。夜に1つずつ。
 - 見るところ：
   - 表の「同じ時間の深さだけの設定との差」が **± の2倍を超えてプラス**の設定。
-  - 1) で単独では差のなかった設定が、2) の組み合わせでプラスになっていないか（例：t を下げて深くする × 終局読みを広げる × 誤差幅を広げる）。
-  - 3) で、時間を増やしたときに Elo が伸び続けるか、どの組み合わせで伸びるか。
-- 良い設定が見つかったら：その周りを細かく刻んだ計画を `frontier.js` に足して測り直し、レベルの表（`engine.js` LEVELS）に反映する。誤差幅（k）が効く場合は、エンジンに正式な設定として入れる。
+  - **lv28 と lv31 で向きが変わる設定**（浅い基準でマイナス・深い基準でプラスなら、深い方を信じる）。
+  - 単独（stage1）で差のなかった設定が、組み合わせ（mech・stage2）でプラスになっていないか。特に「t を下げる × nn × p」。
+  - A0 の Edax の線との差が、どの設定で縮むか。
+- 良い設定が見つかったら：その周りを細かく刻んだ計画を足して測り直す → 同時調整 → レベルの表（`engine.js` LEVELS）に反映。k・nn・p が効く場合は、エンジンに正式な設定として入れる（1スレッドの読みが変わるので、Praline の一致の約束は更新する）。
 
 ## 検証B：定石の大きさと強さ
 ```sh
@@ -82,6 +106,6 @@ EGAROUCID_DIR=~/Egaroucid/bin node tools/book-audit.js tools/book-L.bin 21 --mar
 - 待ち方の変更（パーキング）は 2026-11-19 にリバーシにも入った（`engine_mt.wasm?v=16`）。`reversi/bench.html` と `reversi/bench.html?park=0`（前の待ち方）を並べて、中盤・終盤を 1・8・10・14 スレッドで測る。リバーシは分割が細かいので、8〜10スレッドの伸びが落ちていないか、14スレッドが良くなったかを見る。落ちる場合は `PL_PARK_SPIN` を上げるか、リバーシだけ `-DPL_NO_PARK` でビルドする。
 
 ## 送ってほしいもの
-1. `node frontier.js table` の出力（`frontier.jsonl`・`frontier-extreme.jsonl` があればそのファイルも）
+1. `edax-anchor.js` の出力、`node frontier.js table --base lv28`・`--base lv31` の出力（`frontier-*.jsonl` があればそのファイルも）
 2. `book-gen.js build` の表示（局面数・大きさ）、`book-match` の結果、`book-audit` の出力
 3. `bench.html` の数字（検証C・D を行った場合）

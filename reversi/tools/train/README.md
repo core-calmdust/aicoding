@@ -131,7 +131,8 @@ cc -O3 -o rvmatch rvmatch.c -ldl -lz -lm
 ## 設定の組み合わせを同じ時間で比べる（frontier.js、2026-11-19）
 `rvmatch` は各側の「考えた時間」も出すようになりました。`frontier.js` は、たくさんの設定（深さ・t・読み切り・終局まで読む範囲・終局読みの誤差幅）を今の Lv.28 と対局させ、Elo と時間の表を作ります（止めても続きから）。手順と見方は `claude/reversi-mac-verification.md`。
 ```sh
-node frontier.js run --plan stage1 --n 1000     # stage2（組み合わせ）、extreme（今の10〜100倍の時間）
-node frontier.js table
+node frontier.js run --plan stage1 --base lv28 --n 1000     # mech（枝刈りの仕組み）、stage2（組み合わせ）、extreme（今の10〜100倍の時間）。--base lv31 / lv34 で深い基準
+node frontier.js table --base lv28
+EDAX=…/mEdax node ../edax-anchor.js --levels 12,15,18,21 --base lv28     # Edax を同じ基準に対する物差しに（tools/edax-anchor.js）
 ```
-- `rvmatch match … --engine a.so --engine-b b.so`：別々にビルドしたエンジンどうしの対局（例：`-DENDK=130` で終局読みの誤差幅を 1.3倍にしたもの。`frontier.js` が自動で作ります）。`ENDK` を付けないビルドは今までと同じバイナリです。
+- `rvmatch match … --engine a.so --engine-b b.so`：別々にビルドしたエンジンどうしの対局（`-DENDK=130`：終局読みの誤差幅を 1.3倍、`-DMPC_NONEST`：試しの読みの中では枝刈りしない、`-DMPC_PRE=200`：静的評価が境から2石以内のときだけ試す。`frontier.js` が自動で作ります）。どれも付けないビルドは今までと同じバイナリです。
