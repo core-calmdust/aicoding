@@ -41,7 +41,7 @@ const isPass = m => m < 0;
 
 // ====================================================================== state
 const STORE = 'aicoding-latrunculi';
-const settings = { mode: 'ai', rule: 'seneca', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'stone', pcs: 'bust' };
+const settings = { mode: 'ai', rule: 'seneca', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'stone', pcs: 'helm' };
 const SUPPORTED_ALL = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 // the languages whose game texts are complete (i18n-lt.js / i18n-lt-more.js: a language without its own 'title' is not offered)
 const SUPPORTED = SUPPORTED_ALL.filter(l => l === 'ja' || l === 'en' || (window.LT_LANGS || []).includes(l));
@@ -950,22 +950,25 @@ document.addEventListener('keydown', e => {
 // ANCHOR down sits on the square's centre; turned over = the bust lies toppled), birch plywood with laser-burnt discs, an abstract
 // plaster sheet with arch tokens, lapis lazuli and Calacatta in gold with gold / silver coins, a Roman mosaic floor with glass
 // counters, a Pompeian-red fresco with bone counters. The old designs (img/bd-*, pc-*) stay for the 3D boards (atlas/models).
-const BD_KEYS = ['stone', 'wood', 'abstract', 'lux', 'mosaic', 'pompeii'], PC_KEYS = ['bust', 'wood', 'abstract', 'coin', 'glass', 'bone'];
-const ANCHOR = { bust: .8 }, PC_SIZE = { bust: 1.16 };   // the busts: where the socle's centre is in the picture, and the picture's size in cells
-const ART = k => `img/2d/${k}.webp?v=2`;
-const BD_OLD = { marble: 'stone', travertine: 'stone', tile: 'pompeii', slate: 'abstract', ivory: 'abstract', porphyry: 'lux' }, PC_OLD = { gem: 'coin', stone: 'bust' };
+const BD_KEYS = ['stone', 'wood', 'abstract', 'lux', 'giallo', 'pompeii'], PC_KEYS = ['helm', 'wood', 'abstract', 'coin', 'glass', 'bone'];
+// 2026-11-19 (user): the busts distracted in 2D → abstract carved helmets seen from above (helm); the mosaic floor → a slab of
+// giallo antico (the Roman yellow marble) with the grid in rosso antico; the walnut board is one piece of wood with its frame
+// (the frame shows fr-woodfield, the board only the inlaid grid bd-woodgrid over it; bd-wood = both, for the mini boards)
+const ANCHOR = {}, PC_SIZE = {};   // the busts: where the socle's centre is in the picture, and the picture's size in cells
+const ART = k => `img/2d/${k}.webp?v=3`;
+const BD_OLD = { marble: 'stone', travertine: 'stone', tile: 'pompeii', slate: 'abstract', ivory: 'abstract', porphyry: 'lux', mosaic: 'giallo' }, PC_OLD = { gem: 'coin', stone: 'helm', bust: 'helm' };
 // [surface (fallback), groove (mini-board marks), frame, frame line]
 const BD_PAL = {
   stone: ['#d8cdb8', '#6e5e4a', '#8a7a62', '#e2d6bf'],
   wood: ['#e6d0aa', '#4a2a14', '#5a3820', '#d9b88a'],
   abstract: ['#ece4d6', '#2c2a2a', '#2e2c2a', '#d4c8b4'],
   lux: ['#2a3f8f', '#d9b46a', '#1c0c08', '#d9b46a'],
-  mosaic: ['#e2d8c4', '#2a2826', '#2c2826', '#b9b1a0'],
+  giallo: ['#dcae64', '#8a2a1c', '#2a1810', '#e0b878'],
   pompeii: ['#8e2018', '#1a1210', '#1e1a18', '#d6a04a'],
 };
 // [[Black fill, rim, underside], [White fill, rim, underside]] (the swatch colours of the kifu / fallbacks)
 const PC_PAL = {
-  bust: [['#2c2c2e', '#0c0c0e', '#3a3a3c'], ['#f2efe8', '#b9b4aa', '#d6d1c6']],
+  helm: [['#2c2c2e', '#0c0c0e', '#3a3a3c'], ['#f2efe8', '#b9b4aa', '#d6d1c6']],
   wood: [['#6e4224', '#2e1a0c', '#5a3820'], ['#ead6b0', '#a8865a', '#d2b88c']],
   abstract: [['#2e2c2c', '#0e0e0e', '#444'], ['#ece4d6', '#a89c88', '#d4c8b4']],
   coin: [['#e2b25a', '#8a6420', '#b88a3a'], ['#d8dce2', '#8a9098', '#b4b8c0']],
@@ -973,9 +976,9 @@ const PC_PAL = {
   bone: [['#4a3424', '#1e140c', '#33241a'], ['#ece0c2', '#b3a27c', '#cdbf9c']],
 };
 function designApply() {
-  if (settings.dv !== 2) { settings.dv = 2; settings.bd = 'stone'; settings.pcs = 'bust'; }   // once: the new designs (2026-11-18)
+  if (settings.dv !== 2) { settings.dv = 2; settings.bd = 'stone'; settings.pcs = 'helm'; }   // once: the new designs (2026-11-18)
   if (!BD_KEYS.includes(settings.bd)) settings.bd = BD_OLD[settings.bd] || 'stone';
-  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = PC_OLD[settings.pcs] || 'bust';
+  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = PC_OLD[settings.pcs] || 'helm';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }
 function designSpec() { return specOf({ b: ['c3', 'd3', 'e4', 'f6', 'c6'], w: ['d5', 'e5', 'f3', 'b4'], x: ['d4', 'v'] }); }
@@ -1012,7 +1015,7 @@ function miniSVG(spec, o) {
   const X = i => ox + (P(i)[1] + 0.5) * u, Y = i => oy + (P(i)[0] + 0.5) * u;
   const inC = i => { const [r, c] = P(i); return c >= cr[0] && c <= cr[2] && r >= cr[1] && r <= cr[3]; };
   let bdk = o.bd || settings.bd, pk = o.pcs || settings.pcs;
-  if (!BD_KEYS.includes(bdk)) bdk = BD_OLD[bdk] || 'stone'; if (!PC_KEYS.includes(pk)) pk = PC_OLD[pk] || 'bust';
+  if (!BD_KEYS.includes(bdk)) bdk = BD_OLD[bdk] || 'stone'; if (!PC_KEYS.includes(pk)) pk = PC_OLD[pk] || 'helm';
   const BP = BD_PAL[bdk];
   const id = 'mc' + (++CROP_UID);
   let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}"><defs><clipPath id="${id}"><rect x="${pad}" y="${pad}" width="240" height="240"/></clipPath></defs>`;

@@ -350,6 +350,38 @@ void mat(vec3 p, vec3 n, inout PMat m){
   P['bone-bx'] = { glsl: BONE(1, 1), tex: { tPc: boneBack }, texSize: 1024 };
   P['bone-wx'] = { glsl: BONE(0, 1), tex: { tPc: boneBack }, texSize: 1024 };
 
+  // ================================================================ helm (2026-11-19, user: the busts distract in 2D — more abstract): a carved
+  // stone counter seen from above — a round base, the bowl of a helmet, the crest running front to back — white marble and black
+  // basalt, softly polished; turned over = the flat underside of the base, chisel-dressed, with an incised ring
+  const HELM = (dark, under) => `
+float map(vec3 p){
+  ${under
+    ? `float r = length(p.xy);
+  float d = sdCyl(p, .88, .14, .08);
+  d += step(.0, p.z) * (.006 * (vn3(p * 18.) - .5) + .004 * (vn3(p * vec3(60., 6., 6.)) - .5) + .02 * smoothstep(.025, .0, abs(r - .5)));
+  return d;`
+    : `float d = sdCyl(p - vec3(0., 0., -.06), .9, .1, .06);                       // the base
+  float bowl = sdEll(p - vec3(0., .03, .0), vec3(.56, .6, .52));
+  bowl = max(bowl, -p.z + .02);
+  d = smin(d, bowl, .06);
+  d = smin(d, sdEll(p - vec3(0., .03, .04), vec3(.63, .67, .07)), .03);          // the brim
+  float crest = sdEll(p - vec3(0., .03, .42), vec3(.1, .62, .22));
+  d = smin(d, crest, .05);
+  return d;`}
+}
+void mat(vec3 p, vec3 n, inout PMat m){
+  ${dark
+    ? `vec3 c = mix(hexc(38., 38., 40.), hexc(56., 54., 54.), smoothstep(.3, .8, fbm3(p * 3.)));
+  c *= .94 + .1 * vn3(p * 60.);
+  m.alb = c; m.spec = .7; m.gloss = ${under ? '.25' : '.72'};`
+    : `vec3 c = mix(hexc(242., 238., 230.), hexc(224., 218., 206.), smoothstep(.3, .8, fbm3(p * 2.6)));
+  c = mix(c, hexc(186., 180., 168.), (1. - smoothstep(.0, .025, abs(fbm3(p * 2. + 4.) - .5))) * .18);
+  m.alb = c; m.spec = .4; m.gloss = ${under ? '.22' : '.66'}; m.emit = c * .1;`}
+  ${under ? 'm.alb = mix(m.alb, m.alb * .6, smoothstep(.03, .005, abs(length(p.xy) - .5)));' : ''}
+}`;
+  P['helm-b'] = { glsl: HELM(1, 0) }; P['helm-w'] = { glsl: HELM(0, 0) };
+  P['helm-bx'] = { glsl: HELM(1, 1) }; P['helm-wx'] = { glsl: HELM(0, 1) };
+
   window.ART_PIECES = function (key) {
     const p = P[key];
     if (p.side) return { glsl: COMMON + p.glsl, aa: 3 };
