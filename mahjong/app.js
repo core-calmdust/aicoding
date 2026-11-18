@@ -1302,7 +1302,7 @@ async function startGame(opt = {}) {
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
   if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = (kind, seat) => { SND.tile(); if (kind === 'river' && UIS.landWait && UIS.landWait.seat === seat) UIS.landWait.done(); }; TB.warm(); }
-  TB.resume();
+  TB.resume(); requestAnimationFrame(() => dispatchEvent(new Event('resize')));   // (the table's size is read again once the screen is shown)
   TB.hideAll();
   const me = mySeat();
   const pool = MJChars.list.filter(c => c.id !== me.id && !(me.partner && c.id === me.partner.id) && (c.reward == null || owns(c.id)));   // (a reward character not yet earned never sits at the table)
@@ -2378,11 +2378,11 @@ async function lessonDone() {
   const b = modal(`<div class="ls-res ${pass ? 'ok' : ''}"><img class="lr-face" src="${charImg(MJChars.get(GUIDE), 'face')}" alt=""><h3>${esc(pass ? t('lsPass') : t('lsFail'))}</h3>
     <div class="lr-sc"><b>${score}</b><small>/100</small></div><p class="lr-say">${esc(t(score >= 100 ? 'lsSay100' : pass ? 'lsSayPass' : 'lsSayFail'))}</p><p class="lr-t">${esc(I18N.L(ls.title))}</p><p class="lr-p">${esc(I18N.L(ls.point))}</p><small class="lr-line">${esc(t('lsPassLine'))}</small>
     <div class="cbtns"><button class="btn" data-a="list">${esc(t('lsList'))}</button><button class="btn" data-a="again">${esc(t('lsAgain'))}</button>${next ? `<button class="btn gold" data-a="next">${esc(t('lsNextL'))}</button>` : ''}</div></div>`, 'small lsres');
+  // (2026-11-19, ユーザー「次へを押すと真っ暗」: going home and straight back to the table left the 3D view black — the table was
+  // hidden and shown again in one step, and paused by the way home. もう一度 / 次へ now stay at the table and only start the next hand)
   b.addEventListener('click', e => { const a = e.target.closest('[data-a]'); if (!a) return; SND.pick(); closeModal();
-    quitGame();
-    if (a.dataset.a === 'again') startGame({ lesson: ls });
-    else if (a.dataset.a === 'next') startGame({ lesson: next });
-    else openLessons(ls.cat ? 'l' : 'r', ls.cat); });
+    if (a.dataset.a === 'again' || a.dataset.a === 'next') { lessonGuide(null); startGame({ lesson: a.dataset.a === 'next' ? next : ls }); return; }
+    quitGame(); openLessons(ls.cat ? 'l' : 'r', ls.cat); });
 }
 // the list (ユーザー 2026-11-19「業務ツールっぽい羅列でアガらない。デザイン性を高く」): a room of its own — 小町 large at the left with
 // a word and the overall progress (a ring), the right: two big tabs; ルール = a road of ten medallions joined by a gold line (passed:
