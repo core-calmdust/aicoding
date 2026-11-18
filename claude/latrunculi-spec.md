@@ -63,7 +63,7 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - **3Dルールコース**（`atlas/rules/latrunculi.js`、案内はポンメェ `av/pawn-0`、11ステップ）：紹介 → 置く → 1歩 → 味方を跳び越える → 挟むと裏返る → 次の番に取る → 助ける → 隅 → 間に入っても安全 → 勝ち負け → 3つのルール。課題の正解はエンジンで判定。**3D盤には座標がないのでマス名を言わない**（「光っているマス」）。「タップ」は PC で「クリック」（shared/tapword.js）。
 - **ヒストリア**（`atlas/historia/s/latrunculi.json`＋14言語、案内は同じポンメェ）：この spec と 2D の紹介文にある事実だけで構成（ウァロ・オウィディウス・マルティアリス・『ピソ頌』・ブリテン島の盤・中世のチェスの名・シェードラーの復元・クインタナ博物館）。地図のピン＝ローマ・ブリテン島・フリブール・キュンツィング（`atlas/mapdata.js` にも同じ内容）。
 - **ボスと観戦キャラ**（`atlas/npc/roster.js`・`atlas/npc/t/<lang>.js`、14言語）：ボス7体（ロマメェ → ガラスニャン → ヨウヘイツネ → ウァロホー → シジンチュン → レギオガミ → ピソオン＝UR）。画像 `images/atlas/av/boss-latrunculi-<1〜7>-<0〜3>.webp`（atlas/tools/bosses.html で描画）。豆知識4行。
-- **トップページ**：`index.html` の一覧（セネトの次、`alpha:true`）、アイコン `images/icons/latrunculi.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/latrunculi.webp`（tools/shots.js）。
+- **トップページ**：`index.html` の一覧（アゴンの次（2026-11-19 ユーザー指定、旧：セネトの次）、`alpha:true`）、アイコン `images/icons/latrunculi.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/latrunculi.webp`（tools/shots.js）。
 - Praline のマーク（shared/praline-badge.js の一覧）には入れていない（1スレッドの JS エンジンのため）。mtsplit／tools/mtsim も対象外。
 
 ## 未着手（次の作業）
