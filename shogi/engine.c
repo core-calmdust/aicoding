@@ -1063,10 +1063,12 @@ typedef struct { i32 key, move, data; } TTEntry;   /* one entry in one place: a 
 #ifndef MT
 static TTEntry tt[TT_SIZE];
 #endif
-#if defined(NATIVE) && !defined(MT)
-#define SEARCH2 1   /* (search v5, set_param 44: the native one-thread tools only for now; not in the wasm builds) */
+#define SEARCH2 1   /* search v5 (set_param 44), in every build */
 typedef struct { u32 key; i16 score, eval; unsigned short move; u8 depth, fl; } TT2E;   /* fl: bound | pv << 2 | age << 3 */
-static TT2E tt2[TT_SIZE];
+#ifndef MT
+#define tt2 ((TT2E *)tt)   /* (one thread: the same memory as the old table — both are 12 bytes an entry, and only one search runs) */
+#define TT2_MASK TT_MASK
+typedef char tt2_size_check[sizeof(TT2E) == sizeof(TTEntry) ? 1 : -1];
 #endif
 static int ttAge = 0;
 #define F_EXACT 1
@@ -1122,14 +1124,10 @@ typedef i32 Move;   /* (a move is an int here) */
   i32 pvm[MAXPLY];   /* the line of the best move (its child's) */ \
   i16 lg[SP_MV];     /* the moves' place */
 #include "../shared/praline/praline.h"
-EXPORT(tt_clear) void tt_clear(void) { memset(PL_TT, 0, sizeof PL_TT); memset(busyT, 0, sizeof busyT); }
+static void tt2Clear(void);
+EXPORT(tt_clear) void tt_clear(void) { memset(PL_TT, 0, sizeof PL_TT); memset(busyT, 0, sizeof busyT); tt2Clear(); }
 #else
-EXPORT(tt_clear) void tt_clear(void) {
-  memset(tt, 0, sizeof tt);
-#ifdef SEARCH2
-  memset(tt2, 0, sizeof tt2);
-#endif
-}
+EXPORT(tt_clear) void tt_clear(void) { memset(tt, 0, sizeof tt); }
 #endif
 
 #define NBUF (MAXPLY + 32)
@@ -1423,15 +1421,23 @@ static double qsearch(double alpha, double beta, int ply, int qd) {
    P66 reductions only from depth P66 [2]                               P67 1: the table's static evaluation is not reused */
 #define TT2_NOEVAL (-32768)
 #ifdef SEARCH2
-static i16 capH[16 * 81 * 16];   /* captures: [moving piece type][to][captured type] */
+#ifdef MT   /* (the MT build: its own table, shared by the threads without a lock — a torn entry fails the key or the move test) */
+#ifndef TT2_BITS
+#define TT2_BITS (TTM_BITS + 2)
+#endif
+#define TT2_MASK ((1 << TT2_BITS) - 1)
+static TT2E tt2[1 << TT2_BITS];
+static void tt2Clear(void) { memset(tt2, 0, sizeof tt2); }
+#endif
+static TLS i16 capH[16 * 81 * 16];   /* captures: [moving piece type][to][captured type] */
 static inline TT2E *tt2Probe(int *hit) {
-  TT2E *e = &tt2[hl & TT_MASK & ~1];
+  TT2E *e = &tt2[hl & TT2_MASK & ~1];
   if (e[0].key == (u32)hh && e[0].fl) { *hit = 1; return e; }
   if (e[1].key == (u32)hh && e[1].fl) { *hit = 1; return e + 1; }
   *hit = 0; return e;
 }
 static void tt2Store(int depth, double score, int flag, int move, int ply, double ev, int pv) {
-  TT2E *e = &tt2[hl & TT_MASK & ~1], *w;
+  TT2E *e = &tt2[hl & TT2_MASK & ~1], *w;
   if (e[0].key == (u32)hh && e[0].fl) w = e; else if (e[1].key == (u32)hh && e[1].fl) w = e + 1;
   else { const int a0 = e[0].fl ? e[0].depth - ((e[0].fl >> 3) != (ttAge & 31) ? 8 : 0) : -100, a1 = e[1].fl ? e[1].depth - ((e[1].fl >> 3) != (ttAge & 31) ? 8 : 0) : -100; w = a0 <= a1 ? e : e + 1; w->move = 0; }
   if (w->key == (u32)hh && w->fl && flag != F_EXACT && depth + 3 < w->depth && (w->fl >> 3) == (ttAge & 31)) { if (move && !w->move) w->move = (unsigned short)move; return; }   /* (a much deeper entry of this search stays) */
