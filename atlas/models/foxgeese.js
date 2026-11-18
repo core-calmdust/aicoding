@@ -283,7 +283,7 @@
   const plinth = (r, m) => G('plinth' + r, () => new (T().LatheGeometry)([V2(0, 0), V2(r, 0), V2(r * 1.03, .014), V2(r, .03), V2(r * .92, .044), V2(0, .044)], seg(40)));
 
   // cute: the head (a front half that wears the 2D face, a plain back half), ears or a tuft
-  const CUTE = { 1: { r: .29, sy: .86, c: [.5, .6], rad: .43, ry: .34, back: '#e8813a', ear: '#e8813a', tip: '#5a3220' }, 2: { r: .235, sy: .9, c: [.5, .56], rad: .41, ry: .4, back: '#ffffff' } };
+  const CUTE = { 1: { r: .29, sy: .86, c: [.5, .6], rad: .47, ry: .37, back: '#e8813a', ear: '#e8813a', tip: '#5a3220' }, 2: { r: .235, sy: .9, c: [.5, .56], rad: .44, ry: .43, back: '#ffffff' } };
   function faceGeo(col) {
     const C = CUTE[col];
     return G('cuteF' + col, () => {
@@ -299,13 +299,12 @@
     const g = new TT.Group(); g.position.y = y0; g.rotation.x = -TILT; g.position.z = -.02; g0.add(g);
     const back = mesh(G('cuteB' + col, () => new TT.SphereGeometry(C.r, seg(40), seg(28), Math.PI, Math.PI)), M('cuteB' + col, { color: C.back, roughness: .42, clearcoat: .5, clearcoatRoughness: .3 }), 0, 0, 0);
     back.scale.set(1, C.sy, 1); g.add(back);
-    const face = new TT.Mesh(faceGeo(col), M('cuteF0' + col, { color: C.back, roughness: .42 })); face.position.y = 0; face.scale.set(1, C.sy, 1); face.castShadow = true; g.add(face);
-    cut('pc-cute-' + (fox ? 'f' : 'g')).then(cv => { if (!cv) return; face.material = M('cuteF' + col, { map: cv.tex, color: '#ffffff', roughness: .42, clearcoat: .5, clearcoatRoughness: .3 }); if (X.kick) X.kick(200); });
+    const face = new TT.Mesh(faceGeo(col), M('cuteF' + col, { map: picTex('pc-cute-' + (fox ? 'f' : 'g'), C.back), color: '#ffffff', roughness: .42, clearcoat: .5, clearcoatRoughness: .3 })); face.scale.set(1, C.sy, 1); face.castShadow = true; g.add(face);
     if (fox) for (const sx of [-1, 1]) {
       const e = mesh(G('cuteEar', () => { const q = new TT.ConeGeometry(.1, .17, seg(16)); q.scale(1, 1, .6); return q; }), M('cuteEar', { color: C.ear, roughness: .42, clearcoat: .5 }), sx * .17, C.r * C.sy * .78, -.02);
       e.rotation.z = -sx * .42; g.add(e);
       const t = mesh(G('cuteTip', () => { const q = new TT.ConeGeometry(.045, .07, seg(12)); q.scale(1, 1, .6); return q; }), M('cuteTip', { color: C.tip, roughness: .5 }), 0, .07, 0); e.add(t);
-    } else g.add(mesh(G('cuteTuft', () => new TT.SphereGeometry(.05, seg(14), seg(10))), M('cuteB2', { color: C.back, roughness: .42, clearcoat: .5, clearcoatRoughness: .3 }), .02, C.r * C.sy + .02, -.03));
+    }   // (no tuft on the goose: from behind it read as a beak pointing the wrong way, 2026-11-19 user)
     g0.userData.h = y0 + C.r * C.sy;
   }
   // wood: turned pieces
@@ -375,8 +374,11 @@
     const TT = T();
     if (col === 1) {
       const amber = M('amber', { color: '#c8680e', roughness: .1, clearcoat: 1, clearcoatRoughness: .04, emissive: lin('#5a2400'), envMapIntensity: 1.5 });
-      const hold = new TT.Group(); g.add(hold);   // (filled when the outline is known; inside the group that the fox's size scales)
-      cut('pc-norse-f').then(cv => { if (!cv) return; hold.add(mesh(tokenGeo('norseF', cv, 1.06, .3, 2.2, .18), amber)); if (X.kick) X.kick(200); });
+      // the outline of a fox's head seen from above (the ears toward the far side, the chin narrowing toward the player)
+      const NA = 128, rad = new Float32Array(NA);
+      for (let a = 0; a < NA; a++) { const th = a / NA * Math.PI * 2, z = Math.sin(th), b = d => Math.exp(-d * d / .045);
+        rad[a] = .34 + .03 * z - .05 * Math.max(0, z) * Math.max(0, z) + .13 * (b(th - (Math.PI * 1.5 - .62)) + b(th - (Math.PI * 1.5 + .62))) - .04 * b(th - Math.PI * 1.5); }
+      g.add(mesh(tokenGeo('norseF', { rad }, 1, .3, 2.2, .18), amber));
       g.userData.h = .3;
     } else {
       const bone = M('bone', { map: boneTex(), color: '#ffffff', roughness: .62 });
@@ -390,12 +392,20 @@
     const por = M('delftB', { map: delftTex(), color: '#ffffff', roughness: .18, clearcoat: 1, clearcoatRoughness: .08 });
     const prof = [V2(0, 0), V2(.22, 0), V2(.23, .02), V2(.2, .05), V2(.21, .1), V2(.26, .2), V2(.27, .28), V2(.25, .36), V2(.215, .42), V2(.205, .45), V2(.2, .462), V2(0, .465)].map(p => V2(p.x * s, p.y * s));
     g.add(mesh(G('dBell' + col, () => new TT.LatheGeometry(prof, seg(40))), por));
-    const cap = mesh(G('dCap' + col, () => { const q = new TT.CircleGeometry(.198 * s, seg(40)); q.rotateX(-Math.PI / 2); return q; }), M('delftC0', { color: '#f4f6fa', roughness: .18 }), 0, .4655 * s + .001, 0);
-    g.add(cap);
-    cut('pc-delft-' + (fox ? 'f' : 'g')).then(cv => { if (!cv) return; cap.material = M('delftC' + col, { map: cv.tex, color: '#ffffff', roughness: .18, clearcoat: 1, clearcoatRoughness: .08 }); if (X.kick) X.kick(200); });
+    g.add(mesh(G('dCap' + col, () => { const q = new TT.CircleGeometry(.198 * s, seg(40)); q.rotateX(-Math.PI / 2); return q; }), M('delftC' + col, { map: picTex('pc-delft-' + (fox ? 'f' : 'g'), '#f4f6fa'), color: '#ffffff', roughness: .18, clearcoat: 1, clearcoatRoughness: .08 }), 0, .4655 * s + .001, 0));
     g.userData.h = .47 * s;
   }
   const TILT = .75;
+  // a picture's texture at once (a plain colour until the picture has come: the materials never change afterwards — the portal's
+  // showcase turns the repeated geese into instances when it is built, so a material set later would never reach them)
+  function picTex(k, col0) {
+    return mat('pic' + k, () => {
+      const c = document.createElement('canvas'); c.width = c.height = 4; const q = c.getContext('2d'); q.fillStyle = col0; q.fillRect(0, 0, 4, 4);
+      const t = srgb(new (T().CanvasTexture)(c)); t.anisotropy = 4;
+      cut(k).then(cv => { if (!cv) return; t.image = cv.tex.image; t.needsUpdate = true; if (X.kick) X.kick(200); });
+      return t;
+    });
+  }
   const BUILD = { cute, wood, bauhaus, lux, norse, delft }, FOXK = { cute: 1.12, wood: 1.25, bauhaus: 1.3, lux: 1.3, norse: 1.2, delft: 1.1 };
   // a picture → its outline (the distance from the centre to the last opaque pixel in 128 directions, smoothed) and a texture
   // whose transparent pixels carry the nearest edge colour
