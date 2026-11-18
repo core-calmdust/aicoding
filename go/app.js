@@ -128,7 +128,7 @@ function save() {
 
 // ====================================================================== engine worker (one worker; newer jobs pre-empt older ones)
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=16';
+const ENGINE_URL = 'engine.js?v=17';
 const COARSE = matchMedia('(pointer: coarse)').matches;
 function makeWorker() {
   const w = new Worker(ENGINE_URL);

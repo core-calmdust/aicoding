@@ -18,7 +18,7 @@ vec4 shadeAt(vec2 uv){
   vec3 c = lit(m.alb, n, m.spec, m.gloss, m.metal, m.ao);
   c = POST(p, c, m, n);
   c *= FINISH(uv);
-  return vec4(c, 1.);
+  return vec4(c, gA);
 }`;
   const BOARD_FINISH = `vec3 FINISH(vec2 uv){ return vec3(1.06 - .12 * (uv.x * .45 + uv.y * .55)); }
 float edgeRound(vec2 p, float w){ vec2 d = min(p, 8. - p); float k = min(d.x, d.y); return -w * .6 * pow(1. - clamp(k / w, 0., 1.), 2.); }`;
@@ -150,6 +150,9 @@ float sw(float d, float w){ return smoothstep(w + .003, w - .003, d); }
 float edgeD(vec2 p){ vec2 d = min(p, 8. - p); return abs(min(d.x, d.y) - .03); }
 float H(vec2 p){
   float h = .0008 * (vn(p * vec2(2., 60.)) - .5) + .002 * (fbm(p * .4) - .5);
+#ifdef NOGRID
+  return h;
+#endif
   float d = min(gridDist(p), edgeD(p));
   h -= .0035 * smoothstep(.024, .019, d) * (1. - sw(d, .016));   // the hairline joint round the stringing
   h += .0012 * sw(d, .016);
@@ -167,7 +170,13 @@ void M(vec2 p, inout Mat m){
   c *= .92 + .1 * vn(vec2(q.x * 3., q.y * 90.));
   float cen = length(p - 4.) / 4.; c *= .97 + .06 * cen;
   float d = min(gridDist(p), edgeD(p));
+#ifdef NOGRID
+  d = 9.;
+#endif
   float s1 = sw(d, .019), s0 = sw(d, .0095);
+#ifdef GRIDONLY
+  gA = max(smoothstep(.024, .019, d) * .8, s1);
+#endif
   vec3 box = mix(hexc(238., 222., 184.), hexc(220., 200., 156.), vn(p * vec2(30., 2.) + 3.)) * (.94 + .08 * vn(p * 160.));
   c = mix(c, hexc(30., 18., 10.), smoothstep(.024, .019, d) * (1. - s1) * .8);
   c = mix(c, hexc(22., 16., 14.) * (.9 + .2 * vn(p * 200.)), s1);     // ebony
@@ -187,37 +196,21 @@ void M(vec2 p, inout Mat m){ float rt; vec3 c = fwood(p, hexc(84., 48., 26.), he
   // ================================================================ abstract: a matte plaster sheet with large flat shapes in Roman colours —
   // an arch, the sun, a half moon — printed over each other; the grid a fine charcoal line
   B.abstract = {
-    ao: '.03', aok: '2.',
+    ao: '.03', aok: '0.',
     glsl: `
-// a colour-field painting: oil on linen canvas — soft-edged fields of deep teal, slate blue and a smoulder of plum, laid in with
-// broad brush strokes that show; the grid drawn over it in thin, slightly broken chalk-white lines
-float weave(vec2 p){ vec2 q = p * 120.; float a = sin(q.x * 3.1416) * .5 + .5, b = sin(q.y * 3.1416) * .5 + .5; return mix(a, b, step(.5, fract(floor(q.x) * .5 + floor(q.y) * .5))); }
-float stroke(vec2 p, float ang, float sc){ vec2 q = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * p; return vn(q * vec2(sc * .25, sc * 6.)) * .6 + vn(q * vec2(sc * .5, sc * 14.) + 3.) * .4; }
-float field(vec2 p, vec2 c, vec2 h, float soft){ vec2 w = vec2(fbm(p * 1.7 + c), fbm(p * 1.7 + c + 9.)) * .35; return smoothstep(soft, -soft, sdBox(p + w - .17, c, h)); }
-float H(vec2 p){
-  float h = .0012 * (weave(p) - .5);
-  h += .0035 * (stroke(p, .08, 2.5) - .5) + .002 * (stroke(p, 1.6, 4.) - .5);
-  return h;
-}
+// v3 (2026-11-19, user: simpler, flat): three flat fields of colour on a matte ground — deep teal, a lighter sea-green field above,
+// slate blue below, one thin plum band between — clean edges softened by a hair, a faint grain; the grid in thin off-white lines
+float aa(float d, float s){ return smoothstep(s, -s, d); }
+float H(vec2 p){ return .0006 * (vn(p * 140.) - .5); }
 void M(vec2 p, inout Mat m){
-  vec3 bg = mix(hexc(18., 46., 52.), hexc(26., 62., 66.), stroke(p, .05, 1.6));
-  vec3 c = bg;
-  float f1 = field(p, vec2(4., 2.15), vec2(3.35, 1.45), .38), f2 = field(p, vec2(4., 5.55), vec2(3.35, 1.55), .42), f3 = field(p, vec2(4., 3.9), vec2(3.2, .22), .2);
-  vec3 c1 = mix(hexc(54., 108., 110.), hexc(76., 132., 128.), stroke(p, .1, 2.2));
-  vec3 c2 = mix(hexc(44., 62., 98.), hexc(62., 82., 120.), stroke(p, -.06, 2.));
-  vec3 c3 = mix(hexc(122., 58., 74.), hexc(150., 78., 88.), stroke(p, .0, 3.));
-  c = mix(c, c1, f1 * (.85 + .15 * stroke(p, .1, 5.)));
-  c = mix(c, c2, f2 * (.85 + .15 * stroke(p, -.05, 5.)));
-  c = mix(c, c3, f3 * .9);
-  c *= .93 + .1 * stroke(p, .3, 7.);
-  c *= .95 + .08 * weave(p);
-  vec3 gi = gridInfo(p);
-  float wv = .004 * (fbm(vec2(gi.z * 2., gi.y * 3.)) - .5);
-  float ld = abs((gi.y < 10. ? p.x - gi.y : p.y - (gi.y - 10.)) - wv);
-  float lw = .011 + .003 * (vn(vec2(gi.z * 9., gi.y)) - .5);
-  float chalk = smoothstep(lw + .004, lw - .003, ld) * (.55 + .45 * smoothstep(.3, .7, vn(vec2(gi.z * 60., ld * 300.)) + weave(p) * .4));
-  c = mix(c, hexc(232., 228., 216.), chalk * .9);
-  m.alb = c; m.spec = .25; m.gloss = .25; m.metal = 0.;
+  vec3 c = hexc(30., 62., 66.);
+  c = mix(c, hexc(70., 124., 120.), aa(sdBox(p, vec2(4., 1.92), vec2(3.5, 1.58)) - .05, .008));
+  c = mix(c, hexc(56., 74., 110.), aa(sdBox(p, vec2(4., 5.98), vec2(3.5, 1.68)) - .05, .008));
+  c = mix(c, hexc(138., 70., 86.), aa(sdBox(p, vec2(4., 3.92), vec2(3.5, .13)) - .03, .006));
+  c *= .985 + .03 * vn(p * 220.) + .015 * fbm(p * 2.);
+  float ln = smoothstep(.011, .007, gridDist(p));
+  c = mix(c, hexc(234., 230., 220.), ln * .85);
+  m.alb = c; m.spec = .12; m.gloss = .12; m.metal = 0.;
 }`,
   };
   F.abstract = { glsl: FWOOD + `
@@ -288,67 +281,38 @@ vec4 tess(vec2 p){
   float d = sdBox(q, vec2(0.), vec2(hs - .07)) - .07 - .012 * (vn(p * 12.) - .5);
   return vec4(h21(i), d, i);
 }`;
-  B.mosaic = {
-    ao: '.04', aok: '5.',
-    glsl: TESS + `
-// opus tessellatum laid large and calm: 4×4 limestone tesserae to a square, the grid a single row of slim dark tesserae, a red one
-// where the lines cross; the grout close to the stone's own colour so the floor reads quiet
-// returns vec4(random, signed distance inside the tessera, kind (0 field, 1 line, 2 crossing), id hash)
-vec4 tile(vec2 p){
-  vec2 cell = floor(p), u = p - cell;
-  vec3 gi = gridInfo(p);
-  float lw = .05;
-  vec2 e = min(p, 8. - p); float edge = min(e.x, e.y);
-  if (gi.x < lw || edge < lw) {
-    bool cross = gridDist(p) < lw && abs(p.x - floor(p.x + .5)) < lw && abs(p.y - floor(p.y + .5)) < lw && edge > lw;
-    if (cross) { vec2 q = p - floor(p + .5); float d = sdBox(q, vec2(0.), vec2(lw * .8)) - .006; return vec4(h21(floor(p + .5) + 3.), d, 2., h21(floor(p + .5))); }
-    float along = gi.x < lw ? gi.z : (e.x < e.y ? p.y : p.x), acr = gi.x < lw ? gi.x : edge;
-    float sl = .14, k = floor(along / sl + .5 * step(.5, fract(gi.y * .5)));
-    float f = along / sl + .5 * step(.5, fract(gi.y * .5)) - k - .5;
-    float d = max(abs(f) * sl - sl * .5 + .008, acr - lw + .008);
-    d += .006 * (vn(p * 40.) - .5);
-    return vec4(h21(vec2(k, gi.y)), d, 1., h21(vec2(k, gi.y + 7.)));
-  }
-  vec2 v = clamp((u - lw) / (1. - 2. * lw), 0., .9999) * 4.;
-  vec2 ti = floor(v), f = fract(v) - .5;
-  vec2 id = cell * 7. + ti;
-  vec2 j = (h22(id) - .5) * .08; float rt = (h21(id + 5.) - .5) * .12;
-  vec2 q = mat2(cos(rt), -sin(rt), sin(rt), cos(rt)) * (f - j);
-  float hs = .455 + .02 * h21(id + 2.);
-  float d = (sdBox(q, vec2(0.), vec2(hs - .08)) - .08) * (1. - 2. * lw) / 4. + .002 * (vn(p * 50.) - .5);
-  return vec4(h21(id), d, 0., h21(id + 9.));
-}
+  // ================================================================ giallo (2026-11-19, user: away from the mosaic): a slab of giallo antico,
+  // the honey-yellow marble of imperial Rome, honed to a soft sheen, the grid inlaid in thin strips of rosso antico
+  B.giallo = {
+    ao: '.03', aok: '3.',
+    glsl: `
 float H(vec2 p){
-  vec4 t = tile(p);
-  float h = t.y < 0. ? .01 * smoothstep(0., -.02, t.y) + .003 * (t.w - .5) + .0015 * (vn(p * 50.) - .5) : -.002;
-  return h + .002 * (fbm(p * .7) - .5) + edgeRound(p, .04);
+  float d = gridDist(p);
+  return .0006 * (vn(p * 40.) - .5) + .0015 * smoothstep(.02, .012, d) + edgeRound(p, .05);
 }
 void M(vec2 p, inout Mat m){
-  vec4 t = tile(p);
-  float r = t.x;
-  vec3 c;
-  if (t.z > 1.5) c = mix(hexc(150., 56., 40.), hexc(176., 76., 52.), r);
-  else if (t.z > .5) c = mix(hexc(48., 44., 42.), hexc(74., 68., 62.), r);
-  else c = mix(hexc(222., 210., 186.), hexc(236., 228., 210.), r) * mix(vec3(1.), vec3(1., .95, .88), step(.8, t.w));
-  c *= .94 + .08 * fbm(p * 14. + t.w * 9.);
-  c *= .97 + .05 * vn(p * 120.);
-  float grout = smoothstep(-.003, .004, t.y);
-  c = mix(c, hexc(186., 174., 152.) * (.92 + .1 * vn(p * 200.)), grout);
-  c *= .97 + .05 * fbm(p * .6);
-  m.alb = c; m.spec = .35; m.gloss = .42 - .2 * grout; m.metal = 0.;
-}`,
+  vec2 w = vec2(fbm(p * .35 + 2.), fbm(p * .35 + 8.)) * 1.6;
+  float f = fbm(p * .45 + w);
+  vec3 c = mix(hexc(214., 170., 92.), hexc(234., 200., 128.), smoothstep(.3, .75, f));
+  c = mix(c, hexc(196., 146., 76.), smoothstep(.55, .8, fbm(p * .9 + w * 1.3 + 5.)) * .45);    // deeper honey clouds
+  float v = 1. - smoothstep(.0, .03, abs(fbm(p * .6 + w * 1.2 + 11.) - .5));
+  c = mix(c, hexc(170., 120., 66.), v * .35 * smoothstep(.4, .7, fbm(p * .5 + 20.)));            // soft veins
+  float v2 = 1. - smoothstep(.0, .05, abs(fbm(p * .4 + w + 31.) - .5));
+  c = mix(c, hexc(246., 226., 180.), v2 * .3);                                                   // pale veins
+  c *= .97 + .05 * fbm(p * 6.);
+  float d = gridDist(p);
+  float ln = smoothstep(.016, .011, d);
+  vec3 rosso = mix(hexc(122., 34., 26.), hexc(150., 52., 36.), fbm(p * 8.));
+  c = mix(c, hexc(120., 86., 46.), smoothstep(.021, .016, d) * (1. - ln) * .6);   // the joint
+  c = mix(c, rosso, ln);
+  m.alb = c; m.spec = .45; m.gloss = .7; m.metal = 0.;
+}
+vec3 POST(vec2 p, vec3 c, Mat m, vec3 n){ return c + vec3(exp(-pow((p.x * .75 + p.y * .65 - 3.) / 1.4, 2.)) * .04); }`,
   };
-  F.mosaic = { glsl: TESS + `
-// a border of black and red tesserae, 6 per tile (seamless: the hashes wrap)
-vec4 tessP(vec2 p){ vec4 t = tess(p); return t; }
-float H(vec2 p){ vec4 t = tess(p * 6.); return t.y < 0. ? .01 * smoothstep(0., -.08, t.y) : -.002; }
-void M(vec2 p, inout Mat m){
-  vec4 t = tess(p * 6.); vec2 i = mod(t.zw, 6.);
-  float r = h21(i + 5.);
-  vec3 c = mix(hexc(40., 36., 34.), hexc(64., 58., 52.), r);
-  if (h21(i + 9.) > .8) c = mix(hexc(140., 48., 34.), hexc(170., 68., 46.), r);
-  c = mix(c, hexc(150., 140., 122.), smoothstep(-.01, .02, t.y));
-  m.alb = c; m.spec = .3; m.gloss = .4; m.metal = 0.; }` };
+  F.giallo = { glsl: FWOOD + `
+float H(vec2 p){ return .001 * (vn(p * vec2(4., 140.), vec2(4., 140.)) - .5); }
+void M(vec2 p, inout Mat m){ float rt; vec3 c = fwood(p, hexc(70., 40., 24.), hexc(32., 18., 10.), 10., 6., rt);
+  m.alb = c; m.spec = .6; m.gloss = .6; m.metal = 0.; }` };
 
   // ================================================================ pompeii: a wall panel in Pompeian red — fresco on lime plaster, polished
   // as the Romans did, the grid painted with a brush in black, a fine ochre line inside the edge, fine craquelure and a few losses
@@ -397,7 +361,11 @@ void M(vec2 p, inout Mat m){
   c *= .94 + .1 * vn(p * 200., vec2(200.));
   m.alb = c; m.spec = .3; m.gloss = .35; m.metal = 0.; }` };
 
-  const MAT = `struct Mat { vec3 alb; float spec; float gloss; float metal; float ao; };\n`;
+  const MAT = `struct Mat { vec3 alb; float spec; float gloss; float metal; float ao; };\nfloat gA = 1.;\n`;
+  // the walnut board in two layers (2026-11-19, user: no grain border between the frame and the board): the wood alone, laid
+  // under the whole frame (fr-woodfield, background-size cover), and the inlaid grid with transparency over it (bd-woodgrid)
+  B.woodfield = Object.assign({}, B.wood, { defs: '#define NOGRID' });
+  B.woodgrid = Object.assign({}, B.wood, { defs: '#define GRIDONLY' });
   window.ART_BOARDS = function (kind, key) {
     const post = g => /vec3 POST\(/.test(g) ? g : g + `\nvec3 POST(vec2 p, vec3 c, Mat m, vec3 n){ return c; }\n`;
     if (kind === 'frame') {
@@ -405,6 +373,6 @@ void M(vec2 p, inout Mat m){
       return { glsl: `const float SCALE = 1.; const float AOK = ${f.aok || '0.'};\n` + MAT + FRAME_FINISH + post(f.glsl) + TEMPLATE(f.ao), tex: f.tex, aa: 2 };
     }
     const b = B[key];
-    return { glsl: `const float SCALE = 8.; const float AOK = ${b.aok || '4.'};\n` + MAT + BOARD_FINISH + post(b.glsl) + TEMPLATE(b.ao), tex: b.tex, aa: b.aa || 2 };
+    return { glsl: (b.defs ? b.defs + '\n' : '') + `const float SCALE = 8.; const float AOK = ${b.aok || '4.'};\n` + MAT + BOARD_FINISH + post(b.glsl) + TEMPLATE(b.ao), tex: b.tex, aa: b.aa || 2 };
   };
 })();

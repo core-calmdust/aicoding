@@ -22,7 +22,7 @@ async def run(keys, outdir):
             im = Image.open(io.BytesIO(base64.b64decode(data.split(',')[1]))).convert('RGBA')
             if out != S: im = im.resize((out, out), Image.LANCZOS)
             name = {'board': 'bd-', 'frame': 'fr-', 'piece': 'pc-'}[kind] + k.split('-', 1)[1]
-            if kind != 'piece': im = im.convert('RGB')
+            if kind != 'piece' and 'grid' not in k: im = im.convert('RGB')
             if outdir != '/tmp/art': im.save(os.path.join(outdir, name + '.webp'), quality=q, method=6)
             im.save(os.path.join('/tmp/art', name + '.png'))
             print('ok', name, flush=True)

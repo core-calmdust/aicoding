@@ -1182,11 +1182,14 @@ EXPORT float *gpu_glob(void) { return gbGlob; }
 EXPORT u16 *gpu_pat(void) { return gbPat; }
 EXPORT float *gpu_out(void) { return gbOut; }
 EXPORT int gpu_imm(void) { return gbImm; }
-EXPORT int gpu_collect(int maxB) {
+/* (2026-11-19) off: the first slot of this batch — two batches in flight (one on the GPU while the CPU fills / applies the other) */
+EXPORT int gpu_collect_at(int off, int maxB) {
   int nb = 0, miss = 0; gbImm = 0;
-  if (maxB > gbCap) maxB = gbCap;
+  if (off < 0 || off >= gbCap) return 0;
+  if (maxB > gbCap - off) maxB = gbCap - off;
   while (nb < maxB && miss < 2 * maxB + 8) {
-    Node **path = gbPath + nb * 1024;
+    const int sl = off + nb;
+    Node **path = gbPath + sl * 1024;
     simB = rootB;
     int d = 0; Node *nd = rootN;
     path[d++] = nd; nd->N++;
@@ -1213,16 +1216,17 @@ EXPORT int gpu_collect(int maxB) {
     nd->expanded = 2;
     int sym = SP.symMode ? 0 : (int)(rnd() & 7);
     features(&simB, sym);
-    memcpy(gbFeat + nb * NSP * NP, FEAT, sizeof FEAT); gbGlob[nb * 2] = GLOB[0]; gbGlob[nb * 2 + 1] = GLOB[1];
-    memcpy(gbPat + nb * NP, PAT, sizeof PAT);
-    gbB[nb] = simB; gbSym[nb] = sym; gbD[nb] = d;
+    memcpy(gbFeat + sl * NSP * NP, FEAT, sizeof FEAT); gbGlob[sl * 2] = GLOB[0]; gbGlob[sl * 2 + 1] = GLOB[1];
+    memcpy(gbPat + sl * NP, PAT, sizeof PAT);
+    gbB[sl] = simB; gbSym[sl] = sym; gbD[sl] = d;
     nb++;
   }
   return nb;
 }
-EXPORT int gpu_apply(int nb) {   /* returns the visits done (0: out of nodes) */
+EXPORT int gpu_collect(int maxB) { return gpu_collect_at(0, maxB); }
+EXPORT int gpu_apply_at(int off, int nb) {   /* returns the visits done (0: out of nodes) */
   int done = 0;
-  for (int k = 0; k < nb; k++) {
+  for (int k = off; k < off + nb && k < gbCap; k++) {
     Node **path = gbPath + k * 1024; int d = gbD[k]; Node *nd = path[d - 1];
     map_out(&gbB[k], gbSym[k], (const NNOut *)((char *)gbOut + k * sizeof(NNOut)), &evTmp);
     nnEvals++;
@@ -1232,10 +1236,12 @@ EXPORT int gpu_apply(int nb) {   /* returns the visits done (0: out of nodes) */
   }
   return done;
 }
+EXPORT int gpu_apply(int nb) { return gpu_apply_at(0, nb); }
 EXPORT void gpu_vloss(float v) { VLOSS_G = v; }
-EXPORT void gpu_cpu(int nb) {   /* the batch on the CPU (the same outputs the GPU should give: tests, a fallback) */
-  for (int k = 0; k < nb; k++) net_forward(gbFeat + k * NSP * NP, gbGlob + k * 2, gbPat + k * NP, (NNOut *)((char *)gbOut + k * sizeof(NNOut)));
+EXPORT void gpu_cpu_at(int off, int nb) {   /* the batch on the CPU (the same outputs the GPU should give: tests, a fallback) */
+  for (int k = off; k < off + nb && k < gbCap; k++) net_forward(gbFeat + k * NSP * NP, gbGlob + k * 2, gbPat + k * NP, (NNOut *)((char *)gbOut + k * sizeof(NNOut)));
 }
+EXPORT void gpu_cpu(int nb) { gpu_cpu_at(0, nb); }
 #endif
 
 /* ======================================================================== */

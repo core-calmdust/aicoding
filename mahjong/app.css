@@ -2959,3 +2959,99 @@ html.lp .modal.lessons .lsc-tl .tl{--tw:16px;width:16px}
 .modal.lsres .cbtns .btn{padding:9px 18px;letter-spacing:.06em}
 html.lp .modal.lessons .ls-h small,html.lp .modal.lessons .ls-head small{display:none}
 html.lp .modal.lessons .ls-tabs button{padding:5px 12px;font-size:12.5px}
+/* ---- ルール・レッスン一覧（2026-11-19 デザイン刷新） ---- */
+.modal.lxm .mbox{width:min(1220px,96vw);height:min(800px,94dvh);max-height:none;padding:0;overflow:hidden;display:block;border:1px solid rgba(232,206,140,.5);
+  background:radial-gradient(120% 90% at 70% 0%,rgba(90,58,150,.35),transparent 60%),linear-gradient(160deg,#1c1336,#0c0818 70%);box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.04)}
+.lx{display:grid;grid-template-columns:clamp(250px,27%,330px) 1fr;height:100%}
+.lx-side{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(150,96,60,.35),rgba(40,22,30,.6) 60%,rgba(10,6,20,.9));border-right:1px solid rgba(232,206,140,.25)}
+.lx-side::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(232,206,140,.05) 0 1px,transparent 1px 14px);pointer-events:none}
+.lx-art{position:absolute;left:50%;bottom:0;height:92%;transform:translateX(-50%);object-fit:contain;filter:drop-shadow(0 10px 30px rgba(0,0,0,.6));-webkit-mask-image:linear-gradient(180deg,#000 75%,transparent);mask-image:linear-gradient(180deg,#000 75%,transparent)}
+.lx-say{position:absolute;left:16px;right:16px;top:18px;padding:12px 14px;border-radius:14px 14px 14px 4px;background:rgba(12,8,26,.88);border:1px solid rgba(232,206,140,.45);color:#f4eefe;font-size:13.5px;line-height:1.65;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.lx-say b{display:block;font-family:var(--serif);color:var(--gold);letter-spacing:.14em;font-size:12.5px;margin-bottom:2px}
+.lx-prog{position:absolute;left:16px;bottom:16px;display:flex;align-items:center;gap:10px;padding:8px 14px 8px 8px;border-radius:99px;background:rgba(10,6,20,.82);border:1px solid rgba(232,206,140,.35)}
+.lx-ring{width:52px;height:52px;transform:rotate(-90deg)}
+.lx-ring circle{fill:none;stroke-width:7}
+.lx-ring .bg{stroke:rgba(255,255,255,.1)}
+.lx-ring .fg{stroke:url(#none);stroke:#e8ce8c;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(232,206,140,.7))}
+.lx-prog span b{font-size:24px;font-weight:900;color:#f6e3b0}
+.lx-prog span small{font-size:12px;color:rgba(216,205,240,.7);margin-left:3px}
+.lx-prog em{font-style:normal;font-family:var(--serif);font-size:12px;letter-spacing:.2em;color:var(--gold)}
+.lx-main{display:flex;flex-direction:column;gap:14px;padding:22px 26px 20px;min-width:0;min-height:0}
+.lx-h{display:flex;align-items:center;justify-content:space-between}
+.lx-h h2{margin:0;font-family:var(--serif);font-size:28px;font-weight:800;letter-spacing:.22em;background:linear-gradient(180deg,#fff6dc,#e8ce8c 55%,#b8954a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+.lx-h .x{border:0;background:none;color:#d9cdee;font-size:20px;cursor:pointer}
+.lx-tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lx-tabs button{display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:14px;border:1px solid rgba(232,206,140,.25);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01));color:#d9cdee;cursor:pointer;text-align:left;transition:.2s}
+.lx-tabs button svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.lx-tabs button span{display:flex;flex-direction:column}
+.lx-tabs button b{font-family:var(--serif);font-size:19px;letter-spacing:.18em}
+.lx-tabs button small{font-size:12px;opacity:.75}
+.lx-tabs button.on{border-color:var(--gold);color:#fff;background:linear-gradient(180deg,rgba(232,206,140,.26),rgba(232,206,140,.06));box-shadow:0 0 0 1px rgba(232,206,140,.25),0 8px 24px rgba(232,206,140,.15)}
+.lx-tabs button.on svg{stroke:var(--gold)}
+.lx-body{flex:1;min-height:0;overflow:auto;padding:2px 4px 6px 0}
+.lx-cdesc{margin:0 0 14px;font-size:13.5px;color:rgba(230,220,247,.8);padding-left:12px;border-left:3px solid var(--cc,var(--gold))}
+/* road */
+.lx-road{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);row-gap:26px}
+.lx-node{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;cursor:pointer;padding:4px 4px 0}
+.lx-node:not(:nth-child(5n))::after{content:"";position:absolute;top:39px;left:calc(50% + 38px);right:calc(-50% + 38px);height:2px;background:linear-gradient(90deg,rgba(232,206,140,.55),rgba(232,206,140,.15))}
+.lx-node.done:not(:nth-child(5n))::after{background:linear-gradient(90deg,#f2d793,#b8954a)}
+.lx-med{position:relative;width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#3a2a62,#140c26 70%);box-shadow:0 0 0 2px rgba(232,206,140,.5),0 0 0 6px rgba(20,12,38,.9),0 0 0 7px rgba(232,206,140,.25),0 10px 22px rgba(0,0,0,.5);transition:.2s}
+.lx-med b{font-family:var(--serif);font-size:30px;font-weight:800;color:#e8ce8c}
+.lx-node.done .lx-med{background:radial-gradient(circle at 35% 30%,#fff3cc,#e8ce8c 45%,#9c7a34);box-shadow:0 0 0 2px #f6e3b0,0 0 0 6px rgba(20,12,38,.9),0 0 0 7px rgba(232,206,140,.6),0 0 22px rgba(232,206,140,.45)}
+.lx-node.done .lx-med b{color:#3a250c}
+.lx-med .ck{position:absolute;right:-4px;bottom:-2px;width:24px;height:24px;border-radius:50%;background:#3fc98a;color:#fff;font-style:normal;font-size:14px;font-weight:900;display:grid;place-items:center;box-shadow:0 0 0 2px #0c0818}
+.lx-node.next .lx-med{animation:lxPulse 1.8s ease-in-out infinite}
+@keyframes lxPulse{50%{box-shadow:0 0 0 2px #f6e3b0,0 0 0 6px rgba(20,12,38,.9),0 0 0 7px rgba(232,206,140,.7),0 0 30px rgba(232,206,140,.6)}}
+.lx-node:hover .lx-med{transform:translateY(-3px) scale(1.04)}
+.lx-nt{display:flex;flex-direction:column;align-items:center;gap:3px}
+.lx-nt b{font-family:var(--serif);font-size:14.5px;letter-spacing:.04em;color:#f4eefe}
+.lx-nt small{font-size:11.5px;line-height:1.45;color:rgba(216,205,240,.7)}
+.lx-st i{font-style:normal;font-size:13px;color:rgba(255,255,255,.18);margin:0 1px}
+.lx-st i.on{color:#f3cf6e;text-shadow:0 0 6px rgba(243,207,110,.7)}
+/* categories & cards */
+.lx-cats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.lx-cats button{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#d9cdee;cursor:pointer;font-family:var(--serif);font-weight:700;font-size:14px;letter-spacing:.08em}
+.lx-cats button i{width:9px;height:9px;border-radius:50%;background:var(--cc);box-shadow:0 0 8px var(--cc)}
+.lx-cats button small{font-family:inherit;font-size:11px;opacity:.7}
+.lx-cats button.on{border-color:var(--cc);color:#fff;background:color-mix(in srgb,var(--cc) 18%,transparent)}
+.lx-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.lx-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px 16px 12px;border-radius:14px;cursor:pointer;text-align:left;overflow:hidden;color:#eee6ff;
+  border:1px solid color-mix(in srgb,var(--cc) 35%,rgba(255,255,255,.08));background:linear-gradient(170deg,color-mix(in srgb,var(--cc) 14%,#1a1230),#0e0a1c 70%);box-shadow:0 10px 24px rgba(0,0,0,.35);transition:transform .2s,box-shadow .2s}
+.lx-card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,transparent,var(--cc),transparent)}
+.lx-card:hover{transform:translateY(-4px);box-shadow:0 16px 30px rgba(0,0,0,.45),0 0 0 1px var(--cc)}
+.lx-card.done{box-shadow:0 10px 24px rgba(0,0,0,.35),inset 0 0 0 1px rgba(243,207,110,.35)}
+.lx-no{position:absolute;right:12px;top:6px;font-family:var(--serif);font-size:34px;font-weight:800;color:color-mix(in srgb,var(--cc) 40%,transparent);line-height:1}
+.lx-fan{display:flex;align-self:center;justify-content:center;height:62px;margin:2px 0 8px;padding-top:6px}
+.lx-ft{display:block;margin:0 -5px;transform:translateY(var(--y)) rotate(var(--r));transform-origin:50% 120%}
+.lx-ft .tl{--tw:30px;width:30px;box-shadow:0 3px 0 #5a3787,0 5px 8px rgba(0,0,0,.4)}
+.lx-card>b{font-family:var(--serif);font-size:16.5px;letter-spacing:.06em}
+.lx-card>small{font-size:12.5px;line-height:1.5;color:rgba(216,205,240,.78)}
+.lx-ft2{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:6px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07)}
+.lx-ft2 em{font-style:normal;font-size:11.5px;color:rgba(216,205,240,.65)}
+.lx-card.done .lx-ft2 em{color:#f3cf6e}
+/* phones */
+html.lp .modal.lxm .mbox{height:94dvh;width:96vw}
+html.lp .lx{grid-template-columns:1fr}
+html.lp .lx-side{display:none}
+html.lp .lx-main{padding:10px 14px;gap:8px}
+html.lp .lx-h h2{font-size:18px}
+html.lp .lx-tabs button{padding:6px 12px}
+html.lp .lx-tabs button svg{width:22px;height:22px}
+html.lp .lx-tabs button b{font-size:15px}
+html.lp .lx-road{row-gap:14px}
+html.lp .lx-med{width:52px;height:52px}
+html.lp .lx-med b{font-size:22px}
+html.lp .lx-node:not(:nth-child(5n))::after{top:29px;left:calc(50% + 28px);right:calc(-50% + 28px)}
+html.lp .lx-nt small{display:none}
+html.lp .lx-cdesc{margin-bottom:8px;font-size:12px}
+html.lp .lx-cards{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+html.lp .lx-fan{height:46px;margin-bottom:4px}
+html.lp .lx-ft .tl{--tw:22px;width:22px}
+/* the guide's words bigger on large screens (ユーザー 2026-11-19「16:9だとセリフが小さすぎる」) */
+html:not(.lp) #game .ls-guide .lg-face{width:max(76px,11.5vh);height:max(76px,11.5vh)}
+html:not(.lp) #game .ls-guide p{font-size:max(15px,2.55vh);line-height:1.65}
+html:not(.lp) #game .ls-guide .lg-top b{font-size:max(14px,2vh)}
+html:not(.lp) #game .ls-guide .lg-top small,html:not(.lp) #game .ls-guide .lg-quit{font-size:max(11.5px,1.6vh)}
+html:not(.lp) #game .ls-guide .lg-again{font-size:max(13px,2.1vh)}
+html:not(.lp) #game .ls-guide .lg-btns .btn{font-size:max(13px,1.9vh);padding:.5em 1.3em}
+html:not(.lp) #game .ls-guide .lg-bub{padding:max(10px,1.5vh) max(14px,2vh)}
