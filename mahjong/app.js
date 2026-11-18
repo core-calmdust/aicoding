@@ -107,13 +107,17 @@ const IC = {
 const icon = k => IC[k] || '';
 
 // ---------------------------------------------------------------- sound (WebAudio synth)
+// a volume setting, 0–100 (80 by default; a level saved before as 0–1 of the old scale is carried over: old 1 = 80)
+function volP(k) { const p = DB.set[k + 'P']; if (p != null) return Math.max(0, Math.min(100, +p));
+  const o = DB.set[k + 'Vol']; return o == null ? 80 : Math.round(Math.max(0, Math.min(1, o)) * 80); }
 const SND = (() => {
   let ac = null;
   const ctx = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) ac.resume(); return ac; };
   const on = () => DB.set.snd && !document.hidden;
   // two buses (ユーザー 2026-11-14: the effects and the music each with their own volume and mute — the gear in the game)
   let seB = null, bgB = null;
-  const vol = k => (DB.set[k + 'On'] === false ? 0 : Math.max(0, Math.min(1, DB.set[k + 'Vol'] ?? 1)));
+  // (ユーザー 2026-11-18) the sliders read 0–100 and stand at 80 by default; 80 is the loudness the game had (gain 1), 100 is ×1.25
+  const vol = k => (DB.set[k + 'On'] === false ? 0 : volP(k) / 80);
   const seOut = a => { if (!seB) { seB = a.createGain(); seB.gain.value = vol('se'); seB.connect(a.destination); } return seB; };
   const bgOut = a => { if (!bgB) { bgB = a.createGain(); bgB.gain.value = vol('bg'); bgB.connect(a.destination); } return bgB; };
   function levels() { const a = ac; if (!a) return; const t = a.currentTime;
@@ -705,7 +709,7 @@ function openSettings() {
   SND.pick();
   const row = (k, items, cur) => `<div class="st-row"><small>${esc(t(k))}</small><div class="seg" data-k="${k}">${items.map(([v, lab]) => `<button class="${v === cur ? 'on' : ''}" data-v="${v}">${esc(lab)}</button>`).join('')}</div></div>`;
   // a volume row: its name, a slider, a mute button (ユーザー 2026-11-14)
-  const vrow = k => { const off = DB.set[k + 'On'] === false, v = Math.round((DB.set[k + 'Vol'] ?? 1) * 100);
+  const vrow = k => { const off = DB.set[k + 'On'] === false, v = volP(k);
     return `<div class="st-row st-vol ${off ? 'off' : ''}"><small>${esc(t(k === 'se' ? 'se' : 'music'))}<b>${off ? esc(t('mute')) : v}</b></small><div class="st-v"><button class="st-m" data-m="${k}" aria-label="${esc(t('mute'))}">${off ? IC.mute : IC.snd}</button><input type="range" min="0" max="100" step="5" value="${v}" data-k="${k}" style="--p:${v}%"></div></div>`; };
   // (2026-11-15, ユーザー: on a phone everything was too big and the light mode fell off the bottom) two columns — the sound on
   // one side, the language and light mode on the other — which on a phone fit the screen in one view; a PC keeps one column
@@ -721,7 +725,7 @@ function openSettings() {
   $('#modal').onclick = e => { if (e.target === $('#modal')) closeModal(); };
   box.addEventListener('input', e => {
     const r = e.target.closest('input[type=range]'); if (!r) return;
-    const k = r.dataset.k; DB.set[k + 'Vol'] = r.value / 100; DB.set[k + 'On'] = true; DB.set.snd = true; save(); r.style.setProperty('--p', r.value + '%');
+    const k = r.dataset.k; DB.set[k + 'P'] = +r.value; DB.set[k + 'On'] = true; DB.set.snd = true; save(); r.style.setProperty('--p', r.value + '%');
     const row = r.closest('.st-vol'); row.classList.remove('off'); row.querySelector('small b').textContent = r.value; row.querySelector('.st-m').innerHTML = IC.snd;
     SND.unlock(); SND.levels(); SND.resume(); });
   box.addEventListener('change', e => { if (e.target.dataset.k === 'se') SND.tile(); });   // a sample of the effects' level
@@ -1262,7 +1266,7 @@ async function startGame(opt = {}) {
   SND.newGame();   // opt.ranked: a 段位戦 game, opt.len its length
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
-  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = () => SND.tile(); TB.warm(); }
+  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = (kind, seat) => { SND.tile(); if (kind === 'river' && UIS.landWait && UIS.landWait.seat === seat) UIS.landWait.done(); }; TB.warm(); }
   TB.resume();
   TB.hideAll();
   const me = mySeat();
@@ -1351,6 +1355,8 @@ async function onEvent(ev, d) {
     case 'discard': {
       const p = g.P[d.seat];
       if (d.riichi) { await cutin(d.seat, 'riichi'); SND.music('riichi'); }
+      // (ユーザー 2026-11-18: a ron came before the tile was down) the tile's landing is waited on by a ron on it (agari)
+      { let done; const pr = new Promise(r => { done = r; }); UIS.landWait = { seat: d.seat, done, pr: Promise.race([pr, sleep(2600)]) }; }
       layoutRiver(d.seat, true);   // (the tile's sound plays when it lands — TB.onTileLand)
       // (others: the hand tidies the row after laying the tile — the drawn tile goes to its place, or the row is pushed together. ユーザー 2026-11-14)
       if (d.seat !== ME) { const dr = UIS.drawnBy[d.seat]; TB.sortAfterDiscard(d.seat, p.hand, dr != null && !d.tsumogiri && p.hand.includes(dr) ? dr : null); }
@@ -1400,6 +1406,8 @@ async function onEvent(ev, d) {
     case 'agari': {
       SND.music(null);   // (the game's music stops at the end of a hand; each results screen plays its own short piece once — SND.score) (ユーザー 2026-11-14: the results of a hand have their own music; the game's comes back with the next hand, on the table)
       clearActs();
+      // a ron: the discard is down on the table first, a beat, then 「ロン！」
+      if (d.results.some(r => !r.tsumo) && UIS.landWait) { await UIS.landWait.pr; UIS.landWait = null; await sleep(FAST < 1 ? 60 : 280); }
       for (const r of d.results) await cutin(r.seat, r.tsumo ? 'tsumo' : 'ron');
       SND.win();
       for (const r of d.results) if (r.seat !== ME) TB.layoutHand(r.seat, r.hand, null, true);
@@ -1673,7 +1681,8 @@ function btn(label, cls, fn, role) {
 // action buttons are bound to the bottom-left letter row in on-screen order: Z X C V B N M
 // keys follow SEGA MJ: Enter = win (tsumo/ron), X riichi, C chi, V pon, B kan, Space tsumogiri, Esc cancel/skip
 const KEY_OF = { win: 'Enter', rii: 'x', chi: 'c', pon: 'v', kan: 'b', kyuushu: 'n', skip: 'Escape' };
-const KEY_LABEL = { Enter: 'Enter', Escape: 'Esc' };
+// (ユーザー 2026-11-18) skip is shown as Space: Esc also leaves fullscreen in the browser (Esc still works)
+const KEY_LABEL = { Enter: 'Enter', Escape: 'Space' };
 function bindActKeys() {
   [...document.querySelectorAll('#acts .ab')].forEach(b => {
     const k = KEY_OF[b.dataset.role]; if (!k) return;
@@ -1783,7 +1792,7 @@ function askDealSkill(o, res) {
   const who = o.slot && UIS.chars[ME].partner ? UIS.chars[ME].partner : null;
   el.innerHTML = `<i>${icon(sk.icon)}</i>
     <div class="da-t">${who ? `<em class="da-pt"><img src="${charImg(who, 'face')}" alt="">${esc(t('partner'))} ${esc(L(who.name))}</em>` : ''}<b>${esc(t('dealQ', { name: L(sk.name) + ' ' + MJSkills.TIERS[o.tier | 0] }))}</b><span>${esc(L(sk.desc(MJSkills.val(sk, o.tier))))}</span><small>${o.cost ? t('cost', { n: o.cost.toLocaleString() }) : t('free')}</small></div>
-    <div class="da-b"><button class="ab skip" data-a="no">${t('notUse')}<kbd>Esc</kbd></button><button class="ab call" data-a="yes">${t('use')}<kbd>Enter</kbd></button></div>`;
+    <div class="da-b"><button class="ab skip" data-a="no">${t('notUse')}<kbd>Space</kbd></button><button class="ab call" data-a="yes">${t('use')}<kbd>Enter</kbd></button></div>`;
   el.hidden = false;
   renderHand();
   el.onclick = async e => {
@@ -2184,7 +2193,7 @@ document.addEventListener('keydown', e => {
   const pk = $('#chiPick');
   if (!pk.hidden && /^[1-3]$/.test(k)) { const b = pk.querySelector(`[data-i="${+k - 1}"]`); if (b) { e.preventDefault(); b.click(); } return; }
   // action buttons (Enter win, X riichi, C chi, V pon, B kan, N nine terminals); Esc / Space = skip
-  if (k === ' ' && UIS.kind === 'call') { const sk = $('#acts .skip'); if (sk) { e.preventDefault(); sk.click(); return; } }
+  if (k === ' ' && (UIS.kind === 'call' || $('#acts .skip'))) { const sk = $('#acts .skip'); if (sk) { e.preventDefault(); sk.click(); return; } }
   if (k === 'Escape') { const sk = $('#acts .skip'); if (sk) { e.preventDefault(); sk.click(); return; } if (UIS.riichiMode) { const r = $('#acts .rii'); if (r) r.click(); return; } }
   const ab = $(`#acts [data-key="${k}"]`);
   if (ab) { e.preventDefault(); ab.click(); return; }
