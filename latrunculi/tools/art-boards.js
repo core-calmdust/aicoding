@@ -195,28 +195,39 @@ void M(vec2 p, inout Mat m){ float rt; vec3 c = fwood(p, hexc(84., 48., 26.), he
 
   // ================================================================ abstract: a matte plaster sheet with large flat shapes in Roman colours —
   // an arch, the sun, a half moon — printed over each other; the grid a fine charcoal line
+  // v4 (2026-11-19, user: the white sheet of the first version was better, but its earth colours are too close to other games):
+  // the same sheet and shapes, recoloured as paper cut-outs — ultramarine, blush pink, charcoal, warm grey and a small lemon sun
   B.abstract = {
     ao: '.03', aok: '0.',
     glsl: `
-// v3 (2026-11-19, user: simpler, flat): three flat fields of colour on a matte ground — deep teal, a lighter sea-green field above,
-// slate blue below, one thin plum band between — clean edges softened by a hair, a faint grain; the grid in thin off-white lines
-float aa(float d, float s){ return smoothstep(s, -s, d); }
-float H(vec2 p){ return .0006 * (vn(p * 140.) - .5); }
+float aa(float d){ return smoothstep(.004, -.004, d); }
+float sdArch(vec2 p, vec2 base, float hw, float top){   // a round arch standing on base (y down): a box and a half disc
+  float rect = sdBox(p, vec2(base.x, (base.y + top + hw - .1) * .5), vec2(hw, (base.y - top - hw + .1) * .5));
+  float disc = length(p - vec2(base.x, top + hw)) - hw;
+  return min(rect, max(disc, p.y - (top + hw) + .05));
+}
+vec3 shapes(vec2 p, vec3 c){
+  vec3 terra = hexc(52., 78., 170.), ochre = hexc(236., 186., 182.), sage = hexc(156., 184., 210.), teal = hexc(236., 200., 72.), rose = hexc(176., 172., 164.);
+  float tex = .95 + .07 * vn(p * 140.) + .03 * fbm(p * 3.);
+  c = mix(c, sage * tex, aa(length(p - vec2(-.2, 6.3)) - 2.1));
+  c = mix(c, ochre * tex, aa(sdArch(p, vec2(5.55, 8.2), 1.3, 3.1)));
+  c = mix(c, terra * tex, aa(length(p - vec2(2.6, 2.5)) - 1.75));
+  c = mix(c, rose * tex, aa(max(length(p - vec2(8.1, 3.9)) - 1.6, -(length(p - vec2(7.5, 3.9)) - 1.2))));
+  c = mix(c, teal * tex, aa(length(p - vec2(6.6, 1.35)) - .5));
+  return c;
+}
+float H(vec2 p){ return .001 * (vn(p * 90.) - .5) + .0012 * fbm(p * 10.); }
 void M(vec2 p, inout Mat m){
-  vec3 c = hexc(30., 62., 66.);
-  c = mix(c, hexc(70., 124., 120.), aa(sdBox(p, vec2(4., 1.92), vec2(3.5, 1.58)) - .05, .008));
-  c = mix(c, hexc(56., 74., 110.), aa(sdBox(p, vec2(4., 5.98), vec2(3.5, 1.68)) - .05, .008));
-  c = mix(c, hexc(138., 70., 86.), aa(sdBox(p, vec2(4., 3.92), vec2(3.5, .13)) - .03, .006));
-  c *= .985 + .03 * vn(p * 220.) + .015 * fbm(p * 2.);
-  float ln = smoothstep(.011, .007, gridDist(p));
-  c = mix(c, hexc(234., 230., 220.), ln * .85);
-  m.alb = c; m.spec = .12; m.gloss = .12; m.metal = 0.;
+  vec3 c = hexc(238., 231., 218.) * (.975 + .03 * vn(p * vec2(160., 40.)) * .5 + .03 * vn(p * vec2(40., 170.)) * .5) * (.985 + .03 * fbm(p * 1.5));
+  c = shapes(p, c);
+  float ink = smoothstep(.013, .007, gridDist(p));
+  c = mix(c, hexc(40., 38., 38.) * (.92 + .1 * vn(p * 200.)), ink);
+  m.alb = c; m.spec = .12; m.gloss = .1; m.metal = 0.;
 }`,
   };
-  F.abstract = { glsl: FWOOD + `
-float H(vec2 p){ return .001 * (vn(p * vec2(4., 140.), vec2(4., 140.)) - .5); }
-void M(vec2 p, inout Mat m){ float rt; vec3 c = fwood(p, hexc(52., 40., 34.), hexc(26., 20., 18.), 10., 8., rt);
-  m.alb = c; m.spec = .4; m.gloss = .4; m.metal = 0.; }` };
+  F.abstract = { glsl: `
+float H(vec2 p){ return .0012 * (vn(p * 120., vec2(120.)) - .5); }
+void M(vec2 p, inout Mat m){ m.alb = hexc(46., 46., 50.) * (.95 + .08 * vn(p * 240., vec2(240.)) + .04 * fbmP(p * 5., vec2(5.))); m.spec = .1; m.gloss = .1; m.metal = 0.; }` };
 
   // ================================================================ lux: squares of lapis lazuli and Calacatta marble set in gold
   B.lux = {
@@ -293,12 +304,12 @@ float H(vec2 p){
 void M(vec2 p, inout Mat m){
   vec2 w = vec2(fbm(p * .35 + 2.), fbm(p * .35 + 8.)) * 1.6;
   float f = fbm(p * .45 + w);
-  vec3 c = mix(hexc(214., 170., 92.), hexc(234., 200., 128.), smoothstep(.3, .75, f));
-  c = mix(c, hexc(196., 146., 76.), smoothstep(.55, .8, fbm(p * .9 + w * 1.3 + 5.)) * .45);    // deeper honey clouds
+  vec3 c = mix(hexc(178., 132., 62.), hexc(204., 160., 90.), smoothstep(.3, .75, f));
+  c = mix(c, hexc(156., 108., 50.), smoothstep(.55, .8, fbm(p * .9 + w * 1.3 + 5.)) * .45);    // deeper honey clouds
   float v = 1. - smoothstep(.0, .03, abs(fbm(p * .6 + w * 1.2 + 11.) - .5));
   c = mix(c, hexc(170., 120., 66.), v * .35 * smoothstep(.4, .7, fbm(p * .5 + 20.)));            // soft veins
   float v2 = 1. - smoothstep(.0, .05, abs(fbm(p * .4 + w + 31.) - .5));
-  c = mix(c, hexc(246., 226., 180.), v2 * .3);                                                   // pale veins
+  c = mix(c, hexc(222., 194., 140.), v2 * .25);                                                  // pale veins
   c *= .97 + .05 * fbm(p * 6.);
   float d = gridDist(p);
   float ln = smoothstep(.016, .011, d);
@@ -307,7 +318,7 @@ void M(vec2 p, inout Mat m){
   c = mix(c, rosso, ln);
   m.alb = c; m.spec = .45; m.gloss = .7; m.metal = 0.;
 }
-vec3 POST(vec2 p, vec3 c, Mat m, vec3 n){ return c + vec3(exp(-pow((p.x * .75 + p.y * .65 - 3.) / 1.4, 2.)) * .04); }`,
+vec3 POST(vec2 p, vec3 c, Mat m, vec3 n){ return c + vec3(exp(-pow((p.x * .75 + p.y * .65 - 3.) / 1.4, 2.)) * .025); }`,
   };
   F.giallo = { glsl: FWOOD + `
 float H(vec2 p){ return .001 * (vn(p * vec2(4., 140.), vec2(4., 140.)) - .5); }
