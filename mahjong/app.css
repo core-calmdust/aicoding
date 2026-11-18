@@ -3073,3 +3073,6 @@ html.lp .lx-road{column-gap:12px;row-gap:6px}
 html.lp .lx-node{gap:10px;padding:3px 8px 3px 3px}
 html.lp .lx-node:not(:nth-child(5n))::before{left:30px;top:calc(50% + 26px);height:calc(100% - 46px)}
 html.lp .lx-nh b{font-size:13.5px}
+/* 小町の吹き出し：画面の左右中央、自分の手牌のすぐ上（CSSだけで置く：全画面の切り替えや窓の大きさの変化にも追従。ユーザー 2026-11-19） */
+#game .ls-guide{left:50%;top:auto;bottom:calc(var(--th) * 1.5 + 26px);transform:translateX(-50%);width:min(max(680px,105vh),calc(100% - 2 * (var(--bf) + 130px)));min-width:300px}
+html.lp #game .ls-guide{top:auto;width:min(560px,calc(100% - 2 * (var(--bf) + 60px)))}
