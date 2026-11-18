@@ -101,19 +101,16 @@ void mat(vec3 p, vec3 n, inout PMat m){
   m.alb = c; m.spec = .45; m.gloss = .5;
 }` };
   P['wood-g'] = { glsl: WOOD3 + `
-float triD(vec2 p){   // a rounded triangle pointing down (the bill, inlaid)
-  const float k = 1.7320508; p.x = abs(p.x) - .16; p.y = p.y + .16 / k;
-  if (p.x + k * p.y > 0.) p = vec2(p.x - k * p.y, -k * p.x - p.y) / 2.;
-  p.x -= clamp(p.x, -.32, 0.); return -length(p) * sign(p.y) - .03;
-}
-float map(vec3 p){ vec3 q = p * 1.06; q.x *= 1. + max(q.y, 0.) * .12; return sdEll(q - vec3(0., -.04, -.1), vec3(.7, .66, .5)) / 1.06; }
+// v5 (2026-11-18 user: the flat triangle looked like a smile): a walnut beak that stands out of the dome, long and pointed downwards
+float beak(vec3 p){ vec3 q = p; q.x *= .95; q.z = (q.z - .36) * 1.5 + .36; vec3 a = vec3(0., .04, .4), b = vec3(0., .4, .36); vec3 ba = b - a, pa = q - a; float h = clamp(dot(pa, ba) / dot(ba, ba), 0., 1.); return (length(pa - ba * h) - mix(.17, .06, h)) * .7; }
+float map(vec3 p){ vec3 q = p * 1.06; return smin(sdEll(q - vec3(0., -.06, -.1), vec3(.7, .66, .5)), beak(q), .05) / 1.06; }
 void mat(vec3 p, vec3 n, inout PMat m){
   vec3 q = p * 1.06;
   vec3 c = wood3(q, hexc(240., 222., 190.), hexc(216., 192., 150.), 7., 1.3);
   vec3 wal = wood3(q * 1.6, hexc(112., 70., 40.), hexc(66., 40., 20.), 10., 4.);
-  float bl = smoothstep(.012, -.004, triD(vec2(q.x, q.y - .2)));
-  float ey = smoothstep(.012, -.004, length(vec2(abs(q.x) - .25, q.y + .06)) - .055);
-  float k = max(bl, ey);
+  float bk = smoothstep(.02, -.005, beak(q));
+  float ey = smoothstep(.012, -.004, length(vec2(abs(q.x) - .27, q.y + .14)) - .05);
+  float k = max(bk, ey);
   m.alb = mix(c, wal, k); m.spec = .45; m.gloss = .5 + k * .1;
 }` };
   // ---------------------------------------------------------------- side view (2026-11-18 v2: the user wanted the wooden and the luxury
