@@ -10,7 +10,7 @@
 'use strict';
 importScripts('rules.js?v=2');
 try { importScripts('tsumego.js?v=1'); } catch (e) {}
-try { importScripts('gpunet.js?v=3'); } catch (e) {}   // (PRO's 計算「GPU」, 2026-11-18)
+try { importScripts('gpunet.js?v=4'); } catch (e) {}   // (PRO's 計算「GPU」, 2026-11-18)
 const R = self.GoRules, PASS = -1;
 
 let simd = true;
@@ -122,7 +122,7 @@ function gpuFor(I) {
   return I.gpuP;
 }
 async function search(I, job, o) {
-  const E = I.E, my = job.id, n = job.spec.n, G = o.gpu && !o.gpu.lost ? o.gpu : null;
+  const E = I.E, my = job.id, n = job.spec.n, G = o.gpu && !o.gpu.lost && !o.gpu.bad ? o.gpu : null;
   setPos(I, job);
   E.set_param(4, o.noise || 0);
   E.set_param(3, o.temp || 1);
@@ -139,6 +139,12 @@ async function search(I, job, o) {
       const nb = E.gpu_collect(Math.min(GPU_B, Math.max(1, maxV - done))); got = E.gpu_imm();
       if (nb) {
         let out = null; try { out = await G.run(new Float32Array(E.memory.buffer, E.gpu_feat(), nb * 14 * 361), new Float32Array(E.memory.buffer, E.gpu_glob(), nb * 2), new Uint16Array(E.memory.buffer, E.gpu_pat(), nb * 361), nb); } catch (e) { out = null; }
+        if (G.bad) out = null;
+        else if (out && !G.checked) {   // (2026-11-19) the first batch of this GPU also on the CPU: a GPU / driver that computes it wrong is not used
+          E.gpu_cpu(nb); const ref = new Float32Array(E.memory.buffer, E.gpu_out(), nb * 727);
+          for (let i = 0; i < nb * 727; i++) { const d = Math.abs(out[i] - ref[i]); if (!(d <= 1e-2 + 1e-3 * Math.abs(ref[i]))) { G.bad = true; console.warn('[go] the GPU\'s results differ from the CPU\'s: the CPU is used'); break; } }
+          G.checked = true; out = ref.slice();   // (this batch: the CPU's)
+        }
         if (!out) { E.gpu_cpu(nb); I.gpuFail = 1; } else new Float32Array(E.memory.buffer, E.gpu_out(), nb * 727).set(out);   // (the GPU failed: this batch on the CPU)
         got += E.gpu_apply(nb);
       }

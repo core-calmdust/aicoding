@@ -95,27 +95,28 @@ fn main(@builtin(local_invocation_id) l: vec3<u32>, @builtin(workgroup_id) wg: v
   let kk = P_.k * P_.k; let K = P_.cin * kk; let N = NB_.n * 361u;
   var acc: array<vec4<f32>, 4>;
   for (var i = 0u; i < 4u; i++) { acc[i] = vec4<f32>(0.0); }
-  // this thread loads the same column (weights: output channel am; inputs: position bn) at rows kq = tid / 64 + 4 q of each
-  // 16-row step: its position's batch / row / column are worked out once (the loop used to divide for every element)
-  let col = tid % 64u; let row0 = tid / 64u;
-  let gm = m0 + col; let mOK = gm < P_.cout; let wBase = gm * K;
-  let gn = n0 + col; let nOK = gn < N;
-  let nb_ = gn / 361u; let np_ = gn % 361u; let ny = i32(np_ / 19u); let nx = i32(np_ % 19u);
-  let inBase = nb_ * P_.inC * 361u;
+  // (2026-11-19) each thread fills whole vectors: row kr = tid / 16 of the 16-row step, the four columns 4 (tid % 16) … +3 — a thread
+  // writing one component of a shared vector raced with its neighbours on Apple's GPUs (read, change, write back the whole vector)
+  let kr = tid / 16u; let c4 = (tid % 16u) * 4u;
+  var wB: array<u32, 4>; var mOK: array<bool, 4>; var nOK: array<bool, 4>; var iB: array<u32, 4>; var ny: array<i32, 4>; var nx: array<i32, 4>;
+  for (var j = 0u; j < 4u; j++) {
+    let gm = m0 + c4 + j; mOK[j] = gm < P_.cout; wB[j] = gm * K;
+    let gn = n0 + c4 + j; nOK[j] = gn < N;
+    let b = gn / 361u; let p = gn % 361u; ny[j] = i32(p / 19u); nx[j] = i32(p % 19u); iB[j] = b * P_.inC * 361u;
+  }
   for (var k0 = 0u; k0 < K; k0 += 16u) {
-    for (var q = 0u; q < 4u; q++) {
-      let kr = row0 + q * 4u; let gk = k0 + kr;
-      var av = 0.0; if (mOK && gk < K) { av = w[wBase + gk]; }
-      As[kr * 16u + col / 4u][col % 4u] = av;
-      var bv = 0.0;
-      if (nOK && gk < K) {
-        let ci = gk / kk; let t = gk - ci * kk;
-        var yy = ny; var xx = nx;
-        if (kk == 9u) { let ty = t / 3u; yy = ny + i32(ty) - 1; xx = nx + i32(t - ty * 3u) - 1; }
-        if (yy >= 0 && yy < 19 && xx >= 0 && xx < 19) { bv = inp[inBase + ci * 361u + u32(yy * 19 + xx)]; }
-      }
-      Bs[kr * 16u + col / 4u][col % 4u] = bv;
+    let gk = k0 + kr; let kOK = gk < K;
+    let ci = gk / kk; let t = gk - ci * kk;
+    var dy = 0; var dx = 0;
+    if (kk == 9u) { let ty = t / 3u; dy = i32(ty) - 1; dx = i32(t - ty * 3u) - 1; }
+    var av = vec4<f32>(0.0); var bv = vec4<f32>(0.0);
+    for (var j = 0u; j < 4u; j++) {
+      if (kOK && mOK[j]) { av[j] = w[wB[j] + gk]; }
+      let yy = ny[j] + dy; let xx = nx[j] + dx;
+      if (kOK && nOK[j] && yy >= 0 && yy < 19 && xx >= 0 && xx < 19) { bv[j] = inp[iB[j] + ci * 361u + u32(yy * 19 + xx)]; }
     }
+    As[kr * 16u + tid % 16u] = av;
+    Bs[kr * 16u + tid % 16u] = bv;
     workgroupBarrier();
     for (var k = 0u; k < 16u; k++) {
       let a = As[k * 16u + l.y]; let bb = Bs[k * 16u + l.x];
