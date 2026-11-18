@@ -833,25 +833,25 @@ body .info-line{font-size:12.5px}
 /* 2D designs (2026-11-18, tools/gen_art2.py → img/2d/): the boards carry their own grid (chiselled, burnt, painted, inlaid…), so the
    page's lines are hidden and only the coordinates stay */
 html[data-bd] .lines :is(.grv,.grv-hl){display:none}
-html[data-bd=stone]{--bdImg:url(img/2d/bd-stone.webp?v=3);--frameBg:url(img/2d/fr-stone.webp?v=3) 0 0/260px 260px,#8a7a62;--frm:#e2d6bf;--num:rgba(255,240,214,.92)}
-html[data-bd=wood]{--bdImg:url(img/2d/bd-woodgrid.webp?v=3);--frameBg:url(img/2d/fr-woodfield.webp?v=3) center/cover no-repeat,#4a2c18;--frm:#d9b88a;--num:rgba(240,222,184,.85)}
-html[data-bd=abstract]{--bdImg:url(img/2d/bd-abstract.webp?v=3);--frameBg:url(img/2d/fr-abstract.webp?v=3) 0 0/240px 240px,#2e2c2a;--frm:#d4c8b4;--num:rgba(236,232,220,.85)}
-html[data-bd=lux]{--bdImg:url(img/2d/bd-lux.webp?v=3);--frameBg:url(img/2d/fr-lux.webp?v=3) 0 0/280px 280px,#1c0c08;--frm:#d9b46a;--num:rgba(255,226,160,.9)}
-html[data-bd=giallo]{--bdImg:url(img/2d/bd-giallo.webp?v=3);--frameBg:url(img/2d/fr-giallo.webp?v=3) 0 0/280px 280px,#2a1810;--frm:#e0b878;--num:rgba(90,52,24,.8)}
+html[data-bd=stone]{--bdImg:url(img/2d/bd-stone.webp?v=4);--frameBg:url(img/2d/fr-stone.webp?v=4) 0 0/260px 260px,#8a7a62;--frm:#e2d6bf;--num:rgba(255,240,214,.92)}
+html[data-bd=wood]{--bdImg:url(img/2d/bd-woodgrid.webp?v=4);--frameBg:url(img/2d/fr-woodfield.webp?v=4) center/cover no-repeat,#4a2c18;--frm:#d9b88a;--num:rgba(240,222,184,.85)}
+html[data-bd=abstract]{--bdImg:url(img/2d/bd-abstract.webp?v=4);--frameBg:url(img/2d/fr-abstract.webp?v=4) 0 0/240px 240px,#2e2c2a;--frm:#d4c8b4;--num:rgba(40,38,38,.66)}
+html[data-bd=lux]{--bdImg:url(img/2d/bd-lux.webp?v=4);--frameBg:url(img/2d/fr-lux.webp?v=4) 0 0/280px 280px,#1c0c08;--frm:#d9b46a;--num:rgba(255,226,160,.9)}
+html[data-bd=giallo]{--bdImg:url(img/2d/bd-giallo.webp?v=4);--frameBg:url(img/2d/fr-giallo.webp?v=4) 0 0/280px 280px,#2a1810;--frm:#e0b878;--num:rgba(90,52,24,.8)}
 /* walnut: the board is one piece with its frame (no ring between them) */
 html[data-bd=wood] .board{box-shadow:none}
-html[data-bd=pompeii]{--bdImg:url(img/2d/bd-pompeii.webp?v=3);--frameBg:url(img/2d/fr-pompeii.webp?v=3) 0 0/240px 240px,#1e1a18;--frm:#d6a04a;--num:rgba(246,214,160,.8)}
+html[data-bd=pompeii]{--bdImg:url(img/2d/bd-pompeii.webp?v=4);--frameBg:url(img/2d/fr-pompeii.webp?v=4) 0 0/240px 240px,#1e1a18;--frm:#d6a04a;--num:rgba(246,214,160,.8)}
 html[data-bd=lux] .lines .num{paint-order:stroke;stroke:rgba(10,14,40,.55);stroke-width:.012}
 html[data-bd=stone] .lines .num{paint-order:stroke;stroke:rgba(40,26,14,.7);stroke-width:.014}
 :is(html[data-bd=stone],html[data-bd=abstract],html[data-bd=giallo],html[data-bd=wood]) .reserve .rsv-plate{background:rgba(255,252,244,.9);color:#4a3a40}
 :is(html[data-bd=stone],html[data-bd=abstract],html[data-bd=giallo],html[data-bd=wood]) .reserve .rsv-plate b{color:#2a1c22}
 /* counter sets: face up and turned over (tools/gen_art2.py) */
-html[data-pcs=helm]{--pcB:url(img/2d/pc-helm-b.webp?v=3);--pcW:url(img/2d/pc-helm-w.webp?v=3);--pcBx:url(img/2d/pc-helm-bx.webp?v=3);--pcWx:url(img/2d/pc-helm-wx.webp?v=3)}
-html[data-pcs=wood]{--pcB:url(img/2d/pc-wood-b.webp?v=3);--pcW:url(img/2d/pc-wood-w.webp?v=3);--pcBx:url(img/2d/pc-wood-bx.webp?v=3);--pcWx:url(img/2d/pc-wood-wx.webp?v=3)}
-html[data-pcs=abstract]{--pcB:url(img/2d/pc-abstract-b.webp?v=3);--pcW:url(img/2d/pc-abstract-w.webp?v=3);--pcBx:url(img/2d/pc-abstract-bx.webp?v=3);--pcWx:url(img/2d/pc-abstract-wx.webp?v=3)}
-html[data-pcs=coin]{--pcB:url(img/2d/pc-coin-b.webp?v=3);--pcW:url(img/2d/pc-coin-w.webp?v=3);--pcBx:url(img/2d/pc-coin-bx.webp?v=3);--pcWx:url(img/2d/pc-coin-wx.webp?v=3)}
-html[data-pcs=glass]{--pcB:url(img/2d/pc-glass-b.webp?v=3);--pcW:url(img/2d/pc-glass-w.webp?v=3);--pcBx:url(img/2d/pc-glass-bx.webp?v=3);--pcWx:url(img/2d/pc-glass-wx.webp?v=3)}
-html[data-pcs=bone]{--pcB:url(img/2d/pc-bone-b.webp?v=3);--pcW:url(img/2d/pc-bone-w.webp?v=3);--pcBx:url(img/2d/pc-bone-bx.webp?v=3);--pcWx:url(img/2d/pc-bone-wx.webp?v=3)}
+html[data-pcs=helm]{--pcB:url(img/2d/pc-helm-b.webp?v=4);--pcW:url(img/2d/pc-helm-w.webp?v=4);--pcBx:url(img/2d/pc-helm-bx.webp?v=4);--pcWx:url(img/2d/pc-helm-wx.webp?v=4)}
+html[data-pcs=wood]{--pcB:url(img/2d/pc-wood-b.webp?v=4);--pcW:url(img/2d/pc-wood-w.webp?v=4);--pcBx:url(img/2d/pc-wood-bx.webp?v=4);--pcWx:url(img/2d/pc-wood-wx.webp?v=4)}
+html[data-pcs=abstract]{--pcB:url(img/2d/pc-abstract-b.webp?v=4);--pcW:url(img/2d/pc-abstract-w.webp?v=4);--pcBx:url(img/2d/pc-abstract-bx.webp?v=4);--pcWx:url(img/2d/pc-abstract-wx.webp?v=4)}
+html[data-pcs=coin]{--pcB:url(img/2d/pc-coin-b.webp?v=4);--pcW:url(img/2d/pc-coin-w.webp?v=4);--pcBx:url(img/2d/pc-coin-bx.webp?v=4);--pcWx:url(img/2d/pc-coin-wx.webp?v=4)}
+html[data-pcs=glass]{--pcB:url(img/2d/pc-glass-b.webp?v=4);--pcW:url(img/2d/pc-glass-w.webp?v=4);--pcBx:url(img/2d/pc-glass-bx.webp?v=4);--pcWx:url(img/2d/pc-glass-wx.webp?v=4)}
+html[data-pcs=bone]{--pcB:url(img/2d/pc-bone-b.webp?v=4);--pcW:url(img/2d/pc-bone-w.webp?v=4);--pcBx:url(img/2d/pc-bone-bx.webp?v=4);--pcWx:url(img/2d/pc-bone-wx.webp?v=4)}
 
 /* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
 #newOverlay .ng-cols{display:flex;flex-direction:column}
@@ -1360,7 +1360,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="coach.js?v=1"></script>
 <script src="coach-i18n.js?v=2"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=8"></script>
+<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=9"></script>
 <script src="online-ui.js?v=1"></script>
 <!-- World Board Game Atlas portal skin: konane/?skin=atlas — 3D boards (a koa tray with the Hawaiian quilt / a rough basalt papamū with pecked cups), coral and basalt pebbles, guide speech bubbles, portal look (all features kept) -->
 <script>

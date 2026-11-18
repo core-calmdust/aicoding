@@ -353,34 +353,37 @@ void mat(vec3 p, vec3 n, inout PMat m){
   // ================================================================ helm (2026-11-19, user: the busts distract in 2D — more abstract): a carved
   // stone counter seen from above — a round base, the bowl of a helmet, the crest running front to back — white marble and black
   // basalt, softly polished; turned over = the flat underside of the base, chisel-dressed, with an incised ring
-  const HELM = (dark, under) => `
+  // v2 (2026-11-19, user: seen too much from above it reads as nothing): a round stone counter with a helmet carved in relief —
+  // the side view of a crested galea, raised from a slightly sunk field inside a rim; white marble and black basalt
+  const helmRelief = svg(`<g fill="#000" stroke="#000" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M300,600C296,420 410,318 548,316C690,314 776,410 772,560L772,600Z" stroke-width="10"/>
+    <path d="M286,588L792,588L792,632L286,632Z" stroke-width="8"/>
+    <path d="M304,612L216,698L250,726L350,640Z" stroke-width="10"/>
+    <path d="M600,630L712,630L704,776Q656,822 608,776Z" stroke-width="10"/>
+    <path d="M512,318L520,262L540,262L548,318Z"/>
+    <path d="M372,336C376,160 568,104 722,190C754,208 756,252 724,264C622,218 482,238 412,346Z" stroke-width="10"/>
+  </g>`);
+  const HELM = (dark, under) => RELIEF + `
 float map(vec3 p){
+  float r = length(p.xy);
+  float d = sdCyl(p, .9, .15, .08);
   ${under
-    ? `float r = length(p.xy);
-  float d = sdCyl(p, .88, .14, .08);
-  d += step(.0, p.z) * (.006 * (vn3(p * 18.) - .5) + .004 * (vn3(p * vec3(60., 6., 6.)) - .5) + .02 * smoothstep(.025, .0, abs(r - .5)));
-  return d;`
-    : `float d = sdCyl(p - vec3(0., 0., -.06), .9, .1, .06);                       // the base
-  float bowl = sdEll(p - vec3(0., .03, .0), vec3(.56, .6, .52));
-  bowl = max(bowl, -p.z + .02);
-  d = smin(d, bowl, .06);
-  d = smin(d, sdEll(p - vec3(0., .03, .04), vec3(.63, .67, .07)), .03);          // the brim
-  float crest = sdEll(p - vec3(0., .03, .42), vec3(.1, .62, .22));
-  d = smin(d, crest, .05);
-  return d;`}
+    ? `d += step(.0, p.z) * (.006 * (vn3(p * 18.) - .5) + .004 * (vn3(p * vec3(60., 6., 6.)) - .5) + .02 * smoothstep(.025, .0, abs(r - .5)));`
+    : `d += step(.0, p.z) * (.018 * smoothstep(.72, .66, r) - .075 * rel(p.xy * 1.15) * smoothstep(.72, .66, r) + .004 * (vn3(p * 14.) - .5));`}
+  return d;
 }
 void mat(vec3 p, vec3 n, inout PMat m){
   ${dark
-    ? `vec3 c = mix(hexc(38., 38., 40.), hexc(56., 54., 54.), smoothstep(.3, .8, fbm3(p * 3.)));
+    ? `vec3 c = mix(hexc(40., 40., 42.), hexc(58., 56., 56.), smoothstep(.3, .8, fbm3(p * 3.)));
   c *= .94 + .1 * vn3(p * 60.);
-  m.alb = c; m.spec = .7; m.gloss = ${under ? '.25' : '.72'};`
-    : `vec3 c = mix(hexc(242., 238., 230.), hexc(224., 218., 206.), smoothstep(.3, .8, fbm3(p * 2.6)));
-  c = mix(c, hexc(186., 180., 168.), (1. - smoothstep(.0, .025, abs(fbm3(p * 2. + 4.) - .5))) * .18);
-  m.alb = c; m.spec = .4; m.gloss = ${under ? '.22' : '.66'}; m.emit = c * .1;`}
-  ${under ? 'm.alb = mix(m.alb, m.alb * .6, smoothstep(.03, .005, abs(length(p.xy) - .5)));' : ''}
+  m.alb = c; m.spec = .7; m.gloss = ${under ? '.25' : '.6'};`
+    : `vec3 c = mix(hexc(240., 236., 228.), hexc(222., 216., 204.), smoothstep(.3, .8, fbm3(p * 2.6)));
+  c = mix(c, hexc(186., 180., 168.), (1. - smoothstep(.0, .025, abs(fbm3(p * 2. + 4.) - .5))) * .15);
+  m.alb = c; m.spec = .4; m.gloss = ${under ? '.22' : '.55'}; m.emit = c * .08;`}
+  ${under ? 'm.alb = mix(m.alb, m.alb * .6, smoothstep(.03, .005, abs(length(p.xy) - .5)));' : 'float rr = length(p.xy), rv = smoothstep(.15, .5, rel(p.xy * 1.15)), fld = smoothstep(.72, .66, rr); m.alb *= mix(1., mix(' + (dark ? '.55' : '.8') + ', ' + (dark ? '1.45' : '1.08') + ', rv), fld); m.gloss = mix(m.gloss, m.gloss + .2, rv * fld);'}
 }`;
-  P['helm-b'] = { glsl: HELM(1, 0) }; P['helm-w'] = { glsl: HELM(0, 0) };
-  P['helm-bx'] = { glsl: HELM(1, 1) }; P['helm-wx'] = { glsl: HELM(0, 1) };
+  P['helm-b'] = { glsl: HELM(1, 0), tex: { tPc: helmRelief }, texSize: 1024 }; P['helm-w'] = { glsl: HELM(0, 0), tex: { tPc: helmRelief }, texSize: 1024 };
+  P['helm-bx'] = { glsl: HELM(1, 1), tex: { tPc: helmRelief }, texSize: 1024 }; P['helm-wx'] = { glsl: HELM(0, 1), tex: { tPc: helmRelief }, texSize: 1024 };
 
   window.ART_PIECES = function (key) {
     const p = P[key];

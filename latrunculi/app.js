@@ -955,7 +955,7 @@ const BD_KEYS = ['stone', 'wood', 'abstract', 'lux', 'giallo', 'pompeii'], PC_KE
 // giallo antico (the Roman yellow marble) with the grid in rosso antico; the walnut board is one piece of wood with its frame
 // (the frame shows fr-woodfield, the board only the inlaid grid bd-woodgrid over it; bd-wood = both, for the mini boards)
 const ANCHOR = {}, PC_SIZE = {};   // the busts: where the socle's centre is in the picture, and the picture's size in cells
-const ART = k => `img/2d/${k}.webp?v=3`;
+const ART = k => `img/2d/${k}.webp?v=4`;
 const BD_OLD = { marble: 'stone', travertine: 'stone', tile: 'pompeii', slate: 'abstract', ivory: 'abstract', porphyry: 'lux', mosaic: 'giallo' }, PC_OLD = { gem: 'coin', stone: 'helm', bust: 'helm' };
 // [surface (fallback), groove (mini-board marks), frame, frame line]
 const BD_PAL = {
