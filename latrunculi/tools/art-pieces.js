@@ -72,21 +72,27 @@ const vec3 CEN = vec3(0., 0., .6);
 const float TURN = -.6;            // the bust looks to the viewer's right (three-quarter view)
 float bust(vec3 p){
   p.xy = rot(TURN) * p.xy;
-  // the socle: a round foot, a moulding, a short stem
-  float d = sdCyl(p - vec3(0., 0., .04), .25, .04, .018);
-  d = min(d, sdCyl(p - vec3(0., 0., .1), .19, .025, .012));
-  d = smin(d, sdRCone(p, vec3(0., 0., .11), vec3(0., 0., .32), .085, .06), .03);
-  // chest and shoulders: a tapered block cut in the usual curve, the shoulders rounded
-  vec3 c = p - vec3(0., .01, .47);
-  float w = .26 + .09 * clamp((c.z + .1) / .2, 0., 1.);
-  float ch = sdRBox(c, vec3(w, .13, .13), .1);
-  ch = smin(ch, sdEll(vec3(abs(p.x), p.y, p.z) - vec3(.27, .01, .55), vec3(.13, .13, .09)), .06);
-  ch = smin(ch, sdEll(vec3(abs(p.x) - .1, p.y + .1, p.z - .5), vec3(.11, .05, .08)), .06);   // the cuirass over the chest
-  ch = smax(ch, .3 - p.z + .5 * p.x * p.x, .03);
-
-  d = smin(d, ch, .05);
+  // the socle: a broad round foot and a moulding
+  float d = sdCyl(p - vec3(0., 0., .04), .3, .04, .016);
+  d = min(d, sdCyl(p - vec3(0., 0., .1), .27, .025, .012));
+  // the torso in armour, full down to the socle: a cuirass with a moulded chest, shoulder guards, a row of leather strips (pteruges)
+  vec3 c = p - vec3(0., .0, .37);
+  float w = .25 + .05 * clamp((c.z + .1) / .3, 0., 1.);
+  float ch = sdRBox(c, vec3(w, .15, .22), .1);
+  ch = smin(ch, sdEll(vec3(abs(p.x), p.y, p.z) - vec3(.24, .0, .58), vec3(.14, .15, .1)), .07);      // shoulders
+  ch = smin(ch, sdEll(vec3(abs(p.x) - .095, p.y + .115, p.z - .5), vec3(.105, .05, .085)), .05);     // the moulded chest of the cuirass
+  ch = smax(ch, p.z - .66 - .2 * (p.x * p.x), .04);
+  float pad = sdEll(vec3(abs(p.x), p.y, p.z) - vec3(.29, .0, .55), vec3(.11, .155, .07));                 // shoulder guards (lames)
+  pad = smin(pad, sdEll(vec3(abs(p.x), p.y, p.z) - vec3(.3, .0, .49), vec3(.1, .15, .055)), .012);
+  ch = smin(ch, pad, .05);
+  float belt = sdRBox(p - vec3(0., 0., .24), vec3(w + .02, .17, .02), .02);
+  ch = min(ch, belt);
+  float ang = atan(p.y, p.x), strip = abs(fract(ang * 14. / 6.2832) - .5);
+  float ptr = sdRBox(p - vec3(0., 0., .17), vec3(w + .025, .175, .05), .03) + .008 * smoothstep(.1, .45, strip);
+  ch = min(ch, ptr);
+  d = smin(d, ch, .02);
   // the neck and the head
-  d = smin(d, sdRCone(p, vec3(0., 0., .6), vec3(0., -.01, .76), .08, .072), .05);
+  d = smin(d, sdRCone(p, vec3(0., 0., .6), vec3(0., -.01, .78), .1, .088), .05);
   float hd = sdEll(p - vec3(0., -.01, .9), vec3(.135, .155, .165));
   hd = smin(hd, sdEll(p - vec3(0., -.105, .79), vec3(.075, .055, .06)), .05);                 // chin and jaw
   hd = smin(hd, sdRCone(p, vec3(0., -.155, .9), vec3(0., -.185, .84), .026, .02), .018);     // the nose
@@ -161,7 +167,7 @@ vec3 bendN(vec3 p, vec3 n){ float k = crestK(p) ; vec3 g = vec3(vn3(p * vec3(6.,
 void mat(vec3 p, vec3 n, inout PMat m){
   ${white
     ? `vec3 c = mix(hexc(246., 243., 236.), hexc(230., 226., 218.), smoothstep(.4, .8, fbm3(p * 3.)));
-  c = mix(c, hexc(170., 166., 158.), (1. - smoothstep(.0, .01, abs(fbm3(p * 2.2 + 4.) - .5))) * .3);
+  c = mix(c, hexc(186., 182., 172.), (1. - smoothstep(.0, .02, abs(fbm3(p * 2.2 + 4.) - .5))) * .15);
   m.alb = c; m.spec = .35; m.gloss = .72; m.emit = c * .16;`
     : `vec3 c = mix(hexc(40., 40., 42.), hexc(58., 56., 54.), smoothstep(.4, .8, fbm3(p * 3.)));
   c = mix(c, hexc(70., 68., 66.), smoothstep(.75, .95, vn3(p * 70.)) * .4);
@@ -186,31 +192,43 @@ vec3 wood3(vec3 p, vec3 a, vec3 b, float f, float seed){
 }`;
   const helmetSVG = (ink) => svg(`<g fill="${ink}" stroke="${ink}" stroke-linejoin="round" stroke-linecap="round">
     <circle cx="512" cy="512" r="438" fill="none" stroke-width="16"/><circle cx="512" cy="512" r="404" fill="none" stroke-width="6"/>
-    <path d="M300,590C296,420 410,318 548,316C690,314 776,410 772,560L772,600L300,600Z" fill-opacity=".5" stroke-width="14"/>
+    <path d="M300,590C296,420 410,318 548,316C690,314 776,410 772,560L772,600L300,600Z" fill-opacity=".22" stroke-width="16"/>
     <path d="M286,588L790,588L790,628L286,628Z" stroke-width="10"/>
-    <path d="M300,610L222,690L250,716L344,640Z" fill-opacity=".5" stroke-width="12"/>
-    <path d="M604,628L708,628L700,770Q656,812 612,772Z" fill-opacity=".5" stroke-width="12"/>
+    <path d="M300,610L222,690L250,716L344,640Z" fill-opacity=".22" stroke-width="14"/>
+    <path d="M604,628L708,628L700,770Q656,812 612,772Z" fill-opacity=".22" stroke-width="14"/>
     <circle cx="656" cy="664" r="10"/><circle cx="660" cy="740" r="10"/>
     <path d="M524,316L530,262" stroke-width="22"/>
-    <path d="M382,330C390,170 560,120 708,196C736,210 740,246 714,256C620,214 480,236 412,340Z" fill-opacity=".62" stroke-width="12"/>
+    <path d="M382,330C390,170 560,120 708,196C736,210 740,246 714,256C620,214 480,236 412,340Z" fill-opacity=".3" stroke-width="14"/>
     ${Array.from({ length: 14 }, (_, i) => { const t = i / 13, x0 = 404 + t * 292, y0 = 300 - Math.sin(t * Math.PI) * 60 + (t > .8 ? (t - .8) * 200 : 0), x1 = 400 + t * 300, y1 = 210 - Math.sin(t * Math.PI) * 54 + (t < .2 ? (.2 - t) * 260 : 0); return `<path d="M${x0.toFixed(0)},${y0.toFixed(0)}L${x1.toFixed(0)},${y1.toFixed(0)}" stroke-width="5" fill="none"/>`; }).join('')}
     <path d="M330,560C340,450 420,370 520,352" stroke-width="7" fill="none" stroke-opacity=".9"/>
   </g>`);
   const wreathSVG = (ink) => svg(`<circle cx="512" cy="512" r="438" fill="none" stroke="${ink}" stroke-width="16"/><circle cx="512" cy="512" r="404" fill="none" stroke="${ink}" stroke-width="6"/>${wreath(512, 500, 290, 9, 96, ink)}`);
   const WOODPC = (dark) => WOOD3 + RELIEF + `
+float burnK(vec2 xy){ vec2 u = xy * .5 + .5; return clamp(texture(tPc, u).a * .7 + textureLod(tPc, u, 2.).a * .5, 0., 1.); }
 float map(vec3 p){
   float r = length(p.xy);
-  float d = sdCyl(p, .9, .2, .09);
-  d -= .004 * (1. - r * r);                      // a slight crown
-  d += .012 * rel(p.xy) * step(.0, p.z);         // the burnt lines sit a little lower
+  float d = sdCyl(p, .9, .2, .1);
+  d -= .006 * (1. - r * r);
+  d += .028 * burnK(p.xy) * step(.0, p.z) * (.8 + .4 * vn3(p * 30.));   // the burnt wood is eaten away a little
   return d;
 }
 void mat(vec3 p, vec3 n, inout PMat m){
-  vec3 c = ${dark ? 'wood3(p, hexc(120., 72., 40.), hexc(70., 38., 18.), 6., 3.1)' : 'wood3(p, hexc(240., 220., 186.), hexc(214., 184., 140.), 4.5, 1.7)'};
-  float k = texture(tPc, p.xy * .5 + .5).a, halo = textureLod(tPc, p.xy * .5 + .5, 3.5).a;
-  c = mix(c, c * ${dark ? 'vec3(.7, .62, .55)' : 'vec3(.78, .6, .44)'}, smoothstep(.0, .5, halo) * .5);
-  c = mix(c, ${dark ? 'hexc(26., 14., 8.)' : 'hexc(64., 36., 18.)'}, k * .95);
-  m.alb = c; m.spec = .35; m.gloss = .38 - k * .2;
+  float r = length(p.xy);
+  vec3 c = ${dark ? 'wood3(p, hexc(132., 82., 46.), hexc(82., 46., 22.), 6., 3.1)' : 'wood3(p, hexc(238., 214., 172.), hexc(214., 180., 130.), 4.5, 1.7)'};
+  vec2 u = p.xy * .5 + .5;
+  float k = texture(tPc, u).a, k1 = textureLod(tPc, u, 2.).a, k2 = textureLod(tPc, u, 4.).a, k3 = textureLod(tPc, u, 5.5).a;
+  float nz = fbm3(p * 9.);
+  // a scorched halo spreading into the wood, then the char itself: black, crazed, a little glossy
+  c = mix(c, c * ${dark ? 'vec3(.55, .42, .32)' : 'vec3(.7, .46, .26)'}, clamp(k3 * 2.6 * (.6 + .8 * nz), 0., 1.) * .85);
+  c = mix(c, ${dark ? 'hexc(86., 44., 18.)' : 'hexc(176., 104., 50.)'}, clamp(k2 * 2.2 * (.6 + .8 * nz), 0., 1.) * .7);
+  c = mix(c, ${dark ? 'hexc(70., 36., 16.)' : 'hexc(150., 86., 40.)'}, smoothstep(.05, .5, k2) * .7);
+  c = mix(c, ${dark ? 'hexc(40., 20., 10.)' : 'hexc(96., 50., 22.)'}, smoothstep(.15, .6, k1) * .85);
+  float ch = smoothstep(.25, .7, k * (.75 + .5 * nz));
+  vec3 charC = mix(hexc(16., 10., 8.), hexc(52., 30., 16.), fbm3(p * 14.)) * (.85 + .3 * fbm3(p * 40.));
+  c = mix(c, charC, ch);
+  // the rim toasted from the turning and the burning
+  c = mix(c, c * vec3(.55, .4, .28), smoothstep(.62, .92, r) * .55);
+  m.alb = c; m.spec = .3 + ch * .25; m.gloss = .3 + ch * .15;
 }`;
   P['wood-b'] = { glsl: WOODPC(1), tex: { tPc: helmetSVG('#000') }, texSize: 1024 };
   P['wood-w'] = { glsl: WOODPC(0), tex: { tPc: helmetSVG('#000') }, texSize: 1024 };
@@ -264,26 +282,37 @@ void mat(vec3 p, vec3 n, inout PMat m){
   // ================================================================ glass: Roman glass gaming counters (the "glass soldiers" of the Laus Pisonis) —
   // a dark cobalt-black dome and an opaque white one; turned over, the flat underside with the rough pontil mark
   const GLASS = (dark, under) => `
+// Roman glass counters as they come out of the ground: hand-pressed, a little irregular, a few seed bubbles, patches of the rainbow
+// weathering crust; the dark one deep cobalt that glows where light passes through it, the light one opaque milk glass
+vec3 irid(float t){ return .5 + .5 * cos(6.2832 * (t + vec3(0., .33, .67))); }
+float shapeR(vec3 p){ float a = atan(p.y, p.x); return 1. + .014 * sin(a * 3. + 1.) + .01 * sin(a * 5. + 2.); }
 float map(vec3 p){
   ${under
-    ? `float r = length(p.xy);
-  float d = sdCyl(p, .86, .12, .1) - .03;
-  d += .006 * (vn3(p * 9.) - .5) + .004 * sin(r * 40. + vn3(p * 3.) * 6.) * smoothstep(.2, .6, r);
-  d += .02 * smoothstep(.2, .1, r) * (vn3(p * 30.) - .2);   // the pontil scar
+    ? `float r = length(p.xy) / shapeR(p);
+  float d = sdCyl(vec3(p.xy / shapeR(p), p.z), .86, .1, .09) - .03;
+  d += .004 * (vn3(p * 9.) - .5) + .003 * sin(r * 34. + vn3(p * 3.) * 5.) * smoothstep(.2, .6, r);
+  d += .03 * smoothstep(.22, .1, r) * (fbm3(p * 22.) - .25);   // the rough pontil scar
   return d;`
-    : `float d = sdEll(p - vec3(0., 0., -.12), vec3(.88, .88, .6));
+    : `vec3 q = vec3(p.xy / shapeR(p), p.z);
+  float d = sdEll(q - vec3(.02, -.01, -.14), vec3(.86, .86, .58));
   d = max(d, -p.z - .12);
-  return d + .004 * (vn3(p * 5.) - .5);`}
+  return d + .005 * (vn3(p * 4.) - .5);`}
 }
 void mat(vec3 p, vec3 n, inout PMat m){
   float r = length(p.xy);
+  float crust = smoothstep(.55, .8, fbm3(p * 3.5 + 7.)) * (.4 + .6 * smoothstep(.3, .9, r));
+  vec3 ir = irid(fbm3(p * 7.) * 1.6 + n.x * .4) * .6 + .25;
+  float bub = smoothstep(.05, .02, cell2(p.xy * 9. + 3.)) * step(.82, h21(floor(p.xy * 9. + 3.)));
   ${dark
-    ? `m.alb = hexc(10., 12., 24.); m.spec = 1.2; m.gloss = ${under ? '.55' : '.97'};
-  float thin = ${under ? 'smoothstep(.7, .95, r) * .5' : 'smoothstep(.55, .92, r)'};
-  m.emit = hexc(34., 66., 170.) * thin * .5 + hexc(60., 90., 200.) * smoothstep(.93, .99, vn3(p * 40.)) * .15;`
-    : `vec3 c = mix(hexc(240., 240., 234.), hexc(222., 224., 220.), smoothstep(.3, .8, fbm3(p * 2.5 + vec3(sin(r * 6.), 0., 0.))));
-  m.alb = c; m.spec = .9; m.gloss = ${under ? '.5' : '.95'}; m.emit = c * .14;`}
-  ${under ? 'm.alb *= 1. - .25 * smoothstep(.2, .1, r);' : ''}
+    ? `float thick = clamp(1. - r, 0., 1.);
+  float through = clamp(dot(normalize(vec2(.6, .7)), p.xy) * .8 + .3, 0., 1.);       // light comes out on the far side from the lamp
+  m.alb = hexc(6., 8., 22.); m.spec = 1.1; m.gloss = ${under ? '.5' : '.96'};
+  m.emit = mix(hexc(10., 18., 70.), hexc(60., 110., 230.), through) * (.18 + .55 * through * (1. - thick * .6)) + hexc(120., 170., 255.) * bub * .25;`
+    : `vec3 c = mix(hexc(242., 242., 238.), hexc(220., 228., 232.), smoothstep(.3, .8, fbm3(p * 2.2 + vec3(sin(r * 7.), 0., 0.))));
+  m.alb = c; m.spec = .9; m.gloss = ${under ? '.45' : '.93'}; m.emit = c * .12;`}
+  m.alb = mix(m.alb, ir * ${dark ? '.35' : '.8'}, crust * .55);
+  m.gloss = mix(m.gloss, .35, crust);
+  ${under ? 'm.alb *= 1. - .25 * smoothstep(.22, .1, r);' : ''}
 }`;
   P['glass-b'] = { glsl: GLASS(1, 0) }; P['glass-w'] = { glsl: GLASS(0, 0) };
   P['glass-bx'] = { glsl: GLASS(1, 1) }; P['glass-wx'] = { glsl: GLASS(0, 1) };
@@ -292,24 +321,29 @@ void mat(vec3 p, vec3 n, inout PMat m){
   // turned rings and a centre dot; one set stained dark. Turned over: the flat back with a numeral scratched in (VI)
   const boneBack = svg(`<text x="512" y="660" ${FONT} font-size="380" fill="#000">VI</text>`);
   const BONE = (dark, back) => (back ? RELIEF : '') + `
+// a V-groove cut by the lathe tool: depth and a hard edge
+float vg(float r, float r0, float w){ return clamp(1. - abs(r - r0) / w, 0., 1.); }
 float map(vec3 p){
   float r = length(p.xy);
   float d = sdCyl(p, .88, .12, .07);
   ${back
-    ? 'd += .016 * rel(p.xy) * step(.0, p.z);'
+    ? 'd += .035 * rel(p.xy) * step(.0, p.z) * (.85 + .3 * vn3(p * 40.));'
     : `d -= .07 * (1. - r * r) * step(.0, p.z) * smoothstep(.9, .7, r);
-  d += .016 * (smoothstep(.024, .006, abs(r - .36)) + smoothstep(.024, .006, abs(r - .64)));
-  d += .03 * smoothstep(.05, .025, r);`}
+  d += step(.0, p.z) * (.05 * vg(r, .36, .05) + .05 * vg(r, .64, .05) + .03 * vg(r, .5, .025));
+  d += .07 * smoothstep(.07, .03, r);                                   // the centre point of the compass
+  d += .0025 * sin(r * 260. + vn3(p * 6.) * 3.) * step(.0, p.z);          // lathe chatter`}
   return d * .9;
 }
 void mat(vec3 p, vec3 n, inout PMat m){
   float r = length(p.xy);
-  vec3 c = ${dark ? 'mix(hexc(54., 36., 24.), hexc(92., 64., 40.), smoothstep(.3, .8, fbm3(p * 2.5)))' : 'mix(hexc(236., 224., 194.), hexc(212., 194., 154.), smoothstep(.3, .8, fbm3(p * 2.5)))'};
-  c *= 1. - .14 * smoothstep(.76, .96, vn3(p * vec3(34., 4., 4.)));            // the grain of the bone
-  c *= 1. - .25 * smoothstep(.9, .98, vn3(p * vec3(60., 12., 12.) + 5.));       // tiny pores
+  vec3 c = ${dark ? 'mix(hexc(54., 36., 24.), hexc(96., 66., 42.), smoothstep(.3, .8, fbm3(p * 2.5)))' : 'mix(hexc(238., 226., 196.), hexc(212., 194., 154.), smoothstep(.3, .8, fbm3(p * 2.5)))'};
+  c *= 1. - .14 * smoothstep(.76, .96, vn3(p * vec3(34., 4., 4.)));
+  c *= 1. - .25 * smoothstep(.9, .98, vn3(p * vec3(60., 12., 12.) + 5.));
   ${back
-    ? `c = mix(c, c * .45, texture(tPc, p.xy * .5 + .5).a);`
-    : `c = mix(c, c * .6, smoothstep(.03, .01, abs(r - .36)) + smoothstep(.03, .01, abs(r - .64)) + smoothstep(.05, .03, r));`}
+    ? `float g = textureLod(tPc, p.xy * .5 + .5, 1.).a;
+  c = mix(c, c * ${dark ? '.4' : 'vec3(.45, .36, .26)'}, smoothstep(.1, .7, g));`
+    : `float g = max(max(vg(r, .36, .05), vg(r, .64, .05)), max(vg(r, .5, .025), smoothstep(.07, .03, r)));
+  c = mix(c, c * ${dark ? '.45' : 'vec3(.55, .44, .3)'}, smoothstep(.2, .9, g));    // grime packed into the cuts`}
   m.alb = c; m.spec = .45; m.gloss = .5;
 }`;
   P['bone-b'] = { glsl: BONE(1, 0) }; P['bone-w'] = { glsl: BONE(0, 0) };
