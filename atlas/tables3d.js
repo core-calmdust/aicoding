@@ -425,8 +425,8 @@
   } };
   X.boardName = (k, lang, id) => { const g = id && NG[id] && NG[id][k]; if (g) return g[lang] || g.en; const o = N3[k]; if (!o) return k; const n = o[lang] || o.en, c = n.replace(/\s*(?:3D|ثلاثي(?: الأبعاد)?)$/, '').trim(); return c || n; };   // (2026-11-10: the boards' names without '3D')
   // the full games' 「3D盤」 tiles: the board alone, from straight above, no room (atlas/tools/boardicon.html, 2026-11-09)
-  X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'foxgeese' ? 4 : id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'morris' ? 2 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'chess' ? 7 : 1), ME).href;
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'foxgeese' ? 4 : id === 'hitblow' ? 9 : id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'morris' ? 2 : id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'botao' ? 6 : id === 'chess' ? 7 : 1), ME).href;
+  X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'foxgeese' ? 5 : id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'morris' ? 2 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'chess' ? 7 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'foxgeese' ? 5 : id === 'hitblow' ? 9 : id === 'go' || id === 'gomoku' ? 9 : id === 'hex' ? 3 : id === 'connect4' ? 2 : id === 'mancala' ? 2 : id === 'morris' ? 2 : id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : id === 'checkers' ? 5 : id === 'xiangqi' ? 3 : id === 'botao' ? 6 : id === 'chess' ? 7 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   // 駒: the games whose 3D figures come in sets (the board view's panel shows them as a row under 盤; the full game's 「3D駒」 too)
@@ -513,7 +513,7 @@
     } };
   // fox and geese (atlas/models/foxgeese.js SETS, remade 2026-11-19 from the 2D pieces): 'atlas-foxgeese-pc3' (the first sets' keys → the nearest new one)
   PIECES.foxgeese = { list: ['cute', 'wood', 'bauhaus', 'lux', 'norse', 'delft'], get: () => { let v = ls.get('atlas-foxgeese-pc3'); v = { marble: 'lux', pewter: 'norse', paint: 'bauhaus', bronze: 'lux', clay: 'wood' }[v] || v; return PIECES.foxgeese.list.includes(v) ? v : 'cute'; }, set: k => ls.set('atlas-foxgeese-pc3', k),
-    thumb: k => new URL('img/pc3-foxgeese-' + k + '.webp?v=3', ME).href,
+    thumb: k => new URL('img/pc3-foxgeese-' + k + '.webp?v=4', ME).href,
     names: {
       cute: { ja: "きつね＆がちょう", en: "Fox & goose pals", zh: "狐狸与鹅宝宝", "zh-TW": "狐狸與鵝寶寶", ko: "여우와 거위 친구", es: "Zorro y oca", fr: "Renard et oie", pt: "Raposa e ganso", de: "Fuchs & Gans", ru: "Лис и гусь", tr: "Tilki ve kaz", id: "Rubah & angsa", hi: "लोमड़ी और हंस", ar: "ثعلب وإوزة" },
       wood: { ja: "木の玉", en: "Wooden balls", zh: "木球", "zh-TW": "木球", ko: "나무 구슬", es: "Bolas de madera", fr: "Billes de bois", pt: "Bolas de madeira", de: "Holzkugeln", ru: "Деревянные шары", tr: "Ahşap toplar", id: "Bola kayu", hi: "लकड़ी की गेंदें", ar: "كرات خشبية" },

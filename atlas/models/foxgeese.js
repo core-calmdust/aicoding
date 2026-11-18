@@ -54,7 +54,7 @@
     bauhaus: ['#262628', '#ece6d8', 2.9, .8, 0, .15, .1, '#ffffff'],
     lux: ['#1a0f08', '#16120f', 3.4, .22, .8, .25, .2, '#ffffff'],
     norse: ['#5c5850', '#7c7a70', 3.4, .92, 0, 1, .16, '#ffffff'],
-    delft: ['#2a1d14', '#eef0f4', 3.4, .3, 1, .2, .3, '#ffffff'],
+    delft: ['#2a1d14', '#eef0f4', 3.4, .07, 1, .2, .3, '#ffffff'],
   };
 
   const ON = (r, c) => r >= 0 && r < 7 && c >= 0 && c < 7 && ((r >= 2 && r <= 4) || (c >= 2 && c <= 4));
@@ -86,7 +86,11 @@
     { const q = nm.getContext('2d'); q.fillStyle = 'rgb(128,128,255)'; q.fillRect(0, 0, nW, nH); }
     Promise.all([loadImg('fr-' + look), loadImg('bd-' + look)]).then(([fr, bd]) => {
       const tile = ppu * K[2];
-      if (fr) for (let y = 0; y < Hp; y += tile) for (let x = 0; x < Wp; x += tile) g.drawImage(fr, x, y, tile, tile);
+      if (look === 'lux') {   // black marble all round, a double gold line inlaid round the edge and round the field
+        const mc = marble(), mt = ppu * 3.6; for (let y = 0; y < Hp; y += mt) for (let x = 0; x < Wp; x += mt) g.drawImage(mc, x, y, mt, mt);
+        g.strokeStyle = '#dcb468'; for (const [ins, lw] of [[.12, .035], [.19, .012]]) { g.lineWidth = ppu * lw; g.strokeRect(ppu * ins, ppu * ins, Wp - 2 * ppu * ins, Hp - 2 * ppu * ins); }
+        g.lineWidth = ppu * .02; g.strokeRect(ox - ppu * .09, oz - ppu * .09, F + ppu * .18, F + ppu * .18);
+      } else if (fr) for (let y = 0; y < Hp; y += tile) for (let x = 0; x < Wp; x += tile) g.drawImage(fr, x, y, tile, tile);
       // the field sits a hair below the surround: a soft shade round it
       g.save(); g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = ppu * .12; g.fillStyle = '#000'; g.fillRect(ox, oz, F, F); g.restore();
       if (bd) g.drawImage(bd, ox, oz, F, F);
@@ -111,7 +115,7 @@
       for (let i = 0; i < nW * nH; i++) hh[i] = (src[i * 4] * .3 + src[i * 4 + 1] * .59 + src[i * 4 + 2] * .11) / 255;
       // the step down at the field's edge
       const e0x = Math.round(BX * ns), e0z = Math.round(BZ * ns), e1x = Math.round((BX + N) * ns), e1z = Math.round((BZ + N) * ns);
-      const ng = nm.getContext('2d'), img = ng.createImageData(nW, nH), d = img.data, s = K[5] * 2.4;
+      const ng = nm.getContext('2d'), img = ng.createImageData(nW, nH), d = img.data, s = K[5] * 2.4 * (look === 'delft' ? 2.2 : 1);
       // oak / norse: a drilled hollow on every point; delft: the grout sunk between the tiles
       let ex = null;
       if (look === 'oak' || look === 'norse' || look === 'delft') {
@@ -119,7 +123,10 @@
         for (let y = 0; y < nH; y++) for (let x = 0; x < nW; x++) {
           const u = x / ns - BX, v = y / ns - BZ; if (u < 0 || v < 0 || u >= N || v >= N) continue;
           const c0 = Math.floor(u), r0 = Math.floor(v);
-          if (look === 'delft') { const du = Math.min(u - c0, c0 + 1 - u), dv = Math.min(v - r0, r0 + 1 - v), dd = Math.min(du, dv); if (dd < .03) ex[y * nW + x] = -.12 * (1 - dd / .03); continue; }
+          if (look === 'delft') {   // a glazed tile: a soft pillow rising from the grout, the glaze a little wavy
+            const du = Math.min(u - c0, c0 + 1 - u), dv = Math.min(v - r0, r0 + 1 - v), dd = Math.min(du, dv), k = Math.min(1, dd / .16);
+            hh[y * nW + x] = 0; ex[y * nW + x] = (dd < .025 ? -.25 : .9 * Math.sin(k * Math.PI / 2)) + (fbm(u * 9 + c0 * 3, v * 9 + r0 * 5) - .5) * .05; continue;
+          }
           if (!ON(r0, c0)) continue;
           const dd = Math.hypot(u - c0 - .5, v - r0 - .5); if (dd < .14) ex[y * nW + x] = -.35 * Math.sqrt(1 - (dd / .14) * (dd / .14));
         }
@@ -133,6 +140,22 @@
       if (X.kick) X.kick(300);
     });
     return (tops[look] = { map, nm: nmT });
+  }
+
+  // lux: polished black marble (white and smoke veins, a few gold threads) for the surround and the sides — no wood
+  let marbleC = null;
+  function marble() {
+    if (marbleC) return marbleC;
+    const S = LO() ? 512 : 1024, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), id = g.createImageData(S, S), d = id.data;
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const u = x / S * 6, v = y / S * 6, w = fbm(u * .7, v * .7) * 5 + fbm(u * 2.1 + 3, v * 2.1) * 1.4;
+      const f1 = Math.abs(Math.sin((u * .9 + v * .4 + w) * 1.7)), f2 = Math.abs(Math.sin((u * .3 - v * .8 + w * 1.3) * 2.3));
+      const vein = Math.exp(-f1 * 34) * .9 + Math.exp(-f2 * 60) * .5, cloud = fbm(u * 1.3 + 7, v * 1.3) * .08, gold = Math.exp(-Math.abs(Math.sin((u * .5 + v * .7 + w * .8) * 1.1)) * 140);
+      const i = (y * S + x) * 4, b = 12 + cloud * 160;
+      d[i] = Math.min(255, b + vein * 170 + gold * 200); d[i + 1] = Math.min(255, b + vein * 168 + gold * 160); d[i + 2] = Math.min(255, b + 2 + vein * 165 + gold * 80); d[i + 3] = 255;
+    }
+    g.putImageData(id, 0, 0);
+    return (marbleC = c);
   }
 
   /* ---------- the slab: a block with eased edges ---------- */
@@ -156,6 +179,7 @@
     return (slabs[look] = g);
   }
   function sideTex(look) {
+    if (look === 'lux') return mat('sideTlux', () => { const t = srgb(new (T().CanvasTexture)(marble())); t.wrapS = t.wrapT = T().RepeatWrapping; return t; });
     return mat('sideT' + look, () => {
       const t = srgb(new (T().CanvasTexture)(document.createElement('canvas'))); t.wrapS = t.wrapT = T().RepeatWrapping;
       loadImg('fr-' + look).then(im => { if (!im) return; t.image = im; t.needsUpdate = true; if (X.kick) X.kick(200); });
@@ -168,14 +192,33 @@
     look = LOOKS.includes(look) ? look : lookNow();
     const TT = T(), g = new TT.Group(), tx = topTex(look), K = LK[look];
     const topM = mat('top' + look, () => phys(Object.assign({ map: tx.map, normalMap: tx.nm, normalScale: new TT.Vector2(1, 1), color: '#ffffff', roughness: K[3], metalness: 0, envMapIntensity: .8 }, K[4] ? { clearcoat: K[4], clearcoatRoughness: .25 } : {},
-      look === 'lux' ? { metalnessMap: metalTex(look), roughnessMap: metalTex(look), metalness: 1, roughness: 1, envMapIntensity: 1.3 } : {})));
-    const sideM = mat('side' + look, () => phys(Object.assign({ map: sideTex(look), color: K[7], roughness: Math.min(.95, K[3] + .1), envMapIntensity: .7 }, K[4] ? { clearcoat: K[4] * .8, clearcoatRoughness: .3 } : {})));
+      look === 'lux' ? { metalnessMap: metalTex(look), roughnessMap: metalTex(look), metalness: 1, roughness: 1, envMapIntensity: 1.3 } : {},
+      look === 'delft' ? { clearcoatRoughness: .03, clearcoatNormalMap: tx.nm, envMapIntensity: 1.5 } : {})));
+    const sideM = mat('side' + look, () => phys(Object.assign({ map: sideTex(look), color: K[7], roughness: Math.min(.95, K[3] + .1), envMapIntensity: .7 }, K[4] ? { clearcoat: K[4] * .8, clearcoatRoughness: .3 } : {}, look === 'lux' ? { roughness: .12, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.2 } : {})));
     const slab = new TT.Mesh(slabGeo(look), [topM, sideM]); slab.castShadow = slab.receiveShadow = true; g.add(slab);
     cornerProps(g, look);
+    if (look === 'lux') luxDress(g);
     g.userData.S = N; g.userData.top = TH + .002; g.userData.W = W; g.userData.H = H;
     g.userData.pt = (x, y) => [-N / 2 + x + .5, -N / 2 + y + .5];
     g.userData.piece = (col, set) => piece(col, set); g.userData.sink = 0; g.userData.look = look;
     return g;
+  }
+
+  // lux: a polished gold molding round the top edge and a gold band near the foot, the slab standing on a black marble plinth
+  function rrect(TT, w, h, r) { const sh = new TT.Shape(), a = w / 2 - r, b = h / 2 - r; sh.moveTo(-a, -h / 2); sh.lineTo(a, -h / 2); sh.absarc(a, -b, r, -Math.PI / 2, 0, false); sh.lineTo(w / 2, b); sh.absarc(a, b, r, 0, Math.PI / 2, false); sh.lineTo(-a, h / 2); sh.absarc(-a, b, r, Math.PI / 2, Math.PI, false); sh.lineTo(-w / 2, -b); sh.absarc(-a, -b, r, Math.PI, Math.PI * 1.5, false); return sh; }
+  function ring(k, w, h, r, t, hh) {   // a rounded-rectangle band: outer w × h, t thick, hh high (y 0 … hh)
+    return G(k, () => { const TT = T(), sh = rrect(TT, w, h, r); sh.holes.push(rrect(TT, w - 2 * t, h - 2 * t, Math.max(.01, r - t)));
+      const e = new TT.ExtrudeGeometry(sh, { depth: hh - .01, bevelEnabled: true, bevelThickness: .005, bevelSize: .005, bevelSegments: 2, curveSegments: 12 }); e.rotateX(-Math.PI / 2); e.translate(0, .005, 0); e.computeVertexNormals(); return e; });
+  }
+  function luxDress(g) {
+    const TT = T(), r = LK.lux[6], gold = mat('luxGold', () => phys({ color: '#e2bb68', metalness: 1, roughness: .16, envMapIntensity: 1.6 }));
+    const mm = mat('luxPl', () => phys({ map: sideTex('lux'), color: '#ffffff', roughness: .1, clearcoat: 1, clearcoatRoughness: .04, envMapIntensity: 1.2 }));
+    const add = (geo, m, y) => { const o = new TT.Mesh(geo, m); o.position.y = y; o.castShadow = o.receiveShadow = true; g.add(o); };
+    add(ring('lxTop', W + .02, H + .02, r + .01, .07, .025), gold, TH - .012);            // the molding on the top edge
+    add(ring('lxMid', W + .03, H + .03, r + .015, .04, .03), gold, .12);                   // a band low on the side
+    add(G('lxPlinth', () => { const e = new TT.ExtrudeGeometry(rrect(TT, W + .24, H + .24, r + .12), { depth: .07, bevelEnabled: true, bevelThickness: .02, bevelSize: .02, bevelSegments: 3, curveSegments: 12 }); e.rotateX(-Math.PI / 2); e.translate(0, .02, 0);
+      const P = e.attributes.position, UV = e.attributes.uv; for (let i = 0; i < P.count; i++) UV.setXY(i, P.getX(i) / 3.6, (P.getZ(i) + P.getY(i)) / 3.6); e.computeVertexNormals(); return e; }), mm, -.005);
+    add(ring('lxFoot', W + .3, H + .3, r + .15, .03, .02), gold, .025);                    // gold on the plinth's edge
   }
 
   /* ---------- the boards' objects: the meadow's diorama corners, the abstract board's sculptures, the gold studs ---------- */
@@ -393,7 +436,22 @@
     const prof = [V2(0, 0), V2(.22, 0), V2(.23, .02), V2(.2, .05), V2(.21, .1), V2(.26, .2), V2(.27, .28), V2(.25, .36), V2(.215, .42), V2(.205, .45), V2(.2, .462), V2(0, .465)].map(p => V2(p.x * s, p.y * s));
     g.add(mesh(G('dBell' + col, () => new TT.LatheGeometry(prof, seg(40))), por));
     g.add(mesh(G('dCap' + col, () => { const q = new TT.CircleGeometry(.198 * s, seg(40)); q.rotateX(-Math.PI / 2); return q; }), M('delftC' + col, { map: picTex('pc-delft-' + (fox ? 'f' : 'g'), '#f4f6fa'), color: '#ffffff', roughness: .18, clearcoat: 1, clearcoatRoughness: .08 }), 0, .4655 * s + .001, 0));
-    g.userData.h = .47 * s;
+    if (fox) {   // the fox's lid has a knob: a little porcelain fox sitting on it, cobalt ears, tail tip and eyes
+      const wh = M('delftW', { color: '#f6f8fc', roughness: .1, clearcoat: 1, clearcoatRoughness: .04, envMapIntensity: 1.4 }), bl = M('delftBl', { color: '#1d3b8a', roughness: .12, clearcoat: 1, clearcoatRoughness: .05 });
+      const k = new TT.Group(); k.position.y = .465 * s; g.add(k);
+      k.add(mesh(G('dkBase', () => new TT.CylinderGeometry(.07, .09, .025, seg(24))), bl, 0, .0125, 0));
+      const body = mesh(G('dkBody', () => new TT.SphereGeometry(.085, seg(24), seg(16))), wh, 0, .1, -.01); body.scale.set(.85, 1.15, .95); k.add(body);
+      k.add(mesh(G('dkHead', () => new TT.SphereGeometry(.06, seg(22), seg(14))), wh, 0, .215, .025));
+      k.add(mesh(G('dkSnout', () => { const q = new TT.ConeGeometry(.032, .085, seg(14)); q.rotateX(Math.PI / 2); return q; }), wh, 0, .205, .09));
+      k.add(mesh(G('dkNose', () => new TT.SphereGeometry(.012, 10, 8)), bl, 0, .205, .132));
+      for (const sx of [-1, 1]) {
+        const e = mesh(G('dkEar', () => { const q = new TT.ConeGeometry(.026, .065, seg(12)); q.scale(1, 1, .6); return q; }), bl, sx * .035, .275, .015); e.rotation.z = -sx * .3; k.add(e);
+        k.add(mesh(G('dkEye', () => new TT.SphereGeometry(.009, 8, 6)), bl, sx * .024, .23, .075));
+      }
+      const tail = mesh(G('dkTail', () => new TT.TorusGeometry(.07, .028, seg(10), seg(20), Math.PI * 1.1)), wh, .02, .06, -.04); tail.rotation.set(-Math.PI / 2, 0, -.4); k.add(tail);
+      k.add(mesh(G('dkTip', () => new TT.SphereGeometry(.03, 12, 10)), bl, .08, .06, .03));
+      g.userData.h = .465 * s + .3;
+    } else g.userData.h = .47 * s;
   }
   const TILT = .75;
   // a picture's texture at once (a plain colour until the picture has come: the materials never change afterwards — the portal's
