@@ -9,7 +9,7 @@ for (const [k, v] of Object.entries(arrs)) {
   const mx = Math.max(1e-9, ...v.map(Math.abs)), s = mx / 32767, q = new Int16Array(v.map(x => Math.round(x / s)));
   out.a[k] = [s, Buffer.from(q.buffer).toString('base64')];
 }
-const file = path.join(__dirname, '..', 'engine.js'), src = fs.readFileSync(file, 'utf8');
+const file = process.argv[3] ? path.resolve(process.argv[3]) : path.join(__dirname, '..', 'engine.js'), src = fs.readFileSync(file, 'utf8');
 const a = src.indexOf('// NNW-BEGIN'), b = src.indexOf('// NNW-END');
 if (a < 0 || b < 0) throw new Error('markers not found');
 const line = `// NNW-BEGIN (tools/pack_eval.js: the learned evaluation of the 15-goose rule — ${M.positions} self-play positions × 2 mirrored)\nconst NNW = ${JSON.stringify(out)};\n`;

@@ -116,7 +116,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=9';
+const ENGINE_URL = 'engine.js?v=10';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -144,7 +144,9 @@ let aiW = makeWorker(), anaW = makeWorker();
 // once the option is turned on, without sign-in / online play — the same choice as the mtengine.js games) the workers share one
 // transposition table (shared/mttt.js); otherwise they run as before, each with its own.
 // (latrunculi: the engine is plain JS on one thread for now — no worker pool, no shared table)
-const MTP = null;
+// (2026-11-18: the engine speaks the ladder protocol now — the root moves are shared by plain workers, each with its own table)
+if (window.MTSplit) MTSplit.init();
+const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladder.drive }) : null;
 // (2026-11-11) On an isolated page the threads are core_mt.wasm's instead (shared/mtengine.js: the lead engine.js?…&mt=1, the helpers
 // mt-helper.js): Praline's Young Brothers Wait in C splits every node of the search (and the root), one table in the shared memory
 // (claude/konane-spec.md「αβ を C に」). mtsplit.js stays for a page that is not isolated, and while that pool is busy.
