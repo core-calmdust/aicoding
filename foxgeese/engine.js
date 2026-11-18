@@ -33,7 +33,9 @@ const RULES = {
 const RULE_ORDER = ['g15', 'g17', 'g13', 'g13n'];
 const DEFAULT_RULE = 'g15';
 const FOX_WINS_AT = 5;                // geese left: they can no longer shut the fox in
-const QUIET_MAX = +((typeof process !== 'undefined' && process.env && process.env.FG_QUIET) || 60);   // (30 moves each — 2026-11-17: measured with tools/match.js, see claude/foxgeese-spec.md)   // plies without a capture after which the fox wins: the geese have failed to shut it in (this program's own rule, 60 moves each)
+const QUIET_OPTS = [30, 40, 50], DEFAULT_QUIET = 40;   // the quiet-move limit, in moves each: a game setting (2026-11-19 user: 既定40、30/40/50から選べる)
+let QUIET_MAX = +((typeof process !== 'undefined' && process.env && process.env.FG_QUIET) || DEFAULT_QUIET * 2);   // plies without a capture after which the fox wins: the geese have failed to shut it in (this program's own rule; 2026-11-19: 30 moves each was too short — measured with tools/match.js, see claude/foxgeese-spec.md)
+let QS0 = 20;                         // the evaluation's clock term starts at 10 moves each and grows to the limit (2026-11-19: measured better than starting 20 moves each before the limit)
 const REP_MAX = 3;                    // the same position (same side to move) for the third time: the fox wins — the geese are making no progress (this program's own rule)
 const MAX_JUMPS = 7;
 let R = RULES[DEFAULT_RULE], RK = DEFAULT_RULE;
@@ -54,6 +56,10 @@ for (let i = 0; i < NN; i++) {
 }
 function setRule(k) { RK = RULES[k] ? k : DEFAULT_RULE; R = RULES[RK]; setGooseTable(); }
 function setFirst(p) { FIRST = p === P2 ? 1 : 0; }
+function setQuiet(n) {                 // moves each (30 / 40 / 50); anything else: the default
+  const q = (QUIET_OPTS.includes(+n) ? +n : DEFAULT_QUIET) * 2; if (q === QUIET_MAX) return;
+  QUIET_MAX = q; ttClear(); ECRULE = '';   // (stored values and evaluations depend on the limit)
+}
 // ---------------------------------------------------------------- zobrist
 let seed = 0x2b7e1516;
 function rnd() { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed; }
@@ -284,7 +290,7 @@ function evaluateN(pos) {
     if (gm < 4) for (let n = GM0[i], e = GM0[i + 1]; n < e; n++) if (!sq[GMA[n]]) gm++;   // (only "fewer than 4" matters)
     if (ri < fr) { let friend = 0; for (let n = NB0[i], e = NB0[i + 1]; n < e; n++) if (sq[NBA[n]] === P2) { friend = 1; break; } if (!friend) lone++; }
   }
-  const u = pos.quiet > 20 ? (pos.quiet - 20) / (QUIET_MAX - 20) : 0;
+  const u = pos.quiet > QS0 ? (pos.quiet - QS0) / (QUIET_MAX - QS0) : 0;
   let v = -geese * EW.goose + room * EW.room + jumps * EW.jump * (pos.side ? .5 : 1);
   v += area * EWN.area * (1 + u) + esc * (EWN.esc + area * 10) + deep * EWN.deep;
   v += thr - adv * EWN.adv + lone * EWN.lone + ahead * EWN.ahead;
@@ -327,7 +333,7 @@ const ECB = 16, ECN = 1 << ECB, ECM = ECN - 1, EC1 = new Uint32Array(ECN), EC2 =
 let ECRULE = '';
 function evaluate(pos) {
   const k1 = (pos.h1 ^ ZQ1[pos.quiet & 255]) >>> 0, k2 = (pos.h2 ^ ZQ2[pos.quiet & 255] ^ 0x5bd1e995) >>> 0, i = k1 & ECM;
-  if (ECRULE !== RK) { EC1.fill(0); EC2.fill(0); ECRULE = RK; }
+  if (ECRULE !== RK) { EC1.fill(0); EC2.fill(0); ECRULE = RK; }   // (setQuiet empties it too)
   if (EC1[i] === k1 && EC2[i] === k2) return ECV[i];
   const v = evaluate0(pos); EC1[i] = k1; EC2[i] = k2; ECV[i] = v; return v;
 }
@@ -344,7 +350,7 @@ function evaluate0(pos) {
   }
   v += loose * EW.loose - adv * EW.adv;
   v += EV0[RK];                         // (centred: the start is about 0)
-  if (pos.quiet > 20) { const u = (pos.quiet - 20) / (QUIET_MAX - 20); v += u * u * 900; }   // the clock runs for the fox
+  if (pos.quiet > QS0) { const u = (pos.quiet - QS0) / (QUIET_MAX - QS0); v += u * u * 900; }   // the clock runs for the fox
   return pos.side ? -v : v;
 }
 // ---------------------------------------------------------------- search
@@ -696,7 +702,7 @@ function goalReply(start, moves, n, G, rule) {
 }
 
 setRule(DEFAULT_RULE);
-const API = { N, NN, P1, P2, WIN, WINT, QUIET_MAX, FOX_WINS_AT, RULES, RULE_ORDER, DEFAULT_RULE, get rule() { return RK; }, get R() { return R; }, setRule, setFirst, get first() { return FIRST ? P2 : P1; },
+const API = { N, NN, P1, P2, WIN, WINT, get QUIET_MAX() { return QUIET_MAX; }, QUIET_OPTS, DEFAULT_QUIET, get quiet() { return QUIET_MAX / 2; }, setQuiet, FOX_WINS_AT, RULES, RULE_ORDER, DEFAULT_RULE, get rule() { return RK; }, get R() { return R; }, setRule, setFirst, get first() { return FIRST ? P2 : P1; },
   RC, ON, POINTS, NBR, START, sqAt, sqName, pack, mRm: () => -1, path: (pos, m) => path(m === undefined ? pos : m), mv, mFrom, mTo, jumped, Pos, effect, captured, name, parse, replay, judge,
   LEVELS, think, analyze, cands, pvOf, evaluate, foxArea, kindOf, EW, goalGood, goalMin, goalReply, goalOf, goalMet, ttClear,
   get nodes() { return nodes; } };
@@ -705,7 +711,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
   self.onmessage = e => {
     const m = e.data;
     try {
-      setRule(m.rule || DEFAULT_RULE); setFirst(m.first);
+      setRule(m.rule || DEFAULT_RULE); setFirst(m.first); setQuiet(m.quiet);
       if (m.type === 'think') { PRO_CFG = m.cfg || null; let r; try { r = think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } self.postMessage({ id: m.id, type: 'result', ...r, nodes }); }
       else if (m.type === 'analyze') {
         const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));

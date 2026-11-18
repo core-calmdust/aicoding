@@ -50,7 +50,7 @@ ja: {
   'tp.gBack': '真後ろに仲間がいるガチョウは跳び越されません。', 'tp.gFew': 'ガチョウは残り{n}羽。5羽以下になると負けです。1羽も渡さないつもりで。',
   'tp.gNoBack': 'このルールでは、ガチョウは後ろに下がれません。進める前によく確かめて。',
   'tp.rule': '狐は取る、ガチョウは囲む。ガチョウが5羽以下になれば狐の勝ち、狐が動けなければガチョウの勝ちです。',
-  'tp.quiet': '取り合いのないまま30手ずつ進むと狐の勝ちです。同じ局面の3回目も狐の勝ち。',
+  'tp.quiet': '取り合いのないまま{q}手ずつ進むと狐の勝ちです。同じ局面の3回目も狐の勝ち。',
   'tp.branch': '候補どうしの差は小さい分かれ道です。', 'tp.sharp': '最善とほかの差が大きい（勝率{x}）局面です。慎重に。',
   'tp.winning': '有利です。相手の反撃がないかだけ確かめて、着実に。', 'tp.losing': '苦しい局面。まずは目の前の損を防ごう。',
   sep: '、',
@@ -100,7 +100,7 @@ en: {
   'tp.gBack': 'A goose with a friend straight behind it cannot be jumped.', 'tp.gFew': '{n} geese left: at five they lose. Do not give away a single one.',
   'tp.gNoBack': 'In these rules the geese can never move backwards. Check before every advance.',
   'tp.rule': 'The fox takes, the geese surround. Five geese or fewer and the fox wins; a fox that cannot move loses.',
-  'tp.quiet': 'After 30 moves each without a capture the fox wins; so does the third repetition of a position.',
+  'tp.quiet': 'After {q} moves each without a capture the fox wins; so does the third repetition of a position.',
   'tp.branch': 'The candidates are close here.', 'tp.sharp': 'The best move is clearly better ({x}). Take care.',
   'tp.winning': 'You are ahead. Just check for counterplay and play steadily.', 'tp.losing': 'A hard position. First stop the immediate loss.',
   sep: ', ',
@@ -205,7 +205,7 @@ function tipsOf(f, w, cl, pos) {
     add('tp.gBack', 44); add('tp.gLine', f.stage === 'open' ? 60 : 30);
     if (!E.R.back) add('tp.gNoBack', 50);
   }
-  if (pos.quiet >= E.QUIET_MAX - 40) add('tp.quiet', 64);
+  if (pos.quiet >= E.QUIET_MAX - 40) add('tp.quiet', 64, { q: E.quiet });
   if (w != null) { if (w >= .8) add('tp.winning', 46); else if (w <= .25) add('tp.losing', 46); }
   if (cl && cl.branch) add('tp.branch', 58);
   if (cl && cl.sharp) add('tp.sharp', 56, { x: cl.sharp });
