@@ -1,4 +1,4 @@
-// Characters: 58 sisters in 9 families (2026-11-16: the golden sisters joined the Amber House) (15 of them — the summer series — are rewards of the 段位戦, given as the rank goes up; `reward` = the rank's index, never in the gacha) (same hair colour = sisters). Each character has her own art:
+// Characters: 58 sisters in 8 families (2026-11-16: the golden sisters joined the Amber House; 2026-11-19: the scarlet sisters joined the Crimson Camellia) (15 of them — the summer series — are rewards of the 段位戦, given as the rank goes up; `reward` = the rank's index, never in the gacha) (same hair colour = sisters). Each character has her own art:
 //   images/mahjong/chara/<id>.webp (1080x1920), <id>-t.webp (thumb), <id>-face.webp, <id>-bust.webp
 // Characters have no fixed skill: a skill (with its own rarity) is rolled when the character is pulled from the gacha.
 (function (root) {
@@ -19,7 +19,7 @@ const FAMILIES = {
     profile: L('宝石商・琥珀堂と、その大店を営む姉妹。きらめく牌にも儲け話にも目がない。', 'Sisters of the Amber House jewellers and its great trading store. They can\'t resist a sparkling tile — or a good deal.'),
     lines: { riichi: L('きらっとリーチ♪', 'Sparkle riichi♪'), tsumo: L('ツモ！宝物みーつけた！', 'Tsumo! Found treasure!'), ron: L('ロン！いただきっ♪', 'Ron! Mine♪'), skill: L('きらきらにしちゃお♪', 'Let\'s make it sparkle!') } },
   crimson: { color: '#e0334f', color2: '#3e0a14', nail: 'french', name: L('紅椿の姉妹', 'Crimson Camellia Sisters'),
-    profile: L('賭場「紅椿」を仕切る派手好きな姉妹。積み上がった点棒はまとめていただく。', 'Flashy sisters who run the Crimson Camellia gambling hall. They sweep up every stick on the table.'),
+    profile: L('賭場「紅椿」を仕切る派手好きな九人姉妹。炎のような勝負師もそろい、積み上がった点棒はまとめていただく。', 'Nine flashy sisters who run the Crimson Camellia gambling hall — fiery gamblers among them. They sweep up every stick on the table.'),
     lines: { riichi: L('全部いただくよ、リーチ。', 'I\'m taking it all. Riichi.'), tsumo: L('総取りだね。', 'Jackpot.'), ron: L('ロン、ごちそうさま。', 'Ron. Thanks for the meal.'), skill: L('場の点棒、ぜーんぶ私の！', 'Every stick on the table is mine!') } },
   chestnut: { color: '#b98552', color2: '#3a2414', nail: 'marble', name: L('栗原雀荘の姉妹', 'Kurihara Parlor Sisters'),
     profile: L('老舗の雀荘を切り盛りする姉妹。手先が器用で、場の空気を読むのがうまい。', 'Sisters who run an old mahjong parlor. Nimble fingers, and they read the table well.'),
@@ -30,9 +30,6 @@ const FAMILIES = {
   lapis: { color: '#4b6bff', color2: '#101a4a', nail: 'ombre', name: L('瑠璃の姉妹', 'Lapis Sisters'),
     profile: L('水晶玉をのぞく占い師の姉妹。相手の手の内はお見通し。', 'Fortune-teller sisters with a crystal ball. They see right through everyone\'s hands.'),
     lines: { riichi: L('運命は決まりました。リーチ。', 'Fate is sealed. Riichi.'), tsumo: L('見えていましたよ。', 'I saw this coming.'), ron: L('ロン。占いどおり。', 'Ron. As foretold.'), skill: L('あなたの心、読ませて。', 'Let me read your heart.') } },
-  flame: { color: '#ff7a3d', color2: '#4a1608', nail: 'ombre', name: L('緋色の姉妹', 'Scarlet Sisters'),
-    profile: L('炎のような髪の陽気な勝負師の姉妹。押すときは迷わず押す。', 'Cheerful gambler sisters with flame-coloured hair. When they push, they push all the way.'),
-    lines: { riichi: L('いっくよー、リーチ！', 'Here goes — riichi!'), tsumo: L('はい、ツモっ！', 'Tsumo, there it is!'), ron: L('ロン！もらった！', 'Ron! Got you!'), skill: L('燃えてきたっ！', 'Now I\'m fired up!') } },
 };
 const ROSTER = {
   violet: [['shion', '紫苑', 'Shion', 'UR'], ['sumire', '菫', 'Sumire', 'SR'], ['fujino', '藤乃', 'Fujino', 'SR'], ['kikyo', '桔梗', 'Kikyo', 'R'], ['ayame', '菖蒲', 'Ayame', 'R'], ['rindo', '竜胆', 'Rindo', 'N'],
@@ -43,11 +40,12 @@ const ROSTER = {
     ['karin', '花梨', 'Karin', 'SR', 4], ['mio', '美桜', 'Mio', 'SSR', 14], ['natsume', '夏芽', 'Natsume', 'SR', 8], ['renge', '蓮華', 'Renge', 'UR', 28]],
   // (2026-11-16, ユーザー「琥珀堂と金色は同じカテゴリに」→ 1つの姉妹に統合: 金色の姉妹の3人は琥珀堂の大店を営む姉妹として、八人姉妹に)
   amber: [['kohaku', '琥珀', 'Kohaku', 'SSR'], ['kinka', '金華', 'Kinka', 'SSR'], ['anzu', '杏', 'Anzu', 'SR'], ['yamabuki', '山吹', 'Yamabuki', 'R'], ['yuzu', '柚子', 'Yuzu', 'R'], ['mitsu', '蜜', 'Mitsu', 'R'], ['himawari', '向日葵', 'Himawari', 'N'], ['nana', '菜々', 'Nana', 'N']],
-  crimson: [['tsubaki', '椿', 'Tsubaki', 'SSR'], ['momiji', '紅葉', 'Momiji', 'SR'], ['akane', '茜', 'Akane', 'R'], ['shuon', '朱音', 'Shuon', 'N']],
+  // (2026-11-19, ユーザー「緋色と紅椿は同じ一家」→ 1つの姉妹に統合: 緋色の5人は賭場「紅椿」の勝負師として、九人姉妹に)
+  crimson: [['tsubaki', '椿', 'Tsubaki', 'SSR'], ['akari', '緋莉', 'Akari', 'UR'], ['momiji', '紅葉', 'Momiji', 'SR'], ['hina', '陽菜', 'Hina', 'SR'], ['akane', '茜', 'Akane', 'R'],
+    ['homura', '焔', 'Homura', 'SR', 10], ['matsuri', '茉莉', 'Matsuri', 'R'], ['yuhi', '夕陽', 'Yuhi', 'SSR', 18], ['shuon', '朱音', 'Shuon', 'N']],
   chestnut: [['shiori', '栞', 'Shiori', 'SSR'], ['kaede', '楓', 'Kaede', 'SR'], ['kurumi', '胡桃', 'Kurumi', 'R'], ['komachi', '小町', 'Komachi', 'N']],
   jade: [['midori', '翠', 'Midori', 'SSR'], ['wakaba', '若葉', 'Wakaba', 'R'], ['moegi', '萌黄', 'Moegi', 'N']],
   lapis: [['ruri', '瑠璃', 'Ruri', 'SSR'], ['ai', '藍', 'Ai', 'R'], ['sora', '空', 'Sora', 'N'], ['nagisa', '渚', 'Nagisa', 'SR', 2]],
-  flame: [['akari', '緋莉', 'Akari', 'UR'], ['hina', '陽菜', 'Hina', 'SR'], ['matsuri', '茉莉', 'Matsuri', 'R'], ['homura', '焔', 'Homura', 'SR', 10], ['yuhi', '夕陽', 'Yuhi', 'SSR', 18]],
 };
 // each character's own STORY (2026-11-16, ユーザー「全キャラ、キャラクター設定に沿ったSTORYをもう少し長く」): her family, her place among the
 // sisters, her name and, for the summer series, the summer — 3–4 sentences; the family's line (F.profile) stays as the family's own
@@ -89,9 +87,9 @@ const STORY = {
   mitsu: L("甘いもの好きの六女。店の奥で宝石箱を磨きながら、こっそりお菓子をつまむのが日課。蜂蜜のようにとろけた笑顔で、気づけば甘い待ちに相手を誘い込んでいる。", "The sweet-toothed sixth sister. Polishing jewel boxes in the back of the shop, she sneaks a snack every day. With a smile as melting as honey, she lures her opponents into her sweet waits before they notice."),
   nana: L("琥珀堂の末っ子、八女。姉たちの宝石を眺めるのが好きで、いつか自分の店を持つのが夢。麻雀はまだ修行中だが、光る牌を見つける勘だけは一人前。", "The youngest of the Amber House, the eighth sister. She loves gazing at her sisters' jewels and dreams of a shop of her own one day. Her mahjong is still in training, but her instinct for finding a shining tile is fully grown."),
   tsubaki: L("賭場「紅椿」の女主人を務める長女。派手な着物と鮮やかな紅で客を迎え、卓の上では一歩も引かない。積み上がった供託も本場も、最後はまとめて彼女の懐へ。", "The eldest, mistress of the Crimson Camellia gaming house. She greets her guests in a showy kimono and vivid rouge, and gives no ground at the table. Every pile of deposits and every counter stick ends up in her pocket in the end."),
-  momiji: L("紅葉のように燃える気性の次女。賭場の用心棒を兼ね、いかさまを見抜く目は姉以上。熱くなりやすいが、それを読み合いの武器に変える器用さもある。", "The second sister, with a temper that burns like autumn leaves. She doubles as the house's bouncer, and her eye for cheating is sharper than her sister's. She runs hot, but she is clever enough to turn it into a weapon in the battle of reads."),
-  akane: L("茜色の夕空が好きな三女。賭場の帳簿をつけながら、客の打ち癖を一人ずつ書き留めている。愛想のいい笑顔の裏で、相手の弱点はすでにお見通し。", "The third sister, who loves a madder-red evening sky. Keeping the house's books, she notes down every customer's habits one by one. Behind her friendly smile she already knows your weak spots."),
-  shuon: L("紅椿の末っ子、四女。賭場の喧騒が子守唄代わりで、牌の音で目を覚ます。まだ若いが度胸は姉譲り、大きな勝負ほど目を輝かせる。", "The youngest of the Crimson Camellia, the fourth sister. The din of the gaming house was her lullaby and the click of tiles wakes her. Still young, but she has her sisters' nerve, and the bigger the stakes the brighter her eyes."),
+  momiji: L("紅葉のように燃える気性の三女。賭場の用心棒を兼ね、いかさまを見抜く目は姉以上。熱くなりやすいが、それを読み合いの武器に変える器用さもある。", "The third sister, with a temper that burns like autumn leaves. She doubles as the house's bouncer, and her eye for cheating is sharper than her sister's. She runs hot, but she is clever enough to turn it into a weapon in the battle of reads."),
+  akane: L("茜色の夕空が好きな五女。賭場の帳簿をつけながら、客の打ち癖を一人ずつ書き留めている。愛想のいい笑顔の裏で、相手の弱点はすでにお見通し。", "The fifth sister, who loves a madder-red evening sky. Keeping the house's books, she notes down every customer's habits one by one. Behind her friendly smile she already knows your weak spots."),
+  shuon: L("紅椿の末っ子、九女。賭場の喧騒が子守唄代わりで、牌の音で目を覚ます。まだ若いが度胸は姉譲り、大きな勝負ほど目を輝かせる。", "The youngest of the Crimson Camellia, the ninth sister. The din of the gaming house was her lullaby and the click of tiles wakes her. Still young, but she has her sisters' nerve, and the bigger the stakes the brighter her eyes."),
   shiori: L("老舗の栗原雀荘を継いだ長女。本を読むのが好きで、店の奥には古い麻雀書がずらりと並ぶ。常連の打ち癖はすべて頭に入っていて、卓の空気が変わる一瞬を決して逃さない。", "The eldest, who inherited the old Kurihara parlour. A keen reader, she keeps rows of old mahjong books in the back room. She knows every regular's habits by heart and never misses the instant the mood at the table changes."),
   kaede: L("店の看板娘の次女。凛とした顔立ちとさばけた物言いで、気難しい常連もたちまち手なずける。牌さばきは姉妹一の速さで、山を積む手元はまるで手品のよう。", "The second sister, the face of the parlour. With her striking looks and frank way of talking she wins over even the fussiest regulars. Her hands are the fastest in the family, and watching her build the wall is like watching a magic trick."),
   kurumi: L("食いしん坊の三女。店のまかないを任され、常連のお腹と機嫌を同時に満たす。のんびりした打ち筋に見えて、鳴きの判断は驚くほど的確。", "The food-loving third sister. In charge of the parlour's staff meals, she fills the regulars' stomachs and lifts their spirits at once. Her play looks leisurely, but her decisions to call are startlingly sharp."),
@@ -106,14 +104,16 @@ const STORY = {
   ai: L("藍染めの衣をまとう次女。姉の占いの助手を務め、星の巡りを帳面に記録している。落ち着いた打ち筋で、占いの結果どおりに局を運ぶのが密かな楽しみ。", "The second sister, dressed in indigo-dyed robes. She assists with her sister's readings and records the turning of the stars in her notebook. Her play is calm, and her secret pleasure is steering a round exactly as the reading foretold."),
   sora: L("空を眺めるのが好きな三女。雲の形で天気と運を占うと言い張るが、当たるのは半分ほど。のびのびとした打ち筋で、ときどき姉たちの予言をあっさり裏切る。", "The third sister, who loves to gaze at the sky. She insists she reads weather and luck in the clouds, though she is right about half the time. Her free and easy play sometimes overturns her sisters' prophecies without a care."),
   nagisa: L("夏の渚で占いの店を開く四女。波の音で未来を聞くと言い、水着に薄布をまとって砂浜の卓に座る。潮の満ち引きのように、押し引きの判断がいつも的確。", "The fourth sister, who sets up a fortune stall on the summer shore. She says she hears the future in the waves, and sits at the beach table in a swimsuit and a light veil. Like the tide, her choices of when to push and when to pull are always right."),
-  akari: L("炎のような髪をもつ勝負師の長女。陽気で負けず嫌い、押すと決めたら一切迷わない。彼女のリーチは場を一気に熱くし、気づけば卓全体が彼女のペースで回っている。", "The eldest, a gambler with hair like flame. Cheerful and fiercely competitive, once she decides to push she never hesitates. Her riichi heats the whole table at once, and soon everyone is playing at her pace."),
-  hina: L("陽だまりのように温かい次女。姉の暴走をなだめる役回りだが、本人もいざとなると火がつく。勝っても負けても最後は笑顔、卓の雰囲気を明るくする天才。", "The second sister, warm as a sunny spot. Her role is to calm her elder sister's charges, but she catches fire herself when it counts. Win or lose she ends with a smile, a genius at brightening the table."),
-  matsuri: L("お祭り好きの三女。太鼓の音を聞くと体が勝手に動き出し、夏祭りでは必ず屋台の手伝いをする。麻雀も賑やかなのが好きで、鳴いて鳴いて場をかき回す。", "The festival-loving third sister. At the sound of a drum her body starts moving by itself, and at every summer festival she helps at the stalls. She likes her mahjong lively too, calling and calling to stir up the table."),
-  homura: L("夏の焔のように燃える四女。真夏の浜辺で開かれる勝負に毎年参加し、日焼けした肌で一歩も引かない。熱い打ち筋は姉以上、大物手しか狙わない潔さが持ち味。", "The fourth sister, burning like a summer blaze. Every year she joins the contests held on the midsummer beach and gives no ground, skin tanned dark. Her play runs even hotter than her sister's; she goes only for big hands, and proudly so."),
-  yuhi: L("夕陽に染まる海が好きな五女。夏の夕暮れ、浜辺の卓で最後の一局を打つのが何よりの楽しみ。昼間は姉妹とはしゃぎ、日が沈むころには勝負師の顔になる。", "The fifth sister, who loves the sea dyed by the setting sun. Her greatest joy is playing the last hand of a summer evening at the beach table. By day she frolics with her sisters; by sundown she wears a gambler's face."),
+  akari: L("賭場「紅椿」の看板勝負師を務める次女。炎のような髪をなびかせ、陽気で負けず嫌い、押すと決めたら一切迷わない。彼女のリーチは場を一気に熱くし、気づけば卓全体が彼女のペースで回っている。", "The second sister, the Crimson Camellia's star gambler, with hair like flame. Cheerful and fiercely competitive, once she decides to push she never hesitates. Her riichi heats the whole table at once, and soon everyone is playing at her pace."),
+  hina: L("陽だまりのように温かい四女。賭場の台所を預かり、熱くなりやすい姉たちをなだめる役回りだが、本人もいざとなると火がつく。勝っても負けても最後は笑顔、卓の雰囲気を明るくする天才。", "The fourth sister, warm as a sunny spot. She keeps the gaming house's kitchen, and her role is to calm her hot-headed elder sisters, but she catches fire herself when it counts. Win or lose she ends with a smile, a genius at brightening the table."),
+  matsuri: L("お祭り好きの七女。太鼓の音を聞くと体が勝手に動き出し、夏祭りでは必ず屋台の手伝いをする。麻雀も賑やかなのが好きで、鳴いて鳴いて場をかき回す。", "The festival-loving seventh sister. At the sound of a drum her body starts moving by itself, and at every summer festival she helps at the stalls. She likes her mahjong lively too, calling and calling to stir up the table."),
+  homura: L("夏の焔のように燃える六女。真夏の浜辺で開かれる勝負に毎年参加し、日焼けした肌で一歩も引かない。熱い打ち筋は次姉の緋莉以上、大物手しか狙わない潔さが持ち味。", "The sixth sister, burning like a summer blaze. Every year she joins the contests held on the midsummer beach and gives no ground, skin tanned dark. Her play runs even hotter than Akari's; she goes only for big hands, and proudly so."),
+  yuhi: L("夕陽に染まる海が好きな八女。夏の夕暮れ、浜辺の卓で最後の一局を打つのが何よりの楽しみ。昼間は姉妹とはしゃぎ、日が沈むころには勝負師の顔になる。", "The eighth sister, who loves the sea dyed by the setting sun. Her greatest joy is playing the last hand of a summer evening at the beach table. By day she frolics with her sisters; by sundown she wears a gambler's face."),
 };
 // (2026-11-16) the three who came from the golden house keep their own words for riichi, tsumo, ron and skills
-const OWN_LINES = { kinka: GOLD_LINES, yamabuki: GOLD_LINES, himawari: GOLD_LINES };
+// (2026-11-19) the five who came from the Scarlet sisters keep their own words too
+const FLAME_LINES = { riichi: L('いっくよー、リーチ！', 'Here goes — riichi!'), tsumo: L('はい、ツモっ！', 'Tsumo, there it is!'), ron: L('ロン！もらった！', 'Ron! Got you!'), skill: L('燃えてきたっ！', 'Now I\'m fired up!') };
+const OWN_LINES = { kinka: GOLD_LINES, yamabuki: GOLD_LINES, himawari: GOLD_LINES, akari: FLAME_LINES, hina: FLAME_LINES, matsuri: FLAME_LINES, homura: FLAME_LINES, yuhi: FLAME_LINES };
 const ORDER = [L('長女', 'eldest'), L('次女', 'second'), L('三女', 'third'), L('四女', 'fourth'), L('五女', 'fifth'), L('六女', 'sixth'), L('七女', 'seventh'), L('八女', 'eighth'), L('九女', 'ninth'), L('十女', 'tenth')];
 const CHARS = [];
 for (const fid in ROSTER) {
