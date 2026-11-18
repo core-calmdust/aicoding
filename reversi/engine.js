@@ -1050,23 +1050,23 @@ const LEVELS = [
   { depth: 7, exact: 13, noise: 90 },   // 19 (2026-11-13: new, between the levels beside it)
   { depth: 8, exact: 14 },   // 20 (Lv.14 until 2026-11-13)
   { depth: 9, exact: 14 },   // 21 (2026-11-13: new, between the levels beside it)
-  { depth: 9, exact: 15, time: 700, mpc: 1 },   // 22 (Lv.15 until 2026-11-13)
-  { depth: 9, exact: 16, time: 850, mpc: 1 },   // 23 (2026-11-13: new, between the levels beside it)
-  { depth: 10, exact: 16, time: 1000, mpc: 1 },   // 24 (Lv.16 until 2026-11-13)
-  { depth: 10, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 25 (Lv.17 until 2026-11-13)
-  { depth: 11, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 26 (Lv.18 until 2026-11-13)
-  { depth: 12, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 27 (Lv.19 until 2026-11-13)
-  { depth: 13, exact: 20, wld: 22, end: 26, time: 10000, use: 1, max: 20000, mpc: 1 },   // 28 (Lv.20 until 2026-11-13)
+  { depth: 9, exact: 15, time: 700, mpc: 1, bm: 0.3 },   // 22 (Lv.15 until 2026-11-13)
+  { depth: 9, exact: 16, time: 850, mpc: 1, bm: 0.3 },   // 23 (2026-11-13: new, between the levels beside it)
+  { depth: 10, exact: 16, time: 1000, mpc: 1, bm: 0.3 },   // 24 (Lv.16 until 2026-11-13)
+  { depth: 10, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1, bm: 0.3 },   // 25 (Lv.17 until 2026-11-13)
+  { depth: 11, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1, bm: 0.3 },   // 26 (Lv.18 until 2026-11-13)
+  { depth: 12, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1, bm: 0.3 },   // 27 (Lv.19 until 2026-11-13)
+  { depth: 13, exact: 20, wld: 22, end: 26, time: 10000, use: 1, max: 20000, mpc: 1, bm: 0.3 },   // 28 (Lv.20 until 2026-11-13)
   // 29-36 (2026-11-13, "天上" — beyond what a person plays against: no rewards in the portal): Lv.21-28 until then. 29-35 read to a fixed depth,
   // 36 is the strongest, by time on all threads (wtry / xtry / tryMs / end: MODEL_CARD.md「上位レベルの追加の読み切り」「終局まで読む」)
-  { depth: 16, exact: 22, wld: 24, end: 28, time: 15000, use: 1, max: 30000, mpc: 1 },   // 29 (Lv.21 until 2026-11-13)
-  { depth: 20, mix: 16, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1 },   // 30 (Lv.22 until 2026-11-13)
-  { depth: 20, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1 },   // 31 (Lv.23 until 2026-11-13)
-  { depth: 22, exact: 23, wld: 24, wtry: 27, xtry: 25, tryMs: 4000, end: 30, time: 25000, use: 1, max: 50000, mpc: 1 },   // 32 (Lv.24 until 2026-11-13)
-  { depth: 25, mix: 20, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 33 (Lv.25 until 2026-11-13)
-  { depth: 25, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 34 (Lv.26 until 2026-11-13)
-  { depth: 28, exact: 24, wld: 26, wtry: 29, xtry: 26, tryMs: 6000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 35 (Lv.27 until 2026-11-13)
-  { depth: 60, exact: 23, wld: 25, wtry: 32, xtry: 28, time: 18000, use: 0.8, max: 30000, mpc: 1 },   // 36 (Lv.28 until 2026-11-13)
+  { depth: 16, exact: 22, wld: 24, end: 28, time: 15000, use: 1, max: 30000, mpc: 1, bm: 0.3 },   // 29 (Lv.21 until 2026-11-13)
+  { depth: 20, mix: 16, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1, bm: 0.3 },   // 30 (Lv.22 until 2026-11-13)
+  { depth: 20, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1, bm: 0.3 },   // 31 (Lv.23 until 2026-11-13)
+  { depth: 22, exact: 23, wld: 24, wtry: 27, xtry: 25, tryMs: 4000, end: 30, time: 25000, use: 1, max: 50000, mpc: 1, bm: 0.3 },   // 32 (Lv.24 until 2026-11-13)
+  { depth: 25, mix: 20, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1, bm: 0.3 },   // 33 (Lv.25 until 2026-11-13)
+  { depth: 25, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1, bm: 0.3 },   // 34 (Lv.26 until 2026-11-13)
+  { depth: 28, exact: 24, wld: 26, wtry: 29, xtry: 26, tryMs: 6000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1, bm: 0.3 },   // 35 (Lv.27 until 2026-11-13)
+  { depth: 60, exact: 23, wld: 25, wtry: 32, xtry: 28, time: 18000, use: 0.8, max: 30000, mpc: 1, bm: 0.3 },   // 36 (Lv.28 until 2026-11-13)
 ];
 const NLEVELS = LEVELS.length - 1, DEF_LEVEL = 22;
 
@@ -1100,6 +1100,7 @@ function bookCanon(pl, ph, ol, oh) {
   const bb = [CAN_B[0], CAN_B[1], CAN_B[2], CAN_B[3]];
   return [bb.map(hex8).join(''), bt, bb];
 }
+const ASP_STEP = 2;   // the exact solve's aspiration window: how far it opens past a value outside it (MODEL_CARD.md「完全読みの差の精査」)
 function bookLookup(pl, ph, ol, oh) {
   if (!BOOK) return null;
   const [best, bt] = bookCanon(pl, ph, ol, oh);
@@ -1164,7 +1165,7 @@ function think(cells, toMove, opts, onProgress) {
   if ((lv.mpc || opts.book) && !opts.noBook) {   // (opts.book: PRO mode's opening book at any level)
     const bk = bookLookup(pl, ph, ol, oh);
     if (bk && bk.length) {
-      const top = bk[0].score, margin = opts.bookMargin ?? 0.8;
+      const top = bk[0].score, margin = opts.bookMargin ?? lv.bm ?? 0.8;   // (lv.bm: Lv.22-36 pick within 0.3 discs of the best — 2026-11-18)
       const c = bk.filter(x => x.score >= top - margin && moves.includes(x.move));
       if (c.length) { const r = (opts.random || Math.random)(); const pick = c[Math.floor(r * c.length)]; return { move: pick.move, score: pick.score, depth: 0, nodes: 0, ms: Date.now() - t0, book: true }; }
     }
@@ -1330,8 +1331,8 @@ function think(cells, toMove, opts, onProgress) {
         for (;;) {
           r = SPL ? rootSplit(SPL, pos, ordered, lo, hi) : rootPVS(pos, ordered, 0, 'exact', lo, hi);
           const v = r.score / SCALE;
-          if (v <= lo && lo > -65) { hi = v + 1; lo = -65; }
-          else if (v >= hi && hi < 65) { lo = v - 1; hi = 65; }
+          if (v <= lo && lo > -65) { hi = v + 1; lo = Math.max(-65, v - ASP_STEP); }   // (2026-11-18: the window opens by ASP_STEP discs at a time, not all the way)
+          else if (v >= hi && hi < 65) { lo = v - 1; hi = Math.min(65, v + ASP_STEP); }
           else break;
         }
       }
@@ -1369,8 +1370,8 @@ function think(cells, toMove, opts, onProgress) {
         for (;;) {
           r = SPL ? rootSplit(SPL, pos, ordered, lo, hi) : rootPVS(pos, ordered, 0, 'exact', lo, hi);
           const v = r.score / SCALE;
-          if (v <= lo && lo > -65) { hi = v + 1; lo = -65; }
-          else if (v >= hi && hi < 65) { lo = v - 1; hi = 65; }
+          if (v <= lo && lo > -65) { hi = v + 1; lo = Math.max(-65, v - ASP_STEP); }   // (2026-11-18: the window opens by ASP_STEP discs at a time, not all the way)
+          else if (v >= hi && hi < 65) { lo = v - 1; hi = Math.min(65, v + ASP_STEP); }
           else break;
         }
         result = r; exactDone = true;

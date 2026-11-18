@@ -108,8 +108,14 @@ const icon = k => IC[k] || '';
 
 // ---------------------------------------------------------------- sound (WebAudio synth)
 // a volume setting, 0–100 (80 by default; a level saved before as 0–1 of the old scale is carried over: old 1 = 80)
-function volP(k) { const p = DB.set[k + 'P']; if (p != null) return Math.max(0, Math.min(100, +p));
-  const o = DB.set[k + 'Vol']; return o == null ? 80 : Math.round(Math.max(0, Math.min(1, o)) * 80); }
+// (ユーザー 2026-11-18) the music's scale is set so that 80 is the music at 1.25× the old loudness (what was 100): music gain = value / 64.
+// Its setting is kept as bgQ; a bgP saved on the earlier music scale (gain bgP / 80) is carried over at the same loudness (× .8).
+const VKEY = k => k === 'bg' ? 'bgQ' : k + 'P';
+const VBASE = k => k === 'bg' ? 64 : 80;
+function volP(k) { const c = v => Math.max(0, Math.min(100, Math.round(v)));
+  const p = DB.set[VKEY(k)]; if (p != null) return c(+p);
+  if (k === 'bg' && DB.set.bgP != null) return c(+DB.set.bgP * .8);
+  const o = DB.set[k + 'Vol']; return o == null ? 80 : c(Math.max(0, Math.min(1, o)) * VBASE(k)); }
 const SND = (() => {
   let ac = null;
   const ctx = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) ac.resume(); return ac; };
@@ -117,7 +123,7 @@ const SND = (() => {
   // two buses (ユーザー 2026-11-14: the effects and the music each with their own volume and mute — the gear in the game)
   let seB = null, bgB = null;
   // (ユーザー 2026-11-18) the sliders read 0–100 and stand at 80 by default; 80 is the loudness the game had (gain 1), 100 is ×1.25
-  const vol = k => (DB.set[k + 'On'] === false ? 0 : volP(k) / 80);
+  const vol = k => (DB.set[k + 'On'] === false ? 0 : volP(k) / VBASE(k));
   const seOut = a => { if (!seB) { seB = a.createGain(); seB.gain.value = vol('se'); seB.connect(a.destination); } return seB; };
   const bgOut = a => { if (!bgB) { bgB = a.createGain(); bgB.gain.value = vol('bg'); bgB.connect(a.destination); } return bgB; };
   function levels() { const a = ac; if (!a) return; const t = a.currentTime;
@@ -269,12 +275,14 @@ const SND = (() => {
     skillFx: id => { const f = SKFX[id]; if (f) f(); },
     tile: () => { if (!play(pick3('tile'), 1, .96 + Math.random() * .08)) click(); },
     stick: () => { if (!play(pick3('stick'), 1)) tone(1800, .08, 'triangle', .06); },
-    voice: k => play('v-' + k, 1),
+    voice: k => play('v-' + k, .8),   // (ユーザー 2026-11-18「声のボリュームが少し大きめなので少し抑えて」: ×0.8 ≈ −2 dB)
     preload: () => load(),
     _trk: TRK, _rebuild: () => rebuild(), _ac: () => ac,
     music,
     resume: () => music(want),
-    score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music('score'); },   // (once per results screen, from its top)
+    // (once per results screen, from its top) (ユーザー 2026-11-18「点数計算に入る時のBGMを少しだけ遅らせて」: 0.45 s after the screen opens;
+    // any other music asked for meanwhile cancels it, as music() clears handT)
+    score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music(null); handT = setTimeout(() => music('score'), 450); },
     newGame() { nextMain = draw(MAINS, mainKey); nextRii = draw(RIIS, riichiKey); if (on()) { fetchTrk(nextMain); fetchTrk(nextRii); fetchTrk('score'); } },
     // a hand begins: this hand's track (drawn ahead), after a short quiet (ユーザー 2026-11-16「得点表示から次の局の通常BGMまで少し間を」 —
     // the results' piece fades out, then about 1.6 s of silence)
@@ -730,7 +738,7 @@ function openSettings() {
   $('#modal').onclick = e => { if (e.target === $('#modal')) closeModal(); };
   box.addEventListener('input', e => {
     const r = e.target.closest('input[type=range]'); if (!r) return;
-    const k = r.dataset.k; DB.set[k + 'P'] = +r.value; DB.set[k + 'On'] = true; DB.set.snd = true; save(); r.style.setProperty('--p', r.value + '%');
+    const k = r.dataset.k; DB.set[VKEY(k)] = +r.value; DB.set[k + 'On'] = true; DB.set.snd = true; save(); r.style.setProperty('--p', r.value + '%');
     const row = r.closest('.st-vol'); row.classList.remove('off'); row.querySelector('small b').textContent = r.value; row.querySelector('.st-m').innerHTML = IC.snd;
     SND.unlock(); SND.levels(); SND.resume(); });
   box.addEventListener('change', e => { if (e.target.dataset.k === 'se') SND.tile(); });   // a sample of the effects' level
