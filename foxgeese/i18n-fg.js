@@ -22,8 +22,9 @@ ja: {
   'ord.label': 'あなたの駒と手番', 'ord.labelPvp': '先に動く側', 'ord.opt': '{p}・{o}', 'ord.optPvp': '{p}が先手', 'ord.first': '先手', 'ord.second': '後手',
   'opt.threat': '動かせる駒を光らせる', 'opt.num': '座標',
   'lvd': ['入門：目先の1手だけを見る', '初級〜中級：跳ばれる形に気づく', '上級：数手先の囲みを読む', '最上級：深く読んで追いつめる'],
-  'bd.title': '盤面', 'bd.oak': 'オーク材', 'bd.slate': '石盤とチョーク', 'bd.linen': 'リネンの刺しゅう', 'bd.meadow': '牧場', 'bd.night': 'ナイト', 'bd.paper': 'ペーパー',
-  'pcs.title': '駒', 'pcs.wood': '木のペグ', 'pcs.marble': 'ガラス玉', 'pcs.pewter': 'ピューター', 'pcs.paint': '塗り駒',
+  'bd.title': '盤面', 
+  "bd.oak": "オーク材", "bd.bauhaus": "アブストラクト", "bd.meadow": "ひだまり牧場", "bd.lux": "黒大理石と金", "bd.norse": "北欧の石盤", "bd.delft": "デルフト焼き", "pcs.wood": "木の玉", "pcs.bauhaus": "カラーブロック", "pcs.cute": "きつね＆がちょう", "pcs.lux": "金と真珠", "pcs.norse": "骨と琥珀", "pcs.delft": "染付", "rsv.quiet": "あと{n}手", "rsv.quietT": "取り合いのないまま、あと何手ずつ進むと狐の勝ちになるか",   // 2026-11-18 designs + the quiet-move clock
+  'pcs.title': '駒', 
   'res.why.few': 'ガチョウが5羽以下になりました（もう狐を囲めません）', 'res.why.trap': '狐が動けなくなりました', 'res.why.stuck': 'ガチョウが動けなくなりました', 'res.why.quiet': '取り合いのないまま30手ずつ進みました（ガチョウは狐を囲めませんでした）', 'res.why.rep': '同じ局面が3回現れました（千日手は狐の勝ち）',
   'rv.note': '悪手＝勝ち負けが入れ替わった手、または大きく損をした手。疑問手＝小さくない損。盤上の数字はそこへ動いたときの評価（約1.0＝ガチョウ1羽分の差）、矢印は最善手、点線は実際の手です。',
   'cr.forced': 'ほかに指せる手がない手でした。', 'cr.best': '最善手です。', 'cr.bestHit': '最善手です。ガチョウを取りました。', 'cr.bestFree': '最善手です。',
@@ -75,8 +76,9 @@ en: {
   'ord.label': 'Your side and turn order', 'ord.labelPvp': 'Who moves first', 'ord.opt': '{p} · {o}', 'ord.optPvp': 'First: {p}', 'ord.first': 'first', 'ord.second': 'second',
   'opt.threat': 'Highlight pieces that can move', 'opt.num': 'Coordinates',
   'lvd': ['Beginner: looks one move ahead', 'Novice–intermediate: notices geese that can be jumped', 'Advanced: reads the net a few moves ahead', 'Top: reads deep and closes in'],
-  'bd.title': 'Board', 'bd.oak': 'Oak', 'bd.slate': 'Slate and chalk', 'bd.linen': 'Stitched linen', 'bd.meadow': 'Meadow', 'bd.night': 'Night', 'bd.paper': 'Paper',
-  'pcs.title': 'Pieces', 'pcs.wood': 'Wooden pegs', 'pcs.marble': 'Glass marbles', 'pcs.pewter': 'Pewter', 'pcs.paint': 'Painted',
+  'bd.title': 'Board', 
+  "bd.oak": "Oak", "bd.bauhaus": "Abstract", "bd.meadow": "Sunny meadow", "bd.lux": "Black marble & gold", "bd.norse": "Norse stone", "bd.delft": "Delft blue", "pcs.wood": "Wooden balls", "pcs.bauhaus": "Colour blocks", "pcs.cute": "Fox & goose pals", "pcs.lux": "Gold & pearl", "pcs.norse": "Bone & amber", "pcs.delft": "Blue and white", "rsv.quiet": "{n} left", "rsv.quietT": "Moves each left without a capture before the fox wins",   // 2026-11-18 designs + the quiet-move clock
+  'pcs.title': 'Pieces', 
   'res.why.few': 'Five geese or fewer are left — they can no longer shut the fox in', 'res.why.trap': 'The fox cannot move', 'res.why.stuck': 'The geese cannot move', 'res.why.quiet': '30 moves each without a capture — the geese failed to shut the fox in', 'res.why.rep': 'The same position came up three times — repetition is the fox’s win',
   'rv.note': 'Blunder = a move that changed the result or lost a lot. Dubious = a real but smaller loss. The numbers on the board are the value of moving there (about 1.0 = one goose), the arrow is the best move, the dotted line the move played.',
   'cr.forced': 'It was the only legal move.', 'cr.best': 'The best move.', 'cr.bestHit': 'The best move: it takes a goose.', 'cr.bestFree': 'The best move.',

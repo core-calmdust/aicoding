@@ -795,8 +795,8 @@ body .info-line{font-size:12.5px}
 .pc::before,.pc::after{display:none}
 .pc .orn{display:none}
 /* the fox: a larger head with ears (its picture is drawn a little above the point so the ears stand clear) */
-.pc.p1,.rv.p1{width:calc(var(--cell) * .98);height:calc(var(--cell) * .98);margin:calc(var(--cell) * -.54) 0 0 calc(var(--cell) * -.49);background:var(--pcB) center/100% 100% no-repeat;box-shadow:none;filter:drop-shadow(0 calc(var(--cell) * .06) calc(var(--cell) * .05) rgba(0,0,0,.5));z-index:3}
-.pc.p2,.rv.p2{width:calc(var(--cell) * .74);height:calc(var(--cell) * .74);margin:calc(var(--cell) * -.38) 0 0 calc(var(--cell) * -.37);background:var(--pcW) center/100% 100% no-repeat;box-shadow:none;filter:drop-shadow(0 calc(var(--cell) * .05) calc(var(--cell) * .04) rgba(0,0,0,.45))}
+.pc.p1,.rv.p1{width:calc(var(--cell) * 1.1);height:calc(var(--cell) * 1.1);margin:calc(var(--cell) * -.6) 0 0 calc(var(--cell) * -.55);background:var(--pcB) center/100% 100% no-repeat;box-shadow:none;filter:drop-shadow(0 calc(var(--cell) * .06) calc(var(--cell) * .05) rgba(0,0,0,.5));z-index:3}
+.pc.p2,.rv.p2{width:calc(var(--cell) * .7);height:calc(var(--cell) * .7);margin:calc(var(--cell) * -.36) 0 0 calc(var(--cell) * -.35);background:var(--pcW) center/100% 100% no-repeat;box-shadow:none;filter:drop-shadow(0 calc(var(--cell) * .05) calc(var(--cell) * .04) rgba(0,0,0,.45))}
 /* whose turn / which side: the two small icons (img/ic-fox.svg · img/ic-goose.svg, in the spirit of 🦊 / 🪿 but drawn, so older
    devices without the goose emoji show them too); the same icons in the header chips, the player cards, the side pulldown */
 .pdisc.p1{background:url(img/ic-fox.svg) center/contain no-repeat!important;box-shadow:none!important;border-radius:0!important}
@@ -830,23 +830,28 @@ body .info-line{font-size:12.5px}
 .frame{background:var(--frameBg,linear-gradient(145deg,#2a1a10 0%,#120a06 55%,#24160c 100%))}
 .frame::before{display:none}
 .board{background:var(--bdImg,none) center/100% 100% no-repeat}
-html[data-bd=oak]{--bdImg:url(img/bd-oak.webp);--frameBg:url(img/fr-oak.webp) 0 0/300px 300px,#4a2e18;--frm:#e0b87a;--grv:rgba(52,30,12,.86);--grvHl:rgba(255,226,170,.3);--num:rgba(52,30,12,.7)}
-html[data-bd=slate]{--bdImg:url(img/bd-slate.webp);--frameBg:url(img/fr-slate.webp) 0 0/300px 300px,#a07a44;--frm:#c9a56a;--grv:rgba(238,242,244,.86);--grvHl:rgba(0,0,0,0);--num:rgba(238,242,244,.7)}
-html[data-bd=slate] .lines .grv{stroke-dasharray:.16 .012;stroke-width:.05}
-html[data-bd=linen]{--bdImg:url(img/bd-linen.webp);--frameBg:url(img/fr-linen.webp) 0 0/240px 240px,#6b5a3a;--frm:#cdbb94;--grv:rgba(150,52,40,.92);--grvHl:rgba(255,255,255,.4);--num:rgba(120,50,36,.75)}
-html[data-bd=linen] .lines .grv{stroke-dasharray:.09 .05;stroke-width:.05}
-html[data-bd=meadow]{--bdImg:url(img/bd-meadow.webp);--frameBg:url(img/fr-meadow.webp) 0 0/260px 260px,#3d5a26;--frm:#b9d48a;--grv:rgba(248,246,228,.9);--grvHl:rgba(0,0,0,.12);--num:rgba(248,246,228,.85)}
-html[data-bd=night]{--bdImg:url(img/bd-night.webp);--frameBg:url(img/fr-night.webp) 0 0/260px 260px,#0e1424;--frm:#d9b46a;--grv:rgba(226,190,112,.92);--grvHl:rgba(0,0,0,.3);--num:rgba(226,190,112,.8)}
-html[data-bd=night] .lines .grv{stroke-width:.034}
-html[data-bd=paper]{--bdImg:url(img/bd-paper.webp);--frameBg:url(img/fr-paper.webp) 0 0/260px 260px,#3a3836;--frm:#d6cfc0;--grv:rgba(70,64,58,.86);--grvHl:rgba(255,255,255,.6);--num:rgba(70,64,58,.7)}
-html[data-bd=paper] .lines .grv{stroke-width:.034}
-html[data-bd=linen] .reserve .rsv-plate, html[data-bd=paper] .reserve .rsv-plate{background:rgba(255,252,244,.92);color:#4a4a36}
-html[data-bd=linen] .reserve .rsv-plate b, html[data-bd=paper] .reserve .rsv-plate b{color:#2a2a1c}
-/* piece sets: rendered faces (tools/gen_art.py) — --pcB the fox, --pcW a goose */
-html[data-pcs=wood]{--pcB:url(img/pc-wood-f.webp);--pcW:url(img/pc-wood-g.webp)}
-html[data-pcs=marble]{--pcB:url(img/pc-marble-f.webp);--pcW:url(img/pc-marble-g.webp)}
-html[data-pcs=pewter]{--pcB:url(img/pc-pewter-f.webp);--pcW:url(img/pc-pewter-g.webp)}
-html[data-pcs=paint]{--pcB:url(img/pc-paint-f.webp);--pcW:url(img/pc-paint-g.webp)}
+/* 2D designs (2026-11-18, tools/gen_art2.py → img/2d/): the boards carry their own lines and points (burnt grooves and drilled
+   holes, gold inlay, printed ink, garden paths, pecked grooves, painted cobalt), so the page's line layer is hidden; the 3D boards
+   (atlas/models/foxgeese.js) keep using the older img/bd-*.webp / fr-*.webp. --bdEdge: the thin rim round the board. */
+html[data-bd] .lines :is(.grv,.grv-hl,.pt,.off){display:none}
+html[data-bd] .board::after{display:none}
+html[data-bd] .board{border-radius:calc(var(--cell) * .06);box-shadow:0 0 0 calc(var(--cell) * .025) var(--bdEdge,#000),0 calc(var(--cell) * .05) calc(var(--cell) * .2) rgba(0,0,0,.55)}
+html[data-bd=oak]{--bdImg:url(img/2d/bd-oak.webp?v=1);--frameBg:url(img/2d/fr-oak.webp?v=1) 0 0/300px 300px,#4a2e18;--frm:#e0b87a;--bdEdge:#3a2210;--num:rgba(58,30,12,.78)}
+html[data-bd=bauhaus]{--bdImg:url(img/2d/bd-bauhaus.webp?v=1);--frameBg:url(img/2d/fr-bauhaus.webp?v=1) 0 0/240px 240px,#262628;--frm:#e3a82b;--bdEdge:#151516;--num:rgba(30,30,32,.7)}
+html[data-bd=meadow]{--bdImg:url(img/2d/bd-meadow.webp?v=1);--frameBg:url(img/2d/fr-meadow.webp?v=1) 0 0/260px 260px,#e2c79c;--frm:#8fcf6a;--bdEdge:#c9a676;--num:rgba(255,255,255,.92)}
+html[data-bd=lux]{--bdImg:url(img/2d/bd-lux.webp?v=1);--frameBg:url(img/2d/fr-lux.webp?v=1) 0 0/280px 280px,#1a0f08;--frm:#d9b46a;--bdEdge:#b8913f;--num:rgba(226,190,112,.85)}
+html[data-bd=norse]{--bdImg:url(img/2d/bd-norse.webp?v=1);--frameBg:url(img/2d/fr-norse.webp?v=1) 0 0/280px 280px,#5c5850;--frm:#b9b3a4;--bdEdge:#3c3a35;--num:rgba(236,234,224,.8)}
+html[data-bd=delft]{--bdImg:url(img/2d/bd-delft.webp?v=1);--frameBg:url(img/2d/fr-delft.webp?v=1) 0 0/280px 280px,#2a1d14;--frm:#7f9bd6;--bdEdge:#1d3b8a;--num:rgba(29,59,138,.8)}
+html[data-bd=meadow] .reserve .rsv-plate, html[data-bd=bauhaus] .reserve .rsv-plate{background:rgba(255,252,244,.94);color:#4a4a36}
+html[data-bd=meadow] .reserve .rsv-plate b, html[data-bd=bauhaus] .reserve .rsv-plate b{color:#2a2a1c}
+html[data-bd=meadow] .board.no-num .lines .num, html[data-bd=meadow] .lines .num{paint-order:stroke;stroke:rgba(60,110,40,.55);stroke-width:.03}
+/* piece sets: rendered from above (tools/art-pieces.js) — --pcB the fox, --pcW a goose */
+html[data-pcs=wood]{--pcB:url(img/2d/pc-wood-f.webp?v=1);--pcW:url(img/2d/pc-wood-g.webp?v=1)}
+html[data-pcs=bauhaus]{--pcB:url(img/2d/pc-bauhaus-f.webp?v=1);--pcW:url(img/2d/pc-bauhaus-g.webp?v=1)}
+html[data-pcs=cute]{--pcB:url(img/2d/pc-cute-f.webp?v=1);--pcW:url(img/2d/pc-cute-g.webp?v=1)}
+html[data-pcs=lux]{--pcB:url(img/2d/pc-lux-f.webp?v=1);--pcW:url(img/2d/pc-lux-g.webp?v=1)}
+html[data-pcs=norse]{--pcB:url(img/2d/pc-norse-f.webp?v=1);--pcW:url(img/2d/pc-norse-g.webp?v=1)}
+html[data-pcs=delft]{--pcB:url(img/2d/pc-delft-f.webp?v=1);--pcW:url(img/2d/pc-delft-g.webp?v=1)}
 
 /* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
 #newOverlay .ng-cols{display:flex;flex-direction:column}
@@ -866,8 +871,9 @@ html[data-pcs=paint]{--pcB:url(img/pc-paint-f.webp);--pcW:url(img/pc-paint-g.web
   #newOverlay #segMode button{flex:1 1 0;min-width:0;white-space:nowrap}
 }
 /* board / piece design pickers (live mini boards) */
-.bdrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.bdrow.pcrow{grid-template-columns:repeat(4,minmax(0,1fr))}
+.bdrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.bdrow.pcrow{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){ .bdrow, .bdrow.pcrow{grid-template-columns:repeat(6,minmax(0,1fr))} }
 .bdrow button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:5px 4px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:var(--muted);font-size:11px;line-height:1.2;min-width:0;transition:border-color .2s,color .2s,background .2s}
 .bdrow button svg{display:block;width:100%;height:auto;border-radius:5px}
 .bdrow button span{max-width:100%;text-align:center;word-break:keep-all;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:center;letter-spacing:0}
@@ -1010,6 +1016,14 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 .reserve .rsv-plate{display:inline-block;flex:none;width:auto;max-width:none;white-space:nowrap;line-height:1;overflow:visible}
 .reserve .rsv-plate > *{display:inline-flex;vertical-align:middle;flex:none}
 .reserve .rsv-plate > * + *{margin-inline-start:calc(var(--cell) * .16)}
+/* the quiet-move clock (the fox's plate, at the far end): moves each left without a capture before the fox wins */
+.reserve .rsv-plate.rsv-q{margin-inline-start:auto;margin-inline-end:calc(var(--cell) * .3);font-family:'Shippori Mincho B1',serif;font-weight:800;letter-spacing:.02em}
+.reserve .rsv-plate.rsv-q svg{width:calc(var(--cell) * .2);height:calc(var(--cell) * .2);margin-inline-end:calc(var(--cell) * .07);vertical-align:-.12em;opacity:.85}
+.reserve .rsv-plate.rsv-q b{font-size:calc(var(--cell) * .3);margin:0 .08em}
+.reserve .rsv-plate.rsv-q.lo{color:#ffb4a8;box-shadow:inset 0 0 0 1.5px rgba(255,110,90,.75),0 2px 6px rgba(0,0,0,.35)}
+.reserve .rsv-plate.rsv-q.lo b{color:#ff8b78}
+html[data-bd=meadow] .reserve .rsv-plate.rsv-q.lo, html[data-bd=bauhaus] .reserve .rsv-plate.rsv-q.lo{color:#c0392b}
+html[data-bd=meadow] .reserve .rsv-plate.rsv-q.lo b, html[data-bd=bauhaus] .reserve .rsv-plate.rsv-q.lo b{color:#c0392b}
 .reserve .rsv-plate .rsv-bar{display:inline-block;width:calc(var(--cell) * 1.1);flex:none}
 .reserve .rsv-plate .rsv-w{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:inherit;font-weight:800;letter-spacing:.02em;color:inherit;line-height:inherit;padding:0;border-radius:999px;background:transparent}
 .reserve .rsv-plate .rsv-w b{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:calc(var(--cell) * .3);color:#fff4dc;margin:0}
@@ -1328,8 +1342,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 </div>
 
 <script src="../checkers/i18n.js?v=20261107l14-nd1"></script>
-<script src="i18n-fg.js?v=6"></script>
-<script src="i18n-fg-more.js?v=7"></script>
+<script src="i18n-fg.js?v=7"></script>
+<script src="i18n-fg-more.js?v=8"></script>
 <script src="i18n-online.js?v=1"></script>
 <script src="../shared/pzbook.js?v=8l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
@@ -1354,7 +1368,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="coach.js?v=5"></script>
 <script src="coach-i18n.js?v=6"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=10"></script>
+<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=11"></script>
 <script src="online-ui.js?v=2"></script>
 <!-- World Board Game Atlas portal skin: konane/?skin=atlas — 3D boards (a koa tray with the Hawaiian quilt / a rough basalt papamū with pecked cups), coral and basalt pebbles, guide speech bubbles, portal look (all features kept) -->
 <script>

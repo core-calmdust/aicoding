@@ -317,7 +317,14 @@ function renderReserves(pos) {
     const bottom = flip ? P1 : P2, el = $(p === bottom ? '#res1' : '#res2');   // (the geese start on the near side)
     const tm = !st.over && pos.turn === p, left = pos.geese - E.FOX_WINS_AT;
     let s = p === P1 ? `<span class="rsv-l"><i class="pdisc p1"></i>${t('rsv.took', { n: `<b>${pos.cap}</b>` })}</span>` : `<span class="rsv-l"><i class="pdisc p2"></i>${t('rsv.left', { n: `<b>${pos.geese}</b>` })}</span><span class="rsv-w${left <= 2 ? ' hot' : ''}">${t('rsv.need', { n: `<b>${Math.max(0, left)}</b>` })}</span>`;
-    el.innerHTML = `<span class="rsv-plate">${s}</span>`;
+    // the quiet-move clock on the fox's plate (2026-11-18 user: 2D にも残り手数を見やすく。3D の HUD と同じ値): moves each left
+    // without a capture before the fox wins; red in the last 10. Not in lessons / puzzles (they start from set positions).
+    let q = '';
+    if (p === P1 && !st.over && !startSpec) {
+      const n = Math.max(0, Math.ceil((E.QUIET_MAX - pos.quiet) / 2));
+      q = `<span class="rsv-plate rsv-q${n <= 10 ? ' lo' : ''}" title="${escHb(t('rsv.quietT'))}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h9M3.5 14.5h9M4.5 1.5c0 4 3.5 4.5 3.5 6.5S4.5 10.5 4.5 14.5M11.5 1.5c0 4-3.5 4.5-3.5 6.5s3.5 2.5 3.5 6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 13.2c.6-1.6 1.4-2.2 2-2.2s1.4.6 2 2.2z" fill="currentColor"/></svg>${t('rsv.quiet', { n: `<b>${n}</b>` })}</span>`;
+    }
+    el.innerHTML = `<span class="rsv-plate">${s}</span>${q}`;
     el.title = p === P1 ? t('rsv.titleF', { a: pos.cap }) : t('rsv.titleG', { a: pos.geese, b: Math.max(0, left) });
     el.classList.toggle('turn', tm);
   }
@@ -951,27 +958,17 @@ document.addEventListener('keydown', e => {
 });
 
 // ---------------------------------------------------------------- 2D board designs and stone sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
-// Boards: an oak pub board with the lines burnt in (default), a slate school board with chalk lines, a linen sampler with
-// stitched lines, a meadow, and two plain modern ones. Pieces: turned wooden pegs' heads (a russet fox, white geese),
-// glass marbles, pewter, painted counters.
-const BD_KEYS = ['oak', 'slate', 'linen', 'meadow', 'night', 'paper'], PC_KEYS = ['wood', 'marble', 'pewter', 'paint'];
-// [surface (fallback), line, frame, frame line]
-const BD_PAL = {
-  oak: ['#b98a52', '#3a2412', '#4a2e18', '#e0b87a'],
-  slate: ['#39424a', '#e8ecef', '#5a4630', '#c9a56a'],
-  linen: ['#e6dcc6', '#8a3a2c', '#6b5a3a', '#cdbb94'],
-  meadow: ['#6f9a4a', '#f4f0d8', '#3d5a26', '#b9d48a'],
-  night: ['#1a2238', '#d9b46a', '#0e1424', '#d9b46a'],
-  paper: ['#f1ece0', '#55504a', '#3a3836', '#d6cfc0'],
-};
-// [[fox fill, rim], [goose fill, rim]]
-const PC_PAL = {
-  wood: [['#b4502a', '#5a2410'], ['#f3ead6', '#b3a27c']],
-  marble: [['#c8501e', '#6a2408'], ['#eef2f4', '#a9b6bd']],
-  pewter: [['#b0623a', '#4a2412'], ['#c9cdd0', '#70767c']],
-  paint: [['#d9622b', '#7a2a0c'], ['#ffffff', '#b9b9b9']],
-};
+// 2026-11-18 (user: 木目の質感のアナログ／アブストラクト／可愛いキャラクター／Luxury の4つ＋2つ、合計6種): boards img/2d/bd-<key>.webp
+// carry their own lines and points; pieces img/2d/pc-<set>-f|g.webp (tools/gen_art2.py). The fifth and sixth are the game's own
+// history (a Norse stone slab with bone and amber — 『グレティルのサガ』) and Delft blue (the English and Dutch boards of later times).
+const BD_KEYS = ['oak', 'bauhaus', 'meadow', 'lux', 'norse', 'delft'], PC_KEYS = ['wood', 'bauhaus', 'cute', 'lux', 'norse', 'delft'];
+const BD_OLD = { slate: 'norse', linen: 'delft', night: 'lux', paper: 'bauhaus' }, PC_OLD = { marble: 'lux', pewter: 'norse', paint: 'bauhaus' };
+const ART = (k, v) => `img/2d/${k}.webp?v=${v || 1}`;
+// [frame colour behind the mini boards]
+const BD_PAL = { oak: ['#4a2e18'], bauhaus: ['#262628'], meadow: ['#e2c79c'], lux: ['#1a0f08'], norse: ['#5c5850'], delft: ['#2a1d14'] };
 function designApply() {
+  if (BD_OLD[settings.bd]) settings.bd = BD_OLD[settings.bd];
+  if (PC_OLD[settings.pcs]) settings.pcs = PC_OLD[settings.pcs];
   if (!BD_KEYS.includes(settings.bd)) settings.bd = 'oak';
   if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'wood';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
@@ -983,18 +980,15 @@ function designPickers() {
   r1.innerHTML = BD_KEYS.map(k => `<button type="button" data-bd="${k}" class="${k === settings.bd ? 'sel' : ''}" aria-pressed="${k === settings.bd}">${miniSVG(sp, { cls: 'bdm', bd: k })}<span>${escHb(t('bd.' + k))}</span></button>`).join('');
   r2.innerHTML = PC_KEYS.map(k => `<button type="button" data-pcs="${k}" class="${k === settings.pcs ? 'sel' : ''}" aria-pressed="${k === settings.pcs}">${pcSwatch(k)}<span>${escHb(t('pcs.' + k))}</span></button>`).join('');
 }
-// a piece-set tile: the fox and two geese (their rendered faces) on a patch of the current board
+// a piece-set tile: the fox and two geese on the middle of the current board
 function pcSwatch(k) {
-  const BP = BD_PAL[settings.bd] || BD_PAL.oak;
-  return `<svg class="bdm" viewBox="0 0 120 120"><rect x="1" y="1" width="118" height="118" rx="10" fill="${BP[2]}"/><image href="img/bd-${settings.bd}.webp" x="8" y="8" width="104" height="104" preserveAspectRatio="xMidYMid slice"/>` +
-    `<path d="M34,40H86M34,84H86M34,40V84M86,40V84M34,40L86,84M86,40L34,84" stroke="${BP[1]}" stroke-width="1.8" opacity=".75" fill="none"/>` +
-    `<image href="img/pc-${k}-f.webp" x="34" y="14" width="52" height="52"/><image href="img/pc-${k}-g.webp" x="14" y="64" width="40" height="40"/><image href="img/pc-${k}-g.webp" x="66" y="64" width="40" height="40"/></svg>`;
-}
-function pieceSVG(x, y, r, P, fox) {
-  const s = `<circle cx="${x}" cy="${(y + r * 0.14).toFixed(1)}" r="${r}" fill="rgba(0,0,0,.38)"/><circle cx="${x}" cy="${y}" r="${r}" fill="${P[0]}" stroke="${P[1]}" stroke-width="${Math.max(1, r * 0.12).toFixed(2)}"/>` +
-    `<circle cx="${(x - r * 0.3).toFixed(1)}" cy="${(y - r * 0.32).toFixed(1)}" r="${(r * 0.3).toFixed(1)}" fill="#fff" fill-opacity="${fox ? .3 : .55}"/>`;
-  // the fox: two pointed ears
-  return fox ? `<path d="M${x - r * .78},${y - r * .5}L${x - r * .62},${y - r * 1.28}L${x - r * .1},${y - r * .86}ZM${x + r * .78},${y - r * .5}L${x + r * .62},${y - r * 1.28}L${x + r * .1},${y - r * .86}Z" fill="${P[0]}" stroke="${P[1]}" stroke-width="${Math.max(1, r * 0.1).toFixed(2)}" stroke-linejoin="round"/>` + s : s;
+  const bd = BD_KEYS.includes(settings.bd) ? settings.bd : 'oak', u = 104 / 2.9, W = 7 * u, x0 = 8 - 2.05 * u, id = 'pcs' + k;
+  const at = (c, r) => [8 + (c + .5 - 2.05) * u, 8 + (r + .5 - 2.05) * u];
+  const [fx, fy] = at(3, 2), g1 = at(2, 4), g2 = at(4, 4), F = u * .98, G = u * .74;
+  return `<svg class="bdm" viewBox="0 0 120 120"><defs><clipPath id="${id}"><rect x="8" y="8" width="104" height="104" rx="6"/></clipPath></defs><rect x="1" y="1" width="118" height="118" rx="10" fill="${BD_PAL[bd][0]}"/>` +
+    `<g clip-path="url(#${id})"><image href="${ART('bd-' + bd)}" x="${x0}" y="${x0}" width="${W}" height="${W}"/></g>` +
+    [g1, g2].map(([x, y]) => `<image href="${ART('pc-' + k + '-g')}" x="${x - G / 2}" y="${y - G / 2}" width="${G}" height="${G}"/>`).join('') +
+    `<image href="${ART('pc-' + k + '-f')}" x="${fx - F / 2}" y="${fy - F * .55}" width="${F}" height="${F}"/></svg>`;
 }
 // the lines of the board as one SVG path (unit = one step, origin = the centre of point a7's cell at .5,.5)
 function boardPath(X, Y) {
@@ -1007,17 +1001,15 @@ const sizeOf = () => 7;
 function miniSVG(spec, o) {
   o = o || {};
   const u = 240 / 7, pad = 8, W = 240 + pad * 2, X = i => pad + (E.RC[i][1] + 0.5) * u, Y = i => pad + (E.RC[i][0] + 0.5) * u;
-  const bdk = o.bd || settings.bd, BP = BD_PAL[bdk] || BD_PAL.oak, pk = o.pcs || settings.pcs, PP = PC_PAL[pk] || PC_PAL.wood;
+  let bdk = o.bd || settings.bd, pk = o.pcs || settings.pcs;
+  if (!BD_KEYS.includes(bdk)) bdk = BD_OLD[bdk] || 'oak'; if (!PC_KEYS.includes(pk)) pk = PC_OLD[pk] || 'wood';
   let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}">`;
-  s += `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="${BP[2]}"/><rect x="${pad}" y="${pad}" width="240" height="240" fill="${BP[0]}"/><image href="img/bd-${bdk}.webp" x="${pad}" y="${pad}" width="240" height="240" preserveAspectRatio="none"/>`;
-  { const a = pad, b = pad + 5 * u, w = 2 * u; s += `<path d="M${a},${a}h${w}v${w}h${-w}zM${b},${a}h${w}v${w}h${-w}zM${a},${b}h${w}v${w}h${-w}zM${b},${b}h${w}v${w}h${-w}z" fill="${BP[2]}" opacity=".88"/>`; }   // the four corners outside the cross
-  s += `<path d="${boardPath(X, Y)}" stroke="${BP[1]}" stroke-width="${(u * 0.05).toFixed(2)}" opacity=".8" fill="none" stroke-linecap="round"/>`;
-  for (const i of E.POINTS) s += `<circle cx="${X(i).toFixed(1)}" cy="${Y(i).toFixed(1)}" r="${(u * 0.1).toFixed(1)}" fill="${BP[1]}" opacity=".85"/>`;
+  s += `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="${BD_PAL[bdk][0]}"/><image href="${ART('bd-' + bdk)}" x="${pad}" y="${pad}" width="240" height="240" preserveAspectRatio="none"/>`;   // (the lines are in the picture)
   if (o.last != null && o.last >= 0) s += `<circle cx="${X(o.last)}" cy="${Y(o.last)}" r="${u * 0.46}" fill="rgba(255,222,130,.4)"/>`;
   for (const i of o.trail || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="${u * 0.2}" fill="rgba(255,236,170,.6)"/>`;
   const b = spec && spec.b ? spec.b : '';
-  for (const i of E.POINTS) { const ch = b[i]; if (ch === 'g') s += pieceSVG(X(i), Y(i), u * 0.3, PP[1], false); }
-  for (const i of E.POINTS) { const ch = b[i]; if (ch === 'f') s += pieceSVG(X(i), Y(i) + u * 0.04, u * 0.36, PP[0], true); }
+  for (const i of E.POINTS) { const ch = b[i]; if (ch === 'g') s += `<image href="${ART('pc-' + pk + '-g')}" x="${(X(i) - u * .37).toFixed(1)}" y="${(Y(i) - u * .37).toFixed(1)}" width="${(u * .74).toFixed(1)}" height="${(u * .74).toFixed(1)}"/>`; }
+  for (const i of E.POINTS) { const ch = b[i]; if (ch === 'f') s += `<image href="${ART('pc-' + pk + '-f')}" x="${(X(i) - u * .49).toFixed(1)}" y="${(Y(i) - u * .54).toFixed(1)}" width="${(u * .98).toFixed(1)}" height="${(u * .98).toFixed(1)}"/>`; }
   for (const i of o.took || []) { const x = X(i), y = Y(i), h = u * 0.2; s += `<path d="M${x - h},${y - h}L${x + h},${y + h}M${x + h},${y - h}L${x - h},${y + h}" stroke="#ff5a48" stroke-width="${Math.max(2, u * .07)}" stroke-linecap="round"/>`; }
   for (const i of o.dest || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="${Math.max(4, u * 0.16)}" fill="rgba(255,236,170,.95)" stroke="rgba(0,0,0,.5)" stroke-width="1"/>`;
   if (o.sel != null && o.sel >= 0) s += `<circle cx="${X(o.sel)}" cy="${Y(o.sel)}" r="${u * 0.46}" fill="none" stroke="#ffe9a8" stroke-width="2.8"/>`;
@@ -2438,7 +2430,7 @@ if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
-  renderInfo(); renderFx();
+  renderInfo(); renderFx(); renderReserves(posAt(cur).pos);   // the plates above / below the board (取った / 残り)
   if ($('#newOverlay').classList.contains('show')) { segSync(); designPickers(); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
