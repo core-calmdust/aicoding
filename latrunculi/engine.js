@@ -149,7 +149,8 @@ class Pos {
     }
     for (let d = 0; d < 4; d++) { const t = NB[f][d]; if (t >= 0 && !sq[t]) out.push(t); }
     if (R.leap) {
-      const stamp = ++LEAP_STAMP; LEAP_SEEN[f] = stamp; let sp = 0; LEAP_STK[sp++] = f;
+      if (++LEAP_STAMP > 0x7ffffff0) { LEAP_STAMP = 1; LEAP_SEEN.fill(0); LEAP_OUT.fill(0); }   // (the Int32 marks must not overflow: an endless loop after ~2^31 calls)
+      const stamp = LEAP_STAMP; LEAP_SEEN[f] = stamp; let sp = 0; LEAP_STK[sp++] = f;
       for (const t of out) LEAP_OUT[t] = stamp;
       while (sp) {
         const a = LEAP_STK[--sp];
@@ -324,16 +325,17 @@ function judge(pos, nMoves) {
 }
 // ---------------------------------------------------------------- AI levels (20 steps: Lv.1 … Lv.20)
 const LEVELS = [null,
-  { d: 1, noise: 90 },                   // 1
-  { d: 1, noise: 60 },                   // 2
-  { d: 1, noise: 36 },                   // 3
-  { d: 2, noise: 60 },                   // 4
-  { d: 2, noise: 36 },                   // 5
-  { d: 2, noise: 20 },                   // 6
-  { d: 3, noise: 24 },                   // 7
-  { d: 3, noise: 12 },                   // 8
-  { d: 4, noise: 12 },                   // 9
-  { d: 4, noise: 5 },                    // 10
+  // (2026-11-19: the weak steps re-spaced after the stronger search / evaluation — Lv.4 was weaker than Lv.3, some steps +400 Elo)
+  { d: 1, noise: 150 },                  // 1
+  { d: 1, noise: 110 },                  // 2
+  { d: 1, noise: 85 },                   // 3
+  { d: 1, noise: 68 },                   // 4
+  { d: 1, noise: 56 },                   // 5
+  { d: 2, noise: 60 },                   // 6
+  { d: 2, noise: 46 },                   // 7
+  { d: 2, noise: 32 },                   // 8
+  { d: 3, noise: 24 },                   // 9
+  { s: 1, nk: 1.2 },                     // 10  (about 1,200 positions per move)
   { s: 1, nk: 3 },                       // 11  (about 3,000 positions per move)
   { s: 1, nk: 6 },                       // 12
   { s: 1, nk: 12 },                      // 13
@@ -351,16 +353,21 @@ function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = r
 // move, and — while the counters are being placed — solid shapes: pairs side by side, away from the corners.
 // The evaluation is a weighted sum of features (side to move's view; tools/tune.js fits the weights per rule set by logistic
 // regression on self-play results — Texel's method, 2026-11-19). Feature order (FN):
-const FN = ['man', 'blocked', 'hang', 'mob', 'pair', 'center', 'cornerP', 'hand', 'dhang', 'edge', 'holder', 'tempo', 'quietMat', 'rmNow'];
+const FN = ['man', 'blocked', 'hang', 'mob', 'pair', 'center', 'cornerP', 'hand', 'dhang', 'edge', 'holder', 'tempo', 'quietMat', 'rmNow', 'ctl'];
 const NF = FN.length;
+// (2026-11-19 round 3) two sets of weights: W[k] while the counters are being placed, W[NF + k] once they move; ctl = empty squares
+// one move of a side reaches, minus the opponent's
 // hand-set weights (before tuning); TUNED[rule] replaces them when present
 const EW = { man: 100, blocked: 22, hang: 16, mob: 2, pair: 5, center: 2, cornerP: 14 };
-const W0 = new Float64Array([100, 22, -16, 2, 5, 2, -14, 100, -16, 0, 0, 6, 0, 0]);
-// fitted by tools/tune.js on self-play (2026-11-19; seneca / piso: round 2 on the round-1 engine's games as well)
+const W1 = [100, 22, -16, 2, 5, 2, -14, 100, -16, 0, 0, 6, 0, 0, 0];
+const W0 = new Float64Array(W1.concat(W1));
+// fitted by tools/tune.js on self-play (2026-11-19; seneca / piso: round 2 on the round-1 engine's games as well; piso round 3 on quiet
+// positions only (no enclosure to make / removal due) with separate weights for placing and moving: +117 Elo against round 2 — the same
+// for seneca and quintana lost (−158 / −35), so they keep round 2 for both phases)
 const TUNED = {
-  seneca: new Float64Array([100, 16.5, -11.9, -1.2, -3.3, 0.9, -3.4, 87.9, -7.5, 1.9, -1.6, 5.4, 46.9, 24.2]),
-  piso: new Float64Array([100, 22, -14.6, -1.3, -3.8, 0.9, -16.4, 87.1, -5.7, -0.3, 0, 5.9, 100.9, 0]),
-  quintana: new Float64Array([100, 22, -14.7, -0.1, -0.5, 0.7, -14, 100, -17.8, -1.4, 0, 2.4, 60.6, 0]),
+  seneca: new Float64Array([100, 16.5, -11.9, -1.2, -3.3, 0.9, -3.4, 87.9, -7.5, 1.9, -1.6, 5.4, 46.9, 24.2, 0, 100, 16.5, -11.9, -1.2, -3.3, 0.9, -3.4, 87.9, -7.5, 1.9, -1.6, 5.4, 46.9, 24.2, 0]),
+  piso: new Float64Array([100, 22, -10.6, -1.9, -9, 4, -18.6, 99, -8.3, 4.4, 0, 3.3, 100.9, 0, -4, 100, 22, -30.4, -5.7, -14.7, 3.8, -8.3, 87.1, -18.2, 7.1, 0, 1.8, 66.4, 0, 1.2]),
+  quintana: new Float64Array([100, 22, -14.7, -0.1, -0.5, 0.7, -14, 100, -17.8, -1.4, 0, 2.4, 60.6, 0, 0, 100, 22, -14.7, -0.1, -0.5, 0.7, -14, 100, -17.8, -1.4, 0, 2.4, 60.6, 0, 0]),
 };
 let W = W0;
 const CEN = new Int8Array(NN);
@@ -406,11 +413,13 @@ function evalCore(pos, F) {
   f[7] += pos.hand[me - 1] - pos.hand[2 - me];
   f[11] += 1;
   if (!pos.placing) f[12] += (pos.n[me - 1] - pos.n[2 - me] + pos.cap[me - 1] - pos.cap[2 - me]) * pos.quiet / QUIET_MAX;
-  if (F) return 0;
-  let v = 0; for (let k = 0; k < NF; k++) v += W[k] * f[k];
+  { const A = RCH[me - 1], B = RCH[2 - me]; let c = 0; for (let x = 0; x < NN; x++) if (!sq[x]) c += (A[x] > 0) - (B[x] > 0); f[14] += c; }
+  const o = pos.placing ? 0 : NF;
+  if (F) { if (o) for (let k = 0; k < NF; k++) { F[NF + k] = F[k]; F[k] = 0; } return 0; }
+  let v = 0; for (let k = 0; k < NF; k++) v += W[o + k] * f[k];
   return Math.round(v);
 }
-const EVF = new Float64Array(NF);
+const EVF = new Float64Array(NF);   // (evalCore's scratch; F for tuning has 2 * NF entries)
 function evaluate(pos) { return evalCore(pos, null); }
 // can a free counter of o (other than the one on `not`) reach the empty square x with one move? (steps / slides only)
 function reach(pos, x, o, not) {
@@ -426,6 +435,10 @@ function reach(pos, x, o, not) {
 // ---------------------------------------------------------------- search
 let nodes = 0, stop = false, tEnd = 0, nodeLimit = Infinity;
 const TT = new Map(), killers = [];
+// SH: the transposition table shared by the workers of shared/mtsplit.js (shared mode, shared/mttt.js, set by 'mtshare'); the
+// one-thread worker never has it, so its levels play as before
+let SH = null;
+const SALT = { seneca: 0, piso: 0x5bd1e995, quintana: 0x27d4eb2f };
 const HIST = new Int32Array(2 * 64 * 64);   // history heuristic: [side][from][to]
 function kreset() { killers.length = 0; for (let i = 0; i < HIST.length; i++) HIST[i] >>= 3; }
 function ttClear() { TT.clear(); }
@@ -461,12 +474,12 @@ let NULLMOVE = true, LMR_K = .45, QS_STANDPAT = true, ASP = 40;
 const isKiller = (m, ply) => { const k = killers[ply]; return !!k && (k[0] === m || k[1] === m); };
 function search(pos, d, a, b, ply) {
   nodes++;
-  if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit)) stop = true;
+  if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit || (SH !== null && SH.stopped()))) stop = true;
   if (stop) return 0;
   if (d <= 0) { const tq = terminal(pos, ply); if (tq !== null) return tq; return quiesce(pos, a, b, ply, 0); }
   const LM = pos.moves();
   const tv = terminal(pos, ply, LM.length); if (tv !== null) return tv;
-  const e = TT.get(pos.h1), a0 = a;
+  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1), a0 = a;
   let ttm = -1;
   if (e && e.h2 === pos.h2) {
     ttm = e.m;
@@ -511,8 +524,9 @@ function search(pos, d, a, b, ply) {
       break;
     }
   }
-  if (TT.size > 600000) TT.clear();
   let sv = best; if (sv > WINT) sv += ply; else if (sv < -WINT) sv -= ply;
+  if (SH !== null) { SH.put(pos.h1, pos.h2, d, sv, best <= a0 ? 2 : best >= b ? 1 : 0, bm, 0); return best; }
+  if (TT.size > 600000) TT.clear();
   TT.set(pos.h1, { h2: pos.h2, d, v: sv, m: bm, f: best <= a0 ? 2 : best >= b ? 1 : 0 });
   return best;
 }
@@ -596,9 +610,31 @@ function resist(pos, list) {
   for (const e of pool) { const q = pos.clone().play(e.m), s = (q.count(me) - q.count(3 - me)) * 20 + q.mobility(me) - q.mobility(3 - me); if (s > bs) { bs = s; bm = e.m; } }
   return bm;
 }
-let PRO_CFG = null;
+
+// ---------------------------------------------------------------- opening book for the placing phase (tools/book.js, 2026-11-19): the first
+// placement, the reply to every first placement and the second placement after the book's first one (and any reply); the 8 symmetries of the board are folded (bookKey: the smallest of the 8 board
+// strings, and the transform t that gives it). The book is self.LT_BOOK (book.js, loaded by the worker) or set with setBook().
+const SYM = [];
+for (let t = 0; t < 8; t++) { const a = new Int8Array(NN); for (let i = 0; i < NN; i++) { let r = i >> 3, c = i & 7; if (t & 4) [r, c] = [c, r]; if (t & 1) c = 7 - c; if (t & 2) r = 7 - r; a[i] = r * 8 + c; } SYM.push(a); }
+const SYMI = SYM.map(a => { const b = new Int8Array(NN); for (let i = 0; i < NN; i++) b[a[i]] = i; return b; });
+function bookKey(pos) {
+  let best = null, bt = 0;
+  for (let t = 0; t < 8; t++) { const A = SYM[t], s = new Array(NN); for (let i = 0; i < NN; i++) s[A[i]] = pos.sq[i]; const k = s.join(''); if (best === null || k < best) { best = k; bt = t; } }
+  return { key: RK + ':' + COUNT + ':' + best, t: bt };
+}
+const bookMove = (m, t) => mv(SYM[t][mFrom(m)], SYM[t][mTo(m)]);           // a placement into the canonical orientation
+const bookBack = (m, t) => mv(SYMI[t][mFrom(m)], SYMI[t][mTo(m)]);         // and back
+let BOOK = (typeof self !== 'undefined' && self.LT_BOOK) || null;
+function bookFind(pos) {
+  if (!BOOK || !pos.placing || pos.ply > 2) return -1;
+  const k = bookKey(pos), m = BOOK[k.key];
+  if (m == null) return -1;
+  const b = bookBack(m, k.t);
+  return pos.moves().indexOf(b) >= 0 ? b : -1;
+}
+let PRO_CFG = null, PRO_NOBOOK = false;
 // tools (tools/match.js, tune): think with an explicit level object ({ s: 1, ms } / { s: 1, nk } / { d, noise })
-function thinkCfg(start, moves, cfg, rule) { PRO_CFG = cfg; try { return think(start, moves, 10, null, rule); } finally { PRO_CFG = null; } }
+function thinkCfg(start, moves, cfg, rule, rand) { PRO_CFG = cfg; try { return think(start, moves, 10, rand, rule); } finally { PRO_CFG = null; } }
 function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
@@ -607,6 +643,7 @@ function think(start, moves, level, rand, rule) {
   const all = pos.moves();
   if (!all.length) return { move: -1 };
   if (all.length === 1) return { move: all[0] };
+  if (L.s && !PRO_NOBOOK) { const b = bookFind(pos); if (b >= 0) return { move: b, v: 0, book: true }; }   // (the search levels: the opening book)
   if (!L.s) {
     nodes = 0; stop = false; tEnd = Date.now() + 2500; nodeLimit = Infinity; kreset();
     const d = pos.placing ? Math.min(L.d, 2) : L.d;
@@ -618,6 +655,10 @@ function think(start, moves, level, rand, rule) {
     return { move: best, v: vals[0].v };
   }
   const r = bestMove(pos, L.dx || 60, L.ms || 0, L.nk || (L.ms ? 0 : 50));
+  return thinkFin(pos, r);
+}
+// the strong steps' answer from the search's result (also the end of a search on several threads, shared/mtsplit.js)
+function thinkFin(pos, r) {
   if (r.v < -WINT && r.depth > 0) {
     nodes = 0; stop = false; tEnd = Date.now() + 800; nodeLimit = Infinity;
     const vals = rootValues(pos, Math.max(1, r.depth));
@@ -660,6 +701,51 @@ function cands(start, moves, ms, k, plies, onProgress, rule) {
   const list = r.list.slice().sort((a, b) => b.v - a.v).slice(0, k || 5);
   for (const e of list) e.pv = pvOf(start, moves, e.m, plies);
   return { list, depth: r.depth };
+}
+
+// ---------------------------------------------------------------- several threads (shared/mtsplit.js, 2026-11-19; the same protocol as
+// konane/engine.js): mtPlan = what a 'think' / 'analyze' / 'cands' job searches on the threads (or its answer at once); mtV = the node
+// after the root and m.line searched to depth m.d in the window (m.wa, m.wb); mtKids = that node's moves in this engine's order;
+// mtFin = the job's reply from the threads' raw result (the same shape as the one-thread worker's)
+let mtRule = null;
+function mtNode(m) {
+  if (SH !== null) SH.salt = SALT[RK] | 0;
+  else if (mtRule !== RK) { ttClear(); mtRule = RK; }
+  const line = m.line || [], { pos } = replay(m.start, m.moves.concat(line));
+  return { pos, ply: line.length };
+}
+function mtPlan(m) {
+  const { pos } = replay(m.start, m.moves), all = pos.moves(), inf = WIN + 1;
+  if (m.job === 'think') {
+    const L = m.cfg || LEVELS[m.level] || LEVELS[10];
+    if (all.length < 2 || !L.s || bookFind(pos) >= 0) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }   // (one move, a weak level, the book: no threads)
+    kreset();
+    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99, lmr: { d: 3, i: 3 }, specRes: SH === null ? 0 : undefined, sticky: SH === null } };
+  }
+  if (!all.length) return { result: { list: [], depth: 0 } };
+  const cands = m.job === 'cands';
+  kreset();
+  return { plan: { kind: 'all', sticky: SH === null, moves: orderMoves(pos, all, -1, 0), inf, maxD: 40, ms: m.time || (cands ? 1200 : 1000), win: WINT, stopAll: true, progress: true, pv: cands ? m.plies || 7 : 0, pvK: m.k || 5 } };
+}
+function mtV(m) {
+  const { pos, ply } = mtNode(m);
+  nodes = 0; stop = false; tEnd = m.until || Infinity; nodeLimit = m.nl || Infinity;
+  const v = search(pos, m.d, m.wa, m.wb, ply);
+  return { v, ok: !stop, nodes };
+}
+function mtKids(m) {
+  const { pos, ply } = mtNode(m);
+  const L = pos.moves(); if (!L.length) return { kids: [] };
+  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
+  return { kids: orderMoves(pos, L, e && e.h2 === pos.h2 ? e.m : -1, ply).map(x => ({ m: x, s: -1 })) };
+}
+function mtFin(m) {
+  const r = m.raw;
+  if (m.job === 'think') { const { pos } = replay(m.start, m.moves); return { result: thinkFin(pos, { move: r.m, v: r.v, depth: r.depth }) }; }
+  let list = (r.list || []).map(e => Object.assign({ m: e.m, v: e.v, kind: kindOf(e.v) }, e.pv ? { pv: e.pv } : {}));
+  if (!list.length) { const { pos } = replay(m.start, m.moves); list = pos.moves().map(x => ({ m: x, v: 0, kind: 'heur' })); }
+  if (m.job === 'cands') list = list.slice(0, m.k || 5);
+  return { result: { list, depth: r.depth } };
 }
 // ---------------------------------------------------------------- solvers (puzzles and lessons)
 // goal 'take': the mover's lead in captures grows by at least `gain` within n of its own moves, whatever the reply
@@ -740,13 +826,17 @@ setRule('seneca');
 const API = { N, NN, P1, P2, WIN, WINT, QUIET_MAX, RULES, RULE_ORDER, get rule() { return RK; }, get ruleKey() { return ruleKey(); }, get R() { return R; }, get count() { return COUNT; }, setRule,
   RC, ADJ, NB, CORNER, CADJ, sqAt, sqName, mv, mFrom, mTo, mRm, isPlace, isRemoveOnly, Pos, effect, path, captured, name, parse, replay, judge,
   LEVELS, think, thinkCfg, setOpt(o) { if ('null' in o) NULLMOVE = o.null; if ('lmr' in o) LMR_K = o.lmr; if ('qs' in o) QS_STANDPAT = o.qs; if ('asp' in o) ASP = o.asp; }, analyze, cands, pvOf, evaluate, evalCore, FN, W0, TUNED, setW(w) { W = w ? Float64Array.from(w) : (TUNED[RK] || W0); }, kindOf, EW, goalGood, goalMin, goalReply, goalOf, goalMet, ttClear,
-  get nodes() { return nodes; } };
+  get nodes() { return nodes; }, set SH(t) { SH = t; }, bookKey, bookMove, bookFind, setBook(b) { BOOK = b; }, set noBook(v) { PRO_NOBOOK = !!v; }, get SH() { return SH; }, mtPlan, mtV, mtKids, mtFin };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
+  try { importScripts('book.js?v=1'); BOOK = self.LT_BOOK || null; } catch (e) {}   // (the opening book; none = search as usual)
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = self.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
     try {
+      if (SH !== null) SH.begin(m);
       setRule(m.rule || 'seneca');
+      if (SH !== null) SH.salt = SALT[RK] | 0;
       if (m.type === 'think') { PRO_CFG = m.cfg || null; let r; try { r = think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } self.postMessage({ id: m.id, type: 'result', ...r, nodes }); }
       else if (m.type === 'analyze') {
         const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
@@ -755,6 +845,11 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
       else if (m.type === 'goal') { const g = goalGood(m.start, m.moves, m.n, m.g); self.postMessage({ id: m.id, type: 'result', list: g ? g.map(x => ({ m: x, need: m.n })) : null }); }
       else if (m.type === 'goalReply') self.postMessage({ id: m.id, type: 'result', ...goalReply(m.start, m.moves, m.n, m.g) });
       else if (m.type === 'newgame') { ttClear(); self.postMessage({ id: m.id, type: 'result' }); }
+      else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
+      else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', core: 'js', ...mtV(m) });
+      else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
+      else if (m.type === 'mtpv') self.postMessage({ id: m.id, type: 'result', pv: pvOf(m.start, m.moves, m.m, m.plies) });
+      else if (m.type === 'mtfin') { const f = mtFin(m); if (f.result) f.result.core = 'js'; self.postMessage({ id: m.id, type: 'result', ...f }); }
     } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
   };
 }

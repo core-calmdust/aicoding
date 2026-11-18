@@ -21,7 +21,8 @@ if (mode === 'gen') {
       if (ply < nr || rnd() < .03) { const L = pos.moves(); m = L[Math.floor(rnd() * L.length)]; }
       else m = E.thinkCfg(null, moves, { s: 1, nk: +nk }, rule).move;
       if (m == null || m < 0) break;
-      if (ply >= 8) { const F = new Float64Array(E.FN.length); E.evalCore(pos, F); recs.push([Array.from(F, x => Math.round(x * 1000) / 1000), pos.side + 1]); }
+      const quiet = pos.placing || (!pos.removable().length && !pos.moves().some(x => { const e = E.effect(pos, x); return e.blocks.length || e.takes.length; }));   // (quiet positions only: no enclosure to make, no removal due)
+      if (ply >= 8 && quiet) { const F = new Float64Array(2 * E.FN.length); E.evalCore(pos, F); recs.push([Array.from(F, x => Math.round(x * 1000) / 1000), pos.side + 1]); }
       moves.push(m); pos.play(m);
     }
     j = j && j.over ? j : E.judge(pos);
@@ -33,9 +34,9 @@ if (mode === 'gen') {
 } else if (mode === 'fit') {
   const X = [], Y = [];
   for (const f of rest) for (const ln of fs.readFileSync(f, 'utf8').split('\n')) { if (!ln) continue; const [x, y] = JSON.parse(ln); X.push(x); Y.push(y); }
-  const n = X.length, nf = E.FN.length;
+  const n = X.length, nf = 2 * E.FN.length;
   console.log(rule, n, 'positions');
-  const w = Array.from(E.W0);
+  const w = Array.from(E.TUNED[rule] || E.W0), w0 = w.slice(), LAM = +(process.env.LAM || 0);   // LAM: L2 pull towards the starting weights (per unit of loss)
   const val = (w, x) => { let v = 0; for (let k = 0; k < nf; k++) v += w[k] * x[k]; return v; };
   const loss = (w, K) => { let s = 0; for (let i = 0; i < n; i++) { const p = 1 / (1 + Math.exp(-K * val(w, X[i]))); s += (Y[i] - p) ** 2; } return s / n; };
   // the scale K for the hand-set weights
@@ -51,12 +52,12 @@ if (mode === 'gen') {
       for (let k = 0; k < nf; k++) g[k] += e * x[k];
     }
     for (let k = 0; k < nf; k++) {
-      if (E.FN[k] === 'man') continue;
-      g[k] /= n; m1[k] = .9 * m1[k] + .1 * g[k]; m2[k] = .999 * m2[k] + .001 * g[k] * g[k];
+      if (E.FN[k % E.FN.length] === 'man') continue;
+      g[k] /= n; g[k] += LAM * 2e-8 * (w[k] - w0[k]); m1[k] = .9 * m1[k] + .1 * g[k]; m2[k] = .999 * m2[k] + .001 * g[k] * g[k];
       w[k] -= lr * (m1[k] / (1 - .9 ** it)) / (Math.sqrt(m2[k] / (1 - .999 ** it)) + 1e-9);
     }
     if (it % 100 === 0) console.log(it, loss(w, K).toFixed(5));
   }
   console.log(JSON.stringify(w.map(x => Math.round(x * 10) / 10)));
-  console.log(E.FN.map((k, i) => k + ' ' + (Math.round(w[i] * 10) / 10)).join(', '));
+  const nf1 = E.FN.length; console.log('place: ' + E.FN.map((k, i) => k + ' ' + (Math.round(w[i] * 10) / 10)).join(', ')); console.log('move:  ' + E.FN.map((k, i) => k + ' ' + (Math.round(w[nf1 + i] * 10) / 10)).join(', '));
 }

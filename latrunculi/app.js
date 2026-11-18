@@ -111,7 +111,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=4';
+const ENGINE_URL = 'engine.js?v=6';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -138,8 +138,9 @@ let aiW = makeWorker(), anaW = makeWorker();
 // Shared mode (2026-11-09): on a cross-origin isolated page (sw.js: Document-Isolation-Policy on Chromium; elsewhere the COOP mode
 // once the option is turned on, without sign-in / online play — the same choice as the mtengine.js games) the workers share one
 // transposition table (shared/mttt.js); otherwise they run as before, each with its own.
-// (latrunculi: the engine is plain JS on one thread for now — no worker pool, no shared table)
-const MTP = null;
+// (latrunculi, 2026-11-19: the same as konane — root split / Young Brothers Wait, the shared table on an isolated page)
+if (window.MTSplit) MTSplit.init({ sw: 'sw.js?v=1' });
+const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladder.drive }) : null;
 // (2026-11-11) On an isolated page the threads are core_mt.wasm's instead (shared/mtengine.js: the lead engine.js?…&mt=1, the helpers
 // mt-helper.js): Praline's Young Brothers Wait in C splits every node of the search (and the root), one table in the shared memory
 // (claude/konane-spec.md「αβ を C に」). mtsplit.js stays for a page that is not isolated, and while that pool is busy.
@@ -1274,7 +1275,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step on the kyu / dan scale (100 points per kyu: 15級 = 450 … 1級 = 1850, then 200 per dan)
 // measured: adjacent levels played each other (tools/native.c lv, see MODEL_CARD.md); about +125 per step up to 3級, smaller above
-const RT_LV = [0, 100, 245, 395, 540, 685, 830, 980, 1125, 1270, 1415, 1565, 1710, 1855, 1950, 2020, 2090, 2150, 2205, 2440, 2500, 2700, 2800, 2900];   // (2026-11-13, search v2: Lv.19-23 +50, an estimate)   // (Lv.21〜23: measured steps, see the spec「最上位レベル」)
+const RT_LV = [0, 100, 220, 518, 781, 985, 1074, 1173, 1339, 1756, 2011, 2100, 2254, 2312, 2484, 2528, 2632, 2657, 2682, 2802, 2852, 2952, 3052, 3152];   // (2026-11-19, measured: tools/ladder.js on the default rule — neighbouring levels, 24〜36 games each; steps under +25 (draw-heavy at the top) taken as +25; Lv.19・20 estimated from the nodes' doubling, about +50 Elo each; Lv.21〜23 unused)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
