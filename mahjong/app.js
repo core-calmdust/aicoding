@@ -2300,6 +2300,7 @@ class LessonHuman extends Human {
         const good = I18N.L(b.good || '') || '';
         lessonGuide({ text: good, good: true, step: L.n - L.beats.length });
         L.until = performance.now() + Math.min(4800, 1600 + good.length * 45);
+        L.lastGood = good;
         if (!L.beats.length && L.ls.end === 'beats') g.halt = true;
         return a;
       }
@@ -2348,9 +2349,9 @@ function lessonGuide(o) {
 // (ユーザー 2026-11-18「最上部は見にくいので可能な限り下側」) just above the player's hand, between the player's portrait (left) and the
 // drawn-tile slot (right — the call / win buttons come up there)
 function placeGuide(el) { el.style.left = el.style.top = el.style.width = el.style.transform = ''; }   // (2026-11-19: placed by CSS — it follows resizes and full screen)
-function guideWait(text, label, step) {
+function guideWait(text, label, step, good) {
   return new Promise(res => {
-    lessonGuide({ text, next: label, step });
+    lessonGuide({ text, next: label, step, good });
     const go = () => { removeEventListener('keydown', key, true); SND.pick(); res(); };
     const key = e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); go(); } };
     addEventListener('keydown', key, true);
@@ -2369,8 +2370,10 @@ async function lessonDone() {
   const rec = DB.lessons = DB.lessons || {}, old = rec[ls.id] || {};
   rec[ls.id] = { best: Math.max(old.best || 0, score), pass: !!(old.pass || pass) }; save();
   const list = ls.cat ? MJLessons.LESSONS.filter(x => x.cat === ls.cat) : MJLessons.RULES, i = list.indexOf(ls), next = list[i + 1];
-  await sleep(500);
+  await sleep(450);
   if (!UIS || UIS.lesson !== L) return;
+  // (ユーザー 2026-11-19「最後のメッセージを読む前に結果が出る」) 小町's last words stay until 次へ / Enter, then the result
+  if (L.lastGood) { await guideWait(L.lastGood, t('lsNext'), L.n, true); if (!UIS || UIS.lesson !== L) return; }
   lessonGuide(null);
   const b = modal(`<div class="ls-res ${pass ? 'ok' : ''}"><img class="lr-face" src="${charImg(MJChars.get(GUIDE), 'face')}" alt=""><h3>${esc(pass ? t('lsPass') : t('lsFail'))}</h3>
     <div class="lr-sc"><b>${score}</b><small>/100</small></div><p class="lr-say">${esc(t(score >= 100 ? 'lsSay100' : pass ? 'lsSayPass' : 'lsSayFail'))}</p><p class="lr-t">${esc(I18N.L(ls.title))}</p><p class="lr-p">${esc(I18N.L(ls.point))}</p><small class="lr-line">${esc(t('lsPassLine'))}</small>
