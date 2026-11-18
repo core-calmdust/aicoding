@@ -10,6 +10,71 @@
             ".validate": "$other === 'd' || $other === 't'"
           }
         }
+      },
+      "rooms": {
+        "$code": {
+          ".validate": "$code.matches(/^[A-Z0-9]{5}$/)",
+          "meta": {
+            ".write": "auth != null && (!data.exists() ? newData.child('host').val() === auth.uid : data.child('host').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['host','mode','len','st','t'])",
+            ".read": "auth != null"
+          },
+          "start": {
+            ".write": "auth != null && root.child('janka/rooms/'+$code+'/meta/host').val() === auth.uid",
+            ".read": "auth != null"
+          },
+          "res": {
+            ".write": "auth != null && root.child('janka/rooms/'+$code+'/meta/host').val() === auth.uid",
+            ".read": "auth != null"
+          },
+          "seats": {
+            "$uid": {
+              ".write": "auth != null && (auth.uid === $uid || root.child('janka/rooms/'+$code+'/meta/host').val() === auth.uid)",
+              ".validate": "!newData.exists() || (newData.hasChildren(['name','ch','t']) && newData.child('name').isString() && newData.child('name').val().length <= 24)"
+            },
+            ".read": "auth != null"
+          },
+          "ev": {
+            "$uid": {
+              ".read": "auth != null && (auth.uid === $uid || root.child('janka/rooms/'+$code+'/meta/host').val() === auth.uid)",
+              ".write": "auth != null && root.child('janka/rooms/'+$code+'/meta/host').val() === auth.uid"
+            }
+          },
+          "q": {
+            "$uid": {
+              ".read": "auth != null && (auth.uid === $uid || root.child('janka/rooms/'+$code+'/meta/host').val() === auth.uid)",
+              ".write": "auth != null && root.child('janka/rooms/'+$code+'/meta/host').val() === auth.uid"
+            }
+          },
+          "ans": {
+            "$uid": {
+              ".read": "auth != null && (auth.uid === $uid || root.child('janka/rooms/'+$code+'/meta/host').val() === auth.uid)",
+              ".write": "auth != null && auth.uid === $uid"
+            }
+          },
+          "emo": {
+            "$k": {
+              ".write": "auth != null && !data.exists() && newData.child('u').val() === auth.uid && root.child('janka/rooms/'+$code+'/seats/'+auth.uid).exists()",
+              ".validate": "newData.hasChildren(['u','k','t']) && newData.child('k').isNumber() && newData.child('k').val() >= 0 && newData.child('k').val() < 8"
+            },
+            ".read": "auth != null"
+          },
+          ".write": "auth != null && root.child('janka/rooms/'+$code+'/meta/host').val() === auth.uid && !newData.exists()"
+        }
+      },
+      "mm": {
+        ".read": "auth != null",
+        "$uid": {
+          ".write": "auth != null && (auth.uid === $uid || (data.exists() && !data.child('c').exists() && newData.child('c').isString()))",
+          ".validate": "!newData.exists() || newData.hasChildren(['t','r'])"
+        }
+      },
+      "pl": {
+        ".read": "auth != null",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['r','n']) && newData.child('r').isNumber() && newData.child('n').isNumber() && (data.exists() ? (newData.child('n').val() === data.child('n').val() + 1 && newData.child('r').val() - data.child('r').val() <= 60 && data.child('r').val() - newData.child('r').val() <= 60) : (newData.child('n').val() === 1 && newData.child('r').val() >= 1440 && newData.child('r').val() <= 1560))"
+        }
       }
     }
   }

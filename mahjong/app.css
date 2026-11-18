@@ -3164,3 +3164,40 @@ html.lp .lx-cards,html.lp .lx-cards.c4{grid-template-columns:repeat(4,1fr)}
 html.lp .lx-cdesc{display:none}
 html.lp .lx-card>b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 html.lp .lx-ft2 em{font-size:10.5px}
+/* ---- online (online.js, 2026-11-19) ---- */
+.modal.online .mbox{width:min(560px,calc(var(--W,100vw) - 24px));padding:18px 20px 16px;background:radial-gradient(120% 90% at 70% 0%,rgba(90,58,150,.35),transparent 60%),linear-gradient(160deg,#1c1336,#0c0818 70%);border:1px solid rgba(232,206,140,.5)}
+.ol-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ol-h h3{margin:0;font-family:var(--serif);font-size:20px;letter-spacing:.2em;background:linear-gradient(180deg,#fff3c8,#e8ce8c 55%,#b8954a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ol-h .x{border:0;background:none;color:#d9cdee;font-size:24px;cursor:pointer}
+.ol-tabs{display:flex;gap:8px;margin-bottom:12px}
+.ol-tabs button{flex:1;padding:9px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#d9cdee;font-family:var(--serif);font-weight:700;letter-spacing:.08em;cursor:pointer}
+.ol-tabs button.on{border-color:rgba(232,206,140,.85);background:linear-gradient(180deg,rgba(232,206,140,.18),rgba(232,206,140,.04));color:#fff3c8}
+.ol-pane{display:flex;flex-direction:column;gap:10px}
+.ol-rate{display:flex;align-items:baseline;gap:10px;justify-content:center}
+.ol-rate small{color:rgba(216,205,240,.7)}.ol-rate b{font-family:var(--serif);font-size:34px;color:var(--gold)}.ol-rate span{color:rgba(216,205,240,.7);font-size:12px}
+.ol-d{margin:0;font-size:13px;line-height:1.6;color:rgba(230,220,247,.82);text-align:center}
+.ol-wait{margin:0;text-align:center;color:#9ff0c2;font-size:13.5px;animation:olBlink 1.4s ease-in-out infinite}
+@keyframes olBlink{50%{opacity:.45}}
+.ol-row{display:flex;gap:8px;align-items:center;justify-content:center}
+.ol-row input,.ol-name input{padding:8px 12px;border-radius:10px;border:1px solid rgba(232,206,140,.4);background:rgba(10,6,22,.7);color:#f4eefe;font-size:15px;letter-spacing:.2em;width:9em;text-transform:uppercase}
+.ol-name{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)}
+.ol-name small{color:rgba(216,205,240,.7)}.ol-name input{letter-spacing:.04em;text-transform:none;width:11em}
+.ol-len button{padding:6px 12px}
+.ol-st{text-align:center;color:#f4eefe;margin:14px 0}
+.ol-room{display:flex;flex-direction:column;gap:10px}
+.ol-code{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ol-code small{color:rgba(216,205,240,.7)}.ol-code b{font-family:var(--serif);font-size:30px;letter-spacing:.3em;color:var(--gold)}.ol-code span{font-size:12px;color:rgba(216,205,240,.7)}
+.ol-seats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ol-seat{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;border:1px dashed rgba(255,255,255,.14);color:rgba(216,205,240,.55);font-size:12.5px;min-height:46px}
+.ol-seat.on{border:1px solid rgba(232,206,140,.45);background:rgba(255,255,255,.04);color:#f4eefe}
+.ol-seat img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+.ol-seat b{flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ol-seat b i{font-style:normal;font-size:10px;padding:1px 6px;border-radius:99px;background:rgba(232,206,140,.2);color:var(--gold);margin-left:4px}
+.ol-seat span{font-size:11px;color:rgba(216,205,240,.7)}
+.ol-bot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);font-size:10px!important}
+.ol-note{font-size:13px;color:#e8ddff}.ol-note b{font-family:var(--serif);font-size:18px;color:var(--gold)}.ol-note em{font-style:normal;margin-left:4px}.ol-note em.up{color:#9ff0c2}.ol-note em.dn{color:#ff9d8f}
+.ol-emobtn{position:absolute;z-index:41;right:max(16px,var(--sr,0px));top:calc(var(--st,0px) + 64px);width:40px;height:40px;border-radius:50%;border:1px solid rgba(232,206,140,.55);background:rgba(12,8,26,.82);cursor:pointer;display:grid;place-items:center}
+.ol-emobtn svg{width:20px;height:20px;fill:none;stroke:#e8ce8c;stroke-width:1.8}
+.ol-emopop{position:absolute;z-index:42;right:max(64px,calc(var(--sr,0px) + 64px));top:calc(var(--st,0px) + 56px);display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px;border-radius:14px;background:rgba(12,8,26,.95);border:1px solid rgba(232,206,140,.45)}
+.ol-emopop button{padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#f4eefe;cursor:pointer;font-size:13px;white-space:nowrap}
+.ol-emo{position:absolute;z-index:43;transform:translate(-50%,-100%);padding:6px 12px;border-radius:14px;background:#fff8e6;color:#3a2814;font-weight:700;font-size:14px;box-shadow:0 6px 16px rgba(0,0,0,.45);pointer-events:none;animation:olEmo 2.6s ease both;white-space:nowrap}
+@keyframes olEmo{0%{opacity:0;translate:0 8px}10%,85%{opacity:1;translate:0 0}100%{opacity:0;translate:0 -6px}}
