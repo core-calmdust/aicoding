@@ -420,12 +420,30 @@ const DSAY = {
   e6: [L('捨てたらテンパイになる牌があります。見つけてみて！', 'One discard makes you tenpai. Find it!'),
     L('テンパイにできる1枚、どれでしょう？', 'Which discard makes you tenpai?'),
     L('むずかしめ！ 形をよーく見て…テンパイになる1枚はどれ？', 'A harder one! Look closely at the shapes — which discard gives tenpai?')],
+  w1: [L('テンパイの取り方がいくつか。両面待ちになる1枚はどれでしょう？', 'Several ways to tenpai. Which discard gives a two-sided wait?'),
+    L('どの待ちにするのがいちばんアガりやすい？ 1枚捨ててみて！', 'Which wait wins most often? Discard one.'),
+    L('むずかしめです！ 待ちの枚数がいちばん多くなるテンパイを選んで！', 'A harder one! Pick the tenpai with the most winning tiles.')],
+  w2: [L('待ちは1種類ずつ。河をよーく見て、残りの多いほうを選びましょう！', 'Each wait is a single tile. Look at the rivers and pick the one with more left.'),
+    L('見えてる牌を数えて…生きてる待ちはどっち？', 'Count the visible tiles — which wait is still alive?'),
+    L('むずかしめ！ 河・ドラ表示牌まで数えて、残りがいちばん多い待ちに。', 'A harder one! Count rivers and the dora indicator too — wait on what\'s left.')],
+  w3: [L('両面とシャンポン、どっちの待ちにもできます。いらない1枚は？', 'You can wait two-sided or on two pairs. Which tile goes?'),
+    L('対子が2つ…シャンポンにする？ 両面にする？', 'Two pairs — a double-pair wait, or two-sided?'),
+    L('むずかしめです！ 待ちの枚数を数えて、いちばんアガりやすい形に。', 'A harder one! Count the winning tiles and take the best shape.')],
+  w4: [L('待ちがいちばん広くなる1枚を捨ててみましょう！', 'Discard to leave the widest wait.'),
+    L('つながった形からテンパイ！ 待ちが何種類になるか、数えてみて。', 'Tenpai from a long connected shape — count how many kinds you wait on.'),
+    L('むずかしめ！ 多面待ちになる捨て方、見つけられますか？', 'A harder one! Can you find the many-sided wait?')],
+  w5: [L('自分の河もチェック！ フリテンにならないテンパイはどれでしょう？', 'Check your own river! Which tenpai isn\'t furiten?'),
+    L('いちばん広い待ちは…自分の捨て牌と重なってない？', 'The widest wait — does it clash with your own discards?'),
+    L('むずかしめです！ 自分の河と待ちを見くらべて、ロンできる待ちに。', 'A harder one! Compare your river and your waits — keep a wait you can ron.')],
+  w6: [L('同じような形がいくつか。河を見て、残りが少ない形を外しましょう！', 'Several similar shapes. Look at the rivers and break the one with fewer left.'),
+    L('見えてる牌、何枚ありますか？ 弱い形を崩してみて！', 'How many are visible? Break the weak shape.'),
+    L('むずかしめ！ 河をぜんぶ数えて、受け入れがいちばん多く残る1枚を。', 'A harder one! Count every river and keep the most tiles that help.')],
 };
 function attachDrills(D) {
   if (!D) return;
   for (const ls of LESSONS) { const ds = D[ls.id]; if (!ds || !DSAY[ls.id]) continue;
-    ls.drills = ds.map(d => ({ lv: d.lv, end: 'beats', intro: [], pos: { me: d.me, drawn: d.drawn, dora: d.dora },
-      beats: [{ on: 'turn', say: DSAY[ls.id][d.lv], ok: ls.id === 'e6' ? { best: 'shanten' } : BEST, explain: true }] })); }
+    ls.drills = ds.map(d => ({ lv: d.lv, end: 'beats', intro: [], pos: Object.assign({ me: d.me, drawn: d.drawn, dora: d.dora }, d.river ? { river: d.river, left: 48 } : {}),
+      beats: [{ on: 'turn', say: DSAY[ls.id][d.lv], ok: d.d ? { d: d.d } : ls.id === 'e6' ? { best: 'shanten' } : BEST, explain: true }] })); }
 }
 attachDrills(root.MJDrills || (typeof require !== 'undefined' ? (() => { try { return require('./drills.js'); } catch (e) { return null; } })() : null));
 // a tile's name in the guide's words
@@ -435,21 +453,37 @@ const tName = (t, ja) => t >= 27 ? (ja ? '東南西北白發中' : '')[t - 27] |
 function explain(beat, t, g, s, ja) {
   const tb = discardTable(g, s), row = tb.find(x => x[0] === t), sh = Math.min(...tb.map(x => x[1]));
   if (!row) return '';
-  const kinds = d => { const p = g.P[s], c = MJ.countsIds(p.hand); c[d]--; const sh0 = MJ.shanten(c, p.melds.length), out = [];
+  const p = g.P[s];
+  const kinds = d => { const c = MJ.countsIds(p.hand); c[d]--; const sh0 = MJ.shanten(c, p.melds.length), out = [];
     for (let x = 0; x < 34; x++) if (c[x] < 4) { c[x]++; if (MJ.shanten(c, p.melds.length) < sh0) out.push(x); c[x]--; } return out; };
-  const nm = x => tName(x, ja);
-  if (beat.ok && beat.ok.best === 'shanten') {
-    if (row[1] === sh) { const w = kinds(t); return ja ? `テンパイです！ ${nm(t)}を切って、待ちは${w.map(nm).join('・')}（${row[2]}枚）♪` : `Tenpai! Discarding the ${nm(t)}, you wait on ${w.map(nm).join(', ')} (${row[2]} tiles).`; }
+  const nm = x => tName(x, ja), list = ws => ws.map(nm).join(ja ? '・' : ', ');
+  const furi = d => { const ws = kinds(d); return ws.filter(w => p.discards.has(w) || w === d); };   // (a wait in my own river — or the tile just thrown: no ron)
+  const tenpai = d => { const r = tb.find(x => x[0] === d); return r && r[1] === 0; };
+  const waitTxt = d => { const r = tb.find(x => x[0] === d); return ja ? `待ちは${list(kinds(d))}（${r[2]}枚）` : `you wait on ${list(kinds(d))} (${r[2]} tiles)`; };
+  const ok = beat.ok || {};
+  if (ok.best === 'shanten') {
+    if (row[1] === sh) return ja ? `テンパイです！ ${nm(t)}を切って、${waitTxt(t)}♪` : `Tenpai! Discarding the ${nm(t)}, ${waitTxt(t)}.`;
     return ja ? `${nm(t)}を切ると、まだテンパイじゃないんです…。テンパイになる牌を探してみて！` : `Discarding the ${nm(t)} isn't tenpai yet. Look for the tile that is.`;
   }
-  const at = tb.filter(x => x[1] === sh), best = Math.max(...at.map(x => x[2]));
-  if (row[1] === sh && row[2] === best) {
-    const k = kinds(t).length, others = at.filter(x => x[2] < best).sort((a, b) => b[2] - a[2]), o = others[0];
-    let txt = ja ? `正解！ ${nm(t)}を切ると、受け入れは${k}種${best}枚。` : `Right! Discarding the ${nm(t)} leaves ${k} kinds, ${best} tiles that help.`;
-    if (o) txt += ja ? ` ${nm(o[0])}を切ると${o[2]}枚なので、${best - o[2]}枚お得です♪` : ` The ${nm(o[0])} would leave ${o[2]} — ${best - o[2]} fewer.`;
+  const right = check(beat, { act: 'discard', id: t * 4 }, g, s);
+  // the other choices to compare with: the same shanten, not furiten
+  const at = tb.filter(x => x[1] === sh && x[0] !== t && !(x[1] === 0 && furi(x[0]).length)).sort((a, b) => b[2] - a[2]);
+  if (right) {
+    const o = at.find(x => x[2] < row[2]);
+    if (row[1] === 0) {
+      let txt = ja ? `正解！ ${nm(t)}を切って、${waitTxt(t)}。` : `Right! Discard the ${nm(t)}: ${waitTxt(t)}.`;
+      const f = tb.filter(x => x[1] === 0 && x[0] !== t && furi(x[0]).length).sort((a, b) => b[2] - a[2])[0];
+      if (f) txt += ja ? ` ${nm(f[0])}を切ると、${list(furi(f[0]))}が自分の河にあってフリテンなんです。` : ` Discarding the ${nm(f[0])} would be furiten: ${list(furi(f[0]))} is in your own river.`;
+      else if (o) txt += ja ? ` ${nm(o[0])}を切ると${o[2]}枚なので、${row[2] - o[2]}枚お得です♪` : ` The ${nm(o[0])} would leave ${o[2]} — ${row[2] - o[2]} fewer.`;
+      return txt;
+    }
+    let txt = ja ? `正解！ ${nm(t)}を切ると、受け入れは${kinds(t).length}種${row[2]}枚。` : `Right! Discarding the ${nm(t)} leaves ${kinds(t).length} kinds, ${row[2]} tiles that help.`;
+    if (o) txt += ja ? ` ${nm(o[0])}を切ると${o[2]}枚なので、${row[2] - o[2]}枚お得です♪` : ` The ${nm(o[0])} would leave ${o[2]} — ${row[2] - o[2]} fewer.`;
     return txt;
   }
   if (row[1] > sh) return ja ? `${nm(t)}を切ると、テンパイから1歩遠くなっちゃいます…！ もう一回！` : `Discarding the ${nm(t)} takes you a step further from tenpai. Try again!`;
+  if (row[1] === 0 && furi(t).length) return ja ? `${nm(t)}を切ると、待ちの${list(furi(t))}が自分の河にあってフリテン…ロンできないんです！` : `Discarding the ${nm(t)}, the wait ${list(furi(t))} is in your own river — furiten, no ron!`;
+  if (row[1] === 0) return ja ? `${nm(t)}を切ると、${waitTxt(t)}。もっとアガりやすい待ちがありますよ！` : `Discarding the ${nm(t)}, ${waitTxt(t)}. There's a better wait!`;
   return ja ? `${nm(t)}を切ると受け入れは${row[2]}枚。もっと広くなる牌がありますよ！` : `The ${nm(t)} leaves ${row[2]} tiles that help. One discard leaves more!`;
 }
 
