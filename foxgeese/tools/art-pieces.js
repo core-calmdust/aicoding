@@ -78,44 +78,43 @@ vec3 wood3(vec3 p, vec3 a, vec3 b, float f, float seed){
 #define CARVED
 vec3 bendN(vec3 p, vec3 n){ vec3 c = p * 7.; vec3 g = vec3(vn3(c + 1.7) - .5, vn3(c + 7.3) - .5, vn3(c + 3.1) - .5); return normalize(n + g * .28); }
 `;
-  P['wood-f'] = { glsl: CARVED + WOOD3 + `
-float map(vec3 p){ return foxHead(FX(p)) * 1.04; }
-void mat(vec3 p, vec3 n, inout PMat m){
-  vec3 q = FX(p);
-  vec3 c = wood3(q, hexc(214., 100., 42.), hexc(160., 62., 22.), 6., 2.7);
-  float muz = smoothstep(-.04, .04, q.y - (.2 - .16 * abs(q.x)));   // the lower face: muzzle and cheek ruffs
-  c = mix(c, wood3(q, hexc(240., 212., 170.), hexc(214., 180., 132.), 6., 2.7), clamp(muz, 0., 1.) * .85);   // the pale muzzle and cheeks (left unstained)
-  float burn = 0.;
-  burn = max(burn, smoothstep(.15, -.15, foxEye(q.xy)));
-  burn = max(burn, smoothstep(.2, -.2, foxNose(q)) * step(.35, q.z));
-  burn = max(burn, smoothstep(.25, -.25, earIn(q.xy)) * .75);
-  burn = max(burn, smoothstep(.016, .0, abs(q.x) - .004) * step(.56, q.y) * step(q.y, .66) * .9);
-  c = mix(c, hexc(44., 20., 10.), burn * .92);
-  m.alb = c; m.spec = .45; m.gloss = .4;
-}` };
-  P['wood-g'] = { glsl: CARVED + WOOD3 + `
-float coneW(vec3 p, vec3 a, vec3 b, float r1, float r2){ vec3 ba = b - a, pa = p - a; float h = clamp(dot(pa, ba) / dot(ba, ba), 0., 1.); return length(pa - ba * h) - mix(r1, r2, h); }
-float billD(vec3 p){ vec3 q = p; q.x *= .85; q.z *= 1.5; return coneW(q, vec3(0., .1, .48), vec3(0., .36, .48), .2, .13); }   // a broad bill, tapering down the face
-float gHead(vec3 p){
-  float d = sdEll(p - vec3(0., -.06, -.1), vec3(.64, .6, .46));
-  d = smin(d, sdEll(p - vec3(0., -.6, -.06), vec3(.09, .12, .1)), .1);              // a small tuft on top
-  d = smin(d, billD(p), .1);
+  
+  
+  // wood v4 (2026-11-18 user: もう少しアブストラクトに): sanded wooden toys reduced to their shapes — the fox a smooth cherry head of
+  // three soft points (two ears and the chin) with two cut slits for eyes; the goose a maple dome with a walnut bill set in
+  P['wood-f'] = { glsl: WOOD3 + `
+float fShape(vec3 p){
+  float d = sdEll(p - vec3(0., -.04, -.06), vec3(.66, .5, .42));
+  d = smin(d, sdEll(p - vec3(0., .56, -.08), vec3(.17, .2, .2)), .42);                // the chin
+  vec3 q = p; q.x = abs(q.x); q -= vec3(.46, -.52, -.08); q.xy = rot(-.3) * q.xy;
+  d = smin(d, sdEll(q, vec3(.17, .3, .16)), .2);                                          // the ears
+  vec2 e = vec2(abs(p.x) - .25, p.y - .02); e = rot(-.42) * e;                             // two slits cut for the eyes
+  d = max(d, -(length(e / vec2(.12, .022)) - 1.) * .022 - (p.z > .2 ? 0. : 1.));
   return d;
 }
-float map(vec3 p){ return gHead(p * 1.06) / 1.06; }
+float map(vec3 p){ return fShape(p * 1.04) / 1.04; }
+void mat(vec3 p, vec3 n, inout PMat m){
+  vec3 q = p * 1.04;
+  vec3 c = wood3(q, hexc(198., 104., 62.), hexc(150., 66., 34.), 5., 2.7);
+  vec2 e = vec2(abs(q.x) - .25, q.y - .02); e = rot(-.42) * e;
+  c = mix(c, hexc(70., 32., 14.), smoothstep(.15, -.1, length(e / vec2(.12, .022)) - 1.) * .8);
+  m.alb = c; m.spec = .45; m.gloss = .5;
+}` };
+  P['wood-g'] = { glsl: WOOD3 + `
+float triD(vec2 p){   // a rounded triangle pointing down (the bill, inlaid)
+  const float k = 1.7320508; p.x = abs(p.x) - .16; p.y = p.y + .16 / k;
+  if (p.x + k * p.y > 0.) p = vec2(p.x - k * p.y, -k * p.x - p.y) / 2.;
+  p.x -= clamp(p.x, -.32, 0.); return -length(p) * sign(p.y) - .03;
+}
+float map(vec3 p){ vec3 q = p * 1.06; q.x *= 1. + max(q.y, 0.) * .12; return sdEll(q - vec3(0., -.04, -.1), vec3(.7, .66, .5)) / 1.06; }
 void mat(vec3 p, vec3 n, inout PMat m){
   vec3 q = p * 1.06;
-  vec3 c = wood3(q, hexc(240., 220., 186.), hexc(214., 188., 146.), 8., 1.3);
-  float bill = smoothstep(.03, -.01, billD(q));
-  c = mix(c, hexc(232., 136., 44.) * (.9 + .15 * vn3(q * 20.)), bill * .9);           // painted bill (the grain shows through)
-  vec2 e = vec2(abs(q.x) - .26, q.y + .08);
-  float eye = smoothstep(.02, -.02, length(e / vec2(.075, .085)) - 1.);
-  c = mix(c, hexc(36., 22., 12.), eye * .95);
-  c = mix(c, hexc(255., 240., 220.), smoothstep(.02, -.02, length((e - vec2(-.02, -.03)) / .025) - 1.) * eye);   // a glint
-  c = mix(c, hexc(150., 70., 20.), smoothstep(.014, .0, abs(q.y - .3)) * bill * .55 * step(abs(q.x), .14));   // the carved line where the bill closes
-  c = mix(c, hexc(170., 84., 26.), smoothstep(.05, .0, length((q.xy - vec2(0., .44)) / vec2(.1, .06)) - 1.) * bill * .6);   // the darker nail at the tip
-  c = mix(c, hexc(230., 150., 130.), smoothstep(.2, .0, length((vec2(abs(q.x) - .42, q.y - .12)) / vec2(.12, .07)) - 1.) * .25);   // a faint blush of red ochre
-  m.alb = c; m.spec = .45; m.gloss = .4;
+  vec3 c = wood3(q, hexc(240., 222., 190.), hexc(216., 192., 150.), 7., 1.3);
+  vec3 wal = wood3(q * 1.6, hexc(112., 70., 40.), hexc(66., 40., 20.), 10., 4.);
+  float bl = smoothstep(.012, -.004, triD(vec2(q.x, q.y - .2)));
+  float ey = smoothstep(.012, -.004, length(vec2(abs(q.x) - .25, q.y + .06)) - .055);
+  float k = max(bl, ey);
+  m.alb = mix(c, wal, k); m.spec = .45; m.gloss = .5 + k * .1;
 }` };
   // ---------------------------------------------------------------- side view (2026-11-18 v2: the user wanted the wooden and the luxury
   // pieces as figures seen from the side): the figure stands on a round plinth, facing right; the camera looks slightly down.
