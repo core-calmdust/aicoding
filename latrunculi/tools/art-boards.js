@@ -223,13 +223,11 @@ void M(vec2 p, inout Mat m){
   float fl = flower(p);
   c = mix(c, hexc(214., 214., 212.), smoothstep(.009, .004, fl) * inside);
   c = mix(c, hexc(206., 206., 204.), smoothstep(.009, .004, abs(rr - 3.75)) + smoothstep(.008, .003, abs(rr - 3.92)));
-  // petals in colour, scattered over the pattern
-  c = mix(c, hexc(40., 140., 214.), aa(petal(p, vec2(-2., 1.), vec2(-1., 1.)), .006));
-  c = mix(c, hexc(236., 104., 78.), aa(petal(p, vec2(1., -2.), vec2(1., -1.)), .006));
-  c = mix(c, hexc(150., 206., 84.), aa(petal(p, vec2(1., 1.), vec2(1., 2.)), .006));
-  c = mix(c, hexc(52., 52., 56.), aa(petal(p, vec2(-1., -1.), vec2(-2., -1.)), .006));
-  c = mix(c, hexc(206., 212., 216.), aa(petal(p, vec2(2., -1.), vec2(3., -1.)), .006));
-  c = mix(c, hexc(206., 212., 216.), aa(petal(p, vec2(-1., 2.), vec2(-2., 3.)), .006));
+  // v6 (2026-11-19, user): one flower in grey in the middle — the six petals round the centre point, two greys alternating
+  for (int k = 0; k < 6; k++) {
+    vec2 q = k == 0 ? vec2(1., 0.) : k == 1 ? vec2(0., 1.) : k == 2 ? vec2(-1., 1.) : k == 3 ? vec2(-1., 0.) : k == 4 ? vec2(0., -1.) : vec2(1., -1.);
+    c = mix(c, (k % 2 == 0) ? hexc(150., 152., 156.) : hexc(196., 198., 202.), aa(petal(p, vec2(0.), q), .006));
+  }
   float g = smoothstep(.009, .005, gridDist(p));
   c = mix(c, hexc(120., 122., 128.), g * .85);
   m.alb = c; m.spec = .1; m.gloss = .15; m.metal = 0.;
