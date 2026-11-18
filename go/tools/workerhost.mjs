@@ -13,6 +13,9 @@ export async function createWorker() {
     postMessage: m => { const j = pending.get(m.id); if (!j) return; if (m.type === 'progress') return; pending.delete(m.id); j(m); },
   };
   ctx.self = ctx; ctx.globalThis = ctx;
+  ctx.location = { search: '', href: 'file://' + DIR + '/engine.js' };   // (engine.js reads self.location: ?mt=1 is the threads' lead — not here)
+  ctx.navigator = {};   // (no WebGPU in Node: PRO's GPU falls back to the CPU)
+  Object.assign(ctx, { Uint16Array, Int32Array, Uint32Array, Int8Array, Float64Array, DataView, ArrayBuffer, SharedArrayBuffer, Atomics, Symbol, TextDecoder, setInterval, clearInterval, addEventListener: () => {} });
   vm.createContext(ctx);
   ctx.importScripts = (...urls) => { for (const u of urls) { const p = path.join(DIR, u.split('?')[0]); if (!fs.existsSync(p)) throw new Error('no ' + u); vm.runInContext(fs.readFileSync(p, 'utf8'), ctx, { filename: p }); } };
   vm.runInContext(fs.readFileSync(path.join(DIR, 'engine.js'), 'utf8'), ctx, { filename: 'engine.js' });

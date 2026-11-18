@@ -1,5 +1,6 @@
 // Calibration anchor: an AI level (the page's own worker code) against GNU Go 3.8 (or any GTP engine) over GTP.
 //   node tools/vs-gnugo.mjs <level> [games=10] [size=19] [gnugoLevel=10]
+//   AI_NET=xl AI_VISITS=256 GTP_CMD="katago gtp …" node tools/vs-gnugo.mjs 0 10   (PRO's fixed-visit search; tools/katago-ladder.sh)
 //   GTP_CMD="katago gtp -model human.bin.gz -human-model human.bin.gz -config human.cfg -override-config humanSLProfile=rank_5k,maxVisits=1" \
 //     node tools/vs-gnugo.mjs <level> …   (another GTP engine instead of GNU Go, e.g. KataGo's human-like model at a given rank)
 // Chinese scoring, komi 7.5. Clear games are adjudicated by the light net's score estimate (|lead| > 25 twice, after move 120 on 19x19).
@@ -10,6 +11,8 @@ const require = createRequire(import.meta.url);
 const R = require('../rules.js');
 const [lv0, g0, n0, gl0] = process.argv.slice(2);
 const level = +lv0, games = +(g0 || 10), n = +(n0 || 19), gl = +(gl0 || 10), komi = 7.5;
+// (2026-11-19) AI_NET=light|strong|xl AI_VISITS=N: the AI as PRO's fixed-visit search with that net (one thread), instead of the level
+const PARAMS = process.env.AI_NET ? { net: process.env.AI_NET, visits: +(process.env.AI_VISITS || 64), time: 1e9 } : null;
 const COLS = 'ABCDEFGHJKLMNOPQRST';
 const toV = m => m < 0 ? 'pass' : COLS[m % n] + (n - Math.floor(m / n));
 const fromV = v => { v = v.trim().toUpperCase(); if (v === 'PASS') return -1; if (v === 'RESIGN') return -2; return (n - +v.slice(1)) * n + COLS.indexOf(v[0]); };
@@ -36,7 +39,7 @@ for (let g = 0; g < games; g++) {
     const aiTurn = (pos.turn === 1) === aiBlack;
     let m;
     if (aiTurn) {
-      const r = await W.call({ type: 'think', spec: { n }, moves, komi, level });
+      const r = await W.call({ type: 'think', spec: { n }, moves, komi, level, ...(PARAMS ? { params: PARAMS } : {}) });
       m = r.move === undefined ? -1 : r.move;
       await G.cmd(`play ${pos.turn === 1 ? 'b' : 'w'} ${toV(m)}`);
     } else {
@@ -64,4 +67,4 @@ for (let g = 0; g < games; g++) {
   process.stderr.write(`L${level} game ${g + 1}: AI ${aiBlack ? 'B' : 'W'} ${moves.length} moves, ${aiWon ? 'AI' : 'GNU Go'} wins (${why})\n`);
 }
 const p = (won + 0.5) / (tot + 1), elo = -400 * Math.log10(1 / p - 1);
-console.log(JSON.stringify({ level, opp: process.env.GTP_CMD || 'gnugo ' + gl, n, games: tot, won, elo_vs_gnugo: Math.round(elo), sec: Math.round((Date.now() - t0) / 1000) }));
+console.log(JSON.stringify({ level, ...(PARAMS ? { net: PARAMS.net, visits: PARAMS.visits } : {}), opp: process.env.GTP_CMD || 'gnugo ' + gl, n, games: tot, won, elo_vs_gnugo: Math.round(elo), sec: Math.round((Date.now() - t0) / 1000) }));
