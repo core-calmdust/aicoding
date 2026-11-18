@@ -60,6 +60,10 @@ function rnd() { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= s
 const Z1 = [new Uint32Array(NN), new Uint32Array(NN)], Z2 = [new Uint32Array(NN), new Uint32Array(NN)];
 for (let k = 0; k < 2; k++) for (let i = 0; i < NN; i++) { Z1[k][i] = rnd(); Z2[k][i] = rnd(); }
 const ZS1 = rnd(), ZS2 = rnd();
+// the quiet-move count (plies without a capture) goes into the transposition table's key, not into the position's hash (which the
+// repetition rule compares): the same placement with a different count is a different position — the fox wins at QUIET_MAX
+// (2026-11-18: before, the table mixed them up)
+const ZQ1 = new Uint32Array(256), ZQ2 = new Uint32Array(256); for (let i = 0; i < 256; i++) { ZQ1[i] = rnd(); ZQ2[i] = rnd(); }
 // ---------------------------------------------------------------- squares and moves
 const sqAt = (r, c) => r * 7 + c;
 const sqName = i => 'abcdefg'[i % 7] + (7 - Math.floor(i / 7));
@@ -303,9 +307,11 @@ const TTB = 18, TTN = 1 << TTB, TTM = TTN - 1;
 const TT = { k1: new Uint32Array(TTN), k2: new Uint32Array(TTN), v: new Int32Array(TTN), m: new Float64Array(TTN), d: new Int8Array(TTN), f: new Int8Array(TTN), clear() { this.k1.fill(0); this.k2.fill(0); this.d.fill(-1); } };
 TT.clear();
 const killers = [];
+const HIST = new Int32Array(NN * NN);   // history heuristic: quiet moves (from → to) that caused cut-offs
+function hdecay() { for (let i = 0; i < HIST.length; i++) HIST[i] >>= 2; }
 let REP = null;                       // hash → times the position has already stood in the game (set by think / analyze)
 function setHist(hashes) { REP = null; if (!hashes) return; const c = new Map(); let any = false; for (const h of hashes) { const n = (c.get(h) || 0) + 1; c.set(h, n); if (n >= REP_MAX - 1) any = true; } if (any) { REP = c; TT.clear(); } }
-function kreset() { killers.length = 0; }
+function kreset() { killers.length = 0; hdecay(); }
 function ttClear() { TT.clear(); }
 function terminal(pos, ply) {
   const j = judge(pos);
@@ -320,6 +326,7 @@ function orderMoves(pos, L, ttm, ply) {
     if (!pos.side) s += (path(m).length - 2) * 400;
     else { const t = mTo(m); s += Math.max(0, 4 - Math.max(Math.abs(RC[t][0] - RC[f][0]), Math.abs(RC[t][1] - RC[f][1]))) * 6; }
     if (k && (k[0] === m || k[1] === m)) s += 200;
+    s += Math.min(150, HIST[mFrom(m) * NN + mTo(m)] >> 4);
     return s;
   });
   return L.map((_, i) => i).sort((a, b) => sc[b] - sc[a] || a - b).map(i => L[i]);
@@ -331,9 +338,10 @@ function search(pos, d, a, b, ply) {
   const tv = terminal(pos, ply); if (tv !== null) return tv;
   if (REP && ply > 0 && (REP.get(pos.h1) || 0) >= REP_MAX - 1) return pos.side ? -WIN + ply : WIN - ply;   // the third time: the fox wins
   if (d <= 0) return quiesce(pos, a, b, ply, 0);
-  const ti = pos.h1 & TTM, a0 = a;
+  const K1 = (pos.h1 ^ ZQ1[pos.quiet & 255]) >>> 0, K2 = (pos.h2 ^ ZQ2[pos.quiet & 255]) >>> 0;
+  const ti = K1 & TTM, a0 = a;
   let ttm = -1;
-  if (TT.k1[ti] === pos.h1 && TT.k2[ti] === pos.h2 && TT.d[ti] >= 0) {
+  if (TT.k1[ti] === K1 && TT.k2[ti] === K2 && TT.d[ti] >= 0) {
     ttm = TT.m[ti];
     if (TT.d[ti] >= d) {
       let v = TT.v[ti]; if (v > WINT) v -= ply; else if (v < -WINT) v += ply;
@@ -357,10 +365,10 @@ function search(pos, d, a, b, ply) {
     if (stop) return 0;
     if (v > best) { best = v; bm = m; }
     if (v > a) a = v;
-    if (a >= b) { const k = killers[ply] || (killers[ply] = [-1, -1]); if (k[0] !== m) { k[1] = k[0]; k[0] = m; } break; }
+    if (a >= b) { const k = killers[ply] || (killers[ply] = [-1, -1]); if (k[0] !== m) { k[1] = k[0]; k[0] = m; } if (path(m).length === 2) HIST[mFrom(m) * NN + mTo(m)] += d * d; break; }
   }
   let sv = best; if (sv > WINT) sv += ply; else if (sv < -WINT) sv -= ply;
-  TT.k1[ti] = pos.h1; TT.k2[ti] = pos.h2; TT.d[ti] = d; TT.v[ti] = Math.round(sv); TT.m[ti] = bm; TT.f[ti] = best <= a0 ? 2 : best >= b ? 1 : 0;
+  TT.k1[ti] = K1; TT.k2[ti] = K2; TT.d[ti] = d; TT.v[ti] = Math.round(sv); TT.m[ti] = bm; TT.f[ti] = best <= a0 ? 2 : best >= b ? 1 : 0;
   return best;
 }
 // quiet search: the fox's jumps
