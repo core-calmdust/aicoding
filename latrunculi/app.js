@@ -111,7 +111,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=3';
+const ENGINE_URL = 'engine.js?v=4';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -955,7 +955,7 @@ const BD_KEYS = ['stone', 'wood', 'abstract', 'lux', 'giallo', 'pompeii'], PC_KE
 // giallo antico (the Roman yellow marble) with the grid in rosso antico; the walnut board is one piece of wood with its frame
 // (the frame shows fr-woodfield, the board only the inlaid grid bd-woodgrid over it; bd-wood = both, for the mini boards)
 const ANCHOR = {}, PC_SIZE = {};   // the busts: where the socle's centre is in the picture, and the picture's size in cells
-const ART = k => `img/2d/${k}.webp?v=4`;
+const ART = k => `img/2d/${k}.webp?v=5`;
 const BD_OLD = { marble: 'stone', travertine: 'stone', tile: 'pompeii', slate: 'abstract', ivory: 'abstract', porphyry: 'lux', mosaic: 'giallo' }, PC_OLD = { gem: 'coin', stone: 'helm', bust: 'helm' };
 // [surface (fallback), groove (mini-board marks), frame, frame line]
 const BD_PAL = {
@@ -1045,6 +1045,11 @@ function miniSVG(spec, o) {
     s += `<path d="M${pts.map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join('L')}M${ex - ux * h - uy * h},${ey - uy * h + ux * h}L${ex},${ey}L${ex - ux * h + uy * h},${ey - uy * h - ux * h}" stroke="#ffe9a8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="drop-shadow(0 1px 1px rgba(0,0,0,.7))"/>`;
   }
   s += '</g>';
+  if (o.coords) {   // file letters along the bottom and rank numbers on the left of the part shown (the tasks name squares)
+    const fs = Math.max(9, u * .2), st = `font-family="JetBrains Mono,monospace" font-weight="700" font-size="${fs.toFixed(1)}" fill="rgba(255,250,236,.95)" stroke="rgba(30,20,12,.75)" stroke-width="${(fs * .18).toFixed(2)}" paint-order="stroke"`;
+    for (let c = cr[0]; c <= cr[2]; c++) { const i = fl ? 63 - (cr[3] * 8 + c) : cr[3] * 8 + c; s += `<text x="${(X(i) + u * .42).toFixed(1)}" y="${(Y(i) + u * .44).toFixed(1)}" text-anchor="end" ${st}>${'abcdefgh'[E.RC[i][1]]}</text>`; }
+    for (let r = cr[1]; r <= cr[3]; r++) { const i = fl ? 63 - (r * 8 + cr[0]) : r * 8 + cr[0]; s += `<text x="${(X(i) - u * .44).toFixed(1)}" y="${(Y(i) - u * .26).toFixed(1)}" ${st}>${8 - E.RC[i][0]}</text>`; }
+  }
   if (o.click) for (let i = 0; i < 64; i++) s += `<rect data-p="${i}" x="${X(i) - u / 2}" y="${Y(i) - u / 2}" width="${u}" height="${u}" fill="transparent"/>`;
   return s + '</svg>';
 }
@@ -1092,7 +1097,7 @@ function tourPage(id, spec, o) {
         if (!api.alive()) return;
         const dest = st.sel >= 0 ? W(() => pos.moves().filter(m => mFrom(m) === st.sel).map(mTo)) : [];
         const arrows = !st.done && o.arrows ? o.arrows.map(a => a.map(sqIdx)) : [];
-        api.board.innerHTML = miniSVG(pos.spec(), { cls: 'tour', sel: st.sel, dest, last: st.last, trail: st.trail, took: st.took, marks: st.done ? {} : marks(), arrows, click: !st.done && !st.busy, crop: o.crop });
+        RuleTour.paint(api.board, miniSVG(pos.spec(), { cls: 'tour', sel: st.sel, dest, last: st.last, trail: st.trail, took: st.took, marks: st.done ? {} : marks(), arrows, click: !st.done && !st.busy, crop: o.crop, coords: true }));
       };
       function commit(m) {
         const r = W(() => {
@@ -1136,13 +1141,13 @@ const TOUR_PAGES = [
   // one step up, down, left or right
   tourPage('step', specOf({ b: ['d4'], w: ['f6', 'b6'], side: P1 }), { crop: T5, check: (m, pos, before, fx) => fx.path.length === 2 ? 'ok' : t('tr.step.ng') }),
   // a leap over your own counter (and on over the next)
-  tourPage('leap', specOf({ b: ['c4', 'd4', 'e5', 'e6'], w: ['g3', 'b6'], side: P1 }), { crop: [1, 1, 6, 6], marks: ['e7'], arrows: [['c4', 'e4', 'e7']], check: m => mTo(m) === sq8('e7') ? 'ok' : t('tr.leap.ng') }),
+  tourPage('leap', specOf({ b: ['c4', 'd4', 'e5'], w: ['g3', 'b6'], side: P1 }), { crop: [1, 1, 6, 6], marks: ['e6'], arrows: [['c4', 'e4', 'e6']], check: m => mFrom(m) === sq8('c4') && mTo(m) === sq8('e6') ? 'ok' : t('tr.leap.ng') }),   // c4 over d4 to e4, then over e5 to e6 (2026-11-19: the old setup had no way there)
   // enclose an enemy counter from two opposite sides: it is turned over
-  tourPage('block', specOf({ b: ['c5', 'e3'], w: ['d5', 'f6'], side: P1 }), { crop: T5, marks: ['e5'], check: (m, pos, before, fx) => fx.blocks.length ? 'ok' : t('tr.block.ng') }),
+  tourPage('block', specOf({ b: ['c5', 'e4'], w: ['d5', 'f6'], side: P1 }), { crop: T5, marks: ['e5'], check: (m, pos, before, fx) => fx.blocks.length ? 'ok' : t('tr.block.ng') }),
   // next turn: the blocked counter is taken off first, then you move
   tourPage('remove', specOf({ b: ['c5', 'e5', 'd3'], w: ['d5', 'f6', 'c7'], x: ['d5', 'h'], side: P1 }), { crop: T5, check: () => 'ok' }),
   // rescue: block one of the two counters that hold yours
-  tourPage('rescue', specOf({ b: ['d5', 'c4', 'e3'], w: ['c5', 'e5', 'g7'], x: ['d5', 'h'], side: P1 }), { crop: T5, marks: ['e4'], check: (m, pos, before, fx) => fx.frees.length ? 'ok' : t('tr.rescue.ng') }),
+  tourPage('rescue', specOf({ b: ['d5', 'c4', 'e3', 'e6'], w: ['c5', 'e5', 'g7'], x: ['d5', 'h'], side: P1 }), { crop: T5, marks: ['e4'], check: (m, pos, before, fx) => fx.frees.length ? 'ok' : t('tr.rescue.ng') }),
   // the corner: the two squares beside it
   tourPage('corner', specOf({ b: ['b8', 'a6', 'c5'], w: ['a8', 'd7'], side: P1 }), { crop: [0, 0, 4, 4], marks: ['a7'], check: (m, pos, before, fx) => fx.blocks.length ? 'ok' : t('tr.corner.ng') }),
   // moving in between two enemies is safe

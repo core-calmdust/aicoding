@@ -459,5 +459,25 @@ function intro(o) {
   return `<div class="rt-intro"><div class="rt-intro-hero">${o.img ? `<img src="${o.img}" alt="">` : ''}<div class="rt-intro-facts">${fact('origin', o.origin)}${fact('players', o.players)}${fact('time', o.time)}</div></div>` +
     sec('hist', '📜', 'hist', o.history) + sec('win', '🏆', 'win', o.win) + sec('cult', '🌏', 'cult', o.culture) + '</div>';
 }
-window.RuleTour = { create, intro, box, more, svgPoint, PCQ, S, IL };
+// redraw a small board without the flash (2026-11-19): the new SVG replaces the old one, but every <image> whose picture is
+// already shown is moved over from the old tree (so it does not load / decode again and blink for a frame)
+function paint(host, html) {
+  const old = host.firstElementChild && host.firstElementChild.tagName.toLowerCase() === 'svg' ? host.firstElementChild : null;
+  if (!old) { host.innerHTML = html; return; }
+  const tpl = document.createElement('template'); tpl.innerHTML = html.trim();
+  const neu = tpl.content.firstElementChild;
+  if (!neu) { host.innerHTML = html; return; }
+  const pool = new Map();
+  old.querySelectorAll('image').forEach(im => { const k = im.getAttribute('href') || im.getAttribute('xlink:href'); if (!pool.has(k)) pool.set(k, []); pool.get(k).push(im); });
+  neu.querySelectorAll('image').forEach(im => {
+    const k = im.getAttribute('href') || im.getAttribute('xlink:href'), L = pool.get(k);
+    if (!L || !L.length) return;
+    const keep = L.shift();
+    for (const a of [...keep.attributes]) if (!im.hasAttribute(a.name)) keep.removeAttribute(a.name);
+    for (const a of [...im.attributes]) keep.setAttribute(a.name, a.value);
+    im.replaceWith(keep);
+  });
+  host.replaceChildren(...tpl.content.childNodes);
+}
+window.RuleTour = { create, intro, box, more, svgPoint, PCQ, S, IL, paint };
 })();

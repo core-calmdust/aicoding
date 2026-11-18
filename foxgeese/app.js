@@ -1076,7 +1076,7 @@ function tourPage(id, spec, o) {
         const arrows = !st.done && o.arrows ? o.arrows.map(a => a.map(sqIdx)) : [];
         const sp = pos.spec();
         if (st.trail.length > 1) { const a = sp.b.split(''); a[st.trail[0]] = '.'; a[st.trail[st.trail.length - 1]] = 'f'; sp.b = a.join(''); }   // the fox shown where it stands mid-move
-        api.board.innerHTML = miniSVG(sp, { cls: 'tour', sel: st.sel >= 0 ? st.trail[st.trail.length - 1] : -1, dest, last: st.last, trail: st.trail.slice(0, -1), took: st.took, marks: st.done ? {} : marks(), arrows, click: !st.done && !st.busy });
+        RuleTour.paint(api.board, miniSVG(sp, { cls: 'tour', sel: st.sel >= 0 ? st.trail[st.trail.length - 1] : -1, dest, last: st.last, trail: st.trail.slice(0, -1), took: st.took, marks: st.done ? {} : marks(), arrows, click: !st.done && !st.busy }));
       };
       function commit(m) {
         const r = W(() => {

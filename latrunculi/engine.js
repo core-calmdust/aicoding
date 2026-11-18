@@ -42,6 +42,7 @@ const OPP = [1, 0, 3, 2];
 function setRule(k, count) {
   const key = String(k || 'seneca').split(':');
   RK = RULES[key[0]] ? key[0] : 'seneca'; R = RULES[RK];
+  W = TUNED[RK] || W0;
   const n = +(count || key[1]) || 0;
   COUNT = R.place ? ([16, 20, 24].includes(n) ? n : R.place) : 16;
 }
@@ -65,11 +66,12 @@ const mFrom = m => m & 63, mTo = m => (m >> 6) & 63, mRm = m => (m >> 12) - 1;
 const isPlace = (pos, m) => pos.placing && mFrom(m) === mTo(m);
 const isRemoveOnly = m => mFrom(m) === mTo(m) && mRm(m) === mFrom(m);
 
+let LEAP_STAMP = 0; const LEAP_SEEN = new Int32Array(NN), LEAP_OUT = new Int32Array(NN), LEAP_STK = new Int8Array(NN + 4);
 class Pos {
   constructor() {
     this.sq = new Int8Array(NN); this.inc = new Int8Array(NN);
     this.hand = [0, 0]; this.cap = [0, 0]; this.last = [-1, -1];
-    this.side = 0; this.ply = 0; this.quiet = 0; this.reset();
+    this.side = 0; this.ply = 0; this.quiet = 0; this.n = [0, 0]; this.reset();
   }
   reset() {
     this.sq.fill(0); this.inc.fill(0); this.cap = [0, 0]; this.last = [-1, -1]; this.side = 0; this.ply = 0; this.quiet = 0;
@@ -103,9 +105,11 @@ class Pos {
     const q = Object.create(Pos.prototype);
     q.sq = this.sq.slice(); q.inc = this.inc.slice(); q.hand = [this.hand[0], this.hand[1]]; q.cap = [this.cap[0], this.cap[1]];
     q.last = [this.last[0], this.last[1]]; q.side = this.side; q.ply = this.ply; q.quiet = this.quiet; q.h1 = this.h1; q.h2 = this.h2;
+    q.n = [this.n[0], this.n[1]];
     return q;
   }
   rehash() {
+    this.n = [0, 0]; for (let i = 0; i < NN; i++) if (this.sq[i]) this.n[this.sq[i] - 1]++;
     let a = 0, c = 0;
     for (let i = 0; i < NN; i++) { const x = this.sq[i]; if (x) { const k = x - 1 + 2 * this.inc[i]; a ^= Z1[k][i]; c ^= Z2[k][i]; } }
     if (this.side) { a ^= ZS1; c ^= ZS2; }
@@ -119,7 +123,7 @@ class Pos {
   get turn() { return this.side ? P2 : P1; }
   get placing() { return this.hand[0] + this.hand[1] > 0; }
   get opening() { return this.placing; }
-  count(p) { let n = 0; for (let i = 0; i < NN; i++) if (this.sq[i] === p) n++; return n; }
+  count(p) { return this.n[p - 1]; }
   free(p) { let n = 0; for (let i = 0; i < NN; i++) if (this.sq[i] === p && !this.inc[i]) n++; return n; }
   // the two enclosing squares of a blocked counter
   holders(i) {
@@ -145,14 +149,15 @@ class Pos {
     }
     for (let d = 0; d < 4; d++) { const t = NB[f][d]; if (t >= 0 && !sq[t]) out.push(t); }
     if (R.leap) {
-      const seen = new Set([f]), stack = [f];
-      while (stack.length) {
-        const a = stack.pop();
+      const stamp = ++LEAP_STAMP; LEAP_SEEN[f] = stamp; let sp = 0; LEAP_STK[sp++] = f;
+      for (const t of out) LEAP_OUT[t] = stamp;
+      while (sp) {
+        const a = LEAP_STK[--sp];
         for (let d = 0; d < 4; d++) {
           const o = NB[a][d]; if (o < 0 || sq[o] !== p) continue;
-          const t = NB[o][d]; if (t < 0 || (sq[t] && t !== f) || seen.has(t)) continue;
-          seen.add(t); stack.push(t);
-          if (!out.includes(t)) out.push(t);
+          const t = NB[o][d]; if (t < 0 || (sq[t] && t !== f) || LEAP_SEEN[t] === stamp) continue;
+          LEAP_SEEN[t] = stamp; LEAP_STK[sp++] = t;
+          if (LEAP_OUT[t] !== stamp) { LEAP_OUT[t] = stamp; out.push(t); }
         }
       }
     }
@@ -183,6 +188,18 @@ class Pos {
     }
     return out;
   }
+  // is there at least one legal move? (the same rules as moves(), stopping at the first)
+  hasMove() {
+    if (this.placing) return this.hand[this.side] > 0;
+    if (R.delay && this.removable().length) return true;      // a removal alone is always a legal turn
+    const sq = this.sq, p = this.side + 1, lastM = this.last[this.side], lf = lastM >= 0 ? mTo(lastM) : -1, lt = lastM >= 0 ? mFrom(lastM) : -1;
+    for (let f = 0; f < NN; f++) {
+      if (sq[f] !== p || this.inc[f]) continue;
+      for (let d = 0; d < 4; d++) { const t = NB[f][d]; if (t >= 0 && !sq[t] && !(f === lf && t === lt)) return true; }
+      if (R.leap) { const tmp = []; this.dests(f, tmp); for (const t of tmp) if (!(f === lf && t === lt)) return true; }
+    }
+    return false;
+  }
   moves() {
     const out = [];
     if (this.placing) {
@@ -202,9 +219,9 @@ class Pos {
   }
   _set(i, x, a) {   // change square i to owner x (0 = empty) with block axis a, keeping the hash
     const y = this.sq[i];
-    if (y) { const k = y - 1 + 2 * this.inc[i]; this.h1 ^= Z1[k][i]; this.h2 ^= Z2[k][i]; }
+    if (y) { const k = y - 1 + 2 * this.inc[i]; this.h1 ^= Z1[k][i]; this.h2 ^= Z2[k][i]; this.n[y - 1]--; }
     this.sq[i] = x; this.inc[i] = x ? a : 0;
-    if (x) { const k = x - 1 + 2 * a; this.h1 ^= Z1[k][i]; this.h2 ^= Z2[k][i]; }
+    if (x) { const k = x - 1 + 2 * a; this.h1 ^= Z1[k][i]; this.h2 ^= Z2[k][i]; this.n[x - 1]++; }
   }
   // enemy counters enclosed by the counter that has just landed on x: [{ sq, axis }]
   enclosed(x) {
@@ -296,12 +313,12 @@ function replay(start, moves) {
   return { pos, hashes };
 }
 // {over, winner, draw, why}: why = 'last' (a side is down to one counter) | 'stuck' (no legal move) | 'quiet'
-function judge(pos) {
+function judge(pos, nMoves) {
   if (pos.placing) return { over: false };
   const n1 = pos.count(P1), n2 = pos.count(P2);
   const byCap = why => pos.cap[0] === pos.cap[1] ? { over: true, winner: 0, draw: true, why } : { over: true, winner: pos.cap[0] > pos.cap[1] ? P1 : P2, why };
   if (n1 <= 1 || n2 <= 1) return n1 === n2 ? { over: true, winner: 0, draw: true, why: 'last' } : { over: true, winner: n1 > n2 ? P1 : P2, why: 'last' };
-  if (!pos.moves().length) return R.stuck === 'lose' ? { over: true, winner: pos.side ? P1 : P2, why: 'stuck' } : byCap('stuck');
+  if (nMoves === 0 || (nMoves == null && !pos.hasMove())) return R.stuck === 'lose' ? { over: true, winner: pos.side ? P1 : P2, why: 'stuck' } : byCap('stuck');
   if (pos.quiet >= QUIET_MAX) return byCap('quiet');
   return { over: false };
 }
@@ -332,31 +349,69 @@ function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = r
 // ---------------------------------------------------------------- evaluation (side to move's view, 100 = one counter)
 // material (a blocked counter is nearly lost), counters under attack (an enemy can enclose them with one move), room to
 // move, and — while the counters are being placed — solid shapes: pairs side by side, away from the corners.
+// The evaluation is a weighted sum of features (side to move's view; tools/tune.js fits the weights per rule set by logistic
+// regression on self-play results — Texel's method, 2026-11-19). Feature order (FN):
+const FN = ['man', 'blocked', 'hang', 'mob', 'pair', 'center', 'cornerP', 'hand', 'dhang', 'edge', 'holder', 'tempo', 'quietMat', 'rmNow'];
+const NF = FN.length;
+// hand-set weights (before tuning); TUNED[rule] replaces them when present
 const EW = { man: 100, blocked: 22, hang: 16, mob: 2, pair: 5, center: 2, cornerP: 14 };
+const W0 = new Float64Array([100, 22, -16, 2, 5, 2, -14, 100, -16, 0, 0, 6, 0, 0]);
+// fitted by tools/tune.js on self-play (2026-11-19; seneca / piso: round 2 on the round-1 engine's games as well)
+const TUNED = {
+  seneca: new Float64Array([100, 16.5, -11.9, -1.2, -3.3, 0.9, -3.4, 87.9, -7.5, 1.9, -1.6, 5.4, 46.9, 24.2]),
+  piso: new Float64Array([100, 22, -14.6, -1.3, -3.8, 0.9, -16.4, 87.1, -5.7, -0.3, 0, 5.9, 100.9, 0]),
+  quintana: new Float64Array([100, 22, -14.7, -0.1, -0.5, 0.7, -14, 100, -17.8, -1.4, 0, 2.4, 60.6, 0]),
+};
+let W = W0;
 const CEN = new Int8Array(NN);
 for (let i = 0; i < NN; i++) { const [r, c] = RC[i]; CEN[i] = Math.min(r, 7 - r) + Math.min(c, 7 - c); }
-function evaluate(pos) {
+// RCH[o][x] = how many free counters of o can reach the empty square x with one move (steps / slides), RSRC[o][x] = one of them
+const RCH = [new Int8Array(NN), new Int8Array(NN)], RSRC = [new Int8Array(NN), new Int8Array(NN)];
+function reachMap(pos) {
+  const sq = pos.sq, inc = pos.inc;
+  RCH[0].fill(0); RCH[1].fill(0);
+  for (let f = 0; f < NN; f++) {
+    const p = sq[f]; if (!p || inc[f]) continue;
+    const C = RCH[p - 1], S = RSRC[p - 1];
+    for (let d = 0; d < 4; d++) {
+      let t = NB[f][d];
+      while (t >= 0 && !sq[t]) { C[t]++; S[t] = f; if (!R.rook) break; t = NB[t][d]; }
+    }
+  }
+}
+// can a free counter of o other than the one on `not` reach the empty square x with one move?
+const reachX = (pos, x, o, not) => pos.hand[o - 1] > 0 || RCH[o - 1][x] > 1 || (RCH[o - 1][x] === 1 && RSRC[o - 1][x] !== not);
+// F: null → return the weighted value; else add the feature counts to F (for tuning)
+function evalCore(pos, F) {
   const sq = pos.sq, inc = pos.inc, me = pos.side + 1;
-  let v = 0;
+  reachMap(pos);
+  const f = F || EVF; if (!F) f.fill(0);
   for (let i = 0; i < NN; i++) {
     const p = sq[i]; if (!p) continue;
     const sg = p === me ? 1 : -1, o = 3 - p;
-    if (inc[i]) { v += sg * EW.blocked; continue; }
-    let s = EW.man + EW.center * CEN[i];
-    // under attack: an enemy on one side, the square opposite empty and an enemy able to step there
+    if (inc[i]) { f[1] += sg; if (p !== me) f[13] += 1; continue; }
+    f[0] += sg; f[5] += sg * CEN[i];
+    let h = 0;
     for (let d = 0; d < 4; d += 2) {
       const a = NB[i][d], b = NB[i][d + 1]; if (a < 0 || b < 0) continue;
       const ea = sq[a] === o && !inc[a], eb = sq[b] === o && !inc[b];
-      if ((ea && !sq[b] && reach(pos, b, o, a)) || (eb && !sq[a] && reach(pos, a, o, b))) s -= EW.hang;
+      if ((ea && !sq[b] && reachX(pos, b, o, a)) || (eb && !sq[a] && reachX(pos, a, o, b))) h++;
     }
-    if (R.corner && CORNER[i] >= 0) s -= EW.cornerP;
-    for (let d = 1; d < 4; d += 2) { const a = NB[i][d]; if (a >= 0 && sq[a] === p) s += EW.pair; }
-    for (let d = 0; d < 4; d++) { const a = NB[i][d]; if (a >= 0 && !sq[a]) s += EW.mob; }
-    v += sg * s;
+    if (h) { f[2] += sg; if (h > 1) f[8] += sg; }
+    if (R.corner && CORNER[i] >= 0) f[6] += sg;
+    else if (RC[i][0] === 0 || RC[i][0] === 7 || RC[i][1] === 0 || RC[i][1] === 7) f[9] += sg;
+    for (let d = 1; d < 4; d += 2) { const a = NB[i][d]; if (a >= 0 && sq[a] === p) f[4] += sg; }
+    for (let d = 0; d < 4; d++) { const a = NB[i][d]; if (a >= 0) { if (!sq[a]) f[3] += sg; else if (sq[a] === o && inc[a]) f[10] += sg; } }
   }
-  v += (pos.hand[me - 1] - pos.hand[2 - me]) * EW.man;
-  return v + 6;
+  f[7] += pos.hand[me - 1] - pos.hand[2 - me];
+  f[11] += 1;
+  if (!pos.placing) f[12] += (pos.n[me - 1] - pos.n[2 - me] + pos.cap[me - 1] - pos.cap[2 - me]) * pos.quiet / QUIET_MAX;
+  if (F) return 0;
+  let v = 0; for (let k = 0; k < NF; k++) v += W[k] * f[k];
+  return Math.round(v);
 }
+const EVF = new Float64Array(NF);
+function evaluate(pos) { return evalCore(pos, null); }
 // can a free counter of o (other than the one on `not`) reach the empty square x with one move? (steps / slides only)
 function reach(pos, x, o, not) {
   const sq = pos.sq, inc = pos.inc;
@@ -371,10 +426,12 @@ function reach(pos, x, o, not) {
 // ---------------------------------------------------------------- search
 let nodes = 0, stop = false, tEnd = 0, nodeLimit = Infinity;
 const TT = new Map(), killers = [];
-function kreset() { killers.length = 0; }
+const HIST = new Int32Array(2 * 64 * 64);   // history heuristic: [side][from][to]
+function kreset() { killers.length = 0; for (let i = 0; i < HIST.length; i++) HIST[i] >>= 3; }
 function ttClear() { TT.clear(); }
-function terminal(pos, ply) {
-  const j = judge(pos);
+function terminal(pos, ply, nMoves) {
+  if (!pos.placing && pos.n[0] > 1 && pos.n[1] > 1 && pos.quiet < QUIET_MAX && (nMoves > 0 || (nMoves == null && pos.hasMove()))) return null;
+  const j = judge(pos, nMoves);
   if (!j.over) return null;
   if (j.draw) return 0;
   return j.winner === pos.side + 1 ? WIN - ply : -WIN + ply;
@@ -392,6 +449,7 @@ function moveScore(pos, m, ttm, ply) {
     if (mRm(m) >= 0) s += 50;
   } else s += CEN[mTo(m)] * 3;
   const k = killers[ply]; if (k && (k[0] === m || k[1] === m)) s += 200;
+  s += Math.min(150, HIST[(pos.side << 12) + (m & 4095)] >> 4);
   return s;
 }
 function orderMoves(pos, L, ttm, ply) {
@@ -399,12 +457,15 @@ function orderMoves(pos, L, ttm, ply) {
   idx.sort((a, b) => sc[b] - sc[a] || a - b);
   return idx.map(i => L[i]);
 }
+let NULLMOVE = true, LMR_K = .45, QS_STANDPAT = true, ASP = 40;
+const isKiller = (m, ply) => { const k = killers[ply]; return !!k && (k[0] === m || k[1] === m); };
 function search(pos, d, a, b, ply) {
   nodes++;
   if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit)) stop = true;
   if (stop) return 0;
-  const tv = terminal(pos, ply); if (tv !== null) return tv;
-  if (d <= 0) return quiesce(pos, a, b, ply, 0);
+  if (d <= 0) { const tq = terminal(pos, ply); if (tq !== null) return tq; return quiesce(pos, a, b, ply, 0); }
+  const LM = pos.moves();
+  const tv = terminal(pos, ply, LM.length); if (tv !== null) return tv;
   const e = TT.get(pos.h1), a0 = a;
   let ttm = -1;
   if (e && e.h2 === pos.h2) {
@@ -416,21 +477,39 @@ function search(pos, d, a, b, ply) {
       if (e.f === 2 && v <= a) return v;
     }
   }
-  const L = orderMoves(pos, pos.moves(), ttm, ply);
+  const pv = b - a > 1;
+  // null move (movement phase, not in the middle of a forced removal, the side to move has spare counters): give the
+  // opponent a free move; if we are still above beta at a reduced depth, this node fails high
+  if (!pv && NULLMOVE && d >= 3 && !pos.placing && Math.abs(b) < WINT && !(R.delay && pos.removable().length) && pos.n[pos.side] > 3 && evaluate(pos) >= b) {
+    const q = pos.clone(); q.side ^= 1; q.h1 = (q.h1 ^ ZS1) >>> 0; q.h2 = (q.h2 ^ ZS2) >>> 0; q.quiet++;
+    const v = -search(q, d - 3, -b, -b + 1, ply + 1);
+    if (stop) return 0;
+    if (v >= b && v < WINT) return v;
+  }
+  const L = orderMoves(pos, LM, ttm, ply);
   let best = -Infinity, bm = L[0];
   for (let i = 0; i < L.length; i++) {
     const m = L[i], q = pos.clone().play(m);
     let v;
     if (i === 0) v = -search(q, d - 1, -b, -a, ply + 1);
     else {
-      const red = d >= 3 && i >= 6 && !pos.placing ? 1 : 0;
+      let red = 0;
+      if (d >= 3 && i >= 3 && !pos.placing && q.n[pos.side ^ 1] === pos.n[pos.side ^ 1] && !isKiller(m, ply)) {
+        red = Math.max(1, Math.floor(LMR_K * Math.log(d) * Math.log(i)));
+        if (pv) red = Math.max(0, red - 1);
+        red = Math.min(red, d - 2);
+      } else if (pos.placing && d >= 3 && i >= 10) red = 1;
       v = -search(q, d - 1 - red, -a - 1, -a, ply + 1);
       if (v > a && (red || v < b)) v = -search(q, d - 1, -b, -a, ply + 1);
     }
     if (stop) return 0;
     if (v > best) { best = v; bm = m; }
     if (v > a) a = v;
-    if (a >= b) { const k = killers[ply] || (killers[ply] = [-1, -1]); if (k[0] !== m) { k[1] = k[0]; k[0] = m; } break; }
+    if (a >= b) {
+      const k = killers[ply] || (killers[ply] = [-1, -1]); if (k[0] !== m) { k[1] = k[0]; k[0] = m; }
+      const hi = (pos.side << 12) + (m & 4095); HIST[hi] = Math.min(1 << 20, HIST[hi] + d * d);
+      break;
+    }
   }
   if (TT.size > 600000) TT.clear();
   let sv = best; if (sv > WINT) sv += ply; else if (sv < -WINT) sv -= ply;
@@ -442,13 +521,17 @@ function quiesce(pos, a, b, ply, qd) {
   const stand = evaluate(pos);
   if (pos.placing || qd >= 4) return stand;
   const must = R.delay && pos.removable().length > 0;
-  let best = must ? -Infinity : stand;
-  if (!must) { if (stand >= b) return stand; if (stand > a) a = stand; }
+  let best = must && !QS_STANDPAT ? -Infinity : stand;
+  if (!must || QS_STANDPAT) { if (stand >= b) return stand; if (stand > a) a = stand; }
   const L = pos.moves();
   for (const m of L) {
-    if (!must) {
-      const f = mFrom(m), t = mTo(m), kf = pos.sq[f], kt = pos.sq[t]; pos.sq[f] = 0; pos.sq[t] = kf;
+    if (!must || QS_STANDPAT) {
+      const f = mFrom(m), t = mTo(m);
+      if (f === t) continue;
+      const rm = mRm(m), kr = rm >= 0 ? pos.sq[rm] : 0, ki = rm >= 0 ? pos.inc[rm] : 0; if (rm >= 0) { pos.sq[rm] = 0; pos.inc[rm] = 0; }
+      const kf = pos.sq[f], kt = pos.sq[t]; pos.sq[f] = 0; pos.sq[t] = kf;
       const n = pos.enclosed(t).length; pos.sq[t] = kt; pos.sq[f] = kf;
+      if (rm >= 0) { pos.sq[rm] = kr; pos.inc[rm] = ki; }
       if (!n) continue;
     }
     nodes++;
@@ -476,15 +559,25 @@ function bestMove(pos, maxD, ms, nk) {
   const all = pos.moves();
   let best = all[0], bv = 0, depth = 0, order = orderMoves(pos, all, -1, 0);
   for (let d = 1; d <= maxD; d++) {
-    let a = -WIN - 1, bm = order[0], bestV = -Infinity;
-    for (let i = 0; i < order.length; i++) {
-      const m = order[i], q = pos.clone().play(m);
-      let v;
-      if (i === 0) v = -search(q, d - 1, -WIN - 1, -a, 1);
-      else { v = -search(q, d - 1, -a - 1, -a, 1); if (v > a && !stop) v = -search(q, d - 1, -WIN - 1, -a, 1); }
+    let bm = order[0], bestV = -Infinity;
+    // aspiration: a narrow window round the last value, widened when the result falls outside it
+    let lo = d >= 4 && Math.abs(bv) < WINT ? bv - ASP : -WIN - 1, hi = d >= 4 && Math.abs(bv) < WINT ? bv + ASP : WIN + 1;
+    for (let tries = 0; ; tries++) {
+      let a = lo; bm = order[0]; bestV = -Infinity;
+      for (let i = 0; i < order.length; i++) {
+        const m = order[i], q = pos.clone().play(m);
+        let v;
+        if (i === 0) v = -search(q, d - 1, -hi, -a, 1);
+        else { v = -search(q, d - 1, -a - 1, -a, 1); if (v > a && !stop) v = -search(q, d - 1, -hi, -a, 1); }
+        if (stop) break;
+        if (v > bestV) { bestV = v; bm = m; }
+        if (v > a) a = v;
+        if (a >= hi) break;
+      }
       if (stop) break;
-      if (v > bestV) { bestV = v; bm = m; }
-      if (v > a) a = v;
+      if (bestV <= lo && lo > -WIN - 1) { lo = tries ? -WIN - 1 : lo - ASP * 4; continue; }
+      if (bestV >= hi && hi < WIN + 1) { hi = tries ? WIN + 1 : hi + ASP * 4; order = [bm].concat(order.filter(x => x !== bm)); continue; }
+      break;
     }
     if (stop && bestV === -Infinity) break;
     if (!stop || bestV >= bv) { best = bm; bv = bestV; }
@@ -504,6 +597,8 @@ function resist(pos, list) {
   return bm;
 }
 let PRO_CFG = null;
+// tools (tools/match.js, tune): think with an explicit level object ({ s: 1, ms } / { s: 1, nk } / { d, noise })
+function thinkCfg(start, moves, cfg, rule) { PRO_CFG = cfg; try { return think(start, moves, 10, null, rule); } finally { PRO_CFG = null; } }
 function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
@@ -644,7 +739,7 @@ function goalReply(start, moves, n, G, rule) {
 setRule('seneca');
 const API = { N, NN, P1, P2, WIN, WINT, QUIET_MAX, RULES, RULE_ORDER, get rule() { return RK; }, get ruleKey() { return ruleKey(); }, get R() { return R; }, get count() { return COUNT; }, setRule,
   RC, ADJ, NB, CORNER, CADJ, sqAt, sqName, mv, mFrom, mTo, mRm, isPlace, isRemoveOnly, Pos, effect, path, captured, name, parse, replay, judge,
-  LEVELS, think, analyze, cands, pvOf, evaluate, kindOf, EW, goalGood, goalMin, goalReply, goalOf, goalMet, ttClear,
+  LEVELS, think, thinkCfg, setOpt(o) { if ('null' in o) NULLMOVE = o.null; if ('lmr' in o) LMR_K = o.lmr; if ('qs' in o) QS_STANDPAT = o.qs; if ('asp' in o) ASP = o.asp; }, analyze, cands, pvOf, evaluate, evalCore, FN, W0, TUNED, setW(w) { W = w ? Float64Array.from(w) : (TUNED[RK] || W0); }, kindOf, EW, goalGood, goalMin, goalReply, goalOf, goalMet, ttClear,
   get nodes() { return nodes; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
