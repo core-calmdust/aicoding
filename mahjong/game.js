@@ -139,7 +139,7 @@ class MJGame {
     const wall = [];
     for (let i = 0; i < 136; i++) wall.push(i);
     for (let i = wall.length - 1; i > 0; i--) { const j = (this.rand() * (i + 1)) | 0; [wall[i], wall[j]] = [wall[j], wall[i]]; }
-    this.wall = wall;
+    this.wall = this.testWall ? this.testWall.slice() : wall;   // (testWall: tools/test-rules.js only)
     this.dead = wall.slice(122);          // 14: [0..3] rinshan, [4]+2k dora indicators, [5]+2k ura
     this.livePos = 0; this.liveEnd = 122;
     this.rinshanPos = 0;
@@ -204,7 +204,7 @@ class MJGame {
         } else drawn = null;
         continue;
       }
-      // riichi stick goes down if the riichi discard was not ronned
+      { const ab = this.midAbort(); if (ab) { await this.abort(ab); return; } }   // 四風連打 / 四家立直
       // next player
       if (this.liveLeft() === 0) { await this.exhaustive(); return; }
       if (this.kans >= 4 && this.kanSeats.size > 1) { await this.abort('suukaikan'); return; }
@@ -216,6 +216,17 @@ class MJGame {
     }
   }
 
+  // (2026-11-18, ユーザー「未実装ルールに対応」) after a discard nobody called or ronned:
+  //   四風連打 — the four first discards are all the same wind, with no call before them
+  //   四家立直 — all four are in riichi (the fourth's stick is down and stays on the table)
+  midAbort() {
+    if (this.firstGo && this.P.every(q => q.river.length === 1 && !q.melds.length)) {
+      const w0 = T(this.P[0].river[0].id);
+      if (w0 >= 27 && w0 <= 30 && this.P.every(q => T(q.river[0].id) === w0)) return 'suufon';
+    }
+    if (this.P.every(q => q.riichi)) return 'suucha';
+    return null;
+  }
   draw() { return this.wall[this.livePos++]; }
   // skill "lure": the next draws become effective tiles when one is left in the live wall
   drawFor(s) {
@@ -477,6 +488,12 @@ class MJGame {
     for (const q of this.P) q.ippatsu = false;
     this.firstGo = false;
     if (type === 'minkan') { this.kans++; (this.kanSeats = this.kanSeats || new Set()).add(s); }
+    // 包 (パオ, 2026-11-18): calling the third dragon set / the fourth wind set makes the player who discarded it liable
+    if (type !== 'chi' && !p.pao) {
+      const n = (a, b) => p.melds.filter(m => m.type !== 'chi' && m.t >= a && m.t <= b).length;
+      if (lo >= 31 && n(31, 33) === 3) p.pao = { seat: from, yaku: 'daisangen' };
+      else if (lo >= 27 && lo <= 30 && n(27, 30) === 4) p.pao = { seat: from, yaku: 'daisuushii' };
+    }
     await this.emit('call', { seat: s, from, type, tiles, called: id });
     if (type === 'minkan') await this.revealDora();
     return { caller: s, minkan: type === 'minkan' };
@@ -578,7 +595,21 @@ class MJGame {
       const potMul = p.fx.pot || 1;
       const hb = first ? this.honba * potMul : 0; first = false;
       const moves = [];
-      if (tsumo) {
+      // 包: the liable player pays the whole of that yakuman on a tsumo, half of it on a ron by someone else (the rest as usual)
+      const py = p.pao && res.yakuman && res.yakuman.find(y => y[0] === p.pao.yaku);
+      const pz = py && !(!tsumo && from === p.pao.seat) ? p.pao.seat : -1;
+      if (pz >= 0) {
+        res.pao = pz;
+        const paoBase = 8000 * py[1], restBase = res.base - paoBase, full = MJ.payments(paoBase, dealer, false).ron;
+        if (tsumo) {
+          moves.push([pz, this.pay(pz, w, full + Math.ceil(hb * 3) * 100), 'pao']);
+          if (restBase > 0) { const pr = MJ.payments(restBase, dealer, true); for (let q = 0; q < 4; q++) if (q !== w) moves.push([q, this.pay(q, w, dealer ? pr.all : (this.isDealer(q) ? pr.dealer : pr.other))]); }
+        } else {
+          const half = Math.ceil(full / 2 / 100) * 100;
+          moves.push([pz, this.pay(pz, w, half), 'pao']);
+          moves.push([from, this.pay(from, w, full - half + (restBase > 0 ? MJ.payments(restBase, dealer, false).ron : 0) + Math.ceil(hb * 3) * 100, true)]);
+        }
+      } else if (tsumo) {
         for (let q = 0; q < 4; q++) if (q !== w) {
           const amt = (dealer ? pays.all : (this.isDealer(q) ? pays.dealer : pays.other)) + Math.ceil(hb) * 100;
           moves.push([q, this.pay(q, w, amt)]);
@@ -618,7 +649,13 @@ class MJGame {
     const tenpai = this.P.map(p => MJ.shanten(MJ.countsIds(p.hand), p.melds.length) === 0 && MJ.waits(MJ.countsIds(p.hand), p.melds.length).some(t => MJ.countsIds(p.hand)[t] < 4));
     const n = tenpai.filter(Boolean).length;
     const before = this.scores.slice();
-    if (n > 0 && n < 4) {
+    // 流し満貫 (2026-11-18): every discard a terminal or an honour and none of them called — paid as a mangan tsumo,
+    // in place of the tenpai payments (the dealer still keeps the deal when tenpai)
+    const yao = t => t >= 27 || t % 9 === 0 || t % 9 === 8;
+    const nagashi = [0, 1, 2, 3].filter(s => { const r = this.P[s].river; return r.length && r.every(x => !x.taken && yao(T(x.id))); });
+    if (nagashi.length) {
+      for (const w of nagashi) { const dl = this.isDealer(w); for (let q = 0; q < 4; q++) if (q !== w) this.pay(q, w, dl ? 4000 : (this.isDealer(q) ? 4000 : 2000)); }
+    } else if (n > 0 && n < 4) {
       const get = 3000 / n, give = 3000 / (4 - n);
       // pair each non-tenpai payer with tenpai receivers
       for (let a = 0; a < 4; a++) if (!tenpai[a]) for (let b = 0; b < 4; b++) if (tenpai[b]) this.pay(a, b, give / n);
@@ -627,7 +664,7 @@ class MJGame {
     const renchan = tenpai[this.dealer];
     this.lastResult = { type: 'ryuukyoku', renchan };
     this.honba++;
-    await this.emit('ryuukyoku', { tenpai, delta, scores: this.scores.slice(), hands: this.P.map(p => p.hand.slice()) });
+    await this.emit('ryuukyoku', { tenpai, delta, scores: this.scores.slice(), hands: this.P.map(p => p.hand.slice()), nagashi: nagashi.length ? nagashi : null });
   }
   async abort(kind, seat) {
     this.lastResult = { type: 'abort', renchan: true };

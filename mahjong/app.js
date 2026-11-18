@@ -275,7 +275,7 @@ const SND = (() => {
     skillFx: id => { const f = SKFX[id]; if (f) f(); },
     tile: () => { if (!play(pick3('tile'), 1, .96 + Math.random() * .08)) click(); },
     stick: () => { if (!play(pick3('stick'), 1)) tone(1800, .08, 'triangle', .06); },
-    voice: k => play('v-' + k, .8),   // (ユーザー 2026-11-18「声のボリュームが少し大きめなので少し抑えて」: ×0.8 ≈ −2 dB)
+    voice: k => play('v-' + k, .65),   // (ユーザー 2026-11-18「声が少し大きめ」×0.8 →「まだ大きい」×0.65 ≈ −3.7 dB)
     preload: () => load(),
     _trk: TRK, _rebuild: () => rebuild(), _ac: () => ac,
     music,
@@ -1997,6 +1997,7 @@ async function showAgari(d, r, last) {
         <div class="ag-hand">${hand.map(id => tileHTML(id, 'md')).join('')}${melds}<span class="gap"></span>${tileHTML(r.winId, 'md win')}</div>
         <div class="ag-dora"><span><small>${t('dora')}</small>${d.dora.map(x => typeHTML(x, 'xs')).join('')}</span>${G.P[r.seat].riichi ? `<span><small>${I18N.yaku('ura')}</small>${d.ura.slice(0, d.dora.length).map(x => typeHTML(x, 'xs')).join('')}</span>` : ''}</div>
         <div class="agst-mid"><div class="ag-yaku">${yl}</div>${res.yakumanN ? '' : `<div class="agst-han"><b>${res.han}</b><span>${t('han', { n: '' }).trim() || '翻'}</span><small>${t('fu', { n: res.fu })}</small></div>`}</div>
+        ${res.pao != null ? `<div class="ag-note">${esc(t('pao'))} ${esc(L(UIS.chars[res.pao].name))}</div>` : ''}
         ${res.shugi ? `<div class="ag-note">${esc(I18N.L(MJSkills.get('shugi').name))} ×${res.shugi}</div>` : ''}
         <div class="agst-total">${lim ? `<em class="stamp">${esc(lim)}</em>` : ''}<span class="ag-pw">${lv >= 3 ? '<span class="ag-rays"></span>' : ''}<b data-v="${pts.toLocaleString()}">${pts.toLocaleString()}</b>${spark}</span></div>
       </div>
@@ -2085,8 +2086,8 @@ async function showMoves(d, o = {}) {
 }
 async function showRyuukyoku(d) {
   SND.score();
-  const ab = d.abort ? t('abort')[d.abort] || d.abort : '';
-  await showMoves(d, { title: `${t('ryuukyoku')}${ab ? ` <small>${esc(ab)}</small>` : ''}`, tags: d.abort ? null : [0, 1, 2, 3].map(s => [d.tenpai[s] ? t('tenpai') : t('noten'), d.tenpai[s]]) });
+  const ab = d.abort ? t('abort')[d.abort] || d.abort : d.nagashi ? t('nagashi') : '';   // (流し満貫 2026-11-18: its seats tagged so)
+  await showMoves(d, { title: `${t('ryuukyoku')}${ab ? ` <small>${esc(ab)}</small>` : ''}`, tags: d.abort ? null : [0, 1, 2, 3].map(s => d.nagashi && d.nagashi.includes(s) ? [t('nagashi'), true] : [d.tenpai[s] ? t('tenpai') : t('noten'), d.tenpai[s]]) });
 }
 // 勝敗記録 (shared/record.js): one entry per finished game vs the BOTs — 1st = win, 4th = loss, 2nd / 3rd = draw
 const PTS = { ja: '{n}点', en: '{n} pts', zh: '{n}点', ko: '{n}점', es: '{n} pts', fr: '{n} pts', pt: '{n} pts', de: '{n} Pkt.', hi: '{n} अंक', ar: '{n} نقطة', ru: '{n} очк.', 'zh-TW': '{n}點', id: '{n} poin', tr: '{n} puan' };
