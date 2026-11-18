@@ -108,9 +108,14 @@ const icon = k => IC[k] || '';
 
 // ---------------------------------------------------------------- sound (WebAudio synth)
 // a volume setting, 0–100 (80 by default; a level saved before as 0–1 of the old scale is carried over: old 1 = 80)
-// (ユーザー 2026-11-18) music defaults to 100 (= 1.25× the old loudness), effects to 80
-function volP(k) { const p = DB.set[k + 'P']; if (p != null) return Math.max(0, Math.min(100, +p));
-  const o = DB.set[k + 'Vol']; return o == null ? (k === 'bg' ? 100 : 80) : Math.round(Math.max(0, Math.min(1, o)) * 80); }
+// (ユーザー 2026-11-18) the music's scale is set so that 80 is the music at 1.25× the old loudness (what was 100): music gain = value / 64.
+// Its setting is kept as bgQ; a bgP saved on the earlier music scale (gain bgP / 80) is carried over at the same loudness (× .8).
+const VKEY = k => k === 'bg' ? 'bgQ' : k + 'P';
+const VBASE = k => k === 'bg' ? 64 : 80;
+function volP(k) { const c = v => Math.max(0, Math.min(100, Math.round(v)));
+  const p = DB.set[VKEY(k)]; if (p != null) return c(+p);
+  if (k === 'bg' && DB.set.bgP != null) return c(+DB.set.bgP * .8);
+  const o = DB.set[k + 'Vol']; return o == null ? 80 : c(Math.max(0, Math.min(1, o)) * VBASE(k)); }
 const SND = (() => {
   let ac = null;
   const ctx = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) ac.resume(); return ac; };
@@ -118,7 +123,7 @@ const SND = (() => {
   // two buses (ユーザー 2026-11-14: the effects and the music each with their own volume and mute — the gear in the game)
   let seB = null, bgB = null;
   // (ユーザー 2026-11-18) the sliders read 0–100 and stand at 80 by default; 80 is the loudness the game had (gain 1), 100 is ×1.25
-  const vol = k => (DB.set[k + 'On'] === false ? 0 : volP(k) / 80);
+  const vol = k => (DB.set[k + 'On'] === false ? 0 : volP(k) / VBASE(k));
   const seOut = a => { if (!seB) { seB = a.createGain(); seB.gain.value = vol('se'); seB.connect(a.destination); } return seB; };
   const bgOut = a => { if (!bgB) { bgB = a.createGain(); bgB.gain.value = vol('bg'); bgB.connect(a.destination); } return bgB; };
   function levels() { const a = ac; if (!a) return; const t = a.currentTime;
@@ -731,7 +736,7 @@ function openSettings() {
   $('#modal').onclick = e => { if (e.target === $('#modal')) closeModal(); };
   box.addEventListener('input', e => {
     const r = e.target.closest('input[type=range]'); if (!r) return;
-    const k = r.dataset.k; DB.set[k + 'P'] = +r.value; DB.set[k + 'On'] = true; DB.set.snd = true; save(); r.style.setProperty('--p', r.value + '%');
+    const k = r.dataset.k; DB.set[VKEY(k)] = +r.value; DB.set[k + 'On'] = true; DB.set.snd = true; save(); r.style.setProperty('--p', r.value + '%');
     const row = r.closest('.st-vol'); row.classList.remove('off'); row.querySelector('small b').textContent = r.value; row.querySelector('.st-m').innerHTML = IC.snd;
     SND.unlock(); SND.levels(); SND.resume(); });
   box.addEventListener('change', e => { if (e.target.dataset.k === 'se') SND.tile(); });   // a sample of the effects' level
