@@ -506,7 +506,7 @@ function renderInfo() {
   for (const p of [P1, P2]) {
     $('#count' + p).textContent = p === P1 ? pos.cap : pos.geese;
     $('#hand' + p).textContent = t(p === P1 ? 'pcs.fox' : 'pcs.geese');
-    const n = playerName(p); $('#name' + p).textContent = n ? n + ' · ' + pname(p) : pname(p);
+    const n = playerName(p); $('#name' + p).textContent = n || pname(p); $('#name' + p).title = n ? n + ' · ' + pname(p) : pname(p);   // (2026-11-18 user: the icon already shows the side — just あなた / AI Lv.N, no wrapping)
     const el = $('#pl' + p);
     el.classList.toggle('active', !st.over && tm === p);
     el.classList.toggle('won', st.winner === p);
@@ -2065,7 +2065,7 @@ async function runReview() {
   if (moves.length < 1) { toast(t('nokifu')); return; }
   if (rv && rv.key === gameKey() && (rv.running || rv.done === rv.total)) { rvOpen = true; renderReview(); revealReview(); return; }
   rvCancel();
-  const game = moves.slice(), key = gameKey(), st0 = startSpec;
+  const game = moves.slice(), key = gameKey(), st0 = startSpec, f0 = gfirst;
   const run = rv = { key, list: [], done: 0, total: game.length, running: true, ws: [] };
   for (let k = 0; k < RV_WORKERS; k++) run.ws.push(makeWorker());
   rvOpen = true; renderReview(); revealReview();
@@ -2075,7 +2075,7 @@ async function runReview() {
       const i = next++, pk = startKey() + '|' + game.slice(0, i).join(',');
       let list = anaCache.get(pk);
       if (!list) {
-        const res = await new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve }); w.postMessage({ type: 'analyze', start: st0, rule: gv, moves: game.slice(0, i), time: i < 10 ? 500 : 800, id }); });
+        const res = await new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve }); w.postMessage({ type: 'analyze', start: st0, rule: gv, first: f0, moves: game.slice(0, i), time: i < 10 ? 500 : 800, id }); });   // (first: 2026-11-18 fix — without it a game the geese began was replayed with the fox to move, and no move was found)
         if (rv !== run || !res) return;
         list = res.list; anaCache.set(pk, list);
       }
@@ -2264,7 +2264,7 @@ function rvbUpdate() {
     const playedM = !ken && cur < moves.length ? moves[cur] : -1;
     BOX.update({
       key, over, k: 5,
-      req: { start: startSpec, rule: gv, moves: moves.slice(0, cur), time: 1200, k: 5, plies: 7 },
+      req: { start: startSpec, rule: gv, first: gfirst, moves: moves.slice(0, cur), time: 1200, k: 5, plies: 7 },
       seed: !ken && rv.list[at] ? rv.list[at] : null,
       sub: over ? '' : t('hb.turn', { c: pname(me) }),
       left: ken ? () => kenSwap(() => rvbKenLeft(key)) : () => rvbLeft(),
