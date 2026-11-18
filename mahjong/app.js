@@ -186,7 +186,9 @@ const SND = (() => {
     riichi: { file: 'bgm-riichi', vol: .26, restart: true },
     riichi2: { file: 'bgm-riichi2', vol: .182, restart: true },   // (2026-11-16, ユーザー「リーチ2BGM」: −9.2 LUFS → ≈ −24 like the first)
     riichi3: { file: 'bgm-riichi3', vol: .184, restart: true },   // (同日「リーチ3」: −9.3 LUFS → ≈ −24)
-    score: { file: 'score-jingle', vol: .35, restart: true, once: true },   // (ユーザー 2026-11-15: a short piece, once per results screen — no loop)
+    score: { file: 'score-jingle', vol: .35, restart: true, once: true },
+    // (ユーザー 2026-11-19: the rules / lessons music, from the list through every lesson, as long as 次へ goes on: −15.4 LUFS → ≈ −22 like the title)
+    lesson: { file: 'bgm-lesson', vol: .47, restart: false },   // (ユーザー 2026-11-15: a short piece, once per results screen — no loop)
   };
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
@@ -1298,7 +1300,7 @@ const AUTO = /[?&]auto/.test(location.search);
 
 async function startGame(opt = {}) {
   if (window.MJ && MJ.clearCache) MJ.clearCache();   // (a fresh game: the memo tables start empty, so they never pile up across games)
-  SND.newGame();   // opt.ranked: a 段位戦 game, opt.len its length
+  if (opt.lesson) SND.music('lesson'); else SND.newGame();   // opt.ranked: a 段位戦 game, opt.len its length (a lesson: its own music, carried on)
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
   if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = (kind, seat) => { SND.tile(); if (kind === 'river' && UIS.landWait && UIS.landWait.seat === seat) UIS.landWait.done(); }; TB.warm(); }
@@ -1377,7 +1379,7 @@ async function onEvent(ev, d) {
   switch (ev) {
     case 'game-start': renderBadges(); break;
     case 'hand-start': {
-      SND.handStart();
+      if (!d.lesson) SND.handStart();
       TB.hideAll();
       UIS.intel = null; $('#intel').hidden = true;
       refreshTable(); renderBadges(); renderHand(); layoutAll();
@@ -1394,7 +1396,7 @@ async function onEvent(ev, d) {
     }
     case 'discard': {
       const p = g.P[d.seat];
-      if (d.riichi) { await cutin(d.seat, 'riichi'); SND.music('riichi'); }
+      if (d.riichi) { await cutin(d.seat, 'riichi'); if (!UIS.lesson) SND.music('riichi'); }
       // (ユーザー 2026-11-18: a ron came before the tile was down) the tile's landing is waited on by a ron on it (agari)
       { let done; const pr = new Promise(r => { done = r; }); UIS.landWait = { seat: d.seat, done, pr: Promise.race([pr, sleep(2600)]) }; }
       layoutRiver(d.seat, true);   // (the tile's sound plays when it lands — TB.onTileLand)
@@ -1444,7 +1446,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'agari': {
-      SND.music(null);   // (the game's music stops at the end of a hand; each results screen plays its own short piece once — SND.score) (ユーザー 2026-11-14: the results of a hand have their own music; the game's comes back with the next hand, on the table)
+      if (!UIS.lesson) SND.music(null);   // (the game's music stops at the end of a hand; each results screen plays its own short piece once — SND.score) (ユーザー 2026-11-14: the results of a hand have their own music; the game's comes back with the next hand, on the table)
       clearActs();
       // a ron: the discard is down on the table first, a beat, then 「ロン！」
       if (d.results.some(r => !r.tsumo) && UIS.landWait) { await UIS.landWait.pr; UIS.landWait = null; await sleep(FAST < 1 ? 60 : 280); }
@@ -1457,7 +1459,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'ryuukyoku': {
-      SND.music(null);
+      if (!UIS.lesson) SND.music(null);
       clearActs();
       for (let s = 1; s < 4; s++) if (d.tenpai[s]) TB.layoutHand(s, d.hands[s], null, true);
       if (!d.abort) SND.voice(d.tenpai[ME] ? 'tenpai' : 'noten');   // (ユーザー 2026-11-14: only the player's own テンパイ / ノーテン)   // (each player declares, from the dealer round)
@@ -2003,7 +2005,7 @@ function waitClick(box, sel, any) { return new Promise(res => { const b = box.qu
 //     scores counting to their new values, each player's place                                      (showMoves, once)
 //  A drawn hand: the tenpai hands are laid open where they stand on the table (no list of hands), then 2 with テンパイ / ノーテン.
 async function showAgari(d, r, last) {
-  SND.score();
+  if (!UIS.lesson) SND.score();
   const c = UIS.chars[r.seat], res = r.res;
   const ys = res.list.filter(([k, h]) => !(k === 'ura' && !h));   // (ユーザー 2026-11-15: no ura-dora → no line, not 「0翻」)
   const yl = ys.map(([k, h], i) =>
@@ -2112,7 +2114,7 @@ async function showMoves(d, o = {}) {
   closeModal();
 }
 async function showRyuukyoku(d) {
-  SND.score();
+  if (!UIS.lesson) SND.score();
   const ab = d.abort ? t('abort')[d.abort] || d.abort : d.nagashi ? t('nagashi') : '';   // (流し満貫 2026-11-18: its seats tagged so)
   await showMoves(d, { title: `${t('ryuukyoku')}${ab ? ` <small>${esc(ab)}</small>` : ''}`, tags: d.abort ? null : [0, 1, 2, 3].map(s => d.nagashi && d.nagashi.includes(s) ? [t('nagashi'), true] : [d.tenpai[s] ? t('tenpai') : t('noten'), d.tenpai[s]]) });
 }
@@ -2424,13 +2426,14 @@ function openLessons(tab, cat0) {
   // contents in place; only the first opening has the box's entrance
   const m = $('#modal'), cur = !m.hidden && m.classList.contains('lxm') && m.querySelector('.mbox');
   if (cur) { const sc = cur.querySelector('.lx-body'); cur.innerHTML = html; return; }
+  SND.music('lesson');
   const b = modal(html, 'lessons lxm');
   b.addEventListener('click', e => {
     const tb = e.target.closest('[data-tab]'), ct = e.target.closest('[data-cat]'), c = e.target.closest('.lx-card, .lx-node'), x = e.target.closest('[data-a=close]');
     if (tb) { SND.pick(); openLessons(tb.dataset.tab); }
     else if (ct) { SND.pick(); openLessons('l', ct.dataset.cat); }
     else if (c) { SND.pick(); const ls = LS_ALL().find(q => q.id === c.dataset.id); closeModal(); startGame({ lesson: ls }); }
-    else if (x) { SND.pick(); closeModal(); }
+    else if (x) { SND.pick(); closeModal(); SND.music('title'); }
   });
 }
 
