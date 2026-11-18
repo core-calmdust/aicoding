@@ -79,7 +79,7 @@ EGAROUCID_DIR=~/Egaroucid/bin node tools/book-audit.js tools/book-L.bin 21 --mar
 - `bench.html`（終盤：残り24マス 8局面）の1スレッド・10スレッドの時間を、変更の前後で比べる。作業機で候補になったのは「末端近く専用の小さな置換表」（作業機で −3〜4%、局面数は +5.7%）。Mac で試すときはブランチを用意する。
 
 ## 検証D：複数スレッド（Praline の変更）
-- 待ち方の変更が入ったら、`bench.html` の中盤・終盤を 1・8・10・14 スレッドで測る。リバーシは分割が細かいので、8〜10スレッドの伸びが落ちていないかを見る。
+- 待ち方の変更（パーキング）は 2026-11-19 にリバーシにも入った（`engine_mt.wasm?v=16`）。`reversi/bench.html` と `reversi/bench.html?park=0`（前の待ち方）を並べて、中盤・終盤を 1・8・10・14 スレッドで測る。リバーシは分割が細かいので、8〜10スレッドの伸びが落ちていないか、14スレッドが良くなったかを見る。落ちる場合は `PL_PARK_SPIN` を上げるか、リバーシだけ `-DPL_NO_PARK` でビルドする。
 
 ## 送ってほしいもの
 1. `node frontier.js table` の出力（`frontier.jsonl`・`frontier-extreme.jsonl` があればそのファイルも）
