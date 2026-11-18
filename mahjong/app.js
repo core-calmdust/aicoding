@@ -300,6 +300,8 @@ const SND = (() => {
     // (once per results screen, from its top) (ユーザー 2026-11-18「点数計算に入る時のBGMを少しだけ遅らせて」: 0.35 s after the screen opens;
     // any other music asked for meanwhile cancels it, as music() clears handT)
     score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music(null); handT = setTimeout(() => music('score'), 350); },   // (0.45 s → 0.35 s, ユーザー 2026-11-18「あと0.1s早く」)
+    // (ユーザー 2026-11-19「ゲーム中からトップに戻ったときのBGMを少しだけ遅らせて」) the game's music stops, the title's comes 0.5 s later
+    titleLater() { music(null); handT = setTimeout(() => music('title'), 500); },
     newGame() { nextMain = draw(MAINS, mainKey); nextRii = draw(RIIS, riichiKey); if (on()) { fetchTrk(nextMain); fetchTrk(nextRii); fetchTrk('score'); } },
     // a hand begins: this hand's track (drawn ahead), after a short quiet (ユーザー 2026-11-16「得点表示から次の局の通常BGMまで少し間を」 —
     // the results' piece fades out, then about 1.6 s of silence)
@@ -1355,7 +1357,7 @@ $('#gExit').addEventListener('click', async () => {
 });
 function quitGame() { if (window.MJSkillFx) MJSkillFx.stop();
   if (UIS) UIS.abort = true;
-  SND.music('title');
+  SND.titleLater();
   closeStats();
   $('#dealAsk').hidden = true; lessonGuide(null);
   G = null;

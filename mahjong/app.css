@@ -3091,3 +3091,14 @@ html:not(.lp) .lx-cards.c4{grid-template-columns:repeat(4,1fr)}
 html:not(.lp) .lx-cards.c4 .lx-ft .tl{--tw:clamp(26px,3vh,34px);width:clamp(26px,3vh,34px)}
 html:not(.lp) .lx-cards.c4 .lx-card>b{font-size:15px}
 html:not(.lp) .lx-cards.c4 .lx-card>b{letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* 小町の吹き出し：持ち上がった牌に重ならない高さ、文字は卓の大きさ（縦・横の小さい方）に合わせる（2026-11-19、ユーザー「正方形に近い窓で文字が大きすぎ」「マウスで上がる牌とかぶる」） */
+#game .ls-guide{bottom:calc(var(--th) * 1.85 + 30px);width:min(max(680px,calc(var(--GH,100vh) * 1.05)),calc(100% - 2 * (var(--bf) + 130px)))}
+html:not(.lp) #game .ls-guide{--lgu:min(calc(var(--GH,100vh) / 100), calc(var(--GW,100vw) / 175))}
+html:not(.lp) #game .ls-guide .lg-face{width:max(76px,calc(var(--lgu) * 11.5));height:max(76px,calc(var(--lgu) * 11.5))}
+html:not(.lp) #game .ls-guide p{font-size:max(15px,calc(var(--lgu) * 2.55))}
+html:not(.lp) #game .ls-guide .lg-top b{font-size:max(14px,calc(var(--lgu) * 2))}
+html:not(.lp) #game .ls-guide .lg-top small,html:not(.lp) #game .ls-guide .lg-quit{font-size:max(11.5px,calc(var(--lgu) * 1.6))}
+html:not(.lp) #game .ls-guide .lg-again{font-size:max(13px,calc(var(--lgu) * 2.1))}
+html:not(.lp) #game .ls-guide .lg-btns .btn{font-size:max(13px,calc(var(--lgu) * 1.9))}
+html:not(.lp) #game .ls-guide .lg-bub{padding:max(10px,calc(var(--lgu) * 1.5)) max(14px,calc(var(--lgu) * 2))}
+html.lp #game .ls-guide{bottom:calc(var(--th) * 1.75 + 14px)}
