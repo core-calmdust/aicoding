@@ -75,41 +75,59 @@
   // ---------------------------------------------------------------- the kernels (WGSL). Planes: [batch][channel][361], 19x19 row major,
   // zero outside the board (as the padded planes of engine.c)
   const WG = 64;
+  // (2026-11-19) the convolutions as a tiled matrix product: out[co][n] = sum_k W[co][k] * im2col[k][n] over k = (ci, tap) and
+  // n = (batch, position) — a workgroup computes a 64 x 64 tile through shared memory, each thread 4 x 4 (the first version, one
+  // output a thread, ran at ~0.3 TFLOPS on an M4 Pro)
   const CONV = `
 struct P { cin: u32, cout: u32, k: u32, accum: u32, inC: u32, outC: u32, outOff: u32, pad: u32 };
+struct NB { n: u32, pad0: u32, pad1: u32, pad2: u32 };
 @group(0) @binding(0) var<uniform> P_: P;
 @group(0) @binding(1) var<storage, read> inp: array<f32>;
 @group(0) @binding(2) var<storage, read> w: array<f32>;
 @group(0) @binding(3) var<storage, read_write> outp: array<f32>;
-@compute @workgroup_size(${WG})
-fn main(@builtin(global_invocation_id) g: vec3<u32>) {
-  let p = g.x; if (p >= 361u) { return; }
-  let co0 = g.y * 4u; let b = g.z;
-  let y = i32(p / 19u); let x = i32(p % 19u);
-  let kk = P_.k * P_.k; let r = i32(P_.k / 2u);
-  var acc = vec4<f32>(0.0);
-  let ib = b * P_.inC * 361u;
-  let wstride = P_.cin * kk;
-  for (var ci = 0u; ci < P_.cin; ci++) {
-    let ip = ib + ci * 361u;
-    for (var t = 0u; t < kk; t++) {
-      let yy = y + i32(t / P_.k) - r; let xx = x + i32(t % P_.k) - r;
-      if (yy < 0 || yy >= 19 || xx < 0 || xx >= 19) { continue; }
-      let v = inp[ip + u32(yy * 19 + xx)];
-      let wi = ci * kk + t;
-      var wv = vec4<f32>(0.0);
-      wv.x = w[co0 * wstride + wi];
-      if (co0 + 1u < P_.cout) { wv.y = w[(co0 + 1u) * wstride + wi]; }
-      if (co0 + 2u < P_.cout) { wv.z = w[(co0 + 2u) * wstride + wi]; }
-      if (co0 + 3u < P_.cout) { wv.w = w[(co0 + 3u) * wstride + wi]; }
-      acc += v * wv;
+@group(0) @binding(4) var<uniform> NB_: NB;
+var<workgroup> As: array<f32, 1024>;   // [16 k][64 m]
+var<workgroup> Bs: array<f32, 1024>;   // [16 k][64 n]
+@compute @workgroup_size(16, 16)
+fn main(@builtin(local_invocation_id) l: vec3<u32>, @builtin(workgroup_id) wg: vec3<u32>) {
+  let tid = l.y * 16u + l.x;
+  let m0 = wg.y * 64u; let n0 = wg.x * 64u;
+  let kk = P_.k * P_.k; let K = P_.cin * kk; let N = NB_.n * 361u; let r = i32(P_.k / 2u);
+  var acc: array<vec4<f32>, 4>;
+  for (var i = 0u; i < 4u; i++) { acc[i] = vec4<f32>(0.0); }
+  for (var k0 = 0u; k0 < K; k0 += 16u) {
+    for (var q = 0u; q < 4u; q++) {
+      let e = tid + q * 256u;
+      // A: weights [m][k] → As[k][m]
+      let ak = e / 64u; let am = e % 64u; let gm = m0 + am; let gk = k0 + ak;
+      var av = 0.0; if (gm < P_.cout && gk < K) { av = w[gm * K + gk]; }
+      As[ak * 64u + am] = av;
+      // B: the inputs under each (ci, tap) for each position (zero off the board)
+      let bk = e / 64u; let bn = e % 64u; let gn = n0 + bn; let gk2 = k0 + bk;
+      var bv = 0.0;
+      if (gn < N && gk2 < K) {
+        let b = gn / 361u; let p = gn % 361u; let ci = gk2 / kk; let t = gk2 % kk;
+        let yy = i32(p / 19u) + i32(t / P_.k) - r; let xx = i32(p % 19u) + i32(t % P_.k) - r;
+        if (yy >= 0 && yy < 19 && xx >= 0 && xx < 19) { bv = inp[(b * P_.inC + ci) * 361u + u32(yy * 19 + xx)]; }
+      }
+      Bs[bk * 64u + bn] = bv;
     }
+    workgroupBarrier();
+    for (var k = 0u; k < 16u; k++) {
+      let a = vec4<f32>(As[k * 64u + l.y * 4u], As[k * 64u + l.y * 4u + 1u], As[k * 64u + l.y * 4u + 2u], As[k * 64u + l.y * 4u + 3u]);
+      let bb = vec4<f32>(Bs[k * 64u + l.x * 4u], Bs[k * 64u + l.x * 4u + 1u], Bs[k * 64u + l.x * 4u + 2u], Bs[k * 64u + l.x * 4u + 3u]);
+      acc[0] += a.x * bb; acc[1] += a.y * bb; acc[2] += a.z * bb; acc[3] += a.w * bb;
+    }
+    workgroupBarrier();
   }
-  let ob = b * P_.outC * 361u + P_.outOff * 361u + p;
-  for (var j = 0u; j < 4u; j++) {
-    let co = co0 + j; if (co >= P_.cout) { break; }
-    let o = ob + co * 361u;
-    if (P_.accum == 1u) { outp[o] = outp[o] + acc[j]; } else { outp[o] = acc[j]; }
+  for (var i = 0u; i < 4u; i++) {
+    let m = m0 + l.y * 4u + i; if (m >= P_.cout) { break; }
+    for (var j = 0u; j < 4u; j++) {
+      let n = n0 + l.x * 4u + j; if (n >= N) { break; }
+      let b = n / 361u; let p = n % 361u;
+      let o = (b * P_.outC + P_.outOff + m) * 361u + p;
+      if (P_.accum == 1u) { outp[o] = outp[o] + acc[i][j]; } else { outp[o] = acc[i][j]; }
+    }
   }
 }`;
   const BNRELU = `
@@ -233,9 +251,10 @@ fn main(@builtin(local_invocation_id) l: vec3<u32>, @builtin(workgroup_id) wg: v
       const planes = c => buf(maxB * c * NP, SU | CD);
       const FEAT = planes(NSP), GLOB = buf(maxB * 2, SU | CD), PAT = buf(maxB * NP, SU | CD);
       const X = planes(C), A1 = planes(C), H1 = planes(C), H2 = planes(C), H3 = planes(C), HP = planes(3 * hc), HPB = planes(3 * hc);
+      const NBU = dev.createBuffer({ size: 16, usage: GPUBufferUsage.UNIFORM | CD });
       const OUT = buf(maxB * OUTN, SU | CS), READ = dev.createBuffer({ size: maxB * OUTN * 4, usage: GPUBufferUsage.MAP_READ | CD });
       const ops = [];   // { p, bg, gx, gy, perB } — dispatched in order, z = the batch
-      const conv = (cv, inp, inC, out, outC, accum, outOff = 0) => ops.push({ p: P.conv, bg: bind(P.conv, [uni([cv.cin, cv.cout, cv.k, accum ? 1 : 0, inC, outC, outOff, 0]), inp, data(cv.w), out]), gx: Math.ceil(NP / WG), gy: Math.ceil(cv.cout / 4) });
+      const conv = (cv, inp, inC, out, outC, accum, outOff = 0) => ops.push({ p: P.conv, bg: bind(P.conv, [uni([cv.cin, cv.cout, cv.k, accum ? 1 : 0, inC, outC, outOff, 0]), inp, data(cv.w), out, NBU]), mm: Math.ceil(cv.cout / 64) });
       const bnr = (b, inp, out, c) => ops.push({ p: P.bn, bg: bind(P.bn, [uni([c, 0, 0, 0]), inp, data(cat(b.s, b.b)), out]), gx: Math.ceil(NP / WG), gy: c });
       conv(net.stem, FEAT, NSP, X, C, 0);
       ops.push({ p: P.stem, bg: bind(P.stem, [uni([C, 0, 0, 0]), GLOB, PAT, data(cat(net.gfw, net.gfb)), data(net.emb), X]), gx: Math.ceil(NP / WG), gy: C });
@@ -266,9 +285,9 @@ fn main(@builtin(local_invocation_id) l: vec3<u32>, @builtin(workgroup_id) wg: v
           dev.queue.writeBuffer(FEAT, 0, feat, 0, nb * NSP * NP);
           dev.queue.writeBuffer(GLOB, 0, glob, 0, nb * 2);
           const p32 = new Uint32Array(nb * NP); for (let i = 0; i < nb * NP; i++) p32[i] = pat[i];
-          dev.queue.writeBuffer(PAT, 0, p32);
+          dev.queue.writeBuffer(PAT, 0, p32); dev.queue.writeBuffer(NBU, 0, new Uint32Array([nb, 0, 0, 0]));
           const enc = dev.createCommandEncoder(), pass = enc.beginComputePass();
-          for (const o of ops) { pass.setPipeline(o.p); pass.setBindGroup(0, o.bg); if (o.wg) pass.dispatchWorkgroups(1, o.gy, nb); else pass.dispatchWorkgroups(o.gx, o.gy, nb); }
+          for (const o of ops) { pass.setPipeline(o.p); pass.setBindGroup(0, o.bg); if (o.mm) pass.dispatchWorkgroups(Math.ceil(nb * NP / 64), o.mm, 1); else if (o.wg) pass.dispatchWorkgroups(1, o.gy, nb); else pass.dispatchWorkgroups(o.gx, o.gy, nb); }
           pass.setPipeline(tailOp.p); pass.setBindGroup(0, tailOp.bg); pass.dispatchWorkgroups(nb, 1, 1);
           pass.end();
           enc.copyBufferToBuffer(OUT, 0, READ, 0, nb * OUTN * 4);

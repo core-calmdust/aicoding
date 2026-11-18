@@ -10,7 +10,7 @@
 'use strict';
 importScripts('rules.js?v=2');
 try { importScripts('tsumego.js?v=1'); } catch (e) {}
-try { importScripts('gpunet.js?v=1'); } catch (e) {}   // (PRO's 計算「GPU」, 2026-11-18)
+try { importScripts('gpunet.js?v=2'); } catch (e) {}   // (PRO's 計算「GPU」, 2026-11-18)
 const R = self.GoRules, PASS = -1;
 
 let simd = true;
