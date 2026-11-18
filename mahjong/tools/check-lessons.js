@@ -7,7 +7,9 @@ const LS = require('../lessons.js');
 const T = id => id >> 2, N = t => MJ.NAMES[t];
 let fail = 0;
 (async () => {
-  for (const ls of LS.RULES.concat(LS.LESSONS)) {
+  const ALL = LS.RULES.concat(LS.LESSONS);
+  for (const ls of LS.LESSONS) (ls.drills || []).forEach((d, k) => ALL.push(Object.assign({}, d, { id: ls.id + '#' + (k + 1), title: { ja: ls.title.ja + ' 問題' + (k + 1) + '（lv' + d.lv + '）' } })));
+  for (const ls of ALL) {
     const beats = ls.beats.slice(); let k = 0, out = [];
     const me = {
       interactive: true,

@@ -3104,3 +3104,5 @@ html:not(.lp) #game .ls-guide .lg-bub{padding:max(10px,calc(var(--lgu) * 1.5)) m
 html.lp #game .ls-guide{bottom:calc(var(--th) * 1.75 + 14px + var(--lgLift,0px))}
 /* (ユーザー 2026-11-19「押し引き：ボックスが長くなってる」) one row of cards does not stretch down to fill the page */
 .lx-cards:not(:has(> :nth-child(4))){grid-auto-rows:auto;align-content:start}
+/* (2026-11-19) a lesson with practice problems: how many, as a small pill at the card's top left */
+.lx-card .lx-qn{position:absolute;left:12px;top:10px;font-style:normal;font-size:11px;letter-spacing:.08em;padding:2px 9px;border-radius:99px;color:#f4eefe;background:color-mix(in srgb,var(--cc) 30%,rgba(10,6,22,.8));border:1px solid color-mix(in srgb,var(--cc) 60%,transparent)}
