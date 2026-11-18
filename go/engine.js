@@ -10,7 +10,7 @@
 'use strict';
 importScripts('rules.js?v=2');
 try { importScripts('tsumego.js?v=1'); } catch (e) {}
-try { importScripts('gpunet.js?v=5'); } catch (e) {}   // (PRO's 計算「GPU」, 2026-11-18)
+try { importScripts('gpunet.js?v=6'); } catch (e) {}   // (PRO's 計算「GPU」, 2026-11-18)
 const R = self.GoRules, PASS = -1;
 
 let simd = true;
@@ -118,7 +118,7 @@ const yieldNow = () => new Promise(r => setTimeout(r, 0));
 const GPU_B = 16;   // leaves a batch (virtual loss spreads them; more = faster on the GPU but a little less sharp a search)
 function gpuFor(I) {
   if (MTL || !self.GoGPU) return Promise.resolve(null);
-  if (!I.gpuP) I.gpuP = (I.E.gpu_init && I.E.gpu_init(GPU_B) ? self.GoGPU.create(netBytes[I.name], GPU_B) : Promise.resolve(null)).catch(() => null);
+  if (!I.gpuP) I.gpuP = (I.E.gpu_init && I.E.gpu_init(2 * GPU_B) >= 2 * GPU_B ? self.GoGPU.create(netBytes[I.name], GPU_B) : Promise.resolve(null)).catch(() => null);
   return I.gpuP;
 }
 async function search(I, job, o) {
@@ -132,25 +132,31 @@ async function search(I, job, o) {
   const t0 = performance.now();
   let done = 1, lastE = t0, lastP = t0, gap = o.prog0 || 280;   // first progress report after prog0 ms (quick first display), then every ~280 ms
   const maxV = o.visits || 100, maxT = o.time || 1e9;
+  let gSlot = 0, gPend = null;
+  const gRun = (off, nb) => G.run(new Float32Array(E.memory.buffer, E.gpu_feat() + off * 14 * 361 * 4, nb * 14 * 361).slice(), new Float32Array(E.memory.buffer, E.gpu_glob() + off * 8, nb * 2).slice(), new Uint16Array(E.memory.buffer, E.gpu_pat() + off * 361 * 2, nb * 361).slice(), nb).catch(() => null);
+  const gFinish = async b => {   // its outputs into gpu_out (the GPU's, else the CPU's) → expanded and backed up
+    let out = await b.p;
+    if (G.bad) out = null;
+    else if (out && !G.checked) {   // (2026-11-19) the first batch of this GPU also on the CPU: a GPU / driver that computes it wrong is not used
+      E.gpu_cpu_at(b.off, b.nb); const ref = new Float32Array(E.memory.buffer, E.gpu_out() + b.off * 727 * 4, b.nb * 727);
+      for (let i = 0; i < b.nb * 727; i++) { const d = Math.abs(out[i] - ref[i]); if (!(d <= 1e-2 + 1e-3 * Math.abs(ref[i]))) { G.bad = true; console.warn('[go] the GPU\'s results differ from the CPU\'s: the CPU is used'); break; } }
+      G.checked = true; out = ref.slice();
+    }
+    if (!out) { E.gpu_cpu_at(b.off, b.nb); I.gpuFail = 1; } else new Float32Array(E.memory.buffer, E.gpu_out() + b.off * 727 * 4, b.nb * 727).set(out);
+    return E.gpu_apply_at(b.off, b.nb);
+  };
   while (done < maxV) {
     const k = Math.min(o.slice || 4, maxV - done);
     let got;
-    if (G) {   // a batch of leaves on the GPU (the time and the progress as for the CPU's playouts)
-      const nb = E.gpu_collect(Math.min(GPU_B, Math.max(1, maxV - done))); got = E.gpu_imm();
-      if (nb) {
-        let out = null; try { out = await G.run(new Float32Array(E.memory.buffer, E.gpu_feat(), nb * 14 * 361), new Float32Array(E.memory.buffer, E.gpu_glob(), nb * 2), new Uint16Array(E.memory.buffer, E.gpu_pat(), nb * 361), nb); } catch (e) { out = null; }
-        if (G.bad) out = null;
-        else if (out && !G.checked) {   // (2026-11-19) the first batch of this GPU also on the CPU: a GPU / driver that computes it wrong is not used
-          E.gpu_cpu(nb); const ref = new Float32Array(E.memory.buffer, E.gpu_out(), nb * 727);
-          for (let i = 0; i < nb * 727; i++) { const d = Math.abs(out[i] - ref[i]); if (!(d <= 1e-2 + 1e-3 * Math.abs(ref[i]))) { G.bad = true; console.warn('[go] the GPU\'s results differ from the CPU\'s: the CPU is used'); break; } }
-          G.checked = true; out = ref.slice();   // (this batch: the CPU's)
-        }
-        if (!out) { E.gpu_cpu(nb); I.gpuFail = 1; } else new Float32Array(E.memory.buffer, E.gpu_out(), nb * 727).set(out);   // (the GPU failed: this batch on the CPU)
-        got += E.gpu_apply(nb);
-      }
+    if (G) {   // batches of leaves on the GPU: two in flight (2026-11-19) — the CPU fills the next one and applies the last while the GPU works
+      const off = gSlot * GPU_B; gSlot ^= 1;
+      const nb = E.gpu_collect_at(off, Math.min(GPU_B, Math.max(1, maxV - done - (gPend ? gPend.nb : 0)))); got = E.gpu_imm();
+      const cur = nb ? { off, nb, p: gRun(off, nb) } : null;
+      if (gPend) got += await gFinish(gPend);
+      gPend = cur;
     } else got = E.search_run(k);
     if (MTL) { done = E.mt_visits(); if (!got && E.mt_full()) break; if (E.mt_stopped()) { E.mt_close(); return null; } }   // (threads: every thread's visits count; the page cancelled)
-    else { done += got; if (!got) break; }
+    else { done += got; if (!got && !gPend) break; }
     const now = performance.now();
     if (now - t0 > maxT && done >= (o.minVisits || 1)) break;
     if (o.progress && now - lastP > gap) { lastP = now; gap = 280; o.progress(results(I, n, 24)); }
@@ -159,6 +165,7 @@ async function search(I, job, o) {
     await yieldNow();
     if (curJob !== my) { if (MTL) E.mt_close(); return null; }
   }
+  if (gPend) { await gFinish(gPend); gPend = null; }   // (the batch still on the GPU: in before the tree is read)
   if (MTL) E.mt_close();   // (the helpers leave the tree before it is read)
   return results(I, n, 362);
 }
