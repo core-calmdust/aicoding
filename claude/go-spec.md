@@ -59,3 +59,4 @@ URL: https://core-calmdust.github.io/aicoding/go/ （2026-10-22 main に公開�
 
 ## 対局設定の Pro モード（2026-11-08）
 対局設定の「AIの強さ」の PRO ボタン（`shared/proset.js`、addendum「対局設定の Pro モード」）。探索するレベル（engine.js LEVELS 21〜27：ネット／探索回数／時間、28〜32：強いネット・時間・全スレッド）を元に、項目：思考の制限（時間 0.1〜60 秒／探索回数 1〜2万）、スレッド数（本編のマルチスレッドがオンのとき、どの制限でも。既定1、訪問数の上限は全スレッドの合計）、評価ネット（軽量／強い）。方策だけで打つレベル（1〜20）で変えると、探索する AI になる。ページの `PRO_GO` は engine.js LEVELS の写し。値は `think` の `job.params`（`net`／`visits`／`time`）。レート戦では使わない。戦績のキーは `ai:pro…`、相手名に「PRO」。
+- （2026-11-19）KataGo との比較：`go/tools/katago-ladder.sh <KataGo net> [strong|xl] [訪問数] [局数] [並列数] [KataGo の訪問数…]`（Mac で KataGo を入れて実行。こちらは PRO の訪問数固定の探索を Node で、KataGo は1スレッド maxVisits）。結果は `go/tools/katago-ladder.txt`。`vs-gnugo.mjs` に `AI_NET` / `AI_VISITS`、`workerhost.mjs` を現在の engine.js に合わせて修正（self.location など）。
