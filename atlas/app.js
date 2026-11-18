@@ -1397,6 +1397,9 @@
     if (!card.offsetParent) top = card.getBoundingClientRect().top;
     Table3D.setInset(playing ? Math.max((window.__tbar ? __tbar.band : 0) + (innerWidth >= 820 ? Math.round(innerHeight * .035) : 0), session && session.inset ? session.inset() : 0) : !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4, playing ? Math.max((window.__land && __land.top()) || (window.__hudTop ? __hudTop() : 0), session && session.insetTop ? session.insetTop() : 0) : 0);   // (session.insetTop: room the game keeps at the top — ヒット＆ブロー's Atlamo talk on phones)   // playing: the board is framed above the action bar
     $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - top) + 'px');
+    // PC (2026-11-18): ‹ › at the middle of the window when the card leaves them room at its sides (else above the card, as on phones)
+    const cr = card.getBoundingClientRect();
+    $('bv').classList.toggle('navmid', cr.width > 0 && cr.left >= 76 && innerWidth - cr.right >= 76);
   }
   addEventListener('resize', () => fitStage());
   // back to this tab / app (2026-11-15, iOS): the viewport's size settles a moment later — the canvas and the framing are measured again
