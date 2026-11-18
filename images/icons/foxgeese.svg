@@ -1,26 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
-  <!-- Fox and Geese: the middle of the cross-shaped oak board with its lines, the fox (two pointed ears) facing three geese -->
+  <!-- Fox and Geese (2026-11-18): the fox of the default "ひだまり牧場" set, on the meadow, with a goose peeking in -->
   <defs>
     <clipPath id="fg-c"><rect width="96" height="96" rx="20"/></clipPath>
-    <linearGradient id="fg-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c8c2c"/><stop offset="1" stop-color="#414b14"/></linearGradient>
-    <linearGradient id="fg-ok" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e3c48d"/><stop offset="1" stop-color="#c39a5c"/></linearGradient>
-    <radialGradient id="fg-f" cx=".4" cy=".32" r=".8"><stop offset="0" stop-color="#f08a4a"/><stop offset=".6" stop-color="#c8501e"/><stop offset="1" stop-color="#8a3210"/></radialGradient>
-    <radialGradient id="fg-g" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#f3ead8"/><stop offset="1" stop-color="#c9bc9d"/></radialGradient>
+    <linearGradient id="fg-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe68e"/><stop offset="1" stop-color="#7fbf55"/></linearGradient>
+    <radialGradient id="fg-h" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#ffb066"/><stop offset=".6" stop-color="#f4852f"/><stop offset="1" stop-color="#d9601b"/></radialGradient>
+    <radialGradient id="fg-m" cx=".45" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e9dc"/></radialGradient>
+    <radialGradient id="fg-g" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#f3f5f8"/><stop offset="1" stop-color="#d9dee8"/></radialGradient>
   </defs>
   <g clip-path="url(#fg-c)">
     <rect width="96" height="96" fill="url(#fg-bg)"/>
-    <path d="M32 6h32v26h26v32H64v26H32V64H6V32h26z" fill="url(#fg-ok)"/>
-    <g stroke="#5a3a1c" stroke-width="1.5" fill="none" stroke-linecap="round">
-      <path d="M48 12v72M22 22v52M74 22v52M12 48h72M22 22h52M22 74h52M22 22l52 52M74 22L22 74"/>
+    <path d="M-4 76Q48 64 100 78V100H-4Z" fill="#6fae4a" opacity=".55"/>
+    <path d="M14 14Q16 9 19 14M76 20Q78 15 81 20M10 60Q12 55 15 60" stroke="#6ea84a" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <!-- the goose, peeking in at the lower right -->
+    <g transform="translate(76 80) scale(.2)">
+      <circle r="80" fill="url(#fg-g)" stroke="#6a7488" stroke-width="7"/>
+      <ellipse cx="-30" cy="-6" rx="10" ry="13" fill="#2a2a36"/><ellipse cx="30" cy="-6" rx="10" ry="13" fill="#2a2a36"/>
+      <circle cx="-26" cy="-11" r="4.4" fill="#fff"/><circle cx="34" cy="-11" r="4.4" fill="#fff"/>
+      <path d="M-24,14Q0,2 24,14Q22,32 0,40Q-22,32 -24,14Z" fill="#f6a12c" stroke="#b5600e" stroke-width="5" stroke-linejoin="round"/>
     </g>
-    <g fill="#5a3a1c"><circle cx="22" cy="22" r="2.2"/><circle cx="74" cy="22" r="2.2"/><circle cx="48" cy="48" r="2.2"/><circle cx="22" cy="48" r="2.2"/><circle cx="74" cy="48" r="2.2"/></g>
-    <ellipse cx="49" cy="33" rx="12" ry="3.2" fill="#000" opacity=".18"/>
-    <path d="M38 18l5 9h-9zM58 18l4 9h-9z" fill="#c8501e" stroke="#8a3210" stroke-width=".8" stroke-linejoin="round"/>
-    <circle cx="48" cy="24" r="11.5" fill="url(#fg-f)"/><path d="M42 27q6 6 12 0l-6 6z" fill="#fff3e2"/><circle cx="43.5" cy="22.5" r="1.5" fill="#2a1a10"/><circle cx="52.5" cy="22.5" r="1.5" fill="#2a1a10"/><circle cx="48" cy="29" r="1.3" fill="#2a1a10"/>
-    <g>
-      <ellipse cx="23" cy="80" rx="9" ry="2.6" fill="#000" opacity=".16"/><ellipse cx="49" cy="80" rx="9" ry="2.6" fill="#000" opacity=".16"/><ellipse cx="75" cy="80" rx="9" ry="2.6" fill="#000" opacity=".16"/>
-      <circle cx="22" cy="72" r="9" fill="url(#fg-g)"/><circle cx="48" cy="72" r="9" fill="url(#fg-g)"/><circle cx="74" cy="72" r="9" fill="url(#fg-g)"/>
-      <path d="M20 62l2-5 2 5zM46 62l2-5 2 5zM72 62l2-5 2 5z" fill="#e9902a"/>
+    <!-- the fox -->
+    <g transform="translate(46 50) scale(.4)">
+      <g stroke="#7a3510" stroke-width="6" stroke-linejoin="round">
+        <path d="M-62,-30L-74,-88Q-70,-94 -62,-90L-18,-58Z" fill="url(#fg-h)"/><path d="M62,-30L74,-88Q70,-94 62,-90L18,-58Z" fill="url(#fg-h)"/>
+        <path d="M0,-66C52,-66 84,-36 84,4C84,34 66,52 44,62C30,70 14,74 0,74C-14,74 -30,70 -44,62C-66,52 -84,34 -84,4C-84,-36 -52,-66 0,-66Z" fill="url(#fg-h)"/>
+      </g>
+      <path d="M-61,-40L-68,-80L-36,-58Z" fill="#fff1e0"/><path d="M61,-40L68,-80L36,-58Z" fill="#fff1e0"/>
+      <path d="M-80,14C-60,8 -36,14 -20,30C-10,40 -4,44 0,44C4,44 10,40 20,30C36,14 60,8 80,14C74,44 44,68 0,70C-44,68 -74,44 -80,14Z" fill="url(#fg-m)"/>
+      <path d="M0,-66C52,-66 84,-36 84,4C84,34 66,52 44,62C30,70 14,74 0,74C-14,74 -30,70 -44,62C-66,52 -84,34 -84,4C-84,-36 -52,-66 0,-66Z" fill="none" stroke="#7a3510" stroke-width="6"/>
+      <ellipse cx="-50" cy="-30" rx="20" ry="10" fill="#fff" opacity=".35" transform="rotate(-25 -50 -30)"/>
+      <ellipse cx="-30" cy="0" rx="12" ry="15" fill="#2a1a12"/><ellipse cx="30" cy="0" rx="12" ry="15" fill="#2a1a12"/>
+      <circle cx="-26" cy="-6" r="5" fill="#fff"/><circle cx="34" cy="-6" r="5" fill="#fff"/>
+      <ellipse cx="-52" cy="22" rx="13" ry="8" fill="#ff8b8b" opacity=".55"/><ellipse cx="52" cy="22" rx="13" ry="8" fill="#ff8b8b" opacity=".55"/>
+      <path d="M-8,26Q0,20 8,26Q4,34 0,34Q-4,34 -8,26Z" fill="#2a1a12"/>
+      <path d="M-12,40Q-6,46 0,40Q6,46 12,40" stroke="#2a1a12" stroke-width="3.6" fill="none" stroke-linecap="round"/>
     </g>
   </g>
 </svg>
