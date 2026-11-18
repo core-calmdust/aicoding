@@ -44,7 +44,7 @@ const isPass = m => m < 0;
 
 // ====================================================================== state
 const STORE = 'aicoding-foxgeese';
-const settings = { mode: 'ai', rule: E.DEFAULT_RULE, first: P1, color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'oak', pcs: 'wood' };
+const settings = { mode: 'ai', rule: E.DEFAULT_RULE, first: P1, color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'meadow', pcs: 'cute', dv: 2 };
 const SUPPORTED_ALL = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 // the languages whose game texts are complete (i18n-fg.js / i18n-fg-more.js: a language without its own 'title' is not offered)
 const SUPPORTED = SUPPORTED_ALL.filter(l => l === 'ja' || l === 'en' || (window.FG_LANGS || []).includes(l));
@@ -224,7 +224,7 @@ const animOn = () => settings.anim && !reduceMotion;
 // display row / column of a square (Black's side at the bottom unless flipped)
 const dRC = i => { const [r, c] = E.RC[i], n = NS_() - 1; return flip ? [n - r, n - c] : [r, c]; };
 const ptX = i => (dRC(i)[1] + 0.5) / NS_() * 100, ptY = i => (dRC(i)[0] + 0.5) / NS_() * 100;
-function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; }
+function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; el.style.setProperty('--zr', dRC(i)[0]); }   // --zr: the row (lower rows in front, for the figures seen from the side)
 // the papamū: a puka (a shallow hole where a stone sits) on every square, carved / stitched / woven in the style of the
 // board design (html[data-bd] sets the colours); coordinates a… along the bottom and 1… up the left
 function drawLines() {
@@ -961,17 +961,23 @@ document.addEventListener('keydown', e => {
 // 2026-11-18 (user: 木目の質感のアナログ／アブストラクト／可愛いキャラクター／Luxury の4つ＋2つ、合計6種): boards img/2d/bd-<key>.webp
 // carry their own lines and points; pieces img/2d/pc-<set>-f|g.webp (tools/gen_art2.py). The fifth and sixth are the game's own
 // history (a Norse stone slab with bone and amber — 『グレティルのサガ』) and Delft blue (the English and Dutch boards of later times).
-const BD_KEYS = ['oak', 'bauhaus', 'meadow', 'lux', 'norse', 'delft'], PC_KEYS = ['wood', 'bauhaus', 'cute', 'lux', 'norse', 'delft'];
+// v2 (2026-11-18, user: ひだまり牧場を既定に・並びの先頭に): the meadow first and the default; the page's UI follows the board (uitheme.js:
+// html[data-ui=meadow] a light cute UI for the meadow, html[data-ui=oak] the dark UI in oak colours for the others). dv 2 = the
+// settings know the new default (older saves, which only held the old default, move to the meadow once).
+const BD_KEYS = ['meadow', 'oak', 'bauhaus', 'lux', 'norse', 'delft'], PC_KEYS = ['cute', 'wood', 'bauhaus', 'lux', 'norse', 'delft'];
+// where the board's point is in each piece picture (0.5 = the middle: seen from above; the figures seen from the side stand on a plinth)
+const ANCHOR = { wood: .8, lux: .8 };
 const BD_OLD = { slate: 'norse', linen: 'delft', night: 'lux', paper: 'bauhaus' }, PC_OLD = { marble: 'lux', pewter: 'norse', paint: 'bauhaus' };
-const ART = (k, v) => `img/2d/${k}.webp?v=${v || 1}`;
+const ART = (k, v) => `img/2d/${k}.webp?v=${v || 2}`;
 // [frame colour behind the mini boards]
-const BD_PAL = { oak: ['#4a2e18'], bauhaus: ['#262628'], meadow: ['#e2c79c'], lux: ['#1a0f08'], norse: ['#5c5850'], delft: ['#2a1d14'] };
+const BD_PAL = { meadow: ['#e2c79c'], oak: ['#4a2e18'], bauhaus: ['#262628'], lux: ['#1a0f08'], norse: ['#5c5850'], delft: ['#2a1d14'] };
 function designApply() {
+  if (settings.dv !== 2) { settings.dv = 2; settings.bd = 'meadow'; settings.pcs = 'cute'; }
   if (BD_OLD[settings.bd]) settings.bd = BD_OLD[settings.bd];
   if (PC_OLD[settings.pcs]) settings.pcs = PC_OLD[settings.pcs];
-  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'oak';
-  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'wood';
-  document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'meadow';
+  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'cute';
+  const H = document.documentElement; H.dataset.bd = settings.bd; H.dataset.pcs = settings.pcs; H.dataset.ui = settings.bd === 'meadow' ? 'meadow' : 'oak';
 }
 function designSpec() { return ruleStart(E.DEFAULT_RULE); }
 function designPickers() {
@@ -982,13 +988,13 @@ function designPickers() {
 }
 // a piece-set tile: the fox and two geese on the middle of the current board
 function pcSwatch(k) {
-  const bd = BD_KEYS.includes(settings.bd) ? settings.bd : 'oak', u = 104 / 2.9, W = 7 * u, x0 = 8 - 2.05 * u, id = 'pcs' + k;
+  const bd = BD_KEYS.includes(settings.bd) ? settings.bd : 'meadow', u = 104 / 2.9, W = 7 * u, x0 = 8 - 2.05 * u, id = 'pcs' + k;
   const at = (c, r) => [8 + (c + .5 - 2.05) * u, 8 + (r + .5 - 2.05) * u];
   const [fx, fy] = at(3, 2), g1 = at(2, 4), g2 = at(4, 4), F = u * .98, G = u * .74;
   return `<svg class="bdm" viewBox="0 0 120 120"><defs><clipPath id="${id}"><rect x="8" y="8" width="104" height="104" rx="6"/></clipPath></defs><rect x="1" y="1" width="118" height="118" rx="10" fill="${BD_PAL[bd][0]}"/>` +
     `<g clip-path="url(#${id})"><image href="${ART('bd-' + bd)}" x="${x0}" y="${x0}" width="${W}" height="${W}"/></g>` +
-    [g1, g2].map(([x, y]) => `<image href="${ART('pc-' + k + '-g')}" x="${x - G / 2}" y="${y - G / 2}" width="${G}" height="${G}"/>`).join('') +
-    `<image href="${ART('pc-' + k + '-f')}" x="${fx - F / 2}" y="${fy - F * .55}" width="${F}" height="${F}"/></svg>`;
+    [g1, g2].map(([x, y]) => `<image href="${ART('pc-' + k + '-g')}" x="${x - G / 2}" y="${y - G * (ANCHOR[k] || .5)}" width="${G}" height="${G}"/>`).join('') +
+    `<image href="${ART('pc-' + k + '-f')}" x="${fx - F / 2}" y="${fy - F * (ANCHOR[k] || .55)}" width="${F}" height="${F}"/></svg>`;
 }
 // the lines of the board as one SVG path (unit = one step, origin = the centre of point a7's cell at .5,.5)
 function boardPath(X, Y) {
@@ -1002,14 +1008,14 @@ function miniSVG(spec, o) {
   o = o || {};
   const u = 240 / 7, pad = 8, W = 240 + pad * 2, X = i => pad + (E.RC[i][1] + 0.5) * u, Y = i => pad + (E.RC[i][0] + 0.5) * u;
   let bdk = o.bd || settings.bd, pk = o.pcs || settings.pcs;
-  if (!BD_KEYS.includes(bdk)) bdk = BD_OLD[bdk] || 'oak'; if (!PC_KEYS.includes(pk)) pk = PC_OLD[pk] || 'wood';
+  if (!BD_KEYS.includes(bdk)) bdk = BD_OLD[bdk] || 'meadow'; if (!PC_KEYS.includes(pk)) pk = PC_OLD[pk] || 'cute';
   let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}">`;
   s += `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="${BD_PAL[bdk][0]}"/><image href="${ART('bd-' + bdk)}" x="${pad}" y="${pad}" width="240" height="240" preserveAspectRatio="none"/>`;   // (the lines are in the picture)
   if (o.last != null && o.last >= 0) s += `<circle cx="${X(o.last)}" cy="${Y(o.last)}" r="${u * 0.46}" fill="rgba(255,222,130,.4)"/>`;
   for (const i of o.trail || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="${u * 0.2}" fill="rgba(255,236,170,.6)"/>`;
   const b = spec && spec.b ? spec.b : '';
-  for (const i of E.POINTS) { const ch = b[i]; if (ch === 'g') s += `<image href="${ART('pc-' + pk + '-g')}" x="${(X(i) - u * .37).toFixed(1)}" y="${(Y(i) - u * .37).toFixed(1)}" width="${(u * .74).toFixed(1)}" height="${(u * .74).toFixed(1)}"/>`; }
-  for (const i of E.POINTS) { const ch = b[i]; if (ch === 'f') s += `<image href="${ART('pc-' + pk + '-f')}" x="${(X(i) - u * .49).toFixed(1)}" y="${(Y(i) - u * .54).toFixed(1)}" width="${(u * .98).toFixed(1)}" height="${(u * .98).toFixed(1)}"/>`; }
+  for (const i of E.POINTS) { const ch = b[i]; if (ch === 'g') s += `<image href="${ART('pc-' + pk + '-g')}" x="${(X(i) - u * .37).toFixed(1)}" y="${(Y(i) - u * .74 * (ANCHOR[pk] || .5)).toFixed(1)}" width="${(u * .74).toFixed(1)}" height="${(u * .74).toFixed(1)}"/>`; }
+  for (const i of E.POINTS) { const ch = b[i]; if (ch === 'f') s += `<image href="${ART('pc-' + pk + '-f')}" x="${(X(i) - u * .49).toFixed(1)}" y="${(Y(i) - u * .98 * (ANCHOR[pk] || .55)).toFixed(1)}" width="${(u * .98).toFixed(1)}" height="${(u * .98).toFixed(1)}"/>`; }
   for (const i of o.took || []) { const x = X(i), y = Y(i), h = u * 0.2; s += `<path d="M${x - h},${y - h}L${x + h},${y + h}M${x + h},${y - h}L${x - h},${y + h}" stroke="#ff5a48" stroke-width="${Math.max(2, u * .07)}" stroke-linecap="round"/>`; }
   for (const i of o.dest || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="${Math.max(4, u * 0.16)}" fill="rgba(255,236,170,.95)" stroke="rgba(0,0,0,.5)" stroke-width="1"/>`;
   if (o.sel != null && o.sel >= 0) s += `<circle cx="${X(o.sel)}" cy="${Y(o.sel)}" r="${u * 0.46}" fill="none" stroke="#ffe9a8" stroke-width="2.8"/>`;

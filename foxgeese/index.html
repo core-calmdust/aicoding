@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-foxgeese') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'oak'; document.documentElement.dataset.pcs = S.pcs || 'wood';  } catch (e) {}</script>
+<script>/* the design before the page draws (app.js designApply does the same): 2026-11-18 v2 the meadow is the default (dv 2) and the UI follows the board (uitheme.js) */
+(function () { const H = document.documentElement; let bd = 'meadow', pcs = 'cute';
+  try { const S = (JSON.parse(localStorage.getItem('aicoding-foxgeese') || '{}') || {}).settings || {}; if (S.dv === 2) { bd = ({ slate: 'norse', linen: 'delft', night: 'lux', paper: 'bauhaus' })[S.bd] || S.bd || bd; pcs = ({ marble: 'lux', pewter: 'norse', paint: 'bauhaus' })[S.pcs] || S.pcs || pcs; } } catch (e) {}
+  H.dataset.bd = bd; H.dataset.pcs = pcs; H.dataset.ui = bd === 'meadow' ? 'meadow' : 'oak';
+  setTimeout(() => H.classList.add('ui-ready'), 1500); })();</script>
+<style>html[data-ui]:not(.ui-ready):not(.atlas-skin) body{visibility:hidden}</style>
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2l14"><script src="../atlas/skin/loading.js?v=4l14"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -836,22 +841,26 @@ body .info-line{font-size:12.5px}
 html[data-bd] .lines :is(.grv,.grv-hl,.pt,.off){display:none}
 html[data-bd] .board::after{display:none}
 html[data-bd] .board{border-radius:calc(var(--cell) * .06);box-shadow:0 0 0 calc(var(--cell) * .025) var(--bdEdge,#000),0 calc(var(--cell) * .05) calc(var(--cell) * .2) rgba(0,0,0,.55)}
-html[data-bd=oak]{--bdImg:url(img/2d/bd-oak.webp?v=1);--frameBg:url(img/2d/fr-oak.webp?v=1) 0 0/300px 300px,#4a2e18;--frm:#e0b87a;--bdEdge:#3a2210;--num:rgba(58,30,12,.78)}
-html[data-bd=bauhaus]{--bdImg:url(img/2d/bd-bauhaus.webp?v=1);--frameBg:url(img/2d/fr-bauhaus.webp?v=1) 0 0/240px 240px,#262628;--frm:#e3a82b;--bdEdge:#151516;--num:rgba(30,30,32,.7)}
-html[data-bd=meadow]{--bdImg:url(img/2d/bd-meadow.webp?v=1);--frameBg:url(img/2d/fr-meadow.webp?v=1) 0 0/260px 260px,#e2c79c;--frm:#8fcf6a;--bdEdge:#c9a676;--num:rgba(255,255,255,.92)}
-html[data-bd=lux]{--bdImg:url(img/2d/bd-lux.webp?v=1);--frameBg:url(img/2d/fr-lux.webp?v=1) 0 0/280px 280px,#1a0f08;--frm:#d9b46a;--bdEdge:#b8913f;--num:rgba(226,190,112,.85)}
-html[data-bd=norse]{--bdImg:url(img/2d/bd-norse.webp?v=1);--frameBg:url(img/2d/fr-norse.webp?v=1) 0 0/280px 280px,#5c5850;--frm:#b9b3a4;--bdEdge:#3c3a35;--num:rgba(236,234,224,.8)}
-html[data-bd=delft]{--bdImg:url(img/2d/bd-delft.webp?v=1);--frameBg:url(img/2d/fr-delft.webp?v=1) 0 0/280px 280px,#2a1d14;--frm:#7f9bd6;--bdEdge:#1d3b8a;--num:rgba(29,59,138,.8)}
+html[data-bd=oak]{--bdImg:url(img/2d/bd-oak.webp?v=2);--frameBg:url(img/2d/fr-oak.webp?v=2) 0 0/300px 300px,#4a2e18;--frm:#e0b87a;--bdEdge:#3a2210;--num:rgba(58,30,12,.78)}
+html[data-bd=bauhaus]{--bdImg:url(img/2d/bd-bauhaus.webp?v=2);--frameBg:url(img/2d/fr-bauhaus.webp?v=2) 0 0/240px 240px,#262628;--frm:#e3a82b;--bdEdge:#151516;--num:rgba(30,30,32,.7)}
+html[data-bd=meadow]{--bdImg:url(img/2d/bd-meadow.webp?v=2);--frameBg:url(img/2d/fr-meadow.webp?v=2) 0 0/260px 260px,#e2c79c;--frm:#8fcf6a;--bdEdge:#c9a676;--num:rgba(255,255,255,.92)}
+html[data-bd=lux]{--bdImg:url(img/2d/bd-lux.webp?v=2);--frameBg:url(img/2d/fr-lux.webp?v=2) 0 0/280px 280px,#1a0f08;--frm:#d9b46a;--bdEdge:#b8913f;--num:rgba(226,190,112,.85)}
+html[data-bd=norse]{--bdImg:url(img/2d/bd-norse.webp?v=2);--frameBg:url(img/2d/fr-norse.webp?v=2) 0 0/280px 280px,#5c5850;--frm:#b9b3a4;--bdEdge:#3c3a35;--num:rgba(236,234,224,.8)}
+html[data-bd=delft]{--bdImg:url(img/2d/bd-delft.webp?v=2);--frameBg:url(img/2d/fr-delft.webp?v=2) 0 0/280px 280px,#2a1d14;--frm:#7f9bd6;--bdEdge:#1d3b8a;--num:rgba(29,59,138,.8)}
 html[data-bd=meadow] .reserve .rsv-plate, html[data-bd=bauhaus] .reserve .rsv-plate{background:rgba(255,252,244,.94);color:#4a4a36}
 html[data-bd=meadow] .reserve .rsv-plate b, html[data-bd=bauhaus] .reserve .rsv-plate b{color:#2a2a1c}
 html[data-bd=meadow] .board.no-num .lines .num, html[data-bd=meadow] .lines .num{paint-order:stroke;stroke:rgba(60,110,40,.55);stroke-width:.03}
+/* the figures seen from the side (wood, lux): the picture's point (ANCHOR in app.js, 80 % down) sits on the board's point; lower rows in front */
+html:is([data-pcs=wood],[data-pcs=lux]) .pc.p1{width:calc(var(--cell) * 1.14);height:calc(var(--cell) * 1.14);margin:calc(var(--cell) * -.912) 0 0 calc(var(--cell) * -.57);z-index:calc(3 + var(--zr, 0) * 2)}
+html:is([data-pcs=wood],[data-pcs=lux]) .pc.p2{width:calc(var(--cell) * .92);height:calc(var(--cell) * .92);margin:calc(var(--cell) * -.736) 0 0 calc(var(--cell) * -.46);z-index:calc(2 + var(--zr, 0) * 2)}
+html:is([data-pcs=wood],[data-pcs=lux]) .pc.sel{z-index:30}
 /* piece sets: rendered from above (tools/art-pieces.js) — --pcB the fox, --pcW a goose */
-html[data-pcs=wood]{--pcB:url(img/2d/pc-wood-f.webp?v=1);--pcW:url(img/2d/pc-wood-g.webp?v=1)}
-html[data-pcs=bauhaus]{--pcB:url(img/2d/pc-bauhaus-f.webp?v=1);--pcW:url(img/2d/pc-bauhaus-g.webp?v=1)}
-html[data-pcs=cute]{--pcB:url(img/2d/pc-cute-f.webp?v=1);--pcW:url(img/2d/pc-cute-g.webp?v=1)}
-html[data-pcs=lux]{--pcB:url(img/2d/pc-lux-f.webp?v=1);--pcW:url(img/2d/pc-lux-g.webp?v=1)}
-html[data-pcs=norse]{--pcB:url(img/2d/pc-norse-f.webp?v=1);--pcW:url(img/2d/pc-norse-g.webp?v=1)}
-html[data-pcs=delft]{--pcB:url(img/2d/pc-delft-f.webp?v=1);--pcW:url(img/2d/pc-delft-g.webp?v=1)}
+html[data-pcs=wood]{--pcB:url(img/2d/pc-wood-f.webp?v=2);--pcW:url(img/2d/pc-wood-g.webp?v=2)}
+html[data-pcs=bauhaus]{--pcB:url(img/2d/pc-bauhaus-f.webp?v=2);--pcW:url(img/2d/pc-bauhaus-g.webp?v=2)}
+html[data-pcs=cute]{--pcB:url(img/2d/pc-cute-f.webp?v=2);--pcW:url(img/2d/pc-cute-g.webp?v=2)}
+html[data-pcs=lux]{--pcB:url(img/2d/pc-lux-f.webp?v=2);--pcW:url(img/2d/pc-lux-g.webp?v=2)}
+html[data-pcs=norse]{--pcB:url(img/2d/pc-norse-f.webp?v=2);--pcW:url(img/2d/pc-norse-g.webp?v=2)}
+html[data-pcs=delft]{--pcB:url(img/2d/pc-delft-f.webp?v=2);--pcW:url(img/2d/pc-delft-g.webp?v=2)}
 
 /* ---------------------------------------------------------------- new-game dialog: phone = one column, PC = two columns (same as Reversi) */
 #newOverlay .ng-cols{display:flex;flex-direction:column}
@@ -1368,7 +1377,7 @@ html[data-bd=meadow] .reserve .rsv-plate.rsv-q.lo b, html[data-bd=bauhaus] .rese
 <script src="coach.js?v=5"></script>
 <script src="coach-i18n.js?v=6"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=11"></script>
+<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=12"></script><script src="uitheme.js?v=2"></script>
 <script src="online-ui.js?v=2"></script>
 <!-- World Board Game Atlas portal skin: konane/?skin=atlas — 3D boards (a koa tray with the Hawaiian quilt / a rough basalt papamū with pecked cups), coral and basalt pebbles, guide speech bubbles, portal look (all features kept) -->
 <script>
