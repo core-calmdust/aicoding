@@ -15,7 +15,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../latrunculi/', VER = '?v=4';   // same file / version as latrunculi/index.html → shared cache
+  const BASE = '../latrunculi/', VER = '?v=6';   // same file / version as latrunculi/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.LatrEngine) return Promise.resolve(window.LatrEngine);
@@ -389,7 +389,7 @@
     id: ['Pemula: hanya melihat satu langkah', 'Dasar–menengah: menyadari bidak yang akan terapit', 'Mahir: membaca pertarungan beberapa langkah ke depan', 'Ahli: membaca dalam dan menangkap lebih dulu'],
     tr: ['Başlangıç: yalnızca bir hamle ileriye bakar', 'Acemi–orta: sıkışmak üzere olan taşları fark eder', 'İleri: mücadeleyi birkaç hamle ileriye okur', 'Uzman: derin okur ve önce alır'],
   };
-  const RATING = [0, 100, 245, 395, 540, 685, 830, 980, 1125, 1270, 1415, 1565, 1710, 1855, 1950, 2020, 2090, 2150, 2205, 2440, 2500];   // latrunculi RT_LV (rated games; not measured yet — see the spec)
+  const RATING = [0, 100, 220, 518, 781, 985, 1074, 1173, 1339, 1756, 2011, 2100, 2254, 2312, 2484, 2528, 2632, 2657, 2682, 2802, 2852];   // latrunculi RT_LV (measured 2026-11-19, see the spec)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
