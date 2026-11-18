@@ -41,7 +41,7 @@ const isPass = m => m < 0;
 
 // ====================================================================== state
 const STORE = 'aicoding-latrunculi';
-const settings = { mode: 'ai', rule: 'seneca', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'marble', pcs: 'glass' };
+const settings = { mode: 'ai', rule: 'seneca', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'stone', pcs: 'bust' };
 const SUPPORTED_ALL = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 // the languages whose game texts are complete (i18n-lt.js / i18n-lt-more.js: a language without its own 'title' is not offered)
 const SUPPORTED = SUPPORTED_ALL.filter(l => l === 'ja' || l === 'en' || (window.LT_LANGS || []).includes(l));
@@ -219,7 +219,7 @@ const animOn = () => settings.anim && !reduceMotion;
 // display row / column of a square (Black's side at the bottom unless flipped)
 const dRC = i => { const [r, c] = E.RC[i], n = NS_() - 1; return flip ? [n - r, n - c] : [r, c]; };
 const ptX = i => (dRC(i)[1] + 0.5) / NS_() * 100, ptY = i => (dRC(i)[0] + 0.5) / NS_() * 100;
-function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; }
+function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; el.style.setProperty('--zr', dRC(i)[0]); }   // --zr: the row (lower rows in front, for the busts seen from the side)
 // the papamū: a puka (a shallow hole where a stone sits) on every square, carved / stitched / woven in the style of the
 // board design (html[data-bd] sets the colours); coordinates a… along the bottom and 1… up the left
 function drawLines() {
@@ -944,31 +944,38 @@ document.addEventListener('keydown', e => {
 });
 
 // ---------------------------------------------------------------- 2D board designs and stone sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL / PC_PAL)
-// Boards: what the Romans really cut their grids into — a marble slab (default), the travertine steps of a basilica, a roof
-// tile (tegula), a black-and-white mosaic floor, a walnut gaming table, imperial porphyry — and two plain modern ones.
-// Counters: glass domes (the "glass soldiers" of the Laus Pisonis), coloured glass, turned bone / horn discs, river pebbles.
-const BD_KEYS = ['marble', 'travertine', 'tile', 'mosaic', 'wood', 'porphyry', 'slate', 'ivory'], PC_KEYS = ['glass', 'gem', 'bone', 'stone'];
-// [surface (fallback), groove, frame, frame line]
+// 2026-11-18 (user: 石板＋立体風の駒・木工・アブストラクト・高級感、ほか合計6種): the boards img/2d/bd-<key>.webp carry their own grid
+// (the page hides its lines), frames img/2d/fr-<key>.webp; counters img/2d/pc-<set>-b|w|bx|wx.webp (bx / wx = turned over, blocked) —
+// all drawn by tools/gen_art2.py. Stone slab (default) with marble / basalt busts (figures seen from the side: the picture's point
+// ANCHOR down sits on the square's centre; turned over = the bust lies toppled), birch plywood with laser-burnt discs, an abstract
+// plaster sheet with arch tokens, lapis lazuli and Calacatta in gold with gold / silver coins, a Roman mosaic floor with glass
+// counters, a Pompeian-red fresco with bone counters. The old designs (img/bd-*, pc-*) stay for the 3D boards (atlas/models).
+const BD_KEYS = ['stone', 'wood', 'abstract', 'lux', 'mosaic', 'pompeii'], PC_KEYS = ['bust', 'wood', 'abstract', 'coin', 'glass', 'bone'];
+const ANCHOR = { bust: .8 }, PC_SIZE = { bust: 1.16 };   // the busts: where the socle's centre is in the picture, and the picture's size in cells
+const ART = k => `img/2d/${k}.webp?v=1`;
+const BD_OLD = { marble: 'stone', travertine: 'stone', tile: 'pompeii', slate: 'abstract', ivory: 'abstract', porphyry: 'lux' }, PC_OLD = { gem: 'coin', stone: 'bust' };
+// [surface (fallback), groove (mini-board marks), frame, frame line]
 const BD_PAL = {
-  marble: ['#e9e4da', '#7d756a', '#5b3a2a', '#d9c7a4'],
-  travertine: ['#d8c7a6', '#7a6648', '#4a3c2c', '#cdb78e'],
-  tile: ['#c26a45', '#6e2f1a', '#4a2416', '#e0a47c'],
-  mosaic: ['#d9d3c6', '#3a3732', '#262422', '#b9b1a0'],
-  wood: ['#8a5a34', '#3a2110', '#3a2212', '#c99a63'],
-  porphyry: ['#6d2a44', '#2c0c1a', '#2a1420', '#d7b46a'],
-  slate: ['#39424c', '#151a20', '#1c2128', '#8fa0b0'],
-  ivory: ['#f1ead9', '#b0a48a', '#3b3a3a', '#d6ccb6'],
+  stone: ['#d8cdb8', '#6e5e4a', '#8a7a62', '#e2d6bf'],
+  wood: ['#e6d0aa', '#4a2a14', '#5a3820', '#d9b88a'],
+  abstract: ['#ece4d6', '#2c2a2a', '#2e2c2a', '#d4c8b4'],
+  lux: ['#2a3f8f', '#d9b46a', '#1c0c08', '#d9b46a'],
+  mosaic: ['#e2d8c4', '#2a2826', '#2c2826', '#b9b1a0'],
+  pompeii: ['#8e2018', '#1a1210', '#1e1a18', '#d6a04a'],
 };
-// [[Black fill, rim, underside], [White fill, rim, underside]]
+// [[Black fill, rim, underside], [White fill, rim, underside]] (the swatch colours of the kifu / fallbacks)
 const PC_PAL = {
-  glass: [['#1c2230', '#06080c', '#2e3442'], ['#f2f4ee', '#b9c2bb', '#c9cfc6']],
-  gem: [['#1f4fa8', '#0c2456', '#17366f'], ['#f0c24a', '#9a7417', '#b48c26']],
-  bone: [['#4a3424', '#1e140c', '#33241a'], ['#efe4c8', '#b3a27c', '#cdbf9c']],
-  stone: [['#33302e', '#111010', '#262423'], ['#e9e3d6', '#b0a898', '#c4bcab']],
+  bust: [['#2c2c2e', '#0c0c0e', '#3a3a3c'], ['#f2efe8', '#b9b4aa', '#d6d1c6']],
+  wood: [['#6e4224', '#2e1a0c', '#5a3820'], ['#ead6b0', '#a8865a', '#d2b88c']],
+  abstract: [['#2e2c2c', '#0e0e0e', '#444'], ['#ece4d6', '#a89c88', '#d4c8b4']],
+  coin: [['#e2b25a', '#8a6420', '#b88a3a'], ['#d8dce2', '#8a9098', '#b4b8c0']],
+  glass: [['#141828', '#06080c', '#2e3442'], ['#f0f0ea', '#b9c2bb', '#c9cfc6']],
+  bone: [['#4a3424', '#1e140c', '#33241a'], ['#ece0c2', '#b3a27c', '#cdbf9c']],
 };
 function designApply() {
-  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'marble';
-  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'glass';
+  if (settings.dv !== 2) { settings.dv = 2; settings.bd = 'stone'; settings.pcs = 'bust'; }   // once: the new designs (2026-11-18)
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = BD_OLD[settings.bd] || 'stone';
+  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = PC_OLD[settings.pcs] || 'bust';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
 }
 function designSpec() { return specOf({ b: ['c3', 'd3', 'e4', 'f6', 'c6'], w: ['d5', 'e5', 'f3', 'b4'], x: ['d4', 'v'] }); }
@@ -978,17 +985,22 @@ function designPickers() {
   r1.innerHTML = BD_KEYS.map(k => `<button type="button" data-bd="${k}" class="${k === settings.bd ? 'sel' : ''}" aria-pressed="${k === settings.bd}">${miniSVG(sp, { cls: 'bdm', bd: k, num: false, crop: [1, 1, 6, 6] })}<span>${escHb(t('bd.' + k))}</span></button>`).join('');
   r2.innerHTML = PC_KEYS.map(k => `<button type="button" data-pcs="${k}" class="${k === settings.pcs ? 'sel' : ''}" aria-pressed="${k === settings.pcs}">${pcSwatch(k)}<span>${escHb(t('pcs.' + k))}</span></button>`).join('');
 }
-// a counter-set tile: the two counters (their rendered faces) on a patch of the current board
+// a counter-set tile: the four counters (face up / turned over) on a patch of the current board
 function pcSwatch(k) {
-  const BP = BD_PAL[settings.bd] || BD_PAL.marble;
-  return `<svg class="bdm" viewBox="0 0 120 120"><rect x="1" y="1" width="118" height="118" rx="10" fill="${BP[2]}"/><image href="img/bd-${settings.bd}.webp" x="8" y="8" width="104" height="104" preserveAspectRatio="xMidYMid slice"/>` +
-    `<path d="M60,8V112M8,60H112" stroke="${BP[1]}" stroke-width="1.6" opacity=".7"/>` +
-    `<image href="img/pc-${k}-b.webp" x="12" y="12" width="44" height="44"/><image href="img/pc-${k}-w.webp" x="64" y="12" width="44" height="44"/><image href="img/pc-${k}-bx.webp" x="12" y="64" width="44" height="44"/><image href="img/pc-${k}-wx.webp" x="64" y="64" width="44" height="44"/></svg>`;
+  const bd = BD_KEYS.includes(settings.bd) ? settings.bd : 'stone', BP = BD_PAL[bd], an = ANCHOR[k], sz = PC_SIZE[k] || .8;
+  // a 2×2 patch of the board (the grid lines run through the middle), one counter on each square
+  const u = 52, x0 = 60 - u * 4, y0 = 60 - u * 4;
+  const one = (c, cx, cy) => { const S = u * sz; return `<image href="${ART('pc-' + k + '-' + c)}" x="${(cx - S / 2).toFixed(1)}" y="${(cy - S * (an || .5)).toFixed(1)}" width="${S.toFixed(1)}" height="${S.toFixed(1)}"/>`; };
+  return `<svg class="bdm" viewBox="0 0 120 120"><defs><clipPath id="pcs${k}"><rect x="8" y="8" width="104" height="104"/></clipPath></defs><rect x="1" y="1" width="118" height="118" rx="10" fill="${BP[2]}"/>` +
+    `<g clip-path="url(#pcs${k})"><image href="${ART('bd-' + bd)}" x="${x0}" y="${y0}" width="${u * 8}" height="${u * 8}" preserveAspectRatio="none"/></g>` +
+    (an ? one('bx', 34, 86) + one('wx', 86, 86) + one('b', 34, 36) + one('w', 86, 36) : one('b', 34, 34) + one('w', 86, 34) + one('bx', 34, 86) + one('wx', 86, 86)) + `</svg>`;
 }
-function pieceSVG(x, y, r, P, dark, inc) {
-  if (inc) return `<circle cx="${x}" cy="${(y + r * 0.08).toFixed(1)}" r="${r}" fill="rgba(0,0,0,.3)"/><circle cx="${x}" cy="${y}" r="${r}" fill="${P[2]}" stroke="${P[1]}" stroke-width="${Math.max(1, r * 0.1).toFixed(2)}" stroke-dasharray="${(r * 0.32).toFixed(1)} ${(r * 0.2).toFixed(1)}"/><circle cx="${x}" cy="${y}" r="${(r * 0.52).toFixed(1)}" fill="none" stroke="${P[1]}" stroke-width="${Math.max(.8, r * 0.07).toFixed(2)}" opacity=".7"/>`;
-  return `<circle cx="${x}" cy="${(y + r * 0.14).toFixed(1)}" r="${r}" fill="rgba(0,0,0,.38)"/><circle cx="${x}" cy="${y}" r="${r}" fill="${P[0]}" stroke="${P[1]}" stroke-width="${Math.max(1, r * 0.11).toFixed(2)}"/>` +
-    `<circle cx="${(x - r * 0.3).toFixed(1)}" cy="${(y - r * 0.32).toFixed(1)}" r="${(r * 0.32).toFixed(1)}" fill="#fff" fill-opacity="${dark ? .2 : .5}"/>`;
+// a counter in the mini boards: the rendered picture (turned over = the underside / the toppled bust, with a thin red ring)
+function pieceImg(x, y, u, pk, dark, inc) {
+  const an = ANCHOR[pk], S = u * (PC_SIZE[pk] || .78);
+  let s = inc ? `<ellipse cx="${x}" cy="${(y + (an ? u * .06 : 0)).toFixed(1)}" rx="${(u * .42).toFixed(1)}" ry="${(u * (an ? .24 : .42)).toFixed(1)}" fill="none" stroke="rgba(255,96,72,.9)" stroke-width="${Math.max(1, u * .045).toFixed(2)}"/>` : '';
+  s += `<image href="${ART('pc-' + pk + '-' + (dark ? 'b' : 'w') + (inc ? 'x' : ''))}" x="${(x - S / 2).toFixed(1)}" y="${(y - S * (an || .5)).toFixed(1)}" width="${S.toFixed(1)}" height="${S.toFixed(1)}"/>`;
+  return s;
 }
 // spec: engine position spec (b: 64 chars) ; o: { cls, marks: {sq: 'ring'|'ng'|'x'|'dash'|'ok'}, arrows: [[squares...]], flip, click, sel, dest: [], last, took: [], crop: [c0, r0, c1, r1] }
 const sizeOf = () => 8;
@@ -999,19 +1011,20 @@ function miniSVG(spec, o) {
   const u = 240 / nn, pad = 8, W = 240 + pad * 2, ox = pad + (nn - nc) * u / 2 - cr[0] * u, oy = pad + (nn - nr) * u / 2 - cr[1] * u;
   const X = i => ox + (P(i)[1] + 0.5) * u, Y = i => oy + (P(i)[0] + 0.5) * u;
   const inC = i => { const [r, c] = P(i); return c >= cr[0] && c <= cr[2] && r >= cr[1] && r <= cr[3]; };
-  const bdk = o.bd || settings.bd, BP = BD_PAL[bdk] || BD_PAL.marble, pk = o.pcs || settings.pcs, PP = PC_PAL[pk] || PC_PAL.glass;
+  let bdk = o.bd || settings.bd, pk = o.pcs || settings.pcs;
+  if (!BD_KEYS.includes(bdk)) bdk = BD_OLD[bdk] || 'stone'; if (!PC_KEYS.includes(pk)) pk = PC_OLD[pk] || 'bust';
+  const BP = BD_PAL[bdk];
   const id = 'mc' + (++CROP_UID);
   let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}"><defs><clipPath id="${id}"><rect x="${pad}" y="${pad}" width="240" height="240"/></clipPath></defs>`;
-  s += `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="${BP[2]}"/><rect x="${pad}" y="${pad}" width="240" height="240" fill="${BP[0]}"/><g clip-path="url(#${id})"><image href="img/bd-${bdk}.webp" x="${ox}" y="${oy}" width="${u * 8}" height="${u * 8}" preserveAspectRatio="none"/>`;
-  let g = ''; for (let k = 0; k <= 8; k++) g += `M${ox + k * u},${oy}V${oy + 8 * u}M${ox},${oy + k * u}H${ox + 8 * u}`;
-  s += `<path d="${g}" stroke="${BP[1]}" stroke-width="${Math.max(1, u * 0.035).toFixed(2)}" opacity=".75" fill="none"/>`;
+  s += `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="${BP[2]}"/><rect x="${pad}" y="${pad}" width="240" height="240" fill="${BP[0]}"/><g clip-path="url(#${id})"><image href="${ART('bd-' + bdk)}" x="${ox}" y="${oy}" width="${u * 8}" height="${u * 8}" preserveAspectRatio="none"/>`;
   if (o.last != null && o.last >= 0) s += `<rect x="${X(o.last) - u / 2}" y="${Y(o.last) - u / 2}" width="${u}" height="${u}" fill="rgba(255,222,130,.34)"/>`;
   for (const i of o.trail || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="${u * 0.16}" fill="rgba(255,236,170,.6)"/>`;
   const b = spec && spec.b ? spec.b : '';
-  for (let i = 0; i < 64; i++) {
+  const order = [...Array(64).keys()].sort((a, c) => P(a)[0] - P(c)[0]);   // back rows first (the busts overlap forwards)
+  for (const i of order) {
     const ch = b[i]; if (!ch || ch === '.' || !inC(i)) continue;
     const k = 'bwhvcHVC'.indexOf(ch), dark = k === 0 || (k >= 2 && k <= 4);
-    s += pieceSVG(X(i), Y(i), u * 0.36, PP[dark ? 0 : 1], dark, k >= 2);
+    s += pieceImg(X(i), Y(i), u, pk, dark, k >= 2);
   }
   for (const i of o.took || []) { const x = X(i), y = Y(i), h = u * 0.2; s += `<path d="M${x - h},${y - h}L${x + h},${y + h}M${x + h},${y - h}L${x - h},${y + h}" stroke="#ff5a48" stroke-width="${Math.max(2, u * .07)}" stroke-linecap="round"/>`; }
   for (const i of o.dest || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="${Math.max(4, u * 0.14)}" fill="rgba(255,236,170,.95)" stroke="rgba(0,0,0,.5)" stroke-width="1"/>`;
