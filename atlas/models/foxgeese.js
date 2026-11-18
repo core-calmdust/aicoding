@@ -214,7 +214,7 @@
       // near right: a little red shed and a fence
       { const o = new TT.Group(), red = Mb('shed', { color: '#c8462e', roughness: .7 }), roof = Mb('roof', { color: '#8a2e1e', roughness: .75 }), wd = Mb('fence', { color: '#a87848', roughness: .85 });
         const body = mesh2(G('shedB', () => new TT.BoxGeometry(.7, .32, .5)), red); body.position.y = .16; o.add(body);
-        const rf = mesh2(G('shedR', () => { const q = new TT.CylinderGeometry(.34, .34, .8, 3, 1); q.rotateZ(Math.PI / 2); q.scale(1, .55, 1); return q; }), roof); rf.position.y = .32 + .09; o.add(rf);
+        const rf = mesh2(G('shedR2', () => { const q = new TT.CylinderGeometry(.34, .34, .8, 3, 1); q.rotateZ(Math.PI / 2); q.rotateX(-Math.PI / 2); q.scale(1, .6, 1); return q; }), roof); rf.position.y = .32 + .34 * .5 * .6; o.add(rf);   // (the ridge up, the eaves on the walls)
         const dr = mesh2(G('shedD', () => new TT.BoxGeometry(.14, .2, .01)), Mb('door', { color: '#f2e2c0', roughness: .7 })); dr.position.set(.1, .1, .255); o.add(dr);
         for (let k = 0; k < 6; k++) { const p = mesh2(G('post', () => new TT.BoxGeometry(.04, .2, .04)), wd); p.position.set(-.6 + k * .24, .1, .62); o.add(p); }
         const rail = mesh2(G('rail', () => new TT.BoxGeometry(1.26, .03, .025)), wd); rail.position.set(0, .15, .62); o.add(rail);
