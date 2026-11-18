@@ -7,7 +7,7 @@ table{border-collapse:collapse;margin-top:16px}td,th{padding:6px 14px;border-bot
 #log{white-space:pre-wrap;font-size:13px;color:#a8a6a0;margin-top:12px}</style></head>
 <body>
 <h1>囲碁：ネットの計算速度（CPU / GPU）</h1>
-<p>PRO の「計算」を選ぶための目安です。強いネットで、CPU（WebAssembly・1スレッド）と GPU（WebGPU）の1秒あたりの評価回数を測り、GPU の結果が CPU と一致するかも確かめます。</p>
+<p>PRO の「計算」を選ぶための目安です。強いネット（<a href="?net=xl" style="color:#d9b46a">最強ネットで測る</a>）で、CPU（WebAssembly・1スレッド）と GPU（WebGPU）の1秒あたりの評価回数を測り、GPU の結果が CPU と一致するかも確かめます。</p>
 <button id="go">計測する</button>
 <table id="t"><tr><th>計算</th><th>まとめる数</th><th>評価 / 秒</th><th>CPU比</th></tr></table>
 <table id="t2"><tr><th>探索</th><th></th><th>探索回数 / 秒</th><th>CPU比</th></tr></table>
@@ -15,14 +15,15 @@ table{border-collapse:collapse;margin-top:16px}td,th{padding:6px 14px;border-bot
 <script src="gpunet.js?v=6"></script>
 <script>
 const RX = [0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 7, 5, 1, 1, 102, 0, 0, 10, 61, 1, 59, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 133, 2, 11];
+const NET = /[?&]net=xl\b/.test(location.search) ? 'xl' : 'strong', NETF = NET === 'xl' ? 'net_xl.bin.gz?v=1' : 'net_strong.bin.gz?v=1';   // (?net=xl: the strongest net)
 const log = s => { document.getElementById('log').textContent += s + '\n'; };
 const row = (a, b, c, d) => { const r = document.createElement('tr'); r.innerHTML = `<td>${a}</td><td>${b}</td><td>${c}</td><td>${d}</td>`; document.getElementById('t').appendChild(r); };
 document.getElementById('go').onclick = async () => {
   document.getElementById('go').disabled = true;
   let rx = false; try { rx = WebAssembly.validate(new Uint8Array(RX)); } catch (e) {}
-  const W = rx ? 'engine_rsimd.wasm?v=1' : 'engine_simd.wasm?v=3';
+  const W = rx ? 'engine_rsimd.wasm?v=2' : 'engine_simd.wasm?v=4';
   const { instance } = await WebAssembly.instantiate(await (await fetch(W)).arrayBuffer(), {}); const E = instance.exports;
-  const gz = new Uint8Array(await (await fetch('net_strong.bin.gz?v=1')).arrayBuffer());
+  const gz = new Uint8Array(await (await fetch(NETF)).arrayBuffer());
   const raw = new Uint8Array(await new Response(new Blob([gz]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
   const p = E.galloc(raw.length); new Uint8Array(E.memory.buffer).set(raw, p); E.net_load(p, raw.length);
   E.set_seed(5); E.gpu_init(64); E.pos_reset(19, 7.5); for (const m of [72, 288, 300, 60, 98, 270]) E.pos_play(m); E.search_init(200000);

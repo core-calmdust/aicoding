@@ -19,8 +19,8 @@ try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1
 // engine_rsimd.wasm where the browser has it (Chrome / Edge / Firefox; not Safari yet), else the SIMD build as before
 let rsimd = false;
 try { rsimd = simd && WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 7, 5, 1, 1, 102, 0, 0, 10, 61, 1, 59, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 133, 2, 11])); } catch (e) { rsimd = false; }
-const WASM = rsimd ? 'engine_rsimd.wasm?v=1' : simd ? 'engine_simd.wasm?v=3' : 'engine.wasm?v=3';
-const NETS = { light: 'net_light.bin.gz?v=1', strong: 'net_strong.bin.gz?v=1' };
+const WASM = rsimd ? 'engine_rsimd.wasm?v=2' : simd ? 'engine_simd.wasm?v=4' : 'engine.wasm?v=4';
+const NETS = { light: 'net_light.bin.gz?v=1', strong: 'net_strong.bin.gz?v=1', xl: 'net_xl.bin.gz?v=1' };   // (xl, 2026-11-19: vibego s11 b12c152, PRO's 最強)
 const inst = {};          // name -> { E, mem }
 const loading = {};
 const netBytes = {};      // decompressed nets (kept to rebuild an instance after a trap)
@@ -50,7 +50,7 @@ const mtReady = MTL ? new Promise(res => self.addEventListener('message', functi
 const mtNet = {};   // net name -> loaded into the shared instance
 async function getNetMT(name) {
   await mtReady;
-  const E = MTX, i = name === 'strong' ? 1 : 0;
+  const E = MTX, i = name === 'strong' ? 1 : name === 'xl' ? 2 : 0;
   E.net_sel(i);
   if (!mtNet[name]) {
     let raw = netBytes[name];

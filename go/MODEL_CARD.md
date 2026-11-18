@@ -8,18 +8,20 @@
 - **バージョン**: v1（2026-10-22）、最上位レベル追加（2026-11-08）
 
 ## ネット
-| 項目 | 軽量（`net_light.bin.gz`） | 強い（`net_strong.bin.gz`） |
-|---|---|---|
-| 元のモデル | vibego `s4`（b7c106nbt-pat） | vibego `s9`（b10c128nbt-pat） |
-| 構造 | KataGo の nested-bottleneck 残差ネット（7ブロック・106ch）＋ 3×3 パターン埋め込み | 同（10ブロック・128ch） |
-| 出力 | 着手の確率（362＝361点＋パス）、勝率（勝ち／負け／持碁）、目数差、各点の地（所有）予測 | 同 |
-| 重みの形式 | fp16（BN を畳み込みに畳み込んだ上で変換。gzip 後 約2.5MB） | fp16（gzip 後 約4.8MB） |
-| 1局面の推論時間（目安） | PC の WebAssembly で約28ms | 約57ms |
+| 項目 | 軽量（`net_light.bin.gz`） | 強い（`net_strong.bin.gz`） | 最強（`net_xl.bin.gz`、PRO のみ、2026-11-19） |
+|---|---|---|---|
+| 元のモデル | vibego `s4`（b7c106nbt-pat） | vibego `s9`（b10c128nbt-pat） | vibego `s11`（b12c152nbt-pat） |
+| 構造 | KataGo の nested-bottleneck 残差ネット（7ブロック・106ch）＋ 3×3 パターン埋め込み | 同（10ブロック・128ch） | 同（12ブロック・152ch、計算量は強いの約1.7倍） |
+| 出力 | 着手の確率（362＝361点＋パス）、勝率（勝ち／負け／持碁）、目数差、各点の地（所有）予測 | 同 | 同 |
+| 重みの形式 | fp16（BN を畳み込みに畳み込んだ上で変換。gzip 後 約2.5MB） | fp16（gzip 後 約4.8MB） | fp16（gzip 後 約7.8MB） |
+| 1局面の推論時間（目安） | PC の WebAssembly で約28ms | 約57ms | 約1.7倍（GPU 推奨） |
 
 - 元のモデル：Hugging Face の [sanderland/vibego](https://huggingface.co/sanderland) シリーズ（Sander Land 氏）。KataGo の公開ネット `kata1-b18c384nbt` を教師に、katagoarchive.org の局面で蒸留したもの。
 - 変換：`tools/export_net.py`（PyTorch のチェックポイント → 独自形式 GONN v2）。C 実装の出力を PyTorch と比較し、方策ロジットの差は平均 約0.02。int8 量子化は精度の落ちが大きかったため fp16 を採用。
 - 入力特徴量：KataGo の空間特徴量のうち石・呼吸点（1〜3）・コウ・直前5手・シチョウ関連と、大域特徴量（手番側から見たコミ／20、直前がパスか）。
 - 盤の大きさ：ネットは常に19×19の入力で動かし、小さい盤は左上に置く（学習時と同じ扱い）。対称変換は N×N の盤の中で行う。5〜19路に対応。
+
+- 最強（s11）：作者の評価で g170e-b10c128 に目数 +7.7 ±2.4（48訪問、b18 判定 192局）、s9 は −8.6 → 同じ訪問数で s9 より約16目強い。PRO の「評価ネット：最強」でだけ使う（レベルの段級は変えない）。
 
 ## 探索と強さの段階
 - PUCT（KataGo 式の cpuct・FPU・目数効用・LCB による最終手選択）、終局判定は Tromp-Taylor。コウは単純コウ＋同形反復（スーパーコウ）を禁止。
