@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """SPSA: tune the search's constants (engine.c set_param) by self-play at a fixed time per move, with the site's net on both sides.
 
-  python3 tools/match/spsa.py tune [--work ~/shogi-spsa] [--ms 100] [--procs 6] [--iters 600] [--lr 0.5]
+  python3 tools/match/spsa.py tune [--work ~/shogi-spsa] [--ms 100 | --nodes N] [--procs 6] [--iters 600] [--lr 0.5] [--table v4|v5] [--base "k=v,.."]
       each iteration: every parameter is moved up or down by its step at random (theta+ / theta-), <procs> pairs of games
       (the same opening, colours swapped) are played between the two settings, and each parameter moves a little towards
       the side that won. State in <work>/spsa.json after every iteration: stop with Ctrl+C, the same command continues.
@@ -22,7 +22,8 @@ import argparse, json, math, os, random, subprocess, sys, tempfile, time
 
 HERE = os.path.dirname(os.path.abspath(__file__)); SHOGI = os.path.dirname(os.path.dirname(HERE))
 # name, set_param index, the engine's default (keep in step with engine.c), min, max, step (the size of one trial move)
-PARAMS = [
+TABLES = {}
+TABLES['v4'] = [
     ('rfpMargin',   2,  112,   40,  200,  10),     # reverse futility: margin per depth
     ('rfpDepth',    1,    8,    3,   10,   1),     # ... up to this depth
     ('futMargin',  16,  123,   40,  250,  12),     # futility of quiet moves: margin per depth
@@ -32,6 +33,22 @@ PARAMS = [
     ('histLmr',     9, 6749, 2000, 16000, 500),    # history's weight in the reductions (divisor)
     ('lmrDiv',     17,  203,  130,  320,  12),     # reductions: ln(depth) * ln(move number) / (this / 100)
 ]
+# search v5 (set_param 44, the new search function): run with --table v5 --base "44=1,45=1,53=6,62=1"
+TABLES['v5'] = [
+    ('lmpScale',   43,  800,  200, 4000, 150),     # late move pruning: its move count, percent
+    ('razor',      58,  300,  100,  700,  40),     # razoring margin per depth
+    ('futDepth',   46,    8,    3,   14,   1),     # futility of quiet moves: below this reduced depth
+    ('fut0',       47,  100,   10,  300,  20),     # ... margin
+    ('fut1',       48,  120,   40,  300,  15),     # ... per reduced depth
+    ('nullBase',   52,    4,    2,    7,   1),     # null move reduction
+    ('rfpMargin',   2,  112,   40,  220,  10),
+    ('rfpDepth',    1,    8,    3,   14,   1),
+    ('histLmr',     9, 6749, 2000, 16000, 600),
+    ('lmrDiv',     17,  203,  130,  320,  12),
+    ('bonus',      42,  170,   60,  400,  25),     # history bonus per depth
+    ('aspDelta',   27,   85,   20,  150,   8),
+]
+PARAMS = TABLES['v4']
 
 def build(work):
     os.makedirs(work, exist_ok=True)
@@ -75,8 +92,11 @@ def main():
     ap.add_argument('--procs', type=int, default=6); ap.add_argument('--iters', type=int, default=600)
     ap.add_argument('--lr', type=float, default=0.5); ap.add_argument('--games', type=int, default=80); ap.add_argument('--set', default='')
     ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--table', default='v4', choices=sorted(TABLES)); ap.add_argument('--base', default='', help='parameters fixed on both sides in tune, and added to the candidate in test ("44=1,45=1")')
     ap.add_argument('--nodes', type=int, default=0, help='test: nodes per move instead of time (what the node-limited levels see)')
     a = ap.parse_args()
+    global PARAMS; PARAMS = TABLES[a.table]
+    base = {int(x.split('=')[0]): int(x.split('=')[1]) for x in a.base.split(',') if x}
     site, um, kp = build(a.work)
     ops = [x for x in open(os.path.join(HERE, 'openings.txt')) if len(x) > 3]
     state_f = os.path.join(a.work, 'spsa.json')
@@ -87,15 +107,13 @@ def main():
         if a.set: cand = {int(x.split('=')[0]): int(x.split('=')[1]) for x in a.set.split(',')}
         else:
             st = json.load(open(state_f)); cand = {k: int(round(st['theta'][n])) for n, k, _, _, _, _ in PARAMS}
-        cand = {k: v for k, v in cand.items() if defaults.get(k) != v}
+        cand = {**base, **cand}
         print('candidate:', ', '.join(f'{k}={v}' for k, v in sorted(cand.items())) or '(the defaults)', f' vs the defaults, {ms} ms, {a.games * a.procs} games' if ms > 0 else f' vs the defaults, {-ms} nodes, {a.games * a.procs} games', flush=True)
         ps = []
         for i in range(a.procs):
             r = (i * a.games // 2) % len(ops); lines = ops[r:] + ops[:r]
             A, B = (cand, {}) if i % 2 == 0 else ({}, cand)          # the candidate sits in usimatch in half the processes
-            # the other side: the engine's own defaults (nothing sent; a tuned parameter of the table is sent as its default)
-            B = {k: defaults[k] for k in cand if k in defaults} if i % 2 == 0 else B
-            A = {k: defaults[k] for k in cand if k in defaults} if i % 2 == 1 else A
+            # (the other side: the engine's own defaults, nothing sent)
             # nodes per move: each process a little more (+131 each). The search is deterministic, and the 100 openings give
             # only 100 different pairs of games: without this, processes with the same openings would play the same games.
             ps.append((play(a.work, site, um, kp, ms - 131 * i if ms < 0 else ms, A, B, a.games, lines, f't{i}'), i % 2 == 0))
@@ -107,7 +125,7 @@ def main():
             D += d
         print('candidate vs defaults:', elo(W, L, D)); return
 
-    ms = a.ms or 100
+    ms = -a.nodes if a.nodes else (a.ms or 100)
     if os.path.exists(state_f): st = json.load(open(state_f)); print(f'resume at iteration {st["it"]}', flush=True)
     else: st = {'it': 0, 'theta': {n: float(d) for n, _, d, _, _, _ in PARAMS}, 'games': 0}
     rng = random.Random(a.seed + st['it'])
@@ -119,6 +137,7 @@ def main():
             plus, minus = {}, {}
             for n, k, _, lo, hi, c in PARAMS:
                 plus[k] = int(round(min(hi, max(lo, st['theta'][n] + c * sign[n])))); minus[k] = int(round(min(hi, max(lo, st['theta'][n] - c * sign[n]))))
+            plus = {**base, **plus}; minus = {**base, **minus}
             ps = []
             for i in range(a.procs):
                 line = [rng.choice(ops)]
@@ -137,7 +156,7 @@ def main():
             print(f'{st["it"]}/{a.iters}  games {st["games"]}  (+ {net:+d})  ' + '  '.join(f'{n} {st["theta"][n]:.1f}' for n, *_ in PARAMS), flush=True)
     except KeyboardInterrupt:
         print('\nstopped (the same command continues)')
-    print('now: ' + ', '.join(f'{k}={int(round(st["theta"][n]))}' for n, k, *_ in PARAMS))
+    print('now: ' + ','.join([f'{k}={v}' for k, v in base.items()] + [f'{k}={int(round(st["theta"][n]))}' for n, k, *_ in PARAMS]))
 
 if __name__ == '__main__':
     main()
