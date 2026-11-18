@@ -2319,7 +2319,7 @@ class LessonHuman extends Human {
       if (!UIS || UIS.lesson !== L) throw 'abort';
       if (MJLessons.check(b, a, g, ME)) {
         SND.ok && SND.ok(); clearHint(); L.cur = null;
-        const good = (b.explain ? MJLessons.explain(b, a.id >> 2, g, ME, I18N.lang === 'ja') : '') || I18N.L(b.good || '') || '';
+        const good = (b.explain ? MJLessons.explain(b, a.id >> 2, g, ME, I18N.lang === 'ja', a.act) : '') || I18N.L(b.good || '') || '';
         lessonGuide({ text: good, good: true });
         L.until = performance.now() + Math.min(4800, 1600 + good.length * 45);
         L.lastGood = good;
@@ -2327,7 +2327,7 @@ class LessonHuman extends Human {
         return a;
       }
       L.miss.add(b); clearHint();
-      const why = b.explain && a && a.id != null ? MJLessons.explain(b, a.id >> 2, g, ME, I18N.lang === 'ja') : '';
+      const why = b.explain && a && a.id != null ? MJLessons.explain(b, a.id >> 2, g, ME, I18N.lang === 'ja', a.act) : '';
       lessonGuide({ text: why || I18N.L(b.bad || '') || t('lsWrong'), bad: true, hint: true, again: I18N.L(b.say) });
     }
   }
