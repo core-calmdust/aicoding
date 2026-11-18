@@ -40,6 +40,8 @@ function setup() {
 // the movement of one touch, t seconds after it: a press (pinch), the rebound (bulge) and a few dying wobbles
 // (ユーザー 2026-11-18「ぷるんの速度を0.8に」) the whole motion plays at 0.8× speed: the same shape, 1.25 s instead of 1 s
 const SPD = .8;
+// (ユーザー 2026-11-18「ぷるんの大きさを0.9に」) every movement 0.9× as large (on top of the per-place strength from app.js)
+const AMP = .9;
 function shape(t) {
   const e = Math.exp(-t * 4.6), w = 2 * Math.PI * 5.2 * t;
   return [-.30 * Math.cos(w) * e, .045 * Math.sin(w + .6) * e, .02 * Math.sin(w * .5 + 1.1) * e];
@@ -50,7 +52,7 @@ function draw(now) {
   hits = hits.filter(h => (now - h.t0) * SPD < 1000);
   if (!hits.length) return stop();
   const J = new Float32Array(16), K = new Float32Array(16), M = new Float32Array(16);
-  hits.slice(-4).forEach((h, i) => { const s = shape((now - h.t0) * SPD / 1000), a = h.a; J.set([h.u, h.v, h.r, 1], i * 4); K.set([s[0] * a, s[1] * a, s[2] * a, 0], i * 4); M.set(h.m, i * 4); });
+  hits.slice(-4).forEach((h, i) => { const s = shape((now - h.t0) * SPD / 1000), a = h.a * AMP; J.set([h.u, h.v, h.r, 1], i * 4); K.set([s[0] * a, s[1] * a, s[2] * a, 0], i * 4); M.set(h.m, i * 4); });
   gl.viewport(0, 0, W, H); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
   gl.uniform1i(loc.T, 0); gl.uniform2f(loc.S, W, H); gl.uniform2f(loc.I, img.naturalWidth || 1080, img.naturalHeight || 1920);
   gl.uniform4fv(loc.J, J); gl.uniform4fv(loc.K, K); gl.uniform4fv(loc.M, M); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
