@@ -90,7 +90,8 @@
 // (html.ng-disp-gear already, e.g. reversi / shogi / amazons) is left alone.
 (function () {
   const GAME = (location.pathname.match(/\/([^/]+)\/(?:index\.html)?$/) || [])[1] || '';
-  const PER = { backgammon: { map: { optRoll: 'autoRoll' }, skip: ['optCube'] }, gomoku: { skip: ['optConfirm'], drop: ['optNum'] } };
+  const PER = { backgammon: { map: { optRoll: 'autoRoll' }, skip: ['optCube'] }, gomoku: { skip: ['optConfirm'], drop: ['optNum'] },
+    foxgeese: { order: { watch: 'fLevel,fColor,|,fLevel2,fQuiet', other: 'fRatedInfo,fInfo,fColor,fQuiet,|,fLevel' } } };   // (2026-11-19: the panels keep their places when the side changes)
   function auto() {
     if (document.documentElement.classList.contains('ng-disp-gear') || window.NgDispManual) return;
     let s = null, sv = null, rt = null;
