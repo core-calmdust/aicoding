@@ -10,6 +10,7 @@
 'use strict';
 importScripts('rules.js?v=2');
 try { importScripts('tsumego.js?v=1'); } catch (e) {}
+try { importScripts('gpunet.js?v=1'); } catch (e) {}   // (PRO's 計算「GPU」, 2026-11-18)
 const R = self.GoRules, PASS = -1;
 
 let simd = true;
@@ -113,8 +114,15 @@ function results(I, n, maxc) {
 let curJob = 0;
 const yieldNow = () => new Promise(r => setTimeout(r, 0));
 // run a search: visits / time limits; progress(res) every ~250 ms; returns null if superseded
+// PRO's GPU (2026-11-18, go/gpunet.js): the net's GPU runner for an instance (made once; null: no WebGPU / it failed → the CPU)
+const GPU_B = 16;   // leaves a batch (virtual loss spreads them; more = faster on the GPU but a little less sharp a search)
+function gpuFor(I) {
+  if (MTL || !self.GoGPU) return Promise.resolve(null);
+  if (!I.gpuP) I.gpuP = (I.E.gpu_init && I.E.gpu_init(GPU_B) ? self.GoGPU.create(netBytes[I.name], GPU_B) : Promise.resolve(null)).catch(() => null);
+  return I.gpuP;
+}
 async function search(I, job, o) {
-  const E = I.E, my = job.id, n = job.spec.n;
+  const E = I.E, my = job.id, n = job.spec.n, G = o.gpu && !o.gpu.lost ? o.gpu : null;
   setPos(I, job);
   E.set_param(4, o.noise || 0);
   E.set_param(3, o.temp || 1);
@@ -126,7 +134,15 @@ async function search(I, job, o) {
   const maxV = o.visits || 100, maxT = o.time || 1e9;
   while (done < maxV) {
     const k = Math.min(o.slice || 4, maxV - done);
-    const got = E.search_run(k);
+    let got;
+    if (G) {   // a batch of leaves on the GPU (the time and the progress as for the CPU's playouts)
+      const nb = E.gpu_collect(Math.min(GPU_B, Math.max(1, maxV - done))); got = E.gpu_imm();
+      if (nb) {
+        let out = null; try { out = await G.run(new Float32Array(E.memory.buffer, E.gpu_feat(), nb * 14 * 361), new Float32Array(E.memory.buffer, E.gpu_glob(), nb * 2), new Uint16Array(E.memory.buffer, E.gpu_pat(), nb * 361), nb); } catch (e) { out = null; }
+        if (!out) { E.gpu_cpu(nb); I.gpuFail = 1; } else new Float32Array(E.memory.buffer, E.gpu_out(), nb * 727).set(out);   // (the GPU failed: this batch on the CPU)
+        got += E.gpu_apply(nb);
+      }
+    } else got = E.search_run(k);
     if (MTL) { done = E.mt_visits(); if (!got && E.mt_full()) break; if (E.mt_stopped()) { E.mt_close(); return null; } }   // (threads: every thread's visits count; the page cancelled)
     else { done += got; if (!got) break; }
     const now = performance.now();
@@ -224,13 +240,15 @@ async function think(job) {
     return { move: r.move, wr: (v + 1) / 2, lead: r.ev.score };
   }
   const I = await getNet(L.net);
+  const G = L.gpu ? await gpuFor(I) : null;
   // small boards are cheap to search deeply: more visits within the same time
   const boost = n <= 9 ? 2 : n <= 13 ? 1.4 : 1;
   // timed levels: the level's time (half on boards under 9×9; a rated game's clock may shorten it), no visit limit, an early stop
   // when the choice is settled; job.nodes = the tree size the page expects for its threads
   const tm = L.timed ? Math.min(job.time || 1e9, n < 9 ? L.timed / 2 : L.timed) : 0;
-  const res = L.timed ? await search(I, job, { visits: 1e7, time: tm, nodes: job.nodes, minVisits: 8, slice: 1, early: true })   // (slice 1: the time limit is checked after every playout)
-    : await search(I, job, { visits: Math.round(L.visits * boost), time: job.time || L.time, nodes: job.nodes, minVisits: Math.min(8, L.visits), slice: 4 });
+  const gn = G ? Math.round(Math.min(4e6, Math.max(4e5, ((L.timed ? tm : job.time || L.time) / 1000) * 400 * n * n * 0.8))) : 0;   // (the GPU: a bigger tree)
+  const res = L.timed ? await search(I, job, { visits: 1e7, time: tm, nodes: job.nodes || gn, minVisits: 8, slice: 1, early: true, gpu: G })   // (slice 1: the time limit is checked after every playout)
+    : await search(I, job, { visits: Math.round(L.visits * boost), time: job.time || L.time, nodes: job.nodes || gn, minVisits: Math.min(8, L.visits), slice: 4, gpu: G });
   if (!res) return null;
   let b = bestOf(res);
   // no early pass (see mayPass): take the best real move instead
@@ -238,7 +256,7 @@ async function think(job) {
   // the page enforces superko: skip a move it would refuse
   const ordered = [b].concat(res.list.filter(c => c !== b && c.n > 0));
   b = ordered.find(c => c && legalFor(job, c.m)) || { m: PASS };
-  return { move: b.m, wr: (res.wl + 1) / 2, lead: res.sc, visits: res.visits };
+  return { move: b.m, wr: (res.wl + 1) / 2, lead: res.sc, visits: res.visits, ...(L.gpu ? { gpu: G ? (I.gpuFail ? 'fail' : 'on') : 'none' } : {}) };
 }
 
 // candidate list for hints / evaluation: [{m, lead, wr, n, p}] from the mover's view (lead = points ahead)

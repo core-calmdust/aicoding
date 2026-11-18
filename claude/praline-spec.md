@@ -449,3 +449,9 @@ Many cores (nuts) held together by shared memory (caramel).
 - **ウゴルキ・アゴン・コナネ・アマゾンズの core_mt.wasm の置換表**：複数スレッドのときは、探索の前に半分を超えていたら全部消していた（JS の Map と同じ開番地法）。このため前の手の読みも先読みも残らなかった。複数スレッドのときだけ同じメモリに Praline のバケット表（`praline_tt.h`、4項目×3語 `{ key ^ a ^ c, a, c = 探索の世代 }`、深い・新しいものを残す）を使い、探索をまたいで残す。1スレッド（abExact）は従来どおり（`check_wasm` / `check_ab` の dump を core_mt に通して全一致）。2つの形が同じメモリなので、モードが変わるときに消す。`praline_tt.h` に `PL_TT_IN`（ゲームの配列に表を置く）を追加。
 - 囲碁・ヘックス（MCTS）は探索ごとに木を作り直すため、先読みには木の再利用（相手の手の下の部分木を次の探索の根にする）が先に必要。
 - **Relaxed SIMD（2026-11-18）**：囲碁のネットの畳み込み（直接・Winograd の積和）を `f32x4.relaxed_madd`（FMA）に（engine.c `MADD`）。`engine_rsimd.wasm`・`engine_mt_rsimd.wasm` を追加し、ブラウザが対応していれば（`WebAssembly.validate` で判定。Chrome・Edge・Firefox、Safari は未対応）そちらを読む。評価1回 約40→35ms（約15%速い、作業機 x86）、出力の差は最大 2e-5・方針の最善手は全一致。ほかのゲームの NN は int16 の内積（`i32x4.dot_i16x8`、relaxed に速い代わりがない）か出力層だけの float で、効果がないので入れていない。
+
+## 囲碁：GPU（WebGPU）でネットを計算（2026-11-18、PRO の「計算」）
+- PRO に「計算：CPU / GPU」（既定 CPU。ブラウザに WebGPU があるときだけ表示。GPU のときスレッド数は灰色）。GPU を選ぶと AI の読みはスレッドのプールでなく1スレッドのワーカーで、葉を 16 局面ずつまとめて GPU で評価する。
+- engine.c（1スレッドの版）：`gpu_collect(B)`（仮想損失をつけて B 回下り、評価中でない葉の入力 FEAT・GLOB・PAT をバッファへ。終局は即採点して `gpu_imm`）→ ページが GPU で計算して `gpu_out` に書く → `gpu_apply(n)`（展開して値を戻す）。`gpu_cpu(n)` は同じバッチを CPU で（試験・GPU が失敗したときの代わり）。`evaluate` を `features` / `map_out`、`expand` を `expand_out` に分けただけで、通常の探索は前と全一致（同じ乱数で 150 回の探索の結果の md5 が一致）。
+- `go/gpunet.js`：ネットのファイル（GONN v2）を JS で読み、WGSL の畳み込み（3x3/1x1、4出力チャンネルずつ）・BN+ReLU・ステムの加算・global pooling＋FC・ヘッドを順に流す。SwiftShader（作業機）で CPU の出力との差は最大 6e-5。
+- `go/gpu-bench.html`：CPU と GPU（まとめる数 1〜64）の評価/秒と一致を測る。速さは機械しだい（作業機の SwiftShader は CPU の 1/100）なので、実機で測ってから既定や 16 を見直す。

@@ -952,7 +952,7 @@ document.addEventListener('keydown', e => {
 // counters, a Pompeian-red fresco with bone counters. The old designs (img/bd-*, pc-*) stay for the 3D boards (atlas/models).
 const BD_KEYS = ['stone', 'wood', 'abstract', 'lux', 'mosaic', 'pompeii'], PC_KEYS = ['bust', 'wood', 'abstract', 'coin', 'glass', 'bone'];
 const ANCHOR = { bust: .8 }, PC_SIZE = { bust: 1.16 };   // the busts: where the socle's centre is in the picture, and the picture's size in cells
-const ART = k => `img/2d/${k}.webp?v=1`;
+const ART = k => `img/2d/${k}.webp?v=2`;
 const BD_OLD = { marble: 'stone', travertine: 'stone', tile: 'pompeii', slate: 'abstract', ivory: 'abstract', porphyry: 'lux' }, PC_OLD = { gem: 'coin', stone: 'bust' };
 // [surface (fallback), groove (mini-board marks), frame, frame line]
 const BD_PAL = {

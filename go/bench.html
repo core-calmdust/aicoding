@@ -104,7 +104,7 @@ async function setup() {
   $('#st').textContent = 'スレッドを起動しています…';
   pool = MTEngine.pool({
     wasm: (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 7, 5, 1, 1, 102, 0, 0, 10, 61, 1, 59, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 133, 2, 11])) ? 'engine_mt_rsimd.wasm?v=1' : 'engine_mt.wasm?v=1'; } catch (e) { return 'engine_mt.wasm?v=1'; } })(),   // (2026-11-18: relaxed SIMD where the browser has it)
-  lead: 'engine.js?v=11&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 512, maximum: 16384,
+  lead: 'engine.js?v=12&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 512, maximum: 16384,
     imports: mem => ({ env: { memory: mem } }), help: () => ({}), isDone: m => m.type === 'done',
   });
   if (!(await pool.ready)) { $('#st').innerHTML = '<span class="n">スレッドを起動できませんでした。</span>'; return; }
