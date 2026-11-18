@@ -128,10 +128,10 @@ int main(int argc, char **argv) {
   init();
   if (!loadNet(argv[1])) return 1;
   nue_enable(1);
+  { const char *ps = getenv("PARAMS"); int k, v, q; while (ps && sscanf(ps, "%d=%d%n", &k, &v, &q) == 2) { set_param(k, v); ps += q; if (*ps == ',') ps++; } }   /* PARAMS="44=1,45=1": search parameters of our side, in every mode */
 #ifdef SEARCH_STATS
   if (!strcmp(argv[2], "stat")) {   /* usimatch <net> stat <nodes | dN> <openings> [positions]: what the one-thread search does (build with -DSEARCH_STATS) */
     int lim = argv[3][0] == 'd' ? 0 : atoi(argv[3]), dep = argv[3][0] == 'd' ? atoi(argv[3] + 1) : 0, np = argc > 5 ? atoi(argv[5]) : 8;
-    { const char *ps = getenv("PARAMS"); int k, v, q; while (ps && sscanf(ps, "%d=%d%n", &k, &v, &q) == 2) { set_param(k, v); ps += q; if (*ps == ',') ps++; } }   /* PARAMS="40=1,42=170": search parameters */
     FILE *f = fopen(argv[4], "r"); if (!f) { perror(argv[4]); return 1; }
     char line[2048]; int n = 0; double dsum = 0, nsum = 0, ebf = 0; int ne = 0; static long long stCutKsum[3][8], stCutDsum[3], stCutDSsum[3];
     for (int k = 0; k < np && fgets(line, sizeof line, f); k++) {
