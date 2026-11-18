@@ -691,6 +691,15 @@ class Table3D {
     con.rotation.x = -PI / 2; con.position.y = 0.36; con.castShadow = true; con.receiveShadow = true; s.add(con);
     const neck = new THREE.Mesh(new THREE.ExtrudeGeometry(rsq(CH - .3, CR - .1), { depth: 0.36, bevelEnabled: false, curveSegments: 4 }), new THREE.MeshStandardMaterial({ color: 0x0b0c10, roughness: .7, metalness: .3 }));
     neck.rotation.x = -PI / 2; neck.position.y = 0.0; s.add(neck);
+    // (ユーザー 2026-11-19「手番ライトを一定周期で光らせる」) a soft glow laid over the lit turn light, breathing in with the dora's glint
+    { const c = document.createElement('canvas'); c.width = 512; c.height = 64; const q = c.getContext('2d');
+      const gx = q.createLinearGradient(0, 0, 512, 0); gx.addColorStop(0, 'rgba(255,150,40,0)'); gx.addColorStop(.18, 'rgba(255,170,60,.75)'); gx.addColorStop(.5, 'rgba(255,215,140,1)'); gx.addColorStop(.82, 'rgba(255,170,60,.75)'); gx.addColorStop(1, 'rgba(255,150,40,0)');
+      q.fillStyle = gx; q.fillRect(0, 0, 512, 64);
+      q.globalCompositeOperation = 'destination-in'; const gy = q.createLinearGradient(0, 0, 0, 64); gy.addColorStop(0, 'rgba(0,0,0,0)'); gy.addColorStop(.5, 'rgba(0,0,0,1)'); gy.addColorStop(1, 'rgba(0,0,0,0)'); q.fillStyle = gy; q.fillRect(0, 0, 512, 64);
+      const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+      this.turnMat = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }); this.turnMat.color.setScalar(2.4);
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(2.3, .3), this.turnMat); m.rotation.x = -PI / 2; m.position.set(0, .556, 446 / 1024 * CH * 2);
+      this.turnGlow = new THREE.Group(); this.turnGlow.add(m); this.turnGlow.visible = false; s.add(this.turnGlow); }
 
     // riichi sticks
     const stc = document.createElement('canvas'); stc.width = 256; stc.height = 24;
@@ -1347,6 +1356,7 @@ class Table3D {
       if (!em) { const gl = g.createLinearGradient(0, -268, 0, 50); gl.addColorStop(0, 'rgba(255,255,255,.16)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gl; g.beginPath(); g.arc(0, 0, 268, PI, 2 * PI); g.fill(); }   // the glass
       g.restore();
     }
+    if (this.turnGlow) { const on = I.turn != null && I.turn >= 0 && I.turn < 4; this.turnGlow.visible = on; if (on) this.turnGlow.rotation.y = I.turn * PI / 2; }
     this.conETex.needsUpdate = true;
     this.conTex.needsUpdate = true;
     this._conText();
@@ -1473,7 +1483,7 @@ class Table3D {
     if (this._drew || this.tweens.length || this.handFx.length || this._ov || (this._callG && this._callG.visible) || this.mot === .875) this._idleT = now;
     if (now - (this._idleT || 0) < 400) { requestAnimationFrame(this._loop); return; }
     this._sleep = true;
-    if (this._doraN) { const P = this._mob ? 4200 : 2600; this._wt = setTimeout(() => this._wake(), P - now % P + 8); }
+    if (this._doraN || (this.turnGlow && this.turnGlow.visible)) { const P = this._mob ? 4200 : 2600; this._wt = setTimeout(() => this._wake(), P - now % P + 8); }
   }
   // ---------------------------------------------------------------- debug (the I key): polygons and the rest of the frame's cost
   // The numbers are the renderer's own for the last frame drawn (the table draws on demand, so they stand still while nothing
@@ -1567,6 +1577,10 @@ class Table3D {
     if (this._doraN && !this.quiet) { const ph = now % (MOB ? 4200 : 2600), on = ph < 1300;
       if (on && (moved || now - (this._glT || 0) > GSTEP)) { this._glT = now; this.doraMat.uniforms.uT.value = ph / 1300; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
       this._doraOn = on; }
+    // the turn light breathes once a cycle, with the glint (no extra wake-ups: the same 2.6 s / 4.2 s rhythm)
+    if (this.turnGlow) { const vis = this.turnGlow.visible && !this.quiet, ph = now % (MOB ? 4200 : 2600), on = vis && ph < 1300;
+      if (on && (moved || now - (this._tgT || 0) > GSTEP)) { this._tgT = now; const k = Math.sin(ph / 1300 * PI); this.turnMat.opacity = .95 * k * k; this.dirty = true; }
+      else if (!on && this.turnMat.opacity) { this.turnMat.opacity = 0; this.dirty = true; } }
     if (this._callG && this._callG.visible && this.callMat && (moved || now - (this._clT || 0) > GSTEP)) { this._clT = now; this.callMat.uniforms.uT.value = (now % 1400) / 1400; this.dirty = true; }
     if (this._ov) this.dirty = true;
     if (!this.dirty || document.hidden) return;
