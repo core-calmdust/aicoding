@@ -596,7 +596,7 @@ function render() {
   // the coach is for the game in progress: after the game (or while browsing earlier moves) it steps aside and the
   // coach tab shows the review instead; before the review exists, a short note with a button to start it
   const playing = !!(game && !game.over && cur === game.moves.length && !reviewing);
-  const on = active(), can = usable() && (playing || (game && game.over && !rv));
+  const on = active(), can = usable() && !rv && (playing || (game && game.over));
   // lessons, puzzles, opening practice, rated games, AI vs AI, studies, the editor: the box (and the phone tab) stays, says
   // the coach is resting, and computes / marks nothing (online games keep their own screen)
   const resting = restNow(rv, can);

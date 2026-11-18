@@ -463,7 +463,7 @@ function render() {
   if (FanoronaCoach.sw) FanoronaCoach.sw.sync();
   const rv = !!document.querySelector('#reviewCard.show');
   const over = moves.length > 0 && gameOver(moves.length), playing = !over && cur === moves.length && !reviewing;
-  const on = active(), can = usable() && (playing || (over && !rv));
+  const on = active(), can = usable() && !rv && (playing || (over));
   // lessons, puzzles, opening practice, rated games, AI vs AI, studies, the editor: the box (and the phone tab) stays, says
   // the coach is resting, and computes / marks nothing (online games keep their own screen)
   const resting = restNow(rv, can);

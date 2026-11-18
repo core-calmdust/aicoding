@@ -532,7 +532,7 @@ function render() {
   // shows the review instead; before the review exists, a short note with a button to start it
   const rv = !!document.querySelector('#reviewCard.show'), over = gameOver(moves.length);
   const playing = !over && cur === moves.length && !reviewing;
-  const on = active(), can = usable() && (playing || (over && !rv && moves.length > 0));
+  const on = active(), can = usable() && !rv && (playing || (over && moves.length > 0));
   // lessons, puzzles, opening practice, rated games, AI vs AI, studies, the editor: the box (and the phone tab) stays, says
   // the coach is resting, and computes / marks nothing (online games keep their own screen)
   const resting = restNow(rv, can);

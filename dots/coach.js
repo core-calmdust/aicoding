@@ -479,7 +479,7 @@ function render() {
   // tab shows the review card instead; before the review exists, a short note with a button that starts it
   const rvShow = !!document.querySelector('#reviewCard.show') && !lesson && !puzzle;
   const playing = !SF.over && viewPly === null && !rvShow;
-  const on = active(), can = usable() && (playing || (SF.over && !rvShow));
+  const on = active(), can = usable() && !rvShow && (playing || (SF.over));
   // lessons, puzzles, opening practice, rated games, AI vs AI, studies, the editor: the box (and the phone tab) stays, says
   // the coach is resting, and computes / marks nothing (online games keep their own screen)
   const resting = restNow(rvShow, can);
