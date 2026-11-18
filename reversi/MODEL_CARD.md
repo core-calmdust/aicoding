@@ -1412,3 +1412,6 @@ Edax の約2.0倍、Egaroucid の約2.8倍の時間。Edax との差は、局面
 
 ## Mac での検証計画（2026-11-19）
 設定の組み合わせ・今よりずっと長い時間・定石の大きさを Mac でまとめて確かめる計画を `claude/reversi-mac-verification.md` に置いた。道具：`tools/train/frontier.js`（新規）、`rvmatch` の「考えた時間」と `--engine-b`、`engine.c` のテスト用ビルド `-DENDK=…`（付けなければ wasm は1バイトも変わらないことを確認）、`tools/book-audit.js`。大きい定石は天上レベル・PRO・解析のときだけ読み込み、PRO で切り替えられるようにする方針（実装は定石ができてから）。
+
+## Praline のパーキングを取り込み（2026-11-19）
+`engine_mt.wasm` を今の `shared/praline/` で作り直した（`?v=16`）：手の空いた補助が、仕事のない間は短く回ったあと眠る（`claude/praline-spec.md`「待ち方の改善：パーキング」）。エンジンのソース（`engine.c`）は変更なし、`engine.wasm`（1スレッド）は同じバイナリ。1スレッドの読みは前と全一致（`tools/mt-one.js --quick`）、2スレッドの終盤（`tools/mt-bench.js 20 6`）は石差が一致。速さへの効果は Mac の `bench.html` と `bench.html?park=0` で確かめる（`claude/reversi-mac-verification.md` 検証D）。

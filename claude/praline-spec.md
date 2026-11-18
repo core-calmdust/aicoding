@@ -431,6 +431,7 @@ Many cores (nuts) held together by shared memory (caramel).
 - wasm のスレッド版だけ（`__wasm_atomics__`）。シミュレータ（ネイティブ）と `-DPL_NO_PARK` では入らない。実行中は `mt_park(0)` で切れる：ページの **`?park=0`**（`shared/mtengine.js` がページ自身のインスタンスから呼ぶ。フラグは共有メモリ）で前の待ち方と比べられる（例 `xiangqi/bench.html?park=0`）。
 - 作り直した `engine_mt.wasm`／`core_mt.wasm`：シャンチー・チャンギ・チェッカー・タフル・モリス・ファノロナ（アルケルケ）・チェス・マンカラ・アマゾンズ・ウゴルキ・アゴン・コナネ・五目並べ（将棋・リバーシは別の作業中のため次にその wasm を作るときに入る）。宣言するメモリのページ数は前と同じ。
 - **一致の確認**：1スレッドは配信中の版と全一致（`tools/mtsim/wasm1.js`：シャンチー・チャンギ・タフル深さ9／チェス深さ11、モリス `check_wasm.js` 深さ13、チェッカー・ファノロナ bench の12局面・深さ12、マンカラ `mtcheck.js` 425件、ウゴルキ・アゴン・コナネ `check_ab.js`、アマゾンズ `check_ab.js quick`）。実スレッド：マンカラ `mtcheck.js 3`（解けた8局面が1スレッドと同じ）、五目並べ `check-mt.js 1,2`（手10/10一致）、アマゾンズ MCTS `mt_node.js check 1 2`。headless Chrome の `engine-health.html` で全ゲーム「分離○・オン・組が動作」。シミュレータ（`tools/mtsim`、チャンギ）も生成・実行できる。
+- **リバーシ（2026-11-19）**：`reversi/engine_mt.wasm` を作り直した（`?v=16`、`mt_park` あり。宣言するメモリ・取り込みは前と同じ、`engine.wasm` は同じバイナリ）。1スレッドは配信中の版と全一致（`tools/mt-one.js --quick` の21行）、実スレッドは `tools/mt-bench.js 20 6`（1・2lazy・2split で石差が一致）と `levelmatch --plan L29:L29 --threads 2` の通し対局。`reversi/bench.html?park=0` で前の待ち方と比べられる。PRO（`pro/pro.js`）は自前の組なので `?park=0` は効かない（常にオン）。将棋はまだ。
 - **未確認**：速さ・発熱への効果は実機でしか分からない（作業機は2コア共用）。Mac で `bench-all.html` と各 `bench.html?park=0` を並べて測る。遅くなるゲームがあれば `PL_PARK_SPIN` を上げるか、そのゲームだけ `-DPL_NO_PARK`。
 
 ## 検討して見送ったもの（2026-11-18）
