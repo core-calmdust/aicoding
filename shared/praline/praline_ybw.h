@@ -63,7 +63,38 @@ static int chainStopped(const SPt *s, int idx) {
     if (__atomic_load_n(&s->stop, __ATOMIC_ACQUIRE) || (idx >= 0 && __atomic_load_n(&s->done[idx], __ATOMIC_ACQUIRE))) return 1;
   return 0;
 }
-static inline void spLock(SPt *s) { int z; do { z = 0; } while (!__atomic_compare_exchange_n(&s->lock, &z, 1, 0, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)); }
+// (test-and-test-and-set: a thread that finds the lock taken waits on a plain read of its own cache line instead of a stream of
+//  compare-exchanges that pull the line away from the holder, 2026-11-18)
+static inline void spLock(SPt *s) { int z; for (;;) { z = 0; if (__atomic_compare_exchange_n(&s->lock, &z, 1, 0, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) return; while (__atomic_load_n(&s->lock, __ATOMIC_RELAXED)) {} } }
+// ---- parking (2026-11-18): a helper with nothing to join and no straggler to search a second time polls the split points; after
+// PL_PARK_SPIN empty polls in a row it sleeps (memory.atomic.wait32) until a split point opens (spRun wakes the sleepers) or at
+// most PL_PARK_NS — so long gaps (the owner alone on the first move of a deep node, the tail of a search) do not keep every core
+// spinning (heat, a phone's battery, the other threads' share of a big.LITTLE chip). Short gaps are still polled: the latency of
+// joining is the same. Search results do not change (it only decides when a helper looks again). Only in the wasm thread build;
+// a simulator (native) or -DPL_NO_PARK compiles it out; mt_park(0) turns it off at run time (the page's ?park=0 for a bench).
+#ifndef PL_PARK_SPIN
+#define PL_PARK_SPIN 2048
+#endif
+#ifndef PL_PARK_NS
+#define PL_PARK_NS 200000
+#endif
+#if defined(__wasm__) && defined(__wasm_atomics__) && !defined(PL_NO_PARK)
+static int gWakeSeq __attribute__((aligned(64))), gParked __attribute__((aligned(64))), gParkOn = 1;
+EXPORT(mt_park) void mt_park(int on) { gParkOn = on; }
+static inline void plWake(void) {
+  if (__atomic_load_n(&gParked, __ATOMIC_SEQ_CST)) { __atomic_add_fetch(&gWakeSeq, 1, __ATOMIC_SEQ_CST); __builtin_wasm_memory_atomic_notify(&gWakeSeq, 0x7fffffffu); }
+}
+static inline void plPark(void) {
+  if (!gParkOn) return;
+  const int w = __atomic_load_n(&gWakeSeq, __ATOMIC_SEQ_CST);
+  __atomic_add_fetch(&gParked, 1, __ATOMIC_SEQ_CST);
+  if (!__atomic_load_n(&gOpenN, __ATOMIC_SEQ_CST) && !__atomic_load_n(&gStop, __ATOMIC_SEQ_CST)) __builtin_wasm_memory_atomic_wait32(&gWakeSeq, w, PL_PARK_NS);
+  __atomic_sub_fetch(&gParked, 1, __ATOMIC_SEQ_CST);
+}
+#else
+#define plWake() ((void)0)
+#define plPark() ((void)0)
+#endif
 static inline void spUnlock(SPt *s) { __atomic_store_n(&s->lock, 0, __ATOMIC_RELEASE); }
 static inline void spStop(SPt *s) { __atomic_store_n(&s->stop, 1, __ATOMIC_RELEASE); }
 static void spFree(SPt *s) {   // closed, no helper left: a new sequence number, then the slot is free
@@ -204,6 +235,7 @@ static void spRun(SPt *s, PL_VAL *best, Move *bestM, PL_VAL *vals) {
 #endif
   { const int w = __atomic_load_n(&s->word, __ATOMIC_ACQUIRE); __atomic_store_n(&s->word, (w & ~511) | 256, __ATOMIC_RELEASE); }   // open
   __atomic_add_fetch(&gOpenN, 1, __ATOMIC_ACQ_REL);
+  plWake();   // (parked helpers: a split point is open)
   SPt *const saved = curSP; const int savedIdx = curIdx;
   curSP = s;
   spWork(s, 1);
@@ -253,15 +285,17 @@ EXPORT(mt_idle) double mt_idle(double ms, int fresh) {
 #endif
   const double t0 = ms > 0 ? now() : 0;
   __atomic_add_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
+  int empty = 0;   // (empty polls in a row: parking)
   while (!__atomic_load_n(&gStop, __ATOMIC_ACQUIRE)) {
     SPt *y = gOpenN > 0 ? spFind(0) : 0;
     if (!y) {
       if (ms > 0 && now() - t0 > ms) break;
       int j; SPt *z = spFindDup(0, &j);
-      if (!z || !spDup(z, j, 0)) { STAT(4, 1); SIM_IDLE(); } else STAT(6, 1);
+      if (!z || !spDup(z, j, 0)) { STAT(4, 1); SIM_IDLE(); if (++empty >= PL_PARK_SPIN) { plPark(); empty = PL_PARK_SPIN / 2; } } else { STAT(6, 1); empty = 0; }
       stopFlag = 0;
       continue;
     }
+    empty = 0;
     __atomic_sub_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
     { const int k = spHelp(y, 0); if (!k) { STAT(3, 1); STAT(4, 1); SIM_IDLE(); } else { STAT(1, 1); STAT(2, k); } }
     stopFlag = 0;

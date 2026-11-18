@@ -158,7 +158,7 @@ const MTP = window.MTEngine ? MTEngine.use(NOWASM ? {
   imports: mem => ({ env: { memory: mem } }),
   help: m => (m.type === 'think' || m.type === 'analyze' || m.type === 'cands') ? { rule: m.rule, start: m.start, moves: m.moves || [], list: m.type !== 'think' } : null,
 } : {
-  wasm: 'core_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 384, maximum: 16384,   // slot: a thread's stack (its search state: 4 MB more each, memory.grow); maximum = core_mt.wasm's (1 GiB)
+  wasm: 'core_mt.wasm?v=2', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 384, maximum: 16384,   // slot: a thread's stack (its search state: 4 MB more each, memory.grow); maximum = core_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
   help: m => (m.type === 'think' || m.type === 'analyze' || m.type === 'cands') ? {} : null,
 }) : null;

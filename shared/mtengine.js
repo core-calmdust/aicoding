@@ -304,6 +304,7 @@
       const base = Math.ceil(X.mt_heap_base() / 65536) * 65536, n = 1 + HM, need = base + (n + 1) * SLOT;
       if (need > mem.buffer.byteLength) mem.grow(Math.ceil((need - mem.buffer.byteLength) / 65536));
       X.mt_stack(base + n * SLOT + SLOT - 16); X.mt_thread(base + n * SLOT, 999);   // this page's own slot (mt_stop)
+      if (X.mt_park && /[?&]park=0(&|$)/.test(location.search)) X.mt_park(0);   // (Praline's parking off for a bench's comparison: ?park=0 — the flag is in the shared memory)
       ctl = new Int32Array(new SharedArrayBuffer(512));                // [0]: 1 = stop (the helpers' loop); [8…127]: the game engine's own (reversi: the root split of the solve)
       cnt = new Float64Array(new SharedArrayBuffer(8 * (HM + 2)));       // [id]: a helper's nodes in this job so far
       ini = id => ({ type: 'mtinit', module, mem, id, tls: base + id * SLOT, top: base + id * SLOT + SLOT - 16, ctl, cnt });

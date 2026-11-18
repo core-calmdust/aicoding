@@ -144,7 +144,7 @@ if (window.MTEngine && MTEngine.coi && window.MancalaOnline) MancalaOnline.avail
 // (2026-11-14) On an isolated page the threads are engine_mt.wasm's instead (shared/mtengine.js: the lead engine.js?…&mt=1, the
 // helpers mt-helper.js): Praline's Young Brothers Wait in C splits every node of the search (and the root), one table in the
 // shared memory (claude/mancala-spec.md「Praline」). mtsplit.js stays for a page that is not isolated, and while that pool is busy.
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'engine_mt.wasm?v=1', lead: ENGINE_URL + (ENGINE_URL.includes('?') ? '&' : '?') + 'mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'engine_mt.wasm?v=2', lead: ENGINE_URL + (ENGINE_URL.includes('?') ? '&' : '?') + 'mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,
   imports: mem => ({ env: { memory: mem, now: () => performance.now() } }), help: () => ({}), isDone: m => m.type === 'move' || m.type === 'analyze' || m.type === 'error' }) : null;   // (the COOP mode: online play / sign-in switch back to one thread — shared/mtengine.js)
 const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.kind === 'time'); };
 function mtWants(which, msg) {
