@@ -303,6 +303,9 @@ const SND = (() => {
     // any other music asked for meanwhile cancels it, as music() clears handT)
     score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music(null); handT = setTimeout(() => music('score'), 350); },   // (0.45 s → 0.35 s, ユーザー 2026-11-18「あと0.1s早く」)
     // (ユーザー 2026-11-19「ゲーム中からトップに戻ったときのBGMを少しだけ遅らせて」) the game's music stops, the title's comes 0.5 s later
+    // (ユーザー 2026-11-19「一覧はタイトル曲、ルールページに移ってから少し間を開けて流れ始める」) the lesson's music after a short quiet;
+    // already playing (the next lesson) it simply carries on
+    lessonLater() { if (want === 'lesson') return; music(null); handT = setTimeout(() => music('lesson'), 700); },
     titleLater() { music(null); handT = setTimeout(() => music('title'), 500); },
     newGame() { nextMain = draw(MAINS, mainKey); nextRii = draw(RIIS, riichiKey); if (on()) { fetchTrk(nextMain); fetchTrk(nextRii); fetchTrk('score'); } },
     // a hand begins: this hand's track (drawn ahead), after a short quiet (ユーザー 2026-11-16「得点表示から次の局の通常BGMまで少し間を」 —
@@ -1300,7 +1303,7 @@ const AUTO = /[?&]auto/.test(location.search);
 
 async function startGame(opt = {}) {
   if (window.MJ && MJ.clearCache) MJ.clearCache();   // (a fresh game: the memo tables start empty, so they never pile up across games)
-  if (opt.lesson) SND.music('lesson'); else SND.newGame();   // opt.ranked: a 段位戦 game, opt.len its length (a lesson: its own music, carried on)
+  if (opt.lesson) SND.lessonLater(); else SND.newGame();   // opt.ranked: a 段位戦 game, opt.len its length (a lesson: its own music, carried on)
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
   if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = (kind, seat) => { SND.tile(); if (kind === 'river' && UIS.landWait && UIS.landWait.seat === seat) UIS.landWait.done(); }; TB.warm(); }
@@ -2426,14 +2429,13 @@ function openLessons(tab, cat0) {
   // contents in place; only the first opening has the box's entrance
   const m = $('#modal'), cur = !m.hidden && m.classList.contains('lxm') && m.querySelector('.mbox');
   if (cur) { const sc = cur.querySelector('.lx-body'); cur.innerHTML = html; return; }
-  SND.music('lesson');
   const b = modal(html, 'lessons lxm');
   b.addEventListener('click', e => {
     const tb = e.target.closest('[data-tab]'), ct = e.target.closest('[data-cat]'), c = e.target.closest('.lx-card, .lx-node'), x = e.target.closest('[data-a=close]');
     if (tb) { SND.pick(); openLessons(tb.dataset.tab); }
     else if (ct) { SND.pick(); openLessons('l', ct.dataset.cat); }
     else if (c) { SND.pick(); const ls = LS_ALL().find(q => q.id === c.dataset.id); closeModal(); startGame({ lesson: ls }); }
-    else if (x) { SND.pick(); closeModal(); SND.music('title'); }
+    else if (x) { SND.pick(); closeModal(); }
   });
 }
 
