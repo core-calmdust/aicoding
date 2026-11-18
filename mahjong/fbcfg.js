@@ -1,7 +1,7 @@
 // 雀華：セーブデータのクラウド連携（Google アカウント）に使う Firebase の設定（2026-11-18、ユーザー「丸々空いている DB を使う」）。
-// アゴンをタフルのプロジェクトにまとめた後、まるごと空いた "agon-multiplay" を雀華専用に使う（**削除しないこと**）。
+// 雀華専用の Firebase プロジェクト「Janka-Database」（2026-11-18、ユーザーが用意。旧アゴン用のプロジェクトを改名したもので、プロジェクトIDは agon-multiplay のまま。**削除しないこと**）。
 // データは janka/sync/<uid> = { d: セーブの JSON, t: ms }。ルールは mahjong/database.rules.json。
-// 使う前に一度だけ：Firebase コンソール → agon-multiplay → Realtime Database → ルール に mahjong/database.rules.json の内容を貼って公開。
+// 使う前に一度だけ：Firebase コンソール → Janka-Database → Realtime Database → ルール に mahjong/database.rules.json の内容を貼って公開。
 // Authentication の Google ログイン・承認済みドメイン core-calmdust.github.io・App Check は、アゴンで設定済みのものをそのまま使う。
 // Web の設定値は公開前提のもの。アクセスは Realtime Database のルール（自分の uid のノードだけ読み書き可）で守る。
 window.JANKA_FIREBASE_CONFIG = {

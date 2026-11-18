@@ -530,6 +530,7 @@ function renderHome() {
   $('#btnGacha').innerHTML = mi(IC.gacha, t('gacha'), en2('GACHA')); $('#btnColl').innerHTML = mi(IC.collection, t('chars'), en2('CHARACTERS'));
   $('#btnStats').innerHTML = mi(IC.stats, t('record'), en2('RECORD'));   // (ユーザー 2026-11-14: 戦績 and スタッツ are one menu, 「戦績」 — the game log opens from inside it)
   $('#btnRated').innerHTML = mi(IC.rank, t('rated'), en2('RANKED'));
+  $('#btnLesson').innerHTML = mi(IC.lesson, t('lsLessons'), en2('LESSON')); $('#btnRules').innerHTML = mi(IC.rules, t('lsRules'), en2('RULES'));   // (2026-11-18: the lessons are in)
   document.querySelectorAll('#luxMenu [data-soon]').forEach(b => { b.innerHTML = mi(IC[b.dataset.soon] || '', t(b.dataset.soon), t('soon')); });
   sndIcons(); applyLite();
   const c = MJChars.get(DB.sel);
@@ -733,6 +734,8 @@ function homeFx() {
 $('#home').addEventListener('pointermove', e => { const r = $('#home').getBoundingClientRect(); HFX.mx = (e.clientX - r.left) / r.width - .5; HFX.my = (e.clientY - r.top) / r.height - .5; $('#home').style.setProperty('--mx', HFX.mx.toFixed(3)); $('#home').style.setProperty('--my', HFX.my.toFixed(3)); });
 // entering the home: the pieces come in one after another
 function homeEnter() { const h = $('#home'); h.classList.remove('enter'); void h.offsetWidth; h.classList.add('enter'); homeFx(); }
+$('#btnLesson').addEventListener('click', () => { SND.pick(); openLessons('l'); });
+$('#btnRules').addEventListener('click', () => { SND.pick(); openLessons('r'); });
 $('#luxMenu').addEventListener('click', e => { if (e.target.closest('[data-soon]')) { SND.pick(); toast(t('soon')); } });
 // settings (the gear at the top right): language, sound, light mode
 function openSettings() {
@@ -1316,13 +1319,16 @@ async function startGame(opt = {}) {
     let k2 = rollSkillKey(); for (let n = 0; n < 20 && MJSkills.parse(k2).id === MJSkills.parse(key).id; n++) k2 = rollSkillKey();
     return seatChar(c, key, sis, k2);
   });
-  const chars = [me, ...others];
+  const LSN = opt.lesson || null;   // (a lesson: fixed seats — the player, and three young sisters at the table)
+  const chars = LSN ? [LSN.pos.skills ? seatChar(MJChars.get('komachi'), MJSkills.key('swap', 0)) : me, ...['rikka', 'haruka', 'nana'].map(id => seatChar(MJChars.get(id), rollSkillKey()))] : [me, ...others];
   chars.concat(chars.map(c => c.partner).filter(Boolean)).forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); if (im.decode) im.decode().catch(() => {}); });   // cut-in art, loaded and decoded in advance
   const ranked = !!opt.ranked, len = ranked ? opt.len : DB.set.len, lv = ranked ? MJRank.botLv(DB.rank.pt) : DB.set.lv, skills = ranked ? true : DB.set.skills;
   UIS = { ranked: ranked ? { len } : null, lv, chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
-  const agents = [auto ? new AutoMe(lv) : new Human(), new SlowBot(lv), new SlowBot(lv), new SlowBot(lv)];
-  G = new MJGame({ agents, chars, rules: { length: len, skills }, ui: onEvent });
+  const agents = LSN ? [new LessonHuman(), new LessonBot(), new LessonBot(), new LessonBot()] : [auto ? new AutoMe(lv) : new Human(), new SlowBot(lv), new SlowBot(lv), new SlowBot(lv)];
+  G = LSN ? new MJLessons.LessonGame({ agents, chars, rules: { length: 'east', skills: !!LSN.pos.skills }, ui: onEvent, seed: [...LSN.id].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0, oya: 0, pos: LSN.pos })
+    : new MJGame({ agents, chars, rules: { length: len, skills }, ui: onEvent });
+  UIS.lesson = LSN ? { ls: LSN, beats: LSN.beats.slice(), n: LSN.beats.length, miss: new Set(), cur: null, until: 0 } : null;
   UIS.game = G;
   TB.setSleeves(chars.map(c => c.color), chars.map(c => c.nail));   // (each seat's sleeve in her sisters' colour)
   $('#gSnd').innerHTML = IC.gear; $('#gExit').innerHTML = IC.exit;
@@ -1332,6 +1338,7 @@ async function startGame(opt = {}) {
   const g0 = G;
   try { await G.run(); } catch (e) { if (e !== 'abort') { console.error(e); toast('Error: ' + e.message, 5000); } }
   if (g0 !== G) return;
+  if (LSN) await lessonDone();
 }
 // a seat's face → that player's stats
 $('#game .hud').addEventListener('click', e => {
@@ -1350,7 +1357,7 @@ function quitGame() { if (window.MJSkillFx) MJSkillFx.stop();
   if (UIS) UIS.abort = true;
   SND.music('title');
   closeStats();
-  $('#dealAsk').hidden = true;
+  $('#dealAsk').hidden = true; lessonGuide(null);
   G = null;
   $('#game').hidden = true; $('#home').hidden = false;
   setTimeout(homeEnter, 0);
@@ -1372,9 +1379,10 @@ async function onEvent(ev, d) {
       TB.hideAll();
       UIS.intel = null; $('#intel').hidden = true;
       refreshTable(); renderBadges(); renderHand(); layoutAll();
-      await roundBanner(g);
+      if (!d.lesson) await roundBanner(g);
       break;
     }
+    case 'lesson-intro': await lessonIntro(); break;
     case 'draw': {
       TB.setInfo({ left: g.liveLeft(), turn: d.seat });
       UIS.drawnBy[d.seat] = d.id;
@@ -2249,6 +2257,165 @@ document.addEventListener('keydown', e => {
     }
   }
 });
+
+// ---------------------------------------------------------------- rules course & lessons (lessons.js, ユーザー 2026-11-18)
+// The guide (小町, an N character) talks from a panel at the top of the table; the player plays the real table. Each beat is a
+// decision (a discard, riichi, tsumo, ron, a call, a skill): a wrong answer is not taken (the hand stays) and is asked again; a
+// right one plays on. Score = the beats answered right at the first try (a hint counts as a miss) — 75 or more passes.
+const GUIDE = 'komachi';
+class LessonBot {
+  async turn(g, s, o) { await sleep(560 * FAST + 60); return { act: 'discard', id: o.drawn ?? g.P[s].hand[g.P[s].hand.length - 1] }; }
+  async react() { return { act: 'pass' }; }
+  async dealSkill() { return false; }
+}
+class LessonHuman extends Human {
+  async dealSkill() { return false; }
+  async turn(g, s, o) {
+    const L = UIS.lesson, b = L && L.beats[0] && L.beats[0].on === 'turn' ? L.beats.shift() : null;
+    if (!b) {   // (no question here: the turn plays itself)
+      await sleep(500);
+      if (o.canTsumo && L && L.ls.end === 'hand') return { act: 'tsumo' };
+      return { act: 'discard', id: o.drawn ?? g.P[s].hand[g.P[s].hand.length - 1] };
+    }
+    return this.ask(b, () => super.turn(g, s, o), g);
+  }
+  async react(g, s, o) {
+    const L = UIS.lesson, b = L && L.beats[0] && L.beats[0].on === 'react' ? L.beats.shift() : null;
+    if (!b) return { act: 'pass' };
+    return this.ask(b, () => super.react(g, s, o), g);
+  }
+  async ask(b, get, g) {
+    const L = UIS.lesson;
+    const wait = L.until - performance.now(); if (wait > 0) await sleep(wait);   // (the last answer's words stay a moment)
+    if (!UIS || UIS.lesson !== L) throw 'abort';
+    L.cur = b; clearHint();
+    lessonGuide({ text: I18N.L(b.say), hint: true, step: L.n - L.beats.length });
+    for (;;) {
+      const a = await get();
+      if (!UIS || UIS.lesson !== L) throw 'abort';
+      if (MJLessons.check(b, a, g, ME)) {
+        SND.ok && SND.ok(); clearHint(); L.cur = null;
+        const good = I18N.L(b.good || '') || '';
+        lessonGuide({ text: good, good: true, step: L.n - L.beats.length });
+        L.until = performance.now() + Math.min(4800, 1600 + good.length * 45);
+        if (!L.beats.length && L.ls.end === 'beats') g.halt = true;
+        return a;
+      }
+      L.miss.add(b); clearHint();
+      lessonGuide({ text: I18N.L(b.bad || '') || t('lsWrong'), bad: true, hint: true, step: L.n - L.beats.length, again: I18N.L(b.say) });
+    }
+  }
+}
+function clearHint() { if (UIS && UIS.lesson) UIS.lesson.hintTy = null; document.querySelectorAll('#hand .tl.lhint').forEach(e => e.classList.remove('lhint')); document.querySelectorAll('#acts .ab.lhint').forEach(e => e.classList.remove('lhint')); }
+function showHint() {
+  const L = UIS && UIS.lesson, b = L && L.cur; if (!b) return;
+  L.miss.add(b); SND.pick();
+  const ok = b.ok || {};
+  if (ok.act) {
+    const role = { tsumo: 'win', ron: 'win', riichi: 'rii', pon: 'pon', chi: 'chi', skill: null }[ok.act];
+    document.querySelectorAll('#acts .ab').forEach(e => { if (e.dataset.role === role) e.classList.add('lhint'); });
+    if (ok.act === 'skill') { const k = $('#skBtn'); if (k) k.classList.add('lhint'); }
+  }
+  if (ok.riichi) document.querySelectorAll('#acts .ab').forEach(e => { if (e.dataset.role === 'rii') e.classList.add('lhint'); });
+  let ty = b.hint ? MJ.parse(b.hint) : MJLessons.hintTypes(b, G, ME);
+  if (!ty.length && !ok.act && UIS.drawn != null) ty = [UIS.drawn >> 2];   // (any tile will do: the one just drawn)
+  L.hintTy = ty; applyHint();
+}
+// (the hand is drawn again often — after a wrong tile, a tap: the lit tiles are lit again each time)
+function applyHint() {
+  const L = UIS && UIS.lesson, ty = L && L.hintTy; if (!ty) return;
+  document.querySelectorAll('#hand .tl[data-id]').forEach(e => { if (ty.includes(+e.dataset.id >> 2)) e.classList.add('lhint'); });
+}
+{ const rh0 = renderHand; renderHand = function (...a) { const r = rh0.apply(this, a); applyHint(); const g = $('#lsGuide'); if (g) placeGuide(g); return r; }; }
+// the guide's panel: o = { text, step, hint, good, bad, next (→ a promise resolved by 次へ) } or null to hide
+function lessonGuide(o) {
+  let el = $('#lsGuide');
+  if (!o) { if (el) el.remove(); return; }
+  const L = UIS && UIS.lesson; if (!L) return;
+  if (!el) { el = document.createElement('div'); el.id = 'lsGuide'; $('#game .hud').appendChild(el); }
+  const c = MJChars.get(GUIDE);
+  el.className = 'ls-guide' + (o.good ? ' good' : '') + (o.bad ? ' bad' : '');
+  el.innerHTML = `<img class="lg-face" src="${charImg(c, 'face')}" alt="">
+    <div class="lg-bub"><div class="lg-top"><b>${esc(I18N.L(c.name))}</b><small>${esc(I18N.L(L.ls.title))}${o.step != null ? ` ・ ${o.step} / ${L.n}` : ''}</small><button class="lg-quit" id="lgQuit">${esc(t('lsQuit'))}</button></div>
+      <p>${esc(o.text)}${o.again ? `<span class="lg-again">${esc(o.again)}</span>` : ''}</p>
+      ${o.hint || o.next ? `<div class="lg-btns">${o.hint ? `<button class="btn" id="lgHint">${esc(t('lsHint'))}</button>` : ''}${o.next ? `<button class="btn gold" id="lgNext">${esc(o.next)}<kbd>Enter</kbd></button>` : ''}</div>` : ''}</div>`;
+  placeGuide(el);
+  const q = $('#lgQuit'); if (q) q.onclick = async () => { SND.pick(); if (await confirmBox(t('exitQ'))) { quitGame(); openLessons(L.ls.cat ? 'l' : 'r', L.ls.cat); } };
+  const h = $('#lgHint'); if (h) h.onclick = showHint;
+}
+// (ユーザー 2026-11-18「最上部は見にくいので可能な限り下側」) just above the player's hand, between the player's portrait (left) and the
+// drawn-tile slot (right — the call / win buttons come up there)
+function placeGuide(el) {
+  const hud = el.offsetParent; if (!hud) return;
+  const H = uiRect(hud), k = hud.offsetWidth / H.width, X = x => (x - H.left) * k, Y = y => (y - H.top) * k;
+  const tiles = [...document.querySelectorAll('#hand .tl[data-id]')], mp = $('#mePanel .mb') || $('#mePanel');
+  const top = tiles.length ? Math.min(...tiles.map(e => uiRect(e).top)) : H.bottom - 120;
+  const l = mp && mp.offsetWidth ? X(uiRect(mp).right) + 14 : 14;
+  const last = tiles.length ? uiRect(tiles[tiles.length - 1]) : null, r = last ? X(last.left) - 14 : hud.offsetWidth - 14;
+  const w = Math.max(300, Math.min(680, r - l));
+  el.style.transform = 'none'; el.style.width = w + 'px';
+  el.style.left = Math.max(8, l + Math.max(0, (r - l - w) / 2)) + 'px';
+  el.style.top = Math.max(8, Y(top) - el.offsetHeight - 12) + 'px';
+}
+function guideWait(text, label, step) {
+  return new Promise(res => {
+    lessonGuide({ text, next: label, step });
+    const go = () => { removeEventListener('keydown', key, true); SND.pick(); res(); };
+    const key = e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); go(); } };
+    addEventListener('keydown', key, true);
+    const b = $('#lgNext'); if (b) b.onclick = go;
+  });
+}
+async function lessonIntro() {
+  const L = UIS && UIS.lesson; if (!L) return;
+  const pages = L.ls.intro || [];
+  for (let i = 0; i < pages.length; i++) { if (!UIS || UIS.lesson !== L) throw 'abort'; await guideWait(I18N.L(pages[i]), i === pages.length - 1 ? t('lsStart') : t('lsNext')); }
+}
+const LS_ALL = () => MJLessons.RULES.concat(MJLessons.LESSONS);
+async function lessonDone() {
+  const L = UIS && UIS.lesson; if (!L) return;
+  const ls = L.ls, n = Math.max(1, L.n), right = n - L.miss.size, score = Math.round(100 * right / n), pass = score >= 75;
+  const rec = DB.lessons = DB.lessons || {}, old = rec[ls.id] || {};
+  rec[ls.id] = { best: Math.max(old.best || 0, score), pass: !!(old.pass || pass) }; save();
+  const list = ls.cat ? MJLessons.LESSONS.filter(x => x.cat === ls.cat) : MJLessons.RULES, i = list.indexOf(ls), next = list[i + 1];
+  await sleep(500);
+  if (!UIS || UIS.lesson !== L) return;
+  lessonGuide(null);
+  const b = modal(`<div class="ls-res ${pass ? 'ok' : ''}"><img class="lr-face" src="${charImg(MJChars.get(GUIDE), 'face')}" alt=""><h3>${esc(pass ? t('lsPass') : t('lsFail'))}</h3>
+    <div class="lr-sc"><b>${score}</b><small>/100</small></div><p class="lr-t">${esc(I18N.L(ls.title))}</p><p class="lr-p">${esc(I18N.L(ls.point))}</p><small class="lr-line">${esc(t('lsPassLine'))}</small>
+    <div class="cbtns"><button class="btn" data-a="list">${esc(t('lsList'))}</button><button class="btn" data-a="again">${esc(t('lsAgain'))}</button>${next ? `<button class="btn gold" data-a="next">${esc(t('lsNextL'))}</button>` : ''}</div></div>`, 'small lsres');
+  b.addEventListener('click', e => { const a = e.target.closest('[data-a]'); if (!a) return; SND.pick(); closeModal();
+    quitGame();
+    if (a.dataset.a === 'again') startGame({ lesson: ls });
+    else if (a.dataset.a === 'next') startGame({ lesson: next });
+    else openLessons(ls.cat ? 'l' : 'r', ls.cat); });
+}
+// the list: ルール (the course, in order) | レッスン (by category). Cards with the position's tiles, the best score, 合格.
+let lsTab = 'r', lsCat = 'eff';
+function openLessons(tab, cat0) {
+  if (tab) lsTab = tab; if (cat0) lsCat = cat0;
+  const rec = DB.lessons || {};
+  const tiles = ls => { const ty = MJ.parse(ls.pos.me).concat(ls.pos.drawn ? MJ.parse(ls.pos.drawn) : []); return ty.slice(0, 14).map(x => typeHTML(x, 'xs')).join(''); };
+  const card = (ls, k) => { const r = rec[ls.id];
+    return `<button class="lsc ${r && r.pass ? 'pass' : ''}" data-id="${ls.id}"><span class="lsc-n">${ls.cat ? '' : 'STEP '}${k + 1}</span><span class="lsc-st">${r ? (r.pass ? '✓ ' : '') + t('lsScore', { n: r.best }) : esc(t('lsNew'))}</span>
+      <b>${esc(I18N.L(ls.title))}</b><small>${esc(I18N.L(ls.point))}</small><span class="lsc-tl">${tiles(ls)}</span><i class="lsc-bar"><i style="width:${r ? r.best : 0}%"></i></i></button>`; };
+  const list = lsTab === 'r' ? MJLessons.RULES : MJLessons.LESSONS.filter(x => x.cat === lsCat);
+  const passN = l => l.filter(x => rec[x.id] && rec[x.id].pass).length;
+  const cat = MJLessons.CATS.find(c => c.id === lsCat);
+  const html = `<header class="ls-h"><div><h2>${esc(t('lsListT'))}</h2><small>${esc(t('lsListD'))}</small></div><button class="x" data-a="close" aria-label="close">✕</button></header>
+    <div class="ls-tabs"><button class="${lsTab === 'r' ? 'on' : ''}" data-tab="r">${esc(t('lsRules'))}<small>${passN(MJLessons.RULES)}/${MJLessons.RULES.length}</small></button><button class="${lsTab === 'l' ? 'on' : ''}" data-tab="l">${esc(t('lsLessons'))}<small>${passN(MJLessons.LESSONS)}/${MJLessons.LESSONS.length}</small></button></div>
+    ${lsTab === 'l' ? `<div class="ls-cats">${MJLessons.CATS.map(c => { const l = MJLessons.LESSONS.filter(x => x.cat === c.id); return `<button class="${c.id === lsCat ? 'on' : ''}" data-cat="${c.id}">${esc(I18N.L(c.name))}<small>${passN(l)}/${l.length}</small></button>`; }).join('')}</div>` : ''}
+    <div class="ls-head"><b>${esc(lsTab === 'r' ? t('lsCourse') : I18N.L(cat.name))}</b><small>${esc(lsTab === 'r' ? t('lsCourseD') : I18N.L(cat.desc))}</small><span>${esc(t('lsPassN', { a: passN(list), b: list.length }))}</span><i class="lsc-bar"><i style="width:${100 * passN(list) / list.length}%"></i></i></div>
+    <div class="ls-grid">${list.map(card).join('')}</div>`;
+  const b = modal(html, 'lessons');
+  b.addEventListener('click', e => {
+    const tb = e.target.closest('[data-tab]'), ct = e.target.closest('[data-cat]'), c = e.target.closest('.lsc'), x = e.target.closest('[data-a=close]');
+    if (tb) { SND.pick(); openLessons(tb.dataset.tab); }
+    else if (ct) { SND.pick(); openLessons('l', ct.dataset.cat); }
+    else if (c) { SND.pick(); const ls = LS_ALL().find(q => q.id === c.dataset.id); closeModal(); startGame({ lesson: ls }); }
+    else if (x) { SND.pick(); closeModal(); }
+  });
+}
 
 // ---------------------------------------------------------------- cloud save (cloud.js, ユーザー 2026-11-18)
 // A card at the top of the play box on the home: not linked → what it is for and 「Google で連携」; linked → the account, when it

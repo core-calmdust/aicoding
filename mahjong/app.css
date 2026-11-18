@@ -2878,3 +2878,84 @@ html.lp .modal.cloudq .cl-pick dl{grid-template-columns:auto 1fr auto 1fr;font-s
 html.lp .modal.cloudq .cl-pick .btn{padding:6px 10px;font-size:13px}
 .modal.cloudq .cl-pick dt{white-space:nowrap}
 .modal.cloudbox .cbtns{flex-wrap:nowrap}.modal.cloudbox .cbtns .btn{white-space:nowrap;min-width:0;padding-left:16px;padding-right:16px}
+/* ---- ルールコース・レッスン（2026-11-18） ---- */
+#game .ls-guide{position:absolute;z-index:40;left:50%;top:max(14px,var(--st,0px));transform:translateX(-62%);width:min(620px,46vw);display:flex;align-items:flex-start;gap:12px;pointer-events:auto;animation:lgIn .35s ease both}
+@keyframes lgIn{from{opacity:0;transform:translate(-62%,-8px)}}
+#game .ls-guide .lg-face{flex:none;width:76px;height:76px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px rgba(232,206,140,.85),0 0 0 5px rgba(10,6,22,.85),0 8px 22px rgba(0,0,0,.5);background:#1d1536}
+#game .ls-guide .lg-bub{position:relative;flex:1;min-width:0;padding:10px 14px 12px;border-radius:14px;background:linear-gradient(180deg,rgba(28,20,54,.95),rgba(12,8,26,.95));border:1px solid rgba(232,206,140,.45);box-shadow:0 10px 28px rgba(0,0,0,.5)}
+#game .ls-guide .lg-bub::before{content:"";position:absolute;left:-8px;top:26px;border:8px solid transparent;border-left:0;border-right-color:rgba(232,206,140,.45)}
+#game .ls-guide .lg-top{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+#game .ls-guide .lg-top b{font-family:var(--serif);font-size:14px;color:var(--gold);letter-spacing:.1em}
+#game .ls-guide .lg-top small{font-size:11.5px;color:rgba(216,205,240,.7);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#game .ls-guide .lg-quit{flex:none;border:0;background:none;color:rgba(216,205,240,.6);font-size:11.5px;cursor:pointer;text-decoration:underline;padding:0}
+#game .ls-guide p{margin:0;font-size:15px;line-height:1.7;color:#f4eefe}
+#game .ls-guide .lg-again{display:block;margin-top:4px;font-size:13px;color:rgba(230,220,247,.75)}
+#game .ls-guide.good .lg-bub{border-color:rgba(120,230,170,.7)}
+#game .ls-guide.good p::before{content:"✓ ";color:#7de6a8;font-weight:900}
+#game .ls-guide.bad .lg-bub{border-color:rgba(255,150,140,.7);animation:lgShake .35s}
+@keyframes lgShake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+#game .ls-guide .lg-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+#game .ls-guide .lg-btns .btn{padding:6px 16px;font-size:13px;white-space:nowrap}
+#game .ls-guide .lg-btns kbd{margin-left:6px;font-size:10px;opacity:.7}
+html.lp #game .ls-guide{width:min(480px,52vw);gap:8px;top:6px}
+html.lp #game .ls-guide .lg-face{width:48px;height:48px}
+html.lp #game .ls-guide .lg-bub{padding:6px 10px 8px}
+html.lp #game .ls-guide p{font-size:12.5px;line-height:1.55}
+html.lp #game .ls-guide .lg-btns{margin-top:4px}
+html.lp #game .ls-guide .lg-btns .btn{padding:4px 12px;font-size:12px}
+#hand .tl.lhint{box-shadow:0 0 0 3px #5fe0a0,0 0 18px rgba(95,224,160,.9)!important;transform:translateY(-8px)}
+#acts .ab.lhint,#game .skb.lhint{box-shadow:0 0 0 3px #5fe0a0,0 0 18px rgba(95,224,160,.9)!important}
+/* 一覧 */
+.modal.lessons .mbox{width:min(960px,94vw);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;gap:12px;box-sizing:border-box;overflow:hidden}
+.modal.lessons .ls-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.modal.lessons .ls-h h2{margin:0;font-family:var(--serif);letter-spacing:.12em;color:#f6ecd0;font-size:22px}
+.modal.lessons .ls-h small{color:rgba(216,205,240,.7);font-size:12.5px}
+.modal.lessons .ls-h .x{border:0;background:none;color:#d9cdee;font-size:18px;cursor:pointer}
+.modal.lessons .ls-tabs,.modal.lessons .ls-cats{display:flex;gap:6px;flex-wrap:wrap}
+.modal.lessons .ls-tabs button,.modal.lessons .ls-cats button{display:inline-flex;align-items:baseline;gap:6px;padding:8px 16px;border-radius:99px;border:1px solid rgba(232,206,140,.3);background:rgba(255,255,255,.03);color:#d9cdee;cursor:pointer;font-family:var(--serif);font-weight:700;letter-spacing:.08em;font-size:14px}
+.modal.lessons .ls-cats button{padding:6px 12px;font-size:13px}
+.modal.lessons .ls-tabs button small,.modal.lessons .ls-cats button small{font-family:inherit;font-size:11px;opacity:.7}
+.modal.lessons .ls-tabs button.on,.modal.lessons .ls-cats button.on{background:linear-gradient(180deg,rgba(232,206,140,.28),rgba(232,206,140,.1));border-color:var(--gold);color:#fff}
+.modal.lessons .ls-head{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:10px 14px;border-radius:12px;background:rgba(20,14,40,.7);border:1px solid rgba(232,206,140,.2)}
+.modal.lessons .ls-head b{font-family:var(--serif);color:var(--gold);letter-spacing:.1em}
+.modal.lessons .ls-head small{grid-column:1;color:rgba(216,205,240,.75);font-size:12.5px}
+.modal.lessons .ls-head span{grid-column:2;grid-row:1 / 3;align-self:center;font-size:13px;color:#e6dcf7;white-space:nowrap}
+.modal.lessons .ls-head .lsc-bar{grid-column:1 / -1;margin-top:4px}
+.lsc-bar{display:block;height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}
+.lsc-bar>i{display:block;height:100%;background:linear-gradient(90deg,#b8954a,#f2d793)}
+.modal.lessons .ls-grid{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-right:4px;align-content:start}
+.modal.lessons .lsc{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;align-items:baseline;text-align:left;padding:12px 14px;border-radius:12px;border:1px solid rgba(232,206,140,.22);background:rgba(16,11,32,.75);color:#eee6ff;cursor:pointer}
+.modal.lessons .lsc:hover{border-color:var(--gold);background:rgba(36,26,66,.8)}
+.modal.lessons .lsc.pass{border-color:rgba(120,230,170,.45)}
+.modal.lessons .lsc-n{font-family:var(--serif);font-size:12px;color:var(--gold);letter-spacing:.1em}
+.modal.lessons .lsc-st{justify-self:end;font-size:11.5px;color:rgba(216,205,240,.7)}
+.modal.lessons .lsc.pass .lsc-st{color:#7de6a8}
+.modal.lessons .lsc>b{grid-column:1 / -1;font-family:var(--serif);font-size:16px;letter-spacing:.06em}
+.modal.lessons .lsc>small{grid-column:1 / -1;font-size:12.5px;color:rgba(216,205,240,.75)}
+.modal.lessons .lsc-tl{grid-column:1 / -1;display:flex;gap:1px;margin-top:6px;overflow:hidden}
+.modal.lessons .lsc-tl .tl{--tw:22px;width:22px;flex:none}
+.modal.lessons .lsc .lsc-bar{grid-column:1 / -1;margin-top:6px}
+@media (max-width:640px){.modal.lessons .ls-grid{grid-template-columns:1fr}}
+html.lp .modal.lessons .mbox{gap:6px;padding:10px 14px}
+html.lp .modal.lessons .ls-h h2{font-size:16px}
+html.lp .modal.lessons .ls-head{padding:6px 10px}
+html.lp .modal.lessons .lsc{padding:8px 10px}
+html.lp .modal.lessons .lsc-tl .tl{--tw:16px;width:16px}
+/* 結果 */
+.modal.lsres .ls-res{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.modal.lsres .lr-face{width:84px;height:84px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px rgba(232,206,140,.85)}
+.modal.lsres h3{margin:4px 0 0;font-family:var(--serif);font-size:22px;letter-spacing:.12em;color:#f6ecd0}
+.modal.lsres .ls-res.ok h3{color:#9ff0c2}
+.modal.lsres .lr-sc b{font-size:44px;font-weight:900;color:var(--gold)}
+.modal.lsres .lr-sc small{font-size:14px;color:rgba(216,205,240,.7);margin-left:4px}
+.modal.lsres .lr-t{margin:0;font-family:var(--serif);font-size:16px;color:#f4eefe}
+.modal.lsres .lr-p{margin:0;font-size:13px;color:rgba(230,220,247,.8)}
+.modal.lsres .lr-line{font-size:11px;color:rgba(216,205,240,.55)}
+.modal.lsres .cbtns{margin-top:8px}
+.modal.lsres .cbtns .btn{white-space:nowrap}
+#game .ls-guide{transform:none;animation:lgIn2 .35s ease both}
+@keyframes lgIn2{from{opacity:0;translate:0 -8px}}
+.modal.lsres .cbtns{flex-wrap:wrap;justify-content:center;gap:8px}
+.modal.lsres .cbtns .btn{padding:9px 18px;letter-spacing:.06em}
+html.lp .modal.lessons .ls-h small,html.lp .modal.lessons .ls-head small{display:none}
+html.lp .modal.lessons .ls-tabs button{padding:5px 12px;font-size:12.5px}
