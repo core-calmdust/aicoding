@@ -15,6 +15,7 @@ URL: https://core-calmdust.github.io/aicoding/go/ （2026-10-22 main に公開�
 
 ## AI（engine.c → engine_simd.wasm / engine.wasm、Web Worker engine.js）
 - ネット：vibego（Sander Land、CC BY 4.0、KataGo kata1-b18 から蒸留）。軽量 s4 b7c106（net_light 2.5MB）・強い s9 b10c128（net_strong 4.8MB）、fp16。常に19×19入力で小盤は左上。こちらで学習したものではない。
+- （2026-11-19）PRO の「評価ネット」に「最強」（vibego s11 b12c152nbt-pat、`net_xl.bin.gz` 7.8MB、計算は強いの約1.7倍）を追加。スレッドの版は3つのネットを共有メモリに持つ（`net_sel` 0/1/2）。PRO の「計算：GPU」と組み合わせるのを勧める（help に記載）。
 - 探索：KataGo式 PUCT（cpuct log、FPU、目数効用、LCB）。Winograd 畳み込み＋SIMD。
 - wasm スタック 4MB・stack-first（深いシチョウ読みでのスタック溢れ対策）。トラップ後はインスタンスを作り直し、AIは再試行（パス扱いにしない）。
 - **32段階（2026-10-28 付け直し、2026-11-08 に28〜32を追加）**：18級〜1級（1〜18）・初段〜八段（19〜26）・アマ最強（27）・最強 I〜V（28〜32、時間で考える）。他ゲームの「15級〜五段・20段階」とは異なる（実測に合わせた）。表示は app.js と atlas/games/go.js の RANKS 表。

@@ -298,7 +298,7 @@ typedef struct {
   float *ocw; BN obn; float *oow, oob;
 } NetT;
 #ifdef MT
-static NetT NETS[2]; static int netSel;   /* the threads' build: both nets in the shared memory, netSel = the one in use (net_sel) */
+static NetT NETS[3]; static int netSel;   /* the threads' build: both nets in the shared memory, netSel = the one in use (net_sel) */
 #define net NETS[netSel]
 #else
 static NetT net;
@@ -1374,7 +1374,7 @@ EXPORT void mt_close(void) { mt_close_wait(); }   /* the lead after its search: 
 EXPORT int mt_visits(void) { return rootN ? __atomic_load_n(&rootN->N, __ATOMIC_SEQ_CST) : 0; }   /* every thread's visits */
 EXPORT int mt_full(void) { return oomFlag; }
 EXPORT void mt_vloss(float v) { VLOSS = v; }
-EXPORT void net_sel(int i) { netSel = i ? 1 : 0; }   /* the lead, between searches: the net to load / use */
+EXPORT void net_sel(int i) { netSel = i < 0 ? 0 : i > 2 ? 2 : i; }   /* (0 light, 1 strong, 2 xl: 2026-11-19) */   /* the lead, between searches: the net to load / use */
 /* a helper: join every tree the lead opens during the job and grow it, until the lead closes it or the page stops the
  * threads. Returns the playouts done. */
 static TLS int inTree;
