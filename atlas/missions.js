@@ -16,47 +16,47 @@
   'use strict';
   const TX = {
     ja: { nf: 'ミッション達成！', title: 'ミッション', st: 'スターター', mo: 'マンスリー', lg: 'レジェンダリー', claim: '受け取る', got: '受取済み', line: '1列そろうと +{n}', card: '全部で +{n}', bingo: 'ビンゴ！', left: 'あと{n}日', month: '{m}月のミッション', all: 'ぜんぶ達成で +{n}', done: 'クリア！', name: 'ホシマル',
-      hi: ['クリアしてコインをもらおう！', 'クリアしたマスをタップしてね。', 'ビンゴを狙ってみよう！'], moHi: '毎月かわるミッション。月末までにいくつクリアできるかな？', lgHi: 'とっておきの大挑戦。達成したら大きなごほうび！',
-      page: '「{p}」を開く', news: 'NEWを見る', rules: '3D盤でルールを見る', historia: 'ヒストリアを見る', play: '{g}で遊ぶ', playN: '{g}で{n}回遊ぶ', games: '{n}種類のゲームで遊ぶ', pz: 'パズルを{n}問解く', ls: 'レッスンに{n}回合格する', win: '3D盤でAIに{n}回勝つ', login: '{n}日ログインする', pull: 'ガチャを{n}回引く', beat: '{g}でLv.{n}以上に勝つ', beatS: '{g} Lv.{n}に勝つ', beatN: '{n}種類のゲームでLv.{l}以上のAIに勝つ', ach: '実績を{n}個達成する', top: 'どれかのゲームで最強のAIに勝つ', allG: 'すべてのゲームで遊ぶ' },
+      hi: ['クリアしてコインをもらおう！', 'クリアしたマスをタップしてね。', 'ビンゴを狙ってみよう！'], moHi: '毎月かわるミッション。月末までにいくつクリアできるかな？', lgHi: 'とっておきの大挑戦。達成したら大きなごほうび！', lgHi2: 'レジェンダリー{n}開幕！ 手ごわさもごほうびも特大！', lgGo: '開幕！',
+      page: '「{p}」を開く', news: 'NEWを見る', rules: '3D盤でルールを見る', historia: 'ヒストリアを見る', play: '{g}で遊ぶ', playN: '{g}で{n}回遊ぶ', games: '{n}種類のゲームで遊ぶ', pz: 'パズルを{n}問解く', ls: 'レッスンに{n}回合格する', win: '3D盤でAIに{n}回勝つ', login: '{n}日ログインする', pull: 'ガチャを{n}回引く', beat: '{g}でLv.{n}以上に勝つ', beatS: '{g} Lv.{n}に勝つ', beatN: '{n}種類のゲームでLv.{l}以上のAIに勝つ', ach: '実績を{n}個達成する', top: 'どれかのゲームで最強のAIに勝つ', allG: 'すべてのゲームで遊ぶ', allA: 'すべてのゲームで実績を{n}個ずつ達成する', topN: '{n}種類のゲームで最強のAIに勝つ' },
     en: { nf: 'Mission complete!', title: 'Missions', st: 'Starter', mo: 'Monthly', lg: 'Legendary', claim: 'Claim', got: 'Claimed', line: 'Each line +{n}', card: 'Full card +{n}', bingo: 'Bingo!', left: '{n} days left', month: 'Missions for {M}', all: 'All done +{n}', done: 'Clear!', name: 'Hoshimaru',
-      hi: ['Clear missions, earn coins!', 'Claim whatever you have finished.', 'Go for a bingo!'], moHi: 'New missions every month. How many can you clear by the end?', lgHi: 'The big challenges — with big rewards!',
-      page: 'Open "{p}"', news: 'Look at NEW (updates)', rules: 'Watch the rules on the 3D board', historia: 'Open a Historia', play: 'Play {g}', playN: 'Play {g} {n} times', games: 'Play {n} different games', pz: 'Solve {n} puzzles', ls: 'Pass {n} lessons', win: 'Beat the AI {n} times on the 3D board', login: 'Log in on {n} days', pull: 'Pull the gacha {n} times', beat: 'Beat an AI of Lv.{n}+ in {g}', beatN: 'Beat an AI of Lv.{l}+ in {n} games', ach: 'Earn {n} achievements', top: 'Beat the strongest AI of any game', allG: 'Play every game' },
+      hi: ['Clear missions, earn coins!', 'Claim whatever you have finished.', 'Go for a bingo!'], moHi: 'New missions every month. How many can you clear by the end?', lgHi: 'The big challenges — with big rewards!', lgHi2: 'Legendary {n} begins! Tougher — and richer!', lgGo: 'Begins!',
+      page: 'Open "{p}"', news: 'Look at NEW (updates)', rules: 'Watch the rules on the 3D board', historia: 'Open a Historia', play: 'Play {g}', playN: 'Play {g} {n} times', games: 'Play {n} different games', pz: 'Solve {n} puzzles', ls: 'Pass {n} lessons', win: 'Beat the AI {n} times on the 3D board', login: 'Log in on {n} days', pull: 'Pull the gacha {n} times', beat: 'Beat an AI of Lv.{n}+ in {g}', beatN: 'Beat an AI of Lv.{l}+ in {n} games', ach: 'Earn {n} achievements', top: 'Beat the strongest AI of any game', allG: 'Play every game', allA: 'Earn {n} achievements in every game', topN: 'Beat the strongest AI in {n} games' },
     zh: { nf: '任务完成！', title: '任务', st: '新手', mo: '每月', lg: '传说', claim: '领取', got: '已领取', line: '每连一行 +{n}', card: '全部完成 +{n}', bingo: '宾果！', left: '还剩{n}天', month: '{m}月的任务', all: '全部完成 +{n}', done: '完成！', name: '星丸',
-      hi: ['完成任务赚金币吧！', '完成的部分记得领取哦。', '试着连成一行吧！'], moHi: '每月更换的任务。月底前能完成几个呢？', lgHi: '压轴的大挑战，完成有大奖励！',
-      page: '打开「{p}」', news: '查看NEW（更新信息）', rules: '在3D棋盘上看规则', historia: '查看历史', play: '玩{g}', playN: '玩{g}{n}次', games: '玩{n}种游戏', pz: '解{n}道谜题', ls: '通过{n}次课程', win: '在3D棋盘上赢AI {n}次', login: '登录{n}天', pull: '扭蛋{n}次', beat: '在{g}中战胜Lv.{n}以上的AI', beatN: '在{n}种游戏中战胜Lv.{l}以上的AI', ach: '达成{n}个成就', top: '在任意游戏中战胜最强AI', allG: '玩遍所有游戏' },
+      hi: ['完成任务赚金币吧！', '完成的部分记得领取哦。', '试着连成一行吧！'], moHi: '每月更换的任务。月底前能完成几个呢？', lgHi: '压轴的大挑战，完成有大奖励！', lgHi2: '传说{n}开幕！更难，奖励也更丰厚！', lgGo: '开幕！',
+      page: '打开「{p}」', news: '查看NEW（更新信息）', rules: '在3D棋盘上看规则', historia: '查看历史', play: '玩{g}', playN: '玩{g}{n}次', games: '玩{n}种游戏', pz: '解{n}道谜题', ls: '通过{n}次课程', win: '在3D棋盘上赢AI {n}次', login: '登录{n}天', pull: '扭蛋{n}次', beat: '在{g}中战胜Lv.{n}以上的AI', beatN: '在{n}种游戏中战胜Lv.{l}以上的AI', ach: '达成{n}个成就', top: '在任意游戏中战胜最强AI', allG: '玩遍所有游戏', allA: '在每个游戏中各达成{n}个成就', topN: '在{n}种游戏中战胜最强AI' },
     ko: { nf: '미션 달성!', title: '미션', st: '스타터', mo: '먼슬리', lg: '레전더리', claim: '받기', got: '받음', line: '한 줄마다 +{n}', card: '전부 채우면 +{n}', bingo: '빙고!', left: '{n}일 남음', month: '{m}월 미션', all: '모두 달성 +{n}', done: '클리어!', name: '호시마루',
-      hi: ['미션을 클리어하고 코인을 받자!', '완료한 것부터 받아 가.', '빙고를 노려 보자!'], moHi: '매달 바뀌는 미션이야. 월말까지 몇 개나 클리어할까?', lgHi: '특별한 대도전. 달성하면 큰 보상!',
-      page: '「{p}」 열기', news: 'NEW(업데이트) 보기', rules: '3D 보드에서 규칙 보기', historia: '히스토리아 보기', play: '{g} 플레이', playN: '{g} {n}회 플레이', games: '{n}종류의 게임 플레이', pz: '퍼즐 {n}문제 풀기', ls: '레슨 {n}회 합격', win: '3D 보드에서 AI에게 {n}승', login: '{n}일 로그인', pull: '가챠 {n}회 뽑기', beat: '{g}에서 Lv.{n} 이상 AI 이기기', beatN: '{n}종류 게임에서 Lv.{l} 이상 AI 이기기', ach: '업적 {n}개 달성', top: '아무 게임에서나 최강 AI 이기기', allG: '모든 게임 플레이' },
+      hi: ['미션을 클리어하고 코인을 받자!', '완료한 것부터 받아 가.', '빙고를 노려 보자!'], moHi: '매달 바뀌는 미션이야. 월말까지 몇 개나 클리어할까?', lgHi: '특별한 대도전. 달성하면 큰 보상!', lgHi2: '레전더리 {n} 개막! 더 어렵고, 보상도 더 커!', lgGo: '개막!',
+      page: '「{p}」 열기', news: 'NEW(업데이트) 보기', rules: '3D 보드에서 규칙 보기', historia: '히스토리아 보기', play: '{g} 플레이', playN: '{g} {n}회 플레이', games: '{n}종류의 게임 플레이', pz: '퍼즐 {n}문제 풀기', ls: '레슨 {n}회 합격', win: '3D 보드에서 AI에게 {n}승', login: '{n}일 로그인', pull: '가챠 {n}회 뽑기', beat: '{g}에서 Lv.{n} 이상 AI 이기기', beatN: '{n}종류 게임에서 Lv.{l} 이상 AI 이기기', ach: '업적 {n}개 달성', top: '아무 게임에서나 최강 AI 이기기', allG: '모든 게임 플레이', allA: '모든 게임에서 업적 {n}개씩 달성', topN: '{n}종류 게임에서 최강 AI 이기기' },
     es: { nf: '¡Misión cumplida!', title: 'Misiones', st: 'Inicial', mo: 'Mensual', lg: 'Legendaria', claim: 'Cobrar', got: 'Cobrado', line: 'Cada línea +{n}', card: 'Cartón completo +{n}', bingo: '¡Bingo!', left: 'Quedan {n} días', month: 'Misiones de {M}', all: 'Todas +{n}', done: '¡Hecho!', name: 'Hoshimaru',
-      hi: ['¡Cumple misiones y gana monedas!', 'Cobra lo que ya hayas completado.', '¡Ve a por un bingo!'], moHi: 'Misiones nuevas cada mes. ¿Cuántas completarás?', lgHi: 'Los grandes retos, ¡con grandes premios!',
-      page: 'Abrir «{p}»', news: 'Ver NEW (novedades)', rules: 'Ver las reglas en el tablero 3D', historia: 'Abrir una Historia', play: 'Jugar a {g}', playN: 'Jugar a {g} {n} veces', games: 'Jugar a {n} juegos distintos', pz: 'Resolver {n} problemas', ls: 'Aprobar {n} lecciones', win: 'Ganar a la IA {n} veces en 3D', login: 'Entrar {n} días', pull: 'Tirar del gacha {n} veces', beat: 'Ganar a una IA Nv.{n}+ en {g}', beatN: 'Ganar a una IA Nv.{l}+ en {n} juegos', ach: 'Lograr {n} logros', top: 'Ganar a la IA más fuerte de un juego', allG: 'Jugar a todos los juegos' },
+      hi: ['¡Cumple misiones y gana monedas!', 'Cobra lo que ya hayas completado.', '¡Ve a por un bingo!'], moHi: 'Misiones nuevas cada mes. ¿Cuántas completarás?', lgHi: 'Los grandes retos, ¡con grandes premios!', lgHi2: '¡Empieza Legendaria {n}! Más difícil, ¡y más premios!', lgGo: '¡Empieza!',
+      page: 'Abrir «{p}»', news: 'Ver NEW (novedades)', rules: 'Ver las reglas en el tablero 3D', historia: 'Abrir una Historia', play: 'Jugar a {g}', playN: 'Jugar a {g} {n} veces', games: 'Jugar a {n} juegos distintos', pz: 'Resolver {n} problemas', ls: 'Aprobar {n} lecciones', win: 'Ganar a la IA {n} veces en 3D', login: 'Entrar {n} días', pull: 'Tirar del gacha {n} veces', beat: 'Ganar a una IA Nv.{n}+ en {g}', beatN: 'Ganar a una IA Nv.{l}+ en {n} juegos', ach: 'Lograr {n} logros', top: 'Ganar a la IA más fuerte de un juego', allG: 'Jugar a todos los juegos', allA: 'Lograr {n} logros en cada juego', topN: 'Ganar a la IA más fuerte en {n} juegos' },
     fr: { nf: 'Mission réussie !', title: 'Missions', st: 'Débutant', mo: 'Mensuelles', lg: 'Légendaires', claim: 'Récupérer', got: 'Récupéré', line: 'Chaque ligne +{n}', card: 'Carte complète +{n}', bingo: 'Bingo !', left: 'Encore {n} j', month: 'Missions de {M}', all: 'Tout réussi +{n}', done: 'Réussi !', name: 'Hoshimaru',
-      hi: ['Réussis des missions et gagne des pièces !', 'Récupère ce que tu as déjà fini.', 'Vise le bingo !'], moHi: 'De nouvelles missions chaque mois. Combien en réussiras-tu ?', lgHi: 'Les grands défis, avec de grandes récompenses !',
-      page: 'Ouvrir « {p} »', news: 'Voir NEW (nouveautés)', rules: 'Voir les règles sur le plateau 3D', historia: 'Ouvrir une Historia', play: 'Jouer à {g}', playN: 'Jouer {n} fois à {g}', games: 'Jouer à {n} jeux différents', pz: 'Résoudre {n} problèmes', ls: 'Réussir {n} leçons', win: 'Battre l’IA {n} fois en 3D', login: 'Se connecter {n} jours', pull: 'Tirer {n} fois au gacha', beat: 'Battre une IA Nv.{n}+ à {g}', beatN: 'Battre une IA Nv.{l}+ dans {n} jeux', ach: 'Obtenir {n} succès', top: 'Battre l’IA la plus forte d’un jeu', allG: 'Jouer à tous les jeux' },
+      hi: ['Réussis des missions et gagne des pièces !', 'Récupère ce que tu as déjà fini.', 'Vise le bingo !'], moHi: 'De nouvelles missions chaque mois. Combien en réussiras-tu ?', lgHi: 'Les grands défis, avec de grandes récompenses !', lgHi2: 'Légendaires {n} ! Plus dur, et mieux récompensé !', lgGo: 'C’est parti !',
+      page: 'Ouvrir « {p} »', news: 'Voir NEW (nouveautés)', rules: 'Voir les règles sur le plateau 3D', historia: 'Ouvrir une Historia', play: 'Jouer à {g}', playN: 'Jouer {n} fois à {g}', games: 'Jouer à {n} jeux différents', pz: 'Résoudre {n} problèmes', ls: 'Réussir {n} leçons', win: 'Battre l’IA {n} fois en 3D', login: 'Se connecter {n} jours', pull: 'Tirer {n} fois au gacha', beat: 'Battre une IA Nv.{n}+ à {g}', beatN: 'Battre une IA Nv.{l}+ dans {n} jeux', ach: 'Obtenir {n} succès', top: 'Battre l’IA la plus forte d’un jeu', allG: 'Jouer à tous les jeux', allA: 'Obtenir {n} succès dans chaque jeu', topN: 'Battre l’IA la plus forte dans {n} jeux' },
     pt: { nf: 'Missão cumprida!', title: 'Missões', st: 'Inicial', mo: 'Mensais', lg: 'Lendárias', claim: 'Resgatar', got: 'Resgatado', line: 'Cada linha +{n}', card: 'Cartela cheia +{n}', bingo: 'Bingo!', left: 'Faltam {n} dias', month: 'Missões de {M}', all: 'Todas +{n}', done: 'Feito!', name: 'Hoshimaru',
-      hi: ['Cumpra missões e ganhe moedas!', 'Resgate o que já concluiu.', 'Tente um bingo!'], moHi: 'Missões novas todo mês. Quantas você cumpre?', lgHi: 'Os grandes desafios, com grandes prêmios!',
-      page: 'Abrir «{p}»', news: 'Ver NEW (novidades)', rules: 'Ver as regras no tabuleiro 3D', historia: 'Abrir uma Historia', play: 'Jogar {g}', playN: 'Jogar {g} {n} vezes', games: 'Jogar {n} jogos diferentes', pz: 'Resolver {n} problemas', ls: 'Passar em {n} lições', win: 'Vencer a IA {n} vezes em 3D', login: 'Entrar em {n} dias', pull: 'Girar o gacha {n} vezes', beat: 'Vencer uma IA Nv.{n}+ em {g}', beatN: 'Vencer uma IA Nv.{l}+ em {n} jogos', ach: 'Conquistar {n} conquistas', top: 'Vencer a IA mais forte de um jogo', allG: 'Jogar todos os jogos' },
+      hi: ['Cumpra missões e ganhe moedas!', 'Resgate o que já concluiu.', 'Tente um bingo!'], moHi: 'Missões novas todo mês. Quantas você cumpre?', lgHi: 'Os grandes desafios, com grandes prêmios!', lgHi2: 'Lendárias {n}! Mais difíceis, e com prêmios maiores!', lgGo: 'Começou!',
+      page: 'Abrir «{p}»', news: 'Ver NEW (novidades)', rules: 'Ver as regras no tabuleiro 3D', historia: 'Abrir uma Historia', play: 'Jogar {g}', playN: 'Jogar {g} {n} vezes', games: 'Jogar {n} jogos diferentes', pz: 'Resolver {n} problemas', ls: 'Passar em {n} lições', win: 'Vencer a IA {n} vezes em 3D', login: 'Entrar em {n} dias', pull: 'Girar o gacha {n} vezes', beat: 'Vencer uma IA Nv.{n}+ em {g}', beatN: 'Vencer uma IA Nv.{l}+ em {n} jogos', ach: 'Conquistar {n} conquistas', top: 'Vencer a IA mais forte de um jogo', allG: 'Jogar todos os jogos', allA: 'Conquistar {n} conquistas em cada jogo', topN: 'Vencer a IA mais forte em {n} jogos' },
     de: { nf: 'Mission geschafft!', title: 'Missionen', st: 'Einstieg', mo: 'Monatlich', lg: 'Legendär', claim: 'Abholen', got: 'Abgeholt', line: 'Jede Reihe +{n}', card: 'Ganze Karte +{n}', bingo: 'Bingo!', left: 'Noch {n} Tage', month: 'Missionen im {M}', all: 'Alle geschafft +{n}', done: 'Geschafft!', name: 'Hoshimaru',
-      hi: ['Erfülle Missionen und sammle Münzen!', 'Hol dir ab, was du geschafft hast.', 'Versuch ein Bingo!'], moHi: 'Jeden Monat neue Missionen. Wie viele schaffst du?', lgHi: 'Die großen Herausforderungen – mit großen Belohnungen!',
-      page: '„{p}“ öffnen', news: 'NEW (Neuigkeiten) ansehen', rules: 'Regeln auf dem 3D-Brett ansehen', historia: 'Eine Historia öffnen', play: '{g} spielen', playN: '{g} {n}-mal spielen', games: '{n} verschiedene Spiele spielen', pz: '{n} Aufgaben lösen', ls: '{n} Lektionen bestehen', win: 'Die KI {n}-mal in 3D schlagen', login: 'An {n} Tagen einloggen', pull: '{n}-mal Gacha ziehen', beat: 'Eine KI ab Lv.{n} in {g} schlagen', beatN: 'Eine KI ab Lv.{l} in {n} Spielen schlagen', ach: '{n} Erfolge erreichen', top: 'Die stärkste KI eines Spiels schlagen', allG: 'Jedes Spiel spielen' },
+      hi: ['Erfülle Missionen und sammle Münzen!', 'Hol dir ab, was du geschafft hast.', 'Versuch ein Bingo!'], moHi: 'Jeden Monat neue Missionen. Wie viele schaffst du?', lgHi: 'Die großen Herausforderungen – mit großen Belohnungen!', lgHi2: 'Legendär {n} beginnt! Härter – und lohnender!', lgGo: 'Los geht’s!',
+      page: '„{p}“ öffnen', news: 'NEW (Neuigkeiten) ansehen', rules: 'Regeln auf dem 3D-Brett ansehen', historia: 'Eine Historia öffnen', play: '{g} spielen', playN: '{g} {n}-mal spielen', games: '{n} verschiedene Spiele spielen', pz: '{n} Aufgaben lösen', ls: '{n} Lektionen bestehen', win: 'Die KI {n}-mal in 3D schlagen', login: 'An {n} Tagen einloggen', pull: '{n}-mal Gacha ziehen', beat: 'Eine KI ab Lv.{n} in {g} schlagen', beatN: 'Eine KI ab Lv.{l} in {n} Spielen schlagen', ach: '{n} Erfolge erreichen', top: 'Die stärkste KI eines Spiels schlagen', allG: 'Jedes Spiel spielen', allA: 'In jedem Spiel {n} Erfolge erreichen', topN: 'Die stärkste KI in {n} Spielen schlagen' },
     hi: { nf: 'मिशन पूरा!', title: 'मिशन', st: 'स्टार्टर', mo: 'मासिक', lg: 'लेजेंडरी', claim: 'लें', got: 'लिया', line: 'हर पंक्ति +{n}', card: 'पूरा कार्ड +{n}', bingo: 'बिंगो!', left: '{n} दिन बाकी', month: '{M} के मिशन', all: 'सब पूरे +{n}', done: 'पूरा!', name: 'होशीमारु',
-      hi: ['मिशन पूरे करो और सिक्के पाओ!', 'जो पूरा हुआ, वह ले लो।', 'बिंगो की कोशिश करो!'], moHi: 'हर महीने नए मिशन। कितने पूरे करोगे?', lgHi: 'बड़ी चुनौतियाँ, बड़े इनाम!',
-      page: '“{p}” खोलें', news: 'NEW (अपडेट) देखें', rules: '3D बोर्ड पर नियम देखें', historia: 'हिस्टोरिया खोलें', play: '{g} खेलें', playN: '{g} {n} बार खेलें', games: '{n} अलग खेल खेलें', pz: '{n} पहेलियाँ हल करें', ls: '{n} पाठ पास करें', win: '3D पर AI को {n} बार हराएँ', login: '{n} दिन लॉग इन करें', pull: 'गाचा {n} बार खींचें', beat: '{g} में Lv.{n}+ AI को हराएँ', beatN: '{n} खेलों में Lv.{l}+ AI को हराएँ', ach: '{n} उपलब्धियाँ पाएँ', top: 'किसी खेल का सबसे मज़बूत AI हराएँ', allG: 'हर खेल खेलें' },
+      hi: ['मिशन पूरे करो और सिक्के पाओ!', 'जो पूरा हुआ, वह ले लो।', 'बिंगो की कोशिश करो!'], moHi: 'हर महीने नए मिशन। कितने पूरे करोगे?', lgHi: 'बड़ी चुनौतियाँ, बड़े इनाम!', lgHi2: 'लेजेंडरी {n} शुरू! ज़्यादा कठिन, इनाम भी बड़े!', lgGo: 'शुरू!',
+      page: '“{p}” खोलें', news: 'NEW (अपडेट) देखें', rules: '3D बोर्ड पर नियम देखें', historia: 'हिस्टोरिया खोलें', play: '{g} खेलें', playN: '{g} {n} बार खेलें', games: '{n} अलग खेल खेलें', pz: '{n} पहेलियाँ हल करें', ls: '{n} पाठ पास करें', win: '3D पर AI को {n} बार हराएँ', login: '{n} दिन लॉग इन करें', pull: 'गाचा {n} बार खींचें', beat: '{g} में Lv.{n}+ AI को हराएँ', beatN: '{n} खेलों में Lv.{l}+ AI को हराएँ', ach: '{n} उपलब्धियाँ पाएँ', top: 'किसी खेल का सबसे मज़बूत AI हराएँ', allG: 'हर खेल खेलें', allA: 'हर खेल में {n} उपलब्धियाँ पाएँ', topN: '{n} खेलों का सबसे मज़बूत AI हराएँ' },
     ar: { nf: 'اكتملت المهمة!', title: 'المهام', st: 'المبتدئ', mo: 'الشهرية', lg: 'الأسطورية', claim: 'استلم', got: 'تم الاستلام', line: 'كل صف +{n}', card: 'البطاقة كاملة +{n}', bingo: 'بينغو!', left: 'باقي {n} يوم', month: 'مهام {M}', all: 'الكل +{n}', done: 'تم!', name: 'هوشيمارو',
-      hi: ['أنجز المهام واربح العملات!', 'استلم ما أنجزته.', 'جرّب البينغو!'], moHi: 'مهام جديدة كل شهر. كم ستنجز؟', lgHi: 'التحديات الكبرى بجوائز كبرى!',
-      page: 'افتح «{p}»', news: 'شاهد NEW (التحديثات)', rules: 'شاهد القواعد على اللوحة ثلاثية الأبعاد', historia: 'افتح هيستوريا', play: 'العب {g}', playN: 'العب {g} {n} مرات', games: 'العب {n} ألعاب مختلفة', pz: 'حل {n} ألغاز', ls: 'انجح في {n} دروس', win: 'اهزم الذكاء الاصطناعي {n} مرات', login: 'سجّل الدخول {n} أيام', pull: 'اسحب الغاتشا {n} مرات', beat: 'اهزم ذكاءً اصطناعيًا Lv.{n}+ في {g}', beatN: 'اهزم ذكاءً اصطناعيًا Lv.{l}+ في {n} ألعاب', ach: 'احصل على {n} إنجازًا', top: 'اهزم أقوى ذكاء اصطناعي في أي لعبة', allG: 'العب كل الألعاب' },
+      hi: ['أنجز المهام واربح العملات!', 'استلم ما أنجزته.', 'جرّب البينغو!'], moHi: 'مهام جديدة كل شهر. كم ستنجز؟', lgHi: 'التحديات الكبرى بجوائز كبرى!', lgHi2: 'بدأت الأسطورية {n}! أصعب، والجوائز أكبر!', lgGo: 'بدأت!',
+      page: 'افتح «{p}»', news: 'شاهد NEW (التحديثات)', rules: 'شاهد القواعد على اللوحة ثلاثية الأبعاد', historia: 'افتح هيستوريا', play: 'العب {g}', playN: 'العب {g} {n} مرات', games: 'العب {n} ألعاب مختلفة', pz: 'حل {n} ألغاز', ls: 'انجح في {n} دروس', win: 'اهزم الذكاء الاصطناعي {n} مرات', login: 'سجّل الدخول {n} أيام', pull: 'اسحب الغاتشا {n} مرات', beat: 'اهزم ذكاءً اصطناعيًا Lv.{n}+ في {g}', beatN: 'اهزم ذكاءً اصطناعيًا Lv.{l}+ في {n} ألعاب', ach: 'احصل على {n} إنجازًا', top: 'اهزم أقوى ذكاء اصطناعي في أي لعبة', allG: 'العب كل الألعاب', allA: 'احصل على {n} إنجازات في كل لعبة', topN: 'اهزم أقوى ذكاء اصطناعي في {n} ألعاب' },
     ru: { nf: 'Миссия выполнена!', title: 'Миссии', st: 'Старт', mo: 'Месяц', lg: 'Легенды', claim: 'Забрать', got: 'Получено', line: 'Каждый ряд +{n}', card: 'Вся карточка +{n}', bingo: 'Бинго!', left: 'Осталось {n} дн.', month: 'Миссии: {M}', all: 'Все выполнены +{n}', done: 'Готово!', name: 'Хосимару',
-      hi: ['Выполняй миссии и получай монеты!', 'Забирай награды за выполненное.', 'Попробуй собрать бинго!'], moHi: 'Каждый месяц новые миссии. Сколько успеешь?', lgHi: 'Большие испытания — большие награды!',
-      page: 'Открыть «{p}»', news: 'Посмотреть NEW (новости)', rules: 'Посмотреть правила на 3D-доске', historia: 'Открыть Историю', play: 'Сыграть в {g}', playN: 'Сыграть в {g} {n} раз', games: 'Сыграть в {n} разных игр', pz: 'Решить {n} задач', ls: 'Сдать {n} уроков', win: 'Победить ИИ {n} раз в 3D', login: 'Заходить {n} дней', pull: 'Крутить гачу {n} раз', beat: 'Победить ИИ ур. {n}+ в {g}', beatN: 'Победить ИИ ур. {l}+ в {n} играх', ach: 'Получить {n} достижений', top: 'Победить сильнейший ИИ в любой игре', allG: 'Сыграть во все игры' },
+      hi: ['Выполняй миссии и получай монеты!', 'Забирай награды за выполненное.', 'Попробуй собрать бинго!'], moHi: 'Каждый месяц новые миссии. Сколько успеешь?', lgHi: 'Большие испытания — большие награды!', lgHi2: 'Легенды {n}! Сложнее — и награды больше!', lgGo: 'Начало!',
+      page: 'Открыть «{p}»', news: 'Посмотреть NEW (новости)', rules: 'Посмотреть правила на 3D-доске', historia: 'Открыть Историю', play: 'Сыграть в {g}', playN: 'Сыграть в {g} {n} раз', games: 'Сыграть в {n} разных игр', pz: 'Решить {n} задач', ls: 'Сдать {n} уроков', win: 'Победить ИИ {n} раз в 3D', login: 'Заходить {n} дней', pull: 'Крутить гачу {n} раз', beat: 'Победить ИИ ур. {n}+ в {g}', beatN: 'Победить ИИ ур. {l}+ в {n} играх', ach: 'Получить {n} достижений', top: 'Победить сильнейший ИИ в любой игре', allG: 'Сыграть во все игры', allA: 'Получить по {n} наград в каждой игре', topN: 'Победить сильнейший ИИ в {n} играх' },
     'zh-TW': { nf: '任務完成！', title: '任務', st: '新手', mo: '每月', lg: '傳說', claim: '領取', got: '已領取', line: '每連一行 +{n}', card: '全部完成 +{n}', bingo: '賓果！', left: '還剩{n}天', month: '{m}月的任務', all: '全部完成 +{n}', done: '完成！', name: '星丸',
-      hi: ['完成任務賺金幣吧！', '完成的部分記得領取喔。', '試著連成一行吧！'], moHi: '每月更換的任務。月底前能完成幾個呢？', lgHi: '壓軸的大挑戰，完成有大獎勵！',
-      page: '打開「{p}」', news: '查看NEW（更新資訊）', rules: '在3D棋盤上看規則', historia: '查看歷史', play: '玩{g}', playN: '玩{g}{n}次', games: '玩{n}種遊戲', pz: '解{n}道謎題', ls: '通過{n}次課程', win: '在3D棋盤上贏AI {n}次', login: '登入{n}天', pull: '轉蛋{n}次', beat: '在{g}中戰勝Lv.{n}以上的AI', beatN: '在{n}種遊戲中戰勝Lv.{l}以上的AI', ach: '達成{n}個成就', top: '在任一遊戲中戰勝最強AI', allG: '玩遍所有遊戲' },
+      hi: ['完成任務賺金幣吧！', '完成的部分記得領取喔。', '試著連成一行吧！'], moHi: '每月更換的任務。月底前能完成幾個呢？', lgHi: '壓軸的大挑戰，完成有大獎勵！', lgHi2: '傳說{n}開幕！更難，獎勵也更豐厚！', lgGo: '開幕！',
+      page: '打開「{p}」', news: '查看NEW（更新資訊）', rules: '在3D棋盤上看規則', historia: '查看歷史', play: '玩{g}', playN: '玩{g}{n}次', games: '玩{n}種遊戲', pz: '解{n}道謎題', ls: '通過{n}次課程', win: '在3D棋盤上贏AI {n}次', login: '登入{n}天', pull: '轉蛋{n}次', beat: '在{g}中戰勝Lv.{n}以上的AI', beatN: '在{n}種遊戲中戰勝Lv.{l}以上的AI', ach: '達成{n}個成就', top: '在任一遊戲中戰勝最強AI', allG: '玩遍所有遊戲', allA: '在每個遊戲中各達成{n}個成就', topN: '在{n}種遊戲中戰勝最強AI' },
     id: { nf: 'Misi selesai!', title: 'Misi', st: 'Pemula', mo: 'Bulanan', lg: 'Legendaris', claim: 'Ambil', got: 'Diambil', line: 'Tiap baris +{n}', card: 'Kartu penuh +{n}', bingo: 'Bingo!', left: '{n} hari lagi', month: 'Misi {M}', all: 'Semua +{n}', done: 'Selesai!', name: 'Hoshimaru',
-      hi: ['Selesaikan misi dan dapatkan koin!', 'Ambil hadiah yang sudah selesai.', 'Coba dapatkan bingo!'], moHi: 'Misi baru tiap bulan. Berapa yang bisa kamu selesaikan?', lgHi: 'Tantangan besar dengan hadiah besar!',
-      page: 'Buka “{p}”', news: 'Lihat NEW (pembaruan)', rules: 'Lihat aturan di papan 3D', historia: 'Buka Historia', play: 'Main {g}', playN: 'Main {g} {n} kali', games: 'Main {n} game berbeda', pz: 'Selesaikan {n} teka-teki', ls: 'Lulus {n} pelajaran', win: 'Kalahkan AI {n} kali di 3D', login: 'Masuk {n} hari', pull: 'Tarik gacha {n} kali', beat: 'Kalahkan AI Lv.{n}+ di {g}', beatN: 'Kalahkan AI Lv.{l}+ di {n} game', ach: 'Raih {n} pencapaian', top: 'Kalahkan AI terkuat di game mana pun', allG: 'Main semua game' },
+      hi: ['Selesaikan misi dan dapatkan koin!', 'Ambil hadiah yang sudah selesai.', 'Coba dapatkan bingo!'], moHi: 'Misi baru tiap bulan. Berapa yang bisa kamu selesaikan?', lgHi: 'Tantangan besar dengan hadiah besar!', lgHi2: 'Legendaris {n} dimulai! Lebih sulit, hadiah lebih besar!', lgGo: 'Dimulai!',
+      page: 'Buka “{p}”', news: 'Lihat NEW (pembaruan)', rules: 'Lihat aturan di papan 3D', historia: 'Buka Historia', play: 'Main {g}', playN: 'Main {g} {n} kali', games: 'Main {n} game berbeda', pz: 'Selesaikan {n} teka-teki', ls: 'Lulus {n} pelajaran', win: 'Kalahkan AI {n} kali di 3D', login: 'Masuk {n} hari', pull: 'Tarik gacha {n} kali', beat: 'Kalahkan AI Lv.{n}+ di {g}', beatN: 'Kalahkan AI Lv.{l}+ di {n} game', ach: 'Raih {n} pencapaian', top: 'Kalahkan AI terkuat di game mana pun', allG: 'Main semua game', allA: 'Raih {n} pencapaian di setiap game', topN: 'Kalahkan AI terkuat di {n} game' },
     tr: { nf: 'Görev tamam!', title: 'Görevler', st: 'Başlangıç', mo: 'Aylık', lg: 'Efsanevi', claim: 'Al', got: 'Alındı', line: 'Her sıra +{n}', card: 'Tüm kart +{n}', bingo: 'Tombala!', left: '{n} gün kaldı', month: '{M} görevleri', all: 'Hepsi +{n}', done: 'Tamam!', name: 'Hoshimaru',
-      hi: ['Görevleri tamamla, jeton kazan!', 'Bitirdiklerini al.', 'Tombala yapmayı dene!'], moHi: 'Her ay yeni görevler. Kaçını bitireceksin?', lgHi: 'Büyük meydan okumalar, büyük ödüller!',
-      page: '“{p}” aç', news: 'NEW’e (yenilikler) bak', rules: 'Kuralları 3D tahtada izle', historia: 'Bir Historia aç', play: '{g} oyna', playN: '{g} {n} kez oyna', games: '{n} farklı oyun oyna', pz: '{n} bulmaca çöz', ls: '{n} dersi geç', win: '3D’de YZ’yi {n} kez yen', login: '{n} gün giriş yap', pull: 'Gacha’yı {n} kez çek', beat: '{g} oyununda Sv.{n}+ YZ’yi yen', beatN: '{n} oyunda Sv.{l}+ YZ’yi yen', ach: '{n} başarım kazan', top: 'Herhangi bir oyunun en güçlü YZ’sini yen', allG: 'Her oyunu oyna' },
+      hi: ['Görevleri tamamla, jeton kazan!', 'Bitirdiklerini al.', 'Tombala yapmayı dene!'], moHi: 'Her ay yeni görevler. Kaçını bitireceksin?', lgHi: 'Büyük meydan okumalar, büyük ödüller!', lgHi2: 'Efsanevi {n} başladı! Daha zor, ödüller daha büyük!', lgGo: 'Başladı!',
+      page: '“{p}” aç', news: 'NEW’e (yenilikler) bak', rules: 'Kuralları 3D tahtada izle', historia: 'Bir Historia aç', play: '{g} oyna', playN: '{g} {n} kez oyna', games: '{n} farklı oyun oyna', pz: '{n} bulmaca çöz', ls: '{n} dersi geç', win: '3D’de YZ’yi {n} kez yen', login: '{n} gün giriş yap', pull: 'Gacha’yı {n} kez çek', beat: '{g} oyununda Sv.{n}+ YZ’yi yen', beatN: '{n} oyunda Sv.{l}+ YZ’yi yen', ach: '{n} başarım kazan', top: 'Herhangi bir oyunun en güçlü YZ’sini yen', allG: 'Her oyunu oyna', allA: 'Her oyunda {n} başarım kazan', topN: '{n} oyunda en güçlü YZ’yi yen' },
   };
   const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : '');
   let C = null;
@@ -76,7 +76,8 @@
       pz: ids.reduce((a, id) => a + ((P[id] && P[id].pz) || 0), 0),
       ls: ids.reduce((a, id) => a + ((P[id] && P[id].ls) || 0), 0),
       wins: ids.reduce((a, id) => a + p3(id).w, 0),
-      login: (W.login && W.login.total) || 0, pulls: W.pulls || 0, ach: ACH.filter(a => a.done).length,
+      login: (W.login && W.login.total) || 0, pulls: W.pulls || 0, ach: ACH.filter(a => a.done).length, ACH,
+      pzAll: C.games.reduce((a, g) => a + ((g.total && g.total.pz) || 0), 0), lsAll: C.games.reduce((a, g) => a + ((g.total && g.total.ls) || 0), 0),
       pages: (W.ms && W.ms.pg) || {},
     };
   }
@@ -132,20 +133,43 @@
     L.push(Object.assign(mk(`m-${k}-all`, fill(x.all, { n: MONTH_ALL }), L.filter(m => M.c[m.id]).length, L.length, MONTH_ALL, '⭐'), { all: true }));
     return L;
   }
-  function legend(S) {
-    const x = X(), top = S.ids.some(id => { const n = C.levels(id); return n && S.p3(id).best >= n; });
-    return [
-      mk('l-all', x.allG, S.ids.filter(S.touched).length, S.ids.length, 3000, '🌏'),
-      mk('l-boss10', fill(x.beatN, { n: 10, l: 7 }), S.ids.filter(id => S.p3(id).best >= 7).length, 10, 2000, '👑'),
-      mk('l-top', x.top, top ? 1 : 0, 1, 3000, '🐉'),
-      mk('l-ach', fill(x.ach, { n: 100 }), S.ach, 100, 1500, '🏅'),
-      mk('l-pz', fill(x.pz, { n: 500 }), S.pz, 500, 2000, '🧩'),
-      mk('l-ls', fill(x.ls, { n: 50 }), S.ls, 50, 2000, '🎓'),
-      mk('l-win', fill(x.win, { n: 100 }), S.wins, 100, 2000, '🏆'),
-      mk('l-login', fill(x.login, { n: 30 }), S.login, 30, 1500, '📅'),
-      mk('l-pull', fill(x.pull, { n: 100 }), S.pulls, 100, 1500, '🎰'),
-    ];
+  // レジェンダリー 1, 2, 3 … (2026-11-18 ユーザー：コンプしたら次のレジェンダリーへ). When every mission of a stage has been claimed, the
+  // next stage opens with the same missions made harder (and paying more). Stage 1 keeps its old ids (l-all …); stage k ≥ 2 uses
+  // l<k>-all …. A target that can no longer grow (every game, every achievement, every puzzle …) drops out of the later stages.
+  const lgPay = (c, k) => Math.round(c * (1 + .5 * (k - 1)) / 100) * 100;
+  function legendSet(S, k) {
+    const x = X(), id0 = k === 1 ? 'l-' : 'l' + k + '-', L = [];
+    let meta = {}; try { meta = (JSON.parse(localStorage.getItem('atlas-ach-meta') || '{}') || {}).l3 || {}; } catch (e) {}
+    const lvR = id => meta[id] || (window.AtlasNPC && AtlasNPC.CEL && AtlasNPC.CEL[id]) || C.levels(id) || 0;   // (the top level that counts for the awards: reversi's 天上 levels are a benchmark)
+    const lvd = S.ids.filter(id => lvR(id) > 0), push = (key, tx, have, need, coins, ic) => L.push(mk(id0 + key, tx, have, need, lgPay(coins, k), ic));
+    // 1 · every game  (stage 1: play each; then: n achievements in each)
+    if (k === 1) push('all', x.allG, S.ids.filter(S.touched).length, S.ids.length, 3000, '🌏');
+    else {
+      const per = id => S.ACH.filter(a => a.gid === id), cap = Math.min(...S.ids.map(id => per(id).length)), n = k2 => Math.min(3 * (k2 - 1), cap);
+      if (n(k) > (k > 2 ? n(k - 1) : 0)) push('all', fill(x.allA, { n: n(k) }), S.ids.filter(id => per(id).filter(a => a.done).length >= n(k)).length, S.ids.length, 3000, '🌏');
+    }
+    // 2 · beat Lv.l+ in n games  (Lv. rises by 3 a stage up to 20, then the number of games grows)
+    const bl = k2 => Math.min(7 + 3 * (k2 - 1), 20), bn = k2 => { const l = bl(k2), s = Math.max(0, k2 - 1 - Math.ceil((20 - 7) / 3)); const n = 10 + 5 * s, have = lvd.filter(id => lvR(id) >= l).length; return k2 === 1 || have < 10 ? n : Math.min(n, have); };
+    if (k === 1 || bl(k) > bl(k - 1) || bn(k) > bn(k - 1)) push(k === 1 ? 'boss10' : 'boss', fill(x.beatN, { n: bn(k), l: bl(k) }), S.ids.filter(id => S.p3(id).best >= bl(k)).length, bn(k), 2000, '👑');
+    // 3 · the strongest AI  (stage 1: of any game; then: of n games)
+    if (k === 1) { const top = S.ids.some(id => { const n = C.levels(id); return n && S.p3(id).best >= n; }); push('top', x.top, top ? 1 : 0, 1, 3000, '🐉'); }
+    else { const tn = k2 => lvd.length < 10 ? 2 * k2 - 1 : Math.min(2 * k2 - 1, lvd.length); if (tn(k) > tn(k - 1)) push('top', fill(x.topN, { n: tn(k) }), lvd.filter(id => S.p3(id).best >= lvR(id)).length, tn(k), 3000, '🐉'); }
+    // 4 … · grow by the stage (capped where everything has been done)
+    const grow = (key, base, step, cap, have, txk, coins, ic) => { const n = k2 => Math.min(base + step * (k2 - 1), cap || 1e9); if (k === 1 || n(k) > n(k - 1)) push(key, fill(x[txk], { n: n(k) }), have, n(k), coins, ic); };
+    grow('ach', 100, 150, S.ACH.length, S.ach, 'ach', 1500, '🏅');
+    grow('pz', 500, 500, S.pzAll, S.pz, 'pz', 2000, '🧩');
+    grow('ls', 50, 50, S.lsAll, S.ls, 'ls', 2000, '🎓');
+    grow('win', 100, 100, 0, S.wins, 'win', 2000, '🏆');
+    grow('login', 30, 30, 0, S.login, 'login', 1500, '📅');
+    grow('pull', 100, 100, 0, S.pulls, 'pull', 1500, '🎰');
+    return L;
   }
+  function legendStage(S) {
+    const M = ms(); let k = 1;
+    while (k < 60) { const L = legendSet(S, k); if (!L.length || !L.every(m => M.c[m.id])) break; k++; }
+    return k;
+  }
+  function legend(S) { const k = legendStage(S), L = legendSet(S, k); L.stage = k; return L; }
   // what can be claimed now
   function state() {
     const S = ST(), M = ms(), st = starter(S), mo = monthly(S), lg = legend(S);
@@ -197,7 +221,7 @@
     <ellipse cx="41" cy="47" rx="3.6" ry="4.6" fill="#3a2a1a"/><ellipse cx="59" cy="47" rx="3.6" ry="4.6" fill="#3a2a1a"/><circle cx="42.2" cy="45.4" r="1.2" fill="#fff"/><circle cx="60.2" cy="45.4" r="1.2" fill="#fff"/>
     <path d="M44 56q6 5 12 0" fill="none" stroke="#3a2a1a" stroke-width="2.6" stroke-linecap="round"/><circle cx="35" cy="55" r="3.4" fill="#ff8a7a" opacity=".6"/><circle cx="65" cy="55" r="3.4" fill="#ff8a7a" opacity=".6"/>
     <path d="M62 14q8-6 14 0q-7 2-8 9z" fill="#ff5d5d"/></svg>`;
-  let btn = null, ov = null, tab = 'st', ord = {};   // ord: the list order fixed while the popup is open (a claimed one stays where it was)
+  let btn = null, ov = null, tab = 'st', ord = {}, lgSeen = 0, lgUp = 0;   // ord: the list order fixed while the popup is open (a claimed one stays where it was)
   function css() {
     if (document.getElementById('msCss')) return;
     const s = document.createElement('style'); s.id = 'msCss';
@@ -253,6 +277,7 @@
 .msbingo{position:absolute;left:50%;top:50%;z-index:5;width:max-content;max-width:calc(100% - 8px);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 26px;border-radius:22px;background:linear-gradient(180deg,#fff7c8,#ffd65a);border:3px solid #fff;box-shadow:0 6px 0 #e9a21a,0 18px 36px -10px rgba(120,70,0,.6);pointer-events:none;animation:msPop 2.2s cubic-bezier(.3,1.5,.5,1) both}
 .msbingo b{font-size:28px;font-weight:900;color:#c4500a;letter-spacing:.04em;text-shadow:0 2px 0 #fff}.msbingo span{display:inline-flex;align-items:center;gap:4px;font-size:16px;font-weight:900;color:#8a5a00}
 .msbingo span i{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#ffc928;font-size:11px;font-style:normal;border:1.5px solid #e09a00}
+.msp{position:relative}
 .msbingo.all{background:linear-gradient(120deg,#fff3c4,#ffd9f0,#d9f0ff)}
 @keyframes msPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(-8deg)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.08) rotate(2deg)}25%,80%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-62%) scale(.96)}}
 .mscard{margin-top:12px;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:16px;background:linear-gradient(90deg,#fff3c4,#ffe9f2);border:2px solid #f6d79a;font-weight:900}
@@ -288,7 +313,9 @@
   function render0() {
     if (!ov) return;
     const x = X(), s = state(), esc = C.esc;
-    const say = tab === 'st' ? x.hi[Math.floor(Date.now() / 60000) % x.hi.length] : tab === 'mo' ? x.moHi : x.lgHi;
+    const lk = s.lg.stage || 1, lgName = x.lg + (lk > 1 ? ' ' + lk : '');
+    if (lgSeen !== lk) { if (lgSeen && lk > lgSeen) { ord.lg = null; lgUp = lk; } lgSeen = lk; }   // (a new stage: its list is sorted afresh)
+    const say = tab === 'st' ? x.hi[Math.floor(Date.now() / 60000) % x.hi.length] : tab === 'mo' ? x.moHi : lk > 1 ? fill(x.lgHi2, { n: lk }) : x.lgHi;
     let body = '';
     if (tab === 'st') {
       const cell = m => { const got = !!s.M.c[m.id], can = s.can(m), pr = !got && !can && m.need > 1 ? `<em>${m.have}/${m.need}</em>` : '';
@@ -305,8 +332,21 @@
     }
     ov.innerHTML = `<div class="msp" role="dialog" aria-modal="true" aria-label="${esc(x.title)}">
       <div class="mshd"><span class="pic">${HOSHI}</span><div class="say"><small>${esc(x.name)}</small><h3>${esc(x.title)}</h3><p class="${tab === 'st' ? 'one' : ''}">${esc(say)}</p></div><button type="button" class="msx" aria-label="close">✕</button></div>
-      <div class="mstabs" role="tablist">${[['st', x.st], ['mo', x.mo], ['lg', x.lg]].map(([k, lb]) => `<button type="button" role="tab" data-t="${k}" class="${k === tab ? 'on' : ''}" aria-selected="${k === tab}">${esc(lb)}${s.n[k] ? `<i>${s.n[k]}</i>` : ''}</button>`).join('')}</div>
+      <div class="mstabs" role="tablist">${[['st', x.st], ['mo', x.mo], ['lg', lgName]].map(([k, lb]) => `<button type="button" role="tab" data-t="${k}" class="${k === tab ? 'on' : ''}" aria-selected="${k === tab}">${esc(lb)}${s.n[k] ? `<i>${s.n[k]}</i>` : ''}</button>`).join('')}</div>
       <div class="msbd">${body}</div></div>`;
+  }
+  // the next レジェンダリー opened (the last mission of a stage was claimed): a banner like the bingo's
+  function playLgUp() {
+    if (!lgUp || !ov || tab !== 'lg') return; const k = lgUp; lgUp = 0;
+    const bd = ov.querySelector('.msp'); if (!bd) return; const x = X();
+    setTimeout(() => {
+      if (!ov || !bd.isConnected) return;
+      const el = document.createElement('div'); el.className = 'msbingo all';
+      el.innerHTML = `<b>🐉 ${C.esc(x.lg + ' ' + k)}</b><span>${C.esc(x.lgGo)}</span>`;
+      bd.appendChild(el);
+      try { C.confetti(120); } catch (e) {}
+      setTimeout(() => el.remove(), 2200);
+    }, 500);
   }
   function open(t2) {
     css(); if (t2) tab = t2;
@@ -315,7 +355,7 @@
       ov.addEventListener('click', e => {
         if (e.target === ov || e.target.closest('.msx')) return close();
         const tb = e.target.closest('[data-t]'); if (tb) { tab = tb.dataset.t; ord = {}; try { C.sfx('tap'); } catch (x) {} const b = tab === 'st' ? bingo() : null; render(); playBingo(b); return; }
-        const c = e.target.closest('[data-c]'); if (c && !c.disabled) { claim(c.dataset.c, +c.dataset.n); const b = tab === 'st' ? bingo() : null; render(); playBingo(b); }
+        const c = e.target.closest('[data-c]'); if (c && !c.disabled) { claim(c.dataset.c, +c.dataset.n); const b = tab === 'st' ? bingo() : null; render(); playBingo(b); playLgUp(); }
       });
       addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('on')) close(); });
     }

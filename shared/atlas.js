@@ -230,8 +230,11 @@
     hex: () => { const pz = J('aicoding-hex-puzzles'); return { pz: cntPos(pz), st: starsOf(pz), ls: cntClear(J('aicoding-hex-lessons')), op: cntClear(J('aicoding-hex-open'), 'pass'), dl: daily('aicoding-hex-daily'), rt: rated('aicoding-hex-rated'), ru: rules('hex') }; },
     fanorona: () => { const pz = J('aicoding-fanorona-puzzles'); return { pz: cntPos(pz), st: starsOf(pz), ls: cntClear(J('aicoding-fanorona-lessons')), op: cntClear(J('aicoding-fanorona-open'), 'pass'), dl: daily('aicoding-fanorona-daily'), rt: rated('aicoding-fanorona-rated'), ru: rules('fanorona') }; },
     alquerque: () => { const pz = J('aicoding-alquerque-puzzles'); return { pz: cntPos(pz), st: starsOf(pz), ls: cntClear(J('aicoding-alquerque-lessons')), dl: daily('aicoding-alquerque-daily'), rt: rated('aicoding-alquerque-rated'), ru: rules('alquerque') }; },
-    shanghai: () => { const d = J('aicoding-shanghai') || {}, cs = Object.values(d.cs || {}); return { pz: cntPos(d.st) + cs.reduce((a, c) => a + cntPos(c.st), 0), st: starsOf(d.st) + cs.reduce((a, c) => a + starsOf(c.st), 0), ru: rules('shanghai') }; },   // (2026-11-14: + the 10 scene courses, cs[<id>])
-    hitblow: () => ({ dl: daily('aicoding-hitblow-daily'), rt: rated('atlas-rated-hitblow'), ru: rules('hitblow') }),
+    shanghai: () => { const d = J('aicoding-shanghai') || {}, cs = Object.values(d.cs || {}), F = d.free || {};   // free: { <layout>[:mode:dN]: { best (secs, once cleared), n (games) } }
+      const fl = new Set(Object.keys(F).filter(k => F[k] && F[k].best !== undefined).map(k => k.split(':')[0])).size, fn = Object.values(F).reduce((a, r) => a + ((r && r.n) || 0), 0);
+      return { pz: cntPos(d.st) + cs.reduce((a, c) => a + cntPos(c.st), 0), st: starsOf(d.st) + cs.reduce((a, c) => a + starsOf(c.st), 0), ru: rules('shanghai'), shl: fl, shn: fn }; },   // (2026-11-14: + the 10 scene courses, cs[<id>])
+    hitblow: () => { const d = J('aicoding-hitblow-pz3d') || {}; let pz = 0, st = 0; for (const k in d) if (k[0] !== '_' && d[k] && typeof d[k] === 'object') for (const i in d[k]) { const v = +d[k][i] || 0; if (v > 0) { pz++; st += v; } }   // (問題集 10 sets × 50, 2026-11-18)
+      return { pz, st, pzMax: 500, dl: daily('aicoding-hitblow-daily'), rt: rated('atlas-rated-hitblow'), ru: rules('hitblow') }; },
     // (2026-11-17 ユーザー：ルールを読んでも学んだ実績が出ない) the 3D-only games had no reader at all: their rules course was never counted
     carrom: () => ({ ru: rules('carrom') }), crokinole: () => ({ ru: rules('crokinole') }), hockey: () => ({ ru: rules('hockey') }), botao: () => ({ ru: rules('botao') }),   // (3D only, 2026-11-16: 今日の一問 EASY / HARD — a day counts when either is solved)
     peg: () => { const pz = J('aicoding-peg-pz'), g = (J('aicoding-peg') || {}).goal || {}, b = Object.values(g);   // goal: { board: { b: fewest left (no hint), pf } } (2026-11-14)
@@ -260,7 +263,8 @@
       const days = Object.keys(dl).filter(ds => played(dl[ds])).sort();
       let best = 0, run = 0, prev = null;
       for (const ds of days) { const p = prev && new Date(Date.parse(prev) + 864e5).toISOString().slice(0, 10); run = p === ds ? run + 1 : 1; best = Math.max(best, run); prev = ds; }
-      return { pz: Object.values(st).filter(v => v > 0).length, st: Object.values(st).reduce((a, v) => a + (v || 0), 0), dl: { days: days.length, streak: prev && daysSince(prev) <= 1 ? run : 0, best }, ru: rules('samegame') || !!(D.tut && D.tut.basic) };
+      const S = D.stats || {};
+      return { pz: Object.values(st).filter(v => v > 0).length, st: Object.values(st).reduce((a, v) => a + (v || 0), 0), dl: { days: days.length, streak: prev && daysSince(prev) <= 1 ? run : 0, best }, ru: rules('samegame') || !!(D.tut && D.tut.basic), sgp: S.perfect || 0, sgg: S.games || 0 };
     },
     jailbreak: () => {
       const D = J('jailbreak-slide-v1') || {}, st = D.st || {}, dl = D.dl || {};   // st: 'c<idx>' / '<mode>.<j>' → stars 1-3; dl: date → { e, m, h: { md > 0 once escaped }, sl: { a: plays } }
@@ -268,22 +272,25 @@
       const days = Object.keys(dl).filter(ds => played(dl[ds])).sort();
       let best = 0, run = 0, prev = null;
       for (const ds of days) { const p = prev && new Date(Date.parse(prev) + 864e5).toISOString().slice(0, 10); run = p === ds ? run + 1 : 1; best = Math.max(best, run); prev = ds; }
-      return { pz: Object.values(st).filter(v => v > 0).length, st: Object.values(st).reduce((a, v) => a + (v || 0), 0), dl: { days: days.length, streak: prev && daysSince(prev) <= 1 ? run : 0, best }, ru: rules('jailbreak') || !!(D.tut && D.tut.basic) };
+      const S = D.stats || {};
+      return { pz: Object.values(st).filter(v => v > 0).length, st: Object.values(st).reduce((a, v) => a + (v || 0), 0), dl: { days: days.length, streak: prev && daysSince(prev) <= 1 ? run : 0, best }, ru: rules('jailbreak') || !!(D.tut && D.tut.basic), jbe: S.esc || 0, jbp: S.perfect || 0 };
     },
     blackjack: () => {   // rounds played (all variants), lessons passed
       const D = J('aicoding-blackjack') || {}, st = D.stats || {};
       const hands = Object.values(st).reduce((a, v) => a + ((v && v.hands) || 0), 0);
-      return { hd: hands, ls: cntClear(J('aicoding-blackjack-lessons'), 'pass'), ru: rules('blackjack') };
+      const sum = f => Object.values(st).reduce((a, v) => a + ((v && f(v)) || 0), 0);
+      return { hd: hands, ls: cntClear(J('aicoding-blackjack-lessons'), 'pass'), ru: rules('blackjack'), bj: sum(v => v.k && v.k.bj), cg: sum(v => v.right) };
     },
     baccarat: () => {   // coups played (all variants), lessons passed
       const D = J('aicoding-baccarat') || {}, st = D.stats || {};
       const hands = Object.values(st).reduce((a, v) => a + ((v && v.hands) || 0), 0);
-      return { hd: hands, ls: cntClear(J('aicoding-baccarat-lessons'), 'pass'), ru: rules('baccarat') };
+      return { hd: hands, ls: cntClear(J('aicoding-baccarat-lessons'), 'pass'), ru: rules('baccarat'), nat: Object.values(st).reduce((a, v) => a + ((v && v.nat) || 0), 0), tie: Object.values(st).reduce((a, v) => a + ((v && v.bets && v.bets.T && v.bets.T.won) || 0), 0) };
     },
     poker: () => {   // hands played (all games), lessons passed
       const D = J('aicoding-poker') || {}, st = D.stats || {};
       const hands = Object.values(st).reduce((a, v) => a + ((v && v.hands) || 0), 0);
-      return { hd: hands, ls: cntClear(J('aicoding-poker-lessons'), 'pass'), ru: rules('poker') };
+      const sum = f => Object.values(st).reduce((a, v) => a + ((v && f(v)) || 0), 0), bd = J('aicoding-poker-badges') || {};
+      return { hd: hands, ls: cntClear(J('aicoding-poker-lessons'), 'pass'), ru: rules('poker'), won: sum(v => v.won), cg: sum(v => v.good), pb: Object.values(bd).filter(b => b && b.n > 0).length };
     },
     solitaire: () => {   // daily deals won (date → { variant: { t, m } }), total wins across variants and difficulties
       const D = J('aicoding-solitaire') || {}, dl = D.daily || {}, st = D.stats || {};
@@ -291,7 +298,9 @@
       let best = 0, run = 0, prev = null;
       for (const ds of days) { const p = prev && new Date(Date.parse(prev) + 864e5).toISOString().slice(0, 10); run = p === ds ? run + 1 : 1; best = Math.max(best, run); prev = ds; }
       const won = Object.values(st).reduce((a, v) => a + Object.values(v || {}).reduce((b, r) => b + ((r && r.w) || 0), 0), 0);
-      return { dl: { days: days.length, streak: prev && daysSince(prev) <= 1 ? run : 0, best }, sw: won, ru: rules('solitaire') };
+      const vw = Object.values(st).filter(v => Object.values(v || {}).some(r => r && r.w > 0)).length;   // game types won at least once
+      const sb = Object.values(st).reduce((a, v) => Math.max(a, ...Object.values(v || {}).map(r => (r && r.best) || 0)), 0);   // best run of wins in a row
+      return { dl: { days: days.length, streak: prev && daysSince(prev) <= 1 ? run : 0, best }, sw: won, vw, sb, ru: rules('solitaire') };
     },
     speedsudoku: () => {
       const D = (J('mainichi-sudoku-v1') || {}).sp || {}, d = D.d || {}, c = Object.fromEntries(Object.entries(D.cc || {}).filter(([k]) => k[0] === 's'));   // course records v2 (sp.cc, keys start with the course id)
@@ -335,9 +344,25 @@
     if (ch) try { localStorage.setItem('atlas-ach-meta', JSON.stringify(m)); } catch (e) {}
     m.art = m.art || 0; return m;
   }
+  // the record page's games (localStorage 'atlas-rec-<id>', shared/record.js — the full games and the portal's 3D table): games played,
+  // wins and the best run of wins against an opponent (two players on one device and the 3D table's solo stages do not count). Only
+  // the last 500 games are kept, so the counts behind the achievements keep their high-water mark in 'atlas-ach-meta'.hw (2026-11-18)
+  const recCache = {};
+  function recStat(id) {
+    let raw = ''; try { raw = localStorage.getItem('atlas-rec-' + id) || ''; } catch (e) {}
+    const c = recCache[id]; if (c && c.raw === raw) return c.v;
+    let a = []; try { a = raw ? JSON.parse(raw) : []; } catch (e) {} if (!Array.isArray(a)) a = [];
+    let n = 0, w = 0, s = 0, run = 0;
+    for (const x of a) {
+      if (!x || x.mode === 'pvp' || (x.via === '3d' && x.mode !== 'online' && !/^(ai|rt):/.test(x.key || ''))) continue;
+      n++; if (x.res === 'w') { w++; run++; if (run > s) s = run; } else run = 0;
+    }
+    const v = { n, w, s }; recCache[id] = { raw, v }; return v;
+  }
   function achievements(P, W) {
     P = P || allProgress(); W = W || load();
-    const A = [], META = achMeta();
+    const A = [], META = achMeta(), HW = META.hw = META.hw || {}; let hwCh = false;
+    const steps = (gid, key, have, list) => list.forEach(([n, tier]) => add(gid, key, n, tier, have, n));   // [[n, tier], …]
     const add = (gid, key, n, tier, have, need) => A.push({ id: (gid || 'all') + ':' + key + (n != null ? ':' + n : ''), gid, key, n, tier, have: Math.min(have, need), need, done: have >= need });
     const ladder = (gid, key, have, steps, all, allKey) => {
       steps.filter(s => !all || s < all).forEach((s, i) => add(gid, key, s, Math.min(i, 2), have, s));
@@ -347,39 +372,75 @@
       const r = P[g.id], id = g.id;
       add(id, 'ru', null, 0, r.ru ? 1 : 0, 1);
       if (id === 'sudoku') {
-        ladder(id, 'sdm', r.sdm, [1, 7, 30, 100]);
+        ladder(id, 'sdm', r.sdm, [1, 7, 30, 100]); add(id, 'sdm', 365, 3, r.sdm, 365);
+        steps(id, 'ps', r.st || 0, [[30, 0], [300, 1], [1000, 2]]);
         ladder(id, 'sdc', r.sdc, [1, 50, 300], 1000, 'sdcAll');
         ladder(id, 'sdv', r.sdv, [1, 50], 300, 'sdvAll');
         ladder(id, 'sdi', r.sdi, [10, 100, 300]);
         return;
       }
-      if (g.total.pz) ladder(id, 'pz', r.pz, [1, 10, 50, 100, 300], g.total.pz, 'pzAll');
+      const pzN = g.total.pz || r.pzMax || 0;
+      if (pzN) ladder(id, 'pz', r.pz || 0, [1, 10, 50, 100, 300], pzN, 'pzAll');
+      if (pzN && r.st != null) {   // ★ won on the puzzles (best of 3 each)
+        [[30, 0], [150, 1], [600, 2], [1500, 2]].filter(([n]) => n < pzN * 3).forEach(([n, tier]) => add(id, 'ps', n, tier, r.st, n));
+        add(id, 'psAll', null, 3, r.st, pzN * 3);
+      }
       if (r.pg) {   // peg solitaire's goals, per board (6 with the pyramid; a game without hints): 3 or fewer left · one left · ◎ perfect
         const q = r.pg; add(id, 'pg3', 1, 0, q.g3, 1); add(id, 'pg3', 6, 1, q.g3, 6); add(id, 'pg1', 1, 1, q.g1, 1); add(id, 'pg1', 6, 2, q.g1, 6); add(id, 'pgpf', 1, 2, q.pf, 1); add(id, 'pgpf', 6, 3, q.pf, 6);
       }
-      if (g.total.ls) { add(id, 'ls1', null, 0, r.ls, 1); add(id, 'lsAll', null, 2, r.ls, g.total.ls); }
+      if (g.total.ls) { add(id, 'ls1', null, 0, r.ls, 1); if (g.total.ls >= 6) add(id, 'lsN', Math.ceil(g.total.ls / 2), 1, r.ls, Math.ceil(g.total.ls / 2)); add(id, 'lsAll', null, 2, r.ls, g.total.ls); }
       if (g.tags.includes('openings')) ladder(id, 'op', r.op || 0, [1, 10]);
-      if (g.tags.includes('daily')) { ladder(id, 'dd', r.dl.days, [1, 7, 30]); add(id, 'st', 7, 2, r.dl.best, 7); }
+      if (g.tags.includes('daily')) {
+        ladder(id, 'dd', r.dl.days, [1, 7, 30]); add(id, 'dd', 100, 3, r.dl.days, 100);
+        add(id, 'st', 3, 0, r.dl.best, 3); add(id, 'st', 7, 2, r.dl.best, 7); add(id, 'st', 30, 3, r.dl.best, 30);
+      }
       if (META.l3[id]) {          // played on the portal's 3D table (the level count: the portal's adapter, or remembered from it)
-        ladder(id, 'pw', r.p3.w + (r.p3.sw || 0), [1, 10]);
-        const L = META.l3[id]; [Math.ceil(L / 2), L - 2, L].forEach((lv, i) => add(id, 'pv', lv, i + 1, r.p3.best >= lv ? 1 : 0, 1));
+        steps(id, 'pw', r.p3.w + (r.p3.sw || 0), [[1, 0], [10, 1], [50, 2], [100, 2]]);
+        const L = META.l3[id], lv = [[Math.ceil(L / 4), 0], [Math.ceil(L / 2), 1], [Math.ceil(L * 3 / 4), 2], [L - 2, 2], [L, 3]];
+        lv.filter(([v], i) => v > 0 && !lv.slice(i + 1).some(([u]) => u === v)).forEach(([v, tier]) => add(id, 'pv', v, tier, r.p3.best >= v ? 1 : 0, 1));
       }
       if (g.tags.includes('rated')) {
         const rt = r.rt || { n: 0, w: 0, r: 0, placed: false };
         add(id, 'pl', null, 0, rt.placed ? 1 : 0, 1);
-        ladder(id, 'rw', rt.w, [1, 10, 50]);
+        steps(id, 'rn', rt.n, [[10, 0], [50, 1]]);
+        steps(id, 'rw', rt.w, [[1, 0], [10, 1], [50, 2], [100, 3]]);
+        add(id, 'rr', 1200, 1, rt.r, 1200);
         add(id, 'rr', 1500, 2, rt.r, 1500);
         add(id, 'rr', 1800, 3, rt.r, 1800);
       }
+      if (g.only3d && !META.l3[id] && r.p3.n != null) steps(id, 'pn', r.p3.n, [[10, 0], [50, 1], [200, 2]]);   // solo 3D games (peg, 上海): games played
+      if (g.tags.includes('ai') || (g.tags.includes('card') && id !== 'solitaire')) {   // games against an opponent (the record page): played · won · wins in a row
+        const v = recStat(id), h = HW[id] || (HW[id] = { n: 0, w: 0, s: 0 });
+        ['n', 'w', 's'].forEach(k => { if (v[k] > (h[k] || 0)) { h[k] = v[k]; hwCh = true; } });
+        steps(id, 'gn', h.n, [[10, 0], [50, 1], [200, 2]]);
+        steps(id, 'gw', h.w, [[5, 0], [25, 1], [100, 2], [300, 3]]);
+        steps(id, 'gs', h.s, [[3, 0], [5, 1], [10, 2]]);
+      }
+      if (r.hd != null) steps(id, 'hd', r.hd, [[10, 0], [100, 1], [500, 1], [1000, 2], [3000, 3]]);   // card games: hands dealt
+      if (r.won != null) steps(id, 'pkw', r.won, [[10, 0], [100, 1], [500, 2]]);                       // poker: pots won
+      if (r.pb != null) steps(id, 'pkb', r.pb, [[1, 0], [3, 1], [6, 2], [12, 3]]);                     // poker: its badges (12)
+      if (r.cg != null) steps(id, 'cg', r.cg, [[50, 0], [300, 1], [1000, 2]]);                        // the coach's play (poker · blackjack)
+      if (r.nat != null) steps(id, 'bcn', r.nat, [[10, 0], [100, 1], [500, 2]]);                      // baccarat: naturals
+      if (r.tie != null) steps(id, 'bct', r.tie, [[1, 1], [10, 2]]);                                  //   … a tie bet won
+      if (r.shl != null) { steps(id, 'shl', r.shl, [[3, 1], [10, 2]]); steps(id, 'shn', r.shn, [[10, 0], [50, 1], [200, 2]]); }   // 上海 free play: layouts cleared · games
+      if (r.bj != null) steps(id, 'bjk', r.bj, [[1, 0], [10, 1], [50, 2]]);                           // blackjack: blackjacks
+      if (r.sw != null) steps(id, 'slw', r.sw, [[1, 0], [10, 1], [50, 1], [200, 2], [500, 3]]);       // solitaire: games won
+      if (r.vw != null) steps(id, 'slv', r.vw, [[3, 1], [6, 3]]);                                     //   … game types won
+      if (r.sb != null) steps(id, 'slb', r.sb, [[3, 0], [5, 1], [10, 2]]);                            //   … wins in a row
+      if (r.sgp != null) steps(id, 'sgp', r.sgp, [[1, 0], [10, 1], [50, 2]]);                         // SameGame: clear the whole board
+      if (r.sgg != null) steps(id, 'sgg', r.sgg, [[10, 0], [100, 1], [500, 2]]);
+      if (r.jbe != null) steps(id, 'jbe', r.jbe, [[10, 0], [100, 1], [500, 2]]);                      // Jailbreak: escapes
+      if (r.jbp != null) steps(id, 'jbp', r.jbp, [[10, 1], [100, 2]]);                                //   … in the fewest moves
     });
+    if (hwCh) try { const m = JSON.parse(localStorage.getItem('atlas-ach-meta') || '{}') || {}; m.hw = HW; localStorage.setItem('atlas-ach-meta', JSON.stringify(m)); } catch (e) {}
     const touched = GAMES.filter(g => P[g.id].touched).length;
     ladder(null, 'gg', touched, [1, 3, 5], GAMES.length, 'ggAll');
     const owned = (W.owned || []).length;
     ladder(null, 'gi', owned, [10, 30, 60], META.art, 'giAll');
-    ladder(null, 'gp', W.pulls || 0, [1, 10, 50, 100]);
+    ladder(null, 'gp', W.pulls || 0, [1, 10, 50, 100]); add(null, 'gp', 300, 3, W.pulls || 0, 300);
     [[1, 0], [10, 0], [50, 1], [100, 2], [300, 3]].forEach(([n, tier]) => add(null, 'tk', n, tier, W.talks || 0, n));   // talking with your Atlamo (the profile / dress-up talk, atlas/avtalk.js — 2026-11-15)
     const doneN = A.filter(a => a.done).length;
-    ladder(null, 'ga', doneN, [10, 30, 60, 100]);
+    steps(null, 'ga', doneN, [[10, 0], [30, 1], [60, 2], [100, 2], [200, 2], [400, 3], [700, 3]]);
     return A;
   }
 
@@ -518,7 +579,7 @@
   const doneIds = () => { try { return A.achievements().filter(a => a.done); } catch (e) { return []; } };
   let I18N = window.ATLAS_I18N, loading = null;
   const needText = () => I18N ? Promise.resolve() : (loading || (loading = new Promise(res => {
-    const s = document.createElement('script'); s.src = new URL('../atlas/i18n.js?v=11nn', BASE).href; s.onload = s.onerror = () => { I18N = window.ATLAS_I18N; res(); }; document.head.appendChild(s);
+    const s = document.createElement('script'); s.src = new URL('../atlas/i18n.js?v=20261118ach1', BASE).href; s.onload = s.onerror = () => { I18N = window.ATLAS_I18N; res(); }; document.head.appendChild(s);
   })));
   const lang = () => { const raw = document.documentElement.lang || localStorage.getItem('aicoding-lang') || 'ja', lo = raw.toLowerCase(); const l = /^zh-(tw|hk|mo|hant)/.test(lo) ? 'zh-TW' : lo.slice(0, 2); return A.LANGS && A.LANGS.includes(l) ? l : (l in (I18N || {}) ? l : 'en'); };
   const tr = (k, v) => { const L = I18N || {}, l = lang(); let s = (L[l] && L[l][k]) ?? (L.en && L.en[k]) ?? k; if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; };
