@@ -3102,3 +3102,5 @@ html:not(.lp) #game .ls-guide .lg-again{font-size:max(13px,calc(var(--lgu) * 2.1
 html:not(.lp) #game .ls-guide .lg-btns .btn{font-size:max(13px,calc(var(--lgu) * 1.9))}
 html:not(.lp) #game .ls-guide .lg-bub{padding:max(10px,calc(var(--lgu) * 1.5)) max(14px,calc(var(--lgu) * 2))}
 html.lp #game .ls-guide{bottom:calc(var(--th) * 1.75 + 14px + var(--lgLift,0px))}
+/* (ユーザー 2026-11-19「押し引き：ボックスが長くなってる」) one row of cards does not stretch down to fill the page */
+.lx-cards:not(:has(> :nth-child(4))){grid-auto-rows:auto;align-content:start}
