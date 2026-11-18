@@ -108,8 +108,9 @@ const icon = k => IC[k] || '';
 
 // ---------------------------------------------------------------- sound (WebAudio synth)
 // a volume setting, 0–100 (80 by default; a level saved before as 0–1 of the old scale is carried over: old 1 = 80)
+// (ユーザー 2026-11-18) music defaults to 100 (= 1.25× the old loudness), effects to 80
 function volP(k) { const p = DB.set[k + 'P']; if (p != null) return Math.max(0, Math.min(100, +p));
-  const o = DB.set[k + 'Vol']; return o == null ? 80 : Math.round(Math.max(0, Math.min(1, o)) * 80); }
+  const o = DB.set[k + 'Vol']; return o == null ? (k === 'bg' ? 100 : 80) : Math.round(Math.max(0, Math.min(1, o)) * 80); }
 const SND = (() => {
   let ac = null;
   const ctx = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) ac.resume(); return ac; };
