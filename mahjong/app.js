@@ -570,6 +570,11 @@ function toggleFs() { SND.pick(); const d = document.documentElement;
   else { const r = (d.requestFullscreen || d.webkitRequestFullscreen); if (r) { const p = r.call(d); if (p && p.catch) p.catch(() => {}); } } }
 document.querySelectorAll('.fsb').forEach(b => b.addEventListener('click', toggleFs));
 document.addEventListener('fullscreenchange', fsIcons); document.addEventListener('webkitfullscreenchange', fsIcons);
+// (ユーザー 2026-11-18) Chrome / Edge: in the game's own full screen, Esc comes to the game (skip, cancel …) and a long press of Esc
+// leaves full screen (Keyboard Lock API; elsewhere there is none and Esc leaves full screen as before)
+function escLock() { const kb = navigator.keyboard; if (!kb || !kb.lock) return;
+  try { if (fsEl()) { const p = kb.lock(['Escape']); if (p && p.catch) p.catch(() => {}); } else kb.unlock(); } catch (e) {} }
+document.addEventListener('fullscreenchange', escLock);
 if (!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)) document.querySelectorAll('.fsb').forEach(b => b.hidden = true);   // (iPhone Safari: none)
 fsIcons();
 $('#aaProf').addEventListener('click', () => openStats(null));
