@@ -20,7 +20,15 @@ function bakedCanvas(name) { const im = BAKED[name]; if (!im || !im.complete || 
 // (2026-11-16, ユーザー「PCにも、見た目を変えない軽量化を」) lean now on a desktop too: the picture is on the graphics card, the page's copy
 // of it is only memory. Not with ?nobake (the baking tool reads the drawn pictures back).
 const LEAN = MOB || !/[?&]nobake\b/.test(location.search);
-function lean(t) { if (!LEAN || !t) return t; const prev = t.onUpdate; t.onUpdate = () => { if (prev) prev(); const c = t.image; if (c && c.getContext && c.width > 64) c.width = c.height = 1; t.onUpdate = null; }; return t; }
+// (2026-11-18, ユーザー「スキル演出の後、牌の面・卓が真っ黒になることがある」) when the browser takes the graphics context away (a phone
+// short of memory, mid effect) and gives it back, every texture is sent to the card again from its picture — and a lean texture's
+// picture had been let go (1×1): the tile faces, the cloth and the rails came back black. Each lean texture now keeps how to draw
+// its picture again (regen), and on the context's return (relean) it is redrawn, sent and let go once more.
+const LEANED = [];
+function shrinkAfterUpload(t) { const prev = t.onUpdate; t.onUpdate = () => { if (prev) prev(); const c = t.image; if (c && c.getContext && c.width > 64) c.width = c.height = 1; t.onUpdate = prev || null; }; }
+function lean(t, regen) { if (!LEAN || !t) return t; if (regen) { t.userData.regen = regen; LEANED.push(t); } else return t;   // (nothing to redraw from: keep the picture)
+  shrinkAfterUpload(t); return t; }
+function relean() { for (const t of LEANED) { const c = t.userData.regen && t.userData.regen(); if (!c) continue; t.image = c; t.needsUpdate = true; shrinkAfterUpload(t); } }
 const keepGen = (name, c) => { (root.JANKA_TEXGEN = root.JANKA_TEXGEN || {})[name] = c; };
 // ---- the table's own materials (2026-11-14, ユーザー: a more real automatic table — a quieter felt, real wood with rounded
 // edges, the lift seams of an automatic table, a real score unit) ----
@@ -61,7 +69,7 @@ function weaveTex() {
 // lower) gives the lacquer something to catch on. u runs along the grain and wraps.
 function woodTex() {
   const tex = cv => { const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t; };
-  { const bm = bakedCanvas('wood'), bb = bakedCanvas('woodb'); if (bm && bb) { const map = lean(tex(bm)); map.encoding = THREE.sRGBEncoding; return { map, bump: lean(tex(bb)) }; } }
+  { const bm = bakedCanvas('wood'), bb = bakedCanvas('woodb'); if (bm && bb) { const map = lean(tex(bm), () => bakedCanvas('wood')); map.encoding = THREE.sRGBEncoding; return { map, bump: lean(tex(bb), () => bakedCanvas('woodb')) }; } }
   const Wd = 4096, Hd = 384, N = mkNoise(53);   // (one whole rail along u: nothing repeats along a rail — ユーザー 2026-11-14)
   const c = document.createElement('canvas'); c.width = Wd; c.height = Hd; const g = c.getContext('2d'), im = g.createImageData(Wd, Hd), o = im.data;
   const cb = document.createElement('canvas'); cb.width = Wd; cb.height = Hd; const gb = cb.getContext('2d'), ib = gb.createImageData(Wd, Hd), ob = ib.data;
@@ -544,6 +552,10 @@ class Table3D {
   constructor(host) {
     this.host = host;
     const r = this.renderer = new THREE.WebGLRenderer({ antialias: (window.devicePixelRatio || 1) < 1.5, alpha: true, powerPreference: 'high-performance' });   // (2026-11-14, optimisation: a high-density screen is already sharp — no multisampling on top; and the faster GPU when there are two. 2026-11-15: a phone now draws at 2× (prMax) — sharp enough without it)
+    // the graphics context lost and given back (see lean): the let-go pictures are drawn again, the shadows redone, a frame drawn
+    r.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); this.ctxLost = true; }, false);
+    r.domElement.addEventListener('webglcontextrestored', () => { this.ctxLost = false; relean(); r.shadowMap.needsUpdate = true; this.dirty = true;
+      try { if (this._syncInst) this._syncInst(); r.render(this.scene, this.camera); } catch (e) {} }, false);
     const mobile = matchMedia('(pointer: coarse)').matches;
     this.mobile = mobile;
     r.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5)); this.prMax = mobile ? 1.25 : 1.5; this.dyn = 1;
@@ -622,7 +634,8 @@ class Table3D {
     { const sh = g.createRadialGradient(0, 0, 1.5 * U, 0, 0, 2.6 * U); sh.addColorStop(0, 'rgba(4,8,18,.6)'); sh.addColorStop(.75, 'rgba(4,8,18,.3)'); sh.addColorStop(1, 'rgba(4,8,18,0)'); g.fillStyle = sh; g.fillRect(-2.7 * U, -2.7 * U, 5.4 * U, 5.4 * U); }
     g.setTransform(1, 0, 0, 1, 0, 0);
     keepGen('felt', fc); }
-    const felt = lean(new THREE.CanvasTexture(fc)); felt.encoding = THREE.sRGBEncoding; felt.anisotropy = 8;
+    const feltBaked = !!BAKED.felt && BAKED.felt.complete && BAKED.felt.naturalWidth;
+    const felt = lean(new THREE.CanvasTexture(fc), feltBaked ? () => bakedCanvas('felt') : null); felt.encoding = THREE.sRGBEncoding; felt.anisotropy = 8;
     const table = new THREE.Mesh(new THREE.PlaneGeometry(21.2, 21.2), new THREE.MeshStandardMaterial({ map: felt, roughness: 1, metalness: 0, bumpMap: napTex(), bumpScale: .012 }));
     table.rotation.x = -PI / 2; table.receiveShadow = true; s.add(table);
     // ---- the floor under the table: a dark Chinese carpet (ユーザー 2026-11-14) — an indigo field with scattered roundels and
@@ -780,16 +793,19 @@ class Table3D {
     // cloth and the rails are kept at half, and the page's copies are let go)
     const FW = MJTiles.FW, FH = MJTiles.FH, pad = 8, cw = FW + pad * 2, ch = FH + pad * 2, cols = 8, rows = 5;
     const mk = () => { const c = document.createElement('canvas'); c.width = cols * cw; c.height = rows * ch; return c; };
-    const cv = mk(), cn = MJTiles.sheets() ? mk() : null, g = cv.getContext('2d'), gn = cn && cn.getContext('2d');
-    const cells = {}; let k = 0;
     const put = (gg, src, x, y) => { gg.drawImage(src, x - pad, y - pad, FW + pad * 2, FH + pad * 2); gg.drawImage(src, x, y, FW, FH); };   // (the picture's edge stretched into the padding: no bleeding from the neighbours)
-    for (let t = 0; t < 34; t++) for (const red of t === 4 || t === 13 || t === 22 ? [false, true] : [false]) {
-      const col = k % cols, row = (k / cols) | 0, x = col * cw + pad, y = row * ch + pad;
-      put(g, MJTiles.canvas(t, red), x, y); if (gn) put(gn, MJTiles.normal(t, red), x, y);
-      cells[t + (red ? 'r' : '')] = [col, rows - 1 - row]; k++; }
-    const tex = c => { const t = lean(new THREE.CanvasTexture(c)); t.anisotropy = 8; return t; };
-    const map = tex(cv); map.encoding = THREE.sRGBEncoding;
-    const A = { map, nrm: cn ? tex(cn) : null, cells, sheets: !!cn, cell: new THREE.Vector4(cw / cv.width, ch / cv.height, FW / cv.width, FH / cv.height), pad: new THREE.Vector2(pad / cv.width, pad / cv.height) };
+    const cells = {}, sheets = !!MJTiles.sheets();
+    // draws the faces' atlas (nrm: the normal maps' one instead) — once now, and again if the graphics context is lost (lean)
+    const draw = nrm => { const c = mk(), gg = c.getContext('2d'); let k = 0;
+      for (let t = 0; t < 34; t++) for (const red of t === 4 || t === 13 || t === 22 ? [false, true] : [false]) {
+        const col = k % cols, row = (k / cols) | 0, x = col * cw + pad, y = row * ch + pad;
+        put(gg, nrm ? MJTiles.normal(t, red) : MJTiles.canvas(t, red), x, y);
+        cells[t + (red ? 'r' : '')] = [col, rows - 1 - row]; k++; }
+      return c; };
+    const cv = draw(false), cn = sheets ? draw(true) : null;
+    const tex = (c, nrm) => { const t = lean(new THREE.CanvasTexture(c), () => draw(nrm)); t.anisotropy = 8; return t; };
+    const map = tex(cv, false); map.encoding = THREE.sRGBEncoding;
+    const A = { map, nrm: cn ? tex(cn, true) : null, cells, sheets: !!cn, cell: new THREE.Vector4(cw / cv.width, ch / cv.height, FW / cv.width, FH / cv.height), pad: new THREE.Vector2(pad / cv.width, pad / cv.height) };
     if (this.A && this.I) { const m = this.I.face.material; m.map = A.map; m.normalMap = A.nrm; m.needsUpdate = true; }
     return (this.A = A);
   }
