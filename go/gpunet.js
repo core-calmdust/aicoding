@@ -86,36 +86,39 @@ struct NB { n: u32, pad0: u32, pad1: u32, pad2: u32 };
 @group(0) @binding(2) var<storage, read> w: array<f32>;
 @group(0) @binding(3) var<storage, read_write> outp: array<f32>;
 @group(0) @binding(4) var<uniform> NB_: NB;
-var<workgroup> As: array<f32, 1024>;   // [16 k][64 m]
-var<workgroup> Bs: array<f32, 1024>;   // [16 k][64 n]
+var<workgroup> As: array<vec4<f32>, 256>;   // [16 k][64 m] (four m a vector: one shared read for four)
+var<workgroup> Bs: array<vec4<f32>, 256>;   // [16 k][64 n]
 @compute @workgroup_size(16, 16)
 fn main(@builtin(local_invocation_id) l: vec3<u32>, @builtin(workgroup_id) wg: vec3<u32>) {
   let tid = l.y * 16u + l.x;
   let m0 = wg.y * 64u; let n0 = wg.x * 64u;
-  let kk = P_.k * P_.k; let K = P_.cin * kk; let N = NB_.n * 361u; let r = i32(P_.k / 2u);
+  let kk = P_.k * P_.k; let K = P_.cin * kk; let N = NB_.n * 361u;
   var acc: array<vec4<f32>, 4>;
   for (var i = 0u; i < 4u; i++) { acc[i] = vec4<f32>(0.0); }
+  // this thread loads the same column (weights: output channel am; inputs: position bn) at rows kq = tid / 64 + 4 q of each
+  // 16-row step: its position's batch / row / column are worked out once (the loop used to divide for every element)
+  let col = tid % 64u; let row0 = tid / 64u;
+  let gm = m0 + col; let mOK = gm < P_.cout; let wBase = gm * K;
+  let gn = n0 + col; let nOK = gn < N;
+  let nb_ = gn / 361u; let np_ = gn % 361u; let ny = i32(np_ / 19u); let nx = i32(np_ % 19u);
+  let inBase = nb_ * P_.inC * 361u;
   for (var k0 = 0u; k0 < K; k0 += 16u) {
     for (var q = 0u; q < 4u; q++) {
-      let e = tid + q * 256u;
-      // A: weights [m][k] → As[k][m]
-      let ak = e / 64u; let am = e % 64u; let gm = m0 + am; let gk = k0 + ak;
-      var av = 0.0; if (gm < P_.cout && gk < K) { av = w[gm * K + gk]; }
-      As[ak * 64u + am] = av;
-      // B: the inputs under each (ci, tap) for each position (zero off the board)
-      let bk = e / 64u; let bn = e % 64u; let gn = n0 + bn; let gk2 = k0 + bk;
+      let kr = row0 + q * 4u; let gk = k0 + kr;
+      var av = 0.0; if (mOK && gk < K) { av = w[wBase + gk]; }
+      As[kr * 16u + col / 4u][col % 4u] = av;
       var bv = 0.0;
-      if (gn < N && gk2 < K) {
-        let b = gn / 361u; let p = gn % 361u; let ci = gk2 / kk; let t = gk2 % kk;
-        let yy = i32(p / 19u) + i32(t / P_.k) - r; let xx = i32(p % 19u) + i32(t % P_.k) - r;
-        if (yy >= 0 && yy < 19 && xx >= 0 && xx < 19) { bv = inp[(b * P_.inC + ci) * 361u + u32(yy * 19 + xx)]; }
+      if (nOK && gk < K) {
+        let ci = gk / kk; let t = gk - ci * kk;
+        var yy = ny; var xx = nx;
+        if (kk == 9u) { let ty = t / 3u; yy = ny + i32(ty) - 1; xx = nx + i32(t - ty * 3u) - 1; }
+        if (yy >= 0 && yy < 19 && xx >= 0 && xx < 19) { bv = inp[inBase + ci * 361u + u32(yy * 19 + xx)]; }
       }
-      Bs[bk * 64u + bn] = bv;
+      Bs[kr * 16u + col / 4u][col % 4u] = bv;
     }
     workgroupBarrier();
     for (var k = 0u; k < 16u; k++) {
-      let a = vec4<f32>(As[k * 64u + l.y * 4u], As[k * 64u + l.y * 4u + 1u], As[k * 64u + l.y * 4u + 2u], As[k * 64u + l.y * 4u + 3u]);
-      let bb = vec4<f32>(Bs[k * 64u + l.x * 4u], Bs[k * 64u + l.x * 4u + 1u], Bs[k * 64u + l.x * 4u + 2u], Bs[k * 64u + l.x * 4u + 3u]);
+      let a = As[k * 16u + l.y]; let bb = Bs[k * 16u + l.x];
       acc[0] += a.x * bb; acc[1] += a.y * bb; acc[2] += a.z * bb; acc[3] += a.w * bb;
     }
     workgroupBarrier();
