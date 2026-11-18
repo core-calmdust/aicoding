@@ -513,7 +513,7 @@
     } };
   // fox and geese (atlas/models/foxgeese.js SETS, remade 2026-11-19 from the 2D pieces): 'atlas-foxgeese-pc3' (the first sets' keys → the nearest new one)
   PIECES.foxgeese = { list: ['cute', 'wood', 'bauhaus', 'lux', 'norse', 'delft'], get: () => { let v = ls.get('atlas-foxgeese-pc3'); v = { marble: 'lux', pewter: 'norse', paint: 'bauhaus', bronze: 'lux', clay: 'wood' }[v] || v; return PIECES.foxgeese.list.includes(v) ? v : 'cute'; }, set: k => ls.set('atlas-foxgeese-pc3', k),
-    thumb: k => new URL('img/pc3-foxgeese-' + k + '.webp?v=4', ME).href,
+    thumb: k => new URL('img/pc3-foxgeese-' + k + '.webp?v=5', ME).href,
     names: {
       cute: { ja: "きつね＆がちょう", en: "Fox & goose pals", zh: "狐狸与鹅宝宝", "zh-TW": "狐狸與鵝寶寶", ko: "여우와 거위 친구", es: "Zorro y oca", fr: "Renard et oie", pt: "Raposa e ganso", de: "Fuchs & Gans", ru: "Лис и гусь", tr: "Tilki ve kaz", id: "Rubah & angsa", hi: "लोमड़ी और हंस", ar: "ثعلب وإوزة" },
       wood: { ja: "木の玉", en: "Wooden balls", zh: "木球", "zh-TW": "木球", ko: "나무 구슬", es: "Bolas de madera", fr: "Billes de bois", pt: "Bolas de madeira", de: "Holzkugeln", ru: "Деревянные шары", tr: "Ahşap toplar", id: "Bola kayu", hi: "लकड़ी की गेंदें", ar: "كرات خشبية" },
