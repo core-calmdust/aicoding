@@ -262,7 +262,7 @@ const HOP = 260, LIFT = 380;
 function moveDur(m, pos) {
   if (!animOn() || isPass(m)) return 60;
   if (pos.placing) return 300;
-  return (mRm(m) >= 0 ? LIFT * 0.6 : 0) + (mFrom(m) === mTo(m) ? 0 : hopsOf(pos, m) * HOP + 120);
+  return (mRm(m) >= 0 ? LIFT * 0.6 : 0) + (hopsOf(pos, m) < 1 ? 0 : hopsOf(pos, m) * HOP + 120);   // (a ring of jumps can end where it began: 2026-11-18 fix)
 }
 // a captured stone (or the stone lifted off in the opening) pops up and fades out
 function liftOff(el, delay) {
@@ -282,7 +282,7 @@ function animateMove(m, before) {
   }
   const d0 = rm >= 0 ? LIFT * 0.6 : 0;
   if (rm >= 0) { const c = pcEls.get(rm); if (c) { pcEls.delete(rm); c.style.zIndex = 5; liftOff(c, 0); sTake(60); } }
-  if (f === tt) return true;
+  if (E.path(m).length < 2) return true;   // (not f === tt: a ring of jumps can end on the point it began — the hops must still play)
   const el = pcEls.get(f);
   if (!el) return false;
   const fx = E.effect(before, m), path = fx.path, caps = fx.takes;
@@ -382,7 +382,7 @@ function renderFx() {
   if (m >= 0 && !isPass(m) && !sel) {
     const before = posAt(cur - 1).pos, fx = E.effect(before, m), path = fx.path || [fx.to];
     if (path.length > 1) fxDiv('sqfx lastf', path[0]);
-    if (mFrom(m) !== mTo(m) || fx.place) fxDiv('sqfx last', mTo(m));
+    if (path.length > 1 || fx.place) fxDiv('sqfx last', mTo(m));
     if (settings.last) { for (let k = 1; k < path.length - 1; k++) fxDiv('sqfx trail', path[k]); for (const q of E.captured(before, m)) fxDiv('mark took', q); }
   }
   if (st.over && st.winner) for (const [i, el] of pcEls) if ((pos.at(i) <= 2 ? P1 : P2) !== st.winner) el.classList.add('dim');
@@ -2111,7 +2111,7 @@ function rvJudge(i) {
 // 振り返り解説 (latrunculi terms): a counter enclosed / missed, a counter left where it can be enclosed, a rescue missed
 const crName = (pos, x) => '<bdi>' + mvIn(pos, x) + '</bdi>';
 const crHits = (pos, x) => { const fx = E.effect(pos, x); return fx.takes.length + fx.blocks.length; };
-const crThreat = pos => pos.moves().some(x => mFrom(x) !== mTo(x) && crHits(pos, x) > 0);   // the side to move can enclose something
+const crThreat = pos => pos.moves().some(x => E.path(x).length > 1 && crHits(pos, x) > 0);   // the side to move can enclose something
 function crExplain(i, j) {   // { kind, txt } for move i (played from position i)
   const pos = posAt(i).pos, m = j.m, b = j.best;
   if (pos.moves().length === 1) return { kind: '', txt: t('cr.forced') };
