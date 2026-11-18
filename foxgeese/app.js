@@ -966,9 +966,9 @@ document.addEventListener('keydown', e => {
 // settings know the new default (older saves, which only held the old default, move to the meadow once).
 const BD_KEYS = ['meadow', 'oak', 'bauhaus', 'lux', 'norse', 'delft'], PC_KEYS = ['cute', 'wood', 'bauhaus', 'lux', 'norse', 'delft'];
 // where the board's point is in each piece picture (0.5 = the middle: seen from above; the figures seen from the side stand on a plinth)
-const ANCHOR = { wood: .8, lux: .8 };
+const ANCHOR = { lux: .8 };   // (wood: front-facing carved faces again since v3, 2026-11-18)
 const BD_OLD = { slate: 'norse', linen: 'delft', night: 'lux', paper: 'bauhaus' }, PC_OLD = { marble: 'lux', pewter: 'norse', paint: 'bauhaus' };
-const ART = (k, v) => `img/2d/${k}.webp?v=${v || 2}`;
+const ART = (k, v) => `img/2d/${k}.webp?v=${v || 3}`;
 // [frame colour behind the mini boards]
 const BD_PAL = { meadow: ['#e2c79c'], oak: ['#4a2e18'], bauhaus: ['#262628'], lux: ['#1a0f08'], norse: ['#5c5850'], delft: ['#2a1d14'] };
 function designApply() {

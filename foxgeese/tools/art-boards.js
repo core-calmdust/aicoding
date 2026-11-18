@@ -385,7 +385,7 @@ vec3 POST(vec2 p, vec3 c, Mat m, vec3 n){
         ${PTS.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${U * .15}" fill="#d0d0d0" filter="url(#b8)"/>`).join('')}
         <circle cx="${c6 + 10}" cy="${c1}" r="200" fill="#b0b0b0" filter="url(#b30)"/><circle cx="${c1}" cy="${c1}" r="190" fill="#9a9a9a" filter="url(#b30)"/><ellipse cx="${c1 + 10}" cy="${c1 + 34}" rx="80" ry="50" fill="#303030" filter="url(#b8)"/>
         <path d="M${c1 - 200},${c6 - 40}C${c1 - 190},${c6 - 150} ${c1 + 170},${c6 - 140} ${c1 + 190},${c6 + 60}C${c1 + 160},${c6 + 170} ${c1 - 170},${c6 + 160} ${c1 - 200},${c6 - 40}Z" fill="#505050" filter="url(#b8)"/>
-        ${[[-70, -30, 1.25], [90, -90, 1], [100, 60, .9]].map(([x, y, s]) => `<circle cx="${c6 + x}" cy="${c6 + y}" r="${70 * s}" fill="#bdbdbd" filter="url(#b8)"/>`).join('')}`,
+        <rect x="${c6 - 150}" y="${c6 - 150}" width="250" height="210" rx="16" fill="#a8a8a8" filter="url(#b8)"/><rect x="${c6 + 140}" y="${c6 - 60}" width="56" height="130" rx="14" fill="#8a8a8a" filter="url(#b8)"/>`,
         `<filter id="b8"><feGaussianBlur stdDeviation="8"/></filter><filter id="b30"><feGaussianBlur stdDeviation="30"/></filter>`);
     }
     return svgWrap(`<rect width="2048" height="2048" fill="#93cb63"/>
