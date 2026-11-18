@@ -82,8 +82,8 @@ html.atlas-skin.atlas-fox:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) 
   let root = null, U = null, Y = 0, built = '';
   const P3 = new Map();   // square → { g, k, inc }
   let tok = 0;            // a full re-sync cancels running animations
-  const lookNow = () => T3.BOARDS && T3.BOARDS.foxgeese ? T3.BOARDS.foxgeese.get() : 'marble';
-  const setNow = () => T3.PIECES && T3.PIECES.foxgeese ? T3.PIECES.foxgeese.get() : 'glass';
+  const lookNow = () => T3.BOARDS && T3.BOARDS.foxgeese ? T3.BOARDS.foxgeese.get() : 'meadow';
+  const setNow = () => T3.PIECES && T3.PIECES.foxgeese ? T3.PIECES.foxgeese.get() : 'cute';
   function build() {
     const key = lookNow() + '|' + setNow();
     if (key === built && root) return false;

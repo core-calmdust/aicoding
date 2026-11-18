@@ -116,7 +116,7 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
   - 駒 `cute` きつね＆がちょう（既定）・`wood` 木の駒（2026-11-18 v4、ユーザー：もう少しアブストラクトに：磨いた桜材の狐（耳2つと顎の3点だけの形、目は切り込み）、白木のドームのガチョウ（くるみ材の目と、突き出たくるみ材のくちばし。v5：平らな三角は笑った口に見えたため））・`bauhaus` カラーブロック・`lux` 金と大理石（**横向き・面取りのローポリ彫刻**：金の狐（ルビーの目）と白大理石のガチョウ（金のくちばし）、オニキスと金の台座）・`norse` 骨と琥珀（骨のドームに彫りの輪1本。琥珀の狐は耳と細い顎だけの抽象形）・`delft` 染付。
   - **横向きの像（lux）**：絵の上から80%（app.js の `ANCHOR`）が盤の点＝台座の中心。CSS で大きさと位置（狐 1.14 マス・ガチョウ .92 マス）、行が下の駒ほど手前（`--zr`＝行、placeAt が入れる）。ミニ盤・駒の見本も ANCHOR で置く。
   - 新しい既定は `settings.dv = 2`。dv のない保存（旧既定のまま）は一度だけ meadow / cute に切り替える。旧キーの読み替え：盤 slate→norse・linen→delft・night→lux・paper→bauhaus、駒 marble→lux・pewter→norse・paint→bauhaus。
-  - 3D 盤（atlas/models/foxgeese.js）は**旧来の** `img/bd-*.webp`・`fr-*.webp` を使い続ける（3D は後日作り直し）。
+  - 3D（atlas/models/foxgeese.js）は 2026-11-19 にこの6テーマで作り直した（下の「3D」）。旧来の `img/bd-*.webp`・`fr-*.webp`・`pc-*.webp` はもう使っていない。
 - **UI のテーマは盤に合わせる（2026-11-18 v2、`uitheme.js`）**：`html[data-ui=meadow]`（ひだまり牧場）＝明るいパステルの UI（クリームのカード・草色の線・Zen Maru Gothic・オレンジの主ボタン）、`html[data-ui=oak]`（ほかの盤）＝これまでの暗い UI のオリーブ色をオーク材の茶に。ページと共通部品（ヘッダー・ダイアログ・コーチ・パズル帳など）の CSS を読み、色を写像した上書きルールを `html[data-ui=…]` の下に生成（後から足されるスタイルも変換）。盤・駒・盤上の印は対象外。手書きの調整は uitheme.js の BASE。head のスクリプトが描画前に data-bd / data-pcs / data-ui を入れ、変換が終わるまで本体を隠す（1.5 秒の保険つき）。大百科スキン（?skin=atlas）では使わない。
 - **残り手数（2026-11-18、2D）**：盤の上のプレート（狐の側）の右端に「⏳ あと◯手」（取り合いなしで狐の勝ちになるまでの各自の手数＝(QUIET_MAX−quiet)/2 の切り上げ、3D の HUD と同じ値）。残り10以下で赤。レッスン・パズルでは出さない。i18n `rsv.quiet`・`rsv.quietT`（14言語）。言語を切り替えたらプレートも描き直す。
 - 盤は自動では回さない（ガチョウがいつも手前）。上のプレート＝狐の取った数、下＝ガチョウの残りと「あと何羽で狐の勝ち」。
@@ -128,7 +128,10 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
 - オンライン：準備中（Firebase は専用プロジェクトを作らず、タフルのプロジェクト tafl-multiplay の節 foxgeese/ に入れる（2026-11-16 統合））。言語：**14言語**（2026-11-16。残り12言語は i18n-fg-more.js・coach-i18n.js・lux.json、`window.FG_LANGS`。全言語でキー182・コーチ118の抜けなし。2026-11-16 の4ルール・手番選択の追加後はキー194・コーチ118、PC／スマホで表示確認）。コーチの要約の札は長い言語で折り返す（index.html の `.ck-sum span`）。
 
 ## 3D（フル機能版 ?skin=atlas、2026-11-16）
-- atlas/models/foxgeese.js：3D盤6種（オーク材＝既定・石盤とチョーク・リネンの刺しゅう・牧場・ナイト・ペーパー、保存キー atlas-foxgeese-look）と3D駒6種（木＝既定・ガラス・ピューター・塗り・青銅と銀・素焼き、atlas-foxgeese-pc3）。狐は耳のある頭、ガチョウはくちばしのある丸い体。atlas/skin/foxgeese.js が2Dページの駒を3Dに写す。
+- atlas/models/foxgeese.js（**2026-11-19 作り直し**。ユーザー：2Dの作り込みを活かして、ただしそっくり同じでなく3Dならではのコンセプトで）。2Dと同じ6テーマ・同じキー（盤 atlas-foxgeese-look：meadow 既定・oak・bauhaus・lux・norse・delft、駒 atlas-foxgeese-pc3：cute 既定・wood・bauhaus・lux・norse・delft。旧キーは近いものに読み替え：slate→norse、linen→delft、night→lux、paper→bauhaus／marble・bronze→lux、pewter→norse、paint→bauhaus、clay→wood）。
+  - 盤：上面は2Dの盤絵（img/2d/bd-*）と枠タイル（fr-*）、凹凸は絵の明るさから。そこに3Dならではの物を足す。ひだまり牧場＝ジオラマ（四隅の絵を消して、穴の開いた切り株とキノコ・リンゴの木・池と睡蓮とガマ・赤い小屋と柵を立体で）。オーク材＝点に丸い穴。アブストラクト＝四隅を立体オブジェ（紺の四分円と黄色の球・黄色の台に黒いアーチ・黒い台に白い棒・紺のくさび）。黒大理石と金＝絵の金色の部分を本物の金属に（metalness/roughness マップ）、33点に金の鋲。北欧の石盤＝側面が荒削りの石、点に丸い穴。デルフト焼き＝1マス1枚のタイルと目地。
+  - 駒（向きは +z＝手前。顔は少し上向き TILT で、ちゃぶ台の低いカメラにもフル機能版の真上寄りの視点にも見える）：きつね＆がちょう＝ころんとしたソフビ人形（2Dの顔を前半分に、耳・とさか）。木の玉＝ろくろ挽き（桜材の狐：胴・頭・耳・鼻先、メープルのガチョウ玉、くるみのくちばしと目）。カラーブロック＝ティールの八面体（黒い台）とオレンジの角丸キューブ。金と真珠＝多面体の金の狐（ルビーの目）と真珠、どちらも金の台座。骨と琥珀＝2Dの狐の輪郭を琥珀のカボションに、ろくろ挽きの骨の円盤。染付＝白磁の置物に藍の帯と葉、天面に2Dの絵。狐は駒ごとに大きめ（FOXK）。
+  - 画像：盤アイコン `atlas/img/boardic-foxgeese-<盤>.webp`（tools/boardicon.html）、盤サムネ `board-foxgeese-<盤>.webp`（boardicon.html ?pcs=…&el=42、640×480）、駒 `pc3-foxgeese-<駒>.webp`（新設 tools/fgpiece.html、640×428 el=25）。
 
 ## 大百科への登録（2026-11-16、コナネと同じ形）
 - **台帳**：`shared/atlas.js` の GAMES（`alpha: true`、released 2026-11-16、tags＝historical・ai・rated・daily・lessons・puzzles・variants・mobile。オンラインは Firebase 未作成なので `online` タグなし）と READ。total＝パズル250・レッスン6。名前は14言語（ja「狐とガチョウ」／en「Fox and Geese」ほか）。
