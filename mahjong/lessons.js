@@ -438,19 +438,40 @@ const DSAY = {
   w6: [L('同じような形がいくつか。河を見て、残りが少ない形を外しましょう！', 'Several similar shapes. Look at the rivers and break the one with fewer left.'),
     L('見えてる牌、何枚ありますか？ 弱い形を崩してみて！', 'How many are visible? Break the weak shape.'),
     L('むずかしめ！ 河をぜんぶ数えて、受け入れがいちばん多く残る1枚を。', 'A harder one! Count every river and keep the most tiles that help.')],
+  y1: [L('テンパイの取り方がいくつか。平和がつくのはどれでしょう？', 'Several ways to tenpai. Which one gives pinfu?'), L('役がつくテンパイを選んで！ 点数が高くなる1枚は？', 'Pick a tenpai with a yaku — which discard scores more?'), L('むずかしめ！ 待ちの広さだけじゃなく、役と点数も見て選んで。', 'A harder one! Look at the yaku and points, not only the width.')],
+  y2: [L('一盃口が残るテンパイ、どれでしょう？', 'Which tenpai keeps the pure double run?'), L('同じ順子2つ、こわさないように1枚捨てて！', 'Don\'t break the twin runs — discard one.'), L('むずかしめ！ 役と点数がいちばん高くなるテンパイは？', 'A harder one! Which tenpai scores the most?')],
+  y3: [L('三色同順がつくテンパイを選んでみて！', 'Pick the tenpai with the mixed triple run!'), L('3種類で同じ数の順子…どれを切ればそろう？', 'The same run in all three suits — which discard gets it?'), L('むずかしめ！ 広い待ちより、三色の高さが勝つかも？', 'A harder one! A wider wait, or the triple run\'s points?')],
+  y4: [L('一気通貫がつくテンパイ、どれでしょう？', 'Which tenpai gives the pure straight?'), L('123・456・789…そろう形を残して1枚捨てて！', '1-2-3, 4-5-6, 7-8-9 — keep it and discard one.'), L('むずかしめ！ 点数がいちばん高くなる1枚を探して。', 'A harder one! Find the discard that scores the most.')],
+  y5: [L('混一色を目指すなら、どれを捨てます？', 'Going for the half flush — which tile goes?'), L('ほかの色の牌、どれから外す？', 'Which off-suit tile do you drop?'), L('むずかしめ！ 待ちの広さと混一色の点数、どっちを取る？', 'A harder one! Width of the wait, or the half flush\'s points?')],
+  y6: [L('七対子のテンパイ！ 単騎待ちはどっちの牌がいい？', 'Seven pairs tenpai! Which tile should you wait on?'), L('残りの枚数を数えて、待つ牌を選んで！', 'Count what\'s left and pick your wait.'), L('むずかしめ！ 河も見て、いちばん出やすい単騎に。', 'A harder one! Check the rivers for the best single wait.')],
+  y7: [L('ポンが2つ。対々和になるテンパイはどれ？', 'Two pons. Which tenpai gives all pungs?'), L('鳴いた手は役が大事！ 役がつく待ちを選んで。', 'An open hand needs a yaku! Pick a wait that has one.'), L('むずかしめ！ 両面に見えても、役がなかったら…？', 'A harder one! A two-sided wait with no yaku is…?')],
+  s1: [L('タンヤオがつくテンパイを選んで、点数アップ！', 'Pick the tenpai with all simples — more points!'), L('1・9・字牌を手放すと…？ 点数の高いテンパイは？', 'Drop the 1s, 9s and honours — which tenpai scores more?'), L('むずかしめ！ 待ちの枚数と点数、両方見てみて。', 'A harder one! Look at both the tiles and the points.')],
+  s2: [L('ドラを使うテンパイを選びましょう！', 'Pick the tenpai that uses the dora!'), L('ドラ表示牌をチェック！ 点数の高い1枚は？', 'Check the dora indicator! Which discard scores more?'), L('むずかしめ！ ドラを残すか、待ちを広げるか…？', 'A harder one! Keep the dora, or widen the wait?')],
+  d1: [L('右の人がリーチ！ 手は遠いので、いちばん安全な牌を！', 'Riichi on your right! Your hand is far off — throw the safest tile.'), L('リーチの人の河をよーく見て、安全な牌は？', 'Read the riichi river — which tile is safe?'), L('むずかしめ！ 安全そうな牌がいくつか…ぜったい安全なのは？', 'A harder one! Several look safe — which one surely is?')],
+  d2: [L('現物がありません…。スジの牌を探して！', 'No genbutsu… look for a suji tile!'), L('リーチの人の河の4・5・6から、スジを考えて！', 'Work out the suji from the 4s, 5s and 6s in the riichi river.'), L('むずかしめ！ 片スジと両スジ、どっちが安全？', 'A harder one! Which suji is really safe?')],
+  d3: [L('現物がない…！ 字牌の見えてる枚数を数えて。', 'No genbutsu! Count how many of each honour are out.'), L('場をよーく見て、安全な字牌は？', 'Look at the table — which honour is safe?'), L('むずかしめ！ いちばん安全な牌を見つけて。', 'A harder one! Find the safest tile.')],
+  d4: [L('4枚見えてる牌があります。壁を使って安全な牌を！', 'Four of one tile are out. Use the wall to find a safe tile!'), L('ノーチャンスの牌、わかりますか？', 'Can you spot the no-chance tile?'), L('むずかしめ！ 自分の手牌も数えて、壁を見つけて。', 'A harder one! Count your own tiles too and find the wall.')],
+  d5: [L('ベタオリです！ まずはいちばん安全な牌から。', 'Folding! Start with the safest tile.'), L('安全そうな牌がいっぱい…順番をつけるなら、どれが先？', 'Lots of safe-looking tiles — which comes first?'), L('むずかしめ！ スジ・字牌・現物…いちばんは？', 'A harder one! Suji, honours, genbutsu — which is best?')],
+  p1: [L('リーチを受けたけど、両面テンパイが取れます！ リーチで勝負！', 'Facing a riichi, but you can be tenpai two-sided. Riichi back!'), L('現物を切って降りる？ それとも…良い待ちで押す？', 'Fold with a safe tile — or push with a good wait?'), L('むずかしめ！ 危ない牌でも、良い待ちのテンパイなら…？', 'A harder one! A dangerous tile, but a good tenpai…?')],
+  p2: [L('リーチに対して、手はまだ遠い…。何を捨てます？', 'Facing a riichi with a slow hand. What do you discard?'), L('手を進めたい気持ちはわかるけど…安全なのは？', 'You want to build your hand, but… what\'s safe?'), L('むずかしめ！ 遠い手のときは、いちばん安全な牌から。', 'A harder one! With a slow hand, the safest tile first.')],
 };
 function attachDrills(D) {
   if (!D) return;
   for (const ls of LESSONS) { const ds = D[ls.id]; if (!ds || !DSAY[ls.id]) continue;
-    ls.drills = ds.map(d => ({ lv: d.lv, end: 'beats', intro: [], pos: Object.assign({ me: d.me, drawn: d.drawn, dora: d.dora }, d.river ? { river: d.river, left: 48 } : {}),
-      beats: [{ on: 'turn', say: DSAY[ls.id][d.lv], ok: d.d ? { d: d.d } : ls.id === 'e6' ? { best: 'shanten' } : BEST, explain: true }] })); }
+    ls.drills = ds.map(d => ({ lv: d.lv, end: 'beats', intro: [],
+      pos: Object.assign({ me: d.me, drawn: d.drawn, dora: d.dora }, d.river ? { river: d.river, left: d.riichi ? 40 : 48 } : {}, d.riichi ? { riichi: d.riichi } : {}, d.melds ? { melds: { 0: d.melds } } : {}),
+      beats: [{ on: 'turn', say: DSAY[ls.id][d.lv], ok: d.riichiAns ? { riichi: true, d: d.d } : d.d ? { d: d.d } : ls.id === 'e6' ? { best: 'shanten' } : BEST, explain: true, notes: d.notes || null }] })); }
 }
 attachDrills(root.MJDrills || (typeof require !== 'undefined' ? (() => { try { return require('./drills.js'); } catch (e) { return null; } })() : null));
 // a tile's name in the guide's words
 const tName = (t, ja) => t >= 27 ? (ja ? '東南西北白發中' : '')[t - 27] || ['East', 'South', 'West', 'North', 'White', 'Green', 'Red'][t - 27]
   : (t % 9 + 1) + (ja ? '萬筒索' : '')[(t / 9) | 0] + (ja ? '' : ' ' + ['characters', 'dots', 'bamboo'][(t / 9) | 0]);
 // the words after an answer (right or wrong), counted on the table as it is (14 tiles in hand)
-function explain(beat, t, g, s, ja) {
+function explain(beat, t, g, s, ja, act) {
+  if (beat.notes) {
+    if (beat.ok && beat.ok.riichi && act !== 'riichi' && P(beat.ok.d || '').includes(t)) return ja ? 'その牌で合ってます！ でも、ここは「リーチ」ボタンで宣言して勝負しましょう♪' : 'Right tile! But declare it with the Riichi button and fight.';
+    const key = t >= 27 ? (t - 26) + 'z' : (t % 9 + 1) + 'mps'[(t / 9) | 0];
+    const n = beat.notes[key] || beat.notes['*']; return n ? n[ja ? 'ja' : 'en'] : ''; }
   const tb = discardTable(g, s), row = tb.find(x => x[0] === t), sh = Math.min(...tb.map(x => x[1]));
   if (!row) return '';
   const p = g.P[s];

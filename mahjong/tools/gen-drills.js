@@ -221,16 +221,17 @@ function evaluateW(theme, h) {
 }
 
 // ---------------------------------------------------------------- choose 2 easy · 2 normal · 2 hard per lesson
-const THEMES = (process.argv.find(a => a.startsWith('--only=')) || '').slice(7).split(',').filter(Boolean).length ? (process.argv.find(a => a.startsWith('--only='))).slice(7).split(',') : ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'w1', 'w2', 'w3', 'w4', 'w5', 'w6'];
+const THEMES = (process.argv.find(a => a.startsWith('--only=')) || '').slice(7).split(',').filter(Boolean).length ? (process.argv.find(a => a.startsWith('--only='))).slice(7).split(',') : ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'w1', 'w2', 'w3', 'w4', 'w5', 'w6', ...require('./drills-more.js').TH];
 const PER = 6, OVER = 3;
+const M = require('./drills-more.js');
 const out = {};
 for (const th of THEMES) {
   const cands = [], sig = new Set();
   for (let n = 0; n < (th === 'e2' ? 300000 : 60000) && cands.length < 400; n++) {
     if (n % 2000 === 0) MJ.clearCache();
-    const W = th[0] === 'w', h = W ? makeW(th) : makeHand(th); if (!h) continue;
-    const key = h.c.join(''); if (sig.has(key)) continue; sig.add(key);
-    const e = W ? evaluateW(th, h) : evaluate(th, h); if (e && e.fun >= 70) cands.push(e);
+    const W = th[0] === 'w', X = M.TH.includes(th), h = X ? M.make(th) : W ? makeW(th) : makeHand(th); if (!h) continue;
+    const key = h.c.join('') + (h.melds ? JSON.stringify(h.melds) : ''); if (sig.has(key)) continue; sig.add(key);
+    const e = X ? M.evaluate(th, h) : W ? evaluateW(th, h) : evaluate(th, h); if (e && e.fun >= 70) cands.push(e);
   }
   if (cands.length < PER * OVER) console.warn(`${th}: only ${cands.length} candidates (need ${PER * OVER})`);
   cands.sort((a, b) => a.D - b.D);
@@ -242,7 +243,7 @@ for (const th of THEMES) {
     for (const e of band) {
       if (got.length >= 2) break;
       // variety: a different answer tile and suit mix from those already chosen
-      if (chosen.concat(got).some(x => (x.B.join() === e.B.join() && (th !== 'e1' || x.U1 === e.U1)) || x.c.join('') === e.c.join(''))) continue;
+      if (chosen.concat(got).some(x => (x.B.join() === e.B.join() && (th !== 'e1' && !M.TH.includes(th) || x.U1 === e.U1)) || x.c.join('') === e.c.join(''))) continue;
       got.push(e);
     }
     for (const e of got) chosen.push(Object.assign(e, { lv }));
@@ -250,13 +251,17 @@ for (const th of THEMES) {
   out[th] = chosen.map(e => {
     // the drawn tile: one that is not an answer (the answer is not always the tile just drawn)
     const ts = []; e.c.forEach((n, t) => { for (let k = 0; k < n; k++) ts.push(t); });
-    const others = ts.filter(t => !e.B.includes(t)); const drawn = others[ri(others.length)];
+    const others = ts.filter(t => !e.B.includes(t)); const drawn = others.length ? others[ri(others.length)] : ts[0];
     const me = ts.slice(); me.splice(me.indexOf(drawn), 1);
     const str2 = arr => arr.map(t => str([t])).join('');
     const str = arr => { let s = ''; for (const [b, ch] of [[0, 'm'], [9, 'p'], [18, 's'], [27, 'z']]) { const xs = arr.filter(t => t >= b && t < b + (ch === 'z' ? 7 : 9)).map(t => t - b + 1); if (xs.length) s += xs.join('') + ch; } return s; };
     const o = { me: str(me), drawn: str([drawn]), dora: str([e.ind]), lv: e.lv, fun: e.fun, D: +e.D.toFixed(2), ans: str(e.B) };
     if (e.rv) o.river = { 0: str2(e.rv[0]), 1: str2(e.rv[1]), 2: str2(e.rv[2]), 3: str2(e.rv[3]) };
-    if (e.okd) o.d = str(e.B);
+    if (e.rr) { o.river = { 0: str2(e.others[0]), 1: str2(e.rr), 2: str2(e.others[1]), 3: str2(e.others[2]) }; o.riichi = { 1: Math.max(0, e.rr.length - 1 - ri(3)) }; }
+    if (e.melds && e.melds.length) o.melds = e.melds.map(m => ({ type: m.type, t: str([m.t]), from: 2 }));
+    if (e.okd || M.TH.includes(th)) o.d = str(e.B);
+    if (e.riichiAns) o.riichiAns = true;
+    if (e.notes) { o.notes = {}; for (const k in e.notes) o.notes[k === '*' ? '*' : str([+k])] = e.notes[k]; }
     return o;
   });
   if (REPORT) {
