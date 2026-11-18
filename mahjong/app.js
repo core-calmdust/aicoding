@@ -2352,9 +2352,11 @@ function placeGuide(el) {
   const top = tiles.length ? Math.min(...tiles.map(e => uiRect(e).top)) : H.bottom - 120;
   const l = mp && mp.offsetWidth ? X(uiRect(mp).right) + 14 : 14;
   const last = tiles.length ? uiRect(tiles[tiles.length - 1]) : null, r = last ? X(last.left) - 14 : hud.offsetWidth - 14;
-  const w = Math.max(300, Math.min(Math.max(680, innerHeight * 1.05), r - l));   // (wider on big screens, where the words are bigger)
+  // (ユーザー 2026-11-19「会話ボックスの横位置がセンターに来るように」) centred on the screen, as wide as fits between the two bounds
+  const c = hud.offsetWidth / 2, half = Math.min(c - l, r - c);
+  const w = Math.max(300, Math.min(Math.max(680, innerHeight * 1.05), 2 * half));   // (wider on big screens, where the words are bigger)
   el.style.transform = 'none'; el.style.width = w + 'px';
-  el.style.left = Math.max(8, l + Math.max(0, (r - l - w) / 2)) + 'px';
+  el.style.left = Math.max(8, c - w / 2) + 'px';
   el.style.top = Math.max(8, Y(top) - el.offsetHeight - 12) + 'px';
 }
 function guideWait(text, label, step) {
