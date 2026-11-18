@@ -280,7 +280,9 @@ const SND = (() => {
     _trk: TRK, _rebuild: () => rebuild(), _ac: () => ac,
     music,
     resume: () => music(want),
-    score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music('score'); },   // (once per results screen, from its top)
+    // (once per results screen, from its top) (ユーザー 2026-11-18「点数計算に入る時のBGMを少しだけ遅らせて」: 0.45 s after the screen opens;
+    // any other music asked for meanwhile cancels it, as music() clears handT)
+    score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music(null); handT = setTimeout(() => music('score'), 450); },
     newGame() { nextMain = draw(MAINS, mainKey); nextRii = draw(RIIS, riichiKey); if (on()) { fetchTrk(nextMain); fetchTrk(nextRii); fetchTrk('score'); } },
     // a hand begins: this hand's track (drawn ahead), after a short quiet (ユーザー 2026-11-16「得点表示から次の局の通常BGMまで少し間を」 —
     // the results' piece fades out, then about 1.6 s of silence)
