@@ -275,7 +275,7 @@ const SND = (() => {
     skillFx: id => { const f = SKFX[id]; if (f) f(); },
     tile: () => { if (!play(pick3('tile'), 1, .96 + Math.random() * .08)) click(); },
     stick: () => { if (!play(pick3('stick'), 1)) tone(1800, .08, 'triangle', .06); },
-    voice: k => play('v-' + k, 1),
+    voice: k => play('v-' + k, .8),   // (ユーザー 2026-11-18「声のボリュームが少し大きめなので少し抑えて」: ×0.8 ≈ −2 dB)
     preload: () => load(),
     _trk: TRK, _rebuild: () => rebuild(), _ac: () => ac,
     music,
