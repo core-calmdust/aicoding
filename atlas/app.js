@@ -1054,7 +1054,7 @@
     // a game's rule (adapter.rule — フチボウ・ジ・ボタン 2026-11-15: 手数制 · 点数制 · PK戦): a pulldown whose choice decides the
     // 長さ options (the size values say both, so the game reads only the size). rule = { label(lang), list, name(v, lang),
     // sizes(v), size0(v), of(size) → its rule, info(v, lang) → { sub } }
-    const RU = ad && ad.rule, rcur = RU ? (RU.list.includes(pref[id + ':rule']) ? pref[id + ':rule'] : RU.of(+pref[id + ':size']) || RU.list[0]) : '';
+    const RU = ad && ad.rule, RLK = RU && RU.lock && RU.lock(), rcur = RLK ? RLK.v : RU ? (RU.list.includes(pref[id + ':rule']) ? pref[id + ':rule'] : RU.of(+pref[id + ':size']) || RU.list[0]) : '';
     const SZS = RU ? RU.sizes(rcur) : ad && ad.sizes, SZ0 = RU ? RU.size0(rcur) : ad && ad.size0;
     const bsz = SZS ? (SZS.includes(+pref[id + ':size']) ? +pref[id + ':size'] : SZS.includes(SZ0) ? SZ0 : SZS[0]) : 0;   // board size (go, hex, tafl); adapter.size0 = the default
     // ペグソリテール (2026-11-13: 3D only): フリー · パズル — the puzzles (today's two, the list) on this 3D table
@@ -1065,7 +1065,8 @@
     // board size (go): on the same row as the time control when there is one
     // 種目 first (mancala · morris, 2026-11-15, as shogi): 種目 (+ its own setting: 種の数) → 相手 → 時間
     const KF = !!(ad && ad.kindFirst), KL = KIND[lang] || KIND.en;
-    const ruleHtml = RU ? `<label>${esc((KF || MXR) && !RU.ownLabel ? KL : RU.label(lang))}<select id="bvRuleSel" data-pick="drop">${RU.list.map(v => `<option value="${esc(v)}" ${v === rcur ? 'selected' : ''}>${esc(RU.name(v, lang))}</option>`).join('')}</select></label>` : '';
+    // (adapter.rule.lock() → { v, name(lang) }: one choice only on this device, shown greyed out — ホッケーの操作はスマホならスライド, 2026-11-18)
+    const ruleHtml = RU ? `<label>${esc((KF || MXR) && !RU.ownLabel ? KL : RU.label(lang))}<select id="bvRuleSel" data-pick="drop"${RLK ? ' disabled' : ''}>${RLK ? `<option value="${esc(RLK.v)}" selected>${esc(RLK.name(lang))}</option>` : RU.list.map(v => `<option value="${esc(v)}" ${v === rcur ? 'selected' : ''}>${esc(RU.name(v, lang))}</option>`).join('')}</select></label>` : '';
     const sizeOnly = ad && ad.sizes ? `<label>${esc(KF && !RU && !ad.kindOwn ? KL : ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${SZS.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : ''
     const sizeHtml = sizeOnly ? ruleHtml + sizeOnly : '';
     headIcons(false);   // (ヒストリア / 戦績 back out of the old card before it is rebuilt)
@@ -1235,7 +1236,7 @@
         if (((lt && lt === KL && !(MXR && sid === 'bvRuleSel')) || (ad.kindFirst && ad.kindOwn && sid === 'bvSize')) && $(sid).options.length > 1) { kindPick(g, ad, sid, lt); return; } }   // (種目, 2026-11-16: every game as shogi — big cards with a picture and the rule's description)
       // (2026-11-14) data-pick="drop": a small list that drops down right under the button (a few choices: 上海's 難易度)
       if ($(sid).dataset.pick === 'drop') {
-        const sel = $(sid), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
+        const sel = $(sid), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt); bt.disabled = sel.disabled;
         const ico = v => { const inf = ad.optInfo ? ad.optInfo(sid, v, lang) || {} : {}; return inf.icon || ''; };   // (adapter.optInfo(…).icon: a small picture before the name — foxgeese's fox / goose)
         const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${o ? ico(o.value) : ''}${esc(o ? o.textContent : '')}</span><i>▾</i>`; };
         sel.addEventListener('change', paint); paint();

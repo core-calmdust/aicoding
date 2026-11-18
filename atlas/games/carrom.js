@@ -58,12 +58,15 @@
     const ac = () => { try { if (localStorage.getItem('atlas-sfx') === '0') return null; } catch (e) {} try { C = C || window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume(); return C; } catch (e) { return null; } };
     const tone = (a, t0, f0, f1, dur, vol, type) => { const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + .003); g.gain.exponentialRampToValueAtTime(.001, t0 + dur); o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + dur + .02); };
     const noise = (a, t0, dur, vol, f, q) => { const n = a.createBufferSource(), b = a.createBuffer(1, Math.max(1, a.sampleRate * dur | 0), a.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 5); n.buffer = b; const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q || 2; const g = a.createGain(); g.gain.value = vol; n.connect(bp).connect(g).connect(a.destination); n.start(t0); };
-    const at = f => { const a = ac(); if (a) try { f(a, a.currentTime + .005); } catch (e) {} };
-    let lastHit = 0;
+    // when: an AudioContext time to play at (フチボウ schedules its replay's knocks a little ahead on the audio clock, so a slow
+    // frame on a phone no longer delays them — 2026-11-18); none or past: now
+    const at = (f, when) => { const a = ac(); if (a) try { f(a, Math.max(a.currentTime + .005, when || 0)); } catch (e) {} };
+    let lastHit = 0, lastHitA = -1;
     return {
+      now: () => { const a = ac(); return a && a.state === 'running' ? a.currentTime : 0; },   // (also wakes a suspended context)
       flick: () => at((a, t) => { noise(a, t, .03, .5, 2400, 1.2); tone(a, t, 900, 300, .05, .06); }),
-      hit: v => { const now = performance.now(); if (now - lastHit < 22) return; lastHit = now; at((a, t) => { const k = Math.min(1, v / 300); noise(a, t, .018, .12 + k * .4, 3400 + k * 1500, 3); tone(a, t, 1900 + k * 600, 1200, .03, .03 + k * .05, 'triangle'); }); },
-      cush: v => at((a, t) => { const k = Math.min(1, v / 300); noise(a, t, .05, .1 + k * .25, 420, 1.4); tone(a, t, 140, 80, .07, .05 + k * .08); }),
+      hit: (v, when) => { if (!when) { const now = performance.now(); if (now - lastHit < 22) return; lastHit = now; } at((a, t) => { if (when) { if (Math.abs(t - lastHitA) < .022) return; lastHitA = t; } const k = Math.min(1, v / 300); noise(a, t, .018, .12 + k * .4, 3400 + k * 1500, 3); tone(a, t, 1900 + k * 600, 1200, .03, .03 + k * .05, 'triangle'); }, when); },
+      cush: (v, when) => at((a, t) => { const k = Math.min(1, v / 300); noise(a, t, .05, .1 + k * .25, 420, 1.4); tone(a, t, 140, 80, .07, .05 + k * .08); }, when),
       pocket: () => at((a, t) => { noise(a, t, .04, .3, 900, 1.5); tone(a, t + .03, 220, 120, .16, .1); noise(a, t + .08, .12, .12, 600, .8); }),
       place: () => at((a, t) => { noise(a, t, .02, .2, 3000, 2); }),
       good: () => at((a, t) => [659.25, 987.77].forEach((f, i) => tone(a, t + i * .09, f, 0, .4, .07, 'triangle'))),

@@ -1931,6 +1931,8 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi #bvPz{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bvi #bvPz .mxb[data-pz="list"]:nth-child(3){grid-column:1 / -1}
 .bvi .act.act3.act1 > a.btn{grid-column:1 / -1}
 .bvi .act.act3 #bvTable.mxw{background:#fff;color:var(--ink);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
+.bvi .lvpick:disabled{background:#f3ead8;color:var(--ink2);cursor:default;opacity:.75}.bvi .lvpick:disabled i{visibility:hidden}   /* (one choice only on this device: ホッケーの操作 on phones, 2026-11-18) */
+.bvi .szrow > label:only-child{flex:1 1 100%!important;min-width:0}.bvi .szrow > label:only-child .sidetg{flex:1 1 auto!important}.bvi .szrow > label:only-child .sidetg > button{flex:1 1 0!important}   /* (a row with the length alone: the toggle runs to the right edge — 2026-11-18 ユーザー) */
 .bvi .lvpick{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;height:38px;border-radius:12px;border:2px solid var(--line);background:#fff;padding:0 12px;font:inherit;font-weight:900;color:var(--ink);cursor:pointer}
 .bvi .lvpick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bvi .lvpick .lvb{flex:none;width:34px;height:34px;margin:-4px 0;object-fit:contain;transform:scale(1.2);pointer-events:none}.bvi .lvpick:has(.lvb) i{margin-inline-start:auto}.bvi .lvpick i{font-style:normal;color:var(--ink2);font-size:13px}
 @media (min-width:820px){.bvi .lvpick{height:48px;font-size:17px;padding:0 16px;border-radius:14px}.bvi .lvpick .lvb{width:44px;height:44px}.bvi .sidetg button{font-size:16px;padding:10px 8px}}
@@ -2344,7 +2346,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=434"></script>
+<script src="lazy.js?v=435"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=40"></script>
 <script src="lessons3d.js?v=69"></script>
@@ -2366,7 +2368,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=43"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=451"></script>
+<script src="app.js?v=452"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>

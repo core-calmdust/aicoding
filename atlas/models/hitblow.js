@@ -231,10 +231,12 @@
       const fx = new TT.Group(); fx.userData.keep = true; g.add(fx);   // (kept apart from the static merge: it moves)
       const sm = new TT.SpriteMaterial({ map: sparkTex(), color: 0xffffff, transparent: true, depthWrite: false, depthTest: true, blending: TT.AdditiveBlending, toneMapped: false });
       const wp = new TT.Vector3(), cp = new TT.Vector3();
+      // each jewel its own rhythm (2026-11-18 ユーザー：金庫の宝石のキラキラが全部同じタイミング): a phase and a pace of its own
+      const gp = Math.random() * Math.PI * 2, gs = .75 + Math.random() * .55;
       [[.62, .3, -.28, 0], [-.42, .36, .5, 2.1], [.15, .49, .38, 4.2], [-.55, .28, -.4, 1.1], [.32, .5, .02, 3.3], [.05, .32, -.72, 5.1]].forEach(([x, y, z, ph], i) => {
         const st = new TT.Sprite(sm.clone()); st.position.set(x * R, y * R + .01, z * R); st.renderOrder = 3; fx.add(st);
-        st.onBeforeRender = (rn, sc, cam) => { st.getWorldPosition(wp); cp.copy(cam.position).sub(wp).normalize(); const a = Math.atan2(cp.x, cp.z) * 3 + cp.y * 7 + ph, t = performance.now() / 1000;
-          const k = Math.pow(Math.max(0, Math.cos(a)), 6) * .85 + Math.pow(Math.max(0, Math.sin(t * (1.3 + i * .37) + ph * 2)), 12) * .7;
+        st.onBeforeRender = (rn, sc, cam) => { st.getWorldPosition(wp); cp.copy(cam.position).sub(wp).normalize(); const a = Math.atan2(cp.x, cp.z) * 3 + cp.y * 7 + ph + gp, t = performance.now() / 1000;
+          const k = Math.pow(Math.max(0, Math.cos(a)), 6) * .85 + Math.pow(Math.max(0, Math.sin(t * (1.3 + i * .37) * gs + ph * 2 + gp)), 12) * .7;
           st.material.opacity = Math.min(1, k); const sz = R * (.35 + k * .75) * (st.parent && st.parent.parent ? 1 : 1); st.scale.set(sz, sz, 1); };
       });
       h = R * .47;
