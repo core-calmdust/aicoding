@@ -851,8 +851,9 @@ static TLS float GLOB[2];
 static TLS NNOut nnTmp;
 static TLS int nnEvals = 0;
 
+static void map_out(const Board *b, int sym, const NNOut *raw, NNOut *o);
 /* evaluate b with symmetry sym; outputs mapped back to board coordinates */
-static void evaluate(const Board *b, int sym, NNOut *o) {
+static void features(const Board *b, int sym) {   /* the net's inputs FEAT, GLOB, PAT */
   int n = b->n;
   encode(b, sym);
   float sk = b->tomove == WHITE ? komiG : -komiG;
@@ -860,16 +861,25 @@ static void evaluate(const Board *b, int sym, NNOut *o) {
   if (sk > lim) sk = lim; if (sk < -lim) sk = -lim;
   GLOB[0] = sk / 20.f;
   GLOB[1] = (b->hmv[0] == PASS) ? 1.f : 0.f;
+}
+static void evaluate(const Board *b, int sym, NNOut *o) {
+  features(b, sym);
   net_forward(FEAT, GLOB, PAT, &nnTmp);
   nnEvals++;
+  map_out(b, sym, &nnTmp, o);
+}
+/* the net's outputs (in the symmetry's frame) back to board coordinates */
+static void map_out(const Board *b, int sym, const NNOut *raw, NNOut *o) {
+  int n = b->n;
+  const NNOut nn = *raw;
   for (int p = 0; p < NP; p++) { o->pol[p] = -1e30f; o->own[p] = 0; }
   for (int y = 0; y < n; y++) for (int x = 0; x < n; x++) {
     int p = y * PL + x, q = symPos(p, sym, n);
-    o->pol[p] = nnTmp.pol[q]; o->own[p] = nnTmp.own[q];
+    o->pol[p] = nn.pol[q]; o->own[p] = nn.own[q];
   }
-  o->pol[NP] = nnTmp.pol[NP];
-  o->val[0] = nnTmp.val[0]; o->val[1] = nnTmp.val[1]; o->val[2] = nnTmp.val[2];
-  o->score = nnTmp.score;
+  o->pol[NP] = nn.pol[NP];
+  o->val[0] = nn.val[0]; o->val[1] = nn.val[1]; o->val[2] = nn.val[2];
+  o->score = nn.score;
 }
 
 /* ======================================================================== */
@@ -910,9 +920,14 @@ static float score_util(float s, int mover) {
 }
 
 static TLS NNOut evTmp;
+static int expand_out(Node *nd, const Board *b);
 static int expand(Node *nd, const Board *b) {
   int sym = SP.symMode ? 0 : (int)(rnd() & 7);
   evaluate(b, sym, &evTmp);
+  return expand_out(nd, b);
+}
+/* the node's values and children from evTmp (the evaluation in board coordinates) */
+static int expand_out(Node *nd, const Board *b) {
   float v = evTmp.val[0] - evTmp.val[1];
   nd->rawV = v; nd->rawS = evTmp.score;
   nd->rawU = SP.wlf * v + score_util(evTmp.score, b->tomove);
@@ -990,6 +1005,9 @@ static Node *select_child(Node *nd, int isRoot) {
 }
 
 static TLS Node *pathN[1024];
+#ifndef MT
+static float VLOSS_G = 1.f;   /* (the GPU batches' virtual loss) */
+#endif
 static TLS Board simB;
 static TLS int lastTerminalDepth;
 #ifdef MT
@@ -1134,6 +1152,89 @@ EXPORT int search_run(int visits) {
   int done = 0;
   for (int i = 0; i < visits; i++) { if (!playout(rootN)) break; done++; }
   return done;
+}
+
+/* ---- GPU batches (2026-11-18, PRO's 計算: GPU — go/gpunet.js): the page's WebGPU evaluates a batch of leaves at once.
+   gpu_collect(B): up to B descents with virtual loss, each to a leaf no one is evaluating; its inputs go to the batch buffers
+   (a finished game is scored and backed up at once: gpu_imm()). The page runs the net on the batch into gpu_out (the raw outputs
+   in the symmetry's frame, NNOut's layout), then gpu_apply(n) expands the leaves and backs their values up. One thread. */
+#define GB_MAX 128
+static float *gbFeat, *gbGlob, *gbOut; static u16 *gbPat; static Board *gbB; static Node **gbPath;
+static int gbSym[GB_MAX], gbD[GB_MAX], gbImm, gbCap;
+static void backup(Node **path, int d, float util, float wl, float sc) {   /* N and the virtual loss were counted on the way down */
+  for (int i = 0; i < d; i++) {
+    Node *x = path[i]; float sign = ((d - 1 - i) & 1) ? -1.f : 1.f;
+    x->W += sign * util - (i ? VLOSS_G : 0); x->Wsq += util * util; x->Wwl += sign * wl; x->Wsc += sign * sc;
+  }
+}
+EXPORT int gpu_init(int cap) {
+  if (cap > GB_MAX) cap = GB_MAX;
+  if (gbCap < cap) {
+    gbFeat = halloc(cap * NSP * NP * 4); gbGlob = halloc(cap * 2 * 4); gbOut = halloc(cap * (int)sizeof(NNOut));
+    gbPat = halloc(cap * NP * 2); gbB = halloc(cap * (int)sizeof(Board)); gbPath = halloc(cap * 1024 * (int)sizeof(Node *));
+    if (!gbFeat || !gbGlob || !gbOut || !gbPat || !gbB || !gbPath) return 0;
+    gbCap = cap;
+  }
+  return gbCap;
+}
+EXPORT float *gpu_feat(void) { return gbFeat; }
+EXPORT float *gpu_glob(void) { return gbGlob; }
+EXPORT u16 *gpu_pat(void) { return gbPat; }
+EXPORT float *gpu_out(void) { return gbOut; }
+EXPORT int gpu_imm(void) { return gbImm; }
+EXPORT int gpu_collect(int maxB) {
+  int nb = 0, miss = 0; gbImm = 0;
+  if (maxB > gbCap) maxB = gbCap;
+  while (nb < maxB && miss < 2 * maxB + 8) {
+    Node **path = gbPath + nb * 1024;
+    simB = rootB;
+    int d = 0; Node *nd = rootN;
+    path[d++] = nd; nd->N++;
+    int passes = rootB.hmv[0] == PASS ? 1 : 0;
+    while (nd->expanded == 1 && nd->nch > 0 && d < 1000) {
+      Node *c = select_child(nd, nd == rootN);
+      c->N++; c->W += VLOSS_G;
+      play(&simB, OPP(c->pla), c->move);
+      passes = c->move == PASS ? passes + 1 : 0;
+      path[d++] = c; nd = c;
+      if (passes >= 2) break;
+    }
+    if (passes >= 2) {   /* a finished game: scored now */
+      float s = tt_score(&simB); int mover = simB.tomove; float sc = mover == BLACK ? s : -s, wl = sc > 0 ? 1.f : sc < 0 ? -1.f : 0.f;
+      float util = SP.wlf * wl + score_util(sc, mover);
+      nd->rawU = util; nd->rawV = wl; nd->rawS = sc;
+      backup(path, d, util, wl, sc); gbImm++; miss++; continue;
+    }
+    if (nd->expanded == 1) { backup(path, d, nd->rawU, nd->rawV, nd->rawS); gbImm++; miss++; continue; }   /* (no children: its own value) */
+    if (nd->expanded == 2) {   /* in this batch already: take the visit back and look elsewhere */
+      for (int i = 0; i < d; i++) { path[i]->N--; if (i) path[i]->W -= VLOSS_G; }
+      miss++; continue;
+    }
+    nd->expanded = 2;
+    int sym = SP.symMode ? 0 : (int)(rnd() & 7);
+    features(&simB, sym);
+    memcpy(gbFeat + nb * NSP * NP, FEAT, sizeof FEAT); gbGlob[nb * 2] = GLOB[0]; gbGlob[nb * 2 + 1] = GLOB[1];
+    memcpy(gbPat + nb * NP, PAT, sizeof PAT);
+    gbB[nb] = simB; gbSym[nb] = sym; gbD[nb] = d;
+    nb++;
+  }
+  return nb;
+}
+EXPORT int gpu_apply(int nb) {   /* returns the visits done (0: out of nodes) */
+  int done = 0;
+  for (int k = 0; k < nb; k++) {
+    Node **path = gbPath + k * 1024; int d = gbD[k]; Node *nd = path[d - 1];
+    map_out(&gbB[k], gbSym[k], (const NNOut *)((char *)gbOut + k * sizeof(NNOut)), &evTmp);
+    nnEvals++;
+    nd->expanded = 0;
+    if (!expand_out(nd, &gbB[k])) { for (int i = 0; i < d; i++) { path[i]->N--; if (i) path[i]->W -= VLOSS_G; } continue; }
+    backup(path, d, nd->rawU, nd->rawV, nd->rawS); done++;
+  }
+  return done;
+}
+EXPORT void gpu_vloss(float v) { VLOSS_G = v; }
+EXPORT void gpu_cpu(int nb) {   /* the batch on the CPU (the same outputs the GPU should give: tests, a fallback) */
+  for (int k = 0; k < nb; k++) net_forward(gbFeat + k * NSP * NP, gbGlob + k * 2, gbPat + k * NP, (NNOut *)((char *)gbOut + k * sizeof(NNOut)));
 }
 #endif
 
