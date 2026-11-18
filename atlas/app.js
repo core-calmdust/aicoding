@@ -1146,7 +1146,7 @@
     if (OL3 && ol3Soon(id)) ol3Paint();
     if (OL3 && $('bvOl3Rec')) $('bvOl3Rec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openRec(g, 'all', 'rt'); };
     if (OL3 && $('bvRtOpp')) $('bvRtOpp').addEventListener('change', () => { pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} if (window.__bvModeRz) window.__bvModeRz(); });
-    if (OL3 && !ol3Linked && QS0.get('room')) { ol3Linked = true; const code = QS0.get('room'); setTimeout(() => { if (bvGame === g) openOnline3D(g, code); }, 400); }   // (a room link: ?room=CODE#games/<id>)
+    if ((OL3 || (MX && ad && ad.online && window.Online3D)) && !ol3Linked && QS0.get('room')) { ol3Linked = true; const code = QS0.get('room'); setTimeout(() => { if (bvGame === g) openOnline3D(g, code); }, 400); }   // (a room link: ?room=CODE#games/<id>; MX too, 2026-11-18: carrom · crokinole on the shogi-style card)
     { const ar = $('bvAchR'); if (ar) ar.onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g, null, 'ach'); }; }
     { const rb = $('bvRec'), L = ACH.filter(a => a.gid === g.id), lab = `${t('tab.ach')} ${L.filter(a => a.done).length}/${L.length}`; rb.classList.add('achc'); rb.innerHTML = `<span class="ring achr">${achRingIn(g)}</span>`; rb.setAttribute('aria-label', lab); rb.title = lab; rb.onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g, null, 'ach'); }; }   // (the cup: phones right of the ヒストリア pill, PC beside the place chip)
     placeRec();
