@@ -285,7 +285,37 @@ function evaluateN(pos) {
   if (u > 0) v += u * u * 500;   // the clock runs for the fox
   return pos.side ? -v : v;
 }
+// ---------------------------------------------------------------- the learned evaluation (2026-11-18): a small network over the geese as
+// seen from the fox (index foxPoint × 33 + goosePoint), the side to move and the quiet-move clock; trained on self-play
+// (tools/gen_data.js → tools/train_eval.py → tools/pack_eval.js). Used for the 15-goose rule; the others keep evaluateN / evaluate.
+// NNW-BEGIN
+const NNW = null;
+// NNW-END
+const PIX = new Int8Array(NN).fill(-1); POINTS.forEach((p, k) => { PIX[p] = k; });
+let NET = null;
+function netLoad() {
+  if (!NNW) return null;
+  const dec = ([s, b64]) => { let bin; if (typeof atob === 'function') { const t = atob(b64); bin = new Uint8Array(t.length); for (let i = 0; i < t.length; i++) bin[i] = t.charCodeAt(i); } else bin = new Uint8Array(Buffer.from(b64, 'base64')); const q = new Int16Array(bin.buffer, bin.byteOffset, bin.length >> 1), f = new Float32Array(q.length); for (let i = 0; i < q.length; i++) f[i] = q[i] * s; return f; };
+  const n = { h1: NNW.h1, h2: NNW.h2, scale: NNW.scale };
+  for (const k in NNW.a) n[k] = dec(NNW.a[k]);
+  n.acc = new Float32Array(n.h1); n.hid = new Float32Array(n.h2);
+  return n;
+}
+NET = netLoad();
+let NET_ON = !(typeof process !== 'undefined' && process.env && process.env.FG_NONET);
+function evalNet(pos) {
+  const N1 = NET.h1, N2 = NET.h2, acc = NET.acc, W1 = NET.W1, sq = pos.sq, side = pos.side;
+  const qb = Math.min(7, pos.quiet >> 3), fb = PIX[pos.fox] * 33;
+  for (let j = 0; j < N1; j++) acc[j] = NET.b1[j] + NET.Ws[side * N1 + j] + NET.Wq[qb * N1 + j];
+  for (let k = 0; k < 33; k++) { if (sq[POINTS[k]] !== P2) continue; const o = (fb + k) * N1; for (let j = 0; j < N1; j++) acc[j] += W1[o + j]; }
+  for (let j = 0; j < N1; j++) { const x = acc[j]; acc[j] = x < 0 ? 0 : x > 1 ? 1 : x; }
+  let z = NET.b3[0];
+  for (let i = 0; i < N2; i++) { let h = NET.b2[i]; for (let j = 0; j < N1; j++) h += acc[j] * NET.W2[j * N2 + i]; h = h < 0 ? 0 : h > 1 ? 1 : h; z += h * NET.w3[i]; }
+  const v = Math.round(z * NET.scale);
+  return side ? -v : v;
+}
 function evaluate(pos) {
+  if (NET && NET_ON && RK === 'g15') return evalNet(pos);
   if (!R.back) return evaluateN(pos);
   const sq = pos.sq;
   let v = -pos.geese * EW.goose + pos.foxRoom() * EW.room + pos.foxJumps() * EW.jump * (pos.side ? .5 : 1) + foxArea(pos) * EW.area;
@@ -307,9 +337,12 @@ const TTB = 18, TTN = 1 << TTB, TTM = TTN - 1;
 const TT = { k1: new Uint32Array(TTN), k2: new Uint32Array(TTN), v: new Int32Array(TTN), m: new Float64Array(TTN), d: new Int8Array(TTN), f: new Int8Array(TTN), clear() { this.k1.fill(0); this.k2.fill(0); this.d.fill(-1); } };
 TT.clear();
 const killers = [];
+const NOHIST = typeof process !== 'undefined' && process.env && !!process.env.FG_NOHIST, NOQK = typeof process !== 'undefined' && process.env && !!process.env.FG_NOQK;
 const HIST = new Int32Array(NN * NN);   // history heuristic: quiet moves (from → to) that caused cut-offs
 function hdecay() { for (let i = 0; i < HIST.length; i++) HIST[i] >>= 2; }
-let REP = null;                       // hash → times the position has already stood in the game (set by think / analyze)
+let REP = null;
+const PATHH = new Uint32Array(256);   // the position hashes along the line being searched (by ply): a repeat on the line is the fox's
+const NOPATHREP = typeof process !== 'undefined' && process.env && !!process.env.FG_NOPATHREP;                       // hash → times the position has already stood in the game (set by think / analyze)
 function setHist(hashes) { REP = null; if (!hashes) return; const c = new Map(); let any = false; for (const h of hashes) { const n = (c.get(h) || 0) + 1; c.set(h, n); if (n >= REP_MAX - 1) any = true; } if (any) { REP = c; TT.clear(); } }
 function kreset() { killers.length = 0; hdecay(); }
 function ttClear() { TT.clear(); }
@@ -326,7 +359,7 @@ function orderMoves(pos, L, ttm, ply) {
     if (!pos.side) s += (path(m).length - 2) * 400;
     else { const t = mTo(m); s += Math.max(0, 4 - Math.max(Math.abs(RC[t][0] - RC[f][0]), Math.abs(RC[t][1] - RC[f][1]))) * 6; }
     if (k && (k[0] === m || k[1] === m)) s += 200;
-    s += Math.min(150, HIST[mFrom(m) * NN + mTo(m)] >> 4);
+    if (!NOHIST) s += Math.min(150, HIST[mFrom(m) * NN + mTo(m)] >> 4);
     return s;
   });
   return L.map((_, i) => i).sort((a, b) => sc[b] - sc[a] || a - b).map(i => L[i]);
@@ -337,8 +370,12 @@ function search(pos, d, a, b, ply) {
   if (stop) return 0;
   const tv = terminal(pos, ply); if (tv !== null) return tv;
   if (REP && ply > 0 && (REP.get(pos.h1) || 0) >= REP_MAX - 1) return pos.side ? -WIN + ply : WIN - ply;   // the third time: the fox wins
+  // the same placement earlier on this line (no capture since: quiet counts back that far): the geese have made no progress and
+  // the fox gets it under the rules (repetition / the clock). Without this, lines of geese stepping back and forth fill the search.
+  PATHH[ply & 255] = pos.h1;
+  if (!NOPATHREP && ply >= 4) for (let k = ply - 4, lo = Math.max(0, ply - pos.quiet); k >= lo; k -= 2) if (PATHH[k & 255] === pos.h1) return pos.side ? -WINT + 500 : WINT - 500;
   if (d <= 0) return quiesce(pos, a, b, ply, 0);
-  const K1 = (pos.h1 ^ ZQ1[pos.quiet & 255]) >>> 0, K2 = (pos.h2 ^ ZQ2[pos.quiet & 255]) >>> 0;
+  const K1 = NOQK ? pos.h1 : (pos.h1 ^ ZQ1[pos.quiet & 255]) >>> 0, K2 = NOQK ? pos.h2 : (pos.h2 ^ ZQ2[pos.quiet & 255]) >>> 0;
   const ti = K1 & TTM, a0 = a;
   let ttm = -1;
   if (TT.k1[ti] === K1 && TT.k2[ti] === K2 && TT.d[ti] >= 0) {
@@ -387,7 +424,7 @@ function quiesce(pos, a, b, ply, qd) {
   return best;
 }
 function rootValues(pos, d) {
-  const out = [];
+  const out = []; PATHH[0] = pos.h1;
   for (const m of orderMoves(pos, pos.moves(), -1, 0)) {
     const q = pos.clone().play(m), v = -search(q, d - 1, -WIN - 1, WIN + 1, 1);
     if (stop) break;
@@ -398,7 +435,7 @@ function rootValues(pos, d) {
 }
 function bestMove(pos, maxD, ms, nk) {
   nodes = 0; stop = false; tEnd = Date.now() + (ms || 20000); nodeLimit = nk ? nk * 1000 : Infinity; kreset();
-  const all = pos.moves();
+  const all = pos.moves(); PATHH[0] = pos.h1;
   let best = all[0], bv = 0, depth = 0, order = orderMoves(pos, all, -1, 0);
   for (let d = 1; d <= maxD; d++) {
     let a = -WIN - 1, bm = order[0], bestV = -Infinity;
