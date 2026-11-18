@@ -635,7 +635,11 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
   }
   if (MPC_ON && depth >= MPC_MIN && beta - alpha == 1 && MPC_A > 0) {
     int empties = 64 - pc(P | O), ds = 2 * (depth >> 2) + (depth & 1);
-    int sig = (int)(MPC_T * (MPC_A + MPC_B * depth + MPC_C * empties)), hb = beta + sig;
+    int sig = (int)(MPC_T * (MPC_A + MPC_B * depth + MPC_C * empties));
+#ifdef ENDK   /* (a test build only, tools/train/rvmatch --engine-b: the width of the search to the end of the game ×ENDK/100 — claude/reversi-mac-verification.md) */
+    if (depth >= empties) sig = sig * ENDK / 100;
+#endif
+    int hb = beta + sig;
     const int e0 = ds == 0 ? evalAt(ply, P, O) : 0;   /* (v8: the probe of depth 0 once for both bounds) */
     if (hb < 30000) {
       int v = ds == 0 ? e0 : searchI(P, O, ds, hb - 1, hb, ply, passed);
