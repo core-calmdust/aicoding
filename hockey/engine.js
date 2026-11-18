@@ -391,7 +391,11 @@
 
   // a target clamped to the bounds of a side's mallet (its own half, inside the walls) — the relative mouse / touchpad control
   function clampXY(s, side, x, y) { const m = { r: s.mal[side].r, tx: x, ty: y }; clampMal(m, side); return { tx: m.tx, ty: m.ty }; }
-  const API = { setAI(a) { [AIV0, AIV1, AIA0, AIA1, AIP, AIH, AIN] = a; }, clampXY, DIM, MODES, BOARDS, ITEMS, PORTAL, PR, BUMPERS, BR, BAR, newMatch, step, serve, aiTarget, aiSkill, rng, has };
+  // レベルの段差をそろえる (2026-11-18 ユーザー：天井は今のまま、段差を均等に): Lv.1–20 → the AI's own strength scale (the old levels),
+  // measured by AI-against-AI matches so that every step is about the same gain in strength. The table is the old level each level plays at.
+  const LVMAP = [1, 2.05, 3.53, 4.85, 5.65, 6.61, 7.58, 8.55, 9.59, 10.77, 11.95, 12.84, 13.67, 14.55, 15.58, 16.45, 17.28, 17.71, 18.53, 20];
+  const lvMap = l => { const L = Math.max(1, Math.min(20, +l || 1)), i = Math.min(18, Math.floor(L) - 1), f = L - 1 - i; return LVMAP[i] + (LVMAP[i + 1] - LVMAP[i]) * f; };
+  const API = { setAI(a) { [AIV0, AIV1, AIA0, AIA1, AIP, AIH, AIN] = a; }, clampXY, DIM, MODES, BOARDS, ITEMS, PORTAL, PR, BUMPERS, BR, BAR, newMatch, step, serve, aiTarget: (s, sd, l, m, dt) => aiTarget(s, sd, lvMap(l), m, dt), aiSkill: l => aiSkill(lvMap(l)), rng, has };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   root.HockeyEngine = API;
 })(typeof self !== 'undefined' ? self : this);

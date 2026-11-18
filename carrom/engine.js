@@ -373,7 +373,11 @@
 
   function setScale(k) { k = +k || 1; RM = 1.59 * k; RS = 2.065 * k; DIM.K = k; DIM.RM = RM; DIM.RS = RS; }
   setScale(phone() ? PHONE_K : 1);
-  const API = { setScale, DIM, DECEL, VMAX, newBoard, nextBoard, matchOver, clone, colOf, other, baseY, onBoard, strikerFree, nearestFree, simulate, resolve, think, perform, wobble, skill, aimTrace, layout, rng, evaluate };
+  // レベルの段差をそろえる (2026-11-18 ユーザー：天井は今のまま、段差を均等に): Lv.1–20 → the AI's own strength scale (the old levels),
+  // measured by AI-against-AI matches so that every step is about the same gain in strength. The table is the old level each level plays at.
+  const LVMAP = [1, 1.96, 3.14, 3.92, 4.76, 5.59, 6.67, 7.95, 9.48, 12.21, 12.84, 13.48, 14.21, 15.37, 16.28, 16.9, 17.51, 18.18, 19.09, 20];
+  const lvMap = l => { const L = Math.max(1, Math.min(20, +l || 1)), i = Math.min(18, Math.floor(L) - 1), f = L - 1 - i; return LVMAP[i] + (LVMAP[i + 1] - LVMAP[i]) * f; };
+  const API = { setScale, DIM, DECEL, VMAX, newBoard, nextBoard, matchOver, clone, colOf, other, baseY, onBoard, strikerFree, nearestFree, simulate, resolve, think: (s, l, sd, o) => think(s, lvMap(l), sd, o), perform: (sh, l, sd) => perform(sh, lvMap(l), sd), wobble, skill: l => skill(lvMap(l)), aimTrace, layout, rng, evaluate };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   root.CarromEngine = API;
 })(typeof self !== 'undefined' ? self : this);
