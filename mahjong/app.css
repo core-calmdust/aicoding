@@ -3078,3 +3078,16 @@ html.lp .lx-nh b{font-size:13.5px}
 html.lp #game .ls-guide{top:auto;width:min(560px,calc(100% - 2 * (var(--bf) + 60px)))}
 .modal.lsres .lr-say{margin:2px 0 4px;padding:8px 14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(232,206,140,.25);font-size:14px;line-height:1.6;color:#f4eefe;max-width:360px}
 .modal.lsres .mbox{width:min(500px,94vw);max-width:none}
+/* 下の余白を残さず、箱の高さいっぱいに配分（2026-11-19、ユーザー「下の方にスペース。バランスよく」） */
+.lx-body{display:flex;flex-direction:column}
+.lx-body>.lx-road,.lx-body>.lx-cards{flex:1}
+.lx-road{grid-template-rows:repeat(5,minmax(min-content,1fr));align-content:stretch}
+.lx-cards{grid-auto-rows:minmax(min-content,1fr);align-content:stretch}
+.lx-card{justify-content:flex-start}
+.lx-card .lx-fan{flex:1;align-items:center;min-height:62px;max-height:120px}
+.lx-card .lx-ft2{margin-top:auto}
+html:not(.lp) .lx-card .lx-ft .tl{--tw:clamp(30px,3.6vh,40px);width:clamp(30px,3.6vh,40px)}
+html:not(.lp) .lx-cards.c4{grid-template-columns:repeat(4,1fr)}
+html:not(.lp) .lx-cards.c4 .lx-ft .tl{--tw:clamp(26px,3vh,34px);width:clamp(26px,3vh,34px)}
+html:not(.lp) .lx-cards.c4 .lx-card>b{font-size:15px}
+html:not(.lp) .lx-cards.c4 .lx-card>b{letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}

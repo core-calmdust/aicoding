@@ -2405,7 +2405,7 @@ function openLessons(tab, cat0) {
   const cat = MJLessons.CATS.find(c => c.id === lsCat), list = LL.filter(x => x.cat === lsCat);
   const cats = `<div class="lx-cats">${MJLessons.CATS.map(c => { const l = LL.filter(x => x.cat === c.id);
     return `<button class="${c.id === lsCat ? 'on' : ''}" data-cat="${c.id}" style="--cc:${LS_COL[c.id]}"><i></i>${esc(I18N.L(c.name))}<small>${passN(l)}/${l.length}</small></button>`; }).join('')}</div>`;
-  const cards = `<p class="lx-cdesc" style="--cc:${LS_COL[lsCat]}">${esc(I18N.L(cat.desc))}</p><div class="lx-cards">${list.map((ls, i) => { const r = rec[ls.id];
+  const cards = `<p class="lx-cdesc" style="--cc:${LS_COL[lsCat]}">${esc(I18N.L(cat.desc))}</p><div class="lx-cards ${list.length > 6 ? 'c4' : ''}">${list.map((ls, i) => { const r = rec[ls.id];
     return `<button class="lx-card ${r && r.pass ? 'done' : ''}" data-id="${ls.id}" style="--cc:${LS_COL[ls.cat]}"><span class="lx-no">${String(i + 1).padStart(2, '0')}</span>${fan(ls)}
       <b>${esc(I18N.L(ls.title))}</b><small>${esc(I18N.L(ls.point))}</small><span class="lx-ft2">${starRow(lsStars(r))}<em>${r ? t('lsScore', { n: r.best }) : esc(t('lsNew'))}</em></span></button>`; }).join('')}</div>`;
   const html = `<div class="lx">
