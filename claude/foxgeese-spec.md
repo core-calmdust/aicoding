@@ -112,7 +112,7 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
 - **3Dルールコース**（`atlas/rules/foxgeese.js`、案内はドミダック `av/duck-0`、10ステップ）：紹介 → 盤と駒 → 狐の動き → 跳び越えて取る → 続けて跳ぶ → ガチョウの動き → 後ろを守る → ガチョウの勝ち → 狐の勝ち → 4つのルール。エンジンは g15（ガチョウは後退しない）、盤・最後のステップは15羽の配置。課題の正解はエンジンで判定。3D盤には座標がないので点の名前を言わない（「光っている点」）。
 - **ヒストリア**（`atlas/historia/s/foxgeese.json`＋14言語）：この spec と 2D の紹介文にある事実だけで構成（『グレティルのサガ』のハラタフル・遅くとも14世紀・エドワード4世の駒・ヴィクトリア女王・「狐とめんどり」「狼と羊」・ペグ・ソリテールと同じ盤・13羽と17羽）。盤の図は十字形（`atlas/historia.js` の grid に `cross` を追加）。地図のピン＝アイスランド・イングランド・フランス・ロシア（伝わった道筋は資料にないので線は引かない）。
 - **ボスと観戦キャラ**（`atlas/npc/roster.js`・`atlas/npc/t/<lang>.js`、14言語）：ボス7体（ネボガチョ → ハタケッコ → サガメェ → ロイヤルワン → オイカケガミ → マジェスグース → エドワツネ＝UR）。画像 `images/atlas/av/boss-foxgeese-<1〜7>-<0〜3>.webp`。豆知識4行。
-- **トップページ**：`index.html` の一覧（ラトルンクロルムの次、`alpha:true`）、アイコン `images/icons/foxgeese.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/foxgeese.webp`。
+- **トップページ**：`index.html` の一覧（**タフルの次**。2026-11-18 ユーザー。それまではラトルンクロルムの次、`alpha:true`）、アイコン `images/icons/foxgeese.svg`（2026-11-18：既定のひだまり牧場の可愛い狐を主役に、ガチョウがのぞく図）、JSON-LD。SS は既定のデザイン（ひだまり牧場×きつね＆がちょう）の対局途中。ゲーム一覧のサムネ `atlas/shots/foxgeese.webp`。
 - Praline のマーク・mtsplit／tools/mtsim は対象外（1スレッドの JS エンジン）。
 
 ## 未着手（次の作業）
