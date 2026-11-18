@@ -153,7 +153,7 @@ async function run() {
   const t00 = performance.now(); let doneW = 0;
   const totalW = COUNTS.length * (MP.length * T + EP.length * 6000) + 1500;   // (rough weights for the bar)
   const tick = (add, msg) => { doneW += add; $('#bar i').style.width = Math.min(100, doneW / totalW * 100) + '%'; if (msg) $('#st').textContent = msg + `　経過 ${Math.round((performance.now() - t00) / 1000)}秒`; };
-  lines = [`reversi bench (mt ${ENGINE}, 2026-11-13d) ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
+  lines = [`reversi bench (mt ${ENGINE}, engine_mt ${PREV ? 'v41' : 'v16'}, park ${PREV ? 'n/a' : /[?&]park=0(&|$)/.test(location.search) ? 'off' : 'on'}, 2026-11-19a) ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
   const M = {}, E = {};   // per thread count
   // midgame: iterative deepening for T ms (use 1.0: a new depth may start until T, cut at T); per depth the time and move
   const midCfg = { depth: 60, exact: 0, time: T, use: 1, max: T, mpc: 1 };
