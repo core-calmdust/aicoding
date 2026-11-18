@@ -1,7 +1,9 @@
 # after battery-v6 (2026-11-18). From here the other side is the search v4 defaults (on the site since 2026-11-18: +73 over
 # the search before), so a line's result is what it adds to the site.   bash tools/match/battery.sh 300000 40 12 < tools/match/battery-v7.txt
 # C = search v5 (44) with what helped; the late move pruning's count (43) and the "improving" flag (24) come from the defaults (300, 1)
-44=1,45=1,46=8,53=6,62=1,58=300
+# (the first line is written with 43 and 24 spelled out: without them it is the same text as a line of battery-v6, and
+# battery.sh would show that older result — measured against the search before v4 — instead of playing)
+44=1,45=1,46=8,53=6,62=1,58=300,43=300,24=1
 44=1,45=1,46=8,53=6,62=1,58=300,43=500
 44=1,45=1,46=8,53=6,62=1,58=300,43=800
 44=1,46=8,53=6,62=1,58=300

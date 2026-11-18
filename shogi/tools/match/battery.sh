@@ -5,6 +5,8 @@
 #   bash tools/match/battery.sh 20000 100 12 < tools/match/battery-v4.txt
 # (2026-11-18: every process searches a few more nodes than the one before, so no two play the same games; the results
 # before that, in battery.txt, were 200 different games counted several times.)
+# A setting is known by its text and the node count alone: after the engine's defaults change, write a setting differently
+# (or set WORK to a new folder), or the older result is shown.
 # Results: one line per setting on the screen and in ~/shogi-spsa/battery2.txt (appended; a setting already there is skipped,
 # so the same command continues after a stop).
 HERE=$(cd "$(dirname "$0")" && pwd); cd "$HERE/../.."
