@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const E = window.JanggiEngine;
-  const VER = '?v=8', ENG = '../engine.js?v=4-pro1-mt1-pd1';
+  const VER = '?v=9', ENG = '../engine.js?v=5';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { back: '← チャンギ', gname: 'チャンギ', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -48,7 +48,8 @@
   // ------------------------------------------------------------------ the multi-thread engine
   const SLOT = 2 << 20;
   const HC = navigator.hardwareConcurrency || 4, MAXT = Math.max(1, Math.min(32, HC));
-  const MT = { X: null, mem: null, module: null, base: 0, workers: [] };
+  const MT = { X: null, mem: null, module: null, base: 0, workers: [], nn: false };
+  const NETV = '';   // the version of ../nnue.bin.gz (as engine.js NET; '' = no network yet: the hand evaluation)
   async function initMT() {
     MT.module = await WebAssembly.compileStreaming(fetch('../engine_mt.wasm' + VER));
     MT.mem = new WebAssembly.Memory({ initial: 1152, maximum: 16384, shared: true });   // maximum = engine_mt.wasm's (1 GiB)
@@ -57,6 +58,19 @@
     const need = MT.base + (MAXT + 1) * SLOT;
     if (need > MT.mem.buffer.byteLength) MT.mem.grow(Math.ceil((need - MT.mem.buffer.byteLength) / 65536));
     X.mt_stack(MT.base + MAXT * SLOT + SLOT - 16); X.mt_thread(MT.base + MAXT * SLOT, 999);
+    // the learned evaluation, once there is one (as the game page: engine.js loadNet; claude/janggi-spec.md「NNUE」)
+    if (NETV && typeof DecompressionStream !== 'undefined') try {
+      const res = await fetch('../nnue.bin.gz?v=' + NETV);
+      const buf = new Uint8Array(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+      const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength), H = dv.getInt32(4, true), IN = 1260;
+      if (dv.getUint32(0, true) === 0x5845554E && dv.getInt32(8, true) === IN && H === X.xq_h()) {
+        const b = buf.buffer; let o = buf.byteOffset + 12;
+        new Int16Array(MT.mem.buffer, X.xq_w1_ptr(), IN * H).set(new Int16Array(b.slice(o, o + IN * H * 2))); o += IN * H * 2;
+        new Int32Array(MT.mem.buffer, X.xq_b1_ptr(), H).set(new Int32Array(b.slice(o, o + H * 4))); o += H * 4;
+        new Int16Array(MT.mem.buffer, X.xq_w2_ptr(), 2 * H).set(new Int16Array(b.slice(o, o + H * 4))); o += H * 4;
+        X.xq_set_b2(dv.getInt32(o - buf.byteOffset, true)); MT.nn = true;
+      }
+    } catch (e) { console.warn('net', e); }
     X.new_game();
     MT.X = X;
   }
@@ -86,7 +100,7 @@
           nodes += m.nodes; if (m.id === 0) main = m;
           if (--left === 0) resolve({ ...main, totalNodes: nodes, ms: performance.now() - t0 });
         };
-        w.postMessage({ type: 'go', setup, time });
+        w.postMessage({ type: 'go', setup, time, nn: MT.nn });
       });
     });
   }

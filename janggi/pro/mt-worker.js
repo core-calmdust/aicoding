@@ -14,6 +14,7 @@ self.onmessage = e => {
     return;
   }
   if (m.type === 'go') {
+    if (X.xq_nnue) X.xq_nnue(m.nn ? 1 : 0);   // (the network: pro.js loads it into the shared memory once there is one)
     io().set(m.setup); const ok = X.setup();
     const t0 = Date.now();
     let hn = -1;

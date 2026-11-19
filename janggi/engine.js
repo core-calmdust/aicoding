@@ -412,7 +412,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROO
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.JanggiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=4';
+  const V = 'v=5';
   const NET = '';   // the version of nnue.bin.gz ('' = no network yet: the hand evaluation; claude/janggi-spec.md「NNUE の準備」)
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The rest is the usual API.
@@ -458,7 +458,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     } catch (e) { wNNReady = false; }
   }
   // the opening book (2026-11-15): the top levels' first plies (think), loaded with the engine
-  const bookP = typeof fetch === 'function' ? fetch(new URL('book.json?v=1', self.location.href)).then(r => r.ok ? r.json() : null).then(b => { BOOK = b; }).catch(() => {}) : null;
+  const bookP = typeof fetch === 'function' ? fetch(new URL('book.json?v=2', self.location.href)).then(r => r.ok ? r.json() : null).then(b => { BOOK = b; }).catch(() => {}) : null;
   let queue = Promise.resolve();
   self.onmessage = e => {
     const m = e.data;
