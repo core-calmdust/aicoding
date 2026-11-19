@@ -58,7 +58,7 @@
   const srgb = t => { const TT = T(); if ('colorSpace' in t && TT.SRGBColorSpace) t.colorSpace = TT.SRGBColorSpace; else t.encoding = TT.sRGBEncoding; return t; };
   const V2 = (x, y) => new (T().Vector2)(x, y);
   const geos = {}, G = (k, f) => { const kk = k + (LO() ? 'lo' : 'hi'); if (!geos[kk]) { const g = f(); g.computeBoundingSphere(); if (X.share) X.share(g); geos[kk] = g; } return geos[kk]; };
-  const seg = n => Math.max(8, Math.round(n * (LO() ? .4 : .6)));
+  const seg = n => Math.max(8, Math.round(n * (LO() ? .3 : .45)));   // (2026-11-19 user: ポリゴン数を削減 — 32 figures on the board)
   const ctex = (k, w, h, draw, rep, lin0) => mat('tx' + k, () => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new (T().CanvasTexture)(c); if (!lin0) srgb(t); if (rep) t.wrapS = t.wrapT = T().RepeatWrapping; t.anisotropy = 4; return t; });
   const M = (k, o) => mat('pm' + k, () => phys(o));
   const mesh = (geo, m, x, y, z) => { const o = new (T().Mesh)(geo, m); o.position.set(x || 0, y || 0, z || 0); o.castShadow = o.receiveShadow = true; return o; };
@@ -112,7 +112,7 @@
   let STONE_OUT = null;
   function stoneOutline() {   // points in the shape's plane (x, s) — s = −z (far is +s)
     if (STONE_OUT) return STONE_OUT;
-    const n = 220, pts = [], ra = .12, a = W / 2 - ra, b = H / 2 - ra, L = 2 * (2 * a + 2 * b) + 2 * Math.PI * ra;
+    const n = LO() ? 96 : 124, pts = [], ra = .12, a = W / 2 - ra, b = H / 2 - ra, L = 2 * (2 * a + 2 * b) + 2 * Math.PI * ra;
     const at = t => {   // a point on the rounded rectangle at arc length t, with its outward normal
       const seglist = [[2 * a, (u) => [-a + u, -H / 2, 0, -1]], [Math.PI * ra / 2, u => { const q = -Math.PI / 2 + u / ra; return [a + ra * Math.cos(q), -b + ra * Math.sin(q), Math.cos(q), Math.sin(q)]; }],
         [2 * b, u => [W / 2, -b + u, 1, 0]], [Math.PI * ra / 2, u => { const q = u / ra; return [a + ra * Math.cos(q), b + ra * Math.sin(q), Math.cos(q), Math.sin(q)]; }],
@@ -156,7 +156,9 @@
       else if (look === 'wood' && fr) { const s = Math.max(Wp / fr.width, Hp / fr.height); g.drawImage(fr, (Wp - fr.width * s) / 2, (Hp - fr.height * s) / 2, fr.width * s, fr.height * s); }
       else if (fr) for (let y = 0; y < Hp; y += tile) for (let x = 0; x < Wp; x += tile) g.drawImage(fr, x, y, tile, tile);
       if (look !== 'wood' && look !== 'stone') { g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = ppu * .1; g.fillStyle = '#000'; g.fillRect(ox, oz, F, F); g.restore(); }
-      if (bd) g.drawImage(bd, ox, oz, F, F);
+      if (bd && look === 'wood') {   // the grid is cut into the walnut and filled with pale wood: a dark hairline where the inlay meets the groove
+        g.save(); g.shadowColor = 'rgba(20,8,0,.75)'; g.shadowBlur = ppu * .012; g.shadowOffsetX = g.shadowOffsetY = ppu * .006; g.drawImage(bd, ox, oz, F, F); g.restore();
+      } else if (bd) g.drawImage(bd, ox, oz, F, F);
       // the frame lines of the 2D page (--frm)
       const line = (ins, lw, col) => { g.strokeStyle = col; g.lineWidth = ppu * lw; g.strokeRect(ppu * ins, ppu * ins, Wp - 2 * ppu * ins, Hp - 2 * ppu * ins); };
       const fieldLine = (off, lw, col) => { g.strokeStyle = col; g.lineWidth = ppu * lw; g.strokeRect(ox - ppu * off, oz - ppu * off, F + 2 * ppu * off, F + 2 * ppu * off); };
@@ -171,6 +173,10 @@
       h2.filter = 'blur(' + Math.max(.5, ns / 90) + 'px)'; h2.drawImage(c, 0, 0, nW, nH); h2.filter = 'none';
       const src = h2.getImageData(0, 0, nW, nH).data, hh = new Float32Array(nW * nH);
       for (let i = 0; i < nW * nH; i++) hh[i] = (src[i * 4] * .3 + src[i * 4 + 1] * .59 + src[i * 4 + 2] * .11) / 255;
+      if (look === 'wood' && bd) {   // wood: the grain only faintly; the inlaid lines sit a little below the surface
+        const lc = document.createElement('canvas'); lc.width = nW; lc.height = nH; const l2 = lc.getContext('2d'); l2.drawImage(bd, BX * ns, BZ * ns, N * ns, N * ns);
+        const la = l2.getImageData(0, 0, nW, nH).data; for (let i = 0; i < nW * nH; i++) hh[i] = hh[i] * .25 - la[i * 4 + 3] / 255 * .9;
+      }
       if (look === 'stone') for (let y = 0; y < nH; y++) for (let x = 0; x < nW; x++) {   // pitting and a worn, uneven face
         const u = x / ns, v = y / ns, p = fbm(u * 14, v * 14); hh[y * nW + x] += (fbm(u * 1.6, v * 1.6) - .5) * .5 + (p < .3 ? (p - .3) * 2.2 : 0);
       }
@@ -231,7 +237,7 @@
     let sh;
     if (stone) { sh = new TT.Shape(); stoneOutline().forEach(([x, s], i) => i ? sh.lineTo(x, s) : sh.moveTo(x, s)); sh.closePath(); }
     else sh = rrect(TT, W, H, K[6]);
-    const bv = stone ? .05 : .06, g = new TT.ExtrudeGeometry(sh, { depth: TH - 2 * bv, bevelEnabled: true, bevelThickness: bv, bevelSize: bv - .01, bevelSegments: LO() ? 2 : stone ? 3 : 4, curveSegments: LO() ? 6 : 12, steps: stone ? 4 : 1 });
+    const bv = stone ? .05 : .06, g = new TT.ExtrudeGeometry(sh, { depth: TH - 2 * bv, bevelEnabled: true, bevelThickness: bv, bevelSize: bv - .01, bevelSegments: LO() ? 1 : 2, curveSegments: LO() ? 4 : 6, steps: stone ? 2 : 1 });
     g.rotateX(-Math.PI / 2); g.translate(0, bv, 0);
     if (!stone) g.scale((W - .02) / (W + 2 * (bv - .01)), 1, (H - .02) / (H + 2 * (bv - .01)));
     const P = g.attributes.position, UV = g.attributes.uv, side = new Uint8Array(P.count), col = new Float32Array(P.count * 3);
@@ -244,16 +250,26 @@
         x += x / len * k; z += z / len * k; P.setX(i, x); P.setZ(i, z);
         P.setY(i, y + (y < .02 ? 0 : (fbm(x * 4, z * 4) - .5) * .03));
       }
-      if (side[i]) UV.setXY(i, (x + z) / tile, P.getY(i) / tile); else UV.setXY(i, x / W + .5, .5 - z / H);
+      if (side[i]) UV.setXY(i, (x + z) / tile, P.getY(i) / (stone ? 1.2 : tile)); else UV.setXY(i, x / W + .5, .5 - z / H);
       // the soil's stain on the stone's sides: dark at the foot
-      const yy = P.getY(i) / TH, sd = stone ? .45 + .55 * Math.min(1, Math.pow(yy, .8) + (fbm(x * 3, z * 3) - .5) * .3) : 1;
+      const yy = P.getY(i) / TH, sd = stone ? .55 + .4 * Math.min(1, Math.pow(yy, .7) + (fbm(x * 3, z * 3) - .5) * .3) : 1;
       col[i * 3] = sd; col[i * 3 + 1] = sd * (stone ? .96 : 1); col[i * 3 + 2] = sd * (stone ? .9 : 1);
     }
     g.setAttribute('color', new TT.BufferAttribute(col, 3));
     g.computeVertexNormals(); g.computeBoundingSphere();
     return (slabs[look] = g);
   }
+  // stone: the slab's broken sides — weathered limestone with bedding layers, pits and fresh pale breaks
+  const limeTex = () => mat('limeT', () => { const S = LO() ? 256 : 512, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), id = g.createImageData(S, S), d = id.data;
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const u = x / S, v = y / S, layer = Math.sin((v * 9 + fbm(u * 3, v * 3) * 1.6) * Math.PI * 2) * .5 + .5, n = fbm(u * 14, v * 14), pit = fbm(u * 40 + 3, v * 40) < .28 ? .55 : 1;
+      const k = (.78 + layer * .1 + (n - .5) * .25) * pit, i = (y * S + x) * 4;
+      d[i] = 168 * k; d[i + 1] = 134 * k; d[i + 2] = 92 * k; d[i + 3] = 255;   // (the top's own sandy tone)
+    }
+    g.putImageData(id, 0, 0);
+    const t = srgb(new (T().CanvasTexture)(c)); t.wrapS = t.wrapT = T().RepeatWrapping; return t; });
   function sideTex(look) {
+    if (look === 'stone') return limeTex();
     if (look === 'giallo') return marbleTex('rosso');
     return mat('sideT' + look, () => {
       const t = srgb(new (T().CanvasTexture)(document.createElement('canvas'))); t.wrapS = t.wrapT = T().RepeatWrapping;
@@ -269,7 +285,7 @@
     const metal = look === 'lux' || look === 'pompeii';
     const topM = mat('top' + look, () => phys(Object.assign({ map: tx.map, normalMap: tx.nm, normalScale: new TT.Vector2(1, 1), color: '#ffffff', roughness: K[3], metalness: 0, envMapIntensity: .8 }, K[4] ? { clearcoat: K[4], clearcoatRoughness: .25 } : {},
       metal ? { metalnessMap: metalTex(look), roughnessMap: metalTex(look), metalness: 1, roughness: 1, envMapIntensity: 1.2 } : {})));
-    const sideM = mat('side' + look, () => phys(Object.assign({ map: sideTex(look), color: '#ffffff', vertexColors: look === 'stone', roughness: Math.min(.95, K[3] + .08), envMapIntensity: .7 }, K[4] ? { clearcoat: K[4] * .8, clearcoatRoughness: .3 } : {})));
+    const sideM = mat('side' + look, () => phys(Object.assign({ map: sideTex(look), bumpMap: look === 'stone' ? sideTex(look) : null, bumpScale: 2, color: '#ffffff', vertexColors: look === 'stone', roughness: Math.min(.95, K[3] + .08), envMapIntensity: .7 }, K[4] ? { clearcoat: K[4] * .8, clearcoatRoughness: .3 } : {})));
     const slab = new TT.Mesh(slabGeo(look), [topM, sideM]); slab.castShadow = slab.receiveShadow = true; slab.position.y = PL; g.add(slab);
     let top = PL + K[7];
     top = dress(g, look, top) || top;
@@ -282,9 +298,9 @@
   // a rounded-rectangle band: outer w × h, t thick, hh high (y 0 … hh)
   function ring(k, w, h, r, t, hh, bev) {
     return G(k, () => { const TT = T(), sh = rrect(TT, w, h, r); sh.holes.push(rrect(TT, w - 2 * t, h - 2 * t, Math.max(.01, r - t)));
-      const b = bev || .005, e = new TT.ExtrudeGeometry(sh, { depth: Math.max(.002, hh - 2 * b), bevelEnabled: true, bevelThickness: b, bevelSize: b, bevelSegments: bev ? 3 : 1, curveSegments: 6 }); e.rotateX(-Math.PI / 2); e.translate(0, b, 0); e.computeVertexNormals(); return e; });
+      const b = bev || .005, e = new TT.ExtrudeGeometry(sh, { depth: Math.max(.002, hh - 2 * b), bevelEnabled: true, bevelThickness: b, bevelSize: b, bevelSegments: bev ? 2 : 1, curveSegments: 4 }); e.rotateX(-Math.PI / 2); e.translate(0, b, 0); e.computeVertexNormals(); return e; });
   }
-  const block = (k, w, h, r, hh, uvs) => G(k, () => { const TT = T(), e = new TT.ExtrudeGeometry(rrect(TT, w, h, r), { depth: hh - .03, bevelEnabled: true, bevelThickness: .015, bevelSize: .015, bevelSegments: 2, curveSegments: 6 }); e.rotateX(-Math.PI / 2); e.translate(0, .015, 0);
+  const block = (k, w, h, r, hh, uvs) => G(k, () => { const TT = T(), e = new TT.ExtrudeGeometry(rrect(TT, w, h, r), { depth: hh - .03, bevelEnabled: true, bevelThickness: .015, bevelSize: .015, bevelSegments: 1, curveSegments: 4 }); e.rotateX(-Math.PI / 2); e.translate(0, .015, 0);
     const P = e.attributes.position, UV = e.attributes.uv; for (let i = 0; i < P.count; i++) UV.setXY(i, P.getX(i) / (uvs || 3.6), (P.getZ(i) + P.getY(i)) / (uvs || 3.6)); e.computeVertexNormals(); return e; });
 
   /* ---------- each board's dressing (returns the new top when the field is raised) ---------- */
@@ -295,7 +311,7 @@
       const walnut = M('wdPlinth', { map: sideTex('wood'), color: '#7a5a44', roughness: .55, clearcoat: .3, clearcoatRoughness: .4 });
       add(block('wdPl', W + .2, H + .2, K[6] + .1, PL, 3.6), walnut, 0, 0, 0);
       // brass corner caps: a quarter ring and two arms on the top, the same wrapped round the side; two screws
-      const brass = M('brass', { color: '#c9a050', metalness: 1, roughness: .3, envMapIntensity: 1.4 }), brassD = M('brassD', { color: '#a88038', metalness: 1, roughness: .4 });
+      const brass = M('brass', { color: '#e8bd62', metalness: 1, roughness: .12, envMapIntensity: 2.2 }), brassD = M('brassD', { color: '#c89a48', metalness: 1, roughness: .2, envMapIntensity: 2 });
       const r0 = K[6], armL = .42, bw = .1, TH = K[7], sh = TH * .8, y0 = PL;
       for (const [sx, sz] of [[1, -1], [-1, -1], [1, 1], [-1, 1]]) {
         const cx = sx * (W / 2 - r0), cz = sz * (H / 2 - r0);
@@ -361,25 +377,25 @@
     // the bed: a low mound of earth round the slab (its edge sinks below the table top, so it has no hard outline)
     const bed = G('ltBed', () => {
       // rings round the slab, out to an uneven edge that comes down flush with the table
-      const NA = LO() ? 120 : 200, K = LO() ? 7 : 10, pos = [], uv = [], col = [], idx = [];
+      const NA = LO() ? 72 : 100, K = LO() ? 5 : 6, pos = [], uv = [], col = [], idx = [];
       for (let i = 0; i < NA; i++) {
         const th = i / NA * Math.PI * 2, cx = Math.cos(th), sz = Math.sin(th);
         const t0 = Math.min((W / 2 - .25) / Math.abs(cx || 1e-6), (H / 2 - .25) / Math.abs(sz || 1e-6));   // inside the slab's foot
         const reach = .2 + fbm(th * 2.2 + 4, 1.7) * .5 + (fbm(th * 9, 3.1) - .5) * .12;   // (kept close: the full game's view crops a little round the slab)
         for (let k = 0; k <= K; k++) {
-          const e = k === 0 ? -.05 : Math.pow(k / K, 1.15) * (reach + .2), r = t0 + .25 + e, x = cx * r, z = sz * r, f = Math.max(0, e) / (reach + .2);
-          let y = k === 0 ? .12 : .02 + .1 * Math.pow(1 - f, 1.4) * (1 + .4 * Math.sin(Math.min(1, e / .3) * Math.PI)) + (k < K ? (fbm(x * 3, z * 3) - .5) * .04 * (1 - f) : 0);
+          const e = k === 0 ? -.9 : k === 1 ? -.38 : Math.pow((k - 1) / (K - 1), 1.15) * (reach + .2), r = t0 + .25 + e, x = cx * r, z = sz * r, f = Math.max(0, e) / (reach + .2);
+          let y = k <= 1 ? .16 : .02 + .16 * Math.pow(1 - f, 1.3) + (k < K ? (fbm(x * 3, z * 3) - .5) * .04 * (1 - f) : 0);
           if (k === K) y = .003;
           pos.push(x, y, z); uv.push(x / 2.4, z / 2.4);
-          const dark = Math.max(0, 1 - e / .45) * .32 + (1 - f) * .08; col.push(1 - dark, 1 - dark * 1.05, 1 - dark * 1.12);
+          const dark = Math.max(0, 1 - Math.max(0, e) / .45) * .18 + (1 - f) * .06; col.push(1 - dark, 1 - dark * 1.05, 1 - dark * 1.12);
         }
       }
       const Kp = K + 1;
       for (let i = 0; i < NA; i++) { const j = (i + 1) % NA; for (let k = 0; k < K; k++) { const a = i * Kp + k, b = j * Kp + k, c = j * Kp + k + 1, d = i * Kp + k + 1; idx.push(a, b, d, b, c, d); } }
       const q = new TT.BufferGeometry(); q.setAttribute('position', new TT.Float32BufferAttribute(pos, 3)); q.setAttribute('uv', new TT.Float32BufferAttribute(uv, 2)); q.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); q.setIndex(idx);
-      q.computeVertexNormals(); return q;
+      { const nn = q; nn.computeVertexNormals(); const N0 = nn.attributes.normal; if (N0.getY(0) < 0) { const I = nn.index.array; for (let i = 0; i < I.length; i += 3) { const t = I[i]; I[i] = I[i + 1]; I[i + 1] = t; } nn.computeVertexNormals(); } } return q;
     });
-    const soil = M('soil', { map: soilTex(), color: '#ffffff', vertexColors: true, roughness: 1, side: TT.DoubleSide });
+    const soil = M('soil', { map: soilTex(), color: '#ffffff', vertexColors: true, roughness: 1 });
     const b = mesh(bed, soil); b.castShadow = false; g.add(b);
     // rubble: little rough stones
     const rub = G('ltRub', () => { const q = new TT.IcosahedronGeometry(1, 0), P = q.attributes.position; for (let i = 0; i < P.count; i++) { const k = .75 + hash(P.getX(i) * 3 + P.getZ(i), P.getY(i)) * .5; P.setXYZ(i, P.getX(i) * k, P.getY(i) * k * .7, P.getZ(i) * k); } q.computeVertexNormals(); return q; });
@@ -421,17 +437,23 @@
     for (let y = 0; y < h; y++) { const t = fbm(y * .05, 3.1) * 4 + y * .09, a = .1 + .2 * Math.pow(.5 + .5 * Math.sin(t * 6.283), 6); g.fillStyle = dark; g.globalAlpha = a; g.fillRect(0, y, w, 1); }
     g.globalAlpha = 1;
   }, true);
-  // stone for the helmets: Carrara (soft grey veins) and basalt (grain, a few pale crystals)
+  // stone for the figures, old and weathered (2026-11-19 user: もう少し古い感じに): marble yellowed with grime in patches and in the
+  // hollows, basalt dulled with paler worn patches; both pitted (the same picture as a bump map)
   const stoneTex = k => ctex('st' + k, 256, 256, (g, w, h) => {
-    const id = g.createImageData(w, h), d = id.data, white = k === 'w';
+    const id = g.createImageData(w, h), d = id.data, white = k === 'w', green = k === 'g';
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const u = x / w * 4, v = y / h * 4, i = (y * w + x) * 4, n = fbm(u * 3, v * 3);
-      if (white) { const vein = Math.exp(-Math.abs(Math.sin((u + v * .6 + fbm(u, v) * 3) * 2.2)) * 18); const b = 238 - n * 14 - vein * 50; d[i] = b; d[i + 1] = b - 2; d[i + 2] = b - 5; }
-      else { const sp = hash(x, y) > .985 ? 50 : 0, b = 40 + n * 22 + sp; d[i] = b; d[i + 1] = b; d[i + 2] = b + 2; }
-      d[i + 3] = 255;
+      const a = x / w * Math.PI * 2, v = y / h * 4, i = (y * w + x) * 4, cx = Math.cos(a) * 1.3, sx = Math.sin(a) * 1.3;
+      const n = fbm(cx * 3 + v, sx * 3 + v), grime = Math.max(0, fbm(cx + v * .7 + 5, sx - v * .5) - .45) * 1.8, pit = fbm(cx * 12 + v * 9, sx * 12 - v * 7) < .27 ? 1 : 0;
+      let r, gg, b;
+      if (white) { const vein = Math.exp(-Math.abs(Math.sin((cx + v * .6 + fbm(cx, v) * 3) * 2.2)) * 16); r = 222 - n * 18 - vein * 40; gg = r - 6; b = r - 18; r -= grime * 60; gg -= grime * 66; b -= grime * 70; }
+      else if (green) { const vein = Math.exp(-Math.abs(Math.sin((cx * 1.3 - v * .8 + fbm(sx * 2, v * 2) * 4) * 2.6)) * 30) * .6; r = 30 + n * 22 + vein * 70; gg = 42 + n * 26 + vein * 84; b = 36 + n * 22 + vein * 72; r += grime * 26; gg += grime * 24; b += grime * 18; }
+      else { r = gg = b = 48 + n * 20 + (hash(x, y) > .985 ? 36 : 0); r += grime * 34; gg += grime * 30; b += grime * 24; }
+      if (pit) { r *= .62; gg *= .62; b *= .62; }
+      d[i] = Math.max(0, r); d[i + 1] = Math.max(0, gg); d[i + 2] = Math.max(0, b); d[i + 3] = 255;
     }
     g.putImageData(id, 0, 0);
   }, true);
+  const oldStone = (k, col) => M('old' + k + col, { map: stoneTex(k), bumpMap: stoneTex(k), bumpScale: 1.6, color: '#ffffff', roughness: k === 'w' ? .62 : .72, metalness: 0, envMapIntensity: .7 });
   // a 2D counter picture (latrunculi/img/2d/pc-*.webp) as a texture, for a face of a disc
   const picTex = k => mat('pic' + k, () => { const t = srgb(new (T().CanvasTexture)((() => { const c = document.createElement('canvas'); c.width = c.height = 2; return c; })())); t.anisotropy = 8;
     loadImg(k).then(im => { if (!im) return; t.image = im; t.needsUpdate = true; if (X.kick) X.kick(200); }); return t; });
@@ -443,14 +465,13 @@
   // helm: a Roman helmet (galea) carved in marble / basalt on a round plinth — faces the near side (+z)
   function helm(g, col) {
     const TT = T(), white = col === 2;
-    const m = M('helm' + col, { map: stoneTex(white ? 'w' : 'b'), color: '#ffffff', roughness: white ? .34 : .5, clearcoat: white ? .35 : .2, clearcoatRoughness: .3 });
-    const m2 = M('helm2s' + col, { map: stoneTex(white ? 'w' : 'b'), color: '#ffffff', roughness: white ? .34 : .5, side: TT.DoubleSide });
-    g.add(mesh(G('hmPlinth', () => new TT.LatheGeometry([V2(0, 0), V2(.3, 0), V2(.31, .015), V2(.31, .045), V2(.29, .06), V2(.26, .068), V2(.25, .085), V2(.27, .095), V2(.25, .11), V2(.16, .12), V2(.13, .15), V2(.12, .2), V2(0, .2)], seg(40))), m));
+    const m = oldStone(white ? 'w' : 'b', ''), m2 = M('helm2s' + col, { map: stoneTex(white ? 'w' : 'b'), bumpMap: stoneTex(white ? 'w' : 'b'), bumpScale: 1.6, color: '#ffffff', roughness: .7, side: TT.DoubleSide });
+    g.add(mesh(G('hmPlinth', () => new TT.LatheGeometry([V2(0, 0), V2(.31, 0), V2(.3, .055), V2(.255, .075), V2(.27, .095), V2(.15, .125), V2(.12, .2), V2(0, .2)], LO() ? 14 : 22)), m));
     const hd = new TT.Group(); hd.position.y = .3; hd.rotation.y = col === 1 ? 1.15 : -1.15; g.add(hd);   // (turned three-quarters, the crest's fan shows — the two sides face each other)
     // the bowl, deep, a little longer front to back
-    const bowl = mesh(G('hmBowl2', () => new TT.SphereGeometry(.2, seg(36), seg(20), 0, Math.PI * 2, 0, Math.PI * .62)), m); bowl.scale.set(1, 1.05, 1.1); hd.add(bowl);
+    const bowl = mesh(G('hmBowl2', () => new TT.SphereGeometry(.2, seg(30), 8, 0, Math.PI * 2, 0, Math.PI * .62)), m); bowl.scale.set(1, 1.05, 1.1); hd.add(bowl);
     // the brow ridge in front, the wide neck guard behind
-    const brow = mesh(G('hmBrow2', () => { const q = new TT.TorusGeometry(.2, .022, 6, seg(28), Math.PI * .9); q.rotateX(Math.PI / 2); q.rotateY(Math.PI * .05); return q; }), m, 0, -.07, 0); brow.scale.set(1.02, 1, 1.12); hd.add(brow);
+    const brow = mesh(G('hmBrow2', () => { const q = new TT.TorusGeometry(.2, .022, 4, 12, Math.PI * .9); q.rotateX(Math.PI / 2); q.rotateY(Math.PI * .05); return q; }), m, 0, -.07, 0); brow.scale.set(1.02, 1, 1.12); hd.add(brow);
     const guard = mesh(G('hmGuard2', () => new TT.CylinderGeometry(.205, .31, .08, seg(28), 1, true, Math.PI * .58, Math.PI * .84)), m2, 0, -.1, -.01); guard.scale.z = 1.1; hd.add(guard);
     // cheek guards
     for (const sx of [-1, 1]) {
@@ -460,22 +481,21 @@
     // the crest: a fan of horsehair front to back on a little holder, its strands cut in
         const crestG = G('hmCrest2', () => {
       const sh = new TT.Shape(), r0 = .31, r1 = .17; sh.moveTo(-r0, -.02); sh.absarc(0, 0, r0, Math.PI + .06, -.06, true); sh.lineTo(r1, -.02); sh.absarc(0, 0, r1, -.06, Math.PI + .06, false); sh.closePath();
-      const e = new TT.ExtrudeGeometry(sh, { depth: .05, bevelEnabled: true, bevelThickness: .015, bevelSize: .012, bevelSegments: 2, curveSegments: seg(24) }); e.translate(0, 0, -.025); e.rotateY(Math.PI / 2);
+      const e = new TT.ExtrudeGeometry(sh, { depth: .05, bevelEnabled: true, bevelThickness: .015, bevelSize: .012, bevelSegments: 1, curveSegments: 8 }); e.translate(0, 0, -.025); e.rotateY(Math.PI / 2);
       const P = e.attributes.position, UV = e.attributes.uv; for (let i = 0; i < P.count; i++) { const a = Math.atan2(P.getY(i), P.getZ(i)); UV.setXY(i, a / Math.PI, Math.hypot(P.getY(i), P.getZ(i)) * 3); } e.computeVertexNormals(); return e; });
-    const strands = ctex('strand' + col, 256, 32, (q, w, h) => { q.fillStyle = white ? '#ece8df' : '#36363a'; q.fillRect(0, 0, w, h); q.strokeStyle = white ? 'rgba(120,112,100,.5)' : 'rgba(10,10,10,.7)'; q.lineWidth = 2; for (let x = 4; x < w; x += 9) { q.beginPath(); q.moveTo(x, 0); q.lineTo(x, h); q.stroke(); } }, true);
-    const crest = mesh(crestG, M('crest' + col, { map: strands, color: '#ffffff', roughness: .6 }), 0, 0, -.01); crest.scale.set(1, .82, 1.0); hd.add(crest);
+    const strands = ctex('strand' + col, 256, 32, (q, w, h) => { q.fillStyle = white ? '#d8ccb4' : '#3a3836'; q.fillRect(0, 0, w, h); q.strokeStyle = white ? 'rgba(120,112,100,.5)' : 'rgba(10,10,10,.7)'; q.lineWidth = 2; for (let x = 4; x < w; x += 9) { q.beginPath(); q.moveTo(x, 0); q.lineTo(x, h); q.stroke(); } }, true);
+    const crest = mesh(crestG, M('crest' + col, { map: strands, color: white ? '#e6dcc8' : '#ffffff', roughness: .8 }), 0, 0, -.01); crest.scale.set(1, .82, 1.0); hd.add(crest);
     g.userData.h = .56; g.userData.lie = .31;
   }
   // wood: a turned pawn with burnt rings
   function wood(g, col) {
     const TT = T(), dark = col === 1;
     const wm = M('pawn' + col, { map: dark ? woodTex('wn', '#6a4226', '#2c180a') : woodTex('bx', '#e6cfa2', '#b38a58'), color: '#ffffff', roughness: .48, clearcoat: .35, clearcoatRoughness: .45 });
-    g.add(mesh(G('pwBody', () => new TT.LatheGeometry([V2(0, 0), V2(.29, 0), V2(.3, .02), V2(.29, .05), V2(.25, .065), V2(.235, .08), V2(.25, .095), V2(.22, .115), V2(.16, .15), V2(.125, .22), V2(.105, .3), V2(.1, .34), V2(.155, .355), V2(.165, .372), V2(.14, .388), V2(.1, .4), V2(.08, .42), V2(0, .42)], seg(40))), wm));
-    g.add(mesh(G('pwHead', () => new TT.SphereGeometry(.125, seg(32), seg(22))), wm, 0, .52, 0));
+    g.add(mesh(G('pwBody', () => new TT.LatheGeometry([V2(0, 0), V2(.3, 0), V2(.3, .03), V2(.25, .07), V2(.25, .095), V2(.15, .16), V2(.1, .34), V2(.16, .365), V2(.09, .405), V2(0, .42)], LO() ? 14 : 22)), wm));
+    g.add(mesh(G('pwHead', () => new TT.SphereGeometry(.125, 16, 10)), wm, 0, .52, 0));
     const burnt = M('burnt', { color: '#1c0f06', roughness: .9 });
-    g.add(mesh(G('pwRing1', () => { const q = new TT.TorusGeometry(.243, .009, 6, seg(40)); q.rotateX(Math.PI / 2); return q; }), burnt, 0, .08, 0));
-    g.add(mesh(G('pwRing2', () => { const q = new TT.TorusGeometry(.16, .008, 6, seg(36)); q.rotateX(Math.PI / 2); return q; }), burnt, 0, .372, 0));
-    g.add(mesh(G('pwRing3', () => { const q = new TT.TorusGeometry(.288, .007, 6, seg(40)); q.rotateX(Math.PI / 2); return q; }), burnt, 0, .03, 0));
+    g.add(mesh(G('pwRing1', () => { const q = new TT.TorusGeometry(.252, .01, 4, seg(32)); q.rotateX(Math.PI / 2); return q; }), burnt, 0, .08, 0));
+    g.add(mesh(G('pwRing2', () => { const q = new TT.TorusGeometry(.164, .009, 4, seg(28)); q.rotateX(Math.PI / 2); return q; }), burnt, 0, .372, 0));
     g.userData.h = .645; g.userData.lie = .3;
   }
   // abstract: a six-petal flower on a stem (the 2D counters' flower, standing up)
@@ -483,62 +503,62 @@
     const TT = T(), dark = col === 1;
     const body = M('abs' + col, { color: dark ? '#2e2c2c' : '#ece6dc', roughness: .62, clearcoat: .15, clearcoatRoughness: .5 });
     const petal = M('absP' + col, { color: dark ? '#55524f' : '#bdb6aa', roughness: .55, clearcoat: .2, clearcoatRoughness: .4 });
-    g.add(mesh(G('abBaseG', () => new TT.LatheGeometry([V2(0, 0), V2(.27, 0), V2(.28, .015), V2(.28, .05), V2(.25, .07), V2(.17, .09), V2(.1, .12), V2(.06, .17), V2(0, .175)], seg(40))), body));
+    g.add(mesh(G('abBaseG', () => new TT.LatheGeometry([V2(0, 0), V2(.27, 0), V2(.28, .015), V2(.28, .05), V2(.25, .07), V2(.17, .09), V2(.1, .12), V2(.06, .17), V2(0, .175)], LO() ? 14 : 22)), body));
     g.add(mesh(G('abStem', () => { const q = new TT.CylinderGeometry(.04, .055, .2, seg(16)); q.translate(0, .1 + .16, 0); return q; }), body));
     const fl = new TT.Group(); fl.position.y = .38; g.add(fl);
     fl.add(mesh(G('abCup', () => new TT.LatheGeometry([V2(.04, -.04), V2(.08, -.015), V2(.09, 0), V2(0, .005)], seg(20))), body));
-    const pg = G('abPetal', () => { const q = new TT.SphereGeometry(1, seg(20), seg(12)); q.scale(.075, .028, .15); q.translate(0, 0, .14); return q; });
+    const pg = G('abPetal', () => { const q = new TT.SphereGeometry(1, 8, 4); q.scale(.075, .028, .15); q.translate(0, 0, .14); return q; });
     for (let k = 0; k < 6; k++) { const p = mesh(pg, petal); p.rotation.set(0, k * Math.PI / 3, 0); const t = new TT.Group(); t.rotation.y = k * Math.PI / 3; p.rotation.set(-.18, 0, 0); t.add(p); fl.add(t); }
-    fl.add(mesh(G('abHeart', () => new TT.SphereGeometry(.05, seg(16), seg(10))), body, 0, .025, 0));
+    fl.add(mesh(G('abHeart', () => new TT.SphereGeometry(.05, 10, 6)), body, 0, .025, 0));
     g.userData.h = .46; g.userData.lie = .29;
   }
-  // coin: a stack of three; the top one wears the 2D coin (SPQR), the bottom one the reverse (S·C)
+  // coin: one thick coin, polished (2026-11-19 user: 1枚で、より光らせて — 金貨と銀貨); SPQR on top, S·C underneath (the 2D pictures)
   function coin(g, col) {
-    const TT = T(), gold = col === 1, r = .29, th = .054;
-    const metal = M('coin' + col, { color: gold ? '#e0b45a' : '#d2d6dc', metalness: 1, roughness: .32, envMapIntensity: 1.35 });
-    const face = (k, img) => M('coinF' + k, { map: picTex(img), bumpMap: picTex(img), bumpScale: .9, color: gold ? '#fff1d0' : '#ffffff', metalness: .85, roughness: .34, envMapIntensity: 1.3 });
-    const side = G('cnSide', () => { const q = new TT.CylinderGeometry(r, r, th, seg(48), 1, true); q.translate(0, th / 2, 0); return q; });
-    const rim = G('cnRim', () => { const q = new TT.TorusGeometry(r - .006, .007, 4, seg(48)); q.rotateX(Math.PI / 2); return q; });
-    const plain = G('cnCap', () => { const q = new TT.CircleGeometry(r, seg(48)); q.rotateX(-Math.PI / 2); return q; });
-    for (let k = 0; k < 3; k++) {
-      const o = new TT.Group(); o.position.set((hash(k, 3) - .5) * .03, k * th, (hash(k, 5) - .5) * .03); o.rotation.y = k === 1 ? hash(k, col) * 6 : 0; g.add(o);
-      o.add(mesh(side, metal)); o.add(mesh(rim, metal, 0, th, 0)); o.add(mesh(rim, metal, 0, 0, 0));
-      if (k === 2) o.add(mesh(faceGeo('cnTop', r, .9, false), face(col + 't', 'pc-coin-' + (gold ? 'b' : 'w')), 0, th + .0005, 0));
-      else o.add(mesh(plain, metal, 0, th - .0005, 0));
-      if (k === 0) o.add(mesh(faceGeo('cnBot', r, .9, true), face(col + 'b', 'pc-coin-' + (gold ? 'bx' : 'wx')), 0, -.0005, 0));
-    }
-    g.userData.h = 3 * th; g.userData.lie = 0;
+    const TT = T(), gold = col === 1, r = .3, th = .07;
+    const metal = M('coin' + col, { color: gold ? '#f2c25c' : '#e6e9ee', metalness: 1, roughness: .14, envMapIntensity: 2 });
+    const face = (k, img) => M('coinF' + k, { map: picTex(img), bumpMap: picTex(img), bumpScale: 1.2, color: '#ffffff', metalness: .55, roughness: .24, clearcoat: .6, clearcoatRoughness: .1, envMapIntensity: 2.2 });
+    g.add(mesh(G('cnSide1', () => { const q = new TT.CylinderGeometry(r, r, th, seg(56), 1, true); q.translate(0, th / 2, 0); return q; }), metal));
+    for (const y of [0, th]) g.add(mesh(G('cnRim1', () => { const q = new TT.TorusGeometry(r - .007, .008, 3, seg(48)); q.rotateX(Math.PI / 2); return q; }), metal, 0, y, 0));
+    g.add(mesh(faceGeo('cnTop', r, .9, false), face(col + 't', 'pc-coin-' + (gold ? 'b' : 'w')), 0, th + .0005, 0));
+    g.add(mesh(faceGeo('cnBot', r, .9, true), face(col + 'b', 'pc-coin-' + (gold ? 'bx' : 'wx')), 0, -.0005, 0));
+    g.userData.h = th; g.userData.lie = 0;
   }
-  // glass: a dome of Roman glass, weathered (iridescent crust in patches); its flat underside is the 2D page's turned-over picture
-  // (sampled round a circle so the texture meets itself where the lathe closes)
-  const crustAt = (k, x, y, w, h) => { const a = x / w * Math.PI * 2, v = y / h; return fbm(Math.cos(a) * 2.2 + v * 4 + (k === 'w' ? 7 : 0), Math.sin(a) * 2.2 + v * 4) * .7 + fbm(Math.cos(a) * 6 + v * 11, Math.sin(a) * 6 - v * 9) * .3; };
-  const crust = (k, base, patch) => ctex('crust' + k, 256, 256, (g, w, h) => {
-    const id = g.createImageData(w, h), d = id.data, B = base, Pc = patch;
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const n = crustAt(k, x, y, w, h), a = Math.max(0, Math.min(1, (n - .6) * 7)) * .75, i = (y * w + x) * 4;
-      for (let c = 0; c < 3; c++) d[i + c] = B[c] + (Pc[c] - B[c]) * a; d[i + 3] = 255; }
-    g.putImageData(id, 0, 0);
-  }, true);
-  const crustR = k => ctex('crustR' + k, 256, 256, (g, w, h) => {
-    const id = g.createImageData(w, h), d = id.data;
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const n = crustAt(k, x, y, w, h), a = Math.max(0, Math.min(1, (n - .6) * 7)), i = (y * w + x) * 4; d[i] = 0; d[i + 1] = 15 + a * 170; d[i + 2] = 0; d[i + 3] = 255; }
-    g.putImageData(id, 0, 0);
-  }, true, true);
+  // 'glass' (in 3D, 2026-11-19 user: 石細工でこだわりのチェス駒的な像で): a little Ionic column carved in marble — a square plinth,
+  // the torus–scotia base, a fluted shaft (the flutes in a normal map), the capital with its two scrolls and the abacus slab.
+  // Black verde antico (dark green-black), White Carrara; both old and weathered like the helmets.
+  const fluteN = () => mat('fluteN', () => { const w = 256, h = 8, c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'), id = g.createImageData(w, h), d = id.data, F = 16;
+    for (let x = 0; x < w; x++) { const t = (x / w * F) % 1, sl = -Math.cos(t * Math.PI * 2) * Math.sign(t - .5) * .0 + (t < .08 || t > .92 ? 0 : -Math.cos((t - .08) / .84 * Math.PI) * .9), nx = sl, l = Math.hypot(nx, 1);
+      for (let y = 0; y < h; y++) { const i = (y * w + x) * 4; d[i] = (nx / l * .5 + .5) * 255; d[i + 1] = 128; d[i + 2] = (1 / l * .5 + .5) * 255; d[i + 3] = 255; } }
+    g.putImageData(id, 0, 0); const t = new (T().CanvasTexture)(c); t.wrapS = t.wrapT = T().RepeatWrapping; return t; });
+  const voluteTex = k => ctex('volute' + k, 128, 128, (g, w, h) => {
+    g.fillStyle = k === 'w' ? '#d9cfba' : '#33463c'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = k === 'w' ? 'rgba(90,70,40,.75)' : 'rgba(8,14,10,.85)'; g.lineWidth = 5; g.beginPath();
+    for (let i = 0; i <= 120; i++) { const a = i / 120 * Math.PI * 5, r = 58 * (1 - i / 140); const x = w / 2 + Math.cos(a) * r, y = h / 2 + Math.sin(a) * r; i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke();
+    g.fillStyle = g.strokeStyle; g.beginPath(); g.arc(w / 2, h / 2, 9, 0, 7); g.fill();
+  });
   function glass(g, col) {
-    const TT = T(), blue = col === 1, r = .3, ph = .23;
-    const gm = M('glass' + col, { map: blue ? crust('b', [22, 46, 128], [120, 140, 150]) : crust('w', [238, 238, 230], [206, 198, 176]), roughnessMap: blue ? crustR('b') : crustR('w'), color: '#ffffff',
-      roughness: 1, metalness: 0, clearcoat: 1, clearcoatRoughness: .06, iridescence: .7, iridescenceIOR: 1.6, iridescenceThicknessRange: [180, 520], envMapIntensity: 1.5 });
-    g.add(mesh(G('glDome', () => { const pts = [V2(0, 0), V2(r * .97, 0), V2(r, .015)], st = LO() ? 7 : 11; for (let i = 1; i <= st; i++) { const a = Math.PI / 2 * i / st; pts.push(V2(r * Math.cos(a), .015 + (ph - .015) * Math.pow(Math.sin(a), .9))); } return new TT.LatheGeometry(pts, seg(44)); }), gm));
-    g.add(mesh(faceGeo('glBot', r * .97, .88, true), M('glassU' + col, { map: picTex('pc-glass-' + (blue ? 'bx' : 'wx')), color: '#ffffff', roughness: .3, clearcoat: .6 }), 0, -.001, 0));
-    g.userData.h = ph; g.userData.lie = 0;
+    const TT = T(), white = col === 2, k = white ? 'w' : 'g', m = oldStone(k, '');
+    g.add(mesh(G('icPl', () => { const q = new TT.BoxGeometry(.42, .04, .42); q.translate(0, .02, 0); return q; }), m));
+    g.add(mesh(G('icBase', () => new TT.LatheGeometry([V2(.18, .04), V2(.192, .052), V2(.182, .068), V2(.148, .075), V2(.138, .085), V2(.15, .094), V2(.138, .104), V2(.112, .11), V2(0, .11)], seg(36))), m));
+    const sh = M('icShaft' + k, { map: stoneTex(k), normalMap: fluteN(), normalScale: new TT.Vector2(2.2, 2.2), color: '#ffffff', roughness: white ? .62 : .72, envMapIntensity: .7 });
+    g.add(mesh(G('icShaft', () => { const q = new TT.CylinderGeometry(.092, .108, .34, seg(40), 1, true); q.translate(0, .11 + .17, 0); return q; }), sh));
+    g.add(mesh(G('icNeck', () => new TT.LatheGeometry([V2(.092, .45), V2(.104, .457), V2(.098, .466), V2(.13, .484), V2(0, .485)], seg(36))), m));
+    // the capital: the bolster across with a scroll at each end, the abacus on top
+    const vg = G('icVol', () => { const q = new TT.CylinderGeometry(.046, .046, .22, seg(24)); q.rotateX(Math.PI / 2); return q; });
+    const vm = M('icVolM' + k, { map: stoneTex(k), bumpMap: stoneTex(k), bumpScale: 1.6, color: '#ffffff', roughness: .7 }), face = M('icVolF' + k, { map: voluteTex(k), bumpMap: voluteTex(k), bumpScale: 2, color: '#ffffff', roughness: .7 });
+    for (const sx of [-1, 1]) g.add(mesh(vg, [vm, face, face], sx * .11, .49, 0));
+    g.add(mesh(G('icBol', () => new TT.BoxGeometry(.22, .06, .17)), m, 0, .5, 0));
+    g.add(mesh(G('icAb', () => { const q = new TT.BoxGeometry(.27, .03, .25); q.translate(0, .545, 0); return q; }), m));
+    g.userData.h = .56; g.userData.lie = .21;
   }
-  // bone: a turned counter with V grooves round the side and on the top; VI cut underneath (the 2D page's turned-over picture)
+  // bone: one turned disc (2026-11-19 user: 1枚でOK) — a bead round the edge, rings cut in the top; VI cut underneath (the 2D picture)
   function bone(g, col) {
     const TT = T(), dark = col === 1;
-    const bm = M('boneC' + col, { map: boneTex(), color: dark ? '#6e5640' : '#ffffff', roughness: .45, clearcoat: .25, clearcoatRoughness: .4 });
-    g.add(mesh(G('bnBody', () => new TT.LatheGeometry([V2(0, .002), V2(.27, .002), V2(.285, .015), V2(.29, .06), V2(.255, .078), V2(.29, .096), V2(.29, .136), V2(.255, .154), V2(.29, .172), V2(.285, .215), V2(.265, .235),
-      V2(.22, .242), V2(.2, .222), V2(.18, .244), V2(.14, .244), V2(.12, .222), V2(.1, .244), V2(.06, .244), V2(.045, .222), V2(.03, .244), V2(0, .238)], seg(44))), bm));
+    const bm = M('boneC' + col, { map: boneTex(), bumpMap: boneTex(), bumpScale: .8, color: dark ? '#6e5640' : '#ffffff', roughness: .5, clearcoat: .15, clearcoatRoughness: .5 });
+    g.add(mesh(G('bnBody1', () => new TT.LatheGeometry([V2(0, .002), V2(.27, .002), V2(.29, .02), V2(.295, .05), V2(.29, .075), V2(.27, .092),
+      V2(.22, .098), V2(.2, .082), V2(.18, .1), V2(.12, .1), V2(.1, .084), V2(.08, .1), V2(0, .096)], seg(38))), bm));
     g.add(mesh(faceGeo('bnBot', .27, .9, true), M('boneU' + col, { map: picTex('pc-bone-' + (dark ? 'bx' : 'wx')), color: '#ffffff', roughness: .55 }), 0, 0, 0));
-    g.userData.h = .244; g.userData.lie = 0;
+    g.userData.h = .1; g.userData.lie = 0;
   }
   const BUILD = { helm, wood, abstract, coin, glass, bone };
   // col 1 Black (the first player) / 2 White. The body sits in an inner group that turns (topples or turns over).

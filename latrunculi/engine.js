@@ -23,7 +23,7 @@ const N = 8, NN = 64;
 const RULES = {
   seneca: { place: 20, rook: false, leap: true, delay: true, corner: true, stuck: 'cap' },
   piso: { place: 20, rook: false, leap: false, delay: false, corner: true, stuck: 'cap' },
-  quintana: { place: 0, rook: true, leap: false, delay: false, corner: false, stuck: 'lose', tie: 2 },   // tie: equal captures at the end → White (the second player) wins (2026-11-19 user: 決着がつかないので後手勝ち)
+  quintana: { place: 0, rook: true, leap: false, delay: false, corner: false, stuck: 'lose', tie: 'adv' },   // tie: equal captures at the end → more counters in the opponent's half wins, still equal → White (2026-11-19, see advTie)
 };
 const RULE_ORDER = ['seneca', 'piso', 'quintana'];
 const QUIET_MAX = 60;
@@ -314,11 +314,16 @@ function replay(start, moves) {
   for (const m of moves) { pos.play(m); hashes.push(pos.h1); }
   return { pos, hashes };
 }
-// {over, winner, draw, why}: why = 'last' (a side is down to one counter) | 'stuck' (no legal move) | 'quiet' | 'tie' (quintana: equal captures → White)
+// {over, winner, draw, why}: why = 'last' (a side is down to one counter) | 'stuck' (no legal move) | 'quiet' | 'tie' (quintana: captures level → more counters in the opponent's half) | 'tie2' (that level too → White)
+// quintana's tie-break (2026-11-19: equal captures → the side with more counters in the opponent's half (Black: rows 0-3, White:
+// rows 4-7) wins; still equal → White, the second player). Measured in self-play: White-wins-every-tie gave White nearly all games
+// (10/10); this one Black 19 · White 17 of 36 (draws going to White).
+const ADV_KOMI = +((typeof process !== 'undefined' && process.env && process.env.LT_KOMI) || 0);   // Black must lead by more than this
+function advDiff(pos) { const sq = pos.sq; let m = 0; for (let i = 0; i < NN; i++) { const p = sq[i]; if (!p || pos.inc[i]) continue; if (p === P1 && i < 32) m++; else if (p === P2 && i >= 32) m--; } return m - ADV_KOMI; }
 function judge(pos, nMoves) {
   if (pos.placing) return { over: false };
   const n1 = pos.count(P1), n2 = pos.count(P2);
-  const byCap = why => pos.cap[0] === pos.cap[1] ? (R.tie ? { over: true, winner: R.tie, why: 'tie' } : { over: true, winner: 0, draw: true, why }) : { over: true, winner: pos.cap[0] > pos.cap[1] ? P1 : P2, why };
+  const byCap = why => pos.cap[0] === pos.cap[1] ? (R.tie ? (a => a ? { over: true, winner: a > 0 ? P1 : P2, why: 'tie' } : { over: true, winner: P2, why: 'tie2' })(advDiff(pos)) : { over: true, winner: 0, draw: true, why }) : { over: true, winner: pos.cap[0] > pos.cap[1] ? P1 : P2, why };
   if (n1 <= 1 || n2 <= 1) return n1 === n2 ? { over: true, winner: 0, draw: true, why: 'last' } : { over: true, winner: n1 > n2 ? P1 : P2, why: 'last' };
   if (nMoves === 0 || (nMoves == null && !pos.hasMove())) return R.stuck === 'lose' ? { over: true, winner: pos.side ? P1 : P2, why: 'stuck' } : byCap('stuck');
   if (pos.quiet >= QUIET_MAX) return byCap('quiet');
@@ -418,8 +423,8 @@ function evalCore(pos, F) {
   const o = pos.placing ? 0 : NF;
   if (F) { if (o) for (let k = 0; k < NF; k++) { F[NF + k] = F[k]; F[k] = 0; } return 0; }
   let v = 0; for (let k = 0; k < NF; k++) v += W[o + k] * f[k];
-  // quintana: equal captures at the end go to White — the longer it stays level, the better for White (TIE_W per the whole limit)
-  if (R.tie && !pos.placing && pos.cap[0] === pos.cap[1]) v += (me === R.tie ? TIE_W : -TIE_W) * pos.quiet / QUIET_MAX;
+  // quintana: with captures level the tie-break counts — the nearer the limit, the more (TIE_W per the whole limit)
+  if (R.tie && !pos.placing && pos.cap[0] === pos.cap[1]) { const a = advDiff(pos); v += (me === P1 ? 1 : -1) * (a ? Math.sign(a) * Math.min(1, Math.abs(a) / 3) : -.3) * TIE_W * pos.quiet / QUIET_MAX; }
   return Math.round(v);
 }
 const EVF = new Float64Array(NF);   // (evalCore's scratch; F for tuning has 2 * NF entries)
