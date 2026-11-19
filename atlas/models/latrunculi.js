@@ -311,15 +311,18 @@
       const walnut = M('wdPlinth', { map: sideTex('wood'), color: '#7a5a44', roughness: .55, clearcoat: .3, clearcoatRoughness: .4 });
       add(block('wdPl', W + .2, H + .2, K[6] + .1, PL, 3.6), walnut, 0, 0, 0);
       // brass corner caps: a quarter ring and two arms on the top, the same wrapped round the side; two screws
-      const brass = M('brass', { color: '#e8bd62', metalness: 1, roughness: .12, envMapIntensity: 2.2 }), brassD = M('brassD', { color: '#c89a48', metalness: 1, roughness: .2, envMapIntensity: 2 });
+      const brass = M('brass', { color: '#f4c968', metalness: 1, roughness: .07, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 2.8 }), brassD = M('brassD', { color: '#e6b85c', metalness: 1, roughness: .1, envMapIntensity: 2.6 });   // (2026-11-19 user: 煌めき感を — polished, nearly gold)
       const r0 = K[6], armL = .42, bw = .1, TH = K[7], sh = TH * .8, y0 = PL;
       for (const [sx, sz] of [[1, -1], [-1, -1], [1, 1], [-1, 1]]) {
         const cx = sx * (W / 2 - r0), cz = sz * (H / 2 - r0);
         const ph0 = sx > 0 ? (sz < 0 ? 0 : -Math.PI / 2) : (sz < 0 ? Math.PI / 2 : Math.PI);
-        const top = mesh(G('wdQ' + ph0.toFixed(2), () => { const q = new TT.RingGeometry(r0 - bw, r0 + .004, 10, 1, ph0, Math.PI / 2); q.rotateX(-Math.PI / 2); return q; }), brass, cx, y0 + TH + .006, cz); g.add(top);
+        void ph0;
+        // the top: one bevelled L following the corner (its rounded edges catch the light), mirrored for each corner
+        const capG = G('wdCapL', () => { const sh2 = new TT.Shape(), ri = r0 - bw, A = armL + r0;
+          sh2.moveTo(-A, r0); sh2.lineTo(0, r0); sh2.absarc(0, 0, r0, Math.PI / 2, 0, true); sh2.lineTo(r0, -A); sh2.lineTo(ri, -A); sh2.lineTo(ri, 0); sh2.absarc(0, 0, ri, 0, Math.PI / 2, false); sh2.lineTo(-A, ri); sh2.closePath();
+          const e = new TT.ExtrudeGeometry(sh2, { depth: .006, bevelEnabled: true, bevelThickness: .006, bevelSize: .006, bevelSegments: 2, curveSegments: 8 }); e.rotateX(Math.PI / 2); e.translate(0, .012, 0); e.computeVertexNormals(); return e; });
+        const cap = mesh(capG, brass, cx, y0 + TH, cz); cap.scale.set(sx, 1, sz); g.add(cap);
         const thk = G('wdArmT', () => new TT.BoxGeometry(1, .012, 1));
-        const a1 = mesh(thk, brass, cx - sx * armL / 2, y0 + TH + .001, sz * (H / 2 - bw / 2 + .002)); a1.scale.set(armL, 1, bw); g.add(a1);
-        const a2 = mesh(thk, brass, sx * (W / 2 - bw / 2 + .002), y0 + TH + .001, cz - sz * armL / 2); a2.scale.set(bw, 1, armL); g.add(a2);
         const thS = Math.PI / 2 + Math.atan2(-sz, sx) - Math.PI / 4;   // (the cylinder's θ for this quadrant)
         const th0 = sx > 0 ? (sz > 0 ? 0 : Math.PI / 2) : (sz < 0 ? Math.PI : Math.PI * 1.5);
         void thS;
@@ -512,11 +515,20 @@
     fl.add(mesh(G('abHeart', () => new TT.SphereGeometry(.05, 10, 6)), body, 0, .025, 0));
     g.userData.h = .46; g.userData.lie = .29;
   }
-  // coin: one thick coin, polished (2026-11-19 user: 1枚で、より光らせて — 金貨と銀貨); SPQR on top, S·C underneath (the 2D pictures)
+  // coin: one thick coin struck as a proof (2026-11-19 user: 1枚で、プルーフ貨幣並みに — 金貨と銀貨): a mirror field, the design
+  // frosted (a roughness map from the picture: where it has relief, matt), a mirror rim; SPQR on top, S·C underneath (the 2D pictures)
+  const proofR = k => mat('proofR' + k, () => { const c = document.createElement('canvas'); c.width = c.height = 2; const t = new (T().CanvasTexture)(c);
+    loadImg(k).then(im => { if (!im) return; const S = 320, a = document.createElement('canvas'); a.width = a.height = S; const g = a.getContext('2d'); g.drawImage(im, 0, 0, S, S);
+      const o = g.getImageData(0, 0, S, S).data, b2 = document.createElement('canvas'); b2.width = b2.height = S; const h = b2.getContext('2d'); h.filter = 'blur(3px)'; h.drawImage(im, 0, 0, S, S);
+      const bl = h.getImageData(0, 0, S, S).data, out = g.createImageData(S, S), d = out.data;
+      for (let i = 0; i < S * S; i++) { const l = (o[i * 4] + o[i * 4 + 1] + o[i * 4 + 2]) / 3, lb = (bl[i * 4] + bl[i * 4 + 1] + bl[i * 4 + 2]) / 3, rel = Math.min(1, Math.abs(l - lb) / 14);
+        d[i * 4] = 0; d[i * 4 + 1] = Math.round((.05 + rel * .5) * 255); d[i * 4 + 2] = 255; d[i * 4 + 3] = 255; }
+      g.putImageData(out, 0, 0); t.image = a; t.needsUpdate = true; if (X.kick) X.kick(200); });
+    return t; });
   function coin(g, col) {
     const TT = T(), gold = col === 1, r = .3, th = .07;
-    const metal = M('coin' + col, { color: gold ? '#f2c25c' : '#e6e9ee', metalness: 1, roughness: .14, envMapIntensity: 2 });
-    const face = (k, img) => M('coinF' + k, { map: picTex(img), bumpMap: picTex(img), bumpScale: 1.2, color: '#ffffff', metalness: .55, roughness: .24, clearcoat: .6, clearcoatRoughness: .1, envMapIntensity: 2.2 });
+    const metal = M('coin' + col, { color: gold ? '#ffd27a' : '#f2f4f7', metalness: 1, roughness: .04, envMapIntensity: 2.6 });
+    const face = (k, img) => M('coinF' + k, { bumpMap: picTex(img), bumpScale: 1.6, roughnessMap: proofR(img), color: gold ? '#ffd27a' : '#f2f4f7', metalness: 1, roughness: 1, envMapIntensity: 2.6 });   // (no colour picture: the design shows as frosted relief on the mirror field)
     g.add(mesh(G('cnSide1', () => { const q = new TT.CylinderGeometry(r, r, th, seg(56), 1, true); q.translate(0, th / 2, 0); return q; }), metal));
     for (const y of [0, th]) g.add(mesh(G('cnRim1', () => { const q = new TT.TorusGeometry(r - .007, .008, 3, seg(48)); q.rotateX(Math.PI / 2); return q; }), metal, 0, y, 0));
     g.add(mesh(faceGeo('cnTop', r, .9, false), face(col + 't', 'pc-coin-' + (gold ? 'b' : 'w')), 0, th + .0005, 0));
@@ -549,7 +561,8 @@
     for (const sx of [-1, 1]) g.add(mesh(vg, [vm, face, face], sx * .11, .49, 0));
     g.add(mesh(G('icBol', () => new TT.BoxGeometry(.22, .06, .17)), m, 0, .5, 0));
     g.add(mesh(G('icAb', () => { const q = new TT.BoxGeometry(.27, .03, .25); q.translate(0, .545, 0); return q; }), m));
-    g.userData.h = .56; g.userData.lie = .21;
+    g.children.forEach(o => { o.scale.multiplyScalar(1.18); o.position.multiplyScalar(1.18); });   // (2026-11-19 user: マスに対して小さめ → 一回り大きく)
+    g.userData.h = .56 * 1.18; g.userData.lie = .21 * 1.18;
   }
   // bone: one turned disc (2026-11-19 user: 1枚でOK) — a bead round the edge, rings cut in the top; VI cut underneath (the 2D picture)
   function bone(g, col) {
