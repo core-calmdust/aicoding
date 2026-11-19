@@ -789,7 +789,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
       }).catch(err => { MX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
   }
   // the opening books (2026-11-15): the top levels' first plies, one file a rule
-  const bookP = typeof fetch === 'function' ? Promise.all(RULE_ORDER.map(k => fetch(new URL(`book-${k}.json?v=2`, self.location.href)).then(r => r.ok ? r.json() : null).then(b => { if (b) BOOKS[k] = b; }).catch(() => {}))) : Promise.resolve();
+  const bookP = typeof fetch === 'function' ? Promise.all(RULE_ORDER.map(k => fetch(new URL(`book-${k}.json?v=3`, self.location.href)).then(r => r.ok ? r.json() : null).then(b => { if (b) BOOKS[k] = b; }).catch(() => {}))) : Promise.resolve();
   queueP = queueP.then(() => bookP);
   // the learned evaluation (NETV): fetched and unzipped here, then loaded into the cores (MX after its 'mtinit': chained after it)
   const netP = typeof fetch === 'function' && typeof DecompressionStream !== 'undefined' ? Promise.all(RULE_ORDER.filter(k => NETV[k]).map(k =>
