@@ -219,6 +219,19 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
     ok(await p.evaluate(() => G.st.sides[0].armor[G.my.findIndex(s => s.t === 1)] === 1), name + ': plating armors the battleship that was hit');
     await shot('plate');
+    // 第15弾: with the pursuer afloat, sinking a ship with a normal shot keeps my turn; the command ship halves cooldown waits
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; render(); }, [[38, 39, 3], [4, 1, 3]]);
+    await p.waitForTimeout(300);
+    const dd = await p.evaluate(() => { const T = G.st.sides[1], i = T.ships.findIndex(s => s.t === 4), o = []; for (let k = 0; k < 100; k++) if (T.grid[k] === i) o.push(k); T.shots[o[0]] = 2; T.hits++; T.hitsOn[i] = 1; return o[1]; });
+    const cd0 = await p.evaluate(() => G.st.cd[0][G.my.findIndex(s => s.t === 3)]);
+    n0 = await acts(); await tapCell(dd); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 }); await p.waitForFunction(() => !G.busy, null, { timeout: 10000 });
+    ok(await p.evaluate(() => G.st.turn === 0 && G.st.sides[1].sunk.some(Boolean)), name + ': sinking with the pursuer afloat keeps my turn');
+    const miss = await p.evaluate(() => { const T = G.st.sides[1]; for (let k = 0; k < 100; k++) if (T.grid[k] < 0 && !T.shots[k]) return k; });
+    n0 = await acts(); await tapCell(miss); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 }); await idle();
+    ok(await p.evaluate(c => G.st.cd[0][G.my.findIndex(s => s.t === 3)] === Math.max(0, c - 2) || G.phase !== 'battle', cd0), name + ': the command ship takes 2 off the sonar cooldown a turn');
+    await shot('pursuit');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
