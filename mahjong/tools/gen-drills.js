@@ -231,6 +231,7 @@ for (const th of THEMES) {
     if (n % 2000 === 0) MJ.clearCache();
     const W = th[0] === 'w', X = M.TH.includes(th), h = X ? M.make(th) : W ? makeW(th) : makeHand(th); if (!h) continue;
     const key = h.c.join('') + (h.melds ? JSON.stringify(h.melds) : ''); if (sig.has(key)) continue; sig.add(key);
+    if (!X && MJ.shanten(h.c, 0) === -1) continue;   // (a winning hand offers ツモ: never a problem)
     const e = X ? M.evaluate(th, h) : W ? evaluateW(th, h) : evaluate(th, h); if (e && e.fun >= 70) cands.push(e);
   }
   if (cands.length < PER * OVER) console.warn(`${th}: only ${cands.length} candidates (need ${PER * OVER})`);
