@@ -204,6 +204,21 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     for (const c of hc.slice(0, 2)) { await idle(); await p.evaluate(() => { G.view = 'enemy'; render(); }); n0 = await acts(); await tapCell(c); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 }); }
     ok(await p.evaluate(c => c.slice(0, 2).every(x => G.st.sides[1].shots[x] === 3) && G.st.sides[1].armor.some(a => a === 0), hc), name + ': the heavy cruiser dents twice');
     await shot('hcruiser');
+    // 第14弾: depth charge on a ship square (its neighbours go too); plating armors my most-hit ship
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[36, 37, 1], [0, 4, 3]]);
+    await p.waitForTimeout(300);
+    const dc = await p.evaluate(() => { const T = G.st.sides[1]; for (let k = 0; k < 100; k++) if (T.grid[k] >= 0) return k; });
+    i = await skillBtn('depth'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(dc); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(c => { const v = G.st.log.filter(x => x.via === 'depth').map(x => x.cell); const nb = [c - 10, c + 10, c % 10 ? c - 1 : -1, c % 10 < 9 ? c + 1 : -1].filter(x => x >= 0 && x < 100); return v[0] === c && v.length === 1 + nb.length; }, dc), name + ': a depth charge that hits also shoots the 4 neighbours');
+    await shot('depth'); await idle();
+    await p.evaluate(() => { const E = SeaEngine, M = G.st.sides[0], i = G.my.findIndex(s => s.t === 1); for (let k = 0; k < 100; k++) if (M.grid[k] === i) { G.st.turn = 1; E.fire(G.st, k); break; } G.st.turn = 0; G.st.cd[0].fill(0); render(); });
+    i = await skillBtn('plate'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => G.st.sides[0].armor[G.my.findIndex(s => s.t === 1)] === 1), name + ': plating armors the battleship that was hit');
+    await shot('plate');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
