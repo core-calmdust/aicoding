@@ -1046,6 +1046,7 @@ static int mate3(void) {
 /* ------------------------------------------------------------------ search */
 #ifdef SEARCH_STATS   /* (tools/match/usimatch.c "stat": counters of the one-thread search; no effect on the search) */
 static long long stCutK[3][8], stCutD[3], stCutDS[3];   /* cut-offs: [table move / capture or promotion / quiet][place 1, 2, 3, 4-6, 7-10, 11-20, 21-40, 41+]; quiet cuts by depth 1-3 / 4-7 / 8+: count, sum of places */
+static long long stHR[3][6];   /* quiet cut-offs by depth class: count, moves with more history than the cutting one, quiet moves, with history 0, the cutting move's history > 0, it was a killer */
 static long long stQ, stProbe, stHit, stTTcut, stCut, stCut1, stCutTT, stCutIdx, stChkExt, stNull, stNullOk, stLmr, stLmrRe, stStore, stEvict, stRfp, stPv, stMoves;
 #define ST(x) (x)
 #else
@@ -1607,6 +1608,22 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
   PickBlocks *pk = &pkT[ply]; pk->nb = 0;
   EvMask ev; if (inChk) evMask(&ev);
   if (!(ttm && isPseudo(ttm))) { ttm = 0; stage = 1; }
+  /* singular extension (P75 = the least depth, 0 off): is the table move the only good one? A search of the others at half
+     depth against a bound a little below its value: all fail -> the table move is read deeper (2 or 3 plies when they fail
+     by more: P77, P78; non-PV); they reach beta too -> the node is cut (multi-cut); else the table move is read shallower
+     where a cut is expected anyway (P79). */
+  int sgExt = 0;
+  if (P[75] && ttm && !ex && ply > 0 && depth >= P[75] + (ttPv ? 1 : 0) && ttD >= depth - 3 && (ttF == F_LOWER || ttF == F_EXACT) && (ttS < 0 ? -ttS : ttS) < MATE - MAXPLY && ply < rootDepth * 2) {
+    const double sb = ttS - (double)(P[76] ? P[76] : 56) * (1 + (ttPv && !pvNode ? 1.4 : 0)) * depth / 64;
+    exclM[ply] = ttm;
+    const double sv = search2((depth - 1) / 2, sb - 1, sb, ply, 0, cutNode);
+    exclM[ply] = 0;
+    if (stopFlag) return 0;
+    pvLen[ply] = ply; pk->nb = 0; evSt[ply] = rawEval;   /* (the search above used this ply's buffers) */
+    if (sv < sb) { const int tq_ = !board[(ttm >> 7) & 127]; sgExt = 1 + (!pvNode && sv < sb - P[77] + (tq_ ? P[80] : 0)) + (!pvNode && P[78] && sv < sb - P[78] + (tq_ ? P[80] : 0)); }
+    else if (sb >= beta && (sb < 0 ? -sb : sb) < MATE - MAXPLY) return sb;
+    else if (P[79]) { if (ttS >= beta) sgExt = -P[79]; else if (cutNode) sgExt = -(P[79] > 1 ? P[79] - 1 : 1); }
+  }
   for (;;) {
     int m, sc = 0;
     if (stage == 0) { m = ttm; stage = 1; }
@@ -1666,6 +1683,7 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
     legal++; ST(stMoves++);
     const int givesChk = inCheck();
     int ext = !P[55] && givesChk && ply < rootDepth * 2 && (P[11] || seeAfterCheck(m) >= 0) ? 1 : 0;
+    if (m == ttm && sgExt) { if (sgExt > ext) ext = sgExt; else if (sgExt < 0 && !ext) ext = sgExt; }
     const int nd = depth - 1 + ext;
     double v = 0; int full = 0, lmrB = 0;
     if (depth >= (P[66] ? P[66] : 2) && legal > (P[56] ? P[56] : 1) && (quiet || P[57] || sc < 0) && !(P[64] && (inChk || givesChk))) {
@@ -1701,7 +1719,8 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
           ST(stCut++); ST(stCut1 += (legal == 1)); ST(stCutTT += (m == ttm)); ST(stCutIdx += legal);
 #ifdef SEARCH_STATS
           { const int pl = mc, b_ = pl <= 3 ? pl - 1 : pl <= 6 ? 3 : pl <= 10 ? 4 : pl <= 20 ? 5 : pl <= 40 ? 6 : 7, k_ = m == ttm ? 0 : !quiet ? 1 : 2;
-            stCutK[k_][b_ < 0 ? 0 : b_]++; if (k_ == 2) { const int d_ = depth < 4 ? 0 : depth < 8 ? 1 : 2; stCutD[d_]++; stCutDS[d_] += pl; } }
+            stCutK[k_][b_ < 0 ? 0 : b_]++; if (k_ == 2) { const int d_ = depth < 4 ? 0 : depth < 8 ? 1 : 2; stCutD[d_]++; stCutDS[d_] += pl; }
+            if (k_ == 2 && n2 > 1 && !inChk) { int hm = quietHist(us, m), above = 0, zero = 0; for (int q_ = 0; q_ < n2; q_++) { int hq = quietHist(us, qmoves[q_]); above += hq > hm; zero += hq == 0; } const int d_ = depth < 4 ? 0 : depth < 8 ? 1 : 2; stHR[d_][0]++; stHR[d_][1] += above; stHR[d_][2] += n2; stHR[d_][3] += zero; stHR[d_][4] += hm > 0; stHR[d_][5] += (m == killers[ply * 2] || m == killers[ply * 2 + 1]); } }
 #endif
           int b = (P[42] ? P[42] : 170) * depth - 80; if (b > 1600) b = 1600;
           if (quiet) {
