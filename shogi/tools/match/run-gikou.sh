@@ -8,7 +8,7 @@
 #   default 6: Gikou plays on time here, so leave cores free), then GAMES = games per process (P x GAMES in all).
 #   NODES may also be a time, e.g. NODES=4000ms (our engine, 1 thread, native: about the speed of the browser's wasm).
 #   THREADS (default 1): our side on that many threads = the site's multi-thread search (the browser's engine_mt.wasm, native);
-#     the helper threads sleep while Gikou thinks. With THREADS > 1 one game at a time (P = 1), so the cores are ours.
+#     (since 2026-11-19: search v5, the helpers Lazy SMP — built as tools/build-wasm-mt.sh) the helper threads sleep while Gikou thinks. With THREADS > 1 one game at a time (P = 1), so the cores are ours.
 #   FISCHER (e.g. FISCHER=300000,10000 = 5 min + 10 s per move, Floodgate's clock): both sides on that clock (Gikou manages its
 #     own time; ours thinks up to increment + remaining / 25 per move). Used with FULL=1 (any value: the clock replaces it).
 #   e.g. the peak on a Mac with 10 performance cores, on Floodgate's clock, 8 games (about 25 minutes each):
@@ -25,7 +25,7 @@ echo "== build the site's engine (net: $NET, hidden $H)"
 cc -O3 -DNATIVE -DNUE_H=$H -w -o usimatch "$HERE/usimatch.c"
 UM=./usimatch; MTOPT=""
 if [ "$THREADS" -gt 1 ]; then
-  cc -O3 -DNATIVE -DMT -DNUE_H=$H -w -o usimatch-mt "$HERE/usimatch.c" -lpthread
+  cc -O3 -DNATIVE -DMT -DSEARCH2_MT -DTTM_BITS=16 -DNUE_H=$H -w -o usimatch-mt "$HERE/usimatch.c" -lpthread
   UM=./usimatch-mt; MTOPT="--threads $THREADS"
   echo "== what the threads give here (2 s per position)"
   ./usimatch net.bin bench 2000 1 "$HERE/openings.txt"
