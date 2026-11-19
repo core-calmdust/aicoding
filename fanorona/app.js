@@ -132,7 +132,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = GM.engine || 'engine.js?v=fb5s-pro1-mt1-aq2';
+const ENGINE_URL = GM.engine || 'engine.js?v=fb5s-pro1-mt1-aq3';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -159,7 +159,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // workers, as does Fanoron-Telo (solved in JavaScript).
 const MT_DIR = GID === 'fanorona' ? '' : '../fanorona/';
 const MTP = window.MTEngine && (GID === 'fanorona' || GID === 'alquerque') ? MTEngine.use({
-  wasm: MT_DIR + 'engine_mt.wasm?v=7', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2',   // (Alquerque: its own alquerque/mt-helper.js, which loads ours — a worker's script must be in the page's own scope)
+  wasm: MT_DIR + 'engine_mt.wasm?v=8', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2',   // (Alquerque: its own alquerque/mt-helper.js, which loads ours — a worker's script must be in the page's own scope)
   slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => m.rule === 'telo' ? null : { io: E.setupIO(m.start, m.moves || []), rk: E.ruleKey() },   // (the page's rule is the job's: gv)

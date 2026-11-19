@@ -439,7 +439,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, RU
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.FanoronaEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261101h', WV = 'v=20261120aq', GAMEQ = new URLSearchParams(self.location.search).get('g');
+  const V = 'v=20261101h', WV = 'v=20261120aq3', GAMEQ = new URLSearchParams(self.location.search).get('g');
   // the folder of the engine's files (wasm, tables, book): this file's, or self.FANORONA_BASE when another folder's stub loads it
   // with importScripts (alquerque/engine.js: the worker's script has to be in the page's own service-worker scope, 2026-11-20)
   const HERE = new URL(self.FANORONA_BASE || './', self.location.href).href;

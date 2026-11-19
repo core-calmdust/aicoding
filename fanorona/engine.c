@@ -303,6 +303,9 @@ static int alqHand(const Pos *p) {
 // inputs on the 25 points turned so that "forward" is up for the view's side: own piece 25, other piece 25, own piece the other
 // side can jump now 25, other piece the own side can jump now 25 → 64 (clipped ReLU 0..127) ×2 → 16 → 1; value = out × K.
 // The net is evaluated whole at every leaf (no incremental update: the leaves of this engine are cheap and few).
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+#endif
 #define AQ_IN 100
 #define AQ_H 64
 #define AQ_H2 16
@@ -343,6 +346,34 @@ static inline int aqK(int i, int view) { int r = i / 9, c = i % 9; return (view 
 static int aqnEval(const Pos *p) {
   const int s = p->side; const u64 occ = p->p[0] | p->p[1];
   u64 hit[2]; hit[0] = alqHit(p->p[0], p->p[1], occ); hit[1] = alqHit(p->p[1], p->p[0], occ);
+#ifdef __wasm_simd128__
+  // (2026-11-20, 推論の高速化) the same whole numbers with wasm SIMD: the int16 sums in i16x8 lanes (wrapping as the i16 adds
+  // below), clipped to 0..127, then each of the AQ_H2 sums by i32x4.dot_i16x8 (exact int32 pair sums)
+  v128_t xv[2 * AQ_H / 8];
+  for (int v = 0; v < 2; v++) {
+    const int cv = v ? s ^ 1 : s;
+    v128_t a[AQ_H / 8];
+    for (int j = 0; j < AQ_H / 8; j++) a[j] = wasm_v128_load(AQB1 + 8 * j);
+    for (int c = 0; c < 2; c++) {
+      const int base = c == cv ? 0 : 25;
+      u64 y = p->p[c];
+      while (y) { int i = ctz(y); y &= y - 1; const i16 *w = AQW1 + (base + aqK(i, cv)) * AQ_H; for (int j = 0; j < AQ_H / 8; j++) a[j] = wasm_i16x8_add(a[j], wasm_v128_load(w + 8 * j)); }
+      y = hit[c];
+      while (y) { int i = ctz(y); y &= y - 1; const i16 *w = AQW1 + (50 + base + aqK(i, cv)) * AQ_H; for (int j = 0; j < AQ_H / 8; j++) a[j] = wasm_i16x8_add(a[j], wasm_v128_load(w + 8 * j)); }
+    }
+    const v128_t z = wasm_i16x8_splat(0), hi = wasm_i16x8_splat(AQ_QA);
+    for (int j = 0; j < AQ_H / 8; j++) xv[v * AQ_H / 8 + j] = wasm_i16x8_min(wasm_i16x8_max(a[j], z), hi);
+  }
+  i64 out = AQB3;
+  for (int k = 0; k < AQ_H2; k++) {
+    const i16 *w = AQW2 + k * 2 * AQ_H; v128_t s0 = wasm_i32x4_splat(0), s1 = s0;
+    for (int j = 0; j < 2 * AQ_H / 8; j += 2) { s0 = wasm_i32x4_add(s0, wasm_i32x4_dot_i16x8(xv[j], wasm_v128_load(w + 8 * j))); s1 = wasm_i32x4_add(s1, wasm_i32x4_dot_i16x8(xv[j + 1], wasm_v128_load(w + 8 * j + 8))); }
+    s0 = wasm_i32x4_add(s0, s1);
+    i32 h = AQB2[k] + (wasm_i32x4_extract_lane(s0, 0) + wasm_i32x4_extract_lane(s0, 1) + wasm_i32x4_extract_lane(s0, 2) + wasm_i32x4_extract_lane(s0, 3));
+    h >>= 6; if (h < 0) h = 0; else if (h > AQ_QA) h = AQ_QA;
+    out += (i64)h * AQW3[k];
+  }
+#else
   u8 x[2 * AQ_H];
   for (int v = 0; v < 2; v++) {
     const int cv = v ? s ^ 1 : s;
@@ -364,6 +395,7 @@ static int aqnEval(const Pos *p) {
     h >>= 6; if (h < 0) h = 0; else if (h > AQ_QA) h = AQ_QA;
     out += (i64)h * AQW3[k];
   }
+#endif
   i64 v = out * AQK / (AQ_QA * 64);
   return v > 20000 ? 20000 : v < -20000 ? -20000 : (int)v;
 }
