@@ -87,7 +87,7 @@ function renderFleet() {
     el.querySelector('.pips').innerHTML = side.ships.map((s, i) => `<span class="pip${side.sunk[i] ? ' dead' : ''}" title="${t('ship.' + s.t)}">${Array.from({ length: s.len }, (_, k) => `<i${mine && k < side.hitsOn[i] ? ' class="x"' : ''}></i>`).join('')}</span>`).join('');
   };
   row($('#flFoe'), 'AI Lv.' + G.level, G.st.sides[1], false);
-  $('#flFoe .cds').innerHTML = G.st.cd ? G.st.sides[1].ships.map((s, i) => { const k = skillOf(s); if (!k) return ''; const c = G.st.cd[1][i], dead = G.st.sides[1].sunk[i]; return `<span class="${dead ? 'x' : c === 0 ? 'r' : ''}">${t('sk.' + k)}${dead || c === 0 ? '' : ' ' + c}</span>`; }).join('') : '';
+  $('#flFoe .cds').innerHTML = G.st.cd ? G.st.sides[1].ships.map((s, i) => { const k = skillOf(s); if (!k) return ''; const c = G.st.cd[1][i], dead = !E.skillLive(G.st, 1, i); return `<span class="${dead ? 'x' : c === 0 ? 'r' : ''}">${t('sk.' + k)}${dead || c === 0 ? '' : ' ' + c}</span>`; }).join('') : '';
   row($('#flMe'), t('you'), G.st.sides[0], true);
   $('#flFoe').classList.toggle('turn', G.phase === 'battle' && G.st.turn === 1);
   $('#flMe').classList.toggle('turn', G.phase === 'battle' && G.st.turn === 0);
@@ -154,7 +154,7 @@ const SK_ICON = {
 function renderSkills() {
   const el = $('#skillCard'); if (!tac() || !G.st) { el.innerHTML = ''; return; }
   const live = G.phase === 'battle', mine = G.st.turn === 0 && !G.busy;
-  el.innerHTML = G.st.sides[0].ships.map((s, i) => { const k = skillOf(s); if (!k) return ''; const c = G.st.cd[0][i], dead = G.st.sides[0].sunk[i], ready = !dead && c === 0;
+  el.innerHTML = G.st.sides[0].ships.map((s, i) => { const k = skillOf(s); if (!k) return ''; const c = G.st.cd[0][i], dead = !E.skillLive(G.st, 0, i), ready = !dead && c === 0;
     return `<button class="sk ${dead ? 'lost' : ready ? 'ready' : 'wait'}${G.armed === i ? ' armed' : ''}" data-i="${i}" ${ready && live && mine ? '' : 'disabled'} title="${t('ship.' + s.t)} — ${t('sk.' + k + '.d')}">${SK_ICON[k]}<b>${t('sk.' + k)}</b><small>${dead ? t('sk.lost') : ready ? t('sk.ready') : t('sk.wait', { n: c })}</small></button>`; }).join('');
 }
 // the pick draft (タクティクス): 10 ships on the table, picked in turn A B B A …; then the fleet is arranged as usual
@@ -162,7 +162,7 @@ function renderDraft() {
   if (G.phase !== 'draft') return;
   const d = G.draft, mine = d.turn === 0;
   $('#drTurn').textContent = t(d.turn === 0 ? 'dr.you' : 'dr.ai'); $('#drTurn').classList.toggle('me', mine);
-  $('#drRows').innerHTML = E.TYPES.map((T, k) => (d.f || E.POOL)[k] ? `<div class="dr${d.pool[k] && d.picks[0].indexOf(k) < 0 ? '' : ' out'}"><span class="pip">${'<i></i>'.repeat(T.len)}</span><div class="dn"><b>${t('ship.' + k)}<em>×${d.pool[k]}</em></b><small>${T.skill ? t('sk.' + T.skill) + '：' + t('sk.' + T.skill + '.d') : T.armor ? t('sk.armor') + '：' + t('sk.armor.d') : T.aa ? t('sk.aa') + '：' + t('sk.aa.d') : T.decoy ? t('sk.decoy') + '：' + t('sk.decoy.d') : T.counter ? t('sk.counter') + '：' + t('sk.counter.d') : t('dr.none')}</small></div><span class="dc">${T.cost}</span><button data-k="${k}" ${E.draftCan(d, 0, k) && !G.busy ? '' : 'disabled'}>${t('dr.pick')}</button></div>` : '').join('');
+  $('#drRows').innerHTML = E.TYPES.map((T, k) => (d.f || E.POOL)[k] ? `<div class="dr${d.pool[k] && d.picks[0].indexOf(k) < 0 ? '' : ' out'}"><span class="pip">${'<i></i>'.repeat(T.len)}</span><div class="dn"><b>${t('ship.' + k)}<em>×${d.pool[k]}</em></b><small>${T.skill ? t('sk.' + T.skill) + '：' + t('sk.' + T.skill + '.d') : T.armor ? t('sk.armor') + '：' + t('sk.armor.d') : T.aa ? t('sk.aa') + '：' + t('sk.aa.d') : T.decoy ? t('sk.decoy') + '：' + t('sk.decoy.d') : T.counter ? t('sk.counter') + '：' + t('sk.counter.d') : T.rally ? t('sk.rally') + '：' + t('sk.rally.d') : T.hospital ? t('sk.hospital') + '：' + t('sk.hospital.d') : t('dr.none')}</small></div><span class="dc">${T.cost}</span><button data-k="${k}" ${E.draftCan(d, 0, k) && !G.busy ? '' : 'disabled'}>${t('dr.pick')}</button></div>` : '').join('');
   const who = (p, name) => `<div class="dw${d.turn === p ? ' turn' : ''}"><div class="fh"><b>${name}</b><span>${t('dr.left', { c: E.draftLeft(d, p) })}</span></div><div class="pips">${d.picks[p].map(k => `<span class="pip" title="${t('ship.' + k)}">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</div></div>`;
   $('#drWho').innerHTML = who(1, 'AI Lv.' + G.level) + who(0, t('you'));
   $('#btnDrStop').disabled = !(E.draftCanStop(d, 0) && !G.busy);
