@@ -148,6 +148,24 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(77); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
     ok(await p.evaluate(() => { const m = G.st.log.filter(m => m.by === 0 && m.skill === 'sonar').pop(); return m && m.blk === 1 && G.st.scans[0].filter(s => !s.one).length === 0 && G.st.sides[1].ward === 0; }), name + ': the enemy ward stops my sonar');
     await shot('ward');
+    // 第10弾: intel marks an enemy ship square; quick fire keeps the turn while shells hit
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[28, 29, 4], [0, 1, 4]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('intel'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    await idle(); await p.evaluate(() => { G.view = 'enemy'; render(); });
+    ok(await p.evaluate(() => { const sc = G.st.scans[0].find(s => s.one && s.k); return sc && G.st.sides[1].grid[sc.at] >= 0 && !!document.querySelector('#bsvg .sb-lit.on'); }), name + ': intel marks a square of the enemy carrier');
+    await p.evaluate(() => { G.st.cd[0].fill(0); render(); });
+    i = await skillBtn('rapid'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 }); await idle();
+    const cells = await p.evaluate(() => { const T = G.st.sides[1]; const hit = []; for (let k = 0; k < 100; k++) if (T.grid[k] >= 0 && !T.shots[k]) hit.push(k); let miss = -1; for (let k = 0; k < 100; k++) if (T.grid[k] < 0 && !T.shots[k]) { miss = k; break; } return [hit[0], hit[1], miss]; });
+    for (const c of cells.slice(0, 2)) { n0 = await acts(); await tapCell(c); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 }); await p.waitForFunction(() => !G.busy, null, { timeout: 10000 }); }
+    ok(await p.evaluate(() => G.st.turn === 0 && G.st.rapid === 1), name + ': quick fire: two hits, still my turn');
+    n0 = await acts(); await tapCell(cells[2]); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => G.st.rapid === 0 && G.st.log.filter(m => m.by === 1).length > 0 || G.st.turn === 1), name + ': ... and a miss ends it');
+    await shot('rapid');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
