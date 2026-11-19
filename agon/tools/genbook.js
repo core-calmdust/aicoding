@@ -1,7 +1,7 @@
 // The AI's opening book of Agon (2026-11-20, claude/agon-spec.md「AI の序盤ブック」): the page's worker (engine.js run as a Web
 // Worker in a Node vm, shared/tools/workeremu.js — the site's own wasm search and, once agon/net.js has one, the learned
 // evaluation) analyses each book position for --ms ms on its own thread (worker_threads: one position per core, all cores busy;
-// shared/tools/genbook.js runs its "workers" one after another in one thread). An entry keeps the moves within --margin of the
+// shared/tools/genbook.js does the same since 2026-11-20). An entry keeps the moves within --margin of the
 // best ([move, value], best first); the tree grows along the --k best of them (per ply: "3,2,2,1" → 3 at ply 0, 2 at plies
 // 1–2, 1 after) up to --plies plies. Positions reached by another order of moves are analysed once (the entry is copied to
 // the other key). The book is saved after every ply; running again with the same --out goes on from it (positions already

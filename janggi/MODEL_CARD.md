@@ -99,7 +99,7 @@ ROUNDS=3 DATA="/Volumes/Orico A 8TB/janggi-data" bash janggi/tools/nnue/run.sh  
 ## 序盤ブック（`book.json`）
 - 2026-11-15：`shared/tools/genbook.js janggi --starts all`（16通りの配置それぞれ、初手から3手、上位3手、1局面8秒、最善から12点以内の手）。
 - 2026-11-20：`tools/genbook_ext.js` で各配置の木を伸ばした（4手目は上位2手、5手目は最善手の先を、1局面5秒の分析。1,538局面を新たに分析、作業機2プロセスで約1.5時間）。917 → **2,455局面**（手の数 13,915、全部合法を確認）、116KB → 342KB。キーは `<開始FEN>|手,手,…`、使い方は前と同じ（Lv.19・20 と PRO の book が10手目まで。無い局面は普通に読む）。
-- Mac でさらに深く：`node janggi/tools/genbook_ext.js --plies 8 --k 3,2,2,1,1 --ms 8000 --workers 12`（作ってある局面は読み直さない。止めても続きから）。
+- Mac でさらに深く：`node janggi/tools/genbook_ext.js --plies 8 --k 3,2,2,1,1 --ms 8000 --workers 12`（作ってある局面は読み直さない。止めても続きから）。2026-11-20 から workers は本当に並列（1コア1局面、既定はコア数−1。前は1スレッドで順番＝「2プロセス」も実は1コア）。
 
 ## 限界
 - 評価は手作り（NNUE は Mac の学習待ち）。人間の棋譜・定跡書は使っていない（序盤ブックもエンジンの読み）。
