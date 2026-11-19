@@ -34,7 +34,7 @@
   // online dock's bar (as data-place="dock"), else a light pill in the corner (the portal's look, legible on any floor)
   const SKIN = !PORTAL && (de.classList.contains('atlas-skin') || /[?&]skin=atlas\b/.test(location.search));
   // the games whose AI thinks with Praline (claude/praline-spec.md §2) — the portal shows the mark only for these
-  const GAMES = 'xiangqi janggi checkers tafl morris fanorona alquerque reversi shogi chess gomoku go hex amazons ugolki agon konane mancala connect4 dots ur senet ludo backgammon'.split(' ');
+  const GAMES = 'xiangqi janggi checkers tafl morris fanorona alquerque reversi shogi chess gomoku go hex amazons ugolki agon konane mancala connect4 dots ur senet ludo backgammon latrunculi'.split(' ');
   const MQ = (window.HeaderBar && window.HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)';
   let href = '../#software';
   try { href = new URL('../#software', me && me.src ? me.src : location.href).href; } catch (e) {}   // (the site's top page, from shared/)

@@ -46,6 +46,7 @@ function setRule(k, count) {
   W = TUNED[RK] || W0;
   const n = +(count || key[1]) || 0;
   COUNT = R.place ? ([16, 20, 24].includes(n) ? n : R.place) : 16;
+  waRule();
 }
 const ruleKey = () => RK + (R.place && COUNT !== R.place ? ':' + COUNT : '');
 // ---------------------------------------------------------------- zobrist
@@ -66,6 +67,105 @@ const mv = (f, t, rm) => f + 64 * t + 4096 * ((rm == null ? -1 : rm) + 1);
 const mFrom = m => m & 63, mTo = m => (m >> 6) & 63, mRm = m => (m >> 12) - 1;
 const isPlace = (pos, m) => pos.placing && mFrom(m) === mTo(m);
 const isRemoveOnly = m => mFrom(m) === mTo(m) && mRm(m) === mFrom(m);
+
+// ---------------------------------------------------------------- the WebAssembly core (core.c → core-wasm.js, tools/build-core.sh; 2026-11-20)
+// The rules, search() / quiesce() / evaluate() and the root loops of bestMove / rootValues run in core.c — the same moves, order,
+// table, counters and values (tools/check_wasm.js: node for node; tools/check_rules.js: the rules on random positions), several
+// times faster. Loaded synchronously in a worker and in Node; the page itself and any failure use the JS below (LT_NOWASM=1 in Node).
+// MX: the lead of the threads (?mt=1, shared/mtengine.js) on core_mt.wasm (Praline's Young Brothers Wait, shared/praline/).
+let WA = null, MX = null;
+function loadCore() {
+  try {
+    let b64 = null;
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=1'); b64 = self.LT_WASM; }
+    else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.LT_WASM; } finally { if (had) g.self = old; else delete g.self; } }
+    if (!b64 || (typeof process !== 'undefined' && process.env && process.env.LT_NOWASM)) return;
+    // the SIMD build first; the one without SIMD where that does not compile (LT_NOSIMD=1 in Node to check it)
+    const g = typeof self !== 'undefined' ? self : globalThis, list = [b64, g.LT_WASM0];
+    if (typeof process !== 'undefined' && process.env && process.env.LT_NOSIMD) list.shift();
+    for (const s of list) {
+      if (!s) continue;
+      try {
+        const bin = typeof atob === 'function' ? Uint8Array.from(atob(s), c => c.charCodeAt(0)) : Buffer.from(s, 'base64');
+        let io = null;
+        const env = {
+          poll: () => (Date.now() > tEnd || (SH !== null && SH.stopped())) ? 1 : 0,
+          shget: (h1, h2) => { const e = SH.get(h1 >>> 0, h2 >>> 0); if (!e) return 0; io[0] = e.d; io[1] = e.f; io[2] = e.v; io[3] = e.m; return 1; },
+          shput: (h1, h2, d, v, f, m) => { SH.put(h1 >>> 0, h2 >>> 0, d, v, f, m, 0); },
+          now: () => Date.now(),
+        };
+        const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env }).exports;
+        io = new Int32Array(x.memory.buffer, x.iop(), 32);
+        WA = coreViews(x, x.memory.buffer, io); WA.simd = s === b64; return;
+      } catch (e) { WA = null; }
+    }
+  } catch (e) { WA = null; }
+}
+function coreViews(x, buf, io) {
+  const C = { x, io: io || new Int32Array(buf, x.iop(), 32), sq: new Int8Array(buf, x.sqp(), 64), inc: new Int8Array(buf, x.incp(), 64), zt: new Uint32Array(buf, x.ztp(), 1154 + 4 * 4097),
+    wt: new Float64Array(buf, x.wtp(), 32), lmr: new Uint8Array(buf, x.lmrp(), 64 * 1024), aom: new Int32Array(buf, x.aomp(), 2048), aov: new Int32Array(buf, x.aovp(), 2048), raw: new Uint8Array(buf, x.netrawp(), 2 * (366 * 256 + 768) + 28) };
+  const zt = C.zt;
+  for (let k = 0; k < 8; k++) for (let i = 0; i < NN; i++) { zt[k * 64 + i] = Z1[k][i]; zt[512 + k * 64 + i] = Z2[k][i]; }
+  zt[1024] = ZS1; zt[1025] = ZS2;
+  for (let k = 0; k < 2; k++) { for (let h = 0; h < 32; h++) { zt[1026 + k * 32 + h] = ZH1[k][h]; zt[1090 + k * 32 + h] = ZH2[k][h]; } for (let l = 0; l < 4097; l++) { zt[1154 + k * 4097 + l] = ZL1[k][l]; zt[1154 + 8194 + k * 4097 + l] = ZL2[k][l]; } }
+  C.netRule = null;
+  return C;
+}
+function waRule() {   // (setRule / setW / setOpt: the rule, the weights, the options, the reductions and the net of the rule)
+  for (const C of [WA, MX]) {
+    if (!C) continue;
+    C.x.setup(R.rook ? 1 : 0, R.leap ? 1 : 0, R.delay ? 1 : 0, R.corner ? 1 : 0, R.tie ? 1 : 0, R.stuck === 'lose' ? 1 : 0, ADV_KOMI, TIE_W);
+    C.x.setopt(NULLMOVE ? 1 : 0, QS_STANDPAT ? 1 : 0, ASP);
+    C.wt.set(W); C.lmr.set(LMRT);
+    const nb = NET_ON ? NETB[RK] : null, key = nb ? RK : null;
+    if (C.netRule !== key || C.netBytes !== nb) { if (nb) { C.raw.set(nb.subarray(0, Math.min(nb.length, C.raw.length))); C.x.net_load(nb.length); } else C.x.net_load(0); C.netRule = key; C.netBytes = nb; }
+  }
+}
+function toCore(C, pos) {
+  C.sq.set(pos.sq); C.inc.set(pos.inc); const io = C.io;
+  io[8] = pos.side; io[9] = pos.ply; io[10] = pos.h1 | 0; io[11] = pos.h2 | 0; io[12] = pos.hand[0]; io[13] = pos.hand[1];
+  io[14] = pos.cap[0]; io[15] = pos.cap[1]; io[16] = pos.last[0]; io[17] = pos.last[1]; io[18] = pos.quiet;
+}
+const abCore = () => SH !== null ? null : MX || WA;
+function abRoot(A, pos) {
+  toCore(A, pos);
+  A.x.setn(nodes, nodeLimit === Infinity ? 1e300 : nodeLimit, 0);
+  if (A === MX) { A.x.set_tend(tEnd); A.x.ab_threads(MX.jobThreads || MX.threads || 1); }
+}
+function abBack(A) { nodes = A.x.getn(); if (A.x.stopped()) stop = true; }
+
+// ---------------------------------------------------------------- the learned evaluation (NNUE, tools/nnue/; 2026-11-20)
+// NETS[rule] = the file name of the rule's net in nets/ (its version). Empty: the hand-made evaluation below, as before. A net
+// that has passed its checks (tools/nnue/README.md) is put in nets/ and named here — nothing else changes. The format and the
+// inputs: core.c「the net」; JS evaluates the same integers (netEvalJS) where there is no WebAssembly.
+const NETS = { seneca: '', piso: '', quintana: '' };
+const NETB = {};          // rule → the net's bytes (loaded)
+let NET_ON = true;        // (tools: off = the hand-made evaluation even with a net)
+let NETJ = null, NETJR = null;   // the JS copy of the current rule's net
+function netParse(b) {
+  if (!b || b.length < 20 || b[0] !== 76 || b[1] !== 84 || b[2] !== 78 || b[3] !== 49) return null;
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength), H = dv.getInt32(4, true), IN = dv.getInt32(8, true), K = dv.getInt32(12, true), FL = dv.getInt32(16, true);
+  if (IN !== 366 || H < 8 || H > 256 || (H & 7) || b.length < 20 + 2 * (IN * H + 3 * H) + 4) return null;
+  let o = 20; const rd = n => { const a = new Int16Array(n); for (let i = 0; i < n; i++, o += 2) a[i] = dv.getInt16(o, true); return a; };
+  const W1 = rd(IN * H), B1 = rd(H), W2 = rd(2 * H), B2 = dv.getInt32(o, true);
+  return { H, K, FL, W1, B1, W2, B2 };
+}
+function setNet(rule, bytes) { if (bytes) NETB[rule] = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes); else delete NETB[rule]; NETJR = null; waRule(); }
+function netNow() { if (!NET_ON || !NETB[RK]) return null; if (NETJR !== NETB[RK]) { NETJ = netParse(NETB[RK]); NETJR = NETB[RK]; } return NETJ; }
+// the net's value of pos for the side to move (the same integers as core.c netEval on a fresh accumulator; with FL & 1 it is added
+// to the hand-made evaluation)
+function netEvalJS(pos, N) {
+  const H = N.H, acc = [new Int32Array(H), new Int32Array(H)], hc = x => x > 24 ? 24 : x < 0 ? 0 : x;
+  for (let v = 0; v < 2; v++) {
+    const a = acc[v]; for (let i = 0; i < H; i++) a[i] = N.B1[i];
+    const add = f => { const o = f * H; for (let i = 0; i < H; i++) a[i] += N.W1[o + i]; };
+    for (let s = 0; s < NN; s++) { const x = pos.sq[s]; if (x) add(((x - 1 === v ? 0 : 2) + (pos.inc[s] ? 1 : 0)) * 64 + (v ? s ^ 56 : s)); }
+    add(256 + hc(pos.hand[v])); add(281 + hc(pos.hand[v ^ 1])); add(306 + hc(pos.cap[v])); add(331 + hc(pos.cap[v ^ 1])); add(356 + Math.min(9, Math.floor(pos.quiet / 6)));
+  }
+  let s = 0;
+  for (let k = 0; k < 2; k++) { const a = acc[k ? pos.side ^ 1 : pos.side]; for (let i = 0; i < H; i++) { const c = a[i] < 0 ? 0 : a[i] > 127 ? 127 : a[i]; s = (s + ((c * c) >> 6) * N.W2[k * H + i]) | 0; } }
+  return Math.trunc((s + N.B2) * N.K * 64 / (127 * 127 * 64));
+}
 
 let LEAP_STAMP = 0; const LEAP_SEEN = new Int32Array(NN), LEAP_OUT = new Int32Array(NN), LEAP_STK = new Int8Array(NN + 4);
 class Pos {
@@ -428,7 +528,7 @@ function evalCore(pos, F) {
   return Math.round(v);
 }
 const EVF = new Float64Array(NF);   // (evalCore's scratch; F for tuning has 2 * NF entries)
-function evaluate(pos) { return evalCore(pos, null); }
+function evaluate(pos) { const N = netNow(); if (!N) return evalCore(pos, null); if (WA) { toCore(WA, pos); return WA.x.evaluate(); } return (N.FL & 1 ? evalCore(pos, null) : 0) + netEvalJS(pos, N); }
 // can a free counter of o (other than the one on `not`) reach the empty square x with one move? (steps / slides only)
 function reach(pos, x, o, not) {
   const sq = pos.sq, inc = pos.inc;
@@ -448,8 +548,13 @@ const TT = new Map(), killers = [];
 let SH = null;
 const SALT = { seneca: 0, piso: 0x5bd1e995, quintana: 0x27d4eb2f };
 const HIST = new Int32Array(2 * 64 * 64);   // history heuristic: [side][from][to]
-function kreset() { killers.length = 0; for (let i = 0; i < HIST.length; i++) HIST[i] >>= 3; }
-function ttClear() { TT.clear(); }
+function kreset() { killers.length = 0; for (let i = 0; i < HIST.length; i++) HIST[i] >>= 3; if (WA) WA.x.kclear(); if (MX) MX.x.kclear(); }
+function ttClear() { TT.clear(); if (WA) WA.x.ttclear(); if (MX) MX.x.ttclear(); }
+function ttGet(pos) {   // the one-thread table's entry for pos (or the shared table's)
+  if (SH !== null) return SH.get(pos.h1, pos.h2);
+  if (WA) return WA.x.ttprobe(pos.h1, pos.h2) ? { h2: pos.h2, d: WA.io[0], f: WA.io[1], v: WA.io[2], m: WA.io[3] } : undefined;
+  const e = TT.get(pos.h1); return e && e.h2 === pos.h2 ? e : undefined;
+}
 function terminal(pos, ply, nMoves) {
   if (!pos.placing && pos.n[0] > 1 && pos.n[1] > 1 && pos.quiet < QUIET_MAX && (nMoves > 0 || (nMoves == null && pos.hasMove()))) return null;
   const j = judge(pos, nMoves);
@@ -474,13 +579,24 @@ function moveScore(pos, m, ttm, ply) {
   return s;
 }
 function orderMoves(pos, L, ttm, ply) {
+  if (WA && L.length > 1 && L.length <= 2048) { toCore(WA, pos); WA.aom.set(L); WA.x.ab_order(L.length, ttm, ply); return Array.from(WA.aom.subarray(0, L.length)); }
   const sc = L.map(m => moveScore(pos, m, ttm, ply)), idx = L.map((_, i) => i);
   idx.sort((a, b) => sc[b] - sc[a] || a - b);
   return idx.map(i => L[i]);
 }
 let NULLMOVE = true, LMR_K = .45, QS_STANDPAT = true, ASP = 40;
+// the late-move reductions max(1, floor(LMR_K ln d ln i)) as a table (core.c gets the same numbers)
+const LMRT = new Uint8Array(64 * 1024);
+function lmrTable() { for (let d = 0; d < 64; d++) for (let i = 0; i < 1024; i++) LMRT[d * 1024 + i] = d && i ? Math.max(1, Math.floor(LMR_K * Math.log(d) * Math.log(i))) : 1; }
+lmrTable();
 const isKiller = (m, ply) => { const k = killers[ply]; return !!k && (k[0] === m || k[1] === m); };
 function search(pos, d, a, b, ply) {
+  if (WA && !stop) {
+    toCore(WA, pos); WA.x.setn(nodes, nodeLimit === Infinity ? 1e300 : nodeLimit, SH !== null ? 1 : 0);
+    const v = WA.x.search(d, a, b, ply);
+    nodes = WA.x.getn(); if (WA.x.stopped()) stop = true;
+    return v;
+  }
   nodes++;
   if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit || (SH !== null && SH.stopped()))) stop = true;
   if (stop) return 0;
@@ -516,7 +632,7 @@ function search(pos, d, a, b, ply) {
     else {
       let red = 0;
       if (d >= 3 && i >= 3 && !pos.placing && q.n[pos.side ^ 1] === pos.n[pos.side ^ 1] && !isKiller(m, ply)) {
-        red = Math.max(1, Math.floor(LMR_K * Math.log(d) * Math.log(i)));
+        red = LMRT[Math.min(d, 63) * 1024 + Math.min(i, 1023)];
         if (pv) red = Math.max(0, red - 1);
         red = Math.min(red, d - 2);
       } else if (pos.placing && d >= 3 && i >= 10) red = 1;
@@ -566,6 +682,8 @@ function quiesce(pos, a, b, ply, qd) {
   return best === -Infinity ? stand : best;
 }
 function rootValues(pos, d) {
+  const A = abCore();
+  if (A) { abRoot(A, pos); const k = A.x.ab_values(d); abBack(A); const out = []; for (let i = 0; i < k; i++) out.push({ m: A.aom[i], v: A.aov[i] }); return out; }
   const out = [];
   for (const m of orderMoves(pos, pos.moves(), -1, 0)) {
     const q = pos.clone().play(m);
@@ -578,6 +696,8 @@ function rootValues(pos, d) {
 }
 function bestMove(pos, maxD, ms, nk) {
   nodes = 0; stop = false; tEnd = Date.now() + (ms || 20000); nodeLimit = nk ? nk * 1000 : Infinity; kreset();
+  const A = abCore();
+  if (A) { abRoot(A, pos); A.x.ab_best(maxD); abBack(A); return { move: A.io[0], v: A.io[1], depth: A.io[2] }; }
   const all = pos.moves();
   let best = all[0], bv = 0, depth = 0, order = orderMoves(pos, all, -1, 0);
   for (let d = 1; d <= maxD; d++) {
@@ -744,8 +864,8 @@ function mtV(m) {
 function mtKids(m) {
   const { pos, ply } = mtNode(m);
   const L = pos.moves(); if (!L.length) return { kids: [] };
-  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
-  return { kids: orderMoves(pos, L, e && e.h2 === pos.h2 ? e.m : -1, ply).map(x => ({ m: x, s: -1 })) };
+  const e = ttGet(pos);
+  return { kids: orderMoves(pos, L, e ? e.m : -1, ply).map(x => ({ m: x, s: -1 })) };
 }
 function mtFin(m) {
   const r = m.raw;
@@ -830,18 +950,41 @@ function goalReply(start, moves, n, G, rule) {
   return { move: best, need: bk };
 }
 
+loadCore();
 setRule('seneca');
+// Node (tools): a net from LT_NET_<rule> (a file), else nets/NETS[rule] when named
+if (typeof module !== 'undefined' && module.exports && typeof require === 'function' && typeof window === 'undefined') {
+  try { const fs = require('fs'), path = require('path'); for (const k of RULE_ORDER) { const f = (process.env['LT_NET_' + k]) || (NETS[k] ? path.join(__dirname, 'nets', NETS[k]) : ''); if (f && fs.existsSync(f)) NETB[k] = new Uint8Array(fs.readFileSync(f)); } if (process.env.LT_NONET) NET_ON = false; waRule(); } catch (e) {}
+}
 const API = { N, NN, P1, P2, WIN, WINT, QUIET_MAX, RULES, RULE_ORDER, get rule() { return RK; }, get ruleKey() { return ruleKey(); }, get R() { return R; }, get count() { return COUNT; }, setRule,
   RC, ADJ, NB, CORNER, CADJ, sqAt, sqName, mv, mFrom, mTo, mRm, isPlace, isRemoveOnly, Pos, effect, path, captured, name, parse, replay, judge,
-  LEVELS, think, thinkCfg, setOpt(o) { if ('null' in o) NULLMOVE = o.null; if ('lmr' in o) LMR_K = o.lmr; if ('qs' in o) QS_STANDPAT = o.qs; if ('asp' in o) ASP = o.asp; }, analyze, cands, pvOf, evaluate, evalCore, FN, W0, TUNED, setW(w) { W = w ? Float64Array.from(w) : (TUNED[RK] || W0); }, kindOf, EW, goalGood, goalMin, goalReply, goalOf, goalMet, ttClear,
+  LEVELS, think, thinkCfg, setOpt(o) { if ('null' in o) NULLMOVE = o.null; if ('lmr' in o) { LMR_K = o.lmr; lmrTable(); } if ('qs' in o) QS_STANDPAT = o.qs; if ('asp' in o) ASP = o.asp; waRule(); }, analyze, cands, pvOf, evaluate, evalCore, FN, W0, TUNED, setW(w) { W = w ? Float64Array.from(w) : (TUNED[RK] || W0); waRule(); }, NETS, setNet, set netOn(v) { NET_ON = !!v; NETJR = null; waRule(); }, get netOn() { return NET_ON; }, netParse, netEvalJS, get wasm() { return !!WA; }, get simd() { return !!(WA && WA.simd); }, get core() { return WA; }, toCore,
+  useCore: (x, buf) => { MX = x ? coreViews(x, buf) : null; if (MX) { MX.threads = 1; MX.jobThreads = 1; waRule(); } }, kindOf, EW, goalGood, goalMin, goalReply, goalOf, goalMet, ttClear,
   get nodes() { return nodes; }, set SH(t) { SH = t; }, bookKey, bookMove, bookFind, setBook(b) { BOOK = b; }, set noBook(v) { PRO_NOBOOK = !!v; }, get SH() { return SH; }, mtPlan, mtV, mtKids, mtFin };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   try { importScripts('book.js?v=1'); BOOK = self.LT_BOOK || null; } catch (e) {}   // (the opening book; none = search as usual)
+  let queueP = Promise.resolve();
+  // ?…&mt=1: the lead of the threads (shared/mtengine.js): core_mt.wasm on the shared memory sent with the first message ('mtinit')
+  if (/[?&]mt=1\b/.test(self.location.search || '')) {
+    queueP = new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
+      .then(m => {
+        const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
+        x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+        MX = coreViews(x, m.mem.buffer); MX.threads = navigator.hardwareConcurrency || 2;
+        waRule();
+        self.postMessage({ type: 'mtready' });
+      }).catch(err => { MX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
+  }
+  // the nets named in NETS (nets/<file>): fetched before the first job; a failure keeps the hand-made evaluation
+  const netP = typeof fetch === 'function' ? Promise.all(RULE_ORDER.filter(k => NETS[k]).map(k => fetch(new URL('nets/' + NETS[k], self.location.href)).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b && netParse(new Uint8Array(b))) setNet(k, new Uint8Array(b)); }).catch(() => {}))) : Promise.resolve();
+  queueP = queueP.then(() => netP);
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtinit') return;
     if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = self.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
-    try {
+    queueP = queueP.then(() => { try {
+      if (MX) MX.jobThreads = m.mtThreads > 0 ? Math.min(m.mtThreads, MX.threads) : 0;   // (the threads of this job: the exact one-thread table with 1)
       if (SH !== null) SH.begin(m);
       setRule(m.rule || 'seneca');
       if (SH !== null) SH.salt = SALT[RK] | 0;
@@ -854,11 +997,11 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
       else if (m.type === 'goalReply') self.postMessage({ id: m.id, type: 'result', ...goalReply(m.start, m.moves, m.n, m.g) });
       else if (m.type === 'newgame') { ttClear(); self.postMessage({ id: m.id, type: 'result' }); }
       else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
-      else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', core: 'js', ...mtV(m) });
+      else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', core: WA ? 'wasm' : 'js', ...mtV(m) });
       else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
       else if (m.type === 'mtpv') self.postMessage({ id: m.id, type: 'result', pv: pvOf(m.start, m.moves, m.m, m.plies) });
-      else if (m.type === 'mtfin') { const f = mtFin(m); if (f.result) f.result.core = 'js'; self.postMessage({ id: m.id, type: 'result', ...f }); }
-    } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
+      else if (m.type === 'mtfin') { const f = mtFin(m); if (f.result) f.result.core = WA ? 'wasm' : 'js'; self.postMessage({ id: m.id, type: 'result', ...f }); }
+    } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); } });
   };
 }
 if (typeof window !== 'undefined') window.LatrEngine = API;
