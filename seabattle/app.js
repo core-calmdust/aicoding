@@ -107,7 +107,7 @@ function renderStatus(msg) {
 function renderKifu() {
   const k = $('#kifu');
   if (!G.st || !G.st.log.length) { k.innerHTML = `<div class="empty">${t('kifu.empty')}</div>`; return; }
-  k.innerHTML = G.st.log.map((m, i) => m.rest ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('log.rest')}</span></span>` : m.skill ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('sk.' + m.skill)}</span> ${m.cell < 0 ? '' : m.skill === 'torpedo' || m.skill === 'radar' ? 'ABCDEFGHIJ'[m.cell % 10] : m.skill === 'scout' ? String((m.cell / 10 | 0) + 1) : E.cellName(m.cell)}${m.skill === 'sonar' || m.skill === 'scout' || m.skill === 'radar' || m.skill === 'probe' ? ' → ' + m.k : ''}</span>` : `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i>${m.via === 'counter' ? `<span class="s">${t('sk.counter')}</span> ` : ''}${E.cellName(m.cell)} ${m.sunk >= 0 ? `<span class="s">${t('log.sunk')}</span>` : m.by === 0 && m.fog && G.st.sides[1].fogged[m.cell] ? t('log.fog') : m.mine ? `<span class="x">${t('log.mine')}</span>` : m.dent ? `<span class="x">${t('log.dent')}</span>` : m.hit ? `<span class="x">${t('log.hit')}</span>` : t('log.miss')}</span>`).join('');
+  k.innerHTML = G.st.log.map((m, i) => m.rest ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('log.rest')}</span></span>` : m.skill ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('sk.' + m.skill)}</span> ${m.cell < 0 ? '' : m.skill === 'torpedo' || m.skill === 'radar' ? 'ABCDEFGHIJ'[m.cell % 10] : m.skill === 'scout' || m.skill === 'rtorpedo' ? String((m.cell / 10 | 0) + 1) : E.cellName(m.cell)}${m.skill === 'sonar' || m.skill === 'scout' || m.skill === 'radar' || m.skill === 'probe' ? ' → ' + m.k : ''}</span>` : `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i>${m.via === 'counter' ? `<span class="s">${t('sk.counter')}</span> ` : ''}${E.cellName(m.cell)} ${m.sunk >= 0 ? `<span class="s">${t('log.sunk')}</span>` : m.by === 0 && m.fog && G.st.sides[1].fogged[m.cell] ? t('log.fog') : m.mine ? `<span class="x">${t('log.mine')}</span>` : m.dent ? `<span class="x">${t('log.dent')}</span>` : m.hit ? `<span class="x">${t('log.hit')}</span>` : t('log.miss')}</span>`).join('');
   k.scrollTop = k.scrollHeight;
 }
 function renderEval() {
@@ -135,6 +135,8 @@ function render(msg) {
   renderBoards(); renderFleet(); renderStatus(msg); renderKifu(); renderEval(); renderButtons(); renderSkills(); renderDraft();
 }
 const SK_ICON = {
+  strafe: '<svg viewBox="0 0 24 24"><rect x="9.5" y="9.5" width="5" height="5" rx=".8"/><rect x="3" y="3" width="5" height="5" rx=".8"/><rect x="16" y="3" width="5" height="5" rx=".8"/><rect x="3" y="16" width="5" height="5" rx=".8"/><rect x="16" y="16" width="5" height="5" rx=".8"/></svg>',
+  rtorpedo: '<svg viewBox="0 0 24 24"><path d="M3 12h15"/><path d="M14 7l5 5-5 5"/><path d="M3 8v8"/></svg>',
   probe: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><rect x="9.5" y="2" width="5" height="4.5" rx=".8"/><rect x="9.5" y="17.5" width="5" height="4.5" rx=".8"/><rect x="2" y="9.5" width="4.5" height="5" rx=".8"/><rect x="17.5" y="9.5" width="4.5" height="5" rx=".8"/></svg>',
   barrage: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5" rx=".8"/><rect x="9.5" y="3" width="5" height="5" rx=".8"/><rect x="16" y="3" width="5" height="5" rx=".8"/><rect x="3" y="9.5" width="5" height="5" rx=".8"/><rect x="9.5" y="9.5" width="5" height="5" rx=".8"/><rect x="16" y="9.5" width="5" height="5" rx=".8"/><rect x="3" y="16" width="5" height="5" rx=".8"/><rect x="9.5" y="16" width="5" height="5" rx=".8"/><rect x="16" y="16" width="5" height="5" rx=".8"/></svg>',
   radar: '<svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 6a9 9 0 0 1 14 0M7.5 9a5.5 5.5 0 0 1 9 0"/><circle cx="12" cy="14" r="1.6"/><path d="M8 21h8"/></svg>',
@@ -286,7 +288,7 @@ async function doSkill(a) {
   await sleep(by === 1 ? 650 : 250); if (G.st !== st) return null;
   if (noAim) await sleep(250);
   else if (pv.skill === 'sonar' || pv.skill === 'scout' || pv.skill === 'radar') await SB.sweep($('#bsvg'), pv.area);
-  else { for (const x of pv.shots) { SB.fx($('#bsvg'), x.cell, by === 0 && st.sides[1].fog > 0 ? 'fog' : x.hit, true); setTimeout(() => sfx(x.hit ? 'hit' : 'miss'), 160); await sleep(pv.skill === 'torpedo' ? 120 : 170); } if (pv.ic >= 0) SB.fx($('#bsvg'), pv.ic, 'fog', true); await sleep(330); }
+  else { for (const x of pv.shots) { SB.fx($('#bsvg'), x.cell, by === 0 && st.sides[1].fog > 0 ? 'fog' : x.hit, true); setTimeout(() => sfx(x.hit ? 'hit' : 'miss'), 160); await sleep(pv.skill === 'torpedo' || pv.skill === 'rtorpedo' ? 120 : 170); } if (pv.ic >= 0) SB.fx($('#bsvg'), pv.ic, 'fog', true); await sleep(330); }
   if (G.st !== st) return null;
   const res = E.useSkill(st, a.ship, a.cell); if (!res) return null;
   G.armed = null; hoverCell = -1;
