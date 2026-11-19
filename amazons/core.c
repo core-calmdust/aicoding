@@ -201,6 +201,7 @@ static float NB1[NH] __attribute__((aligned(16))), NWD1[NDN][NH] __attribute__((
 static int NNOK = 0, NNVER = 0;
 static unsigned short NNBUF[NNW + 8];
 static u8 SYMC[NN], B2S[128];
+static unsigned short RB[128];   // the bit of a square → its row base SYMC × NCAT (nnFast)
 static TLS int NNFEAT = 0;               // (the trainer: ev() fills NFI / NFD whatever the mode)
 static TLS short NFI[NN]; static TLS int NFN; static TLS float NFD[NDN];
 static float h2f(unsigned short h) {
@@ -213,6 +214,7 @@ static void nnInitTabs(void) {
   for (int i = 0; i < NN; i++) { int r = i / 10, c = i % 10; if (r > 4) r = 9 - r; if (c > 4) c = 9 - c; if (r > c) { int t = r; r = c; c = t; } SYMC[i] = (u8)(r * 5 - r * (r - 1) / 2 + (c - r)); }
   for (int b = 0; b < 128; b++) B2S[b] = 255;
   for (int i = 0; i < NN; i++) B2S[(i / 10) * 11 + i % 10] = (u8)i;
+  for (int b = 0; b < 128; b++) RB[b] = B2S[b] == 255 ? 0 : (unsigned short)(SYMC[B2S[b]] * NCAT);
 }
 __attribute__((export_name("nn_buf"))) unsigned short *nn_buf(void) { return NNBUF; }
 // the file in NNBUF (bytes): "AMZN", u32 version, u32 count (= NNW), then the values as float16; 1 = loaded
@@ -271,6 +273,44 @@ static void nnClasses(int tm) {
   for (int k = 0; k < 8; k++) { if (Q[k] < 0) continue; int own = (k < 4) == (tm == 1); NFI[n++] = (short)(SYMC[(int)Q[k]] * NCAT + 108 + (own ? 0 : 6) + AMB[k]); }
   NFN = n;
 }
+// (2026-11-20, 推論の高速化) the same value as nnClasses + nnOut, in one pass: the rows added straight into the accumulator as
+// the squares are found (no NFI), in the same order (so the same float sums); the class loops stop as soon as their squares are
+// used up (the queen-distance classes and the king classes each split the empty squares, so the classes left are empty).
+#if NH == 32
+static float nnFast(int tm) {
+  const F4 *b1 = (const F4 *)NB1;
+  F4 a0 = b1[0], a1 = b1[1], a2 = b1[2], a3 = b1[3], a4 = b1[4], a5 = b1[5], a6 = b1[6], a7 = b1[7];
+#define NROW(ix) { const F4 *w_ = (const F4 *)NW1[ix]; a0 += w_[0]; a1 += w_[1]; a2 += w_[2]; a3 += w_[3]; a4 += w_[4]; a5 += w_[5]; a6 += w_[6]; a7 += w_[7]; }
+  const BB *QS_ = tm == 1 ? QMA : QMB, *QO = tm == 1 ? QMB : QMA;
+  const BB K[3] = { KMR[tm == 1 ? 0 : 2], KMR[1], KMR[tm == 1 ? 2 : 0] };
+  for (int a = 0; a < 6; a++) {
+    BB m1 = QS_[a];
+    for (int b = 0; b < 6 && bnz(m1); b++) {
+      BB m2 = m1 & QO[b]; if (!bnz(m2)) continue;
+      m1 &= ~m2;
+      if (a == 5 && b == 5) continue;   // (dead squares: nobody's)
+      for (int r = 0; r < 3 && bnz(m2); r++) {
+        BB m3 = m2 & K[r]; if (!bnz(m3)) continue;
+        m2 &= ~m3; const int c = (a * 6 + b) * 3 + r;
+        for (u64 m = m3[0]; m; m &= m - 1) NROW(RB[__builtin_ctzll(m)] + c)
+        for (u64 m = m3[1]; m; m &= m - 1) NROW(RB[__builtin_ctzll(m) + 64] + c)
+      }
+    }
+  }
+  for (int k = 0; k < 8; k++) { if (Q[k] < 0) continue; int own = (k < 4) == (tm == 1); NROW(SYMC[(int)Q[k]] * NCAT + 108 + (own ? 0 : 6) + AMB[k]) }
+#undef NROW
+  for (int j = 0; j < NDN; j++) {
+    float x = NFD[j] * NDS; F4 xv = { x, x, x, x }; const F4 *w = (const F4 *)NWD1[j];
+    a0 += xv * w[0]; a1 += xv * w[1]; a2 += xv * w[2]; a3 += xv * w[3]; a4 += xv * w[4]; a5 += xv * w[5]; a6 += xv * w[6]; a7 += xv * w[7];
+  }
+  float o = NB2;
+  for (int j = 0; j < NDN; j++) o += NWD2[j] * NFD[j];
+  const F4 z = { 0, 0, 0, 0 }, one = { 1, 1, 1, 1 };
+  const F4 *w2 = (const F4 *)NW2; F4 acc[8] = { a0, a1, a2, a3, a4, a5, a6, a7 }, sum = z;
+  for (int h = 0; h < 8; h++) { F4 x = acc[h]; I4 gz = x > z, g1 = x > one; x = (F4)(((I4)x & gz & ~g1) | ((I4)one & g1)); sum += x * w2[h]; }
+  return o + ((sum[0] + sum[1]) + (sum[2] + sum[3]));
+}
+#endif
 static float nnOut(void) {
   F4 acc[NH / 4];
   for (int h = 0; h < NH / 4; h++) acc[h] = *(const F4 *)&NB1[4 * h];
@@ -342,6 +382,9 @@ __attribute__((export_name("ev"))) int ev(int me, int toMove) {
     double sg = toMove == 1 ? 1 : -1;
     NFD[0] = (float)(sg * t1); NFD[1] = (float)(sg * e * t1); NFD[2] = (float)(sg * e * t2); NFD[3] = (float)(sg * e * c1); NFD[4] = (float)(sg * e * c2);
     NFD[5] = (float)(sg * mob); NFD[6] = (float)e; NFD[7] = (float)(92 - pc(E)) * (1.f / 92.f);
+#if NH == 32
+    if (EVM == 3 && NNOK && !NNFEAT) { int s = jsRound((double)nnFast(toMove) * 100); return me == toMove ? s : -s; }
+#endif
     nnClasses(toMove);
     if (EVM == 3) {
       double v = NNOK ? nnOut() : (2.0 - e) * t1 * sg + sg * e * (0.85 * t2 + 0.7 * c1 + 0.6 * c2) + sg * mob;
