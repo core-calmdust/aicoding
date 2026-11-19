@@ -23,7 +23,7 @@
 #else
 #define TLS
 #endif
-typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8; typedef int16_t i16; typedef uint16_t u16; typedef uint64_t u64;
+typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8; typedef int16_t i16; typedef uint16_t u16; typedef uint64_t u64; typedef int64_t i64;
 #ifdef NATIVE
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,7 +61,8 @@ static u64 ZP[2][NP], ZSIDE;
 static int geoReady = 0, GW = 9, GH = 5, ruleStd = 1, ALQ = 0, ALQF = 0;   // ALQF: Alfonso's Alquerque (steps in any direction; set_alq(2))
    // ALQ: Alquerque (jumps, steps forward / sideways only)   // board size (5x5 Fanoron-Dimy uses the points r < 5, c < 5)
 static int AQV = 11;   // Alquerque evaluation / search (bits: 1 evaluation alqHand, 2 forced jumps searched out in the
-                      // quiescence, 8 endgame databases; 0 = the 2026-10 engine, kept for tools/alqmatch.c)
+                      // quiescence, 8 endgame databases, 16 the learned evaluation when a net is loaded (aqnEval); 0 = the 2026-10
+                      // engine, kept for tools/alqmatch.c)
 static u64 rs64 = 0x9E3779B97F4A7C15ull;
 static u64 rnd64(void) { rs64 ^= rs64 << 13; rs64 ^= rs64 >> 7; rs64 ^= rs64 << 17; return rs64; }
 static void buildNB(void) {
@@ -297,8 +298,77 @@ static int alqHand(const Pos *p) {
   if (h) v -= AW[1] + (h - 1) * AW[2];
   return v;
 }
+// Alquerque learned evaluation (AQV & 16 with a net loaded; alquerque/tools/nnue, alquerque/MODEL_CARD.md). Whole numbers only
+// (the same value in WebAssembly, with or without SIMD, and natively). Two views (the side to move's first), each with 100
+// inputs on the 25 points turned so that "forward" is up for the view's side: own piece 25, other piece 25, own piece the other
+// side can jump now 25, other piece the own side can jump now 25 → 64 (clipped ReLU 0..127) ×2 → 16 → 1; value = out × K.
+// The net is evaluated whole at every leaf (no incremental update: the leaves of this engine are cheap and few).
+#define AQ_IN 100
+#define AQ_H 64
+#define AQ_H2 16
+#define AQ_QA 127
+#define AQ_BYTES (16 + 2 * (AQ_IN * AQ_H + AQ_H + AQ_H2 * 2 * AQ_H + AQ_H2) + 4 * (AQ_H2 + 1))
+static i16 AQW1[AQ_IN * AQ_H], AQB1[AQ_H], AQW2[AQ_H2 * 2 * AQ_H], AQW3[AQ_H2]; static i32 AQB2[AQ_H2], AQB3, AQK; static int aqnOn = 0;
+static u8 AQBUF[AQ_BYTES];
+EXPORT(aqn_buf) u8 *aqn_buf(void) { return AQBUF; }
+// the file ("AQN1", u16 inputs, hidden, hidden 2, 0, i32 K, then i16 W1 B1 W2, i32 B2, i16 W3, i32 B3, little-endian) put at
+// aqn_buf() first; 1 if it is one of ours. len 0: turn the net off.
+EXPORT(aqn_load) int aqn_load(int len) {
+  const u8 *b = AQBUF;
+  aqnOn = 0;
+  if (len != AQ_BYTES || b[0] != 'A' || b[1] != 'Q' || b[2] != 'N' || b[3] != '1') return 0;
+  if ((b[4] | b[5] << 8) != AQ_IN || (b[6] | b[7] << 8) != AQ_H || (b[8] | b[9] << 8) != AQ_H2) return 0;
+  int o = 12;
+  #define RD16() (i16)(u16)(b[o] | b[o + 1] << 8); o += 2
+  #define RD32() (i32)((u32)b[o] | (u32)b[o + 1] << 8 | (u32)b[o + 2] << 16 | (u32)b[o + 3] << 24); o += 4
+  AQK = RD32();
+  for (int i = 0; i < AQ_IN * AQ_H; i++) { AQW1[i] = RD16(); }
+  for (int i = 0; i < AQ_H; i++) { AQB1[i] = RD16(); }
+  for (int i = 0; i < AQ_H2 * 2 * AQ_H; i++) { AQW2[i] = RD16(); }
+  for (int i = 0; i < AQ_H2; i++) { AQB2[i] = RD32(); }
+  for (int i = 0; i < AQ_H2; i++) { AQW3[i] = RD16(); }
+  AQB3 = RD32();
+  #undef RD16
+  #undef RD32
+  aqnOn = AQK > 0;
+  return aqnOn;
+}
+EXPORT(aqn_on) int aqn_on(void) { return aqnOn; }
+static inline u64 alqHit(u64 victims, u64 att, u64 occ) {   // the victims the attackers can jump now
+  u64 hit = 0, x = att;
+  while (x) { int i = ctz(x); x &= x - 1; for (int d = 0; d < 8; d++) { int mid = NB[d][i]; if (mid < 0 || !(victims & BIT(mid))) continue; int t = NB[d][mid]; if (t >= 0 && !(occ & BIT(t))) hit |= BIT(mid); } }
+  return hit;
+}
+static inline int aqK(int i, int view) { int r = i / 9, c = i % 9; return (view ? 4 - r : r) * 5 + c; }   // (the view's side moves "up")
+static int aqnEval(const Pos *p) {
+  const int s = p->side; const u64 occ = p->p[0] | p->p[1];
+  u64 hit[2]; hit[0] = alqHit(p->p[0], p->p[1], occ); hit[1] = alqHit(p->p[1], p->p[0], occ);
+  u8 x[2 * AQ_H];
+  for (int v = 0; v < 2; v++) {
+    const int cv = v ? s ^ 1 : s;
+    i16 a[AQ_H];
+    for (int j = 0; j < AQ_H; j++) a[j] = AQB1[j];
+    for (int c = 0; c < 2; c++) {
+      const int base = c == cv ? 0 : 25;
+      u64 y = p->p[c];
+      while (y) { int i = ctz(y); y &= y - 1; const i16 *w = AQW1 + (base + aqK(i, cv)) * AQ_H; for (int j = 0; j < AQ_H; j++) a[j] += w[j]; }
+      y = hit[c];
+      while (y) { int i = ctz(y); y &= y - 1; const i16 *w = AQW1 + (50 + base + aqK(i, cv)) * AQ_H; for (int j = 0; j < AQ_H; j++) a[j] += w[j]; }
+    }
+    for (int j = 0; j < AQ_H; j++) x[v * AQ_H + j] = (u8)(a[j] < 0 ? 0 : a[j] > AQ_QA ? AQ_QA : a[j]);
+  }
+  i64 out = AQB3;
+  for (int k = 0; k < AQ_H2; k++) {
+    i32 h = AQB2[k]; const i16 *w = AQW2 + k * 2 * AQ_H;
+    for (int j = 0; j < 2 * AQ_H; j++) h += (i32)x[j] * w[j];
+    h >>= 6; if (h < 0) h = 0; else if (h > AQ_QA) h = AQ_QA;
+    out += (i64)h * AQW3[k];
+  }
+  i64 v = out * AQK / (AQ_QA * 64);
+  return v > 20000 ? 20000 : v < -20000 ? -20000 : (int)v;
+}
 static int hand(const Pos *p) {
-  if (ALQ && (AQV & 1)) return alqHand(p);
+  if (ALQ && (AQV & 1)) return (AQV & 16) && aqnOn ? aqnEval(p) : alqHand(p);
   int s = p->side; u64 own = p->p[s], opp = p->p[s ^ 1];
   int a = pc(own), b = pc(opp);
   int v = 100 * (a - b);
@@ -961,6 +1031,8 @@ EXPORT(puzzle) void puzzle(int n, int defend, int goal, int base, int budgetK) {
   }
 }
 EXPORT(set_net_use) void set_net_use(int on) { useNet = on; }
+// Alquerque: the evaluation / search bits for the next searches (AQV above; the page: 11, or 27 with the learned evaluation)
+EXPORT(set_aqv) void set_aqv(int v) { AQV = v; }
 static void initPST(void);
 // the board size (9, 5 = Fanoron-Tsivy; 5, 5 = Fanoron-Dimy). The endgame databases and the learned evaluation are for 9x5 only.
 #ifdef MT
