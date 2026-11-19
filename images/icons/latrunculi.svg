@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
-  <!-- Ludus latrunculorum (2026-11-19, the 3D / 2D default): the stone helmets on the excavated slab — a white marble helmet with
-       its crest in front, a black basalt one behind, both on round plinths, the slab's cut grid and a crack behind them -->
+  <!-- Ludus latrunculorum (2026-11-19, the 3D / 2D default): a white marble helmet with its crest on a round plinth, on the
+       excavated slab (the cut grid and a crack behind it) -->
   <defs>
     <clipPath id="lt-c"><rect width="96" height="96" rx="20"/></clipPath>
     <linearGradient id="lt-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cdb184"/><stop offset="1" stop-color="#9c7d52"/></linearGradient>
@@ -24,11 +24,8 @@
     <g stroke="#6e5232" stroke-width="2.4" opacity=".7"><path d="M-2 30H98M-2 70H98M30-2V98M70-2V98"/></g>
     <path d="M86 4L78 16L80 22L72 32" fill="none" stroke="#5a4026" stroke-width="1.4" opacity=".7"/>
     <g fill="#6e5232" opacity=".35"><circle cx="14" cy="14" r="1.4"/><circle cx="52" cy="10" r="1"/><circle cx="84" cy="48" r="1.2"/><circle cx="12" cy="52" r="1"/><circle cx="46" cy="88" r="1.3"/><circle cx="86" cy="84" r="1"/></g>
-    <!-- the black helmet behind (faces left) -->
-    <ellipse cx="66" cy="55" rx="16" ry="3.5" fill="#000" opacity=".2"/>
-    <use href="#lt-h" x="45" y="22" width="42" height="39" transform="translate(132 0) scale(-1 1)" fill="url(#lt-k)" stroke="#0e0d0c" stroke-width=".8" style="--l:#8a8682"/>
-    <!-- the white helmet in front (faces right) -->
-    <ellipse cx="36" cy="80" rx="25" ry="5" fill="#000" opacity=".24"/>
-    <use href="#lt-h" x="3" y="30" width="66" height="61" fill="url(#lt-w)" stroke="#8e8472" stroke-width=".7"/>
+    <!-- the white marble helmet, alone and large (2026-11-19 user: 兜一つでOK) -->
+    <ellipse cx="48" cy="79" rx="30" ry="5.5" fill="#000" opacity=".24"/>
+    <use href="#lt-h" x="10" y="20" width="76" height="70" fill="url(#lt-w)" stroke="#8e8472" stroke-width=".7"/>
   </g>
 </svg>
