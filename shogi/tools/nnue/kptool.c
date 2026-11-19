@@ -174,6 +174,39 @@ static int cmd_gen(int argc, char **argv) {
   fclose(f); return 0;
 }
 /* a small USI engine */
+/* (a build with -DMT -lpthread, USI option Threads) the search on several threads, as tools/match/usimatch.c --threads:
+   the helpers take part while we search and sleep while the other side thinks */
+#ifdef MT
+#include <pthread.h>
+static int kpThreads = 1; static volatile int kpGen, kpDone;
+static void *kpHelper(void *arg) {
+  mt_thread_native((int)(long)arg);
+  for (int seen = 0; ; ) {
+    while (__atomic_load_n(&kpGen, __ATOMIC_ACQUIRE) == seen) usleep(300);
+    seen = __atomic_load_n(&kpGen, __ATOMIC_ACQUIRE);
+    for (int f = 1; !__atomic_load_n(&gStop, __ATOMIC_ACQUIRE); f = 0) mt_idle(250, f);
+    __atomic_add_fetch(&kpDone, 1, __ATOMIC_SEQ_CST);
+  }
+  return NULL;
+}
+static void kpStartHelpers(int from) {
+  pthread_attr_t at; pthread_attr_init(&at); pthread_attr_setstacksize(&at, 64u << 20);
+  for (int i = from; i < kpThreads; i++) { pthread_t t; if (pthread_create(&t, &at, kpHelper, (void *)(long)i)) { perror("pthread_create"); exit(2); } }
+}
+static int kpSearch(double ms, int nodeLim) {
+  if (kpThreads > 1) {
+    __atomic_store_n(&kpDone, 0, __ATOMIC_SEQ_CST); mt_stop(0); __atomic_add_fetch(&kpGen, 1, __ATOMIC_SEQ_CST);
+    int m = root_search(ms, 0, nodeLim);
+    mt_stop(1); while (__atomic_load_n(&kpDone, __ATOMIC_ACQUIRE) < kpThreads - 1) usleep(100);
+    mt_stop(0);
+    return m;
+  }
+  return root_search(ms, 0, nodeLim);
+}
+#else
+static int kpSearch(double ms, int nodeLim) { return root_search(ms, 0, nodeLim); }
+#endif
+
 static int cmd_usi(void) {
   const char *net = getenv("KPNET"); if (!net || !loadKP(net)) { fprintf(stderr, "KPNET=<net file> is needed\n"); return 1; }
   nue_enable(1);
@@ -185,6 +218,9 @@ static int cmd_usi(void) {
     else if (!strcmp(line, "isready")) printf("readyok\n");
     else if (!strncmp(line, "setoption name Nodes value ", 27)) nodeLim = atoi(line + 27);
     else if (!strncmp(line, "setoption name TimeMs value ", 28)) timeMs = atoi(line + 28);
+#ifdef MT
+    else if (!strncmp(line, "setoption name Threads value ", 29)) { int n = atoi(line + 29); if (n > MT_SLOTS) n = MT_SLOTS; if (n > kpThreads) { int from = kpThreads; kpThreads = n; kpStartHelpers(from); } }
+#endif
     else if (!strncmp(line, "setoption name Param", 20)) { int k, v; if (sscanf(line + 20, "%d value %d", &k, &v) == 2) set_param(k, v); }   /* a search parameter (engine.c set_param): for tools/match/spsa.py */
     else if (!strcmp(line, "usinewgame")) { tt_clear(); reset_search(); }
     else if (!strncmp(line, "position startpos", 17)) {
@@ -193,7 +229,7 @@ static int cmd_usi(void) {
     } else if (!strncmp(line, "go", 2)) {
       double byo = 0; char *q = strstr(line, "byoyomi"); if (q) byo = atof(q + 8);
       replay();
-      int m = nodeLim ? root_search(0, 0, nodeLim) : root_search(timeMs ? timeMs : byo > 0 ? byo * 0.9 : 1000, 0, 0);
+      int m = nodeLim ? kpSearch(0, nodeLim) : kpSearch(timeMs ? timeMs : byo > 0 ? byo * 0.9 : 1000, 0);
       if (!m || resScore <= -(MATE - MAXPLY)) printf("bestmove resign\n");
       else { char b[8]; toUsi(m, b); printf("info depth %d score cp %d\nbestmove %s\n", res[1], (int)resScore, b); }
     } else if (!strcmp(line, "quit")) break;

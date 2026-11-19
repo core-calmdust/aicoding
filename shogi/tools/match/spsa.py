@@ -33,38 +33,41 @@ TABLES['v4'] = [
     ('histLmr',     9, 6749, 2000, 16000, 500),    # history's weight in the reductions (divisor)
     ('lmrDiv',     17,  203,  130,  320,  12),     # reductions: ln(depth) * ln(move number) / (this / 100)
 ]
-# search v5 (set_param 44, the new search function): run with --table v5 --base "44=1,45=1,62=1"
-TABLES['v5'] = [
-    ('lmpScale',   43,  800,  200, 4000, 150),     # late move pruning: its move count, percent
-    ('razor',      58,  300,  100,  700,  40),     # razoring margin per depth
-    ('futDepth',   46,    8,    3,   14,   1),     # futility of quiet moves: below this reduced depth
-    ('fut0',       47,  100,   10,  300,  20),     # ... margin
-    ('fut1',       48,  120,   40,  300,  15),     # ... per reduced depth
-    ('nullBase',   52,    4,    2,    7,   1),     # null move reduction
-    ('iirDepth',   53,    4,    2,    9,   1),     # no table move: a ply less from this depth (battery-v7: 4 +119, 6 +97, 8 +53)
-    ('rfpMargin',   2,  112,   40,  220,  10),
-    ('rfpDepth',    1,    8,    3,   14,   1),
-    ('histLmr',     9, 6749, 2000, 16000, 600),
-    ('lmrDiv',     17,  203,  130,  320,  12),
-    ('bonus',      42,  170,   60,  400,  25),     # history bonus per depth
-    ('aspDelta',   27,   85,   20,  150,   8),
+# search v5 (set_param 44, the new search function): the one-thread default since 2026-11-19: --table v5 (no --base needed)
+TABLES['v5'] = [   # (2026-11-19: the starts are the values of the first tuning = the engine's defaults; wider ranges where it stopped at a limit)
+    ('lmpScale',   43,  246,   40, 4000,  40),     # late move pruning: its move count, percent
+    ('razor',      58,  346,  100,  900,  40),     # razoring margin per depth
+    ('futDepth',   46,    8,    3,   16,   1),     # futility of quiet moves: below this reduced depth
+    ('fut0',       47,  131,   10,  400,  20),     # ... margin
+    ('fut1',       48,   43,    0,  300,  10),     # ... per reduced depth
+    ('nullBase',   52,    6,    2,   12,   1),     # null move reduction
+    ('iirDepth',   53,    2,    1,    9,   1),     # no table move: a ply less from this depth
+    ('rfpMargin',   2,   73,   20,  220,   8),
+    ('rfpDepth',    1,   11,    3,   24,   1),
+    ('histLmr',     9, 5049, 1500, 16000, 500),
+    ('lmrDiv',     17,  214,  130,  320,  12),
+    ('bonus',      42,  297,   60,  800,  30),     # history bonus per depth
+    ('aspDelta',   27,   57,   10,  150,   6),
 ]
 PARAMS = TABLES['v4']
 
+THREADS = 1
 def build(work):
     os.makedirs(work, exist_ok=True)
+    mt = ['-DMT', '-DSEARCH2_MT', '-lpthread'] if THREADS > 1 else []     # (--threads: the MT build, with search v5 in it)
     site = os.path.join(work, 'site.bin')
     subprocess.run(f'gzip -dc "{SHOGI}/nnue.bin.gz" > "{site}"', shell=True, check=True)
     h = int.from_bytes(open(site, 'rb').read(8)[4:8], 'little')
     um, kp = os.path.join(work, 'usimatch'), os.path.join(work, 'kptool')
-    subprocess.run(['cc', '-O3', '-DNATIVE', f'-DNUE_H={h}', '-w', '-o', um, os.path.join(HERE, 'usimatch.c')], check=True)
-    subprocess.run(['cc', '-O3', '-DNATIVE', '-DNUE_KB=1', f'-DNUE_H={h}', '-w', '-o', kp, os.path.join(SHOGI, 'tools', 'nnue', 'kptool.c')], check=True)
+    subprocess.run(['cc', '-O3', '-DNATIVE', f'-DNUE_H={h}', '-w', '-o', um, os.path.join(HERE, 'usimatch.c')] + mt, check=True)
+    subprocess.run(['cc', '-O3', '-DNATIVE', '-DNUE_KB=1', f'-DNUE_H={h}', '-w', '-o', kp, os.path.join(SHOGI, 'tools', 'nnue', 'kptool.c')] + mt, check=True)
     return site, um, kp
 
 def play(work, site, um, kp, ms, setA, setB, games, opening_lines, tag):
     """usimatch plays setA, kptool plays setB; returns a Popen and the file with the openings"""
     f = tempfile.NamedTemporaryFile('w', suffix=f'-{tag}.txt', delete=False); f.write(''.join(opening_lines)); f.close()
     cmd = [um, site, f'{ms}ms', kp, work, str(games), '--openings', f.name, '--opt', f'TimeMs={ms}'] if ms > 0 else [um, site, str(-ms), kp, work, str(games), '--openings', f.name, '--opt', f'Nodes={-ms}']
+    if THREADS > 1: cmd += ['--threads', str(THREADS), '--opt', f'Threads={THREADS}']
     for k, v in setA.items(): cmd += ['--param', f'{k}={v}']
     for k, v in setB.items(): cmd += ['--opt', f'Param{k}={v}']
     env = dict(os.environ, KPNET=site)
@@ -93,10 +96,11 @@ def main():
     ap.add_argument('--procs', type=int, default=6); ap.add_argument('--iters', type=int, default=600)
     ap.add_argument('--lr', type=float, default=0.5); ap.add_argument('--games', type=int, default=80); ap.add_argument('--set', default='')
     ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--threads', type=int, default=1, help='both sides search on this many threads (the MT build: its defaults are search v4, so give search v5 in full with --set)')
     ap.add_argument('--table', default='v4', choices=sorted(TABLES)); ap.add_argument('--base', default='', help='parameters fixed on both sides in tune, and added to the candidate in test ("44=1,45=1")')
     ap.add_argument('--nodes', type=int, default=0, help='test: nodes per move instead of time (what the node-limited levels see)')
     a = ap.parse_args()
-    global PARAMS; PARAMS = TABLES[a.table]
+    global PARAMS, THREADS; PARAMS = TABLES[a.table]; THREADS = a.threads
     base = {int(x.split('=')[0]): int(x.split('=')[1]) for x in a.base.split(',') if x}
     site, um, kp = build(a.work)
     ops = [x for x in open(os.path.join(HERE, 'openings.txt')) if len(x) > 3]
