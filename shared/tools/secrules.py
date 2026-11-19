@@ -125,14 +125,14 @@ GAMES = {
                  variant=('v', ['std', 'place'])),
     # Ludus latrunculorum (2026-11-19): under the node latrunculi/ of the Tafl project; v = tc = 'seneca' / 'piso' / 'quintana';
     # b = Black (moves first; the placing phase alternates too); moves are 3 K64 chars each (from, to, the index among the legal
-    # moves with that from / to — the removal of a turned-over counter is part of a move); a game can end drawn, no draw offers
+    # moves with that from / to — the removal of a turned-over counter is part of a move); a game can end drawn; draw offers (2026-11-19)
     'latrunculi': dict(host=('tafl', 'latrunculi'), first='b', alt=True, tckey='tc', tcs={'seneca': (480000, 0, 5000), 'piso': (480000, 0, 5000), 'quintana': (420000, 0, 5000)},
-                       legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=6000, bg=False,
+                       legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
                        variant=('v', ['seneca', 'piso', 'quintana'])),
     # Fox and Geese (2026-11-19): under the node foxgeese/ of the Tafl project; v = tc = 'g15' / 'g17' / 'g13' / 'g13n';
-    # b = the fox (moves first online, the default quiet limit); moves are 3 K64 chars each (a multiple jump is one move); no draws
+    # b = the fox (moves first online, the default quiet limit); moves are 3 K64 chars each (a multiple jump is one move); no draws by the rules, draw offers (2026-11-19)
     'foxgeese': dict(host=('tafl', 'foxgeese'), first='b', alt=True, tckey='tc', tcs={'g15': (300000, 0, 5000), 'g17': (300000, 0, 5000), 'g13': (300000, 0, 5000), 'g13n': (300000, 0, 5000)},
-                     legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=6000, bg=False,
+                     legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
                      variant=('v', ['g15', 'g17', 'g13', 'g13n'])),
     # Royal Game of Ur: v = tc = 'finkel' / 'blitz' / 'masters'; b = Light (moves first). Extra turns
     # (rosettes, blitz captures) and the dice commit–reveal tokens (the side not to move reveals first): nt names the next writer;

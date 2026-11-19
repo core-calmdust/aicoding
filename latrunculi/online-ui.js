@@ -60,7 +60,9 @@ document.body.insertAdjacentHTML('beforeend', `
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 <div class="mt-strip" id="mtStrip" role="button"></div>`);
 $('.side-in').insertAdjacentHTML('afterbegin', '<div class="card ol-watch hidden" id="olWatch" aria-live="polite"></div>');
-// (no draw offers: a game can still end drawn by the rules)
+// draw offers in online games (2026-11-19 user)
+$('.controls').insertAdjacentHTML('beforeend', `<button class="btn ol-only" id="btnDraw"><svg viewBox="0 0 24 24"><path d="M7 12h10"/><path d="M5 8h14M5 16h14"/></svg><span data-i18n="ol.draw"></span></button>`);
+if (window.DrawOffer) DrawOffer.init({ btn: '#btnDraw', lang: () => LANG, live: () => window.drawLiveKind ? drawLiveKind() : '', online: () => settings.mode === 'online', ai: () => { if (window.playerDraw) playerDraw(); }, agree: () => { if (window.drawAgree) drawAgree(); } });
 $('#segMode').insertAdjacentHTML('beforeend', '<button data-v="online" data-i18n="ol.title"></button>');
 $('#resultOverlay .modal-actions').insertAdjacentHTML('beforebegin', '<div class="ol-res hidden" id="olRes"></div>');
 // the new-game dialog: "online" shows a short description and opens the online dialog
@@ -374,7 +376,7 @@ function olAfterInfo() {
   const g = net.game;
   $('#infoLine').textContent = g ? `${varName(g.v)}  ·  ${t(g.rated ? 'ol.rated' : 'ol.friendly')}  ·  ${tcText(g.v)}  ·  ${t('info.moves', { n: moves.length })}` : '';
   $('#btnResign').disabled = !canResign();
-  { const b = document.getElementById('btnDraw'); if (b) b.disabled = true; }
+  $('#btnDraw').disabled = !olLive() || !!(g && g.offer && g.offer.by);
   olDrawRender();
 }
 // draw offers: shown in the game card above the players
@@ -469,6 +471,7 @@ $('#btnAgain').addEventListener('click', e => {
 }, true);
 // 投了 in an online game (the button and the common 投了しますか？ dialog live in app.js / shared/resign.js)
 window.olResignBtn = () => { if (olLive()) ON.resign(net.gid).catch(e => { console.warn(e); toast(t('ol.error'), 2000); }); };
+$('#btnDraw').onclick = () => { if (!olLive() && window.aiGameLive && aiGameLive()) { playerDraw(); return; } if (olLive()) olConfirm(t('ol.drawQ'), t('ol.draw'), () => { if (olLive()) ON.offerDraw(net.gid).then(r => { if (r && r.committed) toast(t('ol.drawSent'), 1600); }).catch(e => console.warn(e)); }); };
 
 // leaving a live online game (new game, lessons, puzzles, loading a record) = resigning it, after a confirmation
 function olGuard(sel) {

@@ -48,6 +48,7 @@
 - `tafl-multiplay` の「Realtime Database → ルール」に `tafl/database.rules.json` の中身を全部貼って公開する（`https://raw.githubusercontent.com/core-calmdust/aicoding/main/tafl/database.rules.json`）。
   タフル・アゴンの部分は今までと同じ。公開するまで2ゲームのオンラインは「準備中」（ほかは何も変わらない）。公開後は次に開いたときから使える。
 - 追加の設定（Authentication・承認済みドメイン・App Check）は不要（タフル・アゴンと同じプロジェクト）。
+- 2026-11-19 夕方：2ゲームに引き分けの提案を足した（ルールが変わったので、それより前に貼った場合は貼り直し）。
 
 ## 0. 現在の状態
 
