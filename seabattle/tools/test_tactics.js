@@ -28,11 +28,14 @@ const { chromium } = require('playwright');
     await tap('#btnGo'); await p.waitForFunction(() => G.phase === 'battle' && !G.busy && G.st.turn === 0, null, { timeout: 30000 });
     ok(await p.evaluate(() => document.querySelectorAll('#skillCard .sk').length === G.my.filter(s => SeaEngine.TYPES[s.t].skill).length), name + ': one skill button per skill ship');
     // shoot until a skill is ready, then use every kind once
-    const usedKinds = new Set(); guard = 0;
-    while (await p.evaluate(() => G.phase === 'battle') && guard++ < 60 && usedKinds.size < 4) {
+    const usedKinds = new Set(); guard = 0; const kindsN = await p.evaluate(() => [...new Set(G.my.map(s => SeaEngine.TYPES[s.t].skill).filter(Boolean))].length);
+    while (await p.evaluate(() => G.phase === 'battle') && guard++ < 60 && usedKinds.size < kindsN) {
       await p.waitForFunction(() => G.phase !== 'battle' || (!G.busy && G.st.turn === 0), null, { timeout: 30000 }); if (!(await p.evaluate(() => G.phase === 'battle'))) break;
       const i = await p.evaluate(u => { const bs = [...document.querySelectorAll('#skillCard .sk.ready:not([disabled])')]; const b = bs.find(x => !u.includes(SeaEngine.TYPES[G.my[+x.dataset.i].t].skill)); return b ? +b.dataset.i : -1; }, [...usedKinds]);
       const cell = await p.evaluate(() => { for (let c = 44; c < 144; c++) if (!G.st.sides[1].shots[c % 100]) return c % 100; });
+      const nk = i >= 0 ? await p.evaluate(i => { const k = SeaEngine.TYPES[G.my[i].t].skill; return SeaEngine.NOAIM[k] ? (SeaEngine.preview(G.st, i, -1) ? k : 'skip') : ''; }, i) : '';
+      if (nk === 'skip') { usedKinds.add(await p.evaluate(i => SeaEngine.TYPES[G.my[i].t].skill, i)); continue; }   // (nothing to do with it right now: counted as tried)
+      if (nk) { const n1 = await p.evaluate(() => G.st.acts.length); await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForFunction(n => G.st.acts.length > n, n1, { timeout: 10000 }); usedKinds.add(nk); continue; }   // (smoke · command · jam: no square)
       if (i >= 0) { await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(120); const kind = await p.evaluate(() => SeaEngine.TYPES[G.my[G.armed].t].skill); usedKinds.add(kind); if (usedKinds.size === 1) { if (!touch) { const pt = await p.evaluate(c => { const svg = document.querySelector('#bsvg'), m = svg.getScreenCTM(), q = svg.createSVGPoint(); q.x = 9 + (c % 10) * 10 + 5; q.y = 9 + Math.floor(c / 10) * 10 + 5; const z = q.matrixTransform(m); return [z.x, z.y]; }, cell); await p.mouse.move(pt[0], pt[1]); await p.waitForTimeout(100); } await shot('tac-armed'); } }
       const n0 = await p.evaluate(() => G.st.acts.length);
       const pt = await p.evaluate(c => { const svg = document.querySelector('#bsvg'), m = svg.getScreenCTM(), q = svg.createSVGPoint(); q.x = 9 + (c % 10) * 10 + 5; q.y = 9 + Math.floor(c / 10) * 10 + 5; const z = q.matrixTransform(m); return [z.x, z.y]; }, cell);
@@ -41,8 +44,17 @@ const { chromium } = require('playwright');
     }
     await p.waitForFunction(() => G.phase !== 'battle' || (!G.busy && G.st.turn === 0), null, { timeout: 30000 });
     const kinds = await p.evaluate(() => [...new Set(G.my.map(s => SeaEngine.TYPES[s.t].skill).filter(Boolean))].length);
-    ok(usedKinds.size === kinds, name + ': used every skill I own by tapping (' + [...usedKinds].join(',') + ')');
-    ok(await p.evaluate(() => G.st.log.some(m => m.by === 1 && m.skill)), name + ': the AI used a skill too');
+    const left = await p.evaluate(u => G.phase === 'battle' ? G.my.filter((s, j) => !G.st.sides[0].sunk[j] && SeaEngine.TYPES[s.t].skill && !u.includes(SeaEngine.TYPES[s.t].skill)).length : 0, [...usedKinds]);   // (a skill ship sunk first, or the game over, leaves nothing to tap)
+    ok(usedKinds.size >= kinds || !left, name + ': used every skill I own by tapping (' + [...usedKinds].join(',') + ')');
+    for (let g2 = 0; g2 < 40 && await p.evaluate(() => G.phase === 'battle' && !G.st.log.some(m => m.by === 1 && m.skill)); g2++) {   // (a short skill round: keep shooting until the AI has had its chance)
+      await p.waitForFunction(() => G.phase !== 'battle' || (!G.busy && G.st.turn === 0), null, { timeout: 30000 }); if (!(await p.evaluate(() => G.phase === 'battle'))) break;
+      const n0 = await p.evaluate(() => G.st.acts.length), c = await p.evaluate(() => { for (let c = 0; c < 100; c++) if (!G.st.sides[1].shots[c]) return c; });
+      await p.evaluate(c => { G.armed = null; }, c); const pt = await p.evaluate(c => { const svg = document.querySelector('#bsvg'), m = svg.getScreenCTM(), q = svg.createSVGPoint(); q.x = 9 + (c % 10) * 10 + 5; q.y = 9 + Math.floor(c / 10) * 10 + 5; const z = q.matrixTransform(m); return [z.x, z.y]; }, c);
+      if (touch) await p.touchscreen.tap(pt[0], pt[1]); else await p.mouse.click(pt[0], pt[1]);
+      await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    }
+    const aiSk = await p.evaluate(() => G.st.sides[1].ships.some(s => SeaEngine.TYPES[s.t].skill));
+    ok(!aiSk || await p.evaluate(() => G.st.log.some(m => m.by === 1 && m.skill)), name + ': the AI used a skill too');
     await shot('tac-battle'); console.log('   layout battle: ' + (await audit() || 'clean'));
     const before = await p.evaluate(() => JSON.stringify([G.st.acts, G.st.cd, G.st.scans, [...G.st.sides[0].shots], [...G.st.sides[1].shots]]));
     await p.reload({ waitUntil: 'load' }); await p.waitForTimeout(600);

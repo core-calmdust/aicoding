@@ -99,6 +99,10 @@ body.placing .frame .sb-ship{cursor:grab}
 .sb-best{animation:best 1s ease-in-out infinite alternate}@keyframes best{to{opacity:.45}}
 .sb-scan rect{fill:rgba(143,230,212,.07);stroke:#8fe6d4;stroke-width:.45;stroke-dasharray:2.4 1.6;opacity:.6}.sb-scan circle{fill:#0d3140;stroke:#8fe6d4;stroke-width:.4}.sb-scan text{font-family:var(--num);font-size:3.6px;font-weight:700;fill:#8fe6d4;text-anchor:middle}
 .sb-scan.new rect{opacity:1;fill:rgba(143,230,212,.12)}.sb-scan{pointer-events:none}
+/* the new ships (2026-11-20): a dented plate (armored), a shot under the smoke (?), the smoke over a sea */
+.sb-dent{fill:rgba(255,196,90,.18);stroke:#ffc45a;stroke-width:.7}.sb-dentx{fill:none;stroke:#ffc45a;stroke-width:.55;stroke-linecap:round;stroke-linejoin:round}
+.sb-fogc{fill:rgba(220,228,240,.28);stroke:rgba(230,236,245,.7);stroke-width:.35;stroke-dasharray:1 .8}.sb-fogq{font:800 4.4px var(--font,system-ui);fill:#eef3fa;text-anchor:middle}
+.sb-smoke{fill:rgba(205,214,228,.16);pointer-events:none}.sb-fx-smoke{fill:rgba(225,232,242,.45);animation:sbpuff .9s ease-out forwards}@keyframes sbpuff{from{transform-box:fill-box;transform-origin:center;transform:scale(.5);opacity:.9}to{transform-box:fill-box;transform-origin:center;transform:scale(1.8);opacity:0}}
 .sb-fx-scan{fill:rgba(143,230,212,.25);stroke:#8fe6d4;stroke-width:.6;animation:scanbox .9s ease-out both}@keyframes scanbox{from{opacity:0}30%{opacity:1}to{opacity:0}}
 .sb-fx-ring.scan{stroke:#8fe6d4;stroke-width:.7;animation-duration:.9s}
 .sb-aim rect{fill:rgba(255,255,255,.1);stroke:#fff;stroke-width:.4}.sb-aim path{stroke:#fff;stroke-width:.4;stroke-linecap:round}
@@ -341,15 +345,15 @@ body.tac:not(.placing) .skills{display:grid}
   </div>
 </div>
 
-<script src="i18n.js?v=2"></script>
+<script src="i18n.js?v=3"></script>
 <script src="../shared/rulesoffer.js?v=20sea"></script>
 <script src="../shared/headerbar.js?v=63"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/ruletour.js?v=30tw"></script>
-<script src="engine.js?v=2"></script>
-<script src="board.js?v=2"></script>
+<script src="engine.js?v=3"></script>
+<script src="board.js?v=3"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
