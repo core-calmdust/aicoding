@@ -525,7 +525,7 @@
     } };
   // ludus latrunculorum (atlas/models/latrunculi.js SETS, remade 2026-11-19): 'atlas-latrunculi-pc3' — 石の兜 (the default) · 木 · 花 · 硬貨 · 大理石の柱 (key 'glass': the 2D set's glass counters became carved columns in 3D) · 骨
   PIECES.latrunculi = { list: ['helm', 'wood', 'abstract', 'coin', 'glass', 'bone'], get: () => { let v = ls.get('atlas-latrunculi-pc3'); v = { gem: 'glass', stone: 'helm', bronze: 'coin', terra: 'wood' }[v] || v; return PIECES.latrunculi.list.includes(v) ? v : 'helm'; }, set: k => ls.set('atlas-latrunculi-pc3', k),
-    thumb: k => new URL('img/pc3-latrunculi-' + k + '.webp?v=5', ME).href,
+    thumb: k => new URL('img/pc3-latrunculi-' + k + '.webp?v=6', ME).href,
     names: {
       helm: { ja: '石の兜', en: 'Stone helmets', zh: '石盔', 'zh-TW': '石盔', ko: '돌 투구', es: 'Yelmos de piedra', fr: 'Casques de pierre', pt: 'Elmos de pedra', de: 'Steinhelme', ru: 'Каменные шлемы', tr: 'Taş miğferler', id: 'Helm batu', hi: 'पत्थर के शिरस्त्राण', ar: 'خوذ حجرية' },
       wood: { ja: '焼き絵の木駒', en: 'Pyrography wood', zh: '烙画木棋', 'zh-TW': '烙畫木棋', ko: '낙화 나무말', es: 'Madera pirograbada', fr: 'Bois pyrogravé', pt: 'Madeira pirogravada', de: 'Brandmalerei', ru: 'Выжигание по дереву', tr: 'Yakma ahşap', id: 'Kayu ukir bakar', hi: 'पायरोग्राफ़ी लकड़ी', ar: 'خشب محفور بالحرق' },
