@@ -314,10 +314,13 @@ int main(int argc, char **argv) {
     if (dg && argc > 6) { if (!loadNet(argv[6])) return 1; xq_nnue(1); }
     double S = xqOn ? XQ_K : (getenv("JG_S") ? atof(getenv("JG_S")) : JG_S);
     FILE *out = dg ? fopen(argv[2], "ab") : 0; if (dg && !out) { perror(argv[2]); return 1; }
+    // adjudication (saves the long won endings: their positions are past the trainer's |score| < 3000 anyway): JG_ADJ points
+    // (default 3000) for the same side in JG_ADJN (default 8) searched plies in a row = that side wins. JG_ADJ=0: off.
+    const int ADJ = getenv("JG_ADJ") ? atoi(getenv("JG_ADJ")) : 3000, ADJN = getenv("JG_ADJN") ? atoi(getenv("JG_ADJN")) : 8;
     static Rec rec[256]; long tot = 0; double t0 = now();
     static double fx[400000]; static signed char fy[400000]; int fn = 0;
     for (int g = 0; g < G; g++) {
-      u8 board[90]; int sd, nh = 0, nr = 0, result = 0, pre = 2 + rnd32() % 8, ply;
+      u8 board[90]; int sd, nh = 0, nr = 0, result = 0, pre = 2 + rnd32() % 8, ply, adjN = 0, adjS = 0;
       randomStart(board, &sd); new_game(); setupBoard(board, sd, GH, 0, 0, 0); GK[0] = KEY;
       for (ply = 0; ply < 200; ply++) {
         setupBoard(board, sd, GH, nh, 0, 0);
@@ -327,6 +330,10 @@ int main(int argc, char **argv) {
         else {
           int v = 0;
           if (rootN == 1) m = rootL[0]; else { best(99, 0, nk); m = (Move)IO[0]; v = IO[1]; setupBoard(board, sd, GH, nh, 0, 0); }
+          if (ADJ > 0 && rootN > 1) {   // (Cho's view)
+            int sg = v >= ADJ ? 1 : v <= -ADJ ? -1 : 0; if (side) sg = -sg;
+            if (sg && sg == adjS) adjN++; else { adjS = sg; adjN = sg ? 1 : 0; }
+          }
           if (rootN > 1 && nr < 256) {
             Rec *r = &rec[nr++]; memset(r, 0, sizeof *r);
             for (int s = 0; s < 90; s++) r->b[s >> 1] |= (uint8_t)(B[s] << ((s & 1) * 4));
@@ -336,6 +343,7 @@ int main(int argc, char **argv) {
             r->flags = (uint8_t)((attackedKing(side) ? REC_CHECK : 0) | (MF(m) != MT(m) && B[MT(m)] ? REC_CAPTURE : 0));
           }
         }
+        if (adjN >= ADJN) { result = adjS; break; }
         makeMove(m); GH[nh++] = m; GK[nh] = KEY;
         int cnt = 0; for (int i = nh; i >= 0; i--) if (GK[i] == KEY) cnt++;
         if (cnt >= 3) { result = pointsResult(); break; }
@@ -353,6 +361,20 @@ int main(int argc, char **argv) {
     double a = 1 / 300.0;   // result ~ sigmoid(a * cp): Newton steps on the log-likelihood
     for (int it = 0; it < 30; it++) { double g1 = 0, g2 = 0; for (int i = 0; i < fn; i++) { double p = 1 / (1 + exp(-a * fx[i])); g1 += (fy[i] - p) * fx[i]; g2 += p * (1 - p) * fx[i] * fx[i]; } a += g1 / (g2 + 1e-9); }
     printf("%d positions: result ~ sigmoid(score / %.0f)\n", fn, 1 / a);
+    return 0;
+  }
+  if (argc > 1 && !strcmp(argv[1], "iobest")) {
+    // iobest net.bin|- depth file: per line the IO array of engine.js setupIO (board, side, moves, excluded) -> best(depth) as
+    // "i move value depth knodes" (tools/check_wasm.js compares it with the wasm builds)
+    if (strcmp(argv[2], "-")) { if (!loadNet(argv[2])) return 1; xq_nnue(1); }
+    int D = atoi(argv[3]); FILE *f = fopen(argv[4], "r"); if (!f) { perror(argv[4]); return 1; }
+    static char ln[65536]; int i = 0;
+    while (fgets(ln, sizeof ln, f)) {
+      int k = 0; char *p = ln, *e; for (;;) { long v = strtol(p, &e, 10); if (e == p) break; IO[k++] = (i32)v; p = e; }
+      if (k < 92) continue;
+      new_game(); if (!setup()) { printf("%d bad\n", i++); continue; }
+      int ev = eval_root(); best(D, 0, 0); printf("%d e%d %d %d d%d k%d\n", i++, ev, IO[0], IO[1], IO[2], IO[3]);
+    }
     return 0;
   }
   if (argc > 1 && !strcmp(argv[1], "serve")) {
