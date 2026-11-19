@@ -135,6 +135,8 @@ function render(msg) {
   renderBoards(); renderFleet(); renderStatus(msg); renderKifu(); renderEval(); renderButtons(); renderSkills(); renderDraft();
 }
 const SK_ICON = {
+  rocket: '<svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="5.5" height="6" rx="1"/><rect x="9.25" y="9" width="5.5" height="6" rx="1"/><rect x="16" y="9" width="5.5" height="6" rx="1"/><path d="M5 6l1-2M12 6V3.5M19 6l-1-2"/></svg>',
+  repair: '<svg viewBox="0 0 24 24"><path d="M14.5 4a4.5 4.5 0 0 0-4.2 6.1L3.5 16.9a1.8 1.8 0 0 0 2.6 2.6l6.8-6.8A4.5 4.5 0 0 0 19 8.5l-2.7 2.7-2.6-.6-.6-2.6L15.8 5.3A4.5 4.5 0 0 0 14.5 4z"/></svg>',
   smoke: '<svg viewBox="0 0 24 24"><path d="M5 15a4 4 0 0 1 3-6.5A5 5 0 0 1 17.5 9 3.5 3.5 0 0 1 19 15.8"/><path d="M4 19h16M7 22h10"/></svg>',
   scout: '<svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M12 8l-7 4 7 1 7-1z"/><path d="M10 16h4"/><path d="M3 5h18M3 19h4M17 19h4"/></svg>',
   twin: '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="3.2"/><circle cx="16.5" cy="12" r="3.2"/><path d="M8 4v3M16.5 4v3M8 17v3M16.5 17v3"/></svg>',
@@ -284,7 +286,7 @@ async function doSkill(a) {
   G.armed = null; hoverCell = -1;
   const sunk = res.shots.filter(x => x.sunk >= 0), hits = res.shots.filter(x => x.hit).length;
   if (res.skill === 'sonar' || res.skill === 'scout') toast(t('fx.' + res.skill, { k: res.k }));
-  else if (noAim) toast(t((by === 0 ? 'fx.' : 'fx.foe.') + res.skill));
+  else if (noAim) toast(t((by === 0 ? 'fx.' : 'fx.foe.') + res.skill, { c: res.fix != null ? E.cellName(res.fix) : '' }));
   else if (by === 0 && res.shots.some(x => x.fog)) toast(t('fx.fog'));
   else if (res.shots.some(x => x.dent)) toast(t('fx.dent'), 'hit');
   else if (sunk.length) { sfx('sunk'); shake(); toast(t(by === 0 ? 'fx.sunk' : 'fx.lost', { s: t('ship.' + st.sides[1 - by].ships[sunk[0].sunk].t) }), 'hit'); }
