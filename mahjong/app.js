@@ -189,9 +189,9 @@ const SND = (() => {
     riichi3: { file: 'bgm-riichi3', vol: .184, restart: true },   // (同日「リーチ3」: −9.3 LUFS → ≈ −24)
     score: { file: 'score-jingle', vol: .35, restart: true, once: true },
     // (ユーザー 2026-11-19: the rules / lessons music, from the list through every lesson, as long as 次へ goes on: −15.4 LUFS → ≈ −22 like the title)
-    lesson: { file: 'bgm-lesson', vol: .47, restart: false },
+    lesson: { file: 'bgm-guitar', vol: .52, restart: false },   // (ユーザー 2026-11-20「BGMがギターのやつじゃなくなってる」: the lessons play the guitar piece too; the file got a new name so no browser keeps the old one)
     // (同日、ユーザー「ルール曲はこちらに（前のは気が散る）」: the rules course's own, acoustic guitar: −16.2 LUFS → ≈ −22)
-    rules: { file: 'bgm-rules', vol: .52, restart: false },   // (ユーザー 2026-11-15: a short piece, once per results screen — no loop)
+    rules: { file: 'bgm-guitar', vol: .52, restart: false },   // (ユーザー 2026-11-15: a short piece, once per results screen — no loop)
   };
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
