@@ -438,7 +438,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
       <button class="btn" id="btnResign"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg><span></span></button>
       <button class="btn" id="btnHint"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg><span data-i18n="btn.hint"></span></button>
       <button class="btn" id="btnRules"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M8 8h8M8 12h6"/></svg><span data-i18n="btn.rules"></span></button>
-      <button class="btn" id="btnLesson"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg><span data-i18n="btn.lesson"></span></button>
+      <button class="btn hidden" id="btnLesson" hidden><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg><span data-i18n="btn.lesson"></span></button>
     </div>
   </header>
   <div class="board-area" id="boardArea">
@@ -520,7 +520,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <!-- rules (hands-on tutorial: ludo/tour.js on shared/ruletour.js) -->
 <div class="overlay" id="rulesOverlay">
   <div class="modal">
-    <div class="seg ls-tabs" role="tablist"><button data-v="rules-ludo" role="tab"></button><button data-v="rules-pachisi" role="tab"></button><button data-v="lesson" role="tab"></button></div>
+    <div class="seg ls-tabs" role="tablist"><button data-v="rules-ludo" role="tab"></button><button data-v="rules-pachisi" role="tab"></button></div>
     <div id="rulesBody"></div>
   </div>
 </div>
@@ -529,7 +529,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <div class="overlay" id="lessonOverlay">
   <div class="modal">
     <div id="lessonListView">
-      <div class="seg ls-tabs" role="tablist"><button data-v="rules-ludo" role="tab"></button><button data-v="rules-pachisi" role="tab"></button><button data-v="lesson" role="tab"></button></div>
+      <div class="seg ls-tabs" role="tablist"><button data-v="rules-ludo" role="tab"></button><button data-v="rules-pachisi" role="tab"></button></div>
       <h2 data-i18n="ls.title"></h2>
       <p class="ls-lead" data-i18n="ls.desc"></p>
       <div class="ls-cats" id="lsCats"></div>
@@ -586,12 +586,12 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/mtworkers.js?v=4"></script>
 <script src="mt.js?v=4"></script>
 <script src="house.js?v=7"></script>
-<script src="app.js?v=27-olt"></script>
+<script src="app.js?v=27-olt-nl"></script>
 <script src="review.js?v=3-mt"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="rated.js?v=3"></script>
-<script src="tour.js?v=2"></script>
-<script src="../shared/luxintro.js?v=3"></script><script src="app-learn.js?v=5-lx1"></script>
+<script src="tour.js?v=2-nl"></script>
+<script src="../shared/luxintro.js?v=3"></script><script src="app-learn.js?v=5-lx1-nl"></script>
 <script src="firebase-config.js?v=1"></script>
 <script src="../shared/onlinesec.js?v=2l14as1sh1"></script>
 <script src="../shared/tick.js?v=2l14"></script>
@@ -600,7 +600,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/cardbar.js?v=15l14"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script><script src="../shared/ngdisp.js?v=1-nd1"></script>
-<script src="../shared/atlas.js?v=20261119fg1" defer></script>
+<script src="../shared/atlas.js?v=20261119ld1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=4l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>

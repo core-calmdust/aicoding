@@ -599,7 +599,7 @@ if (window.HeaderBar && HeaderBar.addOption) {
     get: () => settings.speed, set: v => { settings.speed = +v; if (draft) draft.speed = settings.speed; save(); } });
   window.__ldSpeedOpt = spH;
 }
-const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson'], lang: () => LANG }) : null;
+const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules'], lang: () => LANG }) : null;
 applyI18n(); paintSnd();
 if (saved.game && saved.game.state && saved.game.state.pos) {
   const sg = saved.game;

@@ -3,7 +3,7 @@
    - レッスン（lessons.json）：カテゴリのタブ（アイコン＋名前＋合格数）→ カテゴリの見出しカード → ミニ盤付きのカード（PC 2列）。
      開くと説明（ミニ盤）→ 準備 2（考え方：盤に矢印と印／例題：採点なし）→ 採点問題5（満点20、ヒント3段階：考え方 → 見るところ → 答え、
      誤答はやり直し）→ 合格75。終わりの画面は「レッスンに戻る」「もう一度」「次のステップ」。
-   - （パズルは 2026-11-09 に廃止）
+   - （パズルは 2026-11-09 に廃止。レッスンも 2026-11-19 に廃止：ボタン・タブ・大百科の入口を外した。コードと lessons.json は残してある）
      → 問題（★：ヒントなし・まちがいなし3、ヒント／やり直し2、答えを見たら1）。
    問題は本体の盤で解く（SP＝特別モード：G を一時的に差し替え。app.js の commit は SP_commit へ）。
    Shares the globals of app.js (classic scripts): G, SP, SP_commit, settings, LANG, t, E, B, drawBoard, showThrow, placeAll, pcEls, geo, gMarks … */
@@ -137,7 +137,7 @@
     try { localStorage.setItem('aicoding-ludo-rules-seen', '1'); } catch (e) {}
     LudoTour.open({ mount: '#rulesBody', rule: rrule, lang: () => LANG, design: settings.design,
       sound: k => { if (k === 'step') sTick(); else if (k === 'cap') sCap(); else if (k === 'ok') tone(880, .12); else if (k === 'roll') sRattle(); },
-      onClose: () => closeRules(), onPlay: () => { closeRules(); openNew(); }, onLessons: () => { closeRules(); openLessons(); } });
+      onClose: () => closeRules(), onPlay: () => { closeRules(); openNew(); } });   // (no 「レッスンへ」: lessons retired 2026-11-19)
   }
   function closeRules() { try { LudoTour.stop(); } catch (e) {} hideOv('#rulesOverlay'); }
   $('#btnRules').onclick = () => openRules();

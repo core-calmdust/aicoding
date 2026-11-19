@@ -266,7 +266,7 @@
         mount: el, store: 'aicoding-ludo-rules-' + rule, lang, pages: pagesFor(rule), aspect: .84,
         close: () => { O.onClose && O.onClose(); },
         play: () => { O.onPlay && O.onPlay(); },
-        lessons: () => { O.onLessons && O.onLessons(); },
+        lessons: O.onLessons ? () => O.onLessons() : null,   // (2026-11-19: lessons retired — no button)
         sound: k => snd(k),
       });
     }
