@@ -3,6 +3,8 @@
    usage: usimatch <nnue.bin> <our nodes | Nms> <usi engine path> <engine dir> <games> [--opt "Name=Value"]... [--byoyomi ms] [--openings file] [--param k=v]...
      --param k=v: a search parameter of our side (engine.c set_param); the other side, if it is kptool: --opt "Param<k>=v"
             [--threads N] [--fischer baseMs,incMs]
+           [--us <usi engine> <dir> [--usopt Name=Value]... [--usbyoyomi ms]]   (our side played by another USI engine, e.g.
+           YaneuraOu's search with our evaluation against Gikou: tools/match/yo-gikou.sh)
    --threads N (a build with -DMT -lpthread): our side searches on N threads, the multi-thread search of the site (engine_mt.wasm:
      Young Brothers Wait on the first 10 threads, Lazy SMP past them), the helpers asleep while the other engine thinks.
    --fischer 300000,10000: both sides play on a clock (base + increment per move, e.g. Floodgate's 5 min + 10 s): the USI engine
@@ -122,6 +124,12 @@ static int eMove(int byoyomi, char *out) {   /* 1 move, 0 resign, 2 declares a w
   return 1;
 }
 
+/* --us <engine> <dir>: OUR side is played by another USI engine too (e.g. YaneuraOu's search with our evaluation against Gikou:
+   the board, the rules and the clocks stay here). --usopt Name=Value: its options; it gets "go ... byoyomi <--usbyoyomi>" (or the
+   Fischer clock), so bound it by an option such as NodesLimit. */
+static FILE *toU, *fromU; static pid_t upid;
+static void eSwap(void) { FILE *t = toE; toE = toU; toU = t; t = fromE; fromE = fromU; fromU = t; pid_t q = epid; epid = upid; upid = q; }
+
 int main(int argc, char **argv) {
   if (argc < 6) { fprintf(stderr, "usage: usimatch <nnue.bin> <our nodes> <usi engine> <engine dir> <games> [--opt Name=Value]... [--byoyomi ms] [--seed S]\n"); return 1; }
   signal(SIGPIPE, SIG_IGN);
@@ -186,9 +194,13 @@ int main(int argc, char **argv) {
     return 0;
   }
   int ourNodes = atoi(argv[2]), ourMs = strstr(argv[2], "ms") ? ourNodes : 0, games = atoi(argv[5]), byo = 10000; char *opts[32]; int nopt = 0; const char *opf = NULL;
+  const char *usPath = NULL, *usDir = NULL; char *uopts[32]; int nuopt = 0, usByo = 60000;
   for (int a = 6; a + 1 < argc; a++) {
     if (!strcmp(argv[a], "--opt") && nopt < 32) opts[nopt++] = argv[++a];
     else if (!strcmp(argv[a], "--byoyomi")) byo = atoi(argv[++a]);
+    else if (!strcmp(argv[a], "--us") && a + 2 < argc) { usPath = argv[a + 1]; usDir = argv[a + 2]; a += 2; }
+    else if (!strcmp(argv[a], "--usopt") && nuopt < 32) uopts[nuopt++] = argv[++a];
+    else if (!strcmp(argv[a], "--usbyoyomi")) usByo = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--openings")) opf = argv[++a];
     else if (!strcmp(argv[a], "--param")) { int k, v; if (sscanf(argv[++a], "%d=%d", &k, &v) == 2) set_param(k, v); }   /* our side's search parameter (engine.c set_param) */
     else if (!strcmp(argv[a], "--threads")) nThreads = atoi(argv[++a]);
@@ -201,6 +213,7 @@ int main(int argc, char **argv) {
 #else
   if (nThreads > 1) { fprintf(stderr, "--threads needs a build with -DMT -lpthread\n"); return 1; }
 #endif
+  if (usPath) { eStart(usPath, usDir, uopts, nuopt); eSwap(); }
   eStart(argv[3], argv[4], opts, nopt);
   int w = 0, l = 0, d = 0;
   for (int g = 0; g < games; g++) {
@@ -211,6 +224,7 @@ int main(int argc, char **argv) {
       while (sscanf(p, " %15s%n", tok, &k) == 1) { p += k; int m = fromUsi(tok); if (!m) { fprintf(stderr, "opening move %s not legal\n", tok); exit(3); } hist[nh++] = m; play_move(m); }
     }
     fprintf(toE, "usinewgame\n"); fflush(toE);
+    if (usPath) { fprintf(toU, "usinewgame\n"); fflush(toU); }
     clk[0] = clk[1] = fBase; int flag = 0; double usedO = 0, usedE = 0; int nO = 0, nE = 0;
     i32 keysL[400], keysH[400]; int nh0 = nh;
     for (int ply = nh; ; ply++) {
@@ -228,6 +242,11 @@ int main(int argc, char **argv) {
           double t0 = js_now(); m = ourSearch(cap, 0); double el = js_now() - t0;
           clk[side] -= el; usedO += el; nO++; if (clk[side] < 0) { flag = 1; result = -1; break; }
           clk[side] += fInc;
+        } else if (usPath) {
+          char mv[16]; eSwap(); int r = eMove(usByo, mv); eSwap();
+          if (r == 2) { result = 1; break; }
+          m = r ? (replay(), fromUsi(mv)) : 0;
+          if (r && !m) fprintf(stderr, "illegal move from our stand-in: %s\n", mv);
         } else m = ourMs ? ourSearch(ourMs, 0) : ourSearch(0, ourNodes);
         if (!m) { result = -1; break; }
       } else {
