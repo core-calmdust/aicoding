@@ -67,7 +67,11 @@ __attribute__((export_name("stopped"))) int stopped(void) { return stopF; }
 #ifndef MT
 #define TSZ (1 << 21)
 typedef struct { u32 k, h2; int gen; short v; signed char d, f; int m, rs; } TE;
+#ifdef NATIVE_TTSWAP
+static TE *T;   // (the native match tools/nnue/nn.c: each player its own table)
+#else
 static TE T[TSZ];
+#endif
 static int gen = 1, tsize = 0;
 __attribute__((export_name("ttclear"))) void ttclear(void) { gen++; tsize = 0; }
 static TE *tfind(u32 k) { u32 i = (k * 2654435761u) & (TSZ - 1); for (;;) { TE *e = &T[i]; if (e->gen != gen) return 0; if (e->k == k) return e; i = (i + 1) & (TSZ - 1); } }
@@ -276,6 +280,68 @@ static int hangN(const P *p, int pl, const int *own_, int nOwn, int lim) {   // 
   }
   return n;
 }
+// ---- the learned evaluation (2026-11-20, agon/MODEL_CARD.md「学習した評価」, agon/tools/nnue/): a small net that adds a
+// correction to the evaluation above, from the side to move's view. Inputs (NNF = 740, one-hot): each piece by kind (own guard,
+// own queen, the other's guard, queen) × captured or not × its cell (Black's view: cell 90 − i, the board turned round), and each
+// side's reserve (1..6). One hidden layer of NNH (≤ 64) clipped ReLUs; out = 100 × (b2 + Σ w2 · h). The file (agon/net.js, base64)
+// keeps half floats: the same floats native and in wasm, summed in the same order → the same values (tools/nnue/check_net.js).
+// A net whose w2 is zero gives the evaluation above exactly. Off (nn_use 0) the search is the one before, node for node.
+#define NNF 740
+#define NNHMAX 64
+static float NW1[NNF * NNHMAX], NB1[NNHMAX], NW2[NNHMAX], NB2;
+static int NNH = 0, NNOK = 0, NNVER = 0, NNON = 0;
+static unsigned char NNBUF[16 + 2 * (NNF * NNHMAX + 2 * NNHMAX + 1)];
+EXPORT(nn_buf) unsigned char *nn_buf(void) { return NNBUF; }
+static float h2f(unsigned h) {
+  unsigned s = (h & 0x8000u) << 16, e = (h >> 10) & 31, m = h & 1023, u;
+  if (!e) { if (!m) u = s; else { int k = -1; do { k++; m <<= 1; } while (!(m & 1024)); u = s | (unsigned)(127 - 15 - k) << 23 | (m & 1023) << 13; } }
+  else if (e == 31) u = s | 0x7f800000u | m << 13;
+  else u = s | (e + 112) << 23 | m << 13;
+  union { unsigned u; float f; } x; x.u = u; return x.f;
+}
+// the file: "AGNN", version, NNH, NNF (4 × u32), then half floats W1[NNF][NNH], B1[NNH], W2[NNH], B2
+EXPORT(nn_load) int nn_load(int n) {
+  NNOK = 0; NNON = 0;
+  if (n < 16) return 0;
+  const unsigned char *b = NNBUF; unsigned hd[4];
+  for (int k = 0; k < 4; k++) hd[k] = (unsigned)b[4 * k] | (unsigned)b[4 * k + 1] << 8 | (unsigned)b[4 * k + 2] << 16 | (unsigned)b[4 * k + 3] << 24;
+  if (b[0] != 'A' || b[1] != 'G' || b[2] != 'N' || b[3] != 'N' || hd[2] < 1 || hd[2] > NNHMAX || hd[3] != NNF) return 0;
+  const int H = (int)hd[2], cnt = NNF * H + 2 * H + 1;
+  if (n < 16 + 2 * cnt) return 0;
+  const unsigned char *w = b + 16; int k = 0;
+#define NXT() (k++, (unsigned)w[2 * (k - 1)] | (unsigned)w[2 * (k - 1) + 1] << 8)
+  for (int i = 0; i < NNF; i++) for (int h = 0; h < H; h++) NW1[i * H + h] = h2f(NXT());
+  for (int h = 0; h < H; h++) NB1[h] = h2f(NXT());
+  for (int h = 0; h < H; h++) NW2[h] = h2f(NXT());
+  NB2 = h2f(NXT());
+#undef NXT
+  NNH = H; NNVER = (int)hd[1]; NNOK = 1; return 1;
+}
+EXPORT(nn_use) void nn_use(int on) { NNON = on && NNOK; }
+EXPORT(nn_ver) int nn_ver(void) { return NNOK ? NNVER : 0; }
+// the active inputs of p (from the side to move's view); returns how many
+static int nnFeat(const P *p, const PLs *ps, int *F) {
+  const int me = p->side + 1; int n = 0;
+  for (int w = 1; w <= 2; w++) for (int k = 0; k < ps->n[w]; k++) {
+    const int i = ps->L[w][k], x = p->sq[i];
+    const int cat = (w == me ? 0 : 2) + isQ(x) + (p->cap[i] ? 4 : 0);
+    F[n++] = cat * N + (me == 1 ? i : N - 1 - i);
+  }
+  if (p->res[me] > 0) F[n++] = 8 * N + p->res[me] - 1;
+  if (p->res[3 - me] > 0) F[n++] = 8 * N + 6 + p->res[3 - me] - 1;
+  return n;
+}
+static int nnOut(const P *p, const PLs *ps) {
+  int F[40]; const int nf = nnFeat(p, ps, F), H = NNH;
+  float acc[NNHMAX];
+  for (int h = 0; h < H; h++) acc[h] = NB1[h];
+  for (int j = 0; j < nf; j++) { const float *w = &NW1[F[j] * H]; for (int h = 0; h < H; h++) acc[h] += w[h]; }
+  float o = NB2;
+  for (int h = 0; h < H; h++) { float x = acc[h] < 0.f ? 0.f : acc[h] > 1.f ? 1.f : acc[h]; o += NW2[h] * x; }
+  o *= 100.f;
+  if (o > 5000.f) o = 5000.f; if (o < -5000.f) o = -5000.f;
+  return (int)(o >= 0 ? o + 0.5f : o - 0.5f);
+}
 static int evaluatePL(const P *p, const PLs *ps) {
   int me = p->side + 1, op = 3 - me;
   const int (*L)[16] = ps->L, *n = ps->n;
@@ -284,6 +350,7 @@ static int evaluatePL(const P *p, const PLs *ps) {
     int hn = hangN(p, me, L[me], n[me], 99); if (hn > 1) v -= (hn - 1) * 70 * 2;
     int gn = hangN(p, op, L[op], n[op], 1); if (gn) v += 35;
   }
+  if (NNON) v += nnOut(p, ps);
   return v;
 }
 static int evaluate(const P *p) { PLs ps; collect(p, &ps); return evaluatePL(p, &ps); }
@@ -463,6 +530,12 @@ static void spIdleReset(int fresh) { nodes = 0; tEnd = 1e300; nodeLimit = 1e300;
 #include "../shared/praline/praline_ybw.h"
 #endif
 static P ROOTP;
+EXPORT(evalpos) int evalpos(void) {   // the evaluation of the position in SQ / CAP / IO[8 …] (tools/nnue/check_net.js)
+  P *p = &ROOTP;
+  for (int i = 0; i < N; i++) { p->sq[i] = SQ[i]; p->cap[i] = CAP[i]; }
+  p->side = IO[8]; p->ply = IO[9]; p->res[0] = 0; p->res[1] = IO[14]; p->res[2] = IO[15];
+  return evaluate(p);
+}
 __attribute__((export_name("search"))) int csearch(int d, int a, int b, int ply) {
   P *p = &ROOTP;
   for (int i = 0; i < N; i++) { p->sq[i] = SQ[i]; p->cap[i] = CAP[i]; }
