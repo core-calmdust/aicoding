@@ -83,7 +83,7 @@ let WA = null;
 function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=3'); b64 = self.AG_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=4'); b64 = self.AG_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.AG_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AG_NOWASM)) return;
     const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
@@ -95,6 +95,7 @@ function loadCore() {
     };
     const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env }).exports, buf = x.memory.buffer;
     WA = coreViews(x, buf, io = new Int32Array(buf, x.iop(), 32));
+    NET_OK = netInto(x, buf);
   } catch (e) { WA = null; }
 }
 // the geometry and keys into a core (setup) and the views of its memory: core-wasm.js (WA) or the lead's core_mt.wasm (MX)
@@ -115,6 +116,32 @@ function coreViews(x, buf, io) {
   if (x.aomp) { C.aom = new Int32Array(buf, x.aomp(), 256); C.aov = new Int32Array(buf, x.aovp(), 256); }
   C.geo = geo; C.zt = zt;
   return C;
+}
+// (2026-11-20) the learned evaluation (core.c nn_*, agon/MODEL_CARD.md「学習した評価」): agon/net.js holds the net (base64) that
+// tools/nnue/run.sh makes; while its AG_NET is empty nothing changes. Loaded into each core (core-wasm.js, and the lead's
+// core_mt.wasm: the helpers read it in the shared memory); on for the strong levels (局面数・時間), the analysis and the threads'
+// jobs, off for the weak levels (深さ＋ノイズ: tuned on the hand-made evaluation). The JS search of the page never uses it.
+let NET_B = null, NET_OK = false, netOn = -1;
+function netBytes() {
+  if (NET_B) return NET_B;
+  let b64 = '';
+  try {
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('net.js?v=1'); b64 = self.AG_NET || ''; }
+    else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { const f = (typeof process !== 'undefined' && process.env && process.env.AG_NETJS) || require('path').join(__dirname, 'net.js'); delete require.cache[require.resolve(f)]; require(f); b64 = g.AG_NET || ''; } finally { if (had) g.self = old; else delete g.self; } }
+  } catch (e) { b64 = ''; }
+  if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AG_NONET)) return null;
+  NET_B = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : new Uint8Array(Buffer.from(b64, 'base64'));
+  return NET_B;
+}
+function netInto(x, buf) {
+  if (!x || !x.nn_load) return false;
+  const b = netBytes(); if (!b) return false;
+  try { new Uint8Array(buf, x.nn_buf(), b.length).set(b); if (x.nn_load(b.length) !== 1) return false; x.nn_use(1); netOn = 1; return true; } catch (e) { return false; }
+}
+function useNet(on) {
+  on = on && NET_OK ? 1 : 0; if (on === netOn) return;
+  netOn = on; if (WA && WA.x.nn_use) WA.x.nn_use(on); if (MX && MX.x.nn_use) MX.x.nn_use(on);
+  ttClear();   // (the table's values belong to one evaluation)
 }
 function kreset() { killers.length = 0; if (WA) WA.x.kclear(); if (MX) MX.x.kclear(); }
 function ttClear() { TT.clear(); if (WA) WA.x.ttclear(); if (MX) MX.x.ttclear(); }
@@ -576,6 +603,7 @@ function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
   const L = PRO_CFG || LEVELS[level] || LEVELS[10];   // (PRO_CFG: the page's PRO mode, shared/proset.js ladder())
+  useNet(!!L.s);
   const { pos } = replay(start, moves), hist = histOf(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
@@ -615,6 +643,7 @@ function thinkFin(pos, hist, r) {
 }
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 function analyze(start, moves, ms, onProgress, rule) {
+  useNet(true);
   if (rule) setRule(rule);
   const { pos } = replay(start, moves), hist = histOf(start, moves);
   nodes = 0; stop = false; tEnd = Date.now() + (ms || 1000); nodeLimit = Infinity;
@@ -656,6 +685,7 @@ function pvOf(start, moves, m, plies) {
 // order; mtFin: the job's reply from the threads' raw result (the same as the one-thread worker's).
 let mtRule = null;
 function mtNode(m) {
+  useNet(true);
   if (SH !== null) SH.salt = SALT[RK] | 0;
   else if (mtRule !== RK) { ttClear(); mtRule = RK; }
   const line = m.line || [], root = replay(m.start, m.moves).pos, { pos, hashes } = replay(m.start, m.moves.concat(line)); hashes.pop();
@@ -712,6 +742,7 @@ function mtLazy(m) {   // (shared/tools/mtlazy.js: one Lazy SMP thread's search 
 // a Lazy SMP helper (shared/mtsplit.js shared mode, 'mthelp'): iterative deepening of the root on the shared table — one ply
 // deeper every other helper (k), from a root order rotated by k >> 1 — until the page stops it (or m.until)
 function mtHelp(m) {
+  useNet(true);
   let total = 0;
   for (let d = 1; d <= (m.maxD || 60); d++) {
     const r = mtLazy(Object.assign({}, m, { d: d + (m.k & 1), rot: m.k >> 1 }));
@@ -815,7 +846,7 @@ function duelReply(start, moves, n, rule) {
 
 loadCore();
 setRule('std');
-const API = { get coreArrays() { return WA ? { geo: Array.from(WA.geo), zt: Array.from(WA.zt) } : null; }, useCore: (x, buf) => { MX = x ? coreViews(x, buf) : null; if (MX) { MX.threads = 1; MX.jobThreads = 1; } }, get wasm() { return !!WA; }, get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RES, N, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; },
+const API = { get coreArrays() { return WA ? { geo: Array.from(WA.geo), zt: Array.from(WA.zt) } : null; }, useCore: (x, buf) => { MX = x ? coreViews(x, buf) : null; if (MX) { MX.threads = 1; MX.jobThreads = 1; if (netInto(x, buf)) NET_OK = true; } }, get net() { return NET_OK; }, get netVer() { return NET_OK && WA && WA.x.nn_ver ? WA.x.nn_ver() : 0; }, useNet, get wasm() { return !!WA; }, get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RES, N, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; },
   Q, RR, RING, XC, YC, ROWS, RINGL, RPOS, NB, DIRS, CENTER, INNER, OUTER, START, at, sqName, sqParse, mv, mFrom, mTo, own, isQ,
   Pos, path, isJump, name, parse, replay, judge, kindOfMove, LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, need,
   evaluate, hanging, kindOf, resist, mtPlan, mtV, mtKids, mtFin, pvOf };
@@ -829,6 +860,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
         x.mt_stack(m.top); x.mt_thread(m.tls, 0);
         MX = coreViews(x, m.mem.buffer); MX.threads = navigator.hardwareConcurrency || 2;
+        if (netInto(x, m.mem.buffer)) NET_OK = true;   // (the net in the shared memory: every helper reads it)
         self.postMessage({ type: 'mtready' });
       }).catch(err => { MX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
   }
