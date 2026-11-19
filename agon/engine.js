@@ -83,17 +83,21 @@ let WA = null;
 function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=4'); b64 = self.AG_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=5'); b64 = self.AG_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.AG_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AG_NOWASM)) return;
-    const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
+    // (2026-11-20) the SIMD build first, the one without SIMD when it does not compile (AG_NOSIMD in Node: that one)
+    const g0 = typeof self !== 'undefined' ? self : globalThis, nos = typeof process !== 'undefined' && process.env && process.env.AG_NOSIMD;
+    let mod = null;
+    for (const s of nos ? [g0.AG_WASM0] : [b64, g0.AG_WASM0]) { if (!s) continue; try { mod = new WebAssembly.Module(typeof atob === 'function' ? Uint8Array.from(atob(s), c => c.charCodeAt(0)) : Buffer.from(s, 'base64')); break; } catch (e) {} }
+    if (!mod) return;
     let io = null;
     const env = {
       poll: () => (Date.now() > tEnd || (SH !== null && SH.stopped())) ? 1 : 0,
       shget: (h1, h2) => { const e = SH.get(h1 >>> 0, h2 >>> 0); if (!e) return 0; io[0] = e.d; io[1] = e.f; io[2] = e.v; io[3] = e.m; io[4] = e.rs; return 1; },
       shput: (h1, h2, d, v, f, m, rs) => { SH.put(h1 >>> 0, h2 >>> 0, d, v, f, m, rs); },
     };
-    const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env }).exports, buf = x.memory.buffer;
+    const x = new WebAssembly.Instance(mod, { env }).exports, buf = x.memory.buffer;
     WA = coreViews(x, buf, io = new Int32Array(buf, x.iop(), 32));
     NET_OK = netInto(x, buf);
   } catch (e) { WA = null; }

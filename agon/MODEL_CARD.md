@@ -61,6 +61,13 @@ ROUNDS=2 bash agon/tools/nnue/run.sh                                # 2周目は
 - 小さな学習（900局・13.6万局面、1手1万局面の先生、10エポック）：確認用の損失 0.0491（手作り）→ 0.0468（−4.6%）。対局（1手2万局面、80局）：+16 −21 =43（46.9%、約 −22 Elo、誤差の内）。データが2000万局面の 1% 以下なので強さは見込んでいない（Mac で本番）。
 - ブラウザ（headless Chrome、作業機）：乱数の仮ネットを置いた状態で、対局ページ（Lv.14 対 Lv.20：Lv.20 は core_mt.wasm の主＋補助スレッド）と `agon/?skin=atlas` で AI が指し、`net.js` が読まれ、コンソールにエラーなし（firebase の App Check のローカル由来の警告だけ）。空の `net.js` でも同じ。
 
+## 推論の高速化（2026-11-20、値は同じ）
+
+- **core-wasm.js を SIMD 版と SIMD なし版の2本に**（`tools/build-core.sh`、`AG_WASM`／`AG_WASM0`。engine.js はコンパイルできた方を使う、Node は `AG_NOSIMD=1` で SIMD なし）。core_mt.wasm も `-msimd128`（ほかのゲームと同じ）。前はどれも SIMD なしだった。
+- **`nnOut` の中間層を f32x4 で**（H が4の倍数のとき）：各レーンの和は前と同じ順番なので float もビット単位で同じ。出力の和は前と同じ順に1つずつ。ほかのコードはコンパイラの自動 SIMD 化だけ（float の和の順番は変えない）。
+- **確認**：`tools/nnue/check_net.js`（仮ネット、300局面：ネイティブと core-wasm.js SIMD・SIMD なし・core_mt.wasm がネットあり・なしで一致、engine.js が net.js でネットを使う）、`tools/check_ab.js`（旧版と 424 探索が core-wasm.js・core_mt.wasm 1スレッドでネットなし・あり・SIMD なしとも一致）、旧版と新版の探索（Lv.14、8局面×2）が一致、ブラウザ（headless Chrome、仮ネットを `net.js` に置いて）で1スレッド・マルチスレッドとも Node と同じ手・値。
+- **速さ**（wasm、Lv.14 の探索を旧・新交互に同じプロセスで、CPU 時間）：ネットあり **約+12〜15%**（SIMD なし版でも約+9%）、ネットなし約+6%。ネットなしの約 0.86 倍 → 0.90 倍。時間固定の対局は差が小さいため今回は測っていない。
+
 ## 強さの計測の仕方
 - `agon/tools/nnue/nn.c` の `nn match`（ネイティブ、1スレッド、CPU 時間）：`n=30,net=1`（局面数・千）、`t=100,net=0`（CPU ミリ秒）。序盤 `PRE`=4 手ランダム、先後入れ替え。
 - `agon/tools/duel.js`（Node、2つのビルドのフォルダ同士）：探索を変えたときの前の版との比較。

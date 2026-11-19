@@ -1,5 +1,5 @@
 // The learned evaluation in WebAssembly gives the same values as the native tools (nn check): core-wasm.js and core_mt.wasm
-// (one thread on a shared memory), and engine.js with the net in net.js (AG_NETJS) searches with it.
+// (one thread on a shared memory; core-wasm.js: with SIMD and without, 2026-11-20), and engine.js with the net in net.js (AG_NETJS) searches with it.
 //   ./nn check net.bin vals.txt && node agon/tools/nnue/check_net.js net.bin vals.txt [net.js]
 const fs = require('fs'), path = require('path');
 const [netf, valf, netjs] = process.argv.slice(2);
@@ -8,7 +8,7 @@ const dir = path.join(__dirname, '..', '..');
 process.env.AG_NONET = '1';
 const E = require(path.join(dir, 'engine.js')), C = E.coreArrays;
 global.self = global; require(path.join(dir, 'core-wasm.js'));
-const cores = [['core-wasm.js', Buffer.from(self.AG_WASM, 'base64'), false], ['core_mt.wasm', fs.readFileSync(path.join(dir, 'core_mt.wasm')), true]];
+const cores = [['core-wasm.js SIMD', Buffer.from(self.AG_WASM, 'base64'), false], ['core-wasm.js without SIMD', Buffer.from(self.AG_WASM0, 'base64'), false], ['core_mt.wasm', fs.readFileSync(path.join(dir, 'core_mt.wasm')), true]];
 let bad = 0;
 const env0 = { now: () => Date.now(), poll: () => 0, shget: () => 0, shput: () => {} };
 for (const [name, bin, mt] of cores) {

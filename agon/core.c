@@ -287,6 +287,9 @@ static int hangN(const P *p, int pl, const int *own_, int nOwn, int lim) {   // 
 // keeps half floats: the same floats native and in wasm, summed in the same order → the same values (tools/nnue/check_net.js).
 // A net whose w2 is zero gives the evaluation above exactly. Off (nn_use 0) the search is the one before, node for node.
 #define NNF 740
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+#endif
 #define NNHMAX 64
 static float NW1[NNF * NNHMAX], NB1[NNHMAX], NW2[NNHMAX], NB2;
 static int NNH = 0, NNOK = 0, NNVER = 0, NNON = 0;
@@ -333,9 +336,19 @@ static int nnFeat(const P *p, const PLs *ps, int *F) {
 }
 static int nnOut(const P *p, const PLs *ps) {
   int F[40]; const int nf = nnFeat(p, ps, F), H = NNH;
-  float acc[NNHMAX];
+  float acc[NNHMAX] __attribute__((aligned(16)));
+#ifdef __wasm_simd128__
+  if (!(H & 3)) {   // (2026-11-20, 推論の高速化) the rows in f32x4 lanes: each lane's sum in the same order, so the same floats
+    v128_t a[NNHMAX / 4]; const int H4 = H >> 2;
+    for (int h = 0; h < H4; h++) a[h] = wasm_v128_load(NB1 + 4 * h);
+    for (int j = 0; j < nf; j++) { const float *w = &NW1[F[j] * H]; for (int h = 0; h < H4; h++) a[h] = wasm_f32x4_add(a[h], wasm_v128_load(w + 4 * h)); }
+    for (int h = 0; h < H4; h++) wasm_v128_store(acc + 4 * h, a[h]);
+  } else
+#endif
+  {
   for (int h = 0; h < H; h++) acc[h] = NB1[h];
   for (int j = 0; j < nf; j++) { const float *w = &NW1[F[j] * H]; for (int h = 0; h < H; h++) acc[h] += w[h]; }
+  }
   float o = NB2;
   for (int h = 0; h < H; h++) { float x = acc[h] < 0.f ? 0.f : acc[h] > 1.f ? 1.f : acc[h]; o += NW2[h] * x; }
   o *= 100.f;

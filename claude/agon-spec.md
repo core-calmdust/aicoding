@@ -125,3 +125,7 @@ URL: https://core-calmdust.github.io/aicoding/agon/ ／ トップはアルケル
 - **定跡**：AI は定跡を使わない。`openings.json` は「序盤」ページの学習用（作戦3つ）。ネットを採用して強くなったら `tools/gen_openings.js` で作り直す。
 - **レベル表**：今回は強さが変わらないので変えていない。ネットを置いたら Lv.12〜23 と `RT_LV` を測り直す（Lv.1〜11 は不変）。
 - キャッシュ：`engine.js?v=9-nn1`（agon/index.html・app.js・bench.html・大百科 `games/agon.js`）、`core-wasm.js?v=4`、`core_mt.wasm?v=5`、`net.js?v=1`、大百科 `games/agon.js?v=17`（lazy.js）・`lazy.js?v=471`。
+
+## 推論の高速化（2026-11-20）
+- core-wasm.js を SIMD 版（`AG_WASM`）と SIMD なし版（`AG_WASM0`）の2本に（engine.js はコンパイルできた方）、core_mt.wasm も SIMD。`core.c` `nnOut` の中間層を f32x4 に（同じ順番の和なので値は同じ）。wasm のネットありの探索が約+12〜15%。詳細は `agon/MODEL_CARD.md`「推論の高速化」。
+- 版：`core-wasm.js?v=5`、`engine.js?v=10-nn1`（app.js・index.html・bench.html・atlas/games/agon.js・atlas/rules/agon.js）、`core_mt.wasm?v=6`、app.js `…-nn2`、atlas/lazy.js の agon（games 18・rules 7）。
