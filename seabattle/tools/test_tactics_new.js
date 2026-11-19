@@ -87,6 +87,19 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     n0 = await acts(); await tapCell(mc); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
     ok(await p.evaluate(c => { const L = G.st.log, j = L.findIndex(m => m.by === 0 && m.cell === c && !m.skill); return j >= 0 && L[j + 1] && L[j + 1].via === 'counter' && L[j + 1].by === 1; }, mc), name + ': hitting the monitor brings a shell back');
     await shot('counter');
+    // 第6弾: with a hospital ship afloat, a sunk submarine's sonar still works
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; const si = G.my.findIndex(s => s.t === 3), M = G.st.sides[0];
+      for (let k = 0; k < 100; k++) if (M.grid[k] === si) { G.st.turn = 1; E.fire(G.st, k); }
+      G.st.turn = 0; G.st.cd[0].fill(0); render(); }, [[21, 3, 4], [3, 4, 0]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('sonar');
+    const sub = await p.evaluate(() => G.my.findIndex(s => s.t === 3));
+    ok(await p.evaluate(i => G.st.sides[0].sunk[i] && !document.querySelector('#skillCard .sk[data-i="' + i + '"]').disabled, sub), name + ': a sunk ship\'s skill stays usable with the hospital ship afloat');
+    n0 = await acts(); await tap('#skillCard .sk[data-i="' + sub + '"]'); await p.waitForTimeout(150); await tapCell(55); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => G.st.scans[0].length === 1), name + ': ... and it reads the sea');
+    await shot('hospital');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
