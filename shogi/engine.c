@@ -1202,6 +1202,10 @@ static inline int quietHist(int us, int m) {
   if (P[22]) { int k = mKey(m); if (sp >= 1 && ckS[sp - 1] >= 0) v += contH[0][ckS[sp - 1] * CK + k]; if (sp >= 2 && ckS[sp - 2] >= 0) v += contH[1][ckS[sp - 2] * CK + k]; }
   return v;
 }
+static inline void contUpd(int k, int b) {   /* the continuation histories alone (k = mKey of the move, the board before it) */
+  if (sp >= 1 && ckS[sp - 1] >= 0) gravS(&contH[0][ckS[sp - 1] * CK + k], b);
+  if (sp >= 2 && ckS[sp - 2] >= 0) gravS(&contH[1][ckS[sp - 2] * CK + k], b);
+}
 static inline void histUpd(int us, int m, int b) {
   gravI(&history[hIdx(us, m)], b);
   int k = mKey(m);
@@ -1314,7 +1318,7 @@ static int repetition(int ply, double *out) {
   return 0;
 }
 static void orderMoves(i32 *moves, i32 *scores, int n, int ttm, int ply) {
-  int us = side, k0 = killers[ply * 2], k1 = killers[ply * 2 + 1];
+  int us = side, k0 = P[74] ? 0 : killers[ply * 2], k1 = P[74] ? 0 : killers[ply * 2 + 1];   /* (P74: no killers, the history alone) */
   for (int i = 0; i < n; i++) {
     int m = moves[i];
     if (m == ttm) { scores[i] = 1 << 30; continue; }
@@ -1476,7 +1480,7 @@ static void order2Caps(i32 *moves, i32 *scores, int n, int ttm) {
   }
 }
 static double qsearch2(double alpha, double beta, int ply, int pvNode, int qd) {
-  nodes++;
+  nodes++; ST(stQ++);
   if (timeUp()) return 0;
   const int inChk = inCheck();
   histChk[hn - 1] = inChk ? 1 : 0;
@@ -1559,11 +1563,15 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
   const int ex = exclM[ply];
   int hit = 0, ttm = 0, ttD = -1, ttF = 0, ttPv = pvNode; double ttS = 0, rawEval = -INF;
   if (!ex) {
-    TT2E *e = tt2Probe(&hit);
-    if (hit) {
+    TT2E *e = tt2Probe(&hit); ST(stProbe++); ST(stPv += pvNode);
+    if (hit) { ST(stHit++);
       ttm = e->move; ttD = e->depth; ttF = e->fl & 3; ttS = e->score; ttPv |= (e->fl >> 2) & 1;
       if (ttS > MATE - MAXPLY) ttS -= ply; else if (ttS < -MATE + MAXPLY) ttS += ply;
-      if (!pvNode && ttD >= depth && (ttF == F_EXACT || (ttF == F_LOWER && ttS >= beta) || (ttF == F_UPPER && ttS <= alpha))) return ttS;
+      if (!pvNode && ttD >= depth && (ttF == F_EXACT || (ttF == F_LOWER && ttS >= beta) || (ttF == F_UPPER && ttS <= alpha))) {
+        ST(stTTcut++);
+        if (P[70] && ttS >= beta && ttm && !inChk && isPseudo(ttm) && !board[(ttm >> 7) & 127] && !((ttm >> 14) & 1)) { int b = (P[42] ? P[42] : 170) * depth - 80; histUpd(side, ttm, b > 1600 ? 1600 : b); }   /* (the table move cut: its history too) */
+        return ttS;
+      }
       if (e->eval != TT2_NOEVAL && !P[67]) rawEval = e->eval;
     }
   }
@@ -1579,14 +1587,14 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
   const int wasNull = sp > 0 && ckS[sp - 1] < 0;
   if (!pvNode && !inChk && !ex) {
     if (P[58] && depth <= 3 && eval + P[58] * depth < alpha) { double v = qsearch2(alpha, beta, ply, 0, 0); if (v < alpha) return v; }
-    if (depth <= rfpDepth && eval - rfpMargin * (depth - (P[24] ? improving : 0)) >= beta && (beta < 0 ? -beta : beta) < MATE - MAXPLY) return eval;
+    if (depth <= rfpDepth && eval - rfpMargin * (depth - (P[24] ? improving : 0)) >= beta && (beta < 0 ? -beta : beta) < MATE - MAXPLY) { ST(stRfp++); return eval; }
     if (!wasNull && depth >= 3 && eval >= beta) {
       int x = (int)((eval - beta) / 250); const int R = P[65] ? 3 + depth / 5 + (x < 2 ? x : 2) : (P[52] ? P[52] : 4) + depth / 3 + (x < 3 ? x : 3);
-      doNull();
+      doNull(); ST(stNull++);
       double v = -search2(depth - 1 - R, -beta, -beta + 1, ply + 1, 0, !cutNode);
       undoNull();
       if (stopFlag) return 0;
-      if (v >= beta && v < MATE - MAXPLY) return v;
+      if (v >= beta && v < MATE - MAXPLY) { ST(stNullOk++); return v; }
     }
   }
   if (P[53] && !ttm && !ex && depth >= P[53] && (pvNode || cutNode)) depth--;
@@ -1655,11 +1663,11 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
       doMove(m);
       if (!legalAfter(m, 0)) { undoMove(); continue; }
     }
-    legal++;
+    legal++; ST(stMoves++);
     const int givesChk = inCheck();
     int ext = !P[55] && givesChk && ply < rootDepth * 2 && (P[11] || seeAfterCheck(m) >= 0) ? 1 : 0;
     const int nd = depth - 1 + ext;
-    double v = 0; int full = 0;
+    double v = 0; int full = 0, lmrB = 0;
     if (depth >= (P[66] ? P[66] : 2) && legal > (P[56] ? P[56] : 1) && (quiet || P[57] || sc < 0) && !(P[64] && (inChk || givesChk))) {
       int r = LMRT[depth < 63 ? depth : 63][legal < 63 ? legal : 63];
       if (quiet) { if (m == killers[ply * 2] || m == killers[ply * 2 + 1]) r--; r -= hv / (P[9] ? P[9] : 6000); }
@@ -1671,9 +1679,9 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
       if (givesChk) r--;
       if (inChk) r--;
       if (r < 0) r = 0;
-      int d = nd - r; if (d < 1) d = 1;
+      int d = nd - r; if (d < 1) d = 1; ST(stLmr += (d < nd));
       v = -search2(d, -alpha - 1, -alpha, ply + 1, 0, 1);
-      if (v > alpha && d < nd) v = -search2(nd, -alpha - 1, -alpha, ply + 1, 0, !cutNode);
+      if (v > alpha && d < nd) { ST(stLmrRe++); v = -search2(nd, -alpha - 1, -alpha, ply + 1, 0, !cutNode); if (P[71] && quiet) { int b = (P[42] ? P[42] : 170) * nd - 80; if (b > 1600) b = 1600; lmrB = v >= beta ? b : v <= alpha ? -b : 0; } }
       full = pvNode && v > alpha;
     } else if (!pvNode || legal > 1) { v = -search2(nd, -alpha - 1, -alpha, ply + 1, 0, !cutNode); full = pvNode && v > alpha; }
     else full = 1;
@@ -1681,6 +1689,7 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
     undoMove();
     if (stopFlag) return 0;
     if (quiet) { if (nq < 1000) tq[nq++] = m; } else if (capI >= 0 && ntc < 32) tc[ntc++] = capI;
+    if (lmrB) contUpd(mKey(m), lmrB);   /* (the full-depth answer to a reduced search that looked good: P71) */
     if (v > best) {
       best = v; bestMove = m;
       if (v > alpha) {
@@ -1689,12 +1698,17 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
         for (int j = ply + 1; j < pvLen[ply + 1]; j++) pvTable[ply * MAXPLY + j] = pvTable[(ply + 1) * MAXPLY + j];
         pvLen[ply] = imax(ply + 1, pvLen[ply + 1]);
         if (v >= beta) {
+          ST(stCut++); ST(stCut1 += (legal == 1)); ST(stCutTT += (m == ttm)); ST(stCutIdx += legal);
+#ifdef SEARCH_STATS
+          { const int pl = mc, b_ = pl <= 3 ? pl - 1 : pl <= 6 ? 3 : pl <= 10 ? 4 : pl <= 20 ? 5 : pl <= 40 ? 6 : 7, k_ = m == ttm ? 0 : !quiet ? 1 : 2;
+            stCutK[k_][b_ < 0 ? 0 : b_]++; if (k_ == 2) { const int d_ = depth < 4 ? 0 : depth < 8 ? 1 : 2; stCutD[d_]++; stCutDS[d_] += pl; } }
+#endif
           int b = (P[42] ? P[42] : 170) * depth - 80; if (b > 1600) b = 1600;
           if (quiet) {
             if (killers[ply * 2] != m) { killers[ply * 2 + 1] = killers[ply * 2]; killers[ply * 2] = m; }
             histUpd(us, m, b);
             for (int k = 0; k < nq; k++) if (tq[k] != m) histUpd(us, tq[k], -b);
-          } else if (capI >= 0) gravS(&capH[capI], b);
+          } else { if (capI >= 0) gravS(&capH[capI], b); if (P[72]) for (int k = 0; k < nq; k++) histUpd(us, tq[k], -b); }
           for (int k = 0; k < ntc; k++) if (tc[k] != capI) gravS(&capH[tc[k]], -b);
           break;
         }
@@ -1702,6 +1716,12 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
     }
   }
   if (!legal) return ex ? alpha : inChk ? -MATE + ply : (best > -INF + 1 ? best : -MATE + ply);
+  if (P[73] && !ex && best <= origAlpha && sp >= 1 && stMove[sp - 1] && !stCap[sp - 1] && !((stMove[sp - 1] >> 14) & 1) && ckS[sp - 1] >= 0) {   /* the node failed low: the quiet move that led here was good */
+    int b = ((P[42] ? P[42] : 170) * depth - 80) * P[73] / 100; if (b > 1600) b = 1600; const int pm = stMove[sp - 1], pk_ = ckS[sp - 1];
+    gravI(&history[hIdx(us ^ 1, pm)], b);
+    if (sp >= 2 && ckS[sp - 2] >= 0) gravS(&contH[0][ckS[sp - 2] * CK + pk_], b);
+    if (sp >= 3 && ckS[sp - 3] >= 0) gravS(&contH[1][ckS[sp - 3] * CK + pk_], b);
+  }
   if (!ex) tt2Store(depth, best, best >= beta ? F_LOWER : best > origAlpha ? F_EXACT : F_UPPER, bestMove, ply, rawEval, ttPv);
   return best;
 }
