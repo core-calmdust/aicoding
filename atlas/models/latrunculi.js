@@ -311,7 +311,7 @@
       const walnut = M('wdPlinth', { map: sideTex('wood'), color: '#7a5a44', roughness: .55, clearcoat: .3, clearcoatRoughness: .4 });
       add(block('wdPl', W + .2, H + .2, K[6] + .1, PL, 3.6), walnut, 0, 0, 0);
       // brass corner caps: a quarter ring and two arms on the top, the same wrapped round the side; two screws
-      const brass = M('brass', { color: '#f4c968', metalness: 1, roughness: .07, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 2.8 }), brassD = M('brassD', { color: '#e6b85c', metalness: 1, roughness: .1, envMapIntensity: 2.6 });   // (2026-11-19 user: 煌めき感を — polished, nearly gold)
+      const brass = M('brass', { color: '#e0a83e', metalness: .72, roughness: .22, emissive: '#2a1a04', envMapIntensity: 1.8 }), brassD = M('brassD', { color: '#c8922e', metalness: .72, roughness: .25, emissive: '#2a1a04', envMapIntensity: 1.6 });   // (2026-11-19: no clearcoat — its uncoloured reflection read as silver; not fully metal — in the dark rooms a pure metal went black: some gold of its own, lit by the lamps)   // (2026-11-19 user: 煌めき感を — polished, nearly gold)
       const r0 = K[6], armL = .42, bw = .1, TH = K[7], sh = TH * .8, y0 = PL;
       for (const [sx, sz] of [[1, -1], [-1, -1], [1, 1], [-1, 1]]) {
         const cx = sx * (W / 2 - r0), cz = sz * (H / 2 - r0);
@@ -321,7 +321,7 @@
         const capG = G('wdCapL', () => { const sh2 = new TT.Shape(), ri = r0 - bw, A = armL + r0;
           sh2.moveTo(-A, r0); sh2.lineTo(0, r0); sh2.absarc(0, 0, r0, Math.PI / 2, 0, true); sh2.lineTo(r0, -A); sh2.lineTo(ri, -A); sh2.lineTo(ri, 0); sh2.absarc(0, 0, ri, 0, Math.PI / 2, false); sh2.lineTo(-A, ri); sh2.closePath();
           const e = new TT.ExtrudeGeometry(sh2, { depth: .006, bevelEnabled: true, bevelThickness: .006, bevelSize: .006, bevelSegments: 2, curveSegments: 8 }); e.rotateX(Math.PI / 2); e.translate(0, .012, 0); e.computeVertexNormals(); return e; });
-        const cap = mesh(capG, brass, cx, y0 + TH, cz); cap.scale.set(sx, 1, sz); g.add(cap);
+        const cap = mesh(capG, brass, cx, y0 + TH + .003, cz);   // (lifted off the top: its underside flickered against it) cap.scale.set(sx, 1, sz); g.add(cap);
         const thk = G('wdArmT', () => new TT.BoxGeometry(1, .012, 1));
         const thS = Math.PI / 2 + Math.atan2(-sz, sx) - Math.PI / 4;   // (the cylinder's θ for this quadrant)
         const th0 = sx > 0 ? (sz > 0 ? 0 : Math.PI / 2) : (sz < 0 ? Math.PI : Math.PI * 1.5);
