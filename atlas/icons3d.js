@@ -452,20 +452,25 @@
       for (let i = 0; i < 6; i++) { const t = (i + .5) / 6, d = ball(.085, dotM); d.position.set(p(0) + (p(2) - p(0)) * t, .7 + Math.sin(t * Math.PI) * 1.35, p(1)); g.add(d); }
       return g;
     },
-    latrunculi() {   // a corner of the white marble board (the 3D default): glass counters — a white one enclosed between two dark ones, a big dark counter coming down to close the line
-      const top = M({ map: X.canvasTex('iclt1', 512, 512, (c, W) => {
-        c.fillStyle = '#ece7dc'; c.fillRect(0, 0, W, W);
-        let sd = 11; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-        for (let k = 0; k < 26; k++) { c.strokeStyle = `rgba(${r() < .5 ? '150,144,136' : '196,186,170'},${.18 + r() * .22})`; c.lineWidth = 1 + r() * 5; c.beginPath(); let x = r() * W, y = r() * W; c.moveTo(x, y); for (let i = 0; i < 6; i++) { x += (r() - .3) * 130; y += (r() - .5) * 110; c.lineTo(x, y); } c.stroke(); }   // veins
-        c.strokeStyle = '#7d756a'; c.lineWidth = 9; const st = W / 3; for (let i = 1; i < 3; i++) { c.beginPath(); c.moveTo(i * st, 0); c.lineTo(i * st, W); c.stroke(); c.beginPath(); c.moveTo(0, i * st); c.lineTo(W, i * st); c.stroke(); }
-      }), roughness: .28 });
-      const g = boardChunk(3, 3.6, top, C(0x4e1c38, { roughness: .55 }));   // the theme's Tyrian purple, darkened like stained wood
-      const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
-      const dark = C(0x1c2540, { roughness: .08 }), light = C(0xf4f6f0, { roughness: .1 });
-      const cnt = (m, sc) => { const o = new T.Group(); o.add(puck(.5, .3, m, .5)); o.scale.setScalar(sc); return o; };
-      g.add(at(cnt(dark, .8), p(0), .5, p(1))); g.add(at(cnt(light, .8), p(1), .5, p(1))); g.add(at(cnt(light, .8), p(2), .5, p(0))); g.add(at(cnt(dark, .8), p(0), .5, p(2)));
-      const ring = mesh(new T.TorusGeometry(.5, .05, 10, 44), gloss(0xe0452c)); ring.rotation.x = Math.PI / 2; g.add(at(ring, p(1), .56, p(1), Math.PI / 2));   // the enclosed counter
-      g.add(at(cnt(dark, 1.4), p(2) - .45, 2.05, p(1) - .35, .3, 0, -.3));   // coming down on the empty square right of the white one
+    latrunculi() {   // (2026-11-19: the 3D default — the excavated stone slab and the stone helmets) a corner of the weathered slab, its grid
+      // cut in; a white helmet enclosed between two black ones lies toppled, another white one stands by (the real 3D pieces,
+      // atlas/models/latrunculi.js, scaled up)
+      const top = M({ map: X.canvasTex('iclt2', 512, 512, (c, W) => {
+        let sd = 7; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+        c.fillStyle = '#a88a5e'; c.fillRect(0, 0, W, W);
+        for (let k = 0; k < 60; k++) { const x = r() * W, y = r() * W, rr = 20 + r() * 90, g = c.createRadialGradient(x, y, 0, x, y, rr), col = r() < .55 ? '120,92,58' : '226,206,168'; g.addColorStop(0, `rgba(${col},${.18 + r() * .2})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.fillRect(x - rr, y - rr, 2 * rr, 2 * rr); }
+        for (let k = 0; k < 500; k++) { c.fillStyle = `rgba(70,50,30,${.25 + r() * .45})`; const x = r() * W, y = r() * W, s = 1.5 + r() * 4; c.beginPath(); c.arc(x, y, s, 0, 7); c.fill(); }
+        const st = W / 3; c.lineCap = 'round';
+        for (let i = 1; i < 3; i++) for (const [lw, col] of [[16, 'rgba(70,48,26,.9)'], [6, 'rgba(42,28,14,.95)']]) { c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); c.moveTo(i * st + (r() - .5) * 4, 0); c.lineTo(i * st, W); c.stroke(); c.beginPath(); c.moveTo(0, i * st); c.lineTo(W, i * st + (r() - .5) * 4); c.stroke(); }
+        c.strokeStyle = 'rgba(50,34,20,.8)'; c.lineWidth = 3; c.beginPath(); let x = W * .9, y = W * .05; c.moveTo(x, y); for (let i = 0; i < 14; i++) { x -= 10 + r() * 14; y += 8 + r() * 16; c.lineTo(x, y); } c.stroke();
+        const e = c.createLinearGradient(0, 0, 0, W); e.addColorStop(0, 'rgba(70,48,26,.35)'); e.addColorStop(.12, 'rgba(70,48,26,0)'); e.addColorStop(.88, 'rgba(70,48,26,0)'); e.addColorStop(1, 'rgba(70,48,26,.35)'); c.fillStyle = e; c.fillRect(0, 0, W, W);
+      }), roughness: .92 });
+      const side = C(0x6b553a, { roughness: .95 });   // weathered limestone, dark with soil
+      const g = boardChunk(3, 3.6, top, side);
+      const S = 3.1 / 3, p = i => -1.55 + S * (i + .5), L = X.latrunculi, k = 1.45;
+      const helm = (col, inc) => { const o = L.piece(col, 'helm'); if (inc) L.turn(o, 1); o.scale.setScalar(k); return o; };
+      g.add(at(helm(1), p(0), .5, p(1))); g.add(at(helm(2, true), p(1), .5, p(1))); g.add(at(helm(1), p(2), .5, p(1)));
+      g.add(at(helm(2), p(2), .5, p(2)));
       return g;
     },
     foxgeese() {   // (2026-11-19: the meadow board and the cute pieces, the 2D / 3D defaults) the middle of the cross: a sunny grass board with cream paths and white stones, a round fox leaping over a round goose, two more geese waiting

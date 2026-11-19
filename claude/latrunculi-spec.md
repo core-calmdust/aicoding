@@ -83,6 +83,11 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - **トップページ**：`index.html` の一覧（アゴンの次（2026-11-19 ユーザー指定、旧：セネトの次）、`alpha:true`）、アイコン `images/icons/latrunculi.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/latrunculi.webp`（tools/shots.js）。
 - Praline のマーク（shared/praline-badge.js の一覧）には入れていない（1スレッドの JS エンジンのため）。mtsplit／tools/mtsim も対象外。
 
+## アイコンとSS（2026-11-19 ユーザー：今の3D盤の既定をモチーフに撮り直し）
+- 大百科のアイコン `images/atlas/latrunculi.webp`（?v=13）：`atlas/icons3d.js` ICONS.latrunculi＝風化した石板の一角（溝を彫った格子・くぼみ・ひび、土で汚れた石灰岩の側面）に、本物の3D駒（models/latrunculi.js の石の兜、1.45倍）：黒・倒れた白（挟まれた）・黒が一列、奥に白。`atlas/tools/icons.html` は models/latrunculi.js も読む。icon-post.py で320×320。
+- トップのアイコン `images/icons/latrunculi.svg`（?v=2）：石板の色の地に彫った格子とひび、手前に大きな白い大理石の兜（たてがみの飾り＝扇形の房）、奥に黒い玄武岩の兜が向かい合う（横顔）。
+- SS：トップ `images/latrunculi.webp`（?v=2、1200幅）・一覧 `atlas/shots/latrunculi.webp`（520×390、背景 #15110b、余白3%）＝3D の既定（石板×石の兜）の対局途中を斜め上（58°）から、盤（土の盛りまで）だけで切り出し。`tools/boardicon.html?game=latrunculi&look=stone&pcs=helm&el=58&w=1600&h=1300`。
+
 ## 未着手（次の作業）
 - レッスンの準備ステップ、piso・quintana のレッスン／パズル、ルール違いタブ。
 - 大百科：正式アイコン（icons3d.js のシーン＋書き出し。いまは仮の images/atlas/latrunculi.webp）、3D卓でのレート戦・パズル・レッスン（`atlas/app.js` RTG・`atlas/puzzles.js`・`atlas/lessons3d.js`。いまはフル機能版を開く）、種目カードの絵と説明を 2D のルールカードから作る `atlas/kindart.js`（2Dが14言語になってから。いまはアダプタ内の文言と簡易な絵）。

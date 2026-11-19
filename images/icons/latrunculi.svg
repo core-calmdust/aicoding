@@ -1,22 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
-  <!-- Ludus latrunculorum: a corner of the white marble board in its Tyrian-purple surround, a white glass counter
-       enclosed between two black ones -->
+  <!-- Ludus latrunculorum (2026-11-19, the 3D / 2D default): the stone helmets on the excavated slab — a white marble helmet with
+       its crest in front, a black basalt one behind, both on round plinths, the slab's cut grid and a crack behind them -->
   <defs>
     <clipPath id="lt-c"><rect width="96" height="96" rx="20"/></clipPath>
-    <linearGradient id="lt-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a2f72"/><stop offset="1" stop-color="#4a173d"/></linearGradient>
-    <linearGradient id="lt-mb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbf9f4"/><stop offset="1" stop-color="#e2ddd2"/></linearGradient>
-    <radialGradient id="lt-b" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#6b7284"/><stop offset=".5" stop-color="#232733"/><stop offset="1" stop-color="#0a0c11"/></radialGradient>
-    <radialGradient id="lt-w" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#f1f1ec"/><stop offset="1" stop-color="#bfc3bb"/></radialGradient>
+    <linearGradient id="lt-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cdb184"/><stop offset="1" stop-color="#9c7d52"/></linearGradient>
+    <radialGradient id="lt-k" cx=".35" cy=".25" r=".9"><stop offset="0" stop-color="#77736e"/><stop offset=".5" stop-color="#34322f"/><stop offset="1" stop-color="#121110"/></radialGradient>
+    <radialGradient id="lt-w" cx=".35" cy=".25" r=".9"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#eee8dc"/><stop offset="1" stop-color="#b8ad99"/></radialGradient>
+    <symbol id="lt-h" viewBox="-30 -32 60 56" overflow="visible">
+      <!-- crest (a fan of horsehair, front to back) -->
+      <path d="M-19-6A21 21 0 0 1 19-9L12-5A14 14 0 0 0-12-3Z"/>
+      <path d="M-14-11L-9-6M-8-15L-5-8M0-17L0-9M8-16L5-8M14-13L9-6" stroke-width="1.3" fill="none" class="ln"/>
+      <!-- bowl, brow, neck guard, cheek guard -->
+      <path d="M-16 4A16 16 0 0 1 16 2L15 6H-15Z"/>
+      <path d="M-15 4L-25 10L-23 13L-13 8Z"/>
+      <path d="M8 5H17L14 15L8 13Z"/>
+      <!-- the neck and the plinth -->
+      <path d="M-7 8H7L6 15H-6Z"/>
+      <path d="M-17 15H17L19 19L17 21H-17L-19 19Z"/>
+    </symbol>
   </defs>
   <g clip-path="url(#lt-c)">
     <rect width="96" height="96" fill="url(#lt-bg)"/>
-    <rect x="9" y="9" width="78" height="78" rx="4" fill="url(#lt-mb)"/>
-    <path d="M14 30q10-6 18 2t20-3 18 6M20 62q12 5 22-2t26 4" fill="none" stroke="#cfc8ba" stroke-width="1" opacity=".7"/>
-    <path d="M35 9v78M61 9v78M9 35h78M9 61h78" stroke="#a99f8c" stroke-width="1.4"/>
-    <ellipse cx="23" cy="51" rx="10.5" ry="3" fill="#000" opacity=".16"/><ellipse cx="49" cy="51" rx="10.5" ry="3" fill="#000" opacity=".16"/><ellipse cx="75" cy="51" rx="10.5" ry="3" fill="#000" opacity=".16"/>
-    <circle cx="22" cy="47" r="10" fill="url(#lt-b)"/><circle cx="74" cy="47" r="10" fill="url(#lt-b)"/>
-    <circle cx="48" cy="47" r="10" fill="url(#lt-w)" stroke="#d8423a" stroke-width="1.6"/>
-    <circle cx="18.5" cy="43" r="2.6" fill="#fff" opacity=".55"/><circle cx="70.5" cy="43" r="2.6" fill="#fff" opacity=".55"/><circle cx="44.5" cy="43" r="2.6" fill="#fff" opacity=".9"/>
-    <circle cx="48" cy="21" r="8" fill="url(#lt-b)" opacity=".92"/><circle cx="22" cy="74" r="8" fill="url(#lt-w)"/>
+    <g stroke="#6e5232" stroke-width="2.4" opacity=".7"><path d="M-2 30H98M-2 70H98M30-2V98M70-2V98"/></g>
+    <path d="M86 4L78 16L80 22L72 32" fill="none" stroke="#5a4026" stroke-width="1.4" opacity=".7"/>
+    <g fill="#6e5232" opacity=".35"><circle cx="14" cy="14" r="1.4"/><circle cx="52" cy="10" r="1"/><circle cx="84" cy="48" r="1.2"/><circle cx="12" cy="52" r="1"/><circle cx="46" cy="88" r="1.3"/><circle cx="86" cy="84" r="1"/></g>
+    <!-- the black helmet behind (faces left) -->
+    <ellipse cx="66" cy="55" rx="16" ry="3.5" fill="#000" opacity=".2"/>
+    <use href="#lt-h" x="45" y="22" width="42" height="39" transform="translate(132 0) scale(-1 1)" fill="url(#lt-k)" stroke="#0e0d0c" stroke-width=".8" style="--l:#8a8682"/>
+    <!-- the white helmet in front (faces right) -->
+    <ellipse cx="36" cy="80" rx="25" ry="5" fill="#000" opacity=".24"/>
+    <use href="#lt-h" x="3" y="30" width="66" height="61" fill="url(#lt-w)" stroke="#8e8472" stroke-width=".7"/>
   </g>
 </svg>
