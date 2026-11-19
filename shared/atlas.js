@@ -59,11 +59,11 @@
       name: N('ブラックジャック', 'Blackjack', '21点', '블랙잭', 'Blackjack', 'Blackjack', 'Blackjack', 'Blackjack', 'ब्लैकजैक', 'بلاك جاك', 'Блэкджек', '21點', 'Blackjack', 'Blackjack') },
     { id: 'solitaire', cat: 'puzzle', store: ['aicoding-solitaire'], href: 'solitaire/', color: '#2f6b4f', released: '2026-10-28', tags: ['classic', 'card', 'daily', 'variants', 'mobile'], total: {},
       name: N('ソリティア', 'Solitaire', '纸牌接龙', '솔리테어', 'Solitario', 'Solitaire', 'Paciência', 'Solitär', 'सॉलिटेयर', 'سوليتير', 'Пасьянс', '接龍', 'Solitaire', 'Solitaire') },
-    { id: 'peg', cat: 'puzzle', store: ['aicoding-peg'], href: 'atlas/#games/peg', only3d: true, color: '#7d5ba6', released: '2026-11-11', tags: ['classic', 'daily', 'puzzles', 'variants', 'mobile'], total: { pz: 497 },
+    { id: 'peg', cat: 'puzzle', store: ['aicoding-peg'], href: 'atlas/#games/peg', only3d: true, color: '#7d5ba6', released: '2026-11-11', official: '2026-11-13', tags: ['classic', 'daily', 'puzzles', 'variants', 'mobile'], total: { pz: 497 },
       name: N('ペグソリテール', 'Peg Solitaire', '孔明棋', '페그 솔리테르', 'Solitario de clavijas', 'Solitaire', 'Resta Um', 'Solitär', 'पेग सॉलिटेयर', 'سوليتير الأوتاد', 'Солитер', '孔明棋', 'Peg Solitaire', 'Peg Solitaire') },
-    { id: 'shanghai', cat: 'puzzle', store: ['aicoding-shanghai'], href: 'atlas/#games/shanghai', only3d: true, color: '#1f6a4c', released: '2026-11-13', tags: ['classic', 'puzzles', 'variants', 'mobile'], total: { pz: 720 },
+    { id: 'shanghai', cat: 'puzzle', store: ['aicoding-shanghai'], href: 'atlas/#games/shanghai', only3d: true, color: '#1f6a4c', released: '2026-11-13', official: '2026-11-14', tags: ['classic', 'puzzles', 'variants', 'mobile'], total: { pz: 720 },
       name: N('上海', 'Shanghai', '上海麻将', '상하이', 'Shanghái', 'Shanghai', 'Xangai', 'Shanghai', 'शंघाई', 'شنغهاي', 'Шанхай', '上海麻將', 'Shanghai', 'Şanghay') },
-    { id: 'hitblow', cat: 'deduce', store: ['aicoding-hitblow'], href: 'atlas/#games/hitblow', only3d: true, color: '#2b3683', released: '2026-11-16', tags: ['classic', 'ai', 'rated', 'daily', 'variants', 'mobile'], total: {},   /* (正式版 2026-11-18, user) */
+    { id: 'hitblow', cat: 'deduce', store: ['aicoding-hitblow'], href: 'atlas/#games/hitblow', only3d: true, color: '#2b3683', released: '2026-11-16', official: '2026-11-18', tags: ['classic', 'ai', 'rated', 'daily', 'variants', 'mobile'], total: {},   /* (正式版 2026-11-18, user) */
       name: N('ヒット＆ブロー', 'Hit & Blow', '猜数字·猜颜色', '히트 앤 블로', 'Hit & Blow', 'Hit & Blow', 'Hit & Blow', 'Hit & Blow', 'हिट एंड ब्लो', 'هِت آند بلو', 'Быки и коровы', '猜數字·猜顏色', 'Hit & Blow', 'Hit & Blow') },
     { id: 'checkers', cat: 'chess', store: ['aicoding-checkers', 'checkers-online-name'], href: 'checkers/', color: '#8e2a3c', released: '2026-10-21', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 13 },
       name: N('チェッカー V2', 'Checkers V2', '跳棋（国际跳棋·英式） V2', '체커 V2', 'Damas V2', 'Dames anglaises V2', 'Damas V2', 'Dame V2', 'चेकर्स V2', 'الداما V2', 'Шашки V2', '西洋跳棋（英式） V2', 'Dam V2', 'Dama V2') },
@@ -83,7 +83,7 @@
       name: N('チャンギ（韓国将棋）', 'Janggi', '韩国将棋', '장기', 'Janggi (ajedrez coreano)', 'Janggi (échecs coréens)', 'Janggi (xadrez coreano)', 'Janggi (Koreanisches Schach)', 'जांग्गी (कोरियाई शतरंज)', 'جانغي (الشطرنج الكوري)', 'Чанги (корейские шахматы)', '韓國將棋', 'Janggi (catur Korea)', 'Janggi (Kore satrancı)') },
     { id: 'tafl', cat: 'chess', store: ['aicoding-tafl', 'tafl-online-name'], href: 'tafl/', color: '#3f6f8f', released: '2026-10-25', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 390, ls: 16 },
       name: N('ネファタフル', 'Hnefatafl', '维京棋（Hnefatafl）', '흐네파타플', 'Hnefatafl', 'Hnefatafl', 'Hnefatafl', 'Hnefatafl', 'ह्नेफ़ाटाफ़ल', 'هنفتافل', 'Хнефатафл', '維京棋（Hnefatafl）', 'Hnefatafl', 'Hnefatafl') },
-    { id: 'amazons', cat: 'line', also: ['chess'], store: ['aicoding-amazons', 'amazons-online-name'], href: 'amazons/', color: '#3f8a5c', released: '2026-11-10', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 163, ls: 8 },
+    { id: 'amazons', cat: 'line', also: ['chess'], store: ['aicoding-amazons', 'amazons-online-name'], href: 'amazons/', color: '#3f8a5c', released: '2026-11-10', official: '2026-11-11', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'mobile'], total: { pz: 163, ls: 8 },
       name: N("アマゾンズ", "Amazons", "亚马逊棋", "아마존스", "Amazons", "Amazons", "Amazons", "Amazons", "अमेज़न्स", "الأمازونات", "Амазонки", "亞馬遜棋", "Amazons", "Amazons") },
     { id: 'go', cat: 'line', store: ['aicoding-go', 'go-online-name'], href: 'go/', color: '#b8893f', released: '2026-10-22', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 500, ls: 21 },
       name: N('囲碁', 'Go', '围棋', '바둑', 'Go', 'Go', 'Go', 'Go', 'गो', 'غو', 'Го', '圍棋', 'Go', 'Go') },
@@ -101,19 +101,19 @@
       name: N('ウル王朝のゲーム', 'The Royal Game of Ur', '乌尔王族局戏', '우르 왕실 게임', 'El Juego Real de Ur', 'Le Jeu royal d’Ur', 'O Jogo Real de Ur', 'Das Königliche Spiel von Ur', 'उर का शाही खेल', 'لعبة أور الملكية', 'Царская игра Ура', '烏爾王族局戲', 'Permainan Kerajaan Ur', 'Ur Kraliyet Oyunu') },
     { id: 'senet', cat: 'hist', also: ['race'], store: ['aicoding-senet', 'senet-online-name'], href: 'senet/', color: '#8c9a2e', released: '2026-11-07', tags: ['historical', 'ai', 'online', 'rated', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 178, ls: 9 },
       name: N('セネト', 'Senet', '塞尼特', '세네트', 'Senet', 'Senet', 'Senet', 'Senet', 'सेनेट', 'سينيت', 'Сенет', '塞尼特', 'Senet', 'Senet') },
-    { id: 'latrunculi', cat: 'hist', also: ['chess'], store: ['aicoding-latrunculi', 'latrunculi-online-name'], href: 'latrunculi/', color: '#857055', released: '2026-11-16', tags: ['historical', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 250, ls: 7 },
+    { id: 'latrunculi', cat: 'hist', also: ['chess'], store: ['aicoding-latrunculi', 'latrunculi-online-name'], href: 'latrunculi/', color: '#857055', released: '2026-11-16', official: '2026-11-19', tags: ['historical', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 250, ls: 7 },
       name: N("ルドゥス・ラトルンクロルム", "Ludus Latrunculorum", "罗马兵棋", "루두스 라트룬쿨로룸", "Ludus latrunculorum", "Ludus latrunculorum", "Ludus latrunculorum", "Ludus latrunculorum", "लूडुस लात्रुंकुलोरुम", "لودوس لاترونكولوروم", "Латрункули", "羅馬兵棋", "Ludus Latrunculorum", "Ludus Latrunculorum") },
-    { id: 'foxgeese', cat: 'hist', also: ['chess'], store: ['aicoding-foxgeese', 'foxgeese-online-name'], href: 'foxgeese/', color: '#5d6a1f', released: '2026-11-16', tags: ['historical', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 250, ls: 6 },
+    { id: 'foxgeese', cat: 'hist', also: ['chess'], store: ['aicoding-foxgeese', 'foxgeese-online-name'], href: 'foxgeese/', color: '#5d6a1f', released: '2026-11-16', official: '2026-11-19', tags: ['historical', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 250, ls: 6 },
       name: N("狐とガチョウ", "Fox and Geese", "狐狸与鹅", "여우와 거위", "El zorro y las ocas", "Le renard et les oies", "A raposa e os gansos", "Fuchs und Gänse", "लोमड़ी और कलहंस", "الثعلب والإوز", "Лиса и гуси", "狐狸與鵝", "Rubah dan Angsa", "Tilki ve Kazlar") },
     { id: 'patolli', cat: 'hist', also: ['race'], store: ['aicoding-patolli', 'patolli-online-name'], href: 'patolli/', color: '#12a4b8', alpha: true, released: '2026-11-16', tags: ['historical', 'ai', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 200, ls: 9 },
       name: N("パトリ", "Patolli", "帕托利", "파톨리", "Patolli", "Patolli", "Patolli", "Patolli", "पटोली", "باتولي", "Патолли", "帕托利", "Patolli", "Patolli") },
-    { id: 'ludo', cat: 'race', also: ['hist'], store: ['aicoding-ludo', 'ludo-online-name'], href: 'ludo/', color: '#d9473b', released: '2026-11-08', tags: ['classic', 'ai', 'online', 'rated', 'variants', 'mobile'], total: {},
+    { id: 'ludo', cat: 'race', also: ['hist'], store: ['aicoding-ludo', 'ludo-online-name'], href: 'ludo/', color: '#d9473b', released: '2026-11-08', official: '2026-11-09', tags: ['classic', 'ai', 'online', 'rated', 'variants', 'mobile'], total: {},
       name: N('ルドー・パチーシ', 'Ludo & Pachisi', '鲁多与帕棋西', '루도 & 파치시', 'Ludo y Pachisi', 'Ludo et Pachisi', 'Ludo e Pachisi', 'Ludo & Pachisi', 'लूडो और पचीसी', 'لودو وباتشيسي', 'Лудо и Пачиси', '魯多與帕奇西', 'Ludo & Pachisi', 'Ludo ve Pachisi') },
     { id: 'carrom', cat: 'action', store: ['aicoding-carrom'], href: 'atlas/#games/carrom', only3d: true, color: '#c23a7a', released: '2026-11-09', tags: ['classic', 'ai', 'mobile'], total: {},
       name: N('キャロム', 'Carrom', '克朗棋', '캐롬', 'Carrom', 'Carrom', 'Carrom', 'Carrom', 'कैरम', 'كيرم', 'Карром', '克朗棋', 'Karambol', 'Carrom') },
     { id: 'crokinole', cat: 'action', store: ['aicoding-crokinole'], href: 'atlas/#games/crokinole', only3d: true, color: '#b8742a', released: '2026-11-09', tags: ['classic', 'ai', 'mobile'], total: {},
       name: N('クロキノール', 'Crokinole', '克罗基诺', '크로키놀', 'Crokinole', 'Crokinole', 'Crokinole', 'Crokinole', 'क्रोकिनोल', 'كروكينول', 'Крокинол', '克羅基諾', 'Crokinole', 'Crokinole') },
-    { id: 'hockey', cat: 'action', store: ['aicoding-hockey'], href: 'atlas/#games/hockey', only3d: true, color: '#2f6fd0', released: '2026-11-09', tags: ['ai', 'mobile'], total: {},
+    { id: 'hockey', cat: 'action', store: ['aicoding-hockey'], href: 'atlas/#games/hockey', only3d: true, color: '#2f6fd0', released: '2026-11-09', official: '2026-11-10', tags: ['ai', 'mobile'], total: {},
       name: N('テーブルホッケー', 'Table Hockey', '桌上冰球', '테이블 하키', 'Hockey de mesa', 'Hockey de table', 'Hóquei de mesa', 'Tischhockey', 'टेबल हॉकी', 'هوكي الطاولة', 'Настольный хоккей', '桌上冰球', 'Hoki meja', 'Masa hokeyi') },
     { id: 'botao', cat: 'action', store: ['aicoding-botao'], href: 'atlas/#games/botao', only3d: true, color: '#5f9e1a', released: '2026-11-17', tags: ['classic', 'ai', 'mobile'], total: {},
       name: N('フチボウ・ジ・ボタン', 'Futebol de Botão', '纽扣足球', '푸치보우 지 보탕', 'Fútbol de botones', 'Football de boutons', 'Futebol de botão', 'Knopffußball', 'बटन फ़ुटबॉल', 'كرة القدم بالأزرار', 'Пуговичный футбол', '鈕扣足球', 'Sepak bola kancing', 'Düğme futbolu') },
@@ -173,17 +173,19 @@
   // Badges — at most 2, in this priority (common rules 2026-11-08, claude/game-conventions-addendum.md):
   //   ALPHA    g.alpha (alone, like BETA; new titles start as alpha from 2026-11-15, then beta, until the owner says)
   //   BETA     g.beta (alone: it takes the place of NEW, ORIGINAL and UPDATE)
-  //   NEW      released within NEW_DAYS (14) days (alone)
+  //   NEW      within NEW_DAYS (14) days of the official release (alone): g.official (the day ALPHA / BETA came off, 2026-11-19 user:
+  //            NEW を正式版から数える) or else g.released
   //   ORIGINAL g.original (our own titles — ORIGINAL on the top page) once the NEW days are over
   //   UPDATE   the game's latest UPDATES line is an update, not the release, and is within UPDATE_DAYS (14) days.
   //            A line dated on or before g.released counts as the release, so no line needs a label.
   //   (no PREMIUM badge any more: nearly every title had it, so it told players nothing)
   const NEW_DAYS = 14, UPDATE_DAYS = 14;
-  const updatedOn = g => { const d = lastUpdate(g.id); return d && (!g.released || d > g.released) ? d : null; };
+  const newFrom = g => g.official || g.released;
+  const updatedOn = g => { const d = lastUpdate(g.id), r = newFrom(g); return d && (!r || d > r) ? d : null; };
   function badges(g) {
     if (g.alpha) return ['alpha'];
     if (g.beta) return ['beta'];
-    if (g.released && daysSince(g.released) <= NEW_DAYS) return ['new'];
+    if (newFrom(g) && daysSince(newFrom(g)) <= NEW_DAYS) return ['new'];
     const out = [];
     if (g.original) out.push('original');   // an original title: NEW at first, then ORIGINAL (common rule 2026-11-08)
     const u = updatedOn(g); if (u && daysSince(u) <= UPDATE_DAYS) out.push('update');
@@ -201,7 +203,7 @@
   function news() {
     const seen = new Set(), ups = UPDATES.filter(u => !seen.has(u[1]) && seen.add(u[1]));
     let lead = -1, best = '';
-    ups.forEach((u, i) => { const g = GAMES.find(x => x.id === u[1]); if (g && g.released && daysSince(g.released) <= NEW_DAYS && g.released > best) { best = g.released; lead = i; } });
+    ups.forEach((u, i) => { const g = GAMES.find(x => x.id === u[1]); if (g && newFrom(g) && daysSince(newFrom(g)) <= NEW_DAYS && newFrom(g) > best) { best = newFrom(g); lead = i; } });
     return lead > 0 ? [ups[lead], ...ups.slice(0, lead), ...ups.slice(lead + 1)] : ups;
   }
   // games ordered by the changelog (UPDATES is newest first); games without entries keep registry order
