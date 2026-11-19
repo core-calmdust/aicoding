@@ -2439,7 +2439,7 @@ flip = flipFor(); drawLines();
 // 勝敗記録 (shared/record.js) and the coach's switch (coach.js): before the header bar takes the menu / icons
 if (window.GameRecord) GameRecord.init({ game: 'foxgeese', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });
 if (window.FoxCoach) FoxCoach.init();
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson'], lang: () => LANG }) : null;   // (2026-11-19 user: the online draw offer took the place — パズル leaves the top menu; the puzzles stay, from the 授業 / ルール tabs and the new-game dialog)
 
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);
