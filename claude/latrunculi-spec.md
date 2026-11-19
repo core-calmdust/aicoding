@@ -23,7 +23,11 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - **本作の取り決め**（対局を終わらせるため。出典はベルの「30手取りなし」規定を参考）：取り合いなしで30手ずつ（60手）続いたら終了し、取った数の多い方の勝ち・同数は引き分け（`QUIET_MAX`）。
 - 出典で決まっていない点の扱い：跳び越えは Locus Ludi の本文どおり味方のみ（図Cの相手越えは採らない）。取り除き後に動かせる駒がなければ、取り除きだけで手番終了。先手は黒。
 
-## エンジン（engine.js、純JS・1スレッド、Web Worker）
+## エンジン（core.c → WebAssembly ＋ engine.js、Web Worker）
+- **C／WebAssembly 化（2026-11-20、`latrunculi/MODEL_CARD.md`）**：ルール・探索・評価を `core.c` に移した（`tools/build-core.sh` → `core-wasm.js`＝SIMD 版 `LT_WASM` と SIMD なし版 `LT_WASM0`、`core_mt.wasm`＝`-DMT`）。engine.js は Worker と Node で `core-wasm.js` を同期で読み、`search`・`orderMoves`・`bestMove`（`ab_best`）・`rootValues`（`ab_values`）・`evaluate` をコアに任せる。ページ本体・読み込みの失敗・`LT_NOWASM=1` は今までの JS（予備）。**JS と WebAssembly は同じ手・同じ値・同じ局面数**：`tools/check_rules.js`（ランダムな局面で合法手の順番・指したあとの盤／裏返り／手持ち／取った数／往復禁止／手数／ハッシュ・hasMove・judge・評価・ネットの値と差分更新）と `tools/check_wasm.js`（局面数・深さで決まるレベルの探索）。局面のやりとりは `SQ`／`INC`／`IO[8..18]`、Zobrist キー・重み・LMR の表（`Math.log` から作った `LMRT`）は engine.js がコアに書く（`waRule`、setRule／setW／setOpt のたび）。評価はビットボード（同じ値で約6倍速い）。速さ：作業機で JS 約6万 → WebAssembly 約95万局面／秒。
+- **マルチスレッド（2026-11-20）**：分離されたページでは `core_mt.wasm` を `shared/mtengine.js` のスレッドで（主＝`engine.js?v=…&mt=1`、補助＝`mt-helper.js`、Praline の Young Brothers Wait。`app.js` の `MCP`、コナネと同じ設定）。分離できないページは今までの `shared/mtsplit.js`（各 Worker の探索は WebAssembly、共有の置換表は JS の SH を import で使う）。計測ページ `latrunculi/bench.html`（bench-all.html にも追加）。Praline のマーク（praline-badge.js の一覧）にも追加。
+- **学習した評価（NNUE）の仕組み（2026-11-20、まだネットは採用していない）**：`engine.js` の `NETS = { seneca, piso, quintana }` が空の間は手作り評価のまま。`latrunculi/nets/` にファイルを置いて名前を書くと、Worker が取得してそのルールの評価が「手作り評価＋ネットの補正」になる（`core.c`「the net」：入力366×2視点 → H → 1、SCReLU、差分更新。JS の予備は同じ整数を作り直しで計算）。学習はユーザーの Mac で `bash latrunculi/tools/nnue/run.sh`（自己対局 → 学習 → 確認 → 採用ファイル。手順・時間・採用基準は `tools/nnue/README.md` と MODEL_CARD）。Node のツールは `LT_NET_<rule>=ファイル` でネットを読む、`LT_NONET=1` で切る。
+- 探索の追加（reverse futility・LMP・IIR・置く段階の強い LMR：`core.c` の `SX`、ltn の `smatch`）は対局で勝ち越さず不採用（MODEL_CARD）。
 - 手 m = from + 64×to + 4096×(rm+1)。置く手は from = to。rm＝この番のはじめに取り除く裏返った駒（なければ −1）。取り除きだけの手は from = to = rm。
 - `Pos`：sq（持ち主）・inc（裏返りの向き：1 横・2 縦・3 隅）・hand（置く残り）・cap（取った数）・last（直前の手：往復禁止）・quiet。`E.effect(pos, m)` が1手の中身（path・leap・blocks・takes・frees・rm）を返す：画面・コーチ・レッスン生成はすべてこれを使う。
 - 棋譜：置く `d4`、移動 `d4-d5`、跳び `d4^d6`、取る `xe5`、挟む（裏返す）`!e5`、取り除いてから動く `xe5,d4-d5`。
@@ -32,13 +36,13 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - **並列探索（2026-11-19）**：`shared/mtsplit.js`（コナネと同じ。ルートの手を Young Brothers Wait で分担、分離されたページでは `shared/mttt.js` の共有置換表、`sw.js`）。エンジンは `mtplan`／`mtv`／`mtkids`／`mtpv`／`mtfin`／`mtshare` に答える。使う所：分析・ヒント・コーチ・時間で考える Lv.19・20（レート戦も）。Lv.1〜18 は1スレッドのまま。作業機（2コア）で2スレッド動作を確認。
 - **置く段階の定跡（2026-11-19）**：`book.js`（`self.LT_BOOK`、ワーカーが importScripts）。seneca・piso の最初の1手、その応手（対称8通りでまとめて10局面）、定跡の1手目と任意の応手のあとの3手目（`tools/book.js`、1局面1千万局面の探索）。探索で決める段（Lv.10〜）だけが使う。
 - **評価の学習の続き（2026-11-19）**：重みを置く段階と動かす段階で別々に（30個）、特徴「1手で届く空きマスの差」（ctl）を追加。`tools/tune.js` は静かな局面（挟める手がなく、取り除きもない）だけで学習。piso は +117 Elo で採用、seneca（−158）・quintana（−35）は効果がなく、前の重みのまま。quintana は人が指しても引き分けが多いゲームで、評価では差がつきにくい。
-- **レート戦の基準値 RT_LV（2026-11-19 実測）**：`tools/ladder.js`（既定ルール、となりのレベル同士 24〜36局、定跡あり）で段差を測り、Lv.1＝100 から積み上げ。上の段は取り合いなしの引き分けが多く差が出にくい（+25 未満は +25 とみなす）。Lv.19・20 は局面数2倍あたり約 +50 Elo（Lv.13〜18 の実測）からの推定。大百科の `atlas/games/latrunculi.js` の RATING も同じ値。
+- **レート戦の基準値 RT_LV（2026-11-19 実測）**：`tools/ladder.js`（既定ルール、となりのレベル同士 24〜36局、定跡あり）で段差を測り、Lv.1＝100 から積み上げ。上の段は取り合いなしの引き分けが多く差が出にくい（+25 未満は +25 とみなす）。Lv.19・20 は局面数2倍あたり約 +50 Elo（Lv.13〜18 の実測）からの推定。大百科の `atlas/games/latrunculi.js` の RATING も同じ値。**2026-11-20**：WebAssembly のコアで Lv.1〜18 は前と同じ手（局面数・深さで決まるため）。時間で考える Lv.19・20 は同じ時間で約16倍の局面を読む（同じ時間の旧 JS 比 seneca 1手0.1秒で +209 Elo）ので、各 +148 して 2950・3000（長い持ち時間では引き分けが増えて差が縮むので控えめに）。
 - 不具合の修正（2026-11-19）：跳び先の探索の通し番号（Int32）が約21億回で桁あふれし無限ループになっていた（同じワーカーで30分以上考え続けると起こりうる）。上限で巻き戻す。
 - クインタナ式の説明（2D のルール欄・大百科の種目カード、14言語）には「古代の記録をもとに遊べる形に再構成したルールで、決着がつかないことが多い」を添え、続けて本作の同数ルール（下）を書く（2026-11-19 ユーザー）。
 - 強さの計測（`tools/match.js`、1手60ms・40局）：旧エンジン比 seneca 75%（約+190 Elo）・piso 82.5%（約+270 Elo）。quintana はほぼ引き分け（36/40）で差が出ない。`tools/bench.js`・`bench2.js` は速度の計測。
 - 20段階（Lv.表記）：Lv.1〜9 は深さ1〜3＋ノイズ、Lv.10 は1,200局面、Lv.11〜18 は局面数（3千〜20万）、Lv.19・20 は 1.5 秒・3 秒。負け確定は `resist`（いちばん遅く負ける手）。2026-11-19：AIが強くなって段差が不揃い（Lv.4 が Lv.3 より弱い、1段 +400 超）になったので Lv.1〜10 のノイズ・深さを組み直した（すべて上の段が勝ち越す）。
 - ソルバー：`goalGood / goalMin / goalReply`（N 手以内に「取った数の差を+1（裏返った自分の駒が残らない）」または「勝ち」、相手は最長抵抗＋評価の良い受け）。
-- 既知の課題：強いレベル同士は取り合いが少なく「30手」で終わりやすい（特に quintana）。WASM 化は未着手。
+- 既知の課題：強いレベル同士は取り合いが少なく「30手」で終わりやすい（特に quintana）。
 
 ## 画面（konane/ から派生）
 - **2D の盤6種・駒6種（2026-11-18 全面作り直し、ユーザー：石板＋立体風の駒（古代ローマ）・木工・アブストラクト・高級感＋2種）**。絵は `tools/gen_art2.py`（`tools/art.html` を headless Chrome で描く GLSL。`art-lib.js`＝ノイズ・8×8の格子・ライティング、`art-boards.js`＝盤と枠、`art-pieces.js`＝駒。浮き彫り・焼き絵・象嵌は SVG をテクスチャにする）→ `img/2d/`（`?v=1`）。**盤の絵に格子が焼き込んである**ので、ページの線（.grv・.grv-hl）は隠し、座標の文字だけ出す。盤 1536px・枠のタイル 512px（継ぎ目なし）・駒 320px。並びと保存キー（settings.bd / settings.pcs）：
@@ -82,7 +86,7 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - **ヒストリア**（`atlas/historia/s/latrunculi.json`＋14言語、案内は同じポンメェ）：この spec と 2D の紹介文にある事実だけで構成（ウァロ・オウィディウス・マルティアリス・『ピソ頌』・ブリテン島の盤・中世のチェスの名・シェードラーの復元・クインタナ博物館）。地図のピン＝ローマ・ブリテン島・フリブール・キュンツィング（`atlas/mapdata.js` にも同じ内容）。
 - **ボスと観戦キャラ**（`atlas/npc/roster.js`・`atlas/npc/t/<lang>.js`、14言語）：ボス7体（ロマメェ → ガラスニャン → ヨウヘイツネ → ウァロホー → シジンチュン → レギオガミ → ピソオン＝UR）。画像 `images/atlas/av/boss-latrunculi-<1〜7>-<0〜3>.webp`（atlas/tools/bosses.html で描画）。豆知識4行。
 - **トップページ**：`index.html` の一覧（アゴンの次（2026-11-19 ユーザー指定、旧：セネトの次）、`alpha:true`）、アイコン `images/icons/latrunculi.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/latrunculi.webp`（tools/shots.js）。
-- Praline のマーク（shared/praline-badge.js の一覧）には入れていない（1スレッドの JS エンジンのため）。mtsplit／tools/mtsim も対象外。
+- Praline のマーク：2026-11-20 から shared/praline-badge.js の一覧に入れた（core_mt.wasm の Young Brothers Wait）。tools/mtsim は対象外。
 
 ## 正式リリース（2026-11-19 ユーザー）
 - ALPHA 表記を外した（index.html の alpha:true、shared/atlas.js の alpha: true。atlas.js の ?v= を全ページで上げた）。更新情報（shared/atlas-updates.js）に正式版の1行（新しい3D盤・駒6種、クインタナ式の決着）。
@@ -97,7 +101,7 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 ## 未着手（次の作業）
 - レッスンの準備ステップ、piso・quintana のレッスン／パズル、ルール違いタブ。
 - 大百科：正式アイコン（icons3d.js のシーン＋書き出し。いまは仮の images/atlas/latrunculi.webp）、3D卓でのレート戦・パズル・レッスン（`atlas/app.js` RTG・`atlas/puzzles.js`・`atlas/lessons3d.js`。いまはフル機能版を開く）、種目カードの絵と説明を 2D のルールカードから作る `atlas/kindart.js`（2Dが14言語になってから。いまはアダプタ内の文言と簡易な絵）。
-- AI：評価と探索の強化、WASM 化、マルチスレッド、レート基準値の実測。
+- AI：Mac で NNUE を学習して採用（run.sh の結果待ち）、そのあとレベル表の測り直し。
 - OG 画像（images/latrunculi.webp）の撮り直し、オンライン対戦（tafl-multiplay の節 latrunculi/）。
 
 ## 保存キー
