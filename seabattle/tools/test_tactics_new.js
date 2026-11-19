@@ -114,6 +114,25 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(92); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
     ok(await p.evaluate(() => { const c = G.st.log.filter(x => x.via === 'rtorpedo').map(x => x.cell); return c.length >= 1 && c.every((x, j) => x === 90 + j) && c.slice(0, -1).every(x => G.st.sides[1].grid[x] < 0); }), name + ': the side torpedo runs along row 10 from the left');
     await shot('rtorpedo');
+    // 第8弾: suppress (the enemy's armor gives way at once) and sweep
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[24, 25, 4], [5, 13, 4]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('suppress'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => G.st.sides[1].supp === 2), name + ': suppress holds the enemy abilities for my next 2 turns');
+    await idle(); await p.evaluate(() => { G.view = 'enemy'; render(); });
+    const ac = await p.evaluate(() => { const T = G.st.sides[1], i = T.ships.findIndex(s => SeaEngine.TYPES[s.t].armor); for (let k = 0; k < 100; k++) if (T.grid[k] === i && !T.shots[k]) return k; return -1; });
+    n0 = await acts(); await tapCell(ac); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(c => G.st.sides[1].shots[c] === 2, ac), name + ': ... so a shell on the armored ship is a plain hit');
+    await idle(); await p.evaluate(() => { G.view = 'enemy'; G.st.cd[0].fill(0); render(); });
+    i = await skillBtn('sweep'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150);
+    const swc = await p.evaluate(() => { for (const k of [44, 55, 66, 33, 77, 22]) if (SeaEngine.preview(G.st, G.armed, k)) return k; return 44; });
+    await tapCell(swc); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => { const m = G.st.log.filter(m => m.by === 0 && m.skill === 'sweep').pop(); return m && m.sw != null && G.st.scans[0].length === 1; }), name + ': sweep reads a 3×3 box and reports the mines it cleared');
+    await shot('sweep');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
