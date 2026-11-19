@@ -344,6 +344,15 @@ const SND = (() => {
     skill: () => { tone(300, .5, 'sawtooth', .05, 0, 1200); tone(1200, .6, 'sine', .1, .3); },
     ok: () => { tone(988, .25, 'sine', .12); tone(1319, .5, 'sine', .1, .12); },
     pick: () => tone(660, .06, 'triangle', .06),
+    // (ユーザー 2026-11-20「正解でピンポン、間違いでブッブー」) the quiz-show chime: high then low; the buzzer: two low rasps
+    pinpon: () => { tone(1319, .32, 'sine', .16); tone(1319 * 2, .2, 'sine', .03); tone(1047, .7, 'sine', .16, .2); tone(2094, .4, 'sine', .03, .2); },
+    buzz: () => { tone(155, .26, 'square', .07); tone(152, .26, 'sawtooth', .05); tone(155, .5, 'square', .07, .32); tone(150, .5, 'sawtooth', .05, .32); },
+    // (ユーザー 2026-11-20「コース終了画面で成績に応じた効果音」) 100: a fanfare; passed: a bright little tune; not yet: a falling "oh well"
+    grade: sc => {
+      if (sc >= 100) { [[523, 0], [659, .12], [784, .24], [1046, .36], [784, .56], [1046, .68]].forEach(([f, d]) => tone(f, .3, 'triangle', .12, d)); [1046, 1319, 1568, 2093].forEach(f => tone(f, 1.6, 'triangle', .07, .9)); tone(262, 1.8, 'sine', .12, .9); for (let i = 0; i < 6; i++) tone(2093 + i * 230, .22, 'sine', .035, 1.3 + i * .07); }
+      else if (sc >= 75) { [[659, 0], [784, .13], [1046, .26], [1319, .42]].forEach(([f, d], i) => tone(f, i === 3 ? .9 : .28, 'triangle', .11, d)); tone(523, 1, 'sine', .07, .42); }
+      else { [[392, 0], [370, .32], [349, .64]].forEach(([f, d]) => tone(f, .3, 'triangle', .1, d)); tone(330, 1.1, 'triangle', .1, .96, 300); }
+    },
     // (2026-11-18, ユーザー「チーやポンの選択肢が出る時に軽い効果音」) a light two-note rise, softer than the pick
     callAsk: () => { tone(784, .09, 'triangle', .07); tone(1046, .14, 'sine', .06, .07); },
     // (ユーザー 2026-11-15: the sound when she is touched and speaks was drowned by the music) the same short tone as pick, a little louder
@@ -2350,7 +2359,7 @@ class LessonHuman extends Human {
       const a = await get();
       if (!UIS || UIS.lesson !== L) throw 'abort';
       if (MJLessons.check(b, a, g, ME)) {
-        SND.ok && SND.ok(); clearHint(); L.cur = null;
+        SND.pinpon(); clearHint(); L.cur = null;
         const good = (b.explain ? MJLessons.explain(b, a.id >> 2, g, ME, I18N.lang === 'ja', a.act) : '') || I18N.L(b.good || '') || '';
         lessonGuide({ text: good, good: true });
         L.until = performance.now() + Math.min(4800, 1600 + good.length * 45);
@@ -2358,7 +2367,7 @@ class LessonHuman extends Human {
         if (!L.beats.length && L.end === 'beats') g.halt = true;
         return a;
       }
-      L.miss.add(b); clearHint();
+      L.miss.add(b); clearHint(); SND.buzz();
       const why = b.explain && a && a.id != null ? MJLessons.explain(b, a.id >> 2, g, ME, I18N.lang === 'ja', a.act) : '';
       lessonGuide({ text: why || I18N.L(b.bad || '') || t('lsWrong'), bad: true, hint: true, again: I18N.L(b.say) });
     }
@@ -2367,7 +2376,7 @@ class LessonHuman extends Human {
 function clearHint() { if (UIS && UIS.lesson) UIS.lesson.hintTy = null; document.querySelectorAll('#hand .tl.lhint').forEach(e => e.classList.remove('lhint')); document.querySelectorAll('#acts .ab.lhint').forEach(e => e.classList.remove('lhint')); }
 function showHint() {
   const L = UIS && UIS.lesson, b = L && L.cur; if (!b) return;
-  L.miss.add(b); SND.pick();
+  L.miss.add(b); SND.pick(); lsScoreShow(L);
   const ok = b.ok || {};
   if (ok.act) {
     const role = { tsumo: 'win', ron: 'win', riichi: 'rii', pon: 'pon', chi: 'chi', skill: null }[ok.act];
@@ -2392,6 +2401,9 @@ function lsStep(L) {
   if (!L.si) return ' ・ ' + t('lsExample');
   const st = L.stg[L.si]; return ` ・ ${t('lsQ')} ${L.si} / ${L.stg.length - 1}${st.lv != null ? ' ・ ' + I18N.L(MJLessons.LV[st.lv]) : ''}`;
 }
+// (ユーザー 2026-11-20「レッスンの現在の得点が見えるように」) the score as it stands: 100 at the start, down with each problem missed or hinted
+const lsScoreNow = L => Math.round(100 * (Math.max(1, L.n) - L.miss.size) / Math.max(1, L.n));
+function lsScoreShow(L) { const e = document.querySelector('#lsGuide .lg-sc'); if (e) { e.textContent = t('lsNow', { n: lsScoreNow(L) }); e.classList.remove('hit'); void e.offsetWidth; e.classList.add('hit'); } }
 function lessonGuide(o) {
   let el = $('#lsGuide');
   if (!o) { if (el) el.remove(); return; }
@@ -2400,7 +2412,7 @@ function lessonGuide(o) {
   const c = MJChars.get(GUIDE);
   el.className = 'ls-guide' + (o.good ? ' good' : '') + (o.bad ? ' bad' : '');
   el.innerHTML = `<img class="lg-face" src="${charImg(c, 'face')}" alt="">
-    <div class="lg-bub"><div class="lg-top"><b>${esc(I18N.L(c.name))}</b><small>${esc(I18N.L(L.ls.title))}${esc(lsStep(L))}</small><button class="lg-quit" id="lgQuit">${esc(t('lsQuit'))}</button></div>
+    <div class="lg-bub"><div class="lg-top"><b>${esc(I18N.L(c.name))}</b><small>${esc(I18N.L(L.ls.title))}${esc(lsStep(L))}</small><em class="lg-sc${o.bad ? ' hit' : ''}">${esc(t('lsNow', { n: lsScoreNow(L) }))}</em><button class="lg-quit" id="lgQuit">${esc(t('lsQuit'))}</button></div>
       <p>${esc(o.text)}${o.again ? `<span class="lg-again">${esc(o.again)}</span>` : ''}</p>
       ${o.hint || o.next ? `<div class="lg-btns">${o.hint ? `<button class="btn" id="lgHint">${esc(t('lsHint'))}</button>` : ''}${o.next ? `<button class="btn gold" id="lgNext">${esc(o.next)}<kbd>Enter</kbd></button>` : ''}</div>` : ''}</div>`;
   placeGuide(el); guideDodge();
@@ -2443,7 +2455,7 @@ async function lessonIntro() {
 const LS_ALL = () => MJLessons.RULES.concat(MJLessons.LESSONS);
 async function lessonDone() {
   const L = UIS && UIS.lesson; if (!L) return;
-  const ls = L.ls, n = Math.max(1, L.n), right = n - L.miss.size, score = Math.round(100 * right / n), pass = score >= 75;
+  const ls = L.ls, score = lsScoreNow(L), pass = score >= 75;
   const rec = DB.lessons = DB.lessons || {}, old = rec[ls.id] || {};
   rec[ls.id] = { best: Math.max(old.best || 0, score), pass: !!(old.pass || pass) }; save();
   const list = ls.cat ? MJLessons.LESSONS.filter(x => x.cat === ls.cat) : MJLessons.RULES, i = list.indexOf(ls), next = list[i + 1];
@@ -2455,6 +2467,7 @@ async function lessonDone() {
   const b = modal(`<div class="ls-res ${pass ? 'ok' : ''}"><img class="lr-face" src="${charImg(MJChars.get(GUIDE), 'face')}" alt=""><h3>${esc(pass ? t('lsPass') : t('lsFail'))}</h3>
     <div class="lr-sc"><b>${score}</b><small>/100</small></div><p class="lr-say">${esc(t(score >= 100 ? 'lsSay100' : pass ? 'lsSayPass' : 'lsSayFail'))}</p><p class="lr-t">${esc(I18N.L(ls.title))}</p><p class="lr-p">${esc(I18N.L(ls.point))}</p><small class="lr-line">${esc(t('lsPassLine'))}</small>
     <div class="cbtns"><button class="btn" data-a="list">${esc(t('lsList'))}</button><button class="btn" data-a="again">${esc(t('lsAgain'))}</button>${next ? `<button class="btn gold" data-a="next">${esc(t('lsNextL'))}</button>` : ''}</div></div>`, 'small lsres');
+  SND.grade(score);
   // (2026-11-19, ユーザー「次へを押すと真っ暗」: going home and straight back to the table left the 3D view black — the table was
   // hidden and shown again in one step, and paused by the way home. もう一度 / 次へ now stay at the table and only start the next hand)
   b.addEventListener('click', e => { const a = e.target.closest('[data-a]'); if (!a) return; SND.pick(); closeModal();

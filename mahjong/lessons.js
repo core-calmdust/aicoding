@@ -471,7 +471,7 @@ function attachDrills(D) {
     const pickD = ls.id === 'e1' ? ds.filter((d, i) => i === 0 || i === ds.length - 1) : ds;
     ls.drills = pickD.map(d => ({ lv: d.lv, end: 'beats', intro: [],
       pos: Object.assign({ me: d.me, drawn: d.drawn, dora: d.dora }, d.river ? { river: d.river, left: d.riichi ? 40 : 48 } : {}, d.riichi ? { riichi: d.riichi } : {}, d.melds ? { melds: { 0: d.melds } } : {}),
-      beats: [{ on: 'turn', say: (pickD.indexOf(d) % 2 && DALT[ls.id[0]]) ? DALT[ls.id[0]][(pickD.indexOf(d) >> 1) % DALT[ls.id[0]].length] : DSAY[ls.id][d.lv], ok: d.riichiAns ? { riichi: true, d: d.d } : d.d ? { d: d.d } : ls.id === 'e6' ? { best: 'shanten' } : BEST, explain: true, notes: d.notes || null, shape: /^e[1-4]$/.test(ls.id) }] })); }
+      beats: [{ on: 'turn', say: (pickD.indexOf(d) % 2 && DALT[ls.id[0]]) ? DALT[ls.id[0]][(pickD.indexOf(d) >> 1) % DALT[ls.id[0]].length] : DSAY[ls.id][d.lv], ok: d.riichiAns ? { riichi: true, d: d.d } : d.d ? { d: d.d } : ls.id === 'e6' ? { best: 'shanten' } : BEST, explain: true, th: ls.id, notes: d.notes || null, shape: /^e[1-4]$/.test(ls.id) }] })); }
 }
 attachDrills(root.MJDrills || (typeof require !== 'undefined' ? (() => { try { return require('./drills.js'); } catch (e) { return null; } })() : null));
 // a tile's name in the guide's words
