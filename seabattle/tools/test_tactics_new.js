@@ -175,6 +175,22 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(83); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
     ok(await p.evaluate(() => JSON.stringify(G.st.log.filter(x => x.via === 'lance').map(x => x.cell)) === '[63,73,83,93]'), name + ': lance fires D7–D10');
     await shot('lance');
+    // 第12弾: wide sonar (5×5), and my ESM ship tracing an enemy skill user
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[32, 33, 4], [1, 0, 4]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('echo'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(0); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => { const sc = G.st.scans[0][0]; return sc && sc.big === 1 && sc.cells.every(c => c % 10 <= 4 && c < 50); }), name + ': wide sonar reads the 5×5 corner box');
+    for (let g2 = 0; g2 < 20 && !(await p.evaluate(() => G.st.scans[0].some(s => s.tr))) && await p.evaluate(() => G.phase === 'battle'); g2++) {
+      await idle(); if (!(await p.evaluate(() => G.phase === 'battle'))) break;
+      await p.evaluate(() => { G.st.cd[1].fill(0); G.view = 'enemy'; render(); });
+      n0 = await acts(); const c = await p.evaluate(() => { const s = G.st.sides[1].shots; for (let k = 99; k >= 0; k--) if (!s[k]) return k; }); await tapCell(c); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    }
+    await idle();
+    ok(await p.evaluate(() => { const sc = G.st.scans[0].find(s => s.tr); return sc && sc.k >= 1 && G.st.log.some(m => m.by === 1 && m.tr != null); }), name + ': my ESM ship traced the enemy ship that used a skill');
+    await shot('trace');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
