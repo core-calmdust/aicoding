@@ -60,7 +60,7 @@ document.body.insertAdjacentHTML('beforeend', `
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 <div class="mt-strip" id="mtStrip" role="button"></div>`);
 $('.side-in').insertAdjacentHTML('afterbegin', '<div class="card ol-watch hidden" id="olWatch" aria-live="polite"></div>');
-// (Kōnane has no draws: no draw-offer button)
+// (no draw offers: Fox and Geese has no draws)
 $('#segMode').insertAdjacentHTML('beforeend', '<button data-v="online" data-i18n="ol.title"></button>');
 $('#resultOverlay .modal-actions').insertAdjacentHTML('beforebegin', '<div class="ol-res hidden" id="olRes"></div>');
 // the new-game dialog: "online" shows a short description and opens the online dialog
@@ -279,7 +279,7 @@ function olDetach(keepMode) {
   const s = n.saved;
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; sel = null; hintList = null;
   settings.mode = s.mode === 'online' ? 'pvp' : s.mode;
-  setVariant(s.gv); setQuietG(s.gq); startSpec = null; drawLines();
+  setVariant(s.gv); setQuietG(s.gq); if (s.first) setFirst(s.first); startSpec = null; drawLines();
   setFirst(s.first); moves = s.moves; cur = s.cur; evals = s.evals; humanColor = s.humanColor; rgame = s.rgame; reviewing = cur !== moves.length;
   gameOverShown = statusAt(moves.length).over;
   update(false); olWatchRender(); dockRender(); afterPosition();
@@ -302,7 +302,7 @@ function onNetGame(gid, g) {
   if (!st.ok && !net.warned) { net.warned = true; toast(t('ol.illegal'), 2500); console.warn('illegal online move at', st.bad); }
   const remote = st.moves;
   if (first || gv !== g.v) {
-    setVariant(g.v); setQuietG(E.DEFAULT_QUIET); startSpec = null; drawLines();   // (online games: the default quiet-move limit)
+    setVariant(g.v); setQuietG(E.DEFAULT_QUIET); setFirst(P1); startSpec = null; drawLines();   // (online games: the default quiet-move limit)
     setFirst(P1); moves = remote.slice(); cur = moves.length;   // (online games: the fox moves first)
     reviewing = false; evals = []; humanColor = net.me > 0 ? net.me : P1;
     update(false);

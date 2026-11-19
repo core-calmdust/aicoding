@@ -40,7 +40,7 @@ PRES_GONE = 300000      # presence: t older than this = owner gone
 # into <host game>/database.rules.json under <node>/ (the page sets window.FIREBASE_ROOT = '<node>/'; Alquerque: OL_DB_PREFIX).
 # The host game keeps its data at the root. At most MAX_SHARED games per database (the published rules must stay under 256 KiB;
 # one game is about 45 KB). Groups: shogi ← chess, xiangqi, janggi · reversi ← go, gomoku, hex · checkers ← ugolki, fanorona,
-# alquerque · tafl ← agon (+ latrunculi, foxgeese once their online play is written) · backgammon ← ur, senet (+ patolli) ·
+# alquerque · tafl ← agon, latrunculi, foxgeese (full: 4) · backgammon ← ur, senet (+ patolli) ·
 # morris ← mancala, connect4, dots · konane ← amazons, ludo (one free place for new titles).
 MAX_SHARED = 4
 RULES_MAX = 256 * 1024
@@ -123,6 +123,17 @@ GAMES = {
     'agon': dict(host=('tafl', 'agon'), first='b', alt=True, tckey='tc', tcs={'std': (420000, 0, 5000), 'place': (480000, 0, 5000)},
                  legacy_byo=None, free=0, imm=['tc', 'v'], draw=True, abandon=True, hist=True, moves_max=6000, bg=False,
                  variant=('v', ['std', 'place'])),
+    # Ludus latrunculorum (2026-11-19): under the node latrunculi/ of the Tafl project; v = tc = 'seneca' / 'piso' / 'quintana';
+    # b = Black (moves first; the placing phase alternates too); moves are 3 K64 chars each (from, to, the index among the legal
+    # moves with that from / to — the removal of a turned-over counter is part of a move); a game can end drawn, no draw offers
+    'latrunculi': dict(host=('tafl', 'latrunculi'), first='b', alt=True, tckey='tc', tcs={'seneca': (480000, 0, 5000), 'piso': (480000, 0, 5000), 'quintana': (420000, 0, 5000)},
+                       legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=6000, bg=False,
+                       variant=('v', ['seneca', 'piso', 'quintana'])),
+    # Fox and Geese (2026-11-19): under the node foxgeese/ of the Tafl project; v = tc = 'g15' / 'g17' / 'g13' / 'g13n';
+    # b = the fox (moves first online, the default quiet limit); moves are 3 K64 chars each (a multiple jump is one move); no draws
+    'foxgeese': dict(host=('tafl', 'foxgeese'), first='b', alt=True, tckey='tc', tcs={'g15': (300000, 0, 5000), 'g17': (300000, 0, 5000), 'g13': (300000, 0, 5000), 'g13n': (300000, 0, 5000)},
+                     legacy_byo=None, free=0, imm=['tc', 'v'], draw=False, abandon=True, hist=True, moves_max=6000, bg=False,
+                     variant=('v', ['g15', 'g17', 'g13', 'g13n'])),
     # Royal Game of Ur: v = tc = 'finkel' / 'blitz' / 'masters'; b = Light (moves first). Extra turns
     # (rosettes, blitz captures) and the dice commit–reveal tokens (the side not to move reveals first): nt names the next writer;
     # every action has 30 s (free) and no reserve; dkey: sync/<uid>/k keeps the private dice key (as backgammon)

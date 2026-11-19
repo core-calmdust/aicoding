@@ -55,7 +55,7 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - パズル（同 gen_content.js、PZBook v2）：「N 手で駒を取れ」＝テーマ t2・t3・t4（駒を取れ）＋ corner（隅と辺）・double（テーマ別）、各20問。最短がちょうど N 手・初手は2通りまで・（2手は）効かない挟みが別にある局面だけ。
 - コーチ（coach.js、ja/en）：対局中に分析（振り返り）を開くとコーチの箱は隠れて振り返りがその位置に出る（閉じるとコーチに戻る）。候補手は方針が同じでも最大3手まで出す。方針分類＝勝ち筋・2個挟む・挟む・助ける・守る・跳ぶ・寄せる・並べる／離して置く。置く段階は定跡ではなく原則（並べる・隅を避ける）で解説。
 - 振り返り解説：挟みを逃した・助けを逃した・挟まれる形を作った。
-- オンライン：準備中（Firebase は専用プロジェクトを作らず、タフルのプロジェクト tafl-multiplay の節 latrunculi/ に入れる（2026-11-16 統合））（firebase-config.js が null）。作成後に secrules.py へ追加。
+- **オンライン対戦（2026-11-19 ユーザー：オンライン対応に）**：タフルのプロジェクト `tafl-multiplay` の節 `latrunculi/`（`firebase-config.js` の `FIREBASE_ROOT`、前のプロジェクトはない）。`secrules.py` の latrunculi（host=('tafl','latrunculi')、3ルール＝`v`／`tc`：シェードラー式・ピソ式 8分＋1手5秒、クインタナ式 7分＋1手5秒、黒が先手で交互、引き分けの提案なし（終局の引き分けはある）、放棄あり）→ `tafl/database.rules.json`。**tafl-multiplay にルールを公開するまでは「準備中」**。手は1手3文字（移動元・移動先・同じ元と先の合法手の中の番号。置く手・取り除きも含む）、両者がエンジンで再生して違法手を拒否。ロビー・レート戦（初期1500）・部屋・観戦・再戦・チャット・Google 連携は他のゲームと同じ（online.js／online-ui.js）。大百科のレート戦は相手 AI（フル機能版）／オンラインを選べる（atlas/app.js の FULL_AI_RT）。`?mock=1` で2タブの対局を確認済み（クインタナ式・シェードラー式とも最後まで）。
 - 言語：**14言語**（2026-11-16。残り12言語は i18n-lt-more.js・coach-i18n.js・lux.json。言語メニューは app.js の SUPPORTED / window.LT_LANGS。検査：全言語でキー206・コーチ113の抜けなし、差し込み記号一致、PC／スマホで表示確認。zh の題名「罗马强盗棋」は定訳未確認）。
 
 ## 3D（フル機能版 ?skin=atlas、2026-11-16）
@@ -73,7 +73,7 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - サムネイル：atlas/img/boardic-latrunculi-*・board-latrunculi-*・pc3-latrunculi-*.webp（atlas/tools/boardicon.html?game=latrunculi&look=…[&pcs=…]）。
 
 ## 大百科への登録（2026-11-16、コナネと同じ形）
-- **台帳**：`shared/atlas.js` の GAMES（`alpha: true`、released 2026-11-16、tags＝historical・ai・rated・daily・lessons・puzzles・variants・mobile。オンラインは Firebase 未作成なので `online` タグなし）と READ（パズル・レッスン・今日の一問・レート・ルール）。total＝パズル250・レッスン7。名前は14言語（ja「ルドゥス・ラトルンクロルム」／en「Ludus Latrunculorum」／zh「罗马兵棋」／ru「Латрункули」ほか）。
+- **台帳**：`shared/atlas.js` の GAMES（`alpha: true`、released 2026-11-16、tags＝historical・ai・rated・daily・lessons・puzzles・variants・mobile。オンラインは 2026-11-19 から `online` タグあり（旧：Firebase 未作成なので `online` タグなし）と READ（パズル・レッスン・今日の一問・レート・ルール）。total＝パズル250・レッスン7。名前は14言語（ja「ルドゥス・ラトルンクロルム」／en「Ludus Latrunculorum」／zh「罗马兵棋」／ru「Латрункули」ほか）。
 - **文言（14言語）**：`atlas/i18n.js` の `about.latrunculi`・`hist.latrunculi`、`atlas/gamelist-i18n.js` の一言、`shared/atlas-updates.js` の公開行、トップページ `index.html` の `lt.title`・`lt.desc`。
 - **読み込み**：`atlas/lazy.js` に models／games／rules の3本。`atlas/app.js` の R3（アイコン images/atlas/latrunculi.webp は仮のまま）と FULL_SKIN。
 - **ちゃぶ台対局**（`atlas/games/latrunculi.js`）：エンジン（`../latrunculi/engine.js` をページと Worker で）そのままの3ルール。カードの「種目」＝シェードラー式・ピソ式・クインタナ式（size 1・2・3。フル機能版へは `&size=` で渡り、`atlas/skin/latrunculi.js` が rule に直す）。モードは 対戦（AI Lv.1〜20・二人で対戦）／レート戦・パズル・レッスンはフル機能版（`?skin=atlas`）を開く。入力は2Dと同じ（置く＝空きマス、動かす＝駒→行き先、取り除く駒が複数なら先に選ぶ・1個なら自動）。置く＝落ちる、1歩・クインタナの直進＝滑る、跳び＝味方を越える弧、挟まれた駒＝跳ねて裏返る（**裏返った駒には細い赤い輪**）、助けたら表に戻る、取る＝浮いて消える。HUD の数字は置く間＝残りの手持ち、そのあと＝取った数。待った・ヒント・投了。引き分けの申し込みはなし（引き分けは「取った数が同じ」で終わったときだけ）。3D駒の切り替え（`atlas-pieces`）に追従。

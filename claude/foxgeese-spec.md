@@ -125,7 +125,7 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
 - レッスン6（tools/gen_content.js、正解集合はエンジンで計算。**2026-11-16 に g15（既定ルール）で作り直し**：lessons.json の `rule`・各問の `s.rule`＝g15。`FG_RULE=…` で別ルール）：狐3（取れるガチョウを探す・続けて取る・2羽を同時に狙う）、ガチョウ3（跳ばれない・閉じ込める・2手で閉じ込める）。各5問。準備ステップ（ramp）は未実装。
 - パズル（PZBook v2、**g13＝13羽（伝統）のまま**。`puzzles.json` の `rule`。一覧の説明と設定の案内に「パズルは13羽（伝統）のルールです」と出す（`pz.rule`）。作り直すときは `PZ_RULE=…`）：閉じ込めろ＝w2・w3・w4（ガチョウ番）、取れ＝t2・t3（狐番）。最短がちょうど N 手・初手は2通りまで。正解でない手を「ミス」とは言わず、手数切れまで指せる。
 - コーチ（ja/en）：狐＝勝ち筋・続けて取る・取る・2羽を狙う・狙う・広い所へ・位置を変える／ガチョウ＝閉じ込める・守る・詰める・形を整える・誘う。
-- オンライン：準備中（Firebase は専用プロジェクトを作らず、タフルのプロジェクト tafl-multiplay の節 foxgeese/ に入れる（2026-11-16 統合））。言語：**14言語**（2026-11-16。残り12言語は i18n-fg-more.js・coach-i18n.js・lux.json、`window.FG_LANGS`。全言語でキー182・コーチ118の抜けなし。2026-11-16 の4ルール・手番選択の追加後はキー194・コーチ118、PC／スマホで表示確認）。コーチの要約の札は長い言語で折り返す（index.html の `.ck-sum span`）。
+- **オンライン対戦（2026-11-19 ユーザー：オンライン対応に）**：タフルのプロジェクト `tafl-multiplay` の節 `foxgeese/`（前のプロジェクトはない）。`secrules.py` の foxgeese（host=('tafl','foxgeese')、4ルール＝`v`／`tc`、各5分＋1手5秒、狐が先手で交互、引き分けなし、放棄あり）→ `tafl/database.rules.json`。**tafl-multiplay にルールを公開するまでは「準備中」**。オンラインは常に狐が先手・取りなしの手数制限は既定40手ずつ（online.js の replay と online-ui.js が setFirst(P1)・setQuietG(既定) にし、抜けるときに元へ戻す）。手は1手3文字（連続跳びは1手、同じ元と先の手の中の番号）。大百科のレート戦は相手 AI／オンラインを選べる（FULL_AI_RT）。`?mock=1` で2タブの対局を確認済み。
 
 ## 3D（フル機能版 ?skin=atlas、2026-11-16）
 - atlas/models/foxgeese.js（**2026-11-19 作り直し**。ユーザー：2Dの作り込みを活かして、ただしそっくり同じでなく3Dならではのコンセプトで）。2Dと同じ6テーマ・同じキー（盤 atlas-foxgeese-look：meadow 既定・oak・bauhaus・lux・norse・delft、駒 atlas-foxgeese-pc3：cute 既定・wood・bauhaus・lux・norse・delft。旧キーは近いものに読み替え：slate→norse、linen→delft、night→lux、paper→bauhaus／marble・bronze→lux、pewter→norse、paint→bauhaus、clay→wood）。
@@ -134,7 +134,7 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
   - 画像：盤アイコン `atlas/img/boardic-foxgeese-<盤>.webp`（tools/boardicon.html）、盤サムネ `board-foxgeese-<盤>.webp`（boardicon.html ?pcs=…&el=42、640×480）、駒 `pc3-foxgeese-<駒>.webp`（新設 tools/fgpiece.html、640×428 el=25）。
 
 ## 大百科への登録（2026-11-16、コナネと同じ形）
-- **台帳**：`shared/atlas.js` の GAMES（`alpha: true`、released 2026-11-16、tags＝historical・ai・rated・daily・lessons・puzzles・variants・mobile。オンラインは Firebase 未作成なので `online` タグなし）と READ。total＝パズル250・レッスン6。名前は14言語（ja「狐とガチョウ」／en「Fox and Geese」ほか）。
+- **台帳**：`shared/atlas.js` の GAMES（`alpha: true`、released 2026-11-16、tags＝historical・ai・rated・daily・lessons・puzzles・variants・mobile。オンラインは 2026-11-19 から `online` タグあり（旧：Firebase 未作成なので `online` タグなし）と READ。total＝パズル250・レッスン6。名前は14言語（ja「狐とガチョウ」／en「Fox and Geese」ほか）。
 - **文言（14言語）**：`atlas/i18n.js` の `about.foxgeese`・`hist.foxgeese`、`atlas/gamelist-i18n.js` の一言、`shared/atlas-updates.js` の公開行、トップページ `index.html` の `fg.title`・`fg.desc`。
 - **読み込み**：`atlas/lazy.js` に models／games／rules の3本。`atlas/app.js` の R3（アイコン images/atlas/foxgeese.webp は仮のまま）と FULL_SKIN。
 - **ちゃぶ台対局**（`atlas/games/foxgeese.js`）：エンジン（`../foxgeese/engine.js` をページと Worker で）そのままの4ルール。カードの「種目」＝15羽（後退なし、既定）・17羽・13羽（伝統）・13羽（改変）（size 15・17・13・113。フル機能版へは `&size=` で渡り、`atlas/skin/foxgeese.js` が rule に直す）。手番は上の「手番の選択」。盤は回さない（ガチョウがいつも手前）。モードは 対戦（AI Lv.1〜20・二人で対戦）／レート戦・パズル・レッスンはフル機能版を開く。狐の連続跳びは着地点を1つずつタップし、まだ跳べる所で止まるときは同じ点（か狐）をもう一度タップ。HUD の数字は狐＝取った数、ガチョウ＝残りの数。待った・ヒント・投了。3D駒の切り替え（`atlas-pieces`）に追従。
@@ -147,7 +147,6 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
 ## 未着手（次の作業）
 - レッスンの準備ステップ、g15 のパズル（いまは g13）、g17 のレッスン／パズル。
 - レート戦の基準値 RT_LV（Lv ごとのレート）は **g13 のころの値**のまま（レート戦は 2026-11-16 から g15）。2026-11-16 のガチョウ AI 強化（engine.js v6）で上位レベルのガチョウの強さが大きく変わったので、g15 で測り直す。
-- `online.js` の VARIANTS が他ゲーム（s8/s6）の流用のまま（Firebase 未作成で動いていない）。オンラインを作るときに g15 などへ直す。
 - 大百科：正式アイコン（icons3d.js。いまは仮の images/atlas/foxgeese.webp）、3D卓でのレート戦・パズル・レッスン（いまはフル機能版を開く）、種目カードを 2D のルールカードから作る `atlas/kindart.js`。
 - AI の強化（狐側：要塞・時間切れ狙い。完全解析、WASM）、レート基準値の実測。オンライン対戦（tafl-multiplay の節 foxgeese/）。
 
