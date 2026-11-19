@@ -34,6 +34,7 @@
 
 ## 本編のマルチスレッド（2026-11-14）
 - ファノロナと同じ組（`shared/mtengine.js`、`engine_mt.wasm`＝YBW＋busy marks、Praline）をアルケルケのページでも有効にした。ページの `alquerque/sw.js`（ページの分離。中身はファノロナと同じ）、エンジンのファイルは `../fanorona/`（fanorona/app.js の `MT_DIR`）。主スレッドは `../fanorona/engine.js?…&g=alq&mt=1` で、アルケルケの終盤DB（alqeg）を共有メモリに読み、補助も引く。対象はファノロナと同じ（分析・ヒント・コーチ・検討ボックス・時間で考える四段・五段・PRO のスレッド数）。
+- **ワーカーの入口はアルケルケのフォルダ（2026-11-20）**：`alquerque/engine.js`・`alquerque/mt-helper.js` は `../fanorona/` の同名ファイルを `importScripts` するだけの入口（エンジンのファイルは `self.FANORONA_BASE` から読む）。ワーカーのスクリプトはそのURLのスコープの Service Worker に振り分けられるため、`../fanorona/engine.js` を直接ワーカーにすると COOP モード（Safari・Firefox などでマルチスレッドをオン）で COEP ヘッダーが付かずブロックされ、AI がまったく指さなかった（DIP の Chrome では起きない）。大百科の3D（`atlas/games/fanorona.js`）は分離しないページなので `../fanorona/engine.js?…&g=alq` のまま。
 - 2026-11-08 にアルケルケを1スレッドにした理由は記録がなく、性能の問題がないか調べてから有効にした：
   - 「本当に同時」のシミュレーション（fanorona/tools/mtsim をアルケルケ用に：`set_rule(5,5)`・`set_alq(1)`・alqeg、乱数の16局面、1スレッドの予算 3M局面で届く深さまで）：同じ深さまでの時間 2・4・8スレッド **×1.88／×2.96／×4.45**（幾何平均 ×1.84／×2.81／×4.13）。遅くなる局面はない（読みの少ない局面でも ×1.4 以上）。ファノロナ（×1.83／×3.43／×5.78）より伸びが小さいのは盤が小さく取りが義務で手が少ないためで、悪化ではない。
   - headless Chrome（作業機、2コア）：ページが分離され（crossOriginIsolated）、組で解析が動く。終盤DBの局面（6局面）で組と1スレッドの解析の値・手・exact が全部一致。

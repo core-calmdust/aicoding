@@ -132,7 +132,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = GM.engine || 'engine.js?v=fb5s-pro1-mt1-aq1';
+const ENGINE_URL = GM.engine || 'engine.js?v=fb5s-pro1-mt1-aq2';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -153,13 +153,14 @@ function noteNps(nodes, ms) {
 }
 let aiW = makeWorker(), anaW = makeWorker();
 // multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」; the Alquerque page too since
-// 2026-11-14 — its own sw.js, the engine files from ../fanorona/): analysis, hints, the coach, the review box and the levels that think by time (四段・五段, rated
+// 2026-11-14 — its own sw.js, the engine files from ../fanorona/ through the stubs alquerque/engine.js and mt-helper.js): analysis, hints, the coach, the review box and the levels that think by time (四段・五段, rated
 // games too) go to the pool of threads when it is free (the lead keeps the level's own limits; the helpers fill the shared
 // table, so it reads deeper in the same time). The levels decided by depth / positions (15級〜三段) stay on the one-thread
 // workers, as does Fanoron-Telo (solved in JavaScript).
 const MT_DIR = GID === 'fanorona' ? '' : '../fanorona/';
 const MTP = window.MTEngine && (GID === 'fanorona' || GID === 'alquerque') ? MTEngine.use({
-  wasm: MT_DIR + 'engine_mt.wasm?v=7', lead: ENGINE_URL + '&mt=1', helper: MT_DIR + 'mt-helper.js?v=2', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
+  wasm: MT_DIR + 'engine_mt.wasm?v=7', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2',   // (Alquerque: its own alquerque/mt-helper.js, which loads ours — a worker's script must be in the page's own scope)
+  slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => m.rule === 'telo' ? null : { io: E.setupIO(m.start, m.moves || []), rk: E.ruleKey() },   // (the page's rule is the job's: gv)
 }) : null;
