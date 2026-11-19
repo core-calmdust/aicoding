@@ -3,11 +3,11 @@
 // matches) and genbook.js (opening books). emuWorker(file) → ask(message) → the 'result' message (by id).
 'use strict';
 const vm = require('vm'), fs = require('fs'), { fileURLToPath, pathToFileURL } = require('url');
-function emuWorker(file) {
+function emuWorker(file, search) {   // (search: the worker URL's query, e.g. '?book=1')
   const msgs = new Map(), listeners = []; let seq = 0;
   const ctx = { console, URL, Response, DecompressionStream, TextDecoder, TextEncoder, setTimeout, clearTimeout, setInterval, clearInterval, performance, Blob,
     atob: x => Buffer.from(x, 'base64').toString('binary'), btoa: x => Buffer.from(x, 'binary').toString('base64') };
-  ctx.self = ctx; ctx.location = new URL(pathToFileURL(file).href);
+  ctx.self = ctx; ctx.location = new URL(pathToFileURL(file).href + (search || ''));
   ctx.WebAssembly = Object.assign(Object.create(WebAssembly), { instantiateStreaming: undefined, compileStreaming: undefined });   // (the arrayBuffer path)
   const fp = u => fileURLToPath(new URL(String(u), ctx.location.href).href.replace(/[?#].*$/, ''));
   ctx.fetch = async u => { try { return new Response(fs.readFileSync(fp(u))); } catch (e) { return new Response(null, { status: 404 }); } };
