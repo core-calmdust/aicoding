@@ -146,6 +146,7 @@ static TLS int side;
 #define XQ_ST 400
 static TLS int xqOn = 0, xqTop = 0;         // NNUE (see below): on, accumulator stack top
 static TLS u8 xqOk[XQ_ST];
+static TLS u8 PCS[MAXPLY + 2], PTO[MAXPLY + 2];   // (search v3) the move made at each ply: the moved piece (0: a null move / pass), its to-point
 static TLS int KSQ[2];
 static TLS u64 KEY;
 // the points of each colour's pieces as a 90-bit set (BB[c][0]: points 0..63, BB[c][1]: 64..89), kept with B; walked in
@@ -198,7 +199,12 @@ static int attackedKing(int c) {
 #endif
 #define XQ_QA 127
 #define XQ_QB 64
-#define XQ_K 220                       // engine points per logit unit (fitted to the linear evaluation's scale)
+#ifndef XQ_K
+// engine points per logit unit of the network's output. (2026-11-20) 430: the hand evaluation's own scale (`jg scale`: the game
+// result ~ sigmoid(score / 430)), so the search's margins (futility, null move, aspiration, ProbCut), tuned on the hand
+// evaluation, mean the same with the network; it was 220, xiangqi's (its linear evaluation's scale), when this was copied.
+#define XQ_K 430
+#endif
 static i16 xqW1[XQ_IN * XQ_H], xqW2[2 * XQ_H];
 static i32 xqB1[XQ_H], xqB2;
 static TLS i16 xqAcc[XQ_ST + 1][2][XQ_H];   // (slot XQ_ST: scratch for positions deeper than the stack)
@@ -422,6 +428,7 @@ static void ttStore(u64 key, int d, int flag, int v, Move m, int ply) {
 #define PL_SP_FIELDS \
   int inChk, nnue; u64 key, bb[2][2]; int side, hn, hirr, ksq[2]; \
   u8 lg[SP_MV], gc[SP_MV];   /* the moves' place (LMR, futility) and gives check */ \
+  u8 pcs[2], pto[2];         /* the moves 1 and 2 plies back (continuation history, counter move) */ \
   u8 B[90]; u8 hc[SP_HK]; u64 hk[SP_HK];   /* the board, the repetition history since the last capture */
 #include "../shared/praline/praline.h"
 EXPORT(new_game) void new_game(void) { memset(PL_TT, 0, sizeof(PL_TT)); memset(busyT, 0, sizeof(busyT)); ttAge = 0; }
@@ -476,6 +483,7 @@ static int spFillPos(SPt *s) {   // the owner: this node's position
 static void spLoadPos(const SPt *s, int top, int fresh) {   // a thread joining s (fresh: the NNUE accumulator at slot top anew)
   memcpy(B, s->B, 90); side = s->side; KEY = s->key; memcpy(BB, s->bb, sizeof(BB)); KSQ[0] = s->ksq[0]; KSQ[1] = s->ksq[1];
   hn = s->hn; hirr = s->hirr; memcpy(HK + hirr, s->hk, 8 * (hn - hirr)); memcpy(HC + hirr, s->hc, hn - hirr);
+  for (int b = 0; b < 2; b++) if (s->ply > b) { PCS[s->ply - 1 - b] = s->pcs[b]; PTO[s->ply - 1 - b] = s->pto[b]; }
   xqOn = s->nnue; xqTop = top;
   if (fresh && xqOn && top < XQ_ST) xqRefresh(top);
 }
@@ -500,12 +508,46 @@ static int repState(void) {
   return 0;
 }
 static int bigPieces(int c) { FOR_BITS(BB[c][0], BB[c][1], s) int t = TYPE(B[s]); if (t == ROOK || t == HORSE || t == CANNON) return 1; END_BITS return 0; }
+static int svOff;   // 1 during values(): see below
+// ---- search v3 (2026-11-20): continuation history + counter move (SV3_CH), ProbCut (SV3_PC); claude/janggi-spec.md「探索 v3」
+#ifndef SV3_CH
+#define SV3_CH 0   // (not adopted: same nodes +21, same time −32 Elo; MODEL_CARD.md「探索 v3（試したもの）」)
+#endif
+#ifndef SV3_PC
+#define SV3_PC 0   // (not adopted: same nodes −3 Elo)
+#endif
+#ifndef PC_M
+#define PC_M 250   // ProbCut: the margin over beta
+#endif
+#if SV3_CH
+// continuation history (one table for the move 1 and 2 plies back: the earlier move's piece (with its colour) and to-point ×
+// this move's piece type and to-point), bounded by the "gravity" update; the counter move of the opponent's last move. Shared
+// by the threads (a lost update is harmless).
+static i16 CH[16 * 90][8 * 90];
+static Move CMV[16][90];
+static inline int chIdx(int ply, int back) { int p = ply - back; return p >= 0 && PCS[p] ? PCS[p] * 90 + PTO[p] : -1; }
+static inline int chScore(int ply, Move m) {
+  int k = TYPE(B[MF(m)]) * 90 + MT(m), a = chIdx(ply, 1), b = chIdx(ply, 2);
+  return (a >= 0 ? CH[a][k] : 0) + (b >= 0 ? CH[b][k] : 0);
+}
+static inline void chUpd(int ply, Move m, int bonus) {   // (B: before the move is made)
+  int k = TYPE(B[MF(m)]) * 90 + MT(m);
+  for (int back = 1; back <= 2; back++) { int a = chIdx(ply, back); if (a < 0) continue; i16 *x = &CH[a][k]; *x = (i16)(*x + bonus - *x * (bonus < 0 ? -bonus : bonus) / 16384); }
+}
+static inline int chBonus(int depth) { int b = 32 * depth * depth; return b > 1600 ? 1600 : b; }
+#endif
 static inline int moveScore(Move m, Move ttm, int ply) {
   if (m == ttm) return 1 << 30;
   u8 v = B[MT(m)];
   if (v) return (1 << 28) + PV_[TYPE(v)] * 16 - PV_[TYPE(B[MF(m)])] / 8;
   if (m == killers[ply][0]) return 1 << 27;
   if (m == killers[ply][1]) return (1 << 27) - 1;
+#if SV3_CH
+  if (!svOff) {
+    if (ply > 0 && PCS[ply - 1] && CMV[PCS[ply - 1]][PTO[ply - 1]] == m) return (1 << 27) - 2;
+    return hist[side][MF(m)][MT(m)] + 2 * chScore(ply, m);
+  }
+#endif
   return hist[side][MF(m)][MT(m)];
 }
 // ---- search v2 (2026-11-13): the pruning of the tafl / chess engines (each part can be switched off for a measurement: -DSV_x=0)
@@ -549,7 +591,7 @@ static inline int moveScore(Move m, Move ttm, int ply) {
 #define LMP_B 3
 #endif
 static u8 lmrT[64][64]; static int lmrInit;
-static int svOff;   // 1 during values(): the fixed-depth search of the weak levels (Lv.1-12) stays as it was (shared: only the main thread sets it)
+// (svOff: declared above) 1 during values(): the fixed-depth search of the weak levels (Lv.1-12) stays as it was (shared: only the main thread sets it)
 static void initLmr(void) {   // floor(0.3 + ln(d) ln(n) / 2.2) without libm: the logs by a table of ln(1..63) x 1000
   static const short LN[64] = { 0, 0, 693, 1099, 1386, 1609, 1792, 1946, 2079, 2197, 2303, 2398, 2485, 2565, 2639, 2708, 2773, 2833, 2890, 2944, 2996,
     3045, 3091, 3135, 3178, 3219, 3258, 3296, 3332, 3367, 3401, 3434, 3466, 3497, 3526, 3555, 3584, 3611, 3638, 3664, 3689, 3714, 3738, 3761,
@@ -649,7 +691,7 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
     // null move
     if (nullOk && depth >= 3 && stat >= beta && bigPieces(me) && beta > -WINT && beta < WINT) {
       int R = SV_NMP && !svOff ? 3 + depth / 4 + ((stat - beta) / 200 > 2 ? 2 : (stat - beta) / 200) : 2 + (depth >= 7);
-      side ^= 1; KEY ^= ZSIDE; HK[hn] = KEY; HC[hn] = 0; hn++;
+      side ^= 1; KEY ^= ZSIDE; HK[hn] = KEY; HC[hn] = 0; hn++; PCS[ply] = 0;
       int saveIrr = hirr; hirr = hn - 1;   // the null move cuts repetition chains
       int v = -search(depth - 1 - R, -beta, -beta + 1, ply + 1, 0, 0);
       hn--; hirr = saveIrr; side ^= 1; KEY ^= ZSIDE;
@@ -657,6 +699,31 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
       if (v >= beta) return v >= WINT ? beta : v;
     }
   }
+#if SV3_PC
+  // ProbCut: a capture that wins enough by the quiescence search and then by a search 4 plies shallower against beta + PC_M
+  // cuts the node (no exchange evaluation here: the victim alone must cover the gap)
+  if (!svOff && !pv && !inChk && depth >= 5 && stat > -INF && beta > -WINT && beta < WINT - PC_M) {
+    const int rb = beta + PC_M;
+    Move C[MAXMV]; int nc = gen(C, 1), cs[MAXMV];
+    for (int i = 0; i < nc; i++) cs[i] = moveScore(C[i], ttm, ply);
+    for (int i = 0; i < nc; i++) {
+      int bi = i; for (int j = i + 1; j < nc; j++) if (cs[j] > cs[bi]) bi = j;
+      { Move tm = C[bi]; C[bi] = C[i]; C[i] = tm; int ts = cs[bi]; cs[bi] = cs[i]; cs[i] = ts; }
+      Move m = C[i];
+      if (stat + PV_[TYPE(B[MT(m)])] < rb) continue;
+      PCS[ply] = B[MF(m)]; PTO[ply] = (u8)MT(m);
+      u8 c = makeMove(m);
+      if (attackedKing(me)) { unmakeMove(m, c); continue; }
+      HK[hn] = KEY; HC[hn] = (u8)attackedKing(side); hn++;
+      int saveIrr = hirr; hirr = hn - 1;
+      int v = -qsearch(-rb, -rb + 1, ply + 1, 0);
+      if (v >= rb && !stopFlag) v = -search(depth - 4, -rb, -rb + 1, ply + 1, 0, 1);
+      hn--; hirr = saveIrr; unmakeMove(m, c);
+      if (stopFlag) return 0;
+      if (v >= rb) { ttStore(KEY, depth - 3, TT_LOWER, v, m, ply); return v; }
+    }
+  }
+#endif
   Move L[MAXMV]; int n = gen(L, 0);
   int sc[MAXMV]; for (int i = 0; i < n; i++) sc[i] = moveScore(L[i], ttm, ply);
   int best = -INF, oldAlpha = alpha, legal = 0; Move bestM = 0;
@@ -674,6 +741,7 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
     if (k < n && legal && !noSplit && depth >= splitD && (gIdle > 0 || (gWaitN > 0 && spWanted()))) {
       SPt *s = spAlloc(); int ns = 0;
       if (s && spFillPos(s)) {
+        for (int b = 0; b < 2; b++) { s->pcs[b] = ply > b ? PCS[ply - 1 - b] : 0; s->pto[b] = ply > b ? PTO[ply - 1 - b] : 0; }
         int lg2 = legal;
         for (int i = k; i < n && ns >= 0; i++) {
           int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
@@ -722,6 +790,10 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
 #define LG legal
 #endif
     int isCap = B[MT(m)] != 0;
+#if SV3_CH
+    const int chs = !svOff && !isCap ? chScore(ply, m) : 0;
+#endif
+    PCS[ply] = B[MF(m)]; PTO[ply] = (u8)MT(m);
     u8 c = makeMove(m);
     if (attackedKing(me)) { unmakeMove(m, c); continue; }
 #ifdef JG_THREADS
@@ -741,6 +813,9 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
       int red = 0;
       if (depth >= 3 && LG > 3 && !isCap && !inChk && !givesChk && m != killers[ply][0] && m != killers[ply][1]) {
         red = lmrRed(depth, LG, pv, hist[me][MF(m)][MT(m)]);
+#if SV3_CH
+        if (!svOff) { if (chs > 12000 && red) red--; else if (chs < -12000) red++; if (red > d1 - 1) red = d1 - 1 > 0 ? d1 - 1 : 0; }
+#endif
         if (red > d1 - 1) red = d1 - 1 > 0 ? d1 - 1 : 0;
       }
       v = -search(d1 - red, -alpha - 1, -alpha, ply + 1, 0, 1);
@@ -767,6 +842,12 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
 #if SV_MALUS
             if (!svOff) for (int j = 0; j < nq; j++) { i32 *g = &hist[me][MF(qm[j])][MT(qm[j])]; *g -= depth * depth; if (*g < -(1 << 24)) *g = -(1 << 24); }
 #endif
+#if SV3_CH
+            if (!svOff) {
+              int bo = chBonus(depth); chUpd(ply, m, bo); for (int j = 0; j < nq; j++) chUpd(ply, qm[j], -bo);
+              if (ply > 0 && PCS[ply - 1]) CMV[PCS[ply - 1]][PTO[ply - 1]] = m;
+            }
+#endif
           }
           break;
         }
@@ -776,7 +857,7 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
   if (!legal) {
     if (inChk) return -(WIN - ply);   // checkmate
     // no legal move but not in check: the side passes
-    side ^= 1; KEY ^= ZSIDE; HK[hn] = KEY; HC[hn] = (u8)attackedKing(side); hn++;
+    side ^= 1; KEY ^= ZSIDE; HK[hn] = KEY; HC[hn] = (u8)attackedKing(side); hn++; PCS[ply] = 0;
     int v = -search(depth - 1, -beta, -alpha, ply + 1, pv, 0);
     hn--; side ^= 1; KEY ^= ZSIDE;
     return v;
@@ -790,6 +871,10 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
 // the move i of s (the thread is at s's position) with the null window against a and the re-searches, as the one-thread loop
 static int spSearch(SPt *s, int i, int a) {
   const int b = s->beta, d1 = s->depth - 1, ply = s->ply; const Move m = s->mv[i]; const int isCap = B[MT(m)] != 0, gc = s->gc[i];
+#if SV3_CH
+  const int chs = !svOff && !isCap && !s->root ? chScore(ply, m) : 0;
+#endif
+  PCS[ply] = B[MF(m)]; PTO[ply] = (u8)MT(m);
   u8 c = makeMove(m);
   HK[hn] = KEY; HC[hn] = (u8)gc; hn++;
   int saveIrr = hirr; if (c) hirr = hn - 1;
@@ -802,6 +887,9 @@ static int spSearch(SPt *s, int i, int a) {
     const int LG = s->lg[i]; int red = 0;
     if (s->depth >= 3 && LG > 3 && !isCap && !s->inChk && !gc && m != killers[ply][0] && m != killers[ply][1]) {
       red = lmrRed(s->depth, LG, s->pv, hist[side ^ 1][MF(m)][MT(m)]);   // (after makeMove: the mover is side ^ 1)
+#if SV3_CH
+      if (!svOff) { if (chs > 12000 && red) red--; else if (chs < -12000) red++; }
+#endif
       if (red > d1 - 1) red = d1 - 1 > 0 ? d1 - 1 : 0;
     }
     v = -search(d1 - red, -a - 1, -a, ply + 1, 0, 1);
@@ -820,6 +908,9 @@ static void spCutoff(const SPt *s, int i) {
   if (killers[ply][0] != m) { killers[ply][1] = killers[ply][0]; killers[ply][0] = m; }
   i32 *h = &hist[side][MF(m)][MT(m)]; *h += s->depth * s->depth;
   if (*h > (1 << 24)) for (int x = 0; x < 2; x++) for (int y = 0; y < 90; y++) for (int q = 0; q < 90; q++) hist[x][y][q] >>= 1;
+#if SV3_CH
+  if (!svOff) { chUpd(ply, m, chBonus(s->depth)); if (ply > 0 && PCS[ply - 1]) CMV[PCS[ply - 1]][PTO[ply - 1]] = m; }
+#endif
 }
 static inline int spTop(void) { return xqTop; }   // (the NNUE accumulator's slot: a thread helping below its own split point uses the next one)
 static void waitCheck(void) { SIM_IDLE(); mtCheck(); }
@@ -891,6 +982,7 @@ static int rootSearch(int depth, int all, int alpha0, int beta0) {
   for (int i = 0; i < rootN; i++) {
     Move m = rootL[i]; u8 c = makeMove(m);
 #endif
+    PCS[0] = MF(m) == MT(m) ? 0 : B[MT(m)]; PTO[0] = (u8)MT(m);   // (after the move: the piece is on its to-point)
     HK[hn] = KEY; HC[hn] = (u8)attackedKing(side); hn++;
     int saveIrr = hirr; if (c) hirr = hn - 1;
     int v;
