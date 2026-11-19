@@ -13,7 +13,7 @@
 | `shogi-multiplay` | 将棋 | チェス `chess/`・シャンチー `xiangqi/`・チャンギ `janggi/` | `shogi/database.rules.json` |
 | `reversi-multiplay` | リバーシ | 囲碁 `go/`・五目並べ `gomoku/`・ヘックス `hex/` | `reversi/database.rules.json` |
 | `checkers-multiplay` | チェッカー | ウゴルキ `ugolki/`・ファノロナ `fanorona/`・アルケルケ `alq/` | `checkers/database.rules.json` |
-| `tafl-multiplay` | タフル | アゴン `agon/`・ラトルンクロルム `latrunculi/`・狐とガチョウ `foxgeese/`（2026-11-19 追加、もとのプロジェクトはないので公開までは「準備中」。これで満員） | `tafl/database.rules.json` |
+| `tafl-multiplay`（表示名 **Tafl-Agon-Group**、2026-11-19 改名。プロジェクトIDは変わらない） | タフル | アゴン `agon/`・ラトルンクロルム `latrunculi/`・狐とガチョウ `foxgeese/`（2026-11-19 追加、もとのプロジェクトはないので公開までは「準備中」。これで満員） | `tafl/database.rules.json` |
 | `backgammon-multi` | バックギャモン | ウル `ur/`・セネト `senet/`（今後：パトリ） | `backgammon/database.rules.json` |
 | `ninemens-multiplay` | モリス | マンカラ `mancala/`・コネクトフォー `connect4/`・ドット＆ボックス `dots/` | `morris/database.rules.json` |
 | `konane-multiplay` | コナネ | アマゾンズ `amazons/`（2026-11-16 追加。もとのプロジェクトはないので、公開までは「準備中」）・ルドー・パチーシ `ludo/`（2026-11-16 追加、同じく公開までは「準備中」） | `konane/database.rules.json` |
@@ -49,6 +49,7 @@
   タフル・アゴンの部分は今までと同じ。公開するまで2ゲームのオンラインは「準備中」（ほかは何も変わらない）。公開後は次に開いたときから使える。
 - 追加の設定（Authentication・承認済みドメイン・App Check）は不要（タフル・アゴンと同じプロジェクト）。
 - 2026-11-19 夕方：2ゲームに引き分けの提案を足した（ルールが変わったので、それより前に貼った場合は貼り直し）。
+- **2026-11-19 公開済み**（ユーザー。プロジェクトの表示名を Tafl-Agon-Group に改名）。2ゲームのオンラインは使える状態。
 
 ## 0. 現在の状態
 
