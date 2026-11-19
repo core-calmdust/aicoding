@@ -6,10 +6,13 @@
 'use strict';
 const path = require('path');
 const [dA, dB, kind, xs, Ns, seedS, ruleA, preS] = process.argv.slice(2);
-const E = [require(path.resolve(dA, 'engine.js')), require(path.resolve(dB, 'engine.js'))];
+// (2026-11-20) KN_X=1: both play search v3 (core.c mode 2, the levels with x); KN_NETA / KN_NETB: a folder with net-<rule>.bin
+// for A / B (the learned evaluation, used by v3 only)
+const req = (d, net) => { if (net) process.env.KN_NETDIR = net; else delete process.env.KN_NETDIR; const e = require(path.resolve(d, 'engine.js')); delete process.env.KN_NETDIR; return e; };
+const E = [req(dA, process.env.KN_NETA), req(dB, process.env.KN_NETB)];
 const X = (xs.split(':').concat(xs.split(':'))).slice(0, 2).map(Number), N = +Ns, rule = ruleA || 's8', pre = preS === undefined ? 4 : +preS;
 let s = (+seedS || 1) * 2654435761 >>> 0; const rnd = () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
-for (let i = 0; i < 2; i++) { E[i].setRule(rule); E[i].LEVELS[40] = kind === 't' ? { s: 1, ms: X[i] } : { s: 1, nk: X[i] }; }
+for (let i = 0; i < 2; i++) { E[i].setRule(rule); E[i].LEVELS[40] = Object.assign(kind === 't' ? { s: 1, ms: X[i] } : { s: 1, nk: X[i] }, process.env.KN_X ? { x: 1 } : {}); }
 let w = 0, l = 0, dr = 0, op = []; const ds = [0, 0], dn = [0, 0];
 for (let g = 0; g < N; g++) {
   if (g % 2 === 0) op = Array.from({ length: pre }, () => rnd());

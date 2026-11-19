@@ -72,7 +72,7 @@ let WA = null;
 function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=5'); b64 = self.KN_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=6'); b64 = self.KN_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.KN_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.KN_NOWASM)) return;
     // (2026-11-15) the SIMD build first; the one without SIMD where that does not compile (KN_NOSIMD=1 in Node to check it)
@@ -97,7 +97,7 @@ function loadCore() {
 }
 // the views of a core's memory: core-wasm.js (WA) or the lead's core_mt.wasm (MX)
 function coreViews(x, buf, io) {
-  const C = { x, io: io || new Int32Array(buf, x.iop(), 16), sq: new Int8Array(buf, x.sqp(), 100), zt: new Uint32Array(buf, x.ztp(), 402) };
+  const C = { x, buf, io: io || new Int32Array(buf, x.iop(), 16), sq: new Int8Array(buf, x.sqp(), 100), zt: new Uint32Array(buf, x.ztp(), 402) };
   if (x.aomp) { C.aom = new Int32Array(buf, x.aomp(), 512); C.aov = new Int32Array(buf, x.aovp(), 512); }
   return C;
 }
@@ -109,6 +109,20 @@ function waRule() {   // (setRule: the board size and the zobrist keys)
     C.x.setup(N);
   }
 }
+// ---- the learned evaluation (2026-11-20, claude/konane-spec.md「学習した評価」, tools/nnue/): one net a board size,
+// net-<rule>.bin.gz, loaded only when its version below is set ('' = no net: the hand evaluation, as before). Used by search v3
+// (mode 2: the levels with x and the analysis); the other levels keep search v2 and the hand evaluation. Placing a file and its
+// version here is all it takes.
+const NETV = { s8: '', s6: '', s10: '' };
+const ANA_MODE = 2;   // the analysis / hint / coach / review: search v3
+const NETS = {};      // rule → the file's bytes (Uint8Array)
+function netInto(C, k) {   // a net into a core (WA, or the threads' MX: their memory is shared, one load is enough)
+  const b = NETS[k]; if (!C || !b || !C.x.net_load) return false;
+  new Uint8Array(C.x.memory ? C.x.memory.buffer : C.buf, C.x.net_buf(), b.length).set(b);
+  return !!C.x.net_load(RULE_ORDER.indexOf(k), b.length);
+}
+function netOk(k) { const C = MX || WA; return !!(C && C.x.net_ok && C.x.net_ok(RULE_ORDER.indexOf(k))); }
+function loadNet(k, bytes) { NETS[k] = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes); const a = netInto(WA, k), b = netInto(MX, k); return a || b; }
 function kreset() { killers.length = 0; if (WA) WA.x.kclear(); if (MX) MX.x.kclear(); }
 function ttClear() { TT.clear(); if (WA) WA.x.ttclear(); if (MX) MX.x.ttclear(); }
 // (2026-11-11) The root's loops in the core too (core.c ab_best / ab_values: node for node bestMove / rootValues below — the
@@ -299,9 +313,10 @@ const LEVELS = [null,
   { s: 1, ms: 2500 },                    // 20
   // the top levels (2026-11-09, common rule「最上位のレベルの追加」): twice the time per step up to 20 s, every thread of the
   // page's pool (shared/mtsplit.js; the shared table on an isolated page) — one thread without the option
-  { s: 1, ms: 5000 },                    // 21
-  { s: 1, ms: 10000 },                   // 22
-  { s: 1, ms: 20000 },                   // 23
+  // (2026-11-20: x = search v3 and the learned evaluation when the board's net is loaded, claude/konane-spec.md「探索 v3」)
+  { s: 1, ms: 5000, x: 1 },              // 21
+  { s: 1, ms: 10000, x: 1 },             // 22
+  { s: 1, ms: 20000, x: 1 },             // 23
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 // ---------------------------------------------------------------- evaluation (side to move's view, ~100 = one spare move)
@@ -387,9 +402,9 @@ function search(pos, d, a, b, ply) {
   TT.set(key, { h2: pos.h2, d, v: sv, f: best <= a0 ? 2 : best >= b ? 1 : 0, m: bm });
   return best;
 }
-function rootValues(pos, d, v2) {   // v2: the analysis reads with search v2 (core.c); the levels by depth as before
+function rootValues(pos, d, v2) {   // v2: the analysis reads with search v3 (core.c mode 2, ANA_MODE); the levels by depth as before
   const A = abCore();
-  if (A) { abRoot(A, pos); const k = v2 && A.x.ab_values2 ? A.x.ab_values2(d, 1) : A.x.ab_values(d); abBack(A); const out = []; for (let i = 0; i < k; i++) out.push({ m: A.aom[i], v: A.aov[i] }); return out; }
+  if (A) { abRoot(A, pos); const k = v2 && A.x.ab_values2 ? A.x.ab_values2(d, A.x.ab_best3 ? ANA_MODE : 1) : A.x.ab_values(d); abBack(A); const out = []; for (let i = 0; i < k; i++) out.push({ m: A.aom[i], v: A.aov[i] }); return out; }
   const L = orderMoves(pos, pos.moves(), -1, 0), out = [];
   for (const m of L) {
     const q = pos.clone().play(m);
@@ -405,12 +420,12 @@ function helperDone(pos, L, d) {
   const e = SH.get(pos.h1, pos.h2);
   return e && e.f === 0 && e.d >= d && true && L.indexOf(e.m) >= 0 ? { move: e.m, v: e.v, depth: e.d } : null;
 }
-function bestMove(pos, maxD, ms, nk) {
+function bestMove(pos, maxD, ms, nk, mode) {   // mode (core.c): 1 search v2, 2 v3 (+ the learned evaluation when loaded)
   nodes = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; nodeLimit = nk ? nk * 1000 : Infinity; kreset();
   const L = pos.moves(); if (L.length === 1) return { move: L[0], v: 0, depth: 0 };
   let best = { move: orderMoves(pos, L, -1, 0)[0], v: 0, depth: 0 };
   const A = abCore();
-  if (A) { abRoot(A, pos); A.x.ab_best(maxD || 60); abBack(A); return { move: A.io[0], v: A.io[1], depth: A.io[2] }; }
+  if (A) { abRoot(A, pos); if (A.x.ab_best3) A.x.ab_best3(maxD || 60, mode || 1); else A.x.ab_best(maxD || 60); abBack(A); return { move: A.io[0], v: A.io[1], depth: A.io[2] }; }
   for (let d = 1; d <= (maxD || 60); d++) {
     let a = -WIN - 1, bm = null, bv = -Infinity;
     const order = orderMoves(pos, L, best.move, 0);
@@ -459,8 +474,9 @@ function think(start, moves, level, rand, rule) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best, v: vals[0].v };
   }
-  const r = bestMove(pos, L.dx || 60, L.ms || 0, L.nk || (L.ms ? 0 : 50));
-  return thinkFin(pos, r);
+  const r = bestMove(pos, L.dx || 60, L.ms || 0, L.nk || (L.ms ? 0 : 50), L.x ? 2 : 1);   // (x: search v3 + the learned evaluation — the top levels, 2026-11-20)
+  const out = thinkFin(pos, r); if (L.x && netOk(RK)) out.nn = 1;
+  return out;
 }
 // the strong steps' answer from the search's result (also the end of a search on several threads, shared/mtsplit.js)
 function thinkFin(pos, r) {
@@ -686,11 +702,28 @@ function winningMoves(start, moves, rule, budget) {
   solveBudget = Infinity; return out;
 }
 
+// (tools/check_nn.js) the evaluation of search v3 at pos and a search of v3 from an empty table — the same as the native kn probe
+function probe(pos, nk) {
+  const A = abCore(); if (!A || !A.x.ab_eval) return null;
+  nodes = 0; abRoot(A, pos); const e = A.x.ab_eval(2);
+  ttClear(); const r = bestMove(pos, 60, 0, nk, 2);
+  return { e, m: r.move, v: r.v, d: r.depth, n: nodes };
+}
 loadCore();
 setRule('s8');
-const API = { get ZT() { return [...Z1[0].slice(0, 100), ...Z1[1].slice(0, 100), ...Z2[0].slice(0, 100), ...Z2[1].slice(0, 100), ZS1, ZS2]; }, get N() { return N; }, useCore: (x, buf) => { MX = x ? coreViews(x, buf) : null; if (MX) { MX.threads = 1; MX.jobThreads = 1; waRule(); } }, get wasm() { return !!WA; }, get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, get N() { return N; }, get NN() { return NN; },
+// the nets in Node (tools, tests): the shipped files (NETV) next to this file, or every net-<rule>.bin[.gz] of the folder KN_NETDIR
+if (WA && typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+  try {
+    const fs = require('fs'), path = require('path'), zlib = require('zlib'), dir = process.env.KN_NETDIR;
+    for (const k of RULE_ORDER) {
+      const fns = dir ? [path.join(dir, `net-${k}.bin`), path.join(dir, `net-${k}.bin.gz`)] : NETV[k] ? [path.join(__dirname, `net-${k}.bin.gz`)] : [];
+      for (const fn of fns) if (fs.existsSync(fn)) { let b = fs.readFileSync(fn); if (/\.gz$/.test(fn)) b = zlib.gunzipSync(b); loadNet(k, new Uint8Array(b)); break; }
+    }
+  } catch (e) {}
+}
+const API = { get ZT() { return [...Z1[0].slice(0, 100), ...Z1[1].slice(0, 100), ...Z2[0].slice(0, 100), ...Z2[1].slice(0, 100), ZS1, ZS2]; }, get N() { return N; }, useCore: (x, buf) => { MX = x ? coreViews(x, buf) : null; if (MX) { MX.threads = 1; MX.jobThreads = 1; waRule(); for (const k in NETS) netInto(MX, k); } }, loadNet, netOk: k => netOk(k || RK), NETV, get wasm() { return !!WA; }, get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, get N() { return N; }, get NN() { return NN; },
   get RC() { return RC; }, COLOR: () => COLOR, OPEN1: () => OPEN1, ADJ: () => ADJ, sqAt, sqName, mv, mFrom, mTo, isRemove, hops, Pos, path, captured, isJump, name, parse, replay, judge,
-  LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, solve, winningMoves, evaluate, kindOf, EW, mtPlan, mtV, mtKids, mtFin, pvOf };
+  LEVELS, think, analyze, cands, probe, duelGood, duelMin, duelReply, solve, winningMoves, evaluate, kindOf, EW, mtPlan, mtV, mtKids, mtFin, pvOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
@@ -701,10 +734,15 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
         x.mt_stack(m.top); x.mt_thread(m.tls, 0);
         MX = coreViews(x, m.mem.buffer); MX.threads = navigator.hardwareConcurrency || 2;
-        waRule();
+        waRule(); for (const k in NETS) netInto(MX, k);
         self.postMessage({ type: 'mtready' });
       }).catch(err => { MX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
   }
+  // the learned evaluation (NETV): fetched and unzipped here, then loaded into the cores (MX after its 'mtinit': chained after it)
+  const netP = typeof fetch === 'function' && typeof DecompressionStream !== 'undefined' ? Promise.all(RULE_ORDER.filter(k => NETV[k]).map(k =>
+    fetch(new URL(`net-${k}.bin.gz?v=${NETV[k]}`, self.location.href)).then(r => r.ok ? new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer() : null)
+      .then(b => { if (b) loadNet(k, b); }).catch(() => {}))) : Promise.resolve();
+  queueP = queueP.then(() => netP);
   self.onmessage = e => {
     const m = e.data;
     if (m && m.type === 'mtinit') return;
