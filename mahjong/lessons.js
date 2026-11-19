@@ -510,7 +510,14 @@ function shapeTalk(beat, t, g, s, ja) {
       if (ro.kind === rt.kind && rt.mates.length) {   // the same kind of tile: what tells them apart is how many of their partners are still out there
         const a = left(rt), b = left(ro);
         txt += a < b ? (ja ? ` ${nm(o[0])}も同じような形だけど、${nm(t)}にくっつく牌は手牌や場にもう出ていて残り${a}枚。${nm(o[0])}の相手は残り${b}枚あるので、${nm(o[0])}を残したほうがお得です♪` : ` The ${nm(o[0])} looks alike, but the tiles that join the ${nm(t)} are mostly used up (${a} left); the ${nm(o[0])}'s still have ${b} — keep it.`)
-          : extra.length ? (ja ? ` ${nm(o[0])}も同じような形だけど、${nm(o[0])}を残しておくと、${extra.map(nm).join('・')}を引いたときにも手が進むんです♪` : ` The ${nm(o[0])} looks alike, but keeping it, drawing the ${extra.map(nm).join(', ')} also moves you on.`)
+          : extra.length ? (() => {
+            // (ユーザー 2026-11-20「5問目の意味合いがわからない」) say why: the tiles that would join the thrown one are taken care of by another tile already
+            const onlyT = ko.filter(x => !K(t).includes(x)), shared = rt.mates.filter(m => !onlyT.includes(m) && ko.includes(m));
+            const helper = shared.length ? [...Array(34).keys()].filter(h => h !== t && c[h] && h < 27 && ((h / 9) | 0) === ((t / 9) | 0) && shared.some(m => Math.abs(m - h) <= 2 && m !== h)) : [];
+            if (shared.length && helper.length) return ja
+              ? ` ${nm(t)}にくっつく${shared.map(nm).join('・')}は、${helper.map(nm).join('・')}にもくっつく牌。${nm(t)}を残しても${onlyT.length ? `増えるのは${onlyT.map(nm).join('・')}だけ` : '新しく使える牌は増えません'}。${nm(o[0])}を残しておけば、${extra.map(nm).join('・')}を引いたときにも手が進むので、こっちがお得です♪`
+              : ` The ${shared.map(nm).join(', ')} that would join the ${nm(t)} already join your ${helper.map(nm).join(', ')}, so keeping the ${nm(t)} adds ${onlyT.length ? 'only the ' + onlyT.map(nm).join(', ') : 'nothing new'}. Keep the ${nm(o[0])} instead: then the ${extra.map(nm).join(', ')} help too.`;
+            return ja ? ` ${nm(o[0])}も同じような形だけど、${nm(o[0])}を残しておくと、${extra.map(nm).join('・')}を引いたときにも手が進むんです♪` : ` The ${nm(o[0])} looks alike, but keeping it, drawing the ${extra.map(nm).join(', ')} also moves you on.`; })()
           : (ja ? ` ${nm(o[0])}も同じような形だけど、ほかの牌との組み合わせで${nm(o[0])}を残したほうが形になりやすいんです♪` : ` The ${nm(o[0])} looks alike, but with the rest of your hand it turns into a shape more easily — keep it.`);
       } else if (['edge', 'near', 'mid', 'hlone'].includes(ro.kind)) txt += ja ? ` いっぽう${ro.txt}。くっつく相手が多いぶん、こっちを残したほうがお得です♪` : ` Meanwhile, ${ro.txt} — more tiles can join it, so keep that one.`;
       else {
