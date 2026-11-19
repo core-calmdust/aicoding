@@ -440,6 +440,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.FanoronaEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   const V = 'v=20261101h', WV = 'v=20261120aq', GAMEQ = new URLSearchParams(self.location.search).get('g');
+  // the folder of the engine's files (wasm, tables, book): this file's, or self.FANORONA_BASE when another folder's stub loads it
+  // with importScripts (alquerque/engine.js: the worker's script has to be in the page's own service-worker scope, 2026-11-20)
+  const HERE = new URL(self.FANORONA_BASE || './', self.location.href).href;
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The network and the endgame tables
   // go into the shared memory above every thread's slot (the helpers read the same ones). The rest is the usual API.
@@ -448,7 +451,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     const simd = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })();
-    const url = new URL((simd ? 'engine_simd.wasm?' : 'engine.wasm?') + WV, self.location.href);   // (the same search; SIMD only speeds up the net)
+    const url = new URL((simd ? 'engine_simd.wasm?' : 'engine.wasm?') + WV, HERE);   // (the same search; SIMD only speeds up the net)
     readyP = (MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
       .then(m => {
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } }).exports;
@@ -458,15 +461,15 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       }) : WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
       .then(async r => {
         const X = r.instance.exports;
-        const gunzip = async (u, v) => { const res = await fetch(new URL(u + '?' + (v ? 'v=' + v : V), self.location.href)); if (!res.ok || typeof DecompressionStream !== 'function') return null; return new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); };
+        const gunzip = async (u, v) => { const res = await fetch(new URL(u + '?' + (v ? 'v=' + v : V), HERE)); if (!res.ok || typeof DecompressionStream !== 'function') return null; return new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); };
         if (GAMEQ === 'alq') {   // the Alquerque page (engine.js?…&g=alq): only its endgame tables
           try { const b = await gunzip('alqeg.bin.gz'); if (b) loadEG(X, b); } catch (e) {}
           if (ALQ_NETV && X.aqn_load) try { const b = await gunzip('alqnet.bin.gz', ALQ_NETV); if (b && loadAlqNet(X, b)) AQV_STRONG |= 16; } catch (e) {}
         } else {
           try { const b = await gunzip('evalnet.bin.gz'); if (b) loadNet(X, b); } catch (e) {}
-          try { const b = await fetch(new URL('book.json?' + V, self.location.href)); if (b.ok) BOOK = await b.json(); } catch (e) {}
+          try { const b = await fetch(new URL('book.json?' + V, HERE)); if (b.ok) BOOK = await b.json(); } catch (e) {}
           try {
-            const res = await fetch(new URL('egdb.bin.gz?' + V, self.location.href));
+            const res = await fetch(new URL('egdb.bin.gz?' + V, HERE));
             if (res.ok && typeof DecompressionStream === 'function') loadEG(X, await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
           } catch (e) {}
         }
