@@ -3,10 +3,11 @@
 # for MS ms, the moves within 8 points of the best kept, the tree grown along the K best up to PLIES plies; then the
 # 五段 setting with the book against the same without it (games from the start position: the book or the live analysis
 # picks among the near-best moves). Writes checkers/book.json — commit it if the match line is not negative.
-#   sh checkers/tools/book.sh [plies=12] [k=2] [ms=15000] [workers=10] [pairs=300]      (from the repository root)
+#   sh checkers/tools/book.sh [plies=12] [k=2] [ms=15000] [workers=cores-1] [pairs=300]      (from the repository root)
 set -e
 ROOT=$(cd "$(dirname "$0")/../.." && pwd); cd "$ROOT"
-PLIES=${1:-12}; K=${2:-2}; MS=${3:-15000}; NW=${4:-10}; PAIRS=${5:-300}; W=${BOOK_DIR:-$HOME/cbook}
+NW=${4:-$(node -e "console.log(Math.max(1, require('os').cpus().length - 1))")}   # one position per core (genbook.js threads, 2026-11-20)
+PLIES=${1:-12}; K=${2:-2}; MS=${3:-15000}; PAIRS=${5:-300}; W=${BOOK_DIR:-$HOME/cbook}
 mkdir -p "$W"
 [ -s "$W/book.json" ] || node shared/tools/genbook.js checkers --plies "$PLIES" --k "$K" --ms "$MS" --margin 8 --workers "$NW" --out "$W/book.json"
 for s in A B; do rm -rf "$W/$s"; mkdir -p "$W/$s"

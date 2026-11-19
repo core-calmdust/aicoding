@@ -60,7 +60,7 @@ URL: https://core-calmdust.github.io/aicoding/checkers/ ／ 旧版 checker.html 
 
 ## AI の強化（2026-11-17）
 - **時間配分**（`engine.c` `bestN`、`-DTM=0` で前の「時間の55%を使ったら次の深さに入らない」）：時間で考えるレベル（四段・五段・PRO の時間の段）は、反復ごとに目安の時間（持ち時間 × 0.45 × (1＋最善手の揺れ) × (1＋評価の下がり)、浅い間は1.5倍、上限は持ち時間の1.08倍）を超えたら止め、強制終了は持ち時間の1.8倍。平均の使用時間は前と同じ（1手300msで 203ms／202ms）。同じ持ち時間で600局 +142 =347 −111（約 +18 Elo）。1手が持ち時間を超えることがある（最大1.8倍）。
-- **序盤ブック**：`checkers/book.json`（無ければ前のとおりその場の分析）。book 付きのレベル（四段・五段・PRO で book）が、ブックにある局面では最善から8点以内の手を乱数で指す。作るのは Mac：`sh checkers/tools/book.sh [手数12] [上位2] [ms 15000] [並列10] [組300]`（`shared/tools/genbook.js checkers` で作り、五段の設定でブックあり対なしを対局して `checkers/book.json` に置く。結果が負でなければコミット）。
+- **序盤ブック**：`checkers/book.json`（無ければ前のとおりその場の分析）。book 付きのレベル（四段・五段・PRO で book）が、ブックにある局面では最善から8点以内の手を乱数で指す。作るのは Mac：`sh checkers/tools/book.sh [手数12] [上位2] [ms 15000] [並列＝コア数−1] [組300]`（`shared/tools/genbook.js checkers` で作り、五段の設定でブックあり対なしを対局して `checkers/book.json` に置く。結果が負でなければコミット）。genbook.js は1コア1局面の並列（2026-11-20 まで実は1コアだった）。
 - **評価関数の学習の続き**：`cd checkers && sh tools/nn/more.sh [周10]`（最後の周の続きから `loop.sh`）。`tools/native.c` は圧縮した終盤DB（CKZ2・CKZ3）も読む（`EGDB=a:b` で複数）。
 - **マルチスレッド**：`tools/mtsim`（64局面ごとに同期、6局面のうち3局面、`SIM_V2=1` で v2）で8スレッド ×4.3（v2 の前の探索は ×4.4）。分割を始める深さ 5・6 は悪化（×2.5）なので変えない。`sim.c`・`gen.py` を CKZ3 と praline_tt に合わせた。
 

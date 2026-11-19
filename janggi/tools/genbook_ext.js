@@ -1,22 +1,22 @@
 // Deepen janggi/book.json (2026-11-20): the trees of the 16 set-ups ("<FEN>|m1,m2,…") grow from their deepest positions along
 // the best moves, with the same rule as shared/tools/genbook.js (the page's worker analyses each new position for --ms; the
 // entry keeps the moves within --margin points of the best). Positions already in the book are not analysed again.
-//   node janggi/tools/genbook_ext.js [--plies 5] [--k 2,1] [--ms 5000] [--margin 12] [--workers 2] [--out janggi/book.json]
+//   node janggi/tools/genbook_ext.js [--plies 5] [--k 2,1] [--ms 5000] [--margin 12] [--workers cores-1] [--out janggi/book.json]
 //     --plies: the deepest ply to analyse; --k: per new ply, how many of a position's best moves are followed (the last value
 //     for the deeper plies). Saves after every ply (stop and run again: it goes on from the book as saved).
 //   Mac (all cores, deeper): node janggi/tools/genbook_ext.js --plies 8 --k 3,2,2,1,1 --ms 8000 --workers 12
 'use strict';
 const path = require('path'), fs = require('fs');
-const { emuWorker } = require('../../shared/tools/workeremu.js');
+const { emuThread } = require('../../shared/tools/workeremu.js');
 const DIR = path.join(__dirname, '..');
 const argOf = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 const plies = +argOf('plies', 5), KS = String(argOf('k', '2,1')).split(',').map(Number), ms = +argOf('ms', 5000), margin = +argOf('margin', 12);
-const NW = +argOf('workers', 2), out = argOf('out', path.join(DIR, 'book.json'));
+const NW = +argOf('workers', Math.max(1, require('os').cpus().length - 1)), out = argOf('out', path.join(DIR, 'book.json'));
 const E = require(path.join(DIR, 'engine.js'));
 const book = JSON.parse(fs.readFileSync(out, 'utf8'));
 const over = (st, moves) => { const { pos, hashes } = E.replay(st, moves); return E.judge(pos, hashes).over; };
 (async () => {
-  const W = Array.from({ length: NW }, () => emuWorker(path.join(DIR, 'engine.js')));
+  const W = Array.from({ length: NW }, () => emuThread(path.join(DIR, 'engine.js')));   // one thread each (2026-11-20: before, all in one thread = one core)
   const t0 = Date.now(); let done = 0;
   const starts = []; for (let x = 0; x < 4; x++) for (let y = 0; y < 4; y++) starts.push(E.startFen(x, y));
   // the book's deepest ply per set-up: its positions there are the first parents
