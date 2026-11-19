@@ -6,7 +6,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
 // move), appended to games/<gid>/moves. The turn always alternates: even count = Black (b, first player) to move.
 // Game record: b = the first player's uid (P1 = the fox), w = P2; v = the rule; bn/wn names, br/wr ratings, mb/mw clock (ms left),
 // t = time of the last move, tc = time control id; status play | over | resign | timeout | abandon | draw; win 1 / 2 / 0 (draw);
-// why = reason (few · trap · stuck · quiet · rep — Fox and Geese has no draws; online always the default quiet limit and the fox first); loser = uid (resign / timeout / abandon); offer = { by, n } draw offer.
+// why = reason (few · trap · stuck · quiet · rep — no draws by the rules, but draw offers (status draw); online always the default quiet limit and the fox first); loser = uid (resign / timeout / abandon); offer = { by, n } draw offer.
 // Every move is a transaction on the game record, so the game survives a reload / server hiccup and is resumed from the database.
 // Both clients (and spectators) replay the moves with FoxEngine and reject any illegal move.
 // Backend: Firebase (anonymous / Google auth + Realtime Database) when window.FIREBASE_CONFIG is set,
@@ -69,7 +69,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
 
   let db = null, uid = null, profile = null, ready = null;
   // anti-tamper protocol (shared/onlinesec.js): 'secure' once the new rules are published, else exactly the old behaviour
-  const SEC = window.OnlineSec ? OnlineSec.make({ db: () => db, uid: () => uid, mock: MOCK, initial: INITIAL, opts: { draw: false, abandon: true },
+  const SEC = window.OnlineSec ? OnlineSec.make({ db: () => db, uid: () => uid, mock: MOCK, initial: INITIAL, opts: { draw: true, abandon: true },
     decorate: typeof secDecorate === 'function' ? (...a) => secDecorate(...a) : null,
     onProfile: p => { profile = p; if (presOn) db.update('presence/' + uid, { rating: p.rating }).catch(() => {}); } }) : null;
   const secure = () => !!(SEC && SEC.secure());
