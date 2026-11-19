@@ -1148,7 +1148,7 @@ static TLS int rootDepth = 1;
 /* (2026-11-19) search v5 is the default search of the one-thread builds: search2 with its numbers tuned by SPSA at 300k nodes a
    move (tools/match/spsa.py --table v5, 500 rounds of 24 games): against search v4, +201 Elo at 300 ms (480 games on the Mac).
    The MT build keeps search v4 and its numbers until search v5 is measured with many threads (S5 below). */
-#ifdef MT
+#if defined(MT) && !defined(SEARCH2_MT)   /* (2026-11-19: engine_mt.wasm is built with -DSEARCH2_MT — search v5, the helpers Lazy SMP) */
 #define S5 0
 #else
 #define S5 1
@@ -1442,7 +1442,7 @@ static double qsearch(double alpha, double beta, int ply, int qd) {
 #ifdef SEARCH2
 #ifdef MT   /* (the MT build: its own table, shared by the threads without a lock — a torn entry fails the key or the move test) */
 #ifndef TT2_BITS
-#define TT2_BITS (TTM_BITS + 2)
+#define TT2_BITS 22   /* (2^22 entries x 12 bytes = 48 MB) */
 #endif
 #define TT2_MASK ((1 << TT2_BITS) - 1)
 static TT2E tt2[1 << TT2_BITS];
