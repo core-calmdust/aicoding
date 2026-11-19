@@ -8,3 +8,7 @@ reversi/tools/book-work*/nodes.jsonl
 morris/tools/solve
 amazons/tools/cand-*.jsonl
 foxgeese/.fgdata/
+
+# shogi/tools/nnue/gtrain.py: the decoder built on first use
+shogi/tools/nnue/libgfeed.*
+__pycache__/
