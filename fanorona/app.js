@@ -1472,7 +1472,7 @@ function openIntro(i) {
   $('#liStep').textContent = step; $('#liTitle').textContent = title;
   // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · goal · how to think · trivia — as much as shogi's page
   if (window.LuxIntro) {
-    LuxIntro.load('lux.json?v=1').then(X => {
+    luxLoad().then(X => {
       if (introIdx !== i || openChoiceIdx >= 0) return;
       const U = LL(X.ui || {}) || {}, x = (X.lessons || {})[s.id] || {}, H = k => LuxIntro.head(k, LANG), n = (s.problems || []).length;
       const gk = 'ls.' + s.id + '.goal', goal = t(gk) !== gk ? t(gk) : '', tr = LL(x.trivia);
@@ -1708,7 +1708,9 @@ $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.v
 
 // ====================================================================== openings (famous lines, studied move by move, then practice)
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=2').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+// (a game on these scripts without openings.json / lux.json — Alquerque: window.GAME open: false / lux: false — reads none: no 404)
+const luxLoad = () => GM.lux === false ? Promise.resolve({}) : LuxIntro.load('lux.json?v=1');
+const openReady = (GM.open === false ? Promise.reject(0) : fetch('openings.json?v=2')).then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1749,7 +1751,7 @@ function openOpeningChoice(i) {
   $('#liTitle').textContent = LL(g.title);
   if (window.LuxIntro) {   // the common opening page (shared/luxintro.js, 2026-11-11): board · lead · the two ways in · history (with trivia)
     const fig = miniSVG(lineSpec(pre), { last: last !== undefined ? mTo(last) : -1 });
-    LuxIntro.load('lux.json?v=1').then(X => {
+    luxLoad().then(X => {
       if (openChoiceIdx !== i) return;
       const U = LL(X.ui || {}) || {}, x = (X.openings || {})[g.id] || {};
       LuxIntro.opening({ step: $('#liStep').textContent, title: LL(g.title), fig, cap: U.figO, lead: opIntro(g),
