@@ -25,7 +25,7 @@
     <path d="M86 4L78 16L80 22L72 32" fill="none" stroke="#5a4026" stroke-width="1.4" opacity=".7"/>
     <g fill="#6e5232" opacity=".35"><circle cx="14" cy="14" r="1.4"/><circle cx="52" cy="10" r="1"/><circle cx="84" cy="48" r="1.2"/><circle cx="12" cy="52" r="1"/><circle cx="46" cy="88" r="1.3"/><circle cx="86" cy="84" r="1"/></g>
     <!-- the white marble helmet, alone and large (2026-11-19 user: 兜一つでOK) -->
-    <ellipse cx="48" cy="79" rx="30" ry="5.5" fill="#000" opacity=".24"/>
-    <use href="#lt-h" x="10" y="20" width="76" height="70" fill="url(#lt-w)" stroke="#8e8472" stroke-width=".7"/>
+    <ellipse cx="50" cy="67" rx="30" ry="5.5" fill="#000" opacity=".24"/>
+    <use href="#lt-h" x="14" y="8" width="76" height="70" fill="url(#lt-w)" stroke="#8e8472" stroke-width=".7"/>
   </g>
 </svg>
