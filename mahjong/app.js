@@ -1358,8 +1358,10 @@ async function startGame(opt = {}) {
       // 小町's last words, then the next problem on a fresh deal (the first time: a word that the problems begin)
       await guideWait(L.lastGood || '', t('lsNextQ'), null, true); if (!UIS || UIS.lesson !== L || G !== L.g) return;
       if (i === 1) { await guideWait(t('lsDrillsGo').replace('{n}', STG.length - 1), t('lsStart'), null); if (!UIS || UIS.lesson !== L || G !== L.g) return; }
-      L.lastGood = null; lessonGuide(null); TB.hideAll();
+      L.lastGood = null; TB.hideAll();
       const st = STG[i]; L.si = i; L.beats = st.beats.slice(); L.intro = st.intro || []; L.end = st.end || 'beats';
+      // (ユーザー 2026-11-20「問題が切り替わってからすぐ小町の会話が出てこないことがある」) her question shows at once, while the new deal is laid out
+      if (st.beats[0]) lessonGuide({ text: I18N.L(st.beats[0].say) }); else lessonGuide(null);
       const gi = L.g = G = lsGame(st, i); UIS.game = G;
       try { await G.run(); } catch (e) { if (e !== 'abort') { console.error(e); toast('Error: ' + e.message, 5000); } }
       if (G !== gi || !UIS || UIS.lesson !== L) return;
