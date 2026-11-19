@@ -73,6 +73,20 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     }
     ok(await p.evaluate(() => { const T = G.st.sides[1], d = T.ships.findIndex(s => SeaEngine.TYPES[s.t].decoy); return G.st.winner === 0 ? !T.sunk[d] : true; }), name + ': winning with the enemy decoy still afloat');
     await shot('decoy');
+    // 第5弾: the patrol boat's probe, and the enemy monitor firing back
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[19, 18, 4], [18, 3, 4]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('probe'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(44); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    await idle(); if (await p.evaluate(() => G.view !== 'enemy')) await p.evaluate(() => { G.view = 'enemy'; render(); });
+    ok(await p.evaluate(() => { const sc = G.st.scans[0].slice(-1)[0]; return sc && sc.plus === 1 && G.st.sides[1].shots[44] > 0 && document.querySelectorAll('#bsvg .sb-scan rect').length >= 2; }), name + ': probe shoots a square and reads its neighbours');
+    await shot('probe');
+    const mc = await p.evaluate(() => { const T = G.st.sides[1], i = T.ships.findIndex(s => SeaEngine.TYPES[s.t].counter); for (let k = 0; k < 100; k++) if (T.grid[k] === i && !T.shots[k]) return k; return -1; });
+    n0 = await acts(); await tapCell(mc); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(c => { const L = G.st.log, j = L.findIndex(m => m.by === 0 && m.cell === c && !m.skill); return j >= 0 && L[j + 1] && L[j + 1].via === 'counter' && L[j + 1].by === 1; }, mc), name + ': hitting the monitor brings a shell back');
+    await shot('counter');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
