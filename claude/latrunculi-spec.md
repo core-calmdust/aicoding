@@ -85,7 +85,7 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 
 ## アイコンとSS（2026-11-19 ユーザー：今の3D盤の既定をモチーフに撮り直し）
 - 大百科のアイコン `images/atlas/latrunculi.webp`（?v=13）：`atlas/icons3d.js` ICONS.latrunculi＝風化した石板の一角（溝を彫った格子・くぼみ・ひび、土で汚れた石灰岩の側面）に、本物の3D駒（models/latrunculi.js の石の兜、1.45倍）：黒・倒れた白（挟まれた）・黒が一列、奥に白。`atlas/tools/icons.html` は models/latrunculi.js も読む。icon-post.py で320×320。
-- トップのアイコン `images/icons/latrunculi.svg`（?v=4、兜は上下左右とも中央）：石板の色の地に彫った格子とひび、大きな白い大理石の兜（横顔、扇形の房飾り、丸い台座）を1つだけ（2026-11-19 ユーザー：兜一つでOK）。
+- トップのアイコン `images/icons/latrunculi.svg`（?v=5、兜は大きく、上下左右とも中央）：石板の色の地に彫った格子とひび、大きな白い大理石の兜（横顔、扇形の房飾り、丸い台座）を1つだけ（2026-11-19 ユーザー：兜一つでOK）。
 - SS：トップ `images/latrunculi.webp`（?v=2、1200幅）・一覧 `atlas/shots/latrunculi.webp`（520×390、背景 #15110b、余白3%）＝3D の既定（石板×石の兜）の対局途中を斜め上（58°）から、盤（土の盛りまで）だけで切り出し。`tools/boardicon.html?game=latrunculi&look=stone&pcs=helm&el=58&w=1600&h=1300`。
 
 ## 未着手（次の作業）
