@@ -167,3 +167,7 @@ v2（ヌルムーブ・LMP・LMR の対数表・フューティリティ・ヒ�
 - 人が遊ぶ Lv.1〜23 は変えていない。v3 を使うのは `LEVELS` に `x: 1` のあるエンジンのレベル 21〜23（＝天上Ⅰ〜Ⅲ、5・10・20秒）と分析・ヒント・コーチ・検討。
 - 天上の基準値（`RT_LV` の 24〜26＝2700／2800／2900、大百科の RATING）は**据え置き**：探索だけの差は時間固定で +20〜30（自己対局）、×0.55 で +15 前後と小さい。学習したネットを入れたら、天上とネットなしの v3 の対局で測り直して上げる（作業機の仮ネットは同じ持ち時間で +500 前後の差が出ており、本番のネットでは大きく変わる見込み）。
 - キャッシュ：`engine.js?v=10-v3nn-b3`、`core-wasm.js?v=6`、`core_mt.wasm?v=7`、`book-*.json?v=3`、大百科 `games/ugolki.js?v=19`・`rules/ugolki.js?v=13`。`ugolki/sw.js` はキャッシュを持たない（分離だけ）ので変更なし。
+
+## 推論の高速化（2026-11-20）
+- `core.c` `nnEval` を wasm SIMD に（1層目は int32 レーン、2層目は `i32x4.dot_i16x8`。値・局面数は同じ）。wasm SIMD のネットありの探索が約+50%。詳細は `ugolki/MODEL_CARD.md`「推論の高速化」。
+- 版：`core-wasm.js?v=7`、`engine.js?v=11-v3nn-b3`（app.js・index.html・bench.html・atlas/games/ugolki.js・atlas/rules/ugolki.js）、`core_mt.wasm?v=8`、app.js `…-v3b2`、atlas/lazy.js の ugolki（games 20・rules 14）。

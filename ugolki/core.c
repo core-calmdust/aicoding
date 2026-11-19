@@ -339,6 +339,9 @@ static int sv2 = 0;   // (the job's mode: the lead sets it, the helpers read it)
 #define NN_H 64
 #define NN_H2 16
 #define NN_QA 127
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+#endif
 typedef struct { short w1[NN_IN * NN_H], b1[NN_H], w2[2 * NN_H * NN_H2], w3[NN_H2]; int b2[NN_H2], b3, k; } NNet;
 static NNet NETS[4]; static int netOk[4], netUse = 1, nnOn = 0, nnRid = -1;
 static unsigned char NETBUF[sizeof(NNet) + 64];
@@ -390,7 +393,34 @@ static inline int nnLim(int left) { return left <= 0 ? 0 : left <= 2 ? 1 : left 
 static inline int nnCap(int left) { return left <= 2 ? 0 : left <= 6 ? 1 : left <= 14 ? 2 : 3; }
 // the value for the side to move, from the accumulators a (both views) of position p
 static int nnEval(const P *p, short (*a)[NN_H]) {
-  const NNet *N = &NETS[RID]; unsigned char x[2 * NN_H];
+  const NNet *N = &NETS[RID];
+#ifdef __wasm_simd128__
+  // (2026-11-20, 推論の高速化) the same whole numbers with wasm SIMD: the first layer's sums in int32 lanes (as the int sums
+  // below: no int16 overflow), clipped to 0..127, then each of the NN_H2 sums by i32x4.dot_i16x8 (exact int32 pair sums)
+  v128_t xv[2 * NN_H / 8];
+  for (int k = 0; k < 2; k++) {
+    const int c = k ? 1 - p->side : p->side, mo = c == 0 ? (p->ply + 1) >> 1 : p->ply >> 1;
+    const short *A = a[c], *L = N->w1 + (128 + nnLim(LIMIT - mo)) * NN_H, *C = N->w1 + (136 + nnCap(CAP - mo)) * NN_H;
+    const v128_t z = wasm_i32x4_splat(0), hi = wasm_i32x4_splat(NN_QA);
+    for (int i = 0; i < NN_H; i += 8) {
+      const v128_t a8 = wasm_v128_load(A + i), l8 = wasm_v128_load(L + i), c8 = wasm_v128_load(C + i);
+      v128_t lo = wasm_i32x4_add(wasm_i32x4_add(wasm_i32x4_extend_low_i16x8(a8), wasm_i32x4_extend_low_i16x8(l8)), wasm_i32x4_extend_low_i16x8(c8));
+      v128_t hh = wasm_i32x4_add(wasm_i32x4_add(wasm_i32x4_extend_high_i16x8(a8), wasm_i32x4_extend_high_i16x8(l8)), wasm_i32x4_extend_high_i16x8(c8));
+      lo = wasm_i32x4_min(wasm_i32x4_max(lo, z), hi); hh = wasm_i32x4_min(wasm_i32x4_max(hh, z), hi);
+      xv[(k * NN_H + i) / 8] = wasm_i16x8_narrow_i32x4(lo, hh);
+    }
+  }
+  long long out = N->b3;
+  for (int j = 0; j < NN_H2; j++) {
+    const short *W = N->w2 + j * 2 * NN_H; v128_t s0 = wasm_i32x4_splat(0), s1 = s0;
+    for (int i = 0; i < 2 * NN_H / 8; i += 2) { s0 = wasm_i32x4_add(s0, wasm_i32x4_dot_i16x8(xv[i], wasm_v128_load(W + 8 * i))); s1 = wasm_i32x4_add(s1, wasm_i32x4_dot_i16x8(xv[i + 1], wasm_v128_load(W + 8 * i + 8))); }
+    s0 = wasm_i32x4_add(s0, s1);
+    int h = N->b2[j] + (wasm_i32x4_extract_lane(s0, 0) + wasm_i32x4_extract_lane(s0, 1) + wasm_i32x4_extract_lane(s0, 2) + wasm_i32x4_extract_lane(s0, 3));
+    h >>= 6; if (h < 0) h = 0; else if (h > NN_QA) h = NN_QA;
+    out += (long long)h * N->w3[j];
+  }
+#else
+  unsigned char x[2 * NN_H];
   for (int k = 0; k < 2; k++) {
     const int c = k ? 1 - p->side : p->side, mo = c == 0 ? (p->ply + 1) >> 1 : p->ply >> 1;
     const short *L = N->w1 + (128 + nnLim(LIMIT - mo)) * NN_H, *C = N->w1 + (136 + nnCap(CAP - mo)) * NN_H;
@@ -403,6 +433,7 @@ static int nnEval(const P *p, short (*a)[NN_H]) {
     h >>= 6; if (h < 0) h = 0; else if (h > NN_QA) h = NN_QA;
     out += (long long)h * N->w3[j];
   }
+#endif
   long long v = out * N->k / (NN_QA * 64);
   return v > 20000 ? 20000 : v < -20000 ? -20000 : (int)v;
 }
