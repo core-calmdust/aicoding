@@ -2,7 +2,7 @@
 .hidden{display:none!important}
 .ol-only{display:none!important}
 body.in-online .ol-only{display:flex!important}
-body.ai-live #btnDraw{display:flex!important}
+/* (the draw offer: online games only — the AI does not take draws here, 2026-11-19) */
 body.in-online #btnHint, body.in-online #btnPaste{display:none!important}
 body.in-watch #btnDraw{display:none!important}
 .clk.ol-move{color:var(--accent)}
