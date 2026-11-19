@@ -1063,12 +1063,15 @@ typedef struct { i32 key, move, data; } TTEntry;   /* one entry in one place: a 
 #ifndef MT
 static TTEntry tt[TT_SIZE];
 #endif
-#define SEARCH2 1   /* search v5 (set_param 44), in every build */
+#if !defined(MT) || defined(SEARCH2_MT)   /* search v5 (set_param 44): the one-thread builds; the MT build only with -DSEARCH2_MT
+   (its table would add 48 MB to the memory the page allots: for native tests until it is measured with many threads) */
+#define SEARCH2 1
 typedef struct { u32 key; i16 score, eval; unsigned short move; u8 depth, fl; } TT2E;   /* fl: bound | pv << 2 | age << 3 */
 #ifndef MT
 #define tt2 ((TT2E *)tt)   /* (one thread: the same memory as the old table — both are 12 bytes an entry, and only one search runs) */
 #define TT2_MASK TT_MASK
 typedef char tt2_size_check[sizeof(TT2E) == sizeof(TTEntry) ? 1 : -1];
+#endif
 #endif
 static int ttAge = 0;
 #define F_EXACT 1
@@ -1124,7 +1127,11 @@ typedef i32 Move;   /* (a move is an int here) */
   i32 pvm[MAXPLY];   /* the line of the best move (its child's) */ \
   i16 lg[SP_MV];     /* the moves' place */
 #include "../shared/praline/praline.h"
+#ifdef SEARCH2_MT
 static void tt2Clear(void);
+#else
+#define tt2Clear() ((void)0)
+#endif
 EXPORT(tt_clear) void tt_clear(void) { memset(PL_TT, 0, sizeof PL_TT); memset(busyT, 0, sizeof busyT); tt2Clear(); }
 #else
 EXPORT(tt_clear) void tt_clear(void) { memset(tt, 0, sizeof tt); }
@@ -1138,14 +1145,23 @@ static TLS i32 nodes; static TLS int stopFlag; static TLS double deadline; stati
 static TLS i32 pvTable[MAXPLY * MAXPLY], pvLen[MAXPLY];
 static TLS int rootDepth = 1;
 /* tunables (same defaults as engine.js) */
-static int useMate1 = 1, rfpDepth = 8, rfpMargin = 112, nullAdapt = 1, histMalus = 0;   /* (2026-11-17: SPSA at 100 ms per move, tools/match/spsa.py: depth 6 -> 8, margin 90 -> 112, [9] 6000 -> 6749, [12] 4 -> 7, [16] 100 -> 123, [23] 200 -> 162, [27] 60 -> 85, LMR divisor 2.0 -> 2.03: +22 Elo at 300 ms over 1440 games) */
+/* (2026-11-19) search v5 is the default search of the one-thread builds: search2 with its numbers tuned by SPSA at 300k nodes a
+   move (tools/match/spsa.py --table v5, 500 rounds of 24 games): against search v4, +201 Elo at 300 ms (480 games on the Mac).
+   The MT build keeps search v4 and its numbers until search v5 is measured with many threads (S5 below). */
+#ifdef MT
+#define S5 0
+#else
+#define S5 1
+#endif
+static int useMate1 = 1, rfpDepth = S5 ? 11 : 8, rfpMargin = S5 ? 73 : 112, nullAdapt = 1, histMalus = 0;   /* (2026-11-17: SPSA at 100 ms per move, tools/match/spsa.py: depth 6 -> 8, margin 90 -> 112, [9] 6000 -> 6749, [12] 4 -> 7, [16] 100 -> 123, [23] 200 -> 162, [27] 60 -> 85, LMR divisor 2.0 -> 2.03: +22 Elo at 300 ms over 1440 games) */
 /* before:   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
 /* (2026-11-18: search v4's switches on, measured together on the Mac against the search before: +73 Elo at 300k nodes and +70
    at 300 ms per move, 480 different games each. 24 improving, 28 = 4 null move reduction, 29 + 43 = 300 late move pruning at
    every depth, 30 = 8 futility by the reduced depth, 35 = 6 a ply less without a table move, 37 = 1 reductions from the second
    move, 38 losing captures reduced, 40 losing captures after the quiet moves, 42 = 170 history bonus linear in the depth.) */
-static int P[96] = {[5] = 1, [7] = 1, [9] = 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = 85,
-                    [24] = 1, [28] = 4, [29] = 1, [30] = 8, [35] = 6, [37] = 1, [38] = 1, [40] = 1, [42] = 170, [43] = 300};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
+static int P[96] = {[5] = 1, [7] = 1, [9] = S5 ? 5049 : 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = S5 ? 57 : 85,
+                    [24] = 1, [28] = 4, [29] = 1, [30] = 8, [35] = 6, [37] = 1, [38] = 1, [40] = 1, [42] = S5 ? 297 : 170, [43] = S5 ? 246 : 300,
+                    [44] = S5, [45] = S5, [46] = S5 ? 8 : 0, [47] = S5 ? 131 : 0, [48] = S5 ? 43 : 0, [52] = S5 ? 6 : 0, [53] = S5 ? 2 : 0, [58] = S5 ? 346 : 0, [62] = S5};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
 static void lmrInit(double div);
 EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 96) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
@@ -2493,7 +2509,7 @@ EXPORT(init) void init(void) {
     A1[c][p * 8 + d] = STEP[p * 8 + d] || SLIDE[p * 8 + d]; AS[c][p * 8 + d] = SLIDE[p * 8 + d];
   }
   for (int p = 0; p < 32; p++) { NDIRS[p] = 0; for (int d = 0; d < 8; d++) { if (STEP[p * 8 + d]) DIRS[p][NDIRS[p]++] = d; if (SLIDE[p * 8 + d]) DIRS[p][NDIRS[p]++] = d | 8; } }
-  lmrInit(2.03);
+  lmrInit(S5 ? 2.14 : 2.03);
   zseed = 0x2545F4914F6CDD1DULL;
   for (int i = 0; i < 81 * 32; i++) { const unsigned long long r = rnd64(); ZB_L[i] = (i32)r; ZB_H[i] = (i32)(r >> 32); }
   for (int i = 0; i < 2 * 8 * 20; i++) { const unsigned long long r = rnd64(); ZHD_L[i] = (i32)r; ZHD_H[i] = (i32)(r >> 32); }
