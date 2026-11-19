@@ -208,7 +208,7 @@
   function rrect(TT, w, h, r) { const sh = new TT.Shape(), a = w / 2 - r, b = h / 2 - r; sh.moveTo(-a, -h / 2); sh.lineTo(a, -h / 2); sh.absarc(a, -b, r, -Math.PI / 2, 0, false); sh.lineTo(w / 2, b); sh.absarc(a, b, r, 0, Math.PI / 2, false); sh.lineTo(-a, h / 2); sh.absarc(-a, b, r, Math.PI / 2, Math.PI, false); sh.lineTo(-w / 2, -b); sh.absarc(-a, -b, r, Math.PI, Math.PI * 1.5, false); return sh; }
   function ring(k, w, h, r, t, hh) {   // a rounded-rectangle band: outer w × h, t thick, hh high (y 0 … hh)
     return G(k, () => { const TT = T(), sh = rrect(TT, w, h, r); sh.holes.push(rrect(TT, w - 2 * t, h - 2 * t, Math.max(.01, r - t)));
-      const e = new TT.ExtrudeGeometry(sh, { depth: hh - .01, bevelEnabled: true, bevelThickness: .005, bevelSize: .005, bevelSegments: 2, curveSegments: 12 }); e.rotateX(-Math.PI / 2); e.translate(0, .005, 0); e.computeVertexNormals(); return e; });
+      const e = new TT.ExtrudeGeometry(sh, { depth: hh - .01, bevelEnabled: true, bevelThickness: .005, bevelSize: .005, bevelSegments: 1, curveSegments: 6 }); e.rotateX(-Math.PI / 2); e.translate(0, .005, 0); e.computeVertexNormals(); return e; });
   }
   function luxDress(g) {
     const TT = T(), r = LK.lux[6], gold = mat('luxGold', () => phys({ color: '#e2bb68', metalness: 1, roughness: .16, envMapIntensity: 1.6 }));
@@ -216,7 +216,7 @@
     const add = (geo, m, y) => { const o = new TT.Mesh(geo, m); o.position.y = y; o.castShadow = o.receiveShadow = true; g.add(o); };
     add(ring('lxTop', W + .02, H + .02, r + .01, .07, .025), gold, TH - .012);            // the molding on the top edge
     add(ring('lxMid', W + .03, H + .03, r + .015, .04, .03), gold, .12);                   // a band low on the side
-    add(G('lxPlinth', () => { const e = new TT.ExtrudeGeometry(rrect(TT, W + .24, H + .24, r + .12), { depth: .07, bevelEnabled: true, bevelThickness: .02, bevelSize: .02, bevelSegments: 3, curveSegments: 12 }); e.rotateX(-Math.PI / 2); e.translate(0, .02, 0);
+    add(G('lxPlinth', () => { const e = new TT.ExtrudeGeometry(rrect(TT, W + .24, H + .24, r + .12), { depth: .07, bevelEnabled: true, bevelThickness: .02, bevelSize: .02, bevelSegments: 2, curveSegments: 6 }); e.rotateX(-Math.PI / 2); e.translate(0, .02, 0);
       const P = e.attributes.position, UV = e.attributes.uv; for (let i = 0; i < P.count; i++) UV.setXY(i, P.getX(i) / 3.6, (P.getZ(i) + P.getY(i)) / 3.6); e.computeVertexNormals(); return e; }), mm, -.005);
     add(ring('lxFoot', W + .3, H + .3, r + .15, .03, .02), gold, .025);                    // gold on the plinth's edge
   }
@@ -235,23 +235,23 @@
         const hw = mesh2(G('stumpHw', () => new TT.CylinderGeometry(.3, .3, .07, s2, 1, true)), bark); hw.position.y = .095; hw.material = Mb('holeW', { color: '#4a2a14', roughness: 1, side: TT.BackSide }); o.add(hw);
         for (const [x, z, s] of [[.5, .5, 1], [.66, .32, .8], [-.55, .5, .7]]) {
           const st = mesh2(G('mStem', () => new TT.CylinderGeometry(.03, .04, .1, 10)), Mb('mStem', { color: '#f2ead8', roughness: .7 })); st.position.set(x, -.08 + .05 * s, z); st.scale.setScalar(s); o.add(st);
-          const cp = mesh2(G('mCap', () => new TT.SphereGeometry(.08, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2)), Mb('mCap', { color: '#d23a2a', roughness: .5 })); cp.position.set(x, -.08 + .1 * s, z); cp.scale.setScalar(s); o.add(cp);
+          const cp = mesh2(G('mCap', () => new TT.SphereGeometry(.08, 10, 4, 0, Math.PI * 2, 0, Math.PI / 2)), Mb('mCap', { color: '#d23a2a', roughness: .5 })); cp.position.set(x, -.08 + .1 * s, z); cp.scale.setScalar(s); o.add(cp);
         }
         add(o, -2.5, .13, -2.5); }
       // far right: an apple tree
       { const o = new TT.Group(), leaf = Mb('leaf', { color: '#4f9a3a', roughness: .85 });
         o.add(Object.assign(mesh2(G('trunk', () => new TT.CylinderGeometry(.09, .14, .5, 12)), Mb('trunk', { color: '#7a4e2c', roughness: .9 })), {}));
         o.children[0].position.y = .25;
-        for (const [x, y, z, r] of [[0, .72, 0, .48], [-.3, .58, .2, .34], [.32, .6, -.12, .36], [.1, .9, .15, .3]]) { const b = mesh2(G('leafB', () => new TT.IcosahedronGeometry(1, 2)), leaf); b.position.set(x, y, z); b.scale.setScalar(r); o.add(b); }
+        for (const [x, y, z, r] of [[0, .72, 0, .48], [-.3, .58, .2, .34], [.32, .6, -.12, .36], [.1, .9, .15, .3]]) { const b = mesh2(G('leafB', () => new TT.IcosahedronGeometry(1, 1)), leaf); b.position.set(x, y, z); b.scale.setScalar(r); o.add(b); }
         const apple = Mb('apple', { color: '#d8262a', roughness: .35, clearcoat: .6 });
-        for (let k = 0; k < 9; k++) { const t = k * 2.4, a = mesh2(G('apple', () => new TT.SphereGeometry(.055, 12, 8)), apple); a.position.set(Math.cos(t) * .44, .55 + (k % 3) * .14, Math.sin(t) * .44); o.add(a); }
+        for (let k = 0; k < 9; k++) { const t = k * 2.4, a = mesh2(G('apple', () => new TT.SphereGeometry(.055, 8, 6)), apple); a.position.set(Math.cos(t) * .44, .55 + (k % 3) * .14, Math.sin(t) * .44); o.add(a); }
         add(o, 2.5, 0, -2.5); }
       // near left: a pond with lily pads and reeds
       { const o = new TT.Group();
         const w = mesh2(G('pond', () => { const q = new TT.CircleGeometry(.72, s2 * 2); q.scale(1, .82, 1); q.rotateX(-Math.PI / 2); return q; }), Mb('water', { color: '#5aa6c8', roughness: .05, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 1.4 })); w.position.y = .004; o.add(w);
-        const rim = mesh2(G('pondRim', () => { const q = new TT.TorusGeometry(.72, .045, 8, s2 * 2); q.scale(1, .82, 1); q.rotateX(Math.PI / 2); return q; }), Mb('pebble', { color: '#b8ad98', roughness: .9 })); o.add(rim);
+        const rim = mesh2(G('pondRim', () => { const q = new TT.TorusGeometry(.72, .045, 6, s2 * 2); q.scale(1, .82, 1); q.rotateX(Math.PI / 2); return q; }), Mb('pebble', { color: '#b8ad98', roughness: .9 })); o.add(rim);
         for (const [x, z, r] of [[-.2, .1, .14], [.25, -.15, .11], [.05, .3, .09]]) { const p = mesh2(G('pad', () => { const q = new TT.CircleGeometry(1, 16, .3, Math.PI * 2 - .6); q.rotateX(-Math.PI / 2); return q; }), Mb('pad', { color: '#3f8a3a', roughness: .6, side: TT.DoubleSide })); p.position.set(x, .012, z); p.scale.setScalar(r); o.add(p); }
-        { const fl = mesh2(G('lotus', () => new TT.SphereGeometry(.045, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2)), Mb('lotus', { color: '#f0a8c0', roughness: .5 })); fl.position.set(-.2, .015, .1); o.add(fl); }
+        { const fl = mesh2(G('lotus', () => new TT.SphereGeometry(.045, 8, 3, 0, Math.PI * 2, 0, Math.PI / 2)), Mb('lotus', { color: '#f0a8c0', roughness: .5 })); fl.position.set(-.2, .015, .1); o.add(fl); }
         for (const [x, z, hgt] of [[-.62, -.3, .42], [-.56, -.42, .34], [.6, .4, .38]]) { const st = mesh2(G('reed', () => new TT.CylinderGeometry(.012, .014, 1, 6)), Mb('reed', { color: '#6c8a3a', roughness: .8 })); st.scale.set(1, hgt, 1); st.position.set(x, hgt / 2, z); o.add(st); const hd = mesh2(G('cat', () => new TT.CylinderGeometry(.03, .03, .12, 8)), Mb('cat', { color: '#6a4426', roughness: .9 })); hd.position.set(x, hgt - .06, z); o.add(hd); }
         add(o, -2.5, 0, 2.5); }
       // near right: a little red shed and a fence
@@ -267,7 +267,7 @@
       const navy = Mb('bNavy', { color: '#1f2f6e', roughness: .45, clearcoat: .3 }), yel = Mb('bYel', { color: '#e3a82b', roughness: .45, clearcoat: .3 }), blk = Mb('bBlk', { color: '#1e1e20', roughness: .5 }), wht = Mb('bWht', { color: '#efe9dc', roughness: .5 });
       // far left: a navy quarter disc and a yellow ball
       { const o = new TT.Group(), q = mesh2(G('bQuarter', () => { const sh = new TT.Shape(); sh.moveTo(0, 0); sh.lineTo(1.5, 0); sh.absarc(0, 0, 1.5, 0, Math.PI / 2, false); sh.lineTo(0, 0); const e = new TT.ExtrudeGeometry(sh, { depth: .1, bevelEnabled: true, bevelThickness: .015, bevelSize: .015, bevelSegments: 2, curveSegments: 20 }); e.rotateX(Math.PI / 2); e.translate(0, .115, 0); return e; }), navy);
-        q.position.set(-.85, 0, -.85); o.add(q); const b = mesh2(G('bBall', () => new TT.SphereGeometry(.2, 24, 16)), yel); b.position.set(.15, .32, .15); o.add(b); add(o, -2.5, 0, -2.5); }
+        q.position.set(-.85, 0, -.85); o.add(q); const b = mesh2(G('bBall', () => new TT.SphereGeometry(.2, 18, 12)), yel); b.position.set(.15, .32, .15); o.add(b); add(o, -2.5, 0, -2.5); }
       // far right: a yellow block with a black arch
       { const o = new TT.Group(), bl = mesh2(G('bBlock', () => new TT.BoxGeometry(1.6, .1, 1.6)), yel); bl.position.y = .05; o.add(bl);
         const ar = mesh2(G('bArch', () => { const q = new TT.CylinderGeometry(.55, .55, .3, 32, 1, false, 0, Math.PI); q.rotateZ(Math.PI / 2); q.rotateY(Math.PI / 2); return q; }), blk); ar.position.set(0, .1, .35); ar.rotation.x = 0; o.add(ar);
@@ -279,10 +279,10 @@
       // near right: a navy wedge and a yellow ball
       { const o = new TT.Group(), w = mesh2(G('bWedge', () => { const sh = new TT.Shape(); sh.moveTo(-.8, .8); sh.lineTo(.8, .8); sh.lineTo(.8, -.8); sh.lineTo(-.8, .8); const e = new TT.ExtrudeGeometry(sh, { depth: .5, bevelEnabled: false }); e.rotateX(Math.PI / 2); e.translate(0, .5, 0); return e; }), navy); o.add(w);
         const plate = mesh2(G('bBlock', () => new TT.BoxGeometry(1.6, .1, 1.6)), wht); plate.position.y = .03; plate.scale.y = .4; o.add(plate);
-        const b = mesh2(G('bBall', () => new TT.SphereGeometry(.2, 24, 16)), yel); b.position.set(-.35, .2, .35); o.add(b); add(o, 2.5, 0, 2.5); }
+        const b = mesh2(G('bBall', () => new TT.SphereGeometry(.2, 18, 12)), yel); b.position.set(-.35, .2, .35); o.add(b); add(o, 2.5, 0, 2.5); }
     } else if (look === 'lux') {
       // a gold stud on every point
-      const gold = Mb('luxStud', { color: '#e0b864', metalness: 1, roughness: .22, envMapIntensity: 1.5 }), geo = G('stud', () => new TT.SphereGeometry(.075, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2));
+      const gold = Mb('luxStud', { color: '#e0b864', metalness: 1, roughness: .22, envMapIntensity: 1.5 }), geo = G('stud', () => new TT.SphereGeometry(.075, 10, 3, 0, Math.PI * 2, 0, Math.PI / 2));
       for (let r = 0; r < 7; r++) for (let c = 0; c < 7; c++) if (ON(r, c)) { const m = mesh2(geo, gold); m.scale.y = .45; m.position.set(-N / 2 + c + .5, Y, -N / 2 + r + .5); m.castShadow = false; m.receiveShadow = true; g.add(m); }
     }
   }
@@ -296,7 +296,7 @@
      delft   染付の置物: white porcelain bells with cobalt bands, the 2D fox / goose motif painted on the crown */
   const V2 = (x, y) => new (T().Vector2)(x, y);
   const geos = {}, G = (k, f) => { const kk = k + (LO() ? 'lo' : 'hi'); if (!geos[kk]) { const g = f(); g.computeBoundingSphere(); if (X.share) X.share(g); geos[kk] = g; } return geos[kk]; };
-  const seg = n => LO() ? Math.max(8, n >> 1) : n;
+  const seg = n => Math.max(8, Math.round(n * (LO() ? .4 : .6)));   // (2026-11-19: ~60 % of the old segments — smooth normals keep the look; ~1/3 of the triangles)
   // a canvas texture (cached)
   const ctex = (k, w, h, draw, rep) => mat('tx' + k, () => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = srgb(new (T().CanvasTexture)(c)); if (rep) t.wrapS = t.wrapT = T().RepeatWrapping; t.anisotropy = 4; return t; });
   // turned wood: growth rings across the piece (u round, v up)
@@ -443,13 +443,13 @@
       const body = mesh(G('dkBody', () => new TT.SphereGeometry(.085, seg(24), seg(16))), wh, 0, .1, -.01); body.scale.set(.85, 1.15, .95); k.add(body);
       k.add(mesh(G('dkHead', () => new TT.SphereGeometry(.06, seg(22), seg(14))), wh, 0, .215, .025));
       k.add(mesh(G('dkSnout', () => { const q = new TT.ConeGeometry(.032, .085, seg(14)); q.rotateX(Math.PI / 2); return q; }), wh, 0, .205, .09));
-      k.add(mesh(G('dkNose', () => new TT.SphereGeometry(.012, 10, 8)), bl, 0, .205, .132));
+      k.add(mesh(G('dkNose', () => new TT.SphereGeometry(.012, 8, 6)), bl, 0, .205, .132));
       for (const sx of [-1, 1]) {
         const e = mesh(G('dkEar', () => { const q = new TT.ConeGeometry(.026, .065, seg(12)); q.scale(1, 1, .6); return q; }), bl, sx * .035, .275, .015); e.rotation.z = -sx * .3; k.add(e);
         k.add(mesh(G('dkEye', () => new TT.SphereGeometry(.009, 8, 6)), bl, sx * .024, .23, .075));
       }
       const tail = mesh(G('dkTail', () => new TT.TorusGeometry(.07, .028, seg(10), seg(20), Math.PI * 1.1)), wh, .02, .06, -.04); tail.rotation.set(-Math.PI / 2, 0, -.4); k.add(tail);
-      k.add(mesh(G('dkTip', () => new TT.SphereGeometry(.03, 12, 10)), bl, .08, .06, .03));
+      k.add(mesh(G('dkTip', () => new TT.SphereGeometry(.03, 10, 8)), bl, .08, .06, .03));
       g.userData.h = .465 * s + .3;
     } else g.userData.h = .47 * s;
   }
@@ -494,7 +494,7 @@
   // short straight side, a flat bottom; uv straight from above
   function tokenGeo(k, cv, w, h, pw, edge) {
     return G('tok' + k, () => {
-      const TT = T(), step = LO() ? 2 : 1, NA = cv.rad.length / step | 0, KR = LO() ? 9 : 18;
+      const TT = T(), step = LO() ? 4 : 2, NA = cv.rad.length / step | 0, KR = LO() ? 6 : 10;
       const pos = [], uv = [], idx = [], rAt = a => cv.rad[(a * step) % cv.rad.length] * w * .985;
       const prof = t => edge + (1 - edge) * Math.pow(Math.max(0, 1 - Math.pow(t, pw)), 1 / pw);
       const V = (x, y, z) => { pos.push(x, y, z); uv.push(x / w + .5, .5 - z / w); return pos.length / 3 - 1; };
