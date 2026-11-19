@@ -14,8 +14,8 @@
      'helm' (the default) a Roman helmet carved in marble / basalt, on a stand and plinth · 'wood' a turned pawn with burnt rings ·
      'abstract' a six-petal flower on a stem · 'coin' a stack of three coins (gold / silver; SPQR on top, S·C underneath) ·
      'glass' a domed counter of Roman glass with an iridescent weathering crust · 'bone' a turned bone counter with V grooves.
-   A blocked counter (incitus): the tall figures (helm, wood, abstract) topple onto their side; the flat ones (coin, glass, bone)
-   lie upside down showing their underside (the 2D page's turned-over pictures: S·C, the crust, VI).
+   A blocked counter (incitus): the tall figures (helm, wood, abstract, column) topple onto their side; the stacks of three (coin,
+   bone) stand up on their edge (2026-11-19 user: turned over was hard to see), showing their underside sideways (S·C, VI).
    Table3D.latrunculi.turn(piece, k) (k 0 … 1) — the skin and the table adapter animate it.
    Older saved keys (the first 3D set of 2026-11-16) are read as the new ones (tables3d.js).
    Registers into Table3D:
@@ -537,7 +537,7 @@
       if (k === 0) o.add(mesh(faceGeo('cnBot', r, .9, true), face(col + 'b', 'pc-coin-' + (gold ? 'bx' : 'wx')), 0, -.0005, 0));
       if (k < 2) o.add(mesh(G('cnCapP', () => { const q = new TT.CircleGeometry(r - .004, seg(40)); q.rotateX(-Math.PI / 2); return q; }), metal, 0, th - .0005, 0));   // (the edge of the face shows where the next coin sits off-centre)
     }
-    g.userData.h = 3 * th; g.userData.lie = 0;
+    g.userData.h = 3 * th; g.userData.lie = r + .015; g.userData.edge = 1;   // (blocked: the stack stands up on its edge, its face to the near side — 2026-11-19 user: 裏返しは分かりにくいので立てる)
   }
 
   // 'glass' (in 3D, 2026-11-19 user: 石細工でこだわりのチェス駒的な像で): a little Ionic column carved in marble — a square plinth,
@@ -579,7 +579,7 @@
     const dz = .064;
     g.add(mesh(plain, bm, 0, 0, 0)); g.add(mesh(plain, bm, .012, dz, -.008)); g.add(mesh(top, bm, -.004, 2 * dz, .006));
     g.add(mesh(faceGeo('bnBot', .27, .9, true), M('boneU' + col, { map: picTex('pc-bone-' + (dark ? 'bx' : 'wx')), color: '#ffffff', roughness: .55 }), 0, 0, 0));
-    g.userData.h = 2 * dz + .074; g.userData.lie = 0;
+    g.userData.h = 2 * dz + .074; g.userData.lie = .3; g.userData.edge = 1;   // (blocked: stands up on its edge, its face to the near side)
   }
 
   const BUILD = { helm, wood, abstract, coin, glass, bone };
@@ -592,13 +592,14 @@
     if (lie) { flip.position.y = lie; body.position.y = -lie; }   // the tall figures topple about a point their radius up
     else { flip.position.y = h / 2; body.position.y = -h / 2; }   // the flat ones turn over about their middle
     flip.add(body); g.add(flip);
-    g.userData = { col, h, set, flip, lie, inc: false };
+    g.userData = { col, h, set, flip, lie, edge: !!body.userData.edge, inc: false };
     return g;
   }
   // a blocked counter: k 0 (standing / face up) … 1 (lying on its side / face down)
   function turn(g, k) {
     const U = g.userData, f = U && U.flip; if (!f) return;
-    if (U.lie) { f.rotation.z = Math.PI / 2 * k; f.position.x = k * (U.h / 2 - U.lie); }   // (lying, it stays centred on its square)
+    if (U.edge) { f.rotation.x = Math.PI / 2 * k; f.position.z = -k * (U.h / 2 - U.lie); }   // (a stack: stood up on its edge, the top face to the player)
+    else if (U.lie) { f.rotation.z = Math.PI / 2 * k; f.position.x = k * (U.h / 2 - U.lie); }   // (lying, it stays centred on its square)
     else f.rotation.z = Math.PI * k;
   }
 
