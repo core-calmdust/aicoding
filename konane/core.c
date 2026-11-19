@@ -16,6 +16,8 @@ typedef signed char i8; typedef unsigned int u32; typedef unsigned char u8; type
 #define MAXN 100
 #define MAXPLY 128
 #define MAXMV 512
+#define NN_H 64         /* the learned evaluation's sizes (below) */
+#define NN_H2 16
 #ifndef MT
 __attribute__((import_module("env"), import_name("poll"))) int js_poll(void);
 __attribute__((import_module("env"), import_name("shget"))) int js_shget(u32 h1, u32 h2);
@@ -44,10 +46,25 @@ static TLS int killers[MAXPLY];
 #define TSZ (1 << 21)
 typedef struct { u32 k, h2; int gen; short v; signed char d, f; int m; } TE;
 static TE T[TSZ];
-static int gen = 1, tsize = 0;
-__attribute__((export_name("ttclear"))) void ttclear(void) { gen++; tsize = 0; }
+static int gen = 1, tsize = 0, g3lo = 1;
+__attribute__((export_name("ttclear"))) void ttclear(void) { gen++; tsize = 0; g3lo = gen; }
 static TE *tfind(u32 k) { u32 i = (k * 2654435761u) & (TSZ - 1); for (;;) { TE *e = &T[i]; if (e->gen != gen) return 0; if (e->k == k) return e; i = (i + 1) & (TSZ - 1); } }
+// (2026-11-20, search v3 = mode 2) the same memory as 4-way buckets kept from search to search: an entry is valid from the generation
+// g3lo on (ttclear), each search a new generation (its age); a bucket replaces the shallowest / oldest entry (claude/konane-spec.md「探索 v3」)
+static int sv3T = 0;
+static TE *t3find(u32 k) { TE *b = &T[(k * 2654435761u) & (TSZ - 4)]; for (int i = 0; i < 4; i++) if (b[i].gen >= g3lo && b[i].k == k) return &b[i]; return 0; }
+static void t3set(u32 k, u32 h2, int d, int v, int f, int m) {
+  TE *b = &T[(k * 2654435761u) & (TSZ - 4)], *e = 0; int ws = 1 << 30;
+  for (int i = 0; i < 4; i++) {
+    if (b[i].gen >= g3lo && b[i].k == k) { e = &b[i]; break; }
+    const int sc = b[i].gen < g3lo ? -1000 : b[i].d - (b[i].gen != gen ? 8 : 0);
+    if (sc < ws) { ws = sc; e = &b[i]; }
+  }
+  e->gen = gen; e->k = k; e->h2 = h2; e->d = (signed char)d; e->v = (short)v; e->f = (signed char)f; e->m = m;
+}
+static void ttnew3(void) { gen++; }   // (a new search: the entries of the searches before get older)
 static void tset(u32 k, u32 h2, int d, int v, int f, int m) {
+  if (sv3T) { t3set(k, h2, d, v, f, m); return; }
   if (tsize > 700000) ttclear();   // (as the Map: checked before every store)
   TE *e = tfind(k);
   if (!e) {
@@ -57,8 +74,8 @@ static void tset(u32 k, u32 h2, int d, int v, int f, int m) {
   e->h2 = h2; e->d = (signed char)d; e->v = (short)v; e->f = (signed char)f; e->m = m;
 }
 // IO[0..4] = found, d, f, v, m — the page reads it (mtKids / mtLazy ordering)
-__attribute__((export_name("ttprobe"))) int ttprobe(u32 h1, u32 h2) { TE *e = tfind(h1); if (!e || e->h2 != h2) return 0; IO[0] = e->d; IO[1] = e->f; IO[2] = e->v; IO[3] = e->m; return 1; }
-static int tlook(u32 h1, u32 h2, int *d, int *f, int *v, int *m) { TE *e = tfind(h1); if (!e || e->h2 != h2) return 0; *d = e->d; *f = e->f; *v = e->v; *m = e->m; return 1; }
+__attribute__((export_name("ttprobe"))) int ttprobe(u32 h1, u32 h2) { TE *e = sv3T ? t3find(h1) : tfind(h1); if (!e || e->h2 != h2) return 0; IO[0] = e->d; IO[1] = e->f; IO[2] = e->v; IO[3] = e->m; return 1; }
+static int tlook(u32 h1, u32 h2, int *d, int *f, int *v, int *m) { TE *e = sv3T ? t3find(h1) : tfind(h1); if (!e || e->h2 != h2) return 0; *d = e->d; *f = e->f; *v = e->v; *m = e->m; return 1; }
 #else
 // (MT) the same Map semantics on one shared table without locks: slot = { kw = h1 | h2 << 32 (0 empty: taken by a CAS), a = depth 8 |
 // flag 2 | value 16 | move + 2 14 | h2's low 23 | 1 << 63 }; one thread clears it past 700,000 entries as before, several never mid-search
@@ -71,7 +88,8 @@ EXPORT(ttclear) void ttclear(void) { for (unsigned i = 0; i < (1u << TT_BITS); i
 // (2026-11-18) several threads: Praline's bucket table (praline_tt.h, 4 entries of { key ^ a ^ c, a, c = the search's generation }) in
 // the same memory, kept from search to search (the Map's table was cleared past half before a search: the threads' work of the move
 // before and PRO's 先読み were lost) — the deeper / newer entries stay. One thread (abExact): the Map semantics as before.
-static int ttGen;
+static int ttGen, sv3T = 0;   // sv3T: search v3 (mode 2) — the bucket table with one thread too
+#define PLT (!abExact || sv3T)
 #define PL_TT_BITS (TT_BITS - 3)
 #define PL_TT_WAYS 4
 #define PL_TT_WORDS 3
@@ -80,7 +98,7 @@ static int ttGen;
 #define PL_TT_SCORE(w, c) (!((w) >> 63) ? -1000 : (int)(signed char)((w) & 255) - ((c) != (u64)ttGen ? 8 : 0))
 #include "../shared/praline/praline_tt.h"
 static int tlook(u32 h1, u32 h2, int *d, int *f, int *v, int *m) {
-  if (!abExact) { u64 a, c; if (!plttFind((u64)h1 | (u64)h2 << 32, h1, &a, &c)) return 0;
+  if (PLT) { u64 a, c; if (!plttFind((u64)h1 | (u64)h2 << 32, h1, &a, &c)) return 0;
     if (!(a >> 63) || ((a >> 40) & 0x7FFFFF) != (h2 & 0x7FFFFF)) return 0;
     *d = (int)(signed char)(a & 255); *f = (int)((a >> 8) & 3); *v = (int)(short)(unsigned short)((a >> 10) & 0xFFFF); *m = (int)((a >> 26) & 0x3FFF) - 2;
     return 1;
@@ -102,7 +120,7 @@ static void tset(u32 h1, u32 h2, int d, int v, int f, int m) {
   if (abExact && ttCount > TT_CLEAR_N) ttclear();
   const u64 want = (u64)h1 | (u64)h2 << 32; const unsigned M = (1u << TT_BITS) - 1;
   const u64 a = (u64)(u8)(signed char)d | (u64)(f & 3) << 8 | (u64)(unsigned short)(short)v << 10 | (u64)((m + 2) & 0x3FFF) << 26 | (u64)(h2 & 0x7FFFFF) << 40 | 1ull << 63;
-  if (!abExact) { int hit; u64 ow, oc; u64 *e = plttSlot((u64)h1 | (u64)h2 << 32, h1, &hit, &ow, &oc); plttWrite(e, (u64)h1 | (u64)h2 << 32, a, (u64)ttGen); return; }
+  if (PLT) { int hit; u64 ow, oc; u64 *e = plttSlot((u64)h1 | (u64)h2 << 32, h1, &hit, &ow, &oc); plttWrite(e, (u64)h1 | (u64)h2 << 32, a, (u64)ttGen); return; }
   for (unsigned i = (h1 * 2654435761u) & M, k = 0; k <= M && (abExact || k < 256); i = (i + 1) & M, k++) {
     u64 kw = __atomic_load_n(&TTB[i].kw, __ATOMIC_ACQUIRE);
     if (!kw) {
@@ -116,6 +134,7 @@ static void tset(u32 h1, u32 h2, int d, int v, int f, int m) {
   }
 }
 EXPORT(ttprobe) int ttprobe(u32 h1, u32 h2) { return tlook(h1, h2, IO, IO + 1, IO + 2, IO + 3); }
+static void ttnew3(void) { ttGen = (ttGen + 1) & 255; }
 #endif
 typedef struct { u64 lo, hi; } BB;
 static BB VALID; static unsigned char BITI[MAXN], FOFB[128];
@@ -168,9 +187,10 @@ typedef int Move;
 #ifdef MT
 // Praline (shared/praline/praline.h): a split point carries the node's position and each move's place in the node's order (LMR)
 #define SP_MV 256
-#define PL_SP_FIELDS P pos; short lg[SP_MV];
+#define PL_SP_FIELDS P pos; short lg[SP_MV]; short acc[2][NN_H];
 #define stopFlag stopF
 #include "../shared/praline/praline.h"
+static void spFillAcc(SPt *s, const P *p);   // (the split point carries the node's accumulators: the learned evaluation)
 static TLS double tEnd = 1e300;
 static inline void mtCheck(void) {
   if (now() > tEnd || nodes > nodeLimit || __atomic_load_n(&gStop, __ATOMIC_RELAXED)) stopF = 1;
@@ -257,6 +277,85 @@ static int evaluate(const P *p) {
   if (!a) return -WIN + 1;
   return (a - b) * 34 + (pa - pb) * 52 + 30;
 }
+// ---- the learned evaluation (2026-11-20, claude/konane-spec.md「学習した評価」, tools/nnue/): one small net a board size, "KNN1"
+// files (net-<rule>.bin.gz, loaded by engine.js only when its NETV has a version). Two views (Black's; White's with the files
+// mirrored, so that its own stones stand on the same colour of squares as Black's): the stones (own / the opponent's, 2·NN) ->
+// NN_H each (int16 accumulators kept move by move in ACC[ply]), plus at the evaluation one row each for the view's jumps, the
+// other side's jumps, the view's stones that can jump and the other side's (buckets, tools/nnue/nnfeat.h) -> clipped ReLU, the
+// side to move's view first -> NN_H2 -> 1. Whole numbers only: the same value in WebAssembly and native code.
+#define NN_QA 127
+#define NN_X 56          /* the count rows: jumps 16 + 16, movers 12 + 12 */
+#define NN_INMAX (2 * MAXN + NN_X)
+typedef struct { short w1[NN_INMAX * NN_H], b1[NN_H], w2[2 * NN_H * NN_H2], w3[NN_H2]; int b2[NN_H2], b3, k, n; } NNet;
+static NNet NETS[3]; static int netOk[3], netUse = 1, nnOn = 0, nnRid = -1;
+static unsigned char NETBUF[sizeof(NNet) + 64];
+#define RID (N == 8 ? 0 : N == 6 ? 1 : 2)   /* engine.js RULE_ORDER: s8 s6 s10 */
+EXPORT(net_buf) unsigned char *net_buf(void) { return NETBUF; }
+static int rd16(const unsigned char *b) { return (short)(b[0] | b[1] << 8); }
+static int rd32(const unsigned char *b) { return (int)(b[0] | b[1] << 8 | b[2] << 16 | (unsigned)b[3] << 24); }
+// net_load(rule, bytes): NETBUF holds a file: "KNN1", u16 inputs, NN_H, NN_H2, the board's size n, i32 k (the evaluation's scale),
+// then i16 w1[inputs × NN_H], i16 b1, i16 w2[NN_H2 × 2·NN_H], i32 b2, i16 w3, i32 b3
+EXPORT(net_load) int net_load(int r, int len) {
+  const unsigned char *b = NETBUF; static const int SZ[3] = { 8, 6, 10 };
+  if (r < 0 || r > 2 || len < 16 || b[0] != 'K' || b[1] != 'N' || b[2] != 'N' || b[3] != '1') return 0;
+  const int n = SZ[r], nin = 2 * n * n + NN_X;
+  if (rd16(b + 4) != nin || rd16(b + 6) != NN_H || rd16(b + 8) != NN_H2 || rd16(b + 10) != n) return 0;
+  if (len < 16 + 2 * (nin * NN_H + NN_H + 2 * NN_H * NN_H2) + 4 * NN_H2 + 2 * NN_H2 + 4) return 0;
+  NNet *Q = &NETS[r]; int o = 16; Q->k = rd32(b + 12); Q->n = n;
+  for (int i = 0; i < nin * NN_H; i++, o += 2) Q->w1[i] = (short)rd16(b + o);
+  for (int i = 0; i < NN_H; i++, o += 2) Q->b1[i] = (short)rd16(b + o);
+  for (int i = 0; i < 2 * NN_H * NN_H2; i++, o += 2) Q->w2[i] = (short)rd16(b + o);
+  for (int i = 0; i < NN_H2; i++, o += 4) Q->b2[i] = rd32(b + o);
+  for (int i = 0; i < NN_H2; i++, o += 2) Q->w3[i] = (short)rd16(b + o);
+  Q->b3 = rd32(b + o);
+  netOk[r] = 1; nnRid = -1; return 1;
+}
+EXPORT(net_use) void net_use(int on) { netUse = on; }   // (0: the hand evaluation even with a net — for measuring)
+EXPORT(net_ok) int net_ok(int r) { return r >= 0 && r < 3 && netOk[r]; }
+static TLS short ACC[MAXPLY + 2][2][NN_H];
+static inline int nnSq(int c, int s) { return c ? (s / N) * N + (N - 1 - s % N) : s; }   // (White's view: the files mirrored)
+static inline const short *nnRow(const NNet *Q, int c, int col, int s) { return Q->w1 + ((col == c ? 0 : NN) + nnSq(c, s)) * NN_H; }
+static void accFull(const P *p, short (*a)[NN_H]) {
+  const NNet *Q = &NETS[RID];
+  for (int c = 0; c < 2; c++) {
+    for (int i = 0; i < NN_H; i++) a[c][i] = Q->b1[i];
+    for (int s = 0; s < NN; s++) if (p->sq[s]) { const short *W = nnRow(Q, c, p->sq[s] - 1, s); for (int i = 0; i < NN_H; i++) a[c][i] += W[i]; }
+  }
+}
+// ACC[dst] = ACC[src] after move m of position p (p before the move)
+static void accMove(int dst, int src, const P *p, int m) {
+  const NNet *Q = &NETS[RID]; const int f = m % 128, t = m / 128, x = p->sq[f] - 1;
+  int rm[MAXN / 2 + 2], nr = 0;   // the jumped stones
+  if (f != t) { const int d = dirOf(f, t), *ray = RAY[f][d], L = RAYN[f][d]; for (int k = 0; k < L; k += 2) { rm[nr++] = ray[k]; if (k + 1 < L && ray[k + 1] == t) break; } }
+  for (int c = 0; c < 2; c++) {
+    const short *s = ACC[src][c]; short *dd = ACC[dst][c], *A = (short *)nnRow(Q, c, x, f);
+    if (f == t) { for (int i = 0; i < NN_H; i++) dd[i] = (short)(s[i] - A[i]); continue; }
+    const short *B = nnRow(Q, c, x, t);
+    for (int i = 0; i < NN_H; i++) dd[i] = (short)(s[i] - A[i] + B[i]);
+    for (int j = 0; j < nr; j++) { const short *R = nnRow(Q, c, 1 - x, rm[j]); for (int i = 0; i < NN_H; i++) dd[i] = (short)(dd[i] - R[i]); }
+  }
+}
+static inline int nnMb(int x) { return x < 12 ? x : x < 14 ? 12 : x < 17 ? 13 : x < 21 ? 14 : 15; }
+static inline int nnVb(int x) { return x < 10 ? x : x < 13 ? 10 : 11; }
+// the value for the side to move, from the accumulators a (both views) of position p and the counts (jumps, stones that jump)
+static int nnEval(const P *p, short (*a)[NN_H], const int *mob, const int *mov) {
+  const NNet *Q = &NETS[RID]; unsigned char x[2 * NN_H]; const int X = 2 * NN;
+  for (int k = 0; k < 2; k++) {
+    const int c = k ? 1 - p->side : p->side, o = 1 - c;
+    const short *R0 = Q->w1 + (X + nnMb(mob[c])) * NN_H, *R1 = Q->w1 + (X + 16 + nnMb(mob[o])) * NN_H,
+      *R2 = Q->w1 + (X + 32 + nnVb(mov[c])) * NN_H, *R3 = Q->w1 + (X + 44 + nnVb(mov[o])) * NN_H;
+    for (int i = 0; i < NN_H; i++) { int v = a[c][i] + R0[i] + R1[i] + R2[i] + R3[i]; x[k * NN_H + i] = (unsigned char)(v < 0 ? 0 : v > NN_QA ? NN_QA : v); }
+  }
+  long long out = Q->b3;
+  for (int j = 0; j < NN_H2; j++) {
+    int h = Q->b2[j]; const short *W = Q->w2 + j * 2 * NN_H;
+    for (int i = 0; i < 2 * NN_H; i++) h += x[i] * W[i];
+    h >>= 6; if (h < 0) h = 0; else if (h > NN_QA) h = NN_QA;
+    out += (long long)h * Q->w3[j];
+  }
+  long long v = out * Q->k / (NN_QA * 64);
+  return v > 20000 ? 20000 : v < -20000 ? -20000 : (int)v;
+}
 // ---- search v2 (2026-11-13, claude/konane-spec.md「探索 v2」): on for ab_best (the levels by positions / time) and the analysis
 // (ab_values2 with v2 = 1); off — the search as before, exact to its depth — for the levels by depth, the resistance and
 // search() called from the page (the puzzles). A change of mode clears the table. (-DKV_x=0: a part left out, for measuring)
@@ -306,7 +405,30 @@ static void initLmr(void) {   // floor(LMR_BASE/1000 + ln(d) ln(n) / (LMR_DIV/10
   for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) lmrT[d][n] = (unsigned char)((LMR_BASE * 1000 + (long)LN[d] * LN[n] * 10 / LMR_DIV) / 1000000);
   lmrInit = 1;
 }
-static void setMode(int v) { if (!lmrInit) initLmr(); v = v ? 1 : 0; if (v != sv2) { ttclear(); sv2 = v; } }
+// (2026-11-20) modes: 0 the search before v2, 1 v2, 2 v3 (v2 + the bucket table kept between searches, the root's PVS and
+// aspiration window, the learned evaluation when the board's net is loaded). A change of mode or of the evaluation clears the table.
+#ifndef KV_TT3
+#define KV_TT3 1
+#endif
+static void setMode(int v) {
+  if (!lmrInit) initLmr(); v = v < 0 ? 0 : v > 2 ? 2 : v;
+  const int nn = v == 2 && netOk[RID] && netUse;
+  if (v != sv2 || nn != nnOn || RID != nnRid) { sv2 = v; sv3T = v == 2 && KV_TT3; nnOn = nn; nnRid = RID; ttclear(); }
+}
+// the evaluation of p (a position of the stack ST: its accumulators are ACC at the same place) and a move with them
+static long long nnChecked = 0, nnBad = 0;
+static inline int evalP(const P *p) {
+  if (!nnOn) return evaluate(p);
+  if (p->ply < 2) return 0;
+  const int mob[2] = { mobility(p, 1), mobility(p, 2) }, mov[2] = { movers(p, 1), movers(p, 2) };
+  if (!mob[p->side]) return -WIN + 1;
+#ifdef NN_DEBUG   // (tools/nnue/kn.c nncheck: every evaluation's accumulators against ones made from the whole board)
+  { short f[2][NN_H]; accFull(p, f); nnChecked++;
+    for (int c = 0; c < 2; c++) for (int i = 0; i < NN_H; i++) if (f[c][i] != ACC[p - ST][c][i]) { nnBad++; c = 2; break; } }
+#endif
+  return nnEval(p, ACC[p - ST], mob, mov);
+}
+static inline void playN(P *q, const P *p, int m) { if (nnOn) accMove((int)(q - ST), (int)(p - ST), p, m); play(q, p, m); }   // (the accumulators first: q may be p at the stack's end)
 static inline short *histAt(const P *p, int m) { return &hist[p->side][(m % 128) % MAXN][(m / 128) % MAXN]; }
 static inline void histAdd(const P *p, int m, int bonus) { short *h = histAt(p, m); *h += bonus - *h * (bonus < 0 ? -bonus : bonus) / 512; }
 static inline int lmrOf(const P *p, int m, int d, int i, int ply) {   // the reduction of the move in place i (0 = first)
@@ -349,10 +471,10 @@ static int search(P *p, int d, int a, int b, int ply) {
   }
   int L[MAXMV], n = genMoves(p, L);
   if (!n) return -(WIN - ply);
-  if (d <= 0) return evaluate(p);
+  if (d <= 0) return evalP(p);
   const int v2 = sv2; int futile = 0;
   if (v2 && b - a == 1 && a > -WINT && b < WINT && ply > 0 && p->ply >= 2) {
-    const int stat = evaluate(p);
+    const int stat = evalP(p);
     if (KV_RFP && d <= RFP_D && stat - RFP_M * d >= b) return stat;
     if (KV_FUT && d <= 2 && stat + FUT_M * d <= a) futile = 1;
   }
@@ -370,7 +492,7 @@ static int search(P *p, int d, int a, int b, int ply) {
     if (i >= 1 && !noSplit && d >= splitD && n - i >= 2 && n - i <= SP_MV && (gIdle > 0 || (gWaitN > 0 && spWanted()))) {
       SPt *s = spAlloc();
       if (s) {
-        s->pos = *p; int k = 0; for (int j = i; j < n; j++) { s->mv[k] = L[j]; s->lg[k++] = (short)j; }
+        s->pos = *p; spFillAcc(s, p); int k = 0; for (int j = i; j < n; j++) { s->mv[k] = L[j]; s->lg[k++] = (short)j; }
         s->n = k; s->depth = d; s->ply = ply; s->root = 0; s->all = 0; s->pv = 0; s->beta = b; s->alpha = a;
         Move bmm = bm; spRun(s, &best, &bmm, 0); bm = bmm;
         if (stopF) return best;
@@ -382,13 +504,13 @@ static int search(P *p, int d, int a, int b, int ply) {
 #endif
     int m = L[i];
     if (futile && i >= 3 && any && best > -WINT) continue;
-    play(q, p, m);
+    playN(q, p, m);
     int v;
     if (i == 0) v = -search(q, d - 1, -b, -a, ply + 1);
     else {
       int red = v2 && KV_LMR ? lmrOf(p, m, d, i, ply) : (d >= 3 && i >= 5) ? 1 : 0;
       v = -search(q, d - 1 - red, -a - 1, -a, ply + 1);
-      if (v > a && (red || v < b)) { play(q, p, m); v = -search(q, d - 1, -b, -a, ply + 1); }
+      if (v > a && (red || v < b)) { playN(q, p, m); v = -search(q, d - 1, -b, -a, ply + 1); }
     }
     if (stopF) return any ? best : 0;
     if (v > best) { best = v; any = 1; bm = m; if (v > a) { a = v; if (a >= b) {
@@ -408,17 +530,26 @@ static int search(P *p, int d, int a, int b, int ply) {
 #ifdef MT
 // ---- Praline's glue (praline_ybw.h)
 static inline P *slotP(int ply) { return &ST[ply < MAXPLY ? ply : MAXPLY]; }
-static void spLoadPos(const SPt *s, int top, int fresh) { *slotP(s->ply) = s->pos; (void)top; (void)fresh; }
+static void spLoadPos(const SPt *s, int top, int fresh) {
+  P *p = slotP(s->ply); *p = s->pos;
+  if (nnOn) { const int k = (int)(p - ST); for (int c = 0; c < 2; c++) for (int i = 0; i < NN_H; i++) ACC[k][c][i] = s->acc[c][i]; }
+  (void)top; (void)fresh;
+}
+static void spFillAcc(SPt *s, const P *p) { if (nnOn) { const int k = (int)(p - ST); for (int c = 0; c < 2; c++) for (int i = 0; i < NN_H; i++) s->acc[c][i] = ACC[k][c][i]; } }
 static int spSearch(SPt *s, int i, int a) {
   const int ply = s->ply, b = s->beta, d = s->depth; const Move m = s->mv[i];
   P *p = slotP(ply), *q = slotP(ply + 1);
-  play(q, p, m);
+  playN(q, p, m);
   int v;
-  if (s->root) v = s->all ? -search(q, d - 1, -WIN - 1, WIN + 1, 1) : -search(q, d - 1, -WIN - 1, -a, 1);   // (the root: as ab_best / ab_values)
+  if (s->root) {
+    if (s->all) v = -search(q, d - 1, -WIN - 1, WIN + 1, 1);
+    else if (sv2 == 2) { v = -search(q, d - 1, -a - 1, -a, 1); if (v > a && v < b && !stopF) v = -search(q, d - 1, -b, -a, 1); }   // (v3: PVS in the aspiration window)
+    else v = -search(q, d - 1, -WIN - 1, -a, 1);   // (the root: as ab_best / ab_values)
+  }
   else {
     int red = sv2 && KV_LMR ? lmrOf(p, m, d, s->lg[i], ply) : (d >= 3 && s->lg[i] >= 5) ? 1 : 0;
     v = -search(q, d - 1 - red, -a - 1, -a, ply + 1);
-    if (v > a && (red || v < b)) { play(q, p, m); v = -search(q, d - 1, -b, -a, ply + 1); }
+    if (v > a && (red || v < b)) { playN(q, p, m); v = -search(q, d - 1, -b, -a, ply + 1); }
   }
   return v;
 }
@@ -442,10 +573,14 @@ __attribute__((export_name("search"))) int csearch(int d, int a, int b, int ply)
 // ab_best(maxD): IO[0] move, IO[1] value, IO[2] depth; ab_values(d): the finished root moves in AOM / AOV best first (a stable
 // sort), returns how many. The caller sets the counters (setn) and the killers (kclear) as for a JS bestMove.
 int AOM[MAXMV], AOV[MAXMV];
-static void abRoot(void) { P *p = &ST[0]; for (int i = 0; i < NN; i++) p->sq[i] = SQ[i]; syncBB(p); p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; }
-static int rootChild(int m, int d, int a, int b) { play(&ST[1], &ST[0], m); return -search(&ST[1], d - 1, a, b, 1); }
-EXPORT(ab_best) void ab_best(int maxD) {
-  setMode(1);
+static void abRoot(void) { P *p = &ST[0]; for (int i = 0; i < NN; i++) p->sq[i] = SQ[i]; syncBB(p); p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; if (nnOn) accFull(p, ACC[0]); }
+static int rootChild(int m, int d, int a, int b) { playN(&ST[1], &ST[0], m); return -search(&ST[1], d - 1, a, b, 1); }
+EXPORT(ab_best3) void ab_best3(int maxD, int mode);
+EXPORT(ab_best) void ab_best(int maxD) { ab_best3(maxD, 1); }
+static void ab_best_v3(int maxD);
+void ab_best3(int maxD, int mode) {
+  setMode(mode);
+  if (sv2 == 2) { ab_best_v3(maxD); return; }
   abRoot();
   int G[MAXMV], n = genMoves(&ST[0], G), O[MAXMV];
   for (int i = 0; i < n; i++) O[i] = G[i];
@@ -459,7 +594,7 @@ EXPORT(ab_best) void ab_best(int maxD) {
 #ifdef MT
       if (i == 1 && n - 1 >= 2 && n - 1 <= SP_MV && d >= splitD && gIdle > 0) {   // YBW at the root: the first move is done
         SPt *s = spAlloc();
-        if (s) { s->pos = ST[0];
+        if (s) { s->pos = ST[0]; spFillAcc(s, &ST[0]);
           int vals[SP_MV];
           for (int j = 1; j < n; j++) { s->mv[j - 1] = O[j]; s->lg[j - 1] = (short)j; }
           s->n = n - 1; s->depth = d; s->ply = 0; s->root = 1; s->all = 0; s->pv = 1; s->beta = WIN + 1; s->alpha = a;
@@ -479,10 +614,62 @@ EXPORT(ab_best) void ab_best(int maxD) {
   }
   IO[0] = bestM; IO[1] = bestV; IO[2] = bestD;
 }
+// (2026-11-20) v3's root: iterative deepening with an aspiration window around the last depth's value (±ASP_W, widened ×2 on
+// a fail; a fail high keeps its move), the first move with the window, the others by a null window first (PVS)
+#ifndef ASP_W
+#define ASP_W 40
+#endif
+#ifndef KV_ASP
+#define KV_ASP 1
+#endif
+static void ab_best_v3(int maxD) {
+  ttnew3();
+  abRoot();
+  int G[MAXMV], n = genMoves(&ST[0], G), O[MAXMV];
+  for (int i = 0; i < n; i++) O[i] = G[i];
+  orderMoves(&ST[0], O, n, -1, 0);
+  int bestM = n ? O[0] : -1, bestV = 0, bestD = 0;
+  for (int d = 1; d <= maxD; d++) {
+    int delta = ASP_W, lo = -WIN - 1, hi = WIN + 1, fin = 0;
+    if (KV_ASP && d >= 4 && bestV > -WINT && bestV < WINT) { lo = bestV - delta; hi = bestV + delta; }
+    for (;;) {
+      int a = lo, bm = -1, bv = -WIN - 1, any = 0;
+      for (int i = 0; i < n; i++) O[i] = G[i];
+      orderMoves(&ST[0], O, n, bestM, 0);
+      for (int i = 0; i < n; i++) {
+#ifdef MT
+        if (i == 1 && n - 1 >= 2 && n - 1 <= SP_MV && d >= splitD && gIdle > 0) {   // YBW at the root: the first move is done
+          SPt *s = spAlloc();
+          if (s) { s->pos = ST[0]; spFillAcc(s, &ST[0]);
+            int vals[SP_MV];
+            for (int j = 1; j < n; j++) { s->mv[j - 1] = O[j]; s->lg[j - 1] = (short)j; }
+            s->n = n - 1; s->depth = d; s->ply = 0; s->root = 1; s->all = 0; s->pv = 1; s->beta = hi; s->alpha = a;
+            Move b2 = bm; int bv2 = bv; spRun(s, &bv2, &b2, vals); if (bv2 > bv) { bv = bv2; bm = b2; }
+            break;
+          }
+        }
+#endif
+        int v;
+        if (i == 0) v = rootChild(O[i], d, -hi, -a);
+        else { v = rootChild(O[i], d, -a - 1, -a); if (v > a && v < hi && !stopF) v = rootChild(O[i], d, -hi, -a); }
+        if (stopF) break;
+        if (!any || v > bv) { bv = v; bm = O[i]; any = 1; if (v > a) { a = v; if (a >= hi) break; } }
+      }
+      if (stopF) { if (bm >= 0 && bv > lo) { bestM = bm; bestV = bv; bestD = d; } break; }   // (a move better than the window's low end: keep it)
+      if (bv <= lo && lo > -WIN - 1) { delta *= 2; lo = bv - delta < -WIN - 1 ? -WIN - 1 : bv - delta; continue; }   // fail low: search again lower
+      if (bv >= hi && hi < WIN + 1) { bestM = bm; delta *= 2; hi = bv + delta > WIN + 1 ? WIN + 1 : bv + delta; continue; }   // fail high: the move stays first
+      bestM = bm; bestV = bv; bestD = d; fin = 1; break;
+    }
+    if (stopF || !fin) break;
+    if (bestV > 29000 || bestV < -29000) break;
+  }
+  IO[0] = bestM; IO[1] = bestV; IO[2] = bestD;
+}
 EXPORT(ab_values2) int ab_values2(int d, int v2);
 EXPORT(ab_values) int ab_values(int d) { return ab_values2(d, 0); }
-int ab_values2(int d, int v2) {   // v2 = 1: the analysis (search v2); 0: the levels by depth, the resistance (as before)
+int ab_values2(int d, int v2) {   // v2 = 1 / 2: the analysis (search v2 / v3); 0: the levels by depth, the resistance (as before)
   setMode(v2);
+  if (sv2 == 2 && d == 1) ttnew3();   // (v3: a new analysis, a new generation)
   abRoot();
   int O[MAXMV], n = genMoves(&ST[0], O), vals[MAXMV], k = 0;
   orderMoves(&ST[0], O, n, -1, 0);
@@ -491,7 +678,7 @@ int ab_values2(int d, int v2) {   // v2 = 1: the analysis (search v2); 0: the le
   int done = 0;
   if (n >= 2 && n <= SP_MV && d >= splitD && gIdle > 0) {   // every root move with the full window: split from the first
     SPt *s = spAlloc();
-    if (s) { s->pos = ST[0];
+    if (s) { s->pos = ST[0]; spFillAcc(s, &ST[0]);
       for (int j = 0; j < n; j++) { s->mv[j] = O[j]; s->lg[j] = (short)j; }
       s->n = n; s->depth = d; s->ply = 0; s->root = 1; s->all = 1; s->pv = 1; s->beta = WIN + 1; s->alpha = -WIN - 1;
       int bst = -2147483647; Move b2 = O[0]; spRun(s, &bst, &b2, vals); done = 1;
@@ -507,6 +694,11 @@ int ab_values2(int d, int v2) {   // v2 = 1: the analysis (search v2); 0: the le
   }
   return k;
 }
+// (2026-11-20, the native tools tools/nnue/kn.c) the root (as ab_best): its moves into AOM, its evaluation (the mode's: the net when on)
+EXPORT(ab_moves) int ab_moves(void) { abRoot(); return genMoves(&ST[0], AOM); }
+EXPORT(ab_eval) int ab_eval(int mode) { setMode(mode); abRoot(); return evalP(&ST[0]); }
+EXPORT(nn_checked) double nn_checked(void) { return (double)nnChecked; }
+EXPORT(nn_bad) double nn_bad(void) { return (double)nnBad; }
 EXPORT(aomp) int *aomp(void) { return AOM; }
 EXPORT(aovp) int *aovp(void) { return AOV; }
 #ifdef MT
