@@ -1053,7 +1053,7 @@
      their marks on the board (the amazon's square ring, the destination dot, the arrow's diamond). The warm-ups (step.ramp) play here
      too, with texts without coordinates (atlas/nocoord/amazons.json, 2026-11-16); an intro's notation paragraph is dropped.
      A position here is { spec: { b, side }, me }. Moves: amazons/engine.js move numbers. */
-  const AM_ENG = '../amazons/engine.js?v=16';   // (the table adapter's file: one cache)
+  const AM_ENG = '../amazons/engine.js?v=17';   // (the table adapter's file: one cache)
   const amEng = () => window.AmazonsEngine ? Promise.resolve(window.AmazonsEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = AM_ENG; sc.onload = () => window.AmazonsEngine ? res(window.AmazonsEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
   const AMM = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の手' : '赤い印の手') + '\u0002' : `<i class="ls-spot ${k}"></i>`;   // (a move named by its marks)
   const AM_MK = { s_escape: 'ng' };   // (amazons/app.js MK_CLS: the squares a problem lights)
