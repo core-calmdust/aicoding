@@ -135,6 +135,8 @@ function render(msg) {
   renderBoards(); renderFleet(); renderStatus(msg); renderKifu(); renderEval(); renderButtons(); renderSkills(); renderDraft();
 }
 const SK_ICON = {
+  depth: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/><path d="M12 8.8V7" /></svg>',
+  plate: '<svg viewBox="0 0 24 24"><path d="M3 15h18l-2.5 4h-13z"/><path d="M6 15V9h12v6"/><path d="M9 9V6h6v3"/></svg>',
   diag: '<svg viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="5" height="5" rx=".8"/><rect x="9.5" y="9.5" width="5" height="5" rx=".8"/><rect x="16.5" y="16.5" width="5" height="5" rx=".8"/><path d="M16 4h4v4"/></svg>',
   echo: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/></svg>',
   lance: '<svg viewBox="0 0 24 24"><rect x="9.5" y="2" width="5" height="4.2" rx=".8"/><rect x="9.5" y="7.3" width="5" height="4.2" rx=".8"/><rect x="9.5" y="12.6" width="5" height="4.2" rx=".8"/><rect x="9.5" y="17.9" width="5" height="4.2" rx=".8"/></svg>',
@@ -313,7 +315,7 @@ async function doSkill(a) {
   if (res.blocked) { sfx('bad'); toast(t(by === 0 ? 'fx.blk' : 'fx.foe.blk', { s: t('sk.' + res.skill) })); }
   else if (res.skill === 'flare') toast(t('fx.flare', { k: res.k }));
   else if (res.skill === 'sonar' || res.skill === 'scout' || res.skill === 'radar' || res.skill === 'sweep' || res.skill === 'echo' || res.skill === 'diag') toast(t('fx.' + res.skill, { k: res.k, n: res.swept || 0 }));
-  else if (noAim) toast(t((by === 0 ? 'fx.' : 'fx.foe.') + res.skill, { c: res.fix != null ? E.cellName(res.fix) : res.lit != null ? E.cellName(res.lit) : '' }));
+  else if (noAim) toast(t((by === 0 ? 'fx.' : 'fx.foe.') + res.skill, { c: res.fix != null ? E.cellName(res.fix) : res.lit != null ? E.cellName(res.lit) : '', s: res.pi != null ? t('ship.' + st.sides[by].ships[res.pi].t) : '' }));
   else if (by === 0 && res.shots.some(x => x.fog)) toast(t('fx.fog'));
   else if (res.skill === 'probe') toast(t('fx.probe', { r: t(res.shots[0] && res.shots[0].hit && !res.shots[0].fog ? 'log.hit' : res.shots[0] && res.shots[0].fog ? 'log.fog' : 'log.miss'), k: res.k != null ? res.k : '?' }), res.shots[0] && res.shots[0].hit ? 'hit' : '');
   else if (res.shots.some(x => x.mine)) { sfx('sunk'); shake(); toast(t(by === 0 ? 'fx.mine' : 'fx.foe.mine'), 'hit'); }
