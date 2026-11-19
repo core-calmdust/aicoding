@@ -167,7 +167,9 @@ body.placing .radar{display:none}
 /* タクティクス: the draft (deploy) and the skill bar (battle) */
 .draft{display:none}
 body.drafting .draft{display:block}body.drafting .deploy{display:none}
-.draft .dh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.draft .dh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}.draft .dh b{margin-inline-end:auto}
+#btnShipList{height:28px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--muted);font-size:12.5px;cursor:pointer;white-space:nowrap}
+#shipList .sl{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid rgba(255,255,255,.07)}#shipList .sl b{font-size:15px}#shipList .sl small{display:block;font-size:12.5px;color:var(--muted);line-height:1.45}#shipList .sl .dc{font-family:var(--num);font-size:14px;color:var(--heat)}#shipList .pip i{width:8px;height:12px}
 .draft .dh b{font-size:17px;letter-spacing:.06em}.draft .dh span{font-family:var(--num);font-size:16px;font-weight:600;color:var(--accent)}.draft .dh span.me{color:var(--heat)}
 .dr{display:grid;grid-template-columns:54px minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.07)}
 .dr .dn{min-width:0}.dr .dn b{display:block;font-size:15px;white-space:nowrap}.dr .dn small{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -291,7 +293,7 @@ body.tac:not(.placing) .skills{display:grid}
     </div>
   </div>
   <aside class="side">
-    <div class="card draft" id="draftCard"><div class="dh"><b data-i18n="dr.t"></b><span id="drTurn"></span></div><div id="drRows"></div><div id="drWho"></div><button id="btnDrStop" data-i18n="dr.stop"></button></div>
+    <div class="card draft" id="draftCard"><div class="dh"><b data-i18n="dr.t"></b><button id="btnShipList" data-i18n="dr.all"></button><span id="drTurn"></span></div><div id="drRows"></div><div id="drWho"></div><button id="btnDrStop" data-i18n="dr.stop"></button></div>
     <div class="card skills" id="skillCard"></div>
     <div class="card deploy" id="deployCard">
       <h3 data-i18n="dep.t"></h3><p id="depText"></p>
@@ -336,6 +338,7 @@ body.tac:not(.placing) .skills{display:grid}
 </div>
 
 <!-- rules (shared/ruletour.js) -->
+<div class="overlay" id="shipsOverlay"><div class="modal"><h2 data-i18n="dr.all"></h2><div id="shipList"></div><div class="modal-actions"><button class="mbtn" id="btnShipsClose" data-i18n="close"></button></div></div></div>
 <div class="overlay" id="rulesOverlay"><div class="modal"><div id="rulesBody"></div></div></div>
 
 <!-- result -->
@@ -348,7 +351,7 @@ body.tac:not(.placing) .skills{display:grid}
   </div>
 </div>
 
-<script src="i18n.js?v=13"></script>
+<script src="i18n.js?v=14"></script>
 <script src="../shared/rulesoffer.js?v=20sea"></script>
 <script src="../shared/headerbar.js?v=63"></script>
 <script src="../shared/resign.js?v=3l14"></script>
@@ -356,7 +359,7 @@ body.tac:not(.placing) .skills{display:grid}
 <script src="engine.js?v=13"></script>
 <script src="board.js?v=7"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=14"></script>
+<script src="app.js?v=15"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>

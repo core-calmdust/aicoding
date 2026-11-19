@@ -167,6 +167,13 @@ function renderSkills() {
     return `<button class="sk ${dead ? 'lost' : ready ? 'ready' : 'wait'}${G.armed === i ? ' armed' : ''}" data-i="${i}" ${ready && live && mine ? '' : 'disabled'} title="${t('ship.' + s.t)} — ${t('sk.' + k + '.d')}">${SK_ICON[k]}<b>${t('sk.' + k)}</b><small>${dead ? t('sk.lost') : ready ? t('sk.ready') : t('sk.wait', { n: c })}</small></button>`; }).join('');
 }
 // the pick draft (タクティクス): 10 ships on the table, picked in turn A B B A …; then the fleet is arranged as usual
+function shipDesc(T) { return T.skill ? t('sk.' + T.skill) + '：' + t('sk.' + T.skill + '.d') + ' · ' + t('sl.cd', { n: T.cd }) : T.armor ? t('sk.armor') + '：' + t('sk.armor.d') : T.aa ? t('sk.aa') + '：' + t('sk.aa.d') : T.decoy ? t('sk.decoy') + '：' + t('sk.decoy.d') : T.counter ? t('sk.counter') + '：' + t('sk.counter.d') : T.cost === 0 ? t('sk.free') + '：' + t('sk.free.d') : T.rally ? t('sk.rally') + '：' + t('sk.rally.d') : T.hospital ? t('sk.hospital') + '：' + t('sk.hospital.d') : t('dr.none'); }
+function openShipList() {   // every type, cheapest first, with the full text — for planning a fleet
+  $('#shipList').innerHTML = E.TYPES.map((T, k) => [T, k]).sort((a, b) => a[0].cost - b[0].cost || a[1] - b[1]).map(([T, k]) => `<div class="sl"><span class="pip">${'<i></i>'.repeat(T.len)}</span><div><b>${t('ship.' + k)}</b><small>${shipDesc(T)}</small></div><span class="dc">${T.cost}</span></div>`).join('');
+  $('#shipsOverlay').classList.add('show');
+}
+$('#btnShipList').onclick = openShipList; $('#btnShipsClose').onclick = () => $('#shipsOverlay').classList.remove('show');
+$('#shipsOverlay').addEventListener('click', e => { if (e.target.id === 'shipsOverlay') $('#shipsOverlay').classList.remove('show'); });
 const drOpen = new Set();   // draft rows whose full description is shown (tap the name)
 function renderDraft() {
   if (G.phase !== 'draft') return;
