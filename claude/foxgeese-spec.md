@@ -167,3 +167,4 @@ URL: https://core-calmdust.github.io/aicoding/foxgeese/ （cat: hist＝ヒスト
 
 ## 正式リリース（2026-11-19）
 - ALPHA 表記を外した（index.html の alpha:true、shared/atlas.js の alpha: true）。
+- 大百科のゲームアイコン（images/atlas/foxgeese.webp、atlas/icons3d.js ICONS.foxgeese）を、ひだまり牧場の盤ときつね＆がちょうの駒の可愛いモチーフに描き直し（2026-11-19）。芝の盤にクリーム色の小道と白い点、まるい狐がガチョウを跳び越える。

@@ -62,7 +62,7 @@ html.atlas-skin.atlas-fox:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) 
     board: boardDom,
     pc: { vars: ['--cell'], extras: '.frame > .reserve' },
     outer: r => { const H = r.height * K3.H() / 7; return { top: r.top + r.height / 2 - H / 2, height: H }; },   // slab edge to slab edge
-    guide: '../images/atlas/foxgeese.webp', guideFallback: '../images/atlas/foxgeese.webp',
+    guide: '../images/atlas/foxgeese.webp?v=13', guideFallback: '../images/atlas/foxgeese.webp?v=13',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
     skip: 'lines|\\.pc|\\.rv|reserve|rsv|sqfx|\\.dest|\\.mark|\\.hov|fxsvg|hintlbl|frame|prompt|orn',
     start(lv, side, mode) {
