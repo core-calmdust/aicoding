@@ -468,29 +468,38 @@
       g.add(at(cnt(dark, 1.4), p(2) - .45, 2.05, p(1) - .35, .3, 0, -.3));   // coming down on the empty square right of the white one
       return g;
     },
-    foxgeese() {   // the middle of the oak cross board (the 3D default): lines and diagonals through nine points; a big fox leaping over a goose, two more geese waiting
-      const top = M({ map: X.canvasTex('icfg1', 512, 512, (c, W) => {
-        c.fillStyle = '#c2925a'; c.fillRect(0, 0, W, W);
-        let sd = 7; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-        for (let k = 0; k < 90; k++) { c.strokeStyle = `rgba(${r() < .5 ? '120,78,38' : '226,190,140'},${.1 + r() * .16})`; c.lineWidth = 1 + r() * 3; const y = r() * W; c.beginPath(); c.moveTo(0, y); c.bezierCurveTo(W * .3, y + (r() - .5) * 26, W * .7, y + (r() - .5) * 26, W, y + (r() - .5) * 14); c.stroke(); }   // grain
-        const a = W / 6, b = W / 2, d = W - a; c.strokeStyle = '#4a2c12'; c.lineWidth = 12; c.lineCap = 'round';
-        for (const v of [a, b, d]) { c.beginPath(); c.moveTo(v, a); c.lineTo(v, d); c.stroke(); c.beginPath(); c.moveTo(a, v); c.lineTo(d, v); c.stroke(); }
-        c.beginPath(); c.moveTo(a, a); c.lineTo(d, d); c.moveTo(d, a); c.lineTo(a, d); c.stroke();
-        c.fillStyle = '#4a2c12'; for (const x of [a, b, d]) for (const y of [a, b, d]) { c.beginPath(); c.arc(x, y, 20, 0, 7); c.fill(); }
-      }), roughness: .55 });
-      const g = boardChunk(3, 3.6, top, M({ map: X.wood('icfgw', '#5a3a1c', '#3a2410') }));
+    foxgeese() {   // (2026-11-19: the meadow board and the cute pieces, the 2D / 3D defaults) the middle of the cross: a sunny grass board with cream paths and white stones, a round fox leaping over a round goose, two more geese waiting
+      const top = M({ map: X.canvasTex('icfg2', 512, 512, (c, W) => {
+        c.fillStyle = '#5fae3a'; c.fillRect(0, 0, W, W);
+        let sd = 11; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+        for (let k = 0; k < 900; k++) { c.fillStyle = r() < .5 ? 'rgba(56,120,32,.4)' : 'rgba(170,220,110,.4)'; c.fillRect(r() * W, r() * W, 2, 5 + r() * 4); }
+        const a = W / 6, b = W / 2, d = W - a; c.lineCap = 'round';
+        const path = (x0, y0, x1, y1) => { for (const [w, col] of [[30, '#e9cf9a'], [20, '#fbf0d6']]) { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); } };
+        for (const v of [a, b, d]) { path(v, a, v, d); path(a, v, d, v); }
+        path(a, a, d, d); path(d, a, a, d);
+        c.setLineDash([16, 12]); c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 4; c.strokeRect(a * .38, a * .38, W - a * .76, W - a * .76); c.setLineDash([]);
+        for (const x of [a, b, d]) for (const y of [a, b, d]) { c.fillStyle = 'rgba(120,90,40,.25)'; c.beginPath(); c.arc(x + 2, y + 4, 26, 0, 7); c.fill(); c.fillStyle = '#ffffff'; c.beginPath(); c.arc(x, y, 24, 0, 7); c.fill(); }
+      }), roughness: .75 });
+      const g = boardChunk(3, 3.6, top, M({ map: X.wood('icfgw2', '#d6a466', '#9c6a32') }));
       const S = 3.1 / 3, p = i => -1.55 + S * (i + .5);
-      const goose = sc => { const o = new T.Group(), m = C(0xf6f1e4, { roughness: .5 }), body = ball(.46, m, .86); body.position.y = .38; o.add(body);
-        const bill = mesh(new T.ConeGeometry(.12, .3, 16), C(0xf09a24, { roughness: .4 })); bill.rotation.x = Math.PI / 2; bill.position.set(0, .5, .5); o.add(bill);
-        for (const sx of [-1, 1]) { const e = ball(.045, C(0x14110e, { roughness: .3 })); e.position.set(sx * .17, .58, .37); o.add(e); }
+      const ink = C(0x2a1a12, { roughness: .3 }), cheek = C(0xf7a8b0, { roughness: .6 });
+      const face = (o, y, z, w) => {   // two shiny eyes and pink cheeks on a round head
+        for (const sx of [-1, 1]) { const e = ball(.07, ink); e.position.set(sx * w, y, z); o.add(e); const hl = ball(.022, C(0xffffff, { roughness: .2 })); hl.position.set(sx * w + .02, y + .03, z + .06); o.add(hl);
+          const ck = ball(.08, cheek, .45); ck.position.set(sx * (w + .13), y - .12, z - .05); o.add(ck); } };
+      const goose = sc => { const o = new T.Group(), m = C(0xffffff, { roughness: .35 }), body = ball(.46, m, .92); body.position.y = .42; o.add(body);
+        face(o, .52, .38, .15);
+        const bill = ball(.13, C(0xf5a02a, { roughness: .35 }), .55); bill.position.set(0, .42, .47); bill.scale.set(1.2, .55, 1); o.add(bill);
         o.scale.setScalar(sc); return o; };
-      const fox = sc => { const o = new T.Group(), m = C(0xd9602c, { roughness: .45 }), body = ball(.5, m, .9); body.position.y = .42; o.add(body);
-        for (const sx of [-1, 1]) { const e = mesh(new T.ConeGeometry(.17, .36, 18), m); e.position.set(sx * .28, .92, -.04); e.rotation.z = -sx * .25; o.add(e); const e2 = ball(.05, C(0x14110e, { roughness: .3 })); e2.position.set(sx * .19, .56, .42); o.add(e2); }
-        const muz = ball(.22, C(0xfbf3e6, { roughness: .5 }), .8); muz.position.set(0, .34, .36); o.add(muz); const nose = ball(.06, C(0x14110e, { roughness: .3 })); nose.position.set(0, .42, .56); o.add(nose);
+      const fox = sc => { const o = new T.Group(), m = C(0xee7f2e, { roughness: .4 }), body = ball(.5, m, .9); body.position.y = .45; o.add(body);
+        for (const sx of [-1, 1]) { const e = mesh(new T.ConeGeometry(.17, .34, 18), m); e.position.set(sx * .27, .92, -.02); e.rotation.z = -sx * .28; o.add(e);
+          const tip = mesh(new T.ConeGeometry(.075, .13, 14), C(0x4a2a18, { roughness: .5 })); tip.position.set(sx * .335, 1.05, -.02); tip.rotation.z = -sx * .28; o.add(tip); }
+        const muz = ball(.26, C(0xfff6ea, { roughness: .45 }), .72); muz.position.set(0, .32, .32); o.add(muz);
+        face(o, .56, .4, .17);
+        const nose = ball(.055, ink); nose.position.set(0, .42, .55); o.add(nose);
         o.scale.setScalar(sc); return o; };
-      g.add(at(goose(.8), p(1), .5, p(1), 0, .5)); g.add(at(goose(.8), p(0), .5, p(1), 0, .9)); g.add(at(goose(.8), p(2), .5, p(2), 0, .2));
-      g.add(at(fox(1.25), p(1) + .05, 2.0, p(1) - .05, .25, .6, -.2));   // over the goose in the middle, towards the empty point
-      const dotM = gloss(0xe0452c);
+      g.add(at(goose(.8), p(1), .5, p(1), 0, -.35)); g.add(at(goose(.8), p(0), .5, p(1), 0, -.1)); g.add(at(goose(.8), p(2), .5, p(2), 0, -.6));   // (the faces toward the camera)
+      g.add(at(fox(1.25), p(1) + .05, 2.0, p(1) - .05, .3, -.35, -.12));   // over the goose in the middle, towards the empty point, looking at us
+      const dotM = gloss(0xffb43a);
       for (let i = 0; i < 5; i++) { const t = (i + .5) / 5, d = ball(.075, dotM); d.position.set(p(2) + (p(0) - p(2)) * t, .7 + Math.sin(t * Math.PI) * 1.05, p(0) + (p(2) - p(0)) * t); g.add(d); }
       return g;
     },
