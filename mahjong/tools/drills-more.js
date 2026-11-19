@@ -91,6 +91,7 @@ function rivers(c, avoid, dead, L0) {
 function evalY(th, h) {
   const { c, melds } = h, m = melds.length;
   if (c.some(x => x >= 4)) return null;
+  if (MJ.shanten(c, m) === -1) return null;   // (ユーザー 2026-11-20: a hand that has already won offers ツモ — never a problem)
   const base = options(c, melds, new Array(34).fill(0), 0, melds);
   if (base.sh0 !== 0) return null;
   const ten = base.out.filter(o => o.sh === 0);
@@ -183,6 +184,7 @@ function makeD(th) {
 function evalD(th, h) {
   const { c } = h;
   if (c.some(x => x >= 4)) return null;
+  if (MJ.shanten(c, 0) === -1) return null;
   const sh = Math.min(...[...Array(34).keys()].filter(d => c[d]).map(d => { c[d]--; const s = MJ.shanten(c, 0); c[d]++; return s; }));
   if (th === 'p1' ? sh !== 0 : sh < 2) return null;
   // the riichi river (seat 1): 6–9 tiles; the concept of the lesson is planted in it
