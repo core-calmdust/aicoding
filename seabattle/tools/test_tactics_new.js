@@ -100,6 +100,20 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     n0 = await acts(); await tap('#skillCard .sk[data-i="' + sub + '"]'); await p.waitForTimeout(150); await tapCell(55); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
     ok(await p.evaluate(() => G.st.scans[0].length === 1), name + ': ... and it reads the sea');
     await shot('hospital');
+    // 第7弾: strafe (an X, one shell lost to AA) and the side torpedo
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[22, 23, 4], [13, 3, 4]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('strafe'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(55); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => { const m = G.st.log.filter(m => m.by === 0 && m.skill === 'strafe').pop(); const c = G.st.log.filter(x => x.via === 'strafe').map(x => x.cell); return m && m.ic >= 0 && c.length === 4 && c.every(x => [55, 44, 46, 64, 66].includes(x)); }), name + ': strafe fires an X, one shell shot down by AA');
+    await shot('strafe'); await idle();
+    await p.evaluate(() => { G.view = 'enemy'; G.st.cd[0].fill(0); render(); });
+    i = await skillBtn('rtorpedo'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(92); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => { const c = G.st.log.filter(x => x.via === 'rtorpedo').map(x => x.cell); return c.length >= 1 && c.every((x, j) => x === 90 + j) && c.slice(0, -1).every(x => G.st.sides[1].grid[x] < 0); }), name + ': the side torpedo runs along row 10 from the left');
+    await shot('rtorpedo');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
