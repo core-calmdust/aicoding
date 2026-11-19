@@ -140,3 +140,7 @@ Mac の実測でコナネは 55〜67万局面／秒と遅かった（ウゴル�
 - **作業機の仮ネット**（8×8、約20万局面、採用しない）：差分更新・学習器の値とも不一致 0、wasm＝ネイティブ。手作り評価に 1手2万局面 +147 −53（+177 Elo）、1手0.1秒 +113 −87（+45、−3〜+95）。ネットの評価は局面数／秒が約0.7倍。ブラウザ（1スレッドの Worker、分離あり2スレッドの core_mt.wasm）で天上Ⅰの手と分析が動く（`nn: 1`）。
 - **採用の基準**：`run.sh` の `-> adopt`（不一致 0、1手0.1秒・200局で片側95%の下限が 50% 超）→ `check_nn.js`・ブラウザで確認 → 天上の基準値（`RT_LV` 24〜26、大百科の RATING）を測り直し、トップの紹介文に「NNUE搭載」と学習量。
 - キャッシュ：`engine.js?v=8-v3nn`（app.js・index.html・bench.html・大百科 games/konane.js）、`core-wasm.js?v=6`、`core_mt.wasm?v=7`、大百科 `games/konane.js?v=19`（lazy.js、`atlas/index.html` の lazy.js?v=474）。
+
+## 推論の高速化（2026-11-20）
+- `core.c` `nnEval` を wasm SIMD に（1層目は int32 レーン、2層目は `i32x4.dot_i16x8`。値・局面数は同じ）。wasm SIMD のネットありの探索が約+30%。詳細は `konane/MODEL_CARD.md`「推論の高速化」。
+- 版：`core-wasm.js?v=7`、`engine.js?v=9-v3nn`（app.js・index.html・bench.html・atlas/games/konane.js・atlas/rules/konane.js）、`core_mt.wasm?v=8`、app.js `…-v3s`、atlas/lazy.js の konane（games 20・rules 8）。
