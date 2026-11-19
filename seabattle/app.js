@@ -66,7 +66,7 @@ function restore() {
 function boardOpts(which) {
   if (which === 'own') { const sd = G.st ? G.st.sides[0] : null; return { ships: G.my, show: i => (sd && sd.sunk[i]) ? 'sunk' : (drag && drag.i === i ? (drag.bad ? 'ghost bad' : 'ghost') : 'own'), shots: sd ? sd.shots : null, last: lastOn(0), scans: G.st ? G.st.scans[1] : null }; }
   const sd = G.st.sides[1];
-  return { ships: sd.ships, show: i => sd.sunk[i] ? 'sunk' : (G.phase === 'over' ? 'ghost' : ''), shots: sd.shots, heat: G.hint ? G.hint.p : null, best: G.hint ? G.hint.best : -1, last: lastOn(1), scans: G.st.scans[0], glow: G.armed != null && hoverCell >= 0 && G.view === 'enemy' ? E.footprint(skillOf(G.my[G.armed]), hoverCell) : null };
+  return { ships: sd.ships, show: i => sd.sunk[i] ? 'sunk' : (G.phase === 'over' ? 'ghost' : ''), shots: G.phase === 'over' ? sd.shots : E.view(sd).shots, heat: G.hint ? G.hint.p : null, best: G.hint ? G.hint.best : -1, last: lastOn(1), scans: G.st.scans[0], glow: G.armed != null && hoverCell >= 0 && G.view === 'enemy' ? E.footprint(skillOf(G.my[G.armed]), hoverCell) : null, fogged: sd.fog > 0 };
 }
 function lastOn(sideIdx) { if (!G.st) return -1; for (let i = G.st.log.length - 1; i >= 0; i--) { const m = G.st.log[i]; if (m.by !== sideIdx && !m.skill) return m.cell; if (m.by === sideIdx) break; } return -1; }
 function renderBoards() {
@@ -107,7 +107,7 @@ function renderStatus(msg) {
 function renderKifu() {
   const k = $('#kifu');
   if (!G.st || !G.st.log.length) { k.innerHTML = `<div class="empty">${t('kifu.empty')}</div>`; return; }
-  k.innerHTML = G.st.log.map((m, i) => m.skill ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('sk.' + m.skill)}</span> ${m.skill === 'torpedo' ? 'ABCDEFGHIJ'[m.cell % 10] : E.cellName(m.cell)}${m.skill === 'sonar' ? ' → ' + m.k : ''}</span>` : `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i>${E.cellName(m.cell)} ${m.sunk >= 0 ? `<span class="s">${t('log.sunk')}</span>` : m.hit ? `<span class="x">${t('log.hit')}</span>` : t('log.miss')}</span>`).join('');
+  k.innerHTML = G.st.log.map((m, i) => m.skill ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('sk.' + m.skill)}</span> ${m.cell < 0 ? '' : m.skill === 'torpedo' ? 'ABCDEFGHIJ'[m.cell % 10] : m.skill === 'scout' ? String((m.cell / 10 | 0) + 1) : E.cellName(m.cell)}${m.skill === 'sonar' || m.skill === 'scout' ? ' → ' + m.k : ''}</span>` : `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i>${E.cellName(m.cell)} ${m.sunk >= 0 ? `<span class="s">${t('log.sunk')}</span>` : m.by === 0 && m.fog && G.st.sides[1].fogged[m.cell] ? t('log.fog') : m.dent ? `<span class="x">${t('log.dent')}</span>` : m.hit ? `<span class="x">${t('log.hit')}</span>` : t('log.miss')}</span>`).join('');
   k.scrollTop = k.scrollHeight;
 }
 function renderEval() {
@@ -135,6 +135,11 @@ function render(msg) {
   renderBoards(); renderFleet(); renderStatus(msg); renderKifu(); renderEval(); renderButtons(); renderSkills(); renderDraft();
 }
 const SK_ICON = {
+  smoke: '<svg viewBox="0 0 24 24"><path d="M5 15a4 4 0 0 1 3-6.5A5 5 0 0 1 17.5 9 3.5 3.5 0 0 1 19 15.8"/><path d="M4 19h16M7 22h10"/></svg>',
+  scout: '<svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M12 8l-7 4 7 1 7-1z"/><path d="M10 16h4"/><path d="M3 5h18M3 19h4M17 19h4"/></svg>',
+  twin: '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="3.2"/><circle cx="16.5" cy="12" r="3.2"/><path d="M8 4v3M16.5 4v3M8 17v3M16.5 17v3"/></svg>',
+  command: '<svg viewBox="0 0 24 24"><path d="M6 21V3"/><path d="M6 4h11l-2.5 3.5L17 11H6"/><path d="M12 15l2 2 4-4"/></svg>',
+  jam: '<svg viewBox="0 0 24 24"><path d="M12 13v8"/><circle cx="12" cy="11" r="2"/><path d="M8 7a5.5 5.5 0 0 0 0 8M16 7a5.5 5.5 0 0 1 0 8"/><path d="M4 4l16 16"/></svg>',
   bomb: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><rect x="9" y="16" width="6" height="6" rx="1"/><rect x="2" y="9" width="6" height="6" rx="1"/><rect x="16" y="9" width="6" height="6" rx="1"/></svg>',
   volley: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.2"/><rect x="13" y="4" width="7" height="7" rx="1.2"/><rect x="4" y="13" width="7" height="7" rx="1.2"/><rect x="13" y="13" width="7" height="7" rx="1.2"/></svg>',
   torpedo: '<svg viewBox="0 0 24 24"><path d="M12 21V6"/><path d="M7 10l5-5 5 5"/><path d="M8 21h8"/></svg>',
@@ -151,7 +156,7 @@ function renderDraft() {
   if (G.phase !== 'draft') return;
   const d = G.draft, mine = d.turn === 0;
   $('#drTurn').textContent = t(d.turn === 0 ? 'dr.you' : 'dr.ai'); $('#drTurn').classList.toggle('me', mine);
-  $('#drRows').innerHTML = E.TYPES.map((T, k) => `<div class="dr${d.pool[k] ? '' : ' out'}"><span class="pip">${'<i></i>'.repeat(T.len)}</span><div class="dn"><b>${t('ship.' + k)}<em>×${d.pool[k]}</em></b><small>${T.skill ? t('sk.' + T.skill) + '：' + t('sk.' + T.skill + '.d') : t('dr.none')}</small></div><span class="dc">${T.cost}</span><button data-k="${k}" ${E.draftCan(d, 0, k) && !G.busy ? '' : 'disabled'}>${t('dr.pick')}</button></div>`).join('');
+  $('#drRows').innerHTML = E.TYPES.map((T, k) => (d.f || E.POOL)[k] ? `<div class="dr${d.pool[k] && d.picks[0].indexOf(k) < 0 ? '' : ' out'}"><span class="pip">${'<i></i>'.repeat(T.len)}</span><div class="dn"><b>${t('ship.' + k)}<em>×${d.pool[k]}</em></b><small>${T.skill ? t('sk.' + T.skill) + '：' + t('sk.' + T.skill + '.d') : T.armor ? t('sk.armor') + '：' + t('sk.armor.d') : t('dr.none')}</small></div><span class="dc">${T.cost}</span><button data-k="${k}" ${E.draftCan(d, 0, k) && !G.busy ? '' : 'disabled'}>${t('dr.pick')}</button></div>` : '').join('');
   const who = (p, name) => `<div class="dw${d.turn === p ? ' turn' : ''}"><div class="fh"><b>${name}</b><span>${t('dr.left', { c: E.draftLeft(d, p) })}</span></div><div class="pips">${d.picks[p].map(k => `<span class="pip" title="${t('ship.' + k)}">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</div></div>`;
   $('#drWho').innerHTML = who(1, 'AI Lv.' + G.level) + who(0, t('you'));
   $('#btnDrStop').disabled = !(E.draftCanStop(d, 0) && !G.busy);
@@ -250,14 +255,16 @@ function startBattle() {
   if (G.st.turn === 1) aiTurn();
 }
 async function doShot(cell) {
-  const st = G.st, by = st.turn, T = st.sides[1 - by], hit = T.grid[cell] >= 0;
+  const st = G.st, by = st.turn, T = st.sides[1 - by], hit = by === 0 && T.fog > 0 ? 'fog' : T.grid[cell] >= 0;   // (under the smoke the shooter sees no flash)
   await swapView(by === 0 ? 'enemy' : 'own');
   if (G.st !== st) return null;
   sfx('lock');
   await SB.fx($('#bsvg'), cell, hit);
   if (G.st !== st) return null;
   const res = E.fire(st, cell); if (!res) return null;
-  if (res.sunk >= 0) { sfx('sunk'); shake(); toast(t(by === 0 ? 'fx.sunk' : 'fx.lost', { s: t('ship.' + T.ships[res.sunk].t) }), 'hit'); }
+  if (res.sunk < 0 && by === 0 && res.fog) { sfx('miss'); toast(t('fx.fog')); }
+  else if (res.dent) { sfx('hit'); toast(t('fx.dent'), 'hit'); }
+  else if (res.sunk >= 0) { sfx('sunk'); shake(); toast(t(by === 0 ? 'fx.sunk' : 'fx.lost', { s: t('ship.' + T.ships[res.sunk].t) }), 'hit'); }
   else if (res.hit) { sfx('hit'); toast(t('fx.hit'), 'hit'); }
   else { sfx('miss'); toast(t('fx.miss')); }
   render(); save(); queueEval();
@@ -265,16 +272,21 @@ async function doShot(cell) {
 }
 async function doSkill(a) {
   const st = G.st, by = st.turn, pv = E.preview(st, a.ship, a.cell); if (!pv) return null;
-  await swapView(by === 0 ? 'enemy' : 'own'); if (G.st !== st) return null;
+  const noAim = E.NOAIM[pv.skill];
+  if (!noAim) { await swapView(by === 0 ? 'enemy' : 'own'); if (G.st !== st) return null; }
   toast((by === 1 ? t('fx.foe', { s: t('sk.' + pv.skill) }) : t('sk.' + pv.skill))); sfx('ping');
   await sleep(by === 1 ? 650 : 250); if (G.st !== st) return null;
-  if (pv.skill === 'sonar') await SB.sweep($('#bsvg'), pv.area);
-  else { for (const x of pv.shots) { SB.fx($('#bsvg'), x.cell, x.hit, true); setTimeout(() => sfx(x.hit ? 'hit' : 'miss'), 160); await sleep(pv.skill === 'torpedo' ? 120 : 170); } await sleep(330); }
+  if (noAim) await sleep(250);
+  else if (pv.skill === 'sonar' || pv.skill === 'scout') await SB.sweep($('#bsvg'), pv.area);
+  else { for (const x of pv.shots) { SB.fx($('#bsvg'), x.cell, by === 0 && st.sides[1].fog > 0 ? 'fog' : x.hit, true); setTimeout(() => sfx(x.hit ? 'hit' : 'miss'), 160); await sleep(pv.skill === 'torpedo' ? 120 : 170); } await sleep(330); }
   if (G.st !== st) return null;
   const res = E.useSkill(st, a.ship, a.cell); if (!res) return null;
   G.armed = null; hoverCell = -1;
   const sunk = res.shots.filter(x => x.sunk >= 0), hits = res.shots.filter(x => x.hit).length;
-  if (res.skill === 'sonar') toast(t('fx.sonar', { k: res.k }));
+  if (res.skill === 'sonar' || res.skill === 'scout') toast(t('fx.' + res.skill, { k: res.k }));
+  else if (noAim) toast(t((by === 0 ? 'fx.' : 'fx.foe.') + res.skill));
+  else if (by === 0 && res.shots.some(x => x.fog)) toast(t('fx.fog'));
+  else if (res.shots.some(x => x.dent)) toast(t('fx.dent'), 'hit');
   else if (sunk.length) { sfx('sunk'); shake(); toast(t(by === 0 ? 'fx.sunk' : 'fx.lost', { s: t('ship.' + st.sides[1 - by].ships[sunk[0].sunk].t) }), 'hit'); }
   else if (hits) toast(hits > 1 ? t('fx.hits', { n: hits }) : t('fx.hit'), 'hit'); else toast(t('fx.miss'));
   render(); save(); queueEval();
@@ -287,6 +299,15 @@ async function playerShot(cell) {
   if (a.skill ? !E.preview(G.st, a.ship, cell) : G.st.sides[1].shots[cell]) { if (a.skill) sfx('bad'); return; }
   const st = G.st; G.busy = true; G.hint = null; SB.aim($('#bsvg'), -1); renderButtons(); renderSkills();
   const res = await doAction(a); if (!res || G.st !== st) return;
+  if (st.winner >= 0) return finish();
+  if (st.turn === 1) return aiTurn();
+  G.busy = false; render();
+}
+async function playerNoAim(i) {
+  if (!G.st || G.phase !== 'battle' || G.busy || G.st.turn !== 0) return;
+  if (!E.preview(G.st, i, -1)) { sfx('bad'); toast(t('sk.none')); return; }
+  const st = G.st; G.busy = true; G.hint = null; renderButtons(); renderSkills();
+  const res = await doSkill({ skill: skillOf(G.my[i]), ship: i, cell: -1 }); if (!res || G.st !== st) return;
   if (st.winner >= 0) return finish();
   if (st.turn === 1) return aiTurn();
   G.busy = false; render();
@@ -360,7 +381,7 @@ bsvg.addEventListener('pointermove', e => { if (drag) return deployMove(e); if (
 bsvg.addEventListener('pointerup', deployUp);
 bsvg.addEventListener('pointercancel', () => { if (drag) { G.my[drag.i] = drag.from; drag = null; renderBoards(); } });
 bsvg.addEventListener('pointerleave', () => { SB.aim(bsvg, -1); if (G.armed != null && hoverCell >= 0 && PCQ.matches) { hoverCell = -1; renderBoards(); } });
-$('#skillCard').addEventListener('click', e => { const b = e.target.closest('.sk'); if (!b || b.disabled || !G.st || G.busy || G.phase !== 'battle' || G.st.turn !== 0) return; const i = +b.dataset.i; G.armed = G.armed === i ? null : i; hoverCell = -1; G.hint = null; sfx('place'); if (G.view !== 'enemy') swapView('enemy').then(() => render()); else render(); });
+$('#skillCard').addEventListener('click', e => { const b = e.target.closest('.sk'); if (!b || b.disabled || !G.st || G.busy || G.phase !== 'battle' || G.st.turn !== 0) return; const i = +b.dataset.i; if (E.NOAIM[skillOf(G.my[i])]) { G.armed = null; return playerNoAim(i); } G.armed = G.armed === i ? null : i; hoverCell = -1; G.hint = null; sfx('place'); if (G.view !== 'enemy') swapView('enemy').then(() => render()); else render(); });
 $('#drRows').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) draftPickMine(+b.dataset.k); });
 $('#btnDrStop').onclick = () => draftPickMine(-1);
 bsvg.addEventListener('click', e => { if (G.phase !== 'battle') return; const c = SB.cellAt(bsvg, e); if (c >= 0) playerShot(c); });

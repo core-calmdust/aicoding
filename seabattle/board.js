@@ -67,11 +67,13 @@ function draw(svg, o) {
   if (o.ships) o.ships.forEach((s, i) => { const c = o.show ? o.show(i) : 'own', kind = s && s.t != null ? s.t : i; if (s && c) h += `<g class="sb-shadow" filter="url(#${id}s)" transform="translate(.7 1.2)">${shipG(s, kind, 'sh', id)}</g>` + shipG(s, kind, c, id); });
   if (o.glow) for (const c of o.glow) { const [x, y] = xy(c); h += `<rect x="${x + .8}" y="${y + .8}" width="8.4" height="8.4" rx="1.6" class="sb-glow"/>`; }
   if (o.shots) for (let i = 0; i < 100; i++) { const v = o.shots[i]; if (!v) continue; const [x, y] = xy(i), cx = x + 5, cy = y + 5;
-    h += v === 2 ? `<circle cx="${cx}" cy="${cy}" r="4.3" fill="url(#${id}f)" class="sb-hitglow"/><circle cx="${cx}" cy="${cy}" r="1.9" class="sb-hit"/>` : `<circle cx="${cx}" cy="${cy}" r="1.25" class="sb-miss"/><circle cx="${cx}" cy="${cy}" r="2.9" class="sb-missring"/>`; }
-  if (o.scans) o.scans.slice(-3).forEach((sc, n, arr) => { const r = sc.at / 10 | 0, c = sc.at % 10, r0 = Math.max(0, r - 1), c0 = Math.max(0, c - 1), r1 = Math.min(9, r + 1), c1 = Math.min(9, c + 1), x = O + c0 * 10, y = O + r0 * 10;
+    h += v === 3 ? `<circle cx="${cx}" cy="${cy}" r="3.4" class="sb-dent"/><path d="M${cx - 1.8} ${cy - 1.2}l1.4 1.2-1 1.4 1.8 .6" class="sb-dentx"/>` : v === 4 ? `<circle cx="${cx}" cy="${cy}" r="3.2" class="sb-fogc"/><text x="${cx}" y="${cy + 1.6}" class="sb-fogq">?</text>` :
+      v === 2 ? `<circle cx="${cx}" cy="${cy}" r="4.3" fill="url(#${id}f)" class="sb-hitglow"/><circle cx="${cx}" cy="${cy}" r="1.9" class="sb-hit"/>` : `<circle cx="${cx}" cy="${cy}" r="1.25" class="sb-miss"/><circle cx="${cx}" cy="${cy}" r="2.9" class="sb-missring"/>`; }
+  if (o.scans) o.scans.slice(-3).forEach((sc, n, arr) => { const r = sc.at / 10 | 0, c = sc.at % 10, row = !!sc.row, r0 = row ? r : Math.max(0, r - 1), c0 = row ? 0 : Math.max(0, c - 1), r1 = row ? r : Math.min(9, r + 1), c1 = row ? 9 : Math.min(9, c + 1), x = O + c0 * 10, y = O + r0 * 10;
     h += `<g class="sb-scan${n === arr.length - 1 ? ' new' : ''}"><rect x="${x + .7}" y="${y + .7}" width="${(c1 - c0 + 1) * 10 - 1.4}" height="${(r1 - r0 + 1) * 10 - 1.4}" rx="2.4"/><circle cx="${x + 1.2}" cy="${y + 1.2}" r="3.3"/><text x="${x + 1.2}" y="${y + 2.5}">${sc.k}</text></g>`; });
   if (o.last != null && o.last >= 0) { const [x, y] = xy(o.last); h += `<rect x="${x + .6}" y="${y + .6}" width="8.8" height="8.8" rx="1.8" class="sb-last"/>`; }
   if (o.best != null && o.best >= 0) { const [x, y] = xy(o.best); h += `<g class="sb-best" transform="translate(${x + 5} ${y + 5})"><circle r="3.6"/><path d="M-5.2 0h2.6M2.6 0h2.6M0 -5.2v2.6M0 2.6v2.6"/></g>`; }
+  if (o.fogged) h += `<rect x="${O}" y="${O}" width="100" height="100" rx="2.2" class="sb-smoke"/>`;
   h += `<rect x="${O}" y="${O}" width="100" height="100" rx="2.2" class="sb-rim"/><g class="sb-aim" style="display:none"><rect width="10" height="10" rx="1.8"/><path d="M5 1.6v2M5 6.4v2M1.6 5h2M6.4 5h2"/></g>`;
   base.innerHTML = h;
 }
@@ -90,7 +92,8 @@ function fx(svg, cell, hit, fast) {
   const t1 = fast ? 160 : 380;
   add(`<g class="sb-fx-lock" style="animation-duration:${t1}ms" transform="translate(${cx} ${cy})"><circle r="4.2"/><path d="M-7 0h3.4M3.6 0h3.4M0 -7v3.4M0 3.6v3.4"/></g>`, t1 + 40);
   return new Promise(res => setTimeout(() => {
-    if (hit) add(`<circle cx="${cx}" cy="${cy}" r="5" fill="url(#${id}f)" class="sb-fx-blast"/><circle cx="${cx}" cy="${cy}" r="3" class="sb-fx-ring hit"/><g class="sb-fx-sparks" transform="translate(${cx} ${cy})">${[0, 51, 103, 154, 206, 257, 309].map(a => `<path d="M0 -2.4V-5.4" transform="rotate(${a})"/>`).join('')}</g>`, 900);
+    if (hit === 'fog') add(`<circle cx="${cx}" cy="${cy}" r="3.4" class="sb-fx-smoke"/>`, 900);   // (under the smoke: a puff, no answer)
+    else if (hit) add(`<circle cx="${cx}" cy="${cy}" r="5" fill="url(#${id}f)" class="sb-fx-blast"/><circle cx="${cx}" cy="${cy}" r="3" class="sb-fx-ring hit"/><g class="sb-fx-sparks" transform="translate(${cx} ${cy})">${[0, 51, 103, 154, 206, 257, 309].map(a => `<path d="M0 -2.4V-5.4" transform="rotate(${a})"/>`).join('')}</g>`, 900);
     else add(`<circle cx="${cx}" cy="${cy}" r="2" class="sb-fx-ring"/><circle cx="${cx}" cy="${cy}" r="2" class="sb-fx-ring d2"/><circle cx="${cx}" cy="${cy}" r="1.6" class="sb-fx-drop"/>`, 1000);
     res();
   }, t1));

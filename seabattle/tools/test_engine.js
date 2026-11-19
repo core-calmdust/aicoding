@@ -39,11 +39,11 @@ ok(!E.validFleet([{ r: 0, c: 7, len: 5, h: 1 }, { r: 2, c: 0, len: 4, h: 0 }, { 
 // ---- 1b) タクティクス: draft, skills, cooldowns ----
 {
   // snake order A B B A A B B A
-  let d = E.draftNew(0); const seq = []; for (let i = 0; i < 8; i++) { seq.push(d.turn); const k = [4, 3, 2, 1, 0].find(x => E.draftCan(d, d.turn, x)); if (k == null) break; E.draftPick(d, k); }
+  let d = E.draftNew(0); const seq = []; for (let i = 0; i < 8; i++) { seq.push(d.turn); const k = E.TYPES.map((_, x) => x).reverse().find(x => E.draftCan(d, d.turn, x)); if (k == null) break; E.draftPick(d, k); }
   ok(seq.join('') === '01100110', 'draft order is A B B A A B B A (' + seq.join('') + ')');
   ok(!E.draftPick(E.draftNew(0), -1), 'cannot stop before 3 ships');
   let bad = 0, sizes = {};
-  for (let g = 0; g < 2000; g++) { d = E.draftNew(g & 1); let guard = 0; while (d.turn >= 0 && guard++ < 40) { const p = d.turn; let k = g % 3 === 0 ? E.draftAI(d, rnd) : [0, 1, 2, 3, 4].filter(x => E.draftCan(d, p, x))[rnd() * 5 | 0]; if (k == null || k < 0) k = E.draftCanStop(d, p) && rnd() < .5 ? -1 : [0, 1, 2, 3, 4].find(x => E.draftCan(d, p, x)); if (!E.draftPick(d, k)) { bad++; break; } }
+  for (let g = 0; g < 2000; g++) { d = E.draftNew(g & 1); let guard = 0; while (d.turn >= 0 && guard++ < 40) { const p = d.turn; const all = E.TYPES.map((_, x) => x).filter(x => E.draftCan(d, p, x)); let k = g % 3 === 0 ? E.draftAI(d, rnd) : all[rnd() * all.length | 0]; if (k == null || k < 0) k = E.draftCanStop(d, p) && rnd() < .5 ? -1 : all[0]; if (!E.draftPick(d, k)) { bad++; break; } }
     if (d.turn >= 0 || !E.validDraft(d.picks[0]) || !E.validDraft(d.picks[1]) || d.pool.some(x => x < 0)) bad++; sizes[d.picks[0].length] = (sizes[d.picks[0].length] || 0) + 1; }
   ok(bad === 0, 'every draft (random and AI) ends with two legal fleets (' + JSON.stringify(sizes) + ')');
   const fl = [{ r: 0, c: 0, len: 5, h: 1, t: 0 }, { r: 2, c: 0, len: 4, h: 1, t: 1 }, { r: 4, c: 0, len: 3, h: 1, t: 2 }, { r: 6, c: 0, len: 3, h: 1, t: 3 }];
