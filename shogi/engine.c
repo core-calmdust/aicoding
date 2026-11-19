@@ -1665,8 +1665,11 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
         int skip = 0;
         if (P[45] && !pvNode && mc >= (3 + depth * depth) * (P[43] ? P[43] : 100) / 100 / (2 - improving)) { skip = 1; skipQuiets = 1; }
         else if (P[51] && ld < 4 && hv < -P[51] * depth) skip = 1;
-        else if (P[46] && !pvNode && ld < P[46] && rawEval + (P[47] ? P[47] : 100) + (P[48] ? P[48] : 120) * ld <= alpha) skip = 1;
-        else if (P[49] && ld < 8 && see(m) < -P[49] * ld * ld) skip = 2;
+        else {
+          int lh = ld; if (P[81]) { lh += hv / P[81]; if (lh < 0) lh = 0; }   /* (P81: a move with a good history is pruned as if deeper, a bad one as if shallower) */
+          if (P[46] && !pvNode && lh < P[46] && rawEval + (P[47] ? P[47] : 100) + (P[48] ? P[48] : 120) * lh <= alpha) skip = 1;
+          else if (P[49] && lh < 8 && see(m) < -P[49] * lh * lh) skip = 2;
+        }
         if (skip == 2) continue;
         if (skip) { if (!givesCheckPre(m)) continue; if (!chkFast) { doMove(m); int chk = inCheck(); undoMove(); if (!chk) continue; } }
       } else if (P[50] && cap && m != ttm && sc < 0 && see(m) < -P[50] * depth) continue;
