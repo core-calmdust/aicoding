@@ -524,16 +524,22 @@
         d[i * 4] = 0; d[i * 4 + 1] = Math.round((.05 + rel * .5) * 255); d[i * 4 + 2] = 255; d[i * 4 + 3] = 255; }
       g.putImageData(out, 0, 0); t.image = a; t.needsUpdate = true; if (X.kick) X.kick(200); });
     return t; });
-  function coin(g, col) {
-    const TT = T(), gold = col === 1, r = .3, th = .07;
+  function coin(g, col) {   // (2026-11-19 user: a stack of three again — turned over, the stack shows plainly)
+    const TT = T(), gold = col === 1, r = .3, th = .055;
     const metal = M('coin' + col, { color: gold ? '#ffd27a' : '#f2f4f7', metalness: 1, roughness: .04, envMapIntensity: 2.6 });
     const face = (k, img) => M('coinF' + k, { bumpMap: picTex(img), bumpScale: 1.6, roughnessMap: proofR(img), color: gold ? '#ffd27a' : '#f2f4f7', metalness: 1, roughness: 1, envMapIntensity: 2.6 });   // (no colour picture: the design shows as frosted relief on the mirror field)
-    g.add(mesh(G('cnSide1', () => { const q = new TT.CylinderGeometry(r, r, th, seg(56), 1, true); q.translate(0, th / 2, 0); return q; }), metal));
-    for (const y of [0, th]) g.add(mesh(G('cnRim1', () => { const q = new TT.TorusGeometry(r - .007, .008, 3, seg(48)); q.rotateX(Math.PI / 2); return q; }), metal, 0, y, 0));
-    g.add(mesh(faceGeo('cnTop', r, .9, false), face(col + 't', 'pc-coin-' + (gold ? 'b' : 'w')), 0, th + .0005, 0));
-    g.add(mesh(faceGeo('cnBot', r, .9, true), face(col + 'b', 'pc-coin-' + (gold ? 'bx' : 'wx')), 0, -.0005, 0));
-    g.userData.h = th; g.userData.lie = 0;
+    const side = G('cnSide3', () => { const q = new TT.CylinderGeometry(r, r, th, seg(56), 1, true); q.translate(0, th / 2, 0); return q; });
+    const rim = G('cnRim3', () => { const q = new TT.TorusGeometry(r - .006, .007, 3, seg(48)); q.rotateX(Math.PI / 2); return q; });
+    for (let k = 0; k < 3; k++) {
+      const o = new TT.Group(); o.position.set(k === 1 ? .014 : k === 2 ? -.006 : 0, k * th, k === 1 ? -.01 : k === 2 ? .008 : 0); g.add(o);
+      o.add(mesh(side, metal)); o.add(mesh(rim, metal, 0, th, 0)); o.add(mesh(rim, metal, 0, 0, 0));
+      if (k === 2) o.add(mesh(faceGeo('cnTop', r, .9, false), face(col + 't', 'pc-coin-' + (gold ? 'b' : 'w')), 0, th + .0005, 0));
+      if (k === 0) o.add(mesh(faceGeo('cnBot', r, .9, true), face(col + 'b', 'pc-coin-' + (gold ? 'bx' : 'wx')), 0, -.0005, 0));
+      if (k < 2) o.add(mesh(G('cnCapP', () => { const q = new TT.CircleGeometry(r - .004, seg(40)); q.rotateX(-Math.PI / 2); return q; }), metal, 0, th - .0005, 0));   // (the edge of the face shows where the next coin sits off-centre)
+    }
+    g.userData.h = 3 * th; g.userData.lie = 0;
   }
+
   // 'glass' (in 3D, 2026-11-19 user: 石細工でこだわりのチェス駒的な像で): a little Ionic column carved in marble — a square plinth,
   // the torus–scotia base, a fluted shaft (the flutes in a normal map), the capital with its two scrolls and the abacus slab.
   // Black verde antico (dark green-black), White Carrara; both old and weathered like the helmets.
@@ -564,14 +570,18 @@
     g.userData.h = .56 * 1.18; g.userData.lie = .21 * 1.18;
   }
   // bone: one turned disc (2026-11-19 user: 1枚でOK) — a bead round the edge, rings cut in the top; VI cut underneath (the 2D picture)
-  function bone(g, col) {
+  function bone(g, col) {   // (2026-11-19 user: three discs stacked again — turned over, the stack shows plainly)
     const TT = T(), dark = col === 1;
     const bm = M('boneC' + col, { map: boneTex(), bumpMap: boneTex(), bumpScale: .8, color: dark ? '#6e5640' : '#ffffff', roughness: .5, clearcoat: .15, clearcoatRoughness: .5 });
-    g.add(mesh(G('bnBody1', () => new TT.LatheGeometry([V2(0, .002), V2(.27, .002), V2(.29, .02), V2(.295, .05), V2(.29, .075), V2(.27, .092),
-      V2(.22, .098), V2(.2, .082), V2(.18, .1), V2(.12, .1), V2(.1, .084), V2(.08, .1), V2(0, .096)], seg(38))), bm));
+    const plain = G('bnDisc', () => new TT.LatheGeometry([V2(0, .002), V2(.27, .002), V2(.285, .015), V2(.29, .036), V2(.285, .055), V2(.27, .066), V2(0, .066)], seg(38)));
+    const top = G('bnTop3', () => new TT.LatheGeometry([V2(0, .002), V2(.27, .002), V2(.285, .015), V2(.29, .036), V2(.285, .055), V2(.27, .066),
+      V2(.22, .072), V2(.2, .058), V2(.18, .074), V2(.12, .074), V2(.1, .06), V2(.08, .074), V2(0, .07)], seg(38)));
+    const dz = .064;
+    g.add(mesh(plain, bm, 0, 0, 0)); g.add(mesh(plain, bm, .012, dz, -.008)); g.add(mesh(top, bm, -.004, 2 * dz, .006));
     g.add(mesh(faceGeo('bnBot', .27, .9, true), M('boneU' + col, { map: picTex('pc-bone-' + (dark ? 'bx' : 'wx')), color: '#ffffff', roughness: .55 }), 0, 0, 0));
-    g.userData.h = .1; g.userData.lie = 0;
+    g.userData.h = 2 * dz + .074; g.userData.lie = 0;
   }
+
   const BUILD = { helm, wood, abstract, coin, glass, bone };
   // col 1 Black (the first player) / 2 White. The body sits in an inner group that turns (topples or turns over).
   function piece(col, set) {
