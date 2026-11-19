@@ -10,6 +10,9 @@
 //             level n as in engine.js LEVELS (L1 … L23; one thread, the time levels by this process's CPU time; L19:ms=150 etc.
 //             overrides a key). Each player keeps its own alpha-beta tables (the table and the candidate cache) from move to
 //             move, as its own worker would (2026-11-14: before, both players shared them).
+//             sep=n: the count of separated boards (core.c P_SEP, engine.js MC.sep; ev=3 the learned evaluation, AMZ_NET=net.bin).
+//             AMZ_ADJ=count: a game ends early only when the count of a separated board decides it (else at a lead of 3);
+//             AMZ_ADJ=none: every game is played to its end.
 //             MCTS keys as engine.js MC (qk k qkr kr po s np c a pwa pwk pwb pom vl b0 la fin); e<k>=v sets the evaluation's
 //             parameter k (ev_set(k, v)) for that player
 #include <stdio.h>
@@ -23,7 +26,7 @@ static const char *MCK[] = { "qk", "k", "qkr", "kr", "po", "s", "np", "c", "a", 
 static const double MCD[] = { 10, 24, 20, 48, 0, 400, 2, 0.25, 0.3, 3, 1, 0.5, 0.5, 1, 300, 8 };
 #define FIN_DEF 0.5   // (engine.js MC.fin, core.c P_FIN — mcts_set 17; fin=0: the most visited move as before 2026-11-14)
 #define NEP 32
-typedef struct { int mc, ev, lv, qk, d; double ms, nk, noise, fin, mcp[16]; int nep; int epk[NEP]; double epv[NEP]; const char *name;
+typedef struct { int sep; int mc, ev, lv, qk, d; double ms, nk, noise, fin, mcp[16]; int nep; int epk[NEP]; double epv[NEP]; const char *name;
   TTS *ttp; unsigned ttm; int ttc; CCS *ccp; unsigned ccm; int ccc; } Player;
 // engine.js LEVELS (LVEV: the evaluation of each level, 1 = v2, 2 = v3)
 static const double LVN[24] = { 0, 420, 300, 210, 150, 105, 70, 45, 200 };
@@ -46,7 +49,7 @@ static void parseP(const char *s, Player *P) {
   char buf[512]; strncpy(buf, c + 1, 511); buf[511] = 0;
   for (char *tok = strtok(buf, ","); tok; tok = strtok(0, ",")) {
     char *eq = strchr(tok, '='); if (!eq) continue; *eq = 0; double v = atof(eq + 1);
-    if (!strcmp(tok, "ms")) P->ms = v; else if (!strcmp(tok, "fin")) P->fin = v; else if (!strcmp(tok, "nk")) P->nk = v; else if (!strcmp(tok, "ev")) P->ev = (int)v;
+    if (!strcmp(tok, "sep")) P->sep = (int)v; else if (!strcmp(tok, "ms")) P->ms = v; else if (!strcmp(tok, "fin")) P->fin = v; else if (!strcmp(tok, "nk")) P->nk = v; else if (!strcmp(tok, "ev")) P->ev = (int)v;
     else if (!strcmp(tok, "noise")) P->noise = v; else if (!strcmp(tok, "qk") && P->lv) P->qk = (int)v; else if (!strcmp(tok, "d")) P->d = (int)v;
     else if (tok[0] == 'e' && tok[1] >= '0' && tok[1] <= '9') { if (P->nep < NEP) { P->epk[P->nep] = atoi(tok + 1); P->epv[P->nep++] = v; } }
     else for (int k = 0; k < 16; k++) if (!strcmp(tok, MCK[k])) P->mcp[k] = v;
@@ -76,7 +79,8 @@ static void setEval(const Player *P) {
 }
 static int thinkMC(const Player *P, int seed) {
   for (int k = 0; k < 16; k++) mcts_set(k, (float)P->mcp[k]);
-  mcts_set(17, (float)(P->fin >= 0 ? P->fin : FIN_DEF));
+  mcts_set(17, (float)(P->fin >= 0 ? P->fin : FIN_DEF)); mcts_set(18, (float)P->sep);
+  if (P->sep > 0) { load(); int m = sep_best(gside, P->sep * 10); if (m) return m; }   // (a separated board: the longest fill)
   double evl = P->nk * 1000, ms = P->ms;
   double est = ms > 0 ? ms * 400 * 2.6 : evl / 200 * P->mcp[1] * 1.3; int want = (int)est; if (want < 65536) want = 65536; if (want > (1 << 22)) want = 1 << 22;
   mcts_alloc(want); mcts_limit(0); mcts_set(16, 0);
@@ -127,6 +131,7 @@ static void terr(int *a, int *b, int *sep) {   // Pos.terr: queen distances
   for (int i = 0; i < NN; i++) { if (GS[i]) continue; int p = PI[i], u = DA[p], v = DB[p]; if (u < v) x++; else if (v < u) y++; if (u < INF && v < INF) both++; }
   *a = x; *b = y; *sep = both == 0;
 }
+static int ADJC = 0;
 static double useT[3]; static int useN[3];
 static int play(Player *W, Player *B, const int *op, int nop, int gseed, int *plies, int *adj) {
   memset(GS, 0, NN); const int ws[4] = { 60, 93, 96, 69 }, bs[4] = { 30, 3, 6, 39 };   // a4 d1 g1 j4 / a7 d10 g10 j7
@@ -134,10 +139,12 @@ static int play(Player *W, Player *B, const int *op, int nop, int gseed, int *pl
   gside = 1; tabNew(W); tabNew(B); rs1 = (unsigned)(gseed * 2654435761u + 7) & 0x7fffffff;
   for (int i = 0; i < nop; i++) gplay(op[i]);
   *adj = 0;
-  for (int ply = nop; ply < 100; ply++) {
+  for (int ply = nop; ply < 200; ply++) {
     load(); if (!canMove(gside)) { *plies = ply; return 3 - gside; }
     int a, b, sep; terr(&a, &b, &sep);
-    if (sep && abs(a - b) >= 3) { *plies = ply; *adj = 1; return a > b ? 1 : 2; }
+    if (ADJC == 2) {}   // (AMZ_ADJ=none: every game to its end)
+    else if (ADJC) { if (sep) { load(); int r = sepProve(gside, 20000); if (r) { *plies = ply; *adj = 1; return r > 0 ? gside : 3 - gside; } } }   // (AMZ_ADJ=count: only a decided count)
+    else if (sep && abs(a - b) >= 3) { *plies = ply; *adj = 1; return a > b ? 1 : 2; }
     Player *P = gside == 1 ? W : B; setEval(P);
     double t0 = now();
     tabIn(P);
@@ -147,11 +154,15 @@ static int play(Player *W, Player *B, const int *op, int nop, int gseed, int *pl
     if (m < 0) { *plies = ply; return 3 - gside; }
     gplay(m);
   }
-  *plies = 100; return 0;
+  *plies = 200; return 0;
 }
 int main(int argc, char **argv) {
   if (argc < 3) { fprintf(stderr, "usage: A B pairs [seed] [part/n]\n"); return 1; }
-  init(); initBB();
+  init(); initBB(); ADJC = !getenv("AMZ_ADJ") ? 0 : !strcmp(getenv("AMZ_ADJ"), "count") ? 1 : !strcmp(getenv("AMZ_ADJ"), "none") ? 2 : 0;
+  if (getenv("AMZ_NET")) {   // (the learned evaluation for ev=3: tools/nnue/)
+    FILE *f = fopen(getenv("AMZ_NET"), "rb"); size_t n = f ? fread(NNBUF, 1, sizeof NNBUF, f) : 0; if (f) fclose(f);
+    if (!nn_load((int)n)) { fprintf(stderr, "AMZ_NET: not a net\n"); return 1; }
+  }
   Player A, B; parseP(argv[1], &A); parseP(argv[2], &B);
   int pairs = argc > 3 ? atoi(argv[3]) : 10, seed = argc > 4 ? atoi(argv[4]) : 1, pi = 0, pn = 1;
   if (argc > 5) sscanf(argv[5], "%d/%d", &pi, &pn);

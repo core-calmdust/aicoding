@@ -24,6 +24,7 @@ async function setupMT(nHelp) {
   const base = Math.ceil(x.mt_heap_base() / 65536) * 65536, n = 1 + nHelp, need = base + (n + 1) * SLOT;
   if (need > mem.buffer.byteLength) mem.grow(Math.ceil((need - mem.buffer.byteLength) / 65536));
   x.mt_stack(base + SLOT - 16); x.mt_thread(base, 0);
+  if (E.net && E.netInto) E.netInto(x, mem);   // (2026-11-20: the learned evaluation in the shared memory, as engine.js's lead)
   const src = `const { parentPort } = require('worker_threads'); let X = null;
     parentPort.on('message', m => {
       if (m.type === 'mtinit') { X = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports; X.mt_stack(m.top); X.mt_thread(m.tls, m.id); parentPort.postMessage({ type: 'mtready' }); return; }
