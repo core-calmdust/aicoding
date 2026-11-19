@@ -363,13 +363,14 @@ const LEVELS = [null,
   { s: 1, nk: 60 },                              // 初段
   { s: 1, nk: 110 },                             // 二段
   { s: 1, nk: 200 },                             // 三段
-  { s: 1, ms: 1200 },                            // 四段
-  { s: 1, ms: 2500 },                            // 五段
+  // (book: the AI's opening book book-<rule>.json from the start position, 2026-11-20 — the timed levels only, as ugolki / checkers)
+  { s: 1, ms: 1200, book: 1 },                   // 四段
+  { s: 1, ms: 2500, book: 1 },                   // 五段
   // the top levels (2026-11-09, common rule「最上位のレベルの追加」): twice the time per step up to 20 s, every thread of the
   // page's pool (shared/mtsplit.js; the shared table on an isolated page) — one thread without the option
-  { s: 1, ms: 5000 },                            // Lv.21
-  { s: 1, ms: 10000 },                           // Lv.22
-  { s: 1, ms: 20000 },                           // Lv.23
+  { s: 1, ms: 5000, book: 1 },                            // Lv.21
+  { s: 1, ms: 10000, book: 1 },                           // Lv.22
+  { s: 1, ms: 20000, book: 1 },                           // Lv.23
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 // ---------------------------------------------------------------- evaluation (side to move's view, ~100 = one tempo)
@@ -603,6 +604,20 @@ function resist(pos, vals) {
   return bm;
 }
 let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
+// the AI's opening book (2026-11-20, agon/tools/genbook.js: the site's own search, a few seconds a position, made beforehand):
+// { pos: { "m1,m2,…": [[move, value], …] } } per rule, loaded by the worker. Levels with `book` play from it while the game
+// (from the start position) is in it: a move within BOOK_MARGIN of the best, at random (the variety); out of it they search.
+// BOOK_V: the books' version (book-<rule>.json?v=BOOK_V); 0 = no book shipped (nothing is fetched, the levels search from move 1)
+const BOOKS = {}, BOOK_MARGIN = 10, BOOK_V = 0;
+function bookMove(L, start, moves, pos, rand) {
+  if (!L.book || !L.s || start) return null;
+  const B = BOOKS[RK], bk = B && B.pos[moves.join(',')];
+  if (!bk || !bk.length) return null;
+  const all = pos.moves(), mg = L.bookMargin != null ? L.bookMargin : BOOK_MARGIN, good = bk.filter(e => e[1] >= bk[0][1] - mg && all.includes(e[0]));
+  if (!good.length) return null;
+  const e = good[Math.floor((rand || Math.random)() * good.length)];
+  return { move: e[0], v: bk[0][1], book: 1 };
+}
 function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
@@ -634,6 +649,7 @@ function think(start, moves, level, rand, rule) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best, v: vals[0].v };
   }
+  const bm = bookMove(L, start, moves, pos, rand); if (bm) return bm;
   const r = bestMove(pos, hist, L.dx || 60, L.ms || 3000, L.nk || 0);
   return thinkFin(pos, hist, r);
 }
@@ -704,7 +720,7 @@ function mtPlan(m) {
   rootSide = pos.side;
   if (m.job === 'think') {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
-    if (all.length < 2 || !L.s) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
+    if (all.length < 2 || !L.s || (L.book && !m.start && BOOKS[RK] && BOOKS[RK].pos[m.moves.join(',')])) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
     return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 3000, nodes: L.nk ? L.nk * 1000 : 0, win: WINT, lmr: { d: 3, i: 8 }, splitMin: 5, helpMin: 4, lazy: lazyOf(m, L, false) } };   // (Young Brothers Wait on the shared table — on the user's Mac 8 threads ×3.3 vs Lazy SMP ×1.2, 2026-11-09; lazy: Lazy SMP, for the bench; helpMin: the idle workers help only tasks of depth 5 or more — shared/mtsplit.js, 2026-11-10)
   }
   if (!all.length) return { result: { list: [], depth: 0 } };
@@ -853,7 +869,7 @@ setRule('std');
 const API = { get coreArrays() { return WA ? { geo: Array.from(WA.geo), zt: Array.from(WA.zt) } : null; }, useCore: (x, buf) => { MX = x ? coreViews(x, buf) : null; if (MX) { MX.threads = 1; MX.jobThreads = 1; if (netInto(x, buf)) NET_OK = true; } }, get net() { return NET_OK; }, get netVer() { return NET_OK && WA && WA.x.nn_ver ? WA.x.nn_ver() : 0; }, useNet, get wasm() { return !!WA; }, get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RES, N, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; },
   Q, RR, RING, XC, YC, ROWS, RINGL, RPOS, NB, DIRS, CENTER, INNER, OUTER, START, at, sqName, sqParse, mv, mFrom, mTo, own, isQ,
   Pos, path, isJump, name, parse, replay, judge, kindOfMove, LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, need,
-  evaluate, hanging, kindOf, resist, mtPlan, mtV, mtKids, mtFin, pvOf };
+  evaluate, hanging, kindOf, resist, BOOKS, bookMove, mtPlan, mtV, mtKids, mtFin, pvOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
@@ -868,6 +884,10 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         self.postMessage({ type: 'mtready' });
       }).catch(err => { MX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
   }
+  // the AI's opening books (2026-11-20): one file a rule, read before the first job (missing: the levels search from move 1)
+  const bookV = BOOK_V || +((self.location.search || '').match(/[?&]book=(\d+)/) || [0, 0])[1];   // (?…&book=N: try books not shipped yet — agon/tools/bookmatch.js)
+  const bookP = bookV && typeof fetch === 'function' ? Promise.all(RULE_ORDER.map(k => fetch(new URL(`book-${k}.json?v=${bookV}`, self.location.href)).then(r => r.ok ? r.json() : null).then(b => { if (b && b.pos) BOOKS[k] = b; }).catch(() => {}))) : Promise.resolve();
+  queueP = queueP.then(() => bookP);
   self.onmessage = e => {
     const m = e.data;
     if (m && m.type === 'mtinit') return;

@@ -5,7 +5,8 @@
 //   node shared/tools/genbook.js <game> [--rule r] [--plies 6] [--k 3] [--ms 8000] [--margin 12] [--workers 2] [--out file]
 //                                       [--starts all] [--merge file]   (--merge: add to an existing book)
 //   games: janggi (book.json { v, ms, margin, pos: { "m1,m2,…": [[m, v], …] } }, the default start),
-//          ugolki (book-<rule>.json, --rule c33 | c34 | c44 | diag), checkers (book.json)
+//          ugolki (book-<rule>.json, --rule c33 | c34 | c44 | diag), checkers (book.json),
+//          agon (book-<rule>.json, --rule std | place; 2026-11-20, Mac: sh agon/tools/book.sh)
 'use strict';
 const path = require('path'), fs = require('fs');
 const { emuWorker } = require('./workeremu.js');
@@ -20,6 +21,9 @@ const GAMES = {
   checkers: { rule: 'std', msg: (moves, ms) => ({ type: 'analyze', start: null, moves, time: ms }), out: () => 'book.json',
     over: (E, moves) => { const { pos, hashes } = E.replay(null, moves); return E.judge(pos, hashes).over; } },
   ugolki: { rule: 'c33', msg: (moves, ms, rule) => ({ type: 'analyze', start: null, moves, time: ms, rule }), out: r => `book-${r}.json`,
+    over: (E, moves, rule) => { E.setRule(rule); const { pos, hashes } = E.replay(null, moves); return E.judge(pos, hashes).over; } },
+  // agon (2026-11-20): the timed levels (四段 and up, PRO with a time limit) use it — claude/agon-spec.md「AI の序盤ブック」
+  agon: { rule: 'std', msg: (moves, ms, rule) => ({ type: 'analyze', start: null, moves, time: ms, rule }), out: r => `book-${r}.json`,
     over: (E, moves, rule) => { E.setRule(rule); const { pos, hashes } = E.replay(null, moves); return E.judge(pos, hashes).over; } },
 };
 const game = process.argv[2], G = GAMES[game];

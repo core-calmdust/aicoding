@@ -122,10 +122,22 @@ URL: https://core-calmdust.github.io/aicoding/agon/ ／ トップはアルケル
 - **道具**（`agon/tools/nnue/`）：`run.sh`（ビルド→全コアで自己対局（既定2000万局面、1手2万局面、5局に1局は配置ルール）→学習→手作りとの対局で確認→`adopt/net.js`、途中再開・`WORK`・`ROUNDS`）、`nn.c`（selfplay／train／match／check／speed／tojs／zero／depth）、`geo.h`（`gen_geo.js` が engine.js から作る盤・鍵・初期配置・12の対称）、`check_net.js`。採用基準：1手 CPU 0.1秒の対局で 52% 以上かつ1手3万局面で 50% 以上（各400局）。
 - **確認**：`net.js` が空のとき `tools/check_ab.js`（前の版、424探索）で全一致。乱数の仮ネットで値の一致・engine.js での対局・ブラウザ（対局ページの Lv.14／Lv.20（core_mt.wasm）、`?skin=atlas`）でエラーなし。作業機の小さな学習（13.6万局面）は確認用の損失 −4.6%、1手2万局面の対局 80局で +16 −21 =43（46.9%、誤差の内。仮ネットは採用しない）。
 - **探索の追加の検証（採用せず）**：ルートの PVS（深さ7までの局面数 −4%）、aspiration window ±50（+8%）。どちらも入れていない。
-- **定跡**：AI は定跡を使わない。`openings.json` は「序盤」ページの学習用（作戦3つ）。ネットを採用して強くなったら `tools/gen_openings.js` で作り直す。
+- **定跡**：`openings.json` は「序盤」ページの学習用（作戦3つ）。ネットを採用して強くなったら `tools/gen_openings.js` で作り直す。AI 用のブックは下の「AI の序盤ブック」（仕組みだけ、ブックは未同梱）。
 - **レベル表**：今回は強さが変わらないので変えていない。ネットを置いたら Lv.12〜23 と `RT_LV` を測り直す（Lv.1〜11 は不変）。
 - キャッシュ：`engine.js?v=9-nn1`（agon/index.html・app.js・bench.html・大百科 `games/agon.js`）、`core-wasm.js?v=4`、`core_mt.wasm?v=5`、`net.js?v=1`、大百科 `games/agon.js?v=17`（lazy.js）・`lazy.js?v=471`。
 
 ## 推論の高速化（2026-11-20）
 - core-wasm.js を SIMD 版（`AG_WASM`）と SIMD なし版（`AG_WASM0`）の2本に（engine.js はコンパイルできた方）、core_mt.wasm も SIMD。`core.c` `nnOut` の中間層を f32x4 に（同じ順番の和なので値は同じ）。wasm のネットありの探索が約+12〜15%。詳細は `agon/MODEL_CARD.md`「推論の高速化」。
 - 版：`core-wasm.js?v=5`、`engine.js?v=10-nn1`（app.js・index.html・bench.html・atlas/games/agon.js・atlas/rules/agon.js）、`core_mt.wasm?v=6`、app.js `…-nn2`、atlas/lazy.js の agon（games 18・rules 7）。
+
+## AI の序盤ブック（2026-11-20、仕組みと生成ツールだけ・ブックは同梱せず）
+- **引き方**（`engine.js` の `bookMove`）：`book` のあるレベル＝時間で考える四段・五段・Lv.21〜23（レート戦も同じ）と、PRO で時間の制限を選んだそれらの段（`ProSet.ladder` が `book` を引き継ぐ）。ウゴルキ・チェッカーと同じく人が遊ぶ下の段（Lv.1〜18、深さ・局面数）は使わない。初期配置から（`start` が null）、手順 `"m1,m2,…"` がブックにあれば、最善から `BOOK_MARGIN`＝10 以内の手を等確率で（手のばらつき）、探索なしですぐ返す（`book: 1`）。無ければ（ブック外れ）いつもの探索。分析・ヒント・コーチ・検討・先読みは使わない（その場で読む）。マルチスレッドの `mtPlan` も、ブックにある局面はその場で答える。
+- **ファイル**：`agon/book-<std|place>.json`（`{ pos: { "手順": [[手, 値], …] } }`、最善が先頭）。`engine.js` の `BOOK_V`（今は **0＝同梱なし：何も読みに行かない**）を版番号にすると Worker が `book-<rule>.json?v=BOOK_V` を最初の仕事の前に読む。試すときはワーカーの URL に `?book=N`（`agon/tools/bookmatch.js`）。ばらつきの幅は cfg の `bookMargin` でも変えられる（試験用）。
+- **生成**（`agon/tools/genbook.js`）：ページの Worker（engine.js を Node の vm で、`shared/tools/workeremu.js`。サイトの wasm の探索、ネットを置けば学習した評価も）を worker_threads で**1コア1局面**に並べ、各局面を `--ms` だけ分析（全部の手の値）。最善から `--margin` 以内の手を残し、上位 `--k`（手ごとに "3,2" のように）をたどって `--plies` 手まで木を伸ばす。手順違いで同じになった局面は1回だけ読み、項目をもう一方の手順にも写す。1手ごとに保存し、同じ `--out` で続き・深掘り（既にある局面は読まない）。`shared/tools/genbook.js` にも `agon` を足した（ただしあちらの workers は1スレッドの中で順番に動く）。
+- **Mac で深く**：`sh agon/tools/book.sh`（既定 10手・k 3,2・1局面20秒・コア数−1、`BOOK_DIR`＝`~/agbook` に途中保存）。できたら `agon/tools/bookmatch.js` で確かめ、勝ち越したら `BOOK_V` を上げてブックを同梱。ネットを採用したらブックも作り直す（値の目盛りが変わる）。
+- **作業機で作ったブック**（同梱せず）：1局面4秒（深さ8前後）、std・place とも 10手・k 3,2 で std 962局面（82KB）・place 1018局面（87KB）、2コアで約30分。
+- **採用の対局**（`agon/tools/bookmatch.js`：両方とも同じ Worker、1手100ミリ秒（壁時計）、序盤はブックの手から1〜2手ランダム、先後入れ替え、4組に1組は配置ルール、互いに別の置換表）：
+  - 最善から10以内をランダム：206局 +39 =120 −47（**48.1%**、約 −13 Elo）。std 47.8%・place 49.0%。
+  - 最善の手だけ（`bookMargin: 0`）：206局 +35 =116 −55（**45.1%**、約 −34 Elo）。std 46.2%・place 42.0%。
+  - ブック側がブックの手を指したのは1局あたり約1.7手（相手がすぐブックの外へ出る）。**勝ち越さないので同梱しない**。理由の見立て：手作りの評価の値が勝敗をあまり言い当てない（MODEL_CARD「学習した評価」）ので、序盤を深く読んでも良い手にならない。ネットを採用したあとに Mac で作り直して測る。
+- 版：`engine.js?v=10-nn1-bk1`（app.js・index.html・bench.html・atlas/games/agon.js・atlas/rules/agon.js）、app.js `…-nn2-bk1`、atlas/lazy.js の agon（games 19・rules 8）、`lazy.js?v=483`。
