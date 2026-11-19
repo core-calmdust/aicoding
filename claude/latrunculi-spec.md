@@ -46,7 +46,7 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
   - 作り方の方針（2026-11-18 ユーザー）：**ベクター感は極力出さない**（輪郭のくっきりした平坦な塗り・均一な線を避け、凹凸の陰影・にじみ・素材のむらで見せる）。
   - 設定は `settings.dv = 2`。dv のない保存（旧デザイン）は一度だけ stone / helm に切り替える。旧キーの読み替え：盤 marble・travertine→stone、tile→pompeii、slate・ivory→abstract、porphyry→lux、mosaic→giallo、駒 gem→coin、stone・bust→helm。
   - ミニ盤（レッスン・パズル・ルール・デザイン選び）も同じ絵（`pieceImg`、裏返りは赤い輪）。
-  - 3D 盤（atlas/models/latrunculi.js）は**旧来の** `img/bd-*.webp`・`fr-*.webp` を使い続ける（3D は後日作り直し）。
+  - 3D 盤も 2026-11-19 に 2D の新デザイン（`img/2d/`）から作り直した（下の「3D」）。旧来の `img/bd-*`・`fr-*`・`pc-*` はもう使っていない。
 - 入力：置く段階は空きマスをタップ。動かす段階は駒→行き先。取り除く駒が1個なら自動、複数なら先に取り除く駒をタップ。
 - 盤の上下：取った数・手持ち（置く段階）・動けない駒の数。右下に手番の案内（置く／取り除く／あと何手で終了）。
 - ルール（RuleTour）：紹介 → 置く → 1歩 → 跳び越え → 挟むと裏返る → 次の番に取る → 助ける → 隅 → 間に入っても安全 → 勝ち負け → 3つのルール。課題のミニ盤には座標（下にa〜h、左に数字）を出す（課題文がマス名を使うため）。2026-11-19：跳び越え（c4→e4→e6、c4から跳んだときだけ正解）・挟む・助けるの配置に正解の手がなかったのを修正（3Dのルールコースと同じ配置に）。描き直しは `RuleTour.paint`（画像を読み直さず、ちらつかない）。
@@ -58,7 +58,14 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - 言語：**14言語**（2026-11-16。残り12言語は i18n-lt-more.js・coach-i18n.js・lux.json。言語メニューは app.js の SUPPORTED / window.LT_LANGS。検査：全言語でキー206・コーチ113の抜けなし、差し込み記号一致、PC／スマホで表示確認。zh の題名「罗马强盗棋」は定訳未確認）。
 
 ## 3D（フル機能版 ?skin=atlas、2026-11-16）
-- atlas/models/latrunculi.js：3D盤6種（Table3D.BOARDS.latrunculi、保存キー atlas-latrunculi-look）＝大理石（既定）・トラバーチン・屋根瓦・モザイクの床・くるみ材・斑岩。2Dの盤画像（latrunculi/img/bd-*・fr-*）を面と縁に貼り、格子の溝を法線マップで彫る。3D駒6種（Table3D.PIECES.latrunculi、atlas-latrunculi-pc3）＝黒と白のガラス（既定）・青と琥珀のガラス・骨と角・川の小石・青銅と銀の硬貨・素焼きの赤と白。`Table3D.latrunculi.turn(g, k)` で駒を裏返す。
+- atlas/models/latrunculi.js（2026-11-19 作り直し。ユーザー：3D版＆フル版の完全対応／3D盤では駒に立体感（チェス的）／石板は遺跡から発掘したような雰囲気）：
+  - 盤6種（Table3D.BOARDS.latrunculi、保存キー atlas-latrunculi-look）＝2D と同じキー：石板 stone（既定）・木工 wood・アブストラクト abstract・ラピスと大理石 lux・黄大理石 giallo・ポンペイの赤 pompeii。面は 2D の `img/2d/bd-*.webp?v=7`（wood は bd-woodgrid）、縁は `fr-*`（wood は fr-woodfield を1枚で）、法線は絵の明るさから。
+  - 石板：欠けの多い不規則な輪郭（右奥の角が割れて落ちている）、側面は荒く下ほど土で汚れる（頂点色）、上面は縁に土・しみ・苔・ひび。盤は土の盛り（外周はテーブル面に沈む）に半ば埋まり、小石・割れた角の破片2つ・赤い土器片・移植ごてを周りに置く（フル機能版の画面は盤のまわりを少ししか見せないので、盛りと小物は盤から0.2〜0.7マス以内）。
+  - 木工：真鍮の角金具（上面のL＋側面の巻き＋ビス）と台座。アブストラクト：濃い台の上に浮くスレートの盤、白い盤面は一段高いパネル。ラピス：絵の金を本物の金属に（metalnessMap）、金のモールと黒大理石の台座。黄大理石：縁と段つき台座はロッソ・アンティコ（コードで作る赤大理石）。ポンペイ：黒い縁に金の玉縁、絵の金線も金属。
+  - 駒6種（Table3D.PIECES.latrunculi、atlas-latrunculi-pc3）＝2D と同じキー：石の兜 helm（既定。大理石／玄武岩の兜を台座に。横顔の向きで黒と白が向かい合う）・木 wood（ろくろ挽きのポーン、焦げの輪）・花 abstract（台と茎の上に六弁の花）・硬貨 coin（3枚重ね。上面に 2D の SPQR、裏に S·C）・ガラス glass（ローマンガラスのドーム、虹色の風化の斑点。r128 では虹色なし）・骨 bone（V溝を挽いた円盤、裏に VI）。
+  - 挟まれた駒（`Table3D.latrunculi.turn(g, k)`）：背の高い兜・木・花は横に倒れる、低い硬貨・ガラス・骨は裏返って 2D の裏面の絵（S·C／風化／VI）を見せる。
+  - 旧キーの読み替え（tables3d.js）：盤 marble・travertine→stone、tile→pompeii、mosaic→giallo、porphyry→lux。駒 gem→glass、stone→helm、bronze→coin、terra→wood。名前は 2D の盤・駒の名前（14言語）。背景（BG2D）も土色に。フル機能版の数字プレートも紫→土色。
+  - 画像：盤アイコン `atlas/img/boardic-latrunculi-<盤>.webp`・盤サムネ `board-latrunculi-<盤>.webp`（tools/boardicon.html、サムネは ?pcs=helm&el=42 640×480）、駒 `pc3-latrunculi-<駒>.webp`（新設 tools/ltpiece.html、640×428 el=25）。いずれも ?v=2。
 - atlas/skin/latrunculi.js：2Dページの駒（syncPieces / animateMove / .inc クラス）を3Dに写す。置く＝上から落ちる、移動＝滑る、跳び＝味方を越えて弧を描く、取る＝浮いて消える、挟まれた駒＝その場で跳ねて裏返る（助けられたら表に戻る）。デザインタブの「3D盤」「3D駒」は共通の `AtlasSkin.rows3d`。レート戦・レッスン・パズル・コーチは2Dと同じものがそのまま3D盤で動く。
 - サムネイル：atlas/img/boardic-latrunculi-*・board-latrunculi-*・pc3-latrunculi-*.webp（atlas/tools/boardicon.html?game=latrunculi&look=…[&pcs=…]）。
 
