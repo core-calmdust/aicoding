@@ -135,6 +135,8 @@ function render(msg) {
   renderBoards(); renderFleet(); renderStatus(msg); renderKifu(); renderEval(); renderButtons(); renderSkills(); renderDraft();
 }
 const SK_ICON = {
+  rapid: '<svg viewBox="0 0 24 24"><path d="M4 8h9M4 12h12M4 16h9"/><path d="M15 6l5 6-5 6"/></svg>',
+  intel: '<svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>',
   flare: '<svg viewBox="0 0 24 24"><path d="M12 2v5"/><circle cx="12" cy="11" r="3"/><path d="M5 16l2.5-2M19 16l-2.5-2M12 15v2"/><rect x="6" y="17" width="12" height="4" rx="1"/></svg>',
   ward: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
   suppress: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M5 5l14 14"/></svg>',
@@ -301,7 +303,7 @@ async function doSkill(a) {
   if (res.blocked) { sfx('bad'); toast(t(by === 0 ? 'fx.blk' : 'fx.foe.blk', { s: t('sk.' + res.skill) })); }
   else if (res.skill === 'flare') toast(t('fx.flare', { k: res.k }));
   else if (res.skill === 'sonar' || res.skill === 'scout' || res.skill === 'radar' || res.skill === 'sweep') toast(t('fx.' + res.skill, { k: res.k, n: res.swept || 0 }));
-  else if (noAim) toast(t((by === 0 ? 'fx.' : 'fx.foe.') + res.skill, { c: res.fix != null ? E.cellName(res.fix) : '' }));
+  else if (noAim) toast(t((by === 0 ? 'fx.' : 'fx.foe.') + res.skill, { c: res.fix != null ? E.cellName(res.fix) : res.lit != null ? E.cellName(res.lit) : '' }));
   else if (by === 0 && res.shots.some(x => x.fog)) toast(t('fx.fog'));
   else if (res.skill === 'probe') toast(t('fx.probe', { r: t(res.shots[0] && res.shots[0].hit && !res.shots[0].fog ? 'log.hit' : res.shots[0] && res.shots[0].fog ? 'log.fog' : 'log.miss'), k: res.k != null ? res.k : '?' }), res.shots[0] && res.shots[0].hit ? 'hit' : '');
   else if (res.shots.some(x => x.mine)) { sfx('sunk'); shake(); toast(t(by === 0 ? 'fx.mine' : 'fx.foe.mine'), 'hit'); }
