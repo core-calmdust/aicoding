@@ -124,4 +124,4 @@ URL: https://core-calmdust.github.io/aicoding/agon/ ／ トップはアルケル
 - **探索の追加の検証（採用せず）**：ルートの PVS（深さ7までの局面数 −4%）、aspiration window ±50（+8%）。どちらも入れていない。
 - **定跡**：AI は定跡を使わない。`openings.json` は「序盤」ページの学習用（作戦3つ）。ネットを採用して強くなったら `tools/gen_openings.js` で作り直す。
 - **レベル表**：今回は強さが変わらないので変えていない。ネットを置いたら Lv.12〜23 と `RT_LV` を測り直す（Lv.1〜11 は不変）。
-- キャッシュ：`engine.js?v=9-nn1`（agon/index.html・app.js・bench.html・大百科 `games/agon.js`）、`core-wasm.js?v=4`、`core_mt.wasm?v=5`、`net.js?v=1`、大百科 `games/agon.js?v=17`（lazy.js）・`lazy.js?v=469`。
+- キャッシュ：`engine.js?v=9-nn1`（agon/index.html・app.js・bench.html・大百科 `games/agon.js`）、`core-wasm.js?v=4`、`core_mt.wasm?v=5`、`net.js?v=1`、大百科 `games/agon.js?v=17`（lazy.js）・`lazy.js?v=471`。
