@@ -28,7 +28,7 @@ def local_script(m):
     name = m.group(1)
     files[name] = os.path.join(HERE, name)
     return f'<script src="{name}"></script>'
-body = re.sub(r'<script src="([a-z0-9]+\.js)\?v=\d+"></script>', local_script, body)
+body = re.sub(r'<script src="([a-z0-9-]+\.js)\?v=\d+"></script>', local_script, body)
 # three.js (r186 + the compatibility layer, 2026-11-14): the page loads it from ../atlas/vendor/ — in the bundle it sits next to the page
 body = re.sub(r'<script>/\* three\.js.*?</script>', '<script src="three-r186.min.js"></script><script src="three-compat.js"></script>', body, flags=re.S)
 for f in ('three-r186.min.js', 'three-compat.js'):
