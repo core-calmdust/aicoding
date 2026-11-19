@@ -45,9 +45,9 @@ html.atlas-latr .pieces .hov{opacity:.45!important;box-shadow:none!important}
 html.atlas-latr .pieces .hov::before,html.atlas-latr .pieces .hov::after,html.atlas-latr .pieces .hov .orn{display:none!important}
 html.atlas-latr .pieces .hov.p1{background:radial-gradient(circle at 40% 35%,#5a6070,#1c2230 60%,#0b0d12)!important}
 html.atlas-latr .pieces .hov.p2{background:radial-gradient(circle at 40% 35%,#fff,#eef0ea 60%,#c4cbc4)!important}
-html.atlas-latr .reserve .rsv-plate{background:rgba(26,14,22,.84)!important;box-shadow:0 0 0 1px rgba(226,170,214,.45),0 2px 6px rgba(0,0,0,.35)!important;color:#f0d9e6!important}
+html.atlas-latr .reserve .rsv-plate{background:rgba(28,20,12,.84)!important;box-shadow:0 0 0 1px rgba(222,190,140,.45),0 2px 6px rgba(0,0,0,.35)!important;color:#efe2cc!important}
 html.atlas-latr .reserve .rsv-plate .rsv-l b,html.atlas-latr .reserve .rsv-plate .rsv-w:not(.hot) b{color:#fff2dc!important}
-html.atlas-latr .reserve .rsv-plate .rsv-w:not(.hot){color:#f0d9e6!important;background:transparent!important}
+html.atlas-latr .reserve .rsv-plate .rsv-w:not(.hot){color:#efe2cc!important;background:transparent!important}
 /* a game with clocks (rated / online): the two players one above the other — side by side the clock chip left no room for the names */
 html.atlas-skin.atlas-latr:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:not(:has(> .pl-info)):has(.clk:not(:empty)){grid-template-columns:minmax(0,1fr)!important;gap:6px!important}
 html.atlas-skin.atlas-latr:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:has(.clk:not(:empty)) > .player :is(.name, .nm){display:block!important;-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis;font-size:13.5px!important}
@@ -82,8 +82,8 @@ html.atlas-skin.atlas-latr:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon)
   let root = null, U = null, Y = 0, built = '';
   const P3 = new Map();   // square → { g, k, inc }
   let tok = 0;            // a full re-sync cancels running animations
-  const lookNow = () => T3.BOARDS && T3.BOARDS.latrunculi ? T3.BOARDS.latrunculi.get() : 'marble';
-  const setNow = () => T3.PIECES && T3.PIECES.latrunculi ? T3.PIECES.latrunculi.get() : 'glass';
+  const lookNow = () => T3.BOARDS && T3.BOARDS.latrunculi ? T3.BOARDS.latrunculi.get() : 'stone';
+  const setNow = () => T3.PIECES && T3.PIECES.latrunculi ? T3.PIECES.latrunculi.get() : 'helm';
   function build() {
     const key = lookNow() + '|' + setNow();
     if (key === built && root) return false;
