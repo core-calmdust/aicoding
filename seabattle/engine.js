@@ -65,21 +65,24 @@ const TYPES = [
   //   intel (intelligence ship) — one unhit square of the enemy's largest afloat ship is revealed (marked, not shot)
   { k: 'rapidship', len: 3, cost: 4, skill: 'rapid', cd: 6 },
   { k: 'intel', len: 3, cost: 4, skill: 'intel', cd: 7 },
+  // 第11弾 (2026-11-20): battlecruiser — lance: a vertical line of 4 squares · transport — no skill, costs nothing: a free but long target
+  { k: 'bcruiser', len: 4, cost: 5, skill: 'lance', cd: 5 },
+  { k: 'transport', len: 4, cost: 0, skill: null, cd: 0 },
 ];
 const SELF = { smoke: 1, command: 1, repair: 1, mine: 1, ward: 1, rapid: 1 };   // skills that act on your own fleet (a ward does not stop them)
 const PASSIVE = t => !!(t.armor || t.aa || t.counter || t.rally || t.hospital);
-const AREA = { bomb: 1, volley: 1, rocket: 1, barrage: 1, strafe: 1 }, SCAN = { sonar: 1, scout: 1, radar: 1, sweep: 1 }, MAXMINES = 2;
+const AREA = { bomb: 1, volley: 1, rocket: 1, barrage: 1, strafe: 1, lance: 1 }, SCAN = { sonar: 1, scout: 1, radar: 1, sweep: 1 }, MAXMINES = 2;
 const NOAIM = { smoke: 1, command: 1, jam: 1, repair: 1, mine: 1, suppress: 1, ward: 1, rapid: 1, intel: 1 };   // skills that need no square
 // the field (2026-11-20): the destroyer and 6 other types drawn at random, 2 of each — at least one attacker, one scout and one of
 // defence / support — and a fleet takes each type at most once, so the drafts differ from game to game
-const ROLE = { atk: [0, 1, 2, 8, 11, 15, 22, 23, 28], info: [3, 7, 16, 19, 25, 26, 29], def: [5, 6, 9, 10, 12, 13, 14, 17, 18, 20, 21, 24, 27] };
+const ROLE = { atk: [0, 1, 2, 8, 11, 15, 22, 23, 28, 30], info: [3, 7, 16, 19, 25, 26, 29], def: [5, 6, 9, 10, 12, 13, 14, 17, 18, 20, 21, 24, 27] };
 const BUDGET = 20, MINSHIPS = 3, MAXSHIPS = 6, MAXSAME = 1, CLASSIC = [0, 1, 2, 3, 4], NT = TYPES.length;
 const PRESETS = [[0, 1, 2, 3], [0, 1, 3, 4], [1, 2, 3, 4, 6], [1, 8, 7, 4, 6], [0, 5, 3, 4], [9, 1, 8, 3], [0, 10, 7, 4, 6]];
 function draftCost(types) { let c = 0; for (const t of types) c += TYPES[t].cost; return c; }
 function validDraft(types) { if (types.length < MINSHIPS || types.length > MAXSHIPS || draftCost(types) > BUDGET) return false; const n = new Array(NT).fill(0); for (const t of types) { if (!(t >= 0 && t < NT) || ++n[t] > MAXSAME) return false; } return true; }
 // The draft: 2 of each type lie on the table (10 ships); the players pick in turn — A B B A A B B A … — within the budget.
 // A player with MINSHIPS or more may stop; one who cannot afford anything left stops by itself. d.turn = -1 when it is over.
-const POOL = [2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const POOL = [2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 function field(rnd) {
   rnd = rnd || Math.random;
   for (let t = 0; t < 200; t++) {
@@ -119,7 +122,7 @@ function draftAI(d, rnd) {
 }
 // the AI's taste per type (tuned with tools/test_tactics_balance.js)
 let REPAIR_V = .65, MINE_V = .5, PROBE_V = .12, WARD_V = .3, FLARE_V = .5, RAPID_V = 2, INTEL_V = .7;
-let DRAFT_W = [1, .95, .8, .92, .5, .85, .75, .8, .9, .7, .7, .85, .75, .8, .75, .8, .75, .6, .75, .85, .8, .8, .85, .8, .75, .8, .8, .75, .8, .8];
+let DRAFT_W = [1, .95, .8, .92, .5, .85, .75, .8, .9, .7, .7, .85, .75, .8, .75, .8, .75, .6, .75, .85, .8, .8, .85, .8, .75, .8, .8, .75, .8, .8, .85, .6];
 const typeOf = (s, i) => s.t != null ? s.t : i;
 
 function rng(seed) { let a = (seed >>> 0) || 1; return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -217,6 +220,7 @@ function footprint(skill, cell) {
   else if (skill === 'torpedo') { for (let rr = N - 1; rr >= 0; rr--) o.push(rr * N + c); }
   else if (skill === 'scout') { for (let cc = 0; cc < N; cc++) o.push(r * N + cc); }
   else if (skill === 'strafe') { o.push(cell); for (const [dr, dc] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) { const rr = r + dr, cc = c + dc; if (rr >= 0 && rr < N && cc >= 0 && cc < N) o.push(rr * N + cc); } }
+  else if (skill === 'lance') { const r0 = Math.min(r, N - 4); for (let i = 0; i < 4; i++) o.push((r0 + i) * N + c); }
   else if (skill === 'rtorpedo') { for (let cc = 0; cc < N; cc++) o.push(r * N + cc); }
   else if (skill === 'radar') { for (let rr = 0; rr < N; rr++) o.push(rr * N + c); }
   else if (skill === 'barrage') { const r0 = Math.max(1, Math.min(N - 2, r)), c0 = Math.max(1, Math.min(N - 2, c)); for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) o.push((r0 + dr) * N + c0 + dc); }
@@ -451,6 +455,7 @@ function chooseAction(st, level, rnd) {
       if (skill === 'barrage' && (c % N === 0 || c % N === N - 1 || c < N || c >= NN - N)) continue;
       if (skill === 'volley' && (c % N === N - 1 || c >= NN - N)) continue;
       if (skill === 'rocket' && c % N > N - 3) continue;
+      if (skill === 'lance' && c >= NN - 3 * N) continue;
       const fp = footprint(skill, c); let val = 0, un = 0, miss = 1;
       for (const k of fp) if (!v.shots[k]) { un++; val += p[k]; miss *= 1 - p[k]; }
       if (!un) continue;

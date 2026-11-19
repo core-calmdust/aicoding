@@ -166,6 +166,15 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     n0 = await acts(); await tapCell(cells[2]); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
     ok(await p.evaluate(() => G.st.rapid === 0 && G.st.log.filter(m => m.by === 1).length > 0 || G.st.turn === 1), name + ': ... and a miss ends it');
     await shot('rapid');
+    // 第11弾: lance fires a column of 4 (the bottom rows pull it up)
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[30, 31, 4], [31, 4, 3]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('lance'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(83); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => JSON.stringify(G.st.log.filter(x => x.via === 'lance').map(x => x.cell)) === '[63,73,83,93]'), name + ': lance fires D7–D10');
+    await shot('lance');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
