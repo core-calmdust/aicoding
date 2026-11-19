@@ -152,15 +152,16 @@ def main():
     if a.bench:
         t0 = time.time(); c = [data.get() for _ in range(4)]; dt = time.time() - t0
         print(f'decoder: {4 * CH / dt / 1e3:.0f} thousand positions/s ({a.threads} threads)', flush=True)
-        for mode in ('dense', 'gather'):
+        T = loss_of(c[0], 'dense'); n = T[0].shape[0]
+        for mode, bs in (('dense', BS), ('gather', BS), ('dense', BS * 2), ('dense', BS * 4), ('dense', BS * 8)):
             try:
-                T = [loss_of(x, mode) for x in c[:1]][0]; nb = CH // BS
-                for rep in range(2):   # (the first round warms up)
+                nb = max(1, n // bs)
+                for rep in range(3):   # (the first round warms up)
                     t0 = time.time()
-                    for b in range(nb): l = run_batch(*[x[b * BS:(b + 1) * BS] for x in T], mode)
+                    for b in range(nb): l = run_batch(*[x[b * bs:(b + 1) * bs] for x in T], mode)
                     l.item(); dt = time.time() - t0
-                print(f'{mode}: {nb * BS / dt / 1e3:.0f} thousand positions/s (hidden {a.hidden}, batch {BS})', flush=True)
-            except Exception as e: print(f'{mode}: failed on {dev}: {str(e)[:200]}', flush=True)
+                print(f'{mode}, batch {bs}: {nb * bs / dt / 1e3:.0f} thousand positions/s (hidden {a.hidden})', flush=True)
+            except Exception as e: print(f'{mode}, batch {bs}: failed on {dev}: {str(e)[:200]}', flush=True)
         return
 
     val = None
