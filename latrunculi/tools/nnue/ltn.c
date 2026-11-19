@@ -142,12 +142,12 @@ static int cmdNncheck(int argc, char **argv) {
       P q; play(&q, &p, L[xr() % n]); p = q;
       P r = p; refresh(&r); checks++;
       for (int v = 0; v < 2; v++) for (int i = 0; i < NH; i++) if (r.acc[v][i] != p.acc[v][i]) { bad++; v = 2; break; }
-      int e = netEval(&p); NH = 0; int h = evalHand(&p); NH = netH;
+      int e = evaluate(&p); NH = 0; int h = evalHand(&p); NH = netH;   /* (with a correction net: the hand-made value + the net's) */
       sum += e; sum2 += (double)e * e; sh += h; shh += (double)h * h; sxy += (double)e * h; nv++;
     }
   }
   double me = sum / nv, sd = sqrt(sum2 / nv - me * me), mh = sh / nv, sdh = sqrt(shh / nv - mh * mh), cor = (sxy / nv - me * mh) / (sd * sdh + 1e-9);
-  printf("nncheck %s %s: %ld positions, accumulator differences %ld | net value mean %.1f sd %.1f | hand-made sd %.1f | correlation %.3f\n", argv[3], argv[2], checks, bad, me, sd, sdh, cor);
+  printf("nncheck %s %s: %ld positions, accumulator differences %ld | value with the net: mean %.1f sd %.1f | hand-made sd %.1f | correlation %.3f\n", argv[3], argv[2], checks, bad, me, sd, sdh, cor);
   return bad ? 1 : 0;
 }
 static Player A, B;
