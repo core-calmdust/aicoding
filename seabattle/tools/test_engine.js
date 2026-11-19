@@ -36,6 +36,17 @@ ok(!E.validFleet([{ r: 0, c: 7, len: 5, h: 1 }, { r: 2, c: 0, len: 4, h: 0 }, { 
   ok(st.winner === 0, 'win when all 17 are hit');
 }
 
+// ---- 1a) タクティクス 第2弾: rockets and repairs — every AI game ends, replays to the same boards, and hit counts stay true ----
+{
+  let bad = 0, reps = 0;
+  for (let g = 0; g < 120; g++) { const fl = [0, 1].map(() => E.randomFleet(rnd, false, [11, 12, 6, 3, 4])), st = E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: g & 1 }); let n = 0;
+    while (st.winner < 0 && n++ < 400) { const a = E.chooseAction(st, 20, rnd); if (a.skill === 'repair') reps++; if (!E.act(st, a)) { bad++; break; } }
+    const st2 = E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: g & 1 }); for (const a of st.acts) E.act(st2, a);
+    if (st.winner < 0 || JSON.stringify([...st.sides[0].shots, ...st.sides[1].shots]) !== JSON.stringify([...st2.sides[0].shots, ...st2.sides[1].shots])) bad++;
+    for (const sd of st.sides) if (sd.shots.filter(x => x === 2).length !== sd.hits) bad++; }
+  ok(bad === 0 && reps > 0, 'rockets and repairs: games end, replay the same, hits stay true (' + reps + ' repairs)');
+}
+
 // ---- 1b) タクティクス: draft, skills, cooldowns ----
 {
   // snake order A B B A A B B A
