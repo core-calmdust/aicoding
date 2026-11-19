@@ -51,10 +51,10 @@ TABLES['v5'] = [   # (2026-11-19: the starts are the values of the first tuning 
 ]
 PARAMS = TABLES['v4']
 
-THREADS = 1
+THREADS = 1; THREADS_VS = 0      # (--threads-vs: the threads of the defaults' side in test, when not the same)
 def build(work):
     os.makedirs(work, exist_ok=True)
-    mt = ['-DMT', '-DSEARCH2_MT', '-lpthread'] if THREADS > 1 else []     # (--threads: the MT build, with search v5 in it)
+    mt = ['-DMT', '-DSEARCH2_MT', '-lpthread'] if max(THREADS, THREADS_VS) > 1 else []     # (--threads: the MT build, with search v5 in it)
     site = os.path.join(work, 'site.bin')
     subprocess.run(f'gzip -dc "{SHOGI}/nnue.bin.gz" > "{site}"', shell=True, check=True)
     h = int.from_bytes(open(site, 'rb').read(8)[4:8], 'little')
@@ -63,11 +63,12 @@ def build(work):
     subprocess.run(['cc', '-O3', '-DNATIVE', '-DNUE_KB=1', f'-DNUE_H={h}', '-w', '-o', kp, os.path.join(SHOGI, 'tools', 'nnue', 'kptool.c')] + mt, check=True)
     return site, um, kp
 
-def play(work, site, um, kp, ms, setA, setB, games, opening_lines, tag):
+def play(work, site, um, kp, ms, setA, setB, games, opening_lines, tag, thA=0, thB=0):
     """usimatch plays setA, kptool plays setB; returns a Popen and the file with the openings"""
     f = tempfile.NamedTemporaryFile('w', suffix=f'-{tag}.txt', delete=False); f.write(''.join(opening_lines)); f.close()
     cmd = [um, site, f'{ms}ms', kp, work, str(games), '--openings', f.name, '--opt', f'TimeMs={ms}'] if ms > 0 else [um, site, str(-ms), kp, work, str(games), '--openings', f.name, '--opt', f'Nodes={-ms}']
-    if THREADS > 1: cmd += ['--threads', str(THREADS), '--opt', f'Threads={THREADS}']
+    thA = thA or THREADS; thB = thB or THREADS
+    if max(THREADS, THREADS_VS) > 1: cmd += ['--threads', str(thA), '--opt', f'Threads={thB}']
     for k, v in setA.items(): cmd += ['--param', f'{k}={v}']
     for k, v in setB.items(): cmd += ['--opt', f'Param{k}={v}']
     env = dict(os.environ, KPNET=site)
@@ -97,10 +98,12 @@ def main():
     ap.add_argument('--lr', type=float, default=0.5); ap.add_argument('--games', type=int, default=80); ap.add_argument('--set', default='')
     ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--threads', type=int, default=1, help='both sides search on this many threads (the MT build: its defaults are search v4, so give search v5 in full with --set)')
+    ap.add_argument('--threads-vs', type=int, default=0, help='test: the threads of the other side (default: --threads). With --vs: what the threads give to one search')
+    ap.add_argument('--vs', default='', help='test: the parameters of the other side (default: nothing sent, the engine defaults)')
     ap.add_argument('--table', default='v4', choices=sorted(TABLES)); ap.add_argument('--base', default='', help='parameters fixed on both sides in tune, and added to the candidate in test ("44=1,45=1")')
     ap.add_argument('--nodes', type=int, default=0, help='test: nodes per move instead of time (what the node-limited levels see)')
     a = ap.parse_args()
-    global PARAMS, THREADS; PARAMS = TABLES[a.table]; THREADS = a.threads
+    global PARAMS, THREADS, THREADS_VS; PARAMS = TABLES[a.table]; THREADS = a.threads; THREADS_VS = a.threads_vs
     base = {int(x.split('=')[0]): int(x.split('=')[1]) for x in a.base.split(',') if x}
     site, um, kp = build(a.work)
     ops = [x for x in open(os.path.join(HERE, 'openings.txt')) if len(x) > 3]
@@ -112,16 +115,17 @@ def main():
         if a.set: cand = {int(x.split('=')[0]): int(x.split('=')[1]) for x in a.set.split(',')}
         else:
             st = json.load(open(state_f)); cand = {k: int(round(st['theta'][n])) for n, k, _, _, _, _ in PARAMS}
-        cand = {**base, **cand}
+        cand = {**base, **cand}; vs = {int(x.split('=')[0]): int(x.split('=')[1]) for x in a.vs.split(',') if x}; tc, tv = a.threads, a.threads_vs or a.threads
+        if vs or tv != tc: print(f'the other side: {a.vs or "the defaults"}, {tv} thread(s); the candidate: {tc} thread(s)', flush=True)
         print('candidate:', ', '.join(f'{k}={v}' for k, v in sorted(cand.items())) or '(the defaults)', f' vs the defaults, {ms} ms, {a.games * a.procs} games' if ms > 0 else f' vs the defaults, {-ms} nodes, {a.games * a.procs} games', flush=True)
         ps = []
         for i in range(a.procs):
             r = (i * a.games // 2) % len(ops); lines = ops[r:] + ops[:r]
-            A, B = (cand, {}) if i % 2 == 0 else ({}, cand)          # the candidate sits in usimatch in half the processes
+            A, B = (cand, vs) if i % 2 == 0 else (vs, cand)          # the candidate sits in usimatch in half the processes
             # (the other side: the engine's own defaults, nothing sent)
             # nodes per move: each process a little more (+131 each). The search is deterministic, and the 100 openings give
             # only 100 different pairs of games: without this, processes with the same openings would play the same games.
-            ps.append((play(a.work, site, um, kp, ms - 131 * i if ms < 0 else ms, A, B, a.games, lines, f't{i}'), i % 2 == 0))
+            ps.append((play(a.work, site, um, kp, ms - 131 * i if ms < 0 else ms, A, B, a.games, lines, f't{i}', *((tc, tv) if i % 2 == 0 else (tv, tc))), i % 2 == 0))
         W = L = D = 0
         for (p, fn), candInUm in ps:
             w, l, d = result(p, fn)
