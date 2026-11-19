@@ -97,7 +97,7 @@ def main():
     ap.add_argument('--procs', type=int, default=6); ap.add_argument('--iters', type=int, default=600)
     ap.add_argument('--lr', type=float, default=0.5); ap.add_argument('--games', type=int, default=80); ap.add_argument('--set', default='')
     ap.add_argument('--seed', type=int, default=1)
-    ap.add_argument('--threads', type=int, default=1, help='both sides search on this many threads (the MT build: its defaults are search v4, so give search v5 in full with --set)')
+    ap.add_argument('--threads', type=int, default=1, help='both sides search on this many threads (the MT build; since 2026-11-19 its defaults are search v5 with Lazy SMP helpers — search v4 with YBW: 44=0 and its numbers)')
     ap.add_argument('--threads-vs', type=int, default=0, help='test: the threads of the other side (default: --threads). With --vs: what the threads give to one search')
     ap.add_argument('--vs', default='', help='test: the parameters of the other side (default: nothing sent, the engine defaults)')
     ap.add_argument('--table', default='v4', choices=sorted(TABLES)); ap.add_argument('--base', default='', help='parameters fixed on both sides in tune, and added to the candidate in test ("44=1,45=1")')
