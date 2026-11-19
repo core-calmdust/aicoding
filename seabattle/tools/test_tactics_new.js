@@ -50,6 +50,29 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     const lg = await p.evaluate(() => ({ mine: G.st.log.some(m => m.mine), rest: G.st.log.some(m => m.rest), aaFoe: G.st.log.some(m => m.by === 1 && m.ic >= 0), kifu: document.querySelector('#kifu') ? document.querySelector('#kifu').textContent.length : -1 }));
     console.log('   ' + name + ': mine hit ' + lg.mine + ' · rest ' + lg.rest + ' · my AA shot one down ' + lg.aaFoe);
     await shot('over');
+    // 第4弾: barrage (into AA), radar, and a decoy that need not be sunk
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[15, 16, 17, 4], [17, 13, 1, 3]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('radar'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(4); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => { const sc = G.st.scans[0].slice(-1)[0]; return sc && sc.col === 1 && sc.cells.every(c => c % 10 === 4) && !!document.querySelector('#bsvg .sb-scan'); }), name + ': radar reads a whole column');
+    await shot('radar'); await idle();
+    await p.evaluate(() => { G.st.cd[0].fill(0); render(); });
+    i = await skillBtn('barrage'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(55); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => { const m = G.st.log.filter(m => m.by === 0 && m.skill === 'barrage').pop(); return m && m.ic >= 0 && G.st.log.filter(x => x.via === 'barrage').length === 8; }), name + ': barrage fires 9 squares, one shot down by AA');
+    await shot('barrage');
+    guard = 0;
+    while (await p.evaluate(() => G.phase === 'battle') && guard++ < 160) {
+      await idle(); if (!(await p.evaluate(() => G.phase === 'battle'))) break;
+      n0 = await acts();
+      const c = await p.evaluate(() => { const s = G.st.sides[1].shots, g = G.st.sides[1].grid, sh = G.st.sides[1].ships; for (let k = 0; k < 100; k++) if (!s[k] && g[k] >= 0 && !SeaEngine.TYPES[sh[g[k]].t].decoy) return k; for (let k = 0; k < 100; k++) if (!s[k]) return k; return -1; });
+      await tapCell(c); await p.waitForFunction(n => G.st.acts.length > n || G.phase !== 'battle', n0, { timeout: 10000 });
+    }
+    ok(await p.evaluate(() => { const T = G.st.sides[1], d = T.ships.findIndex(s => SeaEngine.TYPES[s.t].decoy); return G.st.winner === 0 ? !T.sunk[d] : true; }), name + ': winning with the enemy decoy still afloat');
+    await shot('decoy');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
