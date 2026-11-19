@@ -30,18 +30,24 @@ const TYPES = [
   // 第2弾 (2026-11-20): rocket — a row of 3 squares · repair (repair ship) — the latest hit on one of your afloat ships is mended (the square is unknown to the enemy again)
   { k: 'rocket', len: 3, cost: 4, skill: 'rocket', cd: 4 },
   { k: 'repair', len: 3, cost: 3, skill: 'repair', cd: 5 },
+  // 第3弾 (2026-11-20): aa (anti-air cruiser) — always, while afloat: the enemy's bomb / volley / rocket loses its last shell (shot down)
+  //   mine (minelayer) — lays a mine on the empty square of your sea the enemy is most likely to shoot next (at most 2 at a time);
+  //   a shell on it is a miss, and the shooter loses their next turn
+  { k: 'aa', len: 3, cost: 4, skill: null, cd: 0, aa: 1 },
+  { k: 'mine', len: 2, cost: 2, skill: 'mine', cd: 4 },
 ];
-const NOAIM = { smoke: 1, command: 1, jam: 1, repair: 1 };   // skills that need no square
+const AREA = { bomb: 1, volley: 1, rocket: 1 }, MAXMINES = 2;
+const NOAIM = { smoke: 1, command: 1, jam: 1, repair: 1, mine: 1 };   // skills that need no square
 // the field (2026-11-20): the destroyer and 6 other types drawn at random, 2 of each — at least one attacker, one scout and one of
 // defence / support — and a fleet takes each type at most once, so the drafts differ from game to game
-const ROLE = { atk: [0, 1, 2, 8, 11], info: [3, 7], def: [5, 6, 9, 10, 12] };
+const ROLE = { atk: [0, 1, 2, 8, 11], info: [3, 7], def: [5, 6, 9, 10, 12, 13, 14] };
 const BUDGET = 20, MINSHIPS = 3, MAXSHIPS = 6, MAXSAME = 1, CLASSIC = [0, 1, 2, 3, 4], NT = TYPES.length;
 const PRESETS = [[0, 1, 2, 3], [0, 1, 3, 4], [1, 2, 3, 4, 6], [1, 8, 7, 4, 6], [0, 5, 3, 4], [9, 1, 8, 3], [0, 10, 7, 4, 6]];
 function draftCost(types) { let c = 0; for (const t of types) c += TYPES[t].cost; return c; }
 function validDraft(types) { if (types.length < MINSHIPS || types.length > MAXSHIPS || draftCost(types) > BUDGET) return false; const n = new Array(NT).fill(0); for (const t of types) { if (!(t >= 0 && t < NT) || ++n[t] > MAXSAME) return false; } return true; }
 // The draft: 2 of each type lie on the table (10 ships); the players pick in turn — A B B A A B B A … — within the budget.
 // A player with MINSHIPS or more may stop; one who cannot afford anything left stops by itself. d.turn = -1 when it is over.
-const POOL = [2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0];
+const POOL = [2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 function field(rnd) {
   rnd = rnd || Math.random;
   for (let t = 0; t < 200; t++) {
@@ -80,8 +86,8 @@ function draftAI(d, rnd) {
   return best;
 }
 // the AI's taste per type (tuned with tools/test_tactics_balance.js)
-let REPAIR_V = .65;
-let DRAFT_W = [1, .95, .8, .92, .5, .85, .75, .8, .9, .7, .7, .85, .75];
+let REPAIR_V = .65, MINE_V = .5;
+let DRAFT_W = [1, .95, .8, .92, .5, .85, .75, .8, .9, .7, .7, .85, .75, .8, .75];
 const typeOf = (s, i) => s.t != null ? s.t : i;
 
 function rng(seed) { let a = (seed >>> 0) || 1; return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -126,7 +132,7 @@ function randomFleet(rnd, adj, types) {
   }
 }
 
-function newSide(ships) { return { ships: ships.map((s, i) => ({ r: s.r, c: s.c, len: s.len, h: s.h ? 1 : 0, t: typeOf(s, i) })), grid: gridOf(ships), shots: new Uint8Array(NN), hitsOn: ships.map(() => 0), sunk: ships.map(() => false), afloat: ships.length, armor: ships.map((sh, i) => TYPES[typeOf(sh, i)] && TYPES[typeOf(sh, i)].armor ? 1 : 0), fog: 0, fogged: new Uint8Array(NN), hits: 0, nshots: 0 }; }
+function newSide(ships) { return { ships: ships.map((s, i) => ({ r: s.r, c: s.c, len: s.len, h: s.h ? 1 : 0, t: typeOf(s, i) })), grid: gridOf(ships), shots: new Uint8Array(NN), hitsOn: ships.map(() => 0), sunk: ships.map(() => false), afloat: ships.length, armor: ships.map((sh, i) => TYPES[typeOf(sh, i)] && TYPES[typeOf(sh, i)].armor ? 1 : 0), fog: 0, fogged: new Uint8Array(NN), mines: [], hits: 0, nshots: 0 }; }
 function newGame(o) {
   const st = { rule: RULES.includes(o.rule) ? o.rule : 'classic', adj: !!o.adj, sides: [newSide(o.fleets[0]), newSide(o.fleets[1])], turn: o.first ? 1 : 0, winner: -1, log: [], acts: [], left: 1, cd: null, scans: [[], []] };
   if (st.rule === 'tactics') st.cd = st.sides.map(sd => sd.ships.map(s => TYPES[s.t].skill ? Math.ceil(TYPES[s.t].cd / 2) : -1));
@@ -141,25 +147,26 @@ function strike(st, by, cell) {      // one shell on the other side's square (no
   if (T.fog > 0) { T.fogged[cell] = 1; res.fog = true; }                                   // under the smoke: the shooter is not told
   if (si >= 0 && T.armor && T.armor[si] && T.shots[cell] !== 3) { T.armor[si] = 0; T.shots[cell] = 3; res.dent = true; }   // the plate takes it
   else if (si >= 0) { T.shots[cell] = 2; T.hits++; if (++T.hitsOn[si] === T.ships[si].len) { T.sunk[si] = true; T.afloat--; res.sunk = si; } }
-  else T.shots[cell] = 1;
+  else { T.shots[cell] = 1; const mi = T.mines.indexOf(cell); if (mi >= 0) { T.mines.splice(mi, 1); res.mine = true; if (!st.rest) st.rest = [0, 0]; st.rest[by] = 1; } }   // a mine: the shooter rests next turn
   if (T.afloat === 0) st.winner = by;
   return res;
 }
 function pass(st, by) { const T = st.sides[1 - by]; if (T.fog > 0 && --T.fog === 0) T.fogged.fill(0); if (st.bonus) st.bonus = 0;
-  st.turn = 1 - by; if (st.cd) { const c = st.cd[st.turn]; for (let i = 0; i < c.length; i++) if (c[i] > 0) c[i]--; } }
+  st.turn = 1 - by; if (st.cd) { const c = st.cd[st.turn]; for (let i = 0; i < c.length; i++) if (c[i] > 0) c[i]--; }
+  if (st.rest && st.rest[st.turn] && st.winner < 0) { st.rest[st.turn] = 0; st.log.push({ by: st.turn, cell: -1, rest: 1 }); pass(st, st.turn); } }   // (a turn lost to a mine)
 // the player to move (st.turn) shoots at `cell` of the other side. → { by, cell, hit, sunk (ship index or -1), win, again } or null
 function fire(st, cell) {
   if (st.winner >= 0) return null;
   const by = st.turn, T = st.sides[1 - by];
   if (!(cell >= 0 && cell < NN) || (T.shots[cell] && T.shots[cell] !== 3)) return null;
-  const res = strike(st, by, cell); res.win = st.winner === by; res.again = false;
+  const nlog = st.log.length, res = strike(st, by, cell); res.win = st.winner === by; res.again = false;
   if (res.win) {}
   else if (st.bonus > 0) { st.bonus--; res.again = true; }
   else if (st.rule === 'streak') { if (!res.hit) pass(st, by); else res.again = true; }
   else if (st.rule === 'salvo') { if (--st.left <= 0) { pass(st, by); st.left = quota(st); } else res.again = true; }
   else pass(st, by);
   if (st.rule !== 'salvo') st.left = 1;
-  st.log.push({ by, cell, hit: res.hit, sunk: res.sunk, fog: res.fog ? 1 : 0, dent: res.dent ? 1 : 0 }); st.acts.push({ cell });
+  st.log.splice(nlog, 0, { by, cell, hit: res.hit, sunk: res.sunk, fog: res.fog ? 1 : 0, dent: res.dent ? 1 : 0, mine: res.mine ? 1 : 0 }); st.acts.push({ cell });
   return res;
 }
 // ---- skills (タクティクス) ----
@@ -176,6 +183,9 @@ function footprint(skill, cell) {
 }
 // the square a repair would mend: the latest hit (seen as a hit, not a dent) on an afloat ship of `by`
 function repairCell(st, by) { const M = st.sides[by]; for (let i = st.log.length - 1; i >= 0; i--) { const m = st.log[i]; if (m.by === by || m.skill || !(m.cell >= 0)) continue; if (M.shots[m.cell] === 2 && !M.sunk[M.grid[m.cell]]) return m.cell; } return -1; }
+// where a minelayer of `by` would lay: the empty square of its own sea the enemy is most likely to shoot next (their public view)
+function mineCell(st, by) { const M = st.sides[by]; if (M.mines.length >= MAXMINES) return -1; const v = view(M, st.scans[1 - by]), p = probs(v, st.adj); let best = -1, bv = -1;
+  for (let i = 0; i < NN; i++) { if (v.shots[i] || M.grid[i] >= 0 || M.mines.includes(i)) continue; if (p[i] > bv + 1e-9) { bv = p[i]; best = i; } } return best; }
 function skillReady(st, by, ship) { return !!st.cd && st.winner < 0 && st.cd[by][ship] === 0 && !st.sides[by].sunk[ship]; }
 // what a skill would do (pure): the squares that get a shell, in order, with the result — used for the effects before act()
 function preview(st, ship, cell) {
@@ -184,6 +194,7 @@ function preview(st, ship, cell) {
   if (NOAIM[skill]) {
     if (skill === 'command' && !st.cd[by].some((c, i) => i !== ship && c > 0 && !M.sunk[i])) return null;
     if (skill === 'jam' && !st.cd[1 - by].some((c, i) => c >= 0 && !T.sunk[i])) return null;
+    if (skill === 'mine') { const mc = mineCell(st, by); return mc < 0 ? null : { skill, area: [], shots: [], mc }; }
     if (skill === 'repair') { const fix = repairCell(st, by); return fix < 0 ? null : { skill, area: [], shots: [], fix }; }
     return { skill, area: [], shots: [] };
   }
@@ -191,20 +202,24 @@ function preview(st, ship, cell) {
   const area = footprint(skill, cell), shots = [], seen = k => T.shots[k] && T.shots[k] !== 3;
   if (skill === 'sonar' || skill === 'scout') { const U = area.filter(k => !T.shots[k]); if (!U.length) return null; return { skill, area, U, k: U.filter(x => T.grid[x] >= 0).length, shots }; }
   for (const k of area) { if (seen(k)) continue; shots.push({ cell: k, hit: T.grid[k] >= 0 }); if (skill === 'torpedo' && T.grid[k] >= 0) break; }
-  return shots.length ? { skill, area, shots } : null;
+  if (!shots.length) return null;
+  let ic = -1; if (AREA[skill] && shots.length >= 2 && T.ships.some((s, i) => TYPES[s.t].aa && !T.sunk[i])) ic = shots.pop().cell;   // (the anti-air cruiser shoots one down)
+  return { skill, area, shots, ic };
 }
 // use the skill of the mover's ship `ship` at `cell`. → { by, skill, ship, cell, shots: [{cell, hit, sunk}], k (sonar), win } or null
 function useSkill(st, ship, cell) {
   const pv = preview(st, ship, cell); if (!pv) return null;
   const by = st.turn, res = { by, skill: pv.skill, ship, cell, area: pv.area, shots: [], k: pv.k, win: false };
-  st.log.push({ by, cell: pv.fix != null ? pv.fix : cell, skill: pv.skill, k: pv.k });
+  st.log.push({ by, cell: pv.fix != null ? pv.fix : cell, skill: pv.skill, k: pv.k, ic: pv.ic >= 0 ? pv.ic : undefined });
+  if (pv.mc != null) st.sides[by].mines.push(pv.mc);
+  res.ic = pv.ic;
   if (pv.fix != null) { const M0 = st.sides[by], si = M0.grid[pv.fix]; M0.shots[pv.fix] = 0; M0.hits--; M0.hitsOn[si]--; M0.fogged[pv.fix] = 0; res.fix = pv.fix; }
   if (pv.skill === 'sonar' || pv.skill === 'scout') st.scans[by].push({ cells: pv.U, k: pv.k, at: cell, row: pv.skill === 'scout' ? 1 : 0 });
   const M = st.sides[by], O = st.sides[1 - by];
   if (pv.skill === 'smoke') M.fog = 2;
   if (pv.skill === 'command') st.cd[by].forEach((c, i) => { if (i !== ship && c > 0) st.cd[by][i] = Math.max(0, c - 4); });
   if (pv.skill === 'jam') st.cd[1 - by].forEach((c, i) => { if (c >= 0 && !O.sunk[i]) st.cd[1 - by][i] = Math.min(TYPES[O.ships[i].t].cd + 3, c + 3); });
-  for (const x of pv.shots) { const r = strike(st, by, x.cell); res.shots.push(r); st.log.push({ by, cell: r.cell, hit: r.hit, sunk: r.sunk, via: pv.skill, fog: r.fog ? 1 : 0, dent: r.dent ? 1 : 0 }); if (st.winner >= 0) break; }
+  for (const x of pv.shots) { const r = strike(st, by, x.cell); res.shots.push(r); st.log.push({ by, cell: r.cell, hit: r.hit, sunk: r.sunk, via: pv.skill, fog: r.fog ? 1 : 0, dent: r.dent ? 1 : 0, mine: r.mine ? 1 : 0 }); if (st.winner >= 0) break; }
   st.cd[by][ship] = TYPES[st.sides[by].ships[ship].t].cd;
   st.acts.push({ skill: pv.skill, ship, cell });
   res.win = st.winner === by;
@@ -341,7 +356,7 @@ function chooseAction(st, level, rnd) {
   let best = { cell: dn >= 0 ? dn : argmax(p, v, rnd) }, bv = dn >= 0 ? 1 : best.cell >= 0 ? p[best.cell] : 0; if (best.cell < 0) return shot();
   const shotCell = best.cell;
   const top2 = () => { let a = 0, b = 0; for (let i = 0; i < NN; i++) { if (v.shots[i]) continue; const x = p[i]; if (x > a) { b = a; a = x; } else if (x > b) b = x; } return a + b; };
-  const Me = st.sides[by], myV = view(Me), myP = prep(myV, st.adj);
+  const Me = st.sides[by], myV = view(Me), myP = prep(myV, st.adj), foeAA = T.ships.some((s, i) => TYPES[s.t].aa && !T.sunk[i]);
   for (const i of ready) {
     const skill = TYPES[st.sides[by].ships[i].t].skill; let sv = -1, sc = -1;
     if (NOAIM[skill]) {
@@ -349,6 +364,7 @@ function chooseAction(st, level, rnd) {
       if (skill === 'smoke') sv = myP.nOpen ? .55 + .15 * myP.nOpen : .08;                                   // when they are on a hit of ours
       else if (skill === 'command') { let x = 0; st.cd[by].forEach((c, j) => { if (j !== i && c > 0 && !Me.sunk[j]) x += Math.min(4, c) * .14; }); sv = x; }
       else if (skill === 'repair') sv = REPAIR_V + (myP.nOpen ? .15 : 0);
+      else if (skill === 'mine') sv = myP.nOpen ? .15 : MINE_V;
       else if (skill === 'jam') { let x = 0; st.cd[1 - by].forEach((c, j) => { if (c >= 0 && !T.sunk[j]) x += c <= 1 ? .28 : .12; }); sv = x; }
       sv += 1e-4 * rnd();
       if (sv > bv) { bv = sv; best = { skill, ship: i, cell: -1 }; }
@@ -363,6 +379,7 @@ function chooseAction(st, level, rnd) {
       const fp = footprint(skill, c); let val = 0, un = 0, miss = 1;
       for (const k of fp) if (!v.shots[k]) { un++; val += p[k]; miss *= 1 - p[k]; }
       if (!un) continue;
+      if (foeAA && AREA[skill] && un >= 2) val *= (un - 1) / un;   // (one shell will be shot down)
       if (skill === 'torpedo') val = (1 - miss) + .03 * un;
       else if (skill === 'sonar') val = P.nOpen || un < 6 ? -1 : .5 - Math.abs(val - 1.3) * .08;
       else if (skill === 'scout') val = P.nOpen || un < 7 ? -1 : .55 - Math.abs(val - 2) * .06;
@@ -406,6 +423,6 @@ function winProb(st, me, rnd, n) {
 const COLS = 'ABCDEFGHIJ';
 function cellName(cell) { return COLS[cell % N] + ((cell / N | 0) + 1); }
 
-const E = { NOAIM, field, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
+const E = { NOAIM, field, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
 if (typeof module !== 'undefined' && module.exports) module.exports = E; else root.SeaEngine = E;
 })(typeof self !== 'undefined' ? self : this);
