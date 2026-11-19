@@ -2887,6 +2887,9 @@ html.lp .modal.cloudq .cl-pick .btn{padding:6px 10px;font-size:13px}
 #game .ls-guide .lg-top{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
 #game .ls-guide .lg-top b{font-family:var(--serif);font-size:14px;color:var(--gold);letter-spacing:.1em}
 #game .ls-guide .lg-top small{font-size:11.5px;color:rgba(216,205,240,.7);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#game .ls-guide .lg-sc{flex:none;font-style:normal;font-size:11.5px;font-weight:700;color:#ffe9a8;background:rgba(243,199,102,.16);border:1px solid rgba(243,199,102,.45);border-radius:999px;padding:1px 8px;font-variant-numeric:tabular-nums}
+#game .ls-guide .lg-sc.hit{animation:lgScHit .6s ease}
+@keyframes lgScHit{0%{transform:scale(1);color:#ffe9a8}30%{transform:scale(1.25);color:#ff8a8a}100%{transform:scale(1);color:#ffe9a8}}
 #game .ls-guide .lg-quit{flex:none;border:0;background:none;color:rgba(216,205,240,.6);font-size:11.5px;cursor:pointer;text-decoration:underline;padding:0}
 #game .ls-guide p{margin:0;font-size:15px;line-height:1.7;color:#f4eefe}
 #game .ls-guide .lg-again{display:block;margin-top:4px;font-size:13px;color:rgba(230,220,247,.75)}
@@ -3051,7 +3054,7 @@ html.lp .lx-ft .tl{--tw:22px;width:22px}
 html:not(.lp) #game .ls-guide .lg-face{width:max(76px,11.5vh);height:max(76px,11.5vh)}
 html:not(.lp) #game .ls-guide p{font-size:max(15px,2.55vh);line-height:1.65}
 html:not(.lp) #game .ls-guide .lg-top b{font-size:max(14px,2vh)}
-html:not(.lp) #game .ls-guide .lg-top small,html:not(.lp) #game .ls-guide .lg-quit{font-size:max(11.5px,1.6vh)}
+html:not(.lp) #game .ls-guide .lg-top small,html:not(.lp) #game .ls-guide .lg-quit,html:not(.lp) #game .ls-guide .lg-sc{font-size:max(11.5px,1.6vh)}
 html:not(.lp) #game .ls-guide .lg-again{font-size:max(13px,2.1vh)}
 html:not(.lp) #game .ls-guide .lg-btns .btn{font-size:max(13px,1.9vh);padding:.5em 1.3em}
 html:not(.lp) #game .ls-guide .lg-bub{padding:max(10px,1.5vh) max(14px,2vh)}
@@ -3097,7 +3100,7 @@ html:not(.lp) #game .ls-guide{--lgu:min(calc(var(--GH,100vh) / 100), calc(var(--
 html:not(.lp) #game .ls-guide .lg-face{width:max(76px,calc(var(--lgu) * 11.5));height:max(76px,calc(var(--lgu) * 11.5))}
 html:not(.lp) #game .ls-guide p{font-size:max(15px,calc(var(--lgu) * 2.55))}
 html:not(.lp) #game .ls-guide .lg-top b{font-size:max(14px,calc(var(--lgu) * 2))}
-html:not(.lp) #game .ls-guide .lg-top small,html:not(.lp) #game .ls-guide .lg-quit{font-size:max(11.5px,calc(var(--lgu) * 1.6))}
+html:not(.lp) #game .ls-guide .lg-top small,html:not(.lp) #game .ls-guide .lg-quit,html:not(.lp) #game .ls-guide .lg-sc{font-size:max(11.5px,calc(var(--lgu) * 1.6))}
 html:not(.lp) #game .ls-guide .lg-again{font-size:max(13px,calc(var(--lgu) * 2.1))}
 html:not(.lp) #game .ls-guide .lg-btns .btn{font-size:max(13px,calc(var(--lgu) * 1.9))}
 html:not(.lp) #game .ls-guide .lg-bub{padding:max(10px,calc(var(--lgu) * 1.5)) max(14px,calc(var(--lgu) * 2))}
