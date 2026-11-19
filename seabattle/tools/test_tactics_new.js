@@ -133,6 +133,21 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await tapCell(swc); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
     ok(await p.evaluate(() => { const m = G.st.log.filter(m => m.by === 0 && m.skill === 'sweep').pop(); return m && m.sw != null && G.st.scans[0].length === 1; }), name + ': sweep reads a 3×3 box and reports the mines it cleared');
     await shot('sweep');
+    // 第9弾: the star shell lights a 2×2 box; the enemy's ward stops my next skill
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[26, 3, 4], [27, 1, 4]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('flare'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(44); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    await idle(); await p.evaluate(() => { G.view = 'enemy'; render(); });
+    ok(await p.evaluate(() => G.st.scans[0].filter(s => s.one).length === 4 && document.querySelectorAll('#bsvg .sb-lit').length === [44, 45, 54, 55].filter(c => !G.st.sides[1].shots[c]).length), name + ': the star shell marks each square of the box');
+    await shot('flare');
+    await p.evaluate(() => { G.st.sides[1].ward = 1; G.st.cd[0].fill(0); render(); });
+    i = await skillBtn('sonar'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(77); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => { const m = G.st.log.filter(m => m.by === 0 && m.skill === 'sonar').pop(); return m && m.blk === 1 && G.st.scans[0].filter(s => !s.one).length === 0 && G.st.sides[1].ward === 0; }), name + ': the enemy ward stops my sonar');
+    await shot('ward');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
