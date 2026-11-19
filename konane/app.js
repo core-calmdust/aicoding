@@ -161,16 +161,19 @@ function mtWants(which, msg) {
   if (msg.cfg) return !!msg.cfg.s && msg.cfg.threads > 1;   // PRO: its own thread count with any limit of the search (not the weak steps' root values)
   return mtLevel(msg.level) || (which === 'ana' && msg.level === 19);   // (rated games too: the user's decision 2026-11-08; 19 = COACH_DEEP, the coach's deeper pass)
 }
+// (2026-11-20) with the board's learned evaluation (engine.js NETV) the jobs of search v3 — analysis and the 天上 levels (x) — skip the
+// plain workers' threads (mtsplit.js: the JS loops over the old search, no net) and go to one worker of v3 + the net, unless core_mt.wasm's threads are on (same as ugolki)
+const nnJob = msg => !!(E.NETV && E.NETV[gv]) && (msg.type !== 'think' || !!(E.LEVELS[msg.level] && E.LEVELS[msg.level].x && !msg.cfg));
 function request(which, msg, onProgress) {
   // a top level (Lv.21〜) right after the page has opened: wait up to 4 s for the threads rather than start on one
   const cOn = MCP && MTEngine.on();
-  if ((cOn || (MTP && MTSplit.on())) && which === 'ai' && msg.type === 'think' && msg.level > 20 && !msg.waited) {
+  if ((cOn || (MTP && MTSplit.on() && !nnJob(msg))) && which === 'ai' && msg.type === 'think' && msg.level > 20 && !msg.waited) {
     const P = cOn ? MCP : MTP;
     return (async () => { const t0 = Date.now(); while (!P.pool('ai') && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 100)); return request(which, Object.assign({}, msg, { waited: 1 }), onProgress); })();
   }
   const cp = cOn && mtWants(which, msg) && MCP.pool(which === 'ai' ? 'ai' : null);
   if (cp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return cp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
-  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  const mp = MTP && !nnJob(msg) && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
 }
