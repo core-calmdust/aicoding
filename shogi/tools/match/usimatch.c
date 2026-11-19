@@ -169,7 +169,8 @@ int main(int argc, char **argv) {
     { static const char *nm[3] = { "table move", "capture", "quiet" }; long long tot = 0; for (int k = 0; k < 3; k++) for (int b = 0; b < 8; b++) tot += stCutKsum[k][b];
       for (int k = 0; k < 3; k++) { long long t = 0; for (int b = 0; b < 8; b++) t += stCutKsum[k][b]; const long long *c = stCutKsum[k];
         printf("cut by %-10s %5.1f%% of cuts; place 1: %4.1f%% 2: %4.1f%% 3: %4.1f%% 4-6: %4.1f%% 7-10: %4.1f%% 11-20: %4.1f%% 21-40: %4.1f%% 41+: %4.1f%%\n", nm[k], 100.0 * t / (tot + 1), 100.0 * c[0] / (t + 1), 100.0 * c[1] / (t + 1), 100.0 * c[2] / (t + 1), 100.0 * c[3] / (t + 1), 100.0 * c[4] / (t + 1), 100.0 * c[5] / (t + 1), 100.0 * c[6] / (t + 1), 100.0 * c[7] / (t + 1)); }
-      static const char *dn[3] = { "depth 1-3", "depth 4-7", "depth 8+" }; for (int d = 0; d < 3; d++) printf("%s: quiet cut moves %lld, mean place %.2f\n", dn[d], stCutDsum[d], (double)stCutDSsum[d] / (stCutDsum[d] + 1)); }
+      static const char *dn[3] = { "depth 1-3", "depth 4-7", "depth 8+" }; for (int d = 0; d < 3; d++) printf("%s: quiet cut moves %lld, mean place %.2f\n", dn[d], stCutDsum[d], (double)stCutDSsum[d] / (stCutDsum[d] + 1));
+      for (int d = 0; d < 3; d++) { const long long *h = stHR[d]; printf("%s: the cutting quiet move among the node's quiet moves by history alone: %.1f of %.1f moves have more (%.1f have history 0); its own history > 0: %.0f%%; it was a killer: %.0f%%\n", dn[d], (double)h[1] / (h[0] + 1), (double)h[2] / (h[0] + 1), (double)h[3] / (h[0] + 1), 100.0 * h[4] / (h[0] + 1), 100.0 * h[5] / (h[0] + 1)); } }
     return 0;
   }
 #endif
