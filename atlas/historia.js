@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 26;                     // data version (bump when historia/*.json change)
+  const V = 27;                     // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];   // (a game without text in a language falls back to English)
   const UI = {
@@ -345,7 +345,7 @@
     const P = root.querySelector('.hs-pages'), old = P.querySelector('.hs-pg:not(.leave)');
     if (old) { old.classList.add('leave', dir > 0 ? 'l' : 'r'); setTimeout(() => old.remove(), 420); }
     const c = data.ch[i], pg = document.createElement('article'); pg.className = 'hs-pg k-' + c.k + (dir > 0 ? ' fr' : ' fl');
-    pg.innerHTML = page(c, i);
+    pg.innerHTML = page(c, i) + (c.tip ? tipBox(c.tip) : '');
     P.appendChild(pg); P.scrollTop = 0;
     requestAnimationFrame(() => requestAnimationFrame(() => { pg.classList.add('in'); run(pg, c); }));
     root.querySelectorAll('.hs-dots button').forEach((b, k) => { b.classList.toggle('on', k === i); b.classList.toggle('done', k < i); });
@@ -371,6 +371,9 @@
     return joined ? html : html.replace(/(?:<span class="ki"[^>]*>[^<]*<\/span>)+/g, w => /[\u3000-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(w) ? w : `<span style="white-space:nowrap">${w}</span>`);
   }
   const st = (i, base = 0, gap = 90) => `style="--d:${base + i * gap}ms"`;
+  // a page's highlighted note (c.tip: [title, text]) — a coloured box under the page, more noticeable than a trivia card
+  // (2026-11-19: foxgeese's "swap the roles and play twice" — a house rule many players use because one side has the edge)
+  const tipBox = x => `<div class="hs-tip rv" style="--d:900ms"><span class="ic">★</span><div class="tx"><b>${esc(x[0])}</b><span>${esc(x[1])}</span></div></div>`;
   function page(c, i) {
     const head = `<div class="hs-kick"><span>${String(i + 1).padStart(2, '0')}</span><i></i></div><h2 class="hs-h">${kin(c.t || '')}</h2>`;
     const P = (c.p || []).map((x, j) => `<p class="rv" ${st(j, 380)}>${esc(x)}</p>`).join('');

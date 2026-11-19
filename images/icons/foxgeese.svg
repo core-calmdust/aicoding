@@ -11,15 +11,15 @@
     <rect width="96" height="96" fill="url(#fg-bg)"/>
     <path d="M-4 76Q48 64 100 78V100H-4Z" fill="#6fae4a" opacity=".55"/>
     <path d="M14 14Q16 9 19 14M76 20Q78 15 81 20M10 60Q12 55 15 60" stroke="#6ea84a" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-    <!-- the goose, peeking in at the lower right -->
-    <g transform="translate(76 80) scale(.2)">
+    <!-- the goose, peeking in at the lower left (2026-11-19: the lower right is under the TOP page's phone badge) -->
+    <g transform="translate(18 81) scale(.21)">
       <circle r="80" fill="url(#fg-g)" stroke="#6a7488" stroke-width="7"/>
       <ellipse cx="-30" cy="-6" rx="10" ry="13" fill="#2a2a36"/><ellipse cx="30" cy="-6" rx="10" ry="13" fill="#2a2a36"/>
       <circle cx="-26" cy="-11" r="4.4" fill="#fff"/><circle cx="34" cy="-11" r="4.4" fill="#fff"/>
       <path d="M-24,14Q0,2 24,14Q22,32 0,40Q-22,32 -24,14Z" fill="#f6a12c" stroke="#b5600e" stroke-width="5" stroke-linejoin="round"/>
     </g>
     <!-- the fox -->
-    <g transform="translate(46 50) scale(.4)">
+    <g transform="translate(51 49) scale(.4)">
       <g stroke="#7a3510" stroke-width="6" stroke-linejoin="round">
         <path d="M-62,-30L-74,-88Q-70,-94 -62,-90L-18,-58Z" fill="url(#fg-h)"/><path d="M62,-30L74,-88Q70,-94 62,-90L18,-58Z" fill="url(#fg-h)"/>
         <path d="M0,-66C52,-66 84,-36 84,4C84,34 66,52 44,62C30,70 14,74 0,74C-14,74 -30,70 -44,62C-66,52 -84,34 -84,4C-84,-36 -52,-66 0,-66Z" fill="url(#fg-h)"/>

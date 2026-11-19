@@ -361,3 +361,9 @@ html.hs-open body > main.wrap *{animation-play-state:paused!important}
 
 /* the origin map only fades in (no rise / scale): it stands still until its first zoom */
 .in .hs-map.steps.rv{animation:hsFade .45s var(--d,0ms) both}
+/* a page's highlighted note (c.tip, 2026-11-19) */
+.hs-tip{display:flex;gap:12px;align-items:flex-start;margin:12px 0 4px;padding:12px 14px;border-radius:16px;background:linear-gradient(180deg,#fff4d6,#ffe9b8);border:2px solid #f2c45a;box-shadow:0 3px 0 #e8b13c,0 12px 20px -14px rgba(120,70,0,.55)}
+.hs-tip .ic{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#f29a1e;color:#fff;font-size:16px;box-shadow:0 2px 0 #c97412}
+.hs-tip .tx{display:flex;flex-direction:column;gap:3px}
+.hs-tip .tx b{font-size:15px;color:#7a4a08}
+.hs-tip .tx span{font-size:13px;line-height:1.65;color:#5a4a30}
