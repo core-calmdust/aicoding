@@ -1223,6 +1223,9 @@ static TLS u64 rootK;
 #define YBW_MAX 10
 #endif
 static int ybwMax = YBW_MAX;
+/* (2026-11-19) with search v5 (P44) there are no split points below the root: every helper is a Lazy SMP helper on the shared
+   table (P68 > 1: the first P68 threads split the root's moves instead, as measured first: +33 Elo over v4 on 4 threads) */
+#define YBW_N (P[44] ? (P[68] > 1 ? P[68] : 1) : ybwMax)
 static TLS int lazyT, lazySeen;   /* a Lazy SMP helper now; the root it is on (gRootSeq) */
 static volatile int gRootSeq;     /* the lead's root (gRootP), a new one at every root_search: odd while written */
 static inline void mtCheck(void) {
@@ -2164,9 +2167,9 @@ static double lazyRun(double ms) {
 }
 static void spIdleReset(int fresh) {   /* mt_idle: a helper's search state (fresh: a new job, as root_search — not a Lazy SMP helper) */
   nodes = 0; deadline = 0; nodeLimit = 0; rootK = 0;
-  if (fresh && threadId < ybwMax) { memset(killers, 0, sizeof killers); for (int k = 0; k < (int)(sizeof history / 4); k++) history[k] >>= 2; }
+  if (fresh && threadId < YBW_N) { memset(killers, 0, sizeof killers); for (int k = 0; k < (int)(sizeof history / 4); k++) history[k] >>= 2; }
 }
-#define PL_IDLE_HOOK(ms) if (threadId >= ybwMax) return lazyRun(ms);   /* (past ybwMax: a Lazy SMP helper) */
+#define PL_IDLE_HOOK(ms) if (threadId >= YBW_N) return lazyRun(ms);   /* (past ybwMax: a Lazy SMP helper) */
 #include "../shared/praline/praline_ybw.h"
 #endif
 
