@@ -33,6 +33,9 @@ __attribute__((import_module("env"), import_name("shput"))) void js_shput(u32 h1
 #endif
 __attribute__((import_module("env"), import_name("now"))) double now(void);
 #define EXPORT(n) __attribute__((export_name(#n)))
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+#endif
 void *memcpy(void *d, const void *s, unsigned long n) { char *a = d; const char *b = s; while (n--) *a++ = *b++; return d; }
 void *memset(void *d, int c, unsigned long n) { char *a = d; while (n--) *a++ = (char)c; return d; }
 #endif
@@ -145,6 +148,30 @@ static inline int fSq(int v, int i, int x, int a) { return ((x - 1 == v ? 0 : 2)
 static inline int qb(int q) { int b = q / 6; return b > 9 ? 9 : b; }
 static inline void accAdd(i16 *acc, int f) { const i16 *w = NW1 + f * NH; for (int i = 0; i < NH; i++) acc[i] += w[i]; }
 static inline void accSub(i16 *acc, int f) { const i16 *w = NW1 + f * NH; for (int i = 0; i < NH; i++) acc[i] -= w[i]; }
+// (2026-11-20, 推論の高速化) play() collects the inputs a move turns on / off (both views) and writes the child's accumulators in one
+// pass from the parent's (dst = src + the rows on − the rows off) instead of copying them and updating them row by row; the
+// sums are of int16 with wrap-around like the row-by-row updates, so the same accumulators (ltn nncheck).
+#define DMAX 48
+static TLS int DN[2], DPN[2], DA_[2][DMAX], DS_[2][DMAX], DOVF;
+static inline void dAdd(int v, int f) { if (DN[v] < DMAX) DA_[v][DN[v]++] = f; else DOVF = 1; }
+static inline void dSub(int v, int f) { if (DPN[v] < DMAX) DS_[v][DPN[v]++] = f; else DOVF = 1; }
+static i16 ZROW[NH_MAX] __attribute__((aligned(16)));   // (a row of zeros: the missing rows of the first pass)
+static void accApply(i16 *dst, const i16 *src, int v) {
+  const int na = DN[v], ns = DPN[v]; const int *A = DA_[v], *S = DS_[v];
+  // the first pass: the parent's row with up to two rows on and two off; the rest (several captures) one row a pass
+  const i16 *r0 = na > 0 ? NW1 + A[0] * NH : ZROW, *r1 = na > 1 ? NW1 + A[1] * NH : ZROW, *r2 = ns > 0 ? NW1 + S[0] * NH : ZROW, *r3 = ns > 1 ? NW1 + S[1] * NH : ZROW;
+#ifdef __wasm_simd128__
+#define LD(r) wasm_v128_load((r) + i)
+  if (na == 1 && ns == 1) for (int i = 0; i < NH; i += 8) wasm_v128_store(dst + i, wasm_i16x8_sub(wasm_i16x8_add(LD(src), LD(r0)), LD(r2)));   // (a counter moves)
+  else if (na == 1 && ns == 0) for (int i = 0; i < NH; i += 8) wasm_v128_store(dst + i, wasm_i16x8_add(LD(src), LD(r0)));   // (one is placed)
+  else for (int i = 0; i < NH; i += 8) wasm_v128_store(dst + i, wasm_i16x8_sub(wasm_i16x8_sub(wasm_i16x8_add(wasm_i16x8_add(LD(src), LD(r0)), LD(r1)), LD(r2)), LD(r3)));
+#undef LD
+#else
+  for (int i = 0; i < NH; i++) dst[i] = (i16)(src[i] + r0[i] + r1[i] - r2[i] - r3[i]);
+#endif
+  for (int k = 2; k < na; k++) accAdd(dst, A[k]);
+  for (int k = 2; k < ns; k++) accSub(dst, S[k]);
+}
 static inline int hcap(int x) { return x > 24 ? 24 : x < 0 ? 0 : x; }
 static void accMisc(P *p, int sgn) {   // the inputs that are not squares, added (sgn 1) or taken off (-1)
   for (int v = 0; v < 2; v++) {
@@ -160,8 +187,21 @@ static void refresh(P *p) {
 static int netEval(const P *p) {
   const i16 *us = p->acc[p->side], *th = p->acc[p->side ^ 1];
   int s = 0;
+#ifdef __wasm_simd128__
+  {   // (2026-11-20) clamp, square, >> 6 in int16 (≤ 252) and the dot product with W2 in int32 pairs: the same integer sum
+    const v128_t z = wasm_i16x8_splat(0), hi = wasm_i16x8_splat(NQA); v128_t a0 = wasm_i32x4_splat(0), a1 = a0;
+    for (int i = 0; i < NH; i += 8) {
+      v128_t c = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(us + i), z), hi), d = wasm_i16x8_min(wasm_i16x8_max(wasm_v128_load(th + i), z), hi);
+      a0 = wasm_i32x4_add(a0, wasm_i32x4_dot_i16x8(wasm_u16x8_shr(wasm_i16x8_mul(c, c), 6), wasm_v128_load(NW2 + i)));
+      a1 = wasm_i32x4_add(a1, wasm_i32x4_dot_i16x8(wasm_u16x8_shr(wasm_i16x8_mul(d, d), 6), wasm_v128_load(NW2 + NH + i)));
+    }
+    a0 = wasm_i32x4_add(a0, a1);
+    s = wasm_i32x4_extract_lane(a0, 0) + wasm_i32x4_extract_lane(a0, 1) + wasm_i32x4_extract_lane(a0, 2) + wasm_i32x4_extract_lane(a0, 3);
+  }
+#else
   for (int i = 0; i < NH; i++) { int c = us[i] < 0 ? 0 : us[i] > NQA ? NQA : us[i]; s += ((c * c) >> 6) * NW2[i]; }
   for (int i = 0; i < NH; i++) { int c = th[i] < 0 ? 0 : th[i] > NQA ? NQA : th[i]; s += ((c * c) >> 6) * NW2[NH + i]; }
+#endif
   long long t = (long long)s + NB2;
   return (int)(t * NK * 64 / (NQA * NQA * NQB));
 }
@@ -257,9 +297,9 @@ static int hasMove(const P *p) {
 static inline void setSq(P *p, int i, int x, int a) {   // engine.js _set
   int y = p->sq[i];
   { const u64 bit = 1ull << i; if (y) p->bb[y - 1] &= ~bit; p->bk &= ~bit; if (x) { p->bb[x - 1] |= bit; if (a) p->bk |= bit; } }
-  if (y) { int k = y - 1 + 2 * p->inc[i]; p->h1 ^= Z1(k, i); p->h2 ^= Z2(k, i); p->n[y - 1]--; if (NH) { accSub(p->acc[0], fSq(0, i, y, p->inc[i])); accSub(p->acc[1], fSq(1, i, y, p->inc[i])); } }
+  if (y) { int k = y - 1 + 2 * p->inc[i]; p->h1 ^= Z1(k, i); p->h2 ^= Z2(k, i); p->n[y - 1]--; if (NH) { dSub(0, fSq(0, i, y, p->inc[i])); dSub(1, fSq(1, i, y, p->inc[i])); } }
   p->sq[i] = (i8)x; p->inc[i] = (i8)(x ? a : 0);
-  if (x) { int k = x - 1 + 2 * a; p->h1 ^= Z1(k, i); p->h2 ^= Z2(k, i); p->n[x - 1]++; if (NH) { accAdd(p->acc[0], fSq(0, i, x, a)); accAdd(p->acc[1], fSq(1, i, x, a)); } }
+  if (x) { int k = x - 1 + 2 * a; p->h1 ^= Z1(k, i); p->h2 ^= Z2(k, i); p->n[x - 1]++; if (NH) { dAdd(0, fSq(0, i, x, a)); dAdd(1, fSq(1, i, x, a)); } }
 }
 // enemy counters enclosed by the counter that has just landed on x: es[] (square) / ax[] (axis 1 horizontal 2 vertical 3 corner)
 static int enclosed(const P *p, int x, int *es, int *ax) {
@@ -281,7 +321,7 @@ static void revalidate(P *p) {
   }
 }
 static void play(P *q, const P *p, int m) {
-  pcopy(q, p);
+  memcpy(q, p, PBASE); DN[0] = DN[1] = DPN[0] = DPN[1] = 0; DOVF = 0;   // (the accumulators: written at the end)
   const int f = MFROM(m), t = MTO(m), rm = MRM(m), s = q->side, pl = s + 1;
   const int oh0 = q->hand[0], oh1 = q->hand[1], oc0 = q->cap[0], oc1 = q->cap[1], oq = q->quiet;
   q->h1 ^= ZH1(0, q->hand[0]) ^ ZH1(1, q->hand[1]) ^ ZL1(0, q->last[0] + 1) ^ ZL1(1, q->last[1] + 1);
@@ -307,14 +347,19 @@ static void play(P *q, const P *p, int m) {
     for (int v = 0; v < 2; v++) {
       const int fo[5] = { 256 + hcap(o.hand[v]), 281 + hcap(o.hand[v ^ 1]), 306 + hcap(o.cap[v]), 331 + hcap(o.cap[v ^ 1]), 356 + qb(o.quiet) };
       const int fn[5] = { 256 + hcap(q->hand[v]), 281 + hcap(q->hand[v ^ 1]), 306 + hcap(q->cap[v]), 331 + hcap(q->cap[v ^ 1]), 356 + qb(q->quiet) };
-      for (int k = 0; k < 5; k++) if (fo[k] != fn[k]) { accSub(q->acc[v], fo[k]); accAdd(q->acc[v], fn[k]); }
+      for (int k = 0; k < 5; k++) if (fo[k] != fn[k]) { dSub(v, fo[k]); dAdd(v, fn[k]); }
     }
   }
+  if (NH) { if (DOVF) refresh(q); else { accApply(q->acc[0], p->acc[0], 0); accApply(q->acc[1], p->acc[1], 1); } }
 }
 static void nullPlay(P *q, const P *p) {   // the null move of the search: the other side to move, one more quiet ply
-  pcopy(q, p); q->side ^= 1; q->h1 ^= ZS1; q->h2 ^= ZS2;
+  memcpy(q, p, PBASE); q->side ^= 1; q->h1 ^= ZS1; q->h2 ^= ZS2;
   int oq = q->quiet; q->quiet++;
-  if (NH && qb(oq) != qb(q->quiet)) for (int v = 0; v < 2; v++) { accSub(q->acc[v], 356 + qb(oq)); accAdd(q->acc[v], 356 + qb(q->quiet)); }
+  if (NH) {
+    DN[0] = DN[1] = DPN[0] = DPN[1] = 0;
+    if (qb(oq) != qb(q->quiet)) for (int v = 0; v < 2; v++) { dSub(v, 356 + qb(oq)); dAdd(v, 356 + qb(q->quiet)); }
+    accApply(q->acc[0], p->acc[0], 0); accApply(q->acc[1], p->acc[1], 1);
+  }
 }
 static int advDiff(const P *p) { int m = 0; for (int i = 0; i < NN; i++) { int x = p->sq[i]; if (!x || p->inc[i]) continue; if (x == 1 && i < 32) m++; else if (x == 2 && i >= 32) m--; } return m - advKomi; }
 // judge: 0 = not over; else why * 4 + winner (0 draw, 1, 2); why 1 last, 2 stuck, 3 quiet, 4 tie, 5 tie2. nMoves < 0: not known
