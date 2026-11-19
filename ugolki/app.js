@@ -164,7 +164,10 @@ function mtWants(which, msg) {
 }
 // (2026-11-20) with the rule's learned evaluation (engine.js NETV) the jobs of search v3 — analysis and the 天上 levels (x) — skip the
 // plain workers' threads (mtsplit.js: the JS loops over the old search, no net) and go to one worker of v3 + the net, unless core_mt.wasm's threads are on
-const nnJob = msg => !!(E.NETV && E.NETV[gv]) && (msg.type !== 'think' || !!(E.LEVELS[msg.level] && E.LEVELS[msg.level].x && !msg.cfg));
+// (2026-11-20 audit) a 'think' with a cfg too when the cfg asks for v3 (x): rtCap — a rated game's 天上 level capped by the clock —
+// and the coach's deeper pass on a board with a net (coachDeep). PRO's steps never carry x (shared/proset.js ladder), so they stay as before
+const nnOn = () => !!(E.NETV && E.NETV[gv]);
+const nnJob = msg => nnOn() && (msg.type !== 'think' || !!(msg.cfg ? msg.cfg.x : E.LEVELS[msg.level] && E.LEVELS[msg.level].x));
 function request(which, msg, onProgress) {
   // a top level (Lv.21〜) right after the page has opened: wait up to 4 s for the threads rather than start on one
   const cOn = MCP && MTEngine.on();
@@ -773,7 +776,10 @@ const COACH_DEEP = 19;   // engine LEVELS: 四段, about 1 s
 async function coachDeep(idx, key, apply) {
   const list = anaCache.get(key);
   if (!list || !list.length || list.deep || !(window.UgolkiCoach && UgolkiCoach.active() && (settings.mode === 'pvp' || toMoveAt(idx) === humanColor))) return;
-  const r = await request('ana', { type: 'think', moves: moves.slice(0, idx), level: COACH_DEEP });
+  // (2026-11-20 audit) with the board's learned evaluation the deeper pass is search v3 + the net as well (no book) — the level's v2 and
+  // hand evaluation would put a weaker move above the analysis's; on the threads of core_mt.wasm when they are on, else one worker
+  const cfg = nnOn() ? Object.assign({}, E.LEVELS[COACH_DEEP], { x: 1, book: 0, threads: MCP && MTEngine.on() ? 1 + MTEngine.helpers() : 1 }) : null;
+  const r = await request('ana', Object.assign({ type: 'think', moves: moves.slice(0, idx), level: COACH_DEEP }, cfg ? { cfg } : {}));
   if (!r || r.error || r.book || r.move === undefined || r.move === null || r.move < 0 || keyOf(idx) !== key || anaCache.get(key) !== list) return;
   const out = deepTop(list, r.move, e => e.v > WINT); out.deep = true;
   anaCache.set(key, out); apply(out); save();
@@ -2236,7 +2242,9 @@ function rvbUpdate() {
 }
 if (window.RvBox) BOX = RvBox.create({
   app: '.app', frame: '#frame', lang: () => LANG, worker: () => ENGINE_URL,
-  pool: () => MTP && MTP.pool(), cancel: () => { if (MTP) MTP.cancel('rvb'); },   // (the threads when free)
+  // (the threads when free; 2026-11-20 audit: with the board's net the review box's v3 job skips mtsplit.js's old search, as request() —
+  //  core_mt.wasm's threads when they are on, else the one worker)
+  pool: () => nnOn() ? MCP && MTEngine.on() && MCP.pool() : MTP && MTP.pool(), cancel: () => { if (MTP) MTP.cancel('rvb'); if (MCP) MCP.cancel('rvb'); },
   onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
   onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
   onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }
