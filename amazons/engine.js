@@ -215,10 +215,32 @@ const P2N = new Float64Array(INF + 2); for (let i = 0; i <= INF + 1; i++) P2N[i]
 // the WebAssembly core (core.c → core-wasm.js, tools/build.sh): the same evaluation and candidate list, several times faster.
 // Loaded synchronously in a worker and in Node; on the page itself (no need there) and when anything fails, the JS below.
 let WA = null;
+// (2026-11-20) the learned evaluation (core.c EVM 3, amazons/MODEL_CARD.md「学習した評価」): amazons/net.js holds the net (base64)
+// that tools/nnue/run.sh makes; while its AMZ_NET is empty nothing changes (the MCTS keeps v3). Loaded into each core (the one-
+// thread core and the lead's core_mt.wasm: its shared memory serves every helper); with it the MCTS evaluates with the net (MC.ev 3).
+let NET_OK = false, NET_B = null;
+function netBytes() {
+  if (NET_B) return NET_B;
+  let b64 = '';
+  try {
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('net.js?v=1'); b64 = self.AMZ_NET || ''; }
+    else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = typeof globalThis !== 'undefined' ? globalThis : global, had = 'self' in g, old = g.self; g.self = g; try { const f = (typeof process !== 'undefined' && process.env && process.env.AMZ_NETJS) || require('path').join(__dirname, 'net.js'); delete require.cache[require.resolve(f)]; require(f); b64 = g.AMZ_NET || ''; } finally { if (had) g.self = old; else delete g.self; } }
+  } catch (e) { b64 = ''; }
+  if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AMZ_NONET)) return null;
+  NET_B = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : new Uint8Array(Buffer.from(b64, 'base64'));
+  return NET_B;
+}
+function netInto(x, mem) {
+  try {
+    const b = netBytes(); if (!b || !x.nn_buf) return false;
+    new Uint8Array((mem || x.memory).buffer, x.nn_buf(), b.length).set(b);
+    return x.nn_load(b.length) === 1;
+  } catch (e) { return false; }
+}
 (function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=9'); b64 = self.AMZ_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=10'); b64 = self.AMZ_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = typeof globalThis !== 'undefined' ? globalThis : global, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.AMZ_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AMZ_NOWASM)) return;
     // (the SIMD build first; the one without SIMD where that does not compile — AMZ_NOSIMD=1 in Node to check it)
@@ -229,7 +251,7 @@ let WA = null;
       try {
         const bin = typeof atob === 'function' ? Uint8Array.from(atob(s), c => c.charCodeAt(0)) : Buffer.from(s, 'base64');
         const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env: { now: () => Date.now() } }).exports;
-        WA = { x, simd: s === b64 }; waViews(); return;
+        WA = { x, simd: s === b64 }; waViews(); NET_OK = netInto(x, null); return;   // (MC.ev 3 below when the net is there)
       } catch (e) { WA = null; }
     }
   } catch (e) { WA = null; }
@@ -530,7 +552,10 @@ function bestMove(pos, maxD, ms, ek, rootK) {
 // the candidate list (the evaluation of its children = its value), the children pre-selected and valued by the evaluation
 // (prior), progressive widening and implicit minimax values. Only with the WebAssembly core (mcts: null without it).
 // o: { ms (time), nk (thousands of evaluations), sims (visits), seed, prm (parameters, MC), onProgress(list, sims) }
-const MC = { qk: 10, k: 24, qkr: 20, kr: 48, po: 0, s: 400, np: 2, c: 0.25, a: 0.3, pwa: 3, pwk: 1, pwb: 0.5, pom: 0.5, vl: 1, b0: 300, la: 8, ev: 2, fin: 0.5 };   // (ev: the evaluation's weights, core.c ev_set — 1 = v2 (2026-11-14), 2 = v3 since 2026-11-14 (t1 counts 2 − e: more as the board closes); the alpha-beta search keeps the classic ones or v2 (Lv.13〜15). fin (2026-11-14, core.c P_FIN): the move is the best value among the root's children with at least fin × the most visits)
+// (sep, 2026-11-20: core.c P_SEP — a node on a separated board is proven by counting each side's moves left, this many nodes of
+// the count's search per region; and a separated board at the root is played by the count: mctsThink)
+const MC = { qk: 10, k: 24, qkr: 20, kr: 48, po: 0, s: 400, np: 2, c: 0.25, a: 0.3, pwa: 3, pwk: 1, pwb: 0.5, pom: 0.5, vl: 1, b0: 300, la: 8, ev: 2, fin: 0.5, sep: 500 };   // (ev: the evaluation's weights, core.c ev_set — 1 = v2 (2026-11-14), 2 = v3 since 2026-11-14 (t1 counts 2 − e: more as the board closes); the alpha-beta search keeps the classic ones or v2 (Lv.13〜15). fin (2026-11-14, core.c P_FIN): the move is the best value among the root's children with at least fin × the most visits)
+if (NET_OK) MC.ev = 3;
 const MC_KEYS = ['qk', 'k', 'qkr', 'kr', 'po', 's', 'np', 'c', 'a', 'pwa', 'pwk', 'pwb', 'pom', 'vl', 'b0', 'la'];
 let MX = null;   // the core of the MCTS: { x, views } — WA (one thread) or the multi-thread core of the lead (mt=1)
 function mcCore() { return MX || WA; }
@@ -565,6 +590,7 @@ function mcts(pos, o) {
   if (X.ev_set) { X.ev_reset(); X.ev_set(-1, mev); if (mev && p.ep) for (const k in p.ep) X.ev_set(+k, p.ep[k]); }
   if (X.mcts_vnodes) X.mcts_set(16, exact ? C.vcap : 0);
   X.mcts_set(17, p.fin || 0);   // (an older core ignores it)
+  X.mcts_set(18, p.sep || 0);
   C.sq.set(pos.sq); C.q.set(pos.q);
   X.mcts_begin(pos.turn, o.seed | 0);
   const t0 = Date.now();
@@ -593,6 +619,13 @@ function mcList(C) {
 function mcPV(m, plies) { const C = mcCore(), k = Math.min(C.x.mcts_pv(m), plies || 5), out = []; for (let i = 0; i < k; i++) out.push(C.pv[i]); return out; }
 // a level / PRO setting with mc: the MCTS's move (the alpha-beta search's way in a lost position: resist)
 function mctsThink(pos, L) {
+  const sp = Object.assign({}, MC, L.prm || {}).sep, C = mcCore();
+  if (sp > 0 && C && C.x.sep_best) {   // (a separated board: the longest fill of one's own regions is the best move, won or lost)
+    mcViews(C); C.sq.set(pos.sq); C.q.set(pos.q);
+    const X = C.x, r = X.sep_prove(pos.turn, sp * 40), me = pos.turn, lo = X.sep_lo(me) - X.sep_lo(3 - me);
+    const m = X.sep_best(me, sp * 40);
+    if (m > 0) return { move: m, v: r > 0 ? WIN - 1 - (X.sep_lo(me) + X.sep_lo(3 - me)) : r < 0 ? -(WIN - 2) + (X.sep_lo(me) + X.sep_lo(3 - me)) : lo * 100, depth: 1, evals: 0, nodes: 0, mc: 1, sep: 1 };
+  }
   const r = mcts(pos, { ms: L.ms || 0, nk: L.nk || 0, sims: L.sims || 0, seed: L.seed || 0, prm: L.prm, pool: L.pool || 0 });
   if (!r || !r.list.length) return null;
   const b = r.list[0];
@@ -1036,7 +1069,7 @@ const hops = () => 1;
 
 const API = { get nodes() { return nodes; }, get evals() { return evals; }, P1, P2, WIN, WINT, ARROW, RULES, RULE_ORDER, setRule, get rule() { return 'std'; }, N, NN, RC, RAYS, NB, START,
   sqAt, sqName, sqIdx, mv, mFrom, mTo, mArrow, isRemove, hops, Pos, path, arrowPath, captured, name, parse, replay, judge, clearLine,
-  get wasm() { return !!WA; }, get simd() { return !!(WA && WA.simd); }, LEVELS, MC, mcts, mcPV, useCore: C => { MX = C; }, think, analyze, valuesAt, newGame, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, trapReply, trapWin, trapAll, trapIdx, boxed, guardGood, guardReply, escapes, freeAt, endGood, readGood, readReply, solveWin, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
+  get wasm() { return !!WA; }, get net() { return NET_OK; }, netInto, get simd() { return !!(WA && WA.simd); }, LEVELS, MC, mcts, mcPV, useCore: C => { MX = C; }, think, analyze, valuesAt, newGame, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, trapReply, trapWin, trapAll, trapIdx, boxed, guardGood, guardReply, escapes, freeAt, endGood, readGood, readReply, solveWin, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   // ?…&mt=1: the lead of the MCTS on several threads (shared/mtengine.js): core_mt.wasm on the shared memory sent with the first
@@ -1047,6 +1080,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
       .then(m => {
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
         x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+        if (netInto(x, m.mem)) { NET_OK = true; MC.ev = 3; }   // (the net in the shared memory: every helper reads it)
         // maxNodes: 512 MB of tree with 8 or more cores and 8 GB or more (deviceMemory; Safari has none: 10 or more cores), 256 MB with
         // 8 or more cores, else 128 MB (the memory grows only as far as a search asks: mcts_alloc)
         const hc = navigator.hardwareConcurrency || 2, big = hc >= 8 && (navigator.deviceMemory ? navigator.deviceMemory >= 8 : hc >= 10);
@@ -1071,7 +1105,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }), null, m.extra);
           self.postMessage({ id: m.id, type: 'result', ...nd(r) });
         } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...nd(candsJob(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }))) });
-        else if (m.type === 'core') self.postMessage({ id: m.id, type: 'result', core: coreName() });
+        else if (m.type === 'core') self.postMessage({ id: m.id, type: 'result', core: coreName(), net: NET_OK });
         else if (m.type === 'newgame') { newGame(); self.postMessage({ id: m.id, type: 'result' }); }
         else if (m.type === 'pzgood') { const g = pzGood(m); self.postMessage({ id: m.id, type: 'result', list: g }); }
         else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...(m.kind === 'trap' ? trapReply(m.start, m.moves, m.e, m.n) : m.kind === 'guard' ? guardReply(m.start, m.moves, m.e, 2) : m.kind === 'read' ? readReply(m.start, m.moves) : duelReply(m.start, m.moves, m.n)) });

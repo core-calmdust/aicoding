@@ -121,7 +121,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=9-sp-zf1-bk1-s1';
+const ENGINE_URL = 'engine.js?v=10-v3nn-b3';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -153,7 +153,7 @@ const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladde
 // (2026-11-11) On an isolated page the threads are core_mt.wasm's instead (shared/mtengine.js: the lead engine.js?…&mt=1, the helpers
 // mt-helper.js): Praline's Young Brothers Wait in C splits every node of the search (and the root), one table in the shared memory
 // (claude/ugolki-spec.md「αβ を C に」). mtsplit.js stays for a page that is not isolated, and while that pool is busy.
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=6', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // (initial ≥ its declared 528 pages)
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=7', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // (initial ≥ its declared 528 pages)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: () => ({}) }) : null;
 const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L.nk); };   // a level that thinks by time
 function mtWants(which, msg) {
@@ -162,16 +162,19 @@ function mtWants(which, msg) {
   if (msg.cfg) return !!msg.cfg.s && msg.cfg.threads > 1;   // PRO: its own thread count with any limit of the search (not the weak steps' root values)
   return mtLevel(msg.level) || (which === 'ana' && msg.level === 19);   // (rated games too: the user's decision 2026-11-08; 19 = COACH_DEEP, the coach's deeper pass)
 }
+// (2026-11-20) with the rule's learned evaluation (engine.js NETV) the jobs of search v3 — analysis and the 天上 levels (x) — skip the
+// plain workers' threads (mtsplit.js: the JS loops over the old search, no net) and go to one worker of v3 + the net, unless core_mt.wasm's threads are on
+const nnJob = msg => !!(E.NETV && E.NETV[gv]) && (msg.type !== 'think' || !!(E.LEVELS[msg.level] && E.LEVELS[msg.level].x && !msg.cfg));
 function request(which, msg, onProgress) {
   // a top level (Lv.21〜) right after the page has opened: wait up to 4 s for the threads rather than start on one
   const cOn = MCP && MTEngine.on();
-  if ((cOn || (MTP && MTSplit.on())) && which === 'ai' && msg.type === 'think' && msg.level > 20 && !msg.waited) {
+  if ((cOn || (MTP && MTSplit.on() && !nnJob(msg))) && which === 'ai' && msg.type === 'think' && msg.level > 20 && !msg.waited) {
     const P = cOn ? MCP : MTP;
     return (async () => { const t0 = Date.now(); while (!P.pool('ai') && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 100)); return request(which, Object.assign({}, msg, { waited: 1 }), onProgress); })();
   }
   const cp = cOn && mtWants(which, msg) && MCP.pool(which === 'ai' ? 'ai' : null);
   if (cp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return cp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
-  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  const mp = MTP && !nnJob(msg) && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
 }
