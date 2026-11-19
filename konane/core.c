@@ -18,6 +18,9 @@ typedef signed char i8; typedef unsigned int u32; typedef unsigned char u8; type
 #define MAXMV 512
 #define NN_H 64         /* the learned evaluation's sizes (below) */
 #define NN_H2 16
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+#endif
 #ifndef MT
 __attribute__((import_module("env"), import_name("poll"))) int js_poll(void);
 __attribute__((import_module("env"), import_name("shget"))) int js_shget(u32 h1, u32 h2);
@@ -339,7 +342,37 @@ static inline int nnMb(int x) { return x < 12 ? x : x < 14 ? 12 : x < 17 ? 13 : 
 static inline int nnVb(int x) { return x < 10 ? x : x < 13 ? 10 : 11; }
 // the value for the side to move, from the accumulators a (both views) of position p and the counts (jumps, stones that jump)
 static int nnEval(const P *p, short (*a)[NN_H], const int *mob, const int *mov) {
-  const NNet *Q = &NETS[RID]; unsigned char x[2 * NN_H]; const int X = 2 * NN;
+  const NNet *Q = &NETS[RID]; const int X = 2 * NN;
+#ifdef __wasm_simd128__
+  // (2026-11-20, 推論の高速化) the same whole numbers with wasm SIMD: the first layer's sums in int32 lanes (as the int sums
+  // below: no int16 overflow), clipped to 0..127, then each of the NN_H2 sums by i32x4.dot_i16x8 (exact int32 pair sums)
+  v128_t xv[2 * NN_H / 8];
+  for (int k = 0; k < 2; k++) {
+    const int c = k ? 1 - p->side : p->side, o = 1 - c;
+    const short *A = a[c], *R0 = Q->w1 + (X + nnMb(mob[c])) * NN_H, *R1 = Q->w1 + (X + 16 + nnMb(mob[o])) * NN_H,
+      *R2 = Q->w1 + (X + 32 + nnVb(mov[c])) * NN_H, *R3 = Q->w1 + (X + 44 + nnVb(mov[o])) * NN_H;
+    const v128_t z = wasm_i32x4_splat(0), hi = wasm_i32x4_splat(NN_QA);
+    for (int i = 0; i < NN_H; i += 8) {
+#define W8(P) wasm_v128_load((P) + i)
+      const v128_t a8 = W8(A), r0 = W8(R0), r1 = W8(R1), r2 = W8(R2), r3 = W8(R3);
+      v128_t lo = wasm_i32x4_add(wasm_i32x4_add(wasm_i32x4_add(wasm_i32x4_add(wasm_i32x4_extend_low_i16x8(a8), wasm_i32x4_extend_low_i16x8(r0)), wasm_i32x4_extend_low_i16x8(r1)), wasm_i32x4_extend_low_i16x8(r2)), wasm_i32x4_extend_low_i16x8(r3));
+      v128_t hh = wasm_i32x4_add(wasm_i32x4_add(wasm_i32x4_add(wasm_i32x4_add(wasm_i32x4_extend_high_i16x8(a8), wasm_i32x4_extend_high_i16x8(r0)), wasm_i32x4_extend_high_i16x8(r1)), wasm_i32x4_extend_high_i16x8(r2)), wasm_i32x4_extend_high_i16x8(r3));
+#undef W8
+      lo = wasm_i32x4_min(wasm_i32x4_max(lo, z), hi); hh = wasm_i32x4_min(wasm_i32x4_max(hh, z), hi);
+      xv[(k * NN_H + i) / 8] = wasm_i16x8_narrow_i32x4(lo, hh);
+    }
+  }
+  long long out = Q->b3;
+  for (int j = 0; j < NN_H2; j++) {
+    const short *W = Q->w2 + j * 2 * NN_H; v128_t s0 = wasm_i32x4_splat(0), s1 = s0;
+    for (int i = 0; i < 2 * NN_H / 8; i += 2) { s0 = wasm_i32x4_add(s0, wasm_i32x4_dot_i16x8(xv[i], wasm_v128_load(W + 8 * i))); s1 = wasm_i32x4_add(s1, wasm_i32x4_dot_i16x8(xv[i + 1], wasm_v128_load(W + 8 * i + 8))); }
+    s0 = wasm_i32x4_add(s0, s1);
+    int h = Q->b2[j] + (wasm_i32x4_extract_lane(s0, 0) + wasm_i32x4_extract_lane(s0, 1) + wasm_i32x4_extract_lane(s0, 2) + wasm_i32x4_extract_lane(s0, 3));
+    h >>= 6; if (h < 0) h = 0; else if (h > NN_QA) h = NN_QA;
+    out += (long long)h * Q->w3[j];
+  }
+#else
+  unsigned char x[2 * NN_H];
   for (int k = 0; k < 2; k++) {
     const int c = k ? 1 - p->side : p->side, o = 1 - c;
     const short *R0 = Q->w1 + (X + nnMb(mob[c])) * NN_H, *R1 = Q->w1 + (X + 16 + nnMb(mob[o])) * NN_H,
@@ -353,6 +386,7 @@ static int nnEval(const P *p, short (*a)[NN_H], const int *mob, const int *mov) 
     h >>= 6; if (h < 0) h = 0; else if (h > NN_QA) h = NN_QA;
     out += (long long)h * Q->w3[j];
   }
+#endif
   long long v = out * Q->k / (NN_QA * 64);
   return v > 20000 ? 20000 : v < -20000 ? -20000 : (int)v;
 }
