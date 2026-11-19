@@ -83,6 +83,9 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - **トップページ**：`index.html` の一覧（アゴンの次（2026-11-19 ユーザー指定、旧：セネトの次）、`alpha:true`）、アイコン `images/icons/latrunculi.svg`、JSON-LD。ゲーム一覧のサムネ `atlas/shots/latrunculi.webp`（tools/shots.js）。
 - Praline のマーク（shared/praline-badge.js の一覧）には入れていない（1スレッドの JS エンジンのため）。mtsplit／tools/mtsim も対象外。
 
+## 正式リリース（2026-11-19 ユーザー）
+- ALPHA 表記を外した（index.html の alpha:true、shared/atlas.js の alpha: true。atlas.js の ?v= を全ページで上げた）。更新情報（shared/atlas-updates.js）に正式版の1行（新しい3D盤・駒6種、クインタナ式の決着）。
+
 ## アイコンとSS（2026-11-19 ユーザー：今の3D盤の既定をモチーフに撮り直し）
 - 大百科のアイコン `images/atlas/latrunculi.webp`（?v=13）：`atlas/icons3d.js` ICONS.latrunculi＝風化した石板の一角（溝を彫った格子・くぼみ・ひび、土で汚れた石灰岩の側面）に、本物の3D駒（models/latrunculi.js の石の兜、1.45倍）：黒・倒れた白（挟まれた）・黒が一列、奥に白。`atlas/tools/icons.html` は models/latrunculi.js も読む。icon-post.py で320×320。
 - トップのアイコン `images/icons/latrunculi.svg`（?v=6、兜は大きく、見た目の重心で上下左右とも中央）：石板の色の地に彫った格子とひび、大きな白い大理石の兜（横顔、扇形の房飾り、丸い台座）を1つだけ（2026-11-19 ユーザー：兜一つでOK）。
