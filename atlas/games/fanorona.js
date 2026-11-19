@@ -17,7 +17,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../fanorona/', VER = '?v=fb5s-pro1-mt1';   // same file / version as fanorona/index.html → shared cache
+  const BASE = '../fanorona/', VER = '?v=fb5s-pro1-mt1-aq1';   // same file / version as fanorona/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.FanoronaEngine) return Promise.resolve(window.FanoronaEngine);
@@ -319,7 +319,8 @@
     }
 
     /* ---------- AI: the game's engine worker ---------- */
-    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER); w.postMessage({ type: 'newgame', id: 0, rule: GG.rule }); return w; }
+    function newWorker() { const w = new Worker(BASE + 'engine.js' + VER + (GG.id === 'alquerque' ? '&g=alq' : ''));   // (Alquerque: its endgame tables / net, as alquerque/index.html)
+      w.postMessage({ type: 'newgame', id: 0, rule: GG.rule }); return w; }
     function aiMove() {
       thinking = true; hud(L.think); showMust();
       if (!worker) worker = newWorker();

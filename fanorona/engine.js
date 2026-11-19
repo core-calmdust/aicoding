@@ -322,6 +322,13 @@ function wSetup(start, moves) {
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: fromWire(r[2 + 3 * i], r[3 + 3 * i]), v: r[4 + 3 * i] }); return L; }
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 
+// Alquerque (Bell's rules 'alq'): the strong searches (the levels that think by time — 四段・五段 — PRO without a node limit, and
+// the analysis / hint / coach) use engine.c AQV_STRONG; the levels with a node limit (4級〜三段) keep 11, the 2026-11 engine.
+// AQV bits: 1 alqHand, 2 forced jumps searched out, 8 endgame tables, 16 the learned evaluation (when alqnet.bin.gz is loaded:
+// ALQ_NETV, alquerque/MODEL_CARD.md). (Search changes tried for these levels and not taken: claude/alquerque-spec.md.)
+const ALQ_NETV = '';   // the net's version: '' = none (alqHand everywhere); e.g. '1' loads alqnet.bin.gz?v=1
+let AQV_STRONG = 11;
+const aqv = strong => { if (WX && WX.set_aqv) WX.set_aqv(ALQ && !ALQF && strong ? AQV_STRONG : 11); };
 let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
 function think(start, moves, level, rand) {
   rand = rand || Math.random;
@@ -338,7 +345,7 @@ function think(start, moves, level, rand) {
   }
   if (!wSetup(start, moves)) return { move: all[0] };
   if (!L.s) {
-    WX.values(L.d, L.hand ? 1 : 0);
+    aqv(false); WX.values(L.d, L.hand ? 1 : 0);
     const vals = wList();
     if (L.blunder && rand() < L.blunder) {
       const ok = vals.filter(e => e.v > vals[0].v - 450); const pool = ok.length > 1 ? ok : vals;
@@ -352,7 +359,7 @@ function think(start, moves, level, rand) {
     const bk = BOOK[pos.key()];
     if (bk && bk.length) { const m = bk[Math.floor(rand() * bk.length)]; if (all.includes(m)) return { move: m, book: true }; }
   }
-  WX.best(L.d || 99, L.ms || 0, L.nk || 0);
+  aqv(!L.nk); WX.best(L.d || 99, L.ms || 0, L.nk || 0);
   const r = wIO();
   if (r[0] < 0) return { move: all[0] };
   return { move: fromWire(r[0], r[1]), v: r[2], depth: r[3], nodes: r[4] * 1000 };
@@ -363,7 +370,7 @@ function analyze(start, moves, ms, onProgress) {
   if (!WX) { const L = jsValues(pos, 3, ms).map(e => ({ ...e, kind: kindOf(e.v) })); return { list: L, depth: 3 }; }
   if (!wSetup(start, moves)) return { list: [], depth: 0 };
   progressCb = onProgress ? (d => onProgress(wList().map(e => ({ ...e, kind: kindOf(e.v) })), d)) : null;
-  WX.analyze(ms, 60); progressCb = null;
+  aqv(true); WX.analyze(ms, 60); progressCb = null;
   return { list: wList().map(e => ({ ...e, kind: kindOf(e.v) })), depth: wIO()[1], nodes: WX.last_nodes ? WX.last_nodes() : undefined };   // (nodes: the threads' build only)
 }
 function cands(start, moves, ms, k, plies, onProgress) {
@@ -378,7 +385,7 @@ function cands(start, moves, ms, k, plies, onProgress) {
       const { pos, hashes } = replay(start, line);
       if (judge(pos, hashes).over) break;
       if (!wSetup(start, line)) break;
-      WX.best(99, 30, 0);
+      aqv(true); WX.best(99, 30, 0);
       const io = wIO(); if (io[0] < 0) break;
       const m = fromWire(io[0], io[1]);
       if (!pos.steps(m)) break;
@@ -404,6 +411,12 @@ function loadNet(X, b) {
   const sc = dv.getFloat32(4, true), n = (b.byteLength - 8) / 4;
   new Float32Array(X.memory.buffer, X.net_ptr(), n).set(new Float32Array(b, 8, n)); X.net_set(sc); return true;
 }
+// the Alquerque learned evaluation ("AQN1", engine.c aqn_load: copied to aqn_buf(), checked and read there)
+function loadAlqNet(X, b) {
+  if (!X.aqn_buf || b.byteLength > 65536) return false;
+  new Uint8Array(X.memory.buffer, X.aqn_buf(), b.byteLength).set(new Uint8Array(b));
+  return X.aqn_load(b.byteLength) === 1;
+}
 // opening book: { "<position key>": [moves...] } (tools/gen_book.js), used by the top levels
 let BOOK = null;
 function setBook(b) { BOOK = b; }
@@ -422,11 +435,11 @@ function loadEG(X, b) {
   return true;
 }
 
-const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, RULES, setRule, rule, dims, valid, line3, LINES3, teloVal, strong, ptAt, pname, pparse, dirOf, mFrom, mTo, isCap, Pos, path, capsOf, name, same, parse, replay, judge, toWire, fromWire, loadEG, loadNet, setBook, LEVELS, think, analyze, cands, puzzle, kindOf, attachWasm, setupIO, ruleKey };
+const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, RULES, setRule, rule, dims, valid, line3, LINES3, teloVal, strong, ptAt, pname, pparse, dirOf, mFrom, mTo, isCap, Pos, path, capsOf, name, same, parse, replay, judge, toWire, fromWire, loadEG, loadNet, loadAlqNet, setAqvStrong: v => { AQV_STRONG = v; }, setBook, LEVELS, think, analyze, cands, puzzle, kindOf, attachWasm, setupIO, ruleKey };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.FanoronaEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261101h', GAMEQ = new URLSearchParams(self.location.search).get('g');
+  const V = 'v=20261101h', WV = 'v=20261120aq', GAMEQ = new URLSearchParams(self.location.search).get('g');
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The network and the endgame tables
   // go into the shared memory above every thread's slot (the helpers read the same ones). The rest is the usual API.
@@ -435,7 +448,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     const simd = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })();
-    const url = new URL((simd ? 'engine_simd.wasm?' : 'engine.wasm?') + V, self.location.href);   // (the same search; SIMD only speeds up the net)
+    const url = new URL((simd ? 'engine_simd.wasm?' : 'engine.wasm?') + WV, self.location.href);   // (the same search; SIMD only speeds up the net)
     readyP = (MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
       .then(m => {
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } }).exports;
@@ -445,9 +458,10 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       }) : WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
       .then(async r => {
         const X = r.instance.exports;
-        const gunzip = async u => { const res = await fetch(new URL(u + '?' + V, self.location.href)); if (!res.ok || typeof DecompressionStream !== 'function') return null; return new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); };
+        const gunzip = async (u, v) => { const res = await fetch(new URL(u + '?' + (v ? 'v=' + v : V), self.location.href)); if (!res.ok || typeof DecompressionStream !== 'function') return null; return new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); };
         if (GAMEQ === 'alq') {   // the Alquerque page (engine.js?…&g=alq): only its endgame tables
           try { const b = await gunzip('alqeg.bin.gz'); if (b) loadEG(X, b); } catch (e) {}
+          if (ALQ_NETV && X.aqn_load) try { const b = await gunzip('alqnet.bin.gz', ALQ_NETV); if (b && loadAlqNet(X, b)) AQV_STRONG |= 16; } catch (e) {}
         } else {
           try { const b = await gunzip('evalnet.bin.gz'); if (b) loadNet(X, b); } catch (e) {}
           try { const b = await fetch(new URL('book.json?' + V, self.location.href)); if (b.ok) BOOK = await b.json(); } catch (e) {}
