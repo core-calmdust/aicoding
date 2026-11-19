@@ -1418,3 +1418,6 @@ Edax の約2.0倍、Egaroucid の約2.8倍の時間。Edax との差は、局面
 
 ## 検証計画の見直し（2026-11-19、将棋の記録と突き合わせ）
 将棋の探索の比較（`claude/shogi-search-comparison.md`）で成果の出たやり方に合わせて、`claude/reversi-mac-verification.md` の検証A を直した：Edax を同じ表に載せる物差し（`tools/edax-anchor.js`）、深い基準（Lv.31・Lv.34）での計測、枝刈りの仕組みの切り替え（テスト用ビルド `-DMPC_NONEST`・`-DMPC_PRE=…`、`frontier.js --plan mech`）。テスト用の切り替えを付けないビルドは、`engine.wasm`・`engine_mt.wasm` とも前と同じバイナリ。
+
+## 評価関数の再確認：序盤〜中盤（空き36・44マス）では Edax・Egaroucid より誤差が大きい（2026-11-20、エンジンは変更なし）
+「他ソフトとの直接比較」の節の「評価関数の精度に差はない」は、**空き16〜22マスの範囲だけ**の結果だった。空き36・44マスを、Edax・Egaroucid のレベル24 の読みを正解役にして測ると（120局面ずつ、相手側の正解役で比較）、自前の全幅読みの値の誤差は 1〜4割大きい：空き44・深さ6 で 自前 2.16 対 Egaroucid 1.52（正解役 Edax）、自前 2.63 対 Edax 1.85（正解役 Egaroucid）。空き36・深さ8 で 2.13 対 1.87、2.19 対 1.48。表と次の手順は `claude/reversi-mac-verification.md`「評価関数の再確認」「検証E」。道具：`tools/eval-accuracy.js`（新規）。`tools/edax-anchor.js` は黒番・白番別の成績も出すようにした。

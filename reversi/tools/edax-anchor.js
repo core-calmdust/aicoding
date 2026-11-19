@@ -62,11 +62,12 @@ if (args[0] === '--worker') {   // one process: its share of the openings for on
       c.stdout.on('data', x => { buf += x; let j; while ((j = buf.indexOf('\n')) >= 0) { rs.push(JSON.parse(buf.slice(0, j))); buf = buf.slice(j + 1); process.stderr.write(`\r${rs.length} / ${N}  `); } });
       c.on('exit', code => code ? rej(new Error('worker ' + code)) : res());
     })));
-    const n = rs.length; let sw = 0, sw2 = 0, sd = 0, tE = 0, tU = 0;
-    for (const r of rs) { const p = ((r.d1 > 0 ? 1 : r.d1 ? 0 : 0.5) + (r.d2 > 0 ? 1 : r.d2 ? 0 : 0.5)) / 2; sw += p; sw2 += p * p; sd += (r.d1 + r.d2) / 2; tE += r.tE; tU += r.tU; }
+    const n = rs.length; let sw = 0, sw2 = 0, sd = 0, tE = 0, tU = 0, ub = 0, uw = 0, dbl = 0, dwh = 0;   // ub / uw: our score with black / white (the openings have black to move)
+    for (const r of rs) { ub += r.d2 < 0 ? 1 : r.d2 ? 0 : 0.5; uw += r.d1 < 0 ? 1 : r.d1 ? 0 : 0.5; dbl -= r.d2; dwh -= r.d1; const p = ((r.d1 > 0 ? 1 : r.d1 ? 0 : 0.5) + (r.d2 > 0 ? 1 : r.d2 ? 0 : 0.5)) / 2; sw += p; sw2 += p * p; sd += (r.d1 + r.d2) / 2; tE += r.tE; tU += r.tU; }
     const sc = sw / n, se = Math.sqrt((sw2 / n - sc * sc) / n), cl = Math.min(0.999, Math.max(0.001, sc)), elo = -400 * Math.log10(1 / cl - 1), dElo = se * 400 / (Math.LN10 * cl * (1 - cl));
-    const out = { level, base: BNAME, n, score: +(100 * sc).toFixed(1), elo: Math.round(elo), eloErr: Math.round(dElo), discs: +(sd / n).toFixed(2), secEdax: +(tE / (2 * n)).toFixed(3), secOurs: +(tU / (2 * n)).toFixed(3) };
+    const out = { level, base: BNAME, n, oursBlack: +(100 * ub / n).toFixed(1), oursWhite: +(100 * uw / n).toFixed(1), oursBlackDiscs: +(dbl / n).toFixed(2), oursWhiteDiscs: +(dwh / n).toFixed(2), score: +(100 * sc).toFixed(1), elo: Math.round(elo), eloErr: Math.round(dElo), discs: +(sd / n).toFixed(2), secEdax: +(tE / (2 * n)).toFixed(3), secOurs: +(tU / (2 * n)).toFixed(3) };
     fs.appendFileSync(OUT, JSON.stringify(out) + '\n');
     console.log(`\rEdax レベル${level} 対 ${BNAME}: Edax の得点率 ${out.score}%  Elo ${elo >= 0 ? '+' : ''}${out.elo} ± ${out.eloErr}  平均石差 ${out.discs >= 0 ? '+' : ''}${out.discs}  考えた時間（1局）Edax ${out.secEdax} 秒 / 自前 ${out.secOurs} 秒（×${(out.secEdax / out.secOurs).toFixed(2)}）`);
+    console.log(`    自前の得点率：黒番 ${out.oursBlack}%（平均 ${out.oursBlackDiscs >= 0 ? '+' : ''}${out.oursBlackDiscs} 石）／白番 ${out.oursWhite}%（平均 ${out.oursWhiteDiscs >= 0 ? '+' : ''}${out.oursWhiteDiscs} 石）`);
   }
 })().catch(e => { console.error(e); process.exit(1); });
