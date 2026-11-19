@@ -1,12 +1,12 @@
 window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.indexOf('@'); if (i < 1) return e; const l = e.slice(0, i); return (l.length <= 2 ? l[0] : l.slice(0, 2)) + '***' + e.slice(i); }); // 連携中の表示用にメールアドレスの一部を隠す
-// Online play for Kōnane (adapted from ugolki/online.js, the same design as Checkers / Nine Men's Morris / Dots & Boxes): lobby, Elo rating with history, rating-based matchmaking,
+// Online play for Fox and Geese (2026-11-19; the Kōnane / Agon design, the same as Checkers / Nine Men's Morris / Dots & Boxes): lobby, Elo rating with history, rating-based matchmaking,
 // rooms with codes, spectating, rematch, resign / timeout / abandon, draw offers, presence — plus Google sign-in and cloud sync of
 // local progress (sync/<uid>).
 // Moves: three characters per move in K64 (from, to, and the index among the legal moves with that from / to — a multiple jump is one
 // move), appended to games/<gid>/moves. The turn always alternates: even count = Black (b, first player) to move.
-// Game record: b = Black's uid (P1), w = White (P2); v = 's8' / 's6'; bn/wn names, br/wr ratings, mb/mw clock (ms left),
+// Game record: b = the first player's uid (P1 = the fox), w = P2; v = the rule; bn/wn names, br/wr ratings, mb/mw clock (ms left),
 // t = time of the last move, tc = time control id; status play | over | resign | timeout | abandon | draw; win 1 / 2 / 0 (draw);
-// why = reason (stuck: the player to move has no capture; Kōnane has no draws); loser = uid (resign / timeout / abandon); offer = { by, n } draw offer.
+// why = reason (few · trap · stuck · quiet · rep — Fox and Geese has no draws; online always the default quiet limit and the fox first); loser = uid (resign / timeout / abandon); offer = { by, n } draw offer.
 // Every move is a transaction on the game record, so the game survives a reload / server hiccup and is resumed from the database.
 // Both clients (and spectators) replay the moves with FoxEngine and reject any illegal move.
 // Backend: Firebase (anonymous / Google auth + Realtime Database) when window.FIREBASE_CONFIG is set,
@@ -18,10 +18,10 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   const MOCK = Q.has('mock');
   const FB_VER = '10.12.2';
   const INITIAL = 1500;
-  const VARIANTS = ['s8', 's6'];          // 10×10 is offline only (K64 encodes squares 0–63)
+  const VARIANTS = ['g15', 'g17', 'g13', 'g13n'];
   // Fischer clock per variant: base time per player + increment per move
-  const TC = { s8: { main: 300000, inc: 5000 }, s6: { main: 180000, inc: 3000 } };
-  const DEF_V = 's8';
+  const TC = { g15: { main: 300000, inc: 5000 }, g17: { main: 300000, inc: 5000 }, g13: { main: 300000, inc: 5000 }, g13n: { main: 300000, inc: 5000 } };
+  const DEF_V = 'g15';
   const GRACE = 3000;                    // latency allowance before the opponent may claim a timeout
   const ABANDON_MS = MOCK && +Q.get('abandon') > 0 ? +Q.get('abandon') : 45000;   // opponent offline this long on their turn → win by abandonment
   const ROOM_TTL = 10 * 60000;           // a room nobody joins expires after 10 min
@@ -47,9 +47,9 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     const same = pos ? pos.moves().filter(x => E.mFrom(x) === f && E.mTo(x) === t) : [m];
     return K64[f] + K64[t] + K64[Math.max(0, same.indexOf(m))];
   }
-  // replay a move string: { ok, moves[] (move numbers), turn (1 / 2 = player to move), over, win (1 / 2 / 0 draw), why, bad, pos }
+  // replay a move string (online: the fox first, the default quiet limit): { ok, moves[] (move numbers), turn (1 / 2 = player to move), over, win (1 / 2 / 0 draw), why, bad, pos }
   function replay(v, s) {
-    const E = window.FoxEngine; E.setRule(VARIANTS.includes(v) ? v : DEF_V); const pos = E.Pos.from(null), hashes = [pos.h1 + ':' + pos.h2], moves = [];
+    const E = window.FoxEngine; E.setRule(VARIANTS.includes(v) ? v : DEF_V); E.setFirst(E.P1); E.setQuiet(E.DEFAULT_QUIET); const pos = E.Pos.from(null), hashes = [pos.h1 + ':' + pos.h2], moves = [];
     s = String(s || '');
     let res = null;
     const judge = () => { const j = E.judge(pos, hashes); return j.over ? { over: true, win: j.winner, why: j.why } : null; };
@@ -112,7 +112,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
 
   // in-browser mock with the same surface (tree in localStorage, sharded by the first two path segments, change events across tabs)
   function mockDB() {
-    const PFX = 'konane-mockdb:';
+    const PFX = 'foxgeese-mockdb:';
     const parts = p => p.split('/').filter(Boolean);
     const shardOf = ks => PFX + ks.slice(0, 2).join('/');
     const readKey = k => { try { const v = localStorage.getItem(k); return v === null ? null : JSON.parse(v); } catch (e) { return null; } };
@@ -161,7 +161,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
 
   // ---------------------------------------------------------------- auth
   // mock Google: one fake Google account per browser profile (localStorage); a tab is "signed in" through sessionStorage
-  const MOCK_G = 'konane-mock-gacct', MOCK_UID = 'konane-mock-uid', MOCK_SIGNED = 'konane-mock-gsigned';
+  const MOCK_G = 'foxgeese-mock-gacct', MOCK_UID = 'foxgeese-mock-uid', MOCK_SIGNED = 'foxgeese-mock-gsigned';
   const mockAcc = () => { try { return JSON.parse(localStorage.getItem(MOCK_G) || 'null'); } catch (e) { return null; } };
   let authUser = null;     // real Firebase user
 

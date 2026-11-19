@@ -12,8 +12,8 @@
 const fs = require('fs'), path = require('path'), vm = require('vm'), cp = require('child_process');
 const ROOT = path.join(__dirname, '..', '..');
 const GAMES = ['shogi', 'chess', 'xiangqi', 'janggi', 'reversi', 'go', 'gomoku', 'hex', 'checkers', 'ugolki', 'fanorona', 'alquerque',
-  'tafl', 'agon', 'backgammon', 'ur', 'senet', 'morris', 'mancala', 'connect4', 'dots', 'konane', 'amazons', 'ludo'];
-const SOON = ['foxgeese', 'latrunculi', 'patolli'];   // online play not written yet: the config stays null
+  'tafl', 'agon', 'latrunculi', 'foxgeese', 'backgammon', 'ur', 'senet', 'morris', 'mancala', 'connect4', 'dots', 'konane', 'amazons', 'ludo'];
+const SOON = ['patolli'];   // online play not written yet: the config stays null
 // games whose online play is not a <game>/online.js page script (2026-11-16): the 3D-only flick games run atlas/online3d.js
 // (Online3D.net(game) is their API). They live in a host-only database (secrules.py HOSTS: no game at its root) and have no
 // previous project: before their rules are published they must end in 'not-configured' (the card shows 準備中).
@@ -106,7 +106,7 @@ async function run(game, mode) {
   // every path written / read after the project is settled is under the node (the probe on the shared project is the only stray one)
   const seen = log.filter(l => l.pid === exp.pid && !/^\.info\//.test(l.path));
   if (seen.length < 3) out.bad.push('too few paths recorded: ' + seen.length);
-  seen.forEach(l => { if (exp.root ? l.path.indexOf(exp.root) !== 0 : /^(chess|xiangqi|janggi|go|gomoku|hex|ugolki|fanorona|alq|agon|ur|senet|mancala|connect4|dots|amazons|ludo|carrom|crokinole)\//.test(l.path)) out.bad.push('path ' + l.path + ' (want ' + (exp.root || 'root') + ')'); });
+  seen.forEach(l => { if (exp.root ? l.path.indexOf(exp.root) !== 0 : /^(chess|xiangqi|janggi|go|gomoku|hex|ugolki|fanorona|alq|agon|latrunculi|foxgeese|ur|senet|mancala|connect4|dots|amazons|ludo|carrom|crokinole)\//.test(l.path)) out.bad.push('path ' + l.path + ' (want ' + (exp.root || 'root') + ')'); });
   const stray = log.filter(l => l.pid !== exp.pid && !/^\.info\//.test(l.path) && !/secv$/.test(l.path));
   stray.forEach(l => out.bad.push('stray ' + l.pid + ':' + l.path));
   out.n = seen.length;

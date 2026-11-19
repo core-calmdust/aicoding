@@ -13,7 +13,7 @@
 | `shogi-multiplay` | 将棋 | チェス `chess/`・シャンチー `xiangqi/`・チャンギ `janggi/` | `shogi/database.rules.json` |
 | `reversi-multiplay` | リバーシ | 囲碁 `go/`・五目並べ `gomoku/`・ヘックス `hex/` | `reversi/database.rules.json` |
 | `checkers-multiplay` | チェッカー | ウゴルキ `ugolki/`・ファノロナ `fanorona/`・アルケルケ `alq/` | `checkers/database.rules.json` |
-| `tafl-multiplay` | タフル | アゴン `agon/`（今後：ラトルンクリ・狐とガチョウ） | `tafl/database.rules.json` |
+| `tafl-multiplay` | タフル | アゴン `agon/`・ラトルンクロルム `latrunculi/`・狐とガチョウ `foxgeese/`（2026-11-19 追加、もとのプロジェクトはないので公開までは「準備中」。これで満員） | `tafl/database.rules.json` |
 | `backgammon-multi` | バックギャモン | ウル `ur/`・セネト `senet/`（今後：パトリ） | `backgammon/database.rules.json` |
 | `ninemens-multiplay` | モリス | マンカラ `mancala/`・コネクトフォー `connect4/`・ドット＆ボックス `dots/` | `morris/database.rules.json` |
 | `konane-multiplay` | コナネ | アマゾンズ `amazons/`（2026-11-16 追加。もとのプロジェクトはないので、公開までは「準備中」）・ルドー・パチーシ `ludo/`（2026-11-16 追加、同じく公開までは「準備中」） | `konane/database.rules.json` |
@@ -43,6 +43,11 @@
   3. （任意）プロジェクトの表示名を「flick-multiplay」などに変える（projectId は変わらないので設定ファイルはそのまま）。Authentication（匿名・Google）、承認済みドメイン、App Check のキーは今のままでよい。
   - 公開前は各ゲームのカードで「オンライン（準備中）」と出て選べない（前のプロジェクトがないので `rehome()` の戻り先はなく、節 `<node>secv` が読めないことで判定）。公開後は次に開いたときから使える。
 - 配線の確認：`node shared/tools/roottest.js`（全ゲームを「公開後」「公開前」「通信不可」の3状態で読み込み、使うプロジェクトと全パスが節の下かを調べる）。
+
+## 0.0.1 ラトルンクロルム・狐とガチョウのオンライン（2026-11-19）：tafl-multiplay のルールの貼り替え
+- `tafl-multiplay` の「Realtime Database → ルール」に `tafl/database.rules.json` の中身を全部貼って公開する（`https://raw.githubusercontent.com/core-calmdust/aicoding/main/tafl/database.rules.json`）。
+  タフル・アゴンの部分は今までと同じ。公開するまで2ゲームのオンラインは「準備中」（ほかは何も変わらない）。公開後は次に開いたときから使える。
+- 追加の設定（Authentication・承認済みドメイン・App Check）は不要（タフル・アゴンと同じプロジェクト）。
 
 ## 0. 現在の状態
 
