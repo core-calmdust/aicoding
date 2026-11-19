@@ -458,16 +458,79 @@ const DSAY = {
 function attachDrills(D) {
   if (!D) return;
   for (const ls of LESSONS) { const ds = D[ls.id]; if (!ds || !DSAY[ls.id]) continue;
-    ls.drills = ds.map(d => ({ lv: d.lv, end: 'beats', intro: [],
+    // (ユーザー 2026-11-20「レッスン1：字牌を捨てれば終わるのにこんなに問題数はいらない。最初と最後以外」→ the first and the last only)
+    const pickD = ls.id === 'e1' ? ds.filter((d, i) => i === 0 || i === ds.length - 1) : ds;
+    ls.drills = pickD.map(d => ({ lv: d.lv, end: 'beats', intro: [],
       pos: Object.assign({ me: d.me, drawn: d.drawn, dora: d.dora }, d.river ? { river: d.river, left: d.riichi ? 40 : 48 } : {}, d.riichi ? { riichi: d.riichi } : {}, d.melds ? { melds: { 0: d.melds } } : {}),
-      beats: [{ on: 'turn', say: DSAY[ls.id][d.lv], ok: d.riichiAns ? { riichi: true, d: d.d } : d.d ? { d: d.d } : ls.id === 'e6' ? { best: 'shanten' } : BEST, explain: true, notes: d.notes || null }] })); }
+      beats: [{ on: 'turn', say: DSAY[ls.id][d.lv], ok: d.riichiAns ? { riichi: true, d: d.d } : d.d ? { d: d.d } : ls.id === 'e6' ? { best: 'shanten' } : BEST, explain: true, notes: d.notes || null, shape: /^e[1-4]$/.test(ls.id) }] })); }
 }
 attachDrills(root.MJDrills || (typeof require !== 'undefined' ? (() => { try { return require('./drills.js'); } catch (e) { return null; } })() : null));
 // a tile's name in the guide's words
 const tName = (t, ja) => t >= 27 ? (ja ? '東南西北白發中' : '')[t - 27] || ['East', 'South', 'West', 'North', 'White', 'Green', 'Red'][t - 27]
   : (t % 9 + 1) + (ja ? '萬筒索' : '')[(t / 9) | 0] + (ja ? '' : ' ' + ['characters', 'dots', 'bamboo'][(t / 9) | 0]);
 // the words after an answer (right or wrong), counted on the table as it is (14 tiles in hand)
+// (ユーザー 2026-11-20「受け入れが何枚〜という機械的な話はわかりづらい。他の牌とどう絡むか（1・9より真ん中の数字がいい、など）で、こっちがお得！と」)
+// what a tile is doing in the hand, in words: a finished set, a pair, a two-sided / edge / gap shape with what it waits on, or a lone tile and what can join it
+function role(c, x, ja) {
+  const nm = y => tName(y, ja), X = nm(x), R = (kind, txt, mates) => ({ kind, txt, mates: mates || [] });
+  if (x >= 27) {
+    if (c[x] >= 3) return R('pung', ja ? `${X}は3枚そろった刻子で、もう完成した面子` : `the ${X} is a finished pung`);
+    if (c[x] === 2) return R('pair', ja ? `${X}は2枚そろった対子で、雀頭の候補` : `the ${X} is a pair — a candidate for the head`);
+    return R('hlone', ja ? `${X}はひとりぼっちの字牌で、同じ${X}が来ないと使えません` : `the ${X} is a lone honour: only another ${X} helps it`, [x]);
+  }
+  const b = x - x % 9, n = x % 9 + 1, has = k => k >= 1 && k <= 9 && c[b + k - 1] > 0, at = k => b + k - 1;
+  if (c[x] >= 3) return R('pung', ja ? `${X}は3枚そろった刻子で、もう完成した面子` : `the ${X} is a finished pung`);
+  for (const st of [n - 2, n - 1, n]) if (st >= 1 && st + 2 <= 9 && has(st) && has(st + 1) && has(st + 2))
+    return R('run', ja ? `${X}は${nm(at(st))}・${nm(at(st + 1))}・${nm(at(st + 2))}の順子で、もう完成した面子` : `the ${X} is in the finished run ${nm(at(st))}-${nm(at(st + 1))}-${nm(at(st + 2))}`);
+  if (c[x] === 2) return R('pair', ja ? `${X}は2枚そろった対子で、雀頭の候補` : `the ${X} is a pair — a candidate for the head`);
+  const nb = has(n + 1) ? n + 1 : has(n - 1) ? n - 1 : null;
+  if (nb) { const lo = Math.min(n, nb), Y = nm(at(nb));
+    if (lo === 1 || lo === 8) { const w = nm(at(lo === 1 ? 3 : 7)); return R('pen', ja ? `${X}は${Y}と辺張の形で、待ちは${w}の1種類だけ` : `the ${X} makes an edge shape with the ${Y}: it waits on the ${w} only`, [at(lo === 1 ? 3 : 7)]); }
+    return R('ryan', ja ? `${X}は${Y}と両面の形で、${nm(at(lo - 1))}・${nm(at(lo + 2))}の2種類で面子になります` : `the ${X} makes a two-sided shape with the ${Y}: the ${nm(at(lo - 1))} or ${nm(at(lo + 2))} completes it`, [at(lo - 1), at(lo + 2)]); }
+  const gp = has(n + 2) ? n + 2 : has(n - 2) ? n - 2 : null;
+  if (gp) { const w = nm(at((n + gp) / 2)); return R('kan', ja ? `${X}は${nm(at(gp))}と嵌張の形で、待ちは${w}の1種類だけ` : `the ${X} makes a gap shape with the ${nm(at(gp))}: it waits on the ${w} only`, [at((n + gp) / 2)]); }
+  const mt = [n - 2, n - 1, n + 1, n + 2].filter(k => k >= 1 && k <= 9).map(at), mates = mt.map(nm);
+  if (n === 1 || n === 9) return R('edge', ja ? `${X}は端っこの牌で、くっつく相手は${mates.join('・')}の${mates.length}種類だけ` : `the ${X} is an edge tile: only ${mates.join(', ')} can join it`, mt);
+  if (n === 2 || n === 8) return R('near', ja ? `${X}は端に近い牌で、くっつく相手は${mates.join('・')}の${mates.length}種類` : `the ${X} is near the edge: ${mates.join(', ')} can join it`, mt);
+  return R('mid', ja ? `${X}は真ん中の牌なので、${mates.join('・')}の${mates.length}種類とくっつけます` : `the ${X} is a middle tile: ${mates.join(', ')} can all join it`, mt);
+}
+function shapeTalk(beat, t, g, s, ja) {
+  const tb = discardTable(g, s), row = tb.find(x => x[0] === t); if (!row) return '';
+  const sh = Math.min(...tb.map(x => x[1])), at = tb.filter(x => x[1] === sh), best = Math.max(...at.map(x => x[2]));
+  const c = MJ.countsIds(g.P[s].hand), cnt = beat.counts, nm = y => tName(y, ja);
+  const left = r => r.mates.reduce((a, m) => a + Math.max(0, unseen(g, s, m) - (c[m] || 0) + 0), 0);   // (copies of the tiles that would join it, still out there)
+  if (row[1] === sh && row[2] === best) {
+    const o = at.filter(x => x[2] < best).sort((a, b) => b[2] - a[2])[0];
+    const rt = role(c, t, ja);
+    let txt = ja ? `正解！ ${rt.txt}。` : `Right! ${cap(rt.txt)}.`;
+    if (o) {
+      const ro = role(c, o[0], ja);
+      const K = d => { const cc = c.slice(); cc[d]--; const m = g.P[s].melds.length, s0 = MJ.shanten(cc, m), out = []; for (let x = 0; x < 34; x++) if (cc[x] < 4) { cc[x]++; if (MJ.shanten(cc, m) < s0) out.push(x); cc[x]--; } return out; };
+      const ko = K(o[0]), extra = K(t).filter(x => !ko.includes(x));   // (draws that help only while the other tile is kept)
+      if (ro.kind === rt.kind && rt.mates.length) {   // the same kind of tile: what tells them apart is how many of their partners are still out there
+        const a = left(rt), b = left(ro);
+        txt += a < b ? (ja ? ` ${nm(o[0])}も同じような形だけど、${nm(t)}にくっつく牌は手牌や場にもう出ていて残り${a}枚。${nm(o[0])}の相手は残り${b}枚あるので、${nm(o[0])}を残したほうがお得です♪` : ` The ${nm(o[0])} looks alike, but the tiles that join the ${nm(t)} are mostly used up (${a} left); the ${nm(o[0])}'s still have ${b} — keep it.`)
+          : extra.length ? (ja ? ` ${nm(o[0])}も同じような形だけど、${nm(o[0])}を残しておくと、${extra.map(nm).join('・')}を引いたときにも手が進むんです♪` : ` The ${nm(o[0])} looks alike, but keeping it, drawing the ${extra.map(nm).join(', ')} also moves you on.`)
+          : (ja ? ` ${nm(o[0])}も同じような形だけど、ほかの牌との組み合わせで${nm(o[0])}を残したほうが形になりやすいんです♪` : ` The ${nm(o[0])} looks alike, but with the rest of your hand it turns into a shape more easily — keep it.`);
+      } else if (['edge', 'near', 'mid', 'hlone'].includes(ro.kind)) txt += ja ? ` いっぽう${ro.txt}。くっつく相手が多いぶん、こっちを残したほうがお得です♪` : ` Meanwhile, ${ro.txt} — more tiles can join it, so keep that one.`;
+      else {
+        const why = ro.kind === 'run' || ro.kind === 'pung' ? [ja ? '崩すのはもったいないので、残しましょう♪' : 'breaking a finished set would be a waste']
+          : ro.kind === 'pair' ? [ja ? 'これは大事にしましょう♪' : 'look after it']
+          : ro.kind === 'ryan' ? [rt.kind === 'kan' || rt.kind === 'pen' ? (ja ? `2種類待てる両面は、1種類だけの${rt.kind === 'kan' ? '嵌張' : '辺張'}より強い形。崩すなら弱いほうからです♪` : `a two-sided wait beats a ${rt.kind === 'kan' ? 'gap' : 'edge'} wait — break the weaker one`) : (ja ? '2種類待てる良い形なので残しましょう♪' : 'it is a good two-way shape — keep it')]
+          : [ja ? 'もう形になっているので、こっちは残しましょう♪' : "it's already a shape — keep it"];
+        txt += ja ? ` いっぽう${ro.txt}。${why[0]}` : ` Meanwhile, ${ro.txt} — ${why[0]}.`;
+      }
+      if (cnt) txt += ja ? `（受け入れ ${best}枚 対 ${o[2]}枚）` : ` (${best} tiles help vs ${o[2]})`;
+    }
+    return txt;
+  }
+  const rx = role(c, t, ja);
+  if (row[1] > sh) return ja ? `${rx.txt}。切ると形がくずれて、テンパイから遠くなっちゃいます…！` : `${cap(rx.txt)}. Throwing it breaks your shape — you'd be further from tenpai.`;
+  return ja ? `${rx.txt}。もっといらない牌がありますよ！` : `${cap(rx.txt)}. There's a tile you need even less!`;
+}
+const cap = x => x.charAt(0).toUpperCase() + x.slice(1);
 function explain(beat, t, g, s, ja, act) {
+  if (beat.shape) return shapeTalk(beat, t, g, s, ja);
   if (beat.notes) {
     if (beat.ok && beat.ok.riichi && act !== 'riichi' && P(beat.ok.d || '').includes(t)) return ja ? 'その牌で合ってます！ でも、ここは「リーチ」ボタンで宣言して勝負しましょう♪' : 'Right tile! But declare it with the Riichi button and fight.';
     const key = t >= 27 ? (t - 26) + 'z' : (t % 9 + 1) + 'mps'[(t / 9) | 0];
