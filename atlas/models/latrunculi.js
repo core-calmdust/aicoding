@@ -67,7 +67,7 @@
   //             roughness, clearcoat, relief, slab corner, slab thickness, plinth height]
   const LK = {
     stone: ['#8a7a62', '#d8cdb8', 3.4, .92, 0, 1.25, .12, .5, 0],
-    wood: ['#4a2c18', '#8a5a34', 0, .48, .4, .45, .34, .38, .08],
+    wood: ['#4a2c18', '#8a5a34', 0, .5, .25, .45, .34, .38, .08],
     abstract: ['#3a3d42', '#ece4d6', 3.0, .82, 0, .2, .05, .2, .16],
     lux: ['#1c0c08', '#2a3f8f', 3.6, .24, .7, .22, .2, .36, .07],
     giallo: ['#5a1e18', '#dcae64', 3.4, .3, .55, .3, .14, .36, .11],
@@ -174,8 +174,8 @@
       const src = h2.getImageData(0, 0, nW, nH).data, hh = new Float32Array(nW * nH);
       for (let i = 0; i < nW * nH; i++) hh[i] = (src[i * 4] * .3 + src[i * 4 + 1] * .59 + src[i * 4 + 2] * .11) / 255;
       if (look === 'wood' && bd) {   // wood: the grain only faintly; the inlaid lines sit a little below the surface
-        const lc = document.createElement('canvas'); lc.width = nW; lc.height = nH; const l2 = lc.getContext('2d'); l2.drawImage(bd, BX * ns, BZ * ns, N * ns, N * ns);
-        const la = l2.getImageData(0, 0, nW, nH).data; for (let i = 0; i < nW * nH; i++) hh[i] = hh[i] * .25 - la[i * 4 + 3] / 255 * .9;
+        const lc = document.createElement('canvas'); lc.width = nW; lc.height = nH; const l2 = lc.getContext('2d'); l2.filter = 'blur(1.2px)'; l2.drawImage(bd, BX * ns, BZ * ns, N * ns, N * ns); l2.filter = 'none';
+        const la = l2.getImageData(0, 0, nW, nH).data; for (let i = 0; i < nW * nH; i++) hh[i] = hh[i] * .2 - la[i * 4 + 3] / 255 * .45;
       }
       if (look === 'stone') for (let y = 0; y < nH; y++) for (let x = 0; x < nW; x++) {   // pitting and a worn, uneven face
         const u = x / ns, v = y / ns, p = fbm(u * 14, v * 14); hh[y * nW + x] += (fbm(u * 1.6, v * 1.6) - .5) * .5 + (p < .3 ? (p - .3) * 2.2 : 0);
@@ -321,7 +321,7 @@
         const capG = G('wdCapL', () => { const sh2 = new TT.Shape(), ri = r0 - bw, A = armL + r0;
           sh2.moveTo(-A, r0); sh2.lineTo(0, r0); sh2.absarc(0, 0, r0, Math.PI / 2, 0, true); sh2.lineTo(r0, -A); sh2.lineTo(ri, -A); sh2.lineTo(ri, 0); sh2.absarc(0, 0, ri, 0, Math.PI / 2, false); sh2.lineTo(-A, ri); sh2.closePath();
           const e = new TT.ExtrudeGeometry(sh2, { depth: .006, bevelEnabled: true, bevelThickness: .006, bevelSize: .006, bevelSegments: 2, curveSegments: 8 }); e.rotateX(Math.PI / 2); e.translate(0, .012, 0); e.computeVertexNormals(); return e; });
-        const cap = mesh(capG, brass, cx, y0 + TH + .003, cz);   // (lifted off the top: its underside flickered against it) cap.scale.set(sx, 1, sz); g.add(cap);
+        const cap = mesh(capG, brass, cx, y0 + TH + .003, cz); cap.scale.set(sx, 1, sz); g.add(cap);   // (lifted off the top: its underside flickered against it)
         const thk = G('wdArmT', () => new TT.BoxGeometry(1, .012, 1));
         const thS = Math.PI / 2 + Math.atan2(-sz, sx) - Math.PI / 4;   // (the cylinder's θ for this quadrant)
         const th0 = sx > 0 ? (sz > 0 ? 0 : Math.PI / 2) : (sz < 0 ? Math.PI : Math.PI * 1.5);
@@ -329,10 +329,12 @@
         g.add(mesh(G('wdW' + th0.toFixed(2), () => new TT.CylinderGeometry(r0 + .006, r0 + .006, sh, 10, 1, true, th0, Math.PI / 2)), brass, cx, y0 + TH - sh / 2, cz));
         const s1 = mesh(thk, brass, cx - sx * armL / 2, y0 + TH - sh / 2, sz * (H / 2 + .004)); s1.scale.set(armL, sh / .012, .006); g.add(s1);
         const s2 = mesh(thk, brass, sx * (W / 2 + .004), y0 + TH - sh / 2, cz - sz * armL / 2); s2.scale.set(.006, sh / .012, armL); g.add(s2);
+        g.children.forEach(o => { if (o.material === brass || o.material === brassD) { o.castShadow = false; o.receiveShadow = false; } });
         const sc = G('wdScrew', () => new TT.SphereGeometry(.02, 10, 4, 0, Math.PI * 2, 0, Math.PI / 2));
         g.add(mesh(sc, brassD, cx - sx * (armL - .06), y0 + TH + .007, sz * (H / 2 - bw / 2)));
         g.add(mesh(sc, brassD, sx * (W / 2 - bw / 2), y0 + TH + .007, cz - sz * (armL - .06)));
       }
+      g.children.forEach(o => { if (o.material === brass || o.material === brassD) { o.castShadow = false; o.receiveShadow = false; } });   // (thin metal: shadow acne shimmered on it)
       return;
     }
     if (look === 'abstract') {   // the slate slab floats on a dark base; the white field is a panel laid on it
@@ -490,15 +492,12 @@
     const crest = mesh(crestG, M('crest' + col, { map: strands, color: white ? '#e6dcc8' : '#ffffff', roughness: .8 }), 0, 0, -.01); crest.scale.set(1, .82, 1.0); hd.add(crest);
     g.userData.h = .56; g.userData.lie = .31;
   }
-  // wood: a turned pawn with burnt rings
+  // wood: a turned pawn (2026-11-19 user: the burnt rings are not needed)
   function wood(g, col) {
     const TT = T(), dark = col === 1;
     const wm = M('pawn' + col, { map: dark ? woodTex('wn', '#6a4226', '#2c180a') : woodTex('bx', '#e6cfa2', '#b38a58'), color: '#ffffff', roughness: .48, clearcoat: .35, clearcoatRoughness: .45 });
     g.add(mesh(G('pwBody', () => new TT.LatheGeometry([V2(0, 0), V2(.3, 0), V2(.3, .03), V2(.25, .07), V2(.25, .095), V2(.15, .16), V2(.1, .34), V2(.16, .365), V2(.09, .405), V2(0, .42)], LO() ? 14 : 22)), wm));
     g.add(mesh(G('pwHead', () => new TT.SphereGeometry(.125, 16, 10)), wm, 0, .52, 0));
-    const burnt = M('burnt', { color: '#1c0f06', roughness: .9 });
-    g.add(mesh(G('pwRing1', () => { const q = new TT.TorusGeometry(.252, .01, 4, seg(32)); q.rotateX(Math.PI / 2); return q; }), burnt, 0, .08, 0));
-    g.add(mesh(G('pwRing2', () => { const q = new TT.TorusGeometry(.164, .009, 4, seg(28)); q.rotateX(Math.PI / 2); return q; }), burnt, 0, .372, 0));
     g.userData.h = .645; g.userData.lie = .3;
   }
   // abstract: a six-petal flower on a stem (the 2D counters' flower, standing up)
