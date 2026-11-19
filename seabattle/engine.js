@@ -40,19 +40,24 @@ const TYPES = [
   { k: 'dread', len: 5, cost: 7, skill: 'barrage', cd: 7 },
   { k: 'radar', len: 4, cost: 4, skill: 'radar', cd: 4 },
   { k: 'decoy', len: 2, cost: 1, skill: null, cd: 0, decoy: 1 },
+  // 第5弾 (2026-11-20): monitor — always: each shell that hits it is answered at once by a free shell on the shooter's sea
+  //   (on the square its side's map likes best; a return shell never triggers another) · patrol — probe: shoot one square and learn
+  //   how many unhit ship squares lie on its 4 neighbours
+  { k: 'monitor', len: 3, cost: 4, skill: null, cd: 0, counter: 1 },
+  { k: 'patrol', len: 2, cost: 3, skill: 'probe', cd: 4 },
 ];
 const AREA = { bomb: 1, volley: 1, rocket: 1, barrage: 1 }, SCAN = { sonar: 1, scout: 1, radar: 1 }, MAXMINES = 2;
 const NOAIM = { smoke: 1, command: 1, jam: 1, repair: 1, mine: 1 };   // skills that need no square
 // the field (2026-11-20): the destroyer and 6 other types drawn at random, 2 of each — at least one attacker, one scout and one of
 // defence / support — and a fleet takes each type at most once, so the drafts differ from game to game
-const ROLE = { atk: [0, 1, 2, 8, 11, 15], info: [3, 7, 16], def: [5, 6, 9, 10, 12, 13, 14, 17] };
+const ROLE = { atk: [0, 1, 2, 8, 11, 15], info: [3, 7, 16, 19], def: [5, 6, 9, 10, 12, 13, 14, 17, 18] };
 const BUDGET = 20, MINSHIPS = 3, MAXSHIPS = 6, MAXSAME = 1, CLASSIC = [0, 1, 2, 3, 4], NT = TYPES.length;
 const PRESETS = [[0, 1, 2, 3], [0, 1, 3, 4], [1, 2, 3, 4, 6], [1, 8, 7, 4, 6], [0, 5, 3, 4], [9, 1, 8, 3], [0, 10, 7, 4, 6]];
 function draftCost(types) { let c = 0; for (const t of types) c += TYPES[t].cost; return c; }
 function validDraft(types) { if (types.length < MINSHIPS || types.length > MAXSHIPS || draftCost(types) > BUDGET) return false; const n = new Array(NT).fill(0); for (const t of types) { if (!(t >= 0 && t < NT) || ++n[t] > MAXSAME) return false; } return true; }
 // The draft: 2 of each type lie on the table (10 ships); the players pick in turn — A B B A A B B A … — within the budget.
 // A player with MINSHIPS or more may stop; one who cannot afford anything left stops by itself. d.turn = -1 when it is over.
-const POOL = [2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const POOL = [2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 function field(rnd) {
   rnd = rnd || Math.random;
   for (let t = 0; t < 200; t++) {
@@ -91,8 +96,8 @@ function draftAI(d, rnd) {
   return best;
 }
 // the AI's taste per type (tuned with tools/test_tactics_balance.js)
-let REPAIR_V = .65, MINE_V = .5;
-let DRAFT_W = [1, .95, .8, .92, .5, .85, .75, .8, .9, .7, .7, .85, .75, .8, .75, .8, .75, .6];
+let REPAIR_V = .65, MINE_V = .5, PROBE_V = .12;
+let DRAFT_W = [1, .95, .8, .92, .5, .85, .75, .8, .9, .7, .7, .85, .75, .8, .75, .8, .75, .6, .75, .85];
 const typeOf = (s, i) => s.t != null ? s.t : i;
 
 function rng(seed) { let a = (seed >>> 0) || 1; return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -152,8 +157,14 @@ function strike(st, by, cell) {      // one shell on the other side's square (no
   if (T.fog > 0) { T.fogged[cell] = 1; res.fog = true; }                                   // under the smoke: the shooter is not told
   if (si >= 0 && T.armor && T.armor[si] && T.shots[cell] !== 3) { T.armor[si] = 0; T.shots[cell] = 3; res.dent = true; }   // the plate takes it
   else if (si >= 0) { T.shots[cell] = 2; T.hits++; if (++T.hitsOn[si] === T.ships[si].len) { T.sunk[si] = true; if (!TYPES[T.ships[si].t] || !TYPES[T.ships[si].t].decoy) T.afloat--; res.sunk = si; } }
-  else { T.shots[cell] = 1; const mi = T.mines.indexOf(cell); if (mi >= 0) { T.mines.splice(mi, 1); res.mine = true; if (!st.rest) st.rest = [0, 0]; st.rest[by] = 1; } }   // a mine: the shooter rests next turn
+  else { T.shots[cell] = 1; const mi = st.noCounter ? -1 : T.mines.indexOf(cell); if (mi >= 0) { T.mines.splice(mi, 1); res.mine = true; if (!st.rest) st.rest = [0, 0]; st.rest[by] = 1; } }   // a mine: the shooter rests next turn
   if (T.afloat === 0) st.winner = by;
+  if (si >= 0 && !res.dent && !st.noCounter && st.winner < 0 && TYPES[T.ships[si].t] && TYPES[T.ships[si].t].counter) {   // the monitor answers
+    const S = st.sides[by], v = view(S, st.scans && st.scans[1 - by]), p = probs(v, st.adj); let tc = -1, tv = -1;
+    for (let i = 0; i < NN; i++) if (!S.shots[i] && p[i] > tv + 1e-9) { tv = p[i]; tc = i; }
+    if (tc >= 0) { st.noCounter = 1; const r2 = strike(st, 1 - by, tc); st.noCounter = 0; res.counter = r2;
+      st.log.push({ by: 1 - by, cell: tc, hit: r2.hit, sunk: r2.sunk, via: 'counter', fog: r2.fog ? 1 : 0, dent: r2.dent ? 1 : 0, mine: 0 }); }
+  }
   return res;
 }
 function pass(st, by) { const T = st.sides[1 - by]; if (T.fog > 0 && --T.fog === 0) T.fogged.fill(0); if (st.bonus) st.bonus = 0;
@@ -165,7 +176,7 @@ function fire(st, cell) {
   const by = st.turn, T = st.sides[1 - by];
   if (!(cell >= 0 && cell < NN) || (T.shots[cell] && T.shots[cell] !== 3)) return null;
   const nlog = st.log.length, res = strike(st, by, cell); res.win = st.winner === by; res.again = false;
-  if (res.win) {}
+  if (st.winner >= 0) {}
   else if (st.bonus > 0) { st.bonus--; res.again = true; }
   else if (st.rule === 'streak') { if (!res.hit) pass(st, by); else res.again = true; }
   else if (st.rule === 'salvo') { if (--st.left <= 0) { pass(st, by); st.left = quota(st); } else res.again = true; }
@@ -184,7 +195,7 @@ function footprint(skill, cell) {
   else if (skill === 'scout') { for (let cc = 0; cc < N; cc++) o.push(r * N + cc); }
   else if (skill === 'radar') { for (let rr = 0; rr < N; rr++) o.push(rr * N + c); }
   else if (skill === 'barrage') { const r0 = Math.max(1, Math.min(N - 2, r)), c0 = Math.max(1, Math.min(N - 2, c)); for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) o.push((r0 + dr) * N + c0 + dc); }
-  else if (skill === 'twin') o.push(cell);
+  else if (skill === 'twin' || skill === 'probe') o.push(cell);
   else if (skill === 'rocket') { const c0 = Math.min(c, N - 3); o.push(r * N + c0, r * N + c0 + 1, r * N + c0 + 2); }
   return o;
 }
@@ -217,7 +228,7 @@ function preview(st, ship, cell) {
 function useSkill(st, ship, cell) {
   const pv = preview(st, ship, cell); if (!pv) return null;
   const by = st.turn, res = { by, skill: pv.skill, ship, cell, area: pv.area, shots: [], k: pv.k, win: false };
-  st.log.push({ by, cell: pv.fix != null ? pv.fix : cell, skill: pv.skill, k: pv.k, ic: pv.ic >= 0 ? pv.ic : undefined });
+  const at0 = st.log.length; st.log.push({ by, cell: pv.fix != null ? pv.fix : cell, skill: pv.skill, k: pv.k, ic: pv.ic >= 0 ? pv.ic : undefined });
   if (pv.mc != null) st.sides[by].mines.push(pv.mc);
   res.ic = pv.ic;
   if (pv.fix != null) { const M0 = st.sides[by], si = M0.grid[pv.fix]; M0.shots[pv.fix] = 0; M0.hits--; M0.hitsOn[si]--; M0.fogged[pv.fix] = 0; res.fix = pv.fix; }
@@ -226,11 +237,12 @@ function useSkill(st, ship, cell) {
   if (pv.skill === 'smoke') M.fog = 2;
   if (pv.skill === 'command') st.cd[by].forEach((c, i) => { if (i !== ship && c > 0) st.cd[by][i] = Math.max(0, c - 4); });
   if (pv.skill === 'jam') st.cd[1 - by].forEach((c, i) => { if (c >= 0 && !O.sunk[i]) st.cd[1 - by][i] = Math.min(TYPES[O.ships[i].t].cd + 3, c + 3); });
-  for (const x of pv.shots) { const r = strike(st, by, x.cell); res.shots.push(r); st.log.push({ by, cell: r.cell, hit: r.hit, sunk: r.sunk, via: pv.skill, fog: r.fog ? 1 : 0, dent: r.dent ? 1 : 0, mine: r.mine ? 1 : 0 }); if (st.winner >= 0) break; }
+  for (const x of pv.shots) { const at = st.log.length, r = strike(st, by, x.cell); res.shots.push(r); st.log.splice(at, 0, { by, cell: r.cell, hit: r.hit, sunk: r.sunk, via: pv.skill, fog: r.fog ? 1 : 0, dent: r.dent ? 1 : 0, mine: r.mine ? 1 : 0 }); if (st.winner >= 0) break; }
   st.cd[by][ship] = TYPES[st.sides[by].ships[ship].t].cd;
   st.acts.push({ skill: pv.skill, ship, cell });
   res.win = st.winner === by;
-  if (!res.win) { if (pv.skill === 'twin') { st.bonus = 1; res.again = true; } else pass(st, by); }
+  if (pv.skill === 'probe' && st.winner < 0) { const U = neighbors4(cell).filter(k => !st.sides[1 - by].shots[k]); res.k = U.filter(x => st.sides[1 - by].grid[x] >= 0).length; st.scans[by].push({ cells: U, k: res.k, at: cell, plus: 1 }); st.log[at0].k = res.k; }
+  if (st.winner < 0) { if (pv.skill === 'twin') { st.bonus = 1; res.again = true; } else pass(st, by); }
   return res;
 }
 function act(st, a) { return a.skill ? useSkill(st, a.ship, a.cell) : fire(st, a.cell); }
@@ -377,6 +389,7 @@ function chooseAction(st, level, rnd) {
       if (sv > bv) { bv = sv; best = { skill, ship: i, cell: -1 }; }
       continue;
     }
+    if (skill === 'probe') { sv = (dn >= 0 ? 1 : p[shotCell]) + (P.nOpen ? .04 : PROBE_V); if (sv > bv) { bv = sv; best = { skill, ship: i, cell: dn >= 0 ? dn : shotCell }; } continue; }
     if (skill === 'twin') { if (dn < 0) { sv = top2(); sc = shotCell; } else { sv = 1.4; sc = dn; } if (sv > bv) { bv = sv; best = { skill, ship: i, cell: sc }; } continue; }
     for (let c = 0; c < NN; c++) {
       if (skill === 'torpedo' && c >= N) break;

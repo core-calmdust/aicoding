@@ -107,7 +107,7 @@ function renderStatus(msg) {
 function renderKifu() {
   const k = $('#kifu');
   if (!G.st || !G.st.log.length) { k.innerHTML = `<div class="empty">${t('kifu.empty')}</div>`; return; }
-  k.innerHTML = G.st.log.map((m, i) => m.rest ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('log.rest')}</span></span>` : m.skill ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('sk.' + m.skill)}</span> ${m.cell < 0 ? '' : m.skill === 'torpedo' || m.skill === 'radar' ? 'ABCDEFGHIJ'[m.cell % 10] : m.skill === 'scout' ? String((m.cell / 10 | 0) + 1) : E.cellName(m.cell)}${m.skill === 'sonar' || m.skill === 'scout' || m.skill === 'radar' ? ' → ' + m.k : ''}</span>` : `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i>${E.cellName(m.cell)} ${m.sunk >= 0 ? `<span class="s">${t('log.sunk')}</span>` : m.by === 0 && m.fog && G.st.sides[1].fogged[m.cell] ? t('log.fog') : m.mine ? `<span class="x">${t('log.mine')}</span>` : m.dent ? `<span class="x">${t('log.dent')}</span>` : m.hit ? `<span class="x">${t('log.hit')}</span>` : t('log.miss')}</span>`).join('');
+  k.innerHTML = G.st.log.map((m, i) => m.rest ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('log.rest')}</span></span>` : m.skill ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('sk.' + m.skill)}</span> ${m.cell < 0 ? '' : m.skill === 'torpedo' || m.skill === 'radar' ? 'ABCDEFGHIJ'[m.cell % 10] : m.skill === 'scout' ? String((m.cell / 10 | 0) + 1) : E.cellName(m.cell)}${m.skill === 'sonar' || m.skill === 'scout' || m.skill === 'radar' || m.skill === 'probe' ? ' → ' + m.k : ''}</span>` : `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i>${m.via === 'counter' ? `<span class="s">${t('sk.counter')}</span> ` : ''}${E.cellName(m.cell)} ${m.sunk >= 0 ? `<span class="s">${t('log.sunk')}</span>` : m.by === 0 && m.fog && G.st.sides[1].fogged[m.cell] ? t('log.fog') : m.mine ? `<span class="x">${t('log.mine')}</span>` : m.dent ? `<span class="x">${t('log.dent')}</span>` : m.hit ? `<span class="x">${t('log.hit')}</span>` : t('log.miss')}</span>`).join('');
   k.scrollTop = k.scrollHeight;
 }
 function renderEval() {
@@ -135,6 +135,7 @@ function render(msg) {
   renderBoards(); renderFleet(); renderStatus(msg); renderKifu(); renderEval(); renderButtons(); renderSkills(); renderDraft();
 }
 const SK_ICON = {
+  probe: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><rect x="9.5" y="2" width="5" height="4.5" rx=".8"/><rect x="9.5" y="17.5" width="5" height="4.5" rx=".8"/><rect x="2" y="9.5" width="4.5" height="5" rx=".8"/><rect x="17.5" y="9.5" width="4.5" height="5" rx=".8"/></svg>',
   barrage: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5" rx=".8"/><rect x="9.5" y="3" width="5" height="5" rx=".8"/><rect x="16" y="3" width="5" height="5" rx=".8"/><rect x="3" y="9.5" width="5" height="5" rx=".8"/><rect x="9.5" y="9.5" width="5" height="5" rx=".8"/><rect x="16" y="9.5" width="5" height="5" rx=".8"/><rect x="3" y="16" width="5" height="5" rx=".8"/><rect x="9.5" y="16" width="5" height="5" rx=".8"/><rect x="16" y="16" width="5" height="5" rx=".8"/></svg>',
   radar: '<svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 6a9 9 0 0 1 14 0M7.5 9a5.5 5.5 0 0 1 9 0"/><circle cx="12" cy="14" r="1.6"/><path d="M8 21h8"/></svg>',
   mine: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5.5"/><path d="M12 4v3.5M12 18.5V22M3 13h3.5M17.5 13H21M5.6 6.6l2.5 2.5M15.9 16.9l2.5 2.5M18.4 6.6l-2.5 2.5M8.1 16.9l-2.5 2.5"/></svg>',
@@ -161,7 +162,7 @@ function renderDraft() {
   if (G.phase !== 'draft') return;
   const d = G.draft, mine = d.turn === 0;
   $('#drTurn').textContent = t(d.turn === 0 ? 'dr.you' : 'dr.ai'); $('#drTurn').classList.toggle('me', mine);
-  $('#drRows').innerHTML = E.TYPES.map((T, k) => (d.f || E.POOL)[k] ? `<div class="dr${d.pool[k] && d.picks[0].indexOf(k) < 0 ? '' : ' out'}"><span class="pip">${'<i></i>'.repeat(T.len)}</span><div class="dn"><b>${t('ship.' + k)}<em>×${d.pool[k]}</em></b><small>${T.skill ? t('sk.' + T.skill) + '：' + t('sk.' + T.skill + '.d') : T.armor ? t('sk.armor') + '：' + t('sk.armor.d') : T.aa ? t('sk.aa') + '：' + t('sk.aa.d') : T.decoy ? t('sk.decoy') + '：' + t('sk.decoy.d') : t('dr.none')}</small></div><span class="dc">${T.cost}</span><button data-k="${k}" ${E.draftCan(d, 0, k) && !G.busy ? '' : 'disabled'}>${t('dr.pick')}</button></div>` : '').join('');
+  $('#drRows').innerHTML = E.TYPES.map((T, k) => (d.f || E.POOL)[k] ? `<div class="dr${d.pool[k] && d.picks[0].indexOf(k) < 0 ? '' : ' out'}"><span class="pip">${'<i></i>'.repeat(T.len)}</span><div class="dn"><b>${t('ship.' + k)}<em>×${d.pool[k]}</em></b><small>${T.skill ? t('sk.' + T.skill) + '：' + t('sk.' + T.skill + '.d') : T.armor ? t('sk.armor') + '：' + t('sk.armor.d') : T.aa ? t('sk.aa') + '：' + t('sk.aa.d') : T.decoy ? t('sk.decoy') + '：' + t('sk.decoy.d') : T.counter ? t('sk.counter') + '：' + t('sk.counter.d') : t('dr.none')}</small></div><span class="dc">${T.cost}</span><button data-k="${k}" ${E.draftCan(d, 0, k) && !G.busy ? '' : 'disabled'}>${t('dr.pick')}</button></div>` : '').join('');
   const who = (p, name) => `<div class="dw${d.turn === p ? ' turn' : ''}"><div class="fh"><b>${name}</b><span>${t('dr.left', { c: E.draftLeft(d, p) })}</span></div><div class="pips">${d.picks[p].map(k => `<span class="pip" title="${t('ship.' + k)}">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</div></div>`;
   $('#drWho').innerHTML = who(1, 'AI Lv.' + G.level) + who(0, t('you'));
   $('#btnDrStop').disabled = !(E.draftCanStop(d, 0) && !G.busy);
@@ -270,6 +271,7 @@ async function doShot(cell) {
   if (res.sunk < 0 && by === 0 && res.fog) { sfx('miss'); toast(t('fx.fog')); }
   else if (res.dent) { sfx('hit'); toast(t('fx.dent'), 'hit'); }
   else if (res.mine) { sfx('sunk'); shake(); toast(t(by === 0 ? 'fx.mine' : 'fx.foe.mine'), 'hit'); }
+  else if (res.counter) { sfx(res.counter.hit ? 'hit' : 'miss'); toast(t(by === 0 ? 'fx.counter' : 'fx.foe.counter', { c: E.cellName(res.counter.cell), r: t(res.counter.hit ? 'log.hit' : 'log.miss') }), 'hit'); }
   else if (res.sunk >= 0) { sfx('sunk'); shake(); toast(t(by === 0 ? 'fx.sunk' : 'fx.lost', { s: t('ship.' + T.ships[res.sunk].t) }), 'hit'); }
   else if (res.hit) { sfx('hit'); toast(t('fx.hit'), 'hit'); }
   else { sfx('miss'); toast(t('fx.miss')); }
@@ -292,11 +294,13 @@ async function doSkill(a) {
   if (res.skill === 'sonar' || res.skill === 'scout' || res.skill === 'radar') toast(t('fx.' + res.skill, { k: res.k }));
   else if (noAim) toast(t((by === 0 ? 'fx.' : 'fx.foe.') + res.skill, { c: res.fix != null ? E.cellName(res.fix) : '' }));
   else if (by === 0 && res.shots.some(x => x.fog)) toast(t('fx.fog'));
+  else if (res.skill === 'probe') toast(t('fx.probe', { r: t(res.shots[0] && res.shots[0].hit && !res.shots[0].fog ? 'log.hit' : res.shots[0] && res.shots[0].fog ? 'log.fog' : 'log.miss'), k: res.k != null ? res.k : '?' }), res.shots[0] && res.shots[0].hit ? 'hit' : '');
   else if (res.shots.some(x => x.mine)) { sfx('sunk'); shake(); toast(t(by === 0 ? 'fx.mine' : 'fx.foe.mine'), 'hit'); }
   else if (res.ic >= 0) toast(t(by === 0 ? 'fx.aa' : 'fx.foe.aa', { c: E.cellName(res.ic) }));
   else if (res.shots.some(x => x.dent)) toast(t('fx.dent'), 'hit');
   else if (sunk.length) { sfx('sunk'); shake(); toast(t(by === 0 ? 'fx.sunk' : 'fx.lost', { s: t('ship.' + st.sides[1 - by].ships[sunk[0].sunk].t) }), 'hit'); }
   else if (hits) toast(hits > 1 ? t('fx.hits', { n: hits }) : t('fx.hit'), 'hit'); else toast(t('fx.miss'));
+  const cn = res.shots.find(x => x.counter); if (cn) { await sleep(700); toast(t(by === 0 ? 'fx.counter' : 'fx.foe.counter', { c: E.cellName(cn.counter.cell), r: t(cn.counter.hit ? 'log.hit' : 'log.miss') }), 'hit'); }
   render(); save(); queueEval();
   return res;
 }
