@@ -65,3 +65,7 @@
 - **3D（大百科のちゃぶ台）の AI**：`atlas/games/fanorona.js` のワーカーがアルケルケでも `&g=alq` を付けるようにした（前はファノロナの学習評価・終盤DBを読み、アルケルケの終盤DBを使っていなかった）。
 - レベル表（大百科の RATING）は今は変えない（どのレベルの手も変わらない）。ネットを入れたら四段・五段を測り直す（MODEL_CARD「採用の基準」）。
 - アルケルケには定跡（`openings.json`）とレッスン紹介の追加文（`lux.json`）がない。`window.GAME` の `open: false`・`lux: false` で `fanorona/app.js` が読みに行かない（前は 404。2026-11-20 直した）。定跡を作るときはファイルを置いて `open: false` を外す。
+
+## 推論の高速化（2026-11-20）
+- `fanorona/engine.c` `aqnEval` を wasm SIMD に（1層目 i16x8、2層目 `i32x4.dot_i16x8`。値・局面数は同じ）。engine_simd.wasm のネットありの探索が約+30%。詳細は `alquerque/MODEL_CARD.md`「推論の高速化」。
+- 版：fanorona/engine.js の `WV`（`v=20261120aq3`）、`engine.js?v=fb5s-pro1-mt1-aq3`（fanorona/app.js・index.html・bench.html・alquerque/index.html・atlas/games/fanorona.js・atlas/rules/alquerque.js・atlas/rules/fanorona.js）、`engine_mt.wasm?v=8`、app.js `…-qa2-ns1`（両ページ）、atlas/lazy.js の fanorona・alquerque（games/fanorona 12・rules 10／8）。

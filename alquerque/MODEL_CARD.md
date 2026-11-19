@@ -99,6 +99,12 @@
 - WebAssembly：前の配信版と新しい `engine.wasm`・`engine_simd.wasm`・`engine_mt.wasm`（1スレッド）で、4ルールの102局面の
   `best()`（4万局面）・`values()` の手・値・深さ・局面数が全部一致。
 
+## 推論の高速化（2026-11-20、値は同じ）
+
+- **wasm SIMD の `aqnEval`**（`fanorona/engine.c`）：1層目の和を i16x8 のレーンで（前の int16 の足し算と同じ折り返し）、0〜127 に切り、2層目の 16 個の和を `i32x4.dot_i16x8` で（整数なので同じ）。`engine.wasm`（SIMD なし）とネイティブは前のまま（バイナリも同じ）。ファノロナの評価には触れていない。
+- **確認**：`tools/nnue/wasmcheck.js`（仮ネット：engine.wasm・engine_simd.wasm・engine_mt.wasm のネットの値のチェックサムがネイティブ `aq check` と一致、2万局面の探索が一致、engine_mt.wasm 2スレッドがネットで動作）、旧版と新版の engine_simd.wasm の探索（20局面×3、20万局面）がネットあり・なしで一致、ブラウザ（headless Chrome、仮ネットを置いて）で1スレッド・マルチスレッドとも四段がネットで動作。
+- **速さ**（engine_simd.wasm、同じ探索を旧・新交互に同じプロセスで、CPU 時間）：ネットあり **約+27〜31%**（ネットなしの約 0.68 倍 → 0.88 倍）。ネットなし・SIMD なしは同じ。時間固定の対局は今回は測っていない。
+
 ## Mac での学習（`alquerque/tools/nnue/`）
 ```bash
 bash alquerque/tools/nnue/run.sh                                         # 既定：約2000万局面、1手1万6千局面読み
