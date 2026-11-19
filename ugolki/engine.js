@@ -84,7 +84,7 @@ let WA = null;
 function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=5'); b64 = self.UG_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=6'); b64 = self.UG_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.UG_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.UG_NOWASM)) return;
     const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
@@ -101,13 +101,26 @@ function loadCore() {
 }
 // the views of a core's memory (and its keys filled in): core-wasm.js (WA) or the lead's core_mt.wasm (MX)
 function coreViews(x, buf, io) {
-  const C = { x, io: io || new Int32Array(buf, x.iop(), 32), sq: new Int8Array(buf, x.sqp(), 64), zt: new Uint32Array(buf, x.ztp(), 258), rh1: new Uint32Array(buf, x.rh1p(), 4096), rh2: new Uint32Array(buf, x.rh2p(), 4096) };
+  const C = { x, buf, io: io || new Int32Array(buf, x.iop(), 32), sq: new Int8Array(buf, x.sqp(), 64), zt: new Uint32Array(buf, x.ztp(), 258), rh1: new Uint32Array(buf, x.rh1p(), 4096), rh2: new Uint32Array(buf, x.rh2p(), 4096) };
   if (x.aomp) { C.aom = new Int32Array(buf, x.aomp(), 512); C.aov = new Int32Array(buf, x.aovp(), 512); }
   for (let k = 0; k < 2; k++) for (let i = 0; i < 64; i++) { C.zt[k * 64 + i] = Z1[k][i]; C.zt[128 + k * 64 + i] = Z2[k][i]; }
   C.zt[256] = ZS1; C.zt[257] = ZS2;
   return C;
 }
 function waRule() { if (WA) WA.x.setup(R.rows, R.cols, R.diag ? 1 : 0, R.limit, R.cap); if (MX) MX.x.setup(R.rows, R.cols, R.diag ? 1 : 0, R.limit, R.cap); }
+// ---- the learned evaluation (2026-11-20, claude/ugolki-spec.md「学習した評価」, tools/nnue/): one net a rule, net-<rule>.bin.gz,
+// loaded only when its version below is set ('' = no net: the hand evaluation, as before). Used by search v3 (mode 2: the levels
+// with x and the analysis); the other levels keep the hand evaluation. Placing a file and its version here is all it takes.
+const NETV = { c33: '', c34: '', c44: '', diag: '' };
+const ANA_MODE = 2;   // the analysis / hint / coach: search v3
+const NETS = {};      // rule → the file's bytes (Uint8Array)
+function netInto(C, k) {   // a net into a core (WA, or the threads' MX: their memory is shared, one load is enough)
+  const b = NETS[k]; if (!C || !b || !C.x.net_load) return false;
+  new Uint8Array(C.x.memory ? C.x.memory.buffer : C.buf, C.x.net_buf(), b.length).set(b);
+  return !!C.x.net_load(RULE_ORDER.indexOf(k), b.length);
+}
+function netOk(k) { const C = MX || WA; return !!(C && C.x.net_ok && C.x.net_ok(RULE_ORDER.indexOf(k))); }
+function loadNet(k, bytes) { NETS[k] = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes); const a = netInto(WA, k), b = netInto(MX, k); return a || b; }
 function kreset() { killers.length = 0; if (WA) WA.x.kclear(); if (MX) MX.x.kclear(); }
 function ttClear() { TT.clear(); if (WA) WA.x.ttclear(); if (MX) MX.x.ttclear(); }
 // (2026-11-11) The root's loops in the core too (core.c ab_best / ab_values: node for node bestMove / rootValues below — the
@@ -297,9 +310,9 @@ const LEVELS = [null,
   { s: 1, ms: 2500, book: 1 },           // 五段
   // the top levels (2026-11-09, common rule「最上位のレベルの追加」): twice the time per step up to 20 s, every thread of the
   // page's pool (shared/mtsplit.js; the shared table on an isolated page) — one thread without the option
-  { s: 1, ms: 5000, book: 1 },           // Lv.21
-  { s: 1, ms: 10000, book: 1 },          // Lv.22
-  { s: 1, ms: 20000, book: 1 },          // Lv.23
+  { s: 1, ms: 5000, book: 1, x: 1 },     // Lv.21   (x: search v3 + the learned evaluation, 2026-11-20 — the page's 天上 levels)
+  { s: 1, ms: 10000, book: 1, x: 1 },    // Lv.22
+  { s: 1, ms: 20000, book: 1, x: 1 },    // Lv.23
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 // ---------------------------------------------------------------- evaluation (side to move's view, ~100 = one tempo)
@@ -397,9 +410,9 @@ function search(pos, d, a, b, ply) {
   TT.set(key, { h2: pos.h2, d, v: best, f: best <= a0 ? 2 : best >= b ? 1 : 0, m: bm, ply: pos.ply });
   return best;
 }
-function rootValues(pos, d, hist, v2) {   // v2: the analysis reads with search v2 (core.c); the levels by depth as before
+function rootValues(pos, d, hist, v2) {   // v2: the analysis reads with search v2 / v3 (core.c: 1 / 2); the levels by depth as before
   const A = abCore();
-  if (A) { abRoot(A, pos, hist); const k = v2 && A.x.ab_values2 ? A.x.ab_values2(d, 1) : A.x.ab_values(d); abBack(A); const out = []; for (let i = 0; i < k; i++) out.push({ m: A.aom[i], v: A.aov[i] }); return out; }
+  if (A) { abRoot(A, pos, hist); const k = v2 && A.x.ab_values2 ? A.x.ab_values2(d, A.x.ab_best3 ? v2 : 1) : A.x.ab_values(d); abBack(A); const out = []; for (let i = 0; i < k; i++) out.push({ m: A.aom[i], v: A.aov[i] }); return out; }
   const L = orderMoves(pos, pos.moves(), -1, 0), out = [];
   for (const m of L) {
     const q = pos.clone().play(m);
@@ -415,12 +428,12 @@ function helperDone(pos, L, d) {
   const e = SH.get(pos.h1, pos.h2);
   return e && e.f === 0 && e.d >= d && e.ply === pos.ply && L.indexOf(e.m) >= 0 ? { move: e.m, v: e.v, depth: e.d } : null;
 }
-function bestMove(pos, hist, maxD, ms, nk) {
+function bestMove(pos, hist, maxD, ms, nk, mode) {   // mode (core.c): 1 search v2, 2 v3 (+ the learned evaluation when loaded)
   nodes = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; nodeLimit = nk ? nk * 1000 : Infinity; kreset();
   const L = pos.moves(); if (L.length === 1) return { move: L[0], v: 0, depth: 0 };
   let best = { move: orderMoves(pos, L, -1, 0)[0], v: 0, depth: 0 };
   const A = abCore();
-  if (A) { abRoot(A, pos, hist); A.x.ab_best(maxD || 60); abBack(A); return { move: A.io[0], v: A.io[1], depth: A.io[2] }; }
+  if (A) { abRoot(A, pos, hist); if (A.x.ab_best3) A.x.ab_best3(maxD || 60, mode || 1); else A.x.ab_best(maxD || 60); abBack(A); return { move: A.io[0], v: A.io[1], depth: A.io[2] }; }
   for (let d = 1; d <= (maxD || 60); d++) {
     let a = -WIN - 1, bm = null, bv = -Infinity;
     const ttE = TT.get(pos.h1), order = orderMoves(pos, L, best.move, 0);
@@ -446,6 +459,7 @@ const histOf = (start, moves) => { const { hashes } = replay(start, moves); hash
 
 let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
 const BOOKS = {};     // the opening books by rule (book-<rule>.json, loaded by the worker; 2026-11-15)
+const bookPlies = L => L.x ? 10 : 6;   // (2026-11-20: the book of search v3 goes 10 plies deep; the human levels with a book keep their 6)
 function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
@@ -481,17 +495,23 @@ function think(start, moves, level, rand, rule) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best, v: vals[0].v };
   }
-  if (L.book && moves.length < 6 && !start) {
+  if (L.book && moves.length < bookPlies(L) && !start) {
     // from the opening book when the position is in it (shared/tools/genbook.js: the same rule on a deeper analysis, made beforehand)
     const B = BOOKS[RK], bk = B && B.pos[moves.join(',')];
     if (bk && bk.length) { const good = bk.filter(e => e[1] >= bk[0][1] - 10); const e = good[Math.floor(rand() * good.length)]; if (pos.moves().includes(e[0])) return { move: e[0], v: bk[0][1], book: 1 }; }
     nodes = 0; stop = false; tEnd = Date.now() + 600; nodeLimit = Infinity;
-    const vals = rootValues(pos, 3, hist), good = vals.filter(e => e.v >= vals[0].v - 10);
+    let vals = rootValues(pos, 3, hist);
+    if (L.x) {   // (v3 levels, 2026-11-20: out of the book the variety comes from a real analysis — search v3, a quarter of the move's time — not depth 3)
+      tEnd = Date.now() + Math.min(L.ms / 4, 3000); stop = false;
+      for (let d = 4; d <= 40; d++) { const v = rootValues(pos, d, hist, 2); if (stop && v.length < vals.length) break; vals = v; if (stop) break; }
+    }
+    const good = vals.filter(e => e.v >= vals[0].v - 10);
     return { move: good[Math.floor(rand() * good.length)].m, v: vals[0].v };
   }
   const A2 = abCore(), nk = L.nk2 && RK === 'c33' && A2 && A2.x.ab_values2 ? L.nk2 : L.nk;   // (search v2 in the core only)
-  const r = bestMove(pos, hist, L.dx || 60, L.ms || 3000, nk || 0);
-  return thinkFin(pos, hist, r);
+  const r = bestMove(pos, hist, L.dx || 60, L.ms || 3000, nk || 0, L.x ? 2 : 1);   // (x: search v3 + the learned evaluation — the top levels, 2026-11-20)
+  const out = thinkFin(pos, hist, r); if (L.x && netOk(RK)) out.nn = 1;   // (nn: the move came from the learned evaluation)
+  return out;
 }
 // the strong steps' answer from the search's result (also the end of a search on several threads, shared/mtsplit.js)
 function thinkFin(pos, hist, r) { return { move: r.move, v: r.v, depth: r.depth }; }
@@ -502,7 +522,7 @@ function analyze(start, moves, ms, onProgress, rule) {
   nodes = 0; stop = false; tEnd = Date.now() + (ms || 1000); nodeLimit = Infinity;
   let list = [], depth = 0;
   for (let d = 1; d <= 30; d++) {
-    const vals = rootValues(pos, d, hist, 1);
+    const vals = rootValues(pos, d, hist, ANA_MODE);
     if (stop && vals.length < pos.moves().length) break;
     list = vals.map(e => ({ ...e, kind: kindOf(e.v) })); depth = d;
     if (onProgress) onProgress(list, d);
@@ -541,7 +561,7 @@ function mtPlan(m) {
   const { pos } = replay(m.start, m.moves), all = pos.moves(), inf = WIN + 1;
   if (m.job === 'think') {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
-    if (all.length < 2 || !L.s || (L.book && m.moves.length < 6 && !m.start)) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
+    if (all.length < 2 || !L.s || (L.book && m.moves.length < bookPlies(L) && !m.start)) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
     return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 3000, nodes: L.nk ? L.nk * 1000 : 0, win: WINT, lmr: { d: 3, i: 6 }, splitMin: 5, lazy: lazyOf(m, L, false) } };   // (Young Brothers Wait on the shared table; lazy: Lazy SMP, for the bench)
   }
   if (!all.length) return { result: { list: [], depth: 0 } };
@@ -743,7 +763,17 @@ function puzzle(start, moves, n, defend, goal, base, rule) { return soloGood(sta
 
 loadCore();
 setRule('c33');
-const API = { useCore: (x, buf) => { MX = x ? coreViews(x, buf) : null; if (MX) { MX.threads = 1; MX.jobThreads = 1; waRule(); } }, get wasm() { return !!WA; }, get nodes() { return nodes; }, get ZT() { return [...Z1[0], ...Z1[1], ...Z2[0], ...Z2[1], ZS1, ZS2]; }, set SH(t) { SH = t; }, get SH() { return SH; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, mtPlan, mtV, mtKids, mtFin, mtLazy, pvOf, soloGood, soloMin, soloNeed, duelGood, duelMin, duelReply, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
+// the nets in Node (tools, tests): the shipped files (NETV) next to this file, or every net-<rule>.bin[.gz] of the folder UG_NETDIR
+if (WA && typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+  try {
+    const fs = require('fs'), path = require('path'), zlib = require('zlib'), dir = process.env.UG_NETDIR;
+    for (const k of RULE_ORDER) {
+      const fns = dir ? [path.join(dir, `net-${k}.bin`), path.join(dir, `net-${k}.bin.gz`)] : NETV[k] ? [path.join(__dirname, `net-${k}.bin.gz`)] : [];
+      for (const fn of fns) if (fs.existsSync(fn)) { let b = fs.readFileSync(fn); if (/\.gz$/.test(fn)) b = zlib.gunzipSync(b); loadNet(k, new Uint8Array(b)); break; }
+    }
+  } catch (e) {}
+}
+const API = { useCore: (x, buf) => { MX = x ? coreViews(x, buf) : null; if (MX) { MX.threads = 1; MX.jobThreads = 1; waRule(); for (const k in NETS) netInto(MX, k); } }, loadNet, netOk: k => netOk(k || RK), NETV, get wasm() { return !!WA; }, get nodes() { return nodes; }, get ZT() { return [...Z1[0], ...Z1[1], ...Z2[0], ...Z2[1], ZS1, ZS2]; }, set SH(t) { SH = t; }, get SH() { return SH; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, mtPlan, mtV, mtKids, mtFin, mtLazy, pvOf, soloGood, soloMin, soloNeed, duelGood, duelMin, duelReply, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
@@ -754,13 +784,18 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
         x.mt_stack(m.top); x.mt_thread(m.tls, 0);
         MX = coreViews(x, m.mem.buffer); MX.threads = navigator.hardwareConcurrency || 2;
-        waRule();
+        waRule(); for (const k in NETS) netInto(MX, k);
         self.postMessage({ type: 'mtready' });
       }).catch(err => { MX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
   }
   // the opening books (2026-11-15): the top levels' first plies, one file a rule
-  const bookP = typeof fetch === 'function' ? Promise.all(RULE_ORDER.map(k => fetch(new URL(`book-${k}.json?v=1`, self.location.href)).then(r => r.ok ? r.json() : null).then(b => { if (b) BOOKS[k] = b; }).catch(() => {}))) : Promise.resolve();
+  const bookP = typeof fetch === 'function' ? Promise.all(RULE_ORDER.map(k => fetch(new URL(`book-${k}.json?v=2`, self.location.href)).then(r => r.ok ? r.json() : null).then(b => { if (b) BOOKS[k] = b; }).catch(() => {}))) : Promise.resolve();
   queueP = queueP.then(() => bookP);
+  // the learned evaluation (NETV): fetched and unzipped here, then loaded into the cores (MX after its 'mtinit': chained after it)
+  const netP = typeof fetch === 'function' && typeof DecompressionStream !== 'undefined' ? Promise.all(RULE_ORDER.filter(k => NETV[k]).map(k =>
+    fetch(new URL(`net-${k}.bin.gz?v=${NETV[k]}`, self.location.href)).then(r => r.ok ? new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer() : null)
+      .then(b => { if (b) loadNet(k, b); }).catch(() => {}))) : Promise.resolve();
+  queueP = queueP.then(() => netP);
   self.onmessage = e => {
     const m = e.data;
     if (m && m.type === 'mtinit') return;
