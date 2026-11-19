@@ -191,6 +191,19 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await idle();
     ok(await p.evaluate(() => { const sc = G.st.scans[0].find(s => s.tr); return sc && sc.k >= 1 && G.st.log.some(m => m.by === 1 && m.tr != null); }), name + ': my ESM ship traced the enemy ship that used a skill');
     await shot('trace');
+    // 第13弾: the diagonal spot, and a heavy cruiser that takes two dents
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[35, 4, 3], [34, 4, 3]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('diag'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(23); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => { const sc = G.st.scans[0][0]; return sc && JSON.stringify(sc.list) === '[1,12,23,34,45,56,67,78,89]'; }), name + ': the diagonal spot reads B1–J9');
+    await idle(); await p.evaluate(() => { G.view = 'enemy'; render(); });
+    const hc = await p.evaluate(() => { const T = G.st.sides[1], i = T.ships.findIndex(s => SeaEngine.TYPES[s.t].armor === 2); const o = []; for (let k = 0; k < 100; k++) if (T.grid[k] === i) o.push(k); return o; });
+    for (const c of hc.slice(0, 2)) { await idle(); await p.evaluate(() => { G.view = 'enemy'; render(); }); n0 = await acts(); await tapCell(c); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 }); }
+    ok(await p.evaluate(c => c.slice(0, 2).every(x => G.st.sides[1].shots[x] === 3) && G.st.sides[1].armor.some(a => a === 0), hc), name + ': the heavy cruiser dents twice');
+    await shot('hcruiser');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
