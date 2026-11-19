@@ -217,3 +217,14 @@ $W/trainkp --rescale a.bin b.bin 0.805                       # 出力層を 0.80
 - 小さなデータでの対局（1手1,500局面・4局）は2勝2敗。データが少なすぎて強さの判断にはなりません。強さは Mac での本番の学習で測ります。
 
 2026-11-11 に今の main（YBW・Lazy SMP 化後の `engine.c`）で再確認済み：同じ方法で `run-kp.sh` が最後まで通り（clang・gcc とも）、学習で重みを実際に動かしたネット（`TRAIN_OPTS="--batch 256"`）でも学習器・エンジン・Python・`engine_kp.wasm` の評価値が2,000局面で一致、差分計算の不一致 0、`-DNUE_KB=1` のビルドはサイトのエンジンとベンチのチェックサムが一致。
+
+
+## GPU の学習器（2026-11-19、大量のデータ用）
+
+`tools/nnue/gtrain.py`（PyTorch：Mac の GPU＝MPS、なければ CPU）。ネット・損失・出力ファイルは `trainkp.c --kb k1` と同じ（NUEK / NUEO / NUEM）で、エンジンや対局ツールはそのまま使える。局面の読み取りは `gfeed.c`（最初の実行時に自動でビルド）。
+
+- 準備：`python3 -m pip install torch numpy`
+- データ：`tools/nnue/fetch-all.sh`（MIT の約80億局面・320GB を外付けディスクへ）→ `prep`（王手・駒取り・序盤を除いてシャッフル、約半分が残る）
+- 速さの確認：`python3 gtrain.py train.bin --bench --hidden 1024`（局面の読み取りと、第1層の2通りの計算方法の速さ）
+- 学習：`python3 gtrain.py train.bin out.bin --hidden 1024 --l1 16 --l2 32 --passes 1 --val val.bin`（止めても同じコマンドで続きから。`out.bin.pNNN` が5億局面ごとの途中経過）
+- 確認済み（作業環境、CPU）：保存したファイルを `trainkp --check` で読んだ評価値と、学習器の中の計算が一致（400局面、差は最大 0.07）。GPU（MPS）での動作と速さは Mac で未確認。
