@@ -10,7 +10,7 @@
 #define WIN 30000
 // -DMT (core_mt.wasm, several threads on one shared memory: the MCTS below): every thread's own board and work areas are
 // thread-local; without MT, TLS is nothing (core-wasm.js, one thread)
-#ifdef MT
+#if defined(MT) || defined(NATIVE_TLS)
 #define TLS _Thread_local
 #else
 #define TLS
@@ -30,7 +30,7 @@ static TLS u8 DA[PN], DB[PN], KA[PN], KB[PN], QU[PN + 8];
 static double P2N[INF + 2], CL6[2 * ML + 1];   // CL6: clamp6(d) at d + ML
 static int RAY[NN][8][10], RAYN[NN][8], NBS[NN][8], NBN[NN];
 static int inited = 0;
-static void initZ(void);
+static void initZ(void); static void nnInitTabs(void);
 static void init(void) {
   if (inited) return;
   initZ();
@@ -43,6 +43,7 @@ static void init(void) {
       RAYN[i][d] = n; if (n) NBS[i][NBN[i]++] = RAY[i][d][0];
     }
   }
+  nnInitTabs();
   double p = 1.0; for (int i = 0; i <= INF + 1; i++) { P2N[i] = i >= INF ? 0.0 : p; p *= 0.5; }
   for (int d = -ML; d <= ML; d++) { double x = (double)d / 6; CL6[d + ML] = x > 1 ? 1 : x < -1 ? -1 : x; }
   inited = 1;   // (last: a thread that sees it set finds the tables filled)
@@ -179,23 +180,127 @@ static void terms(int La, int Lb, double kap, int kind) {
   } else { cc += sa; cc -= sb; }
   CS0 = (nA - nB) + kap * nT; CS1 = cc; CS2 = ww;
 }
+// ================================================================ the learned evaluation (2026-11-20, EVM 3; amazons/MODEL_CARD.md)
+// A small network on top of the same terms: every square gets a class (an empty square: the side to move's and the opponent's
+// queen distance 1…4, 5+, none × which side is nearer by king moves; an amazon: whose × its moves counted to 5; an arrow) and
+// its row of NH weights is added (the board's 8 symmetries share a row: NSYM square classes, so the net is symmetric), the
+// classic terms (t1 …, from the side to move) go in too; a clipped ReLU layer, and the output adds the classic terms linearly
+// (they start at v3's weights, so an untrained net is v3). The value is from the side to move, in squares (×100 as ev()).
+// The weights come from amazons/net.js (base64 of the file tools/nnue/nn.c writes: "AMZN", version, count, float16 values)
+// through nn_buf / nn_load; without them EVM 3 is v3. Trained by tools/nnue/ (self-play of this engine, the user's Mac).
+#ifndef NH
+#define NH 32
+#endif
+#define NCAT 121
+#define NSYM 15
+#define NDN 8
+#define NNW (NSYM * NCAT * NH + NH + NDN * NH + NH + NDN + 1)
+typedef float F4 __attribute__((vector_size(16))); typedef int I4 __attribute__((vector_size(16)));
+static float NW1[NSYM * NCAT][NH] __attribute__((aligned(16)));
+static float NB1[NH] __attribute__((aligned(16))), NWD1[NDN][NH] __attribute__((aligned(16))), NW2[NH] __attribute__((aligned(16))), NWD2[NDN], NB2;
+static int NNOK = 0, NNVER = 0;
+static unsigned short NNBUF[NNW + 8];
+static u8 SYMC[NN], B2S[128];
+static TLS int NNFEAT = 0;               // (the trainer: ev() fills NFI / NFD whatever the mode)
+static TLS short NFI[NN]; static TLS int NFN; static TLS float NFD[NDN];
+static float h2f(unsigned short h) {
+  unsigned s = (h >> 15) & 1, e = (h >> 10) & 31, m = h & 1023; union { float f; unsigned u; } x;
+  if (e == 0) { float v = (float)m * (1.f / 16777216.f); return s ? -v : v; }
+  if (e == 31) e = 30;   // (no inf / nan here)
+  x.u = (s << 31) | ((e - 15 + 127) << 23) | (m << 13); return x.f;
+}
+static void nnInitTabs(void) {
+  for (int i = 0; i < NN; i++) { int r = i / 10, c = i % 10; if (r > 4) r = 9 - r; if (c > 4) c = 9 - c; if (r > c) { int t = r; r = c; c = t; } SYMC[i] = (u8)(r * 5 - r * (r - 1) / 2 + (c - r)); }
+  for (int b = 0; b < 128; b++) B2S[b] = 255;
+  for (int i = 0; i < NN; i++) B2S[(i / 10) * 11 + i % 10] = (u8)i;
+}
+__attribute__((export_name("nn_buf"))) unsigned short *nn_buf(void) { return NNBUF; }
+// the file in NNBUF (bytes): "AMZN", u32 version, u32 count (= NNW), then the values as float16; 1 = loaded
+__attribute__((export_name("nn_load"))) int nn_load(int bytes) {
+  const u8 *b = (const u8 *)NNBUF; NNOK = 0;
+  if (bytes < 12 || b[0] != 'A' || b[1] != 'M' || b[2] != 'Z' || b[3] != 'N') return 0;
+  unsigned ver = b[4] | b[5] << 8 | b[6] << 16 | (unsigned)b[7] << 24, cnt = b[8] | b[9] << 8 | b[10] << 16 | (unsigned)b[11] << 24;
+  if (cnt != NNW || bytes < 12 + 2 * NNW) return 0;
+  const u8 *q = b + 12; int k = 0;
+#define NXT() h2f((unsigned short)(q[2 * k] | q[2 * k + 1] << 8)), k++
+  for (int i = 0; i < NSYM * NCAT; i++) for (int h = 0; h < NH; h++) { NW1[i][h] = h2f((unsigned short)(q[2 * k] | q[2 * k + 1] << 8)); k++; }
+  for (int h = 0; h < NH; h++) { NB1[h] = h2f((unsigned short)(q[2 * k] | q[2 * k + 1] << 8)); k++; }
+  for (int j = 0; j < NDN; j++) for (int h = 0; h < NH; h++) { NWD1[j][h] = h2f((unsigned short)(q[2 * k] | q[2 * k + 1] << 8)); k++; }
+  for (int h = 0; h < NH; h++) { NW2[h] = h2f((unsigned short)(q[2 * k] | q[2 * k + 1] << 8)); k++; }
+  for (int j = 0; j < NDN; j++) { NWD2[j] = h2f((unsigned short)(q[2 * k] | q[2 * k + 1] << 8)); k++; }
+  NB2 = h2f((unsigned short)(q[2 * k] | q[2 * k + 1] << 8)); k++;
+#undef NXT
+  NNVER = (int)ver; NNOK = 1; return 1;
+}
+__attribute__((export_name("nn_ver"))) int nn_ver(void) { return NNOK ? NNVER : 0; }
+// the squares by class as bit boards (from White's view): QMA[c] / QMB[c] the empty squares White / Black reaches first in c + 1
+// queen moves (c = 4: 5 or more, 5: never), KMR[0 / 1 / 2] White nearer / equal / Black nearer by king moves
+static TLS BB QMA[6], QMB[6], KMR[3];
+static void nnDist(int La, int Lb, BB E) {
+  BB ua = Z0, ub = Z0;
+  for (int c = 0; c < 6; c++) { QMA[c] = Z0; QMB[c] = Z0; }
+  for (int k = 1; k <= La; k++) { QMA[k < 5 ? k - 1 : 4] |= LA[k]; ua |= LA[k]; }
+  for (int k = 1; k <= Lb; k++) { QMB[k < 5 ? k - 1 : 4] |= LB[k]; ub |= LB[k]; }
+  QMA[5] = E & ~ua; QMB[5] = E & ~ub;
+}
+static void nnKing(int La, int Lb, BB E) {
+  BB sa = Z0, sb = Z0, na = Z0, nb = Z0; int L = La > Lb ? La : Lb;
+  for (int k = 1; k <= L; k++) {
+    BB a = k <= La ? LA[k] : Z0, b = k <= Lb ? LB[k] : Z0;
+    sa |= a; sb |= b; na |= a & ~sb; nb |= b & ~sa;
+  }
+  KMR[0] = na; KMR[2] = nb; KMR[1] = E & ~na & ~nb;
+}
+static TLS u8 AMB[8];
+// the dense inputs (from the side to move): t1, e·t1, e·t2, e·c1, e·c2, mob, e, arrows / 92
+static const float NDS = 1.f / 16.f;   // (their scale into the hidden layer)
+// the rows of the board (NFI: row index into NW1), `tm` the side to move: its distances first
+static void nnClasses(int tm) {
+  int n = 0; const BB *QS_ = tm == 1 ? QMA : QMB, *QO = tm == 1 ? QMB : QMA;
+  for (int a = 0; a < 6; a++) {
+    BB m1 = QS_[a]; if (!bnz(m1)) continue;
+    for (int b = 0; b < 6; b++) {
+      if (a == 5 && b == 5) continue;   // (dead squares: nobody's)
+      BB m2 = m1 & QO[b]; if (!bnz(m2)) continue;
+      for (int r = 0; r < 3; r++) {
+        BB m3 = m2 & KMR[tm == 1 ? r : 2 - r]; int c = (a * 6 + b) * 3 + r;
+        for (int w = 0; w < 2; w++) { u64 m = m3[w]; while (m) { int sq = B2S[__builtin_ctzll(m) + 64 * w]; m &= m - 1; NFI[n++] = (short)(SYMC[sq] * NCAT + c); } }
+      }
+    }
+  }
+  for (int k = 0; k < 8; k++) { if (Q[k] < 0) continue; int own = (k < 4) == (tm == 1); NFI[n++] = (short)(SYMC[(int)Q[k]] * NCAT + 108 + (own ? 0 : 6) + AMB[k]); }
+  NFN = n;
+}
+static float nnOut(void) {
+  F4 acc[NH / 4];
+  for (int h = 0; h < NH / 4; h++) acc[h] = *(const F4 *)&NB1[4 * h];
+  for (int i = 0; i < NFN; i++) { const F4 *w = (const F4 *)NW1[NFI[i]]; for (int h = 0; h < NH / 4; h++) acc[h] += w[h]; }
+  for (int j = 0; j < NDN; j++) { float x = NFD[j] * NDS; F4 xv = { x, x, x, x }; const F4 *w = (const F4 *)NWD1[j]; for (int h = 0; h < NH / 4; h++) acc[h] += xv * w[h]; }
+  float o = NB2;
+  for (int j = 0; j < NDN; j++) o += NWD2[j] * NFD[j];
+  const F4 z = { 0, 0, 0, 0 }, one = { 1, 1, 1, 1 };
+  F4 sum = z;
+  for (int h = 0; h < NH / 4; h++) { F4 x = acc[h]; I4 gz = x > z, g1 = x > one; x = (F4)(((I4)x & gz & ~g1) | ((I4)one & g1)); sum += x * *(const F4 *)&NW2[4 * h]; }
+  return o + ((sum[0] + sum[1]) + (sum[2] + sum[3]));
+}
 // ---- the evaluation's weights (2026-11-14, claude/amazons-spec.md「評価 v2」): EVM 0 = the classic set (exactly engine.js's
 // evalFor: the same constants in the same arithmetic), 1 = v2 (the king-distance terms t2 / c2 count more and the queen-distance
 // position term c1 less; tuned by self-play matches of the MCTS, tools/native_match.c). ev_set(k, v): k < 0 the set, else
 // parameter k of the set in use (tools); ev_reset: every set back to its values.
 // EP: 0 W0 (w at which the board counts as open), 1 t1, 2 t1·e, 3 t2, 4 c1, 5 c2, 6 κ (the side to move's share of a tie)
 #define NEPS 7
+// (2026-11-20) EVM 3 = the learned evaluation (above; v3 without a net).
 // (2026-11-14) EVM 2 = v3, the MCTS's (Lv.16〜23): v2 with the territory t1 counting more as the board closes — 2 − e (2 on a
 // separated board, 1 on an open one as in v2; EP[2] = t1·e = −1). claude/amazons-spec.md「評価 v3」
-#define NEVM 3
-static const double EPC[NEVM][NEPS] = { { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05 }, { 40, 1.0, 0, 0.85, 0.35, 0.6, 0.05 }, { 40, 2.0, -1.0, 0.85, 0.35, 0.6, 0.05 } };
-static double EPS[NEVM][NEPS] = { { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05 }, { 40, 1.0, 0, 0.85, 0.35, 0.6, 0.05 }, { 40, 2.0, -1.0, 0.85, 0.35, 0.6, 0.05 } };
+#define NEVM 4
+static const double EPC[NEVM][NEPS] = { { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05 }, { 40, 1.0, 0, 0.85, 0.35, 0.6, 0.05 }, { 40, 2.0, -1.0, 0.85, 0.35, 0.6, 0.05 }, { 40, 2.0, -1.0, 0.85, 0.35, 0.6, 0.05 } };
+static double EPS[NEVM][NEPS] = { { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05 }, { 40, 1.0, 0, 0.85, 0.35, 0.6, 0.05 }, { 40, 2.0, -1.0, 0.85, 0.35, 0.6, 0.05 }, { 40, 2.0, -1.0, 0.85, 0.35, 0.6, 0.05 } };
 static int EVM = 0;
 static const double *EP = EPS[0];
 __attribute__((export_name("ev_reset"))) void ev_reset(void) { for (int j = 0; j < NEVM; j++) for (int i = 0; i < NEPS; i++) EPS[j][i] = EPC[j][i]; }
-__attribute__((export_name("ev_set"))) void ev_set(int k, double v) { if (k < 0) { EVM = v > 1 ? 2 : v > 0 ? 1 : 0; EP = EPS[EVM]; } else if (k < NEPS) EPS[EVM][k] = v; }
+__attribute__((export_name("ev_set"))) void ev_set(int k, double v) { if (k < 0) { EVM = v > 2 ? 3 : v > 1 ? 2 : v > 0 ? 1 : 0; EP = EPS[EVM]; } else if (k < NEPS) EPS[EVM][k] = v; }
 __attribute__((export_name("ev_mode"))) int ev_mode(void) { return EVM; }
-// the value for `me` with `toMove` to move (evalFor in engine.js)
+// the value for `me` with `toMove` to move (evalFor in engine.js; EVM 3 with a net loaded: the learned evaluation above)
 __attribute__((export_name("ev"))) int ev(int me, int toMove) {
   init(); initBB(); evn++;
   u64 e0 = 0, e1 = 0;
@@ -211,16 +316,19 @@ __attribute__((export_name("ev"))) int ev(int me, int toMove) {
   BB E = { e0, e1 }, SA = Z0, SB = Z0;
   for (int k = 0; k < 8; k++) if (Q[k] >= 0) { if (k < 4) SA |= BIT[(int)Q[k]]; else SB |= BIT[(int)Q[k]]; }
   double kap = toMove == 1 ? EP[6] : -EP[6];
+  int nn = (EVM == 3 && NNOK) || NNFEAT;
   props(E);
   int La = layersQ(SA, E, LA), Lb = layersQ(SB, E, LB);
+  if (nn) nnDist(La, Lb, E);
   terms(La, Lb, kap, 0);
   double t1 = CS0, c1 = CS1, w = CS2, t2 = 0, c2 = 0;
   double e = w > EP[0] ? 1 : w / EP[0];
   if (e > 0) {
     La = layersK(SA, E, LA); Lb = layersK(SB, E, LB);
+    if (nn) nnKing(La, Lb, E);
     terms(La, Lb, kap, 1);
     t2 = CS0; c2 = CS1;
-  }
+  } else if (nn) { KMR[0] = Z0; KMR[2] = Z0; KMR[1] = E; }   // (a separated board: no king distances, "equal" everywhere)
   double mob = 0;
   for (int k = 0; k < 8; k++) {
     if (Q[k] < 0) continue;
@@ -228,7 +336,20 @@ __attribute__((export_name("ev"))) int ev(int me, int toMove) {
     for (int d = 0; d < 8 && n < 5; d++) { const int *r = RAY[f][d]; for (int j = 0, m = RAYN[f][d]; j < m && n < 5 && !SQ[r[j]]; j++) n++; }
     double pen = n == 0 ? 10 : n < 5 ? (5 - n) * 1.4 : 0;
     mob += (k < 4 ? -1 : 1) * pen * (0.25 + 0.75 * e);
+    AMB[k] = (u8)n;
   }
+  if (nn) {   // (from the side to move)
+    double sg = toMove == 1 ? 1 : -1;
+    NFD[0] = (float)(sg * t1); NFD[1] = (float)(sg * e * t1); NFD[2] = (float)(sg * e * t2); NFD[3] = (float)(sg * e * c1); NFD[4] = (float)(sg * e * c2);
+    NFD[5] = (float)(sg * mob); NFD[6] = (float)e; NFD[7] = (float)(92 - pc(E)) * (1.f / 92.f);
+    nnClasses(toMove);
+    if (EVM == 3) {
+      double v = NNOK ? nnOut() : (2.0 - e) * t1 * sg + sg * e * (0.85 * t2 + 0.7 * c1 + 0.6 * c2) + sg * mob;
+      int s = jsRound(v * 100);
+      return me == toMove ? s : -s;
+    }
+  }
+  if (EVM == 3) { double v = (2.0 - e) * t1 + e * (0.85 * t2 + 0.7 * c1 + 0.6 * c2) + mob; int s = jsRound(v * 100); return me == 1 ? s : -s; }   // (no net: v3)
   double v = (EP[1] + EP[2] * e) * t1 + e * (EP[3] * t2 + EP[4] * 2 * c1 + EP[5] * c2) + 1.0 * mob;
   int s = jsRound(v * 100);
   return me == 1 ? s : -s;
@@ -279,6 +400,141 @@ __attribute__((export_name("sqp"))) i8 *sqp(void) { return SQ; }
 __attribute__((export_name("qp"))) i8 *qp(void) { return Q; }
 __attribute__((export_name("omp"))) int *omp(void) { return OM; }
 __attribute__((export_name("osp"))) int *osp(void) { return OS; }
+
+// ================================================================ the separated board (2026-11-20, claude/amazons-spec.md「終盤の数え上げ」)
+// Once no empty square is reachable by both colours (every region of empty squares — king-connected, with the amazons in it —
+// holds amazons of one colour only) the game is a sum of one-player games: each side makes as many moves as it can in its own
+// regions, and the side to move wins iff its count is larger than the opponent's (it moves first). Each move fills exactly one
+// square (the amazon leaves one, takes one, the arrow fills one), so a region of E empty squares gives at most E moves; fewer
+// when it is "defective" (Kloetzer, Iida, Bouzy; Buro: deciding it is NP-hard in general). sepDfs finds the most moves of a
+// region by a depth-first search with a memo (the region's empty squares and amazons as a 64-bit key, kept from call to call)
+// and a node budget: past it only the first (greedy) move of each node is followed, so the value is a lower bound then.
+// The move order: the arrow onto the square with the fewest empty neighbours first (dead ends filled first) — a perfect fill
+// is found on the first line in most regions, and E is the bound that stops the search there.
+static u64 ZEm[NN], ZAm[NN]; static int sepInit = 0;
+static void sepInitZ(void) {
+  if (sepInit) return;
+  u64 z = 0x9E3779B97F4A7C15ULL;
+  for (int i = 0; i < NN; i++) { z ^= z << 13; z ^= z >> 7; z ^= z << 17; ZEm[i] = z * 0xD1B54A32D192ED03ULL; z ^= z << 13; z ^= z >> 7; z ^= z << 17; ZAm[i] = z * 0x94D049BB133111EBULL; }
+  sepInit = 1;
+}
+#ifdef MT
+#define SM_BITS 12   /* (thread-local: its zeros are in core_mt.wasm) */
+#define SMV_N 8192
+#else
+#define SM_BITS 14
+#define SMV_N 16384
+#endif
+static TLS u64 SMEM[1 << SM_BITS];   // key's high 56 bits | exact << 7 | value (≤ 99)
+static TLS i8 SBD[NN];               // 0 empty, 1 an amazon of the region, 3 anything else
+static TLS int sAm[4], sNa, sBud, sCut, sTop, sTopM; static TLS u64 sKey;   // (sTop: the next call is the root — no memo there, its best move in sTopM)
+static TLS int SMV[SMV_N]; static TLS int smvTop;
+static inline int sDeg(int a) { int n = 0; for (int j = 0; j < NBN[a]; j++) n += !SBD[NBS[a][j]]; return n; }
+// the most moves the region's amazons (sAm) can still make; E its empty squares. Lower bound when sCut is set inside.
+static int sepDfs(int E) {
+  if (E <= 0) return 0;
+  int top = sTop; sTop = 0;
+  u64 *slot = &SMEM[(sKey >> 7) & ((1 << SM_BITS) - 1)]; u64 hk = sKey & ~0xFFULL; int lb = 0;
+  if (!top && (*slot & ~0xFFULL) == hk) { int v = (int)(*slot & 127); if (*slot & 128) return v; lb = v; if (sBud <= 0) { sCut = 1; return lb; } }
+  sBud--;
+  int base = smvTop, n = 0, cnt[9] = { 0 };
+  // the moves, bucketed by the arrow square's empty neighbours (after the move)
+  for (int i = 0; i < sNa; i++) {
+    int p = sAm[i];
+    for (int d = 0; d < 8; d++) for (int j = 0; j < RAYN[p][d]; j++) {
+      int t = RAY[p][d][j]; if (SBD[t]) break;
+      SBD[p] = 0; SBD[t] = 1;
+      for (int d2 = 0; d2 < 8; d2++) for (int k = 0; k < RAYN[t][d2]; k++) {
+        int a = RAY[t][d2][k]; if (SBD[a]) break;
+        if (base + n < SMV_N) { SBD[a] = 3; int g = sDeg(a); SBD[a] = 0; SMV[base + n++] = (g << 24) | (i << 21) | (t << 7) | a; cnt[g]++; }
+      }
+      SBD[t] = 0; SBD[p] = 1;
+    }
+  }
+  if (!n) { *slot = hk | 128; return 0; }
+  if (base + 2 * n > SMV_N) { n = (SMV_N - base) / 2; if (n < 1) { sCut = 1; return lb; } }
+  int *ord = SMV + base + n, st[9]; st[0] = 0; for (int g = 1; g < 9; g++) st[g] = st[g - 1] + cnt[g - 1];
+  for (int k = 0; k < n; k++) { int x = SMV[base + k]; ord[st[x >> 24]++] = x & 0xFFFFFF; }
+  smvTop = base + 2 * n;
+  int best = lb, cut0 = sCut; sCut = 0;
+  for (int k = 0; k < n && best < E; k++) {
+    if (k > 0 && sBud <= 0) { sCut = 1; break; }
+    int x = ord[k], i = (x >> 21) & 7, t = (x >> 7) & 127, a = x & 127, p = sAm[i];
+    SBD[p] = 0; SBD[t] = 1; SBD[a] = 3; sAm[i] = t;
+    u64 k0 = sKey; sKey ^= ZAm[p] ^ ZEm[p] ^ ZAm[t] ^ ZEm[t] ^ ZEm[a];
+    int v = 1 + sepDfs(E - 1);
+    sKey = k0; sAm[i] = p; SBD[a] = 0; SBD[t] = 0; SBD[p] = 1;
+    if (v > best || (top && !sTopM)) { if (v > best) best = v; if (top) sTopM = p + 128 * t + 16384 * a; }
+  }
+  smvTop = base;
+  int exact = !sCut || best >= E;
+  *slot = hk | (exact ? 128 : 0) | (u64)best;
+  sCut = cut0 || !exact;
+  return best;
+}
+// the regions: SRG[i] the region of square i (−1: none), per region its colour mask, empty squares and amazons
+static TLS i8 SRG[NN]; static TLS int sRn, sRcol[50], sRE[50], sRam[50][4], sRna[50];
+static int sepRegions(void) {   // 1 = separated
+  for (int i = 0; i < NN; i++) SRG[i] = -1;
+  sRn = 0; int stk[NN];
+  for (int s = 0; s < NN; s++) {
+    if (SRG[s] >= 0 || SQ[s] == 3 || SQ[s] == 0) continue;   // (from the amazons: a region with no amazon does not count)
+    if (sRn >= 50) return 0;
+    int r = sRn++, sp = 0; sRcol[r] = 0; sRE[r] = 0; sRna[r] = 0; SRG[s] = (i8)r; stk[sp++] = s;
+    while (sp) {
+      int x = stk[--sp];
+      if (SQ[x] == 0) sRE[r]++; else { sRcol[r] |= SQ[x]; if (sRna[r] < 4) sRam[r][sRna[r]++] = x; }
+      for (int j = 0; j < NBN[x]; j++) { int y = NBS[x][j]; if (SRG[y] < 0 && SQ[y] != 3) { SRG[y] = (i8)r; stk[sp++] = y; } }
+    }
+    if (sRcol[r] == 3) return 0;
+  }
+  return 1;
+}
+static int sepSolve(int r, int budget) {   // region r's most moves (sCut: a lower bound)
+  int top = sTop;
+  for (int i = 0; i < NN; i++) SBD[i] = SRG[i] == r && SQ[i] == 0 ? 0 : 3;
+  sNa = sRna[r]; sKey = 0;
+  for (int i = 0; i < sNa; i++) { sAm[i] = sRam[r][i]; SBD[sAm[i]] = 1; }
+  for (int i = 0; i < NN; i++) if (SRG[i] == r) sKey ^= SQ[i] == 0 ? ZEm[i] : ZAm[i];
+  sBud = budget; sCut = 0; smvTop = 0; sTop = top;
+  return sepDfs(sRE[r]);
+}
+// the separated board with `side` (1 White, 2 Black) to move: 1 the side to move wins, −1 loses, 0 not separated / not decided.
+// lo / hi: each colour's moves (exact when equal)
+static TLS int sLo[3], sHi[3];
+static int sepProve(int side, int budget) {
+  if (!sepRegions()) return 0;
+  sepInitZ();
+  sLo[1] = sLo[2] = sHi[1] = sHi[2] = 0;
+  for (int r = 0; r < sRn; r++) {
+    int c = sRcol[r]; if (!sRE[r]) continue;
+    int v = sepSolve(r, budget); sLo[c] += v; sHi[c] += sCut ? sRE[r] : v;
+  }
+  int o = 3 - side;
+  if (sLo[side] > sHi[o]) return 1;
+  if (sHi[side] <= sLo[o]) return -1;
+  return 0;
+}
+// the move on a separated board: the first move of the longest fill of one of `side`'s regions (the regions solved exactly
+// first). 0: not separated (or no move). Both sides play best by making the most moves they can, whatever the count.
+static int sepBest(int side, int budget) {
+  if (!sepRegions()) return 0;
+  sepInitZ();
+  int bm = 0, bx = -1;
+  for (int r = 0; r < sRn; r++) {
+    if (sRcol[r] != side || !sRE[r]) continue;
+    sTop = 1; sTopM = 0; int v = sepSolve(r, budget), exact = !sCut;
+    if (v <= 0) continue;
+    int m = sTopM;
+    if (m && (exact ? 1000 : 0) + v > bx) { bx = (exact ? 1000 : 0) + v; bm = m; }
+    if (bx >= 1000) break;
+  }
+  return bm;
+}
+__attribute__((export_name("sep_prove"))) int sep_prove(int side, int budget) { init(); return sepProve(side, budget); }
+__attribute__((export_name("sep_best"))) int sep_best(int side, int budget) { init(); return sepBest(side, budget); }
+__attribute__((export_name("sep_lo"))) int sep_lo(int c) { return sLo[c & 3]; }
+__attribute__((export_name("sep_hi"))) int sep_hi(int c) { return sHi[c & 3]; }
 
 // ================================================================ MCTS with the evaluation (2026-11-10, claude/amazons-spec.md「MCTS」)
 // The way of the strong Amazons programs since Invader-MC (Lorentz, "Amazons discover Monte-Carlo", CG 2008; Kloetzer, Iida,
@@ -344,6 +600,9 @@ static int P_LA = 8;
 // (2026-11-14) The move played (mcts_out's first): among the root's children with at least P_FIN of the most visits, the best
 // value (valOf: the mean mixed with the implicit minimax value) — not only the most visited. 0: the most visited (before).
 static float P_FIN = 0.f;
+// (2026-11-20) A node on a separated board is proven by counting (sepProve, the node budget P_SEP of its search per region;
+// 0: off as before): the side to move wins iff it has more moves left. claude/amazons-spec.md「終盤の数え上げ」
+static int P_SEP = 0;
 // The pool's fill that raises expT (mcts_run) is the larger of the nodes made / the pool and the nodes the search would have
 // made with every child at once (vNodes: K per expansion) / VPOOL: with VPOOL = the pool (a search by visits or evaluations,
 // engine.js) the waits come exactly where they came before (the same tree, the same result); VPOOL = 0 (a search by time):
@@ -445,6 +704,10 @@ static float expand(int ni, int side) {
 #ifdef MT
   u8 z = 0; if (!__atomic_compare_exchange_n(&nd->exp, &z, 2, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) return -1.f;
 #endif
+  if (P_SEP > 0 && ni) {   // (a separated board: proven by the count)
+    int r = sepProve(side, P_SEP);
+    if (r) { nd->proof = (i8)(r > 0 ? -1 : 1); nd->mm = r > 0 ? 0.f : 1.f; nd->nch = 0; nd->full = 1; __atomic_store_n(&nd->exp, 1, __ATOMIC_RELEASE); return nd->mm; }
+  }
   int root = ni == 0, qk = root ? P_QKR : P_QK, n = cand(side, qk, 0), K = root ? P_KR : P_K;
   if (n == 0) { nd->proof = 1; nd->mm = 1.f; nd->nch = 0; nd->full = 1; __atomic_store_n(&nd->exp, 1, __ATOMIC_RELEASE); return 1.f; }   // (the side to move cannot move)
   if (K > n) K = n;
@@ -570,7 +833,7 @@ EXPORT(mcts_set) void mcts_set(int k, float v) {
   switch (k) {
     case 0: P_QK = (int)v; break; case 1: P_K = (int)v; break; case 2: P_QKR = (int)v; break; case 3: P_KR = (int)v; break;
     case 4: P_PO = (int)v; break; case 5: P_S = v; break; case 6: P_NP = v; break; case 7: P_C = v; break; case 8: P_A = v; break;
-    case 9: P_PWA = v; break; case 10: P_PWK = v; break; case 11: P_PWB = v; break; case 12: P_POM = v; break; case 13: VLOSS = v; break; case 14: BIAS0 = v; break; case 15: P_LA = (int)v; break; case 16: VPOOL = v; break; case 17: P_FIN = v; break;
+    case 9: P_PWA = v; break; case 10: P_PWK = v; break; case 11: P_PWB = v; break; case 12: P_POM = v; break; case 13: VLOSS = v; break; case 14: BIAS0 = v; break; case 15: P_LA = (int)v; break; case 16: VPOOL = v; break; case 17: P_FIN = v; break; case 18: P_SEP = (int)v; break;
   }
 }
 // a new tree on the position SQ / Q with `side` to move (the root expanded); seed: the random numbers (the playouts).
@@ -600,10 +863,13 @@ EXPORT(mcts_run) double mcts_run(double ms, double evalLimit, double simLimit) {
 #define HS() 0.0
 #define HE() 0.0
 #endif
+  int dry = 0;   // (visits in a row without an evaluation: a search by evaluations whose window holds only proven children
+                 // — the counts of separated boards, 2026-11-20 — would never end)
   while (!T[0].proof) {
     if (evalLimit > 0 && evalsUsed + HE() >= evalLimit) break;
     if (simLimit > 0 && sims + HS() >= simLimit) break;
-    iterate(); sims += 1; evalsUsed += evn; evn = 0;
+    iterate(); sims += 1; dry = evn ? 0 : dry + 1; evalsUsed += evn; evn = 0;
+    if (dry > 20000 && !simLimit) break;
     double t = now(); if (t >= tEnd) break;
 #ifdef MT
     if (__atomic_load_n(&gStop, __ATOMIC_RELAXED)) break;
