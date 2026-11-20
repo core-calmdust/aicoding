@@ -406,6 +406,60 @@ body.tac:not(.placing) .skills{display:grid}
   :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pwhy{grid-area:wy;justify-self:end;font-size:10.5px;padding:1px 6px}
   :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .plen i{width:6px;height:6px}
 }
+
+/* ========== Luxury everywhere (2026-11-20 user: UIのLuxury化は全てのUIに) — lacquered navy, gilt hairlines and lettering, Mincho headings ========== */
+:root{--gold:#d8b46a;--gold2:#f3dea6;--gold3:#9c7a3c;--gl:rgba(216,180,106,.24);--gl2:rgba(216,180,106,.5);--serif:'Shippori Mincho','Cormorant Garamond',serif;
+  --bg:#060e16;--panel:#0a1722;--panel2:#0f2131;--line:rgba(216,180,106,.2);--text:#efe8d8;--muted:#b4c0c4;--dim:#7d8e95;--accent:#d8b46a;--brass:#d8b46a}
+#newOverlay,#rulesOverlay,#resultOverlay{--ngl-a:#d8b46a;--ngl-hi:#e8cc8a}
+body{background:radial-gradient(1200px 700px at 20% -15%, #15304a 0%, transparent 60%), radial-gradient(900px 600px at 110% 115%, #2a2234 0%, transparent 60%), var(--bg)}
+.series{color:#9c8a66;letter-spacing:.2em}
+.brand h1{font-family:var(--serif);letter-spacing:.16em;background:linear-gradient(180deg,var(--gold2),var(--gold) 55%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand h1 small{-webkit-text-fill-color:var(--gold);border-color:var(--gl2);color:var(--gold);font-family:var(--num);letter-spacing:.2em}
+.snd,#langSel{background:linear-gradient(180deg,#102335,#0a1824);border-color:var(--gl);color:var(--gold2)}
+.snd:hover{border-color:var(--gl2)}
+.card{background:linear-gradient(170deg,#0f2131 0%,#0b1824 60%,#09141e 100%);border:1px solid var(--gl);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 18px 40px -28px rgba(0,0,0,.95)}
+.btn{background:linear-gradient(180deg,rgba(216,180,106,.07),rgba(216,180,106,.015));border-color:var(--gl);color:#cdbf9e;border-radius:8px}
+.btn svg{color:var(--gold)}
+.btn:hover:not(:disabled){border-color:rgba(243,222,166,.7);color:var(--gold2);background:linear-gradient(180deg,rgba(216,180,106,.16),rgba(216,180,106,.04))}
+.btn.primary{border-color:var(--gl2);color:var(--gold2)}
+.btn.on{border-color:var(--gold);color:var(--gold2);background:linear-gradient(180deg,rgba(216,180,106,.2),rgba(216,180,106,.06))}
+.label,.kifu-head b,.evalrow > b,.evalrow > span:first-child{font-family:var(--serif);letter-spacing:.18em;color:#bda873}
+.bhead .bt{font-family:var(--serif);letter-spacing:.16em;color:var(--gold2)}
+.frame{background:linear-gradient(160deg,#0f2232,#081521);border-color:var(--gl2);box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 0 0 4px rgba(6,14,22,.9),inset 0 0 0 5px var(--gl),0 30px 60px -26px rgba(0,0,0,.9)}
+.toast{background:rgba(6,14,22,.92);border-color:var(--gl2);color:var(--gold2);font-family:var(--serif);letter-spacing:.12em}
+.toast.hit{border-color:rgba(255,143,107,.6);color:#ffb39a}
+.deploy h3,.draft .dh b{font-family:var(--serif);letter-spacing:.16em;color:var(--gold2)}
+.deploy .acts button,#btnDrStop,.mbtn{border-radius:6px;border:1px solid var(--gl2);background:linear-gradient(180deg,rgba(216,180,106,.10),rgba(216,180,106,.03));color:#ead9ae;font-family:var(--serif);font-weight:600;letter-spacing:.2em;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.deploy .acts button:hover,#btnDrStop:not(:disabled):hover,.mbtn:hover{border-color:rgba(243,222,166,.85);color:#fff6dc;background:linear-gradient(180deg,rgba(216,180,106,.22),rgba(216,180,106,.08))}
+.deploy .acts button.go,.mbtn.go{border-color:var(--gold);color:#fff3d6;background:linear-gradient(180deg,#183248,#0e2131);box-shadow:0 0 0 1px rgba(216,180,106,.25),0 0 22px -10px rgba(216,180,106,.6)}
+#btnDrStop:disabled{border-color:rgba(255,255,255,.07);background:transparent;color:#5f6f77}
+.mini{border-color:var(--gl);background:#081521}.mini:hover{border-color:var(--gl2)}
+.fl .fh b{font-family:var(--serif);letter-spacing:.1em;color:#f1e6c8}
+.fl.turn .fh b::after{background:var(--gold)}
+.status{background:rgba(2,8,14,.45);border-color:var(--gl);color:#efe6cf}
+.evalbar{background:#2a1f26}.evalbar .fill{background:linear-gradient(90deg,#9c7a3c,#e8cc8a)}
+.kifu .k i{background:var(--gold)}.kifu .k .s{color:var(--gold2)}
+.sk{border-radius:8px;border-color:var(--gl);background:linear-gradient(180deg,rgba(216,180,106,.06),rgba(216,180,106,.01))}
+.sk svg{color:var(--gold)}
+.sk.ready{border-color:var(--gl2);color:var(--gold2)}.sk.ready small{color:var(--gold)}
+.sk.ready:hover{border-color:rgba(243,222,166,.85);background:linear-gradient(180deg,rgba(216,180,106,.18),rgba(216,180,106,.05))}
+.sk.armed{background:linear-gradient(180deg,#1b3850,#10263a);border-color:var(--gold);color:#fff3d6;box-shadow:0 0 0 1px rgba(216,180,106,.3),0 0 22px -8px rgba(216,180,106,.7)}.sk.armed small{color:var(--gold2)}.sk.armed svg{color:var(--gold2)}
+.modal{background:radial-gradient(130% 90% at 50% -20%,#17314a 0%,#0c1c2b 50%,#070f18 100%);border:1px solid var(--gl2);box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 0 0 5px rgba(8,20,32,.9),inset 0 0 0 6px var(--gl),0 40px 90px -30px rgba(0,0,0,.9)}
+.modal h2{font-family:var(--serif);letter-spacing:.18em;background:linear-gradient(180deg,var(--gold2),var(--gold) 55%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent}
+/* the draft card on the side: one button and a compact row per side */
+#btnPick{height:44px}
+.draft .dw{display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;padding:9px 12px;border-radius:8px;border:1px solid var(--gl);background:rgba(2,8,14,.35);cursor:pointer;text-align:start;float:none;height:auto}
+.draft .dw:hover{border-color:var(--gl2)}.draft .dw.turn{border-color:var(--gold);box-shadow:0 0 18px -10px rgba(216,180,106,.7)}
+.draft .dw b{font-family:var(--serif);letter-spacing:.08em;color:#f1e6c8;font-size:14px;white-space:nowrap}
+.draft .dw .pips{flex:1;min-width:0;margin:0;overflow:hidden}.draft .dw .pip i{background:#c7b48a}
+.draft .dw em{font-style:normal;font-family:var(--num);font-size:13px;color:var(--muted);white-space:nowrap}
+#drWho{display:block}#btnDrStop{margin-top:10px}
+.draft .dw.flv{margin:8px 0 0;float:none;font-size:inherit}
+.flv.eye{width:28px;height:24px;padding:0;display:inline-grid;place-items:center;margin-inline-start:6px;border-radius:6px;border:1px solid var(--gl);background:rgba(0,0,0,.25);color:var(--gold)}.flv.eye svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7}.flv.eye:hover{border-color:var(--gl2);color:var(--gold2)}
+#flFoe .cds span{border-color:var(--gl);color:#cdbf9e}#flFoe .cds span.r{border-color:var(--gl2);color:var(--gold2)}
+/* the dialogs shared with the series (new game, rules, results) */
+#newOverlay .modal,#rulesOverlay .modal,#resultOverlay .modal,#shipsOverlay .modal{border-radius:18px}
+#shipsOverlay .modal h2{margin-bottom:10px}#shipList .sl{border-top-color:var(--gl)}#shipList .sl b{font-family:var(--serif);color:#f1e6c8}#shipList .sl .dc{color:var(--gold)}
 </style>
 </head>
 <body class="no-online placing">
@@ -430,7 +484,7 @@ body.tac:not(.placing) .skills{display:grid}
     </div>
   </div>
   <aside class="side">
-    <div class="card draft" id="draftCard"><div class="dh"><b data-i18n="dr.t"></b><button id="btnShipList" data-i18n="dr.all"></button><span id="drTurn"></span></div><div id="drRows"></div><div id="drWho"></div><button id="btnDrStop" data-i18n="dr.stop"></button></div>
+    <div class="card draft" id="draftCard"><div class="dh"><b data-i18n="dr.t"></b><span id="drTurn"></span></div><div id="drRows"></div><div id="drWho"></div><button id="btnDrStop" data-i18n="dr.stop"></button></div>
     <div class="card skills" id="skillCard"></div>
     <div class="card deploy" id="deployCard">
       <h3 data-i18n="dep.t"></h3><p id="depText"></p>
@@ -439,8 +493,8 @@ body.tac:not(.placing) .skills{display:grid}
     <div class="card radar" id="radarCard">
       <button class="mini" id="miniBtn"><svg id="msvg" xmlns="http://www.w3.org/2000/svg"></svg><span class="cap" id="miniCap"></span></button>
       <div class="fleets">
-        <div class="fl foe" id="flFoe"><div class="fh"><b></b><button class="flv" data-p="1" data-i18n="fv.see"></button><span></span></div><div class="pips"></div><div class="cds"></div></div>
-        <div class="fl" id="flMe"><div class="fh"><b></b><button class="flv" data-p="0" data-i18n="fv.see"></button><span></span></div><div class="pips"></div></div>
+        <div class="fl foe" id="flFoe"><div class="fh"><b></b><button class="flv eye" data-p="1" data-i18n-title="fv.see" title=""><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button><span></span></div><div class="pips"></div><div class="cds"></div></div>
+        <div class="fl" id="flMe"><div class="fh"><b></b><button class="flv eye" data-p="0" data-i18n-title="fv.see" title=""><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button><span></span></div><div class="pips"></div></div>
       </div>
     </div>
     <div class="status" id="status" aria-live="polite"></div>
@@ -498,7 +552,7 @@ body.tac:not(.placing) .skills{display:grid}
 <script src="engine.js?v=23"></script>
 <script src="board.js?v=10"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=34"></script>
+<script src="app.js?v=36"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
