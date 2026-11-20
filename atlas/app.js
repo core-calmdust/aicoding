@@ -3224,6 +3224,9 @@
     sfx: k => { try { (SFX[k] || SFX.tap)(); } catch (e) {} }, confetti: n => confetti(n),
     playable: () => A_.GAMES.filter(g => (window.Atlas3D && Atlas3D[g.id] && Atlas3D[g.id].table) || (window.AtlasLazy && AtlasLazy.hasPlay(g.id))).map(g => g.id),
     levels: id => (window.Atlas3D && Atlas3D[id] && Atlas3D[id].levels) || (window.AtlasNPC && AtlasNPC.LEVELS && AtlasNPC.LEVELS[id]) || 0 });
+  { const dt = document.querySelector('#pg-dress .dtop');   // きせかえの上の段: a backing only while it is stuck under the header
+    if (dt) { const chk = () => { const top = parseFloat(getComputedStyle(dt).top) || 0; dt.classList.toggle('stuck', dt.offsetParent !== null && dt.getBoundingClientRect().top <= top + .5 && scrollY > 4); };
+      addEventListener('scroll', chk, { passive: true }); addEventListener('resize', chk); } }
   applyLang(); refresh(); dsegPos();
   const [h0, h1] = (location.hash || '#home').slice(1).split('/');
   go(h0, false);

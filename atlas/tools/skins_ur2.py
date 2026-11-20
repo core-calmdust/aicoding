@@ -230,7 +230,7 @@ def cover_finish(img, seed):
     return grain(img, .004, seed)
 
 if __name__ == '__main__':
-    ids = sys.argv[1:] or ['s89', 's90', 's91', 's92', 's93', 's94', 's95']
+    ids = sys.argv[1:] or ['s91', 's92', 's93', 's94', 's95']
     jobs = {'s89': (stained(0), OW, OH), 's89b': (stained(1), OW, OH), 's90': (kaleido(0), OW, OH), 's90b': (kaleido(1), OW, OH),
             's92': (cloisonne(), 1024, 1024), 's93': (night_fair(0), OW, OH), 's93b': (night_fair(1), OW, OH),
             's94': (makie(0), OW, OH), 's94b': (makie(1), OW, OH), 's95': (damask(), 1024, 1024)}

@@ -918,7 +918,7 @@ SKINS = {
     's35': (old_map_cover, 'cover'), 's36': (lambda: starry_cover(seed=157, aurora=True), 'cover'),
     's37': (celestial_cover, 'cover'), 's38': (lambda: washi(base='#f7efe0', gold=True, seed=163), 'tile'),
     's39': (lambda: marble(gold=True, seed=167), 'tile'),
-    's40': (opal_cover, 'cover'), 's40b': (lambda: opal_cover(shift=.33), 'cover'),
+    # s40 (opal) retired 2026-11-20 → atlas/tools/skins_ur3.py (天灯まつり)
 }
 
 # ================================================================ s41 … s99 (2026-11-20：計100種に)
