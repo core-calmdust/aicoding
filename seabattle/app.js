@@ -616,9 +616,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeNew()
 function applyLang() {
   document.documentElement.lang = LANG;
   $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); }); $$('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
-  $('#ttlName').textContent = 'FLEET TACTICS';   // the logo (2026-11-20 user: FLEET TACTICS — 海戦ゲーム —; the atlas lists keep 海戦ゲーム)
-  $('#ttlSub').textContent = $('#ttlSub2').textContent = '— ' + t('title') + ' —';
-  document.title = 'FLEET TACTICS — ' + t('title') + ' | ' + t('series');
+  $('#ttlName').textContent = 'DREADNOUGHTS';   // the logo (2026-11-21 user: DREADNOUGHTS: FLEET TACTICS; the atlas lists keep 海戦ゲーム)
+  $('#ttlSub').textContent = $('#ttlSub2').textContent = 'FLEET TACTICS';
+  document.title = 'DREADNOUGHTS: FLEET TACTICS — ' + t('title') + ' | ' + t('series');
   $('#depText').textContent = t(PCQ.matches ? 'dep.b.pc' : 'dep.b');
   if (window.Resign) $('#btnResign span').textContent = Resign.label(LANG);
   if (HB && HB.relabel) HB.relabel();
