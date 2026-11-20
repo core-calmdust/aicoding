@@ -237,7 +237,7 @@ function renderDraft() {
   // a card can be chosen if it fits beside the ones already chosen (cost); when the run is full a tap swaps it for the last one chosen
   const fits = k => { if (pickSel.includes(k)) return true; const rest = pickSel.length < run ? pickSel : pickSel.slice(0, -1); return costOf(rest.concat(k)) <= E.draftLeft(d, 0); };
   const card = k => { const T = E.TYPES[k], have = d.picks[0].filter(x => x === k).length, taken = have >= E.MAXSAME, dup = have > 0 && !taken, cost = E.pickCost(d, 0, k), can = mine && E.draftCan(d, 0, k) && fits(k), sel = pickSel.includes(k);
-    const why = taken ? t('pk.taken') : !d.pool[k] ? t('pk.gone') : cost > E.draftLeft(d, 0) - (mine && !sel ? selCost : 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : '';
+    const why = taken ? t('pk.taken') : !d.pool[k] ? t('pk.gone') : cost > E.draftLeft(d, 0) - (mine && !sel ? selCost : 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : mine && !E.canReachMin(d, 0, k) ? t('pk.min') : '';
     const kind = T.skill ? t('pk.active', { n: T.cd }) : PASSIVE_T(T) ? t('pk.passive') : t('pk.none');
     return `<div class="pc g${ROLE_OF(k)}${can ? ' can' : ' off'}${taken ? ' taken' : ''}${dup ? ' dup' : ''}${sel ? ' sel' : ''}" data-k="${k}" aria-pressed="${sel}" ${can ? 'role="button" tabindex="0"' : ''} title="${can ? t('pk.tap') : why}"><div class="pt"><span class="pcost">${cost}</span><b>${t('ship.' + k)}</b>${lenIcon(T.len)}<em>×${d.pool[k]}</em></div>
       <div class="pa">${cardArt(T)}</div>
@@ -482,13 +482,28 @@ async function playerNoAim(i) {
   if (st.turn === 1) return aiTurn();
   G.busy = false; render();
 }
+// Lv.19–20 think ahead (engine planAction) in a worker; anything that goes wrong falls back to the plain choice
+let aiW = null, aiWid = 0;
+function planMove(st, level) {
+  const plain = () => E.chooseAction(st, level, Math.random);
+  if (!E.PLAN || !E.PLAN[level]) return Promise.resolve(plain());
+  if (aiW === null) { try { aiW = new Worker('ai-worker.js?v=1'); } catch (e) { aiW = false; } }
+  if (!aiW) return Promise.resolve(E.planAction(st, level, Math.random));
+  const id = ++aiWid, engine = new URL($('script[src^="engine.js"]').getAttribute('src'), location.href).href;
+  return new Promise(res => {
+    let done = false; const fin = a => { if (done) return; done = true; aiW.removeEventListener('message', on); clearTimeout(tm); res(a || plain()); };
+    const on = e => { if (e.data && e.data.id === id) fin(e.data.a); }, tm = setTimeout(() => fin(null), 6000);
+    aiW.addEventListener('message', on); aiW.onerror = () => fin(null);
+    try { aiW.postMessage({ engine, st, level, id }); } catch (e) { fin(null); }
+  });
+}
 async function aiTurn() {
   const st = G.st; G.busy = true; render();
   await sleep(520); if (G.st !== st) return;
   await swapView('own');
   while (G.st === st && st.winner < 0 && st.turn === 1) {
-    await sleep(480); if (G.st !== st) return;
-    const res = await doAction(E.chooseAction(st, G.level, Math.random)); if (!res) return;
+    const [a] = await Promise.all([planMove(st, G.level), sleep(480)]); if (G.st !== st) return;   // (thinking overlaps the pause)
+    const res = await doAction(a); if (!res) return;
     await sleep(res.again ? 260 : 620);
   }
   if (G.st !== st) return;

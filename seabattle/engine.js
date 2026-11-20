@@ -477,7 +477,7 @@ function levelSpec(lv) {
   const x = (20 - lv) / 19;
   return { eps: EPS1 * Math.pow(x, EPSP), follow: Math.min(1, FOL1 + (1 - FOL1) * (lv - 1) / 12) };
 }
-let EPS1 = 1, EPSP = .7, FOL1 = .2;
+let FORCE = -1; let EPS1 = 1, EPSP = .7, FOL1 = .2;
 function choose(side, level, adj, rnd, scans) {
   rnd = rnd || Math.random;
   const v = view(side, scans), L = levelSpec(level);
@@ -505,11 +505,12 @@ function chooseAction(st, level, rnd) {
   const by = st.turn, T = st.sides[1 - by], scans = st.scans[by];
   const shot = () => { let cell = choose(T, level, st.adj, rnd, scans); if (cell < 0) for (let i = 0; i < NN; i++) if (!T.shots[i] || T.shots[i] === 3) { cell = i; break; } return { cell }; };   // (a last resort when smoke hides every square left)
   if (!st.cd || st.rapid) return shot();
-  const ready = []; st.cd[by].forEach((c, i) => { if (skillReady(st, by, i)) ready.push(i); });
-  if (!ready.length || rnd() < levelSpec(level).eps * .9) return shot();
+  let ready = []; st.cd[by].forEach((c, i) => { if (skillReady(st, by, i)) ready.push(i); });
+  if (FORCE >= 0) { if (!ready.includes(FORCE)) return null; ready = [FORCE]; }   // (the planner asks: the best use of this one skill)
+  else if (!ready.length || rnd() < levelSpec(level).eps * .9) return shot();
   const v = view(T, scans), p = probs(v, st.adj), P = prep(v, st.adj), dn = dented(v);
   let best = { cell: dn >= 0 ? dn : argmax(p, v, rnd) }, bv = dn >= 0 ? 1 : best.cell >= 0 ? p[best.cell] : 0; if (best.cell < 0) return shot();
-  const shotCell = best.cell;
+  const shotCell = best.cell; if (FORCE >= 0) { bv = -1e9; best = null; }
   const top2 = () => { let a = 0, b = 0; for (let i = 0; i < NN; i++) { if (v.shots[i]) continue; const x = p[i]; if (x > a) { b = a; a = x; } else if (x > b) b = x; } return a + b; };
   const Me = st.sides[by], myV = view(Me), myP = prep(myV, st.adj), foeAA = !T.supp && T.ships.some((s, i) => TYPES[s.t].aa && !T.sunk[i]), foeNet = !T.supp && T.ships.some((s, i) => TYPES[s.t].net && !T.sunk[i]);
   for (const i of ready) {
@@ -604,6 +605,47 @@ function winProb(st, me, rnd, n) {
 const COLS = 'ABCDEFGHIJ';
 function cellName(cell) { return COLS[cell % N] + ((cell / N | 0) + 1); }
 
-const E = { pickCost, DUP_EXTRA, ROLE, FIELD_N, FIELD_MIX, FIELD_ONE, calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
+
+// ---- 先読み (Lv.19–20; 2026-11-20 user: Lv20 でも勝てすぎる) ----
+// Candidates: the usual choice, the best use of each skill that is ready, and the plain shot. Each is tried on fleets imagined
+// from what the AI knows of the enemy (sample — never the real one), and the game is played out by the Lv.20 policy; the move
+// that wins most often is taken. Only when a skill is ready (shooting alone is already near the best possible).
+// Self-play against plain Lv.20: 40 playouts per candidate 57%, 120 → 62%.
+function deep(x) { if (ArrayBuffer.isView(x)) return x.slice(); if (Array.isArray(x)) return x.map(deep); if (x && typeof x === 'object') { const o = {}; for (const k in x) o[k] = deep(x[k]); return o; } return x; }
+function determinize(st, me, rnd) {
+  const real = st.sides[1 - me], v = view(real, st.scans && st.scans[me]); let f = null;
+  for (let t = 0; t < 6 && !f; t++) f = sample(v, st.adj, rnd);
+  if (!f) return null;
+  const s2 = deep(Object.assign({}, st, { log: st.log.slice(-12), acts: [] })), S = s2.sides[1 - me];
+  const pool = f.map(cs => cs.slice().sort((a, b) => a - b));
+  S.ships.forEach((sh, i) => { if (S.sunk[i]) return; const j = pool.findIndex(cs => cs.length === sh.len); if (j < 0) return; const cs = pool.splice(j, 1)[0]; sh.r = (cs[0] / N) | 0; sh.c = cs[0] % N; sh.h = cs.length > 1 && cs[1] - cs[0] === 1 ? 1 : 0; });
+  S.grid = gridOf(S.ships.map(sh => ({ r: sh.r, c: sh.c, len: sh.len, h: sh.h })));
+  for (let c = 0; c < NN; c++) if (v.shots[c] === 4) S.shots[c] = S.grid[c] >= 0 ? 2 : 1;   // (under smoke: what it would be on this imagined fleet)
+  S.hitsOn = S.ships.map(sh => { let k = 0; for (const c of shipCells(sh)) if (S.shots[c] === 2) k++; return k; });
+  const nm = S.mines.length; S.mines = []; for (let g = 0; g < 200 && S.mines.length < nm; g++) { const c = rnd() * NN | 0; if (!S.shots[c] && S.grid[c] < 0 && !S.mines.includes(c)) S.mines.push(c); }   // (their mines are hidden too)
+  return s2;
+}
+function playOut(st, rnd, cap) { let n = 0; while (st.winner < 0 && n < cap) { const a = chooseAction(st, 20, rnd); if (!a || !act(st, a)) break; n++; } return st.winner; }
+const PLAN = { 19: { R: 40, ms: 700 }, 20: { R: 400, ms: 1200, min: 60 } };
+function planAction(st, level, rnd, now) {
+  rnd = rnd || Math.random; now = now || (() => Date.now()); const me = st.turn, cfg = PLAN[level];
+  const base = chooseAction(st, level, rnd); if (!cfg || !st.cd || st.rapid || !base) return base;
+  const ready = []; st.cd[me].forEach((c, i) => { if (skillReady(st, me, i)) ready.push(i); });
+  if (!ready.length) return base;
+  const cands = [base], key = a => JSON.stringify(a);
+  for (const i of ready) { FORCE = i; let a = null; try { a = chooseAction(st, 20, rnd); } finally { FORCE = -1; } if (a && !cands.some(b => key(b) === key(a))) cands.push(a); }
+  if (base.skill) { const v = view(st.sides[1 - me], st.scans && st.scans[me]), p = probs(v, st.adj), dn = dented(v); const c = dn >= 0 ? dn : argmax(p, v, rnd); if (c >= 0) cands.push({ cell: c }); }
+  if (cands.length < 2) return base;
+  const wins = cands.map(() => 0), seen = cands.map(() => 0), t0 = now();
+  for (let r = 0; r < cfg.R; r++) {
+    if (r >= (cfg.min || cfg.R) && now() - t0 > cfg.ms) break;
+    const det = determinize(st, me, rnd); if (!det) continue; const seed = (rnd() * 1e9) | 0;
+    cands.forEach((a, j) => { const s2 = deep(det); if (!act(s2, a)) return; seen[j]++; if (playOut(s2, rng(seed), 300) === me) wins[j]++; });
+  }
+  let bj = 0, bv = -1; cands.forEach((a, j) => { const x = seen[j] ? (wins[j] + (j === 0 ? .5 : 0)) / (seen[j] + 1) : -1; if (x > bv) { bv = x; bj = j; } });
+  return cands[bj];
+}
+
+const E = { canReachMin, planAction, PLAN, pickCost, DUP_EXTRA, ROLE, FIELD_N, FIELD_MIX, FIELD_ONE, calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
 if (typeof module !== 'undefined' && module.exports) module.exports = E; else root.SeaEngine = E;
 })(typeof self !== 'undefined' ? self : this);
