@@ -2717,7 +2717,7 @@
      The page: the totals, 「もうすぐ達成」(the nearest to done, one per group, three at most), then one tile per group (共通 + each game: icon,
      name, progress), the games under the ゲーム list's category headings. A tile opens its awards right under its own row (one group open at a time; the tile again closes it).
      Only the open group's cards are in the page — it used to build all 1,400 cards at once (20,000 elements, 1,700 pictures). */
-  let achF = '', achS = 'all';   // achF: the open group ('' none · 'common' · a game's id); achS: done / to-do filter
+  let achC = '', achF = '', achS = 'all';   // achC: the category shown;   // achF: the open group ('' none · 'common' · a game's id); achS: done / to-do filter
   const achGrp = a => a.gid || 'common';
   const achSort = (a, b) => (b.done - a.done) || (a.done ? 0 : (b.have / b.need) - (a.have / a.need));
   function renderAch(keep) {
@@ -2746,14 +2746,24 @@
         <b class="nm">${esc(l)}</b><span class="bar"><i style="width:${n / all.length * 100}%"></i></span><em><b>${n}</b> / ${all.length}</em><i class="cv" aria-hidden="true"></i></button>`
         + (open ? `<div class="agp" data-for="${k}"><div class="alist">${all.filter(show).sort(achSort).map(a => achHtml(a, true)).join('')}</div></div>` : '');
     };
-    // sections as the ゲーム list's: 共通 first, then the same categories in the same order (card games together), each under its heading
-    const catOf = g => g.tags.includes('card') ? 'card' : g.cat;
-    const secs = [['', groups.filter(x => !x[2])], ...A_.CATS.map(c => [c, groups.filter(x => x[2] && catOf(x[2]) === c)]), ['?', groups.filter(x => x[2] && !A_.CATS.includes(catOf(x[2])))]].filter(([, a]) => a.length);
-    $('achList').innerHTML = secs.map(([c, a]) => { const all = a.flatMap(([k]) => by[k]), n = all.filter(x => x.done).length;
-      return `<section class="lxa agsec${a.length === 1 ? ' one' : ''}">${c && c !== '?' ? head(t('cat.' + c), n, all.length) : ''}<div class="agl">${a.map(tile).join('')}</div></section>`; }).join('');
-    $('achList').querySelectorAll('.agt').forEach(b => b.onclick = () => { const k = b.dataset.k; achF = achF === k ? '' : k; SFX.tap && SFX.tap(); renderAch(k); });
+    // (2026-11-21 ユーザー：共通は合計のシートに、スクロールをあまりしないで済む形に) two sheets only. The first: the totals, もうすぐ達成 and
+    // the 共通 row. The second: the games — the ゲーム list's categories as a row of tabs (name + n / all), and under it only the
+    // chosen category's rows. The whole page fits a screen on PC; a phone scrolls a category's rows at most.
+    const com = groups.filter(x => !x[2]);
+    $('achCom').hidden = !com.length; $('achCom').innerHTML = com.map(tile).join('');
+    const catOf = g => { const c = g.tags.includes('card') ? 'card' : g.cat; return A_.CATS.includes(c) ? c : A_.CATS[A_.CATS.length - 1]; };
+    const cats = A_.CATS.map(c => [c, groups.filter(x => x[2] && catOf(x[2]) === c)]).filter(([, a]) => a.length);
+    if (achF && achF !== 'common') { const g = A_.GAMES.find(x => x.id === achF); if (g) achC = catOf(g); }   // (the open game's category is the one shown)
+    if (!cats.some(([c]) => c === achC)) achC = cats.length ? cats[0][0] : '';
+    const cur = cats.find(([c]) => c === achC);
+    $('achList').hidden = !cats.length;
+    $('achList').innerHTML = cats.length ? `<div class="lxtabs" role="tablist" style="--n:${cats.length}">${cats.map(([c, a]) => { const all = a.flatMap(([k]) => by[k]), n = all.filter(x => x.done).length;
+      return `<button type="button" class="lxtab" role="tab" aria-selected="${c === achC}" data-c="${c}"><span>${esc(t('cat.' + c))}</span><em><b>${n}</b> / ${all.length}</em></button>`; }).join('')}</div>
+      <div class="agl${cur[1].length === 1 ? ' one' : ''}" role="tabpanel">${cur[1].map(tile).join('')}</div>` : '';
+    $('achList').querySelectorAll('.lxtab').forEach(b => b.onclick = () => { if (achC === b.dataset.c) return; achC = b.dataset.c; if (achF !== 'common') achF = ''; SFX.tap && SFX.tap(); renderAch(); });
+    $('pg-ach').querySelectorAll('.agt').forEach(b => b.onclick = () => { const k = b.dataset.k; achF = achF === k ? '' : k; SFX.tap && SFX.tap(); renderAch(k); });
     // a tile just opened / closed: keep it in view (the page's height changed above or below it)
-    if (keep) { const tile = $('achList').querySelector(`.agt[data-k="${keep}"]`); if (tile) { const hd = document.querySelector('header'), top = (hd && getComputedStyle(hd).position !== 'static' ? hd.getBoundingClientRect().bottom : 0) + 10, r = tile.getBoundingClientRect();
+    if (keep) { const tile = $('pg-ach').querySelector(`.agt[data-k="${keep}"]`); if (tile) { const hd = document.querySelector('header'), top = (hd && getComputedStyle(hd).position !== 'static' ? hd.getBoundingClientRect().bottom : 0) + 10, r = tile.getBoundingClientRect();
       if (r.top < top || r.top > innerHeight * .6) scrollBy({ top: r.top - top, behavior: 'smooth' }); } }
   }
 
