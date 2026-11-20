@@ -206,7 +206,7 @@ function init() {
   // the chosen variant's name (under ルール)
   const gameName = () => {
     const g = modal.querySelector('[data-ng=game]'); if (!g) return '';
-    const card = [...g.querySelectorAll('.ngt-gcard')].find(isSel); if (card) { const b = card.querySelector('b'); return (b ? b.textContent : card.textContent).trim(); }
+    const card = [...modal.querySelectorAll('[data-ng=game] .ngt-gcard')].find(isSel); /* (the cards in any game block: another block, e.g. a format switch, may come first — 2026-11-20) */ if (card) { const b = card.querySelector('b'); return (b ? b.textContent : card.textContent).trim(); }
     const btn = [...g.querySelectorAll('button')].find(isSel); if (btn) return btn.textContent.trim();
     const s = g.querySelector('select'); return s && s.selectedOptions[0] ? s.selectedOptions[0].text.trim() : '';
   };
@@ -277,7 +277,7 @@ function init() {
   // (the block shown / hidden → the tabs; otherwise only the name; sync() itself toggles .ngt-hide on the block, so compare first)
   const tkey = () => tabs().join() + hasGame();
   let tk = tkey();
-  if (g) new MutationObserver(() => { const k = tkey(); if (k !== tk) { tk = k; sync(); return; } sizeCards(); const n = gameName(), sm = bar.querySelector('small'); if (sm && sm.textContent !== n) sm.textContent = n; }).observe(g, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'aria-pressed', 'aria-checked'] });
+  if (g) { const mo = new MutationObserver(() => { const k = tkey(); if (k !== tk) { tk = k; sync(); return; } sizeCards(); const n = gameName(), sm = bar.querySelector('small'); if (sm && sm.textContent !== n) sm.textContent = n; }); modal.querySelectorAll('[data-ng=game]').forEach(b => mo.observe(b, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'aria-pressed', 'aria-checked'] })); }   // (every game block: 2026-11-20)
   new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   if (MQ.addEventListener) MQ.addEventListener('change', sync); else MQ.addListener(sync);
   // (phone landscape: html.ngt-land — the CSS above makes the sheet denser)

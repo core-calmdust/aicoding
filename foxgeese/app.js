@@ -46,7 +46,7 @@ const isPass = m => m < 0;
 
 // ====================================================================== state
 const STORE = 'aicoding-foxgeese';
-const settings = { mode: 'ai', rule: E.DEFAULT_RULE, first: P1, color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'meadow', pcs: 'cute', dv: 2, quiet: 40 };
+const settings = { mode: 'ai', rule: E.DEFAULT_RULE, first: P1, color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'meadow', pcs: 'cute', dv: 2, quiet: 40, fmt: 'match' };
 const SUPPORTED_ALL = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 // the languages whose game texts are complete (i18n-fg.js / i18n-fg-more.js: a language without its own 'title' is not offered)
 const SUPPORTED = SUPPORTED_ALL.filter(l => l === 'ja' || l === 'en' || (window.FG_LANGS || []).includes(l));
@@ -104,6 +104,7 @@ function load() {
       if (!validMoves(d.moves)) return false;
       moves = d.moves; humanColor = d.humanColor || 1; manualEnd = d.end && d.end.n === d.moves.length ? d.end : null; evals = Array.isArray(d.evals) ? d.evals : [];
       rgame = d.rated && d.rated.id ? d.rated : null; if (rgame && !rgame.over) { rgame.t = Date.now(); rtHold = true; }
+      mt = d.mt && d.mt.g ? d.mt : null;
       cur = moves.length; gameOverShown = statusAt(cur).over;
       return true;
     }
@@ -113,7 +114,7 @@ function load() {
 function save() {
   if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp' }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, first: gfirst, quiet: gq, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, end: manualEnd })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, first: gfirst, quiet: gq, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, end: manualEnd, mt })); } catch (e) {}
 }
 
 // ====================================================================== engine workers
@@ -499,7 +500,7 @@ function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
   if (lesson) return '';
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
-  if (settings.mode === 'pvp') return '';
+  if (settings.mode === 'pvp') return mt ? t('mt.p' + mtParty(p)) : '';
   if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p), p)}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
   return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
@@ -533,7 +534,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
   renderReview();
-  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
+  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}${mt && !lesson && !puzzle ? '  ·  ' + mtChip() : ''}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
@@ -547,6 +548,7 @@ function hbInfo(pos, st) {
   let h = `<span class="hb-chip"><i class="pdisc p${st.over ? (st.winner || tm) : tm}"></i><b>${escHb(st.over ? (st.winner ? t('hb.won', { c: pname(st.winner) }) : t('res.draw')) : pos.placing ? t('hb.place', { c: pname(tm) }) : t('hb.turn', { c: pname(tm) }))}</b></span>`;
   for (const p of [P1, P2]) h += `<span class="hb-chip cnt"><i class="pdisc p${p}"></i><b>${p === P1 ? pos.cap : pos.geese}</b><small>${escHb(t(p === P1 ? 'pcs.fox' : 'pcs.geese'))}</small></span>`;
   h += `<span class="hb-chip opt">${escHb(t('rule.' + gv))}</span>`;
+  if (mt && !lesson && !puzzle) h += `<span class="hb-chip">${escHb(mtChip())}</span>`;
   if (gq !== E.DEFAULT_QUIET) h += `<span class="hb-chip opt">${escHb(t('ng.quietN', { n: gq }))}</span>`;
   const evOn = settings.eval && !lesson && !puzzle && !rtLive() && !(window.olLive && olLive());
   if (evOn && $('#evalText').textContent && $('#evalText').textContent !== '—') h += `<span class="hb-chip opt">${escHb(t('eval'))} <b>${escHb($('#evalText').textContent)}</b></span>`;
@@ -678,12 +680,14 @@ function commit(m) {
 }
 
 // ====================================================================== flow
-function newGame(rated) {
+function newGame(rated, next) {   // next: the second game of a 交代2局戦 ({ hc }: the human's side in it)
   busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; wpPaused = false;
+  if (!next) mt = mtWanted() ? { g: 1 } : null;
   rgame = null; rtHold = false; settings.rsNoRec = false;
   if (rated) rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() });
   startSpec = null; setFirst(rated ? P1 : settings.first); setQuietG(rated ? E.DEFAULT_QUIET : settings.quiet);   // (rated games: the fox always moves first, the sides are drawn; the default quiet-move limit)
   if (settings.mode === 'ai') humanColor = rated ? (Math.random() < 0.5 ? P1 : P2) : settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
+  if (next) humanColor = next.hc;
   moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; sel = null; manualEnd = null; aiVals = []; drawAsked = -99;
   hideOverlay('#resultOverlay');
   request('ai', { type: 'newgame' });
@@ -824,7 +828,8 @@ function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
   gameOverShown = true;
-  recordGame(st);
+  if (mt && (settings.mode === 'ai' || settings.mode === 'pvp')) { mtEnd(st); return; }
+  recordGame(st); $('#btnAgain').textContent = t('res.again');
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
   const aiWin = settings.mode === 'ai' && st.winner && st.winner !== humanColor;
   playChime(!aiWin);
@@ -838,6 +843,65 @@ function onGameEnd(st) {
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level) });
   $('#resultSub').innerHTML = sub;
   { const ref = moves; setTimeout(() => { if (moves === ref && !lesson && !puzzle) showOverlay('#resultOverlay'); }, 700); }
+}
+// ====================================================================== 交代2局戦 (2026-11-20 user: the game is lopsided — the geese win
+// with correct play — so by default two games are played with the roles swapped; whoever took more geese as the fox wins, a tie goes
+// to whoever trapped the fox in fewer moves). AI, two-player and rated games (the rated ones may choose 1局); not AI-vs-AI / online.
+// Parties: A = you (AI games) / the fox of game 1 (two players); B = the AI / the other player.
+let mt = null;   // { g: 1 | 2, r1: { fox: 'A' | 'B', caps, trap: plies to trap the fox or 0, n }, res }
+function mtWanted() { return settings.fmt !== 'single' && (settings.mode === 'ai' || settings.mode === 'pvp') && !lesson && !puzzle; }
+function mtParty(p) {   // the party playing colour p in the current game
+  if (settings.mode === 'ai') return p === humanColor ? 'A' : 'B';
+  return (p === P1) === (!mt || mt.g === 1) ? 'A' : 'B';
+}
+function mtName(x) { if (settings.mode !== 'ai') return t('mt.p' + x); return x === 'A' ? t('you') : rgame ? `${AIW()} ${rtLvName(rgame.lv)}` : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`; }
+function mtResult(st) {   // (a fox that resigns counts as trapped then; geese that resign give the fox the captures that win it the game)
+  const { pos } = posAt(moves.length), foxWon = st.winner === P1, cap = foxWon && (st.why === 'resign' || st.aiResigned) ? Math.max(pos.cap, pos.geese + pos.cap - E.FOX_WINS_AT) : pos.cap;
+  return { fox: mtParty(P1), caps: cap, trap: st.winner === P2 ? moves.length : 0, n: moves.length, why: st.aiResigned ? 'aiResigned' : st.why };
+}
+function mtEnd(st) {
+  const r = mtResult(st), aiGame = settings.mode === 'ai', why = r.why === 'aiResigned' ? t('dr.aiResigned') : t('res.why.' + r.why);
+  $('#resultDisc').innerHTML = st.winner ? `<div class="pdisc p${st.winner}"></div>` : '';
+  if (mt.g === 1) {
+    mt.r1 = r; save();
+    playChime(true);
+    $('#resultTitle').textContent = t('mt.g1done');
+    $('#resultSub').innerHTML = `${why}<br><b>${escHb(t('mt.caps', { p: mtName(r.fox), n: r.caps }))}</b><br><small style="color:var(--muted)">${escHb(t('mt.swap'))}</small>`;
+    $('#btnAgain').textContent = t('mt.next');
+  } else {
+    const r1 = mt.r1, r2 = r, cap = x => (r1.fox === x ? r1.caps : r2.caps), trap = x => { const g = r1.fox === x ? r2 : r1; return g.trap || Infinity; };
+    const cA = cap('A'), cB = cap('B'), tA = trap('A'), tB = trap('B');
+    const win = cA !== cB ? (cA > cB ? 'A' : 'B') : tA !== tB ? (tA < tB ? 'A' : 'B') : null;
+    mt.res = win || 'draw'; save();
+    const youWin = aiGame && win === 'A', aiWin = aiGame && win === 'B';
+    playChime(!aiWin); if (youWin || (!aiGame && win)) confetti();
+    $('#resultDisc').innerHTML = '';
+    $('#resultTitle').textContent = !win ? t('res.draw') : youWin ? t('res.youWin') : aiWin ? t('res.aiWin') : t('mt.pWin', { p: mtName(win) });
+    let sub = `<div class="mt-tbl"><div><span></span><b>${escHb(mtName('A'))}</b><b>${escHb(mtName('B'))}</b></div><div><span>${escHb(t('mt.rowCaps'))}</span><b class="${win === 'A' && cA !== cB ? 'w' : ''}">${cA}</b><b class="${win === 'B' && cA !== cB ? 'w' : ''}">${cB}</b></div>` +
+      (cA === cB ? `<div><span>${escHb(t('mt.rowTrap'))}</span><b class="${win === 'A' ? 'w' : ''}">${tA === Infinity ? '—' : tA}</b><b class="${win === 'B' ? 'w' : ''}">${tB === Infinity ? '—' : tB}</b></div>` : '') + `</div>` +
+      `<div><small style="color:var(--muted)">${escHb(cA !== cB ? t('mt.byCaps') : win ? t('mt.byTrap') : t('mt.tie'))}</small></div>`;
+    // the record and the rating: one result for the match
+    const stM = { over: true, why: 'match', winner: win ? (win === 'A' ? humanColor : 3 - humanColor) : 0, draw: !win };
+    if (aiGame) recordMatch(stM, r1.n + r2.n);
+    if (rgame) {
+      const rx = rtSettle(stM);
+      if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
+    }
+    $('#resultSub').innerHTML = sub;
+    $('#btnAgain').textContent = t('mt.again');
+  }
+  { const ref = moves; setTimeout(() => { if (moves === ref && !lesson && !puzzle) showOverlay('#resultOverlay'); }, 700); }
+}
+function mtChip() { return t('mt.chip', { g: mt.g }) + (mt.g === 2 && mt.r1 ? ' · ' + t('mt.caps', { p: mtName(mt.r1.fox), n: mt.r1.caps }) : ''); }
+function mtNext() {   // the second game: the roles swapped (AI games: you take the other side; the fox still moves first)
+  mt.g = 2; const hc = 3 - humanColor;
+  newGame(rgame || undefined, { hc });
+  toast(t('mt.g2start', { p: pname(settings.mode === 'ai' ? hc : P1) }), 2600);
+}
+function recordMatch(st, n) {
+  if (!window.GameRecord || settings.rsNoRec) return;
+  const opp = rgame ? `AI ${rtLvName(rgame.lv)} · R${rgame.or}` : `AI ${LV(settings.level)}${proTag(settings.level)}`;
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: st.draw ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp, key: rgame ? 'rt:' + rgame.lv : (proCfg(settings.level) ? 'ai:pro' : 'ai:') + settings.level, n, why: t('mt.why') });
 }
 // 勝敗記録 (shared/record.js): games against the AI (free / rated); online games are recorded in online-ui.js finishOnline()
 function recordGame(st) {
@@ -942,7 +1006,7 @@ document.querySelectorAll('.ls-tabs').forEach(g => g.addEventListener('click', e
 $('#btnResume').onclick = () => { if (rgame || settings.mode === 'online' || lesson || puzzle || !reviewing) { resumeHere(); return; } openNewDialog(true); };
 $('#btnLatest').onclick = () => viewAt(moves.length);
 $('#btnReview').onclick = () => hideOverlay('#resultOverlay');
-$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (rgame) rtStart(); else newGame(); };
+$('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (mt && mt.g === 1 && mt.r1 && !(rgame && rgame.over)) { mtNext(); return; } if (rgame) rtStart(); else newGame(); };
 function recordText() {
   const pos = E.Pos.from(startSpec), out = [];
   const s0 = pos.turn; moves.forEach((m, i) => { const k = i + (s0 === P2 ? 1 : 0); out.push((k % 2 === 0 ? (k / 2 + 1) + '. ' : i === 0 ? '1... ' : '') + mvIn(pos, m)); pos.play(m); });
@@ -1170,6 +1234,9 @@ function segSync() {
   $('#fRules').classList.toggle('hidden', !(game || m === 'online'));   // (rated games: always the default rules, g15 — named on the rating card)
   $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleArt(r), { cls: 'gmini' })}</span><b>${t('rule.' + r)}</b><p>${r === E.DEFAULT_RULE ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
   $('#fQuiet').classList.toggle('hidden', !game);   // (rated and online games: always the default limit)
+  $('#fFormat').classList.toggle('hidden', !(m === 'ai' || m === 'pvp' || m === 'rated') || !!draft.resume);   // 交代2局戦 / 1局 (not for AI-vs-AI, online, 「ここから再開」)
+  document.querySelectorAll('#segFmt button').forEach(b => { const v = b.dataset.v; b.classList.toggle('sel', v === draft.fmt); b.innerHTML = escHb(t('fmt.' + v)) + (v === 'match' ? `<small class="q-std"> ${escHb(t('rule.std'))}</small>` : ''); });
+  $('#fmtNote').textContent = t(draft.fmt === 'match' ? 'fmt.noteM' : 'fmt.noteS');
   document.querySelectorAll('#segQuiet button').forEach(b => { const n = +b.dataset.v; b.classList.toggle('sel', n === draft.quiet); b.innerHTML = escHb(t('ng.quietN', { n })) + (n === E.DEFAULT_QUIET ? `<small class="q-std"> ${escHb(t('rule.std'))}</small>` : ''); });
   $('#fColor').classList.toggle('hidden', !game); ordSync();
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
@@ -1183,7 +1250,7 @@ function segSync() {
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
 }
 function openNewDialog(resume) {
-  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color === P2 ? P2 : P1, first: settings.first === P2 ? P2 : P1, level: settings.level, level2: settings.level2, rule: settings.rule, quiet: settings.quiet };
+  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode === 'online' ? 'pvp' : settings.mode, color: settings.color === P2 ? P2 : P1, first: settings.first === P2 ? P2 : P1, level: settings.level, level2: settings.level2, rule: settings.rule, quiet: settings.quiet , fmt: settings.fmt === 'single' ? 'single' : 'match' };
   if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = humanColor; draft.first = gfirst; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat; $('#optNum').checked = settings.num;
   if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fRules, #fQuiet' }); else ResumeNG.close(); }
@@ -1201,6 +1268,7 @@ function resumeWith() {
 }
 $('#bdRow').addEventListener('click', e => { const b = e.target.closest('button[data-bd]'); if (!b) return; settings.bd = b.dataset.bd; designApply(); designPickers(); save(); });
 $('#pcRow').addEventListener('click', e => { const b = e.target.closest('button[data-pcs]'); if (!b) return; settings.pcs = b.dataset.pcs; designApply(); designPickers(); save(); });
+$('#segFmt').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.fmt = b.dataset.v; segSync(); } };
 $('#segQuiet').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.quiet = +b.dataset.v; segSync(); } };
 $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.v) { draft.mode = b.dataset.v; segSync(); } };
 // the ルール button on every card (shared/ngtabs.js): the tutorial, or the board-size page
@@ -1265,7 +1333,7 @@ $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
-  Object.assign(settings, { eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, num: $('#optNum').checked });
+  Object.assign(settings, { eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, num: $('#optNum').checked, fmt: draft.fmt });
   if (draft.mode === 'rated') { rtStart(); return; }
   if (draft.resume) { resumeWith(); return; }
   exitSpecial();
