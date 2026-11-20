@@ -1437,3 +1437,6 @@ Lv.34（1局 27.8秒）対 Edax レベル24（29.1秒）で Edax +19 ± 14（300
 
 ## 枝刈りの設定を Edax 相手に測る道具（2026-11-20、公開エンジンは変更なし）
 `tools/edax-anchor.js` に `--t`・`--variant`・`--bases`・`--table` を足し、試験ビルドの wasm を `tools/variants/` に置いた（`tools/build-variants.sh`。サイトは読み込まない）。手順は `claude/reversi-mac-verification.md`。
+
+## 奥原氏の Edax 高速化の解説との突き合わせ（2026-11-20、公開エンジンは変更なし）
+解説の技法の多くはすでに入っていた。未確認だったのは「Arm では着手生成は SIMD より整数演算のほうが速い」点で、試験ビルド（`engine.c` の `-DGEN=1`・`-DGEN=2`、付けなければ同じバイナリ。wasm の一致を確認）と `tools/variant-bench.js`（新規）を足した。作業機（x86）では差は揺れの中。Mac での結果待ち。一覧は `claude/reversi-mac-verification.md`。
