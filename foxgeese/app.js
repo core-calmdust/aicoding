@@ -1282,13 +1282,29 @@ function ruleStart(r) { const keep = E.rule; E.setRule(r); const sp = E.Pos.from
 function ruleArt(r) { return ruleStart(r); }
 // the rule cards of the new-game dialog (2026-11-20 user: the whole board was too small): only the rows where the pieces start,
 // drawn large, and the number of geese beside it
-function ruleCardSVG(r) {
+const RC_PAL = { meadow: ['#a6d477', '#f7e9c0', '#8cbf5f'], oak: ['#c99c64', '#6b4423', '#a97c46'], bauhaus: ['#ece7da', '#262628', '#cfc8b6'], lux: ['#231812', '#c9a24a', '#3a2a1c'], norse: ['#8c877c', '#ece4d0', '#6f6a60'], delft: ['#f5f2ea', '#2c4f9e', '#c9d3ea'] };
+function ruleCardSVG(r) {   // a simple board of its own (only the rows where the pieces start, framed all round), not a cut of the picture
   const sp = ruleStart(r), b = sp.b, n = [...b].filter(c => c === 'g').length;
   let r0 = 7; for (let i = 0; i < 49; i++) if (b[i] === 'g' || b[i] === 'f') r0 = Math.min(r0, Math.floor(i / 7));
-  const u = 240 / 7, pad = 8, W = 256, y0 = pad + r0 * u - u * .2, h = W - y0, pw = 250, pk = PC_KEYS.includes(settings.pcs) ? settings.pcs : 'cute';
-  const inner = miniSVG(sp, { cls: 'gmini' }).replace(/^<svg[^>]*>/, `<svg x="0" y="0" width="${W}" height="${h.toFixed(1)}" viewBox="0 ${y0.toFixed(1)} ${W} ${h.toFixed(1)}">`);
+  let bdk = settings.bd; if (!BD_KEYS.includes(bdk)) bdk = BD_OLD[bdk] || 'meadow';
+  const [bg, ln, bd] = RC_PAL[bdk] || RC_PAL.meadow, pk = PC_KEYS.includes(settings.pcs) ? settings.pcs : 'cute';
+  const u = 34, m = 8, W = 7 * u + m * 2, h = (7 - r0) * u + m * 2, X = c => m + (c + .5) * u, Y = rr => m + (rr - r0 + .5) * u, pw = 250;
+  const inB = i => E.ON[i] && E.RC[i][0] >= r0;
+  // the board's shape: the full-width arm rows and the middle column band, rounded
+  let s = `<svg class="gmini grule" viewBox="0 0 ${W + pw} ${h}" overflow="visible"><g stroke="${bd}" stroke-width="3" fill="${bg}">`;
+  const arm = r0 <= 4 ? [m - 4, m - 4, 7 * u + 8, (5 - r0) * u + 8] : null, band = [m + 2 * u - 4, m - 4, 3 * u + 8, (7 - r0) * u + 8];
+  for (const q of [arm, band]) if (q) s += `<rect x="${q[0]}" y="${q[1]}" width="${q[2]}" height="${q[3]}" rx="12"/>`;
+  s += `</g>`; for (const q of [arm, band]) if (q) s += `<rect x="${q[0] + 1.5}" y="${q[1] + 1.5}" width="${q[2] - 3}" height="${q[3] - 3}" rx="10.5" fill="${bg}"/>`;   // (no seam where the two meet)
+  s += `<g stroke="${ln}" stroke-width="3.2" stroke-linecap="round" opacity=".95">`;
+  for (const i of E.POINTS) if (inB(i)) for (const [j] of E.NBR[i]) if (j > i && inB(j)) s += `<line x1="${X(E.RC[i][1])}" y1="${Y(E.RC[i][0])}" x2="${X(E.RC[j][1])}" y2="${Y(E.RC[j][0])}"/>`;
+  s += `</g>`;
+  for (const i of E.POINTS) if (inB(i)) s += `<circle cx="${X(E.RC[i][1])}" cy="${Y(E.RC[i][0])}" r="${u * .13}" fill="${ln}"/>`;
+  for (const ch of 'gf') for (const i of E.POINTS) if (b[i] === ch && inB(i)) {
+    const sz = u * (ch === 'g' ? .78 : 1), an = ANCHOR[pk] || (ch === 'g' ? .5 : pk === 'cute' ? .52 : .55);
+    s += `<image href="${ART('pc-' + pk + '-' + ch)}" x="${(X(E.RC[i][1]) - sz / 2).toFixed(1)}" y="${(Y(E.RC[i][0]) - sz * an).toFixed(1)}" width="${sz.toFixed(1)}" height="${sz.toFixed(1)}"/>`;
+  }
   const gs = Math.min(80, h * .62), fs = Math.round(Math.min(52, h * .4)), tx = W + 14 + gs + 8;   // (the number in the page's own font, with room to spare on the right)
-  return `<svg class="gmini grule" viewBox="0 0 ${W + pw} ${h.toFixed(1)}" overflow="visible">${inner}<image href="${ART('pc-' + pk + '-g')}" x="${W + 14}" y="${(h / 2 - gs / 2).toFixed(1)}" width="${gs.toFixed(1)}" height="${gs.toFixed(1)}"/><text x="${tx.toFixed(1)}" y="${(h / 2).toFixed(1)}" dy=".36em" font-size="${fs}" font-weight="800" fill="currentColor">×${n}</text></svg>`;
+  return s + `<image href="${ART('pc-' + pk + '-g')}" x="${W + 14}" y="${(h / 2 - gs / 2).toFixed(1)}" width="${gs.toFixed(1)}" height="${gs.toFixed(1)}"/><text x="${tx.toFixed(1)}" y="${(h / 2).toFixed(1)}" dy=".36em" font-size="${fs}" font-weight="800" fill="currentColor">×${n}</text></svg>`;
 }
 // your side and who moves first — one pulldown (vs the AI: 狐・先手 / 狐・後手 / ガチョウ・先手 / ガチョウ・後手; two players and
 // AI vs AI: only who moves first; 「ここから再開」: the order of the game on the board stays). The icons: img/ic-fox.svg / ic-goose.svg
