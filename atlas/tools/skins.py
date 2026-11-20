@@ -869,7 +869,7 @@ def celestial_cover(seed=149):
     for _ in range(700):
         x, y = r.random() * W, r.random() * H; s = k(.6 + r.random() ** 3 * 1.8)
         sd.ellipse([x - s, y - s, x + s, y + s], fill=int(120 + r.random() * 135))
-    img = lerp(img, hexc('#e6c77a'), np.asarray(lines.filter(ImageFilter.GaussianBlur(k(.8))), np.float32) / 255 * .55)
+    img = lerp(img, hexc('#8e97b6'), np.asarray(lines.filter(ImageFilter.GaussianBlur(k(.8))), np.float32) / 255 * .4)   # (2026-11-20: grey; the one being drawn turns gold — atlas/skins-fx.js)
     img = lerp(img, hexc('#fff3cf'), np.asarray(stars.filter(ImageFilter.GaussianBlur(k(.9))), np.float32) / 255)
     img = img + (np.asarray(stars.filter(ImageFilter.GaussianBlur(k(8))), np.float32) / 255 * .25)[..., None] * hexc('#ffe7a8')
     img = img * (0.94 + 0.1 * big_noise(seed + 3))[..., None]
