@@ -229,7 +229,7 @@ function renderDraft() {
   $('#drTurn').textContent = t(d.turn === 0 ? 'dr.you' : 'dr.ai'); $('#drTurn').classList.toggle('me', d.turn === 0);
   // the side card: the field at a glance (tap → the pick sheet)
   $('#drRows').innerHTML = '';
-  const who = (p, name) => `<button class="dw${d.turn === p ? ' turn' : ''}" data-v="${p === 1 ? 'foe' : 'mine'}"><b>${name}</b><span class="pips">${d.picks[p].map(k => `<span class="pip">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</span><em>${t('dr.left', { c: E.draftLeft(d, p) })}</em></button>`;   // (a compact row per side; tap → the fleet sheet)
+  const who = (p, name) => `<button class="dw${d.turn === p ? ' turn' : ''}" data-v="${p === 1 ? 'foe' : 'mine'}"><b>${name}</b><span class="pips">${d.picks[p].map(k => `<span class="pip">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</span><em>${t('dr.left', { c: E.draftLeft(d, p) - (p === 0 && d.turn === 0 ? pickSel.reduce((a, k) => a + E.TYPES[k].cost, 0) : 0) })}</em></button>`;   // (a compact row per side; tap → the fleet sheet)
   $('#drWho').innerHTML = who(1, 'AI Lv.' + G.level) + who(0, t('you'));
   // the pick sheet: one card per type on the table, by role, cheapest first
   if (!mine) pickSel = []; pickSel = pickSel.filter(k => E.draftCan(d, 0, k));
@@ -244,7 +244,7 @@ function renderDraft() {
       <div class="ps"><i class="ic">${SK_ICON[abilityKey(T)] || ''}</i><b>${shipSkillName(T)}</b><small>${kind}</small></div>
       <p>${shipSkillText(T)}</p>
       ${sel ? `<span class="psel">${run > 1 ? (pickSel.indexOf(k) + 1) + ' ・ ' : ''}${t('pk.sel')}</span>` : why ? `<span class="pwhy">${why}</span>` : ''}</div>`; };
-  $('#pickHead').innerHTML = `<b>${t(d.turn === 0 ? 'dr.you' : 'dr.ai')}</b><span>${t('pk.left', { c: E.draftLeft(d, 0), n: d.picks[0].length, m: E.MAXSHIPS })}</span>`;
+  $('#pickHead').innerHTML = `<b>${t(d.turn === 0 ? 'dr.you' : 'dr.ai')}</b><span class="${pickSel.length ? 'pend' : ''}">${t('pk.left', { c: E.draftLeft(d, 0) - selCost, n: d.picks[0].length + pickSel.length, m: E.MAXSHIPS })}</span>`;
   $('#pickViews').innerHTML = [['pick', t('pk.v.pick')], ['foe', t('pk.v.foe', { n: d.picks[1].length })], ['mine', t('pk.v.mine', { n: d.picks[0].length })]].map(([v, l]) => `<button data-v="${v}" class="${v === pickView ? 'on' : ''}">${l}</button>`).join('') + `<button id="btnAllShips" class="all">${t('dr.all')}</button>`;
   $('#pickOverlay .modal').dataset.view = pickView;
   if ($('#fleetOverlay').classList.contains('show')) renderFleetSheet();

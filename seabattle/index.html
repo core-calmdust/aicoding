@@ -527,6 +527,7 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
 #pickOverlay .modal-actions #btnPickOk{flex:0 0 auto;min-width:180px}
 #pickOverlay .modal.lux:not([data-view="pick"]) .modal-actions #pickLegend{visibility:hidden}
 @media (max-width:600px){#pickOverlay .modal-actions #btnPickOk{flex:1 1 100%}}
+#pickHead span.pend{color:var(--gold2)}   /* (the cost left already takes the chosen cards off, 2026-11-20 user) */
 </style>
 </head>
 <body class="no-online placing">
@@ -619,7 +620,7 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
 <script src="engine.js?v=25"></script>
 <script src="board.js?v=10"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=53"></script>
+<script src="app.js?v=54"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
