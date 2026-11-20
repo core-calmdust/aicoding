@@ -302,6 +302,28 @@
     return t;
   }
   window.AtlasGuideJa = guideJa;
+  /* (2026-11-21 the user: lines that all end in 〜だよ read badly — the endings vary, and they sound like the guide)
+     Over the whole bubble: a sentence that would end the same way as the one before it (〜だよ / 〜よ) takes another
+     natural ending (〜なんだ・〜だね / 〜んだ・〜ね); a guide with a verbal tic says it once in about half its bubbles,
+     at its last plain ending. Hand-written lines that already vary are left as they are. */
+  const TIC = { amazons: 'ケロ', shogi: 'コン', xiangqi: 'コン', backgammon: 'ワン', chess: 'ピョン', go: 'ペン', gomoku: 'ペン', hex: 'ペン', checkers: 'カニ' };
+  function varyJa(h, id) {
+    const re = /(なんだ|だよ|だね|んだ|よ|ね)(?=(?:<\/b>|<\/small>)?(?:[。！？!?]|<br>|$))/g, ms = [];
+    let m; while ((m = re.exec(h))) { const pc = h[m.index - 1] || '';
+      if (m[1] === 'よ' && (/[のわだ]/.test(pc) || (pc === 'う' && /[おこごそぞとどのほぼぽもよろ]/.test(h[m.index - 2] || '')))) continue;   // (〜のよ・〜わよ, and 〜しようよ: kept)
+      ms.push({ at: m.index, pc, s: m[1], k: m[1] === 'だよ' ? 'D' : m[1] === 'よ' ? (/[いうくぐすつぬぶむるた]/.test(pc) ? 'V' : 'X') : m[1] === 'なんだ' || m[1] === 'んだ' ? 'N' : 'E' }); }   // (X: 〜てよ and the like — kept)
+    if (!ms.length) return h;
+    let prev = '', alt = 0;
+    for (const x of ms) {
+      if (x.k === 'N' && prev === 'N' && (x.s === 'なんだ' || /[いうくぐすつぬぶむるた]/.test(x.pc))) { x.r = x.s === 'なんだ' ? 'だよ' : 'よ'; prev = 'Y'; continue; }   // (〜んだ twice running → 〜よ)
+      if ((x.k === 'D' || x.k === 'V') && prev === 'Y') { const D = ['なんだ', 'だね'], V = ['んだ', 'ね']; x.r = (x.k === 'D' ? D : V)[alt++ % 2]; prev = x.r === 'だね' || x.r === 'ね' ? 'E' : 'N'; }
+      else prev = x.k === 'D' || x.k === 'V' ? 'Y' : x.k;   // (〜だよ and 〜よ sound alike: one family)
+    }
+    const tic = TIC[id]; let hs = 0; for (let i = 0; i < h.length; i++) hs = (hs * 31 + h.charCodeAt(i)) | 0;
+    if (tic && !h.includes(tic) && (hs & 1)) { const last = [...ms].reverse().find(x => !x.r && (x.k === 'D' || x.k === 'V')); if (last) last.r = last.k === 'D' ? 'だ' + tic : tic; }
+    for (const x of ms.slice().reverse()) if (x.r) h = h.slice(0, x.at) + x.r + h.slice(x.at + x.s.length);
+    return h;
+  }
   const LSV = {};   // (atlas/lsvoice-ja.js: the problem lines of the guides without a voice file, loaded for Japanese only)
   const lsvLoad = lang => lang !== 'ja' ? Promise.resolve() : LSV.p || (LSV.p = fetch('lsvoice-ja.js?v=1').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} LSV.d = w.AtlasLsVoice || {}; }).catch(() => { LSV.d = {}; }));
   const pick = a => Array.isArray(a) ? a[Math.floor(Math.random() * a.length)] : a;
@@ -1359,7 +1381,7 @@
     const VO = (VOICE[id] || {})[ctx.lang] || {}, X = Object.assign({}, TX[ctx.lang] || TX.en, VO);
     const LN = ((window.AtlasPuzzleLines || {})[id] || {})[ctx.lang] || {}, line = k => { const a = LN[k]; return a && a.length ? a[Math.floor(Math.random() * a.length)] : ''; };
     const lsv = h => { const m = (LSV.d || {})[id]; if (!m) return h; const ks = LSV[id] || (LSV[id] = Object.keys(m).sort((a, b) => b.length - a.length)); for (const k of ks) if (h.includes(k)) h = h.split(k).join(m[k]); return h; };   // (the problem lines in the guide's own words: atlas/lsvoice-ja.js, 2026-11-21)
-    const voice = h => ctx.lang === 'ja' ? lsv(guideJa(h, id)) : h;   // (each guide's own way of talking, 2026-11-15)
+    const voice = h => ctx.lang === 'ja' ? varyJa(lsv(guideJa(h, id)), id) : h;   // (each guide's own way of talking, 2026-11-15)
     let greeted = false;
     let stopped = false, sess = null, cur = null, phase = 'load', typeT = 0, onReady = null, onMoved = null;
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms)), sleep = ms => new Promise(r => later(r, ms));
@@ -1414,7 +1436,8 @@
       more.unshift(hist.pop()); show(hist[hist.length - 1]); $('.tx').onclick(); apply(); return true;   // (shown whole: it has been read)
     }
     function say(html) {
-      html = String(html || '').replace(/[ \u00a0]*\u0001/g, '').replace(/\u0002[ \u00a0]*/g, '');   // (ja mark phrases: SP)
+      html = String(html || '').replace(/[ \u00a0]*\u0001/g, '').replace(/\u0002[ \u00a0]*/g, '').replace(/\{fig\d*\}\s*/g, '').replace(/\{[a-zA-Z]\w{0,8}\}/g, '');   // (2026-11-21: the 2D page's figure slots {fig1}… — none on the 3D table)
+      // (ja mark phrases: SP)
       if (id === 'checkers' && window.Table3D && Table3D.checkers && Table3D.checkers.recolor) html = Table3D.checkers.recolor(html, ctx.lang);   // (黒 / 白 → the chosen set's colours, 2026-11-14)
       html = voice(String(html || '').replace(/<p[^>]*>/g, '').replace(/<\/p>\s*/g, '<br>').replace(/(<br>\s*)+$/, ''));   // (the chess texts come as <p> paragraphs)
       if (!greeted && X.hi && html !== X.loading) { greeted = true; html = X.hi + '<br>' + html; }
@@ -1430,7 +1453,9 @@
       const b = nextB(); if (b) { b.style.setProperty('--ls-auto-ms', ms + 'ms'); void b.offsetWidth; b.classList.add('ls-auto'); }
       const stop = e => { if (e && e.isTrusted === false) return; autoCancel(); };
       setTimeout(() => { if (!autoT) return; ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, stop, true)); autoOff = () => ['pointerdown', 'keydown'].forEach(ev => document.removeEventListener(ev, stop, true)); }, 0);
-      autoT = setTimeout(() => { autoT = 0; const go = !stopped && (!ok || ok()); autoCancel(); if (go) fire(); }, ms);
+      autoT = setTimeout(() => { autoT = 0; autoCancel(); if (stopped) return;
+        if (more.length) { turn(); autoGo(Math.max(2200, ms), ok, fire); return; }   // (2026-11-21: the words ran onto a second page — show it, then go on; before, the meter ran out and nothing happened)
+        if (!ok || ok()) fire(); }, ms);
     }
     const head = txt => { $('.pg').textContent = txt ? ' · ' + txt : ''; };
     function act(nextLabel, { hint = false, again = false, nextOn = true } = {}) { want = { nextLabel, nextOn }; $('[data-a=hint]').disabled = !hint; $('[data-a=again]').disabled = !again; apply(); }
