@@ -1434,3 +1434,6 @@ Edax レベル18 との直接対局（300局ずつ）：Lv.28 は Edax +173（�
 
 ## マクロの点検その3：同じ時間なら Edax とほぼ互角〜約20 Elo 下（2026-11-20、Mac、公開エンジンは変更なし）
 Lv.34（1局 27.8秒）対 Edax レベル24（29.1秒）で Edax +19 ± 14（300局、1スレッド、定石なし）。Lv.31・Lv.34 と Edax レベル18・21・24 の結果を結ぶと、1局 3〜30秒の範囲で同じ時間なら互角〜約20 Elo 下。1スレッドの読みと評価に大きな差は残っていない。表は `claude/reversi-mac-verification.md`。
+
+## 枝刈りの設定を Edax 相手に測る道具（2026-11-20、公開エンジンは変更なし）
+`tools/edax-anchor.js` に `--t`・`--variant`・`--bases`・`--table` を足し、試験ビルドの wasm を `tools/variants/` に置いた（`tools/build-variants.sh`。サイトは読み込まない）。手順は `claude/reversi-mac-verification.md`。
