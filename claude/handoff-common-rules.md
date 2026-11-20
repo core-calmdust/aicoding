@@ -251,6 +251,7 @@
 - 目安は20段階（とても強い〜弱い）。将棋は思考時間を伸ばさず今の制限時間内で強くする方針（長考AIは別枠で可）。
 - **負け確定局面の振る舞い**：適当な手を指さず、**いちばん遅く負ける手**、同じなら**相手の即勝ちの片方をふさぐ手**、次に反撃の脅威を作る手（`Engine.resist`：コネクトフォー・タフル・五目並べ）。
 - 強化手段：終盤DB・学習型評価（小さなNN／NNUE、WASM化）・序盤定跡（book.json）。学習はユーザーのMacで本格的に。
+- **AI を強くする作業の前に `claude/engine-measurement-lessons.md` を読む**（2026-11-20）：採否は外の物差し（自分より強い公開ソフトとの直接対局）で決める。自己対局・深さ・誤差の数字で決めない。1設定 200局以上。細部の前に、大きなてこごとの伸びしろを数字にする。
 
 ---
 
@@ -420,6 +421,7 @@
 | `claude/puzzle-collection-spec.md` | 詰めパズル PZBook v2 |
 | `claude/atlas-portal-spec.md` | ポータル仕様 |
 | `claude/online-security-setup.md` | オンライン改ざん対策・Firebase設定手順 |
+| `claude/engine-measurement-lessons.md` | AI 強化での計測の失敗と決まり（将棋の記録から。全ゲーム共通） |
 | `claude/<game>-spec.md` | 各ゲームの仕様（ur, agon, ugolki, fanorona, alquerque, checkers, go, poker, mahjong, solitaire, hexdeck, jailbreak, samegame-pop, speed-sudoku 等） |
 | `claude/COACH.md` | `shared/COACH.md` への案内だけ（内容は正本の `shared/COACH.md` に書く） |
 | `CLAUDE.md` | 作業の進め方（PR・マージ・バージョン番号） |
