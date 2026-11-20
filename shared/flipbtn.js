@@ -7,7 +7,7 @@
 // Usage (after the DOM is built):
 //   FlipBtn.init({ game: 'chess', lang: () => LANG, onChange: on => redrawBoard() });
 //   FlipBtn.on()        // true while the board is turned round by the button: the game XORs it with its own orientation
-//   FlipBtn.toggle()    // also bound to the F key (when no text field has the focus)
+//   FlipBtn.toggle()    // also bound to the F key (when no text field has the focus; not in the 3D full version, where F is full screen)
 (function () {
 'use strict';
 const T = {
@@ -35,6 +35,7 @@ function init(o) {
   else { const r = document.querySelector(o.mount || '.brand-r'); if (r) r.insertBefore(btn, r.firstChild); }
   document.addEventListener('keydown', e => {
     if (e.key !== 'f' && e.key !== 'F') return;
+    if (document.documentElement.classList.contains('atlas-skin')) return;   // (the 3D full version: F = full screen, atlas/skin/common.js — 2026-11-20)
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const a = document.activeElement; if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable)) return;
     toggle();
