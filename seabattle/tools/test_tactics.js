@@ -21,8 +21,8 @@ const { chromium } = require('playwright');
       if (guard === 2) await shot('tac-draft');
       await p.waitForFunction(() => document.querySelector('#pickOverlay').classList.contains('show'), null, { timeout: 4000 }); await p.waitForTimeout(250);   // (the pick sheet opens by itself on my turn)
       if (guard === 2) await shot('tac-pick');
-      for (const g of await p.evaluate(() => [...document.querySelectorAll('#pickTabs button')].map(b => b.dataset.g))) { if (await p.evaluate(() => [...document.querySelectorAll('#pickGrid button')].some(x => !x.disabled))) break; await tap('#pickTabs button[data-g="' + g + '"]'); await p.waitForTimeout(120); }   // (look through the role tabs)
-      const sel = await p.evaluate(() => { const b = [...document.querySelectorAll('#pickGrid button')].find(x => !x.disabled); return b ? '#pickGrid button[data-k="' + b.dataset.k + '"]' : '#btnPickStop'; });
+      for (const g of await p.evaluate(() => [...document.querySelectorAll('#pickTabs button')].map(b => b.dataset.g))) { if (await p.evaluate(() => !!document.querySelector('#pickGrid .pc.can'))) break; await tap('#pickTabs button[data-g="' + g + '"]'); await p.waitForTimeout(120); }   // (look through the role tabs)
+      const sel = await p.evaluate(() => { const b = document.querySelector('#pickGrid .pc.can'); return b ? '#pickGrid .pc[data-k="' + b.dataset.k + '"]' : '#btnPickStop'; });   // (tap the card itself)
       await tap(sel); await p.waitForTimeout(150);
     }
     ok(await p.evaluate(() => G.phase === 'deploy' && SeaEngine.validFleet(G.my, G.adj, true) && SeaEngine.validDraft(G.draft.picks[1])), name + ': draft ends with two legal fleets, mine on the board');

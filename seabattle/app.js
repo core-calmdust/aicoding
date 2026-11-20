@@ -201,11 +201,11 @@ function renderDraft() {
   const card = k => { const T = E.TYPES[k], taken = d.picks[0].includes(k), can = mine && E.draftCan(d, 0, k);
     const why = taken ? t('pk.taken') : !d.pool[k] ? t('pk.gone') : T.cost > E.draftLeft(d, 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : '';
     const kind = T.skill ? t('pk.active', { n: T.cd }) : PASSIVE_T(T) ? t('pk.passive') : t('pk.none');
-    return `<div class="pc g${ROLE_OF(k)}${can ? '' : ' off'}${taken ? ' taken' : ''}"><div class="pt"><span class="pcost">${T.cost}</span><b>${t('ship.' + k)}</b><em>×${d.pool[k]}</em></div>
-      <div class="pa${reachSvg(T.skill) ? ' wide' : ''}">${reachSvg(T.skill)}<div class="pship">${SB.shipSvg(k, T.len)}<span class="plen">${'<i></i>'.repeat(T.len)}<b>${t('pk.len', { n: T.len })}</b></span></div></div>
+    return `<div class="pc g${ROLE_OF(k)}${can ? ' can' : ' off'}${taken ? ' taken' : ''}${reachSvg(T.skill) ? '' : ' nodia'}" data-k="${k}" ${can ? 'role="button" tabindex="0"' : ''} title="${can ? t('pk.tap') : why}"><div class="pt"><span class="pcost">${T.cost}</span><b>${t('ship.' + k)}</b>${lenIcon(T.len)}<em>×${d.pool[k]}</em></div>
+      ${reachSvg(T.skill) ? `<div class="pa">${reachSvg(T.skill)}</div>` : ''}
       <div class="ps">${T.skill ? `<i class="ic">${SK_ICON[T.skill] || ''}</i>` : ''}<b>${shipSkillName(T)}</b><small>${kind}</small></div>
       <p>${shipSkillText(T)}</p>
-      <button data-k="${k}" ${can ? '' : 'disabled'}>${can ? t('dr.pick') : why || t('dr.pick')}</button></div>`; };
+      ${why ? `<span class="pwhy">${why}</span>` : ''}</div>`; };
   $('#pickHead').innerHTML = `<b>${t(d.turn === 0 ? 'dr.you' : 'dr.ai')}</b><span>${t('pk.left', { c: E.draftLeft(d, 0), n: d.picks[0].length, m: E.MAXSHIPS })}</span>${d.picks[1].length ? `<button class="flv" data-p="1">${t('fv.foeBtn', { n: d.picks[1].length })}</button>` : ''}`;
   if ($('#fleetOverlay').classList.contains('show')) renderFleetSheet();
   const groups = [0, 1, 2, 3].map(g => E.TYPES.map((T, k) => k).filter(k => f[k] && ROLE_OF(k) === g).sort((a, b) => E.TYPES[a].cost - E.TYPES[b].cost || a - b));
@@ -248,8 +248,8 @@ function renderFleetSheet(scrollTo) {
       else if (T.skill) { const c = G.st.cd[p][i]; st = `<div class="pst${c === 0 ? ' r' : ''}">${sunk ? t('fv.sunk') + ' · ' : ''}${c === 0 ? t('sk.ready') : t('sk.wait', { n: c })}</div>`; if (sunk) cls = ' sunk'; }
       else st = `<div class="pst">${p === 0 ? t('fv.hits', { n: sd.hitsOn[i], m: T.len }) : t('fv.afloat')}</div>`; }
     const kind = T.skill ? t('pk.active', { n: T.cd }) : PASSIVE_T(T) ? t('pk.passive') : t('pk.none');
-    return `<div class="pc g${ROLE_OF(k)}${cls}"><div class="pt"><span class="pcost">${T.cost}</span><b>${t('ship.' + k)}</b></div>
-      <div class="pa${reachSvg(T.skill) ? ' wide' : ''}">${reachSvg(T.skill)}<div class="pship">${SB.shipSvg(k, T.len)}<span class="plen">${'<i></i>'.repeat(T.len)}<b>${t('pk.len', { n: T.len })}</b></span></div></div>
+    return `<div class="pc g${ROLE_OF(k)}${cls}${reachSvg(T.skill) ? '' : ' nodia'}"><div class="pt"><span class="pcost">${T.cost}</span><b>${t('ship.' + k)}</b>${lenIcon(T.len)}</div>
+      ${reachSvg(T.skill) ? `<div class="pa">${reachSvg(T.skill)}</div>` : ''}
       <div class="ps">${T.skill ? `<i class="ic">${SK_ICON[T.skill] || ''}</i>` : ''}<b>${shipSkillName(T)}</b><small>${kind}</small></div>
       <p>${shipSkillText(T)}</p>${st}</div>`; };
   const sec = (q, name) => { const L = listOf(q), left = inBattle ? t('left', { n: G.st.sides[q].afloat }) : t('dr.left', { c: E.draftLeft(G.draft, q) });
@@ -260,6 +260,8 @@ function renderFleetSheet(scrollTo) {
 document.addEventListener('click', e => { const b = e.target.closest('.flv'); if (b) { e.stopPropagation(); openFleet(+b.dataset.p); } });
 $('#btnFleetClose').onclick = () => $('#fleetOverlay').classList.remove('show');
 $('#fleetOverlay').addEventListener('click', e => { if (e.target.id === 'fleetOverlay') $('#fleetOverlay').classList.remove('show'); });
+// the ship's length as a row of small gilt squares next to its name
+const lenIcon = n => `<span class="plen" title="${t('pk.len', { n })}">${'<i></i>'.repeat(n)}</span>`;
 const PASSIVE_T = T => !!(T.armor || T.aa || T.decoy || T.counter || T.rally || T.hospital || T.trace || T.pursuit || T.haste || T.net || T.plunder || T.calm);
 function shipSkillName(T) { return T.skill ? t('sk.' + T.skill) : T.armor ? t('sk.armor') : T.aa ? t('sk.aa') : T.decoy ? t('sk.decoy') : T.counter ? t('sk.counter') : T.calm ? t('sk.calm') : T.plunder ? t('sk.plunder') : T.net ? t('sk.net') : T.pursuit ? t('sk.pursuit') : T.haste ? t('sk.haste') : T.trace ? t('sk.trace') : T.cost === 0 ? t('sk.free') : T.rally ? t('sk.rally') : T.hospital ? t('sk.hospital') : t('dr.none'); }
 function shipSkillText(T) { const d = shipDesc(T).replace(/^[^：]*：/, '').replace(/ · .*$/, ''); return T.skill || PASSIVE_T(T) || T.cost === 0 ? d.replace(/^常時：/, '').replace(/^Always: /, '') : t('pk.plain'); }
@@ -497,7 +499,8 @@ bsvg.addEventListener('pointerleave', () => { SB.aim(bsvg, -1); if (G.armed != n
 $('#skillCard').addEventListener('click', e => { const b = e.target.closest('.sk'); if (!b || b.disabled || !G.st || G.busy || G.phase !== 'battle' || G.st.turn !== 0) return; const i = +b.dataset.i; if (E.NOAIM[skillOf(G.my[i])]) { G.armed = null; return playerNoAim(i); } G.armed = G.armed === i ? null : i; hoverCell = -1; G.hint = null; sfx('place'); if (G.view !== 'enemy') swapView('enemy').then(() => render()); else render(); });
 $('#drRows').addEventListener('click', e => { if (e.target.closest('#btnPick')) $('#pickOverlay').classList.add('show'); });
 $('#pickTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; pickTab = +b.dataset.g; renderDraft(); $('#pickGrid').scrollTop = 0; });
-$('#pickGrid').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; $('#pickOverlay').classList.remove('show'); draftPickMine(+b.dataset.k); });
+$('#pickGrid').addEventListener('click', e => { const c = e.target.closest('.pc.can'); if (!c) return; $('#pickOverlay').classList.remove('show'); draftPickMine(+c.dataset.k); });   // (the whole card is the button)
+$('#pickGrid').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.pc.can')) { e.preventDefault(); e.target.click(); } });
 $('#btnPickClose').onclick = () => { pickShut = G.draft ? G.draft.n : -1; $('#pickOverlay').classList.remove('show'); };
 $('#pickOverlay').addEventListener('click', e => { if (e.target.id === 'pickOverlay') $('#btnPickClose').onclick(); });
 $('#btnPickStop').onclick = () => { $('#pickOverlay').classList.remove('show'); $('#btnDrStop').click(); };
