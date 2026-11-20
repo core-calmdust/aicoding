@@ -19,6 +19,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     const acts = () => p.evaluate(() => G.st.acts.length);
     const skillBtn = k => p.evaluate(k => G.my.findIndex((s, i) => SeaEngine.TYPES[s.t].skill === k && !G.st.sides[0].sunk[i]), k);
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [MINE, FOE]);
     // the minelayer: no square to pick, a mine appears on my own sea (the small board)
@@ -55,6 +56,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('over');
     // 第4弾: barrage (into AA), radar, and a decoy that need not be sunk
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[15, 16, 17, 4], [17, 13, 1, 3]]);
     await p.waitForTimeout(300);
@@ -79,6 +81,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('decoy');
     // 第5弾: the patrol boat's probe, and the enemy monitor firing back
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[19, 18, 4], [18, 3, 4]]);
     await p.waitForTimeout(300);
@@ -93,6 +96,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('counter');
     // 第6弾: with a hospital ship afloat, a sunk submarine's sonar still works
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; const si = G.my.findIndex(s => s.t === 3), M = G.st.sides[0];
       for (let k = 0; k < 100; k++) if (M.grid[k] === si) { G.st.turn = 1; E.fire(G.st, k); }
@@ -106,6 +110,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('hospital');
     // 第7弾: strafe (an X, one shell lost to AA) and the side torpedo
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[22, 23, 4], [13, 3, 4]]);
     await p.waitForTimeout(300);
@@ -120,6 +125,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('rtorpedo');
     // 第8弾: suppress (the enemy's armor gives way at once) and sweep
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[24, 25, 4], [5, 13, 4]]);
     await p.waitForTimeout(300);
@@ -139,6 +145,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('sweep');
     // 第9弾: the star shell lights a 2×2 box; the enemy's ward stops my next skill
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[26, 3, 4], [27, 1, 4]]);
     await p.waitForTimeout(300);
@@ -154,6 +161,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('ward');
     // 第10弾: intel marks an enemy ship square; quick fire keeps the turn while shells hit
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[28, 29, 4], [0, 1, 4]]);
     await p.waitForTimeout(300);
@@ -172,6 +180,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('rapid');
     // 第11弾: lance fires a column of 4 (the bottom rows pull it up)
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[30, 31, 4], [31, 4, 3]]);
     await p.waitForTimeout(300);
@@ -181,6 +190,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('lance');
     // 第12弾: wide sonar (5×5), and my ESM ship tracing an enemy skill user
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[32, 33, 4], [1, 0, 4]]);
     await p.waitForTimeout(300);
@@ -197,6 +207,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('trace');
     // 第13弾: the diagonal spot, and a heavy cruiser that takes two dents
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[35, 4, 3], [34, 4, 3]]);
     await p.waitForTimeout(300);
@@ -210,6 +221,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('hcruiser');
     // 第14弾: depth charge on a ship square (its neighbours go too); plating armors my most-hit ship
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[36, 37, 1], [0, 4, 3]]);
     await p.waitForTimeout(300);
@@ -225,6 +237,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('plate');
     // 第15弾: with the pursuer afloat, sinking a ship with a normal shot keeps my turn; the command ship halves cooldown waits
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; render(); }, [[38, 39, 3], [4, 1, 3]]);
     await p.waitForTimeout(300);
@@ -238,6 +251,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('pursuit');
     // 第16弾: bracket (2 left and 2 right, the middle read); my cruiser's torpedo stopped by the enemy net after 3 squares
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[41, 2, 4], [40, 4, 3]]);
     await p.waitForTimeout(300);
@@ -252,6 +266,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('net');
     // 第17弾: cross search (a row and a column)
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[43, 42, 4], [1, 4, 3]]);
     await p.waitForTimeout(300);
@@ -261,6 +276,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('cross');
     // 第18弾: twin torpedoes up two columns; listening finds the busiest row
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[44, 45, 4], [1, 4, 3]]);
     await p.waitForTimeout(300);
@@ -274,6 +290,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('dtorpedo');
     // 第19弾: a guided missile that hits strikes the same ship again; all-out readies every other skill
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[47, 46, 3], [0, 4, 3]]);
     await p.waitForTimeout(300);
@@ -288,6 +305,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await shot('allout');
     // 第20弾: ring fire (8 around the centre); the enemy breakwater blocks my twin shot
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));   // (a result from the scenario before must not cover the board)
       G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
       G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[49, 8, 4], [48, 4, 3]]);
     await p.waitForTimeout(300);
