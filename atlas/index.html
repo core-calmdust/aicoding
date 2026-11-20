@@ -736,7 +736,8 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 #pg-ach .lxa{margin:0 0 16px;padding:18px 28px 8px}
 #pg-ach .lxa[hidden]{display:none}
 #pg-ach .lxtop{margin-top:6px}
-#pg-ach .anear{padding:14px 0 6px;border-top:1px solid var(--lx-h)}
+#pg-ach .anear{padding:4px 0 6px}   /* (no rule above it: the user, 2026-11-21) */
+#pg-ach .anear .alist{padding-inline:10px 6px}   /* (as wide as the 共通 row under it: its medal over that row's icon, its coins over the chevron) */
 #pg-ach #achCom{border-top:1px solid var(--lx-h)}#pg-ach #achCom[hidden]{display:none}
 /* the categories: a row of tabs (name over n / all), the chosen one under a gold line */
 .lxtabs{display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,1fr));margin:0 0 6px;border-bottom:1px solid var(--lx-h)}
@@ -1034,7 +1035,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
   #pg-ach .achsum{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px 12px;margin:0;padding:0 0 12px}
   #pg-ach .achsum > b{font-size:19px!important}
   #pg-ach .lxa{margin-bottom:12px;padding:14px 14px 4px;border-radius:18px}
-  #pg-ach .anear{padding:10px 0 2px}
+  #pg-ach .anear{padding:2px 0 2px}#pg-ach .anear .alist{padding-inline:7px 2px}
   .lxtabs{grid-template-columns:repeat(2,minmax(0,1fr));border-bottom:0;margin-bottom:2px}
   .lxtab{flex-direction:row;justify-content:space-between;align-items:center;gap:8px;padding:10px 6px 10px 4px;border-bottom:1px solid var(--lx-h);text-align:start}
   .lxtab span{font-size:12.5px;letter-spacing:.02em}.lxtab em{flex:none;font-size:10.5px}
