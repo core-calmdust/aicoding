@@ -612,7 +612,7 @@
   // shared/atlas-updates-archive.js (tools/news-archive.js), loaded only when its button is pressed; sorted newest / oldest / by game
   let arcP = null;
   const arcLoad = () => arcP || (arcP = new Promise(res => { const sc = document.createElement('script'); sc.src = '../shared/atlas-updates-archive.js?v=' + ARC_V; sc.onload = sc.onerror = () => res(window.ATLAS_UPDATES_ARCHIVE || []); document.head.appendChild(sc); }));
-  const ARC_V = 1;
+  const ARC_V = 2;
   const ARCT = {
     ja: ['過去の更新を見る', 'アーカイブ', '最近の更新', '新しい順', '古い順', 'ゲーム別'],
     en: ['See older updates', 'Archive', 'Recent updates', 'Newest', 'Oldest', 'By game'],
