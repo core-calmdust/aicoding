@@ -84,6 +84,20 @@ node tools/edax-anchor.js --table      # これまでの全部の結果を、時
 ```
 `--table` の ◎ の並びが「その時間で一番強い配分」。レベルの表（`engine.js` LEVELS の Lv.25〜35）をその並びに合わせて組み直す。
 
+### 枝刈りの強さと仕組みを Edax 相手に測る（2026-11-20、道具を追加）
+`edax-anchor.js` に `--t`（枝刈りの強さ。今は 1.5、Edax・Egaroucid は約1.1）と `--variant`（試験ビルド：`nn`＝試しの読みの中では枝刈りしない、`p200`／`p400`＝静的評価が境から2石／4石以内のときだけ試す、`nn_p200`・`nn_p400`、`k150`、`v150_190`）を足した。試験ビルドは `tools/variants/`（サイトは読み込まない。`engine.c` を変えたら `sh tools/build-variants.sh` で作り直す）。
+```sh
+cd reversi && git pull
+E=~/edax-reversi/bin/mEdax-armv8.5-a
+B="17,20,22,26;18,20,22,26;19,20,22,26"
+EDAX=$E node tools/edax-anchor.js --levels 18 --n 150 --bases "$B" --t 1.1
+EDAX=$E node tools/edax-anchor.js --levels 18 --n 150 --bases "$B" --t 1.1 --variant nn_p200
+EDAX=$E node tools/edax-anchor.js --levels 18 --n 150 --bases "17,20,22,26" --variant nn_p200
+EDAX=$E node tools/edax-anchor.js --levels 18 --n 150 --bases "17,20,22,26;19,20,22,26" --t 1.1 --variant p200
+node tools/edax-anchor.js --table
+```
+比べる相手は今の設定の線（17,20,22,26 が 1.37秒で −60、20,20,22,26 が 3.71秒で −17）。同じ時間でそれより上に出る組み合わせがあれば、Lv.31・Lv.34 の深さで確かめてから採用する。
+
 ### 計画の直し方
 1. **採否は Edax 相手の対局で決める**。`frontier.js`（自分どうし）は候補を絞る補助に下げ、プラスの設定は `edax-anchor.js --base 深さ,読み切り,勝敗読み,終局まで` で確かめる。
 2. **てこごとの線を Edax 相手に引く**（Mac、下のコマンド）。同じ時間を「深さ」に使う場合と「終盤」に使う場合を直接比べる。

@@ -5,6 +5,7 @@
 // the site). Guide: claude/reversi-mac-verification.md.
 //   EDAX=~/edax-reversi/bin/mEdax-… node tools/edax-anchor.js --levels 12,15,18,21 [--base lv28|lv31|lv34|d,x,w,e] [--n 100]
 //        [--openings tools/train/op10.bin] [--procs 8] [--out edax-anchor.jsonl] [--games games.jsonl]
+//   [--t 1.1] (how hard Multi-ProbCut cuts; today 1.5)  [--variant nn_p200] (a test build under tools/variants/, tools/build-variants.sh)
 //   … --bases "17,20,22,26;18,22,24,28" (several settings, one after another)      node tools/edax-anchor.js --table (all results so far)
 // --games: every position of every game (the side to move as X, who moved) for tools/phase-loss.js — where in the game the discs are lost.
 // (Edax is started once per move with -solve; its time is the search time it prints, ours the CPU time of think.)
@@ -33,6 +34,7 @@ if (opt('bases', '') && args[0] !== '--worker') {   // --bases "17,20,22,26;18,2
   process.exit(0);
 }
 const BNAME = opt('base', 'lv28'), bv = BASES[BNAME] || BNAME.split(',').map(Number);
+const TV = opt('t', ''), VAR = opt('variant', ''), TAG = (TV ? ' t' + TV : '') + (VAR ? ' ' + VAR : '');
 const CFG = { depth: bv[0], exact: bv[1], wld: bv[2], end: bv[3], mpc: 1 };
 const LEVELS = opt('levels', '12,15,18,21').split(',').map(Number), N = +opt('n', 100), PROCS = +opt('procs', Math.max(1, os.cpus().length - 2));
 const OPEN = path.resolve(opt('openings', path.join(__dirname, 'train/op10.bin'))), OUT = opt('out', 'edax-anchor.jsonl'), GAMES = opt('games', '');
@@ -46,7 +48,12 @@ const moves = (P, O) => { const m = []; for (let s = 0; s < 64; s++) if (!(((P |
 const pc = x => { let n = 0; for (; x; x &= x - 1n) n++; return n; };
 
 if (args[0] === '--worker') {   // one process: its share of the openings for one level
-  const E = require(path.join(RV, 'engine.js'));
+  let dir = RV;
+  if (VAR) {   // a test build: engine.js beside that engine.wasm in a directory of its own (engine.js loads the engine.wasm next to it)
+    const w = path.join(__dirname, 'variants', `engine_${VAR}.wasm`); if (!fs.existsSync(w)) { console.error('no ' + w + ' (sh tools/build-variants.sh)'); process.exit(1); }
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rv-variant-')); fs.copyFileSync(path.join(RV, 'engine.js'), path.join(dir, 'engine.js')); fs.copyFileSync(w, path.join(dir, 'engine.wasm'));
+  }
+  const E = require(path.join(dir, 'engine.js')); if (TV) E.MPC.t = +TV;
   let b = zlib.gunzipSync(fs.readFileSync(path.join(RV, 'weights.bin.gz'))); b = new Uint8Array(b); E.setWeights(new Int16Array(b.buffer, 0, b.length >> 1), 30);
   const level = +args[1], k = +args[2], d = fs.readFileSync(OPEN), tmp = path.join(os.tmpdir(), `edax-anchor-${process.pid}.obf`);
   const edaxMove = (P, O) => {
@@ -72,13 +79,13 @@ if (args[0] === '--worker') {   // one process: its share of the openings for on
   };
   for (let i = k; i < N && (i + 1) * 17 <= d.length; i += PROCS) {
     const P = d.readBigUInt64LE(i * 17), O = d.readBigUInt64LE(i * 17 + 8), a = game(P, O, true), c = game(P, O, false);
-    if (GAMES) for (const g of [a, c]) fs.appendFileSync(GAMES, JSON.stringify({ level, base: BNAME, i, edaxFirst: g === a, d: g.d, pos: g.log }) + '\n');
+    if (GAMES) for (const g of [a, c]) fs.appendFileSync(GAMES, JSON.stringify({ level, base: BNAME + TAG, i, edaxFirst: g === a, d: g.d, pos: g.log }) + '\n');
     process.stdout.write(JSON.stringify({ i, d1: a.d, d2: c.d, tE: a.tE + c.tE, tU: a.tU + c.tU }) + '\n');
   }
   try { fs.unlinkSync(tmp); } catch (e) {}
 } else (async () => {
   for (const level of LEVELS) {
-    const rs = []; console.error(`Edax level ${level} against ${BNAME} (${N} openings × 2 games, ${PROCS} processes)`);
+    const rs = []; console.error(`Edax level ${level} against ${BNAME}${TAG} (${N} openings × 2 games, ${PROCS} processes)`);
     await Promise.all([...Array(PROCS).keys()].map(k => new Promise((res, rej) => {
       const c = cp.spawn(process.execPath, [__filename, '--worker', String(level), String(k), ...args], { stdio: ['ignore', 'pipe', 'inherit'] }); let buf = '';
       c.stdout.on('data', x => { buf += x; let j; while ((j = buf.indexOf('\n')) >= 0) { rs.push(JSON.parse(buf.slice(0, j))); buf = buf.slice(j + 1); process.stderr.write(`\r${rs.length} / ${N}  `); } });
@@ -87,9 +94,9 @@ if (args[0] === '--worker') {   // one process: its share of the openings for on
     const n = rs.length; let sw = 0, sw2 = 0, sd = 0, tE = 0, tU = 0, ub = 0, uw = 0, dbl = 0, dwh = 0;   // ub / uw: our score with black / white (the openings have black to move)
     for (const r of rs) { ub += r.d2 < 0 ? 1 : r.d2 ? 0 : 0.5; uw += r.d1 < 0 ? 1 : r.d1 ? 0 : 0.5; dbl -= r.d2; dwh -= r.d1; const p = ((r.d1 > 0 ? 1 : r.d1 ? 0 : 0.5) + (r.d2 > 0 ? 1 : r.d2 ? 0 : 0.5)) / 2; sw += p; sw2 += p * p; sd += (r.d1 + r.d2) / 2; tE += r.tE; tU += r.tU; }
     const sc = sw / n, se = Math.sqrt((sw2 / n - sc * sc) / n), cl = Math.min(0.999, Math.max(0.001, sc)), elo = -400 * Math.log10(1 / cl - 1), dElo = se * 400 / (Math.LN10 * cl * (1 - cl));
-    const out = { level, base: BNAME, n, oursBlack: +(100 * ub / n).toFixed(1), oursWhite: +(100 * uw / n).toFixed(1), oursBlackDiscs: +(dbl / n).toFixed(2), oursWhiteDiscs: +(dwh / n).toFixed(2), score: +(100 * sc).toFixed(1), elo: Math.round(elo), eloErr: Math.round(dElo), discs: +(sd / n).toFixed(2), secEdax: +(tE / (2 * n)).toFixed(3), secOurs: +(tU / (2 * n)).toFixed(3) };
+    const out = { level, base: BNAME + TAG, n, oursBlack: +(100 * ub / n).toFixed(1), oursWhite: +(100 * uw / n).toFixed(1), oursBlackDiscs: +(dbl / n).toFixed(2), oursWhiteDiscs: +(dwh / n).toFixed(2), score: +(100 * sc).toFixed(1), elo: Math.round(elo), eloErr: Math.round(dElo), discs: +(sd / n).toFixed(2), secEdax: +(tE / (2 * n)).toFixed(3), secOurs: +(tU / (2 * n)).toFixed(3) };
     fs.appendFileSync(OUT, JSON.stringify(out) + '\n');
-    console.log(`\rEdax レベル${level} 対 ${BNAME}: Edax の得点率 ${out.score}%  Elo ${elo >= 0 ? '+' : ''}${out.elo} ± ${out.eloErr}  平均石差 ${out.discs >= 0 ? '+' : ''}${out.discs}  考えた時間（1局）Edax ${out.secEdax} 秒 / 自前 ${out.secOurs} 秒（×${(out.secEdax / out.secOurs).toFixed(2)}）`);
+    console.log(`\rEdax レベル${level} 対 ${BNAME}${TAG}: Edax の得点率 ${out.score}%  Elo ${elo >= 0 ? '+' : ''}${out.elo} ± ${out.eloErr}  平均石差 ${out.discs >= 0 ? '+' : ''}${out.discs}  考えた時間（1局）Edax ${out.secEdax} 秒 / 自前 ${out.secOurs} 秒（×${(out.secEdax / out.secOurs).toFixed(2)}）`);
     console.log(`    自前の得点率：黒番 ${out.oursBlack}%（平均 ${out.oursBlackDiscs >= 0 ? '+' : ''}${out.oursBlackDiscs} 石）／白番 ${out.oursWhite}%（平均 ${out.oursWhiteDiscs >= 0 ? '+' : ''}${out.oursWhiteDiscs} 石）`);
   }
 })().catch(e => { console.error(e); process.exit(1); });
