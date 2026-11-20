@@ -24,7 +24,10 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     // the minelayer: no square to pick, a mine appears on my own sea (the small board)
     let i = await skillBtn('mine'), n0 = await acts();
     await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
-    ok(await p.evaluate(() => G.st.sides[0].mines.length === 1 && !!document.querySelector('#msvg .sb-mine')), name + ': the minelayer lays a mine, drawn on my sea');
+    ok(await p.evaluate(() => G.st.sides[0].mines.length === 1), name + ': the minelayer lays a mine');
+    await idle(); await tap('#btnSwap'); await p.waitForTimeout(800);
+    ok(await p.evaluate(() => G.view === 'own' && !!document.querySelector('#bsvg .sb-mine')), name + ': ... drawn on my sea (the caption switch shows it)');
+    await tap('#btnSwap'); await p.waitForTimeout(800);
     await idle();
     // rockets into a fleet with an AA cruiser: one shell is shot down
     await p.evaluate(() => { G.st.cd[0].fill(0); render(); });

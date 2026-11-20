@@ -74,6 +74,7 @@ function renderBoards() {
   SB.draw($('#bsvg'), boardOpts(v));
   document.body.classList.toggle('view-own', v === 'own');
   $('#bTitle').textContent = t(v === 'own' ? 'own' : 'enemy');
+  document.body.classList.toggle('can-swap', !!G.st && G.phase !== 'deploy'); $('#btnSwap').textContent = t(G.view === 'own' ? 'sw.enemy' : 'sw.own');
   if (G.st) { const o = boardOpts(v === 'own' ? 'enemy' : 'own'); o.mini = true; o.heat = null; o.best = -1; o.glow = null; SB.draw($('#msvg'), o); $('#miniCap').textContent = t(v === 'own' ? 'enemy' : 'own'); }
   let sub = '';
   if (G.st && G.phase === 'battle' && G.rule === 'salvo') { const q = G.st.left; for (let i = 0; i < q; i++) sub += '<b></b>'; }
@@ -104,6 +105,7 @@ function renderStatus(msg) {
     else s = t('st.ai');
   }
   $('#status').textContent = s;
+  $('#status').title = $('#status').textContent;
 }
 function renderKifu() {
   const k = $('#kifu');
@@ -511,6 +513,11 @@ $('#pickOverlay').addEventListener('click', e => { if (e.target.id === 'pickOver
 $('#btnPickStop').onclick = () => { $('#pickOverlay').classList.remove('show'); $('#btnDrStop').click(); };
 $('#btnDrStop').onclick = () => draftPickMine(-1);
 bsvg.addEventListener('click', e => { if (G.phase !== 'battle') return; const c = SB.cellAt(bsvg, e); if (c >= 0) playerShot(c); });
+$('#btnSwap').onclick = () => $('#miniBtn').onclick();
+// PC: the status line lives in the board's caption, between the title and the view switch; phones keep it in the side
+const statusHome = $('#status').parentElement, statusNext = $('#status').nextElementSibling, pcLayout = matchMedia('(min-width:1040px) and (min-aspect-ratio:3/4)');
+function placeStatus() { const el = $('#status'); if (pcLayout.matches) { if (el.parentElement !== $('.bhead')) $('.bhead').insertBefore(el, $('#btnSwap')); } else if (el.parentElement !== statusHome) statusHome.insertBefore(el, statusNext); el.title = el.textContent; }
+pcLayout.addEventListener('change', placeStatus); placeStatus();
 $('#miniBtn').onclick = () => { if (!G.st || G.busy || G.phase === 'deploy') return; swapView(G.view === 'enemy' ? 'own' : 'enemy').then(() => render()); };
 $('#btnShuffle').onclick = () => { if (G.phase !== 'deploy') return; G.my = E.randomFleet(Math.random, G.adj, G.my.map((s, i) => s.t != null ? s.t : i)); sfx('place'); renderBoards(); save(); };
 $('#btnGo').onclick = startBattle;
