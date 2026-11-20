@@ -1132,6 +1132,10 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 .sknote{grid-column:1/-1;font-size:13.5px;font-weight:700;color:var(--ink2);background:rgba(255,255,255,.85);border:2px dashed var(--line);border-radius:14px;padding:8px 12px;line-height:1.5}
 .skc{position:relative;display:flex;flex-direction:column;min-width:0;padding:3px;border:0;border-radius:16px;background:var(--rc,#c9cdd6);cursor:pointer;text-align:start;font:inherit;color:var(--ink);-webkit-tap-highlight-color:transparent;transition:transform .15s;box-shadow:0 2px 0 rgba(0,0,0,.1);isolation:isolate}
 .skc:active{transform:scale(.97)}
+/* not owned: greyed out like the other items (2026-11-20) */
+.skc.locked{background:#d9d6ce}.skc.locked .skp{filter:grayscale(1) opacity(.38)}
+.skc.locked .skn{background:#f4f2ec}.skc.locked .skn b{color:#9a9890}.skc.locked .skn .rar{opacity:.55}
+.skc .lk{position:absolute;right:8px;top:8px;width:20px;height:20px;border-radius:50%;background:rgba(43,48,68,.72);color:#fff;display:grid;place-items:center;z-index:2}.skc .lk svg{width:12px;height:12px}
 .skc.sel{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--sky)}
 .skc:not(.vis) .rfx::before{animation-play-state:paused}
 .skp{position:relative;display:block;aspect-ratio:16/10;border-radius:13px 13px 0 0;overflow:hidden}
@@ -2452,7 +2456,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=45"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=464"></script>
+<script src="app.js?v=465"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>
