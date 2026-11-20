@@ -9,26 +9,28 @@
 (function () {
   'use strict';
   const BASE = (() => { try { return new URL('../images/atlas/skin/', document.currentScript.src).href; } catch (e) { return '../images/atlas/skin/'; } })();
-  const V = 1;   // bump when the images are re-rendered
+  const V = 2;   // bump when the images are re-rendered
   const DEV_ALL = true;
   const RAR = ['N', 'R', 'SR', 'SSR', 'UR'];
   // id: [rarity, kind (tile px | 'c' = cover), page colour, header colour, selected-tab colour, dark]
   const D = {
-    s01: [1, 768, '#f6eddb', '#fbf5e8', '#6b5a3e'], s02: [1, 768, '#e6dece', '#f3eee4', '#5c5446'], s03: [1, 768, '#d8c19b', '#efe2c8', '#6e4f2a'],
-    s04: [1, 768, '#cae7d9', '#e6f4ed', '#2e6b52'], s05: [1, 1024, '#e5efef', '#f1f7fa', '#3b6f9a'], s06: [1, 768, '#f6f5ee', '#fbfaf5', '#3f5f8f'],
-    s07: [1, 768, '#fbe7eb', '#fdf3f5', '#b9506e'], s08: [1, 768, '#d7b685', '#efdfc4', '#6b4524'], s09: [1, 1024, '#f3e8ec', '#f8f1f6', '#7a5aa8'],
-    s10: [1, 1024, '#efece4', '#f8f6f1', '#4f5b6e'], s11: [1, 768, '#f3e3bd', '#faf0da', '#7a5426'], s12: [1, 768, '#fbf6d2', '#fdfae6', '#a07a00'],
-    s13: [2, 768, '#fbecef', '#fdf4f6', '#c25478'], s14: [2, 768, '#f9eddc', '#fcf5ea', '#b4532a'], s15: [2, 768, '#ebf3f9', '#f5f9fc', '#3d6e9e'],
-    s16: [2, 768, '#e0ebf0', '#eef4f7', '#2f5a78'], s17: [2, 768, '#f7eedf', '#fbf6ec', '#2b3044'], s18: [2, 768, '#ebf4ee', '#f4f9f5', '#2f6a52'],
-    s19: [2, 768, '#eee4d3', '#f7f1e7', '#4a3f30'], s20: [2, 768, '#eee9f8', '#f6f3fc', '#5b47a8'], s21: [2, 768, '#e8f4fb', '#f3f9fd', '#2c7fb8'],
-    s22: [2, 768, '#eef4e0', '#f6f9ee', '#4f7a2e'], s23: [2, 768, '#edd5ac', '#f7ead2', '#6b4524'], s24: [2, 768, '#337355', '#1f4a36', '#e9c46a', 1],
+    s01: [1, 1024, '#f6eddc', '#fbf5e8', '#6b5a3e'], s02: [1, 1024, '#e7dfcf', '#f3eee4', '#5c5446'], s03: [1, 1024, '#dbc6a2', '#efe2c8', '#6e4f2a'],
+    s04: [1, 1024, '#d3ebe0', '#e6f4ed', '#2e6b52'], s05: [1, 1024, '#f4f6f3', '#f1f7fa', '#3b6f9a'], s06: [1, 1024, '#f7f6ee', '#fbfaf5', '#3f5f8f'],
+    s07: [1, 1024, '#fbebef', '#fdf3f5', '#b9506e'], s08: [1, 1024, '#cca878', '#efdfc4', '#6b4524'], s09: [1, 1024, '#f8f4f2', '#f8f1f6', '#7a5aa8'],
+    s10: [1, 1024, '#f0ebe3', '#f8f6f1', '#4f5b6e'], s11: [1, 1024, '#f3e2bd', '#faf0da', '#7a5426'], s12: [1, 1024, '#fefbe3', '#fdfae6', '#a07a00'],
+    s13: [2, 1024, '#fef5f7', '#fdf4f6', '#c25478'], s14: [2, 1024, '#fcf6ec', '#fcf5ea', '#b4532a'], s15: [2, 1024, '#f0f6fb', '#f5f9fc', '#3d6e9e'],
+    s16: [2, 1024, '#e3edf1', '#eef4f7', '#2f5a78'], s17: [2, 1024, '#fbf4e9', '#fbf6ec', '#2b3044'], s18: [2, 1024, '#f1f8f3', '#f4f9f5', '#2f6a52'],
+    s19: [2, 1024, '#eee5d6', '#f7f1e7', '#4a3f30'], s20: [2, 1024, '#f4effa', '#f6f3fc', '#5b47a8'], s21: [2, 1024, '#ecf6fc', '#f3f9fd', '#2c7fb8'],
+    s22: [2, 1024, '#f3f8e8', '#f6f9ee', '#4f7a2e'], s23: [2, 1024, '#edd5ac', '#f7ead2', '#6b4524'], s24: [2, 1024, '#2f6c51', '#1f4a36', '#e9c46a', 1],
     s25: [3, 'c', '#e2f0f8', '#eef7fd', '#2c7fb8'], s26: [3, 'c', '#efc6b0', '#fbe6d6', '#a14d5e'], s27: [3, 'c', '#d8e8e9', '#eef7fb', '#1f7a96'],
     s28: [3, 'c', '#e4edf6', '#f2f6fb', '#4a6f96'], s29: [3, 'c', '#dbecdc', '#eef7f0', '#4b8a3e'], s30: [3, 'c', '#f6dbb8', '#fcefdf', '#a5622a'],
     s31: [3, 'c', '#d0e1e2', '#edf4f6', '#3e6b6a'], s32: [3, 1024, '#f2f0ec', '#faf9f7', '#3a3a40'], s33: [3, 'c', '#222f55', '#1b2547', '#ffd56a', 1],
-    s34: [3, 1024, '#f9ead5', '#fcf3e6', '#c0613a'],
+    s34: [3, 1024, '#faf3e7', '#fcf3e6', '#c0613a'],
     s35: [4, 'c', '#d4cab0', '#efe5cc', '#6b4a22'], s36: [4, 'c', '#2d4969', '#14223b', '#6fe3bd', 1], s37: [4, 'c', '#1b2954', '#16224a', '#e6c77a', 1],
-    s38: [4, 768, '#f4ead9', '#faf4ea', '#a67c1f'], s39: [4, 1024, '#f3f1eb', '#faf9f5', '#a67c1f'], s40: [4, 1024, '#f1ebef', '#faf6fa', '#7d5cc4'],
+    s38: [4, 1024, '#f3e9d5', '#faf4ea', '#a67c1f'], s39: [4, 1024, '#f3f1eb', '#faf9f5', '#a67c1f'], s40: [4, 'c', '#f1ebf2', '#faf6fa', '#7d5cc4'],
   };
+  // skins whose colours drift: a second picture cross-fades over the first (opal's play of colour, 2026-11-20)
+  const ANIM = { s40: 's40b' };
   const L = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   // names, in the order of L
   const N = {
@@ -95,7 +97,8 @@
     return {
       '--sk-bg': s.bg,
       '--sk-img': `url("${url(s.id)}")`,
-      '--sk-size': s.cover ? 'cover' : `${Math.round(s.px / 1.5)}px ${Math.round(s.px / 1.5)}px`,
+      '--sk-size': s.cover ? 'cover' : `${s.px / 2}px ${s.px / 2}px`,   // (tiles: 2× pixels, sharp on retina)
+      '--sk-img2': ANIM[s.id] ? `url("${url(ANIM[s.id])}")` : 'none',
       '--sk-hdr': rgba(s.hd, .94), '--sk-hdrs': s.hd,
       '--sk-line': s.dark ? 'rgba(255,255,255,.14)' : shade(s.hd, .09),
       '--sk-nav': s.nav, '--sk-nav2': s.dark ? shade(s.nav, .3) : shade(s.nav, .35),
@@ -107,16 +110,16 @@
   function paint(id) {
     const s = map[id], st = root.style;
     Object.keys(vars(list[1])).forEach(k => st.removeProperty(k));
-    if (!s || s.def) { delete root.dataset.skin; delete root.dataset.skk; root.classList.remove('skdark'); return null; }
+    if (!s || s.def) { delete root.dataset.skin; delete root.dataset.skk; delete root.dataset.ska; root.classList.remove('skdark'); return null; }
     const v = vars(s); for (const k in v) st.setProperty(k, v[k]);
-    root.dataset.skin = id; root.dataset.skk = s.cover ? 'cover' : 'tile'; root.classList.toggle('skdark', s.dark);
+    root.dataset.skin = id; root.dataset.skk = s.cover ? 'cover' : 'tile'; if (ANIM[id]) root.dataset.ska = '1'; else delete root.dataset.ska; root.classList.toggle('skdark', s.dark);
     return v;
   }
   // wear a skin ('' / unknown = the classic cream): paint now and remember it for the next first paint
   function apply(id) {
     const v = paint(id);
     try {
-      if (v) { localStorage.setItem('atlas-skin', id); localStorage.setItem('atlas-skin-css', JSON.stringify({ id, v, k: map[id].cover ? 'cover' : 'tile', d: map[id].dark ? 1 : 0 })); }
+      if (v) { localStorage.setItem('atlas-skin', id); localStorage.setItem('atlas-skin-css', JSON.stringify({ id, v, k: map[id].cover ? 'cover' : 'tile', d: map[id].dark ? 1 : 0, a: ANIM[id] ? 1 : 0 })); }
       else { localStorage.removeItem('atlas-skin'); localStorage.removeItem('atlas-skin-css'); }
     } catch (e) {}
   }
