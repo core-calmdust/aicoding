@@ -109,7 +109,9 @@ html[data-skin] body{background-color:var(--sk-bg);background-image:none}
 html[data-skk=tile] body{background-image:var(--sk-img);background-size:var(--sk-size)}
 html[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-bg) var(--sk-img) var(--sk-pos,50% 100%)/cover no-repeat;pointer-events:none}
 @media (max-aspect-ratio:6/5){html[data-skp] body::before,html[data-skp] #skfx .fx-x{background-position-y:var(--sk-pyp,100%)}html[data-skp] body::before{background-image:var(--sk-imgp)}html[data-skp] #skfx .fx-x{background-image:var(--sk-img2p)}}
-@media (max-width:760px){html[data-skk=cover] body::before,html[data-skk=cover] #skfx{bottom:calc(var(--tabsH,64px) + var(--ulH,0px))}}   /* phones: the scene stands on the bottom bars, not under them */   /* narrow windows: the portrait picture (more sky above) */
+@media (max-width:760px){html[data-skk=cover] body::before,html[data-skk=cover] #skfx{bottom:calc(var(--tabsH,64px) + var(--ulH,0px))}}
+html[data-skin]{--pf-lip:rgba(110,80,40,.2)}html[data-skin].skdark{--pf-lip:rgba(0,0,0,.38)}html[data-skin].skdark .prof:not(.nr3):not(.nr4){box-shadow:0 6px 0 var(--pf-lip),0 14px 28px -14px rgba(0,0,0,.6)!important}   /* the profile card's edge takes the skin's tone (2026-11-20) */
+@media (min-width:761px){html[data-skk=cover]:has(.updline:not([hidden])) body::before,html[data-skk=cover]:has(.updline:not([hidden])) #skfx{bottom:var(--ulH,0px)}}   /* PC: the scene stands on the news ticker (NEW), not under it (2026-11-20) */   /* phones: the scene stands on the bottom bars, not under them */   /* narrow windows: the portrait picture (more sky above) */
 /* UR effects (atlas/skins.js FX): #skfx sits behind the page; only transform / opacity animate */
 #skfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}
 #skfx i{position:absolute;display:block;font-style:normal}#skfx svg{display:block;width:100%;height:100%;overflow:visible}
@@ -529,7 +531,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .tcsheet .lvs-l button b{min-width:28px;text-align:center}
 /* ---------- home: compact profile (one update-card wide) + today's game ---------- */
 .toprow{display:grid;grid-template-columns:503px minmax(0,1fr);gap:16px;margin-top:18px}   /* the gap sits under the centre of the 2nd update card (330 + 16 + 165 − 8) */
-.prof{position:relative;overflow:hidden;padding:14px 16px;display:flex;flex-direction:column;justify-content:center;gap:10px;border-radius:28px;border:0!important;box-shadow:0 6px 0 #e9dcc0,0 14px 28px -14px rgba(120,80,20,.4)!important}   /* same solid edge as Today's game, so both read the same size */
+.prof{position:relative;overflow:hidden;padding:14px 16px;display:flex;flex-direction:column;justify-content:center;gap:10px;border-radius:28px;border:0!important;box-shadow:0 6px 0 var(--pf-lip,#e9dcc0),0 14px 28px -14px rgba(120,80,20,.4)!important}   /* same solid edge as Today's game, so both read the same size */
 .prof .bgfill{position:absolute;inset:0;opacity:.9}
 .prof .bgfill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,253,247,.15) 0%,rgba(255,253,247,.93) 38%)}
 [dir=rtl] .prof .bgfill::after{background:linear-gradient(270deg,rgba(255,253,247,.15) 0%,rgba(255,253,247,.93) 38%)}
@@ -1178,8 +1180,8 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 /* (the rarity effects run also with the system's reduce-motion setting on: they are the reward's look, 2026-11-11) */
 /* the name card wearing an SSR / UR: the same running light round its edge, a soft glow, a twinkle in the corner */
 /* (.dprev stays position:sticky — a 'position:relative' here un-stuck the SSR / UR card and it drifted down, 2026-11-10) */
-.prof.nr4{box-shadow:0 6px 0 #e9dcc0,0 0 26px 4px rgba(255,170,60,.45)!important}
-.prof.nr3{box-shadow:0 6px 0 #e9dcc0,0 0 26px 4px rgba(180,107,255,.4)!important}
+.prof.nr4{box-shadow:0 6px 0 var(--pf-lip,#e9dcc0),0 0 26px 4px rgba(255,170,60,.45)!important}
+.prof.nr3{box-shadow:0 6px 0 var(--pf-lip,#e9dcc0),0 0 26px 4px rgba(180,107,255,.4)!important}
 .prof > .rfx{position:absolute;inset:0;z-index:6;padding:3.5px;border-radius:inherit}
 .prof > .ntw{position:absolute;top:8px;right:10px;width:18px;height:18px;z-index:7;pointer-events:none;background:conic-gradient(from 45deg,transparent 0 10%,#fff 12.5%,transparent 15% 35%,#fff 37.5%,transparent 40% 60%,#fff 62.5%,transparent 65% 85%,#fff 87.5%,transparent 90%);-webkit-mask:radial-gradient(circle,#000 0 18%,transparent 60%);mask:radial-gradient(circle,#000 0 18%,transparent 60%);animation:dicTw 2.2s ease-in-out infinite}
 .dprev.nr4{box-shadow:0 0 0 1px rgba(255,255,255,.6),0 0 26px 4px rgba(255,170,60,.45),0 10px 24px rgba(60,40,10,.14)}
@@ -1543,7 +1545,7 @@ html.bv-pland .urtoast{top:calc(52px + var(--sat,env(safe-area-inset-top)));left
   /* the boxes inside the opened name row: one frosted-glass look over the chosen background (2026-11-11) */
   #pg-home .prof .pf-r input{text-shadow:0 1px 0 #fff,0 0 6px #fff,0 0 12px rgba(255,255,255,.9)}
   /* wearing an SSR / UR: the glow and the running light wrap the title and the name row as one card (2026-11-11) */
-  #pg-home .prof.nr3,#pg-home .prof.nr4{overflow:visible;box-shadow:0 6px 0 #e9dcc0!important}
+  #pg-home .prof.nr3,#pg-home .prof.nr4{overflow:visible;box-shadow:0 6px 0 var(--pf-lip,#e9dcc0)!important}
   #pg-home .prof.nr3::before,#pg-home .prof.nr4::before{content:'';position:absolute;left:0;right:0;top:-188px;bottom:0;border-radius:24px;z-index:-1;pointer-events:none;box-shadow:0 0 26px 4px rgba(180,107,255,.45)}
   #pg-home .prof.nr4::before{box-shadow:0 0 26px 4px rgba(255,170,60,.5)}
   #pg-home .prof > .rfx{top:-188px;border-radius:24px}
@@ -2378,7 +2380,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=16"></script>
 <script src="art.js?v=19"></script>
-<script src="skins.js?v=21"></script>
+<script src="skins.js?v=23"></script>
 <script src="../shared/atlas-updates.js?v=48"></script>
 <script src="../shared/atlas.js?v=20261119nw1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
@@ -2443,7 +2445,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=44"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=462"></script>
+<script src="app.js?v=463"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

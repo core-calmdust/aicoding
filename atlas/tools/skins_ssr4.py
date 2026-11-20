@@ -451,7 +451,6 @@ def angkor():
         tx, ty = x + 20, y - h
         o += ''.join(f'<path d="M{tx} {ty} Q{tx + math.cos(a) * h * .3:.0f} {ty + math.sin(a) * h * .3 - h * .08:.0f} {tx + math.cos(a) * h * .5:.0f} {ty + math.sin(a) * h * .5 + h * .1:.0f}" stroke="{c}" stroke-width="{h * .05:.0f}" fill="none" stroke-linecap="round"/>' for a in (-3, -2.4, -1.8, -1.2, -.6, 0, .4))
         return o
-    g.append(palm(120, 880, 420) + palm(260, 870, 320) + palm(1700, 880, 380) + palm(1840, 900, 460))
     return doc(d, ''.join(g))
 
 # ------------------------------------------------------------------------------------------------ s127 マチュピチュ
@@ -564,9 +563,14 @@ def canyon_falls():
             for _ in range(5):
                 mx = xa + r.random() * (xb - xa); mw = 60 + r.random() * 140
                 g.append(f'<path d="M{mx:.0f} {y + 30:.0f} q{mw * .2:.0f} -{14 + r.random() * 10:.0f} {mw * .5:.0f} -{8 + r.random() * 8:.0f} q{mw * .3:.0f} -4 {mw * .5:.0f} 8 Z" fill="{["#a6c88c", "#94bc7e", "#b4d49a"][int(r.random() * 3)]}"/>')
-    g.append('<path d="M860 330 L1060 330 L1080 1000 L840 1000 Z" fill="#dff2f6"/>' + ''.join(f'<path d="M{x} 330 L{x + 4} 1000" stroke="#ffffff" stroke-width="{w}" opacity=".7"/>' for x, w in ((880, 8), (930, 14), (980, 10), (1030, 12))))
+    g.append(lin('fall', [(0, '#e8f6fa'), (.5, '#cfe8f0'), (1, '#f4fbfd')]).join(('<defs>', '</defs>')))
+    g.append('<path d="M856 330 C870 600 846 820 836 1000 L1084 1000 C1074 820 1050 600 1064 330 Z" fill="url(#fall)"/>')
+    rf = RNG(1303)
+    g.append(''.join(f'<path d="M{x:.0f} 334 C{x + (rf.random() - .5) * 8:.0f} 600 {x - 8 + (x - 960) * .05:.0f} 820 {x - 10 + (x - 960) * .1:.0f} 1000" stroke="{["#ffffff", "#bfe0ea", "#e2f2f8"][int(rf.random() * 3)]}" stroke-width="{1.5 + rf.random() * 4:.1f}" opacity="{.4 + rf.random() * .5:.2f}" fill="none"/>' for x in [860 + k * 5.2 for k in range(39)]))
+    g.append('<path d="M846 334 C900 318 1020 318 1074 334 C1040 348 880 348 846 334 Z" fill="#ffffff" opacity=".85"/>')
+    g.append('<ellipse cx="960" cy="1000" rx="230" ry="46" fill="#ffffff" opacity=".9" filter="url(#b8)"/><ellipse cx="960" cy="980" rx="160" ry="60" fill="#ffffff" opacity=".6" filter="url(#b16)"/>')
     g.append('<path d="M820 320 C880 300 1000 300 1100 320 L1100 340 L820 340 Z" fill="#7d9a8a"/>')
-    g.append('<path d="M640 1000 C760 960 1160 960 1280 1000 L1280 1200 L640 1200 Z" fill="#a9d4e0"/><ellipse cx="960" cy="1000" rx="260" ry="40" fill="#ffffff" opacity=".8" filter="url(#b16)"/>')
+    g.append('<path d="M640 1000 C760 960 1160 960 1280 1000 L1280 1200 L640 1200 Z" fill="#a9d4e0"/><ellipse cx="960" cy="1010" rx="260" ry="34" fill="#ffffff" opacity=".7" filter="url(#b16)"/>')
     g.append('<g opacity=".38" filter="url(#b4)">' + ''.join(f'<path d="M560 980 A420 420 0 0 1 1360 980" stroke="{c}" stroke-width="18" fill="none" transform="translate(0 {k * 18})"/>' for k, c in enumerate(('#f6a8a8', '#f6d79a', '#a9d8a8', '#a9c8f0', '#c9a8e8'))) + '</g>')
     g.append('<path d="M600 760 Q960 700 1320 760" stroke="#d9634e" stroke-width="18" fill="none"/>' + ''.join(f'<rect x="{x - 4}" y="{y - 46}" width="8" height="46" fill="#d9634e"/>' for x, y in ((640, 754), (760, 732), (880, 722), (1040, 722), (1160, 732), (1280, 754))) + '<path d="M600 714 Q960 654 1320 714" stroke="#d9634e" stroke-width="8" fill="none"/>')
     g.append(''.join(f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{ry}" fill="#8f9a96"/><ellipse cx="{x - rx * .2:.0f}" cy="{y - ry * .4:.0f}" rx="{rx * .6:.0f}" ry="{ry * .4:.0f}" fill="#a6b0ac"/>' for x, y, rx, ry in ((560, 1150, 120, 60), (1380, 1140, 110, 56), (760, 1190, 90, 40), (1180, 1190, 100, 44))))
@@ -588,6 +592,7 @@ def ski_slope():
     g.append('<path d="M-40 1200 L-40 880 C400 820 700 760 960 700 C1200 760 1500 820 1960 880 L1960 1200 Z" fill="#f6f9fc"/>')
     g.append('<path d="M760 1200 C820 1000 900 840 960 700 C1020 840 1100 1000 1160 1200 Z" fill="#ffffff"/>' + ''.join(f'<path d="M{960 + a * 20} 720 C{960 + a * 60} 900 {960 + a * 120} 1050 {960 + a * 180} 1200" stroke="#e2eaf4" stroke-width="3" fill="none"/>' for a in (-1, -.3, .4, 1)))
     g.append('<path d="M1160 1100 L1700 360" stroke="#5a6070" stroke-width="3"/><path d="M1190 1110 L1730 370" stroke="#5a6070" stroke-width="3"/>' + ''.join(f'<rect x="{x - 6}" y="{y}" width="12" height="{110 + i * 6}" fill="#8f949e"/><rect x="{x - 30}" y="{y}" width="60" height="10" fill="#8f949e"/>' for i, (x, y) in enumerate(((1250, 960), (1430, 720), (1610, 470)))))
+    g.append('<rect x="1690" y="330" width="130" height="80" fill="#8a96a8"/><path d="M1676 334 L1755 290 L1834 334 Z" fill="#ffffff"/><rect x="1700" y="350" width="40" height="30" fill="#ffd796"/><circle cx="1712" cy="352" r="22" fill="#6a7484"/><rect x="1120" y="1060" width="110" height="70" fill="#8a96a8"/><path d="M1108 1064 L1175 1026 L1242 1064 Z" fill="#ffffff"/><circle cx="1172" cy="1092" r="22" fill="#6a7484"/>')
     X, Y = 420, 1100   # the lodge
     g.append(f'<rect x="{X - 170}" y="{Y - 120}" width="340" height="140" fill="#a9785a"/>' + ''.join(f'<rect x="{X - 170}" y="{Y - 120 + i * 20}" width="340" height="3" fill="#946648"/>' for i in range(7)) + f'<path d="M{X - 220} {Y - 110} L{X} {Y - 260} L{X + 220} {Y - 110} Z" fill="#ffffff"/><path d="M{X - 220} {Y - 110} L{X + 220} {Y - 110} L{X + 200} {Y - 96} L{X - 200} {Y - 96} Z" fill="#dfe6ee"/>'
              + ''.join(f'<rect x="{X - 140 + i * 74}" y="{Y - 80}" width="50" height="46" rx="4" fill="#ffd796"/>' for i in range(4)) + f'<rect x="{X + 90}" y="{Y - 220}" width="30" height="60" fill="#8f7766"/>')
@@ -634,12 +639,21 @@ def hydrangea_rain():
         g.append(f'<rect x="{960 - w}" y="{y}" width="{w * 2}" height="{10 + k * 4}" fill="#c9c4ba"/><rect x="{960 - w}" y="{y}" width="{w * 2}" height="{3 + k}" fill="#ddd8ce"/>')
     r = RNG(133)
     def bush(x, y, s, c, c2):
-        o = ''.join(f'<ellipse cx="{x + dx * s:.0f}" cy="{y + dy * s:.0f}" rx="{s * .5:.0f}" ry="{s * .3:.0f}" fill="#7fae7a"/>' for dx, dy in ((-.5, .1), (.5, .1), (0, .22)))
-        for dx, dy, rr in ((-.42, -.2, .3), (.34, -.24, .32), (0, -.42, .3), (-.12, -.05, .26), (.5, .02, .24)):
+        o = ''
+        for k in range(9):   # leaves: big, pointed, with a vein
+            a = -3.0 + k * .75 + (r.random() - .5) * .3; L = s * (.5 + r.random() * .16); lx, ly = x + math.cos(a) * s * .3, y + s * .16
+            ex, ey = lx + math.cos(a) * L, ly + math.sin(a) * L * .55
+            o += f'<path d="M{lx:.0f} {ly:.0f} Q{(lx + ex) / 2 - math.sin(a) * L * .25:.0f} {(ly + ey) / 2 + math.cos(a) * L * .18:.0f} {ex:.0f} {ey:.0f} Q{(lx + ex) / 2 + math.sin(a) * L * .25:.0f} {(ly + ey) / 2 - math.cos(a) * L * .18:.0f} {lx:.0f} {ly:.0f} Z" fill="{["#6f9e6a", "#7fae76", "#5f8f5e"][k % 3]}"/><path d="M{lx:.0f} {ly:.0f} L{ex:.0f} {ey:.0f}" stroke="#9cc48e" stroke-width="{max(1, s * .008):.1f}" opacity=".7"/>'
+        for dx, dy, rr in ((-.4, -.16, .27), (.32, -.2, .29), (0, -.4, .28), (-.1, -.02, .24), (.48, .04, .21), (-.52, .08, .2)):
             cx, cy, R = x + dx * s, y + dy * s, rr * s
-            o += f'<circle cx="{cx:.0f}" cy="{cy:.0f}" r="{R:.0f}" fill="{c}"/>' + ''.join(f'<path d="M{cx + R * .55 * math.cos(a):.1f} {cy + R * .55 * math.sin(a):.1f} m-{R * .14:.1f} 0 l{R * .14:.1f} -{R * .14:.1f} l{R * .14:.1f} {R * .14:.1f} l-{R * .14:.1f} {R * .14:.1f} Z" fill="{c2}"/>' for a in [j * 1.05 + r.random() for j in range(6)])
+            o += f'<circle cx="{cx:.0f}" cy="{cy:.0f}" r="{R * .8:.0f}" fill="{c}"/>'
+            n = int(22 + R * .32)
+            for _ in range(n):   # florets: four rounded petals and a dot
+                a, d2 = r.random() * 6.283, R * .92 * r.random() ** .5; fx, fy, fs = cx + math.cos(a) * d2, cy + math.sin(a) * d2 * .92, R * (.2 + r.random() * .07)
+                fc = c2 if (fy < cy - R * .1 or r.random() < .5) else c; rot = r.random() * 90
+                o += ''.join(f'<ellipse cx="{fx + math.cos(b) * fs * .5:.1f}" cy="{fy + math.sin(b) * fs * .5:.1f}" rx="{fs * .48:.1f}" ry="{fs * .4:.1f}" transform="rotate({math.degrees(b):.0f} {fx + math.cos(b) * fs * .5:.1f} {fy + math.sin(b) * fs * .5:.1f})" fill="{fc}"/>' for b in [math.radians(rot) + q * 1.571 for q in range(4)]) + f'<circle cx="{fx:.1f}" cy="{fy:.1f}" r="{fs * .14:.1f}" fill="#ffffff" opacity=".8"/>'
         return o
-    pal = [('#9fb8ec', '#c4d4f6'), ('#b8a6e6', '#d8ccf4'), ('#f0a8c8', '#f8cce0'), ('#a8c8f0', '#d0e2f8')]
+    pal = [('#8aa6e6', '#c8d8f8'), ('#a894e0', '#dcd0f6'), ('#e894bc', '#fad2e4'), ('#94bcec', '#d6e6fa')]
     for side in (-1, 1):
         for k in range(8):
             t = k / 7; x = 960 + side * (180 + t ** 1.2 * 760); y = 700 + t ** 1.4 * 480; s = 60 + t * 220
@@ -656,14 +670,22 @@ def apple_orchard():
     g.append('<rect x="1440" y="640" width="200" height="120" fill="#c8584e"/><path d="M1420 646 L1540 570 L1660 646 Z" fill="#a84a44"/><rect x="1510" y="690" width="60" height="70" fill="#f6efe2"/><path d="M1510 690 L1570 760 M1570 690 L1510 760" stroke="#c8584e" stroke-width="5"/>')
     g.append('<path d="M-40 1200 L-40 780 C500 760 1200 760 1960 790 L1960 1200 Z" fill="#b4d48e"/>')
     r = RNG(134)
-    for row, (y, n, s) in enumerate(((800, 12, 100), (880, 9, 150), (990, 7, 220), (1140, 5, 320))):
+    def apple(x, y, R):
+        return (f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{R:.1f}" fill="#d8443e"/><path d="M{x - R:.1f} {y:.1f} A{R:.1f} {R:.1f} 0 0 0 {x + R:.1f} {y:.1f} A{R:.1f} {R * .6:.1f} 0 0 1 {x - R:.1f} {y:.1f} Z" fill="#b83a36" opacity=".6"/>'
+                f'<ellipse cx="{x - R * .35:.1f}" cy="{y - R * .35:.1f}" rx="{R * .28:.1f}" ry="{R * .2:.1f}" fill="#ffffff" opacity=".55"/><path d="M{x:.1f} {y - R * .8:.1f} q{R * .1:.1f} {-R * .4:.1f} {R * .3:.1f} {-R * .5:.1f}" stroke="#7a5a3a" stroke-width="{max(1, R * .14):.1f}" fill="none"/>'
+                f'<path d="M{x + R * .1:.1f} {y - R * 1.05:.1f} q{R * .5:.1f} {-R * .35:.1f} {R * .8:.1f} 0 q{-R * .4:.1f} {R * .3:.1f} {-R * .8:.1f} 0 Z" fill="#6fa85a"/>')
+    for row, (y, n, sz) in enumerate(((800, 12, 100), (880, 9, 150), (990, 7, 220), (1140, 5, 320))):
         for i in range(n):
-            x = (i + .5 + (row % 2) * .5) * VW / n + (r.random() - .5) * 40; ss = s * (.9 + r.random() * .2)
-            g.append(f'<rect x="{x - ss * .06:.0f}" y="{y - ss * .5:.0f}" width="{ss * .12:.0f}" height="{ss * .5:.0f}" fill="#9a7a5e"/><ellipse cx="{x:.0f}" cy="{y - ss * .78:.0f}" rx="{ss * .52:.0f}" ry="{ss * .44:.0f}" fill="#7fb06a"/><ellipse cx="{x - ss * .1:.0f}" cy="{y - ss * .86:.0f}" rx="{ss * .4:.0f}" ry="{ss * .32:.0f}" fill="#8fbf74"/>')
-            g.append(''.join(f'<circle cx="{x + (r.random() - .5) * ss * .8:.0f}" cy="{y - ss * .78 + (r.random() - .5) * ss * .6:.0f}" r="{ss * .055:.1f}" fill="#e2524a"/>' for _ in range(int(6 + row * 3))))
+            x = (i + .5 + (row % 2) * .5) * VW / n + (r.random() - .5) * 40; ss = sz * (.9 + r.random() * .2)
+            g.append(f'<path d="M{x - ss * .06:.0f} {y:.0f} L{x - ss * .04:.0f} {y - ss * .55:.0f} L{x - ss * .25:.0f} {y - ss * .8:.0f} M{x + ss * .04:.0f} {y - ss * .55:.0f} L{x + ss * .22:.0f} {y - ss * .82:.0f}" stroke="#9a7a5e" stroke-width="{ss * .07:.1f}" fill="none" stroke-linecap="round"/><rect x="{x - ss * .06:.0f}" y="{y - ss * .55:.0f}" width="{ss * .12:.0f}" height="{ss * .55:.0f}" fill="#9a7a5e"/>')
+            for dx, dy, rr, c in ((-.3, -.72, .34, '#6fa25e'), (.3, -.74, .34, '#6fa25e'), (0, -.98, .36, '#7fb06a'), (-.42, -.92, .26, '#7fb06a'), (.42, -.95, .26, '#7fb06a'), (-.12, -.78, .3, '#8fbf74'), (.14, -1.06, .24, '#8fbf74')):
+                g.append(f'<circle cx="{x + dx * ss:.0f}" cy="{y + dy * ss:.0f}" r="{rr * ss:.0f}" fill="{c}"/>')
+            for _ in range(int(3 + row * 2.5)):
+                a, d2 = r.random() * 6.283, r.random() ** .5 * ss * .42
+                g.append(apple(x + math.cos(a) * d2, y - ss * .86 + math.sin(a) * d2 * .7, ss * (.06 + r.random() * .015)))
         g.append(haze(y - 200, y, '#eef4e6', .18 - row * .04))
     g.append('<path d="M620 1200 L700 900 M680 1200 L760 900" stroke="#b08a64" stroke-width="10"/>' + ''.join(f'<path d="M{620 + t * 80:.0f} {1200 - t * 300:.0f} L{680 + t * 80:.0f} {1200 - t * 300:.0f}" stroke="#b08a64" stroke-width="8"/>' for t in (.15, .35, .55, .75, .95)))
-    g.append(''.join(f'<path d="M{x - 60} {y} L{x + 60} {y} L{x + 48} {y + 70} L{x - 48} {y + 70} Z" fill="#c9a06a"/><path d="M{x - 60} {y + 20} L{x + 60} {y + 20} M{x - 56} {y + 44} L{x + 56} {y + 44}" stroke="#b08a54" stroke-width="5"/>' + ''.join(f'<circle cx="{x - 40 + j * 20}" cy="{y - 6}" r="13" fill="#e2524a"/>' for j in range(5)) for x, y in ((420, 1110), (1300, 1120))))
+    g.append(''.join(f'<path d="M{x - 60} {y} L{x + 60} {y} L{x + 48} {y + 70} L{x - 48} {y + 70} Z" fill="#c9a06a"/><path d="M{x - 60} {y + 20} L{x + 60} {y + 20} M{x - 56} {y + 44} L{x + 56} {y + 44}" stroke="#b08a54" stroke-width="5"/>' + ''.join(apple(x - 40 + j * 20, y - 8, 12) for j in range(5)) for x, y in ((420, 1110), (1300, 1120))))
     return doc(d, ''.join(g))
 
 # ------------------------------------------------------------------------------------------------ s135 恐竜の谷
@@ -761,7 +783,7 @@ def rainy_cafe():
     d = BLUR + lin('out', [(0, '#a9b8c8'), (1, '#c9d2dc')]) + lin('wall', [(0, '#e9d6c0'), (1, '#dcc4a8')])
     g = ['<rect width="1920" height="1200" fill="url(#wall)"/>']
     W = (360, 140, 1560, 860)   # the window
-    g.append(f'<rect x="{W[0]}" y="{W[1]}" width="{W[2] - W[0]}" height="{W[3] - W[1]}" fill="url(#out)"/>')
+    g.append(f'<clipPath id="win"><rect x="{W[0]}" y="{W[1]}" width="{W[2] - W[0]}" height="{W[3] - W[1]}"/></clipPath><g clip-path="url(#win)"><rect x="{W[0]}" y="{W[1]}" width="{W[2] - W[0]}" height="{W[3] - W[1]}" fill="url(#out)"/>')
     r = RNG(139)
     x = W[0]
     while x < W[2]:   # the street outside: blurry buildings, umbrellas
@@ -771,6 +793,7 @@ def rainy_cafe():
     g.append(f'<rect x="{W[0]}" y="{W[3] - 120}" width="{W[2] - W[0]}" height="120" fill="#9aa4b0" filter="url(#b4)"/>' + ''.join(f'<ellipse cx="{x}" cy="{W[3] - 60}" rx="70" ry="10" fill="#ffe6b0" opacity=".25" filter="url(#b8)"/>' for x in (600, 1100, 1400)))
     for x, c in ((700, '#f08a8a'), (1250, '#6fa8d8')):
         g.append(f'<g filter="url(#b2)"><path d="M{x - 60} {W[3] - 150} C{x - 60} {W[3] - 210} {x + 60} {W[3] - 210} {x + 60} {W[3] - 150} Z" fill="{c}"/><rect x="{x - 2}" y="{W[3] - 150}" width="4" height="40" fill="#5a5a6a"/><rect x="{x - 16}" y="{W[3] - 130}" width="32" height="60" rx="10" fill="#6a6a7a"/></g>')
+    g.append('</g>')
     g.append(f'<rect x="{W[0] - 30}" y="{W[1] - 30}" width="{W[2] - W[0] + 60}" height="30" fill="#8a6a54"/><rect x="{W[0] - 30}" y="{W[3]}" width="{W[2] - W[0] + 60}" height="40" fill="#8a6a54"/><rect x="{W[0] - 30}" y="{W[1]}" width="30" height="{W[3] - W[1]}" fill="#8a6a54"/><rect x="{W[2]}" y="{W[1]}" width="30" height="{W[3] - W[1]}" fill="#8a6a54"/>'
              f'<rect x="{(W[0] + W[2]) / 2 - 10:.0f}" y="{W[1]}" width="20" height="{W[3] - W[1]}" fill="#8a6a54"/><rect x="{W[0]}" y="{W[1] + 200}" width="{W[2] - W[0]}" height="14" fill="#8a6a54"/>')
     g.append(f'<path d="M{W[0] + 20} {W[1]} C{W[0] + 80} {W[1] + 60} {W[0] + 140} {W[1] + 40} {W[0] + 200} {W[1] + 90} L{W[0] + 200} {W[1]} Z" fill="#f2e2c8" opacity=".0"/>')

@@ -115,11 +115,15 @@ def clockwork():
     """時計じかけの塔: inside a clock tower — warm brass and wood, the back of a great clock face letting in light, beams and stairs (the gears turn, the pendulum swings: the page's)"""
     d = BLUR + lin('wall', [(0, '#3a2a2a'), (1, '#5a3e34')]) + rad('face', [(0, '#fff2d0', 1), (.7, '#f6d8a0', .95), (1, '#e8b870', .9)])
     g = ['<rect width="1920" height="1200" fill="url(#wall)"/>', glow(960, 420, 700, 500, '#ffd8a0', .35, 'b60')]
-    C = (960, 420, 300)   # the clock face (seen from behind: the numerals mirrored)
-    g.append(f'<circle cx="{C[0]}" cy="{C[1]}" r="{C[2] + 40}" fill="#6a4a3a"/><circle cx="{C[0]}" cy="{C[1]}" r="{C[2]}" fill="url(#face)"/><circle cx="{C[0]}" cy="{C[1]}" r="{C[2]}" fill="none" stroke="#8a6a4a" stroke-width="10"/>')
-    g.append(''.join(f'<path d="M{C[0] + C[2] * .82 * math.cos(a):.0f} {C[1] + C[2] * .82 * math.sin(a):.0f} L{C[0] + C[2] * .95 * math.cos(a):.0f} {C[1] + C[2] * .95 * math.sin(a):.0f}" stroke="#8a6a4a" stroke-width="{12 if k % 3 == 0 else 5}"/>' for k, a in enumerate([j * math.pi / 6 for j in range(12)])))
-    g.append(''.join(f'<path d="M{C[0]} {C[1]} L{C[0] + C[2] * math.cos(a):.0f} {C[1] + C[2] * math.sin(a):.0f}" stroke="#8a6a4a" stroke-width="3" opacity=".5"/>' for a in [j * math.pi / 6 for j in range(12)]))
-    g.insert(1, ''.join(f'<rect x="{(i * 120 + (j % 2) * 60) - 60}" y="{40 + j * 50}" width="116" height="46" rx="4" fill="#4a3430" opacity=".55"/>' for i in range(18) for j in range(16)))
+    C = (960, 400, 210)   # the clock face (seen from behind: light through the glass), finely drawn
+    g.append(f'<circle cx="{C[0]}" cy="{C[1]}" r="{C[2] + 46}" fill="#5a4030"/><circle cx="{C[0]}" cy="{C[1]}" r="{C[2] + 34}" fill="none" stroke="#c89a5a" stroke-width="6"/>'
+             + ''.join(f'<circle cx="{C[0] + (C[2] + 40) * math.cos(a):.1f}" cy="{C[1] + (C[2] + 40) * math.sin(a):.1f}" r="4" fill="#d8b070"/>' for a in [k * math.pi / 30 for k in range(60)])
+             + f'<circle cx="{C[0]}" cy="{C[1]}" r="{C[2]}" fill="url(#face)"/><circle cx="{C[0]}" cy="{C[1]}" r="{C[2] * .72:.0f}" fill="none" stroke="#b88a4a" stroke-width="2" opacity=".6"/><circle cx="{C[0]}" cy="{C[1]}" r="{C[2] * .3:.0f}" fill="none" stroke="#b88a4a" stroke-width="2" opacity=".5"/>')
+    g.append(''.join(f'<path d="M{C[0] + C[2] * .9 * math.cos(a):.1f} {C[1] + C[2] * .9 * math.sin(a):.1f} L{C[0] + C[2] * .97 * math.cos(a):.1f} {C[1] + C[2] * .97 * math.sin(a):.1f}" stroke="#8a6a4a" stroke-width="{4 if k % 5 == 0 else 1.5}"/>' for k, a in enumerate([j * math.pi / 30 for j in range(60)])))
+    RN = ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI']
+    g.append(''.join(f'<text x="{C[0] - C[2] * .8 * math.sin(k * math.pi / 6):.1f}" y="{C[1] - C[2] * .8 * math.cos(k * math.pi / 6) + 9:.1f}" font-family="Georgia,serif" font-size="26" fill="#7a5a3a" text-anchor="middle">{RN[k]}</text>' for k in range(12)))
+    g.append(''.join(f'<path d="M{C[0]} {C[1]} m{C[2] * .45 * math.cos(a):.1f} {C[2] * .45 * math.sin(a):.1f} q{C[2] * .1 * math.cos(a + 1.2):.1f} {C[2] * .1 * math.sin(a + 1.2):.1f} {C[2] * .2 * math.cos(a):.1f} {C[2] * .2 * math.sin(a):.1f}" stroke="#b88a4a" stroke-width="2" fill="none" opacity=".55"/>' for a in [k * math.pi / 4 for k in range(8)]))
+    g.append(f'<g opacity=".25">' + ''.join(f'<path d="M{C[0] + C[2] * math.cos(a):.0f} {C[1] + C[2] * math.sin(a):.0f} L{C[0] + 900 * math.cos(a):.0f} {C[1] + 1200:.0f}" stroke="#ffe0a8" stroke-width="40" opacity=".3" filter="url(#b16)"/>' for a in (1.9, 2.3, 1.2)) + '</g>')
     g.append('<rect x="0" y="0" width="80" height="1200" fill="#4a3228"/><rect x="1840" y="0" width="80" height="1200" fill="#4a3228"/><rect x="0" y="820" width="1920" height="40" fill="#6a4a38"/><rect x="0" y="0" width="1920" height="40" fill="#4a3228"/>')
     g.append(''.join(f'<path d="M{x} 860 L{x} 1200" stroke="#6a4a38" stroke-width="30"/>' for x in (300, 960, 1620)))
     g.append('<path d="M1300 1200 L1300 1140 L1380 1140 L1380 1080 L1460 1080 L1460 1020 L1540 1020 L1540 960 L1620 960 L1620 900 L1700 900 L1700 860 L1960 860 L1960 1200 Z" fill="#5a3e30"/>')
@@ -131,14 +135,19 @@ def ringed_planet():
     """環のある惑星: deep space with a nebula, a great ringed planet low on the right, a rocky little moon in front (moons orbit, the ring shimmers, a comet and satellites pass: the page's)"""
     d = BLUR + lin('sky', [(0, '#080a1e'), (1, '#141a3a')]) + rad('pl', [(0, '#f6d8b0', 1), (.6, '#d89a7a', 1), (1, '#8a5a6a', 1)], .38, .32, .75) + rad('neb', [(0, '#b07ae0', .45), (1, '#b07ae0', 0)])
     g = [f'<rect width="{VW}" height="{VH}" fill="url(#sky)"/>', '<ellipse cx="500" cy="380" rx="700" ry="260" fill="url(#neb)" filter="url(#b30)"/><ellipse cx="760" cy="300" rx="400" ry="160" fill="#6ac0e0" opacity=".15" filter="url(#b60)"/>', stars(520, 106, 0, 1200, '#f6f2ff', .06)]
-    P = (1400, 760, 300)
-    ring = lambda sw, col, op: f'<ellipse cx="{P[0]}" cy="{P[1]}" rx="{P[2] * 2}" ry="{P[2] * .42:.0f}" fill="none" stroke="{col}" stroke-width="{sw}" opacity="{op}"/>'
-    rings = ring(40, '#e8c8a0', .5) + ring(14, '#fff0d8', .5).replace(f'rx="{P[2] * 2}"', f'rx="{P[2] * 2 - 34}"').replace(f'ry="{P[2] * .42:.0f}"', f'ry="{P[2] * .42 - 8:.0f}"') + ring(10, '#c8a080', .45).replace(f'rx="{P[2] * 2}"', f'rx="{P[2] * 2 + 36}"').replace(f'ry="{P[2] * .42:.0f}"', f'ry="{P[2] * .42 + 8:.0f}"')
-    g.append(f'<clipPath id="rf"><rect x="{P[0] - 800}" y="{P[1]}" width="1600" height="400"/></clipPath><g transform="rotate(-14 {P[0]} {P[1]})">{rings}</g>')
-    g.append(f'<circle cx="{P[0]}" cy="{P[1]}" r="{P[2]}" fill="url(#pl)"/>' + ''.join(f'<ellipse cx="{P[0]}" cy="{P[1] + dy}" rx="{(P[2] ** 2 - dy ** 2) ** .5:.0f}" ry="{12 + abs(dy) * .02:.0f}" fill="{c}" opacity=".35"/>' for dy, c in ((-180, '#f6e2c4'), (-90, '#c88a6a'), (0, '#f6d8b0'), (90, '#b87a6a'), (180, '#e8b890'))))
-    g.append(f'<circle cx="{P[0]}" cy="{P[1]}" r="{P[2]}" fill="none" stroke="#ffe8c8" stroke-width="6" opacity=".4" filter="url(#b4)"/>')
+    P = (1380, 660, 190)
+    pl = f'<circle cx="{P[0]}" cy="{P[1]}" r="{P[2]}"/>'
+    rings = ''.join(f'<ellipse cx="{P[0]}" cy="{P[1]}" rx="{rx}" ry="{rx * .21:.0f}" fill="none" stroke="{c}" stroke-width="{w}" opacity="{o}"/>' for rx, w, c, o in ((300, 26, '#e8c8a0', .55), (336, 10, '#d8b088', .45), (262, 8, '#f6e0c0', .5), (360, 4, '#c8a080', .35)))
+    g.append(f'<clipPath id="rf"><rect x="{P[0] - 500}" y="{P[1]}" width="1000" height="300"/></clipPath><g transform="rotate(-14 {P[0]} {P[1]})">{rings}</g>')
+    g.append(f'<clipPath id="pc">{pl}</clipPath><circle cx="{P[0]}" cy="{P[1]}" r="{P[2]}" fill="url(#pl)"/><g clip-path="url(#pc)">' + ''.join(f'<path d="M{P[0] - 220} {P[1] + dy} C{P[0] - 80} {P[1] + dy - 10} {P[0] + 80} {P[1] + dy + 12} {P[0] + 220} {P[1] + dy}" stroke="{c}" stroke-width="{w}" fill="none" opacity="{o}"/>' for dy, w, c, o in ((-140, 10, '#f6e2c4', .5), (-104, 18, '#c88a6a', .45), (-60, 8, '#f6d8b0', .5), (-30, 22, '#b87a6a', .4), (10, 12, '#f6e2c4', .45), (44, 26, '#c88a6a', .4), (86, 10, '#e8b890', .5), (120, 18, '#a86a5a', .35), (156, 12, '#e8b890', .4)))
+             + f'<ellipse cx="{P[0] + 60}" cy="{P[1] + 50}" rx="34" ry="16" fill="#c87a5a" opacity=".7"/><ellipse cx="{P[0] + 56}" cy="{P[1] + 46}" rx="18" ry="8" fill="#e8a080" opacity=".7"/><circle cx="{P[0] + 150}" cy="{P[1] + 120}" r="{P[2] * 1.05:.0f}" fill="#2a1a3a" opacity=".18" filter="url(#b8)"/></g>'
+             + f'<circle cx="{P[0]}" cy="{P[1]}" r="{P[2]}" fill="none" stroke="#ffe8c8" stroke-width="4" opacity=".4" filter="url(#b4)"/>')
     g.append(f'<g transform="rotate(-14 {P[0]} {P[1]})"><g clip-path="url(#rf)">{rings}</g></g>')
-    g.append('<circle cx="300" cy="1180" r="300" fill="#8a8aa0"/>' + ''.join(f'<circle cx="{x}" cy="{y}" r="{r}" fill="#7a7a92"/>' for x, y, r in ((200, 960, 40), (360, 1010, 26), (460, 1100, 50), (140, 1080, 30))) + '<circle cx="300" cy="1180" r="300" fill="none" stroke="#c8c8e0" stroke-width="8" opacity=".4" filter="url(#b4)"/>')
+    g.append('<circle cx="420" cy="300" r="34" fill="#8ab0d8"/><path d="M386 300 A34 34 0 0 0 454 300 A34 18 0 0 1 386 300 Z" fill="#5a80b0" opacity=".5"/><circle cx="420" cy="300" r="34" fill="none" stroke="#cfe2ff" stroke-width="3" opacity=".4" filter="url(#b2)"/>')
+    M = (240, 1160, 190)   # a small cratered moon in front
+    g.append(f'<clipPath id="mc"><circle cx="{M[0]}" cy="{M[1]}" r="{M[2]}"/></clipPath><circle cx="{M[0]}" cy="{M[1]}" r="{M[2]}" fill="#9a9ab2"/><g clip-path="url(#mc)">'
+             + ''.join(f'<circle cx="{M[0] + x}" cy="{M[1] + y}" r="{r}" fill="#86869e"/><circle cx="{M[0] + x - r * .2:.0f}" cy="{M[1] + y - r * .2:.0f}" r="{r * .75:.0f}" fill="#7a7a92"/><path d="M{M[0] + x - r} {M[1] + y} A{r} {r} 0 0 0 {M[0] + x + r} {M[1] + y}" stroke="#b8b8ce" stroke-width="2" fill="none" opacity=".6"/>' for x, y, r in ((-70, -130, 26), (40, -110, 16), (90, -40, 34), (-110, -40, 18), (-20, -60, 12), (0, -160, 9)))
+             + f'<circle cx="{M[0] + 80}" cy="{M[1] + 60}" r="{M[2]}" fill="#1a1a30" opacity=".45"/></g><circle cx="{M[0]}" cy="{M[1]}" r="{M[2]}" fill="none" stroke="#d8d8f0" stroke-width="5" opacity=".45" filter="url(#b4)"/>')
     return doc(d, ''.join(g))
 
 # ------------------------------------------------------------------------------------------------ s107 不死鳥
@@ -224,8 +233,8 @@ def candy_land():
     H = (1300, 900)   # gingerbread house
     g.append(f'<rect x="{H[0] - 120}" y="{H[1] - 150}" width="240" height="150" fill="#c4844e"/><path d="M{H[0] - 160} {H[1] - 140} L{H[0]} {H[1] - 280} L{H[0] + 160} {H[1] - 140} Z" fill="#a86a3e"/><path d="M{H[0] - 166} {H[1] - 136} L{H[0]} {H[1] - 286} L{H[0] + 166} {H[1] - 136}" stroke="#ffffff" stroke-width="14" fill="none" stroke-linejoin="round" stroke-dasharray="18 10"/>'
              f'<rect x="{H[0] - 30}" y="{H[1] - 90}" width="60" height="90" rx="30" fill="#f6a8c8"/><rect x="{H[0] - 100}" y="{H[1] - 120}" width="46" height="40" fill="#fff2c8"/><rect x="{H[0] + 54}" y="{H[1] - 120}" width="46" height="40" fill="#fff2c8"/>' + ''.join(f'<circle cx="{H[0] - 100 + k * 40}" cy="{H[1] - 150}" r="9" fill="{["#e8404a", "#5ac85a", "#f6d05a", "#5aa8e8"][k % 4]}"/>' for k in range(6)))
-    def lolly(x, y, s, c):
-        return f'<rect x="{x - s * .05:.0f}" y="{y - s * 1.2:.0f}" width="{s * .1:.0f}" height="{s * 1.2:.0f}" fill="#fbf6ee"/><circle cx="{x}" cy="{y - s * 1.4:.0f}" r="{s * .4:.0f}" fill="{c}"/>' + ''.join(f'<path d="M{x} {y - s * 1.4:.0f} m{s * .35 * math.cos(a):.0f} {s * .35 * math.sin(a):.0f} A{s * .2:.0f} {s * .2:.0f} 0 0 1 {x:.0f} {y - s * 1.4:.0f}" stroke="#ffffff" stroke-width="{s * .05:.1f}" fill="none" opacity=".8"/>' for a in (0, 2.1, 4.2))
+    def lolly(x, y, s, c):   # (the swirl on the candy turns: the page's)
+        return f'<rect x="{x - s * .05:.0f}" y="{y - s * 1.2:.0f}" width="{s * .1:.0f}" height="{s * 1.2:.0f}" fill="#fbf6ee"/><circle cx="{x}" cy="{y - s * 1.4:.0f}" r="{s * .4:.0f}" fill="{c}"/>'
     g.append(lolly(520, 980, 160, '#f6a8c8') + lolly(640, 960, 110, '#a8d8f6') + lolly(1640, 990, 150, '#c8a8f6') + lolly(1820, 1000, 120, '#f6d68a'))
     g.append(''.join(f'<rect x="{x - 10}" y="{y - h}" width="20" height="{h}" fill="#ffffff"/>' + ''.join(f'<path d="M{x - 10} {y - h + k * 24 + 8} l20 -10" stroke="#e8404a" stroke-width="8"/>' for k in range(int(h // 24))) for x, y, h in ((120, 1200, 180), (1100, 1200, 140))))
     return doc(d, ''.join(g))
