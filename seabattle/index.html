@@ -482,6 +482,22 @@ body{background:radial-gradient(1200px 700px at 20% -15%, #15304a 0%, transparen
   .side > #draftCard,.side > #deployCard{order:0}.side > #radarCard{order:1}.side > #evalCard{order:2}.side > #skillCard{order:3}.side > *{order:4}
   .bhead .status{flex:1 1 auto;min-width:0;min-height:0;padding:0 6px;border:0;background:none;border-radius:0;display:block;text-align:center;font-family:var(--serif);font-size:14.5px;letter-spacing:.06em;color:#e6d6ae;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
+
+/* the board's caption: bigger letters, the status centred on the board (2026-11-20 user) */
+.bhead{position:relative;min-height:34px}.bhead .bt{font-size:19px}.bhead .bt i{width:10px;height:10px}
+.bhead .swap{height:32px;font-size:14.5px;padding:0 14px}
+@media (min-width:1040px) and (min-aspect-ratio:3/4){
+  .bhead .status{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max-content;max-width:calc(100% - 420px);font-size:17px;padding:0}
+  html:not(.hb-on):not(.hb-atlas) .side{margin-top:40px}
+  html:is(.hb-on,.hb-atlas) .side{height:var(--bd);max-height:var(--bd)}
+}
+
+.bhead .swap{padding:0;gap:0;overflow:hidden;border-color:var(--gl2)}.bhead .swap span{padding:0 14px;height:100%;display:inline-flex;align-items:center;color:#9d8e6c}
+
+/* the switch is the caption (自分の艦隊｜相手の艦隊): the title is shown only while there is no switch (deploy, draft) */
+body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
+@media (min-width:1040px) and (min-aspect-ratio:3/4){ .bhead .status{max-width:calc(100% - 2 * (var(--swapw, 236px) + 12px));font-size:15.5px;letter-spacing:.04em} }
+.bhead .swap{height:34px;font-size:15px} .bhead .swap span{padding:0 6px 0 16px;color:var(--gold2)}.bhead .swap i{font-style:normal;padding:0 14px 0 8px;height:100%;display:inline-flex;align-items:center;color:#9d8e6c;border-left:1px solid var(--gl);font-size:15px}.bhead .swap:hover i{color:var(--gold2)}
 </style>
 </head>
 <body class="no-online placing">
@@ -566,7 +582,7 @@ body{background:radial-gradient(1200px 700px at 20% -15%, #15304a 0%, transparen
   </div>
 </div>
 
-<script src="i18n.js?v=33"></script>
+<script src="i18n.js?v=36"></script>
 <script src="../shared/rulesoffer.js?v=20sea"></script>
 <script src="../shared/headerbar.js?v=63"></script>
 <script src="../shared/resign.js?v=3l14"></script>
@@ -574,7 +590,7 @@ body{background:radial-gradient(1200px 700px at 20% -15%, #15304a 0%, transparen
 <script src="engine.js?v=23"></script>
 <script src="board.js?v=10"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=39"></script>
+<script src="app.js?v=43"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
