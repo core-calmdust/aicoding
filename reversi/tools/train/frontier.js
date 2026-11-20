@@ -2,7 +2,7 @@
 // and the table shows its Elo and its time, so settings can be compared at equal time — also in combination, not one
 // parameter at a time, and at the depths the top levels really read. Guide: claude/reversi-mac-verification.md.
 //
-//   node frontier.js run   --plan stage1|stage2|mech|extreme [--base lv28|lv31|lv34|d,x,w,e,t] [--n 1000] [--procs N]
+//   node frontier.js run   --plan stage1|stage2|mech|extreme|bias [--base lv28|lv31|lv34|d,x,w,e,t] [--n 1000] [--procs N]
 //                          [--openings op10.bin] [--out frontier-<base>.jsonl]
 //   node frontier.js table [--base …] [--out …]
 //
@@ -18,9 +18,9 @@ const opt = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i
 const BASES = { lv28: [13, 20, 22, 26, 1.5], lv31: [20, 22, 24, 28, 1.5], lv34: [25, 23, 25, 30, 1.5] };
 const BNAME = opt('base', 'lv28'), bv = BASES[BNAME] || BNAME.split(',').map(Number);
 if (bv.length < 4 || bv.some(x => !(x >= 0))) { console.error('--base lv28 | lv31 | lv34 | depth,exact,wld,end[,t]'); process.exit(1); }
-const BASE = { depth: bv[0], exact: bv[1], wld: bv[2], end: bv[3], t: bv[4] || 1.5, endk: 100, nonest: 0, pre: 0 };
+const BASE = { depth: bv[0], exact: bv[1], wld: bv[2], end: bv[3], t: bv[4] || 1.5, endk: 100, nonest: 0, pre: 0, eve: 0, evo: 0 };
 const OUT = opt('out', `frontier-${BNAME.replace(/[^\w.]/g, '_')}.jsonl`), N = +opt('n', 1000), PROCS = opt('procs', ''), OPEN = opt('openings', 'op10.bin');
-const name = c => `d${c.depth} x${c.exact}/${c.wld} e${c.end} t${c.t}` + (c.endk !== 100 ? ` k${c.endk}` : '') + (c.nonest ? ' nn' : '') + (c.pre ? ` p${c.pre}` : '');
+const name = c => `d${c.depth} x${c.exact}/${c.wld} e${c.end} t${c.t}` + (c.endk !== 100 ? ` k${c.endk}` : '') + (c.nonest ? ' nn' : '') + (c.pre ? ` p${c.pre}` : '') + (c.eve || c.evo ? ` v${c.eve}/${c.evo}` : '');
 const mk = o => Object.assign({}, BASE, o), B = BASE;
 const PLANS = {
   // one parameter at a time around the baseline: the slope of each (Elo per doubling of the time)
@@ -48,6 +48,14 @@ const PLANS = {
       out.push(mk({ nonest, pre, t, depth: B.depth + d }));
     return out;
   },
+  // the evaluation without its lean toward the side to move (-DEVOFF_E / -DEVOFF_O: about +1.7 discs too high with an even
+  // number of empty squares, about 1.9 too low with an odd number, measured against Edax and Egaroucid): alone (odd and even
+  // depths), half and 1.5 times the size, one parity only, and together with the search to the end
+  bias: () => [
+    ...[0, 1, 3, 4].map(d => mk({ depth: B.depth + d, eve: 150, evo: 190 })), ...[1, 3, 4].map(d => mk({ depth: B.depth + d })),
+    mk({ eve: 75, evo: 95 }), mk({ eve: 225, evo: 285 }), mk({ eve: 150 }), mk({ evo: 190 }),
+    mk({ eve: 150, evo: 190, end: B.end + 4 }), mk({ end: B.end + 4 }), mk({ eve: 150, evo: 190, end: 0 }), mk({ end: 0 }),
+  ],
   // far more time than any level uses today (10 to 100 times): does the strength keep growing, and with which mix
   extreme: () => [
     mk({ depth: 22, t: 1.1, end: 32, exact: 24, wld: 26 }), mk({ depth: 24, t: 1.1, end: 32, exact: 24, wld: 26, endk: 150 }),
@@ -58,8 +66,8 @@ const PLANS = {
 };
 const done = () => fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
 function lib(c) {   // the engine as a library, built once per set of build options
-  const plain = c.endk === 100 && !c.nonest && !c.pre, so = plain ? './rveng.so' : `./rveng_k${c.endk}_n${c.nonest}_p${c.pre}.so`;
-  const D = (c.endk !== 100 ? ` -DENDK=${c.endk}` : '') + (c.nonest ? ' -DMPC_NONEST' : '') + (c.pre ? ` -DMPC_PRE=${c.pre}` : '');
+  const plain = c.endk === 100 && !c.nonest && !c.pre && !c.eve && !c.evo, so = plain ? './rveng.so' : `./rveng_k${c.endk}_n${c.nonest}_p${c.pre}` + (c.eve || c.evo ? `_v${c.eve}_${c.evo}` : '') + '.so';
+  const D = (c.endk !== 100 ? ` -DENDK=${c.endk}` : '') + (c.nonest ? ' -DMPC_NONEST' : '') + (c.pre ? ` -DMPC_PRE=${c.pre}` : '') + (c.eve || c.evo ? ` -DEVOFF_E=${c.eve} -DEVOFF_O=${c.evo}` : '');
   if (!fs.existsSync(path.join(__dirname, so)) || fs.statSync(path.join(__dirname, so)).mtimeMs < fs.statSync(path.join(__dirname, '../../engine.c')).mtimeMs)
     cp.execSync(`cc -O3 -shared -fPIC${D} -DENGINE_ALLOC=malloc -DENGINE_OWN_NOW -o ${so} ../../engine.c`, { cwd: __dirname, stdio: 'inherit' });
   return so;
@@ -100,4 +108,4 @@ function table() {
   console.log('（「差」が ± の2倍を超えてプラスなら、同じ時間を深さに使うより得な設定）');
 }
 if (cmd === 'run') run(); else if (cmd === 'table') table();
-else console.error('usage: node frontier.js run --plan stage1|stage2|mech|extreme [--base lv28|lv31|lv34|d,x,w,e,t] [--n 1000] [--procs N] [--openings op10.bin] [--out file]\n       node frontier.js table [--base …] [--out file]');
+else console.error('usage: node frontier.js run --plan stage1|stage2|mech|extreme|bias [--base lv28|lv31|lv34|d,x,w,e,t] [--n 1000] [--procs N] [--openings op10.bin] [--out file]\n       node frontier.js table [--base …] [--out file]');

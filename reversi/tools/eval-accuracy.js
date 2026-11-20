@@ -25,6 +25,9 @@ const edax = (file, level, th) => { const o = cp.execFileSync(EDAX, ['-solve', f
 const ega = (file, level, th) => { const o = cp.execFileSync(EXE, ['-solve', file, '-l', String(level), '-nobook', '-t', String(th)], { cwd: EGA, maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'] }).toString();
   return o.split('\n').filter(l => l.startsWith('|') && !l.includes('Level')).map(l => +l.split('|')[4]); };
 const mae = (a, b) => a.reduce((s, x, i) => s + Math.abs(x - b[i]), 0) / a.length;
+// 偏り＝値−正解役の平均（手番側から見て。＋なら手番側に甘い）。ずれを除いた誤差＝その平均を引いたあとの平均絶対誤差
+const bias = (a, b) => a.reduce((s, x, i) => s + x - b[i], 0) / a.length, mae0 = (a, b) => { const m = bias(a, b); return a.reduce((s, x, i) => s + Math.abs(x - b[i] - m), 0) / a.length; };
+const sg = x => (x >= 0 ? '+' : '') + x.toFixed(2);
 const d = fs.readFileSync(path.resolve(opt('positions'))), total = Math.floor(d.length / 17), tmp = path.join(os.tmpdir(), `rv-evalacc-${process.pid}`);
 for (const e of EMP) {
   const pos = [], seen = new Set(), all = [];
@@ -38,10 +41,17 @@ for (const e of EMP) {
   console.log(`\n空き${e}マス（${pos.length} 局面）：正解役どうしの差 ${mae(Te, Tg).toFixed(2)} 石（Edax 対 Egaroucid、レベル${REF}）`);
   console.log('| 深さ | 自前（Edax が正解役） | Egaroucid（Edax が正解役） | 自前（Egaroucid が正解役） | Edax（Egaroucid が正解役） |');
   console.log('|---|---|---|---|---|');
+  const rows = [];
   for (const dep of DEPTHS) {
     const o = pos.map(([P, O]) => { E.clearTT(); return E.think(cells(P, O), 1, { cfg: { depth: dep, exact: 0, wld: 0, end: 0, mpc: 0 }, noBook: true, variety: false, time: 0 }).score; });
     const ve = edax(tmp + '.obf', dep, 1), vg = ega(tmp + '.txt', dep, 1);
     console.log(`| ${dep} | ${mae(o, Te).toFixed(2)} | ${vg.length === pos.length ? mae(vg, Te).toFixed(2) : '-'} | ${mae(o, Tg).toFixed(2)} | ${ve.length === pos.length ? mae(ve, Tg).toFixed(2) : '-'} |`);
+    const ok = ve.length === pos.length && vg.length === pos.length;
+    rows.push(`| ${dep} | ${sg(bias(o, Te))} / ${mae0(o, Te).toFixed(2)} | ${ok ? sg(bias(vg, Te)) + ' / ' + mae0(vg, Te).toFixed(2) : '-'} | ${sg(bias(o, Tg))} / ${mae0(o, Tg).toFixed(2)} | ${ok ? sg(bias(ve, Tg)) + ' / ' + mae0(ve, Tg).toFixed(2) : '-'} |`);
   }
+  console.log('\n偏り（手番側に甘い＋） / 偏りを除いた誤差');
+  console.log('| 深さ | 自前（Edax が正解役） | Egaroucid（Edax が正解役） | 自前（Egaroucid が正解役） | Edax（Egaroucid が正解役） |');
+  console.log('|---|---|---|---|---|');
+  for (const r of rows) console.log(r);
 }
 for (const x of ['.obf', '.txt']) try { fs.unlinkSync(tmp + x); } catch (err) {}

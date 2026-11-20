@@ -287,6 +287,20 @@ static inline int extSum(u64 P, u64 O, int base) {
   if (USE_EXT >= 5) { const int d = pc(P); s += W[base + EXT_OFF + 256 + (d > 63 ? 63 : d)]; }   /* (v5) own discs */
   return s;
 }
+/* (a test build only, tools/train/frontier.js --plan bias: the evaluation minus its measured lean toward the side to move —
+   too high by about EVOFF_E (1/100 disc) with an even number of empty squares, too low by about EVOFF_O with an odd number;
+   claude/reversi-mac-verification.md. Without these the binary is the same as before) */
+#if defined(EVOFF_E) || defined(EVOFF_O)
+#ifndef EVOFF_E
+#define EVOFF_E 0
+#endif
+#ifndef EVOFF_O
+#define EVOFF_O 0
+#endif
+#define EV_OUT(s, P, O) ((s) * 100 / 32 + ((pc((P) | (O)) & 1) ? EVOFF_O : -EVOFF_E))
+#else
+#define EV_OUT(s, P, O) ((s) * 100 / 32)
+#endif
 static int evalFull(u64 P, u64 O) {   // = engine.js evalPattern
   int idx[MAXI]; for (int i = 0; i < NINST; i++) idx[i] = 0;
   for (u64 x = P; x; x &= x - 1) { int q = lsb(x); for (int j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) idx[SQI[j]] += SQP[j]; }
@@ -294,7 +308,7 @@ static int evalFull(u64 P, u64 O) {   // = engine.js evalPattern
   int base = phaseOf(pc(P | O)) * PHASE_SIZE, s = W[base + PHASE_SIZE - 1];
   for (int i = 0; i < NINST; i++) s += W[base + I_OFF[i] + idx[i]];
   if (USE_EXT) s += extSum(P, O, base);
-  return (s * 100) / 32;
+  return EV_OUT(s, P, O);
 }
 static void initIdx(int ply, u64 P, u64 O) {
   int a0 = ply * MAXI;
@@ -342,7 +356,7 @@ static int evalAt(int ply, u64 P, u64 O) {
   int base = PHB[pc(P | O)], a0 = ply * MAXI, s = W[base + PHASE_SIZE - 1];
   for (int i = 0; i < NINST; i++) s += W[base + I_OFF[i] + STA[a0 + i]];
   if (USE_EXT) s += extSum(P, O, base);
-  return (s * 100) / 32;
+  return EV_OUT(s, P, O);
 }
 
 // ------------------------------------------------------------------ search state

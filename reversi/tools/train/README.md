@@ -135,4 +135,4 @@ node frontier.js run --plan stage1 --base lv28 --n 1000     # mech（枝刈り�
 node frontier.js table --base lv28
 EDAX=…/mEdax node ../edax-anchor.js --levels 12,15,18,21 --base lv28     # Edax を同じ基準に対する物差しに（tools/edax-anchor.js）
 ```
-- `rvmatch match … --engine a.so --engine-b b.so`：別々にビルドしたエンジンどうしの対局（`-DENDK=130`：終局読みの誤差幅を 1.3倍、`-DMPC_NONEST`：試しの読みの中では枝刈りしない、`-DMPC_PRE=200`：静的評価が境から2石以内のときだけ試す。`frontier.js` が自動で作ります）。どれも付けないビルドは今までと同じバイナリです。
+- `rvmatch match … --engine a.so --engine-b b.so`：別々にビルドしたエンジンどうしの対局（`-DENDK=130`：終局読みの誤差幅を 1.3倍、`-DMPC_NONEST`：試しの読みの中では枝刈りしない、`-DMPC_PRE=200`：静的評価が境から2石以内のときだけ試す、`-DEVOFF_E=150 -DEVOFF_O=190`：評価値の手番側へのずれを補正＝空きが偶数なら −1.5石・奇数なら +1.9石（`frontier.js --plan bias`）。`frontier.js` が自動で作ります）。どれも付けないビルドは今までと同じバイナリです。
