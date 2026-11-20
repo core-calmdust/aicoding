@@ -469,7 +469,7 @@ html:has(#bv.on,#hist.on,#ov.on) #skfx *{animation-play-state:paused!important}`
     function frame(now) {
       raf = requestAnimationFrame(frame);
       if (now - last < 41) return; last = now;
-      if (document.hidden || document.documentElement.matches(':has(#bv.on,#hist.on,#ov.on)')) return;
+      if (document.hidden || !cv.getClientRects().length || document.documentElement.matches(':has(#bv.on,#hist.on,#ov.on)')) return;   // (also: the full version showing the place's floor — #skfx hidden)
       const t = now / 1000; ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter';
       const pulse = .85 + .15 * sn(t * .25) * sn(t * .09 + 1);
       BANDS.forEach((b, bi) => {
