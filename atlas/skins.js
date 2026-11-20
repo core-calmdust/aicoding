@@ -10,7 +10,7 @@
   'use strict';
   const BASE = (() => { try { return new URL('../images/atlas/skin/', document.currentScript.src).href; } catch (e) { return '../images/atlas/skin/'; } })();
   const V = 19, FXV = 20;   // bump when the images are re-rendered
-  const DEV_ALL = true;
+  const DEV_ALL = false;   // (2026-11-20: released — in the gacha; the cream is everyone's, 銀河鉄道 + 雪原 a present to all)
   const RAR = ['N', 'R', 'SR', 'SSR', 'UR'];
   // id: [rarity, kind (tile px | 'c' = cover), page colour, header colour, selected-tab colour, dark]
   const D = {
@@ -303,6 +303,10 @@
     kind: ['スキン', 'Skin', '皮肤', '外觀', '스킨', 'Aspecto', 'Thème', 'Visual', 'Skin', 'Оформление', 'Tema', 'Tema', 'स्किन', 'المظهر'],
     def: ['クリーム', 'Cream', '奶油色', '奶油色', '크림', 'Crema', 'Crème', 'Creme', 'Creme', 'Кремовый', 'Krem', 'Krem', 'क्रीम', 'الكريمي'],
     defSub: ['デフォルト', 'Default', '默认', '預設', '기본', 'Predeterminado', 'Par défaut', 'Padrão', 'Standard', 'По умолчанию', 'Varsayılan', 'Bawaan', 'डिफ़ॉल्ट', 'الافتراضي'],
+    giftH: ['スキンのプレゼント', 'A present: skins', '皮肤礼物', '外觀禮物', '스킨 선물', 'Un regalo: aspectos', 'Un cadeau : des thèmes', 'Um presente: visuais', 'Ein Geschenk: Skins', 'Подарок: оформление', 'Hediye: temalar', 'Hadiah: tema', 'उपहार: स्किन', 'هدية: مظاهر'],
+    giftSay: ['ページの見た目を変えられる「スキン」が登場したよ！記念に2つプレゼント。きせかえで着替えてみてね！', 'Skins are here — they change the whole look of the page! Here are two to celebrate. Try them on in Dress-up!', '可以改变页面外观的「皮肤」登场啦！送你两款作纪念，去装扮里换上试试吧！', '可以改變頁面外觀的「外觀」登場囉！送你兩款當紀念，去裝扮裡換上試試吧！', '페이지 모습을 바꾸는 「스킨」이 나왔어! 기념으로 두 개 선물할게. 꾸미기에서 바꿔 봐!', '¡Llegaron los aspectos: cambian el look de toda la página! Te regalo dos para celebrarlo. ¡Pruébalos en Vestir!', 'Les thèmes sont là : ils changent tout le look de la page ! En voici deux pour fêter ça. Essaie-les dans Habillage !', 'Chegaram os visuais: eles mudam a cara da página toda! Aqui vão dois para comemorar. Experimente em Visual!', 'Skins sind da – sie ändern das Aussehen der ganzen Seite! Zur Feier schenke ich dir zwei. Probier sie beim Einkleiden aus!', 'Появилось оформление — оно меняет вид всей страницы! Дарю два в честь этого. Примерь их в гардеробе!', 'Temalar geldi — sayfanın tüm görünümünü değiştiriyorlar! Kutlamak için iki tane hediye. Giydir’de dene!', 'Tema sudah hadir — bisa mengubah tampilan seluruh halaman! Ini dua hadiah untuk merayakannya. Coba di Dandan, ya!', 'स्किन आ गई हैं — ये पूरे पेज का रूप बदल देती हैं! जश्न में दो तोहफ़े। ड्रेस-अप में पहनकर देखो!', 'وصلت المظاهر — تغيّر شكل الصفحة كلها! إليك اثنين احتفالًا بذلك. جرّبها في التزيين!'],
+    giftGo: ['きせかえで着る', 'Wear one', '去装扮', '去裝扮', '꾸미기에서 입기', 'Ponérmelo', 'L’essayer', 'Usar agora', 'Anziehen', 'Надеть', 'Giy', 'Pakai', 'पहनो', 'ارتدِه'],
+    giftOk: ['ありがとう！', 'Thanks!', '谢谢！', '謝謝！', '고마워!', '¡Gracias!', 'Merci !', 'Obrigado!', 'Danke!', 'Спасибо!', 'Teşekkürler!', 'Terima kasih!', 'धन्यवाद!', 'شكرًا!'],
     dev: ['開発中：すべてのスキンをお試しで着せかえできます（のちにガチャの景品になります）', 'In development: every skin can be tried for now (they will become gacha prizes later)', '开发中：目前可试用所有皮肤（之后将成为扭蛋奖品）', '開發中：目前可試用所有外觀（之後將成為扭蛋獎品）', '개발 중: 지금은 모든 스킨을 체험할 수 있어요 (나중에 가챠 경품이 됩니다)', 'En desarrollo: por ahora puedes probar todos los aspectos (luego serán premios del gacha)', 'En développement : tous les thèmes sont à l’essai pour l’instant (ils deviendront des lots du gacha)', 'Em desenvolvimento: por enquanto, todos os visuais podem ser testados (depois serão prêmios do gacha)', 'In Entwicklung: Alle Skins sind vorerst zum Ausprobieren frei (später gibt es sie im Gacha)', 'В разработке: пока можно примерить любое оформление (позже оно станет призами гачи)', 'Geliştirme aşamasında: şimdilik tüm temalar denenebilir (sonra gacha ödülü olacak)', 'Dalam pengembangan: semua tema bisa dicoba dulu (nanti menjadi hadiah gacha)', 'विकास जारी: अभी सभी स्किन आज़माई जा सकती हैं (बाद में ये गाचा इनाम बनेंगी)', 'قيد التطوير: يمكن تجربة كل المظاهر الآن (ستصبح جوائز في الغاتشا لاحقًا)'],
   };
   const li = lang => Math.max(0, L.indexOf(lang));
@@ -366,7 +370,10 @@
       else { localStorage.removeItem('atlas-skin'); localStorage.removeItem('atlas-skin-css'); }
     } catch (e) {}
   }
-  const owned = (id, W) => DEV_ALL || !!(W && W.owned && W.owned.includes(id));
+  const owned = (id, W) => DEV_ALL || id === 'base' || !!(W && W.owned && W.owned.includes(id));
+  // the skins are gacha items too (AtlasArt kind 'skin'; the cream is not — everyone has it)
+  if (window.AtlasArt && AtlasArt.add) AtlasArt.skins = 1, AtlasArt.add(list.filter(s => !s.def).map(s => ({ id: s.id, kind: 'skin', rar: s.rar, thumb: thumb(s.id), name: Object.fromEntries(L.map(l => [l, tx(N[s.id] || [s.id], l)])) })));
+  const GIFT = ['s38', 's28'];   // the present when skins came out (UR 銀河鉄道 · SSR 雪原)
   if (!document.body) addEventListener('DOMContentLoaded', () => { const id = root.dataset.skin; fxId = ''; if (id) effects(id); });
-  window.AtlasSkins = { list, byId: id => map[id], url, thumb, apply, owned, DEV_ALL, RAR, name: (s, lang) => s.def ? tx(T.def, lang) : tx(N[s.id] || [s.id], lang), t: (k, lang) => tx(T[k], lang) };
+  window.AtlasSkins = { list, byId: id => map[id], url, thumb, apply, owned, DEV_ALL, RAR, GIFT, name: (s, lang) => s.def ? tx(T.def, lang) : tx(N[s.id] || [s.id], lang), t: (k, lang) => tx(T[k], lang) };
 })();
