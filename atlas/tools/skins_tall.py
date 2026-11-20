@@ -49,6 +49,33 @@ SVG = {   # id: (builder, extra pieces in the extension)
     's94': (lambda: U.makie(0), lambda: stars_svg(500, 94, '#e2bd6a', -1800, 0)), 's94b': (lambda: U.makie(1), lambda: stars_svg(500, 94, '#e2bd6a', -1800, 0)),
 }
 
+MAPOFF = 900   # the old map (s35): its portrait picture keeps the map in the middle — parchment above AND below (2026-11-20)
+
+def extend_map():
+    id_ = 's35'
+    im = Image.open(os.path.join(D, id_ + '.webp')).convert('RGB').resize((TW, 1200), Image.LANCZOS)
+    a = np.asarray(im, np.float32) / 255
+    sm = lambda v: np.stack([np.convolve(np.pad(v[:, c], 500, mode='edge'), np.ones(1001) / 1001, 'valid') for c in range(3)], -1)
+    from PIL import ImageFilter   # flatten the picture's vignette (light middle) so the map band does not glow against the new parchment
+    lo = np.asarray(Image.fromarray((a * 255).astype(np.uint8)).resize((96, 60), Image.BOX).filter(ImageFilter.GaussianBlur(8)).resize((TW, 1200), Image.BICUBIC), np.float32) / 255
+    paper = np.concatenate([a[:60].reshape(-1, 3), a[-60:].reshape(-1, 3)]).mean(0)
+    a = np.clip(a / np.maximum(lo, .05) * paper, 0, 1)
+    top = bot = np.broadcast_to(paper, (TW, 3))
+    H2 = TH - 1200 - MAPOFF
+    nz = np.asarray(Image.fromarray((S.fnoise(256, 3.0, 35, m=256) * 255).astype(np.uint8)).resize((TW, TH), Image.BICUBIC), np.float32) / 255
+    f1 = np.clip(np.arange(1200) / 120, 0, 1)[:, None, None]; f2 = np.clip((1199 - np.arange(1200)) / 120, 0, 1)[:, None, None]
+    a2 = a * f1 + top[None] * (1 - f1); a2 = a2 * f2 + bot[None] * (1 - f2)
+    out = np.concatenate([np.broadcast_to(top[None], (MAPOFF, TW, 3)), a2, np.broadcast_to(bot[None], (H2, TW, 3))], 0) * (0.985 + 0.03 * nz)[..., None]
+    pim = Image.fromarray(np.clip(out * 255 + .5, 0, 255).astype(np.uint8)); d = ImageDraw.Draw(pim, 'RGBA')
+    cx, cy = 1517, 912 + MAPOFF   # rhumb lines from the compass rose run on into the new parchment
+    lines = Image.new('RGBA', (TW, TH)); dl = ImageDraw.Draw(lines)
+    for k in range(32):
+        t = k * math.pi / 16; dl.line([cx, cy, cx + math.cos(t) * 4000, cy + math.sin(t) * 4000], fill=(138, 106, 60, 50), width=1)
+    mask = np.ones((TH, TW), np.float32); mask[MAPOFF + 60:MAPOFF + 1140] = 0
+    la = np.asarray(lines, np.float32); la[..., 3] *= mask
+    pim = Image.alpha_composite(pim.convert('RGBA'), Image.fromarray(la.astype(np.uint8))).convert('RGB')
+    return S.grain(np.asarray(pim, np.float32) / 255, .004, 35)
+
 def extend(id_):
     """numpy scenes: the landscape picture at the bottom, its top colours carried up (with a gentle drift), stars etc."""
     im = Image.open(os.path.join(D, id_ + '.webp')).convert('RGB').resize((TW, 1200), Image.LANCZOS)
@@ -73,11 +100,6 @@ def extend(id_):
         for rr in range(300, 4600, 170): d.ellipse([cx - rr, cy - rr, cx + rr, cy + rr], outline=(201, 169, 94, 48), width=1)
         for k in range(24):
             t = k * math.pi / 12; d.line([cx, cy, cx + math.cos(t) * 4600, cy + math.sin(t) * 4600], fill=(201, 169, 94, 34), width=1)
-        pim.paste(Image.fromarray(np.clip(a2 * 255, 0, 255).astype(np.uint8)), (0, EXT))
-    if id_ == 's35':   # rhumb lines from the compass rose carry on up
-        cx, cy = 1517, 912 + EXT
-        for k in range(32):
-            t = k * math.pi / 16; d.line([cx, cy, cx + math.cos(t) * 4000, cy + math.sin(t) * 4000], fill=(138, 106, 60, 50), width=1)
         pim.paste(Image.fromarray(np.clip(a2 * 255, 0, 255).astype(np.uint8)), (0, EXT))
     if id_ in ('s25', 's27', 's28', 's29', 's31'):   # a few flat clouds in the extra sky
         for i in range(3):
@@ -106,4 +128,4 @@ if __name__ == '__main__':
     if jobs:
         for i, im in zip(svg, P.render(jobs)): save_p(i, S.grain(im, .004, int(i[1:3])))
     for i in ids:
-        if i in NUMPY: save_p(i, extend(i))
+        if i in NUMPY: save_p(i, extend_map() if i == 's35' else extend(i))

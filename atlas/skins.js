@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   const BASE = (() => { try { return new URL('../images/atlas/skin/', document.currentScript.src).href; } catch (e) { return '../images/atlas/skin/'; } })();
-  const V = 11, FXV = 4;   // bump when the images are re-rendered
+  const V = 12, FXV = 6;   // bump when the images are re-rendered
   const DEV_ALL = true;
   const RAR = ['N', 'R', 'SR', 'SSR', 'UR'];
   // id: [rarity, kind (tile px | 'c' = cover), page colour, header colour, selected-tab colour, dark]
@@ -93,7 +93,7 @@
   // (only the sky is cut or grows); windows narrower than 6:5 use the portrait version <id>-p (1800 more units of sky,
   // atlas/tools/skins_tall.py); POS = the picture's horizontal focus (where its landmark is) when the sides are cut
   const TALLS = new Set(['s25', 's26', 's27', 's28', 's29', 's30', 's31', 's33', 's35', 's36', 's37', 's38', 's39', 's40', 's79', 's80', 's81', 's82', 's83', 's84', 's85', 's86', 's87', 's88', 's89', 's90', 's93', 's94', 's96', 's97', 's98', 's99']);
-  const POS = { s79: 74, s81: 28, s82: 30, s84: 62, s85: 72, s93: 76, s94: 30, s97: 35, s35: 70 }, MID = {};
+  const POS = { s79: 74, s81: 28, s82: 30, s84: 62, s85: 72, s93: 76, s94: 30, s97: 35, s35: 70 }, MID = {}, PY = { s35: 22 }, PYP = { s35: 50 }, TOFF = { s35: 900 };   // PY: the picture's focus down (landscape, %); PYP / TOFF: the portrait picture's focus and where its scene starts (the old map sits in the middle of its portrait parchment)
   const ANIM = { s93: 's93b', s94: 's94b' };   // (a second picture cross-fading under the moving pieces)
   const L = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   // names, in the order of L
@@ -223,7 +223,7 @@
       '--sk-bg': s.bg,
       '--sk-img': `url("${url(s.id)}")`,
       '--sk-size': s.cover ? 'cover' : `${s.px / 2}px ${s.px / 2}px`,   // (tiles: 2× pixels, sharp on retina)
-      '--sk-pos': `${POS[s.id] ?? 50}% ${MID[s.id] ? 50 : 82}%`,   // (82 %: on very wide windows a little sky goes and a little ground)
+      '--sk-pos': `${POS[s.id] ?? 50}% ${MID[s.id] ? 50 : PY[s.id] ?? 82}%`, ...(PYP[s.id] != null ? { '--sk-pyp': PYP[s.id] + '%' } : {}),   // (82 %: on very wide windows a little sky goes and a little ground)
       '--sk-imgp': TALLS.has(s.id) ? `url("${BASE + s.id}-p.webp?v=${V}")` : 'none',
       '--sk-img2p': TALLS.has(s.id) && ANIM[s.id] ? `url("${BASE + ANIM[s.id]}-p.webp?v=${V}")` : 'none',
       '--sk-img2': ANIM[s.id] ? `url("${url(ANIM[s.id])}")` : 'none',
@@ -246,12 +246,12 @@
     fxEl = document.createElement('div'); fxEl.id = 'skfx'; fxEl.setAttribute('aria-hidden', 'true'); document.body.prepend(fxEl);
     const host = fxEl;
     fxLoad().then(() => { if (fxEl !== host || !window.AtlasSkinFX || !AtlasSkinFX.has(id)) { if (fxEl === host && ANIM[id]) host.innerHTML = '<i class="fx-x"></i>'; return; }
-      AtlasSkinFX.mount(host, { id, tall: TALLS.has(id), px: POS[id] ?? 50, mid: !!MID[id], x: !!ANIM[id], url }); });
+      AtlasSkinFX.mount(host, { id, tall: TALLS.has(id), px: POS[id] ?? 50, mid: !!MID[id], py: PY[id], pyp: PYP[id], toff: TOFF[id], x: !!ANIM[id], url }); });
   }
   const root = document.documentElement;
   function paint(id) {
     const s = map[id], st = root.style;
-    Object.keys(vars(list[1])).forEach(k => st.removeProperty(k));
+    Object.keys(vars(list[1])).concat('--sk-pyp').forEach(k => st.removeProperty(k));
     effects(s && !s.def ? s.id : '');
     if (!s || s.def) { delete root.dataset.skin; delete root.dataset.skk; delete root.dataset.ska; delete root.dataset.skp; root.classList.remove('skdark'); return null; }
     const v = vars(s); for (const k in v) st.setProperty(k, v[k]);

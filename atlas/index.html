@@ -108,7 +108,7 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.95);border-
 html[data-skin] body{background-color:var(--sk-bg);background-image:none}
 html[data-skk=tile] body{background-image:var(--sk-img);background-size:var(--sk-size)}
 html[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-bg) var(--sk-img) var(--sk-pos,50% 100%)/cover no-repeat;pointer-events:none}
-@media (max-aspect-ratio:6/5){html[data-skp] body::before,html[data-skp] #skfx .fx-x{background-position-y:100%}html[data-skp] body::before{background-image:var(--sk-imgp)}html[data-skp] #skfx .fx-x{background-image:var(--sk-img2p)}}
+@media (max-aspect-ratio:6/5){html[data-skp] body::before,html[data-skp] #skfx .fx-x{background-position-y:var(--sk-pyp,100%)}html[data-skp] body::before{background-image:var(--sk-imgp)}html[data-skp] #skfx .fx-x{background-image:var(--sk-img2p)}}
 @media (max-width:760px){html[data-skk=cover] body::before,html[data-skk=cover] #skfx{bottom:calc(var(--tabsH,64px) + var(--ulH,0px))}}   /* phones: the scene stands on the bottom bars, not under them */   /* narrow windows: the portrait picture (more sky above) */
 /* UR effects (atlas/skins.js FX): #skfx sits behind the page; only transform / opacity animate */
 #skfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}
@@ -142,7 +142,7 @@ html.skdark .ic .lab .n{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45)}@media 
   header:not(.hd3) > .hd{display:contents}
   header:not(.hd3) .hd .sp{display:none}
   header:not(.hd3) .brand{flex:none;order:0}
-  header:not(.hd3) > .tabs{order:1;flex:1 1 0;min-width:0;max-width:none;margin:0;padding:0;flex-wrap:nowrap;overflow:hidden}
+  header:not(.hd3) > .tabs{order:1;flex:1 1 0;min-width:0;max-width:none;margin:-8px 0;padding:8px 0;flex-wrap:nowrap;overflow:hidden}   /* (the room above / below keeps the chosen tab's shadow from being cut, 2026-11-20) */
   header:not(.hd3) > .tabs .tab{flex:none;white-space:nowrap}
   header:not(.hd3) > .hd > :not(.brand){order:2}
   header.hd1 .brand .wm small,header.hd1 .brand .wk{display:none}
@@ -2378,7 +2378,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=16"></script>
 <script src="art.js?v=19"></script>
-<script src="skins.js?v=15"></script>
+<script src="skins.js?v=16"></script>
 <script src="../shared/atlas-updates.js?v=48"></script>
 <script src="../shared/atlas.js?v=20261119nw1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
