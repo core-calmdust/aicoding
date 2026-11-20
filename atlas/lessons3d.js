@@ -675,7 +675,7 @@
           // (2026-11-21) the hint: the step's words, and on the board what they point at — never the answer itself (the red frames: moves
           // that hand over a corner; wall: the moves that build a wall)
           const hintMk = () => l.id === 'wall' && p.wall && p.wall.length ? p.wall.map(q => [q, 'ng']) : l.id === 'rules' || l.id === 'parity' || l.id === 'finish' ? [] : v.filter(x => x[1][4]).map(x => [+x[0], 'ng']);
-          return { pos: p.cells + ':' + p.toMove, kind: 'best', P: p, ask: ja && AQ ? AQ[i % AQ.length] : T.prompt || '', why: '', ans: b ? b[0] : '', oks, hintMk,
+          return { pos: p.cells + ':' + p.toMove, kind: 'best', P: p, ask: ja && AQ ? (i >= 2 ? AQ[i % AQ.length].replace('数字を見くらべてみてね。', '自分で数えてみてね。') : AQ[i % AQ.length]) : T.prompt || '',   /* (from the 3rd problem no flip counts on the board: lessons3d RV_NUMS) */ why: '', ans: b ? b[0] : '', oks, hintMk,
             hintTx: (T.hint || '') + (ja && hintMk().length ? (l.id === 'wall' ? '<br>赤い枠は、外がわに壁を作っちゃう手なんだ。' : '<br>赤い枠は、打つと相手に隅を渡しちゃう手。') : ''),
             good: u => ja ? rvTeachJa(l.id, p, u == null ? b && b[0] : u, true) : '', ng: u => ja ? rvTeachJa(l.id, p, u, false) : '' }; }),
         save: (pts, max) => this.save(l.id, pts, max) };
@@ -1617,7 +1617,7 @@
         if (sess && id === 'tafl' && G && G.spec && G.spec.b && pz() && pz().n !== Math.round(Math.sqrt(String(G.spec.b).length))) { sess.stop(); sess = null; }   // (tafl: another rule set's board)   // (go / hex: another board size — a new board)
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
-            pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
+            pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp' && !(phase === 'prob' && cur && cur.k >= RV_NUMS), ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
         else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots')) pz().load(G.spec, G.me, { lock: !!G.lock });
@@ -1764,11 +1764,13 @@
       const s = String(p.pos).split(':')[1]; if (s !== '1' && s !== '2') return '';
       return ((SIDE[ctx.lang] || SIDE.en)[+s - 1]) + (ctx.lang === 'ja' || /^zh/.test(ctx.lang) ? '' : '');
     }
+    // (2026-11-21 user) reversi: the flip counts on the first RV_NUMS problems only — the rest are solved without them
+    const RV_NUMS = 2, RV_SELF = { ja: 'ここからは数字なし。自分で数えて考えてみて！', en: 'From here on, no numbers: count for yourself!' };
     // one problem
     async function prob() {
       phase = 'prob'; const p = cur.probs[cur.k]; if (!p) return finish();
       p.hinted = false; p.used = 0; dots(); act(X.next, { nextOn: false });
-      say(sideLine(p) + (p.ask || X.opGoal));
+      say(sideLine(p) + (id === 'reversi' && cur.k === RV_NUMS && RV_SELF[ctx.lang] ? RV_SELF[ctx.lang] + '<br>' : '') + (p.ask || X.opGoal));
       await board(p.pos, p.sol); if (stopped || cur.probs[cur.k] !== p) return;
       onMoved = (u, info) => moved(p, u, info);
       if (p.marks && p.marks.length && pz().mark) pz().mark(p.marks);

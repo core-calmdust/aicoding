@@ -21,6 +21,7 @@
 - キャラのセリフ：`<game>/voice-*-ja.js`（ある場合）、なければ `atlas/lsvoice-ja.js`（元の文 → キャラのセリフ）。
 - 不正解の解説を足す：各 DATA の lesson() の `ng` / `good` / `ngTx`、または lessons.json / i18n の ja テキスト（2D版にも影響するので注意。3D専用なら lsvoice / voice 側で）。
 - リバーシ：問題の問いかけ・正解／不正解の解説は atlas/lessons3d.js の `RVJ_ASK`・`rvTeachJa`（lessons.json の手ごとの数値 f から理由を作る。緑の枠＝正解、赤い枠＝自分の手／ヒントでは隅を渡す手・壁を作る手）。導入・ヒントは lsvoice-ja.js。
+- リバーシの問題の数字（返せる石の数）：準備と最初の2問だけ表示し、3問目からは数字なしで自力で解かせる（2026-11-21 ユーザー指示。atlas/lessons3d.js `RV_NUMS`。3問目の最初に「ここからは数字なし」と言う。問いかけも数字に触れない文に）。
 - 文末のばらし：atlas/lessons3d.js `varyJa`（自動。手書きで変化をつけた文はそのまま）。
 
 ## ログ
