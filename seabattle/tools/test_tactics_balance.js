@@ -3,13 +3,14 @@
 // Prints, per ship type: how often it is on the table, how often it is picked when on the table, and the win rate of the
 // fleets that took it (and that of the fleets that did not, when it was there). Also checks that every game ends and that
 // every skill was used. A type is "balanced" when its pick rate is neither ~0 nor ~100% and its win rate sits near 50%.
+if (process.argv[4] === 'flat') require('../engine.js').setDraftW(new Array(require('../engine.js').TYPES.length).fill(.8));
 const E = require('../engine.js');
 const G = +process.argv[2] || 200, rnd = E.rng(+process.argv[3] || 1), LV = 20, NT = E.TYPES.length;
 const on = new Array(NT).fill(0), pick = new Array(NT).fill(0), won = new Array(NT).fill(0), notW = new Array(NT).fill(0), notN = new Array(NT).fill(0), used = {};
 let moves = 0, stuck = 0, firstWins = 0, fleetSize = 0, costSum = 0;
 for (let g = 0; g < G; g++) {
   const d = E.draftNew(g & 1, rnd);
-  while (d.turn >= 0) { const k = E.draftAI(d, rnd); E.draftPick(d, k >= 0 ? k : -1); }
+  while (d.turn >= 0) { const k = E.draftAI(d, rnd); E.draftPick(d, k >= 0 ? k : -1); }   // (with `flat` as 3rd argument the AI's taste is switched off: every type equally liked, so each ship's win rate is not skewed by what it is drafted with)
   const fleets = [0, 1].map(p => E.randomFleet(rnd, false, d.picks[p]));
   const st = E.newGame({ rule: 'tactics', adj: false, fleets, first: g & 1 });
   let n = 0;

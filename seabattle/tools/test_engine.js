@@ -39,7 +39,7 @@ ok(!E.validFleet([{ r: 0, c: 7, len: 5, h: 1 }, { r: 2, c: 0, len: 4, h: 0 }, { 
 // ---- 1a) タクティクス 第2弾・第3弾: rockets, repairs, mines (turns lost), anti-air — every AI game ends, replays to the same boards, and hit counts stay true ----
 {
   let bad = 0, reps = 0;
-  for (let g = 0; g < 120; g++) { const fl = [0, 1].map(() => E.randomFleet(rnd, false, [[11, 12, 6, 3, 4], [14, 13, 12, 1, 4], [15, 16, 17, 13, 4], [18, 19, 14, 5, 4], [20, 21, 1, 3, 4], [22, 23, 13, 5, 4], [24, 25, 14, 18, 4], [26, 27, 3, 1, 4], [28, 29, 0, 5, 4], [30, 31, 13, 4], [32, 33, 1, 3, 4], [34, 35, 0, 4], [36, 37, 1, 4], [38, 39, 3, 4], [40, 41, 2, 23, 4], [42, 43, 1, 4], [44, 45, 40, 4], [46, 47, 1, 3, 4]][g % 18])), st = E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: g & 1 }); let n = 0;
+  for (let g = 0; g < 120; g++) { const fl = [0, 1].map(() => E.randomFleet(rnd, false, [[11, 12, 6, 3, 4], [14, 13, 12, 1, 4], [15, 16, 17, 13, 4], [18, 19, 14, 5, 4], [20, 21, 1, 3, 4], [22, 23, 13, 5, 4], [24, 25, 14, 18, 4], [26, 27, 3, 1, 4], [28, 29, 0, 5, 4], [30, 31, 13, 4], [32, 33, 1, 3, 4], [34, 35, 0, 4], [36, 37, 1, 4], [38, 39, 3, 4], [40, 41, 2, 23, 4], [42, 43, 1, 4], [44, 45, 40, 4], [46, 47, 1, 3, 4], [48, 49, 8, 28, 4]][g % 19])), st = E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: g & 1 }); let n = 0;
     while (st.winner < 0 && n++ < 400) { const a = E.chooseAction(st, 20, rnd); if (a.skill === 'repair') reps++; if (!E.act(st, a)) { bad++; break; } }
     const st2 = E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: g & 1 }); for (const a of st.acts) E.act(st2, a);
     if (st.winner < 0 || JSON.stringify([...st.sides[0].shots, ...st.sides[1].shots]) !== JSON.stringify([...st2.sides[0].shots, ...st2.sides[1].shots])) bad++;
@@ -59,11 +59,11 @@ ok(!E.validFleet([{ r: 0, c: 7, len: 5, h: 1 }, { r: 2, c: 0, len: 4, h: 0 }, { 
   ok(bad === 0, 'every draft (random and AI) ends with two legal fleets (' + JSON.stringify(sizes) + ')');
   const fl = [{ r: 0, c: 0, len: 5, h: 1, t: 0 }, { r: 2, c: 0, len: 4, h: 1, t: 1 }, { r: 4, c: 0, len: 3, h: 1, t: 2 }, { r: 6, c: 0, len: 3, h: 1, t: 3 }];
   let st = E.newGame({ rule: 'tactics', fleets: [fl, fl], first: 0 });
-  ok(st.cd[0].join() === '3,2,3,2', 'skills start half charged (' + st.cd[0].join() + ')');
+  const half = [0, 1, 2, 3].map(t => Math.ceil(E.TYPES[t].cd / 2)).join(); ok(st.cd[0].join() === half, 'skills start half charged (' + st.cd[0].join() + ' = ' + half + ')');
   ok(E.useSkill(st, 3, 55) === null, 'a charging skill cannot be used');
   E.fire(st, 99); E.fire(st, 99); E.fire(st, 98); E.fire(st, 98);
-  ok(st.cd[0][3] === 0 && st.cd[0][1] === 0 && st.turn === 0, 'cooldowns count the owner’s turns');
-  let r = E.useSkill(st, 3, 11); ok(r && r.k === 6 && st.scans[0].length === 1 && st.turn === 1 && st.cd[0][3] === 3, 'sonar counts 6 ship squares around B2, costs the turn, goes on cooldown');
+  ok(st.cd[0][3] === Math.max(0, Math.ceil(E.TYPES[3].cd / 2) - 2) && st.cd[0][1] === Math.max(0, Math.ceil(E.TYPES[1].cd / 2) - 2) && st.turn === 0, 'cooldowns count the owner’s turns');
+  let r = E.useSkill(st, 3, 11); ok(r && r.k === 6 && st.scans[0].length === 1 && st.turn === 1 && st.cd[0][3] === E.TYPES[3].cd, 'sonar counts 6 ship squares around B2, costs the turn, goes on cooldown');
   ok(E.heat(E.view(st.sides[1], st.scans[0]), false, 6)[1] > E.heat(E.view(st.sides[1]), false, 6)[1] * 1.5, 'the density map leans toward the sonar box');
   E.fire(st, 97);
   r = E.useSkill(st, 1, 0); ok(r && r.shots.length === 4 && r.shots.filter(x => x.hit).length === 2 && st.sides[1].shots[0] === 2 && st.sides[1].shots[10] === 1, 'volley: 2×2 block, 2 hits');
