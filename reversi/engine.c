@@ -881,11 +881,23 @@ static inline int lastCount(int s, u64 P) {
 static u64 NEIGH[64];   // the 8 squares around each square
 /* the last 7 squares without move generation: each empty square is tried (a move must touch an opponent disc).
    P to move; the scores are for P. */
+/* (a test build only, -DLAZYCUT, tools/build-variants.sh lc: when the side to move has no move, the value is at most d + 1
+   (d - 1 if behind) whatever the opponent does; at or below the caller's alpha that bound is returned without counting the
+   opponent's flips — Edax's lazy cut-off. Without it the binary is the same as before) */
+#ifdef LAZYCUT
+#define L1(P, x, A) last1(P, x, A)
+static inline int last1(u64 P, int x, int A) {
+#else
+#define L1(P, x, A) last1(P, x)
 static inline int last1(u64 P, int x) {   // one empty square x, the board otherwise full
+#endif
   ++nodes;
   const int d = 2 * pc(P) - 63;
   int n = lastCount(x, P);
   if (n) return d + 1 + 2 * n;
+#ifdef LAZYCUT
+  if ((d > 0 ? d + 1 : d - 1) <= A) return d > 0 ? d + 1 : d - 1;
+#endif
   ++nodes;   // (the pass)
   n = lastCount(x, ~P & ~(1ULL << x));
   if (n) return d - 1 - 2 * n;
@@ -894,13 +906,13 @@ static inline int last1(u64 P, int x) {   // one empty square x, the board other
 static int solve2(u64 P, u64 O, int alpha, int beta, int x1, int x2) {
   ++nodes;
   u64 f; int best = -99, v;
-  if ((NEIGH[x1] & O) && (f = flips(x1, P, O))) { best = -last1(O & ~f, x2); if (best >= beta) return best; }
-  if ((NEIGH[x2] & O) && (f = flips(x2, P, O))) { v = -last1(O & ~f, x1); return v > best ? v : best; }
+  if ((NEIGH[x1] & O) && (f = flips(x1, P, O))) { best = -L1(O & ~f, x2, -beta); if (best >= beta) return best; }
+  if ((NEIGH[x2] & O) && (f = flips(x2, P, O))) { v = -L1(O & ~f, x1, -beta); return v > best ? v : best; }
   if (best > -99) return best;
   ++nodes;   // P passes: the opponent plays (still P's score)
   best = 99;
-  if ((NEIGH[x1] & P) && (f = flips(x1, O, P))) { best = last1(P & ~f, x2); if (best <= alpha) return best; }
-  if ((NEIGH[x2] & P) && (f = flips(x2, O, P))) { v = last1(P & ~f, x1); return v < best ? v : best; }
+  if ((NEIGH[x1] & P) && (f = flips(x1, O, P))) { best = L1(P & ~f, x2, alpha); if (best <= alpha) return best; }
+  if ((NEIGH[x2] & P) && (f = flips(x2, O, P))) { v = L1(P & ~f, x1, alpha); return v < best ? v : best; }
   if (best < 99) return best;
   return finalScore(P, O);
 }
@@ -948,7 +960,7 @@ static int solveN(u64 P, u64 O, int alpha, int beta, int n, u64 E, int par, int 
 static int solveSmall(u64 P, u64 O, int alpha, int beta, int empties, int passed) {
   const u64 E = ~(P | O);
   /* after a pass (passed) the side to move has a move (solve checked it), so 1 and 2 empties need no flag */
-  if (empties == 1) return last1(P, lsb(E));
+  if (empties == 1) return L1(P, lsb(E), alpha);
   if (empties == 2) { const int a = lsb(E); return solve2(P, O, alpha, beta, a, lsb(E & (E - 1))); }
   if (empties == 3) return solve3e(P, O, alpha, beta, E, passed);
   int par = 0; for (u64 x = E; x; x &= x - 1) par ^= 1 << QUAD[lsb(x)];

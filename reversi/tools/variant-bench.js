@@ -19,7 +19,7 @@ if (args[0] === '--worker') {
     const [pl, ph, ol, oh] = E.toBits(c, side), [nol, noh, npl, nph] = E.childOf(pl, ph, ol, oh, m), n = new Array(64).fill(0);
     for (let q = 0; q < 64; q++) { const me = q < 32 ? (npl >>> q) & 1 : (nph >>> (q - 32)) & 1, op = q < 32 ? (nol >>> q) & 1 : (noh >>> (q - 32)) & 1; n[q] = me ? side : op ? 3 - side : 0; }
     return n; };
-  const run = (list, cfg) => { let nodes = 0; const t0 = process.cpuUsage(); for (const [c, side] of list) { E.clearTT(); const r = E.think(c, side, { cfg, noBook: true, variety: false, time: 0 }); nodes += r.nodes || 0; } const u = process.cpuUsage(t0); return { sec: (u.user + u.system) / 1e6, nodes }; };
+  const run = (list, cfg) => { let nodes = 0, sum = ''; const t0 = process.cpuUsage(); for (const [c, side] of list) { E.clearTT(); const r = E.think(c, side, { cfg, noBook: true, variety: false, time: 0 }); nodes += r.nodes || 0; sum += r.move + ':' + r.score + ' '; } const u = process.cpuUsage(t0); return { sec: (u.user + u.system) / 1e6, nodes, sum }; };
   const mid = cells.map(c => [c, 1]), end = [];
   for (const c0 of cells) {   // the same shallow game from each opening down to EMP empties (the moves do not depend on the build's speed)
     let c = c0, side = 1, guard = 0;
@@ -32,11 +32,11 @@ if (args[0] === '--worker') {
   const vs = ['base', ...opt('variants', 'g1,g2').split(',').filter(Boolean)], best = {};
   for (let r = 0; r < ROUNDS; r++) for (const v of vs) {
     const o = JSON.parse(cp.execFileSync(process.execPath, [__filename, '--worker', v, ...args], { stdio: ['ignore', 'pipe', 'inherit'] }).toString());
-    const b = best[v] || (best[v] = { mid: Infinity, end: Infinity }); b.mid = Math.min(b.mid, o.mid.sec); b.end = Math.min(b.end, o.end.sec); b.midN = o.mid.nodes; b.endN = o.end.nodes; b.nEnd = o.nEnd;
+    const b = best[v] || (best[v] = { mid: Infinity, end: Infinity }); b.mid = Math.min(b.mid, o.mid.sec); b.end = Math.min(b.end, o.end.sec); b.midN = o.mid.nodes; b.endN = o.end.nodes; b.sum = o.mid.sum + '|' + o.end.sum; b.nEnd = o.nEnd;
     process.stderr.write(`\r${r + 1} / ${ROUNDS}: ${v}      `);
   }
   console.log(`\n中盤：深さ${DEPTH} × ${N} 局面　終盤：空き${EMP}マスの完全読み × ${best.base.nEnd} 局面（${ROUNDS} 回のうち最短）`);
-  console.log('| ビルド | 中盤の時間 | 今の版との比 | 終盤の時間 | 今の版との比 | 読んだ局面数が同じか |');
-  console.log('|---|---|---|---|---|---|');
-  for (const v of vs) { const b = best[v], a = best.base; console.log(`| ${v === 'base' ? '今の版' : v} | ${b.mid.toFixed(2)}秒 | ×${(b.mid / a.mid).toFixed(3)} | ${b.end.toFixed(2)}秒 | ×${(b.end / a.end).toFixed(3)} | ${b.midN === a.midN && b.endN === a.endN ? '同じ' : '違う'} |`); }
+  console.log('| ビルド | 中盤の時間 | 今の版との比 | 終盤の時間 | 今の版との比 | 手と値が同じか | 読んだ局面数が同じか |');
+  console.log('|---|---|---|---|---|---|---|');
+  for (const v of vs) { const b = best[v], a = best.base; console.log(`| ${v === 'base' ? '今の版' : v} | ${b.mid.toFixed(2)}秒 | ×${(b.mid / a.mid).toFixed(3)} | ${b.end.toFixed(2)}秒 | ×${(b.end / a.end).toFixed(3)} | ${b.sum === a.sum ? '同じ' : '違う'} | ${b.midN === a.midN && b.endN === a.endN ? '同じ' : '違う'} |`); }
 }
