@@ -689,7 +689,7 @@ html.atlas-skin.askin-bg[data-skk=cover] body::before{will-change:transform}   /
       set(mode);
       // the scene's motion (2026-11-20): still on the game pages unless switched on in the options — a moving scene behind the 3D board
       // costs every frame (銀河鉄道 + ラトロンクロルム was heavy); skins-fx.js pauses all of it under html.askin-still
-      let anim = true; try { anim = localStorage.getItem('atlas-fullanim') !== '0'; } catch (e) {}   // (2026-11-21 the user: on by default)
+      let anim = false; try { anim = localStorage.getItem('atlas-fullanim') === '1'; } catch (e) {}   // (2026-11-21 the user: off by default again — a moving scene behind the board draws a frame all the time; measured)
       de.classList.toggle('askin-still', !anim);
       if (window.HeaderBar && HeaderBar.addOption) HeaderBar.addOption({ id: 'skanim', type: 'toggle', hidden: () => !de.classList.contains('askin-bg'),
         label: { ja: '背景アニメーション', en: 'Animated background', zh: '背景动画', 'zh-TW': '背景動畫', ko: '배경 애니메이션', es: 'Fondo animado', fr: 'Fond animé', pt: 'Fundo animado', de: 'Animierter Hintergrund', ru: 'Анимированный фон', tr: 'Hareketli arka plan', id: 'Latar animasi', hi: 'एनिमेटेड बैकग्राउंड', ar: 'خلفية متحركة' },
