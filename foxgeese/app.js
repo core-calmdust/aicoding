@@ -1235,7 +1235,7 @@ function segSync() {
   $('#fRatedInfo').classList.toggle('hidden', m !== 'rated');
   if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml();
   $('#fRules').classList.toggle('hidden', !(game || m === 'online'));   // (rated games: always the default rules, g15 — named on the rating card)
-  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${ruleCardSVG(r)}</span><b>${t('rule.' + r)}</b><p>${r === E.DEFAULT_RULE ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
+  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${ruleCardSVG(r)}</span><b>${t('rule.' + r)}</b><p>${r === E.DEFAULT_RULE ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><small class="gshort">${r === E.DEFAULT_RULE ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.s')}</small><span class="gpick"></span></button>`).join('');   // (.gshort: phones show the short line, 4 cards in one row — 2026-11-20 user)
   $('#fQuiet').classList.toggle('hidden', !game);   // (rated and online games: always the default limit)
   $('#fFormat').classList.toggle('hidden', !(m === 'ai' || m === 'pvp' || m === 'rated') || !!draft.resume);   // 交代2局戦 / 1局 (not for AI-vs-AI, online, 「ここから再開」)
   document.querySelectorAll('#segFmt button').forEach(b => { const v = b.dataset.v; b.classList.toggle('sel', v === draft.fmt); b.innerHTML = escHb(t('fmt.' + v)) + (v === 'match' ? `<small class="q-std"> ${escHb(t('rule.std'))}</small>` : ''); });
