@@ -258,3 +258,4 @@ html.exv-open{overflow:hidden}
 .gxgt small{display:block;font-size:13px;font-weight:700;color:var(--ink2);line-height:1.5}
 .gxguide>i{font-style:normal;font:700 16px var(--round);color:#9a6a32;flex:none}
 @media (max-width:819px){.gxav img{width:40px;height:40px;margin-inline-end:-12px}.gxgt small{font-size:12px}.gxguide{gap:10px;padding:8px 12px 8px 6px}}
+.exspot[hidden]{display:none}

@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 2;
+  const V = 3;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -18,6 +18,9 @@
       spots: [[-3.5, .44, -1], [-.5, .44, 0], [1, .44, 0], [3.5, .44, -1], [-2.5, .22, 1.62]] },
     { id: 'senet', game: 'senet', cm: 1, view: [.62, .4, .95], spots: [[-11, 20.9, -3.9], [17, 20.9, 3.9], [22.5, 17.1, 0], [-17.6, 7, 6.9], [4, 1.8, 7.6]] },
     { id: 'shosoin', game: 'go', cm: 1, view: [.35, .62, .95], spots: [[0, 12.8, 0], [-10.6, 12.8, -10.6], [12, 6.5, -24.2], [0, 6, 29], [-24.2, 2, 6]] },
+    { id: 'pyrgus', game: 'backgammon', cm: 1, view: [.55, .32, 1], spots: [[0, 18.6, 4.6], [4.6, 20.4, 0], [0, 12, 0], [0, 3.2, 4.6], [1.4, .9, 6.3]] },
+    { id: 'ottoman', game: 'backgammon', cm: 1, flip: true, view: [.25, .78, .9], lock: { game: 'backgammon', ach: 3 },
+      spots: [[-21, 1.3, -21], [0, 1.3, -14], [10, 1.75, .6], [6, 0, 9], [-4.6, 0, 4.85], [0, 0, 24.6], [-24.3, 0, -24.2], [28.3, .6, 12]], side: [0, 0, 0, 1, 1, 1, 1, 1] },
     { id: 'kofukuji', game: 'shogi', cm: 0, view: [0, 1.05, .9], spots: [[-7.1, 1.6, -2.9], [3.55, 1.6, -2.9], [-1.8, 1.6, 1.7], [8.9, 1.6, 1.7], [0, 1.6, 6]], lock: { game: 'shogi', ach: 3 } },
   ];
   const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
@@ -57,16 +60,16 @@
   let V3 = null;   // { R, scene, cam, obj, … } while open
   function open(id) {
     const e = EX.find(x => x.id === id); if (!e || V3) return;
-    const t = ex(lang, id), g = ctx.games.find(x => x.id === e.game);
+    const t = ex(lang, id), g = ctx.games.find(x => x.id === e.game), B0 = e.flip ? { flip: true } : null;
     const ov = document.createElement('div'); ov.className = 'exv'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
     ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div>
         <div class="exscale" aria-hidden="true" dir="ltr"><i></i><span>10 cm</span></div>
         <p class="exhint">${esc(ui(lang, phone() ? 'hintT' : 'hint'))}</p>
-        <div class="exbtns"><button type="button" class="exb" data-k="spin" aria-label="${esc(ui(lang, 'spin'))}" title="${esc(ui(lang, 'spin'))}"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg></button><button type="button" class="exb" data-k="reset" aria-label="${esc(ui(lang, 'reset'))}" title="${esc(ui(lang, 'reset'))}"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
+        <div class="exbtns"><button type="button" class="exb" data-k="spin" aria-label="${esc(ui(lang, 'spin'))}" title="${esc(ui(lang, 'spin'))}"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg></button>${B0 && B0.flip ? `<button type="button" class="exb" data-k="flip" aria-label="${esc(ui(lang, 'flip'))}" title="${esc(ui(lang, 'flip'))}"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></button>` : ''}<button type="button" class="exb" data-k="reset" aria-label="${esc(ui(lang, 'reset'))}" title="${esc(ui(lang, 'reset'))}"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
         <p class="exload">${esc(ui(lang, 'loading'))}</p></div>
       <aside class="exinfo"><button type="button" class="exclose" aria-label="${esc(ui(lang, 'close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         <div class="exscroll"><small class="exkind">${esc(ui(lang, 'collection'))}${e.lock ? ` · ${esc(ui(lang, 'special'))}` : ''}</small><h2>${esc(t.name || id)}</h2>${t.alt ? `<p class="exalt">${esc(t.alt)}</p>` : ''}
-        <dl class="exfacts">${[['date', t.date], ['where', t.found], ['museum', t.museum + (t.no ? `（${t.no}）` : '')], ['mat', t.mat], ['size', t.size]].filter(r => r[1]).map(([k, v]) => `<dt>${esc(ui(lang, k))}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+        <dl class="exfacts">${[['date', t.date], ['where', t.found], ['museum', t.museum ? t.museum + (t.no ? `（${t.no}）` : '') : ''], ['mat', t.mat], ['size', t.size]].filter(r => r[1]).map(([k, v]) => `<dt>${esc(ui(lang, k))}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
         ${(t.p || []).map(p => `<p class="exp">${esc(p)}</p>`).join('')}
         ${(t.spots || []).length ? `<h3>${esc(ui(lang, 'look'))}</h3><ol class="exlook">${t.spots.map((s, i) => `<li><button type="button" data-n="${i}"><u>${i + 1}</u><span><b>${esc(s[0])}</b>${esc(s[1])}</span></button></li>`).join('')}</ol>` : ''}
         ${t.model ? `<h3>${esc(ui(lang, 'aboutModel'))}</h3><p class="exp sm">${esc(t.model)}</p>` : ''}
@@ -90,6 +93,7 @@
     ov.querySelector('[data-k="reset"]').onclick = () => { if (V3 && V3.home) { V3.spin = false; tween(V3.home); } };
     ov.querySelector('[data-k="spin"]').onclick = () => { if (!V3) return; V3.spin = !V3.spin; ov.querySelector('[data-k="spin"]').classList.toggle('on', V3.spin); go(); };
     ov.querySelector('[data-k="spin"]').classList.add('on');
+    const fb = ov.querySelector('[data-k="flip"]'); if (fb) fb.onclick = () => { if (!V3 || !V3.flip) return; V3.flip.to = V3.flip.to ? 0 : 1; fb.classList.toggle('on', !!V3.flip.to); go(); };
     Promise.all([load('museum/ex/' + id + '.js?v=' + V), e.src ? e.src() : 0]).then(() => { const B = window.AtlasEx && AtlasEx[id]; return B && B.ready ? B.ready() : 0; }).then(() => { if (V3 && V3.ov === ov) build(e); });
   }
 
@@ -119,25 +123,27 @@
     const plMat = new TT.MeshStandardMaterial({ color: new TT.Color('#1b1612').convertSRGBToLinear(), roughness: .9, metalness: 0 });
     const plTop = new TT.MeshStandardMaterial({ color: new TT.Color('#231d18').convertSRGBToLinear(), roughness: .95, metalness: 0 });
     const plinth = new TT.Mesh(new TT.BoxGeometry(pw, ph, pd), [plMat, plMat, plTop, plMat, plMat, plMat]); plinth.position.y = -ph / 2; plinth.receiveShadow = true;
-    scene.add(plinth, obj);
+    // a pivot at the piece's middle, so a two-sided piece (B.flip) can be turned over in the case
+    const pivot = new TT.Group(); pivot.position.y = sz.y / 2; obj.position.y -= sz.y / 2; pivot.add(obj);
+    scene.add(plinth, pivot);
     // light: a warm key spot from above and in front (the only shadow), a cool rim from behind, a soft fill
-    const r = Math.hypot(sz.x, sz.z) / 2 + .2;
+    const rf = Math.hypot(sz.x, sz.z) / 2, r = Math.max(rf, Math.hypot(rf, sz.y / 2) * .92) + .2;   // (tall pieces: the height counts too)
     scene.add(new TT.HemisphereLight(0xfff2e0, 0x2a1d14, .45));
     const key = new TT.SpotLight(0xfff0dc, 2.5, 0, .55, .6, 0); key.position.set(r * .6, r * 3.2, r * 1.9); key.target.position.set(0, 0, 0); key.castShadow = true;
     key.shadow.mapSize.set(phone() ? 1024 : 2048, phone() ? 1024 : 2048); key.shadow.bias = -.0004; key.shadow.normalBias = .02; key.shadow.camera.near = r * .5; key.shadow.camera.far = r * 8; key.shadow.radius = 4;
     scene.add(key, key.target);
     const rim = new TT.DirectionalLight(0xcfe0ff, .6); rim.position.set(-r * 2, r * 1.5, -r * 2.5); scene.add(rim);
     const fill = new TT.DirectionalLight(0xffe2c4, .3); fill.position.set(-r * 2.5, r, r * 2); scene.add(fill);
-    const cam = new TT.PerspectiveCamera(30, 1, .01, r * 40);
-    const tgt = new TT.Vector3(0, Math.min(sz.y * .45, r * .3), 0);
+    const cam = new TT.PerspectiveCamera(30, 1, Math.max(.01, r * .02), r * 40);
+    const tgt = new TT.Vector3(0, sz.y > rf ? sz.y * .46 : Math.min(sz.y * .45, r * .3), 0);
     // the start view: [yaw, pitch, distance factor]
     const [yaw0, pit0, df] = e.view || [-.5, .6, 1];
     const fitD = () => { const a = cam.aspect, vf = cam.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * a); return r * 1.32 / Math.sin(Math.min(vf, hf) / 2); };
-    Object.assign(V3, { R, scene, cam, obj, env, tgt, r, e, sph: { yaw: yaw0, pit: pit0, d: 0 }, vel: { yaw: 0, pit: 0 }, home: null, raf: 0, need: 2, last: 0, plinth, fitD, df });
+    Object.assign(V3, { R, scene, cam, obj, pivot, py: sz.y / 2, flip: B.flip ? { t: 0, to: 0 } : null, env, tgt, r, e, sph: { yaw: yaw0, pit: pit0, d: 0 }, vel: { yaw: 0, pit: 0 }, home: null, raf: 0, need: 2, last: 0, plinth, fitD, df });
     const resize = () => { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); if (!V3.sph.d) V3.sph.d = fitD() * df; V3.home = { yaw: yaw0, pit: pit0, d: fitD() * df }; go(); };
     V3.ro = new ResizeObserver(resize); V3.ro.observe(stage); resize();
     // spots: the numbered details (model coordinates; the piece was moved onto the plinth, so add its offset)
-    V3.spots = (e.spots || []).map(p => new TT.Vector3(p[0], p[1], p[2]).add(obj.position));
+    V3.spots = (e.spots || []).map(p => new TT.Vector3(p[0], p[1], p[2]));   // (model coordinates: placed through the piece's matrix each frame)
     const sl = ov.querySelector('.exspots'); sl.innerHTML = V3.spots.map((_, i) => `<button type="button" class="exspot" data-n="${i}">${i + 1}</button>`).join('');
     sl.querySelectorAll('.exspot').forEach(b => b.onclick = () => focusSpot(+b.dataset.n));
     bindInput(stage);
@@ -189,6 +195,11 @@
     if (V3.tw) { const k = Math.min(1, (now - V3.tw.t0) / V3.tw.ms), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; S.yaw = V3.tw.a.yaw + (V3.tw.b.yaw - V3.tw.a.yaw) * e; S.pit = V3.tw.a.pit + (V3.tw.b.pit - V3.tw.a.pit) * e; S.d = V3.tw.a.d + (V3.tw.b.d - V3.tw.a.d) * e; if (k >= 1) V3.tw = null; moving = true; }
     if (!V3.drag && (Math.abs(V3.vel.yaw) > 1e-4 || Math.abs(V3.vel.pit) > 1e-4)) { S.yaw += V3.vel.yaw; S.pit += V3.vel.pit; V3.vel.yaw *= .9; V3.vel.pit *= .9; moving = true; }
     if (V3.spin && !V3.drag && !V3.tw && awake()) { S.yaw += dt * .16; moving = true; }
+    if (V3.flip && V3.flip.t !== V3.flip.to) {   // turning a two-sided piece over: lift, roll half a turn, set down
+      const F = V3.flip; F.t = F.to > F.t ? Math.min(F.to, F.t + dt / .9) : Math.max(F.to, F.t - dt / .9);
+      const k = F.t < .5 ? 2 * F.t * F.t : 1 - Math.pow(-2 * F.t + 2, 2) / 2;
+      V3.pivot.rotation.z = Math.PI * k; V3.pivot.position.y = V3.py + Math.sin(Math.PI * F.t) * V3.r * .5; V3.R.shadowMap.needsUpdate = true; moving = true;
+    }
     S.pit = Math.max(.08, Math.min(1.35, S.pit));
     const c = V3.cam, t = V3.tgt; c.position.set(t.x + S.d * Math.cos(S.pit) * Math.sin(S.yaw), t.y + S.d * Math.sin(S.pit), t.z + S.d * Math.cos(S.pit) * Math.cos(S.yaw)); c.lookAt(t);
     V3.R.render(V3.scene, c);
@@ -199,7 +210,8 @@
   function place() {
     const ov = V3.ov, st = ov.querySelector('.exstage'), w = st.clientWidth, h = st.clientHeight, c = V3.cam;
     const P = new (window.THREE.Vector3)();
-    ov.querySelectorAll('.exspot').forEach((b, i) => { P.copy(V3.spots[i]).project(c); const vis = P.z < 1; b.style.transform = `translate(${((P.x + 1) / 2 * w).toFixed(1)}px,${((1 - P.y) / 2 * h).toFixed(1)}px)`; b.style.opacity = vis ? '' : '0'; });
+    V3.obj.updateWorldMatrix(true, false);
+    ov.querySelectorAll('.exspot').forEach((b, i) => { P.copy(V3.spots[i]).applyMatrix4(V3.obj.matrixWorld); const up = V3.flip && V3.flip.t > .5; b.hidden = !!V3.e.side && (V3.e.side[i] === 1) !== !!up; P.project(c); const vis = P.z < 1; b.style.transform = `translate(${((P.x + 1) / 2 * w).toFixed(1)}px,${((1 - P.y) / 2 * h).toFixed(1)}px)`; b.style.opacity = vis ? '' : '0'; });
     // 10 cm on screen at the target's depth
     if (!V3.e.cm) { ov.querySelector('.exscale').hidden = true; return; }
     const cm = V3.e.cm, u = 10 / cm, dist = c.position.distanceTo(V3.tgt), px = u / (2 * dist * Math.tan(c.fov * Math.PI / 360)) * h;
@@ -209,7 +221,7 @@
   function focusSpot(i) {
     if (!V3 || !V3.spots || !V3.spots[i]) return;
     V3.spin = false; V3.ov.querySelector('[data-k="spin"]').classList.remove('on');
-    const p = V3.spots[i], t = V3.tgt, yaw = Math.atan2(p.x - t.x, p.z - t.z + .001);
+    V3.obj.updateWorldMatrix(true, false); const p = V3.spots[i].clone().applyMatrix4(V3.obj.matrixWorld), t = V3.tgt, yaw = Math.atan2(p.x - t.x, p.z - t.z + .001);
     tween({ yaw: Math.hypot(p.x, p.z) > V3.r * .25 ? yaw : V3.sph.yaw, pit: .72, d: V3.fitD() * .62 });
     V3.ov.querySelectorAll('.exlook li').forEach((li, k) => li.classList.toggle('on', k === i));
     V3.ov.querySelectorAll('.exspot').forEach((b, k) => b.classList.toggle('on', k === i));
