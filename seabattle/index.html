@@ -529,6 +529,8 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
 @media (max-width:600px){#pickOverlay .modal-actions #btnPickOk{flex:1 1 100%}}
 #pickHead span.pend{color:var(--gold2)}   /* (the cost left already takes the chosen cards off, 2026-11-20 user) */
 .pc .pwhy.pdup{color:var(--gold2);border-color:rgba(216,180,106,.55)}.pc.dup .pcost{color:var(--gold2)}
+#pickOverlay .modal-actions #btnPickClose{flex:0 0 auto;min-width:120px}
+@media (max-width:600px){#pickOverlay .modal-actions #btnPickClose{flex:0 0 34%;min-width:0}#pickOverlay .modal-actions #btnPickOk{flex:1 1 0!important}}
 </style>
 </head>
 <body class="no-online placing">
@@ -598,7 +600,7 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
 </div>
 
 <!-- rules (shared/ruletour.js) -->
-<div class="overlay" id="pickOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="dr.t"></h2><div id="pickHead"></div><div id="pickViews"></div><div id="pickTabs"></div></div><div id="pickGrid"></div><div class="modal-actions"><div id="pickLegend"><span><i class="t"></i><b data-i18n="pk.lg.t"></b></span><span><i class="a"></i><b data-i18n="pk.lg.a"></b></span><span><i class="s"></i><b data-i18n="pk.lg.s"></b></span><span><i class="p"></i><b data-i18n="pk.lg.p"></b></span><span><i class="m"></i><b data-i18n="pk.lg.m"></b></span></div><button class="mbtn primary" id="btnPickOk" data-i18n="pk.ok"></button></div></div></div>
+<div class="overlay" id="pickOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="dr.t"></h2><div id="pickHead"></div><div id="pickViews"></div><div id="pickTabs"></div></div><div id="pickGrid"></div><div class="modal-actions"><div id="pickLegend"><span><i class="t"></i><b data-i18n="pk.lg.t"></b></span><span><i class="a"></i><b data-i18n="pk.lg.a"></b></span><span><i class="s"></i><b data-i18n="pk.lg.s"></b></span><span><i class="p"></i><b data-i18n="pk.lg.p"></b></span><span><i class="m"></i><b data-i18n="pk.lg.m"></b></span></div><button class="mbtn" id="btnPickClose" data-i18n="close"></button><button class="mbtn primary" id="btnPickOk" data-i18n="pk.ok"></button></div></div></div>
 <div class="overlay" id="fleetOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="fv.t"></h2></div><div id="fleetGrid"></div><div class="modal-actions"><button class="mbtn" id="btnFleetClose" data-i18n="close"></button></div></div></div>
 <div class="overlay" id="shipsOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="dr.all"></h2><div id="slSort" class="slsort"></div><div id="slTabs" class="sltabs"></div></div><div id="shipGrid"></div><div class="modal-actions"><button class="mbtn" id="btnShipsClose" data-i18n="close"></button></div></div></div>
 <div class="overlay" id="rulesOverlay"><div class="modal"><div id="rulesBody"></div></div></div>
@@ -621,7 +623,7 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
 <script src="draft-model.js?v=2"></script><script src="engine.js?v=33"></script>
 <script src="board.js?v=10"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=57"></script>
+<script src="app.js?v=58"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
