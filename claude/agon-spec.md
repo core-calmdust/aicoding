@@ -141,3 +141,8 @@ URL: https://core-calmdust.github.io/aicoding/agon/ ／ トップはアルケル
   - 最善の手だけ（`bookMargin: 0`）：206局 +35 =116 −55（**45.1%**、約 −34 Elo）。std 46.2%・place 42.0%。
   - ブック側がブックの手を指したのは1局あたり約1.7手（相手がすぐブックの外へ出る）。**勝ち越さないので同梱しない**。理由の見立て：手作りの評価の値が勝敗をあまり言い当てない（MODEL_CARD「学習した評価」）ので、序盤を深く読んでも良い手にならない。ネットを採用したあとに Mac で作り直して測る。
 - 版：`engine.js?v=10-nn1-bk1`（app.js・index.html・bench.html・atlas/games/agon.js・atlas/rules/agon.js）、app.js `…-nn2-bk1`、atlas/lazy.js の agon（games 19・rules 8）、`lazy.js?v=483`。
+
+## 検討ボックスのスレッド（2026-11-20、点検 #2929/#2938）
+- 検討ボックス（`rvbox.js` の `pool()`）は、分離されたページでも `shared/mtsplit.js`（別の探索）で読んでいて、分析（`core_mt.wasm`、Praline の YBW）と深さ・値がずれていた。分析と同じ組に：分離されたページは `core_mt.wasm`（コーチの深読みなどでふさがっていれば1ワーカー、`mtsplit.js` には回さない）、分離されないページは今まで通り `mtsplit.js`。共通の決まりは addendum「検討ボックスのスレッド」。
+- 確認：headless Chrome（Playwright、1440×900、2D と `?skin=atlas`）で、分離あり（DIP）・COOP モード・分離なしの各モードで対局の振り返りから検討ボックスを開き、読みが進んで候補手と値が出ること、分離ありでは `core_mt.wasm` の組で読むこと、分析と同じ局面で手と値が大きくずれないこと（αβ の値は深さの偶数・奇数で揺れる）、コンソールエラーなし（localhost の Firebase／reCAPTCHA を除く）。
+- 版：`app.js?v=…-bk1-rb1`（`agon/index.html`）。

@@ -2280,7 +2280,9 @@ function rvbUpdate() {
 }
 if (window.RvBox) BOX = RvBox.create({
   app: '.app', frame: '#frame', lang: () => LANG, worker: () => ENGINE_URL,
-  pool: () => MTP && MTP.pool(), cancel: () => { if (MTP) MTP.cancel('rvb'); },   // (the threads when free)
+  // (2026-11-20 #2929/#2938) the analysis's threads, as in the other games (chess, checkers…: the threads when free, else the one worker):
+  //  on an isolated page core_mt.wasm's (Praline's YBW) — never mtsplit.js's search beside them —, on a page that is not isolated mtsplit.js's
+  pool: () => MCP && MTEngine.on() ? MCP.pool() : MTP && MTP.pool(), cancel: () => { if (MTP) MTP.cancel('rvb'); if (MCP) MCP.cancel('rvb'); },
   onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
   onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
   onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }

@@ -172,3 +172,8 @@ v2（ヌルムーブ・LMP・LMR の対数表・フューティリティ・ヒ�
 ## 推論の高速化（2026-11-20）
 - `core.c` `nnEval` を wasm SIMD に（1層目は int32 レーン、2層目は `i32x4.dot_i16x8`。値・局面数は同じ）。wasm SIMD のネットありの探索が約+50%。詳細は `ugolki/MODEL_CARD.md`「推論の高速化」。
 - 版：`core-wasm.js?v=7`、`engine.js?v=11-v3nn-b3`（app.js・index.html・bench.html・atlas/games/ugolki.js・atlas/rules/ugolki.js）、`core_mt.wasm?v=8`、app.js `…-v3b2`、atlas/lazy.js の ugolki（games 20・rules 14）。
+
+## 検討ボックスのスレッド（2026-11-20、点検 #2929/#2938）
+- 検討ボックス（`rvbox.js` の `pool()`）は、分離されたページでも `shared/mtsplit.js`（別の探索）で読んでいて、分析（`core_mt.wasm`、Praline の YBW）と深さ・値がずれていた。分析と同じ組に：分離されたページは `core_mt.wasm`（コーチの深読みなどでふさがっていれば1ワーカー、`mtsplit.js` には回さない）、分離されないページは今まで通り `mtsplit.js`（ネットのある盤は1ワーカー＝v3＋ネット）。共通の決まりは addendum「検討ボックスのスレッド」。
+- 確認：headless Chrome（Playwright、1440×900、2D と `?skin=atlas`）で、分離あり（DIP）・COOP モード・分離なしの各モードで対局の振り返りから検討ボックスを開き、読みが進んで候補手と値が出ること、分離ありでは `core_mt.wasm` の組で読むこと、分析と同じ局面で手と値が大きくずれないこと（αβ の値は深さの偶数・奇数で揺れる）、コンソールエラーなし（localhost の Firebase／reCAPTCHA を除く）。
+- 版：`app.js?v=…-nj2-rb1`（`ugolki/index.html`）。

@@ -220,3 +220,7 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
 - 3Dルールコース：`atlas/rules/amazons.js`（10ステップ、案内役ケロ、あなたは白）：はじめの配置 → クイーンの動き（矢なし）→ 動いたら矢（光っているマスへ）→ 飛び越えられない → 元いたマスへ矢 → 閉じ込め → 黒を動けなくして勝ち → 部屋に分かれたら陣地の広さ（金と緑で色分け）→ 対局へ。判定はすべて amazons/engine.js。盤に座標の文字はないので、説明文でマスの名前（d1・g7など）は使わず「光っているアマゾン／マス」と言う（ユーザー指示）。正解したら▶ボタンのタイマーが満ちて次のステップへ自動で進む。
 - スクリーンショット：トップ `images/amazons.webp`（2D既定の神殿盤＋カメオ駒、16手目の局面、盤だけを 1200×900 の緑の地に）、一覧 `atlas/shots/amazons.webp`（tools/shots.js）。
 
+## 検討ボックスのスレッド（2026-11-20、点検 #2929/#2938）
+- 検討ボックス（`rvbox.js` の `pool()`）は、分離されたページでも `shared/mtsplit.js`（別の探索）で読んでいて、分析（`core_mt.wasm`、Praline の YBW）と深さ・値がずれていた（αβ の仕事。MCTS の Lv.16〜23 は前から core_mt.wasm）。分析と同じ組に：分離されたページは `core_mt.wasm`（コーチの深読みなどでふさがっていれば1ワーカー、`mtsplit.js` には回さない）、分離されないページは今まで通り `mtsplit.js`。共通の決まりは addendum「検討ボックスのスレッド」。
+- 確認：headless Chrome（Playwright、1440×900、2D と `?skin=atlas`）で、分離あり（DIP）・COOP モード・分離なしの各モードで対局の振り返りから検討ボックスを開き、読みが進んで候補手と値が出ること、分離ありでは `core_mt.wasm` の組で読むこと、分析と同じ局面で手と値が大きくずれないこと（αβ の値は深さの偶数・奇数で揺れる）、コンソールエラーなし（localhost の Firebase／reCAPTCHA を除く）。
+- 版：`app.js?v=33-pk1-pd1`（`amazons/index.html`）。
