@@ -1262,5 +1262,21 @@ function cardSplitInit() {
   [0, 300, 1200, 3000].forEach(ms => setTimeout(apply, ms));
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(cardSplitInit, 0)); else setTimeout(cardSplitInit, 0);
+// フルスクリーン (2026-11-20): the F key and a switch in the options' system box, on every game page (2D and the 3D full version)
+(function fullScreen() {
+  const d = document, root = d.documentElement;
+  if (!(root.requestFullscreen || root.webkitRequestFullscreen)) return;
+  const on = () => !!(d.fullscreenElement || d.webkitFullscreenElement);
+  const set = v => { try { if (v && !on()) { const r = (root.requestFullscreen || root.webkitRequestFullscreen).call(root); if (r && r.catch) r.catch(() => {}); } else if (!v && on()) (d.exitFullscreen || d.webkitExitFullscreen).call(d); } catch (e) {} };
+  addOption({ id: 'fs', type: 'toggle', get: on, set,
+    label: { ja: 'フルスクリーン（F）', en: 'Full screen (F)', zh: '全屏（F）', 'zh-TW': '全螢幕（F）', ko: '전체 화면 (F)', es: 'Pantalla completa (F)', fr: 'Plein écran (F)', pt: 'Tela cheia (F)', de: 'Vollbild (F)', ru: 'Полный экран (F)', tr: 'Tam ekran (F)', id: 'Layar penuh (F)', hi: 'फ़ुल स्क्रीन (F)', ar: 'ملء الشاشة (F)' },
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>' });
+  d.addEventListener('fullscreenchange', syncAll); d.addEventListener('webkitfullscreenchange', syncAll);
+  d.addEventListener('keydown', e => {
+    if ((e.key !== 'f' && e.key !== 'F') || e.ctrlKey || e.metaKey || e.altKey || e.repeat || e.defaultPrevented) return;
+    const a = d.activeElement; if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable)) return;
+    e.preventDefault(); set(!on());
+  });
+})();
 window.HeaderBar = { init, MEDIA: MQ, HEIGHT: H, ICON_RULES, options, addOption, syncOptions: syncAll, OPTIONS_T: OT };
 })();
