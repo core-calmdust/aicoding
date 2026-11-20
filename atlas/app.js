@@ -2710,7 +2710,7 @@
   try { new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1 && !n.classList.contains('sgw')) sgScan(n); }))).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
   /* ---------- 実績 (2026-11-21 ユーザー：全部を一度に出さず、ゲームごとに区分してクリックで開く) ----------
      The page: the totals, 「もうすぐ達成」(the nearest to done, one per group, three at most), then one tile per group (共通 + each game: icon,
-     name, progress). A tile opens its awards right under its own row (one group open at a time; the tile again closes it).
+     name, progress), the games under the ゲーム list's category headings. A tile opens its awards right under its own row (one group open at a time; the tile again closes it).
      Only the open group's cards are in the page — it used to build all 1,400 cards at once (20,000 elements, 1,700 pictures). */
   let achF = '', achS = 'all';   // achF: the open group ('' none · 'common' · a game's id); achS: done / to-do filter
   const achGrp = a => a.gid || 'common';
@@ -2731,14 +2731,19 @@
     $('achNear').innerHTML = near.length ? `<h3 class="glh">${esc(t('ach.near'))}</h3><div class="alist">${near.map(achHtml).join('')}</div>` : '';
     const groups = [['common', t('ach.common'), null], ...A_.GAMES.map(g => [g.id, gname(g), g])].filter(([k]) => by[k] && by[k].some(show));
     if (achF && !groups.some(([k]) => k === achF)) achF = '';
-    $('achList').innerHTML = groups.map(([k, l, g]) => {
+    const tile = ([k, l, g]) => {
       const all = by[k], n = all.filter(a => a.done).length, full = n === all.length, open = achF === k;
       const pic = g ? `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}>` : `<img src="logo.svg" alt="" class="flat">`;
       return `<button type="button" class="card agt${full ? ' full' : ''}${open ? ' open' : ''}" data-k="${k}" aria-expanded="${open}"><span class="pic">${pic}</span>
         <span class="tx"><b>${esc(l)}</b><span class="pr"><span class="bar" style="--c:${full ? 'var(--mint)' : 'var(--sun)'}"><i style="width:${n / all.length * 100}%"></i></span><em>${n}/${all.length}</em></span></span>
         <i class="cv" aria-hidden="true"></i></button>`
         + (open ? `<div class="agp" data-for="${k}"><div class="alist">${all.filter(show).sort(achSort).map(a => achHtml(a, true)).join('')}</div></div>` : '');
-    }).join('');
+    };
+    // sections as the ゲーム list's: 共通 first, then the same categories in the same order (card games together), each under its heading
+    const catOf = g => g.tags.includes('card') ? 'card' : g.cat;
+    const secs = [['', groups.filter(x => !x[2])], ...A_.CATS.map(c => [c, groups.filter(x => x[2] && catOf(x[2]) === c)]), ['?', groups.filter(x => x[2] && !A_.CATS.includes(catOf(x[2])))]].filter(([, a]) => a.length);
+    $('achList').innerHTML = secs.map(([c, a]) => { const all = a.flatMap(([k]) => by[k]), n = all.filter(x => x.done).length;
+      return `<section class="agsec">${c && c !== '?' ? `<h3 class="glh"><span>${esc(t('cat.' + c))}</span><em>${n}/${all.length}</em></h3>` : ''}<div class="agl">${a.map(tile).join('')}</div></section>`; }).join('');
     $('achList').querySelectorAll('.agt').forEach(b => b.onclick = () => { const k = b.dataset.k; achF = achF === k ? '' : k; SFX.tap && SFX.tap(); renderAch(k); });
     // a tile just opened / closed: keep it in view (the page's height changed above or below it)
     if (keep) { const tile = $('achList').querySelector(`.agt[data-k="${keep}"]`); if (tile) { const hd = document.querySelector('header'), top = (hd && getComputedStyle(hd).position !== 'static' ? hd.getBoundingClientRect().bottom : 0) + 10, r = tile.getBoundingClientRect();
