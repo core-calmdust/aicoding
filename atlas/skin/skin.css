@@ -1027,9 +1027,9 @@ html.atlas-skin body:not(#_) :is(.modal, .dock, #dock) :is(input:not([type]), in
    bottom padding hides the cards scrolling under it */
 html.atlas-skin body:not(#_) .lxh-fix.pin:not(#_){clip-path:inset(-14px -14px 0 -14px);padding-bottom:10px;margin-bottom:2px}
 /* (2026-11-13) the lesson / opening header and its category tabs as one box: the tabs run along the box's bottom */
-html.atlas-skin body:not(#_) .lxh-fix > .lxh-box:not(#_):not(#_){display:flex!important;flex-direction:column!important;gap:0!important;padding:0!important;border-radius:20px!important;background:#fffaf0!important;border:2px solid #ead9b6!important;box-shadow:0 3px 0 #ead9b6!important;overflow:hidden}
+html.atlas-skin body:not(#_) .lxh-fix > .lxh-box:not(#_):not(#_){display:flex!important;flex-direction:column!important;gap:0!important;padding:0!important;border-radius:20px!important;background:var(--a-tile,#fffaf0)!important;border:2px solid color-mix(in srgb,var(--a-line,#efe3c8) 85%,#b08a40)!important;box-shadow:0 3px 0 color-mix(in srgb,var(--a-line,#efe3c8) 85%,#b08a40)!important;overflow:hidden}
 html.atlas-skin body:not(#_) .lxh-box > .lxh:not(#_){border:0!important;box-shadow:none!important;border-radius:0!important;background:none!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > .lx-tabs:not(#_):not(#_){margin:0!important;border-radius:0!important;background:#f5ecd8!important;border-top:2px solid #efe3c8!important;padding:5px 8px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > .lx-tabs:not(#_):not(#_){margin:0!important;border-radius:0!important;background:var(--a-track,#f5ecd8)!important;border-top:2px solid var(--a-line,#efe3c8)!important;padding:5px 8px!important}
 /* the puzzles' 続きから as big as the lessons' */
 html.atlas-skin body:not(#_) :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont:not(#_){padding:12px 22px!important;min-width:190px;border-radius:14px!important;font-size:17px!important;font-weight:900!important;box-shadow:0 4px 0 #d93c3c!important}
 html.atlas-skin body:not(#_) :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont small:not(#_){font-size:12px!important}
@@ -1038,7 +1038,7 @@ html.atlas-skin body:not(#_) :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont small:no
 @media (min-width:761px){ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal :has(> :is(.seg.ls-tabs, #segLs)) > :has(+ .modal-actions){padding-bottom:40px!important} }
 /* (2026-11-13) puzzles' hubs: header + category tabs in one box like the lessons'; every header the same height and the same 続きから */
 html.atlas-skin body:not(#_) .lxh-box > :is(.pbh-hero,.pzx-hero):not(#_):not(#_){border:0!important;box-shadow:none!important;border-radius:0!important;background:none!important;margin:0!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > :is(.pbh-tabs,.lx-tabs):not(#_):not(#_){margin:0!important;border-radius:0!important;background:#f5ecd8!important;border-top:2px solid #efe3c8!important;padding:5px 8px!important;display:flex!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > :is(.pbh-tabs,.lx-tabs):not(#_):not(#_){margin:0!important;border-radius:0!important;background:var(--a-track,#f5ecd8)!important;border-top:2px solid var(--a-line,#efe3c8)!important;padding:5px 8px!important;display:flex!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > :is(.pbh-tabs,.lx-tabs) > button:not(#_):not(#_){flex:1 1 0;min-width:0;border:0!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > .pbh-tabs > button:not(.sel):not(#_):not(#_){background:transparent!important;box-shadow:none!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > .pbh-tabs > button.sel:not(#_):not(#_){background:var(--a-tile)!important;color:var(--a-ink)!important;box-shadow:0 3px 0 var(--a-line)!important;border-radius:99px!important}

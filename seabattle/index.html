@@ -531,13 +531,14 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
 .pc .pwhy.pdup{color:var(--gold2);border-color:rgba(216,180,106,.55)}.pc.dup .pcost{color:var(--gold2)}
 #pickOverlay .modal-actions #btnPickClose{flex:0 0 auto;min-width:120px}
 @media (max-width:600px){#pickOverlay .modal-actions #btnPickClose{flex:0 0 34%;min-width:0}#pickOverlay .modal-actions #btnPickOk{flex:1 1 0!important}}
+@media (max-width:600px){.brand h1{font-size:19px;letter-spacing:.1em}}   /* (DREADNOUGHTS + BETA must clear the buttons on the right) */
 </style>
 </head>
 <body class="no-online placing">
 <div class="app">
   <header class="top">
     <div class="brand">
-      <div class="brand-l"><a class="series" href="../" data-i18n="series"></a><h1><span id="ttlName">FLEET TACTICS</span><em class="ttl-in" id="ttlSub2"></em><small data-i18n="beta"></small></h1><div class="ttl-sub" id="ttlSub"></div></div>
+      <div class="brand-l"><a class="series" href="../" data-i18n="series"></a><h1><span id="ttlName">DREADNOUGHTS</span><em class="ttl-in" id="ttlSub2"></em><small data-i18n="beta"></small></h1><div class="ttl-sub" id="ttlSub"></div></div>
       <span class="brand-r"><button id="btnSound" class="snd" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option></select><a href="../" class="snd home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a></span>
     </div>
     <div class="card controls">
@@ -623,7 +624,7 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
 <script src="draft-model.js?v=2"></script><script src="engine.js?v=34"></script>
 <script src="board.js?v=10"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=59"></script>
+<script src="app.js?v=60"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
