@@ -115,6 +115,18 @@ def clockwork():
     """時計じかけの塔: inside a clock tower — warm brass and wood, the back of a great clock face letting in light, beams and stairs (the gears turn, the pendulum swings: the page's)"""
     d = BLUR + lin('wall', [(0, '#3a2a2a'), (1, '#5a3e34')]) + rad('face', [(0, '#fff2d0', 1), (.7, '#f6d8a0', .95), (1, '#e8b870', .9)])
     g = ['<rect width="1920" height="1200" fill="url(#wall)"/>', glow(960, 420, 700, 500, '#ffd8a0', .35, 'b60')]
+    # the tower: a timber roof truss, arched slit windows, the bell and its rope, the drive shafts (2026-11-20: more of a clock tower)
+    g.append('<path d="M-40 230 L960 -60 L1960 230 L1960 270 L960 -20 L-40 270 Z" fill="#5a3e30"/><rect x="-40" y="150" width="2000" height="26" fill="#6a4a38"/>'
+             + ''.join(f'<path d="M{x} 176 L{x + (960 - x) * .35:.0f} {176 - (176 + 60) * .35 * (1 if x < 960 else 1):.0f}" stroke="#6a4a38" stroke-width="18"/>' for x in (240, 560, 1360, 1680)) + '<rect x="948" y="-40" width="24" height="216" fill="#6a4a38"/>')
+    for x in (190, 1730):
+        g.append(f'<path d="M{x - 34} 640 L{x - 34} 440 A34 34 0 0 1 {x + 34} 440 L{x + 34} 640 Z" fill="#a8c4e0"/><path d="M{x - 34} 640 L{x - 34} 440 A34 34 0 0 1 {x + 34} 440 L{x + 34} 640 Z" fill="none" stroke="#3a2a24" stroke-width="10"/><path d="M{x} 410 L{x} 640 M{x - 34} 520 L{x + 34} 520" stroke="#3a2a24" stroke-width="5"/>'
+                 + glow(x, 560, 120, 200, '#ffe8c0', .25, 'b30'))
+    Bx, By = 420, 330   # the bronze bell
+    g.append(f'<rect x="{Bx - 120}" y="{By - 140}" width="240" height="22" fill="#5a3e30"/><rect x="{Bx - 8}" y="{By - 120}" width="16" height="40" fill="#5a3e30"/>'
+             f'<path d="M{Bx - 70} {By + 60} C{Bx - 66} {By - 10} {Bx - 50} {By - 80} {Bx} {By - 84} C{Bx + 50} {By - 80} {Bx + 66} {By - 10} {Bx + 70} {By + 60} C{Bx + 80} {By + 66} {Bx + 84} {By + 76} {Bx + 84} {By + 82} L{Bx - 84} {By + 82} C{Bx - 84} {By + 76} {Bx - 80} {By + 66} {Bx - 70} {By + 60} Z" fill="#a87a3a"/>'
+             f'<path d="M{Bx - 40} {By - 60} C{Bx - 50} {By} {Bx - 54} {By + 40} {Bx - 56} {By + 70}" stroke="#e8c070" stroke-width="10" fill="none" opacity=".55" stroke-linecap="round"/><path d="M{Bx - 76} {By + 66} L{Bx + 76} {By + 66}" stroke="#7a5428" stroke-width="5"/><circle cx="{Bx}" cy="{By + 96}" r="14" fill="#7a5428"/>'
+             f'<path d="M{Bx + 60} {By + 40} C{Bx + 90} {By + 300} {Bx + 70} {By + 520} {Bx + 90} 860" stroke="#c8a878" stroke-width="5" fill="none"/>')
+    g.append('<path d="M1500 300 L1500 860 M1500 300 L1180 400 M640 300 L740 400" stroke="#8a6a3a" stroke-width="9"/><circle cx="1500" cy="300" r="12" fill="#b88a4a"/>')
     C = (960, 400, 210)   # the clock face (seen from behind: light through the glass), finely drawn
     g.append(f'<circle cx="{C[0]}" cy="{C[1]}" r="{C[2] + 46}" fill="#5a4030"/><circle cx="{C[0]}" cy="{C[1]}" r="{C[2] + 34}" fill="none" stroke="#c89a5a" stroke-width="6"/>'
              + ''.join(f'<circle cx="{C[0] + (C[2] + 40) * math.cos(a):.1f}" cy="{C[1] + (C[2] + 40) * math.sin(a):.1f}" r="4" fill="#d8b070"/>' for a in [k * math.pi / 30 for k in range(60)])
