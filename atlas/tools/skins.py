@@ -487,9 +487,12 @@ def suits(n=1024, seed=61):
             for x, y, s, a, k in S:
                 if k not in kinds: continue
                 for X, Y in wrapped(n, x, y, s * 1.5):
-                    if k == 3:
-                        clover_draw(d, X * ss, Y * ss, s * ss * .62, a - math.pi / 6)
-                        d.polygon([((X - s * .16) * ss, (Y + s * .1) * ss), ((X + s * .16) * ss, (Y + s * .1) * ss), ((X + s * .3) * ss, (Y + s * .9) * ss), ((X - s * .3) * ss, (Y + s * .9) * ss)], fill=255)
+                    if k == 3:   # an upright club: three round leaves (top, left, right), a filled centre and a flared stem
+                        s = s * 1.2; R = s * .33
+                        for cx, cy in ((0, -.42), (-.4, .1), (.4, .1)):
+                            d.ellipse([(X + cx * s - R) * ss, (Y + cy * s - R) * ss, (X + cx * s + R) * ss, (Y + cy * s + R) * ss], fill=255)
+                        d.ellipse([(X - s * .2) * ss, (Y - s * .15) * ss, (X + s * .2) * ss, (Y + s * .25) * ss], fill=255)
+                        d.polygon([((X - s * .09) * ss, (Y + s * .1) * ss), ((X + s * .09) * ss, (Y + s * .1) * ss), ((X + s * .3) * ss, (Y + s * .92) * ss), ((X - s * .3) * ss, (Y + s * .92) * ss)], fill=255)
                     elif k == 2:
                         d.polygon([(px * ss, py * ss) for px, py in poly_t(spade_pts(), X, Y - s * .1, s * .9, 0)], fill=255)
                         d.polygon([((X - s * .12) * ss, (Y + s * .3) * ss), ((X + s * .12) * ss, (Y + s * .3) * ss), ((X + s * .3) * ss, (Y + s * .95) * ss), ((X - s * .3) * ss, (Y + s * .95) * ss)], fill=255)
