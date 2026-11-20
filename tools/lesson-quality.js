@@ -27,7 +27,7 @@ const CONCRETE = /(緑|赤|金|銀|光って|印|矢印|☗|☖|♘|♗|♖|♕|
 
 function scoreLesson(id, L) {
   const pen = [], P = (n, why) => pen.push([n, why]);
-  const all = [L.intro, ...L.probs.flatMap(p => [p.ask, p.hint, p.good, p.ng])].filter(Boolean);
+  const all = [L.intro, ...(L.ramp || []), ...L.probs.flatMap(p => [p.ask, p.hint, p.good, p.ng])].filter(Boolean);   // (display order: intro → warm-up → each problem)
   // hard faults (shown to the player as garbage or the wrong register)
   for (const t of all) {
     const s = plain(t);
@@ -36,6 +36,7 @@ function scoreLesson(id, L) {
     if (/あなた/.test(s)) P(4, 'あなた');
     if (/\b(Gold|Silver|undefined|null|NaN)\b/.test(s)) P(20, 'raw value: ' + s.slice(0, 40));
     if (/列列|  |。。/.test(s)) P(6, 'doubled: ' + s.slice(0, 40));
+    if (!/^(chess|shogi)$/.test(id) && /(^|[^A-Za-z])[a-o](1[0-9]|[1-9])(?![0-9A-Za-z])/.test(s)) P(6, 'coordinate on the 3D table: ' + s.match(/[a-o](1[0-9]|[1-9])/)[0]);
     for (const sn of sents(t)) if (sn.length > 90) P(2, 'long sentence');
   }
   // bubble size on a phone (44 chars a page) and a PC (58): atlas/lessons3d.js pages() packs sentences up to the limit and cuts a
@@ -51,10 +52,20 @@ function scoreLesson(id, L) {
   }
   for (const p of L.probs) { const fb = [p.ng, p.good].map(plain).filter(Boolean); if (fb.some(x => x.length > 150)) P(2, 'feedback over 150 chars'); }
   // ending variety over each bubble and over the lesson
-  let fam = 0, tot = 0;
-  for (const t of all) { const E = sents(t).map(end); for (let i = 1; i < E.length; i++) if (E[i] !== 'x' && E[i] !== '？' && E[i] !== '！' && E[i] === E[i - 1]) P(3, 'same ending twice: ' + E[i]); E.forEach(e => { tot++; if (e === 'よ') fam++; }); }
-  if (tot >= 6 && fam / tot > 0.45) P(10, `〜よ on ${Math.round(fam / tot * 100)}% of sentences`);
+  // (2026-11-21 the user: a lesson rated 96 still read 〜よ。〜よ。 — the bubble is read page by page, one bubble after another,
+  //  so endings are counted over the whole lesson in display order, across bubbles, and the 〜よ share is held lower)
+  let fam = 0, tot = 0, nda = 0, prevE = '';
+  for (const t of all) { const E = sents(t).map(end);
+    E.forEach((e, i) => { const pe = i ? E[i - 1] : prevE; if (e !== 'x' && e !== '？' && e !== '！' && e === pe) P(i ? 3 : 2, (i ? 'same ending twice: ' : 'same ending across bubbles: ') + e); tot++; if (e === 'よ') fam++; if (e === 'んだ') nda++; });
+    if (E.length) prevE = E[E.length - 1]; }
+  if (tot >= 6 && fam / tot > 0.35) P(Math.round((fam / tot - 0.35) * 60) + 5, `〜よ on ${Math.round(fam / tot * 100)}% of sentences`);
+  if (tot >= 6 && nda / tot > 0.3) P(5, `〜んだ on ${Math.round(nda / tot * 100)}% of sentences`);
   if (TIC[id] && !all.some(t => TIC[id].test(plain(t)))) P(6, 'no verbal tic anywhere');
+  // the guide talking, not a textbook read aloud: a share of the bubbles carries its tic (if it has one) or some feeling — ！ ？ 〜 ね かな
+  if (all.length >= 5) {
+    if (TIC[id]) { const r = all.filter(t => TIC[id].test(plain(t))).length / all.length; if (r < 0.2) P(Math.round((0.2 - r) * 40) + 3, `tic in only ${Math.round(r * 100)}% of bubbles`); }
+    const r2 = all.filter(t => /[！？〜♪]|ね[。！]|かな/.test(plain(t))).length / all.length; if (r2 < 0.45) P(Math.round((0.45 - r2) * 40) + 3, `only ${Math.round(r2 * 100)}% of bubbles sound like someone talking`);
+  }
   // the problems: ask → (hint) → praise or a concrete, reasoned correction
   const asks = L.probs.map(p => plain(p.ask)).filter(Boolean);
   if (!L.probs.length) P(30, 'no problems');
@@ -84,7 +95,7 @@ function scoreLesson(id, L) {
   const R = await pg.evaluate(async games => {
     let src = await (await fetch('lessons3d.js?x=' + Date.now())).text();
     src = src.replace('  window.AtlasGuideJa = guideJa;', '  window.AtlasGuideJa = guideJa; let LSVD = null; const lsvX = (h, id) => { const m = (LSVD || {})[id]; if (!m) return h; for (const k of Object.keys(m).sort((a, b) => b.length - a.length)) if (h.includes(k)) h = h.split(k).join(m[k]); return h; }; window.__setLSV = d => { LSVD = d; };')
-      .replace('window.AtlasLessons = {', 'window.__LD = DATA; window.__V = (h, id) => varyJa(lsvX(guideJa(h, id), id), id); window.AtlasLessons = {');
+      .replace('window.AtlasLessons = {', 'window.__LD = DATA; window.__NC = { load: ncLoad, apply: ncApply }; window.__V = (h, id) => varyJa(lsvX(guideJa(h, id), id), id); window.AtlasLessons = {');
     window.Atlas3D = window.Atlas3D || {}; if (!Atlas3D.connect4) Atlas3D.connect4 = { names: l => l === 'ja' ? ['金', '銀'] : ['Gold', 'Silver'] };
     new Function(src)();
     try { const t = await (await fetch('lsvoice-ja.js?x=' + Date.now())).text(); const w = {}; new Function('window', t)(w); __setLSV(w.AtlasLsVoice); } catch (e) {}
@@ -92,8 +103,8 @@ function scoreLesson(id, L) {
     const f = (x, p) => { try { return typeof x === 'function' ? x(p && p.ans, p) : x; } catch (e) { return ''; } };
     const out = {};
     for (const id of (games.length ? games : Object.keys(__LD))) { const D = __LD[id]; out[id] = [];
-      try { await D.load('ja'); for (const it of D.list('lesson', 'ja')) { let s; try { s = await D.lesson(it.key, 'ja'); } catch (e) { continue; } if (!s) continue;
-        out[id].push({ key: it.key, title: it.title, intro: say(s.intro, id), probs: (s.probs || []).map(p => ({ ask: say(p.ask, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id) })) }); } } catch (e) { out[id].push({ err: String(e) }); } }
+      try { await D.load('ja'); await __NC.load(id); for (const it of D.list('lesson', 'ja')) { let s; try { s = __NC.apply(id, await D.lesson(it.key, 'ja')); } catch (e) { continue; } if (!s) continue;
+        out[id].push({ key: it.key, title: it.title, intro: say(s.intro, id), ramp: (s.ramp || []).flatMap(r => ['t', 'b', 'g', 'h', 'y'].map(f => r[f] && (typeof r[f] === 'string' ? r[f] : r[f].ja || r[f].en)).filter(x => x && !/^[a-o0-9\s,]+$/.test(String(x)))).map(x => say(D.rampTx ? D.rampTx(x, 'ja') : x, id)), probs: (s.probs || []).map(p => ({ ask: say(p.ask, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id) })) }); } } catch (e) { out[id].push({ err: String(e) }); } }
     return out;
   }, games);
   await b.close(); srv.close();
