@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   const BASE = (() => { try { return new URL('../images/atlas/skin/', document.currentScript.src).href; } catch (e) { return '../images/atlas/skin/'; } })();
-  const V = 10, FXV = 1;   // bump when the images are re-rendered
+  const V = 11, FXV = 3;   // bump when the images are re-rendered
   const DEV_ALL = true;
   const RAR = ['N', 'R', 'SR', 'SSR', 'UR'];
   // id: [rarity, kind (tile px | 'c' = cover), page colour, header colour, selected-tab colour, dark]
@@ -27,7 +27,7 @@
     s31: [3, 'c', '#d0e1e2', '#edf4f6', '#3e6b6a'], s32: [2, 1024, '#f2f0ec', '#faf9f7', '#3a3a40'], s33: [3, 'c', '#222f55', '#1b2547', '#ffd56a', 1],
     s34: [2, 1024, '#faf3e7', '#fcf3e6', '#c0613a'],
     s35: [4, 'c', '#d4cab0', '#efe5cc', '#6b4a22'], s36: [4, 'c', '#2d4969', '#14223b', '#6fe3bd', 1], s37: [4, 'c', '#1b2954', '#16224a', '#e6c77a', 1],
-    s38: [4, 'c', '#231c55', '#1a1640', '#e6dcff', 1], s39: [4, 'c', '#1e4878', '#183a64', '#a9e4ff', 1], s40: [4, 'c', '#f1ebf2', '#faf6fa', '#7d5cc4'],
+    s38: [4, 'c', '#231c55', '#1a1640', '#e6dcff', 1], s39: [4, 'c', '#1e4878', '#183a64', '#a9e4ff', 1], s40: [4, 'c', '#262252', '#1d1a40', '#ffd7a0', 1],
     s41: [1, 1024, '#b6cae0', '#c5d5e6', '#395e88'],
     s42: [1, 1024, '#dbdbb1', '#e1e1bf', '#7a5a2e'],
     s43: [1, 1024, '#ede3d0', '#f2ecde', '#7a5a2e'],
@@ -76,8 +76,8 @@
     s86: [3, 'c', '#d4e8e7', '#c6e5eb', '#427f7a'],
     s87: [3, 'c', '#e3d2bb', '#f2eade', '#7a5a2e'],
     s88: [3, 'c', '#dce6e2', '#e9f4fa', '#487965'],
-    s89: [4, 'c', '#f2ecf0', '#f8f6f8', '#794867'],
-    s90: [4, 'c', '#f2e7e8', '#faf4f4', '#7d4348'],
+    s89: [4, 'c', '#4a4688', '#3d3c7c', '#ffe2b0', 1],
+    s90: [4, 'c', '#10204a', '#0b1530', '#9fe8ff', 1],
     s91: [2, 1024, '#e4c8a9', '#e9d2b9', '#896338'],
     s92: [2, 1024, '#ebebe1', '#f3f3ed', '#7a5a2e'],
     s93: [4, 'c', '#2b2f59', '#202343', '#ffe9a6', 1],
@@ -92,9 +92,9 @@
   // one-picture skins on any window (2026-11-20 ユーザー：いろんなブラウザサイズに対応): the picture sits on the bottom edge
   // (only the sky is cut or grows); windows narrower than 6:5 use the portrait version <id>-p (1800 more units of sky,
   // atlas/tools/skins_tall.py); POS = the picture's horizontal focus (where its landmark is) when the sides are cut
-  const TALLS = new Set(['s25', 's26', 's27', 's28', 's29', 's30', 's31', 's33', 's35', 's36', 's37', 's38', 's39', 's79', 's80', 's81', 's82', 's83', 's84', 's85', 's86', 's87', 's88', 's89', 's93', 's94', 's96', 's97', 's98', 's99']);
-  const POS = { s79: 74, s81: 28, s82: 30, s84: 62, s85: 72, s93: 76, s94: 30, s97: 35, s35: 70 }, MID = { s40: 1, s90: 1 };
-  const ANIM = { s40: 's40b', s89: 's89b', s93: 's93b', s94: 's94b' };   // (a second picture cross-fading under the moving pieces)
+  const TALLS = new Set(['s25', 's26', 's27', 's28', 's29', 's30', 's31', 's33', 's35', 's36', 's37', 's38', 's39', 's40', 's79', 's80', 's81', 's82', 's83', 's84', 's85', 's86', 's87', 's88', 's89', 's90', 's93', 's94', 's96', 's97', 's98', 's99']);
+  const POS = { s79: 74, s81: 28, s82: 30, s84: 62, s85: 72, s93: 76, s94: 30, s97: 35, s35: 70 }, MID = {};
+  const ANIM = { s93: 's93b', s94: 's94b' };   // (a second picture cross-fading under the moving pieces)
   const L = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   // names, in the order of L
   const N = {
@@ -137,7 +137,7 @@
     s37: ['天球図', 'Celestial Chart', '天球图', '天球圖', '천구도', 'Carta celeste', 'Carte céleste', 'Carta celeste', 'Himmelskarte', 'Небесная карта', 'Gök Haritası', 'Peta Langit', 'खगोलीय मानचित्र', 'خريطة السماء'],
     s38: ['銀河鉄道', 'Galaxy Railway', '银河铁道', '銀河鐵道', '은하철도', 'Tren de la galaxia', 'Train de la galaxie', 'Trem da galáxia', 'Galaxie-Eisenbahn', 'Галактический поезд', 'Galaksi Treni', 'Kereta Galaksi', 'आकाशगंगा रेल', 'قطار المجرّة'],
     s39: ['クラゲの海', 'Jellyfish Sea', '水母之海', '水母之海', '해파리 바다', 'Mar de medusas', 'Mer des méduses', 'Mar de águas-vivas', 'Quallenmeer', 'Море медуз', 'Denizanası Denizi', 'Laut Ubur-ubur', 'जेलीफ़िश सागर', 'بحر قناديل البحر'],
-    s40: ['オパール', 'Opal', '欧泊', '蛋白石', '오팔', 'Ópalo', 'Opale', 'Opala', 'Opal', 'Опал', 'Opal', 'Opal', 'ओपल', 'الأوبال'],
+    s40: ['天灯まつり', 'Sky Lantern Festival', '天灯节', '天燈節', '풍등 축제', 'Festival de linternas', 'Fête des lanternes célestes', 'Festival das lanternas', 'Himmelslaternenfest', 'Праздник небесных фонариков', 'Gökyüzü Fenerleri Festivali', 'Festival Lentera Langit', 'आकाशदीप उत्सव', 'مهرجان الفوانيس الطائرة'],
     s41: ["デニム", "Denim", "牛仔布", "丹寧布", "데님", "Mezclilla", "Denim", "Jeans", "Denim", "Деним", "Kot", "Denim", "डेनिम", "الدنيم"],
     s42: ["たたみ", "Tatami", "榻榻米", "榻榻米", "다다미", "Tatami", "Tatami", "Tatame", "Tatami", "Татами", "Tatami", "Tatami", "तातामी", "التاتامي"],
     s43: ["帆布", "Canvas", "帆布", "帆布", "캔버스", "Lona", "Toile", "Lona", "Segeltuch", "Холст", "Kanvas", "Kanvas", "कैनवास", "القماش المشمّع"],
@@ -186,8 +186,8 @@
     s86: ["すいぞくかん", "Aquarium", "水族馆", "水族館", "수족관", "Acuario", "Aquarium", "Aquário", "Aquarium", "Аквариум", "Akvaryum", "Akuarium", "मछलीघर", "حوض الأسماك"],
     s87: ["としょかん", "Library", "图书馆", "圖書館", "도서관", "Biblioteca", "Bibliothèque", "Biblioteca", "Bibliothek", "Библиотека", "Kütüphane", "Perpustakaan", "पुस्तकालय", "المكتبة"],
     s88: ["汽車の旅", "Train Journey", "火车之旅", "火車之旅", "기차 여행", "Viaje en tren", "Voyage en train", "Viagem de trem", "Zugreise", "Путешествие на поезде", "Tren Yolculuğu", "Perjalanan Kereta", "रेल यात्रा", "رحلة القطار"],
-    s89: ["ステンドグラス", "Stained Glass", "彩色玻璃", "彩繪玻璃", "스테인드글라스", "Vitral", "Vitrail", "Vitral", "Buntglasfenster", "Витраж", "Vitray", "Kaca Patri", "रंगीन काँच", "الزجاج المعشّق"],
-    s90: ["万華鏡", "Kaleidoscope", "万花筒", "萬花筒", "만화경", "Caleidoscopio", "Kaléidoscope", "Caleidoscópio", "Kaleidoskop", "Калейдоскоп", "Kaleydoskop", "Kaleidoskop", "बहुरूपदर्शी", "المشكال"],
+    s89: ["雲海の夜明け", "Dawn over the Clouds", "云海日出", "雲海日出", "운해의 새벽", "Amanecer sobre las nubes", "Aube sur la mer de nuages", "Amanhecer sobre as nuvens", "Morgen über dem Wolkenmeer", "Рассвет над облаками", "Bulut Denizinde Şafak", "Fajar di Lautan Awan", "बादलों पर भोर", "فجر فوق بحر الغيوم"],
+    s90: ["夜光の海", "Glowing Sea", "荧光之海", "螢光之海", "야광 바다", "Mar luminoso", "Mer luminescente", "Mar luminoso", "Leuchtendes Meer", "Светящееся море", "Işıldayan Deniz", "Laut Bercahaya", "चमकता सागर", "البحر المضيء"],
     s91: ["寄木細工", "Yosegi Marquetry", "寄木细工", "寄木細工", "요세기 세공", "Marquetería yosegi", "Marqueterie yosegi", "Marchetaria yosegi", "Yosegi-Intarsie", "Маркетри ёсэги", "Yosegi Kakma", "Marquetry Yosegi", "योसेगी जड़ाई", "ترصيع يوسيغي"],
     s92: ["七宝焼", "Cloisonné", "景泰蓝", "景泰藍", "칠보", "Esmalte cloisonné", "Émail cloisonné", "Esmalte cloisonné", "Cloisonné", "Перегородчатая эмаль", "Kloazone Mine", "Kloisone", "क्लॉइज़ोन", "المينا المقسّمة"],
     s93: ["夜のゆうえんち", "Night Fair", "夜游乐园", "夜遊樂園", "밤의 놀이공원", "Feria nocturna", "Fête foraine de nuit", "Parque à noite", "Nachtkirmes", "Ночной парк", "Gece Lunaparkı", "Pasar Malam", "रात का मेला", "الملاهي ليلًا"],

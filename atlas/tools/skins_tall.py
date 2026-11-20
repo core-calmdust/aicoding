@@ -13,6 +13,7 @@ import skins as S
 import skins_ssr2 as P
 import skins_ur2 as U
 import skins_ssr3 as Q
+import skins_ur3 as U3
 
 D = os.path.join(os.path.dirname(__file__), '..', '..', 'images', 'atlas', 'skin')
 TW, TH, EXT = 1920, 3000, 1800   # px (1 px = 1 grid unit)
@@ -41,9 +42,9 @@ SVG = {   # id: (builder, extra pieces in the extension)
         f'<g transform="translate({x} {y}) scale({s})"><path d="M-90 0 C-90 -70 90 -70 90 0 C90 50 40 80 26 110 L-26 110 C-40 80 -90 50 -90 0 Z" fill="{c}"/><path d="M-24 110 L-20 140 M24 110 L20 140" stroke="#b08a6a" stroke-width="3"/><rect x="-24" y="138" width="48" height="30" rx="5" fill="#c9a07a"/></g>'
         for x, y, s, c in ((380, -900, .5, '#f6d79a'), (1500, -1300, .6, '#a9c8e6'), (900, -500, .35, '#f6b8c2'), (1700, -400, .4, '#d9c8ef')))),
     's99': (P.mexico, lambda: ''),
+    's40': (U3.lanterns, lambda: U3.tall_extra('s40')), 's89': (U3.cloud_dawn, lambda: U3.tall_extra('s89')), 's90': (U3.glow_sea, lambda: U3.tall_extra('s90')),
     's25': (Q.blue_sky, lambda: ''), 's26': (Q.sunset_hills, lambda: ''), 's27': (Q.seaside, lambda: ''), 's28': (Q.snowfield, lambda: ''), 's29': (Q.flower_meadow, lambda: ''),
     's30': (Q.dunes, lambda: ''), 's31': (Q.lake, lambda: ''), 's33': (Q.night_sky, lambda: stars_svg(300, 33)), 's38': (Q.galaxy_rail, lambda: stars_svg(500, 38, '#fff6e6')), 's39': (Q.jelly_sea, lambda: ''),
-    's89': (lambda: U.stained(0), lambda: ''), 's89b': (lambda: U.stained(1), lambda: ''),
     's93': (lambda: U.night_fair(0), lambda: stars_svg(260, 93)), 's93b': (lambda: U.night_fair(1), lambda: stars_svg(260, 93)),
     's94': (lambda: U.makie(0), lambda: stars_svg(500, 94, '#e2bd6a', -1800, 0)), 's94b': (lambda: U.makie(1), lambda: stars_svg(500, 94, '#e2bd6a', -1800, 0)),
 }
