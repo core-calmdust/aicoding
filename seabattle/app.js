@@ -567,13 +567,17 @@ bsvg.addEventListener('pointerup', deployUp);
 bsvg.addEventListener('pointercancel', () => { if (drag) { G.my[drag.i] = drag.from; drag = null; renderBoards(); } });
 bsvg.addEventListener('pointerleave', () => { SB.aim(bsvg, -1); if (G.armed != null && hoverCell >= 0 && PCQ.matches) { hoverCell = -1; renderBoards(); } });
 $('#skillCard').addEventListener('click', e => { const b = e.target.closest('.sk'); if (!b || b.disabled || !G.st || G.busy || G.phase !== 'battle' || G.st.turn !== 0) return; const i = +b.dataset.i; if (E.NOAIM[skillOf(G.my[i])]) { G.armed = null; return playerNoAim(i); } G.armed = G.armed === i ? null : i; hoverCell = -1; G.hint = null; sfx('place'); if (G.view !== 'enemy') swapView('enemy').then(() => render()); else render(); });
-$('#drWho').addEventListener('click', e => { const b = e.target.closest('.dw[data-v]'); if (!b) return; pickView = b.dataset.v; $('#pickOverlay').classList.add('show'); renderDraft(); });
+$('#drWho').addEventListener('click', e => { const b = e.target.closest('.dw[data-v]'); if (!b) return; pickView = b.dataset.v === 'mine' && G.draft && G.draft.turn === 0 ? 'pick' : b.dataset.v;   // (on my pick, my row opens the cards to choose)
+  $('#pickOverlay').classList.add('show'); renderDraft(); });
 $('#pickViews').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; pickView = b.dataset.v; renderDraft(); $('#pickGrid').scrollTop = 0; });
 $('#pickTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; pickTab = +b.dataset.g; renderDraft(); $('#pickGrid').scrollTop = 0; });
 $('#pickGrid').addEventListener('click', e => { const c = e.target.closest('.pc.can'); if (!c) return; const k = +c.dataset.k, run = myRun(G.draft); if (pickSel.includes(k)) pickSel = pickSel.filter(x => x !== k); else if (pickSel.length < run) pickSel.push(k); else pickSel = pickSel.slice(0, -1).concat(k); sfx('select'); renderDraft(); });   // (the whole card is the button: tap to choose, tap again to undo)
 const legendPc = matchMedia('(min-width:601px)');
-function placeLegend() { const lg = $('#pickLegend'); if (legendPc.matches) $('#pickOverlay .modal-actions').insertBefore(lg, $('#btnPickOk')); else $('#pickTabs').after(lg); }
+function placeLegend() { const lg = $('#pickLegend'); if (legendPc.matches) $('#pickOverlay .modal-actions').insertBefore(lg, $('#btnPickClose')); else $('#pickTabs').after(lg); }
 placeLegend(); legendPc.addEventListener('change', placeLegend);
+// 閉じる is back (2026-11-20 user: without it there is no way to the game settings); it stays shut for this pick, the
+// 「あなた」 row on the side opens it again
+$('#btnPickClose').onclick = () => { pickShut = G.draft ? G.draft.n : -1; $('#pickOverlay').classList.remove('show'); };
 $('#btnPickOk').onclick = () => { if (!pickSel.length) return; const ks = pickSel; pickSel = []; for (const k of ks) { if (G.phase !== 'draft' || G.draft.turn !== 0) break; draftPickMine(k); } if (G.phase !== 'draft' || G.draft.turn !== 0) $('#pickOverlay').classList.remove('show'); };   // (決定: take the chosen card; the sheet stays open while it is still my pick)
 $('#pickGrid').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.pc.can')) { e.preventDefault(); e.target.click(); } });
 // no 閉じる in the pick sheet (2026-11-20 user: you must pick anyway); outside your pick turn a tap on the backdrop closes it
