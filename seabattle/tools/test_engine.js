@@ -39,7 +39,7 @@ ok(!E.validFleet([{ r: 0, c: 7, len: 5, h: 1 }, { r: 2, c: 0, len: 4, h: 0 }, { 
 // ---- 1a) タクティクス 第2弾・第3弾: rockets, repairs, mines (turns lost), anti-air — every AI game ends, replays to the same boards, and hit counts stay true ----
 {
   let bad = 0, reps = 0;
-  for (let g = 0; g < 120; g++) { const fl = [0, 1].map(() => E.randomFleet(rnd, false, [[11, 12, 6, 3, 4], [14, 13, 12, 1, 4], [15, 16, 17, 13, 4], [18, 19, 14, 5, 4], [20, 21, 1, 3, 4], [22, 23, 13, 5, 4], [24, 25, 14, 18, 4], [26, 27, 3, 1, 4], [28, 29, 0, 5, 4], [30, 31, 13, 4], [32, 33, 1, 3, 4], [34, 35, 0, 4], [36, 37, 1, 4], [38, 39, 3, 4], [40, 41, 2, 23, 4], [42, 43, 1, 4]][g % 16])), st = E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: g & 1 }); let n = 0;
+  for (let g = 0; g < 120; g++) { const fl = [0, 1].map(() => E.randomFleet(rnd, false, [[11, 12, 6, 3, 4], [14, 13, 12, 1, 4], [15, 16, 17, 13, 4], [18, 19, 14, 5, 4], [20, 21, 1, 3, 4], [22, 23, 13, 5, 4], [24, 25, 14, 18, 4], [26, 27, 3, 1, 4], [28, 29, 0, 5, 4], [30, 31, 13, 4], [32, 33, 1, 3, 4], [34, 35, 0, 4], [36, 37, 1, 4], [38, 39, 3, 4], [40, 41, 2, 23, 4], [42, 43, 1, 4], [44, 45, 40, 4]][g % 17])), st = E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: g & 1 }); let n = 0;
     while (st.winner < 0 && n++ < 400) { const a = E.chooseAction(st, 20, rnd); if (a.skill === 'repair') reps++; if (!E.act(st, a)) { bad++; break; } }
     const st2 = E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: g & 1 }); for (const a of st.acts) E.act(st2, a);
     if (st.winner < 0 || JSON.stringify([...st.sides[0].shots, ...st.sides[1].shots]) !== JSON.stringify([...st2.sides[0].shots, ...st2.sides[1].shots])) bad++;

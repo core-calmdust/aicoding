@@ -255,6 +255,19 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(34); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
     ok(await p.evaluate(() => { const sc = G.st.scans[0][0]; return sc && sc.list.length === 19 && sc.list.every(c => (c / 10 | 0) === 3 || c % 10 === 4); }), name + ': cross search reads row 4 and column E');
     await shot('cross');
+    // 第18弾: twin torpedoes up two columns; listening finds the busiest row
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[44, 45, 4], [1, 4, 3]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('listen'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => { const sc = G.st.scans[0][0], T = G.st.sides[1]; if (!sc || !sc.row) return false; let mx = 0; for (let r = 0; r < 10; r++) { let k = 0; for (let c = 0; c < 10; c++) if (T.grid[r * 10 + c] >= 0) k++; mx = Math.max(mx, k); } return sc.k === mx; }), name + ': listening finds the row with the most ship squares');
+    await idle(); await p.evaluate(() => { G.view = 'enemy'; G.st.cd[0].fill(0); render(); });
+    i = await skillBtn('dtorpedo'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(94); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => { const c = G.st.log.filter(x => x.via === 'dtorpedo').map(x => x.cell); return c.some(x => x % 10 === 4) && c.some(x => x % 10 === 5) && c.every(x => x % 10 === 4 || x % 10 === 5); }), name + ': twin torpedoes run up columns E and F');
+    await shot('dtorpedo');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
