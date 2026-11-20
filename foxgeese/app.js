@@ -1285,9 +1285,10 @@ function ruleArt(r) { return ruleStart(r); }
 function ruleCardSVG(r) {
   const sp = ruleStart(r), b = sp.b, n = [...b].filter(c => c === 'g').length;
   let r0 = 7; for (let i = 0; i < 49; i++) if (b[i] === 'g' || b[i] === 'f') r0 = Math.min(r0, Math.floor(i / 7));
-  const u = 240 / 7, pad = 8, W = 256, y0 = pad + r0 * u - u * .5, h = W - y0, pw = 196, pk = PC_KEYS.includes(settings.pcs) ? settings.pcs : 'cute';
+  const u = 240 / 7, pad = 8, W = 256, y0 = pad + r0 * u - u * .2, h = W - y0, pw = 222, pk = PC_KEYS.includes(settings.pcs) ? settings.pcs : 'cute';
   const inner = miniSVG(sp, { cls: 'gmini' }).replace(/^<svg[^>]*>/, `<svg x="0" y="0" width="${W}" height="${h.toFixed(1)}" viewBox="0 ${y0.toFixed(1)} ${W} ${h.toFixed(1)}">`);
-  return `<svg class="gmini grule" viewBox="0 0 ${W + pw} ${h.toFixed(1)}">${inner}<image href="${ART('pc-' + pk + '-g')}" x="${W + 14}" y="${(h / 2 - 40).toFixed(1)}" width="80" height="80"/><text x="${W + 100}" y="${(h / 2 + 2).toFixed(1)}" dominant-baseline="middle" font-size="58" font-weight="800" fill="currentColor">×${n}</text></svg>`;
+  const gs = Math.min(80, h * .62), fs = Math.round(Math.min(58, h * .46)), tx = W + 14 + gs + 8;   // (the number: a fixed width, never past the picture's right edge)
+  return `<svg class="gmini grule" viewBox="0 0 ${W + pw} ${h.toFixed(1)}" overflow="visible">${inner}<image href="${ART('pc-' + pk + '-g')}" x="${W + 14}" y="${(h / 2 - gs / 2).toFixed(1)}" width="${gs.toFixed(1)}" height="${gs.toFixed(1)}"/><text x="${tx.toFixed(1)}" y="${(h / 2).toFixed(1)}" dy=".36em" font-size="${fs}" font-weight="800" font-family="system-ui, sans-serif" textLength="${(W + pw - 6 - tx).toFixed(1)}" lengthAdjust="spacingAndGlyphs" fill="currentColor">×${n}</text></svg>`;
 }
 // your side and who moves first — one pulldown (vs the AI: 狐・先手 / 狐・後手 / ガチョウ・先手 / ガチョウ・後手; two players and
 // AI vs AI: only who moves first; 「ここから再開」: the order of the game on the board stays). The icons: img/ic-fox.svg / ic-goose.svg
