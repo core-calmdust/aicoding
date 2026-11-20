@@ -596,6 +596,42 @@
       <div class="atlas-lpop" id="atlasLangPop" hidden></div>
       <a class="atlas-ic" href="${BASE}" aria-label="Portal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5h4v5"/></svg></a>`;
     document.body.appendChild(bar);
+    /* ---------- the worn portal skin (きせかえ → スキン, atlas/skins.js) in the full version too (2026-11-20) ----------
+       The top bar always takes the skin's colours. The page background is either the skin's picture (with its moving
+       scene) or the place's floor as before — one button in the bar switches (localStorage atlas-fullbg: 'skin' | 'place').
+       The skin itself is changed on the portal; nothing to do here while the classic cream is worn. */
+    (function skinBg() {
+      let sk = null; try { sk = JSON.parse(localStorage.getItem('atlas-skin-css') || 'null'); } catch (e) {}
+      if (!sk || !sk.id) return;
+      const SKV = 25;   // (= the portal's skins.js?v= in atlas/index.html: bump both together)
+      const de = document.documentElement;
+      if (!document.getElementById('askinCss')) { const st = document.createElement('style'); st.id = 'askinCss'; st.textContent = `
+html.atlas-skin[data-skin] .atlas-top{background:var(--sk-hdr)!important;border-bottom-color:var(--sk-line)!important}
+html.atlas-skin[data-skin].skdark .atlas-brand b{color:#fff}html.atlas-skin[data-skin].skdark .atlas-brand small,html.atlas-skin[data-skin].skdark .atlas-brand .wk{color:rgba(255,255,255,.75)}
+html.atlas-skin.askin-bg[data-skin]{background:var(--sk-bg)!important}
+html.atlas-skin.askin-bg[data-skin] body{background:transparent!important}
+html.atlas-skin.askin-bg[data-skk=tile]{background:var(--sk-bg) var(--sk-img) 0 0/var(--sk-size) repeat fixed!important}
+html.atlas-skin.askin-bg[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-bg) var(--sk-img) var(--sk-pos,50% 100%)/cover no-repeat;pointer-events:none}
+@media (max-aspect-ratio:6/5){html.atlas-skin.askin-bg[data-skp] body::before{background-image:var(--sk-imgp);background-position-y:var(--sk-pyp,100%)}html.atlas-skin.askin-bg[data-skp] #skfx .fx-x{background-image:var(--sk-img2p);background-position-y:var(--sk-pyp,100%)}}
+#skfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}#skfx i{position:absolute;display:block;font-style:normal}#skfx svg{display:block;width:100%;height:100%;overflow:visible}
+#skfx .fx-x{inset:0;background:var(--sk-img2) var(--sk-pos,50% 100%)/cover no-repeat;opacity:0;animation:skDrift 9s ease-in-out infinite alternate;will-change:opacity}@keyframes skDrift{to{opacity:1}}
+html:not(.askin-bg) #skfx{display:none}`; document.head.appendChild(st); }
+      const L = { ja: ['背景：スキン', '背景：場所'], en: ['Background: skin', 'Background: place'], zh: ['背景：皮肤', '背景：场景'], 'zh-TW': ['背景：外觀', '背景：場景'], ko: ['배경: 스킨', '배경: 장소'], es: ['Fondo: aspecto', 'Fondo: lugar'], fr: ['Fond : thème', 'Fond : lieu'], pt: ['Fundo: visual', 'Fundo: local'], de: ['Hintergrund: Skin', 'Hintergrund: Ort'], ru: ['Фон: скин', 'Фон: место'], tr: ['Arka plan: görünüm', 'Arka plan: mekân'], id: ['Latar: skin', 'Latar: tempat'], hi: ['पृष्ठभूमि: स्किन', 'पृष्ठभूमि: स्थान'], ar: ['الخلفية: المظهر', 'الخلفية: المكان'] };
+      const lab = () => { const l = lang(), k = /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2); return L[k] || L.en; };
+      let mode = 'skin'; try { mode = localStorage.getItem('atlas-fullbg') || 'skin'; } catch (e) {}
+      const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'atlas-ic'; btn.id = 'atlasSkinBg';
+      const IC = { skin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.6"/></svg>',   // a picture: the skin
+        place: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18"/><path d="M5 10v9M19 10v9"/><path d="M7 6h10l2 4H5z"/></svg>' };   // a table: the place
+      const set = m => { mode = m; de.classList.toggle('askin-bg', m === 'skin'); btn.innerHTML = IC[m]; const t = lab()[m === 'skin' ? 0 : 1]; btn.title = t; btn.setAttribute('aria-label', t);
+        try { localStorage.setItem('atlas-fullbg', m); } catch (e) {} };
+      btn.onclick = () => set(mode === 'skin' ? 'place' : 'skin');
+      const lb = bar.querySelector('#atlasLang'); bar.insertBefore(btn, lb || null);
+      set(mode);
+      const sc = document.createElement('script'); sc.src = BASE + 'skins.js?v=' + SKV;
+      sc.onload = () => { try { if (window.AtlasSkins) AtlasSkins.apply(sk.id); } catch (e) {} };
+      document.head.appendChild(sc);
+      const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => set(mode));
+    })();
     // sound: reuse the game's own button
     const snd = document.getElementById('btnSound'), mySnd = bar.querySelector('#atlasSnd');
     if (snd) { mySnd.innerHTML = snd.innerHTML; mySnd.onclick = () => { snd.click(); mySnd.className = 'atlas-ic ' + snd.className.replace(/\bsnd\b/, ''); }; mySnd.className = 'atlas-ic ' + snd.className.replace(/\bsnd\b/, ''); } else mySnd.remove();
