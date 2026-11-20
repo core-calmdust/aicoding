@@ -10,7 +10,15 @@ from skins_sr2 import render
 
 VW, VH, OW, OH = 1920, 1200, 2880, 1800
 
+# portrait version (atlas/tools/skins_tall.py): the same scene with 1800 more units of sky on top (TALL['on']),
+# EXT = the extension's fill colour and any extra pieces drawn in it (clouds / stars)
+TALL = {'on': False, 'col': '#ffffff', 'extra': ''}
+EXTH = 1800
+
 def doc(defs, body):
+    if TALL['on']:
+        return (f'<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="3000" viewBox="0 {-EXTH} {VW} {VH + EXTH}"><defs>{defs}</defs>'
+                f'<rect x="0" y="{-EXTH - 2}" width="{VW}" height="{EXTH + 4}" fill="{TALL["col"]}"/>{TALL["extra"]}{body}</svg>')
     return f'<svg xmlns="http://www.w3.org/2000/svg" width="{OW}" height="{OH}" viewBox="0 0 {VW} {VH}"><defs>{defs}</defs>{body}</svg>'
 
 def lin(id_, stops, x2=0, y2=1):

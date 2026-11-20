@@ -184,6 +184,18 @@
     b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICO[k]}</svg><span></span>`;
     b.onclick = () => go(k); tabsEl.appendChild(b);
   });
+  // PC: one header row — drop the subtitle, then the title, then (very narrow) fall back to two rows, so the tabs never squeeze
+  const hdrEl = document.querySelector('header');
+  function fitHeader() {
+    if (!hdrEl) return;
+    const over = () => tabsEl.scrollWidth > tabsEl.clientWidth + 1;
+    hdrEl.classList.remove('hd1', 'hd2', 'hd3');
+    if (!matchMedia('(min-width:761px)').matches) return;
+    for (const c of ['hd1', 'hd2']) { if (!over()) return; hdrEl.classList.add(c); }
+    if (over()) { hdrEl.classList.remove('hd1', 'hd2'); hdrEl.classList.add('hd3'); }   // (two rows: the full title again)
+  }
+  addEventListener('resize', () => { clearTimeout(fitHeader.t); fitHeader.t = setTimeout(fitHeader, 30); }); fitHeader();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitHeader);
   let page = 'home';
   // phones: the gacha page has two tabs, ガチャ and ショップ (html[data-gs]); PC shows both, the shop below the gacha
   function gsSet(v) { document.documentElement.dataset.gs = v; document.querySelectorAll('#gsSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v)); }
@@ -3152,6 +3164,7 @@
     $('langSel').value = lang; $('langCode').textContent = lang === 'zh-TW' ? 'TW' : lang.toUpperCase();
     $('homeBtn').setAttribute('aria-label', t('tab.home')); $('footBack').textContent = t('back');
     tabsEl.querySelectorAll('.tab').forEach(b => { b.querySelector('span').textContent = t('tab.' + b.dataset.k); });
+    requestAnimationFrame(fitHeader);
     document.querySelectorAll('#gsSeg button').forEach(b => { b.textContent = t('tab.' + b.dataset.v); });
     if (window.AtlasMissions) try { AtlasMissions.sync(); } catch (e) {}   // (the missions' button / panel follow the language, 2026-11-12)
   }

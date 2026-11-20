@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>/* the worn portal skin (きせかえ → スキン, atlas/skins.js): its colours before the first paint */
-try { (function (j) { if (!j || !j.v) return; var r = document.documentElement; for (var k in j.v) r.style.setProperty(k, j.v[k]); r.setAttribute('data-skin', j.id); r.setAttribute('data-skk', j.k); if (j.a) r.setAttribute('data-ska', '1'); if (j.d) r.className += ' skdark'; })(JSON.parse(localStorage.getItem('atlas-skin-css') || 'null')); } catch (e) {}</script>
+try { (function (j) { if (!j || !j.v) return; var r = document.documentElement; for (var k in j.v) r.style.setProperty(k, j.v[k]); r.setAttribute('data-skin', j.id); r.setAttribute('data-skk', j.k); if (j.a) r.setAttribute('data-ska', '1'); if (j.p) r.setAttribute('data-skp', '1'); if (j.d) r.className += ' skdark'; })(JSON.parse(localStorage.getItem('atlas-skin-css') || 'null')); } catch (e) {}</script>
 <script src="../shared/safetop.js?v=2"></script>
 <script src="../shared/latinfs.js?v=1"></script>
 <script src="../shared/focusgate.js?v=5"></script>
@@ -107,9 +107,41 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.95);border-
    selected menu tab follow the worn skin; cards, sheets and the 3D view keep their own colours ---------- */
 html[data-skin] body{background-color:var(--sk-bg);background-image:none}
 html[data-skk=tile] body{background-image:var(--sk-img);background-size:var(--sk-size)}
-html[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-bg) var(--sk-img) center/cover no-repeat;pointer-events:none}
-html[data-ska] body::after{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-img2) center/cover no-repeat;pointer-events:none;opacity:0;animation:skDrift 9s ease-in-out infinite alternate;will-change:opacity}
-@keyframes skDrift{to{opacity:1}}   /* (opal: its colours drift — an opacity cross-fade, on the compositor) */
+html[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-bg) var(--sk-img) var(--sk-pos,50% 100%)/cover no-repeat;pointer-events:none}
+@media (max-aspect-ratio:6/5){html[data-skp] body::before,html[data-skp] #skfx .fx-x{background-position-y:100%}html[data-skp] body::before{background-image:var(--sk-imgp)}html[data-skp] #skfx .fx-x{background-image:var(--sk-img2p)}}
+@media (max-width:760px){html[data-skk=cover] body::before,html[data-skk=cover] #skfx{bottom:calc(var(--tabsH,64px) + var(--ulH,0px))}}   /* phones: the scene stands on the bottom bars, not under them */   /* narrow windows: the portrait picture (more sky above) */
+/* UR effects (atlas/skins.js FX): #skfx sits behind the page; only transform / opacity animate */
+#skfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}
+#skfx i{position:absolute;display:block;font-style:normal}#skfx svg{display:block;width:100%;height:100%;overflow:visible}
+html:has(#bv.on,#hist.on,#ov.on) #skfx *{animation-play-state:paused!important}
+#skfx .fx-x{inset:0;background:var(--sk-img2) var(--sk-pos,50% 100%)/cover no-repeat;opacity:0;animation:skDrift 9s ease-in-out infinite alternate;will-change:opacity}
+@keyframes skDrift{to{opacity:1}}
+.fx-tw{opacity:0;animation:fxTw 4s ease-in-out infinite;will-change:transform,opacity}
+@keyframes fxTw{0%,100%{opacity:0;transform:scale(.3) rotate(0)}45%{opacity:1;transform:scale(1) rotate(45deg)}60%{opacity:.85;transform:scale(.85) rotate(60deg)}}
+.fx-fall{top:-60px;animation:fxFall 20s linear infinite;will-change:transform}.fx-fall b{display:block;animation:fxSway 4s ease-in-out infinite alternate}
+@keyframes fxFall{to{transform:translate3d(var(--sw),calc(100vh + 120px),0)}}
+@keyframes fxSway{from{transform:translateX(-14px) rotate(0)}to{transform:translateX(14px) rotate(var(--rt))}}
+.fx-sheen{top:-50%;left:-60%;width:40%;height:200%;background:linear-gradient(90deg,transparent,var(--c),transparent);transform:rotate(var(--a)) translateX(0);animation:fxSheen 9s ease-in-out infinite;will-change:transform}
+@keyframes fxSheen{0%{transform:rotate(var(--a)) translateX(0)}55%,100%{transform:rotate(var(--a)) translateX(420%)}}
+.fx-shoot{width:180px;height:2px;background:linear-gradient(90deg,transparent,#fff8e6);border-radius:2px;opacity:0;transform:rotate(-24deg);animation:fxShoot 10s ease-in infinite;will-change:transform,opacity}
+@keyframes fxShoot{0%,88%{opacity:0;transform:rotate(-24deg) translateX(0)}90%{opacity:1}97%{opacity:0;transform:rotate(-24deg) translateX(-360px)}100%{opacity:0}}
+.fx-mote{width:5px;height:5px;border-radius:50%;background:var(--c);opacity:.0;animation:fxMote 14s ease-in-out infinite;will-change:transform,opacity}
+@keyframes fxMote{0%,100%{opacity:0;transform:translate(0,0)}30%{opacity:.85}50%{transform:translate(30px,-40px)}70%{opacity:.6}}
+.fx-rose svg{animation:fxRose 16s ease-in-out infinite alternate}
+@keyframes fxRose{0%{transform:rotate(-14deg)}40%{transform:rotate(9deg)}70%{transform:rotate(-4deg)}100%{transform:rotate(22deg)}}
+.fx-orbit svg{animation:fxSpin 240s linear infinite}
+.fx-wheel .fx-turn{transform-origin:0 0;animation:fxSpin 60s linear infinite}
+.fx-wheel .fx-cab{transform-box:fill-box;transform-origin:50% 0;animation:fxSpin 60s linear infinite reverse}
+.fx-wheel .fx-bulb{animation:fxBulb 1.5s steps(1) infinite}
+@keyframes fxBulb{50%{opacity:.35}}
+@keyframes fxSpin{to{transform:rotate(360deg)}}
+.fx-boom{opacity:0;transform:scale(.2);animation:fxBoom 9.5s ease-out infinite;will-change:transform,opacity}
+@keyframes fxBoom{0%{opacity:0;transform:scale(.2)}3%{opacity:1}14%{opacity:.9;transform:scale(1)}22%,100%{opacity:0;transform:scale(1.12)}}
+.fx-aur{left:-20%;width:140%;height:34%;background:radial-gradient(60% 50% at 50% 50%,var(--c),transparent 70%);opacity:.32;mix-blend-mode:screen;animation:fxAur 16s ease-in-out infinite alternate;will-change:transform}
+@keyframes fxAur{0%{transform:translateX(-6%) scaleY(.8) skewX(-8deg)}50%{transform:translateX(4%) scaleY(1.15) skewX(6deg)}100%{transform:translateX(8%) scaleY(.9) skewX(-4deg)}}
+.fx-ray{top:-20%;width:14%;height:140%;background:linear-gradient(90deg,transparent,var(--c),transparent);transform:rotate(18deg);opacity:0;animation:fxRay 12s ease-in-out infinite;will-change:transform,opacity}
+@keyframes fxRay{0%,100%{opacity:0;transform:rotate(18deg) translateX(-30%)}50%{opacity:.85;transform:rotate(18deg) translateX(30%)}}
+.fx-kal{background:center/cover no-repeat;border-radius:50%;animation:fxSpin 150s linear infinite;will-change:transform}
 html[data-skin] header{background:var(--sk-hdr);border-bottom-color:var(--sk-line)}
 html[data-skin] .tab[aria-selected=true]{background:var(--sk-nav);color:var(--sk-navt);box-shadow:0 3px 0 var(--sk-nav2)}
 @media (max-width:760px){
@@ -128,6 +160,21 @@ html.skdark h2.h{color:#fff}
 html.skdark .glh{color:#f3e6c8}html.skdark .amsub,html.skdark .foot,html.skdark .foot a{color:#c9d2ea}
 html.skdark .ic .lab .n{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45)}@media (min-width:761px){html.skdark .achsum > b{color:#fff}html.skdark .shophead .note{color:#d5dcef}}html.skdark .glh::after{background:linear-gradient(90deg,rgba(255,255,255,.35),transparent)}html.skdark[dir=rtl] .glh::after{background:linear-gradient(270deg,rgba(255,255,255,.35),transparent)}
 
+/* PC header in one row (2026-11-20 ユーザー): logo · tabs (centre) · coins and buttons, across the full width.
+   When the tabs would be squeezed the title drops its subtitle (hd1), then the title (hd2: the mark only), and only on a very
+   narrow window does the header go back to two rows (hd3). atlas/app.js fitHeader decides. */
+@media (min-width:761px){
+  header:not(.hd3){display:flex;align-items:center;gap:14px;height:72px;padding:0 max(20px,env(safe-area-inset-right)) 0 max(20px,env(safe-area-inset-left))}
+  header:not(.hd3) > .hd{display:contents}
+  header:not(.hd3) .hd .sp{display:none}
+  header:not(.hd3) .brand{flex:none;order:0}
+  header:not(.hd3) > .tabs{order:1;flex:1 1 0;min-width:0;max-width:none;margin:0;padding:0;flex-wrap:nowrap;overflow:hidden}
+  header:not(.hd3) > .tabs .tab{flex:none;white-space:nowrap}
+  header:not(.hd3) > .hd > :not(.brand){order:2}
+  header.hd1 .brand .wm small,header.hd1 .brand .wk{display:none}
+  header.hd2 .brand .wm{display:none}
+  header:not(.hd3) .opop,header:not(.hd3) .lpop{top:66px;inset-inline-end:max(20px,env(safe-area-inset-right))}
+}
 /* ---------- tabs ---------- */
 .tabs{display:flex;gap:6px;justify-content:center;padding:12px 0 4px}
 .tab{display:flex;align-items:center;gap:7px;border:0;background:transparent;padding:9px 16px;border-radius:99px;font-weight:900;font-size:15px;color:var(--ink2);transition:background .15s,color .15s}
@@ -2352,7 +2399,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=16"></script>
 <script src="art.js?v=19"></script>
-<script src="skins.js?v=9"></script>
+<script src="skins.js?v=12"></script>
 <script src="../shared/atlas-updates.js?v=48"></script>
 <script src="../shared/atlas.js?v=20261119nw1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
@@ -2417,7 +2464,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=44"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=460"></script>
+<script src="app.js?v=461"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

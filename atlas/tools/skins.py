@@ -801,7 +801,7 @@ def land_mask():
             x += n
     return g
 
-def old_map_cover(seed=139):
+def old_map_cover(seed=139, rose_=False):
     """the voyager's map: parchment, a Natural Earth world, graticule, rhumb lines, a compass rose"""
     img = vgrad([(0, '#f3e4c4'), (1, '#ecd8b2')])
     img = img * (0.93 + 0.1 * big_noise(seed, 2.4))[..., None]
@@ -828,17 +828,18 @@ def old_map_cover(seed=139):
     for j in range(32):
         a = j * math.pi / 16; gd.line([cx, cy, cx + math.cos(a) * k(1400), cy + math.sin(a) * k(1400)], fill=70, width=lw)
     img = lerp(img, hexc('#8a6a3c'), np.asarray(g.filter(ImageFilter.GaussianBlur(k(.6))), np.float32) / 255 * .45)
-    def rose(half):   # flat compass rose: each point split into a light and a dark half
-        def draw(d, ss):
-            R = k(120)
-            for j in range(8):
-                a = -math.pi / 2 + j * math.pi / 4; L = R if j % 2 == 0 else R * .6
-                tip = (cx + math.cos(a) * L, cy + math.sin(a) * L)
-                side = (cx + math.cos(a + half * .32) * R * .17, cy + math.sin(a + half * .32) * R * .17)
-                d.polygon([(x * ss, y * ss) for x, y in (tip, side, (cx, cy))], fill=255)
-        return draw
-    img = flat(img, mask_draw(H, 2, rose(1), m=W), '#d9b17a')
-    img = flat(img, mask_draw(H, 2, rose(-1), m=W), '#9b6e3a')
+    if rose_:   # (2026-11-20: the compass rose is drawn by the page — atlas/skins.js FX — so it can turn)
+        def rose(half):   # flat compass rose: each point split into a light and a dark half
+            def draw(d, ss):
+                R = k(120)
+                for j in range(8):
+                    a = -math.pi / 2 + j * math.pi / 4; L = R if j % 2 == 0 else R * .6
+                    tip = (cx + math.cos(a) * L, cy + math.sin(a) * L)
+                    side = (cx + math.cos(a + half * .32) * R * .17, cy + math.sin(a + half * .32) * R * .17)
+                    d.polygon([(x * ss, y * ss) for x, y in (tip, side, (cx, cy))], fill=255)
+            return draw
+        img = flat(img, mask_draw(H, 2, rose(1), m=W), '#d9b17a')
+        img = flat(img, mask_draw(H, 2, rose(-1), m=W), '#9b6e3a')
     img = lerp(img, hexc('#8a6a3c'), np.clip(1 - np.abs(np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) - k(84)) / k(2), 0, 1) * .6)
     return grain(img, .008, seed)
 
