@@ -652,3 +652,35 @@
   const start = () => { check(); setInterval(check, 2500); addEventListener('storage', e => { if (!e.key || e.key !== SEEN) setTimeout(check, 50); }); document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(check, 300); }); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(start, 800)); else setTimeout(start, 800);
 })();
+
+/* =====================================================================
+   Drag to scroll (2026-11-20): rows that scroll sideways (tag chips,
+   tabs, carousels …) can be dragged left / right with the mouse on
+   every page that loads this file. Touch keeps its own native swipe.
+   A drag of more than a few px swallows the click that follows it.
+   ===================================================================== */
+(function () {
+  'use strict';
+  if (typeof document === 'undefined' || window.__atlasDragX) return; window.__atlasDragX = 1;
+  const row = el => { for (; el && el !== document.body && el.nodeType === 1; el = el.parentElement) {
+    if (el.scrollWidth <= el.clientWidth + 2) continue;
+    const cs = getComputedStyle(el); if (!/(auto|scroll)/.test(cs.overflowX)) continue;
+    if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 2) return null;   // two-way scrollers (a page, a sheet): leave them
+    return el; } return null; };
+  let d = null, eat = false;
+  document.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('input,textarea,select,canvas,[contenteditable],[draggable=true]')) return;
+    const r = row(e.target); if (!r) return;
+    d = { r, x: e.clientX, s: r.scrollLeft, m: false, id: e.pointerId };
+  }, true);
+  addEventListener('pointermove', e => {
+    if (!d || e.pointerId !== d.id) return;
+    const dx = e.clientX - d.x;
+    if (!d.m) { if (Math.abs(dx) < 6) return; d.m = true; d.sb = d.r.style.scrollBehavior; d.ss = d.r.style.scrollSnapType; d.r.style.scrollBehavior = 'auto'; d.r.style.scrollSnapType = 'none'; document.documentElement.style.cursor = 'grabbing'; document.documentElement.style.userSelect = 'none'; }
+    d.r.scrollLeft = d.s - dx; e.preventDefault();
+  }, { passive: false });
+  const end = () => { if (!d) return; if (d.m) { eat = true; setTimeout(() => { eat = false; }, 0); d.r.style.scrollBehavior = d.sb || ''; d.r.style.scrollSnapType = d.ss || ''; document.documentElement.style.cursor = ''; document.documentElement.style.userSelect = ''; } d = null; };
+  addEventListener('pointerup', end); addEventListener('pointercancel', end);
+  document.addEventListener('click', e => { if (eat) { eat = false; e.preventDefault(); e.stopPropagation(); } }, true);
+  document.addEventListener('dragstart', e => { if (d) e.preventDefault(); }, true);   // (links / images in the row would start a native drag)
+})();
