@@ -74,7 +74,7 @@ function renderBoards() {
   SB.draw($('#bsvg'), boardOpts(v));
   document.body.classList.toggle('view-own', v === 'own');
   $('#bTitle').textContent = t(v === 'own' ? 'own' : 'enemy');
-  document.body.classList.toggle('can-swap', !!G.st && G.phase !== 'deploy'); $('#btnSwap').textContent = t(G.view === 'own' ? 'sw.enemy' : 'sw.own');
+  document.body.classList.toggle('can-swap', !!G.st && G.phase !== 'deploy'); requestAnimationFrame(() => { const w = $('#btnSwap').offsetWidth || $('.bhead .bt').offsetWidth; if (w) $('.bhead').style.setProperty('--swapw', w + 'px'); });   /* (the status keeps clear of the caption's left part on both sides, so it stays centred on the board) */ $('#btnSwap').innerHTML = `<span>${t(G.view === 'own' ? 'sw.own' : 'sw.enemy')}</span><i>⇄</i>`;   // (one toggle button showing the fleet on the board; click switches — 2026-11-20 user)
   if (G.st) { const o = boardOpts(v === 'own' ? 'enemy' : 'own'); o.mini = true; o.heat = null; o.best = -1; o.glow = null; SB.draw($('#msvg'), o); $('#miniCap').textContent = t(v === 'own' ? 'enemy' : 'own'); }
   let sub = '';
   if (G.st && G.phase === 'battle' && G.rule === 'salvo') { const q = G.st.left; for (let i = 0; i < q; i++) sub += '<b></b>'; }
