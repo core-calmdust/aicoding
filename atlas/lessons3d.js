@@ -261,10 +261,16 @@
   const I2A = { 'い': 'わ', 'き': 'か', 'ぎ': 'が', 'し': 'さ', 'ち': 'た', 'に': 'な', 'び': 'ば', 'み': 'ま', 'り': 'ら' };
   const I2O = { 'い': 'お', 'き': 'こ', 'ぎ': 'ご', 'し': 'そ', 'ち': 'と', 'に': 'の', 'び': 'ぼ', 'み': 'も', 'り': 'ろ' };
   const I2T = { 'い': 'った', 'ち': 'った', 'り': 'った', 'に': 'んだ', 'び': 'んだ', 'み': 'んだ', 'き': 'いた', 'ぎ': 'いだ', 'し': 'した' };
-  const ICHI_I = /(でき|見|起き|生き|落ち|足り|借り|信じ|感じ|閉じ|浴び|伸び|延び|過ぎ|尽き|満ち|用い|着|似|居)$/;
+  const ICHI_I = /(でき|見|起き|生き|落ち|足り|借り|[\u4e00-\u9fff]じ|浴び|伸び|延び|過ぎ|尽き|満ち|用い|着|似|居|得|出|寝)$/;
   const KANJI = /[\u4e00-\u9fff々]/;
   function verb(stem) {   // the verb stem before ます → { dict, neg, vol, past }
     const k = stem.slice(-1), body = stem.slice(0, -1);
+    if (/[\u30a1-\u30f6]{2}$/.test(stem)) {   // (2026-11-21 lesson loop: a go term in katakana — カカリます → カカる, ハネます → ハネる, ノビます → ノビる)
+      const h = String.fromCharCode(k.charCodeAt(0) - 0x60), ichi = /[えけげせぜてでねへべめれ]/.test(h) || /(ノビ|オリ|イレ)$/.test(stem);
+      if (ichi) return { dict: stem + 'る', neg: stem + 'ない', vol: stem + 'よう', past: stem + 'た' };
+      if (I2U[h]) return { dict: body + I2U[h], neg: body + I2A[h] + 'ない', vol: body + I2O[h] + 'う', past: body + (I2T[h] || 'った') };
+      return null;
+    }
     if (/[てで][いみ]$/.test(stem)) return { dict: stem + 'る', neg: stem + 'ない', vol: stem + 'よう', past: stem + 'た' };   // (〜ています: the いる of the progressive)
     // し: する after a noun / particle / two kanji (確認し), す after one kanji or the a-row kana of 動かし・逃がし・増やし (godan)
     if (k === 'し' && (stem.length === 1 || (KANJI.test(stem.slice(-2, -1)) && KANJI.test(stem.slice(-3, -2))) || !(KANJI.test(stem.slice(-2, -1)) || /[かがさやらわまたなば]/.test(stem.slice(-2, -1))))) return { dict: body + 'する', neg: body + 'しない', vol: body + 'しよう', past: body + 'した' };
@@ -731,7 +737,7 @@
           // (2026-11-21) the hint: the step's words, and on the board what they point at — never the answer itself (the red frames: moves
           // that hand over a corner; wall: the moves that build a wall)
           const hintMk = () => l.id === 'wall' && p.wall && p.wall.length ? p.wall.map(q => [q, 'ng']) : l.id === 'rules' || l.id === 'parity' || l.id === 'finish' ? [] : v.filter(x => x[1][4]).map(x => [+x[0], 'ng']);
-          return { pos: p.cells + ':' + p.toMove, kind: 'best', P: p, ask: ja && AQ ? AQ[i % AQ.length] : T.prompt || '', why: '', ans: b ? b[0] : '', oks, hintMk,
+          return { pos: p.cells + ':' + p.toMove, kind: 'best', P: p, ask: ja && AQ ? (i >= 2 ? AQ[i % AQ.length].replace('数字を見くらべてみてね。', '自分で数えてみてね。') : AQ[i % AQ.length]) : T.prompt || '',   /* (from the 3rd problem no flip counts on the board: lessons3d RV_NUMS) */ why: '', ans: b ? b[0] : '', oks, hintMk,
             hintTx: (T.hint || '') + (ja && hintMk().length ? (l.id === 'wall' ? '<br>赤い枠は、外がわに壁を作っちゃう手なんだ。' : '<br>赤い枠は、打つと相手に隅を渡しちゃう手。') : ''),
             good: u => ja ? rvTeachJa(l.id, p, u == null ? b && b[0] : u, true) : '', ng: u => ja ? rvTeachJa(l.id, p, u, false) : '' }; }),
         save: (pts, max) => this.save(l.id, pts, max) };
@@ -869,6 +875,23 @@
   const GO_CLS = { ok: 'ok', ng: 'ng', hang: 'ng', tri: 'hl', sq: 'hl', dash: 'ring', hl2: 'ring', x: 'ng' };
   let goRulesP = null;
   const goRules = () => window.GoRules ? Promise.resolve() : goRulesP || (goRulesP = new Promise(res => { const sc = document.createElement('script'); sc.src = '../go/rules.js?v=2'; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); }));
+  /* (2026-11-21 lesson loop) the joseki practice in ゴイシペン's words, Japanese: a varied question, a hint from what the line's move is
+     for (the note's key word — never the point itself), and after the answer the note's reason; a wrong move gets the right point
+     (green), why it is played, and what the other move gives up. */
+  const GOJ = {
+    ask: ['定石の続き、{s}の次の一手はどこかな？', '{s}の番だね。手順を思い出して打ってみて！', 'ここで{s}が打つ、いちばんの定石はどこだと思う？', 'この形の急所はどこかな？ 相手の狙いも考えてみるペン。', 'さあ{s}の一手！ 強い人がよく打った手を当ててみて。'],
+    hint: [[/切|キリ|ツギ|ツイ|ツナ|つな/, '自分の石のつながりを確かめてみて。切られそうなところはないかな？'], [/三々|隅に入|隅にすべ/, '隅の奥がまだ空いてるね。そこが気にならない？'],
+      [/ハネ/, '相手の石の先をおさえる手を考えてみて。頭をたたかれると苦しいペン。'], [/押さえ|オサエ|ふさ|止め/, '相手が進みたい方向はどっちかな？ そこをふさぐ手が大事だね。'],
+      [/ヒラ|開い|開く|足場|根拠/, '石が生きるには足場が要るよね。辺に広げる手を探してみて！'], [/ハサ/, '受けるだけじゃなく、相手の石をはさんで攻める手もあるペン。'],
+      [/カカ/, '相手の隅の石に近づいて、地を減らす手を考えてみて。'], [/ノビ|伸び|ノビる/, 'あわてずに、石をまっすぐ伸ばす手も考えてみて。'], [/トビ|一間/, '一歩軽く跳んで、中央に顔を出す手はどうかな？']],
+    hintDef: ['前の手の狙いを思い出してみて。相手は次に何をしたいのかな？', 'まずは自分の弱い石を探そう。それから相手の急所を考えるペン。'],
+    good: ['そう、それが定石ペン！', 'ばっちり！ 手順どおりだね。', 'いいね、その一手！'],
+    ngHalf: ['きみの手も一つの考え方だね。でも定石の手順と比べると、少し損なんだ。', 'きみの手も悪くはないね。ただ、手順から外れると細かいところで損が出ちゃう。'],
+    ngBad: ['ほかの点だと、その狙いが果たせないまま相手に急所を先に打たれちゃうペン。', 'そこだと一手遅れて、相手に好きな形を作られちゃうんだ。', 'その手だと石の働きが弱くて、相手に隅や辺の主導権を渡しちゃうね。'],
+    // the note → its plain sentences (no tags), the first ones up to `max` characters
+    why(note, max) { const ss = (String(note || '').replace(/<[^>]+>/g, '').match(/[^。！？]+[。！？]/g) || []).map(x => x.trim()); let out = ''; for (const x of ss) { if (out && (out + x).length > max) break; out += x; } return out; },
+    side: s => s === 1 ? '黒' : '白',
+  };
   const GO = {
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
@@ -906,6 +929,15 @@
         notes[String(i)] = `<b>${i + 1}. ${side === 1 ? '●' : '○'}</b>${ev}` + ((g.notes || {})[String(i + 1)] ? '<br>' + L((NC.go || {})['op:' + g.id + '/n' + (i + 1)] || g.notes[String(i + 1)], lang) : ''); });   // (3D: the notes without coordinates)
       const self = this, probs = shuffle(g.problems || []).slice(0, 5).sort((a, b) => a.at - b.at).map(P => { const ok = goPcs(P.ok, N);
         const o = { kind: 'best', P: { ok, good: goPcs(P.good, N), half: goPcs(P.half, N) }, ask: L(self.data.op.goal || null, lang) || '', ans: ok[0], N };
+        if (lang === 'ja') {   // (2026-11-21 lesson loop: ゴイシペン asks, hints and explains — see GOJ)
+          const sd = P.at % 2 ? 3 - (st.turn || 1) : st.turn || 1, note = L((NC.go || {})['op:' + g.id + '/n' + (P.at + 1)] || (g.notes || {})[String(P.at + 1)], 'ja'), hs = (g.id.length * 7 + P.at) | 0;
+          const why = GOJ.why(note, 80), whyS = GOJ.why(note.replace(/^[^。]*?(打ちます|ます|です)。/, ''), 60) || why, hk = GOJ.hint.find(([re]) => re.test(note));
+          o.ask = fill(GOJ.ask[(hs + P.at) % GOJ.ask.length], { s: GOJ.side(sd) });
+          o.hintTx = hk ? hk[1] : GOJ.hintDef[hs % 2];
+          o.good = () => GOJ.good[hs % 3] + (why ? '<br>' + why : '');
+          o.ng = u => { const part = (o.P.good || []).concat(o.P.half || []).includes(u);
+            return SP('ok', 'ja') + 'を打つわけはね、' + (whyS || why) + '<br>' + (part ? GOJ.ngHalf[hs % 2] : GOJ.ngBad[hs % 3]); };
+        }
         Object.defineProperty(o, 'pos', { get() { const sp = self.after(st, line.slice(0, P.at)); return { spec: sp, me: sp.turn || 1, view: g.view || null }; } });   // (the position after `at` moves: the rules are loaded by then)
         return o; });
       return { id: g.id, title: L(g.title, lang), intro: L((NC.go || {})['op:' + g.id + '/story'] || g.story, lang) || L(g.short, lang), start: { spec: st, me: g.side || st.turn || 1, view: g.view || null }, steps: line, notes, probs,
@@ -1675,7 +1707,7 @@
         if (sess && id === 'tafl' && G && G.spec && G.spec.b && pz() && pz().n !== Math.round(Math.sqrt(String(G.spec.b).length))) { sess.stop(); sess = null; }   // (tafl: another rule set's board)   // (go / hex: another board size — a new board)
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
-            pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
+            pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp' && !(phase === 'prob' && cur && cur.k >= RV_NUMS()), ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
         else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots')) pz().load(G.spec, G.me, { lock: !!G.lock });
@@ -1823,11 +1855,13 @@
       const s = String(p.pos).split(':')[1]; if (s !== '1' && s !== '2') return '';
       return ((SIDE[ctx.lang] || SIDE.en)[+s - 1]) + (ctx.lang === 'ja' || /^zh/.test(ctx.lang) ? '' : '');
     }
+    // (2026-11-21 user) reversi: the flip counts on the first 2 problems only (1 when the lesson has only 2: EASY2) — the rest are solved without them
+    const RV_NUMS = () => cur && cur.probs && cur.probs.length <= 2 ? 1 : 2, RV_SELF = { ja: 'ここからは数字なし。自分で数えて考えてみて！', en: 'From here on, no numbers: count for yourself!' };
     // one problem
     async function prob() {
       phase = 'prob'; const p = cur.probs[cur.k]; if (!p) return finish();
       p.hinted = false; p.used = 0; dots(); act(X.next, { nextOn: false });
-      say(sideLine(p) + (p.ask || X.opGoal));
+      say(sideLine(p) + (id === 'reversi' && cur.k === RV_NUMS() && RV_SELF[ctx.lang] ? RV_SELF[ctx.lang] + '<br>' : '') + (p.ask || X.opGoal));
       await board(p.pos, p.sol); if (stopped || cur.probs[cur.k] !== p) return;
       onMoved = (u, info) => moved(p, u, info);
       if (p.marks && p.marks.length && pz().mark) pz().mark(p.marks);
