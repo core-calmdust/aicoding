@@ -24,7 +24,7 @@ H=$(od -An -t d4 -j 4 -N 4 "$WORK/site.bin" | tr -d ' ')
 cc -O3 -DNATIVE -DNUE_H=$H -w -o "$WORK/usimatch" "$HERE/usimatch.c"
 cd "$WORK"; NO=$(grep -c . "$HERE/openings.txt")
 for i in $(seq 1 $P); do
-  R=$(( (i - 1) * G / 2 % NO )); tail -n +$((R + 1)) "$HERE/openings.txt" > op$i.txt; head -n $R "$HERE/openings.txt" >> op$i.txt
+  R=$(( (i - 1) * G / 2 % NO )); tail -n +$((R + 1)) "$HERE/openings.txt" > op$i.txt; if [ $R -gt 0 ]; then head -n $R "$HERE/openings.txt" >> op$i.txt; fi
   OURNET="$WORK/site.bin" OURSCALE=${OURSCALE:-100} ./usimatch site.bin $ON "$WORK/yo-ours" "$WORK" $G --opt BookFile=no_book --opt USI_Hash=64 --opt Threads=1 --opt NodesLimit=$N --opt NetworkDelay=0 --opt NetworkDelay2=0 --openings op$i.txt --byoyomi 60000 > log$i.txt 2>&1 &
 done; wait; W=0; L=0; D=0
 for i in $(seq 1 $P); do T=$(grep total log$i.txt | tail -1 | sed 's/.*total //'); set -- $T; W=$((W + ${1#+})); L=$((L + ${2#-})); D=$((D + ${3#=})); done
