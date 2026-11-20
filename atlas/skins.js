@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   const BASE = (() => { try { return new URL('../images/atlas/skin/', document.currentScript.src).href; } catch (e) { return '../images/atlas/skin/'; } })();
-  const V = 19, FXV = 23;   // bump when the images are re-rendered
+  const V = 19, FXV = 24;   // bump when the images are re-rendered
   const DEV_ALL = false;   // (2026-11-20: released — in the gacha; the cream is everyone's, 銀河鉄道 + 雪原 a present to all)
   const RAR = ['N', 'R', 'SR', 'SSR', 'UR'];
   // id: [rarity, kind (tile px | 'c' = cover), page colour, header colour, selected-tab colour, dark]
@@ -339,20 +339,36 @@
     };
   }
 
+  const root = document.documentElement;
   let fxEl = null, fxId = '';
+  /* The scene's on / off gate (2026-11-21): html.skfx-off pauses every moving piece (CSS in atlas/index.html, skin/common.js,
+     skins-fx.js). Off while the tab is hidden, the window is not in front (another window / app has the focus — as the games,
+     shared/focusgate.js), the 3D view / Historia / a sheet covers the page, the full version keeps the scene still
+     (.askin-still) or shows the place's floor. A class kept here — not html:has(#bv.on,…): with that selector (in a rule, or in
+     matches()) every .on class changed anywhere re-styled the whole document, the scene's ~200 pieces included (measured). */
+  const COARSE = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches && !matchMedia('(any-pointer: fine)').matches);   // (phones / in-app browsers: hasFocus() is false until the first tap)
+  const fxGate = () => {
+    const c = root.classList, on = id => { const e = document.getElementById(id); return !!e && e.classList.contains('on'); };
+    const off = document.hidden || (!COARSE && !document.hasFocus()) || on('bv') || on('hist') || on('ov') || c.contains('askin-still') || (c.contains('atlas-skin') && !c.contains('askin-bg'));
+    if (off !== c.contains('skfx-off')) { c.toggle('skfx-off', off); try { dispatchEvent(new CustomEvent('skfx-gate', { detail: { off } })); } catch (e) {} }
+    return off;
+  };
+  let fxIv = 0;
+  const fxWatch = on => { if (on && !fxIv) { fxIv = setInterval(fxGate, 500); ['visibilitychange'].forEach(k => document.addEventListener(k, fxGate)); ['focus', 'blur', 'pageshow', 'atlas-skinbg'].forEach(k => addEventListener(k, fxGate)); }
+    else if (!on && fxIv) { clearInterval(fxIv); fxIv = 0; document.removeEventListener('visibilitychange', fxGate); ['focus', 'blur', 'pageshow', 'atlas-skinbg'].forEach(k => removeEventListener(k, fxGate)); } };
   // SSR / UR: their scene moves (atlas/skins-fx.js, loaded only while one is worn)
   let fxP = null;
   const fxLoad = () => fxP || (fxP = new Promise(res => { if (window.AtlasSkinFX) return res(); const sc = document.createElement('script'); sc.src = BASE.replace(/images\/atlas\/skin\/$/, 'atlas/') + 'skins-fx.js?v=' + FXV; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); }));
   function effects(id) {
     if (id === fxId) return; fxId = id;
     if (fxEl) { fxEl.remove(); fxEl = null; if (window.AtlasSkinFX) AtlasSkinFX.unmount(); }
-    const s = map[id]; if (!s || s.rar < 3 || !document.body) return;
+    const s = map[id]; if (!s || s.rar < 3 || !document.body) { fxWatch(false); return; }
+    fxWatch(true); fxGate();
     fxEl = document.createElement('div'); fxEl.id = 'skfx'; fxEl.setAttribute('aria-hidden', 'true'); document.body.prepend(fxEl);
     const host = fxEl;
     fxLoad().then(() => { if (fxEl !== host || !window.AtlasSkinFX || !AtlasSkinFX.has(id)) { if (fxEl === host && ANIM[id]) host.innerHTML = '<i class="fx-x"></i>'; return; }
       AtlasSkinFX.mount(host, { id, tall: TALLS.has(id), px: POS[id] ?? 50, mid: !!MID[id], py: PY[id], pyp: PYP[id], toff: TOFF[id], x: !!ANIM[id], url }); });
   }
-  const root = document.documentElement;
   function paint(id) {
     const s = map[id], st = root.style;
     Object.keys(vars(list[1])).concat('--sk-pyp').forEach(k => st.removeProperty(k));
@@ -375,5 +391,5 @@
   if (window.AtlasArt && AtlasArt.add) AtlasArt.skins = 1, AtlasArt.add(list.filter(s => !s.def).map(s => ({ id: s.id, kind: 'skin', rar: s.rar, thumb: thumb(s.id), name: Object.fromEntries(L.map(l => [l, tx(N[s.id] || [s.id], l)])) })));
   const GIFT = ['s38', 's28'];   // the present when skins came out (UR 銀河鉄道 · SSR 雪原)
   if (!document.body) addEventListener('DOMContentLoaded', () => { const id = root.dataset.skin; fxId = ''; if (id) effects(id); });
-  window.AtlasSkins = { list, byId: id => map[id], url, thumb, apply, owned, DEV_ALL, RAR, GIFT, name: (s, lang) => s.def ? tx(T.def, lang) : tx(N[s.id] || [s.id], lang), t: (k, lang) => tx(T[k], lang) };
+  window.AtlasSkins = { fxGate, list, byId: id => map[id], url, thumb, apply, owned, DEV_ALL, RAR, GIFT, name: (s, lang) => s.def ? tx(T.def, lang) : tx(N[s.id] || [s.id], lang), t: (k, lang) => tx(T[k], lang) };
 })();

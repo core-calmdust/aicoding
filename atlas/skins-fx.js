@@ -448,7 +448,7 @@
 .a-beamL{transform-origin:0 50%;margin-top:-60px;background:linear-gradient(90deg,rgba(255,240,190,.75),rgba(255,240,190,.15) 60%,transparent);clip-path:polygon(0 46%,100% 0,100% 100%,0 54%);-webkit-mask:linear-gradient(90deg,#000 40%,transparent);mask:linear-gradient(90deg,#000 40%,transparent);animation:aBeamL 12s ease-in-out infinite}
 @keyframes aBeamL{0%{transform:scaleX(.15) rotate(-2deg);opacity:.2}25%{transform:scaleX(1) rotate(2deg);opacity:1}50%{transform:scaleX(.15) rotate(6deg);opacity:.2}75%{transform:scaleX(.6) rotate(-6deg);opacity:.6}100%{transform:scaleX(.15) rotate(-2deg);opacity:.2}}
 .a-wash{transform-origin:100% 100%;opacity:0;animation:aWash var(--d) ease-in-out var(--dl) infinite}@keyframes aWash{0%{opacity:0;transform:translate(160px,60px) scaleY(.6)}35%{opacity:1}55%{opacity:.9;transform:translate(0,0) scaleY(1)}100%{opacity:0;transform:translate(60px,30px) scaleY(.8)}}
-html:has(#bv.on,#hist.on,#ov.on) #skfx *,html.askin-still #skfx *{animation-play-state:paused!important}`;
+html.skfx-off #skfx *{animation-play-state:paused!important}`;   // (html.skfx-off: atlas/skins.js fxGate — hidden tab, window not in front, 3D view / Historia / sheet open, the full version's still scene)
   if (!document.getElementById('skfxcss')) { const s = document.createElement('style'); s.id = 'skfxcss'; s.textContent = CSS + CSS2; document.head.appendChild(s); }
 
   /* ---------------- the live aurora (s36): a canvas of rays (2026-11-20 ユーザー：全然リアルじゃない)
@@ -467,9 +467,10 @@ html:has(#bv.on,#hist.on,#ov.on) #skfx *,html.askin-still #skfx *{animation-play
     const TAU = Math.PI * 2, sn = Math.sin;
     function size() { const r = cv.getBoundingClientRect(); W = Math.max(40, Math.round(r.width / 4)); H = Math.max(40, Math.round(r.height / 4)); cv.width = W; cv.height = H; }
     function frame(now) {
+      raf = 0; if (!on || document.documentElement.classList.contains('skfx-off')) return;   // (paused: no frame asked for at all — 'skfx-gate' starts it again)
       raf = requestAnimationFrame(frame);
       if (now - last < 41) return; last = now;
-      if (document.hidden || !cv.getClientRects().length || document.documentElement.matches(':has(#bv.on,#hist.on,#ov.on),.askin-still')) return;   // (also: the full version showing the place's floor — #skfx hidden)
+      if (!cv.getClientRects().length) return;   // (the full version showing the place's floor — #skfx hidden)
       const t = now / 1000; ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter';
       const pulse = .85 + .15 * sn(t * .25) * sn(t * .09 + 1);
       BANDS.forEach((b, bi) => {
@@ -495,8 +496,9 @@ html:has(#bv.on,#hist.on,#ov.on) #skfx *,html.askin-still #skfx *{animation-play
       });
       ctx.globalAlpha = 1;
     }
-    size(); const ro = new ResizeObserver(size); ro.observe(cv); raf = requestAnimationFrame(frame);
-    return () => { on = false; cancelAnimationFrame(raf); ro.disconnect(); };
+    const wake = () => { if (on && !raf) raf = requestAnimationFrame(frame); };
+    size(); const ro = new ResizeObserver(size); ro.observe(cv); addEventListener('skfx-gate', wake); wake();
+    return () => { on = false; cancelAnimationFrame(raf); raf = 0; removeEventListener('skfx-gate', wake); ro.disconnect(); };
   }
 
   /* ---------------- mount / place ---------------- */
@@ -587,9 +589,9 @@ html:has(#bv.on,#hist.on,#ov.on) #skfx *,html.askin-still #skfx *{animation-play
     });
     // pause everything (CSS and these) while the 3D view, Historia or a sheet covers the page, or the tab is hidden
     // (.askin-still: the full version's game pages keep the scene still unless 背景アニメーション is on; place background: hidden)
-    const pz = () => { const off = document.hidden || document.documentElement.matches(':has(#bv.on,#hist.on,#ov.on),.askin-still,.atlas-skin:not(.askin-bg)'); anims.forEach(a => off ? a.pause() : a.play()); };
-    const iv = setInterval(pz, 700); document.addEventListener('visibilitychange', pz);
-    cur.stopP = () => { clearInterval(iv); document.removeEventListener('visibilitychange', pz); anims.forEach(a => a.cancel()); };
+    const pz = () => { const off = window.AtlasSkins && AtlasSkins.fxGate ? AtlasSkins.fxGate() : document.hidden; anims.forEach(a => { if (off) { if (a.playState === 'running') a.pause(); } else if (a.playState === 'paused') a.play(); }); };
+    pz(); addEventListener('skfx-gate', pz);   // (atlas/skins.js keeps html.skfx-off and tells when it changes)
+    cur.stopP = () => { removeEventListener('skfx-gate', pz); anims.forEach(a => a.cancel()); };
   }
   window.AtlasSkinFX = {
     has: id => !!S[id],
