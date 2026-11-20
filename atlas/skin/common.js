@@ -678,6 +678,11 @@ html.atlas-skin[data-skin].skdark body:not(#_):not(#_) #dock .dock-panel h4{colo
 html.atlas-skin[data-skin].skdark body:not(#_):not(#_) #dock .ol-list > div{color:#f4f6ff!important}
 html.atlas-skin[data-skin].skdark body:not(#_):not(#_) #dock .ol-list b{color:#fff!important}
 html.atlas-skin[data-skin].skdark body:not(#_):not(#_) #dock :is(.dk-join,.dk-watch){background:rgba(255,255,255,.1)!important}
+/* (2026-11-21) オンラインの「詳しく」のダイアログ（.ol-lux）もスキンの色に：クリームの箱・金の見出しをやめる */
+html.atlas-skin[data-skin] body:not(#_):not(#_) .modal :is(.ol-me,.ol-pane):not(#_){background:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9)!important;background-image:none!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;box-shadow:0 3px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .modal :is(.ol-ph,.ol-ph *,.ol-me b,.ol-r b){color:color-mix(in srgb,var(--sk-acc) 70%,#1c2033)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .modal :is(.ol-sub,.ol-tcl,.ol-me small,.ol-me .ol-r > small){color:color-mix(in srgb,var(--sk-acc) 55%,#4a4f66)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .modal :is(.ol-sub,.ol-tcl)::after{background:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
 html.atlas-skin[data-skin]{--sk-acc:var(--sk-navm)}html.atlas-skin[data-skin].skdark{--sk-acc:color-mix(in srgb,var(--sk-hdr) 55%,var(--sk-navm))}
 html.atlas-skin[data-skin] body:not(#_) #newOverlay > .modal.ngl:not(#_){--ngl-a:color-mix(in srgb,var(--sk-acc) 50%,#1c2033)!important;--ngl-hi:var(--sk-acc)!important}
 html.atlas-skin[data-skin] body:not(#_) #newOverlay > .modal.ngl:not(#_) :is(.level-name, #levelName, #levelName2):not(#_){color:color-mix(in srgb,var(--sk-acc) 55%,#1c2033)!important}
