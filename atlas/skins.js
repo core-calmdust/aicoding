@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   const BASE = (() => { try { return new URL('../images/atlas/skin/', document.currentScript.src).href; } catch (e) { return '../images/atlas/skin/'; } })();
-  const V = 9;   // bump when the images are re-rendered
+  const V = 10, FXV = 1;   // bump when the images are re-rendered
   const DEV_ALL = true;
   const RAR = ['N', 'R', 'SR', 'SSR', 'UR'];
   // id: [rarity, kind (tile px | 'c' = cover), page colour, header colour, selected-tab colour, dark]
@@ -24,10 +24,10 @@
     s22: [2, 1024, '#f3f8e8', '#f6f9ee', '#4f7a2e'], s23: [2, 1024, '#edd5ac', '#f7ead2', '#6b4524'], s24: [2, 1024, '#2f6c51', '#1f4a36', '#e9c46a', 1],
     s25: [3, 'c', '#e2f0f8', '#eef7fd', '#2c7fb8'], s26: [3, 'c', '#efc6b0', '#fbe6d6', '#a14d5e'], s27: [3, 'c', '#d8e8e9', '#eef7fb', '#1f7a96'],
     s28: [3, 'c', '#e4edf6', '#f2f6fb', '#4a6f96'], s29: [3, 'c', '#dbecdc', '#eef7f0', '#4b8a3e'], s30: [3, 'c', '#f6dbb8', '#fcefdf', '#a5622a'],
-    s31: [3, 'c', '#d0e1e2', '#edf4f6', '#3e6b6a'], s32: [3, 1024, '#f2f0ec', '#faf9f7', '#3a3a40'], s33: [3, 'c', '#222f55', '#1b2547', '#ffd56a', 1],
-    s34: [3, 1024, '#faf3e7', '#fcf3e6', '#c0613a'],
+    s31: [3, 'c', '#d0e1e2', '#edf4f6', '#3e6b6a'], s32: [2, 1024, '#f2f0ec', '#faf9f7', '#3a3a40'], s33: [3, 'c', '#222f55', '#1b2547', '#ffd56a', 1],
+    s34: [2, 1024, '#faf3e7', '#fcf3e6', '#c0613a'],
     s35: [4, 'c', '#d4cab0', '#efe5cc', '#6b4a22'], s36: [4, 'c', '#2d4969', '#14223b', '#6fe3bd', 1], s37: [4, 'c', '#1b2954', '#16224a', '#e6c77a', 1],
-    s38: [4, 1024, '#f3e9d5', '#faf4ea', '#a67c1f'], s39: [4, 1024, '#f3f1eb', '#faf9f5', '#a67c1f'], s40: [4, 'c', '#f1ebf2', '#faf6fa', '#7d5cc4'],
+    s38: [4, 'c', '#231c55', '#1a1640', '#e6dcff', 1], s39: [4, 'c', '#1e4878', '#183a64', '#a9e4ff', 1], s40: [4, 'c', '#f1ebf2', '#faf6fa', '#7d5cc4'],
     s41: [1, 1024, '#b6cae0', '#c5d5e6', '#395e88'],
     s42: [1, 1024, '#dbdbb1', '#e1e1bf', '#7a5a2e'],
     s43: [1, 1024, '#ede3d0', '#f2ecde', '#7a5a2e'],
@@ -78,11 +78,11 @@
     s88: [3, 'c', '#dce6e2', '#e9f4fa', '#487965'],
     s89: [4, 'c', '#f2ecf0', '#f8f6f8', '#794867'],
     s90: [4, 'c', '#f2e7e8', '#faf4f4', '#7d4348'],
-    s91: [4, 1024, '#e4c8a9', '#e9d2b9', '#896338'],
-    s92: [4, 1024, '#ebebe1', '#f3f3ed', '#7a5a2e'],
+    s91: [2, 1024, '#e4c8a9', '#e9d2b9', '#896338'],
+    s92: [2, 1024, '#ebebe1', '#f3f3ed', '#7a5a2e'],
     s93: [4, 'c', '#2b2f59', '#202343', '#ffe9a6', 1],
     s94: [4, 'c', '#2c2527', '#211c1d', '#e8c46a', 1],
-    s95: [4, 1024, '#f1e6cb', '#f5eedb', '#7a5a2e'],
+    s95: [2, 1024, '#f1e6cb', '#f5eedb', '#7a5a2e'],
     s96: [3, 'c', '#f3dab6', '#fcebd8', '#7a5a2e'],
     s97: [3, 'c', '#d9e8f4', '#eef4fb', '#386589'],
     s98: [3, 'c', '#f3dacd', '#f8eaef', '#895438'],
@@ -92,9 +92,9 @@
   // one-picture skins on any window (2026-11-20 ユーザー：いろんなブラウザサイズに対応): the picture sits on the bottom edge
   // (only the sky is cut or grows); windows narrower than 6:5 use the portrait version <id>-p (1800 more units of sky,
   // atlas/tools/skins_tall.py); POS = the picture's horizontal focus (where its landmark is) when the sides are cut
-  const TALLS = new Set(['s25', 's26', 's27', 's28', 's29', 's30', 's31', 's33', 's35', 's36', 's37', 's79', 's80', 's81', 's82', 's83', 's84', 's85', 's86', 's87', 's88', 's89', 's93', 's94', 's96', 's97', 's98', 's99']);
+  const TALLS = new Set(['s25', 's26', 's27', 's28', 's29', 's30', 's31', 's33', 's35', 's36', 's37', 's38', 's39', 's79', 's80', 's81', 's82', 's83', 's84', 's85', 's86', 's87', 's88', 's89', 's93', 's94', 's96', 's97', 's98', 's99']);
   const POS = { s79: 74, s81: 28, s82: 30, s84: 62, s85: 72, s93: 76, s94: 30, s97: 35, s35: 70 }, MID = { s40: 1, s90: 1 };
-  const ANIM = { s40: 's40b', s89: 's89b', s93: 's93b', s94: 's94b' };
+  const ANIM = { s40: 's40b', s89: 's89b', s93: 's93b', s94: 's94b' };   // (a second picture cross-fading under the moving pieces)
   const L = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   // names, in the order of L
   const N = {
@@ -135,8 +135,8 @@
     s35: ['大航海の古地図', 'Voyager’s Map', '大航海古地图', '大航海古地圖', '대항해의 옛 지도', 'Mapa del navegante', 'Carte du navigateur', 'Mapa do navegador', 'Karte der Entdecker', 'Карта мореплавателя', 'Kâşifin Haritası', 'Peta Penjelajah', 'नाविक का नक़्शा', 'خريطة الرحّالة'],
     s36: ['オーロラ', 'Aurora', '极光', '極光', '오로라', 'Aurora', 'Aurore', 'Aurora', 'Polarlicht', 'Северное сияние', 'Kutup Işıkları', 'Aurora', 'ध्रुवीय ज्योति', 'الشفق القطبي'],
     s37: ['天球図', 'Celestial Chart', '天球图', '天球圖', '천구도', 'Carta celeste', 'Carte céleste', 'Carta celeste', 'Himmelskarte', 'Небесная карта', 'Gök Haritası', 'Peta Langit', 'खगोलीय मानचित्र', 'خريطة السماء'],
-    s38: ['金箔の和紙', 'Gold-Leaf Washi', '金箔和纸', '金箔和紙', '금박 화지', 'Washi con pan de oro', 'Washi à la feuille d’or', 'Washi com folha de ouro', 'Washi mit Blattgold', 'Васи с сусальным золотом', 'Altın Varaklı Washi', 'Washi Daun Emas', 'सोने के पत्र वाला वाशी', 'واشي بورق الذهب'],
-    s39: ['金と大理石', 'Gold & Marble', '金与大理石', '金與大理石', '금과 대리석', 'Oro y mármol', 'Or et marbre', 'Ouro e mármore', 'Gold und Marmor', 'Золото и мрамор', 'Altın ve Mermer', 'Emas & Marmer', 'सोना और संगमरमर', 'الذهب والرخام'],
+    s38: ['銀河鉄道', 'Galaxy Railway', '银河铁道', '銀河鐵道', '은하철도', 'Tren de la galaxia', 'Train de la galaxie', 'Trem da galáxia', 'Galaxie-Eisenbahn', 'Галактический поезд', 'Galaksi Treni', 'Kereta Galaksi', 'आकाशगंगा रेल', 'قطار المجرّة'],
+    s39: ['クラゲの海', 'Jellyfish Sea', '水母之海', '水母之海', '해파리 바다', 'Mar de medusas', 'Mer des méduses', 'Mar de águas-vivas', 'Quallenmeer', 'Море медуз', 'Denizanası Denizi', 'Laut Ubur-ubur', 'जेलीफ़िश सागर', 'بحر قناديل البحر'],
     s40: ['オパール', 'Opal', '欧泊', '蛋白石', '오팔', 'Ópalo', 'Opale', 'Opala', 'Opal', 'Опал', 'Opal', 'Opal', 'ओपल', 'الأوبال'],
     s41: ["デニム", "Denim", "牛仔布", "丹寧布", "데님", "Mezclilla", "Denim", "Jeans", "Denim", "Деним", "Kot", "Denim", "डेनिम", "الدنيم"],
     s42: ["たたみ", "Tatami", "榻榻米", "榻榻米", "다다미", "Tatami", "Tatami", "Tatame", "Tatami", "Татами", "Tatami", "Tatami", "तातामी", "التاتامي"],
@@ -235,84 +235,19 @@
     };
   }
 
-  /* ---------- UR effects (2026-11-20 ユーザー：URは実際に動く感じに) ----------
-     A fixed layer behind the page (#skfx) with light CSS-animated pieces: only transform / opacity are animated (the
-     compositor draws them; no script runs per frame). Pieces tied to a spot of a one-picture skin (the Ferris wheel, the
-     compass rose) are placed in the picture's 1920×1200 grid and re-placed on resize (background-size: cover maths).
-     Paused while the 3D view, Historia or a sheet covers the page (index.html). Runs whatever the OS motion setting, as
-     the other reward effects do. */
-  const rnd = seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const TW = c => `<svg viewBox="-10 -10 20 20"><path d="M0 -10 C1 -2 2 -1 10 0 C2 1 1 2 0 10 C-1 2 -2 1 -10 0 C-2 -1 -1 -2 0 -10 Z" fill="${c}"/></svg>`;
-  const PETAL = c => `<svg viewBox="-12 -16 24 32"><path d="M0 14 C-12 4 -11 -10 -4 -15 C-2 -12 2 -12 4 -15 C11 -10 12 4 0 14 Z" fill="${c}"/></svg>`;
-  const FLAKE = c => `<svg viewBox="-10 -10 20 20"><path d="M-6 -8 L5 -9 L9 2 L1 9 L-8 4 Z" fill="${c}"/></svg>`;
-  function glints(n, cols, seed, y0 = 0, y1 = 100, size = [10, 22]) {
-    const r = rnd(seed); let h = '';
-    for (let i = 0; i < n; i++) { const s = size[0] + r() * (size[1] - size[0]);
-      h += `<i class="fx-tw" style="left:${(r() * 100).toFixed(2)}%;top:${(y0 + r() * (y1 - y0)).toFixed(2)}%;width:${s.toFixed(0)}px;height:${s.toFixed(0)}px;animation-duration:${(2.6 + r() * 3).toFixed(2)}s;animation-delay:${(-r() * 6).toFixed(2)}s">${TW(cols[i % cols.length])}</i>`; }
-    return h;
-  }
-  function fall(n, shape, cols, seed, size = [14, 26], dur = [16, 30]) {
-    const r = rnd(seed); let h = '';
-    for (let i = 0; i < n; i++) { const s = size[0] + r() * (size[1] - size[0]), d = dur[0] + r() * (dur[1] - dur[0]);
-      h += `<i class="fx-fall" style="left:${(r() * 100).toFixed(2)}%;--sw:${(30 + r() * 60).toFixed(0)}px;--rt:${(r() < .5 ? -1 : 1) * (240 + r() * 300) | 0}deg;animation-duration:${d.toFixed(1)}s;animation-delay:${(-r() * d).toFixed(1)}s"><b style="width:${s.toFixed(0)}px;height:${(s * 1.3).toFixed(0)}px;animation-duration:${(3 + r() * 3).toFixed(1)}s">${shape(cols[i % cols.length])}</b></i>`; }
-    return h;
-  }
-  const sheen = (c, dur = 9, ang = -20) => `<i class="fx-sheen" style="--c:${c};--a:${ang}deg;animation-duration:${dur}s"></i>`;
-  const shoot = (n, seed) => { const r = rnd(seed); let h = ''; for (let i = 0; i < n; i++) h += `<i class="fx-shoot" style="left:${(20 + r() * 70).toFixed(1)}%;top:${(r() * 35).toFixed(1)}%;animation-delay:${(i * 4.3 + r() * 2).toFixed(1)}s;animation-duration:${(9 + r() * 5).toFixed(1)}s"></i>`; return h; };
-  const motes = (n, c, seed) => { const r = rnd(seed); let h = ''; for (let i = 0; i < n; i++) h += `<i class="fx-mote" style="left:${(r() * 100).toFixed(1)}%;top:${(r() * 100).toFixed(1)}%;--c:${c};animation-duration:${(10 + r() * 12).toFixed(1)}s;animation-delay:${(-r() * 20).toFixed(1)}s"></i>`; return h; };
-  // pieces tied to the picture: [x, y, size] in the 1920×1200 grid → placed by place()
-  const at = (x, y, w, cls, inner) => `<i class="fx-at ${cls}" data-x="${x}" data-y="${y}" data-w="${w}">${inner}</i>`;
-  const ROSE = (() => { let p = ''; for (let j = 0; j < 8; j++) { const a = -Math.PI / 2 + j * Math.PI / 4, L = j % 2 ? 60 : 100;
-      for (const [h, c] of [[1, '#e2c08c'], [-1, '#a8794a']]) { const sx = 14 * Math.cos(a + h * .32), sy = 14 * Math.sin(a + h * .32);
-        p += `<path d="M${(L * Math.cos(a)).toFixed(1)} ${(L * Math.sin(a)).toFixed(1)} L${sx.toFixed(1)} ${sy.toFixed(1)} L0 0 Z" fill="${c}"/>`; } }
-    return `<svg viewBox="-110 -110 220 220">${p}<circle r="9" fill="#a8794a"/><circle r="4" fill="#efe0c0"/></svg>`; })();
-  const WHEEL = (() => { const R = 300; let g = `<circle r="${R}" fill="none" stroke="#5a5f92" stroke-width="8"/><circle r="${R - 46}" fill="none" stroke="#4d5288" stroke-width="3"/>`;
-    for (let k = 0; k < 16; k++) { const t = k * Math.PI / 8; g += `<line x1="0" y1="0" x2="${(R * Math.cos(t)).toFixed(0)}" y2="${(R * Math.sin(t)).toFixed(0)}" stroke="#5a5f92" stroke-width="4"/>`; }
-    let b = ''; const cols = ['#ffe9a6', '#ffc6d4', '#c9e6ff'];
-    for (let k = 0; k < 48; k++) { const t = k * Math.PI / 24, x = (R * Math.cos(t)).toFixed(0), y = (R * Math.sin(t)).toFixed(0);
-      b += `<g class="fx-bulb" style="animation-delay:${(-(k % 6) * .25).toFixed(2)}s"><circle cx="${x}" cy="${y}" r="20" fill="${cols[k % 3]}" opacity=".22"/><circle cx="${x}" cy="${y}" r="7" fill="${cols[k % 3]}"/></g>`; }
-    let c = ''; for (let k = 0; k < 8; k++) { const t = k * Math.PI / 4 + .2, x = (R * Math.cos(t)).toFixed(0), y = (R * Math.sin(t)).toFixed(0);
-      c += `<g transform="translate(${x} ${y})"><g class="fx-cab"><path d="M-24 6 L24 6 L20 42 L-20 42 Z" fill="#6a6fa6"/><path d="M-28 8 C-28 -12 28 -12 28 8 Z" fill="#7a5f9a"/><rect x="-13" y="14" width="26" height="14" rx="3" fill="#ffe9a6"/></g></g>`; }
-    return `<svg viewBox="-340 -340 680 680"><g class="fx-turn">${g}${b}${c}<circle r="26" fill="#6a6fa6"/></g></svg>`; })();
-  const FW = c => { let p = ''; for (let k = 0; k < 16; k++) { const t = k * Math.PI / 8; p += `<line x1="${(18 * Math.cos(t)).toFixed(1)}" y1="${(18 * Math.sin(t)).toFixed(1)}" x2="${(46 * Math.cos(t)).toFixed(1)}" y2="${(46 * Math.sin(t)).toFixed(1)}" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/><circle cx="${(52 * Math.cos(t)).toFixed(1)}" cy="${(52 * Math.sin(t)).toFixed(1)}" r="3" fill="${c}"/>`; }
-    return `<svg viewBox="-60 -60 120 120">${p}</svg>`; };
-  const fireworks = seed => { const r = rnd(seed), cols = ['#ffc6d4', '#ffe9a6', '#c9e6ff', '#d9c8ff']; let h = '';
-    for (let i = 0; i < 5; i++) h += `<i class="fx-boom" style="left:${(18 + r() * 50).toFixed(1)}%;top:${(6 + r() * 26).toFixed(1)}%;width:${(110 + r() * 90) | 0}px;height:${(110 + r() * 90) | 0}px;animation-delay:${(i * 1.9).toFixed(1)}s">${FW(cols[i % 4])}</i>`; return h; };
-  const aurora = () => [['#5fe0b6', 30, 0], ['#7fb8ff', 22, -6], ['#c79bff', 16, -12]].map(([c, t, d]) => `<i class="fx-aur" style="--c:${c};top:${t}%;animation-delay:${d}s"></i>`).join('');
-  const rays = c => [8, 30, 56, 78].map((x, i) => `<i class="fx-ray" style="left:${x}%;--c:${c};animation-delay:${-i * 3.1}s"></i>`).join('');
-  const FX = {
-    s35: () => at(1517, 912, 230, 'fx-rose', ROSE) + motes(14, '#fff6dc', 35) + sheen('rgba(255,236,190,.35)', 12),
-    s36: () => aurora() + glints(26, ['#fff6dc', '#dff4ff'], 36, 0, 70, [6, 14]) + shoot(3, 36),
-    s37: () => glints(30, ['#fff3cf', '#ffe7a8'], 37, 0, 100, [8, 18]) + shoot(3, 37) + at(960, 1500, 3000, 'fx-orbit', '<svg viewBox="-1500 -1500 3000 3000">' + [380, 720, 1060, 1400].map((r, i) => `<circle r="${r}" fill="none" stroke="#e6c77a" stroke-width="3" stroke-dasharray="${4 + i * 4} ${18 + i * 10}" opacity=".45"/>`).join('') + '</svg>'),
-    s38: () => fall(18, FLAKE, ['#e2bd6a', '#f3d993', '#c99a45'], 38, [10, 20], [20, 34]) + glints(16, ['#f3d993'], 38) + sheen('rgba(255,236,170,.45)', 10),
-    s39: () => sheen('rgba(255,232,170,.55)', 8) + glints(18, ['#f3d993', '#fff6dc'], 39),
-    s40: () => sheen('rgba(255,255,255,.55)', 7, -30) + glints(22, ['#ffffff', '#ffe1f0', '#dff4ff'], 40, 0, 100, [8, 16]),
-    s89: () => rays('rgba(255,250,235,.6)') + motes(24, '#fffaf0', 89),
-    s90: () => '<i class="fx-kal"></i>',
-    s91: () => sheen('rgba(255,240,205,.5)', 10) + glints(10, ['#fff6dc'], 91, 0, 100, [8, 14]),
-    s92: () => sheen('rgba(255,255,255,.55)', 9) + glints(22, ['#f3d993', '#ffffff'], 92, 0, 100, [8, 16]),
-    s93: () => at(1540, 600, 680, 'fx-wheel', WHEEL) + fireworks(93) + glints(20, ['#fff6dc'], 93, 0, 50, [5, 10]),
-    s94: () => fall(16, PETAL, ['#f6dff2', '#dff1ff', '#e2fff4', '#fff4d6'], 94, [14, 24], [18, 32]) + glints(18, ['#e2bd6a', '#f3d993'], 94, 0, 100, [8, 16]),
-    s95: () => sheen('rgba(255,236,180,.5)', 8) + glints(16, ['#f3d993', '#fffaf0'], 95),
-  };
   let fxEl = null, fxId = '';
-  function place() {
-    if (!fxEl) return;
-    // the same maths as background-size: cover with the skin's position (bottom edge, its focus across)
-    const w = innerWidth, h = fxEl.getBoundingClientRect().height || innerHeight, tall = TALLS.has(fxId) && matchMedia('(max-aspect-ratio: 6/5)').matches, ih = tall ? 3000 : 1200, y0 = tall ? 1800 : 0;
-    const k = Math.max(w / 1920, h / ih), ox = (w - 1920 * k) * (POS[fxId] ?? 50) / 100, oy = (h - ih * k) * (MID[fxId] ? .5 : tall ? 1 : .82);
-    fxEl.querySelectorAll('.fx-at').forEach(e => { const W = +e.dataset.w * k; e.style.cssText = `width:${W}px;height:${W}px;left:${ox + +e.dataset.x * k - W / 2}px;top:${oy + (+e.dataset.y + y0) * k - W / 2}px`; });
-    const kal = fxEl.querySelector('.fx-kal'); if (kal) { const d = Math.hypot(w, h) * 1.05; kal.style.cssText = `width:${d}px;height:${d}px;left:${(w - d) / 2}px;top:${(h - d) / 2}px;background-image:url("${url('s90')}")`; }
-  }
+  // SSR / UR: their scene moves (atlas/skins-fx.js, loaded only while one is worn)
+  let fxP = null;
+  const fxLoad = () => fxP || (fxP = new Promise(res => { if (window.AtlasSkinFX) return res(); const sc = document.createElement('script'); sc.src = BASE.replace(/images\/atlas\/skin\/$/, 'atlas/') + 'skins-fx.js?v=' + FXV; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); }));
   function effects(id) {
     if (id === fxId) return; fxId = id;
-    if (fxEl) { fxEl.remove(); fxEl = null; }
-    const f = FX[id]; if (!f || !document.body) return;
-    fxEl = document.createElement('div'); fxEl.id = 'skfx'; fxEl.setAttribute('aria-hidden', 'true'); fxEl.className = 'fx-' + id;
-    fxEl.innerHTML = (ANIM[id] ? '<i class="fx-x"></i>' : '') + f();
-    document.body.prepend(fxEl); place();
+    if (fxEl) { fxEl.remove(); fxEl = null; if (window.AtlasSkinFX) AtlasSkinFX.unmount(); }
+    const s = map[id]; if (!s || s.rar < 3 || !document.body) return;
+    fxEl = document.createElement('div'); fxEl.id = 'skfx'; fxEl.setAttribute('aria-hidden', 'true'); document.body.prepend(fxEl);
+    const host = fxEl;
+    fxLoad().then(() => { if (fxEl !== host || !window.AtlasSkinFX || !AtlasSkinFX.has(id)) { if (fxEl === host && ANIM[id]) host.innerHTML = '<i class="fx-x"></i>'; return; }
+      AtlasSkinFX.mount(host, { id, tall: TALLS.has(id), px: POS[id] ?? 50, mid: !!MID[id], x: !!ANIM[id], url }); });
   }
-  addEventListener('resize', () => { clearTimeout(place.t); place.t = setTimeout(place, 120); });
   const root = document.documentElement;
   function paint(id) {
     const s = map[id], st = root.style;

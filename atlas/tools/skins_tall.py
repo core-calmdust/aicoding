@@ -12,6 +12,7 @@ from PIL import Image, ImageDraw, ImageFilter
 import skins as S
 import skins_ssr2 as P
 import skins_ur2 as U
+import skins_ssr3 as Q
 
 D = os.path.join(os.path.dirname(__file__), '..', '..', 'images', 'atlas', 'skin')
 TW, TH, EXT = 1920, 3000, 1800   # px (1 px = 1 grid unit)
@@ -25,6 +26,7 @@ def stars_svg(n, seed, col='#fff6dc', y0=-1800, y1=0):
     return ''.join(f'<circle cx="{r.random() * 1920:.0f}" cy="{y0 + r.random() * (y1 - y0):.0f}" r="{.8 + r.random() ** 3 * 2.4:.1f}" fill="{col}" opacity="{.35 + r.random() * .6:.2f}"/>' for _ in range(n))
 
 def clouds_svg(seed, shade='#e3edf6', n=3):
+    return ''   # (2026-11-20: the clouds drift — atlas/skins-fx.js)
     r = S.RNG(seed); out = ''
     for i in range(n):
         out += P.cloud(200 + (i * 620 + r.random() * 300) % 1600, -1550 + i * 480 + r.random() * 160, 80 + r.random() * 50, shade=shade)
@@ -38,7 +40,9 @@ SVG = {   # id: (builder, extra pieces in the extension)
     's96': (P.savanna, lambda: ''), 's97': (P.antarctic, lambda: clouds_svg(8, '#dde8f3')), 's98': (P.cappadocia, lambda: ''.join(
         f'<g transform="translate({x} {y}) scale({s})"><path d="M-90 0 C-90 -70 90 -70 90 0 C90 50 40 80 26 110 L-26 110 C-40 80 -90 50 -90 0 Z" fill="{c}"/><path d="M-24 110 L-20 140 M24 110 L20 140" stroke="#b08a6a" stroke-width="3"/><rect x="-24" y="138" width="48" height="30" rx="5" fill="#c9a07a"/></g>'
         for x, y, s, c in ((380, -900, .5, '#f6d79a'), (1500, -1300, .6, '#a9c8e6'), (900, -500, .35, '#f6b8c2'), (1700, -400, .4, '#d9c8ef')))),
-    's99': (P.mexico, lambda: clouds_svg(9)),
+    's99': (P.mexico, lambda: ''),
+    's25': (Q.blue_sky, lambda: ''), 's26': (Q.sunset_hills, lambda: ''), 's27': (Q.seaside, lambda: ''), 's28': (Q.snowfield, lambda: ''), 's29': (Q.flower_meadow, lambda: ''),
+    's30': (Q.dunes, lambda: ''), 's31': (Q.lake, lambda: ''), 's33': (Q.night_sky, lambda: stars_svg(300, 33)), 's38': (Q.galaxy_rail, lambda: stars_svg(500, 38, '#fff6e6')), 's39': (Q.jelly_sea, lambda: ''),
     's89': (lambda: U.stained(0), lambda: ''), 's89b': (lambda: U.stained(1), lambda: ''),
     's93': (lambda: U.night_fair(0), lambda: stars_svg(260, 93)), 's93b': (lambda: U.night_fair(1), lambda: stars_svg(260, 93)),
     's94': (lambda: U.makie(0), lambda: stars_svg(500, 94, '#e2bd6a', -1800, 0)), 's94b': (lambda: U.makie(1), lambda: stars_svg(500, 94, '#e2bd6a', -1800, 0)),
@@ -84,7 +88,7 @@ def extend(id_):
     o = np.asarray(pim, np.float32) / 255
     return S.grain(o, .004, int(id_[1:]))
 
-NUMPY = ['s25', 's26', 's27', 's28', 's29', 's30', 's31', 's33', 's35', 's36', 's37']
+NUMPY = ['s35', 's36', 's37']
 
 def save_p(id_, img):
     im = img if isinstance(img, Image.Image) else S.to_img(img)
