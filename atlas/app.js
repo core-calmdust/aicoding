@@ -2931,7 +2931,7 @@
     $('dsort').parentNode.style.display = dKind === 'table' ? 'none' : '';
     $('dItems').classList.toggle('skins', dKind === 'skin');
     const slot = dKind;
-    // 'own': only the owned items (by rarity) · 'rarD' / 'rarA': every item in sections by rarity (owned first in each section)
+    // 'own': only the owned items, the rarest first (2026-11-20) · 'rarD' / 'rarA': every item in sections by rarity (owned first in each section)
     $('dsort').innerHTML = ['own', 'rarD', 'rarA'].map(k => `<button type="button" aria-pressed="${dSort === k}" data-s="${k}">${t('dress.sort.' + k)}</button>`).join('');
     $('dsort').querySelectorAll('button').forEach(b => b.onclick = () => { dSort = b.dataset.s; try { localStorage.setItem('atlas-dsort', dSort); } catch (e) {} renderDress(); });
     const SKS = dKind === 'skin', ownd = it => (SKS ? SK.owned(it.id, W) : W.owned.includes(it.id)) ? 1 : 0, idx = new Map((SKS ? SK.list : ART.items).map((it, i) => [it.id, i]));
@@ -2949,7 +2949,7 @@
       document.addEventListener('click', e => { const p = $('drarPop'); if (p && !p.hidden && !p.contains(e.target)) { p.hidden = true; $('drar').setAttribute('aria-expanded', false); } });
       document.addEventListener('keydown', e => { const p = $('drarPop'); if (e.key === 'Escape' && p && !p.hidden) { p.hidden = true; $('drar').setAttribute('aria-expanded', false); } }); }
     openRar(false);
-    const list = (dSort === 'own' ? all.filter(ownd) : all).filter(it => dRar < 0 || it.rar === dRar).sort((a, b) => (dSort === 'rarD' ? b.rar - a.rar : a.rar - b.rar) || (ownd(b) - ownd(a)) || idx.get(a.id) - idx.get(b.id));
+    const list = (dSort === 'own' ? all.filter(ownd) : all).filter(it => dRar < 0 || it.rar === dRar).sort((a, b) => (dSort === 'rarA' ? a.rar - b.rar : b.rar - a.rar) || (ownd(b) - ownd(a)) || idx.get(a.id) - idx.get(b.id));
     const sec = r => { const of = all.filter(it => it.rar === r); return `<div class="dsec r${r}"><span class="rar r${r}">${ART.RAR[r]}</span><span class="dsn">${of.filter(ownd).length} / ${of.length}</span></div>`; };
     // a skin: a little picture of the page in that skin (its background, the header in its colour, a few white cards)
     const skCell = it => { const own = !!ownd(it), on = (W.av.skin || 'base') === it.id, nm = SK.name(it, lang);
