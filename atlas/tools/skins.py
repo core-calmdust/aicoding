@@ -920,6 +920,561 @@ SKINS = {
     's40': (opal_cover, 'cover'), 's40b': (lambda: opal_cover(shift=.33), 'cover'),
 }
 
+# ================================================================ s41 … s99 (2026-11-20：計100種に)
+# R = materials / plain patterns · SR = flat pale motifs · SSR = flat one-picture landscapes · UR = special
+# ---------------------------------------------------------------- R
+def stripes(n=1024, base='#f4f9fd', c='#dcebf7', w=32, seed=301):
+    idx = np.arange(n)
+    band = blurw(np.tile((((idx // w) % 2) == 0).astype(np.float32), (n, 1)), 1.2)[0]
+    img = lerp(hexc(base), hexc(c), np.repeat(band[None, :], n, 0))
+    img = img * (0.99 + 0.02 * blurw(streaks(n, seed, 1), .8))[..., None]
+    return grain(img, .004, seed)
+
+def dotgrid(n=1024, base='#fcfaf4', dot='#c9d6e6', seed=303):
+    m = lambda d, s: [d.ellipse([(x - 2.6) * s, (y - 2.6) * s, (x + 2.6) * s, (y + 2.6) * s], fill=255) for x in range(0, n + 1, 32) for y in range(0, n + 1, 32)]
+    return flat_tile(n, base, seed, [(m, dot, 1)], paper=.016)
+
+def ruled(n=1024, base='#fdfbf5', line='#bcd3ea', seed=305):
+    img = solid(n, base) * (0.99 + 0.016 * fnoise(n, 2.4, seed))[..., None]
+    idx = np.arange(n); m = ((idx % 48) == 0).astype(np.float32)
+    m = blurw(np.repeat(m[:, None], n, 1), .6) * 2.2
+    img = lerp(img, hexc(line), np.clip(m, 0, 1) * .8)
+    return grain(img, .004, seed)
+
+def hinoki(n=1024, seed=307):
+    y = np.arange(n)[:, None] / n
+    warp = blurw(fnoise(n, 2.4, seed), 4) * .03
+    g = np.clip(1 - np.abs(np.sin((y + warp) * 32 * math.pi)) / .12, 0, 1) * (.4 + .6 * fnoise(n, 1.6, seed + 5))
+    fib = blurw(streaks(n, seed + 2, 0) * .5 + streaks(n, seed + 7, 0) * .5, .8)
+    img = lerp(hexc('#fbf1dd'), hexc('#e8cfa2'), np.clip(g * .5 + (fib - .3) * .3, 0, 1))
+    return grain(img, .004, seed)
+
+# ---------------------------------------------------------------- SR: flat motifs
+def scatter_draw(n, count, seed, size, minsep, fn, var=.4, rot=.5):
+    """fn(d, X, Y, s, a, ss) draws one motif; returns a mask draw for flat_tile"""
+    r = RNG(seed + 11); P = scatter(n, count, seed, minsep)
+    S = [(p[0], p[1], size * (1 - var / 2 + r.random() * var), (r.random() - .5) * rot * 2) for p in P]
+    def draw(d, ss):
+        _SS[0] = ss
+        for x, y, s, a in S:
+            for X, Y in wrapped(n, x, y, s * 1.8): fn(d, X, Y, s, a, ss)
+    return draw
+
+_SS = [3]
+def P_(pts, X, Y, s, a, ss=None):
+    ss = ss or _SS[0]; return [(px * ss, py * ss) for px, py in poly_t(pts, X, Y, s, a)]
+def E_(d, x, y, r, ss, fill=255): d.ellipse([(x - r) * ss, (y - r) * ss, (x + r) * ss, (y + r) * ss], fill=fill)
+
+def tulip_head(d, X, Y, s, a, ss):
+    d.polygon(P_([(-.55, -.2), (-.35, -.75), (-.15, -.35), (0, -.85), (.15, -.35), (.35, -.75), (.55, -.2), (.45, .25), (0, .45), (-.45, .25)], X, Y, s, a), fill=255)
+def tulip_green(d, X, Y, s, a, ss):
+    d.polygon(P_([(-.06, .3), (.06, .3), (.06, 1.5), (-.06, 1.5)], X, Y, s, a), fill=255)
+    d.polygon(P_([(.04, 1.4), (.55, .75), (.5, 1.05), (.1, 1.5)], X, Y, s, a), fill=255)
+
+def paw(d, X, Y, s, a, ss):
+    d.ellipse([(X - s * .42) * ss, (Y - s * .05) * ss, (X + s * .42) * ss, (Y + s * .55) * ss], fill=255)
+    for tx, ty in ((-.48, -.3), (-.17, -.55), (.17, -.55), (.48, -.3)):
+        c, si = math.cos(a), math.sin(a); x, y = X + (tx * c - ty * si) * s, Y + (tx * si + ty * c) * s
+        E_(d, x, y, s * .17, ss)
+
+def fish(d, X, Y, s, a, ss):
+    d.ellipse([(X - s * .6) * ss, (Y - s * .32) * ss, (X + s * .4) * ss, (Y + s * .32) * ss], fill=255)
+    d.polygon(P_([(.3, 0), (.85, -.38), (.75, 0), (.85, .38)], X, Y, s, 0), fill=255)
+def fish_eye(d, X, Y, s, a, ss): E_(d, X - s * .32, Y - s * .06, s * .07, ss)
+
+def candy(d, X, Y, s, a, ss):
+    E_(d, X, Y, s * .42, ss)
+    d.polygon(P_([(.35, 0), (.85, -.35), (.85, .35)], X, Y, s, a), fill=255)
+    d.polygon(P_([(-.35, 0), (-.85, -.35), (-.85, .35)], X, Y, s, a), fill=255)
+def candy_swirl(d, X, Y, s, a, ss):
+    d.arc([(X - s * .26) * ss, (Y - s * .26) * ss, (X + s * .26) * ss, (Y + s * .26) * ss], 0, 270, fill=255, width=int(s * .1 * ss))
+
+def heart(d, X, Y, s, a, ss): d.polygon(P_(heart_pts(), X, Y, s, a), fill=255)
+
+def note(d, X, Y, s, a, ss):
+    d.ellipse([(X - s * .32) * ss, (Y + s * .25) * ss, (X + s * .18) * ss, (Y + s * .6) * ss], fill=255)
+    d.rectangle([(X + s * .1) * ss, (Y - s * .7) * ss, (X + s * .19) * ss, (Y + s * .45) * ss], fill=255)
+    d.polygon([((X + s * .1) * ss, (Y - s * .7) * ss), ((X + s * .55) * ss, (Y - s * .45) * ss), ((X + s * .55) * ss, (Y - s * .22) * ss), ((X + s * .19) * ss, (Y - s * .45) * ss)], fill=255)
+
+def rook(d, X, Y, s, a, ss):
+    d.rounded_rectangle([(X - s * .6) * ss, (Y + s * .55) * ss, (X + s * .6) * ss, (Y + s * .85) * ss], radius=s * .1 * ss, fill=255)
+    d.polygon([((X - s * .38) * ss, (Y - s * .4) * ss), ((X + s * .38) * ss, (Y - s * .4) * ss), ((X + s * .48) * ss, (Y + s * .6) * ss), ((X - s * .48) * ss, (Y + s * .6) * ss)], fill=255)
+    for i in range(3):
+        x0 = X - s * .5 + i * s * .38
+        d.rectangle([x0 * ss, (Y - s * .75) * ss, (x0 + s * .24) * ss, (Y - s * .38) * ss], fill=255)
+def king(d, X, Y, s, a, ss):
+    pawn_draw(d, X * ss, (Y + s * .1) * ss, s * ss)
+    d.rectangle([(X - s * .07) * ss, (Y - s * 1.2) * ss, (X + s * .07) * ss, (Y - s * .8) * ss], fill=255)
+    d.rectangle([(X - s * .2) * ss, (Y - s * 1.08) * ss, (X + s * .2) * ss, (Y - s * .95) * ss], fill=255)
+def pawn(d, X, Y, s, a, ss): pawn_draw(d, X * ss, Y * ss, s * ss)
+
+def die(d, X, Y, s, a, ss): d.polygon(P_([(-.7, -.7), (.7, -.7), (.7, .7), (-.7, .7)], X, Y, s, a), fill=255)
+def die_pips(d, X, Y, s, a, ss):
+    c, si = math.cos(a), math.sin(a)
+    for ox, oy in [(-1, -1), (1, -1), (0, 0), (-1, 1), (1, 1)]:
+        u, v = ox * .38, oy * .38; E_(d, X + (u * c - v * si) * s, Y + (u * si + v * c) * s, s * .11, ss)
+
+def stone(d, X, Y, s, a, ss): E_(d, X, Y, s * .8, ss)
+def drop(d, X, Y, s, a, ss):
+    pts = [(math.sin(t) * .5 * (1 - math.cos(t)) ** .9 * .95, -math.cos(t) * .8) for t in np.linspace(0, 2 * math.pi, 48)]
+    d.polygon(P_(pts, X, Y, s, a * .3), fill=255)
+
+def cloudlet(d, X, Y, s, a, ss):
+    for lx, ly, lr in ((-.45, .05, .32), (-.1, -.15, .42), (.32, -.05, .36), (.62, .1, .25)):
+        E_(d, X + lx * s, Y + ly * s, lr * s, ss)
+    d.rounded_rectangle([(X - .7 * s) * ss, (Y + .02 * s) * ss, (X + .82 * s) * ss, (Y + .34 * s) * ss], radius=.16 * s * ss, fill=255)
+
+def crescent(d, X, Y, s, a, ss):
+    E_(d, X, Y, s * .7, ss); E_(d, X + s * .32, Y - s * .18, s * .6, ss, fill=0)
+
+def cherry(d, X, Y, s, a, ss):
+    E_(d, X - s * .32, Y + s * .4, s * .3, ss); E_(d, X + s * .3, Y + s * .5, s * .3, ss)
+def cherry_stem(d, X, Y, s, a, ss):
+    w = max(2, int(s * .07 * ss))
+    d.line([((X - s * .3) * ss, (Y + s * .2) * ss), (X * ss, (Y - s * .6) * ss)], fill=255, width=w)
+    d.line([((X + s * .28) * ss, (Y + s * .3) * ss), (X * ss, (Y - s * .6) * ss)], fill=255, width=w)
+    d.ellipse([(X) * ss, (Y - s * .78) * ss, (X + s * .42) * ss, (Y - s * .55) * ss], fill=255)
+
+def ginkgo(d, X, Y, s, a, ss):
+    pts = [(0, .1)]
+    for t in np.linspace(-2.35, -.79, 30):
+        r = 1 - .12 * (abs(t + 1.57) < .08)
+        pts.append((math.cos(t) * r * .9, math.sin(t) * r * .9 + .1))
+    pts += [(.06, .1), (.04, .7), (-.04, .7), (-.06, .1)]
+    d.polygon(P_(pts, X, Y, s, a), fill=255)
+
+def apple(d, X, Y, s, a, ss):
+    E_(d, X - s * .22, Y + s * .1, s * .45, ss); E_(d, X + s * .22, Y + s * .1, s * .45, ss); E_(d, X, Y + s * .28, s * .4, ss)
+def apple_leaf(d, X, Y, s, a, ss):
+    d.ellipse([(X + s * .05) * ss, (Y - s * .6) * ss, (X + s * .5) * ss, (Y - s * .38) * ss], fill=255)
+    d.rectangle([(X - s * .04) * ss, (Y - s * .55) * ss, (X + s * .04) * ss, (Y - s * .25) * ss], fill=255)
+
+def motif(n, base, seed, specs):
+    """specs: [(count, size, minsep, [(fn, colour), …], var, rot, seed+)]: each group shares its points across its layers"""
+    layers = []
+    for cnt, size, sep, parts, var, rot, sd in specs:
+        for fn, col in parts:
+            layers.append((scatter_draw(n, cnt, seed + sd, size, sep, fn, var, rot), col, 1))
+    return flat_tile(n, base, seed, layers)
+
+def lattice_lines(n, seed, base, col, kind):
+    """geometric lattices drawn as lines (asanoha / shippo / honeycomb / uroko), seamless"""
+    ss = 3; m = Image.new('L', (n * ss, n * ss), 0); d = ImageDraw.Draw(m); w = int(2.2 * ss)
+    L = lambda pts: [d.line([((x + ox) * ss, (y + oy) * ss) for x, y in pts], fill=255, width=w) for ox in (-n, 0, n) for oy in (-n, 0, n)]
+    if kind == 'shippo':
+        st = n / 8; R = st / math.sqrt(2)
+        for i in range(-1, 10):
+            for j in range(-1, 10):
+                for cx, cy in ((i * st, j * st), (i * st + st / 2, j * st + st / 2)):
+                    d.ellipse([(cx - R) * ss, (cy - R) * ss, (cx + R) * ss, (cy + R) * ss], outline=255, width=w)
+    elif kind == 'honey':
+        R = n / 12; rows = 7; rh = n / rows; ys = rh / (math.sqrt(3) * R)
+        for c in range(9):
+            for rr in range(rows + 1):
+                cx = c * 1.5 * R; cy = rr * rh + (rh / 2 if c % 2 else 0)
+                pts = [(cx + R * .94 * math.cos(t), cy + R * .94 * math.sin(t) * ys) for t in np.linspace(0, 2 * math.pi, 7)]
+                L(pts)
+    elif kind == 'asanoha':
+        cols, rows = 7, 8; a = n / cols; h = n / rows
+        V = lambda i, j: (i * a + (a / 2 if j % 2 else 0), j * h)
+        for j in range(-1, rows + 1):
+            for i in range(-1, cols + 1):
+                p = V(i, j); q = V(i + 1, j)
+                r_ = V(i, j + 1) if j % 2 else V(i, j + 1)
+                # the two triangles of this cell
+                up = (p, q, V(i + (1 if j % 2 else 0), j + 1)); dn = (V(i + (1 if j % 2 else 0), j + 1), V(i + (0 if j % 2 else -1), j + 1), p)
+                for tri in (up, dn):
+                    cx = sum(t[0] for t in tri) / 3; cy = sum(t[1] for t in tri) / 3
+                    L([tri[0], tri[1], tri[2], tri[0]])
+                    for t in tri: L([(cx, cy), t])
+    elif kind == 'uroko':
+        b = n / 12; h = n / 14
+        for j in range(14):
+            for i in range(-1, 13):
+                x0 = i * b + (b / 2 if j % 2 else 0)
+                for ox in (-n, 0, n):
+                    d.polygon([((x0 + ox) * ss, (j * h + h) * ss), ((x0 + b + ox) * ss, (j * h + h) * ss), ((x0 + b / 2 + ox) * ss, j * h * ss)], fill=255)
+    mm = np.asarray(m.resize((n, n), Image.LANCZOS), np.float32) / 255
+    img = solid(n, base) * (0.99 + 0.02 * fnoise(n, 2.4, seed))[..., None]
+    return grain(flat(img, mm, col), .004, seed)
+
+def herringbone(n=1024, seed=331):
+    w = 32; yy, xx = np.mgrid[0:n, 0:n]
+    col = (xx // (2 * w)); off = np.abs((xx % (2 * w)) - w)
+    t = ((yy + off * (1 if True else 0)) // w + col) % 2
+    r = RNG(seed); tone = r.random((64, 64)).astype(np.float32)
+    blk = tone[(yy // w) % 64, col % 64]
+    img = lerp(hexc('#f2e2c4'), hexc('#e6cfa6'), (t * .6 + blk * .4))
+    edge = (((yy + off) % w) == 0) | ((xx % w) == 0)
+    img = lerp(img, img * .86, blurw(edge.astype(np.float32), .6) * 1.2)
+    fib = blurw(streaks(n, seed, 1), .7)
+    img = img * (0.98 + 0.04 * fib)[..., None]
+    return grain(img, .004, seed)
+
+def gems(n=1024, seed=341):
+    """UR: flat faceted gems (two tones each) scattered on ivory, with tiny gold sparks"""
+    cols = [('#f7c8d6', '#f2a9bf'), ('#c9e4f6', '#a9d2ef'), ('#d4f0dc', '#b4e3c3'), ('#e3d5f7', '#cdb9f1'), ('#fbe7b0', '#f5d27a')]
+    r = RNG(seed + 1); P = scatter(n, 22, seed, 170)
+    S = [(p[0], p[1], 34 + r.random() * 14, r.random() * .6 - .3, i % len(cols), i % 3) for i, p in enumerate(P)]
+    shapes = {0: [(-.7, -.25), (-.35, -.6), (.35, -.6), (.7, -.25), (0, .75)],   # brilliant (side view)
+              1: [(0, -.8), (.55, 0), (0, .8), (-.55, 0)],                       # diamond
+              2: [(-.6, -.4), (-.3, -.7), (.3, -.7), (.6, -.4), (.6, .4), (.3, .7), (-.3, .7), (-.6, .4)]}   # emerald cut
+    layers = []
+    for ci, (c1, c2) in enumerate(cols):
+        def body(d, ss, ci=ci):
+            for x, y, s, a, c, k_ in S:
+                if c != ci: continue
+                for X, Y in wrapped(n, x, y, s * 1.2): d.polygon(P_(shapes[k_], X, Y, s, a), fill=255)
+        def facet(d, ss, ci=ci):
+            for x, y, s, a, c, k_ in S:
+                if c != ci: continue
+                for X, Y in wrapped(n, x, y, s * 1.2):
+                    sh = shapes[k_]; half = [(0, 0)] + [p for p in sh if p[0] >= 0]
+                    d.polygon(P_(half, X, Y, s, a), fill=255)
+        layers += [(body, c1, 1), (facet, c2, 1)]
+    layers.append((scatter_shapes(n, star_pts, 30, seed + 9, 6, 70), '#e8c46a', 1))
+    return flat_tile(n, '#fbf8f0', seed, layers)
+
+def raden_cover(seed=351, shift=0):
+    """UR (dark): black lacquer with flat mother-of-pearl inlay (petals, leaves); two versions cross-fade so the shell shimmers"""
+    img = vgrad([(0, '#16141c'), (1, '#1d1a24')])
+    img = img * (0.96 + 0.06 * big_noise(seed, 3.0))[..., None]
+    r = RNG(seed); m = Image.new('L', (W, H), 0); d = ImageDraw.Draw(m)
+    for _ in range(20):
+        x, y = r.random() * W, r.random() * H; s = k(20 + r.random() * 26); a = r.random() * 6.3
+        for j in range(5):
+            t = a + j * 2 * math.pi / 5
+            d.polygon([(x + px * s, y + py * s) for px, py in poly_t(petal_pts(), math.cos(t) * .9, math.sin(t) * .9, 1, t + math.pi / 2)], fill=255)
+    for _ in range(26):
+        x, y = r.random() * W, r.random() * H; s = k(8 + r.random() * 12)
+        d.polygon([(x + px, y + py) for px, py in poly_t(petal_pts(), 0, 0, s, r.random() * 6.3)], fill=255)
+    mm = np.asarray(m.filter(ImageFilter.GaussianBlur(k(.7))), np.float32) / 255
+    w4, h4 = W // 8, H // 8
+    hue = np.asarray(Image.fromarray((fnoise(256, 3.4, seed + 3 + int(shift * 7), m=256) * 255).astype(np.uint8)).resize((W, H), Image.BICUBIC), np.float32) / 255
+    hue = (hue * 1.6 + shift) % 1
+    spec = np.stack([hexc(c) for c in ('#f6d6ef', '#cfe9ff', '#d6fff0', '#fff2c8', '#e2d4ff', '#f6d6ef')])
+    f = hue * (len(spec) - 1); i0 = np.floor(f).astype(int); t = (f - i0)[..., None]
+    shell = spec[i0] * (1 - t) + spec[np.minimum(i0 + 1, len(spec) - 1)] * t
+    img = lerp(img, shell * .92, mm)
+    return grain(img, .005, seed)
+
+# ---------------------------------------------------------------- SSR / UR covers (flat)
+def shapes_layer(img, draw, col, a=1.0, blur=.7):
+    m = Image.new('L', (W, H), 0); d = ImageDraw.Draw(m); draw(d)
+    return flat(img, np.asarray(m.filter(ImageFilter.GaussianBlur(k(blur))), np.float32) / 255, col, a)
+
+def flat_clouds(img, clouds, seed, col='#ffffff', under='#dcebf6'):
+    return soft_clouds(img, clouds, col, under, seed)
+
+def sakura_trees_cover(seed=401):
+    img = vgrad([(0, '#d7ecfa'), (.55, '#f3f8fb'), (1, '#fdf3f5')])
+    img = flat_clouds(img, [(330, 200, 100), (1560, 160, 120)], seed)
+    for i, (b, a, top, bot) in enumerate([(760, 50, '#d9ebc8', '#e2f0d3'), (880, 40, '#cbe4b6', '#d6eac4'), (1010, 30, '#bfdea8', '#cbe4b6')]):
+        img = paint_layer(img, ridge(seed + i, b, a, freq=.8 + i * .3), top, bot, soft=1.2)
+    r = RNG(seed + 3)
+    trees = sorted([(r.random() * 1920, 780 + r.random() * 360, 50 + r.random() * 60) for _ in range(14)], key=lambda t: t[1])
+    for x, y, s in trees:
+        sc = .55 + (y - 780) / 360 * .6; s *= sc
+        img = shapes_layer(img, lambda d: d.polygon([(k(x - s * .1), k(y)), (k(x + s * .1), k(y)), (k(x + s * .06), k(y - s * 1.1)), (k(x - s * .06), k(y - s * 1.1))], fill=255), '#a7826a')
+        def crown(d, c2=0):
+            for lx, ly, lr in ((0, -1.55, .6), (-.55, -1.25, .5), (.55, -1.25, .5), (-.3, -1.85, .45), (.35, -1.85, .45), (0, -1.15, .5)):
+                d.ellipse([k(x + (lx - lr) * s), k(y + (ly - lr + c2) * s), k(x + (lx + lr) * s), k(y + (ly + lr + c2) * s)], fill=255)
+        img = shapes_layer(img, crown, '#f6c7d4'); img = shapes_layer(img, lambda d: crown(d, -.08), '#fbdbe4')
+    pet = lambda d: [d.polygon([(k(x) + px * k(s), k(y) + py * k(s)) for px, py in poly_t(petal_pts(), 0, 0, 1, a_)], fill=255)
+                     for x, y, s, a_ in [(r.random() * 1920, r.random() * 1200, 6 + r.random() * 6, r.random() * 6.3) for _ in range(70)]]
+    img = shapes_layer(img, pet, '#f8cfdc')
+    return grain(img, .004, seed)
+
+def autumn_cover(seed=403):
+    img = vgrad([(0, '#fbe5cf'), (.55, '#fdf2e4'), (1, '#fbe8d0')])
+    for i, (b, a, top, bot) in enumerate([(640, 120, '#f2cfa6', '#f5d9b8'), (760, 90, '#efb98d', '#f3c8a2'), (880, 70, '#e8a27f', '#eeb593'), (1010, 50, '#f2c27a', '#f5cf92')]):
+        yl = ridge(seed + i, b, a, freq=.9 + i * .35, rough=.5)
+        img = paint_layer(img, yl, top, bot, soft=1.2)
+        if i in (1, 2):   # round flat trees standing on this hill's ridge
+            r = RNG(seed + 10 + i)
+            T = [(r.random() * W, k(46 if i == 1 else 66) * (.7 + r.random() * .6)) for _ in range(18)]
+            img = shapes_layer(img, lambda d: [d.rectangle([x - h * .05, yl[int(x)] - h * .45, x + h * .05, yl[int(x)] + k(10)], fill=255) for x, h in T], '#b98466')
+            img = shapes_layer(img, lambda d: [d.ellipse([x - h * .36, yl[int(x)] - h * 1.1, x + h * .36, yl[int(x)] - h * .3], fill=255) for x, h in T], '#e48f6e' if i == 1 else '#f0b257')
+    return grain(img, .004, seed)
+
+def sunflower_cover(seed=405):
+    img = vgrad([(0, '#cfe9fb'), (.55, '#eef7fc'), (1, '#f7f6e2')])
+    img = flat_clouds(img, [(300, 220, 110), (1600, 180, 130), (950, 330, 70)], seed)
+    img = paint_layer(img, ridge(seed, 820, 30, freq=.7), '#cfe5b4', '#d9ebc2', soft=1.2)
+    img = paint_layer(img, ridge(seed + 1, 930, 25, freq=1.0), '#bfdc9f', '#cbe3ae', soft=1.2)
+    r = RNG(seed + 2); pts = []
+    tries = 0
+    while len(pts) < 46 and tries < 30000:
+        tries += 1; y = 860 + r.random() ** .8 * 330; x = r.random() * 1920; sz = 10 + (y - 860) / 330 * 26
+        if all((x - q[0]) ** 2 + (y - q[1]) ** 2 > ((sz + q[2]) * 1.6) ** 2 for q in pts): pts.append((x, y, sz))
+    for x, y, sz in sorted(pts, key=lambda p: p[1]):
+        X, Y, S = k(x), k(y), k(sz)
+        img = shapes_layer(img, lambda d: (d.line([(X, Y), (X, Y + S * 2.6)], fill=255, width=max(2, int(S * .16))), d.ellipse([X + S * .1, Y + S * 1.2, X + S * .9, Y + S * 1.55], fill=255)), '#86bd6e')
+        def petals(d):
+            for j in range(12):
+                t = j * math.pi / 6
+                d.polygon([(X + px * S, Y + py * S) for px, py in poly_t(petal_pts(), math.cos(t) * .78, math.sin(t) * .78, .42, t + math.pi / 2)], fill=255)
+        img = shapes_layer(img, petals, '#ffd65c')
+        img = shapes_layer(img, lambda d: d.ellipse([X - S * .55, Y - S * .55, X + S * .55, Y + S * .55], fill=255), '#b8834f')
+        if sz > 16:
+            e = S * .07
+            img = shapes_layer(img, lambda d: ([d.ellipse([X + ex * S - e, Y - S * .12 - e * 1.2, X + ex * S + e, Y - S * .12 + e * 1.2], fill=255) for ex in (-.2, .2)],
+                                               d.arc([X - S * .14, Y - S * .1, X + S * .14, Y + S * .16], 20, 160, fill=255, width=max(2, int(S * .06)))), '#4a3020', blur=.4)
+            img = shapes_layer(img, lambda d: [d.ellipse([X + ex * S - S * .09, Y + S * .02 - S * .06, X + ex * S + S * .09, Y + S * .02 + S * .06], fill=255) for ex in (-.32, .32)], '#ff9f8a', .6)
+    return grain(img, .004, seed)
+
+def dawn_sea_cover(seed=407):
+    img = vgrad([(0, '#f9d3d6'), (.4, '#fde4d6'), (.52, '#fff2df'), (.53, '#cde4ef'), (.8, '#b9dbeb'), (1, '#d6ebf2')])
+    img = shapes_layer(img, lambda d: d.ellipse([k(1260 - 120), k(636 - 120), k(1260 + 120), k(636 + 120)], fill=255), '#ffe7b8')
+    img = paint_layer(img, np.full(W, k(636.0)), '#cde4ef', '#b9dbeb', soft=.6)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    rr = RNG(seed + 5)
+    def glints(d):
+        for j in range(16):
+            y = 660 + j * (24 + j * 2.2); w = (150 - j * 6) * (.5 + rr.random() * .6); x = 1260 + (rr.random() - .5) * (60 + j * 10)
+            d.rounded_rectangle([k(x - w / 2), k(y), k(x + w / 2), k(y + 5 + j * .3)], radius=k(3), fill=255)
+    img = shapes_layer(img, glints, '#fff3d6', .75)
+    img = soft_clouds(img, [(330, 230, 110), (760, 380, 70), (1650, 260, 120)], '#fff6f2', '#f7d2d6', seed)
+    return grain(img, .004, seed)
+
+def snowman_cover(seed=409):
+    img = vgrad([(0, '#d5e6f6'), (.6, '#eef4fa'), (1, '#fbfdff')])
+    for i, (b, a, top, bot) in enumerate([(700, 80, '#e6eef7', '#f1f6fb'), (840, 60, '#f1f5fa', '#fafcfe'), (990, 40, '#f8fafd', '#ffffff')]):
+        img = paint_layer(img, ridge(seed + i, b, a, freq=.8 + i * .3, rough=.5), top, bot, soft=1.2)
+    for x, y, s in ((380, 960, 80), (1500, 1000, 95), (980, 860, 55)):
+        X, Y, S = k(x), k(y), k(s)
+        img = shapes_layer(img, lambda d: (d.ellipse([X - S, Y - S * .2, X + S, Y + S * 1.6], fill=255), d.ellipse([X - S * .65, Y - S * 1.3, X + S * .65, Y], fill=255)), '#dfe8f2')
+        img = shapes_layer(img, lambda d: (d.ellipse([X - S * .96, Y - S * .25, X + S * .9, Y + S * 1.5], fill=255), d.ellipse([X - S * .62, Y - S * 1.33, X + S * .6, Y - S * .05], fill=255)), '#ffffff')
+        img = shapes_layer(img, lambda d: (d.rounded_rectangle([X - S * .68, Y - S * .2, X + S * .68, Y + S * .02], radius=S * .1, fill=255), d.rectangle([X + S * .2, Y - S * .1, X + S * .45, Y + S * .5], fill=255)), '#f08a8a')
+        img = shapes_layer(img, lambda d: [d.ellipse([X + ex * S - S * .06, Y - S * .8, X + ex * S + S * .06, Y - S * .66], fill=255) for ex in (-.22, .22)], '#4a4a55', blur=.4)
+        img = shapes_layer(img, lambda d: d.polygon([(X, Y - S * .62), (X + S * .4, Y - S * .52), (X, Y - S * .48)], fill=255), '#ffaf5c', blur=.4)
+    r = RNG(seed)
+    img = shapes_layer(img, lambda d: [d.ellipse([x - s, y - s, x + s, y + s], fill=255) for x, y, s in [(r.random() * W, r.random() * H, k(2 + r.random() ** 3 * 5)) for _ in range(220)]], '#ffffff', .9)
+    return grain(img, .004, seed)
+
+def balloon_cover(seed=411):
+    img = vgrad([(0, '#c9e6fb'), (.6, '#eaf5fd'), (1, '#fdf6ea')])
+    img = flat_clouds(img, [(200, 760, 160), (900, 1000, 220), (1650, 840, 180), (560, 300, 80), (1400, 420, 70)], seed)
+    for x, y, s, c1, c2 in ((360, 330, 90, '#f7b6c2', '#fde3e8'), (1180, 220, 120, '#ffd27a', '#fff0c4'), (1650, 520, 70, '#a9d6f2', '#e1f2fc'), (800, 620, 55, '#c7b6f2', '#ece5fd')):
+        X, Y, S = k(x), k(y), k(s)
+        body = lambda d: (d.ellipse([X - S, Y - S, X + S, Y + S * 1.05], fill=255), d.polygon([(X - S * .82, Y + S * .5), (X + S * .82, Y + S * .5), (X + S * .25, Y + S * 1.3), (X - S * .25, Y + S * 1.3)], fill=255))
+        img = shapes_layer(img, body, c1)
+        img = shapes_layer(img, lambda d: (d.ellipse([X - S * .38, Y - S, X + S * .38, Y + S * 1.05], fill=255), d.polygon([(X - S * .3, Y + S * .5), (X + S * .3, Y + S * .5), (X + S * .1, Y + S * 1.3), (X - S * .1, Y + S * 1.3)], fill=255)), c2)
+        img = shapes_layer(img, lambda d: (d.line([(X - S * .25, Y + S * 1.3), (X - S * .2, Y + S * 1.6)], fill=255, width=max(2, int(S * .04))), d.line([(X + S * .25, Y + S * 1.3), (X + S * .2, Y + S * 1.6)], fill=255, width=max(2, int(S * .04))),
+                                           d.rounded_rectangle([X - S * .26, Y + S * 1.58, X + S * .26, Y + S * 1.9], radius=S * .06, fill=255)), '#b88a64')
+    return grain(img, .004, seed)
+
+def rainbow_cover(seed=413):
+    img = vgrad([(0, '#cfe8fb'), (.6, '#eef7fd'), (1, '#fdf8ee')])
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    d = np.sqrt((xx - k(960)) ** 2 + (yy - k(1150)) ** 2) / K
+    for i, c in enumerate(('#f9c2c8', '#fcd9b4', '#fdeeb0', '#cdeec4', '#bfe1f6', '#d6cbf4')):
+        r0 = 820 - i * 46
+        band = np.clip((d - (r0 - 46)) * K / 1.5, 0, 1) * np.clip((r0 - d) * K / 1.5, 0, 1)
+        img = flat(img, band, c, .95)
+    img = flat_clouds(img, [(250, 1030, 200), (520, 1110, 160), (1680, 1030, 210), (1420, 1110, 150), (1000, 260, 80)], seed)
+    return grain(img, .004, seed)
+
+def lavender_cover(seed=415):
+    img = vgrad([(0, '#dfe7f7'), (.5, '#f4f2fa'), (1, '#f1ecf8')])
+    img = flat_clouds(img, [(420, 200, 100), (1500, 170, 120)], seed, under='#e3e1f2')
+    img = paint_layer(img, ridge(seed, 680, 45, freq=.8), '#d8e6c8', '#e0ecd2', soft=1.2)
+    yl = ridge(seed + 1, 760, 18, freq=.6)
+    img = paint_layer(img, yl, '#cdbfe9', '#d8cdef', soft=1.2)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    vy = k(700); u = (xx - W / 2) / np.maximum(yy - vy, 1) * k(260)
+    rows = (np.sin(u / k(16)) > .1) & (yy > yl[None, :] + k(10))
+    img = flat(img, np.asarray(Image.fromarray((rows * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(k(.8))), np.float32) / 255, '#b6a3e0', .85)
+    return grain(img, .004, seed)
+
+def bamboo_tile(n=1024, seed=417):
+    """SR-like but used as SSR in the list? → kept as a tile (bamboo grove), flat"""
+    r = RNG(seed); img = solid(n, '#eef6e6') * (0.99 + 0.02 * fnoise(n, 2.4, seed))[..., None]
+    for layer, (cnt, col, wmin) in enumerate([(9, '#d6eac4', 14), (7, '#bfdea6', 20)]):
+        m = Image.new('L', (n * 2, n * 2), 0); d = ImageDraw.Draw(m)
+        xs = sorted(r.random(cnt) * n)
+        for x in xs:
+            w = wmin + r.random() * 8; seg = 110 + r.random() * 60; off = r.random() * seg
+            for ox in (-n, 0, n):
+                X = x + ox
+                d.rectangle([(X - w / 2) * 2, 0, (X + w / 2) * 2, n * 2], fill=255)
+            for k_ in range(int(n / seg) + 2):
+                y = (off + k_ * seg) % n
+                for ox in (-n, 0, n):
+                    X = x + ox
+                    d.rectangle([(X - w / 2) * 2, (y - 2) * 2, (X + w / 2) * 2, (y + 2) * 2], fill=0)
+        mm = np.asarray(m.resize((n, n), Image.LANCZOS), np.float32) / 255
+        img = flat(img, mm, col)
+    leaves = scatter_shapes(n, lambda: [(-1, 0), (-.2, -.16), (1, 0), (-.2, .16)], 26, seed + 3, 30, 120)
+    img = flat(img, mask_draw(n, 3, leaves), '#a9d38e', .9)
+    return grain(img, .004, seed)
+
+def dusk_town_cover(seed=419):
+    img = vgrad([(0, '#c9c1ea'), (.45, '#f2c6d3'), (.7, '#fcdcc4'), (1, '#fde9d6')])
+    r = RNG(seed)
+    for layer, (base, col, hmin, hmax) in enumerate([(1020, '#e6d3e6', 70, 170), (1110, '#d9c3e1', 45, 120)]):
+        def town(d, base=base, hmin=hmin, hmax=hmax):
+            x = -20
+            while x < 1940:
+                w = 70 + r.random() * 90; h = hmin + r.random() * (hmax - hmin)
+                d.rectangle([k(x), k(base - h), k(x + w), H], fill=255)
+                if r.random() < .5: d.polygon([(k(x - 6), k(base - h)), (k(x + w / 2), k(base - h - w * .45)), (k(x + w + 6), k(base - h))], fill=255)
+                x += w + r.random() * 8
+        img = shapes_layer(img, town, col)
+        def windows(d, base=base, hmin=hmin):
+            for _ in range(60 if layer else 40):
+                x = r.random() * 1920; y = base - r.random() * hmin * .8
+                d.rounded_rectangle([k(x), k(y), k(x + 12), k(y + 16)], radius=k(2), fill=255)
+        img = shapes_layer(img, windows, '#ffe7a6', .9)
+    img = shapes_layer(img, lambda d: [d.polygon([(k(x) + px * k(4), k(y) + py * k(4)) for px, py in star_pts()], fill=255) for x, y in [(r.random() * 1920, r.random() * 300) for _ in range(14)]], '#fff4cf', .8)
+    return grain(img, .004, seed)
+
+def island_cover(seed=421):
+    img = vgrad([(0, '#c3e7f8'), (.5, '#e6f6fc'), (.56, '#9ed9e8'), (1, '#c8ecf0')])
+    img = paint_layer(img, np.full(W, k(672.0)), '#a5dceb', '#c6ebf2', soft=.6)
+    img = flat_clouds(img, [(300, 260, 110), (1580, 220, 130), (900, 420, 60)], seed)
+    X, Y = k(1240), k(720)
+    img = shapes_layer(img, lambda d: d.ellipse([X - k(330), Y - k(70), X + k(330), Y + k(60)], fill=255), '#f6e3b6')
+    img = shapes_layer(img, lambda d: d.ellipse([X - k(260), Y - k(60), X + k(160), Y + k(10)], fill=255), '#a8d68f')
+    img = shapes_layer(img, lambda d: d.polygon([(X + k(40), Y - k(40)), (X + k(62), Y - k(40)), (X + k(10), Y - k(280)), (X - k(8), Y - k(276))], fill=255), '#c49a6c')
+    def fronds(d):
+        cx, cy = X + k(2), Y - k(280)
+        for t in (-2.6, -2.0, -1.2, -.5, .1, .7):
+            pts = [(cx, cy), (cx + math.cos(t - .25) * k(80), cy + math.sin(t - .25) * k(80) + k(10)), (cx + math.cos(t) * k(150), cy + math.sin(t) * k(150) + k(40)), (cx + math.cos(t + .25) * k(80), cy + math.sin(t + .25) * k(80) + k(14))]
+            d.polygon(pts, fill=255)
+    img = shapes_layer(img, fronds, '#7fc283')
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    rr = RNG(seed + 7)
+    def waves(d):
+        for _ in range(40):
+            x = rr.random() * 1920; y = 700 + rr.random() ** .8 * 500; w = 30 + (y - 700) / 500 * 60
+            d.arc([k(x - w), k(y - w * .35), k(x), k(y + w * .35)], 200, 340, fill=255, width=max(2, int(k(3))))
+            d.arc([k(x), k(y - w * .35), k(x + w), k(y + w * .35)], 200, 340, fill=255, width=max(2, int(k(3))))
+    img = shapes_layer(img, waves, '#e8f8fb', .8)
+    return grain(img, .004, seed)
+
+def moon_night_cover(seed=423):
+    img = vgrad([(0, '#1a2347'), (.6, '#27355f'), (1, '#33467a')])
+    r = RNG(seed)
+    img = shapes_layer(img, lambda d: [d.ellipse([x - s, y - s, x + s, y + s], fill=255) for x, y, s in [(r.random() * W, r.random() * H * .8, k(.8 + r.random() ** 3 * 2.2)) for _ in range(500)]], '#fff6dc', .9, blur=.5)
+    img = shapes_layer(img, lambda d: [d.polygon([(k(x) + px * k(9), k(y) + py * k(9)) for px, py in star_pts()], fill=255) for x, y in [(r.random() * 1920, r.random() * 700) for _ in range(12)]], '#ffe9a6', .9)
+    img = shapes_layer(img, lambda d: d.ellipse([k(1420 - 130), k(300 - 130), k(1420 + 130), k(300 + 130)], fill=255), '#fff1c4')
+    img = shapes_layer(img, lambda d: (d.ellipse([k(1380), k(250), k(1420), k(290)], fill=255), d.ellipse([k(1450), k(330), k(1475), k(355)], fill=255)), '#f6e2a6')
+    img = soft_clouds(img, [(380, 460, 110), (1100, 560, 90), (1700, 650, 100)], '#56628f', '#47527d', seed)
+    img = paint_layer(img, ridge(seed + 1, 980, 60, freq=.8), '#1d2747', '#18203b', soft=1)
+    img = paint_layer(img, ridge(seed + 2, 1080, 40, freq=1.1), '#141b33', '#10172b', soft=1)
+    return grain(img, .006, seed)
+
+def fuji_cover(seed=425):
+    img = vgrad([(0, '#c9e3f7'), (.55, '#eaf4fb'), (1, '#f6f4ea')])
+    X = k(1100)
+    img = shapes_layer(img, lambda d: d.polygon([(X - k(620), k(900)), (X - k(110), k(360)), (X + k(110), k(360)), (X + k(620), k(900))], fill=255), '#8fb2d6')
+    def cap(d):
+        pts = [(X - k(110), k(360)), (X + k(110), k(360)), (X + k(230), k(480))]
+        for j in range(7): pts.append((X + k(230 - j * 460 / 6), k(480 + (25 if j % 2 else 0))))
+        pts.append((X - k(230), k(480))); d.polygon(pts, fill=255)
+    img = shapes_layer(img, cap, '#ffffff')
+    img = soft_clouds(img, [(500, 700, 140), (1500, 760, 160), (1100, 820, 120), (300, 240, 90), (1700, 220, 80)], '#ffffff', '#dde9f4', seed)
+    img = paint_layer(img, ridge(seed, 900, 20, freq=.6), '#cfe4c0', '#d9ebcb', soft=1.2)
+    img = paint_layer(img, ridge(seed + 1, 1000, 25, freq=1.0), '#bfdcaa', '#cbe3b8', soft=1.2)
+    return grain(img, .004, seed)
+
+def cloud_sea_cover(seed=427):
+    img = vgrad([(0, '#c7c9ef'), (.35, '#f3cbd8'), (.6, '#fde4c8'), (1, '#fff3e0')])
+    img = shapes_layer(img, lambda d: d.ellipse([k(960 - 150), k(640 - 150), k(960 + 150), k(640 + 150)], fill=255), '#ffe9b0')
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    img = lerp(img, hexc('#fff1c8'), np.exp(-((xx - k(960)) ** 2 + (yy - k(640)) ** 2) / (2 * k(420) ** 2)) * .45)
+    for i, (y0, c1, c2) in enumerate([(700, '#f8dcdf', '#f1c8d0'), (820, '#fbe8e6', '#f4d3d6'), (960, '#fff3f0', '#f9e0df')]):
+        r = RNG(seed + i)
+        cl = [(x, y0 + r.random() * 60, 120 + r.random() * 90) for x in np.arange(-100, 2100, 210 - i * 30)]
+        img = soft_clouds(img, cl, c1, c2, seed + i)
+        img = flat(img, np.clip((yy - k(y0 + 60)) / k(4), 0, 1), c1)
+    return grain(img, .004, seed)
+
+def galaxy_cover(seed=429):
+    img = vgrad([(0, '#120f2a'), (1, '#1b1840')])
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    X, Y = (xx - W / 2) / K, (yy - H / 2) / K
+    t = -.5; u = X * math.cos(t) - Y * math.sin(t); v = X * math.sin(t) + Y * math.cos(t)
+    band = np.exp(-(v / 230) ** 2) * (big_noise(seed, 2.4) * .7 + .3)
+    neb = big_noise(seed + 1, 3.0)
+    img = img + band[..., None] * lerp(hexc('#6b4fb8'), hexc('#d86fb0'), neb) * .55
+    img = img + (np.exp(-(v / 90) ** 2) * neb * .35)[..., None] * hexc('#ffe1f0')
+    r = RNG(seed)
+    for cnt, sz in ((1400, .8), (220, 1.6), (40, 2.8)):
+        img = shapes_layer(img, lambda d: [d.ellipse([x - s, y - s, x + s, y + s], fill=255) for x, y, s in [(r.random() * W, r.random() * H, k(sz * (.6 + r.random() * .8))) for _ in range(cnt)]], '#fff8ea', .95, blur=sz * .4)
+    return grain(img, .006, seed)
+
+def gold_seigaiha(n=1024, seed=431):
+    img = seigaiha(n, base='#fcf9f1', c1='#ecd9a8', c2='#f9f1df', seed=seed)
+    return img
+
+def rose_marble(n=1024, seed=433):
+    img = marble(n, base='#fbf2f2', vein='#e2b9be', gold=True, seed=seed)
+    return img
+
+def night_gold_washi(n=1024, seed=435):
+    return washi(n, base='#1e2648', fib='#2c3663', fib2='#26305a', seed=seed, gold=True)
+
+def shifting_sky(seed=437, dusk=False):
+    """UR (animated): the same flat clouds under a day sky and a dusk sky; the two cross-fade on the page"""
+    img = vgrad([(0, '#bfe3fb'), (.55, '#e3f3fd'), (1, '#fdf7ea')]) if not dusk else vgrad([(0, '#c8c0ec'), (.45, '#f6c9d6'), (.75, '#fde2c6'), (1, '#fff1df')])
+    cl = [(260, 260, 150), (1500, 190, 120), (1020, 420, 90), (1760, 560, 140), (180, 760, 170), (820, 900, 200), (1500, 980, 220), (520, 1120, 180)]
+    return grain(soft_clouds(img, cl, '#ffffff' if not dusk else '#fff2ef', '#dcebf6' if not dusk else '#f2c9d3', seed), .004, seed)
+
+SKINS.update({
+    # R (18)
+    's41': (lambda: washi(base='#fbeef0', fib='#fff8f9', fib2='#f3d9df', seed=501), 'tile'),
+    's42': (lambda: washi(base='#eef4e2', fib='#f9fcf3', fib2='#dce9c8', seed=503), 'tile'),
+    's43': (lambda: washi(base='#eaf2f9', fib='#f8fbfe', fib2='#d6e5f3', seed=505), 'tile'),
+    's44': (lambda: linen(base='#ece8f4', dark='#d3cbe4', seed=507), 'tile'),
+    's45': (lambda: linen(base='#e7ede2', dark='#cbd7c2', seed=509), 'tile'),
+    's46': (lambda: graph(base='#fdf8f8', line='#efc3cf', seed=511), 'tile'),
+    's47': (dotgrid, 'tile'),
+    's48': (ruled, 'tile'),
+    's49': (lambda: gingham(base='#f6fbf8', c='#bfe3d0', seed=513), 'tile'),
+    's50': (lambda: gingham(base='#fffdf2', c='#f7e3a0', seed=515), 'tile'),
+    's51': (lambda: felt(base='#e6def4', light='#f1ebfa', dark='#d4c8ec', seed=517), 'tile'),
+    's52': (lambda: felt(base='#f6dde3', light='#fbecef', dark='#ecc8d1', seed=519), 'tile'),
+    's53': (lambda: watercolor(inks=('#d3ecd0', '#e2f0c9'), seed=521), 'tile'),
+    's54': (stripes, 'tile'),
+    's55': (lambda: stripes(base='#fff7f8', c='#fadde3', w=24, seed=523), 'tile'),
+    's56': (lambda: polka(base='#f7efe7', dot='#e6d2c0', seed=525), 'tile'),
+    's57': (lambda: polka(base='#effaf5', dot='#cdebdc', seed=527), 'tile'),
+    's58': (hinoki, 'tile'),
+    # SR (20)
+    's59': (lambda: motif(1024, '#fdf8f2', 531, [(18, 34, 190, [(tulip_green, '#cfe6bf'), (tulip_head, '#f8d0d8')], .3, .2, 0), (12, 30, 180, [(tulip_green, '#cfe6bf'), (tulip_head, '#fde7b0')], .3, .2, 7)]), 'tile'),
+    's60': (lambda: motif(1024, '#fbf6ef', 533, [(26, 30, 150, [(paw, '#ead9c6')], .3, .6, 0)]), 'tile'),
+    's61': (lambda: motif(1024, '#eef7fb', 535, [(22, 40, 170, [(fish, '#cfe6f4'), (fish_eye, '#eef7fb')], .35, 0, 0), (12, 30, 150, [(fish, '#f6dccc'), (fish_eye, '#eef7fb')], .3, 0, 5)]), 'tile'),
+    's62': (lambda: motif(1024, '#fdf6fa', 537, [(14, 34, 170, [(candy, '#f7cfdf'), (candy_swirl, '#fbe7ef')], .3, .6, 0), (14, 34, 170, [(candy, '#cfe8f4'), (candy_swirl, '#e9f5fb')], .3, .6, 3), (10, 34, 170, [(candy, '#fbe7ad'), (candy_swirl, '#fdf4d6')], .3, .6, 6)]), 'tile'),
+    's63': (lambda: motif(1024, '#fff7f8', 539, [(28, 26, 130, [(heart, '#fbdce3')], .5, .5, 0), (14, 16, 110, [(heart, '#f9e8c8')], .3, .5, 4)]), 'tile'),
+    's64': (lambda: motif(1024, '#f6f5fc', 541, [(26, 34, 150, [(note, '#d9d4f2')], .3, .3, 0), (16, 24, 120, [(note, '#f3d6e3')], .3, .3, 6)]), 'tile'),
+    's65': (lambda: motif(1024, '#f7f3ec', 543, [(10, 36, 200, [(pawn, '#e6dccb')], .2, 0, 0), (8, 34, 200, [(rook, '#ddd3c2')], .2, 0, 3), (7, 34, 200, [(king, '#e9e1d2')], .2, 0, 6)]), 'tile'),
+    's66': (lambda: motif(1024, '#fbf8f1', 545, [(20, 34, 170, [(die, '#f2dcd2'), (die_pips, '#fbf8f1')], .3, .5, 0), (14, 30, 160, [(die, '#d6e6f2'), (die_pips, '#fbf8f1')], .3, .5, 4)]), 'tile'),
+    's67': (lambda: motif(1024, '#f8efdd', 547, [(20, 24, 150, [(stone, '#dcd2c1')], .1, 0, 0), (20, 24, 150, [(stone, '#fffcf5')], .1, 0, 9)]), 'tile'),
+    's68': (lambda: motif(1024, '#eff6fb', 549, [(30, 24, 130, [(drop, '#cfe3f3')], .5, .2, 0)]), 'tile'),
+    's69': (lambda: motif(1024, '#e8f4fc', 551, [(16, 56, 230, [(cloudlet, '#ffffff')], .4, 0, 0), (12, 34, 180, [(cloudlet, '#f6fbff')], .3, 0, 5)]), 'tile'),
+    's70': (lambda: motif(1024, '#f1f0fa', 553, [(10, 40, 220, [(crescent, '#f8eab8')], .3, .4, 0), (26, 12, 110, [(lambda d, X, Y, s, a, ss: d.polygon(P_(star_pts(), X, Y, s, a), fill=255), '#f6e6b4')], .5, .5, 3)]), 'tile'),
+    's71': (lambda: motif(1024, '#fdf7f6', 555, [(20, 36, 180, [(cherry_stem, '#c7deb0'), (cherry, '#f6c4c8')], .3, .2, 0)]), 'tile'),
+    's72': (lambda: motif(1024, '#fdf9ec', 557, [(24, 34, 160, [(ginkgo, '#f8e3a0')], .3, 1.2, 0), (12, 26, 140, [(ginkgo, '#f3d58a')], .3, 1.2, 5)]), 'tile'),
+    's73': (lambda: motif(1024, '#fbf7ef', 559, [(18, 32, 180, [(apple_leaf, '#c9e2b4'), (apple, '#f6c9c4')], .3, .1, 0), (10, 30, 170, [(apple_leaf, '#c9e2b4'), (apple, '#e4eeb9')], .3, .1, 7)]), 'tile'),
+    's74': (lambda: lattice_lines(1024, 561, '#f6f8f1', '#d7e3c9', 'asanoha'), 'tile'),
+    's75': (lambda: lattice_lines(1024, 563, '#f9f5fb', '#e1d4ea', 'shippo'), 'tile'),
+    's76': (lambda: lattice_lines(1024, 565, '#fbf3f0', '#f1dbd3', 'uroko'), 'tile'),
+    's77': (herringbone, 'tile'),
+    's78': (lambda: lattice_lines(1024, 567, '#fdf9ec', '#efdfae', 'honey'), 'tile'),
+    # SSR (14)
+    's79': (sakura_trees_cover, 'cover'), 's80': (autumn_cover, 'cover'), 's81': (sunflower_cover, 'cover'), 's82': (dawn_sea_cover, 'cover'),
+    's83': (snowman_cover, 'cover'), 's84': (balloon_cover, 'cover'), 's85': (rainbow_cover, 'cover'), 's86': (lavender_cover, 'cover'),
+    's87': (bamboo_tile, 'tile'), 's88': (dusk_town_cover, 'cover'), 's89': (island_cover, 'cover'), 's90': (moon_night_cover, 'cover'),
+    's91': (fuji_cover, 'cover'), 's92': (cloud_sea_cover, 'cover'),
+    # UR (7)
+    's93': (gems, 'tile'), 's94': (gold_seigaiha, 'tile'), 's95': (galaxy_cover, 'cover'),
+    's96': (raden_cover, 'cover'), 's96b': (lambda: raden_cover(shift=.4), 'cover'),
+    's97': (rose_marble, 'tile'), 's98': (night_gold_washi, 'tile'),
+    's99': (shifting_sky, 'cover'), 's99b': (lambda: shifting_sky(dusk=True), 'cover'),
+})
+
 if __name__ == '__main__':
     ids = sys.argv[1:] or list(SKINS)
     for i in ids:
