@@ -4,7 +4,8 @@
 // baseline this shows how far our settings are from Edax at equal time. Edax only runs here (GPL; nothing of it goes into
 // the site). Guide: claude/reversi-mac-verification.md.
 //   EDAX=~/edax-reversi/bin/mEdax-… node tools/edax-anchor.js --levels 12,15,18,21 [--base lv28|lv31|lv34|d,x,w,e] [--n 100]
-//        [--openings tools/train/op10.bin] [--procs 8] [--out edax-anchor.jsonl]
+//        [--openings tools/train/op10.bin] [--procs 8] [--out edax-anchor.jsonl] [--games games.jsonl]
+// --games: every position of every game (the side to move as X, who moved) for tools/phase-loss.js — where in the game the discs are lost.
 // (Edax is started once per move with -solve; its time is the search time it prints, ours the CPU time of think.)
 'use strict';
 const fs = require('fs'), path = require('path'), zlib = require('zlib'), cp = require('child_process'), os = require('os');
@@ -15,7 +16,7 @@ const BASES = { lv28: [13, 20, 22, 26], lv31: [20, 22, 24, 28], lv34: [25, 23, 2
 const BNAME = opt('base', 'lv28'), bv = BASES[BNAME] || BNAME.split(',').map(Number);
 const CFG = { depth: bv[0], exact: bv[1], wld: bv[2], end: bv[3], mpc: 1 };
 const LEVELS = opt('levels', '12,15,18,21').split(',').map(Number), N = +opt('n', 100), PROCS = +opt('procs', Math.max(1, os.cpus().length - 2));
-const OPEN = path.resolve(opt('openings', path.join(__dirname, 'train/op10.bin'))), OUT = opt('out', 'edax-anchor.jsonl');
+const OPEN = path.resolve(opt('openings', path.join(__dirname, 'train/op10.bin'))), OUT = opt('out', 'edax-anchor.jsonl'), GAMES = opt('games', '');
 const M64 = (1n << 64n) - 1n;
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 function flips(s, P, O) { let f = 0n; const x0 = s & 7, y0 = s >> 3;
@@ -39,18 +40,20 @@ if (args[0] === '--worker') {   // one process: its share of the openings for on
   const ourMove = (P, O) => { const c = []; for (let q = 0; q < 64; q++) c.push((P >> BigInt(q)) & 1n ? 1 : (O >> BigInt(q)) & 1n ? 2 : 0);
     const t0 = process.cpuUsage(), t = E.think(c, 1, { cfg: CFG, noBook: true, variety: false, time: 0 }), u = process.cpuUsage(t0); return { move: t.move, sec: (u.user + u.system) / 1e6 }; };
   const game = (P, O, edaxFirst) => {   // the disc difference for Edax
-    let side = edaxFirst ? 0 : 1, passes = 0, tE = 0, tU = 0; E.clearTT();
+    let side = edaxFirst ? 0 : 1, passes = 0, tE = 0, tU = 0; const log = []; E.clearTT();
     while (passes < 2) {
       const ms = moves(P, O); if (!ms.length) { [P, O] = [O, P]; side ^= 1; passes++; continue; } passes = 0;
       let r; if (ms.length === 1) r = { move: ms[0], sec: 0 }; else if (side === 0) { r = edaxMove(P, O); tE += r.sec; } else { r = ourMove(P, O); tU += r.sec; }
       if (!ms.includes(r.move)) throw new Error('illegal move ' + r.move);
+      if (GAMES) { let t = ''; for (let q = 0; q < 64; q++) t += (P >> BigInt(q)) & 1n ? 'X' : (O >> BigInt(q)) & 1n ? 'O' : '-'; log.push([t, side, ms.length]); }
       const f = flips(r.move, P, O), nP = P | f | (1n << BigInt(r.move)); [P, O] = [O & ~f & M64, nP]; side ^= 1;
     }
     const p = pc(P), o = pc(O), em = 64 - p - o; let df = p - o; df = df > 0 ? df + em : df < 0 ? df - em : 0;
-    return { d: side === 0 ? df : -df, tE, tU };
+    return { d: side === 0 ? df : -df, tE, tU, log };
   };
   for (let i = k; i < N && (i + 1) * 17 <= d.length; i += PROCS) {
     const P = d.readBigUInt64LE(i * 17), O = d.readBigUInt64LE(i * 17 + 8), a = game(P, O, true), c = game(P, O, false);
+    if (GAMES) for (const g of [a, c]) fs.appendFileSync(GAMES, JSON.stringify({ level, base: BNAME, i, edaxFirst: g === a, d: g.d, pos: g.log }) + '\n');
     process.stdout.write(JSON.stringify({ i, d1: a.d, d2: c.d, tE: a.tE + c.tE, tU: a.tU + c.tU }) + '\n');
   }
   try { fs.unlinkSync(tmp); } catch (e) {}
