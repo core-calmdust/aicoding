@@ -36,7 +36,10 @@ function statusAt(i) {
   if (manualEnd && !kenSw && manualEnd.n === moves.length && i === moves.length && !lesson && !puzzle && settings.mode !== 'online') return manualEnd;
   if (settings.mode === 'online' && !kenSw && window.olOver && i === moves.length && !lesson && !puzzle) { const o = olOver(); if (o) return o; }
   if (rgame && rgame.over && !kenSw && i === moves.length && !lesson && !puzzle) return rgame.over;
-  const pc = posAt(i); return E.judge(pc.pos, pc.hashes);   // 同じ局面3回目・取りのない60手ずつは狐の勝ち
+  const pc = posAt(i), j = E.judge(pc.pos, pc.hashes);   // 同じ局面3回目・取りのない60手ずつは狐の勝ち
+  // 交代2局戦の2局目：狐の取った数が1局目を上回ったらそこで決着（2026-11-20 user）
+  if (!j.over && mt && mt.g === 2 && mt.r1 && !kenSw && !lesson && !puzzle && settings.mode !== 'online' && pc.pos.cap > mt.r1.caps) return { over: true, winner: P1, why: 'mtCaps' };
+  return j;
 }
 const toMoveAt = i => posAt(i).pos.turn;
 // move name in standard notation (needs the position before the move)
@@ -848,7 +851,7 @@ function onGameEnd(st) {
 // with correct play — so by default two games are played with the roles swapped; whoever took more geese as the fox wins, a tie goes
 // to whoever trapped the fox in fewer moves). AI, two-player and rated games (the rated ones may choose 1局); not AI-vs-AI / online.
 // Parties: A = you (AI games) / the fox of game 1 (two players); B = the AI / the other player.
-let mt = null;   // { g: 1 | 2, r1: { fox: 'A' | 'B', caps, trap: plies to trap the fox or 0, n }, res }
+var mt = null;   // (var: statusAt reads it) { g: 1 | 2, r1: { fox: 'A' | 'B', caps, trap: plies to trap the fox or 0, n }, res }
 function mtWanted() { return settings.fmt !== 'single' && (settings.mode === 'ai' || settings.mode === 'pvp') && !lesson && !puzzle; }
 function mtParty(p) {   // the party playing colour p in the current game
   if (settings.mode === 'ai') return p === humanColor ? 'A' : 'B';
@@ -1063,7 +1066,7 @@ function pcSwatch(k) {
   return `<svg class="bdm" viewBox="0 0 120 120"><defs><clipPath id="${id}"><rect x="8" y="8" width="104" height="104" rx="6"/></clipPath></defs><rect x="1" y="1" width="118" height="118" rx="10" fill="${BD_PAL[bd][0]}"/>` +
     `<g clip-path="url(#${id})"><image href="${ART('bd-' + bd)}" x="${x0}" y="${x0}" width="${W}" height="${W}"/></g>` +
     [g1, g2].map(([x, y]) => `<image href="${ART('pc-' + k + '-g')}" x="${x - G / 2}" y="${y - G * (ANCHOR[k] || .5)}" width="${G}" height="${G}"/>`).join('') +
-    `<image href="${ART('pc-' + k + '-f')}" x="${fx - F / 2}" y="${fy - F * (ANCHOR[k] || .55)}" width="${F}" height="${F}"/></svg>`;
+    `<image href="${ART('pc-' + k + '-f')}" x="${fx - F / 2}" y="${fy - F * (ANCHOR[k] || (k === 'cute' ? .52 : .55))}" width="${F}" height="${F}"/></svg>`;
 }
 // the lines of the board as one SVG path (unit = one step, origin = the centre of point a7's cell at .5,.5)
 function boardPath(X, Y) {
@@ -1084,7 +1087,7 @@ function miniSVG(spec, o) {
   for (const i of o.trail || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="${u * 0.2}" fill="rgba(255,236,170,.6)"/>`;
   const b = spec && spec.b ? spec.b : '';
   for (const i of E.POINTS) { const ch = b[i]; if (ch === 'g') s += `<image href="${ART('pc-' + pk + '-g')}" x="${(X(i) - u * .37).toFixed(1)}" y="${(Y(i) - u * .74 * (ANCHOR[pk] || .5)).toFixed(1)}" width="${(u * .74).toFixed(1)}" height="${(u * .74).toFixed(1)}"/>`; }
-  for (const i of E.POINTS) { const ch = b[i]; if (ch === 'f') s += `<image href="${ART('pc-' + pk + '-f')}" x="${(X(i) - u * .49).toFixed(1)}" y="${(Y(i) - u * .98 * (ANCHOR[pk] || .55)).toFixed(1)}" width="${(u * .98).toFixed(1)}" height="${(u * .98).toFixed(1)}"/>`; }
+  for (const i of E.POINTS) { const ch = b[i]; if (ch === 'f') s += `<image href="${ART('pc-' + pk + '-f')}" x="${(X(i) - u * .49).toFixed(1)}" y="${(Y(i) - u * .98 * (ANCHOR[pk] || (pk === 'cute' ? .52 : .55))).toFixed(1)}" width="${(u * .98).toFixed(1)}" height="${(u * .98).toFixed(1)}"/>`; }
   for (const i of o.took || []) { const x = X(i), y = Y(i), h = u * 0.2; s += `<path d="M${x - h},${y - h}L${x + h},${y + h}M${x + h},${y - h}L${x - h},${y + h}" stroke="#ff5a48" stroke-width="${Math.max(2, u * .07)}" stroke-linecap="round"/>`; }
   for (const i of o.dest || []) s += `<circle cx="${X(i)}" cy="${Y(i)}" r="${Math.max(4, u * 0.16)}" fill="rgba(255,236,170,.95)" stroke="rgba(0,0,0,.5)" stroke-width="1"/>`;
   if (o.sel != null && o.sel >= 0) s += `<circle cx="${X(o.sel)}" cy="${Y(o.sel)}" r="${u * 0.46}" fill="none" stroke="#ffe9a8" stroke-width="2.8"/>`;
@@ -1232,7 +1235,7 @@ function segSync() {
   $('#fRatedInfo').classList.toggle('hidden', m !== 'rated');
   if (m === 'rated') $('#rtStats').innerHTML = rtStatsHtml();
   $('#fRules').classList.toggle('hidden', !(game || m === 'online'));   // (rated games: always the default rules, g15 — named on the rating card)
-  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${miniSVG(ruleArt(r), { cls: 'gmini' })}</span><b>${t('rule.' + r)}</b><p>${r === E.DEFAULT_RULE ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
+  $('#ruleCards').innerHTML = RULE_ORDER.map(r => `<button type="button" class="ngt-gcard${draft.rule === r ? ' sel' : ''}" data-r="${r}"><span class="gart">${ruleCardSVG(r)}</span><b>${t('rule.' + r)}</b><p>${r === E.DEFAULT_RULE ? `<span class="gtag">${t('rule.std')}</span>` : ''}${t('rule.' + r + '.d')}</p><span class="gpick"></span></button>`).join('');
   $('#fQuiet').classList.toggle('hidden', !game);   // (rated and online games: always the default limit)
   $('#fFormat').classList.toggle('hidden', !(m === 'ai' || m === 'pvp' || m === 'rated') || !!draft.resume);   // 交代2局戦 / 1局 (not for AI-vs-AI, online, 「ここから再開」)
   document.querySelectorAll('#segFmt button').forEach(b => { const v = b.dataset.v; b.classList.toggle('sel', v === draft.fmt); b.innerHTML = escHb(t('fmt.' + v)) + (v === 'match' ? `<small class="q-std"> ${escHb(t('rule.std'))}</small>` : ''); });
@@ -1277,6 +1280,32 @@ $('#ruleCards').ngtRules = r => openRules(null, r === E.DEFAULT_RULE ? 0 : TOUR_
 function ruleStart(r) { const keep = E.rule; E.setRule(r); const sp = E.Pos.from(null).spec(); E.setRule(keep); return sp; }
 // the picture of a rule set on its card: what makes it different (a blocked counter and a leap / a capture / the two rows)
 function ruleArt(r) { return ruleStart(r); }
+// the rule cards of the new-game dialog (2026-11-20 user: the whole board was too small): only the rows where the pieces start,
+// drawn large, and the number of geese beside it
+const RC_PAL = { meadow: ['#a6d477', '#f7e9c0', '#8cbf5f'], oak: ['#c99c64', '#6b4423', '#a97c46'], bauhaus: ['#ece7da', '#262628', '#cfc8b6'], lux: ['#231812', '#c9a24a', '#3a2a1c'], norse: ['#8c877c', '#ece4d0', '#6f6a60'], delft: ['#f5f2ea', '#2c4f9e', '#c9d3ea'] };
+function ruleCardSVG(r) {   // a simple board of its own (only the rows where the pieces start, framed all round), not a cut of the picture
+  const sp = ruleStart(r), b = sp.b, n = [...b].filter(c => c === 'g').length;
+  let r0 = 7; for (let i = 0; i < 49; i++) if (b[i] === 'g' || b[i] === 'f') r0 = Math.min(r0, Math.floor(i / 7));
+  let bdk = settings.bd; if (!BD_KEYS.includes(bdk)) bdk = BD_OLD[bdk] || 'meadow';
+  const [bg, ln, bd] = RC_PAL[bdk] || RC_PAL.meadow, pk = PC_KEYS.includes(settings.pcs) ? settings.pcs : 'cute';
+  const u = 34, m = 8, W = 7 * u + m * 2, h = (7 - r0) * u + m * 2, X = c => m + (c + .5) * u, Y = rr => m + (rr - r0 + .5) * u, pw = 250;
+  const inB = i => E.ON[i] && E.RC[i][0] >= r0;
+  // the board's shape: the full-width arm rows and the middle column band, rounded
+  let s = `<svg class="gmini grule" viewBox="0 0 ${W + pw} ${h}" overflow="visible"><g stroke="${bd}" stroke-width="3" fill="${bg}">`;
+  const arm = r0 <= 4 ? [m - 4, m - 4, 7 * u + 8, (5 - r0) * u + 8] : null, band = [m + 2 * u - 4, m - 4, 3 * u + 8, (7 - r0) * u + 8];
+  for (const q of [arm, band]) if (q) s += `<rect x="${q[0]}" y="${q[1]}" width="${q[2]}" height="${q[3]}" rx="12"/>`;
+  s += `</g>`; for (const q of [arm, band]) if (q) s += `<rect x="${q[0] + 1.5}" y="${q[1] + 1.5}" width="${q[2] - 3}" height="${q[3] - 3}" rx="10.5" fill="${bg}"/>`;   // (no seam where the two meet)
+  s += `<g stroke="${ln}" stroke-width="3.2" stroke-linecap="round" opacity=".95">`;
+  for (const i of E.POINTS) if (inB(i)) for (const [j] of E.NBR[i]) if (j > i && inB(j)) s += `<line x1="${X(E.RC[i][1])}" y1="${Y(E.RC[i][0])}" x2="${X(E.RC[j][1])}" y2="${Y(E.RC[j][0])}"/>`;
+  s += `</g>`;
+  for (const i of E.POINTS) if (inB(i)) s += `<circle cx="${X(E.RC[i][1])}" cy="${Y(E.RC[i][0])}" r="${u * .13}" fill="${ln}"/>`;
+  for (const ch of 'gf') for (const i of E.POINTS) if (b[i] === ch && inB(i)) {
+    const sz = u * (ch === 'g' ? .78 : 1), an = ANCHOR[pk] || (ch === 'g' ? .5 : pk === 'cute' ? .52 : .55);
+    s += `<image href="${ART('pc-' + pk + '-' + ch)}" x="${(X(E.RC[i][1]) - sz / 2).toFixed(1)}" y="${(Y(E.RC[i][0]) - sz * an).toFixed(1)}" width="${sz.toFixed(1)}" height="${sz.toFixed(1)}"/>`;
+  }
+  const gs = Math.min(80, h * .62), fs = Math.round(Math.min(52, h * .4)), tx = W + 14 + gs + 8;   // (the number in the page's own font, with room to spare on the right)
+  return s + `<image href="${ART('pc-' + pk + '-g')}" x="${W + 14}" y="${(h / 2 - gs / 2).toFixed(1)}" width="${gs.toFixed(1)}" height="${gs.toFixed(1)}"/><text x="${tx.toFixed(1)}" y="${(h / 2).toFixed(1)}" dy=".36em" font-size="${fs}" font-weight="800" fill="currentColor">×${n}</text></svg>`;
+}
 // your side and who moves first — one pulldown (vs the AI: 狐・先手 / 狐・後手 / ガチョウ・先手 / ガチョウ・後手; two players and
 // AI vs AI: only who moves first; 「ここから再開」: the order of the game on the board stays). The icons: img/ic-fox.svg / ic-goose.svg
 const fgIcon = p => `<img class="fgic" src="img/ic-${p === P1 ? 'fox' : 'goose'}.svg" alt="">`;

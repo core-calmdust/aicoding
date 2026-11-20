@@ -2238,9 +2238,10 @@ function rvbUpdate() {
 }
 if (window.RvBox) BOX = RvBox.create({
   app: '.app', frame: '#frame', lang: () => LANG, worker: () => ENGINE_URL,
-  // (the threads when free; 2026-11-20 audit: with the board's net the review box's v3 job skips mtsplit.js's old search, as request() —
-  //  core_mt.wasm's threads when they are on, else the one worker)
-  pool: () => nnOn() ? MCP && MTEngine.on() && MCP.pool() : MTP && MTP.pool(), cancel: () => { if (MTP) MTP.cancel('rvb'); if (MCP) MCP.cancel('rvb'); },
+  // (2026-11-20 #2929/#2938) the analysis's threads, as in the other games (chess, checkers…: the threads when free, else the one worker):
+  //  on an isolated page core_mt.wasm's (Praline's YBW) — never mtsplit.js's old search beside them —, on a page that is not isolated
+  //  mtsplit.js's (not with the net: the one worker of v3 + the net)
+  pool: () => MCP && MTEngine.on() ? MCP.pool() : !nnOn() && MTP && MTP.pool(), cancel: () => { if (MTP) MTP.cancel('rvb'); if (MCP) MCP.cancel('rvb'); },
   onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
   onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
   onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }
