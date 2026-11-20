@@ -600,15 +600,15 @@
        The top bar always takes the skin's colours. The page background is either the skin's picture (with its moving
        scene) or the place's floor as before — the デザイン tab's 場所 row has the skin as its first tile (localStorage atlas-fullbg: 'skin' | 'place').
        The skin itself is changed on the portal; nothing to do here while the classic cream is worn. */
-    (function skinBg() {
+    (function skinBg() {   // (the skin's tint: the page's cards only — the dialogs keep the cream: their inner panels and fades are cream, 2026-11-20)
       let sk = null; try { sk = JSON.parse(localStorage.getItem('atlas-skin-css') || 'null'); } catch (e) {}
       if (!sk || !sk.id) return;
-      const SKV = 26;   // (= the portal's skins.js?v= in atlas/index.html: bump both together)
+      const SKV = 27;   // (= the portal's skins.js?v= in atlas/index.html: bump both together)
       const de = document.documentElement;
       if (!document.getElementById('askinCss')) { const st = document.createElement('style'); st.id = 'askinCss'; st.textContent = `
 html.atlas-skin[data-skin] .atlas-top{background:var(--sk-hdr)!important;border-bottom-color:var(--sk-line)!important}
-html.atlas-skin[data-skin]{--a-paper:color-mix(in srgb,var(--sk-navm) 15%,#fffcf6);--a-tile:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9);--a-btn:color-mix(in srgb,var(--sk-navm) 5%,#fffefb);--a-line:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8);--a-track:color-mix(in srgb,var(--sk-navm) 20%,#f4eee2);--a-ink2:color-mix(in srgb,var(--sk-navm) 30%,#6a7088);--a-shadow:0 2px 0 color-mix(in srgb,var(--sk-navm) 14%,transparent),0 10px 24px -12px color-mix(in srgb,var(--sk-navm) 45%,rgba(0,0,0,.4))}
-html.atlas-skin[data-skin].skdark{--a-paper:color-mix(in srgb,var(--sk-hdrs) 13%,var(--sk-navm));--a-tile:color-mix(in srgb,var(--sk-hdrs) 6%,#fbfbff);--a-btn:color-mix(in srgb,var(--sk-hdrs) 4%,#fdfdff);--a-line:color-mix(in srgb,var(--sk-hdrs) 32%,var(--sk-navm));--a-track:color-mix(in srgb,var(--sk-hdrs) 20%,var(--sk-navm));--a-ink2:color-mix(in srgb,var(--sk-hdrs) 55%,#6a7088)}
+html.atlas-skin[data-skin] body .card:not(.hb-menu){--a-paper:color-mix(in srgb,var(--sk-navm) 15%,#fffcf6);--a-tile:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9);--a-btn:color-mix(in srgb,var(--sk-navm) 5%,#fffefb);--a-line:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8);--a-track:color-mix(in srgb,var(--sk-navm) 20%,#f4eee2);--a-ink2:color-mix(in srgb,var(--sk-navm) 30%,#6a7088);--a-shadow:0 2px 0 color-mix(in srgb,var(--sk-navm) 14%,transparent),0 10px 24px -12px color-mix(in srgb,var(--sk-navm) 45%,rgba(0,0,0,.4))}
+html.atlas-skin[data-skin].skdark body .card:not(.hb-menu){--a-paper:color-mix(in srgb,var(--sk-navm) 20%,#fdfcff);--a-tile:color-mix(in srgb,var(--sk-navm) 8%,#fefdff);--a-btn:color-mix(in srgb,var(--sk-navm) 5%,#fff);--a-line:color-mix(in srgb,var(--sk-navm) 45%,#f3f1f8);--a-track:color-mix(in srgb,var(--sk-navm) 28%,#f4f2f8);--a-ink2:color-mix(in srgb,var(--sk-hdrs) 50%,#6a7088)}
 html.atlas-skin[data-skin]:not(.atlas-2d) body:not(#_) #dock.dock{background:var(--sk-hdr)!important;border-top:2px solid var(--sk-line)!important}
 html.atlas-skin[data-skin].skdark:not(.atlas-2d) body:not(#_) #dock.dock :is(.dk-title,.dk-me b,.chat-list,.chat-list *){color:#f4f6ff!important}
 html.atlas-skin[data-skin].skdark:not(.atlas-2d) body:not(#_) #dock.dock :is(.dk-stat,.dk-me,.chat-list small,.chat-list time,.dk-note){color:rgba(255,255,255,.66)!important}
@@ -635,6 +635,14 @@ html:not(.askin-bg) #skfx{display:none}`; document.head.appendChild(st); }
       let mode = 'skin'; try { mode = localStorage.getItem('atlas-fullbg2') || 'skin'; } catch (e) {}
       const set = m => { mode = m; de.classList.toggle('askin-bg', m === 'skin'); try { localStorage.setItem('atlas-fullbg2', m); } catch (e) {} try { dispatchEvent(new CustomEvent('atlas-skinbg')); } catch (e) {} };
       set(mode);
+      // the scene's motion (2026-11-20): still on the game pages unless switched on in the options — a moving scene behind the 3D board
+      // costs every frame (銀河鉄道 + ラトロンクロルム was heavy); skins-fx.js pauses all of it under html.askin-still
+      let anim = false; try { anim = localStorage.getItem('atlas-fullanim') === '1'; } catch (e) {}
+      de.classList.toggle('askin-still', !anim);
+      if (window.HeaderBar && HeaderBar.addOption) HeaderBar.addOption({ id: 'skanim', type: 'toggle', hidden: () => !de.classList.contains('askin-bg'),
+        label: { ja: '背景アニメーション', en: 'Animated background', zh: '背景动画', 'zh-TW': '背景動畫', ko: '배경 애니메이션', es: 'Fondo animado', fr: 'Fond animé', pt: 'Fundo animado', de: 'Animierter Hintergrund', ru: 'Анимированный фон', tr: 'Hareketli arka plan', id: 'Latar animasi', hi: 'एनिमेटेड बैकग्राउंड', ar: 'خلفية متحركة' },
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M10 9.5v5l4-2.5z" fill="currentColor"/></svg>',
+        get: () => anim, set: v => { anim = !!v; de.classList.toggle('askin-still', !anim); try { localStorage.setItem('atlas-fullanim', anim ? '1' : '0'); } catch (e) {} } });
       window.__atlasSkinBg = { id: sk.id, mode: () => mode, set, thumb: BASE.replace(/atlas\/$/, 'images/atlas/skin/t/') + sk.id + '.webp' };   // (the デザイン tab's 場所 row offers it: placeField)
       const sc = document.createElement('script'); sc.src = BASE + 'skins.js?v=' + SKV;
       sc.onload = () => { try { if (window.AtlasSkins) AtlasSkins.apply(sk.id); } catch (e) {} };
@@ -800,26 +808,6 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 20 4"/><path d="M4 14l2-2M8 18l2-2M10 8l2-2M14 12l2-2" opacity=".5"/></svg>',
       get, set: v => { try { localStorage.setItem('atlas-aa', v ? '1' : '0'); } catch (e) {}
         if (!document.body.classList.contains('in-online')) setTimeout(() => location.reload(), 150); } });
-  })();
-  // フルスクリーン (2026-11-20): the F key and a system switch in the options (gear)
-  (function fsOpt() {
-    const d = document, root = d.documentElement;
-    const can = !!(root.requestFullscreen || root.webkitRequestFullscreen);
-    const on = () => !!(d.fullscreenElement || d.webkitFullscreenElement);
-    const set = v => { try { if (v && !on()) (root.requestFullscreen || root.webkitRequestFullscreen).call(root); else if (!v && on()) (d.exitFullscreen || d.webkitExitFullscreen).call(d); } catch (e) {} };
-    if (!can) return;
-    let h = null;
-    if (window.HeaderBar && HeaderBar.addOption) h = HeaderBar.addOption({ id: 'fs', type: 'toggle',
-      label: { ja: 'フルスクリーン（F）', en: 'Full screen (F)', zh: '全屏（F）', 'zh-TW': '全螢幕（F）', ko: '전체 화면 (F)', es: 'Pantalla completa (F)', fr: 'Plein écran (F)', pt: 'Tela cheia (F)', de: 'Vollbild (F)', ru: 'Полный экран (F)', tr: 'Tam ekran (F)', id: 'Layar penuh (F)', hi: 'फ़ुल स्क्रीन (F)', ar: 'ملء الشاشة (F)' },
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
-      get: on, set });
-    const sync = () => { if (h && h.sync) h.sync(); };
-    d.addEventListener('fullscreenchange', sync); d.addEventListener('webkitfullscreenchange', sync);
-    d.addEventListener('keydown', e => {
-      if ((e.key !== 'f' && e.key !== 'F') || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
-      const a = d.activeElement; if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable)) return;
-      e.preventDefault(); set(!on());
-    });
   })();
   const SKL = { ja: 'スキン', en: 'Skin', zh: '皮肤', 'zh-TW': '外觀', ko: '스킨', es: 'Aspecto', fr: 'Thème', pt: 'Visual', de: 'Skin', ru: 'Скин', tr: 'Görünüm', id: 'Skin', hi: 'स्किन', ar: 'المظهر' };   // (the worn portal skin as the page background, 2026-11-20)
   function placeField() {
