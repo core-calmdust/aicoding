@@ -111,7 +111,7 @@ html[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;w
 @media (max-aspect-ratio:6/5){html[data-skp] body::before,html[data-skp] #skfx .fx-x{background-position-y:var(--sk-pyp,100%)}html[data-skp] body::before{background-image:var(--sk-imgp)}html[data-skp] #skfx .fx-x{background-image:var(--sk-img2p)}}
 @media (max-width:760px){html[data-skk=cover] body::before,html[data-skk=cover] #skfx{bottom:calc(var(--tabsH,64px) + var(--ulH,0px))}}
 html[data-skin]{--pf-lip:rgba(110,80,40,.2)}html[data-skin].skdark{--pf-lip:rgba(0,0,0,.38)}html[data-skin].skdark .prof:not(.nr3):not(.nr4){box-shadow:0 6px 0 var(--pf-lip),0 14px 28px -14px rgba(0,0,0,.6)!important}   /* the profile card's edge takes the skin's tone (2026-11-20) */
-@media (min-width:761px){html[data-skk=cover]:has(.updline:not([hidden])) body::before,html[data-skk=cover]:has(.updline:not([hidden])) #skfx{bottom:var(--ulH,0px)}}   /* PC: the scene stands on the news ticker (NEW), not under it (2026-11-20) */   /* phones: the scene stands on the bottom bars, not under them */   /* narrow windows: the portrait picture (more sky above) */
+@media (min-width:761px){html[data-skk=cover].ul-on:not([_]) body::before,html[data-skk=cover].ul-on:not([_]) #skfx{bottom:var(--ulH,0px)}}   /* PC: the scene stands on the news ticker (NEW), not under it (2026-11-20) */   /* phones: the scene stands on the bottom bars, not under them */   /* narrow windows: the portrait picture (more sky above) */
 /* UR effects (atlas/skins.js FX): #skfx sits behind the page; only transform / opacity animate */
 #skfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}
 #skfx i{position:absolute;display:block;font-style:normal}#skfx svg{display:block;width:100%;height:100%;overflow:visible}
@@ -251,7 +251,7 @@ html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 .crhow button,.ckhow button,.hkhw button{max-width:440px;margin:0 auto;padding:17px!important;font-size:22px!important}
 }
 @media (min-width:900px) and (min-height:560px) and (max-height:760px) and (hover:hover){.crhow-c,.ckhow-c,.hkhw-c{padding:24px 40px 22px!important}.crhow h2,.ckhow h2,.hkhw h2{font-size:28px!important;margin-bottom:14px!important}.crhow ol,.ckhow ol,.hkhw ol{gap:8px!important}.crhow li,.ckhow li,.hkhw li{font-size:19px!important}.crhow li i,.ckhow li i,.hkhw li i{width:44px!important;height:44px!important;font-size:24px!important}.crhow .u,.ckhow .u,.hkhw .u{margin-top:12px!important}.crhow label,.ckhow label,.hkhw label{margin-top:14px!important}.crhow .n,.ckhow .n,.hkhw .n{margin-bottom:12px!important}.crhow button,.ckhow button,.hkhw button{padding:13px!important;font-size:19px!important}}
-html:has(#bv.playing),html:has(#bv.playing) body,html:has(#bv.playing) body *:not(input):not(textarea){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}   /* any game in play: no loupe on a double tap (hockey on Chrome, 2026-11-13) */
+html.bv-playing:not(#_),html.bv-playing:not(#_) body,html.bv-playing:not(#_) body *:not(input):not(textarea){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}   /* any game in play: no loupe on a double tap (hockey on Chrome, 2026-11-13) */
 html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}html.hand-on #gl,html.hand-on #gl *{touch-action:pinch-zoom}html.hand-on input,html.hand-on textarea{-webkit-user-select:text;user-select:text}   /* carrom / crokinole in play: no loupe, double-tap zoom or text selection (the Hand adds the class) */
 .hand-drag .npc-float,.hand-drag .npc-float *,.hand-drag .crtoast,.hand-drag .cktoast,.hand-drag .cktask,.hand-drag #tbar,.hand-drag #tbar *,.hand-drag .crflip,.hand-drag .ckflip,.hand-drag #hud,.hand-drag #hud *{pointer-events:none!important}   /* pulling a striker / disc: the talk, the play bar, the flip / view buttons and the HUD pass the pointer through (a release over them still strikes) */
 .props .pp img{display:block;width:100%;filter:drop-shadow(0 12px 10px rgba(0,0,0,.16));transition:filter .2s;-webkit-user-drag:none;user-select:none}
@@ -709,6 +709,26 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .chip em{font-style:normal;font-family:var(--round);font-size:12px;opacity:.7}
 .achsum{display:flex;gap:10px;align-items:center;margin:4px 0 14px;flex-wrap:wrap}
 .alist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+/* 実績 (2026-11-21): one tile per group (共通 + each game); the open one's awards sit right under its row — the panel spans the
+   whole grid, and 'dense' lets the tiles after it fill the rest of the tile's own row */
+.anear{margin:0 0 18px}.anear .glh{margin-bottom:10px}
+.agl{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));grid-auto-flow:row dense;gap:10px}
+.agt{display:flex;align-items:center;gap:10px;min-width:0;padding:9px 12px 9px 9px;border-radius:20px;font:inherit;color:inherit;text-align:start;cursor:pointer;position:relative;transition:transform .12s,box-shadow .12s}
+.agt .pic{flex:none;width:52px;height:52px;display:grid;place-items:center}
+.agt .pic img{width:52px;height:52px;object-fit:contain;display:block}.agt .pic img.flat{width:40px;height:40px;border-radius:11px}
+.agt .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.agt .tx b{font-weight:900;font-size:14.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agt .pr{display:flex;align-items:center;gap:8px}.agt .pr .bar{flex:1;height:8px}
+.agt .pr em{flex:none;font-style:normal;font-family:var(--round);font-weight:700;font-size:12px;color:var(--ink2);min-width:3.2em;text-align:end}
+.agt.full .pr em{color:var(--mint2)}.agt.full .pr em::after{content:' ✓'}
+.agt .cv{flex:none;width:9px;height:9px;border-right:2.5px solid #c9b78f;border-bottom:2.5px solid #c9b78f;transform:translateY(-2px) rotate(45deg);transition:transform .18s;margin-inline:2px 4px}
+.agt.open .cv{transform:translateY(2px) rotate(225deg);border-color:var(--ink)}
+@media (hover:hover){.agt:hover{transform:translateY(-2px)}}
+.agt:active{transform:translateY(2px)}
+.agt.open{outline:2.5px solid var(--ink);outline-offset:-2.5px}
+.agp{grid-column:1/-1;margin:0 0 4px;padding:12px;border-radius:22px;background:rgba(255,255,255,.62);border:2px solid var(--line);animation:agpIn .18s ease-out}
+@keyframes agpIn{from{opacity:0;transform:translateY(-6px)}}
+html.skdark .agp{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.28)}
 .ach{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:20px}
 .ach.todo{background:#fbf7ee;box-shadow:none}
 .medal{flex:none;width:46px;height:46px;position:relative}
@@ -959,11 +979,12 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
   .aseg{grid-column:1/-1;display:flex;gap:2px;padding:3px;border-radius:99px;background:#f6efdd}
   .aseg button{flex:1;border:0;background:none;border-radius:99px;padding:6px 4px;font-weight:900;font-size:12.5px;color:var(--ink2);min-height:32px}
   .aseg button[aria-pressed=true]{background:var(--ink);color:#fff}
-  #achHsc{position:sticky;top:62px;z-index:12;margin:0 -16px 6px;padding:6px 16px 0;background:var(--sk-hdr,rgba(255,246,226,.96))}
-  #achHsc .hsn{display:none}
-  #achChips{padding-bottom:6px}
-  #achChips .chip{padding:3px 10px 3px 4px;font-size:12.5px;min-height:34px}
-  #achChips .chip img{width:22px;height:22px}
+  .anear{margin-bottom:12px}.anear .glh{margin-bottom:7px;font-size:14.5px}
+  .agl{grid-template-columns:1fr;gap:6px}
+  .agt{gap:9px;padding:6px 10px 6px 7px;border-radius:16px}
+  .agt .pic{width:42px;height:42px}.agt .pic img{width:42px;height:42px}.agt .pic img.flat{width:32px;height:32px;border-radius:9px}
+  .agt .tx{gap:4px}.agt .tx b{font-size:13.5px}.agt .pr .bar{height:6px}.agt .pr em{font-size:11.5px}
+  .agp{padding:7px;border-radius:16px;margin-bottom:2px}
   .alist{grid-template-columns:1fr;gap:6px}
   .alist .ach{gap:10px;padding:7px 10px;border-radius:14px}
   .alist .medal{width:34px;height:34px}.alist .medal svg{width:34px;height:34px}
@@ -1630,7 +1651,7 @@ html.bv-pland .urtoast{top:calc(52px + var(--sat,env(safe-area-inset-top)));left
    A tap → every update in a bottom sheet. */
 #pg-home #hUpd,#pg-home .updwrap{display:none}
 .updline{position:fixed;left:0;right:0;bottom:var(--tabsH,calc(64px + env(safe-area-inset-bottom)));z-index:39;display:flex;align-items:center;gap:8px;height:var(--ulH);margin:0;padding:0 8px 0 8px;border:0;border-top:2px solid var(--line);border-radius:0;background:#fffaf0;box-shadow:0 -6px 14px -10px rgba(60,40,10,.3);cursor:pointer;color:var(--ink);font:inherit;text-align:start}
-html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],html.hs-open .updline{display:none}
+html.cov-on:not(#_) :is(.updline,#gsSeg),.updline[hidden],html.hs-open .updline{display:none}
 :root{--ulH:52px}
 .updline .ul-i{align-items:center!important;gap:8px!important}
 .updline .ul-a{flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(120% 120% at 30% 0%,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 60%,color-mix(in srgb,var(--c) 75%,#000) 100%)}
@@ -2012,7 +2033,7 @@ html[dir=rtl] .uarc i,html[dir=rtl] .usb svg{transform:scaleX(-1)}
 @media (min-width:701px){.rgd-act .btn.ic{width:auto;flex-direction:row;gap:9px;padding:0 20px 0 16px;min-height:56px;border-radius:99px}.rgd-act .btn.ic svg{width:26px;height:26px}.rgd-act .btn.ic small{font-size:15px;max-width:none}}   /* (room enough on the 3D view: wide pills with the label beside the icon, 2026-11-11) */
 @media (max-width:600px){.rgd-act .btn.ic{width:60px;padding:6px 0 5px;gap:2px}.rgd-act .btn.ic svg{width:26px;height:26px}.rgd-act .btn.ic small{font-size:11px}.rgd-act .btn.big{font-size:16px;padding-top:12px;padding-bottom:12px}}
 .rgd.lsg .rgd-act{gap:8px}.rgd.lsg .rgd-act .sp{flex:1}.rgd.lsg .cnt{display:flex;align-items:center;gap:5px;min-height:0}.rgd.lsg .lsd{width:12px;height:12px;border-radius:50%;background:#e6dccb;display:inline-block}.rgd.lsg .lsd.ok{background:#3ccf91}.rgd.lsg .lsd.mid{background:#ffb21e}.rgd.lsg .lsd.ng{background:#ff5d5d}.rgd.lsg .lsd.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
-body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,body:has(#pg-gacha.on) .msbtn,body:has(#pg-dress.on) .msbtn{display:none}   /* (ミッション: not over the 3D view) */
+html.bv-on:not(#_) .msbtn,html.rec-on:not(#_) .msbtn,html[data-pg=map]:not(#_) .msbtn,html[data-pg=gacha]:not(#_) .msbtn,html[data-pg=dress]:not(#_) .msbtn{display:none}   /* (ミッション: not over the 3D view) */
 /* shogi / chess, PC: 対戦 · レート戦 · パズル · レッスン (app.js mxPanels, 2026-11-10) */
 .bvi .mtab3.mtab4 button{padding-inline:4px;font-size:13.5px}.bvi .mxp.mxoff > *{display:none!important}#bvFull.mxgone{display:none!important}.mxone > #bvTable{grid-column:1 / -1}
 .bvi .mxp[hidden]{display:none!important}
@@ -2353,8 +2374,8 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
   <section class="pg" id="pg-ach">
     <h2 class="h" id="hAch"></h2>
     <div class="achsum" id="achSum"></div>
-    <div class="hsc" id="achHsc"><button class="hsn l" type="button" aria-label="‹" tabindex="-1">‹</button><div class="chips" id="achChips"></div><button class="hsn r" type="button" aria-label="›" tabindex="-1">›</button></div>
-    <div class="alist" id="achList"></div>
+    <div class="anear" id="achNear" hidden></div>
+    <div class="agl" id="achList"></div>
   </section>
 
   <!-- GACHA + SHOP (one page since 2026-11-06: the gacha on top, the shop below; the tab is called ガチャ) -->
@@ -2413,11 +2434,11 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="../shared/atlas.js?v=20261120dx1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
-<script src="i18n/v.js?v=20261120atm1"></script>
+<script src="i18n/v.js?v=20261121ach1"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=20261120atm1', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=20261121ach1', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -2460,7 +2481,8 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="historia.js?v=50"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=5"></script>
-<script src="gacha3d.js?v=7"></script>
+<script src="vis.js?v=1"></script>
+<script src="gacha3d.js?v=8"></script>
 <style>/* the resign / draw confirmation (shared/resign.js): a white box like the portal's other boxes (2026-11-14) */
 .rsg-box{background:#fffdf7!important;color:#2b3044!important;border:2px solid #ead9b6!important;box-shadow:0 6px 0 #efe3c8,0 24px 60px rgba(0,0,0,.35)!important}
 .rsg-q{color:#2b3044!important}.rsg-sub{color:#6a7088!important}.rsg-flag{background:rgba(255,107,91,.12)!important;color:#e5533f!important}
@@ -2473,7 +2495,19 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=45"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=468"></script>
+<script>/* Page states as classes on <html> (2026-11-21) — html.cov-on: the 3D view / Historia / a sheet / a level sheet is open;
+   html.bv-on: the 3D view; html.rec-on: the records page; html.bv-playing: a game is in play; html.ul-on: the news line is there. The CSS used html:has(#bv.on,…) for these: with a
+   :has() on the root every class / hidden change anywhere re-styled the whole page (measured: 20,000 elements on the awards tab).
+   (:not(#_) / :not([_]) in those rules only keep the old selectors' specificity.) */
+(function () { var de = document.documentElement, seen = new WeakSet(), mo;
+  function sync() { var g = function (i) { return document.getElementById(i); }, bv = g('bv'), ov = g('ov'), hs = g('hist'), rc = g('recOv'), ul = g('updLine'), on = function (e) { return !!e && e.classList.contains('on'); };
+    var sheet = false, c = document.body.children; for (var i = 0; i < c.length; i++) if (c[i].classList.contains('lvsheet')) { sheet = true; break; }
+    de.classList.toggle('cov-on', on(bv) || on(hs) || on(ov) || sheet); de.classList.toggle('bv-on', on(bv)); de.classList.toggle('rec-on', on(rc)); de.classList.toggle('bv-playing', !!bv && bv.classList.contains('playing')); de.classList.toggle('ul-on', !!ul && !ul.hasAttribute('hidden'));
+    [bv, ov, hs, rc].forEach(function (e) { if (e && !seen.has(e)) { seen.add(e); mo.observe(e, { attributes: true, attributeFilter: ['class'] }); } });
+    if (ul && !seen.has(ul)) { seen.add(ul); mo.observe(ul, { attributes: true, attributeFilter: ['hidden'] }); } }
+  mo = new MutationObserver(sync); mo.observe(document.body, { childList: true }); sync(); window.__pgState = sync; })();
+</script>
+<script src="app.js?v=469"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>
