@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>/* the worn portal skin (きせかえ → スキン, atlas/skins.js): its colours before the first paint */
-try { (function (j) { if (!j || !j.v) return; var r = document.documentElement; for (var k in j.v) r.style.setProperty(k, j.v[k]); r.setAttribute('data-skin', j.id); r.setAttribute('data-skk', j.k); if (j.d) r.className += ' skdark'; })(JSON.parse(localStorage.getItem('atlas-skin-css') || 'null')); } catch (e) {}</script>
+try { (function (j) { if (!j || !j.v) return; var r = document.documentElement; for (var k in j.v) r.style.setProperty(k, j.v[k]); r.setAttribute('data-skin', j.id); r.setAttribute('data-skk', j.k); if (j.a) r.setAttribute('data-ska', '1'); if (j.d) r.className += ' skdark'; })(JSON.parse(localStorage.getItem('atlas-skin-css') || 'null')); } catch (e) {}</script>
 <script src="../shared/safetop.js?v=2"></script>
 <script src="../shared/latinfs.js?v=1"></script>
 <script src="../shared/focusgate.js?v=5"></script>
@@ -108,6 +108,8 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.95);border-
 html[data-skin] body{background-color:var(--sk-bg);background-image:none}
 html[data-skk=tile] body{background-image:var(--sk-img);background-size:var(--sk-size)}
 html[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-bg) var(--sk-img) center/cover no-repeat;pointer-events:none}
+html[data-ska] body::after{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-img2) center/cover no-repeat;pointer-events:none;opacity:0;animation:skDrift 9s ease-in-out infinite alternate;will-change:opacity}
+@keyframes skDrift{to{opacity:1}}   /* (opal: its colours drift — an opacity cross-fade, on the compositor) */
 html[data-skin] header{background:var(--sk-hdr);border-bottom-color:var(--sk-line)}
 html[data-skin] .tab[aria-selected=true]{background:var(--sk-nav);color:var(--sk-navt);box-shadow:0 3px 0 var(--sk-nav2)}
 @media (max-width:760px){
@@ -119,7 +121,8 @@ html.skdark .brand .wm b{color:#fff}html.skdark .brand .wm small,html.skdark .br
 html.skdark .brand img{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.75)) drop-shadow(0 3px 0 rgba(0,0,0,.2))}
 @media (min-width:761px){html.skdark .tab:not([aria-selected=true]){color:#d5dcef}html.skdark .tab:not([aria-selected=true]):hover{background:rgba(255,255,255,.12)}}
 html.skdark h2.h{color:#fff}
-html.skdark .glh{color:#f3e6c8}html.skdark .amsub,html.skdark .foot,html.skdark .foot a{color:#c9d2ea}html.skdark .glh::after{background:linear-gradient(90deg,rgba(255,255,255,.35),transparent)}html.skdark[dir=rtl] .glh::after{background:linear-gradient(270deg,rgba(255,255,255,.35),transparent)}
+html.skdark .glh{color:#f3e6c8}html.skdark .amsub,html.skdark .foot,html.skdark .foot a{color:#c9d2ea}
+html.skdark .ic .lab .n{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45)}@media (min-width:761px){html.skdark .achsum > b{color:#fff}html.skdark .shophead .note{color:#d5dcef}}html.skdark .glh::after{background:linear-gradient(90deg,rgba(255,255,255,.35),transparent)}html.skdark[dir=rtl] .glh::after{background:linear-gradient(270deg,rgba(255,255,255,.35),transparent)}
 
 /* ---------- tabs ---------- */
 .tabs{display:flex;gap:6px;justify-content:center;padding:12px 0 4px}
@@ -2345,7 +2348,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=16"></script>
 <script src="art.js?v=19"></script>
-<script src="skins.js?v=2"></script>
+<script src="skins.js?v=3"></script>
 <script src="../shared/atlas-updates.js?v=48"></script>
 <script src="../shared/atlas.js?v=20261119nw1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
