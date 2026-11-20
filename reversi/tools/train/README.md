@@ -136,3 +136,23 @@ node frontier.js table --base lv28
 EDAX=…/mEdax node ../edax-anchor.js --levels 12,15,18,21 --base lv28     # Edax を同じ基準に対する物差しに（tools/edax-anchor.js）
 ```
 - `rvmatch match … --engine a.so --engine-b b.so`：別々にビルドしたエンジンどうしの対局（`-DENDK=130`：終局読みの誤差幅を 1.3倍、`-DMPC_NONEST`：試しの読みの中では枝刈りしない、`-DMPC_PRE=200`：静的評価が境から2石以内のときだけ試す、`-DEVOFF_E=150 -DEVOFF_O=190`：評価値の手番側へのずれを補正＝空きが偶数なら −1.5石・奇数なら +1.9石（`frontier.js --plan bias`）。`frontier.js` が自動で作ります）。どれも付けないビルドは今までと同じバイナリです。
+
+## 着手可能数なしの評価を試す（2026-11-20）
+評価の追加特徴（着手可能数・潜在的着手可能数）は、1回の評価で着手生成を2回行う。外すと1局面が軽くなり、同じ時間で深く読める（Edax・Egaroucid は入れていない）。精度が落ちるぶんとの差し引きを、Edax 相手に同じ時間で比べる。`rvtrain train --ext 0` で「パターンだけ」の重みを学習できる。
+
+```sh
+cd reversi/tools/train && git pull
+cc -O3 -o rvtrain rvtrain.c -lz -lm -lpthread
+# 夜に続けて回す（1本 2〜4時間）。1本目は比較の基準（今と同じ形を同じデータ・同じやり方で学習し直したもの）
+caffeinate -i sh -c '
+./rvtrain train pairs.bin games.bin --out w_b30e4.bin.gz --set B --phases 30 --ext 4 --init ../../weights.bin.gz --threads 10 2>&1 | tee train_b30e4.log
+./rvtrain train pairs.bin games.bin --out w_b30e0.bin.gz --set B --phases 30 --ext 0 --init ../../weights.bin.gz --threads 10 2>&1 | tee train_b30e0.log
+./rvtrain train pairs.bin games.bin --out w_c60e0.bin.gz --set C --phases 60 --ext 0 --init ../../weights.bin.gz --threads 10 2>&1 | tee train_c60e0.log
+for w in b30e4 b30e0 c60e0; do ./rvlabel mpc games.bin --weights w_$w.bin.gz --n 1500 --depth 12 --write w_${w}m.bin.gz | tee mpc_$w.log; done'
+# 速さ（1分）と、Edax 相手の同じ時間の比較（各 約10分）
+cd ../.. && node tools/train/nps.js weights.bin.gz tools/train/w_b30e4m.bin.gz tools/train/w_b30e0m.bin.gz tools/train/w_c60e0m.bin.gz --depth 13 --rounds 3
+E=~/edax-reversi/bin/mEdax-armv8.5-a
+for w in b30e4m b30e0m c60e0m; do EDAX=$E node tools/edax-anchor.js --levels 18 --n 150 --bases "17,20,22,26;18,22,24,28;20,22,24,28" --weights tools/train/w_$w.bin.gz; done
+node tools/edax-anchor.js --table
+```
+見るところ：`--table` で、同じ時間のところの Elo が `w_b30e0m`／`w_c60e0m` のほうが今の評価・`w_b30e4m` より高いか。高ければ公開の評価を入れ替える（`weights.bin.gz`、MPC の幅、Praline の一致の約束の更新が要る）。

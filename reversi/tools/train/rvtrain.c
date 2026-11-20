@@ -13,7 +13,8 @@
 //   2) rvtrain train positions.bin[:weight]… --out weights.bin.gz [options]
 //        --set B|C            pattern set (engine.js PATTERN_DEFS_B / _C = B + cross; default C)
 //        --phases N           phases (60 = one per ply, v5; 30 = two plies, v4; default 60)
-//        --ext N              extra features: 4 (mobility, potential mobility) or 5 (+ own discs; default 5)
+//        --ext N              extra features: 4 (mobility, potential mobility), 5 (+ own discs; default 5) or 0 (patterns only:
+//                             no move generation in the evaluation — faster per position, as Edax)
 //        --init w.bin.gz      start from these weights (v4 or v5; mapped to the new layout: the same pattern tables, the
 //                             phase holding the same plies; new tables start at 0)
 //        --iters 300 --threads 8 --val 0.02 --lr 0.03
@@ -244,7 +245,7 @@ static int train(int argc, char **argv) {
   }
   T = T < 1 ? 1 : T > 256 ? 256 : T; quant = quant < 1 ? 1 : quant;
   if (!out || !nfiles) { fprintf(stderr, "usage: rvtrain train positions.bin[:weight]… --out weights.bin.gz [--set B|C] [--phases 60] [--ext 5] [--init w.bin.gz] …\n"); return 1; }
-  if (model_init(&M, set, nphase, next) || (next != 4 && next != 5)) { fprintf(stderr, "bad --set / --phases / --ext\n"); return 1; }
+  if (model_init(&M, set, nphase, next) || (next != 0 && next != 4 && next != 5)) { fprintf(stderr, "bad --set / --phases / --ext\n"); return 1; }
   memcpy(M.mpc, mpc, sizeof mpc);
   if (wstep <= 0) wstep = nphase >= 60 ? 2 : 1;   // (one phase per ply: the neighbours of the same parity)
   if (tie) buildCanon();

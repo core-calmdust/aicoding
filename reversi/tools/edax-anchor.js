@@ -5,6 +5,7 @@
 // the site). Guide: claude/reversi-mac-verification.md.
 //   EDAX=~/edax-reversi/bin/mEdax-… node tools/edax-anchor.js --levels 12,15,18,21 [--base lv28|lv31|lv34|d,x,w,e] [--n 100]
 //        [--openings tools/train/op10.bin] [--procs 8] [--out edax-anchor.jsonl] [--games games.jsonl]
+//   [--weights w.bin.gz] (another evaluation, a v5 file of rvtrain; its name goes into the table)
 //   [--t 1.1] (how hard Multi-ProbCut cuts; today 1.5)  [--variant nn_p200] (a test build under tools/variants/, tools/build-variants.sh)
 //   … --bases "17,20,22,26;18,22,24,28" (several settings, one after another)      node tools/edax-anchor.js --table (all results so far)
 // --games: every position of every game (the side to move as X, who moved) for tools/phase-loss.js — where in the game the discs are lost.
@@ -34,7 +35,7 @@ if (opt('bases', '') && args[0] !== '--worker') {   // --bases "17,20,22,26;18,2
   process.exit(0);
 }
 const BNAME = opt('base', 'lv28'), bv = BASES[BNAME] || BNAME.split(',').map(Number);
-const TV = opt('t', ''), VAR = opt('variant', ''), TAG = (TV ? ' t' + TV : '') + (VAR ? ' ' + VAR : '');
+const TV = opt('t', ''), VAR = opt('variant', ''), WFILE = opt('weights', ''), TAG = (TV ? ' t' + TV : '') + (VAR ? ' ' + VAR : '') + (WFILE ? ' ' + path.basename(WFILE).replace(/\.bin\.gz$/, '') : '');
 const CFG = { depth: bv[0], exact: bv[1], wld: bv[2], end: bv[3], mpc: 1 };
 const LEVELS = opt('levels', '12,15,18,21').split(',').map(Number), N = +opt('n', 100), PROCS = +opt('procs', Math.max(1, os.cpus().length - 2));
 const OPEN = path.resolve(opt('openings', path.join(__dirname, 'train/op10.bin'))), OUT = opt('out', 'edax-anchor.jsonl'), GAMES = opt('games', '');
@@ -54,7 +55,7 @@ if (args[0] === '--worker') {   // one process: its share of the openings for on
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rv-variant-')); fs.copyFileSync(path.join(RV, 'engine.js'), path.join(dir, 'engine.js')); fs.copyFileSync(w, path.join(dir, 'engine.wasm'));
   }
   const E = require(path.join(dir, 'engine.js')); if (TV) E.MPC.t = +TV;
-  let b = zlib.gunzipSync(fs.readFileSync(path.join(RV, 'weights.bin.gz'))); b = new Uint8Array(b); E.setWeights(new Int16Array(b.buffer, 0, b.length >> 1), 30);
+  let b = zlib.gunzipSync(fs.readFileSync(WFILE ? path.resolve(WFILE) : path.join(RV, 'weights.bin.gz'))); b = new Uint8Array(b); E.setWeights(new Int16Array(b.buffer, 0, b.length >> 1), 30);   // (a v5 file says its own phases)
   const level = +args[1], k = +args[2], d = fs.readFileSync(OPEN), tmp = path.join(os.tmpdir(), `edax-anchor-${process.pid}.obf`);
   const edaxMove = (P, O) => {
     let s = ''; for (let q = 0; q < 64; q++) s += (P >> BigInt(q)) & 1n ? 'X' : (O >> BigInt(q)) & 1n ? 'O' : '-';
