@@ -147,13 +147,20 @@ def galaxy_rail():
     return doc(d, ''.join(g))
 
 def jelly_sea():
-    """クラゲの海 (UR): deep indigo water lit from above, soft light shafts, a seabed of glowing anemones — the jellyfish are the page's"""
-    d = lin('sky', [(0, '#3d7fae'), (.35, '#245a8c'), (.8, '#173a6a'), (1, '#132f58')]) + lin('ray', [(0, '#ffffff'), (1, '#ffffff00')])
-    g = [f'<rect width="{VW}" height="{VH}" fill="url(#sky)"/>']
-    g.append(''.join(f'<path d="M{x} 0 L{x + w} 0 L{x + w * 2.2} 1100 L{x + w * 1.2} 1100 Z" fill="url(#ray)" opacity=".10"/>' for x, w in ((180, 80), (620, 60), (1080, 100), (1560, 70))))
-    g.append(f'<path d="{ridge_path(1080, 30, 391, 7)}" fill="#10294d"/>')
+    """クラゲの海 (UR): deep indigo water lit from above, soft light shafts, a seabed of glowing anemones — the jellyfish are the page's.
+    Soft (2026-11-20 ユーザー：ベクター感が強い): blurred shafts and glows, a hazy seabed, no hard edges."""
+    from skins_ur3 import BLUR
+    d = BLUR + lin('sky', [(0, '#3d7fae'), (.35, '#245a8c'), (.8, '#173a6a'), (1, '#132f58')]) + lin('ray', [(0, '#ffffff'), (1, '#ffffff00')]) + \
+        '<radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#d8f2ff" stop-opacity=".55"/><stop offset="1" stop-color="#d8f2ff" stop-opacity="0"/></radialGradient>'
+    g = [f'<rect width="{VW}" height="{VH}" fill="url(#sky)"/>', '<ellipse cx="900" cy="-60" rx="1300" ry="380" fill="url(#sun)"/>']
+    g.append(''.join(f'<path d="M{x} -40 L{x + w} -40 L{x + w * 2.4} 1120 L{x + w * 1.1} 1120 Z" fill="url(#ray)" opacity=".13" filter="url(#b16)"/>' for x, w in ((180, 80), (620, 60), (1080, 100), (1560, 70), (380, 40), (1320, 50))))
+    r = RNG(392)
+    g.append(''.join(f'<circle cx="{r.random() * 1920:.0f}" cy="{r.random() * 1050:.0f}" r="{1 + r.random() * 2.5:.1f}" fill="#d8f2ff" opacity="{.15 + r.random() * .35:.2f}" filter="url(#b2)"/>' for _ in range(160)))
+    g.append(f'<path d="{ridge_path(1060, 30, 391, 7)}" fill="#163a66" opacity=".7" filter="url(#b8)"/>')
+    g.append(f'<path d="{ridge_path(1090, 24, 393, 8)}" fill="#10294d" filter="url(#b2)"/>')
     for x, c in ((180, '#f7a8c8'), (260, '#a9e4ff'), (1600, '#d0b4ff'), (1720, '#f7a8c8'), (980, '#a9e4ff')):
-        g.append(''.join(f'<path d="M{x} 1110 C{x + dx * .4} {1080 - abs(dx) * .2} {x + dx * .8} {1060 - abs(dx) * .3} {x + dx} 1040" stroke="{c}" stroke-width="6" fill="none" stroke-linecap="round" opacity=".85"/><circle cx="{x + dx}" cy="1040" r="6" fill="{c}"/>' for dx in (-40, -20, 0, 20, 40)))
+        g.append(f'<ellipse cx="{x}" cy="1060" rx="90" ry="60" fill="{c}" opacity=".28" filter="url(#b16)"/>')
+        g.append('<g opacity=".8" filter="url(#b2)">' + ''.join(f'<path d="M{x} 1110 C{x + dx * .4} {1080 - abs(dx) * .2} {x + dx * .8} {1060 - abs(dx) * .3} {x + dx} 1040" stroke="{c}" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="{x + dx}" cy="1040" r="7" fill="{c}"/>' for dx in (-40, -20, 0, 20, 40)) + '</g>')
     return doc(d, ''.join(g))
 
 SSR3 = {'s25': blue_sky, 's26': sunset_hills, 's27': seaside, 's28': snowfield, 's29': flower_meadow, 's30': dunes, 's31': lake, 's33': night_sky,
