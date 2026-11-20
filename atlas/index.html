@@ -106,6 +106,18 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.95);border-
 /* ---------- skins (きせかえ → スキン, 2026-11-20; atlas/skins.js): the page background, the header / sticky bars and the
    selected menu tab follow the worn skin; cards, sheets and the 3D view keep their own colours ---------- */
 html[data-skin] body{background-color:var(--sk-bg);background-image:none}
+/* (2026-11-21 the user) アトラモたちの会話の吹き出しもスキンの色に：白＋スキン色の縁、顔の丸はアクセント色 */
+html[data-skin]:not(.skdark){--sk-acc0:var(--sk-navm)}html[data-skin].skdark{--sk-acc0:color-mix(in srgb,var(--sk-hdr) 55%,var(--sk-navm))}
+html[data-skin] body:not(#_):not(#_) :is(.npc-bub,.atlas-guide .bub,.rgd .bub,#avTalk .at-bub){background:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;box-shadow:0 4px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) :is(.npc-bub,.atlas-guide .bub,.rgd .bub)::before{border-right-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) :is(.npc-bub,.rgd .bub)::after{border-right-color:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important}
+html[data-skin][dir=rtl] body:not(#_):not(#_) :is(.npc-bub,.atlas-guide .bub,.rgd .bub)::before{border-right-color:transparent!important;border-left-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) #avTalk .at-bub::after{border-top-color:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important}
+html[data-skin].atlas-skin body:not(#_):not(#_) .atlas-guide .bub::before{border-top-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) :is(.npc-float:not([data-who=boss]) .npc-pic,.atlas-guide .pic,.rgd .pic){background:radial-gradient(circle at 40% 35%,#fff,color-mix(in srgb,var(--sk-acc0) 40%,#fff))!important}
+html[data-skin] body:not(#_):not(#_) #avTalk .at-ch .bg{box-shadow:0 0 0 6px #fff,0 0 0 9px color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8),0 14px 30px rgba(20,20,60,.25)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .coach{background:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;box-shadow:0 4px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+
 html[data-skk=tile] body{background-image:var(--sk-img);background-size:var(--sk-size)}
 html[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;will-change:transform;background:var(--sk-bg) var(--sk-img) var(--sk-pos,50% 100%)/cover no-repeat;pointer-events:none}
 @media (max-aspect-ratio:6/5){html[data-skp] body::before,html[data-skp] #skfx .fx-x{background-position-y:var(--sk-pyp,100%)}html[data-skp] body::before{background-image:var(--sk-imgp)}html[data-skp] #skfx .fx-x{background-image:var(--sk-img2p)}}
@@ -709,27 +721,54 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .chip em{font-style:normal;font-family:var(--round);font-size:12px;opacity:.7}
 .achsum{display:flex;gap:10px;align-items:center;margin:4px 0 14px;flex-wrap:wrap}
 .alist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
-/* 実績 (2026-11-21): one tile per group (共通 + each game); the open one's awards sit right under its row — the panel spans the
-   whole grid, and 'dense' lets the tiles after it fill the rest of the tile's own row */
-.anear{margin:0 0 18px}.anear .glh{margin-bottom:10px}
-.agsec{margin:0 0 18px}.agsec .glh{margin-bottom:10px}.agsec:last-child{margin-bottom:0}
-.agl{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));grid-auto-flow:row dense;gap:10px}
-.agt{display:flex;align-items:center;gap:10px;min-width:0;padding:9px 12px 9px 9px;border-radius:20px;font:inherit;color:inherit;text-align:start;cursor:pointer;position:relative;transition:transform .12s,box-shadow .12s}
-.agt .pic{flex:none;width:52px;height:52px;display:grid;place-items:center}
-.agt .pic img{width:52px;height:52px;object-fit:contain;display:block}.agt .pic img.flat{width:40px;height:40px;border-radius:11px}
-.agt .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
-.agt .tx b{font-weight:900;font-size:14.5px;line-height:1.25;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}   /* (a long name takes a second line: never cut to "ドット・アンド・ボッ…") */
-.agt .pr{display:flex;align-items:center;gap:8px}.agt .pr .bar{flex:1;height:8px}
-.agt .pr em{flex:none;font-style:normal;font-family:var(--round);font-weight:700;font-size:12px;color:var(--ink2);min-width:3.2em;text-align:end}
-.agt.full .pr em{color:var(--mint2)}.agt.full .pr em::after{content:' ✓'}
-.agt .cv{flex:none;width:9px;height:9px;border-right:2.5px solid #c9b78f;border-bottom:2.5px solid #c9b78f;transform:translateY(-2px) rotate(45deg);transition:transform .18s;margin-inline:2px 4px}
-.agt.open .cv{transform:translateY(2px) rotate(225deg);border-color:var(--ink)}
-@media (hover:hover){.agt:hover{transform:translateY(-2px)}}
-.agt:active{transform:translateY(2px)}
-.agt.open{outline:2.5px solid var(--ink);outline-offset:-2.5px}
-.agp{grid-column:1/-1;margin:0 0 4px;padding:12px;border-radius:22px;background:rgba(255,255,255,.62);border:2px solid var(--line);animation:agpIn .18s ease-out}
+/* 実績 — Luxury 路線 (2026-11-21 ユーザー：ごちゃごちゃしている → 綺麗にまとめる). One sheet of paper per section (hairline gold
+   frame, soft shadow), a centred heading between thin gold rules, and plain rows inside parted by hairlines: icon · name · a thin
+   gold line of progress · n / all. The open row's awards sit under its own row (the panel spans the sheet; 'dense' keeps the
+   row whole). One accent only (gold); no pills, no thick borders. The sheets are opaque, so every skin reads the same. */
+#pg-ach{--lx-g:#c39a45;--lx-g2:#e3c57c;--lx-h:#ecdfbf;--lx-p:#fffdf8;--lx-t:#8a6a2a;--lx-tr:#f1e8d2}
+#pg-ach .lxa,#pg-ach .achsum{background:var(--lx-p);border:1px solid #e2cf9f;border-radius:22px;box-shadow:0 14px 34px -24px rgba(80,54,10,.5)}
+#pg-ach .achsum{gap:18px;margin:6px 0 20px;padding:16px 24px;flex-wrap:nowrap}
+#pg-ach .achsum > b{font-size:24px!important;font-weight:700;letter-spacing:.02em;color:var(--ink);text-shadow:none;white-space:nowrap}
+#pg-ach .achsum .bar{height:4px;background:var(--lx-tr)}#pg-ach .achsum .bar i{background:linear-gradient(90deg,var(--lx-g),var(--lx-g2))}
+#pg-ach .achsum .coin{box-shadow:none;border:1px solid var(--lx-h);background:#fffaf0}
+#pg-ach .aseg{background:none;border:1px solid var(--lx-h);padding:3px}
+#pg-ach .aseg button{font-weight:700;letter-spacing:.04em}#pg-ach .aseg button[aria-pressed=true]{background:var(--ink);color:#fff}
+#pg-ach .lxa{margin:0 0 20px;padding:20px 28px 10px}
+#pg-ach .lxa.one,#pg-ach .anear{padding-bottom:12px}
+.lxa-h{display:flex;align-items:center;justify-content:center;gap:16px;margin:0 0 8px;color:var(--lx-t);font-family:var(--round);font-weight:700;font-size:15px;letter-spacing:.16em}
+.lxa-h::before,.lxa-h::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--lx-g) 70%)}
+.lxa-h::after{background:linear-gradient(270deg,transparent,var(--lx-g) 70%);order:3}
+.lxa-h em{order:2;font-style:normal;font-size:12px;letter-spacing:.06em;color:#b39a63;padding-inline-start:16px;border-inline-start:1px solid var(--lx-h)}
+.lxa-h em b{font-weight:700;color:var(--lx-t)}
+.agl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:row dense;column-gap:56px;background:linear-gradient(var(--lx-h),var(--lx-h)) 50% 50%/1px calc(100% - 24px) no-repeat}
+.lxa.one .agl{grid-template-columns:minmax(0,1fr);background:none}
+.agt{display:grid;grid-template-columns:44px minmax(0,1fr) 132px 5.2em 12px;align-items:center;column-gap:14px;min-width:0;min-height:60px;padding:6px 4px;border:0;border-bottom:1px solid var(--lx-h);background:none;font:inherit;color:var(--ink);text-align:start;cursor:pointer;transition:background .15s}
+.lxa.one .agt,.agl > .agt:last-child,.agl > .agt:nth-last-child(2):nth-child(odd){border-bottom-color:transparent}
+.agt .pic{width:44px;height:44px;display:grid;place-items:center}
+.agt .pic img{width:44px;height:44px;object-fit:contain;display:block}.agt .pic img.flat{width:32px;height:32px;border-radius:9px}
+.agt .nm{font-weight:700;font-size:15px;line-height:1.3;letter-spacing:.02em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}   /* (a long name takes a second line: never cut to "ドット・アンド・ボッ…") */
+.agt .bar{height:3px;background:var(--lx-tr)}.agt .bar i{background:linear-gradient(90deg,var(--lx-g),var(--lx-g2));transition:none}
+.agt em{font-style:normal;font-family:var(--round);font-size:12.5px;letter-spacing:.03em;color:#a8946a;text-align:end;white-space:nowrap}
+.agt em b{font-weight:700;font-size:14px;color:var(--ink)}
+.agt em,.lxa-h em{direction:ltr;unicode-bidi:isolate}   /* (n / all reads the same way in Arabic) */
+.agt.full em b{color:var(--lx-t)}.agt.full em::after{content:' ✓';color:var(--lx-g)}
+.agt .cv{width:7px;height:7px;border-right:1.5px solid #c8b382;border-bottom:1.5px solid #c8b382;transform:translateY(-2px) rotate(45deg);transition:transform .18s;justify-self:center}
+.agt.open .cv{transform:translateY(2px) rotate(225deg);border-color:var(--lx-t)}
+.agt.open .nm{color:var(--lx-t)}.agt.open{border-bottom-color:transparent}
+@media (hover:hover){.agt:hover{background:linear-gradient(90deg,transparent,#fbf4e2 12%,#fbf4e2 88%,transparent)}}
+.agt:focus-visible{outline:2px solid var(--lx-g);outline-offset:-2px;border-radius:10px}
+.agp{grid-column:1/-1;margin:2px 0 14px;padding:4px 22px 6px;border-radius:16px;background:#fbf6e9;border:1px solid var(--lx-h);animation:agpIn .18s ease-out}
 @keyframes agpIn{from{opacity:0;transform:translateY(-6px)}}
-html.skdark .agp{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.28)}
+/* the awards themselves, inside a sheet: plain rows too (the cards with thick frames stay in the 「実績を達成！」 sheet) */
+#pg-ach .alist{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:36px;row-gap:0}
+#pg-ach .alist .ach{background:none;border:0;box-shadow:none;border-radius:0;padding:11px 0;gap:12px;border-bottom:1px solid var(--lx-h)}
+#pg-ach .anear .alist .ach{border-bottom:0;padding:8px 0 4px}
+#pg-ach .alist .medal,#pg-ach .alist .medal svg{width:34px;height:34px}
+#pg-ach .alist .ach .t1{font-weight:700;font-size:14px;letter-spacing:.01em}
+#pg-ach .alist .ach .t2{margin-top:5px;font-size:11.5px;color:#a8946a;gap:10px}
+#pg-ach .alist .ach .t2 .bar{height:3px;background:var(--lx-tr)}#pg-ach .alist .ach .t2 .bar i{background:linear-gradient(90deg,var(--lx-g),var(--lx-g2))!important}
+#pg-ach .alist .ach .rw{font-size:12.5px;color:var(--lx-t);min-width:48px;justify-content:flex-end}
+#pg-ach .alist .ach:not(.todo) .rw::after{content:'✓';margin-inline-start:3px;color:var(--lx-g)}
 .ach{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:20px}
 .ach.todo{background:#fbf7ee;box-shadow:none}
 .medal{flex:none;width:46px;height:46px;position:relative}
@@ -980,13 +1019,20 @@ html.skdark .agp{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.
   .aseg{grid-column:1/-1;display:flex;gap:2px;padding:3px;border-radius:99px;background:#f6efdd}
   .aseg button{flex:1;border:0;background:none;border-radius:99px;padding:6px 4px;font-weight:900;font-size:12.5px;color:var(--ink2);min-height:32px}
   .aseg button[aria-pressed=true]{background:var(--ink);color:#fff}
-  .anear{margin-bottom:12px}.anear .glh{margin-bottom:7px;font-size:14.5px}
-  .agsec{margin-bottom:12px}.agsec .glh{margin-bottom:7px;font-size:14.5px}
-  .agl{grid-template-columns:1fr;gap:6px}
-  .agt{gap:9px;padding:6px 10px 6px 7px;border-radius:16px}
-  .agt .pic{width:42px;height:42px}.agt .pic img{width:42px;height:42px}.agt .pic img.flat{width:32px;height:32px;border-radius:9px}
-  .agt .tx{gap:4px}.agt .tx b{font-size:13.5px}.agt .pr .bar{height:6px}.agt .pr em{font-size:11.5px}
-  .agp{padding:7px;border-radius:16px;margin-bottom:2px}
+  #pg-ach .achsum{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px 12px;margin:0 0 12px;padding:12px 14px;border-radius:18px;border-width:1px}
+  #pg-ach .achsum > b{font-size:19px!important}
+  #pg-ach .lxa{margin-bottom:12px;padding:14px 14px 4px;border-radius:18px}
+  #pg-ach .lxa.one,#pg-ach .anear{padding-bottom:6px}
+  .lxa-h{gap:10px;font-size:13.5px;letter-spacing:.12em;margin-bottom:4px}.lxa-h em{font-size:11px;padding-inline-start:10px}
+  .agl{grid-template-columns:minmax(0,1fr);background:none}
+  .agl > .agt:nth-last-child(2):nth-child(odd){border-bottom-color:var(--lx-h)}.agl > .agt.open{border-bottom-color:transparent}
+  .agt{grid-template-columns:38px minmax(0,1fr) auto 10px;grid-template-areas:"pic nm em cv" "pic bar bar cv";column-gap:11px;row-gap:5px;min-height:54px;padding:8px 2px}
+  .agt .pic{grid-area:pic;width:38px;height:38px}.agt .pic img{width:38px;height:38px}.agt .pic img.flat{width:28px;height:28px;border-radius:8px}
+  .agt .nm{grid-area:nm;font-size:14px;align-self:end}.agt .bar{grid-area:bar;align-self:start}.agt em{grid-area:em;align-self:end;font-size:11.5px}.agt em b{font-size:13px}.agt .cv{grid-area:cv}
+  .agp{margin:0 0 10px;padding:2px 12px 4px;border-radius:14px}
+  #pg-ach .alist{grid-template-columns:minmax(0,1fr)}
+  #pg-ach .alist .ach{padding:9px 0;gap:10px}#pg-ach .anear .alist .ach{border-bottom:1px solid var(--lx-h);padding:9px 0}#pg-ach .anear .alist .ach:last-child{border-bottom:0}
+  #pg-ach .alist .ach:last-child{border-bottom:0}
   .alist{grid-template-columns:1fr;gap:6px}
   .alist .ach{gap:10px;padding:7px 10px;border-radius:14px}
   .alist .medal{width:34px;height:34px}.alist .medal svg{width:34px;height:34px}
@@ -2376,7 +2422,7 @@ html.bv-on:not(#_) .msbtn,html.rec-on:not(#_) .msbtn,html[data-pg=museum]:not(#_
   <section class="pg" id="pg-ach">
     <h2 class="h" id="hAch"></h2>
     <div class="achsum" id="achSum"></div>
-    <div class="anear" id="achNear" hidden></div>
+    <div class="lxa anear" id="achNear" hidden></div>
     <div class="agsecs" id="achList"></div>
   </section>
 
@@ -2497,7 +2543,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="museum.css?v=1">
 <script src="worldmap.js?v=40"></script>
 <script src="museum.js?v=1"></script>
-<script src="npc/npc.js?v=45"></script>
+<script src="npc/npc.js?v=46"></script>
 <script src="avtalk.js?v=4"></script>
 <script>/* Page states as classes on <html> (2026-11-21) — html.cov-on: the 3D view / Historia / a sheet / a level sheet is open;
    html.bv-on: the 3D view; html.rec-on: the records page; html.bv-playing: a game is in play; html.ul-on: the news line is there. The CSS used html:has(#bv.on,…) for these: with a
@@ -2511,7 +2557,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
     if (ul && !seen.has(ul)) { seen.add(ul); mo.observe(ul, { attributes: true, attributeFilter: ['hidden'] }); } }
   mo = new MutationObserver(sync); mo.observe(document.body, { childList: true }); sync(); window.__pgState = sync; })();
 </script>
-<script src="app.js?v=471"></script>
+<script src="app.js?v=472"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

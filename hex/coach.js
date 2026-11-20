@@ -532,7 +532,8 @@ function render() {
   if (!f) return put(h);
   if (!myTurn()) { h += `<p class="ck-muted">${esc(tx('oppTurn'))}</p>` + verdictHtml(); return put(h); }
   const n = f.n, list = listAt(cur), cl = candInfo(list, f);
-  const bv = list && list.length ? list[0].v : null, wr = bv != null ? wrOf(bv) : null;
+  // (2026-11-21) the empty board with the swap rule: the first move is worth the smaller of its value and the swapped one (≈ even)
+  const bv = list && list.length ? (cur === 0 && gSwap && !startSpec ? list.reduce((m, x) => Math.max(m, Math.min(x.v, -x.v)), -Infinity) : list[0].v) : null, wr = bv != null ? wrOf(bv) : null;
   // summary chips
   const chips = [];
   if (bv != null && settings.eval) chips.push({ k: tx('form'), v: esc(tx('f.' + formOf(bv)) + (Math.abs(bv) > WINT ? '' : ' ' + pctS(wr))), cls: wr >= .54 ? 'pos' : wr <= .46 ? 'neg' : '' });
