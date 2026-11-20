@@ -107,7 +107,7 @@ function renderStatus(msg) {
 function renderKifu() {
   const k = $('#kifu');
   if (!G.st || !G.st.log.length) { k.innerHTML = `<div class="empty">${t('kifu.empty')}</div>`; return; }
-  k.innerHTML = G.st.log.map((m, i) => m.rest ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('log.rest')}</span></span>` : m.skill ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('sk.' + m.skill)}</span>${m.blk ? ` <span class="x">${t('log.blk')}</span>` : ''} ${m.blk || m.cell < 0 ? '' : m.skill === 'torpedo' || m.skill === 'radar' ? 'ABCDEFGHIJ'[m.cell % 10] : m.skill === 'scout' || m.skill === 'rtorpedo' ? String((m.cell / 10 | 0) + 1) : E.cellName(m.cell)}${(m.skill === 'sonar' || m.skill === 'scout' || m.skill === 'radar' || m.skill === 'probe' || m.skill === 'sweep' || m.skill === 'flare' || m.skill === 'echo' || m.skill === 'diag' || m.skill === 'cross' || m.skill === 'bracket') && !m.blk && m.k != null ? ' → ' + m.k : ''}</span>` : `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i>${m.via === 'counter' ? `<span class="s">${t('sk.counter')}</span> ` : ''}${E.cellName(m.cell)} ${m.sunk >= 0 ? `<span class="s">${t('log.sunk')}</span>` : m.by === 0 && m.fog && G.st.sides[1].fogged[m.cell] ? t('log.fog') : m.mine ? `<span class="x">${t('log.mine')}</span>` : m.dent ? `<span class="x">${t('log.dent')}</span>` : m.hit ? `<span class="x">${t('log.hit')}</span>` : t('log.miss')}</span>`).join('');
+  k.innerHTML = G.st.log.map((m, i) => m.rest ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('log.rest')}</span></span>` : m.skill ? `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i><span class="s">${t('sk.' + m.skill)}</span>${m.blk ? ` <span class="x">${t('log.blk')}</span>` : ''} ${m.blk || m.cell < 0 ? '' : m.skill === 'torpedo' || m.skill === 'radar' ? 'ABCDEFGHIJ'[m.cell % 10] : m.skill === 'scout' || m.skill === 'rtorpedo' || m.skill === 'listen' ? String((m.cell / 10 | 0) + 1) : E.cellName(m.cell)}${(m.skill === 'sonar' || m.skill === 'scout' || m.skill === 'radar' || m.skill === 'probe' || m.skill === 'sweep' || m.skill === 'flare' || m.skill === 'echo' || m.skill === 'diag' || m.skill === 'cross' || m.skill === 'listen' || m.skill === 'bracket') && !m.blk && m.k != null ? ' → ' + m.k : ''}</span>` : `<span class="k"><em>${i + 1}</em><i class="s${m.by}"></i>${m.via === 'counter' ? `<span class="s">${t('sk.counter')}</span> ` : ''}${E.cellName(m.cell)} ${m.sunk >= 0 ? `<span class="s">${t('log.sunk')}</span>` : m.by === 0 && m.fog && G.st.sides[1].fogged[m.cell] ? t('log.fog') : m.mine ? `<span class="x">${t('log.mine')}</span>` : m.dent ? `<span class="x">${t('log.dent')}</span>` : m.hit ? `<span class="x">${t('log.hit')}</span>` : t('log.miss')}</span>`).join('');
   k.scrollTop = k.scrollHeight;
 }
 function renderEval() {
@@ -135,6 +135,8 @@ function render(msg) {
   renderBoards(); renderFleet(); renderStatus(msg); renderKifu(); renderEval(); renderButtons(); renderSkills(); renderDraft();
 }
 const SK_ICON = {
+  dtorpedo: '<svg viewBox="0 0 24 24"><path d="M8 21V7M16 21V7"/><path d="M5 10l3-4 3 4M13 10l3-4 3 4"/></svg>',
+  listen: '<svg viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>',
   cross: '<svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="3"/></svg>',
   bracket: '<svg viewBox="0 0 24 24"><rect x="1.5" y="9.5" width="5" height="5" rx=".8"/><rect x="17.5" y="9.5" width="5" height="5" rx=".8"/><path d="M10 12h4M12 10v4"/></svg>',
   depth: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/><path d="M12 8.8V7" /></svg>',
@@ -309,12 +311,13 @@ async function doSkill(a) {
   await sleep(by === 1 ? 650 : 250); if (G.st !== st) return null;
   if (noAim || blocked) await sleep(250);
   else if (pv.skill === 'sonar' || pv.skill === 'scout' || pv.skill === 'radar' || pv.skill === 'sweep' || pv.skill === 'flare' || pv.skill === 'echo' || pv.skill === 'diag' || pv.skill === 'cross') await SB.sweep($('#bsvg'), pv.area);
-  else { for (const x of pv.shots) { SB.fx($('#bsvg'), x.cell, by === 0 && st.sides[1].fog > 0 ? 'fog' : x.hit, true); setTimeout(() => sfx(x.hit ? 'hit' : 'miss'), 160); await sleep(pv.skill === 'torpedo' || pv.skill === 'rtorpedo' ? 120 : 170); } if (pv.ic >= 0) SB.fx($('#bsvg'), pv.ic, 'fog', true); await sleep(330); }
+  else { for (const x of pv.shots) { SB.fx($('#bsvg'), x.cell, by === 0 && st.sides[1].fog > 0 ? 'fog' : x.hit, true); setTimeout(() => sfx(x.hit ? 'hit' : 'miss'), 160); await sleep(pv.skill === 'torpedo' || pv.skill === 'rtorpedo' || pv.skill === 'dtorpedo' ? 120 : 170); } if (pv.ic >= 0) SB.fx($('#bsvg'), pv.ic, 'fog', true); await sleep(330); }
   if (G.st !== st) return null;
   const res = E.useSkill(st, a.ship, a.cell); if (!res) return null;
   G.armed = null; hoverCell = -1;
   const sunk = res.shots.filter(x => x.sunk >= 0), hits = res.shots.filter(x => x.hit).length;
-  if (res.blocked) { sfx('bad'); toast(t(by === 0 ? 'fx.blk' : 'fx.foe.blk', { s: t('sk.' + res.skill) })); }
+  if (res.skill === 'listen') toast(t(by === 0 ? 'fx.listen' : 'fx.foe.listen', { r: res.row + 1, k: res.k }));
+  else if (res.blocked) { sfx('bad'); toast(t(by === 0 ? 'fx.blk' : 'fx.foe.blk', { s: t('sk.' + res.skill) })); }
   else if (res.skill === 'flare') toast(t('fx.flare', { k: res.k }));
   else if (res.skill === 'sonar' || res.skill === 'scout' || res.skill === 'radar' || res.skill === 'sweep' || res.skill === 'echo' || res.skill === 'diag' || res.skill === 'cross') toast(t('fx.' + res.skill, { k: res.k, n: res.swept || 0 }));
   else if (noAim) toast(t((by === 0 ? 'fx.' : 'fx.foe.') + res.skill, { c: res.fix != null ? E.cellName(res.fix) : res.lit != null ? E.cellName(res.lit) : '', s: res.pi != null ? t('ship.' + st.sides[by].ships[res.pi].t) : '' }));
