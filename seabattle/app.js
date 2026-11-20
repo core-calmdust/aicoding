@@ -229,21 +229,21 @@ function renderDraft() {
   $('#drTurn').textContent = t(d.turn === 0 ? 'dr.you' : 'dr.ai'); $('#drTurn').classList.toggle('me', d.turn === 0);
   // the side card: the field at a glance (tap → the pick sheet)
   $('#drRows').innerHTML = '';
-  const who = (p, name) => `<button class="dw${d.turn === p ? ' turn' : ''}" data-v="${p === 1 ? 'foe' : 'mine'}"><b>${name}</b><span class="pips">${d.picks[p].map(k => `<span class="pip">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</span><em>${t('dr.left', { c: E.draftLeft(d, p) - (p === 0 && d.turn === 0 ? pickSel.reduce((a, k) => a + E.TYPES[k].cost, 0) : 0) })}</em></button>`;   // (a compact row per side; tap → the fleet sheet)
+  const who = (p, name) => `<button class="dw${d.turn === p ? ' turn' : ''}" data-v="${p === 1 ? 'foe' : 'mine'}"><b>${name}</b><span class="pips">${d.picks[p].map(k => `<span class="pip">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</span><em>${t('dr.left', { c: E.draftLeft(d, p) - (p === 0 && d.turn === 0 ? E.draftCost(d.picks[0].concat(pickSel)) - E.draftCost(d.picks[0]) : 0) })}</em></button>`;   // (a compact row per side; tap → the fleet sheet)
   $('#drWho').innerHTML = who(1, 'AI Lv.' + G.level) + who(0, t('you'));
   // the pick sheet: one card per type on the table, by role, cheapest first
   if (!mine) pickSel = []; pickSel = pickSel.filter(k => E.draftCan(d, 0, k));
-  const run = myRun(d), selCost = pickSel.reduce((a, k) => a + E.TYPES[k].cost, 0);
+  const run = myRun(d), costOf = ks => E.draftCost(d.picks[0].concat(ks)) - E.draftCost(d.picks[0]), selCost = costOf(pickSel);
   // a card can be chosen if it fits beside the ones already chosen (cost); when the run is full a tap swaps it for the last one chosen
-  const fits = k => { if (pickSel.includes(k)) return true; const rest = pickSel.length < run ? pickSel : pickSel.slice(0, -1); return rest.reduce((a, x) => a + E.TYPES[x].cost, 0) + E.TYPES[k].cost <= E.draftLeft(d, 0); };
-  const card = k => { const T = E.TYPES[k], taken = d.picks[0].includes(k), can = mine && E.draftCan(d, 0, k) && fits(k), sel = pickSel.includes(k);
-    const why = taken ? t('pk.taken') : !d.pool[k] ? t('pk.gone') : T.cost > E.draftLeft(d, 0) - (mine && !sel ? selCost : 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : '';
+  const fits = k => { if (pickSel.includes(k)) return true; const rest = pickSel.length < run ? pickSel : pickSel.slice(0, -1); return costOf(rest.concat(k)) <= E.draftLeft(d, 0); };
+  const card = k => { const T = E.TYPES[k], have = d.picks[0].filter(x => x === k).length, taken = have >= E.MAXSAME, dup = have > 0 && !taken, cost = E.pickCost(d, 0, k), can = mine && E.draftCan(d, 0, k) && fits(k), sel = pickSel.includes(k);
+    const why = taken ? t('pk.taken') : !d.pool[k] ? t('pk.gone') : cost > E.draftLeft(d, 0) - (mine && !sel ? selCost : 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : '';
     const kind = T.skill ? t('pk.active', { n: T.cd }) : PASSIVE_T(T) ? t('pk.passive') : t('pk.none');
-    return `<div class="pc g${ROLE_OF(k)}${can ? ' can' : ' off'}${taken ? ' taken' : ''}${sel ? ' sel' : ''}" data-k="${k}" aria-pressed="${sel}" ${can ? 'role="button" tabindex="0"' : ''} title="${can ? t('pk.tap') : why}"><div class="pt"><span class="pcost">${T.cost}</span><b>${t('ship.' + k)}</b>${lenIcon(T.len)}<em>×${d.pool[k]}</em></div>
+    return `<div class="pc g${ROLE_OF(k)}${can ? ' can' : ' off'}${taken ? ' taken' : ''}${dup ? ' dup' : ''}${sel ? ' sel' : ''}" data-k="${k}" aria-pressed="${sel}" ${can ? 'role="button" tabindex="0"' : ''} title="${can ? t('pk.tap') : why}"><div class="pt"><span class="pcost">${cost}</span><b>${t('ship.' + k)}</b>${lenIcon(T.len)}<em>×${d.pool[k]}</em></div>
       <div class="pa">${cardArt(T)}</div>
       <div class="ps"><i class="ic">${SK_ICON[abilityKey(T)] || ''}</i><b>${shipSkillName(T)}</b><small>${kind}</small></div>
       <p>${shipSkillText(T)}</p>
-      ${sel ? `<span class="psel">${run > 1 ? (pickSel.indexOf(k) + 1) + ' ・ ' : ''}${t('pk.sel')}</span>` : why ? `<span class="pwhy">${why}</span>` : ''}</div>`; };
+      ${sel ? `<span class="psel">${run > 1 ? (pickSel.indexOf(k) + 1) + ' ・ ' : ''}${t('pk.sel')}</span>` : why ? `<span class="pwhy">${why}</span>` : dup ? `<span class="pwhy pdup">${t('pk.dup', { n: E.DUP_EXTRA })}</span>` : ''}</div>`; };
   $('#pickHead').innerHTML = `<b>${t(d.turn === 0 ? 'dr.you' : 'dr.ai')}</b><span class="${pickSel.length ? 'pend' : ''}">${t('pk.left', { c: E.draftLeft(d, 0) - selCost, n: d.picks[0].length + pickSel.length, m: E.MAXSHIPS })}</span>`;
   $('#pickViews').innerHTML = [['pick', t('pk.v.pick')], ['foe', t('pk.v.foe', { n: d.picks[1].length })], ['mine', t('pk.v.mine', { n: d.picks[0].length })]].map(([v, l]) => `<button data-v="${v}" class="${v === pickView ? 'on' : ''}">${l}</button>`).join('') + `<button id="btnAllShips" class="all">${t('dr.all')}</button>`;
   $('#pickOverlay .modal').dataset.view = pickView;
