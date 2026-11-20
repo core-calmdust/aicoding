@@ -266,11 +266,25 @@
       emit();
     }
   }
+
+  // マルチスレッドコーチ (2026-11-21): the per-move analysis (coach · 形勢 · hints; jobs tagged 'ana' / 'coach') on at most 2 threads
+  // unless switched on — it ran on every core after each move, at any AI level (300–800 % CPU). PRO's own count (mtThreads) wins.
+  const K_COACH = 'aicoding-mtcoach';
+  const coachAll = () => { try { return localStorage.getItem(K_COACH) === '1'; } catch (e) { return false; } };
+  const coachCap = (msg, tag) => (tag === 'ana' || tag === 'coach') && !(msg.mtThreads > 0) && !coachAll();
+  function addCoachOpt() {
+    if (!window.HeaderBar || !HeaderBar.addOption) return;
+    const tt = { ja: 'オン：コーチ・形勢表示・ヒントの読みも全コアで。オフ（既定）：2スレッドまで（CPUを使いすぎない）。AIの手と最強解析はいつも全コア。', en: 'On: the coach, evaluation and hints search on every core. Off (default): up to 2 threads (less CPU). The AI\'s moves and deep analysis always use every core.' };
+    HeaderBar.addOption({ id: 'mtcoach', icon: ICON, label: { ja: 'マルチスレッドコーチ', en: 'Multi-threaded coach', zh: '多线程教练', 'zh-TW': '多執行緒教練', ko: '멀티스레드 코치', es: 'Coach multihilo', fr: 'Coach multithread', pt: 'Treinador multithread', de: 'Multithread-Coach', ru: 'Многопоточный тренер', tr: 'Çok iş parçacıklı koç', id: 'Pelatih multi-thread', hi: 'मल्टी-थ्रेड कोच', ar: 'المدرّب متعدد الخيوط' }, type: 'toggle', get: coachAll,
+      set: v => { try { localStorage.setItem(K_COACH, v ? '1' : '0'); } catch (e) {} }, hidden: () => !on(),
+      title: () => { const l = (document.documentElement.lang || 'ja').slice(0, 2); return tt[l] || tt.en; } });
+  }
   let noToggle = false;   // (init({ opt: false }): the page's own toggle — shared/mtsplit.js in its shared mode — calls set())
   function addOpt() {
     if (opt || !window.HeaderBar || !HeaderBar.addOption) return;
     opt = noToggle ? { sync() {} } : HeaderBar.addOption({ id: 'mt', icon: ICON, label: T.label, type: 'toggle', get: on, set,
       hidden: () => !CAN || helpers() < 1, title: () => tx(COI ? 'coiOff' : ISO && !FLAGGED ? 'auto' : 'reload') });
+    addCoachOpt();
     if (COI) HeaderBar.addOption({ id: 'mtnote', icon: INFO, label: T.note, type: 'button', title: () => tx('coiOff'), onClick: () => alert(tx('reload')) });
   }
   function init(o) {
@@ -325,7 +339,7 @@
         if (j.cancelled || !ok || dead) { if (j.resolve) j.resolve(j.cancelled ? null : undefined); return; }
         j.running = true;
         Atomics.store(ctl, 0, 0); X.mt_stop(0); cnt.fill(0);
-        const nh = msg.mtThreads > 0 ? Math.min(HM, msg.mtThreads - 1) : H;   // (mtThreads: PRO mode's thread count, shared/proset.js — more helpers are started when asked for)
+        const nh = msg.mtThreads > 0 ? Math.min(HM, msg.mtThreads - 1) : coachCap(msg, tag) ? Math.min(H, 1) : H;   // (マルチスレッドコーチ off: the coach's analysis on 2 threads)   // (mtThreads: PRO mode's thread count, shared/proset.js — more helpers are started when asked for)
         try {   // more helpers asked for (PRO): start them and give them the same setup as the first ones (weights, tables)
           const add = []; while (hw.length + add.length < nh) add.push(await spawn(cfg.helper, ini(hw.length + add.length + 1)));
           if (add.length && cfg.after) await cfg.after(X, memRef, add);
