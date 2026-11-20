@@ -268,6 +268,20 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(94); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
     ok(await p.evaluate(() => { const c = G.st.log.filter(x => x.via === 'dtorpedo').map(x => x.cell); return c.some(x => x % 10 === 4) && c.some(x => x % 10 === 5) && c.every(x => x % 10 === 4 || x % 10 === 5); }), name + ': twin torpedoes run up columns E and F');
     await shot('dtorpedo');
+    // 第19弾: a guided missile that hits strikes the same ship again; all-out readies every other skill
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[47, 46, 3], [0, 4, 3]]);
+    await p.waitForTimeout(300);
+    const gc = await p.evaluate(() => { const T = G.st.sides[1], i = T.ships.findIndex(s => s.t === 0); for (let k = 0; k < 100; k++) if (T.grid[k] === i) return k; });
+    i = await skillBtn('guided'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(gc); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(c => { const v = G.st.log.filter(x => x.via === 'guided'); const T = G.st.sides[1]; return v.length === 2 && v[0].cell === c && T.grid[v[1].cell] === T.grid[c] && v[1].hit; }, gc), name + ': the guided missile strikes the carrier twice');
+    await idle(); await p.evaluate(() => { G.view = 'enemy'; const c = G.st.cd[0]; G.my.forEach((s, j) => { c[j] = SeaEngine.TYPES[s.t].skill === 'allout' ? 0 : SeaEngine.TYPES[s.t].skill ? 4 : c[j]; }); render(); });
+    i = await skillBtn('allout'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 }); await idle();
+    ok(await p.evaluate(() => G.my.every((s, j) => SeaEngine.TYPES[s.t].skill === 'allout' || !SeaEngine.TYPES[s.t].skill || G.st.cd[0][j] === 0 || G.st.sides[0].sunk[j])), name + ': all-out readies every other skill');
+    await shot('allout');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
