@@ -406,9 +406,9 @@
     // transform of its own layer (the compositor moves the picture; the old SMIL turn re-drew the whole emblem — and its drop
     // shadow — every frame), and the shadows sit on the two still layers, drawn once
     return `<svg class="ttlBase" viewBox="0 0 640 400" aria-hidden="true"><circle cx="320" cy="200" r="176" fill="#111"/></svg>
-      <svg class="ttlRing" viewBox="0 0 640 400" aria-hidden="true"><defs><path id="ringP" d="M320 200m-153 0a153 153 0 1 1 306 0a153 153 0 1 1-306 0"/></defs>
+      <span class="ttlRing"><svg viewBox="0 0 640 400" aria-hidden="true"><defs><path id="ringP" d="M320 200m-153 0a153 153 0 1 1 306 0a153 153 0 1 1-306 0"/></defs>
       <g><text font-family="Fredoka,'Zen Maru Gothic',sans-serif" font-weight="700" font-size="15.5" letter-spacing="3.2" fill="#fff"><textPath href="#ringP" textLength="955" lengthAdjust="spacing">${ring}</textPath></text></g>
-      </svg><svg class="ttlTop" viewBox="0 0 640 400" role="img" aria-hidden="true">
+      </svg></span><svg class="ttlTop" viewBox="0 0 640 400" role="img" aria-hidden="true">
       <circle cx="320" cy="200" r="136" fill="#fff"/>
       <circle cx="320" cy="200" r="128" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="3 5"/>
       <g fill="#111" opacity=".16">${pts(118, 22)}</g>

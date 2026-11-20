@@ -115,7 +115,7 @@ html[data-skin]{--pf-lip:rgba(110,80,40,.2)}html[data-skin].skdark{--pf-lip:rgba
 /* UR effects (atlas/skins.js FX): #skfx sits behind the page; only transform / opacity animate */
 #skfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}
 #skfx i{position:absolute;display:block;font-style:normal}#skfx svg{display:block;width:100%;height:100%;overflow:visible}
-html:has(#bv.on,#hist.on,#ov.on) #skfx *{animation-play-state:paused!important}
+html.skfx-off #skfx *{animation-play-state:paused!important}   /* (skins.js fxGate: hidden tab, window not in front, 3D view / Historia / sheet open) */
 #skfx .fx-x{inset:0;background:var(--sk-img2) var(--sk-pos,50% 100%)/cover no-repeat;opacity:0;animation:skDrift 9s ease-in-out infinite alternate;will-change:opacity}
 @keyframes skDrift{to{opacity:1}}
 html[data-skin] header{background:var(--sk-hdr);border-bottom-color:var(--sk-line)}
@@ -263,7 +263,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
    (it was an SMIL turn inside one SVG under a drop-shadow filter: the whole emblem and its blur were re-drawn every frame) */
 .ttl .ttlBase,.ttl .ttlTop{filter:drop-shadow(0 14px 18px rgba(0,0,0,.12))}
 .ttl .ttlRing,.ttl .ttlTop{position:absolute;left:0;top:0}
-.ttl .ttlRing{transform-origin:50% 50%;will-change:transform;animation:ttlSpin 20s linear infinite}
+.ttl .ttlRing{display:block;width:100%;transform-origin:50% 50%;will-change:transform;animation:ttlSpin 20s linear infinite}   /* (2026-11-21) an HTML box round the ring's SVG: the turn of the <svg> itself was not run by the compositor (measured: a layout + paint of the page every frame) */
 .ttl.pz .ttlRing{animation-play-state:paused}
 @keyframes ttlSpin{to{transform:rotate(360deg)}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -1535,9 +1535,10 @@ html.bv-pland .urtoast{top:calc(52px + var(--sat,env(safe-area-inset-top)));left
 .lgd .d i{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#e6d9bd;font:700 10px var(--round);font-style:normal;color:#fff}
 .lgd .d small{font:700 9.5px var(--round);color:var(--ink2)}
 .lgd .d.got{background:#fff1bf}.lgd .d.got i{background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00);color:#a66a00}
-.lgd .d.now{box-shadow:0 0 0 2px var(--coral);animation:lgPulse 1.6s ease-in-out infinite}
+.lgd .d.now::before,.lgd .d.now::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;animation:lgPulse 1.6s ease-in-out infinite}   /* (2026-11-21) today's ring pulses as two rings cross-fading (opacity only: the compositor runs it). Animating box-shadow itself made the page style / paint a frame 60 times a second for as long as the home tab was shown */
+.lgd .d.now::before{box-shadow:0 0 0 2px var(--coral)}.lgd .d.now::after{box-shadow:0 0 0 4px rgba(255,93,93,.25);opacity:0;animation-name:lgPulse2}
 .lgd .d.big i{width:auto;height:20px;background:none;font-size:16px}.lgd .d.big{background:linear-gradient(135deg,#ffe0f0,#e8dcff)}
-@keyframes lgPulse{50%{box-shadow:0 0 0 4px rgba(255,93,93,.25)}}
+@keyframes lgPulse{50%{opacity:0}}@keyframes lgPulse2{50%{opacity:1}}
 .prof .acc{margin-top:0}
 @media (max-width:600px){.prof .pf-l{width:92px}.prof .pf-l .av svg,.prof .pf-l .av img{width:68px;height:68px}.prof .pf-r{padding:10px 10px 10px 12px;gap:7px}.prof .pf-r input{font-size:17px}
   .pt{grid-template-columns:1fr;justify-items:center;text-align:center;padding:4px 2px;row-gap:1px}.pt .ic{grid-row:auto;font-size:15px}.pt .ic .cn{width:18px;height:18px;font-size:9px}.pt b{font-size:13.5px}.pt b small{font-size:10px}.pt em{font-size:9.5px;max-width:100%}
@@ -2407,7 +2408,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=16"></script>
 <script src="art.js?v=20"></script>
-<script src="skins.js?v=28"></script>
+<script src="skins.js?v=29"></script>
 <script src="../shared/atlas-updates.js?v=49"></script>
 <script src="../shared/atlas.js?v=20261120dx1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
@@ -2472,7 +2473,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=45"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=467"></script>
+<script src="app.js?v=468"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

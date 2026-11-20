@@ -641,7 +641,7 @@
     (function skinBg() {   // (the skin's tint: the page's cards only — the dialogs keep the cream: their inner panels and fades are cream, 2026-11-20)
       let sk = null; try { sk = JSON.parse(localStorage.getItem('atlas-skin-css') || 'null'); } catch (e) {}
       if (!sk || !sk.id) return;
-      const SKV = 28;   // (= the portal's skins.js?v= in atlas/index.html: bump both together)
+      const SKV = 29;   // (= the portal's skins.js?v= in atlas/index.html: bump both together)
       const de = document.documentElement;
       if (!document.getElementById('askinCss')) { const st = document.createElement('style'); st.id = 'askinCss'; st.textContent = `
 html.atlas-skin[data-skin] .atlas-top{background:var(--sk-hdr)!important;border-bottom-color:var(--sk-line)!important}
@@ -670,6 +670,7 @@ html.atlas-skin.askin-bg[data-skk=cover] body::before{content:'';position:fixed;
 #skfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}#skfx i{position:absolute;display:block;font-style:normal}#skfx svg{display:block;width:100%;height:100%;overflow:visible}
 #skfx .fx-x{inset:0;background:var(--sk-img2) var(--sk-pos,50% 100%)/cover no-repeat;opacity:0;animation:skDrift 9s ease-in-out infinite alternate;will-change:opacity}@keyframes skDrift{to{opacity:1}}
 html:not(.askin-bg) #skfx{display:none}
+html.skfx-off #skfx *{animation-play-state:paused!important}
 html.atlas-skin.askin-bg[data-skk=cover] body::before{will-change:transform}   /* (its own layer: a text changing in the right column no longer re-rasters — and re-decodes — the big picture under it; measured 2026-11-20) */`; document.head.appendChild(st); }
       let mode = 'skin'; try { mode = localStorage.getItem('atlas-fullbg2') || 'skin'; } catch (e) {}
       const set = m => { mode = m; de.classList.toggle('askin-bg', m === 'skin'); try { localStorage.setItem('atlas-fullbg2', m); } catch (e) {} try { dispatchEvent(new CustomEvent('atlas-skinbg')); } catch (e) {} };
@@ -681,7 +682,7 @@ html.atlas-skin.askin-bg[data-skk=cover] body::before{will-change:transform}   /
       if (window.HeaderBar && HeaderBar.addOption) HeaderBar.addOption({ id: 'skanim', type: 'toggle', hidden: () => !de.classList.contains('askin-bg'),
         label: { ja: '背景アニメーション', en: 'Animated background', zh: '背景动画', 'zh-TW': '背景動畫', ko: '배경 애니메이션', es: 'Fondo animado', fr: 'Fond animé', pt: 'Fundo animado', de: 'Animierter Hintergrund', ru: 'Анимированный фон', tr: 'Hareketli arka plan', id: 'Latar animasi', hi: 'एनिमेटेड बैकग्राउंड', ar: 'خلفية متحركة' },
         icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M10 9.5v5l4-2.5z" fill="currentColor"/></svg>',
-        get: () => anim, set: v => { anim = !!v; de.classList.toggle('askin-still', !anim); try { localStorage.setItem('atlas-fullanim', anim ? '1' : '0'); } catch (e) {} } });
+        get: () => anim, set: v => { anim = !!v; de.classList.toggle('askin-still', !anim); try { if (window.AtlasSkins && AtlasSkins.fxGate) AtlasSkins.fxGate(); } catch (e) {} try { localStorage.setItem('atlas-fullanim', anim ? '1' : '0'); } catch (e) {} } });
       window.__atlasSkinBg = { id: sk.id, mode: () => mode, set, thumb: BASE.replace(/atlas\/$/, 'images/atlas/skin/t/') + sk.id + '.webp' };   // (the デザイン tab's 場所 row offers it: placeField)
       const sc = document.createElement('script'); sc.src = BASE + 'skins.js?v=' + SKV;
       sc.onload = () => { try { if (window.AtlasSkins) AtlasSkins.apply(sk.id); } catch (e) {} };
