@@ -2732,23 +2732,25 @@
     // もうすぐ達成: the nearest to done among those begun (none while only the earned ones are shown)
     const seen = new Set(), near = achS === 'done' ? [] : ACH.filter(a => !a.done && a.have > 0).sort((a, b) => (b.have / b.need) - (a.have / a.need))
       .filter(a => !seen.has(achGrp(a)) && seen.add(achGrp(a))).slice(0, 3);   // (one per group: a series such as 10 / 30 / 60 items would fill the row alone)
+    // (2026-11-21 ユーザー：ごちゃごちゃしている → Luxury 路線で) one sheet of paper per section — a hairline frame, a centred heading
+    // between thin gold rules, and inside it plain rows (icon · name · a thin gold line of progress · n / all) parted by hairlines
+    const head = (label, n, all) => `<div class="lxa-h" role="heading" aria-level="3"><span>${esc(label)}</span>${all ? `<em><b>${n}</b> / ${all}</em>` : ''}</div>`;   // (not <header>: the page's bar styles that tag)
     $('achNear').hidden = !near.length;
-    $('achNear').innerHTML = near.length ? `<h3 class="glh">${esc(t('ach.near'))}</h3><div class="alist">${near.map(achHtml).join('')}</div>` : '';
+    $('achNear').innerHTML = near.length ? `${head(t('ach.near'))}<div class="alist">${near.map(a => achHtml(a)).join('')}</div>` : '';
     const groups = [['common', t('ach.common'), null], ...A_.GAMES.map(g => [g.id, gname(g), g])].filter(([k]) => by[k] && by[k].some(show));
     if (achF && !groups.some(([k]) => k === achF)) achF = '';
     const tile = ([k, l, g]) => {
       const all = by[k], n = all.filter(a => a.done).length, full = n === all.length, open = achF === k;
       const pic = g ? `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}>` : `<img src="logo.svg" alt="" class="flat">`;
-      return `<button type="button" class="card agt${full ? ' full' : ''}${open ? ' open' : ''}" data-k="${k}" aria-expanded="${open}"><span class="pic">${pic}</span>
-        <span class="tx"><b>${esc(l)}</b><span class="pr"><span class="bar" style="--c:${full ? 'var(--mint)' : 'var(--sun)'}"><i style="width:${n / all.length * 100}%"></i></span><em>${n}/${all.length}</em></span></span>
-        <i class="cv" aria-hidden="true"></i></button>`
+      return `<button type="button" class="agt${full ? ' full' : ''}${open ? ' open' : ''}" data-k="${k}" aria-expanded="${open}"><span class="pic">${pic}</span>
+        <b class="nm">${esc(l)}</b><span class="bar"><i style="width:${n / all.length * 100}%"></i></span><em><b>${n}</b> / ${all.length}</em><i class="cv" aria-hidden="true"></i></button>`
         + (open ? `<div class="agp" data-for="${k}"><div class="alist">${all.filter(show).sort(achSort).map(a => achHtml(a, true)).join('')}</div></div>` : '');
     };
     // sections as the ゲーム list's: 共通 first, then the same categories in the same order (card games together), each under its heading
     const catOf = g => g.tags.includes('card') ? 'card' : g.cat;
     const secs = [['', groups.filter(x => !x[2])], ...A_.CATS.map(c => [c, groups.filter(x => x[2] && catOf(x[2]) === c)]), ['?', groups.filter(x => x[2] && !A_.CATS.includes(catOf(x[2])))]].filter(([, a]) => a.length);
     $('achList').innerHTML = secs.map(([c, a]) => { const all = a.flatMap(([k]) => by[k]), n = all.filter(x => x.done).length;
-      return `<section class="agsec">${c && c !== '?' ? `<h3 class="glh"><span>${esc(t('cat.' + c))}</span><em>${n}/${all.length}</em></h3>` : ''}<div class="agl">${a.map(tile).join('')}</div></section>`; }).join('');
+      return `<section class="lxa agsec${a.length === 1 ? ' one' : ''}">${c && c !== '?' ? head(t('cat.' + c), n, all.length) : ''}<div class="agl">${a.map(tile).join('')}</div></section>`; }).join('');
     $('achList').querySelectorAll('.agt').forEach(b => b.onclick = () => { const k = b.dataset.k; achF = achF === k ? '' : k; SFX.tap && SFX.tap(); renderAch(k); });
     // a tile just opened / closed: keep it in view (the page's height changed above or below it)
     if (keep) { const tile = $('achList').querySelector(`.agt[data-k="${keep}"]`); if (tile) { const hd = document.querySelector('header'), top = (hd && getComputedStyle(hd).position !== 'static' ? hd.getBoundingClientRect().bottom : 0) + 10, r = tile.getBoundingClientRect();
