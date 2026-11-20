@@ -241,3 +241,20 @@ html.exv-open{overflow:hidden}
   .exclose{position:fixed;top:calc(12px + env(safe-area-inset-top));right:12px;background:rgba(25,18,12,.6);border-color:rgba(255,255,255,.35);color:#fff;box-shadow:none}
   .exkind,.exinfo h2{padding-inline-end:0}
 }
+/* ミュゼフク, the museum's Atlamo: a card that drops into the case when a rank is earned */
+.exgift{position:absolute;left:50%;top:22px;transform:translate(-50%,-14px);opacity:0;transition:opacity .35s,transform .45s cubic-bezier(.2,1.4,.4,1);display:flex;flex-direction:column;gap:8px;pointer-events:none;z-index:5}
+.exgift.on{opacity:1;transform:translate(-50%,0)}
+.exg{display:flex;align-items:center;gap:12px;padding:8px 18px 8px 8px;border-radius:20px;background:#fff8ea;color:var(--ink);box-shadow:0 10px 30px -8px rgba(0,0,0,.6),0 0 0 3px rgba(255,214,140,.55)}
+.exg img{width:64px;height:64px}
+.exg small{display:block;font-size:12.5px;font-weight:700;color:#9a6a32}
+.exg b{display:block;font:700 18px var(--round);white-space:nowrap}
+.gxguide{display:flex;align-items:center;gap:14px;margin:0 0 14px;padding:10px 18px 10px 10px;border-radius:20px;background:#fff8ea;border:2px solid var(--line);box-shadow:0 2px 0 var(--line)}
+.gxguide:empty{display:none}
+.gxav{display:flex;flex:none}
+.gxav img{width:52px;height:52px;margin-inline-end:-10px;filter:grayscale(1) brightness(1.15) opacity(.45)}
+.gxav img.on{filter:none}
+.gxgt{min-width:0;flex:1}
+.gxgt b{display:block;font:700 15px var(--round)}
+.gxgt small{display:block;font-size:13px;font-weight:700;color:var(--ink2);line-height:1.5}
+.gxguide>i{font-style:normal;font:700 16px var(--round);color:#9a6a32;flex:none}
+@media (max-width:819px){.gxav img{width:40px;height:40px;margin-inline-end:-12px}.gxgt small{font-size:12px}.gxguide{gap:10px;padding:8px 12px 8px 6px}}

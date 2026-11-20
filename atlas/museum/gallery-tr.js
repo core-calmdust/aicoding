@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Turkish). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).tr = {
-  ui: { sub: 'Dünya müzelerinin koruduğu oyun tarihi hazineleri. Her parça 3D olarak yeniden yapıldı — elinizde çevirin ve yakından bakın.', collection: 'Koleksiyon', special: 'Özel sergi', lock: '{g} oyununda {n} başarımla açılır', loading: 'Vitrin hazırlanıyor…', fail: 'Eser yüklenemedi',
+  ui: { guideH: 'Rehberin Müzebaykuş', guide: 'Koleksiyonu gezdikçe Müzebaykuş her seferinde biraz daha süslenip yanına gelir', gift: 'Yeni bir Atlamo geldi!', sub: 'Dünya müzelerinin koruduğu oyun tarihi hazineleri. Her parça 3D olarak yeniden yapıldı — elinizde çevirin ve yakından bakın.', collection: 'Koleksiyon', special: 'Özel sergi', lock: '{g} oyununda {n} başarımla açılır', loading: 'Vitrin hazırlanıyor…', fail: 'Eser yüklenemedi',
     hint: 'Sürükle: çevir · Tekerlek: yakınlaştır · Numaralar: ayrıntılar', hintT: 'Sürükle: çevir · Kıstır: yakınlaştır', spin: 'Yavaşça döndür', reset: 'İlk görünüme dön', close: 'Kapat',
     date: 'Tarih', where: 'Buluntu / köken', museum: 'Koleksiyon', mat: 'Malzemeler', size: 'Boyut', look: 'Ayrıntılar', aboutModel: 'Bu 3D model hakkında', sources: 'Kaynaklar', play: '{g} oyna' },
   ex: {
