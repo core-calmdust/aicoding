@@ -162,7 +162,9 @@ function request(which, msg, onProgress) {
   }
   const cp = cOn && mtWants(which, msg) && MCP.pool(which === 'ai' ? 'ai' : null);
   if (cp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return cp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
-  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  // (2026-11-20) on an isolated page while core_mt.wasm's threads are busy: one worker, not mtsplit.js (another search, shallower) —
+  // the rule's「一度に1つの仕事だけで、使用中なら通常の1スレッドのワーカー」, as the review box (rvbox pool) and chess / checkers / tafl
+  const mp = !cOn && MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
 }
