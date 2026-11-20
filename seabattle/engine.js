@@ -141,10 +141,20 @@ function field(rnd) {
 }
 function draftNew(first, rnd) { const pool = field(rnd), d = { pool, f: pool.slice(), picks: [[], []], done: [false, false], first: first ? 1 : 0, n: 0, turn: first ? 1 : 0, last: null }; return d; }
 function draftLeft(d, p) { return BUDGET - draftCost(d.picks[p]); }
-function draftCan(d, p, k) { return d.turn === p && !d.done[p] && d.pool[k] > 0 && d.picks[p].length < MAXSHIPS && pickCost(d, p, k) <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < MAXSAME; }
+function draftCan(d, p, k) { return d.turn === p && !d.done[p] && d.pool[k] > 0 && d.picks[p].length < MAXSHIPS && pickCost(d, p, k) <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < MAXSAME && canReachMin(d, p, k); }
+// a pick must still leave room for a fleet of three: after it, the cheapest ships left on the table must fit the budget
+// (two copies of a 9 would cost 19 and leave nothing to buy — 2026-11-20)
+function canReachMin(d, p, k) {
+  const picks = d.picks[p].concat(k), need = MINSHIPS - picks.length; if (need <= 0) return true;
+  let left = BUDGET - draftCost(picks); const pool = d.pool.slice(); pool[k]--; const opts = [];
+  for (let x = 0; x < NT; x++) { const have = picks.filter(y => y === x).length; for (let n = 0; n < Math.min(pool[x], MAXSAME - have); n++) opts.push(TYPES[x].cost + (have + n > 0 ? DUP_EXTRA : 0)); }
+  opts.sort((a, b) => a - b); if (opts.length < need) return false;
+  for (let i = 0; i < need; i++) left -= opts[i];
+  return left >= 0;
+}
 function draftCanStop(d, p) { return d.turn === p && d.picks[p].length >= MINSHIPS; }
 function draftNext(d) {
-  for (const p of [0, 1]) if (!d.done[p] && (d.picks[p].length >= MAXSHIPS || !TYPES.some((T, k) => d.pool[k] > 0 && pickCost(d, p, k) <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < MAXSAME))) d.done[p] = true;
+  for (const p of [0, 1]) if (!d.done[p] && (d.picks[p].length >= MAXSHIPS || !TYPES.some((T, k) => d.pool[k] > 0 && pickCost(d, p, k) <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < MAXSAME && canReachMin(d, p, k)))) d.done[p] = true;
   if (d.done[0] && d.done[1]) { d.turn = -1; return; }
   for (let g = 0; g < 4; g++) { d.n++; const p = (((d.n + 1) >> 1) & 1) ^ d.first; if (!d.done[p]) { d.turn = p; return; } }
 }
