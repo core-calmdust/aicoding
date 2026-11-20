@@ -683,6 +683,25 @@ html.atlas-skin[data-skin] body:not(#_):not(#_) .modal :is(.ol-me,.ol-pane):not(
 html.atlas-skin[data-skin] body:not(#_):not(#_) .modal :is(.ol-ph,.ol-ph *,.ol-me b,.ol-r b){color:color-mix(in srgb,var(--sk-acc) 70%,#1c2033)!important}
 html.atlas-skin[data-skin] body:not(#_):not(#_) .modal :is(.ol-sub,.ol-tcl,.ol-me small,.ol-me .ol-r > small){color:color-mix(in srgb,var(--sk-acc) 55%,#4a4f66)!important}
 html.atlas-skin[data-skin] body:not(#_):not(#_) .modal :is(.ol-sub,.ol-tcl)::after{background:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+/* (2026-11-21) マンカラの上下の名前の帯（.plate）と、手番の人のカード（.player.active）もスキンの色に（金の枠・黄色をやめる） */
+html.atlas-skin[data-skin]:not(.atlas-2d) body:not(#_):not(#_) .plate:not(#_){background:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;box-shadow:0 4px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html.atlas-skin[data-skin]:not(.atlas-2d) body:not(#_):not(#_) .plate.active:not(#_){border-color:var(--sk-acc)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--sk-acc) 40%,transparent),0 4px 0 color-mix(in srgb,var(--sk-acc) 55%,transparent)!important}
+html.atlas-skin[data-skin]:not(.atlas-2d) body:not(#_):not(#_) .card.players .player.active:not(#_){background:color-mix(in srgb,var(--sk-acc) 16%,#fff)!important;border-color:var(--sk-acc)!important;box-shadow:0 3px 0 color-mix(in srgb,var(--sk-acc) 60%,#000),0 0 0 4px color-mix(in srgb,var(--sk-acc) 25%,transparent)!important}
+/* (2026-11-21) Praline のバッジ：暗いスキンでは白い文字（ドックの中も、右下の浮いたバッジも） */
+html.atlas-skin[data-skin].skdark body:not(#_):not(#_) :is(.prlb-sk, #dock .prlb){color:#f4f6ff!important;opacity:.75}
+html.atlas-skin[data-skin].skdark body:not(#_):not(#_) .prlb-pc.prlb-sk:not(.prlb-indock){background:rgba(255,255,255,.1)!important;box-shadow:0 0 0 1px rgba(255,255,255,.16)!important}
+html.atlas-skin[data-skin]:not(.skdark) body:not(#_):not(#_) .prlb-pc.prlb-sk:not(.prlb-indock){background:color-mix(in srgb,var(--sk-navm) 10%,#fff)!important;box-shadow:0 2px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+/* (2026-11-21 the user) アトラモたちの会話の吹き出しもスキンの色に：白＋スキン色の縁、顔の丸はアクセント色 */
+html[data-skin]:not(.skdark){--sk-acc0:var(--sk-navm)}html[data-skin].skdark{--sk-acc0:color-mix(in srgb,var(--sk-hdr) 55%,var(--sk-navm))}
+html[data-skin] body:not(#_):not(#_) :is(.npc-bub,.atlas-guide .bub,.rgd .bub,#avTalk .at-bub){background:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;box-shadow:0 4px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) :is(.npc-bub,.atlas-guide .bub,.rgd .bub)::before{border-right-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) :is(.npc-bub,.rgd .bub)::after{border-right-color:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important}
+html[data-skin][dir=rtl] body:not(#_):not(#_) :is(.npc-bub,.atlas-guide .bub,.rgd .bub)::before{border-right-color:transparent!important;border-left-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) #avTalk .at-bub::after{border-top-color:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important}
+html[data-skin].atlas-skin body:not(#_):not(#_) .atlas-guide .bub::before{border-top-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) :is(.npc-float:not([data-who=boss]) .npc-pic,.atlas-guide .pic,.rgd .pic){background:radial-gradient(circle at 40% 35%,#fff,color-mix(in srgb,var(--sk-acc0) 40%,#fff))!important}
+html[data-skin] body:not(#_):not(#_) #avTalk .at-ch .bg{box-shadow:0 0 0 6px #fff,0 0 0 9px color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8),0 14px 30px rgba(20,20,60,.25)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .coach{background:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;box-shadow:0 4px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
 html.atlas-skin[data-skin]{--sk-acc:var(--sk-navm)}html.atlas-skin[data-skin].skdark{--sk-acc:color-mix(in srgb,var(--sk-hdr) 55%,var(--sk-navm))}
 html.atlas-skin[data-skin] body:not(#_) #newOverlay > .modal.ngl:not(#_){--ngl-a:color-mix(in srgb,var(--sk-acc) 50%,#1c2033)!important;--ngl-hi:var(--sk-acc)!important}
 html.atlas-skin[data-skin] body:not(#_) #newOverlay > .modal.ngl:not(#_) :is(.level-name, #levelName, #levelName2):not(#_){color:color-mix(in srgb,var(--sk-acc) 55%,#1c2033)!important}
@@ -875,7 +894,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     // AI games: the boss of the level and a watching creature talk now and then (atlas/npc/npc.js, common rule 2026-11-09)
     (function npc() {
       if (o.npc === false || !GAME) return;
-      const s = document.createElement('script'); s.src = BASE + 'npc/npc.js?v=45'; s.onload = () => { try { window.AtlasNPC.skin(GAME); } catch (e) {} };
+      const s = document.createElement('script'); s.src = BASE + 'npc/npc.js?v=46'; s.onload = () => { try { window.AtlasNPC.skin(GAME); } catch (e) {} };
       setTimeout(() => document.head.appendChild(s), 1500);   // after the board and the first frames
     })();
     return { T3, ready, alignTo, view };
