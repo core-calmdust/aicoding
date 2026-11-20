@@ -726,24 +726,36 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
    gold line of progress · n / all. The open row's awards sit under its own row (the panel spans the sheet; 'dense' keeps the
    row whole). One accent only (gold); no pills, no thick borders. The sheets are opaque, so every skin reads the same. */
 #pg-ach{--lx-g:#c39a45;--lx-g2:#e3c57c;--lx-h:#ecdfbf;--lx-p:#fffdf8;--lx-t:#8a6a2a;--lx-tr:#f1e8d2}
-#pg-ach .lxa,#pg-ach .achsum{background:var(--lx-p);border:1px solid #e2cf9f;border-radius:22px;box-shadow:0 14px 34px -24px rgba(80,54,10,.5)}
-#pg-ach .achsum{gap:18px;margin:6px 0 20px;padding:16px 24px;flex-wrap:nowrap}
+#pg-ach .lxa{background:var(--lx-p);border:1px solid #e2cf9f;border-radius:22px;box-shadow:0 14px 34px -24px rgba(80,54,10,.5)}
+#pg-ach .achsum{gap:18px;margin:0;padding:0 0 16px;flex-wrap:nowrap;background:none;border:0;border-radius:0;box-shadow:none}
 #pg-ach .achsum > b{font-size:24px!important;font-weight:700;letter-spacing:.02em;color:var(--ink);text-shadow:none;white-space:nowrap}
 #pg-ach .achsum .bar{height:4px;background:var(--lx-tr)}#pg-ach .achsum .bar i{background:linear-gradient(90deg,var(--lx-g),var(--lx-g2))}
 #pg-ach .achsum .coin{box-shadow:none;border:1px solid var(--lx-h);background:#fffaf0}
 #pg-ach .aseg{background:none;border:1px solid var(--lx-h);padding:3px}
 #pg-ach .aseg button{font-weight:700;letter-spacing:.04em}#pg-ach .aseg button[aria-pressed=true]{background:var(--ink);color:#fff}
-#pg-ach .lxa{margin:0 0 20px;padding:20px 28px 10px}
-#pg-ach .lxa.one,#pg-ach .anear{padding-bottom:12px}
+#pg-ach .lxa{margin:0 0 16px;padding:18px 28px 8px}
+#pg-ach .lxa[hidden]{display:none}
+#pg-ach .lxtop{margin-top:6px}
+#pg-ach .anear{padding:14px 0 6px;border-top:1px solid var(--lx-h)}
+#pg-ach #achCom{border-top:1px solid var(--lx-h)}#pg-ach #achCom[hidden]{display:none}
+/* the categories: a row of tabs (name over n / all), the chosen one under a gold line */
+.lxtabs{display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,1fr));margin:0 0 6px;border-bottom:1px solid var(--lx-h)}
+.lxtab{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;min-width:0;padding:4px 2px 11px;border:0;background:none;font:inherit;color:#a8946a;cursor:pointer;position:relative;text-align:center;transition:color .15s}
+.lxtab span{font-family:var(--round);font-weight:700;font-size:12.5px;letter-spacing:.01em;line-height:1.25;overflow-wrap:anywhere}
+.lxtab em{font-style:normal;font-family:var(--round);font-size:11px;letter-spacing:.04em;direction:ltr;unicode-bidi:isolate}.lxtab em b{font-weight:700}
+.lxtab::after{content:'';position:absolute;left:14%;right:14%;bottom:-1px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--lx-g),var(--lx-g2));opacity:0;transform:scaleX(.4);transition:opacity .18s,transform .18s}
+.lxtab[aria-selected=true]{color:var(--ink)}.lxtab[aria-selected=true] em{color:var(--lx-t)}.lxtab[aria-selected=true]::after{opacity:1;transform:none}
+@media (hover:hover){.lxtab:hover{color:var(--lx-t)}}
+.lxtab:focus-visible{outline:2px solid var(--lx-g);outline-offset:-2px;border-radius:10px}
 .lxa-h{display:flex;align-items:center;justify-content:center;gap:16px;margin:0 0 8px;color:var(--lx-t);font-family:var(--round);font-weight:700;font-size:15px;letter-spacing:.16em}
 .lxa-h::before,.lxa-h::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--lx-g) 70%)}
 .lxa-h::after{background:linear-gradient(270deg,transparent,var(--lx-g) 70%);order:3}
 .lxa-h em{order:2;font-style:normal;font-size:12px;letter-spacing:.06em;color:#b39a63;padding-inline-start:16px;border-inline-start:1px solid var(--lx-h)}
 .lxa-h em b{font-weight:700;color:var(--lx-t)}
 .agl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:row dense;column-gap:56px;background:linear-gradient(var(--lx-h),var(--lx-h)) 50% 50%/1px calc(100% - 24px) no-repeat}
-.lxa.one .agl{grid-template-columns:minmax(0,1fr);background:none}
+.agl.one{grid-template-columns:minmax(0,1fr);background:none}
 .agt{display:grid;grid-template-columns:44px minmax(0,1fr) 132px 5.2em 12px;align-items:center;column-gap:14px;min-width:0;min-height:60px;padding:6px 4px;border:0;border-bottom:1px solid var(--lx-h);background:none;font:inherit;color:var(--ink);text-align:start;cursor:pointer;transition:background .15s}
-.lxa.one .agt,.agl > .agt:last-child,.agl > .agt:nth-last-child(2):nth-child(odd){border-bottom-color:transparent}
+.agl.one .agt,.agl > .agt:last-child,.agl > .agt:nth-last-child(2):nth-child(odd){border-bottom-color:transparent}
 .agt .pic{width:44px;height:44px;display:grid;place-items:center}
 .agt .pic img{width:44px;height:44px;object-fit:contain;display:block}.agt .pic img.flat{width:32px;height:32px;border-radius:9px}
 .agt .nm{font-weight:700;font-size:15px;line-height:1.3;letter-spacing:.02em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}   /* (a long name takes a second line: never cut to "ドット・アンド・ボッ…") */
@@ -762,7 +774,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 /* the awards themselves, inside a sheet: plain rows too (the cards with thick frames stay in the 「実績を達成！」 sheet) */
 #pg-ach .alist{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:36px;row-gap:0}
 #pg-ach .alist .ach{background:none;border:0;box-shadow:none;border-radius:0;padding:11px 0;gap:12px;border-bottom:1px solid var(--lx-h)}
-#pg-ach .anear .alist .ach{border-bottom:0;padding:8px 0 4px}
+#pg-ach .anear .alist .ach{border-bottom:0;padding:6px 0 2px}
 #pg-ach .alist .medal,#pg-ach .alist .medal svg{width:34px;height:34px}
 #pg-ach .alist .ach .t1{font-weight:700;font-size:14px;letter-spacing:.01em}
 #pg-ach .alist .ach .t2{margin-top:5px;font-size:11.5px;color:#a8946a;gap:10px}
@@ -1019,10 +1031,15 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
   .aseg{grid-column:1/-1;display:flex;gap:2px;padding:3px;border-radius:99px;background:#f6efdd}
   .aseg button{flex:1;border:0;background:none;border-radius:99px;padding:6px 4px;font-weight:900;font-size:12.5px;color:var(--ink2);min-height:32px}
   .aseg button[aria-pressed=true]{background:var(--ink);color:#fff}
-  #pg-ach .achsum{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px 12px;margin:0 0 12px;padding:12px 14px;border-radius:18px;border-width:1px}
+  #pg-ach .achsum{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px 12px;margin:0;padding:0 0 12px}
   #pg-ach .achsum > b{font-size:19px!important}
   #pg-ach .lxa{margin-bottom:12px;padding:14px 14px 4px;border-radius:18px}
-  #pg-ach .lxa.one,#pg-ach .anear{padding-bottom:6px}
+  #pg-ach .anear{padding:10px 0 2px}
+  .lxtabs{grid-template-columns:repeat(2,minmax(0,1fr));border-bottom:0;margin-bottom:2px}
+  .lxtab{flex-direction:row;justify-content:space-between;align-items:center;gap:8px;padding:10px 6px 10px 4px;border-bottom:1px solid var(--lx-h);text-align:start}
+  .lxtab span{font-size:12.5px;letter-spacing:.02em}.lxtab em{flex:none;font-size:10.5px}
+  .lxtab::after{left:0;right:0;bottom:-1px}
+  .lxtab[aria-selected=true]{background:linear-gradient(180deg,transparent,#fbf2dc)}
   .lxa-h{gap:10px;font-size:13.5px;letter-spacing:.12em;margin-bottom:4px}.lxa-h em{font-size:11px;padding-inline-start:10px}
   .agl{grid-template-columns:minmax(0,1fr);background:none}
   .agl > .agt:nth-last-child(2):nth-child(odd){border-bottom-color:var(--lx-h)}.agl > .agt.open{border-bottom-color:transparent}
@@ -2421,9 +2438,8 @@ html.bv-on:not(#_) .msbtn,html.rec-on:not(#_) .msbtn,html[data-pg=museum]:not(#_
   <!-- ACHIEVEMENTS -->
   <section class="pg" id="pg-ach">
     <h2 class="h" id="hAch"></h2>
-    <div class="achsum" id="achSum"></div>
-    <div class="lxa anear" id="achNear" hidden></div>
-    <div class="agsecs" id="achList"></div>
+    <div class="lxa lxtop"><div class="achsum" id="achSum"></div><div class="anear" id="achNear" hidden></div><div class="agl one" id="achCom" hidden></div></div>
+    <div class="lxa lxgames" id="achList" hidden></div>
   </section>
 
   <!-- GACHA + SHOP (one page since 2026-11-06: the gacha on top, the shop below; the tab is called ガチャ) -->
@@ -2557,7 +2573,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
     if (ul && !seen.has(ul)) { seen.add(ul); mo.observe(ul, { attributes: true, attributeFilter: ['hidden'] }); } }
   mo = new MutationObserver(sync); mo.observe(document.body, { childList: true }); sync(); window.__pgState = sync; })();
 </script>
-<script src="app.js?v=472"></script>
+<script src="app.js?v=473"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>
