@@ -225,7 +225,7 @@ def amusement():
         x0 = X - 220 + i * 55
         g.append(f'<path d="M{x0} {Y - 160} L{X} {Y - 330} L{x0 + 55} {Y - 160} Z" fill="{["#f6b8c2", "#fdf3e6"][i % 2]}"/><path d="M{x0} {Y - 160} C{x0 + 10} {Y - 128} {x0 + 45} {Y - 128} {x0 + 55} {Y - 160} Z" fill="{["#f6b8c2", "#f6d79a"][i % 2]}"/>')
     g.append(f'<path d="M{X - 8} {Y - 330} L{X + 8} {Y - 330} L{X} {Y - 370} Z" fill="#f6d79a"/><circle cx="{X}" cy="{Y - 376}" r="9" fill="#f6b8c2"/>')
-    for x, c in ((X - 140, '#ffffff'), (X - 30, '#f6e0b0'), (X + 90, '#ffffff')):
+    for x, c in ((X - 140, '#ffffff'), (X - 30, '#f6e0b0'), (X + 90, '#ffffff')) if not MV['on'] else ():   # (the horses go round: atlas/skins-fx.js)
         g.append(f'<rect x="{x + 28}" y="{Y - 130}" width="5" height="120" fill="#e9c47a"/><path d="M{x} {Y - 50} C{x} {Y - 76} {x + 20} {Y - 82} {x + 44} {Y - 78} C{x + 56} {Y - 92} {x + 70} {Y - 88} {x + 66} {Y - 70} C{x + 66} {Y - 54} {x + 50} {Y - 46} {x + 40} {Y - 46} L{x + 42} {Y - 26} L{x + 34} {Y - 26} L{x + 30} {Y - 44} L{x + 14} {Y - 44} L{x + 12} {Y - 26} L{x + 4} {Y - 26} Z" fill="{c}"/>')
     pts = [(560, 760), (760, 800), (960, 780), (1180, 810)]
     g.append(f'<path d="M560 760 Q660 800 760 800 Q860 800 960 780 Q1070 800 1180 810" fill="none" stroke="#d9cfe6" stroke-width="3"/>')
