@@ -6,7 +6,7 @@ python3 foxgeese/tools/train_eval.py <out.json> <data.jsonl> [more.jsonl ...]   
 Data: tools/gen_data.js lines {f, g, s, q, v, r}.
 Network (the fox's view, like the king-relative inputs of NNUE — here the fox is the only piece that matters to everything):
   inputs  one row per goose: index = foxPoint * 33 + goosePoint (33 × 33 = 1089 rows, at most 17 active)
-          + the side to move (2 rows) + the quiet-move clock (8 buckets of 8 plies: the fox wins at 60)
+          + the side to move (2 rows) + the quiet-move clock (8 buckets of 8 plies left before the limit; 7 = 56 or more)
   layer 1 H1 units (sum of the active rows + bias), clipped ReLU [0, 1]
   layer 2 H2 units, clipped ReLU; output one logit = the fox's chance of winning
 Target: LAMBDA × game result + (1 − LAMBDA) × sigmoid(search value / SCALE) (the fox's side; a found win is 1 / 0).
@@ -40,7 +40,8 @@ F = np.concatenate([F, MIR[F]]); G = np.concatenate([G, Gm]); S = np.concatenate
 vf = np.where(S == 0, V, -V)                       # the search value from the fox's side
 pv = np.where(vf > 20000, 1., np.where(vf < -20000, 0., 1 / (1 + np.exp(-np.clip(vf, -5000, 5000) / SCALE))))
 T = LAM * R + (1 - LAM) * pv
-QB = np.minimum(7, Q // 8)
+QMAX = int(os.environ.get('QMAX', 80))   # the quiet-move limit the data was made with (plies; 2026-11-19 default 40 moves each)
+QB = np.minimum(7, np.maximum(0, QMAX - Q) // 8)   # the clock as plies LEFT (so one net serves every limit: 30 / 40 / 50 moves each)
 IDX = np.where(G >= 0, F[:, None] * 33 + G, 1089)   # 1089 = a zero row (padding)
 
 rng = np.random.default_rng(1)
