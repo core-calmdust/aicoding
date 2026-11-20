@@ -11,7 +11,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a2230'/%3E%3Cpath d='M10 36h36l8-6v12l-8 6H10z' fill='%23b9c9d0'/%3E%3Ccircle cx='24' cy='22' r='6' fill='%23ff8f6b'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#0a2230; --bg2:#0d2a3a; --panel:#0f2c3c; --panel2:#153a4c; --line:#285a70;
@@ -300,6 +300,42 @@ body.tac:not(.placing) .skills{display:grid}
 #rulesBody > .rt{flex:1;min-height:0}
 .rt-fleet{display:grid;gap:8px;margin:6px 0 0;font-size:15px}
 .rt-fleet div{display:flex;align-items:center;gap:12px}.rt-fleet .pip i{width:16px;height:18px}
+
+/* the pick sheet and the fleet sheet: a fixed-size gilt panel (2026-11-20 user: タブで大きさを変えない・Luxury) */
+:is(#pickOverlay,#fleetOverlay) .modal.lux{--gold:#d8b46a;--gold2:#f3dea6;--gold3:#9c7a3c;--ink2:#0a1622;width:min(1120px,calc(100vw - 32px));height:min(840px,calc(100dvh - 32px));max-height:none;display:flex;flex-direction:column;overflow:hidden;padding:0!important;border-radius:20px;
+  background:radial-gradient(120% 80% at 50% -10%,#1d3a52 0%,#0f2233 45%,#081420 100%);border:1px solid color-mix(in srgb,var(--gold) 55%,transparent);
+  box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 0 0 5px rgba(8,20,32,.9),inset 0 0 0 6px color-mix(in srgb,var(--gold) 22%,transparent),0 40px 90px -30px rgba(0,0,0,.9)}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pkh{position:static;margin:0;padding:24px 30px 0;background:none;flex:none;display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 18px}
+:is(#pickOverlay,#fleetOverlay) .modal.lux h2{font-family:'Shippori Mincho','Cormorant Garamond',serif;font-weight:700;font-size:26px;letter-spacing:.18em;margin:0;background:linear-gradient(180deg,var(--gold2),var(--gold) 55%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pkh::after{content:'';flex-basis:100%;height:1px;margin-top:2px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--gold) 70%,transparent) 20%,color-mix(in srgb,var(--gold) 70%,transparent) 80%,transparent);order:5}
+:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead{margin-inline-start:auto;gap:16px}:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead b{font-family:'Shippori Mincho',serif;color:var(--gold2);font-size:16px;letter-spacing:.08em}:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead span{color:#b9c8cf;font-family:'Cormorant Garamond',var(--num);font-size:17px;letter-spacing:.04em}
+:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs{order:6;gap:4px;padding:0}:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button{height:40px;padding:0 18px;border-radius:0;border:0;border-bottom:2px solid transparent;background:none;color:#8fa4ae;font-family:'Shippori Mincho',serif;font-size:15px;letter-spacing:.12em}
+:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button em{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold3)}
+:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button.on{color:var(--gold2);background:none;border-bottom-color:var(--gold)}:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button.on em{color:var(--gold)}
+:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--rc);margin-inline-end:8px;vertical-align:2px;opacity:.85}
+:is(#pickOverlay,#fleetOverlay) .modal.lux #pickLegend{order:7;padding:6px 0 10px;color:#8fa4ae}
+:is(#pickOverlay,#fleetOverlay) .modal.lux #pickGrid,:is(#pickOverlay,#fleetOverlay) .modal.lux #fleetGrid{flex:1;min-height:0;overflow-y:auto;padding:18px 30px 22px;overscroll-behavior:contain;scrollbar-color:color-mix(in srgb,var(--gold) 40%,transparent) transparent}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions{flex:none;margin:0;padding:14px 30px 20px;border-top:1px solid color-mix(in srgb,var(--gold) 22%,transparent);background:rgba(4,12,20,.35)}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions .mbtn{border-color:color-mix(in srgb,var(--gold) 45%,transparent);color:var(--gold2);background:rgba(0,0,0,.2);font-family:'Shippori Mincho',serif;letter-spacing:.1em}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pg{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc{border-radius:14px;padding:14px;gap:10px;background:linear-gradient(165deg,#16304a 0%,#0e2133 55%,#0a1826 100%);border:1px solid color-mix(in srgb,var(--gold) 26%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 30px -20px rgba(0,0,0,.9)}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc::before{content:'';position:absolute;left:14px;right:14px;top:0;height:2px;border-radius:0 0 2px 2px;background:var(--rc,var(--gold));opacity:.75}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.g0{--rc:#ff9f7a}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.g1{--rc:#7fd8ff}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.g2{--rc:#9ff0c8}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.g3{--rc:#c9c9d6}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt b{font-family:'Shippori Mincho',serif;font-size:17px;letter-spacing:.06em;color:#f4ecd8}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt em{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold3)}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pcost{min-width:32px;height:32px;border-radius:50%;font-family:'Cormorant Garamond',serif;font-size:19px;color:#2a1d08;background:radial-gradient(circle at 35% 30%,#fff2c8,#e3c07a 45%,#a8823f 100%);box-shadow:0 0 0 1px rgba(0,0,0,.5),inset 0 -2px 3px rgba(0,0,0,.25)}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa{background:rgba(2,10,18,.55);border:1px solid color-mix(in srgb,var(--gold) 16%,transparent);border-radius:10px}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .ps b{color:var(--gold2);font-size:15px;letter-spacing:.04em}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .ps .ic{color:var(--gold)}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .ps small{color:#8fa4ae}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc p{color:#c9d6dc}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc button{border-radius:999px;border:1px solid #f3dea6;background:linear-gradient(180deg,#f6e3ae,#d8b46a 55%,#b48d48);color:#2a1d08;font-family:'Shippori Mincho',serif;font-weight:700;letter-spacing:.2em;box-shadow:0 6px 16px -8px rgba(216,180,106,.7)}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc button:disabled{background:rgba(0,0,0,.25);border-color:color-mix(in srgb,var(--gold) 25%,transparent);color:#7f8f97;box-shadow:none;letter-spacing:.1em}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.taken{outline:none;border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 26px -8px rgba(216,180,106,.6)}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pst{border-radius:999px;background:rgba(0,0,0,.25);border:1px solid color-mix(in srgb,var(--gold) 20%,transparent);color:#b9c8cf}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pst.r{background:linear-gradient(180deg,#f6e3ae,#d8b46a 55%,#b48d48);color:#2a1d08;border-color:#f3dea6}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .fsec{margin-bottom:22px}:is(#pickOverlay,#fleetOverlay) .modal.lux .fsec h3{display:flex;align-items:center;gap:12px;margin:0 0 12px;font-family:'Shippori Mincho',serif;font-size:17px;letter-spacing:.14em;color:var(--gold2)}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .fsec h3::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 55%,transparent),transparent)}:is(#pickOverlay,#fleetOverlay) .modal.lux .fsec h3 small{font-family:'Cormorant Garamond',serif;color:#8fa4ae;font-size:15px;letter-spacing:.04em}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .none{color:#8fa4ae;margin:0}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pship{flex-direction:column;align-items:center;gap:7px}:is(#pickOverlay,#fleetOverlay) .modal.lux .plen{display:flex;align-items:center;gap:3px}:is(#pickOverlay,#fleetOverlay) .modal.lux .plen i{width:9px;height:9px;border-radius:2px;background:linear-gradient(180deg,#f3dea6,#b48d48)}:is(#pickOverlay,#fleetOverlay) .modal.lux .plen b{white-space:nowrap;margin-inline-start:6px;font-family:'Shippori Mincho',serif;font-size:13px;color:var(--gold2);letter-spacing:.06em}
+:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead > *{white-space:nowrap}:is(#pickOverlay,#fleetOverlay) .modal.lux .flv{border-color:color-mix(in srgb,var(--gold) 50%,transparent);color:var(--gold2);background:rgba(0,0,0,.25);font-family:'Shippori Mincho',serif;letter-spacing:.06em}
+@media (max-width: 600px){ :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead b{font-size:14px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead span{font-size:15px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead{gap:6px 10px;flex-wrap:wrap;min-width:0} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead .flv{margin-inline-start:auto;height:28px;font-size:12.5px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pkh{min-width:0} :is(#pickOverlay,#fleetOverlay) .modal.lux{overflow-x:hidden} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickLegend{gap:4px 10px;font-size:11px} :is(#pickOverlay,#fleetOverlay) .modal.lux{width:100%;height:calc(100dvh - 16px);border-radius:16px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pkh{padding:16px 16px 0} :is(#pickOverlay,#fleetOverlay) .modal.lux h2{font-size:21px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead{margin-inline-start:0;flex-basis:100%;justify-content:space-between} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs{overflow-x:auto;flex-wrap:nowrap} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button{padding:0 11px;font-size:14px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickGrid,:is(#pickOverlay,#fleetOverlay) .modal.lux #fleetGrid{padding:12px 12px 16px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pg{grid-template-columns:1fr 1fr;gap:9px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc{padding:10px;gap:7px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt b{font-size:14.5px} :is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions{padding:10px 14px 14px} }
 </style>
 </head>
 <body class="no-online placing">
@@ -369,8 +405,8 @@ body.tac:not(.placing) .skills{display:grid}
 </div>
 
 <!-- rules (shared/ruletour.js) -->
-<div class="overlay" id="pickOverlay"><div class="modal"><div class="pkh"><h2 data-i18n="dr.t"></h2><div id="pickHead"></div><div id="pickTabs"></div><div id="pickLegend"><span><i class="t"></i><b data-i18n="pk.lg.t"></b></span><span><i class="a"></i><b data-i18n="pk.lg.a"></b></span><span><i class="s"></i><b data-i18n="pk.lg.s"></b></span><span><i class="p"></i><b data-i18n="pk.lg.p"></b></span><span><i class="m"></i><b data-i18n="pk.lg.m"></b></span></div></div><div id="pickGrid"></div><div class="modal-actions"><button class="mbtn" id="btnPickClose" data-i18n="close"></button><button class="mbtn" id="btnPickStop" data-i18n="dr.stop"></button></div></div></div>
-<div class="overlay" id="fleetOverlay"><div class="modal"><div class="pkh"><h2 data-i18n="fv.t"></h2><div id="fleetTabs"></div></div><div id="fleetGrid"></div><div class="modal-actions"><button class="mbtn" id="btnFleetClose" data-i18n="close"></button></div></div></div>
+<div class="overlay" id="pickOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="dr.t"></h2><div id="pickHead"></div><div id="pickTabs"></div><div id="pickLegend"><span><i class="t"></i><b data-i18n="pk.lg.t"></b></span><span><i class="a"></i><b data-i18n="pk.lg.a"></b></span><span><i class="s"></i><b data-i18n="pk.lg.s"></b></span><span><i class="p"></i><b data-i18n="pk.lg.p"></b></span><span><i class="m"></i><b data-i18n="pk.lg.m"></b></span></div></div><div id="pickGrid"></div><div class="modal-actions"><button class="mbtn" id="btnPickClose" data-i18n="close"></button><button class="mbtn" id="btnPickStop" data-i18n="dr.stop"></button></div></div></div>
+<div class="overlay" id="fleetOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="fv.t"></h2></div><div id="fleetGrid"></div><div class="modal-actions"><button class="mbtn" id="btnFleetClose" data-i18n="close"></button></div></div></div>
 <div class="overlay" id="shipsOverlay"><div class="modal"><h2 data-i18n="dr.all"></h2><div id="shipList"></div><div class="modal-actions"><button class="mbtn" id="btnShipsClose" data-i18n="close"></button></div></div></div>
 <div class="overlay" id="rulesOverlay"><div class="modal"><div id="rulesBody"></div></div></div>
 
@@ -384,7 +420,7 @@ body.tac:not(.placing) .skills{display:grid}
   </div>
 </div>
 
-<script src="i18n.js?v=29"></script>
+<script src="i18n.js?v=30"></script>
 <script src="../shared/rulesoffer.js?v=20sea"></script>
 <script src="../shared/headerbar.js?v=63"></script>
 <script src="../shared/resign.js?v=3l14"></script>
@@ -392,7 +428,7 @@ body.tac:not(.placing) .skills{display:grid}
 <script src="engine.js?v=23"></script>
 <script src="board.js?v=10"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=29"></script>
+<script src="app.js?v=31"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
