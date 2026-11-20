@@ -1543,6 +1543,75 @@
   const bgDecP = s0 => { const q = new Int8Array(52); for (let i = 0; i < 52; i++) q[i] = parseInt(String(s0)[i], 16) || 0; return q; };
   const bgCodes = (pos, m) => { const q = bgDecP(pos), out = []; for (let i = 0; i + 1 < m.length; i += 2) out.push(BG.apply(q, 0, m.charCodeAt(i) - 65, m.charCodeAt(i + 1) - 65)); return { moves: out, key: BG.key(q) }; };
   const bgCkOf = () => { let ck = ['gold', 'black']; try { const st = (JSON.parse(localStorage.getItem('aicoding-backgammon-v2') || '{}') || {}).settings || {}; if (st.ck && st.ck[0] && st.ck[1] && st.ck[0] !== st.ck[1]) ck = st.ck.slice(); } catch (e) {} return ck; };
+  /* (2026-11-21 lesson loop) the backgammon openings in ダイスン's words, Japanese, for the 3D table: an intro without point numbers
+     (the 3D board has none), a varied question, a hint from what the best play is for (never where), and after the answer a short
+     reason built from backgammon/explain.js teach (the plan of the best play, and what yours gives up) instead of its long list. */
+  const BGJ_OP = {
+    intro: {
+      o31: '3と1は、最初の一手でゴールデンポイント（インナーの右から5番目）が作れる目ワン！ ほかの手とは大きな差があるから、迷わなくていいんだ。',
+      o42: '4と2なら、インナーの右から4番目にポイントが作れるね。ゴールデンポイントの次に大事な場所で、ほかの手より明らかに得ワン。',
+      o53: '5と3は、インナーの右から3番目にポイントを作るのがいちばん。少し奥でも、ポイントの価値は大きいからね。後ろの駒を分ける手が次点ワン。',
+      o61: '6と1なら、バーポイントが作れるワン！ となりのポイントとつながって、相手の後ろの駒は6の目で逃げられなくなるんだ。',
+      o21: '2と1は考え方が2つあるね。後ろの駒を分けて中盤に材料を置くか、ゴールデンポイントに1枚置いて次に作るのを狙うか。差は小さくて、どちらも正解ワン。',
+      o41: '4と1は、中盤から1枚下ろして材料（ビルダー）にして、1の目で後ろの駒を分けるのがいちばん。ゴールデンポイントに1枚置く手は、少し落ちるワン。',
+      o51: '5と1は、5で中盤から安全に1枚下ろして、1で後ろの駒を分けるワン。ゴールデンポイントに1枚置く手より、こっちの評価が上なんだ。',
+      o32: '3と2は、後ろの駒を1枚前に出して、中盤からも1枚下ろすのが基本ワン。中盤から2枚下ろす手も、差は小さいね。',
+      o43: '4と3は、後ろの駒を進めるか、中盤から材料を下ろすか。その組み合わせの4つの手が、ほとんど同じ評価ワン。好みで選んでいい目なんだ。',
+      o52: '5と2は、中盤から2枚下ろす手がわずかに上ワン。後ろを分ける手も十分で、どちらを選んでも大きな損はないね。',
+      o54: '5と4は、後ろの駒を1枚前に出して、中盤からも1枚下ろすのが基本ワン。中盤から2枚下ろす手も僅差。後ろの1枚を逃がす手は、少し落ちるんだ。',
+      o62: '6と2は、6で後ろの駒を相手のバーポイントへ、2で中盤から材料を下ろすのがいちばんワン。1枚を逃がす手や、ゴールデンポイントに置く手は少し落ちるね。',
+      o63: '6と3は、相手のバーポイントに出て材料を置くか、後ろの1枚を逃がすか。ほとんど互角だけど、前のほうがわずかに上ワン。',
+      o64: '6と4は、考え方の違う手が3つあるね。ポイントを作る、後ろの1枚を逃がす、相手のバーポイントに出て材料を置く。どれもほぼ同じ評価ワン。',
+      o65: '6と5は、後ろの1枚を相手の陣地からミッドポイントまで一気に逃がすワン！ 「ラバーズリープ」と呼ばれる有名な手で、ほかの手よりずっと上なんだ。',
+      r31: '相手がゴールデンポイントを作ると、そこには駒を出せないね。だから応手も少し変わるワン。ポイントを作れる目なら、こっちも作るのがいちばんなんだ。',
+      r42: '相手がインナーの4番目にポイントを作った後の応手ワン。いつもの手が使えない目もあるけど、ポイントを作れる目なら、やっぱり作るのがいちばんだね。',
+      r61: '相手がバーポイントを作ると、6の目で後ろの駒を出せなくなるね。2つの目を合わせて走る手が多いけど、走らずに材料を置くのが良い目もあるワン。',
+      r53: '相手が少し奥にポイントを作った後の応手ワン。ポイントを作れる目なら、こっちも作るのがいちばん。ほかの目は、オープニングと同じ考え方で大丈夫なんだ。',
+      r21p: '相手が後ろの駒を分けてきた後の応手ワン。ポイントを作れる目なら、やっぱり作るのが最善。ほかの目は、後ろを分けたり材料を置いたりするんだ。',
+      r51: '相手が後ろの駒を分けると、相手の陣地にブロットが残るね。目によっては、2枚まとめて打つ手が最善になるワン！ 走る目、分ける目もあるから、よく見てね。',
+      r65: '相手が1枚を一気に逃がした後の応手ワン。ポイントを作れる目は作る。ほかは、オープニングと同じ考え方で動かすのがいちばんなんだ。',
+      d66: '2手目に6のゾロ目が出たら、ふつうは後ろの2枚を相手のバーポイントへ、中盤の2枚をバーポイントへ動かすワン。でも相手がバーポイントを作っていたら、そこへは止まれないね。',
+      d55: '5のゾロ目は、多くの場面で中盤の2枚をインナーの右から3番目へ運んでポイントにするワン。相手の残したブロットが打てるなら、打ちながらポイントを作る手もあるんだ。',
+      d44: '4のゾロ目は、ポイントを作るか、後ろと中盤をそろえて進めるか、相手の形しだいで変わるワン。ブロットを打てるときは、打つのが大事だね。',
+      d33: '3のゾロ目は、後ろの2枚で相手の陣地に足場（アンカー）を作る手が多いワン。相手のブロットが打てるときや、相手が逃げた後は、インナーにポイントを作るんだ。',
+      d22: '2のゾロ目は、多くの場面でインナーの右から4番目にポイントを作るワン。相手のブロットに届くなら、打ちながら作るのがいちばんだね。',
+      d11: '1のゾロ目は、ゴールデンポイントを作るのが基本ワン。相手のブロットを打てるときは打つ。相手が逃げた後なら、バーポイントまで一緒に作れることもあるんだ。',
+      h21s: '相手がゴールデンポイントに1枚だけ置いてきたら、それを打てる目は打つのがいちばんワン！ 自分のポイントを作れる目でも、打つほうが上のことが多いんだ。',
+      h43: '相手が後ろと中盤から1枚ずつ出てきた後の応手ワン。打てる目は打つのが基本。でも、打たずにポイントを作るほうが良い目もあるんだ。',
+      h64: '相手が後ろの1枚を中盤まで逃がした後の応手ワン。その1枚に届く目は、打つのがいちばん。打たずに自分も逃げるほうが良い目もあるから、気をつけてね。',
+      h62: '相手がこっちのバーポイントに出てきた後の応手ワン。打ちながらポイントを作れる目は最高だね。打たずにポイントを作るほうが良い目もあるんだ。',
+    },
+    ask: ['{d}が出たワン。どう動かすのがいちばんかな？', '{d}か。きみならどう動かす？', 'さあ、{d}をどう使う？ 強い人の手を当ててみて！', '{d}が出た！ 作る、逃げる、打つ……どれを選ぶワン？', 'ここで{d}。いちばん得な動かし方はどれかな？'],
+    dice: d => d[0] === d[1] ? d[0] + 'のゾロ目' : d[0] + 'と' + d[1],
+    // a point (the mover's own numbering) by a short name: no numbers on the 3D board
+    pt(i) { return i === 5 ? 'ゴールデンポイント' : i === 6 ? 'インナーの左はしのポイント' : i >= 1 && i <= 4 ? `インナーの右から${i}番目のポイント` : i === 7 ? 'バーポイント' : i >= 8 && i <= 12 ? `バーの左${i - 6}つ目のポイント` : i === 13 ? 'ミッドポイント'
+      : i === 18 ? '相手のバーポイント' : i >= 14 && i <= 17 ? `ミッドポイントの右${i - 13}つ目` : i === 20 ? '相手のゴールデンポイント' : i === 24 ? '相手の陣地のいちばん奥' : `相手のインナーの左から${i - 18}番目`; },
+    plan: { enter: 'まずバーの駒を入れ直すのが先だからね。', hit: '相手のブロットを打てば、約{n}ピップも戻せるからね。', hit2: '相手の駒を{k}枚まとめて打てば、相手は反撃どころじゃなくなるワン。',
+      dance: '打たれた相手が入れずに休む確率も、約{d}%あるんだ。',
+      pt5: '{P}は相手の後ろの駒の前をふさぐ、いちばん大事な場所だからね。', pt7: '{P}をふさげば、相手の後ろの駒は6の目で飛び出せなくなるワン。',
+      ptHome: '{P}が増えると、打たれた相手の駒が入りにくくなるからね。', ptDeep: '少し奥の{P}でも、ポイントにすれば相手の入り口が1つ減るワン。',
+      ptOuter: '{P}は相手の逃げ道をふさいで、駒を運ぶ中継にもなるからね。', anchor20: '{P}に足場（アンカー）があれば、打たれても戻る場所になるワン。',
+      anchor: '{P}に2枚の足場ができれば、閉じ込められにくくなるからね。', ptMid: '{P}が中盤の足場になって、駒を安全に運べるワン。',
+      prime: 'ポイントが{n}つ並んで、相手の駒の前に壁ができるからね。', prime6: '6つ並んだ完全な壁で、相手は一歩も出られないワン！',
+      escape: '後ろの駒が閉じ込められる前に、相手の陣地から逃げ出せるからね。', raceA: '接触がなくなって、リードしたままのレースになるワン。', raceB: '接触をなくして、あとはレース勝負にするからね。',
+      off: '駒を{n}枚上げられるからね。', raceMove: 'むだなく前へ進めて、上げやすい形に整えるワン。', boRolls: '', safe0: 'しかもブロットを残さないから、打たれる心配がないワン。',
+      bold: 'わざと打たれる危険をとって、次にポイントを作る材料を置くからね。', build: '次の番にポイントを作れる目が{a}通りもあるワン。', unstack: '重なった駒をほぐして、使える駒を増やせるからね。', quiet: '駒の配置のバランスがいちばん良いからね。' },
+    vs: { noHit: 'きみの手は打つチャンスを見送っちゃうから、相手を自由に動かせちゃう。', noPoint: 'きみの手だと{P}が作れないままになるワン。', broke: 'きみの手は{P}をくずすから、せっかくの壁が弱くなるんだ。',
+      shots: 'きみの手は打たれる目が{a}通りもあるから、緑の手の{b}通りより危ないワン。', shots0: 'きみの手はブロットが残って、{a}通りの目で打たれちゃう。緑の手なら打たれる目はゼロなんだ。',
+      stuck: 'きみの手だと後ろの駒が残って、閉じ込められる危険が続くワン。', build: 'きみの手だと、次にポイントを作れる目が{c}通り減っちゃうから、少し損なんだ。', stack: 'きみの手は{n}枚が1か所に重なって、駒が使いにくくなるワン。',
+      off: 'きみの手だと、上げる駒が{n}枚少なくなるからね。', close: '差はほんの少しだけど、細かい駒の置き方で緑の手がわずかに上だからね。' },
+    good: ['ナイス！ ', 'その手ワン！ ', 'ばっちり！ ', 'いいね、正解！ ', 'さすが！ '],
+    ngHead: ['正解は緑の矢印の手ワン。', 'ここは緑の矢印の手がいちばんなんだ。', '緑の矢印の手を見てみて。', '強い人は緑の矢印の手を選ぶワン。'],
+    hint: { hit: '相手のブロット（1枚だけの駒）に届く目がないか、数えてみて！', hit2: '相手のブロット、1枚だけじゃないね。まとめて狙ってみて！', enter: 'まずはバーの駒からだね。',
+      pt: '2枚を同じ場所にそろえれば、ポイントが作れそうだね。', anchor: '後ろの2枚を同じ場所にそろえる手もあるワン。', escape: '後ろの駒、そろそろ相手の陣地から逃がしたくない？',
+      build: 'すぐポイントにならなくても、次に作る材料を置く手があるワン。', safe0: 'ブロットを残さない、安全な形を探してみて。', def: '後ろの駒と中盤の駒、どっちを動かすか考えてみて！' },
+    say(x) { const t = (this[x.k.slice(0, 2) === 'tv' ? 'vs' : 'plan'] || {})[x.k.slice(3)]; if (!t) return '';
+      const a = Object.assign({}, x.a); if (a.P != null) a.P = '<b>' + this.pt(a.P) + '</b>'; if (a.a != null && a.b != null) a.c = a.a - a.b; return fill(t, a); },
+    // join the pieces: one ワン in a row is enough (the next piece's ワン becomes ね, or んだ after a ね)
+    join(...xs) { let out = ''; for (let x of xs) { if (!x) continue; if (/ワン[。！]$/.test(out.replace(/<[^>]+>/g, '').trim()) && /ワン[。！]$/.test(x)) x = x.replace(/ワン([。！])$/, (a, e) => (/ね[。！]?\s*$/.test(out) ? 'んだ' : 'ね') + e);
+      else if (/ね[。！]\s*$/.test(out) && /からね。$/.test(x)) x = x.replace(/からね。$/, 'からなんだ。'); out += x; } return out; },
+    hintOf(T) { const k = T && T.plan[0] ? T.plan[0].k.slice(3) : ''; return this.hint[k] || this.hint[/^pt|prime/.test(k) ? 'pt' : /^anchor/.test(k) ? 'anchor' : k === 'bold' ? 'build' : 'def']; },
+  };
   const BACKGAMMON = {
     LKEY: 'aicoding-backgammon-v2-lessons', OKEY: 'aicoding-backgammon-v2-open', data: null, I: null,
     load() {
@@ -1620,12 +1689,30 @@
       const it = this.data.op.items[key]; if (!it || !window.BG) return null;
       const T = f => this.tx('op.i.' + it.id + '.' + f, lang), N = this.names(lang);
       const decs = this.opDecs(it);
-      return { id: it.id, title: T('t') || it.id, intro: [T('d'), T('a')].filter(Boolean).join('<br>'), start: null, steps: [], notes: {},
-        probs: decs.map(x => { const tol = this.data.op.tol || .02, R = x.plays.map(y => ({ m: y[0], e: y[3] != null ? y[3] : y[1], ro: y[3] != null, ply: y[2] })), rolled = R.some(y => y.ro), best = R.filter(y => !rolled || y.ro).reduce((a, b) => b.e > a.e ? b : a);
+      return { id: it.id, title: T('t') || it.id, intro: (lang === 'ja' && BGJ_OP.intro[it.id]) || [T('d'), T('a')].filter(Boolean).join('<br>'), start: null, steps: [], notes: {},
+        probs: decs.map((x, j) => { const tol = this.data.op.tol || .02, R = x.plays.map(y => ({ m: y[0], e: y[3] != null ? y[3] : y[1], ro: y[3] != null, ply: y[2] })), rolled = R.some(y => y.ro), best = R.filter(y => !rolled || y.ro).reduce((a, b) => b.e > a.e ? b : a);
           const P = { dice: x.d, plays: R.map(y => [y.m, y.e]), opTol: tol, opOk: R.filter(y => (rolled ? y.ro : y.ply === 2) && best.e - y.e <= tol + 1e-9).map(y => y.m), best: best.m };
           const ask = this.tx('op.drillTurn', lang, { c: '<b>' + N.c + '</b>', d: x.d.join('') });
-          return Object.assign(this.play(P, x.pos, ask, this.tx('op.hint', lang) || '', lang), { ans: [{ froms: best.m, cls: 'ring' }], best: () => best.m }); }),
+          const o = Object.assign(this.play(P, x.pos, ask, this.tx('op.hint', lang) || '', lang), { ans: [{ froms: best.m, cls: 'ring' }], best: () => best.m });
+          if (lang === 'ja' && window.BGX && BGX.teach) this.opJa(o, it, j);   // (ダイスン asks, hints and explains — BGJ_OP)
+          return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[it.id] || {}, pass = pts >= max; pr[it.id] = Object.assign({}, o, { pass: !!o.pass || pass, best: Math.max(o.best || 0, max ? pts / max : 0) }); put(this.OKEY, pr); return pass; } };
+    },
+    opJa(o, it, j) {   // (2026-11-21 lesson loop) the opening problem in ダイスン's words: see BGJ_OP
+      const J2 = BGJ_OP, hs = (it.id.length * 7 + it.id.charCodeAt(1) + j) | 0, q0 = bgDecP(o.bgPos), d = J2.dice(o.P.dice);
+      const mk = m => { const q = q0.slice(), mv = Array.isArray(m) ? m : bgCodes(o.bgPos, m).moves; mv.forEach(c => BG.apply(q, 0, BG.mvFrom(c), BG.mvTo(c))); return { moves: mv, pos: q }; };
+      const bestM = o.best(), bestP = mk(bestM), others = o.P.plays.map(y => y[0]).filter(m => !o.P.opOk.includes(m));
+      const T0 = (() => { try { return BGX.teach(q0, 0, bestP, null); } catch (e) { return null; } })();
+      o.ask = fill(J2.ask[hs % J2.ask.length], { d });
+      o.hintTx = J2.hintOf(T0);
+      const reasons = (T, max, pre) => { let out = pre || ''; const n0 = out.length; for (const x of (T && T.plan) || []) { let s = J2.say(x); if (!s || (out.length > n0 && (out + s).length - n0 > max)) continue; if (out.length > n0) s = 'それに、' + s.replace(/^しかも/, '').replace(/からね。$/, 'んだ。'); out = J2.join(out, s); if (out.length - n0 > max * .6) break; } return out; };
+      o.good = u => { let T = T0; try { if (u && u.steps && u.steps.length) T = BGX.teach(q0, 0, mk(u.steps), null); } catch (e) {}
+        const many = o.P.opOk.length > 1 ? (hs % 2 ? 'ほかにも同じくらい良い手があるけど、' : '同じくらいの手はほかにもあるワン。') : '';
+        return J2.join(reasons(T, 90, J2.good[hs % J2.good.length]), many && many.endsWith('、') ? many + 'どれも大きな差はないんだ。' : many); };
+      o.ng = u => { let mine = null; try { mine = u && u.steps && u.steps.length ? mk(u.steps) : others.length ? mk(others[0]) : null; } catch (e) {}
+        let T = T0; try { if (mine) T = BGX.teach(q0, 0, bestP, mine); } catch (e) {}
+        const vs = ((T && T.vs) || []).map(x => J2.say(x)).filter(Boolean)[0] || J2.vs.close;
+        return J2.join(reasons(T, 60, J2.ngHead[hs % J2.ngHead.length]), vs); };
     },
     points(P, u, p) {   // = backgammon/app.js problemPoints (lessons) · op.js opSubmit (openings: right within the tolerance, else nothing)
       const mine = u && u.key, L = P.plays.map(([m, e]) => Object.assign(bgCodes(p.bgPos, m), { m, e }));
@@ -2388,11 +2475,13 @@
         const right = pts >= 16, k = cur.k;
         if (p.kind === 'bgplay' && u && u.steps) { const best = p.best(); later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().reset(); pz().mark([{ m: best, cls: 'ok' }, ...(right && pts >= 20 ? [] : [{ play: u.steps, cls: 'ng' }])]); }, 700); }
         let teach = '';   // (what the best play is for, and what yours gives up: backgammon/explain.js teach)
-        if (p.kind === 'bgplay' && window.BGX && BGX.teach && window.AtlasBgTeach) {
+        if (p.kind === 'bgplay' && typeof p.good === 'function' && u && u.steps) teach = '<br>' + (pts >= 16 ? p.good(u) : p.ng(u));   // (an opening in ja: ダイスン's short words, BGJ_OP)
+        else if (p.kind === 'bgplay' && window.BGX && BGX.teach && window.AtlasBgTeach) {
           try { const q0 = bgDecP(p.bgPos), mk = mv => { const q = q0.slice(); mv.forEach(c => BG.apply(q, 0, BG.mvFrom(c), BG.mvTo(c))); return { moves: mv, pos: q }; };
             teach = AtlasBgTeach.html(BGX.teach(q0, 0, mk(bgCodes(p.bgPos, p.best()).moves), pts >= 20 ? null : mk(u.steps)), (k, v) => D.tx(k, ctx.lang, v), false, true); } catch (e) { console.warn(e); }
         }
-        say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
+        const own = p.kind === 'bgplay' && typeof p.ng === 'function' && u && u.steps;   // (ダイスン names the green play himself: the head stays short)
+        say(`${right ? line('solved') || pick(X.good) : own ? String(pts > 0 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
         try { chime(right); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
@@ -2521,7 +2610,9 @@
     Promise.all([D.load(ctx.lang), ncLoad(id), lsvLoad(ctx.lang)]).then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
     const dbg = { state: () => cur && { key: cur.key, phase, k: cur.k, si: cur.si, res: cur.res.slice(), ans: cur.probs[cur.k] && cur.probs[cur.k].ans, ramp: phase === 'ramp' && cur.ramp && cur.ramp[cur.ri] ? cur.ramp[cur.ri].ans : undefined, moves: cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.f ? Object.keys(cur.probs[cur.k].P.f).map(Number) : cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.cand ? cur.probs[cur.k].P.cand.map(c => c[0]) : null, say: $('.tx').textContent },
       toProb: () => { if (cur && cur.probs.length) { cur.k = 0; prob(); } },   // (test hook: straight to the problems)
-      answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return; u = u || p.ans; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook)
+      answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return;
+        if (p.kind === 'bgplay') { const m = typeof u === 'string' ? u : p.best(), c = bgCodes(p.bgPos, m), q = bgDecP(p.bgPos); c.moves.forEach(x => BG.apply(q, 0, BG.mvFrom(x), BG.mvTo(x))); await pz().play(c.moves); return moved(p, { key: c.key, steps: c.moves, pos: q }); }   // (backgammon: a play by the json's letter pairs)
+        u = u || p.ans; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook)
     window.__atlasLs = dbg;
     return {
       stop() { autoCancel(); stopped = true; document.removeEventListener('keydown', onKey, true); if (window.__atlasLs === dbg) delete window.__atlasLs; clearInterval(typeT); timers.forEach(clearTimeout); if (sess) sess.stop(); sess = null; el.remove(); },
