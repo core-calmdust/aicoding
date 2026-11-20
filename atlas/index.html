@@ -106,6 +106,18 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.95);border-
 /* ---------- skins (きせかえ → スキン, 2026-11-20; atlas/skins.js): the page background, the header / sticky bars and the
    selected menu tab follow the worn skin; cards, sheets and the 3D view keep their own colours ---------- */
 html[data-skin] body{background-color:var(--sk-bg);background-image:none}
+/* (2026-11-21 the user) アトラモたちの会話の吹き出しもスキンの色に：白＋スキン色の縁、顔の丸はアクセント色 */
+html[data-skin]:not(.skdark){--sk-acc0:var(--sk-navm)}html[data-skin].skdark{--sk-acc0:color-mix(in srgb,var(--sk-hdr) 55%,var(--sk-navm))}
+html[data-skin] body:not(#_):not(#_) :is(.npc-bub,.atlas-guide .bub,.rgd .bub,#avTalk .at-bub){background:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;box-shadow:0 4px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) :is(.npc-bub,.atlas-guide .bub,.rgd .bub)::before{border-right-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) :is(.npc-bub,.rgd .bub)::after{border-right-color:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important}
+html[data-skin][dir=rtl] body:not(#_):not(#_) :is(.npc-bub,.atlas-guide .bub,.rgd .bub)::before{border-right-color:transparent!important;border-left-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) #avTalk .at-bub::after{border-top-color:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important}
+html[data-skin].atlas-skin body:not(#_):not(#_) .atlas-guide .bub::before{border-top-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html[data-skin] body:not(#_):not(#_) :is(.npc-float:not([data-who=boss]) .npc-pic,.atlas-guide .pic,.rgd .pic){background:radial-gradient(circle at 40% 35%,#fff,color-mix(in srgb,var(--sk-acc0) 40%,#fff))!important}
+html[data-skin] body:not(#_):not(#_) #avTalk .at-ch .bg{box-shadow:0 0 0 6px #fff,0 0 0 9px color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8),0 14px 30px rgba(20,20,60,.25)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .coach{background:color-mix(in srgb,var(--sk-navm) 6%,#fff)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;box-shadow:0 4px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+
 html[data-skk=tile] body{background-image:var(--sk-img);background-size:var(--sk-size)}
 html[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;will-change:transform;background:var(--sk-bg) var(--sk-img) var(--sk-pos,50% 100%)/cover no-repeat;pointer-events:none}
 @media (max-aspect-ratio:6/5){html[data-skp] body::before,html[data-skp] #skfx .fx-x{background-position-y:var(--sk-pyp,100%)}html[data-skp] body::before{background-image:var(--sk-imgp)}html[data-skp] #skfx .fx-x{background-image:var(--sk-img2p)}}
@@ -2497,7 +2509,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="museum.css?v=1">
 <script src="worldmap.js?v=40"></script>
 <script src="museum.js?v=1"></script>
-<script src="npc/npc.js?v=45"></script>
+<script src="npc/npc.js?v=46"></script>
 <script src="avtalk.js?v=4"></script>
 <script>/* Page states as classes on <html> (2026-11-21) — html.cov-on: the 3D view / Historia / a sheet / a level sheet is open;
    html.bv-on: the 3D view; html.rec-on: the records page; html.bv-playing: a game is in play; html.ul-on: the news line is there. The CSS used html:has(#bv.on,…) for these: with a
