@@ -5,7 +5,7 @@
 (function (root) {
 'use strict';
 const N = 10, NN = 100, FLEET = [5, 4, 3, 3, 2], TOTAL = 17;
-const RULES = ['classic', 'streak', 'salvo', 'tactics'];
+const RULES = ['tactics', 'classic', 'streak', 'salvo'];   // (タクティクス first and the default — 2026-11-20 user)
 // タクティクス: the fleet is drafted within a budget; every ship type but the destroyer carries a skill with a cooldown
 // (counted in the owner's turns). A skill replaces the turn's shot, and is lost when its ship is sunk.
 //   bomb (carrier): a + of 5 squares · volley (battleship): a 2×2 block · torpedo (cruiser): runs up a column from the near
@@ -47,7 +47,7 @@ const TYPES = [
   { k: 'patrol', len: 2, cost: 4, skill: 'probe', cd: 5 },
   // 第6弾 (2026-11-20): supply — always, while afloat: when another of your ships is sunk, your other skills' cooldowns −3
   //   hospital — always, while afloat: the skills of your sunk ships can still be used
-  { k: 'supply', len: 3, cost: 2, skill: null, cd: 0, rally: 1 },
+  { k: 'supply', len: 3, cost: 3, skill: null, cd: 0, rally: 1 },
   { k: 'hospital', len: 4, cost: 4, skill: null, cd: 0, hospital: 1 },
   // 第7弾 (2026-11-20): light carrier — strafe: an X of 5 squares (the square and its 4 diagonals) · torpedo boat — a torpedo along a row,
   //   from the left edge, that hits the first unhit ship square (the water it passes shows as misses)
@@ -67,7 +67,7 @@ const TYPES = [
   { k: 'intel', len: 3, cost: 4, skill: 'intel', cd: 7 },
   // 第11弾 (2026-11-20): battlecruiser — lance: a vertical line of 4 squares · transport — no skill, costs nothing: a free but long target
   { k: 'bcruiser', len: 4, cost: 6, skill: 'lance', cd: 5 },
-  { k: 'transport', len: 4, cost: 0, skill: null, cd: 0 },
+  { k: 'transport', len: 4, cost: 1, skill: null, cd: 0 },
   // 第12弾 (2026-11-20): echo (wide-sonar ship) — echo: the unhit ship squares in a 5×5 box · tracker (ESM ship) — always, while afloat:
   //   the first time each enemy ship uses a skill on you, a sonar reading (3×3) around one of its squares is given to you
   { k: 'echo', len: 4, cost: 4, skill: 'echo', cd: 6 },
@@ -104,7 +104,7 @@ const TYPES = [
   // 第20弾 (2026-11-20): breakwater — always, while afloat: the enemy gets no extra shots (twin shot and quick fire cannot be used, no pursuit)
   //   ring ship — ring: the 8 squares around the chosen square (not the square itself)
   { k: 'breakwater', len: 3, cost: 3, skill: null, cd: 0, calm: 1 },
-  { k: 'ringship', len: 4, cost: 7, skill: 'ring', cd: 8 },
+  { k: 'ringship', len: 4, cost: 8, skill: 'ring', cd: 8 },
 ];
 const SELF = { smoke: 1, command: 1, repair: 1, mine: 1, ward: 1, rapid: 1, plate: 1, allout: 1 };   // skills that act on your own fleet (a ward does not stop them)
 // 妨害 (jam) only counts down 1 a turn: no 統率・号令・総力・補給・通商破壊 speed-up (2026-11-20 user: 電子戦艦＋司令艦 was too strong —

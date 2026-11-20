@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
     await ctx.route(/fonts\.(googleapis|gstatic)|firebase|gstatic/, r => r.abort());
     const p = await ctx.newPage();
     p.on('pageerror', e => errs.push(name + ': ' + e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED|Failed to load resource/.test(m.text())) errs.push(name + ': ' + m.text()); });
-    await p.goto('http://localhost:8765/seabattle/', { waitUntil: 'load' }); await p.waitForTimeout(500);
+    await p.goto('http://localhost:8765/seabattle/', { waitUntil: 'load' }); await p.waitForTimeout(500); await p.evaluate(() => { if (document.querySelector('#pickOverlay').classList.contains('show')) document.querySelector('#btnPickClose').click(); });   // (a fresh visit opens the pick sheet of a new タクティクス game)
     const shot = n => p.screenshot({ path: '/tmp/shots/' + name + '-' + n + '.png' });
     const tap = sel => touch ? p.tap(sel) : p.click(sel);
     await tap('#btnNew'); await p.waitForTimeout(400); await shot('tac-new');
