@@ -1573,7 +1573,8 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
     if (hit) { ST(stHit++);
       ttm = e->move; ttD = e->depth; ttF = e->fl & 3; ttS = e->score; ttPv |= (e->fl >> 2) & 1;
       if (ttS > MATE - MAXPLY) ttS -= ply; else if (ttS < -MATE + MAXPLY) ttS += ply;
-      if (!pvNode && ttD >= depth && (ttF == F_EXACT || (ttF == F_LOWER && ttS >= beta) || (ttF == F_UPPER && ttS <= alpha))) {
+      /* (P110: the table cuts only with more depth for a fail high, and only where the node's expected kind agrees or depth > 4) */
+      if (!pvNode && (P[110] ? ttD > depth - (ttS <= beta) && (cutNode == (ttS >= beta) || depth > 4) : ttD >= depth) && (ttF == F_EXACT || (ttF == F_LOWER && ttS >= beta) || (ttF == F_UPPER && ttS <= alpha))) {
         ST(stTTcut++);
         if (P[70] && ttS >= beta && ttm && !inChk && isPseudo(ttm) && !board[(ttm >> 7) & 127] && !((ttm >> 14) & 1)) { int b = (P[42] ? P[42] : 170) * depth - 80; histUpd(side, ttm, b > 1600 ? 1600 : b); }   /* (the table move cut: its history too) */
         return ttS;
@@ -1587,15 +1588,22 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
   }
   if (inChk) rawEval = -INF; else if (rawEval <= -INF + 1) rawEval = evaluate();
   evSt[ply] = rawEval;
+  /* (P111: the quiet move that led here is credited by what it did to the static evaluation, before any search) */
+  if (P[111] && !inChk && !ex && ply >= 1 && sp >= 1 && stMove[sp - 1] && ckS[sp - 1] >= 0 && !stCap[sp - 1] && !((stMove[sp - 1] >> 14) & 1) && evSt[ply - 1] > -INF + 1) {
+    double d_ = -(evSt[ply - 1] + rawEval); int df = (int)(d_ < -190 ? -190 : d_ > 195 ? 195 : d_) + 60;
+    gravI(&history[hIdx(side ^ 1, stMove[sp - 1])], df * P[111] / 10);
+  }
   double eval = rawEval;
   if (!inChk && hit && !P[61] && (ttS < 0 ? -ttS : ttS) < MATE - MAXPLY && (ttF == F_EXACT || (ttF == F_LOWER && ttS > eval) || (ttF == F_UPPER && ttS < eval))) eval = ttS;
   const int improving = !inChk && ply >= 2 && (evSt[ply - 2] > -INF + 1 ? rawEval > evSt[ply - 2] : ply >= 4 && evSt[ply - 4] > -INF + 1 ? rawEval > evSt[ply - 4] : 1);
   const int wasNull = sp > 0 && ckS[sp - 1] < 0;
   if (!pvNode && !inChk && !ex) {
+    if (P[114]) { if (!cutNode && eval < alpha - P[114] * depth) return qsearch2(alpha, beta, ply, 0, 0); }   /* (razoring at expected all-nodes, any depth) */
+    else
     if (P[58] && depth <= 3 && eval + P[58] * depth < alpha) { double v = qsearch2(alpha, beta, ply, 0, 0); if (v < alpha) return v; }
-    if (depth <= rfpDepth && eval - rfpMargin * (depth - (P[24] ? improving : 0)) >= beta && (beta < 0 ? -beta : beta) < MATE - MAXPLY) { ST(stRfp++); return eval; }
-    if (!wasNull && depth >= 3 && eval >= beta) {
-      int x = (int)((eval - beta) / 250); const int R = P[65] ? 3 + depth / 5 + (x < 2 ? x : 2) : (P[52] ? P[52] : 4) + depth / 3 + (x < 3 ? x : 3);
+    if (!(P[113] && (ttPv || (ttm && !board[(ttm >> 7) & 127]))) && depth <= rfpDepth && eval - rfpMargin * (depth - (P[24] ? improving : 0)) >= beta && (beta < 0 ? -beta : beta) < MATE - MAXPLY) { ST(stRfp++); return eval; }
+    if (!wasNull && (P[112] ? cutNode && rawEval >= beta - 13 * depth - 47 * improving + P[112] : depth >= 3 && eval >= beta)) {   /* (P112: only at expected cut nodes, the static evaluation clearly above beta) */
+      int x = (int)((eval - beta) / 250); const int R = P[112] ? 6 + depth / 3 + (x > 0 ? x : 0) : P[65] ? 3 + depth / 5 + (x < 2 ? x : 2) : (P[52] ? P[52] : 4) + depth / 3 + (x < 3 ? x : 3);
       doNull(); ST(stNull++);
       double v = -search2(depth - 1 - R, -beta, -beta + 1, ply + 1, 0, !cutNode);
       undoNull();
