@@ -61,6 +61,27 @@ TABLES['sing'] = [
     ('sgDouble',   77,   80,   10,  260,  15),     # ... a second ply when the others fail by this much
     ('sgNeg',      79,    2,    0,    4,   1),     # ... not singular: the table move this much shallower
 ]
+# the site's search (v5 + the singular extension) against YaneuraOu's search: its numbers all together
+TABLES['v5yo'] = TABLES['sing'][:1] + [
+    ('sgMargin',   76,   90,   20,  220,  12),
+    ('sgDouble',   77,   40,   10,  260,  12),
+    ('sgNeg',      79,    2,    0,    4,   1),
+    ('lmpScale',   43,  246,   60,  800,  25),
+    ('futDepth',   46,    8,    2,   14,   1),
+    ('fut0',       47,  131,   20,  400,  15),
+    ('fut1',       48,   43,    0,  300,  10),
+    ('nullBase',   52,    6,    2,   12,   1),
+    ('rfpMargin',   2,   73,   30,  250,  10),
+    ('rfpDepth',    1,   11,    3,   24,   1),
+    ('razor',      58,  346,  100,  900,  40),
+    ('histLmr',     9, 5049, 1500, 16000, 500),
+    ('lmrDiv',     17,  214,  130,  320,  12),
+    ('cutR',       54,    1,    0,    4,   1),     # (the default is 0: starts from 1)
+    ('bonus',      42,  297,   80,  700,  30),
+    ('malusPct',  106,  100,   40,  400,  25),     # the tried quiet moves' malus, percent of the bonus
+    ('mainPct',   119,  100,   40,  400,  25),     # the main history's share of the bonus
+    ('contPct',   120,  100,   20,  250,  15),     # the continuation histories' share
+]
 V6_BASE = '85=1,91=1,92=2,55=1,44=1,45=1,62=1'
 TABLES['v6'] = TABLES['sing'] + [
     ('notImp',     86,   40,    0,  100,   8),     # reductions: percent more when the static evaluation is not improving
