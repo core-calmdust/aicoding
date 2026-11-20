@@ -10,7 +10,7 @@
    a mouse can also drag the canvas. */
 (function () {
   'use strict';
-  const V = 1;
+  const V = 2;
   /* ---------- the families (lanes), top to bottom ---------- */
   const FAM = [
     { k: 'race', c: '#c27a2c', i: '<rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/><circle cx="15" cy="15" r="1.4" fill="currentColor"/><circle cx="15" cy="9" r="1.4" fill="currentColor"/><circle cx="9" cy="15" r="1.4" fill="currentColor"/>' },
@@ -99,6 +99,8 @@
     ['hockey', 'flick', 1932, { y: 1932 }, 'g'],
     ['airhockey', 'flick', 1972, { y: 1972 }],
   ];
+  // uncollected games that can still be played inside an Atlas game (2026-11-21 user: パチーシはルドーの種目で遊べる)
+  const PLAY = { pachisi: { game: 'ludo', rule: 'pachisi', size: 14 } };
   /* ---------- the lines: [from, to, sure] (sure 0 = a theory / an influence / a shared board: dashed) ---------- */
   const E = [
     ['tabula', 'backgammon', 1], ['nard', 'backgammon', 0], ['nard', 'sugoroku', 0], ['pachisi', 'ludo', 1],
@@ -164,7 +166,7 @@
   let ctx = null, lang = 'ja', host = null, el = {}, sel = null, fam = 'all', zoom = 1, built = null;
   const node = id => built && built.byId[id];
   const gameOf = id => ctx.games.find(g => g.id === id);
-  const nodeName = n => n.g ? ctx.gname(n.g).replace(/\s*V\d+$/, '') : ((tx(lang).n || {})[n.id] || (tx('en').n || {})[n.id] || [n.id])[0];
+  const nodeName = n => n.g && !n.play ? ctx.gname(n.g).replace(/\s*V\d+$/, '') : ((tx(lang).n || {})[n.id] || (tx('en').n || {})[n.id] || [n.id])[0];
   const nodeTx = (n, i) => { const a = (tx(lang).n || {})[n.id], b = (tx('en').n || {})[n.id]; return (a && a[i]) || (b && b[i]) || ''; };
 
   const famC = k => (FAM.find(f => f.k === k) || FAM[0]).c;
@@ -178,7 +180,7 @@
   function layout() {
     const P = phone(), ROW = P ? 56 : 64, NH = P ? 44 : 50, LP = P ? 8 : 12, PAD = P ? 90 : 150;
     const famList = FAM.filter(f => fam === 'all' || f.k === fam);
-    const nodes = N.map(([id, f, y, L, fl = '']) => ({ id, fam: f, y, L, g: fl.includes('g') ? gameOf(id) : null, orig: fl.includes('o') }));
+    const nodes = N.map(([id, f, y, L, fl = '']) => ({ id, fam: f, y, L, g: fl.includes('g') ? gameOf(id) : PLAY[id] ? gameOf(PLAY[id].game) : null, play: PLAY[id] || null, orig: fl.includes('o') }));
     const byId = {}; nodes.forEach(n => byId[n.id] = n);
     const lanes = []; let top = 0;
     famList.forEach(f => {
@@ -275,7 +277,7 @@
       <div class="trrel">${up.length ? `<div><i>${esc(TT(lang, 'from'))}</i><span>${up.map(chipHtml).join('')}</span></div>` : ''}${dn.length ? `<div><i>${esc(TT(lang, 'to'))}</i><span>${dn.map(chipHtml).join('')}</span></div>` : ''}${!up.length && !dn.length ? `<div class="solo"><i>${esc(TT(lang, 'solo'))}</i></div>` : ''}</div>
       ${g ? `<div class="tracts"><button type="button" class="amplay" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>${esc(TT(lang, 'play'))}</button>${window.Historia && Historia.has && Historia.has(g.id) ? `<button type="button" class="amhist" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/></svg>${esc(TT(lang, 'hist'))}</button>` : ''}</div>` : ''}`;
     el.info.querySelectorAll('.trc').forEach(b => b.onclick = () => { select(b.dataset.id); });
-    const pb = el.info.querySelector('.amplay'); if (pb) pb.onclick = () => { const im = el.info.querySelector('.trhd .tra img'); ctx.open(g.id, im); };
+    const pb = el.info.querySelector('.amplay'); if (pb) pb.onclick = () => { const im = el.info.querySelector('.trhd .tra img'); ctx.open(g.id, im, n.play || null); };
     const hb = el.info.querySelector('.amhist'); if (hb) hb.onclick = () => window.Historia.open(g.id);
   }
   function select(id, scroll = true) {

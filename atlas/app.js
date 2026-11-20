@@ -916,6 +916,12 @@
   let bvDrawer = 0;   // phones: the board card's drawer state, kept while moving between games on the table
   // a game's 3D board / table play / rules tour load when it is opened (atlas/lazy.js): the board view waits for them (2026-11-10)
   let openTok = 0;
+  // a game whose 種目 has a board of its own shows that board in the 3D view too (ルドー・パチーシ: the pachisi cloth, 2026-11-21 —
+  // the museum's family tree opens pachisi straight on it); null = the game's usual board
+  function ruleModel(id) {
+    try { if (id === 'ludo' && pref['ludo:rule'] === 'pachisi' && Table3D.MODELS.ludo) return Table3D.MODELS.ludo(false, 'pachisi'); } catch (e) {}
+    return null;
+  }
   function openBoard(id, push = true, flown = false) {
     const L = window.AtlasLazy;
     if (L && !L.loaded(id)) { const tok = ++openTok; document.body.classList.add('lz-wait'); return L.need(id).then(() => { document.body.classList.remove('lz-wait'); if (tok === openTok) openBoard0(id, push, flown); }); }
@@ -940,8 +946,9 @@
     if (initGL()) {
       // back from a game on the table: the board settles in softly and the camera glides back (ease-in-out) to the showcase view
       const show3d = () => {
-        if (back) { Table3D.show(id, null, { soft: true }); Table3D.play(false, { glide: 400 }); }
-        else { Table3D.show(id, null, flown ? { magic: true, hold: true } : {}); Table3D.play(false); }
+        const rm = ruleModel(id);
+        if (back) { Table3D.show(id, rm, { soft: true }); Table3D.play(false, { glide: 400 }); }
+        else { Table3D.show(id, rm, flown && !rm ? { magic: true, hold: true } : {}); Table3D.play(false); }
       };
       if (TG && !back) try { warm(id); } catch (e) {}   // (built now, so its textures are under way)
       if (!back && texBusy(id)) {   // its textures are still being drawn (opened right after the page loaded): show it when they are done
@@ -1250,6 +1257,7 @@
     // the level as a button that opens a list sheet with each level's name, meter and who it suits
     // the rule pulldown: a new rule rebuilds the card with its own 長さ choices
     if ($('bvRuleSel') && RU) $('bvRuleSel').addEventListener('change', () => { pref[id + ':rule'] = $('bvRuleSel').value; const z = RU.size0($('bvRuleSel').value); if (z) pref[id + ':size'] = z; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+      if (id === 'ludo' && !session) try { Table3D.show(id, ruleModel(id), { soft: true }); Table3D.play(false); } catch (e) {}   // (the board follows the 種目)
       if (!MXR) { bvCard(g, id, false, false); return; }
       // (MXR, 2026-11-16: only the length row changes — its choices and its picker; the card is not rebuilt)
       const sz = $('bvSize'); if (!sz) return; const v = $('bvRuleSel').value, L = RU.sizes(v);
@@ -3246,8 +3254,8 @@
   function renderMuseum() {
     if (!window.AtlasMuseum) return;
     const room = muRoom; muRoom = null;
-    AtlasMuseum.render($('pg-museum'), { games: A_.GAMES, lang, gname, no: gno, art: g => artImg(g), open: (id, img) => flyOpen(id, img), room,
-      page: r => { if (window.AtlasMissions) AtlasMissions.page(r); } });
+    AtlasMuseum.render($('pg-museum'), { games: A_.GAMES, lang, gname, no: gno, art: g => artImg(g), open: (id, img, o) => { if (o && o.rule) { pref[id + ':rule'] = o.rule; if (o.size) pref[id + ':size'] = o.size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} } flyOpen(id, img); }, room,
+      page: r => { if (window.AtlasMissions) AtlasMissions.page(r); }, achDone: gid => ACH.filter(a => a.gid === gid && a.done).length });
   }
   // the header's house: the Atlas's own home tab (not the CALMDUST top page); over a board it reloads the portal's home
   { const hb = $('homeBtn'); if (hb) hb.addEventListener('click', e => { if (document.querySelector('#bv.on,#hist.on') || document.documentElement.classList.contains('hs-open')) return;
