@@ -41,7 +41,7 @@ html.atlas-fox .pieces .pc.inc:not(.sel):not(.rmable){box-shadow:0 0 0 2.5px rgb
 html.atlas-fox .pieces .pc.rmable:not(.sel){box-shadow:0 0 0 3px rgba(255,120,90,.95),0 0 16px rgba(255,110,80,.7)!important;animation:fgRm3 1.4s ease-in-out infinite!important}
 @keyframes fgRm3{50%{box-shadow:0 0 0 5px rgba(255,120,90,.5),0 0 22px rgba(255,110,80,.45)}}
 html.atlas-fox .pieces .pc.dim{opacity:1!important}
-html.atlas-fox .pieces .hov{opacity:.45!important;box-shadow:none!important}
+html.atlas-fox .pieces .hov{opacity:.45!important;box-shadow:none!important;border-radius:50%!important;width:calc(var(--cell) * .7)!important;height:calc(var(--cell) * .7)!important;margin:calc(var(--cell) * -.35) 0 0 calc(var(--cell) * -.35)!important}   /* (a round ghost on the 3D board: the 2D page's fox is a square 1.1-cell picture — it showed as a grey square, 2026-11-21) */
 html.atlas-fox .pieces .hov::before,html.atlas-fox .pieces .hov::after,html.atlas-fox .pieces .hov .orn{display:none!important}
 html.atlas-fox .pieces .hov.p1{background:radial-gradient(circle at 40% 35%,#5a6070,#1c2230 60%,#0b0d12)!important}
 html.atlas-fox .pieces .hov.p2{background:radial-gradient(circle at 40% 35%,#fff,#eef0ea 60%,#c4cbc4)!important}
