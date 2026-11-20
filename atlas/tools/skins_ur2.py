@@ -6,7 +6,7 @@ import sys, os, math
 sys.path.insert(0, os.path.dirname(__file__))
 from skins import *   # noqa
 from skins_sr2 import render, svg_doc
-from skins_ssr2 import doc, lin, smooth_path, cloud, VW, VH, OW, OH
+from skins_ssr2 import doc, lin, smooth_path, cloud, VW, VH, OW, OH, TALL, EXTH
 
 def gold_defs(id_='gold'):
     return lin(id_, [(0, '#f7e3a6'), (.45, '#e2bd6a'), (.55, '#f3d993'), (1, '#c99a45')], 1, 1)
@@ -21,7 +21,7 @@ def stained(variant=0):
     # leaded quarries: a diamond lattice of pale tinted glass over the whole window, a few coloured panes
     r = RNG(61); q = 80
     for i in range(-1, int(VW / q) + 2):
-        for j in range(-1, int(VH / (q * .7)) + 3):
+        for j in range((-int(EXTH / (q * .7)) - 2) if TALL['on'] else -1, int(VH / (q * .7)) + 3):
             x = i * q + (q / 2 if j % 2 else 0); y = j * q * .7
             c = cols[int(r.random() * 6)] if r.random() < .22 else '#f7f3f6'
             g.append(f'<path d="M{x} {y - q * .7:.0f} L{x + q / 2:.0f} {y:.0f} L{x} {y + q * .7:.0f} L{x - q / 2:.0f} {y:.0f} Z" fill="{c}" stroke="#c4bccf" stroke-width="2.5" opacity=".85"/>')
@@ -42,8 +42,9 @@ def stained(variant=0):
     # light: a soft glow that sits in a different place in the two versions, so the light seems to move
     lx, ly = ((cx - 260, cy - 180), (cx + 300, cy + 120))[variant]
     defs = f'<radialGradient id="glow" cx="{lx / VW:.3f}" cy="{ly / VH:.3f}" r=".55"><stop offset="0" stop-color="#ffffff" stop-opacity=".75"/><stop offset=".6" stop-color="#ffffff" stop-opacity=".25"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>'
-    g.append(f'<rect width="{VW}" height="{VH}" fill="url(#glow)"/><rect width="{VW}" height="{VH}" fill="#fbf7fb" opacity=".32"/>')
-    return doc(defs, f'<rect width="{VW}" height="{VH}" fill="#efe9f2"/>' + ''.join(g))
+    y0 = -EXTH if TALL['on'] else 0
+    g.append(f'<rect width="{VW}" height="{VH}" fill="url(#glow)"/><rect y="{y0}" width="{VW}" height="{VH - y0}" fill="#fbf7fb" opacity=".32"/>')
+    return doc(defs, f'<rect y="{y0}" width="{VW}" height="{VH - y0}" fill="#efe9f2"/>' + ''.join(g))
 
 # ---------------------------------------------------------------- kaleidoscope (cover, colours that turn)
 def kaleido(variant=0):
@@ -130,7 +131,7 @@ def cloisonne():
     return svg_doc(f'<defs>{defs}</defs>' + ''.join(g), '#f3f6f8')
 
 # ---------------------------------------------------------------- night fair (dark cover, lights that twinkle)
-def night_fair(variant=0):
+def night_fair(variant=0, wheel=False):
     d = lin('sky', [(0, '#1b2246'), (.6, '#2b2f5e'), (1, '#3d3a6e')])
     g = [f'<rect width="{VW}" height="{VH}" fill="url(#sky)"/>']
     r = RNG(91)
@@ -145,11 +146,11 @@ def night_fair(variant=0):
         bulbs.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{7 if on(k) else 5}" fill="{c}" opacity="{1 if on(k) else .35}"/>')
         if on(k): bulbs.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="22" fill="{c}" opacity=".18"/>')
     g.append(f'<path d="M{cx - 160} 1010 L{cx} {cy} L{cx + 160} 1010" fill="none" stroke="#5a5f92" stroke-width="16" stroke-linecap="round"/>')
-    g.append(f'<circle cx="{cx}" cy="{cy}" r="{R}" fill="none" stroke="#5a5f92" stroke-width="8"/>' + ''.join(f'<line x1="{cx}" y1="{cy}" x2="{cx + R * math.cos(k * math.pi / 8):.0f}" y2="{cy + R * math.sin(k * math.pi / 8):.0f}" stroke="#5a5f92" stroke-width="4"/>' for k in range(16)))
-    for k in range(8):
+    if wheel: g.append(f'<circle cx="{cx}" cy="{cy}" r="{R}" fill="none" stroke="#5a5f92" stroke-width="8"/>' + ''.join(f'<line x1="{cx}" y1="{cy}" x2="{cx + R * math.cos(k * math.pi / 8):.0f}" y2="{cy + R * math.sin(k * math.pi / 8):.0f}" stroke="#5a5f92" stroke-width="4"/>' for k in range(16)))
+    for k in range(8 if wheel else 0):
         t = k * math.pi / 4 + .2; x, y = cx + R * math.cos(t), cy + R * math.sin(t)
         g.append(f'<path d="M{x - 24:.0f} {y + 6:.0f} L{x + 24:.0f} {y + 6:.0f} L{x + 20:.0f} {y + 42:.0f} L{x - 20:.0f} {y + 42:.0f} Z" fill="#6a6fa6"/><rect x="{x - 13:.0f}" y="{y + 14:.0f}" width="26" height="14" rx="3" fill="#ffe9a6" opacity="{.95 if on(k) else .6}"/>')
-    g.append(''.join(bulbs))
+    if wheel: g.append(''.join(bulbs))
     X, Y = 360, 990   # carousel with a lit canopy
     g.append(f'<rect x="{X - 200}" y="{Y - 150}" width="400" height="160" fill="#3f4579"/><rect x="{X - 210}" y="{Y}" width="420" height="26" rx="10" fill="#565c97"/>')
     for i in range(8):
@@ -230,7 +231,7 @@ def cover_finish(img, seed):
 
 if __name__ == '__main__':
     ids = sys.argv[1:] or ['s89', 's90', 's91', 's92', 's93', 's94', 's95']
-    jobs = {'s89': (stained(0), OW, OH), 's89b': (stained(1), OW, OH), 's90': (kaleido(0), OW, OH), 's90b': (kaleido(1), OW, OH),
+    jobs = {'s89': (stained(0), OW, OH), 's89b': (stained(1), OW, OH), 's90': (kaleido(0), OW, OH),
             's92': (cloisonne(), 1024, 1024), 's93': (night_fair(0), OW, OH), 's93b': (night_fair(1), OW, OH),
             's94': (makie(0), OW, OH), 's94b': (makie(1), OW, OH), 's95': (damask(), 1024, 1024)}
     want = []
