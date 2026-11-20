@@ -1084,24 +1084,23 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 }
 .dsec .rar{position:static;font-size:12px;padding:2px 9px}.dsec .dsn{font-family:var(--round);font-weight:700;font-size:13px;color:var(--ink2)}
 .dempty{grid-column:1/-1;text-align:center;padding:24px 0}
-/* きせかえ → スキン: a cell = a little picture of the page in that skin (2026-11-20) */
-.dgrid.skins{grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:12px}
-@media (max-width:760px){.dgrid.skins{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}}
+/* きせかえ → スキン: a cell = the skin's background picture (with its header colour as a thin strip) + its name (2026-11-20) */
+.dgrid.skins,.dgrid.skins .dgg{grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:12px}
+@media (max-width:760px){.dgrid.skins,.dgrid.skins .dgg{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
 .sknote{grid-column:1/-1;font-size:13.5px;font-weight:700;color:var(--ink2);background:rgba(255,255,255,.85);border:2px dashed var(--line);border-radius:14px;padding:8px 12px;line-height:1.5}
-.skc{position:relative;display:flex;flex-direction:column;padding:3px;border:0;border-radius:16px;background:var(--rc,#c9cdd6);cursor:pointer;text-align:start;font:inherit;color:var(--ink);-webkit-tap-highlight-color:transparent;transition:transform .15s;box-shadow:0 2px 0 rgba(0,0,0,.1);isolation:isolate}
-.skc.r0{--rc:#c9cdd6}.skc:active{transform:scale(.97)}
+.skc{position:relative;display:flex;flex-direction:column;min-width:0;padding:3px;border:0;border-radius:16px;background:var(--rc,#c9cdd6);cursor:pointer;text-align:start;font:inherit;color:var(--ink);-webkit-tap-highlight-color:transparent;transition:transform .15s;box-shadow:0 2px 0 rgba(0,0,0,.1);isolation:isolate}
+.skc:active{transform:scale(.97)}
 .skc.sel{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--sky)}
 .skc:not(.vis) .rfx::before{animation-play-state:paused}
-.skp{position:relative;display:block;aspect-ratio:16/10;border-radius:13px 13px 0 0;overflow:hidden;background:#fff6e2 radial-gradient(circle at 1px 1px,rgba(200,150,60,.22) 1.2px,transparent 1.4px) 0 0/9px 9px;--hd:#fff6e2;--nv:#2b3044}
+.skp{position:relative;display:block;aspect-ratio:16/10;border-radius:13px 13px 0 0;overflow:hidden}
+.skp.def{background:#fff6e2 radial-gradient(circle at 1px 1px,rgba(200,150,60,.24) 1.2px,transparent 1.4px) 0 0/9px 9px}
 .skp i{position:absolute;display:block}
-.skp .skh{left:0;right:0;top:0;height:17%;background:var(--hd);opacity:.96;box-shadow:0 1px 0 rgba(0,0,0,.07)}
-.skp .skh i{left:50%;top:22%;width:22%;height:56%;margin-left:-11%;border-radius:99px;background:var(--nv)}
-.skp .skb{bottom:11%;width:26%;height:36%;border-radius:7px;background:#fffdf7;box-shadow:0 2px 4px rgba(40,30,10,.18)}
-.skp .skb:nth-of-type(2){left:6%}.skp .skb:nth-of-type(3){left:37%}.skp .skb:nth-of-type(4){left:68%}
-.skn{display:flex;align-items:center;gap:6px;min-height:34px;padding:5px 8px 6px;border-radius:0 0 13px 13px;background:#fff;line-height:1.2}
+.skp .skh{left:0;right:0;top:0;height:12%;background:var(--hd);box-shadow:0 1px 0 rgba(0,0,0,.08)}
+.skp .skh i{left:50%;top:20%;width:20%;height:60%;margin-left:-10%;border-radius:99px;background:var(--nv)}
+.skn{display:flex;align-items:center;gap:6px;min-height:36px;padding:6px 8px 7px;border-radius:0 0 13px 13px;background:#fff;line-height:1.25}
 .skn .rar{position:static;flex:none;font-size:10px;padding:1px 6px;border-radius:6px;box-shadow:none}
-.skn b{font-size:13.5px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.skn small{margin-inline-start:auto;flex:none;font-size:11px;font-weight:700;color:var(--ink2)}
+.skn b{font-size:14px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:760px){.skn b{font-size:13.5px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}}
 .dic{position:relative;display:block;aspect-ratio:1;padding:3px;border:0;border-radius:16px;background:var(--rc);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;box-shadow:0 2px 0 rgba(0,0,0,.1)}
 .dic .art{display:grid;place-items:center;width:100%;height:100%;border-radius:13px;background:#f6efdd;overflow:hidden}
 .dic .art svg{width:86%;height:86%}.dic[data-kind=bg] .art svg{width:100%;height:100%}
@@ -2346,7 +2345,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=16"></script>
 <script src="art.js?v=19"></script>
-<script src="skins.js?v=1"></script>
+<script src="skins.js?v=2"></script>
 <script src="../shared/atlas-updates.js?v=48"></script>
 <script src="../shared/atlas.js?v=20261119nw1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
@@ -2411,7 +2410,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=44"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=459"></script>
+<script src="app.js?v=460"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

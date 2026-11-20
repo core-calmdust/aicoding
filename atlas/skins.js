@@ -82,7 +82,9 @@
   };
   const li = lang => Math.max(0, L.indexOf(lang));
   const tx = (row, lang) => row[li(lang)] || row[1];
-  const list = Object.keys(D).map(id => { const [rar, k, bg, hd, nav, dark] = D[id]; return { id, rar, kind: 'skin', cover: k === 'c', px: k === 'c' ? 0 : k, bg, hd, nav, dark: !!dark }; });
+  // 'base' = the classic cream (no image; the portal's own colours) — counted as an R (2026-11-20)
+  const list = [{ id: 'base', rar: 1, kind: 'skin', def: true, bg: '#fff6e2', hd: '#fff6e2', nav: '#2b3044', dark: false }]
+    .concat(Object.keys(D).map(id => { const [rar, k, bg, hd, nav, dark] = D[id]; return { id, rar, kind: 'skin', cover: k === 'c', px: k === 'c' ? 0 : k, bg, hd, nav, dark: !!dark }; }));
   const map = Object.fromEntries(list.map(s => [s.id, s]));
   const url = id => BASE + id + '.webp?v=' + V, thumb = id => BASE + 't/' + id + '.webp?v=' + V;
   const rgba = (h, a) => `rgba(${parseInt(h.slice(1, 3), 16)},${parseInt(h.slice(3, 5), 16)},${parseInt(h.slice(5, 7), 16)},${a})`;
@@ -104,8 +106,8 @@
   const root = document.documentElement;
   function paint(id) {
     const s = map[id], st = root.style;
-    Object.keys(vars(list[0])).forEach(k => st.removeProperty(k));
-    if (!s) { delete root.dataset.skin; delete root.dataset.skk; root.classList.remove('skdark'); return null; }
+    Object.keys(vars(list[1])).forEach(k => st.removeProperty(k));
+    if (!s || s.def) { delete root.dataset.skin; delete root.dataset.skk; root.classList.remove('skdark'); return null; }
     const v = vars(s); for (const k in v) st.setProperty(k, v[k]);
     root.dataset.skin = id; root.dataset.skk = s.cover ? 'cover' : 'tile'; root.classList.toggle('skdark', s.dark);
     return v;
@@ -119,5 +121,5 @@
     } catch (e) {}
   }
   const owned = (id, W) => DEV_ALL || !!(W && W.owned && W.owned.includes(id));
-  window.AtlasSkins = { list, byId: id => map[id], url, thumb, apply, owned, DEV_ALL, RAR, name: (s, lang) => tx(N[s.id] || [s.id], lang), t: (k, lang) => tx(T[k], lang) };
+  window.AtlasSkins = { list, byId: id => map[id], url, thumb, apply, owned, DEV_ALL, RAR, name: (s, lang) => s.def ? tx(T.def, lang) : tx(N[s.id] || [s.id], lang), t: (k, lang) => tx(T[k], lang) };
 })();
