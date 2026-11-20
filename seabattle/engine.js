@@ -52,7 +52,7 @@ const TYPES = [
   // 第7弾 (2026-11-20): light carrier — strafe: an X of 5 squares (the square and its 4 diagonals) · torpedo boat — a torpedo along a row,
   //   from the left edge, that hits the first unhit ship square (the water it passes shows as misses)
   { k: 'lcarrier', len: 4, cost: 6, skill: 'strafe', cd: 8 },
-  { k: 'tboat', len: 2, cost: 6, skill: 'rtorpedo', cd: 7 },
+  { k: 'tboat', len: 2, cost: 6, skill: 'rtorpedo', cd: 8 },
   // 第8弾 (2026-11-20): suppressor — suppress: the enemy's always-on abilities (armor, anti-air, return fire, resupply, rescue) stop
   //   for your next 2 turns · sweeper — sweep: a 3×3 box like sonar (the unhit ship squares in it), and any enemy mines in it are cleared
   { k: 'suppressor', len: 3, cost: 2, skill: 'suppress', cd: 4 },
