@@ -116,6 +116,10 @@ html[data-skin] .tab[aria-selected=true]{background:var(--sk-nav);color:var(--sk
   html[data-skin] header{background:var(--sk-hdrs)}
   html[data-skin] .tab[aria-selected=true]{background:transparent;color:var(--sk-navm);box-shadow:none}
 }
+/* light skins: a soft white halo round the text that sits right on the page, so it stays readable on the mid-toned ones
+   (コルク・クラフト紙・メープル・夕焼け・古地図… 2026-11-20); on pale grounds it is invisible */
+html[data-skin]:not(.skdark) :is(h2.h,.glh,.ic .lab .n,.amsub,.foot,.achsum > b,.shophead .note){text-shadow:0 0 2px #fff,0 0 4px #fff,0 0 8px rgba(255,255,255,.9),0 0 14px rgba(255,255,255,.7)}
+html[data-skin]:not(.skdark) .glh{color:#4a3214}
 /* dark skins (夜空・オーロラ・天球図・カードテーブル): light text where it sits right on the page or the header */
 html.skdark .brand .wm b{color:#fff}html.skdark .brand .wm small,html.skdark .brand .wk{color:#c9d2ea}html.skdark .brand .wk::before,html.skdark .brand .wk::after{background:#8f9ac0}
 html.skdark .brand img{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.75)) drop-shadow(0 3px 0 rgba(0,0,0,.2))}
@@ -2348,7 +2352,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=16"></script>
 <script src="art.js?v=19"></script>
-<script src="skins.js?v=5"></script>
+<script src="skins.js?v=6"></script>
 <script src="../shared/atlas-updates.js?v=48"></script>
 <script src="../shared/atlas.js?v=20261119nw1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>

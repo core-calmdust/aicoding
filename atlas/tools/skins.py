@@ -618,10 +618,14 @@ def cloud_mask(cx, cy, s, seed):
     return draw
 
 def soft_clouds(img, clouds, col, under, seed=1, rad=10, hi=.25):
-    m = Image.new('L', (W, H), 0); d = ImageDraw.Draw(m)
-    for i, (x, y, s) in enumerate(clouds): cloud_mask(k(x), k(y), k(s), seed + i)(d, 1)
-    mm = np.asarray(m.filter(ImageFilter.GaussianBlur(k(1.2))), np.float32) / 255
-    return emboss_layer(img, mm, col, rad=k(rad), k=14 / K, shadow=0, wrap=False, col2=under, hi=hi, lo=.12, light=(-0.3, -0.85, 0.5))
+    """flat two-tone clouds (2026-11-20 ユーザー：基本全部フラット): the shape in the shade colour, the same shape
+    nudged up on top in the light colour, so a flat shadow shows along the bottom"""
+    def mask(dy):
+        m = Image.new('L', (W, H), 0); d = ImageDraw.Draw(m)
+        for i, (x, y, s) in enumerate(clouds): cloud_mask(k(x), k(y + dy * s), k(s), seed + i)(d, 1)
+        return np.asarray(m.filter(ImageFilter.GaussianBlur(k(.8))), np.float32) / 255
+    img = flat(img, mask(0), under)
+    return flat(img, mask(-.12), col)
 
 def big_noise(seed, beta=2.6):
     pn = fnoise(512, beta, seed, m=512)
@@ -667,8 +671,8 @@ def snow_cover(seed=109):
                 for j in range(3):
                     w = h * (.42 - j * .1); yk = y0 - j * h * .28
                     d.polygon([(x, yk - h * .55), (x + w, yk), (x - w, yk)], fill=255)
-            mm = np.asarray(m.filter(ImageFilter.GaussianBlur(k(1.2))), np.float32) / 255
-            img = emboss_layer(img, mm, '#9fb9cf' if i == 1 else '#8fb0c8', rad=k(3), k=5 / K, shadow=.06, wrap=False, col2='#e9f1f8', light=(-0.4, -0.8, 0.5), sh_off=(int(k(4)), int(k(5))))
+            mm = np.asarray(m.filter(ImageFilter.GaussianBlur(k(.8))), np.float32) / 255
+            img = flat(img, mm, '#b3c9dc' if i == 1 else '#a4bfd4')
         img = paint_layer(img, yl, top, bot, soft=1.5)
         img = lerp(img, np.ones(3, np.float32), np.clip(1 - np.abs(yy - yl[None, :] - k(4)) / k(5), 0, 1) * .55)
     m = Image.new('L', (W, H), 0); d = ImageDraw.Draw(m)
@@ -824,13 +828,17 @@ def old_map_cover(seed=139):
     for j in range(32):
         a = j * math.pi / 16; gd.line([cx, cy, cx + math.cos(a) * k(1400), cy + math.sin(a) * k(1400)], fill=70, width=lw)
     img = lerp(img, hexc('#8a6a3c'), np.asarray(g.filter(ImageFilter.GaussianBlur(k(.6))), np.float32) / 255 * .45)
-    def rose(d, ss):
-        R = k(120)
-        for j in range(8):
-            a = -math.pi / 2 + j * math.pi / 4; L = R if j % 2 == 0 else R * .6
-            pts = [(cx + math.cos(a) * L, cy + math.sin(a) * L), (cx + math.cos(a + .32) * R * .17, cy + math.sin(a + .32) * R * .17), (cx, cy), (cx + math.cos(a - .32) * R * .17, cy + math.sin(a - .32) * R * .17)]
-            d.polygon([(x * ss, y * ss) for x, y in pts], fill=255)
-    img = emboss_layer(img, mask_draw(H, 2, rose, m=W), '#9b6e3a', rad=k(2), k=5 / K, shadow=.15, wrap=False, col2='#d9b17a', sh_off=(int(k(3)), int(k(4))))
+    def rose(half):   # flat compass rose: each point split into a light and a dark half
+        def draw(d, ss):
+            R = k(120)
+            for j in range(8):
+                a = -math.pi / 2 + j * math.pi / 4; L = R if j % 2 == 0 else R * .6
+                tip = (cx + math.cos(a) * L, cy + math.sin(a) * L)
+                side = (cx + math.cos(a + half * .32) * R * .17, cy + math.sin(a + half * .32) * R * .17)
+                d.polygon([(x * ss, y * ss) for x, y in (tip, side, (cx, cy))], fill=255)
+        return draw
+    img = flat(img, mask_draw(H, 2, rose(1), m=W), '#d9b17a')
+    img = flat(img, mask_draw(H, 2, rose(-1), m=W), '#9b6e3a')
     img = lerp(img, hexc('#8a6a3c'), np.clip(1 - np.abs(np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) - k(84)) / k(2), 0, 1) * .6)
     return grain(img, .008, seed)
 
