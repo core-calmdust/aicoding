@@ -448,7 +448,7 @@
 .a-beamL{transform-origin:0 50%;margin-top:-60px;background:linear-gradient(90deg,rgba(255,240,190,.75),rgba(255,240,190,.15) 60%,transparent);clip-path:polygon(0 46%,100% 0,100% 100%,0 54%);-webkit-mask:linear-gradient(90deg,#000 40%,transparent);mask:linear-gradient(90deg,#000 40%,transparent);animation:aBeamL 12s ease-in-out infinite}
 @keyframes aBeamL{0%{transform:scaleX(.15) rotate(-2deg);opacity:.2}25%{transform:scaleX(1) rotate(2deg);opacity:1}50%{transform:scaleX(.15) rotate(6deg);opacity:.2}75%{transform:scaleX(.6) rotate(-6deg);opacity:.6}100%{transform:scaleX(.15) rotate(-2deg);opacity:.2}}
 .a-wash{transform-origin:100% 100%;opacity:0;animation:aWash var(--d) ease-in-out var(--dl) infinite}@keyframes aWash{0%{opacity:0;transform:translate(160px,60px) scaleY(.6)}35%{opacity:1}55%{opacity:.9;transform:translate(0,0) scaleY(1)}100%{opacity:0;transform:translate(60px,30px) scaleY(.8)}}
-html:has(#bv.on,#hist.on,#ov.on) #skfx *{animation-play-state:paused!important}`;
+html:has(#bv.on,#hist.on,#ov.on) #skfx *,html.askin-still #skfx *{animation-play-state:paused!important}`;
   if (!document.getElementById('skfxcss')) { const s = document.createElement('style'); s.id = 'skfxcss'; s.textContent = CSS + CSS2; document.head.appendChild(s); }
 
   /* ---------------- the live aurora (s36): a canvas of rays (2026-11-20 ユーザー：全然リアルじゃない)
@@ -469,7 +469,7 @@ html:has(#bv.on,#hist.on,#ov.on) #skfx *{animation-play-state:paused!important}`
     function frame(now) {
       raf = requestAnimationFrame(frame);
       if (now - last < 41) return; last = now;
-      if (document.hidden || !cv.getClientRects().length || document.documentElement.matches(':has(#bv.on,#hist.on,#ov.on)')) return;   // (also: the full version showing the place's floor — #skfx hidden)
+      if (document.hidden || !cv.getClientRects().length || document.documentElement.matches(':has(#bv.on,#hist.on,#ov.on),.askin-still')) return;   // (also: the full version showing the place's floor — #skfx hidden)
       const t = now / 1000; ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter';
       const pulse = .85 + .15 * sn(t * .25) * sn(t * .09 + 1);
       BANDS.forEach((b, bi) => {
@@ -563,7 +563,8 @@ html:has(#bv.on,#hist.on,#ov.on) #skfx *{animation-play-state:paused!important}`
       anims.push(host.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: dur * 1000, iterations: Infinity, easing: 'linear' }));
     });
     // pause everything (CSS and these) while the 3D view, Historia or a sheet covers the page, or the tab is hidden
-    const pz = () => { const off = document.hidden || document.documentElement.matches(':has(#bv.on,#hist.on,#ov.on)'); anims.forEach(a => off ? a.pause() : a.play()); };
+    // (.askin-still: the full version's game pages keep the scene still unless 背景アニメーション is on; place background: hidden)
+    const pz = () => { const off = document.hidden || document.documentElement.matches(':has(#bv.on,#hist.on,#ov.on),.askin-still,.atlas-skin:not(.askin-bg)'); anims.forEach(a => off ? a.pause() : a.play()); };
     const iv = setInterval(pz, 700); document.addEventListener('visibilitychange', pz);
     cur.stopP = () => { clearInterval(iv); document.removeEventListener('visibilitychange', pz); anims.forEach(a => a.cancel()); };
   }

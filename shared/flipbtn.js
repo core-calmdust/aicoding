@@ -7,7 +7,7 @@
 // Usage (after the DOM is built):
 //   FlipBtn.init({ game: 'chess', lang: () => LANG, onChange: on => redrawBoard() });
 //   FlipBtn.on()        // true while the board is turned round by the button: the game XORs it with its own orientation
-//   FlipBtn.toggle()    // also bound to the F key (when no text field has the focus; not in the 3D full version, where F is full screen)
+//   FlipBtn.toggle()    // (the F key: full screen since 2026-11-20 — shared/headerbar.js)
 (function () {
 'use strict';
 const T = {
@@ -33,13 +33,7 @@ function init(o) {
   const rec = document.getElementById('btnRecord'), anchor = rec && snd && rec.parentNode === snd.parentNode ? rec : snd;   // order: 盤面反転 → 戦績 → sound
   if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(btn, anchor);
   else { const r = document.querySelector(o.mount || '.brand-r'); if (r) r.insertBefore(btn, r.firstChild); }
-  document.addEventListener('keydown', e => {
-    if (e.key !== 'f' && e.key !== 'F') return;
-    if (document.documentElement.classList.contains('atlas-skin')) return;   // (the 3D full version: F = full screen, atlas/skin/common.js — 2026-11-20)
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    const a = document.activeElement; if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable)) return;
-    toggle();
-  });
+  // (2026-11-20: the F key is full screen now — shared/headerbar.js; 盤面反転 is the button)
   new MutationObserver(relabel).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   relabel();
   return window.FlipBtn;
