@@ -22,14 +22,14 @@ const TYPES = [
   //   scout (seaplane tender): the number of unhit ship squares in a whole row · twin (gunboat): this shot and one more
   //   command (flagship): the other ships' cooldowns −3 · jam (electronic warfare): the enemy's skill cooldowns +2
   { k: 'armored', len: 3, cost: 2, skill: null, cd: 0, armor: 1 },
-  { k: 'smoke', len: 2, cost: 1, skill: 'smoke', cd: 2 },
-  { k: 'tender', len: 3, cost: 4, skill: 'scout', cd: 4 },
+  { k: 'smoke', len: 2, cost: 0, skill: 'smoke', cd: 2 },
+  { k: 'tender', len: 3, cost: 3, skill: 'scout', cd: 4 },
   { k: 'gunboat', len: 3, cost: 6, skill: 'twin', cd: 5 },
   { k: 'flagship', len: 4, cost: 2, skill: 'command', cd: 6 },
-  { k: 'jammer', len: 3, cost: 3, skill: 'jam', cd: 6 },
+  { k: 'jammer', len: 3, cost: 2, skill: 'jam', cd: 6 },
   // 第2弾 (2026-11-20): rocket — a row of 3 squares · repair (repair ship) — the latest hit on one of your afloat ships is mended (the square is unknown to the enemy again)
-  { k: 'rocket', len: 3, cost: 6, skill: 'rocket', cd: 4 },
-  { k: 'repair', len: 3, cost: 2, skill: 'repair', cd: 5 },
+  { k: 'rocket', len: 3, cost: 5, skill: 'rocket', cd: 4 },
+  { k: 'repair', len: 3, cost: 3, skill: 'repair', cd: 5 },
   // 第3弾 (2026-11-20): aa (anti-air cruiser) — always, while afloat: the enemy's bomb / volley / rocket loses its last shell (shot down)
   //   mine (minelayer) — lays a mine on the empty square of your sea the enemy is most likely to shoot next (at most 2 at a time);
   //   a shell on it is a miss, and the shooter loses their next turn
@@ -37,22 +37,22 @@ const TYPES = [
   { k: 'mine', len: 2, cost: 1, skill: 'mine', cd: 3 },
   // 第4弾 (2026-11-20): dread (dreadnought) — barrage: a 3×3 block · radar — the number of unhit ship squares in a whole column
   //   decoy — a dummy hull: it can be hit and sunk, but it need not be sunk to win (the enemy does not know which 2-long ship it is)
-  { k: 'dread', len: 5, cost: 9, skill: 'barrage', cd: 9 },
+  { k: 'dread', len: 5, cost: 8, skill: 'barrage', cd: 9 },
   { k: 'radar', len: 4, cost: 3, skill: 'radar', cd: 4 },
   { k: 'decoy', len: 2, cost: 0, skill: null, cd: 0, decoy: 1 },
   // 第5弾 (2026-11-20): monitor — always: each shell that hits it is answered at once by a free shell on the shooter's sea
   //   (on the square its side's map likes best; a return shell never triggers another) · patrol — probe: shoot one square and learn
   //   how many unhit ship squares lie on its 4 neighbours
   { k: 'monitor', len: 3, cost: 4, skill: null, cd: 0, counter: 1 },
-  { k: 'patrol', len: 2, cost: 5, skill: 'probe', cd: 5 },
+  { k: 'patrol', len: 2, cost: 4, skill: 'probe', cd: 5 },
   // 第6弾 (2026-11-20): supply — always, while afloat: when another of your ships is sunk, your other skills' cooldowns −3
   //   hospital — always, while afloat: the skills of your sunk ships can still be used
   { k: 'supply', len: 3, cost: 2, skill: null, cd: 0, rally: 1 },
   { k: 'hospital', len: 4, cost: 4, skill: null, cd: 0, hospital: 1 },
   // 第7弾 (2026-11-20): light carrier — strafe: an X of 5 squares (the square and its 4 diagonals) · torpedo boat — a torpedo along a row,
   //   from the left edge, that hits the first unhit ship square (the water it passes shows as misses)
-  { k: 'lcarrier', len: 4, cost: 7, skill: 'strafe', cd: 8 },
-  { k: 'tboat', len: 2, cost: 7, skill: 'rtorpedo', cd: 7 },
+  { k: 'lcarrier', len: 4, cost: 6, skill: 'strafe', cd: 8 },
+  { k: 'tboat', len: 2, cost: 6, skill: 'rtorpedo', cd: 7 },
   // 第8弾 (2026-11-20): suppressor — suppress: the enemy's always-on abilities (armor, anti-air, return fire, resupply, rescue) stop
   //   for your next 2 turns · sweeper — sweep: a 3×3 box like sonar (the unhit ship squares in it), and any enemy mines in it are cleared
   { k: 'suppressor', len: 3, cost: 2, skill: 'suppress', cd: 4 },
@@ -70,7 +70,7 @@ const TYPES = [
   { k: 'transport', len: 4, cost: 0, skill: null, cd: 0 },
   // 第12弾 (2026-11-20): echo (wide-sonar ship) — echo: the unhit ship squares in a 5×5 box · tracker (ESM ship) — always, while afloat:
   //   the first time each enemy ship uses a skill on you, a sonar reading (3×3) around one of its squares is given to you
-  { k: 'echo', len: 4, cost: 3, skill: 'echo', cd: 6 },
+  { k: 'echo', len: 4, cost: 4, skill: 'echo', cd: 6 },
   { k: 'tracker', len: 3, cost: 7, skill: null, cd: 0, trace: 1 },
   // 第13弾 (2026-11-20): heavy cruiser — armor 2: the first two shells that hit it only dent (on two different squares)
   //   spotter (spotter-plane ship) — diagonal: the unhit ship squares on the whole ↘ diagonal through the square
@@ -79,11 +79,11 @@ const TYPES = [
   // 第14弾 (2026-11-20): subchaser — depth charge: shoot one square; on a hit its 4 neighbours are shot too
   //   plating (plating ship) — plate: the afloat ship of yours with the most hits (none yet armored) gets an armor plate (the next hit on it only dents)
   { k: 'subchaser', len: 2, cost: 5, skill: 'depth', cd: 5 },
-  { k: 'plating', len: 3, cost: 1, skill: 'plate', cd: 7 },
+  { k: 'plating', len: 3, cost: 2, skill: 'plate', cd: 7 },
   // 第15弾 (2026-11-20): pursuer — always, while afloat: when your normal shot sinks a ship, you shoot again
   //   command ship — always, while afloat: your skills' cooldowns fall by 2 a turn instead of 1
   { k: 'pursuer', len: 3, cost: 3, skill: null, cd: 0, pursuit: 1 },
-  { k: 'cship', len: 4, cost: 3, skill: null, cd: 0, haste: 1 },
+  { k: 'cship', len: 4, cost: 4, skill: null, cd: 0, haste: 1 },
   // 第16弾 (2026-11-20): netlayer — always, while afloat: the enemy's torpedoes (column and row) stop after 3 squares of water
   //   (they still hit a ship within those 3) · bracket ship — bracket: shoot two squares, the ones 2 to the left and 2 to the right
   //   of the chosen square (straddling it), and learn whether the square between holds a ship
@@ -104,7 +104,7 @@ const TYPES = [
   // 第20弾 (2026-11-20): breakwater — always, while afloat: the enemy gets no extra shots (twin shot and quick fire cannot be used, no pursuit)
   //   ring ship — ring: the 8 squares around the chosen square (not the square itself)
   { k: 'breakwater', len: 3, cost: 3, skill: null, cd: 0, calm: 1 },
-  { k: 'ringship', len: 4, cost: 9, skill: 'ring', cd: 8 },
+  { k: 'ringship', len: 4, cost: 7, skill: 'ring', cd: 8 },
 ];
 const SELF = { smoke: 1, command: 1, repair: 1, mine: 1, ward: 1, rapid: 1, plate: 1, allout: 1 };   // skills that act on your own fleet (a ward does not stop them)
 // 妨害 (jam) only counts down 1 a turn: no 統率・号令・総力・補給・通商破壊 speed-up (2026-11-20 user: 電子戦艦＋司令艦 was too strong —
