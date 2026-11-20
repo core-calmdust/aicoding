@@ -92,6 +92,19 @@
   let opt = null;
   const emit = () => { subs.forEach(f => { try { f(on()); } catch (e) { console.error(e); } }); if (opt) opt.sync(); };
   const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M10 10h4v4h-4zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg>';
+
+  // マルチスレッドコーチ (2026-11-21): the per-move analysis (coach · 形勢 · hints; jobs tagged 'ana' / 'coach') on at most 2 threads
+  // unless switched on — it ran on every core after each move, at any AI level (300–800 % CPU). PRO's own count (mtThreads) wins.
+  const K_COACH = 'aicoding-mtcoach';
+  const coachAll = () => { try { return localStorage.getItem(K_COACH) === '1'; } catch (e) { return false; } };
+  const coachCap = (msg, tag) => (tag === 'ana' || tag === 'coach') && !(msg.mtThreads > 0) && !coachAll();
+  function addCoachOpt() {
+    if (!window.HeaderBar || !HeaderBar.addOption) return;
+    const tt = { ja: 'オン：コーチ・形勢表示・ヒントの読みも全コアで。オフ（既定）：2スレッドまで（CPUを使いすぎない）。AIの手と最強解析はいつも全コア。', en: 'On: the coach, evaluation and hints search on every core. Off (default): up to 2 threads (less CPU). The AI\'s moves and deep analysis always use every core.' };
+    HeaderBar.addOption({ id: 'mtcoach', icon: ICON, label: { ja: 'マルチスレッドコーチ', en: 'Multi-threaded coach', zh: '多线程教练', 'zh-TW': '多執行緒教練', ko: '멀티스레드 코치', es: 'Coach multihilo', fr: 'Coach multithread', pt: 'Treinador multithread', de: 'Multithread-Coach', ru: 'Многопоточный тренер', tr: 'Çok iş parçacıklı koç', id: 'Pelatih multi-thread', hi: 'मल्टी-थ्रेड कोच', ar: 'المدرّب متعدد الخيوط' }, type: 'toggle', get: coachAll,
+      set: v => { try { localStorage.setItem(K_COACH, v ? '1' : '0'); } catch (e) {} }, hidden: () => !on(),
+      title: () => { const l = (document.documentElement.lang || 'ja').slice(0, 2); return tt[l] || tt.en; } });
+  }
   function addOpt() {
     if (opt || !window.HeaderBar || !HeaderBar.addOption) return;
     const M = ME();
@@ -100,6 +113,7 @@
       : v => { LS.set(K_SET, v ? '1' : '0'); emit(); };
     const title = M ? () => M.tx(M.coi ? 'coiOff' : M.isolated || on() ? 'auto' : 'reload') : () => T.auto[lang()] || T.auto.en;
     opt = HeaderBar.addOption({ id: 'mt', icon: ICON, label: T.label, type: 'toggle', get: on, set, hidden: () => helpers() < 1, title });
+    addCoachOpt();
   }
   // init(): the option; init({ sw: 'sw.js?v=N' }): shared mode (load shared/mtengine.js first)
   function init(o) {
@@ -207,7 +221,7 @@
       j.done = (async () => {
         if (prev) await prev.done;
         if (j.cancelled || dead) { j.resolve(j.cancelled ? null : undefined); return; }
-        const n = msg.mtThreads > 0 ? Math.max(1, Math.min(1 + HM, msg.mtThreads)) : 1 + H;
+        const n = msg.mtThreads > 0 ? Math.max(1, Math.min(1 + HM, msg.mtThreads)) : coachCap(msg, tag) ? Math.min(2, 1 + H) : 1 + H;   // (マルチスレッドコーチ off: the coach's analysis on 2 threads)
         if (TT) { j.ep = Atomics.add(CTL, 0, 1) + 1; age = age % 63 + 1; j.age = age; }   // (a new epoch: the tasks of the job before stop)
         j.X = makeX(j, n); j.running = true;
         const t0 = performance.now();
