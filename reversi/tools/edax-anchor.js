@@ -5,14 +5,33 @@
 // the site). Guide: claude/reversi-mac-verification.md.
 //   EDAX=~/edax-reversi/bin/mEdax-… node tools/edax-anchor.js --levels 12,15,18,21 [--base lv28|lv31|lv34|d,x,w,e] [--n 100]
 //        [--openings tools/train/op10.bin] [--procs 8] [--out edax-anchor.jsonl] [--games games.jsonl]
+//   … --bases "17,20,22,26;18,22,24,28" (several settings, one after another)      node tools/edax-anchor.js --table (all results so far)
 // --games: every position of every game (the side to move as X, who moved) for tools/phase-loss.js — where in the game the discs are lost.
 // (Edax is started once per move with -solve; its time is the search time it prints, ours the CPU time of think.)
 'use strict';
 const fs = require('fs'), path = require('path'), zlib = require('zlib'), cp = require('child_process'), os = require('os');
 const RV = path.join(__dirname, '..'), args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
+if (args.includes('--table')) {   // every result so far (edax-anchor.jsonl), one table per Edax level: our time, our Elo against Edax, and whether a faster setting is at least as strong
+  const rows = fs.readFileSync(opt('out', 'edax-anchor.jsonl'), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)), last = new Map();
+  for (const r of rows) last.set(r.level + '|' + r.base, r);
+  for (const level of [...new Set(rows.map(r => r.level))].sort((a, b) => a - b)) {
+    const rs = [...last.values()].filter(r => r.level === level).sort((a, b) => a.secOurs - b.secOurs); let best = -1e9;
+    console.log(`\nEdax レベル${level}（1局 約${(rs.reduce((t, r) => t + r.secEdax, 0) / rs.length).toFixed(1)}秒）に対して`);
+    console.log('| 自前の設定（深さ,読み切り,勝敗読み,終局まで） | 自前の時間（1局） | Edax 比 | 自前の Elo | 局数 | |');
+    console.log('|---|---|---|---|---|---|');
+    for (const r of rs) { const e = -r.elo, front = e > best; if (front) best = e;
+      console.log(`| ${r.base} | ${r.secOurs.toFixed(2)}秒 | ×${(r.secOurs / r.secEdax).toFixed(2)} | ${e >= 0 ? '+' : ''}${e} ± ${r.eloErr} | ${2 * r.n} | ${front ? '◎ ここまでで最強' : '（もっと速い設定のほうが強い）'} |`); }
+  }
+  process.exit(0);
+}
 const EDAX = process.env.EDAX; if (!EDAX || !fs.existsSync(EDAX)) { console.error('set EDAX to the Edax executable (its data/eval.dat beside it)'); process.exit(1); }
 const BASES = { lv28: [13, 20, 22, 26], lv31: [20, 22, 24, 28], lv34: [25, 23, 25, 30] };
+if (opt('bases', '') && args[0] !== '--worker') {   // --bases "17,20,22,26;18,22,24,28": one run after another, same options otherwise
+  const rest = args.filter((a, i) => a !== '--bases' && args[i - 1] !== '--bases' && a !== '--base' && args[i - 1] !== '--base');
+  for (const b of opt('bases').split(';').map(x => x.trim()).filter(Boolean)) cp.execFileSync(process.execPath, [__filename, ...rest, '--base', b], { stdio: 'inherit' });
+  process.exit(0);
+}
 const BNAME = opt('base', 'lv28'), bv = BASES[BNAME] || BNAME.split(',').map(Number);
 const CFG = { depth: bv[0], exact: bv[1], wld: bv[2], end: bv[3], mpc: 1 };
 const LEVELS = opt('levels', '12,15,18,21').split(',').map(Number), N = +opt('n', 100), PROCS = +opt('procs', Math.max(1, os.cpus().length - 2));
