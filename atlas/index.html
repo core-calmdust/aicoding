@@ -107,7 +107,7 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.95);border-
    selected menu tab follow the worn skin; cards, sheets and the 3D view keep their own colours ---------- */
 html[data-skin] body{background-color:var(--sk-bg);background-image:none}
 html[data-skk=tile] body{background-image:var(--sk-img);background-size:var(--sk-size)}
-html[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-bg) var(--sk-img) var(--sk-pos,50% 100%)/cover no-repeat;pointer-events:none}
+html[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;will-change:transform;background:var(--sk-bg) var(--sk-img) var(--sk-pos,50% 100%)/cover no-repeat;pointer-events:none}
 @media (max-aspect-ratio:6/5){html[data-skp] body::before,html[data-skp] #skfx .fx-x{background-position-y:var(--sk-pyp,100%)}html[data-skp] body::before{background-image:var(--sk-imgp)}html[data-skp] #skfx .fx-x{background-image:var(--sk-img2p)}}
 @media (max-width:760px){html[data-skk=cover] body::before,html[data-skk=cover] #skfx{bottom:calc(var(--tabsH,64px) + var(--ulH,0px))}}
 html[data-skin]{--pf-lip:rgba(110,80,40,.2)}html[data-skin].skdark{--pf-lip:rgba(0,0,0,.38)}html[data-skin].skdark .prof:not(.nr3):not(.nr4){box-shadow:0 6px 0 var(--pf-lip),0 14px 28px -14px rgba(0,0,0,.6)!important}   /* the profile card's edge takes the skin's tone (2026-11-20) */
@@ -2406,7 +2406,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=16"></script>
 <script src="art.js?v=20"></script>
-<script src="skins.js?v=27"></script>
+<script src="skins.js?v=28"></script>
 <script src="../shared/atlas-updates.js?v=48"></script>
 <script src="../shared/atlas.js?v=20261120dx1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
