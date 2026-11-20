@@ -59,9 +59,11 @@ def cloud_dawn():
         g.append(f'<path d="M{px - w / 2:.0f} 900 L{px - w * .12:.0f} {py + 40:.0f} L{px:.0f} {py:.0f} L{px + w * .14:.0f} {py + 50:.0f} L{px + w / 2:.0f} 900 Z" fill="{col}" opacity=".8" filter="url(#{blur})"/>')
     for (px, py, w, sd) in ((520, 470, 760, 1), (1560, 420, 820, 2)):
         L, R = px - w / 2, px + w / 2
-        g.append(f'<path d="M{L:.0f} 960 C{L + w * .2:.0f} 760 {px - w * .1:.0f} {py + 60:.0f} {px:.0f} {py:.0f} C{px + w * .12:.0f} {py + 70:.0f} {R - w * .2:.0f} 760 {R:.0f} 960 Z" fill="url(#pk)"/>')
-        g.append(f'<path d="M{px:.0f} {py:.0f} C{px + w * .12:.0f} {py + 70:.0f} {R - w * .2:.0f} 760 {R:.0f} 960 L{px + w * .06:.0f} 960 C{px + w * .1:.0f} 800 {px + w * .02:.0f} {py + 120:.0f} {px:.0f} {py:.0f} Z" fill="#c6a8c4" opacity=".55"/>')
-        g.append(f'<path d="M{px - 46:.0f} {py + 70:.0f} C{px - 24:.0f} {py + 20:.0f} {px - 6:.0f} {py + 4:.0f} {px:.0f} {py:.0f} C{px + 14:.0f} {py + 16:.0f} {px + 40:.0f} {py + 50:.0f} {px + 56:.0f} {py + 80:.0f} C{px + 30:.0f} {py + 70:.0f} {px + 10:.0f} {py + 90:.0f} {px - 10:.0f} {py + 76:.0f} C{px - 24:.0f} {py + 90:.0f} {px - 36:.0f} {py + 80:.0f} {px - 46:.0f} {py + 70:.0f} Z" fill="#fbeef2" opacity=".95"/>')
+        mt = f'M{L:.0f} 960 C{L + w * .2:.0f} 760 {px - w * .1:.0f} {py + 60:.0f} {px:.0f} {py:.0f} C{px + w * .12:.0f} {py + 70:.0f} {R - w * .2:.0f} 760 {R:.0f} 960 Z'
+        g.append(f'<clipPath id="mk{sd}"><path d="{mt}"/></clipPath><path d="{mt}" fill="url(#pk)"/>')
+        g.append(f'<g clip-path="url(#mk{sd})">'   # the lit side and the snow cap are cut by the mountain's own outline (no edges sticking out)
+                 f'<path d="M{px:.0f} {py - 10:.0f} L{px + 14:.0f} {py + 120:.0f} C{px + w * .1:.0f} 800 {px + w * .12:.0f} 900 {px + w * .1:.0f} 980 L{R + 40:.0f} 980 L{R + 40:.0f} {py - 10:.0f} Z" fill="#c6a8c4" opacity=".5"/>'
+                 f'<path d="M{L:.0f} {py - 20:.0f} L{R:.0f} {py - 20:.0f} L{R:.0f} {py + 92:.0f} C{px + 60:.0f} {py + 112:.0f} {px + 40:.0f} {py + 74:.0f} {px + 18:.0f} {py + 96:.0f} C{px:.0f} {py + 112:.0f} {px - 20:.0f} {py + 80:.0f} {px - 40:.0f} {py + 102:.0f} C{px - 60:.0f} {py + 116:.0f} {px - 80:.0f} {py + 96:.0f} {L:.0f} {py + 100:.0f} Z" fill="#fbeef2" opacity=".96"/></g>')
     # the sea of clouds: layered soft billows, lit pink-gold toward the sun
     r = RNG(893)
     for y, col, op, n, s in ((820, '#e9c7d8', .9, 14, 120), (880, '#f4d9e0', .95, 16, 130), (960, '#fbe8e6', 1, 18, 140), (1060, '#fff3ec', 1, 18, 150)):
