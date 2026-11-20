@@ -334,7 +334,18 @@ body.tac:not(.placing) .skills{display:grid}
 :is(#pickOverlay,#fleetOverlay) .modal.lux .fsec h3::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 55%,transparent),transparent)}:is(#pickOverlay,#fleetOverlay) .modal.lux .fsec h3 small{font-family:'Cormorant Garamond',serif;color:#8fa4ae;font-size:15px;letter-spacing:.04em}
 :is(#pickOverlay,#fleetOverlay) .modal.lux .none{color:#8fa4ae;margin:0}
 :is(#pickOverlay,#fleetOverlay) .modal.lux .pship{flex-direction:column;align-items:center;gap:7px}:is(#pickOverlay,#fleetOverlay) .modal.lux .plen{display:flex;align-items:center;gap:3px}:is(#pickOverlay,#fleetOverlay) .modal.lux .plen i{width:9px;height:9px;border-radius:2px;background:linear-gradient(180deg,#f3dea6,#b48d48)}:is(#pickOverlay,#fleetOverlay) .modal.lux .plen b{white-space:nowrap;margin-inline-start:6px;font-family:'Shippori Mincho',serif;font-size:13px;color:var(--gold2);letter-spacing:.06em}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead > *{white-space:nowrap}:is(#pickOverlay,#fleetOverlay) .modal.lux .flv{border-color:color-mix(in srgb,var(--gold) 50%,transparent);color:var(--gold2);background:rgba(0,0,0,.25);font-family:'Shippori Mincho',serif;letter-spacing:.06em}
+:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead > *{white-space:nowrap}
+:is(#pickOverlay,#fleetOverlay) .modal.lux{font-variant-numeric:lining-nums tabular-nums}
+:is(#pickOverlay,#fleetOverlay) .modal.lux :is(#pickHead span,.pcost,.pt em,#pickTabs button em,.fsec h3 small){font-variant-numeric:lining-nums tabular-nums;font-feature-settings:'lnum' 1,'tnum' 1}
+:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead span{font-family:var(--num);font-size:15px;letter-spacing:.02em}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt em{font-family:var(--num);font-size:13px;color:#a08a5c}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pcost{font-family:var(--num);font-size:16px;font-weight:700}
+:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button em{font-family:var(--num);font-size:13px}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .fsec h3 small{font-family:var(--num);font-size:13px}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa{overflow:hidden}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa.wide{flex-direction:column;align-items:center;gap:8px;padding:10px}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa .pship{max-width:100%;min-width:0}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa .pship svg{height:16px;max-width:100%}
+:is(#pickOverlay,#fleetOverlay) .modal.lux .plen b{font-family:var(--num);font-weight:600}:is(#pickOverlay,#fleetOverlay) .modal.lux .flv{border-color:color-mix(in srgb,var(--gold) 50%,transparent);color:var(--gold2);background:rgba(0,0,0,.25);font-family:'Shippori Mincho',serif;letter-spacing:.06em}
 @media (max-width: 600px){ :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead b{font-size:14px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead span{font-size:15px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead{gap:6px 10px;flex-wrap:wrap;min-width:0} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead .flv{margin-inline-start:auto;height:28px;font-size:12.5px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pkh{min-width:0} :is(#pickOverlay,#fleetOverlay) .modal.lux{overflow-x:hidden} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickLegend{gap:4px 10px;font-size:11px} :is(#pickOverlay,#fleetOverlay) .modal.lux{width:100%;height:calc(100dvh - 16px);border-radius:16px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pkh{padding:16px 16px 0} :is(#pickOverlay,#fleetOverlay) .modal.lux h2{font-size:21px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead{margin-inline-start:0;flex-basis:100%;justify-content:space-between} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs{overflow-x:auto;flex-wrap:nowrap} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button{padding:0 11px;font-size:14px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickGrid,:is(#pickOverlay,#fleetOverlay) .modal.lux #fleetGrid{padding:12px 12px 16px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pg{grid-template-columns:1fr 1fr;gap:9px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc{padding:10px;gap:7px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt b{font-size:14.5px} :is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions{padding:10px 14px 14px} }
 </style>
 </head>
@@ -428,7 +439,7 @@ body.tac:not(.placing) .skills{display:grid}
 <script src="engine.js?v=23"></script>
 <script src="board.js?v=10"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=31"></script>
+<script src="app.js?v=32"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
