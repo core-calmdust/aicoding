@@ -38,6 +38,18 @@ function scoreLesson(id, L) {
     if (/列列|  |。。/.test(s)) P(6, 'doubled: ' + s.slice(0, 40));
     for (const sn of sents(t)) if (sn.length > 90) P(2, 'long sentence');
   }
+  // bubble size on a phone (44 chars a page) and a PC (58): atlas/lessons3d.js pages() packs sentences up to the limit and cuts a
+  // sentence over 1.25× at a comma — a page that still runs over may not fit the bubble; many pages make a long read
+  const pagesOf = (t, LIM) => { const parts = []; plain(t).split('\n').forEach(par => (par.match(/[^。！？!?]*[。！？!?]+」?|[^。！？!?]+$/g) || [par]).map(x => x.trim()).filter(Boolean).forEach(sn => {
+      if (sn.length > LIM * 1.25) { const mid = sn.length / 2; let best = -1; for (let k = 0; k < sn.length; k++) if (sn[k] === '、' && (best < 0 || Math.abs(k - mid) < Math.abs(best - mid))) best = k; if (best > 0) { parts.push(sn.slice(0, best + 1), sn.slice(best + 1)); return; } } parts.push(sn); }));
+    const out = []; let cur = ''; for (const sn of parts) { if (cur && (cur + sn).length > LIM) { out.push(cur); cur = sn; } else cur += sn; } if (cur) out.push(cur); return out; };
+  for (const t of all) {
+    const ph = pagesOf(t, 44), pc = pagesOf(t, 58);
+    if (ph.some(x => x.length > 44 * 1.45)) P(4, 'phone: a page too long for the bubble: ' + ph.find(x => x.length > 44 * 1.45).slice(0, 30));
+    if (ph.length > 4) P(3, `phone: ${ph.length} pages in one bubble`);
+    if (pc.length > 3) P(2, `PC: ${pc.length} pages in one bubble`);
+  }
+  for (const p of L.probs) { const fb = [p.ng, p.good].map(plain).filter(Boolean); if (fb.some(x => x.length > 150)) P(2, 'feedback over 150 chars'); }
   // ending variety over each bubble and over the lesson
   let fam = 0, tot = 0;
   for (const t of all) { const E = sents(t).map(end); for (let i = 1; i < E.length; i++) if (E[i] !== 'x' && E[i] !== '？' && E[i] !== '！' && E[i] === E[i - 1]) P(3, 'same ending twice: ' + E[i]); E.forEach(e => { tot++; if (e === 'よ') fam++; }); }
