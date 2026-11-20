@@ -1215,11 +1215,14 @@ static inline void contUpd(int k, int b) {   /* the continuation histories alone
   if (P[118] && sp >= 4 && ckS[sp - 4] >= 0) gravS(&contH4[ckS[sp - 4] * CK + k], b / 2);
 }
 static inline void histUpd(int us, int m, int b) {
-  gravI(&history[hIdx(us, m)], b);
+  /* (P119, P120: percent of the bonus for the main table and for the continuation tables — a quick main table and slow
+     continuation tables; 0 = 100) */
+  const int bm = P[119] ? b * P[119] / 100 : b, bc = P[120] ? b * P[120] / 100 : b;
+  gravI(&history[hIdx(us, m)], bm > 8000 ? 8000 : bm < -8000 ? -8000 : bm);
   int k = mKey(m);
-  if (sp >= 1 && ckS[sp - 1] >= 0) gravS(&contH[0][ckS[sp - 1] * CK + k], b);
-  if (sp >= 2 && ckS[sp - 2] >= 0) gravS(&contH[1][ckS[sp - 2] * CK + k], b);
-  if (P[118] && sp >= 4 && ckS[sp - 4] >= 0) gravS(&contH4[ckS[sp - 4] * CK + k], b / 2);
+  if (sp >= 1 && ckS[sp - 1] >= 0) gravS(&contH[0][ckS[sp - 1] * CK + k], bc);
+  if (sp >= 2 && ckS[sp - 2] >= 0) gravS(&contH[1][ckS[sp - 2] * CK + k], bc);
+  if (P[118] && sp >= 4 && ckS[sp - 4] >= 0) gravS(&contH4[ckS[sp - 4] * CK + k], bc / 2);
 }
 
 #ifdef MT
@@ -2303,7 +2306,7 @@ static double lazyRun(double ms) {
 }
 static void spIdleReset(int fresh) {   /* mt_idle: a helper's search state (fresh: a new job, as root_search — not a Lazy SMP helper) */
   nodes = 0; deadline = 0; nodeLimit = 0; rootK = 0;
-  if (fresh && threadId < YBW_N) { memset(killers, 0, sizeof killers); for (int k = 0; k < (int)(sizeof history / 4); k++) history[k] >>= 2; }
+  if (fresh && threadId < YBW_N) { memset(killers, 0, sizeof killers); if (!P[121]) for (int k = 0; k < (int)(sizeof history / 4); k++) history[k] >>= 2; }   /* (P121: the history is kept from move to move) */
 }
 #define PL_IDLE_HOOK(ms) if (threadId >= YBW_N) return lazyRun(ms);   /* (past ybwMax: a Lazy SMP helper) */
 #include "../shared/praline/praline_ybw.h"
@@ -2402,7 +2405,7 @@ EXPORT(root_search) int root_search(double timeMs, int maxDepth, int nodeLim) {
 #endif
   ttAge = (ttAge + 1) & 31;
   memset(killers, 0, sizeof killers);
-  for (int k = 0; k < (int)(sizeof history / 4); k++) history[k] >>= 2;
+  if (!P[121]) for (int k = 0; k < (int)(sizeof history / 4); k++) history[k] >>= 2;
   if (!maxDepth) maxDepth = 40;
   static TLS i32 legal[1000];
   int nl = legalMoves(legal, 0);
