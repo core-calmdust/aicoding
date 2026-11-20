@@ -336,11 +336,63 @@
   const winP = (v, k) => 1 / (1 + Math.pow(10, -v / k));
 
   /* ---------- the two games' data ---------- */
+  /* (2026-11-21 lesson loop) the shogi lesson problems in ショウギツネ's words, Japanese: varied questions, the hint, and after a wrong
+     move why it falls short — from the stored candidate scores (lessons.json cand: the engine's value for the side to move, ±29996 =
+     mate), the trap the step sets (trap / bait) and the piece each move takes. {m} = the best move, {x} = yours (named by the runner). */
+  const SHJ = {
+    ask: {
+      k20: ['取れる駒の中で、いちばん価値が高いのはどれかな？', '盤をぐるっと見わたして、いちばん大きな駒を取ってみて。', 'どの駒を取るのがいちばん得だと思う？ 価値の高い駒をねらうコン。'],
+      k15: ['タダで取れる駒はどれかな？ 取り返されないかも確かめてね。', '取り返されずに取れる駒を探してみて。わなの駒には気をつけてね。', 'いちばん得をする一手を指してみて。取ったあとのことも考えるコン。'],
+      k12: ['王手をかわす、いちばん良い手はどれかな？', '王手されちゃった！ 逃げる・取る・合駒、どれがいちばん？', 'かわしたあとの形まで考えて、いちばん良い受けを選んでね。'],
+      k5: ['いちばん良い一手を指してみて！ 2つをねらえる手はないかな？', '駒得できる手筋をさがそう。両取りがかかる場所はどこかな？', 'この局面、いちばん良い手はどれだと思う？'],
+      k3: ['相手の詰みのねらいを防いでね。', '相手は次に詰ませようとしているの。どう受ける？', '玉のまわりをよく見て、詰めろを消す手を指してみて。'],
+      k1: ['いちばん良い一手を指してみて！ 少し先まで読んでね。', '候補手をいくつか比べてみよう。いちばん良いのはどれかな？', 'じっくり読んで、相手の応手まで考えた一手を指してね。'],
+    },
+    hint: {
+      k20: '自分の駒ひとつひとつについて、取れる相手の駒を探してみよう。<br>光っているのが、動かす駒と行き先だよ。',
+      k15: '光っているのが答えの手だよ。どうしてその駒がタダなのか、取り返す駒がないか見てみてね。',
+      k12: '光っている手で王手をかわせるの。逃げる・取る・合駒のどれか、確かめてみて。',
+      k5: '光っている手を見てね。その手で、相手のどの駒とどの駒をねらえるかな？',
+      k3: '光っている手で受けられるよ。相手がどこから詰ませようとしているか、考えてみて。',
+      k1: '光っている手がいちばん。指したあと、相手がどう応じるか読んでみてね。',
+      rx: '光っている手を見てね。問題の条件を、もう一度読んでみよう。',
+      tsume: '光っているのが最初の王手だよ。そのあと玉がどこへ逃げられるか、確かめてみてね。',
+    },
+    tip: { k15: '取ったあと取り返されないか、いつも確かめてね。', k12: 'かわしたあとの形まで考えるのがコツだコン。', k5: '1手で2つをねらう手を探してみてね。', k3: '相手の詰み筋を消せているか、確かめるくせをつけようね。', k1: '候補手を比べて、相手の応手まで読んでみてね。' },
+  };
+  const SH_KJ = { p: '歩', l: '香車', n: '桂馬', s: '銀', g: '金', b: '角', r: '飛車', k: '玉', '+p': 'と金', '+l': '成香', '+n': '成桂', '+s': '成銀', '+b': '馬', '+r': '竜' };
+  function shCap(sfen, u) {   // the opponent's piece a move takes ('' when none)
+    if (!u || u.length < 4) return '';
+    const [bd, side] = String(sfen).split(' '), f = +u[2], r = u.charCodeAt(3) - 97, row = (bd.split('/')[r] || ''); let x = 0, pro = '';
+    for (const ch of row) { if (ch === '+') { pro = '+'; continue; } if (/\d/.test(ch)) { x += +ch; pro = ''; continue; } if (9 - x === f) { const opp = side === 'w' ? ch === ch.toUpperCase() : ch === ch.toLowerCase(); return opp ? SH_KJ[pro + ch.toLowerCase()] || '' : ''; } x++; pro = ''; }
+    return '';
+  }
+  function shTeachJa(gid, p, u) {
+    const C = p.cand || [], acc = p.accept || [];
+    if (!u || acc.includes(u)) { const w = C.find(x => !acc.includes(x[0])); if (w) u = w[0]; else if (p.mode === 'material') u = ''; else if (p.kind !== 'tsume') return ''; }   // (no wrong move given: the strongest-looking one)
+    const ans = acc[0] || (C[0] || [])[0] || (p.sol || [])[0], sc = new Map(C), best = C.length ? C[0][1] : 0, s = sc.has(u) ? sc.get(u) : (p.floor != null ? p.floor : best - 2000);
+    let sd = 0; for (const ch of String(p.sfen) + gid) sd = (sd * 31 + ch.charCodeAt(0)) | 0; sd = Math.abs(sd); const pk = a => a[sd++ % a.length];
+    const out = p.kind === 'best' && SHOGI.points(p, u) > 0 ? [] : [pk(['{m}が正しい手なの。', 'いちばん良いのは{m}だコン。', 'ここは{m}を指したかったね。'])];   // (a partial answer: the runner has said the best one is lit)
+    if (p.kind === 'tsume') { out.push(p.why ? '{x}だと詰まないの。' + p.why : pk(['{x}だと玉に逃げられちゃうから、詰まないの。玉の逃げ道を、ひとつずつ消していこうね。', '{x}だと、玉の逃げ道が残っちゃうの。最初の王手で、どこへ逃げられるか確かめてね。'])); return out.join(''); }
+    const px = shCap(p.sfen, u), pm = shCap(p.sfen, ans);
+    if (p.mode === 'material') {
+      if (!pm) out.push(gid === 'rx' ? '{x}だと、入玉宣言の条件がそろわないから、まだ宣言できないの。' : '');
+      else out.push(px ? `{x}で取れるのは${px}、{m}なら${pm}が取れるの。${pm}のほうが価値が高いからね。` : `{x}だと駒が取れないの。{m}なら${pm}が取れるから、そっちが得だよ。`);
+      return out.join('');
+    }
+    if (p.trap && p.bait && u === p.bait) out.push(s <= -29000 ? `{x}で取れる${px || '駒'}は、わななの。取ると、そのあと詰まされちゃうんだ。` : `{x}で取れる${px || '駒'}は、わななの。取ったあとに相手の強い手があるから、大損しちゃうんだ。`);
+    else if (s <= -29000) out.push(pk(['{x}だと、相手に詰まされちゃうの。', '{x}だと玉が詰んじゃうから、それだけはだめなんだ。']));
+    else if (best >= 29000) out.push('{m}なら詰ませられたのに、{x}だと詰みをのがしちゃうの。');
+    else { const d = winP(best, 600) - winP(s, 600);
+      out.push((px ? `{x}だと${px}は取れるけど、` : '{x}だと、') + (d > .35 ? '形勢がぐっと悪くなっちゃうの。' : d > .12 ? 'けっこう損をしちゃうんだ。' : 'ほんの少しだけ損なの。')); }
+    if (SHJ.tip[gid]) out.push(SHJ.tip[gid]);
+    return out.join('');
+  }
   const SHOGI = {
     LKEY: 'shogi-kaya-lessons-v1', OKEY: 'shogi-kaya-open-v1', CATS: ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'], data: null,
     load() {
       if (this.p) return this.p;
-      const voice = fetch('../shogi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
+      const voice = fetch('../shogi/voice-fox-ja.js?v=3').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       return (this.p = Promise.all([voice, getJ('../shogi/lessons.json?v=20261121k2'), getJ('../shogi/openings.json?v=20261107l14'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261107l14`).catch(() => ({ sets: [] })))])
         .then(([_, ls, op, ...more]) => {
@@ -368,8 +420,12 @@
         ['t', 'body', 'g', 'h', 'y'].forEach(f => { const v = vo(`ramp:${g.id}/${j}/${f}`); if (v) o[f] = v; }); return o; });
       const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L((this.data.ls.rampUi || {})[k], lang), v || {});
       return { id: g.id, title: `${L(g.grade, lang)} · ${L(g.title, lang)}`, intro: V['intro:' + g.id] || (L(g.intro, lang) || []).join('<br>'), ramp: ramp.length ? ramp : null, RU,
-        probs: probs.map(p => ({ pos: p.sfen, kind: p.kind === 'tsume' ? 'tsume' : 'best', n: p.n, sol: p.sol, P: p,
-          ask: L(p.q, lang) || (p.kind === 'tsume' ? fill(X.tsume, { n: p.n }) : V['prompt:' + g.id] || L(g.prompt, lang)), why: L((NC.shogi || {})[g.id + '/p' + g.problems.indexOf(p) + '/expl'] || p.expl, lang), ans: p.sol ? p.sol[0] : (p.accept || p.pv || [])[0] })),
+        probs: probs.map((p, i) => { const ja = lang === 'ja', best = p.kind !== 'tsume', AQ = ja && best ? SHJ.ask[g.id] : null, ans = p.sol ? p.sol[0] : (p.accept || p.pv || [])[0], pm = ja && p.mode === 'material' ? shCap(p.sfen, ans) : '';
+          const why = L((NC.shogi || {})[g.id + '/p' + g.problems.indexOf(p) + '/expl'] || p.expl, lang);   // (3D: the words without coordinates)
+          return { pos: p.sfen, kind: best ? 'best' : 'tsume', n: p.n, sol: p.sol, P: p,
+            ask: L(p.q, lang) || (!best ? fill(ja ? ['<b>{n}手詰め</b>。王手を続けて玉を詰ませよう！', '<b>{n}手詰め</b>だよ。玉の逃げ道をよく見てね。', '<b>{n}手詰め</b>に挑戦！ 最後まで読み切るコン。'][i % 3] : X.tsume, { n: p.n }) : AQ ? AQ[i % AQ.length] : V['prompt:' + g.id] || L(g.prompt, lang)),
+            why: why || (pm ? `{m}で${pm}を取ったね。取れる駒の中で、いちばん価値が高い駒なの。` : ja && g.id === 'rx' && best ? 'それがいちばん良い手だコン。駒落ちでも、ふつうの将棋と同じように、駒の働きを大事にしてね。' : ja && !best ? ['逃げ道をぜんぶふさいで、ちゃんと詰ませたね。', '王手を続けて、玉をつかまえたコン！', 'おみごと！ 最後まで読み切れたね。'][i % 3] : ''), ans,
+            hintTx: ja ? (best || g.id === 'rx' ? SHJ.hint[g.id] || '' : SHJ.hint.tsume) : '', ng: ja && (best ? p.cand : true) ? u => shTeachJa(g.id, Object.assign({ why }, p), u) : null }; }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[g.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
@@ -1512,6 +1568,8 @@
     points(P, e) { const v = new Map(P.values).get(e); return v === undefined ? 0 : dRank(P.values, v); },
     introPos(c) { const s = this.data.ls.steps.find(x => x.id === c.id), q = s && s.problems[0]; return q ? { pos: { spec: { n: q.n, edges: dDecE(q.e), owners: dDecO(q.o) }, me: 0, lock: true } } : null; },
   };
+  /* (2026-11-21 the user: a very easy first step — the answer is lit, or one obvious move — needs no 5 problems: 2 clear it). Lesson keys. */
+  const EASY2 = { amazons: ['0', '1', '2'], morris: ['0'], tafl: ['0'], mancala: ['0'], reversi: ['0'], gomoku: ['0'], connect4: ['0'], hex: ['0'] };
   const DATA = { dots: DOTS, morris: MORRIS, mancala: MANCALA, tafl: TAFL, shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI, backgammon: BACKGAMMON, hex: HEX, amazons: AMAZONS, connect4: CONNECT4 };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(lang), ncLoad(id)]).then(() => D.list(kind, lang)); }
@@ -1617,7 +1675,7 @@
         if (sess && id === 'tafl' && G && G.spec && G.spec.b && pz() && pz().n !== Math.round(Math.sqrt(String(G.spec.b).length))) { sess.stop(); sess = null; }   // (tafl: another rule set's board)   // (go / hex: another board size — a new board)
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
-            pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp' && !(phase === 'prob' && cur && cur.k >= RV_NUMS), ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
+            pz: Object.assign({ lesson: true, fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: () => id === 'reversi' && phase !== 'ramp' && !(phase === 'prob' && cur && cur.k >= RV_NUMS()), ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
         else if (G && (id === 'checkers' || id === 'xiangqi' || id === 'hex' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots')) pz().load(G.spec, G.me, { lock: !!G.lock });
@@ -1724,6 +1782,7 @@
       const L2 = ctx.kind === 'open' ? D.opening(key, ctx.lang) : D.lesson(key, ctx.lang, X);
       if (!L2) { say(X.drill); act(X.full, {}); $('[data-a=next]').onclick = () => ctx.onFull && ctx.onFull(ctx.kind, key); return; }
       cur = Object.assign(ncApply(id, L2), { key, k: 0, res: [], si: 0 }); head(cur.title); choices(null);
+      if (ctx.kind !== 'open' && (EASY2[id] || []).includes(String(key)) && cur.probs && cur.probs.length > 2) cur.probs = cur.probs.slice(0, 2);   // (2026-11-21 ユーザー：簡単すぎる初級の問題は2問でクリア)
       phase = 'intro'; dots();
       say(`${fill((TOPIC[ctx.lang] || TOPIC.en)[ctx.kind === 'open' ? 1 : 0], { t: `<b>${cur.title}</b>` })}<br>${cur.intro || ''}`);   // (「今日は『ルーク』について学ぶよ！」 — not the bare title, 2026-11-14)
       // (2026-11-14) while the introduction is read, the board shows the lesson's own picture (its diagram) for looking only — never the
@@ -1764,13 +1823,13 @@
       const s = String(p.pos).split(':')[1]; if (s !== '1' && s !== '2') return '';
       return ((SIDE[ctx.lang] || SIDE.en)[+s - 1]) + (ctx.lang === 'ja' || /^zh/.test(ctx.lang) ? '' : '');
     }
-    // (2026-11-21 user) reversi: the flip counts on the first RV_NUMS problems only — the rest are solved without them
-    const RV_NUMS = 2, RV_SELF = { ja: 'ここからは数字なし。自分で数えて考えてみて！', en: 'From here on, no numbers: count for yourself!' };
+    // (2026-11-21 user) reversi: the flip counts on the first 2 problems only (1 when the lesson has only 2: EASY2) — the rest are solved without them
+    const RV_NUMS = () => cur && cur.probs && cur.probs.length <= 2 ? 1 : 2, RV_SELF = { ja: 'ここからは数字なし。自分で数えて考えてみて！', en: 'From here on, no numbers: count for yourself!' };
     // one problem
     async function prob() {
       phase = 'prob'; const p = cur.probs[cur.k]; if (!p) return finish();
       p.hinted = false; p.used = 0; dots(); act(X.next, { nextOn: false });
-      say(sideLine(p) + (id === 'reversi' && cur.k === RV_NUMS && RV_SELF[ctx.lang] ? RV_SELF[ctx.lang] + '<br>' : '') + (p.ask || X.opGoal));
+      say(sideLine(p) + (id === 'reversi' && cur.k === RV_NUMS() && RV_SELF[ctx.lang] ? RV_SELF[ctx.lang] + '<br>' : '') + (p.ask || X.opGoal));
       await board(p.pos, p.sol); if (stopped || cur.probs[cur.k] !== p) return;
       onMoved = (u, info) => moved(p, u, info);
       if (p.marks && p.marks.length && pz().mark) pz().mark(p.marks);
@@ -1928,7 +1987,7 @@
       }
       // (2026-11-21) {m} / {x} in the lesson's words (chess) → the best move / yours; a wrong answer gets the lesson's ng words, or the why without its 「正解！」
       const Wm = t => t && /\{[mx]\}/.test(t) ? fill(t, { m: '<b>' + (moveName(p.pos, p.ans) || SP('ok', ctx.lang)) + '</b>', x: '<b>' + (moveName(p.pos, u) || '') + '</b>' }) : t;
-      const whyR = Wm(p.why), whyW = Wm(p.ngTx || (p.why || '').replace(/^\s*(正解|Correct|Right)[！!]\s*/, ''));
+      const whyR = Wm(p.why), whyW = Wm((id === 'shogi' && p.ng ? p.ng(u) : '') || p.ngTx || (p.why || '').replace(/^\s*(正解|Correct|Right)[！!]\s*/, ''));   // (shogi: why the move played falls short, 2026-11-21)
       if (pts >= 16) say(`${line('solved') || pick(X.good)} <b>${fill(X.pts, { n })}</b>${whyR ? '<br>' + whyR : ''}`);
       else { if (p.ans) pz().mark(p.ans); const mvN0 = p.kind !== 'tsume' && p.ans ? moveName(p.pos, p.ans) : '', nm = p.kind !== 'tsume' && p.ans && !(mvN0 && whyW && whyW.replace(/<[^>]+>|\s/g, '').includes(mvN0.replace(/\s/g, ''))), mvN = nm ? mvN0 : ''; say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSP[ctx.lang] || ANSP.en)) : ''}${whyW ? '<br>' + whyW : ''}`);
         if (nm && !mvN) { const k = cur.k, mk = p.ans; later(async () => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz() || !pz().play) return; try { let r = await pz().play(mk); if (r === false) { pz().undo(1); await sleep(250); r = await pz().play(mk); } if (r === false) return; await sleep(1600); if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark(mk); } catch (e) { console.warn('[lessons] show move', e); } }, 1000); } }   // (the move is shown on the board, not named: no coordinates, 2026-11-14)
@@ -1995,7 +2054,8 @@
     requestAnimationFrame(() => el.classList.add('on'));
     say(X.loading); act(X.next, { nextOn: false });
     Promise.all([D.load(ctx.lang), ncLoad(id), lsvLoad(ctx.lang)]).then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
-    const dbg = { state: () => cur && { key: cur.key, phase, k: cur.k, si: cur.si, res: cur.res.slice(), ans: cur.probs[cur.k] && cur.probs[cur.k].ans, ramp: phase === 'ramp' && cur.ramp && cur.ramp[cur.ri] ? cur.ramp[cur.ri].ans : undefined, moves: cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.f ? Object.keys(cur.probs[cur.k].P.f).map(Number) : null, say: $('.tx').textContent },
+    const dbg = { state: () => cur && { key: cur.key, phase, k: cur.k, si: cur.si, res: cur.res.slice(), ans: cur.probs[cur.k] && cur.probs[cur.k].ans, ramp: phase === 'ramp' && cur.ramp && cur.ramp[cur.ri] ? cur.ramp[cur.ri].ans : undefined, moves: cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.f ? Object.keys(cur.probs[cur.k].P.f).map(Number) : cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.cand ? cur.probs[cur.k].P.cand.map(c => c[0]) : null, say: $('.tx').textContent },
+      toProb: () => { if (cur && cur.probs.length) { cur.k = 0; prob(); } },   // (test hook: straight to the problems)
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return; u = u || p.ans; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook)
     window.__atlasLs = dbg;
     return {

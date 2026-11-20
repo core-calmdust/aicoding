@@ -95,7 +95,7 @@ function scoreLesson(id, L) {
   const R = await pg.evaluate(async games => {
     let src = await (await fetch('lessons3d.js?x=' + Date.now())).text();
     src = src.replace('  window.AtlasGuideJa = guideJa;', '  window.AtlasGuideJa = guideJa; let LSVD = null; const lsvX = (h, id) => { const m = (LSVD || {})[id]; if (!m) return h; for (const k of Object.keys(m).sort((a, b) => b.length - a.length)) if (h.includes(k)) h = h.split(k).join(m[k]); return h; }; window.__setLSV = d => { LSVD = d; };')
-      .replace('window.AtlasLessons = {', 'window.__LD = DATA; window.__NC = { load: ncLoad, apply: ncApply }; window.__V = (h, id) => varyJa(lsvX(guideJa(h, id), id), id); window.AtlasLessons = {');
+      .replace('window.AtlasLessons = {', 'window.__LD = DATA; window.__NC = { load: ncLoad, apply: ncApply }; window.__V = (h, id) => varyJa(lsvX(guideJa(h, id), id), id); window.__X = id => Object.assign({}, TX.ja, (VOICE[id] || {}).ja || {}); window.AtlasLessons = {');
     window.Atlas3D = window.Atlas3D || {}; if (!Atlas3D.connect4) Atlas3D.connect4 = { names: l => l === 'ja' ? ['金', '銀'] : ['Gold', 'Silver'] };
     new Function(src)();
     try { const t = await (await fetch('lsvoice-ja.js?x=' + Date.now())).text(); const w = {}; new Function('window', t)(w); __setLSV(w.AtlasLsVoice); } catch (e) {}
@@ -103,13 +103,18 @@ function scoreLesson(id, L) {
     const f = (x, p) => { try { return typeof x === 'function' ? x(p && p.ans, p) : x; } catch (e) { return ''; } };
     const out = {};
     for (const id of (games.length ? games : Object.keys(__LD))) { const D = __LD[id]; out[id] = [];
-      try { await D.load('ja'); await __NC.load(id); for (const it of D.list('lesson', 'ja')) { let s; try { s = __NC.apply(id, await D.lesson(it.key, 'ja')); } catch (e) { continue; } if (!s) continue;
-        out[id].push({ key: it.key, title: it.title, intro: say(s.intro, id), ramp: (s.ramp || []).flatMap(r => ['t', 'b', 'g', 'h', 'y'].map(f => r[f] && (typeof r[f] === 'string' ? r[f] : r[f].ja || r[f].en)).filter(x => x && !/^[a-o0-9\s,]+$/.test(String(x)))).map(x => say(D.rampTx ? D.rampTx(x, 'ja') : x, id)), probs: (s.probs || []).map(p => ({ ask: say(p.ask, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id) })) }); } } catch (e) { out[id].push({ err: String(e) }); } }
+      try { await D.load('ja'); await __NC.load(id); for (const it of D.list('lesson', 'ja')) { let s; try { s = __NC.apply(id, await D.lesson(it.key, 'ja', __X(id))); } catch (e) { continue; } if (!s) continue;
+        out[id].push({ key: it.key, title: it.title, intro: say(s.intro, id), ramp: (s.ramp || []).flatMap(r => ['t', 'b', 'g', 'h', 'y'].map(f => r[f] && (typeof r[f] === 'string' ? r[f] : r[f].ja || r[f].en)).filter(x => x && !/^[a-o0-9\s,]+$/.test(String(x)))).map(x => say(D.rampTx ? D.rampTx(x, 'ja') : x, id)), probs: (s.probs || []).map(p => ({ ask: say(p.ask, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id) })) }); } } catch (e) { out[id].push({ err: String(e) }); }
+      // (2026-11-21 ユーザー：定跡・定石の問題もレッスンと同じく採点) the openings: intro, the study's notes, then the problems (no ask → the guide's opGoal, as the runner)
+      if (!D.opening) continue; const oid = id + '/open', X = __X(id); out[oid] = [];
+      try { for (const it of D.list('open', 'ja')) { let s; try { s = __NC.apply(id, await D.opening(it.key, 'ja')); } catch (e) { continue; } if (!s) continue;
+        out[oid].push({ key: it.key, title: it.title, intro: say(s.intro, id), ramp: Object.values(s.notes || {}).map(x => say(typeof x === 'string' ? x : x.ja || x.en, id)).filter(Boolean),
+          probs: (s.probs || []).map(p => ({ ask: say(p.ask || X.opGoal, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id) })) }); } } catch (e) { out[oid].push({ err: String(e) }); } }
     return out;
   }, games);
   await b.close(); srv.close();
   const rep = {}; let sum = 0, n = 0;
-  for (const id in R) { const ls = R[id].filter(l => !l.err).map(l => Object.assign({ key: l.key, title: l.title }, scoreLesson(id, l)));
+  for (const id in R) { const ls = R[id].filter(l => !l.err).map(l => Object.assign({ key: l.key, title: l.title }, scoreLesson(id.split('/')[0], l)));
     const avg = ls.length ? ls.reduce((a, l) => a + l.score, 0) / ls.length : 0; rep[id] = { avg: Math.round(avg * 10) / 10, pass: ls.filter(l => l.score >= CFG.pass).length, n: ls.length, lessons: ls };
     sum += avg * ls.length; n += ls.length; }
   const overall = n ? Math.round(sum / n * 10) / 10 : 0;

@@ -114,7 +114,6 @@
 /* phones: everything in about one screen — chips, a taller map, a one-row game strip that scrolls sideways,
    then a compact card (icon · name · facts on one line, two lines of story, the journey, 遊ぶ | ヒストリア side by side) */
 @media (max-width:819px){
-  #pg-map.on{display:flex;flex-direction:column;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
   .amwrap{display:contents}
   .amhead{order:0;gap:2px 10px}.amhead .h{margin-bottom:0}
   .amsub{display:none}
