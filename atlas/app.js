@@ -181,8 +181,9 @@
     gacha: '<circle cx="12" cy="9.5" r="6.5"/><path d="M6 15h12v5H6zM5.5 9.5h13"/><circle cx="12" cy="17.5" r="1.2" fill="currentColor"/>',
     dress: '<path d="M9 4l3 2 3-2 5 3-2 4-2-1v10H8V10l-2 1-2-4z"/>',
     map: '<path d="M9 4.5 3.5 6.5v13l5.5-2 6 2 5.5-2v-13l-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>',
+    museum: '<path d="M3.5 9.5 12 4.5l8.5 5"/><path d="M5.5 10.5v7M10 10.5v7M14 10.5v7M18.5 10.5v7M3.5 20h17"/>',
   };
-  const TABS = ['home', 'games', 'map', 'ach', 'gacha', 'dress'];   // ショップはガチャのページの下段（2026-11-06）。#shop はガチャへ
+  const TABS = ['home', 'games', 'museum', 'ach', 'gacha', 'dress'];   // ショップはガチャのページの下段（2026-11-06）。#shop はガチャへ。地図は博物館の展示室の1つ（2026-11-21、#map・#tree は博物館のその部屋へ）
   const tabsEl = $('tabs');
   TABS.forEach(k => {
     const b = document.createElement('button'); b.className = 'tab'; b.role = 'tab'; b.dataset.k = k;
@@ -205,8 +206,10 @@
   // phones: the gacha page has two tabs, ガチャ and ショップ (html[data-gs]); PC shows both, the shop below the gacha
   function gsSet(v) { document.documentElement.dataset.gs = v; document.querySelectorAll('#gsSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v)); }
   document.querySelectorAll('#gsSeg button').forEach(b => b.onclick = () => { gsSet(b.dataset.v); if (b.dataset.v === 'gacha' && !busy) renderGacha(); window.scrollTo({ top: 0 }); });
+  let muRoom = null;   // (#map / #tree: open the museum on that room)
   function go(k, push = true) {
     const toShop = k === 'shop'; if (toShop) k = 'gacha';
+    if (k === 'map' || k === 'tree' || k === 'gallery') { muRoom = k; k = 'museum'; }
     if (k === 'gacha') gsSet(toShop ? 'shop' : 'gacha');   // phones: the ガチャ｜ショップ tabs of the page
     if (!TABS.includes(k)) k = 'home';
     page = k; propSync(); document.documentElement.dataset.pg = k; requestAnimationFrame(() => AtlasVis.check());   // (phones: the updates ticker hides on the map and きせかえ)
@@ -548,6 +551,8 @@
   }
   // portal features that can appear in the recent-updates row (UPDATES lines with the id tab:<page>)
   const FEAT = { ach: { color: '#d79a1c', art: 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%20100%22%3E%3Cpath%20d%3D%22M48%2014h8l6%2024h-12zM72%2014h-8l-6%2024h12z%22%20fill%3D%22%23ff6b6b%22%2F%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2226%22%20fill%3D%22%23d79a1c%22%2F%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2258%22%20r%3D%2222%22%20fill%3D%22%23ffd84d%22%2F%3E%3Cpath%20d%3D%22M60%2043l4.6%209.4%2010.4%201.5-7.5%207.3%201.8%2010.3L60%2066.6l-9.3%204.9%201.8-10.3-7.5-7.3%2010.4-1.5z%22%20fill%3D%22%23fff%22%20opacity%3D%22.9%22%2F%3E%3C%2Fsvg%3E' }, gacha: { color: '#e0567a', art: '../images/atlas/av/boss-chess-9-3.webp?v=1' }, map: { color: '#2f86d6', art: 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20120%20100%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22o%22%20cx%3D%22.38%22%20cy%3D%22.32%22%20r%3D%22.8%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%238fd3ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%232f86d6%22/%3E%3C/radialGradient%3E%3CclipPath%20id%3D%22c%22%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2254%22%20r%3D%2238%22/%3E%3C/clipPath%3E%3C/defs%3E%3Cellipse%20cx%3D%2260%22%20cy%3D%2295%22%20rx%3D%2230%22%20ry%3D%224%22%20fill%3D%22%23000%22%20opacity%3D%22.18%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2254%22%20r%3D%2238%22%20fill%3D%22url%28%23o%29%22/%3E%3Cg%20clip-path%3D%22url%28%23c%29%22%20fill%3D%22%23f6e3b0%22%3E%3Cpath%20d%3D%22M20%2030c8-6%2020-8%2026-2%204%204%200%2010%206%2014%205%203%204%2010-2%2012-7%203-8%2012-14%2012-6%200-6-8-12-10-6-2-10-8-8-14%201-5%201-9%204-12z%22/%3E%3Cpath%20d%3D%22M62%2020c10-3%2026%200%2034%208%206%206%204%2014-2%2016-6%202-8%208-14%208s-6-8-12-8-10-4-10-10%200-12%204-14z%22/%3E%3Cpath%20d%3D%22M70%2062c6-2%2014%202%2016%208%202%207-4%2014-10%2016-6%201-8-6-10-12-2-5-1-10%204-12z%22/%3E%3C/g%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2254%22%20r%3D%2238%22%20fill%3D%22none%22%20stroke%3D%22%231f5fa0%22%20stroke-width%3D%222.4%22/%3E%3Cpath%20d%3D%22M44%2030a26%2026%200%200%201%2012-8%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20opacity%3D%22.55%22/%3E%3Cg%3E%3Cpath%20d%3D%22M38%2044c0-6%204-10%209-10s9%204%209%2010c0%207-9%2014-9%2014s-9-7-9-14z%22%20fill%3D%22%23ff5d5d%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222.2%22/%3E%3Ccircle%20cx%3D%2247%22%20cy%3D%2244%22%20r%3D%223.2%22%20fill%3D%22%23fff%22/%3E%3C/g%3E%3Cg%3E%3Cpath%20d%3D%22M72%2030c0-5%203.5-8.5%207.5-8.5S87%2025%2087%2030c0%206-7.5%2012-7.5%2012S72%2036%2072%2030z%22%20fill%3D%22%23ffc928%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22/%3E%3Ccircle%20cx%3D%2279.5%22%20cy%3D%2230%22%20r%3D%222.6%22%20fill%3D%22%23fff%22/%3E%3C/g%3E%3Cg%3E%3Cpath%20d%3D%22M70%2066c0-4.5%203-7.5%206.5-7.5S83%2061.5%2083%2066c0%205-6.5%2010.5-6.5%2010.5S70%2071%2070%2066z%22%20fill%3D%22%233ccf91%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22/%3E%3Ccircle%20cx%3D%2276.5%22%20cy%3D%2266%22%20r%3D%222.3%22%20fill%3D%22%23fff%22/%3E%3C/g%3E%3C/svg%3E' } };
+  // 博物館 (2026-11-21): a little museum front — pediment, columns, steps — for its lines in the news
+  FEAT.museum = { color: '#9a6a32', art: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100"><ellipse cx="60" cy="94" rx="40" ry="4" fill="#000" opacity=".16"/><path d="M60 10 102 32H18z" fill="#ffc928" stroke="#d79a1c" stroke-width="2.5" stroke-linejoin="round"/><circle cx="60" cy="25" r="5" fill="#fff6e2"/><rect x="20" y="32" width="80" height="7" rx="2" fill="#fff6e2" stroke="#e3cf9f" stroke-width="2"/>' + [30, 46, 62, 78].map(x => `<rect x="${x}" y="40" width="12" height="38" rx="3" fill="#fffdf7" stroke="#e3cf9f" stroke-width="2"/><path d="M${x + 4} 44v30M${x + 8} 44v30" stroke="#efe3c8" stroke-width="1.6"/>`).join('') + '<rect x="16" y="78" width="88" height="7" rx="2" fill="#fff6e2" stroke="#e3cf9f" stroke-width="2"/><rect x="10" y="85" width="100" height="6" rx="2" fill="#9a6a32"/></svg>') };
   function renderHome() {
     renderHero();
     $('hUpd').textContent = t('upd.h'); $('hIcons').textContent = t('upd.games');
@@ -3219,10 +3224,13 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('langPop').hidden) openLang(false); });
   $('langSel').onchange = e => { const lg = e.target.value; (window.ATLAS_I18N_LOAD ? ATLAS_I18N_LOAD(lg) : Promise.resolve()).then(() => { lang = I[lg] ? lg : 'ja'; try { localStorage.setItem('aicoding-lang', lang); } catch (x) {} applyLang(); render(page); const bv = $('bv'); if (bv.classList.contains('on') && !bv.classList.contains('playing') && bvGame) openBoard0(bvGame.id, false, false, true); else if (bv.classList.contains('on')) try { renderPlace(); } catch (x) {} }); };   // (only the page's language is loaded: atlas/i18n/<lang>.js)
 
-  // ボドゲ地図: atlas/worldmap.js draws the map; a pin's ▶ flies its icon into the board view like the home icons
-  function renderMap() {
-    if (!window.AtlasMap) return;
-    AtlasMap.render($('pg-map'), { games: A_.GAMES, lang, gname, no: gno, art: g => artImg(g), open: (id, img) => flyOpen(id, img) });
+  // 博物館 (atlas/museum.js, 2026-11-21): its rooms — 地図 (atlas/worldmap.js), 系統樹 (atlas/museum/tree.js) …; a pin's / a node's ▶
+  // flies its icon into the board view like the home icons
+  function renderMuseum() {
+    if (!window.AtlasMuseum) return;
+    const room = muRoom; muRoom = null;
+    AtlasMuseum.render($('pg-museum'), { games: A_.GAMES, lang, gname, no: gno, art: g => artImg(g), open: (id, img) => flyOpen(id, img), room,
+      page: r => { if (window.AtlasMissions) AtlasMissions.page(r); } });
   }
   // the header's house: the Atlas's own home tab (not the CALMDUST top page); over a board it reloads the portal's home
   { const hb = $('homeBtn'); if (hb) hb.addEventListener('click', e => { if (document.querySelector('#bv.on,#hist.on') || document.documentElement.classList.contains('hs-open')) return;
@@ -3233,7 +3241,7 @@
     sfxIcon(); npcIcon();
     if (window.AtlasMissions) AtlasMissions.page(k);   // (ミッション: the pages opened)
     renderUpdLine();
-    if (k === 'home') renderHome(); else if (k === 'games') renderGames(); else if (k === 'map') renderMap(); else if (k === 'ach') renderAch();
+    if (k === 'home') renderHome(); else if (k === 'games') renderGames(); else if (k === 'museum') renderMuseum(); else if (k === 'ach') renderAch();
     else if (k === 'gacha') { renderGacha(); renderShop(); } else if (k === 'dress') renderDress();
   }
   // progress may change in another tab (a game) — re-read when coming back

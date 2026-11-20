@@ -1,0 +1,164 @@
+/* 博物館 (Museum tab) — atlas/museum.js: the title, the row of room buttons and the rooms' stage */
+.muhead .h{margin-bottom:4px}
+.musub{margin:0 0 12px;color:var(--ink2);font-weight:700;font-size:14.5px;line-height:1.6}
+.murooms{display:flex;gap:10px;margin:0 0 14px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 6px}
+.murooms::-webkit-scrollbar{display:none}
+.murm{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:12px;padding:10px 16px 10px 10px;border:2px solid var(--line);border-radius:20px;background:#fff;box-shadow:0 3px 0 var(--line);
+  font-family:var(--font);color:var(--ink);text-align:start;cursor:pointer;transition:transform .1s,box-shadow .1s,background .15s}
+.murm:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.murm .mui{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:#f6eedb;color:var(--ink)}
+.murm .mui svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.murm .mut{min-width:0}
+.murm b{display:block;font:700 17px var(--round);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.murm small{display:block;font-size:12.5px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.murm[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 3px 0 #161a28}
+.murm[aria-selected=true] .mui{background:var(--sun);color:var(--ink)}
+.murm[aria-selected=true] small{color:rgba(255,255,255,.72)}
+@media (hover:hover){.murm:not([aria-selected=true]):hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--line)}}
+.muroom{display:none}
+.muroom.on{display:block}
+.muload{padding:60px 0;text-align:center;font-weight:900;color:var(--ink2)}
+/* the map inside the museum: the museum's title stands for it */
+.muroom[data-r=map] .amhead .h{display:none}
+.muroom[data-r=map] .amsub{margin-top:0}
+html.skdark .musub{color:rgba(255,255,255,.8)}
+@media (max-width:819px){
+  .muhead{display:flex;align-items:baseline;gap:10px}
+  .muhead .h{margin-bottom:6px}
+  .musub{display:none}
+  .murooms{gap:6px;margin:0 -16px 8px;padding:2px 16px 6px}
+  .murm{flex:1 0 auto;gap:7px;padding:5px 12px 5px 5px;border-radius:99px}
+  .murm .mui{width:32px;height:32px;border-radius:50%}
+  .murm .mui svg{width:20px;height:20px}
+  .murm b{font-size:14px}
+  .murm small{display:none}
+  #pg-museum.on{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  .muroom[data-r=map].on{display:flex;flex-direction:column}
+  .muroom[data-r=map] .ammap{height:clamp(240px,calc(100svh - 610px),108vw)}
+}
+
+/* ===== 系統樹 (family tree room, atlas/museum/tree.js) ===== */
+.trsub{margin:0 0 8px;color:var(--ink2);font-weight:700;font-size:14px}
+.trfam{padding-top:2px}
+.trfam .chip .trfc{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-inline-end:6px;vertical-align:0}
+.trwrap{position:relative;overflow:hidden;margin-top:8px;padding:0}
+.trscroll{position:relative;overflow:auto;height:min(68vh,760px);min-height:380px;overscroll-behavior:contain;outline:none;scrollbar-width:thin;cursor:grab;
+  background:linear-gradient(#fdf9ee,#f8f0dc)}
+.trscroll.grab{cursor:grabbing}
+.trscroll.grab .trn{pointer-events:none}
+.trscroll:focus-visible{box-shadow:inset 0 0 0 3px var(--sky)}
+/* the ruler: era bands + year ticks, stuck to the top while the tree scrolls */
+.trruler{position:sticky;top:0;z-index:6;height:52px;background:rgba(255,250,238,.96);border-bottom:2px solid var(--line);box-sizing:border-box;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.trera{position:absolute;top:0;height:24px;display:flex;align-items:center;box-sizing:border-box;border-inline-start:2px solid var(--line)}
+.trera b{position:sticky;left:var(--trNW,128px);padding:0 10px;font:700 13px var(--round);color:var(--ink2);white-space:nowrap}
+.trera.e-anc{background:#f3e6c8}.trera.e-med{background:#efe0bd}.trera.e-early{background:#f3e6c8}.trera.e-mod{background:#efe0bd}.trera.e-cont{background:#f3e6c8}
+.trtick{position:absolute;top:28px;transform:translateX(-50%);font:700 12px var(--round);color:var(--ink2);white-space:nowrap;padding:2px 5px}
+.trtick::before{content:"";position:absolute;left:50%;top:-5px;width:2px;height:5px;background:var(--line)}
+.trbody{position:relative;display:flex;align-items:flex-start;width:max-content;min-width:100%}
+/* the lane names: stuck at the start of each row */
+.trnames{position:sticky;left:0;z-index:5;flex:none;width:var(--trNW,128px);align-self:stretch}
+.trname{position:absolute;left:0;right:0;display:flex;align-items:center;padding:0 8px 0 10px;box-sizing:border-box;background:linear-gradient(90deg,rgba(255,250,238,.97) 82%,rgba(255,250,238,0));pointer-events:none}
+.trname span{display:flex;align-items:center;gap:7px;min-width:0}
+.trname i{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--c);color:#fff;box-shadow:0 2px 0 color-mix(in srgb,var(--c) 60%,#000)}
+.trname i svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.trname b{font:700 13px/1.25 var(--round);color:color-mix(in srgb,var(--c) 70%,var(--ink));overflow-wrap:anywhere}
+.trcanvas{position:relative;flex:none;margin-inline-start:calc(-1 * var(--trNW,128px))}
+.trlanes{position:absolute;inset:0}
+.trlane{position:absolute;left:0;right:0;border-bottom:1.5px dashed color-mix(in srgb,var(--c) 22%,var(--line));background:color-mix(in srgb,var(--c) 4%,transparent)}
+.trlane.odd{background:color-mix(in srgb,var(--c) 7%,transparent)}
+.trgrid{position:absolute;top:0;bottom:0;width:1.5px;background:rgba(160,120,60,.09)}
+.trsvg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.tre{fill:none;stroke:var(--c);stroke-width:2.6;stroke-linecap:round;opacity:.55;transition:opacity .2s,stroke-width .2s}
+.tre.maybe{stroke-dasharray:3 7;stroke-width:2.4}
+.tre.on{opacity:1;stroke-width:3.4}
+.tre.dim{opacity:.1}
+.trnodes{position:absolute;inset:0}
+/* a node: Atlas games carry their 3D icon; the others are plain labels with a family dot */
+.trn{position:absolute;display:flex;align-items:center;gap:8px;padding:0 12px 0 6px;box-sizing:border-box;border-radius:99px;border:2.5px solid color-mix(in srgb,var(--c) 55%,#fff);background:#fff;
+  box-shadow:0 3px 0 color-mix(in srgb,var(--c) 40%,var(--line)),0 8px 14px -10px rgba(60,40,10,.45);cursor:pointer;font-family:var(--font);color:var(--ink);text-align:start;
+  transition:opacity .2s,filter .2s,transform .15s,box-shadow .15s}
+.trn.x{border:2px dashed color-mix(in srgb,var(--f) 45%,var(--line));background:#fffaf0;box-shadow:none;padding-inline-start:10px}
+.trn .tra{position:relative;flex:none;width:44px;height:44px;margin-block:-4px;border-radius:50%;background:color-mix(in srgb,var(--c) 22%,#fff);display:block}
+.trn .tra img{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);object-fit:contain;transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+.trn .tra img.flat{inset:5px;width:calc(100% - 10px);height:calc(100% - 10px);border-radius:8px}
+.trn .trd{flex:none;width:12px;height:12px;border-radius:50%;background:var(--f);box-shadow:0 0 0 3px color-mix(in srgb,var(--f) 22%,#fff)}
+.trn .trt{min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.trn b{font-size:14.5px;font-weight:900;white-space:nowrap}
+.trn small{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
+.trn.x b{font-weight:800;color:color-mix(in srgb,var(--ink) 82%,#fff)}
+.trn em{font-style:normal;font:700 9.5px/1 var(--round);letter-spacing:.04em;color:#fff;background:var(--grape);padding:2px 5px;border-radius:99px;vertical-align:1px}
+@media (hover:hover){.trn:hover{transform:translateY(-2px);z-index:2}.trn:hover .tra img{transform:scale(1.12) translateY(-2px)}}
+.trn:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.trn.on{z-index:3;border-color:var(--c);border-style:solid;box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 35%,transparent),0 3px 0 color-mix(in srgb,var(--c) 55%,#000)}
+.trn.x.on{border-color:var(--f);box-shadow:0 0 0 4px color-mix(in srgb,var(--f) 30%,transparent)}
+.trn.dim{opacity:.28;filter:grayscale(.75)}
+.trn.kin{z-index:2}
+.trzoom{right:12px;top:auto;bottom:12px;flex-direction:row}
+.trload{position:absolute;inset:52px 0 0;margin:0;display:grid;place-items:center;font-weight:900;color:var(--ink2);background:rgba(253,249,238,.85);z-index:7}
+.trload[hidden]{display:none}
+/* the legend under the tree */
+.trlegend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:10px 4px 0;font-size:13px;font-weight:700;color:var(--ink2)}
+.trlegend span{display:inline-flex;align-items:center;gap:7px}
+.trlegend svg{width:30px;height:10px}
+.trlegend svg path{fill:none;stroke:var(--ink2);stroke-width:2.6;stroke-linecap:round}
+.trlegend svg path.maybe{stroke-dasharray:3 6}
+.trlegend .lg{display:inline-block;width:22px;height:14px;border-radius:99px;border:2.5px solid #d9a85a;background:#fff}
+.trlegend .lg.x{border:2px dashed #cdb894;background:#fffaf0}
+/* the card under the tree */
+.trinfo{margin-top:12px;padding:16px 20px;min-height:178px;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) 190px;grid-template-areas:"hd rel acts" "desc rel acts";gap:8px 22px;align-items:start}
+.trinfo .trempty{grid-column:1/-1;grid-row:1/-1;align-self:center;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--ink2);font-weight:700}
+.trinfo .trempty svg{width:30px;height:30px;fill:none;stroke:var(--line);stroke-width:2;stroke-linecap:round}
+.trinfo .trempty p{margin:0;font-size:14px}
+.trhd{grid-area:hd;display:flex;align-items:center;gap:12px;min-width:0}
+.trhd>div{min-width:0}
+.trhd small{display:block;font-size:12px;font-weight:700;color:var(--ink2)}
+.trhd b{display:block;font:700 20px/1.25 var(--round);margin:1px 0 5px}
+.trhd .tra.big,.trhd .trd.big{position:relative;flex:none;width:64px;height:64px;border-radius:20px;background:color-mix(in srgb,var(--c) 20%,#fff);display:grid;place-items:center}
+.trhd .tra.big img{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);object-fit:contain}
+.trhd .tra.big img.flat{inset:8px;width:calc(100% - 16px);height:calc(100% - 16px);border-radius:10px}
+.trhd .trd.big{background:color-mix(in srgb,var(--f) 16%,#fff);color:var(--f)}
+.trhd .trd.big svg{width:36px;height:36px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.trfacts{display:flex;flex-wrap:wrap;gap:6px}
+.trfacts>span{display:inline-flex;align-items:center;gap:6px;padding:3px 11px 3px 4px;border-radius:99px;background:#f6eedb;font-weight:900;font-size:13px}
+.trfacts i{font-style:normal;font-size:11px;padding:2px 8px;border-radius:99px;background:#fff;color:var(--ink2)}
+.trdesc{grid-area:desc;margin:0;font-size:14.5px;line-height:1.75}
+.trrel{grid-area:rel;display:flex;flex-direction:column;gap:10px;padding-inline-start:20px;border-inline-start:2px solid var(--line);min-height:100%;box-sizing:border-box}
+.trrel>div>i{display:block;font-style:normal;font-size:12px;font-weight:900;color:var(--ink2);margin-bottom:5px}
+.trrel>div>span{display:flex;flex-wrap:wrap;gap:6px}
+.trrel .solo i{font-weight:700}
+.trc{display:inline-flex;align-items:center;gap:6px;padding:3px 11px 3px 3px;border:2px solid color-mix(in srgb,var(--c) 45%,var(--line));border-radius:99px;background:#fff;font:800 13.5px var(--font);color:var(--ink);cursor:pointer;box-shadow:0 2px 0 color-mix(in srgb,var(--c) 30%,var(--line))}
+.trc.maybe{border-style:dashed}
+.trc .tra{position:relative;width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--c) 20%,#fff)}
+.trc .tra img{position:absolute;inset:-3px;width:calc(100% + 6px);height:calc(100% + 6px);object-fit:contain}
+.trc .tra img.flat{inset:3px;width:calc(100% - 6px);height:calc(100% - 6px)}
+.trc .trd{width:10px;height:10px;margin:0 4px 0 6px;border-radius:50%;background:var(--c)}
+.trc em{font-style:normal;font-size:10.5px;font-weight:900;color:var(--ink2);padding:1px 6px;border-radius:99px;background:#f6eedb}
+.trc:active{transform:translateY(2px);box-shadow:none}
+.tracts{grid-area:acts;display:flex;flex-direction:column;justify-content:center;gap:10px;align-self:stretch;padding-inline-start:20px;border-inline-start:2px solid var(--line)}
+html.skdark .trsub,html.skdark .trlegend{color:rgba(255,255,255,.8)}
+@media (max-width:819px){
+  .trsub{display:none}
+  .trfam{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px 4px}
+  .trfam::-webkit-scrollbar{display:none}
+  .trfam .chip{flex:none}
+  .trwrap{--trNW:76px}
+  .trscroll{height:clamp(300px,calc(100svh - 420px),560px);min-height:0}
+  .trruler{height:46px}
+  .trera{height:20px}.trera b{font-size:11.5px}
+  .trtick{top:24px;font-size:11px}
+  .trname{padding:0 4px 0 6px}
+  .trname span{flex-direction:column;align-items:flex-start;gap:3px}
+  .trname i{width:24px;height:24px;border-radius:8px}.trname i svg{width:16px;height:16px}
+  .trname b{font-size:10.5px;line-height:1.15}
+  .trn{gap:6px;padding:0 10px 0 4px}
+  .trn .tra{width:38px;height:38px}
+  .trn b{font-size:13.5px}.trn small{font-size:11.5px}
+  .trlegend{gap:4px 12px;font-size:12px}
+  .trinfo{grid-template-columns:minmax(0,1fr);grid-template-areas:"hd" "desc" "rel" "acts";padding:14px;gap:8px;scroll-margin-bottom:calc(80px + env(safe-area-inset-bottom))}
+  .trhd .tra.big,.trhd .trd.big{width:52px;height:52px;border-radius:16px}
+  .trhd b{font-size:17px}
+  .trdesc{font-size:13.5px;line-height:1.65}
+  .trrel{padding:8px 0 0;border:0;border-top:2px solid var(--line)}
+  .tracts{flex-direction:row;padding:4px 0 0;border:0}
+  .tracts>*{flex:1;padding-block:10px}
+}
