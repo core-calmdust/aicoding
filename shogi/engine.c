@@ -1785,11 +1785,15 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
             if (k_ == 2 && n2 > 1 && !inChk) { int hm = quietHist(us, m), above = 0, zero = 0; for (int q_ = 0; q_ < n2; q_++) { int hq = quietHist(us, qmoves[q_]); above += hq > hm; zero += hq == 0; } const int d_ = depth < 4 ? 0 : depth < 8 ? 1 : 2; stHR[d_][0]++; stHR[d_][1] += above; stHR[d_][2] += n2; stHR[d_][3] += zero; stHR[d_][4] += hm > 0; stHR[d_][5] += (m == killers[ply * 2] || m == killers[ply * 2 + 1]); } }
 #endif
           int b = (P[42] ? P[42] : 170) * depth - 80; if (b > 1600) b = 1600;
+          /* (P106: the tried quiet moves lose this percent of the bonus instead of 100; P107: each later one this percent of
+             the one before; P109: the bonus grows with the number of moves tried before the cut: + bonus x count / P109) */
+          int mb = P[106] ? b * P[106] / 100 : b; if (mb > 3200) mb = 3200;
+          if (P[109]) { b += b * (nq + ntc) / P[109]; if (b > 3200) b = 3200; }
           if (quiet) {
             if (killers[ply * 2] != m) { killers[ply * 2 + 1] = killers[ply * 2]; killers[ply * 2] = m; }
             histUpd(us, m, b);
-            for (int k = 0; k < nq; k++) if (tq[k] != m) histUpd(us, tq[k], -b);
-          } else { if (capI >= 0) gravS(&capH[capI], b); if (P[72]) for (int k = 0; k < nq; k++) histUpd(us, tq[k], -b); }
+            for (int k = 0; k < nq; k++) if (tq[k] != m) { histUpd(us, tq[k], -mb); if (P[107]) mb = mb * P[107] / 100; }
+          } else { if (capI >= 0) gravS(&capH[capI], b); if (P[72]) for (int k = 0; k < nq; k++) histUpd(us, tq[k], -mb); }
           for (int k = 0; k < ntc; k++) if (tc[k] != capI) gravS(&capH[tc[k]], -b);
           break;
         }
@@ -1797,6 +1801,11 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
     }
   }
   if (!legal) return ex ? alpha : inChk ? -MATE + ply : (best > -INF + 1 ? best : -MATE + ply);
+  if (P[108] && !ex && bestMove && best > origAlpha && best < beta && !board[(bestMove >> 7) & 127] && !((bestMove >> 14) & 1)) {   /* a quiet move raised alpha without a cut: its history too */
+    int b = (P[42] ? P[42] : 170) * depth - 80; if (b > 1600) b = 1600; int mb = P[106] ? b * P[106] / 100 : b; if (mb > 3200) mb = 3200;
+    histUpd(us, bestMove, b);
+    for (int k = 0; k < nq; k++) if (tq[k] != bestMove) { histUpd(us, tq[k], -mb); if (P[107]) mb = mb * P[107] / 100; }
+  }
   if (P[73] && !ex && best <= origAlpha && sp >= 1 && stMove[sp - 1] && !stCap[sp - 1] && !((stMove[sp - 1] >> 14) & 1) && ckS[sp - 1] >= 0) {   /* the node failed low: the quiet move that led here was good */
     int b = ((P[42] ? P[42] : 170) * depth - 80) * P[73] / 100; if (b > 1600) b = 1600; const int pm = stMove[sp - 1], pk_ = ckS[sp - 1];
     gravI(&history[hIdx(us ^ 1, pm)], b);
