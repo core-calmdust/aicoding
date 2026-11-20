@@ -861,6 +861,74 @@
   const gCells = a => (Array.isArray(a) ? a : String(a || '').split(/\s+/)).filter(Boolean).map(GSQ);
   const gPos = (P, o) => Object.assign({ start: { b: gCells(P.b), w: gCells(P.w), side: P.side || 1 }, rule: P.rule || 'renju', me: P.side || 1, last: P.last ? GSQ(P.last) : -1 }, o || {});
   const GMK = { ok: 'ok', ng: 'ng', hl2: 'ring', t4: 'hl', t3: 'hl', hang: 'ng', forb: 'ng' };
+  /* (2026-11-21 lesson loop) the gomoku opening practice in ゴイシペン's words, Japanese: the line's notes varied (and the first three
+     moves told: 天元 → 直接打ち／間接打ち → the shape), a varied question, a hint from what the best move does (its threat or the
+     threat it stops — the stones in that line ringed, never the point itself), why it is best, and for another move what it misses.
+     The reasons come from the position (gmA: fives, fours, open threes through a point, on the 15×15 board) and the stored values. */
+  const GMA = (() => {
+    const DIR = [[1, 0], [0, 1], [1, 1], [1, -1]], at = (bd, x, y) => x < 0 || y < 0 || x > 14 || y > 14 ? -1 : bd[y * 15 + x];
+    const run = (bd, q, s, dx, dy) => { const x = q % 15, y = Math.floor(q / 15); let n = 1, k; for (k = 1; at(bd, x + dx * k, y + dy * k) === s; k++) n++; for (k = 1; at(bd, x - dx * k, y - dy * k) === s; k++) n++; return n; };
+    const five = (bd, q, s, d) => { if (bd[q] !== 0) return false; bd[q] = s; const n = run(bd, q, s, d[0], d[1]); bd[q] = 0; return s === 1 ? n === 5 : n >= 5; };   // (renju: black needs exactly five)
+    const lineCells = (q, d) => { const x = q % 15, y = Math.floor(q / 15), out = []; for (let k = -5; k <= 5; k++) { const a = x + d[0] * k, b = y + d[1] * k; if (a >= 0 && b >= 0 && a < 15 && b < 15) out.push(b * 15 + a); } return out; };
+    const fivesIn = (bd, q, s, d) => lineCells(q, d).filter(c => five(bd, c, s, d));   // (the points that make five in this line)
+    const openFourAt = (bd, q, s, d) => { if (bd[q] !== 0) return false; bd[q] = s; const f = fivesIn(bd, q, s, d); bd[q] = 0; return f.length >= 2; };
+    const threeIn = (bd, q, s, d) => lineCells(q, d).some(c => openFourAt(bd, c, s, d));   // (a three: one more stone makes an open four)
+    function info(bd, m, s) {   // what s playing m does
+      const r = { five: false, four: 0, three: 0, two: 0, line4: null, line3: null };
+      if (bd[m] !== 0) return r;
+      DIR.forEach(d => { if (five(bd, m, s, d)) r.five = true; });
+      bd[m] = s;
+      DIR.forEach(d => { if (fivesIn(bd, m, s, d).length) { r.four++; r.line4 = r.line4 || d; } else if (threeIn(bd, m, s, d)) { r.three++; r.line3 = r.line3 || d; }
+        else { const cs = lineCells(m, d); if (cs.some(c => { if (bd[c] !== 0) return false; bd[c] = s; const t = threeIn(bd, c, s, d); bd[c] = 0; return t; })) r.two++; } });
+      bd[m] = 0; return r;
+    }
+    const allPts = (bd, f) => { const o = []; for (let q = 0; q < 225; q++) if (bd[q] === 0 && f(q)) o.push(q); return o; };
+    const foursOf = (bd, s) => allPts(bd, q => DIR.some(d => five(bd, q, s, d)));
+    const threesOf = (bd, s) => allPts(bd, q => DIR.some(d => openFourAt(bd, q, s, d)));
+    const stonesNear = (bd, q, s, d) => { const x = q % 15, y = Math.floor(q / 15), o = []; for (const sg of [1, -1]) for (let k = 1; k <= 4; k++) { const v = at(bd, x + d[0] * k * sg, y + d[1] * k * sg); if (v === s) o.push((y + d[1] * k * sg) * 15 + x + d[0] * k * sg); else if (v !== 0) break; } return o; };
+    function analyse(pos, best) {   // pos = { b, w, side } (cells) → the board, the side's threats and the opponent's
+      const bd = new Array(225).fill(0); pos.b.forEach(q => { bd[q] = 1; }); pos.w.forEach(q => { bd[q] = 2; });
+      const s = pos.side, o = 3 - s, o4 = foursOf(bd, o), o3 = threesOf(bd, o);
+      const blocks3 = m => { if (!o3.length || bd[m] !== 0) return false; bd[m] = s; const n = threesOf(bd, o).length; bd[m] = 0; return n < o3.length; };
+      const of = m => { const r = info(bd, m, s); r.b4 = o4.includes(m); r.b3 = blocks3(m); r.oppNear = DIR.filter(d => stonesNear(bd, m, o, d).length).length; return r; };
+      const ring = (m, r) => {   // the stones the hint rings: the opponent's threat, or our own line
+        if (o4.length) { const q = o4[0]; const d = DIR.find(d => five(bd, q, o, d)); return stonesNear(bd, q, o, d); }
+        if (r.b3) { const q = o3.find(q => q === m) != null ? m : o3[0]; const d = DIR.find(d => openFourAt(bd, q, o, d)); return d ? stonesNear(bd, q, o, d) : []; }
+        const d = r.line4 || r.line3; return d ? stonesNear(bd, m, s, d) : [];
+      };
+      return { bd, s, o, o4, o3, of, ring };
+    }
+    const kind = r => r.five ? 'win' : r.b4 ? 'b4' : r.four >= 2 || (r.four && r.three) ? 'ft' : r.four ? 'four' : r.b3 && r.three ? 'b3t' : r.b3 ? 'b3' : r.three ? 'three' : 'shape';
+    return { analyse, kind, info };
+  })();
+  const GOMJ = {
+    ask: ['{s}の番。いちばん良い次の一手はどこかな？', 'さあ、{s}ならどこに打つ？ 相手の狙いも見てみて！', 'ここで{s}が打つ、強い一手を探してみよう！', 'この形、{s}の急所はどこだと思う？', '{s}の一手だペン。攻めるか守るか、どっちかな？'],
+    hint: { win: ['自分の四をよく見て！ 五つ並べられる点がありそうだペン。'], b4: ['相手の石をよく見て！ あと1つで五つ並ぶところがあるペン。', '大変、相手に四ができてるね。まずどこを止める？'],
+      ft: ['四と三を、いっぺんに作れる点がありそうだね。', '攻めどき！ 四を作りながら三もできる点を探してみて。'], four: ['四を作って、相手に止めさせる手はないかな？', '先手で攻めたいね。四が作れる点を探してみるペン。'],
+      b3t: ['相手の三が気になるね。止めながら自分も得する点はどこかな？'], b3: ['相手の三が見える？ 放っておくと達四になっちゃうね。', '守りの場面かも。相手の三をどこで止める？'],
+      three: ['自分の石で、両はしのあいた三を作れないかな？', '攻めを続けたいね。三ができる点を探してみて！'],
+      shape: ['まだ急ぐ場面じゃないペン。自分の石がたくさん生きる点を探してみて。', '相手の石の並びも見てみて。じゃましながら自分の形も作れたら最高ペン！'] },
+    good: ['そう、それ！', 'ばっちりだペン！', 'いい読みだね！', 'お見事！', 'すてきな一手だね！'],
+    why: { win: '五つ並んで勝ちだね！ ぼく、踊っちゃう。', b4: 'ここを空けると、次に五つ並べられて負けちゃう。だから四を止めるのが先なんだ。', ft: '四と三が同時にできたから、相手は両方は止められないペン。',
+      four: '四を作ると、相手は止めるしかない。そのあいだに攻めの形を広げられるね。', b3t: '相手の三を止めながら、自分の三も作れたね。守りと攻めがいっぺんにできたペン。', b3: '放っておくと達四になって、もう止められなかったはず。三は早めにふさぐのが大事だね。',
+      three: '三を作ると、相手は止めに回るしかない。攻めの主導権を握れるペン。' },
+    lead: ['{ok}と比べてみよう。', 'きみの手と{ok}、何がちがうかな？', '{ok}とのちがいを見てみるペン。'],
+    miss: { win: 'そこに打てば五つ並んで勝ちだったのに、きみの手だと勝ちを逃しちゃう。', b4: 'きみの手だと相手の四が残ったまま。次に五つ並べられて負けちゃうんだ。', ft: '四三なら勝ちが決まったのに、きみの手だと相手に立て直す時間をあげちゃうね。',
+      four: 'きみの手だと攻めが止まって、相手に先手を渡しちゃう。四で押したほうが強いペン。', b3: 'きみの手だと相手の三が残るから、次に達四を作られて止められないね。', b3t: 'きみの手だと相手の三が残るから、次に達四を作られて止められないね。',
+      three: 'きみの手だと攻めが続かず、相手に反撃の時間をあげちゃうペン。' },
+    // the best move's why when it makes no threat: from its shape
+    shapeWhy(r) { return r.two >= 2 ? '二を2本いっぺんに作る手。次にどちらからでも三が作れるペン。' : r.two && r.oppNear ? '相手の石の並びをじゃましながら、自分の二も作れる点なんだ。' : r.two ? '自分の石と並んで二ができる点。次の三の足場になるペン。' : r.oppNear ? '相手の石の並びをじゃまして、相手の攻めの足場を減らせる点なんだ。' : '石のまだ少ない側に打って、先の攻めに備える手。'; },
+    side: s => s === 1 ? '黒' : '白',
+    // the line's notes
+    n: { three: ['三！ 放っておくと達四になっちゃう。', '三を作ったね。相手は止めに回るしかないペン。', '三だ！ 次は達四を狙ってるね。'],
+      block3: ['相手の三を止めたね。', 'ここで三をふさぐペン。', '三のはしをおさえて、達四を防いだんだ。', 'あわてず三を止める。大事な一手！', '相手の三にふたをしたね。', '三をふさいで、ひと安心ペン。'],
+      four: ['四！ 相手は止めるしかないね。', '四を作って先手を取ったペン。', '四だ！ これは必ず止めないといけない。'],
+      block4: ['四を止めた！ ここを空けたら負けだもんね。', 'すかさず四をふさぐペン。'],
+      win: ['ここから{c}の勝ちを読み切ったペン！', 'これで{c}の勝ちが決まり！ 読み切りだね。'],
+      two2: ['二を2本作る欲ばりな手。次はどちらでも三が作れるね。'], two: ['自分の石と並べて、二を作ったね。', '二ができた！ 三への足場ペン。', '自分の石と組んで、攻めの準備！'] },
+    ev: { bw: '研究で、黒の必勝が知られている珠型なんだ（旧RIF規定での評価）。黒を持ったら、攻めの形を覚えちゃおう！', ba: '黒が有利とされる珠型だね（旧RIF規定での評価）。',
+      bs: '黒がやや有利とされる珠型だね（旧RIF規定での評価）。', eq: '互角に近いとされる珠型なんだ（旧RIF規定での評価）。', ws: '白がやや有利とされる珠型なんだ（旧RIF規定での評価）。', ww: '白の必勝とされて、黒には不利な珠型なんだ（旧RIF規定での評価）。' },
+  };
   const GOMOKU = {
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
@@ -897,10 +965,44 @@
         if (i === 2) t += '<br>' + this.tx('op.ev.' + g.ev, lang);
         if (n) t += '<br>' + (String(n).startsWith('op.n.') ? this.tx(n, lang, { c: this.tx(v > 0 ? 'p1' : 'p2', lang) }) : L(n, lang));
         notes[String(i)] = t; });
+      const ja = lang === 'ja', hs = g.id.length * 7 + g.no;
+      if (ja) {   // (2026-11-21 lesson loop: ゴイシペン tells the line — see GOMJ)
+        const bd = { b: [], w: [] }, cnt = {};
+        const pk = k => { const a = GOMJ.n[k]; cnt[k] = (cnt[k] || 0) + 1; return a[(hs + cnt[k]) % a.length]; };
+        g.study.forEach((x, i) => { const q = GSQ(x[0]), s = i % 2 ? 2 : 1, n = x[2]; let t = `<b>${i + 1}. ${GOMJ.side(s)}</b>`, say = '';
+          if (i === 0) say = 'まずは黒が、盤のまん中（天元）に打つね。';
+          else if (i === 1) say = g.kind === 'direct' ? '白は黒のすぐとなりに打つ。これを直接打ちっていうんだ。' : '白は黒のななめとなりに打つ。これを間接打ちっていうペン。';
+          else if (i === 2) say = `3手目で、珠型『${g.kanji}』の形ができたね！<br>` + GOMJ.ev[g.ev];
+          else if (n) say = fill(pk(String(n).replace('op.n.', '')), { c: GOMJ.side(x[1] > 0 ? 1 : 2) });
+          else { const r = GMA.info(GMA.analyse({ b: bd.b, w: bd.w, side: s }).bd, q, s); if (r.two >= 2) say = pk('two2'); else if (r.two && i % 3 === 0) say = pk('two'); }
+          if (say) t += '<br>' + say; notes[String(i)] = t; (s === 1 ? bd.b : bd.w).push(q); });
+      }
       const probs = shuffle(g.problems || []).slice(0, 5);
-      return { id: g.id, title: this.name(g, lang), intro: this.tx('op.read', lang, { k: g.kanji, r: g.kana, n: g.name }) + '<br>' + this.tx('op.d.' + g.id, lang), start: { start: null, rule: 'renju', me: 1, last: -1 },
-        steps, notes, probs: probs.map(P => { const sc = (P.sc || []).map(([u, v]) => [GSQ(u), v]), b = sc.slice().sort((a, c) => c[1] - a[1])[0]; return { pos: gPos(P, { rule: 'renju' }), kind: 'best', P: { sc }, ask: this.tx('op.goal', lang), ans: b ? b[0] : -1 }; }),
+      return { id: g.id, title: this.name(g, lang), intro: this.tx('op.read', lang, { k: g.kanji, r: g.kana, n: g.name }) + '<br>' + this.tx('op.d.' + g.id, lang) + (ja ? '<br>ぼくといっしょに、この珠型の流れを1手ずつ見ていこう！' : ''), start: { start: null, rule: 'renju', me: 1, last: -1 },
+        steps, notes, probs: probs.map((P, i) => { const sc = (P.sc || []).map(([u, v]) => [GSQ(u), v]), b = sc.slice().sort((a, c) => c[1] - a[1])[0];
+          const o = { pos: gPos(P, { rule: 'renju' }), kind: 'best', P: { sc }, ask: this.tx('op.goal', lang), ans: b ? b[0] : -1 };
+          if (ja && b) Object.assign(o, this.opJa(o, sc, b, hs + i, i));
+          return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= 75; pr[g.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
+    },
+    opJa(o, sc, b, hs, i) {   // (2026-11-21 lesson loop) the question, hint, praise and correction of an opening problem — see GOMJ / GMA
+      const A = GMA.analyse(o.pos.start), best = b[0], rb = A.of(best), kb = GMA.kind(rb), val = new Map(sc), side = GOMJ.side(A.s);
+      const hk = GOMJ.hint[kb], whyB = GOMJ.why[kb] || GOMJ.shapeWhy(rb);
+      const pickWrong = u => u !== best && u != null && u >= 0 ? u : (sc.slice().sort((a, c) => a[1] - c[1])[0] || [])[0];
+      return { ask: fill(GOMJ.ask[hs % GOMJ.ask.length], { s: side }), hintTx: hk[hs % hk.length], hint: A.ring(best, rb),
+        good: u => { const same = u != null && u !== best; return GOMJ.good[hs % GOMJ.good.length] + (same ? ' きみの手も、いちばんの手とほとんど同じくらい良い手なんだ。' : '') + '<br>' + (same ? '' : whyB); },
+        ng: u0 => { const u = pickWrong(u0), lead = fill(GOMJ.lead[hs % GOMJ.lead.length], { ok: SP('ok', 'ja') });
+          if (u == null) return lead + '<br>' + whyB;
+          const ru = A.of(u), ku = GMA.kind(ru), mine = val.has(u) ? val.get(u) : null, d = mine == null ? null : b[1] - mine;
+          let why;
+          if (kb === 'win' || kb === 'b4' || kb === 'ft') why = GOMJ.miss[kb];
+          else if ((kb === 'b3' || kb === 'b3t') && !ru.b3) why = ru.four ? '四で攻めても、止められたあとに相手の三が残っちゃうね。達四を作られたら止められないんだ。' : GOMJ.miss[kb];
+          else if ((kb === 'four' || kb === 'three') && !ru.four && !ru.three) why = GOMJ.miss[kb];
+          else if (mine != null && mine < -9000) why = 'きみの手だと、相手に勝ちを読み切られる形になっちゃうんだ。';
+          else if (mine == null) why = 'きみの手は、AIが候補にも入れなかった手。ほかの石とのつながりが弱いからね。';
+          else if (d < 80) why = 'きみの手も悪くないけど、AIの評価は少しだけ下がるね。' + (kb === 'shape' ? '緑の点は' + whyB : '');
+          else why = 'きみの手だと石の働きが弱くて、AIの評価がだいぶ下がっちゃう。' + (kb === 'shape' ? '緑の点は' + whyB : '');
+          return lead + '<br>' + why; } };
     },
     points(P, u) {   // = gomoku/app.js problemPoints
       if (P.sc && P.sc.length) {
@@ -1939,6 +2041,7 @@
         if (id === 'reversi' && p.hintMk) { const mk = p.hintMk(); pz().mark(mk.length ? mk : null); say(p.hintTx || X.hintSay); return; }   // (2026-11-21: the lesson's own hint, not the answer ring)
         if (id === 'mancala') { pz().mark(p.base.concat(p.hintMk ? p.hintMk() : [])); say(p.hintTx || X.hintSay); return; }   // (mancala/app.js lsHint: the store, the pits to capture, the threats — never the answer itself)   // (the threats the step's hint names: yours green, the opponent's red)
         if (p.dHint) { pz().mark(p.hint.length ? p.hint.map(q => [q, 'ring']) : null); say(p.hintTx || X.hintSay); return; }   // (dots: the safe lines, or the step's words alone — never the answer)
+        if (id === 'gomoku' && Array.isArray(p.hint) && !p.hint.length && p.hintTx) { say(p.hintTx); return; }   // (2026-11-21 the opening hint: words only when no stones to ring)
         if (p.hint && p.hint.length) { pz().mark((id === 'amazons' && p.marks ? p.marks : []).concat(p.hint.map(q => [q, 'ring']))); say(p.hintTx || X.hintSay); return; }   // (gomoku: the lesson's own hint points and words)
         if (p.kind === 'bgplay') { pz().reset(); pz().mark(p.ans); pz().wait(); say((p.hintTx ? p.hintTx + '<br>' : '') + X.hintSay); return; }   // (backgammon: back to the roll's start, rings on the checkers the best play moves)
         if (p.kind === 'choice') { say(p.hintTx || X.hintSay); return; }
