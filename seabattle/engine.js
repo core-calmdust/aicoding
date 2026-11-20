@@ -121,13 +121,14 @@ function validDraft(types) { if (types.length < MINSHIPS || types.length > MAXSH
 // A player with MINSHIPS or more may stop; one who cannot afford anything left stops by itself. d.turn = -1 when it is over.
 const POOL = new Array(50).fill(0).map((x, i) => i < 5 ? 2 : 0);
 const FIELD_N = 13;   // the destroyer + 13 drawn types (2026-11-20 user: 場の幅を広げる — 7 → 14 types)
+// Balanced field (2026-11-20 user: 攻撃・索敵・防御がバランスよく出るように、枚数のばらつきは可): one of these role splits is drawn,
+// then that many types from each role.
+const FIELD_MIX = [[4, 3, 6], [4, 4, 5], [5, 3, 5], [5, 4, 4]];
 function field(rnd) {
   rnd = rnd || Math.random;
-  for (let t = 0; t < 200; t++) {
-    const others = TYPES.map((_, k) => k).filter(k => k !== 4).sort(() => rnd() - .5).slice(0, FIELD_N), has = (R, n) => R.filter(k => others.includes(k)).length >= n;
-    if (has(ROLE.atk, 3) && has(ROLE.info, 2) && has(ROLE.def, 3)) { const pool = new Array(NT).fill(0); pool[4] = 2; for (const k of others) pool[k] = 2; return pool; }
-  }
-  return POOL.slice();
+  const mix = FIELD_MIX[Math.floor(rnd() * FIELD_MIX.length)], pool = new Array(NT).fill(0); pool[4] = 2;
+  ['atk', 'info', 'def'].forEach((r, i) => { for (const k of ROLE[r].slice().sort(() => rnd() - .5).slice(0, mix[i])) pool[k] = 2; });
+  return pool;
 }
 function draftNew(first, rnd) { const pool = field(rnd), d = { pool, f: pool.slice(), picks: [[], []], done: [false, false], first: first ? 1 : 0, n: 0, turn: first ? 1 : 0, last: null }; return d; }
 function draftLeft(d, p) { return BUDGET - draftCost(d.picks[p]); }
@@ -584,6 +585,6 @@ function winProb(st, me, rnd, n) {
 const COLS = 'ABCDEFGHIJ';
 function cellName(cell) { return COLS[cell % N] + ((cell / N | 0) + 1); }
 
-const E = { ROLE, FIELD_N, calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
+const E = { ROLE, FIELD_N, FIELD_MIX, calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
 if (typeof module !== 'undefined' && module.exports) module.exports = E; else root.SeaEngine = E;
 })(typeof self !== 'undefined' ? self : this);
