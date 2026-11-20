@@ -316,7 +316,7 @@
     load() {
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=2').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
-      return (this.p = Promise.all([voice, getJ('../shogi/lessons.json?v=20261115r'), getJ('../shogi/openings.json?v=20261107l14'),
+      return (this.p = Promise.all([voice, getJ('../shogi/lessons.json?v=20261121k'), getJ('../shogi/openings.json?v=20261107l14'),
         ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261107l14`).catch(() => ({ sets: [] })))])
         .then(([_, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
@@ -1655,6 +1655,7 @@
       pz().wait();
     }
     // (2026-11-12) a partial or wrong answer names the best move in words too (not only the glowing squares)
+    // (2026-11-21 ユーザー：印だけでは0点に見える) shogi / chess: the move itself in notation (☗７九銀, ♘g1–f3); other games: 盤に印を付けた手
     const ANSM = { ja: '正解は盤に印を付けた手です。', en: 'The best move is marked on the board.', zh: '正解已在棋盘上标出。', 'zh-TW': '正解已在棋盤上標出。', ko: '정답은 판에 표시한 수입니다.', es: 'La mejor jugada está marcada en el tablero.', fr: 'Le meilleur coup est marqué sur le plateau.', pt: 'O melhor lance está marcado no tabuleiro.', de: 'Der beste Zug ist auf dem Brett markiert.', ru: 'Лучший ход отмечен на доске.', tr: 'En iyi hamle tahtada işaretli.', id: 'Langkah terbaik ditandai di papan.', hi: 'सबसे अच्छी चाल बोर्ड पर चिह्नित है।', ar: 'أفضل نقلة مُعلَّمة على اللوح.' };
     const ANSW = { ja: '正解は {m}', en: 'Best move: {m}', zh: '正解：{m}', 'zh-TW': '正解：{m}', ko: '정답: {m}', es: 'Mejor jugada: {m}', fr: 'Meilleur coup : {m}', pt: 'Melhor lance: {m}', de: 'Bester Zug: {m}', ru: 'Лучший ход: {m}', tr: 'En iyi hamle: {m}', id: 'Langkah terbaik: {m}', hi: 'सबसे अच्छी चाल: {m}', ar: 'أفضل نقلة: {m}' };
     function moveName(pos, u) {
@@ -1742,7 +1743,7 @@
         return;
       }
       if (pts >= 16) say(`${line('solved') || pick(X.good)} <b>${fill(X.pts, { n })}</b>${p.why ? '<br>' + p.why : ''}`);
-      else { if (p.ans) pz().mark(p.ans); const nm = p.kind !== 'tsume' && p.ans; say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (ANSM[ctx.lang] || ANSM.en) : ''}${p.why ? '<br>' + p.why : ''}`); }   // (the move is shown on the board, not named: no coordinates, 2026-11-14)
+      else { if (p.ans) pz().mark(p.ans); const nm = p.kind !== 'tsume' && p.ans, mvN = nm ? moveName(p.pos, p.ans) : ''; say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSM[ctx.lang] || ANSM.en)) : ''}${p.why ? '<br>' + p.why : ''}`); }   // (the move is shown on the board, not named: no coordinates, 2026-11-14)
       try { chime(pts >= 16); } catch (e) {}
       act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
       if (pts >= 16 && cur.k + 1 < cur.probs.length) { const k = cur.k; autoGo(2400, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); }); }   // (right: the next problem by itself, the meter on 次へ)
