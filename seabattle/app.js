@@ -335,7 +335,7 @@ function draftStep() {
   if (d.turn < 0) { G.phase = 'deploy'; G.busy = false; sfx('ping'); render(); save(); return; }
   if (d.turn === 0) { G.busy = false; render(); return; }
   G.busy = true; render();
-  setTimeout(() => { if (G !== g || G.phase !== 'draft') return; const k = E.draftAI(d, Math.random); E.draftPick(d, k >= 0 ? k : -1); if (k >= 0) { toast('AI：' + t('ship.' + k)); sfx('place'); } save(); draftStep(); }, 850);
+  setTimeout(() => { if (G !== g || G.phase !== 'draft') return; const k = E.draftAI(d, Math.random, G.level); E.draftPick(d, k >= 0 ? k : -1); if (k >= 0) { toast('AI：' + t('ship.' + k)); sfx('place'); } save(); draftStep(); }, 850);
 }
 function draftPickMine(k) {
   if (G.phase !== 'draft' || G.busy || G.draft.turn !== 0) return;
