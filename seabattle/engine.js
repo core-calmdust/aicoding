@@ -116,9 +116,12 @@ const NOAIM = { smoke: 1, command: 1, jam: 1, repair: 1, mine: 1, suppress: 1, w
 // the field (2026-11-20): the destroyer and 6 other types drawn at random, 2 of each — at least one attacker, one scout and one of
 // defence / support — and a fleet takes each type at most once, so the drafts differ from game to game
 const ROLE = { atk: [0, 1, 2, 8, 11, 15, 22, 23, 28, 30, 36, 41, 44, 47, 49], info: [3, 7, 16, 19, 25, 26, 29, 32, 33, 35, 43, 45], def: [5, 6, 9, 10, 12, 13, 14, 17, 18, 20, 21, 24, 27, 34, 37, 38, 39, 40, 42, 46, 48] };
-const BUDGET = 20, MINSHIPS = 3, MAXSHIPS = 6, MAXSAME = 1, CLASSIC = [0, 1, 2, 3, 4], NT = TYPES.length;
+const BUDGET = 20, MINSHIPS = 3, MAXSHIPS = 6, MAXSAME = 2, DUP_EXTRA = 1, CLASSIC = [0, 1, 2, 3, 4], NT = TYPES.length;
 const PRESETS = [[0, 1, 2, 3], [0, 1, 3, 4], [1, 2, 3, 4, 6], [1, 8, 7, 4, 6], [0, 5, 3, 4], [9, 1, 8, 3], [0, 10, 7, 4, 6]];
-function draftCost(types) { let c = 0; for (const t of types) c += TYPES[t].cost; return c; }
+// a second copy of a type is allowed (the one the other side left) and costs 1 more (2026-11-20 user; 2000 games: first mover 51%,
+// 39% of fleets take a double, no double stands out)
+function draftCost(types) { let c = 0; const n = {}; for (const t of types) { c += TYPES[t].cost + (n[t] ? DUP_EXTRA : 0); n[t] = 1; } return c; }
+function pickCost(d, p, k) { return TYPES[k].cost + (d.picks[p].includes(k) ? DUP_EXTRA : 0); }
 function validDraft(types) { if (types.length < MINSHIPS || types.length > MAXSHIPS || draftCost(types) > BUDGET) return false; const n = new Array(NT).fill(0); for (const t of types) { if (!(t >= 0 && t < NT) || ++n[t] > MAXSAME) return false; } return true; }
 // The draft: 2 of each type lie on the table (10 ships); the players pick in turn — A B B A A B B A … — within the budget.
 // A player with MINSHIPS or more may stop; one who cannot afford anything left stops by itself. d.turn = -1 when it is over.
@@ -138,10 +141,10 @@ function field(rnd) {
 }
 function draftNew(first, rnd) { const pool = field(rnd), d = { pool, f: pool.slice(), picks: [[], []], done: [false, false], first: first ? 1 : 0, n: 0, turn: first ? 1 : 0, last: null }; return d; }
 function draftLeft(d, p) { return BUDGET - draftCost(d.picks[p]); }
-function draftCan(d, p, k) { return d.turn === p && !d.done[p] && d.pool[k] > 0 && d.picks[p].length < MAXSHIPS && TYPES[k].cost <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < MAXSAME; }
+function draftCan(d, p, k) { return d.turn === p && !d.done[p] && d.pool[k] > 0 && d.picks[p].length < MAXSHIPS && pickCost(d, p, k) <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < MAXSAME; }
 function draftCanStop(d, p) { return d.turn === p && d.picks[p].length >= MINSHIPS; }
 function draftNext(d) {
-  for (const p of [0, 1]) if (!d.done[p] && (d.picks[p].length >= MAXSHIPS || !TYPES.some((T, k) => d.pool[k] > 0 && T.cost <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < MAXSAME))) d.done[p] = true;
+  for (const p of [0, 1]) if (!d.done[p] && (d.picks[p].length >= MAXSHIPS || !TYPES.some((T, k) => d.pool[k] > 0 && pickCost(d, p, k) <= draftLeft(d, p) && d.picks[p].filter(x => x === k).length < MAXSAME))) d.done[p] = true;
   if (d.done[0] && d.done[1]) { d.turn = -1; return; }
   for (let g = 0; g < 4; g++) { d.n++; const p = (((d.n + 1) >> 1) & 1) ^ d.first; if (!d.done[p]) { d.turn = p; return; } }
 }
@@ -160,7 +163,7 @@ function draftAI(d, rnd) {
     let v = W[k] + rnd() * .5;
     if (k === 10) v += .08 * foe.filter(x => TYPES[x].skill).length;                      // jam: better the more skills the other side has
     if (k === 9) v += .1 * mine.filter(x => TYPES[x].skill).length - .15;               // command: wants other skills to recharge
-    const after = left - TYPES[k].cost, slots = Math.max(0, 4 - mine.length - 1); if (after < slots * 2) v -= 2;     // keep room for a fleet of four
+    const after = left - pickCost(d, p, k), slots = Math.max(0, 4 - mine.length - 1); if (after < slots * 2) v -= 2;     // keep room for a fleet of four
     if (v > bv) { bv = v; best = k; }
   }
   return best;
@@ -591,6 +594,6 @@ function winProb(st, me, rnd, n) {
 const COLS = 'ABCDEFGHIJ';
 function cellName(cell) { return COLS[cell % N] + ((cell / N | 0) + 1); }
 
-const E = { ROLE, FIELD_N, FIELD_MIX, FIELD_ONE, calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
+const E = { pickCost, DUP_EXTRA, ROLE, FIELD_N, FIELD_MIX, FIELD_ONE, calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
 if (typeof module !== 'undefined' && module.exports) module.exports = E; else root.SeaEngine = E;
 })(typeof self !== 'undefined' ? self : this);
