@@ -452,6 +452,134 @@
       return 0;
     },
   };
+  /* (2026-11-21 lesson loop) the chess opening practice in ナイトン's words, Japanese: the intro and the line's notes written for him
+     (3D, no coordinates — other languages keep atlas/nocoord / openings.json), a varied question, a hint from what the most played
+     move does, and after the answer why it is played and what yours gives up — from the board (development, centre pawns, castling,
+     recapture, pins, pieces left to be taken) and the stored game counts (openings.json cand: [move, games], n = games). */
+  const CHJ_OP = {
+    ask: ['{s}の番！ 『{n}』で、強い人がいちばん指した手はどれかな？', '『{n}』のこの場面。{s}ならどう指す？', 'さあ{s}の一手。定跡どおりに指せるかな？', 'ここで{s}がいちばんよく選ぶ手、わかるかな？', '{s}の番。手順を思い出して、本筋の手を指してみて！'],
+    pct: ['強い人の対局の{a}%で、この手が選ばれているんだ。', '実戦では{a}%がこの手。いちばん人気！', '強い人の{a}%が指した、定跡の本筋の手。', 'この場面では{a}%の人がこれを選ぶ。覚えておこう！'],
+    lead: ['{m}が定跡の手。', '正解は{m}だったんだ。', 'ここは{m}を指したかったね。', '本筋は{m}ピョン。'],
+    intro: {
+      italian: 'イタリアン・ゲームは、何百年も前から指されている古典の序盤。白はビショップを斜めに出して、黒のキングの横のポーンをねらうピョン！<br>このポーンはキングしか守っていない弱点なんだ。いまは中央を支えて、キャスリングしてからじっくり駒組みするのが主流だね。',
+      ruy: 'ルイ・ロペスは「スペイン」とも呼ばれる、チェスの王道の序盤。白はビショップで黒のナイトをねらって、そのナイトが守る中央のポーンにじわじわ圧力をかけるピョン。<br>黒はすぐポーンでビショップを追うのが定番。そこから長い駆け引きが始まるんだ！',
+      sicilian: 'シシリアン・ディフェンスは、トップレベルでいちばん多く指される黒の応手。黒は左寄りのポーンで、中央を横から押さえるピョン！<br>左右がちがう形になるから、黒も勝ちをねらいやすい。白がポーンを交換する「オープン・シシリアン」が主流なんだ。',
+      french: 'フレンチ・ディフェンスは、守りの堅さが自慢の序盤ピョン。黒はポーンを1マス進めて支えを作り、隣のポーンを2マス進めて白の中央に挑むんだ。<br>中央が閉じたら、ポーンの鎖の根元を横から攻めるのが黒の作戦。クイーン側のビショップが出にくいのが弱点だね。',
+      caro: 'カロ・カン・ディフェンスは、フレンチの仲間みたいな序盤。ポーンを2マス進めて中央に挑む前に、手前のポーンを1マス進めて支えておくピョン。<br>だからクイーン側のビショップを自由に出せるんだ。ポーンの形が崩れにくくて、手堅く戦いたい人に人気だね。',
+      scandi: 'スカンジナビアン・ディフェンスでは、黒が1手目からポーンを2マス進めて、白の中央のポーンに体当たり！<br>取り合ったあと、早めにクイーンが出てくるのが特徴。クイーンは追われやすいから、安全な場所に置いて、すばやく駒を出すのがコツなんだ。',
+      qgd: 'クイーンズ・ギャンビット辞退は、クイーンの前のポーンから始まる王道の形。白は隣のポーンを差し出して、黒の中央のポーンをどかそうとするピョン。<br>黒は取らずに、キングの前のポーンでがっちり守るんだ。あとは駒を自然に出して、キャスリングするのが基本の作戦だね。',
+      slav: 'スラブ・ディフェンスも、クイーンズ・ギャンビットへの応じ方のひとつ。黒はキングの前ではなく、反対隣のポーンを1マス進めて中央を守るピョン。<br>これならクイーン側のビショップを外に出せる。差し出されたポーンを取ってから守る、やわらかい指し方もできるんだ。',
+      kid: 'キングズ・インディアン・ディフェンスは、攻め好きの黒に人気の序盤ピョン！ 黒はビショップを長い対角線に置いて、まずキングを安全にする。中央はいったん白にゆずるんだ。<br>駒組みが終わったら、ポーンで中央に反撃して、キング側ではポーンを押し上げて攻めるのが定番だね。',
+      nimzo: 'ニムゾ・インディアン・ディフェンスは、駒の働きとポーンの形のバランスを争う、ちょっと大人な序盤ピョン。<br>黒はビショップで白のナイトをピンして、白が中央を広げるのをじゃまするんだ。ナイトと交換して、白のポーンの形を崩すことも多いね。',
+      london: 'ロンドン・システムは、相手が何をしてきても、だいたい同じ形を作れる白の序盤ピョン。<br>ポーンで道をふさぐ前にビショップを外へ出して、あとはポーンとナイトでがっちり組む。覚えることが少なくて安定してるから、初心者から上級者まで人気なんだ。',
+      english: 'イングリッシュ・オープニングは、白がクイーン側のポーンから始める序盤ピョン。中央を横から押さえるから、ゆったりした戦いになりやすいんだ。<br>ナイトとビショップを組み合わせて、じわじわ中央をねらうのが定番の形。ほかの序盤とはひと味ちがうね！',
+    },
+    notes: {
+      italian: { 2: 'ナイトを出して、黒の中央のポーンをねらう。ぼくの仲間の出番ピョン！', 3: '黒もナイトを出して、中央のポーンを守る形。', 4: 'ビショップが、黒のキングの横のポーンをにらんでる！ ここはキングしか守っていない弱いところなんだ。', 5: '黒ももう1つのナイトを出して、白の中央のポーンをねらう。「ツー・ナイツ・ディフェンス」って呼ばれる形だね。', 6: 'ポーンを1マスだけ進めて、中央のポーンをがっちり守る。いまいちばん人気の、落ち着いた指し方ピョン。', 8: 'このポーンは、あとで隣のポーンを進めて中央を広げるための下準備。気づいたかな？', 10: 'キャスリングでキングを安全な場所へ！ 序盤の基本は「駒を出す・中央を取る・キャスリング」の3つだよ。' },
+      ruy: { 4: 'ビショップで黒のナイトに圧力！ このナイトは、中央のポーンを守っている大事な駒なんだ。', 5: '「モルフィー・ディフェンス」。ポーンでビショップに「引くの？ 取るの？」って聞いてるんだね。', 6: '白はビショップを斜め後ろに下げて、ナイトへの圧力をキープ。', 8: '中央のポーンを取られても、あとでルークで取り返せる。だから先にキャスリングしておくピョン！', 11: 'ポーンでビショップを追い払って、クイーン側に陣地を広げる手だよ。', 14: 'このポーンは、ビショップの逃げ道を作りつつ、隣のポーンで中央を広げる準備。一手で二役だね！', 15: '出た、「マーシャル・アタック」！ 黒はポーンを1つ捨てて、駒の勢いで攻めかかるんだ。' },
+      sicilian: { 1: '左寄りのポーンを2マス進めて、中央を横から押さえる。左右非対称の戦いのはじまり！', 4: '白はクイーンの前のポーンを進めて交換をせまる。これが「オープン・シシリアン」だね。', 5: '黒はポーンを交換。半分開いた列ができて、あとで反撃に使えるようになるんだ。', 7: 'ナイトで白の中央のポーンをねらう。白は次にナイトで守るよ。', 9: '「ナイドルフ・バリエーション」！ この端寄りのポーンで、白のナイトやビショップが入ってくるマスをふさぐピョン。', 12: '白はキング側のポーンを2マス進めて、中央へ突撃する準備。かなり攻撃的だね！', 16: '白はクイーン側にキャスリング。お互いが反対側のキングを攻める、はげしい戦いになるよ。' },
+      french: { 1: 'キングの前のポーンを1マスだけ。次に隣のポーンを2マス進めるための支えなんだ。', 3: 'さあ、隣のポーンを2マス！ 白の中央のポーンにすぐ挑む。', 6: '白は中央のポーンを押して、黒のナイトを追い払う。これで中央が閉じたね。', 8: 'キング側のポーンも2マス進めて、押し出したポーンを後ろから支えるピョン。', 9: '黒は左寄りのポーンを2マス進めて、白のポーンの鎖の根元をつつく！ フレンチの基本の反撃だよ。' },
+      caro: { 1: '隣のポーンを1マス進めて、次の2マス前進を支える準備！', 4: '白は中央のポーンを押す。「アドバンス・バリエーション」っていうんだ。', 5: 'ビショップをポーンの鎖の外へ出せる。これがカロ・カンの大きな長所だね！', 6: '端のポーンを2マス進めて、ビショップを追い回す積極的な手。黒もポーンで止めるピョン。', 9: 'ビショップどうしを交換して、白の攻めの駒を1つ減らす。' },
+      scandi: { 2: 'まずは白がポーンを取る。', 3: '黒はクイーンで取り返す！ こんなに早くクイーンが出るのは、この序盤ならではだね。', 4: '白はナイトでクイーンを攻撃。駒を出しながら手も稼げる、一石二鳥ピョン。', 5: 'クイーンは斜めの端のマスへ。ここなら安全だし、あとで白のナイトを縛ることもねらえるんだ。', 9: 'ビショップを出して、白のナイトをピン！ ナイトが動くと、後ろのクイーンが取られちゃう形だよ。' },
+      qgd: { 2: '隣のポーンを差し出す「クイーンズ・ギャンビット」！ 黒の中央のポーンをどかすのがねらい。', 3: '黒は取らずに、キングの前のポーンを1マス進めて中央を守る。これが「辞退」なんだ。', 6: '白は先にポーンを交換する。「エクスチェンジ・バリエーション」って呼ばれる形だね。', 7: 'キングの前のポーンで取り返すと、クイーン側のビショップの通り道が開くピョン！', 8: '白のビショップが、黒のナイトをピン。ナイトの後ろにはクイーンがいるよ。' },
+      slav: { 3: '反対隣のポーンで中央を守る！ ビショップの通り道をふさがないのが、スラブのいいところ。', 7: 'キングの前のポーンも加えた形は「セミ・スラブ」。とっても堅い陣形なんだ。', 8: '白のビショップが黒のナイトをピンして、圧力をかけるピョン。' },
+      kid: { 5: 'ビショップを長い対角線に置く「フィアンケット」。盤の向こうまでにらみがきくピョン。', 6: '白はキングの前のポーンも2マス進めて、大きな中央を作る。黒はいったんそれを許すんだ。', 11: 'ここで黒はキングの前のポーンを2マス！ 中央に反撃開始だね。', 14: '白はポーンをもう1マス押して中央を閉じ、クイーン側で攻める作戦。', 15: '黒のナイトはキング側へ回る。あとでポーンを押し上げて攻めるための準備なんだ。', 16: '白はクイーン側のポーンを2マス進めて突撃！ 「バヨネット・アタック」っていうよ。' },
+      nimzo: { 5: 'ビショップで白のナイトをピン！ 白がキングの前のポーンを進めるのを防いでる。', 6: '白はキングの前のポーンを1マスだけ進めて、落ち着いて駒を出す。「ルービンシュタイン・バリエーション」だよ。', 11: '黒はビショップとナイトを交換して、白のポーンを縦に2つ重ねさせる。これが「ダブルポーン」なんだ。' },
+      london: { 2: 'ロンドンの目印！ ポーンで道をふさぐ前に、ビショップを外へ出しておく。', 4: 'キングの前のポーンを1マス進めて、ポーンの形を固める。ビショップは先に出したから、もう道はふさがらないピョン。', 6: 'クイーン側のポーンも1マス進めて、中央のポーンを支える。崩れにくい形だね！', 8: 'ナイトはポーンの後ろから出す。ポーンのじゃまをしないための置き場所なんだ。' },
+      english: { 0: 'クイーン側のポーンを2マス進めて、中央を横から押さえる。ここからスタート！', 4: '白は中央のポーンも2つ加えて、中央を大きく取る。黒はキングズ・インディアンの形で迎え撃つピョン。', 9: 'お互いキャスリングが済んで、ここからは中盤の作戦を考える段階だよ。' },
+    },
+  };
+  const CH_PN = { p: 'ポーン', n: 'ナイト', b: 'ビショップ', r: 'ルーク', q: 'クイーン', k: 'キング' }, CH_VAL = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 100 };
+  const chSq = s => (+s[1] - 1) * 8 + s.charCodeAt(0) - 97, chW = ch => ch === ch.toUpperCase();
+  function chBoard(fen) { const b = Array(64).fill(''); String(fen).split(' ')[0].split('/').forEach((row, ri) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) f += +ch; else { b[(7 - ri) * 8 + f] = ch; f++; } } }); return b; }
+  function chAtt(b, q, white) {   // the cheapest piece of that side attacking square q ('' when none)
+    let best = ''; const take = ch => { if (!best || CH_VAL[ch.toLowerCase()] < CH_VAL[best.toLowerCase()]) best = ch; }, r = q >> 3, f = q & 7, mine = ch => ch && chW(ch) === white;
+    const at = (rr, ff) => rr >= 0 && rr < 8 && ff >= 0 && ff < 8 ? b[rr * 8 + ff] : null;
+    for (const df of [-1, 1]) { const ch = at(white ? r - 1 : r + 1, f + df); if (mine(ch) && ch.toLowerCase() === 'p') take(ch); }
+    for (const [dr, df] of [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]]) { const ch = at(r + dr, f + df); if (mine(ch) && ch.toLowerCase() === 'n') take(ch); }
+    for (let dr = -1; dr <= 1; dr++) for (let df = -1; df <= 1; df++) { if (!dr && !df) continue; const ch = at(r + dr, f + df); if (mine(ch) && ch.toLowerCase() === 'k') take(ch);
+      const kinds = dr && df ? 'bq' : 'rq'; let rr = r + dr, ff = f + df; while (at(rr, ff) === '') { rr += dr; ff += df; } const c2 = at(rr, ff); if (mine(c2) && kinds.includes(c2.toLowerCase())) take(c2); }
+    return best;
+  }
+  function chMove(b, u) {   // the board after a UCI move (castling moves the rook, en passant takes the pawn)
+    const n = b.slice(), a = chSq(u), z = chSq(u.slice(2, 4)), pc = n[a], lo = pc.toLowerCase();
+    if (lo === 'p' && (a & 7) !== (z & 7) && !n[z]) n[(a & ~7) | (z & 7)] = '';
+    n[z] = u[4] ? (chW(pc) ? u[4].toUpperCase() : u[4]) : pc; n[a] = '';
+    if (lo === 'k' && Math.abs((a & 7) - (z & 7)) === 2) { const rf = (z & 7) === 6 ? 7 : 0, rt = (z & 7) === 6 ? 5 : 3; n[(a & ~7) | rt] = n[(a & ~7) | rf]; n[(a & ~7) | rf] = ''; }
+    return n;
+  }
+  function chFacts(fen, u) {   // what a move does, for the guide's words
+    const b = chBoard(fen), white = String(fen).split(' ')[1] !== 'b', a = chSq(u), z = chSq(u.slice(2, 4)), pc = b[a] || '', lo = pc.toLowerCase();
+    const home = white ? 0 : 7, cap = b[z] ? b[z].toLowerCase() : lo === 'p' && (a & 7) !== (z & 7) ? 'p' : '';
+    const mat = w => b.reduce((s, ch) => s + (ch && chW(ch) === w && ch.toLowerCase() !== 'k' ? CH_VAL[ch.toLowerCase()] : 0), 0);
+    const nb = chMove(b, u), att = lo === 'k' ? '' : chAtt(nb, z, !white), def = chAtt(nb, z, white);
+    const F = { pc: lo, cap, castle: lo === 'k' && Math.abs((a & 7) - (z & 7)) === 2, king: lo === 'k', behind: mat(white) < mat(!white),
+      dev: (lo === 'n' || lo === 'b') && (a >> 3) === home, centre: lo === 'p' && [3, 4].includes(a & 7), side: lo === 'p' && [2, 5].includes(a & 7), flank: lo === 'p' && [0, 1, 6, 7].includes(a & 7),
+      move: +String(fen).split(' ')[5] || 1, two: lo === 'p' && Math.abs((a >> 3) - (z >> 3)) === 2 };
+    F.fian = F.flank && !F.two && [1, 6].includes(a & 7) && (a >> 3) === (white ? 1 : 6);
+    if (att && (!def || CH_VAL[att.toLowerCase()] < CH_VAL[lo]) && !(cap && CH_VAL[cap] >= CH_VAL[lo])) F.hang = CH_PN[att.toLowerCase()];
+    if (lo === 'p') { for (const df of [-1, 1]) { const r2 = (z >> 3) + (white ? 1 : -1), f2 = (z & 7) + df; if (r2 >= 0 && r2 < 8 && f2 >= 0 && f2 < 8) { const ch = nb[r2 * 8 + f2]; if (ch && chW(ch) !== white && 'nbrq'.includes(ch.toLowerCase())) F.chase = CH_PN[ch.toLowerCase()]; } } }
+    if ('bqr'.includes(lo)) {   // a pin: an enemy piece on the line, a bigger one behind it
+      const dirs = lo === 'b' ? [[1, 1], [1, -1], [-1, 1], [-1, -1]] : lo === 'r' ? [[1, 0], [-1, 0], [0, 1], [0, -1]] : [[1, 1], [1, -1], [-1, 1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]];
+      for (const [dr, df] of dirs) { let r = (z >> 3) + dr, f = (z & 7) + df; const seen = []; while (r >= 0 && r < 8 && f >= 0 && f < 8 && seen.length < 2) { const ch = nb[r * 8 + f]; if (ch) { if (chW(ch) === white) break; seen.push(ch.toLowerCase()); } r += dr; f += df; }
+        if (seen.length === 2 && CH_VAL[seen[1]] > CH_VAL[seen[0]] && seen[0] !== 'p') { F.pin = [CH_PN[seen[0]], CH_PN[seen[1]]]; break; } }
+    }
+    if (!F.pin && lo !== 'p' && lo !== 'k') for (let q = 0; q < 64; q++) { const ch = nb[q]; if (!ch || chW(ch) === white || ch.toLowerCase() === 'k') continue; const bb = nb.slice(); bb[z] = '';
+      if (chAtt(nb, q, white) && !chAtt(bb, q, white) && (!chAtt(nb, q, !white) || CH_VAL[ch.toLowerCase()] > CH_VAL[lo])) { F.aim = CH_PN[ch.toLowerCase()]; break; } }
+    return F;
+  }
+  function chWhyJa(F) {   // why the move is played (one or two short sentences)
+    if (F.castle) return 'キャスリングでキングを端の安全な場所へ移して、ルークも働きやすくする手なんだ。';
+    if (F.cap && F.behind) return `取られた駒をすぐ${CH_PN[F.cap]}で取り返す手。ここで取り返さないと、駒損のままになっちゃう！`;
+    if (F.cap) return `相手の${CH_PN[F.cap]}を取る手。ここで取っておくのが、この形の定跡なんだ。`;
+    if (F.pin) return `${CH_PN[F.pc]}で相手の${F.pin[0]}をピン！ ${F.pin[0]}が動くと、後ろの${F.pin[1]}が取られちゃう形なんだ。`;
+    if (F.chase) return `ポーンで相手の${F.chase}を追い払う手。追われた${F.chase}は、逃げ場所を考えなきゃいけない。`;
+    if (F.dev) return `まだ動いていない${CH_PN[F.pc]}を外へ出す手。序盤は駒を早く出すのが大事ピョン！` + (F.aim ? ` 相手の${F.aim}もねらえるおまけつき。` : '');
+    if (F.centre) return '中央のポーンを進めて、盤のまん中を押さえる手。中央を取ると、駒がぐんと動きやすくなるピョン！';
+    if (F.side) return '中央の隣のポーンで、まん中のマスを横から支える手だピョン。';
+    if (F.aim) return `${CH_PN[F.pc]}で相手の${F.aim}をねらう手。相手は守りに1手使わなきゃいけないピョン。`;
+    if (F.fian) return '端に近いポーンを1マス進めて、ビショップを長い対角線に出す準備をする手なんだ。';
+    if (F.flank && F.two) return '端のポーンを2マス進めて、相手の陣地に攻めかかる手。';
+    if (F.flank) return '端のポーンで、相手の駒が入ってくるマスを先にふさいでおく手なんだ。';
+    return 'この形で、強い人たちが本筋と考えている手だピョン。';
+  }
+  function chShortJa(F) { return F.castle ? 'キングを安全にできる' : F.cap && F.behind ? '駒を取り返せる' : F.cap ? '駒を取れる' : F.pin ? 'ピンをかけられる' : F.chase ? '相手の駒を追い払える' : F.dev ? '新しい駒を出せる' : F.centre ? '中央を押さえられる' : F.side ? 'まん中を横から支えられる' : F.aim ? '相手の駒をねらえる' : '定跡どおりの形になる'; }
+  function chHintJa(F, k) {
+    if (F.castle) return 'キングはまだ真ん中にいるね。安全な場所へ逃がす手が光ってるピョン。';
+    if (F.cap && F.behind) return '駒の数を数えてみて。いま、どっちが得をしてる？ 光ってる手がヒント！';
+    if (F.cap) return '光ってる手を見てね。取れる相手の駒がありそうだピョン！';
+    if (F.pin) return `相手の${F.pin[0]}の後ろに、何がいるか見てみて！ 光ってる手がヒントだよ。`;
+    if (F.chase) return `相手の${F.chase}のすぐ近くまでポーンを進めたら、どうなる？`;
+    if (F.dev) return ['まだ一度も動いていない駒を探してみて。光ってるところがヒント！', '序盤の基本は「駒を出す」。光ってる駒が、出番を待ってるピョン！'][k % 2];
+    if (F.centre || F.side) return '盤のまん中の4マスを、だれが押さえてるか見てみよう。光ってる手がヒント！';
+    return '光ってる手が、強い人がいちばん選んだ手。指したあとの形を想像してみて！';
+  }
+  function chOpJa(o, name, hs, i) {
+    const P = o.P, C = P.cand || [], N = P.n || C.reduce((s, x) => s + x[1], 0) || 1, A = o.ans, side = String(o.pos).split(' ')[1] === 'b' ? '黒' : '白';
+    const pc = c => Math.max(1, Math.round(c / N * 100)), cnt = new Map(C), FA = chFacts(o.pos, A), k = hs + i;
+    const nm = /[a-h][1-8]/.test(name) ? 'この序盤' : name;
+    const ask = fill(CHJ_OP.ask[k % CHJ_OP.ask.length], { n: nm, s: side }).replace('『この序盤』', 'この序盤');
+    const good = u => { if (u && u !== A && cnt.has(u)) return `{x}も人気の手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なんだ。`;
+      const w = chWhyJa(FA); return w + (/！$/.test(w) ? ' ' : '') + fill(CHJ_OP.pct[k % CHJ_OP.pct.length], { a: pc(cnt.get(A) || 0) }); };
+    const ng = u0 => {
+      let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0]; if (!u) return CHJ_OP.lead[k % CHJ_OP.lead.length] + chWhyJa(FA);
+      const out = [CHJ_OP.lead[k % CHJ_OP.lead.length]];
+      if (cnt.has(u)) { const b = pc(cnt.get(u)), a = pc(cnt.get(A)); out.push(b >= a ? `{x}も{m}と同じくらい指される手（${b}%）。{m}のほうがわずかに多いから、こっちを正解にしているんだ。` : b * 2 >= a ? `{x}もよく指される手（${b}%）。でも{m}なら${a}%で、こっちがいちばんの本筋なんだ。` : `{x}も実戦で指される手だけど、${b}%だけ。{m}なら${a}%の人が選んでいて、${chShortJa(FA)}んだ。`); return out.join(''); }
+      let F; try { F = chFacts(o.pos, u); } catch (e) { F = {}; }
+      if (F.hang) out.push(`{x}だと、その${CH_PN[F.pc]}が相手の${F.hang}に取られて損しちゃう！`);
+      else if (FA.cap && FA.behind && !F.cap) out.push('{x}だと取り返しそびれて、駒損のままになっちゃう。');
+      else if (F.king && !F.castle) out.push('{x}でキングが動くと、もうキャスリングできなくなっちゃうんだ。');
+      else if (FA.castle) out.push('{x}だとキャスリングが遅れて、キングが真ん中に残っちゃう。');
+      else if (F.pc === 'q' && F.move <= 10 && !F.cap) out.push('{x}のように序盤でクイーンを動かすと、相手の駒に追い回されて手損しやすいんだ。');
+      else if (F.pc === 'r') out.push('ルークは序盤ではまだ働きにくい駒。先にナイトやビショップを出そう！');
+      else if (FA.dev && (F.pc === 'n' || F.pc === 'b') && !F.dev) out.push('{x}は同じ駒をもう一度動かす手。まだ出ていない駒を先に出そう！');
+      else if (FA.dev && F.pc === 'p') out.push('{x}だとポーンの手で1手使っちゃう。まだ出ていない駒を出すほうが先ピョン。');
+      else if (F.flank) out.push('{x}の端のポーンは、中央の争いにはあまり役立たないんだ。');
+      else out.push(`{x}は強い人の対局ではほとんど指されない手。{m}なら${chShortJa(FA)}から、こっちを選びたい！`);
+      return out.join('');
+    };
+    return { ask, hintTx: chHintJa(FA, k), good, ng };
+  }
   const CHESS = {
     LKEY: 'aicoding-chess-lessons', OKEY: 'aicoding-chess-open', data: null, I: null,
     load() {
@@ -494,10 +622,11 @@
       const s = this.data.op.sets.find(x => x.id === key); if (!s) return null;
       const probs = shuffle(s.problems || []).slice(0, 5);
       const nc = NC.chess || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the texts without coordinates)
-      const IN = nc['op:' + s.id + '/intro'] || s.intro;
-      return { id: s.id, title: L(s.title, lang), intro: (L(IN, lang) || []).join ? L(IN, lang).join('<br>') : L(IN, lang), start: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+      const IN = nc['op:' + s.id + '/intro'] || s.intro, ja = lang === 'ja';
+      if (ja && CHJ_OP.notes[s.id]) Object.entries(CHJ_OP.notes[s.id]).forEach(([k, v]) => { notes[k] = { ja: v }; });   // (2026-11-21 lesson loop: ナイトン's own lines)
+      return { id: s.id, title: L(s.title, lang), intro: ja && CHJ_OP.intro[s.id] ? CHJ_OP.intro[s.id] : (L(IN, lang) || []).join ? L(IN, lang).join('<br>') : L(IN, lang), start: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
         steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
-        probs: probs.map(p => ({ pos: p.fen, kind: 'best', P: p, ans: p.cand && p.cand[0][0] })),
+        probs: probs.map((p, i) => { const o = { pos: p.fen, kind: 'best', P: p, ans: p.cand && p.cand[0][0] }; if (ja && o.ans) try { Object.assign(o, chOpJa(o, L(s.title, 'ja'), s.id.length * 3, i)); } catch (e) { console.warn('[lessons3d] chess opening', e); } return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
     points(P, u) {   // = chess/app.js problemPoints (the stored scores)
@@ -2189,7 +2318,7 @@
       }
       // (2026-11-21) {m} / {x} in the lesson's words (chess) → the best move / yours; a wrong answer gets the lesson's ng words, or the why without its 「正解！」
       const Wm = t => t && /\{[mx]\}/.test(t) ? fill(t, { m: '<b>' + (moveName(p.pos, p.ans) || SP('ok', ctx.lang)) + '</b>', x: '<b>' + (moveName(p.pos, u) || '') + '</b>' }) : t;
-      const whyR = Wm(p.why), whyW = Wm((id === 'shogi' && p.ng ? p.ng(u) : '') || p.ngTx || (p.why || '').replace(/^\s*(正解|Correct|Right)[！!]\s*/, ''));   // (shogi: why the move played falls short, 2026-11-21)
+      const whyR = Wm(id === 'chess' && typeof p.good === 'function' ? p.good(u) : p.why), whyW = Wm(((id === 'shogi' || id === 'chess') && p.ng ? p.ng(u) : '') || p.ngTx || (p.why || '').replace(/^\s*(正解|Correct|Right)[！!]\s*/, ''));   // (shogi: why the move played falls short, 2026-11-21)
       if (pts >= 16) say(`${line('solved') || pick(X.good)} <b>${fill(X.pts, { n })}</b>${whyR ? '<br>' + whyR : ''}`);
       else { if (p.ans) pz().mark(p.ans); const mvN0 = p.kind !== 'tsume' && p.ans ? moveName(p.pos, p.ans) : '', nm = p.kind !== 'tsume' && p.ans && !(mvN0 && whyW && whyW.replace(/<[^>]+>|\s/g, '').includes(mvN0.replace(/\s/g, ''))), mvN = nm ? mvN0 : ''; say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSP[ctx.lang] || ANSP.en)) : ''}${whyW ? '<br>' + whyW : ''}`);
         if (nm && !mvN) { const k = cur.k, mk = p.ans; later(async () => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz() || !pz().play) return; try { let r = await pz().play(mk); if (r === false) { pz().undo(1); await sleep(250); r = await pz().play(mk); } if (r === false) return; await sleep(1600); if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark(mk); } catch (e) { console.warn('[lessons] show move', e); } }, 1000); } }   // (the move is shown on the board, not named: no coordinates, 2026-11-14)
