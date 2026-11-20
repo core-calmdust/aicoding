@@ -712,12 +712,13 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 /* 実績 (2026-11-21): one tile per group (共通 + each game); the open one's awards sit right under its row — the panel spans the
    whole grid, and 'dense' lets the tiles after it fill the rest of the tile's own row */
 .anear{margin:0 0 18px}.anear .glh{margin-bottom:10px}
+.agsec{margin:0 0 18px}.agsec .glh{margin-bottom:10px}.agsec:last-child{margin-bottom:0}
 .agl{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));grid-auto-flow:row dense;gap:10px}
 .agt{display:flex;align-items:center;gap:10px;min-width:0;padding:9px 12px 9px 9px;border-radius:20px;font:inherit;color:inherit;text-align:start;cursor:pointer;position:relative;transition:transform .12s,box-shadow .12s}
 .agt .pic{flex:none;width:52px;height:52px;display:grid;place-items:center}
 .agt .pic img{width:52px;height:52px;object-fit:contain;display:block}.agt .pic img.flat{width:40px;height:40px;border-radius:11px}
 .agt .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
-.agt .tx b{font-weight:900;font-size:14.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agt .tx b{font-weight:900;font-size:14.5px;line-height:1.25;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}   /* (a long name takes a second line: never cut to "ドット・アンド・ボッ…") */
 .agt .pr{display:flex;align-items:center;gap:8px}.agt .pr .bar{flex:1;height:8px}
 .agt .pr em{flex:none;font-style:normal;font-family:var(--round);font-weight:700;font-size:12px;color:var(--ink2);min-width:3.2em;text-align:end}
 .agt.full .pr em{color:var(--mint2)}.agt.full .pr em::after{content:' ✓'}
@@ -980,6 +981,7 @@ html.skdark .agp{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.
   .aseg button{flex:1;border:0;background:none;border-radius:99px;padding:6px 4px;font-weight:900;font-size:12.5px;color:var(--ink2);min-height:32px}
   .aseg button[aria-pressed=true]{background:var(--ink);color:#fff}
   .anear{margin-bottom:12px}.anear .glh{margin-bottom:7px;font-size:14.5px}
+  .agsec{margin-bottom:12px}.agsec .glh{margin-bottom:7px;font-size:14.5px}
   .agl{grid-template-columns:1fr;gap:6px}
   .agt{gap:9px;padding:6px 10px 6px 7px;border-radius:16px}
   .agt .pic{width:42px;height:42px}.agt .pic img{width:42px;height:42px}.agt .pic img.flat{width:32px;height:32px;border-radius:9px}
@@ -2375,7 +2377,7 @@ html.bv-on:not(#_) .msbtn,html.rec-on:not(#_) .msbtn,html[data-pg=museum]:not(#_
     <h2 class="h" id="hAch"></h2>
     <div class="achsum" id="achSum"></div>
     <div class="anear" id="achNear" hidden></div>
-    <div class="agl" id="achList"></div>
+    <div class="agsecs" id="achList"></div>
   </section>
 
   <!-- GACHA + SHOP (one page since 2026-11-06: the gacha on top, the shop below; the tab is called ガチャ) -->
