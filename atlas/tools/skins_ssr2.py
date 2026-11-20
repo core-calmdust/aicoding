@@ -13,6 +13,10 @@ VW, VH, OW, OH = 1920, 1200, 2880, 1800
 # portrait version (atlas/tools/skins_tall.py): the same scene with 1800 more units of sky on top (TALL['on']),
 # EXT = the extension's fill colour and any extra pieces drawn in it (clouds / stars)
 TALL = {'on': False, 'col': '#ffffff', 'extra': ''}
+# (2026-11-20) the moving parts of a scene (clouds, boats, the train, fish, balloons …) are drawn by the page
+# (atlas/skins-fx.js) so they can move: MV['on'] leaves them out of the picture
+MV = {'on': True}
+def still(x): return '' if MV['on'] else x
 EXTH = 1800
 
 def doc(defs, body):
@@ -41,7 +45,8 @@ def hill(y, amp, col, seed, n=7, bottom=VH):
     r = RNG(seed); pts = [(-60 + i * (VW + 120) / (n - 1), y + (r.random() - .5) * 2 * amp) for i in range(n)]
     return f'<path d="{smooth_path(pts, bottom)}" fill="{col}"/>'
 
-def cloud(x, y, s, col='#ffffff', shade='#e3edf6'):
+def cloud(x, y, s, col='#ffffff', shade='#e3edf6', keep=False):
+    if MV['on'] and not keep: return ''
     lobes = [(-.55, .02, .3), (-.2, -.2, .42), (.25, -.12, .38), (.58, .04, .28)]
     def shape(dy):
         return ''.join(f'<circle cx="{x + lx * s:.1f}" cy="{y + (ly + dy) * s:.1f}" r="{lr * s:.1f}"/>' for lx, ly, lr in lobes) + f'<rect x="{x - .82 * s:.1f}" y="{y + (dy - .02) * s:.1f}" width="{1.68 * s:.1f}" height="{.3 * s:.1f}" rx="{.15 * s:.1f}"/>'
@@ -106,9 +111,9 @@ def venice():
     g.append(''.join(f'<rect x="{x}" y="{y}" width="{w}" height="6" rx="3" fill="#c9e6e6"/>' for x, y, w in ((120, 1020, 120), (520, 1060, 180), (880, 1030, 90), (1260, 1080, 200), (1640, 1040, 120), (300, 1130, 160), (1500, 1150, 140))))
     for x in (560, 610, 1350, 1400):
         g.append(f'<rect x="{x}" y="900" width="12" height="120" rx="6" fill="#f3f0ea"/><rect x="{x}" y="920" width="12" height="16" fill="#9fbde0"/><rect x="{x}" y="952" width="12" height="16" fill="#9fbde0"/>')
-    g.append('<path d="M760 1110 C840 1130 1040 1130 1120 1106 C1110 1098 1090 1100 1080 1104 C1000 1118 880 1118 790 1100 C780 1096 768 1098 760 1110 Z" fill="#5f6a86"/>')
-    g.append('<path d="M1112 1106 C1124 1094 1130 1080 1132 1068 L1138 1068 C1136 1084 1130 1098 1118 1110 Z" fill="#5f6a86"/><rect x="930" y="1074" width="60" height="22" rx="6" fill="#e9b3a4"/>')
-    g.append('<path d="M840 1104 L870 1020 L876 1022 L848 1106 Z" fill="#c9a77e"/><circle cx="860" cy="1048" r="13" fill="#f6dfc8"/><rect x="845" y="1060" width="30" height="40" rx="8" fill="#f2f0ea"/><path d="M845 1068 L875 1068 L875 1074 L845 1074 Z" fill="#9fbde0"/><rect x="846" y="1034" width="28" height="7" rx="3" fill="#e9c47a"/>')
+    g.append(still('<path d="M760 1110 C840 1130 1040 1130 1120 1106 C1110 1098 1090 1100 1080 1104 C1000 1118 880 1118 790 1100 C780 1096 768 1098 760 1110 Z" fill="#5f6a86"/>'))
+    g.append(still('<path d="M1112 1106 C1124 1094 1130 1080 1132 1068 L1138 1068 C1136 1084 1130 1098 1118 1110 Z" fill="#5f6a86"/><rect x="930" y="1074" width="60" height="22" rx="6" fill="#e9b3a4"/>'))
+    g.append(still('<path d="M840 1104 L870 1020 L876 1022 L848 1106 Z" fill="#c9a77e"/><circle cx="860" cy="1048" r="13" fill="#f6dfc8"/><rect x="845" y="1060" width="30" height="40" rx="8" fill="#f2f0ea"/><path d="M845 1068 L875 1068 L875 1074 L845 1074 Z" fill="#9fbde0"/><rect x="846" y="1034" width="28" height="7" rx="3" fill="#e9c47a"/>'))
     return doc(d, ''.join(g))
 
 def santorini():
@@ -132,7 +137,7 @@ def santorini():
     for x, y, s_ in ((200, 560, 60), (430, 776, 52), (330, 920, 58)):
         g.append(f'<rect x="{x - s_ * .55:.0f}" y="{y - 6}" width="{s_ * 1.1:.0f}" height="70" fill="#fbfbf8"/><path d="M{x - s_ * .6:.0f} {y} A{s_ * .6:.0f} {s_ * .6:.0f} 0 0 1 {x + s_ * .6:.0f} {y} Z" fill="#5f97d0"/><rect x="{x - 3}" y="{y - s_ * .6 - 22:.0f}" width="6" height="24" fill="#f6d79a"/><rect x="{x - 10}" y="{y - s_ * .6 - 14:.0f}" width="20" height="5" fill="#f6d79a"/>')
     g.append('<circle cx="640" cy="840" r="44" fill="#f2b8c8"/><circle cx="600" cy="866" r="30" fill="#f6c9d6"/><circle cx="680" cy="870" r="28" fill="#f6c9d6"/>')   # bougainvillea tree
-    g.append('<path d="M1460 900 L1540 900 L1528 924 L1472 924 Z" fill="#f8f6f0"/><path d="M1500 900 L1500 800 L1460 892 Z" fill="#ffffff"/><path d="M1504 812 L1504 892 L1536 892 Z" fill="#f2c8b8"/><rect x="1499" y="796" width="4" height="106" fill="#c9a77e"/>')
+    g.append(still('<path d="M1460 900 L1540 900 L1528 924 L1472 924 Z" fill="#f8f6f0"/><path d="M1500 900 L1500 800 L1460 892 Z" fill="#ffffff"/><path d="M1504 812 L1504 892 L1536 892 Z" fill="#f2c8b8"/><rect x="1499" y="796" width="4" height="106" fill="#c9a77e"/>'))
     return doc(d, ''.join(g))
 
 def kyoto():
@@ -178,7 +183,7 @@ def nordic_harbor():
     g.append(f'<rect x="0" y="900" width="{VW}" height="26" fill="#b9a289"/><rect x="0" y="926" width="{VW}" height="274" fill="#a9cde0"/>')
     g.append(''.join(f'<rect x="{x}" y="{y}" width="{w}" height="6" rx="3" fill="#cbe2ee"/>' for x, y, w in ((200, 980, 140), (700, 1040, 200), (1200, 990, 120), (1600, 1060, 180), (400, 1130, 160), (1000, 1150, 220))))
     for x, c in ((360, '#f2b8a8'), (1320, '#bcd6ec')):
-        g.append(f'<path d="M{x - 90} 1010 L{x + 90} 1010 L{x + 70} 1044 L{x - 70} 1044 Z" fill="{c}"/><rect x="{x - 3}" y="880" width="6" height="130" fill="#b08a6a"/><path d="M{x + 4} 890 L{x + 4} 1000 L{x + 70} 1000 Z" fill="#fbfaf6"/>')
+        g.append(still(f'<path d="M{x - 90} 1010 L{x + 90} 1010 L{x + 70} 1044 L{x - 70} 1044 Z" fill="{c}"/><rect x="{x - 3}" y="880" width="6" height="130" fill="#b08a6a"/><path d="M{x + 4} 890 L{x + 4} 1000 L{x + 70} 1000 Z" fill="#fbfaf6"/>'))
     return doc(d, ''.join(g))
 
 def egypt():
@@ -197,7 +202,7 @@ def egypt():
         for a in (-150, -110, -60, -20, 20):
             t = math.radians(a)
             g.append(f'<path d="M{cx:.0f} {cy:.0f} Q{cx + math.cos(t) * 60 * s:.0f} {cy + math.sin(t) * 60 * s - 30 * s:.0f} {cx + math.cos(t) * 110 * s:.0f} {cy + math.sin(t) * 110 * s + 20 * s:.0f} Q{cx + math.cos(t) * 50 * s:.0f} {cy + math.sin(t) * 50 * s:.0f} {cx:.0f} {cy:.0f} Z" fill="#9fcf9a"/>')
-    g.append('<path d="M1500 1010 C1520 980 1560 980 1570 1000 C1580 970 1610 975 1615 995 L1640 990 C1652 975 1668 980 1664 996 L1650 1004 L1652 1060 L1640 1060 L1636 1020 L1580 1022 L1576 1060 L1564 1060 L1562 1022 L1530 1024 L1526 1060 L1514 1060 L1512 1024 Z" fill="#d9b48a"/>')   # camel
+    g.append(still('<path d="M1500 1010 C1520 980 1560 980 1570 1000 C1580 970 1610 975 1615 995 L1640 990 C1652 975 1668 980 1664 996 L1650 1004 L1652 1060 L1640 1060 L1636 1020 L1580 1022 L1576 1060 L1564 1060 L1562 1022 L1530 1024 L1526 1060 L1514 1060 L1512 1024 Z" fill="#d9b48a"/>'))   # camel
     return doc(d, ''.join(g))
 
 def amusement():
@@ -207,13 +212,13 @@ def amusement():
     g.append(hill(930, 20, '#d5e9c9', 9, n=6))
     cx, cy, R = 1560, 640, 280
     g.append(f'<path d="M{cx - 150} 980 L{cx} {cy} L{cx + 150} 980" fill="none" stroke="#c9b9da" stroke-width="16" stroke-linecap="round"/>')
-    g.append(f'<circle cx="{cx}" cy="{cy}" r="{R}" fill="none" stroke="#d9cfe6" stroke-width="10"/><circle cx="{cx}" cy="{cy}" r="{R - 40}" fill="none" stroke="#e6def0" stroke-width="5"/>')
+    g.append(still(f'<circle cx="{cx}" cy="{cy}" r="{R}" fill="none" stroke="#d9cfe6" stroke-width="10"/><circle cx="{cx}" cy="{cy}" r="{R - 40}" fill="none" stroke="#e6def0" stroke-width="5"/>'))
     cols = ['#f6b8c2', '#f6d79a', '#a9d3bb', '#a9c8e6']
     for k in range(12):
         t = k * math.pi / 6; x, y = cx + R * math.cos(t), cy + R * math.sin(t)
-        g.append(f'<line x1="{cx}" y1="{cy}" x2="{x:.0f}" y2="{y:.0f}" stroke="#e6def0" stroke-width="5"/>')
-        g.append(f'<path d="M{x - 26:.0f} {y + 4:.0f} L{x + 26:.0f} {y + 4:.0f} L{x + 22:.0f} {y + 44:.0f} L{x - 22:.0f} {y + 44:.0f} Z" fill="{cols[k % 4]}"/><path d="M{x - 30:.0f} {y + 6:.0f} C{x - 30:.0f} {y - 14:.0f} {x + 30:.0f} {y - 14:.0f} {x + 30:.0f} {y + 6:.0f} Z" fill="{cols[(k + 1) % 4]}"/><rect x="{x - 14:.0f}" y="{y + 12:.0f}" width="28" height="16" rx="4" fill="#ffffff"/>')
-    g.append(f'<circle cx="{cx}" cy="{cy}" r="26" fill="#c9b9da"/>')
+        g.append(still(f'<line x1="{cx}" y1="{cy}" x2="{x:.0f}" y2="{y:.0f}" stroke="#e6def0" stroke-width="5"/>'))
+        g.append(still(f'<path d="M{x - 26:.0f} {y + 4:.0f} L{x + 26:.0f} {y + 4:.0f} L{x + 22:.0f} {y + 44:.0f} L{x - 22:.0f} {y + 44:.0f} Z" fill="{cols[k % 4]}"/><path d="M{x - 30:.0f} {y + 6:.0f} C{x - 30:.0f} {y - 14:.0f} {x + 30:.0f} {y - 14:.0f} {x + 30:.0f} {y + 6:.0f} Z" fill="{cols[(k + 1) % 4]}"/><rect x="{x - 14:.0f}" y="{y + 12:.0f}" width="28" height="16" rx="4" fill="#ffffff"/>'))
+    g.append(still(f'<circle cx="{cx}" cy="{cy}" r="26" fill="#c9b9da"/>'))
     X, Y = 330, 960   # carousel
     g.append(f'<rect x="{X - 210}" y="{Y - 160}" width="420" height="170" fill="#fdf3e6"/><rect x="{X - 220}" y="{Y}" width="440" height="30" rx="10" fill="#f2c8b8"/>')
     for i in range(8):
@@ -228,30 +233,30 @@ def amusement():
         x = 580 + i * 34; y = 770 + 20 * math.sin(i / 17 * math.pi * 1.6)
         g.append(f'<path d="M{x} {y} L{x + 22} {y} L{x + 11} {y + 26} Z" fill="{cols[i % 4]}"/>')
     for x, y, c in ((820, 560, '#f6b8c2'), (870, 600, '#a9c8e6'), (790, 620, '#f6d79a')):
-        g.append(f'<path d="M{x} {y + 44} C{x + 6} {y + 80} {x - 6} {y + 120} {x + 4} {y + 170}" fill="none" stroke="#c9b9da" stroke-width="2"/><ellipse cx="{x}" cy="{y}" rx="30" ry="36" fill="{c}"/><path d="M{x - 5} {y + 34} L{x + 5} {y + 34} L{x} {y + 44} Z" fill="{c}"/>')
+        g.append(still(f'<path d="M{x} {y + 44} C{x + 6} {y + 80} {x - 6} {y + 120} {x + 4} {y + 170}" fill="none" stroke="#c9b9da" stroke-width="2"/><ellipse cx="{x}" cy="{y}" rx="30" ry="36" fill="{c}"/><path d="M{x - 5} {y + 34} L{x + 5} {y + 34} L{x} {y + 44} Z" fill="{c}"/>'))
     return doc(d, ''.join(g))
 
 def aquarium():
     """an aquarium tunnel: a deep-turquoise arch of water full of fish, rays of light, sand and seaweed"""
     d = lin('sky', [(0, '#bfe4ec'), (.6, '#d8eff1'), (1, '#eef7f2')]) + lin('ray', [(0, '#ffffff'), (1, '#ffffff00')]) + '<filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>'
     g = [f'<rect width="{VW}" height="{VH}" fill="url(#sky)"/>']
-    g.append(''.join(f'<path d="M{x} 0 L{x + w} 0 L{x + w * 2.4} 1200 L{x + w * 1.4} 1200 Z" fill="url(#ray)" opacity=".3" filter="url(#soft)"/>' for x, w in ((200, 60), (560, 40), (1100, 70), (1500, 50))))
+    g.append(still(''.join(f'<path d="M{x} 0 L{x + w} 0 L{x + w * 2.4} 1200 L{x + w * 1.4} 1200 Z" fill="url(#ray)" opacity=".3" filter="url(#soft)"/>' for x, w in ((200, 60), (560, 40), (1100, 70), (1500, 50)))))
     g.append('<path d="M0 1010 C300 980 600 1020 960 1000 C1320 980 1620 1020 1920 1000 L1920 1200 L0 1200 Z" fill="#f4e8cf"/>')
     r = RNG(29)
     for x in (80, 170, 1700, 1800, 1610, 420, 1460):
         h = 200 + r.random() * 160
         g.append(f'<path d="M{x} 1020 C{x - 30} {1020 - h * .3:.0f} {x + 30} {1020 - h * .6:.0f} {x} {1020 - h:.0f}" fill="none" stroke="#9fd0b0" stroke-width="18" stroke-linecap="round"/>')
     for x, y, s, c, f in ((260, 360, 1.3, '#f6c49a', 1), (1540, 300, 1.1, '#f6b8c2', -1), (1700, 560, .9, '#f6d79a', -1), (180, 640, .8, '#a9c8e6', 1), (1360, 700, .7, '#f6c49a', -1), (420, 820, .7, '#f6b8c2', 1)):
-        g.append(f'<g transform="translate({x} {y}) scale({s * f} {s})"><path d="M-60 0 C-40 -36 20 -36 40 0 C20 36 -40 36 -60 0 Z" fill="{c}"/><path d="M36 0 L76 -30 L68 0 L76 30 Z" fill="{c}"/><circle cx="-34" cy="-6" r="6" fill="#ffffff"/><circle cx="-34" cy="-6" r="3" fill="#4a5a6a"/><path d="M-12 -24 C-4 -8 -4 8 -12 24" fill="none" stroke="#ffffff" stroke-width="5" opacity=".6"/></g>')
+        g.append(still(f'<g transform="translate({x} {y}) scale({s * f} {s})"><path d="M-60 0 C-40 -36 20 -36 40 0 C20 36 -40 36 -60 0 Z" fill="{c}"/><path d="M36 0 L76 -30 L68 0 L76 30 Z" fill="{c}"/><circle cx="-34" cy="-6" r="6" fill="#ffffff"/><circle cx="-34" cy="-6" r="3" fill="#4a5a6a"/><path d="M-12 -24 C-4 -8 -4 8 -12 24" fill="none" stroke="#ffffff" stroke-width="5" opacity=".6"/></g>'))
     r2 = RNG(37)   # a school of little fish, and soft corals on the sand
     for k in range(26):   # along a gentle arc, loosely
         t = k / 25; x = 520 + t * 380 + (r2.random() - .5) * 50; y = 600 - math.sin(t * math.pi) * 90 + (r2.random() - .5) * 60
-        g.append(f'<g transform="translate({x:.0f} {y:.0f}) scale(.32)"><path d="M-60 0 C-40 -36 20 -36 40 0 C20 36 -40 36 -60 0 Z" fill="#a9c8e6"/><path d="M36 0 L76 -30 L68 0 L76 30 Z" fill="#a9c8e6"/></g>')
+        g.append(still(f'<g transform="translate({x:.0f} {y:.0f}) scale(.32)"><path d="M-60 0 C-40 -36 20 -36 40 0 C20 36 -40 36 -60 0 Z" fill="#a9c8e6"/><path d="M36 0 L76 -30 L68 0 L76 30 Z" fill="#a9c8e6"/></g>'))
     for x, c in ((260, '#f6b8c2'), (370, '#f6d79a'), (1560, '#f6c49a'), (1670, '#d9c8ef')):   # branching corals
         br = [(0, 0, 0, -70), (0, -40, -34, -86), (0, -30, 30, -80), (-20, -62, -40, -110), (18, -58, 34, -104)]
         g.append(''.join(f'<path d="M{x + a} {1018 + b} L{x + c_} {1018 + d_}" stroke="{c}" stroke-width="16" stroke-linecap="round"/>' for a, b, c_, d_ in br))
-    g.append('<g transform="translate(1180 470) scale(1.2)"><path d="M0 -46 C20 -40 40 -20 110 -6 C70 8 36 20 14 40 L0 46 L-14 40 C-36 20 -70 8 -110 -6 C-40 -20 -20 -40 0 -46 Z" fill="#c9d6e6"/><path d="M0 44 C4 80 14 110 28 140" fill="none" stroke="#c9d6e6" stroke-width="5" stroke-linecap="round"/><path d="M-14 -40 C-18 -52 -10 -58 -6 -50 M14 -40 C18 -52 10 -58 6 -50" stroke="#c9d6e6" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="-12" cy="-26" r="3.5" fill="#5a6a7a"/><circle cx="12" cy="-26" r="3.5" fill="#5a6a7a"/></g>')   # manta
-    g.append(''.join(f'<circle cx="{x}" cy="{y}" r="{s}" fill="none" stroke="#ffffff" stroke-width="3" opacity=".7"/>' for x, y, s in ((320, 260, 10), (340, 220, 7), (330, 190, 5), (1600, 220, 9), (1615, 186, 6), (900, 280, 8), (912, 250, 5))))
+    g.append(still('<g transform="translate(1180 470) scale(1.2)"><path d="M0 -46 C20 -40 40 -20 110 -6 C70 8 36 20 14 40 L0 46 L-14 40 C-36 20 -70 8 -110 -6 C-40 -20 -20 -40 0 -46 Z" fill="#c9d6e6"/><path d="M0 44 C4 80 14 110 28 140" fill="none" stroke="#c9d6e6" stroke-width="5" stroke-linecap="round"/><path d="M-14 -40 C-18 -52 -10 -58 -6 -50 M14 -40 C18 -52 10 -58 6 -50" stroke="#c9d6e6" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="-12" cy="-26" r="3.5" fill="#5a6a7a"/><circle cx="12" cy="-26" r="3.5" fill="#5a6a7a"/></g>'))   # manta
+    g.append(still(''.join(f'<circle cx="{x}" cy="{y}" r="{s}" fill="none" stroke="#ffffff" stroke-width="3" opacity=".7"/>' for x, y, s in ((320, 260, 10), (340, 220, 7), (330, 190, 5), (1600, 220, 9), (1615, 186, 6), (900, 280, 8), (912, 250, 5)))))
     g.append(f'<path d="M0 0 L{VW} 0 L{VW} 130 C1500 80 420 80 0 130 Z" fill="#a9d6e0"/>')   # the tunnel's rim
     return doc(d, ''.join(g))
 
@@ -294,12 +299,12 @@ def train():
     X = 640
     cars = [(X, '#f2b8a8'), (X + 210, '#bcd6ec'), (X + 400, '#f6dca0'), (X + 590, '#cfe3c6')]
     for x, c in cars[1:]:
-        g.append(f'<rect x="{x}" y="760" width="180" height="90" rx="12" fill="{c}"/><rect x="{x - 4}" y="746" width="188" height="18" rx="9" fill="#fbf6ec"/>' + windows(x + 18, 778, 3, 1, 36, 30, 52, 0, '#fbfaf6', 6))
-        g.append(f'<circle cx="{x + 40}" cy="852" r="16" fill="#8a95ab"/><circle cx="{x + 140}" cy="852" r="16" fill="#8a95ab"/>')
+        g.append(still(f'<rect x="{x}" y="760" width="180" height="90" rx="12" fill="{c}"/><rect x="{x - 4}" y="746" width="188" height="18" rx="9" fill="#fbf6ec"/>' + windows(x + 18, 778, 3, 1, 36, 30, 52, 0, '#fbfaf6', 6)))
+        g.append(still(f'<circle cx="{x + 40}" cy="852" r="16" fill="#8a95ab"/><circle cx="{x + 140}" cy="852" r="16" fill="#8a95ab"/>'))
     x = X - 20
-    g.append(f'<rect x="{x}" y="720" width="70" height="130" rx="10" fill="#f2b8a8"/><rect x="{x + 66}" y="770" width="150" height="80" rx="38" fill="#f2b8a8"/><rect x="{x + 170}" y="720" width="26" height="54" rx="6" fill="#e9a596"/><rect x="{x + 162}" y="710" width="42" height="16" rx="6" fill="#e9a596"/>')
-    g.append(f'<rect x="{x + 12}" y="740" width="46" height="36" rx="6" fill="#fbfaf6"/><rect x="{x - 6}" y="706" width="82" height="18" rx="8" fill="#e9a596"/>')
-    g.append(f'<circle cx="{x + 30}" cy="846" r="26" fill="#8a95ab"/><circle cx="{x + 110}" cy="852" r="18" fill="#8a95ab"/><circle cx="{x + 170}" cy="852" r="18" fill="#8a95ab"/>')
+    g.append(still(f'<rect x="{x}" y="720" width="70" height="130" rx="10" fill="#f2b8a8"/><rect x="{x + 66}" y="770" width="150" height="80" rx="38" fill="#f2b8a8"/><rect x="{x + 170}" y="720" width="26" height="54" rx="6" fill="#e9a596"/><rect x="{x + 162}" y="710" width="42" height="16" rx="6" fill="#e9a596"/>'))
+    g.append(still(f'<rect x="{x + 12}" y="740" width="46" height="36" rx="6" fill="#fbfaf6"/><rect x="{x - 6}" y="706" width="82" height="18" rx="8" fill="#e9a596"/>'))
+    g.append(still(f'<circle cx="{x + 30}" cy="846" r="26" fill="#8a95ab"/><circle cx="{x + 110}" cy="852" r="18" fill="#8a95ab"/><circle cx="{x + 170}" cy="852" r="18" fill="#8a95ab"/>'))
     for i, (dx, dy, s) in enumerate(((190, 670, 34), (230, 620, 44), (290, 580, 54), (370, 560, 60))):
         g.append(cloud(x + dx, dy, s * 1.6))
     g.append('</g>')
@@ -349,7 +354,7 @@ def antarctic():
                 '<path d="M-14 -62 C-14 -72 14 -72 14 -62 C14 -52 -14 -52 -14 -62 Z" fill="#fbfcfd" opacity=".9"/><circle cx="-7" cy="-62" r="3" fill="#3a4258"/><circle cx="7" cy="-62" r="3" fill="#3a4258"/>'
                 '<path d="M-6 -54 L6 -54 L0 -46 Z" fill="#f6c27e"/><path d="M-36 -24 C-48 -6 -46 10 -40 16 C-36 0 -34 -12 -30 -20 Z M36 -24 C48 -6 46 10 40 16 C36 0 34 -12 30 -20 Z" fill="#5f6a86"/>'
                 '<path d="M-16 28 L-4 28 L-6 34 L-20 34 Z M4 28 L16 28 L20 34 L6 34 Z" fill="#f6c27e"/><circle cx="-14" cy="-44" r="4" fill="#f6c2c8" opacity=".7"/><circle cx="14" cy="-44" r="4" fill="#f6c2c8" opacity=".7"/></g>')
-    g.append(penguin(300, 868, 1.2) + penguin(420, 880, 1.0, -1) + penguin(360, 890, .6) + penguin(1100, 950, .9) + penguin(1700, 1030, 1.1, -1) + penguin(1610, 1040, .55))
+    g.append(still(penguin(300, 868, 1.2) + penguin(420, 880, 1.0, -1) + penguin(360, 890, .6) + penguin(1100, 950, .9) + penguin(1700, 1030, 1.1, -1) + penguin(1610, 1040, .55)))
     return doc(d, ''.join(g))
 
 def cappadocia():
@@ -357,9 +362,9 @@ def cappadocia():
     d, b = sky([(0, '#f2d9e6'), (.5, '#fbe7dc'), (1, '#fdf0e2')])
     g = [b]
     for x, y, s, c1, c2 in ((1500, 240, 1.0, '#f6b8c2', '#fde3e8'), (1180, 160, .7, '#f6d79a', '#fff0c8'), (1740, 420, .6, '#a9c8e6', '#e1eefa'), (980, 360, .5, '#c9b9ec', '#ebe4fb'), (1340, 470, .42, '#a9d3bb', '#e2f2e8'), (220, 300, .55, '#f6c49a', '#fde6d4'), (420, 180, .38, '#f6b8c2', '#fde3e8'), (660, 420, .32, '#a9c8e6', '#e1eefa')):
-        g.append(f'<g transform="translate({x} {y}) scale({s})"><path d="M-90 0 C-90 -70 90 -70 90 0 C90 50 40 80 26 110 L-26 110 C-40 80 -90 50 -90 0 Z" fill="{c1}"/>'
+        g.append(still(f'<g transform="translate({x} {y}) scale({s})"><path d="M-90 0 C-90 -70 90 -70 90 0 C90 50 40 80 26 110 L-26 110 C-40 80 -90 50 -90 0 Z" fill="{c1}"/>'
                  f'<path d="M-30 -52 C-30 -10 -16 70 -10 110 L10 110 C16 70 30 -10 30 -52 C20 -60 -20 -60 -30 -52 Z" fill="{c2}"/>'
-                 f'<path d="M-24 110 L-20 140 M24 110 L20 140" stroke="#b08a6a" stroke-width="3"/><rect x="-24" y="138" width="48" height="30" rx="5" fill="#c9a07a"/></g>')
+                 f'<path d="M-24 110 L-20 140 M24 110 L20 140" stroke="#b08a6a" stroke-width="3"/><rect x="-24" y="138" width="48" height="30" rx="5" fill="#c9a07a"/></g>'))
     g.append(hill(840, 40, '#efcfae', 61, n=6))
     r = RNG(63)
     for x in range(-40, 1980, 110):   # fairy chimneys: cones with a cap, little doorways
@@ -377,12 +382,12 @@ def mexico():
     g = [b, cloud(980, 340, 90)]
     cols = ['#f6b8c2', '#a9d3bb', '#f6d79a', '#a9c8e6', '#d9c8ef', '#f6c49a']
     for row, (y0, amp) in enumerate(((40, 40), (150, 50))):   # papel picado: cut-paper flags on strings
-        g.append(f'<path d="M-20 {y0} Q480 {y0 + amp} 960 {y0} Q1440 {y0 + amp} 1940 {y0}" fill="none" stroke="#c9b9a6" stroke-width="2"/>')
+        g.append(still(f'<path d="M-20 {y0} Q480 {y0 + amp} 960 {y0} Q1440 {y0 + amp} 1940 {y0}" fill="none" stroke="#c9b9a6" stroke-width="2"/>'))
         for i in range(22):
             t = i / 21; x = t * 1920; y = y0 + amp * 4 * ((t * 2) % 1) * (1 - (t * 2) % 1)
             c = cols[(i + row) % 6]
-            g.append(f'<path d="M{x - 30:.0f} {y:.0f} L{x + 30:.0f} {y:.0f} L{x + 30:.0f} {y + 54:.0f} L{x + 20:.0f} {y + 64:.0f} L{x + 10:.0f} {y + 54:.0f} L{x:.0f} {y + 64:.0f} L{x - 10:.0f} {y + 54:.0f} L{x - 20:.0f} {y + 64:.0f} L{x - 30:.0f} {y + 54:.0f} Z" fill="{c}"/>'
-                     f'<circle cx="{x:.0f}" cy="{y + 24:.0f}" r="9" fill="#fbf6ee"/><path d="M{x - 20:.0f} {y + 12:.0f} l6 6 l-6 6 l-6 -6 Z M{x + 20:.0f} {y + 12:.0f} l6 6 l-6 6 l-6 -6 Z" fill="#fbf6ee"/>')
+            g.append(still(f'<path d="M{x - 30:.0f} {y:.0f} L{x + 30:.0f} {y:.0f} L{x + 30:.0f} {y + 54:.0f} L{x + 20:.0f} {y + 64:.0f} L{x + 10:.0f} {y + 54:.0f} L{x:.0f} {y + 64:.0f} L{x - 10:.0f} {y + 54:.0f} L{x - 20:.0f} {y + 64:.0f} L{x - 30:.0f} {y + 54:.0f} Z" fill="{c}"/>'
+                     f'<circle cx="{x:.0f}" cy="{y + 24:.0f}" r="9" fill="#fbf6ee"/><path d="M{x - 20:.0f} {y + 12:.0f} l6 6 l-6 6 l-6 -6 Z M{x + 20:.0f} {y + 12:.0f} l6 6 l-6 6 l-6 -6 Z" fill="#fbf6ee"/>'))
     x = -20; r = RNG(71)
     while x < 1940:
         w = 170 + r.random() * 80; h = 230 + r.random() * 120; c = cols[int(r.random() * 6)]; top = 1000 - h
