@@ -647,6 +647,37 @@
 html.atlas-skin[data-skin] .atlas-top{background:var(--sk-hdr)!important;border-bottom-color:var(--sk-line)!important}
 html.atlas-skin[data-skin] body .card:not(.hb-menu){--a-paper:color-mix(in srgb,var(--sk-navm) 15%,#fffcf6);--a-tile:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9);--a-btn:color-mix(in srgb,var(--sk-navm) 5%,#fffefb);--a-line:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8);--a-track:color-mix(in srgb,var(--sk-navm) 20%,#f4eee2);--a-ink2:color-mix(in srgb,var(--sk-navm) 30%,#6a7088);--a-shadow:0 2px 0 color-mix(in srgb,var(--sk-navm) 14%,transparent),0 10px 24px -12px color-mix(in srgb,var(--sk-navm) 45%,rgba(0,0,0,.4))}
 html.atlas-skin[data-skin].skdark body .card:not(.hb-menu){--a-paper:color-mix(in srgb,var(--sk-navm) 20%,#fdfcff);--a-tile:color-mix(in srgb,var(--sk-navm) 8%,#fefdff);--a-btn:color-mix(in srgb,var(--sk-navm) 5%,#fff);--a-line:color-mix(in srgb,var(--sk-navm) 45%,#f3f1f8);--a-track:color-mix(in srgb,var(--sk-navm) 28%,#f4f2f8);--a-ink2:color-mix(in srgb,var(--sk-hdrs) 50%,#6a7088)}
+/* (2026-11-21 the user) 戦績・オプション・オンライン（開いたとき）もスキンの色に */
+html.atlas-skin[data-skin] body:not(#_):not(#_) .grc:not(.grc-inl){background:color-mix(in srgb,var(--sk-navm) 14%,#fffcf6)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;--gc:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9);--gb:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .grc-hd{background:linear-gradient(180deg,color-mix(in srgb,var(--sk-acc) 22%,#fff),color-mix(in srgb,var(--sk-navm) 14%,#fffcf6))!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) :is(.grc-x,.grc-tabs){background:color-mix(in srgb,var(--sk-navm) 22%,#f6f1e6)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) :is(.grc-tabs button.sel,.grc-vb,.grc-vp,.grc-hero,.grc-row,.grc-g,.grc-ft button:not(.grc-go)){background:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .grc-tabs button.sel{box-shadow:0 3px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .grc-ft button:not(.grc-go){box-shadow:0 3px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .grc-hero{box-shadow:0 3px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) :is(.grc-cnt div,.grc-tag,.grc-mini){background:color-mix(in srgb,var(--sk-navm) 22%,#f6f1e6)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .grc-hd .grc-ic{background:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9)!important;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--sk-acc) 45%,#fff),0 2px 0 color-mix(in srgb,var(--sk-acc) 45%,#fff)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .grc-hd .grc-ic svg{stroke:var(--sk-acc)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .hbo-pop.hbo-atlas{background:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;box-shadow:0 6px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8),0 24px 40px -18px rgba(20,20,60,.5)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .hbo-pop.hbo-atlas.hbo-grp .hbo-box{background:color-mix(in srgb,var(--sk-navm) 14%,#fffcf6)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .hbo-pop.hbo-atlas .hbo-row{background:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .hbo-pop.hbo-atlas .hbo-row:hover{background:color-mix(in srgb,var(--sk-navm) 22%,#f6f1e6)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .hbo-pop.hbo-atlas.hbo-grp .hbo-bh{color:color-mix(in srgb,var(--sk-acc) 70%,#1c2033)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .hbo-pop.hbo-atlas .hbo-row.on .hbo-sw{background:var(--sk-acc)!important;box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--sk-acc) 70%,#000)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .hbo-pop.hbo-atlas .hbo-sw{background:color-mix(in srgb,var(--sk-navm) 22%,#f6f1e6)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .hbo-atlas :is(.hbo-sbtn,.hbo-spop){background:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9)!important;border-color:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important;box-shadow:0 2px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .hbo-atlas .hbo-spop button.on{background:color-mix(in srgb,var(--sk-navm) 22%,#f6f1e6)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .hbo-pop.hbo-atlas .hbo-end .atlas-lbtn{box-shadow:0 2px 0 color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8)!important}
+html.atlas-skin[data-skin] body.dock-open:not(#_):not(#_) #dock .dock-panel{background:linear-gradient(var(--sk-hdr),var(--sk-hdr)),#fff!important}
+html.atlas-skin[data-skin].skdark body.dock-open:not(#_):not(#_) #dock .dock-panel{background:linear-gradient(var(--sk-hdr),var(--sk-hdr)),#0b0a1c!important}
+html.atlas-skin[data-skin]:not(.skdark) body #dock.dock{--a-tile:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9);--a-line:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8);--a-track:color-mix(in srgb,var(--sk-navm) 22%,#f6f1e6);--a-sun:var(--sk-acc);--a-sun2:color-mix(in srgb,var(--sk-acc) 70%,#000)}
+html.atlas-skin[data-skin].skdark body #dock.dock{--a-tile:rgba(255,255,255,.09);--a-line:rgba(255,255,255,.18);--a-track:rgba(255,255,255,.12);--a-ink:#f4f6ff;--a-ink2:rgba(255,255,255,.66);--a-sun:var(--sk-navm);--a-sun2:color-mix(in srgb,var(--sk-navm) 60%,#000)}
+html.atlas-skin[data-skin]:not(.atlas-2d) body:not(#_):not(#_) #dock .ol-list > div.me{background:var(--a-tile)!important}
+html.atlas-skin[data-skin].skdark body:not(#_):not(#_) #dock :is(.dock-panel h4,.dk-acc,.dk-acc p,.dk-acc small,.ol-note,.chat-list,.chat-list b){color:var(--a-ink2)!important}
+html.atlas-skin[data-skin].skdark body:not(#_):not(#_) #dock .dock-panel h4{color:#f4f6ff!important}
+html.atlas-skin[data-skin].skdark body:not(#_):not(#_) #dock .ol-list > div{color:#f4f6ff!important}
+html.atlas-skin[data-skin].skdark body:not(#_):not(#_) #dock .ol-list b{color:#fff!important}
+html.atlas-skin[data-skin].skdark body:not(#_):not(#_) #dock :is(.dk-join,.dk-watch){background:rgba(255,255,255,.1)!important}
 html.atlas-skin[data-skin]{--sk-acc:var(--sk-navm)}html.atlas-skin[data-skin].skdark{--sk-acc:color-mix(in srgb,var(--sk-hdr) 55%,var(--sk-navm))}
 html.atlas-skin[data-skin] body:not(#_) #newOverlay > .modal.ngl:not(#_){--ngl-a:color-mix(in srgb,var(--sk-acc) 50%,#1c2033)!important;--ngl-hi:var(--sk-acc)!important}
 html.atlas-skin[data-skin] body:not(#_) #newOverlay > .modal.ngl:not(#_) :is(.level-name, #levelName, #levelName2):not(#_){color:color-mix(in srgb,var(--sk-acc) 55%,#1c2033)!important}
