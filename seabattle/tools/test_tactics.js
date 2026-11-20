@@ -24,6 +24,11 @@ const { chromium } = require('playwright');
       for (const g of await p.evaluate(() => [...document.querySelectorAll('#pickTabs button')].map(b => b.dataset.g))) { if (await p.evaluate(() => !!document.querySelector('#pickGrid .pc.can'))) break; await tap('#pickTabs button[data-g="' + g + '"]'); await p.waitForTimeout(120); }   // (look through the role tabs)
       const sel = await p.evaluate(() => { const b = document.querySelector('#pickGrid .pc.can'); return b ? '#pickGrid .pc[data-k="' + b.dataset.k + '"]' : '#btnPickStop'; });   // (tap the card itself)
       await tap(sel); await p.waitForTimeout(150);
+      if (sel !== '#btnPickStop') {   // (a tapped card is only chosen: tapping it again undoes it, 決定 takes it)
+        if (!(await p.evaluate(s => document.querySelector(s).classList.contains('sel') && !document.querySelector('#btnPickOk').disabled, sel))) { console.log('NG  a tapped card is chosen, not taken'); fail++; }
+        if (guard === 2) { await tap(sel); await p.waitForTimeout(120); if (!(await p.evaluate(s => !document.querySelector(s).classList.contains('sel') && document.querySelector('#btnPickOk').disabled && G.draft.turn === 0, sel))) { console.log('NG  tapping the chosen card again undoes it'); fail++; } await tap(sel); await p.waitForTimeout(120); }
+        await tap('#btnPickOk'); await p.waitForTimeout(150);
+      }
     }
     ok(await p.evaluate(() => G.phase === 'deploy' && SeaEngine.validFleet(G.my, G.adj, true) && SeaEngine.validDraft(G.draft.picks[1])), name + ': draft ends with two legal fleets, mine on the board');
     const audit = () => p.evaluate(() => { const out = []; if (document.documentElement.scrollWidth > innerWidth + 1) out.push('scroll-x'); for (const el of document.querySelectorAll('.side button, .side b, .side small, .side span')) { if (!el.offsetParent) continue; const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let nd; while ((nd = tw.nextNode())) { if (!nd.textContent.trim() || nd.parentElement !== el) continue; const rg = document.createRange(); rg.selectNodeContents(nd); if (new Set([...rg.getClientRects()].map(q => Math.round(q.top / 4))).size > 1) out.push('WRAP ' + nd.textContent.trim()); if (el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflow === 'hidden') out.push('CLIP ' + nd.textContent.trim()); } } return out.join(' | '); });
