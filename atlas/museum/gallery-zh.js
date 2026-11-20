@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Simplified Chinese). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).zh = {
-  ui: { sub: "世界各地博物馆珍藏的游戏史瑰宝。每件珍品都以3D重现——仿佛拿在手中，转动细看。", collection: "馆藏", special: "特别展示", lock: "达成{n}个{g}成就后开放", loading: "正在准备展柜…", fail: "展品加载失败",
+  ui: { guideH: '向导：馆藏枭', guide: '逛遍馆藏，馆藏枭就会一次比一次打扮得更漂亮来见你', gift: '新的阿特拉莫来了！', sub: "世界各地博物馆珍藏的游戏史瑰宝。每件珍品都以3D重现——仿佛拿在手中，转动细看。", collection: "馆藏", special: "特别展示", lock: "达成{n}个{g}成就后开放", loading: "正在准备展柜…", fail: "展品加载失败",
     hint: "拖动旋转 · 滚轮缩放 · 点数字看细节", hintT: "拖动旋转 · 双指缩放", spin: "缓慢旋转", reset: "回到初始视角", close: "关闭",
     date: "年代", where: "出土 / 传承", museum: "收藏", mat: "材质", size: "尺寸", look: "看点", aboutModel: "关于此3D模型", sources: "参考资料", play: "玩{g}" },
   ex: {

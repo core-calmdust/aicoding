@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 1;
+  const V = 2;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -35,10 +35,13 @@
   /* ---------- the room: an intro and the cards ---------- */
   function render(sec, c) {
     ctx = c; lang = c.lang || 'ja'; host = sec;
-    if (!sec.querySelector('.gxgrid')) sec.innerHTML = `<p class="gxsub"></p><div class="gxgrid"></div>`;
+    if (!sec.querySelector('.gxgrid')) sec.innerHTML = `<p class="gxsub"></p><div class="gxguide"></div><div class="gxgrid"></div>`;
     textsFor(lang).then(() => {
       if (host !== sec) return;
       sec.querySelector('.gxsub').textContent = ui(lang, 'sub');
+      // the guide: ミュゼフク's four ranks, the ones earned in colour
+      const R = ranks(seenList()), gd = sec.querySelector('.gxguide');
+      gd.innerHTML = `<span class="gxav">${[0, 1, 2, 3].map(t => `<img src="../images/atlas/av/musowl-${t}.webp" alt="" class="${R.includes(t) ? 'on' : ''}">`).join('')}</span><span class="gxgt"><b>${esc(ui(lang, 'guideH'))}</b><small>${esc(ui(lang, 'guide'))}</small></span><i>${R.length}/4</i>`;
       sec.querySelector('.gxgrid').innerHTML = EX.map(e => {
         const t = ex(lang, e.id), g = ctx.games.find(x => x.id === e.game), op = isOpen(e);
         const cond = e.lock && !op ? ui(lang, 'lock').replace('{g}', g ? ctx.gname(g).replace(/\s*V\d+$/, '') : e.lock.game).replace('{n}', e.lock.ach) : '';
@@ -141,6 +144,31 @@
     R.shadowMap.needsUpdate = true;
     ov.querySelector('.exload').hidden = true;
     go();
+    seen(e.id);
+  }
+  /* ---------- ミュゼフク (musowl): the museum's Atlamo, earned by looking round the collection ----------
+     N one piece seen · R every regular piece · SR a special exhibit opened · SSR every piece, special ones included */
+  const SEEN = 'atlas-museum-seen';
+  const seenList = () => { try { return JSON.parse(localStorage.getItem(SEEN) || '[]') || []; } catch (x) { return []; } };
+  function ranks(L) {
+    const reg = EX.filter(x => !x.lock), sp = EX.filter(x => x.lock), has = x => L.includes(x.id), r = [];
+    if (L.length) r.push(0); if (reg.every(has)) r.push(1); if (sp.some(isOpen)) r.push(2); if (EX.every(has)) r.push(3); return r;
+  }
+  function seen(id) {
+    let L = seenList();
+    if (!L.includes(id)) { L.push(id); try { localStorage.setItem(SEEN, JSON.stringify(L)); } catch (x) {} }
+    reward(L);
+  }
+  function reward(L) {
+    if (!ctx.grant) return;
+    const want = ranks(L);
+    if (host && host.isConnected) render(host, ctx);   // (the guide strip in the room shows the new rank)
+    const got = ctx.grant(want.map(t => 'av-musowl-' + t)); if (!got.length || !V3) return;
+    const box = document.createElement('div'); box.className = 'exgift';
+    box.innerHTML = got.map(g => `<div class="exg"><img src="${g.img}" alt=""><div><small>${esc(ui(lang, 'gift'))}</small><b>${esc(g.name)}</b></div></div>`).join('');
+    // shown once the case has settled (the first frames upload the textures), then kept for a while
+    const ov = V3.ov; setTimeout(() => { if (!ov.isConnected) return; ov.querySelector('.exstage').appendChild(box);
+      requestAnimationFrame(() => requestAnimationFrame(() => { box.classList.add('on'); setTimeout(() => { box.classList.remove('on'); setTimeout(() => box.remove(), 400); }, 4600); })); }, 900);
   }
   function teardown() {
     if (!V3) return;

@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (French). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).fr = {
-  ui: { sub: "Des trésors de l'histoire du jeu conservés par les musées du monde. Chaque pièce est reconstituée en 3D : tournez-la entre vos mains et regardez de près.", collection: "Collection", special: "Exposition spéciale", lock: "Débloqué après {n} succès de {g}", loading: "Préparation de la vitrine…", fail: "Impossible de charger l'objet",
+  ui: { guideH: 'Votre guide, Muséhibou', guide: 'Parcourez la collection : Muséhibou viendra vous voir, chaque fois plus élégant', gift: 'Un nouvel Atlamo arrive !', sub: "Des trésors de l'histoire du jeu conservés par les musées du monde. Chaque pièce est reconstituée en 3D : tournez-la entre vos mains et regardez de près.", collection: "Collection", special: "Exposition spéciale", lock: "Débloqué après {n} succès de {g}", loading: "Préparation de la vitrine…", fail: "Impossible de charger l'objet",
     hint: "Glisser pour tourner · molette pour zoomer · numéros pour les détails", hintT: "Glisser pour tourner · pincer pour zoomer", spin: "Tourner lentement", reset: "Vue initiale", close: "Fermer",
     date: "Date", where: "Découverte / provenance", museum: "Collection", mat: "Matériaux", size: "Dimensions", look: "Détails", aboutModel: "À propos de ce modèle 3D", sources: "Sources", play: "Jouer à {g}" },
   ex: {

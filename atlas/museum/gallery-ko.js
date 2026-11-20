@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Korean). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).ko = {
-  ui: { sub: "세계의 박물관이 지켜 온 게임 역사의 보물. 3D로 재현한 명품을 손에 든 듯 돌려 보며 자세히 살펴보세요.", collection: "소장품", special: "특별 전시", lock: "{g} 업적 {n}개 달성 시 공개", loading: "전시 케이스를 준비하는 중…", fail: "전시품을 불러오지 못했습니다",
+  ui: { guideH: '안내원 뮤제후쿠', guide: '소장품을 둘러볼수록 뮤제후쿠가 조금씩 멋을 내고 찾아와요', gift: '새 아트라모가 찾아왔어요!', sub: "세계의 박물관이 지켜 온 게임 역사의 보물. 3D로 재현한 명품을 손에 든 듯 돌려 보며 자세히 살펴보세요.", collection: "소장품", special: "특별 전시", lock: "{g} 업적 {n}개 달성 시 공개", loading: "전시 케이스를 준비하는 중…", fail: "전시품을 불러오지 못했습니다",
     hint: "드래그로 회전 · 휠로 확대 · 번호로 볼거리", hintT: "드래그로 회전 · 핀치로 확대", spin: "천천히 돌리기", reset: "처음 방향으로", close: "닫기",
     date: "연대", where: "출토 · 전래", museum: "소장", mat: "재질", size: "크기", look: "볼거리", aboutModel: "이 3D 모델에 대하여", sources: "출처", play: "{g} 플레이" },
   ex: {

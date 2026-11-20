@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Spanish). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).es = {
-  ui: { sub: "Tesoros de la historia del juego que guardan los museos del mundo. Cada pieza está recreada en 3D: gírala en tus manos y obsérvala de cerca.", collection: "Colección", special: "Exposición especial", lock: "Se abre con {n} logros de {g}", loading: "Preparando la vitrina…", fail: "No se pudo cargar la pieza",
+  ui: { guideH: 'Tu guía, Museúho', guide: 'Recorre la colección y Museúho vendrá a verte, cada vez más elegante', gift: '¡Llega un nuevo Atlamo!', sub: "Tesoros de la historia del juego que guardan los museos del mundo. Cada pieza está recreada en 3D: gírala en tus manos y obsérvala de cerca.", collection: "Colección", special: "Exposición especial", lock: "Se abre con {n} logros de {g}", loading: "Preparando la vitrina…", fail: "No se pudo cargar la pieza",
     hint: "Arrastra para girar · rueda para zoom · números para detalles", hintT: "Arrastra para girar · pellizca para zoom", spin: "Girar despacio", reset: "Vista inicial", close: "Cerrar",
     date: "Fecha", where: "Hallazgo / procedencia", museum: "Colección", mat: "Materiales", size: "Tamaño", look: "Detalles", aboutModel: "Sobre este modelo 3D", sources: "Fuentes", play: "Jugar a {g}" },
   ex: {
