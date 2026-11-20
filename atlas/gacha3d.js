@@ -286,7 +286,8 @@
       if (canRun() && (tweens.length || awake || parts.length || sparks.length || urCap || performance.now() < until)) raf = requestAnimationFrame(loop);
     }
     try { new ResizeObserver(size).observe(el); } catch (e) { addEventListener('resize', size); }
-    try { new IntersectionObserver(es => { vis = es[es.length - 1].isIntersecting; if (vis) { size(); kick(100); } else if (playing) flush(); }).observe(el); } catch (e) {}
+    try { const seen = on => { vis = on; if (vis) { size(); kick(100); } else if (playing) flush(); };   // (AtlasVis, not IntersectionObserver: atlas/vis.js says why)
+      if (window.AtlasVis) AtlasVis.observer((e, on) => seen(on)).observe(el); else new IntersectionObserver(es => seen(es[es.length - 1].isIntersecting)).observe(el); } catch (e) {}
     document.addEventListener('visibilitychange', () => { if (!document.hidden) kick(100); else if (playing) flush(); });
     setInterval(() => { if (!playing && canRun() && !awake) stir(.35); }, 7000);   // idle: a gentle jiggle now and then
     el.addEventListener('pointerdown', e => { if (e.target.closest('button,a')) return; if (playing) skip(); else if (!curCap) { stir(.9); say('boing'); } });

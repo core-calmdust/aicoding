@@ -209,7 +209,7 @@
     const toShop = k === 'shop'; if (toShop) k = 'gacha';
     if (k === 'gacha') gsSet(toShop ? 'shop' : 'gacha');   // phones: the ガチャ｜ショップ tabs of the page
     if (!TABS.includes(k)) k = 'home';
-    page = k; propSync(); document.documentElement.dataset.pg = k;   // (phones: the updates ticker hides on the map and きせかえ)
+    page = k; propSync(); document.documentElement.dataset.pg = k; requestAnimationFrame(() => AtlasVis.check());   // (phones: the updates ticker hides on the map and きせかえ)
     tabsEl.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k));
     document.querySelectorAll('section.pg').forEach(s => s.classList.toggle('on', s.id === 'pg-' + k));
     if (push) history.replaceState(null, '', '#' + k);
@@ -248,8 +248,8 @@
     return `<svg class="medal" viewBox="0 0 46 46"><path d="M14 2h7l4 14h-7zM32 2h-7l-4 14h7z" fill="${tier === 3 ? '#a17cff' : '#ff6b6b'}"/><circle cx="23" cy="28" r="15" fill="${c[1]}"/><circle cx="23" cy="27" r="13" fill="${c[0]}"/><path d="M23 19l2.4 5l5.4.6-4 3.7 1.1 5.3-4.9-2.7-4.9 2.7 1.1-5.3-4-3.7 5.4-.6z" fill="#fff" opacity=".85"/></svg>`;
   }
   function achText(a) { return t('a.' + a.key, { n: a.n != null ? a.n.toLocaleString() : '' }); }
-  function achHtml(a) {
-    const g = a.gid && A_.GAMES.find(x => x.id === a.gid);
+  function achHtml(a, plain) {   // plain: inside its own game's group — no game icon before the text
+    const g = !plain && a.gid && A_.GAMES.find(x => x.id === a.gid);
     return `<div class="card ach ${a.done ? '' : 'todo'}">${medalSvg(a.tier)}<div class="tx"><div class="t1">${g ? `<img class="gi" src="../${g.icon}" alt="">` : ''}${esc(achText(a))}</div>
       <div class="t2"><span class="bar"><i style="width:${a.have / a.need * 100}%;--c:${a.done ? 'var(--mint)' : 'var(--sun)'}"></i></span>${a.have.toLocaleString()}/${a.need.toLocaleString()}</div></div>
       <span class="rw"><i></i>${A_.TIER_COINS[a.tier]}</span></div>`;
@@ -512,7 +512,7 @@
   function startProps() {
     cancelAnimationFrame(propRaf); propRaf = 0;
     if (!propObs) { propObs = true;
-      try { new IntersectionObserver(es => { propVis = es.some(e => e.isIntersecting); propSync(); }).observe($('props')); } catch (e) {}
+      try { AtlasVis.observer((el, on) => { propVis = on; propSync(); }).observe($('props')); } catch (e) {}   // (AtlasVis, not IntersectionObserver: atlas/vis.js says why)
       document.addEventListener('visibilitychange', propSync); addEventListener('focus', propSync); addEventListener('blur', () => setTimeout(propSync, 0));
       try { new MutationObserver(propSync).observe($('bv'), { attributes: true, attributeFilter: ['class'] }); } catch (e) {} }
     propEls = [...$('props').querySelectorAll('.pp')];
@@ -1445,8 +1445,7 @@
   function rfxWake() { if (!rfxRaf && rfxOn()) rfxRaf = requestAnimationFrame(rfxStep); }
   function rfxTrack() {   // after a .rfx is drawn (the home profile card, the きせかえ name card)
     if (!rfxIO) {
-      if (!window.IntersectionObserver) { rfxIO = { observe: e => { rfxSeen.add(e); }, unobserve() {} }; }
-      else rfxIO = new IntersectionObserver(es => { es.forEach(x => { if (x.isIntersecting) rfxSeen.add(x.target); else rfxSeen.delete(x.target); }); rfxWake(); });
+      rfxIO = AtlasVis.observer((el, on) => { if (on) rfxSeen.add(el); else rfxSeen.delete(el); rfxWake(); });
       document.addEventListener('visibilitychange', rfxWake); addEventListener('focus', rfxWake); addEventListener('pageshow', rfxWake);
       try { new MutationObserver(rfxWake).observe($('bv'), { attributes: true, attributeFilter: ['class'] }); } catch (e) {}
     }
@@ -2709,25 +2708,41 @@
   const sgScan = root => { if (root.matches && root.matches(SG_SEL)) scrollGuide(root); if (root.querySelectorAll) root.querySelectorAll(SG_SEL).forEach(scrollGuide); };
   sgScan(document.body);
   try { new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1 && !n.classList.contains('sgw')) sgScan(n); }))).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
-  let achF = 'all', achS = 'all';   // achS: done / to-do filter (phones and PC)
-  function renderAch() {
+  /* ---------- 実績 (2026-11-21 ユーザー：全部を一度に出さず、ゲームごとに区分してクリックで開く) ----------
+     The page: the totals, 「もうすぐ達成」(the nearest to done, one per group, three at most), then one tile per group (共通 + each game: icon,
+     name, progress). A tile opens its awards right under its own row (one group open at a time; the tile again closes it).
+     Only the open group's cards are in the page — it used to build all 1,400 cards at once (20,000 elements, 1,700 pictures). */
+  let achF = '', achS = 'all';   // achF: the open group ('' none · 'common' · a game's id); achS: done / to-do filter
+  const achGrp = a => a.gid || 'common';
+  const achSort = (a, b) => (b.done - a.done) || (a.done ? 0 : (b.have / b.need) - (a.have / a.need));
+  function renderAch(keep) {
     $('hAch').textContent = t('ach.h');
     const done = ACH.filter(a => a.done).length, coins = ACH.filter(a => a.done).reduce((s, a) => s + A_.TIER_COINS[a.tier], 0);
     $('achSum').innerHTML = `<span class="coin"><i>¢</i>${coins.toLocaleString()}</span><b style="font-family:var(--round);font-size:18px">${done} / ${ACH.length}</b>
       <span class="bar" style="flex:1;min-width:120px;--c:var(--mint)"><i style="width:${done / ACH.length * 100}%"></i></span>
       <div class="aseg" role="group">${['all', 'done', 'todo'].map(k => `<button type="button" aria-pressed="${achS === k}" data-s="${k}">${t('ach.' + k)}</button>`).join('')}</div>`;
     $('achSum').querySelectorAll('.aseg button').forEach(b => b.onclick = () => { achS = b.dataset.s; renderAch(); });
-    const groups = [['all', t('ach.all'), null], ['common', t('ach.common'), null], ...A_.GAMES.map(g => [g.id, gname(g), g])];
-    $('achChips').innerHTML = groups.map(([k, l, g]) => {
-      const list = k === 'all' ? ACH : ACH.filter(a => (a.gid || 'common') === k);
-      return `<button class="chip" aria-pressed="${achF === k}" data-k="${k}">${g ? `<img src="${artSrc(g)}" alt="" style="object-fit:contain;background:none">` : ''}${esc(l)} <em>${list.filter(a => a.done).length}/${list.length}</em></button>`;
+    const show = a => achS === 'all' || (achS === 'done') === !!a.done;
+    const by = {}; ACH.forEach(a => (by[achGrp(a)] = by[achGrp(a)] || []).push(a));
+    // もうすぐ達成: the nearest to done among those begun (none while only the earned ones are shown)
+    const seen = new Set(), near = achS === 'done' ? [] : ACH.filter(a => !a.done && a.have > 0).sort((a, b) => (b.have / b.need) - (a.have / a.need))
+      .filter(a => !seen.has(achGrp(a)) && seen.add(achGrp(a))).slice(0, 3);   // (one per group: a series such as 10 / 30 / 60 items would fill the row alone)
+    $('achNear').hidden = !near.length;
+    $('achNear').innerHTML = near.length ? `<h3 class="glh">${esc(t('ach.near'))}</h3><div class="alist">${near.map(achHtml).join('')}</div>` : '';
+    const groups = [['common', t('ach.common'), null], ...A_.GAMES.map(g => [g.id, gname(g), g])].filter(([k]) => by[k] && by[k].some(show));
+    if (achF && !groups.some(([k]) => k === achF)) achF = '';
+    $('achList').innerHTML = groups.map(([k, l, g]) => {
+      const all = by[k], n = all.filter(a => a.done).length, full = n === all.length, open = achF === k;
+      const pic = g ? `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}>` : `<img src="logo.svg" alt="" class="flat">`;
+      return `<button type="button" class="card agt${full ? ' full' : ''}${open ? ' open' : ''}" data-k="${k}" aria-expanded="${open}"><span class="pic">${pic}</span>
+        <span class="tx"><b>${esc(l)}</b><span class="pr"><span class="bar" style="--c:${full ? 'var(--mint)' : 'var(--sun)'}"><i style="width:${n / all.length * 100}%"></i></span><em>${n}/${all.length}</em></span></span>
+        <i class="cv" aria-hidden="true"></i></button>`
+        + (open ? `<div class="agp" data-for="${k}"><div class="alist">${all.filter(show).sort(achSort).map(a => achHtml(a, true)).join('')}</div></div>` : '');
     }).join('');
-    $('achChips').querySelectorAll('.chip').forEach(b => b.onclick = () => { achF = b.dataset.k; renderAch(); });
-    hscroll($('achHsc'));
-    const list = (achF === 'all' ? ACH : ACH.filter(a => (a.gid || 'common') === achF)).slice()
-      .filter(a => achS === 'all' || (achS === 'done') === !!a.done)
-      .sort((a, b) => (b.done - a.done) || (a.done ? 0 : (b.have / b.need) - (a.have / a.need)));
-    $('achList').innerHTML = list.map(achHtml).join('');
+    $('achList').querySelectorAll('.agt').forEach(b => b.onclick = () => { const k = b.dataset.k; achF = achF === k ? '' : k; SFX.tap && SFX.tap(); renderAch(k); });
+    // a tile just opened / closed: keep it in view (the page's height changed above or below it)
+    if (keep) { const tile = $('achList').querySelector(`.agt[data-k="${keep}"]`); if (tile) { const hd = document.querySelector('header'), top = (hd && getComputedStyle(hd).position !== 'static' ? hd.getBoundingClientRect().bottom : 0) + 10, r = tile.getBoundingClientRect();
+      if (r.top < top || r.top > innerHeight * .6) scrollBy({ top: r.top - top, behavior: 'smooth' }); } }
   }
 
   /* ---------- SHOP ---------- */
@@ -2972,7 +2987,7 @@
         c.onclick = () => { if (id && !SK.owned(id, W)) return dressInfo(ART.byId(id)); if ((W.av.skin || 'base') === id) { pokeAvatar(); return; } if (id !== 'base') W.av.skin = id; else delete W.av.skin; A_.save(W); skinSync(); renderDress(); pokeAvatar(true); }; });
       if (renderDress.io) renderDress.io.disconnect();
       const fx = $('dItems').querySelectorAll('.skc.r3,.skc.r4');
-      if (fx.length && window.IntersectionObserver) { renderDress.io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('vis', e.isIntersecting)), { rootMargin: '80px' }); fx.forEach(c => renderDress.io.observe(c)); }
+      if (fx.length) { renderDress.io = AtlasVis.observer((el, on) => el.classList.toggle('vis', on), { margin: 80 }); fx.forEach(c => renderDress.io.observe(c)); }
       return;
     }
     // tap an owned icon to wear it; an unowned one shows its name, rarity and how to get it
@@ -2983,8 +2998,7 @@
     // SSR / UR cells animate only while on screen (hundreds of them otherwise run at once)
     if (renderDress.io) renderDress.io.disconnect();
     const fx = $('dItems').querySelectorAll('.dic.r3:not(.locked),.dic.r4:not(.locked)');
-    if (fx.length && window.IntersectionObserver) { renderDress.io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('vis', e.isIntersecting)), { rootMargin: '80px' }); fx.forEach(c => renderDress.io.observe(c)); }
-    else fx.forEach(c => c.classList.add('vis'));
+    if (fx.length) { renderDress.io = AtlasVis.observer((el, on) => el.classList.toggle('vis', on), { margin: 80 }); fx.forEach(c => renderDress.io.observe(c)); }
   }
   // phone: keep the fixed kind tabs (#dseg) sitting right on top of the bottom tab bar, whatever its height
   function dsegPos() {
