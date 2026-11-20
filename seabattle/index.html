@@ -194,9 +194,9 @@ body.drafting .draft{display:block}body.drafting .deploy{display:none}
 #pickGrid{padding-top:12px}
 .flv{margin-inline-start:8px;height:24px;padding:0 9px;border-radius:7px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}.fl .fh{align-items:center}.fl .fh span{margin-inline-start:auto}
 .dw .flv{float:right;margin:0}#pickHead .flv{height:30px;font-size:13px}
-#fleetOverlay .modal{width:min(1080px,calc(100vw - 32px));padding:20px 22px}#fleetTabs{flex-basis:100%;display:flex;gap:6px;padding-top:4px}#fleetTabs button{height:36px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--muted);font-size:14px;font-weight:700;cursor:pointer}#fleetTabs button.on{background:#e8f4f6;color:#08202a}
+:is(#fleetOverlay,#shipsOverlay) .modal{width:min(1080px,calc(100vw - 32px));padding:20px 22px}#fleetTabs{flex-basis:100%;display:flex;gap:6px;padding-top:4px}#fleetTabs button{height:36px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--muted);font-size:14px;font-weight:700;cursor:pointer}#fleetTabs button.on{background:#e8f4f6;color:#08202a}
 #fleetGrid{padding-top:12px}.pc .pst{font-size:13px;font-weight:700;text-align:center;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);color:var(--muted)}.pc .pst.r{color:#06302b;background:linear-gradient(180deg,#a8f0e0,#5fcdb8)}.pc .pst.x{color:#ffb4a0;background:rgba(226,99,74,.16)}.pc.sunk{opacity:.6}.pc.sunk .pa{filter:grayscale(1)}
-@media (max-width: 600px){ #fleetOverlay{padding:8px} #fleetOverlay .modal{width:100%;max-height:calc(100dvh - 16px);padding:14px} }
+@media (max-width: 600px){ :is(#fleetOverlay,#shipsOverlay){padding:8px} :is(#fleetOverlay,#shipsOverlay) .modal{width:100%;max-height:calc(100dvh - 16px);padding:14px} }
 .pc .ps{display:flex;align-items:center;gap:7px}.pc .ps .ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;display:block}.pc .ps b{font-size:14.5px}.pc .ps small{margin-inline-start:auto;font-size:11.5px;color:var(--muted);white-space:nowrap}
 .pc p{margin:0;font-size:13px;line-height:1.5;color:#cfe2e8;flex:1}
 .pc button{height:38px;border-radius:10px;border:1px solid #c4f7ec;background:linear-gradient(180deg,#a8f0e0,#5fcdb8);color:#06302b;font-size:14.5px;font-weight:700;cursor:pointer}
@@ -303,109 +303,109 @@ body.tac:not(.placing) .skills{display:grid}
 .rt-fleet div{display:flex;align-items:center;gap:12px}.rt-fleet .pip i{width:16px;height:18px}
 
 /* the pick sheet and the fleet sheet: a fixed-size gilt panel (2026-11-20 user: タブで大きさを変えない・Luxury) */
-:is(#pickOverlay,#fleetOverlay) .modal.lux{--gold:#d8b46a;--gold2:#f3dea6;--gold3:#9c7a3c;--ink2:#0a1622;width:min(1120px,calc(100vw - 32px));height:min(840px,calc(100dvh - 32px));max-height:none;display:flex;flex-direction:column;overflow:hidden;padding:0!important;border-radius:20px;
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux{--gold:#d8b46a;--gold2:#f3dea6;--gold3:#9c7a3c;--ink2:#0a1622;width:min(1120px,calc(100vw - 32px));height:min(840px,calc(100dvh - 32px));max-height:none;display:flex;flex-direction:column;overflow:hidden;padding:0!important;border-radius:20px;
   background:radial-gradient(120% 80% at 50% -10%,#1d3a52 0%,#0f2233 45%,#081420 100%);border:1px solid color-mix(in srgb,var(--gold) 55%,transparent);
   box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 0 0 5px rgba(8,20,32,.9),inset 0 0 0 6px color-mix(in srgb,var(--gold) 22%,transparent),0 40px 90px -30px rgba(0,0,0,.9)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pkh{position:static;margin:0;padding:24px 30px 0;background:none;flex:none;display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 18px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux h2{font-family:'Shippori Mincho','Cormorant Garamond',serif;font-weight:700;font-size:26px;letter-spacing:.18em;margin:0;background:linear-gradient(180deg,var(--gold2),var(--gold) 55%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pkh::after{content:'';flex-basis:100%;height:1px;margin-top:2px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--gold) 70%,transparent) 20%,color-mix(in srgb,var(--gold) 70%,transparent) 80%,transparent);order:5}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead{margin-inline-start:auto;gap:16px}:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead b{font-family:'Shippori Mincho',serif;color:var(--gold2);font-size:16px;letter-spacing:.08em}:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead span{color:#b9c8cf;font-family:'Cormorant Garamond',var(--num);font-size:17px;letter-spacing:.04em}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs{order:6;gap:4px;padding:0}:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button{height:40px;padding:0 18px;border-radius:0;border:0;border-bottom:2px solid transparent;background:none;color:#8fa4ae;font-family:'Shippori Mincho',serif;font-size:15px;letter-spacing:.12em}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button em{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold3)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button.on{color:var(--gold2);background:none;border-bottom-color:var(--gold)}:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button.on em{color:var(--gold)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--rc);margin-inline-end:8px;vertical-align:2px;opacity:.85}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickLegend{order:7;padding:6px 0 10px;color:#8fa4ae}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickGrid,:is(#pickOverlay,#fleetOverlay) .modal.lux #fleetGrid{flex:1;min-height:0;overflow-y:auto;padding:18px 30px 22px;overscroll-behavior:contain;scrollbar-color:color-mix(in srgb,var(--gold) 40%,transparent) transparent}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions{flex:none;margin:0;padding:14px 30px 20px;border-top:1px solid color-mix(in srgb,var(--gold) 22%,transparent);background:rgba(4,12,20,.35)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions .mbtn{border-color:color-mix(in srgb,var(--gold) 45%,transparent);color:var(--gold2);background:rgba(0,0,0,.2);font-family:'Shippori Mincho',serif;letter-spacing:.1em}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pg{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc{border-radius:14px;padding:14px;gap:10px;background:linear-gradient(165deg,#16304a 0%,#0e2133 55%,#0a1826 100%);border:1px solid color-mix(in srgb,var(--gold) 26%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 30px -20px rgba(0,0,0,.9)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc::before{content:'';position:absolute;left:14px;right:14px;top:0;height:2px;border-radius:0 0 2px 2px;background:var(--rc,var(--gold));opacity:.75}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.g0{--rc:#ff9f7a}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.g1{--rc:#7fd8ff}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.g2{--rc:#9ff0c8}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.g3{--rc:#c9c9d6}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt b{font-family:'Shippori Mincho',serif;font-size:17px;letter-spacing:.06em;color:#f4ecd8}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt em{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold3)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pcost{min-width:32px;height:32px;border-radius:50%;font-family:'Cormorant Garamond',serif;font-size:19px;color:#2a1d08;background:radial-gradient(circle at 35% 30%,#fff2c8,#e3c07a 45%,#a8823f 100%);box-shadow:0 0 0 1px rgba(0,0,0,.5),inset 0 -2px 3px rgba(0,0,0,.25)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa{background:rgba(2,10,18,.55);border:1px solid color-mix(in srgb,var(--gold) 16%,transparent);border-radius:10px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .ps b{color:var(--gold2);font-size:15px;letter-spacing:.04em}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .ps .ic{color:var(--gold)}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .ps small{color:#8fa4ae}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc p{color:#c9d6dc}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc button{border-radius:999px;border:1px solid #f3dea6;background:linear-gradient(180deg,#f6e3ae,#d8b46a 55%,#b48d48);color:#2a1d08;font-family:'Shippori Mincho',serif;font-weight:700;letter-spacing:.2em;box-shadow:0 6px 16px -8px rgba(216,180,106,.7)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc button:disabled{background:rgba(0,0,0,.25);border-color:color-mix(in srgb,var(--gold) 25%,transparent);color:#7f8f97;box-shadow:none;letter-spacing:.1em}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.taken{outline:none;border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 26px -8px rgba(216,180,106,.6)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pst{border-radius:999px;background:rgba(0,0,0,.25);border:1px solid color-mix(in srgb,var(--gold) 20%,transparent);color:#b9c8cf}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pst.r{background:linear-gradient(180deg,#f6e3ae,#d8b46a 55%,#b48d48);color:#2a1d08;border-color:#f3dea6}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .fsec{margin-bottom:22px}:is(#pickOverlay,#fleetOverlay) .modal.lux .fsec h3{display:flex;align-items:center;gap:12px;margin:0 0 12px;font-family:'Shippori Mincho',serif;font-size:17px;letter-spacing:.14em;color:var(--gold2)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .fsec h3::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 55%,transparent),transparent)}:is(#pickOverlay,#fleetOverlay) .modal.lux .fsec h3 small{font-family:'Cormorant Garamond',serif;color:#8fa4ae;font-size:15px;letter-spacing:.04em}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .none{color:#8fa4ae;margin:0}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pship{flex-direction:column;align-items:center;gap:7px}:is(#pickOverlay,#fleetOverlay) .modal.lux .plen{display:flex;align-items:center;gap:3px}:is(#pickOverlay,#fleetOverlay) .modal.lux .plen i{width:9px;height:9px;border-radius:2px;background:linear-gradient(180deg,#f3dea6,#b48d48)}:is(#pickOverlay,#fleetOverlay) .modal.lux .plen b{white-space:nowrap;margin-inline-start:6px;font-family:'Shippori Mincho',serif;font-size:13px;color:var(--gold2);letter-spacing:.06em}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead > *{white-space:nowrap}
-:is(#pickOverlay,#fleetOverlay) .modal.lux{font-variant-numeric:lining-nums tabular-nums}
-:is(#pickOverlay,#fleetOverlay) .modal.lux :is(#pickHead span,.pcost,.pt em,#pickTabs button em,.fsec h3 small){font-variant-numeric:lining-nums tabular-nums;font-feature-settings:'lnum' 1,'tnum' 1}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead span{font-family:var(--num);font-size:15px;letter-spacing:.02em}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt em{font-family:var(--num);font-size:13px;color:#a08a5c}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pcost{font-family:var(--num);font-size:16px;font-weight:700}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button em{font-family:var(--num);font-size:13px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .fsec h3 small{font-family:var(--num);font-size:13px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa{overflow:hidden}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa.wide{flex-direction:column;align-items:center;gap:8px;padding:10px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa .pship{max-width:100%;min-width:0}:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa .pship svg{height:16px;max-width:100%}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .plen b{font-family:var(--num);font-weight:600}:is(#pickOverlay,#fleetOverlay) .modal.lux .flv{border-color:color-mix(in srgb,var(--gold) 50%,transparent);color:var(--gold2);background:rgba(0,0,0,.25);font-family:'Shippori Mincho',serif;letter-spacing:.06em}
-@media (max-width: 600px){ :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead b{font-size:14px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead span{font-size:15px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead{gap:6px 10px;flex-wrap:wrap;min-width:0} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead .flv{margin-inline-start:auto;height:28px;font-size:12.5px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pkh{min-width:0} :is(#pickOverlay,#fleetOverlay) .modal.lux{overflow-x:hidden} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickLegend{gap:4px 10px;font-size:11px} :is(#pickOverlay,#fleetOverlay) .modal.lux{width:100%;height:calc(100dvh - 16px);border-radius:16px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pkh{padding:16px 16px 0} :is(#pickOverlay,#fleetOverlay) .modal.lux h2{font-size:21px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead{margin-inline-start:0;flex-basis:100%;justify-content:space-between} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs{overflow-x:auto;flex-wrap:nowrap} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button{padding:0 11px;font-size:14px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickGrid,:is(#pickOverlay,#fleetOverlay) .modal.lux #fleetGrid{padding:12px 12px 16px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pg{grid-template-columns:1fr 1fr;gap:9px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc{padding:10px;gap:7px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt b{font-size:14.5px} :is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions{padding:10px 14px 14px} }
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pkh{position:static;margin:0;padding:24px 30px 0;background:none;flex:none;display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 18px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux h2{font-family:'Shippori Mincho','Cormorant Garamond',serif;font-weight:700;font-size:26px;letter-spacing:.18em;margin:0;background:linear-gradient(180deg,var(--gold2),var(--gold) 55%,var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pkh::after{content:'';flex-basis:100%;height:1px;margin-top:2px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--gold) 70%,transparent) 20%,color-mix(in srgb,var(--gold) 70%,transparent) 80%,transparent);order:5}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead{margin-inline-start:auto;gap:16px}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead b{font-family:'Shippori Mincho',serif;color:var(--gold2);font-size:16px;letter-spacing:.08em}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead span{color:#b9c8cf;font-family:'Cormorant Garamond',var(--num);font-size:17px;letter-spacing:.04em}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs{order:6;gap:4px;padding:0}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs button{height:40px;padding:0 18px;border-radius:0;border:0;border-bottom:2px solid transparent;background:none;color:#8fa4ae;font-family:'Shippori Mincho',serif;font-size:15px;letter-spacing:.12em}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs button em{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold3)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs button.on{color:var(--gold2);background:none;border-bottom-color:var(--gold)}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs button.on em{color:var(--gold)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs button::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--rc);margin-inline-end:8px;vertical-align:2px;opacity:.85}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickLegend{order:7;padding:6px 0 10px;color:#8fa4ae}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickGrid,:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux :is(#fleetGrid,#shipGrid){flex:1;min-height:0;overflow-y:auto;padding:18px 30px 22px;overscroll-behavior:contain;scrollbar-color:color-mix(in srgb,var(--gold) 40%,transparent) transparent}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .modal-actions{flex:none;margin:0;padding:14px 30px 20px;border-top:1px solid color-mix(in srgb,var(--gold) 22%,transparent);background:rgba(4,12,20,.35)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .modal-actions .mbtn{border-color:color-mix(in srgb,var(--gold) 45%,transparent);color:var(--gold2);background:rgba(0,0,0,.2);font-family:'Shippori Mincho',serif;letter-spacing:.1em}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pg{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc{border-radius:14px;padding:14px;gap:10px;background:linear-gradient(165deg,#16304a 0%,#0e2133 55%,#0a1826 100%);border:1px solid color-mix(in srgb,var(--gold) 26%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 30px -20px rgba(0,0,0,.9)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc::before{content:'';position:absolute;left:14px;right:14px;top:0;height:2px;border-radius:0 0 2px 2px;background:var(--rc,var(--gold));opacity:.75}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.g0{--rc:#ff9f7a}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.g1{--rc:#7fd8ff}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.g2{--rc:#9ff0c8}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.g3{--rc:#c9c9d6}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pt b{font-family:'Shippori Mincho',serif;font-size:17px;letter-spacing:.06em;color:#f4ecd8}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pt em{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold3)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pcost{min-width:32px;height:32px;border-radius:50%;font-family:'Cormorant Garamond',serif;font-size:19px;color:#2a1d08;background:radial-gradient(circle at 35% 30%,#fff2c8,#e3c07a 45%,#a8823f 100%);box-shadow:0 0 0 1px rgba(0,0,0,.5),inset 0 -2px 3px rgba(0,0,0,.25)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa{background:rgba(2,10,18,.55);border:1px solid color-mix(in srgb,var(--gold) 16%,transparent);border-radius:10px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .ps b{color:var(--gold2);font-size:15px;letter-spacing:.04em}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .ps .ic{color:var(--gold)}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .ps small{color:#8fa4ae}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc p{color:#c9d6dc}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc button{border-radius:999px;border:1px solid #f3dea6;background:linear-gradient(180deg,#f6e3ae,#d8b46a 55%,#b48d48);color:#2a1d08;font-family:'Shippori Mincho',serif;font-weight:700;letter-spacing:.2em;box-shadow:0 6px 16px -8px rgba(216,180,106,.7)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc button:disabled{background:rgba(0,0,0,.25);border-color:color-mix(in srgb,var(--gold) 25%,transparent);color:#7f8f97;box-shadow:none;letter-spacing:.1em}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.taken{outline:none;border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 26px -8px rgba(216,180,106,.6)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pst{border-radius:999px;background:rgba(0,0,0,.25);border:1px solid color-mix(in srgb,var(--gold) 20%,transparent);color:#b9c8cf}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pst.r{background:linear-gradient(180deg,#f6e3ae,#d8b46a 55%,#b48d48);color:#2a1d08;border-color:#f3dea6}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .fsec{margin-bottom:22px}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .fsec h3{display:flex;align-items:center;gap:12px;margin:0 0 12px;font-family:'Shippori Mincho',serif;font-size:17px;letter-spacing:.14em;color:var(--gold2)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .fsec h3::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 55%,transparent),transparent)}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .fsec h3 small{font-family:'Cormorant Garamond',serif;color:#8fa4ae;font-size:15px;letter-spacing:.04em}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .none{color:#8fa4ae;margin:0}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pship{flex-direction:column;align-items:center;gap:7px}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .plen{display:flex;align-items:center;gap:3px}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .plen i{width:9px;height:9px;border-radius:2px;background:linear-gradient(180deg,#f3dea6,#b48d48)}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .plen b{white-space:nowrap;margin-inline-start:6px;font-family:'Shippori Mincho',serif;font-size:13px;color:var(--gold2);letter-spacing:.06em}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead > *{white-space:nowrap}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux{font-variant-numeric:lining-nums tabular-nums}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux :is(#pickHead span,.pcost,.pt em,#pickTabs button em,.fsec h3 small){font-variant-numeric:lining-nums tabular-nums;font-feature-settings:'lnum' 1,'tnum' 1}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead span{font-family:var(--num);font-size:15px;letter-spacing:.02em}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pt em{font-family:var(--num);font-size:13px;color:#a08a5c}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pcost{font-family:var(--num);font-size:16px;font-weight:700}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs button em{font-family:var(--num);font-size:13px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .fsec h3 small{font-family:var(--num);font-size:13px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa{overflow:hidden}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa.wide{flex-direction:column;align-items:center;gap:8px;padding:10px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa .pship{max-width:100%;min-width:0}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa .pship svg{height:16px;max-width:100%}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .plen b{font-family:var(--num);font-weight:600}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .flv{border-color:color-mix(in srgb,var(--gold) 50%,transparent);color:var(--gold2);background:rgba(0,0,0,.25);font-family:'Shippori Mincho',serif;letter-spacing:.06em}
+@media (max-width: 600px){ :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead b{font-size:14px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead span{font-size:15px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead{gap:6px 10px;flex-wrap:wrap;min-width:0} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead .flv{margin-inline-start:auto;height:28px;font-size:12.5px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pkh{min-width:0} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux{overflow-x:hidden} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickLegend{gap:4px 10px;font-size:11px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux{width:100%;height:calc(100dvh - 16px);border-radius:16px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pkh{padding:16px 16px 0} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux h2{font-size:21px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead{margin-inline-start:0;flex-basis:100%;justify-content:space-between} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs{overflow-x:auto;flex-wrap:nowrap} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs button{padding:0 11px;font-size:14px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickGrid,:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux :is(#fleetGrid,#shipGrid){padding:12px 12px 16px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pg{grid-template-columns:1fr 1fr;gap:9px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc{padding:10px;gap:7px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pt b{font-size:14.5px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .modal-actions{padding:10px 14px 14px} }
 
 /* chic pass (2026-11-20 user: 黄色系のボタンをやめてシックに・全体を見直す): dark lacquer with gilt hairlines, gold only as line and lettering */
-:is(#pickOverlay,#fleetOverlay) .modal.lux{background:radial-gradient(130% 90% at 50% -20%,#17314a 0%,#0c1c2b 50%,#070f18 100%)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc{background:linear-gradient(170deg,#0f2131 0%,#0b1824 60%,#09141e 100%);border-color:rgba(216,180,106,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 18px 36px -26px rgba(0,0,0,.95)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc:hover{border-color:rgba(216,180,106,.36)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc::before{height:1px;left:22px;right:22px;opacity:.55}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pcost{background:#08131d;color:var(--gold2);box-shadow:0 0 0 1px rgba(216,180,106,.65),inset 0 0 0 3px #08131d,inset 0 0 0 4px rgba(216,180,106,.22);font-weight:600}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa{background:rgba(1,7,13,.6);border-color:rgba(216,180,106,.12)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .reach rect{fill:rgba(255,255,255,.045)}:is(#pickOverlay,#fleetOverlay) .modal.lux .reach rect.a{fill:#d9805c}:is(#pickOverlay,#fleetOverlay) .modal.lux .reach rect.s{fill:#5fb2d6}:is(#pickOverlay,#fleetOverlay) .modal.lux .reach rect.p{fill:rgba(217,128,92,.32)}:is(#pickOverlay,#fleetOverlay) .modal.lux .reach rect.m{stroke:#d9805c}:is(#pickOverlay,#fleetOverlay) .modal.lux .reach rect.aim{stroke:#f3e7c9}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc button,:is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions .mbtn{height:40px;border-radius:6px;border:1px solid rgba(216,180,106,.55);background:linear-gradient(180deg,rgba(216,180,106,.10),rgba(216,180,106,.03));color:#ead9ae;font-family:'Shippori Mincho',serif;font-weight:600;letter-spacing:.32em;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);transition:background .18s,border-color .18s,color .18s}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc button:not(:disabled):hover,:is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions .mbtn:hover{background:linear-gradient(180deg,rgba(216,180,106,.22),rgba(216,180,106,.08));border-color:rgba(243,222,166,.85);color:#fff6dc}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc button:disabled{border-color:rgba(255,255,255,.07);background:transparent;color:#5f6f77;letter-spacing:.16em}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.taken{border-color:rgba(216,180,106,.8);box-shadow:0 0 0 1px rgba(216,180,106,.35),0 0 30px -14px rgba(216,180,106,.55)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.taken button:disabled{color:var(--gold2);border-color:rgba(216,180,106,.3)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pst{border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,.08);color:#9fb0b8;letter-spacing:.12em;font-weight:600}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pst.r{background:linear-gradient(180deg,rgba(216,180,106,.12),rgba(216,180,106,.03));border-color:rgba(216,180,106,.55);color:#ead9ae}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pst.x{background:transparent;border-color:rgba(226,99,74,.35);color:#e79a86}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .flv{border-radius:6px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button.on{color:#f3e7c9;border-bottom-width:1px;border-bottom-color:var(--gold)}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions{background:linear-gradient(180deg,rgba(3,9,15,.2),rgba(3,9,15,.55))}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux{background:radial-gradient(130% 90% at 50% -20%,#17314a 0%,#0c1c2b 50%,#070f18 100%)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc{background:linear-gradient(170deg,#0f2131 0%,#0b1824 60%,#09141e 100%);border-color:rgba(216,180,106,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 18px 36px -26px rgba(0,0,0,.95)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc:hover{border-color:rgba(216,180,106,.36)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc::before{height:1px;left:22px;right:22px;opacity:.55}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pcost{background:#08131d;color:var(--gold2);box-shadow:0 0 0 1px rgba(216,180,106,.65),inset 0 0 0 3px #08131d,inset 0 0 0 4px rgba(216,180,106,.22);font-weight:600}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa{background:rgba(1,7,13,.6);border-color:rgba(216,180,106,.12)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .reach rect{fill:rgba(255,255,255,.045)}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .reach rect.a{fill:#d9805c}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .reach rect.s{fill:#5fb2d6}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .reach rect.p{fill:rgba(217,128,92,.32)}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .reach rect.m{stroke:#d9805c}:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .reach rect.aim{stroke:#f3e7c9}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc button,:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .modal-actions .mbtn{height:40px;border-radius:6px;border:1px solid rgba(216,180,106,.55);background:linear-gradient(180deg,rgba(216,180,106,.10),rgba(216,180,106,.03));color:#ead9ae;font-family:'Shippori Mincho',serif;font-weight:600;letter-spacing:.32em;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);transition:background .18s,border-color .18s,color .18s}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc button:not(:disabled):hover,:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .modal-actions .mbtn:hover{background:linear-gradient(180deg,rgba(216,180,106,.22),rgba(216,180,106,.08));border-color:rgba(243,222,166,.85);color:#fff6dc}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc button:disabled{border-color:rgba(255,255,255,.07);background:transparent;color:#5f6f77;letter-spacing:.16em}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.taken{border-color:rgba(216,180,106,.8);box-shadow:0 0 0 1px rgba(216,180,106,.35),0 0 30px -14px rgba(216,180,106,.55)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.taken button:disabled{color:var(--gold2);border-color:rgba(216,180,106,.3)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pst{border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,.08);color:#9fb0b8;letter-spacing:.12em;font-weight:600}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pst.r{background:linear-gradient(180deg,rgba(216,180,106,.12),rgba(216,180,106,.03));border-color:rgba(216,180,106,.55);color:#ead9ae}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pst.x{background:transparent;border-color:rgba(226,99,74,.35);color:#e79a86}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .flv{border-radius:6px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs button.on{color:#f3e7c9;border-bottom-width:1px;border-bottom-color:var(--gold)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .modal-actions{background:linear-gradient(180deg,rgba(3,9,15,.2),rgba(3,9,15,.55))}
 #btnPick{border-radius:8px;border:1px solid rgba(216,180,106,.45);background:linear-gradient(180deg,#132a3c,#0c1c2a);color:#ead9ae;font-family:'Shippori Mincho',serif;letter-spacing:.14em}
 #btnPick.go{border-color:rgba(216,180,106,.85);background:linear-gradient(180deg,#183248,#0e2131);color:#f6ead0;box-shadow:0 0 0 1px rgba(216,180,106,.25),0 0 22px -10px rgba(216,180,106,.6)}
 
 /* phones: one compact row per ship (2026-11-20 user: スマホはコンパクトに) */
 @media (max-width: 600px){
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pkh{padding:12px 14px 0;gap:4px 10px} :is(#pickOverlay,#fleetOverlay) .modal.lux h2{font-size:18px;letter-spacing:.14em}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead{flex-basis:auto;margin-inline-start:auto} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead b{display:none} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickHead span{font-size:13px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button{height:34px;padding:0 9px;font-size:13px;letter-spacing:.06em} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickTabs button::before{margin-inline-end:5px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux #pickLegend{padding:4px 0 6px;font-size:10.5px;gap:2px 8px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux #pickGrid,:is(#pickOverlay,#fleetOverlay) .modal.lux #fleetGrid{padding:10px 10px 12px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pg{grid-template-columns:1fr;gap:8px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc{display:grid;grid-template-columns:78px minmax(0,1fr) auto;grid-template-areas:"pa pt pt" "pa ps ps" "pa tx tx" "pa . bt";gap:3px 10px;padding:9px 10px 9px 9px;align-items:start}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc::before{left:12px;right:12px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt{grid-area:pt;gap:7px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt b{font-size:14.5px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pcost{min-width:24px;width:24px;height:24px;font-size:13px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa,:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa.wide{grid-area:pa;flex-direction:column;justify-content:center;gap:4px;padding:5px;min-height:78px;align-self:stretch}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .reach{width:66px;height:66px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa .pship svg{height:10px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa.wide .pship svg{display:none}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .plen{gap:2px} :is(#pickOverlay,#fleetOverlay) .modal.lux .plen i{width:6px;height:6px} :is(#pickOverlay,#fleetOverlay) .modal.lux .plen b{font-size:11px;margin-inline-start:3px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .ps{grid-area:ps;gap:5px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .ps b{font-size:13px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .ps .ic svg{width:16px;height:16px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .ps small{display:inline;font-size:10.5px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc p{grid-area:tx;font-size:11.5px;line-height:1.45}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc button,:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pst{grid-area:bt;height:32px;padding:0 16px;font-size:12.5px;letter-spacing:.2em;justify-self:end;align-self:end;display:flex;align-items:center}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions{padding:8px 10px 10px} :is(#pickOverlay,#fleetOverlay) .modal.lux .modal-actions .mbtn{height:40px;font-size:14px;letter-spacing:.16em}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .fsec{margin-bottom:14px} :is(#pickOverlay,#fleetOverlay) .modal.lux .fsec h3{font-size:14.5px;margin-bottom:8px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pkh{padding:12px 14px 0;gap:4px 10px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux h2{font-size:18px;letter-spacing:.14em}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead{flex-basis:auto;margin-inline-start:auto} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead b{display:none} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickHead span{font-size:13px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs button{height:34px;padding:0 9px;font-size:13px;letter-spacing:.06em} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickTabs button::before{margin-inline-end:5px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickLegend{padding:4px 0 6px;font-size:10.5px;gap:2px 8px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickGrid,:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux :is(#fleetGrid,#shipGrid){padding:10px 10px 12px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pg{grid-template-columns:1fr;gap:8px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc{display:grid;grid-template-columns:78px minmax(0,1fr) auto;grid-template-areas:"pa pt pt" "pa ps ps" "pa tx tx" "pa . bt";gap:3px 10px;padding:9px 10px 9px 9px;align-items:start}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc::before{left:12px;right:12px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pt{grid-area:pt;gap:7px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pt b{font-size:14.5px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pcost{min-width:24px;width:24px;height:24px;font-size:13px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa,:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa.wide{grid-area:pa;flex-direction:column;justify-content:center;gap:4px;padding:5px;min-height:78px;align-self:stretch}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .reach{width:66px;height:66px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa .pship svg{height:10px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa.wide .pship svg{display:none}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .plen{gap:2px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .plen i{width:6px;height:6px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .plen b{font-size:11px;margin-inline-start:3px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .ps{grid-area:ps;gap:5px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .ps b{font-size:13px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .ps .ic svg{width:16px;height:16px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .ps small{display:inline;font-size:10.5px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc p{grid-area:tx;font-size:11.5px;line-height:1.45}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc button,:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pst{grid-area:bt;height:32px;padding:0 16px;font-size:12.5px;letter-spacing:.2em;justify-self:end;align-self:end;display:flex;align-items:center}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .modal-actions{padding:8px 10px 10px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .modal-actions .mbtn{height:40px;font-size:14px;letter-spacing:.16em}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .fsec{margin-bottom:14px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .fsec h3{font-size:14.5px;margin-bottom:8px}
 }
 
 /* compact cards (2026-11-20 user: 選ぶボタン廃止・長さは名前の横・艦の絵は省略) */
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt{gap:8px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pt b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .plen{display:inline-flex;gap:2px;flex:none;margin-inline-start:2px} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .plen i{width:7px;height:7px;border-radius:1.5px;background:linear-gradient(180deg,#f3dea6,#b48d48);opacity:.9}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa{justify-content:center;padding:8px;min-height:0} :is(#pickOverlay,#fleetOverlay) .modal.lux .reach{width:118px;height:118px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.can{cursor:pointer} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc.can:hover{border-color:rgba(243,222,166,.7);transform:translateY(-2px);box-shadow:0 0 0 1px rgba(216,180,106,.25),0 18px 36px -22px rgba(216,180,106,.45)} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc{transition:transform .16s,border-color .16s,box-shadow .16s}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.can:focus-visible{outline:1px solid var(--gold2);outline-offset:2px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.off:not(.taken){opacity:.5} :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pwhy{align-self:flex-end;font-size:11.5px;letter-spacing:.12em;color:#a08a5c;border:1px solid rgba(216,180,106,.25);border-radius:4px;padding:2px 8px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux .pc.taken .pwhy{color:var(--gold2);border-color:rgba(216,180,106,.6)}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pt{gap:8px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pt b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .plen{display:inline-flex;gap:2px;flex:none;margin-inline-start:2px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .plen i{width:7px;height:7px;border-radius:1.5px;background:linear-gradient(180deg,#f3dea6,#b48d48);opacity:.9}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa{justify-content:center;padding:8px;min-height:0} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .reach{width:118px;height:118px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.can{cursor:pointer} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.can:hover{border-color:rgba(243,222,166,.7);transform:translateY(-2px);box-shadow:0 0 0 1px rgba(216,180,106,.25),0 18px 36px -22px rgba(216,180,106,.45)} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc{transition:transform .16s,border-color .16s,box-shadow .16s}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.can:focus-visible{outline:1px solid var(--gold2);outline-offset:2px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.off:not(.taken){opacity:.5} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pwhy{align-self:flex-end;font-size:11.5px;letter-spacing:.12em;color:#a08a5c;border:1px solid rgba(216,180,106,.25);border-radius:4px;padding:2px 8px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.taken .pwhy{color:var(--gold2);border-color:rgba(216,180,106,.6)}
 @media (max-width: 600px){
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc{grid-template-columns:72px minmax(0,1fr);grid-template-areas:"pa pt" "pa ps" "pa tx" "pa wy";gap:2px 10px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc.nodia{grid-template-columns:minmax(0,1fr);grid-template-areas:"pt" "ps" "tx" "wy"}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pa{min-height:72px;padding:4px} :is(#pickOverlay,#fleetOverlay) .modal.lux .reach{width:62px;height:62px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .pwhy{grid-area:wy;justify-self:end;font-size:10.5px;padding:1px 6px}
-  :is(#pickOverlay,#fleetOverlay) .modal.lux .pc .plen i{width:6px;height:6px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc{grid-template-columns:72px minmax(0,1fr);grid-template-areas:"pa pt" "pa ps" "pa tx" "pa wy";gap:2px 10px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc.nodia{grid-template-columns:minmax(0,1fr);grid-template-areas:"pt" "ps" "tx" "wy"}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pa{min-height:72px;padding:4px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .reach{width:62px;height:62px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .pwhy{grid-area:wy;justify-self:end;font-size:10.5px;padding:1px 6px}
+  :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux .pc .plen i{width:6px;height:6px}
 }
 
 /* ========== Luxury everywhere (2026-11-20 user: UIのLuxury化は全てのUIに) — lacquered navy, gilt hairlines and lettering, Mincho headings ========== */
@@ -463,13 +463,13 @@ body{background:radial-gradient(1200px 700px at 20% -15%, #15304a 0%, transparen
 #shipsOverlay .modal h2{margin-bottom:10px}#shipList .sl{border-top-color:var(--gl)}#shipList .sl b{font-family:var(--serif);color:#f1e6c8}#shipList .sl .dc{color:var(--gold)}
 
 /* the pick sheet's three views: 選ぶ／相手の艦／自分の艦 (2026-11-20 user: 右上で切り替え、閉じる不要) */
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickViews{order:4;flex-basis:100%;display:flex;gap:0;align-items:center}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickViews button{height:34px;padding:0 16px;border:1px solid var(--gl);background:rgba(0,0,0,.25);color:#b9a77c;font-family:var(--serif);font-size:14px;letter-spacing:.1em;cursor:pointer;margin-inline-start:-1px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickViews button:first-child{border-radius:6px 0 0 6px;margin:0} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickViews button[data-v=mine]{border-radius:0 6px 6px 0}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickViews button.on{background:linear-gradient(180deg,rgba(216,180,106,.2),rgba(216,180,106,.06));color:var(--gold2);border-color:var(--gl2);position:relative;z-index:1}
-:is(#pickOverlay,#fleetOverlay) .modal.lux #pickViews .all{margin-inline-start:auto;border-radius:6px;font-size:12.5px;height:30px}
-:is(#pickOverlay,#fleetOverlay) .modal.lux[data-view=foe] :is(#pickTabs,#pickLegend),:is(#pickOverlay,#fleetOverlay) .modal.lux[data-view=mine] :is(#pickTabs,#pickLegend){display:none}
-@media (max-width: 600px){ :is(#pickOverlay,#fleetOverlay) .modal.lux #pickViews button{padding:0 10px;font-size:12.5px;height:32px} :is(#pickOverlay,#fleetOverlay) .modal.lux #pickViews .all{font-size:11.5px;padding:0 8px} }
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickViews{order:4;flex-basis:100%;display:flex;gap:0;align-items:center}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickViews button{height:34px;padding:0 16px;border:1px solid var(--gl);background:rgba(0,0,0,.25);color:#b9a77c;font-family:var(--serif);font-size:14px;letter-spacing:.1em;cursor:pointer;margin-inline-start:-1px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickViews button:first-child{border-radius:6px 0 0 6px;margin:0} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickViews button[data-v=mine]{border-radius:0 6px 6px 0}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickViews button.on{background:linear-gradient(180deg,rgba(216,180,106,.2),rgba(216,180,106,.06));color:var(--gold2);border-color:var(--gl2);position:relative;z-index:1}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickViews .all{margin-inline-start:auto;border-radius:6px;font-size:12.5px;height:30px}
+:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux[data-view=foe] :is(#pickTabs,#pickLegend),:is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux[data-view=mine] :is(#pickTabs,#pickLegend){display:none}
+@media (max-width: 600px){ :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickViews button{padding:0 10px;font-size:12.5px;height:32px} :is(#pickOverlay,#fleetOverlay,#shipsOverlay) .modal.lux #pickViews .all{font-size:11.5px;padding:0 8px} }
 
 /* no small board in the fleet card (2026-11-20 user): the other sea is one tap away in the board's caption */
 #miniBtn{display:none!important} .radar,.radar{grid-template-columns:minmax(0,1fr)!important}
@@ -505,6 +505,28 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
 .reach.emb .r1{fill:rgba(216,180,106,.035);stroke:rgba(216,180,106,.28);stroke-width:.8}.reach.emb .r2{fill:rgba(216,180,106,.07);stroke:rgba(216,180,106,.55);stroke-width:1}.reach.emb .r3{fill:none;stroke:rgba(216,180,106,.25);stroke-width:.6}.reach.emb .tk{stroke:rgba(216,180,106,.45);stroke-width:.9;stroke-linecap:round}.reach.emb .emi{fill:none;stroke:var(--gold2);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 @media (max-width:600px){#pickGrid .pc,#fleetOverlay .pc{min-height:102px}}
 .pc.sel{border-color:var(--gold2)!important;box-shadow:0 0 0 2px var(--gold),0 0 34px -10px rgba(216,180,106,.75)!important;background:linear-gradient(180deg,rgba(216,180,106,.12),rgba(216,180,106,.03))}.pc .psel{position:absolute;right:12px;bottom:10px;padding:3px 12px;border-radius:999px;background:var(--gold);color:#0b1520;font-size:12px;font-weight:700;letter-spacing:.12em}.pc{position:relative}
+/* 全艦の一覧 (2026-11-20 user: 画像付き・コスト／カテゴリで並べ替え・見やすい大きさ) */
+#shipsOverlay .slh{display:none}
+#shipsOverlay .slsort{display:flex;gap:0;margin-inline-start:auto;border:1px solid rgba(216,180,106,.4);border-radius:6px;overflow:hidden}
+#shipsOverlay .slsort button{height:32px;padding:0 14px;border:0;background:transparent;color:#a99a78;font-family:'Shippori Mincho',serif;font-size:13.5px;letter-spacing:.12em;cursor:pointer}
+#shipsOverlay .slsort button+button{border-left:1px solid rgba(216,180,106,.25)}
+#shipsOverlay .slsort button.on{color:var(--gold2);background:linear-gradient(180deg,rgba(216,180,106,.18),rgba(216,180,106,.05))}
+#shipsOverlay .sltabs{order:6;flex-basis:100%;display:flex;gap:4px;flex-wrap:wrap}
+#shipsOverlay .sltabs button{height:34px;padding:0 14px;border:0;border-bottom:2px solid transparent;background:none;color:#8fa4ae;font-family:'Shippori Mincho',serif;font-size:14.5px;letter-spacing:.12em;cursor:pointer}
+#shipsOverlay .sltabs button em{font-style:normal;margin-inline-start:6px;color:#a08c62;font-family:var(--num);font-size:12px}
+#shipsOverlay .sltabs button.on{color:var(--gold2);border-bottom-color:var(--gold)}
+#shipsOverlay .sltabs button::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;margin-inline-end:7px;vertical-align:2px;background:var(--rc,#d8b46a)}
+#shipsOverlay .sltabs button.g0{--rc:#ff9f7a}#shipsOverlay .sltabs button.g1{--rc:#7fd8ff}#shipsOverlay .sltabs button.g2{--rc:#9ff0c8}#shipsOverlay .sltabs button.g3{--rc:#c9c9d6}
+#shipsOverlay .pc.onf{box-shadow:0 0 0 1px rgba(216,180,106,.35)}
+#shipsOverlay .pg{grid-auto-rows:1fr}#shipsOverlay .pc{min-height:328px}@media (max-width:600px){#shipsOverlay .pc{min-height:120px}}
+#shipsOverlay .pa{position:relative}#shipsOverlay .pc .pon{position:absolute;top:8px;right:8px;white-space:nowrap;padding:1px 9px;background:rgba(5,12,20,.8);border-radius:999px;border:1px solid rgba(216,180,106,.5);color:var(--gold2);font-size:11.5px;letter-spacing:.12em}
+@media (max-width:600px){#shipsOverlay .slsort button{height:30px;padding:0 10px;font-size:12.5px}#shipsOverlay .sltabs button{height:30px;padding:0 8px;font-size:13px}}
+@media (min-width:601px){#pickGrid .pc,#fleetOverlay .pc{min-height:328px}}
+/* PC: the legend sits in the footer, left of 決定 (2026-11-20 user; phones keep it under the tabs — app.js placeLegend) */
+#pickOverlay .modal-actions{align-items:center}#pickOverlay .modal.lux .modal-actions #pickLegend{padding:0;flex:1 1 auto;margin:0 auto 0 0;order:0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px}
+#pickOverlay .modal-actions #btnPickOk{flex:0 0 auto;min-width:180px}
+#pickOverlay .modal.lux:not([data-view="pick"]) .modal-actions #pickLegend{visibility:hidden}
+@media (max-width:600px){#pickOverlay .modal-actions #btnPickOk{flex:1 1 100%}}
 </style>
 </head>
 <body class="no-online placing">
@@ -529,7 +551,7 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
     </div>
   </div>
   <aside class="side">
-    <div class="card draft" id="draftCard"><div class="dh"><b data-i18n="dr.t"></b><span id="drTurn"></span></div><div id="drRows"></div><div id="drWho"></div><button id="btnDrStop" data-i18n="dr.stop"></button></div>
+    <div class="card draft" id="draftCard"><div class="dh"><b data-i18n="dr.t"></b><span id="drTurn"></span></div><div id="drRows"></div><div id="drWho"></div></div>
     <div class="card skills" id="skillCard"></div>
     <div class="card deploy" id="deployCard">
       <h3 data-i18n="dep.t"></h3><p id="depText"></p>
@@ -574,9 +596,9 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
 </div>
 
 <!-- rules (shared/ruletour.js) -->
-<div class="overlay" id="pickOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="dr.t"></h2><div id="pickHead"></div><div id="pickViews"></div><div id="pickTabs"></div><div id="pickLegend"><span><i class="t"></i><b data-i18n="pk.lg.t"></b></span><span><i class="a"></i><b data-i18n="pk.lg.a"></b></span><span><i class="s"></i><b data-i18n="pk.lg.s"></b></span><span><i class="p"></i><b data-i18n="pk.lg.p"></b></span><span><i class="m"></i><b data-i18n="pk.lg.m"></b></span></div></div><div id="pickGrid"></div><div class="modal-actions"><button class="mbtn" id="btnPickStop" data-i18n="dr.stop"></button><button class="mbtn primary" id="btnPickOk" data-i18n="pk.ok"></button></div></div></div>
+<div class="overlay" id="pickOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="dr.t"></h2><div id="pickHead"></div><div id="pickViews"></div><div id="pickTabs"></div></div><div id="pickGrid"></div><div class="modal-actions"><div id="pickLegend"><span><i class="t"></i><b data-i18n="pk.lg.t"></b></span><span><i class="a"></i><b data-i18n="pk.lg.a"></b></span><span><i class="s"></i><b data-i18n="pk.lg.s"></b></span><span><i class="p"></i><b data-i18n="pk.lg.p"></b></span><span><i class="m"></i><b data-i18n="pk.lg.m"></b></span></div><button class="mbtn primary" id="btnPickOk" data-i18n="pk.ok"></button></div></div></div>
 <div class="overlay" id="fleetOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="fv.t"></h2></div><div id="fleetGrid"></div><div class="modal-actions"><button class="mbtn" id="btnFleetClose" data-i18n="close"></button></div></div></div>
-<div class="overlay" id="shipsOverlay"><div class="modal"><h2 data-i18n="dr.all"></h2><div id="shipList"></div><div class="modal-actions"><button class="mbtn" id="btnShipsClose" data-i18n="close"></button></div></div></div>
+<div class="overlay" id="shipsOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="dr.all"></h2><div id="slSort" class="slsort"></div><div id="slTabs" class="sltabs"></div></div><div id="shipGrid"></div><div class="modal-actions"><button class="mbtn" id="btnShipsClose" data-i18n="close"></button></div></div></div>
 <div class="overlay" id="rulesOverlay"><div class="modal"><div id="rulesBody"></div></div></div>
 
 <!-- result -->
@@ -589,7 +611,7 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
   </div>
 </div>
 
-<script src="i18n.js?v=38"></script>
+<script src="i18n.js?v=40"></script>
 <script src="../shared/rulesoffer.js?v=20sea"></script>
 <script src="../shared/headerbar.js?v=63"></script>
 <script src="../shared/resign.js?v=3l14"></script>
@@ -597,7 +619,7 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
 <script src="engine.js?v=25"></script>
 <script src="board.js?v=10"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=49"></script>
+<script src="app.js?v=53"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>

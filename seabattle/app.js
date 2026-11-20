@@ -195,13 +195,32 @@ function renderSkills() {
 }
 // the pick draft (タクティクス): 10 ships on the table, picked in turn A B B A …; then the fleet is arranged as usual
 function shipDesc(T) { return T.skill ? t('sk.' + T.skill) + '：' + t('sk.' + T.skill + '.d') + ' · ' + t('sl.cd', { n: T.cd }) : T.armor ? t('sk.armor') + '：' + t(T.armor > 1 ? 'sk.armor2.d' : 'sk.armor.d') : T.aa ? t('sk.aa') + '：' + t('sk.aa.d') : T.decoy ? t('sk.decoy') + '：' + t('sk.decoy.d') : T.counter ? t('sk.counter') + '：' + t('sk.counter.d') : T.calm ? t('sk.calm') + '：' + t('sk.calm.d') : T.plunder ? t('sk.plunder') + '：' + t('sk.plunder.d') : T.net ? t('sk.net') + '：' + t('sk.net.d') : T.pursuit ? t('sk.pursuit') + '：' + t('sk.pursuit.d') : T.haste ? t('sk.haste') + '：' + t('sk.haste.d') : T.trace ? t('sk.trace') + '：' + t('sk.trace.d') : T.cost === 0 ? t('sk.free') + '：' + t('sk.free.d') : T.rally ? t('sk.rally') + '：' + t('sk.rally.d') : T.hospital ? t('sk.hospital') + '：' + t('sk.hospital.d') : t('dr.none'); }
-function openShipList() {   // every type, cheapest first, with the full text — for planning a fleet
-  $('#shipList').innerHTML = E.TYPES.map((T, k) => [T, k]).sort((a, b) => a[0].cost - b[0].cost || a[1] - b[1]).map(([T, k]) => `<div class="sl"><span class="pip">${'<i></i>'.repeat(T.len)}</span><div><b>${t('ship.' + k)}</b><small>${shipDesc(T)}</small></div><span class="dc">${T.cost}</span></div>`).join('');
-  $('#shipsOverlay').classList.add('show');
+// 全艦の一覧: every type as a card (same picture as the pick sheet), sorted by cost or by role, filtered by role; the field's types are marked
+let slSort = 'cost', slTab = -1;
+function openShipList() { renderShipList(); $('#shipsOverlay').classList.add('show'); $('#shipGrid').scrollTop = 0; }
+function renderShipList() {
+  const f = G && G.draft && G.phase === 'draft' ? (G.draft.f || null) : null;
+  const all = E.TYPES.map((T, k) => k), byCost = (a, b) => E.TYPES[a].cost - E.TYPES[b].cost || a - b;
+  const card = k => { const T = E.TYPES[k], kind = T.skill ? t('pk.active', { n: T.cd }) : PASSIVE_T(T) ? t('pk.passive') : t('pk.none'), on = f && f[k];
+    return `<div class="pc g${ROLE_OF(k)}${on ? ' onf' : ''}"><div class="pt"><span class="pcost">${T.cost}</span><b>${t('ship.' + k)}</b>${lenIcon(T.len)}</div>
+      <div class="pa">${cardArt(T)}${on ? `<span class="pon">${t('sl.onf')}</span>` : ''}</div>
+      <div class="ps"><i class="ic">${SK_ICON[abilityKey(T)] || ''}</i><b>${shipSkillName(T)}</b><small>${kind}</small></div>
+      <p>${shipSkillText(T)}</p></div>`; };
+  const counts = [0, 1, 2, 3].map(g => all.filter(k => ROLE_OF(k) === g).length);
+  $('#slSort').innerHTML = [['cost', t('sl.s.cost')], ['role', t('sl.s.role')]].map(([v, l]) => `<button data-s="${v}" class="${v === slSort ? 'on' : ''}">${l}</button>`).join('');
+  $('#slTabs').innerHTML = `<button data-g="-1" class="${slTab < 0 ? 'on' : ''}">${t('sl.allc')}<em>${all.length}</em></button>` + [0, 1, 2, 3].map(g => counts[g] ? `<button data-g="${g}" class="g${g}${g === slTab ? ' on' : ''}">${t('dr.g' + g)}<em>${counts[g]}</em></button>` : '').join('');
+  const list = all.filter(k => slTab < 0 || ROLE_OF(k) === slTab);
+  if (slSort === 'role' && slTab < 0) $('#shipGrid').innerHTML = [0, 1, 2, 3].map(g => { const L = list.filter(k => ROLE_OF(k) === g).sort(byCost); return L.length ? `<section class="fsec"><h3>${t('dr.g' + g)}<small>${L.length}</small></h3><div class="pg">${L.map(card).join('')}</div></section>` : ''; }).join('');
+  else $('#shipGrid').innerHTML = `<div class="pg">${list.sort(slSort === 'role' ? ((a, b) => ROLE_OF(a) - ROLE_OF(b) || byCost(a, b)) : byCost).map(card).join('')}</div>`;
 }
+$('#slSort').addEventListener('click', e => { const b = e.target.closest('button[data-s]'); if (!b) return; slSort = b.dataset.s; renderShipList(); $('#shipGrid').scrollTop = 0; });
+$('#slTabs').addEventListener('click', e => { const b = e.target.closest('button[data-g]'); if (!b) return; slTab = +b.dataset.g; renderShipList(); $('#shipGrid').scrollTop = 0; });
 document.addEventListener('click', e => { if (e.target.closest('#btnAllShips')) openShipList(); }); $('#btnShipsClose').onclick = () => $('#shipsOverlay').classList.remove('show');
 $('#shipsOverlay').addEventListener('click', e => { if (e.target.id === 'shipsOverlay') $('#shipsOverlay').classList.remove('show'); });
-let pickShut = -1, pickTab = 0, pickView = 'pick', pickSel = -1;   // (pickSel: the card chosen but not yet confirmed — tap again to undo, 決定 to take it; 2026-11-20 user)
+let pickShut = -1, pickTab = 0, pickView = 'pick', pickSel = [];   // (pickSel: the cards chosen but not yet confirmed — tap again to undo, 決定 takes them all; 2026-11-20 user)
+// how many picks the player has in a row from now (the order is A B B A A B B …; a side that has finished is skipped), within the fleet cap
+function myRun(d) { let n = d.n, c = 0; for (let g = 0; g < 12; g++) { const p = (((n + 1) >> 1) & 1) ^ d.first; if (p === 0) c++; else if (!d.done[1]) break; n++; } return Math.max(1, Math.min(c, E.MAXSHIPS - d.picks[0].length)); }
+
    // (pickView: 'pick' the cards to choose from, 'foe' / 'mine' the picks so far)   // (pickTab: the role tab open in the pick sheet)   // the draft pick number at which the player closed the pick sheet (it opens itself on each of their turns)
 const ROLE_OF = k => E.ROLE.atk.includes(k) ? 0 : E.ROLE.info.includes(k) ? 1 : E.ROLE.def.includes(k) ? 2 : 3;
 function renderDraft() {
@@ -212,17 +231,19 @@ function renderDraft() {
   $('#drRows').innerHTML = '';
   const who = (p, name) => `<button class="dw${d.turn === p ? ' turn' : ''}" data-v="${p === 1 ? 'foe' : 'mine'}"><b>${name}</b><span class="pips">${d.picks[p].map(k => `<span class="pip">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</span><em>${t('dr.left', { c: E.draftLeft(d, p) })}</em></button>`;   // (a compact row per side; tap → the fleet sheet)
   $('#drWho').innerHTML = who(1, 'AI Lv.' + G.level) + who(0, t('you'));
-  $('#btnDrStop').disabled = !(E.draftCanStop(d, 0) && !G.busy);
   // the pick sheet: one card per type on the table, by role, cheapest first
-  if (!mine || (pickSel >= 0 && !E.draftCan(d, 0, pickSel))) pickSel = -1;
-  const card = k => { const T = E.TYPES[k], taken = d.picks[0].includes(k), can = mine && E.draftCan(d, 0, k), sel = k === pickSel;
-    const why = taken ? t('pk.taken') : !d.pool[k] ? t('pk.gone') : T.cost > E.draftLeft(d, 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : '';
+  if (!mine) pickSel = []; pickSel = pickSel.filter(k => E.draftCan(d, 0, k));
+  const run = myRun(d), selCost = pickSel.reduce((a, k) => a + E.TYPES[k].cost, 0);
+  // a card can be chosen if it fits beside the ones already chosen (cost); when the run is full a tap swaps it for the last one chosen
+  const fits = k => { if (pickSel.includes(k)) return true; const rest = pickSel.length < run ? pickSel : pickSel.slice(0, -1); return rest.reduce((a, x) => a + E.TYPES[x].cost, 0) + E.TYPES[k].cost <= E.draftLeft(d, 0); };
+  const card = k => { const T = E.TYPES[k], taken = d.picks[0].includes(k), can = mine && E.draftCan(d, 0, k) && fits(k), sel = pickSel.includes(k);
+    const why = taken ? t('pk.taken') : !d.pool[k] ? t('pk.gone') : T.cost > E.draftLeft(d, 0) - (mine && !sel ? selCost : 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : '';
     const kind = T.skill ? t('pk.active', { n: T.cd }) : PASSIVE_T(T) ? t('pk.passive') : t('pk.none');
     return `<div class="pc g${ROLE_OF(k)}${can ? ' can' : ' off'}${taken ? ' taken' : ''}${sel ? ' sel' : ''}" data-k="${k}" aria-pressed="${sel}" ${can ? 'role="button" tabindex="0"' : ''} title="${can ? t('pk.tap') : why}"><div class="pt"><span class="pcost">${T.cost}</span><b>${t('ship.' + k)}</b>${lenIcon(T.len)}<em>×${d.pool[k]}</em></div>
       <div class="pa">${cardArt(T)}</div>
       <div class="ps"><i class="ic">${SK_ICON[abilityKey(T)] || ''}</i><b>${shipSkillName(T)}</b><small>${kind}</small></div>
       <p>${shipSkillText(T)}</p>
-      ${sel ? `<span class="psel">${t('pk.sel')}</span>` : why ? `<span class="pwhy">${why}</span>` : ''}</div>`; };
+      ${sel ? `<span class="psel">${run > 1 ? (pickSel.indexOf(k) + 1) + ' ・ ' : ''}${t('pk.sel')}</span>` : why ? `<span class="pwhy">${why}</span>` : ''}</div>`; };
   $('#pickHead').innerHTML = `<b>${t(d.turn === 0 ? 'dr.you' : 'dr.ai')}</b><span>${t('pk.left', { c: E.draftLeft(d, 0), n: d.picks[0].length, m: E.MAXSHIPS })}</span>`;
   $('#pickViews').innerHTML = [['pick', t('pk.v.pick')], ['foe', t('pk.v.foe', { n: d.picks[1].length })], ['mine', t('pk.v.mine', { n: d.picks[0].length })]].map(([v, l]) => `<button data-v="${v}" class="${v === pickView ? 'on' : ''}">${l}</button>`).join('') + `<button id="btnAllShips" class="all">${t('dr.all')}</button>`;
   $('#pickOverlay .modal').dataset.view = pickView;
@@ -231,8 +252,8 @@ function renderDraft() {
   if (!groups[pickTab] || !groups[pickTab].length) pickTab = groups.findIndex(g => g.length);
   $('#pickTabs').innerHTML = groups.map((ks, g) => ks.length ? `<button class="g${g}${g === pickTab ? ' on' : ''}" data-g="${g}">${t('dr.g' + g)}<em>${ks.length}</em></button>` : '').join('');
   $('#pickGrid').innerHTML = pickView === 'pick' ? `<div class="pg">${groups[pickTab].map(card).join('')}</div>` : (fleetSec || (renderFleetSheet(), fleetSec))(pickView === 'foe' ? 1 : 0, pickView === 'foe' ? t('fv.foe', { n: 'AI Lv.' + G.level }) : t('fv.me'));
-  $('#btnPickStop').disabled = !(E.draftCanStop(d, 0) && !G.busy);
-  $('#btnPickOk').disabled = !(mine && pickSel >= 0);
+  $('#btnPickOk').disabled = !(mine && pickSel.length);
+  $('#btnPickOk').textContent = mine && run > 1 ? t('pk.okn', { n: pickSel.length, m: run }) : t('pk.ok');
   if (mine && pickShut !== d.n && !$('#pickOverlay').classList.contains('show')) { pickView = 'pick'; $('#pickOverlay').classList.add('show'); renderDraft(); }
 }
 // the reach of a skill, drawn on a 7×7 window of the sea around the aimed square (E5): attack squares warm, read squares cool
@@ -328,7 +349,8 @@ function toast(text, cls) { const el = $('#toast'); el.textContent = text; el.cl
 function swapView(v) {
   if (G.view === v) return Promise.resolve();
   document.body.classList.add('swapping');
-  return sleep(230).then(() => { G.view = v; renderBoards(); document.body.classList.remove('swapping'); return sleep(230); });
+  const g = G;   // (a new game started during the fade must not be switched by the old one)
+  return sleep(230).then(() => { document.body.classList.remove('swapping'); if (G !== g) return; G.view = v; renderBoards(); return sleep(230); });
 }
 
 // ---------- 形勢 (public-information rollouts, off the critical path) ----------
@@ -533,13 +555,14 @@ $('#skillCard').addEventListener('click', e => { const b = e.target.closest('.sk
 $('#drWho').addEventListener('click', e => { const b = e.target.closest('.dw[data-v]'); if (!b) return; pickView = b.dataset.v; $('#pickOverlay').classList.add('show'); renderDraft(); });
 $('#pickViews').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; pickView = b.dataset.v; renderDraft(); $('#pickGrid').scrollTop = 0; });
 $('#pickTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; pickTab = +b.dataset.g; renderDraft(); $('#pickGrid').scrollTop = 0; });
-$('#pickGrid').addEventListener('click', e => { const c = e.target.closest('.pc.can'); if (!c) return; const k = +c.dataset.k; pickSel = pickSel === k ? -1 : k; sfx('select'); renderDraft(); });   // (the whole card is the button: tap to choose, tap again to undo)
-$('#btnPickOk').onclick = () => { if (pickSel < 0) return; const k = pickSel; pickSel = -1; draftPickMine(k); if (G.phase !== 'draft' || G.draft.turn !== 0) $('#pickOverlay').classList.remove('show'); };   // (決定: take the chosen card; the sheet stays open while it is still my pick)
+$('#pickGrid').addEventListener('click', e => { const c = e.target.closest('.pc.can'); if (!c) return; const k = +c.dataset.k, run = myRun(G.draft); if (pickSel.includes(k)) pickSel = pickSel.filter(x => x !== k); else if (pickSel.length < run) pickSel.push(k); else pickSel = pickSel.slice(0, -1).concat(k); sfx('select'); renderDraft(); });   // (the whole card is the button: tap to choose, tap again to undo)
+const legendPc = matchMedia('(min-width:601px)');
+function placeLegend() { const lg = $('#pickLegend'); if (legendPc.matches) $('#pickOverlay .modal-actions').insertBefore(lg, $('#btnPickOk')); else $('#pickTabs').after(lg); }
+placeLegend(); legendPc.addEventListener('change', placeLegend);
+$('#btnPickOk').onclick = () => { if (!pickSel.length) return; const ks = pickSel; pickSel = []; for (const k of ks) { if (G.phase !== 'draft' || G.draft.turn !== 0) break; draftPickMine(k); } if (G.phase !== 'draft' || G.draft.turn !== 0) $('#pickOverlay').classList.remove('show'); };   // (決定: take the chosen card; the sheet stays open while it is still my pick)
 $('#pickGrid').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.pc.can')) { e.preventDefault(); e.target.click(); } });
 // no 閉じる in the pick sheet (2026-11-20 user: you must pick anyway); outside your pick turn a tap on the backdrop closes it
 $('#pickOverlay').addEventListener('click', e => { if (e.target.id === 'pickOverlay' && !(G.draft && G.draft.turn === 0)) $('#pickOverlay').classList.remove('show'); });
-$('#btnPickStop').onclick = () => { $('#pickOverlay').classList.remove('show'); $('#btnDrStop').click(); };
-$('#btnDrStop').onclick = () => draftPickMine(-1);
 bsvg.addEventListener('click', e => { if (G.phase !== 'battle') return; const c = SB.cellAt(bsvg, e); if (c >= 0) playerShot(c); });
 $('#btnSwap').onclick = () => $('#miniBtn').onclick();
 // PC: the status line lives in the board's caption, between the title and the view switch; phones keep it in the side

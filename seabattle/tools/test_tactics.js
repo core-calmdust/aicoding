@@ -15,6 +15,7 @@ const { chromium } = require('playwright');
     await p.evaluate(() => { document.querySelector('#ruleCards [data-v=tactics]').click(); }); await tap('#btnStart'); await p.waitForTimeout(300);
     ok(await p.evaluate(() => G.phase === 'draft' && document.body.classList.contains('drafting')), name + ': tactics starts with the draft');
     let guard = 0;
+    let multiOk = false;
     while (await p.evaluate(() => G.phase === 'draft') && guard++ < 14) {
       await p.waitForFunction(() => G.phase !== 'draft' || (!G.busy && G.draft.turn === 0), null, { timeout: 8000 });
       if (!(await p.evaluate(() => G.phase === 'draft'))) break;
@@ -22,13 +23,18 @@ const { chromium } = require('playwright');
       await p.waitForFunction(() => document.querySelector('#pickOverlay').classList.contains('show'), null, { timeout: 4000 }); await p.waitForTimeout(250);   // (the pick sheet opens by itself on my turn)
       if (guard === 2) await shot('tac-pick');
       for (const g of await p.evaluate(() => [...document.querySelectorAll('#pickTabs button')].map(b => b.dataset.g))) { if (await p.evaluate(() => !!document.querySelector('#pickGrid .pc.can'))) break; await tap('#pickTabs button[data-g="' + g + '"]'); await p.waitForTimeout(120); }   // (look through the role tabs)
-      const sel = await p.evaluate(() => { const b = document.querySelector('#pickGrid .pc.can'); return b ? '#pickGrid .pc[data-k="' + b.dataset.k + '"]' : '#btnPickStop'; });   // (tap the card itself)
+      const sel = await p.evaluate(() => { const b = document.querySelector('#pickGrid .pc.can'); return b ? '#pickGrid .pc[data-k="' + b.dataset.k + '"]' : null; });   // (tap the card itself)
+      if (!sel) { console.log('NG  my turn but no card can be chosen'); fail++; break; }
       await tap(sel); await p.waitForTimeout(150);
-      if (sel !== '#btnPickStop') {   // (a tapped card is only chosen: tapping it again undoes it, 決定 takes it)
-        if (!(await p.evaluate(s => document.querySelector(s).classList.contains('sel') && !document.querySelector('#btnPickOk').disabled, sel))) { console.log('NG  a tapped card is chosen, not taken'); fail++; }
-        if (guard === 2) { await tap(sel); await p.waitForTimeout(120); if (!(await p.evaluate(s => !document.querySelector(s).classList.contains('sel') && document.querySelector('#btnPickOk').disabled && G.draft.turn === 0, sel))) { console.log('NG  tapping the chosen card again undoes it'); fail++; } await tap(sel); await p.waitForTimeout(120); }
-        await tap('#btnPickOk'); await p.waitForTimeout(150);
-      }
+      // a tapped card is only chosen: tapping it again undoes it, 決定 takes it
+      if (!(await p.evaluate(s => document.querySelector(s).classList.contains('sel') && !document.querySelector('#btnPickOk').disabled, sel))) { console.log('NG  a tapped card is chosen, not taken'); fail++; }
+      if (guard === 2) { await tap(sel); await p.waitForTimeout(120); if (!(await p.evaluate(s => !document.querySelector(s).classList.contains('sel') && document.querySelector('#btnPickOk').disabled && G.draft.turn === 0, sel))) { console.log('NG  tapping the chosen card again undoes it'); fail++; } await tap(sel); await p.waitForTimeout(120); }
+      // two picks in a row: choose a second card too, and 決定 takes both
+      const two = await p.evaluate(() => myRun(G.draft) > 1 && !!document.querySelector('#pickGrid .pc.can:not(.sel)'));
+      const n0 = await p.evaluate(() => G.draft.picks[0].length);
+      if (two) { await p.evaluate(() => document.querySelector('#pickGrid .pc.can:not(.sel)').click()); await p.waitForTimeout(120); }
+      await tap('#btnPickOk'); await p.waitForTimeout(150);
+      if (two) { const n1 = await p.evaluate(() => G.draft.picks[0].length); if (n1 !== n0 + 2) { console.log('NG  決定 takes both chosen cards (' + n0 + ' → ' + n1 + ')'); fail++; } else if (!multiOk) { multiOk = true; console.log('ok  two cards chosen in one turn, both taken with 決定'); } }
     }
     ok(await p.evaluate(() => G.phase === 'deploy' && SeaEngine.validFleet(G.my, G.adj, true) && SeaEngine.validDraft(G.draft.picks[1])), name + ': draft ends with two legal fleets, mine on the board');
     const audit = () => p.evaluate(() => { const out = []; if (document.documentElement.scrollWidth > innerWidth + 1) out.push('scroll-x'); for (const el of document.querySelectorAll('.side button, .side b, .side small, .side span')) { if (!el.offsetParent) continue; const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let nd; while ((nd = tw.nextNode())) { if (!nd.textContent.trim() || nd.parentElement !== el) continue; const rg = document.createRange(); rg.selectNodeContents(nd); if (new Set([...rg.getClientRects()].map(q => Math.round(q.top / 4))).size > 1) out.push('WRAP ' + nd.textContent.trim()); if (el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflow === 'hidden') out.push('CLIP ' + nd.textContent.trim()); } } return out.join(' | '); });
