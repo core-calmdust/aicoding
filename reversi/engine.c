@@ -54,6 +54,8 @@ static inline int lsb(u64 x) { return __builtin_ctzll(x); }
 #define R7(v) ((v) >> 7)
 #ifdef __wasm_simd128__
 #include <wasm_simd128.h>
+#endif
+#if defined(__wasm_simd128__) && !defined(GEN)
 /* the board and its vertical mirror (byte swap) in the two lanes of one vector: a left shift by 8 / 9 / 7 is the direction
    +8 / +9 / +7 in lane 0 and -8 / -7 / -9 in lane 1, so three Kogge-Stone floods cover six directions */
 #define BSWAP2(v) wasm_i8x16_swizzle(v, wasm_i8x16_const(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8))
@@ -71,6 +73,26 @@ static u64 genMoves(u64 P, u64 O) {
 #define KSR1(S, MSK) pp = MSK; gg = P | (pp & (P >> S)); pp &= pp >> S; gg |= pp & (gg >> (2 * S)); pp &= pp >> (2 * S); gg |= pp & (gg >> (4 * S)); r |= (gg & ~P) >> S;
   KSL1(1, I) KSR1(1, I)
   return r & E;
+}
+#elif defined(GEN) && GEN == 2
+/* (a test build only, tools/build-variants.sh g2: eight directions on plain 64-bit integers, two steps and a shared pair
+   mask per axis, the +1 direction by carry propagation — T. Okuhara's notes on Edax; said to beat SIMD on Arm) */
+static u64 genMoves(u64 P, u64 O) {
+  const u64 mO = O & 0x7E7E7E7E7E7E7E7EULL;
+  u64 f7, f9, f8, f1, p7, p9, p8, p1, m;
+  f7 = mO & (P << 7); f9 = mO & (P << 9); f8 = O & (P << 8); f1 = mO & (P << 1);
+  f7 |= mO & (f7 << 7); f9 |= mO & (f9 << 9); f8 |= O & (f8 << 8); m = mO + f1;
+  p7 = mO & (mO << 7); p9 = mO & (mO << 9); p8 = O & (O << 8);
+  f7 |= p7 & (f7 << 14); f9 |= p9 & (f9 << 18); f8 |= p8 & (f8 << 16);
+  f7 |= p7 & (f7 << 14); f9 |= p9 & (f9 << 18); f8 |= p8 & (f8 << 16);
+  m |= f7 << 7; m |= f9 << 9; m |= f8 << 8;
+  f7 = mO & (P >> 7); f9 = mO & (P >> 9); f8 = O & (P >> 8); f1 = mO & (P >> 1);
+  f7 |= mO & (f7 >> 7); f9 |= mO & (f9 >> 9); f8 |= O & (f8 >> 8); f1 |= mO & (f1 >> 1);
+  p7 >>= 7; p9 >>= 9; p8 >>= 8; p1 = mO & (mO >> 1);
+  f7 |= p7 & (f7 >> 14); f9 |= p9 & (f9 >> 18); f8 |= p8 & (f8 >> 16); f1 |= p1 & (f1 >> 2);
+  f7 |= p7 & (f7 >> 14); f9 |= p9 & (f9 >> 18); f8 |= p8 & (f8 >> 16); f1 |= p1 & (f1 >> 2);
+  m |= f7 >> 7; m |= f9 >> 9; m |= f8 >> 8; m |= f1 >> 1;
+  return m & ~(P | O);
 }
 #else
 static u64 genMoves(u64 P, u64 O) {   // Kogge-Stone: each direction in 3 doubling steps instead of 6 single steps
