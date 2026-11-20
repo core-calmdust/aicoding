@@ -1160,11 +1160,11 @@ static int useMate1 = 1, rfpDepth = S5 ? 11 : 8, rfpMargin = S5 ? 73 : 112, null
    at 300 ms per move, 480 different games each. 24 improving, 28 = 4 null move reduction, 29 + 43 = 300 late move pruning at
    every depth, 30 = 8 futility by the reduced depth, 35 = 6 a ply less without a table move, 37 = 1 reductions from the second
    move, 38 losing captures reduced, 40 losing captures after the quiet moves, 42 = 170 history bonus linear in the depth.) */
-static int P[96] = {[5] = 1, [7] = 1, [9] = S5 ? 5049 : 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = S5 ? 57 : 85,
+static int P[128] = {[5] = 1, [7] = 1, [9] = S5 ? 5049 : 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = S5 ? 57 : 85,
                     [24] = 1, [28] = 4, [29] = 1, [30] = 8, [35] = 6, [37] = 1, [38] = 1, [40] = 1, [42] = S5 ? 297 : 170, [43] = S5 ? 246 : 300,
                     [44] = S5, [45] = S5, [46] = S5 ? 8 : 0, [47] = S5 ? 131 : 0, [48] = S5 ? 43 : 0, [52] = S5 ? 6 : 0, [53] = S5 ? 2 : 0, [58] = S5 ? 346 : 0, [62] = S5};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
 static void lmrInit(double div);
-EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 96) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
+EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 128) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
    P5 log-LMR, P6 counter-move ordering, P7 quiet checks in first qsearch ply, P10 razoring, P11 extend all checks, P12 LMP base;
    search v3 (2026-11-08, MODEL_CARD.md): P22 history v2 (gravity, malus, continuation history; on), P23 ProbCut margin (200, on),
@@ -1186,7 +1186,8 @@ EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else 
    P43 the move count of P29 times P43 / 100 (300: three times as many moves before the pruning) */
 static double ln_(double x) { int k = 0; while (x > 1.5) { x *= 0.5; k++; } double z = (x - 1) / (x + 1), z2 = z * z, t = z, r = 0; for (int i = 1; i < 40; i += 2) { r += t / i; t *= z2; } return 2 * r + k * 0.6931471805599453; }
 static i8 LMRT[64][64];
-static void lmrInit(double div) { for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) LMRT[d][n] = (i8)(0.6 + ln_(d) * ln_(n) / div); }
+static i32 LMRX[64][64];   /* (the same in 1024ths of a ply, without the 0.6: the base of the fractional reductions, P85) */
+static void lmrInit(double div) { for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) { LMRT[d][n] = (i8)(0.6 + ln_(d) * ln_(n) / div); LMRX[d][n] = (i32)(1024 * ln_(d) * ln_(n) / div); } }
 static TLS i32 counterMv[32 * 81];
 /* continuation history (the previous move and the one before, by type after the move and destination, times this move):
    shared by the threads (a lost update does no harm) */
@@ -1201,6 +1202,10 @@ static inline void gravS(i16 *h, int b) { int v = *h; v += b - v * (b < 0 ? -b :
 static inline int quietHist(int us, int m) {
   int v = history[hIdx(us, m)];
   if (P[22]) { int k = mKey(m); if (sp >= 1 && ckS[sp - 1] >= 0) v += contH[0][ckS[sp - 1] * CK + k]; if (sp >= 2 && ckS[sp - 2] >= 0) v += contH[1][ckS[sp - 2] * CK + k]; }
+  return v;
+}
+static inline int contHist(int m) {   /* the continuation histories' part of quietHist */
+  int v = 0, k = mKey(m); if (sp >= 1 && ckS[sp - 1] >= 0) v += contH[0][ckS[sp - 1] * CK + k]; if (sp >= 2 && ckS[sp - 2] >= 0) v += contH[1][ckS[sp - 2] * CK + k];
   return v;
 }
 static inline void contUpd(int k, int b) {   /* the continuation histories alone (k = mKey of the move, the board before it) */
@@ -1612,6 +1617,7 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
      depth against a bound a little below its value: all fail -> the table move is read deeper (2 or 3 plies when they fail
      by more: P77, P78; non-PV); they reach beta too -> the node is cut (multi-cut); else the table move is read shallower
      where a cut is expected anyway (P79). */
+  const int ttCap = ttm && board[(ttm >> 7) & 127] != 0;
   int sgExt = 0;
   if (P[75] && ttm && !ex && ply > 0 && depth >= P[75] + (ttPv ? 1 : 0) && ttD >= depth - 3 && (ttF == F_LOWER || ttF == F_EXACT) && (ttS < 0 ? -ttS : ttS) < MATE - MAXPLY && ply < rootDepth * 2) {
     const double sb = ttS - (double)(P[76] ? P[76] : 56) * (1 + (ttPv && !pvNode ? 1.4 : 0)) * depth / 64;
@@ -1658,19 +1664,41 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
     mc++;
     int hv = 0;
     if (quiet) hv = quietHist(us, m);
+    /* pruning v2 (P91; search v6, 2026-11-20): at every node but the root, in check too; a move that gives check is judged
+       with the captures (by the exchange), not exempt; the depth a quiet move is judged at is its reduced depth shifted by
+       its history; past the move-count limit the remaining quiet moves are dropped. */
+    if (P[91] && ply > 0 && legal > 0 && best > -MATE + MAXPLY) {
+      const int di = depth < 63 ? depth : 63, mi = mc < 63 ? mc : 63;
+      if (mc >= (3 + depth * depth) * (P[43] ? P[43] : 100) / 100 / (2 - improving)) { skipQuiets = 1; if (quiet && inChk) continue; }
+      int rb = LMRX[di][mi]; if (!improving) rb += rb * P[86] / 100; rb += P[88] * 10; if (pvNode) rb -= 512; if (ttPv) rb += 900;
+      int ld = depth - 1 - rb / 1024;
+      int gc = givesCheckPre(m); if (gc && !chkFast) { doMove(m); gc = inCheck(); undoMove(); }
+      if (!quiet || gc) {
+        const int ch = cap && (m & 127) <= 80 ? capH[capIdx(m)] : 0;
+        if (!gc && !inChk && cap && ld < 8 && rawEval + P[99] + P[100] * ld + VALUE[typeOf(cap)] + ch / 8 <= alpha) continue;
+        if (alpha >= 0 && m != ttm && see(m) < -(P[101] * depth + ch / 32)) continue;
+      } else if (!pvNode || mc > 1) {
+        if (P[98] && contHist(m) < -P[98] * depth) continue;
+        ld += hv / (P[81] ? P[81] : 2000);
+        const double fv = rawEval + P[102] + P[103] * ld + (rawEval > alpha ? P[104] : 0);
+        if (!inChk && ld < 12 && fv <= alpha) { if (best <= fv && fv < MATE - MAXPLY) best = fv; continue; }
+        if (ld < 0) ld = 0;
+        if (see(m) < -P[105] * ld * ld) continue;
+      }
+    } else
     /* pruning in the move loop: one legal move is in, the node is not a lost one */
     if (ply > 0 && legal > 0 && !inChk && best > -MATE + MAXPLY) {
       const int r0 = LMRT[depth < 63 ? depth : 63][mc < 63 ? mc : 63], ld0 = depth - 1 - r0, ld = ld0 < 0 ? 0 : ld0;
       if (quiet) {
         int skip = 0;
-        if (P[45] && !pvNode && mc >= (3 + depth * depth) * (P[43] ? P[43] : 100) / 100 / (2 - improving)) { skip = 1; skipQuiets = 1; }
+        if (P[45] && (!pvNode || P[83]) && mc >= (3 + depth * depth) * (P[43] ? P[43] : 100) / 100 / (2 - improving)) { skip = 1; skipQuiets = 1; }   /* (P83: at PV nodes too, as Stockfish) */
         else if (P[51] && ld < 4 && hv < -P[51] * depth) skip = 1;
         else {
           int lh = ld; if (P[81]) { lh += hv / P[81]; if (lh < 0) lh = 0; }   /* (P81: a move with a good history is pruned as if deeper, a bad one as if shallower) */
-          if (P[46] && !pvNode && lh < P[46] && rawEval + (P[47] ? P[47] : 100) + (P[48] ? P[48] : 120) * lh <= alpha) skip = 1;
+          if (P[46] && (!pvNode || P[83]) && lh < P[46] && rawEval + (P[47] ? P[47] : 100) + (P[48] ? P[48] : 120) * lh <= alpha) skip = 1;
           else if (P[49] && lh < 8 && see(m) < -P[49] * lh * lh) skip = 2;
         }
-        if (skip == 2) continue;
+        if (skip == 2 || (skip && P[82])) continue;   /* (P82: a move that gives check is pruned like the others) */
         if (skip) { if (!givesCheckPre(m)) continue; if (!chkFast) { doMove(m); int chk = inCheck(); undoMove(); if (!chk) continue; } }
       } else if (P[50] && cap && m != ttm && sc < 0 && see(m) < -P[50] * depth) continue;
     }
@@ -1687,8 +1715,39 @@ static double search2(int depth, double alpha, double beta, int ply, int pvNode,
     const int givesChk = inCheck();
     int ext = !P[55] && givesChk && ply < rootDepth * 2 && (P[11] || seeAfterCheck(m) >= 0) ? 1 : 0;
     if (m == ttm && sgExt) { if (sgExt > ext) ext = sgExt; else if (sgExt < 0 && !ext) ext = sgExt; }
-    const int nd = depth - 1 + ext;
+    int nd = depth - 1 + ext;
     double v = 0; int full = 0, lmrB = 0;
+    if (P[85]) {
+      /* reductions v2 (search v6): in 1024ths of a ply, every move after the first one; much more at an expected cut node,
+         less on the PV, by the move's history both ways — a negative reduction reads the move deeper (up to P92 plies);
+         where the reduction would be large even a first move is read 1 or 2 plies shallower (P93). */
+      const int di = depth < 63 ? depth : 63, mi = legal < 63 ? legal : 63;
+      int r = LMRX[di][mi]; if (!improving) r += r * P[86] / 100;
+      r += P[88] * 10 - legal * 64;
+      if (pvNode) r -= 512;
+      if (ttPv) r -= P[87] * 10 + (pvNode ? 1000 : 0) + (ttS > alpha ? 900 : 0) + (ttD >= depth ? 800 : 0);
+      if (cutNode) r += P[89] * 10 + (ttm ? 0 : 900);
+      if (ttCap) r += 1000;
+      if (m == ttm) r -= 2000;
+      if (quiet) { r -= (int)((long long)hv * 1024 / (P[9] ? P[9] : 6000)); if (alpha > -MATE + MAXPLY && alpha < MATE - MAXPLY) { double g = alpha - eval; r += 3 * (int)(g < -64 ? -64 : g > 96 ? 96 : g); } }
+      else if (capI >= 0) r -= capH[capI] / 8;
+      if (givesChk) r -= P[94] * 10;
+      if (!pvNode && !cutNode) r += r * 276 / (256 * depth + 268);
+      if (depth >= 2 && legal > 1) {
+        const int lim = ply < rootDepth * 2 ? P[92] : 0, e = -r / 1024;
+        int d = nd + (e < lim ? e : lim); if (d < 1) d = 1; d += pvNode; ST(stLmr += (d < nd));
+        v = -search2(d, -alpha - 1, -alpha, ply + 1, 0, 1);
+        if (v > alpha) {
+          nd += (d < nd && v > best + P[95]) - (v < best + P[96]);
+          if (nd > d) { ST(stLmrRe++); v = -search2(nd, -alpha - 1, -alpha, ply + 1, 0, !cutNode); }
+          if (quiet) lmrB = P[97];
+        }
+        full = pvNode && v > alpha;
+      } else if (!pvNode || legal > 1) {
+        if (!ttm) r += 1100;
+        v = -search2(nd - (r > P[93] * 10) - (r > P[93] * 10 + 250 && nd > 2), -alpha - 1, -alpha, ply + 1, 0, !cutNode); full = pvNode && v > alpha;
+      } else full = 1;
+    } else
     if (depth >= (P[66] ? P[66] : 2) && legal > (P[56] ? P[56] : 1) && (quiet || P[57] || sc < 0) && !(P[64] && (inChk || givesChk))) {
       int r = LMRT[depth < 63 ? depth : 63][legal < 63 ? legal : 63];
       if (quiet) { if (m == killers[ply * 2] || m == killers[ply * 2 + 1]) r--; r -= hv / (P[9] ? P[9] : 6000); }
