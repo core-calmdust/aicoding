@@ -97,6 +97,7 @@
      (VOICE; other languages: the plain lines above). The lesson texts themselves come from the full games' data, written
      politely (です・ます): in Japanese the guide says them in plain, friendly speech (casualJa). */
   const VOICE = {
+    reversi: { ja: { partial: 'おしい！', wrong: 'ざんねん…。' } },   // (2026-11-21: the lesson's own words say which square was best and why)
     backgammon: {
       ja: { hi: 'ワン！ ダイスンだよ。いっしょにバックギャモンのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'おしい！ 緑の矢印が正解だよ。', hintSay: 'ヒント：青い輪の駒を動かしてみて。' },
       en: { hi: "Woof! Dicepup here. Let's study backgammon together.", partial: 'A nice play! But the green arrows are the best.', wrong: 'So close! The green arrows are the answer.', hintSay: 'Psst — move the checkers with the blue rings.' },
@@ -325,7 +326,7 @@
     return h;
   }
   const LSV = {};   // (atlas/lsvoice-ja.js: the problem lines of the guides without a voice file, loaded for Japanese only)
-  const lsvLoad = lang => lang !== 'ja' ? Promise.resolve() : LSV.p || (LSV.p = fetch('lsvoice-ja.js?v=1').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} LSV.d = w.AtlasLsVoice || {}; }).catch(() => { LSV.d = {}; }));
+  const lsvLoad = lang => lang !== 'ja' ? Promise.resolve() : LSV.p || (LSV.p = fetch('lsvoice-ja.js?v=2').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} LSV.d = w.AtlasLsVoice || {}; }).catch(() => { LSV.d = {}; }));
   const pick = a => Array.isArray(a) ? a[Math.floor(Math.random() * a.length)] : a;
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const J = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
@@ -493,6 +494,139 @@
     }
     return out;
   }
+  /* (2026-11-21 lesson loop) the reversi lesson problems in リバガメ's words, Japanese: varied questions, and after the answer why the
+     move is good / what the green square does better than yours (= reversi/index.html lessonReason, from the stored move facts
+     f[sq] = [value, flips, open, opponent's moves after, gives a corner, empty region, opponent passes]). No coordinates: the best
+     squares are framed green on the board, yours red. Other languages: the marks and the plain line. */
+  const RVJ_ASK = {
+    rules: ['いちばんたくさん返せる場所はどこかな？ 数字を見くらべてみてね。', '8方向ぜんぶ数えて、いちばん多く返せる場所に打ってみよう。', 'この場面で、いちばん多くひっくり返せるのはどこだろう？'],
+    corner: ['どこに打つのがいちばんいいかな？ 隅と、XやCのマスに気をつけてね。', '隅は取れるかな？ 取れないときは、相手に隅を渡さない手をさがそう。', 'この場面のいちばんいい手はどこだろう。打ったあと、相手が隅を取れないかも見てね。'],
+    mobility: ['いちばんいい手をさがそう。打ったあと、相手は何か所に打てるかな？', '石の数より、相手の打てる場所の数。いちばんいい手はどこだろう？', 'じっくり見て、いちばんいい手に打ってみて。相手に足場をあげない手がねらい目なんだ。'],
+    quiet: ['いちばんいい手はどこかな？ 返す石のまわりの空きに注目してみて。', '静かな手をさがそう。でも、相手に隅をあげないかも見てね。', 'この場面のいちばんいい手に打ってみよう。のんびり考えていいからね。'],
+    wall: ['いちばんいい手に打ってみよう。外がわに石を並べないようにね。', '壁を作らない手はどれかな？ 余裕手をとっておけるかも見てみて。', 'この場面、どこに打つのがいちばん得だろう？'],
+    edge: ['辺をよく見て、いちばんいい手をさがそう。', '相手の辺に、すき間はないかな？ いちばんいい手に打ってみて。', 'この場面のいちばんいい手はどこだろう。辺の形がヒントなんだ。'],
+    exception: ['隅は取るべきかな？ いちばんいい手をじっくりさがそう。', 'いつもの格言どおりでいいのかな？ 打ったあとのことを考えてみて。', 'この場面のいちばんいい手はどこだろう。隅やXにも、例外があるんだ。'],
+    parity: ['空きの塊を数えて、いちばんいい手をさがそう。', '終盤だね。最後の1手を取れるのは、どこに打ったときかな？', 'いちばんいい手に打ってみよう。奇数の塊が、まず候補になるよ。'],
+    finish: ['勝ちを守れる手は、ひとつだけ。どこかな？', '終盤の正念場だね。勝ち（か引き分け）を守れる手をさがそう。', 'ほかの手はみんな負けになっちゃう場面。正しい1手はどこだろう？'],
+  };
+  const RV_CN = [0, 7, 56, 63], RV_X = { 9: 0, 14: 7, 49: 56, 54: 63 }, RV_C = { 1: 0, 8: 0, 6: 7, 15: 7, 48: 56, 57: 56, 55: 63, 62: 63 };
+  function rvTeachJa(kind, P, u, right) {
+    const F = P.f || {}, ks = Object.keys(F).map(Number), v = q => F[q][0], top = Math.max(...ks.map(v)), bs = ks.filter(q => v(q) >= top - 1e-9);
+    if (!ks.length) return '';
+    u = +u;
+    if (!right && (!F[u] || bs.includes(u))) {   // (no wrong move given: the most telling one — a move that hands over a corner, else the worst)
+      const w = ks.filter(q => !bs.includes(q)); if (!w.length) return '';
+      u = (kind !== 'parity' && kind !== 'finish' && w.find(q => F[q][4])) || w.reduce((a, q) => v(q) < v(a) ? q : a, w[0]);
+    }
+    const b = bs.includes(u) ? u : bs[0], fu = F[u] || F[b], fb = F[b], c = String(P.cells).split('').map(Number);
+    let sd = 0; for (const ch of String(P.cells) + kind) sd = (sd * 31 + ch.charCodeAt(0)) | 0; sd = Math.abs(sd);
+    const pk = a => a[sd++ % a.length];
+    const xc = q => RV_X[q] != null && !c[RV_X[q]] ? 'X' : RV_C[q] != null && !c[RV_C[q]] ? 'C' : '';
+    const res = n => n > 0 ? `${n}石差で勝ち` : n < 0 ? `${-n}石差で負け` : '引き分け';
+    const exact = P.type === 'exact', d = Math.round(v(b) - v(u));
+    const loss = () => exact ? `最後は、赤い枠だと${res(v(u))}、緑の枠なら${res(v(b))}になるんだ。` : d <= 2 ? '赤い枠も悪くないけど、緑の枠のほうが少しだけ得。差は小さいから、気にしすぎなくていいよ。' : `赤い枠だと、形勢がおよそ${d}石ぶん悪くなっちゃうんだ。`;
+    const mob = () => `打ったあと相手が打てる場所は、赤い枠だと${fu[3]}か所、緑の枠なら${fb[3]}か所。`;
+    const out = [];
+    if (right) {
+      if (!bs.includes(u)) out.push(pk(['いい手だね。でも、いちばんは緑の枠の手なんだ。', 'なかなかの手。いちばんいいのは、緑の枠のほうだったよ。']));
+      switch (kind) {
+        case 'rules': out.push(pk([`${fu[1]}枚、ちゃんと数えられたね。8方向ぜんぶ見るのがコツなんだ。`, `いちばん多い${fu[1]}枚を見つけたね。ななめの列まで見られたのがえらい。`, `${fu[1]}枚返る場所だね。縦・横・ななめを、のこさず数えられたんだ。`])); break;
+        case 'corner':
+          if (RV_CN.includes(u)) out.push(pk(['隅を取ったね。隅の石はもう返されないから、ここから辺に確定石が広がっていくんだ。', '隅をしっかり取れたね。二度と返されない石は、終盤までたよれる味方になるよ。']));
+          else if (P.trap) out.push('この場面は隅が取れないんだ。だから、相手に隅への通り道を作らない手がいちばんなんだね。');
+          else out.push('相手に隅への通り道を作らない、安全な手だね。');
+          if (ks.some(q => q !== u && F[q][4])) out.push(pk(['赤い枠に打っていたら、相手に隅を渡すところだったんだ。', '赤い枠の手は、相手に隅をあげちゃう手。よくよけられたね。']));
+          break;
+        case 'mobility': {
+          const mn = Math.min(...ks.map(q => F[q][3])), mf = ks.reduce((a, q) => F[q][1] > F[a][1] ? q : a, ks[0]);
+          out.push(`打ったあと、相手が打てる場所は${fu[3]}か所。` + (fu[3] <= mn ? 'いちばん少なく抑えられたね。' : 'うまく抑えられたね。'));
+          if (mf !== u && F[mf][3] > fu[3]) out.push(`いちばん多く返す手だと、${F[mf][3]}か所に増えちゃうんだ。`);
+          break;
+        }
+        case 'quiet': {
+          const mo = Math.min(...ks.map(q => F[q][2]));
+          if (P.trap && fu[2] > mo) out.push('この問題は例外なんだ。開放度がいちばん小さい手は、ここだと相手にいい手を打たれちゃう。よく気づいたね。');
+          else out.push(fu[2] === 0 ? 'まわりに空きのない石だけを返す、中割りだね。相手に新しい打ち場所をあげないんだ。' : `返す石のまわりの空きは${fu[2]}マス。静かな手だから、相手に足場をあげないんだ。`);
+          break;
+        }
+        case 'wall':
+          if (P.trap) out.push('あわてて余裕手を使わなかったね。自分だけが打てる場所は、貯金としてとっておけるんだ。');
+          else out.push(pk([`外がわに石を並べずにすんだね。打ったあと相手が打てる場所は${fu[3]}か所なんだ。`, `壁を作らない、内がわの手だね。相手が打てる場所は${fu[3]}か所に抑えられるよ。`]));
+          break;
+        case 'edge':
+          if ((P.wedge || []).includes(u)) out.push(pk(['相手の石2つのあいだに打つ付け手だね。相手の辺の形がくずれて、隅をねらいやすくなるんだ。', '辺のすき間に打つ付け手、おみごと。相手はもう、きれいな辺を作れないね。']));
+          else out.push(`辺の形をよく見られたね。打ったあと相手が打てる場所は${fu[3]}か所に抑えられるんだ。`);
+          break;
+        case 'exception':
+          if (RV_X[u] != null) out.push('X打ちが正解の場面だったね。隅への通り道ができても、相手はそこを取れないか、取っても得をしないんだ。');
+          else if (ks.some(q => RV_CN.includes(q)) && !RV_CN.includes(u)) out.push(pk(['あえて隅を後回しにできたね。この場面は、隅より手番のほうが大事なんだ。', '隅にとびつかなかったね。ここで隅を取ると、相手にいい所を続けて打たれちゃうんだ。', '格言にまどわされなかったね。今は隅より、手番を守るほうが得な場面なんだ。']));
+          else out.push('格言より「打ったあとに何が起きるか」で選べたね。それが強くなる近道なんだ。');
+          break;
+        case 'parity':
+          out.push(`この空きの塊は${fu[5]}マスで${fu[5] % 2 ? '奇数' : '偶数'}。` + (fu[6] ? '相手をパスさせて、もう1手続けて打てるんだ。' : fu[5] % 2 ? '先に入ったから、最後の1手をねらえるね。' : 'ここは例外で、偶数の塊に入るほうが得なんだ。'));
+          out.push(`完全読みだと、${res(v(u))}になるよ。`);
+          break;
+        case 'finish':
+          out.push(fu[6] ? `相手をパスさせる手だね。続けて打てるから、最後は${res(v(u))}になるんだ。` : pk([`ほかの手はみんな負けの場面で、ただ一つの手を見つけたね。完全読みだと、最後は${res(v(u))}。`, `正確に読めたね。この手なら最後は${res(v(u))}、ほかの手だと負けちゃうんだ。`]));
+          if (P.trap && ks.some(q => RV_CN.includes(q)) && !RV_CN.includes(u)) out.push('隅にとびつかなかったのが、えらいね。');
+          break;
+      }
+      return out.join('');
+    }
+    if (!(kind === 'exception' && RV_X[b] != null)) out.push(pk(['いちばんいい手は、緑の枠なんだ。', '正解は緑の枠のマスだよ。', '緑の枠が、この場面のいちばんいい手。']));
+    const lead = kind !== 'parity' && kind !== 'finish' && kind !== 'rules' ? (fu[4] ? pk(['赤い枠だと、次に相手が隅を取れるようになっちゃうんだ。', '赤い枠に打つと相手に隅への道が開くから、そこは損なんだ。']) : xc(u) ? `赤い枠は空いた隅のとなりの${xc(u)}だから、相手に隅への通り道を作りやすいんだ。` : '') : '';
+    switch (kind) {
+      case 'rules': out.push(`赤い枠は${fu[1]}枚、緑の枠なら${fb[1]}枚返せたんだ。` + pk(['ななめの列を見落としたのかも。', '打つ前に、8方向をひとつずつ数えてみてね。'])); break;
+      case 'corner':
+        if (lead) out.push(lead); else if (RV_CN.includes(b)) out.push('取れる隅があったんだ。隅の石は二度と返されないから、取れるときに取っておきたいね。'); else out.push(loss());
+        if (lead && RV_CN.includes(b)) out.push('緑の枠の隅を取れば、二度と返されない石が手に入ったよ。');
+        break;
+      case 'mobility':
+        if (lead) out.push(lead + (fu[3] > fb[3] ? mob() : ''));
+        else if (fu[3] > fb[3]) out.push(mob() + (fu[1] > fb[1] ? `${fu[1]}枚も返すと外がわの石が増えて、相手の足場になっちゃうんだ。` : '相手に打てる場所をあげるほど、こちらは苦しくなるからね。'));
+        else out.push(loss());
+        break;
+      case 'quiet': {
+        const mo = Math.min(...ks.map(q => F[q][2]));
+        if (lead) out.push(lead);
+        else if (P.trap && fu[2] <= mo) out.push('赤い枠は開放度がいちばん小さいけど、ここは例外なんだ。そのあと相手にいい手を打たれちゃうから、相手の応手まで考えようね。');
+        else if (fu[2] > fb[2]) out.push(`返す石のまわりの空きは、赤い枠が${fu[2]}マス、緑の枠は${fb[2]}マス。空きが多いと、そこが相手の打ち場所になっちゃうからね。`);
+        else out.push(loss());
+        break;
+      }
+      case 'wall': {
+        const opL = rvLegal(c, 3 - P.toMove);
+        if ((P.wall || []).includes(u)) out.push('赤い枠は外がわに石を並べて、壁を作っちゃう手。壁ができると、その外は相手だけが打てる場所になるからね。');
+        else if (P.trap && !opL.includes(u)) out.push('赤い枠は、きみだけが打てる余裕手。今使うと損だから、貯金としてとっておこうね。');
+        else if (lead) out.push(lead);
+        else if (fu[3] > fb[3]) out.push(mob() + '外がわの石がふえると、相手の打てる場所もふえちゃうんだ。');
+        else out.push(loss());
+        break;
+      }
+      case 'edge':
+        if ((P.wedge || []).includes(b)) out.push('緑の枠は、相手の石2つのあいだのすき間に打つ付け手。相手の辺の形をくずせるから、隅や辺をうばうきっかけになるんだ。');
+        if (lead) out.push(lead); else if (!(P.wedge || []).includes(b)) out.push(loss());
+        break;
+      case 'exception':
+        if (RV_CN.includes(u)) out.push(`隅は取れるけど、そのあと相手に${fu[3]}か所も打つ場所が残って、主導権をにぎられちゃうんだ。`);
+        else if (RV_X[b] != null) out.push('ここは緑の枠のX打ちがいちばん。相手はその隅をすぐには取れないから、Xでも損をしないんだ。');
+        else out.push(lead || loss());
+        break;
+      case 'parity': {
+        const par = n => n % 2 ? '奇数' : '偶数';
+        out.push((fu[5] % 2 !== fb[5] % 2 ? `赤い枠の塊は${fu[5]}マスで${par(fu[5])}、緑の枠の塊は${fb[5]}マスで${par(fb[5])}。` : `どちらも${par(fb[5])}の塊。入る場所で、最後の1手を取れるかが変わるんだ。`) + (fb[6] ? '緑の枠なら、相手をパスさせられるよ。' : ''));
+        out.push(loss());
+        break;
+      }
+      case 'finish':
+        out.push(loss());
+        if (fb[6]) out.push('緑の枠は、相手をパスさせる手なんだ。');
+        else if (RV_CN.includes(u)) out.push('終盤は、隅より最後の1手が勝負を決めるからね。');
+        break;
+      default: out.push(lead || loss());
+    }
+    return out.join('');
+  }
   const REVERSI = {
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
@@ -536,7 +670,14 @@
       if (!ramp.every(it => (it.k === 'explain' ? it.b : it.g))) ramp = [];   // (texts missing: no warm-up rather than an empty one)
       const look = W('look'), RU = (k, v) => fill(k === 'look' && look ? L(look, lang) : L(WT['ui/' + k], lang) || '', v || {});
       return { id: l.id, title: T.title || l.id, intro: (Array.isArray(T.intro) ? T.intro.join('<br>') : T.intro || ''), ramp: ramp.length ? ramp : null, RU,
-        probs: probs.map(p => { const v = Object.entries(p.f), b = v.reduce((a, x) => x[1][0] > a[1][0] ? x : a, v[0]); return { pos: p.cells + ':' + p.toMove, kind: 'best', P: p, ask: T.prompt || '', why: '', ans: b ? b[0] : '' }; }),
+        probs: probs.map((p, i) => { const v = Object.entries(p.f), b = v.reduce((a, x) => x[1][0] > a[1][0] ? x : a, v[0]), ja = lang === 'ja', AQ = RVJ_ASK[l.id];
+          const top = b ? b[1][0] : 0, oks = v.filter(x => x[1][0] >= top - 1e-9).map(x => +x[0]);
+          // (2026-11-21) the hint: the step's words, and on the board what they point at — never the answer itself (the red frames: moves
+          // that hand over a corner; wall: the moves that build a wall)
+          const hintMk = () => l.id === 'wall' && p.wall && p.wall.length ? p.wall.map(q => [q, 'ng']) : l.id === 'rules' || l.id === 'parity' || l.id === 'finish' ? [] : v.filter(x => x[1][4]).map(x => [+x[0], 'ng']);
+          return { pos: p.cells + ':' + p.toMove, kind: 'best', P: p, ask: ja && AQ ? AQ[i % AQ.length] : T.prompt || '', why: '', ans: b ? b[0] : '', oks, hintMk,
+            hintTx: (T.hint || '') + (ja && hintMk().length ? (l.id === 'wall' ? '<br>赤い枠は、外がわに壁を作っちゃう手なんだ。' : '<br>赤い枠は、打つと相手に隅を渡しちゃう手。') : ''),
+            good: u => ja ? rvTeachJa(l.id, p, u == null ? b && b[0] : u, true) : '', ng: u => ja ? rvTeachJa(l.id, p, u, false) : '' }; }),
         save: (pts, max) => this.save(l.id, pts, max) };
     },
     opening(key, lang) {
@@ -1636,6 +1777,7 @@
       $('[data-a=next]').onclick = () => { cur.k++; if (cur.k < cur.probs.length) prob(); else finish(); };
       $('[data-a=hint]').onclick = () => { if (p.ans == null || p.ans < 0 || p.ans === '' || p.done) return; p.hinted = true;
         if (id === 'connect4') { pz().mark(p.hintMk && p.hintMk.length ? p.hintMk : null); say(p.hintTx || X.hintSay); return; }
+        if (id === 'reversi' && p.hintMk) { const mk = p.hintMk(); pz().mark(mk.length ? mk : null); say(p.hintTx || X.hintSay); return; }   // (2026-11-21: the lesson's own hint, not the answer ring)
         if (id === 'mancala') { pz().mark(p.base.concat(p.hintMk ? p.hintMk() : [])); say(p.hintTx || X.hintSay); return; }   // (mancala/app.js lsHint: the store, the pits to capture, the threats — never the answer itself)   // (the threats the step's hint names: yours green, the opponent's red)
         if (p.dHint) { pz().mark(p.hint.length ? p.hint.map(q => [q, 'ring']) : null); say(p.hintTx || X.hintSay); return; }   // (dots: the safe lines, or the step's words alone — never the answer)
         if (p.hint && p.hint.length) { pz().mark((id === 'amazons' && p.marks ? p.marks : []).concat(p.hint.map(q => [q, 'ring']))); say(p.hintTx || X.hintSay); return; }   // (gomoku: the lesson's own hint points and words)
@@ -1760,6 +1902,17 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
+      if (id === 'reversi' && u != null && u !== '' && !isNaN(+u) && p.P && p.P.f) { u = +u;   // (2026-11-21: back to the problem — the best squares green, yours red; why, in the guide's words)
+        const right = pts >= 16, k = cur.k, okA = p.oks || [+p.ans], tx = right ? p.good(u) : p.ng(u);
+        say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (tx ? '<br>' + tx : right ? '' : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) })));
+        try { chime(right); } catch (e) {}
+        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1);
+          const danger = right && cur.id === 'corner' ? Object.entries(p.P.f).filter(x => x[1][4] && +x[0] !== u).map(x => [+x[0], 'ng']) : [];
+          pz().mark([...okA.filter(q => q !== u).map(q => [q, 'ok']), [u, okA.includes(u) || right ? 'ok' : 'ng'], ...danger]); }, 900);
+        act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
+        if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
+        return;
+      }
       if ((id === 'gomoku' || id === 'go') && typeof u === 'number') {   // (gomoku: the lesson's own words — why it wins / which points were right; the points marked)
         const okA = (p.P.ok && p.P.ok.length ? p.P.ok : [p.ans]).filter(q => q >= 0);
         const said = pts >= 16 ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) });   // (no coordinates: the points are named by their marks)
@@ -1840,7 +1993,7 @@
     requestAnimationFrame(() => el.classList.add('on'));
     say(X.loading); act(X.next, { nextOn: false });
     Promise.all([D.load(ctx.lang), ncLoad(id), lsvLoad(ctx.lang)]).then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
-    const dbg = { state: () => cur && { key: cur.key, phase, k: cur.k, si: cur.si, res: cur.res.slice(), ans: cur.probs[cur.k] && cur.probs[cur.k].ans, say: $('.tx').textContent },
+    const dbg = { state: () => cur && { key: cur.key, phase, k: cur.k, si: cur.si, res: cur.res.slice(), ans: cur.probs[cur.k] && cur.probs[cur.k].ans, ramp: phase === 'ramp' && cur.ramp && cur.ramp[cur.ri] ? cur.ramp[cur.ri].ans : undefined, moves: cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.f ? Object.keys(cur.probs[cur.k].P.f).map(Number) : null, say: $('.tx').textContent },
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return; u = u || p.ans; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook)
     window.__atlasLs = dbg;
     return {
