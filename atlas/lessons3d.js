@@ -1756,9 +1756,12 @@
       say(pass ? fill(X.pass, { p: pts, m: max }) : fill(X.fail, { p: pts, m: max, q }));
       if (pass && window.AtlasConfetti) try { AtlasConfetti(70); } catch (e) {}
       if (pass) setTimeout(fanfare, 350);   // (2026-11-12) the lesson passed: a little fanfare
-      act(pass ? X.nextL : X.again, { again: true });
+      // (2026-11-21) not passed: the main button runs the problems again (not the explanation); the ↺ button still starts the lesson over
+      const RQ = { ja: '問題をやり直す', en: 'Retry the problems', zh: '重做题目', 'zh-TW': '重做題目', ko: '문제 다시 풀기', es: 'Repetir los problemas', fr: 'Refaire les problèmes', pt: 'Refazer os problemas', de: 'Aufgaben wiederholen', ru: 'Решить задачи снова', tr: 'Soruları tekrar çöz', id: 'Ulangi soalnya', hi: 'प्रश्न फिर से करें', ar: 'أعد حل المسائل' };
+      const retry = cur.probs && cur.probs.length && !cur.drill;
+      act(pass ? X.nextL : retry ? (RQ[ctx.lang] || RQ.en) : X.again, { again: true });
       $('[data-a=again]').onclick = () => open(cur.key);
-      $('[data-a=next]').onclick = pass ? nextItem : () => open(cur.key);
+      $('[data-a=next]').onclick = pass ? nextItem : retry ? () => { cur.res = []; cur.probs.forEach(p => { p.done = false; p.hinted = false; p.used = 0; }); cur.k = 0; prob(); } : () => open(cur.key);
       if (ctx.onDone) try { ctx.onDone(); } catch (e) {}
     }
     function nextItem() {
