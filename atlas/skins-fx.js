@@ -142,7 +142,7 @@
       + `<i class="pc a-cloudsh" style="left:-600px;top:0;width:900px;height:1200px"></i>` + motes(14, '#fff6dc', 351, 0, 0, 1920, 1200),
     s36: T => `<i class="sp a-aurcv"><canvas></canvas></i>` + twinkles(T ? 80 : 50, ['#fff6dc', '#dff4ff'], 36, 0, 70, [6, 14]) + shooting(6, 36, 7),
     s37: T => `<i class="sp a-sky"><svg viewBox="-1000 -1000 2000 2000"><g class="a-sky2">${[400, 640, 880].map((r, i) => `<circle r="${r}" fill="none" stroke="#ffe7a8" stroke-width="3" stroke-dasharray="${i % 2 ? '60 40' : '2 22'}" opacity=".22"/>`).join('')}${Array.from({ length: 12 }, (_, k) => { const a = k * Math.PI / 6; return `<text x="${f1(Math.cos(a) * 960)}" y="${f1(Math.sin(a) * 960)}" font-size="44" fill="#ffe7a8" opacity=".35" text-anchor="middle" transform="rotate(${f1(a * 180 / Math.PI + 90)} ${f1(Math.cos(a) * 960)} ${f1(Math.sin(a) * 960)})">${'♈♉♊♋♌♍♎♏♐♑♒♓'[k]}</text>`; }).join('')}</g>${[300, 520, 740, 960].map((r, i) => `<circle r="${r}" fill="none" stroke="#e6c77a" stroke-width="2" stroke-dasharray="${3 + i * 3} ${14 + i * 8}" opacity=".35"/>`).join('')}${Array.from({ length: 90 }, (_, k) => { const r = rnd(370 + k), a = r() * 6.283, d = 80 + r() * 940; return `<circle cx="${f1(Math.cos(a) * d)}" cy="${f1(Math.sin(a) * d)}" r="${f1(1 + r() * 2.4)}" fill="#fff3cf" opacity="${f1(.4 + r() * .6)}"/>`; }).join('')}</svg></i>`
-      + `<i class="pc" style="left:0;top:0;width:1920px;height:1200px"><svg viewBox="0 0 1920 1200">${CONS.map((c, i) => `<g class="a-con" style="--dl:${(i * 2.4).toFixed(1)}s"><path d="M${c.map(q => q.join(' ')).join(' L')}" fill="none" stroke="#ffe7a8" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="100" />${c.map(q => `<circle cx="${q[0]}" cy="${q[1]}" r="7" fill="#fff6dc"/>`).join('')}</g>`).join('')}</svg></i>`
+      + `<i class="pc" style="left:0;top:0;width:1920px;height:1200px"><svg viewBox="0 0 1920 1200">${CONS.map((c, i) => `<g class="a-con" style="--dl:${(i * 4 - 32).toFixed(1)}s"><path d="M${c.map(q => q.join(' ')).join(' L')}" fill="none" stroke="#ffe7a8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" />${c.map(q => `<circle cx="${q[0]}" cy="${q[1]}" r="8" fill="#fff6dc"/>`).join('')}</g>`).join('')}</svg></i>`
       + twinkles(60, ['#fff3cf', '#ffe7a8', '#d8e6ff'], 37, 0, 100, [8, 18]) + shooting(6, 37, 7) + `<i class="sp a-comet"></i><i class="sp a-comet" style="animation-delay:-11s;top:30%"></i>`
       + `<i class="pc" style="left:0;top:0;width:1920px;height:1200px"><svg viewBox="0 0 1920 1200"><path d="${ECL}" fill="none" stroke="#ffe7a8" stroke-width="2" stroke-dasharray="4 12" opacity=".35"/></svg></i>`
       + [['#fff1b8', 34, 60, 0], ['#ffc9a8', 22, 44, -9], ['#c9e0ff', 18, 36, -20], ['#ffe0f0', 14, 52, -31], ['#d8ffe8', 12, 40, -40]].map(([c, w, d, dl]) => `<i class="pc a-planet" style="left:0;top:0;width:${w * 3}px;height:${w * 3}px;offset-path:path('${ECL}');--d:${d}s;--dl:${dl}s">${GLOW(c)}<i style="position:absolute;left:33%;top:33%;width:34%;height:34%;border-radius:50%;background:${c}"></i></i>`).join(''),
@@ -246,10 +246,10 @@
 .a-cloudsh{background:radial-gradient(40% 30% at 50% 40%,rgba(120,90,50,.12),transparent 70%);animation:aDrift 50s linear infinite;--x0:0px;--x1:3200px}
 .a-sky{left:50%;top:100%;width:300vmax;height:300vmax;margin:-150vmax 0 0 -150vmax;animation:aSpin 150s linear infinite}#skfx .a-sky2{animation:aSpin 90s linear infinite reverse;transform-origin:0 0}
 .a-planet{offset-rotate:0deg;animation:aPath var(--d) linear var(--dl) infinite,aPlF var(--d) linear var(--dl) infinite}@keyframes aPlF{0%,100%{opacity:0}6%,92%{opacity:1}}
-.a-aurcv{inset:0;mix-blend-mode:screen}.a-aurcv canvas{width:100%;height:100%;display:block;filter:blur(2.2px)}
-.a-con path{animation:aCon 19s ease-in-out var(--dl) infinite}.a-con circle{opacity:.0;animation:aConS 19s ease-in-out var(--dl) infinite}
-@keyframes aCon{0%{stroke-dashoffset:100;opacity:0}3%{opacity:1}12%{stroke-dashoffset:0}60%{stroke-dashoffset:0;opacity:1}70%,100%{opacity:0;stroke-dashoffset:0}}
-@keyframes aConS{0%{opacity:0;transform:scale(.4)}12%{opacity:1;transform:scale(1.6)}20%{transform:scale(1)}30%{transform:scale(1.4)}40%{transform:scale(1)}50%{transform:scale(1.3)}60%{opacity:1;transform:scale(1)}70%,100%{opacity:0}}#skfx .a-con circle{transform-box:fill-box;transform-origin:50% 50%}
+.a-aurcv{inset:0;mix-blend-mode:screen;opacity:.85}.a-aurcv canvas{width:100%;height:100%;display:block;filter:blur(2.2px)}
+.a-con path{opacity:0;animation:aCon 32s linear var(--dl) infinite}.a-con circle{opacity:0;animation:aConS 32s ease-in-out var(--dl) infinite}
+@keyframes aCon{0%{stroke-dashoffset:100;opacity:1}8%{stroke-dashoffset:0;opacity:1}12.4%{stroke-dashoffset:0;opacity:1}13.5%,100%{stroke-dashoffset:0;opacity:0}}
+@keyframes aConS{0%{opacity:0;transform:scale(.4)}3%{opacity:1;transform:scale(1.5)}6%{transform:scale(1)}9%{transform:scale(1.35)}12.4%{opacity:1;transform:scale(1)}13.5%,100%{opacity:0;transform:scale(1)}}#skfx .a-con circle{transform-box:fill-box;transform-origin:50% 50%}
 .a-comet{left:110%;top:4%;width:300px;height:3px;border-radius:3px;background:linear-gradient(90deg,#fff6dc,rgba(255,231,168,0));animation:aComet 22s linear infinite}@keyframes aComet{0%,70%{transform:translate(0,0) rotate(18deg);opacity:0}72%{opacity:1}100%{transform:translate(-160vw,52vh) rotate(18deg);opacity:0}}
 .a-rail{offset-rotate:auto;animation:aPath 18s linear infinite}.a-trail{animation:aPath 18s linear calc(var(--lag) * -1 + 0s) infinite,aTrailF 1.2s ease-in-out infinite alternate;animation-delay:calc(var(--lag) * -1),0s}@keyframes aTrailF{from{opacity:.3}to{opacity:1}}
 .a-jelly{animation:aJel var(--d) linear var(--dl) infinite;will-change:transform}.a-pulsej .bl{transform-box:fill-box;transform-origin:50% 100%;animation:aBell 2.4s ease-in-out infinite}.a-pulsej .tn{animation:aTn 2.4s ease-in-out infinite}
@@ -288,7 +288,7 @@ html:has(#bv.on,#hist.on,#ov.on) #skfx *{animation-play-state:paused!important}`
       if (now - last < 33) return; last = now;
       if (document.hidden || document.documentElement.matches(':has(#bv.on,#hist.on,#ov.on)')) return;
       const t = now / 1000; ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter';
-      const pulse = .8 + .2 * sn(t * .7) * sn(t * .23 + 1);
+      const pulse = .85 + .15 * sn(t * .25) * sn(t * .09 + 1);
       BANDS.forEach((b, bi) => {
         const N = Math.round(W * 1.5);
         for (let i = 0; i < N; i++) {
@@ -298,16 +298,16 @@ html:has(#bv.on,#hist.on,#ov.on) #skfx *{animation-play-state:paused!important}`
           const x = (u * 1.25 - .125 + fold) * W;
           const y = H * (b.y + b.amp * sn(TAU * (u * .7 + t * .02) + b.ph) + .018 * sn(TAU * (u * 4 - t * .09) + bi));
           // rays: fine structure that drifts and flickers; brightness waves running along the band
-          const ray = .5 + .5 * sn(TAU * (u * 70 + t * .9) + 3 * sn(TAU * (u * 6 - t * .17) + bi));
-          const ray2 = .5 + .5 * sn(TAU * (u * 160 - t * 2.3) + bi * 1.7);
+          const ray = .5 + .5 * sn(TAU * (u * 70 + t * .12) + 3 * sn(TAU * (u * 6 - t * .05) + bi));
+          const ray2 = .5 + .5 * sn(TAU * (u * 23 - t * .04) + bi * 1.7);
           const wave = .55 + .45 * sn(TAU * (u * 1.6 - t * .06) + b.ph);
           const env = Math.min(1, u * 6, (1 - u) * 6) * Math.max(0, wave);
           const flare = Math.max(0, sn(TAU * (u * 2.2 + t * .11) + bi * 2)) ** 6 * .8;
           const I = env * (.35 + .45 * ray * ray + .2 * ray2) * (b.a + flare) * pulse;
           if (I < .02) continue;
           const h = H * b.h * (.55 + .3 * ray + .5 * flare + .15 * sn(TAU * (u * 3 + t * .07)));
-          const jy = H * .012 * sn(TAU * (u * 37 + t * .5) + bi);
-          ctx.globalAlpha = Math.min(1, I * .9); ctx.drawImage(b.sp, x, y - h + jy, 1.6, h);
+          const jy = H * .012 * sn(TAU * (u * 37 + t * .06) + bi);
+          ctx.globalAlpha = Math.min(.6, I * .5); ctx.drawImage(b.sp, x, y - h + jy, 1.6, h);
         }
       });
       ctx.globalAlpha = 1;
