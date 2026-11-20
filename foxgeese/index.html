@@ -1013,6 +1013,12 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 #newOverlay #ruleCards .ngt-gcard .gart{min-height:0!important;height:clamp(84px, calc(var(--vh, 100vh) * .13), 118px)!important;padding:6px 0!important}
 #newOverlay #ruleCards .ngt-gcard .gart svg{height:100%!important;width:auto!important;max-height:none!important}
 #newOverlay #ruleCards .ngt-gcard{padding-bottom:44px}
+#fFormat .q-note{font-size:12px;color:var(--muted);line-height:1.6;margin:6px 2px 0}
+.mt-tbl{display:grid;justify-content:center;gap:4px;margin:8px auto 6px;font-size:14px}
+.mt-tbl>div{display:grid;grid-template-columns:auto 6.5em 6.5em;gap:10px;align-items:center}
+.mt-tbl span{color:var(--muted);text-align:right;font-size:12.5px}
+.mt-tbl b{text-align:center;font-variant-numeric:tabular-nums}
+.mt-tbl b.w{color:var(--accent,#e07a2e);font-size:18px}
 #fQuiet .q-note{font-size:12px;color:var(--muted);line-height:1.6;margin:6px 2px 0}
 #newOverlay #ruleCards .ngt-gcard > b{white-space:normal;text-overflow:clip;line-height:1.3}   /* (the four rule names wrap, never 「15 Gänse (kein…」) */
 .tour-vars{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:start}
@@ -1215,6 +1221,12 @@ html[data-bd=meadow] .reserve .rsv-plate.rsv-q.lo b, html[data-bd=bauhaus] .rese
     <div class="ng-cols"><div class="ng-col ng-set">
     <div class="field hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field hidden" id="fInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" id="fInfoText"></p></div>
+    <!-- 交代2局戦 / 1局 (2026-11-20 user: the default; the rated games may choose) -->
+    <div class="field" id="fFormat" data-ng="game">
+      <label><span data-i18n="fmt.label"></span></label>
+      <div class="seg" id="segFmt"><button type="button" data-v="match"></button><button type="button" data-v="single"></button></div>
+      <p class="q-note" id="fmtNote"></p>
+    </div>
     <div class="field" id="fRules" data-ng="game">
       <label><span data-i18n="ng.rules"></span></label>
       <div class="ngt-gcards" id="ruleCards" style="--ngt-cols:2"></div>
@@ -1368,7 +1380,7 @@ html[data-bd=meadow] .reserve .rsv-plate.rsv-q.lo b, html[data-bd=bauhaus] .rese
 
 <script src="../checkers/i18n.js?v=20261107l14-nd1"></script>
 <script src="i18n-fg.js?v=8"></script>
-<script src="i18n-fg-more.js?v=9"></script>
+<script src="i18n-fg-more.js?v=10"></script>
 <script src="i18n-online.js?v=3"></script>
 <script src="../shared/pzbook.js?v=8l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
@@ -1393,7 +1405,7 @@ html[data-bd=meadow] .reserve .rsv-plate.rsv-q.lo b, html[data-bd=bauhaus] .rese
 <script src="coach.js?v=7"></script>
 <script src="coach-i18n.js?v=7"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=23"></script><script src="uitheme.js?v=4"></script>
+<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=24"></script><script src="uitheme.js?v=4"></script>
 <script src="online-ui.js?v=5"></script>
 <!-- World Board Game Atlas portal skin: konane/?skin=atlas — 3D boards (a koa tray with the Hawaiian quilt / a rough basalt papamū with pecked cups), coral and basalt pebbles, guide speech bubbles, portal look (all features kept) -->
 <script>
@@ -1414,7 +1426,7 @@ html[data-bd=meadow] .reserve .rsv-plate.rsv-q.lo b, html[data-bd=bauhaus] .rese
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
 <script src="../shared/infotabs.js?v=24" defer></script>
 <script src="../shared/pickdrop.js?v=8l14"></script>
-<script src="../shared/ngtabs.js?v=36"></script>
+<script src="../shared/ngtabs.js?v=37"></script>
 <script src="../shared/nglux.js?v=24l16"></script><script src="../shared/ngdisp.js?v=2"></script>
 <script src="../shared/resumeng.js?v=1l14"></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
