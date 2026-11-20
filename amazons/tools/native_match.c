@@ -33,9 +33,9 @@ static const double LVN[24] = { 0, 420, 300, 210, 150, 105, 70, 45, 200 };
 static const int LVD[24] = { 0, 1, 1, 1, 1, 1, 1, 1, 3 };
 static const int LVQ[24] = { 0, 3, 4, 5, 6, 8, 10, 12, 14 };
 static const double LVK[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4.5, 6, 16, 40, 150, 200, 500, 1200 };
-static const int LVMC[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1 };
+static const int LVMC[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 };
 static const double LVMS[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1500, 3000, 6000, 12000, 20000 };
-static const int LVEV[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2 };   // (2 = v3: the MCTS levels, 2026-11-14)
+static const int LVEV[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2 };   // (2026-11-20: the entry of Lv.23 was missing — L23 played with the classic evaluation)   // (2 = v3: the MCTS levels, 2026-11-14)
 static void parseP(const char *s, Player *P) {
   memset(P, 0, sizeof *P); P->fin = -1; P->name = s; P->mc = !strncmp(s, "mc", 2); P->lv = !strncmp(s, "lv", 2); memcpy(P->mcp, MCD, sizeof MCD);
   if (s[0] == 'L' && s[1] >= '0' && s[1] <= '9') {

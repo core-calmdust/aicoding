@@ -9,6 +9,8 @@
 //        and the engine's value against nnfeat.h's (the trainer's) at every position of the games
 //   kn match <rule> <games> <seed> <A> <B> [random plies]   A against B, every opening twice (colours swapped). A player:
 //        mode/nodesK/ms/net — mode 1 = search v2, 2 = v3; nodesK or ms (0 = not used); net = a net file or - (the hand evaluation)
+//        A~mode/nodesK/ms~p: each move with the chance p the second setting (the page's LVX [a, b, p], same net). Built with
+//        -DCPUCLOCK the ms are the process's CPU time (a shared machine; the ladder of 2026-11-20, MODEL_CARD.md)
 //   kn bench <rule> <player> [moves]      positions per second
 //   kn probe <rule> <net|-> [nodesK]      reads lines "<board: . b w a square> <side 0/1> <ply>" and prints, for each, the evaluation
 //        (search v3's) and a search of v3 from an empty table (move value depth nodes) — tools/check_nn.js compares WebAssembly
@@ -19,7 +21,12 @@
 #include <time.h>
 #include "nnfeat.h"
 typedef unsigned int u32; typedef unsigned long long u64;
-double now(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return t.tv_sec * 1e3 + t.tv_nsec / 1e6; }
+#ifdef CPUCLOCK   // -DCPUCLOCK: the time of a move by the process's CPU time (fair on a shared machine)
+#define NOWCLK CLOCK_PROCESS_CPUTIME_ID
+#else
+#define NOWCLK CLOCK_MONOTONIC
+#endif
+double now(void) { struct timespec t; clock_gettime(NOWCLK, &t); return t.tv_sec * 1e3 + t.tv_nsec / 1e6; }
 static double gEnd = 1e300;
 int js_poll(void) { return now() > gEnd; }
 int js_shget(u32 a, u32 b) { (void)a; (void)b; return 0; }
@@ -87,18 +94,21 @@ static void gPlay(G *g, int m) {
 static void gLoad(Eng *E, const G *g) { memcpy(E->SQ, g->sq, NN); E->IO[8] = g->side; E->IO[9] = g->ply; E->IO[10] = (int)g->h1; E->IO[11] = (int)g->h2; }
 static u64 rs = 88172645463325252ull;
 static u64 rnd(void) { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; return rs; }
-typedef struct { int mode, nk, ms; double dsum; int dn; Eng *E; } Pl;
+typedef struct { int mode, nk, ms, m2, n2, s2; double pm; double dsum; int dn; Eng *E; } Pl;
 static void plParse(Pl *p, const char *s, Eng *E) {
   char net[512] = "-"; memset(p, 0, sizeof *p); p->E = E;
-  if (sscanf(s, "%d/%d/%d/%511s", &p->mode, &p->nk, &p->ms, net) < 3) { fprintf(stderr, "player? %s (mode/nodesK/ms/net)\n", s); exit(2); }
+  if (sscanf(s, "%d/%d/%d/%511[^~]", &p->mode, &p->nk, &p->ms, net) < 3) { fprintf(stderr, "player? %s (mode/nodesK/ms/net)\n", s); exit(2); }
+  { const char *x = strchr(s, '~'); if (x && sscanf(x + 1, "%d/%d/%d~%lf", &p->m2, &p->n2, &p->s2, &p->pm) < 4) { fprintf(stderr, "mix? %s (A~mode/nodesK/ms~p)\n", s); exit(2); } }   // A~B~p: each move B with the chance p (the page's LVX [a, b, p])
   engInit(E);
   if (strcmp(net, "-")) { loadNet(E, net); E->netuse(1); } else E->netuse(0);
 }
 static int plMove(Pl *p, const G *g, int *val) {
   Eng *E = p->E; gLoad(E, g);
-  E->setn(0, p->nk ? p->nk * 1000.0 : 1e300, 0); E->kclear();
-  gEnd = p->ms ? now() + p->ms : 1e300;
-  E->best(60, p->mode); gEnd = 1e300;
+  static u64 mr = 0x9E3779B97F4A7C15ull; mr ^= mr << 13; mr ^= mr >> 7; mr ^= mr << 17;   // (its own generator: the openings stay the same)
+  int b = p->pm > 0 && (double)(mr >> 11) / 9007199254740992.0 < p->pm, mode = b ? p->m2 : p->mode, nk = b ? p->n2 : p->nk, ms = b ? p->s2 : p->ms;
+  E->setn(0, nk ? nk * 1000.0 : 1e300, 0); E->kclear();
+  gEnd = ms ? now() + ms : 1e300;
+  E->best(60, mode); gEnd = 1e300;
   if (E->IO[2] > 0) { p->dsum += E->IO[2]; p->dn++; }
   if (val) *val = E->IO[1];
   return E->IO[0];
