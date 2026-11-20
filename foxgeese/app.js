@@ -709,12 +709,14 @@ function playMove(m) {
   update(true); save();
   const st = statusAt(cur);
   if (st.over) { const ref = moves; setTimeout(() => { if (moves === ref) onGameEnd(st); }, d + 450); }   // only if this game is still on the board
-  afterPosition();
+  afterPosition(animating ? d : 0);
 }
-function afterPosition() {
+// (2026-11-21) after an animated move the searches (the AI's reply, the coach's analysis — many threads) start once the piece
+// has landed: started at once, they took every core and the move was choppy (the 3D full version above all)
+function afterPosition(delay) {
   const tok = ++busyToken;
-  analyzeCurrent(tok);
-  maybeAI(tok);
+  const go = () => { if (tok !== busyToken) return; analyzeCurrent(tok); maybeAI(tok); };
+  if (delay > 0) setTimeout(go, delay); else go();
 }
 async function maybeAI(tok) {
   if (lesson || puzzle || reviewing || wpPaused || gameOver(cur)) return;
