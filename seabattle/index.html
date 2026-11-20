@@ -192,6 +192,11 @@ body.drafting .draft{display:block}body.drafting .deploy{display:none}
 #pickTabs{flex-basis:100%;display:flex;gap:6px;overflow-x:auto;padding-top:4px}#pickTabs button{flex:none;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--muted);font-size:14px;font-weight:700;cursor:pointer}#pickTabs button em{font-style:normal;font-family:var(--num);margin-inline-start:6px;opacity:.75;font-weight:500}
 #pickTabs button.on{color:#08202a;background:var(--rc);border-color:var(--rc)}#pickTabs .g0{--rc:#ff9f7a}#pickTabs .g1{--rc:#7fd8ff}#pickTabs .g2{--rc:#9ff0c8}#pickTabs .g3{--rc:#c9c9d6}
 #pickGrid{padding-top:12px}
+.flv{margin-inline-start:8px;height:24px;padding:0 9px;border-radius:7px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}.fl .fh{align-items:center}.fl .fh span{margin-inline-start:auto}
+.dw .flv{float:right;margin:0}#pickHead .flv{height:30px;font-size:13px}
+#fleetOverlay .modal{width:min(1080px,calc(100vw - 32px));padding:20px 22px}#fleetTabs{flex-basis:100%;display:flex;gap:6px;padding-top:4px}#fleetTabs button{height:36px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--muted);font-size:14px;font-weight:700;cursor:pointer}#fleetTabs button.on{background:#e8f4f6;color:#08202a}
+#fleetGrid{padding-top:12px}.pc .pst{font-size:13px;font-weight:700;text-align:center;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);color:var(--muted)}.pc .pst.r{color:#06302b;background:linear-gradient(180deg,#a8f0e0,#5fcdb8)}.pc .pst.x{color:#ffb4a0;background:rgba(226,99,74,.16)}.pc.sunk{opacity:.6}.pc.sunk .pa{filter:grayscale(1)}
+@media (max-width: 600px){ #fleetOverlay{padding:8px} #fleetOverlay .modal{width:100%;max-height:calc(100dvh - 16px);padding:14px} }
 .pc .ps{display:flex;align-items:center;gap:7px}.pc .ps .ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;display:block}.pc .ps b{font-size:14.5px}.pc .ps small{margin-inline-start:auto;font-size:11.5px;color:var(--muted);white-space:nowrap}
 .pc p{margin:0;font-size:13px;line-height:1.5;color:#cfe2e8;flex:1}
 .pc button{height:38px;border-radius:10px;border:1px solid #c4f7ec;background:linear-gradient(180deg,#a8f0e0,#5fcdb8);color:#06302b;font-size:14.5px;font-weight:700;cursor:pointer}
@@ -328,8 +333,8 @@ body.tac:not(.placing) .skills{display:grid}
     <div class="card radar" id="radarCard">
       <button class="mini" id="miniBtn"><svg id="msvg" xmlns="http://www.w3.org/2000/svg"></svg><span class="cap" id="miniCap"></span></button>
       <div class="fleets">
-        <div class="fl foe" id="flFoe"><div class="fh"><b></b><span></span></div><div class="pips"></div><div class="cds"></div></div>
-        <div class="fl" id="flMe"><div class="fh"><b></b><span></span></div><div class="pips"></div></div>
+        <div class="fl foe" id="flFoe"><div class="fh"><b></b><button class="flv" data-p="1" data-i18n="fv.see"></button><span></span></div><div class="pips"></div><div class="cds"></div></div>
+        <div class="fl" id="flMe"><div class="fh"><b></b><button class="flv" data-p="0" data-i18n="fv.see"></button><span></span></div><div class="pips"></div></div>
       </div>
     </div>
     <div class="status" id="status" aria-live="polite"></div>
@@ -365,6 +370,7 @@ body.tac:not(.placing) .skills{display:grid}
 
 <!-- rules (shared/ruletour.js) -->
 <div class="overlay" id="pickOverlay"><div class="modal"><div class="pkh"><h2 data-i18n="dr.t"></h2><div id="pickHead"></div><div id="pickTabs"></div><div id="pickLegend"><span><i class="t"></i><b data-i18n="pk.lg.t"></b></span><span><i class="a"></i><b data-i18n="pk.lg.a"></b></span><span><i class="s"></i><b data-i18n="pk.lg.s"></b></span><span><i class="p"></i><b data-i18n="pk.lg.p"></b></span><span><i class="m"></i><b data-i18n="pk.lg.m"></b></span></div></div><div id="pickGrid"></div><div class="modal-actions"><button class="mbtn" id="btnPickClose" data-i18n="close"></button><button class="mbtn" id="btnPickStop" data-i18n="dr.stop"></button></div></div></div>
+<div class="overlay" id="fleetOverlay"><div class="modal"><div class="pkh"><h2 data-i18n="fv.t"></h2><div id="fleetTabs"></div></div><div id="fleetGrid"></div><div class="modal-actions"><button class="mbtn" id="btnFleetClose" data-i18n="close"></button></div></div></div>
 <div class="overlay" id="shipsOverlay"><div class="modal"><h2 data-i18n="dr.all"></h2><div id="shipList"></div><div class="modal-actions"><button class="mbtn" id="btnShipsClose" data-i18n="close"></button></div></div></div>
 <div class="overlay" id="rulesOverlay"><div class="modal"><div id="rulesBody"></div></div></div>
 
@@ -378,7 +384,7 @@ body.tac:not(.placing) .skills{display:grid}
   </div>
 </div>
 
-<script src="i18n.js?v=28"></script>
+<script src="i18n.js?v=29"></script>
 <script src="../shared/rulesoffer.js?v=20sea"></script>
 <script src="../shared/headerbar.js?v=63"></script>
 <script src="../shared/resign.js?v=3l14"></script>
@@ -386,7 +392,7 @@ body.tac:not(.placing) .skills{display:grid}
 <script src="engine.js?v=23"></script>
 <script src="board.js?v=10"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=28"></script>
+<script src="app.js?v=29"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>

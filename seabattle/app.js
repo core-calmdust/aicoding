@@ -89,6 +89,7 @@ function renderFleet() {
   row($('#flFoe'), 'AI Lv.' + G.level, G.st.sides[1], false);
   $('#flFoe .cds').innerHTML = G.st.cd ? G.st.sides[1].ships.map((s, i) => { const k = skillOf(s); if (!k) return ''; const c = G.st.cd[1][i], dead = !E.skillLive(G.st, 1, i); return `<span class="${dead ? 'x' : c === 0 ? 'r' : ''}">${t('sk.' + k)}${dead || c === 0 ? '' : ' ' + c}</span>`; }).join('') : '';
   row($('#flMe'), t('you'), G.st.sides[0], true);
+  if ($('#fleetOverlay').classList.contains('show')) renderFleetSheet();
   $('#flFoe').classList.toggle('turn', G.phase === 'battle' && G.st.turn === 1);
   $('#flMe').classList.toggle('turn', G.phase === 'battle' && G.st.turn === 0);
 }
@@ -193,7 +194,7 @@ function renderDraft() {
   $('#drTurn').textContent = t(d.turn === 0 ? 'dr.you' : 'dr.ai'); $('#drTurn').classList.toggle('me', d.turn === 0);
   // the side card: the field at a glance (tap → the pick sheet)
   $('#drRows').innerHTML = `<button id="btnPick" class="${mine ? 'go' : ''}">${t('dr.open')}</button><div class="drf">${E.TYPES.map((T, k) => k).filter(k => f[k]).sort((a, b) => ROLE_OF(a) - ROLE_OF(b) || E.TYPES[a].cost - E.TYPES[b].cost).map(k => `<span class="g${ROLE_OF(k)}${d.pool[k] ? '' : ' out'}">${t('ship.' + k)}</span>`).join('')}</div>`;
-  const who = (p, name) => `<div class="dw${d.turn === p ? ' turn' : ''}"><div class="fh"><b>${name}</b><span>${t('dr.left', { c: E.draftLeft(d, p) })}</span></div><div class="pips">${d.picks[p].map(k => `<span class="pip" title="${t('ship.' + k)}">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</div></div>`;
+  const who = (p, name) => `<div class="dw${d.turn === p ? ' turn' : ''}"><div class="fh"><b>${name}</b>${d.picks[p].length ? `<button class="flv" data-p="${p}">${t('fv.see')}</button>` : ''}<span>${t('dr.left', { c: E.draftLeft(d, p) })}</span></div><div class="pips">${d.picks[p].map(k => `<span class="pip" title="${t('ship.' + k)}">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</div></div>`;
   $('#drWho').innerHTML = who(1, 'AI Lv.' + G.level) + who(0, t('you'));
   $('#btnDrStop').disabled = !(E.draftCanStop(d, 0) && !G.busy);
   // the pick sheet: one card per type on the table, by role, cheapest first
@@ -205,7 +206,8 @@ function renderDraft() {
       <div class="ps">${T.skill ? `<i class="ic">${SK_ICON[T.skill] || ''}</i>` : ''}<b>${shipSkillName(T)}</b><small>${kind}</small></div>
       <p>${shipSkillText(T)}</p>
       <button data-k="${k}" ${can ? '' : 'disabled'}>${can ? t('dr.pick') : why || t('dr.pick')}</button></div>`; };
-  $('#pickHead').innerHTML = `<b>${t(d.turn === 0 ? 'dr.you' : 'dr.ai')}</b><span>${t('pk.left', { c: E.draftLeft(d, 0), n: d.picks[0].length, m: E.MAXSHIPS })}</span>`;
+  $('#pickHead').innerHTML = `<b>${t(d.turn === 0 ? 'dr.you' : 'dr.ai')}</b><span>${t('pk.left', { c: E.draftLeft(d, 0), n: d.picks[0].length, m: E.MAXSHIPS })}</span>${d.picks[1].length ? `<button class="flv" data-p="1">${t('fv.foeBtn', { n: d.picks[1].length })}</button>` : ''}`;
+  if ($('#fleetOverlay').classList.contains('show')) renderFleetSheet();
   const groups = [0, 1, 2, 3].map(g => E.TYPES.map((T, k) => k).filter(k => f[k] && ROLE_OF(k) === g).sort((a, b) => E.TYPES[a].cost - E.TYPES[b].cost || a - b));
   if (!groups[pickTab] || !groups[pickTab].length) pickTab = groups.findIndex(g => g.length);
   $('#pickTabs').innerHTML = groups.map((ks, g) => ks.length ? `<button class="g${g}${g === pickTab ? ' on' : ''}" data-g="${g}">${t('dr.g' + g)}<em>${ks.length}</em></button>` : '').join('');
@@ -234,6 +236,31 @@ function reachSvg(skill) {
   if (skill === 'rtorpedo') h += `<path d="M2 ${ar * z + 6}h10m-3-3l3 3-3 3" class="arw"/>`;
   return `<svg class="reach" viewBox="0 0 ${n * z} ${n * z}">${h}</svg>`;
 }
+// the fleet sheet: either side's ships as cards (in the draft: what has been picked; in battle: state, cooldowns, sinkings)
+let fleetSide = 1;
+function openFleet(p) { fleetSide = p; renderFleetSheet(); $('#fleetOverlay').classList.add('show'); }
+function renderFleetSheet() {
+  if (!G) return;
+  const inBattle = !!G.st, p = fleetSide;
+  const names = [t('fv.foe', { n: 'AI Lv.' + G.level }), t('fv.me')];
+  $('#fleetTabs').innerHTML = [1, 0].map(q => `<button data-p="${q}" class="${q === p ? 'on' : ''}">${names[1 - q]}</button>`).join('');
+  const list = inBattle ? G.st.sides[p].ships.map((s, i) => ({ k: s.t, i })) : (G.draft ? G.draft.picks[p] : []).map(k => ({ k, i: -1 }));
+  const card = ({ k, i }) => { const T = E.TYPES[k], sd = inBattle ? G.st.sides[p] : null, sunk = sd && sd.sunk[i];
+    let st = inBattle ? '' : `<div class="pst">${t('fv.picked')}</div>`, cls = '';
+    if (inBattle) { if (sunk && !(T.skill && E.skillLive(G.st, p, i))) { st = `<div class="pst x">${t('fv.sunk')}</div>`; cls = ' sunk'; }
+      else if (T.skill) { const c = G.st.cd[p][i]; st = `<div class="pst${c === 0 ? ' r' : ''}">${sunk ? t('fv.sunk') + ' · ' : ''}${c === 0 ? t('sk.ready') : t('sk.wait', { n: c })}</div>`; if (sunk) cls = ' sunk'; }
+      else st = `<div class="pst">${p === 0 ? t('fv.hits', { n: sd.hitsOn[i], m: T.len }) : t('fv.afloat')}</div>`; }
+    const kind = T.skill ? t('pk.active', { n: T.cd }) : PASSIVE_T(T) ? t('pk.passive') : t('pk.none');
+    return `<div class="pc g${ROLE_OF(k)}${cls}"><div class="pt"><span class="pcost">${T.cost}</span><b>${t('ship.' + k)}</b></div>
+      <div class="pa${reachSvg(T.skill) ? ' wide' : ''}">${reachSvg(T.skill)}<div class="pship">${SB.shipSvg(k, T.len)}</div></div>
+      <div class="ps">${T.skill ? `<i class="ic">${SK_ICON[T.skill] || ''}</i>` : ''}<b>${shipSkillName(T)}</b><small>${kind}</small></div>
+      <p>${shipSkillText(T)}</p>${st}</div>`; };
+  $('#fleetGrid').innerHTML = list.length ? `<div class="pg">${list.map(card).join('')}</div>` : `<p class="none">${t('fv.none')}</p>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest('.flv'); if (b) { e.stopPropagation(); openFleet(+b.dataset.p); } });
+$('#fleetTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { fleetSide = +b.dataset.p; renderFleetSheet(); } });
+$('#btnFleetClose').onclick = () => $('#fleetOverlay').classList.remove('show');
+$('#fleetOverlay').addEventListener('click', e => { if (e.target.id === 'fleetOverlay') $('#fleetOverlay').classList.remove('show'); });
 const PASSIVE_T = T => !!(T.armor || T.aa || T.decoy || T.counter || T.rally || T.hospital || T.trace || T.pursuit || T.haste || T.net || T.plunder || T.calm);
 function shipSkillName(T) { return T.skill ? t('sk.' + T.skill) : T.armor ? t('sk.armor') : T.aa ? t('sk.aa') : T.decoy ? t('sk.decoy') : T.counter ? t('sk.counter') : T.calm ? t('sk.calm') : T.plunder ? t('sk.plunder') : T.net ? t('sk.net') : T.pursuit ? t('sk.pursuit') : T.haste ? t('sk.haste') : T.trace ? t('sk.trace') : T.cost === 0 ? t('sk.free') : T.rally ? t('sk.rally') : T.hospital ? t('sk.hospital') : t('dr.none'); }
 function shipSkillText(T) { const d = shipDesc(T).replace(/^[^：]*：/, '').replace(/ · .*$/, ''); return T.skill || PASSIVE_T(T) || T.cost === 0 ? d.replace(/^常時：/, '').replace(/^Always: /, '') : t('pk.plain'); }
