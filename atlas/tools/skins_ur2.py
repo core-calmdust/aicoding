@@ -131,6 +131,9 @@ def cloisonne():
     return svg_doc(f'<defs>{defs}</defs>' + ''.join(g), '#f3f6f8')
 
 # ---------------------------------------------------------------- night fair (dark cover, lights that twinkle)
+def wheel_page():
+    return True   # 2026-11-20: the carousel's horses are the page's (they go round)
+
 def night_fair(variant=0, wheel=False):
     d = lin('sky', [(0, '#1b2246'), (.6, '#2b2f5e'), (1, '#3d3a6e')])
     g = [f'<rect width="{VW}" height="{VH}" fill="url(#sky)"/>']
@@ -160,7 +163,7 @@ def night_fair(variant=0, wheel=False):
         x = X - 210 + k * 26; c = ['#ffe9a6', '#ffc6d4'][k % 2]
         g.append(f'<circle cx="{x}" cy="{Y - 150}" r="{6 if on(k) else 4}" fill="{c}" opacity="{1 if on(k) else .35}"/>' + (f'<circle cx="{x}" cy="{Y - 150}" r="18" fill="{c}" opacity=".18"/>' if on(k) else ''))
     g.append(f'<rect x="{X - 180}" y="{Y - 140}" width="360" height="130" fill="#ffe9a6" opacity=".14"/>')
-    for x, c in ((X - 130, '#f3eef8'), (X - 20, '#ffe9c4'), (X + 90, '#f3eef8')):
+    for x, c in ((X - 130, '#f3eef8'), (X - 20, '#ffe9c4'), (X + 90, '#f3eef8')) if not wheel_page() else ():   # (the horses go round: atlas/skins-fx.js)
         g.append(f'<rect x="{x + 28}" y="{Y - 140}" width="5" height="130" fill="#d9c27a"/><path d="M{x} {Y - 50} C{x} {Y - 76} {x + 20} {Y - 82} {x + 44} {Y - 78} C{x + 56} {Y - 92} {x + 70} {Y - 88} {x + 66} {Y - 70} C{x + 66} {Y - 54} {x + 50} {Y - 46} {x + 40} {Y - 46} L{x + 42} {Y - 26} L{x + 34} {Y - 26} L{x + 30} {Y - 44} L{x + 14} {Y - 44} L{x + 12} {Y - 26} L{x + 4} {Y - 26} Z" fill="{c}"/>')
     # a string of lights across
     g.append('<path d="M640 760 Q860 840 1080 800 Q1180 790 1260 820" fill="none" stroke="#5a5f92" stroke-width="3"/>')
@@ -200,7 +203,7 @@ def makie(variant=0):
     r = RNG(97)
     for _ in range(40):   # scattered raden petals
         x, y, a = r.random() * VW, r.random() * VH, r.random() * 360
-        g.append(f'<path d="M0 0 C-10 -10 -10 -26 0 -32 C10 -26 10 -10 0 0 Z" transform="translate({x:.0f} {y:.0f}) rotate({a:.0f}) scale({.8 + r.random() * .7:.2f})" fill="url(#s{int(r.random() * 4)})" opacity=".95"/>')
+        r.random(); r.random()   # (2026-11-20: the petals all move — atlas/skins-fx.js; the draws stay so the gold dust keeps its place)
     # fine gold dust (nashiji) in drifts
     g.append(''.join(f'<circle cx="{r.random() * VW:.0f}" cy="{(r.random() ** 2) * 500 + (900 if r.random() < .5 else 0):.0f}" r="{.8 + r.random() * 1.6:.1f}" fill="#e2bd6a" opacity="{.3 + r.random() * .5:.2f}"/>' for _ in range(500)))
     return doc(d, ''.join(g))
