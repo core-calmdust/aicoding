@@ -607,6 +607,16 @@
       const de = document.documentElement;
       if (!document.getElementById('askinCss')) { const st = document.createElement('style'); st.id = 'askinCss'; st.textContent = `
 html.atlas-skin[data-skin] .atlas-top{background:var(--sk-hdr)!important;border-bottom-color:var(--sk-line)!important}
+html.atlas-skin[data-skin]{--a-paper:color-mix(in srgb,var(--sk-navm) 15%,#fffcf6);--a-tile:color-mix(in srgb,var(--sk-navm) 7%,#fffdf9);--a-btn:color-mix(in srgb,var(--sk-navm) 5%,#fffefb);--a-line:color-mix(in srgb,var(--sk-navm) 38%,#f1e9d8);--a-track:color-mix(in srgb,var(--sk-navm) 20%,#f4eee2);--a-ink2:color-mix(in srgb,var(--sk-navm) 30%,#6a7088);--a-shadow:0 2px 0 color-mix(in srgb,var(--sk-navm) 14%,transparent),0 10px 24px -12px color-mix(in srgb,var(--sk-navm) 45%,rgba(0,0,0,.4))}
+html.atlas-skin[data-skin].skdark{--a-paper:color-mix(in srgb,var(--sk-hdrs) 13%,var(--sk-navm));--a-tile:color-mix(in srgb,var(--sk-hdrs) 6%,#fbfbff);--a-btn:color-mix(in srgb,var(--sk-hdrs) 4%,#fdfdff);--a-line:color-mix(in srgb,var(--sk-hdrs) 32%,var(--sk-navm));--a-track:color-mix(in srgb,var(--sk-hdrs) 20%,var(--sk-navm));--a-ink2:color-mix(in srgb,var(--sk-hdrs) 55%,#6a7088)}
+html.atlas-skin[data-skin]:not(.atlas-2d) body:not(#_) #dock.dock{background:var(--sk-hdr)!important;border-top:2px solid var(--sk-line)!important}
+html.atlas-skin[data-skin].skdark:not(.atlas-2d) body:not(#_) #dock.dock :is(.dk-title,.dk-me b,.chat-list,.chat-list *){color:#f4f6ff!important}
+html.atlas-skin[data-skin].skdark:not(.atlas-2d) body:not(#_) #dock.dock :is(.dk-stat,.dk-me,.chat-list small,.chat-list time,.dk-note){color:rgba(255,255,255,.66)!important}
+html.atlas-skin[data-skin].skdark:not(.atlas-2d) body:not(#_) #dock.dock :is(.dk-btn,.dk-name,.dk-vsel,.dk-vpick,.dk-g,.dk-myroom,.dk-acc button):not(.go){background:rgba(255,255,255,.1)!important;border-color:rgba(255,255,255,.2)!important;color:#fff!important;box-shadow:none!important}
+html.atlas-skin[data-skin].skdark:not(.atlas-2d) body:not(#_) #dock.dock :is(.dk-btn,.dk-name,.dk-vsel,.dk-vpick,.dk-g,.dk-myroom):not(.go):hover{background:rgba(255,255,255,.18)!important}
+html.atlas-skin[data-skin].skdark:not(.atlas-2d) body:not(#_) #dock.dock :is(.dk-btn,.dk-name,.dk-vsel,.dk-vpick,.dk-g,.dk-myroom,.dk-acc button) *{color:inherit!important}
+html.atlas-skin[data-skin].skdark:not(.atlas-2d) body:not(#_) :is(#dock.dock input,#dock .chat-form input,.dock .chat-form input:not(#_)){background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.22)!important;color:#fff!important}
+html.atlas-skin[data-skin].skdark:not(.atlas-2d) body:not(#_) :is(#dock.dock input,.dock .chat-form input:not(#_))::placeholder{color:rgba(255,255,255,.5)!important}
 html.atlas-skin[data-skin].skdark .atlas-brand b{color:#fff}html.atlas-skin[data-skin].skdark .atlas-brand small,html.atlas-skin[data-skin].skdark .atlas-brand .wk{color:rgba(255,255,255,.75)}
 html.atlas-skin[data-skin].skdark .atlas-top .hb-title h1{color:#fff!important}html.atlas-skin[data-skin].skdark .atlas-top .hb-title{border-left-color:rgba(255,255,255,.28)!important}
 html.atlas-skin[data-skin].skdark .atlas-top .hb-menu:not(#_) > *{color:rgba(255,255,255,.86)!important}
@@ -791,6 +801,26 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       get, set: v => { try { localStorage.setItem('atlas-aa', v ? '1' : '0'); } catch (e) {}
         if (!document.body.classList.contains('in-online')) setTimeout(() => location.reload(), 150); } });
   })();
+  // フルスクリーン (2026-11-20): the F key and a system switch in the options (gear)
+  (function fsOpt() {
+    const d = document, root = d.documentElement;
+    const can = !!(root.requestFullscreen || root.webkitRequestFullscreen);
+    const on = () => !!(d.fullscreenElement || d.webkitFullscreenElement);
+    const set = v => { try { if (v && !on()) (root.requestFullscreen || root.webkitRequestFullscreen).call(root); else if (!v && on()) (d.exitFullscreen || d.webkitExitFullscreen).call(d); } catch (e) {} };
+    if (!can) return;
+    let h = null;
+    if (window.HeaderBar && HeaderBar.addOption) h = HeaderBar.addOption({ id: 'fs', type: 'toggle',
+      label: { ja: 'フルスクリーン（F）', en: 'Full screen (F)', zh: '全屏（F）', 'zh-TW': '全螢幕（F）', ko: '전체 화면 (F)', es: 'Pantalla completa (F)', fr: 'Plein écran (F)', pt: 'Tela cheia (F)', de: 'Vollbild (F)', ru: 'Полный экран (F)', tr: 'Tam ekran (F)', id: 'Layar penuh (F)', hi: 'फ़ुल स्क्रीन (F)', ar: 'ملء الشاشة (F)' },
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+      get: on, set });
+    const sync = () => { if (h && h.sync) h.sync(); };
+    d.addEventListener('fullscreenchange', sync); d.addEventListener('webkitfullscreenchange', sync);
+    d.addEventListener('keydown', e => {
+      if ((e.key !== 'f' && e.key !== 'F') || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+      const a = d.activeElement; if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable)) return;
+      e.preventDefault(); set(!on());
+    });
+  })();
   const SKL = { ja: 'スキン', en: 'Skin', zh: '皮肤', 'zh-TW': '外觀', ko: '스킨', es: 'Aspecto', fr: 'Thème', pt: 'Visual', de: 'Skin', ru: 'Скин', tr: 'Görünüm', id: 'Skin', hi: 'स्किन', ar: 'المظهر' };   // (the worn portal skin as the page background, 2026-11-20)
   function placeField() {
     const X = window.Table3D; if (!X || !X.PLACES || !X.TABLES[5]) return;
@@ -809,6 +839,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
 #newOverlay #fPlace.atlas-place > .dsg-now{font-size:15px!important;font-weight:800}
 #newOverlay #fPlace.atlas-place .atlas-brh{margin:14px 0 8px;font-size:14px;font-weight:800;opacity:.8}
 #newOverlay #fPlace.atlas-place .atlas-br{display:flex!important;gap:6px}
+#newOverlay .modal:is([data-ngt=rules],[data-ngt=game]) #fPlace.atlas-place{display:none!important}   /* (only in the デザイン tab — it is added after the tabs sorted the fields) */
 #newOverlay #fPlace.atlas-place .atlas-br > button{flex:1 1 0;min-width:0;white-space:nowrap;font-size:15px!important;padding:10px 6px!important}
 #newOverlay #fPlace.atlas-place .atlas-tod > button{display:inline-flex!important;align-items:center;justify-content:center;gap:7px}
 #newOverlay #fPlace.atlas-place .atlas-tod .sw{flex:none;width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
