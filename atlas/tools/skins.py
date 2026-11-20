@@ -683,16 +683,58 @@ def meadow_cover(seed=113):
     img = soft_clouds(img, [(380, 230, 110), (1550, 200, 120)], '#ffffff', '#e2eef4', seed)
     for i, (b, a, top, bot) in enumerate([(760, 50, '#cfe6bf', '#d9ecc8'), (860, 45, '#bfdea8', '#cde6b6'), (980, 40, '#b2d698', '#c4e0ab')]):
         img = paint_layer(img, ridge(seed + i, b, a, freq=.8 + i * .3), top, bot, soft=1.5)
-    r = RNG(seed + 1)
-    for col in ('#fbd3dd', '#fff1b0', '#ffffff', '#d9cdf6'):
-        m = Image.new('L', (W, H), 0); d = ImageDraw.Draw(m)
-        for _ in range(120):
-            x = r.random() * W; y = k(880 + r.random() ** .7 * 320); s = k(4) + (y - k(860)) / 50 * r.random()
-            for j in range(5):
-                a = j * 2 * math.pi / 5; d.ellipse([x + math.cos(a) * s - s * .55, y + math.sin(a) * s - s * .55, x + math.cos(a) * s + s * .55, y + math.sin(a) * s + s * .55], fill=255)
-        mm = np.asarray(m.filter(ImageFilter.GaussianBlur(k(.8))), np.float32) / 255
-        img = emboss_layer(img, mm, col, rad=k(1.5), k=4 / K, shadow=.08, wrap=False, sh_off=(int(k(2)), int(k(3))))
-    return grain(img, .005, seed)
+    img = flower_friends(img, seed + 1)
+    return grain(img, .004, seed)
+
+def flower_friends(img, seed):
+    """flat, character-like flowers on the near hills: round petals, a centre with a little face (2026-11-20 ユーザー)"""
+    r = RNG(seed)
+    PET = ['#fbc6d4', '#ffe08a', '#ffffff', '#d4c8f6', '#ffcfae', '#bfe3f7']
+    CEN = {'#fbc6d4': '#ffe48f', '#ffe08a': '#ffb35c', '#ffffff': '#ffd65e', '#d4c8f6': '#fff0a6', '#ffcfae': '#fff0a6', '#bfe3f7': '#fff0a6'}
+    pts = []
+    tries = 0
+    while len(pts) < 70 and tries < 20000:   # spread out, bigger toward the front
+        tries += 1
+        y = 900 + r.random() ** .8 * 290; x = r.random() * 1920; sz = 7 + (y - 900) / 290 * 17 + r.random() * 4
+        if all((x - q[0]) ** 2 + (y - q[1]) ** 2 > ((sz + q[2]) * 1.9) ** 2 for q in pts): pts.append((x, y, sz))
+    pts.sort(key=lambda p: p[1])
+    ss = 2
+    def L(): return Image.new('L', (W * ss, H * ss), 0)
+    for x, y, sz in pts:
+        pass
+    # draw back to front, each flower its own layers so nearer ones overlap farther ones
+    for x, y, sz in pts:
+        X, Y, S = k(x) * ss, k(y) * ss, k(sz) * ss
+        col = PET[int(r.random() * len(PET))]
+        stem, leaf, pet, cen, face = L(), L(), L(), L(), L()
+        ds, dl, dp, dc, df = ImageDraw.Draw(stem), ImageDraw.Draw(leaf), ImageDraw.Draw(pet), ImageDraw.Draw(cen), ImageDraw.Draw(face)
+        hgt = S * (1.6 + r.random() * .8)
+        ds.line([(X, Y), (X, Y + hgt)], fill=255, width=max(2, int(S * .16)))
+        sd = 1 if r.random() < .5 else -1
+        lx, ly = X + sd * S * .55, Y + hgt * .6
+        dl.ellipse([lx - S * .5, ly - S * .22, lx + S * .5, ly + S * .22], fill=255)
+        n = 5 if r.random() < .7 else 6
+        rot = r.random() * math.pi
+        for j in range(n):
+            a = rot + j * 2 * math.pi / n
+            px, py = X + math.cos(a) * S * .62, Y + math.sin(a) * S * .62
+            dp.ellipse([px - S * .48, py - S * .48, px + S * .48, py + S * .48], fill=255)
+        dc.ellipse([X - S * .5, Y - S * .5, X + S * .5, Y + S * .5], fill=255)
+        if sz > 11:   # a face: two dot eyes, a small smile, rosy cheeks
+            e = S * .085
+            for ex in (-.2, .2):
+                df.ellipse([X + ex * S - e, Y - S * .1 - e * 1.2, X + ex * S + e, Y - S * .1 + e * 1.2], fill=255)
+            df.arc([X - S * .14, Y - S * .08, X + S * .14, Y + S * .18], 20, 160, fill=255, width=max(2, int(S * .06)))
+        for m_, c_, al in ((stem, '#8cc47a', 1), (leaf, '#9fd18b', 1), (pet, col, 1), (cen, CEN[col], 1), (face, '#5a4038', .9)):
+            mm = np.asarray(m_.resize((W, H), Image.LANCZOS), np.float32) / 255
+            box = mm > 0
+            if box.any(): img = lerp(img, hexc(c_), mm * al)
+        if sz > 11:   # cheeks
+            ck = L(); dk = ImageDraw.Draw(ck)
+            for ex in (-.3, .3):
+                dk.ellipse([X + ex * S - S * .09, Y + S * .02 - S * .06, X + ex * S + S * .09, Y + S * .02 + S * .06], fill=255)
+            img = lerp(img, hexc('#ff9fb0'), np.asarray(ck.resize((W, H), Image.LANCZOS), np.float32) / 255 * .6)
+    return img
 
 def dunes_cover(seed=127):
     img = vgrad([(0, '#fbe2c4'), (.45, '#fdf0dc'), (1, '#f6dcb3')])
