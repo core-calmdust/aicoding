@@ -598,7 +598,7 @@
     document.body.appendChild(bar);
     /* ---------- the worn portal skin (きせかえ → スキン, atlas/skins.js) in the full version too (2026-11-20) ----------
        The top bar always takes the skin's colours. The page background is either the skin's picture (with its moving
-       scene) or the place's floor as before — one button in the bar switches (localStorage atlas-fullbg: 'skin' | 'place').
+       scene) or the place's floor as before — the デザイン tab's 場所 row has the skin as its first tile (localStorage atlas-fullbg: 'skin' | 'place').
        The skin itself is changed on the portal; nothing to do here while the classic cream is worn. */
     (function skinBg() {
       let sk = null; try { sk = JSON.parse(localStorage.getItem('atlas-skin-css') || 'null'); } catch (e) {}
@@ -608,6 +608,12 @@
       if (!document.getElementById('askinCss')) { const st = document.createElement('style'); st.id = 'askinCss'; st.textContent = `
 html.atlas-skin[data-skin] .atlas-top{background:var(--sk-hdr)!important;border-bottom-color:var(--sk-line)!important}
 html.atlas-skin[data-skin].skdark .atlas-brand b{color:#fff}html.atlas-skin[data-skin].skdark .atlas-brand small,html.atlas-skin[data-skin].skdark .atlas-brand .wk{color:rgba(255,255,255,.75)}
+html.atlas-skin[data-skin].skdark .atlas-top .hb-title h1{color:#fff!important}html.atlas-skin[data-skin].skdark .atlas-top .hb-title{border-left-color:rgba(255,255,255,.28)!important}
+html.atlas-skin[data-skin].skdark .atlas-top .hb-menu:not(#_) > *{color:rgba(255,255,255,.86)!important}
+html.atlas-skin[data-skin].skdark .atlas-top .hb-menu:not(#_) > *:not(:disabled):hover{background:rgba(255,255,255,.16)!important;color:#fff!important}
+html.atlas-skin[data-skin].skdark .atlas-top .hb-menu:not(#_) > :is(.on,.sel,[aria-pressed=true],[aria-selected=true]){background:var(--sk-nav)!important;color:var(--sk-navt,#1a1a2a)!important;box-shadow:0 3px 0 var(--sk-nav2)!important}
+html.atlas-skin[data-skin].skdark .atlas-top .hb-menu:not(#_) > *:disabled{opacity:.5!important}
+html.atlas-skin[data-skin].skdark .atlas-top .hb-info,html.atlas-skin[data-skin].skdark .atlas-top .hb-info b{color:rgba(255,255,255,.86)!important}
 html.atlas-skin.askin-bg[data-skin]{background:var(--sk-bg)!important}
 html.atlas-skin.askin-bg[data-skin] body{background:transparent!important}
 html.atlas-skin.askin-bg[data-skk=tile]{background:var(--sk-bg) var(--sk-img) 0 0/var(--sk-size) repeat fixed!important}
@@ -616,21 +622,14 @@ html.atlas-skin.askin-bg[data-skk=cover] body::before{content:'';position:fixed;
 #skfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}#skfx i{position:absolute;display:block;font-style:normal}#skfx svg{display:block;width:100%;height:100%;overflow:visible}
 #skfx .fx-x{inset:0;background:var(--sk-img2) var(--sk-pos,50% 100%)/cover no-repeat;opacity:0;animation:skDrift 9s ease-in-out infinite alternate;will-change:opacity}@keyframes skDrift{to{opacity:1}}
 html:not(.askin-bg) #skfx{display:none}`; document.head.appendChild(st); }
-      const L = { ja: ['背景：スキン', '背景：場所'], en: ['Background: skin', 'Background: place'], zh: ['背景：皮肤', '背景：场景'], 'zh-TW': ['背景：外觀', '背景：場景'], ko: ['배경: 스킨', '배경: 장소'], es: ['Fondo: aspecto', 'Fondo: lugar'], fr: ['Fond : thème', 'Fond : lieu'], pt: ['Fundo: visual', 'Fundo: local'], de: ['Hintergrund: Skin', 'Hintergrund: Ort'], ru: ['Фон: скин', 'Фон: место'], tr: ['Arka plan: görünüm', 'Arka plan: mekân'], id: ['Latar: skin', 'Latar: tempat'], hi: ['पृष्ठभूमि: स्किन', 'पृष्ठभूमि: स्थान'], ar: ['الخلفية: المظهر', 'الخلفية: المكان'] };
-      const lab = () => { const l = lang(), k = /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2); return L[k] || L.en; };
       let mode = 'skin'; try { mode = localStorage.getItem('atlas-fullbg') || 'skin'; } catch (e) {}
-      const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'atlas-ic'; btn.id = 'atlasSkinBg';
-      const IC = { skin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.6"/></svg>',   // a picture: the skin
-        place: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18"/><path d="M5 10v9M19 10v9"/><path d="M7 6h10l2 4H5z"/></svg>' };   // a table: the place
-      const set = m => { mode = m; de.classList.toggle('askin-bg', m === 'skin'); btn.innerHTML = IC[m]; const t = lab()[m === 'skin' ? 0 : 1]; btn.title = t; btn.setAttribute('aria-label', t);
-        try { localStorage.setItem('atlas-fullbg', m); } catch (e) {} };
-      btn.onclick = () => set(mode === 'skin' ? 'place' : 'skin');
-      const lb = bar.querySelector('#atlasLang'); bar.insertBefore(btn, lb || null);
+      const set = m => { mode = m; de.classList.toggle('askin-bg', m === 'skin'); try { localStorage.setItem('atlas-fullbg', m); } catch (e) {} try { dispatchEvent(new CustomEvent('atlas-skinbg')); } catch (e) {} };
       set(mode);
+      window.__atlasSkinBg = { id: sk.id, mode: () => mode, set, thumb: BASE.replace(/atlas\/$/, 'images/atlas/skin/t/') + sk.id + '.webp' };   // (the デザイン tab's 場所 row offers it: placeField)
       const sc = document.createElement('script'); sc.src = BASE + 'skins.js?v=' + SKV;
       sc.onload = () => { try { if (window.AtlasSkins) AtlasSkins.apply(sk.id); } catch (e) {} };
       document.head.appendChild(sc);
-      const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => set(mode));
+      sc.onload = (o => () => { o && o(); try { dispatchEvent(new CustomEvent('atlas-skinbg')); } catch (e) {} })(sc.onload);
     })();
     // sound: reuse the game's own button
     const snd = document.getElementById('btnSound'), mySnd = bar.querySelector('#atlasSnd');
@@ -792,6 +791,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       get, set: v => { try { localStorage.setItem('atlas-aa', v ? '1' : '0'); } catch (e) {}
         if (!document.body.classList.contains('in-online')) setTimeout(() => location.reload(), 150); } });
   })();
+  const SKL = { ja: 'スキン', en: 'Skin', zh: '皮肤', 'zh-TW': '外觀', ko: '스킨', es: 'Aspecto', fr: 'Thème', pt: 'Visual', de: 'Skin', ru: 'Скин', tr: 'Görünüm', id: 'Skin', hi: 'स्किन', ar: 'المظهر' };   // (the worn portal skin as the page background, 2026-11-20)
   function placeField() {
     const X = window.Table3D; if (!X || !X.PLACES || !X.TABLES[5]) return;
     const modal = document.querySelector('#newOverlay .modal'), first = modal && modal.querySelector('[data-ng=design]'); if (!first) return;
@@ -801,9 +801,11 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       st.textContent = `#newOverlay #fPlace.atlas-place{container-type:inline-size}
 #newOverlay #fPlace.atlas-place .atlas-plrow.dsg{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:6px!important}
 #newOverlay #fPlace.atlas-place .atlas-plrow.dsg > button{width:auto!important;max-width:none!important;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:3px 3px 3px!important;border-radius:10px!important;cursor:pointer;font:inherit;font-size:14px;font-weight:700}
+#newOverlay #fPlace.atlas-place .atlas-plrow.dsg.sk7{grid-template-columns:repeat(7,minmax(0,1fr))!important}
 #newOverlay #fPlace.atlas-place .atlas-plrow img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:7px;background:#efe6d6}
 #newOverlay #fPlace.atlas-place .atlas-plrow .nm{display:none;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@container (min-width:600px){#newOverlay #fPlace.atlas-place .atlas-plrow img{aspect-ratio:3/2}#newOverlay #fPlace.atlas-place .atlas-plrow .nm{display:block}#newOverlay #fPlace.atlas-place .atlas-plrow.dsg > button{padding:4px 4px 7px!important}}
+@container (min-width:600px){#newOverlay #fPlace.atlas-place .atlas-plrow.dsg.sk7{grid-template-columns:repeat(7,minmax(0,1fr))!important}
+#newOverlay #fPlace.atlas-place .atlas-plrow img{aspect-ratio:3/2}#newOverlay #fPlace.atlas-place .atlas-plrow .nm{display:block}#newOverlay #fPlace.atlas-place .atlas-plrow.dsg > button{padding:4px 4px 7px!important}}
 #newOverlay #fPlace.atlas-place > .dsg-now{font-size:15px!important;font-weight:800}
 #newOverlay #fPlace.atlas-place .atlas-brh{margin:14px 0 8px;font-size:14px;font-weight:800;opacity:.8}
 #newOverlay #fPlace.atlas-place .atlas-br{display:flex!important;gap:6px}
@@ -826,17 +828,19 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     const paint = () => {
       const td = X.timeOfDayPick ? X.timeOfDayPick() : 'auto';
       const l = lang(), k = X.table(), b = X.bright(), N = X.PLACES.name[l] || X.PLACES.name.en, B = X.placeUi('b', l);
-      f.innerHTML = `<label>${X.placeUi('place', l)}</label><b class="dsg-now">${N[k]}</b>`
-        + `<div class="dsg atlas-plrow">${N.map((n, i) => (X.placeOff || []).includes(i) ? '' : `<button type="button" data-k="${i}" class="${i === k ? 'sel' : ''}" aria-pressed="${i === k}" title="${n}"><img class="th" src="${X.placeThumb(i)}" alt="" loading="lazy"><span class="nm">${n}</span></button>`).join('')}</div>`
+      const SB = window.__atlasSkinBg, sOn = !!(SB && SB.mode() === 'skin'), skN = SB && window.AtlasSkins && AtlasSkins.byId(SB.id) ? AtlasSkins.name(AtlasSkins.byId(SB.id), l) : (SKL[l] || SKL.en);
+      f.innerHTML = `<label>${X.placeUi('place', l)}</label><b class="dsg-now">${sOn ? skN : N[k]}</b>`
+        + `<div class="dsg atlas-plrow${SB ? ' sk7' : ''}">${SB ? `<button type="button" data-skinbg="1" class="${sOn ? 'sel' : ''}" aria-pressed="${sOn}" title="${skN}"><img class="th" src="${SB.thumb}" alt="" loading="lazy"><span class="nm">${SKL[l] || SKL.en}</span></button>` : ''}${N.map((n, i) => (X.placeOff || []).includes(i) ? '' : `<button type="button" data-k="${i}" class="${i === k && !sOn ? 'sel' : ''}" aria-pressed="${i === k && !sOn}" title="${n}"><img class="th" src="${X.placeThumb(i)}" alt="" loading="lazy"><span class="nm">${n}</span></button>`).join('')}</div>`
         + `<div class="atlas-lt"><div><div class="atlas-brh">${X.placeUi('bright', l)}</div><div class="seg atlas-br">${B.map((n, i) => `<button type="button" data-b="${i}" class="${i === b ? 'sel' : ''}" aria-pressed="${i === b}">${n}</button>`).join('')}</div></div>`
         + (X.setTimeOfDay ? `<div><div class="atlas-brh">${TODH[l] || TODH.en}</div><div class="seg atlas-br atlas-tod">${TODK.map((v, i) => `<button type="button" data-t="${v}" class="${v === td ? 'sel' : ''}" aria-pressed="${v === td}"><span class="sw" style="background:${TODSW[v]}"></span>${(TOD[l] || TOD.en)[i]}</button>`).join('')}</div></div>` : '') + '</div>';
     };
     f.addEventListener('click', e => {
-      const p = e.target.closest('[data-k]'), q = e.target.closest('[data-b]');
-      if (p) { e.stopPropagation(); X.setTable(+p.dataset.k); } else if (q) { e.stopPropagation(); X.setBright(+q.dataset.b); }
+      const p = e.target.closest('[data-k]'), q = e.target.closest('[data-b]'), sb = e.target.closest('[data-skinbg]');
+      if (sb && window.__atlasSkinBg) { e.stopPropagation(); __atlasSkinBg.set('skin'); paint(); return; }
+      if (p) { e.stopPropagation(); if (window.__atlasSkinBg) __atlasSkinBg.set('place'); X.setTable(+p.dataset.k); paint(); } else if (q) { e.stopPropagation(); X.setBright(+q.dataset.b); }
       const tq = e.target.closest('[data-t]'); if (tq && X.setTimeOfDay) { e.stopPropagation(); X.setTimeOfDay(tq.dataset.t); paint(); try { dispatchEvent(new CustomEvent('atlas-table', { detail: {} })); } catch (err) {} }   // (the page floor follows)
     });
-    addEventListener('atlas-table', paint);
+    addEventListener('atlas-table', paint); addEventListener('atlas-skinbg', paint);
     addEventListener('storage', e => { if (e.key === 'atlas-table') X.setTable(+e.newValue || 0); else if (e.key === 'atlas-bright2') X.setBright(+e.newValue); });
     const sel = document.getElementById('langSel'); if (sel) sel.addEventListener('change', () => setTimeout(paint, 40));
     paint();
