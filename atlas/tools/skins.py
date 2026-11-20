@@ -768,7 +768,10 @@ def starry_cover(seed=137, aurora=False):
     img = vgrad([(0, '#141c3a'), (.55, '#22305a'), (1, '#33467a')]) if not aurora else vgrad([(0, '#0e1a33'), (.6, '#16304c'), (1, '#1d3d55')])
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     X, Y = xx / K, yy / K
-    if aurora:
+    if aurora == 'base':   # (2026-11-20) the aurora itself is drawn live by the page (atlas/skins-fx.js, canvas): only a faint glow low in the sky here
+        dy = Y - 640
+        img = img + hexc('#3fae8a') * (np.exp(-dy ** 2 / (2 * 220 ** 2)) * .10)[..., None]
+    elif aurora:
         for col, y0, amp, ph in [('#5fe0b6', 380, 90, 0), ('#7fb8ff', 300, 70, 2), ('#c79bff', 250, 60, 4)]:
             dy = Y - (y0 + np.sin(X / 260 + ph) * amp + np.sin(X / 97 + ph * 2) * 22)
             band = np.exp(-np.clip(dy, 0, None) / 160) * np.exp(-np.clip(-dy, 0, None) / 18) * (dy > -40)
@@ -915,7 +918,7 @@ SKINS = {
     's29': (meadow_cover, 'cover'), 's30': (dunes_cover, 'cover'), 's31': (mountain_lake_cover, 'cover'),
     's32': (marble, 'tile'), 's33': (starry_cover, 'cover'),
     's34': (lambda: watercolor(paper='#fcf8f1', inks=('#f8dcc8', '#f8ebc2'), seed=223, amt=.55), 'tile'),
-    's35': (old_map_cover, 'cover'), 's36': (lambda: starry_cover(seed=157, aurora=True), 'cover'),
+    's35': (old_map_cover, 'cover'), 's36': (lambda: starry_cover(seed=157, aurora='base'), 'cover'),
     's37': (celestial_cover, 'cover'), 's38': (lambda: washi(base='#f7efe0', gold=True, seed=163), 'tile'),
     's39': (lambda: marble(gold=True, seed=167), 'tile'),
     # s40 (opal) retired 2026-11-20 → atlas/tools/skins_ur3.py (天灯まつり)

@@ -20,7 +20,7 @@
   const BALLOON = (c1, c2) => `<svg viewBox="-92 -72 184 244"><path d="M-90 0 C-90 -70 90 -70 90 0 C90 50 40 80 26 110 L-26 110 C-40 80 -90 50 -90 0 Z" fill="${c1}"/><path d="M-30 -52 C-30 -10 -16 70 -10 110 L10 110 C16 70 30 -10 30 -52 C20 -60 -20 -60 -30 -52 Z" fill="${c2}"/><path d="M-24 110 L-20 140 M24 110 L20 140" stroke="#b08a6a" stroke-width="3"/><rect x="-24" y="138" width="48" height="30" rx="5" fill="#c9a07a"/></svg>`;
   const TOYBALLOON = c => `<svg viewBox="-34 -40 68 220"><path d="M0 44 C6 80 -6 120 4 170" fill="none" stroke="#c9b9da" stroke-width="2"/><ellipse cx="0" cy="0" rx="30" ry="36" fill="${c}"/><path d="M-5 34 L5 34 L0 44 Z" fill="${c}"/><ellipse cx="-10" cy="-12" rx="7" ry="10" fill="#ffffff" opacity=".45"/></svg>`;
   const FISH = c => `<svg viewBox="-64 -40 144 80"><path d="M-60 0 C-40 -36 20 -36 40 0 C20 36 -40 36 -60 0 Z" fill="${c}"/><path d="M36 0 L76 -30 L68 0 L76 30 Z" fill="${c}" class="tl"/><circle cx="-34" cy="-6" r="6" fill="#ffffff"/><circle cx="-34" cy="-6" r="3" fill="#4a5a6a"/><path d="M-12 -24 C-4 -8 -4 8 -12 24" fill="none" stroke="#ffffff" stroke-width="5" opacity=".6"/></svg>`;
-  const MANTA = () => `<svg viewBox="-120 -60 240 210"><g class="mf"><path d="M0 -46 C20 -40 40 -20 110 -6 C70 8 36 20 14 40 L0 46 L-14 40 C-36 20 -70 8 -110 -6 C-40 -20 -20 -40 0 -46 Z" fill="#b9c9de"/><circle cx="-12" cy="-26" r="3.5" fill="#5a6a7a"/><circle cx="12" cy="-26" r="3.5" fill="#5a6a7a"/></g><path d="M0 44 C4 80 14 110 28 140" fill="none" stroke="#b9c9de" stroke-width="5" stroke-linecap="round"/></svg>`;
+  const MANTA = () => `<svg viewBox="-120 -60 240 210"><g class="mf"><path d="M0 -46 C20 -40 40 -20 110 -6 C70 8 36 20 14 40 L0 46 L-14 40 C-36 20 -70 8 -110 -6 C-40 -20 -20 -40 0 -46 Z" fill="#b9c9de"/><circle cx="-12" cy="-26" r="3.5" fill="#5a6a7a"/><circle cx="12" cy="-26" r="3.5" fill="#5a6a7a"/><path d="M0 40 C4 80 14 110 28 140" fill="none" stroke="#b9c9de" stroke-width="5" stroke-linecap="round"/></g></svg>`;
   const BUBBLE = () => `<svg viewBox="-12 -12 24 24"><circle r="9" fill="none" stroke="#ffffff" stroke-width="2.6" opacity=".75"/><circle cx="-3" cy="-3" r="2.4" fill="#ffffff" opacity=".7"/></svg>`;
   const BUTTERFLY = (c, c2) => `<svg viewBox="-30 -26 60 52"><g class="fw"><path d="M0 0 C-10 -24 -30 -26 -28 -8 C-26 4 -12 6 0 0 Z M0 0 C-12 6 -24 18 -14 24 C-6 26 -2 14 0 0 Z" fill="${c}"/></g><g class="fw2"><path d="M0 0 C10 -24 30 -26 28 -8 C26 4 12 6 0 0 Z M0 0 C12 6 24 18 14 24 C6 26 2 14 0 0 Z" fill="${c2 || c}"/></g><rect x="-2" y="-12" width="4" height="26" rx="2" fill="#7a6a6a"/></svg>`;
   const SWAN = () => `<svg viewBox="-60 -70 120 100"><path d="M-46 10 C-46 -12 -10 -18 20 -8 C34 -4 46 4 50 12 C30 24 -30 26 -46 10 Z" fill="#ffffff"/><path d="M20 -8 C16 -30 20 -52 32 -58 C42 -62 50 -56 50 -48 L60 -46 L50 -42 C40 -44 34 -40 32 -30 C30 -20 34 -10 38 -4 Z" fill="#ffffff"/><path d="M50 -48 L60 -46 L50 -42 Z" fill="#f6b37a"/><circle cx="44" cy="-50" r="2.4" fill="#4a5060"/><path d="M-30 8 C-10 -4 14 -2 30 6" fill="none" stroke="#e3ecf4" stroke-width="5" stroke-linecap="round"/></svg>`;
@@ -33,6 +33,7 @@
   const TAIL = () => `<svg viewBox="-60 -70 120 110"><path d="M0 40 C-4 10 -6 -10 0 -20 C-20 -40 -50 -46 -58 -60 C-30 -58 -10 -50 0 -36 C10 -50 30 -58 58 -60 C50 -46 20 -40 0 -20 C6 -10 4 10 0 40 Z" fill="#7d8fae"/></svg>`;
   const LEAF = c => `<svg viewBox="-20 -20 40 40"><path d="M0 18 L0 6 M0 -18 L4 -8 L14 -12 L10 -2 L18 4 L8 6 L10 14 L2 8 L0 18 L-2 8 L-10 14 L-8 6 L-18 4 L-10 -2 L-14 -12 L-4 -8 Z" fill="${c}" stroke="${c}" stroke-width="2" stroke-linejoin="round"/></svg>`;
   const PETAL = c => `<svg viewBox="-12 -16 24 32"><path d="M0 14 C-12 4 -11 -10 -4 -15 C-2 -12 2 -12 4 -15 C11 -10 12 4 0 14 Z" fill="${c}"/></svg>`;
+  const RADEN = ([a, b]) => { const k = gid(a + b); return `<svg viewBox="-12 -34 24 36"><defs><linearGradient id="r${k}" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><path d="M0 0 C-10 -10 -10 -26 0 -32 C10 -26 10 -10 0 0 Z" fill="url(#r${k})" opacity=".95"/></svg>`; };
   const DOT = c => `<svg viewBox="-10 -10 20 20"><circle r="9" fill="${c}"/></svg>`;
   const gid = c => c.replace(/[^0-9a-z]/gi, '');
   const TW = c => `<svg viewBox="-10 -10 20 20"><defs><radialGradient id="t${gid(c)}"><stop offset="0" stop-color="${c}" stop-opacity=".95"/><stop offset=".25" stop-color="${c}" stop-opacity=".45"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient><linearGradient id="th${gid(c)}"><stop offset="0" stop-color="${c}" stop-opacity="0"/><stop offset=".5" stop-color="${c}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient><linearGradient id="tv${gid(c)}" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity="0"/><stop offset=".5" stop-color="${c}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient></defs><circle r="10" fill="url(#t${gid(c)})"/><rect x="-10" y="-.55" width="20" height="1.1" fill="url(#th${gid(c)})"/><rect x="-.55" y="-10" width="1.1" height="20" fill="url(#tv${gid(c)})"/><circle r="1.6" fill="#ffffff"/></svg>`;
@@ -40,11 +41,12 @@
   const GLOW = c => `<svg viewBox="-50 -50 100 100"><defs><radialGradient id="g${gid(c)}"><stop offset="0" stop-color="${c}" stop-opacity=".9"/><stop offset=".35" stop-color="${c}" stop-opacity=".35"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient></defs><circle r="50" fill="url(#g${gid(c)})"/></svg>`;
   const FLAG = c => `<svg viewBox="-30 0 60 66"><path d="M-30 0 L30 0 L30 54 L20 64 L10 54 L0 64 L-10 54 L-20 64 L-30 54 Z" fill="${c}"/><circle cx="0" cy="24" r="9" fill="#fbf6ee"/><path d="M-20 12 l6 6 l-6 6 l-6 -6 Z M20 12 l6 6 l-6 6 l-6 -6 Z" fill="#fbf6ee"/></svg>`;
   const JELLY = (c, c2) => { const k = gid(c); return `<svg viewBox="-60 -60 120 220"><defs><radialGradient id="j${k}"><stop offset="0" stop-color="${c}" stop-opacity=".6"/><stop offset=".5" stop-color="${c}" stop-opacity=".18"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient><radialGradient id="jb${k}" cx=".5" cy=".75" r=".75"><stop offset="0" stop-color="#ffffff" stop-opacity=".9"/><stop offset=".45" stop-color="${c}" stop-opacity=".75"/><stop offset="1" stop-color="${c}" stop-opacity=".35"/></radialGradient><linearGradient id="jt${k}" x2="0" y2="1"><stop offset="0" stop-color="${c2}" stop-opacity=".75"/><stop offset="1" stop-color="${c2}" stop-opacity="0"/></linearGradient></defs><circle cx="0" cy="0" r="60" fill="url(#j${k})"/><g class="tn">${[-20, -8, 4, 16].map(x => `<path d="M${x} 10 C${x - 8} 50 ${x + 10} 90 ${x - 4} 150" fill="none" stroke="url(#jt${k})" stroke-width="3.5" stroke-linecap="round"/>`).join('')}</g><g class="bl"><path d="M-38 10 C-38 -30 38 -30 38 10 C26 18 14 6 0 14 C-14 6 -26 18 -38 10 Z" fill="url(#jb${k})"/></g></svg>`; };
-  const LANTERN = () => `<svg viewBox="-40 -40 80 104"><defs><radialGradient id="lg"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".7"/><stop offset="1" stop-color="#ff9a4a" stop-opacity="0"/></radialGradient><linearGradient id="lb" x2="0" y2="1"><stop offset="0" stop-color="#ffd9a0"/><stop offset=".75" stop-color="#ffb46a"/><stop offset="1" stop-color="#ff8f4a"/></linearGradient></defs><circle cy="14" r="40" fill="url(#lg)"/><path d="M-15 -12 C-15 -17 15 -17 15 -12 L19 36 C19 40 -19 40 -19 36 Z" fill="url(#lb)"/><ellipse cy="34" rx="9" ry="4" fill="#fff2c8"/></svg>`;
+  const LANTERN = () => `<svg viewBox="-70 -70 140 160"><defs><radialGradient id="lg"><stop offset="0" stop-color="#ffd27a" stop-opacity=".75"/><stop offset=".35" stop-color="#ffaa55" stop-opacity=".3"/><stop offset="1" stop-color="#ff8a40" stop-opacity="0"/></radialGradient><radialGradient id="lb" cx=".5" cy=".7" r=".7"><stop offset="0" stop-color="#fff4d0"/><stop offset=".45" stop-color="#ffc878"/><stop offset="1" stop-color="#f08a48" stop-opacity=".85"/></radialGradient></defs><circle cy="12" r="70" fill="url(#lg)" class="lh"/><path d="M-15 -12 C-15 -17 15 -17 15 -12 L19 36 C19 40 -19 40 -19 36 Z" fill="url(#lb)"/><ellipse cy="36" rx="12" ry="5" fill="#fff6d8" opacity=".9"/></svg>`;
+  const HORSE = c => `<svg viewBox="0 0 60 130"><rect x="28" y="0" width="4" height="130" fill="#d9c27a"/><path d="M8 74 C8 52 26 46 40 50 C46 38 56 40 54 56 C54 66 46 74 40 74 L42 92 L36 92 L33 76 L18 76 L16 92 L10 92 Z" fill="${c}"/></svg>`;
   const NTRAIN = () => `<svg viewBox="-230 -40 460 70"><g fill="#2b2460">${[-200, -100, 0, 100].map(x => `<rect x="${x}" y="-20" width="92" height="40" rx="10"/>`).join('')}<path d="M110 -20 L160 -20 C190 -20 200 0 200 20 L110 20 Z"/><rect x="150" y="-36" width="16" height="18" rx="3"/></g><g fill="#ffe9a6">${[-200, -100, 0, 100].map(x => [0, 1, 2].map(i => `<rect x="${x + 10 + i * 27}" y="-12" width="18" height="14" rx="3"/>`).join('')).join('')}<circle cx="196" cy="6" r="6"/></g></svg>`;
   const SHIP = () => `<svg viewBox="-60 -80 120 100"><path d="M-46 0 L46 0 L34 18 L-34 18 Z" fill="#9b6e3a"/><path d="M-4 0 L-4 -70 L-36 -6 Z" fill="#f4e8cf"/><path d="M4 -76 L4 -6 L40 -6 Z" fill="#f4e8cf"/><rect x="-2" y="-78" width="4" height="80" fill="#8a6a3c"/><path d="M2 -78 L18 -72 L2 -66 Z" fill="#d98c6a"/></svg>`;
   const PIN = () => `<svg viewBox="-20 -44 40 48"><path d="M0 2 C-4 -10 -16 -18 -16 -28 A16 16 0 0 1 16 -28 C16 -18 4 -10 0 2 Z" fill="#d9745e"/><circle cx="0" cy="-28" r="6" fill="#fbf2e2"/></svg>`;
-  const FW = c => `<svg viewBox="-60 -60 120 120">${Array.from({ length: 18 }, (_, k) => { const t = k * Math.PI / 9; return `<line x1="${f1(16 * Math.cos(t))}" y1="${f1(16 * Math.sin(t))}" x2="${f1(48 * Math.cos(t))}" y2="${f1(48 * Math.sin(t))}" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/><circle cx="${f1(54 * Math.cos(t))}" cy="${f1(54 * Math.sin(t))}" r="3.2" fill="${c}"/>`; }).join('')}<circle r="6" fill="${c}"/></svg>`;
+  const FW = c => `<svg viewBox="-70 -70 140 140"><defs><radialGradient id="fw${gid(c)}"><stop offset="0" stop-color="${c}" stop-opacity=".5"/><stop offset=".5" stop-color="${c}" stop-opacity=".15"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient></defs><circle r="70" fill="url(#fw${gid(c)})"/>${Array.from({ length: 22 }, (_, k) => { const t = k * Math.PI / 11; return `<line x1="${f1(14 * Math.cos(t))}" y1="${f1(14 * Math.sin(t))}" x2="${f1(48 * Math.cos(t))}" y2="${f1(48 * Math.sin(t))}" stroke="${c}" stroke-width="3" stroke-linecap="round" opacity=".45"/><circle cx="${f1(54 * Math.cos(t))}" cy="${f1(54 * Math.sin(t))}" r="4" fill="${c}" opacity=".7"/>`; }).join('')}</svg>`;
 
   /* ---------------- builders: a piece in the grid / on the screen ---------------- */
   // p(svg, x, y, w, h, cls, vars, inner) — x / y the piece's centre in the grid; vars → CSS custom properties
@@ -98,7 +100,7 @@
       + glints(271, 22, 0, 660, 1920, 900, '#ffffff') + [[400, 300, 30], [700, 380, 38], [1500, 260, 34]].map(([x, y, d], i) => p(GULL(), 0, y, 56, 26, 'a-drift', { x0: -100, x1: 2020, d, dl: -i * 11 }, 'a-glide')).join(''),
     s28: T => clouds(T, 28, 5, 80, 500, '#ffffff', '#dde8f3', .6) + falling(46, DOT, ['#ffffff'], 28, [5, 11], [12, 24], 90) + [0, 1, 2, 3, 4].map(i => p(CLOUD('#f4f6f9', '#e3e9f1'), 1521, 834, 40, 24, 'a-smoke', { d: 7, dl: -i * 1.4 })).join(''),
     s29: T => clouds(T, 29, 6, 80, 600, '#ffffff', '#e2eef4') + [['#fbc6d4', '#f6a8bd', 700, 760], ['#ffe08a', '#f6cf62', 400, 900], ['#d4c8f6', '#bfb0ee', 1300, 820], ['#bfe3f7', '#a3d2f0', 1600, 960], ['#ffcfae', '#f6b48a', 1000, 1000]].map(([c, c2, x, y], i) =>
-      `<i class="pc a-path" style="left:0;top:0;width:44px;height:38px;offset-path:path('M${x} ${y} c120 -80 260 40 140 120 c-120 80 -300 -20 -200 -140 c80 -90 220 -40 60 20 z');--d:${16 + i * 3}s;--dl:${-i * 4}s"><b class="a-flut">${BUTTERFLY(c, c2)}</b></i>`).join(''),
+      `<i class="pc a-path" style="left:0;top:0;width:70px;height:60px;offset-path:path('M${x} ${y} c120 -80 260 40 140 120 c-120 80 -300 -20 -200 -140 c80 -90 220 -40 60 20 z');--d:${16 + i * 3}s;--dl:${-i * 4}s"><b class="a-flut">${BUTTERFLY(c, c2)}</b></i>`).join(''),
     s30: T => p(GLOW('#fff1c8'), 520, 420, 360, 360, 'a-pulse', { d: 7 }) + [0, 1, 2].map(i => p(CAMEL(), 0, 828 - i * 4, 176, 94, 'a-drift', { x0: -220 - i * 190, x1: 2140 - i * 190, d: 120, dl: -30 }, 'a-walk')).join('')
       + Array.from({ length: 10 }, (_, i) => `<i class="pc a-wisp" style="left:${(i * 197) % 1900}px;top:${880 + (i * 53) % 260}px;width:${160 + (i * 37) % 120}px;height:3px;--d:${4 + i % 4}s;--dl:${-i * .7}s"></i>`).join(''),
     s31: T => clouds(T, 31, 6, 80, 420, '#ffffff', '#dfeaf2', .6) + p(SWAN(), 0, 890, 96, 80, 'a-drift', { x0: -100, x1: 2020, d: 160, dl: -60 }, 'a-bob') + p(SWAN(), 0, 950, 72, 60, 'a-drift', { x0: 2020, x1: -100, d: 190, dl: -20 }, 'a-bob flip')
@@ -138,13 +140,12 @@
     s35: T => p(ROSE(), 1517, 912, 230, 230, '', {}, 'a-rose') + `<i class="pc" style="left:0;top:0;width:1920px;height:1200px"><svg viewBox="0 0 1920 1200"><path class="a-route" d="${ROUTE}" fill="none" stroke="#b5532e" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round" opacity=".75"/></svg></i>`
       + `<i class="pc a-sail" style="left:0;top:0;width:90px;height:76px;offset-path:path('${ROUTE}')">${SHIP()}</i>` + PINS.map(([lo, la], i) => p(PIN(), 96 + (lo + 180) * 4.8, 144 + (72.5 - la) * 4.8 - 20, 30, 36, 'a-pin', { d: 30, dl: -30 + i * 30 / PINS.length * .9 })).join('')
       + `<i class="pc a-cloudsh" style="left:-600px;top:0;width:900px;height:1200px"></i>` + motes(14, '#fff6dc', 351, 0, 0, 1920, 1200),
-    s36: T => ['#5fe0b6', '#7fb8ff', '#c79bff', '#5fe0b6', '#9ff0d0', '#ff9fd6', '#7fffc8'].map((c, i) => { const r = rnd(360 + i); let rays = '';
-        for (let k = 0; k < 16; k++) { const x = r() * 100, w = 1.5 + r() * 5, h = 55 + r() * 45; rays += `<i style="left:${f1(x)}%;width:${f1(w)}%;height:${f1(h)}%;top:${f1(30 - h * .3)}%;--o:${f1(.35 + r() * .55)};--d:${f1(.9 + r() * 2.2)}s;--dl:${f1(-r() * 8)}s"></i>`; }
-        return `<i class="sp a-curtain" style="--c:${c};top:${[6, 0, -4, 14, 10, 2, 18][i]}%;left:${[-10, 20, -30, 30, 0, -20, 40][i]}%;width:${[90, 80, 70, 70, 120, 80, 70][i]}%;--d:${[7, 9, 11, 8, 13, 10, 6.5][i]}s;--dl:${-i * 2.3}s">${rays}</i>`; }).join('')
-      + twinkles(T ? 80 : 50, ['#fff6dc', '#dff4ff'], 36, 0, 70, [6, 14]) + shooting(7, 36, 6),
-    s37: T => `<i class="sp a-sky"><svg viewBox="-1000 -1000 2000 2000">${[300, 520, 740, 960].map((r, i) => `<circle r="${r}" fill="none" stroke="#e6c77a" stroke-width="2" stroke-dasharray="${3 + i * 3} ${14 + i * 8}" opacity=".35"/>`).join('')}${Array.from({ length: 90 }, (_, k) => { const r = rnd(370 + k), a = r() * 6.283, d = 80 + r() * 940; return `<circle cx="${f1(Math.cos(a) * d)}" cy="${f1(Math.sin(a) * d)}" r="${f1(1 + r() * 2.4)}" fill="#fff3cf" opacity="${f1(.4 + r() * .6)}"/>`; }).join('')}</svg></i>`
-      + `<i class="pc" style="left:0;top:0;width:1920px;height:1200px"><svg viewBox="0 0 1920 1200">${CONS.map((c, i) => `<g class="a-con" style="--dl:${(i * 3.2).toFixed(1)}s"><path d="M${c.map(q => q.join(' ')).join(' L')}" fill="none" stroke="#ffe7a8" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="100" />${c.map(q => `<circle cx="${q[0]}" cy="${q[1]}" r="7" fill="#fff6dc"/>`).join('')}</g>`).join('')}</svg></i>`
-      + twinkles(40, ['#fff3cf', '#ffe7a8'], 37, 0, 100, [8, 16]) + shooting(3, 37, 11) + `<i class="sp a-comet"></i>`,
+    s36: T => `<i class="sp a-aurcv"><canvas></canvas></i>` + twinkles(T ? 80 : 50, ['#fff6dc', '#dff4ff'], 36, 0, 70, [6, 14]) + shooting(6, 36, 7),
+    s37: T => `<i class="sp a-sky"><svg viewBox="-1000 -1000 2000 2000"><g class="a-sky2">${[400, 640, 880].map((r, i) => `<circle r="${r}" fill="none" stroke="#ffe7a8" stroke-width="3" stroke-dasharray="${i % 2 ? '60 40' : '2 22'}" opacity=".22"/>`).join('')}${Array.from({ length: 12 }, (_, k) => { const a = k * Math.PI / 6; return `<text x="${f1(Math.cos(a) * 960)}" y="${f1(Math.sin(a) * 960)}" font-size="44" fill="#ffe7a8" opacity=".35" text-anchor="middle" transform="rotate(${f1(a * 180 / Math.PI + 90)} ${f1(Math.cos(a) * 960)} ${f1(Math.sin(a) * 960)})">${'♈♉♊♋♌♍♎♏♐♑♒♓'[k]}</text>`; }).join('')}</g>${[300, 520, 740, 960].map((r, i) => `<circle r="${r}" fill="none" stroke="#e6c77a" stroke-width="2" stroke-dasharray="${3 + i * 3} ${14 + i * 8}" opacity=".35"/>`).join('')}${Array.from({ length: 90 }, (_, k) => { const r = rnd(370 + k), a = r() * 6.283, d = 80 + r() * 940; return `<circle cx="${f1(Math.cos(a) * d)}" cy="${f1(Math.sin(a) * d)}" r="${f1(1 + r() * 2.4)}" fill="#fff3cf" opacity="${f1(.4 + r() * .6)}"/>`; }).join('')}</svg></i>`
+      + `<i class="pc" style="left:0;top:0;width:1920px;height:1200px"><svg viewBox="0 0 1920 1200">${CONS.map((c, i) => `<g class="a-con" style="--dl:${(i * 2.4).toFixed(1)}s"><path d="M${c.map(q => q.join(' ')).join(' L')}" fill="none" stroke="#ffe7a8" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="100" />${c.map(q => `<circle cx="${q[0]}" cy="${q[1]}" r="7" fill="#fff6dc"/>`).join('')}</g>`).join('')}</svg></i>`
+      + twinkles(60, ['#fff3cf', '#ffe7a8', '#d8e6ff'], 37, 0, 100, [8, 18]) + shooting(6, 37, 7) + `<i class="sp a-comet"></i><i class="sp a-comet" style="animation-delay:-11s;top:30%"></i>`
+      + `<i class="pc" style="left:0;top:0;width:1920px;height:1200px"><svg viewBox="0 0 1920 1200"><path d="${ECL}" fill="none" stroke="#ffe7a8" stroke-width="2" stroke-dasharray="4 12" opacity=".35"/></svg></i>`
+      + [['#fff1b8', 34, 60, 0], ['#ffc9a8', 22, 44, -9], ['#c9e0ff', 18, 36, -20], ['#ffe0f0', 14, 52, -31], ['#d8ffe8', 12, 40, -40]].map(([c, w, d, dl]) => `<i class="pc a-planet" style="left:0;top:0;width:${w * 3}px;height:${w * 3}px;offset-path:path('${ECL}');--d:${d}s;--dl:${dl}s">${GLOW(c)}<i style="position:absolute;left:33%;top:33%;width:34%;height:34%;border-radius:50%;background:${c}"></i></i>`).join(''),
     s38: T => twinkles(T ? 90 : 60, ['#fff6e6', '#e6dcff'], 38, 0, 80, [6, 14]) + shooting(4, 38, 9)
       + `<i class="pc a-rail" style="left:0;top:0;width:520px;height:80px;offset-path:path('${RAIL}')">${NTRAIN()}</i>` + Array.from({ length: 16 }, (_, i) => `<i class="pc a-rail a-trail" style="left:0;top:0;width:${18 - i * .6}px;height:${18 - i * .6}px;offset-path:path('${RAIL}');--lag:${(i + 1) * .35}s">${TW(i % 2 ? '#ffe9a6' : '#e6dcff')}</i>`).join('')
       + `<i class="pc" style="left:0;top:0;width:1920px;height:1200px"><svg viewBox="0 0 1920 1200"><path d="${RAIL}" fill="none" stroke="#e6dcff" stroke-width="2" stroke-dasharray="1 16" stroke-linecap="round" opacity=".5"/></svg></i>` + p(GLOW('#fdf0c8'), 300, 200, 300, 300, 'a-pulse', { d: 7 }),
@@ -155,7 +156,7 @@
     s40: T => {   // 天灯まつり: lanterns float up from the town across the whole sky, the lake's lights shimmer, stars twinkle
       const r = rnd(40); let h = twinkles(T ? 70 : 40, ['#fff6e6', '#ffe2c0'], 40, 0, 60, [6, 14]);
       for (let i = 0; i < (T ? 46 : 30); i++) { const s = .35 + r() * r() * 1.3, d = 26 + (1.6 - s) * 14 + r() * 8;
-        h += p(LANTERN(), 160 + r() * 1600, 990, 46 * s, 64 * s, 'a-lant', { rx: Math.round((r() - .3) * 420), ry: -(T ? 2900 : 1150) - r() * 200, d: +d.toFixed(1), dl: +(-(i / (T ? 46 : 30)) * d - r() * 4).toFixed(1) }, 'a-sway2'); }
+        h += p(LANTERN(), 160 + r() * 1600, 990, 92 * s, 105 * s, 'a-lant', { rx: Math.round((r() - .3) * 420), ry: -(T ? 2900 : 1150) - r() * 200, d: +d.toFixed(1), dl: +(-(i / (T ? 46 : 30)) * d - r() * 4).toFixed(1) }, 'a-sway2'); }
       return h + ripples(401, 26, 0, 980, 1920, 1190, 'rgba(255,200,140,.55)', [40, 140]) + `<i class="pc a-pulse" style="left:200px;top:820px;width:1600px;height:180px;background:radial-gradient(50% 50% at 50% 60%,rgba(255,170,120,.35),transparent 70%);--d:7s"></i>`; },
     s89: T => {   // 雲海の夜明け: the sea of clouds flows, mist slides past the peaks, the sun's rays turn, birds cross
       const r = rnd(89); let h = `<i class="pc a-sunray" style="left:580px;top:220px;width:1200px;height:1200px"></i>` + p(GLOW('#fff1c8'), 1180, 820, 640, 640, 'a-pulse', { d: 6 });
@@ -168,10 +169,10 @@
       for (let i = 0; i < 4; i++) h += `<i class="pc a-wash" style="left:${520 + i * 40}px;top:${930 + i * 24}px;width:1500px;height:${150 - i * 10}px;--d:${7 + i * .8}s;--dl:${-i * 1.9}s"><svg viewBox="0 0 1500 150" preserveAspectRatio="none"><defs><linearGradient id="wv${i}" x2="0" y2="1"><stop offset="0" stop-color="#7ff0ff" stop-opacity=".0"/><stop offset=".35" stop-color="#7ff0ff" stop-opacity=".75"/><stop offset=".6" stop-color="#3ab6ff" stop-opacity=".25"/><stop offset="1" stop-color="#3ab6ff" stop-opacity="0"/></linearGradient></defs><path d="M0 150 C200 70 500 40 800 50 C1100 60 1300 30 1500 10 L1500 150 Z" fill="url(#wv${i})"/></svg></i>`;
       const r = rnd(90); for (let k = 0; k < 50; k++) { const t = r(), x = 600 + t * 1320, y = 1180 - t * 150 - r() * 60; h += p(SOFT(['#8ff2ff', '#c8f8ff', '#5fd0ff'][k % 3]), x, y, 10 + r() * 16, 10 + r() * 16, 'a-tw', { d: +(1.6 + r() * 2.4).toFixed(2), dl: +(-r() * 6).toFixed(2) }); }
       return h + gtwinkles(30, ['#9fe8ff'], 901, 300, 760, 1920, 960, [8, 16]) + twinkles(T ? 70 : 40, ['#eef4ff', '#cfe0ff'], 90, 0, 55, [6, 14]) + shooting(5, 90, 8); },
-    s93: T => p(WHEEL(), 1540, 600, 680, 680) + ['#ffc6d4', '#ffe9a6', '#c9e6ff', '#d9c8ff', '#b8f0d8', '#ffc6d4'].map((c, i) => { const x = [700, 1000, 1240, 860, 1120, 560][i], y = [240, 160, 300, 380, 120, 320][i];
+    s93: T => p(WHEEL(), 1540, 600, 680, 680) + `<i class="pc" style="left:180px;top:850px;width:360px;height:130px;overflow:hidden">${[0, 1, 2, 3, 4, 5].map(i => `<i class="pc a-car" style="left:150px;top:0;width:60px;height:130px;--dl:${(-i * 12 / 6).toFixed(2)}s"><b class="a-carb" style="animation-delay:${(-i * .7).toFixed(1)}s">${HORSE(['#f3eef8', '#ffe9c4', '#ffd6e0'][i % 3])}</b></i>`).join('')}</i>` + ['#ffc6d4', '#ffe9a6', '#c9e6ff', '#d9c8ff', '#b8f0d8', '#ffc6d4'].map((c, i) => { const x = [700, 1000, 1240, 860, 1120, 560][i], y = [240, 160, 300, 380, 120, 320][i];
         return `<i class="pc a-shell" style="left:${x - 3}px;top:${y}px;width:6px;height:${960 - y}px;--d:7.5s;--dl:${i * 1.25}s"></i>` + p(FW(c), x, y, 220, 220, 'a-boom', { d: 7.5, dl: i * 1.25 }) + p(FW(c), x, y, 120, 120, 'a-boom b2', { d: 7.5, dl: i * 1.25 }); }).join('')
       + twinkles(30, ['#fff6dc'], 93, 0, 50, [5, 10]),
-    s94: T => falling(22, PETAL, ['#f6dff2', '#dff1ff', '#e2fff4', '#fff4d6'], 94, [16, 28], [16, 30], 140) + gtwinkles(26, ['#f3d993', '#fff6dc'], 941, 0, 0, 1920, 1200, [10, 22]) + p(GLOW('#fdf0c8'), 1500, 260, 520, 520, 'a-pulse', { d: 8 })
+    s94: T => falling(48, RADEN, [['#f4d4ee', '#cfe8ff'], ['#d4fff0', '#f6e2ff'], ['#fff2c8', '#d6e6ff'], ['#e2d4ff', '#d4fff4']], 94, [18, 34], [18, 34], 160) + gtwinkles(26, ['#f3d993', '#fff6dc'], 941, 0, 0, 1920, 1200, [10, 22]) + p(GLOW('#fdf0c8'), 1500, 260, 520, 520, 'a-pulse', { d: 8 })
       + ripples(942, 14, 0, 1060, 1920, 1190, 'rgba(243,217,147,.7)', [80, 200]),
   };
   // the night fair's and the amusement park's wheels
@@ -197,6 +198,7 @@
   // the birthplaces of games in the Atlas, lighting up one after another
   const PINS = [[139.7, 35.7], [116.4, 39.9], [127, 37.5], [77.6, 27.2], [31.2, 30], [44.4, 31], [47.5, -18.9], [-155.5, 19.6], [23.7, 38], [4.9, 52.4], [51.4, 35.7], [-99.1, 19.4], [-43.2, -22.9], [37.6, 55.8], [12.5, 41.9], [10.7, 59.9], [-80.5, 43.4], [-0.1, 51.5]];
   const CONS = [[[141, 137], [133, 27], [170, 134], [306, 128]], [[338, 476], [327, 586], [446, 605], [361, 580], [353, 704], [224, 605]], [[908, 510], [841, 481], [919, 399], [921, 471], [1008, 543], [1086, 474]], [[1443, 538], [1350, 570], [1386, 722], [1286, 759], [1337, 911], [1232, 898]], [[348, 883], [464, 823], [351, 851], [409, 910], [469, 976]], [[755, 895], [843, 976], [744, 958], [733, 888], [816, 830], [729, 848]], [[1446, 835], [1451, 672], [1421, 523], [1483, 443], [1389, 457]], [[1497, 139], [1436, 107], [1494, 180], [1563, 135], [1572, 40]]];
+  const ECL = 'M-200 900 C300 420 900 160 1400 220 C1800 270 2050 420 2200 560';
   const RAIL = 'M-300 980 C200 900 420 700 760 640 C1100 580 1300 700 1560 560 C1760 450 1880 300 2240 160';
 
   /* ---------------- styles (injected once) ---------------- */
@@ -206,7 +208,7 @@
 #skfx .flip>svg,#skfx b.flip>svg{transform:scaleX(-1)}
 .a-drift{animation:aDrift var(--d) linear var(--dl,0s) infinite;will-change:transform}@keyframes aDrift{from{transform:translateX(var(--x0))}to{transform:translateX(var(--x1))}}
 .a-fly .fl{transform-origin:50% 50%;animation:aFlap .55s ease-in-out infinite alternate}@keyframes aFlap{to{transform:scaleY(-.35)}}
-.mf{transform-origin:50% 0;animation:aMf 3s ease-in-out infinite alternate}@keyframes aMf{to{transform:scaleX(.8) scaleY(1.1)}}
+.mf{transform-box:fill-box;transform-origin:50% 20%;animation:aMf 3s ease-in-out infinite alternate}@keyframes aMf{to{transform:scaleX(.82)}}
 .a-glide{animation:aGlide 4s ease-in-out infinite alternate}.a-glide .fl{transform-origin:50% 60%;animation:aFlap 1.6s ease-in-out infinite alternate}@keyframes aGlide{from{transform:translateY(-16px) rotate(-4deg)}to{transform:translateY(16px) rotate(4deg)}}
 .a-bob{animation:aBob 3.6s ease-in-out infinite alternate}.a-bob.b2{animation-duration:4.4s;animation-delay:-1.3s}@keyframes aBob{from{transform:translateY(-5px) rotate(-2deg)}to{transform:translateY(5px) rotate(2deg)}}
 .a-walk{animation:aWalk .9s ease-in-out infinite alternate}@keyframes aWalk{from{transform:translateY(0) rotate(-1.2deg)}to{transform:translateY(-4px) rotate(1.2deg)}}
@@ -223,8 +225,8 @@
 .a-wave{animation:aWave 6s ease-in-out infinite}@keyframes aWave{0%,100%{transform:translateY(0) scaleY(1);opacity:.9}50%{transform:translateY(22px) scaleY(.7);opacity:.5}}
 .a-smoke{opacity:0;animation:aSmoke var(--d) ease-out var(--dl) infinite}@keyframes aSmoke{0%{opacity:0;transform:translate(0,0) scale(.5)}15%{opacity:.9}100%{opacity:0;transform:translate(60px,-220px) scale(2.2)}}
 .a-path{offset-rotate:0deg;animation:aPath var(--d) linear var(--dl) infinite}@keyframes aPath{from{offset-distance:0%}to{offset-distance:100%}}
-.a-flut{animation:aFlutY .35s ease-in-out infinite alternate}.a-flut .fw{transform-origin:50% 50%;animation:aFw .18s ease-in-out infinite alternate}.a-flut .fw2{transform-origin:50% 50%;animation:aFw2 .18s ease-in-out infinite alternate}
-@keyframes aFlutY{to{transform:translateY(-6px)}}@keyframes aFw{to{transform:scaleX(.25) translateX(-6px)}}@keyframes aFw2{to{transform:scaleX(.25) translateX(6px)}}
+.a-flut{animation:aFlutY .35s ease-in-out infinite alternate}.a-flut .fw{transform-box:fill-box;transform-origin:100% 50%;animation:aFw .18s ease-in-out infinite alternate}.a-flut .fw2{transform-box:fill-box;transform-origin:0 50%;animation:aFw .18s ease-in-out infinite alternate}
+@keyframes aFlutY{to{transform:translateY(-6px)}}@keyframes aFw{to{transform:scaleX(.2)}}
 .a-wisp{background:linear-gradient(90deg,transparent,rgba(255,244,225,.9),transparent);border-radius:3px;opacity:0;animation:aWisp var(--d) ease-in-out var(--dl) infinite}@keyframes aWisp{0%,100%{opacity:0;transform:translateX(-80px)}50%{opacity:.9;transform:translateX(80px)}}
 .a-mist{background:radial-gradient(50% 50% at 50% 50%,rgba(255,255,255,.7),transparent 70%);animation:aMist 30s ease-in-out infinite alternate}@keyframes aMist{from{transform:translateX(-200px)}to{transform:translateX(200px)}}
 .a-spin.s60 svg .fx-turn,.fx-wheel .fx-turn{transform-origin:0 0;animation:aSpin 60s linear infinite}.fx-turn{transform-origin:0 0;animation:aSpin 60s linear infinite}.fx-turn.s45{animation-duration:45s}
@@ -242,28 +244,77 @@
 .a-sail{offset-rotate:0deg;animation:aPath 30s linear infinite,aSailF 30s linear infinite}@keyframes aSailF{0%,100%{opacity:0}3%,95%{opacity:1}}
 .a-pin{opacity:0;transform-origin:50% 100%;animation:aPin var(--d) ease-out var(--dl) infinite}@keyframes aPin{0%{opacity:0;transform:translateY(-30px) scale(.4)}4%{opacity:1;transform:translateY(0) scale(1.15)}6%{transform:scale(1)}80%{opacity:1}90%,100%{opacity:0}}
 .a-cloudsh{background:radial-gradient(40% 30% at 50% 40%,rgba(120,90,50,.12),transparent 70%);animation:aDrift 50s linear infinite;--x0:0px;--x1:3200px}
-.a-curtain{height:60%;background:radial-gradient(60% 40% at 50% 55%,var(--c),transparent 75%);-webkit-mask:radial-gradient(55% 50% at 50% 55%,#000 25%,transparent 75%);mask:radial-gradient(55% 50% at 50% 55%,#000 25%,transparent 75%);opacity:.45;mix-blend-mode:screen;animation:aCurt var(--d) ease-in-out var(--dl) infinite alternate;will-change:transform}
-#skfx .a-curtain>i{position:absolute;background:radial-gradient(50% 50% at 50% 50%,var(--c),transparent);opacity:var(--o);animation:aRayS var(--d) ease-in-out var(--dl) infinite alternate}@keyframes aRayS{from{opacity:calc(var(--o) * .15);transform:scaleY(.8)}to{opacity:var(--o);transform:scaleY(1.15)}}
-@keyframes aCurt{0%{transform:translateX(-22%) skewX(-24deg) scaleY(.75);opacity:.2}30%{transform:translateX(-4%) skewX(14deg) scaleY(1.3);opacity:.75}55%{transform:translateX(10%) skewX(-10deg) scaleY(.95);opacity:.4}80%{transform:translateX(18%) skewX(20deg) scaleY(1.2);opacity:.8}100%{transform:translateX(24%) skewX(-6deg) scaleY(.85);opacity:.3}}
-.a-sky{left:50%;top:100%;width:300vmax;height:300vmax;margin:-150vmax 0 0 -150vmax;animation:aSpin 260s linear infinite}
-.a-con path{animation:aCon 26s ease-in-out var(--dl) infinite}.a-con circle{opacity:.0;animation:aConS 26s ease-in-out var(--dl) infinite}
+.a-sky{left:50%;top:100%;width:300vmax;height:300vmax;margin:-150vmax 0 0 -150vmax;animation:aSpin 150s linear infinite}#skfx .a-sky2{animation:aSpin 90s linear infinite reverse;transform-origin:0 0}
+.a-planet{offset-rotate:0deg;animation:aPath var(--d) linear var(--dl) infinite,aPlF var(--d) linear var(--dl) infinite}@keyframes aPlF{0%,100%{opacity:0}6%,92%{opacity:1}}
+.a-aurcv{inset:0;mix-blend-mode:screen}.a-aurcv canvas{width:100%;height:100%;display:block;filter:blur(2.2px)}
+.a-con path{animation:aCon 19s ease-in-out var(--dl) infinite}.a-con circle{opacity:.0;animation:aConS 19s ease-in-out var(--dl) infinite}
 @keyframes aCon{0%{stroke-dashoffset:100;opacity:0}3%{opacity:1}12%{stroke-dashoffset:0}60%{stroke-dashoffset:0;opacity:1}70%,100%{opacity:0;stroke-dashoffset:0}}
-@keyframes aConS{0%{opacity:0;transform:scale(.4)}12%{opacity:1}60%{opacity:1}70%,100%{opacity:0}}#skfx .a-con circle{transform-box:fill-box;transform-origin:50% 50%}
+@keyframes aConS{0%{opacity:0;transform:scale(.4)}12%{opacity:1;transform:scale(1.6)}20%{transform:scale(1)}30%{transform:scale(1.4)}40%{transform:scale(1)}50%{transform:scale(1.3)}60%{opacity:1;transform:scale(1)}70%,100%{opacity:0}}#skfx .a-con circle{transform-box:fill-box;transform-origin:50% 50%}
 .a-comet{left:110%;top:4%;width:300px;height:3px;border-radius:3px;background:linear-gradient(90deg,#fff6dc,rgba(255,231,168,0));animation:aComet 22s linear infinite}@keyframes aComet{0%,70%{transform:translate(0,0) rotate(18deg);opacity:0}72%{opacity:1}100%{transform:translate(-160vw,52vh) rotate(18deg);opacity:0}}
 .a-rail{offset-rotate:auto;animation:aPath 18s linear infinite}.a-trail{animation:aPath 18s linear calc(var(--lag) * -1 + 0s) infinite,aTrailF 1.2s ease-in-out infinite alternate;animation-delay:calc(var(--lag) * -1),0s}@keyframes aTrailF{from{opacity:.3}to{opacity:1}}
 .a-jelly{animation:aJel var(--d) linear var(--dl) infinite;will-change:transform}.a-pulsej .bl{transform-box:fill-box;transform-origin:50% 100%;animation:aBell 2.4s ease-in-out infinite}.a-pulsej .tn{animation:aTn 2.4s ease-in-out infinite}
 @keyframes aJel{0%{opacity:0;transform:translate(0,0)}6%{opacity:1}90%{opacity:1}100%{opacity:0;transform:translate(var(--rx),var(--ry))}}@keyframes aBell{0%,100%{transform:scale(1,1)}40%{transform:scale(.82,1.14)}}@keyframes aTn{0%,100%{transform:skewX(4deg)}50%{transform:skewX(-6deg)}}
 .a-ray{background:linear-gradient(90deg,transparent,rgba(255,255,255,.16) 40%,rgba(255,255,255,.16) 60%,transparent);-webkit-mask:linear-gradient(180deg,#000,transparent 90%);mask:linear-gradient(180deg,#000,transparent 90%);transform-origin:50% 0;animation:aRay var(--d) ease-in-out var(--dl) infinite alternate}@keyframes aRay{from{transform:rotate(-6deg);opacity:.5}to{transform:rotate(6deg);opacity:1}}
+.a-car{animation:aCar 12s linear var(--dl) infinite}.a-carb{animation:aCarB 1.4s ease-in-out infinite alternate}@keyframes aCarB{from{transform:translateY(-8px)}to{transform:translateY(8px)}}
+@keyframes aCar{0%{transform:translateX(0) scale(1);opacity:1;z-index:2}12.5%{transform:translateX(106px) scale(.92)}25%{transform:translateX(150px) scale(.8);opacity:.8}37.5%{transform:translateX(106px) scale(.68);opacity:.45;z-index:1}50%{transform:translateX(0) scale(.62);opacity:.35}62.5%{transform:translateX(-106px) scale(.68);opacity:.45}75%{transform:translateX(-150px) scale(.8);opacity:.8;z-index:2}87.5%{transform:translateX(-106px) scale(.92)}100%{transform:translateX(0) scale(1);opacity:1}}
 .a-shell{background:linear-gradient(0deg,transparent,rgba(255,240,200,.85));transform-origin:50% 100%;opacity:0;animation:aShell var(--d) ease-out var(--dl) infinite}@keyframes aShell{0%{opacity:0;transform:scaleY(0)}2%{opacity:1}12%{opacity:1;transform:scaleY(1)}16%,100%{opacity:0;transform:scaleY(1)}}
-.a-boom{opacity:0;transform:scale(.2);animation:aBoom var(--d) ease-out var(--dl) infinite}.a-boom.b2{animation-name:aBoom2}@keyframes aBoom{0%,13%{opacity:0;transform:scale(.2)}15%{opacity:1}30%{opacity:.9;transform:scale(1)}42%,100%{opacity:0;transform:scale(1.1) translateY(30px)}}
+.a-boom{mix-blend-mode:screen;opacity:0;transform:scale(.2);animation:aBoom var(--d) ease-out var(--dl) infinite}.a-boom.b2{animation-name:aBoom2}.a-boom svg{filter:blur(.8px)}@keyframes aBoom{0%,13%{opacity:0;transform:scale(.2)}15%{opacity:1}30%{opacity:.9;transform:scale(1)}42%,100%{opacity:0;transform:scale(1.1) translateY(30px)}}
 @keyframes aBoom2{0%,15%{opacity:0;transform:scale(.2) rotate(10deg)}18%{opacity:1}32%{opacity:.8;transform:scale(1) rotate(10deg)}44%,100%{opacity:0;transform:scale(1.05) rotate(10deg) translateY(36px)}}
-.a-lant{animation:aJel var(--d) linear var(--dl) infinite;will-change:transform}.a-sway2{animation:aSw2 5s ease-in-out infinite alternate}@keyframes aSw2{from{transform:translateX(-10px) rotate(-4deg)}to{transform:translateX(10px) rotate(4deg)}}
+.a-lant{animation:aJel var(--d) linear var(--dl) infinite;will-change:transform}.a-lant svg{filter:blur(1.4px)}.a-lant .lh{animation:aLh 2.6s ease-in-out infinite alternate}@keyframes aLh{from{opacity:.6}to{opacity:1}}.a-sway2{animation:aSw2 5s ease-in-out infinite alternate}@keyframes aSw2{from{transform:translateX(-10px) rotate(-4deg)}to{transform:translateX(10px) rotate(4deg)}}
 .a-sunray{border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,240,200,.0) 0deg,rgba(255,240,200,.22) 6deg,rgba(255,240,200,0) 14deg,rgba(255,240,200,0) 24deg);-webkit-mask:radial-gradient(circle,#000 8%,transparent 62%);mask:radial-gradient(circle,#000 8%,transparent 62%);animation:aSpin 120s linear infinite}
 .a-beamL{transform-origin:0 50%;margin-top:-60px;background:linear-gradient(90deg,rgba(255,240,190,.75),rgba(255,240,190,.15) 60%,transparent);clip-path:polygon(0 46%,100% 0,100% 100%,0 54%);-webkit-mask:linear-gradient(90deg,#000 40%,transparent);mask:linear-gradient(90deg,#000 40%,transparent);animation:aBeamL 12s ease-in-out infinite}
 @keyframes aBeamL{0%{transform:scaleX(.15) rotate(-2deg);opacity:.2}25%{transform:scaleX(1) rotate(2deg);opacity:1}50%{transform:scaleX(.15) rotate(6deg);opacity:.2}75%{transform:scaleX(.6) rotate(-6deg);opacity:.6}100%{transform:scaleX(.15) rotate(-2deg);opacity:.2}}
 .a-wash{transform-origin:100% 100%;opacity:0;animation:aWash var(--d) ease-in-out var(--dl) infinite}@keyframes aWash{0%{opacity:0;transform:translate(160px,60px) scaleY(.6)}35%{opacity:1}55%{opacity:.9;transform:translate(0,0) scaleY(1)}100%{opacity:0;transform:translate(60px,30px) scaleY(.8)}}
 html:has(#bv.on,#hist.on,#ov.on) #skfx *{animation-play-state:paused!important}`;
   if (!document.getElementById('skfxcss')) { const s = document.createElement('style'); s.id = 'skfxcss'; s.textContent = CSS; document.head.appendChild(s); }
+
+  /* ---------------- the live aurora (s36): a canvas of rays (2026-11-20 ユーザー：全然リアルじゃない)
+     How real aurora looks: curtains of thin rays along the magnetic field, a bright sharp lower edge in green (≈100–150 km),
+     fading upward to violet / red at the top; folds and S-shaped ripples travel along the band, rays flicker and flare,
+     where folds overlap it is brighter. Drawn at a third of the window's size (soft by itself), rays added ('lighter'). */
+  function aurora(cv) {
+    const ctx = cv.getContext('2d'); let W = 0, H = 0, raf = 0, last = 0, on = true;
+    const sprite = (stops) => { const c = document.createElement('canvas'); c.width = 1; c.height = 256; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 256, 0, 0);
+      stops.forEach(([o, col]) => gr.addColorStop(o, col)); g.fillStyle = gr; g.fillRect(0, 0, 1, 256); return c; };
+    const BANDS = [
+      { y: .52, h: .34, a: .9, f: [.9, 2.3], v: [.022, -.035], amp: .05, ph: 0, sp: sprite([[0, 'rgba(200,255,220,0)'], [.015, 'rgba(210,255,225,1)'], [.06, 'rgba(70,255,160,.95)'], [.35, 'rgba(40,220,140,.45)'], [.7, 'rgba(90,120,220,.18)'], [.88, 'rgba(170,80,200,.1)'], [1, 'rgba(170,80,200,0)']]) },
+      { y: .40, h: .30, a: .7, f: [1.2, 3.1], v: [-.018, .03], amp: .045, ph: 2, sp: sprite([[0, 'rgba(200,255,230,0)'], [.02, 'rgba(190,255,220,.9)'], [.08, 'rgba(60,240,170,.85)'], [.4, 'rgba(50,190,160,.35)'], [.75, 'rgba(150,90,220,.18)'], [1, 'rgba(200,70,160,0)']]) },
+      { y: .30, h: .26, a: .5, f: [.7, 2.7], v: [.012, -.024], amp: .04, ph: 4, sp: sprite([[0, 'rgba(255,200,240,0)'], [.03, 'rgba(255,170,230,.7)'], [.12, 'rgba(120,230,190,.6)'], [.45, 'rgba(130,110,230,.3)'], [.8, 'rgba(230,80,140,.16)'], [1, 'rgba(230,80,140,0)']]) },
+    ];
+    const TAU = Math.PI * 2, sn = Math.sin;
+    function size() { const r = cv.getBoundingClientRect(); W = Math.max(60, Math.round(r.width / 3)); H = Math.max(60, Math.round(r.height / 3)); cv.width = W; cv.height = H; }
+    function frame(now) {
+      raf = requestAnimationFrame(frame);
+      if (now - last < 33) return; last = now;
+      if (document.hidden || document.documentElement.matches(':has(#bv.on,#hist.on,#ov.on)')) return;
+      const t = now / 1000; ctx.clearRect(0, 0, W, H); ctx.globalCompositeOperation = 'lighter';
+      const pulse = .8 + .2 * sn(t * .7) * sn(t * .23 + 1);
+      BANDS.forEach((b, bi) => {
+        const N = Math.round(W * 1.5);
+        for (let i = 0; i < N; i++) {
+          const u = i / N;
+          // folds: the curtain's own sideways displacement (S-ripples travelling along it)
+          const fold = .055 * sn(TAU * (u * b.f[0] + t * b.v[0]) + b.ph) + .035 * sn(TAU * (u * b.f[1] + t * b.v[1]) + b.ph * 2) + .012 * sn(TAU * (u * 9 - t * .25));
+          const x = (u * 1.25 - .125 + fold) * W;
+          const y = H * (b.y + b.amp * sn(TAU * (u * .7 + t * .02) + b.ph) + .018 * sn(TAU * (u * 4 - t * .09) + bi));
+          // rays: fine structure that drifts and flickers; brightness waves running along the band
+          const ray = .5 + .5 * sn(TAU * (u * 70 + t * .9) + 3 * sn(TAU * (u * 6 - t * .17) + bi));
+          const ray2 = .5 + .5 * sn(TAU * (u * 160 - t * 2.3) + bi * 1.7);
+          const wave = .55 + .45 * sn(TAU * (u * 1.6 - t * .06) + b.ph);
+          const env = Math.min(1, u * 6, (1 - u) * 6) * Math.max(0, wave);
+          const flare = Math.max(0, sn(TAU * (u * 2.2 + t * .11) + bi * 2)) ** 6 * .8;
+          const I = env * (.35 + .45 * ray * ray + .2 * ray2) * (b.a + flare) * pulse;
+          if (I < .02) continue;
+          const h = H * b.h * (.55 + .3 * ray + .5 * flare + .15 * sn(TAU * (u * 3 + t * .07)));
+          const jy = H * .012 * sn(TAU * (u * 37 + t * .5) + bi);
+          ctx.globalAlpha = Math.min(1, I * .9); ctx.drawImage(b.sp, x, y - h + jy, 1.6, h);
+        }
+      });
+      ctx.globalAlpha = 1;
+    }
+    size(); const ro = new ResizeObserver(size); ro.observe(cv); raf = requestAnimationFrame(frame);
+    return () => { on = false; cancelAnimationFrame(raf); ro.disconnect(); };
+  }
 
   /* ---------------- mount / place ---------------- */
   let el = null, cur = null;
@@ -279,12 +330,14 @@ html:has(#bv.on,#hist.on,#ov.on) #skfx *{animation-play-state:paused!important}`
     const html = f(cur.T), stage = [], screen = [];
     const tmp = document.createElement('div'); tmp.innerHTML = html;
     [...tmp.children].forEach(c => (c.classList.contains('sp') ? screen : stage).push(c.outerHTML));
+    if (cur.stop) { cur.stop(); cur.stop = null; }
     el.innerHTML = (cur.x ? '<i class="fx-x"></i>' : '') + `<div class="stage"><div class="st-in">${stage.join('')}</div></div>` + screen.join('');
+    const cv = el.querySelector('.a-aurcv canvas'); if (cv) cur.stop = aurora(cv);
   }
   window.AtlasSkinFX = {
     has: id => !!S[id],
     mount(host, o) { el = host; cur = Object.assign({ T: null }, o); place(); if (cur.T === null) { cur.T = false; build(); place(); } },
-    unmount() { el = null; cur = null; },
+    unmount() { if (cur && cur.stop) cur.stop(); el = null; cur = null; },
     place,
   };
   addEventListener('resize', () => { clearTimeout(place.t); place.t = setTimeout(place, 120); });
