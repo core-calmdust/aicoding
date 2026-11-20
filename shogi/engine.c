@@ -1193,6 +1193,7 @@ static TLS i32 counterMv[32 * 81];
    shared by the threads (a lost update does no harm) */
 #define CK 1134
 static i16 contH[2][CK * CK];
+static i16 contH4[CK * CK];   /* (P118: the same by the move 4 plies back, at half weight) */
 static TLS i32 exclM[NBUF];       /* the move left out at that ply (singular extension test), 0: none */
 static TLS double evSt[NBUF];     /* static evaluation at that ply (-INF: in check) */
 static inline int hIdx(int us, int m) { return ((us * 88 + (m & 127)) * 81 + ((m >> 7) & 127)) * 2 + ((m >> 14) & 1); }
@@ -1201,7 +1202,7 @@ static inline void gravI(i32 *h, int b) { *h += b - *h * (b < 0 ? -b : b) / 1638
 static inline void gravS(i16 *h, int b) { int v = *h; v += b - v * (b < 0 ? -b : b) / 16384; *h = (i16)v; }
 static inline int quietHist(int us, int m) {
   int v = history[hIdx(us, m)];
-  if (P[22]) { int k = mKey(m); if (sp >= 1 && ckS[sp - 1] >= 0) v += contH[0][ckS[sp - 1] * CK + k]; if (sp >= 2 && ckS[sp - 2] >= 0) v += contH[1][ckS[sp - 2] * CK + k]; }
+  if (P[22]) { int k = mKey(m); if (sp >= 1 && ckS[sp - 1] >= 0) v += contH[0][ckS[sp - 1] * CK + k]; if (sp >= 2 && ckS[sp - 2] >= 0) v += contH[1][ckS[sp - 2] * CK + k]; if (P[118] && sp >= 4 && ckS[sp - 4] >= 0) v += contH4[ckS[sp - 4] * CK + k]; }
   return v;
 }
 static inline int contHist(int m) {   /* the continuation histories' part of quietHist */
@@ -1211,12 +1212,14 @@ static inline int contHist(int m) {   /* the continuation histories' part of qui
 static inline void contUpd(int k, int b) {   /* the continuation histories alone (k = mKey of the move, the board before it) */
   if (sp >= 1 && ckS[sp - 1] >= 0) gravS(&contH[0][ckS[sp - 1] * CK + k], b);
   if (sp >= 2 && ckS[sp - 2] >= 0) gravS(&contH[1][ckS[sp - 2] * CK + k], b);
+  if (P[118] && sp >= 4 && ckS[sp - 4] >= 0) gravS(&contH4[ckS[sp - 4] * CK + k], b / 2);
 }
 static inline void histUpd(int us, int m, int b) {
   gravI(&history[hIdx(us, m)], b);
   int k = mKey(m);
   if (sp >= 1 && ckS[sp - 1] >= 0) gravS(&contH[0][ckS[sp - 1] * CK + k], b);
   if (sp >= 2 && ckS[sp - 2] >= 0) gravS(&contH[1][ckS[sp - 2] * CK + k], b);
+  if (P[118] && sp >= 4 && ckS[sp - 4] >= 0) gravS(&contH4[ckS[sp - 4] * CK + k], b / 2);
 }
 
 #ifdef MT
@@ -1513,15 +1516,30 @@ static double qsearch2(double alpha, double beta, int ply, int pvNode, int qd) {
   EvMask ev; if (inChk) evMask(&ev);
   int n = inChk ? genEv(moves, 0, &ev) : gen(moves, 1);
   if (inChk) orderMoves(moves, scores, n, ttm, ply); else order2Caps(moves, scores, n, ttm);
-  int legal = 0;
+  int legal = 0, mcq = 0;
   PickBlocks *pk = &pkT[ply]; pk->nb = 0;
   for (int i = 0; i < n; i++) {
     int m = pickFast(moves, scores, n, i, pk);
     if (!inChk) {
       int cap = board[(m >> 7) & 127];
       if (scores[i] < 0) break;   /* (the losing captures; the list is in order) */
+      if (P[115]) {
+        /* (search v6: after the first P115 captures only recaptures and checks are tried; a capture that cannot reach
+           alpha even with the piece taken (P116 = the margin on the static evaluation) or by the exchange is skipped) */
+        const int to_ = (m >> 7) & 127, rec = sp > 0 && stMove[sp - 1] && ((stMove[sp - 1] >> 7) & 127) == to_;
+        int gc = givesCheckPre(m); if (gc && !chkFast) { doMove(m); gc = inCheck(); undoMove(); }
+        mcq++;
+        if (!gc && !rec) {
+          if (mcq > P[115]) continue;
+          const double fb = raw + P[116], fv = fb + (cap ? VALUE[typeOf(cap)] : 0);
+          if (fv <= alpha) { if (fv > best) best = fv; continue; }
+          if (see(m) < alpha - fb) { const double t = alpha < fb ? alpha : fb; if (t > best) best = t; continue; }
+        }
+        if (see(m) < -74) continue;
+      } else {
       if (cap && raw + VALUE[typeOf(cap)] * 2 + 200 < alpha && !((m >> 14) & 1)) continue;
       if (!cap && see(m) < 0) continue;
+      }
       doMove(m);
       if (!legalAfter(m, 0)) { undoMove(); continue; }
     } else {
@@ -2636,7 +2654,7 @@ EXPORT(init) void init(void) {
   for (int i = 0; i < 2 * 8 * 20; i++) { const unsigned long long r = rnd64(); ZHD_L[i] = (i32)r; ZHD_H[i] = (i32)(r >> 32); }
   { const unsigned long long r = rnd64(); ZSIDE_L = (i32)r; ZSIDE_H = (i32)(r >> 32); }
 }
-EXPORT(reset_search) void reset_search(void) { memset(history, 0, sizeof history); memset(killers, 0, sizeof killers); memset(contH, 0, sizeof contH); 
+EXPORT(reset_search) void reset_search(void) { memset(history, 0, sizeof history); memset(killers, 0, sizeof killers); memset(contH, 0, sizeof contH); memset(contH4, 0, sizeof contH4); 
 #ifdef SEARCH2
   memset(capH, 0, sizeof capH);
 #endif
