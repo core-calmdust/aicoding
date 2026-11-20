@@ -203,8 +203,10 @@
   const li = lang => Math.max(0, L.indexOf(lang));
   const tx = (row, lang) => row[li(lang)] || row[1];
   // 'base' = the classic cream (no image; the portal's own colours) — counted as an R (2026-11-20)
+  // (2026-11-20) s41… are being remade: only the ids in SHOW are listed until they pass review
+  const HOLD = id => +id.slice(1) >= 41 && !SHOW.has(id), SHOW = new Set([]);
   const list = [{ id: 'base', rar: 1, kind: 'skin', def: true, bg: '#fff6e2', hd: '#fff6e2', nav: '#2b3044', dark: false }]
-    .concat(Object.keys(D).map(id => { const [rar, k, bg, hd, nav, dark] = D[id]; return { id, rar, kind: 'skin', cover: k === 'c', px: k === 'c' ? 0 : k, bg, hd, nav, dark: !!dark }; }));
+    .concat(Object.keys(D).filter(id => !HOLD(id)).map(id => { const [rar, k, bg, hd, nav, dark] = D[id]; return { id, rar, kind: 'skin', cover: k === 'c', px: k === 'c' ? 0 : k, bg, hd, nav, dark: !!dark }; }));
   const map = Object.fromEntries(list.map(s => [s.id, s]));
   const url = id => BASE + id + '.webp?v=' + V, thumb = id => BASE + 't/' + id + '.webp?v=' + V;
   const rgba = (h, a) => `rgba(${parseInt(h.slice(1, 3), 16)},${parseInt(h.slice(3, 5), 16)},${parseInt(h.slice(5, 7), 16)},${a})`;
