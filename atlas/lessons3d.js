@@ -394,6 +394,137 @@
     if (SHJ.tip[gid]) out.push(SHJ.tip[gid]);
     return out.join('');
   }
+  /* (2026-11-21 lesson loop) the shogi opening practice in ショウギツネ's words, Japanese: a short intro, varied questions, a hint
+     from what the answer does, and after the answer why it is played and what yours gives up — from the board (shFacts: drops,
+     captures and recaptures, the bishop trade, swinging the rook, opening or closing the bishop's diagonal, the rook's pawn, edge
+     pawns, the king walking into its castle, gold / silver moving up, a piece left to be taken) and the stored data (openings
+     cand: freq = [move, games] with total / win, cp = [move, engine value] with floor). {m} = the line's move, {x} = yours. */
+  const SHJ_OP = {
+    intro: ['『{n}』をいっしょに覚えるコン！<br>{t}。', '今日は『{n}』だコン。<br>{t}。手順を追いかけてみてね！', '『{n}』の手順を見ていくコン！<br>{t}。', 'さあ、『{n}』の練習！<br>{t}。どんな形になるか、楽しみだコン。'],
+    ask: ['{s}の番だコン。『{n}』で、強い人がいちばん指した手はどれかな？', '『{n}』のこの場面、{s}ならどう指す？', 'さあ{s}の一手！ 定跡どおりに指せるかな？', '{s}がここでいちばんよく選ぶ手、わかる？', '{s}の番。手順を思い出して、本筋の手を指してみて！'],
+    askCp: ['{s}の番だコン。ここでいちばん良い手はどれかな？', '駒落ちのこの場面、{s}ならどう指す？', 'さあ{s}の一手！ 駒の多さを生かせる手を探してみて。', '{s}の番。AIがいちばん良いと考えた手、わかる？', '{s}の一手を考えてみて！ 定跡の形を思い出してね。'],
+    pct: ['強い人の対局の{a}%が、この手を選んでいるコン。', '実戦では{a}%がこの手。いちばん人気！', '強い人の{a}%が指した、定跡の本筋の手。', 'この場面では{a}%の人がこれを選ぶの。覚えておいてね。'],
+    cp: ['AIの評価でも、これがいちばん良い手だコン。', 'AIも、この手がいちばんだと考えているの。', 'ほかの手より、AIの評価がはっきり高い手。'],
+    lead: ['{m}が定跡の手。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '本筋は{m}なの。'],
+  };
+  const SH_V = { p: 1, l: 3, n: 4, s: 5, g: 6, b: 8, r: 10, k: 0 };
+  function shBd(sfen) {   // the board as 81 cells (row a..i × file 9..1), the side to move, the hands
+    const [bd, side, hand] = String(sfen).split(' '), b = []; let pro = '';
+    for (const row of bd.split('/')) for (const ch of row) { if (ch === '+') { pro = '+'; continue; } if (/\d/.test(ch)) { for (let k = 0; k < +ch; k++) b.push(''); } else b.push(pro + ch); pro = ''; }
+    const H = { true: {}, false: {} }; let n = 0;
+    for (const ch of hand && hand !== '-' ? hand : '') { if (/\d/.test(ch)) { n = n * 10 + +ch; continue; } const s = ch === ch.toUpperCase(); H[s][ch.toLowerCase()] = (H[s][ch.toLowerCase()] || 0) + (n || 1); n = 0; }
+    return { b, sente: side !== 'w', H };
+  }
+  const shSq = t => (t.charCodeAt(1) - 97) * 9 + (9 - +t[0]);
+  const shS = pc => pc.replace('+', '') === pc.replace('+', '').toUpperCase();   // sente's piece?
+  function shTo(b, i) {   // the squares the piece on i attacks
+    const pc = b[i], s = shS(pc), k = pc.toLowerCase(), r0 = (i / 9) | 0, c0 = i % 9, fw = s ? -1 : 1, out = [];
+    const step = (dr, dc) => { const r = r0 + dr, c = c0 + dc; if (r >= 0 && r < 9 && c >= 0 && c < 9) out.push(r * 9 + c); };
+    const slide = (dr, dc) => { let r = r0 + dr, c = c0 + dc; while (r >= 0 && r < 9 && c >= 0 && c < 9) { out.push(r * 9 + c); if (b[r * 9 + c]) break; r += dr; c += dc; } };
+    const GOLD = [[fw, -1], [fw, 0], [fw, 1], [0, -1], [0, 1], [-fw, 0]], DG = [[1, 1], [1, -1], [-1, 1], [-1, -1]], OR = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    if (k === 'p') step(fw, 0); else if (k === 'l') slide(fw, 0); else if (k === 'n') { step(2 * fw, -1); step(2 * fw, 1); }
+    else if (k === 's') [[fw, -1], [fw, 0], [fw, 1], [-fw, -1], [-fw, 1]].forEach(d => step(...d));
+    else if (k === 'g' || ['+p', '+l', '+n', '+s'].includes(k)) GOLD.forEach(d => step(...d));
+    else if (k === 'k') [...DG, ...OR].forEach(d => step(...d));
+    else if (k === 'b' || k === '+b') { DG.forEach(d => slide(...d)); if (k === '+b') OR.forEach(d => step(...d)); }
+    else if (k === 'r' || k === '+r') { OR.forEach(d => slide(...d)); if (k === '+r') DG.forEach(d => step(...d)); }
+    return out;
+  }
+  const shAtk = (b, q, s) => b.reduce((m, pc, i) => pc && shS(pc) === s && shTo(b, i).includes(q) ? Math.min(m, SH_V[pc.replace('+', '').toLowerCase()] || 0) : m, 99);   // the cheapest attacker of q (99: none)
+  const shKing = (b, s) => b.findIndex(pc => pc && pc.toLowerCase() === 'k' && shS(pc) === s);
+  const shBReach = (b, s) => b.reduce((n, pc, i) => n + (pc && shS(pc) === s && /b$/i.test(pc) ? shTo(b, i).length : 0), 0);
+  function shFacts(sfen, u) {
+    const { b, sente: s, H } = shBd(sfen), drop = u[1] === '*', z = shSq(u.slice(2, 4)), a = drop ? -1 : shSq(u.slice(0, 2));
+    const pc = drop ? u[0].toLowerCase() : b[a].replace('+', '').toLowerCase(), cap = b[z] ? b[z].replace('+', '').toLowerCase() : '';
+    const mat = w => b.reduce((n, p) => n + (p && shS(p) === w ? SH_V[p.replace('+', '').toLowerCase()] : 0), 0) + Object.entries(H[w]).reduce((n, [k, c]) => n + SH_V[k] * c, 0);
+    const nb = b.slice(); nb[z] = drop ? (s ? u[0].toUpperCase() : u[0].toLowerCase()) : (u[4] === '+' ? '+' : '') + b[a].replace('+', ''); if (!drop) nb[a] = '';
+    if (u[4] !== '+' && !drop && b[a][0] === '+') nb[z] = b[a];
+    const F = { pc, drop, cap, pro: u[4] === '+', behind: mat(s) < mat(!s), fm: s ? 9 - z % 9 : 1 + z % 9, rz: s ? (z / 9) | 0 : 8 - ((z / 9) | 0) };
+    F.trade = cap === 'b' && pc === 'b';
+    if (!drop && pc === 'r' && ((a / 9) | 0) === ((z / 9) | 0) && !cap) { F.swing = { 5: '中飛車', 6: '四間飛車', 7: '三間飛車', 8: '向かい飛車', 3: '袖飛車' }[F.fm] || 'side'; if ((s ? 9 - a % 9 : 1 + a % 9) !== 2) F.swing = 'side'; }
+    if (!drop && pc === 'p') {
+      const r1 = shBReach(b, s), r2 = shBReach(nb, s);
+      F.bopen = r2 > r1 + 1; F.bshut = r2 < r1 - 1;
+      F.rookp = nb.some((p, i) => p && shS(p) === s && /r$/i.test(p) && i % 9 === z % 9 && (s ? i > z : i < z));
+      F.edge = F.fm === 1 || F.fm === 9;
+      const ahead = z + (s ? -9 : 9); F.clash = ahead >= 0 && ahead < 81 && nb[ahead] && shS(nb[ahead]) !== s && nb[ahead].toLowerCase() === 'p';
+      F.rank = F.rz <= 4;
+    }
+    if (drop) { const sl = w => w.reduce((n, p, i) => n + (p && shS(p) !== s && /[rbl]$/i.test(p) ? shTo(w, i).length : 0), 0), d0 = sl(b), d1 = sl(nb); if (d1 < d0 - 1) F.block = true; }
+    const rk = b.findIndex(p => p && shS(p) === s && /r$/i.test(p)); F.rside = rk >= 0 && !drop && (rk % 9 < 4) === (a % 9 < 4) && a % 9 !== 4;
+    const kb = shKing(b, s), kd = q => kb < 0 ? 9 : Math.max(Math.abs(((q / 9) | 0) - ((kb / 9) | 0)), Math.abs(q % 9 - kb % 9));
+    if (!drop && (pc === 's' || pc === 'g')) { F.guard = kd(z) < kd(a) && kd(z) <= 2; F.up = s ? z < a - 1 : z > a + 1; }
+    if (pc === 'k' && !drop) F.castle = Math.abs(z % 9 - 4) > Math.abs(a % 9 - 4) || ((z / 9) | 0) !== ((a / 9) | 0);
+    const at = pc === 'k' ? 99 : shAtk(nb, z, !s), df = shAtk(nb, z, s), val = SH_V[pc];
+    if (pc !== 'p' && pc !== 'k' && at < 99 && (df === 99 || at < val) && !(cap && SH_V[cap] >= val)) F.hang = Object.keys(SH_V).find(k => SH_V[k] === at);
+    return F;
+  }
+  const SH_PN = { p: '歩', l: '香車', n: '桂馬', s: '銀', g: '金', b: '角', r: '飛車', k: '玉' };
+  function shWhyJa(F) {
+    if (F.trade && F.behind) return '角を取り返して、駒の損を取り戻す手。ここで取り返さないと、角1枚の損になっちゃう！';
+    if (F.trade) return '自分から角を交換する手コン。おたがいに角を持ち駒にして、打ち込みのスキをねらい合う形になるの。';
+    if (F.cap && F.behind) return `取られた駒を、すぐ${SH_PN[F.pc]}で取り返す手。取り返さないと駒損のままだからね。`;
+    if (F.cap) return `相手の${SH_PN[F.cap]}を取る手。この形では、ここで取っておくのが定跡なの。`;
+    if (F.drop && F.block) return `持ち駒の${SH_PN[F.pc]}を打って、相手の駒の利きを止める手。打った駒が、そのまま壁になるの。`;
+    if (F.drop) return `持ち駒の${SH_PN[F.pc]}を打つ手。手持ちの駒を、ここで働かせるの。`;
+    if (F.swing && F.swing !== 'side') return `飛車を横に動かして「${F.swing}」にする手コン！ 戦う場所を、ここで決めるの。`;
+    if (F.swing) return '飛車を横に動かして、攻める筋を変える手。飛車の働く場所を作るの。';
+    if (F.pc === 'k') return F.castle ? '玉を、囲いのほうへ一歩ずつ寄せていく手。戦いが始まる前に、玉を安全にするのが大事コン。' : '玉の位置を整える手。囲いの形に合わせて、玉の居場所を決めるの。';
+    if (F.pc === 'p') {
+      if (F.bopen) return '歩を突いて角道を開ける手。角が斜めに大きく働けるようになるコン！';
+      if (F.bshut) return '歩で角道を止める手。角交換を防いで、じっくり駒組みする合図なの。';
+      if (F.clash) return '歩を相手の歩にぶつけて、戦いを始める手コン！ 取る・取らないで、相手に決断をせまるの。';
+      if (F.rookp) return '飛車先の歩を伸ばす手。飛車の前の歩が進むほど、飛車が攻めに働きやすくなるの。';
+      if (F.edge) return '端の歩を突く手。端の歩は、あとで玉の逃げ道にも、攻めの足がかりにもなるコン。';
+      if (F.rank) return '歩を伸ばして、盤の真ん中に「位」を取る手。陣地が広くなって、駒が動きやすくなるの。';
+      return '歩を突いて、駒の通り道を作る手。次に出ていく駒の準備なの。';
+    }
+    if (F.pc === 'g' || F.pc === 's') return F.guard ? `${SH_PN[F.pc]}を玉のそばに寄せて、囲いを固める手コン。` : F.pc === 's' && F.up && F.rside ? '銀を前に出して、飛車といっしょに攻める準備をする手。' : F.up ? `${SH_PN[F.pc]}を上がって、陣形を作っていく手。` : `${SH_PN[F.pc]}の位置を整えて、形を作る手なの。`;
+    if (F.pc === 'n') return '桂馬を跳ねて、攻めに参加させる手コン！';
+    if (F.pc === 'l') return '香車を上げる手。玉が入る場所を作ったり、端の攻めに使ったりするの。';
+    if (F.pc === 'b') return '角を動かして、次の駒組みに備える手。';
+    if (F.pc === 'r') return '飛車の位置を整えて、攻めにも守りにも働くようにする手なの。';
+    return 'この形で、強い人たちが本筋と考えている手コン。';
+  }
+  function shShortJa(F) { return F.trade && F.behind ? '角を取り返せる' : F.trade ? '角を交換できる' : F.cap && F.behind ? '駒を取り返せる' : F.cap ? '駒を取れる' : F.drop ? '持ち駒を生かせる' : F.swing ? '飛車の働く場所が決まる' : F.pc === 'k' ? '玉を安全にできる' : F.bopen ? '角道が開く' : F.bshut ? '角道を止められる' : F.clash ? '戦いを始められる' : F.rookp ? '飛車先の歩が伸びる' : F.block ? '相手の駒の利きを止められる' : F.guard ? '囲いが固まる' : F.pc === 's' && F.up && F.rside ? '攻めの銀が前に出る' : '定跡どおりの形になる'; }
+  function shHintJa(F, k, cp) {
+    if (F.trade && F.behind) return '駒の数を数えてみて。いま、角が1枚少なくない？ 光っている手がヒントだコン。';
+    if (F.trade) return '角と角が、向かい合っているね。光っている手を見てみて！';
+    if (F.cap && F.behind) return '直前に取られた駒があるね。光っている手で、どうなるかな？';
+    if (F.cap) return '光っている手を見てね。取れる相手の駒がありそうだコン。';
+    if (F.swing) return '飛車をどこで使うか、考える場面コン。光っている手がヒント！';
+    if (F.pc === 'k') return '玉はまだ戦場の近くにいるね。光っている手で、どこへ向かうかな？';
+    if (F.bopen || F.bshut) return '角の通り道を見てみて。光っている歩が動くと、角はどうなる？';
+    if (F.clash) return '相手の歩とのにらみ合いに注目！ 光っている手がヒントだコン。';
+    if (F.guard) return '玉のまわりの守りを見てみて。光っている駒が、手伝いに来たがっているコン。';
+    if (cp) return ['光っている手が、AIがいちばん良いと考えた手。指したあとの形を想像してみてね。', 'ヒントは光っている手コン。駒の多さを、どう生かすかな？'][k % 2];
+    return ['光っている手が、強い人がいちばん選んだ手。指したあとの形を想像してみてね。', 'ヒントは光っている手コン。手順の流れを思い出してみて！'][k % 2];
+  }
+  function shOpJa(o, name, hs, i, handi) {
+    const P = o.P, C = P.cand || [], A = o.ans, sente = String(o.pos).split(' ')[1] !== 'w', cp = P.mode === 'cp', k = hs + i;
+    const side = handi ? (sente ? '下手' : '上手') : sente ? '☗先手' : '☖後手', N = P.total || C.reduce((s, x) => s + x[1], 0) || 1;
+    const pc = c => Math.max(1, Math.round(c / N * 100)), cnt = new Map(C), FA = shFacts(o.pos, A), rep = (t, v) => t.replace(/\{([ns])\}/g, (_, q) => v[q]);
+    const ask = rep((cp ? SHJ_OP.askCp : SHJ_OP.ask)[k % 5], { n: name, s: side });
+    const why = () => shWhyJa(FA), tail = () => cp ? SHJ_OP.cp[k % SHJ_OP.cp.length] : SHJ_OP.pct[k % SHJ_OP.pct.length].replace('{a}', pc(cnt.get(A) || 0));
+    const sp = w => /[！？]$/.test(w) ? ' ' : '';
+    const good = u => {
+      if (u && u !== A && cnt.has(u)) return cp ? '{x}も悪くない手コン。AIの評価では、{m}がほんの少し上なの。' : `{x}も人気の手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なの。`;
+      const w = why(), t = tail(); return w + sp(w) + (/コン/.test(w) ? t.replace('コン。', 'の。') : t); };
+    const ng = u0 => {
+      let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0]; const lead = SHJ_OP.lead[k % SHJ_OP.lead.length];
+      if (!u) return lead + why();
+      let F; try { F = shFacts(o.pos, u); } catch (e) { F = {}; }
+      const best = C.length ? C[0][1] : 0, mine = cnt.has(u) ? cnt.get(u) : null;
+      const dd = cp ? winP(best, 600) - winP(mine != null ? mine : P.floor != null ? P.floor : best - 600, 600) : 1;
+      if (F.hang && !FA.hang && (cp ? dd > .12 : mine == null)) return lead + `{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`;
+      if (FA.cap && FA.behind && !F.cap) return lead + '{x}だと取り返しそびれて、駒損のままになっちゃう。';
+      if (!cp && mine != null) { const b = pc(mine), a = pc(cnt.get(A)); return lead + (b * 2 >= a ? `{x}もよく指される手（${b}%）。でも{m}なら${a}%で、こっちがいちばんの本筋なの。` : `{x}も実戦で指される手だけど、${b}%だけ。{m}は${a}%の人が選んでいて、${shShortJa(FA)}からね。`); }
+      if (cp) { const s = mine != null ? mine : P.floor != null ? P.floor : best - 600, d = winP(best, 600) - winP(s, 600);
+        return lead + '{x}だと、' + (d > .35 ? '形勢がぐっと悪くなっちゃう。' : d > .12 ? 'けっこう損をしちゃうの。' : 'ほんの少しだけ損なの。') + `{m}なら${shShortJa(FA)}から、こっちを選びたいね。`; }
+      return lead + `{x}は、強い人の対局ではほとんど指されない手。{m}なら${shShortJa(FA)}から、こっちを選びたいね。`;
+    };
+    return { ask, hintTx: shHintJa(FA, k, cp), good, ng };
+  }
   const SHOGI = {
     LKEY: 'shogi-kaya-lessons-v1', OKEY: 'shogi-kaya-open-v1', CATS: ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'], data: null,
     load() {
@@ -438,8 +569,10 @@
       const s = this.data.sets.find(x => x.id === key); if (!s) return null;
       const probs = (s.problems || []).length ? (s.handi ? s.problems.map((p, i) => i) : shuffle(s.problems.map((p, i) => i))).slice(0, 5).sort((a, b) => s.handi ? a - b : 0).map(i => s.problems[i]) : [];
       const nc = NC.shogi || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the notes without coordinates)
-      return { id: s.id, title: L(s.title, lang), intro: L(nc['op:' + s.id + '/short'] || s.short, lang), start: s.study && s.study.start, steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
-        probs: probs.map(p => ({ pos: p.sfen, kind: 'best', P: p, ans: (p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] })),
+      const ja = lang === 'ja', nm = L(s.title, 'ja'), hs = s.id.length * 3, sh = String(L(nc['op:' + s.id + '/short'] || s.short, lang) || '');
+      const intro = !ja ? sh : s.handi ? `『${nm}』の練習だコン！<br>${sh}` : SHJ_OP.intro[hs % SHJ_OP.intro.length].replace('{n}', nm).replace('{t}', sh.replace(/[。！]$/, ''));   // (2026-11-21 lesson loop: ショウギツネ introduces it)
+      return { id: s.id, title: L(s.title, lang), intro, start: s.study && s.study.start, steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
+        probs: probs.map((p, i) => { const o = { pos: p.sfen, kind: 'best', P: p, ans: (p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] }; if (ja && o.ans) try { Object.assign(o, shOpJa(o, nm, hs, i, !!s.handi)); } catch (e) { console.warn('[lessons3d] shogi opening', e); } return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[s.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
     introPos() { return { pos: 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1', lock: true }; },
@@ -1908,6 +2041,7 @@
     const id = ctx.id, D = DATA[id], ad = ctx.adapter, GD = (window.AtlasPuzzles && AtlasPuzzles.G || {})[id] || {};
     const VO = (VOICE[id] || {})[ctx.lang] || {}, X = Object.assign({}, TX[ctx.lang] || TX.en, VO);
     const LN = ((window.AtlasPuzzleLines || {})[id] || {})[ctx.lang] || {}, line = k => { const a = LN[k]; return a && a.length ? a[Math.floor(Math.random() * a.length)] : ''; };
+    const okLine = () => { const a = (LN.solved || []).filter(t => !/詰|参りました|mate|メイト/i.test(t)); return a.length ? a[Math.floor(Math.random() * a.length)] : ''; };   // (2026-11-21 lesson loop: a best-move or opening problem is not praised with 「詰んだ！」)
     const lsv = h => { const m = (LSV.d || {})[id]; if (!m) return h; const ks = LSV[id] || (LSV[id] = Object.keys(m).sort((a, b) => b.length - a.length)); for (const k of ks) if (h.includes(k)) h = h.split(k).join(m[k]); return h; };   // (the problem lines in the guide's own words: atlas/lsvoice-ja.js, 2026-11-21)
     const voice = h => ctx.lang === 'ja' ? varyJa(lsv(guideJa(h, id)), id) : h;   // (each guide's own way of talking, 2026-11-15)
     let greeted = false;
@@ -2318,8 +2452,8 @@
       }
       // (2026-11-21) {m} / {x} in the lesson's words (chess) → the best move / yours; a wrong answer gets the lesson's ng words, or the why without its 「正解！」
       const Wm = t => t && /\{[mx]\}/.test(t) ? fill(t, { m: '<b>' + (moveName(p.pos, p.ans) || SP('ok', ctx.lang)) + '</b>', x: '<b>' + (moveName(p.pos, u) || '') + '</b>' }) : t;
-      const whyR = Wm(id === 'chess' && typeof p.good === 'function' ? p.good(u) : p.why), whyW = Wm(((id === 'shogi' || id === 'chess') && p.ng ? p.ng(u) : '') || p.ngTx || (p.why || '').replace(/^\s*(正解|Correct|Right)[！!]\s*/, ''));   // (shogi: why the move played falls short, 2026-11-21)
-      if (pts >= 16) say(`${line('solved') || pick(X.good)} <b>${fill(X.pts, { n })}</b>${whyR ? '<br>' + whyR : ''}`);
+      const whyR = Wm((id === 'chess' || id === 'shogi') && typeof p.good === 'function' ? p.good(u) : p.why), whyW = Wm(((id === 'shogi' || id === 'chess') && p.ng ? p.ng(u) : '') || p.ngTx || (p.why || '').replace(/^\s*(正解|Correct|Right)[！!]\s*/, ''));   // (shogi: why the move played falls short, 2026-11-21)
+      if (pts >= 16) say(`${(p.kind === 'tsume' ? line('solved') : okLine()) || pick(X.good)} <b>${fill(X.pts, { n })}</b>${whyR ? '<br>' + whyR : ''}`);
       else { if (p.ans) pz().mark(p.ans); const mvN0 = p.kind !== 'tsume' && p.ans ? moveName(p.pos, p.ans) : '', nm = p.kind !== 'tsume' && p.ans && !(mvN0 && whyW && whyW.replace(/<[^>]+>|\s/g, '').includes(mvN0.replace(/\s/g, ''))), mvN = nm ? mvN0 : ''; say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSP[ctx.lang] || ANSP.en)) : ''}${whyW ? '<br>' + whyW : ''}`);
         if (nm && !mvN) { const k = cur.k, mk = p.ans; later(async () => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz() || !pz().play) return; try { let r = await pz().play(mk); if (r === false) { pz().undo(1); await sleep(250); r = await pz().play(mk); } if (r === false) return; await sleep(1600); if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark(mk); } catch (e) { console.warn('[lessons] show move', e); } }, 1000); } }   // (the move is shown on the board, not named: no coordinates, 2026-11-14)
       try { chime(pts >= 16); } catch (e) {}
