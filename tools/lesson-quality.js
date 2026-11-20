@@ -100,7 +100,7 @@ function scoreLesson(id, L) {
     new Function(src)();
     try { const t = await (await fetch('lsvoice-ja.js?x=' + Date.now())).text(); const w = {}; new Function('window', t)(w); __setLSV(w.AtlasLsVoice); } catch (e) {}
     const say = (h, id) => { h = String(h || '').replace(/\{fig\d*\}\s*/g, '').replace(/\{[mx]\}/g, '♘e2–e4').replace(/[  ]*\u0001/g, '').replace(/\u0002[  ]*/g, '').replace(/<p[^>]*>/g, '').replace(/<\/p>\s*/g, '<br>').replace(/(<br>\s*)+$/, ''); return h ? __V(h, id) : ''; };
-    const f = (x, p) => { try { return typeof x === 'function' ? x(p && p.ans, p) : x; } catch (e) { return ''; } };
+    const f = (x, p) => { try { return typeof x === 'function' ? x.call(p, p && p.ans, p) : x; } catch (e) { return ''; } };   // (called as the runner does, p.good(u): go's use `this`)
     const out = {};
     for (const id of (games.length ? games : Object.keys(__LD))) { const D = __LD[id]; out[id] = [];
       try { await D.load('ja'); await __NC.load(id); for (const it of D.list('lesson', 'ja')) { let s; try { s = __NC.apply(id, await D.lesson(it.key, 'ja', __X(id))); } catch (e) { continue; } if (!s) continue;
