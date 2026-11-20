@@ -137,8 +137,9 @@ node tools/edax-anchor.js --table
   4. 空き7〜14マス専用の小さな置換表（Edax はスレッドごと 1024 個＝24KB で約10%）。本作は 512KB で試して −3〜4%（見送り）。もっと小さい表は未計測。
 ```sh
 cd reversi && git pull
-node tools/variant-bench.js --variants g1,g2 --n 12 --depth 19 --empties 22 --rounds 4     # 2〜3分
+node tools/variant-bench.js --variants g1,g2,lc,g2_lc --n 12 --depth 19 --empties 22 --rounds 4     # 約5分
 ```
+`lc`＝上の 2.（最後の1手の省略、`-DLAZYCUT`）。手と値は同じで、数える局面数だけ減る。作業機（x86・2コア共用）は揺れが ±5% 以上あり、数%の差は判定できなかった。
 出力の「今の版との比」が 0.97 未満なら、その方式を wasm の既定にする（読みの内容は同じ。スマホでも確かめる）。
 
 ### 計画の直し方
