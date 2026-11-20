@@ -115,7 +115,7 @@ const AREA = { bomb: 1, volley: 1, rocket: 1, barrage: 1, strafe: 1, lance: 1, r
 const NOAIM = { smoke: 1, command: 1, jam: 1, repair: 1, mine: 1, suppress: 1, ward: 1, rapid: 1, intel: 1, plate: 1, listen: 1, allout: 1 };   // skills that need no square
 // the field (2026-11-20): the destroyer and 6 other types drawn at random, 2 of each — at least one attacker, one scout and one of
 // defence / support — and a fleet takes each type at most once, so the drafts differ from game to game
-const ROLE = { atk: [0, 1, 2, 8, 11, 15, 22, 23, 28, 30, 36, 41, 44, 47, 49], info: [3, 7, 16, 19, 25, 26, 29, 32, 33, 35, 43, 45], def: [5, 6, 9, 10, 12, 13, 14, 17, 18, 20, 21, 24, 27, 34, 37, 38, 39, 40, 42, 46, 48] };
+const ROLE = { atk: [0, 1, 2, 8, 11, 15, 22, 23, 28, 30, 36, 41, 44, 47, 49], info: [3, 7, 16, 19, 25, 26, 29, 32, 33, 35, 43, 45], def: [5, 6, 9, 10, 12, 13, 14, 17, 18, 20, 21, 24, 27, 34, 37, 38, 39, 40, 42, 46, 48, 31] };   // (31 輸送艦 joined 防御／支援 on 2026-11-20: it had no role, so since the balanced field it never came up)
 const BUDGET = 20, MINSHIPS = 3, MAXSHIPS = 6, MAXSAME = 2, DUP_EXTRA = 1, CLASSIC = [0, 1, 2, 3, 4], NT = TYPES.length;
 const PRESETS = [[0, 1, 2, 3], [0, 1, 3, 4], [1, 2, 3, 4, 6], [1, 8, 7, 4, 6], [0, 5, 3, 4], [9, 1, 8, 3], [0, 10, 7, 4, 6]];
 // a second copy of a type is allowed (the one the other side left) and costs 1 more (2026-11-20 user; 2000 games: first mover 51%,
