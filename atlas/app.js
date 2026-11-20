@@ -21,7 +21,10 @@
   /* ---------- state ---------- */
   let W = A_.load(), P = A_.allProgress(), ACH = A_.achievements(P, W), C = A_.coins(W, ACH);
   if (W.name && A_.shareName) A_.shareName(W.name, true);   // the portal name is the player name in every game
-  function refresh() { P = A_.allProgress(); ACH = A_.achievements(P, W); C = A_.coins(W, ACH); if (window.AtlasMissions) { try { AtlasMissions.sync(); } catch (e) {} if (window.Historia && !Historia.__ms) { const o = Historia.open; Historia.open = function () { AtlasMissions.page('historia'); return o.apply(this, arguments); }; Historia.__ms = 1; } } $('coinN').textContent = C.balance.toLocaleString(); document.querySelectorAll('.coinM').forEach(e => { e.textContent = C.balance.toLocaleString(); }); }
+  let skinOn = null;   // the worn portal skin (きせかえ → スキン): painted again whenever the saved wallet changes (another tab, the account sync)
+  const skinSync = () => { const id = (W.av && W.av.skin) || ''; if (id !== skinOn && window.AtlasSkins) { skinOn = id; AtlasSkins.apply(id); } };
+  skinSync();
+  function refresh() { skinSync(); P = A_.allProgress(); ACH = A_.achievements(P, W); C = A_.coins(W, ACH); if (window.AtlasMissions) { try { AtlasMissions.sync(); } catch (e) {} if (window.Historia && !Historia.__ms) { const o = Historia.open; Historia.open = function () { AtlasMissions.page('historia'); return o.apply(this, arguments); }; Historia.__ms = 1; } } $('coinN').textContent = C.balance.toLocaleString(); document.querySelectorAll('.coinM').forEach(e => { e.textContent = C.balance.toLocaleString(); }); }
 
   /* ---------- sound effects: synthesized with WebAudio (no files), one shared AudioContext ---------- */
   const SFX = (() => {
@@ -2908,18 +2911,19 @@
   function renderDress() {
     $('hDress').textContent = t('dress.h');
     renderCard();
-    const kinds = ['icon', 'bg', 'frame'].concat(P3() ? ['table'] : []);
-    $('dseg').innerHTML = kinds.map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${k === 'table' ? esc(P3().placeUi('table', lang)) : t('kind.' + k)}</button>`).join('');
+    // (2026-11-20) the table moved out (it can be changed during a game); its place is the portal skin
+    const SK = window.AtlasSkins, kinds = ['icon', 'bg', 'frame'].concat(SK ? ['skin'] : []); if (!kinds.includes(dKind)) dKind = 'icon';
+    $('dseg').innerHTML = kinds.map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${k === 'skin' ? esc(SK.t('kind', lang)) : t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
     dsegPos();
     $('dsort').parentNode.style.display = dKind === 'table' ? 'none' : '';
-    if (dKind === 'table') { $('dItems').classList.remove('grouped'); placeInto($('dItems'), true); return; }
+    $('dItems').classList.toggle('skins', dKind === 'skin');
     const slot = dKind;
     // 'own': only the owned items (by rarity) · 'rarD' / 'rarA': every item in sections by rarity (owned first in each section)
     $('dsort').innerHTML = ['own', 'rarD', 'rarA'].map(k => `<button type="button" aria-pressed="${dSort === k}" data-s="${k}">${t('dress.sort.' + k)}</button>`).join('');
     $('dsort').querySelectorAll('button').forEach(b => b.onclick = () => { dSort = b.dataset.s; try { localStorage.setItem('atlas-dsort', dSort); } catch (e) {} renderDress(); });
-    const ownd = it => W.owned.includes(it.id) ? 1 : 0, idx = new Map(ART.items.map((it, i) => [it.id, i]));
-    const all = ART.items.filter(it => it.kind === dKind);
+    const SKS = dKind === 'skin', ownd = it => (SKS ? SK.owned(it.id, W) : W.owned.includes(it.id)) ? 1 : 0, idx = new Map((SKS ? SK.list : ART.items).map((it, i) => [it.id, i]));
+    const all = SKS ? SK.list : ART.items.filter(it => it.kind === dKind);
     // the rarity pulldown (left of the sort): only one rarity, or every one
     const rars = [...new Set(all.map(it => it.rar))].sort((a, b) => a - b); if (dRar >= 0 && !rars.includes(dRar)) dRar = -1;
     const rName = r => r < 0 ? esc(t('dress.rar.all')) : ART.RAR[r], btn = $('drar'), pop = $('drarPop');
@@ -2935,14 +2939,25 @@
     openRar(false);
     const list = (dSort === 'own' ? all.filter(ownd) : all).filter(it => dRar < 0 || it.rar === dRar).sort((a, b) => (dSort === 'rarD' ? b.rar - a.rar : a.rar - b.rar) || (ownd(b) - ownd(a)) || idx.get(a.id) - idx.get(b.id));
     const sec = r => { const of = all.filter(it => it.rar === r); return `<div class="dsec r${r}"><span class="rar r${r}">${ART.RAR[r]}</span><span class="dsn">${of.filter(ownd).length} / ${of.length}</span></div>`; };
-    const cell = it => { const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
+    // a skin: a little picture of the page in that skin (its background, the header in its colour, a few white cards)
+    const skCell = it => { const own = !!ownd(it), on = (W.av.skin || '') === it.id, nm = it.id ? SK.name(it, lang) : SK.t('def', lang);
+      return `<button type="button" class="skc r${it.rar}${it.dark ? ' dk' : ''}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-id="${it.id}" title="${esc(nm)}" aria-pressed="${on}">${own && it.rar >= 3 ? `<i class="rfx ${it.rar === 4 ? 'u' : 's'}"></i>` : ''}<span class="skp"${it.id ? ` style="--hd:${it.hd};--nv:${it.nav};background:${it.bg} url('${SK.thumb(it.id)}') center/cover"` : ''}><i class="skh"><i></i></i><i class="skb"></i><i class="skb"></i><i class="skb"></i></span><span class="skn">${it.id ? `<span class="rar r${it.rar}">${ART.RAR[it.rar]}</span>` : ''}<b>${esc(nm)}</b>${it.id ? '' : `<small>${esc(SK.t('defSub', lang))}</small>`}</span></button>`; };
+    const cell = it => { if (SKS) return skCell(it); const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
       return `<button type="button" class="dic r${it.rar}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-kind="${it.kind}" data-id="${it.id}" title="${esc(iname(it))}" aria-label="${esc(iname(it))} (${ART.RAR[it.rar]})" aria-pressed="${on}">${own && it.rar >= 3 ? `<i class="rfx ${it.rar === 4 ? 'u' : 's'}"></i>` : ''}<span class="art">${ART.svg(it.id)}</span><span class="rl">${ART.RAR[it.rar]}</span>${own ? '' : '<span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>'}</button>`; };
     // rarity sorts: one rounded box per rarity, tinted in its colour, its heading (badge · owned / all) on the box's top edge
     const groups = []; if (dSort !== 'own') list.forEach(it => { const g = groups[groups.length - 1]; if (g && g.r === it.rar) g.items.push(it); else groups.push({ r: it.rar, items: [it] }); });
     $('dItems').classList.toggle('grouped', dSort !== 'own' && !!list.length);
-    $('dItems').innerHTML = !list.length ? `<div class="dempty gnote">${t('dress.none')}</div>`
+    $('dItems').innerHTML = (SKS ? `<div class="sknote">${esc(SK.t('dev', lang))}</div>` + (dRar < 0 && dSort !== 'rarD' ? skCell({ id: '', rar: 0 }) : '') : '') + (!list.length ? `<div class="dempty gnote">${t('dress.none')}</div>`
       : dSort === 'own' ? list.map(cell).join('')
-      : groups.map(g => `<section class="dgrp r${g.r}" aria-label="${ART.RAR[g.r]}">${sec(g.r)}<div class="dgg">${g.items.map(cell).join('')}</div></section>`).join('');
+      : groups.map(g => `<section class="dgrp r${g.r}" aria-label="${ART.RAR[g.r]}">${sec(g.r)}<div class="dgg">${g.items.map(cell).join('')}</div></section>`).join('')) + (SKS && dSort === 'rarD' && dRar < 0 ? skCell({ id: '', rar: 0 }) : '');
+    if (SKS) {   // wear a skin: the whole page changes at once
+      $('dItems').querySelectorAll('.skc').forEach(c => { const id = c.dataset.id;
+        c.onclick = () => { if (id && !SK.owned(id, W)) return; if ((W.av.skin || '') === id) { pokeAvatar(); return; } if (id) W.av.skin = id; else delete W.av.skin; A_.save(W); skinSync(); renderDress(); pokeAvatar(true); }; });
+      if (renderDress.io) renderDress.io.disconnect();
+      const fx = $('dItems').querySelectorAll('.skc.r3,.skc.r4');
+      if (fx.length && window.IntersectionObserver) { renderDress.io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('vis', e.isIntersecting)), { rootMargin: '80px' }); fx.forEach(c => renderDress.io.observe(c)); }
+      return;
+    }
     // tap an owned icon to wear it; an unowned one shows its name, rarity and how to get it
     $('dItems').querySelectorAll('.dic').forEach(c => { const id = c.dataset.id;
       if (!W.owned.includes(id)) c.onclick = () => dressInfo(ART.byId(id));

@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>/* the worn portal skin (きせかえ → スキン, atlas/skins.js): its colours before the first paint */
+try { (function (j) { if (!j || !j.v) return; var r = document.documentElement; for (var k in j.v) r.style.setProperty(k, j.v[k]); r.setAttribute('data-skin', j.id); r.setAttribute('data-skk', j.k); if (j.d) r.className += ' skdark'; })(JSON.parse(localStorage.getItem('atlas-skin-css') || 'null')); } catch (e) {}</script>
 <script src="../shared/safetop.js?v=2"></script>
 <script src="../shared/latinfs.js?v=1"></script>
 <script src="../shared/focusgate.js?v=5"></script>
@@ -100,6 +102,24 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.95);border-
 .lpop button small{white-space:nowrap;font-family:var(--round);font-size:11px;font-weight:700;color:var(--ink2);letter-spacing:.08em}
 .lpop button[aria-selected=true]{background:#ffe9b0;box-shadow:inset 0 0 0 2px var(--sun)}   /* (2026-11-17 ユーザー：選択中の言語は設定の「言語」行と同じ薄い色) */
 .lpop button[aria-selected=true] small{color:#6a4200}
+
+/* ---------- skins (きせかえ → スキン, 2026-11-20; atlas/skins.js): the page background, the header / sticky bars and the
+   selected menu tab follow the worn skin; cards, sheets and the 3D view keep their own colours ---------- */
+html[data-skin] body{background-color:var(--sk-bg);background-image:none}
+html[data-skk=tile] body{background-image:var(--sk-img);background-size:var(--sk-size)}
+html[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-bg) var(--sk-img) center/cover no-repeat;pointer-events:none}
+html[data-skin] header{background:var(--sk-hdr);border-bottom-color:var(--sk-line)}
+html[data-skin] .tab[aria-selected=true]{background:var(--sk-nav);color:var(--sk-navt);box-shadow:0 3px 0 var(--sk-nav2)}
+@media (max-width:760px){
+  html[data-skin] header{background:var(--sk-hdrs)}
+  html[data-skin] .tab[aria-selected=true]{background:transparent;color:var(--sk-navm);box-shadow:none}
+}
+/* dark skins (夜空・オーロラ・天球図・カードテーブル): light text where it sits right on the page or the header */
+html.skdark .brand .wm b{color:#fff}html.skdark .brand .wm small,html.skdark .brand .wk{color:#c9d2ea}html.skdark .brand .wk::before,html.skdark .brand .wk::after{background:#8f9ac0}
+html.skdark .brand img{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.75)) drop-shadow(0 3px 0 rgba(0,0,0,.2))}
+@media (min-width:761px){html.skdark .tab:not([aria-selected=true]){color:#d5dcef}html.skdark .tab:not([aria-selected=true]):hover{background:rgba(255,255,255,.12)}}
+html.skdark h2.h{color:#fff}
+html.skdark .glh{color:#f3e6c8}html.skdark .amsub,html.skdark .foot,html.skdark .foot a{color:#c9d2ea}html.skdark .glh::after{background:linear-gradient(90deg,rgba(255,255,255,.35),transparent)}html.skdark[dir=rtl] .glh::after{background:linear-gradient(270deg,rgba(255,255,255,.35),transparent)}
 
 /* ---------- tabs ---------- */
 .tabs{display:flex;gap:6px;justify-content:center;padding:12px 0 4px}
@@ -830,7 +850,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
   .sheet.ginfo .gsec{margin-bottom:14px}
 
   /* SHOP: a slim sticky bar (title · coins · note) and the six items in one 3-column screen */
-  #shopSec .shophead{position:sticky;top:62px;z-index:12;margin:0 -16px 10px;padding:8px 16px 8px;gap:2px 10px;background:rgba(255,246,226,.96);border-bottom:2px solid var(--line)}
+  #shopSec .shophead{position:sticky;top:62px;z-index:12;margin:0 -16px 10px;padding:8px 16px 8px;gap:2px 10px;background:var(--sk-hdr,rgba(255,246,226,.96));border-bottom:2px solid var(--line)}
   #shopSec .shophead h2.h{margin:0;font-size:19px;gap:8px}
   #shopSec .shophead h2.h::before{width:7px;height:16px;box-shadow:10px 0 0 var(--sun),20px 0 0 var(--sky);margin-right:20px}
   #shopSec .shophead .note{order:3;flex-basis:100%;font-size:11.5px}
@@ -883,7 +903,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
   .aseg{grid-column:1/-1;display:flex;gap:2px;padding:3px;border-radius:99px;background:#f6efdd}
   .aseg button{flex:1;border:0;background:none;border-radius:99px;padding:6px 4px;font-weight:900;font-size:12.5px;color:var(--ink2);min-height:32px}
   .aseg button[aria-pressed=true]{background:var(--ink);color:#fff}
-  #achHsc{position:sticky;top:62px;z-index:12;margin:0 -16px 6px;padding:6px 16px 0;background:rgba(255,246,226,.96)}
+  #achHsc{position:sticky;top:62px;z-index:12;margin:0 -16px 6px;padding:6px 16px 0;background:var(--sk-hdr,rgba(255,246,226,.96))}
   #achHsc .hsn{display:none}
   #achChips{padding-bottom:6px}
   #achChips .chip{padding:3px 10px 3px 4px;font-size:12.5px;min-height:34px}
@@ -908,7 +928,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 /* PC: one full-width row (title · icon/background/frame tabs · sort) sticky under the site header (--hdrH, measured in app.js);
    below it the name card and the item grid start on the same line, and the card stays put (sticky) while the grid scrolls.
    Phones keep their order (title · card · sort · grid) via display:contents + order. */
-.dtop{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;position:sticky;top:var(--hdrH,127px);z-index:12;margin:0 -16px 14px;padding:10px 16px;background:rgba(255,246,226,.96);border-bottom:2px solid var(--line)}
+.dtop{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;position:sticky;top:var(--hdrH,127px);z-index:12;margin:0 -16px 14px;padding:10px 16px;background:var(--sk-hdr,rgba(255,246,226,.96));border-bottom:2px solid var(--line)}
 .dtop h2.h{margin:0;flex:none}
 .dtop .dbar{flex:1;min-width:0}
 .dress .dgrid{margin-top:0}
@@ -923,7 +943,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
   #pg-dress .dbar{order:2}
   #pg-dress .dgrid{order:3;margin-top:12px}
   /* the sort chips stay pinned under the mini card */
-  #pg-dress .dbar{position:sticky;top:calc(var(--hdrH,62px) + 72px);z-index:12;margin:0 -16px;padding:6px 16px;background:rgba(255,246,226,.96)}
+  #pg-dress .dbar{position:sticky;top:calc(var(--hdrH,62px) + 72px);z-index:12;margin:0 -16px;padding:6px 16px;background:var(--sk-hdr,rgba(255,246,226,.96))}
   /* the mini name card: slides down from under the header once the full card has scrolled away */
   .dmini{position:fixed;left:0;right:0;top:var(--hdrH,62px);z-index:25;height:72px;display:flex;align-items:center;gap:11px;padding:6px 16px;border:0;border-bottom:2px solid var(--line);background:rgba(255,253,247,.98);box-shadow:0 6px 14px -10px rgba(60,40,10,.35);font:inherit;color:inherit;text-align:start;cursor:pointer;transform:translateY(-105%);opacity:0;pointer-events:none;transition:transform .22s ease,opacity .18s}
   .dmini.on{transform:none;opacity:1;pointer-events:auto}
@@ -1064,6 +1084,24 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 }
 .dsec .rar{position:static;font-size:12px;padding:2px 9px}.dsec .dsn{font-family:var(--round);font-weight:700;font-size:13px;color:var(--ink2)}
 .dempty{grid-column:1/-1;text-align:center;padding:24px 0}
+/* きせかえ → スキン: a cell = a little picture of the page in that skin (2026-11-20) */
+.dgrid.skins{grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:12px}
+@media (max-width:760px){.dgrid.skins{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}}
+.sknote{grid-column:1/-1;font-size:13.5px;font-weight:700;color:var(--ink2);background:rgba(255,255,255,.85);border:2px dashed var(--line);border-radius:14px;padding:8px 12px;line-height:1.5}
+.skc{position:relative;display:flex;flex-direction:column;padding:3px;border:0;border-radius:16px;background:var(--rc,#c9cdd6);cursor:pointer;text-align:start;font:inherit;color:var(--ink);-webkit-tap-highlight-color:transparent;transition:transform .15s;box-shadow:0 2px 0 rgba(0,0,0,.1);isolation:isolate}
+.skc.r0{--rc:#c9cdd6}.skc:active{transform:scale(.97)}
+.skc.sel{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--sky)}
+.skc:not(.vis) .rfx::before{animation-play-state:paused}
+.skp{position:relative;display:block;aspect-ratio:16/10;border-radius:13px 13px 0 0;overflow:hidden;background:#fff6e2 radial-gradient(circle at 1px 1px,rgba(200,150,60,.22) 1.2px,transparent 1.4px) 0 0/9px 9px;--hd:#fff6e2;--nv:#2b3044}
+.skp i{position:absolute;display:block}
+.skp .skh{left:0;right:0;top:0;height:17%;background:var(--hd);opacity:.96;box-shadow:0 1px 0 rgba(0,0,0,.07)}
+.skp .skh i{left:50%;top:22%;width:22%;height:56%;margin-left:-11%;border-radius:99px;background:var(--nv)}
+.skp .skb{bottom:11%;width:26%;height:36%;border-radius:7px;background:#fffdf7;box-shadow:0 2px 4px rgba(40,30,10,.18)}
+.skp .skb:nth-of-type(2){left:6%}.skp .skb:nth-of-type(3){left:37%}.skp .skb:nth-of-type(4){left:68%}
+.skn{display:flex;align-items:center;gap:6px;min-height:34px;padding:5px 8px 6px;border-radius:0 0 13px 13px;background:#fff;line-height:1.2}
+.skn .rar{position:static;flex:none;font-size:10px;padding:1px 6px;border-radius:6px;box-shadow:none}
+.skn b{font-size:13.5px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.skn small{margin-inline-start:auto;flex:none;font-size:11px;font-weight:700;color:var(--ink2)}
 .dic{position:relative;display:block;aspect-ratio:1;padding:3px;border:0;border-radius:16px;background:var(--rc);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;box-shadow:0 2px 0 rgba(0,0,0,.1)}
 .dic .art{display:grid;place-items:center;width:100%;height:100%;border-radius:13px;background:#f6efdd;overflow:hidden}
 .dic .art svg{width:86%;height:86%}.dic[data-kind=bg] .art svg{width:100%;height:100%}
@@ -2308,6 +2346,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=16"></script>
 <script src="art.js?v=19"></script>
+<script src="skins.js?v=1"></script>
 <script src="../shared/atlas-updates.js?v=48"></script>
 <script src="../shared/atlas.js?v=20261119nw1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
@@ -2372,7 +2411,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=40"></script>
 <script src="npc/npc.js?v=44"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=458"></script>
+<script src="app.js?v=459"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>
