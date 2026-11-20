@@ -600,10 +600,48 @@
        The top bar always takes the skin's colours. The page background is either the skin's picture (with its moving
        scene) or the place's floor as before — the デザイン tab's 場所 row has the skin as its first tile (localStorage atlas-fullbg: 'skin' | 'place').
        The skin itself is changed on the portal; nothing to do here while the classic cream is worn. */
+    /* The dialogs in the skin's colour (2026-11-20 ユーザー：新しい対局の色もスキンに合わせて). Their cream comes from many rules —
+       skin.css, shared/nglux.js / ngtabs.js, each game's own page — so instead of a variable for each, the cream / beige colours of
+       every rule about a dialog (.modal, .overlay, .ng-…, .dsg, .seg …) are copied once into an override with the skin's hue: the
+       same lightness (lines stay darker than the paper), the saturation kept low. The warm yellow of a selected tile stays.
+       New style sheets (a dialog's CSS added later) are tinted when they appear. */
+    function dialogTint(navm, dark) {
+      if (!navm || !/^#[0-9a-f]{6}$/i.test(navm)) return;
+      const de = document.documentElement; de.classList.add('ask-t');
+      const hsl = (r, g, b) => { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2; let h = 0, s = 0;
+        if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; } return { h, s, l, c: mx - mn }; };
+      const rgb = (h, s, l) => { const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = n => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)); return [f(0), f(8), f(4)].map(v => Math.round(v * 255)); };
+      const T = hsl(parseInt(navm.slice(1, 3), 16), parseInt(navm.slice(3, 5), 16), parseInt(navm.slice(5, 7), 16));
+      if (T.c < .03) return;   // (a grey skin: nothing to tint with)
+      const SAT = dark ? .36 : .3;
+      const map = (r, g, b) => { const c = hsl(r, g, b); if (c.l < .62 || c.c < .012 || c.h < 18 || c.h > 68) return null; if (c.l > .86 && c.c > .16) return null;   // (not cream: the selected tile's yellow, a coral, an ink)
+        return rgb(T.h, Math.min(c.s, SAT), c.l); };
+      const tok = /#([0-9a-f]{6}|[0-9a-f]{3})\b|rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+%?)\s*)?\)/gi;
+      const fix = v => { let ch = false; const o = v.replace(tok, (m, hx, r, g, b, a) => { let R, G, B; if (hx) { const x = hx.length === 3 ? hx.split('').map(q => q + q).join('') : hx; R = parseInt(x.slice(0, 2), 16); G = parseInt(x.slice(2, 4), 16); B = parseInt(x.slice(4, 6), 16); } else { R = +r; G = +g; B = +b; }
+        const n = map(R, G, B); if (!n) return m; ch = true; return a != null ? `rgba(${n[0]},${n[1]},${n[2]},${a})` : `rgb(${n[0]},${n[1]},${n[2]})`; }); return ch ? o : null; };
+      const SCOPE = /modal|overlay|\.ng[a-z-]|\bng-|dsg|\.dlg|\.seg\b|lx-tabs|pro-|ngt|ngl|newOverlay|rt-nav|\.tabs\b|atlas-pl|bdrow|skrow/;
+      // only surfaces: backgrounds, borders, shadows and colour variables — never a text colour (a game's cream text on its dark theme)
+      const OKP = k => k.startsWith('--') ? !/text|ink|fg|dim|mute|label|title|txt|font/i.test(k) : /^(background|border|box-shadow|outline|fill|stroke|accent-color)/.test(k);
+      const walk = rules => { let out = ''; for (const r of rules) {
+        if (r.selectorText != null && r.style && !SCOPE.test(r.selectorText)) { if (!/atlas-skin/.test(r.selectorText)) continue;   // (a colour variable set for the whole page — skin.css --a-paper …: the dialogs take a tinted copy)
+          let d = ''; for (let i = 0; i < r.style.length; i++) { const k = r.style[i]; if (!k.startsWith('--') || !OKP(k)) continue; const v = r.style.getPropertyValue(k); tok.lastIndex = 0; if (!v || !tok.test(v)) { tok.lastIndex = 0; continue; } tok.lastIndex = 0; const n = fix(v); if (n) d += `${k}:${n};`; }
+          if (d) out += 'html.ask-t :is(.modal,.overlay,.dlg,#newOverlay){' + d + '}\n'; continue; }
+        if (r.selectorText != null && r.style) { let d = ''; for (let i = 0; i < r.style.length; i++) { const k = r.style[i]; if (!OKP(k)) continue; const v = r.style.getPropertyValue(k); if (!v || !tok.test(v)) { tok.lastIndex = 0; continue; } tok.lastIndex = 0; const n = fix(v); if (n) d += `${k}:${n}${r.style.getPropertyPriority(k) ? '!important' : ''};`; }
+          if (d) out += r.selectorText + '{' + d + '}\n'; }   // (the same selector, later in the page: it wins over the cream exactly where the cream did — a selected tile's own rule still wins)
+        else if (r.cssRules && r.cssText) { const inner = walk(r.cssRules); if (inner) out += r.cssText.slice(0, r.cssText.indexOf('{')) + '{\n' + inner + '}\n'; } } return out; };
+      const done = new WeakMap();
+      const run = () => { for (const sh of [...document.styleSheets]) { const n = sh.ownerNode; if (!n || n.hasAttribute && n.hasAttribute('data-ask-t')) continue; let rules; try { rules = sh.cssRules; } catch (e) { continue; } if (!rules) continue;
+        const key = rules.length + ':' + ((n.textContent || '').length); if (done.get(sh) === key) continue; done.set(sh, key);
+        let st = n.__askT; const css = walk(rules); if (!css) { if (st) st.textContent = ''; continue; }
+        if (!st) { st = n.__askT = document.createElement('style'); st.setAttribute('data-ask-t', ''); } st.textContent = css; document.head.appendChild(st); } };
+      run(); let tm = 0; const later = () => { clearTimeout(tm); tm = setTimeout(run, 60); };
+      new MutationObserver(ms => { if (ms.some(m => [...m.addedNodes].some(x => (x.tagName === 'STYLE' || x.tagName === 'LINK') && !x.hasAttribute('data-ask-t')) || (m.type === 'characterData' || (m.target.tagName === 'STYLE' && !m.target.hasAttribute('data-ask-t'))))) later(); }).observe(document.head, { childList: true, subtree: true, characterData: true });
+      addEventListener('load', later); document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#btnNew,[data-act=new],.hb-menu > *')) setTimeout(run, 120); }, true);
+    }
     (function skinBg() {   // (the skin's tint: the page's cards only — the dialogs keep the cream: their inner panels and fades are cream, 2026-11-20)
       let sk = null; try { sk = JSON.parse(localStorage.getItem('atlas-skin-css') || 'null'); } catch (e) {}
       if (!sk || !sk.id) return;
-      const SKV = 27;   // (= the portal's skins.js?v= in atlas/index.html: bump both together)
+      const SKV = 28;   // (= the portal's skins.js?v= in atlas/index.html: bump both together)
       const de = document.documentElement;
       if (!document.getElementById('askinCss')) { const st = document.createElement('style'); st.id = 'askinCss'; st.textContent = `
 html.atlas-skin[data-skin] .atlas-top{background:var(--sk-hdr)!important;border-bottom-color:var(--sk-line)!important}
@@ -626,12 +664,13 @@ html.atlas-skin[data-skin].skdark .atlas-top .hb-menu:not(#_) > *:disabled{opaci
 html.atlas-skin[data-skin].skdark .atlas-top .hb-info,html.atlas-skin[data-skin].skdark .atlas-top .hb-info b{color:rgba(255,255,255,.86)!important}
 html.atlas-skin.askin-bg[data-skin]{background:var(--sk-bg)!important}
 html.atlas-skin.askin-bg[data-skin] body{background:transparent!important}
-html.atlas-skin.askin-bg[data-skk=tile]{background:var(--sk-bg) var(--sk-img) 0 0/var(--sk-size) repeat fixed!important}
+html.atlas-skin.askin-bg[data-skk=tile] body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-bg) var(--sk-img) 0 0/var(--sk-size) repeat;pointer-events:none;will-change:transform}
 html.atlas-skin.askin-bg[data-skk=cover] body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-bg) var(--sk-img) var(--sk-pos,50% 100%)/cover no-repeat;pointer-events:none}
 @media (max-aspect-ratio:6/5){html.atlas-skin.askin-bg[data-skp] body::before{background-image:var(--sk-imgp);background-position-y:var(--sk-pyp,100%)}html.atlas-skin.askin-bg[data-skp] #skfx .fx-x{background-image:var(--sk-img2p);background-position-y:var(--sk-pyp,100%)}}
 #skfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}#skfx i{position:absolute;display:block;font-style:normal}#skfx svg{display:block;width:100%;height:100%;overflow:visible}
 #skfx .fx-x{inset:0;background:var(--sk-img2) var(--sk-pos,50% 100%)/cover no-repeat;opacity:0;animation:skDrift 9s ease-in-out infinite alternate;will-change:opacity}@keyframes skDrift{to{opacity:1}}
-html:not(.askin-bg) #skfx{display:none}`; document.head.appendChild(st); }
+html:not(.askin-bg) #skfx{display:none}
+html.atlas-skin.askin-bg[data-skk=cover] body::before{will-change:transform}   /* (its own layer: a text changing in the right column no longer re-rasters — and re-decodes — the big picture under it; measured 2026-11-20) */`; document.head.appendChild(st); }
       let mode = 'skin'; try { mode = localStorage.getItem('atlas-fullbg2') || 'skin'; } catch (e) {}
       const set = m => { mode = m; de.classList.toggle('askin-bg', m === 'skin'); try { localStorage.setItem('atlas-fullbg2', m); } catch (e) {} try { dispatchEvent(new CustomEvent('atlas-skinbg')); } catch (e) {} };
       set(mode);
@@ -646,6 +685,7 @@ html:not(.askin-bg) #skfx{display:none}`; document.head.appendChild(st); }
       window.__atlasSkinBg = { id: sk.id, mode: () => mode, set, thumb: BASE.replace(/atlas\/$/, 'images/atlas/skin/t/') + sk.id + '.webp' };   // (the デザイン tab's 場所 row offers it: placeField)
       const sc = document.createElement('script'); sc.src = BASE + 'skins.js?v=' + SKV;
       sc.onload = () => { try { if (window.AtlasSkins) AtlasSkins.apply(sk.id); } catch (e) {} };
+      try { dialogTint(sk.v && sk.v['--sk-navm'], !!sk.d); } catch (e) {}
       document.head.appendChild(sc);
       sc.onload = (o => () => { o && o(); try { dispatchEvent(new CustomEvent('atlas-skinbg')); } catch (e) {} })(sc.onload);
     })();

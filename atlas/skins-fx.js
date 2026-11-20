@@ -334,7 +334,7 @@
   const CSS2 = `
 .a-rain{width:2px;transform:rotate(var(--ang));animation:aRain var(--d) linear var(--dl) infinite}@keyframes aRain{from{transform:rotate(var(--ang)) translateY(0)}to{transform:rotate(var(--ang)) translateY(130vh)}}
 .a-rain2{width:2px;top:-15%;animation:aRain2 var(--d) linear var(--dl) infinite}@keyframes aRain2{from{transform:translateY(0)}to{transform:translateY(900px)}}
-.a-tram{offset-rotate:0deg;animation:aPath var(--d) linear var(--dl) infinite}.a-tram svg{transform:rotate(-17.7deg)}
+.a-tram{offset-rotate:0deg;animation:aPath var(--d) linear var(--dl) infinite}.a-tram :is(svg,img.fxr){transform:rotate(-17.7deg)}
 .a-steam{opacity:0;animation:aSteam var(--d) ease-out var(--dl) infinite}@keyframes aSteam{0%{opacity:0;transform:translate(0,0) scale(.6)}20%{opacity:.7}100%{opacity:0;transform:translate(40px,-360px) scale(1.6)}}
 .a-buzz{animation:aBuzz .2s linear infinite alternate}.a-buzz .bw{animation:aFlap .08s linear infinite alternate;transform-box:fill-box;transform-origin:50% 100%}@keyframes aBuzz{to{transform:translateY(-3px)}}
 .fx-turn.s14{animation-duration:14s}.fx-turn.s4{animation-duration:4s}
@@ -358,7 +358,7 @@
 .a-flag2{transform-origin:0 50%;animation:aFlag3 1.2s ease-in-out var(--dl,0s) infinite alternate}@keyframes aFlag3{from{transform:skewY(-6deg) scaleX(.92)}to{transform:skewY(6deg) scaleX(1)}}
 .a-fadeio{animation:aPath var(--d) linear var(--dl) infinite,aGh var(--d) linear var(--dl) infinite}
 .a-rail2{offset-rotate:auto;animation:aPath var(--d) linear var(--dl) infinite}
-.a-spark{opacity:.8}.a-phx{animation:aPath var(--d) linear var(--dl) infinite}.a-phx svg{transform:none}
+.a-spark{opacity:.8}.a-phx{animation:aPath var(--d) linear var(--dl) infinite}.a-phx :is(svg,img.fxr){transform:none}
 .a-ember{opacity:.8;animation:aPath var(--d) linear var(--dl) infinite,aEm 1s ease-out infinite}@keyframes aEm{from{transform:scale(1)}to{transform:scale(.3)}}
 .a-gear{animation:aSpin var(--d) linear infinite}.a-gear.rev{animation-direction:reverse}
 .a-pend{transform-origin:50% 0;animation:aPend 2s ease-in-out infinite alternate}@keyframes aPend{from{transform:rotate(-16deg)}to{transform:rotate(16deg)}}
@@ -375,7 +375,7 @@
 .a-flash{inset:0;background:rgba(220,230,255,.5);opacity:0;mix-blend-mode:screen;animation:aBolt var(--d,6.5s) linear var(--dl,0s) infinite}
 .a-choc{overflow:hidden;-webkit-mask:linear-gradient(180deg,transparent,#000 25%,#000 75%,transparent);mask:linear-gradient(180deg,transparent,#000 25%,#000 75%,transparent)}.a-choc::before{content:'';position:absolute;top:0;bottom:0;left:-360px;right:0;background:repeating-linear-gradient(100deg,rgba(255,255,255,0) 0,rgba(255,230,210,.28) 40px,rgba(255,255,255,0) 90px,rgba(255,255,255,0) 120px);animation:aChoc 3s linear infinite;will-change:transform}@keyframes aChoc{to{transform:translateX(360px)}}
 .a-hop{transform-origin:50% 100%;animation:aHop .9s cubic-bezier(.3,0,.6,1) var(--dl) infinite alternate}@keyframes aHop{0%{transform:translateY(0) scale(1.1,.9)}30%{transform:translateY(-10px) scale(.95,1.05)}100%{transform:translateY(-60px) scale(1,1)}}
-.a-magic{opacity:.82}.a-magic>svg,.a-magic>b{filter:blur(.7px) drop-shadow(0 0 10px rgba(220,200,255,.7))}.a-magic .halo{position:absolute;left:-50%;top:-50%;width:200%;height:200%;border-radius:50%;background:radial-gradient(circle,var(--hc),transparent 65%);opacity:.45}
+.a-magic{opacity:.82}.a-magic>svg,.a-magic>img.fxr,.a-magic>b{filter:blur(.7px) drop-shadow(0 0 10px rgba(220,200,255,.7))}.a-magic .halo{position:absolute;left:-50%;top:-50%;width:200%;height:200%;border-radius:50%;background:radial-gradient(circle,var(--hc),transparent 65%);opacity:.45}
 .a-tilt{animation:aTilt 3s ease-in-out infinite alternate}.a-tilt .pg{transform-box:fill-box;transform-origin:50% 100%;animation:aPage 2.4s ease-in-out infinite alternate}@keyframes aTilt{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}@keyframes aPage{from{transform:scaleY(1)}to{transform:scaleY(.86)}}
 .flk{transform-box:fill-box;transform-origin:50% 100%;animation:aFire .3s ease-in-out infinite alternate}
 .a-ffly{opacity:0;animation:aFf var(--d) ease-in-out var(--dl) infinite}@keyframes aFf{0%,100%{opacity:0;transform:translate(0,0)}40%{opacity:1}60%{opacity:.8;transform:translate(var(--fx),var(--fy))}}
@@ -387,7 +387,7 @@
   /* ---------------- styles (injected once) ---------------- */
   const CSS = `
 #skfx .stage{position:absolute;left:0;top:0;width:1920px;transform-origin:0 0}#skfx .st-in{position:absolute;left:0;width:1920px;height:1200px}
-#skfx .pc,#skfx .sp{position:absolute;display:block}#skfx .pc>b,#skfx .sp>b{display:block;width:100%;height:100%}#skfx svg{display:block;width:100%;height:100%;overflow:visible}
+#skfx .pc,#skfx .sp{position:absolute;display:block}#skfx .pc>b,#skfx .sp>b{display:block;width:100%;height:100%}#skfx svg{display:block;width:100%;height:100%;overflow:visible}#skfx img.fxr{display:block;width:100%;height:100%}
 #skfx .flip>svg,#skfx b.flip>svg{transform:scaleX(-1)}
 .a-drift{animation:aDrift var(--d) linear var(--dl,0s) infinite;will-change:transform}@keyframes aDrift{from{transform:translateX(var(--x0))}to{transform:translateX(var(--x1))}}
 .a-fly .fl{transform-origin:50% 50%;animation:aFlap .55s ease-in-out infinite alternate}@keyframes aFlap{to{transform:scaleY(-.35)}}
@@ -515,8 +515,31 @@ html:has(#bv.on,#hist.on,#ov.on) #skfx *,html.askin-still #skfx *{animation-play
     [...tmp.children].forEach(c => (c.classList.contains('sp') ? screen : stage).push(c.outerHTML));
     if (cur.stop) { cur.stop(); cur.stop = null; } cur.stopP = null;
     el.innerHTML = (cur.x ? '<i class="fx-x"></i>' : '') + `<div class="stage"><div class="st-in">${stage.join('')}</div></div>` + screen.join('');
-    motionize(el);
+    motionize(el); rasterize(el);
     const cv = el.querySelector('.a-aurcv canvas'); if (cv) { const st = aurora(cv); const pz = cur.stopP; cur.stop = () => { st(); pz && pz(); }; } else cur.stop = cur.stopP;
+  }
+  /* Static SVG drawings as images (2026-11-20): an inline SVG with gradients is recorded again on every paint of the page — a
+     text changing in the right column of a full-version game repainted all 64 sparkles of 銀河鉄道 each time (heavy with the 3D
+     board). The same drawing as an <img> is a decoded picture, drawn from cache. Only drawings that look the same as an image:
+     no classes / SMIL (nothing inside moves), no currentColor / var(), no <image>, every #ref inside itself, drawn within its viewBox. */
+  const RAS = new Map();
+  function rasterize(root) {
+    root.querySelectorAll('svg').forEach(svg => {
+      try {
+        if (svg.getAttribute('class') || svg.querySelector('[class],animate,animateTransform,animateMotion,set,image,foreignObject,[style*=anim]') || !svg.getAttribute('viewBox')) return;
+        let mk = svg.outerHTML; if (/currentColor|var\(/.test(mk)) return;
+        const ids = new Set([...svg.querySelectorAll('[id]')].map(e => e.id));
+        if ([...mk.matchAll(/(?:url\(#|href="#)([^)"]+)/g)].some(m => !ids.has(m[1]))) return;
+        const vb = svg.getAttribute('viewBox').split(/[\s,]+/).map(Number);
+        if (svg.getClientRects().length) { const b = svg.getBBox(), sx = vb[2] * .02, sy = vb[3] * .02; if (b.x < vb[0] - sx || b.y < vb[1] - sy || b.x + b.width > vb[0] + vb[2] + sx || b.y + b.height > vb[1] + vb[3] + sy) return; }
+        const c = svg.cloneNode(true); c.removeAttribute('width'); c.removeAttribute('height'); c.removeAttribute('style'); c.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); c.setAttribute('width', '100%'); c.setAttribute('height', '100%');
+        mk = new XMLSerializer().serializeToString(c);
+        let u = RAS.get(mk); if (!u) { u = URL.createObjectURL(new Blob([mk], { type: 'image/svg+xml' })); RAS.set(mk, u); }
+        const im = document.createElement('img'); im.className = 'fxr'; im.alt = ''; im.decoding = 'async'; im.src = u;
+        const st = svg.getAttribute('style'); if (st) im.setAttribute('style', st);
+        svg.replaceWith(im);
+      } catch (e) {}
+    });
   }
   /* Motion along a path (offset-path) is not run by the compositor in Chrome: it costs a style + layout pass every frame.
      So every piece on a path is turned into a plain transform animation (Web Animations, sampled along the path) —

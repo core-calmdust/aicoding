@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   const BASE = (() => { try { return new URL('../images/atlas/skin/', document.currentScript.src).href; } catch (e) { return '../images/atlas/skin/'; } })();
-  const V = 19, FXV = 22;   // bump when the images are re-rendered
+  const V = 19, FXV = 23;   // bump when the images are re-rendered
   const DEV_ALL = false;   // (2026-11-20: released — in the gacha; the cream is everyone's, 銀河鉄道 + 雪原 a present to all)
   const RAR = ['N', 'R', 'SR', 'SSR', 'UR'];
   // id: [rarity, kind (tile px | 'c' = cover), page colour, header colour, selected-tab colour, dark]
