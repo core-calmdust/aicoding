@@ -1,0 +1,232 @@
+/* World Board Game Atlas — 博物館の「所蔵品」 (collection room, 2026-11-21).
+   Real treasures of game history, each rebuilt in 3D as faithfully as the polygon budget allows and shown in a dark
+   gallery case: drag to turn it, wheel / pinch to come closer, numbered points pick out the details, a 10 cm bar gives the
+   real size. Every piece names its museum, its number and the sources it was modelled from.
+   Room: a grid of cards (images/atlas/ex/<id>.webp, made by atlas/tools/exhibits.html) → the viewer (a full-screen case).
+   Some pieces are special exhibitions: they open when the player reaches a goal in a game (achievements of that game).
+   Code: this file (room + viewer) · museum/ex/<id>.js builds each piece (AtlasEx[id].build(THREE, Table3D) → Group)
+   Texts: museum/gallery-<lang>.js (MUSEUM_GAL_T[lang]): ui + one entry per piece.
+   The viewer has its own small WebGL renderer, made on open and disposed on close; it draws only while something moves
+   (a turn, a zoom, the slow turntable) and never while the window is in the background. */
+(function () {
+  'use strict';
+  const V = 1;
+  /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
+     lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
+  const EX = [
+    { id: 'ur', game: 'ur', src: () => window.AtlasLazy ? AtlasLazy.need('ur') : 0, cm: 30.1 / 8.52, view: [-.45, .7, .92],
+      spots: [[-3.5, .44, -1], [-.5, .44, 0], [1, .44, 0], [3.5, .44, -1], [-2.5, .22, 1.62]] },
+    { id: 'senet', game: 'senet', cm: 1, view: [.62, .4, .95], spots: [[-11, 20.9, -3.9], [17, 20.9, 3.9], [22.5, 17.1, 0], [-17.6, 7, 6.9], [4, 1.8, 7.6]] },
+    { id: 'shosoin', game: 'go', cm: 1, view: [.35, .62, .95], spots: [[0, 12.8, 0], [-10.6, 12.8, -10.6], [12, 6.5, -24.2], [0, 6, 29], [-24.2, 2, 6]] },
+    { id: 'kofukuji', game: 'shogi', cm: 0, view: [0, 1.05, .9], spots: [[-7.1, 1.6, -2.9], [3.55, 1.6, -2.9], [-1.8, 1.6, 1.7], [8.9, 1.6, 1.7], [0, 1.6, 6]], lock: { game: 'shogi', ach: 3 } },
+  ];
+  const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
+  const ui = (l, k) => { const a = T(l).ui || {}, b = T('en').ui || {}; return a[k] != null ? a[k] : (b[k] != null ? b[k] : k); };
+  const ex = (l, id) => Object.assign({}, (T('en').ex || {})[id] || {}, (T(l).ex || {})[id] || {});
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const loaded = {};
+  const load = src => loaded[src] || (loaded[src] = new Promise(res => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = res; document.head.appendChild(s); }));
+  const textsFor = l => Promise.all([...new Set(['ja', 'en', l])].map(x => (window.MUSEUM_GAL_T && MUSEUM_GAL_T[x]) ? 0 : load('museum/gallery-' + x + '.js?v=' + V)));
+  const phone = () => innerWidth < 820;
+
+  let ctx = null, lang = 'ja', host = null;
+  const isOpen = e => { if (!e.lock) return true; try { return (ctx.achDone ? ctx.achDone(e.lock.game) : 0) >= e.lock.ach; } catch (x) { return false; } };
+
+  /* ---------- the room: an intro and the cards ---------- */
+  function render(sec, c) {
+    ctx = c; lang = c.lang || 'ja'; host = sec;
+    if (!sec.querySelector('.gxgrid')) sec.innerHTML = `<p class="gxsub"></p><div class="gxgrid"></div>`;
+    textsFor(lang).then(() => {
+      if (host !== sec) return;
+      sec.querySelector('.gxsub').textContent = ui(lang, 'sub');
+      sec.querySelector('.gxgrid').innerHTML = EX.map(e => {
+        const t = ex(lang, e.id), g = ctx.games.find(x => x.id === e.game), op = isOpen(e);
+        const cond = e.lock && !op ? ui(lang, 'lock').replace('{g}', g ? ctx.gname(g).replace(/\s*V\d+$/, '') : e.lock.game).replace('{n}', e.lock.ach) : '';
+        return `<button type="button" class="card gxc${op ? '' : ' locked'}${e.lock ? ' sp' : ''}" data-id="${e.id}" style="--c:${g ? g.color : '#8a6a3a'}">
+          <span class="gxpic"><img src="../images/atlas/ex/${e.id}.webp?v=${V}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">${op ? '' : `<span class="gxlock"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg></span>`}${e.lock ? `<span class="gxsp">${esc(ui(lang, 'special'))}</span>` : ''}</span>
+          <span class="gxtx"><b>${esc(t.name || e.id)}</b><small>${esc(t.date || '')} · ${esc(t.where || '')}</small><i>${esc(op ? (t.museum || '') : cond)}</i></span></button>`;
+      }).join('');
+      sec.querySelectorAll('.gxc').forEach(b => b.onclick = () => { const e = EX.find(x => x.id === b.dataset.id); if (isOpen(e)) open(e.id); else { b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); } });
+    });
+  }
+
+  /* ---------- the viewer ---------- */
+  let V3 = null;   // { R, scene, cam, obj, … } while open
+  function open(id) {
+    const e = EX.find(x => x.id === id); if (!e || V3) return;
+    const t = ex(lang, id), g = ctx.games.find(x => x.id === e.game);
+    const ov = document.createElement('div'); ov.className = 'exv'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+    ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div>
+        <div class="exscale" aria-hidden="true" dir="ltr"><i></i><span>10 cm</span></div>
+        <p class="exhint">${esc(ui(lang, phone() ? 'hintT' : 'hint'))}</p>
+        <div class="exbtns"><button type="button" class="exb" data-k="spin" aria-label="${esc(ui(lang, 'spin'))}" title="${esc(ui(lang, 'spin'))}"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg></button><button type="button" class="exb" data-k="reset" aria-label="${esc(ui(lang, 'reset'))}" title="${esc(ui(lang, 'reset'))}"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
+        <p class="exload">${esc(ui(lang, 'loading'))}</p></div>
+      <aside class="exinfo"><button type="button" class="exclose" aria-label="${esc(ui(lang, 'close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        <div class="exscroll"><small class="exkind">${esc(ui(lang, 'collection'))}${e.lock ? ` · ${esc(ui(lang, 'special'))}` : ''}</small><h2>${esc(t.name || id)}</h2>${t.alt ? `<p class="exalt">${esc(t.alt)}</p>` : ''}
+        <dl class="exfacts">${[['date', t.date], ['where', t.found], ['museum', t.museum + (t.no ? `（${t.no}）` : '')], ['mat', t.mat], ['size', t.size]].filter(r => r[1]).map(([k, v]) => `<dt>${esc(ui(lang, k))}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+        ${(t.p || []).map(p => `<p class="exp">${esc(p)}</p>`).join('')}
+        ${(t.spots || []).length ? `<h3>${esc(ui(lang, 'look'))}</h3><ol class="exlook">${t.spots.map((s, i) => `<li><button type="button" data-n="${i}"><u>${i + 1}</u><span><b>${esc(s[0])}</b>${esc(s[1])}</span></button></li>`).join('')}</ol>` : ''}
+        ${t.model ? `<h3>${esc(ui(lang, 'aboutModel'))}</h3><p class="exp sm">${esc(t.model)}</p>` : ''}
+        ${(t.src || []).length ? `<h3>${esc(ui(lang, 'sources'))}</h3><ul class="exsrc">${t.src.map(([n, u]) => `<li>${u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>` : esc(n)}</li>`).join('')}</ul>` : ''}
+        ${g ? `<div class="exacts"><button type="button" class="amplay" style="--c:${g.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>${esc(ui(lang, 'play').replace('{g}', ctx.gname(g).replace(/\s*V\d+$/, '')))}</button></div>` : ''}
+        </div></aside>`;
+    document.body.appendChild(ov); document.documentElement.classList.add('exv-open');
+    requestAnimationFrame(() => ov.classList.add('on'));
+    // the phone's back gesture / the browser's back button closes the case (a history entry while it is open)
+    let hist = false; try { history.pushState(Object.assign({}, history.state, { exv: id }), ''); hist = true; } catch (x) {}
+    const onPop = () => { hist = false; close(); };
+    addEventListener('popstate', onPop);
+    const close = () => { if (!V3 || V3.ov !== ov) return; removeEventListener('popstate', onPop); if (hist) { hist = false; try { history.back(); } catch (x) {} }
+      teardown(); ov.classList.remove('on'); document.documentElement.classList.remove('exv-open'); setTimeout(() => ov.remove(), 260); };
+    ov.querySelector('.exclose').onclick = close;
+    const pb = ov.querySelector('.amplay'); if (pb) pb.onclick = () => { close(); setTimeout(() => ctx.open(g.id, null), 280); };
+    V3 = { ov, e, close, spin: true };
+    const onKey = ev => { if (ev.key === 'Escape') { ev.preventDefault(); close(); } };
+    document.addEventListener('keydown', onKey); V3.offKey = () => document.removeEventListener('keydown', onKey);
+    ov.querySelectorAll('.exlook [data-n]').forEach(b => b.onclick = () => focusSpot(+b.dataset.n));
+    ov.querySelector('[data-k="reset"]').onclick = () => { if (V3 && V3.home) { V3.spin = false; tween(V3.home); } };
+    ov.querySelector('[data-k="spin"]').onclick = () => { if (!V3) return; V3.spin = !V3.spin; ov.querySelector('[data-k="spin"]').classList.toggle('on', V3.spin); go(); };
+    ov.querySelector('[data-k="spin"]').classList.add('on');
+    Promise.all([load('museum/ex/' + id + '.js?v=' + V), e.src ? e.src() : 0]).then(() => { const B = window.AtlasEx && AtlasEx[id]; return B && B.ready ? B.ready() : 0; }).then(() => { if (V3 && V3.ov === ov) build(e); });
+  }
+
+  // a soft gallery environment for reflections (a dark room with a bright ceiling panel and warm side washes), made once per renderer
+  function envMap(R, TT) {
+    const s = new TT.Scene(), pm = new TT.PMREMGenerator(R);
+    const room = new TT.Mesh(new TT.BoxGeometry(20, 12, 20), new TT.MeshBasicMaterial({ color: 0x1a120c, side: TT.BackSide })); s.add(room);
+    const panel = (w, h, c, x, y, z, rx, ry) => { const m = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: c, side: TT.DoubleSide })); m.position.set(x, y, z); m.rotation.set(rx || 0, ry || 0, 0); s.add(m); };
+    panel(8, 8, 0xfff1dc, 0, 5.9, 0, Math.PI / 2); panel(6, 4, 0x7a5a3a, -9.9, 1, 0, 0, Math.PI / 2); panel(6, 4, 0x6a5040, 9.9, 1, 0, 0, -Math.PI / 2); panel(10, 3, 0x3a2a1e, 0, -1, -9.9);
+    const rt = pm.fromScene(s, .04); pm.dispose(); s.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+    return rt;
+  }
+  function build(e) {
+    const TT = window.THREE, X = window.Table3D, ov = V3.ov, cv = ov.querySelector('canvas'), stage = ov.querySelector('.exstage');
+    const B = window.AtlasEx && AtlasEx[e.id]; if (!TT || !B) { ov.querySelector('.exload').textContent = ui(lang, 'fail'); return; }
+    const R = new TT.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    R.setPixelRatio(Math.min(devicePixelRatio || 1, phone() ? 1.5 : 2));
+    R.outputColorSpace = TT.SRGBColorSpace; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = .98;
+    R.shadowMap.enabled = true; R.shadowMap.type = TT.PCFSoftShadowMap; R.shadowMap.autoUpdate = false;
+    const scene = new TT.Scene(), env = envMap(R, TT); scene.environment = env.texture;
+    let obj; try { obj = B.build(TT, X, kit); } catch (err) { console.warn('[gallery]', err); ov.querySelector('.exload').textContent = ui(lang, 'fail'); R.dispose(); return; }
+    obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    // sit it on a plinth: the plinth fits the piece's footprint with a margin
+    const bb = new TT.Box3().setFromObject(obj), sz = bb.getSize(new TT.Vector3()), cen = bb.getCenter(new TT.Vector3());
+    obj.position.x -= cen.x; obj.position.z -= cen.z; obj.position.y -= bb.min.y;
+    const pw = sz.x * 1.16 + Math.max(sz.x, sz.z) * .08, pd = sz.z * 1.16 + Math.max(sz.x, sz.z) * .08, ph = Math.max(sz.x, sz.z) * .14;
+    const plMat = new TT.MeshStandardMaterial({ color: new TT.Color('#1b1612').convertSRGBToLinear(), roughness: .9, metalness: 0 });
+    const plTop = new TT.MeshStandardMaterial({ color: new TT.Color('#231d18').convertSRGBToLinear(), roughness: .95, metalness: 0 });
+    const plinth = new TT.Mesh(new TT.BoxGeometry(pw, ph, pd), [plMat, plMat, plTop, plMat, plMat, plMat]); plinth.position.y = -ph / 2; plinth.receiveShadow = true;
+    scene.add(plinth, obj);
+    // light: a warm key spot from above and in front (the only shadow), a cool rim from behind, a soft fill
+    const r = Math.hypot(sz.x, sz.z) / 2 + .2;
+    scene.add(new TT.HemisphereLight(0xfff2e0, 0x2a1d14, .45));
+    const key = new TT.SpotLight(0xfff0dc, 2.5, 0, .55, .6, 0); key.position.set(r * .6, r * 3.2, r * 1.9); key.target.position.set(0, 0, 0); key.castShadow = true;
+    key.shadow.mapSize.set(phone() ? 1024 : 2048, phone() ? 1024 : 2048); key.shadow.bias = -.0004; key.shadow.normalBias = .02; key.shadow.camera.near = r * .5; key.shadow.camera.far = r * 8; key.shadow.radius = 4;
+    scene.add(key, key.target);
+    const rim = new TT.DirectionalLight(0xcfe0ff, .6); rim.position.set(-r * 2, r * 1.5, -r * 2.5); scene.add(rim);
+    const fill = new TT.DirectionalLight(0xffe2c4, .3); fill.position.set(-r * 2.5, r, r * 2); scene.add(fill);
+    const cam = new TT.PerspectiveCamera(30, 1, .01, r * 40);
+    const tgt = new TT.Vector3(0, Math.min(sz.y * .45, r * .3), 0);
+    // the start view: [yaw, pitch, distance factor]
+    const [yaw0, pit0, df] = e.view || [-.5, .6, 1];
+    const fitD = () => { const a = cam.aspect, vf = cam.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * a); return r * 1.32 / Math.sin(Math.min(vf, hf) / 2); };
+    Object.assign(V3, { R, scene, cam, obj, env, tgt, r, e, sph: { yaw: yaw0, pit: pit0, d: 0 }, vel: { yaw: 0, pit: 0 }, home: null, raf: 0, need: 2, last: 0, plinth, fitD, df });
+    const resize = () => { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); if (!V3.sph.d) V3.sph.d = fitD() * df; V3.home = { yaw: yaw0, pit: pit0, d: fitD() * df }; go(); };
+    V3.ro = new ResizeObserver(resize); V3.ro.observe(stage); resize();
+    // spots: the numbered details (model coordinates; the piece was moved onto the plinth, so add its offset)
+    V3.spots = (e.spots || []).map(p => new TT.Vector3(p[0], p[1], p[2]).add(obj.position));
+    const sl = ov.querySelector('.exspots'); sl.innerHTML = V3.spots.map((_, i) => `<button type="button" class="exspot" data-n="${i}">${i + 1}</button>`).join('');
+    sl.querySelectorAll('.exspot').forEach(b => b.onclick = () => focusSpot(+b.dataset.n));
+    bindInput(stage);
+    R.shadowMap.needsUpdate = true;
+    ov.querySelector('.exload').hidden = true;
+    go();
+  }
+  function teardown() {
+    if (!V3) return;
+    cancelAnimationFrame(V3.raf); if (V3.ro) V3.ro.disconnect(); if (V3.offKey) V3.offKey(); if (V3.offIn) V3.offIn();
+    if (V3.scene) V3.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); const m = o.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(x => { for (const k in x) { const v = x[k]; if (v && v.isTexture) v.dispose(); } x.dispose(); }); });
+    if (V3.env) V3.env.dispose();
+    if (V3.R) { V3.R.dispose(); try { V3.R.forceContextLoss(); } catch (x) {} }
+    V3 = null;
+  }
+
+  /* ---------- drawing: only while something moves ---------- */
+  const awake = () => !document.hidden && document.hasFocus();
+  function go() { if (V3 && V3.R && !V3.raf) { V3.last = performance.now(); V3.raf = requestAnimationFrame(frame); } }
+  function frame(now) {
+    if (!V3 || !V3.R) return; V3.raf = 0;
+    const dt = Math.min(.05, (now - V3.last) / 1000); V3.last = now;
+    const S = V3.sph; let moving = false;
+    if (V3.tw) { const k = Math.min(1, (now - V3.tw.t0) / V3.tw.ms), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; S.yaw = V3.tw.a.yaw + (V3.tw.b.yaw - V3.tw.a.yaw) * e; S.pit = V3.tw.a.pit + (V3.tw.b.pit - V3.tw.a.pit) * e; S.d = V3.tw.a.d + (V3.tw.b.d - V3.tw.a.d) * e; if (k >= 1) V3.tw = null; moving = true; }
+    if (!V3.drag && (Math.abs(V3.vel.yaw) > 1e-4 || Math.abs(V3.vel.pit) > 1e-4)) { S.yaw += V3.vel.yaw; S.pit += V3.vel.pit; V3.vel.yaw *= .9; V3.vel.pit *= .9; moving = true; }
+    if (V3.spin && !V3.drag && !V3.tw && awake()) { S.yaw += dt * .16; moving = true; }
+    S.pit = Math.max(.08, Math.min(1.35, S.pit));
+    const c = V3.cam, t = V3.tgt; c.position.set(t.x + S.d * Math.cos(S.pit) * Math.sin(S.yaw), t.y + S.d * Math.sin(S.pit), t.z + S.d * Math.cos(S.pit) * Math.cos(S.yaw)); c.lookAt(t);
+    V3.R.render(V3.scene, c);
+    place();
+    if (moving || V3.need-- > 0) { if (awake()) go(); }
+  }
+  // the numbered spots and the 10 cm bar follow the camera
+  function place() {
+    const ov = V3.ov, st = ov.querySelector('.exstage'), w = st.clientWidth, h = st.clientHeight, c = V3.cam;
+    const P = new (window.THREE.Vector3)();
+    ov.querySelectorAll('.exspot').forEach((b, i) => { P.copy(V3.spots[i]).project(c); const vis = P.z < 1; b.style.transform = `translate(${((P.x + 1) / 2 * w).toFixed(1)}px,${((1 - P.y) / 2 * h).toFixed(1)}px)`; b.style.opacity = vis ? '' : '0'; });
+    // 10 cm on screen at the target's depth
+    if (!V3.e.cm) { ov.querySelector('.exscale').hidden = true; return; }
+    const cm = V3.e.cm, u = 10 / cm, dist = c.position.distanceTo(V3.tgt), px = u / (2 * dist * Math.tan(c.fov * Math.PI / 360)) * h;
+    const bar = ov.querySelector('.exscale'); bar.style.setProperty('--w', Math.max(12, Math.min(w * .4, px)).toFixed(1) + 'px'); bar.hidden = !(px > 10);
+  }
+  function tween(to, ms = 700) { if (!V3) return; V3.vel.yaw = V3.vel.pit = 0; V3.tw = { a: Object.assign({}, V3.sph), b: Object.assign({}, to), t0: performance.now(), ms }; const d = to.yaw - V3.sph.yaw; V3.tw.b.yaw = V3.sph.yaw + Math.atan2(Math.sin(d), Math.cos(d)); go(); }
+  function focusSpot(i) {
+    if (!V3 || !V3.spots || !V3.spots[i]) return;
+    V3.spin = false; V3.ov.querySelector('[data-k="spin"]').classList.remove('on');
+    const p = V3.spots[i], t = V3.tgt, yaw = Math.atan2(p.x - t.x, p.z - t.z + .001);
+    tween({ yaw: Math.hypot(p.x, p.z) > V3.r * .25 ? yaw : V3.sph.yaw, pit: .72, d: V3.fitD() * .62 });
+    V3.ov.querySelectorAll('.exlook li').forEach((li, k) => li.classList.toggle('on', k === i));
+    V3.ov.querySelectorAll('.exspot').forEach((b, k) => b.classList.toggle('on', k === i));
+    const li = V3.ov.querySelector(`.exlook li:nth-child(${i + 1})`); if (li) li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  function bindInput(el) {
+    const pts = new Map(); let pinch = 0, d0 = 0, tap = 0;
+    const down = e => { if (e.target.closest('.exb,.exspot')) return; el.setPointerCapture && el.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); V3.drag = true; V3.tw = null; V3.vel.yaw = V3.vel.pit = 0;
+      if (V3.spin) { V3.spin = false; V3.ov.querySelector('[data-k="spin"]').classList.remove('on'); }
+      if (pts.size === 2) { const a = [...pts.values()]; pinch = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); d0 = V3.sph.d; }
+      const now = performance.now(); if (pts.size === 1 && now - tap < 320 && V3.home) { tween(V3.home); } tap = now; go(); };
+    const move = e => { if (!pts.has(e.pointerId)) return; const p = pts.get(e.pointerId), dx = e.clientX - p[0], dy = e.clientY - p[1]; pts.set(e.pointerId, [e.clientX, e.clientY]);
+      if (pts.size === 2) { const a = [...pts.values()], dd = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); V3.sph.d = clampD(d0 * pinch / Math.max(1, dd)); }
+      else { const k = 5.5 / Math.max(300, el.clientWidth); V3.vel.yaw = -dx * k; V3.vel.pit = dy * k; V3.sph.yaw += V3.vel.yaw; V3.sph.pit += V3.vel.pit; }
+      go(); };
+    const up = e => { pts.delete(e.pointerId); if (!pts.size) { V3.drag = false; go(); } };
+    const wheel = e => { e.preventDefault(); V3.tw = null; V3.sph.d = clampD(V3.sph.d * Math.exp(e.deltaY * .0012)); go(); };
+    const vis = () => go();
+    el.addEventListener('pointerdown', down); el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('wheel', wheel, { passive: false });
+    addEventListener('focus', vis); document.addEventListener('visibilitychange', vis);
+    V3.offIn = () => { removeEventListener('focus', vis); document.removeEventListener('visibilitychange', vis); };
+  }
+  const clampD = d => Math.max(V3.fitD() * .32, Math.min(V3.fitD() * 1.9, d));
+
+  /* ---------- a small kit for the pieces' builders (museum/ex/*.js) ---------- */
+  const kit = {
+    // a canvas texture drawn by fn(g, w, h); srgb for colour maps, linear for roughness / bump
+    tex(w, h, fn, o = {}) { const TT = window.THREE, c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new TT.CanvasTexture(c);
+      t.colorSpace = o.data ? TT.NoColorSpace : TT.SRGBColorSpace; t.anisotropy = 8; if (o.rep) { t.wrapS = t.wrapT = TT.RepeatWrapping; t.repeat.set(o.rep[0], o.rep[1]); } return t; },
+    lin: c => new (window.THREE.Color)(c).convertSRGBToLinear(),
+    mat(o) { const TT = window.THREE, p = Object.assign({}, o); if (typeof p.color === 'string') p.color = kit.lin(p.color); return new TT[p.clearcoat != null || p.sheen != null ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](p); },
+    // a value-noise field 0..1 (seeded): n(x, y)
+    noise(seed) { const N = window.Table3D && Table3D.makeNoise ? Table3D.makeNoise(seed) : null; return N ? (x, y, o = 4) => N(x, y, o) : (x, y) => .5 + .25 * Math.sin(x * 3.1 + seed) * Math.cos(y * 2.7 - seed); },
+    // fine grain lines for wood / ivory (pixel loop, fast enough for 512–1024²)
+    grain(g, w, h, { a, b, seed = 1, sx = 1, sy = 24, warp = 2, pores = 0 }) {
+      const n = kit.noise(seed), img = g.createImageData(w, h), d = img.data, A = hexRGB(a), B = hexRGB(b);
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const u = x / w, v = y / h, wv = n(u * 3, v * 3) * warp, s = .5 + .5 * Math.sin((v * sy + wv * 6 + n(u * sx * 2, v * 4) * 2) * Math.PI * 2);
+        let k = Math.pow(s, 3) * .7 + n(u * 40, v * 6) * .3; if (pores && n(u * 300, v * 60, 1) > 1 - pores) k = 1;
+        const i = (y * w + x) * 4; d[i] = A[0] + (B[0] - A[0]) * k; d[i + 1] = A[1] + (B[1] - A[1]) * k; d[i + 2] = A[2] + (B[2] - A[2]) * k; d[i + 3] = 255; }
+      g.putImageData(img, 0, 0);
+    },
+  };
+  const hexRGB = h => { const v = parseInt(h.replace('#', ''), 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; };
+
+  window.AtlasGallery = { render, open, EX, V, kit };
+  window.AtlasEx = window.AtlasEx || {};
+})();
