@@ -447,6 +447,7 @@
     const it = map[id]; if (!it) return '';
     const vb = `viewBox="0 0 100 100" width="${size}" height="${size}"`;
     if (it.kind === 'icon') return `<svg ${vb} aria-hidden="true"><image href="${avUrl(id)}" x="0" y="0" width="100" height="100"/></svg>`;
+    if (it.kind === 'skin') { const u = U('k'); return `<svg ${vb} aria-hidden="true"><defs><clipPath id="${u}"><rect width="100" height="100" rx="18"/></clipPath></defs><image href="${it.thumb}" width="100" height="100" preserveAspectRatio="xMidYMid slice" clip-path="url(#${u})"/></svg>`; }   // (portal skins, atlas/skins.js — in the gacha since 2026-11-20)
     if (it.kind === 'bg') { const f = bgFill(it); return `<svg ${vb} aria-hidden="true"><defs>${f.p}</defs><rect width="100" height="100" rx="18" fill="${f.fill}"/></svg>`; }   // bgFill = the 3D image
     const fu = U('f');
     return `<svg ${vb} aria-hidden="true"><circle cx="50" cy="50" r="44" fill="#eef2f8"/>${it.d.k === 'none' ? '' : frameImg(it.d.k)}</svg>`;
@@ -465,5 +466,7 @@
   }
   function isDark(id) { const it = map[id]; return !!it && it.kind === 'bg' && (it.d.dark || DARK_COL[it.d.c] || (COVER_PAT[it.d.p] && it.d.c === 'night')); }
 
-  window.AtlasArt = { RAR, items, byId: id => map[id], STARTER, DEFAULT_ICON, avUrl, svg, avatar, bgDataUri, isDark };
+  // more items from another file (atlas/skins.js: the portal skins, kind 'skin')
+  const add = arr => arr.forEach(it => { if (map[it.id]) return; items.push(it); map[it.id] = it; });
+  window.AtlasArt = { RAR, items, add, byId: id => map[id], STARTER, DEFAULT_ICON, avUrl, svg, avatar, bgDataUri, isDark };
 })();

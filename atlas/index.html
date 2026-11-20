@@ -620,6 +620,13 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 /* login bonus popup: a guide character pops up with a speech bubble */
 .sheet.lbs{width:min(420px,100%);padding:0 0 22px;overflow:hidden}
 .lbp h3{margin:12px 0 10px}
+.lbp.gift h3{margin-top:16px}.lbp.gift .lb-sky{height:240px}.lbp.gift .lb-ch{width:150px;height:150px;left:14px}.lbp.gift .lb-bub{width:min(236px,calc(100% - 168px));font-size:13px;top:18px}
+.gift-sk{display:flex;gap:12px;justify-content:center;padding:0 18px}
+.gift-sk figure{margin:0;flex:1;max-width:170px;position:relative;animation:lbNow .6s .6s cubic-bezier(.3,1.8,.5,1) both}.gift-sk figure+figure{animation-delay:.75s}
+.gift-sk img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:14px;border:3px solid #fff;box-shadow:0 4px 0 #efe3c8,0 10px 20px -8px rgba(80,50,0,.35)}
+.gift-sk figure.r4 img{border-color:#c9a7ff}.gift-sk figure.r3 img{border-color:#ffd84d}
+.gift-sk .rar{position:absolute;left:8px;top:8px}.gift-sk figcaption{margin-top:7px;font-size:13px;font-weight:900;color:var(--ink)}
+.gift-b{display:flex;gap:10px;justify-content:center;margin-top:16px}
 .lb-sky{position:relative;height:210px;background:radial-gradient(120% 100% at 50% 0%,#fff6c9 0%,#ffd76a 55%,#ffb43d 100%);overflow:hidden}
 .lb-sky .rays{position:absolute;left:50%;top:62%;width:620px;height:620px;margin:-310px 0 0 -310px;border-radius:50%;background:repeating-conic-gradient(rgba(255,255,255,.5) 0 8deg,rgba(255,255,255,0) 8deg 22deg);animation:spin 14s linear infinite;-webkit-mask:radial-gradient(closest-side,#000 20%,transparent 75%);mask:radial-gradient(closest-side,#000 20%,transparent 75%)}
 .lb-ch{position:absolute;left:24px;bottom:-14px;width:170px;height:170px;object-fit:contain;filter:drop-shadow(0 10px 10px rgba(120,60,0,.3));transform-origin:50% 100%;animation:lbPop .7s cubic-bezier(.3,1.6,.5,1) both,lbBob 2.4s .8s ease-in-out infinite}
@@ -2379,10 +2386,10 @@ if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendo
 else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=16"></script>
-<script src="art.js?v=19"></script>
-<script src="skins.js?v=25"></script>
+<script src="art.js?v=20"></script>
+<script src="skins.js?v=26"></script>
 <script src="../shared/atlas-updates.js?v=48"></script>
-<script src="../shared/atlas.js?v=20261119nw1"></script>
+<script src="../shared/atlas.js?v=20261120sk1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
 <script src="i18n/v.js?v=20261119fgn1"></script>
@@ -2443,9 +2450,9 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=48"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=40"></script>
-<script src="npc/npc.js?v=44"></script>
+<script src="npc/npc.js?v=45"></script>
 <script src="avtalk.js?v=4"></script>
-<script src="app.js?v=463"></script>
+<script src="app.js?v=464"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

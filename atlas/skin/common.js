@@ -603,7 +603,7 @@
     (function skinBg() {
       let sk = null; try { sk = JSON.parse(localStorage.getItem('atlas-skin-css') || 'null'); } catch (e) {}
       if (!sk || !sk.id) return;
-      const SKV = 25;   // (= the portal's skins.js?v= in atlas/index.html: bump both together)
+      const SKV = 26;   // (= the portal's skins.js?v= in atlas/index.html: bump both together)
       const de = document.documentElement;
       if (!document.getElementById('askinCss')) { const st = document.createElement('style'); st.id = 'askinCss'; st.textContent = `
 html.atlas-skin[data-skin] .atlas-top{background:var(--sk-hdr)!important;border-bottom-color:var(--sk-line)!important}
@@ -622,8 +622,8 @@ html.atlas-skin.askin-bg[data-skk=cover] body::before{content:'';position:fixed;
 #skfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;contain:strict}#skfx i{position:absolute;display:block;font-style:normal}#skfx svg{display:block;width:100%;height:100%;overflow:visible}
 #skfx .fx-x{inset:0;background:var(--sk-img2) var(--sk-pos,50% 100%)/cover no-repeat;opacity:0;animation:skDrift 9s ease-in-out infinite alternate;will-change:opacity}@keyframes skDrift{to{opacity:1}}
 html:not(.askin-bg) #skfx{display:none}`; document.head.appendChild(st); }
-      let mode = 'skin'; try { mode = localStorage.getItem('atlas-fullbg') || 'skin'; } catch (e) {}
-      const set = m => { mode = m; de.classList.toggle('askin-bg', m === 'skin'); try { localStorage.setItem('atlas-fullbg', m); } catch (e) {} try { dispatchEvent(new CustomEvent('atlas-skinbg')); } catch (e) {} };
+      let mode = 'skin'; try { mode = localStorage.getItem('atlas-fullbg2') || 'skin'; } catch (e) {}
+      const set = m => { mode = m; de.classList.toggle('askin-bg', m === 'skin'); try { localStorage.setItem('atlas-fullbg2', m); } catch (e) {} try { dispatchEvent(new CustomEvent('atlas-skinbg')); } catch (e) {} };
       set(mode);
       window.__atlasSkinBg = { id: sk.id, mode: () => mode, set, thumb: BASE.replace(/atlas\/$/, 'images/atlas/skin/t/') + sk.id + '.webp' };   // (the デザイン tab's 場所 row offers it: placeField)
       const sc = document.createElement('script'); sc.src = BASE + 'skins.js?v=' + SKV;
@@ -768,7 +768,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     // AI games: the boss of the level and a watching creature talk now and then (atlas/npc/npc.js, common rule 2026-11-09)
     (function npc() {
       if (o.npc === false || !GAME) return;
-      const s = document.createElement('script'); s.src = BASE + 'npc/npc.js?v=44'; s.onload = () => { try { window.AtlasNPC.skin(GAME); } catch (e) {} };
+      const s = document.createElement('script'); s.src = BASE + 'npc/npc.js?v=45'; s.onload = () => { try { window.AtlasNPC.skin(GAME); } catch (e) {} };
       setTimeout(() => document.head.appendChild(s), 1500);   // after the board and the first frames
     })();
     return { T3, ready, alignTo, view };

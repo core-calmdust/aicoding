@@ -22,7 +22,12 @@
   let W = A_.load(), P = A_.allProgress(), ACH = A_.achievements(P, W), C = A_.coins(W, ACH);
   if (W.name && A_.shareName) A_.shareName(W.name, true);   // the portal name is the player name in every game
   let skinOn = null;   // the worn portal skin (きせかえ → スキン): painted again whenever the saved wallet changes (another tab, the account sync)
-  const skinSync = () => { const id = (W.av && W.av.skin) || ''; if (id !== skinOn && window.AtlasSkins) { skinOn = id; AtlasSkins.apply(id); } };
+  // (2026-11-20) skins released: 銀河鉄道 + 雪原 a present to everyone who lacks them (once — skinGot keeps the popup's list); a worn skin not owned goes back to the cream
+  let skinGot = [];
+  const skinGift = () => { const SK = window.AtlasSkins; if (!SK || !SK.GIFT || !ART.byId(SK.GIFT[0])) return;
+    const need = SK.GIFT.filter(id => !W.owned.includes(id)); if (need.length) { need.forEach(id => W.owned.push(id)); skinGot = need; A_.save(W); }
+    if (W.av && W.av.skin && !SK.owned(W.av.skin, W)) { delete W.av.skin; A_.save(W); } };
+  const skinSync = () => { skinGift(); const id = (W.av && W.av.skin) || ''; if (id !== skinOn && window.AtlasSkins) { skinOn = id; AtlasSkins.apply(id); } };
   skinSync();
   function refresh() { skinSync(); P = A_.allProgress(); ACH = A_.achievements(P, W); C = A_.coins(W, ACH); if (window.AtlasMissions) { try { AtlasMissions.sync(); } catch (e) {} if (window.Historia && !Historia.__ms) { const o = Historia.open; Historia.open = function () { AtlasMissions.page('historia'); return o.apply(this, arguments); }; Historia.__ms = 1; } } $('coinN').textContent = C.balance.toLocaleString(); document.querySelectorAll('.coinM').forEach(e => { e.textContent = C.balance.toLocaleString(); }); }
 
@@ -2959,12 +2964,12 @@
     // rarity sorts: one rounded box per rarity, tinted in its colour, its heading (badge · owned / all) on the box's top edge
     const groups = []; if (dSort !== 'own') list.forEach(it => { const g = groups[groups.length - 1]; if (g && g.r === it.rar) g.items.push(it); else groups.push({ r: it.rar, items: [it] }); });
     $('dItems').classList.toggle('grouped', dSort !== 'own' && !!list.length);
-    $('dItems').innerHTML = (SKS ? `<div class="sknote">${esc(SK.t('dev', lang))}</div>` : '') + (!list.length ? `<div class="dempty gnote">${t('dress.none')}</div>`
+    $('dItems').innerHTML = (SKS && SK.DEV_ALL ? `<div class="sknote">${esc(SK.t('dev', lang))}</div>` : '') + (!list.length ? `<div class="dempty gnote">${t('dress.none')}</div>`
       : dSort === 'own' ? list.map(cell).join('')
       : groups.map(g => `<section class="dgrp r${g.r}" aria-label="${ART.RAR[g.r]}">${sec(g.r)}<div class="dgg">${g.items.map(cell).join('')}</div></section>`).join(''));
     if (SKS) {   // wear a skin: the whole page changes at once
       $('dItems').querySelectorAll('.skc').forEach(c => { const id = c.dataset.id;
-        c.onclick = () => { if (id && !SK.owned(id, W)) return; if ((W.av.skin || 'base') === id) { pokeAvatar(); return; } if (id !== 'base') W.av.skin = id; else delete W.av.skin; A_.save(W); skinSync(); renderDress(); pokeAvatar(true); }; });
+        c.onclick = () => { if (id && !SK.owned(id, W)) return dressInfo(ART.byId(id)); if ((W.av.skin || 'base') === id) { pokeAvatar(); return; } if (id !== 'base') W.av.skin = id; else delete W.av.skin; A_.save(W); skinSync(); renderDress(); pokeAvatar(true); }; });
       if (renderDress.io) renderDress.io.disconnect();
       const fx = $('dItems').querySelectorAll('.skc.r3,.skc.r4');
       if (fx.length && window.IntersectionObserver) { renderDress.io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('vis', e.isIntersecting)), { rootMargin: '80px' }); fx.forEach(c => renderDress.io.observe(c)); }
@@ -2993,7 +2998,7 @@
   addEventListener('hashchange', () => setTimeout(dsegPos, 0)); setTimeout(dsegPos, 1500); if (document.fonts && document.fonts.ready) document.fonts.ready.then(dsegPos);   //  the bar grows when its labels' web font arrives, e.g. Arabic)
   function dressInfo(it) {
     openSheet(`<div class="dinfo"><div class="card item r${it.rar} locked" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
-      <h3>${esc(iname(it))}</h3><div class="gnote">${t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${it.earn ? '🎁 ' + esc(it.earn.how[lang] || it.earn.how.en) : t('dress.get')}</p>
+      <h3>${esc(iname(it))}</h3><div class="gnote">${it.kind === 'skin' && window.AtlasSkins ? esc(AtlasSkins.t('kind', lang)) : t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${it.earn ? '🎁 ' + esc(it.earn.how[lang] || it.earn.how.en) : t('dress.get')}</p>
       <div class="dbtns">${it.earn ? '' : `<button class="btn sun" id="diG">${t('tab.gacha')}</button><button class="btn sky" id="diS">${t('tab.shop')}</button>`}<button class="btn ghost" id="diX">${t('g.close')}</button></div></div>`, 'dsh');
     // (2026-11-14) a game's own guide (it.earn: クジャクパイ in 上海) is won by playing that game — no gacha / shop buttons
     if (!it.earn) { $('diG').onclick = () => { closeSheet(); go('gacha'); }; $('diS').onclick = () => { closeSheet(); go('shop'); }; }
@@ -3067,8 +3072,25 @@
     const lb = A_.claimLogin(W);
     const fresh = ACH.filter(a => a.done && !W.seen[a.id]);
     refresh();
-    if (lb) return loginPop(lb, () => { if (fresh.length) achSheet(fresh); });
-    if (fresh.length) achSheet(fresh);
+    const rest = () => { if (lb) return loginPop(lb, () => { if (fresh.length) achSheet(fresh); }); if (fresh.length) achSheet(fresh); };
+    if (skinGot.length) { const got = skinGot; skinGot = []; return giftPop(got, rest); }
+    rest();
+  }
+  // the skins' present (2026-11-20): an Atlamo hands over the two skins
+  function giftPop(ids, after) {
+    const SK = window.AtlasSkins, T = k => esc(SK.t(k, lang)), day = Math.floor(Date.now() / 864e5), gid = GUIDES[day % GUIDES.length];
+    const info = window.Icons3D && Icons3D.MON_INFO && Icons3D.MON_INFO[gid], who = info ? (lang === 'ja' ? info.ja : info.en) : '';
+    let done = false; const fin = wear => { if (done) return; done = true; $('ov').classList.remove('on'); sheetClose = null; if (wear) { dKind = 'skin'; go('dress'); } after && after(); };
+    openSheet(`<div class="lbp gift">
+        <div class="lb-sky"><span class="rays"></span><img class="lb-ch" src="../images/atlas/g-${gid}.webp?v=1" alt="">
+          <div class="lb-bub">${who ? `<b>${esc(who)}</b>` : ''}<span>${T('giftSay')}</span></div></div>
+        <h3>${T('giftH')}</h3>
+        <div class="gift-sk">${ids.map(id => { const s = SK.byId(id); return `<figure class="r${s.rar}"><img src="${SK.thumb(id)}" alt=""><span class="rar r${s.rar}">${ART.RAR[s.rar]}</span><figcaption>${esc(SK.name(s, lang))}</figcaption></figure>`; }).join('')}</div>
+        <div class="gift-b"><button class="btn ghost" id="gfOk">${T('giftOk')}</button><button class="btn sun" id="gfGo">${T('giftGo')}</button></div></div>`, 'lbs', () => fin(0));
+    $('gfOk').onclick = () => fin(0); $('gfGo').onclick = () => fin(2);
+    SFX.fanfare(250);
+    const burst = () => setTimeout(() => { if (!done) confetti(60); }, 420);
+    if (document.readyState === 'complete') burst(); else addEventListener('load', burst, { once: true });
   }
   function achSheet(fresh) {
     const total = fresh.reduce((s, a) => s + A_.TIER_COINS[a.tier], 0), show = fresh.slice(0, 6);
