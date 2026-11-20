@@ -689,6 +689,67 @@
     }
     return out.join('');
   }
+  /* (2026-11-21 lesson loop) the reversi opening practice in リバガメ's words, Japanese: the texts without coordinates (atlas/nocoord
+     reversi.json op:<moves>/aim|info, Japanese only — other languages keep the openings.json text), a varied question, a hint from what
+     the line's move does (flips, openness = empty squares next to the flipped discs, the opponent's moves after — never the square),
+     and after the answer why the line's move (green frame) is played and what yours (red frame) gives up, from the AI values
+     (reversi/opcourse-evals.json, the mover's view) and those facts. */
+  const rvNC = (mv, f, lang) => { const o = (NC.reversi || {})['op:' + mv + '/' + f]; return o && o[lang] ? o : null; };
+  const RVJ_OP = {
+    intro: ['まずは手順を盤で見てみよう。そのあと、続きを打ってもらうね！', '手順をひととおり見たら、次はきみの番。覚えられるかな？', 'ゆっくり手順を並べるから、形をよく見ておいてね。'],
+    ask: ['『{n}』の続き、{s}の次の一手はどこかな？', '{s}の番だね。『{n}』の手順を思い出して打ってみて！', 'ここで{s}が打つ、『{n}』の一手はどこだと思う？', 'さあ{s}の一手！ 定石どおりに打てるかな？', '『{n}』はこの先どう進むんだっけ？ {s}の手を打ってみよう。'],
+    good: ['そう、それが定石の手！', 'ばっちり、手順どおりだね。', 'いいね、よく覚えてた！', 'おみごと！ 定石の一手なんだ。'],
+    lead: ['定石の手は緑の枠なんだ。', '緑の枠が、この定石の手。', '正しい手順は緑の枠のマスだね。'],
+  };
+  function rvOpFacts(posStr) {   // every legal move: flips, openness, the opponent's moves after
+    const [cs, tm] = String(posStr).split(':'), c = cs.split('').map(Number), me = +tm, op = 3 - me, F = {};
+    const nbr = q => { const r = q >> 3, k = q & 7, o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = k + dc; if ((dr || dc) && rr >= 0 && rr < 8 && cc >= 0 && cc < 8) o.push(rr * 8 + cc); } return o; };
+    for (const m of rvLegal(c, me)) { const f = rvFlips(c, m, me), nc = c.slice(); nc[m] = me; f.forEach(q => { nc[q] = me; });
+      const seen = new Set(); f.forEach(q => nbr(q).forEach(y => { if (!nc[y]) seen.add(y); })); F[m] = { n: f.length, open: seen.size, oM: rvLegal(nc, op).length }; }
+    return { F, me };
+  }
+  function rvOpJa(o, name, aim, hs, i) {
+    const nm = /(^|[^A-Za-z])[a-h][1-8](?![0-9A-Za-z])/.test(name) ? 'この定石' : name, nmQ = nm === name ? '『' + name + '』' : nm;
+    const { F, me } = rvOpFacts(o.pos), A = +o.ans, ks = Object.keys(F).map(Number), fa = F[A] || { n: 0, open: 0, oM: 0 };
+    const minOf = k => Math.min(...ks.map(q => F[q][k])), maxOf = k => Math.max(...ks.map(q => F[q][k])), side = me === 1 ? '黒' : '白';
+    const ev = o.P.ev, sc = ev ? new Map(ev.map(([m, v]) => [rvSq(m), v])) : null, evBest = ev ? Math.max(...ev.map(x => x[1])) : null;
+    const ask = fill(RVJ_OP.ask[(hs + i) % RVJ_OP.ask.length], { n: name, s: side }).replace('『' + name + '』', nmQ);
+    const spread = k => ks.length > 1 && minOf(k) < maxOf(k);   // (a fact that tells the moves apart — on the first moves every move flips one disc)
+    let hint;
+    if (spread('n') && spread('open') && fa.n === minOf('n') && fa.open === minOf('open')) hint = 'たくさん返す手より、返す石が少なくて、まわりの空きも少ない手。静かな中割りっぽい手をさがしてみて。';
+    else if (spread('open') && fa.open === minOf('open')) hint = '返す石のまわりの空き（開放度）を、手ごとに数えてみて。空きが少ない手がねらい目かも。';
+    else if (spread('oM') && fa.oM === minOf('oM')) hint = '打ったあと、相手が打てる場所がいちばん少なくなる手はどこかな？';
+    else if (spread('n') && fa.n === maxOf('n')) hint = 'ここは思いきって、多めに返す手が定石なんだ。どこから返せるかな？';
+    else hint = ['さっき盤で見た手順を思い出してみて。相手の直前の手に、どう応じていたかな？', '石がどんな形に並んでいたか、思い出してみて。名前のもとになった形がヒントだね！', 'あわてずに、手順の流れを頭の中でもう一度並べてみよう。'][(hs + i) % 3];
+    const why = () => {
+      const isBest = sc && sc.has(A) && sc.get(A) >= evBest - 0.05, s = [];
+      if (fa.open === 0) s.push('返す石のまわりに空きがない、中割りの手なんだ。相手に新しい足場をあげないね。');
+      else if (spread('open') && fa.open === minOf('open')) s.push(`返す石のまわりの空きは${fa.open}マスだけ。相手に打ち場所をあげにくい、静かな手なんだ。`);
+      else if (spread('oM') && fa.oM === minOf('oM')) s.push(`打ったあと、相手が打てる場所は${fa.oM}か所。いちばん少なく抑えられるからね。`);
+      else s.push(`打ったあと、相手が打てる場所は${fa.oM}か所になるんだ。`);
+      const lo = sc && sc.has(A) ? Math.round(evBest - sc.get(A)) : null;
+      s.push(isBest ? 'AIの評価でも、この場面でいちばんいい手とされているよ。' : lo != null && lo <= 2 ? 'AIの評価は最善より少しだけ低めだけど、この定石の名前どおりの手なんだ。' : lo != null ? `AIの評価では最善より${lo}石ほど低い手。名前の付いた手順として覚えておこうね。` : 'この定石ならではの一手として覚えておこうね。');
+      return s.join('');
+    };
+    const pickWrong = u => {   // (no wrong move given — the checker passes the answer: the most telling one, the AI's lowest, else the most flips)
+      if (u !== A && F[u]) return u; const w = ks.filter(q => q !== A); if (!w.length) return null;
+      const inEv = sc ? w.filter(q => sc.has(q)) : []; if (inEv.length) return inEv.reduce((a, q) => sc.get(q) < sc.get(a) ? q : a, inEv[0]);
+      return w.reduce((a, q) => F[q].n > F[a].n ? q : a, w[0]);
+    };
+    const ng = u0 => {
+      const u = pickWrong(+u0), out = [RVJ_OP.lead[(hs + i) % RVJ_OP.lead.length]]; if (u == null) return out[0];
+      const fu = F[u];
+      if (sc && sc.has(u) && sc.has(A)) { const d = Math.round((sc.get(A) - sc.get(u)) * 10) / 10;
+        out.push(d <= 0.5 ? '赤い枠もAIの評価では負けていない手なんだ。でもこの練習は、名前の付いた手順を覚えるのがねらいだね。' : d < 3 ? `赤い枠は、AIの評価で${Math.round(d) || 1}石ほど損。差は小さいけど、手順から外れちゃうね。` : `赤い枠だと、AIの評価で${Math.round(d)}石ほど損しちゃうんだ。`); }
+      else if (sc && !sc.has(u)) out.push('赤い枠は、AIが候補にも挙げない手。打つと大きく損をしやすいんだ。');
+      if (fu.open > fa.open) out.push(`返す石のまわりの空きも、赤い枠は${fu.open}マス、緑の枠は${fa.open}マス。空きが多いと、相手の足場になっちゃうからね。`);
+      else if (fu.oM > fa.oM) out.push(`打ったあと相手が打てる場所は、赤い枠だと${fu.oM}か所、緑の枠なら${fa.oM}か所。相手の選択肢をふやしちゃうんだ。`);
+      else if (fu.n > fa.n) out.push(`赤い枠は${fu.n}枚も返すから、外がわの石がふえて、あとで苦しくなりやすいね。`);
+      else if (out.length < 2) out.push('手順から外れると、定石で覚えた形が使えなくなっちゃうからね。');
+      return out.join('');
+    };
+    return { ask, hintTx: hint, hintMk: () => [], good: () => RVJ_OP.good[(hs + i) % RVJ_OP.good.length] + '<br>' + why(), ng };
+  }
   const REVERSI = {
     LKEY: 'reversi-emerald-lessons', data: null,
     load() {
@@ -704,7 +765,7 @@
     pr(id) { const p = J(this.LKEY, {})[id]; return p ? (p.clear ? 'pass' : 'try') : ''; },
     list(kind, lang) {
       const D = this.data;
-      if (kind === 'open') return D.steps.map(x => ({ key: x.ln.moves, cat: x.set.id, catName: this.T(x.set, lang).title || x.set.id, title: L(x.ln.name, lang), sub: L(x.ln.aim, lang), svg: rvSvg(rvAfter(x.ln.moves)), st: this.pr('opl:' + x.ln.moves) }));
+      if (kind === 'open') return D.steps.map(x => ({ key: x.ln.moves, cat: x.set.id, catName: this.T(x.set, lang).title || x.set.id, title: L(x.ln.name, lang), sub: L(rvNC(x.ln.moves, 'aim', lang) || x.ln.aim, lang), svg: rvSvg(rvAfter(x.ln.moves)), st: this.pr('opl:' + x.ln.moves) }));
       return D.ls.lessons.map((l, i) => { const T = this.T(l, lang); const p0 = (l.problems || [])[0]; return { key: String(i), cat: 'lesson', catName: '', title: T.title || l.id, sub: T.short || '', desc: T.goal || '', svg: p0 ? rvSvg(p0.cells) : '', st: this.pr(l.id) }; });
     },
     introPos() { return { pos: rvAfter(''), lock: true }; },   // (no diagram in lessons.json: the four starting discs, for looking only, while the intro is read)
@@ -748,10 +809,15 @@
       const parent = this.data.steps.filter(x => x.ln.moves.length < key.length && key.startsWith(x.ln.moves)).reduce((a, x) => !a || x.ln.moves.length > a.length ? x.ln.moves : a, '');
       const d = parent ? parent.length / 2 : 1, c = []; for (let k = Math.max(1, d - 4); k < n; k++) c.push(k);
       const ks = c.length <= 5 ? c : [...new Set([0, 1, 2, 3, 4].map(j => c[Math.round(j * (c.length - 1) / 4)]))];
-      const info = L((NC.reversi || {})['op:' + ln.moves + '/info'] || ln.info, lang).replace(/【[^】]+】|\[[\p{L}\p{M}]{1,16}\]/gu, ' ').trim();
-      return { id: 'opl:' + key, title: L(ln.name, lang), intro: `<b>${L(ln.aim, lang)}</b>`,   // (no move list in coordinates: the line is played on the board next) start: rvAfter(''),
+      const info = L(rvNC(ln.moves, 'info', lang) || ln.info, lang).replace(/【[^】]+】|\[[\p{L}\p{M}]{1,16}\]/gu, ' ').trim();
+      const ja = lang === 'ja', name = L(ln.name, lang), aim = L(rvNC(ln.moves, 'aim', lang) || ln.aim, lang);
+      let hs = 0; for (const ch of key) hs = (hs * 31 + ch.charCodeAt(0)) | 0; hs = Math.abs(hs);
+      return { id: 'opl:' + key, title: name, intro: `<b>${aim}</b>` + (ja ? '<br>' + RVJ_OP.intro[hs % RVJ_OP.intro.length] : ''),   // (no move list in coordinates: the line is played on the board next) start: rvAfter(''),
         steps: mv.map(rvSq), notes: info ? { [String(n - 1)]: info } : {},
-        probs: ks.map(k => { const pre = mv.slice(0, k).join(''); return { pos: rvAfter(pre), kind: 'best', ask: fill(RV_ASK[lang] || RV_ASK.en, { n: L(ln.name, lang) }), P: { rv: 'op', ans: rvSq(mv[k]), ev: ev[pre] || null }, ans: String(rvSq(mv[k])) }; }),
+        probs: ks.map((k, i) => { const pre = mv.slice(0, k).join(''), o = { pos: rvAfter(pre), kind: 'best', ask: fill(RV_ASK[lang] || RV_ASK.en, { n: name }), P: { rv: 'op', ans: rvSq(mv[k]), ev: ev[pre] || null }, ans: String(rvSq(mv[k])) };
+          if (ja) Object.assign(o, rvOpJa(o, name, aim, hs + i, i));   // (2026-11-21 lesson loop: リバガメ asks, hints and explains — see RVJ_OP)
+          else { o.good = () => ''; o.ng = () => ''; }
+          return o; }),
         save: (pts, max) => this.save('opl:' + key, pts, max) };
     },
     points(P, u) {
@@ -784,7 +850,7 @@
   /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
-  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=18').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=19').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   function ncApply(id, L2) {
     const T = NC[id] || {}; if (!L2 || !L2.ramp) return L2;
     L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v && !(o[f] && o[f].__voice)) o[f] = v; }); return o; });   // (a guide's own line stays)
@@ -1995,7 +2061,8 @@
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
       }
-      if (id === 'reversi' && u != null && u !== '' && !isNaN(+u) && p.P && p.P.f) { u = +u;   // (2026-11-21: back to the problem — the best squares green, yours red; why, in the guide's words)
+      if (id === 'reversi' && u != null && u !== '' && !isNaN(+u) && p.P && (p.P.f || (p.P.rv === 'op' && p.good))) { u = +u;   // (openings too, 2026-11-21)
+          // (2026-11-21: back to the problem — the best squares green, yours red; why, in the guide's words)
         const right = pts >= 16, k = cur.k, okA = p.oks || [+p.ans], tx = right ? p.good(u) : p.ng(u);
         say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (tx ? '<br>' + tx : right ? '' : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) })));
         try { chime(right); } catch (e) {}

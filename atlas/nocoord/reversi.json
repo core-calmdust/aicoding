@@ -1,1 +1,603 @@
-{"op:f5d6c3d3c2/info": {"ja": "【狙い】虎素の5手目に、辺側へ打つ手。AIの評価では虎より黒が大きく損をする手で、名前だけ知っておけば十分な変化です。", "en": "[Aim] On move 5 of the Tiger trunk, Black plays toward the edge. By the AI’s evaluation Black loses much more than with the Tiger — a line it is enough to know by name.", "zh": "【目的】在虎型第5手向边一侧落子。按AI评估，黑方比走虎损失大得多，知道名字就够了的变化。", "zh-TW": "【目的】在虎型第5手向邊一側落子。按AI評估，黑方比走虎損失大得多，知道名字就夠了的變化。", "ko": "【노림】호랑이 기본형 5수째에 변 쪽으로 두는 수. AI 평가로는 호랑이보다 흑이 크게 손해 보는 수로, 이름만 알아 두면 충분한 변화예요.", "es": "[Objetivo] En la jugada 5 del tronco Tigre, las negras juegan hacia el borde. Según la IA pierden mucho más que con el Tigre: basta conocerla de nombre.", "fr": "[But] Au 5e coup du tronc Tigre, Noir joue vers le bord. Selon l’IA il perd bien plus qu’avec le Tigre — une ligne qu’il suffit de connaître de nom.", "pt": "[Objetivo] No 5.º lance do tronco Tigre, as pretas jogam para a borda. Pela IA perdem muito mais que no Tigre — basta conhecê-la de nome.", "de": "[Ziel] Im 5. Zug des Tiger-Stamms spielt Schwarz zum Rand hin. Laut KI verliert Schwarz deutlich mehr als mit dem Tiger – es reicht, den Namen zu kennen.", "ru": "[Цель] На 5-м ходу ствола «Тигр» чёрные играют к краю. По оценке ИИ они теряют гораздо больше, чем в «Тигре», — достаточно знать название.", "tr": "[Amaç] Kaplan gövdesinin 5. hamlesinde Siyah kenara doğru oynar. Yapay zekâya göre Kaplan’dan çok daha fazla kaybettirir — adını bilmek yeter.", "id": "[Tujuan] Di langkah 5 batang Harimau, Hitam bermain ke arah tepi. Menurut AI Hitam rugi jauh lebih besar daripada Harimau — cukup tahu namanya.", "hi": "[लक्ष्य] टाइगर की 5वीं चाल में काला किनारे की ओर खेलता है। AI के अनुसार इसमें टाइगर से कहीं ज़्यादा नुक़सान है — नाम जानना काफ़ी है।", "ar": "[الهدف] في النقلة الخامسة من جذع النمر يلعب الأسود نحو الحافة. وفق تقييم الذكاء الاصطناعي يخسر أكثر بكثير من النمر — يكفي معرفة اسمه."}, "op:f5d6c3d3e3/info": {"ja": "【狙い】5手目に虎とは別の場所へ打つ手。返すのは虎と同じ1枚ですが、AIの評価では虎より黒が大きく損をします。同じ枚数でも場所で価値が大きく変わる例です。", "en": "[Aim] Move 5 goes to a different square than the Tiger. It flips the same single disc, yet by the AI’s evaluation Black loses much more — the same count, very different value depending on where.", "zh": "【目的】第5手下在与虎不同的位置。翻转的同样是1枚，但按AI评估黑方损失大得多。是同样枚数、位置不同价值就大不相同的例子。", "zh-TW": "【目的】第5手下在與虎不同的位置。翻轉的同樣是1枚，但按AI評估黑方損失大得多。是同樣枚數、位置不同價值就大不相同的例子。", "ko": "【노림】5수째에 호랑이와 다른 곳에 두는 수. 뒤집는 것은 호랑이와 같은 1개지만, AI 평가로는 흑이 크게 손해 봐요. 같은 개수라도 장소에 따라 가치가 크게 달라지는 예입니다.", "es": "[Objetivo] La jugada 5 va a otra casilla que el Tigre. Voltea la misma ficha, pero según la IA las negras pierden mucho más: mismo número, valor muy distinto según el lugar.", "fr": "[But] Le 5e coup va sur une autre case que le Tigre. Il retourne le même pion, mais selon l’IA Noir perd bien plus — même nombre, valeur très différente selon l’endroit.", "pt": "[Objetivo] O 5.º lance vai a outra casa que o Tigre. Vira a mesma peça, mas pela IA as pretas perdem muito mais — mesma quantidade, valor bem diferente conforme o lugar.", "de": "[Ziel] Der 5. Zug geht auf ein anderes Feld als beim Tiger. Er wendet denselben einen Stein, doch laut KI verliert Schwarz viel mehr – gleiche Anzahl, ganz anderer Wert je nach Ort.", "ru": "[Цель] 5-й ход на другое поле, чем в «Тигре». Переворачивается та же одна фишка, но по оценке ИИ чёрные теряют гораздо больше — то же число, но разная ценность в зависимости от места.", "tr": "[Amaç] 5. hamle Kaplan’dan farklı bir kareye gider. Aynı tek taşı çevirir ama yapay zekâya göre Siyah çok daha fazla kaybeder — aynı sayı, yere göre çok farklı değer.", "id": "[Tujuan] Langkah 5 ke petak berbeda dari Harimau. Membalik satu keping yang sama, tetapi menurut AI Hitam rugi jauh lebih besar — jumlah sama, nilai sangat berbeda tergantung tempat.", "hi": "[लक्ष्य] 5वीं चाल टाइगर से अलग खाने पर जाती है। उतनी ही एक गोटी पलटती है, पर AI के अनुसार काले को कहीं ज़्यादा नुक़सान — गिनती वही, जगह से मूल्य बहुत अलग।", "ar": "[الهدف] النقلة الخامسة إلى مربع غير مربع النمر. تقلب القرص نفسه، لكن وفق الذكاء الاصطناعي يخسر الأسود أكثر بكثير — العدد نفسه والقيمة مختلفة تمامًا بحسب المكان."}, "op:f5d6c3d3c5/info": {"ja": "【由来】以前は「ミミ虎」「パンサー」とも呼ばれました。【狙い】虎の代わりに、その隣のマスに打つ手。AIの評価では虎より黒が約4石損で、白に中央を割られやすくなります。", "en": "[Origin] Formerly also called “Mimi Tiger” or “Panther”. [Aim] Instead of the Tiger, Black plays the square next to it. By the AI’s evaluation Black loses about 4 discs compared with the Tiger, and White can more easily split the centre.", "zh": "【由来】以前也叫“米米虎”或“豹”。【目的】不走虎，而是下在它旁边的格子。按AI评估比虎黑方约亏4子，容易被白方中割。", "zh-TW": "【由來】以前也叫「米米虎」或「豹」。【目的】不走虎，而是下在它旁邊的格子。按AI評估比虎黑方約虧4子，容易被白方中割。", "ko": "【유래】예전에는 \"미미 호랑이\", \"팬서\"라고도 불렸어요. 【노림】호랑이 대신 그 옆 칸에 두는 수. AI 평가로는 호랑이보다 흑이 약 4석 손해이고, 백에게 중앙을 갈리기 쉬워집니다.", "es": "[Origen] Antes también se llamaba “Mimi Tigre” o “Pantera”. [Objetivo] En vez del Tigre, las negras juegan en la casilla de al lado. Según la IA pierden unas 4 fichas frente al Tigre, y las blancas parten el centro con más facilidad.", "fr": "[Origine] Autrefois aussi appelée « Mimi Tigre » ou « Panthère ». [But] Au lieu du Tigre, Noir joue la case voisine. Selon l’IA il perd environ 4 pions par rapport au Tigre, et Blanc coupe plus facilement le centre.", "pt": "[Origem] Antes também chamada “Mimi Tigre” ou “Pantera”. [Objetivo] Em vez do Tigre, as pretas jogam na casa ao lado. Pela IA perdem cerca de 4 peças em relação ao Tigre, e as brancas dividem o centro com mais facilidade.", "de": "[Herkunft] Früher auch „Mimi-Tiger“ oder „Panther“ genannt. [Ziel] Statt des Tigers spielt Schwarz das Nachbarfeld. Laut KI verliert Schwarz etwa 4 Steine gegenüber dem Tiger, und Weiß kann das Zentrum leichter spalten.", "ru": "[Происхождение] Раньше также «Мими-тигр» или «Пантера». [Цель] Вместо «Тигра» чёрные играют на соседнее поле. По оценке ИИ чёрные теряют около 4 фишек по сравнению с «Тигром», и белым проще расколоть центр.", "tr": "[Köken] Eskiden “Mimi Kaplan” ya da “Panter” de denirdi. [Amaç] Kaplan yerine Siyah yanındaki kareye oynar. Yapay zekâya göre Kaplan’a kıyasla yaklaşık 4 taş kaybettirir ve Beyaz merkezi daha kolay böler.", "id": "[Asal-usul] Dulu juga disebut “Mimi Harimau” atau “Panter”. [Tujuan] Alih-alih Harimau, Hitam bermain di petak sebelahnya. Menurut AI Hitam rugi sekitar 4 keping dibanding Harimau, dan Putih lebih mudah membelah tengah.", "hi": "[उत्पत्ति] पहले इसे “मिमी टाइगर” या “पैंथर” भी कहते थे। [लक्ष्य] टाइगर की जगह काला उसके बगल वाले खाने पर खेलता है। AI के अनुसार टाइगर की तुलना में लगभग 4 गोटियों का नुक़सान, और सफ़ेद आसानी से केंद्र तोड़ता है।", "ar": "[الأصل] كانت تُسمّى سابقًا «ميمي النمر» أو «الفهد». [الهدف] بدل النمر يلعب الأسود المربع المجاور. وفق الذكاء الاصطناعي يخسر نحو 4 أقراص مقارنة بالنمر، ويسهل على الأبيض شق الوسط."}, "op:f5f6e6f4e3c5c6/info": {"ja": "【狙い】牛の後、白に続いて黒が中割りする手。Rose-v-Toth との違いはマス1つだけで、どちらで中割りするかの選択です。", "en": "[Aim] After the Cow and White’s reply, Black makes a quiet inside move. It differs from Rose-v-Toth by a single square — a choice of where to make the quiet move.", "zh": "【目的】牛之后，紧接白方，黑方中割的一手。与Rose-v-Toth只差一格，是选择在哪里中割。", "zh-TW": "【目的】牛之後，緊接白方，黑方中割的一手。與Rose-v-Toth只差一格，是選擇在哪裡中割。", "ko": "【노림】소 뒤에 백에 이어 흑이 안쪽을 가르는 수. Rose-v-Toth와는 한 칸만 다르고, 어느 쪽으로 가를지의 선택이에요.", "es": "[Objetivo] Tras la Vaca y la réplica blanca, las negras hacen una jugada interior tranquila. Se diferencia de Rose-v-Toth en una sola casilla: elegir dónde hacerla.", "fr": "[But] Après la Vache et la réponse blanche, Noir joue un coup intérieur calme. Il diffère de Rose-v-Toth d’une seule case — le choix de l’endroit du coup calme.", "pt": "[Objetivo] Depois da Vaca e da resposta branca, as pretas fazem um lance interno tranquilo. Difere de Rose-v-Toth por uma só casa — a escolha de onde fazê-lo.", "de": "[Ziel] Nach der Kuh und der weißen Antwort macht Schwarz einen ruhigen Innenzug. Er unterscheidet sich von Rose-v-Toth nur um ein Feld – die Wahl, wo der ruhige Zug kommt.", "ru": "[Цель] После «Коровы» и ответа белых чёрные делают тихий внутренний ход. От Rose-v-Toth отличается лишь одним полем — выбор, где сделать тихий ход.", "tr": "[Amaç] İnek’ten ve Beyaz’ın cevabından sonra Siyah sessiz bir iç hamle yapar. Rose-v-Toth’tan yalnızca bir kare farklıdır — sessiz hamlenin nerede yapılacağı seçimi.", "id": "[Tujuan] Setelah Sapi dan balasan Putih, Hitam membuat langkah dalam yang tenang. Bedanya dari Rose-v-Toth hanya satu petak — pilihan tempat langkah tenang itu.", "hi": "[लक्ष्य] काउ और सफ़ेद के जवाब के बाद काला एक शांत भीतरी चाल चलता है। रोज़-वी-टोथ से सिर्फ़ एक खाने का अंतर — शांत चाल कहाँ चलें, इसका चुनाव।", "ar": "[الهدف] بعد البقرة ورد الأبيض، يلعب الأسود نقلة داخلية هادئة. تختلف عن Rose-v-Toth بمربع واحد فقط — اختيار مكان النقلة الهادئة."}, "op:f5f6e6f4c3/info": {"ja": "【由来】英語名は Buffalo。【狙い】牛の代わりに、離れた場所へ打つ黒の手。AIの評価では黒が約4石損し、白+2の変化とされます。", "en": "[Origin] Its English name is Buffalo. [Aim] Instead of the Cow, Black plays a square further away. By the AI’s evaluation Black loses about 4 discs; it is rated White +2.", "zh": "【由来】英文名是Buffalo。【目的】不走牛，而是下在较远位置的黑方手。按AI评估黑方约亏4子，被视为白+2的变化。", "zh-TW": "【由來】英文名是Buffalo。【目的】不走牛，而是下在較遠位置的黑方手。按AI評估黑方約虧4子，被視為白+2的變化。", "ko": "【유래】영어 이름은 Buffalo. 【노림】소 대신 떨어진 곳에 두는 흑의 수. AI 평가로는 흑이 약 4석 손해이고, 백+2의 변화로 봅니다.", "es": "[Origen] Su nombre inglés es Buffalo. [Objetivo] En vez de la Vaca, las negras juegan una casilla más alejada. Según la IA pierden unas 4 fichas; se valora blancas +2.", "fr": "[Origine] Son nom anglais est Buffalo. [But] Au lieu de la Vache, Noir joue une case plus éloignée. Selon l’IA il perd environ 4 pions ; évalué Blanc +2.", "pt": "[Origem] Seu nome em inglês é Buffalo. [Objetivo] Em vez da Vaca, as pretas jogam numa casa mais afastada. Pela IA perdem cerca de 4 peças; avaliado brancas +2.", "de": "[Herkunft] Englischer Name: Buffalo. [Ziel] Statt der Kuh spielt Schwarz ein weiter entferntes Feld. Laut KI verliert Schwarz etwa 4 Steine; bewertet mit Weiß +2.", "ru": "[Происхождение] Английское название — Buffalo. [Цель] Вместо «Коровы» чёрные играют на более удалённое поле. По оценке ИИ чёрные теряют около 4 фишек; оценка — белые +2.", "tr": "[Köken] İngilizce adı Buffalo. [Amaç] İnek yerine Siyah daha uzaktaki bir kareye oynar. Yapay zekâya göre yaklaşık 4 taş kaybettirir; Beyaz +2 olarak değerlendirilir.", "id": "[Asal-usul] Nama Inggrisnya Buffalo. [Tujuan] Alih-alih Sapi, Hitam bermain di petak yang lebih jauh. Menurut AI Hitam rugi sekitar 4 keping; dinilai Putih +2.", "hi": "[उत्पत्ति] अंग्रेज़ी नाम Buffalo। [लक्ष्य] काउ की जगह काला दूर वाले खाने पर खेलता है। AI के अनुसार लगभग 4 गोटियों का नुक़सान; सफ़ेद +2 आँका गया।", "ar": "[الأصل] اسمها الإنجليزي Buffalo. [الهدف] بدل البقرة يلعب الأسود مربعًا أبعد. وفق الذكاء الاصطناعي يخسر نحو 4 أقراص؛ ويُقيَّم الأبيض +2."}, "op:f5d6c3d3c4f4c5b3c2e6c6b4b5d2e3a6c1d7/info": {"ja": "【分類】評価が互角（±0、引き分け）を保つ本線とされる手順です。別名 Shaman French Tamenori。金魚とは18手目だけが違います。", "en": "[Type] A main line said to keep the evaluation level (±0, a draw). Also called Shaman French Tamenori. It differs from the Goldfish only at move 18.", "zh": "【分类】被视为评估保持均势（±0，和棋）的主线。别名Shaman French Tamenori。与金鱼只有第18手不同。", "zh-TW": "【分類】被視為評估保持均勢（±0，和棋）的主線。別名Shaman French Tamenori。與金魚只有第18手不同。", "ko": "【분류】평가가 호각(±0, 무승부)을 유지하는 본선으로 여겨지는 수순. 별명 Shaman French Tamenori. 금붕어와는 18수째만 달라요.", "es": "[Tipo] Línea principal que se considera que mantiene la igualdad (±0, tablas). También llamada Shaman French Tamenori. Solo difiere del Pez dorado en la jugada 18.", "fr": "[Type] Ligne principale réputée garder l’équilibre (±0, nulle). Aussi appelée Shaman French Tamenori. Elle ne diffère du Poisson rouge qu’au 18e coup.", "pt": "[Tipo] Linha principal que se considera manter a igualdade (±0, empate). Também chamada Shaman French Tamenori. Difere do Peixinho dourado só no lance 18.", "de": "[Typ] Hauptlinie, die als ausgeglichen gilt (±0, Remis). Auch Shaman French Tamenori genannt. Vom Goldfisch unterscheidet sie sich nur im 18. Zug.", "ru": "[Тип] Главная линия, сохраняющая равенство (±0, ничья). Также известна как Shaman French Tamenori. От «Золотой рыбки» отличается только 18-м ходом.", "tr": "[Tür] Değerlendirmeyi dengede (±0, beraberlik) tuttuğu kabul edilen ana kol. Diğer adı Shaman French Tamenori. Japon Balığı’ndan yalnızca 18. hamlede ayrılır.", "id": "[Jenis] Jalur utama yang dianggap menjaga keseimbangan (±0, seri). Juga disebut Shaman French Tamenori. Hanya berbeda dari Ikan Mas di langkah 18.", "hi": "[प्रकार] मुख्य लाइन जो बराबरी (±0, ड्रॉ) बनाए रखती मानी जाती है। दूसरा नाम Shaman French Tamenori। गोल्डफ़िश से सिर्फ़ 18वीं चाल में अलग।", "ar": "[النوع] خط رئيسي يُعدّ محافظًا على التعادل (±0). يُسمّى أيضًا Shaman French Tamenori. يختلف عن «السمكة الذهبية» في النقلة 18 فقط."}, "op:f5d6c4g5f6/info": {"ja": "【分類】評価が互角（±0、引き分け）を保つ本線とされる手順です。ノーキャットに対し、燕とは別の場所に打つ変化です。", "en": "[Type] A main line said to keep the evaluation level (±0, a draw). Against No-Cat, Black plays a different square from the Swallow.", "zh": "【分类】被视为评估保持均势（±0，和棋）的主线。面对无猫，下在与燕不同位置的变化。", "zh-TW": "【分類】被視為評估保持均勢（±0，和棋）的主線。面對無貓，下在與燕不同位置的變化。", "ko": "【분류】평가가 호각(±0, 무승부)을 유지하는 본선으로 여겨지는 수순. 노캣에 대해 제비와 다른 곳에 두는 변화예요.", "es": "[Tipo] Línea principal que se considera que mantiene la igualdad (±0, tablas). Contra No-Cat, las negras juegan otra casilla distinta de la Golondrina.", "fr": "[Type] Ligne principale réputée garder l’équilibre (±0, nulle). Contre No-Cat, Noir joue une autre case que l’Hirondelle.", "pt": "[Tipo] Linha principal que se considera manter a igualdade (±0, empate). Contra No-Cat, as pretas jogam outra casa que a Andorinha.", "de": "[Typ] Hauptlinie, die als ausgeglichen gilt (±0, Remis). Gegen No-Cat spielt Schwarz ein anderes Feld als bei der Schwalbe.", "ru": "[Тип] Главная линия, сохраняющая равенство (±0, ничья). Против No-Cat чёрные играют другое поле, чем в «Ласточке».", "tr": "[Tür] Değerlendirmeyi dengede (±0, beraberlik) tuttuğu kabul edilen ana kol. No-Cat’e karşı Siyah, Kırlangıç’tan farklı bir kareye oynar.", "id": "[Jenis] Jalur utama yang dianggap menjaga keseimbangan (±0, seri). Melawan No-Cat, Hitam bermain di petak yang berbeda dari Walet.", "hi": "[प्रकार] मुख्य लाइन जो बराबरी (±0, ड्रॉ) बनाए रखती मानी जाती है। नो-कैट के ख़िलाफ़ काला स्वैलो से अलग खाने पर खेलता है।", "ar": "[النوع] خط رئيسي يُعدّ محافظًا على التعادل (±0). ضد No-Cat يلعب الأسود مربعًا غير مربع السنونو."}}
+{
+ "op:f5d6c3d3c2/info": {
+  "ja": "虎の形の5手目に、辺の側へ打つ手。AIの評価だと虎より黒が大きく損をするんだ。名前だけ知っておけば十分な変化だね。",
+  "en": "[Aim] On move 5 of the Tiger trunk, Black plays toward the edge. By the AI’s evaluation Black loses much more than with the Tiger — a line it is enough to know by name.",
+  "zh": "【目的】在虎型第5手向边一侧落子。按AI评估，黑方比走虎损失大得多，知道名字就够了的变化。",
+  "zh-TW": "【目的】在虎型第5手向邊一側落子。按AI評估，黑方比走虎損失大得多，知道名字就夠了的變化。",
+  "ko": "【노림】호랑이 기본형 5수째에 변 쪽으로 두는 수. AI 평가로는 호랑이보다 흑이 크게 손해 보는 수로, 이름만 알아 두면 충분한 변화예요.",
+  "es": "[Objetivo] En la jugada 5 del tronco Tigre, las negras juegan hacia el borde. Según la IA pierden mucho más que con el Tigre: basta conocerla de nombre.",
+  "fr": "[But] Au 5e coup du tronc Tigre, Noir joue vers le bord. Selon l’IA il perd bien plus qu’avec le Tigre — une ligne qu’il suffit de connaître de nom.",
+  "pt": "[Objetivo] No 5.º lance do tronco Tigre, as pretas jogam para a borda. Pela IA perdem muito mais que no Tigre — basta conhecê-la de nome.",
+  "de": "[Ziel] Im 5. Zug des Tiger-Stamms spielt Schwarz zum Rand hin. Laut KI verliert Schwarz deutlich mehr als mit dem Tiger – es reicht, den Namen zu kennen.",
+  "ru": "[Цель] На 5-м ходу ствола «Тигр» чёрные играют к краю. По оценке ИИ они теряют гораздо больше, чем в «Тигре», — достаточно знать название.",
+  "tr": "[Amaç] Kaplan gövdesinin 5. hamlesinde Siyah kenara doğru oynar. Yapay zekâya göre Kaplan’dan çok daha fazla kaybettirir — adını bilmek yeter.",
+  "id": "[Tujuan] Di langkah 5 batang Harimau, Hitam bermain ke arah tepi. Menurut AI Hitam rugi jauh lebih besar daripada Harimau — cukup tahu namanya.",
+  "hi": "[लक्ष्य] टाइगर की 5वीं चाल में काला किनारे की ओर खेलता है। AI के अनुसार इसमें टाइगर से कहीं ज़्यादा नुक़सान है — नाम जानना काफ़ी है।",
+  "ar": "[الهدف] في النقلة الخامسة من جذع النمر يلعب الأسود نحو الحافة. وفق تقييم الذكاء الاصطناعي يخسر أكثر بكثير من النمر — يكفي معرفة اسمه."
+ },
+ "op:f5d6c3d3e3/info": {
+  "ja": "5手目に虎とは別の場所へ打つ手。返すのは虎と同じ1枚なのに、AIの評価では黒が大きく損をするんだ。枚数が同じでも、場所で価値がぜんぜん変わる例だね。",
+  "en": "[Aim] Move 5 goes to a different square than the Tiger. It flips the same single disc, yet by the AI’s evaluation Black loses much more — the same count, very different value depending on where.",
+  "zh": "【目的】第5手下在与虎不同的位置。翻转的同样是1枚，但按AI评估黑方损失大得多。是同样枚数、位置不同价值就大不相同的例子。",
+  "zh-TW": "【目的】第5手下在與虎不同的位置。翻轉的同樣是1枚，但按AI評估黑方損失大得多。是同樣枚數、位置不同價值就大不相同的例子。",
+  "ko": "【노림】5수째에 호랑이와 다른 곳에 두는 수. 뒤집는 것은 호랑이와 같은 1개지만, AI 평가로는 흑이 크게 손해 봐요. 같은 개수라도 장소에 따라 가치가 크게 달라지는 예입니다.",
+  "es": "[Objetivo] La jugada 5 va a otra casilla que el Tigre. Voltea la misma ficha, pero según la IA las negras pierden mucho más: mismo número, valor muy distinto según el lugar.",
+  "fr": "[But] Le 5e coup va sur une autre case que le Tigre. Il retourne le même pion, mais selon l’IA Noir perd bien plus — même nombre, valeur très différente selon l’endroit.",
+  "pt": "[Objetivo] O 5.º lance vai a outra casa que o Tigre. Vira a mesma peça, mas pela IA as pretas perdem muito mais — mesma quantidade, valor bem diferente conforme o lugar.",
+  "de": "[Ziel] Der 5. Zug geht auf ein anderes Feld als beim Tiger. Er wendet denselben einen Stein, doch laut KI verliert Schwarz viel mehr – gleiche Anzahl, ganz anderer Wert je nach Ort.",
+  "ru": "[Цель] 5-й ход на другое поле, чем в «Тигре». Переворачивается та же одна фишка, но по оценке ИИ чёрные теряют гораздо больше — то же число, но разная ценность в зависимости от места.",
+  "tr": "[Amaç] 5. hamle Kaplan’dan farklı bir kareye gider. Aynı tek taşı çevirir ama yapay zekâya göre Siyah çok daha fazla kaybeder — aynı sayı, yere göre çok farklı değer.",
+  "id": "[Tujuan] Langkah 5 ke petak berbeda dari Harimau. Membalik satu keping yang sama, tetapi menurut AI Hitam rugi jauh lebih besar — jumlah sama, nilai sangat berbeda tergantung tempat.",
+  "hi": "[लक्ष्य] 5वीं चाल टाइगर से अलग खाने पर जाती है। उतनी ही एक गोटी पलटती है, पर AI के अनुसार काले को कहीं ज़्यादा नुक़सान — गिनती वही, जगह से मूल्य बहुत अलग।",
+  "ar": "[الهدف] النقلة الخامسة إلى مربع غير مربع النمر. تقلب القرص نفسه، لكن وفق الذكاء الاصطناعي يخسر الأسود أكثر بكثير — العدد نفسه والقيمة مختلفة تمامًا بحسب المكان."
+ },
+ "op:f5d6c3d3c5/info": {
+  "ja": "前は「ミミ虎」「パンサー」とも呼ばれていたんだ。虎の代わりに、そのとなりのマスに打つ手。黒が4石ほど損で、白に中央を割られやすくなっちゃうね。",
+  "en": "[Origin] Formerly also called “Mimi Tiger” or “Panther”. [Aim] Instead of the Tiger, Black plays the square next to it. By the AI’s evaluation Black loses about 4 discs compared with the Tiger, and White can more easily split the centre.",
+  "zh": "【由来】以前也叫“米米虎”或“豹”。【目的】不走虎，而是下在它旁边的格子。按AI评估比虎黑方约亏4子，容易被白方中割。",
+  "zh-TW": "【由來】以前也叫「米米虎」或「豹」。【目的】不走虎，而是下在它旁邊的格子。按AI評估比虎黑方約虧4子，容易被白方中割。",
+  "ko": "【유래】예전에는 \"미미 호랑이\", \"팬서\"라고도 불렸어요. 【노림】호랑이 대신 그 옆 칸에 두는 수. AI 평가로는 호랑이보다 흑이 약 4석 손해이고, 백에게 중앙을 갈리기 쉬워집니다.",
+  "es": "[Origen] Antes también se llamaba “Mimi Tigre” o “Pantera”. [Objetivo] En vez del Tigre, las negras juegan en la casilla de al lado. Según la IA pierden unas 4 fichas frente al Tigre, y las blancas parten el centro con más facilidad.",
+  "fr": "[Origine] Autrefois aussi appelée « Mimi Tigre » ou « Panthère ». [But] Au lieu du Tigre, Noir joue la case voisine. Selon l’IA il perd environ 4 pions par rapport au Tigre, et Blanc coupe plus facilement le centre.",
+  "pt": "[Origem] Antes também chamada “Mimi Tigre” ou “Pantera”. [Objetivo] Em vez do Tigre, as pretas jogam na casa ao lado. Pela IA perdem cerca de 4 peças em relação ao Tigre, e as brancas dividem o centro com mais facilidade.",
+  "de": "[Herkunft] Früher auch „Mimi-Tiger“ oder „Panther“ genannt. [Ziel] Statt des Tigers spielt Schwarz das Nachbarfeld. Laut KI verliert Schwarz etwa 4 Steine gegenüber dem Tiger, und Weiß kann das Zentrum leichter spalten.",
+  "ru": "[Происхождение] Раньше также «Мими-тигр» или «Пантера». [Цель] Вместо «Тигра» чёрные играют на соседнее поле. По оценке ИИ чёрные теряют около 4 фишек по сравнению с «Тигром», и белым проще расколоть центр.",
+  "tr": "[Köken] Eskiden “Mimi Kaplan” ya da “Panter” de denirdi. [Amaç] Kaplan yerine Siyah yanındaki kareye oynar. Yapay zekâya göre Kaplan’a kıyasla yaklaşık 4 taş kaybettirir ve Beyaz merkezi daha kolay böler.",
+  "id": "[Asal-usul] Dulu juga disebut “Mimi Harimau” atau “Panter”. [Tujuan] Alih-alih Harimau, Hitam bermain di petak sebelahnya. Menurut AI Hitam rugi sekitar 4 keping dibanding Harimau, dan Putih lebih mudah membelah tengah.",
+  "hi": "[उत्पत्ति] पहले इसे “मिमी टाइगर” या “पैंथर” भी कहते थे। [लक्ष्य] टाइगर की जगह काला उसके बगल वाले खाने पर खेलता है। AI के अनुसार टाइगर की तुलना में लगभग 4 गोटियों का नुक़सान, और सफ़ेद आसानी से केंद्र तोड़ता है।",
+  "ar": "[الأصل] كانت تُسمّى سابقًا «ميمي النمر» أو «الفهد». [الهدف] بدل النمر يلعب الأسود المربع المجاور. وفق الذكاء الاصطناعي يخسر نحو 4 أقراص مقارنة بالنمر، ويسهل على الأبيض شق الوسط."
+ },
+ "op:f5f6e6f4e3c5c6/info": {
+  "ja": "牛のあと、白に続いて黒が中割りする手。ローズ・ヴ・トースとの違いはマス1つだけで、どちらで中割りするかの選びどころなんだ。",
+  "en": "[Aim] After the Cow and White’s reply, Black makes a quiet inside move. It differs from Rose-v-Toth by a single square — a choice of where to make the quiet move.",
+  "zh": "【目的】牛之后，紧接白方，黑方中割的一手。与Rose-v-Toth只差一格，是选择在哪里中割。",
+  "zh-TW": "【目的】牛之後，緊接白方，黑方中割的一手。與Rose-v-Toth只差一格，是選擇在哪裡中割。",
+  "ko": "【노림】소 뒤에 백에 이어 흑이 안쪽을 가르는 수. Rose-v-Toth와는 한 칸만 다르고, 어느 쪽으로 가를지의 선택이에요.",
+  "es": "[Objetivo] Tras la Vaca y la réplica blanca, las negras hacen una jugada interior tranquila. Se diferencia de Rose-v-Toth en una sola casilla: elegir dónde hacerla.",
+  "fr": "[But] Après la Vache et la réponse blanche, Noir joue un coup intérieur calme. Il diffère de Rose-v-Toth d’une seule case — le choix de l’endroit du coup calme.",
+  "pt": "[Objetivo] Depois da Vaca e da resposta branca, as pretas fazem um lance interno tranquilo. Difere de Rose-v-Toth por uma só casa — a escolha de onde fazê-lo.",
+  "de": "[Ziel] Nach der Kuh und der weißen Antwort macht Schwarz einen ruhigen Innenzug. Er unterscheidet sich von Rose-v-Toth nur um ein Feld – die Wahl, wo der ruhige Zug kommt.",
+  "ru": "[Цель] После «Коровы» и ответа белых чёрные делают тихий внутренний ход. От Rose-v-Toth отличается лишь одним полем — выбор, где сделать тихий ход.",
+  "tr": "[Amaç] İnek’ten ve Beyaz’ın cevabından sonra Siyah sessiz bir iç hamle yapar. Rose-v-Toth’tan yalnızca bir kare farklıdır — sessiz hamlenin nerede yapılacağı seçimi.",
+  "id": "[Tujuan] Setelah Sapi dan balasan Putih, Hitam membuat langkah dalam yang tenang. Bedanya dari Rose-v-Toth hanya satu petak — pilihan tempat langkah tenang itu.",
+  "hi": "[लक्ष्य] काउ और सफ़ेद के जवाब के बाद काला एक शांत भीतरी चाल चलता है। रोज़-वी-टोथ से सिर्फ़ एक खाने का अंतर — शांत चाल कहाँ चलें, इसका चुनाव।",
+  "ar": "[الهدف] بعد البقرة ورد الأبيض، يلعب الأسود نقلة داخلية هادئة. تختلف عن Rose-v-Toth بمربع واحد فقط — اختيار مكان النقلة الهادئة."
+ },
+ "op:f5f6e6f4c3/info": {
+  "ja": "英語の名前は Buffalo。牛の代わりに、離れた場所へ打つ黒の手なんだ。AIの評価では黒が4石ほど損で、白が2石ほど得な変化とされているね。",
+  "en": "[Origin] Its English name is Buffalo. [Aim] Instead of the Cow, Black plays a square further away. By the AI’s evaluation Black loses about 4 discs; it is rated White +2.",
+  "zh": "【由来】英文名是Buffalo。【目的】不走牛，而是下在较远位置的黑方手。按AI评估黑方约亏4子，被视为白+2的变化。",
+  "zh-TW": "【由來】英文名是Buffalo。【目的】不走牛，而是下在較遠位置的黑方手。按AI評估黑方約虧4子，被視為白+2的變化。",
+  "ko": "【유래】영어 이름은 Buffalo. 【노림】소 대신 떨어진 곳에 두는 흑의 수. AI 평가로는 흑이 약 4석 손해이고, 백+2의 변화로 봅니다.",
+  "es": "[Origen] Su nombre inglés es Buffalo. [Objetivo] En vez de la Vaca, las negras juegan una casilla más alejada. Según la IA pierden unas 4 fichas; se valora blancas +2.",
+  "fr": "[Origine] Son nom anglais est Buffalo. [But] Au lieu de la Vache, Noir joue une case plus éloignée. Selon l’IA il perd environ 4 pions ; évalué Blanc +2.",
+  "pt": "[Origem] Seu nome em inglês é Buffalo. [Objetivo] Em vez da Vaca, as pretas jogam numa casa mais afastada. Pela IA perdem cerca de 4 peças; avaliado brancas +2.",
+  "de": "[Herkunft] Englischer Name: Buffalo. [Ziel] Statt der Kuh spielt Schwarz ein weiter entferntes Feld. Laut KI verliert Schwarz etwa 4 Steine; bewertet mit Weiß +2.",
+  "ru": "[Происхождение] Английское название — Buffalo. [Цель] Вместо «Коровы» чёрные играют на более удалённое поле. По оценке ИИ чёрные теряют около 4 фишек; оценка — белые +2.",
+  "tr": "[Köken] İngilizce adı Buffalo. [Amaç] İnek yerine Siyah daha uzaktaki bir kareye oynar. Yapay zekâya göre yaklaşık 4 taş kaybettirir; Beyaz +2 olarak değerlendirilir.",
+  "id": "[Asal-usul] Nama Inggrisnya Buffalo. [Tujuan] Alih-alih Sapi, Hitam bermain di petak yang lebih jauh. Menurut AI Hitam rugi sekitar 4 keping; dinilai Putih +2.",
+  "hi": "[उत्पत्ति] अंग्रेज़ी नाम Buffalo। [लक्ष्य] काउ की जगह काला दूर वाले खाने पर खेलता है। AI के अनुसार लगभग 4 गोटियों का नुक़सान; सफ़ेद +2 आँका गया।",
+  "ar": "[الأصل] اسمها الإنجليزي Buffalo. [الهدف] بدل البقرة يلعب الأسود مربعًا أبعد. وفق الذكاء الاصطناعي يخسر نحو 4 أقراص؛ ويُقيَّم الأبيض +2."
+ },
+ "op:f5d6c3d3c4f4c5b3c2e6c6b4b5d2e3a6c1d7/info": {
+  "ja": "評価が互角を保つ本線とされる手順なんだ。別名は Shaman French Tamenori。金魚とは18手目だけがちがうよ。",
+  "en": "[Type] A main line said to keep the evaluation level (±0, a draw). Also called Shaman French Tamenori. It differs from the Goldfish only at move 18.",
+  "zh": "【分类】被视为评估保持均势（±0，和棋）的主线。别名Shaman French Tamenori。与金鱼只有第18手不同。",
+  "zh-TW": "【分類】被視為評估保持均勢（±0，和棋）的主線。別名Shaman French Tamenori。與金魚只有第18手不同。",
+  "ko": "【분류】평가가 호각(±0, 무승부)을 유지하는 본선으로 여겨지는 수순. 별명 Shaman French Tamenori. 금붕어와는 18수째만 달라요.",
+  "es": "[Tipo] Línea principal que se considera que mantiene la igualdad (±0, tablas). También llamada Shaman French Tamenori. Solo difiere del Pez dorado en la jugada 18.",
+  "fr": "[Type] Ligne principale réputée garder l’équilibre (±0, nulle). Aussi appelée Shaman French Tamenori. Elle ne diffère du Poisson rouge qu’au 18e coup.",
+  "pt": "[Tipo] Linha principal que se considera manter a igualdade (±0, empate). Também chamada Shaman French Tamenori. Difere do Peixinho dourado só no lance 18.",
+  "de": "[Typ] Hauptlinie, die als ausgeglichen gilt (±0, Remis). Auch Shaman French Tamenori genannt. Vom Goldfisch unterscheidet sie sich nur im 18. Zug.",
+  "ru": "[Тип] Главная линия, сохраняющая равенство (±0, ничья). Также известна как Shaman French Tamenori. От «Золотой рыбки» отличается только 18-м ходом.",
+  "tr": "[Tür] Değerlendirmeyi dengede (±0, beraberlik) tuttuğu kabul edilen ana kol. Diğer adı Shaman French Tamenori. Japon Balığı’ndan yalnızca 18. hamlede ayrılır.",
+  "id": "[Jenis] Jalur utama yang dianggap menjaga keseimbangan (±0, seri). Juga disebut Shaman French Tamenori. Hanya berbeda dari Ikan Mas di langkah 18.",
+  "hi": "[प्रकार] मुख्य लाइन जो बराबरी (±0, ड्रॉ) बनाए रखती मानी जाती है। दूसरा नाम Shaman French Tamenori। गोल्डफ़िश से सिर्फ़ 18वीं चाल में अलग।",
+  "ar": "[النوع] خط رئيسي يُعدّ محافظًا على التعادل (±0). يُسمّى أيضًا Shaman French Tamenori. يختلف عن «السمكة الذهبية» في النقلة 18 فقط."
+ },
+ "op:f5d6c4g5f6/info": {
+  "ja": "ノーキャットに対して、燕とは別の場所に打つ変化なんだ。評価は互角を保つ本線とされているね。",
+  "en": "[Type] A main line said to keep the evaluation level (±0, a draw). Against No-Cat, Black plays a different square from the Swallow.",
+  "zh": "【分类】被视为评估保持均势（±0，和棋）的主线。面对无猫，下在与燕不同位置的变化。",
+  "zh-TW": "【分類】被視為評估保持均勢（±0，和棋）的主線。面對無貓，下在與燕不同位置的變化。",
+  "ko": "【분류】평가가 호각(±0, 무승부)을 유지하는 본선으로 여겨지는 수순. 노캣에 대해 제비와 다른 곳에 두는 변화예요.",
+  "es": "[Tipo] Línea principal que se considera que mantiene la igualdad (±0, tablas). Contra No-Cat, las negras juegan otra casilla distinta de la Golondrina.",
+  "fr": "[Type] Ligne principale réputée garder l’équilibre (±0, nulle). Contre No-Cat, Noir joue une autre case que l’Hirondelle.",
+  "pt": "[Tipo] Linha principal que se considera manter a igualdade (±0, empate). Contra No-Cat, as pretas jogam outra casa que a Andorinha.",
+  "de": "[Typ] Hauptlinie, die als ausgeglichen gilt (±0, Remis). Gegen No-Cat spielt Schwarz ein anderes Feld als bei der Schwalbe.",
+  "ru": "[Тип] Главная линия, сохраняющая равенство (±0, ничья). Против No-Cat чёрные играют другое поле, чем в «Ласточке».",
+  "tr": "[Tür] Değerlendirmeyi dengede (±0, beraberlik) tuttuğu kabul edilen ana kol. No-Cat’e karşı Siyah, Kırlangıç’tan farklı bir kareye oynar.",
+  "id": "[Jenis] Jalur utama yang dianggap menjaga keseimbangan (±0, seri). Melawan No-Cat, Hitam bermain di petak yang berbeda dari Walet.",
+  "hi": "[प्रकार] मुख्य लाइन जो बराबरी (±0, ड्रॉ) बनाए रखती मानी जाती है। नो-कैट के ख़िलाफ़ काला स्वैलो से अलग खाने पर खेलता है।",
+  "ar": "[النوع] خط رئيسي يُعدّ محافظًا على التعادل (±0). ضد No-Cat يلعب الأسود مربعًا غير مربع السنونو."
+ },
+ "op:f5d6c3d3c4/info": {
+  "ja": "鼠・牛・虎・兎は十二支から取った名前で、1978年の本で「四大定石」として紹介されたんだ。黒の5手目は白石のあいだを割る「中割り」。返す石が少なくて内側に収まるのが、好手のわけだね。ここからたくさんの変化に分かれていくよ。"
+ },
+ "op:f5d6c3d3c4/aim": {
+  "ja": "中割りで内側に収まる、いちばん主流の定石"
+ },
+ "op:f5d6c3d3c4b5/info": {
+  "ja": "白の6手目は、ふつうの手より辺に近い外側の手。評価は白の2石損くらいとされていて、黒にいい候補が多くなるんだ。名前は海外で付いたものだね。"
+ },
+ "op:f5d6c3d3c4b5/aim": {
+  "ja": "白が辺寄りの外側に打つ、やや緩い変化"
+ },
+ "op:f5d6c3d3c4f4f6f3/info": {
+  "ja": "名前は昔の対局ソフト「COMPOTH」から来たとされているんだ。虎から白・黒・白と中央まわりに打ち合う形で、互角になる変化がとても多い。虎の本線と言っていいね！"
+ },
+ "op:f5d6c3d3c4f4f6f3/aim": {
+  "ja": "互角の変化がいちばん多い、虎の本線"
+ },
+ "op:f5d6c3d3c4f4f6g5/info": {
+  "ja": "「カン」は、ある名前を見まちがえたのが定着したものなんだって。そのカンを打たないほうがノーカン。白が右側に打ち出す手で、白がわずかに苦しい、ほぼ互角の形とされているよ。"
+ },
+ "op:f5d6c3d3c4f4f6g5/aim": {
+  "ja": "白が右側へ打ち出す、ほぼ互角の形"
+ },
+ "op:f5d6c3d3c4f4f6b4/info": {
+  "ja": "名前のわけはノーカンと同じ。白が十字の形を作って、黒が右辺を取りにいく流れになりやすいんだ。評価は黒が2石ほど得で、白が少し損をする定石だね。"
+ },
+ "op:f5d6c3d3c4f4f6b4/aim": {
+  "ja": "白が十字の形を作り、黒が右辺をねらう流れ"
+ },
+ "op:f5d6c3d3c4f4c5b3c2/info": {
+  "ja": "別名は「In My Country」。黒が多く取る「虎大量」から続く形で、黒が一気に石をふやして左上を固めるんだ。初心者の黒にもすすめられる、わかりやすい流れ。ここから酉や金魚に分かれるよ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2/aim": {
+  "ja": "黒が多く取って左上を固める、わかりやすい形"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3/info": {
+  "ja": "石の形を鳥に見立てた名前で、派生には「フック」「アッパー」みたいな格闘技の名前が付いてるんだ。ローズビルのあと、黒が中央を割る手。互角になりやすい形だね。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3/aim": {
+  "ja": "ローズビルのあと、黒が中央を割る互角の形"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e6c6b4b5d2e3a6c1b6/info": {
+  "ja": "石の形が、尾びれを広げた金魚に見えるのが名前のわけ。ローズビルからの長い本線で、白の変化が少なくて黒の変化が多いんだ。18手目まで、ゆっくり覚えていこうね！"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e6c6b4b5d2e3a6c1b6/aim": {
+  "ja": "左辺から上辺の取り合いを、黒が収める長い本線"
+ },
+ "op:f5d6c3d3c2/aim": {
+  "ja": "辺側に打つ5手目。黒が大きく損する、名前だけ知る手"
+ },
+ "op:f5d6c3d3e3/aim": {
+  "ja": "同じ1枚返しでも、場所しだいで損をする例"
+ },
+ "op:f5d6c3d3c5/aim": {
+  "ja": "虎のとなりのマスに打つ手。中央を割られやすい"
+ },
+ "op:f5d6c3d3c6/info": {
+  "ja": "虎の代わりに、別のマスへ打つ黒の手。AIの評価では虎より黒が4石ほど損なんだ。それでも変化球として、ときどき打たれるよ。"
+ },
+ "op:f5d6c3d3c6/aim": {
+  "ja": "虎の代わりに打つ、少し損な変化球"
+ },
+ "op:f5d6c3d3c7/info": {
+  "ja": "5手目に、石から離れたマスへ打つ手。AIの評価では黒が大きく損をしちゃうんだ。まねしないで、名前だけ覚えておこうね。"
+ },
+ "op:f5d6c3d3c7/aim": {
+  "ja": "5手目に離れたマスへ。黒が大きく損をする"
+ },
+ "op:f5d6c3f3/info": {
+  "ja": "十二支の犬（戌）が名前のもと。黒の3手目に、白がいつもと別のマスへ打つんだ。開放度を気にしない、むずかしい形になりやすくて、AIの評価では白が損をするね。"
+ },
+ "op:f5d6c3f3/aim": {
+  "ja": "白が開放度を気にせず打つ、むずかしい形"
+ },
+ "op:f5d6c3f4/info": {
+  "ja": "十二支の竜（辰）が名前のもと。1976年の新聞で、四大定石に竜と猿が加えられたんだって。犬と同じように、序盤から開放度を気にしない、むずかしい形になりやすい変化だね。"
+ },
+ "op:f5d6c3f4/aim": {
+  "ja": "白の4手目の変化。犬と同じく、むずかしい形に"
+ },
+ "op:f5d6c3g5/info": {
+  "ja": "白が、遠くの右側へ打ち出す手。AIの評価では白が4石ほど損をしちゃうんだ。遠くへ飛び出すと、石がばらけて相手の足場になりやすいね。"
+ },
+ "op:f5d6c3g5/aim": {
+  "ja": "白が遠くの右側へ打ち出す、損な手"
+ },
+ "op:f5d6c5f4e3/info": {
+  "ja": "十二支の兎（卯）で、四大定石のひとつ。黒が白の縦の石を割って、白も中央を割り返し、黒は返す石を少なくして中割りを打つんだ。ほぼ互角で、最初に覚える定石にぴったりだね！"
+ },
+ "op:f5d6c5f4e3/aim": {
+  "ja": "割り合って互角。最初に覚えたい定石"
+ },
+ "op:f5d6c5f4e3c6d3f6e6d7/info": {
+  "ja": "英語圏で付いた名前で、「逆ローズ」「Sローズ」みたいな派生もたくさんあるんだ。兎から10手目まで続く、海外でも広く研究されている本線だね。"
+ },
+ "op:f5d6c5f4e3c6d3f6e6d7/aim": {
+  "ja": "兎から10手目まで、世界で研究される本線"
+ },
+ "op:f5d6c4d3c5/info": {
+  "ja": "斜めの3手目から、白と黒が1手ずつ打って進む、猫の基本形。派生には「吾輩猫」みたいな、文学っぽい名前の変化もあるんだ。"
+ },
+ "op:f5d6c4d3c5/aim": {
+  "ja": "3手目から白・黒と進む、猫の基本形"
+ },
+ "op:f5d6c4g5/info": {
+  "ja": "猫になる白の手を避けるから、ノーキャット。白が右側のマスへ打つ手で、ここから燕へつながっていくんだ。"
+ },
+ "op:f5d6c4g5/aim": {
+  "ja": "白が猫の手を避けて、右へ打つ変化"
+ },
+ "op:f5d6c4g5c6/info": {
+  "ja": "燕の変化には「ミツバチ戦法」「クリオネ」「ファルコン」なんて名前もあるんだ。ノーキャットに対して、黒が左側を固める手だね。"
+ },
+ "op:f5d6c4g5c6/aim": {
+  "ja": "ノーキャットに、黒が左側を固める手"
+ },
+ "op:f5f6e6f4e3/info": {
+  "ja": "十二支の牛（丑）で、四大定石のひとつ。斜め取りでいちばん打たれる形なんだ。変化が多くて覚えるのは大変だけど、展開がおもしろくて、いちばんおすすめの定石のひとつだね！"
+ },
+ "op:f5f6e6f4e3/aim": {
+  "ja": "斜め取りの代表。変化が多くて展開が楽しい"
+ },
+ "op:f5f6e6f4e3c5c4/info": {
+  "ja": "英語圏で付いた名前なんだ。牛のあと、白と黒が左側で中央を割り合う変化だね。"
+ },
+ "op:f5f6e6f4e3c5c4/aim": {
+  "ja": "左側で中央を割り合う変化"
+ },
+ "op:f5f6e6f4e3c5c6/aim": {
+  "ja": "牛のあと、黒がもう一方のマスで中割りする選択"
+ },
+ "op:f5f6e6f4e3d6/info": {
+  "ja": "英語では「煙突（Chimney）」って呼ばれているんだ。牛のあと、白が中央に寄せる手だね。"
+ },
+ "op:f5f6e6f4e3d6/aim": {
+  "ja": "牛のあと、白が中央に寄せる手"
+ },
+ "op:f5f6e6f4c3/aim": {
+  "ja": "牛の代わりに離れた場所へ。黒がやや損"
+ },
+ "op:f5f6e6f4g6/info": {
+  "ja": "若松二段が「蛇」と名付けたんだ。牛の代わりに黒が右側へ打つ手で、白が2石ほど得な変化とされているね。"
+ },
+ "op:f5f6e6f4g6/aim": {
+  "ja": "黒が右側へ。白が少し有利"
+ },
+ "op:f5f6e6f4g5/info": {
+  "ja": "英語の名前は、プレイヤーでソフト開発者の人から来ていると考えられているんだ。日本では最初「飛び出し」、そのあと「闘牛」と呼ばれて、今は「飛び出し牛」が主流だね。黒が右側に飛び出す手。"
+ },
+ "op:f5f6e6f4g5/aim": {
+  "ja": "黒が右側へ飛び出す手"
+ },
+ "op:f5f6e6f4g5e7e3/info": {
+  "ja": "「こうもり」を裏返した形として、谷田七段が示した定石なんだ。闘牛に白が打ったあと、黒が中央を割る形だね。"
+ },
+ "op:f5f6e6f4g5e7e3/aim": {
+  "ja": "闘牛から、黒が中央を割る"
+ },
+ "op:f5f6e6f4g5e7f7d6/info": {
+  "ja": "別名は「裏カヌー」。闘牛から白・黒と進んだあと、白が中央にもどる手なんだ。"
+ },
+ "op:f5f6e6f4g5e7f7d6/aim": {
+  "ja": "闘牛から、白が中央にもどる"
+ },
+ "op:f5f6e6f4g5e7f7h5/info": {
+  "ja": "別名は「モリスエ」。昔の体操選手にちなむんだって。闘牛から白・黒と進んだあと、白が辺へ飛び出す大胆な手だね！"
+ },
+ "op:f5f6e6f4g5e7f7h5/aim": {
+  "ja": "白が辺へ飛び出す、大胆な手"
+ },
+ "op:f5f4e3f6d3/info": {
+  "ja": "十二支の鼠（子）で、四大定石のひとつ。並び取りの白はやや弱い形とされていて、上級者はあまり打たないんだ。でも初心者の対局ではよく出るから、内側のいい場所をさがす基本を大事にしようね。"
+ },
+ "op:f5f4e3f6d3/aim": {
+  "ja": "並び取り。受け身にならず内側の好所をさがす"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6f8/info": {
+  "ja": "評価が互角を保つ本線とされる手順なんだ。コンポスの中でも、まず覚えたい形だね。"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6f8/aim": {
+  "ja": "互角を保つ、コンポスの本線"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6f8f7g5h6h4g4h3h5h7/info": {
+  "ja": "評価が互角（引き分け）を保つ本線なんだ。コンポスの本線から、21手目まで続く長い手順だね。じっくりいこう！"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6f8f7g5h6h4g4h3h5h7/aim": {
+  "ja": "21手目まで続く、引き分けの本線"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6f8f7g5h6h4e8/info": {
+  "ja": "コンポス群のひとつで、評価が互角を保つ本線とされる手順なんだ。"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6f8f7g5h6h4e8/aim": {
+  "ja": "互角を保つ、コンポス群のひとつ"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6f8c5/info": {
+  "ja": "これもコンポス群のひとつ。評価が互角のまま進む本線とされているんだ。"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6f8c5/aim": {
+  "ja": "互角を保つ、コンポス群のひとつ"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6d8/info": {
+  "ja": "最善より2石ほど損をする「-2の変化」とされる手順なんだ。最善の手順の一部は「大壁」「準大壁」と呼ばれているよ。"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6d8/aim": {
+  "ja": "2石ほど損をする、コンポスの変化"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6f7/info": {
+  "ja": "最善より2石ほど損をする「-2の変化」なんだ。別名は Ruru Comp'Oth だね。"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6f7/aim": {
+  "ja": "2石ほど損をする、コンポスの変化"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6g5/info": {
+  "ja": "コンポス群のひとつで、最善より2石ほど損な「-2の変化」とされる手順なんだ。"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7d7g6g5/aim": {
+  "ja": "2石ほど損をする、コンポスの変化"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7c6/info": {
+  "ja": "最善より2石ほど損な「-2の変化」。昔いちばん強かったソフト「Logistello」が好んだ手順から来ているとされるんだ。"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7c6/aim": {
+  "ja": "強いソフトが好んだ、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7f7/info": {
+  "ja": "最善より2石ほど損な「-2の変化」なんだ。駅名と同じだけど、対局者の名前にちなむという説もあるね。白のコンポスを黒が避ける変化のひとつだよ。"
+ },
+ "op:f5d6c3d3c4f4f6f3e6e7f7/aim": {
+  "ja": "黒がコンポスを避ける、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4f6f3e3/info": {
+  "ja": "最善より2石ほど損な「-2の変化」。黒の石の形が、電気ねずみのしっぽに似ているのが名前のわけなんだって！"
+ },
+ "op:f5d6c3d3c4f4f6f3e3/aim": {
+  "ja": "黒が早めに中央を外す、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4f6g5e6d7e3c5f3e7b6/info": {
+  "ja": "評価が互角を保つ本線とされる手順なんだ。ノーカンからの長い本線で、別名は Piyanat No-Kung だね。"
+ },
+ "op:f5d6c3d3c4f4f6g5e6d7e3c5f3e7b6/aim": {
+  "ja": "ノーカンから続く、互角の長い本線"
+ },
+ "op:f5d6c3d3c4f4f6g5e6c5/info": {
+  "ja": "最善より2石ほど損な「-2の変化」。白はある手をねらうんだけど、黒にうまく受けられて、白が苦しくなりやすいんだ。"
+ },
+ "op:f5d6c3d3c4f4f6g5e6c5/aim": {
+  "ja": "白のねらいを、黒の受けがくじく変化"
+ },
+ "op:f5d6c3d3c4f4f6g5e6f7/info": {
+  "ja": "ノーカンから分かれる「-2の変化」で、最善より2石ほど損な手順なんだ。別名は Tamenori No-Kung だね。"
+ },
+ "op:f5d6c3d3c4f4f6g5e6f7/aim": {
+  "ja": "ノーカンから分かれる、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4f6g5c6/info": {
+  "ja": "これもノーカンから分かれる手順。最善より2石ほど損な「-2の変化」とされているんだ。"
+ },
+ "op:f5d6c3d3c4f4f6g5c6/aim": {
+  "ja": "ノーカンから分かれる、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4f6g5e6d7f7/info": {
+  "ja": "ノーカンから分かれる「-2の変化」のひとつ。少し長めの手順だから、ゆっくり追いかけてみてね。"
+ },
+ "op:f5d6c3d3c4f4f6g5e6d7f7/aim": {
+  "ja": "ノーカンから分かれる、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4c5b3c2b4/info": {
+  "ja": "評価が互角を保つ本線とされる手順なんだ。ローズビルを横に分断する手で、続く黒の手が中割りになって、互角になりやすいんだって。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2b4/aim": {
+  "ja": "ローズビルを横に分断して、互角を保つ"
+ },
+ "op:f5d6c3d3c4f4c5b3c2b4e3e6c6f6a5a4b5a6d7c7e7/info": {
+  "ja": "評価が互角を保つ本線なんだ。FJTから21手目まで続く、長い長い手順だね。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2b4e3e6c6f6a5a4b5a6d7c7e7/aim": {
+  "ja": "FJTから21手目まで続く、互角の本線"
+ },
+ "op:f5d6c3d3c4f4c5b3c2b4e3e6c6f6a5a4b5a6d7d8/info": {
+  "ja": "FJTの長い本線から分かれる手順で、評価は互角のまま保たれるとされているんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2b4e3e6c6f6a5a4b5a6d7d8/aim": {
+  "ja": "FJTの長い本線から分かれる、互角の手順"
+ },
+ "op:f5d6c3d3c4f4c5b3c2b4e3e6c6g4/info": {
+  "ja": "白が跳ねるように打つFJT。評価が互角を保つ本線とされる手順なんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2b4e3e6c6g4/aim": {
+  "ja": "白が跳ねるように打つ、互角のFJT"
+ },
+ "op:f5d6c3d3c4f4c5b3c2b4c6/info": {
+  "ja": "黒が早めに打ち出すFJTで、最善より2石ほど損な「-2の変化」とされているんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2b4c6/aim": {
+  "ja": "黒が早めに打ち出す、2石損のFJT"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2c6b4a3/info": {
+  "ja": "酉から続く、評価が互角を保つ本線なんだ。格闘技の名前シリーズのひとつだね！"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2c6b4a3/aim": {
+  "ja": "互角を保つ、酉の本線"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2c6b4a4/info": {
+  "ja": "酉の変化のひとつで、評価は互角のまま進むとされているんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2c6b4a4/aim": {
+  "ja": "互角を保つ、酉の変化"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2c6b4b5/info": {
+  "ja": "酉の変化のひとつ。最善より2石ほど損な「-2の変化」とされる手順なんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2c6b4b5/aim": {
+  "ja": "2石ほど損をする、酉の変化"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2c6b4f6/info": {
+  "ja": "これも格闘技の名前の、酉の変化。最善より2石ほど損な「-2の変化」なんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2c6b4f6/aim": {
+  "ja": "2石ほど損をする、酉の変化"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2b4/info": {
+  "ja": "白が先を急いで打つ酉の変化で、最善より2石ほど損な「-2の変化」とされているんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2b4/aim": {
+  "ja": "白が急いで打つ、2石損の酉"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2b6/info": {
+  "ja": "白が斜めに打つ酉の変化。最善より2石ほど損な「-2の変化」なんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e3d2b6/aim": {
+  "ja": "白が斜めに打つ、2石損の酉"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e6c6b4b5f6/info": {
+  "ja": "金魚の途中で分かれる手順で、最善より2石ほど損な「-2の変化」とされているんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e6c6b4b5f6/aim": {
+  "ja": "金魚の途中で分かれる、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e6c6b6/info": {
+  "ja": "白が早めに分かれる金魚の変化で、最善より2石ほど損な手順なんだ。別名の Moorlin は、昔の対局ソフトの名前だね。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e6c6b6/aim": {
+  "ja": "白が早めに分かれる、2石損の金魚"
+ },
+ "op:f5d6c3d3c4f4c5b3c2e6c6b4b5d2e3a6c1d7/aim": {
+  "ja": "18手目だけちがう、互角の金魚"
+ },
+ "op:f5d6c3d3c4f4c5b3c2f6/info": {
+  "ja": "ローズビルに対する白の「-2の変化」なんだ。名前は、ある七段の名字から有名な歌手を連想したものと言われているね。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2f6/aim": {
+  "ja": "ローズビルに白が打つ、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4c5b3c2d1/info": {
+  "ja": "ローズビルに対する白の手で、最善より2石ほど損な「-2の変化」なんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2d1/aim": {
+  "ja": "ローズビルに白が辺へ打つ、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4c5b3c2d2/info": {
+  "ja": "これもローズビルに対する白の「-2の変化」。最善より2石ほど損な手順とされているんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b3c2d2/aim": {
+  "ja": "ローズビルに白が打つ、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4c5b5/info": {
+  "ja": "最善より2石ほど損な「-2の変化」なんだ。白が1石だけ返す手で、同じ場面で大量に取るのがバナナだね。"
+ },
+ "op:f5d6c3d3c4f4c5b5/aim": {
+  "ja": "白が1石だけ返す、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4c5b4/info": {
+  "ja": "最善より2石ほど損な「-2の変化」。横にたおれたバナナみたいな形が名前のわけなんだって！"
+ },
+ "op:f5d6c3d3c4f4c5b4/aim": {
+  "ja": "白が大量に取る、2石損の変化"
+ },
+ "op:f5d6c3d3c4f4c5b4b3c6/info": {
+  "ja": "バナナから続く手順で、最善より2石ほど損な「-2の変化」とされているんだ。"
+ },
+ "op:f5d6c3d3c4f4c5b4b3c6/aim": {
+  "ja": "バナナから続く、2石損の変化"
+ },
+ "op:f5d6c5f4e3c6d3f6e6d7g3c4b4/info": {
+  "ja": "ローズから分かれる黒の手で、最善より2石ほど損な「-2の変化」なんだ。別名は「為則ローズ」だね。"
+ },
+ "op:f5d6c5f4e3c6d3f6e6d7g3c4b4/aim": {
+  "ja": "ローズから黒が打つ、2石損の変化"
+ },
+ "op:f5d6c5f4e3c6d3f6e6d7g4/info": {
+  "ja": "これもローズから分かれる黒の手。最善より2石ほど損な「-2の変化」とされているんだ。"
+ },
+ "op:f5d6c5f4e3c6d3f6e6d7g4/aim": {
+  "ja": "ローズから黒が打つ、2石損の変化"
+ },
+ "op:f5d6c5f4e3c6d3f6e6d7e7/info": {
+  "ja": "ローズから分かれる黒の手で、最善より2石ほど損な「-2の変化」なんだ。"
+ },
+ "op:f5d6c5f4e3c6d3f6e6d7e7/aim": {
+  "ja": "ローズから黒が下側へ打つ、2石損の変化"
+ },
+ "op:f5d6c4g5c6c5d7d3b5/info": {
+  "ja": "燕の基本の手順で、最善より2石ほど損な「-2の変化」とされているんだ。"
+ },
+ "op:f5d6c4g5c6c5d7d3b5/aim": {
+  "ja": "燕の基本の手順（2石損の変化）"
+ },
+ "op:f5d6c4g5c6c5f6f4f3/info": {
+  "ja": "燕の変化のひとつ。最善より2石ほど損な「-2の変化」なんだ。"
+ },
+ "op:f5d6c4g5c6c5f6f4f3/aim": {
+  "ja": "燕の変化のひとつ（2石損）"
+ },
+ "op:f5d6c4g5c6c5b6/info": {
+  "ja": "星座の名前が付いた、燕の変化。最善より2石ほど損な「-2の変化」とされているんだ。"
+ },
+ "op:f5d6c4g5c6c5b6/aim": {
+  "ja": "燕の変化のひとつ（2石損）"
+ },
+ "op:f5d6c4g5c6c5e6/info": {
+  "ja": "これも燕の変化のひとつで、最善より2石ほど損な「-2の変化」なんだ。"
+ },
+ "op:f5d6c4g5c6c5e6/aim": {
+  "ja": "燕の変化のひとつ（2石損）"
+ },
+ "op:f5d6c4g5f6/aim": {
+  "ja": "ノーキャットに燕と別の手。互角を保つ"
+ },
+ "op:f5f6e6f4e3c5c4d6c6b3d7d3f3d2/info": {
+  "ja": "牛から長く続く手順で、評価が互角を保つ本線とされているんだ。"
+ },
+ "op:f5f6e6f4e3c5c4d6c6b3d7d3f3d2/aim": {
+  "ja": "牛から長く続く、互角の手順"
+ },
+ "op:f5f6e6f4e3c5c4d6b5/info": {
+  "ja": "評価が互角を保つ本線とされる手順なんだ。野いちごの別名「裏カヌー」は、このカヌーとくらべた名前だね。"
+ },
+ "op:f5f6e6f4e3c5c4d6b5/aim": {
+  "ja": "牛から黒が打つ、互角を保つ変化"
+ },
+ "op:f5f6e6f4e3c5c6d6e7/info": {
+  "ja": "とかげの先に続く手順で、評価は互角を保つとされているんだ。"
+ },
+ "op:f5f6e6f4e3c5c6d6e7/aim": {
+  "ja": "とかげの先の、互角を保つ手順"
+ },
+ "op:f5f6e6f4e3c5c4d7/info": {
+  "ja": "ローズ・ヴ・トースに対する白の手で、最善より2石ほど損な「-2の変化」なんだ。"
+ },
+ "op:f5f6e6f4e3c5c4d7/aim": {
+  "ja": "ローズ・ヴ・トースに白が打つ、2石損の変化"
+ },
+ "op:f5f6e6f4e3c5c4e7/info": {
+  "ja": "これもローズ・ヴ・トースに対する白の「-2の変化」。最善より2石ほど損とされているんだ。"
+ },
+ "op:f5f6e6f4e3c5c4e7/aim": {
+  "ja": "ローズ・ヴ・トースに白が打つ、2石損の変化"
+ },
+ "op:f5f6e6f4e3c5c4d3/info": {
+  "ja": "ローズ・ヴ・トースに対して、白が中央へ打つ手。最善より2石ほど損な「-2の変化」なんだ。"
+ },
+ "op:f5f6e6f4e3c5c4d3/aim": {
+  "ja": "ローズ・ヴ・トースに白が中央へ打つ、2石損の変化"
+ },
+ "op:f5f6e6f4e3d6c4e2d7/info": {
+  "ja": "りんごに対する黒の手から始まる、最善より2石ほど損な「-2の変化」なんだ。"
+ },
+ "op:f5f6e6f4e3d6c4e2d7/aim": {
+  "ja": "りんごに黒が打つ、2石損の変化"
+ },
+ "op:f5f6e6f4e3d6c6c4c5c3/info": {
+  "ja": "りんごに黒が左側へ打つ手から始まる変化。最善より2石ほど損とされているんだ。"
+ },
+ "op:f5f6e6f4e3d6c6c4c5c3/aim": {
+  "ja": "りんごに黒が左側へ打つ、2石損の変化"
+ },
+ "op:f5f6e6f4e3d6c5/info": {
+  "ja": "りんごに対する黒の手で、最善より2石ほど損な「-2の変化」なんだ。"
+ },
+ "op:f5f6e6f4e3d6c5/aim": {
+  "ja": "りんごに黒が打つ、2石損の変化"
+ },
+ "op:f5f6e6f4g5e7f7d6f3g6d8h5e3/info": {
+  "ja": "野いちごから13手目まで続く本線で、評価は互角を保つとされているんだ。"
+ },
+ "op:f5f6e6f4g5e7f7d6f3g6d8h5e3/aim": {
+  "ja": "野いちごから13手目まで続く、互角の本線"
+ }
+}
