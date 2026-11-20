@@ -496,15 +496,22 @@ body{background:radial-gradient(1200px 700px at 20% -15%, #15304a 0%, transparen
 
 /* the switch is the caption (自分の艦隊｜相手の艦隊): the title is shown only while there is no switch (deploy, draft) */
 body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
-@media (min-width:1040px) and (min-aspect-ratio:3/4){ .bhead .status{max-width:calc(100% - 2 * (var(--swapw, 236px) + 12px));font-size:15.5px;letter-spacing:.04em} }
+@media (min-width:1040px) and (min-aspect-ratio:3/4){ .bhead .status{font-size:15.5px;letter-spacing:.04em} }
 .bhead .swap{height:34px;font-size:15px} .bhead .swap span{padding:0 6px 0 16px;color:var(--gold2)}.bhead .swap i{font-style:normal;padding:0 14px 0 8px;height:100%;display:inline-flex;align-items:center;color:#9d8e6c;border-left:1px solid var(--gl);font-size:15px}.bhead .swap:hover i{color:var(--gold2)}
+.brand .ttl-sub{margin-top:3px;font-family:var(--serif);font-size:12.5px;letter-spacing:.3em;color:#bfae86;white-space:nowrap}
+/* in the shared header bar (PC) the subtitle sits beside the logo, the bar is one line tall */
+.brand h1 .ttl-in{display:none}.hb .hb-title .ttl-sub{display:none}.hb .hb-title h1 .ttl-in{display:inline;margin-inline-start:14px;font-style:normal;font-size:13px;letter-spacing:.3em;-webkit-text-fill-color:#bfae86;color:#bfae86;vertical-align:3px}
+@media (max-width:600px){.brand .ttl-sub{font-size:11px;letter-spacing:.22em;margin-top:1px}}
+.reach.emb .r1{fill:rgba(216,180,106,.035);stroke:rgba(216,180,106,.28);stroke-width:.8}.reach.emb .r2{fill:rgba(216,180,106,.07);stroke:rgba(216,180,106,.55);stroke-width:1}.reach.emb .r3{fill:none;stroke:rgba(216,180,106,.25);stroke-width:.6}.reach.emb .tk{stroke:rgba(216,180,106,.45);stroke-width:.9;stroke-linecap:round}.reach.emb .emi{fill:none;stroke:var(--gold2);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:600px){#pickGrid .pc,#fleetOverlay .pc{min-height:102px}}
+.pc.sel{border-color:var(--gold2)!important;box-shadow:0 0 0 2px var(--gold),0 0 34px -10px rgba(216,180,106,.75)!important;background:linear-gradient(180deg,rgba(216,180,106,.12),rgba(216,180,106,.03))}.pc .psel{position:absolute;right:12px;bottom:10px;padding:3px 12px;border-radius:999px;background:var(--gold);color:#0b1520;font-size:12px;font-weight:700;letter-spacing:.12em}.pc{position:relative}
 </style>
 </head>
 <body class="no-online placing">
 <div class="app">
   <header class="top">
     <div class="brand">
-      <div class="brand-l"><a class="series" href="../" data-i18n="series"></a><h1><span id="ttlName"></span><small data-i18n="beta"></small></h1></div>
+      <div class="brand-l"><a class="series" href="../" data-i18n="series"></a><h1><span id="ttlName">FLEET TACTICS</span><em class="ttl-in" id="ttlSub2"></em><small data-i18n="beta"></small></h1><div class="ttl-sub" id="ttlSub"></div></div>
       <span class="brand-r"><button id="btnSound" class="snd" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option></select><a href="../" class="snd home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a></span>
     </div>
     <div class="card controls">
@@ -567,7 +574,7 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
 </div>
 
 <!-- rules (shared/ruletour.js) -->
-<div class="overlay" id="pickOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="dr.t"></h2><div id="pickHead"></div><div id="pickViews"></div><div id="pickTabs"></div><div id="pickLegend"><span><i class="t"></i><b data-i18n="pk.lg.t"></b></span><span><i class="a"></i><b data-i18n="pk.lg.a"></b></span><span><i class="s"></i><b data-i18n="pk.lg.s"></b></span><span><i class="p"></i><b data-i18n="pk.lg.p"></b></span><span><i class="m"></i><b data-i18n="pk.lg.m"></b></span></div></div><div id="pickGrid"></div><div class="modal-actions"><button class="mbtn" id="btnPickClose" data-i18n="close"></button><button class="mbtn" id="btnPickStop" data-i18n="dr.stop"></button></div></div></div>
+<div class="overlay" id="pickOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="dr.t"></h2><div id="pickHead"></div><div id="pickViews"></div><div id="pickTabs"></div><div id="pickLegend"><span><i class="t"></i><b data-i18n="pk.lg.t"></b></span><span><i class="a"></i><b data-i18n="pk.lg.a"></b></span><span><i class="s"></i><b data-i18n="pk.lg.s"></b></span><span><i class="p"></i><b data-i18n="pk.lg.p"></b></span><span><i class="m"></i><b data-i18n="pk.lg.m"></b></span></div></div><div id="pickGrid"></div><div class="modal-actions"><button class="mbtn" id="btnPickStop" data-i18n="dr.stop"></button><button class="mbtn primary" id="btnPickOk" data-i18n="pk.ok"></button></div></div></div>
 <div class="overlay" id="fleetOverlay"><div class="modal lux"><div class="pkh"><h2 data-i18n="fv.t"></h2></div><div id="fleetGrid"></div><div class="modal-actions"><button class="mbtn" id="btnFleetClose" data-i18n="close"></button></div></div></div>
 <div class="overlay" id="shipsOverlay"><div class="modal"><h2 data-i18n="dr.all"></h2><div id="shipList"></div><div class="modal-actions"><button class="mbtn" id="btnShipsClose" data-i18n="close"></button></div></div></div>
 <div class="overlay" id="rulesOverlay"><div class="modal"><div id="rulesBody"></div></div></div>
@@ -582,15 +589,15 @@ body.can-swap .bhead .bt{display:none} .bhead .swap{order:-1}
   </div>
 </div>
 
-<script src="i18n.js?v=36"></script>
+<script src="i18n.js?v=38"></script>
 <script src="../shared/rulesoffer.js?v=20sea"></script>
 <script src="../shared/headerbar.js?v=63"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/ruletour.js?v=30tw"></script>
-<script src="engine.js?v=24"></script>
+<script src="engine.js?v=25"></script>
 <script src="board.js?v=10"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=43"></script>
+<script src="app.js?v=49"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>

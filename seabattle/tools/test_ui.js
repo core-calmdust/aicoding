@@ -93,7 +93,7 @@ const OUT = process.argv[2] || '';
   await p.keyboard.press('Escape'); await p.evaluate(() => { const s = document.querySelector('#langSel'); s.value = 'en'; s.dispatchEvent(new Event('change')); }); await p.waitForTimeout(300);
   const missing = await p.evaluate(() => { const ja = SEA_I18N.ja, en = SEA_I18N.en; return Object.keys(ja).filter(k => !(k in en)).concat(Object.keys(en).filter(k => !(k in ja))); });
   ok(missing.length === 0, 'ja / en have the same keys ' + missing.join(','));
-  ok(await p.evaluate(() => document.querySelector('#ttlName').textContent === 'Sea Battle' && !/[ぁ-んァ-ン一-龥]/.test(document.querySelector('.side').innerText + document.querySelector('.bhead').innerText)), 'English: no Japanese left on the game screen');
+  ok(await p.evaluate(() => document.querySelector('#ttlName').textContent === 'FLEET TACTICS' && document.querySelector('#ttlSub').textContent.includes('Sea Battle') && !/[ぁ-んァ-ン一-龥]/.test(document.querySelector('.side').innerText + document.querySelector('.bhead').innerText)), 'English: no Japanese left on the game screen');
   await shot('ui-en');
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); if (errs.length) fail++;
   console.log(fail ? 'FAILED: ' + fail : 'ALL OK');

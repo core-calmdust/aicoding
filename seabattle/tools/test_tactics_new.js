@@ -15,7 +15,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     const shot = n => p.screenshot({ path: '/tmp/shots/new-' + name + '-' + n + '.png' });
     const tap = sel => touch ? p.tap(sel) : p.click(sel);
     const idle = () => p.waitForFunction(() => G.phase !== 'battle' || (!G.busy && G.st.turn === 0), null, { timeout: 30000 });
-    const tapCell = async c => { const pt = await p.evaluate(c => { const svg = document.querySelector('#bsvg'), m = svg.getScreenCTM(), q = svg.createSVGPoint(); q.x = 9 + (c % 10) * 10 + 5; q.y = 9 + Math.floor(c / 10) * 10 + 5; const z = q.matrixTransform(m); return [z.x, z.y]; }, c); if (touch) await p.touchscreen.tap(pt[0], pt[1]); else await p.mouse.click(pt[0], pt[1]); };
+    const tapCell = async c => { const pt = await p.evaluate(c => { document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show')); const svg = document.querySelector('#bsvg'); const rc = svg.getBoundingClientRect(); if (rc.top < 0 || rc.bottom > innerHeight) svg.scrollIntoView({ block: 'center' }); const m = svg.getScreenCTM(), q = svg.createSVGPoint(); q.x = 9 + (c % 10) * 10 + 5; q.y = 9 + Math.floor(c / 10) * 10 + 5; const z = q.matrixTransform(m); return [z.x, z.y]; }, c); if (touch) await p.touchscreen.tap(pt[0], pt[1]); else await p.mouse.click(pt[0], pt[1]); };
     const acts = () => p.evaluate(() => G.st.acts.length);
     const skillBtn = k => p.evaluate(k => G.my.findIndex((s, i) => SeaEngine.TYPES[s.t].skill === k && !G.st.sides[0].sunk[i]), k);
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
