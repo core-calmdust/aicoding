@@ -172,8 +172,9 @@ function mtWants(which, msg) {
 function request(which, msg, onProgress) {
   const mc = mcJob(msg);
   // a top level (Lv.21〜) right after the page has opened: wait up to 4 s for the threads rather than start on one
-  if ((mc ? MCP && MTEngine.on() : MTP && MTSplit.on()) && which === 'ai' && msg.type === 'think' && msg.level > 20 && !msg.waited) {
-    const P = mc ? MCP : MTP;
+  const cOn = MCP && MTEngine.on();   // (the alpha-beta on an isolated page waits for core_mt.wasm's threads too, 2026-11-20)
+  if ((mc || cOn ? cOn : MTP && MTSplit.on()) && which === 'ai' && msg.type === 'think' && msg.level > 20 && !msg.waited) {
+    const P = mc || cOn ? MCP : MTP;
     return (async () => { const t0 = Date.now(); while (!P.pool('ai') && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 100)); return request(which, Object.assign({}, msg, { waited: 1 }), onProgress); })();
   }
   if (mc) {   // the MCTS: its own pool of threads (PRO: with more than one thread), else the one-thread worker
@@ -182,9 +183,11 @@ function request(which, msg, onProgress) {
     return requestW(which, msg, onProgress);
   }
   // the alpha-beta search on threads: core_mt.wasm's pool on an isolated page (PRO: with more than one thread), else mtsplit.js's
-  const cp = MCP && MTEngine.on() && mtWants(which, msg) && (!msg.cfg || msg.cfg.threads > 1) && MCP.pool(which === 'ai' ? 'ai' : null);
+  const cp = cOn && mtWants(which, msg) && (!msg.cfg || msg.cfg.threads > 1) && MCP.pool(which === 'ai' ? 'ai' : null);
   if (cp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return cp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
-  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  // (2026-11-20) on an isolated page while core_mt.wasm's threads are busy: one worker, not mtsplit.js (another search, shallower) —
+  // the rule's「一度に1つの仕事だけで、使用中なら通常の1スレッドのワーカー」, as the review box (rvbox pool) and chess / checkers / tafl
+  const mp = !cOn && MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
 }
