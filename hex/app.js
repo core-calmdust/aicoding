@@ -420,9 +420,12 @@ function drawLabels(list) { for (const L of list) { const d = fxDiv('hintlbl ' +
 
 // evaluation (Red's view): {s in [-1,1], kind, side}
 function sOfV(v) { return v > WINT ? 1 : v < -WINT ? -1 : (wrOf(v) - .5) * 2; }
-function evalFromList(list, mover) {
+function evalFromList(list, mover, swapNext) {
   if (!list || !list.length) return null;
-  const best = list[0].v, sign = mover === P1 ? 1 : -1;
+  // (2026-11-21 the user: the coach said 有利 69% on the empty board) with the swap rule the first move's value is the
+  // smaller of its value and the other side's after swapping it: the best first move is the one closest to even
+  let best = list[0].v; const sign = mover === P1 ? 1 : -1;
+  if (swapNext) best = list.reduce((m, x) => { const w = Math.min(x.v, -x.v); return w > m ? w : m; }, -Infinity);
   if (best > WINT) return { s: sign, kind: 'win', side: mover };
   if (best < -WINT) return { s: -sign, kind: 'win', side: 3 - mover };
   return { s: sOfV(best) * sign, kind: 'heur', p: wrOf(best), side: mover };
@@ -696,7 +699,7 @@ async function analyzeCurrent(tok) {
   const mover = toMoveAt(idx);
   const apply = list => {
     if (keyOf(idx) !== key || !list) return;
-    const ev = evalFromList(list, mover);
+    const ev = evalFromList(list, mover, idx === 0 && !startSpec && gSwap);
     if (ev) evals[idx] = ev;
     if (cur === idx) { hintList = settings.hint ? list : null; renderFx(); renderInfo(); }
     else if (window.HexCoach) HexCoach.render();   // (the coach's verdict on the previous move uses the earlier positions' lists too)

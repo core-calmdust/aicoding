@@ -380,7 +380,9 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
           const d = document.getElementById('dock') || document.querySelector('.dock'), yd = vis(d) ? d.getBoundingClientRect().top : innerHeight - 10;
           let b = innerHeight - yd + 6;   // (just above the bar: the lowest it may go)
           // the board's lower edge: the 3D board as drawn (the DOM board + its measured overhang, common.js __atlasPcFit), else the DOM board
-          const bx = boardBox(), yb = bx && bx.bottom;
+          const bx = boardBox(); let yb = bx && bx.bottom;
+          // (2026-11-21 mancala: the info cards sit under the board — the gap is theirs, so the talk goes onto the online box)
+          if (yb != null) document.querySelectorAll('.card:not(.hb-menu), .players, .side > *, .pl-bar, .mc-bar').forEach(c => { if (!vis(c)) return; const r = c.getBoundingClientRect(); if (r.height > 20 && r.top >= yb - 30 && r.top < yd && r.bottom <= yd + 4) yb = Math.max(yb, r.bottom); });
           const h = el ? el.offsetHeight : 0;
           if (yb != null && yd > yb) b = Math.max(b, innerHeight - (yb + yd) / 2 - h / 2 - 10);   // (the float sits at --npc-bot + 10px)
           // no room between the board and the bar: over the online box itself (it covers the board no more), 2026-11-12
