@@ -11,100 +11,100 @@ const RULES = ['classic', 'streak', 'salvo', 'tactics'];
 //   bomb (carrier): a + of 5 squares · volley (battleship): a 2×2 block · torpedo (cruiser): runs up a column from the near
 //   edge, hits the first unhit ship square and shows the water it crossed · sonar (submarine): the number of unhit ship squares in a 3×3 box
 const TYPES = [
-  { k: 'carrier', len: 5, cost: 6, skill: 'bomb', cd: 5 },
-  { k: 'battleship', len: 4, cost: 5, skill: 'volley', cd: 4 },
-  { k: 'cruiser', len: 3, cost: 5, skill: 'torpedo', cd: 6 },
-  { k: 'sub', len: 3, cost: 4, skill: 'sonar', cd: 3 },
+  { k: 'carrier', len: 5, cost: 8, skill: 'bomb', cd: 5 },
+  { k: 'battleship', len: 4, cost: 6, skill: 'volley', cd: 5 },
+  { k: 'cruiser', len: 3, cost: 6, skill: 'torpedo', cd: 6 },
+  { k: 'sub', len: 3, cost: 3, skill: 'sonar', cd: 3 },
   { k: 'destroyer', len: 2, cost: 2, skill: null, cd: 0 },
   // 第1弾の新しい艦 (2026-11-20 user: デッキ構築を深めるため艦を増やす) — defence, information, tempo and support, not just more fire:
   //   armored: always — the first shell that hits it only dents the plate (the square shows as dented and must be hit again)
   //   smoke: for the opponent's next 2 turns every result of theirs is hidden ("?") until the smoke clears — no target needed
   //   scout (seaplane tender): the number of unhit ship squares in a whole row · twin (gunboat): this shot and one more
   //   command (flagship): the other ships' cooldowns −3 · jam (electronic warfare): the enemy's skill cooldowns +2
-  { k: 'armored', len: 3, cost: 4, skill: null, cd: 0, armor: 1 },
-  { k: 'smoke', len: 2, cost: 2, skill: 'smoke', cd: 5 },
+  { k: 'armored', len: 3, cost: 2, skill: null, cd: 0, armor: 1 },
+  { k: 'smoke', len: 2, cost: 1, skill: 'smoke', cd: 2 },
   { k: 'tender', len: 3, cost: 4, skill: 'scout', cd: 4 },
-  { k: 'gunboat', len: 3, cost: 5, skill: 'twin', cd: 5 },
-  { k: 'flagship', len: 4, cost: 3, skill: 'command', cd: 6 },
+  { k: 'gunboat', len: 3, cost: 6, skill: 'twin', cd: 5 },
+  { k: 'flagship', len: 4, cost: 2, skill: 'command', cd: 6 },
   { k: 'jammer', len: 3, cost: 3, skill: 'jam', cd: 4 },
   // 第2弾 (2026-11-20): rocket — a row of 3 squares · repair (repair ship) — the latest hit on one of your afloat ships is mended (the square is unknown to the enemy again)
-  { k: 'rocket', len: 3, cost: 4, skill: 'rocket', cd: 4 },
-  { k: 'repair', len: 3, cost: 3, skill: 'repair', cd: 5 },
+  { k: 'rocket', len: 3, cost: 6, skill: 'rocket', cd: 4 },
+  { k: 'repair', len: 3, cost: 2, skill: 'repair', cd: 5 },
   // 第3弾 (2026-11-20): aa (anti-air cruiser) — always, while afloat: the enemy's bomb / volley / rocket loses its last shell (shot down)
   //   mine (minelayer) — lays a mine on the empty square of your sea the enemy is most likely to shoot next (at most 2 at a time);
   //   a shell on it is a miss, and the shooter loses their next turn
-  { k: 'aa', len: 3, cost: 4, skill: null, cd: 0, aa: 1 },
-  { k: 'mine', len: 2, cost: 2, skill: 'mine', cd: 4 },
+  { k: 'aa', len: 3, cost: 2, skill: null, cd: 0, aa: 1 },
+  { k: 'mine', len: 2, cost: 1, skill: 'mine', cd: 3 },
   // 第4弾 (2026-11-20): dread (dreadnought) — barrage: a 3×3 block · radar — the number of unhit ship squares in a whole column
   //   decoy — a dummy hull: it can be hit and sunk, but it need not be sunk to win (the enemy does not know which 2-long ship it is)
-  { k: 'dread', len: 5, cost: 7, skill: 'barrage', cd: 8 },
+  { k: 'dread', len: 5, cost: 9, skill: 'barrage', cd: 9 },
   { k: 'radar', len: 4, cost: 3, skill: 'radar', cd: 4 },
-  { k: 'decoy', len: 2, cost: 1, skill: null, cd: 0, decoy: 1 },
+  { k: 'decoy', len: 2, cost: 0, skill: null, cd: 0, decoy: 1 },
   // 第5弾 (2026-11-20): monitor — always: each shell that hits it is answered at once by a free shell on the shooter's sea
   //   (on the square its side's map likes best; a return shell never triggers another) · patrol — probe: shoot one square and learn
   //   how many unhit ship squares lie on its 4 neighbours
   { k: 'monitor', len: 3, cost: 4, skill: null, cd: 0, counter: 1 },
-  { k: 'patrol', len: 2, cost: 3, skill: 'probe', cd: 5 },
+  { k: 'patrol', len: 2, cost: 5, skill: 'probe', cd: 5 },
   // 第6弾 (2026-11-20): supply — always, while afloat: when another of your ships is sunk, your other skills' cooldowns −3
   //   hospital — always, while afloat: the skills of your sunk ships can still be used
-  { k: 'supply', len: 3, cost: 3, skill: null, cd: 0, rally: 1 },
+  { k: 'supply', len: 3, cost: 2, skill: null, cd: 0, rally: 1 },
   { k: 'hospital', len: 4, cost: 4, skill: null, cd: 0, hospital: 1 },
   // 第7弾 (2026-11-20): light carrier — strafe: an X of 5 squares (the square and its 4 diagonals) · torpedo boat — a torpedo along a row,
   //   from the left edge, that hits the first unhit ship square (the water it passes shows as misses)
-  { k: 'lcarrier', len: 4, cost: 5, skill: 'strafe', cd: 6 },
-  { k: 'tboat', len: 2, cost: 5, skill: 'rtorpedo', cd: 6 },
+  { k: 'lcarrier', len: 4, cost: 7, skill: 'strafe', cd: 8 },
+  { k: 'tboat', len: 2, cost: 7, skill: 'rtorpedo', cd: 7 },
   // 第8弾 (2026-11-20): suppressor — suppress: the enemy's always-on abilities (armor, anti-air, return fire, resupply, rescue) stop
   //   for your next 2 turns · sweeper — sweep: a 3×3 box like sonar (the unhit ship squares in it), and any enemy mines in it are cleared
   { k: 'suppressor', len: 3, cost: 2, skill: 'suppress', cd: 4 },
-  { k: 'sweeper', len: 2, cost: 3, skill: 'sweep', cd: 4 },
+  { k: 'sweeper', len: 2, cost: 4, skill: 'sweep', cd: 4 },
   // 第9弾 (2026-11-20): flare (star-shell ship) — lights a 2×2 box: each unknown square is shown as ship or water, without shooting
   //   ecm (ECM ship) — ward: the enemy's next skill aimed at you fails (until your next turn; skills on their own fleet are not stopped)
   { k: 'flare', len: 3, cost: 3, skill: 'flare', cd: 5 },
-  { k: 'ecm', len: 3, cost: 2, skill: 'ward', cd: 4 },
+  { k: 'ecm', len: 3, cost: 1, skill: 'ward', cd: 2 },
   // 第10弾 (2026-11-20): rapid (quick-firing ship) — this turn, keep shooting as long as your shells hit (then shoot as usual)
   //   intel (intelligence ship) — one unhit square of the enemy's largest afloat ship is revealed (marked, not shot)
-  { k: 'rapidship', len: 3, cost: 4, skill: 'rapid', cd: 6 },
+  { k: 'rapidship', len: 3, cost: 5, skill: 'rapid', cd: 6 },
   { k: 'intel', len: 3, cost: 4, skill: 'intel', cd: 7 },
   // 第11弾 (2026-11-20): battlecruiser — lance: a vertical line of 4 squares · transport — no skill, costs nothing: a free but long target
-  { k: 'bcruiser', len: 4, cost: 5, skill: 'lance', cd: 5 },
+  { k: 'bcruiser', len: 4, cost: 6, skill: 'lance', cd: 5 },
   { k: 'transport', len: 4, cost: 0, skill: null, cd: 0 },
   // 第12弾 (2026-11-20): echo (wide-sonar ship) — echo: the unhit ship squares in a 5×5 box · tracker (ESM ship) — always, while afloat:
   //   the first time each enemy ship uses a skill on you, a sonar reading (3×3) around one of its squares is given to you
   { k: 'echo', len: 4, cost: 3, skill: 'echo', cd: 6 },
-  { k: 'tracker', len: 3, cost: 6, skill: null, cd: 0, trace: 1 },
+  { k: 'tracker', len: 3, cost: 7, skill: null, cd: 0, trace: 1 },
   // 第13弾 (2026-11-20): heavy cruiser — armor 2: the first two shells that hit it only dent (on two different squares)
   //   spotter (spotter-plane ship) — diagonal: the unhit ship squares on the whole ↘ diagonal through the square
-  { k: 'hcruiser', len: 4, cost: 4, skill: null, cd: 0, armor: 2 },
+  { k: 'hcruiser', len: 4, cost: 3, skill: null, cd: 0, armor: 2 },
   { k: 'spotter', len: 3, cost: 3, skill: 'diag', cd: 4 },
   // 第14弾 (2026-11-20): subchaser — depth charge: shoot one square; on a hit its 4 neighbours are shot too
   //   plating (plating ship) — plate: the afloat ship of yours with the most hits (none yet armored) gets an armor plate (the next hit on it only dents)
-  { k: 'subchaser', len: 2, cost: 4, skill: 'depth', cd: 4 },
-  { k: 'plating', len: 3, cost: 2, skill: 'plate', cd: 6 },
+  { k: 'subchaser', len: 2, cost: 5, skill: 'depth', cd: 5 },
+  { k: 'plating', len: 3, cost: 1, skill: 'plate', cd: 7 },
   // 第15弾 (2026-11-20): pursuer — always, while afloat: when your normal shot sinks a ship, you shoot again
   //   command ship — always, while afloat: your skills' cooldowns fall by 2 a turn instead of 1
   { k: 'pursuer', len: 3, cost: 3, skill: null, cd: 0, pursuit: 1 },
-  { k: 'cship', len: 4, cost: 5, skill: null, cd: 0, haste: 1 },
+  { k: 'cship', len: 4, cost: 3, skill: null, cd: 0, haste: 1 },
   // 第16弾 (2026-11-20): netlayer — always, while afloat: the enemy's torpedoes (column and row) stop after 3 squares of water
   //   (they still hit a ship within those 3) · bracket ship — bracket: shoot two squares, the ones 2 to the left and 2 to the right
   //   of the chosen square (straddling it), and learn whether the square between holds a ship
-  { k: 'netlayer', len: 3, cost: 3, skill: null, cd: 0, net: 1 },
-  { k: 'bracket', len: 3, cost: 4, skill: 'bracket', cd: 4 },
+  { k: 'netlayer', len: 3, cost: 2, skill: null, cd: 0, net: 1 },
+  { k: 'bracket', len: 3, cost: 5, skill: 'bracket', cd: 4 },
   // 第17弾 (2026-11-20): raider — always, while afloat: each time you sink an enemy ship, your skills' cooldowns −2
   //   crosser (cross-search ship) — cross: the unhit ship squares on the whole row and column through the square (the square itself once)
-  { k: 'raider', len: 3, cost: 3, skill: null, cd: 0, plunder: 1 },
+  { k: 'raider', len: 3, cost: 2, skill: null, cd: 0, plunder: 1 },
   { k: 'crosser', len: 4, cost: 4, skill: 'cross', cd: 5 },
   // 第18弾 (2026-11-20): twin-torpedo ship — two torpedoes up two neighbouring columns (each stops at its first ship square)
   //   hydrophone ship — listen: the row that holds the most unhit enemy ship squares is found, with its count (no square to pick)
-  { k: 'dtorp', len: 3, cost: 6, skill: 'dtorpedo', cd: 8 },
-  { k: 'hydro', len: 3, cost: 4, skill: 'listen', cd: 6 },
+  { k: 'dtorp', len: 3, cost: 8, skill: 'dtorpedo', cd: 10 },
+  { k: 'hydro', len: 3, cost: 5, skill: 'listen', cd: 6 },
   // 第19弾 (2026-11-20): all-out ship — all out: every other skill of yours becomes ready at once (the turn is spent)
   //   guided-missile ship — guided: shoot one square; on a hit, a second missile strikes another unhit square of the same ship
   { k: 'allout', len: 4, cost: 2, skill: 'allout', cd: 10 },
-  { k: 'missile', len: 3, cost: 4, skill: 'guided', cd: 4 },
+  { k: 'missile', len: 3, cost: 3, skill: 'guided', cd: 4 },
   // 第20弾 (2026-11-20): breakwater — always, while afloat: the enemy gets no extra shots (twin shot and quick fire cannot be used, no pursuit)
   //   ring ship — ring: the 8 squares around the chosen square (not the square itself)
   { k: 'breakwater', len: 3, cost: 3, skill: null, cd: 0, calm: 1 },
-  { k: 'ringship', len: 4, cost: 6, skill: 'ring', cd: 7 },
+  { k: 'ringship', len: 4, cost: 9, skill: 'ring', cd: 8 },
 ];
 const SELF = { smoke: 1, command: 1, repair: 1, mine: 1, ward: 1, rapid: 1, plate: 1, allout: 1 };   // skills that act on your own fleet (a ward does not stop them)
 const PASSIVE = t => !!(t.armor || t.aa || t.counter || t.rally || t.hospital || t.trace || t.pursuit || t.haste || t.net || t.plunder || t.calm);
@@ -120,11 +120,12 @@ function validDraft(types) { if (types.length < MINSHIPS || types.length > MAXSH
 // The draft: 2 of each type lie on the table (10 ships); the players pick in turn — A B B A A B B A … — within the budget.
 // A player with MINSHIPS or more may stop; one who cannot afford anything left stops by itself. d.turn = -1 when it is over.
 const POOL = new Array(50).fill(0).map((x, i) => i < 5 ? 2 : 0);
+const FIELD_N = 13;   // the destroyer + 13 drawn types (2026-11-20 user: 場の幅を広げる — 7 → 14 types)
 function field(rnd) {
   rnd = rnd || Math.random;
   for (let t = 0; t < 200; t++) {
-    const others = TYPES.map((_, k) => k).filter(k => k !== 4).sort(() => rnd() - .5).slice(0, 6), has = R => R.some(k => others.includes(k));
-    if (has(ROLE.atk) && has(ROLE.info) && has(ROLE.def)) { const pool = new Array(NT).fill(0); pool[4] = 2; for (const k of others) pool[k] = 2; return pool; }
+    const others = TYPES.map((_, k) => k).filter(k => k !== 4).sort(() => rnd() - .5).slice(0, FIELD_N), has = (R, n) => R.filter(k => others.includes(k)).length >= n;
+    if (has(ROLE.atk, 3) && has(ROLE.info, 2) && has(ROLE.def, 3)) { const pool = new Array(NT).fill(0); pool[4] = 2; for (const k of others) pool[k] = 2; return pool; }
   }
   return POOL.slice();
 }
@@ -159,7 +160,7 @@ function draftAI(d, rnd) {
 }
 // the AI's taste per type (tuned with tools/test_tactics_balance.js)
 let REPAIR_V = .65, MINE_V = .5, PROBE_V = .12, WARD_V = .3, FLARE_V = .5, RAPID_V = 2, INTEL_V = .7, ECHO_V = .55, DIAG_V = .5, PLATE_V = .5, DEPTH_V = 1, BRACKET_V = .6, CROSS_V = .55, LISTEN_V = .6, GUIDED_V = .9;
-let DRAFT_W = [1, .95, .8, .92, .5, .85, .75, .8, .9, .7, .7, .85, .75, .8, .75, .8, .75, .6, .75, .85, .8, .8, .85, .8, .75, .8, .8, .75, .8, .8, .85, .6, .75, .75, .8, .75, .8, .75, .75, .75, .7, .8, .75, .75, .8, .75, .75, .8, .75, .8];
+let DRAFT_W = TYPES.map(() => .8);   // (2026-11-20: with 14 types on the table the costs carry the balance, so the AI likes every type alike — see tools/test_tactics_balance.js … flat)
 const typeOf = (s, i) => s.t != null ? s.t : i;
 
 function rng(seed) { let a = (seed >>> 0) || 1; return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -216,7 +217,8 @@ function quota(st) { return st.rule === 'salvo' ? Math.max(1, Math.min(st.sides[
 function strike(st, by, cell) {      // one shell on the other side's square (no turn logic)
   const T = st.sides[1 - by], si = T.grid[cell], res = { by, cell, hit: si >= 0, sunk: -1 };
   T.nshots++;
-  if (T.fog > 0) { T.fogged[cell] = 1; res.fog = true; }                                   // under the smoke: the shooter is not told
+  const dentNow = si >= 0 && T.armor && T.armor[si] && !T.supp && T.shots[cell] !== 3;
+  if (T.fog > 0 && !dentNow) { T.fogged[cell] = 1; res.fog = true; }   // under the smoke: the shooter is not told (a plate's clang is still heard)
   if (si >= 0 && T.armor && T.armor[si] && !T.supp && T.shots[cell] !== 3) { T.armor[si]--; T.shots[cell] = 3; res.dent = true; }   // the plate takes it
   else if (si >= 0) { T.shots[cell] = 2; T.hits++; if (++T.hitsOn[si] === T.ships[si].len) { T.sunk[si] = true; if (!TYPES[T.ships[si].t] || !TYPES[T.ships[si].t].decoy) T.afloat--; res.sunk = si; const S0 = st.sides[by]; if (st.cd && !S0.supp && S0.ships.some((s, j) => TYPES[s.t].plunder && !S0.sunk[j])) st.cd[by].forEach((c, j) => { if (c > 0) st.cd[by][j] = Math.max(0, c - 2); }); if (st.cd && !T.supp && T.ships.some((s, j) => j !== si && TYPES[s.t].rally && !T.sunk[j])) st.cd[1 - by].forEach((c, j) => { if (c > 0) st.cd[1 - by][j] = Math.max(0, c - 3); }); } }
   else { T.shots[cell] = 1; const mi = st.noCounter ? -1 : T.mines.indexOf(cell); if (mi >= 0) { T.mines.splice(mi, 1); res.mine = true; if (!st.rest) st.rest = [0, 0]; st.rest[by] = 1; } }   // a mine: the shooter rests next turn
@@ -230,7 +232,7 @@ function strike(st, by, cell) {      // one shell on the other side's square (no
   return res;
 }
 function pass(st, by) { const T = st.sides[1 - by]; if (T.fog > 0 && --T.fog === 0) T.fogged.fill(0); if (T.supp > 0) T.supp--; st.rapid = 0; if (st.bonus) st.bonus = 0;
-  st.turn = 1 - by; st.sides[st.turn].ward = 0; if (st.cd) { const c = st.cd[st.turn], N2 = st.sides[st.turn], h = !N2.supp && N2.ships.some((s, j) => TYPES[s.t].haste && !N2.sunk[j]) ? 2 : 1; for (let i = 0; i < c.length; i++) if (c[i] > 0) c[i] = Math.max(0, c[i] - h); }
+  st.turn = 1 - by; if (st.sides[st.turn].ward > 0) st.sides[st.turn].ward--; if (st.cd) { const c = st.cd[st.turn], N2 = st.sides[st.turn], h = !N2.supp && N2.ships.some((s, j) => TYPES[s.t].haste && !N2.sunk[j]) ? 2 : 1; for (let i = 0; i < c.length; i++) if (c[i] > 0) c[i] = Math.max(0, c[i] - h); }
   if (st.rest && st.rest[st.turn] && st.winner < 0) { st.rest[st.turn] = 0; st.log.push({ by: st.turn, cell: -1, rest: 1 }); pass(st, st.turn); } }   // (a turn lost to a mine)
 // the player to move (st.turn) shoots at `cell` of the other side. → { by, cell, hit, sunk (ship index or -1), win, again } or null
 function fire(st, cell) {
@@ -331,8 +333,8 @@ function useSkill(st, ship, cell) {
   if (pv.fix != null) { const M0 = st.sides[by], si = M0.grid[pv.fix]; M0.shots[pv.fix] = 0; M0.hits--; M0.hitsOn[si]--; M0.fogged[pv.fix] = 0; res.fix = pv.fix; }
   if (SCAN[pv.skill]) st.scans[by].push({ cells: pv.U, k: pv.k, at: cell, row: pv.skill === 'scout' ? 1 : 0, col: pv.skill === 'radar' ? 1 : 0, big: pv.skill === 'echo' ? 1 : 0, list: pv.skill === 'diag' || pv.skill === 'cross' ? pv.area : undefined });
   const M = st.sides[by], O = st.sides[1 - by];
-  if (pv.skill === 'smoke') M.fog = 2;
-  if (pv.skill === 'ward') M.ward = 1;
+  if (pv.skill === 'smoke') M.fog = 3;
+  if (pv.skill === 'ward') M.ward = 2;   // (lasts until your next-but-one turn)
   if (pv.skill === 'listen') { st.scans[by].push({ cells: pv.U, k: pv.k, at: pv.lit, row: 1 }); res.row = pv.lit / N | 0; }
   if (pv.pi != null) { M.armor[pv.pi] = 1; res.pi = pv.pi; st.log[at0].pi = pv.pi; }
   if (!SELF[pv.skill] && !O.supp && O.ships.some((s, j) => TYPES[s.t].trace && !O.sunk[j])) {   // the enemy's ESM ship traces the user
@@ -481,7 +483,7 @@ function advise(side, adj, rnd, K, scans) {
 function chooseAction(st, level, rnd) {
   rnd = rnd || Math.random;
   const by = st.turn, T = st.sides[1 - by], scans = st.scans[by];
-  const shot = () => ({ cell: choose(T, level, st.adj, rnd, scans) });
+  const shot = () => { let cell = choose(T, level, st.adj, rnd, scans); if (cell < 0) for (let i = 0; i < NN; i++) if (!T.shots[i] || T.shots[i] === 3) { cell = i; break; } return { cell }; };   // (a last resort when smoke hides every square left)
   if (!st.cd || st.rapid) return shot();
   const ready = []; st.cd[by].forEach((c, i) => { if (skillReady(st, by, i)) ready.push(i); });
   if (!ready.length || rnd() < levelSpec(level).eps * .9) return shot();
@@ -582,6 +584,6 @@ function winProb(st, me, rnd, n) {
 const COLS = 'ABCDEFGHIJ';
 function cellName(cell) { return COLS[cell % N] + ((cell / N | 0) + 1); }
 
-const E = { calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
+const E = { ROLE, FIELD_N, calmOn, NOAIM, SELF, field, skillLive, setDraftW: w => { DRAFT_W = w; }, setRepairV: x => { REPAIR_V = x; }, setMineV: x => { MINE_V = x; }, N, NN, FLEET, TOTAL, RULES, TYPES, BUDGET, MINSHIPS, MAXSHIPS, MAXSAME, PRESETS, POOL, draftNew, draftLeft, draftCan, draftCanStop, draftPick, draftAI, draftCost, validDraft, footprint, skillReady, preview, useSkill, act, chooseAction, probs, scanLeft, rng, shipCells, inside, fits, gridOf, validFleet, randomFleet, newSide, newGame, fire, quota, view, heat, jointHeat, choose, advise, winProb, shotsToFinish, levelSpec, neighbors4, neighbors8, cellName };
 if (typeof module !== 'undefined' && module.exports) module.exports = E; else root.SeaEngine = E;
 })(typeof self !== 'undefined' ? self : this);
