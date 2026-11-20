@@ -1162,7 +1162,8 @@ static int useMate1 = 1, rfpDepth = S5 ? 11 : 8, rfpMargin = S5 ? 73 : 112, null
    move, 38 losing captures reduced, 40 losing captures after the quiet moves, 42 = 170 history bonus linear in the depth.) */
 static int P[128] = {[5] = 1, [7] = 1, [9] = S5 ? 5049 : 6749, [12] = 7, [14] = 1, [16] = 123, [22] = 1, [23] = 162, [27] = S5 ? 57 : 85,
                     [24] = 1, [28] = 4, [29] = 1, [30] = 8, [35] = 6, [37] = 1, [38] = 1, [40] = 1, [42] = S5 ? 297 : 170, [43] = S5 ? 246 : 300,
-                    [44] = S5, [45] = S5, [46] = S5 ? 8 : 0, [47] = S5 ? 131 : 0, [48] = S5 ? 43 : 0, [52] = S5 ? 6 : 0, [53] = S5 ? 2 : 0, [58] = S5 ? 346 : 0, [62] = S5};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
+                    [44] = S5, [45] = S5, [46] = S5 ? 8 : 0, [47] = S5 ? 131 : 0, [48] = S5 ? 43 : 0, [52] = S5 ? 6 : 0, [53] = S5 ? 2 : 0, [58] = S5 ? 346 : 0, [62] = S5,
+                    [75] = S5 ? 5 : 0, [76] = S5 ? 90 : 0, [77] = S5 ? 40 : 0, [79] = S5 ? 2 : 0};   /* (2026-11-20: the singular extension) */   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
 static void lmrInit(double div);
 EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 128) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
