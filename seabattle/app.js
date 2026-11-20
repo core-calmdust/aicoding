@@ -184,7 +184,7 @@ function openShipList() {   // every type, cheapest first, with the full text �
   $('#shipList').innerHTML = E.TYPES.map((T, k) => [T, k]).sort((a, b) => a[0].cost - b[0].cost || a[1] - b[1]).map(([T, k]) => `<div class="sl"><span class="pip">${'<i></i>'.repeat(T.len)}</span><div><b>${t('ship.' + k)}</b><small>${shipDesc(T)}</small></div><span class="dc">${T.cost}</span></div>`).join('');
   $('#shipsOverlay').classList.add('show');
 }
-$('#btnShipList').onclick = openShipList; $('#btnShipsClose').onclick = () => $('#shipsOverlay').classList.remove('show');
+document.addEventListener('click', e => { if (e.target.closest('#btnAllShips')) openShipList(); }); $('#btnShipsClose').onclick = () => $('#shipsOverlay').classList.remove('show');
 $('#shipsOverlay').addEventListener('click', e => { if (e.target.id === 'shipsOverlay') $('#shipsOverlay').classList.remove('show'); });
 let pickShut = -1, pickTab = 0;   // (pickTab: the role tab open in the pick sheet)   // the draft pick number at which the player closed the pick sheet (it opens itself on each of their turns)
 const ROLE_OF = k => E.ROLE.atk.includes(k) ? 0 : E.ROLE.info.includes(k) ? 1 : E.ROLE.def.includes(k) ? 2 : 3;
@@ -193,8 +193,8 @@ function renderDraft() {
   const d = G.draft, mine = d.turn === 0 && !G.busy, f = d.f || E.POOL;
   $('#drTurn').textContent = t(d.turn === 0 ? 'dr.you' : 'dr.ai'); $('#drTurn').classList.toggle('me', d.turn === 0);
   // the side card: the field at a glance (tap → the pick sheet)
-  $('#drRows').innerHTML = `<button id="btnPick" class="${mine ? 'go' : ''}">${t('dr.open')}</button><div class="drf">${E.TYPES.map((T, k) => k).filter(k => f[k]).sort((a, b) => ROLE_OF(a) - ROLE_OF(b) || E.TYPES[a].cost - E.TYPES[b].cost).map(k => `<span class="g${ROLE_OF(k)}${d.pool[k] ? '' : ' out'}">${t('ship.' + k)}</span>`).join('')}</div>`;
-  const who = (p, name) => `<div class="dw${d.turn === p ? ' turn' : ''}"><div class="fh"><b>${name}</b>${d.picks[p].length ? `<button class="flv" data-p="${p}">${t('fv.see')}</button>` : ''}<span>${t('dr.left', { c: E.draftLeft(d, p) })}</span></div><div class="pips">${d.picks[p].map(k => `<span class="pip" title="${t('ship.' + k)}">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</div></div>`;
+  $('#drRows').innerHTML = `<button id="btnPick" class="${mine ? 'go' : ''}">${t('dr.open')}</button>`;
+  const who = (p, name) => `<button class="dw flv${d.turn === p ? ' turn' : ''}" data-p="${p}"><b>${name}</b><span class="pips">${d.picks[p].map(k => `<span class="pip">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</span><em>${t('dr.left', { c: E.draftLeft(d, p) })}</em></button>`;   // (a compact row per side; tap → the fleet sheet)
   $('#drWho').innerHTML = who(1, 'AI Lv.' + G.level) + who(0, t('you'));
   $('#btnDrStop').disabled = !(E.draftCanStop(d, 0) && !G.busy);
   // the pick sheet: one card per type on the table, by role, cheapest first
@@ -206,7 +206,7 @@ function renderDraft() {
       <div class="ps">${T.skill ? `<i class="ic">${SK_ICON[T.skill] || ''}</i>` : ''}<b>${shipSkillName(T)}</b><small>${kind}</small></div>
       <p>${shipSkillText(T)}</p>
       ${why ? `<span class="pwhy">${why}</span>` : ''}</div>`; };
-  $('#pickHead').innerHTML = `<b>${t(d.turn === 0 ? 'dr.you' : 'dr.ai')}</b><span>${t('pk.left', { c: E.draftLeft(d, 0), n: d.picks[0].length, m: E.MAXSHIPS })}</span>${d.picks[1].length ? `<button class="flv" data-p="1">${t('fv.foeBtn', { n: d.picks[1].length })}</button>` : ''}`;
+  $('#pickHead').innerHTML = `<b>${t(d.turn === 0 ? 'dr.you' : 'dr.ai')}</b><span>${t('pk.left', { c: E.draftLeft(d, 0), n: d.picks[0].length, m: E.MAXSHIPS })}</span>${d.picks[1].length ? `<button class="flv" data-p="1">${t('fv.foeBtn', { n: d.picks[1].length })}</button>` : ''}<button class="flv" id="btnAllShips">${t('dr.all')}</button>`;
   if ($('#fleetOverlay').classList.contains('show')) renderFleetSheet();
   const groups = [0, 1, 2, 3].map(g => E.TYPES.map((T, k) => k).filter(k => f[k] && ROLE_OF(k) === g).sort((a, b) => E.TYPES[a].cost - E.TYPES[b].cost || a - b));
   if (!groups[pickTab] || !groups[pickTab].length) pickTab = groups.findIndex(g => g.length);
@@ -257,7 +257,7 @@ function renderFleetSheet(scrollTo) {
   $('#fleetGrid').innerHTML = sec(1, t('fv.foe', { n: 'AI Lv.' + G.level })) + sec(0, t('fv.me'));
   if (scrollTo != null) { const el = $('#fsec' + scrollTo); if (el) $('#fleetGrid').scrollTop = el.offsetTop - $('#fleetGrid').offsetTop - 8; }
 }
-document.addEventListener('click', e => { const b = e.target.closest('.flv'); if (b) { e.stopPropagation(); openFleet(+b.dataset.p); } });
+document.addEventListener('click', e => { const b = e.target.closest('.flv[data-p]'); if (b) { e.stopPropagation(); openFleet(+b.dataset.p); } });
 $('#btnFleetClose').onclick = () => $('#fleetOverlay').classList.remove('show');
 $('#fleetOverlay').addEventListener('click', e => { if (e.target.id === 'fleetOverlay') $('#fleetOverlay').classList.remove('show'); });
 // the ship's length as a row of small gilt squares next to its name
@@ -520,7 +520,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeNew()
 
 function applyLang() {
   document.documentElement.lang = LANG;
-  $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); }); $$('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
   $('#ttlName').textContent = t('title');
   document.title = t('title') + ' | ' + t('series');
   $('#depText').textContent = t(PCQ.matches ? 'dep.b.pc' : 'dep.b');
