@@ -579,24 +579,58 @@ def canyon_falls():
 
 # ------------------------------------------------------------------------------------------------ s131 スキー場
 def ski_slope():
-    """スキー場: wide snowy slopes under a deep blue sky, a lodge at the bottom, a chair-lift line up the mountain (skiers and chairs are the page's)"""
-    d, b = sky([(0, '#7db8ec'), (.5, '#c4e0f6'), (1, '#eef6fb')])
-    g = [b]
-    g.append('<path d="M-40 800 L300 380 L520 560 L860 220 L1260 640 L1500 420 L1960 820 Z" fill="#dfe9f4"/>')
-    g.append('<path d="M860 220 L1260 640 L1060 640 Z M300 380 L520 560 L420 560 Z M1500 420 L1960 820 L1660 820 Z" fill="#c7d6e8"/>')
+    """スキー場: a deep blue sky over a range of snowy peaks (shaded faces, rock ribs), a forested ridge with the lift's top
+    station, a wide groomed piste sweeping down between groups of snowy firs to the base: a timber lodge with balconies and
+    the lift's bottom station (skiers, the chairs, falling snow and clouds are the page's: the lift runs 1255,1040 → 1585,612)"""
+    d, b = sky([(0, '#5aa4e8'), (.45, '#a8d2f4'), (.7, '#e2f0fa'), (1, '#f4f9fc')])
+    g = [b, glow(1500, 180, 420, 200, '#ffffff', .5, 'b60')]
+    def peak(px, py, w, base, c, cs):
+        L, R = px - w / 2, px + w / 2
+        m = f'M{L:.0f} {base} L{px - w * .14:.0f} {py + 90:.0f} L{px - w * .05:.0f} {py + 30:.0f} L{px:.0f} {py:.0f} L{px + w * .08:.0f} {py + 46:.0f} L{px + w * .2:.0f} {py + 120:.0f} L{R:.0f} {base} Z'
+        cid = f'pk{px}'
+        o = f'<clipPath id="{cid}"><path d="{m}"/></clipPath><path d="{m}" fill="#ffffff"/><g clip-path="url(#{cid})">'
+        o += f'<path d="M{px:.0f} {py - 10:.0f} L{R + 40:.0f} {base} L{px + w * .02:.0f} {base} L{px + 6:.0f} {py + 80:.0f} Z" fill="{cs}"/>'
+        o += ''.join(f'<path d="M{px + dx:.0f} {py + 60 + abs(dx) * .8:.0f} q{6 if dx > 0 else -6} {60 + k * 20} {(14 if dx > 0 else -14) + k * 4} {140 + k * 40}" stroke="{c}" stroke-width="{10 - k * 2}" fill="none" stroke-linecap="round" opacity=".55"/>' for k, dx in enumerate((-w * .1, w * .06, w * .16, -w * .22)))
+        return o + '</g>'
+    g.append(peak(260, 380, 760, 760, '#9fb4cc', '#dfe8f2') + peak(1560, 250, 900, 760, '#9fb4cc', '#dae4f0') + peak(800, 150, 1000, 760, '#90a8c4', '#d6e2ee'))
+    g.append(haze(560, 760, '#eef5fb', .55))
+    g.append(band(640, 30, '#f2f6fb', 1311, 7))   # the ridge
     r = RNG(131)
-    for _ in range(46):
-        x = r.random() * VW; y = 640 + r.random() * 260
-        if 700 < x < 1200 and y > 700: continue
-        g.append(pine(x, y, 80 + r.random() * 70, '#6f8fa6', '#5f7f98', True))
-    g.append('<path d="M-40 1200 L-40 880 C400 820 700 760 960 700 C1200 760 1500 820 1960 880 L1960 1200 Z" fill="#f6f9fc"/>')
-    g.append('<path d="M760 1200 C820 1000 900 840 960 700 C1020 840 1100 1000 1160 1200 Z" fill="#ffffff"/>' + ''.join(f'<path d="M{960 + a * 20} 720 C{960 + a * 60} 900 {960 + a * 120} 1050 {960 + a * 180} 1200" stroke="#e2eaf4" stroke-width="3" fill="none"/>' for a in (-1, -.3, .4, 1)))
-    g.append('<path d="M1160 1100 L1700 360" stroke="#5a6070" stroke-width="3"/><path d="M1190 1110 L1730 370" stroke="#5a6070" stroke-width="3"/>' + ''.join(f'<rect x="{x - 6}" y="{y}" width="12" height="{110 + i * 6}" fill="#8f949e"/><rect x="{x - 30}" y="{y}" width="60" height="10" fill="#8f949e"/>' for i, (x, y) in enumerate(((1250, 960), (1430, 720), (1610, 470)))))
-    g.append('<rect x="1690" y="330" width="130" height="80" fill="#8a96a8"/><path d="M1676 334 L1755 290 L1834 334 Z" fill="#ffffff"/><rect x="1700" y="350" width="40" height="30" fill="#ffd796"/><circle cx="1712" cy="352" r="22" fill="#6a7484"/><rect x="1120" y="1060" width="110" height="70" fill="#8a96a8"/><path d="M1108 1064 L1175 1026 L1242 1064 Z" fill="#ffffff"/><circle cx="1172" cy="1092" r="22" fill="#6a7484"/>')
-    X, Y = 420, 1100   # the lodge
-    g.append(f'<rect x="{X - 170}" y="{Y - 120}" width="340" height="140" fill="#a9785a"/>' + ''.join(f'<rect x="{X - 170}" y="{Y - 120 + i * 20}" width="340" height="3" fill="#946648"/>' for i in range(7)) + f'<path d="M{X - 220} {Y - 110} L{X} {Y - 260} L{X + 220} {Y - 110} Z" fill="#ffffff"/><path d="M{X - 220} {Y - 110} L{X + 220} {Y - 110} L{X + 200} {Y - 96} L{X - 200} {Y - 96} Z" fill="#dfe6ee"/>'
-             + ''.join(f'<rect x="{X - 140 + i * 74}" y="{Y - 80}" width="50" height="46" rx="4" fill="#ffd796"/>' for i in range(4)) + f'<rect x="{X + 90}" y="{Y - 220}" width="30" height="60" fill="#8f7766"/>')
-    g.append(''.join(f'<rect x="{x - 3}" y="{y}" width="6" height="40" fill="{c}"/><path d="M{x + 3} {y} L{x + 30} {y + 8} L{x + 3} {y + 16} Z" fill="{c}"/>' for x, y, c in ((900, 960, '#e85a5a'), (1020, 900, '#3f7ad8'), (860, 1060, '#3f7ad8'), (1080, 1020, '#e85a5a'))))
+    def grove(x0, x1, y0, y1, n, hmin, hmax):
+        pts = sorted(((x0 + r.random() * (x1 - x0), y0 + r.random() * (y1 - y0)) for _ in range(n)), key=lambda q: q[1])
+        return ''.join(pine(x, y, (hmin + r.random() * (hmax - hmin)) * (.7 + (y - y0) / max(1, y1 - y0) * .5), '#5f7f98', '#55738c', True) for x, y in pts)
+    g.append(grove(-40, 840, 640, 720, 34, 60, 90) + grove(1320, 1960, 640, 720, 30, 60, 90))
+    # the piste: from the ridge down to the base, groomed corduroy
+    g.append('<path d="M1000 660 C1080 660 1180 662 1240 668 C1200 760 1120 860 1120 960 C1120 1060 1220 1140 1300 1200 L620 1200 C700 1120 760 1040 780 960 C800 860 900 760 1000 660 Z" fill="#ffffff"/>')
+    g.append(''.join(f'<path d="M{1000 + k * 24} 664 C{960 + k * 18} 760 {860 + k * 30} 860 {860 + k * 40} 960 C{860 + k * 50} 1060 {700 + k * 70} 1140 {640 + k * 66} 1200" stroke="#e6eef8" stroke-width="2.5" fill="none"/>' for k in range(10)))
+    g.append('<path d="M1000 660 C900 760 800 860 780 960 C760 1040 700 1120 620 1200" stroke="#dfe8f2" stroke-width="10" fill="none"/><path d="M1240 668 C1200 760 1120 860 1120 960 C1120 1060 1220 1140 1300 1200" stroke="#dfe8f2" stroke-width="10" fill="none"/>')
+    g.append('<path d="M-40 1200 L-40 800 C200 760 500 740 760 780 L700 1200 Z" fill="#f4f8fc"/><path d="M1960 1200 L1960 760 C1700 740 1400 760 1180 800 L1300 1200 Z" fill="#f4f8fc"/>')
+    g.append(grove(560, 800, 760, 980, 16, 90, 140) + grove(1160, 1440, 760, 960, 14, 90, 140))
+    for x, y, c in ((900, 820, '#e85a5a'), (1010, 880, '#3f7ad8'), (900, 960, '#e85a5a'), (1020, 1040, '#3f7ad8'), (880, 1110, '#e85a5a')):   # slalom gates
+        g.append(f'<rect x="{x - 2}" y="{y - 40}" width="4" height="40" fill="#6a7484"/><path d="M{x + 2} {y - 40} L{x + 30} {y - 32} L{x + 2} {y - 24} Z" fill="{c}"/>')
+    g.append('<path d="M640 1150 L760 1150" stroke="#f08a4a" stroke-width="6" stroke-dasharray="14 6"/>' + ''.join(f'<rect x="{x}" y="1146" width="4" height="34" fill="#8a6a54"/>' for x in (640, 700, 760)))
+    # the lift: towers shrinking up the slope, the top station on the ridge, the bottom station at the base
+    A, B = (1255, 1040), (1585, 612)
+    for t in (.28, .58, .82):
+        x, y = A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t; k = 1 - t * .55
+        g.append(f'<rect x="{x - 5 * k:.0f}" y="{y - 30:.0f}" width="{10 * k:.0f}" height="{110 * k + 30:.0f}" fill="#7f8796"/><rect x="{x - 26 * k:.0f}" y="{y - 34:.0f}" width="{52 * k:.0f}" height="{8 * k + 2:.0f}" fill="#6f7786"/><ellipse cx="{x:.0f}" cy="{y + 110 * k:.0f}" rx="{24 * k:.0f}" ry="{6 * k:.0f}" fill="#e2eaf4"/>')
+    g.append(f'<path d="M{A[0]} {A[1] - 34} L{B[0]} {B[1] - 34}" stroke="#4a5262" stroke-width="2.5"/><path d="M{A[0] + 24} {A[1] - 26} L{B[0] + 16} {B[1] - 28}" stroke="#4a5262" stroke-width="2.5"/>')
+    g.append(f'<rect x="{B[0] - 20}" y="{B[1] - 34}" width="86" height="50" fill="#9aa4b4"/><path d="M{B[0] - 30} {B[1] - 30} L{B[0] + 23} {B[1] - 62} L{B[0] + 76} {B[1] - 30} Z" fill="#ffffff"/><rect x="{B[0] + 30}" y="{B[1] - 20}" width="26" height="20" fill="#ffd796"/><circle cx="{B[0] + 2}" cy="{B[1] - 26}" r="14" fill="#5f6878"/><ellipse cx="{B[0] + 22}" cy="{B[1] + 18}" rx="90" ry="12" fill="#f4f8fc"/>')
+    g.append(f'<rect x="{A[0] - 40}" y="{A[1] - 46}" width="150" height="86" fill="#9aa4b4"/><path d="M{A[0] - 56} {A[1] - 40} L{A[0] + 35} {A[1] - 92} L{A[0] + 126} {A[1] - 40} Z" fill="#ffffff"/><path d="M{A[0] - 56} {A[1] - 40} L{A[0] + 126} {A[1] - 40} L{A[0] + 116} {A[1] - 30} L{A[0] - 46} {A[1] - 30} Z" fill="#dfe6ee"/>'
+             f'<circle cx="{A[0] + 4}" cy="{A[1] - 30}" r="26" fill="#5f6878"/><rect x="{A[0] + 56}" y="{A[1] - 20}" width="40" height="30" fill="#ffd796"/><ellipse cx="{A[0] + 35}" cy="{A[1] + 44}" rx="130" ry="14" fill="#e6eef6"/>')
+    # the lodge: a timber chalet with balconies, a snowy roof, warm windows, a rack of skis
+    X, Y = 330, 1100
+    g.append(f'<rect x="{X - 200}" y="{Y - 190}" width="400" height="190" fill="#a9785a"/>' + ''.join(f'<rect x="{X - 200}" y="{Y - 190 + i * 19}" width="400" height="3" fill="#946648"/>' for i in range(10))
+             + f'<path d="M{X - 250} {Y - 176} L{X} {Y - 330} L{X + 250} {Y - 176} Z" fill="#7a5a44"/><path d="M{X - 262} {Y - 172} L{X} {Y - 342} L{X + 262} {Y - 172} L{X + 240} {Y - 156} L{X} {Y - 314} L{X - 240} {Y - 156} Z" fill="#ffffff"/>'
+             + f'<path d="M{X - 200} {Y - 100} L{X + 200} {Y - 100}" stroke="#6a4a38" stroke-width="12"/>' + ''.join(f'<rect x="{X - 196 + i * 28}" y="{Y - 126}" width="5" height="26" fill="#6a4a38"/>' for i in range(15))
+             + ''.join(f'<rect x="{X - 170 + i * 96}" y="{Y - 172}" width="56" height="52" rx="4" fill="#ffd796"/><path d="M{X - 142 + i * 96} {Y - 172} L{X - 142 + i * 96} {Y - 120}" stroke="#a9785a" stroke-width="4"/>' for i in range(4))
+             + ''.join(f'<rect x="{X - 170 + i * 96}" y="{Y - 80}" width="56" height="52" rx="4" fill="#ffd796"/>' for i in (0, 3)) + f'<rect x="{X - 40}" y="{Y - 90}" width="80" height="90" rx="6" fill="#6a4a38"/>'
+             + f'<rect x="{X + 110}" y="{Y - 300}" width="30" height="70" fill="#8f7766"/><rect x="{X + 104}" y="{Y - 306}" width="42" height="12" rx="4" fill="#ffffff"/>')
+    g.append(glow(X, Y - 120, 300, 140, '#ffd796', .25, 'b30'))
+    g.append(f'<rect x="{X + 220}" y="{Y - 70}" width="90" height="8" fill="#8a6a54"/>' + ''.join(f'<rect x="{X + 226 + i * 14}" y="{Y - 120}" width="7" height="120" rx="3" fill="{c}"/>' for i, c in enumerate(('#e85a5a', '#3f7ad8', '#f6b83a', '#5ac85a', '#e85a5a', '#3f7ad8'))))
+    g.append(f'<ellipse cx="{X}" cy="{Y + 8}" rx="300" ry="20" fill="#e6eef6"/>')
+    S = (1620, 1120)   # a snowman by the base
+    g.append(f'<circle cx="{S[0]}" cy="{S[1] - 40}" r="46" fill="#ffffff"/><circle cx="{S[0]}" cy="{S[1] - 108}" r="32" fill="#ffffff"/><circle cx="{S[0] - 10}" cy="{S[1] - 114}" r="4" fill="#3a3a4a"/><circle cx="{S[0] + 10}" cy="{S[1] - 114}" r="4" fill="#3a3a4a"/><path d="M{S[0]} {S[1] - 104} l20 6 l-20 2 Z" fill="#f08a4a"/><path d="M{S[0] - 30} {S[1] - 84} Q{S[0]} {S[1] - 74} {S[0] + 30} {S[1] - 84}" stroke="#e85a5a" stroke-width="10" fill="none"/><path d="M{S[0] - 24} {S[1] - 134} L{S[0] + 24} {S[1] - 134} L{S[0] + 16} {S[1] - 168} L{S[0] - 16} {S[1] - 168} Z" fill="#3f5a8a"/>')
     return doc(d, ''.join(g))
 
 # ------------------------------------------------------------------------------------------------ s132 クリスマスの村
