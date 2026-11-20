@@ -111,5 +111,8 @@ function sweep(svg, area) {
   layer.appendChild(g); setTimeout(() => g.remove(), 1100);
   return new Promise(res => setTimeout(res, 750));
 }
-window.SeaBoard = { draw, cellAt, point, aim, fx, sweep, xy, O };
+// one ship as a small picture of its own (for the pick cards)
+function shipSvg(kind, len) { const id = 'sp' + (uid++);
+  return `<svg class="sb sb-shipart" viewBox="-1 0 ${len * 10 + 2} 10"><defs><linearGradient id="${id}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="sb-h1"/><stop offset=".55" class="sb-h2"/><stop offset="1" class="sb-h3"/></linearGradient><linearGradient id="${id}d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="sb-d1"/><stop offset="1" class="sb-d2"/></linearGradient></defs><g class="sb-ship">${shipShape(kind, len, id)}</g></svg>`; }
+window.SeaBoard = { shipSvg, draw, cellAt, point, aim, fx, sweep, xy, O };
 })();

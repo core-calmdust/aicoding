@@ -185,18 +185,34 @@ function openShipList() {   // every type, cheapest first, with the full text �
 }
 $('#btnShipList').onclick = openShipList; $('#btnShipsClose').onclick = () => $('#shipsOverlay').classList.remove('show');
 $('#shipsOverlay').addEventListener('click', e => { if (e.target.id === 'shipsOverlay') $('#shipsOverlay').classList.remove('show'); });
-const drOpen = new Set();   // draft rows whose full description is shown (tap the name)
+let pickShut = -1;   // the draft pick number at which the player closed the pick sheet (it opens itself on each of their turns)
+const ROLE_OF = k => E.ROLE.atk.includes(k) ? 0 : E.ROLE.info.includes(k) ? 1 : E.ROLE.def.includes(k) ? 2 : 3;
 function renderDraft() {
-  if (G.phase !== 'draft') return;
-  const d = G.draft, mine = d.turn === 0;
-  $('#drTurn').textContent = t(d.turn === 0 ? 'dr.you' : 'dr.ai'); $('#drTurn').classList.toggle('me', mine);
-  const f = d.f || E.POOL, grp = k => E.ROLE.atk.includes(k) ? 0 : E.ROLE.info.includes(k) ? 1 : E.ROLE.def.includes(k) ? 2 : 3;   // (the 14 types on the table, grouped by role, cheapest first)
-  const row = (T, k) => `<div class="dr${d.pool[k] && d.picks[0].indexOf(k) < 0 ? '' : ' out'}${drOpen.has(k) ? ' open' : ''}" data-k="${k}"><span class="pip">${'<i></i>'.repeat(T.len)}</span><div class="dn"><b>${t('ship.' + k)}<em>×${d.pool[k]}</em></b><small>${T.skill ? t('sk.' + T.skill) + '：' + t('sk.' + T.skill + '.d') : T.armor ? t('sk.armor') + '：' + t(T.armor > 1 ? 'sk.armor2.d' : 'sk.armor.d') : T.aa ? t('sk.aa') + '：' + t('sk.aa.d') : T.decoy ? t('sk.decoy') + '：' + t('sk.decoy.d') : T.counter ? t('sk.counter') + '：' + t('sk.counter.d') : T.calm ? t('sk.calm') + '：' + t('sk.calm.d') : T.plunder ? t('sk.plunder') + '：' + t('sk.plunder.d') : T.net ? t('sk.net') + '：' + t('sk.net.d') : T.pursuit ? t('sk.pursuit') + '：' + t('sk.pursuit.d') : T.haste ? t('sk.haste') + '：' + t('sk.haste.d') : T.trace ? t('sk.trace') + '：' + t('sk.trace.d') : T.cost === 0 ? t('sk.free') + '：' + t('sk.free.d') : T.rally ? t('sk.rally') + '：' + t('sk.rally.d') : T.hospital ? t('sk.hospital') + '：' + t('sk.hospital.d') : t('dr.none')}</small></div><span class="dc">${T.cost}</span><button data-k="${k}" ${E.draftCan(d, 0, k) && !G.busy ? '' : 'disabled'}>${t('dr.pick')}</button></div>`;
-  $('#drRows').innerHTML = [0, 1, 2, 3].map(g => { const ks = E.TYPES.map((T, k) => k).filter(k => f[k] && grp(k) === g).sort((a, b) => E.TYPES[a].cost - E.TYPES[b].cost || a - b); return ks.length ? `<div class="drg">${t('dr.g' + g)}</div>` + ks.map(k => row(E.TYPES[k], k)).join('') : ''; }).join('');
+  if (G.phase !== 'draft') { $('#pickOverlay').classList.remove('show'); return; }
+  const d = G.draft, mine = d.turn === 0 && !G.busy, f = d.f || E.POOL;
+  $('#drTurn').textContent = t(d.turn === 0 ? 'dr.you' : 'dr.ai'); $('#drTurn').classList.toggle('me', d.turn === 0);
+  // the side card: the field at a glance (tap → the pick sheet)
+  $('#drRows').innerHTML = `<button id="btnPick" class="${mine ? 'go' : ''}">${t('dr.open')}</button><div class="drf">${E.TYPES.map((T, k) => k).filter(k => f[k]).sort((a, b) => ROLE_OF(a) - ROLE_OF(b) || E.TYPES[a].cost - E.TYPES[b].cost).map(k => `<span class="g${ROLE_OF(k)}${d.pool[k] ? '' : ' out'}">${t('ship.' + k)}</span>`).join('')}</div>`;
   const who = (p, name) => `<div class="dw${d.turn === p ? ' turn' : ''}"><div class="fh"><b>${name}</b><span>${t('dr.left', { c: E.draftLeft(d, p) })}</span></div><div class="pips">${d.picks[p].map(k => `<span class="pip" title="${t('ship.' + k)}">${'<i></i>'.repeat(E.TYPES[k].len)}</span>`).join('') || '<span class="none">—</span>'}</div></div>`;
   $('#drWho').innerHTML = who(1, 'AI Lv.' + G.level) + who(0, t('you'));
   $('#btnDrStop').disabled = !(E.draftCanStop(d, 0) && !G.busy);
+  // the pick sheet: one card per type on the table, by role, cheapest first
+  const card = k => { const T = E.TYPES[k], taken = d.picks[0].includes(k), can = mine && E.draftCan(d, 0, k);
+    const why = taken ? t('pk.taken') : !d.pool[k] ? t('pk.gone') : T.cost > E.draftLeft(d, 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : '';
+    const kind = T.skill ? t('pk.active', { n: T.cd }) : PASSIVE_T(T) ? t('pk.passive') : t('pk.none');
+    return `<div class="pc g${ROLE_OF(k)}${can ? '' : ' off'}${taken ? ' taken' : ''}"><div class="pt"><span class="pcost">${T.cost}</span><b>${t('ship.' + k)}</b><em>×${d.pool[k]}</em></div>
+      <div class="pa">${SB.shipSvg(k, T.len)}</div>
+      <div class="ps">${T.skill ? `<i class="ic">${SK_ICON[T.skill] || ''}</i>` : ''}<b>${shipSkillName(T)}</b><small>${kind}</small></div>
+      <p>${shipSkillText(T)}</p>
+      <button data-k="${k}" ${can ? '' : 'disabled'}>${can ? t('dr.pick') : why || t('dr.pick')}</button></div>`; };
+  $('#pickHead').innerHTML = `<b>${t(d.turn === 0 ? 'dr.you' : 'dr.ai')}</b><span>${t('pk.left', { c: E.draftLeft(d, 0), n: d.picks[0].length, m: E.MAXSHIPS })}</span>`;
+  $('#pickGrid').innerHTML = [0, 1, 2, 3].map(g => { const ks = E.TYPES.map((T, k) => k).filter(k => f[k] && ROLE_OF(k) === g).sort((a, b) => E.TYPES[a].cost - E.TYPES[b].cost || a - b); return ks.length ? `<h3 class="g${g}">${t('dr.g' + g)}</h3><div class="pg">${ks.map(card).join('')}</div>` : ''; }).join('');
+  $('#btnPickStop').disabled = !(E.draftCanStop(d, 0) && !G.busy);
+  if (mine && pickShut !== d.n) $('#pickOverlay').classList.add('show');
 }
+const PASSIVE_T = T => !!(T.armor || T.aa || T.decoy || T.counter || T.rally || T.hospital || T.trace || T.pursuit || T.haste || T.net || T.plunder || T.calm);
+function shipSkillName(T) { return T.skill ? t('sk.' + T.skill) : T.armor ? t('sk.armor') : T.aa ? t('sk.aa') : T.decoy ? t('sk.decoy') : T.counter ? t('sk.counter') : T.calm ? t('sk.calm') : T.plunder ? t('sk.plunder') : T.net ? t('sk.net') : T.pursuit ? t('sk.pursuit') : T.haste ? t('sk.haste') : T.trace ? t('sk.trace') : T.cost === 0 ? t('sk.free') : T.rally ? t('sk.rally') : T.hospital ? t('sk.hospital') : t('dr.none'); }
+function shipSkillText(T) { const d = shipDesc(T).replace(/^[^：]*：/, '').replace(/ · .*$/, ''); return T.skill || PASSIVE_T(T) || T.cost === 0 ? d.replace(/^常時：/, '').replace(/^Always: /, '') : t('pk.plain'); }
 function addMyShip(k) {
   const g = E.gridOf(G.my); let put = null;
   for (let n = 0; n < 600 && !put; n++) { const s = { r: Math.random() * 10 | 0, c: Math.random() * 10 | 0, len: E.TYPES[k].len, h: Math.random() < .5 ? 1 : 0, t: k }; if (E.fits(g, s, G.adj, -2)) put = s; }
@@ -429,7 +445,11 @@ bsvg.addEventListener('pointerup', deployUp);
 bsvg.addEventListener('pointercancel', () => { if (drag) { G.my[drag.i] = drag.from; drag = null; renderBoards(); } });
 bsvg.addEventListener('pointerleave', () => { SB.aim(bsvg, -1); if (G.armed != null && hoverCell >= 0 && PCQ.matches) { hoverCell = -1; renderBoards(); } });
 $('#skillCard').addEventListener('click', e => { const b = e.target.closest('.sk'); if (!b || b.disabled || !G.st || G.busy || G.phase !== 'battle' || G.st.turn !== 0) return; const i = +b.dataset.i; if (E.NOAIM[skillOf(G.my[i])]) { G.armed = null; return playerNoAim(i); } G.armed = G.armed === i ? null : i; hoverCell = -1; G.hint = null; sfx('place'); if (G.view !== 'enemy') swapView('enemy').then(() => render()); else render(); });
-$('#drRows').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { if (!b.disabled) draftPickMine(+b.dataset.k); return; } const r = e.target.closest('.dr'); if (!r) return; const k = +r.dataset.k; if (drOpen.has(k)) drOpen.delete(k); else drOpen.add(k); r.classList.toggle('open', drOpen.has(k)); });
+$('#drRows').addEventListener('click', e => { if (e.target.closest('#btnPick')) $('#pickOverlay').classList.add('show'); });
+$('#pickGrid').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; $('#pickOverlay').classList.remove('show'); draftPickMine(+b.dataset.k); });
+$('#btnPickClose').onclick = () => { pickShut = G.draft ? G.draft.n : -1; $('#pickOverlay').classList.remove('show'); };
+$('#pickOverlay').addEventListener('click', e => { if (e.target.id === 'pickOverlay') $('#btnPickClose').onclick(); });
+$('#btnPickStop').onclick = () => { $('#pickOverlay').classList.remove('show'); $('#btnDrStop').click(); };
 $('#btnDrStop').onclick = () => draftPickMine(-1);
 bsvg.addEventListener('click', e => { if (G.phase !== 'battle') return; const c = SB.cellAt(bsvg, e); if (c >= 0) playerShot(c); });
 $('#miniBtn').onclick = () => { if (!G.st || G.busy || G.phase === 'deploy') return; swapView(G.view === 'enemy' ? 'own' : 'enemy').then(() => render()); };

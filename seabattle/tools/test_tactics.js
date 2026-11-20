@@ -19,7 +19,9 @@ const { chromium } = require('playwright');
       await p.waitForFunction(() => G.phase !== 'draft' || (!G.busy && G.draft.turn === 0), null, { timeout: 8000 });
       if (!(await p.evaluate(() => G.phase === 'draft'))) break;
       if (guard === 2) await shot('tac-draft');
-      const sel = await p.evaluate(() => { const b = [...document.querySelectorAll('#drRows button')].find(x => !x.disabled); return b ? '#drRows button[data-k="' + b.dataset.k + '"]' : '#btnDrStop'; });
+      await p.waitForFunction(() => document.querySelector('#pickOverlay').classList.contains('show'), null, { timeout: 4000 }); await p.waitForTimeout(250);   // (the pick sheet opens by itself on my turn)
+      if (guard === 2) await shot('tac-pick');
+      const sel = await p.evaluate(() => { const b = [...document.querySelectorAll('#pickGrid button')].find(x => !x.disabled); return b ? '#pickGrid button[data-k="' + b.dataset.k + '"]' : '#btnPickStop'; });
       await tap(sel); await p.waitForTimeout(150);
     }
     ok(await p.evaluate(() => G.phase === 'deploy' && SeaEngine.validFleet(G.my, G.adj, true) && SeaEngine.validDraft(G.draft.picks[1])), name + ': draft ends with two legal fleets, mine on the board');

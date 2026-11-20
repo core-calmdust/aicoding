@@ -173,9 +173,26 @@ body.drafting .draft{display:block}body.drafting .deploy{display:none}
 .draft .dh b{font-size:17px;letter-spacing:.06em}.draft .dh span{font-family:var(--num);font-size:16px;font-weight:600;color:var(--accent)}.draft .dh span.me{color:var(--heat)}
 .dr{display:grid;grid-template-columns:54px minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.07)}
 .dr .dn{min-width:0}.dr .dn b{display:block;font-size:15px;white-space:nowrap}.dr .dn small{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.drg{font-size:11.5px;letter-spacing:.14em;color:var(--accent);padding:10px 0 2px;font-weight:700}#drRows .drg:first-child{padding-top:0}
-#drRows{max-height:min(560px,calc(100dvh - 330px));overflow-y:auto;overscroll-behavior:contain;padding-inline-end:4px}
-@media (max-width: 819px){ #drRows{max-height:none;overflow:visible} }
+#btnPick{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink,#e8f4f6);font-size:15.5px;font-weight:700;cursor:pointer;letter-spacing:.04em}
+#btnPick.go{border-color:#c4f7ec;background:linear-gradient(180deg,#a8f0e0,#5fcdb8);color:#06302b}
+.drf{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 4px}.drf span{font-size:12px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:var(--muted)}.drf span.out{opacity:.35;text-decoration:line-through}
+.drf .g0,.pc.g0 .pcost,#pickGrid h3.g0{--rc:#ff9f7a}.drf .g1,.pc.g1 .pcost,#pickGrid h3.g1{--rc:#7fd8ff}.drf .g2,.pc.g2 .pcost,#pickGrid h3.g2{--rc:#9ff0c8}.drf .g3,.pc.g3 .pcost,#pickGrid h3.g3{--rc:#c9c9d6}
+.drf span{border-color:color-mix(in srgb,var(--rc) 40%,transparent)}
+#pickOverlay .modal{width:min(1080px,calc(100vw - 32px));padding:20px 22px}
+.pkh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:-20px;z-index:2;background:linear-gradient(180deg,#184156 80%,rgba(24,65,86,0));margin:-20px -22px 0;padding:20px 22px 10px}
+.pkh h2{margin:0}#pickHead{display:flex;gap:14px;align-items:baseline}#pickHead b{color:var(--heat);font-size:16px}#pickHead span{font-family:var(--num);color:var(--muted);font-size:14px}
+#pickGrid h3{margin:14px 0 8px;font-size:13px;letter-spacing:.16em;color:var(--rc)}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.pc{position:relative;display:flex;flex-direction:column;gap:8px;padding:12px 12px 12px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.1)}
+.pc .pt{display:flex;align-items:center;gap:8px}.pc .pt b{font-size:16px}.pc .pt em{margin-inline-start:auto;font-style:normal;font-family:var(--num);color:var(--muted);font-size:13px}
+.pc .pcost{min-width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:var(--num);font-weight:700;font-size:15px;color:#08202a;background:var(--rc)}
+.pc .pa{height:34px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(0,0,0,.18)}.pc .pa svg{height:22px;width:auto;max-width:92%}
+.pc .ps{display:flex;align-items:center;gap:7px}.pc .ps .ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;display:block}.pc .ps b{font-size:14.5px}.pc .ps small{margin-inline-start:auto;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.pc p{margin:0;font-size:13px;line-height:1.5;color:#cfe2e8;flex:1}
+.pc button{height:38px;border-radius:10px;border:1px solid #c4f7ec;background:linear-gradient(180deg,#a8f0e0,#5fcdb8);color:#06302b;font-size:14.5px;font-weight:700;cursor:pointer}
+.pc button:disabled{background:rgba(255,255,255,.05);border-color:var(--line);color:var(--dim);cursor:default}
+.pc.off:not(.taken){opacity:.72}.pc.taken{outline:2px solid var(--heat);outline-offset:-2px}
+@media (max-width: 600px){ #pickOverlay{padding:8px} #pickOverlay .modal{width:100%;max-height:calc(100dvh - 16px);padding:14px} .pkh{margin:-14px -14px 0;padding:14px 14px 8px;top:-14px} .pg{grid-template-columns:1fr 1fr;gap:8px} .pc{padding:9px;gap:6px} .pc .pt b{font-size:14px} .pc p{font-size:12px} .pc .ps small{display:none} .pc button{height:34px;font-size:13.5px} }
 .dr .dn{cursor:pointer}.dr.open .dn small{white-space:normal;overflow:visible;color:#d6e8ee}
 .dr .dc{font-family:var(--num);font-size:14px;color:var(--heat);white-space:nowrap}
 .dr button{height:36px;min-width:64px;padding:0 12px;border-radius:10px;border:1px solid #c4f7ec;background:linear-gradient(180deg,#a8f0e0,#5fcdb8);color:#06302b;font-size:14.5px;font-weight:700;cursor:pointer;white-space:nowrap}
@@ -341,6 +358,7 @@ body.tac:not(.placing) .skills{display:grid}
 </div>
 
 <!-- rules (shared/ruletour.js) -->
+<div class="overlay" id="pickOverlay"><div class="modal"><div class="pkh"><h2 data-i18n="dr.t"></h2><div id="pickHead"></div></div><div id="pickGrid"></div><div class="modal-actions"><button class="mbtn" id="btnPickClose" data-i18n="close"></button><button class="mbtn" id="btnPickStop" data-i18n="dr.stop"></button></div></div></div>
 <div class="overlay" id="shipsOverlay"><div class="modal"><h2 data-i18n="dr.all"></h2><div id="shipList"></div><div class="modal-actions"><button class="mbtn" id="btnShipsClose" data-i18n="close"></button></div></div></div>
 <div class="overlay" id="rulesOverlay"><div class="modal"><div id="rulesBody"></div></div></div>
 
@@ -354,15 +372,15 @@ body.tac:not(.placing) .skills{display:grid}
   </div>
 </div>
 
-<script src="i18n.js?v=24"></script>
+<script src="i18n.js?v=26"></script>
 <script src="../shared/rulesoffer.js?v=20sea"></script>
 <script src="../shared/headerbar.js?v=63"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/ruletour.js?v=30tw"></script>
 <script src="engine.js?v=23"></script>
-<script src="board.js?v=9"></script>
+<script src="board.js?v=10"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=25"></script>
+<script src="app.js?v=26"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
