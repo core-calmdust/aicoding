@@ -64,6 +64,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(55); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
     ok(await p.evaluate(() => { const m = G.st.log.filter(m => m.by === 0 && m.skill === 'barrage').pop(); return m && m.ic >= 0 && G.st.log.filter(x => x.via === 'barrage').length === 8; }), name + ': barrage fires 9 squares, one shot down by AA');
     await shot('barrage');
+    const decoyEarly = await p.evaluate(() => { const T = G.st.sides[1]; return T.sunk[T.ships.findIndex(s => SeaEngine.TYPES[s.t].decoy)]; });   // (the barrage may already have sunk it)
     guard = 0;
     while (await p.evaluate(() => G.phase === 'battle') && guard++ < 160) {
       await idle(); if (!(await p.evaluate(() => G.phase === 'battle'))) break;
@@ -71,7 +72,7 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
       const c = await p.evaluate(() => { const s = G.st.sides[1].shots, g = G.st.sides[1].grid, sh = G.st.sides[1].ships; for (let k = 0; k < 100; k++) if (!s[k] && g[k] >= 0 && !SeaEngine.TYPES[sh[g[k]].t].decoy) return k; for (let k = 0; k < 100; k++) if (!s[k]) return k; return -1; });
       await tapCell(c); await p.waitForFunction(n => G.st.acts.length > n || G.phase !== 'battle', n0, { timeout: 10000 });
     }
-    ok(await p.evaluate(() => { const T = G.st.sides[1], d = T.ships.findIndex(s => SeaEngine.TYPES[s.t].decoy); return G.st.winner === 0 ? !T.sunk[d] : true; }), name + ': winning with the enemy decoy still afloat');
+    ok(await p.evaluate(e => { const T = G.st.sides[1], d = T.ships.findIndex(s => SeaEngine.TYPES[s.t].decoy); return G.st.winner === 0 ? (!T.sunk[d] || e) : true; }, decoyEarly), name + ': winning with the enemy decoy still afloat');
     await shot('decoy');
     // 第5弾: the patrol boat's probe, and the enemy monitor firing back
     await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
@@ -282,6 +283,17 @@ const MINE = [14, 13, 11, 12, 4], FOE = [14, 13, 0, 1, 5];
     await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 }); await idle();
     ok(await p.evaluate(() => G.my.every((s, j) => SeaEngine.TYPES[s.t].skill === 'allout' || !SeaEngine.TYPES[s.t].skill || G.st.cd[0][j] === 0 || G.st.sides[0].sunk[j])), name + ': all-out readies every other skill');
     await shot('allout');
+    // 第20弾: ring fire (8 around the centre); the enemy breakwater blocks my twin shot
+    await p.evaluate(([a, f]) => { const E = SeaEngine, fl = [E.randomFleet(Math.random, false, a), E.randomFleet(Math.random, false, f)];
+      G = { phase: 'battle', my: null, st: E.newGame({ rule: 'tactics', adj: false, fleets: fl, first: 0 }), level: 20, rule: 'tactics', adj: false, view: 'enemy', hint: null, evals: [.5], busy: false, resigned: false, first: 0, armed: null };
+      G.my = G.st.sides[0].ships; G.st.cd[0].fill(0); render(); }, [[49, 8, 4], [48, 4, 3]]);
+    await p.waitForTimeout(300);
+    i = await skillBtn('twin');
+    ok(await p.evaluate(i => document.querySelector('#skillCard .sk[data-i="' + i + '"]').disabled, i), name + ': the enemy breakwater blocks my twin shot');
+    i = await skillBtn('ring'); n0 = await acts();
+    await tap('#skillCard .sk[data-i="' + i + '"]'); await p.waitForTimeout(150); await tapCell(55); await p.waitForFunction(n => G.st.acts.length > n, n0, { timeout: 10000 });
+    ok(await p.evaluate(() => JSON.stringify(G.st.log.filter(x => x.via === 'ring').map(x => x.cell).sort((a, b) => a - b)) === '[44,45,46,54,56,64,65,66]'), name + ': ring fire hits the 8 squares around F6');
+    await shot('ring');
     await ctx.close();
   }
   console.log(errs.length ? 'PAGE ERRORS:\n' + errs.join('\n') : 'no page errors'); console.log(fail || errs.length ? 'FAILED' : 'ALL OK');
