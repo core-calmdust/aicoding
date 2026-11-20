@@ -26,7 +26,7 @@ const TYPES = [
   { k: 'tender', len: 3, cost: 4, skill: 'scout', cd: 4 },
   { k: 'gunboat', len: 3, cost: 6, skill: 'twin', cd: 5 },
   { k: 'flagship', len: 4, cost: 2, skill: 'command', cd: 6 },
-  { k: 'jammer', len: 3, cost: 3, skill: 'jam', cd: 4 },
+  { k: 'jammer', len: 3, cost: 3, skill: 'jam', cd: 6 },
   // 第2弾 (2026-11-20): rocket — a row of 3 squares · repair (repair ship) — the latest hit on one of your afloat ships is mended (the square is unknown to the enemy again)
   { k: 'rocket', len: 3, cost: 6, skill: 'rocket', cd: 4 },
   { k: 'repair', len: 3, cost: 2, skill: 'repair', cd: 5 },
