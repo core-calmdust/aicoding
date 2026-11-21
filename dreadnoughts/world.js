@@ -54,18 +54,21 @@ function makeParticles(additive, n) {
         gl_FragColor = vec4(vC.rgb, vC.a * a); }`,
   });
   const pts = new T.Points(g, m); pts.frustumCulled = false; pts.renderOrder = additive ? 6 : 5;
-  const P = { pts, n, pos, col, sz, rot, live: [], free: [] }; for (let i = n - 1; i >= 0; i--) P.free.push(i);
+  const P = { pts, n, pos, col, sz, rot, live: [], free: [], hi: 0 }; for (let i = n - 1; i >= 0; i--) P.free.push(i); g.setDrawRange(0, 0);
   return P;
 }
-function emit(P, o) { const i = P.free.pop(); if (i == null) return; P.live.push(Object.assign({ i, t: 0, r: Math.random() * 6.28, sp: (Math.random() - .5) * (o.spin || 1) }, o)); }
+function emit(P, o) { if (P.dirty) { P.free.sort((a, b) => b - a); P.dirty = 0; } const i = P.free.pop(); if (i == null) return; P.live.push(Object.assign({ i, t: 0, r: Math.random() * 6.28, sp: (Math.random() - .5) * (o.spin || 1) }, o)); }
 function stepParticles(P, dt) {
-  const L = P.live; for (let j = L.length - 1; j >= 0; j--) { const q = L[j]; q.t += dt; if (q.t >= q.life) { P.sz[q.i] = 0; P.col[q.i * 4 + 3] = 0; P.free.push(q.i); L[j] = L[L.length - 1]; L.pop(); continue; }
+  const L = P.live; for (let j = L.length - 1; j >= 0; j--) { const q = L[j]; q.t += dt; if (q.t >= q.life) { P.sz[q.i] = 0; P.col[q.i * 4 + 3] = 0; P.free.push(q.i); P.dirty = 1; L[j] = L[L.length - 1]; L.pop(); continue; }
     const u = q.t / q.life; q.v[1] -= (q.g || 0) * dt; const d = Math.pow(1 - (q.drag || 0), dt * 60); q.v[0] *= d; q.v[1] *= d; q.v[2] *= d;
     q.p[0] += q.v[0] * dt; q.p[1] += q.v[1] * dt; q.p[2] += q.v[2] * dt; if (q.floor != null && q.p[1] < q.floor) { q.p[1] = q.floor; q.v[1] = 0; }
     const k = q.i; P.pos[k * 3] = q.p[0]; P.pos[k * 3 + 1] = q.p[1]; P.pos[k * 3 + 2] = q.p[2];
     const e = q.ease ? Math.pow(u, q.ease) : u; P.sz[k] = q.size0 + (q.size1 - q.size0) * e; for (let c = 0; c < 4; c++) P.col[k * 4 + c] = q.c0[c] + (q.c1[c] - q.c0[c]) * u;
     if (q.fadeIn) P.col[k * 4 + 3] *= Math.min(1, q.t / q.fadeIn); P.rot[k] = q.r + q.sp * q.t; }
-  const g = P.pts.geometry; g.attributes.position.needsUpdate = g.attributes.color.needsUpdate = g.attributes.size.needsUpdate = g.attributes.rot.needsUpdate = true;
+  let hi = 0; for (const q of L) if (q.i >= hi) hi = q.i + 1;
+  const g = P.pts.geometry, hiAll = Math.max(hi, P.hi || 0); P.hi = hi; g.setDrawRange(0, hi);
+  if (!hiAll) return;
+  for (const [k, n] of [['position', 3], ['color', 4], ['size', 1], ['rot', 1]]) { const a = g.attributes[k]; a.clearUpdateRanges(); a.addUpdateRange(0, hiAll * n); a.needsUpdate = true; }
 }
 
 // ---------- text sprites ----------
@@ -87,8 +90,8 @@ function init(canvas, opts) {
   T = window.THREE; opts = opts || {};
   const mobile = matchMedia('(pointer:coarse)').matches || Math.min(screen.width, screen.height) < 700;
   const R = new T.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  const prMax = Math.min(devicePixelRatio || 1, mobile ? 1.6 : 2); R.setPixelRatio(prMax); R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = 1.05;
-  R.shadowMap.enabled = true; R.shadowMap.type = T.PCFSoftShadowMap;
+  const prMax = Math.min(devicePixelRatio || 1, mobile ? 1.5 : 1.75); R.setPixelRatio(prMax); R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = 1.05;
+  R.shadowMap.enabled = true; R.shadowMap.type = T.PCFShadowMap;
   const scene = new T.Scene(), cam = new T.PerspectiveCamera(30, 1, .1, 1500);
   const sunDir = new T.Vector3(-.42, .3, -.86).normalize(), uniSky = { uSun: { value: sunDir }, uTime: { value: 0 } };
   const skyMat = new T.ShaderMaterial({ uniforms: uniSky, side: T.BackSide, depthWrite: false, vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.); gl_Position = p.xyww; }', fragmentShader: GLSL_SKY + 'uniform float uTime; varying vec3 vD; void main(){ gl_FragColor = vec4(skyCol(normalize(vD), uTime), 1.); }' });
@@ -103,9 +106,15 @@ function init(canvas, opts) {
   const uni = { uTime: { value: 0 }, uCellsA: { value: cells[0].tx }, uCellsB: { value: cells[1].tx }, uAim: { value: new T.Vector4(-99, -99, 0, 0) }, uRip: { value: Array.from({ length: 10 }, () => new T.Vector4(0, 0, -99, 0)) },
     uSweep: { value: new T.Vector4(0, 0, -99, 0) }, uSweepBox: { value: new T.Vector4(0, 0, 0, 0) }, uFog: { value: new T.Vector2(0, 0) }, uGrid: { value: new T.Vector2(1, 1) }, uFocus: { value: 0 },
     uHulls: { value: Array.from({ length: 16 }, () => new T.Vector4(0, 0, 0, 0)) }, uNH: { value: 0 }, uCam: { value: cam.position },
-    uW: { value: WAVES.map(w => new T.Vector4(w[0], w[1], w[2], w[3])) }, uWs: { value: WAVES.map(w => w[4]) } };
-  const water = makeWater(uni, mobile); scene.add(water);
-  const labels = [0, 1].map(z => { const g = new T.Group(), col = z ? '#f0a58c' : '#e7cd8f'; for (let i = 0; i < N; i++) { const a = sprite('ABCDEFGHIJ'[i], .55, { top: 1, color: col }), b = sprite(String(i + 1), .55, { top: 1, color: col }); a.position.set(ZC[z][0] - 5 + i + .5, .25, ZC[z][1] - 5.5); b.position.set(ZC[z][0] - 5.55, .25, ZC[z][1] - 5 + i + .5); g.add(a, b); } scene.add(g); return g; });
+    uNrm: { value: null }, uW: { value: WAVES.map(w => new T.Vector4(w[0], w[1], w[2], w[3])) }, uWs: { value: WAVES.map(w => w[4]) } };
+  uni.uNrm.value = rippleNormals(); const water = makeWater(uni, mobile, { sunDir }); scene.add(water);
+  // the coordinates (A–J, 1–10) round each zone: one flat textured plane per zone (one draw call, not twenty sprites)
+  const labels = [0, 1].map(z => { const c = document.createElement('canvas'); c.width = c.height = 1024; const g = c.getContext('2d'), u = 1024 / 12, col = z ? '#f0a58c' : '#e7cd8f';
+    g.font = "600 46px 'Rajdhani','Cormorant Garamond',sans-serif"; g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = 'rgba(0,0,0,.9)'; g.shadowBlur = 8; g.fillStyle = col;
+    for (let i = 0; i < N; i++) { g.fillText('ABCDEFGHIJ'[i], (1 + i + .5) * u, .55 * u); g.fillText(String(i + 1), .5 * u, (1 + i + .5) * u); }
+    const tx = new T.CanvasTexture(c); tx.colorSpace = T.SRGBColorSpace; tx.anisotropy = 8;
+    const m = new T.Mesh(new T.PlaneGeometry(12, 12), new T.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false, depthTest: false, toneMapped: false }));
+    m.rotation.x = -Math.PI / 2; m.position.set(ZC[z][0], .25, ZC[z][1]); m.renderOrder = 8; scene.add(m); return m; });
   const fire = makeParticles(true, mobile ? 1800 : 3600), smoke = makeParticles(false, mobile ? 2400 : 5000); scene.add(fire.pts, smoke.pts);
   const shipLayer = new T.Group(), markLayer = [new T.Group(), new T.Group()], deco = new T.Group(); scene.add(shipLayer, markLayer[0], markLayer[1], deco);
   const flash = new T.PointLight(0xffa860, 0, 7, 1.6); scene.add(flash);
@@ -117,44 +126,56 @@ function init(canvas, opts) {
   loop();
   return V;
 }
-function makeWater(uni, mobile) {
+function rippleNormals() {
+  const n = 128, h = new Float32Array(n * n), d = new Uint8Array(n * n * 4), W = [];
+  for (let i = 0; i < 26; i++) { const a = Math.random() * 6.283, f = 2 + Math.floor(Math.random() * 9); W.push([Math.round(Math.cos(a) * f), Math.round(Math.sin(a) * f), Math.random() * 6.283, 1 / Math.sqrt(f)]); }
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { let v = 0; for (const [fx, fy, ph, am] of W) v += am * Math.sin((fx * x + fy * y) / n * 6.283 + ph); h[y * n + x] = v; }
+  let mx = 0; const sl = []; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const sx = h[y * n + (x + 1) % n] - h[y * n + (x + n - 1) % n], sy = h[((y + 1) % n) * n + x] - h[((y + n - 1) % n) * n + x]; sl.push(sx, sy); mx = Math.max(mx, Math.abs(sx), Math.abs(sy)); }
+  for (let i = 0; i < n * n; i++) { d[i * 4] = 128 + sl[i * 2] / mx * 127; d[i * 4 + 1] = 128 + sl[i * 2 + 1] / mx * 127; d[i * 4 + 2] = 255; d[i * 4 + 3] = 255; }
+  const t = new T.DataTexture(d, n, n, T.RGBAFormat); t.wrapS = t.wrapT = T.RepeatWrapping; t.magFilter = T.LinearFilter; t.minFilter = T.LinearMipmapLinearFilter; t.generateMipmaps = true; t.needsUpdate = true; return t;
+}
+function makeWater(uni, mobile, V0) {
   const rings = mobile ? 100 : 140, segs = mobile ? 128 : 200, pos = [], idx = [];
   pos.push(0, 0, 0); for (let i = 1; i <= rings; i++) { const r = .1 * (Math.pow(1.056, i) - 1) / .056; for (let j = 0; j < segs; j++) { const a = j / segs * Math.PI * 2; pos.push(Math.cos(a) * r, 0, Math.sin(a) * r); } }
   for (let j = 0; j < segs; j++) idx.push(0, 1 + (j + 1) % segs, 1 + j);
   for (let i = 1; i < rings; i++) for (let j = 0; j < segs; j++) { const a = 1 + (i - 1) * segs + j, b = 1 + (i - 1) * segs + (j + 1) % segs, c = a + segs, d = b + segs; idx.push(a, b, c, b, d, c); }
   const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(new Float32Array(pos.length).map((_, i) => i % 3 === 1 ? 1 : 0), 3)); g.setIndex(idx);
-  const m = new T.MeshPhysicalMaterial({ color: 0x0b3a4a, roughness: .12, metalness: 0, clearcoat: .6, clearcoatRoughness: .08, envMapIntensity: 1.1, ior: 1.33 });
-  m.onBeforeCompile = sh => {
-    Object.assign(sh.uniforms, uni);
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\n' + GLSL_WAVES + '\nuniform float uTime; varying vec3 vWp; varying float vH;\nfloat calm(vec2 p) { vec2 a = max(abs(p - vec2(0., 7.)) - 5., 0.), b = max(abs(p - vec2(0., -7.)) - 5., 0.); return .4 + .6 * min(1., min(length(a), length(b)) / 4.); }')
-      .replace('#include <beginnormal_vertex>', `vec3 tg = vec3(1., 0., 0.), bn = vec3(0., 0., 1.); vec3 gd = gerst(position.xz, uTime, tg, bn);
-        float fall = 1. - smoothstep(80., 260., length(position.xz)); gd *= fall * calm(position.xz); vec3 objectNormal = normalize(mix(vec3(0., 1., 0.), normalize(cross(bn, tg)), fall));
-        #ifdef USE_TANGENT
-        vec3 objectTangent = vec3(1., 0., 0.);
-        #endif`)
-      .replace('#include <begin_vertex>', 'vec3 transformed = position + gd; vWp = transformed; vH = gd.y;');
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
-      uniform float uTime; uniform sampler2D uCellsA, uCellsB; uniform vec4 uAim; uniform vec4 uRip[10]; uniform vec4 uSweep; uniform vec4 uSweepBox; uniform vec2 uFog; uniform vec2 uGrid; uniform float uFocus; uniform vec3 uCam; uniform vec4 uHulls[16]; uniform int uNH;
+  // the sea's own light: the evening sky mirrored by Fresnel, the sun's glitter, a deep body colour lifted on the crests —
+  // no physically based light loop (the sea is most of every frame, so it gets the cheapest shader that still looks right)
+  const m = new T.ShaderMaterial({ uniforms: Object.assign({ uSunC: { value: new T.Color(0xffd2a0) }, uFlash: { value: new T.Vector4(0, 0, 0, 0) } }, uni, { uSun: { value: V0.sunDir } }),
+    vertexShader: GLSL_WAVES + `
+      uniform float uTime; varying vec3 vWp; varying float vH; varying vec3 vN;
+      float calm(vec2 p) { vec2 a = max(abs(p - vec2(0., 7.)) - 5., 0.), b = max(abs(p - vec2(0., -7.)) - 5., 0.); return .4 + .6 * min(1., min(length(a), length(b)) / 4.); }
+      void main() { vec3 tg = vec3(1., 0., 0.), bn = vec3(0., 0., 1.); vec3 gd = gerst(position.xz, uTime, tg, bn);
+        float fall = 1. - smoothstep(80., 260., length(position.xz)), k = fall * calm(position.xz); gd *= k; vN = normalize(mix(vec3(0., 1., 0.), normalize(cross(bn, tg)), k));
+        vec3 w = position + gd; vWp = w; vH = gd.y; gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.); }`,
+    fragmentShader: `
+            uniform float uTime; uniform sampler2D uCellsA, uCellsB; uniform vec4 uAim; uniform vec4 uRip[10]; uniform vec4 uSweep; uniform vec4 uSweepBox; uniform vec2 uFog; uniform vec2 uGrid; uniform float uFocus; uniform vec3 uCam; uniform vec4 uHulls[16]; uniform int uNH; uniform sampler2D uNrm;
       varying vec3 vWp; varying float vH;` + GLSL_NOISE + `
       float box(vec2 p, vec2 b, float r) { vec2 d = abs(p) - b + r; return length(max(d, 0.)) + min(max(d.x, d.y), 0.) - r; }
-      vec3 gridEm = vec3(0.); float foamAdd = 0.; vec3 tintAdd = vec3(0.); float darkAdd = 0.;`)
-      .replace('#include <color_fragment>', `#include <color_fragment>
-      {
+      vec3 gridEm = vec3(0.); float foamAdd = 0.; vec3 tintAdd = vec3(0.); float darkAdd = 0.;
+      uniform vec3 uSun, uSunC; uniform vec4 uFlash; varying vec3 vN;
+      vec3 skyLite(vec3 d) { float h = max(d.y, 0.), sd = max(dot(d, uSun), 0.);
+        vec3 c = mix(vec3(.95, .64, .38), vec3(.16, .24, .38), smoothstep(0., .22, h)); c = mix(c, vec3(.03, .06, .13), smoothstep(.2, .85, h));
+        return c + vec3(1., .5, .22) * pow(sd, 5.) * .6 * (1. - smoothstep(0., .5, h)) + vec3(1.6, 1.1, .7) * pow(sd, 90.) * 1.5; }
+      void main() {
+        vec4 diffuseColor = vec4(.03, .17, .22, 1.);
+        
         vec2 p = vWp.xz; float dist = length(p - uCam.xz);
         float crest = smoothstep(.1, .2, vH + (vn(p * 3.1 + uTime * .2) - .5) * .06);
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.05, .3, .33), smoothstep(-.1, .14, vH) * .55);
         float fo = crest * smoothstep(.45, .8, vn(p * vec2(9., 4.) - uTime * .3)) * .55;
         for (int i = 0; i < 10; i++) { vec4 r = uRip[i]; float age = uTime - r.z; if (age < 0. || age > 2.4) continue; float d = length(p - r.xy), rad = (1. - exp(-age * 1.6)) * .75 * r.w;
           fo += (1. - smoothstep(0., .05 + age * .03, abs(d - rad))) * pow(1. - age / 2.4, 2.) * .55 * r.w + (1. - smoothstep(0., .3 * r.w, d)) * max(0., 1. - age * 1.2) * .9; }
-        for (int i = 0; i < 16; i++) { if (i >= uNH) break; vec4 hh = uHulls[i]; vec2 q = p - hh.xy; if (hh.z < 0.) q = vec2(-q.y, q.x); float hl = abs(hh.z), hb = abs(hh.w);
+        for (int i = 0; i < 16; i++) { if (i >= uNH) break; vec4 hh = uHulls[i]; vec2 q = p - hh.xy; if (hh.z < 0.) q = vec2(-q.y, q.x); float hl = abs(hh.z), hb = abs(hh.w); bool mv = hh.w < 0.;
+          if (abs(q.y) > hb + .5 || q.x > hl + .5 || q.x < -hl - (mv ? 14. : .5)) continue;   // (most of the sea is far from every hull: skip it cheaply)
           float t = clamp(q.x / hl, -1., 1.), w = hb * sqrt(max(0., 1. - pow(max(0., t - .35) / .65, 2.))) * (t < -.85 ? .8 : 1.); float d = length(vec2(max(abs(q.x) - hl, 0.), max(abs(q.y) - w, 0.)));
           darkAdd += (1. - smoothstep(0., .22, d)) * .3;
           { vec2 q2 = q - (hh.z < 0. ? vec2(-.26, .2) : vec2(.2, .26)); float d2 = length(vec2(max(abs(q2.x) - hl, 0.), max(abs(q2.y) - w * 1.1, 0.))); darkAdd += (1. - smoothstep(0., .12, d2)) * .3 * step(.0, d); }
-          float wake = hh.w < 0. ? 1. : 0.;   // (a moving ship: a long wake astern)
-          fo += (1. - smoothstep(.0, .045 + .03 * vn(p * 18. + uTime), d)) * smoothstep(.0, .012, d) * (.3 + .3 * vn(p * 25. - uTime * 2.)) * (.6 + .4 * smoothstep(.2, 1., t));
-          if (wake > 0.) { float bx = -q.x - hl; float spread = .05 + bx * .12; fo += step(0., bx) * (1. - smoothstep(0., spread, abs(q.y))) * exp(-bx * .35) * (.5 + .5 * vn(p * 14. - uTime * 3.)) * .9; } }
+          if (d < .09) fo += (1. - smoothstep(.0, .045 + .03 * vn(p * 18. + uTime), d)) * smoothstep(.0, .012, d) * (.3 + .3 * vn(p * 25. - uTime * 2.)) * (.6 + .4 * smoothstep(.2, 1., t));
+          if (mv) { float bx = -q.x - hl; float spread = .05 + bx * .12; if (bx > 0. && abs(q.y) < spread) fo += (1. - smoothstep(0., spread, abs(q.y))) * exp(-bx * .35) * (.5 + .5 * vn(p * 14. - uTime * 3.)) * .9; } }
         for (int zz = 0; zz < 2; zz++) {
-          vec2 zc = zz == 0 ? vec2(0., 7.) : vec2(0., -7.); vec2 pl = p - zc; float ga = zz == 0 ? uGrid.x : uGrid.y; if (ga < .01) continue;
+          vec2 zc = zz == 0 ? vec2(0., 7.) : vec2(0., -7.); vec2 pl = p - zc; float ga = zz == 0 ? uGrid.x : uGrid.y; if (ga < .01 || max(abs(pl.x), abs(pl.y)) > 5.6) continue;
           vec3 gc = zz == 0 ? vec3(.85, .68, .4) : vec3(.95, .5, .38);
           bool inB = abs(pl.x) < 5. && abs(pl.y) < 5.;
           if (inB) {
@@ -183,15 +204,22 @@ function makeWater(uni, mobile) {
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.85, .9, .9), clamp(fo, 0., 1.) * .85);
         diffuseColor.rgb = diffuseColor.rgb * (1. - darkAdd) + tintAdd;
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.04, .08, .11), smoothstep(40., 220., dist) * .35);
-      }`)
-      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
-      { vec2 p = vWp.xz; float e = .05; float n0 = vn(p * 6. + uTime * vec2(.5, .3)) + vn(p * 13. - uTime * vec2(.4, .6)) * .5;
-        float nx = vn((p + vec2(e, 0.)) * 6. + uTime * vec2(.5, .3)) + vn((p + vec2(e, 0.)) * 13. - uTime * vec2(.4, .6)) * .5;
-        float nz = vn((p + vec2(0., e)) * 6. + uTime * vec2(.5, .3)) + vn((p + vec2(0., e)) * 13. - uTime * vec2(.4, .6)) * .5;
-        vec3 dn = vec3(-(nx - n0) / e, 0., -(nz - n0) / e) * .035; normal = normalize(normal + (viewMatrix * vec4(dn, 0.)).xyz); }`)
-      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += gridEm;');
-  };
-  const w = new T.Mesh(g, m); w.receiveShadow = true; w.frustumCulled = false; return w;
+
+        vec2 n1 = texture2D(uNrm, p * .23 + uTime * vec2(.021, .013)).xy * 2. - 1., n2 = texture2D(uNrm, p * .51 - uTime * vec2(.017, .026)).xy * 2. - 1.;
+        vec3 n = normalize(vN + vec3(n1.x + n2.x * .6, 0., n1.y + n2.y * .6) * .2), v = normalize(uCam - vWp), r = reflect(-v, n); r.y = abs(r.y);
+        float foam = clamp(fo, 0., 1.), nv = max(dot(n, v), 0.), fr = .02 + .98 * pow(1. - nv, 5.);
+        float sunL = max(dot(n, uSun), 0.);
+        vec3 lit = diffuseColor.rgb * (vec3(.36, .42, .5) * (.55 + .45 * n.y) + uSunC * sunL * .75) * mix(.55, 1.2, foam);
+        vec3 col = mix(lit, skyLite(r) * .9, fr * (1. - foam * .9));
+        col += uSunC * (pow(max(dot(r, uSun), 0.), 420.) * 22. + pow(max(dot(r, uSun), 0.), 40.) * .5) * (1. - foam);
+        if (uFlash.w > 0.) { float d = length(vWp - uFlash.xyz); col += vec3(1., .55, .2) * uFlash.w * .06 / (1. + d * d * 2.); }
+        col += gridEm;
+        col = mix(col, vec3(.06, .09, .13), smoothstep(60., 300., length(p - uCam.xz)) * .55);
+        gl_FragColor = vec4(col, 1.);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }` });
+  const w = new T.Mesh(g, m); w.receiveShadow = false; w.frustumCulled = false; return w;
 }
 
 // ---------- the camera director ----------
@@ -247,6 +275,7 @@ function loop() {
   if (!V || V.raf) return;
   const step = () => {
     V.raf = 0; if (document.hidden) return;
+    if (V.throttle && (V.skip = !V.skip)) { loop(); return; }   // (a full sheet covers the sea: half the frames)
     const now = performance.now(), dt = Math.min(.05, (now - V.last) / 1000); V.last = now; V.t += dt; V.uni.uTime.value = V.t;
     V.shake = Math.max(0, V.shake - dt * 2.2);
     stepCamera(now);
@@ -254,12 +283,16 @@ function loop() {
     for (const s of V.sailing) { s.x += s.v * dt; if (s.x > s.x1) s.x = s.x0; s.g.position.x = s.x; s.g.position.z = s.z; rideShip(s, dt); }
     for (let z = 0; z < 2; z++) { for (const f of V.floats[z]) { f.o.position.y = waveAt(f.x, f.z, V.t) * .85 + (f.dy || 0); if (f.bob) f.o.rotation.z = Math.sin(V.t * 1.7 + f.x) * .12; } for (const e of V.emitters[z]) { e.acc += dt; while (e.acc > e.every) { e.acc -= e.every; e.fn(); } } }
     stepParticles(V.fire, dt); stepParticles(V.smoke, dt);
-    if (V.flash.intensity > 0) V.flash.intensity = Math.max(0, V.flash.intensity - dt * 60);
+    if (V.flash.intensity > 0) V.flash.intensity = Math.max(0, V.flash.intensity - dt * 60); V.water.material.uniforms.uFlash.value.set(V.flash.position.x, V.flash.position.y, V.flash.position.z, V.flash.intensity);
     updateHulls();
     if (V.onFrame) V.onFrame(dt);
-    V.R.render(V.scene, V.cam);
-    V.fc = (V.fc || 0) + 1; V.slow = (V.slow || 0) * .97 + (dt > .034 ? 1 : 0) * .03;
-    if (V.fc % 90 === 0) { const pr = V.R.getPixelRatio(); if (V.slow > .5 && pr > 1) { V.R.setPixelRatio(Math.max(1, pr - .25)); fit(); } else if (V.slow < .05 && pr < V.prMax) { V.R.setPixelRatio(Math.min(V.prMax, pr + .25)); fit(); } }
+    const r0 = performance.now(); V.R.render(V.scene, V.cam); V.cpu = (V.cpu || 0) * .9 + (performance.now() - r0) * .1; V.frameMs = (V.frameMs || 16) * .9 + dt * 1000 * .1;
+    if (DBG.on) dbgTick(now);
+    // keep the frame rate: every second, step the pixel ratio down when frames run long (under ~50 fps) and back up after a calm spell
+    V.fc = (V.fc || 0) + 1; V.acc = (V.acc || 0) + dt; V.n = (V.n || 0) + 1;
+    if (V.acc > 1) { const ms = V.acc / V.n * 1000, pr = V.R.getPixelRatio(); V.acc = V.n = 0;
+      if (ms > 20.5 && pr > .7 && !V.throttle) { V.R.setPixelRatio(Math.max(.7, pr - .15)); V.good = 0; fit(); }
+      else if (ms < 17.8 && pr < V.prMax && ++V.good >= 4) { V.R.setPixelRatio(Math.min(V.prMax, pr + .1)); V.good = 0; fit(); } }
     loop();
   };
   V.raf = requestAnimationFrame(step);
@@ -460,5 +493,47 @@ function preview(canvas) {
   return { set(k, len) { size(); if (cur) { sc.remove(cur); cur = null; } if (k == null) return; cur = SeaShips.build(T, k, len, SeaEngine.TYPES[k].k); L = len * .9; disc.scale.setScalar(L * .62 + .15); ring.scale.setScalar(L * .62 + .15); sc.add(cur); }, start() { size(); if (!raf) frame(); }, stop() { cancelAnimationFrame(raf); raf = 0; } };
 }
 
-window.World = { init, setZone, grids, focus, show, pose, fx, kind, sweep, shake, sail, cellAt, pointIn, aim, screenOf, portrait, portraitIf, preview, waveAt, ZC, _v: () => V, fit, refit: () => { if (V) { V.poses = null; } } };
+
+// ---------- I: the 3D DEBUG panel (the same look as the other 3D titles: triangles, meshes, draw calls, lights, fps, canvas, camera, GPU) ----------
+const DBG = { on: (() => { try { return !!sessionStorage.getItem('t3d-debug'); } catch (x) { return false; } })(), el: null, fr: 0, t: 0, fps: 0, lo: 1e9, hi: 0, last: 0 };
+const fmtN = n => n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'k' : String(Math.round(n));
+function dbgPaint() {
+  if (!DBG.on || !V) return;
+  if (!DBG.el) { if (!document.querySelector('style[data-t3dbg]')) { const st = document.createElement('style'); st.dataset.t3dbg = '1'; st.textContent = '.t3dbg{position:fixed;left:10px;bottom:10px;z-index:2147483000;min-width:300px;max-width:min(440px,calc(100vw - 20px));padding:10px 12px;border-radius:10px;background:rgba(14,16,22,.86);color:#e8ecf4;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;pointer-events:none;box-shadow:0 4px 18px rgba(0,0,0,.3)}.t3dbg div{display:flex;gap:10px;justify-content:space-between}.t3dbg i{font-style:normal;color:#9aa6bc;white-space:nowrap}.t3dbg span{text-align:right}.t3dbg b{color:#fff}.t3dbg hr{border:0;border-top:1px solid rgba(255,255,255,.14);margin:5px 0}.t3dbg .t3dbg-h{font-weight:700;letter-spacing:.08em;color:#ffd27a;margin-bottom:4px}.t3dbg .t3dbg-h span{font-weight:400;color:#8a94a8;letter-spacing:0}'; document.head.appendChild(st); }
+    DBG.el = document.createElement('div'); DBG.el.className = 't3dbg'; DBG.el.style.zIndex = '2147483600'; document.body.appendChild(DBG.el); }
+  DBG.el.hidden = false;
+  let tri = 0, mesh = 0, pts = 0, lights = 0, shadows = 0, casters = 0;
+  V.scene.traverse(o => { for (let q = o; q; q = q.parent) if (!q.visible) return;
+    if (o.isLight) { lights++; if (o.castShadow) shadows++; }
+    if ((o.isMesh || o.isPoints || o.isLine || o.isSprite) && o.geometry) { const gm = o.geometry, n = gm.index ? gm.index.count : gm.attributes.position ? gm.attributes.position.count : 0; if (o.isMesh) { tri += n / 3; mesh++; if (o.castShadow) casters++; } else if (o.isSprite) { tri += 2; mesh++; } else pts += n; } });
+  const R = V.R, info = R.info, gl = R.getContext(), sz = R.getSize(new T.Vector2()), c = V.cam;
+  const gpu = (() => { try { const x = gl.getExtension('WEBGL_debug_renderer_info'); return x ? String(gl.getParameter(x.UNMASKED_RENDERER_WEBGL)).slice(0, 48) : 'webgl' + (R.capabilities.isWebGL2 ? '2' : '1'); } catch (x) { return '-'; } })();
+  let ships = 0; for (let z = 0; z < 2; z++) ships += V.ships[z].size; ships += V.sailing.length;
+  const live = V.fire.live.length + V.smoke.live.length, sm = V.sun.shadow.mapSize.x;
+  const rows = [
+    ['place', 'DREADNOUGHTS · ' + (V.pose || '-')],
+    ['', ''],
+    ['tris · scene', `<b${tri > 400000 ? ' style="color:#ff8a7a"' : ''}>${fmtN(tri)}</b>  (drawn ${fmtN(info.render.triangles)})`],
+    ['meshes', `${mesh} (${casters} cast shadow)`],
+    ['ships', String(ships)],
+    ['particles', `${live} live / ${V.fire.n + V.smoke.n}`],
+    ['draw calls', String(info.render.calls)],
+    ['lights', `${lights} (${shadows} with shadow · ${sm}px)`],
+    ['geom / tex', `${info.memory.geometries} / ${info.memory.textures}`],
+    ['programs', String((info.programs || []).length)],
+    ['', ''],
+    ['fps', `<b>${DBG.fps ? DBG.fps.toFixed(0) : '-'}</b>  (min ${DBG.lo < 1e8 ? DBG.lo.toFixed(0) : '-'} · ${(V.frameMs || 0).toFixed(1)} ms)`],
+    ['render (cpu)', (V.cpu || 0).toFixed(2) + ' ms'],
+    ['canvas', `${Math.round(sz.x)}×${Math.round(sz.y)} @${R.getPixelRatio().toFixed(2)}x (max ${V.prMax.toFixed(2)}) · exp ${R.toneMappingExposure.toFixed(2)}`],
+    ['camera', c ? `fov ${c.fov.toFixed(1)} · pos ${c.position.x.toFixed(1)}, ${c.position.y.toFixed(1)}, ${c.position.z.toFixed(1)}` : '-'],
+    ['throttle', V.throttle ? 'on (a sheet covers the sea)' : 'off'],
+    ['gpu', gpu],
+  ];
+  DBG.el.innerHTML = '<div class="t3dbg-h">3D DEBUG <span>I で閉じる</span></div>' + rows.map(([k, v]) => k ? `<div><i>${k}</i><span>${v}</span></div>` : '<hr>').join('');
+}
+function dbgTick(now) { DBG.fr++; if (now - DBG.t > 500) { const f = DBG.fr * 1000 / (now - DBG.t); DBG.fps = f; DBG.lo = Math.min(DBG.lo, f); DBG.fr = 0; DBG.t = now; if (++DBG.n % 10 === 0) DBG.lo = f; dbgPaint(); } }
+function dbgToggle(on) { DBG.on = on === undefined ? !DBG.on : !!on; try { sessionStorage.setItem('t3d-debug', DBG.on ? '1' : ''); } catch (x) {} if (!DBG.on) { if (DBG.el) DBG.el.hidden = true; return; } DBG.t = performance.now(); DBG.fr = 0; DBG.n = 0; DBG.lo = 1e9; dbgPaint(); }
+addEventListener('keydown', e => { if ((e.key === 'i' || e.key === 'I') && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target && e.target.closest && e.target.closest('input,textarea,select,[contenteditable]'))) dbgToggle(); });
+
+window.World = { dbg: dbgToggle, throttle: on => { if (V) V.throttle = !!on; }, init, setZone, grids, focus, show, pose, fx, kind, sweep, shake, sail, cellAt, pointIn, aim, screenOf, portrait, portraitIf, preview, waveAt, ZC, _v: () => V, fit, refit: () => { if (V) { V.poses = null; } } };
 })();
