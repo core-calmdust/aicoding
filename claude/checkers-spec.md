@@ -37,7 +37,7 @@ URL: https://core-calmdust.github.io/aicoding/checkers/ ／ 旧版 checker.html 
 - 1手 = K64 3文字（元・先・同じ元/先の合法手の中の番号）。?mock=1 で localStorage のモック（2タブで対戦テスト可）。
 
 ## データ
-- lessons.json（13ステップ×5問）、openings.json（19の定跡、学習＋実戦練習）、puzzles.json（PZBook v2、10テーマ×50＝500問、今日の一問）。
+- lessons.json（13ステップ×5問。同じ局面や1〜2手違いの局面を別の問題に使わない。2026-11-22 に重なっていた7問を差し替え）、openings.json（19の定跡、学習＋実戦練習）、puzzles.json（PZBook v2、10テーマ×50＝500問、今日の一問）。
 - 生成：tools/gen_lessons.js、tools/gen_openings.js、tools/pzgen.c → tools/build_puzzles.py。文言は tools/i18n/*.json → tools/build_i18n.py → i18n.js（10言語）。
 
 ## 保存キー
