@@ -2159,7 +2159,7 @@
     shogi: 'わたしはショウギツネ！ 将棋は、2人で交互に駒を動かして、相手の<b>玉</b>を逃げられなくしたら（<b>詰み</b>）勝ちのゲームだコン。取った駒は自分の駒として使えるのが楽しいところ！ まずは駒の動きから覚えよう。',
     reversi: 'ぼくはリバガメ！ リバーシは、黒と白が交互に石を置いて、自分の色を広げていくゲーム。最後に自分の色の石が多いほうが勝ちなんだ。いっしょにやってみよう！',
     backgammon: 'ワン！ ぼくはダイスン。バックギャモンは、サイコロをふって15個の駒を進め、ぜんぶ自分のゴールまで運んで盤から先に出しきったほうが勝ちのレースゲームなんだワン。相手の駒が1つだけの所に止まると、その駒をふり出しに戻せる！ さあ、始めよう！',
-    amazons: 'ケロ！ アマゾンズは、駒を動かしたあとに<b>矢</b>を放って、そのマスをふさいでいくゲームなんだ。打つたびに盤がせまくなって、先に動けなくなったほうの負け。相手を囲いこめるかな？ いっしょにやってみよう！',
+    amazons: 'ケロ！ アマゾンズは、駒を動かして<b>矢</b>を放ち、マスをふさいでいくゲーム。先に動けなくなったほうが負けなんだ！',
     connect4: 'ポトンウサだよ！ コネクトフォーは、2人で交互に、列の上からコマを落としていくゲーム。'
   };
   window.AtlasGameIntroJa = (id, key, kind, L) => { if (kind === 'open' || String(key) !== '0' || !GAME_JA[id] || !L || L.__gi) return L; L.__gi = true; L.intro = GAME_JA[id] + '<br>' + (L.intro || ''); return L; };
@@ -3951,6 +3951,169 @@
   const AM_MK = { s_escape: 'ng' };   // (amazons/app.js MK_CLS: the squares a problem lights)
   const AM_GM = { 'b_queen/1': [['c8', 'hl']], 'b_arrow/1': [['h7', 'hl']], 'b_block/1': [['c7', 'hl']], 's_trap/1': [['j1', 'ng']], 's_escape/1': [['j10', 'ng']] };
   const amByName = (sp, nm) => { const E = window.AmazonsEngine; if (!E || !nm) return null; const p = E.Pos.from(sp), m = p.moves().find(x => E.name(p, x) === nm); return m === undefined ? null : m; };
+  /* amazons lessons in ケロ's words, Japanese (2026-11-22 lesson loop): his own intros and warm-up lines (AMJ_LS), five questions and
+     five hints per step, and after the answer the praise with why or, for a miss, the green move and what yours misses — read from the
+     board (amazons/engine.js): the line from the amazon to the square (縦・横・斜め and how far), where the arrow flies and what blocks
+     it, the exits left around an amazon (emptyAround / freeAt; the square just left counts), the trap the opponent's next move sets
+     (boxed), the rooms the arrows cut the board into and the moves left in one (fillMax). Cheers the player on (AM_CH). */
+  const AMJ_LS = {
+    intro: {
+      b_queen: '駒の<b>アマゾン</b>は、チェスのクイーンと同じ動き。縦・横・斜めに、まっすぐ何マスでも進めるケロ！ 途中で曲がるのはなし。',
+      b_arrow: '動いたら、着いたマスから<b>矢</b>を1本撃つんだ。矢もアマゾンと同じ線を飛ぶケロ。<br>刺さったマスは最後までふさがったまま！ 「動く＋矢」で1手になるね。',
+      b_block: 'アマゾンも矢も、<b>ほかの駒や矢を飛び越えられない</b>。線の途中に何かあれば、その手前で止まっちゃう。<br>的のマスから逆にたどって、ふさがっていない線をさがすのがコツだケロ！',
+      b_win: '自分の番に<b>どのアマゾンも動けなかったら負け</b>。取ったり取られたりはなくて、引き分けもないゲームなんだ。<br>相手のアマゾン全部のまわりをふさげたら、勝ちケロ！',
+      s_trap: 'ここからは作戦！ 相手のアマゾンを1体<b>閉じこめる</b>と、そいつは最後まで動けない。<br>まわりの空きマスが1つ2つしかないアマゾンは、ねらい目だケロ。',
+      s_escape: '反対に、自分のアマゾンのまわりがせまくなったら危険信号！ 相手の1手で閉じこめられちゃうかも。<br>そうなる前に、<b>まわりが広く空いた場所</b>へ逃がそう。自分の矢で自分のとなりをふさがないようにね。',
+      s_wall: '矢が並ぶと、盤はいくつかの<b>部屋</b>に分かれる。分かれたら、もうおたがいの部屋には入れないんだ。<br>最後は、自分の部屋で長く動けたほうの勝ち！ 壁のすき間は、白の部屋が広くなるようにふさぐケロ。',
+      s_fill: '部屋が分かれたら、あとは何回動けるかの勝負！ ふつうは1マスで1手だけど、矢の置き方が悪いと<b>行けなくなるマス</b>ができちゃう。<br>元いたマスや行き止まりのすみに矢を刺して、端から埋めていくケロ。',
+    },
+    // the warm-ups: rp.<x>.<field> of amazons/lessons.json (t: the title, g: the goal, h: the hint, y: the praise)
+    ramp: {
+      'rp.q1.t': 'クイーンと同じ動き！', 'rp.q2.g': '金の印のマスへアマゾンを動かしてみて！ タップはアマゾン→行き先→矢の3回。矢はどこでもOKケロ。', 'rp.q2.h': '金の印は、アマゾンと同じ縦の線の上にあるね。まっすぐ進めば1手で着くはず！', 'rp.q2.y': 'そうそう！ 縦にまっすぐ5マス、1手でひとっ跳びケロ。',
+      'rp.a1.t': '動いて、撃つ！', 'rp.a2.g': '金の印のマスに矢を刺してみて！', 'rp.a2.h': 'いまの場所からは、金の印へ一直線じゃないケロ。まず金の印と並ぶマスへ動こう！', 'rp.a2.y': 'ナイス！ 動いた先から矢を撃てたね。',
+      'rp.a3.g': '今度は、動いたあとで元いたマスに矢を撃ち返してみよう！', 'rp.a3.h': 'どこへ動いても、来た線をまっすぐ戻れば元のマスに届くんだ。', 'rp.a3.y': 'いいね！ 空いたばかりのマスにも撃てるケロ。',
+      'rp.k1.t': '飛び越えられない！', 'rp.k2.g': '金の印の矢に向かって、白のアマゾンを行けるいちばん遠くまで進めてみて！', 'rp.k2.h': '矢は飛び越えられないから、止まれるのはその手前のマスまでケロ。', 'rp.k2.y': '正解！ 矢の手前でぴたっと止まれたね。',
+      'rp.w1.t': '動けなければ負け！', 'rp.w2.g': '黒が1手も指せないようにしてみよう！', 'rp.w2.h': '黒のアマゾンのとなりで、まだ空いているマスはどこ？ そこに矢を刺すか、白で入ればいいケロ。', 'rp.w2.y': '勝ち！ 黒のアマゾンはもうどこへも行けないね。',
+      'rp.t1.t': '閉じこめちゃえ！', 'rp.t2.g': '赤い印の黒のアマゾンを閉じこめてみて！', 'rp.t2.h': 'その黒のとなりで空いているのは1マスだけ。そこが出口ケロ！', 'rp.t2.y': '閉じこめ成功！ 黒は残りの1体だけで戦うしかないね。',
+      'rp.e1.t': '危ないアマゾン！', 'rp.e2.g': 'すみにいる白のアマゾン（赤い印）を、広い場所へ逃がしてあげて！', 'rp.e2.h': 'すみのマスは、となりがほとんどふさがってる。盤のまん中のほうへ大きく動こう！', 'rp.e2.y': '脱出成功ケロ！ 広い場所なら、かんたんには囲まれないね。',
+      'rp.l1.t': 'すき間をふさごう！', 'rp.l2.g': '壁のすき間をふさいで、盤を2つに分けてみて！', 'rp.l2.h': '縦に並んだ矢の壁で、矢のないマスがすき間。白のアマゾンは広い側に残しておくケロ。', 'rp.l2.y': '盤が分かれた！ 白の部屋のほうがずっと広いね。',
+      'rp.f1.t': 'むだなく埋めよう！', 'rp.f2.g': '白の部屋で、最後までいちばん多く動ける手を選んでみて！', 'rp.f2.h': '白の部屋は5マス。部屋を切らないように、元のマスか端のマスに矢を刺そう！', 'rp.f2.y': 'ばっちり！ これでこの部屋を最後まで使い切れるケロ。',
+    },
+    ask: {
+      b_queen: ['光ってるマスへアマゾンを動かしてみよう！ 矢はどこに撃ってもいいケロ。', 'ゴールの光るマスまで、1手で行ける？', 'どのアマゾンなら、光ってるマスに届くかな？', '光ったマスまでひとっ跳び！ どう動く？', 'あのマスへ行く道、見つけられるかなケロ？'],
+      b_arrow: ['光ってるマスに矢を刺してみよう！', '光るマスに矢を届かせるには、どこへ動けばいい？', '矢の的は光ってるマス！ どこから撃つ？', '動いてから撃つ、の順番だね。的に届く場所はどこケロ？', 'あのマスを矢で射抜いてみて！'],
+      b_block: ['光ってるマスに矢を刺そう！ 通れる道は少ないケロ。', '矢やアマゾンがじゃまな盤だね。光るマスへ矢を通せる？', 'ふさがっていない線はどこかな？ 的を射抜いてみて！', '的に届く道はほんの少し。見つけられる？', '飛び越えずに矢を通す道、さがしてみてケロ！'],
+      b_win: ['黒が次に1手も指せないようにしちゃおう！', '黒のアマゾン全部を止める1手、わかる？', 'あと1手で勝ちケロ！ 黒の出口をどうふさぐ？', '黒が動けなくなる手を見つけて！', '決め手の1手はどこかな？'],
+      s_trap: ['光ってる黒のアマゾンを閉じこめちゃおう！', '光る黒の出口、ふさげるかな？', 'あの黒を、最後まで動けなくしてみて！', '黒を1体つかまえるチャンスだケロ！ どうする？', 'ねらいの黒のまわり、どこが空いてる？ 閉じこめてみよう！'],
+      s_escape: ['赤く光ってる白のアマゾンを、広い場所へ逃がしてあげよう！', 'あぶない白のアマゾン、どこへ逃げる？', 'このままだと閉じこめられちゃう！ 安全な場所はどこケロ？', '赤い白を助けてあげて！', '囲まれる前に脱出だ！ 行き先はどこかな？'],
+      s_wall: ['壁のすき間をふさいで、白の部屋をいちばん大きくしよう！', 'すき間をふさいで盤を分けるなら、どの手かな？', '白に広い部屋を残す手、わかる？', '壁を完成させるチャンスだケロ！ どうふさぐ？', '分けたあと、白のほうが広くなる手を選んでみて！'],
+      s_fill: ['白の部屋で、最後までいちばん多く動ける手を選んでね！', 'この部屋、むだなく埋めるにはどう動く？', '手数をいちばん残せる手はどれかな？', '部屋を使い切る1手を見つけてケロ！', '行けないマスを作らない手、わかる？'],
+    },
+    hint: {
+      b_queen: ['アマゾンから光ってるマスまで、縦・横・斜めのまっすぐな線でつながってるか見てみて。', '途中に何もなければ、遠くてもひとっ跳びケロ！', 'アマゾンごとに、8つの方向へ線を伸ばしてみよう。', '曲がるのはなし！ 1本の線で届くアマゾンはどれ？', '線の途中に矢がないかも、ちゃんと確かめてね。'],
+      b_arrow: ['いまの場所からは届かないケロ。まず的と一直線に並ぶマスへ動こう！', '的のマスから8方向に線を伸ばして、アマゾンが行けるマスと重なるところをさがしてみて。', '矢は、動いた先から飛ぶんだ。どこに着けば的が見える？', '的と同じ縦・横・斜めの線に、アマゾンを乗せちゃおう！', '動く場所が決まれば、あとは的へまっすぐ撃つだけケロ。'],
+      b_block: ['的のマスから縦・横・斜めに逆にたどって、ふさがっていない線をさがしてね。', '矢は飛び越えられないケロ！ じゃまものの手前までしか届かないよ。', '的が見えるマスのうち、アマゾンが行けるのはどこかな？', '近くの線ほどふさがりやすいんだ。遠くからの線も見てみて！', 'アマゾンの通り道も、ふさがってないか確かめてケロ。'],
+      b_win: ['黒のアマゾンのすぐとなりの空きマスを数えてみて！', '残った空きマスに矢を刺すか、白のアマゾンで入ってふさげば勝ちケロ。', '出口が2つなら、白が入るのと矢とで、いっぺんにふさげるかも？', '白が動いたあとの元のマスが、黒の新しい出口にならない？', '黒の全部のアマゾンを見てね。1体でも動けたら勝ちじゃないケロ。'],
+      s_trap: ['光る黒のとなりで、まだ空いてるマスはどこ？ そこが出口ケロ。', '出口が1つなら、矢を1本刺すだけでいいね！', '白のアマゾンで出口に入って、ふさぐ手もあるよ。', '動いた白の元のマスが、新しい出口にならないか気をつけて！', '出口が2つなら、アマゾンと矢で1つずつふさげないかな？'],
+      s_escape: ['赤いアマゾンの行き先で、となりに空きマスが多いところを選んでね。', '逃げた先で、黒の1手でふさがれないかも確かめて！', '矢は自分から離れたところへ撃とう。自分のとなりをふさいだらもったいないケロ。', '盤のすみや矢のそばは、出口が少なくなりがちだよ。', 'となりの空きマスが4つ以上あると、ひとまず安心ケロ！'],
+      s_wall: ['光ってるマスが壁のすき間だよ。そこをふさげば盤が分かれるね。', '白のアマゾンを2体とも広い側に残したまま、すき間をふさいでね！', 'ふさいだあと、白と黒の部屋のマスを数えてくらべてみて。', '矢でふさぐか、アマゾンで入るか。どっちが白の得かな？', '白が1体でもせまい側に残ると損しちゃうケロ。'],
+      s_fill: ['部屋を2つに切っちゃう矢は損！ 元いたマスやすみっこに矢を刺してみて。', '行き止まりのマスから先に埋めると、むだが出にくいケロ。', '動いたあと、残りのマスを全部回れるか想像してみよう！', '真ん中に矢を刺すと、部屋がちぎれやすいんだ。', '最後のマスまで、1手ずつ順に行ける形を残してね。'],
+    },
+  };
+  const AM_CH = {
+    good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりケロ！', 'やったね！', 'いい目してる！', 'すごいすごい！', 'そうそう、それ！'],
+    push: [null, '次もこの調子で行こう！', null, 'どんどん行こうケロ！', 'その勢いで次へ！'],
+    soft: ['大丈夫！', 'ドンマイケロ！', 'あと少しだったね！', '気にしない、気にしない！', 'あと一歩ケロ！', '平気、平気！', 'よくある見落としだね。', 'いっしょに見てみよう！'],
+    tail: [null, null, 'これで覚えちゃおう！', null, '次はきっと見つけられるケロ！'],
+    right: ['{m}なら、{a}！', '{m}が正解、{a}ケロ。', '{m}を選べば、{a}から！', '{m}にすると、{a}でしょ？', '答えは{m}で、{a}んだ。'],
+    why: ['{a}！', 'つまり、{a}！', '{a}ケロ！', 'ほら、{a}でしょ？', 'これで{a}！'],
+    you: ['{x}だと、{b}。', 'きみの{x}だと、{b}ね。', '{x}では{b}！', '{x}を指すと、{b}。', '{x}だと{b}んだ。'],
+  };
+  const amDir = (E, f, t) => { const [r1, c1] = E.RC[f], [r2, c2] = E.RC[t]; return c1 === c2 ? '縦' : r1 === r2 ? '横' : Math.abs(r1 - r2) === Math.abs(c1 - c2) ? '斜め' : ''; };
+  const amDist = (E, f, t) => { const [r1, c1] = E.RC[f], [r2, c2] = E.RC[t]; return Math.max(Math.abs(r1 - r2), Math.abs(c1 - c2)); };
+  // the first square that blocks the line f → t (or -1 when it is clear; ex: a square that counts as empty, the amazon's old one)
+  function amBlock(E, sq, f, t, ex) { const [r1, c1] = E.RC[f], [r2, c2] = E.RC[t], dr = Math.sign(r2 - r1), dc = Math.sign(c2 - c1); let r = r1 + dr, c = c1 + dc;
+    while (r !== r2 || c !== c2) { const q = r * 10 + c; if (sq[q] && q !== ex) return q; r += dr; c += dc; } return -1; }
+  // the rooms after a move: the squares (not arrows) linked by kings' steps; w / b the empty squares each side alone owns, sep: no room shared
+  function amRooms(E, pos) { const sq = pos.sq, seen = new Int8Array(100).fill(-1), R = []; let w = 0, b = 0, sep = true, wSmall = false;
+    for (let s0 = 0; s0 < 100; s0++) { if (sq[s0] === 3 || seen[s0] >= 0) continue; const L = [s0]; seen[s0] = R.length; for (let h = 0; h < L.length; h++) for (const t of E.NB[L[h]]) if (seen[t] < 0 && sq[t] !== 3) { seen[t] = R.length; L.push(t); }
+      const nw = L.filter(q => sq[q] === 1).length, nb = L.filter(q => sq[q] === 2).length, ne = L.filter(q => !sq[q]).length; R.push({ nw, nb, ne });
+      if (nw && nb) sep = false; else if (nw) w += ne; else if (nb) b += ne; }
+    const big = Math.max(0, ...R.filter(r => r.nw && !r.nb).map(r => r.ne)); wSmall = R.some(r => r.nw && !r.nb && r.ne < big);
+    return { sep, w, b, wSmall }; }
+  function amLF(E, pos, m, P, id) {   // what the move m gives: its line, the opponent's exits, the marked amazon's exits, the rooms
+    const f = E.mFrom(m), t = E.mTo(m), a = E.mArrow(m), q = pos.clone().play(m), T = (P.mk || [])[0];
+    const F = { m, f, t, a, q, dir: amDir(E, f, t), n: amDist(E, f, t), adir: amDir(E, t, a), an: amDist(E, t, a) };
+    F.oCan = q.canMove(2); F.oEx = E.emptyAround(q, 2).length; F.ex0 = E.emptyAround(pos, 2);
+    F.opened = E.NB[f].some(x => pos.sq[x] === 2) && q.sq[f] === 0;   // (the square just left now next to a black amazon, still empty)
+    if (id === 's_trap' || id === 's_escape') { let kk = -1; for (let k = 0; k < 8; k++) if (pos.q[k] === T) kk = k; F.kk = kk;
+      const qk = kk >= 0 ? q.q[kk] : -1; F.free = kk >= 0 ? E.freeAt(q, kk) : 0; F.free0 = kk >= 0 ? E.freeAt(pos, kk) : 0; F.moved = f === T; F.selfNext = qk >= 0 && E.NB[qk].includes(a);
+      if (id === 's_escape' && kk >= 0) { let trap = false; for (const r of q.moves()) { q.play(r); const bx = E.boxed(q, kk); q.unplay(r); if (bx) { trap = true; break; } } F.trap = trap; } }
+    if (id === 's_wall') Object.assign(F, amRooms(E, q));
+    if (id === 's_fill') { F.left = E.fillMax(q, t); const R = E.roomOf(pos, f); F.room = R ? R.length - 1 : 0; const R2 = E.roomOf(q, t); F.cut = R ? Math.max(0, F.room - 1 - (R2 ? R2.length - 1 : 0)) : 0; }
+    return F;
+  }
+  function amLsJa(E, s, P, i) {
+    const id = s.id, pos = E.Pos.from(P.s), ok = P.ok || [P.best], A = P.best != null ? P.best : ok[0], k = i % 5, T = (P.mk || [])[0];
+    const si = Math.max(0, ((AMAZONS.data && AMAZONS.data.ls.steps) || []).indexOf(s)), o8 = si % 8 + i * [1, 3, 5, 7][(si >> 3) % 4];   // (the praise / soft openers in a different order in each lesson)
+    const pk = (L, j) => L[((j % L.length) + L.length) % L.length], M = AMM('ok', 'ja'), X = AMM('ng', 'ja');
+    const FA = amLF(E, pos, A, P, id);
+    const all = pos.moves();
+    // a typical miss when none is given (or a right one): by the step, the near miss the lesson warns about
+    const wrongOf = u => { if (u != null && !ok.includes(u) && all.includes(u)) return u;
+      const W = all.filter(m => !ok.includes(m)), pref = {
+        b_queen: m => E.mFrom(m) === FA.f && amDir(E, FA.f, E.mTo(m)) === FA.dir,
+        b_arrow: m => E.mFrom(m) === FA.f, b_block: m => E.mFrom(m) === FA.f && E.mTo(m) !== FA.t,
+        b_win: m => FA.ex0.includes(E.mArrow(m)), s_trap: m => E.NB[T].includes(E.mArrow(m)),
+        s_escape: m => E.mFrom(m) === T, s_wall: m => E.mArrow(m) !== T, s_fill: m => E.mFrom(m) === FA.f }[id];
+      const L = pref ? W.filter(pref) : []; const C = L.length ? L : W; return C.length ? C[(k * 7 + 3) % C.length] : null; };
+    const D = F => F.dir || 'まっすぐ';
+    // why the right move works (a: a short plain clause, the variant j)
+    const why = (F, j) => {
+      switch (id) {
+        case 'b_queen': return pk([`${D(F)}に${F.n}マス、まっすぐ一気に進める`, `${D(F)}の線の上だから、遠くても1手で届く`, `途中に何もないから、${F.n}マス先までひとっ跳びできる`, `アマゾンとゴールが${D(F)}に並んでいる`, `${D(F)}へ${F.n}マス、曲がらずに行ける`], j);
+        case 'b_arrow': return pk([`動いた先から${F.adir}に一直線で、矢がちゃんと届く`, `着いたマスと的が${F.adir}に並ぶ`, `${F.adir}の線にじゃまものがなくて、矢がまっすぐ飛ぶ`, `先に的の見えるマスへ動いてから撃てる`, `${F.an}マス先の的まで、${F.adir}に矢が通る`], j);
+        case 'b_block': return pk([`ふさがっていない${F.adir}の線を見つけて、矢を通せる`, `着いたマスから${F.adir}に、的までさえぎるものがない`, `じゃまな矢をよけて、${F.adir}から的をねらえる`, `数少ない通り道に、うまく入りこめる`, `${F.adir}の線だけは、的まで空いている`], j);
+        case 'b_win': { const n0 = F.ex0.length, byT = F.ex0.includes(F.t), byA = F.ex0.includes(F.a), back = F.a === F.f;
+          if (back && byT) return pk(['アマゾンで出口に入って、空いた元のマスにも矢を撃ち返せる', '出口に入ったあと元のマスを矢でふさぐから、すき間が残らない', '出口へ動いて、来た道に矢でふたができる', '白が出口をふさぎ、元のマスも矢でうまる', '動いたあとのすき間まで、矢でしっかりふさげる'], j);
+          if (byT && byA) return pk(['アマゾンで1つ、矢で1つ、出口を同時にふさげる', '2つの出口を、動きと矢で1手のうちにふさぎきれる', '出口2つをまとめてふさいで、黒の行き場がなくなる', '白が片方の出口に入り、もう片方は矢でうまる', '動きでふたを1つ、矢でもう1つ。これで黒は1歩も動けない'], j);
+          if (n0 === 1) return pk(['最後の出口に矢が刺さって、黒の行き場がなくなる', 'たった1つの出口がふさがる', '残った1マスに矢が刺さって、黒は手づまり', '最後のすき間がうまって、黒はもう指せない', '矢1本で、黒の最後の逃げ道が消える'], j);
+          return pk(['黒のまわりの空きマスが、全部ふさがる', '黒の行き場が、1マスも残らない', '黒の出口が全部なくなる'], j); }
+        case 's_trap': { const byT = E.NB[T].includes(F.t), byA = E.NB[T].includes(F.a);
+          if (byT && byA) return pk(['アマゾンで1つ、矢で1つ、その黒の出口をまとめてふさげる', '出口を2つ同時にふさいで、その黒の逃げ場がなくなる', '白が出口に入り、残りの出口には矢が刺さる', '2つの出口に、白と矢でいっぺんにふたができる', '動きと矢の両方で、その黒をぐるりと囲める'], j);
+          if (byT && F.a === F.f) return pk(['白が出口に入って、元のマスにも矢を撃ち返すから、すき間が残らない', '出口に入って、空いたマスも矢でふさげる', '出口に白が入り、どいたマスも矢でうまる', 'ふたをした白の元のマスまで、矢でしっかりふさげる', '白で出口をふさいで、来た道にも矢を刺せる'], j);
+          if (byT) return pk(['白のアマゾンが出口に入って、ふたをする', '出口に白が入って、その黒はもう動けない', '白が出口にどっかり座って、黒を通さない', '白のアマゾン自身が、出口のふたになる', '出口を白でふさいで、その黒をつかまえられる'], j);
+          return pk(['最後の出口に矢が刺さって、その黒は最後まで動けない', '出口がふさがって、黒は残りのアマゾンだけで戦うことになる', '矢1本で、その黒を閉じこめられる', '出口に矢でふたをして、黒を1体つかまえられる', '逃げ道がなくなって、その黒は置き物になる'], j); }
+        case 's_escape': return pk([`まわりに空きマスが${F.free}つある広い場所へ移れる`, `となりが${F.free}マスも空いていて、黒の1手ではふさぎきれない`, `広い場所へ出て、閉じこめられる心配がなくなる`, `黒の次の1手では囲めない場所へ逃げられる`, '矢も遠くへ撃って、自分のまわりを広いまま保てる'], j);
+        case 's_wall': if (!F.sep) return pk(['すき間がふさがって、黒が入ってきにくくなる', '壁がほぼできて、白の陣地が守れる'], j); return pk([`白の部屋が${F.w}マス、黒の部屋が${F.b}マスに分かれる`, `${F.w}対${F.b}で、白の部屋のほうが広くなる`, 'すき間がふさがって、黒はもうこっちに入ってこられない', `壁が完成して、白は${F.w}マスの部屋を使える`, `盤が分かれて、黒の部屋は${F.b}マスだけになる`], j);
+        case 's_fill': return pk([`この部屋で、まだ${F.left}手も指せる`, `マスをむだなく使えて、${F.left}手ぶん動ける`, '部屋が切れずに、端から順に埋めていける', `行けなくなるマスを作らずに、${F.left}手を残せる`, '矢を行き止まりに刺すから、部屋がちぎれない'], j);
+      }
+      return '';
+    };
+    // what the miss gives up
+    const loss = (F, j) => {
+      switch (id) {
+        case 'b_queen': { if (F.t === T) return 'それでも着いているけど、ほかの手と同じくらいいい'; const fa = amDir(E, F.f, T), bl = fa ? amBlock(E, pos.sq, F.f, T, -1) : -1;
+          if (!fa) return pk(['そのアマゾンからは、ゴールが一直線に並んでいない', '曲がらないと届かない場所で、1手では着かない', 'そのアマゾンとゴールは、縦・横・斜めのどれにも並ばない'], j);
+          if (bl >= 0) return pk(['線の途中にじゃまものがあって、ゴールまで進めない', '途中のマスがふさがっていて、飛び越えられない'], j);
+          if (fa === F.dir && F.n < amDist(E, F.f, T)) return pk(['ゴールの手前で止まっちゃってる', 'あと少し足りなくて、ゴールに着かない', '向きは合ってるけど、進む距離が短い'], j);
+          if (fa === F.dir) return pk(['ゴールを通りすぎちゃってる', '行きすぎて、ゴールのマスに止まっていない'], j);
+          return pk([`向きがちがって、ゴールから離れちゃう`, `${F.dir}に動いても、ゴールは${fa}の方向にある`], j); }
+        case 'b_arrow': case 'b_block': { const fa = amDir(E, F.t, T), bl = fa ? amBlock(E, F.q.sq, F.t, T, -1) : -1;
+          if (F.a === T) return 'それでも的に届いている';
+          if (!fa) return pk(['着いたマスと的が一直線に並ばなくて、矢が届かない', '動いた先からは、的が縦・横・斜めのどれにも見えない', '着いた場所がずれていて、的をねらえない'], j);
+          if (bl >= 0) return pk([`${fa}の線の途中にじゃまものがあって、矢が通らない`, `的は${fa}に見えてるけど、途中でふさがれてる`, '矢は飛び越えられないから、手前で止まっちゃう'], j);
+          return pk(['的は見えているのに、矢を別のマスに撃っちゃってる', '撃つ向きがずれて、的をはずしちゃう'], j); }
+        case 'b_win': { if (!F.oCan) return 'それでも黒は動けない'; const n = F.oEx;
+          if (F.opened) return pk(['動いた白の元のマスが、黒の新しい出口になっちゃう', '白が動いたあとの空きマスから、黒が逃げられる'], j);
+          return pk([`黒のまわりに、まだ出口が${n}つ残る`, `空きマスが${n}つ残って、黒はまだ動ける`, `黒の出口を${n}つふさぎ残してる`], j); }
+        case 's_trap': { if (!F.free) return 'それでもその黒は閉じこめられる';
+          if (F.opened && E.NB[T].includes(F.f)) return pk(['動いた白の元のマスが、その黒の新しい出口になっちゃう', '白がどいたマスから、黒がするっと逃げられる'], j);
+          return pk([`その黒にまだ出口が${F.free}つ残って、逃げられちゃう`, `出口が${F.free}つ空いたままで、閉じこめられない`, `その黒は、残った${F.free}つの出口から外へ出られる`], j); }
+        case 's_escape': {
+          if (!F.moved) return F.trap ? pk(['赤いアマゾンがそのままで、黒の次の1手で閉じこめられちゃう', 'あぶないアマゾンを放っておくことになって、黒にふたをされちゃう', 'ほかのアマゾンを動かしても、赤いアマゾンは黒の1手でつかまっちゃう'], j)
+            : pk(['あぶないアマゾンをそのまま放っておくことになる', '赤いアマゾンが動かないまま、出口も少ないまま', 'ほかのアマゾンを動かしても、赤いアマゾンは助からない'], j);
+          if (F.selfNext && F.trap) return pk(['自分の矢で自分のとなりをふさいで、黒の1手で閉じこめられちゃう', '矢を近くに撃って出口が減り、黒にふたをされちゃう', 'すぐそばに矢を刺したせいで、黒の1手でつかまっちゃう'], j);
+          if (F.trap) return pk([`逃げた先も出口が${F.free}つしかなくて、黒の1手で閉じこめられちゃう`, `行き先がせまくて、黒にすぐふたをされちゃう`, '逃げた場所でも、黒の次の手で囲まれちゃう'], j);
+          if (F.selfNext) return pk(['自分の矢で自分のとなりをふさいじゃってる', '矢を近くに撃って、自分の出口を減らしてる', 'すぐそばに矢を刺して、逃げ道をせばめてる', '矢が自分の足もとをふさいで、もったいない', '自分のまわりに矢を置いて、せっかくの広さを減らしてる'], j);
+          return pk([`まわりの空きが${F.free}つだけで、まだ安心できない`, 'せまい場所に残っていて、そのうち囲まれちゃう'], j); }
+        case 's_wall': { if (!F.sep) return pk(['すき間が開いたままで、黒に入ってこられちゃう', '盤が分かれずに、黒と広い場所を取り合うことになる', '壁が完成しなくて、黒が白の陣地へもぐりこめる'], j);
+          if (F.wSmall) return pk(['白のアマゾンが1体、せまい側に取り残される', '白が1体せまい部屋に入って、うまく働けない'], j);
+          return pk([`白の部屋が${F.w}マスで、黒の${F.b}マスより得が少ない`, `分かれても、白の部屋が${F.w}マスしかない`], j); }
+        case 's_fill': { const d = FA.left - F.left;
+          if (F.cut > 0) return d > 0 ? pk([`部屋がちぎれて${F.cut}マスに行けなくなり、${d}手も損しちゃう`, `矢で部屋を切って${F.cut}マスが使えなくなり、手数が${d}手へっちゃう`], j) : pk([`部屋がちぎれて、行けなくなるマスが${F.cut}つできちゃう`, `矢で部屋を切って、${F.cut}マスが使えなくなる`], j);
+          return pk([`最後まで動ける手数が${d}手少なくなる`, `むだなマスが出て、${d}手ぶん損しちゃう`, `${F.left}手しか指せなくて、${d}手足りない`], j); }
+      }
+      return '';
+    };
+    const fill2 = (t, a) => t.replace('{m}', M).replace('{x}', X).replace('{a}', a).replace('{b}', a);
+    const good = u => { const F = u != null && ok.includes(u) && u !== A ? amLF(E, pos, u, P, id) : FA;
+      return [pk(AM_CH.good, o8), fill2(AM_CH.why[k], why(F, k)), AM_CH.push[k]].filter(Boolean).join(' '); };
+    const ng = u0 => { const u = wrongOf(u0); let F = null; try { if (u != null) F = amLF(E, pos, u, P, id); } catch (e) {}
+      const out = [pk(AM_CH.soft, o8), fill2(AM_CH.right[(k + 2) % 5], why(FA, k + 2))]; if (F) out.push(fill2(AM_CH.you[(k + 3) % 5], loss(F, k + 2)));
+      if (AM_CH.tail[k]) out.push(AM_CH.tail[k]); return out.filter(Boolean).join(' '); };
+    return { ask: pk(AMJ_LS.ask[id] || [''], k), hintTx: pk(AMJ_LS.hint[id] || [''], k), good, ng, own: true, ckls: true };   // (ckls: ケロ praises himself — no heading line)
+  }
   const AMAZONS = {
     LKEY: 'aicoding-amazons-lessons', data: null, I: null,
     load() {
@@ -3971,11 +4134,14 @@
       const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), E = window.AmazonsEngine;
       const intro = String(T('intro') || '').replace(/<p>[^<]*?[a-j](?:10|[1-9])-[a-j](?:10|[1-9])[^]*?<\/p>/g, '');   // (the notation paragraph: no coordinates on the 3D board)
       const mkc = AM_MK[s.id] || 'ok';
-      const RX = it => { const o = Object.assign({}, it); ['t', 'body', 'g', 'h', 'y'].forEach(f => { if (typeof o[f] === 'string') o[f] = this.tx(o[f], lang); }); o.gm = AM_GM[s.id + '/' + s.ramp.indexOf(it)] || null; return o; };
-      return { id: s.id, title: T('title'), intro: lang === 'ja' && TFJ_LS.intro[s.id] || intro, ramp: s.ramp && s.ramp.length ? s.ramp.map(RX) : null, RU: (k, v) => this.tx('ru.' + k, lang, v || {}),   // (the warm-up: texts without coordinates from atlas/nocoord/amazons.json)
-        probs: (s.problems || []).map(P => { const good = P.ok || [P.best];
-          return { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.best != null ? P.best : good[0], marks: (P.mk || []).map(q => [q, mkc]), hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
-            good: () => T('why', { m: AMM('ok', lang), x: AMM('ng', lang) }), ng: () => T('ng', { m: AMM('ok', lang), x: AMM('ng', lang) }) }; }),
+      const ja = lang === 'ja' && E && AMJ_LS.intro[s.id];   // (2026-11-22 lesson loop: ケロ's own intro, warm-up lines, questions, hints, why / what the miss gives up — amLsJa)
+      const RX = it => { const o = Object.assign({}, it); ['t', 'body', 'g', 'h', 'y'].forEach(f => { if (typeof o[f] !== 'string') return; const v = ja && AMJ_LS.ramp[o[f]]; o[f] = v ? { ja: v, __voice: true } : this.tx(o[f], lang); }); o.gm = AM_GM[s.id + '/' + s.ramp.indexOf(it)] || null; return o; };
+      return { id: s.id, title: T('title'), intro: ja ? AMJ_LS.intro[s.id] : intro, ramp: s.ramp && s.ramp.length ? s.ramp.map(RX) : null, RU: (k, v) => this.tx('ru.' + k, lang, v || {}),   // (the warm-up: texts without coordinates from atlas/nocoord/amazons.json)
+        probs: (s.problems || []).map((P, i) => { const good = P.ok || [P.best];
+          const o = { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.best != null ? P.best : good[0], marks: (P.mk || []).map(q => [q, mkc]), hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
+            good: () => T('why', { m: AMM('ok', lang), x: AMM('ng', lang) }), ng: () => T('ng', { m: AMM('ok', lang), x: AMM('ng', lang) }) };
+          if (ja) try { Object.assign(o, amLsJa(E, s, P, i)); } catch (e) { console.warn('[lessons3d] amazons lesson', e); }
+          return o; }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     points(P, m) { return (P.ok || [P.best]).includes(m) ? 20 : 0; },   // (= amazons/app.js lessonAnswer)
