@@ -25,6 +25,7 @@
 - 年号の書き方は tree.js の `YF`（14言語：世紀・頃・初め・末・遅くとも・〜の記録など）。
 - 時間軸は全言語で左→右（アラビア語でも `dir="ltr"`、札の文字だけ `dir="auto"`）。
 - 未収録でも大百科のゲームの中で遊べるもの（`PLAY`：パチーシ＝ルドーの種目）は、そのゲームのアイコン付きの札にし、「遊ぶ」でその種目の盤を開く（app.js の open に `{ rule, size }` を渡すと `atlas-play` の `<id>:rule`・`:size` を設定してから開く。3Dビューの盤も種目に合わせる：app.js `ruleModel()`、今はルドーのパチーシの布盤）。
+  - エアホッケー＝テーブルホッケーの台「エアホッケー」（2026-11-21 ユーザー：台のバリエーションにあるので遊べる）。`PLAY.airhockey = { game: 'hockey', board: 'air' }`：「遊ぶ」でテーブルホッケーの台をエアホッケーに切り替えて開く（open の `{ board }` → `Table3D.setBoard`、tables3d.js が未読み込みなら保存キー `atlas-<id>-look` に直接書く）。種目（rule）ではなく台（board）で遊べるものは、この形で足す。
 - 事実は各ゲームのヒストリア（origin 章）にそろえる。未収録のゲームは確認した出典（Murray、Parlett、The World of Playing Cards など）による。新しいゲームを足したら `N` と `E` に1行ずつ、14言語の `n` に説明を足す。
 
 ## 展示室3：所蔵品（`atlas/museum/gallery.js`、モデル `atlas/museum/ex/<id>.js`、文言 `atlas/museum/gallery-<lang>.js`）
