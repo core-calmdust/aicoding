@@ -6,16 +6,18 @@
 (function () {
   'use strict';
   const BOARDS = {
-    // the Ballinderry board (1 = 1 cm): Brandubh, pegs in its 7 × 7 holes (their places as on the photograph: hand-bored, not quite in
-    // line). No pieces were found with it: plain turned pegs, brown for the attackers, pale for the defenders, the king taller.
+    // the Ballinderry board (1 = 1 cm): Brandubh, pegs in its 7 × 7 holes (their places as on the photograph: hand-bored, not quite in line).
     ballinderry: { game: 'tafl', size: 7, view: { yaw: 0, pit: 1.2, d: .8 },
       board(TH, obj, K) {
         const g = new TH.Group(), n = 7, cs = 2.65, S = cs * n, Y = 1.02, H = obj.userData.holes;
         const cell = (f, r) => { const h = H && H[r * 7 + f]; return h ? [h[0], h[1]] : [(f - 3) * cs, (r - 3) * cs]; };
-        const MAT = { 1: K.mat({ color: '#8a5230', roughness: .45, clearcoat: .3, clearcoatRoughness: .4 }), 2: K.mat({ color: '#e4d6b4', roughness: .45, clearcoat: .25, clearcoatRoughness: .4 }) };
-        const r0 = cs * .34, prof = (h, head) => new TH.LatheGeometry([[0, -.3], [r0 * .22, -.3], [r0 * .22, 0], [r0 * .95, 0], [r0, h * .1], [r0 * .7, h * .28], [r0 * .5, h * .55], [r0 * head, h * .72], [r0 * head * 1.05, h * .84], [r0 * head * .7, h * .96], [0, h]].map(([a, b]) => new TH.Vector2(Math.max(.001, a), b)), 20);
-        const GEO = { 1: prof(r0 * 2.3, .62), 2: prof(r0 * 2.3, .62), 3: prof(r0 * 3.4, .8) };
-        const piece = kd => { const p = new TH.Group(); p.userData.kind = kd; const o = new TH.Mesh(GEO[kd], MAT[kd === 1 ? 1 : 2]); o.castShadow = true; p.add(o); return p; };
+        // the pieces, to go with a worn thousand-year-old board: small squat pegs with a domed head, hand-cut and matt — dark bog-stained
+        // wood for the attackers, yellowed bone for the defenders; the king a little larger with a knob. (An estimate: none were found.)
+        const tex = (a, b, seed) => K.tex(256, 256, (c, w, h) => { K.grain(c, w, h, { a, b, seed, sx: .6, sy: 5, warp: .5, pores: .01 }); c.fillStyle = 'rgba(20,10,4,.25)'; for (let q = 0; q < 26; q++) { c.beginPath(); c.ellipse((q * 97) % w, (q * 53) % h, 3 + q % 5, 2 + q % 3, q, 0, 6.29); c.fill(); } });
+        const MAT = { 1: K.mat({ map: tex('#4a3020', '#22140c', 71), color: '#ffffff', roughness: .78 }), 2: K.mat({ map: tex('#cdb98c', '#9c8458', 72), color: '#ffffff', roughness: .7 }) };
+        const r0 = cs * .23, prof = (h, king) => new TH.LatheGeometry((king ? [[0, -.35], [.16, -.35], [.2, 0], [r0 * .62, .02], [r0 * .7, h * .2], [r0 * 1.02, h * .42], [r0 * 1.05, h * .58], [r0 * .8, h * .74], [r0 * .34, h * .8], [r0 * .42, h * .9], [r0 * .28, h * .98], [0, h]] : [[0, -.35], [.16, -.35], [.2, 0], [r0 * .6, .02], [r0 * .66, h * .28], [r0 * .98, h * .52], [r0, h * .7], [r0 * .72, h * .9], [r0 * .3, h * .99], [0, h]]).map(([a, b]) => new TH.Vector2(Math.max(.001, a), b)), 18);
+        const GEO = { 1: prof(1.25, false), 2: prof(1.25, false), 3: prof(1.9, true) };
+        const piece = kd => { const p = new TH.Group(); p.userData.kind = kd; const o = new TH.Mesh(GEO[kd], MAT[kd === 1 ? 1 : 2]); o.castShadow = true; o.rotation.y = (p.id * 2.4) % 6.28; if (kd === 3) o.scale.set(1.22, 1, 1.22); p.add(o); return p; };
         g.userData = { top: Y, S, n, cs, cell, piece, mats: MAT };
         return g; } },
   };

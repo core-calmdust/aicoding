@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 91;
+  const V = 92;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -81,10 +81,9 @@
         <div class="exscroll"><small class="exkind">${esc(ui(lang, 'collection'))}${e.lock ? ` · ${esc(ui(lang, 'special'))}` : ''}</small><h2>${esc(t.name || id)}</h2>${t.alt ? `<p class="exalt">${esc(t.alt)}</p>` : ''}
         <dl class="exfacts">${[['date', t.date], ['where', t.found], ['museum', t.museum ? t.museum + (t.no ? `（${t.no}）` : '') : ''], ['mat', t.mat], ['size', t.size]].filter(r => r[1]).map(([k, v]) => `<dt>${esc(ui(lang, k))}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
         ${PLAY[id] ? `<div class="expcard"><b>${esc(ui(lang, 'play_' + id))}</b>
-          <div class="exprow"><label>${esc(ui(lang, 'p_level'))}<select data-k="plv">${Array.from({ length: PLAY[id].levels }, (_, i) => `<option value="${i + 1}">Lv.${i + 1}</option>`).join('')}</select></label>
-          <label>${esc(ui(lang, 'p_side'))}<select data-k="pside"><option value="1">${esc(ui(lang, 'p_side1_' + id))}</option><option value="2">${esc(ui(lang, 'p_side2_' + id))}</option></select></label></div>
-          <button type="button" class="explay" data-k="play">${esc(ui(lang, 'play'))}</button><button type="button" class="explay stop" data-k="pstop" hidden>${esc(ui(lang, 'p_stop'))}</button>
-          <small class="expnote">${esc(ui(lang, 'p_note_' + id))}</small></div>` : ''}
+          <div class="exprow"><div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expstep" data-k="plv" data-v="1" data-max="${PLAY[id].levels}"><button type="button" data-d="-1" aria-label="−">−</button><b>Lv.1</b><button type="button" data-d="1" aria-label="+">＋</button></div></div>
+          <div class="expf"><span>${esc(ui(lang, 'p_side'))}</span><div class="expseg" data-k="pside" data-v="1"><button type="button" data-v="1" class="on">${esc(ui(lang, 'p_side1_' + id))}</button><button type="button" data-v="2">${esc(ui(lang, 'p_side2_' + id))}</button></div></div></div>
+          <button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><button type="button" class="explay stop" data-k="pstop" hidden>${esc(ui(lang, 'p_stop'))}</button></div>` : ''}
         ${(t.p || []).map(p => `<p class="exp">${esc(p)}</p>`).join('')}
         ${(t.spots || []).length ? `<h3>${esc(ui(lang, 'look'))}</h3><ol class="exlook">${t.spots.map((s, i) => `<li><button type="button" data-n="${i}"><u>${i + 1}</u><span><b>${esc(s[0])}</b>${esc(s[1])}</span></button></li>`).join('')}</ol>` : ''}
         ${t.model ? `<h3>${esc(ui(lang, 'aboutModel'))}</h3><p class="exp sm">${esc(t.model)}</p>` : ''}
@@ -102,14 +101,18 @@
     ov.querySelector('.exclose').onclick = close;
     { const pb = ov.querySelector('[data-k="play"]'), sb = ov.querySelector('[data-k="pstop"]'), P = PLAY[id];   // 所蔵品で遊ぶ: a game on this board, here in the museum (museum/play.js)
       if (pb && P) { const hudEl = ov.querySelector('.exhud'), PK = 'atlas-museum-play', lvS = ov.querySelector('[data-k="plv"]'), sdS = ov.querySelector('[data-k="pside"]');
-        try { const q = JSON.parse(localStorage.getItem(PK) || '{}')[id]; if (q) { lvS.value = q.lv; sdS.value = q.side; } } catch (x) {}
+        // the card's own controls (no system pull-downs): a stepper for the level, two buttons for the side
+        const setLv = v => { v = Math.max(1, Math.min(+lvS.dataset.max, v | 0 || 1)); lvS.dataset.v = v; lvS.querySelector('b').textContent = 'Lv.' + v; }, setSd = v => { v = +v === 2 ? 2 : 1; sdS.dataset.v = v; sdS.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.v === v)); };
+        let lock = false; lvS.querySelectorAll('button').forEach(b => { let h = 0; const step = () => { if (!lock) setLv(+lvS.dataset.v + +b.dataset.d); }; b.onclick = step; b.onpointerdown = () => { clearInterval(h); const t0 = setTimeout(() => { h = setInterval(step, 90); }, 420); const end = () => { clearTimeout(t0); clearInterval(h); }; b.onpointerup = b.onpointerleave = b.onpointercancel = end; }; });
+        sdS.querySelectorAll('button').forEach(b => b.onclick = () => { if (!lock) setSd(b.dataset.v); });
+        try { const q = JSON.parse(localStorage.getItem(PK) || '{}')[id]; if (q) { setLv(q.lv); setSd(q.side); } } catch (x) {}
         const tt = k => ({ 'p.you': ui(lang, 'p_you'), 'p.ai': 'AI', 'p.turn': ui(lang, 'p_turn'), 'p.think': ui(lang, 'p_think'), 'res.win': ui(lang, 'p_win'), 'res.lose': ui(lang, 'p_lose'), 'res.draw': ui(lang, 'p_draw') })[k] || '';
-        const playing = on => { ov.classList.toggle('exv-play', on); pb.hidden = on; sb.hidden = !on; lvS.disabled = sdS.disabled = on; if (!on) hudEl.innerHTML = ''; };
+        const playing = on => { ov.classList.toggle('exv-play', on); pb.hidden = on; sb.hidden = !on; lock = on; lvS.classList.toggle('off', on); sdS.classList.toggle('off', on); if (!on) hudEl.innerHTML = ''; };
         sb.onclick = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); };
         pb.onclick = () => { if (!V3 || !V3.obj) return; pb.disabled = true;
-          try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.value, side: +sdS.value }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
+          try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
           Promise.all([load('museum/play.js?v=' + V), window.AtlasLazy ? AtlasLazy.need(P.game) : 0]).then(() => { pb.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
-            const ok = AtlasMuseumPlay.start(id, { level: +lvS.value, side: +sdS.value, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { hudEl.innerHTML = `<span class="hm">${esc(res.draw ? ui(lang, 'p_draw') : res.win ? ui(lang, 'p_win') : ui(lang, 'p_lose'))}</span>`; } });
+            const ok = AtlasMuseumPlay.start(id, { level: +lvS.dataset.v, side: +sdS.dataset.v, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { hudEl.innerHTML = `<span class="hm">${esc(res.draw ? ui(lang, 'p_draw') : res.win ? ui(lang, 'p_win') : ui(lang, 'p_lose'))}</span>`; } });
             playing(!!ok); }); }; } }
     const pb = ov.querySelector('.amplay'); if (pb) pb.onclick = () => { close(); setTimeout(() => ctx.open(g.id, null), 280); };
     V3 = { ov, e, close, spin: true };
@@ -309,7 +312,7 @@
   }
   function bindInput(el) {
     const pts = new Map(); let pinch = 0, d0 = 0, tap = 0;
-    const down = e => { if (e.target.closest('.exb,.exspot')) return; el.setPointerCapture && el.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); V3.dragD = 0; V3.drag = true; V3.tw = null; V3.vel.yaw = V3.vel.pit = 0;
+    const down = e => { if (V3.playing || e.target.closest('.exb,.exspot')) return;   /* (a game on the board: the view is fixed, so a tap is always a move) */ el.setPointerCapture && el.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); V3.dragD = 0; V3.drag = true; V3.tw = null; V3.vel.yaw = V3.vel.pit = 0;
       if (V3.spin) { V3.spin = false; V3.ov.querySelector('[data-k="spin"]').classList.remove('on'); }
       if (pts.size === 2) { const a = [...pts.values()]; pinch = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); d0 = V3.sph.d; }
       const now = performance.now(); if (pts.size === 1 && now - tap < 320 && V3.home && !V3.playing) { tween(V3.home); } tap = now; go(); };
@@ -318,7 +321,7 @@
       else { V3.dragD = (V3.dragD || 0) + Math.abs(dx) + Math.abs(dy); if (V3.dragD > 8) V3.dragEnd = performance.now(); const k = 5.5 / Math.max(300, el.clientWidth); V3.vel.yaw = -dx * k; V3.vel.pit = dy * k; V3.sph.yaw += V3.vel.yaw; V3.sph.pit += V3.vel.pit; }
       go(); };
     const up = e => { pts.delete(e.pointerId); if (!pts.size) { V3.drag = false; go(); } };
-    const wheel = e => { e.preventDefault(); V3.tw = null; V3.sph.d = clampD(V3.sph.d * Math.exp(e.deltaY * .0012)); go(); };
+    const wheel = e => { e.preventDefault(); if (V3.playing) return; V3.tw = null; V3.sph.d = clampD(V3.sph.d * Math.exp(e.deltaY * .0012)); go(); };
     const vis = () => go();
     el.addEventListener('pointerdown', down); el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('wheel', wheel, { passive: false });
     addEventListener('focus', vis); document.addEventListener('visibilitychange', vis);
