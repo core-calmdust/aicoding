@@ -12,12 +12,13 @@
   (window.AtlasEx = window.AtlasEx || {}).shosoin = {
     build(TT, X, K) {
       const G = new TT.Group();
-      const S = 48.9, H = 12.7, RAIL = .8, BASE = 8.1, BODY = H - BASE, TOP = .15;
+      const S = 48.9, H = 12.7, RAIL = 1.0, BASE = 7.4,   // (measured on the Shōsōin's oblique photograph: body 5.3, openings 5.4, floor frame 1.0)
+        BODY = H - BASE, TOP = .15;
       const shT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#331b14', b: '#20100b', seed: 21, sx: .5, sy: 9, warp: .35, pores: .003 }));
       const shR = K.tex(256, 256, (g, w, h) => K.grain(g, w, h, { a: '#7a7a7a', b: '#4e4e4e', seed: 22, sy: 14 }), { data: true });
       const shitan = K.mat({ map: shT, roughnessMap: shR, color: '#ffffff', roughness: .5, clearcoat: .4, clearcoatRoughness: .35 });
       const ivory = K.mat({ color: '#e9dcbc', roughness: .4, clearcoat: .25, clearcoatRoughness: .4 });
-      const C = { iv: '#e6d2a4', box: '#d9b46a', grn: '#6f9a62', red: '#c0664c', dk: '#3a1a10', tan: '#c49a5c', pink: '#d99a86' };
+      const C = { iv: '#e6d2a4', box: '#d9b46a', grn: '#7d9468', red: '#b98a62', dk: '#3a1a10', tan: '#c49a5c', pink: '#d99a86' };
       const sil = (g, kind, x, y, k, col) => {   // a figure in silhouette with a few engraved lines (the 撥鏤-like detail)
         g.save(); g.translate(x, y); g.scale(k, k); g.fillStyle = col; g.strokeStyle = 'rgba(40,18,8,.55)'; g.lineWidth = .9; g.beginPath();
         if (kind === 'camel') { g.moveTo(-26, 4); g.quadraticCurveTo(-24, -14, -10, -16); g.quadraticCurveTo(-4, -26, 2, -16); g.quadraticCurveTo(8, -24, 14, -14); g.quadraticCurveTo(20, -12, 22, -22); g.lineTo(30, -26); g.lineTo(31, -21); g.lineTo(26, -18); g.quadraticCurveTo(24, -4, 18, 2);
@@ -103,7 +104,7 @@
           chain(g, x0 + s * .75, cb, h - 2 * cb, s * .75, true);
           g.strokeStyle = C.iv; g.lineWidth = s * .05; g.strokeRect(x0 + s * .85, cb + s * .1, pw - s * .95, h - 2 * cb - s * .2);
           const v = VIGN[(seed * 4 + i) % VIGN.length], cy = h / 2;
-          v.forEach(([kd, c], n) => { const x = x0 + s * .6 + (n + .5) * (pw - s * .7) / v.length; sil(g, kd, x, cy, s * (kd === 'flower' ? .05 : kd === 'camel' || kd === 'man' ? .05 : .052), kd === 'flower' ? C.grn : PAL[(c + seed) % 4]); });
+          v.forEach(([kd, c], n) => { const x = x0 + s * .6 + (n + .5) * (pw - s * .7) / v.length; sil(g, kd, x, cy, s * .04, kd === 'flower' ? C.grn : PAL[(c + seed) % 4]); });
         }
         chain(g, w, cb, h - 2 * cb, s * .75, true);
       });
@@ -114,20 +115,21 @@
       const edgeM = K.mat({ map: edgeT, color: '#ffffff', roughness: .45, clearcoat: .35 });
       add(new TT.BoxGeometry(S + .1, TOP, S + .1), [edgeM, edgeM, faceMat, shitan, edgeM, edgeM], 0, H - TOP / 2, 0);
       /* ---------- the 床脚: corner legs, a post in the middle of each side, openings with cusped tops, the floor rail ---------- */
-      const LEG = 1.8, POST = 1.6, OH = BASE - RAIL - .05;   // leg / post width; the openings' height (the cusps hang right under the body)
+      const LEG = 1.15, POST = 1.25, OH = BASE - RAIL - .05;   // leg / post width; the openings' height (the cusps hang right under the body)
       const skirt = new TT.Shape(); skirt.moveTo(-S / 2, 0); skirt.lineTo(S / 2, 0); skirt.lineTo(S / 2, BASE - RAIL); skirt.lineTo(-S / 2, BASE - RAIL); skirt.closePath();
-      const open = (x0, x1) => { const p = new TT.Path(), R = OH * .43, top = OH, xa0 = x0 + R, xa1 = x1 - R, nC = 7, cw = (xa1 - xa0) / nC;
-        // the opening's ends are almost half-round (photographs of each side), its top a row of hanging cusps
-        p.moveTo(x0 + R, 0); p.lineTo(x1 - R, 0); p.quadraticCurveTo(x1, 0, x1, R); p.lineTo(x1, top - R); p.quadraticCurveTo(x1, top - .3, xa1, top - .45);
-        for (let i = nC; i > 0; i--) { const xa = xa0 + i * cw, xb = xa - cw; p.quadraticCurveTo((xa + xb) / 2, top - 1.6, xb, top - .45); }
-        p.quadraticCurveTo(x0, top - .3, x0, top - R); p.lineTo(x0, R); p.quadraticCurveTo(x0, 0, x0 + R, 0); return p; };
+      const open = (x0, x1) => { const p = new TT.Path(), top = OH, E = 2.3, nC = 7, xa0 = x0 + E, xa1 = x1 - E, cw = (xa1 - xa0) / nC, dip = .95;
+        // (the photograph) the sides drop straight to the floor frame; at each top corner the leg sweeps out in a long concave curve to a
+        // point, and between the two points hangs a row of seven shallow cusps
+        p.moveTo(x0, 0); p.lineTo(x1, 0); p.lineTo(x1, top - 3.3); p.quadraticCurveTo(x1 - .15, top - 1.0, xa1, top - dip);
+        for (let i = nC; i > 0; i--) { const xa = xa0 + i * cw, xb = xa - cw; p.quadraticCurveTo((xa + xb) / 2, top + .25, xb, top - dip); }
+        p.quadraticCurveTo(x0 + .15, top - 1.0, x0, top - 3.3); p.lineTo(x0, 0); return p; };
       const half = (S - 2 * LEG - POST) / 2;
       skirt.holes.push(open(-S / 2 + LEG, -S / 2 + LEG + half), open(S / 2 - LEG - half, S / 2 - LEG));
       const skG = new TT.ExtrudeGeometry(skirt, { depth: 1.2, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1, curveSegments: 10 });
       // the legs' faces: dark shitan edged in ivory, little birds and deer set into the legs and the post
       const legT = K.tex(2048, Math.round(2048 * (BASE - RAIL) / S), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); const s = w / S;
         g.strokeStyle = C.iv; g.lineWidth = s * .08; g.strokeRect(s * .15, s * .1, w - s * .3, h - s * .2);
-        g.strokeStyle = '#d8bb7c'; g.lineWidth = s * .09; skirt.holes.forEach(hp => { g.beginPath(); hp.getPoints(24).forEach((p, i) => { const X = (p.x + S / 2) * s, Y = h - p.y * s; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.closePath(); g.stroke(); });
+        g.strokeStyle = '#e4cf9a'; g.lineWidth = s * .2; skirt.holes.forEach(hp => { g.beginPath(); hp.getPoints(24).forEach((p, i) => { const X = (p.x + S / 2) * s, Y = h - p.y * s; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.closePath(); g.stroke(); });
         [[LEG / 2, 'bird', .8], [LEG / 2, 'deer', .3], [S / 2, 'bird', .75], [S / 2, 'flower', .35], [S - LEG / 2, 'bird', .8], [S - LEG / 2, 'deer', .3]].forEach(([x, kd, fy], i) => sil(g, kd, x * s, h * (1 - fy), s * .035, [C.box, C.grn, C.pink][i % 3])); });
       legT.repeat.set(1 / S, 1 / (BASE - RAIL)); legT.offset.set(.5, 0);
       const legM = K.mat({ map: legT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
