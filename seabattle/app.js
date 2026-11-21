@@ -445,7 +445,7 @@ async function doSkill(a) {
   await sleep(by === 1 ? 650 : 250); if (G.st !== st) return null;
   if (noAim || blocked) await sleep(250);
   else if (pv.skill === 'sonar' || pv.skill === 'scout' || pv.skill === 'radar' || pv.skill === 'sweep' || pv.skill === 'flare' || pv.skill === 'echo' || pv.skill === 'diag' || pv.skill === 'cross') await SB.sweep($('#bsvg'), pv.area);
-  else { for (const x of pv.shots) { SB.fx($('#bsvg'), x.cell, by === 0 && st.sides[1].fog > 0 ? 'fog' : x.hit, true); setTimeout(() => sfx(x.hit ? 'hit' : 'miss'), 160); await sleep(pv.skill === 'torpedo' || pv.skill === 'rtorpedo' || pv.skill === 'dtorpedo' ? 120 : 170); } if (pv.ic >= 0) SB.fx($('#bsvg'), pv.ic, 'fog', true); await sleep(330); }
+  else { if (SB.kind) SB.kind(pv.skill); for (const x of pv.shots) { SB.fx($('#bsvg'), x.cell, by === 0 && st.sides[1].fog > 0 ? 'fog' : x.hit, true); setTimeout(() => sfx(x.hit ? 'hit' : 'miss'), 160); await sleep(pv.skill === 'torpedo' || pv.skill === 'rtorpedo' || pv.skill === 'dtorpedo' ? 120 : 170); } if (pv.ic >= 0) SB.fx($('#bsvg'), pv.ic, 'fog', true); await sleep(330); if (SB.kind) SB.kind(null); }
   if (G.st !== st) return null;
   const res = E.useSkill(st, a.ship, a.cell); if (!res) return null;
   G.armed = null; hoverCell = -1;

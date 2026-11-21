@@ -105,10 +105,10 @@ function init(svg) {
   const frame = svg.parentNode, canvas = document.createElement('canvas'); canvas.className = 'sb3d'; frame.insertBefore(canvas, svg); const vig = document.createElement('div'); vig.className = 'sb3d-vig'; frame.insertBefore(vig, svg); frame.classList.add('sb3d-on');
   const mobile = matchMedia('(pointer:coarse)').matches || Math.min(screen.width, screen.height) < 700;
   const R = new T.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  R.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.6 : 2)); R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = 1.02;
+  const prMax = Math.min(devicePixelRatio || 1, mobile ? 1.6 : 2); R.setPixelRatio(prMax); R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = 1.02;
   R.shadowMap.enabled = true; R.shadowMap.type = T.PCFSoftShadowMap;
   const scene = new T.Scene(), cam = new T.PerspectiveCamera(20, 1, .1, 1200);
-  const sunDir = new T.Vector3(-.42, .2, -.88).normalize(), uniSky = { uSun: { value: sunDir }, uTime: { value: 0 } };
+  const sunDir = new T.Vector3(-.42, .34, -.84).normalize(), uniSky = { uSun: { value: sunDir }, uTime: { value: 0 } };
   // sky dome + an environment map made from the same sky for the reflections on the ships and the water
   const skyMat = new T.ShaderMaterial({ uniforms: uniSky, side: T.BackSide, depthWrite: false, vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.); gl_Position = p.xyww; }', fragmentShader: GLSL_SKY + 'uniform float uTime; varying vec3 vD; void main(){ gl_FragColor = vec4(skyCol(normalize(vD), uTime), 1.); }' });
   const sky = new T.Mesh(new T.SphereGeometry(500, 48, 24), skyMat); sky.frustumCulled = false; scene.add(sky);
@@ -117,7 +117,7 @@ function init(svg) {
   // light: a low evening sun behind the board, soft sky light
   const sun = new T.DirectionalLight(0xffd2a0, 2.5); sun.position.copy(sunDir).multiplyScalar(30); sun.target.position.set(0, 0, 0); scene.add(sun, sun.target);
   sun.castShadow = true; sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048); const sc = sun.shadow.camera; sc.left = -8; sc.right = 8; sc.top = 8; sc.bottom = -8; sc.near = 5; sc.far = 60; sun.shadow.bias = -.0006; sun.shadow.normalBias = .02;
-  scene.add(new T.HemisphereLight(0x9ab4cc, 0x1a2a33, .55));
+  scene.add(new T.HemisphereLight(0xb4c8dc, 0x1a2a33, 1.05));
   const fill = new T.DirectionalLight(0x8fb2d6, .35); fill.position.set(6, 8, 10); scene.add(fill);
   // the cells' state as a 10×10 texture the water reads: R = shot state, G = heat, B = flags
   const cellData = new Uint8Array(N * N * 4), cellTex = new T.DataTexture(cellData, N, N, T.RGBAFormat); cellTex.needsUpdate = true; cellTex.magFilter = cellTex.minFilter = T.NearestFilter;
@@ -129,7 +129,7 @@ function init(svg) {
   const fire = makeParticles(true, mobile ? 1500 : 3000), smoke = makeParticles(false, mobile ? 2000 : 4000); scene.add(fire.pts, smoke.pts);
   const shipLayer = new T.Group(), markLayer = new T.Group(), fxLayer = new T.Group(); scene.add(shipLayer, markLayer, fxLayer);
   const flash = new T.PointLight(0xffa860, 0, 6, 1.6); scene.add(flash);
-  V = { R, scene, cam, canvas, frame, svg, sun, water, uni, cellData, cellTex, fire, smoke, shipLayer, markLayer, fxLayer, flash, labels, mobile, ships: new Map(), proto: new Map(), emitters: [], floats: [], rip: 0, t: 0, last: performance.now(), size: 0, flashT: 0, shake: 0, o: null, aim: -1, intro: 1 };
+  V = { R, scene, cam, canvas, frame, svg, sun, water, uni, cellData, cellTex, fire, smoke, shipLayer, markLayer, fxLayer, flash, labels, mobile, prMax, ships: new Map(), proto: new Map(), emitters: [], floats: [], rip: 0, t: 0, last: performance.now(), size: 0, flashT: 0, shake: 0, o: null, aim: -1, intro: 1 };
   new ResizeObserver(() => fit()).observe(frame); fit();
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { V.last = performance.now(); loop(); } });
   loop();
@@ -166,14 +166,14 @@ function makeWater(uni, mobile) {
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.05, .3, .33), smoothstep(-.1, .14, vH) * .55);
         float fo = crest * smoothstep(.45, .8, vn(p * vec2(9., 4.) - uTime * .3)) * .55;
         // ripples from impacts: rings of foam spreading out
-        for (int i = 0; i < 8; i++) { vec4 r = uRip[i]; float age = uTime - r.z; if (age < 0. || age > 3.2) continue; float d = length(p - r.xy), rad = age * .9 * r.w;
-          fo += (1. - smoothstep(0., .07 + age * .03, abs(d - rad))) * (1. - age / 3.2) * .8 * r.w + (1. - smoothstep(0., .35 * r.w, d)) * max(0., 1. - age * 1.4) * 1.2; }
+        for (int i = 0; i < 8; i++) { vec4 r = uRip[i]; float age = uTime - r.z; if (age < 0. || age > 2.4) continue; float d = length(p - r.xy), rad = (1. - exp(-age * 1.6)) * .75 * r.w;
+          fo += (1. - smoothstep(0., .05 + age * .03, abs(d - rad))) * pow(1. - age / 2.4, 2.) * .55 * r.w + (1. - smoothstep(0., .3 * r.w, d)) * max(0., 1. - age * 1.2) * .9; }
         // hulls: x, z, half length along the ship's axis (sign = axis: + along x, - along z), half beam
         for (int i = 0; i < 12; i++) { if (i >= uNH) break; vec4 hh = uHulls[i]; vec2 q = p - hh.xy; if (hh.z < 0.) q = vec2(-q.y, q.x); float hl = abs(hh.z), hb = hh.w;
           float t = clamp(q.x / hl, -1., 1.), w = hb * sqrt(max(0., 1. - pow(max(0., t - .35) / .65, 2.))) * (t < -.85 ? .8 : 1.); float d = length(vec2(max(abs(q.x) - hl, 0.), max(abs(q.y) - w, 0.)));
           darkAdd += (1. - smoothstep(0., .22, d)) * .3;
           { vec2 q2 = q + (hh.z < 0. ? vec2(-.26, .2) : vec2(.2, .26)) * -1.; float d2 = length(vec2(max(abs(q2.x) - hl, 0.), max(abs(q2.y) - w * 1.1, 0.))); darkAdd += (1. - smoothstep(0., .12, d2)) * .32 * step(.0, d); }   // the hull's shadow, cast away from the low sun
-          fo += (1. - smoothstep(.0, .05 + .03 * vn(p * 18. + uTime), d)) * (.55 + .35 * vn(p * 25. - uTime * 2.)) * step(.002, d + .002); }
+          fo += (1. - smoothstep(.0, .045 + .03 * vn(p * 18. + uTime), d)) * smoothstep(.0, .012, d) * (.3 + .3 * vn(p * 25. - uTime * 2.)) * (.6 + .4 * smoothstep(.2, 1., t)); }
         bool inB = abs(p.x) < 5. && abs(p.y) < 5.;
         if (inB) {
           vec2 cp = p + 5.; ivec2 ci = ivec2(floor(cp)); vec2 f = fract(cp) - .5; vec4 cd = texelFetch(uCells, ci, 0);
@@ -238,7 +238,7 @@ function applyPose(P) { V.cam.position.copy(P.p); V.cam.lookAt(P.t); V.tgt = P.t
 function loop() {
   if (!V || V.raf) return;
   const step = () => {
-    V.raf = 0; if (document.hidden) return;
+    V.raf = 0; if (document.hidden || !V.frame.classList.contains('sb3d-on')) return;
     const now = performance.now(), dt = Math.min(.05, (now - V.last) / 1000); V.last = now; V.t += dt; V.uni.uTime.value = V.t;
     if (V.anim) { const a = V.anim, u = Math.min(1, (now - a.t0) / a.dur), e = u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; V.cam.position.lerpVectors(a.p0, a.p1, e); const tg = a.t0v.clone().lerp(a.t1v, e); V.cam.lookAt(tg); if (u >= 1) { V.anim = null; applyPose(V.fx); } }
     else if (V.fx) { applyPose(V.fx); if (V.shake > 0) { V.shake = Math.max(0, V.shake - dt * 2.2); const s = V.shake * .09; V.cam.position.x += (Math.random() - .5) * s; V.cam.position.y += (Math.random() - .5) * s; } }
@@ -254,6 +254,10 @@ function loop() {
     stepParticles(V.fire, dt); stepParticles(V.smoke, dt);
     if (V.flash.intensity > 0) V.flash.intensity = Math.max(0, V.flash.intensity - dt * 60);
     V.R.render(V.scene, V.cam);
+    // keep it smooth: if frames run slow for a while, draw at a lower resolution (and back up when there is room)
+    V.ft = (V.ft || 16) * .95 + (performance.now() - now) * .05 + dt * 1000 * 0;
+    V.fc = (V.fc || 0) + 1; V.slow = (V.slow || 0) * .97 + (dt > .034 ? 1 : 0) * .03;
+    if (V.fc % 90 === 0) { const pr = V.R.getPixelRatio(); if (V.slow > .5 && pr > 1) { V.R.setPixelRatio(Math.max(1, pr - .25)); fit(); } else if (V.slow < .05 && pr < V.prMax) { V.R.setPixelRatio(Math.min(V.prMax, pr + .25)); fit(); } }
     loop();
   };
   V.raf = requestAnimationFrame(step);
@@ -327,7 +331,7 @@ function syncMarks(o) {
       // flames and black smoke from the hit square (lazier on a sunk wreck)
       const rate = sunk ? .16 : .045;
       V.emitters.push({ acc: Math.random() * rate, every: rate, fn: () => { const y = waveAt(x, z, V.t) * .85 + (own ? (sunk ? .02 : .12) : .03); if (!sunk) emit(V.fire, { p: [x + (Math.random() - .5) * .25, y, z + (Math.random() - .5) * .25], v: [(Math.random() - .5) * .05, .3 + Math.random() * .25, (Math.random() - .5) * .05], life: .55 + Math.random() * .3, size0: .22, size1: .05, c0: [1, .55, .18, .9], c1: [.9, .2, .05, 0] });
-        emit(V.smoke, { p: [x + (Math.random() - .5) * .2, y + .15, z + (Math.random() - .5) * .2], v: [.07 + Math.random() * .05, .35 + Math.random() * .2, .03], life: 2.8, size0: .2, size1: .9, c0: [.09, .08, .08, sunk ? .25 : .55], c1: [.25, .24, .24, 0], drag: .012, fadeIn: .3 }); } });
+        emit(V.smoke, { p: [x + (Math.random() - .5) * .2, y + .15, z + (Math.random() - .5) * .2], v: [.07 + Math.random() * .05, .35 + Math.random() * .2, .03], life: 2.8, size0: .2, size1: 1, c0: [.18, .17, .16, sunk ? .18 : .38], c1: [.38, .37, .37, 0], drag: .012, fadeIn: .3 }); } });
     }
     if (v === 3) { add(glint(), i, .04, false); }
     if (v === 4) { add(sprite('?', .5, { disc: 'rgba(60,66,72,.85)', ring: 'rgba(220,225,230,.9)', color: '#f2f2ee', px: 76 }), i, .45); V.emitters.push({ acc: 0, every: .5, fn: () => emit(V.smoke, { p: [x + (Math.random() - .5) * .5, waveAt(x, z, V.t) + .1, z + (Math.random() - .5) * .5], v: [.04, .05, 0], life: 3, size0: .4, size1: .8, c0: [.6, .62, .64, .35], c1: [.6, .62, .64, 0], fadeIn: .5 }) }); }
@@ -370,17 +374,25 @@ function on3d(svg) { return V && svg === V.svg && V.frame.classList.contains('sb
 function cellAt(svg, e) { if (!on3d(svg)) return S2.cellAt(svg, e); const p = hitXZ(e); if (!p) return -1; const c = Math.floor(p.x + 5), r = Math.floor(p.z + 5); return c >= 0 && c < N && r >= 0 && r < N ? r * N + c : -1; }
 function point(svg, e) { if (!on3d(svg)) return S2.point(svg, e); const p = hitXZ(e) || { x: 0, z: 0 }; return { x: p.x + 5, y: p.z + 5 }; }
 function aim(svg, cell) { if (!on3d(svg)) return S2.aim(svg, cell); if (cell < 0) { V.uni.uAim.value.set(-99, -99, 0); return; } const [x, z] = cellXZ(cell); V.uni.uAim.value.set(x, z, 1); }
+// what is coming in: shells (guns), bombs (aircraft), torpedoes, rockets/missiles, depth charges — set by the game before a skill's shots
+const KIND = { bomb: 'air', strafe: 'air', torpedo: 'torp', rtorpedo: 'torp', dtorpedo: 'torp', rocket: 'rocket', guided: 'rocket', barrage: 'rocket', depth: 'depth' };
+let shotKind = null;
+function kind(sk) { shotKind = sk ? KIND[sk] || null : null; }
 // a shell flies in (from our side when we fire, from over the horizon when they do), then a splash or a blast
 function fx(svg, cell, hit, fast) {
   if (!on3d(svg)) return S2.fx(svg, cell, hit, fast);
+  if (shotKind === 'torp') return torpedo(cell, hit);
+  if (shotKind === 'depth') return depthCharge(cell, hit);
   const [x, z] = cellXZ(cell), own = document.body.classList.contains('view-own'), dur = fast ? .42 : .78;
-  const from = own ? new T.Vector3(x * .3 + (Math.random() - .5) * 2, 3.2, -16) : new T.Vector3(x * .25 + (Math.random() - .5) * 2, 4.5, 14), to = new T.Vector3(x, waveAt(x, z, V.t) * .85 + (hit === true && shipUnder(cell) ? .12 : 0), z), apex = Math.max(from.y, 2) + (fast ? 1.6 : 2.8);
+  const air = shotKind === 'air', rk = shotKind === 'rocket';
+  const from = air ? new T.Vector3(x + (Math.random() - .5) * .6, 9, z + (own ? -3 : 3)) : own ? new T.Vector3(x * .3 + (Math.random() - .5) * 2, 3.2, -16) : new T.Vector3(x * .25 + (Math.random() - .5) * 2, 4.5, 14), to = new T.Vector3(x, waveAt(x, z, V.t) * .85 + (hit === true && shipUnder(cell) ? .12 : 0), z), apex = air ? 0 : rk ? .8 : Math.max(from.y, 2) + (fast ? 1.6 : 2.8);
   const t0 = performance.now();
   return new Promise(res => {
     const tick = () => {
       const u = Math.min(1, (performance.now() - t0) / (dur * 1000)), px = from.x + (to.x - from.x) * u, pz = from.z + (to.z - from.z) * u, py = from.y + (to.y - from.y) * u + 4 * apex * u * (1 - u) * .5;
-      emit(V.fire, { p: [px, py, pz], v: [0, 0, 0], life: .22, size0: .42, size1: .04, c0: [1, .9, .65, 1], c1: [1, .45, .12, 0] }); emit(V.fire, { p: [px, py, pz], v: [0, 0, 0], life: .05, size0: .7, size1: .5, c0: [1, .95, .8, .8], c1: [1, .7, .3, 0] });
-      emit(V.smoke, { p: [px, py, pz], v: [0, .02, 0], life: .5, size0: .05, size1: .16, c0: [.8, .8, .8, .25], c1: [.8, .8, .8, 0] });
+      if (air) { emit(V.smoke, { p: [px, py, pz], v: [0, 0, 0], life: .12, size0: .12, size1: .1, c0: [.15, .16, .17, .9], c1: [.15, .16, .17, 0] }); }   // (a falling bomb: a dark streak)
+      else { emit(V.fire, { p: [px, py, pz], v: [0, 0, 0], life: rk ? .3 : .22, size0: rk ? .5 : .42, size1: .04, c0: [1, .9, .65, 1], c1: [1, .45, .12, 0] }); emit(V.fire, { p: [px, py, pz], v: [0, 0, 0], life: .05, size0: .7, size1: .5, c0: [1, .95, .8, .8], c1: [1, .7, .3, 0] }); }
+      emit(V.smoke, { p: [px, py, pz], v: [0, .02, 0], life: rk ? 1.6 : .5, size0: rk ? .12 : .05, size1: rk ? .5 : .16, c0: [.8, .8, .8, rk ? .45 : .25], c1: [.8, .8, .8, 0] });
       if (u < 1) return requestAnimationFrame(tick);
       impact(to, hit); res();
     };
@@ -393,10 +405,10 @@ function impact(p, hit) {
   const x = p.x, z = p.z;
   if (hit === 'fog') { for (let i = 0; i < 14; i++) emit(V.smoke, { p: [x, p.y + .05, z], v: [(Math.random() - .5) * .8, .2 + Math.random() * .3, (Math.random() - .5) * .8], life: 1.6, size0: .3, size1: 1, c0: [.62, .64, .66, .55], c1: [.62, .64, .66, 0], drag: .05 }); ripple(x, z, .6); return; }
   if (hit) {
-    V.flash.position.set(x, p.y + .6, z); V.flash.intensity = 40; V.shake = Math.max(V.shake, .5);
-    for (let i = 0; i < 26; i++) { const a = Math.random() * 6.28, sp = .4 + Math.random() * 1.1; emit(V.fire, { p: [x, p.y + .08, z], v: [Math.cos(a) * sp * .6, .5 + Math.random() * 1.3, Math.sin(a) * sp * .6], life: .45 + Math.random() * .35, size0: .45 + Math.random() * .3, size1: .08, c0: [1, .78, .4, 1], c1: [.9, .25, .05, 0], drag: .06, ease: .6 }); }
+    V.flash.position.set(x, p.y + .6, z); V.flash.intensity = 22; V.shake = Math.max(V.shake, .5);
+    for (let i = 0; i < 26; i++) { const a = Math.random() * 6.28, sp = .4 + Math.random() * 1.1; emit(V.fire, { p: [x, p.y + .08, z], v: [Math.cos(a) * sp * .6, .5 + Math.random() * 1.3, Math.sin(a) * sp * .6], life: .4 + Math.random() * .3, size0: .3 + Math.random() * .2, size1: .06, c0: [1, .62, .26, .75], c1: [.8, .18, .04, 0], drag: .06, ease: .6 }); }
     for (let i = 0; i < 18; i++) { const a = Math.random() * 6.28; emit(V.fire, { p: [x, p.y + .1, z], v: [Math.cos(a) * (1 + Math.random() * 2), 1.2 + Math.random() * 1.8, Math.sin(a) * (1 + Math.random() * 2)], life: .6 + Math.random() * .4, size0: .06, size1: .02, c0: [1, .9, .6, 1], c1: [1, .5, .1, 0], g: 5 }); }
-    for (let i = 0; i < 16; i++) emit(V.smoke, { p: [x + (Math.random() - .5) * .3, p.y + .2, z + (Math.random() - .5) * .3], v: [(Math.random() - .5) * .5, .5 + Math.random() * .6, (Math.random() - .5) * .5], life: 2.4 + Math.random(), size0: .35, size1: 1.3, c0: [.12, .1, .09, .7], c1: [.3, .29, .28, 0], drag: .04, fadeIn: .15 });
+    for (let i = 0; i < 16; i++) emit(V.smoke, { p: [x + (Math.random() - .5) * .3, p.y + .2, z + (Math.random() - .5) * .3], v: [(Math.random() - .5) * .5, .5 + Math.random() * .6, (Math.random() - .5) * .5], life: 2.4 + Math.random(), size0: .35, size1: 1.4, c0: [.24, .22, .21, .42], c1: [.42, .42, .42, 0], drag: .04, fadeIn: .15 });
     ripple(x, z, 1);
   } else {
     // the water column: a tall white plume, falling spray and a ring of foam
@@ -405,6 +417,19 @@ function impact(p, hit) {
     ripple(x, z, .8);
   }
 }
+// a torpedo: a white wake runs in from the edge of the board along the row (from the near side when we fire), then the blast
+function torpedo(cell, hit) {
+  const [x, z] = cellXZ(cell), own = document.body.classList.contains('view-own'), sx = own ? 6.2 : -6.2, dur = .65, t0 = performance.now();
+  return new Promise(res => { const tick = () => { const u = Math.min(1, (performance.now() - t0) / (dur * 1000)), px = sx + (x - sx) * u, py = waveAt(px, z, V.t) * .85;
+      for (let k = 0; k < 2; k++) emit(V.smoke, { p: [px + (Math.random() - .5) * .06, py + .01, z + (Math.random() - .5) * .08], v: [0, .02, (Math.random() - .5) * .05], life: 1.8, size0: .09, size1: .3, c0: [.92, .96, .98, .7], c1: [.9, .95, .97, 0] });
+      if (u < 1) return requestAnimationFrame(tick); impact({ x, y: py + (hit === true && shipUnder(cell) ? .1 : 0), z }, hit); if (!hit) { V.flash.position.set(x, .4, z); } res(); }; tick(); });
+}
+// a depth charge: a dull boom and a dome of white water
+function depthCharge(cell, hit) {
+  const [x, z] = cellXZ(cell); return new Promise(res => setTimeout(() => { const y = waveAt(x, z, V.t) * .85;
+    for (let i = 0; i < 40; i++) { const a = Math.random() * 6.28, r = Math.random() * .35; emit(V.smoke, { p: [x + Math.cos(a) * r, y, z + Math.sin(a) * r], v: [Math.cos(a) * .4, .9 + Math.random() * 1.2, Math.sin(a) * .4], life: 1.2, size0: .25, size1: .5, c0: [.95, .97, .98, .8], c1: [.9, .95, .97, 0], g: 2.2, floor: y - .05 }); }
+    ripple(x, z, 1.2); if (hit === true) { V.flash.position.set(x, .3, z); V.flash.intensity = 18; emit(V.fire, { p: [x, y + .1, z], v: [0, .5, 0], life: .4, size0: .8, size1: .2, c0: [1, .7, .35, .8], c1: [.8, .3, .1, 0] }); }
+    res(); }, 260)); }
 function sweep(svg, area) {
   if (!on3d(svg)) return S2.sweep(svg, area);
   let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const c of area) { const [x, z] = cellXZ(c); x0 = Math.min(x0, x - .5); z0 = Math.min(z0, z - .5); x1 = Math.max(x1, x + .5); z1 = Math.max(z1, z + .5); }
@@ -423,5 +448,5 @@ function shake(n) { if (V) V.shake = Math.max(V.shake, n || .8); }
 function active() { return !!(V && V.frame.classList.contains('sb3d-on')); }
 function enable(on) { if (!V) return; V.frame.classList.toggle('sb3d-on', on); if (on) { V.last = performance.now(); loop(); } }
 
-window.SeaBoard3D = { _v: () => V, screenOf, draw, cellAt, point, aim, fx, sweep, xy: S2.xy, O: S2.O, shipSvg: S2.shipSvg, intro, shake, active, enable, hasGL, load };
+window.SeaBoard3D = { _v: () => V, screenOf, kind, draw, cellAt, point, aim, fx, sweep, xy: S2.xy, O: S2.O, shipSvg: S2.shipSvg, intro, shake, active, enable, hasGL, load };
 })();
