@@ -484,6 +484,15 @@ static TTM16 *TTB; static u32 TTM; static u32 TT_AGE = 1; static int TT_LOG;
 typedef struct { TTE e[2]; u64 pad[2]; } ETBK;
 static ETBK ETBB[ET_SIZE / 2] __attribute__((aligned(64)));
 #define ETB(i) (ETBB[(i) >> 1].e[(i) & 1])
+#if defined(SE_MAX) && !defined(MT)
+#ifndef SE_LOG
+#define SE_LOG 12
+#endif
+static TTE SET_[1 << SE_LOG] __attribute__((aligned(64)));
+#define SE_CLEAR() for (int i = 0; i < (1 << SE_LOG); i++) { SET_[i].k1 = 0; SET_[i].k2 = 0; SET_[i].dt = 0; }
+#else
+#define SE_CLEAR()
+#endif
 #define DT_LO(d) ((int)((d) & 0xFFFF) - 32768)
 #define DT_HI(d) ((int)(((d) >> 16) & 0xFFFF) - 32768)
 #define DT_D(d) ((int)(((d) >> 32) & 0xFF) - 1)
@@ -553,6 +562,7 @@ EXPORT(clear_tt) void clear_tt(void) {
   for (int i = 0; i < (4 << TT_LOG_ST); i++) { TTS1[i].kx = 0; TTS1[i].dt = 0; }
   for (int i = 0; i < (4 << SH_LOG); i++) { TTSH[i].kx = 0; TTSH[i].dt = 0; }
   for (int i = 0; i < ET_SIZE; i++) { ETB(i).k1 = 0; ETB(i).k2 = 0; ETB(i).dt = 0; }
+  SE_CLEAR()
 }
 #else
 static void ttAlloc(void) {   /* once (init): the midgame table above everything the page has placed (the threads' slots) */
@@ -985,6 +995,15 @@ EXPORT(set_stab) void set_stab(int on, int mn) { STAB_ON = on; (void)mn; }
    of this solve can never be reached again and counts as free). E_V = the empties of the entry (0 = free) */
 static TLS int gRootE = 64;
 #define ET_MIN 8
+/* (a test build only, -DSE_MAX=11 -DSE_LOG=12, tools/build-variants.sh sNN_LL, one thread: the solver's nodes of ET_MIN..SE_MAX
+   empties — most of its table probes — in a small table of their own, one entry per slot, always replaced, that stays in the
+   cache (Edax keeps such a table per thread for 7-14 empties); the big table then holds only the nodes above. Without
+   SE_MAX the binary is the same as before) */
+#if defined(SE_MAX) && !defined(MT)
+#define SE_USE(e) ((e) <= SE_MAX)
+#else
+#define SE_USE(e) 0
+#endif
 static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int passed) {
   if (empties <= SMALL) return solveSmall(P, O, alpha, beta, empties, passed);
 #ifdef MT
@@ -993,6 +1012,22 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
   if (((long long)(++nodes) & 16383) == 0) { checkTime(); if (aborted) return 0; }
 #endif
   int ti = -1, hb = -1, ttMove = -1;
+#if defined(SE_MAX) && !defined(MT)
+  TTE *se = 0;
+  if (empties >= ET_MIN && SE_USE(empties)) {
+    se = &SET_[hash(P, O) & ((1 << SE_LOG) - 1)];
+    const u64 d = se->dt;
+    if ((d & 0xFF) && (se->k1 ^ d) == P && (se->k2 ^ d) == O) {
+      const int lo = (int)((d >> 24) & 0xFF) - 128, hi = (int)((d >> 16) & 0xFF) - 128;
+      if (lo >= beta) return lo;
+      if (hi <= alpha) return hi;
+      if (lo == hi) return lo;
+      if (lo > alpha) alpha = lo;
+      if (hi < beta) beta = hi;
+      ttMove = (i8)((d >> 8) & 0xFF);
+    }
+  } else
+#endif
   if (empties >= ET_MIN) {
     hb = hash(P, O) & ET_MASK & ~1;
     int lo, hi, em;
@@ -1097,6 +1132,13 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
     if (aborted) return 0;
     if (v > best) { best = v; bestMove = s; if (v > alpha) { alpha = v; if (alpha >= beta) break; } }
   }
+#if defined(SE_MAX) && !defined(MT)
+  if (se) {
+    const int lo = best > alpha0 ? best : -99, hi = best < beta ? best : 99;
+    const u64 nd = (u64)(u8)empties | (u64)(u8)bestMove << 8 | (u64)(u32)(hi + 128) << 16 | (u64)(u32)(lo + 128) << 24;
+    se->dt = nd; se->k1 = P ^ nd; se->k2 = O ^ nd;
+  } else
+#endif
   if (hb >= 0) {
     int x0, x1, x2;
     ti = etGet(P, O, hb, &x0, &x1, &x2);
