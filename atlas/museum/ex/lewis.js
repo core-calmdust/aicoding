@@ -5,7 +5,9 @@
    "berserker") and a slab pawn. Heights follow the museum records of representative pieces (king 9.8, queen 9.6,
    bishop 9.7, knight 10.0, warder 9.2, pawn 4.0 cm); the carving on the thrones (arcades, foliage scrolls) is drawn in the
    manner of the pieces, not copied from one throne (estimate). The red that Madden saw on a few pieces in 1831 is gone today.
-   2026-11-21: the ivory's colour (grey-tan, mottled with brown staining) checked against the British Museum's 3D scans (Sketchfab). */
+   2026-11-21: the ivory's colour (grey-tan, mottled with brown staining) and the seated pieces' build — one squat block with sloping
+   shoulders as wide as the throne, a large long head sunk into it, the throne seen only at the sides and behind — after the British
+   Museum's 3D scans (Sketchfab). The knight and the warder are not yet reworked. */
 (function () {
   'use strict';
   (window.AtlasEx = window.AtlasEx || {}).lewis = {
@@ -104,62 +106,103 @@
       const shieldM = (k) => { const map = IV[k].map, bump = K.tex(128, 256, (g, w, h) => { g.fillStyle = '#404040'; g.fillRect(0, 0, w, h); g.strokeStyle = '#fff'; g.lineWidth = 8; g.strokeRect(6, 6, w - 12, h - 12); g.beginPath(); g.moveTo(w / 2, 10); g.lineTo(w / 2, h - 10); g.moveTo(10, h * .38); g.lineTo(w - 10, h * .38); g.stroke(); g.fillStyle = '#fff'; g.beginPath(); g.arc(w / 2, h * .38, 12, 0, 6.29); g.fill(); }, { data: true });
         bump.repeat.set(1 / 2.2, 1 / 4.2); bump.offset.set(.5, .02); bump.wrapS = bump.wrapT = TT.ClampToEdgeWrapping; return K.mat({ map, bumpMap: bump, bumpScale: 2, color: IV[k].color, roughness: .46, clearcoat: .15 }); };
 
-      // ---- a throne: the seat block (arcaded sides), its scrolled back, the figure's robe falling in front
-      const throne = (p, k, o = {}) => {
-        const w = o.w || 4.3, d = 3.2, seat = o.seat || 4.2, top = o.top || 7.2;
-        const blk = add(p, new TT.BoxGeometry(w, seat, d), [sideM, sideM, IV[k], IV[k], IV[k], backM], 0, seat / 2, -.35);
-        const S = new TT.Shape(); const r = w / 2; S.moveTo(-r, seat); S.lineTo(r, seat); S.lineTo(r, top - r * .7); S.absellipse(0, top - r * .7, r, r * .7, 0, Math.PI, false); S.lineTo(-r, seat);
-        const bg = new TT.ExtrudeGeometry(S, { depth: .75, bevelEnabled: true, bevelThickness: .08, bevelSize: .08, bevelSegments: 2, curveSegments: 16 });
-        const bm = backM.clone(); bm.map = backM.map.clone(); bm.map.repeat.set(1 / w, 1 / (top - seat)); bm.map.offset.set(.5, -seat / (top - seat)); bm.map.needsUpdate = true; bm.bumpMap = backM.bumpMap.clone(); bm.bumpMap.repeat.copy(bm.map.repeat); bm.bumpMap.offset.copy(bm.map.offset); bm.bumpMap.needsUpdate = true;
-        add(p, bg, [bm, IV[k]], 0, 0, -1.95 - .75 + .75);
-        // the robe from the knees to the feet, covering the front of the seat; the feet peep out at the hem
-        const rb = add(p, lathe([[0, 0], [1.75, 0], [1.72, .25], [1.6, 2], [1.5, seat + .4], [0, seat + .4]], 26), robe(k, 26), 0, 0, .55); rb.scale.set(.92, 1, .55);
-        ball(p, .42, IV[k], -.55, .25, 1.5, 1, .55, 1.3, 12); ball(p, .42, IV[k], .55, .25, 1.5, 1, .55, 1.3, 12);
-        // the lap and the body
-        const lap = add(p, new TT.BoxGeometry(3.1, .95, 2.5, 1, 1, 1), IV[k], 0, seat + .45, .45);
-        const tor = add(p, lathe([[1.55, 0], [1.45, .9], [1.35, 1.9], [1.3, 2.6], [1.0, 3.1], [.55, 3.35], [0, 3.38]], 26), robe(k, 24), 0, seat + .5, -.45); tor.scale.z = .78;
-        return { seat, top, tor };
+      // ---- the seated pieces, after the British Museum's 3D scans: one compact block — a slab-like body with rounded shoulders
+      //      as wide as the throne, a large long head sunk into it, the robe falling in folds in front; the throne shows only at
+      //      the sides (arcades) and behind (a back with a rounded top and scrolls)
+      const bodyMat = (k, W, H, lapY, o = {}) => {   // the front of the body: mantle edges, folds below the lap (relief + grime)
+        const PXW = 384, PXH = Math.round(384 * H / W), s = PXW / W;
+        const draw = (g, bump) => {
+          if (bump) { g.fillStyle = '#808080'; g.fillRect(0, 0, PXW, PXH); } else g.drawImage(IV[k].map.image, 0, 0, PXW, PXH);
+          const Y = y => PXH - y * s, X = x => (x + W / 2) * s, lo = bump ? '#383838' : 'rgba(92,66,38,.32)', hi = bump ? '#c8c8c8' : 'rgba(0,0,0,0)';
+          g.lineCap = 'round';
+          // the folds of the robe below the lap: broad flat pleats with deep grooves
+          const n = o.folds || 6; for (let i = 1; i < n; i++) { const x = -W / 2 + i * W / n + Math.sin(i * 2.1) * .12;
+            g.strokeStyle = lo; g.lineWidth = s * .14; g.beginPath(); g.moveTo(X(x), Y(lapY - .5)); g.quadraticCurveTo(X(x + .1), Y(lapY * .5), X(x - .05), Y(.15)); g.stroke();
+            if (bump) { g.strokeStyle = hi; g.lineWidth = s * .2; g.beginPath(); g.moveTo(X(x + .3), Y(lapY - .6)); g.lineTo(X(x + .32), Y(.2)); g.stroke(); } }
+          // the hem
+          g.strokeStyle = lo; g.lineWidth = s * .1; g.beginPath(); g.moveTo(X(-W / 2), Y(.45)); g.lineTo(X(W / 2), Y(.45)); g.stroke();
+          // the mantle's edges falling from the shoulders to the lap, with a border
+          [-1, 1].forEach(sd => { g.strokeStyle = lo; g.lineWidth = s * .09; for (const dx of [0, .28]) { g.beginPath(); g.moveTo(X(sd * (W / 2 - .9 - dx)), Y(H - .3)); g.quadraticCurveTo(X(sd * (W / 2 - .55 - dx)), Y((H + lapY) / 2), X(sd * (W / 2 - .7 - dx)), Y(lapY + .4)); g.stroke(); } });
+          if (!bump) { const n2 = K.noise(300 + k); for (let q = 0; q < 140; q++) { const x = Math.random() * PXW, y = Math.random() * PXH; g.fillStyle = `rgba(100,70,40,${.05 + n2(x / 40, y / 40, 2) * .12})`; g.fillRect(x, y, 2 + Math.random() * 8, 1 + Math.random() * 3); } }
+        };
+        const map = K.tex(PXW, PXH, g => draw(g, false)), bump = K.tex(PXW, PXH, g => draw(g, true), { data: true });
+        [map, bump].forEach(t => { t.repeat.set(1 / W, 1 / H); t.offset.set(.5, 0); });
+        return K.mat({ map, bumpMap: bump, bumpScale: 2.6, color: IV[k].color, roughness: .5, clearcoat: .12, clearcoatRoughness: .6 });
       };
+      // a long face on an ellipsoid head: big lentoid eyes with drilled pupils, heavy lids, a long straight nose, a small mouth
+      const faceS = (k, o = {}) => {
+        const W = 512, H = 256, cx = W * .25, ey = o.eye || 78, my = o.mouth || 140;
+        const draw = (g, bump) => {
+          if (bump) { g.fillStyle = '#808080'; g.fillRect(0, 0, W, H); } else g.drawImage(IV[k].map.image, 0, 0, W, H);
+          const lo = bump ? '#202020' : 'rgba(80,56,30,.7)'; g.lineCap = 'round';
+          [-1, 1].forEach(sd => { const ex = cx + sd * 17;
+            if (bump) { g.fillStyle = '#e0e0e0'; g.beginPath(); g.ellipse(ex, ey, 13, 7.5, 0, 0, 6.29); g.fill(); }
+            g.strokeStyle = lo; g.lineWidth = 3; g.beginPath(); g.ellipse(ex, ey, 13, 7.5, 0, 0, 6.29); g.stroke();
+            g.lineWidth = 2.2; g.beginPath(); g.ellipse(ex, ey - 1, 16, 10.5, 0, Math.PI * 1.08, Math.PI * 1.92); g.stroke();   // the lid
+            g.fillStyle = lo; g.beginPath(); g.arc(ex, ey + .5, 3.6, 0, 6.29); g.fill(); });
+          if (bump) { g.fillStyle = '#f0f0f0'; g.beginPath(); g.moveTo(cx - 4, ey - 8); g.lineTo(cx + 4, ey - 8); g.lineTo(cx + 9, my - 16); g.lineTo(cx - 9, my - 16); g.closePath(); g.fill(); }
+          g.strokeStyle = lo; g.lineWidth = 2; g.beginPath(); g.moveTo(cx - 9, my - 15); g.quadraticCurveTo(cx, my - 11, cx + 9, my - 15); g.stroke();   // nostrils
+          g.lineWidth = 3; g.beginPath(); g.moveTo(cx - 9, my); g.quadraticCurveTo(cx, my - 3, cx + 9, my); g.stroke();
+          if (o.moustache) { g.strokeStyle = bump ? '#d0d0d0' : 'rgba(110,80,46,.4)'; g.lineWidth = 6; g.beginPath(); g.moveTo(cx - 2, my - 8); g.quadraticCurveTo(cx - 18, my - 8, cx - 22, my + 8); g.moveTo(cx + 2, my - 8); g.quadraticCurveTo(cx + 18, my - 8, cx + 22, my + 8); g.stroke(); }
+        };
+        return K.mat({ map: K.tex(W, H, g => draw(g, false)), bumpMap: K.tex(W, H, g => draw(g, true), { data: true }), bumpScale: 3, color: IV[k].color, roughness: .45, clearcoat: .12, clearcoatRoughness: .55 });
+      };
+      const seated = (p, k, o) => {
+        const W = o.w, H = o.sh, D = 3.4, lapY = o.lap, z0 = -1.9, HZ = 1.3;
+        // the body block with rounded shoulders
+        const S = new TT.Shape(), r = o.r || 1.0; S.moveTo(-W / 2, 0); S.lineTo(W / 2, 0); S.lineTo(W / 2, H - r); S.quadraticCurveTo(W / 2, H, W / 2 - r, H); S.lineTo(-W / 2 + r, H); S.quadraticCurveTo(-W / 2, H, -W / 2, H - r); S.closePath();
+        const bg = new TT.ExtrudeGeometry(S, { depth: D, bevelEnabled: true, bevelThickness: .25, bevelSize: .22, bevelSegments: 4, curveSegments: 12 });
+        add(p, bg, [bodyMat(k, W, H, lapY, o), IV[k]], 0, 0, z0);
+        // the throne: arcaded sides low down, the back behind the shoulders with a rounded top and scrolls
+        [-1, 1].forEach(sd => { const sp = add(p, new TT.BoxGeometry(.12, lapY + .2, D - .6), [sideM, sideM, IV[k], IV[k], IV[k], IV[k]], sd * (W / 2 + .2), (lapY + .2) / 2, z0 + D / 2 - .2); });
+        const B = new TT.Shape(), bw = W * .5; B.moveTo(-bw, 0); B.lineTo(bw, 0); B.lineTo(bw, o.back - bw * .55); B.absellipse(0, o.back - bw * .55, bw, bw * .55, 0, Math.PI, false); B.lineTo(-bw, 0);
+        const bk = new TT.ExtrudeGeometry(B, { depth: .7, bevelEnabled: true, bevelThickness: .1, bevelSize: .1, bevelSegments: 2, curveSegments: 16 });
+        const bm = backM.clone(); bm.map = backM.map.clone(); bm.map.repeat.set(1 / W, 1 / o.back); bm.map.offset.set(.5, 0); bm.map.needsUpdate = true; bm.bumpMap = backM.bumpMap.clone(); bm.bumpMap.repeat.copy(bm.map.repeat); bm.bumpMap.offset.copy(bm.map.offset); bm.bumpMap.needsUpdate = true;
+        add(p, bk, [bm, IV[k]], 0, 0, z0 - .75);
+        // the head, sunk into the shoulders and standing forward of the body
+        const hd = ball(p, 1, faceS(k, o.face || {}), 0, o.hy, HZ, o.hw, o.hh, .95, 30);
+        return { W, H, D, lapY, front: z0 + D + .25, hd };
+      };
+      const hands = (p, k, x, y, z, ry = 0) => { const h = add(p, new TT.BoxGeometry(.62, .78, .5), IV[k], x, y, z); h.rotation.y = ry;
+        const fb = K.tex(64, 64, (g, w) => { g.fillStyle = '#909090'; g.fillRect(0, 0, w, w); g.fillStyle = '#202020'; for (let i = 1; i < 4; i++) g.fillRect(0, i * w / 4 - 1, w, 2.5); }, { data: true }); h.material = K.mat({ map: IV[k].map, bumpMap: fb, bumpScale: 2, color: IV[k].color, roughness: .5 }); return h; };
 
       // ---- the pieces
       const pieces = [];
-      // KING (1831,1101.78 – 9.8 cm): sword across the knees, gripped by the right hand; crown with four trefoils; beard, braids
-      { const p = new TT.Group(), k = 0; const t = throne(p, k); const hy = t.seat + 4.6;
-        head(p, k, hy, -.35, { beard: true }); crown(p, IV[k], hy + 1.05, .98);
-        ball(p, .78, beardM(k), 0, hy - 1.05, .2, 1, 1.05, .55, 16);
-        [-1, 1].forEach(s => limb(p, V3(s * .85, hy - .5, -.95), V3(s * 1.2, t.seat + 2.2, -.9), .3, .26, braid(k), 8));
-        limb(p, V3(-1.3, t.seat + 3.1, -.3), V3(-1.05, t.seat + 1.3, .9), .42, .38, robe(k, 10)); limb(p, V3(-1.05, t.seat + 1.3, .9), V3(-1.15, t.seat + 1.2, 1.75), .38, .3, IV[k]);
-        limb(p, V3(1.3, t.seat + 3.1, -.3), V3(1.05, t.seat + 1.3, .9), .42, .38, robe(k, 10)); limb(p, V3(1.05, t.seat + 1.3, .9), V3(.9, t.seat + 1.15, 1.75), .38, .3, IV[k]);
-        // the sword: scabbard across the lap, hilt and cross-guard at his right
-        const sw = new TT.Group(); sw.position.set(0, t.seat + 1.05, 1.82); sw.rotation.z = .08;
-        limb(sw, V3(-1.4, 0, 0), V3(2.25, 0, 0), .2, .17, IV[k], 10); add(sw, new TT.BoxGeometry(.18, .95, .3), IV[k], -1.45, 0, 0); limb(sw, V3(-1.5, 0, 0), V3(-2.3, 0, 0), .12, .12, IV[k], 8); ball(sw, .2, IV[k], -2.36, 0, 0);
-        p.add(sw); pieces.push(p); }
-      // QUEEN (1831,1101.84 – 9.6 cm): right hand to the cheek, the left supporting the elbow; veil over braided hair; crown
-      { const p = new TT.Group(), k = 1; const t = throne(p, k, { top: 7.0 }); const hy = t.seat + 4.45;
-        head(p, k, hy, -.35); crown(p, IV[k], hy + 1.06, 1.0);
-        const veil = add(p, new TT.LatheGeometry([[1.12, 1.1], [1.25, .5], [1.32, -.4], [1.5, -1.25], [1.75, -1.75]].map(([r, y]) => new TT.Vector2(r, y)), 24, Math.PI * .3, Math.PI * 1.4), robe(k, 16), 0, hy, -.4);
-        veil.material.side = TT.DoubleSide; veil.scale.z = .85;
-        limb(p, V3(-1.35, t.seat + 3.0, -.3), V3(-.95, t.seat + 1.5, .95), .42, .38, robe(k, 10)); limb(p, V3(-.95, t.seat + 1.5, .95), V3(-.55, hy - .55, .75), .36, .3, robe(k, 10)); ball(p, .34, IV[k], -.55, hy - .35, .72, 1, 1.2, .8, 12);
-        limb(p, V3(1.35, t.seat + 3.0, -.3), V3(1.1, t.seat + 1.45, .8), .42, .38, robe(k, 10)); limb(p, V3(1.1, t.seat + 1.45, .8), V3(-.75, t.seat + 1.45, 1.15), .36, .3, robe(k, 10)); ball(p, .3, IV[k], -.85, t.seat + 1.5, 1.15);
+      // KING (1831,1101.78 – 9.8 cm): the sword across the knees in both hands; crown of four tall trefoil points; long beard
+      { const p = new TT.Group(), k = 0;
+        const t = seated(p, k, { w: 4.7, sh: 5.9, r: 1.6, lap: 3.6, back: 6.4, hy: 6.45, hw: 1.22, hh: 1.55, folds: 6, face: { eye: 74, mouth: 128, moustache: true } });
+        ball(p, 1, beardM(k), 0, 5.3, 2.05, .95, 1.05, .5, 18);
+        const CY = 6.45 + 1.55 * .66, cr = add(p, new TT.CylinderGeometry(1.0, 1.08, .6, 28, 1, true), IV[k], 0, CY, 1.3); cr.material = IV[k].clone(); cr.material.side = TT.DoubleSide; cr.scale.z = .85;
+        for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2, x = Math.sin(a) * 1.0, z = 1.3 + Math.cos(a) * .88;
+          const pt = add(p, new TT.BoxGeometry(.85, .7, .16), IV[k], x, CY + .6, z); pt.rotation.y = a; const tp = add(p, new TT.SphereGeometry(.42, 12, 8), IV[k], x, CY + 1.0, z); tp.scale.set(1, .75, .4); tp.rotation.y = a; }
+        // the arms close to the body, the hands holding the sword across the lap
+        [-1, 1].forEach(sd => { limb(p, V3(sd * 1.95, 6.2, 1.1), V3(sd * 2.15, 4.4, 1.35), .5, .46, robe(k, 10)); limb(p, V3(sd * 2.15, 4.4, 1.35), V3(sd * 1.95, 3.35, 1.85), .46, .4, robe(k, 10)); hands(p, k, sd * 1.95, 3.25, 2.1); });
+        limb(p, V3(-2.3, 3.2, 2.05), V3(2.3, 3.2, 2.05), .33, .33, IV[k], 14);
         pieces.push(p); }
-      // BISHOP (1831,1101.90 – 9.7 cm): seated, mitre with its horns front and back, crozier in the left hand, the right raised
-      { const p = new TT.Group(), k = 2; const t = throne(p, k, { top: 6.9 }); const hy = t.seat + 4.0;
-        head(p, k, hy, -.3);
-        // the mitre: a low cap with two pointed horns, one over the brow and one behind (worn the 12th-century way)
-        const S = new TT.Shape(); S.moveTo(-1.0, 0); S.lineTo(1.0, 0); S.quadraticCurveTo(1.0, 1.0, 0, 1.75); S.quadraticCurveTo(-1.0, 1.0, -1.0, 0);
-        const hg = new TT.ExtrudeGeometry(S, { depth: .22, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 2, curveSegments: 12 }); hg.translate(0, 0, -.11);
-        const mitM = carved((g, w, h) => { g.lineWidth = 18; g.beginPath(); g.moveTo(w / 2, h * .12); g.lineTo(w / 2, h); g.moveTo(0, h * .82); g.lineTo(w, h * .82); g.stroke(); });
-        mitM.map.repeat.set(1 / 2, 1 / 1.75); mitM.map.offset.set(.5, 0); mitM.bumpMap.repeat.copy(mitM.map.repeat); mitM.bumpMap.offset.copy(mitM.map.offset);
-        [1, -1].forEach(s => { const h = add(p, hg, [mitM, IV[k]], 0, hy + .72, -.3 + s * .44); h.rotation.x = s * .1; });
-        const cap = add(p, new TT.SphereGeometry(1.0, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), IV[k], 0, hy + .7, -.3); cap.scale.set(1, .95, .7);
-        add(p, new TT.CylinderGeometry(1.08, 1.12, .32, 24), IV[k], 0, hy + .78, -.3).scale.z = .82;
-        limb(p, V3(-.6, hy + .9, -.3), V3(-.6, hy - .9, -1.1), .1, .1, IV[k], 6); limb(p, V3(.6, hy + .9, -.3), V3(.6, hy - .9, -1.1), .1, .1, IV[k], 6);   // the lappets behind
-        // the chasuble's pointed front (a raised band down the chest) and the pallium
-        limb(p, V3(0, hy - 1.25, .55), V3(0, t.seat + 1.1, 1.45), .2, .2, IV[k], 8);
-        limb(p, V3(-1.35, t.seat + 3.0, -.3), V3(-1.0, t.seat + 1.9, .85), .42, .38, robe(k, 10)); limb(p, V3(-1.0, t.seat + 1.9, .85), V3(-.45, hy - 1.1, 1.0), .34, .3, robe(k, 10)); ball(p, .3, IV[k], -.4, hy - .85, 1.05, .9, 1.3, .7, 12);
-        limb(p, V3(1.35, t.seat + 3.0, -.3), V3(1.15, t.seat + 1.6, .85), .42, .38, robe(k, 10)); ball(p, .32, IV[k], 1.25, t.seat + 1.5, 1.1);
-        limb(p, V3(1.3, .1, 1.45), V3(1.3, hy + 1.5, 1.05), .13, .13, IV[k], 8);
-        const crook = add(p, new TT.TorusGeometry(.48, .11, 8, 20, Math.PI * 1.55), IV[k], 1.3 - .48, hy + 1.5, 1.05); crook.rotation.y = 0;
+      // QUEEN (1831,1101.84 – 9.6 cm): right hand to the cheek, the left holding the right elbow; a veil over the head, crown
+      { const p = new TT.Group(), k = 1;
+        const t = seated(p, k, { w: 4.6, sh: 5.8, r: 1.6, lap: 3.5, back: 6.3, hy: 6.5, hw: 1.15, hh: 1.5, folds: 7, face: { eye: 80, mouth: 134 } });
+        const veil = add(p, new TT.LatheGeometry([[1.12, .9], [1.25, .3], [1.3, -.6], [1.55, -1.4], [1.8, -1.8]].map(([r, y]) => new TT.Vector2(r, y)), 24, Math.PI * .28, Math.PI * 1.44), robe(k, 16), 0, 6.5, 1.25);
+        veil.material.side = TT.DoubleSide; veil.scale.z = .9;
+        const CY = 6.5 + 1.5 * .66, cr = add(p, new TT.CylinderGeometry(1.0, 1.06, .55, 28, 1, true), IV[k], 0, CY, 1.3); cr.material = IV[k].clone(); cr.material.side = TT.DoubleSide; cr.scale.z = .85;
+        for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2, x = Math.sin(a) * 1.0, z = 1.3 + Math.cos(a) * .85; const pt = add(p, new TT.BoxGeometry(.55, .8, .16), IV[k], x, CY + .62, z); pt.rotation.y = a; const tp = add(p, new TT.SphereGeometry(.3, 12, 8), IV[k], x, CY + 1.05, z); tp.scale.set(1, .75, .4); tp.rotation.y = a; }
+        // right hand to the right cheek (her right = −x), the left hand under the right elbow
+        limb(p, V3(-1.9, 6.0, 1.1), V3(-1.55, 4.3, 1.75), .5, .45, robe(k, 10)); limb(p, V3(-1.55, 4.3, 1.75), V3(-1.05, 5.9, 1.75), .42, .36, robe(k, 10)); hands(p, k, -1.0, 6.25, 1.65, .3);
+        limb(p, V3(1.9, 6.0, 1.1), V3(2.0, 4.2, 1.5), .5, .45, robe(k, 10)); limb(p, V3(2.0, 4.2, 1.5), V3(-1.1, 4.1, 2.0), .42, .38, robe(k, 10)); hands(p, k, -1.3, 4.15, 2.05);
+        pieces.push(p); }
+      // BISHOP (1831,1101.90 – 9.7 cm): mitre with its points front and back, crozier in the left hand, the right on the chest
+      { const p = new TT.Group(), k = 2;
+        const t = seated(p, k, { w: 4.5, sh: 5.6, r: 1.6, lap: 3.5, back: 6.2, hy: 6.3, hw: 1.15, hh: 1.45, folds: 6, face: { eye: 82, mouth: 136 } });
+        const Sm = new TT.Shape(); Sm.moveTo(-1.05, 0); Sm.lineTo(1.05, 0); Sm.quadraticCurveTo(1.05, 1.1, 0, 1.9); Sm.quadraticCurveTo(-1.05, 1.1, -1.05, 0);
+        const hg = new TT.ExtrudeGeometry(Sm, { depth: .22, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 2, curveSegments: 12 }); hg.translate(0, 0, -.11);
+        [1, -1].forEach(sd => { const h = add(p, hg, IV[k], 0, 7.45, 1.3 + sd * .5); h.rotation.x = sd * .08; });
+        const cap = add(p, new TT.SphereGeometry(1.08, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), IV[k], 0, 7.45, 1.3); cap.scale.set(1, .95, .62);
+        add(p, new TT.CylinderGeometry(1.18, 1.2, .34, 24), IV[k], 0, 7.55, 1.3).scale.z = .8;
+        limb(p, V3(0, 4.9, 2.1), V3(0, .3, 2.2), .22, .22, IV[k], 8);   // the orphrey down the front
+        limb(p, V3(-1.9, 6.0, 1.1), V3(-1.8, 4.4, 1.6), .5, .45, robe(k, 10)); limb(p, V3(-1.8, 4.4, 1.6), V3(-.6, 4.9, 2.1), .42, .36, robe(k, 10)); hands(p, k, -.4, 5.0, 2.25);
+        limb(p, V3(1.9, 6.0, 1.1), V3(2.0, 4.3, 1.5), .5, .45, robe(k, 10)); hands(p, k, 1.55, 4.0, 2.1);
+        limb(p, V3(1.55, .2, 2.2), V3(1.55, 8.3, 1.9), .14, .14, IV[k], 8);
+        const crook = add(p, new TT.TorusGeometry(.5, .12, 8, 20, Math.PI * 1.55), IV[k], 1.55 - .5, 8.3, 1.9);
         pieces.push(p); }
       // KNIGHT (1831,1101.115 – 10.0 cm): bearded, conical helmet, spear upright, kite shield on the left arm, on a stocky pony
       { const p = new TT.Group(), k = 0;
