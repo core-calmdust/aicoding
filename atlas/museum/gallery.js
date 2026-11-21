@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 35;
+  const V = 36;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -114,7 +114,7 @@
     const s = new TT.Scene(), pm = new TT.PMREMGenerator(R);
     const room = new TT.Mesh(new TT.BoxGeometry(20, 12, 20), new TT.MeshBasicMaterial({ color: 0x1a120c, side: TT.BackSide })); s.add(room);
     const panel = (w, h, c, x, y, z, rx, ry) => { const m = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: c, side: TT.DoubleSide })); m.position.set(x, y, z); m.rotation.set(rx || 0, ry || 0, 0); s.add(m); };
-    panel(8, 8, 0xfff1dc, 0, 5.9, 0, Math.PI / 2); panel(6, 4, 0x7a5a3a, -9.9, 1, 0, 0, Math.PI / 2); panel(6, 4, 0x6a5040, 9.9, 1, 0, 0, -Math.PI / 2); panel(10, 3, 0x3a2a1e, 0, -1, -9.9);
+    /* (the ceiling light: two narrow strips, not one big panel — a big bright panel mirrored in flat glossy boards as a white wash that hid the inlay) */ panel(1.6, 7, 0xd8cdb8, -3.2, 5.9, -1.5, Math.PI / 2); panel(1.6, 7, 0xb8ad9c, 3.4, 5.9, 2.5, Math.PI / 2); panel(8, 8, 0x3a3128, 0, 5.95, 0, Math.PI / 2); panel(6, 4, 0x7a5a3a, -9.9, 1, 0, 0, Math.PI / 2); panel(6, 4, 0x6a5040, 9.9, 1, 0, 0, -Math.PI / 2); panel(10, 3, 0x3a2a1e, 0, -1, -9.9);
     const rt = pm.fromScene(s, .04); pm.dispose(); s.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
     return rt;
   }
@@ -143,12 +143,14 @@
     scene.add(plinth, pivot);
     // light: a warm key spot from above and in front (the only shadow), a cool rim from behind, a soft fill
     const rf = Math.hypot(sz.x, sz.z) / 2, r = Math.max(rf, Math.hypot(rf, sz.y / 2) * .92) + .2;   // (tall pieces: the height counts too)
-    scene.add(new TT.HemisphereLight(0xfff2e0, 0x2a1d14, .45));
-    const key = new TT.SpotLight(0xfff0dc, 2.5, 0, .55, .6, 0); key.position.set(r * .6, r * 3.2, r * 1.9); key.target.position.set(0, 0, 0); key.castShadow = true;
+    scene.add(new TT.HemisphereLight(0xfff2e0, 0x2a1d14, .62)); scene.environmentIntensity = .5;   // (the room's reflections halved, the diffuse fill raised instead: seen at a low angle, glossy tops mirrored the walls and washed out)
+    const key = new TT.SpotLight(0xfff0dc, 2.5, 0, .55, .6, 0); key.position.set(r * .2, r * 3.7, r * .5);   // (steep, ~82°: its glare on a flat board then falls outside the camera's range of pitch) key.target.position.set(0, 0, 0); key.castShadow = true;
     key.shadow.mapSize.set(phone() ? 1024 : 2048, phone() ? 1024 : 2048); key.shadow.bias = -.0004; key.shadow.normalBias = .02; key.shadow.camera.near = r * .5; key.shadow.camera.far = r * 8; key.shadow.radius = 4;
     scene.add(key, key.target);
-    const rim = new TT.DirectionalLight(0xcfe0ff, .6); rim.position.set(-r * 2, r * 1.5, -r * 2.5); scene.add(rim);
-    const fill = new TT.DirectionalLight(0xffe2c4, .3); fill.position.set(-r * 2.5, r, r * 2); scene.add(fill);
+    // rim and fill come in almost level with the table: they edge and fill the sides but barely touch a flat top. (Higher up — 25° and 17° —
+    // each one's mirror image flashed across the whole top of a glossy board as the camera passed: the "white-out" and the flicker.)
+    const rim = new TT.DirectionalLight(0xcfe0ff, .6); rim.position.set(-r * 2, r * .08, -r * 2.5); scene.add(rim);
+    const fill = new TT.DirectionalLight(0xffe2c4, .34); fill.position.set(-r * 2.5, r * .1, r * 2); scene.add(fill);
     const cam = new TT.PerspectiveCamera(30, 1, Math.max(.01, r * .08), r * 14);   // (a tight near/far: phones have little depth precision, and coplanar inlays shimmered)
     const tgt = new TT.Vector3(0, sz.y > rf ? sz.y * .46 : Math.min(sz.y * .45, r * .3), 0);
     // the start view: [yaw, pitch, distance factor]
@@ -326,6 +328,6 @@
   };
   const hexRGB = h => { const v = parseInt(h.replace('#', ''), 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; };
 
-  window.AtlasGallery = { render, open, EX, V, kit };
+  window.AtlasGallery = { render, open, EX, V, kit, _v: () => V3 };   // (_v: the open viewer, for the test tools)
   window.AtlasEx = window.AtlasEx || {};
 })();

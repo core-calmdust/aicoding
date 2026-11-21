@@ -87,11 +87,11 @@
       face.polygonOffset = true; face.polygonOffsetFactor = -2; face.polygonOffsetUnits = -2;
       add(new TT.PlaneGeometry(IL, IW), face, 0, BASE + SL + .004, 0).rotation.x = -Math.PI / 2;
       [eL, eW].forEach(m => { m.map = m.map.clone(); m.map.repeat.set(1, RIM / EDGE); m.map.offset.set(0, SL / EDGE); m.map.needsUpdate = true; });
+      const rimTop = K.mat({ map: K.tex(8, 64, (g, w, h) => { g.fillStyle = '#2c1810'; g.fillRect(0, 0, w, h); g.fillStyle = '#e4d3aa'; g.fillRect(0, h * .3, w, h * .4); }), color: '#ffffff', roughness: .45, clearcoat: .25 });
       [[L, W / 2 - RT / 2, 0, eL], [L, W / 2 - RT / 2, Math.PI, eL], [W - RT * 2, L / 2 - RT / 2, Math.PI / 2, eW], [W - RT * 2, L / 2 - RT / 2, -Math.PI / 2, eW]].forEach(([len, off, ry, m]) => {
         const g = new TT.Group(); g.rotation.y = ry; G.add(g);
-        const r = new TT.Mesh(new TT.BoxGeometry(len, RIM, RT), [shitan, shitan, shitan, shitan, m, shitan]); r.position.set(0, BASE + SL + RIM / 2, off); r.castShadow = r.receiveShadow = true; g.add(r);
-        const e = new TT.Mesh(new TT.BoxGeometry(len + .02, .1, .3), ivory); e.position.set(0, H - .05, off + RT / 2 - .14); g.add(e); });
-      [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([a, b]) => add(new TT.BoxGeometry(.2, EDGE, .2), ivory, a * (L / 2 - .08), BASE + EDGE / 2, b * (W / 2 - .08)));   // ivory strips on the corners
+        // (the ivory line along the rim's top is in the texture, not a sliver of geometry: a strip 3 mm wide sparkled at a distance)
+        const r = new TT.Mesh(new TT.BoxGeometry(len, RIM, RT), [shitan, shitan, rimTop, shitan, m, shitan]); r.position.set(0, BASE + SL + RIM / 2, off); r.castShadow = r.receiveShadow = true; g.add(r); });
       /* ---------- the base: openings with bowed sides and two-arched tops, a waisted post on the long sides ---------- */
       const SK = BASE - RAIL, OT = SK - .35;   // skirt height, the openings' top
       const opening = (x0, x1) => { const p = new TT.Path(), cx = (x0 + x1) / 2, rx = 4.2, ry = 5.2, bow = 1.1, top = OT;

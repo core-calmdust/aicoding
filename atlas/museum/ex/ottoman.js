@@ -224,7 +224,7 @@
         bgMask = new TT.CanvasTexture(mk); bgMask.colorSpace = TT.NoColorSpace;
       });
       // materials: shell / pearl in one picture; the pearl areas get a thin-film iridescence (mask)
-      const face = (map, mask) => K.mat({ map, color: '#ffffff', roughness: .26, metalness: .05, clearcoat: .85, clearcoatRoughness: .12, iridescence: .85, iridescenceIOR: 1.6, iridescenceThicknessRange: [180, 520], iridescenceMap: mask });
+      const face = (map, mask) => K.mat({ map, color: '#ffffff', roughness: .3, metalness: .05, clearcoat: .6, clearcoatRoughness: .24, iridescence: .85, iridescenceIOR: 1.6, iridescenceThicknessRange: [180, 520], iridescenceMap: mask });
       const chessMat = face(chessT, chessMask), bgMat = face(bgT, bgMask);
       const edgeT = K.tex(512, 64, (g, w, h) => { g.fillStyle = '#e8dcbc'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(90,70,40,.5)'; g.lineWidth = 2; for (let x = 0; x < w; x += 40) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 20, h / 2); g.lineTo(x, h); g.stroke(); } }, { rep: [12, 1] });
       const bone = K.mat({ map: edgeT, color: '#ffffff', roughness: .45, clearcoat: .3 });
