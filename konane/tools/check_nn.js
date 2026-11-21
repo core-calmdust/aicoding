@@ -6,6 +6,16 @@
 'use strict';
 const path = require('path'), fs = require('fs'), cp = require('child_process');
 const [kn, dir, nS, nkS] = process.argv.slice(2);
+// one process a rule (KN_RULE): the history table of search v3 is kept between searches, as in the native kn probe (one
+// process a rule), so a rule checked after another in the same process would start from a different table
+if (!process.env.KN_RULE) {
+  let bad = 0;
+  for (const r of ['s8', 's6', 's10']) if (fs.existsSync(path.join(dir, `net-${r}.bin`)))
+    try { process.stdout.write(cp.execFileSync(process.execPath, [__filename, ...process.argv.slice(2)], { env: Object.assign({}, process.env, { KN_RULE: r }) })); }
+    catch (e) { process.stdout.write(e.stdout || ''); bad++; }
+  console.log(bad ? `** NG ** (${bad} rule${bad > 1 ? 's' : ''})` : 'all rules OK');
+  process.exit(bad ? 1 : 0);
+}
 process.env.KN_NETDIR = path.resolve(dir);
 const E = require(path.join(__dirname, '..', 'engine.js'));
 if (process.env.KN_MT1) {   // core_mt.wasm on one thread as the lead's core (engine.js's MX), as tools/check_ab.js
@@ -21,6 +31,7 @@ const NP = +nS || 40, NK = +nkS || 20;
 let s = 7; const rnd = () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
 let all = 0, bad = 0;
 for (const rule of E.RULE_ORDER) {
+  if (rule !== process.env.KN_RULE) continue;
   const fn = path.join(dir, `net-${rule}.bin`); if (!fs.existsSync(fn)) continue;
   E.setRule(rule); if (!E.netOk(rule)) { console.log(rule, 'net not loaded'); bad++; continue; }
   const pos = [];

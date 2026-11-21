@@ -326,7 +326,7 @@ const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 // the analysis / hint / coach) use engine.c AQV_STRONG; the levels with a node limit (4級〜三段) keep 11, the 2026-11 engine.
 // AQV bits: 1 alqHand, 2 forced jumps searched out, 8 endgame tables, 16 the learned evaluation (when alqnet.bin.gz is loaded:
 // ALQ_NETV, alquerque/MODEL_CARD.md). (Search changes tried for these levels and not taken: claude/alquerque-spec.md.)
-const ALQ_NETV = '';   // the net's version: '' = none (alqHand everywhere); e.g. '1' loads alqnet.bin.gz?v=1
+const ALQ_NETV = '1';   // the net's version ('' = none: alqHand everywhere). '1' = 2026-11-21 round 1 (20M self-play positions; +57 Elo at 0.1 s a move over alqHand, 600 games); loads alqnet.bin.gz?v=1
 let AQV_STRONG = 11;
 const aqv = strong => { if (WX && WX.set_aqv) WX.set_aqv(ALQ && !ALQF && strong ? AQV_STRONG : 11); };
 let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
@@ -439,7 +439,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, RU
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.FanoronaEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261101h', WV = 'v=20261120aq3', GAMEQ = new URLSearchParams(self.location.search).get('g');
+  const V = 'v=20261101h', WV = 'v=20261122aq4', GAMEQ = new URLSearchParams(self.location.search).get('g');
   // the folder of the engine's files (wasm, tables, book): this file's, or self.FANORONA_BASE when another folder's stub loads it
   // with importScripts (alquerque/engine.js: the worker's script has to be in the page's own service-worker scope, 2026-11-20)
   const HERE = new URL(self.FANORONA_BASE || './', self.location.href).href;

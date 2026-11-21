@@ -111,7 +111,7 @@ function waRule() { if (WA) WA.x.setup(R.rows, R.cols, R.diag ? 1 : 0, R.limit, 
 // ---- the learned evaluation (2026-11-20, claude/ugolki-spec.md「学習した評価」, tools/nnue/): one net a rule, net-<rule>.bin.gz,
 // loaded only when its version below is set ('' = no net: the hand evaluation, as before). Used by search v3 (mode 2: the levels
 // with x and the analysis); the other levels keep the hand evaluation. Placing a file and its version here is all it takes.
-const NETV = { c33: '', c34: '', c44: '', diag: '' };
+const NETV = { c33: '1', c34: '1', c44: '1', diag: '1' };   // '1' = 2026-11-21 round 1 (20M self-play positions; at 0.1 s a move over the hand evaluation, 196 games each: c33 +845, c34 +378, c44 +999, diag +527 Elo)
 const ANA_MODE = 2;   // the analysis / hint / coach: search v3
 const NETS = {};      // rule → the file's bytes (Uint8Array)
 function netInto(C, k) {   // a net into a core (WA, or the threads' MX: their memory is shared, one load is enough)
