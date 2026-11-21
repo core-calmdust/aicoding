@@ -207,7 +207,7 @@ const tac = () => G && G.rule === 'tactics';
 function safeRect() {
   const w = innerWidth, h = innerHeight;
   if (!G || G.phase === 'title') return { x: 0, y: 0, w, h };
-  if (WIDE.matches) { const side = G.phase === 'deploy' ? 310 : 324; return { x: side, y: 66, w: Math.max(200, w - side * 2), h: Math.max(200, h - 66 - (G.phase === 'deploy' ? 96 : 136)) }; }
+  if (WIDE.matches) { const side = G.phase === 'deploy' ? 344 : 358; return { x: side, y: 70, w: Math.max(200, w - side * 2), h: Math.max(200, h - 70 - (G.phase === 'deploy' ? 104 : 148)) }; }
   return { x: 6, y: 96, w: w - 12, h: Math.max(200, h - 96 - (G.phase === 'deploy' ? 210 : 236)) };
 }
 
