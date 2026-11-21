@@ -73,6 +73,8 @@
           g.moveTo(-.8, 22); g.lineTo(-.8, -8); g.lineTo(.8, -8); g.lineTo(.8, 22); g.closePath();
           for (let q = 0; q < 5; q++) { const a = q / 5 * 6.283 - 1.57, ex = Math.cos(a) * 5.4, ey = -15 + Math.sin(a) * 5.4; g.moveTo(ex + 4.2, ey); g.ellipse(ex, ey, 4.2, 2.6, a, 0, 6.29); }
           [[4, 1], [14, .8]].forEach(([yy, k]) => [-1, 1].forEach(d => { g.moveTo(0, yy); g.quadraticCurveTo(d * 9 * k, yy - 9 * k, d * 13 * k, yy - 2); g.quadraticCurveTo(d * 8 * k, yy + 3, 0, yy); g.closePath(); })); }
+        else if (kind === 'hill') {   // little layered hills (on the legs, detail photographs)
+          [[-12, 6, 14, 9], [6, 8, 16, 11], [-2, 0, 13, 12]].forEach(([cx, by, hw, hh]) => { g.moveTo(cx - hw, by); g.quadraticCurveTo(cx - hw * .3, by - hh * 1.6, cx, by - hh); g.quadraticCurveTo(cx + hw * .5, by - hh * .9, cx + hw, by); g.closePath(); }); }
         else if (kind === 'tree') { g.moveTo(-1.6, 24); g.lineTo(-1.2, -2); g.lineTo(1.2, -2); g.lineTo(1.6, 24); g.closePath(); for (let i = 0; i < 5; i++) { const yy = -4 - i * 6, ww = 14 - i * 2.2; g.moveTo(0, yy - 6); g.quadraticCurveTo(ww, yy, 0, yy + 2); g.quadraticCurveTo(-ww, yy, 0, yy - 6); } }
         else if (kind === 'flower') { for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; g.moveTo(0, 0); g.ellipse(Math.cos(a) * 6, Math.sin(a) * 6, 6, 3, a, 0, 6.29); } }
         else if (kind === 'lion') { g.moveTo(-24, 4); g.quadraticCurveTo(-22, -12, -4, -12); g.quadraticCurveTo(8, -24, 20, -14); g.quadraticCurveTo(26, -8, 22, 0); g.lineTo(18, 22); g.lineTo(13, 22); g.lineTo(12, 6); g.lineTo(-14, 6); g.lineTo(-17, 22); g.lineTo(-21, 22); g.lineTo(-22, 6);
@@ -154,16 +156,18 @@
       const legT = K.tex(2048, Math.round(2048 * (BASE - RAIL) / S), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); const s = w / S;
         g.strokeStyle = C.iv; g.lineWidth = s * .08; g.strokeRect(s * .15, s * .1, w - s * .3, h - s * .2);
         g.strokeStyle = '#e4cf9a'; g.lineWidth = s * .1; skirt.holes.forEach(hp => { g.beginPath(); hp.getPoints(24).forEach((p, i) => { const X = (p.x + S / 2) * s, Y = h - p.y * s; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.closePath(); g.stroke(); });
-        [[LEG / 2, 'bird', .8], [LEG / 2, 'deer', .3], [S / 2, 'bird', .75], [S / 2, 'flower', .35], [S - LEG / 2, 'bird', .8], [S - LEG / 2, 'deer', .3]].forEach(([x, kd, fy], i) => sil(g, kd, x * s, h * (1 - fy), s * .035, [C.box, C.grn, C.pink][i % 3])); });
+        // each leg and the post: a bird in flight at the top, hills in the middle, a deer at the foot; an ivory line down the post (detail photographs)
+        g.fillStyle = C.iv; g.fillRect(S / 2 * s - s * .05, s * .9, s * .1, h - s * 1.0);
+        [[LEG * .62, 1], [S / 2 - POST * .28, 1], [S / 2 + POST * .28, -1], [S - LEG * .62, -1]].forEach(([x, d], i) => { [['bird', .9, .022, C.box], ['hill', .56, .02, C.grn], ['deer', .13, .022, i % 2 ? C.grn : C.red]].forEach(([kd, fy, k, col]) => { g.save(); g.translate(x * s, h * (1 - fy)); g.scale(d, 1); sil(g, kd, 0, 0, s * k, col); g.restore(); }); }); });
       legT.repeat.set(1 / S, 1 / (BASE - RAIL)); legT.offset.set(.5, 0);
       const legM = K.mat({ map: legT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
       for (let i = 0; i < 4; i++) { const m = new TT.Mesh(skG, [legM, shitan]), a = i * Math.PI / 2; m.position.set(Math.sin(a) * (S / 2 - 1.2), RAIL, Math.cos(a) * (S / 2 - 1.2)); m.rotation.y = a; m.scale.x = .995; G.add(m); }   // (each panel a hair short: its end face lay in the same plane as the next panel's front and the two fought at the corner legs — a flicker)
       add(new TT.BoxGeometry(S - 2.4, .5, S - 2.4), shitan, 0, BASE - .25, 0);   // the floor of the body
       // the floor rail: horn over red (華角), dark flowers; its outer faces with the lozenge band
-      const kakT = K.tex(1024, 128, (g, w, h) => { g.fillStyle = '#9c3a24'; g.fillRect(0, 0, w, h); const n = K.noise(5);
-        for (let x = 0; x < w; x += 4) for (let y = 0; y < h; y += 4) { const v = n(x / 40, y / 40, 3); g.fillStyle = `rgba(230,110,50,${(v - .5) * .4 + .08})`; g.fillRect(x, y, 4, 4); }
-        for (let i = 0; i < 10; i++) { const cx = (i + .5) * w / 10, cy = h / 2; g.fillStyle = 'rgba(40,14,8,.85)'; for (let k = 0; k < 6; k++) { const a = k / 6 * 6.283; g.beginPath(); g.ellipse(cx + Math.cos(a) * h * .18, cy + Math.sin(a) * h * .18, h * .14, h * .07, a, 0, 6.29); g.fill(); }
-          g.beginPath(); g.arc(cx, cy, h * .08, 0, 6.29); g.fill(); g.strokeStyle = 'rgba(40,14,8,.7)'; g.lineWidth = 3; g.beginPath(); g.moveTo(cx + h * .35, cy); g.quadraticCurveTo(cx + w / 20, cy - h * .35, cx + w / 10 - h * .35, cy); g.stroke(); } });
+      // (the floor frame's top: painting under a translucent sheet — a deep red ground clouded with black and specks of green and gold; the photographs)
+      const kakT = K.tex(1024, 128, (g, w, h) => { const n = K.noise(5), img = g.createImageData(w, h), d = img.data;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = n(x / 26, y / 18, 3), b = n(x / 7 + 9, y / 7, 2), k = Math.max(0, Math.min(1, (a - .42) * 4)), gsp = b > .78 ? 1 : 0, i = (y * w + x) * 4;
+          d[i] = gsp ? 150 : 150 - k * 118 + b * 20; d[i + 1] = gsp ? 130 : 52 - k * 36 + b * 10; d[i + 2] = gsp ? 60 : 30 - k * 18; d[i + 3] = 255; } g.putImageData(img, 0, 0); });
       const kak = K.mat({ map: kakT, color: '#ffffff', roughness: .28, clearcoat: .85, clearcoatRoughness: .18 });
       const railSide = K.tex(2048, Math.round(2048 * RAIL / S), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); chain(g, 0, 0, w, h, false); });
       const rsM = K.mat({ map: railSide, color: '#ffffff', roughness: .45, clearcoat: .35 });

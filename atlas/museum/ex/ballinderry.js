@@ -1,27 +1,25 @@
 /* 所蔵品：バリンダリーのゲーム盤（アイルランド国立博物館 NMI 1932:6533） — units: 1 = 1 cm.
-   Yew; found in 1932 at Ballinderry crannóg No. 1 (Co. Westmeath), broken in two; 10th century. About 9½ in. (24 cm) square
-   (the 1932 report); a dark panel with 7 × 7 peg holes, the centre and corner holes marked off with arcs; a raised frame of
-   eight carved panels — plain five- and six-strand interlace, Borre-style ring-chain at two opposite corners, a "vertebral"
-   pattern and a key pattern (NMI; 1932 report); a rough human head projecting from one edge, a smaller animal head from the
-   opposite edge (handles). Estimates: the thickness and frame height (after a published replica: 2.5 cm, the frame raised
-   1.5 cm), the hole pitch, which panel sits where, the drawing of each pattern, the line of the break and the heads' features.
-   2026-11-21: colour, the marks on the panel (two rings at the centre, quarter-circles across the corners), the small holes and the
-   worn relief checked against the Discovery Programme / NMI 3D scan (Sketchfab). */
+   Yew; found in 1932 at Ballinderry crannóg No. 1 (Co. Westmeath); 10th century. About 24 cm square.
+   2026-11-22: rebuilt from the museum's photograph of the board seen from above (nothing invented): measured on it —
+   the frame 2.3 cm wide, in three carved panels to a side with a joint between them; the sunk panel with 7 × 7 holes about 2.65 cm
+   apart, two rings round the centre hole and a quarter-circle across each corner; the wood split from end to end about a third of the
+   way across, the split pale and splintered; the grain running the way the heads point; on one edge a long oval human head on a
+   tapering neck (brow, round eyes, long nose, mouth; hair combed back at the sides), on the opposite edge a small plain knob.
+   Built in the photograph's own coordinates (x to the right, z downward, the head at the top), then turned so the head is at −x.
+   Estimates: the thickness (2.4, the panel sunk 1.4) and the exact drawing inside each carved panel. */
 (function () {
   'use strict';
   (window.AtlasEx = window.AtlasEx || {}).ballinderry = {
     build(TT, X, K) {
-      const G = new TT.Group();
-      const S = 24, FW = 3.1, T0 = 1.0, T1 = 2.5, IN = S - FW * 2, P = 2.35, DP = .26;   // DP: how deep the frame's carving is cut
-      // ---- yew: warm orange-brown, darkened by a thousand years in the bog; the heartwood streaks
-      const yew = (seed, dark) => K.tex(1024, 1024, (g, w, h) => {
-        K.grain(g, w, h, { a: dark ? '#5e5038' : '#66573c', b: dark ? '#493c29' : '#4c3f2b', seed, sx: 1, sy: 44, warp: .22, pores: .003 });   // grey-brown, as in the 3D scan
-        const n = K.noise(seed + 5), img = g.getImageData(0, 0, w, h), d = img.data;
-        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = n(x / 160, y / 160, 4), k = .82 + a * .3, i = (y * w + x) * 4; d[i] *= k; d[i + 1] *= k * .97; d[i + 2] *= k * .94; }
-        g.putImageData(img, 0, 0);
-      });
-      const frameMap = yew(31, false), panelMap = yew(47, true);
-      // ---- the carving of one frame side: two panels, each its own pattern; white = the raised strands (bump), the cut-back ground darker
+      const G = new TT.Group(), Pg = new TT.Group(); Pg.rotation.y = Math.PI / 2; G.add(Pg);
+      const S = 24, FW = 2.3, T0 = 1.0, T1 = 2.4, IN = S - FW * 2, P = 2.65, DP = .3;
+      let sd = 1932; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
+      // yew, nearly black-brown with a warmer brown where it is worn; grain along the canvas's height
+      const yew = (seed, lite) => K.tex(1024, 1024, (g, w, h) => { const n = K.noise(seed), img = g.createImageData(w, h), d = img.data;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const wv = n(x / 300, y / 500, 3) * 60, ln = .5 + .5 * Math.sin((x + wv + n(x / 40, y / 400, 2) * 26) / 3.1), big = n(x / 120, y / 420, 3), f = n(x / 3, y / 40, 2), i = (y * w + x) * 4;
+          const k = (lite ? .62 : .4) + ln * (lite ? .2 : .1) + big * .3 + (f - .5) * .12; d[i] = 56 * k; d[i + 1] = 39 * k; d[i + 2] = 25 * k; d[i + 3] = 255; }
+        g.putImageData(img, 0, 0); });
+      const frameMap = yew(31, true), panelMap = yew(47, false);
       const PAT = {
         // a plait of n strands: diagonal ribbons crossing over and under
         plait(g, x0, y0, w, h, n) {
@@ -59,84 +57,67 @@
             g.beginPath(); g.moveTo(x + u * 6, y0 + u); g.lineTo(x + u * 6, y0 + u * 5); g.lineTo(x + u * 2, y0 + u * 5); g.stroke(); }
           g.lineCap = 'round'; g.lineJoin = 'round';
         },
+        // a fret of nested triangles pointing alternately up and down (the long middle panels of the two sides)
+        tri(g, x0, y0, w, h) { const st = h * 1.15; g.lineWidth = h * .09; g.lineJoin = 'miter';
+          for (let x = x0, k = 0; x < x0 + w; x += st / 2, k++) { const up = k % 2; [1, .58, .22].forEach(q => { const a = st / 2 * q, t = h * .84 * q, by = up ? y0 + h * .08 : y0 + h * .92, d = up ? 1 : -1; g.beginPath(); g.moveTo(x + st / 4 - a / 2, by); g.lineTo(x + st / 4, by + d * t); g.lineTo(x + st / 4 + a / 2, by); g.stroke(); }); }
+          g.lineJoin = 'round'; },
+        // a plain ground with one small knot in the middle (the middle panel on the head's side)
+        knot1(g, x0, y0, w, h) { const cx = x0 + w / 2; g.save(); g.beginPath(); g.rect(cx - h * 1.5, y0, h * 3, h); g.clip(); PAT.plait(g, cx - h * 1.5, y0 + h * .12, h * 3, h * .76, 3); g.restore(); },
       };
-      // which pattern in which panel (two per side; ring-chain at two opposite corners) — estimate
-      const SIDES = [['ring', 'plait5'], ['spine', 'key'], ['ring', 'plait6'], ['key', 'spine']];
-      const sideMat = (pair, k) => {
-        const W = 1024, H = 136, bc = document.createElement('canvas'); bc.width = W; bc.height = H; const b = bc.getContext('2d');
+
+      // the frame: three panels to a side (the photograph, clockwise from the head's side): fine plait · plain with one knot · bold steps /
+      // thick plait · triangles · fine plait / fine plait · ring-chain · bold steps / fine plait · triangles · fine plait
+      const SIDES = [[['plait', 6, .31], ['knot1', 0, .36], ['plait', 3, .33]], [['plait', 3, .3], ['tri', 0, .4], ['plait', 5, .3]], [['plait', 5, .31], ['ring', 0, .36], ['plait', 3, .33]], [['plait', 5, .3], ['tri', 0, .4], ['plait', 6, .3]]];
+      const wood = K.mat({ map: frameMap, color: '#ffffff', roughness: .62 });
+      const sideMat = (panels, k, len) => { const W = 1024, H = Math.round(1024 * FW / len), bc = document.createElement('canvas'); bc.width = W; bc.height = H; const b = bc.getContext('2d');
         b.fillStyle = '#000'; b.fillRect(0, 0, W, H); b.strokeStyle = b.fillStyle = '#fff'; b.lineCap = b.lineJoin = 'round';
-        const m = 10, half = (W - m * 3) / 2;
-        b.lineWidth = 7; b.strokeRect(4, 4, W - 8, H - 8); b.beginPath(); b.moveTo(W / 2, 4); b.lineTo(W / 2, H - 4); b.stroke();
-        pair.forEach((p, i) => { const x = m + i * (half + m), y = 16, w = half, h = H - 32;
-          b.save(); b.beginPath(); b.rect(x, y, w, h); b.clip();
-          if (p === 'plait5') PAT.plait(b, x, y, w, h, 5); else if (p === 'plait6') PAT.plait(b, x, y, w, h, 6); else PAT[p](b, x, y, w, h);
-          b.restore(); });
-        // a thousand years of wear: the relief softened, chips in places
-        b.filter = 'blur(3px)'; b.drawImage(bc, 0, 0); b.filter = 'none';
-        b.fillStyle = 'rgba(0,0,0,.45)'; for (let q = 0; q < 60; q++) { b.beginPath(); b.ellipse(Math.random() * W, Math.random() * H, 4 + Math.random() * 16, 3 + Math.random() * 7, Math.random() * 3, 0, 6.29); b.fill(); }
-        const map = K.tex(W, H, (g, w, h) => {
-          g.drawImage(frameMap.image, 0, k * 200, 1024, 136, 0, 0, w, h);
-          const mk = document.createElement('canvas'); mk.width = w; mk.height = h; const mg = mk.getContext('2d');
-          mg.fillStyle = '#6e665a'; mg.fillRect(0, 0, w, h); mg.globalAlpha = .45; mg.globalCompositeOperation = 'lighter'; mg.drawImage(bc, 0, 0); mg.globalAlpha = 1;
-          g.globalCompositeOperation = 'multiply'; g.drawImage(mk, 0, 0); g.globalCompositeOperation = 'source-over';
-        });
-        const bump = new TT.CanvasTexture(bc); bump.colorSpace = TT.NoColorSpace;
-        // the carving is real relief: the top is a fine grid pushed up by the same picture (its outer edge held down, to meet the block below)
-        const dc = document.createElement('canvas'); dc.width = W; dc.height = H; const dg = dc.getContext('2d'); dg.drawImage(bc, 0, 0); dg.strokeStyle = '#000'; dg.lineWidth = 6; dg.strokeRect(0, 0, W, H);
-        const disp = new TT.CanvasTexture(dc); disp.colorSpace = TT.NoColorSpace;
-        return K.mat({ map, bumpMap: bump, bumpScale: 2.2, displacementMap: disp, displacementScale: DP, color: '#b09a84', roughness: .66 });
-      };
-      const wood = K.mat({ map: frameMap, color: '#b09a84', roughness: .68 });
-      // ---- the playing panel: dark, 49 holes, arcs round the centre and corner holes, the crack across it
-      const PX = 1024, crack = [];
-      { let x = 0, y = PX * .56; crack.push([x, y]); while (x < PX) { x += 18 + Math.random() * 30; y += (Math.random() - .5) * 26; crack.push([x, y]); } }
-      const hole = (i, j) => [PX / 2 + (i - 3) * P / IN * PX, PX / 2 + (j - 3) * P / IN * PX];
-      const drawPanel = (g, bump) => {
-        if (bump) { g.fillStyle = '#909090'; g.fillRect(0, 0, PX, PX); } else g.drawImage(panelMap.image, 0, 0, PX, PX);
-        const r = .2 / IN * PX, ink = bump ? '#000' : 'rgba(14,10,6,.85)', cut = bump ? '#303030' : 'rgba(22,16,10,.6)';
-        // incised arcs: a ring round the centre hole, and an arc round each corner hole
-        g.strokeStyle = cut; g.lineWidth = 3.5;
-        // (after the 3D scan: two rings round the centre hole; at each corner a quarter-circle across the corner, centred on the panel's corner)
-        const [cx, cy] = hole(3, 3), R = P * .62 / IN * PX; g.beginPath(); g.arc(cx, cy, R, 0, 6.29); g.stroke(); g.beginPath(); g.arc(cx, cy, R * .7, 0, 6.29); g.stroke();
-        const RQ = P * 1.45 / IN * PX; [[0, 0, 0], [PX, 0, 1], [PX, PX, 2], [0, PX, 3]].forEach(([x, y, q]) => { g.beginPath(); g.arc(x, y, RQ, q * Math.PI / 2, q * Math.PI / 2 + Math.PI / 2); g.stroke(); });
-        for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) { const [x, y] = hole(i, j); g.fillStyle = ink; g.beginPath(); g.arc(x, y, r, 0, 6.29); g.fill();
-          if (!bump) { g.strokeStyle = 'rgba(150,130,100,.3)'; g.lineWidth = 2; g.beginPath(); g.arc(x - 1, y - 1, r + 1.5, Math.PI, Math.PI * 1.6); g.stroke(); } }
-        // the break (the board was found in two pieces)
-        g.strokeStyle = bump ? '#000' : 'rgba(8,4,2,.9)'; g.lineWidth = bump ? 7 : 4; g.beginPath(); crack.forEach(([x, y], k) => k ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke();
-      };
-      const pMap = K.tex(PX, PX, g => drawPanel(g, false)), pBump = K.tex(PX, PX, g => drawPanel(g, true), { data: true });
-      const panel = K.mat({ map: pMap, bumpMap: pBump, bumpScale: 3.5, color: '#948270', roughness: .7 });
-      const add = (geo, m, x, y, z) => { const o = new TT.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; G.add(o); return o; };
-      add(new TT.BoxGeometry(IN, T0, IN), [wood, wood, panel, wood, wood, wood], 0, T0 / 2, 0);
-      // the four frame sides (mitred look: the top textures meet at the corners); each top carries two carved panels
-      const fs = (k, w, x, z, ry) => { const m = sideMat(SIDES[k], k), o = add(new TT.BoxGeometry(w, T1 - DP, FW), wood, x, (T1 - DP) / 2, z); o.rotation.y = ry;
-        const tg = new TT.PlaneGeometry(w, FW, Math.round(w / .16), 19); tg.rotateX(-Math.PI / 2); const t = add(tg, m, x, T1 - DP, z); t.rotation.y = ry; };
-      fs(0, S, 0, -(S / 2 - FW / 2), 0); fs(2, S, 0, S / 2 - FW / 2, Math.PI); fs(1, S - FW * 2, S / 2 - FW / 2, 0, -Math.PI / 2); fs(3, S - FW * 2, -(S / 2 - FW / 2), 0, Math.PI / 2);
-      // ---- the heads (handles), each carved in one with the board and lying flat, the face upward (after the 3D scan: on the west edge a
-      // large flattened oval on a short neck — the human head; on the east a smaller rounded head on a narrow neck — the animal)
-      const I = K.ink, knob = K.tex(256, 256, (g, w, h) => { const n = K.noise(77), img = g.createImageData(w, h), d = img.data;
-        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = n(x / 30, y / 30, 4), r = n(x / 6, y / 60, 2), k = .78 + a * .32 + (r - .5) * .14, i = (y * w + x) * 4;
-          d[i] = 84 * k; d[i + 1] = 71 * k; d[i + 2] = 50 * k; d[i + 3] = 255; } g.putImageData(img, 0, 0); });
-      const head = (o, x, ry) => { const r = K.relief(Object.assign({ px: 256, round: .7, relief: .22, nx: 30, tex: knob.image, dirt: [34, 24, 14], dirtK: .7, bump: 1.6, mat: { roughness: .68, color: '#b09a84' } }, o));
-        r.rotation.x = -Math.PI / 2; const h = new TT.Group(); h.add(r); h.rotation.y = ry; h.position.set(x, 1.2, 0); G.add(h); };
-      head({ w: 4.4, h: 6.4, depth: 1.05,
-        mask(g) { g.fillStyle = '#fff'; g.fillRect(-.95, -.5, 1.9, 2.4); g.beginPath(); g.ellipse(0, 3.7, 1.75, 2.3, 0, 0, 6.29); g.fill(); },
-        thick(g) { g.fillStyle = '#b0b0b0'; g.fillRect(-1.2, -.5, 2.4, 1.6); },
-        front(g) {   // worn features: a brow, round eye hollows, a ridge of nose, a slit mouth, the beard and hair combed in lines
-          I.line(g, [[-1.1, 4.25], [0, 4.45], [1.1, 4.25]], .5, .7); [-1, 1].forEach(sx => { I.blob(g, sx * .62, 3.85, .36, .26, -.9); I.blob(g, sx * .62, 3.85, .14, .1, .5); });
-          I.line(g, [[0, 4.2], [0, 3.6], [0, 3.15]], .42, .9); I.blob(g, 0, 3.1, .34, .22, .5);
-          I.line(g, [[-.5, 2.62], [0, 2.56], [.5, 2.62]], .16, -1);
-          for (let k = -4; k <= 4; k++) I.line(g, [[k * .2, 2.4], [k * .23, 1.95], [k * .2, 1.6]], .08, -.6);
-          for (let k = -5; k <= 5; k++) I.line(g, [[k * .25, 4.95], [k * .26, 5.3], [k * .23, 5.6]], .07, -.4);
-        } }, -S / 2 - .45, Math.PI / 2);
-      head({ w: 3.6, h: 4.8, depth: .95,
-        mask(g) { g.fillStyle = '#fff'; g.fillRect(-.55, -.5, 1.1, 2.0); g.beginPath(); g.ellipse(0, 2.75, 1.4, 1.55, 0, 0, 6.29); g.fill(); },
-        thick(g) { g.fillStyle = '#909090'; g.fillRect(-.9, -.5, 1.8, 1.4); },
-        front(g) {   // an animal's head, the snout outward: eyes to the sides, nostrils at the tip, small ears back by the neck
-          [-1, 1].forEach(sx => { I.blob(g, sx * .7, 2.75, .26, .22, -.9); I.blob(g, sx * .7, 2.75, .1, .08, .5); I.blob(g, sx * .78, 1.75, .3, .22, .7, sx * .5); I.blob(g, sx * .22, 3.95, .1, .08, -.8);
-            I.line(g, [[sx * .3, 3.3], [sx * .75, 3.5], [sx * 1.1, 3.2]], .1, -.5); });
-          I.line(g, [[0, 2.3], [0, 3.2], [0, 3.9]], .5, .5);
-        } }, S / 2 + .45, -Math.PI / 2);
+        let x = 0; panels.forEach(([kind, n, fr]) => { const pw = fr * W, m = H * .09; b.lineWidth = H * .07; b.strokeRect(x + m, m, pw - 2 * m, H - 2 * m);   // each panel in its own raised border, a joint between
+          const ix = x + m * 2.2, iy = m * 2.2, iw = pw - m * 4.4, ih = H - m * 4.4; b.save(); b.beginPath(); b.rect(ix, iy, iw, ih); b.clip(); if (kind === 'knot1') { b.fillStyle = '#8a8a8a'; b.fillRect(ix, iy, iw, ih); b.fillStyle = '#fff'; } if (kind === 'plait') PAT.plait(b, ix, iy, iw, ih, n); else PAT[kind](b, ix, iy, iw, ih); b.restore(); x += pw; });
+        b.filter = 'blur(2.5px)'; b.drawImage(bc, 0, 0); b.filter = 'none';   // a thousand years of wear
+        b.fillStyle = 'rgba(0,0,0,.4)'; for (let q = 0; q < 40; q++) { b.beginPath(); b.ellipse(rnd() * W, rnd() * H, 4 + rnd() * 14, 3 + rnd() * 6, rnd() * 3, 0, 6.29); b.fill(); }
+        const map = K.tex(W, H, (g, w, h) => { g.save(); g.translate(0, h); g.rotate(-Math.PI / 2); g.drawImage(frameMap.image, k * 190, 0, Math.max(8, 1024 * H / W), 1024, 0, 0, h, w); g.restore();   // the grain along the strip
+          const mk = document.createElement('canvas'); mk.width = w; mk.height = h; const mg = mk.getContext('2d'); mg.fillStyle = '#4a4a4a'; mg.fillRect(0, 0, w, h); mg.globalAlpha = .7; mg.globalCompositeOperation = 'lighter'; mg.drawImage(bc, 0, 0); mg.globalAlpha = 1;
+          g.globalCompositeOperation = 'multiply'; g.drawImage(mk, 0, 0); g.globalCompositeOperation = 'source-over'; });
+        const dc = document.createElement('canvas'); dc.width = W; dc.height = H; const dg = dc.getContext('2d'); dg.drawImage(bc, 0, 0); dg.strokeStyle = '#000'; dg.lineWidth = 5; dg.strokeRect(0, 0, W, H);
+        const disp = new TT.CanvasTexture(dc); disp.colorSpace = TT.NoColorSpace; const bump = new TT.CanvasTexture(bc); bump.colorSpace = TT.NoColorSpace;
+        return K.mat({ map, bumpMap: bump, bumpScale: 2, displacementMap: disp, displacementScale: DP, color: '#ffffff', roughness: .58 }); };
+      const add = (geo, m, x, y, z) => { const o = new TT.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; Pg.add(o); return o; };
+      const strip = (k, len, x, z, ry) => { const o = add(new TT.BoxGeometry(len - .02, T1 - DP - .04, FW - .02), wood, x, (T1 - DP - .04) / 2, z); o.rotation.y = ry;   // (a hair smaller than the carved top and its neighbours: faces in one plane flicker)
+        const tg = new TT.PlaneGeometry(len, FW, Math.round(len / .14), 16); tg.rotateX(-Math.PI / 2); const t = add(tg, sideMat(SIDES[k], k, len), x, T1 - DP, z); t.rotation.y = ry; };
+      strip(0, S, 0, -(S / 2 - FW / 2), 0); strip(2, S, 0, S / 2 - FW / 2, Math.PI); strip(1, IN, S / 2 - FW / 2, 0, -Math.PI / 2); strip(3, IN, -(S / 2 - FW / 2), 0, Math.PI / 2);
+      // ---- the sunk panel, in the photograph's coordinates (u to the right, v downward)
+      const PX = 1024, cm = v => v / IN * PX, CX = cm(7.7 - FW);   // the split: about a third of the way across from the left
+      const crack = []; { let x = CX + 6; for (let y = 0; y <= PX; y += 22) { x += (rnd() - .5) * 9 + (y > PX * .3 && y < PX * .62 ? -.9 : .5); crack.push([x, y]); } }
+      const hole = (i, j) => [PX / 2 + (i - 3) * cm(P), PX / 2 + (j - 3) * cm(P)];
+      const drawPanel = (g, bump) => { if (bump) { g.fillStyle = '#909090'; g.fillRect(0, 0, PX, PX); } else g.drawImage(panelMap.image, 0, 0, PX, PX);
+        const cut = bump ? '#3a3a3a' : 'rgba(150,120,84,.5)'; g.strokeStyle = cut; g.lineWidth = bump ? 4 : 2.6; g.lineCap = 'round';
+        const [cx, cy] = hole(3, 3); [1.5, 1.22].forEach(r => { g.beginPath(); g.arc(cx, cy, cm(r), 0, 6.29); g.stroke(); });   // two rings round the centre hole
+        [[0, 0, 0], [PX, 0, 1], [PX, PX, 2], [0, PX, 3]].forEach(([x, y, q]) => { g.beginPath(); g.arc(x, y, cm(3.3), q * Math.PI / 2, q * Math.PI / 2 + Math.PI / 2); g.stroke(); });   // a quarter-circle across each corner
+        // the split, pale where the wood has splintered
+        const run = (dx, col, lw, a, b2) => { g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); crack.forEach(([x, y], k) => { if (y < PX * a || y > PX * b2) return; g.lineTo(x + dx, y); }); g.stroke(); };
+        if (bump) { g.fillStyle = '#9c9c9c'; g.beginPath(); crack.forEach(([x, y], k) => k ? g.lineTo(x, y) : g.moveTo(x, y)); g.lineTo(0, PX); g.lineTo(0, 0); g.closePath(); g.fill(); run(0, '#000', 11, 0, 1); }
+        else { run(-11, 'rgba(206,170,112,.55)', 13, .2, .78); run(8, 'rgba(190,150,96,.35)', 6, .3, .7); run(0, 'rgba(8,4,2,.95)', 7, 0, 1);
+          g.strokeStyle = 'rgba(206,170,112,.45)'; g.lineWidth = 5; g.beginPath(); g.moveTo(CX - 8, PX * .66); g.lineTo(CX - 62, PX * .74); g.stroke(); }   // a splinter lifting to one side
+        for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) { const [x, y] = hole(i, j), r = cm(.2) * (.9 + rnd() * .25); g.fillStyle = bump ? '#000' : 'rgba(6,4,3,.96)'; g.beginPath(); g.arc(x + (rnd() - .5) * 5, y + (rnd() - .5) * 5, r, 0, 6.29); g.fill();
+          if (!bump) { g.strokeStyle = 'rgba(190,160,116,.4)'; g.lineWidth = 2.2; g.beginPath(); g.arc(x, y, r + 1.6, 0, 6.29); g.stroke(); } } };
+      const panel = K.mat({ map: K.tex(PX, PX, g => drawPanel(g, false)), bumpMap: K.tex(PX, PX, g => drawPanel(g, true), { data: true }), bumpScale: 5, color: '#ffffff', roughness: .5 });
+      add(new TT.BoxGeometry(IN + .3, T0, IN + .3), [wood, wood, panel, wood, wood, wood], 0, T0 / 2 - .01, 0);
+      // ---- the human head (the photograph): carved in one with the board, lying flat, the face upward
+      const I = K.ink, hs = K.relief({ w: 5.4, h: 7.6, px: 320, depth: 1.25, round: .9, relief: .55, nx: 40, tex: panelMap.image, dirt: [10, 7, 5], dirtK: .7, bump: 1.8, mat: { roughness: .5, color: '#ffffff' },
+        mask(g) { g.fillStyle = '#fff'; g.beginPath(); g.moveTo(-1.0, -.4); g.lineTo(-.95, 1.2); g.bezierCurveTo(-1.1, 2.2, -2.3, 2.9, -2.3, 4.7); g.bezierCurveTo(-2.3, 6.4, -1.3, 7.2, 0, 7.2); g.bezierCurveTo(1.3, 7.2, 2.3, 6.4, 2.3, 4.7); g.bezierCurveTo(2.3, 2.9, 1.1, 2.2, .95, 1.2); g.lineTo(1.0, -.4); g.closePath(); g.fill(); },
+        thick(g) { g.fillStyle = '#9a9a9a'; g.fillRect(-1.6, -.5, 3.2, 2.2); },
+        front(g) {   // (y runs from the neck, 0, to the crown: the chin is toward the board)
+          I.area(g, [[-1.15, 2.3], [-1.3, 4.6], [-.95, 5.9], [0, 6.3], [.95, 5.9], [1.3, 4.6], [1.15, 2.3], [0, 1.75]], .16);   // the face, a long shield standing out from the hair
+          I.line(g, [[-1.05, 5.3], [0, 5.5], [1.05, 5.3]], .42, .8);                                                         // brow
+          [-1, 1].forEach(sx => { I.blob(g, sx * .58, 4.8, .46, .4, -.85); I.blob(g, sx * .58, 4.8, .26, .22, 1); });         // round eyes in hollows
+          I.line(g, [[0, 5.3], [0, 4.2], [0, 3.5]], .44, 1.2); I.blob(g, 0, 3.45, .4, .26, .8);                                 // the long nose
+          I.line(g, [[-.5, 2.95], [0, 2.9], [.5, 2.95]], .16, -1.2); I.line(g, [[-.45, 2.68], [0, 2.58], [.45, 2.68]], .22, .8); I.line(g, [[-.45, 3.15], [0, 3.2], [.45, 3.15]], .18, .6);   // mouth and lower lip
+          [-1, 1].forEach(sx => { for (let k = 0; k < 4; k++) I.line(g, [[sx * (1.45 + k * .2), 2.6 + k * .2], [sx * (1.7 + k * .13), 4.6], [sx * (1.1 + k * .12), 6.3 + k * .15]], .07, -.5); }); } });   // hair combed back at the sides
+      hs.rotation.x = -Math.PI / 2; hs.position.set(0, T1 * .5, -S / 2 + .3); Pg.add(hs);
+      // ---- the knob on the opposite edge: a short neck and a plain ball
+      const knobM = K.mat({ map: panelMap, color: '#ffffff', roughness: .45 });
+      const nk = add(new TT.CylinderGeometry(.62, .75, 1.3, 18), knobM, 0, T1 * .5, S / 2 + .55); nk.rotation.x = Math.PI / 2;
+      const ball = add(new TT.SphereGeometry(1.35, 28, 18), knobM, 0, T1 * .5, S / 2 + 2.2); ball.scale.set(1, .82, 1);
       return G;
     },
   };

@@ -17,7 +17,7 @@
   const HERE = (document.currentScript && document.currentScript.src) || location.href; let INLAY = null;
   (window.AtlasEx = window.AtlasEx || {}).ottoman = {
     flip: true,
-    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { INLAY = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/ottoman-inlay.webp', HERE).href; setTimeout(res, 8000); }),
+    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { INLAY = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/ottoman-inlay.webp?v=3', HERE).href; setTimeout(res, 8000); }),
     build(TT, X, K) {
       const G = new TT.Group();
       const W = 56.5, D = 56.3, LD = D / 2, TH = 2.0, PX = innerWidth < 820 ? 1536 : 2048;   // width, depth open, a leaf's depth, its thickness
@@ -109,13 +109,13 @@
       const PS = 1024, pearlC = document.createElement('canvas'); pearlC.width = pearlC.height = PS;
       { const og = pearlC.getContext('2d'), img = og.createImageData(PS, PS), d = img.data;
         for (let j = 0; j < PS; j++) for (let i = 0; i < PS; i++) { const u = i / PS, v = j / PS, a = N(u * 22, v * 5, 3), b = N(u * 7 + 5, v * 16, 2), sh = N(u * 90, v * 14, 2), band = Math.sin((v * 9 + a * 2) * Math.PI) * .5 + .5;
-          const gr = 118 + sh * 60 + band * 22 + a * 18; const p = (j * PS + i) * 4; d[p] = gr + a * 16 - b * 14; d[p + 1] = gr + b * 12 - a * 6; d[p + 2] = gr + 10 + b * 18 + a * 6; d[p + 3] = 255; }
+          const gr = 132 + sh * 46 + band * 26 + a * 22; const p = (j * PS + i) * 4; d[p] = gr + a * 16 - b * 14; d[p + 1] = gr + b * 12 - a * 6; d[p + 2] = gr + 10 + b * 18 + a * 6; d[p + 3] = 255; }
         og.putImageData(img, 0, 0); }
       const shellC = document.createElement('canvas'); shellC.width = shellC.height = PS;
       { const og = shellC.getContext('2d'), img = og.createImageData(PS, PS), d = img.data;
-        for (let j = 0; j < PS; j++) for (let i = 0; i < PS; i++) { const u = i / PS, v = j / PS, m = N(u * 30 + 3, v * 18, 4) * .7 + N(u * 90, v * 50, 2) * .3, f = N(u * 90 + 7, v * 90, 2), t = Math.max(0, Math.min(1, (.405 - m) * 7));
+        for (let j = 0; j < PS; j++) for (let i = 0; i < PS; i++) { const u = i / PS, v = j / PS, m = N(u * 22 + 3, v * 15, 4) * .78 + N(u * 110, v * 70, 2) * .22, f = N(u * 90 + 7, v * 90, 2), t = Math.pow(Math.max(0, Math.min(1, (.41 - m) * 6)), 1.2);   // soft blotches a centimetre or two across, a little streaked
           // dark, almost black-brown ground with amber-to-orange blotches (gold leaf glowing through the thin parts)
-          const p = (j * PS + i) * 4; d[p] = 30 + t * 128 + (f - .5) * 10; d[p + 1] = 12 + t * 58 + (f - .5) * 6; d[p + 2] = 9 + t * 6; d[p + 3] = 255; }
+          const p = (j * PS + i) * 4; d[p] = 26 + t * 170 + (f - .5) * 10; d[p + 1] = 10 + t * 86 + (f - .5) * 6; d[p + 2] = 8 + t * 10; d[p + 3] = 255; }
         og.putImageData(img, 0, 0); }
       // the amber of thin turtle shell over gold leaf (for the X-shaped pieces between the plaques)
       const amberC = document.createElement('canvas'); amberC.width = amberC.height = 256;
@@ -136,7 +136,7 @@
           const lay = (fill, op) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const q = c.getContext('2d'); q.drawImage(INLAY, 0, 0, w, h); q.globalCompositeOperation = op || 'source-in'; q.fillStyle = fill; q.fillRect(0, 0, w, h); return c; };
           const dk = lay('rgba(18,8,5,.8)'); [[1.6, 0], [-1.6, 0], [0, 1.6], [0, -1.6]].forEach(([dx, dy]) => g.drawImage(dk, dx, dy));
           const pc = lay(PP); { const q = pc.getContext('2d'), nn = K.noise(57), t = document.createElement('canvas'); t.width = 256; t.height = 256; const tq = t.getContext('2d'), im = tq.createImageData(256, 256), d = im.data;   // each piece its own tone: lighter and greyer patches
-            for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) { const v = nn(x / 9, y / 22, 2), i = (y * 256 + x) * 4, wt = v > .5; d[i] = d[i + 1] = d[i + 2] = wt ? 255 : 40; d[i + 3] = Math.abs(v - .5) * (wt ? 110 : 190); } tq.putImageData(im, 0, 0);
+            for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) { const v = nn(x / 9, y / 22, 2), i = (y * 256 + x) * 4, wt = v > .5; d[i] = d[i + 1] = d[i + 2] = wt ? 255 : 40; d[i + 3] = Math.abs(v - .5) * (wt ? 150 : 260); } tq.putImageData(im, 0, 0);
             q.globalCompositeOperation = 'source-atop'; q.drawImage(t, 0, 0, w, h); }
           g.drawImage(pc, 0, 0);
           // the green-stained bone (the picture's red channel)
@@ -234,8 +234,24 @@
         bgMask = new TT.CanvasTexture(mk); bgMask.colorSpace = TT.NoColorSpace;
       });
       // materials: shell / pearl in one picture; the pearl areas get a thin-film iridescence (mask)
-      const face = (map, mask) => K.mat({ map, color: '#ffffff', roughness: .3, metalness: .05, clearcoat: .6, clearcoatRoughness: .24, iridescence: .85, iridescenceIOR: 1.6, iridescenceThicknessRange: [180, 520], iridescenceMap: mask });
+      // Mother-of-pearl changes colour with the light: each piece is cut from the shell at its own angle, so as the board (or the eye)
+      // moves, a piece swings from grey-white through pink to green and blue, and its neighbour does so at another moment. Done in the
+      // shader: on the pearl (mask) the colour is tinted by a phase made of the piece's own grain (a noise picture) and the direction it
+      // is looked at from, taken in the board's own space — so turning the board changes it.
+      const face = (map, mask) => { const m = K.mat({ map, color: '#f2f0ee', roughness: .42, metalness: 0, clearcoat: .12, clearcoatRoughness: .55, specularIntensity: .45 });   // (little mirror-like shine: the lamp's reflection washed the near edge out)
+        m.onBeforeCompile = sh => { sh.uniforms.uMask = { value: mask }; sh.uniforms.uGrain = { value: thickT };
+          sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vObjView;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvObjView = (inverse(modelMatrix) * vec4(cameraPosition, 1.0)).xyz - position;');
+          sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D uMask; uniform sampler2D uGrain; varying vec3 vObjView;').replace('#include <map_fragment>', `#include <map_fragment>
+            { float pm = texture2D(uMask, vMapUv).r; float gr = texture2D(uGrain, vMapUv * .9).r; float a = gr * 4.2;
+              vec3 gdir = normalize(vec3(cos(a), sin(a), cos(a * 1.7) * .8)); float t = dot(normalize(vObjView), gdir);
+              vec3 hue = .5 + .5 * cos(6.2832 * (gr * .7 + t * .85 + vec3(0.0, .33, .67)));
+              float sheen = smoothstep(.15, .95, abs(t));
+              diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * (.5 + .5 * sheen) + hue * (.08 + .2 * sheen), pm); }`); };
+        m.customProgramCacheKey = () => 'ott-nacre'; return m; };
+      const thickT = K.tex(512, 512, (g, w, h) => { const n = K.noise(91), img = g.createImageData(w, h), d = img.data;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const v = n(x / 30, y / 70, 2) * .35 + n(x / 90, y / 90, 3) * .65, i = (y * w + x) * 4; d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, v * 300 - 20)); d[i + 3] = 255; } g.putImageData(img, 0, 0); }, { data: true, rep: [3, 3] });
       const chessMat = face(chessT, chessMask), bgMat = face(bgT, bgMask);
+   // (the pearl reflects like a metal, so the film's colours show in what it mirrors and move as the board turns; the shell stays a dielectric)
       const edgeT = K.tex(512, 64, (g, w, h) => { g.fillStyle = '#e8dcbc'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(90,70,40,.5)'; g.lineWidth = 2; for (let x = 0; x < w; x += 40) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 20, h / 2); g.lineTo(x, h); g.stroke(); } }, { rep: [12, 1] });
       const bone = K.mat({ map: edgeT, color: '#ffffff', roughness: .45, clearcoat: .3 });
       // the frame tops: plaques of turtle shell alternating with mother-of-pearl cut as long pieces with concave ends running to a point
@@ -266,7 +282,7 @@
         const leaf = new TT.Mesh(new TT.BoxGeometry(LW - .08, TH, D), [sdD, sdD, wood, wood, sdL, sdL]); leaf.position.set(cx + sd * .04, TH / 2, 0); G.add(leaf);
         // raised framing fillets (about 5 mm): far, near and outer sides 1.2 cm wide, the hinge side 1.5 cm
         // (with the photograph's layout, the raised fillets carry their own part of the same picture)
-        const part = (w, d, x, z) => { const m = bgMat.clone(); ['map', 'iridescenceMap'].forEach(k => { const t = bgMat[k].clone(); t.repeat.set(w / W, d / D); t.offset.set((x - w / 2 + W / 2) / W, (D / 2 - z - d / 2) / D); t.needsUpdate = true; m[k] = t; }); m.polygonOffset = false; return m; };
+        const part = (w, d, x, z) => { const m = bgMat.clone(); m.onBeforeCompile = bgMat.onBeforeCompile; m.customProgramCacheKey = bgMat.customProgramCacheKey; const t = bgMat.map.clone(); t.repeat.set(w / W, d / D); t.offset.set((x - w / 2 + W / 2) / W, (D / 2 - z - d / 2) / D); t.needsUpdate = true; m.map = t; m.polygonOffset = false; return m; };
         const fil = (w, d, x, z, m) => { const f = new TT.Mesh(new TT.BoxGeometry(w, .5, d), [wood, wood, INLAY ? part(w, d, x, z) : m, wood, wood, wood]); f.position.set(x, TH + .25, z); G.add(f); };
         fil(LW, FW, cx, -D / 2 + FW / 2, plaqMat(LW, false)); fil(LW, FW, cx, D / 2 - FW / 2, plaqMat(LW, false));
         fil(FW, D - 2 * FW, sd * (W / 2 - FW / 2), 0, plaqMat(D, true)); const HG2 = INLAY ? 1.45 : HG; fil(HG2, D - 2 * FW, sd * HG2 / 2, 0, hingeMat);
