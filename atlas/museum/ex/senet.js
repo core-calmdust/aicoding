@@ -79,8 +79,8 @@
       // the top field: one ivory slab, the raised ebony strips over it (the square signs are painted on the slab's texture)
       // the signs on squares 15 and 26–29, after a careful modern replica of this board (the owner's photographs): cut as outlines — each
       // stroke a pair of fine lines — and large in their squares. 15: the ka's two arms holding an ankh, lying with its top toward the
-      // start of the row; 26: three nefer signs lying with their tops toward the end; 27: five rows of water; 28: three storks (the bas);
-      // 29: two kneeling men, arms raised. The last three stand upright for a player sitting at the long side.
+      // start of the row; 26: three nefer signs standing, the round end downward; 27: five rows of water; 28: three storks (the bas);
+      // 29: two kneeling men, arms raised. The last four stand upright for a player sitting at the long side.
       const signs = { 15: 'ka', 26: 'nfr', 27: 'water', 28: 'birds', 29: 'men' };
       const topT = K.tex(2048, Math.round(2048 * fieldD / fieldW), (g, w, h) => {
         const s = w / fieldW; g.drawImage(ivoryT.image, 0, 0, w, h);
@@ -112,7 +112,7 @@
           const sg = signs[n]; if (!sg) continue;
           const r = Math.floor((n - 1) / 10), k = (n - 1) % 10, c = r === 1 ? 9 - k : k;   // the boustrophedon path: 1–10 → 11–20 ← 21–30 →
           const cx = (ST + c * (SQ + ST) + SQ / 2) * s, cy = (ST + r * (SQ + ST) + SQ / 2) * s, u = SQ * s * .4;
-          q.save(); q.translate(cx, cy); q.rotate(sg === 'nfr' ? Math.PI / 2 : sg === 'ka' ? -Math.PI / 2 : 0); q.scale(u, u); DRAW[sg](); q.restore();
+          q.save(); q.translate(cx, cy); q.rotate(sg === 'ka' ? -Math.PI / 2 : 0); q.scale(u, u); DRAW[sg](); q.restore();
         }
         g.drawImage(lay, 0, 0);
       });
