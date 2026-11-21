@@ -55,7 +55,7 @@
       };
       const mk = (t, base) => K.mat({ map: t, color: '#ffffff', roughness: .48, clearcoat: .3, clearcoatRoughness: .35 });
       /* ---------- the face ---------- */
-      const IL = L - RT * 2, IW = W - RT * 2;
+      const IL = L - RT * 2, IW = W - RT * 2, ROW = 3.6, P0 = 4.9, PS = 3.75;   // the row of points: its distance from the rim, the first point's distance from the centre, the pitch
       const faceT = K.tex(2048, Math.round(2048 * IW / IL), (g, w, h) => { const s = w / IL;
         K.grain(g, w, h, { a: '#331a11', b: '#26120b', seed: 44, sx: .3, sy: 9, warp: .2, pores: .003 });   // straight grain along the length
         let y = 0, sd = 3; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;   // planks along the length, slightly different in tone
@@ -63,24 +63,30 @@
         // a band of scroll inside each long rim (seen on the far side in the overall photograph)
         const band = K.tex(2048, Math.round(2048 * 2.1 / IL), (g2, w2, h2) => scroll(g2, w2, h2, w2 / IL, 9, shT, { per: 3.1, birds: false }));
         g.globalAlpha = .8; g.drawImage(band.image, 0, 0, w, s * 2.1); g.save(); g.translate(w, h); g.rotate(Math.PI); g.drawImage(band.image, 0, 0, w, s * 2.1); g.restore(); g.globalAlpha = 1;
-        const row = s * 1.05, step = s * 3.1;
+        // ---- the playing marks (the Shōsōin's overall photograph): along each long side twelve flower "points", six to the left and six to
+        // the right of a half-moon; one flower in the middle of each short side. This is the board's layout as a game board (双六).
+        g.fillStyle = 'rgba(0,0,0,.35)'; [s * 2.1, h - s * 2.1 - s * .08].forEach(yy => g.fillRect(0, yy, w, s * .08));   // the foot of the rim's slope
+        const rosette = (fx, fy, r) => { g.save(); g.translate(fx, fy);
+          for (let q = 0; q < 8; q++) { g.rotate(Math.PI / 4); g.beginPath(); g.moveTo(r * .28, 0); g.quadraticCurveTo(r * .7, r * .42, r, 0); g.quadraticCurveTo(r * .7, -r * .42, r * .28, 0); g.fillStyle = q % 2 ? '#efe6d2' : '#c98a3c'; g.fill(); g.strokeStyle = 'rgba(40,16,8,.6)'; g.lineWidth = s * .03; g.stroke(); }
+          g.beginPath(); g.arc(0, 0, r * .36, 0, 6.29); g.fillStyle = '#5f9a8c'; g.fill(); g.strokeStyle = '#efe6d2'; g.lineWidth = s * .06; g.stroke(); g.beginPath(); g.arc(0, 0, r * .12, 0, 6.29); g.fillStyle = '#efe6d2'; g.fill(); g.restore(); };
+        const row = s * ROW;
         [row, h - row].forEach((yy, side) => {
-          // a thin crescent, horns towards the edge
-          g.save(); g.translate(w / 2, yy); if (side) g.scale(1, -1);
-          g.translate(0, s * .5); g.beginPath(); g.arc(0, -s * 4.6, s * 5.4, .27 * Math.PI, .73 * Math.PI); g.arc(0, -s * 5.15, s * 5.4, .71 * Math.PI, .29 * Math.PI, true); g.closePath();
-          g.fillStyle = '#e2c47e'; g.fill(); g.strokeStyle = 'rgba(60,30,10,.45)'; g.lineWidth = s * .04; g.stroke(); g.restore();
-          for (let i = 1; i <= 6; i++) [-1, 1].forEach(d => { const fx = w / 2 + d * (s * 1.6 + i * step); g.save(); g.translate(fx, yy);
-            for (let q = 0; q < 6; q++) { g.rotate(Math.PI / 3); g.beginPath(); g.ellipse(s * .42, 0, s * .36, s * .25, 0, 0, 6.29); g.fillStyle = '#c99a4e'; g.fill(); g.strokeStyle = 'rgba(40,16,8,.5)'; g.lineWidth = s * .03; g.stroke(); }
-            g.beginPath(); g.arc(0, 0, s * .2, 0, 6.29); g.fillStyle = '#efe2c2'; g.fill(); g.restore(); });
+          g.save(); g.translate(w / 2, yy); if (!side) g.scale(1, -1); g.beginPath(); g.arc(0, s * 1.07, s * 3.47, Math.PI + .314, -.314); g.closePath(); g.fillStyle = 'rgba(8,3,2,.4)'; g.fill(); g.restore();   // the space inside the half-moon
+          for (let i = 0; i < 6; i++) [-1, 1].forEach(d => rosette(w / 2 + d * s * (P0 + i * PS), yy, s * 1.05));
         });
-        [s * 2.2, w - s * 2.2].forEach(fx => { g.save(); g.translate(fx, h / 2); for (let q = 0; q < 6; q++) { g.rotate(Math.PI / 3); g.beginPath(); g.ellipse(s * .3, 0, s * .28, s * .16, 0, 0, 6.29); g.fillStyle = '#d8b46e'; g.fill(); } g.beginPath(); g.arc(0, 0, s * .12, 0, 6.29); g.fillStyle = '#efe2c2'; g.fill(); g.restore(); });
+        [s * 3.4, w - s * 3.4].forEach(fx => rosette(fx, h / 2, s * .8));
       });
       const face = K.mat({ map: faceT, color: '#ffffff', roughness: .55, clearcoat: .12, clearcoatRoughness: .45 });
       const add = (geo, m, x, y, z) => { const o = new TT.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; G.add(o); return o; };
+
       /* ---------- the board's edge (the slab with its rim, one band of marquetry outside) ---------- */
       const edgeTex = (len, seed) => { const s = 2048 / len; return K.tex(2048, Math.round(EDGE * s), (g, w, h) => scroll(g, w, h, s, seed, shT, { edge: true, per: 5.2 })); };
       const eL = mk(edgeTex(L, 1)), eW = mk(edgeTex(W, 2));
       const SL = EDGE - RIM;   // the slab; the face is at BASE + SL
+      // the half-moons: a raised ivory arc in the middle of each long side, its horns toward the rim, the hollow facing the players' edge
+      { const cs = new TT.Shape(); cs.moveTo(3.3, 0); cs.absarc(0, -1.07, 3.47, .314, Math.PI - .314, false); cs.absarc(0, -1.82, 3.77, Math.PI - .504, .504, true);
+        const cg = new TT.ExtrudeGeometry(cs, { depth: .28, bevelEnabled: true, bevelThickness: .05, bevelSize: .04, bevelSegments: 2, curveSegments: 24 }); cg.rotateX(-Math.PI / 2);
+        [1, -1].forEach(sd => { const m = new TT.Mesh(cg, ivory); m.position.set(0, BASE + SL, sd * (IW / 2 - ROW)); if (sd < 0) m.rotation.y = Math.PI; m.castShadow = true; G.add(m); }); }
       const eLs = mk(edgeTex(L, 1)), eWs = mk(edgeTex(W, 2));
       [eLs, eWs].forEach(m => { m.map.repeat.set(1, SL / EDGE); m.map.offset.set(0, 0); });
       add(new TT.BoxGeometry(L, SL, W), [eWs, eWs, shitan, shitan, eLs, eLs], 0, BASE + SL / 2, 0);
