@@ -68,9 +68,10 @@ let fail = 0; const ok = (c, m) => { console.log((c ? 'ok  ' : 'NG  ') + m); if 
     const last = await p.evaluate(() => { const G = DN.G(), sd = G.st.sides[1]; const cells = []; sd.ships.forEach((s, i) => { if (!sd.sunk[i]) for (let k = 0; k < s.len; k++) cells.push(s.h ? s.r * 10 + s.c + k : (s.r + k) * 10 + s.c); }); return cells; });
     await p.evaluate(cells => { const G = DN.G(), sd = G.st.sides[1]; for (const c of cells.slice(0, -1)) { sd.shots[c] = 2; } sd.ships.forEach((s, i) => { sd.hitsOn[i] = s.len; }); }, last);
     await p.evaluate(cells => { const G = DN.G(), sd = G.st.sides[1], c = cells[cells.length - 1], i = sd.grid[c]; sd.hitsOn[i] = sd.ships[i].len - 1; sd.ships.forEach((s, j) => { if (j !== i && !sd.sunk[j]) { sd.sunk[j] = true; sd.afloat--; } }); sd.fog = 0; sd.armor = sd.armor && sd.armor.map(() => 0); }, last);
-    await myTurn(); const pt = await p.evaluate(c => DN.World.screenOf(1, c), last[last.length - 1]);
-    console.log('   last square', last[last.length - 1], JSON.stringify(pt), await p.evaluate(pt => { const e = document.elementFromPoint(pt.x, pt.y); return e ? e.id || e.className : '-'; }, pt), JSON.stringify(await p.evaluate(() => { const G = DN.G(); return { busy: G.busy, turn: G.st.turn, view: G.view, armed: G.armed }; })));
-    await tap(pt);
+    // (passives such as armour can turn a hit aside: keep firing at the last ship's open squares until it goes down)
+    for (let n = 0; n < 6; n++) { await myTurn(); if (await p.evaluate(() => DN.G().phase !== 'battle')) break;
+      const c = await p.evaluate(cells => { const sd = DN.G().st.sides[1]; return cells.find(c => !sd.shots[c] || sd.shots[c] === 1) ?? cells.find(c => sd.grid[c] >= 0 && !sd.sunk[sd.grid[c]]); }, last);
+      if (c == null) break; const pt = await p.evaluate(c => DN.World.screenOf(1, c), c); await tap(pt); await p.waitForTimeout(1500); }
     await p.waitForFunction(() => !document.querySelector('#scrResult').classList.contains('hide'), null, { timeout: 30000 }).catch(() => {});
     ok(await p.evaluate(() => DN.G().phase === 'over' && document.querySelector('#rsBig').textContent === 'VICTORY'), name + ': sinking the last ship wins'); await shot('result');
     await p.click('#rsTitle'); await p.waitForTimeout(500);
