@@ -2515,11 +2515,13 @@
       const s = this.data.ls.steps[+key]; if (!s) return null;
       const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), name = c => (window.Atlas3D && Atlas3D.connect4 && Atlas3D.connect4.names ? Atlas3D.connect4.names(lang) : ['Gold', 'Silver'])[c - 1];
       const RU = (k, v) => k === 'ans' ? fill(L(C4_ANS, lang), v || {}) : fill(L((this.data.ls.rampUi || {})[k], lang), v || {}).replace(/%P([12])%/g, (_, n) => name(+n));
-      return { id: s.id, title: T('title'), intro: T('intro'), ramp: s.ramp && s.ramp.length ? s.ramp.slice() : null, RU,   // (the warm-up: texts without coordinates from atlas/nocoord/connect4.json)
-        probs: (s.problems || []).map(P => { const me = P.moves.length & 1 ? 2 : 1, g = c4Grid(P.moves), hm = s.hintMarks;
+      return { id: s.id, title: T('title'), intro: lang === 'ja' && C4J_LS.intro[s.id] || T('intro'), ramp: s.ramp && s.ramp.length ? s.ramp.slice() : null, RU,   // (the warm-up: texts without coordinates from atlas/nocoord/connect4.json)
+        probs: (s.problems || []).map((P, i) => { const me = P.moves.length & 1 ? 2 : 1, g = c4Grid(P.moves), hm = s.hintMarks;
           const thr = hm ? [...(hm === 'me' || hm === 'both' ? c4Thr(c4Grid(P.moves), me).map(([c, r]) => ({ c, r, cls: 'ok' })) : []), ...(hm === 'op' || hm === 'both' ? c4Thr(c4Grid(P.moves), 3 - me).map(([c, r]) => ({ c, r, cls: 'ng' })) : [])] : [];
           const why = () => T('why' + (P.why || ''), { m: C4M('ok', lang), x: C4M('ng', lang), c: name(me), a: P.alt !== undefined ? C4M('hl', lang) : '' }).replace(/列\u0002[ \u00a0]*列/g, '列\u0002');   // (ja: 「緑の印の列 列」 → one 列, 2026-11-21)
-          return { pos: { moves: P.moves, me }, kind: 'best', P, ask: T('goal'), ans: P.answer[0], hintTx: T('hint'), hintMk: thr, good: why, ng: why }; }),
+          const o = { pos: { moves: P.moves, me }, kind: 'best', P, ask: T('goal'), ans: P.answer[0], hintTx: T('hint'), hintMk: thr, good: why, ng: why };
+          if (lang === 'ja') try { Object.assign(o, c4LsJa(s, P, i, me, name) || {}); } catch (e) { console.warn('[lessons3d] connect4 lesson', e); }   // (2026-11-21 lesson loop: ポトンウサ's question, hint, why / what yours misses)
+          return o; }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, n = Math.round(pts / PTS), cnt = Math.round(max / PTS), pass = n >= cnt - 1; pr[s.id] = { best: Math.max(o.best || 0, n), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     points(P, c) { return P.answer.includes(c) ? 20 : 0; },   // (= connect4/index.html lessonAnswer)
@@ -2536,6 +2538,169 @@
     rampSeq: it => [...String(it.seq || '')].map(ch => +ch - 1),
   };
   const C4_ANS = { ja: '答え：{m}', en: 'Answer: {m}', zh: '答案：{m}', 'zh-TW': '答案：{m}', ko: '정답: {m}', es: 'Respuesta: {m}', fr: 'Réponse : {m}', pt: 'Resposta: {m}', de: 'Lösung: {m}', hi: 'उत्तर: {m}', ar: 'الجواب: {m}', ru: 'Ответ: {m}', id: 'Jawaban: {m}', tr: 'Cevap: {m}' };
+  /* (2026-11-21 lesson loop) the connect four lessons in ポトンウサ's words, Japanese, for the 3D tower (no column letters): his own
+     intros, five questions a lesson, two hints, and after the answer why the column works / what yours misses, read from the board
+     (c4F: a four now, the opponent's four next, a cell under the opponent's winning cell, new winning cells and their row, two at once /
+     stacked) and the solver's result of every column (C4SOL, connect4/engine.js with the book and tree: A the lesson's answer, W a win,
+     w a slower win, D a draw, L a loss, - a full column). */
+  const C4SOL = {"four":["DLAwwww","wwwwAww","wwwwAwL","wDwAwww"],"block":["LLLLLAL","LLLALLL","LLALLLL"],"centre":["LLDADLL","LLLALLL","LLLALDL"],"early":["LLLALLL","LDAwLLL","LLLLALL","LLLALLL"],"threat":["LALLLLL","ALLLLLL","DAL-LLL"],"open":["LDAwwww","wwwwAww","LALLLLL","LwALLLL"],"diag":["LLLALLL","LLLLLAL","LALLLLL","LLLwLAL"],"double":["A-L---L","-L-L--A","L-L-AL-"],"stack":["LALLwwL","wwwLwAw","wAwwLww","wwAwwww"],"force":["wAwwwwD","wwAwwww","LLwwALL","LLAwwLL"],"parity":["DDADDDD","D-D-DAD","AD-L-DD"],"zugz":["LA----L","-D--L-A","--D--wA","AL---LL"],"follow":["LLLLALL","LLALLLL","wLLALLL","LLLALLL"],"first":["LALLLLL","wDwAwww","wwAwwww","wwwwAww"],"second":["LADLLwL","LDwADwL","LLLADDL","LDALDDL"],"op1":["LLLALLL","LDA-ADL","LALDDAL"],"op2":["DLAAAAA","LLDDLAA","LLwwLLA"],"op3":["LAL-LLL","LDL-LAL","LLL-ALL","LLLLLLA"],"count":["LL-A-L-","LL----A","-A--L-L","--AL---"],"endwin":["AD-----","-DA----","-----DA","--LA---"],"miss":["ALLLLLL","wLLLALL","LALLLLL","wLLLALL"],"under":["DLLAwLL","LLLALLL","wLL-ALL","LLw-LwA"],"edge":["LLALLLL","LLALLLL","LLLDALL","LLLLLAL"]};
+  const C4J_LS = {
+    intro: {
+      four: '自分の色を<b>ヨコ・タテ・ナナメ</b>のどれかに4つ並べたら勝ち！<br>コマは列の<b>いちばん下の空きマス</b>にポトンと落ちるの。下が空いているマスには、まだ置けないからね。<br>置く前に「今すぐ4つ並ぶマスはないかな？」って見るくせをつけよう。',
+      block: '相手に<b>今すぐ置ける勝ちマス</b>があったら、どんないい手よりも先にふさがなきゃ！<br>それから、相手の勝ちマスの<b>真下</b>に置くのもだめ。次に相手がそこへ置けるようになっちゃうの。',
+      centre: '4つ並ぶ線は、盤の上に全部で<b>69本</b>。そのうちいちばん多くの線が通るのが<b>真ん中の列</b>なの。<br>コネクトフォーは先手必勝って分かっていて、初手で勝ちにつながるのは真ん中の列だけ！ 迷ったら真ん中寄りだね。',
+      early: 'マスごとに「4つ並びの線」の数をくらべると、<b>真ん中ほど多くて、端ほど少ない</b>の。真ん中の2マスは13本、すみはたった3本！<br>序盤は線の多いマスに置くと、自分のチャンスがふえて相手のチャンスがへるね。でも、さいごに決めるのは読みだよ。',
+      threat: '3つ並んで、4つ目のマスが空いている形を<b>勝ちマス（スレット）</b>って呼ぶの。相手はそのマスの真下に置けなくなる！<br>すぐには埋まらない<b>空中の勝ちマス</b>は、終盤になるほど効いてくるね。',
+      open: 'すぐ置ける段で、<b>両はしが空いた2つ</b>に3つ目を足すと、どっちのはしに置いても4つ並ぶ形になるの。相手は片方しかふさげない！<br>ぎゃくに、相手がいちばん下の段で2つ並べたら、早めにはしを押さえておこうね。',
+      diag: 'ナナメの4つ並びは<b>階段みたいな土台</b>がいるから、相手も自分も見落としがちなの。<br>ナナメの勝ちマスは空中にできることが多くて、すぐには使えなくても<b>終盤に効く</b>ねらいになるね。',
+      double: '勝ちマスを<b>同時に2つ</b>作れば、相手は1手で片方しかふさげない！ これがダブルスレット。<br>よくあるのは、両はしが空いたヨコの3つと、<b>上下に重なった2つの勝ちマス</b>。一手で勝負が決まる、気持ちのいい手筋だね。',
+      stack: '同じ列に<b>上下に並んだ2つの勝ちマス</b>を作ると、相手が下をふさいでも、その上にきみが置いて勝てるの。<br>数字の「7」みたいな形が代表的！ ヨコの3つとナナメの3つが、同じ列のとなりあうマスをねらうんだ。',
+      force: 'すぐ置ける勝ちマス（<b>リーチ</b>）を作ると、相手はそこをふさぐしかないの。相手の手を<b>決めさせている</b>あいだに、自分の形を整えちゃおう！<br>「リーチ → 相手がふさぐ → ダブルリーチ → 勝ち」の流れを読み切ってね。',
+      parity: '後手がずっと先手の<b>真上</b>に置き返すと、後手は<b>偶数段（下から2・4・6段目）</b>をみんな取れるの。<br>だから終盤は、<b>先手は奇数段</b>、<b>後手は偶数段</b>の勝ちマスが強い！ ほかの列が埋まると、相手は勝ちマスの真下に置くしかなくなるからね。',
+      zugz: 'コネクトフォーは<b>パスができない</b>の。終盤にほかの列が埋まると、相手はきみの勝ちマスの<b>真下</b>に置くしかなくなる！ これがツークツワンク（手づまり）。<br>勝ちマスは数より<b>段</b>が大事なんだ。',
+      follow: '後手が先手の石の<b>真上</b>に置き返し続けると、偶数段（2・4・6段目）をみんな取れるの。偶数段に勝ちマスがある後手は、これだけで負けない！<br>でも、真上に置くと相手に勝ちマスをわたすこともあるから、いつもまねすればいいわけじゃないね。',
+      first: '先手は<b>奇数段（1・3・5段目）</b>の勝ちマスが終盤に効くの。奇数段に1つ作って、後手に偶数段の勝ちマスを作らせなければ先手の勝ち！<br>真上に置き返されても、奇数段の勝ちマスがその流れをくずしてくれるね。',
+      second: '後手は<b>偶数段（2・4・6段目）</b>の勝ちマスが効くの。先手の奇数段のねらいを消しながら偶数段に勝ちマスを持てば、手づまりで後手が勝てる！<br>強い先手が相手でも、ねばれば勝負はまだまだ。結果を悪くしない一手をさがそうね。',
+      op1: 'コネクトフォーは完全に解かれたゲームなの。先手が<b>初手で真ん中の列</b>に置けば、最善をつくすと先手の勝ち！ そのとなりの列なら引き分け、ほかは後手の勝ちになるね。<br>でも勝ち切るのは41手目。初手は長い戦いの入り口なんだ。',
+      op2: '先手が真ん中に置いたら、後手はどこに返しても、強い先手には負けちゃうの。真上に返せば41手目までねばれるけど、<b>横にはずすと先手はもっと早く勝てる</b>！<br>相手が真ん中をはずしたら、すかさず攻めの形を作ろうね。',
+      op3: '先手と後手が真ん中に置き合ったあとは、2人とも真ん中の列をてっぺんまで積み上げて、それから横の列へ広がるのが本線なの。<br>最善どうしなら、先手が<b>41手目</b>に勝つ！ 本線の手を当ててみてね。',
+      count: '終盤は、勝ちマスのある列のほかに<b>空きマスがいくつ残っているか</b>を数えるの。そこが全部埋まったときに手番の側が、勝ちマスの下へ置かされる！<br>相手が置かされる側になるように、<b>数を合わせる</b>のが終盤のわざだね。',
+      endwin: '盤が埋まってくると置ける場所がへって、ひとつのリーチが相手の手を決めちゃうの。<br>勝ちが見えたら、相手に反撃の勝ちマスをあげない<b>いちばん短い手順</b>で決め切ろう！',
+      miss: '相手の勝ちマスをふさぐのは大事。でも、<b>自分が今すぐ4つ並べられるなら、それがいちばん先</b>！ 勝ってしまえば相手のねらいは関係ないからね。<br>置く前の確認は「①自分の勝ち ②相手の勝ちマスをふさぐ ③それ以外」の順番で。',
+      under: '相手の勝ちマスの<b>真下</b>に置くと、そのマスが使えるようになって、相手にすぐ置かれて負けちゃうの。<br>ふさげない勝ちマスの下は、できるだけさいごまで空けておくのが鉄則！ 置ける列が少ない終盤ほど気をつけてね。',
+      edge: 'いちばん端の2列は、どのマスも通る線が少なくて、序盤・中盤ははたらきが弱いの。端に置いているあいだに、相手に真ん中を固められちゃう！<br>迷ったら真ん中寄り。でも、読んでみたら端が正解の場面もあるからね。',
+    },
+    ask: {
+      four: ['今すぐ4つ並べて勝っちゃおう！', '4つ目を入れる列はどこかな？', '勝ちの一手があるよ。見つけられる？', 'ヨコ・タテ・ナナメ、どこで4つそろう？', 'さあ、ポトンと落として勝負を決めよう！'],
+      block: ['負けないための一手をえらんでね。', '相手が次に4つ並べちゃうマスはどこかな？', 'あぶない！ 相手のねらいを止める列は？', 'ここはまず守り。どの列に置く？', '相手の3つの先、空いているのはどこ？'],
+      centre: ['勝ちにつながる、たった一つの手をえらんでね。', 'いちばん多くの線が通る列はどこかな？', 'ここで勝ちにつながる列はひとつだけ。どれ？', '{c}の番！ どの列がいちばん働く？', 'さあ、勝ちへの一手を見つけよう！'],
+      early: ['序盤のいちばんいい一手をえらんでね。', 'この形、いちばん働くマスはどこかな？', '線の数と読み、両方で考えてみて！', '{c}の番。どこに置くのがいちばん？', 'さあ、序盤のじょうずな置き場所は？'],
+      threat: ['勝ちにつながるねらいを作ってみよう！', 'あと1つで4つ並ぶマス、作れるかな？', '{c}の番！ 新しい勝ちマスを作る列は？', '相手をしばる勝ちマスを作る一手は？', 'さあ、空中の勝ちマスを作っちゃおう！'],
+      open: ['両はしが空いた3つを作って、勝ちを決めちゃおう！', '相手が片方しか止められない形、作れるかな？', '{c}の番！ 2つ並びに3つ目を足すならどこ？', 'はしが2つとも空く3つ並び、どの列で作る？', 'さあ、止められない3つを作ろう！'],
+      diag: ['ナナメの線を生かす、いちばんいい手をえらんでね。', 'ナナメの勝ちマスを作れる列はどこかな？', '{c}の番！ 階段の土台、使えそう？', 'ナナメに伸ばせる所、見つけられる？', 'さあ、ナナメのねらいを作ろう！'],
+      double: ['勝ちマスを2つ同時に作っちゃおう！', '相手が1手じゃふさぎきれない形、作れるかな？', '{c}の番！ ダブルスレットの一手は？', '勝ちマスが2つになる列はどこ？', 'さあ、一手で勝負を決めよう！'],
+      stack: ['上下に重なる勝ちマスを作ってみよう！', '同じ列に勝ちマスを2つ重ねられるかな？', '{c}の番！ 「7」の形、作れそう？', '下をふさがれても上で勝てる形、どの列で作る？', 'さあ、重なる勝ちマスをねらおう！'],
+      force: ['3手以内に勝つ、さいしょの一手をえらんでね。', 'まずはリーチ！ どの列から始める？', '{c}の番！ 相手の手を決めさせる一手は？', '相手にふさがせてから勝つ道、見えるかな？', 'さあ、強制手順のスタート！'],
+      parity: ['自分に合った段にねらいを作ってみよう。', '{c}に合うのは奇数段？ 偶数段？ どの列に置く？', '勝ちマスを作るなら何段目がいいかな？', '終盤に効く段の勝ちマス、作れる？', 'さあ、段を考えて置いてみよう！'],
+      zugz: ['さいごに相手を手づまりにする一手をえらんでね。', '相手に勝ちマスの下へ置かせる手はどれかな？', '{c}の番！ 空きマスの数、合わせられる？', 'パスはできない。それを生かす一手は？', 'さあ、手づまりにする一手を見つけよう！'],
+      follow: ['後手として、いちばんいい返し手をえらんでね。', '相手が今置いた石、そのすぐ上はどこかな？', '{c}の番！ 置き返すならどの列？', '偶数段をもらう一手は？', 'さあ、じょうずに置き返そう！'],
+      first: ['先手として、勝ちにつながる一手をえらんでね。', '奇数段に勝ちマスを作れる列はどこかな？', '{c}の番！ 先手らしい一手は？', '終盤に効く勝ちマス、作れそう？', 'さあ、先手の勝ちへ進もう！'],
+      second: ['後手として、いちばんいい一手をえらんでね。', '先手のねらいを消せる列はどこかな？', '{c}の番！ 偶数段を生かす一手は？', '結果を悪くしない一手、見つけられる？', 'さあ、後手のねばりを見せよう！'],
+      op1: ['初手か序盤の正解をえらんでね。', '完全解析でいちばんの一手はどこかな？', '{c}の番！ 勝ちを残す列は？', 'ここで負けない列、どれだと思う？', 'さあ、序盤の正解を当ててみよう！'],
+      op2: ['先手として、いちばんいい一手をえらんでね。', '相手が真ん中をはずしたよ。どう攻める？', '{c}の番！ 勝ちにつながる列は？', '相手がはずした側と真ん中、くらべてみて！', 'さあ、とがめる一手を見つけよう！'],
+      op3: ['本線の、いちばんいい一手をえらんでね。', '本線ではどの列に置くかな？', '{c}の番！ 最善の一手は？', '置いたあと相手に勝ちマスができない列は？', 'さあ、本線の手を当ててみよう！'],
+      count: ['終盤の、いちばんいい一手をえらんでね。', '空きマスはいくつ残ってる？ どの列に置く？', '{c}の番！ 数を合わせる一手は？', 'さいごに残る列はどれかな？', 'さあ、数えて置いてみよう！'],
+      endwin: ['いちばん早く勝てる一手をえらんでね。', '勝ちが見えてる！ 決め切る列はどこかな？', '{c}の番！ 最短の一手は？', '相手に反撃させない一手、見つけられる？', 'さあ、勝ち切っちゃおう！'],
+      miss: ['いちばんいい一手をえらんでね。', '相手のねらいもあるけど、まずは自分を見て！ どの列？', '{c}の番！ 今すぐできることは？', 'ふさぐ前に、もっといい手はないかな？', 'さあ、見のがさずに決めよう！'],
+      under: ['負けない一手をえらんでね。', '置いちゃいけない列はどこかな？ その上で選んで！', '{c}の番！ 安全な列は？', '相手の勝ちマスの下、うめずにすむ手は？', 'さあ、落とし穴をよけて置こう！'],
+      edge: ['この場面のいちばんいい一手をえらんでね。', '端と真ん中寄り、どっちが働くかな？', '{c}の番！ どの列に置く？', '線の多いマス、見つけられる？', 'さあ、じょうずな置き場所は？'],
+    },
+    hint: {
+      four: ['3つ並んでいる所をさがして、その先のマスに今すぐ置けるか見てみて。', 'ナナメも忘れずに！ 4つ目のマスの下が埋まっているかも確かめてね。'],
+      block: ['相手の3つ並びをさがして、その先のマスに今すぐ置けるか見てみて。', '相手の勝ちマスのうち、もう下が埋まっているマスが答えなの。'],
+      centre: ['真ん中の列に注目してみて。左右どっちの4並びにも使えるからね。', '端の列を通る線は少ないの。真ん中ほど線が多いね。'],
+      early: ['端の列は線が少ないから、序盤はたいてい弱い手なの。真ん中寄りから考えてみて。', '相手の形を分断できるマスはどこかな？'],
+      threat: ['置いたあとに「あと1つで4つ並ぶ空きマス」ができる手をさがしてね。', '1つ空けて3つ並べると、空いたマスが勝ちマスになるの。その下が空いているとなおいいね。'],
+      open: ['緑の印はきみの勝ちマス。ヨコに2つ並んだ所で、両どなりとその外がわにすぐ置けるか見てみて。', 'いちばん下の段や、すぐ置ける段の2つ並びに注目！'],
+      diag: ['緑の印はきみの勝ちマス。ナナメに2〜3つ並んだ所を伸ばせないか考えてみて。', '置いたマスから、右上と左上の両方のナナメを見てね。'],
+      double: ['置いたあとに勝ちマスが2つになる手をさがしてね。ヨコの両はしか、上下に重なる形！', '1つしか勝ちマスができない手だと、ふさがれておしまいなの。'],
+      stack: ['緑の印はきみの勝ちマス。そのすぐ上か下に、もう1つ勝ちマスを作れないかな？', 'ヨコの3つとナナメの3つが、同じ列のとなりのマスをねらう形をさがしてね。'],
+      force: ['光ってる印はきみの勝ちマス。まずは今すぐ置ける勝ちマスを作る手をさがして！', '相手がふさいだあと、どんな形が残るか考えてみてね。'],
+      parity: ['先手は奇数段（1・3・5段目）、後手は偶数段（2・4・6段目）のねらいをめざしてね。', '置いたあとにできる勝ちマスが、下から何段目かを数えてみて。'],
+      zugz: ['印は勝ちマス。それぞれの列の空きマスの数と、どの段がだれの勝ちマスかを数えてみて。', '勝ちマスのすぐ下にだけは置かないこと！ ほかの空きマスを埋めていこう。'],
+      follow: ['相手が今置いた石のすぐ上を考えてみて。', '真上に置き返すと、偶数段がきみのものになるの。'],
+      first: ['緑の印はきみの勝ちマス。奇数段（1・3・5段目）に勝ちマスを作る手をさがしてね。', '置いたあと、相手に勝ちマスをわたさないかも確かめて！'],
+      second: ['赤い印は相手の勝ちマス、緑の印はきみの勝ちマス。偶数段（2・4・6段目）に注目してね。', '先手の奇数段のねらいを消せる手はないかな？'],
+      op1: ['真ん中の列から考えてみて。', '真ん中の石は、いちばん多くの線に参加できるね。'],
+      op2: ['真ん中の列と、相手がはずした側の列をくらべてみて。', '相手の石のとなりより、線の多いマスを取るのが近道なの。'],
+      op3: ['置いたあとに相手の勝ちマスができないか、それぞれの列を見てみて。', '本線は真ん中の列をてっぺんまで積んでから、横へ広がっていくの。'],
+      count: ['印は勝ちマス。それぞれの列の空きマスを数えて、どの列がさいごまで残るか考えてみて。', '勝ちマスのある列以外の空きマスが、偶数か奇数かがカギなの。'],
+      endwin: ['緑の印はきみの勝ちマス。すぐ置ける場所はあるかな？', '相手に反撃の勝ちマスをあげない手順を考えてね。'],
+      miss: ['相手の勝ちマスより先に、きみの勝ちマスを見てね。', '赤い印は相手、緑の印はきみの勝ちマス。今すぐ置けるのはどっち？'],
+      under: ['赤い印は相手の勝ちマス。その真下に置く手はさけようね。', '置いたあと、相手がすぐ上に置いて4つ並ばないか確かめて！'],
+      edge: ['端の列はあとまわし。真ん中寄りの列からくらべてみて。', '置いたあとに相手の勝ちマスができないかも見てね。'],
+    },
+  };
+  const C4DIR = ['ヨコ', 'タテ', 'ナナメ', 'ナナメ'];
+  function c4Dir(g, c, r, p) { const at = (x, y) => (x >= 0 && x < 7 && y >= 0 && y < g[x].length) ? g[x][y] : 0; const D = [[1, 0], [0, 1], [1, 1], [1, -1]]; for (let d = 0; d < 4; d++) { const [dc, dr] = D[d]; let n = 1; for (const s of [1, -1]) { let x = c + dc * s, y = r + dr * s; while (at(x, y) === p) { n++; x += dc * s; y += dr * s; } } if (n >= 4) return C4DIR[d]; } return ''; }
+  function c4F(mv, u) {   // what dropping a disc in column u does (the side to move)
+    const g = c4Grid(mv), me = mv.length & 1 ? 2 : 1, op = 3 - me, h = g[u].length;
+    const now = p => { const o = []; for (let c = 0; c < 7; c++) if (g[c].length < 6) { g[c].push(p); if (c4Line(g, c, g[c].length - 1, p)) o.push(c); g[c].pop(); } return o; };
+    const has = (L, c, r) => L.some(([x, y]) => x === c && y === r);
+    const myNow = now(me), opNow = now(op), thrB = c4Thr(g, me), opThrB = c4Thr(g, op);
+    const R = { u, h, row: h + 1, myNow, opNow, blocked: has(opThrB, u, h), under: has(opThrB, u, h + 1), underMine: has(thrB, u, h + 1), centre: Math.abs(u - 3) };
+    if (h >= 6) return Object.assign(R, { full: true });
+    g[u].push(me); R.win = c4Line(g, u, h, me); R.dir = R.win ? c4Dir(g, u, h, me) : '';
+    R.opNext = R.win ? [] : now(op); R.myNext = now(me);
+    const thrA = c4Thr(g, me); R.newThr = thrA.filter(([c, r]) => !has(thrB, c, r)); R.thrA = thrA;
+    R.stacked = thrA.some(([c, r]) => has(thrA, c, r + 1));
+    R.newRows = [...new Set(R.newThr.map(([, r]) => r + 1))].sort((a, b) => a - b);
+    g[u].pop();
+    return R;
+  }
+  function c4LsJa(s, P, i, me, cname) {
+    const id = s.id, A0 = C4J_LS.ask[id]; if (!A0) return null;
+    const k = i + id.length, pick = L => L[k % L.length], H = C4J_LS.hint[id] || [];
+    const M = C4M('ok', 'ja'), X = C4M('ng', 'ja'), f = x => x.replace(/\{m\}/g, M).replace(/\{x\}/g, X).replace(/\{c\}/g, cname(me)).replace(/\{o\}/g, cname(3 - me));
+    const ask = f(pick(A0)), hintTx = f(H[(i + (s.hintMarks ? 0 : 1)) % (H.length || 1)] || '');
+    const sol = (C4SOL[id] || [])[i] || '', okS = new Set(P.answer), A = P.answer[0], FA = c4F(P.moves, A), odd = me === 1;
+    const legal = c => c4Grid(P.moves)[c].length < 6;
+    const alt = u => { if (u != null && !okS.has(u) && legal(u)) return u; for (const c of [3, 2, 4, 1, 5, 0, 6]) if (!okS.has(c) && legal(c)) return c; return null; };
+    const rowW = n => `${n}段目（${n & 1 ? '奇数' : '偶数'}段）`;
+    // why the answer works (the tail of a correction, and the praise)
+    const why = () => {
+      if (FA.win) return `{m}なら、${FA.dir}に4つそろって勝ちだったの。`;
+      if (FA.blocked && FA.myNext.length < 2) return pick(['{m}は、相手が次に4つ並べるマス。先にふさげば負けないの。', '{m}でふさげば、相手の4つ並びを止められたから。']);
+      if (id === 'follow' && P.moves.length && +P.moves[P.moves.length - 1] - 1 === A) return '{m}は相手の石の真上。置き返せば、偶数段がきみのものになるの。';
+      if (id === 'zugz' || id === 'count') return pick(['{m}なら空きマスの数が合って、相手が先に勝ちマスの下へ置かされる流れになるの。', '{m}で数を合わせれば、さいごに置かされるのは相手のほうだから。']);
+      if (id === 'under' && !FA.under) return pick(['{m}なら、相手の勝ちマスの下を埋めずにすむから。', '{m}は安全な列。相手の勝ちマスの下を空けたままにできるの。']);
+      if (FA.myNext.length >= 2) return '{m}なら勝ちマスが2つ同時にできて、相手は片方しか止められないの。';
+      if (FA.stacked && FA.newThr.length) return '{m}なら、上下に重なる勝ちマスができるから。下をふさがれても、上で勝てるの。';
+      if (FA.myNext.length === 1 && (id === 'force' || id === 'endwin')) return '{m}ならリーチになって、相手はそこをふさぐしかないの。そのあとの形もきみのものだね。';
+      if (FA.newThr.length && (id === 'parity' || id === 'first' || id === 'second') && (FA.newRows[FA.newRows.length - 1] & 1) === (odd ? 1 : 0)) return `{m}なら、${rowW(FA.newRows[FA.newRows.length - 1])}に勝ちマスができるから。{c}に合う段だね。`;
+      if (id === 'endwin') return '{m}なら、相手に反撃させずに勝ち切れるの。';
+      if (FA.newThr.length) return pick(['{m}なら、新しい勝ちマスができるから。', '{m}に置けば、あと1つで4つ並ぶマスが生まれるの。']);
+      if (sol[A] === 'A' && /[DLw]/.test(sol.replace(/[A-]/g, '')) && FA.centre <= 1 && (id === 'centre' || id === 'early' || id === 'op1' || id === 'edge')) return '{m}は線の多いマスだから、完全解析でもいちばんいい結果になるの。';
+      return pick(['{m}なら、完全解析でもいちばんいい結果になるから。', '{m}なら、最後まで読んでもいちばん得するの。']);
+    };
+    const goodLines = () => {
+      if (FA.win) return pick([`${FA.dir}に4つそろって勝ち！ 置く前に見つけられたね。`, `ポトン！ ${FA.dir}の4つ並びで勝負あり！`, `やったね！ ${FA.dir}に4つ、きれいにそろったよ。`]);
+      if (FA.blocked && FA.myNext.length < 2) return FA.myNext.length ? 'ふさぎながらリーチ！ 守りと攻めがいっぺんにできたね。' : pick(['相手の勝ちマスをふさいだね！ これで次に負けることはないの。', 'ナイスブロック！ 相手の4つ並びを止められた。', 'しっかり守れた！ 相手の3つの先を見のがさなかったね。']);
+      if (FA.myNext.length >= 2) return pick(['勝ちマスが2つ同時にできた！ 相手は片方しかふさげないね。', 'ダブルスレット完成！ もう相手は止められないの。', 'みごと！ どっちをふさがれても、もう片方で勝てるね。']);
+      if (FA.stacked && FA.newThr.length) return pick(['上下に重なる勝ちマスができた！ 下をふさがれても上で勝てるね。', '「7」の形のできあがり！ 相手はもうその列に置けないの。', 'ぴょこっ！ 同じ列に勝ちマスが2つ重なったね。']);
+      if (id === 'follow' && P.moves.length && +P.moves[P.moves.length - 1] - 1 === A) return pick(['真上に置き返せたね！ これで偶数段がきみのもの。', 'じょうずな置き返し！ 相手の石のすぐ上がいちばんだったの。']);
+      if (id === 'zugz' || id === 'count') return pick(['数がぴったり合ったね！ さいごに置かされるのは相手のほう。', 'じょうずに数えられた！ これで相手は手づまりになるの。', 'ぴょこっ！ 空きマスの数を味方につけたね。']);
+      if (id === 'under' && !FA.under) return pick(['相手の勝ちマスの下を空けたまま、安全に置けたね！', 'その列なら安心！ 落とし穴をちゃんとよけられたの。', 'いい判断！ 相手の勝ちマスの下は、さいごまでとっておこうね。']);
+      if (FA.myNext.length === 1) return pick(['リーチ！ 相手はそこをふさぐしかないね。', 'いいね、相手の手を決めさせるリーチ！ 主導権はきみのもの。']);
+      if (id === 'endwin') return pick(['勝ちを決め切る一手！ 相手に反撃のすきをあげなかったね。', 'みごとな仕上げ！ これでもう相手は止められないの。']);
+      if (FA.newThr.length) { const r = FA.newRows[FA.newRows.length - 1];
+        return (id === 'parity' || id === 'first' || id === 'second') && (r & 1) === (odd ? 1 : 0) ? pick([`${rowW(r)}に勝ちマスができた！ 終盤に効いてくるね。`, `いい段に勝ちマス！ ${r}段目は、{c}にとってたのもしいの。`]) : pick(['新しい勝ちマスができた！ 相手はその真下に置けなくなるね。', 'いいねらい！ あと1つで4つ並ぶマスが生まれたよ。', 'ぴょこっ！ 相手をしばる勝ちマスのできあがり。']); }
+      return pick(['正解！ 完全解析でもいちばんいい手なの。', 'いい手だね！ 最後まで読むと、これがいちばん得なんだ。', FA.centre <= 1 && !/zugz|count|endwin|under|miss/.test(id) ? 'ばっちり！ 線の多いところを押さえられたね。' : 'ばっちり！ ちゃんと先まで読めてるね。']);
+    };
+    const good = () => f(goodLines());
+    const ng = u0 => {
+      const u = alt(u0); if (u == null) return f(why());
+      const G = c4F(P.moves, u), sv = sol[u] || '';
+      let a = '';
+      if (G.myNow.length && !G.win) a = pick(['{x}だと、せっかくの勝ちを見のがしちゃう！', '{x}より先に、今すぐ4つ並べられる列があったの。']);
+      else if (G.opNext.length && G.under && !G.opNow.length) a = '{x}は相手の勝ちマスの真下！ すぐ上に置かれて4つ並んじゃう。';
+      else if (G.opNext.length) a = pick(['{x}だと、相手の勝ちマスがあいたまま。次に4つ並べられて負けちゃう！', '{x}では相手の3つの先がふさがらないの。']);
+      else if (G.underMine) a = '{x}はきみの勝ちマスの真下。相手にその勝ちマスをふさがれちゃう！';
+      else if ((id === 'double' || id === 'open') && G.myNext.length < 2) a = G.myNext.length ? '{x}だと勝ちマスは1つだけ。ふさがれておしまいなの。' : '{x}だと、すぐ置ける勝ちマスができないの。';
+      else if ((id === 'threat' || id === 'diag' || id === 'stack') && !G.newThr.length) a = '{x}だと、新しい勝ちマスができないの。';
+      else if (id === 'stack' && !G.stacked) a = '{x}の勝ちマスは重ならないから、ふさがれたら終わりなの。';
+      else if ((id === 'parity' || id === 'first' || id === 'second') && G.newThr.length && ((G.newRows[G.newRows.length - 1] & 1) !== (odd ? 1 : 0))) a = `{x}の勝ちマスは${rowW(G.newRows[G.newRows.length - 1])}。{c}には効きにくい段なの。`;
+      else if (id === 'follow' && P.moves.length && +P.moves[P.moves.length - 1] - 1 !== u) a = '{x}は相手の石の真上じゃないから、偶数段の流れがくずれちゃう。';
+      else if ((id === 'centre' || id === 'early' || id === 'edge' || id === 'op1' || id === 'op2') && G.centre >= 2 && FA.centre < G.centre) a = '{x}は端寄りで、通る線が少ないの。';
+      const B = { L: [['{x}だと、相手が正しく打てば最後は負けになっちゃう。', '{x}だと、最後まで読むと相手の勝ちになるの。'], ['完全解析だと、最後は相手の勝ちになるの。', 'そのまま進むと、相手の勝ちになっちゃう。']],
+        D: [['{x}だと、最後まで読んでも引き分けどまり。'], ['最後まで読むと引き分けどまり。']], w: [['{x}でも勝てるけど、勝つまでが長くなっちゃうから、ちょっと損。'], ['まだ勝てるけど、遠回りになっちゃう。']] }[sv];
+      let b2 = '';
+      if (!a) a = B ? pick(B[0]) : '{x}だと、相手に楽をさせちゃうの。'; else if (B && !/負けちゃう！|4つ並んじゃう。/.test(a)) b2 = pick(B[1]);
+      const t = a + b2 + why();
+      return f(t.length > 140 ? a + why() : t);
+    };
+    return { ask, hintTx, good, ng, own: true };
+  }
   /* hnefatafl (2026-11-15): tafl/lessons.json (16 steps of 5 problems): one move from P.ok (20 or 0), a strategy move scored by the
      engine's values P.sc (= tafl/app.js problemPoints), or N moves that keep a forced escape / capture (P.n > 1, = seqAnswer: the engine's
      puzzle solver checks each move, the most stubborn defence answers). Progress = the full game's ('aicoding-tafl-lessons' { id: { best:
@@ -3439,7 +3604,7 @@
       }
       if (id === 'connect4' && typeof u === 'number') {   // (back to the problem: the right column green, yours red)
         const right = pts >= 16, k = cur.k;
-        say(`${right ? line('solved') || pick(X.good) : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.good ? '<br>' + p.good(u) : ''));
+        say(`${p.own ? (right ? '' : 'おしい！') : right ? line('solved') || pick(X.good) : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right || !p.own ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));   // (p.own: ポトンウサ names the green column and why yours falls short himself)
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([[p.ans, 'ok'], ...(right ? [] : [[u, 'ng']])]); }, 900);
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
