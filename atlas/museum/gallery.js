@@ -97,7 +97,9 @@
     ov.querySelector('.exclose').onclick = close;
     const pb = ov.querySelector('.amplay'); if (pb) pb.onclick = () => { close(); setTimeout(() => ctx.open(g.id, null), 280); };
     V3 = { ov, e, close, spin: true };
-    const onKey = ev => { if (ev.key === 'Escape') { ev.preventDefault(); close(); } };
+    const onKey = ev => { if (ev.key === 'Escape') { ev.preventDefault(); close(); return; }
+      // (2026-11-21) I: the 3D debug panel for the piece on show (the room's own panel — table3d.js — stays out of it: stopPropagation)
+      if ((ev.key === 'i' || ev.key === 'I') && !ev.repeat && !ev.ctrlKey && !ev.metaKey && !ev.altKey && !(ev.target && ev.target.closest && ev.target.closest('input,textarea,select,[contenteditable]'))) { ev.stopPropagation(); dbgToggle(); } };
     document.addEventListener('keydown', onKey); V3.offKey = () => document.removeEventListener('keydown', onKey);
     ov.querySelectorAll('.exlook [data-n]').forEach(b => b.onclick = () => focusSpot(+b.dataset.n));
     ov.querySelector('[data-k="reset"]').onclick = () => { if (V3 && V3.home) { V3.spin = false; tween(V3.home); } };
@@ -190,10 +192,53 @@
     if (!V3) return;
     cancelAnimationFrame(V3.raf); if (V3.ro) V3.ro.disconnect(); if (V3.offKey) V3.offKey(); if (V3.offIn) V3.offIn();
     if (V3.scene) V3.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); const m = o.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(x => { for (const k in x) { const v = x[k]; if (v && v.isTexture) v.dispose(); } x.dispose(); }); });
+    if (DBG.el) DBG.el.hidden = true;
     if (V3.env) V3.env.dispose();
     if (V3.R) { V3.R.dispose(); try { V3.R.forceContextLoss(); } catch (x) {} }
     V3 = null;
   }
+
+  /* ---------- I key: the debug panel (2026-11-21; the same look as the 3D table's, atlas/table3d.js) ---------- */
+  const DBG = { on: (() => { try { return !!sessionStorage.getItem('t3d-debug'); } catch (x) { return false; } })(), el: null, fr: 0, t: 0, fps: 0, last: 0 };
+  const fmtN = n => n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'k' : String(n);
+  function dbgPaint() {
+    if (!DBG.on) return;
+    if (!DBG.el) { if (!document.querySelector('style[data-t3dbg]')) { const st = document.createElement('style'); st.dataset.t3dbg = '1'; st.textContent = '.t3dbg{position:fixed;left:10px;bottom:10px;z-index:2147483000;min-width:300px;max-width:min(440px,calc(100vw - 20px));padding:10px 12px;border-radius:10px;background:rgba(14,16,22,.82);color:#e8ecf4;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;pointer-events:none;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);box-shadow:0 4px 18px rgba(0,0,0,.3)}.t3dbg div{display:flex;gap:10px;justify-content:space-between}.t3dbg i{font-style:normal;color:#9aa6bc;white-space:nowrap}.t3dbg span{text-align:right}.t3dbg b{color:#fff}.t3dbg hr{border:0;border-top:1px solid rgba(255,255,255,.14);margin:5px 0}.t3dbg .t3dbg-h{font-weight:700;letter-spacing:.08em;color:#ffd27a;margin-bottom:4px}.t3dbg .t3dbg-h span{font-weight:400;color:#8a94a8;letter-spacing:0}'; document.head.appendChild(st); }
+      DBG.el = document.createElement('div'); DBG.el.className = 't3dbg'; DBG.el.style.zIndex = '2147483600'; document.body.appendChild(DBG.el); }
+    if (!V3 || !V3.R || !V3.scene) { DBG.el.hidden = true; return; }
+    DBG.el.hidden = false;
+    let tri = 0, mesh = 0, pts = 0, lights = 0, shadows = 0;
+    V3.scene.traverse(o => { let v = true; for (let q = o; q; q = q.parent) if (!q.visible) { v = false; break; } if (!v) return;
+      if (o.isLight) { lights++; if (o.castShadow) shadows++; }
+      if ((o.isMesh || o.isPoints || o.isLine) && o.geometry) { const gm = o.geometry, n = gm.index ? gm.index.count : gm.attributes.position ? gm.attributes.position.count : 0, k = o.isInstancedMesh ? o.count : 1; if (o.isMesh) { tri += n / 3 * k; mesh++; } else pts += n * k; } });
+    const R = V3.R, info = R.info, gl = R.getContext(), sz = R.getSize(new (window.THREE.Vector2)()), idle = performance.now() - DBG.last > 700, c = V3.cam, S = V3.sph || {};
+    const gpu = (() => { try { const x = gl.getExtension('WEBGL_debug_renderer_info'); return x ? String(gl.getParameter(x.UNMASKED_RENDERER_WEBGL)).slice(0, 48) : 'webgl' + (R.capabilities.isWebGL2 ? '2' : '1'); } catch (x) { return '-'; } })();
+    const rows = [
+      ['place', 'museum · 所蔵品'],
+      ['piece', (V3.e && V3.e.id) || '-'],
+      ['', ''],
+      ['tris · piece', `<b${tri > 120000 ? ' style="color:#ff8a7a"' : ''}>${fmtN(Math.round(tri))}</b>` + (idle ? '  (停止中 · 描画なし)' : `  (drawn ${fmtN(info.render.triangles)})`)],
+      ['meshes', String(mesh)],
+      ['points / lines', fmtN(pts)],
+      ['draw calls', String(idle ? 0 : info.render.calls)],
+      ['lights', `${lights} (${shadows} with shadow)`],
+      ['geom / tex', `${info.memory.geometries} / ${info.memory.textures}`],
+      ['programs', String((info.programs || []).length)],
+      ['', ''],
+      ['fps', idle ? '0 (停止中)' : DBG.fps ? DBG.fps.toFixed(0) : '-'],
+      ['canvas', `${Math.round(sz.x)}×${Math.round(sz.y)} @${R.getPixelRatio().toFixed(2)}x · exp ${R.toneMappingExposure.toFixed(2)}`],
+      ['camera', c ? `fov ${c.fov.toFixed(1)} · dist ${(S.d || 0).toFixed(2)} · pitch ${(S.pit || 0).toFixed(2)} · yaw ${((S.yaw || 0) % 6.283).toFixed(2)}` : '-'],
+      ['gpu', gpu],
+    ];
+    DBG.el.innerHTML = '<div class="t3dbg-h">3D DEBUG <span>I で閉じる</span></div>' + rows.map(([k, v]) => k ? `<div><i>${k}</i><span>${v}</span></div>` : '<hr>').join('');
+  }
+  function dbgTick(now) { DBG.fr++; DBG.last = now; if (now - DBG.t > 500) { DBG.fps = DBG.fr * 1000 / (now - DBG.t); DBG.fr = 0; DBG.t = now; dbgPaint(); } }
+  function dbgToggle(on) {
+    DBG.on = on === undefined ? !DBG.on : !!on; try { sessionStorage.setItem('t3d-debug', DBG.on ? '1' : ''); } catch (x) {}
+    if (!DBG.on) { if (DBG.el) DBG.el.hidden = true; return; }
+    DBG.t = performance.now(); DBG.fr = 0; dbgPaint(); if (V3) { V3.need = Math.max(V3.need || 0, 40); go(); }
+  }
+  setInterval(() => { if (DBG.on && V3 && V3.R) dbgPaint(); }, 1000);   // (drawing sleeps when nothing moves: keep the numbers fresh)
 
   /* ---------- drawing: only while something moves ---------- */
   const awake = () => !document.hidden && document.hasFocus();
@@ -213,6 +258,7 @@
     S.pit = Math.max(.08, Math.min(1.35, S.pit));
     const c = V3.cam, t = V3.tgt; c.position.set(t.x + S.d * Math.cos(S.pit) * Math.sin(S.yaw), t.y + S.d * Math.sin(S.pit), t.z + S.d * Math.cos(S.pit) * Math.cos(S.yaw)); c.lookAt(t);
     V3.R.render(V3.scene, c);
+    if (DBG.on) dbgTick(now);
     place();
     if (moving || V3.need-- > 0) { if (awake()) go(); }
   }
