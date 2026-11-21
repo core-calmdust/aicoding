@@ -117,45 +117,53 @@
           bands.forEach(([by, bh, deep]) => {
             string(ix0 + cm(.2), by, iw - cm(.4), bh);
             const bx0 = ix0 + cm(.45), bx1 = ix1 - cm(.45), bw = bx1 - bx0, bcy = by + bh / 2;
+            // a hole cut through a pearl piece, showing the turtle shell beneath
+            const H = (path) => { g.fillStyle = SP; g.fill(path); m.fillStyle = '#000'; m.fill(path); g.strokeStyle = 'rgba(40,22,14,.5)'; g.lineWidth = 1; g.stroke(path); };
+            const drop = (x, y, rx, ry, rot) => { const p = new Path2D(); const c = Math.cos(rot), s2 = Math.sin(rot), T = (u, v) => [x + u * c - v * s2, y + u * s2 + v * c];
+              p.moveTo(...T(0, -ry)); p.quadraticCurveTo(...T(rx, -ry * .1), ...T(0, ry)); p.quadraticCurveTo(...T(-rx, -ry * .1), ...T(0, -ry)); return p; };
             if (!deep) {
-              // a chain: roundels with an S of shell in the middle, between pointed lobed motifs, all on a thin stem
-              const n = 4, step = bw / n;
-              const stem = new Path2D(); stem.rect(bx0, bcy - cm(.1), bw, cm(.2)); P(stem, .02);
-              for (let i = 0; i < n; i++) { const rx = bx0 + step * (i + .5);
-                const ro = new Path2D(); ro.ellipse(rx, bcy, cm(1.2), cm(.92), 0, 0, 6.29); P(ro);
-                const ss = new Path2D(); ss.moveTo(rx - cm(.5), bcy + cm(.1)); ss.bezierCurveTo(rx - cm(.2), bcy - cm(.5), rx + cm(.2), bcy + cm(.5), rx + cm(.5), bcy - cm(.1)); g.strokeStyle = SP; g.lineWidth = cm(.34); g.stroke(ss); m.strokeStyle = '#000'; m.lineWidth = cm(.34); m.stroke(ss);
-                if (i < n) { const lx = bx0 + step * i; [-1, 1].forEach(sd => { if ((i === 0 && sd < 0)) return; const ax = lx + (i === 0 ? 0 : 0), lob = new Path2D();
-                  lob.moveTo(ax + sd * cm(.25), bcy - cm(.95)); lob.quadraticCurveTo(ax + sd * cm(1.0), bcy - cm(.7), ax + sd * cm(1.55), bcy); lob.quadraticCurveTo(ax + sd * cm(1.0), bcy + cm(.7), ax + sd * cm(.25), bcy + cm(.95)); lob.quadraticCurveTo(ax + sd * cm(.75), bcy, ax + sd * cm(.25), bcy - cm(.95)); if (i) P(lob); }); if (i) GR(lx, bcy, cm(.14), cm(.2)); }
+              // (after the photograph) three roundels, each a disc of pearl with a wave of shell through it, flanked by pointed lobes;
+              // a bead between the groups; a leaf with a green drop at each end
+              const n = 3, step = bw / n;
+              for (let i = 0; i < n; i++) { const rx = bx0 + step * (i + .5), R1 = Math.min(bh * .42, cm(1.15));
+                const u = new Path2D(); u.ellipse(rx, bcy, R1 * 1.05, R1, 0, 0, 6.29);
+                [-1, 1].forEach(sd => { u.moveTo(rx + sd * R1 * .9, bcy - R1 * .55); u.quadraticCurveTo(rx + sd * R1 * 1.6, bcy - R1 * .5, rx + sd * R1 * 2.25, bcy); u.quadraticCurveTo(rx + sd * R1 * 1.6, bcy + R1 * .5, rx + sd * R1 * .9, bcy + R1 * .55); u.closePath(); });
+                P(u);
+                const ss = new Path2D(); ss.moveTo(rx - R1 * .62, bcy + R1 * .12); ss.bezierCurveTo(rx - R1 * .25, bcy - R1 * .62, rx + R1 * .25, bcy + R1 * .62, rx + R1 * .62, bcy - R1 * .12);
+                ss.lineTo(rx + R1 * .62, bcy + R1 * .3); ss.bezierCurveTo(rx + R1 * .25, bcy + R1 * 1.1, rx - R1 * .25, bcy - R1 * .14, rx - R1 * .62, bcy + R1 * .56); ss.closePath(); H(ss);
+                if (i) { const bx = bx0 + step * i, bd = new Path2D(); bd.ellipse(bx, bcy, R1 * .32, R1 * .38, 0, 0, 6.29); bd.moveTo(bx + R1 * .7, bcy); bd.ellipse(bx + R1 * .55, bcy, R1 * .15, R1 * .15, 0, 0, 6.29); bd.moveTo(bx - R1 * .4, bcy); bd.ellipse(bx - R1 * .55, bcy, R1 * .15, R1 * .15, 0, 0, 6.29); P(bd); }
               }
-              // the pointed finials at each end
-              [bx0, bx1].forEach((ex, k) => { const sd = k ? -1 : 1, f = new Path2D(); f.moveTo(ex, bcy - cm(.55)); f.quadraticCurveTo(ex + sd * cm(.9), bcy - cm(.25), ex + sd * cm(1.25), bcy); f.quadraticCurveTo(ex + sd * cm(.9), bcy + cm(.25), ex, bcy + cm(.55)); f.closePath(); P(f); GR(ex + sd * cm(.45), bcy, cm(.13), cm(.2)); });
+              [bx0, bx1].forEach((ex, k) => { const sd = k ? -1 : 1, f = new Path2D(), R1 = Math.min(bh * .4, cm(1.1)); f.moveTo(ex, bcy - R1 * .5); f.quadraticCurveTo(ex + sd * R1 * 1.2, bcy - R1 * .9, ex + sd * R1 * 2.0, bcy); f.quadraticCurveTo(ex + sd * R1 * 1.2, bcy + R1 * .9, ex, bcy + R1 * .5); f.closePath(); P(f); GR(ex + sd * R1 * .95, bcy, R1 * .2, R1 * .28); });
             } else {
-              // the deep band: a round fretted medallion of interlace (four joined quarters), smaller lobed cartouches either side,
-              // fretted hooks (spandrels) in the corners
-              const mx = bx0 + bw / 2, MW = cm(4.7), MH = bh * .47, lw = cm(.16);
-              const strokeP = (p, wdt) => { g.strokeStyle = PP; g.lineWidth = wdt; g.stroke(p); m.strokeStyle = '#fff'; m.lineWidth = wdt; m.stroke(p); g.strokeStyle = 'rgba(40,22,14,.45)'; g.lineWidth = 1; g.stroke(p); };
-              // a lobed round medallion (eight ogee lobes) filled with a dense interlace of rings, a quatrefoil at the heart
-              const lob = new Path2D(), LB = 8;
-              for (let q = 0; q <= LB * 8; q++) { const a = q / (LB * 8) * Math.PI * 2, f = Math.abs(Math.sin(a * LB / 2)), rr = 1 - .14 * Math.pow(1 - f, 2); const x = mx + Math.cos(a) * MW * rr, y = bcy + Math.sin(a) * MH * rr; q ? lob.lineTo(x, y) : lob.moveTo(x, y); } lob.closePath();
-              strokeP(lob, lw * 1.2);
-              const ring = new Path2D();
-              for (let q = 0; q < 8; q++) { const a = q / 8 * Math.PI * 2 + Math.PI / 8, x = mx + Math.cos(a) * MW * .56, y = bcy + Math.sin(a) * MH * .56; ring.moveTo(x + MW * .3, y); ring.ellipse(x, y, MW * .3, MH * .3, 0, 0, Math.PI * 2); }
-              for (let q = 0; q < 4; q++) { const a = q / 4 * Math.PI * 2, x = mx + Math.cos(a) * MW * .28, y = bcy + Math.sin(a) * MH * .28; ring.moveTo(x + MW * .2, y); ring.ellipse(x, y, MW * .2, MH * .2, 0, 0, Math.PI * 2); }
-              strokeP(ring, lw);
-              const qf = new Path2D(); for (let q = 0; q < 4; q++) { const a = q * Math.PI / 2; qf.moveTo(mx, bcy); qf.quadraticCurveTo(mx + Math.cos(a - .5) * MW * .3, bcy + Math.sin(a - .5) * MH * .3, mx + Math.cos(a) * MW * .2, bcy + Math.sin(a) * MH * .2); qf.quadraticCurveTo(mx + Math.cos(a + .5) * MW * .3, bcy + Math.sin(a + .5) * MH * .3, mx, bcy); } P(qf);
-              GR(mx, bcy, cm(.13), cm(.19));
-              const MWt = MW;
-              // long finials from the points of the mandorla, ending in a lobed palmette; quarter medallions at the band's ends
-              [-1, 1].forEach(sd => { const tx = mx + sd * MWt, fx = mx + sd * bw * .34, fin = new Path2D();
-                fin.moveTo(tx, bcy - cm(.12)); fin.lineTo(fx - sd * cm(1.4), bcy - cm(.12)); fin.quadraticCurveTo(fx - sd * cm(1.0), bcy - bh * .42, fx + sd * cm(.7), bcy - bh * .28); fin.quadraticCurveTo(fx + sd * cm(.1), bcy - bh * .1, fx + sd * cm(1.4), bcy);
-                fin.quadraticCurveTo(fx + sd * cm(.1), bcy + bh * .1, fx + sd * cm(.7), bcy + bh * .28); fin.quadraticCurveTo(fx - sd * cm(1.0), bcy + bh * .42, fx - sd * cm(1.4), bcy + cm(.12)); fin.lineTo(tx, bcy + cm(.12)); fin.closePath();
-                fin.moveTo(fx + sd * cm(.35), bcy); fin.ellipse(fx, bcy, cm(.35), bh * .09, 0, 0, 6.29, sd > 0);
-                [-1, 1].forEach(vs => { const ex2 = fx - sd * cm(.6), ey = bcy + vs * bh * .2; fin.moveTo(ex2 + cm(.2), ey); fin.ellipse(ex2, ey, cm(.2), bh * .06, vs * sd * .6, 0, 6.29, sd > 0); }); P(fin); GR(fx, bcy, cm(.1), cm(.15));
-                const ex = sd < 0 ? bx0 : bx1, q = new Path2D(); q.moveTo(ex, bcy - bh * .3); q.quadraticCurveTo(ex - sd * cm(1.7), bcy - bh * .26, ex - sd * cm(1.5), bcy); q.quadraticCurveTo(ex - sd * cm(1.7), bcy + bh * .26, ex, bcy + bh * .3); q.lineTo(ex, bcy + bh * .22); q.quadraticCurveTo(ex - sd * cm(1.15), bcy, ex, bcy - bh * .22); q.closePath(); P(q); });
-              // spandrels: a hooked cloud band in each corner
-              [[bx0, by, 1, 1], [bx1, by, -1, 1], [bx0, by + bh, 1, -1], [bx1, by + bh, -1, -1]].forEach(([sx, sy, dx, dy]) => { const sp = new Path2D();
-                sp.moveTo(sx, sy + dy * cm(.15)); sp.lineTo(sx + dx * cm(2.6), sy + dy * cm(.15)); sp.quadraticCurveTo(sx + dx * cm(1.6), sy + dy * cm(.6), sx + dx * cm(2.0), sy + dy * cm(1.5)); sp.quadraticCurveTo(sx + dx * cm(1.2), sy + dy * cm(1.1), sx + dx * cm(1.0), sy + dy * cm(1.7)); sp.quadraticCurveTo(sx + dx * cm(.6), sy + dy * cm(1.0), sx + dx * cm(.15), sy + dy * cm(2.1)); sp.lineTo(sx + dx * cm(.15), sy + dy * cm(.15)); sp.closePath();
-                sp.moveTo(sx + dx * cm(.9), sy + dy * cm(.6)); sp.ellipse(sx + dx * cm(1.0), sy + dy * cm(.75), cm(.35), cm(.22), 0, 0, 6.29, dx * dy < 0); P(sp); });
+              // (after the photograph) the deep band: a lobed medallion of fretted pearl at the centre, a fretted lozenge of palmettes
+              // either side on a stem, and large fretted spandrels filling the four corners
+              const mx = bx0 + bw / 2, MW = bw * .19, MH = bh * .48;
+              const stem = new Path2D(); stem.rect(bx0 + bw * .2, bcy - cm(.09), bw * .6, cm(.18)); P(stem, .02);
+              const med = new Path2D(), LB = 8;
+              for (let q = 0; q <= 160; q++) { const a = q / 160 * Math.PI * 2, f = Math.abs(Math.sin(a * LB / 2)), rr = 1 - .12 * Math.pow(1 - f, 2), x = mx + Math.cos(a) * MW * rr, y = bcy + Math.sin(a) * MH * rr; q ? med.lineTo(x, y) : med.moveTo(x, y); } med.closePath();
+              [-1, 1].forEach(sd => { med.moveTo(mx + sd * MW * .96, bcy - MH * .14); med.lineTo(mx + sd * MW * 1.32, bcy); med.lineTo(mx + sd * MW * .96, bcy + MH * .14); });   // the pointed ends on the axis
+              P(med);
+              // the fretwork: rings of holes — hearts and drops — leaving the interlaced straps of pearl; the axes left solid
+              for (let q = 0; q < 16; q++) { const a = (q + .5) / 16 * Math.PI * 2; H(drop(mx + Math.cos(a) * MW * .78, bcy + Math.sin(a) * MH * .78, MW * .14, MH * .2, a + Math.PI / 2)); }
+              for (let q = 0; q < 8; q++) { const a = (q + .5) / 8 * Math.PI * 2; H(drop(mx + Math.cos(a) * MW * .5, bcy + Math.sin(a) * MH * .5, MW * .2, MH * .26, a - Math.PI / 2)); }
+              for (let q = 0; q < 8; q++) { const a = q / 8 * Math.PI * 2 + Math.PI / 8; const p = new Path2D(); p.ellipse(mx + Math.cos(a) * MW * .64, bcy + Math.sin(a) * MH * .64, MW * .09, MH * .1, 0, 0, 6.29); H(p); }
+              for (let q = 0; q < 4; q++) { const a = (q + .5) * Math.PI / 2; H(drop(mx + Math.cos(a) * MW * .26, bcy + Math.sin(a) * MH * .26, MW * .15, MH * .19, a + Math.PI / 2)); }
+              [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([ux, uy]) => { const l = new Path2D(); l.rect(Math.min(mx, mx + ux * MW * .95) - (ux ? 0 : cm(.04)), Math.min(bcy, bcy + uy * MH * .95) - (uy ? 0 : cm(.04)), ux ? MW * .95 : cm(.08), uy ? MH * .95 : cm(.08)); g.fillStyle = PP; g.fill(l); m.fillStyle = '#fff'; m.fill(l); });
+              GR(mx, bcy - MH * .22, cm(.09), cm(.14)); GR(mx, bcy + MH * .22, cm(.09), cm(.14));
+              // either side: a lozenge of palmettes, fretted
+              [-1, 1].forEach(sd => { const lx = mx + sd * bw * .3, LWd = bw * .1, LHt = bh * .3, lz = new Path2D();
+                lz.moveTo(lx - LWd, bcy); lz.quadraticCurveTo(lx - LWd * .45, bcy - LHt * .35, lx - LWd * .2, bcy - LHt * .8); lz.quadraticCurveTo(lx, bcy - LHt * 1.1, lx + LWd * .2, bcy - LHt * .8); lz.quadraticCurveTo(lx + LWd * .45, bcy - LHt * .35, lx + LWd, bcy);
+                lz.quadraticCurveTo(lx + LWd * .45, bcy + LHt * .35, lx + LWd * .2, bcy + LHt * .8); lz.quadraticCurveTo(lx, bcy + LHt * 1.1, lx - LWd * .2, bcy + LHt * .8); lz.quadraticCurveTo(lx - LWd * .45, bcy + LHt * .35, lx - LWd, bcy); lz.closePath();
+                [-1, 1].forEach(e => { lz.moveTo(lx + e * LWd * 1.5, bcy - LHt * .2); lz.lineTo(lx + e * LWd * 1.0, bcy); lz.lineTo(lx + e * LWd * 1.5, bcy + LHt * .2); lz.lineTo(lx + e * LWd * 1.25, bcy); lz.closePath(); });
+                P(lz);
+                H(drop(lx, bcy - LHt * .42, LWd * .16, LHt * .22, 0)); H(drop(lx, bcy + LHt * .42, LWd * .16, LHt * .22, Math.PI)); H(drop(lx - LWd * .5, bcy, LWd * .12, LHt * .16, -Math.PI / 2)); H(drop(lx + LWd * .5, bcy, LWd * .12, LHt * .16, Math.PI / 2));
+                const c0 = new Path2D(); c0.ellipse(lx, bcy, LWd * .14, LHt * .14, 0, 0, 6.29); H(c0); GR(lx, bcy, LWd * .07, LHt * .08); });
+              // the corner spandrels: big pieces of pearl reaching in from each corner, cut with crescents and drops
+              [[bx0, by, 1, 1], [bx1, by, -1, 1], [bx0, by + bh, 1, -1], [bx1, by + bh, -1, -1]].forEach(([sx, sy, dx, dy]) => { const sp = new Path2D(), SW = bw * .2, SH = bh * .5;
+                sp.moveTo(sx, sy); sp.lineTo(sx + dx * SW, sy); sp.quadraticCurveTo(sx + dx * SW * .55, sy + dy * SH * .25, sx + dx * SW * .62, sy + dy * SH * .55); sp.quadraticCurveTo(sx + dx * SW * .3, sy + dy * SH * .45, sx + dx * SW * .2, sy + dy * SH * .92); sp.quadraticCurveTo(sx + dx * SW * .08, sy + dy * SH * .7, sx, sy + dy * SH); sp.closePath(); P(sp);
+                const cr = new Path2D(); cr.ellipse(sx + dx * SW * .32, sy + dy * SH * .38, SW * .22, SH * .24, 0, 0, 6.29); cr.ellipse(sx + dx * SW * .4, sy + dy * SH * .3, SW * .16, SH * .17, 0, 0, 6.29, true); H(cr);
+                H(drop(sx + dx * SW * .75, sy + dy * SH * .1, SW * .08, SH * .1, dx * 1.2));
+                H(drop(sx + dx * SW * .62, sy + dy * SH * .18, SW * .07, SH * .12, dx * .8)); H(drop(sx + dx * SW * .1, sy + dy * SH * .62, SW * .05, SH * .14, dx * -.3)); });
             }
           });
           // the points: six from the far edge, six from the near edge
