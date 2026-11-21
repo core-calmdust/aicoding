@@ -13,6 +13,7 @@
    upturned ends and cross-bars; shown as displayed, the drawer open and reels and cones on the board. */
 (function () {
   'use strict';
+  const HERE = (document.currentScript && document.currentScript.src) || location.href; let TXT = null;
   (window.AtlasEx = window.AtlasEx || {}).senet = {
     build(TT, X, K) {
       const G = new TT.Group();
@@ -41,17 +42,20 @@
       const RING = { C1: ['\u{131F3}', '\u{131A3}', '\u{133E5}', '\u{1339F}'], C2: ['\u{131CB}', '\u{133E0}', '\u{13216}', '\u{133CF}', '\u{13171}', '\u{133CF}', '\u{132F9}'] };
       const yel = 'rgba(214,160,84,.92)';
       // a row of signs in a box x0..x0+ww, centred on cy, bh high; returns nothing. Signs are fitted to the row, the stacked ones half height.
-      const row = (g, toks, x0, cy, ww, bh) => { g.fillStyle = g.strokeStyle = yel; g.textBaseline = 'middle'; g.textAlign = 'left';
+      const row = (g, toks, x0, cy, ww, bh) => { const ft = (c, x, y) => { g.lineWidth = bh * .028; g.lineJoin = 'round'; g.strokeText(c, x, y); };   // (the signs are cut as thin outlines, not filled shapes: the museum photograph)
+        g.fillStyle = g.strokeStyle = yel; g.textBaseline = 'middle'; g.textAlign = 'left';
         const F = n => { g.font = `${Math.round(bh * n)}px ${HF}`; }, wOf = t => { if (RING[t]) return bh * (t === 'C1' ? 2.3 : 3.3); if (Array.isArray(t)) { F(.46); return Math.max(...t.map(c => g.measureText(c).width)); } F(.92); return g.measureText(t).width; };
         const ws = toks.map(wOf), gap = bh * .07, nat = ws.reduce((a, c) => a + c, 0) + gap * (toks.length - 1), k = Math.min(1.25, ww / nat); let x = x0 + (ww - nat * k) / 2;
         toks.forEach((t, i) => { const wd = ws[i] * k; g.save(); g.translate(x, cy); g.scale(k, 1);
           if (RING[t]) { const cw = ws[i], ch = bh * .96; g.lineWidth = bh * .05; g.beginPath(); g.roundRect(0, -ch / 2, cw - bh * .1, ch, ch / 2); g.stroke(); g.beginPath(); g.moveTo(cw - bh * .04, -ch * .42); g.lineTo(cw - bh * .04, ch * .42); g.stroke();
-            F(.6); const inner = RING[t], iw = inner.reduce((a, c) => a + g.measureText(c).width, 0), kk = Math.min(1, (cw - bh * .55) / iw); let xx = bh * .22; inner.forEach(c => { g.save(); g.translate(xx, 0); g.scale(kk, 1); g.fillText(c, 0, 0); g.restore(); xx += g.measureText(c).width * kk; }); }
-          else if (Array.isArray(t)) { F(.46); t.forEach((c, j) => g.fillText(c, (ws[i] - g.measureText(c).width) / 2, (j ? .25 : -.25) * bh)); }
-          else { F(.92); g.fillText(t, 0, 0); }
+            F(.6); const inner = RING[t], iw = inner.reduce((a, c) => a + g.measureText(c).width, 0), kk = Math.min(1, (cw - bh * .55) / iw); let xx = bh * .22; inner.forEach(c => { g.save(); g.translate(xx, 0); g.scale(kk, 1); ft(c, 0, 0); g.restore(); xx += g.measureText(c).width * kk; }); }
+          else if (Array.isArray(t)) { F(.46); t.forEach((c, j) => ft(c, (ws[i] - g.measureText(c).width) / 2, (j ? .25 : -.25) * bh)); }
+          else { F(.92); ft(t, 0, 0); }
           g.restore(); x += wd + gap * k; }); };
-      const textTex = (len, ht, toks, mirror) => { const PX = 2048, s = PX / len; return K.tex(PX, Math.round(ht * s), (g, w, h) => {
+      const textTex = (len, ht, toks, mirror, real) => { const PX = 2048, s = PX / len; return K.tex(PX, Math.round(ht * s), (g, w, h) => {
         g.drawImage(ebonyT.image, 0, 0, w, h);
+        if (real === 'end' && TXT) { const bh2 = s * 2.1, k = bh2 / TXT.height, len = w - s * 1.0; g.globalAlpha = .78; g.drawImage(TXT, 900, 0, len / k, TXT.height, s * .5, h * .52 - bh2 / 2, len, bh2); g.globalAlpha = 1; return; }
+        if (real && TXT) { if (!mirror) { g.translate(w, 0); g.scale(-1, 1); }   /* (the far side, as the museum's small photograph of it shows: it too starts at the drawer's end and closes with the king's ring at the other — the near side's inscription, turned to read that way) */ const iw = w * .984, ih = iw * TXT.height / TXT.width; g.globalAlpha = .78; g.drawImage(TXT, w * .006, h * .52 - ih / 2, iw, ih); g.globalAlpha = 1; return; }   // the side toward the visitor: the inscription itself, lifted from a photograph of the box in its case (thin incised outlines, a few signs filled)
         const cy = h * .53, bh = s * 2.1;   // one band a little below the middle (the museum's photograph)
         if (mirror) { g.translate(w, 0); g.scale(-1, 1); }   // read from the right: the signs face the other way
         g.strokeStyle = yel; g.lineWidth = s * .05; [cy - bh / 2 - s * .14, cy + bh / 2 + s * .14].forEach(y => { g.beginPath(); g.moveTo(s * .3, y); g.lineTo(w - s * .3, y); g.stroke(); });
@@ -61,9 +65,11 @@
       const NAMES = T(0x132F9, 0x13143, 0x130D2, 0x130A1, [0x133CF, 0x133CF], 0x13171, 0x1311F, [0x132F4, 0x133CF], 0x13171, 0x13152, 0x13124, [0x13254, 0x132AA], 0x13171, 0x132F4, [0x133BC, 0x1308B], 0x1339B, [0x131FE, 0x131FE], 0x13149, 0x1335E, [0x1320D, 0x133E5], 0x132F4, 0x132B5, [0x133CF, 0x132AA], 0x132B9, 0x132B9, 0x132B9, 0x131D3, 0x131A4, [0x133CF, 0x133CF], 'C1');
       const SIDEB = T(0x132F9, 0x132B9, 0x13124, 0x1339F, [0x131FE, 0x131FE], 0x1339F, [0x13079, 0x133CF], [0x1340D, 0x133CF], 0x131D3, 0x131A4, [0x133CF, 0x133CF], 'C1', 0x1316D, 0x131F3, 'C2', [0x133D9, 0x132F9], 0x13193, [0x133CF, 0x131FE]);
       const ENDT = T(0x133D9, 0x132F9, 0x132BD, 0x13300, [0x133C7, 0x131F3], 0x13193, [0x133CF, 0x131FE]);
-      const sideT = textTex(L, BH, NAMES, true), sideT2 = textTex(L, BH, SIDEB, false), endT = textTex(W, BH, ENDT, false);
+      const sideT = textTex(L, BH, NAMES, true, true), sideT2 = textTex(L, BH, SIDEB, false, true)   /* (no photograph of the far side was found: it carries the same inscription as the near side, by the owner's decision 2026-11-22 — better than a typeface) */, endT = textTex(W, BH, ENDT, false, 'end');
       // the drawer's end of the box: a frame of text round the opening (Carter's sketch c)
       const frameT = K.tex(1024, Math.round(1024 * BH / W), (g, w, h) => { g.drawImage(ebonyT.image, 0, 0, w, h); const s = w / W, hx0 = (W - 9.5) / 2 * s, hx1 = w - hx0, hy1 = h - .9 * s, hy0 = hy1 - 4.0 * s, bh = s * 1.15;
+        if (TXT) { const k = bh / TXT.height, seg = (sx, len, dx, dy, rot) => { g.save(); g.translate(dx, dy); g.rotate(rot); g.globalAlpha = .78; g.drawImage(TXT, sx, 0, len / k, TXT.height, 0, -bh / 2, len, bh); g.restore(); };   // (no photograph shows this end well enough to read: the frame round the drawer's opening is filled with lengths of the long side's inscription rather than a typeface)
+          const tw = hx1 - hx0 + s * 2.6; seg(60, tw, hx0 - s * 1.3, hy0 - bh * .62, 0); const sh = hy1 - hy0 + s * .2; seg(1500, sh, hx0 - s * .68, hy0, Math.PI / 2); seg(2300, sh, hx1 + s * .68, hy0, Math.PI / 2); return; }
         row(g, T('C1', 0x132B9, 0x13124, 0x1339F, [0x131FE, 0x131FE], 0x133D9, 0x132F9), hx0 - s * 1.2, hy0 - bh * .75, hx1 - hx0 + s * 2.4, bh);
         [[hx0 - s * 1.1, T(0x132F9, 0x13143, 0x130D2, 0x130A1)], [hx1 + s * 1.1, T(0x13152, 0x13124, 0x13254, 0x132AA)]].forEach(([x, tk]) => tk.forEach((c, i) => { g.font = `${Math.round(bh * .8)}px ${HF}`; g.textAlign = 'center'; g.fillText(c, x, hy0 + (i + .5) * (hy1 - hy0) / 4); }));
         g.strokeStyle = yel; g.lineWidth = s * .05; g.strokeRect(hx0 - s * 2.0, hy0 - bh * 1.45, hx1 - hx0 + s * 4.0, hy1 - hy0 + bh * 1.55); });
@@ -162,12 +168,12 @@
       [[9, 12.6, amber, .2], [12.2, 12.9, amber, 1.1], [15.8, 13.2, ivory, .5]].forEach(([x, z, m, r]) => { const kb = new TT.Mesh(new TT.BoxGeometry(2.2, 1.0, 1.5, 3, 2, 2), m); const P = kb.geometry.attributes.position; for (let i = 0; i < P.count; i++) { const px = P.getX(i), py = P.getY(i), pz = P.getZ(i), pinch = 1 - .28 * Math.cos(px / 1.1 * Math.PI / 2) ; P.setXYZ(i, px, py * (.8 + .2 * Math.abs(px) / 1.1), pz * pinch); } kb.geometry.computeVertexNormals(); kb.position.set(x, .5, z); kb.rotation.y = r; G.add(kb); });
       return G;
     },
-    ready: () => new Promise(res => {   // the hieroglyph font: wait for its stylesheet, then for the face itself
+    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { TXT = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/senet-text.webp', HERE).href; setTimeout(res, 8000); }).then(() => new Promise(res => {   // the hieroglyph font: wait for its stylesheet, then for the face itself
       const go = () => (document.fonts && document.fonts.load ? document.fonts.load('40px "Noto Sans Egyptian Hieroglyphs"', '\u{131F3}\u{1319F}\u{13079}') : Promise.resolve()).catch(() => {}).then(res);
       let l = document.querySelector('link[href*="Egyptian+Hieroglyphs"]');
       if (l && l.sheet) return go();
       if (!l) { l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Egyptian+Hieroglyphs&display=swap'; document.head.appendChild(l); }
       l.addEventListener('load', go); l.addEventListener('error', res); setTimeout(res, 4000);
-    }),
+    })),
   };
 })();

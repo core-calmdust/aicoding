@@ -60,18 +60,24 @@
         const shield = (x, y, r) => { g.beginPath(); g.moveTo(x, y - r); g.bezierCurveTo(x + r * .5, y - r * .5, x + r * .95, y - r * .3, x + r * .8, y + r * .35); g.quadraticCurveTo(x + r * .4, y + r * .2, x, y + r * .6); g.quadraticCurveTo(x - r * .4, y + r * .2, x - r * .8, y + r * .35); g.bezierCurveTo(x - r * .95, y - r * .3, x - r * .5, y - r * .5, x, y - r); g.fillStyle = C.iv; g.fill(); g.strokeStyle = ol; g.lineWidth = s * .03; g.stroke();
           leaf(g, x - r * .45, y + r * .75, r * .5, .5); leaf(g, x + r * .45, y + r * .75, r * .5, Math.PI - .5); };
         const tulip = (x, y, r, a) => { g.save(); g.translate(x, y); g.rotate(a); [-.55, 0, .55].forEach(t => { g.save(); g.rotate(t); g.beginPath(); g.moveTo(0, r * .5); g.quadraticCurveTo(r * .42, 0, 0, -r); g.quadraticCurveTo(-r * .42, 0, 0, r * .5); g.fillStyle = C.iv; g.fill(); g.strokeStyle = ol; g.lineWidth = s * .03; g.stroke(); g.restore(); }); g.beginPath(); g.arc(0, r * .5, r * .2, 0, 6.29); g.fillStyle = '#2a160e'; g.fill(); g.restore(); };
-        return { ring, rosette, shield, tulip }; };
+        // a tendril curling in on itself, and a small heart-shaped ivory bud on a short stalk: the vine's fill between the larger flowers
+        const curl = (x, y, r, dir, a0) => { g.strokeStyle = C.bam; g.lineWidth = s * .05; g.beginPath(); for (let t = 0; t <= 1; t += .04) { const a = a0 + dir * t * 8.2, rr = r * (1 - t * .8), X = x + Math.cos(a) * rr, Y = y + Math.sin(a) * rr; t ? g.lineTo(X, Y) : g.moveTo(X, Y); } g.stroke(); };
+        const bud = (x, y, r, a) => { g.save(); g.translate(x, y); g.rotate(a); g.beginPath(); g.moveTo(0, r); g.bezierCurveTo(r * 1.1, r * .4, r * .9, -r * .9, 0, -r * .35); g.bezierCurveTo(-r * .9, -r * .9, -r * 1.1, r * .4, 0, r); g.fillStyle = C.iv; g.fill(); g.strokeStyle = ol; g.lineWidth = s * .025; g.stroke(); g.beginPath(); g.arc(0, r * .15, r * .28, 0, 6.29); g.fillStyle = '#2a160e'; g.fill(); g.restore(); };
+        return { ring, rosette, shield, tulip, curl, bud }; };
       // the band round the board's edge, composed as on the Shōsōin's frontal photographs: symmetric about a flowering sprig in the middle;
       // outward from it a bird flying in, then thin stems curling into rings that hold in turn a five-petalled blossom, a tulip-like
       // flower, a large eight-petalled rosette and a pointed ivory "shield", olive leaves between; on the short sides the birds are at the ends
       const band = (g, w, h, s, long) => { g.drawImage(shT.image, 0, 0, w, h); const cy = h * .5, R = h * .33, ol = 'rgba(30,14,8,.6)';
-        const { ring, rosette, shield, tulip } = MOT(g, s);
+        const { ring, rosette, shield, tulip, curl, bud } = MOT(g, s);
         const sprig = (x) => { g.strokeStyle = C.bam; g.lineWidth = s * .055; g.beginPath(); g.moveTo(x, h * .9); g.lineTo(x, cy); g.moveTo(x, h * .7); g.quadraticCurveTo(x - R * .5, h * .62, x - R * .75, cy - R * .1); g.moveTo(x, h * .7); g.quadraticCurveTo(x + R * .5, h * .62, x + R * .75, cy - R * .1); g.stroke();
           flower(g, x, cy - R * .45, R * .42); flower(g, x - R * .8, cy - R * .2, R * .38, .4); flower(g, x + R * .8, cy - R * .2, R * .38, .9); leaf(g, x - R * .55, h * .82, R * .5, -.4); leaf(g, x + R * .55, h * .82, R * .5, Math.PI + .4); leaf(g, x - R * 1.5, cy + R * .4, R * .5, .3); leaf(g, x + R * 1.5, cy + R * .4, R * .5, Math.PI - .3); };
         const half = w / 2, items = long ? [[.115, 'bird'], [.225, 'bud'], [.33, 'blossom'], [.45, 'tulip'], [.585, 'rosette'], [.71, 'shield'], [.82, 'blossom'], [.93, 'bud']] : [[.2, 'tulip'], [.38, 'rosette'], [.56, 'shield'], [.7, 'bud'], [.87, 'bird']];
         [-1, 1].forEach(sd => { const X = u => half + sd * u * half;
           // the stem: a long wave from the middle to the end
           g.strokeStyle = C.bam; g.lineWidth = s * .055; g.beginPath(); for (let u = .03; u <= .98; u += .004) { const y = cy + Math.sin(u * (long ? 26 : 15)) * h * .2; u > .031 ? g.lineTo(X(u), y) : g.moveTo(X(u), y); } g.stroke();
+          // between every two flowers the stem throws off tendrils above and below, each ending in a curl or a bud; a second stem crosses the first
+          g.strokeStyle = C.bam; g.lineWidth = s * .045; g.beginPath(); for (let u = .06; u <= .97; u += .004) { const y = cy - Math.sin(u * (long ? 26 : 15) + .9) * h * .27; u > .061 ? g.lineTo(X(u), y) : g.moveTo(X(u), y); } g.stroke();
+          for (let i = 0; i < items.length - 1; i++) { const u = (items[i][0] + items[i + 1][0]) / 2, x = X(u), d = i % 2 ? 1 : -1; curl(x - sd * R * .2, cy + d * h * .24, R * .42, sd * d, i); curl(x + sd * R * .5, cy - d * h * .27, R * .3, -sd * d, i + 2); bud(x + sd * R * .15, cy - d * h * .1, R * .2, d > 0 ? Math.PI : 0); }
           items.forEach(([u, kind], i) => { const x = X(u), y = cy + (i % 2 ? .06 : -.06) * h;
             if (kind === 'bird') { bird(g, x, cy + h * .06, h * .017, sd > 0 ? !long : long); return; }
             if (kind === 'bud') { [[-.3, -.2], [.3, .25]].forEach(([dx, dy]) => { g.beginPath(); g.arc(x + dx * R, y + dy * R, R * .2, 0, 6.29); g.fillStyle = C.iv; g.fill(); g.strokeStyle = ol; g.lineWidth = s * .03; g.stroke(); g.beginPath(); g.arc(x + dx * R, y + dy * R, R * .08, 0, 6.29); g.fillStyle = '#2a160e'; g.fill(); }); leaf(g, x, y - R * .7, R * .45, .2 * sd); return; }
@@ -157,9 +163,10 @@
         // a vine up each leg and the post (the frontal photographs): thin stems in rings; on a leg, from the top, a blossom, a tulip, a white
         // ribbon-bird, a rosette and a pointed shield; on the post two blossoms, a bird, a tulip and at the foot two rosettes side by side
         { const { ring, rosette, shield, tulip } = MOT(g, s), top = s * 1.3, bot = h - s * .5, span = bot - top;
-          cols.forEach((cxm, ci) => { const post = ci >= 2, x = cxm * s, R = s * (post ? .8 : .72), Y = f => top + f * span;
+          const { curl, bud } = MOT(g, s); cols.forEach((cxm, ci) => { const post = ci >= 2, x = cxm * s, R = s * (post ? .8 : .72), Y = f => top + f * span;
             g.strokeStyle = C.bam; g.lineWidth = s * .055; g.beginPath(); for (let f = 0; f <= 1; f += .01) { const xx = x + Math.sin(f * 15 + ci) * s * (post ? .5 : .32) * (post ? .6 + Math.abs(f - .45) * 1.6 : 1); f ? g.lineTo(xx, Y(f)) : g.moveTo(xx, Y(f)); } g.stroke();
             const its = post ? [[.07, 'blossom', -.55], [.07, 'blossom', .55], [.26, 'blossom', 0], [.43, 'bird', 0], [.58, 'tulip', 0], [.8, 'rosette', -1.15], [.8, 'rosette', 1.15], [.93, 'bud', 0]] : [[.08, 'blossom', 0], [.26, 'tulip', 0], [.43, 'ribbon', 0], [.6, 'rosette', 0], [.82, 'shield', .25 * (ci ? -1 : 1)]];
+            for (let q = 0; q < (post ? 7 : 6); q++) { const f = .15 + q * (post ? .115 : .135), d = q % 2 ? 1 : -1, wd = post ? .75 : .5; curl(x + d * s * wd, Y(f), R * .42, d, q); bud(x - d * s * wd * .85, Y(f + .03), R * .2, d * 1.2); }   // tendrils and buds either side of the stem
             its.forEach(([f, kind, dx], i) => { const xx = x + dx * s, y = Y(f), d = i % 2 ? 1 : -1;
               if (kind === 'bird') { g.save(); g.translate(xx, y); g.rotate(-Math.PI / 2.4); bird(g, 0, 0, s * .03, false); g.restore(); return; }
               if (kind === 'ribbon') { g.strokeStyle = C.iv; g.lineWidth = s * .16; g.lineCap = 'round'; g.beginPath(); g.moveTo(xx - R * .7, y + R * .3); g.bezierCurveTo(xx - R * .2, y - R * .5, xx + R * .1, y + R * .5, xx + R * .7, y - R * .2); g.stroke(); return; }
