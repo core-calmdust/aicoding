@@ -1503,6 +1503,128 @@
   const xqSq = n => { const f = 'abcdefghi'.indexOf(String(n)[0]), r = +String(n).slice(1); return f < 0 || !(r >= 0 && r <= 9) ? -1 : (9 - r) * 9 + f; };
   const xqParse = (fen, nm) => { const E = window.XiangqiEngine; if (!E) return null; try { return E.parse(E.Pos.from(fen), nm); } catch (e) { return null; } };
   const xqS = v => { const E = window.XiangqiEngine, W = E ? E.WIN : 30000, WT = E ? E.WINT : 29000; return v > WT ? 0.9 + 0.1 * Math.min(1, 6 / (W - v + 1)) : v < -WT ? -(0.9 + 0.1 * Math.min(1, 6 / (W + v + 1))) : v > WT - 1000 ? 0.88 : v < -(WT - 1000) ? -0.88 : Math.tanh(v / 450) * 0.82; };   // (= xiangqi/app.js sOfV)
+  /* (2026-11-21 lesson loop) the xiangqi openings in ショウギツネ's words, Japanese, for the 3D table (no coordinates): her own intro,
+     the line's notes rebuilt from the board (what each move does — rook out / up / over the river, horse out / to the edge, central
+     cannon, the palace corner, pawns opening the horse's way, recaptures — with the stored AI verdict), a varied question, a hint from
+     what the best move does (never where), and after the answer why it is played and what yours gives up (a piece left to be taken, a
+     missed recapture, the engine's score gap from openings.json sc). */
+  const XQJ_OP = {
+    intro: {
+      zpp: '赤が炮を真ん中に置く「中炮」に、黒は両方の馬を中央へ跳ねて、真ん中の卒を守るの。馬が屏風みたいに並ぶから「屏風馬」。シャンチーでいちばん指される定跡だコン！',
+      zpgh: '屏風馬に対して、赤は右の車を一気に相手の陣地まで進めるよ。これが「過河車」。黒の馬と卒を直接ねらう激しい戦型で、昔からたくさん研究されてきたんだ。',
+      wqp: '中炮に加えて、もう一方の炮もひとつ横へ回して、黒の右側の卒と馬に二つの炮で圧力をかけるの。これが「五七炮」。いまの大会でもよく見る作戦だね。',
+      fgm: '黒が炮を九宮の角に置いて、その両側に馬を跳ねるのが「反宮馬」。屏風馬とはちがって、反撃をねらう柔らかい受け方なの。形を覚えておくと便利だコン。',
+      sp: '赤の中炮に、黒も同じ側の炮を真ん中へ置いて向かい合うのが「順炮」。おたがいに中央をにらみ合う、昔からある激しい戦いだよ。',
+      lp: '黒が、赤とは反対側の炮を真ん中へ置くのが「列炮」。おたがいに相手の真ん中の兵をねらい合う、攻め合いの定跡なの。気が抜けないね！',
+      dtm: '屏風馬の片方の馬を、端へ跳ねるのが「単提馬」。馬が端へよけるぶん、車の通り道が早く開くんだ。中炮への受け方のひとつだコン。',
+      fx7: '赤が1手目に相を真ん中へ上げるのが「飛相局」。中炮みたいな速攻じゃなくて、しっかり守ってから戦う作戦なの。黒は卒を突いて、馬の道を開けるよ。',
+      fxg: '飛相局に、黒が炮を九宮の反対側へ回して応じる形。これを「過宮炮」と呼ぶの。真ん中をさけて、横から戦うんだね。',
+      xr: '1手目に馬の前の兵を突くのが「仙人指路」。仙人が道を指し示す、という名前なの。相手を見てから中炮にも飛相にもできる、柔らかい手だよ。黒も卒を突き返すのが「対兵局」だコン。',
+      xrd: '仙人指路に、黒が炮を相手の突いた兵の筋へ回すのが「卒底炮」。突いた兵をねらって、先に主導権を取りに行く積極的な応手なの。',
+      qm: '赤が1手目に馬を跳ねるのが「起馬局」。真ん中を急がずに、駒を順番に出して形を整えるの。黒は卒を突いて応じるよ。のんびりに見えて、奥が深いんだコン。',
+      ggp: '赤が右の炮を、九宮を横切って反対側へ回すのが「過宮炮」。真ん中を空けたまま、横から攻める作戦なの。黒はすかさず中炮で応じるね。',
+      sjp: '赤が炮を九宮の角に置くのが「士角炮」。中炮ほど攻撃的じゃないけど、守りと反撃のバランスがいいの。じっくり戦いたい人向けだね。',
+    },
+    ask: ['『{n}』のこの局面、いちばん良い手はどれかな？', 'さあ、ここでどう指す？', '『{n}』の続きだコン。最善手を見つけてみて！', 'ここで指したい一手、わかるかな？', 'AIがいちばんと考える手を当ててみよう！'],   // (the runner says whose turn it is first)
+    lead: ['正解は{m}だったの。', 'ここは{m}がいちばんだコン。', '{m}を見てみて！', 'AIのおすすめは{m}だよ。'],
+    so: ['こっちなら{a}からね。', '{a}のが、この手のいいところ。', 'この手で{a}んだ。', 'これなら{a}の。'],
+    gap: ['{x}だと、AIの評価が{d}下がっちゃう。', 'AIの見立てでは、{x}は{d}損なんだ。', '{x}だと、AIの評価で{d}落ちるの。'],
+    good: ['AIの評価でも、ここではこの手がいちばんだコン。', 'AIもこの手をいちばんに選んでいるの。', '定跡の本筋どおり、ばっちり！', 'これで形がしっかり整ったね。'],
+    deg: d => d <= 30 ? 'ほんの少し' : d <= 80 ? '少し' : d <= 200 ? 'はっきり' : 'かなり',
+  };
+  const XQN = (t, c) => ['', '王さま', c ? '士' : '仕', c ? '象' : '相', '馬', '車', '炮', c ? '卒' : '兵'][t] || '駒';
+  const XQV = [0, 100, 2, 2, 4, 9, 4.5, 1];
+  function xqFacts(E, pos, m) {   // what a move does, for ショウギツネ's words
+    const c = pos.side, f = E.mFrom(m), t = E.mTo(m), [fr, fc] = E.RC[f], [tr, tc] = E.RC[t], pc = pos.at(f), ty = E.typeOf(pc), cp = pos.at(t);
+    const mat = col => { let s = 0; for (let q = 0; q < 90; q++) { const x = pos.at(q); if (x && E.colorOf(x) === col && E.typeOf(x) !== 1) s += XQV[E.typeOf(x)]; } return s; };
+    const after = pos.clone().play(m), fw = c ? tr - fr : fr - tr, crossed = c ? tr >= 5 : tr <= 4, back = c ? 0 : 9;
+    const F = { ty, c, cap: cp ? E.typeOf(cp) : 0, behind: mat(c) < mat(c ^ 1), check: after.inCheck(), fw, crossed, wasCrossed: c ? fr >= 5 : fr <= 4 };
+    F.mine = new Set(E.threats(after, c ^ 1)); F.aims = [...E.threats(after, c)].filter(q => !E.threats(pos, c).has(q)).map(q => E.typeOf(after.at(q)));
+    if (ty === 5) F.k = fr === back && (fc === 0 || fc === 8) && tr === back ? 'rookOut' : fr === back && (fc === 0 || fc === 8) && Math.abs(fw) === 1 ? 'rookUp' : crossed && !F.wasCrossed ? 'rookCross' : tr === (c ? 4 : 5) ? 'rookRiver' : fr === tr ? 'rookSide' : 'rook';
+    else if (ty === 4) F.k = fr === back ? (tc === 0 || tc === 8 ? 'horseEdge' : 'horseOut') : 'horseUp';
+    else if (ty === 6) F.k = tc === 4 && fc !== 4 ? 'cannonMid' : (tc === 3 || tc === 5) && tr === fr && tr === (c ? 2 : 7) ? 'cannonCorner' : crossed ? 'cannonDeep' : tr === (c ? 4 : 5) ? 'cannonRiver' : fr === tr ? 'cannonSide' : 'cannon';
+    else if (ty === 7) F.k = F.crossed ? 'pawnCross' : fc === 2 || fc === 6 ? 'pawnHorse' : 'pawn';
+    else if (ty === 2 || ty === 3) F.k = 'guard'; else F.k = 'king';
+    return F;
+  }
+  const XQ_WHY = {   // why the move is played (the problems' praise / the line's notes): a few wordings each, with different endings
+    recap: ['取られた駒をすぐ取り返して、駒の損を戻す手なの。', '{P}をすぐ取り返す！ ここで取らないと駒損のままだからね。', '取り返しの一手だコン。これで駒の数は元どおり。'],
+    cap: ['相手の{P}を取る手。取り合いの始まりだね！', '{P}を取って、取り合いを始めるの。', '{P}を取る手。ここで取っておくのがこの形の本筋だコン。'],
+    rookOut: ['車を横に動かして、通り道の開いた筋へ出すの。車は早く働かせたい駒だコン。', '隅の車を、開いた筋へ出したね。これで車がよく働くよ。', '車を出して、縦の筋をにらむんだ。'],
+    rookUp: ['車を1つ上げる「横車」。次に横へ回って、好きな筋へ出られるの。', '車を一歩上げて、横へ動ける道を作るね。', 'ここは車をひとつ上げる手。横へ回る準備だコン！', '車を一歩前へ。これで横の道が開くよ。'],
+    rookCross: ['車が川を渡って、相手の陣地へ入ったね！ 馬や卒を直接ねらえるの。', '車で相手の陣地に乗りこむ！ 相手は受けに手を取られるよ。', '川を越えた車は、相手にとってとってもこわい存在なんだ。'],
+    rookRiver: ['車を川のほとりまで進めて、横に広くにらみをきかせるの。', '川のほとりの車は、守りにも攻めにも使えるんだ。', '車を川の手前へ。横に広く目が届くね！'],
+    rookSide: ['車を横へ回して、ねらう筋を変えるの。', '車を横へ動かして、もっと働く筋へ移すね。', '車の筋を変える手。開いた筋は車の通り道だコン。', '車を横すべり！ 次はこの筋から攻めるよ。'],
+    rook: ['車を動かして、もっと働く場所へ移すの。', '車の位置を直して、次の攻めに備えるね。', '車をいい場所へ。車が働くと、攻めがぐっと楽になるんだ。'],
+    horseOut: ['馬を跳ねて、真ん中を守りながら駒を出すの。', 'まだ動いていない馬を出す手。序盤は駒を早く出すのが大事だコン！', '馬を跳ねて、兵（卒）を守りつつ車の道も開けるね。', '馬の出番だよ。駒がそろうと戦いやすいんだ。'],
+    horseEdge: ['馬を端へ跳ねる手。車の通り道を早く開けるねらいなの。', '馬を端へよけて、車が出やすくするね。', '端の馬は少し働きにくいけど、車の道が開くんだコン。'],
+    horseUp: ['馬をさらに前へ進めて、相手の陣地をうかがうの。', '馬をもう一歩前へ。働く場所が増えるね！', '前に出た馬が、相手の駒をにらんでいるよ。'],
+    cannonMid: ['炮を真ん中へ！ 相手の真ん中の兵（卒）をにらむ「中炮」の形だコン。', '炮を中央の筋へ回して、真ん中をねらうの。', '真ん中の炮は、いちばん人気の攻めの形なんだ。'],
+    cannonCorner: ['炮を九宮の角へ回して、守りと攻めの両方に備えるの。', '炮を九宮の角に置く手。王さまのそばで、守りにも効いているね。', '九宮の角の炮は、守りの要にもなるんだコン。'],
+    cannonDeep: ['炮を相手の陣地へ進めて、攻めの準備をするの。', '炮で相手の陣地に飛びこむ！ 相手の駒をゆさぶるよ。', '深く入った炮が、相手の駒の後ろをねらうんだ。'],
+    cannonRiver: ['炮を川のほとりへ出して、横からも前からもねらえるようにするの。', '川のほとりの炮は、相手の兵（卒）をおさえるのにぴったりなんだ。', '炮を川の手前へ。にらみがぐっと広がるね！'],
+    cannonSide: ['炮を横へ回して、ねらう筋を変えるの。', '炮の向きを変えて、別の筋に圧力をかけるね。', '炮を横へ。ねらいの筋をずらす手だコン。'],
+    cannon: ['炮を動かして、次の攻めに備えるの。', '炮の位置を整える手だね。', '炮をいい場所へ移すよ。'],
+    pawnHorse: ['馬の前の{P}を突いて、馬の通り道を開けるの。', '{P}を一つ進めて、馬が跳ねる道を作るね。', '{P}を突く手。馬が前へ出やすくなるんだコン。'],
+    pawnCross: ['{P}が川を渡ったよ！ 渡った{P}は横にも動けて、ぐっと強くなるの。', '{P}で相手の陣地へ！ 小さな駒でも、渡れば立派な戦力だコン。', '川を越えた{P}は、横にも動けるんだ。'],
+    pawn: ['{P}を突いて、陣形を整えるの。', '{P}を一つ進めて、ほかの駒が動きやすくするね。', '{P}を突く静かな一手。形を整えるよ。'],
+    guard: ['{P}を上げて、王さまの守りを固めるの。', '{P}で九宮のまわりをしっかり守るね。', '{P}を上げる守りの手。あわてず固めるのも大事だコン。'],
+    king: ['王さまを動かして、安全な場所へ移すの。', '王さまを一歩よけて、危ない筋から外すね。'],
+  };
+  const XQ_SHORT = { recap: '駒を取り返せる', cap: '駒を取れる', rookOut: '車を早く働かせられる', rookUp: '車が横へ動けるようになる', rookCross: '相手の陣地をねらえる', rookRiver: '車が広くにらみをきかせられる', rookSide: '車の筋を変えられる', rook: '車がもっと働く', horseOut: '新しい駒を出せる', horseEdge: '車の道が開く', horseUp: '馬が前で働く', cannonMid: '真ん中をねらえる', cannonCorner: '守りと攻めの両方に備えられる', cannonDeep: '相手をゆさぶれる', cannonRiver: '炮が広くにらめる', cannonSide: '別の筋をねらえる', cannon: '形が整う', pawnHorse: '馬の道が開く', pawnCross: '兵（卒）が強くなる', pawn: '形が整う', guard: '王さまが固くなる', king: '王さまが安全になる' };
+  const xqKind = F => F.cap ? (F.behind ? 'recap' : 'cap') : F.k;
+  function xqWhyJa(F, k) { const kd = xqKind(F), L = XQ_WHY[kd] || XQ_WHY.cannon; let s = L[k % L.length].replace(/\{P\}/g, XQN(F.cap || F.ty, F.cap ? F.c ^ 1 : F.c)); const sp = /[！？]$/.test(s) ? ' ' : ''; if (F.check) s += sp + 'しかも王手だね！'; else if (!F.cap && F.aims.length) s += sp + `相手の${XQN(F.aims[0], F.c ^ 1)}もねらっているよ。`; return s; }
+  function xqHintJa(F, k) {
+    const kd = xqKind(F), tail = ['', '金の丸の駒がヒントだコン。', ''][k % 3];
+    if (kd === 'recap') return '駒の数を数えてみて。取られたままの駒はない？' + tail;
+    if (kd === 'cap') return '取れる駒がないか、盤をよく見てみて！' + tail;
+    if (F.check) return '王さまに王手をかけられる駒がありそうだね。' + tail;
+    if (F.aims.length) return '相手の駒で、ねらえそうなものはない？' + tail;
+    if (/^rook/.test(kd)) return ['車の出番、そろそろじゃない？', 'いちばん強い駒、車の使い方を考えてみて。'][k % 2] + tail;
+    if (/^horse/.test(kd)) return ['馬の跳ねる先を考えてみて。', 'まだ動いていない馬を探してみて！'][k % 2] + tail;
+    if (kd === 'cannonMid') return '真ん中の筋をにらめる駒があるね。' + tail;
+    if (/^cannon/.test(kd)) return '炮の置き場所を考えてみて。いちばんにらみがきくのはどこ？' + tail;
+    if (/^pawn/.test(kd)) return '兵（卒）を一つ進めると、何が動きやすくなる？' + tail;
+    if (kd === 'guard') return '王さまのまわりの守り、足りてる？' + tail;
+    return '金の丸の駒で、いちばん働く場所を考えてみて。';
+  }
+  function xqOpJa(E, P, name, k, ck) {   // ck(k): the move named by its arrow
+    const pos = E.Pos.from(P.s), A = P.best, sc = new Map(P.sc || []), best = sc.has(A) ? sc.get(A) : Math.max(...(P.sc || [[0, 0]]).map(x => x[1]));
+    const FA = xqFacts(E, pos, A), M = ck('ok'), X = ck('ng'), f = s => s.replace(/\{m\}/g, M).replace(/\{x\}/g, X);
+    const ask = XQJ_OP.ask[k % XQJ_OP.ask.length].replace('{n}', name);
+    const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 10 ? '{x}も、AIの見立てでは{m}とほぼ同じ評価。どちらも良い手だコン！' : '{x}も悪くない手。でも{m}のほうが、AIの評価がわずかに上なの。');
+      const w = xqWhyJa(FA, k); return w + (/[！？]$/.test(w) ? ' ' : '') + XQJ_OP.good[k % XQJ_OP.good.length]; };
+    const ng = u0 => {
+      let u = u0; if (u == null || u === A) u = ((P.sc || []).find(x => x[0] !== A && best - x[1] > 10) || (P.sc || []).find(x => x[0] !== A) || [])[0];   // (no move given: a real miss, as the tool asks)
+      const sh = XQ_SHORT[xqKind(FA)] || '形が整う', out = [XQJ_OP.lead[k % XQJ_OP.lead.length], XQJ_OP.so[k % XQJ_OP.so.length].replace('{a}', sh)];
+      if (u == null) return f(out.join(''));
+      let F = null; try { F = xqFacts(E, pos, u); } catch (e) {}
+      const lost = F ? [...F.mine].filter(q => !FA.mine.has(q)) : [], aft = pos.clone().play(u), d = sc.has(u) ? best - sc.get(u) : null;
+      const lp = lost.length ? E.typeOf(aft.at(lost[0])) : 0;
+      if (F && FA.cap && FA.behind && !F.cap) out.push('{x}だと取り返しそびれて、駒損のままになっちゃう。');   // (the bigger miss first)
+      else if (F && lp && F.cap && XQV[F.cap] >= XQV[lp]) {}   // (an even trade or better: no 'taken' line)
+      else if (F && lp) out.push(F.cap ? `{x}で${XQN(F.cap, pos.side ^ 1)}を取っても、きみの${XQN(lp, pos.side)}を取られて損しちゃう！` : `{x}だと、きみの${XQN(lp, pos.side)}が取られて損しちゃう！`);
+      else if (F && FA.cap && !F.cap) out.push(FA.behind ? '{x}だと取り返しそびれて、駒損のままになっちゃう。' : `{x}だと、取れる${XQN(FA.cap, pos.side ^ 1)}を見のがしちゃうね。`);
+      else if (F && /^rook/.test(FA.k) && !FA.cap && F.ty !== 5) out.push('{x}だと車の出番が遅れちゃう。車は早く働かせたい駒だからね。');
+      else if (d == null) out.push('{x}は、AIの候補にも入らない手なの。');
+      if (d != null && d > 10) out.push(XQJ_OP.gap[k % XQJ_OP.gap.length].replace('{d}', XQJ_OP.deg(d)));
+      else if (d != null && out.length < 3) out.push('{x}も悪くないけど、AIの評価ではこっちがわずかに上だから、本筋はこっちなの。');
+      return f(out.join(''));
+    };
+    return { ask, hintTx: xqHintJa(FA, k), good, ng, own: true };
+  }
+  function xqNotesJa(E, g, notes) {   // the line's notes in ショウギツネ's words (3D, ja); the AI's verdict kept from the stored note
+    const out = {}, cnt = {}; let pos = E.Pos.from(null), n = 0;
+    g.study.line.forEach((m, i) => { const o = notes[String(i)];
+      if (o) { const ai = (String(o.ja || '').match(/（AI[:：]\s*([^）]+)）/) || [])[1]; let F = null; try { F = xqFacts(E, pos, m); } catch (e) {}
+        const kd = F ? xqKind(F) : ''; cnt[kd] = (cnt[kd] || 0) + 1;
+        let s = F ? xqWhyJa(F, cnt[kd] + g.id.length) : String(o.ja || '');
+        if (n === 0) s = `ここまでが『${(g.title || {}).ja || ''}』の形だコン！ ` + s;
+        if (ai) s += `（AIの見立て：${ai}）`;
+        out[String(i)] = { ja: s }; n++; }
+      pos = pos.clone().play(m); });
+    return out;
+  }
   const XIANGQI = {
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
@@ -1537,9 +1659,12 @@
       const g = this.data.op.sets.find(x => x.id === key); if (!g) return null;
       const notes = {}; (g.study.notes || []).forEach((n, i) => { if (n) notes[String(i)] = L(n, lang); });
       const it = g.intro && (g.intro[lang] || g.intro.en), hist = Array.isArray(it) ? it.join(' ') : it || '';
-      const probs = shuffle(g.problems || []).slice(0, 5);
-      return { id: g.id, title: L(g.title, lang), intro: hist, start: { spec: null, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes,
-        probs: probs.map(P => ({ pos: { spec: P.s, me: xqMe(P.s) }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: window.XiangqiEngine ? [XiangqiEngine.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: CKM('ok', lang) }) })),
+      const probs = shuffle(g.problems || []).slice(0, 5), E = window.XiangqiEngine, ja = lang === 'ja' && E;
+      let nj = null; if (ja) try { nj = xqNotesJa(E, g, notes); } catch (e) { console.warn('[lessons3d] xiangqi notes', e); }
+      return { id: g.id, title: L(g.title, lang), intro: ja && XQJ_OP.intro[g.id] ? XQJ_OP.intro[g.id] : hist, start: { spec: null, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes: nj || notes,
+        probs: probs.map((P, i) => { const o = { pos: { spec: P.s, me: xqMe(P.s) }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: E ? [E.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: CKM('ok', lang) }) };
+          if (ja) try { Object.assign(o, xqOpJa(E, P, L(g.title, 'ja'), g.id.length * 2 + i, k => CKM(k, lang))); } catch (e) { console.warn('[lessons3d] xiangqi opening', e); }
+          return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= max * .75; pr[g.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
     points(P, m) {   // = xiangqi/app.js problemPoints
@@ -2794,8 +2919,8 @@
         return;
       }
       if ((id === 'checkers' || id === 'xiangqi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
-        const right = pts >= 16, k = cur.k;
-        say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
+        const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
+        say(`${right ? line('solved') || pick(X.good) : p.own ? (pts > 0 ? 'いい線いってる！' : 'おしい！') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng']]); }, 900);
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
