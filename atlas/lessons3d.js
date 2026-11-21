@@ -406,6 +406,13 @@
     pct: ['強い人の対局の{a}%が、この手を選んでいるコン。', '実戦では{a}%がこの手。いちばん人気！', '強い人の{a}%が指した、定跡の本筋の手。', 'この場面では{a}%の人がこれを選ぶの。覚えておいてね。'],
     cp: ['AIの評価でも、これがいちばん良い手だコン。', 'AIも、この手がいちばんだと考えているの。', 'ほかの手より、AIの評価がはっきり高い手。'],
     lead: ['{m}が定跡の手。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '本筋は{m}なの。'],
+    // (2026-11-21) the line's next move (lineProbs: the castles, 鬼殺し, 立石流 … — problems made from the line itself)
+    askL: ['『{n}』の手順、{s}の次の一手はどれかな？', '{s}の番だコン。『{n}』の形を目指して、ここで何を指す？', 'さあ、手順を思い出して！ {s}の一手は？', '『{n}』の続きだよ。{s}ならここでどう指す？', '{s}の一手コン。『{n}』の手順どおりに指してみて！'],
+    tailL: ['手順どおりの一手コン。', '『{n}』の形に、また一歩近づいたね。', 'これで手順どおり！ 次の形も想像してみてね。', 'ばっちり、『{n}』の手順の手なの。'],
+    dubL: 'AIの評価は少し下がる手だけど、『{n}』はこの手が持ち味なの。',
+    altL: ['{x}でも大丈夫コン！ 手順では{m}が先だけど、順番が入れかわっても同じ『{n}』の形になるの。', 'それもあり！ {x}を先に指しても、最後は同じ『{n}』の形に組めるコン。'],
+    leadL: ['『{n}』の手順は{m}。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '手順の次の手は{m}なの。'],
+    hintL: ['光っている手が、手順の次の一手。指したあとの形を想像してみてね。', 'ヒントは光っている手コン。『{n}』の完成した形を思い出してみて！'],
   };
   const SH_V = { p: 1, l: 3, n: 4, s: 5, g: 6, b: 8, r: 10, k: 0 };
   function shBd(sfen) {   // the board as 81 cells (row a..i × file 9..1), the side to move, the hands
@@ -500,6 +507,27 @@
     if (cp) return ['光っている手が、AIがいちばん良いと考えた手。指したあとの形を想像してみてね。', 'ヒントは光っている手コン。駒の多さを、どう生かすかな？'][k % 2];
     return ['光っている手が、強い人がいちばん選んだ手。指したあとの形を想像してみてね。', 'ヒントは光っている手コン。手順の流れを思い出してみて！'][k % 2];
   }
+  function shLineJa(o, name, k, later) {   // the line's next move (mode 'line'): {m} = the line's move, {x} = yours
+    const P = o.P, C = P.cand || [], A = o.ans, sente = String(o.pos).split(' ')[1] !== 'w', side = sente ? '☗先手' : '☖後手', FA = shFacts(o.pos, A), N = t => t.replace(/\{n\}/g, name);
+    const val = new Map(C), ref = Math.max(...C.filter(c => P.accept.includes(c[0])).map(c => c[1])), sp = w => /[！？]$/.test(w) ? ' ' : '';
+    const ask = N(SHJ_OP.askL[k % 5]).replace('{s}', side);
+    let hintTx = shHintJa(FA, k, false); if (/強い人|ヒントは光っている手コン。手順/.test(hintTx)) hintTx = N(SHJ_OP.hintL[k % 2]);
+    const good = u => {
+      if (u && u !== A && P.accept.includes(u)) return N(SHJ_OP.altL[k % 2]);
+      const w = shWhyJa(FA), TL = SHJ_OP.tailL.filter(x => !/コン/.test(w) || !/コン/.test(x)), t = N(P.dub ? SHJ_OP.dubL : TL[k % TL.length]); return w + sp(w) + t; };   // (one コン per bubble)
+    const ng = u0 => {
+      let u = u0; if (!u || u === A) u = (C.find(x => !P.accept.includes(x[0])) || [])[0]; const lead = N(SHJ_OP.leadL[k % 4]), kon = /コン/.test(lead) ? 'の。' : 'コン。';
+      if (!u) return lead + shWhyJa(FA);
+      let F; try { F = shFacts(o.pos, u); } catch (e) { F = {}; }
+      const mine = val.has(u) ? val.get(u) : P.floor != null ? P.floor : ref - 600, d = winP(ref, 600) - winP(mine, 600);
+      if (F.hang && !FA.hang && d > .05) return lead + `{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`;
+      if (FA.cap && FA.behind && !F.cap) return lead + '{x}だと取り返しそびれて、駒損のままになっちゃう。';
+      if ((later || []).includes(u)) return lead + N('{x}も『{n}』で指す手だけど、いまはまだ早いの。先に{m}を指しておかないと、形がくずれちゃう') + kon;
+      if (d > .12) return lead + '{x}だと、' + (d > .35 ? '形勢がぐっと悪くなっちゃう。' : 'けっこう損をしちゃうの。') + `{m}なら${shShortJa(FA)}から、こっちを選びたいね。`;
+      return lead + (/『/.test(lead) ? `{x}も悪い手じゃないけど、それだと手順からはずれちゃうの。{m}なら${shShortJa(FA)}` : N(`{x}も悪い手じゃないけど、『{n}』の形からははずれちゃうの。{m}なら${shShortJa(FA)}`)) + kon;
+    };
+    return { ask, hintTx, good, ng };
+  }
   function shOpJa(o, name, hs, i, handi) {
     const P = o.P, C = P.cand || [], A = o.ans, sente = String(o.pos).split(' ')[1] !== 'w', cp = P.mode === 'cp', k = hs + i;
     const side = handi ? (sente ? '下手' : '上手') : sente ? '☗先手' : '☖後手', N = P.total || C.reduce((s, x) => s + x[1], 0) || 1;
@@ -531,7 +559,7 @@
       if (this.p) return this.p;
       const voice = fetch('../shogi/voice-fox-ja.js?v=3').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} this.V = ((w.I18N || {})['ja@fox']) || {}; }).catch(() => { this.V = {}; });   // (ショウギツネ's own lines, 3D, ja)
       return (this.p = Promise.all([voice, getJ('../shogi/lessons.json?v=20261121k2'), getJ('../shogi/openings.json?v=20261107l14'),
-        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261107l14`).catch(() => ({ sets: [] })))])
+        ...['beg', 'mid', 'adv', 'sp', 'new', 'castle'].map(c => getJ(`../shogi/openings-${c}.json?v=20261121lp`).catch(() => ({ sets: [] })))])
         .then(([_, ls, op, ...more]) => {
           const sets = op.sets.slice(); more.forEach((m, i) => (m.sets || []).forEach(s => { s.cat = s.cat || ['beg', 'mid', 'adv', 'sp', 'new', 'castle'][i]; if (!sets.some(x => x.id === s.id)) sets.push(s); }));
           sets.forEach(s => { if (!s.cat) s.cat = s.handi ? 'handi' : 'mid'; });
@@ -568,16 +596,22 @@
     opening(key, lang) {
       const s = this.data.sets.find(x => x.id === key); if (!s) return null;
       const probs = (s.problems || []).length ? (s.handi ? s.problems.map((p, i) => i) : shuffle(s.problems.map((p, i) => i))).slice(0, 5).sort((a, b) => s.handi ? a - b : 0).map(i => s.problems[i]) : [];
+      // (2026-11-21) sets with few game-based problems (the castles, 鬼殺し, 立石流 …): filled up with "the line's next move" problems
+      // (lineProbs, shogi/tools/openings/lineprobs.js), in the line's order
+      if (probs.length < 5 && (s.lineProbs || []).length) probs.push(...shuffle(s.lineProbs.slice()).slice(0, 5 - probs.length).sort((a, b) => a.ply - b.ply));
       const nc = NC.shogi || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the notes without coordinates)
       const ja = lang === 'ja', nm = L(s.title, 'ja'), hs = s.id.length * 3, sh = String(L(nc['op:' + s.id + '/short'] || s.short, lang) || '');
       const intro = !ja ? sh : s.handi ? `『${nm}』の練習だコン！<br>${sh}` : SHJ_OP.intro[hs % SHJ_OP.intro.length].replace('{n}', nm).replace('{t}', sh.replace(/[。！]$/, ''));   // (2026-11-21 lesson loop: ショウギツネ introduces it)
       return { id: s.id, title: L(s.title, lang), intro, start: s.study && s.study.start, steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
-        probs: probs.map((p, i) => { const o = { pos: p.sfen, kind: 'best', P: p, ans: (p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] }; if (ja && o.ans) try { Object.assign(o, shOpJa(o, nm, hs, i, !!s.handi)); } catch (e) { console.warn('[lessons3d] shogi opening', e); } return o; }),
+        probs: probs.map((p, i) => { const o = { pos: p.sfen, kind: 'best', P: p, ans: (p.mode === 'line' ? p.pv : p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] };
+          const st = (s.study && s.study.steps || []).map(x => x[0]), later = p.mode === 'line' ? st.filter((u, j) => j > p.ply && (j - p.ply) % 2 === 0) : null;
+          if (ja && o.ans) try { Object.assign(o, p.mode === 'line' ? shLineJa(o, nm, hs + i, later) : shOpJa(o, nm, hs, i, !!s.handi)); } catch (e) { console.warn('[lessons3d] shogi opening', e); } return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[s.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
     introPos() { return { pos: 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1', lock: true }; },
     rampBody: (it, lang) => L(it.body, lang),   // (no diagram in lessons.json: the starting position, for looking only, while the intro is read)
     points(P, u) {   // = shogi/index.html movePoints (without the engine's runtime score)
+      if (P.mode === 'line') { if (P.accept.includes(u)) return PTS; const ref = Math.max(...P.cand.filter(c => P.accept.includes(c[0])).map(c => c[1])), c = P.cand.find(x => x[0] === u), s = c ? c[1] : P.floor; return Math.max(0, Math.min(12, Math.round(12 * (1 - (ref - s) / 500)))); }   // (the line's next move, 3D only: another move is partial at most)
       if (P.mode === 'material' || P.mode === 'freq') { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u); return c ? Math.round(PTS * c[1] / best) : 0; }
       if ((P.accept || []).includes(u)) return PTS;
       if (P.mode === 'cp') { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u), s = c ? c[1] : P.floor; return Math.max(0, Math.min(PTS - 1, Math.round(PTS * (1 - (best - s) / 500)))); }
