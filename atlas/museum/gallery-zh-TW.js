@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Traditional Chinese, Taiwan). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {})['zh-TW'] = {
-  ui: { play: '用這塊棋盤下棋', play_ballinderry: '布蘭杜布（7×7）· 對戰AI', flip: '翻面', guideH: '導覽員：館藏梟', guide: '逛遍館藏，館藏梟就會一次比一次打扮得更漂亮來見你', gift: '新的阿特拉莫來了！', sub: "世界各地博物館守護的遊戲史珍寶。每件名品都以3D重現——彷彿拿在手上，轉動細細端詳。", collection: "館藏", special: "特別展示", lock: "達成{n}個{g}成就後開放", loading: "正在準備展示櫃…", fail: "無法載入展品",
+  ui: { play: "開始對局", play_ballinderry: "用這塊棋盤下棋：布蘭杜布", p_level: "AI強度", p_side: "你執", p_side1_ballinderry: "攻方（先手）", p_side2_ballinderry: "守方（王）", p_stop: "結束對局", p_note_ballinderry: "棋子沒有出土，形狀為推定。", p_you: "你", p_turn: "輪到你", p_think: "思考中…", p_win: "你贏了", p_lose: "你輸了", p_draw: "平局", flip: '翻面', guideH: '導覽員：館藏梟', guide: '逛遍館藏，館藏梟就會一次比一次打扮得更漂亮來見你', gift: '新的阿特拉莫來了！', sub: "世界各地博物館守護的遊戲史珍寶。每件名品都以3D重現——彷彿拿在手上，轉動細細端詳。", collection: "館藏", special: "特別展示", lock: "達成{n}個{g}成就後開放", loading: "正在準備展示櫃…", fail: "無法載入展品",
     hint: "拖曳旋轉 · 滾輪縮放 · 點數字看細節", hintT: "拖曳旋轉 · 雙指縮放", spin: "緩緩旋轉", reset: "回到初始視角", close: "關閉",
     date: "年代", where: "出土 / 流傳", museum: "典藏", mat: "材質", size: "尺寸", look: "看點", aboutModel: "關於這個3D模型", sources: "參考資料", play: "玩{g}" },
   ex: {

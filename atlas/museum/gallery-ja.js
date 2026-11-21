@@ -1,7 +1,7 @@
 /* 博物館「所蔵品」の文言（日本語）。ex[id]: name 名前 / alt 別名 / date 年代 / where カードの地名 / found 出土・伝来 / museum 所蔵 / no 番号 /
    mat 素材 / size 大きさ / p 解説 / spots 見どころ [見出し, 本文]（gallery.js の spots と同じ順）/ model 3Dモデルについて / src 出典 [名前, URL] */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).ja = {
-  ui: { play: 'この盤で遊ぶ', play_ballinderry: 'ブランドゥブ（7×7）・AI戦', flip: '裏返す', guideH: '案内役ミュゼフク', guide: '所蔵品を見てまわると、少しずつおめかしして会いに来てくれます', gift: 'アトラモがやってきた！', sub: '世界の博物館が守る、ゲームの歴史の宝物。3Dで再現した名品を、手に取るようにぐるりと眺めてみよう。', collection: '所蔵品', special: '特別展示', lock: '{g}の実績を{n}個達成で公開', loading: '展示ケースを準備しています…', fail: '展示を読み込めませんでした',
+  ui: { play: "対局開始", play_ballinderry: "この盤で遊ぶ：ブランドゥブ", p_level: "AIの強さ", p_side: "あなた", p_side1_ballinderry: "攻め手（先手）", p_side2_ballinderry: "守り手（王）", p_stop: "対局をやめる", p_note_ballinderry: "駒は見つかっていないので、形は推定です。", p_you: "あなた", p_turn: "あなたの番", p_think: "考え中…", p_win: "あなたの勝ち", p_lose: "あなたの負け", p_draw: "引き分け", flip: '裏返す', guideH: '案内役ミュゼフク', guide: '所蔵品を見てまわると、少しずつおめかしして会いに来てくれます', gift: 'アトラモがやってきた！', sub: '世界の博物館が守る、ゲームの歴史の宝物。3Dで再現した名品を、手に取るようにぐるりと眺めてみよう。', collection: '所蔵品', special: '特別展示', lock: '{g}の実績を{n}個達成で公開', loading: '展示ケースを準備しています…', fail: '展示を読み込めませんでした',
     hint: 'ドラッグで回転・ホイールで拡大・番号で見どころへ', hintT: 'ドラッグで回転・ピンチで拡大', spin: 'ゆっくり回す', reset: 'はじめの向きに戻す', close: '閉じる',
     date: '年代', where: '出土・伝来', museum: '所蔵', mat: '素材', size: '大きさ', look: '見どころ', aboutModel: 'この3Dモデルについて', sources: '出典', play: '{g}で遊ぶ' },
   ex: {

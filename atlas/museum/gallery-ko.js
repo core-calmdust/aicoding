@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Korean). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).ko = {
-  ui: { play: '이 판으로 두기', play_ballinderry: '브란두브(7×7) · AI 대전', flip: '뒤집기', guideH: '안내원 뮤제후쿠', guide: '소장품을 둘러볼수록 뮤제후쿠가 조금씩 멋을 내고 찾아와요', gift: '새 아트라모가 찾아왔어요!', sub: "세계의 박물관이 지켜 온 게임 역사의 보물. 3D로 재현한 명품을 손에 든 듯 돌려 보며 자세히 살펴보세요.", collection: "소장품", special: "특별 전시", lock: "{g} 업적 {n}개 달성 시 공개", loading: "전시 케이스를 준비하는 중…", fail: "전시품을 불러오지 못했습니다",
+  ui: { play: "대국 시작", play_ballinderry: "이 판으로 두기: 브란두브", p_level: "AI 강도", p_side: "내 편", p_side1_ballinderry: "공격(선수)", p_side2_ballinderry: "수비(왕)", p_stop: "대국 그만두기", p_note_ballinderry: "말은 발견되지 않아 모양은 추정입니다.", p_you: "나", p_turn: "내 차례", p_think: "생각 중…", p_win: "승리", p_lose: "패배", p_draw: "무승부", flip: '뒤집기', guideH: '안내원 뮤제후쿠', guide: '소장품을 둘러볼수록 뮤제후쿠가 조금씩 멋을 내고 찾아와요', gift: '새 아트라모가 찾아왔어요!', sub: "세계의 박물관이 지켜 온 게임 역사의 보물. 3D로 재현한 명품을 손에 든 듯 돌려 보며 자세히 살펴보세요.", collection: "소장품", special: "특별 전시", lock: "{g} 업적 {n}개 달성 시 공개", loading: "전시 케이스를 준비하는 중…", fail: "전시품을 불러오지 못했습니다",
     hint: "드래그로 회전 · 휠로 확대 · 번호로 볼거리", hintT: "드래그로 회전 · 핀치로 확대", spin: "천천히 돌리기", reset: "처음 방향으로", close: "닫기",
     date: "연대", where: "출토 · 전래", museum: "소장", mat: "재질", size: "크기", look: "볼거리", aboutModel: "이 3D 모델에 대하여", sources: "출처", play: "{g} 플레이" },
   ex: {
