@@ -9,7 +9,11 @@
    the figures are drawn after the photographs, not traced. */
 (function () {
   'use strict';
+  // the figures of the sixteen side panels, taken off the Shōsōin's detail photographs CO0000000428–436 (4 rows = the sides A, C, B, D,
+  // 4 panels each, 512 × 150): alpha = the ivory figure, green / blue = where it is dyed green / red. Outlines and dye only.
+  const HERE = (document.currentScript && document.currentScript.src) || location.href; let FIG = null;
   (window.AtlasEx = window.AtlasEx || {}).shosoin = {
+    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { FIG = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/shosoin-figures.webp', HERE).href; setTimeout(res, 8000); }),
     build(TT, X, K) {
       const G = new TT.Group();
       const S = 48.9, H = 12.7, RAIL = 1.0, BASE = 7.4,   // (measured on the Shōsōin's oblique photograph: body 5.3, openings 5.4, floor frame 1.0)
@@ -122,6 +126,10 @@
         [['lion', 1], ['runner', 2], ['runner', 1]], [['parrot', 2], ['plant', 2], ['parrot', 2]], [['camel', 2], ['man', 0], ['camel', 1], ['man', 1]], [['plant', 2], ['hound', 0], ['hound', 2]],
       ];
       const PAL = [C.iv, C.red, C.grn, '#d8b878'];
+      // the figures in ivory with their dyes, and a dark outline round each (the joint of the inlay)
+      let figC = null; if (FIG) { figC = document.createElement('canvas'); figC.width = FIG.width; figC.height = FIG.height; const q = figC.getContext('2d'); q.drawImage(FIG, 0, 0); const im = q.getImageData(0, 0, figC.width, figC.height), d = im.data;
+        for (let i = 0; i < d.length; i += 4) { const gr = Math.min(1, d[i + 1] / 255 * 1.5), rd = Math.min(1, d[i + 2] / 255 * 1.4); let c = [222, 206, 168]; c = c.map((v, k) => v + ([96, 140, 108][k] - v) * gr); c = c.map((v, k) => v + ([206, 112, 78][k] - v) * rd); d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; } q.putImageData(im, 0, 0); }
+      const panelFig = (g, row, col, x, y, w2, h2) => { g.save(); g.shadowColor = 'rgba(14,6,3,.9)'; g.shadowBlur = 2.5; g.drawImage(figC, col * 512, row * 150, 512, 150, x, y, w2, h2); g.restore(); };
       const sideTex = (seed, drawerAt) => K.tex(2048, Math.round(2048 * (BODY - TOP) / S), (g, w, h) => {
         g.drawImage(shT.image, 0, 0, w, h); const s = w / S, cb = s * .85;
         chain(g, 0, 0, w, cb, false); chain(g, 0, h - cb, w, cb, false);
@@ -129,6 +137,7 @@
         for (let i = 0; i < 4; i++) { const x0 = i * pw;
           chain(g, x0 + s * .75, cb, h - 2 * cb, s * .75, true);
           g.strokeStyle = C.iv; g.lineWidth = s * .05; g.strokeRect(x0 + s * .85, cb + s * .1, pw - s * .95, h - 2 * cb - s * .2);
+          if (figC) { panelFig(g, seed, i, x0 + s * 1.0, cb + s * .22, pw - s * 1.25, h - 2 * cb - s * .44); continue; }
           const v = VIGN[(seed * 4 + i) % VIGN.length], cy = h * .54;
           v.forEach(([kd, c], n) => { const x = x0 + s * .6 + (n + .5) * (pw - s * .7) / v.length; sil(g, kd, x, cy, s * (v.length > 3 ? .034 : .04), kd === 'plant' ? C.grn : PAL[c % 4]); });
         }
@@ -183,6 +192,7 @@
         // the drawer front is one of the side's panels: birds and flowers in dyed ivory, a large beaded gilt ring in the middle (side A)
         const dfT = K.tex(1024, Math.round(1024 * DH / DW), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); const s2 = w / DW;
           g.strokeStyle = C.iv; g.lineWidth = s2 * .05; g.strokeRect(s2 * .1, s2 * .1, w - s2 * .2, h - s2 * .2);
+          if (figC) { panelFig(g, sx > 0 ? 0 : 1, 0, s2 * .25, s2 * .2, w - s2 * .5, h - s2 * .4); return; }
           const kd = sx > 0 ? 'parrot' : 'camel';   // (one drawer carries the parrots, the other two camels)
           sil(g, kd, w * .2, h * .48, s2 * .05, sx > 0 ? C.grn : C.red); g.save(); g.translate(w, 0); g.scale(-1, 1); sil(g, kd, w * .2, h * .48, s2 * .05, C.grn); g.restore(); });
         const f = new TT.Mesh(new TT.BoxGeometry(DW, DH, .45), [dark, dark, dark, dark, K.mat({ map: dfT, color: '#ffffff', roughness: .5, clearcoat: .35 }), dark]); g2.add(f);
