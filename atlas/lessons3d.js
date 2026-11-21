@@ -747,12 +747,177 @@
     };
     return { ask, hintTx: chHintJa(FA, k), good, ng };
   }
+  /* (2026-11-21 lesson loop) the chess lesson problems (check, escape, mate, special rules, stalemate, tactics) in ナイトン's words,
+     Japanese: a varied question, a hint about what to look at, and after the answer why the move works or what yours misses —
+     from the board (check, the king's ways out, the pieces a move hits, lines through two pieces, pieces left to be taken)
+     and the stored values (chess/lessons.json sc). {m} / {x} = the best move / yours, filled by the runner. */
+  function chHits(b, z) {   // the squares the piece on z attacks
+    const ch = b[z]; if (!ch) return []; const lo = ch.toLowerCase(), w = chW(ch), r = z >> 3, f = z & 7, out = [], ok = (rr, ff) => rr >= 0 && rr < 8 && ff >= 0 && ff < 8;
+    if (lo === 'p') { for (const df of [-1, 1]) if (ok(r + (w ? 1 : -1), f + df)) out.push((r + (w ? 1 : -1)) * 8 + f + df); return out; }
+    if (lo === 'n' || lo === 'k') { for (const [dr, df] of lo === 'n' ? [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]] : [[1, 1], [1, 0], [1, -1], [0, 1], [0, -1], [-1, 1], [-1, 0], [-1, -1]]) if (ok(r + dr, f + df)) out.push((r + dr) * 8 + f + df); return out; }
+    const D = lo === 'b' ? [[1, 1], [1, -1], [-1, 1], [-1, -1]] : lo === 'r' ? [[1, 0], [-1, 0], [0, 1], [0, -1]] : [[1, 1], [1, -1], [-1, 1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]];
+    for (const [dr, df] of D) { let rr = r + dr, ff = f + df; while (ok(rr, ff)) { out.push(rr * 8 + ff); if (b[rr * 8 + ff]) break; rr += dr; ff += df; } }
+    return out;
+  }
+  function chLsF(fen, u) {   // chFacts + check, the king's free squares, what the moved piece hits, a pin / skewer line
+    const F = chFacts(fen, u), b = chBoard(fen), white = String(fen).split(' ')[1] !== 'b', nb = chMove(b, u), a = chSq(u), z = chSq(u.slice(2, 4));
+    const kq = nb.indexOf(white ? 'k' : 'K'), ok = (r, f) => r >= 0 && r < 8 && f >= 0 && f < 8;
+    F.check = kq >= 0 && !!chAtt(nb, kq, white);
+    F.near = kq >= 0 && Math.max(Math.abs((kq >> 3) - (z >> 3)), Math.abs((kq & 7) - (z & 7))) <= 1;
+    F.hits = chHits(nb, z).filter(q => nb[q] && chW(nb[q]) !== white).map(q => nb[q].toLowerCase()).sort((x, y) => CH_VAL[y] - CH_VAL[x]);
+    F.ep = F.pc === 'p' && (a & 7) !== (z & 7) && !b[z]; F.promo = u[4] || '';
+    const w0 = chAtt(b, a, !white); F.was = !!w0 && (!chAtt(b, a, white) || CH_VAL[w0.toLowerCase()] < CH_VAL[F.pc]);   // (the piece moved stood to be taken)
+    F.run = 0; if (kq >= 0) { const nb2 = nb.slice(); nb2[kq] = '';
+      for (let dr = -1; dr <= 1; dr++) for (let df = -1; df <= 1; df++) { const r = (kq >> 3) + dr, f = (kq & 7) + df; if ((!dr && !df) || !ok(r, f)) continue; const c = nb2[r * 8 + f]; if (c && chW(c) !== white) continue; if (!chAtt(nb2, r * 8 + f, white)) F.run++; } }
+    const at = chAtt(nb, z, !white); F.taken = !!at && (at.toLowerCase() !== 'k' || !chAtt(nb, z, white));
+    if ('bqr'.includes(F.pc)) {
+      const D = F.pc === 'b' ? [[1, 1], [1, -1], [-1, 1], [-1, -1]] : F.pc === 'r' ? [[1, 0], [-1, 0], [0, 1], [0, -1]] : [[1, 1], [1, -1], [-1, 1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]];
+      for (const [dr, df] of D) { let r = (z >> 3) + dr, f = (z & 7) + df; const seen = []; while (ok(r, f) && seen.length < 2) { const ch = nb[r * 8 + f]; if (ch) { if (chW(ch) === white) break; seen.push(ch.toLowerCase()); } r += dr; f += df; }
+        if (seen.length < 2) continue; const [fr, bk] = seen;
+        if ((CH_VAL[bk] > CH_VAL[fr] && (fr !== 'p' || bk === 'k')) || CH_VAL[fr] > CH_VAL[bk] && bk !== 'p') { const L = { fr, bk, skewer: CH_VAL[fr] > CH_VAL[bk] }; if (!F.line || fr === 'k' || bk === 'k') F.line = L; } }
+    }
+    return F;
+  }
+  const CHJ_LS = {
+    lead: ['正解は{m}。', '{m}が正解だったピョン。', 'ここは{m}を指したかった！ ', '答えは{m}。', '{m}が決め手。'],
+    ask: {
+      b_check: ['黒のキングに、チェックをかけてみよう！', '{p}で、キングをねらえるマスはどこかな？', 'チェックになる手を指してみて！', '{p}を動かして、黒のキングに王手！', 'さあ、キングを取れる形を作ろう！'],
+      b_escape: ['チェックされちゃった！ いちばん良い守り方は？', 'キングがねらわれてる。逃げる・置く・取る、どれにする？', 'チェックを防ぐ手はいくつかある。損しない手はどれかな？', 'さあ、キングを守ろう！ 駒も損しない手を選んでね。', 'ここはどう守る？ 3つの方法を思い出してみて！'],
+      b_mate: ['1手でチェックメイトにしちゃおう！', 'キングの逃げ道を全部ふさぐチェックはどれかな？', 'この局面、1手で勝てるピョン。わかる？', '黒のキングを詰ませる一手を見つけて！', '逃げ場のないチェック、指せるかな？'],
+      b_special: [''],   // (its own questions below, by the rule the problem uses)
+      b_draw: ['ステイルメイトにしないで、勝ちにつながる手は？', '黒のキングを追いつめよう。でも、動けなくしすぎないでね！', 'クイーンでとどめをさせるかな？ わなに注意ピョン。', '引き分けにならない、勝ちへの一手を選ぼう！', 'ここでいちばん良い手はどれかな？ キングの逃げ道もよく見て！'],
+      capture: ['得をする駒取りを見つけよう！', '取れる駒はいくつかある。いちばん得なのはどれ？', '守られていない駒、見つけられるかな？', 'その駒、取っても取り返されない？ よく見て選んでね。', 'ここで駒得できる手があるピョン。どれだろう？'],
+      escape: ['ねらわれた駒を助けてあげよう！', 'どの駒があぶないかな？ 安全にする手を探して！', '相手の最後の手で、何がねらわれた？', 'このままだと駒を取られちゃう。どう助ける？', '逃げる・守る・ねらい返す。いちばんいい手は？'],
+      fork: ['2つの駒を、同時にねらっちゃおう！', '1手で両取りをかけられる駒はどれかな？', '相手の駒の並びをよく見て。両取りのチャンスピョン！', 'フォークをかけるマス、見つけられる？', '相手が一度に守れない手を探してみて！'],
+      pin: ['並んだ駒を、一直線にねらおう！', '相手の駒がタテ・ヨコ・ナナメに並んでいないかな？', 'ピンか串刺し、かけられる？', '線の上に並んだ2つの駒、見つけたピョン？', '相手の駒を動けなくする一手はどれかな？'],
+      mate1: ['1手でチェックメイトにしちゃおう！', 'キングに逃げ場のないチェックはどれ？', 'この局面、1手で勝負が決まるピョン！', '詰ませる一手、見えるかな？', 'チェックをかけたら逃げ道を数えて。詰む手はどれ？'],
+      mate2: ['2手で詰ませる、最初の一手は？', '相手の応手をしぼる手から入ろう！', 'まずはどう攻める？ 2手先のメイトを見てね。', '駒を捨ててもいいピョン。2手で詰む入り方は？', '相手がどう応じても、次に詰む手を探して！'],
+      promote: ['ポーンを成らせる、正しい一手は？', 'どのポーンを進めたら、クイーンになれるかな？', '相手のキングは追いつける？ 数えてから指してね。', 'パスポーンの出番ピョン！ どれを進める？', 'クイーンへの道を開く手はどれかな？'],
+    },
+  };
+  function chLsJa(sid, o, i) {
+    const A = CHJ_LS.ask[sid]; if (!A) return null;
+    const P = o.P, pos = o.pos, ans = o.ans, FA = chLsF(pos, ans), N = CH_PN, pA = N[FA.pc], k = i + sid.length;
+    const MT = 20000, val = u => { const e = (P.sc || []).find(x => x[0] === u); return e ? e[1] : null; }, best = val(ans);
+    const ok = u => P.ok ? P.ok.includes(u) : CHESS.points(P, u) >= 16;
+    const alt = u => u && u !== ans && !ok(u) ? u : P.sc ? (P.sc.find(x => !ok(x[0])) || [])[0] : null;   // (the scorer asks with the right move: a wrong one from the list)
+    const lead = CHJ_LS.lead[k % CHJ_LS.lead.length];
+    const loss = u => { const v = val(u); if (best == null || v == null || best > MT || v < -MT) return ''; const d = Math.round((best - v) / 100); return d >= 2 ? `評価ではポーン${d}個分くらいの損。` : ''; };
+    const tgt = FA.hits.filter(x => x !== 'p'), t1 = N[tgt[0]] || '', t2 = N[tgt[1]] || '';
+    const tw0 = tgt.length >= 2 ? (t1 === t2 ? `2つの${t1}` : `${t1}と${t2}`) : '';
+    const ask = A[k % A.length].replace('{p}', pA);
+    let hintTx = '', good, ng;
+    const F = u => { try { return chLsF(pos, u); } catch (e) { return { hits: [] }; } };
+    const mateWhy = G => G.pc === 'n' && !G.near ? 'キングは自分の駒にかこまれて、逃げ場がひとつもないピョン。' : G.near ? `キングの目の前の${N[G.pc]}は守られているから、取ることもできない。` : 'キングの逃げ道は全部ふさがって、あいだに置く駒もない！';
+    const notMate = G => !G.check ? '{x}はチェックになっていないから、相手は自由に動けちゃう。' : G.run ? '{x}はチェックだけど、キングに逃げ道が残っちゃう。' : G.taken ? `{x}だと、チェックした${N[G.pc]}を取られちゃう。` : '{x}のチェックは、あいだに駒を置かれて防がれちゃう。';
+    if (sid === 'b_check') {
+      hintTx = { r: 'ルークはタテとヨコに進む駒。キングと同じ列か段に入れないかな？', b: 'ビショップはナナメの駒。キングとナナメに並ぶマスを探してみて！', n: 'ナイトはL字に跳ぶピョン。キングからL字の位置にあるマスはどこ？', q: 'クイーンはタテ・ヨコ・ナナメ全部に進める。キングと一直線に並ぶマスはいくつもあるね。', p: 'ポーンが取れるのはナナメ前の1マス。一歩進めたら、キングはそこにいるかな？' }[FA.pc] || '';
+      const how = { r: 'まっすぐな線', b: 'ナナメの線', n: 'L字の跳び', q: '長い線', p: 'ナナメ前の1マス' }[FA.pc] || '動き';
+      good = () => [`{x}で${pA}がキングをにらんだ！ 黒は次の手で、かならずキングを守らなきゃいけないピョン。`, `チェック成功！ {x}の${pA}の${how}が、キングにちゃんと届いてる。`][k % 2];
+      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; return lead + (G && !G.check ? (G.pc === 'k' ? '{x}はキングが動くだけで、相手のキングをねらえない。' : `{x}だと${N[G.pc] || '駒'}が相手のキングに届かないから、チェックにならない。`) : '') + `${pA}の${how}がキングに届くから、チェックになる！`; };
+    } else if (sid === 'b_escape') {
+      const kind = G => G.cap ? 'take' : G.pc === 'k' ? 'run' : 'block';
+      hintTx = { take: 'チェックしている駒は、だれかに守られてる？ 取れるなら、それがいちばん得ピョン。', run: '逃げられるマスはいくつかある。逃げた先で、ほかの駒がねらわれないかも見てね。', block: 'あいだに駒を置く手もある。置いた駒が取られないか、確かめよう！' }[kind(FA)];
+      const why = { take: `{m}なら、チェックしている${N[FA.cap]}を取れて駒得。`, run: '{m}でキングを逃がすのが、駒を損しない守り方ピョン。', block: '{m}で守りのついた駒を置けば、損しないで防げる！' }[kind(FA)];
+      good = u => { const G = u && u !== ans ? F(u) : FA, kd = kind(G);
+        if (u && u !== ans) return '{x}でもちゃんと守れたね！ ' + { take: 'チェックしている駒を取れて、駒得まで！', run: 'キングが安全なマスへ逃げられたピョン。', block: 'あいだに置いた駒も、ちゃんと守られている。' }[kd];
+        return { take: `{x}でチェックしている${N[G.cap]}を取った！ キングも助かって、駒得までできたピョン。`, run: '{x}でキングを安全なマスへ。ほかの駒もねらわれない、落ち着いた逃げ方！', block: '{x}であいだに駒を置いて、チェックをさえぎった！ 置いた駒もちゃんと守られている。' }[kd]; };
+      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
+        if (G && kind(G) === 'block' && G.hang) x = `{x}であいだに置いた${N[G.pc]}は、${G.hang}にただで取られちゃう。`;
+        else if (G && kind(FA) === 'take' && !G.cap) x = `{x}でも守れるけど、チェックしている${N[FA.cap]}を取るチャンスを見のがしちゃった。`;
+        else if (G && G.pc === 'k') x = '{x}に逃げると、そのあと駒を取られて損しちゃう。';
+        else if (G) x = '{x}だと守りきれずに、駒を損しちゃう。';
+        return (x ? '' : lead) + x + why; };
+    } else if (sid === 'b_mate' || sid === 'mate1') {
+      hintTx = FA.pc === 'n' ? 'キングは自分の駒にかこまれて動けないね。L字に跳ぶ駒の出番ピョン！' : FA.near ? `${pA}をキングのすぐ近くへ。取られないマスはどこかな？ 味方の守りを使おう！` : ['キングの前の段は、自分のポーンでふさがってない？ 奥の段をねらってみて！', `${pA}の長い線でチェックしたら、キングはどこへ逃げられる？`, 'キングのまわりの8マスを数えてみて。もう1つの駒が、どこをふさいでいるかな？'][k % 3];
+      good = u => u && u !== ans && val(u) != null && val(u) < (best || 0) ? '{x}でも勝ちは近い！ でも{m}なら、1手で詰んでたピョン。' : `{x}でチェックメイト！ ${mateWhy(u && u !== ans ? F(u) : FA)}`;
+      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; return lead + (G ? notMate(G) : '') + mateWhy(FA); };
+    } else if (sid === 'b_special') {
+      const kd = FA.castle ? 'castle' : FA.ep ? 'ep' : 'promo', long = FA.castle && (chSq(ans.slice(2, 4)) & 7) === 2;
+      return { ask: { castle: ['特別なルールを使ってみよう！ キングを安全にする手は？', 'キングとルークを、1手でいっしょに動かせるかな？'][i % 2], ep: ['相手のポーンが2マス進んできた！ 特別な取り方、わかる？', 'いまだけできる取り方があるピョン。どれかな？'][i % 2], promo: 'ポーンが奥の段まであと1歩！ どうする？' }[kd],
+        hintTx: { castle: long ? 'キングを、ルークのいる左へ2マス。ルークがキングを飛びこえて、となりに来るよ。' : 'キングを横に2マス動かすと、ルークがとなりに来るピョン。', ep: '黒のポーンはいま、2マス進んで真横に来たところ。ナナメ前のあいたマスに注目してね！', promo: 'ポーンが奥の段に着いたら、いちばん強い駒に成れるね。' }[kd],
+        good: () => ({ castle: long ? 'クイーン側へのキャスリング！ キングは端へ、ルークは真ん中の近くへ出てきた。' : '{x}でキャスリング！ キングは端の安全な場所へ、ルークは真ん中へ出てきたピョン。', ep: '{x}でアンパッサン！ 真横のポーンを、ナナメ前に進んで取れた。', promo: '{x}でクイーンに昇格！ いちばん強い駒が、もう1つ増えたピョン。' }[kd]),
+        ng: u0 => { const G = u0 && u0 !== ans ? F(u0) : null;
+          if (kd === 'castle') return `${lead}{x}だとキングが真ん中に残って、ルークも出にくいまま。キャスリングなら1手で両方できるピョン。`.replace('{x}だと', G ? '{x}だと' : 'ほかの手だと');
+          if (kd === 'ep') return `${lead}アンパッサンは、相手のポーンが2マス進んだ直後しかできない。次の手ではもう取れないから、いまが取りどきだった！`;
+          return lead + (G && G.promo && G.promo !== 'q' ? '{x}だとクイーンより弱い駒になっちゃう。' : '') + 'ポーンを奥の段へ進めてクイーンに成れば、いちばん強い駒が増えるから。'; },
+        why: '' };
+    } else if (sid === 'b_draw') {
+      const m1 = best >= 29999;
+      hintTx = m1 ? '黒のキングの逃げ道を数えてみて。チェックしながら全部ふさげるマスがあるね。' : 'すぐには詰まない形。黒のキングに動けるマスを残しながら、せまい所へ追いこもう！';
+      good = u => { const v = u ? val(u) : best; if (u && u !== ans && v != null && v < best) return '{x}でも勝ちは変わらない！ ただ、{m}ならもっと早く詰ませられたピョン。';
+        return m1 ? '{x}でチェックメイト！ チェックをかけたから、ステイルメイトにならずに勝てたピョン。' : '{x}がいちばん！ 黒のキングに動けるマスを1つ残して、ステイルメイトをよけながら追いつめてる。'; };
+      ng = u0 => { const u = alt(u0) || (P.sc.find(x => x[1] <= 0) || [])[0], G = u ? F(u) : null;
+        const x = G && G.hang ? `{x}だと、${N[G.pc]}をキングに取られちゃう！` : G && !G.check && !G.run ? '{x}だと黒のキングは、チェックされていないのに動けない。ステイルメイトで引き分けになっちゃう！' : '{x}だと勝ちが遠のいちゃう。';
+        return lead + x + (m1 ? 'チェックをかけて詰ませれば勝ちだった。' : '逃げ道を1つ残すのが、勝ちへの近道ピョン。'); };
+    } else if (sid === 'capture') {
+      const cA = N[FA.cap] || '駒', defd = FA.taken;
+      hintTx = [`相手の${cA}に注目！ それを守っている駒はいるかな？`, `取ったあと、取り返されるかを数えてみて。${cA}がねらい目ピョン。`][k % 2];
+      good = u => { if (u && u !== ans) return `{x}も悪くない手！ でも{m}なら${cA}を取れて、もっと得だった。`;
+        return defd ? `{x}で${cA}を取った！ 取り返されても、${pA}より${cA}のほうが価値が高いから得なんだ。` : `{x}で、ただの${cA}をいただき！ だれにも守られていないから、取り返されないピョン。`; };
+      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
+        if (G && G.cap && G.hang) x = `{x}で取った${N[G.cap]}は守られていて、${N[G.pc]}を取り返されちゃう。`;
+        else if (G && G.cap && CH_VAL[G.cap] < CH_VAL[FA.cap]) x = `{x}で取れる${N[G.cap]}より、${cA}のほうが価値が高い。`;
+        else if (G && G.hang) x = `{x}のあと、その${N[G.pc]}が${G.hang}に取られて損しちゃう。`;
+        else if (G) x = `{x}だと、${cA}を取るチャンスを見のがしちゃう。`;
+        return lead + x + (defd ? `${cA}は取り返されても得な駒ピョン。` : `${cA}はだれにも守られていなかった！`); };
+    } else if (sid === 'escape') {
+      const th = FA.was;
+      hintTx = th ? [`ねらわれているのは${pA}。逃げた先が安全か、1マスずつ確かめてね。`, `${pA}の逃げ先はいくつかあるピョン。相手の駒が届かないマスはどこ？`][k % 2] : 'ただ逃げるだけじゃない手もある。相手の駒をねらい返せないかな？';
+      const why = th ? `{m}なら${pA}が、相手の駒の届かないマスへ逃げられる。` : '{m}なら、ねらわれた駒を助けながら反撃できるピョン。';
+      good = u => u && u !== ans ? '{x}でも助かったね！ ただ{m}なら、逃げた先での働きがもっといいピョン。' : (th ? `{x}で${pA}が安全なマスへ！ もう相手の駒は届かないピョン。` : '{x}で、ねらわれた駒を助けながら反撃！ 相手は自分の駒の心配で手いっぱい。') + (FA.hits.length && FA.hits[0] !== 'p' ? `しかも相手の${N[FA.hits[0]]}もねらってる。` : '');
+      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
+        if (G && th && chSq(u) !== chSq(ans)) x = `{x}だと、ねらわれていた${pA}がそのまま取られちゃう。`;
+        else if (G && G.hang) x = `{x}に逃げても、そこで${G.hang}に取られちゃう。`;
+        else if (G) x = '{x}だと駒は助かっても、形が悪くなって損しちゃう。';
+        return (x ? '' : lead) + x + why; };
+    } else if (sid === 'fork') {
+      const two = tgt.length >= 2;
+      hintTx = two ? [`相手の${tw0}に注目！ その両方に届くマスはどこかな？`, `${pA}を使ってみて。${tw0}を、同時にねらえるマスがあるピョン。`][k % 2] : `${pA}で、2つの駒に同時に届くマスを探してみて！`;
+      const tw = two ? tw0 : '2つの駒';
+      good = u => { if (u && u !== ans) return `{x}もいい手！ でも{m}なら${tw}の両取りで、もっと得できたピョン。`;
+        return FA.check && two ? `{x}はチェックしながら${t2}もねらう両取り！ キングを守っているあいだに、${t2}をいただける。` : `{x}で${tw}を同時にねらった！ 相手は両方は守れないから、どちらかが取れるピョン。`; };
+      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
+        if (G && G.hang) x = `{x}だと、その${N[G.pc]}が${G.hang}に取られちゃう。`;
+        else if (G) x = '{x}ではねらえる駒が1つだけで、相手に守られちゃう。';
+        return lead + x + `{m}なら${tw}の両取り！`; };
+    } else if (sid === 'pin') {
+      const Lx = FA.line, fr = Lx ? N[Lx.fr] : '', bk = Lx ? N[Lx.bk] : '';
+      hintTx = Lx ? [`相手の${fr}と${bk}が、一直線に並んでるね。その線に入れる駒はどれかな？`, `${pA}の線を使ってみて。${fr}の後ろに、何がいる？`][k % 2] : `${pA}の長い線の先に、相手の駒が2つ並んでいないかな？`;
+      const what = !Lx ? '{x}で、線の上の相手の駒をしばった！ 前の駒はもう自由に動けないピョン。' : Lx.skewer ? `{x}で串刺し！ ${fr}が逃げたら、後ろの${bk}が取れる。` : Lx.bk === 'k' ? `{x}で${fr}をキングにピン！ ${fr}はもう動くことすらできないピョン。` : `{x}でピン！ ${fr}が動くと、後ろの${bk}が取られちゃう形。`;
+      good = u => u && u !== ans ? `{x}も悪くない！ でも{m}なら、線の上の${fr || '駒'}をしばれたピョン。` : what;
+      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
+        if (G && G.hang) x = `{x}だと、その${N[G.pc]}が${G.hang}に取られちゃう。`;
+        else if (G) x = '{x}では線の上に2つの駒が並ばないから、相手は自由に動ける。';
+        return lead + x + (Lx ? (Lx.skewer ? `{m}なら${fr}の後ろの${bk}まで取れる！` : `{m}なら${fr}が動けなくなる！`) : '{m}なら相手の駒を一直線にしばれた！'); };
+    } else if (sid === 'mate2') {
+      hintTx = FA.hang && !FA.check ? `${pA}をわざと捨てる手もある。取ったら、どうなるかな？` : FA.check ? [`まずはチェックから。${pA}で、キングの逃げ道をしぼってみて！`, `${pA}でチェックしたら、相手の応手はいくつ残る？ 数えてみよう！`][k % 2] : '静かな手で、逃げ道を先にふさぐのもありピョン。';
+      const how = FA.check ? 'チェックで相手の手をしぼったのが決め手ピョン。' : FA.hang ? '駒を捨てて、キングをおびき出した！' : '逃げ道を先にふさいだのがうまい！';
+      good = u => u && u !== ans && val(u) != null && val(u) < best ? '{x}でも詰みまで行ける！ でも{m}なら、もっと早く決まったピョン。' : `{x}から入れば、相手がどう応じても次で詰み！ ${how}`;
+      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
+        if (G && G.check) x = '{x}はチェックだけど、キングに逃げられて詰まない。';
+        else if (G && G.hang) x = `{x}は${N[G.pc]}を取られるだけになっちゃう。`;
+        else if (G) x = '{x}だと相手に一手の余裕ができて、詰みをのがしちゃう。';
+        return lead + x + `{m}から入れば、2手で詰むんだ。${FA.check ? '' : how}`; };
+    } else if (sid === 'promote') {
+      const z = chSq(ans.slice(2, 4)), white = String(pos).split(' ')[1] !== 'b', left = FA.pc === 'p' ? (white ? 7 - (z >> 3) : z >> 3) : 0;
+      hintTx = FA.pc === 'p' ? [`${left + 1}マス進めば成れるポーンがあるね。じゃまする相手の駒は届くかな？`, `相手のキングとポーンの距離をくらべてみて。成るまでいちばん近いポーンはどれピョン？`][k % 2] : 'ポーンの前をふさいでいる駒はいない？ 道を開ける手も考えよう！';
+      const rest = left ? `成るまであと${left}マス！` : 'クイーンまであと少し！';
+      good = u => u && u !== ans ? `{x}でもまだ戦える！ でも{m}なら、ポーンがもっと早く成れたピョン。` : FA.pc === 'p' ? [`{x}でポーンが一歩前へ！ ${rest} 相手は止めるのに大いそがし。`, `{x}が正解！ ${rest} 相手はもう、止めるのがたいへんピョン。`][k % 2] : '{x}でポーンの道が開いた！ クイーンへの道がはっきり見えてきた。';
+      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
+        if (G && G.pc === 'p' && FA.pc === 'p' && chSq(u) !== chSq(ans)) x = '{x}のポーンは、成るまでまだ遠い。';
+        else if (G && G.pc !== 'p') x = '{x}だとポーンが止まったまま。相手に守りを固める時間をあげちゃう。';
+        else if (G) x = '{x}では相手のじゃまが間に合っちゃう。';
+        return lead + x + (u ? loss(u) : '') + (FA.pc === 'p' ? `{m}なら、${rest}` : '{m}でポーンの道が開くんだ。'); };
+    }
+    return { ask, hintTx, good, ng };
+  }
   const CHESS = {
     LKEY: 'aicoding-chess-lessons', OKEY: 'aicoding-chess-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
       const txt = u => fetch(u).then(r => r.text());
-      return (this.p = Promise.all([getJ('../chess/lessons.json?v=20261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=1').catch(() => '')])
+      return (this.p = Promise.all([getJ('../chess/lessons.json?v=20261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=2').catch(() => '')])
         .then(([ls, op, a, b, vk]) => {
           const w = {}; try { new Function('window', a)(w); new Function('window', b)(w); } catch (e) { console.warn('[lessons3d] chess texts', e); }   // (a sandbox: the page's own I18N stays untouched)
           try { const v = {}; new Function('window', vk)(v); this.V = ((v.I18N || {})['ja@knight']) || {}; } catch (e) { this.V = {}; }   // (ナイトン's own lines, 3D, ja)
@@ -782,7 +947,7 @@
       const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L((this.data.ls.rampUi || {})[k], lang), v || {});
       const ramp = s.ramp && s.ramp.length ? s.ramp.map((it, j) => { const o = Object.assign({}, it); ['t', 'b', 'g', 'h', 'y'].forEach(f => { const v = V[`ramp:${s.id}/${j}/${f}`]; if (v != null) o[f] = { ja: v, __voice: true }; }); return o; }) : null;
       return { id: s.id, title: T('title'), intro: T('intro'), ramp, RU,   // (the warm-up before the scored problems: explain / try — not scored)
-        probs: (s.problems || []).map(p => ({ pos: p.fen, kind: 'best', P: p, ask: T('goal'), why: T('why'), ngTx: T('ng'), ans: p.best || (p.ok || [])[0] })),   // (ngTx: the wrong answer's own words where the lesson has them)
+        probs: (s.problems || []).map((p, i) => { const o = { pos: p.fen, kind: 'best', P: p, ask: T('goal'), why: T('why'), ngTx: T('ng'), ans: p.best || (p.ok || [])[0] }; if (lang === 'ja' && o.ans) try { Object.assign(o, chLsJa(s.id, o, i) || {}); } catch (e) { console.warn('[lessons3d] chess lesson', e); } return o; }),   // (2026-11-21 lesson loop: ナイトン's question, hint, why / what yours misses)   // (ngTx: the wrong answer's own words where the lesson has them)
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
