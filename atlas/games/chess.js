@@ -69,14 +69,14 @@
   function css() {
     if (cssDone) return; cssDone = true;
     const s = document.createElement('style');
-    s.textContent = `.chpromo{position:fixed;z-index:90;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 8px 10px;border-radius:18px;background:rgba(255,253,247,.97);border:2px solid #fff;box-shadow:0 14px 30px -12px rgba(60,30,0,.55);transform:translate(-50%,0);animation:chpIn .18s ease-out}
+    s.textContent = `.chpromo{position:fixed;z-index:90;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 12px 12px;border-radius:20px;background:rgba(255,253,247,.97);border:2px solid #fff;box-shadow:0 14px 30px -12px rgba(60,30,0,.55);transform:translate(-50%,0);width:max-content;animation:chpIn .18s ease-out}
 @keyframes chpIn{from{transform:translate(-50%,0) scale(.85)}}
-.chpromo .tl{font-weight:900;font-size:12px;color:#7a6a58}
-.chpromo .rw{display:flex;gap:6px}
-.chpromo button{width:58px;height:72px;border-radius:14px;border:2px solid #eadfcb;background:#fffaf0;cursor:pointer;padding:0;display:flex;align-items:flex-end;justify-content:center;font-size:40px;line-height:72px;color:#3a2e24;box-shadow:0 3px 0 #e2d4bb}
+.chpromo .tl{font-weight:900;font-size:clamp(14px,2.2vmin,18px);color:#7a6a58}
+.chpromo .rw{display:flex;gap:8px}
+.chpromo button{width:clamp(72px,10vmin,104px);height:clamp(88px,12.5vmin,128px);border-radius:16px;border:2px solid #eadfcb;background:#fffaf0;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;font-size:clamp(50px,7.5vmin,76px);line-height:1;color:#3a2e24;box-shadow:0 3px 0 #e2d4bb;touch-action:manipulation;flex:none}
 .chpromo button:hover{background:#fff1cf;border-color:#ffc24a}
 .chpromo button img{width:100%;height:100%;object-fit:contain;pointer-events:none}
-@media (max-width:560px){.chpromo button{width:52px;height:66px;font-size:36px;line-height:66px}}`;
+@media (max-width:440px){.chpromo{padding:8px 8px 10px}.chpromo .rw{gap:6px}.chpromo button{width:min(82px,calc((100vw - 58px) / 4));height:min(100px,calc((100vw - 58px) / 4 * 1.22));font-size:min(56px,calc((100vw - 58px) / 4 * .7))}}`;
     document.head.appendChild(s);
   }
 
