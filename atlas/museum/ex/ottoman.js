@@ -109,9 +109,14 @@
         og.putImageData(img, 0, 0); }
       const shellC = document.createElement('canvas'); shellC.width = shellC.height = PS;
       { const og = shellC.getContext('2d'), img = og.createImageData(PS, PS), d = img.data;
-        for (let j = 0; j < PS; j++) for (let i = 0; i < PS; i++) { const u = i / PS, v = j / PS, m = N(u * 30 + 3, v * 18, 4) * .7 + N(u * 90, v * 50, 2) * .3, f = N(u * 90 + 7, v * 90, 2), t = Math.max(0, Math.min(1, (.4 - m) * 6));
+        for (let j = 0; j < PS; j++) for (let i = 0; i < PS; i++) { const u = i / PS, v = j / PS, m = N(u * 30 + 3, v * 18, 4) * .7 + N(u * 90, v * 50, 2) * .3, f = N(u * 90 + 7, v * 90, 2), t = Math.max(0, Math.min(1, (.425 - m) * 7));
           // dark, almost black-brown ground with amber-to-orange blotches (gold leaf glowing through the thin parts)
-          const p = (j * PS + i) * 4; d[p] = 27 + t * 160 + (f - .5) * 12; d[p + 1] = 11 + t * 80 + (f - .5) * 7; d[p + 2] = 8 + t * 12; d[p + 3] = 255; }
+          const p = (j * PS + i) * 4; d[p] = 34 + t * 176 + (f - .5) * 12; d[p + 1] = 12 + t * 92 + (f - .5) * 7; d[p + 2] = 8 + t * 10; d[p + 3] = 255; }
+        og.putImageData(img, 0, 0); }
+      // the amber of thin turtle shell over gold leaf (for the X-shaped pieces between the plaques)
+      const amberC = document.createElement('canvas'); amberC.width = amberC.height = 256;
+      { const og = amberC.getContext('2d'), img = og.createImageData(256, 256), d = img.data;
+        for (let j = 0; j < 256; j++) for (let i = 0; i < 256; i++) { const a = N(i / 256 * 14 + 11, j / 256 * 14, 3), t = Math.max(0, Math.min(1, (a - .32) * 2.4)), p = (j * 256 + i) * 4; d[p] = 84 + t * 120; d[p + 1] = 28 + t * 72; d[p + 2] = 8 + t * 12; d[p + 3] = 255; }
         og.putImageData(img, 0, 0); }
       const bgT = K.tex(PX, Math.round(PX * D / W), (g, w, h) => {
         const mk = document.createElement('canvas'); mk.width = w; mk.height = h; const m = mk.getContext('2d'); m.fillStyle = '#000'; m.fillRect(0, 0, w, h);
@@ -123,101 +128,89 @@
         const P = (path, line = .03) => { g.fillStyle = PP; g.fill(path); const t = pr(); g.fillStyle = t < .5 ? `rgba(70,64,74,${.08 + t * .5})` : `rgba(235,238,245,${(t - .5) * .25})`; g.fill(path); m.fillStyle = '#fff'; m.fill(path); g.strokeStyle = 'rgba(40,22,14,.55)'; g.lineWidth = cm(line); g.stroke(path); };
         const GR = (x, y, rx, ry, rot = 0) => { g.beginPath(); g.ellipse(x, y, rx, ry, rot, 0, 6.29); g.fillStyle = '#3d7a64'; g.fill(); g.strokeStyle = 'rgba(20,40,30,.6)'; g.lineWidth = 1; g.stroke(); };   // green-stained bone
         const string = (x, y, ww, hh) => { [[.0, '#e6dccb'], [.07, '#2a1208'], [.14, '#e6dccb']].forEach(([o, c]) => { g.strokeStyle = c; g.lineWidth = cm(.05); g.strokeRect(x + cm(o), y + cm(o), ww - cm(2 * o), hh - cm(2 * o)); }); };
+        // ---- traced from the V&A's colour photograph 2012FP3720 (measured on it, 30.5 px to the cm) ----
+        g.lineJoin = g.lineCap = m.lineJoin = m.lineCap = 'round';
+        const AP = g.createPattern(amberC, 'repeat');
+        const RIB = (path, lw) => { g.strokeStyle = 'rgba(30,14,8,.6)'; g.lineWidth = cm(lw + .07); g.stroke(path); g.strokeStyle = PP; g.lineWidth = cm(lw); g.stroke(path); m.strokeStyle = '#fff'; m.lineWidth = cm(lw); m.stroke(path); };   // a ribbon of pearl
+        const CUT = path => { g.fillStyle = SP; g.fill(path); g.fillStyle = 'rgba(14,6,4,.55)'; g.fill(path); m.fillStyle = '#000'; m.fill(path); };   // shell showing through a hole in the pearl
+        const DARK = (x, y, ww, hh, a = .78) => { g.fillStyle = `rgba(20,9,6,${a})`; g.fillRect(x, y, ww, hh); };
+        const LINE2 = (xa, ya, xb, yb) => { [['#e2d8c4', .13], ['#2a1208', .05]].forEach(([c, lw]) => { g.strokeStyle = c; g.lineWidth = cm(lw); g.beginPath(); g.moveTo(xa, ya); g.lineTo(xb, yb); g.stroke(); }); };   // the fine light stringing (two light lines, a dark one between)
+        // a long plaque of pearl with pointed ends, the shoulders cut in a concave curve (len along the axis, wd across); horizontal unless vert
+        const loz = (cx, cy, len, wd, vert) => { const q = new Path2D(), L = len / 2, A = wd * 1.15, pt = (u, v) => vert ? [cx + v, cy + u] : [cx + u, cy + v], M = (u, v) => q.moveTo(...pt(u, v)), Ln = (u, v) => q.lineTo(...pt(u, v)), Q = (a1, b1, u, v) => q.quadraticCurveTo(...pt(a1, b1), ...pt(u, v));
+          M(-L, 0); Q(-L + A * .55, -wd * .12, -L + A, -wd / 2); Ln(L - A, -wd / 2); Q(L - A * .55, -wd * .12, L, 0); Q(L - A * .55, wd * .12, L - A, wd / 2); Ln(-L + A, wd / 2); Q(-L + A * .55, wd * .12, -L, 0); q.closePath(); return q; };
+        // a strip of plaques: pearl pieces end to end, the amber shell showing in the X between their points
+        const strip = (xa, ya, len, wd, vert, n) => { DARK(vert ? xa - wd / 2 : xa, vert ? ya : ya - wd / 2, vert ? wd : len, vert ? len : wd, .9); const per = len / n, pl = per * .74;
+          for (let k = 0; k <= n; k++) { const c = k * per; g.fillStyle = AP; const e = per - pl + wd * .9, lo = Math.max(0, c - e / 2), hi = Math.min(len, c + e / 2); if (vert) g.fillRect(xa - wd / 2, ya + lo, wd, hi - lo); else g.fillRect(xa + lo, ya - wd / 2, hi - lo, wd); }
+          for (let k = 0; k < n; k++) { const c = (k + .5) * per; P(vert ? loz(xa, ya + c, pl, wd * .9, true) : loz(xa + c, ya, pl, wd * .9, false), .02); } };
+        const drop = (x, y, r, up) => { const q = new Path2D(), d = up ? -1 : 1; q.moveTo(x, y - d * r * 1.7); q.bezierCurveTo(x + r * 1.2, y - d * r * .2, x + r, y + d * r, x, y + d * r); q.bezierCurveTo(x - r, y + d * r, x - r * 1.2, y - d * r * .2, x, y - d * r * 1.7); return q; };
+        const GD = (x, y, r, up) => { const q = drop(x, y, r, up); g.fillStyle = '#3f7d68'; g.fill(q); g.strokeStyle = 'rgba(16,36,28,.7)'; g.lineWidth = cm(.03); g.stroke(q); m.fillStyle = '#000'; m.fill(q); };
         [0, 1].forEach(L => {   // left leaf (hinge on its right) and right leaf (hinge on its left)
           const x0 = cm(L ? LW + HG : FW), x1 = cm(L ? W - FW : LW - HG), y0 = cm(FW), y1 = h - cm(FW), fw = x1 - x0, fh = y1 - y0;
-          string(x0 + cm(.15), y0 + cm(.15), fw - cm(.3), fh - cm(.3));
-          const ix0 = x0 + cm(.45), ix1 = x1 - cm(.45), iy0 = y0 + cm(.45), iy1 = y1 - cm(.45), iw = ix1 - ix0, ih = iy1 - iy0, cy = (iy0 + iy1) / 2;
-          // the bands across the middle: narrow · deep · narrow (heights from the photograph)
-          const NB = cm(2.7), DB = cm(8.0), gap = cm(.2);
-          const bands = [[cy - DB / 2 - gap - NB, NB, 0], [cy - DB / 2, DB, 1], [cy + DB / 2 + gap, NB, 0]];
-          bands.forEach(([by, bh, deep]) => {
-            string(ix0 + cm(.2), by, iw - cm(.4), bh);
-            const bx0 = ix0 + cm(.45), bx1 = ix1 - cm(.45), bw = bx1 - bx0, bcy = by + bh / 2;
-            // a hole cut through a pearl piece, showing the turtle shell beneath
-            const H = (path) => { g.fillStyle = SP; g.fill(path); m.fillStyle = '#000'; m.fill(path); g.strokeStyle = 'rgba(40,22,14,.5)'; g.lineWidth = 1; g.stroke(path); };
-            const drop = (x, y, rx, ry, rot) => { const p = new Path2D(); const c = Math.cos(rot), s2 = Math.sin(rot), T = (u, v) => [x + u * c - v * s2, y + u * s2 + v * c];
-              p.moveTo(...T(0, -ry)); p.quadraticCurveTo(...T(rx, -ry * .1), ...T(0, ry)); p.quadraticCurveTo(...T(-rx, -ry * .1), ...T(0, -ry)); return p; };
-            if (!deep) {
-              // (after the photograph) three roundels, each a disc of pearl with a wave of shell through it, flanked by pointed lobes;
-              // a bead between the groups; a leaf with a green drop at each end
-              const n = 3, step = bw / n;
-              for (let i = 0; i < n; i++) { const rx = bx0 + step * (i + .5), R1 = Math.min(bh * .42, cm(1.15));
-                const u = new Path2D(); u.ellipse(rx, bcy, R1 * 1.05, R1, 0, 0, 6.29);
-                [-1, 1].forEach(sd => { u.moveTo(rx + sd * R1 * .9, bcy - R1 * .55); u.quadraticCurveTo(rx + sd * R1 * 1.6, bcy - R1 * .5, rx + sd * R1 * 2.25, bcy); u.quadraticCurveTo(rx + sd * R1 * 1.6, bcy + R1 * .5, rx + sd * R1 * .9, bcy + R1 * .55); u.closePath(); });
-                P(u);
-                const ss = new Path2D(); ss.moveTo(rx - R1 * .62, bcy + R1 * .12); ss.bezierCurveTo(rx - R1 * .25, bcy - R1 * .62, rx + R1 * .25, bcy + R1 * .62, rx + R1 * .62, bcy - R1 * .12);
-                ss.lineTo(rx + R1 * .62, bcy + R1 * .3); ss.bezierCurveTo(rx + R1 * .25, bcy + R1 * 1.1, rx - R1 * .25, bcy - R1 * .14, rx - R1 * .62, bcy + R1 * .56); ss.closePath(); H(ss);
-                if (i) { const bx = bx0 + step * i, bd = new Path2D(); bd.ellipse(bx, bcy, R1 * .32, R1 * .38, 0, 0, 6.29); bd.moveTo(bx + R1 * .7, bcy); bd.ellipse(bx + R1 * .55, bcy, R1 * .15, R1 * .15, 0, 0, 6.29); bd.moveTo(bx - R1 * .4, bcy); bd.ellipse(bx - R1 * .55, bcy, R1 * .15, R1 * .15, 0, 0, 6.29); P(bd); }
-              }
-              [bx0, bx1].forEach((ex, k) => { const sd = k ? -1 : 1, f = new Path2D(), R1 = Math.min(bh * .4, cm(1.1)); f.moveTo(ex, bcy - R1 * .5); f.quadraticCurveTo(ex + sd * R1 * 1.2, bcy - R1 * .9, ex + sd * R1 * 2.0, bcy); f.quadraticCurveTo(ex + sd * R1 * 1.2, bcy + R1 * .9, ex, bcy + R1 * .5); f.closePath(); P(f); GR(ex + sd * R1 * .95, bcy, R1 * .2, R1 * .28); });
-            } else {
-              // (after the photograph) the deep band: a lobed medallion of fretted pearl at the centre, a fretted lozenge of palmettes
-              // either side on a stem, and large fretted spandrels filling the four corners
-              const mx = bx0 + bw / 2, MW = bw * .19, MH = bh * .48;
-              const stem = new Path2D(); stem.rect(bx0 + bw * .2, bcy - cm(.09), bw * .6, cm(.18)); P(stem, .02);
-              const med = new Path2D(), LB = 8;
-              for (let q = 0; q <= 160; q++) { const a = q / 160 * Math.PI * 2, f = Math.abs(Math.sin(a * LB / 2)), rr = 1 - .12 * Math.pow(1 - f, 2), x = mx + Math.cos(a) * MW * rr, y = bcy + Math.sin(a) * MH * rr; q ? med.lineTo(x, y) : med.moveTo(x, y); } med.closePath();
-              [-1, 1].forEach(sd => { med.moveTo(mx + sd * MW * .96, bcy - MH * .14); med.lineTo(mx + sd * MW * 1.32, bcy); med.lineTo(mx + sd * MW * .96, bcy + MH * .14); });   // the pointed ends on the axis
-              P(med);
-              // the fretwork: rings of holes — hearts and drops — leaving the interlaced straps of pearl; the axes left solid
-              for (let q = 0; q < 16; q++) { const a = (q + .5) / 16 * Math.PI * 2; H(drop(mx + Math.cos(a) * MW * .78, bcy + Math.sin(a) * MH * .78, MW * .14, MH * .2, a + Math.PI / 2)); }
-              for (let q = 0; q < 8; q++) { const a = (q + .5) / 8 * Math.PI * 2; H(drop(mx + Math.cos(a) * MW * .5, bcy + Math.sin(a) * MH * .5, MW * .2, MH * .26, a - Math.PI / 2)); }
-              for (let q = 0; q < 8; q++) { const a = q / 8 * Math.PI * 2 + Math.PI / 8; const p = new Path2D(); p.ellipse(mx + Math.cos(a) * MW * .64, bcy + Math.sin(a) * MH * .64, MW * .09, MH * .1, 0, 0, 6.29); H(p); }
-              for (let q = 0; q < 4; q++) { const a = (q + .5) * Math.PI / 2; H(drop(mx + Math.cos(a) * MW * .26, bcy + Math.sin(a) * MH * .26, MW * .15, MH * .19, a + Math.PI / 2)); }
-              [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([ux, uy]) => { const l = new Path2D(); l.rect(Math.min(mx, mx + ux * MW * .95) - (ux ? 0 : cm(.04)), Math.min(bcy, bcy + uy * MH * .95) - (uy ? 0 : cm(.04)), ux ? MW * .95 : cm(.08), uy ? MH * .95 : cm(.08)); g.fillStyle = PP; g.fill(l); m.fillStyle = '#fff'; m.fill(l); });
-              GR(mx, bcy - MH * .22, cm(.09), cm(.14)); GR(mx, bcy + MH * .22, cm(.09), cm(.14));
-              // either side: a lozenge of palmettes, fretted
-              [-1, 1].forEach(sd => { const lx = mx + sd * bw * .3, LWd = bw * .1, LHt = bh * .3, lz = new Path2D();
-                lz.moveTo(lx - LWd, bcy); lz.quadraticCurveTo(lx - LWd * .45, bcy - LHt * .35, lx - LWd * .2, bcy - LHt * .8); lz.quadraticCurveTo(lx, bcy - LHt * 1.1, lx + LWd * .2, bcy - LHt * .8); lz.quadraticCurveTo(lx + LWd * .45, bcy - LHt * .35, lx + LWd, bcy);
-                lz.quadraticCurveTo(lx + LWd * .45, bcy + LHt * .35, lx + LWd * .2, bcy + LHt * .8); lz.quadraticCurveTo(lx, bcy + LHt * 1.1, lx - LWd * .2, bcy + LHt * .8); lz.quadraticCurveTo(lx - LWd * .45, bcy + LHt * .35, lx - LWd, bcy); lz.closePath();
-                [-1, 1].forEach(e => { lz.moveTo(lx + e * LWd * 1.5, bcy - LHt * .2); lz.lineTo(lx + e * LWd * 1.0, bcy); lz.lineTo(lx + e * LWd * 1.5, bcy + LHt * .2); lz.lineTo(lx + e * LWd * 1.25, bcy); lz.closePath(); });
-                P(lz);
-                H(drop(lx, bcy - LHt * .42, LWd * .16, LHt * .22, 0)); H(drop(lx, bcy + LHt * .42, LWd * .16, LHt * .22, Math.PI)); H(drop(lx - LWd * .5, bcy, LWd * .12, LHt * .16, -Math.PI / 2)); H(drop(lx + LWd * .5, bcy, LWd * .12, LHt * .16, Math.PI / 2));
-                const c0 = new Path2D(); c0.ellipse(lx, bcy, LWd * .14, LHt * .14, 0, 0, 6.29); H(c0); GR(lx, bcy, LWd * .07, LHt * .08); });
-              // the corner spandrels: big pieces of pearl reaching in from each corner, cut with crescents and drops
-              [[bx0, by, 1, 1], [bx1, by, -1, 1], [bx0, by + bh, 1, -1], [bx1, by + bh, -1, -1]].forEach(([sx, sy, dx, dy]) => { const sp = new Path2D(), SW = bw * .2, SH = bh * .5;
-                sp.moveTo(sx, sy); sp.lineTo(sx + dx * SW, sy); sp.quadraticCurveTo(sx + dx * SW * .55, sy + dy * SH * .25, sx + dx * SW * .62, sy + dy * SH * .55); sp.quadraticCurveTo(sx + dx * SW * .3, sy + dy * SH * .45, sx + dx * SW * .2, sy + dy * SH * .92); sp.quadraticCurveTo(sx + dx * SW * .08, sy + dy * SH * .7, sx, sy + dy * SH); sp.closePath(); P(sp);
-                const cr = new Path2D(); cr.ellipse(sx + dx * SW * .32, sy + dy * SH * .38, SW * .22, SH * .24, 0, 0, 6.29); cr.ellipse(sx + dx * SW * .4, sy + dy * SH * .3, SW * .16, SH * .17, 0, 0, 6.29, true); H(cr);
-                H(drop(sx + dx * SW * .75, sy + dy * SH * .1, SW * .08, SH * .1, dx * 1.2));
-                H(drop(sx + dx * SW * .62, sy + dy * SH * .18, SW * .07, SH * .12, dx * .8)); H(drop(sx + dx * SW * .1, sy + dy * SH * .62, SW * .05, SH * .14, dx * -.3)); });
+          string(x0 + cm(.12), y0 + cm(.12), fw - cm(.24), fh - cm(.24));
+          const ix0 = x0 + cm(.62), ix1 = x1 - cm(.62), iy0 = y0 + cm(.62), iy1 = y1 - cm(.62), iw = ix1 - ix0, cy = (iy0 + iy1) / 2;
+          string(ix0 - cm(.14), iy0 - cm(.14), iw + cm(.28), iy1 - iy0 + cm(.28));
+          const BW = cm(.8), NB = cm(3.0), DB = cm(7.0), GAP = cm(.22), AZ = cm(4.5);   // the border strip, the narrow and deep bands, the zone of palmettes and arches
+          const mid0 = cy - DB / 2 - GAP - NB, mid1 = cy + DB / 2 + GAP + NB;
+          // the border strips round the field
+          strip(ix0, iy0 + BW / 2, iw, BW, false, 7); strip(ix0, iy1 - BW / 2, iw, BW, false, 7);
+          [ix0 + BW / 2, ix1 - BW / 2].forEach(x => { strip(x, iy0 + BW, mid0 - GAP - iy0 - BW, BW, true, 4); strip(x, mid1 + GAP, iy1 - BW - mid1 - GAP, BW, true, 4); });
+          // six points to a side: a point's own ground 2.75 wide, a strip of plaques .9 wide between each two
+          const px0 = ix0 + BW, pw = ix1 - BW - px0, SWd = cm(.9), ZW = (pw - 5 * SWd) / 6, zc = k => px0 + ZW / 2 + k * (ZW + SWd), sc = k => px0 + ZW + SWd / 2 + k * (ZW + SWd);
+          [[iy0 + BW, 1], [iy1 - BW, -1]].forEach(([top, dir]) => {
+            const end = dir > 0 ? mid0 - GAP : mid1 + GAP, PL = Math.abs(end - top) - AZ, tip = top + dir * PL, Y = v => top + dir * cm(v);
+            for (let k = 0; k < 5; k++) strip(sc(k), dir > 0 ? top : tip, PL, SWd, true, 3);
+            for (let k = 0; k < 6; k++) { const cx = zc(k), xa = cx - ZW / 2, xb = cx + ZW / 2;
+              DARK(xa, Math.min(top, Y(3.55)), ZW, cm(3.55), .86); if ((k + L) % 2) DARK(xa, Math.min(Y(3.55), tip), ZW, PL - cm(3.55), .22);
+              LINE2(xa + cm(.1), top, xa + cm(.1), tip); LINE2(xb - cm(.1), top, xb - cm(.1), tip);
+              // the cypress: a cup, a tapering neck, then the long spike from a shouldered foot
+              let q = new Path2D(); q.moveTo(cx - cm(1.05), Y(.12)); q.lineTo(cx + cm(1.05), Y(.12)); q.bezierCurveTo(cx + cm(1.05), Y(.75), cx + cm(.6), Y(1.0), cx, Y(1.0)); q.bezierCurveTo(cx - cm(.6), Y(1.0), cx - cm(1.05), Y(.75), cx - cm(1.05), Y(.12)); P(q);
+              q = new Path2D(); q.moveTo(cx - cm(.6), Y(1.02)); q.lineTo(cx + cm(.6), Y(1.02)); q.lineTo(cx + cm(.3), Y(3.45)); q.lineTo(cx - cm(.3), Y(3.45)); q.closePath(); P(q);
+              const LEN = PL / S - .15; q = new Path2D(); q.moveTo(cx - cm(.3), Y(3.55)); q.lineTo(cx + cm(.3), Y(3.55)); q.quadraticCurveTo(cx + cm(.7), Y(3.75), cx + cm(.7), Y(4.3)); q.lineTo(cx + cm(.04), Y(LEN)); q.lineTo(cx - cm(.04), Y(LEN)); q.lineTo(cx - cm(.7), Y(4.3)); q.quadraticCurveTo(cx - cm(.7), Y(3.75), cx - cm(.3), Y(3.55)); P(q);
+              [6.2, 8.6].forEach(v => { g.strokeStyle = 'rgba(60,44,40,.4)'; g.lineWidth = cm(.03); g.beginPath(); g.moveTo(cx - cm(.6), Y(v + k % 2 * .7)); g.lineTo(cx + cm(.6), Y(v + k % 2 * .7 + .05)); g.save(); g.clip(q); g.stroke(); g.restore(); });   // the spike is pieced from several lengths
             }
+            // under the tips: a palmette below every point, a bracket with a green drop below every strip, and the arches springing from them
+            const T = v => tip + dir * cm(v), A0 = 2.45, A1 = AZ / S - .12;
+            
+            const cols = [px0 - BW / 2 + cm(.25)]; for (let k = 0; k < 5; k++) cols.push(sc(k)); cols.push(px0 + pw + BW / 2 - cm(.25));
+            for (let k = 0; k < 6; k++) { const cx = zc(k), xl = cols[k], xr = cols[k + 1];
+              const q = new Path2D(); [[xl, 1], [xr, -1]].forEach(([sx, sg]) => { q.moveTo(sx + sg * cm(.3), T(1.7)); q.bezierCurveTo(sx + sg * cm(.5), T(2.9), cx - sg * cm(1.25), T(2.6), cx - sg * cm(.95), T(3.5)); q.quadraticCurveTo(cx - sg * cm(.7), T(A1 - .35), cx - sg * cm(.05), T(A1)); }); RIB(q, .34);
+
+              // palmette: a pointed head between two curled leaves, a drop cut out of it, on a stem
+              const pm = new Path2D(), Xp = (u, v) => [cx + cm(u), T(v)]; pm.moveTo(...Xp(0, .2)); [1, -1].forEach(sg => { const X = (u, v) => Xp(sg * u, v); if (sg < 0) pm.lineTo(...X(.13, 2.35));
+                if (sg > 0) { pm.bezierCurveTo(...X(.3, .5), ...X(.42, .45), ...X(.48, .75)); pm.bezierCurveTo(...X(.75, .5), ...X(.98, .75), ...X(.8, 1.05)); pm.bezierCurveTo(...X(.7, 1.3), ...X(.42, 1.2), ...X(.34, 1.45)); pm.lineTo(...X(.13, 1.75)); pm.lineTo(...X(.13, 2.35)); }
+                else { pm.lineTo(...X(.13, 1.75)); pm.lineTo(...X(.34, 1.45)); pm.bezierCurveTo(...X(.42, 1.2), ...X(.7, 1.3), ...X(.8, 1.05)); pm.bezierCurveTo(...X(.98, .75), ...X(.75, .5), ...X(.48, .75)); pm.bezierCurveTo(...X(.42, .45), ...X(.3, .5), ...X(0, .2)); } }); pm.closePath(); P(pm);
+              CUT(drop(cx, T(.95), cm(.17), dir < 0)); }
+            cols.forEach((sx, k) => { if (k === 0 || k === 6) return; const X = (u, v) => [sx + cm(u), T(v)], br = new Path2D();
+              br.moveTo(...X(-.78, 1.55)); br.lineTo(...X(-.3, 1.55)); br.quadraticCurveTo(...X(-.3, 1.95), ...X(0, 1.95)); br.quadraticCurveTo(...X(.3, 1.95), ...X(.3, 1.55)); br.lineTo(...X(.78, 1.55)); br.bezierCurveTo(...X(.8, 2.2), ...X(.3, 2.2), ...X(.3, 2.75)); br.lineTo(...X(-.3, 2.75)); br.bezierCurveTo(...X(-.3, 2.2), ...X(-.8, 2.2), ...X(-.78, 1.55)); br.closePath(); P(br);
+              GD(sx, T(2.32), cm(.15), dir < 0);
+              const cl = new Path2D(); cl.moveTo(...X(-.95, A1 - .1)); cl.bezierCurveTo(...X(-.5, A1 - .15), ...X(-.4, A1 - .75), ...X(0, A1 - .8)); cl.bezierCurveTo(...X(.4, A1 - .75), ...X(.5, A1 - .15), ...X(.95, A1 - .1)); cl.closePath(); P(cl); });
           });
-          // the points: six from the far edge, six from the near edge
-          const nP = 6, colW = iw / nP, sep = cm(.5);
-          [[iy0, cy - DB / 2 - gap - NB - gap, 1], [iy1, cy + DB / 2 + gap + NB + gap, -1]].forEach(([edge, inner, dir]) => {
-            const span = Math.abs(inner - edge), arc = cm(5.0), tipEnd = inner - dir * arc;   // the niche row next to the bands
-            // separators: narrow bands of the frame's marquetry between the columns (stringing and slivers of pearl)
-            for (let k = 0; k <= nP; k++) { const sx = ix0 + k * colW, sx0 = sx - sep / 2;
-              g.fillStyle = '#e6dccb'; g.fillRect(sx0, Math.min(edge, tipEnd), cm(.05), Math.abs(tipEnd - edge)); g.fillRect(sx0 + sep - cm(.05), Math.min(edge, tipEnd), cm(.05), Math.abs(tipEnd - edge));
-              if (k > 0 && k < nP) { const nd = new Path2D(), nl = Math.abs(tipEnd - edge) * .78, e1 = edge + dir * cm(.3); nd.moveTo(sx - cm(.3), e1); nd.lineTo(sx + cm(.3), e1); nd.lineTo(sx, e1 + dir * nl); nd.closePath(); P(nd, .015); }
-            }
-            for (let k = 0; k < nP; k++) {
-              const cx = ix0 + (k + .5) * colW, half = colW * .24;
-              // the point: a short cap at the edge, then a long tapering triangle (widest at the edge) running to the niche
-              const tr = new Path2D(), Lp = Math.abs(tipEnd - edge) - cm(.3), e0 = edge + dir * cm(.2), bw2 = colW * .17;
-              tr.moveTo(cx - bw2 * .55, e0); tr.lineTo(cx + bw2 * .55, e0); tr.lineTo(cx + bw2 * .55, e0 + dir * cm(.75)); tr.lineTo(cx + bw2 * .35, e0 + dir * cm(.95));
-              tr.lineTo(cx + bw2, e0 + dir * cm(1.15)); tr.quadraticCurveTo(cx + bw2 * .7, e0 + dir * Lp * .55, cx, e0 + dir * Lp); tr.quadraticCurveTo(cx - bw2 * .7, e0 + dir * Lp * .55, cx - bw2, e0 + dir * cm(1.15));
-              tr.lineTo(cx - bw2 * .35, e0 + dir * cm(.95)); tr.lineTo(cx - bw2 * .55, e0 + dir * cm(.75)); tr.closePath();
-              P(tr);
-              // fine double stringing either side of each point (the photograph shows several light lines per column)
-              [-1, 1].forEach(sd2 => [.3, .36].forEach(f => { g.fillStyle = '#d8d0c4'; g.fillRect(cx + sd2 * colW * f - cm(.03), Math.min(edge, tipEnd), cm(.06), Math.abs(tipEnd - edge)); }));
-              // the joins of the pieces the cypress is made of
-              g.strokeStyle = 'rgba(60,40,30,.45)'; g.lineWidth = 1; [.18, .42, .66].forEach(f => { const yy = e0 + dir * Lp * f; g.beginPath(); g.moveTo(cx - half, yy + dir * cm(.2)); g.lineTo(cx + half, yy - dir * cm(.1)); g.stroke(); });
-              // the niche over the tip: a U of two bands with outward hooks, its lowest point near the bands; the pendant inside it
-              const a0 = ix0 + k * colW, a1 = a0 + colW, top0 = tipEnd + dir * cm(.1), bot0 = inner - dir * cm(.25);
-              const ni = new Path2D(), tw = cm(.6);
-              ni.moveTo(a0 - cm(.25), top0); ni.quadraticCurveTo(a0 + cm(.15), top0 + dir * cm(.35), a0 + cm(.2), top0 + dir * cm(.9));
-              ni.quadraticCurveTo(a0 + cm(.25), bot0 - dir * cm(.5), cx, bot0); ni.quadraticCurveTo(a1 - cm(.25), bot0 - dir * cm(.5), a1 - cm(.2), top0 + dir * cm(.9)); ni.quadraticCurveTo(a1 - cm(.15), top0 + dir * cm(.35), a1 + cm(.25), top0);
-              ni.lineTo(a1 + cm(.05), top0 + dir * cm(.25)); ni.quadraticCurveTo(a1 - cm(.45), top0 + dir * cm(.55), a1 - cm(.48), top0 + dir * cm(1.0));
-              ni.quadraticCurveTo(a1 - cm(.55), bot0 - dir * (tw + cm(.5)), cx, bot0 - dir * tw * 1.3); ni.quadraticCurveTo(a0 + cm(.55), bot0 - dir * (tw + cm(.5)), a0 + cm(.48), top0 + dir * cm(1.0)); ni.quadraticCurveTo(a0 + cm(.45), top0 + dir * cm(.55), a0 - cm(.05), top0 + dir * cm(.25)); ni.closePath(); P(ni);
-              // the pendant: a cusped drop on a stem from the cypress tip, pierced in the middle
-              const st0 = tipEnd - dir * cm(.2), pH = Math.abs(bot0 - st0) * .7, pd = new Path2D(), pw2 = half * 1.45;
-              pd.moveTo(cx - cm(.06), st0); pd.lineTo(cx + cm(.06), st0); pd.lineTo(cx + cm(.06), st0 + dir * pH * .22);
-              pd.quadraticCurveTo(cx + pw2 * 1.1, st0 + dir * pH * .3, cx + pw2 * .8, st0 + dir * pH * .7); pd.quadraticCurveTo(cx + pw2 * .35, st0 + dir * pH * .82, cx, st0 + dir * pH);
-              pd.quadraticCurveTo(cx - pw2 * .35, st0 + dir * pH * .82, cx - pw2 * .8, st0 + dir * pH * .7); pd.quadraticCurveTo(cx - pw2 * 1.1, st0 + dir * pH * .3, cx - cm(.06), st0 + dir * pH * .22); pd.closePath();
-              [-1, 1].forEach(hs => { pd.moveTo(cx + hs * cm(.06), st0 + dir * pH * .24); pd.quadraticCurveTo(cx + hs * pw2 * .9, st0 + dir * pH * .18, cx + hs * pw2 * 1.05, st0 - dir * pH * .05); pd.quadraticCurveTo(cx + hs * pw2 * .7, st0 + dir * pH * .1, cx + hs * cm(.06), st0 + dir * pH * .32); });
-              pd.moveTo(cx + pw2 * .3, st0 + dir * pH * .55); pd.ellipse(cx, st0 + dir * pH * .55, pw2 * .3, pH * .14, 0, 0, 6.29, true); P(pd);
-              GR(cx, st0 + dir * pH * .55, pw2 * .16, pH * .07); [a0, a1].forEach(ax => GR(ax, top0 + dir * cm(.55), cm(.12), cm(.2)));
+          // the bands across the middle: narrow · deep · narrow
+          [[mid0, NB, 0], [cy - DB / 2, DB, 1], [cy + DB / 2 + GAP, NB, 0]].forEach(([by, bh, deep]) => {
+            string(ix0 + cm(.05), by, iw - cm(.1), bh);
+            const bx0 = ix0 + cm(.5), bw = iw - cm(1.0), bcy = by + bh / 2, X = (u, v) => [bx0 + bw / 2 + cm(u), bcy + cm(v)], HW = bw / 2 / S;
+            if (!deep) {   // a chain: a leaf with a green drop at each end, three roundels with a wave of shell across them, little double beads between
+              [-1, 0, 1].forEach(k => { const u = k * 5.45, q = new Path2D(); q.moveTo(...X(u - 2.25, 0)); q.bezierCurveTo(...X(u - 1.6, -.2), ...X(u - 1.5, -1.2), ...X(u, -1.25)); q.bezierCurveTo(...X(u + 1.5, -1.2), ...X(u + 1.6, -.2), ...X(u + 2.25, 0));
+                q.bezierCurveTo(...X(u + 1.6, .2), ...X(u + 1.5, 1.2), ...X(u, 1.25)); q.bezierCurveTo(...X(u - 1.5, 1.2), ...X(u - 1.6, .2), ...X(u - 2.25, 0)); q.closePath(); P(q);
+                const wv = new Path2D(); wv.moveTo(...X(u - .95, .12)); wv.bezierCurveTo(...X(u - .8, -.6), ...X(u - .1, -.55), ...X(u + .1, -.1)); wv.bezierCurveTo(...X(u + .3, .3), ...X(u + .7, .3), ...X(u + .95, -.12)); wv.bezierCurveTo(...X(u + .8, .6), ...X(u + .1, .55), ...X(u - .1, .1)); wv.bezierCurveTo(...X(u - .3, -.3), ...X(u - .7, -.3), ...X(u - .95, .12)); wv.closePath(); CUT(wv); });
+              [-2.72, 2.72].forEach(u => [-.24, .24].forEach(v => { const q = new Path2D(); q.arc(...X(u, v), cm(.25), 0, 6.2832); P(q); }));
+              [-1, 1].forEach(sg => { const u0 = sg * (HW - .3), q = new Path2D(), Xs = (u, v) => X(u0 - sg * u, v); q.moveTo(...Xs(0, 0)); q.bezierCurveTo(...Xs(.35, -.5), ...Xs(.9, -.2), ...Xs(1.05, -.62)); q.bezierCurveTo(...Xs(1.5, -.8), ...Xs(2.0, -.55), ...Xs(2.2, -.3)); q.lineTo(...Xs(3.25, 0)); q.lineTo(...Xs(2.2, .3));
+                q.bezierCurveTo(...Xs(2.0, .55), ...Xs(1.5, .8), ...Xs(1.05, .62)); q.bezierCurveTo(...Xs(.9, .2), ...Xs(.35, .5), ...Xs(0, 0)); q.closePath(); P(q); const c = Xs(1.35, 0); g.save(); g.translate(c[0], c[1]); g.rotate(sg * Math.PI / 2); GD(0, 0, cm(.17), false); g.restore(); });
+            } else {   // the deep band: a fretted medallion of interlaced pearl bands, a small cartouche to either side, pearl corner-pieces with leaves cut out
+              const med = new Path2D(), ring = (u, v, r) => { med.moveTo(X(u, v)[0] + cm(r), X(u, v)[1]); med.arc(...X(u, v), cm(r), 0, 6.2832); };
+              [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([a2, b2]) => { ring(a2 * 1.15, b2 * 1.05, 1.3); ring(a2 * 2.2, b2 * 1.0, .95); ring(a2 * .95, b2 * 2.05, .85);
+                med.moveTo(...X(a2 * .12, b2 * .2)); med.bezierCurveTo(...X(a2 * 1.4, b2 * .2), ...X(a2 * 3.3, b2 * 1.2), ...X(a2 * 3.55, 0));
+                med.moveTo(...X(a2 * .2, b2 * .12)); med.bezierCurveTo(...X(a2 * .2, b2 * 1.5), ...X(a2 * 1.4, b2 * 2.9), ...X(0, b2 * 3.1)); });
+              med.moveTo(...X(-3.55, 0)); med.lineTo(...X(3.55, 0)); med.moveTo(...X(0, -3.1)); med.lineTo(...X(0, 3.1)); for (let k = 0; k < 12; k++) { const a2 = k * Math.PI / 6 + Math.PI / 12, c = X(Math.cos(a2) * 3.05, Math.sin(a2) * 2.75); med.moveTo(c[0] + cm(.62), c[1]); med.arc(c[0], c[1], cm(.62), 0, 6.2832); } RIB(med, .26);
+              [-1, 1].forEach(b2 => GD(X(0, b2 * .85)[0], X(0, b2 * .85)[1], cm(.13), b2 > 0));
+              [-1, 1].forEach(sg => { const u = sg * 6.9, q = new Path2D(); for (let k = 0; k < 8; k++) { const a2 = k * Math.PI / 4, rr = k % 2 ? [1.25, .78] : [2.0, 1.2]; const p1 = X(u + Math.cos(a2) * rr[0], Math.sin(a2) * rr[1]); k ? q.quadraticCurveTo(...X(u + Math.cos(a2 - Math.PI / 8) * rr[0] * .82, Math.sin(a2 - Math.PI / 8) * rr[1] * .82), ...p1) : q.moveTo(...p1); }
+                q.quadraticCurveTo(...X(u + Math.cos(-Math.PI / 8) * 1.6, Math.sin(-Math.PI / 8) * .95), ...X(u + 2.0, 0)); q.closePath(); P(q);
+                const hq = new Path2D(); [[.75, 0], [-.75, 0], [0, .45], [0, -.45]].forEach(([du, dv]) => { hq.moveTo(X(u + du, dv)[0] + cm(.24), X(u + du, dv)[1]); hq.ellipse(...X(u + du, dv), cm(du ? .34 : .22), cm(du ? .2 : .2), 0, 0, 6.2832); }); CUT(hq);
+                const bd = new Path2D(); [2.35, -2.35].forEach(du => { bd.moveTo(X(u + du, 0)[0] + cm(.22), X(u + du, 0)[1]); bd.arc(...X(u + du, 0), cm(.22), 0, 6.2832); }); P(bd);
+                // the corner-pieces
+                [-1, 1].forEach(tb => { const C = (du, dv) => X(sg * (HW - du), tb * (bh / 2 / S - .12 - dv)), cp = new Path2D(); cp.moveTo(...C(0, 0)); cp.lineTo(...C(5.1, 0)); cp.bezierCurveTo(...C(4.9, .7), ...C(4.0, .5), ...C(3.6, 1.0)); cp.bezierCurveTo(...C(3.1, 1.7), ...C(2.2, 1.2), ...C(1.9, 1.9));
+                  cp.bezierCurveTo(...C(1.7, 2.6), ...C(.9, 2.3), ...C(.8, 2.9)); cp.bezierCurveTo(...C(.6, 3.2), ...C(.2, 3.1), ...C(0, 3.25)); cp.closePath(); P(cp);
+                  const lf = new Path2D(); [[.55, .5, 1.5, .6, .9], [2.3, .45, 3.6, .5, .5], [.5, 1.3, 1.2, 1.9, .55]].forEach(([u1, v1, u2, v2, bw2]) => { const mu = (u1 + u2) / 2, mv = (v1 + v2) / 2, nx = -(v2 - v1), ny = u2 - u1, nl = Math.hypot(nx, ny) || 1; lf.moveTo(...C(u1, v1)); lf.quadraticCurveTo(...C(mu + nx / nl * bw2 * .6, mv + ny / nl * bw2 * .6), ...C(u2, v2)); lf.quadraticCurveTo(...C(mu - nx / nl * bw2 * .25, mv - ny / nl * bw2 * .25), ...C(u1, v1)); }); CUT(lf); }); });
             }
           });
         });
