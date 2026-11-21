@@ -1390,11 +1390,167 @@
     ev: { bw: '研究で、黒の必勝が知られている珠型なんだ（旧RIF規定での評価）。黒を持ったら、攻めの形を覚えちゃおう！', ba: '黒が有利とされる珠型だね（旧RIF規定での評価）。',
       bs: '黒がやや有利とされる珠型だね（旧RIF規定での評価）。', eq: '互角に近いとされる珠型なんだ（旧RIF規定での評価）。', ws: '白がやや有利とされる珠型なんだ（旧RIF規定での評価）。', ww: '白の必勝とされて、黒には不利な珠型なんだ（旧RIF規定での評価）。' },
   };
+  /* (2026-11-21 lesson loop) the gomoku lessons in ゴイシペン's words, Japanese: a varied question and two hints per step (GMJ_LS), and
+     after the answer why it works / for another point what it misses, read off the board (GML: fives, fours (open or not), threes, the
+     line's direction, black's forbidden points under renju, a small four-after-four (VCF) search) — gmLsJa. The opponent's winning point,
+     when the player's move leaves one, is marked orange (p._hl). */
+  const GML = (() => {
+    const DIR = [[1, 0], [0, 1], [1, 1], [1, -1]], DN = ['ヨコ', 'タテ', 'ナナメ', 'ナナメ'];
+    const at = (bd, x, y) => x < 0 || y < 0 || x > 14 || y > 14 ? -1 : bd[y * 15 + x];
+    const run = (bd, q, s, d) => { const x = q % 15, y = Math.floor(q / 15); let n = 1, k; for (k = 1; at(bd, x + d[0] * k, y + d[1] * k) === s; k++) n++; for (k = 1; at(bd, x - d[0] * k, y - d[1] * k) === s; k++) n++; return n; };
+    const cells = (q, d) => { const x = q % 15, y = Math.floor(q / 15), o = []; for (let k = -5; k <= 5; k++) { const a = x + d[0] * k, b = y + d[1] * k; if (a >= 0 && b >= 0 && a < 15 && b < 15) o.push(b * 15 + a); } return o; };
+    function mk(pos, rule) {
+      const bd = new Array(225).fill(0); pos.b.forEach(q => { bd[q] = 1; }); pos.w.forEach(q => { bd[q] = 2; });
+      const exact = s => s === 1 && rule !== 'free';
+      // s playing q makes five in direction d (renju: black exactly five)
+      const fiveD = (q, s, d) => { if (bd[q] !== 0) return false; bd[q] = s; const n = run(bd, q, s, d); bd[q] = 0; return exact(s) ? n === 5 : n >= 5; };
+      const five = (q, s) => DIR.findIndex(d => fiveD(q, s, d));
+      const over = (q, s) => { if (bd[q] !== 0) return false; bd[q] = s; const n = Math.max(...DIR.map(d => run(bd, q, s, d))); bd[q] = 0; return n >= 6; };
+      const fivesIn = (q, s, d) => cells(q, d).filter(c => fiveD(c, s, d));
+      // what s playing q makes: per direction a five / an open four / a four / a three
+      function info(q, s) {
+        const r = { five: five(q, s), fours: [], open4: [], threes: [], max: 1, fp: [] };
+        if (bd[q] !== 0) return r;
+        bd[q] = s; r.max = Math.max(...DIR.map(d => run(bd, q, s, d)));
+        DIR.forEach((d, i) => { const f = fivesIn(q, s, d); if (f.length) { r.fours.push(i); f.forEach(c => { if (!r.fp.includes(c)) r.fp.push(c); }); if (f.length >= 2) r.open4.push(i); }
+          else if (cells(q, d).some(c => { if (bd[c] !== 0) return false; bd[c] = s; const n = fivesIn(c, s, d).length; bd[c] = 0; return n >= 2; })) r.threes.push(i); });
+        bd[q] = 0; return r;
+      }
+      const forb = q => { if (rule === 'free' || bd[q] !== 0 || five(q, 1) >= 0) return false; if (over(q, 1)) return true; const r = info(q, 1); return r.fours.length >= 2 || r.threes.length >= 2; };   // (black, renju: roughly — 三三・四四・長連)
+      const fivePts = s => { const o = []; for (let q = 0; q < 225; q++) if (bd[q] === 0 && five(q, s) >= 0) o.push(q); return o; };
+      const near = (q, s) => { const x = q % 15, y = Math.floor(q / 15); for (const d of DIR) for (const g of [1, -1]) for (let k = 1; k <= 4; k++) { const v = at(bd, x + d[0] * k * g, y + d[1] * k * g); if (v === s) return true; if (v !== 0) break; } return false; };
+      // four after four: can s win by fours alone (o must block each one)?
+      function vcf(s, depth, nodes) {
+        nodes = nodes || { n: 0 }; const o = 3 - s;
+        if (fivePts(s).length) return [];
+        if (depth <= 0 || nodes.n > 4000) return null;
+        if (fivePts(o).length) return null;
+        for (let q = 0; q < 225; q++) {
+          if (bd[q] !== 0 || !near(q, s)) continue;
+          if (s === 1 && forb(q)) continue;
+          bd[q] = s; const f = fivePts(s); nodes.n++;
+          if (!f.length) { bd[q] = 0; continue; }
+          if (f.length >= 2 || (o === 1 && forb(f[0]))) { bd[q] = 0; return [q]; }
+          bd[f[0]] = o; const ok = !fivePts(o).length ? vcf(s, depth - 1, nodes) : null; bd[f[0]] = 0; bd[q] = 0;
+          if (ok) return [q, f[0], ...ok];
+        }
+        return null;
+      }
+      // s's winning point right now: a five, an open four, a four-three or a double four (black: not forbidden)
+      function winPt(s) {
+        const o = []; for (let q = 0; q < 225; q++) { if (bd[q] !== 0 || !near(q, s)) continue; if (s === 1 && forb(q)) continue; const r = info(q, s);
+          if (r.five >= 0) o.push([q, 'five']); else if (r.open4.length) o.push([q, 'open4']); else if (r.fours.length >= 2) o.push([q, '44']); else if (r.fours.length && r.threes.length) o.push([q, '43']); }
+        return o;
+      }
+      return { bd, info, forb, five, fivePts, vcf, winPt, over, DN };
+    }
+    return { mk, DN };
+  })();
+  const GMJ_LS = {
+    five: { ask: ['あと1手で5つ並ぶ点、見つけられるかな？', '5つ並べて勝っちゃおう！ どこに打つ？', '勝ちの一手があるよ。さあ、どこだペン？', 'この盤、あと1つで5つ並ぶところがあるね。どこかな？', '{s}の番。一手で勝てる点を探してみて！'],
+      hint: ['自分の石が4つ並んでいる列を探してみて。すき間が1つの形もあるペン。', 'タテ・ヨコ・ナナメ、ぜんぶの向きを見てみよう。4つ並びのあいた点が答えだね。'] },
+    block: { ask: ['相手の四を止めよう！', '大変、相手があと1つで5つ並ぶペン！ どこをふさぐ？', '負けないために、まず打つべき点はどこかな？', '相手の四、見つけられる？ すぐに止めよう！', 'ここは守りの一手！ どこに打つ？'],
+      hint: ['相手の石が4つ並んでいる列を探してね。すき間が1つの四もあるペン。', '相手が次に打ったら5つ並ぶ点、それが止める場所だね。'] },
+    three: { ask: ['相手の三を止めよう！', '相手の三が見えるかな？ 達四になる前にふさごう！', '放っておくと止められなくなる形があるペン。どこで止める？', '守りの場面だね。相手の三、どこをおさえる？', '相手の3つ並びに、ふたをしちゃおう！'],
+      hint: ['両はしがあいた、相手の3つ並びを探してみて。すき間が1つの三もあるペン。', '三は、はしかすき間で止められるね。止める点は1つじゃないかも！'] },
+    sfour: { ask: ['達四（両はしがあいた四）を作ろう！', '自分の三を伸ばして、止められない四を作ってみて！', '両はしのあいた四、どこに打てばできるかな？', '攻めの一手だペン。達四ができる点はどこ？', 'ここで達四を作れば、もう勝ちだね。どこかな？'],
+      hint: ['両はしがあいた、自分の三を探してみて。', 'はしが相手にふさがれている側に伸ばしても、達四にはならないペン。'] },
+    fourthree: { ask: ['四三を作ろう！', '四と三をいっぺんに作れる点、見つけられるかな？', '勝ちを決める一手があるペン。どこだと思う？', '1つの石で四と三！ さあ、どこに打つ？', '相手が止めきれない攻めの点を探してみて！'],
+      hint: ['四になる列と、三になる列が交わる点を探そう。', '3つ並びと2つ並び、向きのちがう2本を見つけてみて。交わる点が急所だペン。'] },
+    forbid33: { ask: ['黒の禁手（三三）はどこかな？ その点をタップして！', '黒が打つと三が2つできる点、見つけられる？ タップして！', '黒の打てない点をさがそう！ 三三はどこかな？', 'ここで黒の禁手になる点、タップしてみて！', '三三の点を見抜けるかな？ タップで答えて！'],
+      hint: ['黒の2つ並びが、向きをかえて2本あるね。交わる点を見てみて。', '打つと、2つの列にそれぞれ三ができる点だペン。'] },
+    forbid44: { ask: ['黒の禁手（四四・長連）はどこかな？ その点をタップして！', '黒が打つと四が2つできる点、または6つ以上並ぶ点はどこ？', '黒の打てない点はどこ？ タップで教えて！', '四四か長連になる点、見抜けるかな？', 'ここで黒の禁手になる点、タップしてみて！'],
+      hint: ['黒の3つ並びが2本あるか、見てみて。同じ列に2つの四ができる形もあるペン。', '打ったら6つ以上つながる点も禁手だペン。'] },
+    fourthreeB: { ask: ['黒の四三を打とう（×は禁手だよ）。', '×をよけて、黒の勝ちの一手を探してみて！', '黒の四三はどこかな？ 禁手には気をつけるペン。', '四と三を1つずつ作れる点、見つけられる？', 'さあ黒の番。×じゃない四三の点はどこ？'],
+      hint: ['×の点には打てないペン。四になる列と三になる列が交わる、×ではない点を探そう。', '三が2つや四が2つになる点は禁手だね。四1つ・三1つの点を探してみて。'] },
+    trap: { ask: ['きみは白。黒が止められない四を作ろう！', '黒の禁手を利用して勝てるかな？', '白の四、どこに作れば黒はふさげない？', '×の点に注目！ 白の勝ちの一手はどこかな？', '連珠ならではの勝ち方だペン。どこに打つ？'],
+      hint: ['×（黒の禁手点）に注目。白の四の止め場所が×になるように打とう。', '黒が止めたい点が三三や四四になるなら、黒はそこに打てないね。'] },
+    vcf: { ask: ['四追いで勝とう。最初の一手はどこかな？', '四を続けて勝ち切れるペン。1手目はどこ？', '相手に休ませない攻め、どこから始める？', '四だけで勝てる局面だね。最初の四はどこかな？', '四追いの入り口、見つけられるかな？'],
+      hint: ['まず四を打ち、相手の止め石で形が崩れない順番を考えよう。', '止めた石で相手に四ができないかも、ちゃんと見てね。最後は四三か達四だペン。'] },
+    defend: { ask: ['相手の勝ち筋を止めよう！', '相手のねらい、先に消しちゃおう。どこに打つ？', '守りの急所はどこかな？ 相手の四三の点を探してみて。', 'このままだと負けちゃうペン。どこで受ける？', '相手が次に打ちたい点はどこかな？ 先回りしよう！'],
+      hint: ['相手が次に打つと四三や四追いになる点を探して、そこを先にふさごう。', '止めたあと、別の勝ち筋が残らないかもチェックしてみて。'] },
+    vct: { ask: ['勝ちにつながる最初の一手を打とう（三を使ってもOK）。', '三と四で追いこむ攻め、1手目はどこかな？', '三で相手に止めさせて、攻めを続けよう！ どこから？', 'どう止められても勝てる攻め、見つけられるかな？', '攻めの入り口はどこだペン？'],
+      hint: ['三を作って相手に止めさせ、その止め石を利用されない順番を考えよう。', '自分の石が集まっている線を探してみて。そこで三ができるペン。'] },
+  };
+  function gmLsJa(sid, pos, rule, ok, k) {
+    const T = GMJ_LS[sid]; if (!T) return null;
+    const s = pos.side || 1, o = 3 - s, G = GML.mk(pos, rule), side = s === 1 ? '黒' : '白', foe = o === 1 ? '黒' : '白';
+    const pk = (a, j) => a[(k + (j || 0)) % a.length];
+    const D = i => GML.DN[i] || '';
+    const near = q => { const x = q % 15, y = Math.floor(q / 15); for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const v = G.bd[(y + b) * 15 + x + a]; if ((a || b) && x + a >= 0 && x + a < 15 && y + b >= 0 && y + b < 15 && v) return true; } return false; };
+    const wrongOf = u => { if (u != null && u >= 0 && !ok.includes(u) && G.bd[u] === 0) return u;   // (the tool asks with the answer: a tempting other point)
+      const c = []; for (let q = 0; q < 225; q++) if (G.bd[q] === 0 && !ok.includes(q) && near(q) && !(s === 1 && rule !== 'free' && sid !== 'forbid33' && sid !== 'forbid44' && G.forb(q))) c.push(q);
+      const sc = q => { const r = G.info(q, s); return r.fours.length * 3 + r.threes.length * 2 + (G.info(q, o).fours.length ? 2 : 0); };
+      c.sort((a, b) => sc(b) - sc(a) || a - b); return c[k % Math.min(3, c.length || 1)]; };
+    const ra = ok[0], R = ra != null ? G.info(ra, s) : null;
+    const GOOD = ['そう、そこ！', 'ばっちりだペン！', 'お見事！', 'いい目だペン！', 'すてきな一手！'];
+    let good, ng;
+    const gd = (u, t) => pk(GOOD) + ' ' + t;
+    switch (sid) {
+      case 'five':
+        good = u => { const r = G.info(u, s); return gd(u, `${D(r.five)}に5つ並んだね。ぼく、うれしくて踊っちゃう！`); };
+        ng = u => { const r = G.info(u, s); return `緑の点なら${D(R.five)}に5つ並んでいたんだ。` + (r.fours.length ? 'きみの手は四どまりで、相手に止められちゃう。' : (r.max >= 3 ? `きみの手だと並ぶのは${r.max}つまで。` : 'きみの手だと、5つにはまだまだ届かない。') + '勝ちを逃しちゃったペン。'); };
+        break;
+      case 'block':
+        good = u => gd(u, pk(['相手の四をふさいだね。ここを空けたら、次に5つ並べられて負けだったんだ。', '四をしっかり止めた！ これでひと安心だペン。', 'まず四を止める。いちばん大事な順番を守れたね。'], 1));
+        ng = u => { const r = G.info(u, s); return `${foe}は緑の点に打って5つ並べちゃう。` + (r.fours.length ? '四で返しても、先に相手が5つ並ぶから間に合わないんだ。' : 'きみの手だと四が残ったままで、次の一手で負けちゃうペン。'); };
+        break;
+      case 'three':
+        good = u => gd(u, pk(['三のはしをふさいだから、相手はもう達四を作れないね。', '三にふたをしたね。これで相手の攻めは止まるペン。', 'そこで止めれば、相手の並びは片方がふさがった形になるんだ。'], 1) + (ok.length > 1 ? `止められる点は${ok.length}か所あったよ。` : ''));
+        ng = u => { const r = G.info(u, s); return (r.fours.length ? '四で攻めても、止められたあとに相手の三が残っちゃう。' : 'きみの手だと相手の三が残ったまま。') + `次に達四を作られたら、もう止められない。ふさぐなら緑の点${ok.length > 1 ? 'のどれか' : ''}だったペン。`; };
+        break;
+      case 'sfour':
+        good = u => { const r = G.info(u, s); return gd(u, `${D(r.open4[0] != null ? r.open4[0] : r.fours[0])}に両はしのあいた四ができた！ 相手はどちらか片方しか止められないね。`); };
+        ng = u => { const r = G.info(u, s); return '緑の点なら、両はしがあいた達四になったんだ。' + (r.fours.length ? 'きみの四は片方のはしがふさがっていて、そこを止められたら終わりだペン。' : r.threes.length ? 'きみの手は三どまりで、相手に止める時間をあげちゃうね。' : 'きみの手だと四ができないから、攻めが止まっちゃう。'); };
+        break;
+      case 'fourthree':
+      case 'fourthreeB':
+        good = u => { const r = G.info(u, s); return gd(u, `${D(r.fours[0])}の四と${D(r.threes[0])}の三がいっぺんにできたね。四を止めたら、三が達四になるペン。`) + (sid === 'fourthreeB' ? '禁手でもないから、黒の勝ちだね。' : ''); };
+        ng = u => { const r = G.info(u, s); return `緑の点なら、${D(R.fours[0])}の四と${D(R.threes[0])}の三が同時にできたんだ。` + (r.fours.length && r.threes.length ? 'きみの手は三のほうが達四になれない形だから、止められちゃう。' : r.fours.length ? 'きみの手は四だけだから、止められたら攻めが終わっちゃうペン。' : r.threes.length ? 'きみの手は三だけで、相手に止められたら勝ちまで届かないね。' : 'きみの手だと四も三もできないから、相手に反撃されちゃう。'); };
+        break;
+      case 'forbid33':
+        good = u => { const r = G.info(u, 1); return gd(u, r.threes.length >= 2 ? `${D(r.threes[0]) === D(r.threes[1]) ? '2本の' + D(r.threes[0]) : D(r.threes[0]) + 'と' + D(r.threes[1])}に三が2つできる、三三の点だね。黒はそこに打てないんだ。` : '三が2つ同時にできる三三の点だね。黒はそこに打てないんだ。'); };
+        ng = u => { const r = G.info(u, 1); return '禁手は緑の点。三が2つ同時にできるからね。' + (r.fours.length && r.threes.length ? 'きみの点は四と三が1つずつの四三だから、禁手じゃないペン。' : r.threes.length >= 2 ? 'きみの点は三が2つに見えるけど、片方は達四になれないから禁手じゃないんだ。' : r.threes.length ? 'きみの点だと三は1つだけ。だから打ってもいい点なんだ。' : 'きみの点だと三ができないから、禁手にはならないペン。'); };
+        break;
+      case 'forbid44':
+        good = u => { const r = G.info(u, 1); return gd(u, G.over(u, 1) ? '打つと6つ以上つながる、長連の点だね。黒はちょうど5つじゃないとだめなんだ。' : r.fours.length >= 2 ? `${D(r.fours[0]) === D(r.fours[1]) ? '2本の' + D(r.fours[0]) : D(r.fours[0]) + 'と' + D(r.fours[1])}に四が2つできる、四四の点だね。` : '同じ列に四が2つできる、四四の点だね。黒はそこに打てないんだ。'); };
+        ng = u => { const r = G.info(u, 1); return '禁手は緑の点' + (G.over(ra, 1) ? '。6つ以上つながる長連になるからね。' : '。四が2つ同時にできるからね。') + (r.five >= 0 ? 'きみの点はちょうど5つで、黒の勝ちになるペン。' : r.fours.length ? 'きみの点だと四は1つだけ。だから禁手じゃないんだ。' : 'きみの点だと四ができないから、禁手にはならないペン。'); };
+        break;
+      case 'trap':
+        good = u => { const r = G.info(u, 2); return gd(u, `${D(r.fours[0])}に四ができたね。止める点は黒の禁手だから、黒はふさげないペン。`); };
+        ng = function (u) { const r = G.info(u, 2), ff = r.fp.filter(q => !G.forb(q)); this._hl = ff.slice(0, 1);
+          return '緑の点なら、四の止め場所が黒の禁手になったんだ。' + (r.fours.length ? (ff.length ? 'きみの四は、オレンジの印の点で黒にふさがれちゃう。そこは禁手じゃないからね。' : 'きみの四は止められないけど、黒が先に勝つ筋が残るペン。') : 'きみの手だと四にならないから、黒は好きな点で受けられちゃう。'); };
+        break;
+      case 'vcf':
+        good = u => gd(u, pk(['その四から止めさせ続けて、最後は四三か達四。相手は一度も自由に打てないね。', '四で押すたびに相手の止め石が決まるから、迷わず勝ち切れるペン。', '止め石が相手の四にならない、正しい入り口だね。'], 1));
+        ng = function (u) { const r = G.info(u, s); this._hl = [];
+          if (!r.fours.length) return '緑の点から四を続ければ勝ちだったんだ。きみの手は四じゃないから、相手は止めずに反撃できちゃうペン。';
+          const f = r.fp[0]; G.bd[u] = s; G.bd[f] = o; const ctr = G.fivePts(o), cont = !ctr.length && G.vcf(s, 7); G.bd[f] = 0; G.bd[u] = 0;
+          if (ctr.length) { this._hl = [f]; return '緑の点から四を続ければ勝ちだったんだ。きみの四だと、止めたオレンジの印の石で相手に四ができて、逆に攻められちゃう。'; }
+          return '緑の点から四を続ければ勝ちだったんだ。' + (cont ? 'きみの四も悪くないけど、順番がちがうと勝ち切れないことがあるペン。' : 'きみの四は止められたあと、続く四がなくて攻めが切れちゃう。'); };
+        break;
+      case 'defend':
+        good = u => gd(u, pk(['相手の四三の点を先にふさいで、勝ち筋を消せたね。', '急所をおさえたから、相手の攻めはもう続かないペン。', 'そこを先に取れば、相手のねらいが空振りになるんだ。'], 1) + (ok.length > 1 ? `止められる点は${ok.length}か所あったよ。` : ''));
+        ng = function (u) { G.bd[u] = s; const w = G.winPt(o), v = !w.length && G.vcf(o, 7); G.bd[u] = 0;
+          this._hl = w.length ? [w[0][0]] : v && v.length ? [v[0]] : [];
+          const how = w.length ? { five: '5つ並べられて', open4: '達四を作られて', '44': '四四を打たれて', '43': '四三を打たれて' }[w[0][1]] : '';
+          return `緑の点なら${foe}のねらいを消せたんだ。` + (w.length ? `きみの手だと、オレンジの印の点に${how}負けちゃう。` : v ? 'きみの手だと、オレンジの印の点から四追いで勝たれちゃうペン。' : 'きみの手だと、三と四で追いこまれる筋が残っちゃうね。'); };
+        break;
+      case 'vct':
+        good = u => { const r = G.info(u, s); return gd(u, (r.fours.length ? '四で止めさせて' : r.threes.length ? '三で止めさせて' : '先手で攻めて') + '、どう受けられても三と四で最後まで追いこめるね。'); };
+        ng = u => { const r = G.info(u, s); return '緑の点からなら、どう止められても勝ち切れたんだ。' + (r.fours.length ? 'きみの四は止められたあと、攻めが続かないペン。' : r.threes.length ? 'きみの三は、止め方によっては攻めが切れちゃう。' : 'きみの手だと三も四もできないから、相手に反撃の時間をあげちゃうね。'); };
+        break;
+      default: return null;
+    }
+    const ngW = function (u0) { const u = wrongOf(u0); this._hl = []; return u == null ? '' : ng.call(this, u); };
+    const goodW = function (u) { this._hl = []; return good.call(this, ok.includes(u) ? u : ra); };
+    return { ask: fill(pk(T.ask), { s: side }), hintTx: pk(T.hint, k >> 1), good: goodW, ng: ngW, own: true };
+  }
   const GOMOKU = {
     LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=20261115'), getJ('../gomoku/openings.json?v=20261113'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=20261115'), getJ('../gomoku/openings.json?v=20261113'), fetch('../gomoku/i18n.js?v=20261115').then(r => r.text()), fetch('../gomoku/voice-pen-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op };
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
@@ -1415,8 +1571,10 @@
       const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L((this.data.ls.rampUi || {})[k], lang), v || {});
       const ramp = s.ramp && s.ramp.length ? s.ramp.map((it, j) => { const o = Object.assign({}, it); ['t', 'body', 'g', 'h', 'y'].forEach(f => { const v = V[`ramp:${s.id}/${j}/${f}`]; if (v != null) o[f] = { ja: v, __voice: true }; }); return o; }) : null;
       return { id: s.id, title: T('title'), intro: T('intro'), ramp, RU,
-        probs: (s.problems || []).map(P => { const ok = gCells(P.ok || []), pick = P.kind === 'pick';
-          return { pos: gPos(P, { pick, noForbid: !!(s.hideForbid || pick) }), kind: 'best', P: { ok }, ask: T('goal'), ans: ok[0], why: '', ng: () => T('ng', { m: SP('ok', lang), x: SP('ng', lang) }), good: () => T('why', { m: SP('here', lang), n: ok.length }), hintTx: T('hint'), hint: P.hint ? gCells(P.hint) : null }; }),
+        probs: (s.problems || []).map((P, i) => { const ok = gCells(P.ok || []), pick = P.kind === 'pick';
+          const o = { pos: gPos(P, { pick, noForbid: !!(s.hideForbid || pick) }), kind: 'best', P: { ok }, ask: T('goal'), ans: ok[0], why: '', ng: () => T('ng', { m: SP('ok', lang), x: SP('ng', lang) }), good: () => T('why', { m: SP('here', lang), n: ok.length }), hintTx: T('hint'), hint: P.hint ? gCells(P.hint) : null };
+          if (lang === 'ja') { const J = gmLsJa(s.id, o.pos.start, o.pos.rule, ok, +key * 3 + i); if (J) Object.assign(o, J); }   // (2026-11-21 lesson loop: ゴイシペン asks and explains — see GML / gmLsJa)
+          return o; }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
@@ -4114,7 +4272,7 @@
         const okA = (p.P.ok && p.P.ok.length ? p.P.ok : [p.ans]).filter(q => q >= 0);
         const said = pts >= 16 ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) });   // (no coordinates: the points are named by their marks)
         pz().mark([...okA.filter(q => q !== u).slice(0, 4).map(q => [q, 'ok']), [u, pts >= 16 ? 'ok' : 'ng'], ...(p._hl || []).filter(q => q !== u && !okA.includes(q)).map(q => [q, 'hl'])]);
-        say(`${pts >= 16 ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + said + (id === 'go' && pts < 20 && p.ans >= 0 && !said.includes(SP('ok', ctx.lang)) ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) }) : ''));
+        say(`${p.own ? (pts >= 16 ? '' : 'おしい！') : pts >= 16 ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + said + (id === 'go' && pts < 20 && p.ans >= 0 && !said.includes(SP('ok', ctx.lang)) ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) }) : ''));
         if (id === 'go' && p.line && p.line.length > 1) { const k = cur.k; later(async () => { if (!cur || cur.k !== k || phase !== 'prob') return; pz().undo(9); for (const q of p.line) { await sleep(700); if (!cur || cur.k !== k || phase !== 'prob' || stopped) return; await pz().play(q); } }, 900); }   // (go: the right line played out, as the full game)
         try { chime(pts >= 16); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
