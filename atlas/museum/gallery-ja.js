@@ -75,7 +75,7 @@
         ['人の頭', '縁から突き出た人の頭。1932年の報告では「ヴァイキング風の粗い人の頭」。持ち手だったと考えられています。'],
         ['反対側のつまみ', '反対側の縁には、短い首のついた小さな丸いつまみ。動物の頭とされ、これも持ち手とみられます。'],
         ['割れ目', '盤は2つに割れた状態で見つかりました。']],
-      model: "形と配置は、盤を真上から撮った写真から測って作りました。厚さと、縁の彫刻の細かな線は推定です。",
+      model: "形と配置、縁の彫刻、盤面の傷みは、盤を真上から撮った写真から取りました。厚さは推定です。",
       src: [['アイルランド国立博物館「The Ballinderry gaming board」', 'https://museum.ie/en-IE/Collections-Research/Irish-Antiquities-Division-Collections/Collections-List-(1)/Viking/The-Ballinderry-gaming-board'], ['1932年の発見を伝える新聞記事（Papers Past、大きさ・模様・頭）', 'https://paperspast.natlib.govt.nz/newspapers/MS19321214.2.22'], ['Westmeath Examiner（ブランダブ説・動物の頭）', 'https://www.westmeathexaminer.ie/?p=130666']] },
     lewis: { name: 'ルイス島のチェス駒', alt: 'セイウチの牙に彫られた中世のチェス駒', date: '1150〜1200年ごろ', where: 'スコットランド（ルイス島で出土）・ノルウェーで作られたと考えられる', found: '1831年（またはそれ以前）にルイス島で見つかった。ウイグ湾とされることが多いが、南のメアリスタとする説もある',
       museum: '大英博物館（ロンドン）82点・スコットランド国立博物館（エディンバラ）11点', no: '1831,1101.78 ほか', mat: 'セイウチの牙（一部はクジラの歯）', size: '高さ約4〜10cm（王9.8cm・歩兵4cm）',

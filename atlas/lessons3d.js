@@ -2807,9 +2807,9 @@
     },
   };
   const CK_CH = {
-    good: ['いいね！', 'さすが！', 'お見事！', 'ばっちり！', 'やったね！'],
+    good: ['いいね！', 'さすが！', 'お見事！', 'ばっちり！', 'やったね！', 'いい目してるカニ！', 'すごいすごい！', 'そうそう、それ！'],
     push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次のレッスンへ！'],
-    soft: ['大丈夫！', 'ドンマイだカニ！', null, '気にしない、気にしない！', null],
+    soft: ['大丈夫！', 'ドンマイだカニ！', 'あと少しだったね！', '気にしない、気にしない！', 'あと一歩カニ！', '平気、平気！', 'よくある見落としだよ。', 'いっしょに見てみよう！'],
     tail: [null, null, 'これで覚えちゃおう！', null, '次はきっと見つけられるカニ！'],
     right: ['{m}なら、{a}の。', '{m}が正解！ {a}カニ。', 'ここは{m}。それなら{a}から！', '{m}を見て。あの手なら{a}の！', '答えは{m}だった。{a}んだ。'],
     why: ['{a}！', 'その手なら{a}の。', '{a}カニ！', 'ほら、{a}でしょ？', 'これで{a}んだ。'],
@@ -2835,6 +2835,7 @@
   }
   function ckLsJa(E, s, P, i) {
     const id = s.id, pos = E.Pos.from(P.s), ok = P.ok || [P.best], A = P.best, k = i % 5, name = m => E.name(pos, m);
+    const si = Math.max(0, ((CHECKERS.data && CHECKERS.data.ls.steps) || []).indexOf(s)), o8 = si % 8 + i * [1, 3, 5, 7][(si >> 3) % 4];   // (the praise / soft openers in a different order in each lesson)
     const sc = new Map(P.sc || []), best = P.sc ? Math.max(...P.sc.map(x => x[1])) : 0;
     const FA = ckLF(E, pos, A), M = CKM('ok', 'ja'), X = CKM('ng', 'ja'), pk = (L, j) => L[((j % L.length) + L.length) % L.length];
     const eg = {}; String(CK_EG[P.s.b + P.s.side] || '').split(' ').filter(Boolean).forEach(x => { const [a, b] = x.split(':'); eg[a] = b; });
@@ -2905,9 +2906,9 @@
     const fill2 = (t, a) => t.replace('{m}', M).replace('{x}', X).replace('{a}', a).replace('{b}', a)
       .replace(/(安全|地帯|得|損|始まり|だけ|まま|どまり|一つの手)(?=の[。！]|んだ|カニ|から)/g, (w, x, o, str) => w + (/^(の|ん)/.test(str.slice(o + w.length)) ? 'な' : 'だ'));   // (a noun before の / んだ / カニ / から: 安全なの, 得なんだ, 安全だカニ)
     const good = u => { const F = u != null && ok.includes(u) && u !== A ? ckLF(E, pos, u) : FA;
-      return [CK_CH.good[k], fill2(CK_CH.why[k], why(F, k)), CK_CH.push[k]].filter(Boolean).join(' '); };
+      return [pk(CK_CH.good, o8), fill2(CK_CH.why[k], why(F, k)), CK_CH.push[k]].filter(Boolean).join(' '); };
     const ng = u0 => { const u = wrongOf(u0); let F = null; try { F = ckLF(E, pos, u); } catch (e) {}
-      const out = [CK_CH.soft[k], fill2(CK_CH.right[(k + 2) % 5], why(FA, k + 2))]; if (F) out.push(fill2(CK_CH.you[(k + 3) % 5], loss(F, u, k + 2)));
+      const out = [pk(CK_CH.soft, o8), fill2(CK_CH.right[(k + 2) % 5], why(FA, k + 2))]; if (F) out.push(fill2(CK_CH.you[(k + 3) % 5], loss(F, u, k + 2)));
       if (CK_CH.tail[k]) out.push(CK_CH.tail[k]); return out.filter(Boolean).join(' '); };
     return { ask: pk(CKJ_LS.ask[id] || [''], k), hintTx: pk(CKJ_LS.hint[id] || [''], k), good, ng, own: true, ckls: true };   // (ckls: チェッカニ praises himself — no heading line)
   }
@@ -2915,7 +2916,7 @@
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=20261115'), getJ('../checkers/openings.json?v=3'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../checkers/lessons.json?v=20261122'), getJ('../checkers/openings.json?v=3'), getJ('../checkers/lux.json?v=1').catch(() => ({})), fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()), ckEng(), fetch('../checkers/voice-crab-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, lux, tx, , vc]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] checkers texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux };
           try { const v = {}; new Function('window', vc)(v); this.V = ((v.I18N || {})['ja@crab']) || {}; } catch (e) { this.V = {}; }   // (チェッカニ's own lines, 3D, ja)
           return this; })
