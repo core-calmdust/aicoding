@@ -10,14 +10,14 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 8;
+  const V = 10;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
     { id: 'ur', game: 'ur', src: () => window.AtlasLazy ? AtlasLazy.need('ur') : 0, cm: 30.1 / 8.52, view: [-.45, .7, .92],
       spots: [[-3.5, .44, -1], [-.5, .44, 0], [1, .44, 0], [3.5, .44, -1], [-2.5, .22, 1.62]] },
-    { id: 'senet', game: 'senet', cm: 1, view: [.62, .4, .95], spots: [[-11, 20.9, -3.9], [17, 20.9, 3.9], [22.5, 17.1, 0], [-17.6, 7, 6.9], [4, 1.8, 7.6]] },
-    { id: 'shosoin', game: 'go', cm: 1, view: [.35, .62, .95], spots: [[0, 12.8, 0], [-10.6, 12.8, -10.6], [12, 6.5, -24.2], [0, 6, 29], [-24.2, 2, 6]] },
+    { id: 'senet', game: 'senet', cm: 1, view: [.62, .4, .9], spots: [[-11, 28.4, -3.5], [17, 28.4, 4], [-6, 23.6, 7.2], [22.5, 23.5, 0], [23.8, 2.7, 7.4], [-10, 1.9, 7.6], [-2, .9, 13.8]] },
+    { id: 'shosoin', game: 'go', cm: 1, view: [.35, .58, .82], spots: [[0, 12.8, 0], [-10.6, 12.8, -10.6], [24.3, 7, 10], [0, 6.6, 26], [0, 7.0, 32.1], [-14, .95, 23.8]] },
     { id: 'sugoroku', game: 'backgammon', cm: 1, view: [.45, .55, .92],
       spots: [[0, 12.45, 11.5], [-12, 12.45, 11.5], [-23.35, 12.45, 0], [8, 14.6, 15.55], [-8, 5, 15.5], [5.7, 13.2, -1.3]] },
     { id: 'pyrgus', game: 'backgammon', cm: 1, view: [.55, .32, 1], spots: [[0, 18.6, 4.6], [4.6, 20.4, 0], [0, 12, 0], [0, 3.2, 4.6], [1.4, .9, 6.3]] },
@@ -29,9 +29,9 @@
       spots: [[0, 8.6, -5.0], [3.25, 4.7, -4.4], [-9.5, 12.0, -5.3], [11.45, 9.9, 5.9], [14.4, 11.0, -5.2], [-11.0, 6.0, 6.4], [0, 3.0, 8.5]] },
     { id: 'nishapur', game: 'chess', cm: 1, view: [.9, .55, .78],
       spots: [[3.1, 5.0, 22.9], [-3.1, 4.2, 22.8], [-9.3, 3.4, 21.2], [-15.5, 3.6, 21.0], [-21.7, 3.9, 21.7], [-3.1, 2.4, 15.5], [3.1, 5.0, -22.9]] },
-    { id: 'ottoman', game: 'backgammon', cm: 1, flip: true, view: [.25, .78, .9], lock: { game: 'backgammon', ach: 3 },
-      spots: [[-21, 1.3, -21], [0, 1.3, -14], [10, 1.75, .6], [6, 0, 9], [-4.6, 0, 4.85], [0, 0, 24.6], [-24.3, 0, -24.2], [28.3, .6, 12]], side: [0, 0, 0, 1, 1, 1, 1, 1] },
-    { id: 'kofukuji', game: 'shogi', cm: 0, view: [0, 1.05, .9], spots: [[-7.1, 1.6, -2.9], [3.55, 1.6, -2.9], [-1.8, 1.6, 1.7], [8.9, 1.6, 1.7], [0, 1.6, 6]], lock: { game: 'shogi', ach: 3 } },
+    { id: 'ottoman', game: 'backgammon', cm: 1, flip: true, view: [0, .95, .82], lock: { game: 'backgammon', ach: 3 },
+      spots: [[-21.5, 1.3, -15], [-14.1, 1.3, 0], [-27.6, 1.75, 12], [-6.2, 0, 4.6], [-9.7, 0, 9.5], [-24.3, 0, 0], [-24.3, 0, -24.2], [28.3, .6, 12]], side: [0, 0, 0, 1, 1, 1, 1, 1] },
+    { id: 'kofukuji', game: 'shogi', cm: 1, view: [0, .95, .78], lock: { game: 'shogi', ach: 3 } },   // (spots: from the model's userData)
   ];
   const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
   const ui = (l, k) => { const a = T(l).ui || {}, b = T('en').ui || {}; return a[k] != null ? a[k] : (b[k] != null ? b[k] : k); };
@@ -123,11 +123,14 @@
     const B = window.AtlasEx && AtlasEx[e.id]; if (!TT || !B) { ov.querySelector('.exload').textContent = ui(lang, 'fail'); return; }
     const R = new TT.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'high-performance' });
     R.setPixelRatio(Math.min(devicePixelRatio || 1, phone() ? 1.5 : 2));
-    R.outputColorSpace = TT.SRGBColorSpace; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = .98;
+    R.outputColorSpace = TT.SRGBColorSpace; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = .85;   // (.98 blew out ivory and pale wood on phones)
     R.shadowMap.enabled = true; R.shadowMap.type = TT.PCFSoftShadowMap; R.shadowMap.autoUpdate = false;
     const scene = new TT.Scene(), env = envMap(R, TT); scene.environment = env.texture;
     let obj; try { obj = B.build(TT, X, kit); } catch (err) { console.warn('[gallery]', err); ov.querySelector('.exload').textContent = ui(lang, 'fail'); R.dispose(); return; }
-    obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    const aniso = R.capabilities.getMaxAnisotropy();
+    obj.traverse(o => { if (!o.isMesh) return; o.castShadow = true; o.receiveShadow = true;
+      // every texture mip-mapped and filtered at the device's best anisotropy (fine inlay lines shimmered at a distance on phones)
+      (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { for (const k in m) { const t = m[k]; if (t && t.isTexture) { t.anisotropy = aniso; t.generateMipmaps = true; t.minFilter = TT.LinearMipmapLinearFilter; } } }); });
     // sit it on a plinth: the plinth fits the piece's footprint with a margin
     const bb = new TT.Box3().setFromObject(obj), sz = bb.getSize(new TT.Vector3()), cen = bb.getCenter(new TT.Vector3());
     obj.position.x -= cen.x; obj.position.z -= cen.z; obj.position.y -= bb.min.y;
@@ -146,7 +149,7 @@
     scene.add(key, key.target);
     const rim = new TT.DirectionalLight(0xcfe0ff, .6); rim.position.set(-r * 2, r * 1.5, -r * 2.5); scene.add(rim);
     const fill = new TT.DirectionalLight(0xffe2c4, .3); fill.position.set(-r * 2.5, r, r * 2); scene.add(fill);
-    const cam = new TT.PerspectiveCamera(30, 1, Math.max(.01, r * .02), r * 40);
+    const cam = new TT.PerspectiveCamera(30, 1, Math.max(.01, r * .08), r * 14);   // (a tight near/far: phones have little depth precision, and coplanar inlays shimmered)
     const tgt = new TT.Vector3(0, sz.y > rf ? sz.y * .46 : Math.min(sz.y * .45, r * .3), 0);
     // the start view: [yaw, pitch, distance factor]
     const [yaw0, pit0, df] = e.view || [-.5, .6, 1];
@@ -155,7 +158,7 @@
     const resize = () => { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); if (!V3.sph.d) V3.sph.d = fitD() * df; V3.home = { yaw: yaw0, pit: pit0, d: fitD() * df }; go(); };
     V3.ro = new ResizeObserver(resize); V3.ro.observe(stage); resize();
     // spots: the numbered details (model coordinates; the piece was moved onto the plinth, so add its offset)
-    V3.spots = (e.spots || []).map(p => new TT.Vector3(p[0], p[1], p[2]));   // (model coordinates: placed through the piece's matrix each frame)
+    V3.spots = (e.spots || obj.userData.spots || []).map(p => new TT.Vector3(p[0], p[1], p[2]));   // (model coordinates: placed through the piece's matrix each frame)
     const sl = ov.querySelector('.exspots'); sl.innerHTML = V3.spots.map((_, i) => `<button type="button" class="exspot" data-n="${i}">${i + 1}</button>`).join('');
     sl.querySelectorAll('.exspot').forEach(b => b.onclick = () => focusSpot(+b.dataset.n));
     bindInput(stage);

@@ -52,7 +52,18 @@
         else if (kind === 'elephant') { g.moveTo(-28, -2); g.quadraticCurveTo(-26, -24, 0, -24); g.quadraticCurveTo(18, -24, 22, -10); g.quadraticCurveTo(30, -6, 30, 8); g.quadraticCurveTo(30, 20, 34, 22); g.lineTo(28, 22); g.quadraticCurveTo(24, 10, 22, 4);
           g.lineTo(18, 22); g.lineTo(12, 22); g.lineTo(12, 6); g.lineTo(-14, 6); g.lineTo(-14, 22); g.lineTo(-20, 22); g.lineTo(-20, 4); g.quadraticCurveTo(-28, 6, -28, -2); g.closePath(); }
         else if (kind === 'bird') { g.moveTo(-14, 2); g.quadraticCurveTo(-2, -10, 10, -6); g.lineTo(16, -10); g.lineTo(14, -4); g.quadraticCurveTo(10, 6, -4, 6); g.lineTo(-18, 12); g.lineTo(-12, 4); g.closePath(); g.moveTo(0, -2); g.quadraticCurveTo(-8, -18, -20, -16); g.quadraticCurveTo(-10, -8, 0, -2); }
-        else if (kind === 'rider') { g.moveTo(-24, 6); g.quadraticCurveTo(-22, -8, -6, -8); g.lineTo(12, -10); g.lineTo(20, -20); g.lineTo(24, -16); g.lineTo(18, -6); g.quadraticCurveTo(20, 4, 14, 6); g.lineTo(16, 22); g.lineTo(12, 22); g.lineTo(9, 7); g.lineTo(-14, 7); g.lineTo(-18, 22); g.lineTo(-22, 22); g.closePath();
+        else if (kind === 'man') {   // a foreigner in a peaked cap and boots, leading with a rope
+          g.arc(0, -19, 3.6, 0, 6.29); g.moveTo(-3.4, -21); g.lineTo(0, -29); g.lineTo(3.4, -21); g.closePath();
+          g.moveTo(-4.5, -15); g.lineTo(4.5, -15); g.lineTo(6, 6); g.lineTo(3, 6); g.lineTo(2.6, 22); g.lineTo(-.4, 22); g.lineTo(0, 7); g.lineTo(-1.6, 22); g.lineTo(-4.6, 22); g.lineTo(-3.6, 6); g.lineTo(-6, 6); g.closePath();
+          g.moveTo(4, -12); g.lineTo(13, -8); g.lineTo(12.4, -6.6); g.lineTo(3.6, -10); g.closePath(); }
+        else if (kind === 'deer') { g.moveTo(-20, -2); g.quadraticCurveTo(-18, -12, -4, -12); g.lineTo(10, -12); g.quadraticCurveTo(14, -14, 15, -22); g.lineTo(21, -24); g.lineTo(22, -20); g.lineTo(18, -18); g.quadraticCurveTo(16, -6, 12, -2);
+          g.lineTo(13, 22); g.lineTo(10, 22); g.lineTo(8, 0); g.lineTo(-12, 0); g.lineTo(-13, 22); g.lineTo(-16, 22); g.lineTo(-16, 0); g.closePath();
+          g.moveTo(16, -22); g.lineTo(12, -32); g.lineTo(13, -32.5); g.lineTo(16.5, -25); g.lineTo(19, -34); g.lineTo(20, -33.5); g.lineTo(18, -23); g.closePath(); }
+        else if (kind === 'rider') {   // a mounted archer turning in the saddle to shoot back (the "Parthian shot")
+          g.moveTo(-24, 6); g.quadraticCurveTo(-22, -8, -6, -8); g.lineTo(12, -10); g.lineTo(20, -20); g.lineTo(24, -16); g.lineTo(18, -6); g.quadraticCurveTo(20, 4, 14, 6); g.lineTo(18, 22); g.lineTo(14, 22); g.lineTo(9, 7); g.lineTo(-14, 7); g.lineTo(-20, 22); g.lineTo(-24, 22); g.closePath();
+          g.moveTo(-4, -8); g.lineTo(-2, -22); g.arc(-2, -25, 3.2, 0, 6.29); g.moveTo(-2, -18); g.lineTo(-14, -22); g.lineTo(-14, -20); g.lineTo(-2, -16); g.closePath();
+          g.moveTo(-16, -30); g.quadraticCurveTo(-22, -21, -16, -12); g.lineTo(-15.4, -12.4); g.quadraticCurveTo(-20.6, -21, -15.4, -29.6); g.closePath(); }
+        else if (kind === 'rider0') { g.moveTo(-24, 6); g.quadraticCurveTo(-22, -8, -6, -8); g.lineTo(12, -10); g.lineTo(20, -20); g.lineTo(24, -16); g.lineTo(18, -6); g.quadraticCurveTo(20, 4, 14, 6); g.lineTo(16, 22); g.lineTo(12, 22); g.lineTo(9, 7); g.lineTo(-14, 7); g.lineTo(-18, 22); g.lineTo(-22, 22); g.closePath();
           g.moveTo(-6, -8); g.lineTo(-4, -22); g.arc(-3, -25, 3.2, 0, 6.29); g.moveTo(-2, -18); g.lineTo(8, -26); }
         else if (kind === 'tree') { g.moveTo(-1.6, 24); g.lineTo(-1.2, -2); g.lineTo(1.2, -2); g.lineTo(1.6, 24); g.closePath(); for (let i = 0; i < 5; i++) { const yy = -4 - i * 6, ww = 14 - i * 2.2; g.moveTo(0, yy - 6); g.quadraticCurveTo(ww, yy, 0, yy + 2); g.quadraticCurveTo(-ww, yy, 0, yy - 6); } }
         else if (kind === 'flower') { for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; g.moveTo(0, 0); g.ellipse(Math.cos(a) * 6, Math.sin(a) * 6, 6, 3, a, 0, 6.29); } }
@@ -60,21 +71,31 @@
           g.quadraticCurveTo(-34, 0, -30, -12); g.quadraticCurveTo(-28, -2, -24, 4); g.closePath(); }
         g.fill('evenodd'); g.stroke(); g.restore();
       };
-      const sideTex = seed => K.tex(2048, Math.round(2048 * BODY / S), (g, w, h) => {
-        g.drawImage(shT.image, 0, 0, w, h);
-        const s = w / S;
-        // ivory frame lines (double) and the drawer-front seams
-        g.strokeStyle = C.iv; g.lineWidth = s * .14; g.strokeRect(s * .7, s * .55, w - s * 1.4, h - s * 1.1);
-        g.lineWidth = s * .05; g.strokeRect(s * 1.05, s * .9, w - s * 2.1, h - s * 1.8);
-        // a running scroll of figures between trees and flowers
-        const order = seed % 2 ? ['tree', 'camel', 'flower', 'rider', 'tree', 'bird', 'elephant', 'flower', 'tree'] : ['tree', 'elephant', 'bird', 'flower', 'lion', 'tree', 'camel', 'bird', 'tree'];
-        const cols = [C.box, C.iv, C.red, C.tan, C.box, C.iv, C.iv, C.red, C.box];
-        const cy = h / 2 + s * .4, k = s * .1;
-        order.forEach((kd, i) => { const x = s * 3.6 + i * (w - s * 7.2) / (order.length - 1); sil(g, kd, x, cy, kd === 'tree' ? k * .95 : kd === 'flower' ? k * 1.1 : k * 1.05, kd === 'tree' ? C.grn : cols[i]); });
-        // small flower dots along the frame
-        for (let i = 0; i < 26; i++) { const x = s * 2 + i * (w - s * 4) / 25; [s * .72, h - s * .72].forEach(y => { g.beginPath(); g.arc(x, y, s * .1, 0, 6.29); g.fillStyle = C.box; g.fill(); }); }
-      });
-      const sides = [0, 1, 2, 3].map(i => K.mat({ map: sideTex(i), color: '#ffffff', roughness: .48, clearcoat: .35, clearcoatRoughness: .35 }));
+      // each side is divided into four panels framed in ivory; in each, figures in dyed ivory (pale red, green, yellow) carved in low
+      // relief: pheasants, geese, lions, elephants, camels (one led by a foreigner), deer and a mounted archer, among flowering plants
+      const PAL = ['#e2a493', '#a9cfa2', '#ead69c', '#f0e4c8'];
+      const vign = [[['camel', 'man'], ['flower']], [['rider'], ['bird']], [['lion'], ['flower', 'bird']], [['elephant'], ['tree']],
+        [['deer'], ['bird']], [['bird', 'bird'], ['flower']], [['camel'], ['tree']], [['rider'], ['flower']]];
+      const drawSide = (g, w, h, seed, bump) => {
+        const s = w / S; if (bump) { g.fillStyle = '#000'; g.fillRect(0, 0, w, h); } else { g.drawImage(shT.image, 0, 0, w, h); g.fillStyle = 'rgba(14,4,4,.25)'; g.fillRect(0, 0, w, h); }
+        const iv = bump ? '#9a9a9a' : C.iv;
+        g.strokeStyle = iv; g.lineWidth = s * .16; g.strokeRect(s * .6, s * .5, w - s * 1.2, h - s * 1.0);
+        const pw = (w - s * 1.2) / 4;
+        for (let i = 0; i < 4; i++) {
+          const x0 = s * .6 + i * pw; if (i) { g.beginPath(); g.moveTo(x0, s * .5); g.lineTo(x0, h - s * .5); g.stroke(); }
+          g.save(); g.lineWidth = s * .05; g.strokeRect(x0 + s * .35, s * .85, pw - s * .7, h - s * 1.7); g.restore();
+          const v = vign[(seed * 4 + i) % vign.length], cx = x0 + pw / 2, cy = h / 2 + s * .35, k = s * .09;
+          const col = n => bump ? '#ffffff' : PAL[(seed + i + n) % PAL.length];
+          // the main figure(s), then the filler plant / bird
+          v[0].forEach((kd, n) => sil(g, kd, cx + (n - (v[0].length - 1) / 2) * pw * .34 - (v[1].length ? pw * .1 : 0), cy, k * (kd === 'bird' ? .9 : 1.12), col(n)));
+          v[1].forEach((kd, n) => sil(g, kd, cx + pw * .3, cy - s * (kd === 'bird' ? 1.3 : .2) + n * s * 1.4, k * (kd === 'tree' ? .8 : .7), kd === 'tree' ? (bump ? '#c0c0c0' : C.grn) : col(3 + n)));
+        }
+        // small six-petalled flowers along the frame (ebony centres, ivory petals)
+        for (let i = 0; i < 26; i++) { const x = s * 1.6 + i * (w - s * 3.2) / 25; [s * .5, h - s * .5].forEach(y => { g.beginPath(); g.arc(x, y, s * .11, 0, 6.29); g.fillStyle = bump ? '#808080' : C.box; g.fill(); }); }
+      };
+      const sideTex = seed => K.tex(2048, Math.round(2048 * BODY / S), (g, w, h) => drawSide(g, w, h, seed, false));
+      const sideBump = seed => K.tex(1024, Math.round(1024 * BODY / S), (g, w, h) => drawSide(g, w, h, seed, true), { data: true });
+      const sides = [0, 1, 2, 3].map(i => K.mat({ map: sideTex(i), bumpMap: sideBump(i), bumpScale: 2.2, color: '#ffffff', roughness: .48, clearcoat: .35, clearcoatRoughness: .35 }));
       /* ---------- the body: top slab with the face, the decorated sides ---------- */
       const body = new TT.Mesh(new TT.BoxGeometry(S, BODY - TOPT, S), [sides[0], sides[1], shitan, shitan, sides[2], sides[3]]);
       body.position.y = BASE + (BODY - TOPT) / 2; G.add(body);
@@ -93,17 +114,31 @@
       const legT = K.tex(1024, 128, (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); for (let i = 0; i < 12; i++) { const x = (i + .5) * w / 12; sil(g, 'flower', x, h * .5, h / 60, i % 2 ? C.box : C.iv); } });
       legT.repeat.set(1 / S, 1 / BASE); legT.offset.set(.5, 0);
       const legMat = K.mat({ map: legT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
+      // the floor rail (畳摺) the skirts stand on: its top faced with 華角 (thin dyed horn, a translucent amber-red)
+      const RAIL = .9, kakaku = K.mat({ color: '#7a2a18', roughness: .32, clearcoat: .8, clearcoatRoughness: .2 });
+      [[S + .4, S / 2 - .7, 0], [S + .4, -S / 2 + .7, 0]].forEach(([w, z]) => { const r = new TT.Mesh(new TT.BoxGeometry(w, RAIL, 1.8), [shitan, shitan, kakaku, shitan, shitan, shitan]); r.position.set(0, RAIL / 2, z); G.add(r); });
+      [[S / 2 - .7], [-S / 2 + .7]].forEach(([x]) => { const r = new TT.Mesh(new TT.BoxGeometry(1.8, RAIL, S - 3.2), [shitan, shitan, kakaku, shitan, shitan, shitan]); r.position.set(x, RAIL / 2, 0); G.add(r); });
       for (let i = 0; i < 4; i++) {
         const m = new TT.Mesh(skG, [legMat, shitan]); const a = i * Math.PI / 2;
-        m.position.set(Math.sin(a) * (S / 2 - 1.1), 0, Math.cos(a) * (S / 2 - 1.1)); m.rotation.y = a; m.translateZ(0); G.add(m);
+        m.position.set(Math.sin(a) * (S / 2 - 1.1), RAIL, Math.cos(a) * (S / 2 - 1.1)); m.scale.y = (BASE - RAIL) / BASE; m.rotation.y = a; G.add(m);
       }
       const floor = new TT.Mesh(new TT.BoxGeometry(S - 2.2, .6, S - 2.2), shitan); floor.position.y = BASE - .3; G.add(floor);
       /* ---------- the near drawer, a little open, with the turtle tray ---------- */
       const DW = 16, DH = BODY - TOPT - 2.4, OUT = 7.5;
-      const dFront = new TT.Mesh(new TT.BoxGeometry(DW, DH, .5), sides[0]); dFront.position.set(0, BASE + 1.2 + DH / 2, S / 2 + OUT); G.add(dFront);
+      // the drawer front carries its own slice of the side's marquetry (so the panels run on when it is shut)
+      const slice = (m) => { const c = m.clone(), BH = BODY - TOPT; ['map', 'bumpMap'].forEach(k => { const t = m[k].clone(); t.repeat.set(DW / S, DH / BH); t.offset.set((S - DW) / 2 / S, 1.2 / BH); t.needsUpdate = true; c[k] = t; }); return c; };
+      const dfM = slice(sides[0]);
+      const dFront = new TT.Mesh(new TT.BoxGeometry(DW, DH, .5), [shitan, shitan, shitan, shitan, dfM, shitan]); dFront.position.set(0, BASE + 1.2 + DH / 2, S / 2 + OUT); G.add(dFront);
       const dSide = new TT.BoxGeometry(.4, DH - .2, OUT + .5); [-DW / 2 + .2, DW / 2 - .2].forEach(x => { const m = new TT.Mesh(dSide, shitan); m.position.set(x, BASE + 1.2 + DH / 2 - .1, S / 2 + OUT / 2); G.add(m); });
       const dBot = new TT.Mesh(new TT.BoxGeometry(DW, .3, OUT + .5), shitan); dBot.position.set(0, BASE + 1.35, S / 2 + OUT / 2); G.add(dBot);
       // the opening it leaves in the side (a dark shadow box)
+      // the drawers' gilt ring pulls (the inventory: "rings on both sides of the board"); the far drawer is shut
+      const gilt = K.mat({ color: '#d4a64a', roughness: .3, metalness: 1 });
+      const pull = (z, out) => { const g = new TT.Group(); g.position.set(0, BASE + 1.2 + DH / 2, z); g.rotation.y = out > 0 ? 0 : Math.PI;
+        const plate = new TT.Mesh(new TT.CylinderGeometry(.75, .75, .12, 20), gilt); plate.rotation.x = Math.PI / 2; plate.position.z = .3; g.add(plate);
+        const ring = new TT.Mesh(new TT.TorusGeometry(1.05, .12, 10, 28), gilt); ring.position.set(0, -1.05, .52); ring.rotation.x = -.25; g.add(ring); G.add(g); };
+      pull(S / 2 + OUT, 1); pull(-S / 2, -1);
+      const farF = new TT.Mesh(new TT.BoxGeometry(DW, DH, .05), [shitan, shitan, shitan, shitan, shitan, slice(sides[1])]); farF.position.set(0, BASE + 1.2 + DH / 2, -S / 2 - .03); G.add(farF);
       const hole = new TT.Mesh(new TT.BoxGeometry(DW + .1, DH + .1, .4), K.mat({ color: '#0d0705', roughness: 1 })); hole.position.set(0, BASE + 1.2 + DH / 2, S / 2 - .1); G.add(hole);
       // the turtle tray: a shallow shell-shaped dish with head, feet and tail, in shitan with ivory rims
       const tr = new TT.Group();
@@ -112,7 +147,7 @@
       const rim = new TT.Mesh(new TT.TorusGeometry(1, .06, 8, 48), ivory); rim.rotation.x = Math.PI / 2; rim.scale.set(6.2, 4.6, 1); rim.position.y = 1.7; tr.add(rim);
       const head = new TT.Mesh(new TT.SphereGeometry(.9, 16, 12), shitan); head.scale.set(1.5, .8, 1); head.position.set(7, 1.2, 0); tr.add(head);
       [[4, 3.8], [4, -3.8], [-4, 3.8], [-4, -3.8]].forEach(([x, z]) => { const f = new TT.Mesh(new TT.SphereGeometry(.8, 12, 8), shitan); f.scale.set(1.3, .5, .9); f.position.set(x, .6, z); tr.add(f); });
-      tr.rotation.y = Math.PI / 2; tr.position.set(0, BASE + 1.5, S / 2 + OUT / 2 - .2); tr.scale.setScalar(.95); G.add(tr);
+      tr.rotation.y = Math.PI / 2; tr.position.set(0, BASE + 1.5, S / 2 + OUT - 6.4); tr.scale.setScalar(.85); G.add(tr);
       return G;
     },
   };
