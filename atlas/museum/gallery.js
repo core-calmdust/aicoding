@@ -372,6 +372,48 @@
         if (back) m.rotation.y = Math.PI; m.castShadow = m.receiveShadow = true; G.add(m); return m; };
       side(o.front, false); side(o.back, true);
       return G; },
+    /* A figure carved in the round from one block: a stack of cross-sections (each a rounded rectangle: y, w across, d deep, z its
+       centre front-to-back, sq how square — 2 an ellipse, 6 nearly a rectangle), skinned in four faces (front +z, back, left, right).
+       Each face has its own height painting in centimetres (x from the face's middle, y up from the foot; #808080 level, white
+       stands out, black is cut in — kit.ink's brushes), which moves the surface, bumps it and darkens the cuts.
+       o = { h, sections: [[y, w, d, z, sq], …], seg (per face), rows, px, relief (cm), tex (canvas), dirt, dirtK, bump, mat,
+             front(g), back(g), left(g), right(g) } */
+    loft(o) {
+      const TT = window.THREE, S = o.sections, H = o.h, seg = o.seg || 14, rows = o.rows || 64, rel = o.relief || .25, dirt = o.dirt || [92, 62, 34], dk = o.dirtK == null ? .8 : o.dirtK;
+      const at = y => { let i = 0; while (i < S.length - 2 && y > S[i + 1][0]) i++; const a = S[i], b = S[i + 1], t = Math.max(0, Math.min(1, (y - a[0]) / Math.max(1e-6, b[0] - a[0]))), e = t * t * (3 - 2 * t); return [1, 2, 3, 4].map(k => a[k] + (b[k] - a[k]) * e); };
+      const wmax = Math.max(...S.map(q => q[1])) + rel * 2 + .2, dmax = Math.max(...S.map(q => q[2] + Math.abs(q[3]) * 2)) + rel * 2 + .2;
+      const blur = (a, W, Hh, r) => { r = Math.max(1, Math.round(r)); const k = 1 / (2 * r + 1), N = W * Hh; let src = a; const tmp = new Float32Array(N);
+        for (let p = 0; p < 2; p++) { const out = new Float32Array(N);
+          for (let y = 0; y < Hh; y++) { const row = y * W; let acc = 0; for (let x = -r; x <= r; x++) acc += src[row + Math.min(W - 1, Math.max(0, x))]; for (let x = 0; x < W; x++) { tmp[row + x] = acc * k; acc += src[row + Math.min(W - 1, x + r + 1)] - src[row + Math.max(0, x - r)]; } }
+          for (let x = 0; x < W; x++) { let acc = 0; for (let y = -r; y <= r; y++) acc += tmp[Math.min(Hh - 1, Math.max(0, y)) * W + x]; for (let y = 0; y < Hh; y++) { out[y * W + x] = acc * k; acc += tmp[Math.min(Hh - 1, y + r + 1) * W + x] - tmp[Math.max(0, y - r) * W + x]; } }
+          src = out; } return src; };
+      const G = new TT.Group();
+      const face = (fn, a0, fw) => {   // a0: the face's middle angle (front π/2); fw: the width its painting covers
+        const W = o.px || 256, Hp = Math.round(W * H / fw), N = W * Hp, s = W / fw, c = document.createElement('canvas'); c.width = W; c.height = Hp; const g = c.getContext('2d');
+        g.fillStyle = '#808080'; g.fillRect(0, 0, W, Hp); if (fn) { g.save(); g.translate(W / 2, Hp); g.scale(s, -s); g.lineCap = g.lineJoin = 'round'; fn(g); g.restore(); }
+        const d = g.getImageData(0, 0, W, Hp).data; let hg = new Float32Array(N); for (let i = 0; i < N; i++) hg[i] = d[i * 4] / 255; hg = blur(hg, W, Hp, 1);
+        const lo = blur(hg, W, Hp, Math.max(2, W / 40)), tc = document.createElement('canvas'); tc.width = W; tc.height = Hp; const tg = tc.getContext('2d'); if (o.tex) tg.drawImage(o.tex, 0, 0, W, Hp); else { tg.fillStyle = '#d8c8a4'; tg.fillRect(0, 0, W, Hp); }
+        const ti = tg.getImageData(0, 0, W, Hp), td = ti.data, bi = new ImageData(W, Hp), bd = bi.data;
+        for (let i = 0; i < N; i++) { const q = i * 4, k = Math.max(0, Math.min(.85, (lo[i] - hg[i]) * 7 * dk)); td[q] += (dirt[0] - td[q]) * k; td[q + 1] += (dirt[1] - td[q + 1]) * k; td[q + 2] += (dirt[2] - td[q + 2]) * k;
+          const b = Math.max(0, Math.min(255, 128 + (hg[i] - lo[i]) * 420)); bd[q] = bd[q + 1] = bd[q + 2] = b; bd[q + 3] = 255; }
+        const map = kit.tex(W, Hp, g2 => g2.putImageData(ti, 0, 0)), bump = kit.tex(W, Hp, g2 => g2.putImageData(bi, 0, 0), { data: true });
+        const smp = (u, v) => { const x = Math.min(W - 1.001, Math.max(0, u * (W - 1))), y = Math.min(Hp - 1.001, Math.max(0, (1 - v) * (Hp - 1))), x0 = x | 0, y0 = y | 0, fx = x - x0, fy = y - y0, i = y0 * W + x0; return (hg[i] * (1 - fx) + hg[i + 1] * fx) * (1 - fy) + (hg[i + W] * (1 - fx) + hg[i + W + 1] * fx) * fy; };
+        const pos = [], uv = [], idx = [], ca = Math.cos(a0), sa = Math.sin(a0);
+        for (let j = 0; j <= rows; j++) { const y = H * j / rows, [w, dd, z0, sq] = at(y);
+          for (let i = 0; i <= seg; i++) { const a = a0 + (i / seg - .5) * Math.PI / 2, co = Math.cos(a), si = Math.sin(a), e = 2 / sq;
+            let x = w / 2 * Math.sign(co) * Math.pow(Math.abs(co), e), z = z0 + dd / 2 * Math.sign(si) * Math.pow(Math.abs(si), e);
+            const t = x * -sa + (z - 0) * ca, u = Math.max(0, Math.min(1, -t / fw + .5)), v = y / H;   // across the face (planar), left to right as seen from outside
+            const nl = Math.hypot(x, z - z0) || 1, hh = (smp(u, v) - .502) * 2 * rel; x += x / nl * hh; z += (z - z0) / nl * hh;
+            pos.push(x, y, z); uv.push(u, v); }
+        }
+        for (let j = 0; j < rows; j++) for (let i = 0; i < seg; i++) { const p0 = j * (seg + 1) + i, p1 = p0 + 1, p2 = p0 + seg + 1, p3 = p2 + 1; idx.push(p0, p2, p1, p1, p2, p3); }
+        const geo = new TT.BufferGeometry(); geo.setAttribute('position', new TT.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new TT.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
+        const m = new TT.Mesh(geo, kit.mat(Object.assign({ map, bumpMap: bump, bumpScale: o.bump == null ? 1.6 : o.bump, color: '#ffffff', roughness: .5, side: TT.DoubleSide }, o.mat || {}))); m.castShadow = m.receiveShadow = true; G.add(m); };
+      face(o.front, Math.PI / 2, wmax); face(o.right, 0, dmax); face(o.back, -Math.PI / 2, wmax); face(o.left, Math.PI, dmax);
+      // the top and the foot closed with plain discs
+      [[H, 1], [0, -1]].forEach(([y, up]) => { const [w, dd, z0, sq] = at(y), sh = new TT.Shape(), n = 40; for (let i = 0; i <= n; i++) { const a = i / n * 6.2832, co = Math.cos(a), si = Math.sin(a), e = 2 / sq, x = w / 2 * Math.sign(co) * Math.pow(Math.abs(co), e), z = dd / 2 * Math.sign(si) * Math.pow(Math.abs(si), e); i ? sh.lineTo(x, z) : sh.moveTo(x, z); }
+        const cg = new TT.ShapeGeometry(sh); cg.rotateX(Math.PI / 2); const c = new TT.Mesh(cg, kit.mat(Object.assign({ color: '#d8c8a4', roughness: .55, side: TT.DoubleSide }, o.cap || {}))); c.position.set(0, y, z0); G.add(c); });
+      return G; },
     /* brushes for kit.relief's height paintings (centimetres; amt > 0 stands out, < 0 is cut in; 1 ≈ the full relief):
        path(g, pts, close) a smooth curve through pts · line: a soft ridge / groove · blob: a round swelling / hollow · area: a flat step */
     ink: (() => { const sh = (g, c, a) => { g.fillStyle = g.strokeStyle = `rgba(${c},${c},${c},${a})`; };

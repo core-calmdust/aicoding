@@ -79,10 +79,21 @@
       const crownMask = g => { g.fillRect(-1.42, 7.95, 2.84, .85); [-1.06, 0, 1.06].forEach(x => { g.fillRect(x - .3, 8.7, .6, .62); g.beginPath(); g.arc(x, 9.4, .4, 0, 6.29); g.fill(); }); };
       const crownCarve = g => { line(g, [[-1.4, 8.36], [1.4, 8.36]], .52, .5); for (let x = -1.2; x <= 1.21; x += .3) { sh(g, 0, .6); g.beginPath(); g.arc(x, 8.36, .07, 0, 6.29); g.fill(); }
         line(g, [[-1.45, 8.08], [1.45, 8.08]], .07, -.6); line(g, [[-1.45, 8.66], [1.45, 8.66]], .07, -.6); [-1.06, 0, 1.06].forEach(x => { blob(g, x, 9.4, .3, .3, .45); line(g, [[x, 8.75], [x, 9.2]], .06, -.5); }); };
+      // ---- carved in the round (kit.loft): the block's cross-sections from the foot up, then a height painting for each of its four faces.
+      // (The photographs: a squat block — the throne a squared slab as wide as the figure, the lap pushed forward under the sword, the
+      // shoulders sloping to a round head, the crown or mitre a drum above it.)
+      const SEAT = top => [[0, 5.2, 3.7, 0, 7], [.45, 5.2, 3.7, 0, 7], [2.9, 5.2, 3.8, .05, 6], [3.5, 5.2, 4.1, .2, 5], [4.1, 5.1, 3.7, .05, 5], [5.5, 4.9, 3.2, -.12, 4.5], [6.5, 4.5, 3.0, -.12, 3.4], [6.95, 3.3, 2.7, 0, 2.5], [7.5, 3.0, 2.9, .05, 2.2], [8.1, 2.9, 2.8, .05, 2.2]].concat(top);
+      const CROWN = [[8.35, 3.15, 3.05, 0, 2.2], [9.45, 3.4, 3.3, 0, 2.2], [9.8, 3.3, 3.2, 0, 2.2]];
+      const MITRE = [[8.3, 2.9, 2.6, 0, 2.6], [9.0, 2.5, 2.0, 0, 3], [9.7, .9, 1.2, 0, 3]];
+      const WARD = [[0, 4.3, 3.0, 0, 6], [.5, 4.3, 3.0, 0, 6], [4.6, 3.9, 2.9, .1, 4.5], [5.9, 3.7, 2.7, 0, 3.6], [6.5, 2.6, 2.4, 0, 2.5], [7.3, 2.6, 2.6, 0, 2.2], [8.0, 2.4, 2.4, 0, 2.3], [9.2, .5, .5, 0, 2.2]];
+      // a throne's side: a framed panel with a plait cut into it
+      const throneSide = g => { area(g, [[-1.5, .55], [-1.5, 5.3], [1.5, 5.3], [1.5, .55]], -.3); sh(g, 255, .5); g.lineWidth = .22; g.strokeRect(-1.5, .55, 3, 4.75);
+        for (let r = 0; r < 4; r++) { const cy = 1.2 + r * 1.1; line(g, [[-1.1, cy - .4], [0, cy + .45], [1.1, cy - .4]], .15, .8); line(g, [[-1.1, cy + .45], [0, cy - .4], [1.1, cy + .45]], .15, .8); } };
+      const stat = (k, o) => K.loft(Object.assign({ h: o.h, px: 384, seg: 14, rows: 66, relief: .22, tex: ivC[k], dirt: DIRT, dirtK: .7, bump: 1.6, left: throneSide, right: throneSide, cap: { color: IV[k].color }, mat: { roughness: .5, clearcoat: .14, clearcoatRoughness: .55, color: IV[k].color } }, o));
       const add = (pp, geo, m, x = 0, y = 0, z = 0) => { const o = new TT.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; pp.add(o); return o; };
       const pieces = [];
       // KING (1831,1101.78 – 9.8 cm): the sword in its scabbard across the knees, a hand at each end; crown of trefoils; long beard, locks on the shoulders
-      { const g0 = carve(0, { w: 6.2, h: 10.2, mask: g => seatedMask(g, crownMask), thick: seatedThick,
+      { const g0 = stat(0, { h: 9.8, sections: SEAT(CROWN), mask: g => seatedMask(g, crownMask), thick: seatedThick,
           front: g => { face(g, 7.5, { beard: true }); crownCarve(g);
             locks(g, [[[-1.15, 7.7], [-1.5, 6.9], [-1.75, 5.9]], [[-1.3, 7.3], [-1.85, 6.6], [-2.2, 5.7]], [[1.15, 7.7], [1.5, 6.9], [1.75, 5.9]], [[1.3, 7.3], [1.85, 6.6], [2.2, 5.7]]]);
             both(s => { line(g, [[s * 1.25, 6.5], [s * 1.75, 5.4], [s * 1.6, 4.1]], .1, -.65); line(g, [[s * 1.5, 6.55], [s * 2.0, 5.4], [s * 1.86, 4.1]], .1, -.65);   // the mantle's border
@@ -94,7 +105,7 @@
           back: g => { throneBack(g, 'scroll'); crownCarve(g); locks(g, [-2, -1, 0, 1, 2].map(k => [[k * .42, 7.85], [k * .52, 6.9], [k * .62, 5.8]])); } });
         pieces.push(g0); }
       // QUEEN (1831,1101.84 – 9.6 cm): the right hand to the cheek, the left under the right elbow; a veil under the crown
-      { const g0 = carve(1, { w: 6.2, h: 10.0, mask: g => seatedMask(g, gg => { crownMask(gg); gg.beginPath(); gg.ellipse(0, 7.1, 1.62, 1.1, 0, 0, 6.29); gg.fill(); }), thick: seatedThick,
+      { const g0 = stat(1, { h: 9.6, sections: SEAT(CROWN).map(q => [q[0] * 9.6 / 9.8, q[1], q[2], q[3], q[4]]), mask: g => seatedMask(g, gg => { crownMask(gg); gg.beginPath(); gg.ellipse(0, 7.1, 1.62, 1.1, 0, 0, 6.29); gg.fill(); }), thick: seatedThick,
           front: g => { face(g, 7.45); crownCarve(g);
             both(s => { line(g, [[s * 1.05, 7.95], [s * 1.5, 7.2], [s * 1.7, 6.2], [s * 1.5, 5.6]], .5, .4); line(g, [[s * 1.0, 7.6], [s * 1.28, 6.9], [s * 1.2, 6.1]], .07, -.55);   // the veil
               line(g, [[s * 1.5, 6.5], [s * 2.0, 5.3], [s * 1.9, 4.1]], .1, -.6); });
@@ -106,7 +117,7 @@
             [-1, 0, 1].forEach(k => line(g, [[k * .5, 7.8], [k * .62, 6.8], [k * .7, 5.8]], .08, -.45)); } });
         pieces.push(g0); }
       // BISHOP (1831,1101.90 – 9.7 cm): seated, the mitre's point to the front, the crozier in the left hand, the right raised in blessing
-      { const g0 = carve(2, { w: 6.2, h: 10.2, depth: 1.65,
+      { const g0 = stat(2, { h: 9.7, sections: SEAT(MITRE),
           mask: g => seatedMask(g, gg => { path(gg, [[-1.36, 7.7], [-1.36, 8.25], [-.75, 9.0], [0, 9.72], [.75, 9.0], [1.36, 8.25], [1.36, 7.7]], true); gg.fill(); gg.fillRect(1.52, 6.3, .42, 2.3); gg.beginPath(); gg.arc(1.42, 8.75, .58, 0, 6.29); gg.fill(); }),
           thick: g => { seatedThick(g); g.fillStyle = 'rgb(150,150,150)'; g.fillRect(1.5, 6.9, 1.2, 3); },
           front: g => { face(g, 7.35);
@@ -157,7 +168,7 @@
         const sp = add(p, new TT.CylinderGeometry(.13, .15, 9.3, 8), IV[0], -1.18, 5.3, 1.1); const tip = add(p, new TT.ConeGeometry(.2, .7, 8), IV[0], -1.18, 10.3, 1.1); tip.scale.z = .5;
         pieces.push(p); }
       // WARDER (1831,1101.123 – 9.2 cm): standing, biting the top of his shield, the sword upright in his right hand
-      { const g0 = carve(1, { w: 5.4, h: 9.7, depth: 1.45, nx: 30,
+      { const g0 = stat(1, { h: 9.2, sections: WARD, left: null, right: null,
           mask: g => { g.fillStyle = '#fff'; path(g, [[-2.15, -1], [-2.15, .6], [-1.85, 4.6], [-1.8, 5.9], [-1.2, 6.5], [-1.12, 7.6], [-.95, 8.0], [0, 9.2], [.95, 8.0], [1.12, 7.6], [1.2, 6.5], [1.8, 5.9], [1.85, 4.6], [2.15, .6], [2.15, -1]], true); g.fill(); g.fillRect(-2.12, 4.2, .5, 3.9); },
           thick: g => { g.fillStyle = 'rgb(225,225,225)'; g.fillRect(-3, 6.4, 6, 4); g.fillStyle = 'rgb(120,120,120)'; g.fillRect(-2.5, 6.0, .75, 2.4); },
           front: g => { face(g, 7.35); line(g, [[-1.1, 7.82], [1.1, 7.82]], .2, .55); line(g, [[0, 7.9], [0, 7.0]], .26, .8); both(s => line(g, [[s * 1.0, 7.8], [s * .5, 8.5], [0, 9.15]], .06, -.4));
