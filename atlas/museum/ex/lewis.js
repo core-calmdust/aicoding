@@ -135,7 +135,7 @@
         const W = 512, H = 256, cx = W * .25, ey = o.eye || 78, my = o.mouth || 140;
         const draw = (g, bump) => {
           if (bump) { g.fillStyle = '#808080'; g.fillRect(0, 0, W, H); } else g.drawImage(IV[k].map.image, 0, 0, W, H);
-          const lo = bump ? '#202020' : 'rgba(80,56,30,.7)'; g.lineCap = 'round';
+          const lo = bump ? '#202020' : 'rgba(96,70,40,.5)'; g.lineCap = 'round';
           [-1, 1].forEach(sd => { const ex = cx + sd * 17;
             if (bump) { g.fillStyle = '#e0e0e0'; g.beginPath(); g.ellipse(ex, ey, 13, 7.5, 0, 0, 6.29); g.fill(); }
             g.strokeStyle = lo; g.lineWidth = 3; g.beginPath(); g.ellipse(ex, ey, 13, 7.5, 0, 0, 6.29); g.stroke();
@@ -162,6 +162,7 @@
         add(p, bk, [bm, IV[k]], 0, 0, z0 - .75);
         // the head, sunk into the shoulders and standing forward of the body
         const hd = ball(p, 1, faceS(k, o.face || {}), 0, o.hy, HZ, o.hw, o.hh, .95, 30);
+        const ns = add(p, new TT.ConeGeometry(.24, 1.0, 4), IV[k], 0, o.hy - .12, HZ + o.hw * .93); ns.rotation.y = Math.PI / 4; ns.scale.set(1, 1, .7);   // the long wedge nose
         return { W, H, D, lapY, front: z0 + D + .25, hd };
       };
       const hands = (p, k, x, y, z, ry = 0) => { const h = add(p, new TT.BoxGeometry(.62, .78, .5), IV[k], x, y, z); h.rotation.y = ry;
@@ -171,7 +172,7 @@
       const pieces = [];
       // KING (1831,1101.78 – 9.8 cm): the sword across the knees in both hands; crown of four tall trefoil points; long beard
       { const p = new TT.Group(), k = 0;
-        const t = seated(p, k, { w: 4.7, sh: 5.9, r: 1.6, lap: 3.6, back: 6.4, hy: 6.45, hw: 1.22, hh: 1.55, folds: 6, face: { eye: 74, mouth: 128, moustache: true } });
+        const t = seated(p, k, { w: 4.7, sh: 5.9, r: 1.6, lap: 3.6, back: 6.4, hy: 6.45, hw: 1.22, hh: 1.55, folds: 6, face: { eye: 110, mouth: 158, moustache: true } });
         ball(p, 1, beardM(k), 0, 5.3, 2.05, .95, 1.05, .5, 18);
         const CY = 6.45 + 1.55 * .66, cr = add(p, new TT.CylinderGeometry(1.0, 1.08, .6, 28, 1, true), IV[k], 0, CY, 1.3); cr.material = IV[k].clone(); cr.material.side = TT.DoubleSide; cr.scale.z = .85;
         for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2, x = Math.sin(a) * 1.0, z = 1.3 + Math.cos(a) * .88;
@@ -182,7 +183,7 @@
         pieces.push(p); }
       // QUEEN (1831,1101.84 – 9.6 cm): right hand to the cheek, the left holding the right elbow; a veil over the head, crown
       { const p = new TT.Group(), k = 1;
-        const t = seated(p, k, { w: 4.6, sh: 5.8, r: 1.6, lap: 3.5, back: 6.3, hy: 6.5, hw: 1.15, hh: 1.5, folds: 7, face: { eye: 80, mouth: 134 } });
+        const t = seated(p, k, { w: 4.6, sh: 5.8, r: 1.6, lap: 3.5, back: 6.3, hy: 6.5, hw: 1.15, hh: 1.5, folds: 7, face: { eye: 112, mouth: 160 } });
         const veil = add(p, new TT.LatheGeometry([[1.12, .9], [1.25, .3], [1.3, -.6], [1.55, -1.4], [1.8, -1.8]].map(([r, y]) => new TT.Vector2(r, y)), 24, Math.PI * .28, Math.PI * 1.44), robe(k, 16), 0, 6.5, 1.25);
         veil.material.side = TT.DoubleSide; veil.scale.z = .9;
         const CY = 6.5 + 1.5 * .66, cr = add(p, new TT.CylinderGeometry(1.0, 1.06, .55, 28, 1, true), IV[k], 0, CY, 1.3); cr.material = IV[k].clone(); cr.material.side = TT.DoubleSide; cr.scale.z = .85;
@@ -193,7 +194,7 @@
         pieces.push(p); }
       // BISHOP (1831,1101.90 – 9.7 cm): mitre with its points front and back, crozier in the left hand, the right on the chest
       { const p = new TT.Group(), k = 2;
-        const t = seated(p, k, { w: 4.5, sh: 5.6, r: 1.6, lap: 3.5, back: 6.2, hy: 6.3, hw: 1.15, hh: 1.45, folds: 6, face: { eye: 82, mouth: 136 } });
+        const t = seated(p, k, { w: 4.5, sh: 5.6, r: 1.6, lap: 3.5, back: 6.2, hy: 6.3, hw: 1.15, hh: 1.45, folds: 6, face: { eye: 114, mouth: 162 } });
         const Sm = new TT.Shape(); Sm.moveTo(-1.05, 0); Sm.lineTo(1.05, 0); Sm.quadraticCurveTo(1.05, 1.1, 0, 1.9); Sm.quadraticCurveTo(-1.05, 1.1, -1.05, 0);
         const hg = new TT.ExtrudeGeometry(Sm, { depth: .22, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 2, curveSegments: 12 }); hg.translate(0, 0, -.11);
         [1, -1].forEach(sd => { const h = add(p, hg, IV[k], 0, 7.45, 1.3 + sd * .5); h.rotation.x = sd * .08; });
