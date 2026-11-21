@@ -106,13 +106,16 @@
       sh.quadraticCurveTo(.35, 3.4, .55, 4.8); sh.quadraticCurveTo(.75, 6.6, .7, 8.2); sh.quadraticCurveTo(.68, 9.4, .85, 10.3); sh.lineTo(-.85, 10.3);
       const legG = new TT.ExtrudeGeometry(sh, { depth: 1.15, bevelEnabled: true, bevelThickness: .24, bevelSize: .22, bevelSegments: 4, curveSegments: 10 });
       legG.translate(0, 0, -.575);
-      const clawG = new TT.ConeGeometry(.12, .42, 10); clawG.rotateZ(-Math.PI / 2);
+      const clawG = new TT.ConeGeometry(.1, .4, 8); clawG.rotateZ(-Math.PI / 2);
+      const toeG = new TT.SphereGeometry(.2, 12, 8); toeG.scale(2.6, 2.9, .84);
       const drumG = new TT.LatheGeometry([[0, -.9], [1.15, -.9], [1.2, -.75], [1.05, -.6], [1.18, -.45], [1.05, -.3], [1.18, -.15], [1.05, 0], [1.18, .15], [1.05, .3], [1.18, .45], [1.05, .6], [1.2, .75], [1.15, .9], [0, .9]].map(([x, y]) => new TT.Vector2(x, y)), 28);
       const LX = RL / 2 - 1.6, LZ = RW / 2 - .9, LS = (20.2 - RH - 3.3) / 10.3;   // (the legs stretched to the stand's height)
       for (const sx of [1, -1]) for (const sz of [1, -1]) {
         const x = sx * LX, z = sz * LZ;
         const leg = new TT.Mesh(legG, ebony); leg.position.set(x, 3.3, z); leg.scale.y = LS; leg.scale.x = sx; leg.scale.z = .85; G.add(leg);   // the paws face outwards, to the ends
-        for (let k = -1; k <= 1; k++) { const c = new TT.Mesh(clawG, ivory); c.position.set(x + sx * 1.62, 3.3 + .25, z + k * .3); c.scale.x = sx; G.add(c); }
+        // the lion's paw: four rounded toes side by side, an ivory claw at the tip of each (Carter: "ivory claws"; the photographs)
+        for (let k = -1.5; k <= 1.5; k++) { const t = new TT.Mesh(toeG, ebony); t.position.set(x + sx * 1.62, 3.3 + .74, z + k * .31); t.rotation.z = -sx * .35; G.add(t);
+          const c = new TT.Mesh(clawG, ivory); c.position.set(x + sx * 2.1, 3.3 + .3, z + k * .31); c.scale.x = sx; c.rotation.z = -sx * .5; G.add(c); }
         const dr = new TT.Mesh(drumG, gold); dr.position.set(x + sx * .4, 1.45 + .9, z); G.add(dr);   // a gold drum, ribbed, under each paw
       }
       // runners: long bars whose ends sweep up in a curl (the photographs), joined by a cross-bar near each end

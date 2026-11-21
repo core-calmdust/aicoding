@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 39;
+  const V = 40;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -128,9 +128,12 @@
     const scene = new TT.Scene(), env = envMap(R, TT); scene.environment = env.texture;
     let obj; try { obj = B.build(TT, X, kit); } catch (err) { console.warn('[gallery]', err); ov.querySelector('.exload').textContent = ui(lang, 'fail'); R.dispose(); return; }
     const aniso = R.capabilities.getMaxAnisotropy();
+    // on a phone no texture is kept longer than 1536 px (a 2048² picture is 22 MB of video memory with its mip-maps; the screen cannot show the difference)
+    const small = t => { const im = t.image, cap = 1536; if (!phone() || !im || !im.getContext || Math.max(im.width, im.height) <= cap) return; const k = cap / Math.max(im.width, im.height), c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(im.width * k)); c.height = Math.max(1, Math.round(im.height * k)); const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, c.width, c.height); t.image = c; t.needsUpdate = true; };
     obj.traverse(o => { if (!o.isMesh) return; o.castShadow = true; o.receiveShadow = true;
       // every texture mip-mapped and filtered at the device's best anisotropy (fine inlay lines shimmered at a distance on phones)
-      (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { for (const k in m) { const t = m[k]; if (t && t.isTexture) { t.anisotropy = aniso; t.generateMipmaps = true; t.minFilter = TT.LinearMipmapLinearFilter; } } }); });
+      (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { for (const k in m) { const t = m[k]; if (t && t.isTexture) { t.anisotropy = aniso; t.generateMipmaps = true; t.minFilter = TT.LinearMipmapLinearFilter; small(t); } } }); });
     // sit it on a plinth: the plinth fits the piece's footprint with a margin
     const bb = new TT.Box3().setFromObject(obj), sz = bb.getSize(new TT.Vector3()), cen = bb.getCenter(new TT.Vector3());
     obj.position.x -= cen.x; obj.position.z -= cen.z; obj.position.y -= bb.min.y;
