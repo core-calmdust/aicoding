@@ -116,11 +116,11 @@
       /* ---------- the 床脚: corner legs, a post in the middle of each side, openings with cusped tops, the floor rail ---------- */
       const LEG = 1.8, POST = 1.6, OH = BASE - RAIL - .05;   // leg / post width; the openings' height (the cusps hang right under the body)
       const skirt = new TT.Shape(); skirt.moveTo(-S / 2, 0); skirt.lineTo(S / 2, 0); skirt.lineTo(S / 2, BASE - RAIL); skirt.lineTo(-S / 2, BASE - RAIL); skirt.closePath();
-      const open = (x0, x1) => { const p = new TT.Path(), rb = 2.6, rt = 2.0, top = OH, xa0 = x0 + rt, xa1 = x1 - rt, nC = 7, cw = (xa1 - xa0) / nC;
-        // a rounded opening: large curves at the bottom corners, a big arc at each upper end, and a row of cusps along the top (photographs)
-        p.moveTo(x0 + rb, 0); p.lineTo(x1 - rb, 0); p.quadraticCurveTo(x1, 0, x1, rb); p.lineTo(x1, top - rt - .4); p.quadraticCurveTo(x1, top - .2, xa1, top - .5);
-        for (let i = nC; i > 0; i--) { const xa = xa0 + i * cw, xb = xa - cw; p.quadraticCurveTo((xa + xb) / 2, top - 1.5, xb, top - .5); }
-        p.quadraticCurveTo(x0, top - .2, x0, top - rt - .4); p.lineTo(x0, rb); p.quadraticCurveTo(x0, 0, x0 + rb, 0); return p; };
+      const open = (x0, x1) => { const p = new TT.Path(), R = OH * .43, top = OH, xa0 = x0 + R, xa1 = x1 - R, nC = 7, cw = (xa1 - xa0) / nC;
+        // the opening's ends are almost half-round (photographs of each side), its top a row of hanging cusps
+        p.moveTo(x0 + R, 0); p.lineTo(x1 - R, 0); p.quadraticCurveTo(x1, 0, x1, R); p.lineTo(x1, top - R); p.quadraticCurveTo(x1, top - .3, xa1, top - .45);
+        for (let i = nC; i > 0; i--) { const xa = xa0 + i * cw, xb = xa - cw; p.quadraticCurveTo((xa + xb) / 2, top - 1.6, xb, top - .45); }
+        p.quadraticCurveTo(x0, top - .3, x0, top - R); p.lineTo(x0, R); p.quadraticCurveTo(x0, 0, x0 + R, 0); return p; };
       const half = (S - 2 * LEG - POST) / 2;
       skirt.holes.push(open(-S / 2 + LEG, -S / 2 + LEG + half), open(S / 2 - LEG - half, S / 2 - LEG));
       const skG = new TT.ExtrudeGeometry(skirt, { depth: 1.2, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1, curveSegments: 10 });
@@ -145,14 +145,18 @@
       [[S + .3, RW, 0, S / 2 - RW / 2 + .15], [S + .3, RW, 0, -S / 2 + RW / 2 - .15]].forEach(([w, d, x, z]) => add(new TT.BoxGeometry(w, RAIL, d), [rsM, rsM, kak, shitan, z > 0 ? rsM : shitan, z > 0 ? shitan : rsM], x, RAIL / 2, z));
       [[RW, S - 2 * RW + .3, S / 2 - RW / 2 + .15, 0], [RW, S - 2 * RW + .3, -S / 2 + RW / 2 - .15, 0]].forEach(([w, d, x, z]) => { const k2 = kak.clone(); k2.map = kakT.clone(); k2.map.center.set(.5, .5); k2.map.rotation = Math.PI / 2; k2.map.needsUpdate = true; add(new TT.BoxGeometry(w, RAIL, d), [x > 0 ? rsM : shitan, x > 0 ? shitan : rsM, k2, shitan, shitan, shitan], x, RAIL / 2, z); });
       /* ---------- the drawers: at diagonally opposite ends of the two side faces (±x); the near one pulled out ---------- */
-      const DW = 10.5, DH = BODY - TOP - .9, OUT = 7.2, gilt = K.mat({ color: '#d6a84c', roughness: .3, metalness: 1 });
+      const DW = S / 4 - .95, DH = BODY - TOP - 1.75, OUT = 7.2, gilt = K.mat({ color: '#d6a84c', roughness: .3, metalness: 1 });
       const dark = K.mat({ color: '#2a1810', roughness: .6 });
       const DG = new TT.Group(); DG.rotation.y = 0; G.add(DG);
       const drawer = (sx, z, out) => { const g2 = new TT.Group(); g2.position.set(sx * (S / 2 + out), BASE + (BODY - TOP) / 2, z); g2.rotation.y = sx > 0 ? Math.PI / 2 : -Math.PI / 2; DG.add(g2);
-        const f = new TT.Mesh(new TT.BoxGeometry(DW, DH, .45), dark); g2.add(f);
-        const ring = new TT.Mesh(new TT.TorusGeometry(.55, .13, 8, 24), gilt); ring.position.set(0, -.35, .5); g2.add(ring);
-        for (let k = 0; k < 10; k++) { const a = k / 10 * 6.283, b = new TT.Mesh(new TT.SphereGeometry(.12, 8, 6), gilt); b.position.set(Math.cos(a) * .55, -.35 + Math.sin(a) * .55, .62); g2.add(b); }   // the beaded ring
-        const knob = new TT.Mesh(new TT.SphereGeometry(.22, 10, 8), gilt); knob.position.set(0, .25, .4); g2.add(knob);
+        // the drawer front is one of the side's panels: birds and flowers in dyed ivory, a large beaded gilt ring in the middle (side A)
+        const dfT = K.tex(1024, Math.round(1024 * DH / DW), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); const s2 = w / DW;
+          g.strokeStyle = C.iv; g.lineWidth = s2 * .05; g.strokeRect(s2 * .1, s2 * .1, w - s2 * .2, h - s2 * .2);
+          sil(g, 'bird', w * .22, h * .45, s2 * .06, C.grn); sil(g, 'flower', w * .22, h * .78, s2 * .035, C.red); sil(g, 'bird', w * .78, h * .45, s2 * .06, C.grn); g.save(); g.translate(w * .78, 0); g.scale(-1, 1); g.restore(); sil(g, 'flower', w * .78, h * .78, s2 * .035, C.red); });
+        const f = new TT.Mesh(new TT.BoxGeometry(DW, DH, .45), [dark, dark, dark, dark, K.mat({ map: dfT, color: '#ffffff', roughness: .5, clearcoat: .35 }), dark]); g2.add(f);
+        const RR = .78, ring = new TT.Mesh(new TT.TorusGeometry(RR, .16, 10, 32), gilt); ring.position.set(0, -.15, .55); g2.add(ring);
+        for (let k = 0; k < 16; k++) { const a = k / 16 * 6.283, b = new TT.Mesh(new TT.SphereGeometry(.17, 10, 8), gilt); b.position.set(Math.cos(a) * RR, -.15 + Math.sin(a) * RR, .62); g2.add(b); }   // the beaded ring
+        const knob = new TT.Mesh(new TT.CylinderGeometry(.2, .2, .4, 12), gilt); knob.rotation.x = Math.PI / 2; knob.position.set(0, -.15 + RR + .1, .45); g2.add(knob);
         if (out > .1) { const sd = new TT.BoxGeometry(.35, DH - .3, out + 1); [-DW / 2 + .2, DW / 2 - .2].forEach(x => { const m = new TT.Mesh(sd, dark); m.position.set(x, -.15, -(out + 1) / 2); g2.add(m); });
           const bt = new TT.Mesh(new TT.BoxGeometry(DW, .3, out + 1), dark); bt.position.set(0, -DH / 2 + .15, -(out + 1) / 2); g2.add(bt);
           // the turtle tray: a round open bowl with a shell-segmented rim, head and feet
@@ -163,7 +167,7 @@
           const hd = new TT.Mesh(new TT.SphereGeometry(.75, 14, 10), K.mat({ color: '#4a2a18', roughness: .5 })); hd.scale.set(1, .8, 1.3); hd.position.set(0, .9, 3.8); tr.add(hd);
           [[2.4, 2.4], [-2.4, 2.4], [2.4, -2.4], [-2.4, -2.4]].forEach(([x, z]) => { const ft = new TT.Mesh(new TT.SphereGeometry(.6, 10, 8), K.mat({ color: '#4a2a18', roughness: .5 })); ft.scale.set(1.2, .5, .9); ft.position.set(x, .3, z); tr.add(ft); }); }
       };
-      drawer(1, S / 2 - DW / 2 - 3.2, OUT); drawer(-1, -S / 2 + DW / 2 + 3.2, 1.2);
+      drawer(1, S / 2 - (.75 + S / 4) / 2, OUT); drawer(-1, -S / 2 + (.75 + S / 4) / 2, .3);
       return G;
     },
   };

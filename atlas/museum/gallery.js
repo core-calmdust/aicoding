@@ -10,14 +10,14 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 18;
+  const V = 19;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
     { id: 'ur', game: 'ur', src: () => window.AtlasLazy ? AtlasLazy.need('ur') : 0, cm: 30.1 / 8.52, view: [-.45, .7, .92],
       spots: [[-3.5, .44, -1], [-.5, .44, 0], [1, .44, 0], [3.5, .44, -1], [-2.5, .22, 1.62]] },
     { id: 'senet', game: 'senet', cm: 1, view: [.62, .4, .9], spots: [[-11, 28.4, -3.5], [17, 28.4, 4], [-6, 23.6, 7.2], [28.5, 24.2, 0], [23.6, 3.6, 7.4], [-10, 1.5, 7.6], [-2, .9, 13.8]] },
-    { id: 'shosoin', game: 'go', cm: 1, view: [.35, .58, .82], spots: [[0, 12.8, 0], [-15.5, 12.8, -15.5], [0, 10.4, 24.6], [27.4, 10.2, 15.8], [32.2, 10.0, 15.8], [-14, .8, 23.2]] },
+    { id: 'shosoin', game: 'go', cm: 1, view: [.35, .58, .82], spots: [[0, 12.8, 0], [-15.5, 12.8, -15.5], [0, 10.4, 24.6], [27.4, 9.6, 18.0], [32.3, 10.2, 18.0], [-14, .8, 23.2]] },
     { id: 'sugoroku', game: 'backgammon', cm: 1, view: [.45, .55, .92],
       spots: [[0, 16.0, 12.6], [-12.4, 16.0, 12.8], [-24.2, 16.0, 0], [8, 14.8, 15.55], [-17, 7, 15.5], [5.7, 16.7, -1.3]] },
     { id: 'pyrgus', game: 'backgammon', cm: 1, view: [.55, .32, 1], spots: [[0, 18.6, 4.6], [4.6, 20.4, 0], [0, 12, 0], [0, 3.2, 4.6], [1.4, .9, 6.3]] },
