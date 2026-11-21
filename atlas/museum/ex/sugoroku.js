@@ -62,7 +62,8 @@
       // the slab and its face (inside the rim), the four rims with their carved outer faces and ivory-edged tops
       const slabL = sideMat(L, SLAB, 1), slabW = sideMat(W, SLAB, 2);
       add(new TT.BoxGeometry(L, SLAB, W), [slabW, slabW, shitan, shitan, slabL, slabL], 0, BASE + SLAB / 2, 0);
-      add(new TT.BoxGeometry(IL, .02, IW), [shitan, shitan, face, shitan, shitan, shitan], 0, BASE + SLAB + .01, 0);
+      face.polygonOffset = true; face.polygonOffsetFactor = -2; face.polygonOffsetUnits = -2;   // (drawn over the slab's top without shimmering)
+      add(new TT.PlaneGeometry(IL, IW), face, 0, BASE + SLAB + .005, 0).rotation.x = -Math.PI / 2;
       const rimL = sideMat(L, RIM, 3), rimW = sideMat(W, RIM, 4);
       [[L, W / 2 - RT / 2, 0, rimL], [L, W / 2 - RT / 2, Math.PI, rimL], [W - RT * 2, L / 2 - RT / 2, Math.PI / 2, rimW], [W - RT * 2, L / 2 - RT / 2, -Math.PI / 2, rimW]].forEach(([len, off, ry, m]) => {
         const g = new TT.Group(); g.rotation.y = ry; G.add(g);

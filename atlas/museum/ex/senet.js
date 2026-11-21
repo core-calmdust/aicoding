@@ -1,17 +1,20 @@
-/* 所蔵品：ツタンカーメンのセネト盤（エジプト博物館 JE 62058） — units: 1 = 1 cm.
-   After the published description: an ebony box whose top is veneered with ivory and divided into 30 squares by raised strips
-   (the reverse holds the 20-square game), a drawer for the pieces at one end, standing on an ebony stand with animal-shaped
-   legs fixed to sledge runners; materials ebony, ivory, gold, faience. Height 20.5 cm, width 16 cm (Egyptian Museum record).
-   Built: runners (1.8) + drums (0.6) + legs (10.3) + rails (1.0) + box (6.8) = 20.5 cm; the runners give the 16 cm width.
-   The signs on squares 15 and 26–30 follow the usual New Kingdom marking (shown faintly); the gilding is kept to the claws
-   and the drum caps. */
+/* 所蔵品：ツタンカーメンのセネト盤（エジプト博物館 JE 62058、Carter No. 345 / 383 / 580） — units: 1 = 1 cm.
+   After Howard Carter's object cards (Griffith Institute): an oblong games-box of ebony and ivory, a board on the top (30 squares)
+   and on the bottom (20), the playing squares of ivory divided by narrow ebony strips; a long ebony drawer for the pieces at one
+   end (its bolts and staples wrenched away); the sides, end and drawer front carry hieroglyphic texts, incised and filled with a
+   light-yellow pigment imitating ivory. The stand: an open-work stool of ebony on a sledge, four feline legs with ivory claws,
+   the rest of the decoration gold, the top frame rebated to take the box. Box 44.4 × 14.3 × 8.1; drawer 22.2 × 9.5 × 4.0;
+   stand (with sledge) 55.0 × 17.5 × 20.2; 28 high overall (Carter). The pieces kept with it: two ivory knuckle-bones and two
+   pairs of casting sticks, black ebony above and white ivory below, one pair ending in fingers, one in fox heads (about 17.5 long).
+   Estimates: the wording and layout of the texts (Tutankhamun's throne name in cartouches, the rest in the manner of royal
+   texts), the signs on squares 15 and 26–30, the heights within the stand, where the gold is. */
 (function () {
   'use strict';
   (window.AtlasEx = window.AtlasEx || {}).senet = {
     build(TT, X, K) {
       const G = new TT.Group();
-      const L = 44, W = 15.2, BH = 6.8, Y0 = 13.7;   // box length, width, height, its bottom
-      const SQ = 3.42, ST = .46, ROWS = 3, COLS = 10;
+      const L = 44.4, W = 14.3, BH = 8.1, Y0 = 19.9;   // box length, width, height, its bottom (28 overall; it sits .3 down in the stand's rebate)
+      const SQ = 3.5, ST = .36, ROWS = 3, COLS = 10;
       const fieldW = COLS * SQ + (COLS + 1) * ST, fieldD = ROWS * SQ + (ROWS + 1) * ST;
       /* ---------- materials ---------- */
       const ebonyT = K.tex(512, 512, (g, w, h) => K.grain(g, w, h, { a: '#1c130d', b: '#0b0705', seed: 3, sx: 1, sy: 30, warp: 1.6, pores: .012 }), { rep: [2, 1] });
@@ -23,7 +26,22 @@
       const ivory = K.mat({ map: ivoryT, color: '#ffffff', roughness: .42, metalness: 0, clearcoat: .2, clearcoatRoughness: .5 });
       const gold = K.mat({ color: '#e2b65a', roughness: .32, metalness: 1 });
       /* ---------- the box ---------- */
-      const box = new TT.Mesh(new TT.BoxGeometry(L, BH, W), ebony); box.position.set(0, Y0 + BH / 2, 0); G.add(box);
+      // the texts round the box: incised in the ebony and filled with a light-yellow paste (Carter); Tutankhamun's throne name
+      // Nebkheperure in cartouches, the rest in the manner of a royal text (the real wording is not reproduced here)
+      const HF = '"Noto Sans Egyptian Hieroglyphs"';
+      const textTex = (len, ht, glyphs) => { const PX = 1536, s = PX / len; return K.tex(PX, Math.round(ht * s), (g, w, h) => {
+        g.drawImage(ebonyT.image, 0, 0, w, h); const yel = 'rgba(226,206,150,.92)';
+        g.strokeStyle = yel; g.lineWidth = s * .12; [s * .55, h - s * .55].forEach(y => { g.beginPath(); g.moveTo(s * .4, y); g.lineTo(w - s * .4, y); g.stroke(); });
+        g.fillStyle = yel; g.textBaseline = 'middle'; const FS = Math.min(h * .34, s * 2.3); g.font = `${Math.round(FS)}px ${HF}`;
+        const cart = (x) => { const cw = s * 4.6, ch = FS * 1.25, y0 = h / 2 - ch / 2; g.lineWidth = s * .09; g.beginPath(); g.roundRect(x, y0, cw, ch, ch / 2); g.stroke(); g.beginPath(); g.moveTo(x + cw, y0 + ch * .1); g.lineTo(x + cw, y0 + ch * .9); g.stroke();
+          g.textAlign = 'center'; g.font = `${Math.round(FS * .7)}px ${HF}`; g.fillText('\u{131F3}\u{1319F}\u{133E5}\u{1339F}', x + cw / 2, h * .5); g.font = `${Math.round(FS)}px ${HF}`; g.textAlign = 'left'; return cw; };
+        let x = s * 1.0; g.textAlign = 'left'; let i = 0;
+        while (x < w - s * 2) { const c = glyphs[i % glyphs.length]; if (c === 'C') { x += cart(x) + s * .6; } else { g.fillText(c, x, h * .5); x += g.measureText(c).width + s * .12; } i++; }
+      }); };
+      const LINE = ['\u{13079}', '\u{1309D}', '\u{13190}', '\u{13000}', 'C', '\u{132F9}', '\u{13216}', '\u{1340D}', '\u{13283}', '\u{132B9}', '\u{130ED}', 'C', '\u{13290}', '\u{13000}', '\u{1309D}', '\u{13079}'];
+      const sideT = textTex(L, BH, LINE), endT = textTex(W, BH, LINE.slice(4));
+      const sideM = K.mat({ map: sideT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .45 }), endM = K.mat({ map: endT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .45 });
+      const box = new TT.Mesh(new TT.BoxGeometry(L, BH, W), [ebony, endM, ebony, ebony, sideM, sideM]); box.position.set(0, Y0 + BH / 2, 0); G.add(box);
       // the top field: one ivory slab, the raised ebony strips over it (the square signs are painted on the slab's texture)
       const signs = { 15: 'ankh', 26: 'nfr', 27: 'water', 28: 'III', 29: 'II', 30: 'ra' };
       const topT = K.tex(1024, Math.round(1024 * fieldD / fieldW), (g, w, h) => {
@@ -49,21 +67,21 @@
       for (let r = 0; r <= ROWS; r++) strips.push([fieldW, ST, 0, -fieldD / 2 + ST / 2 + r * (SQ + ST)]);
       for (let c = 0; c <= COLS; c++) strips.push([ST, fieldD, -fieldW / 2 + ST / 2 + c * (SQ + ST), 0]);
       strips.forEach(([w, d, x, z]) => { const m = new TT.Mesh(new TT.BoxGeometry(w, SH, d), ebony); m.position.set(x, Y0 + BH + .12 + SH / 2, z); G.add(m); });
-      // the box's rim round the field: a thin ivory band at the top edge and at the foot of each side
-      const band = (w, d, y, x = 0, z = 0) => { const m = new TT.Mesh(new TT.BoxGeometry(w, .32, d), ivory); m.position.set(x, y, z); G.add(m); };
-      band(L + .06, .1, Y0 + BH - .45, 0, W / 2); band(L + .06, .1, Y0 + BH - .45, 0, -W / 2); band(.1, W + .06, Y0 + BH - .45, -L / 2, 0); band(.1, W + .06, Y0 + BH - .45, L / 2, 0);
-      band(L + .06, .1, Y0 + .45, 0, W / 2); band(L + .06, .1, Y0 + .45, 0, -W / 2); band(.1, W + .06, Y0 + .45, -L / 2, 0);
-      // ivory panels on the long sides, framed by the ebony (four on each side)
-      for (const sz of [1, -1]) for (let k = 0; k < 4; k++) { const pw = 9.2, x = -L / 2 + 2 + pw / 2 + k * (pw + .9); const p = new TT.Mesh(new TT.BoxGeometry(pw, 3.2, .08), ivory); p.position.set(x, Y0 + BH / 2, sz * (W / 2 + .03)); G.add(p); }
-      // the drawer at the +x end: a face inset with an ivory frame, an ivory knob, the bolt's two rings
-      const df = new TT.Mesh(new TT.BoxGeometry(.25, 4.6, W - 1.6), ebony); df.position.set(L / 2 + .12, Y0 + BH / 2, 0); G.add(df);
-      [[0, 2.3], [0, -2.3]].forEach(([, y]) => { const s = new TT.Mesh(new TT.BoxGeometry(.08, .22, W - 1.2), ivory); s.position.set(L / 2 + .27, Y0 + BH / 2 + y, 0); G.add(s); });
-      [W / 2 - .7, -(W / 2 - .7)].forEach(z => { const s = new TT.Mesh(new TT.BoxGeometry(.08, 4.8, .22), ivory); s.position.set(L / 2 + .27, Y0 + BH / 2, z); G.add(s); });
-      const knob = new TT.Mesh(new TT.SphereGeometry(.55, 24, 14), ivory); knob.scale.set(.8, 1, 1); knob.position.set(L / 2 + .55, Y0 + BH / 2, 0); G.add(knob);
-      [-1.6, 1.6].forEach(z => { const r = new TT.Mesh(new TT.TorusGeometry(.32, .07, 8, 20), gold); r.rotation.y = Math.PI / 2; r.position.set(L / 2 + .3, Y0 + BH / 2 - 1.2, z); G.add(r); });
+      // a thin ivory edge where the field meets the ebony
+      const band = (w, d, y, x = 0, z = 0) => { const m = new TT.Mesh(new TT.BoxGeometry(w, .2, d), ivory); m.position.set(x, y, z); G.add(m); };
+      band(L + .04, .08, Y0 + BH - .12, 0, W / 2); band(L + .04, .08, Y0 + BH - .12, 0, -W / 2); band(.08, W + .04, Y0 + BH - .12, -L / 2, 0); band(.08, W + .04, Y0 + BH - .12, L / 2, 0);
+      // the drawer at the +x end (9.5 wide, 4 high): its front framed with a line of text; the bolts and staples are gone
+      const dT = textTex(9.5, 4.0, ['C', '\u{13079}', '\u{1309D}']);
+      const df = new TT.Mesh(new TT.BoxGeometry(.3, 4.0, 9.5), [K.mat({ map: dT, color: '#ffffff', roughness: .5, clearcoat: .35 }), ebony, ebony, ebony, ebony, ebony]); df.position.set(L / 2 + .15, Y0 + BH / 2 - .4, 0); df.rotation.y = 0; G.add(df);
+      // the scars where the bolt's staples were wrenched away
+      [-3.2, 3.2].forEach(z => { const sc = new TT.Mesh(new TT.BoxGeometry(.05, .5, .9), K.mat({ color: '#2a1a10', roughness: .9 })); sc.position.set(L / 2 + .31, Y0 + BH / 2 + 2.3, z); G.add(sc); });
       /* ---------- the stand: rails, four animal legs on drums, two sledge runners ---------- */
-      const RL = 39, RW = 13.6;
-      [[RL, 1, .9, 0, RW / 2 - .45], [RL, 1, .9, 0, -RW / 2 + .45], [.9, 1, RW, RL / 2 - .45, 0], [.9, 1, RW, -RL / 2 + .45, 0]].forEach(([w, h, d, x, z]) => { const m = new TT.Mesh(new TT.BoxGeometry(w, h, d), ebony); m.position.set(x, Y0 - h / 2, z); G.add(m); });
+      const RL = 46.4, RW = 16.4, RH = 1.8;   // the top frame (rebated for the box)
+      [[RL, RH, .9, 0, RW / 2 - .45], [RL, RH, .9, 0, -RW / 2 + .45], [.9, RH, RW, RL / 2 - .45, 0], [.9, RH, RW, -RL / 2 + .45, 0]].forEach(([w, h, d, x, z]) => { const m = new TT.Mesh(new TT.BoxGeometry(w, h, d), ebony); m.position.set(x, 20.2 - h / 2, z); G.add(m); });
+      // the ledge inside the frame the box rests on
+      [[RL - 1.8, .3, .6, 0, RW / 2 - 1.2], [RL - 1.8, .3, .6, 0, -RW / 2 + 1.2]].forEach(([w, h, d, x, z]) => { const m = new TT.Mesh(new TT.BoxGeometry(w, h, d), ebony); m.position.set(x, Y0 - .15, z); G.add(m); });
+      const gilt = (w, d, x, z) => { const m = new TT.Mesh(new TT.BoxGeometry(w, .14, d), gold); m.position.set(x, 20.2 - RH + .07, z); G.add(m); };   // gold bands at the foot of the frame
+      gilt(RL + .02, .92, 0, RW / 2 - .45); gilt(RL + .02, .92, 0, -RW / 2 + .45);
       // a feline leg seen from the side (paw forward to +x), extruded and rounded
       const sh = new TT.Shape();
       sh.moveTo(-.95, 10.3); sh.quadraticCurveTo(-1.25, 8.6, -1.0, 7.2); sh.quadraticCurveTo(-.82, 6.1, -1.12, 4.9); sh.quadraticCurveTo(-1.18, 3.9, -.62, 3.0);
@@ -74,21 +92,38 @@
       legG.translate(0, 0, -.575);
       const clawG = new TT.ConeGeometry(.12, .42, 10); clawG.rotateZ(-Math.PI / 2);
       const drumG = new TT.CylinderGeometry(.95, 1.05, .6, 28);
-      const LX = RL / 2 - 1.6, LZ = RW / 2 - .9;
+      const LX = RL / 2 - 1.6, LZ = RW / 2 - .9, LS = (20.2 - RH - 2.4) / 10.3;   // (the legs stretched to the stand's height)
       for (const sx of [1, -1]) for (const sz of [1, -1]) {
         const x = sx * LX, z = sz * LZ;
-        const leg = new TT.Mesh(legG, ebony); leg.position.set(x, 2.4, z); G.add(leg);
-        for (let k = -1; k <= 1; k++) { const c = new TT.Mesh(clawG, gold); c.position.set(x + 2.18, 2.4 + .3, z + k * .42); G.add(c); }
+        const leg = new TT.Mesh(legG, ebony); leg.position.set(x, 2.4, z); leg.scale.y = LS; G.add(leg);
+        for (let k = -1; k <= 1; k++) { const c = new TT.Mesh(clawG, ivory); c.position.set(x + 2.18, 2.4 + .3, z + k * .42); G.add(c); }
         const dr = new TT.Mesh(drumG, ebony); dr.position.set(x + .4, 2.1, z); G.add(dr);
         const cap = new TT.Mesh(new TT.CylinderGeometry(1.0, 1.0, .1, 28), gold); cap.position.set(x + .4, 2.42, z); G.add(cap);
       }
       // runners: long bars with rounded, slightly upturned ends
-      const rs = new TT.Shape(); const RLn = 46, RH = 1.8;
-      rs.moveTo(-RLn / 2 + 1.2, 0); rs.lineTo(RLn / 2 - 1.2, 0); rs.quadraticCurveTo(RLn / 2 + .2, .1, RLn / 2, RH * .9); rs.quadraticCurveTo(RLn / 2 - .3, RH, RLn / 2 - 1.4, RH);
-      rs.lineTo(-RLn / 2 + 1.4, RH); rs.quadraticCurveTo(-RLn / 2 + .3, RH, -RLn / 2, RH * .9); rs.quadraticCurveTo(-RLn / 2 - .2, .1, -RLn / 2 + 1.2, 0);
+      const rs = new TT.Shape(); const RLn = 55, RH2 = 1.8;
+      rs.moveTo(-RLn / 2 + 1.2, 0); rs.lineTo(RLn / 2 - 1.2, 0); rs.quadraticCurveTo(RLn / 2 + .2, .1, RLn / 2, RH2 * .9); rs.quadraticCurveTo(RLn / 2 - .3, RH2, RLn / 2 - 1.4, RH2);
+      rs.lineTo(-RLn / 2 + 1.4, RH2); rs.quadraticCurveTo(-RLn / 2 + .3, RH2, -RLn / 2, RH2 * .9); rs.quadraticCurveTo(-RLn / 2 - .2, .1, -RLn / 2 + 1.2, 0);
       const runG = new TT.ExtrudeGeometry(rs, { depth: 1.5, bevelEnabled: true, bevelThickness: .15, bevelSize: .15, bevelSegments: 3, curveSegments: 10 }); runG.translate(0, 0, -.75);
       [LZ, -LZ].forEach(z => { const m = new TT.Mesh(runG, ebony); m.position.set(0, 0, z); G.add(m); });
+      /* ---------- the pieces kept with it: two knuckle-bones and two pairs of casting sticks (black ebony over white ivory) ---------- */
+      const stick = (x, z, ry, up, fox) => { const g = new TT.Group(); g.position.set(x, .35, z); g.rotation.y = ry; G.add(g);
+        const half = (m, top) => { const h = new TT.Mesh(new TT.CylinderGeometry(.55, .55, 15.5, 16, 1, false, top ? 0 : Math.PI, Math.PI), m); h.rotation.z = Math.PI / 2; h.scale.set(1, 1, .6); g.add(h); };
+        half(up ? ebony : ivory, true); half(up ? ivory : ebony, false); g.rotation.x = 0;
+        const tip = new TT.Mesh(new TT.ConeGeometry(.5, 1.9, 12), up ? ebony : ivory); tip.rotation.z = -Math.PI / 2; tip.position.x = 8.7; tip.scale.set(1, 1, .6); g.add(tip);
+        if (fox) [-1, 1].forEach(k => { const e = new TT.Mesh(new TT.ConeGeometry(.16, .5, 8), up ? ebony : ivory); e.position.set(8.2, .45, k * .22); g.add(e); });
+        else for (let k = -1; k <= 1; k++) { const f = new TT.Mesh(new TT.CapsuleGeometry(.11, .8, 4, 8), up ? ebony : ivory); f.rotation.z = Math.PI / 2; f.position.set(9.6, .1, k * .26); g.add(f); } };
+      stick(-3, 12.2, .02, 1, 0); stick(-2.6, 13.8, -.03, 0, 0); stick(2.4, 15.4, .04, 1, 1); stick(2.8, 17.0, .01, 0, 1);
+      [[-15.5, 13.2], [-13.2, 15.6]].forEach(([x, z], i) => { const kb = new TT.Mesh(new TT.SphereGeometry(1, 16, 12), ivory); kb.scale.set(1.15, .7, .8); kb.position.set(x, .6, z); kb.rotation.y = i * .9; G.add(kb);
+        const n = new TT.Mesh(new TT.TorusGeometry(.45, .14, 8, 16), ivory); n.position.set(x, 1.05, z); n.rotation.x = Math.PI / 2; G.add(n); });
       return G;
     },
+    ready: () => new Promise(res => {   // the hieroglyph font: wait for its stylesheet, then for the face itself
+      const go = () => (document.fonts && document.fonts.load ? document.fonts.load('40px "Noto Sans Egyptian Hieroglyphs"', '\u{131F3}\u{1319F}\u{13079}') : Promise.resolve()).catch(() => {}).then(res);
+      let l = document.querySelector('link[href*="Egyptian+Hieroglyphs"]');
+      if (l && l.sheet) return go();
+      if (!l) { l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Egyptian+Hieroglyphs&display=swap'; document.head.appendChild(l); }
+      l.addEventListener('load', go); l.addEventListener('error', res); setTimeout(res, 4000);
+    }),
   };
 })();
