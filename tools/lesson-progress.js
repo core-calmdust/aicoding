@@ -12,9 +12,9 @@ const ROOT = path.resolve(__dirname, '..');
 const PUP = process.env.PUPPETEER_CORE || '/opt/npm-tools/node_modules/puppeteer-core';
 const CHROME = process.env.CHROME || '/usr/bin/google-chrome';
 const args = process.argv.slice(2), opt = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
-const OPTV = new Set(['--kind', '--key', '--jobs', '--json']);
+const OPTV = new Set(['--kind', '--key', '--jobs', '--json', '--from']);
 const games = (args.find((a, i) => !a.startsWith('--') && !OPTV.has(args[i - 1])) || '').split(',').filter(Boolean);
-const PHONE = args.includes('--phone'), JOBS = +(opt('--jobs') || 3), ONLY_KIND = opt('--kind'), ONLY_KEY = opt('--key');
+const FROM = opt('--from'), PHONE = args.includes('--phone'), JOBS = +(opt('--jobs') || 3), ONLY_KIND = opt('--kind'), ONLY_KEY = opt('--key');
 const ALL = ['dots', 'morris', 'mancala', 'tafl', 'shogi', 'chess', 'reversi', 'gomoku', 'go', 'checkers', 'xiangqi', 'backgammon', 'hex', 'amazons', 'connect4'];
 const MIME = { '.js': 'text/javascript', '.json': 'application/json', '.html': 'text/html', '.css': 'text/css', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.bin': 'application/octet-stream', '.wasm': 'application/wasm', '.glb': 'model/gltf-binary', '.mp3': 'audio/mpeg' };
 const srv = http.createServer((q, r) => { const u = decodeURIComponent(q.url.split('?')[0]); const f = path.join(ROOT, u.endsWith('/') ? u + 'index.html' : u);
@@ -71,7 +71,7 @@ async function runLesson(ctx, game, kind, key) {
     if (s.phase === 'done' && s.drill) { await pg.evaluate(() => document.querySelector('[data-a=next]').click()); await S(800); continue; }   // (chess ★: on to the route problems)
     if (s.phase === 'prob' && s.drill) { await pg.evaluate(() => window.__atlasLs.drillEnd()); await S(800); continue; }   // (the ★ stages themselves: the route problems after them are played)
     if (s.phase === 'ramp' && s.ramp === 'try' && !(s.next && s.next.on)) {
-      const tag = 'r' + s.ri; if (answered.has(tag)) { await S(400); continue; } answered.add(tag);
+      const tag = 'r' + s.ri + ':' + s.moves; if (answered.has(tag)) { await S(400); continue; } answered.add(tag);
       for (let i = 0; i < 80; i++) { const t = await snap(pg, game); const a = t && t.ad; if (t && (t.phase !== 'ramp' || t.ri !== s.ri)) break; if (game === 'chess' ? a && !a.busy && a.pzOn && a.legal > 0 : !a || (!a.busy && !a.over)) break; await S(300); }
       const ru = await pg.evaluate(ri => { const c = window.__atlasLs.cur(), it = window.__atlasLs.state().phase === 'ramp' && c.ri === ri && c.ramp && c.ramp[c.ri]; return it ? (it.ok ? it.ok[0] : it.k === 'try' && it.ans != null ? it.ans : null) : null; }, s.ri);   // (reversi: a try's answer is it.ans)
       if (ru == null) continue;
@@ -127,6 +127,7 @@ async function runLesson(ctx, game, kind, key) {
           if (!items) continue;
           for (const it of items) {
             if (ONLY_KEY != null && String(it.key) !== ONLY_KEY) continue;
+            if (FROM != null && !ctx.from) { if (String(it.key) !== FROM) continue; ctx.from = true; }   // (--from K: start at the item K)
             let r; try { r = await runLesson(ctx, game, kind, it.key); } catch (e) { r = { game, kind, key: it.key, ok: false, fail: 'exception: ' + e.message, errors: [] }; }
             r.title = it.title; results.push(r);
             console.log(`${r.ok ? 'ok  ' : 'FAIL'} ${game}${kind === 'open' ? '/open' : ''} ${it.key} ${it.title} (${r.probs}問)${r.fail ? ' — ' + r.fail : ''}${r.errors.length ? ' [JS error: ' + r.errors[0] + ']' : ''}`);

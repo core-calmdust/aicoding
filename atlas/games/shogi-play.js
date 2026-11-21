@@ -582,6 +582,12 @@
         w.onerror = () => res(null);
         w.postMessage({ type: 'tsumeDefend', id, sfen: SF, moves: moves.slice(), remain });
       }),
+      mateMove: remain => new Promise(res => {   // (test hook, tools/lesson-progress.js: the mating move from here — the engine's mate solver)
+        const id = ++jobId, w = worker || (worker = newWorker());
+        w.onmessage = e => { const r = e.data; if (r.id !== id || stopped) return; res(r.type === 'mate' && r.pv && r.pv.length ? r.pv[0] : null); };
+        w.onerror = () => res(null);
+        w.postMessage({ type: 'mate', id, sfen: SF, moves: moves.slice(), maxPly: remain * 2 + 1 });
+      }),
       load: pzLoad,
       moves: () => moves.slice(),
       annot,   // [{ at: '7g', cls: 'ok'|'hang'|'hl' } | { arrow: ['7g', '7f'], cls: ''|'ok'|'ng' }] — null clears (the lessons' warm-up)

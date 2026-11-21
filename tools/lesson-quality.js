@@ -51,6 +51,11 @@ function scoreLesson(id, L) {
     if (pc.length > 3) P(2, `PC: ${pc.length} pages in one bubble`);
   }
   for (const p of L.probs) { const fb = [p.ng, p.good].map(plain).filter(Boolean); if (fb.some(x => x.length > 150)) P(2, 'feedback over 150 chars'); }
+  // (2026-11-22 ユーザー：「AIの評価が下がるから取りたくない」などの表現は最悪。その手でどういう理由で不利かを盤の上の事実で解説する)
+  // a reason given as the engine's opinion (AIの評価・見立て・形勢・評価値・勝つ見込み…%) instead of what happens on the board
+  { const AIR = /AI(の|が|も|で|に)|評価|見立て|形勢|勝つ見込み|勝率/; let n = 0;
+    for (const t of all) if (AIR.test(plain(t))) n++;
+    if (n) P(Math.min(40, 12 * n), `the engine's opinion given as the reason (${n}): ` + plain(all.find(t => AIR.test(plain(t)))).match(/[^。！？]*(AI(の|が|も|で|に)|評価|見立て|形勢|勝つ見込み|勝率)[^。！？]*/)[0].slice(0, 40)); }
   // ending variety over each bubble and over the lesson
   // (2026-11-21 the user: a lesson rated 96 still read 〜よ。〜よ。 — the bubble is read page by page, one bubble after another,
   //  so endings are counted over the whole lesson in display order, across bubbles, and the 〜よ share is held lower)
@@ -163,7 +168,9 @@ function gameLevel(raw, ls) {
   }, games);
   await b.close(); srv.close();
   const rep = {}; let sum = 0, n = 0;
-  for (const id in R) { const ls = R[id].filter(l => !l.err).map(l => Object.assign({ key: l.key, title: l.title }, scoreLesson(id.split('/')[0], l)));
+  // (2026-11-22) the board facts (tools/lesson-facts.js): a lesson whose marks / answers / claims do not hold on the board fails
+  let FACTS = {}; try { const tmp = require('os').tmpdir() + '/lesson-facts.json'; try { require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'lesson-facts.js'), '--json', tmp], { stdio: 'ignore' }); } catch (e) {} FACTS = JSON.parse(fs.readFileSync(tmp, 'utf8')); } catch (e) {}
+  for (const id in R) { const ls = R[id].filter(l => !l.err).map(l => { const o = Object.assign({ key: l.key, title: l.title }, scoreLesson(id.split('/')[0], l)); const fx = !id.includes('/') && FACTS[id] && FACTS[id][l.key]; if (fx) { o.pen = (o.pen || []).concat(fx.map(m => [60, 'wrong board fact: ' + m])); o.score = Math.max(0, o.score - 60); } return o; });
     gameLevel(R[id].filter(l => !l.err), ls);
     const avg = ls.length ? ls.reduce((a, l) => a + l.score, 0) / ls.length : 0; rep[id] = { avg: Math.round(avg * 10) / 10, pass: ls.filter(l => l.score >= CFG.pass).length, n: ls.length, lessons: ls };
     sum += avg * ls.length; n += ls.length; }
