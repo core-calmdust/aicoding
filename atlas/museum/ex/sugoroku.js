@@ -53,16 +53,19 @@
         }
         if (opt.edge) { g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .18); g.fillRect(0, h - s * .18, w, s * .18); }
       };
-      // the band round the board's edge, composed as on the Shōsōin's frontal photographs: symmetric about a flowering sprig in the middle;
-      // outward from it a bird flying in, then thin stems curling into rings that hold in turn a five-petalled blossom, a tulip-like
-      // flower, a large eight-petalled rosette and a pointed ivory "shield", olive leaves between; on the short sides the birds are at the ends
-      const band = (g, w, h, s, long) => { g.drawImage(shT.image, 0, 0, w, h); const cy = h * .5, R = h * .33, ol = 'rgba(30,14,8,.6)';
+      const MOT = (g, s) => { const ol = 'rgba(30,14,8,.6)';
         const ring = (x, y, r, dir) => { g.strokeStyle = C.bam; g.lineWidth = s * .055; g.beginPath(); g.arc(x, y, r, dir > 0 ? .6 : Math.PI + .6, dir > 0 ? .6 + 5.3 : Math.PI + .6 + 5.3); g.stroke(); g.beginPath(); g.arc(x, y, r * .8, 2.2, 5.6); g.stroke(); };
         const rosette = (x, y, r) => { g.save(); g.translate(x, y); for (let q = 0; q < 8; q++) { g.rotate(Math.PI / 4); g.beginPath(); g.moveTo(r * .3, 0); g.quadraticCurveTo(r * .62, r * .42, r, r * .12); g.lineTo(r * .86, 0); g.lineTo(r, -r * .12); g.quadraticCurveTo(r * .62, -r * .42, r * .3, 0); g.fillStyle = C.iv; g.fill(); g.strokeStyle = ol; g.lineWidth = s * .03; g.stroke(); }
           g.beginPath(); g.arc(0, 0, r * .34, 0, 6.29); g.fillStyle = '#2a160e'; g.fill(); for (let q = 0; q < 6; q++) { g.rotate(Math.PI / 3); g.beginPath(); g.arc(r * .2, 0, r * .07, 0, 6.29); g.fillStyle = '#c0703c'; g.fill(); } g.restore(); };
         const shield = (x, y, r) => { g.beginPath(); g.moveTo(x, y - r); g.bezierCurveTo(x + r * .5, y - r * .5, x + r * .95, y - r * .3, x + r * .8, y + r * .35); g.quadraticCurveTo(x + r * .4, y + r * .2, x, y + r * .6); g.quadraticCurveTo(x - r * .4, y + r * .2, x - r * .8, y + r * .35); g.bezierCurveTo(x - r * .95, y - r * .3, x - r * .5, y - r * .5, x, y - r); g.fillStyle = C.iv; g.fill(); g.strokeStyle = ol; g.lineWidth = s * .03; g.stroke();
           leaf(g, x - r * .45, y + r * .75, r * .5, .5); leaf(g, x + r * .45, y + r * .75, r * .5, Math.PI - .5); };
         const tulip = (x, y, r, a) => { g.save(); g.translate(x, y); g.rotate(a); [-.55, 0, .55].forEach(t => { g.save(); g.rotate(t); g.beginPath(); g.moveTo(0, r * .5); g.quadraticCurveTo(r * .42, 0, 0, -r); g.quadraticCurveTo(-r * .42, 0, 0, r * .5); g.fillStyle = C.iv; g.fill(); g.strokeStyle = ol; g.lineWidth = s * .03; g.stroke(); g.restore(); }); g.beginPath(); g.arc(0, r * .5, r * .2, 0, 6.29); g.fillStyle = '#2a160e'; g.fill(); g.restore(); };
+        return { ring, rosette, shield, tulip }; };
+      // the band round the board's edge, composed as on the Shōsōin's frontal photographs: symmetric about a flowering sprig in the middle;
+      // outward from it a bird flying in, then thin stems curling into rings that hold in turn a five-petalled blossom, a tulip-like
+      // flower, a large eight-petalled rosette and a pointed ivory "shield", olive leaves between; on the short sides the birds are at the ends
+      const band = (g, w, h, s, long) => { g.drawImage(shT.image, 0, 0, w, h); const cy = h * .5, R = h * .33, ol = 'rgba(30,14,8,.6)';
+        const { ring, rosette, shield, tulip } = MOT(g, s);
         const sprig = (x) => { g.strokeStyle = C.bam; g.lineWidth = s * .055; g.beginPath(); g.moveTo(x, h * .9); g.lineTo(x, cy); g.moveTo(x, h * .7); g.quadraticCurveTo(x - R * .5, h * .62, x - R * .75, cy - R * .1); g.moveTo(x, h * .7); g.quadraticCurveTo(x + R * .5, h * .62, x + R * .75, cy - R * .1); g.stroke();
           flower(g, x, cy - R * .45, R * .42); flower(g, x - R * .8, cy - R * .2, R * .38, .4); flower(g, x + R * .8, cy - R * .2, R * .38, .9); leaf(g, x - R * .55, h * .82, R * .5, -.4); leaf(g, x + R * .55, h * .82, R * .5, Math.PI + .4); leaf(g, x - R * 1.5, cy + R * .4, R * .5, .3); leaf(g, x + R * 1.5, cy + R * .4, R * .5, Math.PI - .3); };
         const half = w / 2, items = long ? [[.115, 'bird'], [.225, 'bud'], [.33, 'blossom'], [.45, 'tulip'], [.585, 'rosette'], [.71, 'shield'], [.82, 'blossom'], [.93, 'bud']] : [[.2, 'tulip'], [.38, 'rosette'], [.56, 'shield'], [.7, 'bud'], [.87, 'bird']];
@@ -151,13 +154,24 @@
         // vertical scrolls up the corner legs and the post (where the wood stands between the openings)
         const LEG = 2.3, POST = 2.5, nO = S.holes.length, ow = (len - 2 * LEG - (nO - 1) * POST) / nO, cols = [LEG * .55, len - LEG * .55];
         for (let i = 1; i < nO; i++) cols.push(LEG + i * ow + (i - .5) * POST);
-        const vs = K.tex(512, Math.round(512 * 3.4 / SK), (g2, w2, h2) => scroll(g2, w2, h2, w2 / SK, seed, baseT, { per: 5.2 }));
-        cols.forEach(cxm => { g.save(); g.translate(cxm * s, h); g.rotate(-Math.PI / 2); g.globalAlpha = 1; g.drawImage(vs.image, 0, -s * 1.7, h, s * 3.4); g.restore(); });
+        // a vine up each leg and the post (the frontal photographs): thin stems in rings; on a leg, from the top, a blossom, a tulip, a white
+        // ribbon-bird, a rosette and a pointed shield; on the post two blossoms, a bird, a tulip and at the foot two rosettes side by side
+        { const { ring, rosette, shield, tulip } = MOT(g, s), top = s * 1.3, bot = h - s * .5, span = bot - top;
+          cols.forEach((cxm, ci) => { const post = ci >= 2, x = cxm * s, R = s * (post ? .8 : .72), Y = f => top + f * span;
+            g.strokeStyle = C.bam; g.lineWidth = s * .055; g.beginPath(); for (let f = 0; f <= 1; f += .01) { const xx = x + Math.sin(f * 15 + ci) * s * (post ? .5 : .32) * (post ? .6 + Math.abs(f - .45) * 1.6 : 1); f ? g.lineTo(xx, Y(f)) : g.moveTo(xx, Y(f)); } g.stroke();
+            const its = post ? [[.07, 'blossom', -.55], [.07, 'blossom', .55], [.26, 'blossom', 0], [.43, 'bird', 0], [.58, 'tulip', 0], [.8, 'rosette', -1.15], [.8, 'rosette', 1.15], [.93, 'bud', 0]] : [[.08, 'blossom', 0], [.26, 'tulip', 0], [.43, 'ribbon', 0], [.6, 'rosette', 0], [.82, 'shield', .25 * (ci ? -1 : 1)]];
+            its.forEach(([f, kind, dx], i) => { const xx = x + dx * s, y = Y(f), d = i % 2 ? 1 : -1;
+              if (kind === 'bird') { g.save(); g.translate(xx, y); g.rotate(-Math.PI / 2.4); bird(g, 0, 0, s * .03, false); g.restore(); return; }
+              if (kind === 'ribbon') { g.strokeStyle = C.iv; g.lineWidth = s * .16; g.lineCap = 'round'; g.beginPath(); g.moveTo(xx - R * .7, y + R * .3); g.bezierCurveTo(xx - R * .2, y - R * .5, xx + R * .1, y + R * .5, xx + R * .7, y - R * .2); g.stroke(); return; }
+              if (kind === 'bud') { g.beginPath(); g.arc(xx, y, R * .22, 0, 6.29); g.fillStyle = C.iv; g.fill(); return; }
+              ring(xx, y, R * (kind === 'rosette' ? 1 : .85), d);
+              if (kind === 'rosette') rosette(xx, y, R * .8); else if (kind === 'shield') shield(xx, y - R * .1, R * .62); else if (kind === 'tulip') tulip(xx, y + R * .1, R * .6, 0); else flower(g, xx, y, R * .52, i);
+              if (!post || Math.abs(dx) < .1) { leaf(g, xx + d * R * 1.05, y + R * .95, R * .5, d > 0 ? 2.2 : .9); leaf(g, xx - d * R * 1.0, y - R * .95, R * .45, d > 0 ? -.9 : -2.2); } }); }); }
         // across the top, between the openings and the edge, a running scroll
         // the strip of rosettes along the top
         g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .14);
         S.holes.forEach(hp => { const xs = hp.getPoints(30).map(p => p.x), xa = (Math.min(...xs) + len / 2) * s, xb = (Math.max(...xs) + len / 2) * s;   // over each opening, a dark strip with rosettes
-          g.fillStyle = '#2a140c'; g.fillRect(xa + s * 1.5, s * .14, xb - xa - s * 3, LIN * s); for (let x = xa + s * 2.4; x < xb - s * 2; x += s * 2.4) flower(g, x, s * .14 + LIN * s * .5, s * .26, x); });
+          g.fillStyle = '#2a140c'; g.fillRect(xa + s * .6, s * .14, xb - xa - s * 1.2, LIN * s); { const ow2 = xb - xa; g.fillRect(xa + ow2 * .1, s * .14, ow2 * .8, s * 2.3); }   /* (the rail and its hanging bracket are dark wood) */ for (let x = xa + s * 2.4; x < xb - s * 2; x += s * 2.4) flower(g, x, s * .14 + LIN * s * .5, s * .26, x); });
         // a bamboo strip following each opening, ivory down the corners
         g.strokeStyle = C.iv; g.lineWidth = s * .13; S.holes.forEach(hp => { g.beginPath(); hp.getPoints(30).forEach((p, i) => { const X = (p.x + len / 2) * s, Y = h - p.y * s; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.closePath(); g.stroke(); });
         g.fillStyle = C.iv; g.fillRect(0, 0, s * .18, h); g.fillRect(w - s * .18, 0, s * .18, h);
