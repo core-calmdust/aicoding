@@ -13,7 +13,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../ugolki/', VER = '?v=12-v3nn-b3';   // same file / version as ugolki/index.html → shared cache
+  const BASE = '../ugolki/', VER = '?v=13-v3nn-b3';   // same file / version as ugolki/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.UgolkiEngine) return Promise.resolve(window.UgolkiEngine);
@@ -330,7 +330,7 @@
     id: ['Pemula: kadang mengambil jalan memutar', 'Dasar–menengah: membaca jalur lompatan beberapa langkah ke depan', 'Mahir: membangun jalur dan blok', 'Ahli: pencarian mendalam yang menghitung balapan'],
     tr: ['Başlangıç: bazen uzun yolu seçer', 'Acemi–orta: birkaç hamle ilerideki atlama yollarını okur', 'İleri: yollar ve bloklar kurar', 'Uzman: yarışı hesaplayan derin arama'],
   };
-  const RATING = [0, 100, 240, 380, 525, 665, 805, 945, 1085, 1225, 1370, 1510, 1650, 1790, 1880, 1950, 2015, 2070, 2130, 2210, 2290, 2365, 2445, 2500, 2700, 2800, 2900];   // ugolki RT_LV (rated games)
+  const RATING = [0, 100, 240, 380, 525, 665, 805, 945, 1085, 1225, 1370, 1510, 1650, 1790, 1880, 1950, 2015, 2070, 2130, 2210, 2290, 2365, 2445, 2500, 2745, 2800, 3000, 3100, 3200];   // ugolki RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
@@ -352,7 +352,7 @@
   // 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–23 are the levels people play (steps
   // added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
   // level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
-  const LVX = [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [18, 19, 0.25], [18, 19, 0.5], [18, 19, 0.75], [19], [20], [21], [22], [23]], LV_HUMAN = 23, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 22, 23, 24, 25, 26];   // LV_MIG: an old level → the new one (saved settings)
+  const LVX = [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [18, 19, 0.25], [18, 19, 0.5], [18, 19, 0.75], [19], [20], [24], [25], [21], [22], [23]], LV_HUMAN = 23, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 22, 23, 24, 25, 26];   // LV_MIG: an old level → the new one (saved settings)
   const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
   const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
   const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
@@ -367,6 +367,6 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.ugolki = { levels: 26, reward: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: [1, 2, 3, 4], size0: 1, sizeLabel: l => rn(l).L,
+  window.Atlas3D.ugolki = { levels: 28, reward: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: [1, 2, 3, 4], size0: 1, sizeLabel: l => rn(l).L,
     sizeName: (z, l) => rn(l).n[(+z || 1) - 1], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[(+v || 1) - 1] } : null, levelInfo, start };
 })();
