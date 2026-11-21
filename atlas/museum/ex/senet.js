@@ -33,26 +33,43 @@
       // the texts round the box: incised in the ebony and filled with a light-yellow paste (Carter); Tutankhamun's throne name
       // Nebkheperure in cartouches, the rest in the manner of a royal text (the real wording is not reproduced here)
       const HF = '"Noto Sans Egyptian Hieroglyphs"';
-      const textTex = (len, ht, glyphs, cartLeft) => { const PX = 1536, s = PX / len; return K.tex(PX, Math.round(ht * s), (g, w, h) => {
-        g.drawImage(ebonyT.image, 0, 0, w, h); const yel = 'rgba(214,160,84,.92)';
-        // one register of text between two incised lines, in the upper middle of the side (photographs in the Egyptian Museum)
-        const cy = h * (ht > 5 ? .52 : .5), bh = Math.min(h * .34, s * 2.3);   // (the museum's side view: a narrow band a little below the middle)
-        g.strokeStyle = yel; g.lineWidth = s * .05; [cy - bh / 2 - s * .12, cy + bh / 2 + s * .12].forEach(y => { g.beginPath(); g.moveTo(s * .35, y); g.lineTo(w - s * .35, y); g.stroke(); });
-        g.fillStyle = yel; g.textBaseline = 'middle'; const FS = bh * .9; g.font = `${Math.round(FS)}px ${HF}`;
-        const cart = (x) => { const cw = s * 3.6, ch = bh * .92, y0 = cy - ch / 2; g.lineWidth = s * .09; g.beginPath(); g.roundRect(x, y0, cw, ch, ch / 2); g.stroke(); g.beginPath(); g.moveTo(x + cw, y0 + ch * .1); g.lineTo(x + cw, y0 + ch * .9); g.stroke();
-          g.textAlign = 'center'; g.font = `${Math.round(FS * .7)}px ${HF}`; g.fillText('\u{131F3}\u{1319F}\u{133E5}\u{1339F}', x + cw / 2, cy); g.font = `${Math.round(FS)}px ${HF}`; g.textAlign = 'left'; return cw; };
-        let x = s * (ht > 5 && cartLeft ? 5.0 : .8); g.textAlign = 'left'; let i = 0;
-        // signs set close, small ones stacked two high in one square (as Egyptian texts are composed); the king's name in its ring at the far end
-        const endX = w - s * (ht > 5 && !cartLeft ? 5.0 : .8);
-        while (x < endX) { const c = glyphs[i % glyphs.length]; i++; if (c === 'C') continue;
-          if (i % 3 === 0) { const c2 = glyphs[(i * 7 + 3) % glyphs.length]; g.font = `${Math.round(FS * .52)}px ${HF}`; const wd = Math.max(g.measureText(c).width, c2 === 'C' ? 0 : g.measureText(c2).width); g.fillText(c, x, cy - bh * .25); if (c2 !== 'C') g.fillText(c2, x, cy + bh * .25); g.font = `${Math.round(FS)}px ${HF}`; x += Math.min(wd, FS * .7) + s * .06; }
-          else { g.fillText(c, x, cy); x += Math.min(g.measureText(c).width, FS * 1.0) + s * .02; } }
-        if (ht > 5) cart(cartLeft ? s * .8 : w - s * 4.4);
+      // The texts are the king's own, as Carter copied them from the box (card 345-06): side a, read from the drawer's end, the five
+      // names — Horus Ka-nakht Tut-mesut, Two Ladies Nefer-hepu Segereh-tawy, Golden Horus Wetjes-khau Sehetep-netjeru, King of Upper and
+      // Lower Egypt Nebkheperure; side b "the good god, lord of the Two Lands, lord of action, Nebkheperure, son of Re, Tutankhamun";
+      // the far end "given life, stability and dominion like Re for ever"; round the drawer's opening a frame of the same names.
+      // A token is one sign, two signs stacked [top, bottom], or a ring with a name ('C1' Nebkheperure, 'C2' Tutankhamun).
+      const RING = { C1: ['\u{131F3}', '\u{131A3}', '\u{133E5}', '\u{1339F}'], C2: ['\u{131CB}', '\u{133E0}', '\u{13216}', '\u{133CF}', '\u{13171}', '\u{133CF}', '\u{132F9}'] };
+      const yel = 'rgba(214,160,84,.92)';
+      // a row of signs in a box x0..x0+ww, centred on cy, bh high; returns nothing. Signs are fitted to the row, the stacked ones half height.
+      const row = (g, toks, x0, cy, ww, bh) => { g.fillStyle = g.strokeStyle = yel; g.textBaseline = 'middle'; g.textAlign = 'left';
+        const F = n => { g.font = `${Math.round(bh * n)}px ${HF}`; }, wOf = t => { if (RING[t]) return bh * (t === 'C1' ? 2.3 : 3.3); if (Array.isArray(t)) { F(.46); return Math.max(...t.map(c => g.measureText(c).width)); } F(.92); return g.measureText(t).width; };
+        const ws = toks.map(wOf), gap = bh * .07, nat = ws.reduce((a, c) => a + c, 0) + gap * (toks.length - 1), k = Math.min(1.25, ww / nat); let x = x0 + (ww - nat * k) / 2;
+        toks.forEach((t, i) => { const wd = ws[i] * k; g.save(); g.translate(x, cy); g.scale(k, 1);
+          if (RING[t]) { const cw = ws[i], ch = bh * .96; g.lineWidth = bh * .05; g.beginPath(); g.roundRect(0, -ch / 2, cw - bh * .1, ch, ch / 2); g.stroke(); g.beginPath(); g.moveTo(cw - bh * .04, -ch * .42); g.lineTo(cw - bh * .04, ch * .42); g.stroke();
+            F(.6); const inner = RING[t], iw = inner.reduce((a, c) => a + g.measureText(c).width, 0), kk = Math.min(1, (cw - bh * .55) / iw); let xx = bh * .22; inner.forEach(c => { g.save(); g.translate(xx, 0); g.scale(kk, 1); g.fillText(c, 0, 0); g.restore(); xx += g.measureText(c).width * kk; }); }
+          else if (Array.isArray(t)) { F(.46); t.forEach((c, j) => g.fillText(c, (ws[i] - g.measureText(c).width) / 2, (j ? .25 : -.25) * bh)); }
+          else { F(.92); g.fillText(t, 0, 0); }
+          g.restore(); x += wd + gap * k; }); };
+      const textTex = (len, ht, toks, mirror) => { const PX = 2048, s = PX / len; return K.tex(PX, Math.round(ht * s), (g, w, h) => {
+        g.drawImage(ebonyT.image, 0, 0, w, h);
+        const cy = h * .53, bh = s * 2.1;   // one band a little below the middle (the museum's photograph)
+        if (mirror) { g.translate(w, 0); g.scale(-1, 1); }   // read from the right: the signs face the other way
+        g.strokeStyle = yel; g.lineWidth = s * .05; [cy - bh / 2 - s * .14, cy + bh / 2 + s * .14].forEach(y => { g.beginPath(); g.moveTo(s * .3, y); g.lineTo(w - s * .3, y); g.stroke(); });
+        row(g, toks, s * .5, cy, w - s * 1.0, bh);
       }); };
-      const LINE = ['\u{13079}', '\u{1309D}', '\u{13190}', '\u{13000}', '\u{132F9}', '\u{13216}', '\u{1340D}', '\u{13283}', '\u{132B9}', '\u{130ED}', '\u{13290}', '\u{13000}', '\u{1309D}', '\u{1308B}', '\u{13171}', '\u{1340D}', '\u{132AA}', '\u{133CF}', '\u{13216}', '\u{1309E}', '\u{13193}', '\u{132F4}', '\u{1308B}', '\u{13000}', '\u{132B9}', 'C'];
-      const sideT = textTex(L, BH, LINE, true), sideT2 = textTex(L, BH, LINE.slice(7).concat(LINE.slice(0, 7)), false), endT = textTex(W, BH, LINE.slice(4));
-      const sideM = K.mat({ map: sideT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .45 }), sideM2 = K.mat({ map: sideT2, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .45 }), endM = K.mat({ map: endT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .45 });
-      const box = new TT.Mesh(new TT.BoxGeometry(L, BH, W), [ebony, endM, ebony, ebony, sideM, sideM2]); box.position.set(0, Y0 + BH / 2, 0); G.add(box);
+      const T = (...a) => a.map(c => Array.isArray(c) ? c.map(q => String.fromCodePoint(q)) : typeof c === 'number' ? String.fromCodePoint(c) : c);
+      const NAMES = T(0x132F9, 0x13143, 0x130D2, 0x130A1, [0x133CF, 0x133CF], 0x13171, 0x1311F, [0x132F4, 0x133CF], 0x13171, 0x13152, 0x13124, [0x13254, 0x132AA], 0x13171, 0x132F4, [0x133BC, 0x1308B], 0x1339B, [0x131FE, 0x131FE], 0x13149, 0x1335E, [0x1320D, 0x133E5], 0x132F4, 0x132B5, [0x133CF, 0x132AA], 0x132B9, 0x132B9, 0x132B9, 0x131D3, 0x131A4, [0x133CF, 0x133CF], 'C1');
+      const SIDEB = T(0x132F9, 0x132B9, 0x13124, 0x1339F, [0x131FE, 0x131FE], 0x1339F, [0x13079, 0x133CF], [0x1340D, 0x133CF], 0x131D3, 0x131A4, [0x133CF, 0x133CF], 'C1', 0x1316D, 0x131F3, 'C2', [0x133D9, 0x132F9], 0x13193, [0x133CF, 0x131FE]);
+      const ENDT = T(0x133D9, 0x132F9, 0x132BD, 0x13300, [0x133C7, 0x131F3], 0x13193, [0x133CF, 0x131FE]);
+      const sideT = textTex(L, BH, NAMES, true), sideT2 = textTex(L, BH, SIDEB, false), endT = textTex(W, BH, ENDT, false);
+      // the drawer's end of the box: a frame of text round the opening (Carter's sketch c)
+      const frameT = K.tex(1024, Math.round(1024 * BH / W), (g, w, h) => { g.drawImage(ebonyT.image, 0, 0, w, h); const s = w / W, hx0 = (W - 9.5) / 2 * s, hx1 = w - hx0, hy1 = h - .9 * s, hy0 = hy1 - 4.0 * s, bh = s * 1.15;
+        row(g, T('C1', 0x132B9, 0x13124, 0x1339F, [0x131FE, 0x131FE], 0x133D9, 0x132F9), hx0 - s * 1.2, hy0 - bh * .75, hx1 - hx0 + s * 2.4, bh);
+        [[hx0 - s * 1.1, T(0x132F9, 0x13143, 0x130D2, 0x130A1)], [hx1 + s * 1.1, T(0x13152, 0x13124, 0x13254, 0x132AA)]].forEach(([x, tk]) => tk.forEach((c, i) => { g.font = `${Math.round(bh * .8)}px ${HF}`; g.textAlign = 'center'; g.fillText(c, x, hy0 + (i + .5) * (hy1 - hy0) / 4); }));
+        g.strokeStyle = yel; g.lineWidth = s * .05; g.strokeRect(hx0 - s * 2.0, hy0 - bh * 1.45, hx1 - hx0 + s * 4.0, hy1 - hy0 + bh * 1.55); });
+      const mkT = map => K.mat({ map, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .45 });
+      const sideM = mkT(sideT), sideM2 = mkT(sideT2), endM = mkT(endT), frameM = mkT(frameT);
+      const box = new TT.Mesh(new TT.BoxGeometry(L, BH, W), [frameM, endM, ebony, ebony, sideM, sideM2]); box.position.set(0, Y0 + BH / 2, 0); G.add(box);
       // the top field: one ivory slab, the raised ebony strips over it (the square signs are painted on the slab's texture)
       const signs = { 15: 'ankh', 26: 'nfr', 27: 'water', 28: 'birds', 29: 'men' };
       const topT = K.tex(1024, Math.round(1024 * fieldD / fieldW), (g, w, h) => {
@@ -83,9 +100,8 @@
       const band = (w, d, y, x = 0, z = 0) => { const m = new TT.Mesh(new TT.BoxGeometry(w, .2, d), ivory); m.position.set(x, y, z); G.add(m); };
       // the drawer at the +x end (22.2 long, 9.5 wide, 4 high), shown pulled out as in the museum's photographs
       const DL = 22.2, DWd = 9.5, DHt = 4.0, DOUT = 8.5, dg = new TT.Group(); dg.position.set(L / 2 + DOUT - DL / 2, Y0 + .9 + DHt / 2, 0); G.add(dg);
-      const dT = textTex(9.5, 4.0, ['C', '\u{13079}', '\u{1309D}']);
       const dpart = (w, h, d, x, y, z, m) => { const o = new TT.Mesh(new TT.BoxGeometry(w, h, d), m || ebony); o.position.set(x, y, z); dg.add(o); };
-      dpart(.35, DHt, DWd, DL / 2 - .175, 0, 0, [K.mat({ map: dT, color: '#ffffff', roughness: .5, clearcoat: .35 }), ebony, ebony, ebony, ebony, ebony]);   // front
+      dpart(.35, DHt, DWd, DL / 2 - .175, 0, 0, ebony);   // front
       dpart(DL - .35, DHt - .2, .3, -.175, -.1, DWd / 2 - .15); dpart(DL - .35, DHt - .2, .3, -.175, -.1, -DWd / 2 + .15);   // sides
       dpart(.3, DHt - .2, DWd - .6, -DL / 2 + .15, -.1, 0); dpart(DL - .35, .25, DWd - .6, -.175, -DHt / 2 + .125, 0, K.mat({ color: '#4a3324', roughness: .85 }));   // back, rough floor
       { const hm = K.mat({ color: '#0a0605', roughness: 1 }), hg = new TT.CylinderGeometry(.11, .11, .06, 10); hg.rotateZ(Math.PI / 2); [[-1.5, .45], [-1.5, -.45], [1.5, .45], [1.5, -.45]].forEach(([z, y]) => { const sc = new TT.Mesh(hg, hm); sc.position.set(DL / 2 + .005, y, z); dg.add(sc); }); }   // four small holes: the staples of the bolt, wrenched away (the museum's photograph)
