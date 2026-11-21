@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 93;
+  const V = 94;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -73,7 +73,8 @@
     const t = ex(lang, id), g = ctx.games.find(x => x.id === e.game), B0 = e.flip ? { flip: true } : null;
     const ov = document.createElement('div'); ov.className = 'exv'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
     ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div><div class="exhud" aria-live="polite"></div>${PLAY[id] ? `<div class="expcard"><b>${esc(ui(lang, 'play_' + id))}</b>
-          <div class="exprow">${[['plv', 'p_level', Array.from({ length: PLAY[id].levels }, (_, i) => [i + 1, 'Lv.' + (i + 1)])], ['pside', 'p_side', [[1, ui(lang, 'p_side1_' + id)], [2, ui(lang, 'p_side2_' + id)]]]].map(([k, lb, opts]) => `<div class="expf"><span>${esc(ui(lang, lb))}</span><div class="expdd" data-k="${k}" data-v="${opts[0][0]}"><button type="button" class="expdd-b" aria-haspopup="listbox"><b>${esc(opts[0][1])}</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${opts.map(([v, n], i) => `<button type="button" role="option" data-v="${v}"${i ? '' : ' class="on"'}>${esc(n)}</button>`).join('')}</div></div></div>`).join('')}</div>
+          <div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expdd" data-k="plv" data-v="1"><button type="button" class="expdd-b" aria-haspopup="listbox"><b>Lv.1</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${Array.from({ length: PLAY[id].levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}"${i ? '' : ' class="on"'}>Lv.${i + 1}</button>`).join('')}</div></div></div>
+          <div class="expf"><span>${esc(ui(lang, 'p_side'))}</span><div class="expseg" data-k="pside" data-v="1"><button type="button" data-v="1" class="on">${esc(ui(lang, 'p_first'))}</button><button type="button" data-v="2">${esc(ui(lang, 'p_second'))}</button></div></div>
           <button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><button type="button" class="explay stop" data-k="pstop" hidden>${esc(ui(lang, 'p_stop'))}</button></div>` : ''}
         <div class="exscale" aria-hidden="true" dir="ltr"><i></i><span>10 cm</span></div>
         <p class="exhint">${esc(ui(lang, phone() ? 'hintT' : 'hint'))}</p>
@@ -102,10 +103,12 @@
         // the card's own pull-downs (the portal's rule: no system <select>): a button showing the choice, its list opening upward over the case
         let lock = false; const setDD = (dd, v) => { const o = [...dd.querySelectorAll('.expdd-l button')], b = o.find(x => +x.dataset.v === +v) || o[0]; dd.dataset.v = b.dataset.v; dd.querySelector('.expdd-b b').textContent = b.textContent; o.forEach(x => x.classList.toggle('on', x === b)); };
         const shut = () => ov.querySelectorAll('.expdd.open').forEach(d => d.classList.remove('open'));
-        [lvS, sdS].forEach(dd => { dd.querySelector('.expdd-b').onclick = ev => { ev.stopPropagation(); if (lock) return; const was = dd.classList.contains('open'); shut(); if (!was) { dd.classList.add('open'); const on = dd.querySelector('.expdd-l .on'); if (on) on.scrollIntoView({ block: 'nearest' }); } };
+        [lvS].forEach(dd => { dd.querySelector('.expdd-b').onclick = ev => { ev.stopPropagation(); if (lock) return; const was = dd.classList.contains('open'); shut(); if (!was) { dd.classList.add('open'); const on = dd.querySelector('.expdd-l .on'); if (on) on.scrollIntoView({ block: 'nearest' }); } };
           dd.querySelectorAll('.expdd-l button').forEach(b => b.onclick = ev => { ev.stopPropagation(); setDD(dd, b.dataset.v); shut(); }); });
+        const setSd = v => { v = +v === 2 ? 2 : 1; sdS.dataset.v = v; sdS.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.v === v)); };   // 手番: 先手 / 後手, two buttons side by side (as on the portal's card)
+        sdS.querySelectorAll('button').forEach(b => b.onclick = () => { if (!lock) setSd(b.dataset.v); });
         ov.addEventListener('click', shut);
-        const setLv = v => setDD(lvS, v), setSd = v => setDD(sdS, v);
+        const setLv = v => setDD(lvS, v);
         try { const q = JSON.parse(localStorage.getItem(PK) || '{}')[id]; if (q) { setLv(q.lv); setSd(q.side); } } catch (x) {}
         const tt = k => ({ 'p.you': ui(lang, 'p_you'), 'p.ai': 'AI', 'p.turn': ui(lang, 'p_turn'), 'p.think': ui(lang, 'p_think'), 'res.win': ui(lang, 'p_win'), 'res.lose': ui(lang, 'p_lose'), 'res.draw': ui(lang, 'p_draw') })[k] || '';
         const playing = on => { ov.classList.toggle('exv-play', on); pb.hidden = on; sb.hidden = !on; lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
