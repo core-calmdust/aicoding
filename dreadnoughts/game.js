@@ -1,0 +1,604 @@
+// DREADNOUGHTS — the game: title → sortie → fleet draft → deploy → battle → result, on the 3D world (world.js).
+// The rules, the AI (Lv.1–20, Lv.19–20 plan ahead in a worker) and the draft model are the 2D 海戦ゲーム's (../seabattle/).
+(function () {
+'use strict';
+const E = window.SeaEngine, $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const STORE = 'aicoding-dreadnoughts', LANGS = ['ja', 'en'];
+const skillOf = s => E.TYPES[s.t].skill;
+let saved = null; try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) {}
+const S = Object.assign({ rule: 'tactics', level: 8, first: 'you', adj: false, sound: true, lang: null }, saved && saved.settings);
+try { if (localStorage.getItem('atlas-sfx') === '0') S.sound = false; } catch (e) {}
+let LANG = LANGS.includes(S.lang) ? S.lang : ((navigator.language || 'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en');
+
+// ---------- texts (DREADNOUGHTS' own; the rules' and ships' texts come from the 2D game's SEA_I18N) ----------
+const DN = {
+  ja: {
+    tagline: '50隻の艦から艦隊を編成し、夕暮れの外洋で敵艦隊と撃ち合う。索敵・煙幕・雷撃・航空攻撃——艦ごとのスキルで読み合う海戦タクティクス。',
+    'm.play': '出撃', 'm.archive': '艦艇図鑑', 'm.help': 'ブリーフィング', 'm.back': 'コレクションへ戻る',
+    'h.mine': '自軍艦隊', 'h.foe': '敵艦隊', 'h.afloat': 'SHIPS AFLOAT', 'h.bal': '形勢', 'h.you': '自軍', 'h.log': '戦況ログ', 'h.k': '遊び方',
+    'v.foe': '敵の海域', 'v.mine': '自軍の海域',
+    's.k': '対局の設定', 's.level': 'AIの強さ', 's.first': '先攻', 's.adj': '艦の置き方', 's.go': '出撃する', 'rec': 'おすすめ',
+    'd.mine': '自軍の編成', 'd.foe': '敵の編成', 'd.budget': '残りコスト', 'd.k': '{n}巡目 ・ 3〜6隻 ・ コスト{b}まで', 'd.you': 'YOUR PICK', 'd.ai': 'ENEMY PICK',
+    'd.ships': '{n}/{m}隻', 'd.ai.pick': '敵が{s}を選んだ', 'd.wait': '敵が艦を選んでいます…',
+    'dep.hint': '艦をドラッグで移動、タップで回転。配置が決まったら出撃。', 'dep.hint.pc': '艦をドラッグで移動、クリックで回転。配置が決まったら出撃。',
+    'b.you': 'YOUR TURN', 'b.foe': 'ENEMY TURN', 'b.deploy': 'DEPLOYMENT', 'b.over': 'BATTLE OVER',
+    'w.hit': 'HIT', 'w.miss': 'MISS', 'w.sunk': 'SUNK', 'w.lost': 'LOST', 'w.skill': 'SKILL', 'w.fog': 'NO SIGNAL', 'w.dent': 'ARMOR',
+    'p.resume': '再開', 'p.new': '新しい対局', 'p.resign': '投了する', 'p.title': 'タイトルへ',
+    'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'もう一度出撃', 'r.look': '海域を見る', 'r.sub': '{n}手で決着 ・ AI Lv.{l}', 'r.subR': '投了 ・ AI Lv.{l}',
+    'r.acc': '命中率', 'r.shots': '発射', 'r.sunk': '撃沈', 'r.lost': '損失',
+    'a.k': '全50隻', 'a.all': 'すべて', ok: 'OK', back: '戻る',
+    'u.cd': 'クールタイム {n}', 'u.len': '{n}マス', 'u.cost': 'コスト',
+    'help': [['艦隊を編成', 'タクティクスでは、毎回ちがう10種の艦から交互に選んで艦隊を組む。コスト20までで3〜6隻。艦ごとにスキル（攻撃・索敵・防御）があり、組み合わせで戦い方が変わる。'],
+      ['配置', '自軍の海域に艦を並べる。ドラッグで移動、タップ（クリック）で回転。艦の大きさがそのまま的の大きさになる。'],
+      ['撃ち合い', '敵の海域のマスを選んで砲撃。命中すると炎が上がり、艦のマスをすべて当てると撃沈。スキルはクールタイムが明けると使える。先に敵艦隊を全滅させた方の勝ち。']],
+  },
+  en: {
+    tagline: 'Draft a fleet from fifty warships and trade fire across an evening ocean. Sonar, smoke, torpedoes, air strikes — every ship brings a skill to outwit the enemy.',
+    'm.play': 'Sortie', 'm.archive': 'Ship archive', 'm.help': 'Briefing', 'm.back': 'Back to the collection',
+    'h.mine': 'Our fleet', 'h.foe': 'Enemy fleet', 'h.afloat': 'SHIPS AFLOAT', 'h.bal': 'Balance', 'h.you': 'Us', 'h.log': 'Battle log', 'h.k': 'How to play',
+    'v.foe': 'Enemy waters', 'v.mine': 'Our waters',
+    's.k': 'Game settings', 's.level': 'AI strength', 's.first': 'First to fire', 's.adj': 'Ship spacing', 's.go': 'Engage', 'rec': 'RECOMMENDED',
+    'd.mine': 'Our picks', 'd.foe': 'Enemy picks', 'd.budget': 'Budget', 'd.k': 'Pick {n} · 3–6 ships · up to {b} cost', 'd.you': 'YOUR PICK', 'd.ai': 'ENEMY PICK',
+    'd.ships': '{n}/{m} ships', 'd.ai.pick': 'The enemy took the {s}', 'd.wait': 'The enemy is choosing…',
+    'dep.hint': 'Drag a ship to move it, tap to turn it. Engage when ready.', 'dep.hint.pc': 'Drag a ship to move it, click to turn it. Engage when ready.',
+    'b.you': 'YOUR TURN', 'b.foe': 'ENEMY TURN', 'b.deploy': 'DEPLOYMENT', 'b.over': 'BATTLE OVER',
+    'w.hit': 'HIT', 'w.miss': 'MISS', 'w.sunk': 'SUNK', 'w.lost': 'LOST', 'w.skill': 'SKILL', 'w.fog': 'NO SIGNAL', 'w.dent': 'ARMOR',
+    'p.resume': 'Resume', 'p.new': 'New game', 'p.resign': 'Resign', 'p.title': 'Title screen',
+    'r.win': 'VICTORY', 'r.lose': 'DEFEAT', 'r.again': 'Sortie again', 'r.look': 'View the sea', 'r.sub': 'Decided in {n} moves · AI Lv.{l}', 'r.subR': 'Resigned · AI Lv.{l}',
+    'r.acc': 'ACCURACY', 'r.shots': 'SHOTS', 'r.sunk': 'SUNK', 'r.lost': 'LOST',
+    'a.k': 'All 50 ships', 'a.all': 'All', ok: 'OK', back: 'Back',
+    'u.cd': 'Cooldown {n}', 'u.len': '{n} squares', 'u.cost': 'Cost',
+    'help': [['Draft a fleet', 'In Tactics both sides take turns picking from ten ship types, different every game: up to 20 cost, 3 to 6 ships. Each ship has a skill — attack, scouting or defence — and the mix decides how you fight.'],
+      ['Deploy', 'Place your ships in our waters. Drag to move, tap (click) to turn. A ship\'s length is the size of the target it makes.'],
+      ['Exchange fire', 'Pick a square in the enemy waters to fire. A hit starts a fire; hit every square of a ship to sink it. Skills come back after their cooldown. Sink the whole enemy fleet first to win.']],
+  },
+};
+function t(k, v) { let s = DN[LANG] && DN[LANG][k]; if (s == null) s = SEA_I18N[LANG] && SEA_I18N[LANG][k]; if (s == null) s = DN.en[k]; if (s == null) s = SEA_I18N.en[k]; if (s == null) return k; if (v && typeof s === 'string') for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; }
+const tier = lv => t('tier')[Math.min(4, (lv - 1) / 4 | 0)];
+const PC = matchMedia('(hover: hover) and (pointer: fine)'), WIDE = matchMedia('(min-width:761px) and (min-height:521px)');
+
+// ---------- sound (Web Audio, no files) ----------
+let AC = null;
+function ac() { if (!S.sound) return null; try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { return null; } return document.hidden ? null : AC; }
+function tone(f0, f1, dur, type, vol, when) { const a = ac(); if (!a) return; const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + (when || 0); o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t0 + dur); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol || .2, t0 + .012); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur); o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + .05); }
+function noise(dur, freq, q, vol, when, type) { const a = ac(); if (!a) return; const n = a.sampleRate * dur | 0, b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.2); const s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(), t0 = a.currentTime + (when || 0); s.buffer = b; f.type = type || 'bandpass'; f.frequency.value = freq; f.Q.value = q; g.gain.value = vol; s.connect(f); f.connect(g); g.connect(a.destination); s.start(t0); }
+const SFX = {
+  lock: () => tone(1250, 1180, .16, 'sine', .08),
+  fire: () => { noise(.7, 160, .5, .55, 0, 'lowpass'); tone(90, 38, .5, 'triangle', .28); },
+  miss: () => { noise(.6, 1700, .7, .22); tone(420, 190, .3, 'sine', .06); },
+  hit: () => { noise(.6, 240, .6, .6, 0, 'lowpass'); tone(150, 40, .5, 'triangle', .34); },
+  sunk: () => { noise(1.2, 170, .5, .65, 0, 'lowpass'); tone(110, 28, 1.1, 'triangle', .38); tone(660, 330, .5, 'sine', .07, .15); },
+  place: () => tone(520, 640, .07, 'triangle', .1),
+  select: () => tone(880, 990, .06, 'sine', .07),
+  bad: () => tone(200, 150, .14, 'square', .05),
+  win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, f, .4, 'triangle', .14, i * .14)),
+  lose: () => [392, 330, 262].forEach((f, i) => tone(f, f * .97, .5, 'sine', .14, i * .22)),
+  ping: () => { tone(1480, 1460, .5, 'sine', .07); tone(1480, 1460, .5, 'sine', .03, .22); },
+  horn: () => { tone(110, 108, 1.1, 'sawtooth', .05); tone(165, 162, 1.1, 'sawtooth', .035); },
+};
+const sfx = k => { try { SFX[k] && SFX[k](); } catch (e) {} };
+document.addEventListener('visibilitychange', () => { if (AC) { try { document.hidden ? AC.suspend() : AC.resume(); } catch (e) {} } });
+
+// ---------- ship texts and icons (as the 2D game) ----------
+const SK_ICON = {
+  armor: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>',
+  aa: '<svg viewBox="0 0 24 24"><path d="M12 21V9M7 13l5-5 5 5M5 5.5l7-3 7 3"/></svg>',
+  decoy: '<svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="4.5"/><path d="M12 14.5V20M7 20.5h10M12 5.5V2.5"/></svg>',
+  counter: '<svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.8-5.8M19.5 3.5v4.8h-4.8"/></svg>',
+  rally: '<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="1"/><path d="M4 12h16M12 8v12M8.5 8L12 4.5 15.5 8"/></svg>',
+  hospital: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M12 7.5v9M7.5 12h9"/></svg>',
+  trace: '<svg viewBox="0 0 24 24"><path d="M3 12h3l2.2-6 3.6 12 2.4-8 1.8 4H21"/></svg>',
+  pursuit: '<svg viewBox="0 0 24 24"><path d="M5 6l6 6-6 6M13 6l6 6-6 6"/></svg>',
+  haste: '<svg viewBox="0 0 24 24"><circle cx="13.5" cy="13" r="7"/><path d="M13.5 9v4l3 2M2.5 7h5M2 11h3.5"/></svg>',
+  net: '<svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20M4 12h16M12 4v16"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>',
+  plunder: '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M12 7v13M8 10.5h8M5 14a7 7 0 0 0 14 0"/></svg>',
+  calm: '<svg viewBox="0 0 24 24"><path d="M3 9.5c3-3 6 3 9 0s6 3 9 0M3 15c3-3 6 3 9 0s6 3 9 0"/></svg>',
+  hull: '<svg viewBox="0 0 24 24"><path d="M3 14h18l-3 5H6zM8 14V9.5h8V14M12 9.5V5"/></svg>',
+  ring: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx=".8" stroke-dasharray="1.5 1.5"/></svg>',
+  allout: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>',
+  guided: '<svg viewBox="0 0 24 24"><path d="M4 20l9-9"/><path d="M13 5l6 0 0 6-6-6z"/><circle cx="5" cy="19" r="1.5"/></svg>',
+  dtorpedo: '<svg viewBox="0 0 24 24"><path d="M8 21V7M16 21V7"/><path d="M5 10l3-4 3 4M13 10l3-4 3 4"/></svg>',
+  listen: '<svg viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>',
+  cross: '<svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="3"/></svg>',
+  bracket: '<svg viewBox="0 0 24 24"><rect x="1.5" y="9.5" width="5" height="5" rx=".8"/><rect x="17.5" y="9.5" width="5" height="5" rx=".8"/><path d="M10 12h4M12 10v4"/></svg>',
+  depth: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/><path d="M12 8.8V7" /></svg>',
+  plate: '<svg viewBox="0 0 24 24"><path d="M3 15h18l-2.5 4h-13z"/><path d="M6 15V9h12v6"/><path d="M9 9V6h6v3"/></svg>',
+  diag: '<svg viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="5" height="5" rx=".8"/><rect x="9.5" y="9.5" width="5" height="5" rx=".8"/><rect x="16.5" y="16.5" width="5" height="5" rx=".8"/><path d="M16 4h4v4"/></svg>',
+  echo: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/></svg>',
+  lance: '<svg viewBox="0 0 24 24"><rect x="9.5" y="2" width="5" height="4.2" rx=".8"/><rect x="9.5" y="7.3" width="5" height="4.2" rx=".8"/><rect x="9.5" y="12.6" width="5" height="4.2" rx=".8"/><rect x="9.5" y="17.9" width="5" height="4.2" rx=".8"/></svg>',
+  rapid: '<svg viewBox="0 0 24 24"><path d="M4 8h9M4 12h12M4 16h9"/><path d="M15 6l5 6-5 6"/></svg>',
+  intel: '<svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  flare: '<svg viewBox="0 0 24 24"><path d="M12 2v5"/><circle cx="12" cy="11" r="3"/><path d="M5 16l2.5-2M19 16l-2.5-2M12 15v2"/><rect x="6" y="17" width="12" height="4" rx="1"/></svg>',
+  ward: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
+  suppress: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M5 5l14 14"/></svg>',
+  sweep: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M12 6.5v2M12 15.5v2M6.5 12h2M15.5 12h2"/></svg>',
+  strafe: '<svg viewBox="0 0 24 24"><rect x="9.5" y="9.5" width="5" height="5" rx=".8"/><rect x="3" y="3" width="5" height="5" rx=".8"/><rect x="16" y="3" width="5" height="5" rx=".8"/><rect x="3" y="16" width="5" height="5" rx=".8"/><rect x="16" y="16" width="5" height="5" rx=".8"/></svg>',
+  rtorpedo: '<svg viewBox="0 0 24 24"><path d="M3 12h15"/><path d="M14 7l5 5-5 5"/><path d="M3 8v8"/></svg>',
+  probe: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><rect x="9.5" y="2" width="5" height="4.5" rx=".8"/><rect x="9.5" y="17.5" width="5" height="4.5" rx=".8"/><rect x="2" y="9.5" width="4.5" height="5" rx=".8"/><rect x="17.5" y="9.5" width="4.5" height="5" rx=".8"/></svg>',
+  barrage: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5" rx=".8"/><rect x="9.5" y="3" width="5" height="5" rx=".8"/><rect x="16" y="3" width="5" height="5" rx=".8"/><rect x="3" y="9.5" width="5" height="5" rx=".8"/><rect x="9.5" y="9.5" width="5" height="5" rx=".8"/><rect x="16" y="9.5" width="5" height="5" rx=".8"/><rect x="3" y="16" width="5" height="5" rx=".8"/><rect x="9.5" y="16" width="5" height="5" rx=".8"/><rect x="16" y="16" width="5" height="5" rx=".8"/></svg>',
+  radar: '<svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 6a9 9 0 0 1 14 0M7.5 9a5.5 5.5 0 0 1 9 0"/><circle cx="12" cy="14" r="1.6"/><path d="M8 21h8"/></svg>',
+  mine: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5.5"/><path d="M12 4v3.5M12 18.5V22M3 13h3.5M17.5 13H21M5.6 6.6l2.5 2.5M15.9 16.9l2.5 2.5M18.4 6.6l-2.5 2.5M8.1 16.9l-2.5 2.5"/></svg>',
+  rocket: '<svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="5.5" height="6" rx="1"/><rect x="9.25" y="9" width="5.5" height="6" rx="1"/><rect x="16" y="9" width="5.5" height="6" rx="1"/><path d="M5 6l1-2M12 6V3.5M19 6l-1-2"/></svg>',
+  repair: '<svg viewBox="0 0 24 24"><path d="M14.5 4a4.5 4.5 0 0 0-4.2 6.1L3.5 16.9a1.8 1.8 0 0 0 2.6 2.6l6.8-6.8A4.5 4.5 0 0 0 19 8.5l-2.7 2.7-2.6-.6-.6-2.6L15.8 5.3A4.5 4.5 0 0 0 14.5 4z"/></svg>',
+  smoke: '<svg viewBox="0 0 24 24"><path d="M5 15a4 4 0 0 1 3-6.5A5 5 0 0 1 17.5 9 3.5 3.5 0 0 1 19 15.8"/><path d="M4 19h16M7 22h10"/></svg>',
+  scout: '<svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M12 8l-7 4 7 1 7-1z"/><path d="M10 16h4"/><path d="M3 5h18M3 19h4M17 19h4"/></svg>',
+  twin: '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="3.2"/><circle cx="16.5" cy="12" r="3.2"/><path d="M8 4v3M16.5 4v3M8 17v3M16.5 17v3"/></svg>',
+  command: '<svg viewBox="0 0 24 24"><path d="M6 21V3"/><path d="M6 4h11l-2.5 3.5L17 11H6"/><path d="M12 15l2 2 4-4"/></svg>',
+  jam: '<svg viewBox="0 0 24 24"><path d="M12 13v8"/><circle cx="12" cy="11" r="2"/><path d="M8 7a5.5 5.5 0 0 0 0 8M16 7a5.5 5.5 0 0 1 0 8"/><path d="M4 4l16 16"/></svg>',
+  bomb: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><rect x="9" y="16" width="6" height="6" rx="1"/><rect x="2" y="9" width="6" height="6" rx="1"/><rect x="16" y="9" width="6" height="6" rx="1"/></svg>',
+  volley: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.2"/><rect x="13" y="4" width="7" height="7" rx="1.2"/><rect x="4" y="13" width="7" height="7" rx="1.2"/><rect x="13" y="13" width="7" height="7" rx="1.2"/></svg>',
+  torpedo: '<svg viewBox="0 0 24 24"><path d="M12 21V6"/><path d="M7 10l5-5 5 5"/><path d="M8 21h8"/></svg>',
+  sonar: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M7.200 7.200a6.800 6.800 0 0 0 0 9.600M16.800 7.200a6.800 6.800 0 0 1 0 9.600M4 4a11.300 11.300 0 0 0 0 16M20 4a11.300 11.300 0 0 1 0 16"/></svg>',
+};
+const PASS_K = ['armor', 'aa', 'decoy', 'counter', 'calm', 'plunder', 'net', 'pursuit', 'haste', 'trace', 'rally', 'hospital'];
+const PASSIVE_T = T => PASS_K.some(k => T[k]);
+const abilityKey = T => T.skill || PASS_K.find(k => T[k]) || 'hull';
+const ROLE_OF = k => E.ROLE.atk.includes(k) ? 0 : E.ROLE.info.includes(k) ? 1 : E.ROLE.def.includes(k) ? 2 : 3;
+function shipSkillName(T) { if (T.skill) return t('sk.' + T.skill); const p = PASS_K.find(k => T[k]); return p ? t('sk.' + p) : T.cost === 0 ? t('sk.free') : t('dr.none'); }
+function shipSkillText(T) {
+  if (T.skill) return t('sk.' + T.skill + '.d');
+  if (T.armor) return t(T.armor > 1 ? 'sk.armor2.d' : 'sk.armor.d');
+  const p = PASS_K.find(k => T[k]); if (p) return String(t('sk.' + p + '.d')).replace(/^常時：/, '').replace(/^Always: /, '');
+  return T.cost === 0 ? t('sk.free.d') : t('pk.plain');
+}
+const kindOf = T => T.skill ? t('u.cd', { n: T.cd }) : PASSIVE_T(T) ? t('pk.passive') : t('pk.none');
+const lenPips = n => `<span class="len">${'<i></i>'.repeat(n)}</span>`;
+const icon = k => SK_ICON[k] || SK_ICON.hull;
+
+// ---------- portraits: rendered one at a time, between frames ----------
+const pq = [];
+function portraitImg(k, len, cls) { const id = k + '|' + len, got = World.portraitIf(k, len); return got ? `<img class="${cls || ''}" alt="" src="${got}">` : `<img class="${cls || ''}" data-pk="${id}" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">`; }
+function fillPortraits(root) { (root || document).querySelectorAll('img[data-pk]:not([data-ok])').forEach(img => { img.dataset.ok = 1; pq.push(img); }); pump(); }
+let pumping = false;
+function pump() { if (pumping) return; pumping = true; const step = () => { const t0 = performance.now(); while (pq.length && performance.now() - t0 < 14) { const img = pq.shift(); if (!img.isConnected) continue; const [k, len] = img.dataset.pk.split('|').map(Number); try { img.src = World.portrait(k, len); } catch (e) {} } if (pq.length) requestAnimationFrame(step); else pumping = false; }; requestAnimationFrame(step); }
+
+// ---------- state ----------
+let G = null, drag = null, hover = -1, aimTap = -1;
+function save() {
+  const d = { settings: Object.assign({}, S, { lang: LANG }) };
+  if (G && (G.phase === 'deploy' || G.phase === 'battle')) d.game = { phase: G.phase, my: G.my, foe: G.st ? G.st.sides[1].ships : null, acts: G.st ? G.st.acts : [], first: G.first, foePicks: G.foePicks || null, rule: G.rule, adj: G.adj, level: G.level, evals: G.evals };
+  try { localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
+}
+function restore() {
+  const g = saved && saved.game; if (!g || !Array.isArray(g.my)) return false;
+  const rule = E.RULES.includes(g.rule) ? g.rule : 'tactics', T = rule === 'tactics';
+  if (!E.validFleet(g.my, false, T)) return false;
+  G = newG({ phase: 'deploy', my: g.my, level: g.level || S.level, rule, adj: !!g.adj, first: g.first | 0, foePicks: g.foePicks });
+  if (g.phase !== 'battle' || !g.foe || !E.validFleet(g.foe, false, T)) return true;
+  G.st = E.newGame({ rule, adj: G.adj, fleets: [g.my, g.foe], first: G.first });
+  for (const a of g.acts || []) if (!E.act(G.st, a)) break;
+  G.my = G.st.sides[0].ships; G.evals = Array.isArray(g.evals) ? g.evals.slice(0, G.st.log.length + 1) : [];
+  G.phase = G.st.winner >= 0 ? 'over' : 'battle'; G.view = 1;
+  return true;
+}
+const newG = o => Object.assign({ phase: 'title', my: [], st: null, level: S.level, rule: S.rule, adj: S.adj, view: 0, hint: null, evals: [], busy: false, resigned: false, first: 0, armed: null, draft: null, foePicks: null }, o);
+const tac = () => G && G.rule === 'tactics';
+
+// ---------- the screen's free area for the camera (between the HUD panels) ----------
+function safeRect() {
+  const w = innerWidth, h = innerHeight;
+  if (!G || G.phase === 'title') return { x: 0, y: 0, w, h };
+  if (WIDE.matches) { const side = G.phase === 'deploy' ? 310 : 324; return { x: side, y: 66, w: Math.max(200, w - side * 2), h: Math.max(200, h - 66 - (G.phase === 'deploy' ? 96 : 136)) }; }
+  return { x: 6, y: 96, w: w - 12, h: Math.max(200, h - 96 - (G.phase === 'deploy' ? 210 : 236)) };
+}
+
+// ---------- world sync ----------
+function lastOn(z) { if (!G.st) return -1; for (let i = G.st.log.length - 1; i >= 0; i--) { const m = G.st.log[i]; if (m.by !== z && !m.skill) return m.cell; if (m.by === z) break; } return -1; }
+function zoneOpts(z) {
+  if (z === 0) { const sd = G.st ? G.st.sides[0] : null; return { ships: G.my, show: i => (sd && sd.sunk[i]) ? 'sunk' : drag && drag.i === i ? (drag.bad ? 'bad' : 'ghost') : 'own', shots: sd ? sd.shots : null, last: lastOn(0), scans: G.st ? G.st.scans[1] : null, mines: sd ? sd.mines : null }; }
+  if (!G.st) return { ships: [] };
+  const sd = G.st.sides[1], over = G.phase === 'over';
+  return { ships: sd.ships, show: i => sd.sunk[i] ? 'sunk' : over ? 'own' : '', shots: over ? sd.shots : E.view(sd).shots, heat: G.hint ? G.hint.p : null, best: G.hint ? G.hint.best : -1, last: lastOn(1),
+    scans: G.st.scans[0], glow: G.armed != null && hover >= 0 && G.view === 1 ? E.footprint(skillOf(G.my[G.armed]), hover) : null, fogged: sd.fog > 0 };
+}
+function syncWorld() {
+  if (!G || G.phase === 'title' || G.phase === 'draft') { World.setZone(0, { ships: [] }); World.setZone(1, { ships: [] }); return; }
+  World.setZone(0, zoneOpts(0)); World.setZone(1, zoneOpts(1));
+}
+function look(z, dur) { if (G) G.view = z; World.focus(z); renderViews(); return World.show(z ? 'z1' : 'z0', dur == null ? 900 : dur); }
+
+// ---------- HUD ----------
+function phaseUI() {
+  const ph = G ? G.phase : 'title';
+  $('#scrTitle').classList.toggle('hide', ph !== 'title');
+  $('#hud').classList.toggle('hide', ph === 'title' || ph === 'draft');
+  $('#deployBar').classList.toggle('hide', ph !== 'deploy');
+  $('#right').classList.toggle('hide', !(ph === 'battle' || ph === 'over'));
+  $('#dock').classList.toggle('hide', !(ph === 'battle' && tac()));
+  $('#views').classList.toggle('hide', !(ph === 'battle' || ph === 'over'));
+  $('#scrDraft').classList.toggle('hide', ph !== 'draft');
+  World.grids(ph === 'title' || ph === 'draft' ? 0 : 1, ph === 'title' || ph === 'draft' || ph === 'deploy' ? 0 : 1);
+}
+function render() { if (!G) return; phaseUI(); syncWorld(); renderBanner(); renderFleets(); renderLog(); renderBal(); renderDock(); renderViews(); $('#bHint').classList.toggle('off', !G.hint); $('#bHint').disabled = !(G.phase === 'battle' && G.st.turn === 0 && !G.busy); }
+function renderBanner(msg) {
+  let tt = '', s = msg || '', foe = false;
+  if (G.phase === 'deploy') { tt = t('b.deploy'); s = s || t('st.deploy'); }
+  else if (G.phase === 'over') { tt = t('b.over'); s = s || (G.resigned ? t('st.resign') : t(G.st.winner === 0 ? 'st.win' : 'st.lose')); }
+  else if (G.st) { foe = G.st.turn === 1; tt = t(foe ? 'b.foe' : 'b.you');
+    if (!s) s = foe ? t('st.ai') : G.armed != null ? t('sk.aim.' + skillOf(G.my[G.armed])) : G.hint ? t('hint.best', { c: E.cellName(G.hint.best), p: Math.round(G.hint.p[G.hint.best] * 100) }) : G.rule === 'salvo' ? t('st.youN', { n: G.st.left }) : t('st.you'); }
+  $('#bnT').textContent = tt; $('#bnT').classList.toggle('foe', foe); $('#bnB').classList.toggle('foe', foe); $('#bnS').textContent = s;
+}
+function fleetItem(s, i, side, mine) {
+  const T = E.TYPES[s.t], sunk = side && side.sunk[i], hits = side ? (mine ? side.hitsOn[i] : sunk ? s.len : 0) : 0, known = mine || sunk || G.phase === 'over';
+  const sk = !!(G.st && G.st.cd && T.skill), c = sk ? G.st.cd[mine ? 0 : 1][i] : null, live = sk ? E.skillLive(G.st, mine ? 0 : 1, i) : false;
+  const tag = sk ? (live ? (c === 0 ? t('sk.ready') : t('sk.wait', { n: c })) : t('sk.lost')) : '';
+  return `<div class="fi${mine ? '' : ' foe'}${sunk ? ' dead' : ''}${known ? '' : ' unk'}" title="${t('ship.' + s.t)}">${portraitImg(s.t, s.len)}<b>${t('ship.' + s.t)}</b><span class="hp">${Array.from({ length: s.len }, (_, k) => `<i${k < hits ? ' class="x"' : ''}></i>`).join('')}</span>${tag ? `<span class="tg">${tag}</span>` : ''}</div>`;
+}
+function renderFleets() {
+  const sd = G.st ? G.st.sides[0] : null;
+  $('#listMine').innerHTML = G.my.map((s, i) => fleetItem(s, i, sd, true)).join('');
+  $('#mineLeft').textContent = sd ? t('left', { n: sd.afloat }) : t('d.ships', { n: G.my.length, m: G.my.length });
+  if (G.st) { const fs = G.st.sides[1]; $('#listFoe').innerHTML = fs.ships.map((s, i) => fleetItem(s, i, fs, false)).join(''); $('#foeLeft').textContent = fs.afloat; $('#foeLvl').textContent = 'AI Lv.' + G.level + ' ' + tier(G.level); }
+  fillPortraits($('#hud'));
+}
+function renderLog() {
+  const ol = $('#logList'); if (!G.st) { ol.innerHTML = ''; return; }
+  const L = G.st.log, from = Math.max(0, L.length - 60);
+  ol.innerHTML = L.slice(from).map((m, j) => { const i = from + j, foe = m.by === 1;
+    let txt;
+    if (m.rest) txt = t('log.rest');
+    else if (m.skill) txt = `<strong>${t('sk.' + m.skill)}</strong>${m.blk ? ' ' + t('log.blk') : m.cell >= 0 && !E.NOAIM[m.skill] ? ' ' + E.cellName(m.cell) : ''}${m.k != null && !m.blk ? ' → ' + m.k : ''}`;
+    else txt = `${m.via === 'counter' ? t('sk.counter') + ' ' : ''}${E.cellName(m.cell)} ${m.sunk >= 0 ? `<em>${t('log.sunk')}</em>` : m.by === 0 && m.fog && G.st.sides[1].fogged[m.cell] ? t('log.fog') : m.mine ? `<em>${t('log.mine')}</em>` : m.dent ? `<em>${t('log.dent')}</em>` : m.hit ? `<em>${t('log.hit')}</em>` : t('log.miss')}`;
+    return `<li class="${foe ? 'foe' : ''}"><span class="n">${i + 1}</span><span class="d"></span><span class="t">${txt}</span></li>`; }).join('');
+  ol.scrollTop = ol.scrollHeight;
+}
+function renderBal() {
+  const ev = G.evals || [], n = G.st ? G.st.log.length : 0; let p = null;
+  for (let i = Math.min(n, ev.length - 1); i >= 0 && p == null; i--) if (ev[i] != null) p = ev[i];
+  if (G.phase === 'over') p = G.st.winner === 0 ? 1 : 0;
+  $('#balV').textContent = p == null ? '—' : Math.round(p * 100) + '%'; $('#balF').style.width = (p == null ? 50 : p * 100) + '%';
+}
+function renderDock() {
+  const el = $('#dock'); if (!tac() || !G.st) { el.innerHTML = ''; return; }
+  const live = G.phase === 'battle', mine = G.st.turn === 0 && !G.busy;
+  el.innerHTML = G.st.sides[0].ships.map((s, i) => { const k = skillOf(s); if (!k) return ''; const T = E.TYPES[s.t], c = G.st.cd[0][i], dead = !E.skillLive(G.st, 0, i), calm = (k === 'twin' || k === 'rapid') && E.calmOn(G.st, 0), ready = !dead && !calm && c === 0;
+    const p = dead ? 0 : Math.max(0, 1 - c / Math.max(1, T.cd));
+    return `<button class="sk ${dead ? 'lost' : ready ? 'ready' : 'wait'}${G.armed === i ? ' armed' : ''}" data-i="${i}" ${ready && live && mine ? '' : 'disabled'} style="--p:${p.toFixed(3)}" title="${t('ship.' + s.t)} — ${t('sk.' + k + '.d')}"><span class="ring"></span><span class="ic">${icon(k)}</span><b>${t('sk.' + k)}</b><small>${dead ? t('sk.lost') : calm ? t('sk.calmed') : ready ? t('sk.ready') : t('sk.wait', { n: c })}</small></button>`; }).join('');
+}
+function renderViews() { $$('#views .vt').forEach(b => b.classList.toggle('on', G && +b.dataset.z === G.view)); }
+let toastT = 0, msgT = 0;
+function callout(word, sub, cls) { const el = $('#toast'); el.innerHTML = `<div class="tw ${cls || ''}">${word}</div>${sub ? `<div class="ts">${sub}</div>` : ''}`; clearTimeout(toastT); toastT = setTimeout(() => { el.innerHTML = ''; }, 1150); }
+function msg(text) { const el = $('#msg'); el.textContent = text; el.classList.add('on'); clearTimeout(msgT); msgT = setTimeout(() => el.classList.remove('on'), 1700); renderBanner(text); }
+
+// ---------- 形勢 (public-information rollouts) ----------
+let evalJob = 0;
+function queueEval() { if (!G.st) return; const job = ++evalJob, n = G.st.log.length, st = G.st; setTimeout(() => { if (job !== evalJob || G.st !== st || st.winner >= 0) return; let p = null; try { p = E.winProb(st, 0, Math.random, 8); } catch (e) {} if (p == null) return; G.evals[n] = Math.round(p * 1000) / 1000; renderBal(); save(); }, 80); }
+
+// ---------- screens ----------
+function sheet(id, on) { $(id).classList.toggle('hide', !on); }
+function toTitle() {
+  evalJob++; G = newG({ phase: 'title' }); stopPreviews();
+  ['#scrSetup', '#scrMenu', '#scrResult', '#scrArchive', '#scrHelp'].forEach(s => sheet(s, false));
+  phaseUI(); syncWorld(); World.sail(true); World.refit(); World.show('title', 1600);
+}
+const RULE_ORDER = ['tactics', 'classic', 'streak', 'salvo'];
+let ND = null;
+function openSetup() { ND = { rule: S.rule, level: S.level, first: S.first, adj: S.adj }; renderSetup(); sheet('#scrSetup', true); }
+function renderSetup() {
+  $('#ruleList').innerHTML = RULE_ORDER.filter(r => E.RULES.includes(r)).map((r, i) => `<button class="rc${ND.rule === r ? ' on' : ''}" data-r="${r}"><span class="num">0${i + 1}</span>${r === 'tactics' ? `<span class="rec">${t('rec')}</span>` : ''}<b>${t('rule.' + r)}</b><p>${t('rule.' + r + '.d')}</p></button>`).join('');
+  $('#lvl').value = ND.level; $('#lvlV').innerHTML = `Lv.${ND.level}<small>${tier(ND.level)}</small>`;
+  $('#segFirst').innerHTML = [['you', t('ng.you')], ['random', t('ng.random')], ['ai', t('ng.ai')]].map(([v, l]) => `<button data-v="${v}" class="${ND.first === v ? 'on' : ''}">${l}</button>`).join('');
+  $('#segAdj').innerHTML = [[0, t('ng.adj0')], [1, t('ng.adj1')]].map(([v, l]) => `<button data-v="${v}" class="${(!!v) === ND.adj ? 'on' : ''}">${l}</button>`).join('');
+}
+function engage() {
+  Object.assign(S, ND); save(); sheet('#scrSetup', false); sheet('#scrResult', false); sheet('#scrMenu', false); World.sail(false); sfx('horn');
+  evalJob++;
+  if (S.rule === 'tactics') return startDraft();
+  G = newG({ phase: 'deploy', my: E.randomFleet(Math.random, S.adj), rule: S.rule, adj: S.adj, level: S.level });
+  enterDeploy();
+}
+
+// ---------- the draft ----------
+let pickSel = [], pickTab = -1, focusK = null, pv = null, pv2 = null;
+function myRun(d) { let n = d.n, c = 0; for (let g = 0; g < 12; g++) { const p = (((n + 1) >> 1) & 1) ^ d.first; if (p === 0) c++; else if (!d.done[1]) break; n++; } return Math.max(1, Math.min(c, E.MAXSHIPS - d.picks[0].length)); }
+function startDraft() {
+  const first = S.first === 'ai' ? 1 : S.first === 'random' ? (Math.random() < .5 ? 0 : 1) : 0;
+  G = newG({ phase: 'draft', rule: 'tactics', adj: S.adj, level: S.level, first, draft: E.draftNew(1 - first) });   // (the second to shoot picks first)
+  pickSel = []; pickTab = -1; focusK = null;
+  phaseUI(); syncWorld(); World.show('wide', 1400);
+  if (!pv) pv = World.preview($('#pv')); pv.start();
+  renderDraft(); draftStep();
+}
+function draftStep() {
+  const d = G.draft, g = G;
+  if (d.turn < 0) { G.busy = false; pv && pv.stop(); G.foePicks = d.picks[1].slice(); sfx('ping'); return enterDeploy(); }
+  if (d.turn === 0) { G.busy = false; renderDraft(); return; }
+  G.busy = true; renderDraft();
+  setTimeout(() => { if (G !== g || G.phase !== 'draft') return; const k = E.draftAI(d, Math.random, G.level); E.draftPick(d, k >= 0 ? k : -1); if (k >= 0) { msg(t('d.ai.pick', { s: t('ship.' + k) })); sfx('place'); } draftStep(); }, 900);
+}
+function addMyShip(k) {
+  const g = E.gridOf(G.my); let put = null;
+  for (let n = 0; n < 600 && !put; n++) { const s = { r: Math.random() * 10 | 0, c: Math.random() * 10 | 0, len: E.TYPES[k].len, h: Math.random() < .5 ? 1 : 0, t: k }; if (E.fits(g, s, G.adj, -2)) put = s; }
+  if (put) G.my.push(put); else G.my = E.randomFleet(Math.random, G.adj, G.my.map(s => s.t).concat(k));
+}
+function draftCard(k, d, mine, run, selCost, costOf) {
+  const T = E.TYPES[k], have = d.picks[0].filter(x => x === k).length, taken = have >= E.MAXSAME, dup = have > 0 && !taken, cost = E.pickCost(d, 0, k), sel = pickSel.includes(k);
+  const fits = sel || costOf((pickSel.length < run ? pickSel : pickSel.slice(0, -1)).concat(k)) <= E.draftLeft(d, 0);
+  const can = mine && E.draftCan(d, 0, k) && fits;
+  const why = taken ? t('pk.taken') : !d.pool[k] ? t('pk.gone') : cost > E.draftLeft(d, 0) - (mine && !sel ? selCost : 0) ? t('pk.cost') : d.picks[0].length >= E.MAXSHIPS ? t('pk.full') : mine && !E.canReachMin(d, 0, k) ? t('pk.min') : '';
+  return `<button class="card r${ROLE_OF(k)}${can || sel ? '' : ' off'}${sel ? ' sel' : ''}${dup ? ' dup' : ''}" data-k="${k}" ${can ? '' : 'aria-disabled="true"'}><span class="role"></span>
+    <span class="top"><span class="cost">${cost}</span><b>${t('ship.' + k)}</b>${lenPips(T.len)}</span>${portraitImg(k, T.len)}
+    <span class="skl">${icon(abilityKey(T))}${shipSkillName(T)}<small>${kindOf(T)}</small></span>
+    ${sel ? `<span class="badge">${run > 1 ? (pickSel.indexOf(k) + 1) + ' · ' : ''}${t('pk.sel')}</span>` : why ? `<span class="why">${why}</span>` : dup ? `<span class="why" style="color:var(--gold)">${t('pk.dup', { n: E.DUP_EXTRA })}</span>` : d.pool[k] > 1 ? `<span class="got">×${d.pool[k]}</span>` : ''}</button>`;
+}
+function renderDraft() {
+  if (!G || G.phase !== 'draft') return;
+  const d = G.draft, mine = d.turn === 0 && !G.busy, f = d.f;
+  if (!mine) pickSel = []; pickSel = pickSel.filter(k => E.draftCan(d, 0, k));
+  const run = myRun(d), costOf = ks => E.draftCost(d.picks[0].concat(ks)) - E.draftCost(d.picks[0]), selCost = costOf(pickSel);
+  const all = E.TYPES.map((_, k) => k).filter(k => f[k]).sort((a, b) => ROLE_OF(a) - ROLE_OF(b) || E.TYPES[a].cost - E.TYPES[b].cost || a - b);
+  const counts = [0, 1, 2, 3].map(g => all.filter(k => ROLE_OF(k) === g).length);
+  $('#drTabs').innerHTML = `<button data-g="-1" class="${pickTab < 0 ? 'on' : ''}">${t('a.all')}<em>${all.length}</em></button>` + [0, 1, 2, 3].map(g => counts[g] ? `<button data-g="${g}" class="${pickTab === g ? 'on' : ''}">${t('dr.g' + g)}<em>${counts[g]}</em></button>` : '').join('');
+  $('#drGrid').innerHTML = all.filter(k => pickTab < 0 || ROLE_OF(k) === pickTab).map(k => draftCard(k, d, mine, run, selCost, costOf)).join('');
+  $('#drK').textContent = t('d.k', { n: d.n + 1, b: E.BUDGET });
+  $('#drTurn').textContent = t(d.turn === 0 ? 'd.you' : 'd.ai'); $('#drTurn').classList.toggle('foe', d.turn !== 0);
+  const left = E.draftLeft(d, 0), used = E.BUDGET - left;
+  $('#bgV').textContent = left - selCost; $('#bgF').style.width = (used / E.BUDGET * 100) + '%'; $('#bgS').style.left = (used / E.BUDGET * 100) + '%'; $('#bgS').style.width = (selCost / E.BUDGET * 100) + '%';
+  $('#bgN').textContent = t('d.ships', { n: d.picks[0].length + pickSel.length, m: E.MAXSHIPS });
+  const chips = (p, cls) => d.picks[p].map((k, i) => `<span class="chip ${cls}${i === d.picks[p].length - 1 && d.last === p ? ' new' : ''}">${portraitImg(k, E.TYPES[k].len)}${t('ship.' + k)}</span>`).join('') || '<span class="chip" style="opacity:.4;padding-left:8px">—</span>';
+  $('#pkMine').innerHTML = chips(0, ''); $('#pkFoe').innerHTML = chips(1, 'foe');
+  $('#drOk').disabled = !(mine && pickSel.length);
+  $('#drOkT').textContent = mine ? (run > 1 ? t('pk.okn', { n: pickSel.length, m: run }) : t('pk.ok')) : t('d.wait');
+  if (focusK == null || !f[focusK]) focusK = pickSel[pickSel.length - 1] != null ? pickSel[pickSel.length - 1] : all[0];
+  showShip(focusK, pv, '#pvName', '#pvMeta', '#pvSkill');
+  fillPortraits($('#scrDraft'));
+}
+let shown = new WeakMap();
+function showShip(k, P, nm, meta, sk) {
+  if (k == null) return; const T = E.TYPES[k];
+  if (P && shown.get(P) !== k) { P.set(k, T.len); shown.set(P, k); }
+  $(nm).textContent = t('ship.' + k);
+  $(meta).innerHTML = `<span>${t('u.cost')}<b>${T.cost}</b></span><span>${t('u.len', { n: '' }).trim()}<b>${T.len}</b></span><span>${t('dr.g' + ROLE_OF(k))}</span>`;
+  $(sk).innerHTML = `${icon(abilityKey(T))}<div><b>${shipSkillName(T)} <small style="font-family:var(--num);color:var(--mute);font-weight:500;letter-spacing:.1em">${kindOf(T)}</small></b><p>${shipSkillText(T)}</p></div>`;
+}
+function draftPickMine(k) { if (G.phase !== 'draft' || G.busy || G.draft.turn !== 0) return; if (!E.draftPick(G.draft, k)) return; addMyShip(k); sfx('place'); }
+function stopPreviews() { if (pv) pv.stop(); if (pv2) pv2.stop(); }
+
+// ---------- deploy ----------
+function enterDeploy() {
+  G.phase = 'deploy'; drag = null; G.view = 0;
+  $('#deployBar p').textContent = t(PC.matches ? 'dep.hint.pc' : 'dep.hint');
+  render(); save(); World.refit(); look(0, 1300);
+}
+const shipAtCell = cell => E.gridOf(G.my)[cell];
+const gridWithout = i => E.gridOf(G.my.map((s, k) => k === i ? null : s));
+function clampShip(s) { const maxR = s.h ? 9 : 10 - s.len, maxC = s.h ? 10 - s.len : 9; s.r = Math.max(0, Math.min(maxR, s.r)); s.c = Math.max(0, Math.min(maxC, s.c)); return s; }
+function tryTurn(i, pivot) {
+  const s = G.my[i], g = gridWithout(i), pr = pivot / 10 | 0, pc = pivot % 10, k0 = s.h ? pc - s.c : pr - s.r;
+  const order = [k0]; for (let d = 1; d < s.len; d++) { if (k0 - d >= 0) order.push(k0 - d); if (k0 + d < s.len) order.push(k0 + d); }
+  for (const k of order) { const n = clampShip({ len: s.len, h: s.h ? 0 : 1, r: s.h ? pr - k : pr, c: s.h ? pc : pc - k, t: s.t }); if (E.fits(g, n, G.adj, -2)) { G.my[i] = n; return true; } }
+  for (let d = 1; d < 4; d++) for (let dr = -d; dr <= d; dr++) for (let dc = -d; dc <= d; dc++) { const n = { len: s.len, h: s.h ? 0 : 1, r: s.r + dr, c: s.c + dc, t: s.t }; if (E.inside(n) && E.fits(g, n, G.adj, -2)) { G.my[i] = n; return true; } }
+  return false;
+}
+function startBattle() {
+  if (G.phase !== 'deploy' || !E.validFleet(G.my, G.adj, tac())) { sfx('bad'); World.shake(.6); return; }
+  if (!tac()) G.first = S.first === 'ai' ? 1 : S.first === 'random' ? (Math.random() < .5 ? 0 : 1) : 0;
+  G.st = E.newGame({ rule: G.rule, adj: G.adj, fleets: [G.my, E.randomFleet(Math.random, G.adj, tac() ? (G.foePicks || E.PRESETS[0]) : null)], first: G.first });
+  G.my = G.st.sides[0].ships; G.armed = null; G.phase = 'battle'; G.evals = [.5]; sfx('horn');
+  render(); save(); World.refit();
+  look(1, 1500).then(() => { if (G.st && G.st.turn === 1 && G.phase === 'battle') aiTurn(); });
+}
+
+// ---------- battle ----------
+async function doShot(cell) {
+  const st = G.st, by = st.turn, z = by === 0 ? 1 : 0, T = st.sides[1 - by], hit = by === 0 && T.fog > 0 ? 'fog' : T.grid[cell] >= 0;
+  if (G.view !== z) await look(z, 750); if (G.st !== st) return null;
+  sfx('fire'); World.kind(null);
+  await World.fx(z, cell, hit); if (G.st !== st) return null;
+  const res = E.fire(st, cell); if (!res) return null;
+  const ship = res.sunk >= 0 ? t('ship.' + T.ships[res.sunk].t) : '';
+  if (res.sunk < 0 && by === 0 && res.fog) { sfx('miss'); callout(t('w.fog'), t('fx.fog'), 'miss'); }
+  else if (res.dent) { sfx('hit'); callout(t('w.dent'), t('fx.dent')); }
+  else if (res.mine) { sfx('sunk'); World.shake(1); callout(t('log.mine'), t(by === 0 ? 'fx.mine' : 'fx.foe.mine'), 'sunk'); }
+  else if (res.counter) { sfx(res.counter.hit ? 'hit' : 'miss'); callout(t('sk.counter'), t(by === 0 ? 'fx.counter' : 'fx.foe.counter', { c: E.cellName(res.counter.cell), r: t(res.counter.hit ? 'log.hit' : 'log.miss') })); }
+  else if (res.sunk >= 0) { sfx('sunk'); World.shake(1.2); callout(t(by === 0 ? 'w.sunk' : 'w.lost'), t(by === 0 ? 'fx.sunk' : 'fx.lost', { s: ship }) + (res.pursuit ? ' — ' + t(by === 0 ? 'fx.pursuit' : 'fx.foe.pursuit') : ''), 'sunk'); }
+  else if (res.hit) { sfx('hit'); callout(t('w.hit'), E.cellName(cell)); }
+  else { sfx('miss'); callout(t('w.miss'), E.cellName(cell), 'miss'); }
+  render(); save(); queueEval();
+  return res;
+}
+const SCANS = { sonar: 1, scout: 1, radar: 1, sweep: 1, flare: 1, echo: 1, diag: 1, cross: 1 };
+async function doSkill(a) {
+  const st = G.st, by = st.turn, z = by === 0 ? 1 : 0, pv = E.preview(st, a.ship, a.cell); if (!pv) return null;
+  const noAim = E.NOAIM[pv.skill], blocked = st.sides[1 - by].ward && !E.SELF[pv.skill];
+  if (!noAim && G.view !== z) { await look(z, 750); if (G.st !== st) return null; }
+  callout(t('sk.' + pv.skill), by === 1 ? t('fx.foe', { s: t('sk.' + pv.skill) }) : t('ship.' + st.sides[by].ships[a.ship].t)); sfx('ping');
+  await sleep(by === 1 ? 700 : 300); if (G.st !== st) return null;
+  if (noAim || blocked) await sleep(300);
+  else if (SCANS[pv.skill]) await World.sweep(z, pv.area);
+  else { World.kind(pv.skill); sfx('fire'); const ts = []; for (const x of pv.shots) { ts.push(World.fx(z, x.cell, by === 0 && st.sides[1].fog > 0 ? 'fog' : x.hit, true).then(() => sfx(x.hit ? 'hit' : 'miss'))); await sleep(/torpedo/.test(pv.skill) ? 140 : 180); } await Promise.all(ts); if (pv.ic >= 0) World.fx(z, pv.ic, 'fog', true); await sleep(350); World.kind(null); }
+  if (G.st !== st) return null;
+  const res = E.useSkill(st, a.ship, a.cell); if (!res) return null;
+  G.armed = null; hover = -1; aimTap = -1;
+  const sunk = res.shots.filter(x => x.sunk >= 0), hits = res.shots.filter(x => x.hit).length, W = t('sk.' + res.skill);
+  let sub = '', cls = '';
+  if (res.skill === 'listen') sub = t(by === 0 ? 'fx.listen' : 'fx.foe.listen', { r: res.row + 1, k: res.k });
+  else if (res.blocked) { sfx('bad'); sub = t(by === 0 ? 'fx.blk' : 'fx.foe.blk', { s: W }); }
+  else if (res.skill === 'flare') sub = t('fx.flare', { k: res.k });
+  else if (SCANS[res.skill]) sub = t('fx.' + res.skill, { k: res.k, n: res.swept || 0 });
+  else if (noAim) sub = t((by === 0 ? 'fx.' : 'fx.foe.') + res.skill, { c: res.fix != null ? E.cellName(res.fix) : res.lit != null ? E.cellName(res.lit) : '', s: res.pi != null ? t('ship.' + st.sides[by].ships[res.pi].t) : '' });
+  else if (by === 0 && res.shots.some(x => x.fog)) { sub = t('fx.fog'); cls = 'miss'; }
+  else if (res.skill === 'bracket' && res.k != null) sub = t('fx.bracket', { r: t(res.k ? 'fx.bracket.s' : 'fx.bracket.w') });
+  else if (res.skill === 'probe') sub = t('fx.probe', { r: t(res.shots[0] && res.shots[0].hit && !res.shots[0].fog ? 'log.hit' : res.shots[0] && res.shots[0].fog ? 'log.fog' : 'log.miss'), k: res.k != null ? res.k : '?' });
+  else if (res.shots.some(x => x.mine)) { sfx('sunk'); World.shake(1); sub = t(by === 0 ? 'fx.mine' : 'fx.foe.mine'); cls = 'sunk'; }
+  else if (res.ic >= 0) sub = t(by === 0 ? 'fx.aa' : 'fx.foe.aa', { c: E.cellName(res.ic) });
+  else if (res.shots.some(x => x.dent)) sub = t('fx.dent');
+  else if (sunk.length) { sfx('sunk'); World.shake(1.2); sub = t(by === 0 ? 'fx.sunk' : 'fx.lost', { s: t('ship.' + st.sides[1 - by].ships[sunk[0].sunk].t) }); cls = 'sunk'; }
+  else if (hits) sub = hits > 1 ? t('fx.hits', { n: hits }) : t('fx.hit'); else { sub = t('fx.miss'); cls = 'miss'; }
+  callout(sunk.length ? t(by === 0 ? 'w.sunk' : 'w.lost') : W, sub, cls); renderBanner(sub);
+  const cn = res.shots.find(x => x.counter); if (cn) { await sleep(800); callout(t('sk.counter'), t(by === 0 ? 'fx.counter' : 'fx.foe.counter', { c: E.cellName(cn.counter.cell), r: t(cn.counter.hit ? 'log.hit' : 'log.miss') })); }
+  if (res.traced != null) { await sleep(700); callout(t('sk.trace'), t(by === 0 ? 'fx.foe.trace' : 'fx.trace', { c: E.cellName(res.traced) })); }
+  render(); save(); queueEval();
+  return res;
+}
+const doAction = a => a.skill ? doSkill(a) : doShot(a.cell);
+async function playerShot(cell) {
+  if (!G || !G.st || G.phase !== 'battle' || G.busy || G.st.turn !== 0 || G.view !== 1) return;
+  const a = G.armed != null ? { skill: skillOf(G.my[G.armed]), ship: G.armed, cell } : { cell };
+  if (a.skill ? !E.preview(G.st, a.ship, cell) : G.st.sides[1].shots[cell]) { sfx('bad'); return; }
+  const st = G.st; G.busy = true; G.hint = null; World.aim(1, -1); renderDock(); render();
+  const res = await doAction(a); if (!res || G.st !== st) return;
+  after(st);
+}
+async function playerNoAim(i) {
+  if (!G.st || G.phase !== 'battle' || G.busy || G.st.turn !== 0) return;
+  if (!E.preview(G.st, i, -1)) { sfx('bad'); msg(t('sk.none')); return; }
+  const st = G.st; G.busy = true; G.hint = null; render();
+  const res = await doSkill({ skill: skillOf(G.my[i]), ship: i, cell: -1 }); if (!res || G.st !== st) return;
+  after(st);
+}
+function after(st) { if (st.winner >= 0) return finish(); if (st.turn === 1) return aiTurn(); G.busy = false; render(); }
+let aiW = null, aiWid = 0;
+function planMove(st, level) {
+  const plain = () => E.chooseAction(st, level, Math.random);
+  if (!E.PLAN || !E.PLAN[level]) return Promise.resolve(plain());
+  if (aiW === null) { try { aiW = new Worker('../seabattle/ai-worker.js?v=1'); } catch (e) { aiW = false; } }
+  if (!aiW) return Promise.resolve(E.planAction(st, level, Math.random));
+  const id = ++aiWid, engine = new URL($('script[src*="engine.js"]').getAttribute('src'), location.href).href;
+  return new Promise(res => {
+    let done = false; const fin = a => { if (done) return; done = true; aiW.removeEventListener('message', on); clearTimeout(tm); res(a || plain()); };
+    const on = e => { if (e.data && e.data.id === id) fin(e.data.a); }, tm = setTimeout(() => fin(null), 6000);
+    aiW.addEventListener('message', on); aiW.onerror = () => fin(null);
+    try { aiW.postMessage({ engine, st, level, id }); } catch (e) { fin(null); }
+  });
+}
+async function aiTurn() {
+  const st = G.st; G.busy = true; render();
+  await sleep(450); if (G.st !== st) return;
+  await look(0, 950); if (G.st !== st) return;
+  while (G.st === st && st.winner < 0 && st.turn === 1) {
+    const [a] = await Promise.all([planMove(st, G.level), sleep(420)]); if (G.st !== st) return;
+    const res = await doAction(a); if (!res) return;
+    await sleep(res.again ? 300 : 700);
+  }
+  if (G.st !== st) return;
+  if (st.winner >= 0) return finish();
+  await look(1, 950); if (G.st !== st) return;
+  G.busy = false; render();
+}
+function finish() {
+  const st = G.st; G.phase = 'over'; G.busy = false; G.hint = null; G.armed = null; evalJob++;
+  const won = st.winner === 0; render(); save();
+  try { localStorage.setItem(STORE, JSON.stringify({ settings: Object.assign({}, S, { lang: LANG }) })); } catch (e) {}
+  setTimeout(() => { if (G.st !== st) return; sfx(won ? 'win' : 'lose'); World.refit(); World.show('result', 2200); setTimeout(() => { if (G.st === st) showResult(); }, 1300); }, G.resigned ? 200 : 1000);
+}
+function showResult() {
+  const st = G.st, won = st.winner === 0, me = st.sides[1], foe = st.sides[0];   // (side[1] holds the shots we fired)
+  $('#rsBig').textContent = t(won ? 'r.win' : 'r.lose'); $('#rsBig').className = 'big' + (won ? '' : ' lose');
+  $('#rsSub').textContent = G.resigned ? t('r.subR', { l: G.level }) : t('r.sub', { n: st.log.length, l: G.level });
+  const acc = me.nshots ? Math.round(me.hits / me.nshots * 100) : 0;
+  $('#rsStats').innerHTML = [[acc + '%', t('r.acc')], [me.nshots, t('r.shots')], [st.sides[1].sunk.filter(Boolean).length, t('r.sunk')], [foe.sunk.filter(Boolean).length, t('r.lost')]].map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('');
+  sheet('#scrResult', true);
+}
+function hint() {
+  if (!G.st || G.phase !== 'battle' || G.st.turn !== 0 || G.busy) return;
+  if (G.hint) G.hint = null; else { G.hint = E.advise(G.st.sides[1], G.adj, Math.random, 6000, G.st.scans[0]); sfx('ping'); if (G.view !== 1) look(1); }
+  render();
+}
+function resign() { if (!G || G.phase !== 'battle') return; sheet('#scrMenu', false); G.resigned = true; G.st.winner = 1; evalJob++; finish(); }
+
+// ---------- archive ----------
+let arTab = -1, arK = 0;
+function openArchive() { sheet('#scrArchive', true); if (!pv2) pv2 = World.preview($('#pv2')); pv2.start(); renderArchive(); }
+function renderArchive() {
+  const all = E.TYPES.map((_, k) => k).sort((a, b) => ROLE_OF(a) - ROLE_OF(b) || E.TYPES[a].cost - E.TYPES[b].cost || a - b);
+  const counts = [0, 1, 2, 3].map(g => all.filter(k => ROLE_OF(k) === g).length);
+  $('#arTabs').innerHTML = `<button data-g="-1" class="${arTab < 0 ? 'on' : ''}">${t('a.all')}<em>${all.length}</em></button>` + [0, 1, 2, 3].map(g => `<button data-g="${g}" class="${arTab === g ? 'on' : ''}">${t('dr.g' + g)}<em>${counts[g]}</em></button>`).join('');
+  $('#arGrid').innerHTML = all.filter(k => arTab < 0 || ROLE_OF(k) === arTab).map(k => { const T = E.TYPES[k]; return `<button class="card r${ROLE_OF(k)}${k === arK ? ' sel' : ''}" data-k="${k}"><span class="role"></span><span class="top"><span class="cost">${T.cost}</span><b>${t('ship.' + k)}</b>${lenPips(T.len)}</span>${portraitImg(k, T.len)}<span class="skl">${icon(abilityKey(T))}${shipSkillName(T)}<small>${kindOf(T)}</small></span></button>`; }).join('');
+  showShip(arK, pv2, '#pv2Name', '#pv2Meta', '#pv2Skill'); fillPortraits($('#scrArchive'));
+}
+
+// ---------- input on the sea ----------
+const cv = $('#world');
+cv.addEventListener('pointerdown', e => {
+  if (!G || G.phase !== 'deploy') return;
+  const cell = World.cellAt(0, e); if (cell < 0) return; const i = shipAtCell(cell); if (i < 0) return;
+  e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+  const s = G.my[i]; drag = { i, from: Object.assign({}, s), k: s.h ? cell % 10 - s.c : (cell / 10 | 0) - s.r, cell, moved: false, bad: false, grid: gridWithout(i) };
+});
+cv.addEventListener('pointermove', e => {
+  if (drag) { const p = World.pointIn(0, e), s = G.my[drag.i]; let r = Math.floor(p.y), c = Math.floor(p.x); if (s.h) c -= drag.k; else r -= drag.k;
+    const n = clampShip({ len: s.len, h: s.h, r, c, t: s.t }); if (n.r === s.r && n.c === s.c) return; drag.moved = true; G.my[drag.i] = n; drag.bad = !E.fits(drag.grid, n, G.adj, -2); syncWorld(); return; }
+  if (!G || !G.st || G.phase !== 'battle' || G.busy || G.st.turn !== 0 || G.view !== 1 || !PC.matches) return;
+  const c = World.cellAt(1, e);
+  if (G.armed != null) { if (c !== hover) { hover = c; World.aim(1, -1); syncWorld(); } return; }
+  World.aim(1, c >= 0 && !G.st.sides[1].shots[c] ? c : -1); cv.style.cursor = c >= 0 ? 'crosshair' : '';
+});
+cv.addEventListener('pointerup', e => {
+  if (drag) { const d = drag; drag = null; if (!d.moved) { if (tryTurn(d.i, d.cell)) sfx('place'); else { sfx('bad'); World.shake(.5); } } else if (d.bad) { G.my[d.i] = d.from; sfx('bad'); } else sfx('place'); syncWorld(); renderFleets(); save(); return; }
+  if (!G || G.phase !== 'battle') return;
+  const c = World.cellAt(1, e); if (c < 0) return;
+  // touch: an armed skill shows its reach on the first tap and fires on a second tap of the same square
+  if (!PC.matches && G.armed != null && c !== aimTap) { aimTap = c; hover = c; syncWorld(); sfx('lock'); return; }
+  aimTap = -1; playerShot(c);
+});
+cv.addEventListener('pointercancel', () => { if (drag) { G.my[drag.i] = drag.from; drag = null; syncWorld(); } });
+cv.addEventListener('pointerleave', () => { World.aim(1, -1); if (G && G.armed != null && hover >= 0 && PC.matches) { hover = -1; syncWorld(); } });
+
+// ---------- wiring ----------
+$('#mPlay').onclick = () => { sfx('select'); openSetup(); };
+$('#mArchive').onclick = () => { sfx('select'); openArchive(); };
+$('#mHelp').onclick = () => { sfx('select'); sheet('#scrHelp', true); };
+$$('[data-close]').forEach(b => b.addEventListener('click', () => { const s = b.closest('.sheet'); s.classList.add('hide'); if (s.id === 'scrArchive' && pv2) pv2.stop(); }));
+$('#ruleList').addEventListener('click', e => { const b = e.target.closest('.rc'); if (b) { ND.rule = b.dataset.r; sfx('select'); renderSetup(); } });
+$('#lvl').addEventListener('input', e => { ND.level = +e.target.value; $('#lvlV').innerHTML = `Lv.${ND.level}<small>${tier(ND.level)}</small>`; });
+$('#segFirst').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { ND.first = b.dataset.v; renderSetup(); } });
+$('#segAdj').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { ND.adj = b.dataset.v === '1'; renderSetup(); } });
+$('#sGo').onclick = engage;
+$('#drTabs').addEventListener('click', e => { const b = e.target.closest('button[data-g]'); if (!b) return; pickTab = +b.dataset.g; renderDraft(); $('#drGrid').scrollTop = 0; });
+$('#drGrid').addEventListener('click', e => {
+  const c = e.target.closest('.card'); if (!c) return; const k = +c.dataset.k; focusK = k;
+  if (c.getAttribute('aria-disabled') && !pickSel.includes(k)) { renderDraft(); return; }
+  const run = myRun(G.draft); if (pickSel.includes(k)) pickSel = pickSel.filter(x => x !== k); else if (pickSel.length < run) pickSel.push(k); else pickSel = pickSel.slice(0, -1).concat(k);
+  sfx('select'); renderDraft();
+});
+$('#drGrid').addEventListener('pointerover', e => { if (!PC.matches) return; const c = e.target.closest('.card'); if (!c) return; const k = +c.dataset.k; if (k !== focusK) { focusK = k; showShip(k, pv, '#pvName', '#pvMeta', '#pvSkill'); } });
+$('#drOk').onclick = () => { if (!pickSel.length) return; const ks = pickSel; pickSel = []; for (const k of ks) { if (G.phase !== 'draft' || G.draft.turn !== 0) break; draftPickMine(k); } draftStep(); };
+$('#arTabs').addEventListener('click', e => { const b = e.target.closest('button[data-g]'); if (!b) return; arTab = +b.dataset.g; renderArchive(); });
+$('#arGrid').addEventListener('click', e => { const c = e.target.closest('.card'); if (!c) return; arK = +c.dataset.k; sfx('select'); renderArchive(); });
+$('#arGrid').addEventListener('pointerover', e => { if (!PC.matches) return; const c = e.target.closest('.card'); if (c && +c.dataset.k !== arK) { arK = +c.dataset.k; $$('#arGrid .card').forEach(x => x.classList.toggle('sel', +x.dataset.k === arK)); showShip(arK, pv2, '#pv2Name', '#pv2Meta', '#pv2Skill'); } });
+$('#dShuffle').onclick = () => { if (G.phase !== 'deploy') return; G.my = E.randomFleet(Math.random, G.adj, G.my.map(s => s.t)); sfx('place'); syncWorld(); renderFleets(); save(); };
+$('#dGo').onclick = startBattle;
+$('#dock').addEventListener('click', e => { const b = e.target.closest('.sk'); if (!b || b.disabled || !G.st || G.busy || G.phase !== 'battle' || G.st.turn !== 0) return; const i = +b.dataset.i;
+  if (E.NOAIM[skillOf(G.my[i])]) { G.armed = null; return playerNoAim(i); }
+  G.armed = G.armed === i ? null : i; hover = aimTap = -1; G.hint = null; sfx('select'); if (G.view !== 1) look(1); render(); });
+$('#views').addEventListener('click', e => { const b = e.target.closest('.vt'); if (!b || !G || G.busy || !(G.phase === 'battle' || G.phase === 'over')) return; look(+b.dataset.z, 800); });
+$('#bHint').onclick = hint;
+$('#bMenu').onclick = () => { $('#pResign').disabled = !(G && G.phase === 'battle'); sheet('#scrMenu', true); };
+$('#pNew').onclick = () => { sheet('#scrMenu', false); openSetup(); };
+$('#pResign').onclick = resign;
+$('#pTitle').onclick = toTitle; $('#rsTitle').onclick = toTitle;
+$('#rsAgain').onclick = () => { sheet('#scrResult', false); openSetup(); };
+$('#rsSea').onclick = () => { sheet('#scrResult', false); look(1, 1200); };
+function soundUI() { $$('#bSound, #tSound').forEach(b => { b.classList.toggle('off', !S.sound); b.querySelector('.w').style.display = S.sound ? '' : 'none'; }); }
+$$('#bSound, #tSound').forEach(b => b.onclick = () => { S.sound = !S.sound; try { localStorage.setItem('atlas-sfx', S.sound ? '1' : '0'); } catch (e) {} save(); soundUI(); if (S.sound) sfx('select'); });
+$('#tLang').onclick = () => { LANG = LANG === 'ja' ? 'en' : 'ja'; applyLang(); save(); };
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { const open = $$('.sheet:not(.hide)').filter(s => s.id !== 'scrDraft'); if (open.length) { open[open.length - 1].classList.add('hide'); return; } if (G && G.armed != null) { G.armed = null; render(); return; } if (G && (G.phase === 'battle' || G.phase === 'deploy')) $('#bMenu').click(); }
+  if (e.key === 'Tab' && G && (G.phase === 'battle' || G.phase === 'over') && !G.busy) { e.preventDefault(); look(G.view ? 0 : 1, 800); }
+  if (G && G.phase === 'battle' && !G.busy && G.st.turn === 0 && /^[1-6]$/.test(e.key)) { const b = $$('#dock .sk')[+e.key - 1]; if (b) b.click(); }
+});
+addEventListener('resize', () => { World.refit(); if (G && G.phase !== 'title') World.show(G.phase === 'draft' ? 'wide' : G.phase === 'over' && !$('#scrResult').classList.contains('hide') ? 'result' : G.view ? 'z1' : 'z0'); else World.show('title'); });
+function applyLang() {
+  document.documentElement.lang = LANG; $('#tLang').textContent = LANG === 'ja' ? 'EN' : 'JA';
+  $$('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
+  $('#helpBody').innerHTML = t('help').map(([h, p]) => `<div><b>${h}</b><p>${p}</p></div>`).join('');
+  if (ND) renderSetup(); if (G && G.phase === 'draft') renderDraft(); else if (G && G.phase !== 'title') render();
+  if (!$('#scrArchive').classList.contains('hide')) renderArchive();
+  soundUI();
+}
+
+// ---------- boot ----------
+function boot() {
+  const T = window.THREE, test = document.createElement('canvas');
+  if (!T || !(test.getContext('webgl2') || test.getContext('webgl'))) { $('#load').remove(); const n = $('#nogl'); n.classList.remove('hide'); n.innerHTML = `<div><div class="logo" style="font-size:44px">DREADNOUGHTS</div><p style="margin-top:18px;color:var(--mute)">${LANG === 'ja' ? 'このゲームには WebGL が必要です。' : 'This game needs WebGL.'}</p><p><a style="color:var(--gold)" href="../seabattle/">${LANG === 'ja' ? '2D版の海戦ゲームで遊ぶ' : 'Play the 2D Sea Battle'}</a></p></div>`; return; }
+  World.init(cv, { safe: safeRect });
+  applyLang();
+  if (restore()) { phaseUI(); render(); World.refit(); World.sail(false); World.show(G.view ? 'z1' : 'z0'); if (G.phase === 'deploy') enterDeploy(); else if (G.phase === 'battle' && G.st.turn === 1) aiTurn(); else if (G.phase === 'over') showResult(); }
+  else { G = newG({ phase: 'title' }); phaseUI(); syncWorld(); World.sail(true); World.show('title'); }
+  setTimeout(() => { $('#load').classList.add('out'); setTimeout(() => $('#load').remove(), 900); }, 400);
+  window.DN = { G: () => G, S, t, World, engage, startBattle, toTitle };
+}
+boot();
+})();
