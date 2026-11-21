@@ -100,7 +100,8 @@
     ['airhockey', 'flick', 1972, { y: 1972 }],
   ];
   // uncollected games that can still be played inside an Atlas game (2026-11-21 user: パチーシはルドーの種目で遊べる)
-  const PLAY = { pachisi: { game: 'ludo', rule: 'pachisi', size: 14 } };
+  // (2026-11-21 user: エアホッケーはテーブルホッケーの台のバリエーションにあるので、この台も遊べる — board: the table chosen when it opens)
+  const PLAY = { pachisi: { game: 'ludo', rule: 'pachisi', size: 14 }, airhockey: { game: 'hockey', board: 'air' } };
   /* ---------- the lines: [from, to, sure] (sure 0 = a theory / an influence / a shared board: dashed) ---------- */
   const E = [
     ['tabula', 'backgammon', 1], ['nard', 'backgammon', 0], ['nard', 'sugoroku', 0], ['pachisi', 'ludo', 1],
