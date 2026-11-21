@@ -111,7 +111,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=10';
+const ENGINE_URL = 'engine.js?v=11';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1280,7 +1280,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step on the kyu / dan scale (100 points per kyu: 15級 = 450 … 1級 = 1850, then 200 per dan)
 // measured: adjacent levels played each other (tools/native.c lv, see MODEL_CARD.md); about +125 per step up to 3級, smaller above
-const RT_LV = [0, 100, 220, 518, 781, 985, 1074, 1173, 1339, 1756, 2011, 2100, 2254, 2312, 2484, 2528, 2632, 2657, 2682, 2950, 3000, 3100, 3200, 3300];   // (2026-11-19, measured: tools/ladder.js on the default rule — neighbouring levels, 24〜36 games each; steps under +25 (draw-heavy at the top) taken as +25; Lv.19・20 estimated from the nodes' doubling, about +50 Elo each; Lv.21〜23 unused. 2026-11-20: the WebAssembly core plays Lv.1〜18 move for move as before; Lv.19・20 (by time) read about 16 times more positions — the same time against the old JS: +209 Elo at 0.1 s a move — so +148 each, 2950 / 3000)
+const RT_LV = [0, 100, 220, 518, 781, 985, 1074, 1173, 1339, 1756, 2011, 2100, 2254, 2312, 2484, 2528, 2632, 2657, 2682, 3060, 3110, 3210, 3310, 3410];   // (2026-11-22: Lv.19〜23 +110 with the net — 150 ms a move in wasm, seneca +207 Elo ×0.55, MODEL_CARD「採用したネット」)   // (2026-11-19, measured: tools/ladder.js on the default rule — neighbouring levels, 24〜36 games each; steps under +25 (draw-heavy at the top) taken as +25; Lv.19・20 estimated from the nodes' doubling, about +50 Elo each; Lv.21〜23 unused. 2026-11-20: the WebAssembly core plays Lv.1〜18 move for move as before; Lv.19・20 (by time) read about 16 times more positions — the same time against the old JS: +209 Elo at 0.1 s a move — so +148 each, 2950 / 3000)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

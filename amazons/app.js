@@ -122,7 +122,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=17';
+const ENGINE_URL = 'engine.js?v=18';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1395,7 +1395,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step (a first estimate from short matches of neighbouring levels on the work machine; to be measured on the
 // user's Mac): about +110 per step at the bottom, smaller at the top
-const RT_LV = [0, 100, 165, 280, 395, 435, 470, 560, 695, 830, 970, 1110, 1200, 1250, 1290, 1445, 1590, 1740, 1920, 2155, 2295, 2385, 2450, 2500, 2700, 2800, 2900];   // (2026-11-15: Lv.16〜23 +45, the MCTS's v3 evaluation and final move — claude/amazons-spec.md「評価 v3 と最後の手の選び方」) (2026-11-14, claude/amazons-spec.md「レベルの測り直し」: measured — native self-play of neighbouring levels at their own limits on one thread, a Bradley–Terry fit from Lv.1 = 350, the flat Lv.10〜12 evened out; Lv.21〜23 extrapolated from Lv.19 → 20. With several threads Lv.19〜23 read more and are stronger than these)
+const RT_LV = [0, 100, 165, 280, 395, 435, 470, 560, 695, 830, 970, 1110, 1200, 1250, 1290, 1445, 1590, 1740, 1920, 2155, 2295, 2385, 2565, 2615, 2815, 2915, 3015];   // (2026-11-15: Lv.16〜23 +45, the MCTS's v3 evaluation and final move — claude/amazons-spec.md「評価 v3 と最後の手の選び方」) (2026-11-14, claude/amazons-spec.md「レベルの測り直し」: measured — native self-play of neighbouring levels at their own limits on one thread, a Bradley–Terry fit from Lv.1 = 350, the flat Lv.10〜12 evened out; Lv.21〜23 extrapolated from Lv.19 → 20. With several threads Lv.19〜23 read more and are stronger than these)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

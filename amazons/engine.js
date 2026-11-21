@@ -223,7 +223,7 @@ function netBytes() {
   if (NET_B) return NET_B;
   let b64 = '';
   try {
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('net.js?v=1'); b64 = self.AMZ_NET || ''; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('net.js?v=2'); b64 = self.AMZ_NET || ''; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = typeof globalThis !== 'undefined' ? globalThis : global, had = 'self' in g, old = g.self; g.self = g; try { const f = (typeof process !== 'undefined' && process.env && process.env.AMZ_NETJS) || require('path').join(__dirname, 'net.js'); delete require.cache[require.resolve(f)]; require(f); b64 = g.AMZ_NET || ''; } finally { if (had) g.self = old; else delete g.self; } }
   } catch (e) { b64 = ''; }
   if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AMZ_NONET)) return null;
@@ -658,9 +658,10 @@ const LEVELS = [null,
   { s: 1, nk: 16, ev: 1 },              // 13
   { s: 1, nk: 40, ev: 1 },              // 14
   { s: 1, nk: 150, ev: 1 },             // 15
-  { s: 1, nk: 200, mc: 1, ev: 1 },      // 16
-  { s: 1, nk: 500, mc: 1, ev: 1 },      // 17
-  { s: 1, nk: 1200, mc: 1, ev: 1 },     // 18
+  { s: 1, nk: 200, mc: 1, ev: 1, prm: { ev: 2 } },      // 16  (prm ev 2: the levels by evaluations keep the evaluation v3 their strengths were
+                                                         //  measured with; the net (MC.ev 3) is for the levels by time — 2026-11-22, MODEL_CARD)
+  { s: 1, nk: 500, mc: 1, ev: 1, prm: { ev: 2 } },      // 17
+  { s: 1, nk: 1200, mc: 1, ev: 1, prm: { ev: 2 } },     // 18
   // Lv.19〜23 think by time with the MCTS (mc, 2026-11-10: stronger than the alpha-beta search in the same CPU time — tools/mcts_match.js,
   // claude/amazons-spec.md「MCTS」), on the threads of the page's MCTS pool (core_mt.wasm, shared/mtengine.js) when it is there
   { s: 1, ms: 1500, mc: 1, ev: 1 },            // 19

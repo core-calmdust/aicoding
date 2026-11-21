@@ -124,3 +124,6 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 - 確認：headless Chrome（Playwright、1440×900、2D と `?skin=atlas`）で、分離あり（DIP）・COOP モード・分離なしの各モードで対局の振り返りから検討ボックスを開き、読みが進んで候補手と値が出ること、分離ありでは `core_mt.wasm` の組で読むこと、分析と同じ局面で手と値が大きくずれないこと（αβ の値は深さの偶数・奇数で揺れる）、コンソールエラーなし（localhost の Firebase／reCAPTCHA を除く）。
 - 版：`app.js?v=19`（`latrunculi/index.html`）。
 - **分析・ヒント・コーチ・AI の手も（2026-11-20）**：`request()` も、分離されたページで `core_mt.wasm` の組がふさがっているとき（AI の手・コーチの深読み・検討ボックスが使用中）は `mtsplit.js` に回さず1ワーカーで読む（addendum「本編のマルチスレッド」の「使用中なら通常の1スレッドのワーカー」、チェス・チェッカー等と同じ）。分離されないページは今まで通り。確認：Playwright（headless Chrome）で分離あり（DIP）・COOP・分離なし × `?skin=atlas`（分離ありは 2D も）で、分析・ヒント・AI の手（時間で考えるレベル）・コーチの深読みと分析の同時、振り返りの検討ボックス＋コーチの深読み＋分析の同時で、値が出てエラーなし。分離ありでは `mtsplit.js` の組が一度も使われない（変更前はふさがっているとき使われていた）。版：`app.js?v=20`。
+
+## NNUE の採用（2026-11-22）
+- 1周目のネット（3ルール、計2000万局面、`latrunculi/nets/`、`engine.js` の `NETS`）。**Lv.19・20（時間）と分析・ヒント・コーチだけ**が使い、Lv.1〜18 は手作り評価のまま（`netUse`、スレッドの仕事は `mtNet`）。`RT_LV` の Lv.19〜 を +110。トップの紹介文に NNUE搭載・約2000万局面（14言語）。キャッシュ：`engine.js?v=11`、app.js `v=21`、大百科 `rules/latrunculi.js?v=6`。詳細は `latrunculi/MODEL_CARD.md`「採用したネット」。

@@ -303,7 +303,7 @@ function think(start, moves, level, rand) {
     if (L.blunder && rand() < L.blunder) return { move: vals[Math.floor(rand() * vals.length)].m };
     let best = vals[0].m, bv = -Infinity; for (const e of vals) { const x = e.v + gauss(rand) * (L.noise || 0); if (x > bv) { bv = x; best = e.m; } } return { move: best, v: vals[0].v };
   }
-  wNN(!!L.s);
+  wNN(!!(L.s && L.ms));   // (2026-11-22: the net for the levels by time and the analysis; Lv.1〜18 keep the hand evaluation — MODEL_CARD)
   if (!wSetup(start, moves, excl)) return { move: all[0] };
   if (!L.s) {
     WX.values(Math.floor(L.d) + (rand() < L.d % 1 ? 1 : 0));
@@ -413,7 +413,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.JanggiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   const V = 'v=5';
-  const NET = '';   // the version of nnue.bin.gz ('' = no network yet: the hand evaluation; claude/janggi-spec.md「NNUE の準備」)
+  const NET = '1';   // the version of nnue.bin.gz ('' = no network: the hand evaluation). '1' = 2026-11-21 round 1 (20M self-play positions)
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The rest is the usual API.
   const MTL = /[?&]mt=1\b/.test(self.location.search || '');

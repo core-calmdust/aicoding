@@ -122,7 +122,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=10-nn1-bk1';
+const ENGINE_URL = 'engine.js?v=11-nn2-bk1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1247,7 +1247,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step on the kyu / dan scale (100 points per kyu: 15級 = 450 … 1級 = 1850, then 200 per dan)
 // measured: adjacent levels played each other (tools/native.c lv, see MODEL_CARD.md); about +125 per step up to 3級, smaller above
-const RT_LV = [0, 100, 260, 415, 575, 730, 890, 1045, 1205, 1285, 1365, 1520, 1600, 1680, 1835, 1915, 1995, 2095, 2170, 2245, 2310, 2375, 2435, 2500, 2700, 2800, 2900];   // (Lv.21〜23: measured steps, see the spec「最上位レベル」)
+const RT_LV = [0, 100, 260, 415, 575, 730, 890, 1045, 1205, 1285, 1365, 1520, 1600, 1680, 1835, 1915, 1995, 2095, 2170, 2245, 2310, 2375, 2735, 2800, 3000, 3100, 3200];   // (Lv.21〜23: measured steps, see the spec「最上位レベル」)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
