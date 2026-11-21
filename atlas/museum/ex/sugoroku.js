@@ -137,14 +137,14 @@
       const opening = (x0, x1) => { const p = new TT.Path(), top = OT, b0 = .35;
         // (the Shōsōin's detail photograph of a post: it stands like an hourglass — waisted a little above the middle, sweeping out in a
         // long curve to the foot and in a shorter one under the top rail; the opening's top is flat)
-        const fx = 4.8, fy = top * .46, tx = 2.6, ty = top * .52, bow = 0;   // (measured on the frontal photographs: legs 2 wide at the waist, 6.5 at the foot, 3.7 under the rail)
-        p.moveTo(x0 + fx, b0); p.lineTo(x1 - fx, b0); p.bezierCurveTo(x1 - fx * .45, b0 + fy * .22, x1 + bow, fy * .5, x1 + bow, fy);
-        p.lineTo(x1 + bow, top - ty); p.bezierCurveTo(x1 + bow, top - ty * .5, x1 - tx * .45, top - .3 - ty * .2, x1 - tx, top - .3);
+        const fx = 5.4, fy = top * .5, tx = 3.2, ty = top * .5, bow = 0;   // (measured on the frontal photographs: legs 2 wide at the waist, 6.5 at the foot, 3.7 under the rail)
+        p.moveTo(x0 + fx, b0); p.lineTo(x1 - fx, b0); p.bezierCurveTo(x1 - fx * .45, b0, x1 + bow, b0 + (fy - b0) * .45, x1 + bow, fy);   // (quarter-ellipses: the foot runs out level, then turns up into the leg)
+        p.lineTo(x1 + bow, top - ty); p.bezierCurveTo(x1 + bow, top - ty * .45, x1 - tx * .45, top - .3, x1 - tx, top - .3);
         { const cx = (x0 + x1) / 2, t0 = top - .3, hw = (x1 - x0) / 2, a = hw * .78, b = hw * .2, dp = 1.25;   // the rail's hanging bracket: a long lobe either side, a small peak between them
           p.lineTo(cx + a, t0); p.bezierCurveTo(cx + a * .8, t0, cx + a * .72, t0 - dp, cx + a * .52, t0 - dp); p.bezierCurveTo(cx + b * 1.6, t0 - dp, cx + b, t0 - dp * .75, cx, t0 - dp * .35);
           p.bezierCurveTo(cx - b, t0 - dp * .75, cx - b * 1.6, t0 - dp, cx - a * .52, t0 - dp); p.bezierCurveTo(cx - a * .72, t0 - dp, cx - a * .8, t0, cx - a, t0); }
-        p.lineTo(x0 + tx, top - .3); p.bezierCurveTo(x0 + tx * .45, top - .3 - ty * .2, x0 - bow, top - ty * .5, x0 - bow, top - ty);
-        p.lineTo(x0 - bow, fy); p.bezierCurveTo(x0 - bow, fy * .5, x0 + fx * .45, b0 + fy * .22, x0 + fx, b0); return p; };
+        p.lineTo(x0 + tx, top - .3); p.bezierCurveTo(x0 + tx * .45, top - .3, x0 - bow, top - ty * .45, x0 - bow, top - ty);
+        p.lineTo(x0 - bow, fy); p.bezierCurveTo(x0 - bow, b0 + (fy - b0) * .45, x0 + fx * .45, b0, x0 + fx, b0); return p; };
       const skirtFor = (len, n) => { const S = new TT.Shape(); S.moveTo(-len / 2, 0); S.lineTo(len / 2, 0); S.lineTo(len / 2, SK); S.lineTo(-len / 2, SK); S.closePath();
         const LEG = 2.3, POST = 2.5, ow = (len - 2 * LEG - (n - 1) * POST) / n;
         for (let i = 0; i < n; i++) { const x0 = -len / 2 + LEG + i * (ow + POST); S.holes.push(opening(x0, x0 + ow)); }
