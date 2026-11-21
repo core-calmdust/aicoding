@@ -14,7 +14,7 @@
   (window.AtlasEx = window.AtlasEx || {}).sugoroku = {
     build(TT, X, K) {
       const G = new TT.Group();
-      const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = .7, RT = .7;   // LIN: the strip of rosettes at the top of the base
+      const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = 1.9, RT = .7;   // (RIM: the wall round the field stands upright, about 1.9 high — the overall photograph)   // LIN: the strip of rosettes at the top of the base
       const shT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#3e2016', b: '#1f0e09', seed: 37, sx: .5, sy: 9, warp: .45, pores: .004 }));
       const baseT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#44241a', b: '#25120c', seed: 41, sx: .5, sy: 12, warp: .3, pores: .004 }));
       const shR = K.tex(256, 256, (g, w, h) => K.grain(g, w, h, { a: '#7a7a7a', b: '#4e4e4e', seed: 38, sy: 14 }), { data: true });
@@ -55,7 +55,7 @@
       };
       const mk = (t, base) => K.mat({ map: t, color: '#ffffff', roughness: .48, clearcoat: .3, clearcoatRoughness: .35 });
       /* ---------- the face ---------- */
-      const IL = L - RT * 2, IW = W - RT * 2, ROW = 3.6, P0 = 4.9, PS = 3.75;   // the row of points: its distance from the rim, the first point's distance from the centre, the pitch
+      const IL = L - RT * 2, IW = W - RT * 2, ROW = 2.0, P0 = 4.9, PS = 3.75;   // the row of points: its distance from the rim, the first point's distance from the centre, the pitch
       const faceT = K.tex(2048, Math.round(2048 * IW / IL), (g, w, h) => { const s = w / IL;
         K.grain(g, w, h, { a: '#331a11', b: '#26120b', seed: 44, sx: .3, sy: 9, warp: .2, pores: .003 });   // straight grain along the length
         let y = 0, sd = 3; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;   // planks along the length, slightly different in tone
@@ -70,7 +70,7 @@
           g.save(); g.translate(w / 2, yy); if (!side) g.scale(1, -1); g.beginPath(); g.arc(0, s * 1.07, s * 3.47, Math.PI + .314, -.314); g.closePath(); g.fillStyle = 'rgba(8,3,2,.4)'; g.fill(); g.restore();   // the space inside the half-moon
           for (let i = 0; i < 6; i++) [-1, 1].forEach(d => rosette(w / 2 + d * s * (P0 + i * PS), yy, s * 1.05));
         });
-        [s * 3.4, w - s * 3.4].forEach(fx => rosette(fx, h / 2, s * .8));
+        [s * 2.4, w - s * 2.4].forEach(fx => rosette(fx, h / 2, s * .8));
       });
       const face = K.mat({ map: faceT, color: '#ffffff', roughness: .55, clearcoat: .12, clearcoatRoughness: .45 });
       const add = (geo, m, x, y, z) => { const o = new TT.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; G.add(o); return o; };
@@ -86,20 +86,23 @@
       const eLs = mk(edgeTex(L, 1)), eWs = mk(edgeTex(W, 2));
       [eLs, eWs].forEach(m => { m.map.repeat.set(1, SL / EDGE); m.map.offset.set(0, 0); });
       add(new TT.BoxGeometry(L, SL, W), [eWs, eWs, shitan, shitan, eLs, eLs], 0, BASE + SL / 2, 0);
-      // the rim's inner face slopes down to the field (the overall photograph): the scroll of flowers runs on that slope, mitred at the corners
-      { const SLW = 2.1, yT = RIM - .02, bandT = K.tex(2048, Math.round(2048 * 2.2 / IL), (g2, w2, h2) => scroll(g2, w2, h2, w2 / IL, 9, shT, { per: 3.1, birds: false })), bm = mk(bandT);
-        const slope = (len, ry, px, pz) => { const q = new TT.BufferGeometry(), a = len / 2, b = len / 2 - SLW;
-          q.setAttribute('position', new TT.Float32BufferAttribute([-a, yT, 0, a, yT, 0, b, .012, -SLW, -b, .012, -SLW], 3)); q.setAttribute('uv', new TT.Float32BufferAttribute([0, 1, 1, 1, b / len + .5, 0, -b / len + .5, 0], 2)); q.setIndex([0, 1, 2, 0, 2, 3]); q.computeVertexNormals();
-          const m = new TT.Mesh(q, bm); m.rotation.y = ry; m.position.set(px, BASE + SL, pz); m.receiveShadow = true; G.add(m); };
-        slope(IL, 0, 0, IW / 2); slope(IL, Math.PI, 0, -IW / 2); slope(IW, Math.PI / 2, IL / 2, 0); slope(IW, -Math.PI / 2, -IL / 2, 0); }
       face.polygonOffset = true; face.polygonOffsetFactor = -2; face.polygonOffsetUnits = -2;
       add(new TT.PlaneGeometry(IL, IW), face, 0, BASE + SL + .004, 0).rotation.x = -Math.PI / 2;
       [eL, eW].forEach(m => { m.map = m.map.clone(); m.map.repeat.set(1, RIM / EDGE); m.map.offset.set(0, SL / EDGE); m.map.needsUpdate = true; });
       const rimTop = K.mat({ map: K.tex(8, 64, (g, w, h) => { g.fillStyle = '#2c1810'; g.fillRect(0, 0, w, h); g.fillStyle = '#e4d3aa'; g.fillRect(0, h * .3, w, h * .4); }), color: '#ffffff', roughness: .45, clearcoat: .25 });
+      // the wall's inner face (it stands at a right angle to the field): a spare run of thin stem, a small flower and a few green leaves
+      // at wide intervals — much quieter than the outside (the overall photograph)
+      const wallT = len => { const s = 2048 / len; return K.tex(2048, Math.max(16, Math.round(RIM * s)), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); g.lineCap = 'round';
+        const per = s * 7.2, cy = h * .55;
+        for (let x = per * .45, k = 0; x < w - per * .3; x += per, k++) { const up = k % 2 ? 1 : -1;
+          g.strokeStyle = C.bam; g.lineWidth = s * .05; g.beginPath(); g.moveTo(x - per * .3, cy + up * h * .18); g.bezierCurveTo(x - per * .12, cy - up * h * .3, x + per * .1, cy + up * h * .3, x + per * .3, cy - up * h * .12); g.stroke();
+          g.beginPath(); g.arc(x + per * .3, cy - up * h * .12 - h * .1, h * .1, 0, 5); g.stroke();
+          flower(g, x, cy - up * h * .02, h * .16, k); leaf(g, x - per * .2, cy + up * h * .1, s * .5, up * .7); leaf(g, x + per * .17, cy - up * h * .05, s * .42, -up * .8); } }); };
+      const wL = mk(wallT(L)), wW = mk(wallT(W - RT * 2));
       [[L, W / 2 - RT / 2, 0, eL], [L, W / 2 - RT / 2, Math.PI, eL], [W - RT * 2, L / 2 - RT / 2, Math.PI / 2, eW], [W - RT * 2, L / 2 - RT / 2, -Math.PI / 2, eW]].forEach(([len, off, ry, m]) => {
         const g = new TT.Group(); g.rotation.y = ry; G.add(g);
         // (the ivory line along the rim's top is in the texture, not a sliver of geometry: a strip 3 mm wide sparkled at a distance)
-        const r = new TT.Mesh(new TT.BoxGeometry(len, RIM, RT), [shitan, shitan, rimTop, shitan, m, shitan]); r.position.set(0, BASE + SL + RIM / 2, off); r.castShadow = r.receiveShadow = true; g.add(r); });
+        const r = new TT.Mesh(new TT.BoxGeometry(len, RIM, RT), [shitan, shitan, rimTop, shitan, m, len === L ? wL : wW]); r.position.set(0, BASE + SL + RIM / 2, off); r.castShadow = r.receiveShadow = true; g.add(r); });
       /* ---------- the base: openings with bowed sides and two-arched tops, a waisted post on the long sides ---------- */
       const SK = BASE - RAIL, OT = SK - .35;   // skirt height, the openings' top
       const opening = (x0, x1) => { const p = new TT.Path(), top = OT, b0 = .35;
