@@ -99,10 +99,11 @@
       gilt(RL + .02, .92, 0, RW / 2 - .45); gilt(RL + .02, .92, 0, -RW / 2 + .45);
       // a feline leg seen from the side (paw forward to +x), extruded and rounded
       const sh = new TT.Shape();
-      // (after the photographs: a heavy thigh, a slender shank curving back, the knee forward, a broad paw)
-      sh.moveTo(-2.3, 10.3); sh.quadraticCurveTo(-2.5, 8.9, -1.5, 7.7); sh.quadraticCurveTo(-.6, 6.6, -.7, 5.2); sh.quadraticCurveTo(-.75, 3.9, -.75, 2.7); sh.quadraticCurveTo(-1.15, 1.6, -.9, .45); sh.lineTo(-.72, .02);
-      sh.lineTo(1.85, .02); sh.quadraticCurveTo(2.5, .05, 2.4, .62); sh.quadraticCurveTo(2.28, 1.12, 1.55, 1.2); sh.quadraticCurveTo(.62, 1.38, .55, 2.4);
-      sh.quadraticCurveTo(.5, 3.6, .95, 5.0); sh.quadraticCurveTo(1.35, 6.6, 1.0, 8.0); sh.quadraticCurveTo(.8, 9.3, 1.15, 10.3); sh.lineTo(-2.3, 10.3);
+      // (after the photographs: a slender, nearly straight leg, a little wider at the top, a slight backward bend above the ankle,
+      //  a lion's paw with spread toes on the drum)
+      sh.moveTo(-.85, 10.3); sh.quadraticCurveTo(-.95, 8.2, -.6, 6.4); sh.quadraticCurveTo(-.4, 4.2, -.55, 2.6); sh.quadraticCurveTo(-.75, 1.4, -.65, .4); sh.lineTo(-.6, .02);
+      sh.lineTo(1.25, .02); sh.quadraticCurveTo(1.75, .08, 1.65, .55); sh.quadraticCurveTo(1.5, .95, .95, 1.0); sh.quadraticCurveTo(.45, 1.15, .4, 2.0);
+      sh.quadraticCurveTo(.35, 3.4, .55, 4.8); sh.quadraticCurveTo(.75, 6.6, .7, 8.2); sh.quadraticCurveTo(.68, 9.4, .85, 10.3); sh.lineTo(-.85, 10.3);
       const legG = new TT.ExtrudeGeometry(sh, { depth: 1.15, bevelEnabled: true, bevelThickness: .24, bevelSize: .22, bevelSegments: 4, curveSegments: 10 });
       legG.translate(0, 0, -.575);
       const clawG = new TT.ConeGeometry(.12, .42, 10); clawG.rotateZ(-Math.PI / 2);
@@ -110,8 +111,8 @@
       const LX = RL / 2 - 1.6, LZ = RW / 2 - .9, LS = (20.2 - RH - 3.3) / 10.3;   // (the legs stretched to the stand's height)
       for (const sx of [1, -1]) for (const sz of [1, -1]) {
         const x = sx * LX, z = sz * LZ;
-        const leg = new TT.Mesh(legG, ebony); leg.position.set(x, 3.3, z); leg.scale.y = LS; leg.scale.x = sx; leg.scale.z = .9; G.add(leg);   // the paws face outwards, to the ends
-        for (let k = -1; k <= 1; k++) { const c = new TT.Mesh(clawG, ivory); c.position.set(x + sx * 2.18, 3.3 + .3, z + k * .36); c.scale.x = sx; G.add(c); }
+        const leg = new TT.Mesh(legG, ebony); leg.position.set(x, 3.3, z); leg.scale.y = LS; leg.scale.x = sx; leg.scale.z = .85; G.add(leg);   // the paws face outwards, to the ends
+        for (let k = -1; k <= 1; k++) { const c = new TT.Mesh(clawG, ivory); c.position.set(x + sx * 1.62, 3.3 + .25, z + k * .3); c.scale.x = sx; G.add(c); }
         const dr = new TT.Mesh(drumG, gold); dr.position.set(x + sx * .4, 1.45 + .9, z); G.add(dr);   // a gold drum, ribbed, under each paw
       }
       // runners: long bars whose ends sweep up in a curl (the photographs), joined by a cross-bar near each end
