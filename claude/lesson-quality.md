@@ -60,6 +60,9 @@
 - チェッカーのレッスン（checkers、13本）：日本語の導入・問いかけ5通り・ヒント5通り（チェッカニの口調、座標なし）は atlas/lessons3d.js の `CKJ_LS`。正誤の解説は `ckLsJa`（盤面から `ckLF`＝定跡の `ckFacts` に、動かした駒の安全の理由（端・跳ぶ先がふさがる・跳んでくる駒がいない）・逃げた／着地点をふさいだ・相手の残りの手と駒・相手の次のショット・相手の成り・二重コーナーを足したもの。tactics は lessons.json の sc、終盤の不正解は `CK_EG`（checkers/tools/wasm.js の analyze で求めた引き分け／負け。lessons.json の終盤の問題を変えたら作り直す））。ほめ言葉・後押し・励ましは `CK_CH`。正解時は見出しのほめ言葉を出さない（p.ckls）。準備（ramp）の文は checkers/voice-crab-ja.js のまま。
 - 文末のばらし：atlas/lessons3d.js `varyJa`（自動。手書きで変化をつけた文はそのまま）。
 
+## 3時間ごとの報告で必ず書くこと（2026-11-22 ユーザー指示）
+- 問題の中身の見張り：/tmp/lq.json の減点理由から、平均70点以上のゲームについて ⑨同じ・ほぼ同じ局面の使い回し（same position as another problem）・⑩ほめ言葉／励ましの出だしが他のレッスンと同じ順番（praise/miss openers in the same order）・⑪5問が全部同じポイント（every problem praised for the same point）の件数を数え、ゲームごとに件数と代表例（どのレッスンの何問目が、どれと重なるか）を報告に入れる。点が高くても似たような問題が続いていないかを見るため。
+
 ## ログ
 | 日時 | 対象 | 平均（前→後） | pass | PR |
 |---|---|---|---|---|
