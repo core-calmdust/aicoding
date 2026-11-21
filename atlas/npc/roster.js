@@ -15,7 +15,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 33, shogi: 30, go: 37, reversi: 36, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 23, tafl: 30, ur: 20, senet: 20, morris: 11,
-    connect4: 9, dots: 12, mancala: 11, backgammon: 10, hex: 20, fanorona: 20, ugolki: 28, agon: 28, konane: 26, latrunculi: 20, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 28, hitblow: 20 };
+    connect4: 9, dots: 12, mancala: 11, backgammon: 10, hex: 20, fanorona: 20, ugolki: 28, agon: 28, konane: 26, latrunculi: 26, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 28, hitblow: 20 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -351,7 +351,7 @@
   };
   // celestial levels (2026-11-13): the levels above CEL[game] are beyond what people play — no rewards for a win. Their boss is the
   // last of the roster (cel: 1), whose only avatar is a gacha-only UR. The bosses before it keep their bands of three.
-  A.CEL = { reversi: 28, konane: 23, ugolki: 23, agon: 23, amazons: 23, janggi: 20, tafl: 25, chess: 25, shogi: 26, go: 32, connect4: 8, mancala: 10, dots: 10, morris: 10 };   // (2026-11-17: every game with 天上 levels)
+  A.CEL = { reversi: 28, konane: 23, ugolki: 23, agon: 23, amazons: 23, janggi: 20, latrunculi: 20, tafl: 25, chess: 25, shogi: 26, go: 32, connect4: 8, mancala: 10, dots: 10, morris: 10 };   // (2026-11-17: every game with 天上 levels)
   A.isCel = (g, lv) => !!A.CEL[g] && (lv | 0) > A.CEL[g];
   const nb = g => { const L = A.BOSSES[g] || []; return L.length - (L.length && L[L.length - 1].cel ? 1 : 0); };   // the bosses people play
   // a game's boss for an AI level (levels beyond the roster count as the last boss)

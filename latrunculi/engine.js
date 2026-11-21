@@ -141,8 +141,8 @@ function abBack(A) { nodes = A.x.getn(); if (A.x.stopped()) stop = true; }
 const NETS = { seneca: 'lt-seneca-20261121-r1.nnue', piso: 'lt-piso-20261121-r1.nnue', quintana: 'lt-quintana-20261121-r1.nnue' };   // round 1 (2026-11-21, 20M self-play positions over the 3 rules)
 const NETB = {};          // rule → the net's bytes (loaded)
 let NET_ON = true;        // (tools: off = the hand-made evaluation even with a net)
-let NET_USE = true;       // (2026-11-22) the levels that think by time (Lv.19・20), a PRO setting by time and the analysis use the net; the levels by
-                          // depth or by positions keep the hand-made evaluation their strengths were measured with (MODEL_CARD「採用したネット」)
+let NET_USE = true;       // (2026-11-22) the 天上 levels with nn (Lv.21・22), a PRO setting by time and the analysis use the net; the other levels keep
+                          // the hand-made evaluation their strengths were measured with (MODEL_CARD「採用したネット」)
 function netUse(on) { on = !!on; if (on === NET_USE) return; NET_USE = on; NETJR = null; waRule(); ttClear(); }
 let NETJ = null, NETJR = null;   // the JS copy of the current rule's net
 function netParse(b) {
@@ -455,6 +455,9 @@ const LEVELS = [null,
   { s: 1, nk: 200 },                     // 18
   { s: 1, ms: 1500 },                    // 19
   { s: 1, ms: 3000 },                    // 20
+  // (2026-11-22) the learned evaluation (nn) at Lv.19・20's time — the page's 天上Ⅴ・Ⅵ (the AI's benchmark, not for people)
+  { s: 1, ms: 1500, nn: 1 },             // 21
+  { s: 1, ms: 3000, nn: 1 },             // 22
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 // ---------------------------------------------------------------- evaluation (side to move's view, 100 = one counter)
@@ -770,7 +773,7 @@ function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
   const L = PRO_CFG || LEVELS[level] || LEVELS[10];
-  netUse(!!(L.s && L.ms));
+  netUse(netFor(L));
   const { pos } = replay(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
@@ -844,7 +847,8 @@ function cands(start, moves, ms, k, plies, onProgress, rule) {
 // mtFin = the job's reply from the threads' raw result (the same shape as the one-thread worker's)
 let mtRule = null;
 // the threads' tasks carry the job's fields (shared/mtsplit.js base): a level / setting by time and the analysis use the net
-function mtNet(m) { const L = m.cfg || (m.level ? LEVELS[m.level] : null); netUse(m.job === 'think' || L ? !!(L && L.s && L.ms) : true); }
+function netFor(L) { return !!(L && L.s && (L.nn || (L.ms && !LEVELS.includes(L)))); }   // (the 天上 levels nn, a PRO setting by time)
+function mtNet(m) { const L = m.cfg || (m.level ? LEVELS[m.level] : null); netUse(m.job === 'think' || L ? netFor(L) : true); }
 function mtNode(m) {
   mtNet(m);
   if (SH !== null) SH.salt = SALT[RK] | 0;
