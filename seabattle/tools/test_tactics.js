@@ -6,7 +6,7 @@ const { chromium } = require('playwright');
   for (const [name, vp, touch] of [['pc', { width: 1280, height: 720 }, false], ['ph', { width: 390, height: 844 }, true]]) {
     const ctx = await b.newContext({ viewport: vp, hasTouch: touch, isMobile: touch, locale: 'ja-JP', deviceScaleFactor: touch ? 2 : 1 });
     await ctx.route(/fonts\.(googleapis|gstatic)|firebase|gstatic/, r => r.abort());
-    const p = await ctx.newPage();
+    const p = await ctx.newPage(); await p.addInitScript(() => { try { if (!localStorage.getItem('aicoding-seabattle')) localStorage.setItem('aicoding-seabattle', JSON.stringify({ settings: { design: 'abyss', seen3d: 1 } })); } catch (e) {} });   // (these drive the SVG board; the 3D sea has its own test)
     p.on('pageerror', e => errs.push(name + ': ' + e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED|Failed to load resource/.test(m.text())) errs.push(name + ': ' + m.text()); });
     await p.goto('http://localhost:8765/seabattle/', { waitUntil: 'load' }); await p.waitForTimeout(500); await p.evaluate(() => { if (document.querySelector('#pickOverlay').classList.contains('show')) document.querySelector('#btnPickClose').click(); });   // (a fresh visit opens the pick sheet of a new タクティクス game)
     const shot = n => p.screenshot({ path: '/tmp/shots/' + name + '-' + n + '.png' });
