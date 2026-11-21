@@ -109,12 +109,15 @@
       });
       const faceMat = K.mat({ map: faceT, color: '#ffffff', roughness: .55, clearcoat: .12, clearcoatRoughness: .4 });
       /* ---------- the body's sides: lozenge bands, four panels of figures in dyed ivory ---------- */
-      const VIGN = [   // panel by panel after the Shōsōin's detail photographs (428–430): the drawer side — parrots on grapes · a man leading camels,
-        // a flowering plant · a stag and a beast · a deer, a hound and a rider; another side — riders hunting · a hare, a plant, deer
+      const VIGN = [   // all sixteen panels after the Shōsōin's detail photographs (CO0000000428–436), four to a side
+        // side A (a drawer): parrots on grapes · a man leading camels, a plant · a stag and a winged beast · a deer, a hound, a rider
         [['parrot', 2], ['parrot', 2]], [['man', 0], ['camel', 1], ['camel', 2], ['plant', 2]], [['runner', 1], ['lion', 2]], [['runner', 1], ['hound', 0], ['hunter', 2]],
-        [['hunter', 1], ['hound', 0], ['hunter', 2]], [['hare', 0], ['plant', 2], ['deer', 1], ['deer', 3]], [['bird', 2], ['runner', 1], ['hound', 0]], [['plant', 2], ['hunter', 1], ['runner', 3]],
-        [['runner', 0], ['hound', 3], ['hunter', 1]], [['bird', 0], ['plant', 2], ['hare', 1]], [['man', 1], ['camel', 0], ['plant', 2]], [['hound', 1], ['runner', 0], ['bird', 2]],
-        [['hunter', 0], ['runner', 2], ['hare', 0]], [['deer', 1], ['plant', 2], ['deer', 3]], [['parrot', 2], ['plant', 2], ['bird', 0]], [['lion', 1], ['runner', 3], ['hunter', 0]],
+        // side C (the other drawer): camels · mounted hunters · long-tailed birds about a plant · pheasants among leaves
+        [['camel', 1], ['camel', 2]], [['hunter', 0], ['hound', 1], ['hunter', 0]], [['parrot', 2], ['plant', 2], ['parrot', 0]], [['parrot', 1], ['plant', 2], ['parrot', 1]],
+        // side B: riders hunting · a hare, a plant, deer · camels and a seated man · geese and a plant
+        [['hunter', 1], ['hound', 0], ['hunter', 2]], [['hare', 0], ['plant', 2], ['deer', 1], ['deer', 3]], [['camel', 1], ['man', 0], ['camel', 2]], [['bird', 2], ['plant', 2], ['bird', 1]],
+        // side D: a winged beast and two deer · long-tailed birds facing over a plant · men and camels · a plant and two running beasts
+        [['lion', 1], ['runner', 2], ['runner', 1]], [['parrot', 2], ['plant', 2], ['parrot', 2]], [['camel', 2], ['man', 0], ['camel', 1], ['man', 1]], [['plant', 2], ['hound', 0], ['hound', 2]],
       ];
       const PAL = [C.iv, C.red, C.grn, '#d8b878'];
       const sideTex = (seed, drawerAt) => K.tex(2048, Math.round(2048 * (BODY - TOP) / S), (g, w, h) => {
@@ -176,7 +179,8 @@
         // the drawer front is one of the side's panels: birds and flowers in dyed ivory, a large beaded gilt ring in the middle (side A)
         const dfT = K.tex(1024, Math.round(1024 * DH / DW), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); const s2 = w / DW;
           g.strokeStyle = C.iv; g.lineWidth = s2 * .05; g.strokeRect(s2 * .1, s2 * .1, w - s2 * .2, h - s2 * .2);
-          sil(g, 'parrot', w * .2, h * .46, s2 * .05, C.grn); g.save(); g.translate(w, 0); g.scale(-1, 1); sil(g, 'parrot', w * .2, h * .46, s2 * .05, C.grn); g.restore(); });
+          const kd = sx > 0 ? 'parrot' : 'camel';   // (one drawer carries the parrots, the other two camels)
+          sil(g, kd, w * .2, h * .48, s2 * .05, sx > 0 ? C.grn : C.red); g.save(); g.translate(w, 0); g.scale(-1, 1); sil(g, kd, w * .2, h * .48, s2 * .05, C.grn); g.restore(); });
         const f = new TT.Mesh(new TT.BoxGeometry(DW, DH, .45), [dark, dark, dark, dark, K.mat({ map: dfT, color: '#ffffff', roughness: .5, clearcoat: .35 }), dark]); g2.add(f);
         const RR = .78, ring = new TT.Mesh(new TT.TorusGeometry(RR, .16, 10, 32), gilt); ring.position.set(0, -.15, .55); g2.add(ring);
         for (let k = 0; k < 16; k++) { const a = k / 16 * 6.283, b = new TT.Mesh(new TT.SphereGeometry(.17, 10, 8), gilt); b.position.set(Math.cos(a) * RR, -.15 + Math.sin(a) * RR, .62); g2.add(b); }   // the beaded ring
