@@ -14,7 +14,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../konane/', VER = '?v=9-v3nn';   // same file / version as konane/index.html → shared cache
+  const BASE = '../konane/', VER = '?v=10-v3nn';   // same file / version as konane/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.KonaneEngine) return Promise.resolve(window.KonaneEngine);
