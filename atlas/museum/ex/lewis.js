@@ -7,7 +7,8 @@
    manner of the pieces, not copied from one throne (estimate). The red that Madden saw on a few pieces in 1831 is gone today.
    2026-11-21: the ivory's colour (grey-tan, mottled with brown staining) and the seated pieces' build — one squat block with sloping
    shoulders as wide as the throne, a large long head sunk into it, the throne seen only at the sides and behind — after the British
-   Museum's 3D scans (Sketchfab). The knight and the warder are not yet reworked. */
+   Museum's 3D scans (Sketchfab); the warder and the knight too (pointed helmets with nose guards over long faces, the pony with a
+   large upright head, banded mane and legs carved as solid slabs). */
 (function () {
   'use strict';
   (window.AtlasEx = window.AtlasEx || {}).lewis = {
@@ -209,31 +210,37 @@
         add(p, new TT.BoxGeometry(2.9, .45, 5.2), IV[k], 0, .225, 0);
         const hm = robe(k, 6);
         ball(p, 1.35, hm, 0, 2.75, -.05, .95, .82, 1.75, 22);
-        [[-.62, 1.3], [.62, 1.3], [-.62, -1.4], [.62, -1.4]].forEach(([x, z]) => limb(p, V3(x, .45, z), V3(x * .9, 2.4, z * .95), .32, .4, IV[k], 10));
-        limb(p, V3(0, 3.1, 1.55), V3(0, 4.55, 2.15), .7, .5, IV[k], 14);
-        const hd = limb(p, V3(0, 4.75, 2.05), V3(0, 3.85, 2.95), .48, .36, IV[k], 12); ball(p, .38, IV[k], 0, 3.82, 2.98, 1, .9, 1.1, 12);
-        [-1, 1].forEach(s => { const e = add(p, new TT.ConeGeometry(.12, .4, 8), IV[k], s * .22, 5.1, 2.05); e.rotation.x = -.3; });
-        add(p, new TT.BoxGeometry(.18, .55, 1.9), braid(k), 0, 4.2, 1.75).rotation.x = .75;   // the mane
+        [1.25, -1.35].forEach(z => { const lg = add(p, new TT.BoxGeometry(1.7, 2.1, .85), robe(k, 4), 0, 1.45, z); });   // the legs carved as two solid slabs (front and back pairs), as in the scan
+        // the pony's head: large and upright before the rider's chest, a broad striped mane down its neck (the scan)
+        limb(p, V3(0, 3.0, 1.6), V3(0, 4.9, 2.1), .95, .8, IV[k], 16);
+        const hd = ball(p, 1, IV[k], 0, 4.6, 2.75, .8, 1.25, .75, 18); hd.rotation.x = .35;
+        [-1, 1].forEach(s => { const e = add(p, new TT.ConeGeometry(.16, .5, 8), IV[k], s * .3, 5.85, 2.35); e.rotation.x = -.2; });
+        const mane = add(p, new TT.BoxGeometry(1.75, 1.9, .3), braid(k), 0, 4.75, 1.45); mane.rotation.x = .25;   // the mane, combed in bands
         limb(p, V3(0, 3.0, -2.35), V3(0, .9, -2.6), .3, .2, braid(k), 8);                      // the tail
         // the rider: legs hanging low beside the pony, body, head, helmet
         [-1, 1].forEach(s => { limb(p, V3(s * .95, 3.7, .2), V3(s * 1.28, 2.0, .45), .45, .36, robe(k, 8)); limb(p, V3(s * 1.28, 2.0, .45), V3(s * 1.3, .9, .55), .36, .3, IV[k]); ball(p, .3, IV[k], s * 1.3, .75, .75, 1, .7, 1.5, 10); });
         const tor = add(p, lathe([[1.25, 0], [1.2, .9], [1.15, 1.7], [.95, 2.25], [.5, 2.5], [0, 2.52]], 22), robe(k, 18), 0, 3.6, .05); tor.scale.z = .8;
-        head(p, k, 7.0, .05, { beard: true }); ball(p, .7, beardM(k), 0, 6.05, .5, 1, 1, .55, 14); helmet(p, IV[k], 7.55, 1.03);
+        ball(p, 1, faceS(k, { eye: 92, mouth: 150, moustache: true }), 0, 7.0, .05, 1.05, 1.3, .95, 28); ball(p, .9, beardM(k), 0, 5.95, .5, .95, 1.0, .5, 14);
+        add(p, new TT.ConeGeometry(1.1, 2.1, 24), IV[k], 0, 8.75, .05); add(p, new TT.BoxGeometry(.24, .9, .2), IV[k], 0, 7.65, 1.0);   // pointed helmet, nose guard
         // the shield on the left arm (+x), the spear in the right hand
         const sh = add(p, kite(shieldM(k), 2.2, 4.0), shieldM(k), 1.5, 4.6, .4); sh.rotation.y = Math.PI / 2 - .25;
         limb(p, V3(-1.15, 4.3, -.2), V3(-1.3, 4.7, .9), .34, .3, robe(k, 8)); ball(p, .3, IV[k], -1.35, 4.8, 1.0);
         limb(p, V3(-1.35, 1.0, 1.05), V3(-1.35, 9.4, .95), .12, .1, IV[k], 8); const tip = add(p, new TT.ConeGeometry(.2, .65, 8), IV[k], -1.35, 9.72, .95);
         pieces.push(p); }
-      // WARDER, a "berserker" (1831,1101.123 – 9.2 cm): standing, helmet, biting the top of his shield, sword in the right hand
+      // WARDER (1831,1101.123 – 9.2 cm), after the British Museum's scan: no base plate; a slender bell-shaped body; a tall pointed
+      // helmet with a nose guard that runs straight into the long face and beard; a long kite shield held in front, the sword upright
+      // in the right hand before it
       { const p = new TT.Group(), k = 1;
-        add(p, new TT.BoxGeometry(3.4, .55, 3.0), IV[k], 0, .275, 0);
-        const body = add(p, lathe([[1.55, .55], [1.5, 1.2], [1.3, 3.2], [1.18, 4.3], [1.3, 5.6], [1.15, 6.2], [.6, 6.55], [0, 6.6]], 26), robe(k, 30), 0, 0, -.15); body.scale.z = .74;
-        const hy = 7.35; head(p, k, hy, -.1, { beard: true }); ball(p, .66, beardM(k), 0, hy - .95, .45, 1, .95, .5, 14); helmet(p, IV[k], hy + .55, 1.02);
-        const sh = add(p, kite(shieldM(k), 2.6, 4.9), shieldM(k), .05, hy - 2.55, 1.0); sh.rotation.x = -.06;
-        limb(p, V3(1.25, 5.9, -.2), V3(1.25, 4.6, .6), .42, .36, robe(k, 8)); ball(p, .3, IV[k], 1.1, 4.7, .9);
-        limb(p, V3(-1.25, 5.9, -.2), V3(-1.45, 4.4, .45), .42, .36, robe(k, 8)); ball(p, .3, IV[k], -1.5, 4.3, .6);
-        const sw = new TT.Group(); sw.position.set(-1.55, 4.3, .6); sw.rotation.z = .12;
-        add(sw, new TT.BoxGeometry(.32, 3.9, .1), IV[k], 0, 2.2, 0); add(sw, new TT.BoxGeometry(1.0, .16, .22), IV[k], 0, .28, 0); limb(sw, V3(0, -.6, 0), V3(0, .2, 0), .1, .1, IV[k], 8); p.add(sw);
+        const body = add(p, lathe([[1.75, 0], [1.72, .3], [1.5, 2.5], [1.32, 4.4], [1.38, 5.6], [1.15, 6.2], [.6, 6.5], [0, 6.55]], 26), robe(k, 30), 0, 0, -.15); body.scale.z = .72;
+        const hy = 6.75; ball(p, 1, faceS(k, { eye: 92, mouth: 150, moustache: true }), 0, hy, .05, 1.08, 1.35, .95, 28);
+        ball(p, 1, beardM(k), 0, hy - 1.2, .55, .9, 1.0, .5, 16);
+        const hc = add(p, new TT.ConeGeometry(1.12, 2.3, 24), IV[k], 0, hy + 1.65, .05); hc.scale.z = .95;   // the pointed helmet, no brim
+        add(p, new TT.BoxGeometry(.24, 1.0, .2), IV[k], 0, hy + .45, 1.05);                                  // the nose guard
+        const sh = add(p, kite(shieldM(k), 2.5, 5.3), shieldM(k), .25, 3.0, 1.15); sh.rotation.x = -.04;
+        limb(p, V3(1.3, 5.6, -.2), V3(1.35, 4.2, .7), .42, .36, robe(k, 8)); ball(p, .3, IV[k], 1.2, 4.4, 1.15);
+        limb(p, V3(-1.3, 5.6, -.2), V3(-1.4, 4.0, .9), .42, .36, robe(k, 8)); ball(p, .34, IV[k], -1.25, 3.95, 1.45);
+        const sw = new TT.Group(); sw.position.set(-1.2, 3.95, 1.5); sw.rotation.z = -.08;
+        add(sw, new TT.BoxGeometry(.3, 3.7, .1), IV[k], 0, 2.1, 0); add(sw, new TT.BoxGeometry(.9, .16, .22), IV[k], 0, .26, 0); limb(sw, V3(0, -.6, 0), V3(0, .2, 0), .1, .1, IV[k], 8); p.add(sw);
         pieces.push(p); }
       // PAWN (1831,1101.134 – 4.0 cm): a plain slab with a rounded top
       { const p = new TT.Group(), k = 2;
