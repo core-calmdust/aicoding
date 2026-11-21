@@ -2255,6 +2255,114 @@
   const TF_ENG = '../tafl/engine.js?v=nn2sr-lv25-zf1';   // (the table adapter's file: one cache)
   const tfEng = () => window.TaflEngine ? Promise.resolve(window.TaflEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = TF_ENG; sc.onload = () => window.TaflEngine ? res(window.TaflEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
   const TFM = (k, lang) => lang === 'ja' ? '\u0001' + (k === 'ok' ? '緑の印の手' : '赤い印の手') + '\u0002' : `<i class="ls-spot ${k}"></i>`;
+  /* (2026-11-21 lesson loop) the tafl openings in タフリン's words, Japanese, for the 3D table (no coordinates): her own intro, the
+     line's notes rebuilt from the board (what each move does — a capture, a piece saved from a sandwich, the corner guard, the king's
+     room widened / narrowed, a capture threat, a defender to the edge / a corner — with the stored AI verdict when it changes), a
+     question naming the side to move, a hint from what the best move does (never where), and after the answer why it is played and
+     what yours gives up (the king let out / caught, a piece left to be sandwiched, a capture missed, the king's room, openings.json sc). */
+  const TF_BLOCK = new Set([2, 12, 22, 8, 20, 32, 88, 100, 112, 98, 108, 118]);   // (the corner guard squares, = tafl/tools/gen_openings.js)
+  function tfFacts(E, pos, m) {   // what a tafl move does (Copenhagen 11×11)
+    const f = E.mFrom(m), t = E.mTo(m), att = pos.turn === 1, king = pos.at(f) === 3, n = pos.n, F = pos.G.F, me = pos.turn, op = me === 1 ? 2 : 1;
+    const after = pos.clone().play(m), caps = after.lastCaps.length;
+    const flip = (p, s) => { const q = p.clone(); q.turn = s; q.rehash(); return q; };
+    const reply = q => { let c = 0, w = false; if (q.res) return { c, w }; for (const r of q.moves()) { const z = q.clone().play(r); if (z.res && z.res === q.turn) w = true; c = Math.max(c, z.lastCaps.length); } return { c, w }; };
+    const opp = reply(after), thr = reply(flip(pos, op)).c, aim0 = reply(flip(pos, me)).c, aim = after.res ? 0 : reply(flip(after, me)).c;
+    const km = p => p.king < 0 ? 0 : flip(p, 2).moves().filter(x => x % 256 === p.king).length, km0 = km(pos), km1 = km(after);
+    const nb = [t - n, t + n, t - 1, t + 1].filter(x => x >= 0 && x < n * n && Math.abs(x % n - t % n) <= 1);
+    const cd = q => { const r = Math.floor(q / n), c = q % n; return Math.min(r, n - 1 - r) + Math.min(c, n - 1 - c); };
+    const Fx = { att, king, caps, win: after.res === me ? after.why || 'win' : '', oppCap: opp.c, oppWin: opp.w, thr, aim: aim > aim0 ? aim : 0, km0, km1,
+      block: att && TF_BLOCK.has(t), edge: !!(F[t] & 1), touch: nb.some(x => { const y = after.at(x); return y && (y === 1) !== att; }), toCorner: cd(t) < cd(f) };
+    Fx.k = Fx.win ? 'win' : caps ? 'cap' : thr && !opp.c ? 'save' : !att && king ? 'king' : att && Fx.block ? 'block' : att && km1 < km0 - 1 ? 'shut'
+      : !att && km1 > km0 ? 'widen' : Fx.aim ? 'aim' : Fx.touch ? 'touch' : !att && Fx.edge ? 'edge' : !att && Fx.toCorner ? 'corner' : att ? 'ring' : 'out';
+    return Fx;
+  }
+  const TFJ_OP = {
+    intro: {
+      a1: '攻め手は1手目から、四つの角のまわりを固めにいくの。王が角へ入る道を、先にふさいでおく作戦だね。いちばん基本の考え方だから、しっかり覚えよう！',
+      a2: '辺のまん中にいる攻め手を、横へ広げていく作戦。翼を広げるみたいに、早めに大きな輪の形を作るんだ。',
+      a3: '攻め手の駒をななめにつなげて、壁を作っていくよ。王の進む道を、少しずつせまくしていく作戦なの。',
+      a4: '攻め手が辺にそって駒を動かして、守り手の出口を外側からおさえる作戦。外から締めつけるのがコツだね！',
+      d1: '守り手は早めに王のまわりを空けて、王さま自身を外へ走らせるの。攻め手の輪ができる前に動くのがポイントだよ。',
+      d2: '攻め手の輪のうすいところをねらって、すき間を作る作戦。守り手の駒で、輪の横っぱらをつつくんだ！',
+      d3: '守り手の駒を外へ出して、盤を広く使う作戦。攻め手をあちこちに散らして、輪を作らせないの。',
+      d4: '守り手の駒を角の近くへ送って、攻め手の角固めを先にくずす作戦だね。王の逃げ道を、早めに準備しておくんだ。',
+    },
+    ask: ['『{n}』のこの場面、{s}のいちばんいい手はどれかな？', '{s}の番！ ここはどう指す？', '{s}として、AIがいちばんと考える手を当ててみて！', 'さあ、{s}ならここで何を指す？', '『{n}』の続きだよ。{s}の最善手、わかるかな？'],
+    lead: ['正解は{m}だったの。', 'ここは{m}がいちばん！', '{m}を見てみて！', 'AIのおすすめは{m}なんだ。'],
+    so: ['こっちなら{a}からね。', '{a}のが、この手のいいところ。', 'この手で{a}の。', 'これなら{a}んだ。'],
+    gap: ['{x}だと、AIの評価が{d}下がっちゃう。', 'AIの見立てでは、{x}は{d}損なの。', '{x}だと、AIの評価で{d}落ちるね。'],
+    gap2: ['AIの評価も{d}下がっちゃう。', 'AIの見立てでも{d}損なの。', '評価も{d}落ちるね。'],   // (after a reason that already named {x})
+    good: ['AIの評価でも、ここではこの手がいちばん！', 'AIもこの手をいちばんに選んでいるの。', 'この作戦の本筋どおり、ばっちり！', 'いい形になった！'],
+    deg: d => d <= 30 ? 'ほんの少し' : d <= 120 ? '少し' : d <= 400 ? 'はっきり' : 'かなり',
+  };
+  const TF_WHY = {   // why the move is played (the praise / the line's notes): a few wordings each, with different endings
+    win: ['これで勝負あり！ この手で勝ちが決まるんだ。', '一気に決めちゃう手だね！'],
+    cap: ['相手の駒をはさんで取る手！ 駒が減ると、相手はぐっと苦しくなるね。', 'はさみ取り成功！ 取れるときは取っておこう。', '相手の駒を1つ取る手だよ。これで相手の駒がひとつ減ったね！'],
+    save: ['ねらわれていた駒を、はさまれない場所へよける手。まずは駒を守るのが大事だね。', 'はさまれそうな駒を助ける手なの。取られる前に動かすのがコツ！', '相手のはさみ取りのねらいを、先にかわしておく手だよ。'],
+    king: ['王さま自身が動く手！ 動けるマスが{a}から{b}に増えるの。', '王を外へ動かして、逃げ道をさがしにいくんだ。', '王さまが前へ出る手。攻め手は王の行き先を気にしないといけなくなる！'],
+    block: ['角のとなりを固める手。王が角へ入る道を、先にふさいでおくの。', '角のまわりをしっかりガード！ 守り手は角へ逃げにくくなるんだ。', '角を守る形を作る手だよ。攻め手の基本中の基本！'],
+    shut: ['王の動けるマスを{a}から{b}にせばめる手！ 王の道をふさいでいくの。', '王の通り道に駒を入れて、動きをしばる手だね。', '王の行き先を減らす手。じわじわ追いつめるんだ。'],
+    widen: ['駒をどかして、王の動けるマスを{a}から{b}に広げる手！', '王のまわりを空けて、通り道を作るの。', '王の道を広げる手だね。王が動けるほど、攻め手は守りにくいんだ。'],
+    aim: ['つぎに相手の駒をはさんで取るねらいを作る手！ 相手は受けに手を取られちゃう。', '相手の駒をはさむ準備ができたの。', 'つぎのはさみ取りをねらう手。相手にプレッシャーをかけるんだ！'],
+    touch: ['相手の駒にぴったりついて、はさむ形をねらう手だね。', '相手の駒のとなりへ。はさみ取りの準備なの。', '相手に近づいて、じわっと圧力をかける手！'],
+    edge: ['守り手が端へ出て、攻め手の輪を外からかき乱す手！', '端へ出る手。攻め手は外側も気にしないといけなくなるの。'],
+    corner: ['角のほうへ駒を送って、攻め手の角固めをじゃまする手だね。', '角に近づく手。王の逃げ道の準備なの！'],
+    ring: ['輪をつめて、守り手の出口をせまくする手だね。', '攻め手の輪を少しずつ閉じていく手なの。', '外側から包む形を作る手！'],
+    out: ['駒を外へ広げて、攻め手を散らす手だね。', '盤を広く使う手。攻め手の輪を作らせないの！', '守り手の駒を外へ出す手だよ。'],
+  };
+  const TF_SHORT = { win: '勝ちが決まる', cap: '相手の駒を取れる', save: 'ねらわれた駒を守れる', king: '王の逃げ道が増える', block: '角を先に固められる', shut: '王の動ける道をせばめられる',
+    widen: '王の通り道が広がる', aim: 'つぎのはさみ取りをねらえる', touch: '相手にはさむ圧力をかけられる', edge: '輪を外から乱せる', corner: '角固めをじゃまできる', ring: '輪をつめられる', out: '攻め手を散らせる' };
+  const TF_SIDE = att => att ? '攻め手' : '守り手';
+  function tfWhyJa(F, k) { const L = TF_WHY[F.k] || TF_WHY.ring; let s = L[k % L.length].replace('{a}', F.km0).replace('{b}', F.km1); if (F.win === 'escape') s = '王が角までたどり着いて、守り手の勝ち！'; else if (F.win === 'capture') s = '王をはさみこんで、攻め手の勝ち！'; return s; }
+  function tfHintJa(F, k) {
+    const tail = ['', '金の丸が動かす駒だよ。', ''][k % 3], a = F.att;
+    const h = { win: a ? '王をつかまえ切れる手がありそう！' : '王が一気に角まで行ける道、ないかな？', cap: 'はさんで取れる相手の駒をさがしてみて！', save: 'いま、はさまれそうな自分の駒はない？',
+      king: '王さま自身を動かすのもアリなんだ。', block: '角のまわり、だいじょうぶ？ 王が入ってこられる道をチェックしてね。', shut: '王の動けるマスを数えてみて。いちばん減らせる手はどれ？',
+      widen: '王のまわりの駒、じゃまになってない？', aim: 'つぎに相手の駒をはさめるように、準備できる手は？', touch: '相手の駒のとなりに、行ける駒はある？',
+      edge: '盤の端まで出られる駒をさがしてみて。', corner: '角に近づける駒はどれ？', ring: '守り手の出口はどこ？ そこを外からふさごう。', out: '駒を外へ広げて、盤を広く使ってみて。' }[F.k];
+    return (h || '金の丸の駒で、いちばん働く場所を考えてみて。') + tail;
+  }
+  function tfOpJa(E, P, name, k, ck) {   // ck(k): the move named by its mark
+    const pos = E.Pos.from(P.s), A = P.best, sc = new Map(P.sc || []), best = sc.has(A) ? sc.get(A) : Math.max(...(P.sc || [[0, 0]]).map(x => x[1]));
+    const FA = tfFacts(E, pos, A), M = ck('ok'), X = ck('ng'), f = s => s.replace(/\{m\}/g, M).replace(/\{x\}/g, X), side = TF_SIDE(FA.att);
+    const ask = TFJ_OP.ask[k % TFJ_OP.ask.length].replace('{n}', name).replace('{s}', side);
+    const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 15 ? '{x}も、AIの見立てでは{m}とほぼ同じ評価。どちらもいい手だね！' : '{x}も悪くない手。でも{m}のほうが、AIの評価がわずかに上なの。');
+      const w = tfWhyJa(FA, k); return w + (/[！？]$/.test(w) ? ' ' : '') + TFJ_OP.good[k % TFJ_OP.good.length]; };
+    const ng = u0 => {
+      let u = u0; if (u == null || u === A) u = ((P.sc || []).find(x => x[0] !== A && best - x[1] > 15) || (P.sc || []).find(x => x[0] !== A) || [])[0];   // (no move given: a real miss, as the tool asks)
+      const out = [TFJ_OP.lead[k % TFJ_OP.lead.length], TFJ_OP.so[k % TFJ_OP.so.length].replace('{a}', TF_SHORT[FA.k] || '形が整う')];
+      if (u == null) return f(out.join(''));
+      let F = null; try { F = tfFacts(E, pos, u); } catch (e) {}
+      const d = sc.has(u) ? best - sc.get(u) : null;
+      if (F) {
+        if (F.oppWin && !FA.oppWin) out.push(FA.att ? '{x}だと、王に角まで逃げられちゃう！' : '{x}だと、王がつかまっちゃう！');
+        else if (FA.win && !F.win) out.push('{x}だと、せっかくの勝ちを見のがしちゃうね。');
+        else if (F.oppCap > FA.oppCap) out.push('{x}だと、きみの駒がはさまれて取られちゃう！');
+        else if (FA.caps > F.caps) out.push('{x}だと、取れる駒を見のがしちゃうね。');
+        else if (FA.att && F.km1 > FA.km1 + 1) out.push(`{x}だと、王の動けるマスが${F.km1}まで増えちゃう。`);
+        else if (!FA.att && F.km1 < FA.km1 - 1) out.push(`{x}だと、王の動けるマスが${F.km1}しかないまま。`);
+        else if (FA.k === 'block' && !F.block) out.push('{x}だと、角のまわりが手うすになっちゃう。');
+        else if (FA.aim && !F.aim && !F.caps) out.push('{x}だと、つぎのはさみ取りのねらいが作れないの。');
+      }
+      if (d != null && d > 15) out.push((out.length > 2 ? TFJ_OP.gap2 : TFJ_OP.gap)[k % TFJ_OP.gap.length].replace('{d}', TFJ_OP.deg(d)));
+      else if (d != null && out.length < 3) out.push('{x}も悪くないけど、AIの評価ではこっちがわずかに上だから、本筋はこっちなの。');
+      else if (d == null && out.length < 3) out.push('{x}は、AIの候補にも入らない手なんだ。');
+      return f(out.join(''));
+    };
+    return { ask, hintTx: tfHintJa(FA, k), good, ng, own: true };
+  }
+  function tfNotesJa(E, g, notes, startSpec) {   // the line's notes in タフリン's words (3D, ja); the AI's verdict kept from the stored note when it changes
+    const out = {}, cnt = {}; let pos = E.Pos.from(startSpec), n = 0, lastAi = '';
+    g.study.line.forEach((m, i) => { const o = notes[String(i)];
+      if (o) { const ai = (String(o.ja || o || '').match(/\((?:AI)[:：]\s*([^)]+)\)|（AI[:：]\s*([^）]+)）/) || []).slice(1).find(Boolean); let F = null; try { F = tfFacts(E, pos, m); } catch (e) {}
+        const kd = F ? F.k : ''; cnt[kd] = (cnt[kd] || 0) + 1;
+        let s = F ? (n ? TF_SIDE(F.att) + '：' : '') + tfWhyJa(F, cnt[kd] + g.id.charCodeAt(1)) : String(o.ja || o || '');
+        if (n === 0) s = `『${(g.title || {}).ja || ''}』のはじまり！ ` + TF_SIDE(F ? F.att : true) + '：' + s.replace(/^[^：]*：/, '');
+        if (ai && ai !== lastAi) s += `（AIの見立て：${ai}）`; lastAi = ai || lastAi;
+        out[String(i)] = { ja: s }; n++; }
+      pos = pos.clone().play(m); });
+    return out;
+  }
   const TAFL = {
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
@@ -2307,9 +2415,13 @@
       const g = this.data.op && this.data.op.sets.find(x => x.id === key); if (!g) return null;
       const notes = {}; (g.study.notes || []).forEach((n, i) => { if (n) notes[String(i)] = L(n, lang); });
       const it = g.intro && (g.intro[lang] || g.intro.en), hist = Array.isArray(it) ? it[0] : it || '';
-      const probs = shuffle(g.problems || []).slice(0, 5), E = window.TaflEngine;
-      return { id: g.id, title: L(g.title, lang), intro: hist, start: { spec: { v: 'copenhagen', b: E && E.START && E.START.copenhagen ? E.START.copenhagen : null, side: 1 }, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes,
-        probs: probs.map(P => ({ pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: E ? [E.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: TFM('ok', lang) }) })),
+      const probs = shuffle(g.problems || []).slice(0, 5), E = window.TaflEngine, ja = lang === 'ja' && E;
+      const start = { v: 'copenhagen', b: E && E.START && E.START.copenhagen ? E.START.copenhagen : null, side: 1 };
+      let nj = null; if (ja) try { nj = tfNotesJa(E, g, notes, start); } catch (e) { console.warn('[lessons3d] tafl notes', e); }
+      return { id: g.id, title: L(g.title, lang), intro: ja && TFJ_OP.intro[g.id] ? TFJ_OP.intro[g.id] : hist, start: { spec: start, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes: nj || notes,
+        probs: probs.map((P, i) => { const o = { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: E ? [E.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: TFM('ok', lang) }) };
+          if (ja) try { Object.assign(o, tfOpJa(E, P, L(g.title, 'ja'), g.id.charCodeAt(1) * 2 + i, k => TFM(k, lang))); } catch (e) { console.warn('[lessons3d] tafl opening', e); }
+          return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= max * .75; pr[g.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
   };
