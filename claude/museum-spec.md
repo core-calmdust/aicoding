@@ -142,3 +142,8 @@
   - 流れ：所蔵品の画面の「この盤で遊ぶ」→ `window.__museumPlay = { game, ex }` を立てて museum/play.js を読み、ゲームカードを開く（盤の大きさは7×7に）→ 開始すると app.js が ctx.museum を渡し、FULL_SKIN の遷移を飛ばす。別の盤を開くと解除。
   - atlas/museum/play.js：`AtlasMuseumPlay.board(id)` が所蔵品のモデルを卓上の盤と同じインターフェース（userData: top, S, n, cs, cell, piece, out）で返す。バリンダリーは穴49個の実位置（ex/ballinderry.js の HOLES、写真から）に駒を差す。駒は出土していないので推定（ろくろ挽きの杭、攻め手＝茶、守り手＝淡色、王は背が高い）。
   - 残り：博物館向けの専用カード（AI戦のみ）、TOPのアイコン（MUSEUM表示）、対局用ライト、セネト・碁盤・双六。
+- 実装 第2弾（2026-11-22、ユーザー指示で方式を変更）：**対局は博物館のページの中で行う**。ちゃぶ台の部屋には行かない。背景・台座は所蔵品の展示と同じ。
+  - 所蔵品の画面の情報欄に博物館向けのゲームカード（AIの強さ・先後・対局開始／やめる、のみ。レッスン・パズル・レート・記録はなし）。
+  - atlas/museum/play.js：`AtlasMuseumPlay.start(id, {level, side, …})`。展示のモデルそのものを盤にし（駒は obj の子、単位cm）、卓上アダプタ（atlas/games/tafl.js）を Table3D の代役（show/kick/pick/project/wasDrag/contact）で動かす。アダプタには ctx.board で盤を渡す。
+  - 対局中は展示のキーライトを0.62倍・環境光を0.55倍に落とし、視点を上から寄り（pitch 1.2）に。やめると元に戻す。対局中は番号つきの見どころを隠す。
+  - 第1弾のちゃぶ台経由（app.js の __museumPlay）は取り除いた。

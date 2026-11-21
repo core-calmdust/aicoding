@@ -939,7 +939,6 @@
   }
   function openBoard0(id, push = true, flown = false, relang = false) {
     const g = A_.GAMES.find(x => x.id === id); if (!g) return;
-    { const mp = window.__museumPlay; if (mp && !relang) { if (mp.fresh && mp.game === id) mp.fresh = false; else if (!$('bv').classList.contains('playing') || mp.game !== id) window.__museumPlay = null; } }   // (所蔵品で遊ぶ: the museum's board stays for this visit to the game's card, and is forgotten once another board is opened)
     if (!$('bv').classList.contains('on')) bvDrawer = 0;   // freshly opened: the default (settings) card
     const back = $('bv').classList.contains('playing');   // coming back from a game / the rules on the table
     if (relang) { renderPlace(); return bvCard(g, id, push, false); }   // the language changed: only the card and the labels are rebuilt (the board stays)
@@ -1872,8 +1871,7 @@
     if (renderPlace.close) renderPlace.close();
     if ($('bvPS')) $('bvPS').classList.remove('on');
     const g = bvGame, ad = Atlas3D[g.id];
-    const muP = window.__museumPlay && window.__museumPlay.game === g.id && !over ? window.__museumPlay.ex : '';   // 所蔵品で遊ぶ: on the table with the museum's board — the game's rules and AI, none of the full game's other features
-    if (FULL_SKIN[g.id] && !(kind === 'table' && ad.table) && !muP) {
+    if (FULL_SKIN[g.id] && !(kind === 'table' && ad.table)) {
       let lv = $('bvLv') ? +$('bvLv').value : 0, mode = over || ($('bvMode') ? $('bvMode').dataset.v : 'ai'), tc = '';
       const side = $('bvSide') ? +$('bvSide').value : 1, size = $('bvSize') ? +$('bvSize').value : 0;
       if (mode === 'ai' && $('bvLv') && lv === 0) { mode = 'pvp'; lv = pref[g.id + ':lv'] || 1; }   // (相手: 二人で対戦)
@@ -1934,7 +1932,7 @@
   }
 
     const variant = bvVarEl(g) ? bvVarEl(g).dataset.v || '' : '';   // (rated games too: each variant its own rating)
-    session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, variant, museum: muP, mode: pmode, online: olM, bar: true, hud: h => { $('hud').innerHTML = h; hudFit(); if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
+    session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, variant, mode: pmode, online: olM, bar: true, hud: h => { $('hud').innerHTML = h; hudFit(); if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
       onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); if (npcT && session === sess && info) npcT.turn(info.ply); },
       onEnd: res => {
         if (session === sess) TB.end();
