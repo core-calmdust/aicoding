@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Indonesian). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).id = {
-  ui: { flip: 'Balik', guideH: 'Pemandu: Musowl', guide: 'Jelajahi koleksi, dan Musowl akan datang, makin rapi setiap kali', gift: 'Atlamo baru datang!', sub: 'Harta sejarah permainan yang dijaga museum-museum dunia. Setiap benda dibuat ulang dalam 3D — putar di tanganmu dan amati dari dekat.', collection: 'Koleksi', special: 'Pameran khusus', lock: 'Terbuka setelah {n} pencapaian {g}', loading: 'Menyiapkan lemari pamer…', fail: 'Benda pamer tidak dapat dimuat',
+  ui: { play: 'Main di papan ini', play_ballinderry: 'Brandubh (7×7) · lawan AI', flip: 'Balik', guideH: 'Pemandu: Musowl', guide: 'Jelajahi koleksi, dan Musowl akan datang, makin rapi setiap kali', gift: 'Atlamo baru datang!', sub: 'Harta sejarah permainan yang dijaga museum-museum dunia. Setiap benda dibuat ulang dalam 3D — putar di tanganmu dan amati dari dekat.', collection: 'Koleksi', special: 'Pameran khusus', lock: 'Terbuka setelah {n} pencapaian {g}', loading: 'Menyiapkan lemari pamer…', fail: 'Benda pamer tidak dapat dimuat',
     hint: 'Seret untuk memutar · roda untuk zoom · nomor untuk detail', hintT: 'Seret untuk memutar · cubit untuk zoom', spin: 'Putar pelan', reset: 'Kembali ke tampilan awal', close: 'Tutup',
     date: 'Masa', where: 'Temuan / asal', museum: 'Koleksi', mat: 'Bahan', size: 'Ukuran', look: 'Detail', aboutModel: 'Tentang model 3D ini', sources: 'Sumber', play: 'Main {g}' },
   ex: {

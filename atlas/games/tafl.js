@@ -66,10 +66,13 @@
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
     const PZ = ctx.pz || null;   // PZ: a puzzle / lesson position driven by atlas/puzzles.js · lessons3d.js (no AI: ctx.pz.moved decides)
     let START = PZ && PZ.spec ? PZ.spec : null, v = PZ ? (START && START.v) || 'copenhagen' : VAR[ctx.size] || 'copenhagen';
+    // 所蔵品で遊ぶ (2026-11-22): ctx.museum 'ballinderry' = Brandubh on the museum's Ballinderry board (atlas/museum/play.js), pegs in its holes
+    const MB = !PZ && ctx.museum === 'ballinderry' && window.AtlasMuseumPlay ? AtlasMuseumPlay.board('ballinderry', TH, T3) : null;
+    if (MB) v = 'brandubh';
     const n = NOF[v];
-    const board = T3.MODELS.tafl(true, { n, edge: !!EDGE[v], home: homeOf(v), key: HOME[v] || EDGE[v] ? v : undefined }); T3.show('tafl', board);
+    const board = MB || T3.MODELS.tafl(true, { n, edge: !!EDGE[v], home: homeOf(v), key: HOME[v] || EDGE[v] ? v : undefined }); T3.show('tafl', board);
     const U = board.userData, Y = U.top, S = U.S, cs = U.cs;
-    if (T3.fit) T3.fit({ w: S + 1.3, d: S + 1.8, y: Y + .3, pitch: 1.0 });   // the whole board, large, from the player's side
+    if (T3.fit) T3.fit(MB ? { w: S * U.out + 1.2, d: S * U.out + 3.2, y: Y + .3, pitch: 1.0 } : { w: S + 1.3, d: S + 1.8, y: Y + .3, pitch: 1.0 });   // the whole board, large, from the player's side
     const pvp = ctx.mode === 'pvp';
     let human = PZ ? (PZ.me === 2 ? 1 : 0) : pvp ? 0 : ctx.side === 2 ? 1 : 0;   // engine sides: 0 = attackers (P1, first), 1 = defenders
     const mover = () => pvp && pos ? pos.side : human;

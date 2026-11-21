@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 89;
+  const V = 90;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -33,6 +33,7 @@
     { id: 'kofukuji', game: 'shogi', cm: 1, view: [0, .95, .78], lock: { game: 'shogi', ach: 3 } },   // (spots: from the model's userData)
   ];
   const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
+  const PLAY = { ballinderry: { game: 'tafl', size: 7 } };   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
   const ui = (l, k) => { const a = T(l).ui || {}, b = T('en').ui || {}; return a[k] != null ? a[k] : (b[k] != null ? b[k] : k); };
   const ex = (l, id) => Object.assign({}, (T('en').ex || {})[id] || {}, (T(l).ex || {})[id] || {});
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -79,6 +80,7 @@
       <aside class="exinfo"><button type="button" class="exclose" aria-label="${esc(ui(lang, 'close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         <div class="exscroll"><small class="exkind">${esc(ui(lang, 'collection'))}${e.lock ? ` · ${esc(ui(lang, 'special'))}` : ''}</small><h2>${esc(t.name || id)}</h2>${t.alt ? `<p class="exalt">${esc(t.alt)}</p>` : ''}
         <dl class="exfacts">${[['date', t.date], ['where', t.found], ['museum', t.museum ? t.museum + (t.no ? `（${t.no}）` : '') : ''], ['mat', t.mat], ['size', t.size]].filter(r => r[1]).map(([k, v]) => `<dt>${esc(ui(lang, k))}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+        ${PLAY[id] ? `<button type="button" class="explay" data-k="play">${esc(ui(lang, 'play'))}<small>${esc(ui(lang, 'play_' + id))}</small></button>` : ''}
         ${(t.p || []).map(p => `<p class="exp">${esc(p)}</p>`).join('')}
         ${(t.spots || []).length ? `<h3>${esc(ui(lang, 'look'))}</h3><ol class="exlook">${t.spots.map((s, i) => `<li><button type="button" data-n="${i}"><u>${i + 1}</u><span><b>${esc(s[0])}</b>${esc(s[1])}</span></button></li>`).join('')}</ol>` : ''}
         ${t.model ? `<h3>${esc(ui(lang, 'aboutModel'))}</h3><p class="exp sm">${esc(t.model)}</p>` : ''}
@@ -94,6 +96,10 @@
     const close = () => { if (!V3 || V3.ov !== ov) return; removeEventListener('popstate', onPop); if (hist) { hist = false; try { history.back(); } catch (x) {} }
       teardown(); ov.classList.remove('on'); document.documentElement.classList.remove('exv-open'); setTimeout(() => ov.remove(), 260); };
     ov.querySelector('.exclose').onclick = close;
+    { const pb = ov.querySelector('[data-k="play"]'), P = PLAY[id]; if (pb && P) pb.onclick = () => {   // 所蔵品で遊ぶ: this board goes onto the table with the game's own rules and AI
+        window.__museumPlay = { game: P.game, ex: id, fresh: true }; close();
+        const set = () => { const z = document.getElementById('bvSize'); if (z && P.size && +z.value !== P.size && [...z.options].some(o => +o.value === P.size)) { z.value = P.size; z.dispatchEvent(new Event('change', { bubbles: true })); } };
+        if (window.AtlasBoard) load('museum/play.js?v=' + V).then(() => AtlasBoard.open(P.game)).then(() => { set(); setTimeout(set, 400); }); }; }
     const pb = ov.querySelector('.amplay'); if (pb) pb.onclick = () => { close(); setTimeout(() => ctx.open(g.id, null), 280); };
     V3 = { ov, e, close, spin: true };
     const onKey = ev => { if (ev.key === 'Escape') { ev.preventDefault(); close(); return; }
