@@ -7,14 +7,16 @@
    leaf, a turtle-shell roundel with an eight-pointed scalloped edge where four squares meet, nine alternating light and dark
    fillets round the field, a wide border of turtle shell with a mother-of-pearl chain linked at the corners by shield motifs
    set with baleen, and the outer edge lipped with half-round bone in interlocking chevrons. Patterns drawn after the record;
-   exact proportions of the motifs are estimates. */
+   exact proportions of the motifs are estimates.
+   2026-11-21: the chess side and the edges redrawn after the V&A's photographs 2012FP3719 / 3721 / FT9876 — dark shell with amber
+   flecks, pearl squares of four pieces round a dark eight-pointed star, S-scroll chain, bone edging, pearl hexagons on the sides. */
 (function () {
   'use strict';
   (window.AtlasEx = window.AtlasEx || {}).ottoman = {
     flip: true,
     build(TT, X, K) {
       const G = new TT.Group();
-      const W = 56.5, D = 56.3, LD = D / 2, TH = 1.2, PX = innerWidth < 820 ? 1536 : 2048;   // width, depth open, a leaf's depth, its thickness
+      const W = 56.5, D = 56.3, LD = D / 2, TH = 2.0, PX = innerWidth < 820 ? 1536 : 2048;   // width, depth open, a leaf's depth, its thickness
       const N = K.noise(23);
       /* ---------- painters ---------- */
       // turtle shell over gold leaf: amber with dark mottles and warm flecks; returns nothing (paints the rect)
@@ -23,7 +25,8 @@
         const og = oc.getContext('2d'), img = og.createImageData(W2, H2), d = img.data;
         for (let j = 0; j < H2; j++) for (let i = 0; i < W2; i++) {
           const u = (x + i) / PX, v = (y + j) / PX, m = N(u * 34, v * 34, 3), f = N(u * 90 + 7, v * 90, 1), k = Math.max(0, Math.min(1, (m - .46) * 3.2));
-          const base = pale ? [214, 150, 70] : [178, 102, 34], dark = pale ? [104, 52, 18] : [44, 18, 6];
+          const base = pale === 'dark' ? [50, 20, 10] : pale ? [214, 150, 70] : [178, 102, 34], dark = pale === 'dark' ? [22, 8, 5] : pale ? [104, 52, 18] : [44, 18, 6];
+          if (pale === 'dark') { const fl = N(u * 30 + 3, v * 70, 2); if (fl > .72) { const t = Math.min(1, (fl - .72) * 7); const p0 = (j * W2 + i) * 4; d[p0] = 50 + (186 - 50) * t; d[p0 + 1] = 20 + (96 - 20) * t; d[p0 + 2] = 10 + (22 - 10) * t; d[p0 + 3] = 255; continue; } }
           const p = (j * W2 + i) * 4; for (let c = 0; c < 3; c++) d[p + c] = base[c] + (dark[c] - base[c]) * k + (f - .5) * 18; d[p + 3] = 255;
         }
         og.putImageData(img, 0, 0); g.drawImage(oc, x, y);
@@ -48,32 +51,45 @@
       let chessMask;
       const chessT = K.tex(PX, Math.round(PX * D / W), (g, w, h) => {
         const mk = document.createElement('canvas'); mk.width = w; mk.height = h; const m = mk.getContext('2d'); m.fillStyle = '#000'; m.fillRect(0, 0, w, h); m.fillStyle = '#fff';
-        shell(g, 0, 0, w, h, false);
-        // outer dark fillet with stringing, and the bone lip drawn at the very edge (the lip itself is modelled)
-        g.strokeStyle = '#2a140a'; g.lineWidth = .5 * S; g.strokeRect(.9 * S, .9 * S, w - 1.8 * S, h - 1.8 * S);
-        g.strokeStyle = '#e8dcc0'; g.lineWidth = .08 * S; g.strokeRect(.62 * S, .62 * S, w - 1.24 * S, h - 1.24 * S); g.strokeRect(1.18 * S, 1.18 * S, w - 2.36 * S, h - 2.36 * S);
-        // the wide border: a mother-of-pearl chain on the shell, shields at the corners (with baleen)
-        const B0 = 1.6, B1 = 7.2, mid = (B0 + B1) / 2;
-        const link = (cx, cy, horiz) => { const rw = (horiz ? 2.4 : .9) * S, rh = (horiz ? .9 : 2.4) * S; g.beginPath(); g.ellipse(cx, cy, rw, rh, 0, 0, 6.29); g.ellipse(cx, cy, rw * .62, rh * .5, 0, 0, 6.29); g.fillStyle = '#eee8e2'; g.fill('evenodd'); m.beginPath(); m.ellipse(cx, cy, rw, rh, 0, 0, 6.29); m.fill();
-          g.beginPath(); g.ellipse(cx, cy, rw * .3, rh * .3, 0, 0, 6.29); g.fillStyle = '#141010'; g.fill(); };
-        for (let k = 0; k < 9; k++) { const t = (B1 + 1.6 + k * ((W - 2 * B1 - 3.2) / 8)) * S; link(t, mid * S, true); link(t, h - mid * S, true); }
-        for (let k = 0; k < 9; k++) { const t = (B1 + 1.6 + k * ((D - 2 * B1 - 3.2) / 8)) * S; link(mid * S, t, false); link(w - mid * S, t, false); }
-        [[mid, mid], [W - mid, mid], [mid, D - mid], [W - mid, D - mid]].forEach(([cx, cy]) => { g.save(); g.translate(cx * S, cy * S); g.beginPath(); g.moveTo(0, -2.2 * S); g.lineTo(1.8 * S, -1.2 * S); g.quadraticCurveTo(1.6 * S, 1.4 * S, 0, 2.4 * S); g.quadraticCurveTo(-1.6 * S, 1.4 * S, -1.8 * S, -1.2 * S); g.closePath();
-          g.fillStyle = '#efe9e4'; g.fill(); m.save(); m.translate(cx * S, cy * S); m.fill(new Path2D(`M0 ${-2.2 * S}L${1.8 * S} ${-1.2 * S}Q${1.6 * S} ${1.4 * S} 0 ${2.4 * S}Q${-1.6 * S} ${1.4 * S} ${-1.8 * S} ${-1.2 * S}Z`)); m.restore();
-          g.beginPath(); g.moveTo(0, -1.2 * S); g.lineTo(.9 * S, -.6 * S); g.quadraticCurveTo(.8 * S, .8 * S, 0, 1.3 * S); g.quadraticCurveTo(-.8 * S, .8 * S, -.9 * S, -.6 * S); g.closePath(); g.fillStyle = '#121010'; g.fill(); g.restore(); });
-        // nine fillets round the field, then the 64 squares
-        const F0 = B1 + .2, FS = .26;
-        fillets(g, F0 * S, F0 * S, w - 2 * F0 * S, h - 2 * F0 * S, 9, FS * S);
-        const q0x = F0 + 9 * FS, q0y = F0 + 9 * FS, QW = (W - 2 * q0x) / 8, QD = (D - 2 * q0y) / 8;
+        // (after the V&A's photograph 2012FP3719: dark turtle shell with amber flecks, a narrow border with a mother-of-pearl chain,
+        //  pearl squares of four pieces round a dark eight-pointed star, every square framed by fine light stringing)
+        shell(g, 0, 0, w, h, 'dark');
+        // the bone frame at the edge, in short lengths with chevron joints
+        g.fillStyle = '#e3d6b8'; [[0, 0, w, .9 * S], [0, h - .9 * S, w, .9 * S], [0, 0, .9 * S, h], [w - .9 * S, 0, .9 * S, h]].forEach(([a, b, c, d2]) => g.fillRect(a, b, c, d2));
+        g.strokeStyle = 'rgba(110,80,50,.55)'; g.lineWidth = .05 * S;
+        for (let t = 2; t < W - 1; t += 2.6) [[t, .45, 1], [t, D - .45, 1]].forEach(([a, b]) => { g.beginPath(); g.moveTo((a - .35) * S, (b - .4) * S); g.lineTo((a + .15) * S, b * S); g.lineTo((a - .35) * S, (b + .4) * S); g.stroke(); });
+        for (let t = 2; t < D - 1; t += 2.6) [[.45, t], [W - .45, t]].forEach(([a, b]) => { g.beginPath(); g.moveTo((a - .4) * S, (b - .35) * S); g.lineTo(a * S, (b + .15) * S); g.lineTo((a + .4) * S, (b - .35) * S); g.stroke(); });
+        g.strokeStyle = '#e6dac0'; g.lineWidth = .07 * S; g.strokeRect(1.15 * S, 1.15 * S, w - 2.3 * S, h - 2.3 * S);
+        const B0 = 1.1, B1 = 5.6, mid = (B0 + B1) / 2;
+        const mop = (path) => { g.fillStyle = '#ece6e0'; g.fill(path); m.fill(path); };
+        // the chain: S-scrolls (two commas turning round each other) alternating with small four-pointed stars
+        const sMotif = (cx, cy, horiz, k) => { const P = new Path2D(), r = .95 * S; g.save(); m.save(); g.translate(cx, cy); m.translate(cx, cy); if (!horiz) { g.rotate(Math.PI / 2); m.rotate(Math.PI / 2); } if (k % 2) { g.scale(1, -1); m.scale(1, -1); }
+          P.moveTo(-2.1 * r, 0); P.bezierCurveTo(-2.1 * r, -1.1 * r, -.4 * r, -1.2 * r, 0, -.15 * r); P.bezierCurveTo(.3 * r, .6 * r, 1.2 * r, .7 * r, 1.3 * r, 0); P.bezierCurveTo(1.3 * r, -.5 * r, .7 * r, -.6 * r, .55 * r, -.25 * r);
+          P.bezierCurveTo(1.0 * r, -1.05 * r, 2.1 * r, -.7 * r, 2.1 * r, 0); P.bezierCurveTo(2.1 * r, 1.1 * r, .4 * r, 1.2 * r, 0, .15 * r); P.bezierCurveTo(-.3 * r, -.6 * r, -1.2 * r, -.7 * r, -1.3 * r, 0);
+          P.bezierCurveTo(-1.3 * r, .5 * r, -.7 * r, .6 * r, -.55 * r, .25 * r); P.bezierCurveTo(-1.0 * r, 1.05 * r, -2.1 * r, .7 * r, -2.1 * r, 0); P.closePath(); mop(P); g.restore(); m.restore(); };
+        const star4 = (cx, cy, r) => { const P = new Path2D(); for (let q = 0; q < 8; q++) { const a = q * Math.PI / 4, rr = q % 2 ? r * .35 : r; q ? P.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr) : P.moveTo(cx + rr, cy); } P.closePath(); mop(P); };
+        const nM = 9;
+        for (let k = 0; k < nM; k++) { const t = B1 + .9 + (k + .5) * ((W - 2 * B1 - 1.8) / nM); sMotif(t * S, mid * S, true, k); sMotif(t * S, h - mid * S, true, k + 1); if (k) { const t2 = B1 + .9 + k * ((W - 2 * B1 - 1.8) / nM); star4(t2 * S, mid * S, .45 * S); star4(t2 * S, h - mid * S, .45 * S); } }
+        for (let k = 0; k < nM; k++) { const t = B1 + .9 + (k + .5) * ((D - 2 * B1 - 1.8) / nM); sMotif(mid * S, t * S, false, k); sMotif(w - mid * S, t * S, false, k + 1); if (k) { const t2 = B1 + .9 + k * ((D - 2 * B1 - 1.8) / nM); star4(mid * S, t2 * S, .45 * S); star4(w - mid * S, t2 * S, .45 * S); } }
+        // the corners: a pointed shield of pearl with a dark heart (baleen)
+        [[mid, mid, 1, 1], [W - mid, mid, -1, 1], [mid, D - mid, 1, -1], [W - mid, D - mid, -1, -1]].forEach(([cx, cy, sx, sy]) => { const P = new Path2D(), r = 1.5 * S; g.save(); m.save(); g.translate(cx * S, cy * S); m.translate(cx * S, cy * S); g.scale(sx, sy); m.scale(sx, sy);
+          P.moveTo(-r, -r); P.quadraticCurveTo(0, -r * .55, r * .2, -r * .2); P.lineTo(r * 1.1, r * 1.1); P.lineTo(-r * .2, r * .2); P.quadraticCurveTo(-r * .55, 0, -r, -r); P.closePath();
+          P.moveTo(r * .3, -r * .9); P.arc(r * .3, -r * .9, r * .28, 0, 6.29); P.moveTo(-r * .9, r * .3); P.arc(-r * .9, r * .3, r * .28, 0, 6.29); mop(P);
+          g.fillStyle = '#140c08'; g.beginPath(); g.moveTo(-r * .45, -r * .45); g.lineTo(r * .3, r * .1); g.lineTo(r * .1, r * .3); g.closePath(); g.fill(); g.restore(); m.restore(); });
+        // fine fillets round the field, then the squares
+        const F0 = B1 + .2, FS = .12;
+        fillets(g, F0 * S, F0 * S, w - 2 * F0 * S, h - 2 * F0 * S, 5, FS * S);
+        const q0x = F0 + 5 * FS, q0y = F0 + 5 * FS, QW = (W - 2 * q0x) / 8, QD = (D - 2 * q0y) / 8;
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
-          const x = (q0x + c * QW) * S, y = (q0y + r * QD) * S;
-          if ((r + c) % 2) { pearl(g, x, y, QW * S, QD * S, true); m.fillRect(x, y, QW * S, QD * S); } else shell(g, x, y, QW * S, QD * S, true);
-        }
-        // turtle-shell roundels with an eight-pointed scalloped edge where four squares meet
-        for (let r = 1; r < 8; r++) for (let c = 1; c < 8; c++) {
-          const cx = (q0x + c * QW) * S, cy = (q0y + r * QD) * S, R0 = QW * S * .2;
-          g.beginPath(); for (let k = 0; k <= 16; k++) { const a = k / 16 * Math.PI * 2, rr = k % 2 ? R0 * .82 : R0; g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } g.closePath();
-          g.fillStyle = '#7a3c14'; g.fill(); g.beginPath(); g.arc(cx, cy, R0 * .62, 0, 6.29); g.fillStyle = '#b8743a'; g.fill(); m.fillStyle = '#000'; m.beginPath(); m.arc(cx, cy, R0, 0, 6.29); m.fill(); m.fillStyle = '#fff';
+          const x = (q0x + c * QW) * S, y = (q0y + r * QD) * S, qw = QW * S, qd = QD * S, gap = .07 * qw;
+          if ((r + c) % 2 === 1) {   // pearl: four pieces, each with a notch, leaving a dark eight-pointed star in the middle
+            pearl(g, x + gap, y + gap, qw - 2 * gap, qd - 2 * gap, true); m.fillRect(x + gap, y + gap, qw - 2 * gap, qd - 2 * gap);
+            const cx = x + qw / 2, cy = y + qd / 2, R = qw * .2; const P = new Path2D(); for (let q = 0; q < 16; q++) { const a = q * Math.PI / 8 + Math.PI / 8, rr = q % 2 ? R * .52 : R; q ? P.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr) : P.moveTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } P.closePath();
+            g.fillStyle = '#160a06'; g.fill(P); m.fillStyle = '#000'; m.fill(P); m.fillStyle = '#fff';
+            g.fillStyle = '#1a0c07'; [[x + gap, y + gap], [x + qw - gap, y + gap], [x + gap, y + qd - gap], [x + qw - gap, y + qd - gap]].forEach(([px, py]) => { g.beginPath(); g.arc(px, py, qw * .09, 0, 6.29); g.fill(); });   // the pieces' rounded outer corners
+            g.strokeStyle = 'rgba(40,20,14,.8)'; g.lineWidth = qw * .035; g.beginPath(); g.moveTo(cx, y + gap); g.lineTo(cx, y + qd - gap); g.moveTo(x + gap, cy); g.lineTo(x + qw - gap, cy); g.stroke();   // the joins between the four pieces
+          }
+          g.strokeStyle = 'rgba(214,196,160,.75)'; g.lineWidth = .05 * S; g.strokeRect(x + .05 * S, y + .05 * S, qw - .1 * S, qd - .1 * S);   // the stringing round each square
         }
         g.fillStyle = 'rgba(20,8,2,.85)'; g.fillRect(w / 2 - .06 * S, 0, .12 * S, h);   // the hinge line between the leaves
         chessMask = new TT.CanvasTexture(mk); chessMask.colorSpace = TT.NoColorSpace;
@@ -223,22 +239,29 @@
         for (let k = 0; k < n; k++) { const y = k * st, p = new Path2D(); p.moveTo(w / 2, y + 2); p.lineTo(w - 3, y + st / 2); p.lineTo(w / 2, y + st - 2); p.lineTo(3, y + st / 2); p.closePath(); g.fillStyle = g.createPattern(pearlC, 'repeat'); g.fill(p); g.strokeStyle = 'rgba(30,14,8,.7)'; g.lineWidth = 1; g.stroke(p); g.beginPath(); g.moveTo(3, y + st / 2); g.lineTo(w - 3, y + st / 2); g.moveTo(w / 2, y); g.lineTo(w / 2, y + st); g.stroke(); } });
       const hingeMat = K.mat({ map: hingeT, color: '#ffffff', roughness: .3, clearcoat: .8, clearcoatRoughness: .15, iridescence: .4, iridescenceIOR: 1.6 });
       const wood = K.mat({ color: '#3a1d10', roughness: .5, clearcoat: .4 });
+      // the leaves' edges: a row of pointed mother-of-pearl hexagons on turtle shell between bone lines (V&A 2012FP3721, 2012FT9876)
+      const sideT = K.tex(256, 128, (g, w, h) => { g.fillStyle = '#2a1008'; g.fillRect(0, 0, w, h);
+        const sh = K.noise(5); for (let x = 0; x < w; x += 4) for (let y = 0; y < h; y += 4) { const v = sh(x / 30, y / 30, 2); if (v > .55) { g.fillStyle = `rgba(170,80,20,${(v - .55) * 1.6})`; g.fillRect(x, y, 4, 4); } }
+        g.fillStyle = '#e3d6b8'; g.fillRect(0, 0, w, h * .1); g.fillRect(0, h * .9, w, h * .1);
+        const hex = (cx) => { g.beginPath(); g.moveTo(cx - w * .4, h / 2); g.lineTo(cx - w * .18, h * .16); g.lineTo(cx + w * .18, h * .16); g.lineTo(cx + w * .4, h / 2); g.lineTo(cx + w * .18, h * .84); g.lineTo(cx - w * .18, h * .84); g.closePath();
+          const gr = g.createLinearGradient(cx - w * .4, 0, cx + w * .4, h); gr.addColorStop(0, '#d9d6dc'); gr.addColorStop(.5, '#f2ece6'); gr.addColorStop(1, '#c9ccd6'); g.fillStyle = gr; g.fill(); g.strokeStyle = 'rgba(60,40,30,.5)'; g.lineWidth = 2; g.stroke(); };
+        hex(w / 2); }, { rep: [1, 1] });
+      const sideM = len => { const t = sideT.clone(); t.wrapS = TT.RepeatWrapping; t.repeat.set(Math.round(len / 2.1), 1); t.needsUpdate = true; return K.mat({ map: t, color: '#ffffff', roughness: .4, clearcoat: .35 }); };
+      const sdD = sideM(D), sdL = sideM(LW);
       [bgMat, chessMat].forEach(m => { m.polygonOffset = true; m.polygonOffsetFactor = -1; m.polygonOffsetUnits = -1; });
       const top = new TT.Mesh(new TT.PlaneGeometry(W, D), bgMat); top.rotation.x = -Math.PI / 2; top.position.y = TH + .03; G.add(top);
       const bot = new TT.Mesh(new TT.PlaneGeometry(W, D), chessMat); bot.rotation.x = Math.PI / 2; bot.position.y = -.03; G.add(bot);
       [-1, 1].forEach(sd => {   // the two leaves, left and right of the hinge
         const cx = sd * LW / 2;
-        const leaf = new TT.Mesh(new TT.BoxGeometry(LW - .08, TH, D), wood); leaf.position.set(cx + sd * .04, TH / 2, 0); G.add(leaf);
+        const leaf = new TT.Mesh(new TT.BoxGeometry(LW - .08, TH, D), [sdD, sdD, wood, wood, sdL, sdL]); leaf.position.set(cx + sd * .04, TH / 2, 0); G.add(leaf);
         // raised framing fillets (about 5 mm): far, near and outer sides 1.2 cm wide, the hinge side 1.5 cm
         const fil = (w, d, x, z, m) => { const f = new TT.Mesh(new TT.BoxGeometry(w, .5, d), [wood, wood, m, wood, wood, wood]); f.position.set(x, TH + .25, z); G.add(f); };
         fil(LW, FW, cx, -D / 2 + FW / 2, plaqMat(LW, false)); fil(LW, FW, cx, D / 2 - FW / 2, plaqMat(LW, false));
         fil(FW, D - 2 * FW, sd * (W / 2 - FW / 2), 0, plaqMat(D, true)); fil(HG, D - 2 * FW, sd * HG / 2, 0, hingeMat);
         // the bone lip on the three outer edges (half-round, in interlocking lengths)
         const lip = (len, x, z, ry) => { const c = new TT.Mesh(new TT.CylinderGeometry(.3, .3, len, 12, 1, false, 0, Math.PI), bone); c.rotation.set(0, ry, Math.PI / 2); c.position.set(x, TH / 2, z); G.add(c); };
-        lip(LW, cx, -D / 2, 0); lip(LW, cx, D / 2, 0); lip(D, sd * W / 2, 0, Math.PI / 2);
+        // (the bone edging is drawn on the faces: the leaves' edges carry the row of pearl hexagons)
       });
-      // the two staple hinges under the join
-      [-D / 4, D / 4].forEach(z => { const h = new TT.Mesh(new TT.BoxGeometry(1.4, .12, 2.2), K.mat({ color: '#9a8a6a', roughness: .4, metalness: .9 })); h.position.set(0, -.09, z); G.add(h); });
       return G;
     },
   };
