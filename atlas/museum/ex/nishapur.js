@@ -3,7 +3,7 @@
    12th century. Abstract shatranj forms (the Met): shah = a throne, firzan (vizier) = a smaller throne, elephant = two tusk-like
    protrusions, horse = a triangular knob for the head, chariot = rectangular with a wedge at the top, pawn = a faceted hemisphere
    with a knob. Sizes: king H. 5.1 cm, diam. 5.4; pawn H. 3.3, diam. 2.9 (the Met). The other pieces' sizes, the exact profiles and
-   the glaze effects are estimates; the 32 are set out in the opening position of shatranj for display (no board survives with them). */
+   the glaze effects are estimates (colours checked 2026-11-21 against photographs of the set: the light pieces a soft sea-green, the dark a streaky amber-brown; pawns as ribbed bells, horses as forward-leaning cones); the 32 are set out in the opening position of shatranj for display (no board survives with them). */
 (function () {
   'use strict';
   (window.AtlasEx = window.AtlasEx || {}).nishapur = {
@@ -15,14 +15,15 @@
         for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = n(x / 70, y / 70, 4), b = n(x / 12, y / 12, 2), k = Math.min(1, Math.max(0, (a - .35) * 1.6 + (b - .5) * .25 + y / h * .35)), i = (y * w + x) * 4;
           d[i] = A[0] + (B[0] - A[0]) * k; d[i + 1] = A[1] + (B[1] - A[1]) * k; d[i + 2] = A[2] + (B[2] - A[2]) * k; d[i + 3] = 255; }
         g.putImageData(img, 0, 0);
-        if (crackle) { g.strokeStyle = 'rgba(20,60,64,.18)'; g.lineWidth = .8; let s = seed; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+        if (crackle) { g.strokeStyle = 'rgba(40,70,44,.16)'; g.lineWidth = .8; let s = seed; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
           for (let q = 0; q < 140; q++) { let x = r() * w, y = r() * h; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (r() - .5) * 40; y += (r() - .5) * 40; g.lineTo(x, y); } g.stroke(); } }
         // the white body showing through where the glaze ran thin, at the edges (a few soft pale spots)
         let s2 = seed * 7; const r2 = () => ((s2 = (s2 * 16807) % 2147483647) / 2147483647);
         for (let q = 0; q < 10; q++) { const gr = g.createRadialGradient(0, 0, 0, 0, 0, 14); g.save(); g.translate(r2() * w, r2() * h * .5); gr.addColorStop(0, `rgba(230,236,226,${pale})`); gr.addColorStop(1, 'rgba(230,236,226,0)'); g.fillStyle = gr; g.fillRect(-14, -14, 28, 28); g.restore(); }
       });
-      const TQ = K.mat({ map: glazeT([92, 196, 196], [26, 120, 132], true, 21), color: '#ffffff', roughness: .2, clearcoat: 1, clearcoatRoughness: .12 });
-      const MN = K.mat({ map: glazeT([54, 34, 46], [16, 9, 15], false, 37, .1), color: '#ffffff', roughness: .22, clearcoat: 1, clearcoatRoughness: .14 });
+      // (after the Met's photographs: the 'turquoise' has aged to a soft sea-green, the manganese to a streaky amber-brown; a satin sheen)
+      const TQ = K.mat({ map: glazeT([150, 180, 142], [100, 136, 98], true, 21), color: '#ffffff', roughness: .38, clearcoat: .55, clearcoatRoughness: .35 });
+      const MN = K.mat({ map: glazeT([124, 78, 46], [50, 26, 16], false, 37, .12), color: '#ffffff', roughness: .38, clearcoat: .55, clearcoatRoughness: .35 });
       // extruded forms carry UVs in centimetres: give them their own copies of the glazes, the texture spread over ~4 cm
       const perCm = (m) => { const c = m.clone(); c.map = m.map.clone(); c.map.wrapS = c.map.wrapT = TT.RepeatWrapping; c.map.repeat.set(.24, .24); c.map.needsUpdate = true; return c; };
       const TQx = perCm(TQ), MNx = perCm(MN), X2 = m => m === TQ ? TQx : MNx;
@@ -41,16 +42,17 @@
       };
       const dome = (m, r, h) => lathe([[0, 0], [r, 0], [r * 1.03, h * .12], [r * .92, h * .5], [r * .66, h * .82], [r * .3, h * .98], [0, h]], 30);
       const elephant = (m) => { const p = new TT.Group(); add(p, dome(m, 2.15, 2.7), m);
-        [-1, 1].forEach(k => { const t = add(p, new TT.CapsuleGeometry(.36, 1.25, 6, 12), m, k * .62, 3.0, .45); t.rotation.set(-.35, 0, -k * .28); }); return p; };
-      const horse = (m) => { const p = new TT.Group(); add(p, dome(m, 2.15, 2.6), m);
-        const S = new TT.Shape(); S.moveTo(-.75, 0); S.lineTo(.75, 0); S.lineTo(0, 1.9); S.closePath(); const hd = add(p, ext(S, .95, .16), X2(m), 0, 2.15, .55); hd.rotation.x = -.42; return p; };
+        [-1, 1].forEach(k => { const t = add(p, new TT.SphereGeometry(.62, 16, 12), m, k * .5, 2.75, .05); t.scale.set(.8, 1.15, 1); }); return p; };   // the top split into two low humps (the tusks)
+      const horse = (m) => { const p = new TT.Group();   // a tall cone rising to a point that leans forward (the head)
+        const c = add(p, lathe([[0, 0], [2.0, 0], [2.05, .3], [1.75, 1.4], [1.15, 2.6], [.55, 3.6], [.18, 4.2], [0, 4.3]], 30), m); c.geometry.translate(0, 0, 0);
+        const pos = c.geometry.attributes.position; for (let i = 0; i < pos.count; i++) { const y = pos.getY(i); pos.setZ(i, pos.getZ(i) + Math.pow(y / 4.3, 2) * .9); } c.geometry.computeVertexNormals(); return p; };
       const rook = (m) => { const p = new TT.Group(); const S = new TT.Shape(); const w = 1.55, h = 3.9;
         S.moveTo(-w, 0); S.lineTo(w, 0); S.lineTo(w, h); S.lineTo(.42, h); S.lineTo(0, h - 1.05); S.lineTo(-.42, h); S.lineTo(-w, h); S.closePath();
         add(p, ext(S, 2.3, .22), X2(m)); return p; };
-      const pawn = (m) => { const p = new TT.Group();
-        const g = new TT.SphereGeometry(1.45, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2); const o = add(p, g, m); o.scale.y = 1.3; o.material = m.clone(); o.material.flatShading = true;
-        add(p, new TT.CircleGeometry(1.45, 8), m).rotation.x = Math.PI / 2;
-        add(p, new TT.SphereGeometry(.42, 12, 8), m, 0, 1.9 + .42 * .6, 0); add(p, new TT.CylinderGeometry(.26, .32, .35, 10), m, 0, 1.9, 0); return p; };
+      const pawn = (m) => { const p = new TT.Group();   // a ribbed bell (eight lobes) with a knob
+        const g = lathe([[0, 0], [1.35, 0], [1.4, .25], [1.32, 1.2], [1.15, 2.0], [.8, 2.5], [0, 2.6]], 48); const pos = g.attributes.position;
+        for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), a = Math.atan2(z, x), k = 1 + .07 * Math.cos(a * 8); pos.setX(i, x * k); pos.setZ(i, z * k); } g.computeVertexNormals(); add(p, g, m);
+        add(p, new TT.SphereGeometry(.4, 12, 8), m, 0, 2.6 + .4 * .6, 0); add(p, new TT.CylinderGeometry(.26, .32, .35, 10), m, 0, 2.6, 0); return p; };
       // ---- set out as at the start of a game of shatranj: turquoise at the front, manganese behind
       const SQ = 6.2, row = ['r', 'h', 'e', 'v', 'k', 'e', 'h', 'r'];
       const make = (t, m) => t === 'k' ? throne(m, 1) : t === 'v' ? throne(m, .84) : t === 'e' ? elephant(m) : t === 'h' ? horse(m) : t === 'r' ? rook(m) : pawn(m);
@@ -59,7 +61,7 @@
         for (let i = 0; i < 8; i++) { const o = make('p', m); o.position.set((i - 3.5) * SQ, 0, side * 2.5 * SQ); o.rotation.y = i * .4; G.add(o); }
       });
       // the case floor: a pale, unmarked linen (the set's own board is lost)
-      const linT = K.tex(256, 256, (g, w, h) => { const n = K.noise(3), img = g.createImageData(w, h), d = img.data; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const wv = (Math.sin(x * 1.7) * .5 + .5) * (Math.sin(y * 1.7 + 1) * .5 + .5), k = .86 + wv * .08 + (n(x / 30, y / 4) - .5) * .1, i = (y * w + x) * 4; d[i] = 196 * k; d[i + 1] = 184 * k; d[i + 2] = 160 * k; d[i + 3] = 255; } g.putImageData(img, 0, 0); }, { rep: [6, 6] });
+      const linT = K.tex(256, 256, (g, w, h) => { const n = K.noise(3), img = g.createImageData(w, h), d = img.data; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const wv = (Math.sin(x * 1.7) * .5 + .5) * (Math.sin(y * 1.7 + 1) * .5 + .5), k = .86 + wv * .08 + (n(x / 30, y / 4) - .5) * .1, i = (y * w + x) * 4; d[i] = 228 * k; d[i + 1] = 214 * k; d[i + 2] = 200 * k; d[i + 3] = 255; } g.putImageData(img, 0, 0); }, { rep: [6, 6] });
       const lin = K.mat({ map: linT, color: '#ffffff', roughness: .95, sheen: .3, sheenRoughness: .8, sheenColor: K.lin('#fff6e4') });
       const base = new TT.Mesh(new TT.BoxGeometry(56, 1.2, 52), lin); base.position.y = -.6; base.receiveShadow = true; G.add(base);
       return G;
