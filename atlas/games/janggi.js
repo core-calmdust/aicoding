@@ -12,7 +12,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../janggi/', VER = '?v=5';   // same file / version as janggi/index.html → shared cache
+  const BASE = '../janggi/', VER = '?v=7';   // same file / version as janggi/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.JanggiEngine) return Promise.resolve(window.JanggiEngine);
@@ -385,7 +385,7 @@
     id: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Pemula: kadang memberikan bidak', 'Dasar: membaca beberapa langkah ke depan', 'Mahir: menghitung pertukaran dan skakmat', 'Ahli: pencarian mendalam (NNUE belajar dari mesin teratas)'] },
     tr: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Başlangıç: ara sıra taş kaptırır', 'Acemi: birkaç hamle ileriyi okur', 'İleri: değişimleri ve matları hesaplar', 'Uzman: derin arama (en iyi motordan öğrenen NNUE)'] },
   };
-  const RATING = [0, 100, 195, 350, 475, 610, 805, 965, 1130, 1255, 1495, 1600, 1660, 1765, 1885, 2020, 2120, 2155, 2185, 2430, 2500];   // janggi RT_LV (rated games)
+  const RATING = [0, 100, 195, 350, 475, 610, 805, 965, 1130, 1255, 1495, 1600, 1660, 1765, 1885, 2020, 2120, 2155, 2185, 2430, 2500, 2730, 2800, 2850];   // janggi RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
@@ -403,12 +403,18 @@
     id: W7('untuk pemula', 'setelah tahu aturannya', 'mulai terbiasa', 'untuk pemain kuat', 'sulit bahkan bagi ahli', 'yang terkuat'),
     tr: W7('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'uzmanlar için bile zor', 'en güçlüsü'),
   };
-  function levelInfo(n, lang) {   // n = 1..20 (the game's level: 15 kyu … 5 dan)
+  // 天上Ⅰ〜Ⅲ (2026-11-22): the learned evaluation, the AI's benchmark — not for people (no rewards)
+  const LV_HUMAN = 20;
+  const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+  const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+  const LVD_TOP = { ja: '最強：全CPUコアで長時間、深く読む', en: 'Strongest: long, deep search on every CPU core', zh: '最强：用所有CPU核心长时间深入计算', 'zh-TW': '最強：用所有CPU核心長時間深入計算', ko: '최강: 모든 CPU 코어로 오래, 깊이 읽음', es: 'Máximo: búsqueda larga y profunda con todos los núcleos', fr: 'Ultime : calcul long et profond sur tous les cœurs', pt: 'Máximo: busca longa e profunda com todos os núcleos', de: 'Höchststufe: lange, tiefe Suche auf allen CPU-Kernen', ru: 'Сильнейший: долгий глубокий расчёт на всех ядрах', tr: 'En güçlü: tüm CPU çekirdekleriyle uzun, derin arama', id: 'Terkuat: pencarian panjang dan dalam dengan semua inti CPU', hi: 'सबसे मज़बूत: सभी CPU कोर पर लंबी, गहरी खोज', ar: 'الأقوى: بحث طويل وعميق بكل أنوية المعالج' };   // (Lv.21〜23, 2026-11-09)
+  function levelInfo(n, lang) {   // n = 1..20 (the game's level), 21..23 天上
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;
+    if (n > LV_HUMAN) return { name: tenjoName(n, lang), desc: LVD_TOP[lang] || LVD_TOP.en, rating: RATING[n], who: W[19] };
     const name = 'Lv.' + n;
     return { name, desc: L.lvd[n <= 4 ? 0 : n <= 10 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.janggi = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, kindOwn: true, sizes: [1, 2, 3, 4], size0: 4, sizePick: true, sizeLabel: l => rn(l).L,
+  window.Atlas3D.janggi = { levels: 23, reward: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, kindOwn: true, sizes: [1, 2, 3, 4], size0: 4, sizePick: true, sizeLabel: l => rn(l).L,
     sizeName: (z, l) => rn(l).n[Math.max(0, (+z || 4) - 1)], levelInfo, start };   // table: start() plays on the chabudai itself
 })();

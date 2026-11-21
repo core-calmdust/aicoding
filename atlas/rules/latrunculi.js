@@ -11,7 +11,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/av/pawn-0.webp', ENG = '../latrunculi/engine.js?v=10', N = 8;
+  const GUIDE = '../images/atlas/av/pawn-0.webp', ENG = '../latrunculi/engine.js?v=12', N = 8;
   const loadEngine = () => window.LatrEngine ? Promise.resolve(window.LatrEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.LatrEngine ? res(window.LatrEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
   const row = (r, f) => 'abcdefgh'.split('').map(c => c + r).filter(s => !f || f(s));
   // b / w: Black's and White's counters ('a1' … 'h8': files from the left, rank 1 nearest); x: turned-over counters { square: 'h' 'v' 'c'

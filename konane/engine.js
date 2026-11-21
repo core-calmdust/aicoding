@@ -113,7 +113,7 @@ function waRule() {   // (setRule: the board size and the zobrist keys)
 // net-<rule>.bin.gz, loaded only when its version below is set ('' = no net: the hand evaluation, as before). Used by search v3
 // (mode 2: the levels with x and the analysis); the other levels keep search v2 and the hand evaluation. Placing a file and its
 // version here is all it takes.
-const NETV = { s8: '', s6: '', s10: '' };
+const NETV = { s8: '1', s6: '1', s10: '1' };   // '1' = 2026-11-21 round 1 (self-play; at 0.1 s a move over the hand evaluation, 196 games each: s8 +297, s6 +76, s10 +319 Elo)
 const ANA_MODE = 2;   // the analysis / hint / coach / review: search v3
 const NETS = {};      // rule → the file's bytes (Uint8Array)
 function netInto(C, k) {   // a net into a core (WA, or the threads' MX: their memory is shared, one load is enough)

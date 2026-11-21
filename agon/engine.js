@@ -130,7 +130,7 @@ function netBytes() {
   if (NET_B) return NET_B;
   let b64 = '';
   try {
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('net.js?v=1'); b64 = self.AG_NET || ''; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('net.js?v=2'); b64 = self.AG_NET || ''; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { const f = (typeof process !== 'undefined' && process.env && process.env.AG_NETJS) || require('path').join(__dirname, 'net.js'); delete require.cache[require.resolve(f)]; require(f); b64 = g.AG_NET || ''; } finally { if (had) g.self = old; else delete g.self; } }
   } catch (e) { b64 = ''; }
   if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AG_NONET)) return null;
@@ -368,9 +368,13 @@ const LEVELS = [null,
   { s: 1, ms: 2500, book: 1 },                   // 五段
   // the top levels (2026-11-09, common rule「最上位のレベルの追加」): twice the time per step up to 20 s, every thread of the
   // page's pool (shared/mtsplit.js; the shared table on an isolated page) — one thread without the option
-  { s: 1, ms: 5000, book: 1 },                            // Lv.21
-  { s: 1, ms: 10000, book: 1 },                           // Lv.22
-  { s: 1, ms: 20000, book: 1 },                           // Lv.23
+  // (2026-11-22, nn: the learned evaluation — the 天上 levels: the AI's benchmark / research, not for people; the levels people play
+  //  keep the hand-made evaluation their ratings were measured with, MODEL_CARD「採用したネット」)
+  { s: 1, ms: 5000, book: 1, nn: 1 },                     // Lv.21 (天上Ⅲ)
+  { s: 1, ms: 10000, book: 1, nn: 1 },                    // Lv.22 (天上Ⅳ)
+  { s: 1, ms: 20000, book: 1, nn: 1 },                    // Lv.23 (天上Ⅴ)
+  { s: 1, ms: 1200, book: 1, nn: 1 },                     // Lv.24 (天上Ⅰ: 四段's time with the net)
+  { s: 1, ms: 2500, book: 1, nn: 1 },                     // Lv.25 (天上Ⅱ: 五段's time with the net)
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 // ---------------------------------------------------------------- evaluation (side to move's view, ~100 = one tempo)
@@ -622,7 +626,7 @@ function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
   const L = PRO_CFG || LEVELS[level] || LEVELS[10];   // (PRO_CFG: the page's PRO mode, shared/proset.js ladder())
-  useNet(!!L.s);
+  useNet(netFor(L));
   const { pos } = replay(start, moves), hist = histOf(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
@@ -704,8 +708,12 @@ function pvOf(start, moves, m, plies) {
 // node after the root and m.line searched to depth m.d in the window (m.a, m.b); mtKids: that node's moves in this engine's
 // order; mtFin: the job's reply from the threads' raw result (the same as the one-thread worker's).
 let mtRule = null;
+// the threads' tasks carry the job's fields (shared/mtsplit.js base): a level / setting by time and the analysis use the net
+// the net (2026-11-22): the 天上 levels (nn), a PRO setting by time, the analysis; the levels people play keep the hand-made evaluation
+function netFor(L) { return !!(L && L.s && (L.nn || (L.ms && !LEVELS.includes(L)))); }
+function mtNet(m) { const L = m.cfg || (m.level ? LEVELS[m.level] : null); useNet(m.job === 'think' || L ? netFor(L) : true); }
 function mtNode(m) {
-  useNet(true);
+  mtNet(m);
   if (SH !== null) SH.salt = SALT[RK] | 0;
   else if (mtRule !== RK) { ttClear(); mtRule = RK; }
   const line = m.line || [], root = replay(m.start, m.moves).pos, { pos, hashes } = replay(m.start, m.moves.concat(line)); hashes.pop();
@@ -718,6 +726,7 @@ const lazyOf = (m, L, dflt) => SH !== null && !L.nk && (L.ms || L.dx) ? (m.lazy 
 function mtPlan(m) {
   const { pos } = replay(m.start, m.moves), all = pos.moves(), inf = WIN + 1;
   rootSide = pos.side;
+  mtNet(m);
   if (m.job === 'think') {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
     if (all.length < 2 || !L.s || (L.book && !m.start && BOOKS[RK] && BOOKS[RK].pos[m.moves.join(',')])) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
@@ -762,7 +771,7 @@ function mtLazy(m) {   // (shared/tools/mtlazy.js: one Lazy SMP thread's search 
 // a Lazy SMP helper (shared/mtsplit.js shared mode, 'mthelp'): iterative deepening of the root on the shared table — one ply
 // deeper every other helper (k), from a root order rotated by k >> 1 — until the page stops it (or m.until)
 function mtHelp(m) {
-  useNet(true);
+  mtNet(m);
   let total = 0;
   for (let d = 1; d <= (m.maxD || 60); d++) {
     const r = mtLazy(Object.assign({}, m, { d: d + (m.k & 1), rot: m.k >> 1 }));

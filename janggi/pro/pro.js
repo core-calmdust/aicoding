@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const E = window.JanggiEngine;
-  const VER = '?v=9', ENG = '../engine.js?v=5';
+  const VER = '?v=9', ENG = '../engine.js?v=7';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { back: '← チャンギ', gname: 'チャンギ', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -49,7 +49,7 @@
   const SLOT = 2 << 20;
   const HC = navigator.hardwareConcurrency || 4, MAXT = Math.max(1, Math.min(32, HC));
   const MT = { X: null, mem: null, module: null, base: 0, workers: [], nn: false };
-  const NETV = '';   // the version of ../nnue.bin.gz (as engine.js NET; '' = no network yet: the hand evaluation)
+  const NETV = '1';   // the version of ../nnue.bin.gz (as engine.js NET; '' = no network: the hand evaluation)
   async function initMT() {
     MT.module = await WebAssembly.compileStreaming(fetch('../engine_mt.wasm' + VER));
     MT.mem = new WebAssembly.Memory({ initial: 1152, maximum: 16384, shared: true });   // maximum = engine_mt.wasm's (1 GiB)

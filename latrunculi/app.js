@@ -41,7 +41,7 @@ const isPass = m => m < 0;
 
 // ====================================================================== state
 const STORE = 'aicoding-latrunculi';
-const settings = { mode: 'ai', rule: 'seneca', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'stone', pcs: 'helm' };
+const settings = { lvV22: 1, mode: 'ai', rule: 'seneca', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'stone', pcs: 'helm' };
 const SUPPORTED_ALL = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 // the languages whose game texts are complete (i18n-lt.js / i18n-lt-more.js: a language without its own 'title' is not offered)
 const SUPPORTED = SUPPORTED_ALL.filter(l => l === 'ja' || l === 'en' || (window.LT_LANGS || []).includes(l));
@@ -51,10 +51,19 @@ const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" i
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 20 steps, Lv.1 … Lv.20
-const LV_MAX = 20;   // (Lv.21〜23: the top levels on every thread, 2026-11-09)
-const LV = i => 'Lv.' + i;   // levels 1 … 20 (kyu / dan names are kept for the Japanese games: shogi, go, gomoku)
+const LV_MAX = 26;
+// 天上 (2026-11-22, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–20 are the levels people play (up to ≈2500;
+// steps added between the old ones), the levels above are 天上 — the AI's benchmark / research, not for people (no rewards): the old
+// Lv.16・18・19・20 (2632〜3000, the hand-made evaluation) and the learned evaluation at Lv.19・20's time (engine Lv.21・22). LVX: each
+// level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
+const LVX = [[1], [2], [2, 3, 0.5], [3], [3, 4, 0.5], [4], [5], [6], [7], [8], [8, 9, 0.33], [8, 9, 0.67], [9], [9, 10, 0.5], [10], [11], [12], [13], [14], [15], [16], [18], [19], [20], [21], [22]], LV_HUMAN = 20, LV_MIG = [1, 2, 4, 6, 7, 8, 9, 10, 13, 15, 16, 17, 18, 19, 20, 21, 21, 22, 23, 24];   // LV_MIG: an old level → the new one (saved settings)
+const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+const LV = i => i > LV_HUMAN ? tenjoName(i, LANG) : 'Lv.' + i;
 const LVD_TOP = { ja: '最強：全CPUコアで長時間、深く読む', en: 'Strongest: long, deep search on every CPU core', zh: '最强：用所有CPU核心长时间深入计算', 'zh-TW': '最強：用所有CPU核心長時間深入計算', ko: '최강: 모든 CPU 코어로 오래, 깊이 읽음', es: 'Máximo: búsqueda larga y profunda con todos los núcleos', fr: 'Ultime : calcul long et profond sur tous les cœurs', pt: 'Máximo: busca longa e profunda com todos os núcleos', de: 'Höchststufe: lange, tiefe Suche auf allen CPU-Kernen', ru: 'Сильнейший: долгий глубокий расчёт на всех ядрах', tr: 'En güçlü: tüm CPU çekirdekleriyle uzun, derin arama', id: 'Terkuat: pencarian panjang dan dalam dengan semua inti CPU', hi: 'सबसे मज़बूत: सभी CPU कोर पर लंबी, गहरी खोज', ar: 'الأقوى: بحث طويل وعميق بكل أنوية المعالج' };
-const LVD = i => i > 20 ? LVD_TOP[LANG] || LVD_TOP.en : t('lvd')[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : 3];
+const LVD = i => i > LV_HUMAN ? LVD_TOP[LANG] || LVD_TOP.en : (o => t('lvd')[o <= 4 ? 0 : o <= 9 ? 1 : o <= 15 ? 2 : 3])(lvOld(i));
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
@@ -88,6 +97,10 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (d.settings && !d.settings.lvV22) {   // (2026-11-22: the levels were renumbered — 天上)
+      ['level', 'level2'].forEach(k => { if (settings[k] >= 1) settings[k] = LV_MIG[settings[k] - 1] || settings[k]; });
+      settings.lvV22 = 1; try { d.settings = Object.assign({}, d.settings, { level: settings.level, level2: settings.level2, lvV22: 1 }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
+    }
     if (settings.mode === 'online') settings.mode = 'pvp';
     if (!(settings.level >= 1 && settings.level <= LV_MAX)) settings.level = 6;
     if (!(settings.level2 >= 1 && settings.level2 <= LV_MAX)) settings.level2 = 6;
@@ -111,7 +124,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=10';
+const ENGINE_URL = 'engine.js?v=12';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -702,7 +715,7 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now(), shown = moves.slice(0, cur);
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p), p) || rtCap(levelFor(p)) });
+  const el = engLv(levelFor(p)), res = await request('ai', { type: 'think', moves: shown, level: el, cfg: proCfg(levelFor(p), p) || rtCap(el) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const prevDur = cur > 0 ? moveDur(moves[cur - 1], posAt(cur - 1).pos) : 0;
   const wait = (settings.mode === 'watch' ? Math.max(700, prevDur + 120) : animating ? prevDur : 0) - (Date.now() - t0);   // AIの着手は即時：前の手のアニメが終わるのを待つだけ（観戦だけ間を取る）
@@ -1237,7 +1250,7 @@ $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { d
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
 // AI vs AI, never rated. ProSet.ladder() turns the changed values into a step of this engine's ladder (engine.js think: cfg).
-const PRO_L = window.ProSet ? ProSet.ladder(E.LEVELS, { dmax: 20, nmax: 20000000 }) : null;
+const PRO_L = window.ProSet ? ProSet.ladder(Array.from({ length: LV_MAX + 1 }, (_, n) => n ? E.LEVELS[lvOld(n)] : null), { dmax: 20, nmax: 20000000 }) : null;
 var PRO = PRO_L ? ProSet.init({ game: 'latrunculi', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   // threads (本編のマルチスレッド, shared/mtsplit.js): with any limit of the search; the default is the levels' own count for the
@@ -1280,7 +1293,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step on the kyu / dan scale (100 points per kyu: 15級 = 450 … 1級 = 1850, then 200 per dan)
 // measured: adjacent levels played each other (tools/native.c lv, see MODEL_CARD.md); about +125 per step up to 3級, smaller above
-const RT_LV = [0, 100, 220, 518, 781, 985, 1074, 1173, 1339, 1756, 2011, 2100, 2254, 2312, 2484, 2528, 2632, 2657, 2682, 2950, 3000, 3100, 3200, 3300];   // (2026-11-19, measured: tools/ladder.js on the default rule — neighbouring levels, 24〜36 games each; steps under +25 (draw-heavy at the top) taken as +25; Lv.19・20 estimated from the nodes' doubling, about +50 Elo each; Lv.21〜23 unused. 2026-11-20: the WebAssembly core plays Lv.1〜18 move for move as before; Lv.19・20 (by time) read about 16 times more positions — the same time against the old JS: +209 Elo at 0.1 s a move — so +148 each, 2950 / 3000)
+const RT_LV = [0, 100, 220, 369, 518, 650, 781, 985, 1074, 1173, 1339, 1478, 1617, 1756, 1884, 2011, 2100, 2254, 2312, 2484, 2528, 2632, 2682, 2950, 3000, 3060, 3110];   // (2026-11-19 measured: tools/ladder.js on the default rule, neighbouring levels; 2026-11-22 天上: Lv.1–20 the old Lv.1〜15 with steps between (their ratings interpolated), 天上Ⅰ〜Ⅵ = the old Lv.16・18・19・20 and the net at Lv.19・20's time (+110: seneca, 150 ms a move ×0.55) — MODEL_CARD)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

@@ -264,12 +264,12 @@
       const id = ++jid, mvs = moves.slice();
       const reply = m => {
         if (stopped || id !== jid || over) return;
-        if (m == null || m < 0) { try { E.setRule(rule); m = E.think(null, mvs, Math.min(ctx.level, 6)).move; } catch (e) { m = -1; } }
+        if (m == null || m < 0) { try { E.setRule(rule); m = E.think(null, mvs, Math.min(lvOld(ctx.level), 6)).move; } catch (e) { m = -1; } }
         later(() => { if (id !== jid || over) return; thinking = false; if (m == null || !legal.includes(m)) m = legal[0]; commit(m); }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onmessage = e => { const r = e.data; if (r.id === id && r.type === 'result') reply(r.error ? null : r.move); };
       worker.onerror = () => { worker = null; reply(null); };
-      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: ctx.level, rule });
+      worker.postMessage({ type: 'think', id, start: null, moves: mvs, level: engLv(ctx.level), rule });
     }
 
     /* ---------- input ---------- */
@@ -352,7 +352,7 @@
             res(true);
           };
           hintW.onerror = () => { hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, ctx.level + 2)), rule });
+          hintW.postMessage({ type: 'think', id: j, start: null, moves: mvs, level: Math.max(14, Math.min(17, lvOld(ctx.level) + 2)), rule });
         });
       },
       canDraw: () => false,   // (a draw only comes from the rules: equal captures when the game stops)
@@ -389,7 +389,7 @@
     id: ['Pemula: hanya melihat satu langkah', 'Dasar–menengah: menyadari bidak yang akan terapit', 'Mahir: membaca pertarungan beberapa langkah ke depan', 'Ahli: membaca dalam dan menangkap lebih dulu'],
     tr: ['Başlangıç: yalnızca bir hamle ileriye bakar', 'Acemi–orta: sıkışmak üzere olan taşları fark eder', 'İleri: mücadeleyi birkaç hamle ileriye okur', 'Uzman: derin okur ve önce alır'],
   };
-  const RATING = [0, 100, 220, 518, 781, 985, 1074, 1173, 1339, 1756, 2011, 2100, 2254, 2312, 2484, 2528, 2632, 2657, 2682, 2950, 3000];   // latrunculi RT_LV (measured 2026-11-19; Lv.19・20 raised 2026-11-20 for the WebAssembly core, see the spec)
+  const RATING = [0, 100, 220, 369, 518, 650, 781, 985, 1074, 1173, 1339, 1478, 1617, 1756, 1884, 2011, 2100, 2254, 2312, 2484, 2528, 2632, 2682, 2950, 3000, 3060, 3110];   // latrunculi RT_LV (measured 2026-11-19; Lv.19・20 raised 2026-11-20 for the WebAssembly core, see the spec)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
@@ -407,9 +407,17 @@
     id: W7('untuk pemula', 'setelah tahu aturannya', 'mulai terbiasa', 'untuk pemain kuat', 'sulit bahkan bagi ahli', 'yang terkuat'),
     tr: W7('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'uzmanlar için bile zor', 'en güçlüsü'),
   };
+  // 天上 (2026-11-22, latrunculi/app.js): Lv.1–20 people play, 天上Ⅰ〜Ⅵ above (the AI's benchmark, no rewards). LVX: level → the engine's
+  const LVX = [[1], [2], [2, 3, 0.5], [3], [3, 4, 0.5], [4], [5], [6], [7], [8], [8, 9, 0.33], [8, 9, 0.67], [9], [9, 10, 0.5], [10], [11], [12], [13], [14], [15], [16], [18], [19], [20], [21], [22]], LV_HUMAN = 20;
+  const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
+  const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
+  const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+  const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+  const LVD_TOP = { ja: '最強：全CPUコアで長時間、深く読む', en: 'Strongest: long, deep search on every CPU core', zh: '最强：用所有CPU核心长时间深入计算', 'zh-TW': '最強：用所有CPU核心長時間深入計算', ko: '최강: 모든 CPU 코어로 오래, 깊이 읽음', es: 'Máximo: búsqueda larga y profunda con todos los núcleos', fr: 'Ultime : calcul long et profond sur tous les cœurs', pt: 'Máximo: busca longa e profunda com todos os núcleos', de: 'Höchststufe: lange, tiefe Suche auf allen CPU-Kernen', ru: 'Сильнейший: долгий глубокий расчёт на всех ядрах', tr: 'En güçlü: tüm CPU çekirdekleriyle uzun, derin arama', id: 'Terkuat: pencarian panjang dan dalam dengan semua inti CPU', hi: 'सबसे मज़बूत: सभी CPU कोर पर लंबी, गहरी खोज', ar: 'الأقوى: بحث طويل وعميق بكل أنوية المعالج' };   // (Lv.21〜23, 2026-11-09)
   function levelInfo(n, lang) {
-    const D = LVD[lang] || LVD.en, W = WHO[lang] || WHO.en;
-    return { name: '', desc: D[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[Math.min(n, 20) - 1] };
+    const D = LVD[lang] || LVD.en, W = WHO[lang] || WHO.en, o = lvOld(n);
+    if (n > LV_HUMAN) return { name: tenjoName(n, lang), desc: LVD_TOP[lang] || LVD_TOP.en, rating: RATING[n], who: W[19] };
+    return { name: '', desc: D[o <= 4 ? 0 : o <= 9 ? 1 : o <= 15 ? 2 : 3], rating: RATING[n], who: W[Math.min(n, 20) - 1] };
   }
   // the 種目 cards' pictures: a small board — counters placed anywhere (one of them turned over in Schädler's game) or the two rows of Quintana
   function kindArt(sid, v) {
@@ -421,6 +429,6 @@
     return o + '</svg>';
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.latrunculi = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: RSZ, size0: 1, sizeLabel: () => 'Rules',
+  window.Atlas3D.latrunculi = { levels: 26, reward: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', kindFirst: true, sizes: RSZ, size0: 1, sizeLabel: () => 'Rules',
     sizeName: (z, l) => rn(l).n[rix(z)], optInfo: (sid, v, l) => sid === 'bvSize' ? { sub: rn(l).d[rix(v)] } : null, kindArt, levelInfo, start };
 })();

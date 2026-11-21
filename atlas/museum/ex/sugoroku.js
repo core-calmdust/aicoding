@@ -14,14 +14,14 @@
   (window.AtlasEx = window.AtlasEx || {}).sugoroku = {
     build(TT, X, K) {
       const G = new TT.Group();
-      const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = .7, RT = .7;   // LIN: the strip of rosettes at the top of the base
+      const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = 1.9, RT = .7;   // (RIM: the wall round the field stands upright, about 1.9 high — the overall photograph)   // LIN: the strip of rosettes at the top of the base
       const shT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#3e2016', b: '#1f0e09', seed: 37, sx: .5, sy: 9, warp: .45, pores: .004 }));
-      const baseT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#6a4026', b: '#4a2a18', seed: 41, sx: .5, sy: 12, warp: .3, pores: .004 }));
+      const baseT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#44241a', b: '#25120c', seed: 41, sx: .5, sy: 12, warp: .3, pores: .004 }));
       const shR = K.tex(256, 256, (g, w, h) => K.grain(g, w, h, { a: '#7a7a7a', b: '#4e4e4e', seed: 38, sy: 14 }), { data: true });
       const shitan = K.mat({ map: shT, roughnessMap: shR, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
       const inner = K.mat({ map: baseT, color: '#ffffff', roughness: .55, clearcoat: .2, clearcoatRoughness: .4 });
       const ivory = K.mat({ color: '#efe4cc', roughness: .4, clearcoat: .25, clearcoatRoughness: .4 });
-      const C = { iv: '#e4d3aa', grn: '#7f9258', bam: '#c9995e', eb: '#1c0f0a', tan: '#b98a55' };
+      const C = { iv: '#efe6d2', grn: '#5f9a78', bam: '#c98a3c', eb: '#1c0f0a', tan: '#b98a55' };
       /* ---------- marquetry (after the detail photographs) ---------- */
       const flower = (g, x, y, r, k = 0) => { g.save(); g.translate(x, y); g.rotate(k);
         for (let i = 0; i < 5; i++) { g.rotate(Math.PI * 2 / 5); g.beginPath(); g.arc(r * .55, 0, r * .42, 0, 6.29); g.fillStyle = C.iv; g.fill(); g.strokeStyle = 'rgba(40,16,8,.55)'; g.lineWidth = r * .07; g.stroke(); }
@@ -39,7 +39,7 @@
       const scroll = (g, w, h, s, seed, bgT, opt = {}) => {
         g.drawImage(bgT.image, 0, 0, w, h); let sd = seed * 7919 + 1; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
         const cy = h / 2, amp = Math.min(h * .26, s * 1.1), per = s * (opt.per || 7);
-        g.strokeStyle = C.bam; g.lineWidth = s * .09; g.lineCap = 'round';
+        g.strokeStyle = C.bam; g.lineWidth = s * .06; g.lineCap = 'round';
         g.beginPath(); for (let x = 0; x <= w; x += 2) { const y = cy + Math.sin(x / per * Math.PI * 2) * amp; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke();
         let k = 0;
         for (let x = per / 4; x < w; x += per / 2, k++) { const up = k % 2 ? 1 : -1, y = cy + up * amp, lr = Math.min(h * .3, s * 1.15);
@@ -55,32 +55,34 @@
       };
       const mk = (t, base) => K.mat({ map: t, color: '#ffffff', roughness: .48, clearcoat: .3, clearcoatRoughness: .35 });
       /* ---------- the face ---------- */
-      const IL = L - RT * 2, IW = W - RT * 2;
+      const IL = L - RT * 2, IW = W - RT * 2, ROW = 2.0, P0 = 4.9, PS = 3.75;   // the row of points: its distance from the rim, the first point's distance from the centre, the pitch
       const faceT = K.tex(2048, Math.round(2048 * IW / IL), (g, w, h) => { const s = w / IL;
         K.grain(g, w, h, { a: '#331a11', b: '#26120b', seed: 44, sx: .3, sy: 9, warp: .2, pores: .003 });   // straight grain along the length
         let y = 0, sd = 3; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;   // planks along the length, slightly different in tone
         while (y < h) { const ph = s * (4.5 + rnd() * 2.5); g.fillStyle = rnd() < .5 ? `rgba(0,0,0,${rnd() * .18})` : `rgba(120,50,30,${rnd() * .12})`; g.fillRect(0, y, w, ph); g.fillStyle = 'rgba(10,3,2,.5)'; g.fillRect(0, y, w, s * .04); y += ph; }
-        // a band of scroll inside each long rim (seen on the far side in the overall photograph)
-        const band = K.tex(2048, Math.round(2048 * 2.1 / IL), (g2, w2, h2) => scroll(g2, w2, h2, w2 / IL, 9, shT, { per: 3.1, birds: false }));
-        g.globalAlpha = .8; g.drawImage(band.image, 0, 0, w, s * 2.1); g.save(); g.translate(w, h); g.rotate(Math.PI); g.drawImage(band.image, 0, 0, w, s * 2.1); g.restore(); g.globalAlpha = 1;
-        const row = s * 1.05, step = s * 3.1;
+        // ---- the playing marks (the Shōsōin's overall photograph): along each long side twelve flower "points", six to the left and six to
+        // the right of a half-moon; one flower in the middle of each short side. This is the board's layout as a game board (双六).
+                const rosette = (fx, fy, r) => { g.save(); g.translate(fx, fy);
+          for (let q = 0; q < 8; q++) { g.rotate(Math.PI / 4); g.beginPath(); g.moveTo(r * .28, 0); g.quadraticCurveTo(r * .7, r * .42, r, 0); g.quadraticCurveTo(r * .7, -r * .42, r * .28, 0); g.fillStyle = q % 2 ? '#efe6d2' : '#c98a3c'; g.fill(); g.strokeStyle = 'rgba(40,16,8,.6)'; g.lineWidth = s * .03; g.stroke(); }
+          g.beginPath(); g.arc(0, 0, r * .36, 0, 6.29); g.fillStyle = '#5f9a8c'; g.fill(); g.strokeStyle = '#efe6d2'; g.lineWidth = s * .06; g.stroke(); g.beginPath(); g.arc(0, 0, r * .12, 0, 6.29); g.fillStyle = '#efe6d2'; g.fill(); g.restore(); };
+        const row = s * ROW;
         [row, h - row].forEach((yy, side) => {
-          // a thin crescent, horns towards the edge
-          g.save(); g.translate(w / 2, yy); if (side) g.scale(1, -1);
-          g.translate(0, s * .5); g.beginPath(); g.arc(0, -s * 4.6, s * 5.4, .27 * Math.PI, .73 * Math.PI); g.arc(0, -s * 5.15, s * 5.4, .71 * Math.PI, .29 * Math.PI, true); g.closePath();
-          g.fillStyle = '#e2c47e'; g.fill(); g.strokeStyle = 'rgba(60,30,10,.45)'; g.lineWidth = s * .04; g.stroke(); g.restore();
-          for (let i = 1; i <= 6; i++) [-1, 1].forEach(d => { const fx = w / 2 + d * (s * 1.6 + i * step); g.save(); g.translate(fx, yy);
-            for (let q = 0; q < 6; q++) { g.rotate(Math.PI / 3); g.beginPath(); g.ellipse(s * .42, 0, s * .36, s * .25, 0, 0, 6.29); g.fillStyle = '#c99a4e'; g.fill(); g.strokeStyle = 'rgba(40,16,8,.5)'; g.lineWidth = s * .03; g.stroke(); }
-            g.beginPath(); g.arc(0, 0, s * .2, 0, 6.29); g.fillStyle = '#efe2c2'; g.fill(); g.restore(); });
+          g.save(); g.translate(w / 2, yy); if (!side) g.scale(1, -1); g.beginPath(); g.arc(0, s * 1.07, s * 3.47, Math.PI + .314, -.314); g.closePath(); g.fillStyle = 'rgba(8,3,2,.4)'; g.fill(); g.restore();   // the space inside the half-moon
+          for (let i = 0; i < 6; i++) [-1, 1].forEach(d => rosette(w / 2 + d * s * (P0 + i * PS), yy, s * 1.05));
         });
-        [s * 2.2, w - s * 2.2].forEach(fx => { g.save(); g.translate(fx, h / 2); for (let q = 0; q < 6; q++) { g.rotate(Math.PI / 3); g.beginPath(); g.ellipse(s * .3, 0, s * .28, s * .16, 0, 0, 6.29); g.fillStyle = '#d8b46e'; g.fill(); } g.beginPath(); g.arc(0, 0, s * .12, 0, 6.29); g.fillStyle = '#efe2c2'; g.fill(); g.restore(); });
+        [s * 2.4, w - s * 2.4].forEach(fx => rosette(fx, h / 2, s * .8));
       });
       const face = K.mat({ map: faceT, color: '#ffffff', roughness: .55, clearcoat: .12, clearcoatRoughness: .45 });
       const add = (geo, m, x, y, z) => { const o = new TT.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; G.add(o); return o; };
+
       /* ---------- the board's edge (the slab with its rim, one band of marquetry outside) ---------- */
       const edgeTex = (len, seed) => { const s = 2048 / len; return K.tex(2048, Math.round(EDGE * s), (g, w, h) => scroll(g, w, h, s, seed, shT, { edge: true, per: 5.2 })); };
       const eL = mk(edgeTex(L, 1)), eW = mk(edgeTex(W, 2));
       const SL = EDGE - RIM;   // the slab; the face is at BASE + SL
+      // the half-moons: a raised ivory arc in the middle of each long side, its horns toward the rim, the hollow facing the players' edge
+      { const cs = new TT.Shape(); cs.moveTo(3.3, 0); cs.absarc(0, -1.07, 3.47, .314, Math.PI - .314, false); cs.absarc(0, -1.82, 3.77, Math.PI - .504, .504, true);
+        const cg = new TT.ExtrudeGeometry(cs, { depth: .28, bevelEnabled: true, bevelThickness: .05, bevelSize: .04, bevelSegments: 2, curveSegments: 24 }); cg.rotateX(-Math.PI / 2);
+        [1, -1].forEach(sd => { const m = new TT.Mesh(cg, ivory); m.position.set(0, BASE + SL, sd * (IW / 2 - ROW)); if (sd < 0) m.rotation.y = Math.PI; m.castShadow = true; G.add(m); }); }
       const eLs = mk(edgeTex(L, 1)), eWs = mk(edgeTex(W, 2));
       [eLs, eWs].forEach(m => { m.map.repeat.set(1, SL / EDGE); m.map.offset.set(0, 0); });
       add(new TT.BoxGeometry(L, SL, W), [eWs, eWs, shitan, shitan, eLs, eLs], 0, BASE + SL / 2, 0);
@@ -88,26 +90,40 @@
       add(new TT.PlaneGeometry(IL, IW), face, 0, BASE + SL + .004, 0).rotation.x = -Math.PI / 2;
       [eL, eW].forEach(m => { m.map = m.map.clone(); m.map.repeat.set(1, RIM / EDGE); m.map.offset.set(0, SL / EDGE); m.map.needsUpdate = true; });
       const rimTop = K.mat({ map: K.tex(8, 64, (g, w, h) => { g.fillStyle = '#2c1810'; g.fillRect(0, 0, w, h); g.fillStyle = '#e4d3aa'; g.fillRect(0, h * .3, w, h * .4); }), color: '#ffffff', roughness: .45, clearcoat: .25 });
+      // the wall's inner face (it stands at a right angle to the field): a spare run of thin stem, a small flower and a few green leaves
+      // at wide intervals — much quieter than the outside (the overall photograph)
+      const wallT = len => { const s = 2048 / len; return K.tex(2048, Math.max(16, Math.round(RIM * s)), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); g.lineCap = 'round';
+        const per = s * 7.2, cy = h * .55;
+        for (let x = per * .45, k = 0; x < w - per * .3; x += per, k++) { const up = k % 2 ? 1 : -1;
+          g.strokeStyle = C.bam; g.lineWidth = s * .05; g.beginPath(); g.moveTo(x - per * .3, cy + up * h * .18); g.bezierCurveTo(x - per * .12, cy - up * h * .3, x + per * .1, cy + up * h * .3, x + per * .3, cy - up * h * .12); g.stroke();
+          g.beginPath(); g.arc(x + per * .3, cy - up * h * .12 - h * .1, h * .1, 0, 5); g.stroke();
+          flower(g, x, cy - up * h * .02, h * .16, k); leaf(g, x - per * .2, cy + up * h * .1, s * .5, up * .7); leaf(g, x + per * .17, cy - up * h * .05, s * .42, -up * .8); } }); };
+      const wL = mk(wallT(L)), wW = mk(wallT(W - RT * 2));
       [[L, W / 2 - RT / 2, 0, eL], [L, W / 2 - RT / 2, Math.PI, eL], [W - RT * 2, L / 2 - RT / 2, Math.PI / 2, eW], [W - RT * 2, L / 2 - RT / 2, -Math.PI / 2, eW]].forEach(([len, off, ry, m]) => {
         const g = new TT.Group(); g.rotation.y = ry; G.add(g);
         // (the ivory line along the rim's top is in the texture, not a sliver of geometry: a strip 3 mm wide sparkled at a distance)
-        const r = new TT.Mesh(new TT.BoxGeometry(len, RIM, RT), [shitan, shitan, rimTop, shitan, m, shitan]); r.position.set(0, BASE + SL + RIM / 2, off); r.castShadow = r.receiveShadow = true; g.add(r); });
+        const r = new TT.Mesh(new TT.BoxGeometry(len, RIM, RT), [shitan, shitan, rimTop, shitan, m, len === L ? wL : wW]); r.position.set(0, BASE + SL + RIM / 2, off); r.castShadow = r.receiveShadow = true; g.add(r); });
       /* ---------- the base: openings with bowed sides and two-arched tops, a waisted post on the long sides ---------- */
       const SK = BASE - RAIL, OT = SK - .35;   // skirt height, the openings' top
-      const opening = (x0, x1) => { const p = new TT.Path(), cx = (x0 + x1) / 2, rx = 4.2, ry = 5.2, bow = 1.1, top = OT;
-        // the bottom corners in long curves (the legs and the post flare out to their feet), the sides bowing out, the top in two arcs
-        // meeting in a hanging point (photographs)
-        p.moveTo(x0 + rx, .4); p.lineTo(x1 - rx, .4); p.bezierCurveTo(x1 - rx * .3, .4, x1 + bow * .4, ry * .45, x1 + bow * .55, ry); p.quadraticCurveTo(x1 + bow, (ry + top) / 2, x1 + .3, top - 2.6);
-        p.quadraticCurveTo(x1, top - .3, x1 - 2.6, top - .3); p.lineTo(x0 + 2.6, top - .3); p.quadraticCurveTo(x0, top - .3, x0 - .3, top - 2.6);   // a smooth rounded top (detail photograph CO0000011759)
-        p.quadraticCurveTo(x0 - bow, (ry + top) / 2, x0 - bow * .55, ry); p.bezierCurveTo(x0 - bow * .4, ry * .45, x0 + rx * .3, .4, x0 + rx, .4); return p; };
+      const opening = (x0, x1) => { const p = new TT.Path(), top = OT, b0 = .35;
+        // (the Shōsōin's detail photograph of a post: it stands like an hourglass — waisted a little above the middle, sweeping out in a
+        // long curve to the foot and in a shorter one under the top rail; the opening's top is flat)
+        const fx = 6.6, fy = top * .56, tx = 4.0, ty = top * .32, bow = 0;
+        p.moveTo(x0 + fx, b0); p.lineTo(x1 - fx, b0); p.bezierCurveTo(x1 - fx * .35, b0, x1 + bow, fy * .45, x1 + bow, fy);
+        p.lineTo(x1 + bow, top - ty); p.bezierCurveTo(x1 + bow, top - ty * .4, x1 - tx * .4, top - .3, x1 - tx, top - .3);
+        { const cx = (x0 + x1) / 2, t0 = top - .3;   // the top's hanging bracket: two ogees meeting in a small notch
+          p.lineTo(cx + 4.6, t0); p.bezierCurveTo(cx + 3.4, t0, cx + 3.2, t0 - 1.15, cx + 1.9, t0 - 1.15); p.quadraticCurveTo(cx + .7, t0 - 1.15, cx, t0 - .55);
+          p.quadraticCurveTo(cx - .7, t0 - 1.15, cx - 1.9, t0 - 1.15); p.bezierCurveTo(cx - 3.2, t0 - 1.15, cx - 3.4, t0, cx - 4.6, t0); }
+        p.lineTo(x0 + tx, top - .3); p.bezierCurveTo(x0 + tx * .4, top - .3, x0 - bow, top - ty * .4, x0 - bow, top - ty);
+        p.lineTo(x0 - bow, fy); p.bezierCurveTo(x0 - bow, fy * .45, x0 + fx * .35, b0, x0 + fx, b0); return p; };
       const skirtFor = (len, n) => { const S = new TT.Shape(); S.moveTo(-len / 2, 0); S.lineTo(len / 2, 0); S.lineTo(len / 2, SK); S.lineTo(-len / 2, SK); S.closePath();
-        const LEG = 2.6, POST = 3.8, ow = (len - 2 * LEG - (n - 1) * POST) / n;
+        const LEG = 2.0, POST = 2.7, ow = (len - 2 * LEG - (n - 1) * POST) / n;
         for (let i = 0; i < n; i++) { const x0 = -len / 2 + LEG + i * (ow + POST); S.holes.push(opening(x0, x0 + ow)); }
         return S; };
       const baseTex = (len, n, seed) => { const S = skirtFor(len, n), s = 2048 / len; return K.tex(2048, Math.round(SK * s), (g, w, h) => {
         g.drawImage(baseT.image, 0, 0, w, h);
         // vertical scrolls up the corner legs and the post (where the wood stands between the openings)
-        const LEG = 2.6, POST = 3.8, nO = S.holes.length, ow = (len - 2 * LEG - (nO - 1) * POST) / nO, cols = [LEG * .55, len - LEG * .55];
+        const LEG = 2.0, POST = 2.7, nO = S.holes.length, ow = (len - 2 * LEG - (nO - 1) * POST) / nO, cols = [LEG * .55, len - LEG * .55];
         for (let i = 1; i < nO; i++) cols.push(LEG + i * ow + (i - .5) * POST);
         const vs = K.tex(512, Math.round(512 * 3.4 / SK), (g2, w2, h2) => scroll(g2, w2, h2, w2 / SK, seed, baseT, { per: 5.2 }));
         cols.forEach(cxm => { g.save(); g.translate(cxm * s, h); g.rotate(-Math.PI / 2); g.globalAlpha = 1; g.drawImage(vs.image, 0, -s * 1.7, h, s * 3.4); g.restore(); });
@@ -117,13 +133,18 @@
         S.holes.forEach(hp => { const xs = hp.getPoints(30).map(p => p.x), xa = (Math.min(...xs) + len / 2) * s, xb = (Math.max(...xs) + len / 2) * s;   // over each opening, a dark strip with rosettes
           g.fillStyle = '#2a140c'; g.fillRect(xa + s * 1.5, s * .14, xb - xa - s * 3, LIN * s); for (let x = xa + s * 2.4; x < xb - s * 2; x += s * 2.4) flower(g, x, s * .14 + LIN * s * .5, s * .26, x); });
         // a bamboo strip following each opening, ivory down the corners
-        g.strokeStyle = C.bam; g.lineWidth = s * .14; S.holes.forEach(hp => { g.beginPath(); hp.getPoints(30).forEach((p, i) => { const X = (p.x + len / 2) * s, Y = h - p.y * s; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.closePath(); g.stroke(); });
+        g.strokeStyle = C.iv; g.lineWidth = s * .13; S.holes.forEach(hp => { g.beginPath(); hp.getPoints(30).forEach((p, i) => { const X = (p.x + len / 2) * s, Y = h - p.y * s; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.closePath(); g.stroke(); });
         g.fillStyle = C.iv; g.fillRect(0, 0, s * .18, h); g.fillRect(w - s * .18, 0, s * .18, h);
       }); };
       const baseMat = (len, n, seed) => { const t = baseTex(len, n, seed); t.repeat.set(1 / len, 1 / SK); t.offset.set(.5, 0); return mk(t); };
       const geoFor = (len, n) => new TT.ExtrudeGeometry(skirtFor(len, n), { depth: 1.3, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1, curveSegments: 14 });
-      const gL = geoFor(L, 2), gW = geoFor(W, 1), mL = baseMat(L, 2, 5), mW = baseMat(W, 1, 6);
+      const ivory2 = ivory.clone(); ivory2.side = TT.DoubleSide;
+      const gL = geoFor(L, 2), gW = geoFor(W, 1); gL.userData = { len: L, n: 2 }; gW.userData = { len: W, n: 1 }; const mL = baseMat(L, 2, 5), mW = baseMat(W, 1, 6);
       [[gL, mL, 0, W / 2 - 1.3, 0], [gL, mL, 0, -W / 2 + 1.3, Math.PI], [gW, mW, L / 2 - 1.3, 0, Math.PI / 2], [gW, mW, -L / 2 + 1.3, 0, -Math.PI / 2]].forEach(([geo, m, x, z, ry]) => {
+        // the openings' cut faces are lined with ivory (a ribbon just inside each opening)
+        const S0 = skirtFor(geo.userData.len, geo.userData.n); S0.holes.forEach(hp => { const pts = hp.getPoints(16), cxm = pts.reduce((a, p) => a + p.x, 0) / pts.length, cym = pts.reduce((a, p) => a + p.y, 0) / pts.length, pos = [], idx = [];
+          pts.forEach((p, i) => { const X = cxm + (p.x - cxm) * .985, Y = cym + (p.y - cym) * .985; pos.push(X, Y, -.07, X, Y, 1.37); if (i) { const k = i * 2; idx.push(k - 2, k - 1, k, k - 1, k + 1, k); } });
+          const rb = new TT.BufferGeometry(); rb.setAttribute('position', new TT.Float32BufferAttribute(pos, 3)); rb.setIndex(idx); rb.computeVertexNormals(); const r = new TT.Mesh(rb, ivory2); r.rotation.y = ry; r.position.set(x, RAIL, z); G.add(r); });
         const o = new TT.Mesh(geo, [m, inner]); o.rotation.y = ry; o.position.set(x, RAIL, z); o.scale.x = .9975;   /* (each panel a hair short: its end face lay in the same plane as the next panel's front and the two fought at the corner legs, a flicker at a distance) */ o.castShadow = o.receiveShadow = true; G.add(o); });
       add(new TT.BoxGeometry(L - 2.6, .5, W - 2.6), inner, 0, BASE - .25, 0);
       // the low rail: dark, with ivory edges and a row of ivory dots and little lozenges

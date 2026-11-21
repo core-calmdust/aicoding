@@ -111,7 +111,7 @@ function waRule() { if (WA) WA.x.setup(R.rows, R.cols, R.diag ? 1 : 0, R.limit, 
 // ---- the learned evaluation (2026-11-20, claude/ugolki-spec.md「学習した評価」, tools/nnue/): one net a rule, net-<rule>.bin.gz,
 // loaded only when its version below is set ('' = no net: the hand evaluation, as before). Used by search v3 (mode 2: the levels
 // with x and the analysis); the other levels keep the hand evaluation. Placing a file and its version here is all it takes.
-const NETV = { c33: '', c34: '', c44: '', diag: '' };
+const NETV = { c33: '1', c34: '1', c44: '1', diag: '1' };   // '1' = 2026-11-21 round 1 (20M self-play positions; at 0.1 s a move over the hand evaluation, 196 games each: c33 +845, c34 +378, c44 +999, diag +527 Elo)
 const ANA_MODE = 2;   // the analysis / hint / coach: search v3
 const NETS = {};      // rule → the file's bytes (Uint8Array)
 function netInto(C, k) {   // a net into a core (WA, or the threads' MX: their memory is shared, one load is enough)
@@ -313,6 +313,9 @@ const LEVELS = [null,
   { s: 1, ms: 5000, book: 1, x: 1 },     // Lv.21   (x: search v3 + the learned evaluation, 2026-11-20 — the page's 天上 levels)
   { s: 1, ms: 10000, book: 1, x: 1 },    // Lv.22
   { s: 1, ms: 20000, book: 1, x: 1 },    // Lv.23
+  // (2026-11-22) 天上Ⅰ・Ⅱ: 四段・五段's time with search v3 + the net (天上 = the AI's benchmark / research, not for people)
+  { s: 1, ms: 1200, book: 1, x: 1 },     // Lv.24 (天上Ⅰ)
+  { s: 1, ms: 2500, book: 1, x: 1 },     // Lv.25 (天上Ⅱ)
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 // ---------------------------------------------------------------- evaluation (side to move's view, ~100 = one tempo)

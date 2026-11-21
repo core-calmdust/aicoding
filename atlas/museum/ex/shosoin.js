@@ -12,14 +12,23 @@
   (window.AtlasEx = window.AtlasEx || {}).shosoin = {
     build(TT, X, K) {
       const G = new TT.Group();
-      const S = 48.9, H = 12.7, RAIL = .8, BASE = 8.1, BODY = H - BASE, TOP = .15;
+      const S = 48.9, H = 12.7, RAIL = 1.0, BASE = 7.4,   // (measured on the Shōsōin's oblique photograph: body 5.3, openings 5.4, floor frame 1.0)
+        BODY = H - BASE, TOP = .15;
       const shT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#331b14', b: '#20100b', seed: 21, sx: .5, sy: 9, warp: .35, pores: .003 }));
       const shR = K.tex(256, 256, (g, w, h) => K.grain(g, w, h, { a: '#7a7a7a', b: '#4e4e4e', seed: 22, sy: 14 }), { data: true });
       const shitan = K.mat({ map: shT, roughnessMap: shR, color: '#ffffff', roughness: .5, clearcoat: .4, clearcoatRoughness: .35 });
       const ivory = K.mat({ color: '#e9dcbc', roughness: .4, clearcoat: .25, clearcoatRoughness: .4 });
-      const C = { iv: '#e6d2a4', box: '#d9b46a', grn: '#6f9a62', red: '#c0664c', dk: '#3a1a10', tan: '#c49a5c', pink: '#d99a86' };
+      const C = { iv: '#e6d2a4', box: '#d9b46a', grn: '#7d9468', red: '#b98a62', dk: '#3a1a10', tan: '#c49a5c', pink: '#d99a86' };
+      // dyed, engraved ivory (撥鏤風): the piece stays ivory, washed with colour in places and pricked with fine dots (the Shōsōin's detail photographs)
+      let dq = 5; const dr = () => ((dq = (dq * 16807) % 2147483647) / 2147483647);
+      const dye = (g, col) => { g.save(); g.clip('evenodd'); g.fillStyle = '#eadfc4'; g.fillRect(-45, -45, 90, 80);
+        const w1 = col === C.grn ? '#7fa07c' : col === C.iv ? '#e6c9a0' : '#e09a70', w2 = col === C.grn ? '#d07a5c' : '#86a89a';
+        let gr = g.createRadialGradient(-6 + dr() * 12, -6, 2, 0, 0, 30); gr.addColorStop(0, w1); gr.addColorStop(.55, w1); gr.addColorStop(1, 'rgba(234,223,196,0)'); g.globalAlpha = .9; g.fillStyle = gr; g.fillRect(-45, -45, 90, 80);
+        gr = g.createRadialGradient(18 - dr() * 40, 6, 1, 10, 4, 16); gr.addColorStop(0, w2); gr.addColorStop(1, 'rgba(234,223,196,0)'); g.globalAlpha = .7; g.fillStyle = gr; g.fillRect(-45, -45, 90, 80);
+        g.globalAlpha = .7; g.fillStyle = '#8a3a22'; for (let i = 0; i < 46; i++) { g.beginPath(); g.arc(-30 + dr() * 60, -24 + dr() * 44, .5, 0, 6.29); g.fill(); }
+        g.restore(); };
       const sil = (g, kind, x, y, k, col) => {   // a figure in silhouette with a few engraved lines (the 撥鏤-like detail)
-        g.save(); g.translate(x, y); g.scale(k, k); g.fillStyle = col; g.strokeStyle = 'rgba(40,18,8,.55)'; g.lineWidth = .9; g.beginPath();
+        g.save(); g.translate(x, y); g.scale(k, k); g.fillStyle = col; g.strokeStyle = 'rgba(60,26,12,.7)'; g.lineWidth = .7; g.beginPath();
         if (kind === 'camel') { g.moveTo(-26, 4); g.quadraticCurveTo(-24, -14, -10, -16); g.quadraticCurveTo(-4, -26, 2, -16); g.quadraticCurveTo(8, -24, 14, -14); g.quadraticCurveTo(20, -12, 22, -22); g.lineTo(30, -26); g.lineTo(31, -21); g.lineTo(26, -18); g.quadraticCurveTo(24, -4, 18, 2);
           g.lineTo(18, 22); g.lineTo(14, 22); g.lineTo(13, 4); g.lineTo(-14, 4); g.lineTo(-15, 22); g.lineTo(-19, 22); g.lineTo(-20, 4); g.closePath(); }
         else if (kind === 'elephant') { g.moveTo(-28, -2); g.quadraticCurveTo(-26, -24, 0, -24); g.quadraticCurveTo(18, -24, 22, -10); g.quadraticCurveTo(30, -6, 30, 8); g.quadraticCurveTo(30, 20, 34, 22); g.lineTo(28, 22); g.quadraticCurveTo(24, 10, 22, 4);
@@ -38,7 +47,7 @@
           g.moveTo(-16, -30); g.quadraticCurveTo(-22, -21, -16, -12); g.lineTo(-15.4, -12.4); g.quadraticCurveTo(-20.6, -21, -15.4, -29.6); g.closePath(); }
         else if (kind === 'rider0') { g.moveTo(-24, 6); g.quadraticCurveTo(-22, -8, -6, -8); g.lineTo(12, -10); g.lineTo(20, -20); g.lineTo(24, -16); g.lineTo(18, -6); g.quadraticCurveTo(20, 4, 14, 6); g.lineTo(16, 22); g.lineTo(12, 22); g.lineTo(9, 7); g.lineTo(-14, 7); g.lineTo(-18, 22); g.lineTo(-22, 22); g.closePath();
           g.moveTo(-6, -8); g.lineTo(-4, -22); g.arc(-3, -25, 3.2, 0, 6.29); g.moveTo(-2, -18); g.lineTo(8, -26); }
-        else if (kind === 'runner' || kind === 'hound' || kind === 'hunter') {   // the flying gallop of the hunting scenes on the sides
+        else if (kind === 'runner' || kind === 'hound' || kind === 'hunter' || kind === 'hare') {   // the flying gallop of the hunting scenes on the sides
           const hd = kind === 'hound' ? [[18, -6], [24, -14], [30, -11], [33, -10], [27, -6], [20, 0]] : [[16, -7], [20, -18], [26, -17], [30, -14], [24, -12], [19, -1]];
           g.moveTo(-20, -4); g.quadraticCurveTo(-8, -12, 10, -10); g.lineTo(hd[0][0], hd[0][1]); hd.slice(1).forEach(([a, b]) => g.lineTo(a, b));
           g.lineTo(34, 3); g.lineTo(35, 5.5); g.lineTo(28, 4); g.lineTo(18, 3);              // forelegs stretched forward
@@ -48,17 +57,27 @@
           else { g.moveTo(-20, -4); g.lineTo(-25, -9); g.lineTo(-21, -6); g.closePath(); }
           if (kind === 'runner') { g.moveTo(22, -18); g.lineTo(18, -30); g.lineTo(13, -33); g.lineTo(18.6, -31); g.lineTo(20, -36); g.lineTo(20.4, -30); g.lineTo(23.6, -19); g.closePath();
             g.moveTo(24, -18); g.lineTo(27, -28); g.lineTo(32, -31); g.lineTo(28, -27); g.lineTo(25.4, -18); g.closePath(); }
+          if (kind === 'hare') { g.moveTo(22, -17); g.quadraticCurveTo(14, -30, 10, -31); g.quadraticCurveTo(15, -24, 19, -16); g.closePath(); g.moveTo(25, -17); g.quadraticCurveTo(21, -31, 18, -33); g.quadraticCurveTo(20, -24, 22, -17); g.closePath(); }
           if (kind === 'hunter') {   // the rider turns in the saddle and draws the bow backwards
             g.moveTo(-4, -10); g.lineTo(-7, -24); g.lineTo(-1, -24); g.lineTo(2, -10); g.closePath(); g.moveTo(-1, -28); g.arc(-4, -28, 3.4, 0, 6.29);
             g.moveTo(-5, -21); g.lineTo(-17, -23); g.lineTo(-17, -21); g.lineTo(-5, -19); g.closePath();
             g.moveTo(-17, -33); g.quadraticCurveTo(-24, -22, -17, -11); g.lineTo(-16.2, -11.4); g.quadraticCurveTo(-22.4, -22, -16.2, -32.6); g.closePath(); }
-          g.fill('evenodd'); g.stroke(); g.beginPath(); g.moveTo(-8, -6); g.quadraticCurveTo(2, -3, 12, -6); g.moveTo(14, -4); g.lineTo(17, -12); g.stroke();   // engraved lines
+          g.fill('evenodd'); dye(g, col); g.stroke(); g.beginPath(); g.moveTo(-8, -6); g.quadraticCurveTo(2, -3, 12, -6); g.moveTo(14, -4); g.lineTo(17, -12); g.stroke();   // engraved lines
           g.fillStyle = 'rgba(40,14,6,.75)'; g.beginPath(); g.arc(kind === 'hound' ? 26 : 23.5, kind === 'hound' ? -11 : -15, 1, 0, 6.29); g.fill(); g.restore(); return; }
+        else if (kind === 'parrot') {   // a long-tailed parrot perched on a bunch of grapes with its leaves (the drawer's front, detail photograph 428)
+          g.moveTo(-6, -12); g.quadraticCurveTo(4, -22, 14, -15); g.lineTo(19, -12); g.lineTo(14, -10); g.quadraticCurveTo(11, -1, -1, 1); g.lineTo(-31, 8); g.lineTo(-29, 4); g.lineTo(-9, -5); g.closePath();
+          g.moveTo(3, -10); g.quadraticCurveTo(-8, -26, -25, -20); g.quadraticCurveTo(-10, -9, 3, -10); g.closePath();
+          for (let r = 0; r < 3; r++) for (let i = 0; i < 3 - r; i++) { const gx = 2 + i * 5 + r * 2.5, gy = 7 + r * 4.5; g.moveTo(gx + 2.4, gy); g.arc(gx, gy, 2.4, 0, 6.29); }
+          g.moveTo(-4, 16); g.quadraticCurveTo(-14, 10, -18, 18); g.quadraticCurveTo(-10, 24, -4, 16); g.closePath(); g.moveTo(16, 16); g.quadraticCurveTo(24, 10, 30, 17); g.quadraticCurveTo(22, 24, 16, 16); g.closePath(); }
+        else if (kind === 'plant') {   // a flowering plant: a straight stem, a flower at its head, two pairs of leaves
+          g.moveTo(-.8, 22); g.lineTo(-.8, -8); g.lineTo(.8, -8); g.lineTo(.8, 22); g.closePath();
+          for (let q = 0; q < 5; q++) { const a = q / 5 * 6.283 - 1.57, ex = Math.cos(a) * 5.4, ey = -15 + Math.sin(a) * 5.4; g.moveTo(ex + 4.2, ey); g.ellipse(ex, ey, 4.2, 2.6, a, 0, 6.29); }
+          [[4, 1], [14, .8]].forEach(([yy, k]) => [-1, 1].forEach(d => { g.moveTo(0, yy); g.quadraticCurveTo(d * 9 * k, yy - 9 * k, d * 13 * k, yy - 2); g.quadraticCurveTo(d * 8 * k, yy + 3, 0, yy); g.closePath(); })); }
         else if (kind === 'tree') { g.moveTo(-1.6, 24); g.lineTo(-1.2, -2); g.lineTo(1.2, -2); g.lineTo(1.6, 24); g.closePath(); for (let i = 0; i < 5; i++) { const yy = -4 - i * 6, ww = 14 - i * 2.2; g.moveTo(0, yy - 6); g.quadraticCurveTo(ww, yy, 0, yy + 2); g.quadraticCurveTo(-ww, yy, 0, yy - 6); } }
         else if (kind === 'flower') { for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; g.moveTo(0, 0); g.ellipse(Math.cos(a) * 6, Math.sin(a) * 6, 6, 3, a, 0, 6.29); } }
         else if (kind === 'lion') { g.moveTo(-24, 4); g.quadraticCurveTo(-22, -12, -4, -12); g.quadraticCurveTo(8, -24, 20, -14); g.quadraticCurveTo(26, -8, 22, 0); g.lineTo(18, 22); g.lineTo(13, 22); g.lineTo(12, 6); g.lineTo(-14, 6); g.lineTo(-17, 22); g.lineTo(-21, 22); g.lineTo(-22, 6);
           g.quadraticCurveTo(-34, 0, -30, -12); g.quadraticCurveTo(-28, -2, -24, 4); g.closePath(); }
-        g.fill('evenodd'); g.stroke(); g.restore();
+        g.fill('evenodd'); if (kind !== 'flower' && kind !== 'tree') dye(g, col); g.stroke(); g.restore();
       };
 
       // a band of small ivory lozenges (the "diamond chain" round every edge in the photographs)
@@ -90,9 +109,15 @@
       });
       const faceMat = K.mat({ map: faceT, color: '#ffffff', roughness: .55, clearcoat: .12, clearcoatRoughness: .4 });
       /* ---------- the body's sides: lozenge bands, four panels of figures in dyed ivory ---------- */
-      const VIGN = [   // after the photographs: running deer and hounds, mounted archers, birds; camels led by a foreigner on one side
-        [['runner', 1], ['hound', 2]], [['runner', 0], ['hound', 3], ['hunter', 1]], [['bird', 0], ['hunter', 2], ['runner', 3]], [['hound', 1], ['runner', 0], ['bird', 2]],
-        [['man', 1], ['camel', 0], ['camel', 3]], [['hunter', 0], ['runner', 2]], [['runner', 3], ['hound', 0], ['bird', 1]], [['flower', 2], ['hunter', 3], ['hound', 0]],
+      const VIGN = [   // all sixteen panels after the Shōsōin's detail photographs (CO0000000428–436), four to a side
+        // side A (a drawer): parrots on grapes · a man leading camels, a plant · a stag and a winged beast · a deer, a hound, a rider
+        [['parrot', 2], ['parrot', 2]], [['man', 0], ['camel', 1], ['camel', 2], ['plant', 2]], [['runner', 1], ['lion', 2]], [['runner', 1], ['hound', 0], ['hunter', 2]],
+        // side C (the other drawer): camels · mounted hunters · long-tailed birds about a plant · pheasants among leaves
+        [['camel', 1], ['camel', 2]], [['hunter', 0], ['hound', 1], ['hunter', 0]], [['parrot', 2], ['plant', 2], ['parrot', 0]], [['parrot', 1], ['plant', 2], ['parrot', 1]],
+        // side B: riders hunting · a hare, a plant, deer · camels and a seated man · geese and a plant
+        [['hunter', 1], ['hound', 0], ['hunter', 2]], [['hare', 0], ['plant', 2], ['deer', 1], ['deer', 3]], [['camel', 1], ['man', 0], ['camel', 2]], [['bird', 2], ['plant', 2], ['bird', 1]],
+        // side D: a winged beast and two deer · long-tailed birds facing over a plant · men and camels · a plant and two running beasts
+        [['lion', 1], ['runner', 2], ['runner', 1]], [['parrot', 2], ['plant', 2], ['parrot', 2]], [['camel', 2], ['man', 0], ['camel', 1], ['man', 1]], [['plant', 2], ['hound', 0], ['hound', 2]],
       ];
       const PAL = [C.iv, C.red, C.grn, '#d8b878'];
       const sideTex = (seed, drawerAt) => K.tex(2048, Math.round(2048 * (BODY - TOP) / S), (g, w, h) => {
@@ -102,8 +127,8 @@
         for (let i = 0; i < 4; i++) { const x0 = i * pw;
           chain(g, x0 + s * .75, cb, h - 2 * cb, s * .75, true);
           g.strokeStyle = C.iv; g.lineWidth = s * .05; g.strokeRect(x0 + s * .85, cb + s * .1, pw - s * .95, h - 2 * cb - s * .2);
-          const v = VIGN[(seed * 4 + i) % VIGN.length], cy = h / 2;
-          v.forEach(([kd, c], n) => { const x = x0 + s * .6 + (n + .5) * (pw - s * .7) / v.length; sil(g, kd, x, cy, s * (kd === 'flower' ? .05 : kd === 'camel' || kd === 'man' ? .05 : .052), kd === 'flower' ? C.grn : PAL[(c + seed) % 4]); });
+          const v = VIGN[(seed * 4 + i) % VIGN.length], cy = h * .54;
+          v.forEach(([kd, c], n) => { const x = x0 + s * .6 + (n + .5) * (pw - s * .7) / v.length; sil(g, kd, x, cy, s * (v.length > 3 ? .034 : .04), kd === 'plant' ? C.grn : PAL[c % 4]); });
         }
         chain(g, w, cb, h - 2 * cb, s * .75, true);
       });
@@ -114,24 +139,25 @@
       const edgeM = K.mat({ map: edgeT, color: '#ffffff', roughness: .45, clearcoat: .35 });
       add(new TT.BoxGeometry(S + .1, TOP, S + .1), [edgeM, edgeM, faceMat, shitan, edgeM, edgeM], 0, H - TOP / 2, 0);
       /* ---------- the 床脚: corner legs, a post in the middle of each side, openings with cusped tops, the floor rail ---------- */
-      const LEG = 1.8, POST = 1.6, OH = BASE - RAIL - .05;   // leg / post width; the openings' height (the cusps hang right under the body)
+      const LEG = 1.45, POST = 1.9, OH = BASE - RAIL - .05;   // leg / post width; the openings' height (the cusps hang right under the body)
       const skirt = new TT.Shape(); skirt.moveTo(-S / 2, 0); skirt.lineTo(S / 2, 0); skirt.lineTo(S / 2, BASE - RAIL); skirt.lineTo(-S / 2, BASE - RAIL); skirt.closePath();
-      const open = (x0, x1) => { const p = new TT.Path(), R = OH * .43, top = OH, xa0 = x0 + R, xa1 = x1 - R, nC = 7, cw = (xa1 - xa0) / nC;
-        // the opening's ends are almost half-round (photographs of each side), its top a row of hanging cusps
-        p.moveTo(x0 + R, 0); p.lineTo(x1 - R, 0); p.quadraticCurveTo(x1, 0, x1, R); p.lineTo(x1, top - R); p.quadraticCurveTo(x1, top - .3, xa1, top - .45);
-        for (let i = nC; i > 0; i--) { const xa = xa0 + i * cw, xb = xa - cw; p.quadraticCurveTo((xa + xb) / 2, top - 1.6, xb, top - .45); }
-        p.quadraticCurveTo(x0, top - .3, x0, top - R); p.lineTo(x0, R); p.quadraticCurveTo(x0, 0, x0 + R, 0); return p; };
+      const open = (x0, x1) => { const p = new TT.Path(), top = OH, E = 1.55, B = 1.9, nC = 7, xa0 = x0 + E, xa1 = x1 - E, cw = (xa1 - xa0) / nC, dip = 1.45, at = .5;
+        // (the Shōsōin's detail photographs CO0000000428–430) each end a full round bulge — the leg narrowest two-thirds of the way up and
+        // spreading to its foot — and across the top seven arches, their points hanging down between them
+        p.moveTo(x0 + B, 0); p.lineTo(x1 - B, 0); p.bezierCurveTo(x1 + .35, .15, x1 + .45, top - 1.3, xa1, top - dip);
+        for (let i = nC; i > 0; i--) { const xa = xa0 + i * cw, xb = xa - cw; p.bezierCurveTo(xa - cw * .1, top - at + .15, xb + cw * .1, top - at + .15, xb, top - dip); }
+        p.bezierCurveTo(x0 - .45, top - 1.3, x0 - .35, .15, x0 + B, 0); return p; };
       const half = (S - 2 * LEG - POST) / 2;
       skirt.holes.push(open(-S / 2 + LEG, -S / 2 + LEG + half), open(S / 2 - LEG - half, S / 2 - LEG));
       const skG = new TT.ExtrudeGeometry(skirt, { depth: 1.2, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1, curveSegments: 10 });
       // the legs' faces: dark shitan edged in ivory, little birds and deer set into the legs and the post
       const legT = K.tex(2048, Math.round(2048 * (BASE - RAIL) / S), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); const s = w / S;
         g.strokeStyle = C.iv; g.lineWidth = s * .08; g.strokeRect(s * .15, s * .1, w - s * .3, h - s * .2);
-        g.strokeStyle = '#d8bb7c'; g.lineWidth = s * .09; skirt.holes.forEach(hp => { g.beginPath(); hp.getPoints(24).forEach((p, i) => { const X = (p.x + S / 2) * s, Y = h - p.y * s; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.closePath(); g.stroke(); });
+        g.strokeStyle = '#e4cf9a'; g.lineWidth = s * .1; skirt.holes.forEach(hp => { g.beginPath(); hp.getPoints(24).forEach((p, i) => { const X = (p.x + S / 2) * s, Y = h - p.y * s; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.closePath(); g.stroke(); });
         [[LEG / 2, 'bird', .8], [LEG / 2, 'deer', .3], [S / 2, 'bird', .75], [S / 2, 'flower', .35], [S - LEG / 2, 'bird', .8], [S - LEG / 2, 'deer', .3]].forEach(([x, kd, fy], i) => sil(g, kd, x * s, h * (1 - fy), s * .035, [C.box, C.grn, C.pink][i % 3])); });
       legT.repeat.set(1 / S, 1 / (BASE - RAIL)); legT.offset.set(.5, 0);
       const legM = K.mat({ map: legT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
-      for (let i = 0; i < 4; i++) { const m = new TT.Mesh(skG, [legM, shitan]), a = i * Math.PI / 2; m.position.set(Math.sin(a) * (S / 2 - 1.2), RAIL, Math.cos(a) * (S / 2 - 1.2)); m.rotation.y = a; G.add(m); }
+      for (let i = 0; i < 4; i++) { const m = new TT.Mesh(skG, [legM, shitan]), a = i * Math.PI / 2; m.position.set(Math.sin(a) * (S / 2 - 1.2), RAIL, Math.cos(a) * (S / 2 - 1.2)); m.rotation.y = a; m.scale.x = .995; G.add(m); }   // (each panel a hair short: its end face lay in the same plane as the next panel's front and the two fought at the corner legs — a flicker)
       add(new TT.BoxGeometry(S - 2.4, .5, S - 2.4), shitan, 0, BASE - .25, 0);   // the floor of the body
       // the floor rail: horn over red (華角), dark flowers; its outer faces with the lozenge band
       const kakT = K.tex(1024, 128, (g, w, h) => { g.fillStyle = '#9c3a24'; g.fillRect(0, 0, w, h); const n = K.noise(5);
@@ -142,17 +168,19 @@
       const railSide = K.tex(2048, Math.round(2048 * RAIL / S), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); chain(g, 0, 0, w, h, false); });
       const rsM = K.mat({ map: railSide, color: '#ffffff', roughness: .45, clearcoat: .35 });
       const RW = 3.0;
-      [[S + .3, RW, 0, S / 2 - RW / 2 + .15], [S + .3, RW, 0, -S / 2 + RW / 2 - .15]].forEach(([w, d, x, z]) => add(new TT.BoxGeometry(w, RAIL, d), [rsM, rsM, kak, shitan, z > 0 ? rsM : shitan, z > 0 ? shitan : rsM], x, RAIL / 2, z));
+      const rsEnd = rsM.clone(); rsEnd.map = railSide.clone(); rsEnd.map.repeat.set(RW / S, 1); rsEnd.map.needsUpdate = true;   // the frame's short end faces: the same band at the same scale (it was the whole length squeezed into 3 cm)
+      [[S + .3, RW, 0, S / 2 - RW / 2 + .15], [S + .3, RW, 0, -S / 2 + RW / 2 - .15]].forEach(([w, d, x, z]) => add(new TT.BoxGeometry(w, RAIL, d), [rsEnd, rsEnd, kak, shitan, z > 0 ? rsM : shitan, z > 0 ? shitan : rsM], x, RAIL / 2, z));
       [[RW, S - 2 * RW + .3, S / 2 - RW / 2 + .15, 0], [RW, S - 2 * RW + .3, -S / 2 + RW / 2 - .15, 0]].forEach(([w, d, x, z]) => { const k2 = kak.clone(); k2.map = kakT.clone(); k2.map.center.set(.5, .5); k2.map.rotation = Math.PI / 2; k2.map.needsUpdate = true; add(new TT.BoxGeometry(w, RAIL, d), [x > 0 ? rsM : shitan, x > 0 ? shitan : rsM, k2, shitan, shitan, shitan], x, RAIL / 2, z); });
       /* ---------- the drawers: at diagonally opposite ends of the two side faces (±x); the near one pulled out ---------- */
-      const DW = S / 4 - .95, DH = BODY - TOP - 1.75, OUT = 8.6, gilt = K.mat({ color: '#d6a84c', roughness: .3, metalness: 1 });
+      const DW = S / 4 - .95, DH = BODY - TOP - 1.75, OUT = 6.4, gilt = K.mat({ color: '#d6a84c', roughness: .3, metalness: 1 });
       const dark = K.mat({ color: '#2a1810', roughness: .6 });
       const DG = new TT.Group(); DG.rotation.y = 0; G.add(DG);
       const drawer = (sx, z, out) => { const g2 = new TT.Group(); g2.position.set(sx * (S / 2 + out), BASE + (BODY - TOP) / 2, z); g2.rotation.y = sx > 0 ? Math.PI / 2 : -Math.PI / 2; DG.add(g2);
         // the drawer front is one of the side's panels: birds and flowers in dyed ivory, a large beaded gilt ring in the middle (side A)
         const dfT = K.tex(1024, Math.round(1024 * DH / DW), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); const s2 = w / DW;
           g.strokeStyle = C.iv; g.lineWidth = s2 * .05; g.strokeRect(s2 * .1, s2 * .1, w - s2 * .2, h - s2 * .2);
-          sil(g, 'bird', w * .22, h * .45, s2 * .06, C.grn); sil(g, 'flower', w * .22, h * .78, s2 * .035, C.red); sil(g, 'bird', w * .78, h * .45, s2 * .06, C.grn); g.save(); g.translate(w * .78, 0); g.scale(-1, 1); g.restore(); sil(g, 'flower', w * .78, h * .78, s2 * .035, C.red); });
+          const kd = sx > 0 ? 'parrot' : 'camel';   // (one drawer carries the parrots, the other two camels)
+          sil(g, kd, w * .2, h * .48, s2 * .05, sx > 0 ? C.grn : C.red); g.save(); g.translate(w, 0); g.scale(-1, 1); sil(g, kd, w * .2, h * .48, s2 * .05, C.grn); g.restore(); });
         const f = new TT.Mesh(new TT.BoxGeometry(DW, DH, .45), [dark, dark, dark, dark, K.mat({ map: dfT, color: '#ffffff', roughness: .5, clearcoat: .35 }), dark]); g2.add(f);
         const RR = .78, ring = new TT.Mesh(new TT.TorusGeometry(RR, .16, 10, 32), gilt); ring.position.set(0, -.15, .55); g2.add(ring);
         for (let k = 0; k < 16; k++) { const a = k / 16 * 6.283, b = new TT.Mesh(new TT.SphereGeometry(.17, 10, 8), gilt); b.position.set(Math.cos(a) * RR, -.15 + Math.sin(a) * RR, .62); g2.add(b); }   // the beaded ring

@@ -12,7 +12,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../amazons/', VER = '?v=17';   // same file / version as amazons/app.js ENGINE_URL → shared cache
+  const BASE = '../amazons/', VER = '?v=19';   // same file / version as amazons/app.js ENGINE_URL → shared cache
   let engP = null;
   function loadEngine() {
     if (window.AmazonsEngine) return Promise.resolve(window.AmazonsEngine);
@@ -373,7 +373,7 @@
 
   /* ---------- the board card: Lv.1 … Lv.23 (amazons/i18n-am*.js) ---------- */
   const LVD = {"ja": ["入門：1手先の形だけを見る", "初級〜中級：陣地を数えて指す", "上級：数手先まで読み合う", "最上級：深く読んで閉じ込める"], "en": ["Beginner: sees only the next position", "Novice–intermediate: counts territory", "Advanced: reads a few moves ahead", "Expert: reads deep and boxes you in"], "zh": ["入门：只看下一步的形状", "初级～中级：计算领地再走", "高级：互相计算几步之后", "最强：深入计算，把你困住"], "zh-TW": ["入門：只看下一步的形狀", "初級～中級：算好領地再走", "高級：互相計算幾步之後", "最強：深入計算，把你困住"], "ko": ["입문: 바로 다음 모양만 봄", "초급~중급: 영역을 세며 둠", "상급: 몇 수 앞을 서로 읽음", "최상급: 깊이 읽어 가둠"], "es": ["Principiante: solo ve la próxima posición", "Novato–intermedio: cuenta el territorio", "Avanzado: calcula unas jugadas", "Experto: calcula hondo y te encierra"], "fr": ["Débutant : voit la position suivante", "Novice–intermédiaire : compte le territoire", "Avancé : calcule quelques coups", "Expert : calcule loin et vous enferme"], "pt": ["Iniciante: vê só a próxima posição", "Novato–intermediário: conta o território", "Avançado: calcula alguns lances", "Especialista: calcula fundo e te prende"], "de": ["Einsteiger: sieht nur die nächste Stellung", "Anfänger–Mittel: zählt das Gebiet", "Fortgeschritten: rechnet einige Züge", "Experte: rechnet tief und sperrt dich ein"], "ru": ["Новичок: видит только следующую позицию", "Начальный–средний: считает территорию", "Продвинутый: просчитывает несколько ходов", "Эксперт: считает глубоко и запирает"], "tr": ["Başlangıç: yalnız sonraki konumu görür", "Acemi–orta: bölgeyi sayar", "İleri: birkaç hamle hesaplar", "Uzman: derin hesaplar ve seni kapatır"], "id": ["Pemula: hanya melihat posisi berikutnya", "Dasar–menengah: menghitung wilayah", "Mahir: membaca beberapa langkah", "Ahli: membaca dalam dan mengurungmu"], "hi": ["शुरुआती: बस अगली स्थिति देखता है", "नौसिखिया–मध्यम: क्षेत्र गिनता है", "उन्नत: कुछ चालें आगे पढ़ता है", "विशेषज्ञ: गहराई से पढ़कर घेर लेता है"], "ar": ["مبتدئ: يرى الوضع التالي فقط", "مبتدئ–متوسط: يحسب المنطقة", "متقدم: يقرأ بضع نقلات للأمام", "خبير: يقرأ بعمق ويحاصرك"]};
-  const RATING = [0, 100, 165, 280, 395, 435, 470, 560, 695, 830, 970, 1110, 1200, 1250, 1290, 1445, 1590, 1740, 1920, 2155, 2295, 2385, 2450, 2500, 2700, 2800, 2900];   // amazons RT_LV
+  const RATING = [0, 100, 165, 280, 395, 435, 470, 560, 695, 830, 970, 1110, 1200, 1250, 1290, 1445, 1590, 1740, 1920, 2155, 2295, 2385, 2450, 2500, 2565, 2615, 2815, 2915, 3015];   // amazons RT_LV
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
@@ -395,7 +395,7 @@
   // 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–23 are the levels people play (steps
   // added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
   // level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
-  const LVX = [[1], [2], [3], [4], [5], [6], [7], [7, 8, 0.5], [8], [8, 9, 0.5], [9], [10], [11], [12], [13], [13, 14, 0.5], [14], [15], [16], [17], [18], [19], [20], [21], [22], [23]], LV_HUMAN = 23, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];   // LV_MIG: an old level → the new one (saved settings)
+  const LVX = [[1], [2], [3], [4], [5], [6], [7], [7, 8, 0.5], [8], [8, 9, 0.5], [9], [10], [11], [12], [13], [13, 14, 0.5], [14], [15], [16], [17], [18], [19], [20], [24], [25], [21], [22], [23]], LV_HUMAN = 23, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];   // LV_MIG: an old level → the new one (saved settings)
   const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
   const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
   const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
@@ -410,5 +410,5 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.amazons = { names: l => (TX[l] || TX.en).n, levels: 26, reward: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };
+  window.Atlas3D.amazons = { names: l => (TX[l] || TX.en).n, levels: 28, reward: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };
 })();
