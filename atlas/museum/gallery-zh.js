@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Simplified Chinese). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).zh = {
-  ui: { flip: '翻面', guideH: '向导：馆藏枭', guide: '逛遍馆藏，馆藏枭就会一次比一次打扮得更漂亮来见你', gift: '新的阿特拉莫来了！', sub: "世界各地博物馆珍藏的游戏史瑰宝。每件珍品都以3D重现——仿佛拿在手中，转动细看。", collection: "馆藏", special: "特别展示", lock: "达成{n}个{g}成就后开放", loading: "正在准备展柜…", fail: "展品加载失败",
+  ui: { p_start: "开始", play_ballinderry: "布兰杜布", p_level: "对手", p_side: "先后", p_first: "先手", p_second: "后手", p_stop: "结束对局", p_you: "你", p_turn: "轮到你", p_think: "思考中…", p_win: "你赢了", p_lose: "你输了", p_draw: "平局", flip: '翻面', guideH: '向导：馆藏枭', guide: '逛遍馆藏，馆藏枭就会一次比一次打扮得更漂亮来见你', gift: '新的阿特拉莫来了！', sub: "世界各地博物馆珍藏的游戏史瑰宝。每件珍品都以3D重现——仿佛拿在手中，转动细看。", collection: "馆藏", special: "特别展示", lock: "达成{n}个{g}成就后开放", loading: "正在准备展柜…", fail: "展品加载失败",
     hint: "拖动旋转 · 滚轮缩放 · 点数字看细节", hintT: "拖动旋转 · 双指缩放", spin: "缓慢旋转", reset: "回到初始视角", close: "关闭",
     date: "年代", where: "出土 / 传承", museum: "收藏", mat: "材质", size: "尺寸", look: "看点", aboutModel: "关于此3D模型", sources: "参考资料", play: "玩{g}" },
   ex: {
@@ -50,7 +50,7 @@
         ["盘侧的花鸟", "盘的侧面：以细竹条勾出的卷草、象牙花朵、染绿鹿角的叶子，以及展开条纹翅膀飞翔的鸟。"],
         ["床脚", "颜色稍浅的床脚，长边各开两个大壸门，中间留下束腰的立柱和纤细的角足，皆饰卷草木画。"],
         ["骰子", "正仓院另外还藏有象牙骰子（北仓17，边长约1.3–1.4厘米）。与今天一样，相对两面的点数之和为7。这里放了两颗作为参考。"]],
-      model: "尺寸依据正仓院的记录。形状和纹样依据公开照片，细密的木画有所简化。",
+      model: "尺寸依据正仓院的记录。侧面和盘面的木画取自一张纹样清晰的照片（看来是仿制品），拉正后贴上。",
       src: [["正仓院，“木画紫檀双六局”", "https://shosoin.kunaicho.go.jp/treasures/?id=0000010086&index=10"], ["正仓院展，“悠久の輝き（前編）”（盘面的新月与花）", "https://shosoin-ten.jp/articles/detail/000453.html"], ["正仓院展，“木画紫檀双六局”", "https://shosoin-ten.jp/info/treasures/000414/"], ["奈良新闻，“時を超えたたからもの(2)”", "https://www.nara-np.co.jp/news/20251103211942.html"]] },
     pyrgus: { name: "韦特魏斯-弗罗伊茨海姆骰塔", alt: "古罗马的骰塔（turricula / pyrgus）", date: "公元4世纪", where: "德国（罗马帝国日耳曼尼亚行省）", found: "韦特魏斯-弗罗伊茨海姆附近的一处罗马别墅遗址；1983年以铜板的形态被发现，由博物馆重新组装",
       museum: "波恩莱茵州立博物馆", no: "Inv. 85.0269.00", mat: "铜合金板", size: "高22厘米 · 9 × 9厘米",
@@ -74,7 +74,7 @@
         ["人头", "从边框突出的一个头像——1932年的报告称之为“一个维京样式的粗糙人头”。它大概是把手。"],
         ["对侧的圆钮", "对侧边缘有一个短颈的小圆钮，被认为是动物头，可能也是把手。"],
         ["断裂处", "棋盘出土时已断成两半。"]],
-      model: "形状、布局、边框的雕刻和盘面的损伤均取自一张俯拍照片。厚度为推定。",
+      model: "形状、布局、边框的雕刻和盘面的损伤均取自一张俯拍照片。厚度为推定。 棋子没有出土，棋子的形状为推定。",
       src: [["爱尔兰国家博物馆，“The Ballinderry gaming board”", "https://museum.ie/en-IE/Collections-Research/Irish-Antiquities-Division-Collections/Collections-List-(1)/Viking/The-Ballinderry-gaming-board"], ["1932年发现时的报纸报道（Papers Past：尺寸、纹样、头像）", "https://paperspast.natlib.govt.nz/newspapers/MS19321214.2.22"], ["Westmeath Examiner（布兰杜布、兽头）", "https://www.westmeathexaminer.ie/?p=130666"]] },
     lewis: { name: "路易斯棋子", alt: "以海象牙雕刻的中世纪国际象棋棋子", date: "约1150–1200年", where: "苏格兰（出土于路易斯岛）·可能制作于挪威", found: "1831年或更早发现于路易斯岛——通常认为出土地点是乌伊格湾，但也有人提出是更南边的梅利斯塔",
       museum: "大英博物馆（伦敦）82枚·苏格兰国家博物馆（爱丁堡）11枚", no: "1831,1101.78等", mat: "海象牙（少数为鲸齿）", size: "高约4–10厘米（王9.8厘米，兵4厘米）",

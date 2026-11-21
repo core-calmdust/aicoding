@@ -7,7 +7,7 @@
    stand (with sledge) 55.0 × 17.5 × 20.2; 28 high overall (Carter). The pieces kept with it: two ivory knuckle-bones and two
    pairs of casting sticks, black ebony above and white ivory below, one pair ending in fingers, one in fox heads (about 17.5 long).
    Estimates: the wording and layout of the texts (Tutankhamun's throne name in cartouches, the rest in the manner of royal
-   texts), the signs on squares 15 and 26–30.
+   texts), the signs on squares 15 and 26–29 follow a modern replica (the museum's photographs do not show them clearly).
    Checked 2026-11-21 against photographs of the set in the Egyptian Museum (Global Egyptian Museum 15033; egypt-museum.com): brown
    ebony, one band of text in the upper middle of the sides, legs with a heavy thigh, ribbed gold drums under the paws, runners with
    upturned ends and cross-bars; shown as displayed, the drawer open and reels and cones on the board. */
@@ -77,23 +77,44 @@
       const sideM = mkT(sideT), sideM2 = mkT(sideT2), endM = mkT(endT), frameM = mkT(frameT);
       const box = new TT.Mesh(new TT.BoxGeometry(L, BH, W), [frameM, endM, ebony, ebony, sideM, sideM2]); box.position.set(0, Y0 + BH / 2, 0); G.add(box);
       // the top field: one ivory slab, the raised ebony strips over it (the square signs are painted on the slab's texture)
-      const signs = { 15: 'ankh', 26: 'nfr', 27: 'water', 28: 'birds', 29: 'men' };
-      const topT = K.tex(1024, Math.round(1024 * fieldD / fieldW), (g, w, h) => {
+      // the signs on squares 15 and 26–29, after a careful modern replica of this board (the owner's photographs): cut as outlines — each
+      // stroke a pair of fine lines — and large in their squares. 15: the ka's two arms holding an ankh, lying with its top toward the
+      // start of the row; 26: three nefer signs standing, the round end downward; 27: five rows of water; 28: three storks (the bas);
+      // 29: two kneeling men, arms raised. The last four stand upright for a player sitting at the long side.
+      const signs = { 15: 'ka', 26: 'nfr', 27: 'water', 28: 'birds', 29: 'men' };
+      const topT = K.tex(2048, Math.round(2048 * fieldD / fieldW), (g, w, h) => {
         const s = w / fieldW; g.drawImage(ivoryT.image, 0, 0, w, h);
-        g.strokeStyle = 'rgba(96,62,30,.8)'; g.fillStyle = 'rgba(96,62,30,.8)'; g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = s * .07;
+        const lay = document.createElement('canvas'); lay.width = w; lay.height = h; const q = lay.getContext('2d'); q.lineCap = 'round'; q.lineJoin = 'round';
+        const INK = 'rgba(92,50,20,1)', T = .042;   // (T: the fine line, in units of the sign's half-size)
+        const thin = fn => { q.beginPath(); fn(); q.strokeStyle = INK; q.lineWidth = T; q.stroke(); };
+        const bar = (fn, wd) => { q.beginPath(); fn(); q.strokeStyle = INK; q.lineWidth = wd; q.stroke(); q.globalCompositeOperation = 'destination-out'; q.strokeStyle = '#000'; q.lineWidth = wd - T * 2; q.stroke(); q.globalCompositeOperation = 'source-over'; };   // a stroke as two fine lines
+        const hole = fn => { q.beginPath(); fn(); q.globalCompositeOperation = 'destination-out'; q.fillStyle = '#000'; q.fill(); q.globalCompositeOperation = 'source-over'; q.strokeStyle = INK; q.lineWidth = T; q.stroke(); };   // a closed shape that covers what lies behind it
+        const DRAW = {
+          ka() { bar(() => { q.moveTo(-.72, .78); q.lineTo(.72, .78); }, .1);
+            [-1, 1].forEach(d => { bar(() => { q.moveTo(d * .66, .7); q.lineTo(d * .66, -.2); q.bezierCurveTo(d * .66, -.5, d * .9, -.5, d * .92, -.78); }, .12); thin(() => { q.moveTo(d * .92, -.78); q.lineTo(d * .62, -.62); q.moveTo(d * .92, -.78); q.lineTo(d * .98, -.6); }); hole(() => q.arc(d * .66, .74, .085, 0, 6.29)); });
+            bar(() => { q.moveTo(0, .72); q.lineTo(0, -.05); }, .13); bar(() => { q.moveTo(-.3, -.05); q.lineTo(.3, -.05); }, .11);
+            hole(() => { q.moveTo(0, -.1); q.bezierCurveTo(-.5, -.45, -.25, -.86, 0, -.86); q.bezierCurveTo(.25, -.86, .5, -.45, 0, -.1); }); thin(() => { q.moveTo(0, -.24); q.bezierCurveTo(-.3, -.48, -.15, -.72, 0, -.72); q.bezierCurveTo(.15, -.72, .3, -.48, 0, -.24); }); },
+          nfr() { [-.58, 0, .58].forEach(x => { bar(() => { q.moveTo(x, .3); q.lineTo(x, -.9); }, .1); thin(() => { q.moveTo(x - .17, -.62); q.lineTo(x + .17, -.62); q.moveTo(x - .17, -.76); q.lineTo(x + .17, -.76); });
+            hole(() => q.ellipse(x, .58, .22, .32, 0, 0, 6.29)); thin(() => q.ellipse(x, .6, .15, .23, 0, 0, 6.29)); thin(() => q.ellipse(x, .62, .08, .14, 0, 0, 6.29)); }); },
+          water() { for (let j = -2; j <= 2; j++) bar(() => { const y = j * .3; q.moveTo(-.86, y + .08); for (let k = 1; k <= 12; k++) q.lineTo(-.86 + k * .1433, y + (k % 2 ? -.08 : .08)); }, .1); q.lineJoin = 'round'; },
+          birds() { thin(() => { q.moveTo(-.2, .8); q.lineTo(.75, .8); });
+            [2, 1, 0].forEach(j => { const x = -.05 + j * .22, y = j * -.03;   // the nearest bird last, over the others
+              thin(() => { [-.1, .06].forEach(d => { q.moveTo(x + d, y + .3); q.lineTo(x + d, .8); q.lineTo(x + d + .12, .8); }); });
+              hole(() => { q.moveTo(-.92 + j * .1, y + .12); q.bezierCurveTo(x - .5, y - .05, x - .3, y - .12, x + .05, y - .1); q.bezierCurveTo(x + .3, y - .08, x + .3, y + .34, x - .02, y + .36); q.bezierCurveTo(x - .3, y + .36, x - .5, y + .22, -.92 + j * .1, y + .12); });
+              bar(() => { q.moveTo(x + .16, y + .05); q.bezierCurveTo(x + .34, y - .1, x + .08, y - .4, x + .22, y - .62); }, .1);
+              hole(() => q.ellipse(x + .25, y - .68, .1, .08, 0, 0, 6.29)); thin(() => { q.moveTo(x + .33, y - .7); q.lineTo(x + .52, y - .62); q.lineTo(x + .33, y - .64); }); }); },
+          men() { [-.48, .42].forEach(x => { thin(() => { q.moveTo(x - .4, .8); q.lineTo(x + .42, .8); });
+              hole(() => { q.moveTo(x - .12, -.3); q.lineTo(x + .1, -.32); q.lineTo(x + .16, .2); q.lineTo(x + .4, .28); q.lineTo(x + .36, .5); q.lineTo(x - .05, .5); q.lineTo(x - .05, .62); q.lineTo(x + .34, .62); q.lineTo(x + .34, .76); q.lineTo(x - .38, .76); q.lineTo(x - .3, .5); q.lineTo(x - .18, .3); q.closePath(); });   // the body, kneeling on one knee
+              [0, .14].forEach(d => bar(() => { q.moveTo(x + .02, -.2 + d); q.lineTo(x + .26, -.12 + d); q.lineTo(x + .5, -.42 + d); }, .11));   // both arms raised before him
+              hole(() => q.arc(x, -.5, .16, 0, 6.29)); thin(() => { q.moveTo(x - .16, -.52); q.bezierCurveTo(x - .2, -.74, x + .12, -.74, x + .14, -.58); q.moveTo(x - .16, -.5); q.lineTo(x - .2, -.3); }); }); },
+        };
         for (let n = 1; n <= 30; n++) {
           const sg = signs[n]; if (!sg) continue;
           const r = Math.floor((n - 1) / 10), k = (n - 1) % 10, c = r === 1 ? 9 - k : k;   // the boustrophedon path: 1–10 → 11–20 ← 21–30 →
-          const cx = (ST + c * (SQ + ST) + SQ / 2) * s, cy = (ST + r * (SQ + ST) + SQ / 2) * s, u = SQ * s * .3;
-          g.beginPath();
-          if (sg === 'ankh') { g.ellipse(cx, cy - u * .55, u * .28, u * .38, 0, 0, 6.29); g.moveTo(cx, cy - u * .17); g.lineTo(cx, cy + u); g.moveTo(cx - u * .5, cy - u * .1); g.lineTo(cx + u * .5, cy - u * .1); }
-          else if (sg === 'nfr') { for (let j = -1; j <= 1; j++) { const xx = cx + j * u * .85; g.moveTo(xx + u * .26, cy + u * .55); g.ellipse(xx, cy + u * .55, u * .26, u * .36, 0, 0, 6.29); g.moveTo(xx, cy + u * .2); g.lineTo(xx, cy - u * .9); g.moveTo(xx - u * .26, cy - u * .6); g.lineTo(xx + u * .26, cy - u * .6); } }
-          else if (sg === 'water') { for (let j = -1; j <= 1; j++) { const yy = cy + j * u * .55; g.moveTo(cx - u * .8, yy); for (let q = 0; q < 6; q++) g.lineTo(cx - u * .8 + (q + 1) * u * .27, yy + (q % 2 ? -1 : 1) * u * .14); } }
-          else if (sg === 'birds') { for (let j = -1; j <= 1; j++) { const xx = cx + j * u * .8, yy = cy; g.moveTo(xx - u * .45, yy + u * .25); g.quadraticCurveTo(xx - u * .1, yy - u * .2, xx + u * .15, yy - u * .35); g.quadraticCurveTo(xx + u * .3, yy - u * .75, xx + u * .5, yy - u * .55); g.moveTo(xx + u * .15, yy - u * .35); g.quadraticCurveTo(xx + u * .25, yy + u * .2, xx - u * .45, yy + u * .25); g.moveTo(xx - u * .05, yy + u * .22); g.lineTo(xx - u * .05, yy + u * .8); g.moveTo(xx + u * .1, yy + u * .18); g.lineTo(xx + u * .1, yy + u * .8); } }
-          else if (sg === 'men') { for (let j = -1; j <= 1; j += 2) { const xx = cx + j * u * .6; g.moveTo(xx + u * .16, cy - u * .65); g.arc(xx, cy - u * .65, u * .16, 0, 6.29); g.moveTo(xx, cy - u * .5); g.lineTo(xx - u * .05, cy + u * .25); g.lineTo(xx + u * .4, cy + u * .25); g.lineTo(xx + u * .4, cy + u * .75); g.moveTo(xx - u * .02, cy - u * .2); g.lineTo(xx + u * .42, cy - u * .05); g.moveTo(xx - u * .05, cy + u * .25); g.lineTo(xx - u * .3, cy + u * .75); } }
-          
-          g.stroke();
+          const cx = (ST + c * (SQ + ST) + SQ / 2) * s, cy = (ST + r * (SQ + ST) + SQ / 2) * s, u = SQ * s * .4;
+          q.save(); q.translate(cx, cy); q.rotate(sg === 'ka' ? -Math.PI / 2 : 0); q.scale(u, u); DRAW[sg](); q.restore();
         }
+        g.drawImage(lay, 0, 0);
       });
       const topMat = K.mat({ map: topT, color: '#ffffff', roughness: .42, clearcoat: .2, clearcoatRoughness: .5 });
       const slab = new TT.Mesh(new TT.BoxGeometry(fieldW, .12, fieldD), [ebony, ebony, topMat, ebony, ebony, ebony]); slab.position.set(0, Y0 + BH + .06, 0); G.add(slab);
@@ -119,7 +140,7 @@
       const coneG = new TT.LatheGeometry([[0, 0], [.95, 0], [1.0, .15], [.7, .5], [.42, 1.6], [.3, 2.4], [.34, 2.7], [.2, 2.9], [0, 2.95]].map(([x, y]) => new TT.Vector2(x, y)), 24);
       const sqc = (c, r) => [-fieldW / 2 + ST + c * (SQ + ST) + SQ / 2, Y0 + BH + .12, -fieldD / 2 + ST + r * (SQ + ST) + SQ / 2];
       [[0, 0], [2, 0], [3, 1], [5, 0], [1, 2]].forEach(([c, r]) => { const m = new TT.Mesh(reelG, K.mat({ color: '#b4b89c', roughness: .6 })); m.position.set(...sqc(c, r)); m.scale.setScalar(.82); G.add(m); });
-      [[6, 1], [7, 2], [8, 1], [9, 2], [9, 0]].forEach(([c, r], i) => { const m = new TT.Mesh(coneG, i === 1 || i === 3 ? faience : ivory); m.position.set(...sqc(c, r)); m.scale.set(.75, .9, .75); G.add(m); });
+      [[6, 1], [4, 2], [8, 1], [9, 2], [9, 0]].forEach(([c, r], i) => { const m = new TT.Mesh(coneG, i === 1 || i === 3 ? faience : ivory); m.position.set(...sqc(c, r)); m.scale.set(.75, .9, .75); G.add(m); });
       /* ---------- the stand: rails, four animal legs on drums, two sledge runners ---------- */
       const RL = 46.0, RW = 16.2, RH = 1.8;   // the top frame (rebated for the box)
       [[RL, RH, .9, 0, RW / 2 - .45], [RL, RH, .9, 0, -RW / 2 + .45], [.9, RH, RW, RL / 2 - .45, 0], [.9, RH, RW, -RL / 2 + .45, 0]].forEach(([w, h, d, x, z]) => { const m = new TT.Mesh(new TT.BoxGeometry(w, h, d), ebony); m.position.set(x, STH - h / 2, z); G.add(m); });

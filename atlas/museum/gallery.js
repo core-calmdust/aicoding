@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 85;
+  const V = 99;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -33,6 +33,7 @@
     { id: 'kofukuji', game: 'shogi', cm: 1, view: [0, .95, .78], lock: { game: 'shogi', ach: 3 } },   // (spots: from the model's userData)
   ];
   const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
+  const PLAY = { ballinderry: { game: 'tafl', levels: 30 } };   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
   const ui = (l, k) => { const a = T(l).ui || {}, b = T('en').ui || {}; return a[k] != null ? a[k] : (b[k] != null ? b[k] : k); };
   const ex = (l, id) => Object.assign({}, (T('en').ex || {})[id] || {}, (T(l).ex || {})[id] || {});
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -71,7 +72,10 @@
     const e = EX.find(x => x.id === id); if (!e || V3) return;
     const t = ex(lang, id), g = ctx.games.find(x => x.id === e.game), B0 = e.flip ? { flip: true } : null;
     const ov = document.createElement('div'); ov.className = 'exv'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
-    ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div>
+    ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div><div class="exhud" aria-live="polite"></div>${PLAY[id] ? `<div class="expcard"><b>${esc(ui(lang, 'play_' + id))}</b>
+          <div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expdd" data-k="plv" data-v="1"><button type="button" class="expdd-b" aria-haspopup="listbox"><b>Lv.1</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${Array.from({ length: PLAY[id].levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}"${i ? '' : ' class="on"'}>Lv.${i + 1}</button>`).join('')}</div></div></div>
+          <div class="expf"><span>${esc(ui(lang, 'p_side'))}</span><div class="expseg" data-k="pside" data-v="1"><button type="button" data-v="1" class="on">${esc(ui(lang, 'p_first'))}</button><button type="button" data-v="2">${esc(ui(lang, 'p_second'))}</button></div></div>
+          <button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><button type="button" class="explay stop" data-k="pstop" hidden>${esc(ui(lang, 'p_stop'))}</button></div>` : ''}
         <div class="exscale" aria-hidden="true" dir="ltr"><i></i><span>10 cm</span></div>
         <p class="exhint">${esc(ui(lang, phone() ? 'hintT' : 'hint'))}</p>
         <div class="exbtns"><button type="button" class="exb" data-k="spin" aria-label="${esc(ui(lang, 'spin'))}" title="${esc(ui(lang, 'spin'))}"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg></button>${B0 && B0.flip ? `<button type="button" class="exb" data-k="flip" aria-label="${esc(ui(lang, 'flip'))}" title="${esc(ui(lang, 'flip'))}"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></button>` : ''}<button type="button" class="exb" data-k="reset" aria-label="${esc(ui(lang, 'reset'))}" title="${esc(ui(lang, 'reset'))}"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
@@ -92,8 +96,30 @@
     const onPop = () => { hist = false; close(); };
     addEventListener('popstate', onPop);
     const close = () => { if (!V3 || V3.ov !== ov) return; removeEventListener('popstate', onPop); if (hist) { hist = false; try { history.back(); } catch (x) {} }
-      teardown(); ov.classList.remove('on'); document.documentElement.classList.remove('exv-open'); setTimeout(() => ov.remove(), 260); };
+      if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); teardown(); ov.classList.remove('on'); document.documentElement.classList.remove('exv-open'); setTimeout(() => ov.remove(), 260); };
     ov.querySelector('.exclose').onclick = close;
+    { const pb = ov.querySelector('[data-k="play"]'), sb = ov.querySelector('[data-k="pstop"]'), P = PLAY[id];   // 所蔵品で遊ぶ: a game on this board, here in the museum (museum/play.js)
+      if (pb && P) { const hudEl = ov.querySelector('.exhud'), PK = 'atlas-museum-play', lvS = ov.querySelector('[data-k="plv"]'), sdS = ov.querySelector('[data-k="pside"]');
+        // the card's own pull-downs (the portal's rule: no system <select>): a button showing the choice, its list opening upward over the case
+        let lock = false; const setDD = (dd, v) => { const o = [...dd.querySelectorAll('.expdd-l button')], b = o.find(x => +x.dataset.v === +v) || o[0]; dd.dataset.v = b.dataset.v; dd.querySelector('.expdd-b b').textContent = b.textContent; o.forEach(x => x.classList.toggle('on', x === b)); };
+        const shut = () => ov.querySelectorAll('.expdd.open').forEach(d => d.classList.remove('open'));
+        [lvS].forEach(dd => { dd.querySelector('.expdd-b').onclick = ev => { ev.stopPropagation(); if (lock) return; const was = dd.classList.contains('open'); shut(); if (!was) { dd.classList.add('open'); const on = dd.querySelector('.expdd-l .on'); if (on) on.scrollIntoView({ block: 'nearest' }); } };
+          dd.querySelectorAll('.expdd-l button').forEach(b => b.onclick = ev => { ev.stopPropagation(); setDD(dd, b.dataset.v); shut(); }); });
+        const setSd = v => { v = +v === 2 ? 2 : 1; sdS.dataset.v = v; sdS.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.v === v)); };   // 手番: 先手 / 後手, two buttons side by side (as on the portal's card)
+        sdS.querySelectorAll('button').forEach(b => b.onclick = () => { if (!lock) setSd(b.dataset.v); });
+        ov.addEventListener('click', shut);
+        const setLv = v => setDD(lvS, v);
+        // the levels' names are the game's own (Lv.1 … and the ones above them): filled in once its adapter has loaded
+        if (window.AtlasLazy) AtlasLazy.need(P.game).then(() => { const ad = window.Atlas3D && Atlas3D[P.game]; if (!ad || !ad.levelInfo || !ov.isConnected) return; lvS.querySelectorAll('.expdd-l button').forEach(b => { try { const nm = ad.levelInfo(+b.dataset.v, lang).name; if (nm) b.textContent = nm; } catch (x) {} }); setDD(lvS, lvS.dataset.v); });
+        try { const q = JSON.parse(localStorage.getItem(PK) || '{}')[id]; if (q) { setLv(q.lv); setSd(q.side); } } catch (x) {}
+        const tt = k => ({ 'p.you': ui(lang, 'p_you'), 'p.ai': 'AI', 'p.turn': ui(lang, 'p_turn'), 'p.think': ui(lang, 'p_think'), 'res.win': ui(lang, 'p_win'), 'res.lose': ui(lang, 'p_lose'), 'res.draw': ui(lang, 'p_draw') })[k] || '';
+        const playing = on => { ov.classList.toggle('exv-play', on); pb.hidden = on; sb.hidden = !on; lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
+        sb.onclick = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); };
+        pb.onclick = () => { if (!V3 || !V3.obj) return; pb.disabled = true;
+          try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
+          Promise.all([load('museum/play.js?v=' + V), window.AtlasLazy ? AtlasLazy.need(P.game) : 0]).then(() => { pb.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
+            const ok = AtlasMuseumPlay.start(id, { level: +lvS.dataset.v, side: +sdS.dataset.v, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { hudEl.innerHTML = `<span class="hm">${esc(res.draw ? ui(lang, 'p_draw') : res.win ? ui(lang, 'p_win') : ui(lang, 'p_lose'))}</span>`; } });
+            playing(!!ok); }); }; } }
     const pb = ov.querySelector('.amplay'); if (pb) pb.onclick = () => { close(); setTimeout(() => ctx.open(g.id, null), 280); };
     V3 = { ov, e, close, spin: true };
     const onKey = ev => { if (ev.key === 'Escape') { ev.preventDefault(); close(); return; }
@@ -148,7 +174,7 @@
     scene.add(new TT.HemisphereLight(0xfff2e0, 0x2a1d14, .62)); scene.environmentIntensity = .5;   // (the room's reflections halved, the diffuse fill raised instead: seen at a low angle, glossy tops mirrored the walls and washed out)
     const key = new TT.SpotLight(0xfff0dc, 2.5, 0, .55, .6, 0); key.position.set(r * .2, r * 3.7, r * .5);   // (steep, ~82°: its glare on a flat board then falls outside the camera's range of pitch) key.target.position.set(0, 0, 0); key.castShadow = true;
     key.shadow.mapSize.set(phone() ? 1024 : 2048, phone() ? 1024 : 2048); key.shadow.bias = -.0004; key.shadow.normalBias = .02; key.shadow.camera.near = r * .5; key.shadow.camera.far = r * 8; key.shadow.radius = 4;
-    scene.add(key, key.target);
+    scene.add(key, key.target); V3.key = key;
     // rim and fill come in almost level with the table: they edge and fill the sides but barely touch a flat top. (Higher up — 25° and 17° —
     // each one's mirror image flashed across the whole top of a glossy board as the camera passed: the "white-out" and the flicker.)
     const rim = new TT.DirectionalLight(0xcfe0ff, .6); rim.position.set(-r * 2, r * .08, -r * 2.5); scene.add(rim);
@@ -292,13 +318,13 @@
   }
   function bindInput(el) {
     const pts = new Map(); let pinch = 0, d0 = 0, tap = 0;
-    const down = e => { if (e.target.closest('.exb,.exspot')) return; el.setPointerCapture && el.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); V3.drag = true; V3.tw = null; V3.vel.yaw = V3.vel.pit = 0;
+    const down = e => { if (e.target.closest('.exb,.exspot,.expcard')) return;   /* (a game on the board: no turning — a tap is always a move — but the wheel and a pinch still zoom, as in every game) */ el.setPointerCapture && el.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); V3.dragD = 0; V3.drag = true; V3.tw = null; V3.vel.yaw = V3.vel.pit = 0;
       if (V3.spin) { V3.spin = false; V3.ov.querySelector('[data-k="spin"]').classList.remove('on'); }
       if (pts.size === 2) { const a = [...pts.values()]; pinch = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); d0 = V3.sph.d; }
-      const now = performance.now(); if (pts.size === 1 && now - tap < 320 && V3.home) { tween(V3.home); } tap = now; go(); };
+      const now = performance.now(); if (pts.size === 1 && now - tap < 320 && V3.home && !V3.playing) { tween(V3.home); } tap = now; go(); };
     const move = e => { if (!pts.has(e.pointerId)) return; const p = pts.get(e.pointerId), dx = e.clientX - p[0], dy = e.clientY - p[1]; pts.set(e.pointerId, [e.clientX, e.clientY]);
       if (pts.size === 2) { const a = [...pts.values()], dd = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); V3.sph.d = clampD(d0 * pinch / Math.max(1, dd)); }
-      else { const k = 5.5 / Math.max(300, el.clientWidth); V3.vel.yaw = -dx * k; V3.vel.pit = dy * k; V3.sph.yaw += V3.vel.yaw; V3.sph.pit += V3.vel.pit; }
+      else if (!V3.playing) { V3.dragD = (V3.dragD || 0) + Math.abs(dx) + Math.abs(dy); if (V3.dragD > 8) V3.dragEnd = performance.now(); const k = 5.5 / Math.max(300, el.clientWidth); V3.vel.yaw = -dx * k; V3.vel.pit = dy * k; V3.sph.yaw += V3.vel.yaw; V3.sph.pit += V3.vel.pit; }
       go(); };
     const up = e => { pts.delete(e.pointerId); if (!pts.size) { V3.drag = false; go(); } };
     const wheel = e => { e.preventDefault(); V3.tw = null; V3.sph.d = clampD(V3.sph.d * Math.exp(e.deltaY * .0012)); go(); };
@@ -395,6 +421,6 @@
   };
   const hexRGB = h => { const v = parseInt(h.replace('#', ''), 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; };
 
-  window.AtlasGallery = { render, open, EX, V, kit, _v: () => V3 };   // (_v: the open viewer, for the test tools)
+  window.AtlasGallery = { render, open, EX, V, kit, go, tween, _v: () => V3 };   // (_v: the open viewer, for the test tools)
   window.AtlasEx = window.AtlasEx || {};
 })();

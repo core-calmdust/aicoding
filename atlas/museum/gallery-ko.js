@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Korean). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).ko = {
-  ui: { flip: '뒤집기', guideH: '안내원 뮤제후쿠', guide: '소장품을 둘러볼수록 뮤제후쿠가 조금씩 멋을 내고 찾아와요', gift: '새 아트라모가 찾아왔어요!', sub: "세계의 박물관이 지켜 온 게임 역사의 보물. 3D로 재현한 명품을 손에 든 듯 돌려 보며 자세히 살펴보세요.", collection: "소장품", special: "특별 전시", lock: "{g} 업적 {n}개 달성 시 공개", loading: "전시 케이스를 준비하는 중…", fail: "전시품을 불러오지 못했습니다",
+  ui: { p_start: "플레이", play_ballinderry: "브란두브", p_level: "상대", p_side: "차례", p_first: "선수", p_second: "후수", p_stop: "대국 그만두기", p_you: "나", p_turn: "내 차례", p_think: "생각 중…", p_win: "승리", p_lose: "패배", p_draw: "무승부", flip: '뒤집기', guideH: '안내원 뮤제후쿠', guide: '소장품을 둘러볼수록 뮤제후쿠가 조금씩 멋을 내고 찾아와요', gift: '새 아트라모가 찾아왔어요!', sub: "세계의 박물관이 지켜 온 게임 역사의 보물. 3D로 재현한 명품을 손에 든 듯 돌려 보며 자세히 살펴보세요.", collection: "소장품", special: "특별 전시", lock: "{g} 업적 {n}개 달성 시 공개", loading: "전시 케이스를 준비하는 중…", fail: "전시품을 불러오지 못했습니다",
     hint: "드래그로 회전 · 휠로 확대 · 번호로 볼거리", hintT: "드래그로 회전 · 핀치로 확대", spin: "천천히 돌리기", reset: "처음 방향으로", close: "닫기",
     date: "연대", where: "출토 · 전래", museum: "소장", mat: "재질", size: "크기", look: "볼거리", aboutModel: "이 3D 모델에 대하여", sources: "출처", play: "{g} 플레이" },
   ex: {
@@ -50,7 +50,7 @@
         ["판 옆면의 꽃과 새", "판의 옆면에는 가는 대나무 선으로 그린 당초에 상아 꽃, 녹색으로 물들인 사슴뿔 잎, 줄무늬 날개를 펴고 나는 새의 목화(木畫)."],
         ["상다리", "조금 밝은 색의 상다리는 긴 쪽에 큰 투각이 2개. 잘록한 가운데 기둥과 가는 모서리 다리에도 당초 목화가 베풀어져 있습니다."],
         ["주사위", "쇼소인에는 상아 주사위도 따로 전해집니다(북창 17, 한 변 약 1.3~1.4cm). 마주 보는 면의 눈을 더하면 7이 되는 것은 오늘날과 같습니다. 여기서는 참고로 2개를 놓았습니다."]],
-      model: "치수는 쇼소인의 기록대로입니다. 형태와 무늬는 공개 사진에 맞췄고, 세밀한 목화는 간략하게 했습니다.",
+      model: "치수는 쇼소인의 기록대로입니다. 옆면과 판 면의 목화는 무늬가 또렷한 사진(모조품으로 보임)을 바로 펴서 입혔습니다.",
       src: [["쇼소인, “木画紫檀双六局”", "https://shosoin.kunaicho.go.jp/treasures/?id=0000010086&index=10"], ["쇼소인전, “悠久の輝き（前編）”(초승달과 꽃)", "https://shosoin-ten.jp/articles/detail/000453.html"], ["쇼소인전, “木画紫檀双六局”", "https://shosoin-ten.jp/info/treasures/000414/"], ["나라신문, “時を超えたたからもの(2)”", "https://www.nara-np.co.jp/news/20251103211942.html"]] },
     pyrgus: { name: "베트바이스-프로이츠하임 주사위 탑", alt: "로마의 주사위 탑(turricula / pyrgus)", date: "서기 4세기", where: "독일(로마 제국 게르마니아)", found: "베트바이스-프로이츠하임 근처의 로마 빌라 유적. 1983년 구리판 상태로 발견되어 박물관에서 다시 조립됨",
       museum: "본 라인 주립 박물관", no: "Inv. 85.0269.00", mat: "구리 합금 판", size: "높이 22cm · 9 × 9cm",
@@ -74,7 +74,7 @@
         ["사람의 머리", "테두리에서 튀어나온 머리. 1932년 보고서는 “바이킹풍의 거친 사람 머리”라고 했습니다. 아마 손잡이였을 것입니다."],
         ["반대쪽 꼭지", "반대쪽 가장자리에는 짧은 목이 달린 작고 둥근 꼭지가 있습니다. 동물 머리로 여겨지며, 이것도 손잡이로 보입니다."],
         ["깨진 자리", "판은 두 조각으로 깨진 채 발견되었습니다."]],
-      model: "형태와 배치, 테두리의 조각, 판 면의 손상은 판을 바로 위에서 찍은 사진에서 가져왔습니다. 두께는 추정입니다.",
+      model: "형태와 배치, 테두리의 조각, 판 면의 손상은 판을 바로 위에서 찍은 사진에서 가져왔습니다. 두께는 추정입니다. 말은 발견되지 않아 말의 모양은 추정입니다.",
       src: [["아일랜드 국립박물관, “The Ballinderry gaming board”", "https://museum.ie/en-IE/Collections-Research/Irish-Antiquities-Division-Collections/Collections-List-(1)/Viking/The-Ballinderry-gaming-board"], ["1932년 발견을 전한 신문 기사(Papers Past: 크기, 무늬, 머리)", "https://paperspast.natlib.govt.nz/newspapers/MS19321214.2.22"], ["Westmeath Examiner(브란두브, 동물 머리)", "https://www.westmeathexaminer.ie/?p=130666"]] },
     lewis: { name: "루이스 체스 말", alt: "바다코끼리 엄니로 조각한 중세 체스 말", date: "1150~1200년경", where: "스코틀랜드(루이스섬에서 발견) · 아마도 노르웨이에서 제작", found: "1831년 또는 그 이전에 루이스섬에서 발견. 흔히 위그만이라고 하지만, 더 남쪽의 멜리스타라는 설도 있다",
       museum: "대영박물관(런던) 82점 · 스코틀랜드 국립박물관(에든버러) 11점", no: "1831,1101.78 외", mat: "바다코끼리 엄니(일부는 고래 이빨)", size: "높이 약 4~10cm(킹 9.8cm, 폰 4cm)",

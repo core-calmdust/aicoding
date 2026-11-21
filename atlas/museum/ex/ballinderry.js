@@ -7,8 +7,8 @@
    tapering neck (brow, round eyes, long nose, mouth; hair combed back at the sides), on the opposite edge a small plain knob.
    Built in the photograph's own coordinates (x to the right, z downward, the head at the top), then turned so the head is at −x.
    The carving of the frame and everything on the sunk panel are that photograph itself: straightened to a square (the four corners of the
-   board found on it), then turned into maps of light and dark that the drawn yew is multiplied by and embossed with. The face is placed
-   by measuring it (brow, eyes, nostrils, mouth). Estimate: the thickness (2.4, the panel sunk 1.4). */
+   board found on it), then turned into maps of light and dark that the drawn yew is multiplied by and embossed with. The head's colour and fine relief
+   are the photograph too, and its features are placed by measuring them on it. Estimate: the thickness (2.4, the panel sunk 1.4). */
 (function () {
   'use strict';
   // the frame's carving, off the same photograph (1536 × 592: four rows, a side each): red = how light or dark (128 = even), green = how warm
@@ -16,10 +16,12 @@
   // the sunk panel, off the same photograph (1024², everything inside the frame): red = how light or dark the wood is there (128 = the
   // usual tone: the grain, the stains, the incised rings, the split), green = pale splintered wood, blue = the holes, alpha = the fine
   // relief only (128 = level)
-  const HERE = (document.currentScript && document.currentScript.src) || location.href; let WEAR = null, FRAME = null;
+  // the 49 holes as they are on the photograph (hand-bored, not quite in line): cm from the panel's centre, x to the right, z downward, row by row
+  const HOLES = [[-7.64,-7.79],[-5.13,-7.82],[-2.54,-7.88],[0.06,-7.62],[2.81,-7.83],[5.53,-7.81],[7.72,-8.11],[-7.37,-5.62],[-5.04,-5.68],[-2.52,-5.6],[0.02,-5.28],[2.93,-5.7],[5.68,-5.69],[8.09,-5.75],[-7.48,-2.36],[-5.02,-2.46],[-2.35,-2.56],[0.2,-2.7],[2.75,-2.47],[5.57,-2.56],[8.11,-2.51],[-7.62,0.09],[-5.01,0.38],[-2.48,0.41],[0.01,0.15],[2.87,-0.01],[5.38,-0.07],[8.01,-0.1],[-7.62,2.75],[-5.1,2.96],[-2.18,3.08],[0.09,2.8],[3.27,2.69],[5.8,2.57],[7.97,2.64],[-7.55,5.51],[-5.25,5.55],[-2.59,5.47],[0.13,5.36],[3.34,5.48],[5.57,5.4],[8.07,5.1],[-7.58,7.98],[-5.16,8.07],[-2.59,8.14],[0.26,7.92],[3.02,7.98],[5.59,7.99],[8.19,8.05]];
+  const HERE = (document.currentScript && document.currentScript.src) || location.href; let WEAR = null, FRAME = null, HEAD = null;
   (window.AtlasEx = window.AtlasEx || {}).ballinderry = {
     ready: () => { const get = (f, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/' + f, HERE).href; setTimeout(res, 8000); });
-      return Promise.all([get('ballinderry-panel.webp?v=3', im => { WEAR = im; }), get('ballinderry-frame.webp?v=1', im => { FRAME = im; })]); },
+      return Promise.all([get('ballinderry-panel.webp?v=3', im => { WEAR = im; }), get('ballinderry-frame.webp?v=1', im => { FRAME = im; }), get('ballinderry-head.webp?v=4', im => { HEAD = im; })]); },
     build(TT, X, K) {
       const G = new TT.Group(), Pg = new TT.Group(); Pg.rotation.y = Math.PI / 2; G.add(Pg);
       const S = 24, FW = 2.3, T0 = 1.0, T1 = 2.4, IN = S - FW * 2, P = 2.65, DP = .3;
@@ -77,21 +79,33 @@
       const panel = K.mat({ map: K.tex(PX, PX, g => drawPanel(g, false)), bumpMap: K.tex(PX, PX, g => drawPanel(g, true), { data: true }), bumpScale: wd ? 2.2 : 5, color: '#ffffff', roughness: .5 });
       add(new TT.BoxGeometry(IN + .3, T0, IN + .3), [wood, wood, panel, wood, wood, wood], 0, T0 / 2 - .01, 0);
       // ---- the human head (the photograph): carved in one with the board, lying flat, the face upward
-      const I = K.ink, hs = K.relief({ w: 5.4, h: 7.6, px: 320, depth: 1.25, round: .9, relief: .55, nx: 48, soft: 4, tex: frameMap.image, dirt: [10, 7, 5], dirtK: .85, bump: 1.8, mat: { roughness: .4, color: '#ffffff' },
-        mask(g) { g.fillStyle = '#fff'; g.beginPath(); g.moveTo(-1.0, -.4); g.lineTo(-.95, 1.2); g.bezierCurveTo(-1.1, 2.2, -2.3, 2.9, -2.3, 4.7); g.bezierCurveTo(-2.3, 6.4, -1.3, 7.2, 0, 7.2); g.bezierCurveTo(1.3, 7.2, 2.3, 6.4, 2.3, 4.7); g.bezierCurveTo(2.3, 2.9, 1.1, 2.2, .95, 1.2); g.lineTo(1.0, -.4); g.closePath(); g.fill(); },
-        thick(g) { g.fillStyle = '#9a9a9a'; g.fillRect(-1.6, -.5, 3.2, 2.2); },
+      // its colour is the photograph itself (images/atlas/ex/ballinderry-head.webp: the head cut out of it, 5.4 × 7.6 cm, the crown at the top) —
+      // the hair combed in fine strokes down the sides, the brow and cheeks rubbed pale — and the same picture, with its broad light and
+      // dark taken out, raises the fine relief. The features are placed where they are on it: brow 6.05, eyes 5.65, nostrils 4.3, mouth
+      // 3.45 cm above the neck's foot; the head 4.3 wide, the neck short.
+      let headTex = frameMap.image, headFine = null;
+      if (HEAD) { const hw = HEAD.width, hh = HEAD.height, c = document.createElement('canvas'); c.width = hw; c.height = hh; const q = c.getContext('2d'); q.drawImage(HEAD, 0, 0); const im = q.getImageData(0, 0, hw, hh), d = im.data;
+        const f = document.createElement('canvas'); f.width = hw; f.height = hh; const fq = f.getContext('2d'); fq.filter = 'blur(14px)'; fq.drawImage(HEAD, 0, 0); fq.filter = 'none'; const lo = fq.getImageData(0, 0, hw, hh).data, fi = fq.createImageData(hw, hh), fd = fi.data;
+        for (let k = 0; k < d.length; k += 4) { const L = .3 * d[k] + .59 * d[k + 1] + .11 * d[k + 2], Lo = .3 * lo[k] + .59 * lo[k + 1] + .11 * lo[k + 2], v = Math.max(0, Math.min(255, 128 + (L - Lo) * 1.6)); fd[k] = fd[k + 1] = fd[k + 2] = v; fd[k + 3] = 255;
+          d[k] = Math.min(255, d[k] * .66); d[k + 1] = Math.min(255, d[k + 1] * .54); d[k + 2] = Math.min(255, d[k + 2] * .44); }   // (toned to sit with the frame beside it)
+        q.putImageData(im, 0, 0); fq.putImageData(fi, 0, 0); headTex = c; headFine = f; }
+      const I = K.ink, hs = K.relief({ w: 5.4, h: 7.6, px: 320, depth: 1.25, round: .9, relief: HEAD ? .34 : .55, nx: 48, soft: HEAD ? 3 : 4, tex: headTex, dirt: [10, 7, 5], dirtK: HEAD ? .25 : .85, bump: 1.8, mat: { roughness: .42, color: '#ffffff' },
+        mask(g) { g.fillStyle = '#fff'; g.beginPath(); g.moveTo(-1.05, -.4); g.lineTo(-1.0, 1.5); g.bezierCurveTo(-1.15, 2.4, -2.15, 3.2, -2.15, 4.9); g.bezierCurveTo(-2.15, 6.4, -1.3, 7.15, 0, 7.15); g.bezierCurveTo(1.3, 7.15, 2.15, 6.4, 2.15, 4.9); g.bezierCurveTo(2.15, 3.2, 1.15, 2.4, 1.0, 1.5); g.lineTo(1.05, -.4); g.closePath(); g.fill(); },
+        thick(g) { g.fillStyle = '#9a9a9a'; g.fillRect(-1.6, -.5, 3.2, 2.0); },
         front(g) {   // (y runs from the neck, 0, to the crown: the chin is toward the board)
-          I.area(g, [[-1.1, 2.7], [-1.35, 4.8], [-1.05, 6.1], [0, 6.45], [1.05, 6.1], [1.35, 4.8], [1.1, 2.7], [0, 2.2]], .14);   // the face, standing out a little from the hair (measured on the photograph: brow 5.7, eyes 5.3, nostrils 4.0, mouth 3.15 above the neck's foot)
-          I.blob(g, -.62, 5.78, .62, .3, .55); I.blob(g, .62, 5.78, .62, .3, .55);                                                         // the brow
-          [-1, 1].forEach(sx => { I.blob(g, sx * .66, 5.28, .5, .4, -.45); I.blob(g, sx * .66, 5.3, .33, .27, 1.25); });       // round bulging eyes under it
-          I.blob(g, 0, 5.0, .2, .95, .9); I.blob(g, 0, 4.45, .27, .6, .7); I.blob(g, 0, 4.1, .44, .3, 1.0);                                // the long nose, wider at the nostrils
-          I.blob(g, 0, 3.15, .82, .58, .6); I.blob(g, 0, 3.38, .56, .17, .5); I.blob(g, 0, 2.93, .5, .17, .45); I.line(g, [[-.42, 3.15], [0, 3.12], [.42, 3.15]], .09, -1.1);   // the mouth pushed forward, the lips parted
-          [-1, 1].forEach(sx => { for (let k = 0; k < 4; k++) I.line(g, [[sx * (1.45 + k * .2), 2.6 + k * .2], [sx * (1.7 + k * .13), 4.6], [sx * (1.1 + k * .12), 6.3 + k * .15]], .07, -.5); }); } });   // hair combed back at the sides
+          if (headFine) { g.save(); g.scale(1, -1); g.globalAlpha = .16; g.drawImage(headFine, -2.7, -7.6, 5.4, 7.6); g.restore(); }
+          I.area(g, [[-1.25, 2.9], [-1.5, 4.9], [-1.2, 6.2], [0, 6.55], [1.2, 6.2], [1.5, 4.9], [1.25, 2.9], [0, 2.3]], .14);   // the face, standing out a little from the hair
+          I.blob(g, -.68, 6.08, .66, .3, .5); I.blob(g, .68, 6.08, .66, .3, .5);                                              // the brow
+          [-1, 1].forEach(sx => { I.blob(g, sx * .72, 5.62, .52, .42, -.45); I.blob(g, sx * .72, 5.65, .35, .28, 1.2); });     // round bulging eyes under it
+          I.blob(g, 0, 5.2, .2, .95, .9); I.blob(g, 0, 4.65, .28, .6, .7); I.blob(g, 0, 4.3, .46, .3, 1.0);                     // the long nose, wider at the nostrils
+          I.blob(g, 0, 3.45, .86, .6, .6); I.blob(g, 0, 3.68, .58, .17, .5); I.blob(g, 0, 3.22, .52, .17, .45); I.line(g, [[-.44, 3.45], [0, 3.42], [.44, 3.45]], .09, -1.1);   // the mouth pushed forward, the lips parted
+          if (!headFine) [-1, 1].forEach(sx => { for (let k = 0; k < 4; k++) I.line(g, [[sx * (1.45 + k * .2), 2.6 + k * .2], [sx * (1.7 + k * .13), 4.6], [sx * (1.1 + k * .12), 6.3 + k * .15]], .07, -.5); }); } });
       hs.rotation.x = -Math.PI / 2; hs.position.set(0, T1 * .5, -S / 2 + .3); Pg.add(hs);
       // ---- the knob on the opposite edge: a short neck and a plain ball
       const knobM = K.mat({ map: frameMap, color: '#d8d8d8', roughness: .4 });
       const nk = add(new TT.CylinderGeometry(.62, .75, 1.3, 18), knobM, 0, T1 * .5, S / 2 + .55); nk.rotation.x = Math.PI / 2;
       const ball = add(new TT.SphereGeometry(1.35, 28, 18), knobM, 0, T1 * .5, S / 2 + 2.2); ball.scale.set(1, .82, 1);
+      G.userData.holes = HOLES.map(([u, v]) => [v, -u]);   // (for play: in the model's own axes — the head at −x)
       return G;
     },
   };

@@ -73,7 +73,7 @@ async function runLesson(ctx, game, kind, key) {
     if (s.phase === 'ramp' && s.ramp === 'try' && !(s.next && s.next.on)) {
       const tag = 'r' + s.ri + ':' + s.moves; if (answered.has(tag)) { await S(400); continue; } answered.add(tag);
       for (let i = 0; i < 80; i++) { const t = await snap(pg, game); const a = t && t.ad; if (t && (t.phase !== 'ramp' || t.ri !== s.ri)) break; if (game === 'chess' ? a && !a.busy && a.pzOn && a.legal > 0 : !a || (!a.busy && !a.over)) break; await S(300); }
-      const ru = await pg.evaluate(ri => { const c = window.__atlasLs.cur(), it = window.__atlasLs.state().phase === 'ramp' && c.ri === ri && c.ramp && c.ramp[c.ri]; return it && it.ok ? it.ok[0] : null; }, s.ri);
+      const ru = await pg.evaluate(ri => { const c = window.__atlasLs.cur(), it = window.__atlasLs.state().phase === 'ramp' && c.ri === ri && c.ramp && c.ramp[c.ri]; return it ? (it.ok ? it.ok[0] : it.k === 'try' && it.ans != null ? it.ans : null) : null; }, s.ri);   // (reversi: a try's answer is it.ans)
       if (ru == null) continue;
       if (game === 'chess' && typeof ru === 'string' && /^[a-h][1-8][a-h][1-8]/.test(ru)) await tapChess(pg, ru); else await pg.evaluate(() => window.__atlasLs.rampAnswer());
       await S(900); continue;
