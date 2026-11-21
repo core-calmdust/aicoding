@@ -2549,6 +2549,170 @@
       prev = m; pos = pos.clone().play(m); });
     return out;
   }
+  /* (2026-11-22 lesson loop) the checkers lessons in チェッカニ's words, Japanese, for the 3D table (no square numbers): a short intro
+     per step (the first says what the game is and how it is won), five questions and five hints per step, and after the answer the
+     praise with why (from the board: the edge / the square behind filled / no piece near, the capture kept, the jumps counted, the crown
+     safe, the threatened piece fled or the landing square blocked, the opponent left without a move, the shot's gain, the opponent's shot
+     stopped, the endgame database's result CK_EG) or, for a miss, the green arrow's move and what yours gives up (a piece jumped for
+     nothing, the capture taken back, fewer jumps, no crown, the opponent still able to move, the shot missed / suffered, the win or the
+     draw lost). Cheers the player on (CK_CH) and words each problem differently. */
+  const CK_EG = {   // the endgame lessons' wrong moves: the database's result for the side to move (d = only a draw, l = a loss) — checkers/tools/wasm.js analyze
+    '..BW......W.....................2': '4-8:d 11-7:l 11-8:l', '....................W........BW.2': '21-25:d 31-26:l', '...........B.................WB.1': '31-26:d', '....B......BW...................1': '5-9:d', '.BB........W....................1': '3-8:d',
+    '...........W....b.........b.w...1': '17-21:d 27-31:d 27-32:d', '...............w.....B.......w..2': '30-25:d 30-26:d', '..WB......b.......w.............2': '3-8:l 19-15:l 19-16:l', '............b....W....w......B..2': '18-14:d 18-15:d 23-19:d', '...W.......B.....b.w............1': '12-16:l 12-8:l',
+    '...B...w.b..............W.......2': '25-29:l 25-30:l 25-21:l 25-22:l', '...B..W........B..........w.....1': '16-19:l 16-20:l 16-11:l', '.W....BW...................B....1': '7-11:l 28-32:l 28-24:l', '.........w....B......B........w.2': '10-7:l 31-26:l 31-27:l', '........B..W..............b....W1': '9-13:l 9-14:l 9-5:l 9-6:l' };
+  const CK_DC = [0, 4, 27, 31];   // the double corners' squares (1, 5, 28, 32)
+  const CKJ_LS = {
+    intro: {
+      b_move: 'ぼくはチェッカニ！ チェッカーは、駒を斜めに進めて、相手の駒を跳び越えて取るゲームだカニ。相手の駒を全部取るか、動けなくしたら勝ち！<br>最初は取られない進み方の練習。進んだマスの裏側が空いていると、跳び越えられちゃうの。',
+      b_jump: '取れる駒があるときは、必ず取るのがルール。でも、どの駒で取るかは選べるカニ！<br>せっかく取っても、すぐ取り返されたら得が帳消し。着地した先が安全かを見て選ぼう。',
+      b_multi: '跳び越えた先から、さらに跳べるなら続けて何枚も取れるの。これが気持ちいいカニ！<br>取り方が何通りかあるときは、好きな道を選べる。ここでは、いちばんたくさん取れる道を探してみて。',
+      b_king: 'マンが相手側のいちばん奥の段に着くと、キングに成れる！ 後ろにも動ける強い駒で、ぼくの背中の王冠とおそろいなの。<br>ただし、成ったとたんに取られないかも確かめるカニ。',
+      b_safe: '相手の番になったら取られちゃう駒、見つけられる？<br>守り方は3つ。逃げる、跳ばれる先のマスをふさぐ、取られても取り返せる形にする。どれが使えるか考えるカニ！',
+      b_win: '相手の駒を全部取るか、1手も動けない形にしたら勝ち！ 駒が残っていても、動かせなければ負けなの。<br>ここでは、1手で勝負を決める手を探すカニ。',
+      t_shot1: 'いよいよ大事な戦術「ショット」だカニ！<br>わざと1枚取らせると、取るのは義務だから相手の駒が動く。そのあと連続で跳び返して、1枚捨てて2枚取るの。',
+      t_shot2: 'ちょっと長いショットに挑戦！<br>捨てた駒を相手が取ると、相手の駒はどこに着地する？ その着地点から、自分の連続取りがつながるかを読むカニ。',
+      t_defend: '今度は守る側。相手にショットのねらいがあって、たいていの手は駒損になっちゃう局面なの。<br>指す前に「このあと捨て駒の一手はない？」と確かめて、ただ一つの受けを探すカニ！',
+      t_best: '終盤に近い局面で、ほかよりはっきり良い手が一つだけある問題だカニ。<br>キングを作る、相手の駒を止める、交換で得をする。どれが決め手になるか、じっくり考えてみて！',
+      e_kings: 'キングどうしの終盤！ 勝てる局面でも、勝ちを保てる手は少ないことがあるの。<br>相手のキングを、角の二重コーナーへ逃がさないのがコツだカニ。答えは終盤のデータベースで確かめてある！',
+      e_men: 'マンが残った終盤は、どっちが先にキングになるかの競争！ 相手のマンを止める位置取りも勝負を決めるカニ。<br>答えは終盤のデータベースで確かめてあるから、安心して考えてみて。',
+      e_draw: '形勢が悪くても、正しく指せば引き分けにできることがあるの。負けを避ける手は、たいてい一つか二つだけ！<br>キングは角の二重コーナーに逃げこむと粘りやすいカニ。あきらめずにいこう！',
+    },
+    ask: {
+      b_move: ['相手にタダで取られないように、駒を1つ進めてみて！', '取られない進み方はどれかな？', 'すぐ後ろが空かない手、見つけられる？', '安全に進める駒はどれだと思う？', '跳び越えられない場所へ、1マス進めるカニ！'],
+      b_jump: ['いちばん得をする取り方、選べるかな？', '取ったあとに安全なのは、どの取り方？', 'どの駒で取るのがいちばん得かな？', '着地した先が安全な取り方、わかる？', '取り返されずにすむ取り方を探すカニ！'],
+      b_multi: ['いちばんたくさん取れる道を選んでみて！', '続けて跳んで、何枚取れるかな？', 'いちばん長い連続ジャンプはどれ？', '取れる枚数がいちばん多い手、見つけられる？', '跳んで跳んで、たくさん取っちゃうカニ！'],
+      b_king: ['マンをキングにしてみて！ 取られないようにね。', 'キングに成れる駒はどれかな？', '王冠をかぶれる手、見つけられる？', '奥の段まで進んで、安全にキングになる手は？', 'キングになるチャンス、逃さないでカニ！'],
+      b_safe: ['ねらわれた駒を、タダで取られないようにしよう！', '取られそうな駒、どうやって守る？', '損をしない手はどれかな？', '相手の取るねらい、先にかわせる？', '逃げる？ ふさぐ？ 守り方を選ぶカニ！'],
+      b_win: ['1手で勝っちゃおう！', '相手を動けなくする手、わかる？', '勝負を決める一手はどれかな？', '全部取る？ それとも動けなくする？', 'この1手で決着をつけるカニ！'],
+      t_shot1: ['駒得になるショットを探してみて！', '1枚捨てて2枚取る手、見つけられる？', 'わざと取らせる手はどれかな？', '取らせて跳び返す、ショットの1手目は？', 'ショットを決めちゃうカニ！'],
+      t_shot2: ['駒得につながる手順の、1手目は？', '相手の着地点を読んで、ショットを決めて！', '捨てる駒はどれがいいかな？', '長いショットの始まりの手、わかる？', '3手先まで読んで、駒得する手を探すカニ！'],
+      t_defend: ['損をしない、ただ一つの受けは？', '相手のショットをかわす手はどれかな？', '捨て駒の一手を許さない手、見つけられる？', 'ここは守りどころ。正しい受けは？', '相手のねらいを先に消す手を探すカニ！'],
+      t_best: ['いちばん良い手を探してみて！', '頭ひとつ抜けた一手はどれかな？', 'この局面の決め手、わかる？', '勝負を分ける一手はどれだと思う？', '決め手をズバッと指すカニ！'],
+      e_kings: ['勝ちを保つ手を指してみて！', '相手のキングを逃がさない手はどれかな？', '勝ちをキープできる手、わかる？', '二重コーナーに逃がさない一手は？', 'キングで追いつめる手を探すカニ！'],
+      e_men: ['勝ちへ近づく手はどれ？ 指してみて！', 'キング競争に勝てる手はどれかな？', '相手のマンを止めつつ進む手、わかる？', '勝ちへの一手はどれだと思う？', '位置取りで差をつける手を探すカニ！'],
+      e_draw: ['負けない手、引き分けにできる手を指してみて！', '負けを避ける手はどれかな？', '粘って引き分けに持ちこむ一手は？', 'ここで踏んばれる手、わかる？', 'あきらめずに、引き分けの道を探すカニ！'],
+    },
+    hint: {
+      b_move: ['動かした先の「すぐ後ろ」が空いていないか、見てみて。', '盤の端は跳び越えられない、安全な場所なの。', '相手の駒が斜め前にいるマスは要注意！', '後ろに味方がいれば、跳び越えられないカニ。', '相手の駒から離れたマスなら、まず安心。'],
+      b_jump: ['着地したマスのまわりに、相手の駒はいない？', '取ったあと、相手の番になったつもりで考えてみて。', '取り方ごとに、着地点の安全をくらべるカニ。', '取り方は1つじゃない。全部くらべてみてね！', '跳んだ先のすぐ後ろが空いていると、取り返されちゃう。'],
+      b_multi: ['跳んだ先から、もう一度跳べないか見てみて。', '着地したマスから、さらに続く道をたどるカニ。', '着地するたび、斜めのとなりに相手の駒はいない？', '向きを変えて跳べることもあるの！', 'いちばん遠くまで行ける道はどれかな？'],
+      b_king: ['奥の段まで、あと1マスの駒がいる！', '成ったあと、すぐ取られないマスを選んでみて。', 'マンは前にしか進めない。奥の段に近い駒はどれ？', '着いたマスの斜めのとなりに、相手の駒はいない？', '王冠まであと一歩の駒を探すカニ！'],
+      b_safe: ['いま跳び越えられそうな駒はどれ？', '跳ばれる先のマスをふさぐ手もあるの。', '取られても、すぐ取り返せる形なら損はしないカニ。', '逃げた先でまた取られないか、確かめてみて。', '相手の番になったつもりで、取れる駒を探してみて！'],
+      b_win: ['相手が動かせる駒、全部数えてみて！', '相手の駒の進む先をふさぐ手もあるの。', '全部取り切れる道はない？', '相手の最後の駒をねらえる駒はどれだカニ？', 'この手のあと、相手に動ける手が残るか見てみて。'],
+      t_shot1: ['わざと取らせたら、相手の駒はどこに着地する？', '取られるマスへ、あえて進めてみるカニ。', '相手の取る手は決まっている。それを利用するカニ！', '着地点の先に、もう1枚取れる駒が並ぶかな？', '損して得とれ！ 先に1枚あげちゃおう。'],
+      t_shot2: ['一見タダで取られる手が、じつは正解かもカニ。', '捨てる → 相手の着地点 → 自分の取る道、の順に読んでみて。', '相手の駒が着地したら、2回以上跳べる？', '捨てる駒の場所で、相手の着地点が決まるの。', '相手に取らせたあとの盤を想像してみて！'],
+      t_defend: ['この手のあと、相手に捨て駒の一手はない？', '相手の連続取りの道、先にふさげない？', '相手に「取らされる」形にならない手を探すカニ。', '1手ずつ「相手の番になったら？」と確かめてみて。', '何気ない手ほど危ないの。相手のねらいを読んでみて！'],
+      t_best: ['キングを作る手、相手を止める手、交換の手…どれかな？', 'いちばん働く駒はどれか、考えるカニ。', '相手の駒の進む道もよく見てみて。', 'タダで取られる駒が出ないかも確かめてね。', '先に成った方が有利になりやすいの！'],
+      e_kings: ['相手のキングを二重コーナーへ行かせないで！', '勝ちを保てる手は、じつは少ないカニ。', '相手のキングの逃げ道を数えてみて。', 'キングをタダで取られないマスを選んでね。', '2枚のキングで、はさむように追いつめよう！'],
+      e_men: ['どっちが先にキングになれるか、手数を数えてみて！', '相手のマンの進む先、おさえられない？', '先にキングになれば、ぐっと有利になるカニ。', '取られる形にならないかも確かめてね。', 'キングとマン、どの駒を動かすのがいいかな？'],
+      e_draw: ['キングは二重コーナーに逃げこむと粘りやすいの。', '引き分けで十分！ 守りに徹するカニ。', 'タダで取られる駒を出さないようにね。', '相手のマンをキングにさせない手はある？', 'あきらめないで！ 負けない手は一つか二つだけ。'],
+    },
+  };
+  const CK_CH = {
+    good: ['いいね！', 'さすが！', 'お見事！', 'ばっちり！', 'やったね！'],
+    push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次のレッスンへ！'],
+    soft: ['大丈夫！', 'ドンマイだカニ！', null, '気にしない、気にしない！', null],
+    tail: [null, null, 'これで覚えちゃおう！', null, '次はきっと見つけられるカニ！'],
+    right: ['{m}なら、{a}の。', '{m}が正解！ {a}カニ。', 'ここは{m}。それなら{a}から！', '{m}を見て。あの手なら{a}の！', '答えは{m}だった。{a}んだ。'],
+    why: ['{a}！', 'その手なら{a}の。', '{a}カニ！', 'ほら、{a}でしょ？', 'これで{a}んだ。'],
+    you: ['{x}だと、{b}。', 'きみの{x}は、{b}の。', '{x}では{b}！', '{x}を指すと、{b}。', '{x}だと{b}んだ。'],
+  };
+  function ckLF(E, pos, m) {   // ckFacts + what the lessons need
+    const F = ckFacts(E, pos, m), after = pos.clone().play(m), me = pos.side, t = E.mTo(m), f = E.mFrom(m), opp = me ? 1 : 2;
+    F.after = after; F.oppN = after.moves().length; F.oppLeft = after.count(opp); F.t = t;
+    // the moved piece's safety: on the edge / the square behind filled / no opponent piece next to it
+    let near = false, blocked = true;   // (near: an opponent piece next to it that could jump it that way — its men only forward)
+    for (let d = 0; d < 4; d++) { const n = E.NB[d][t]; if (n < 0) continue; const v = after.at(n); if (!v || (v <= 2) === (me === 0)) continue;
+      const kg = v === 2 || v === 4, jd = 3 - d; if (!kg && (v <= 2 ? jd >= 2 : jd < 2)) continue;
+      near = true; const back = E.NB[jd][t]; if (back >= 0 && !after.at(back)) blocked = false; }
+    F.near = near; F.blocked = blocked;
+    F.fled = (() => { const q = pos.clone(); q.side ^= 1; q.rehash(); return q.caps().some(c => E.mCap(c) & E.bit(f)); })();
+    F.plug = (() => { const q = pos.clone(); q.side ^= 1; q.rehash(); return q.caps().some(c => E.mTo(c) === t); })();
+    // the opponent's best answer: a quiet sacrifice that wins pieces back (a shot), a crowning, a king into a double corner
+    F.oppShot = 0; if (!after.caps().length && F.oppN) for (const r of after.moves()) { try { const G = ckFacts(E, after, r); if (G.net > F.oppShot) F.oppShot = G.net; } catch (e) {} }
+    F.oppCrown = after.moves().some(r => after.promotes(r));
+    F.oppDC = after.moves().some(r => CK_DC.includes(E.mTo(r)) && (after.at(E.mFrom(r)) === 2 || after.at(E.mFrom(r)) === 4));
+    F.tDC = CK_DC.includes(t);
+    return F;
+  }
+  function ckLsJa(E, s, P, i) {
+    const id = s.id, pos = E.Pos.from(P.s), ok = P.ok || [P.best], A = P.best, k = i % 5, name = m => E.name(pos, m);
+    const sc = new Map(P.sc || []), best = P.sc ? Math.max(...P.sc.map(x => x[1])) : 0;
+    const FA = ckLF(E, pos, A), M = CKM('ok', 'ja'), X = CKM('ng', 'ja'), pk = (L, j) => L[((j % L.length) + L.length) % L.length];
+    const eg = {}; String(CK_EG[P.s.b + P.s.side] || '').split(' ').filter(Boolean).forEach(x => { const [a, b] = x.split(':'); eg[a] = b; });
+    const wrongOf = u => { if (u != null && !ok.includes(u) && pos.moves().includes(u)) return u;   // (no move given, or a right one: a typical miss, as the tool asks)
+      const L = pos.moves().filter(m => !ok.includes(m)); if (P.sc) { const v = P.sc.filter(x => !ok.includes(x[0]) && best - x[1] > 6); if (v.length) return v[Math.min(v.length - 1, k % 2)][0]; } return L[k % Math.max(1, L.length)]; };
+    const deg = d => CKJ_OP.deg(d);
+    // why the right move works (a: a short plain clause, the variant j)
+    const why = (F, j) => {
+      const n = F.capN, g = F.net;
+      switch (id) {
+        case 'b_move': return F.edge ? pk(['端のマスなら跳び越えられない', '盤の端は跳ばれる心配がない', '端っこは安全地帯', '端に寄せれば向こう側にマスがない', '盤のふちなら跳び越す先がない'], j)
+          : F.trade ? pk(['取られても、すぐ取り返せる', '1枚取られても取り返せて損がない', '取り合いになっても五分', '相手が取ったら、こっちも取り返せる', '取られた分はすぐ取り戻せる'], j)
+          : F.near && F.blocked ? pk(['すぐ後ろがふさがっていて跳べない', '跳ぶ先のマスが空いていない', '後ろが埋まっていて取られない', '背中のマスに駒がいて、跳び越せない', '着地するマスがないから跳ばれない'], j)
+          : pk(['跳び越えてくる相手の駒がいなくて安全', 'ねらってくる相手の駒がいないから取られない', '相手の駒に跳ばれる心配がない', 'となりに危ない駒がいない', 'そこまで届く相手の駒がない'], j);
+        case 'b_jump': return pk(['取ったあとも取り返されない', '着地した駒が安全なまま', `${g >= 2 ? g + '枚' : '1枚'}まるまる得できる`, '着地点のまわりに危険がない', '取ったあと相手にお返しされない'], j);
+        case 'b_multi': return pk([`続けて跳んで${n}枚も取れる`, `${n}枚まとめて取れる`, `${n}枚取りの大ジャンプになる`, `一気に${n}枚も持っていける`, `連続ジャンプで${n}枚ゲットできる`], j);
+        case 'b_king': return pk(['キングになれて、すぐには取られない', '王冠をかぶって、しかも安全', '安全なマスでキングに成れる', '成った駒をねらう相手がいない', '成ったあとも跳び越えられない'], j);
+        case 'b_safe': return F.fled ? pk(['ねらわれた駒が逃げられる', '取られそうな駒を安全な所へ逃がせる', '危ない駒をさっと逃がせる', 'ねらいの駒がいなくなって、相手は取れない', '逃げた先でも跳ばれない'], j)
+          : F.plug ? pk(['跳ばれる先のマスをふさげる', '相手の着地点を先にうめられる', '跳ぶ先をふさいで取らせない', '着地するマスがなくなって相手は跳べない', '空きマスをうめて、取りを止められる'], j)
+          : pk(['相手が取っても、すぐ取り返せる', '取り合いで損をしない形になる', '取られても取り返せる形になる', '取られた分を取り戻せる', '相手が取ればお返しできる'], j);
+        case 'b_win': return F.oppLeft === 0 ? pk(['相手の駒を全部取り切れる', '最後の駒まで取れる', '相手の駒がひとつも残らない', '盤の上から相手がいなくなる', '残りの駒をまとめて取れる'], j)
+          : pk(['相手がもう1手も動けない', '相手の進む先が全部ふさがる', '相手は動かせる手がなくなる', '相手の駒が身動きできなくなる', '相手に指せる手がひとつも残らない'], j);
+        case 't_shot1': case 't_shot2': return F.shot ? pk([`1枚取らせたあと跳び返して、差し引き${g}枚の得`, '取らせてから跳び返す、ショットが決まる', `捨てた分より${g}枚多く取り返せる`, `相手が取ったあとに連続取りで${g}枚の得`, 'わざと渡した1枚が、倍になって返ってくる'], j)
+          : pk(['相手の取る手を利用して、駒得の手順に入れる', '捨て駒からの手順で駒得できる', '相手の駒を、こっちの取りやすい所へ呼びこめる', '相手は取るしかなくて、そこから得をする', 'AIの評価でもいちばんの、駒得の始まり'], j);
+        case 't_defend': if (P.sc && P.sc.every(x => x[0] === A || x[1] < -(CK_WINT - 1000))) return pk(['負けを避けられる、ただ一つの手になる', 'ほかの手はどれも負け。これだけが助かる', '負けの道をひとつだけ抜けられる', '相手の勝ち筋をただ一つ消せる', '負けずにすむ道に入れる'], j);
+          return F.oppShot <= 0 ? pk(['相手のショットが決まらなくなる', '捨て駒の一手を先に消せる', '相手の連続ジャンプを先に封じられる', '捨て駒をされても困らない', '相手のねらいが空振りになる'], j)
+          : pk(['損をいちばん小さくできる', 'ほかの手より被害が少ない', '傷を浅くすませられる', 'いちばんましな受けになる', '損を最小限におさえられる'], j);
+        case 't_best': return F.win ? pk(['相手を動けなくして勝ちが決まる', '一気に勝負を決められる', 'これで相手は動けない', 'そのまま勝ちになる', '決着がつく'], j)
+          : F.crown ? pk(['キングに成って一気に有利になる', '先に王冠をかぶって主導権をにぎれる', 'キングを作って形勢がぐっとよくなる', '奥の段に着いて強い駒が増える', '後ろにも動ける駒が手に入る'], j)
+          : F.shot ? pk(['取らせて跳び返して駒得できる', 'ショットで駒得になる', '捨て駒から得をする手順に入れる', '1枚あげて、それ以上取り返せる', '相手の取りを利用して得をする'], j)
+          : F.capN ? pk(['取り返されない取り方で得をする', 'いちばん得な取り方ができる', '取ったあとも駒が安全', '取ってもお返しされない', '得をしたまま形を保てる'], j)
+          : P.sc && P.sc.filter(x => x[0] !== A && x[1] < -(CK_WINT - 1000)).length * 2 >= P.sc.length - 1 ? pk(['負けにつながる落とし穴をよけられる', '負けの落とし穴をよけて進める', 'ちゃんと負けから逃れられる', '負けにつながる手を全部よけられる', '負けの道を避けて踏みとどまれる'], j)
+          : pk(['AIの評価でいちばん上になる', 'ほかの手より形勢を保てる', 'いちばん損が少なくすむ', '形勢をいちばんよく保てる', 'AIの読みでも最善になる'], j);
+        case 'e_kings': return F.capN ? pk(['相手の駒を取って勝ちを決められる', '取って一気に勝ちに近づける', '駒を取って勝ちを確かにできる', '取って数の差を広げられる', '取れば残りは追いつめるだけ'], j)
+          : pk(['勝ちのレールに乗ったまま進める', 'データベースでも勝ちのまま', '勝ちを手放さずにすむ', '相手に逃げ切りを許さない', '勝ちへの道をはずれない'], j);
+        case 'e_men': return F.crown ? pk(['先にキングになって競争に勝てる', '王冠を先にかぶって勝ちに進める', 'キングになって一歩リードできる', '先に成って、あとは追いかけるだけ', 'キング競争で先手を取れる'], j)
+          : F.capN ? pk(['相手の駒を取って勝ちに近づける', '取って差を広げられる', '駒を取って勝ちを確かにできる', '取れば数で上回れる', '取って相手の手を減らせる'], j)
+          : pk(['データベースでも勝ちにつながる', '勝ちの道に乗れる', 'ほかの手では届かない勝ちに届く', '勝ちを手放さずにすむ', '勝ちへの道をまっすぐ進める'], j);
+        case 'e_draw': return F.tDC ? pk(['二重コーナーに逃げこんで粘れる', '二重コーナーで守りを固められる', '角の二重コーナーで踏んばれる', '二重コーナーなら追い出されにくい', '角の安全地帯にもぐりこめる'], j)
+          : F.capN || F.trade ? pk(['駒を取り合って引き分けにできる', '交換で駒を減らして粘れる', '取り合いで差を消せる', '駒が減って相手が決めきれなくなる', '数の差をなくして粘れる'], j)
+          : pk(['負けを避けて引き分けにできる', '最後まで粘って負けを消せる', 'ここで踏んばって負けない', '相手に決め手をあたえない', 'データベースでも引き分けのまま'], j);
+      }
+      return pk(['いちばんいい形になる', '形をくずさずに進める', '損をしない'], j);
+    };
+    // what the miss gives up (b: a short plain clause)
+    const loss = (F, u, j) => {
+      const r = eg[name(u)], n = -F.net, d = sc.has(u) ? best - sc.get(u) : null;
+      if (FA.win && !F.win) return F.oppN ? pk([`相手にまだ${F.oppN}通りの手が残っちゃう`, '相手の駒がまだ動けちゃう', `勝負がつかず、相手に${F.oppN}通りの逃げ道が残る`], j) : pk(['勝ちを見のがしちゃう', 'まだ勝負がつかない', '決着が先にのびちゃう'], j);
+      if (id === 'b_multi' && F.capN < FA.capN) return pk([`${F.capN}枚しか取れない`, `取れるのは${F.capN}枚だけ`, `${FA.capN}枚取れるところが${F.capN}枚どまり`], j);
+      if (id === 'b_king' && !F.crown) return pk(['キングになれない', 'せっかくの王冠のチャンスを逃しちゃう', 'マンのままで終わっちゃう'], j);
+      if (F.crown && F.net < 0) return pk(['キングになったとたん取られちゃう', '成った駒をすぐ跳び越えられちゃう', '王冠をかぶった直後に取られちゃう'], j);
+      if (F.capN && F.net < FA.net) return F.net < 0 ? pk(['取ったのに取り返されて、かえって損しちゃう', '取り返されて差し引きで損が出ちゃう', '着地した駒ごと取り返されて損になる'], j) : pk(['着地した駒をすぐ取り返されちゃう', '取り返されて、得が帳消しになっちゃう', '取った分をそのまま取り返される'], j);
+      if (r === 'l' && F.net < 0) return pk(['駒をタダで取られて、負けになっちゃう', '跳び越えられて、そのまま負け', '取られて形勢がひっくり返っちゃう'], j);
+      if (r === 'l' && F.oppCrown) return pk(['相手のマンがキングになって負けちゃう', '相手に王冠を許して負けになる', '相手にキングを作られて押し切られる'], j);
+      if (r === 'l') return pk(['相手に追いつめられて負けちゃう', '負けが決まっちゃう', '粘りきれずに負けになる'], j);
+      if (r === 'd' && F.oppDC) return pk(['相手のキングに二重コーナーへ逃げこまれちゃう', '相手のキングが二重コーナーで粘れちゃう', '二重コーナーに逃げられて引き分けになる'], j);
+      if (r === 'd' && F.oppCrown) return pk(['相手のマンもキングになれて、引き分けどまり', '相手にも王冠を許して引き分けになる', '相手がキングになって追いつけない'], j);
+      if (r === 'd') return pk(['勝ちが消えて引き分けになっちゃう', '相手に粘られて引き分けまで', 'データベースでは引き分けどまり'], j);
+      if (d != null && sc.get(u) < -(CK_WINT - 1000) && best > -(CK_WINT - 1000)) return pk(['そのまま負けにつながっちゃう', '負けが決まっちゃう', 'AIの読みでは負けになる'], j);
+      if (d != null && d < 120 && (F.oppShot > 0 || F.net < 0)) return d > 6 ? pk([`AIの評価が${deg(d)}下がっちゃう`, `AIの見立てでは${deg(d)}損`, `形勢が${deg(d)}悪くなる`], j) : pk(['悪くないけど、ほんの少し見劣りする', 'わずかに形が悪くなる', 'ほんの少しだけ損になる'], j);
+      if (F.oppShot > 0) return pk([`相手にショットを打たれて${F.oppShot}枚損しちゃう`, `捨て駒からの連続取りで${F.oppShot}枚取られちゃう`, `相手の捨て駒が決まって${F.oppShot}枚の損`], j);
+      if (F.net < 0) return pk([`相手に跳び越えられて、${n}枚タダで取られちゃう`, `タダで${n}枚、相手に取られちゃう`, `相手に${n}枚タダで取られて損しちゃう`], j);
+      if (FA.shot && !F.shot) return pk(['ショットのチャンスを見のがしちゃう', '駒得できる手順に入れない', '相手の取る手を利用できない'], j);
+      if (FA.crown && !F.crown) return pk(['キングになるチャンスを逃しちゃう', '先に成るチャンスがなくなる', '王冠への近道を見のがしちゃう'], j);
+      if (d != null && d > 6) return pk([`AIの評価が${deg(d)}下がっちゃう`, `AIの見立てでは${deg(d)}損`, `形勢が${deg(d)}悪くなる`], j);
+      return pk(['悪くないけど、ほんの少し見劣りする', 'わずかに形が悪くなる', 'ほんの少しだけ損になる'], j);
+    };
+    const fill2 = (t, a) => t.replace('{m}', M).replace('{x}', X).replace('{a}', a).replace('{b}', a)
+      .replace(/(安全|地帯|得|損|始まり|だけ|まま|どまり|一つの手)(?=の[。！]|んだ|カニ|から)/g, (w, x, o, str) => w + (/^(の|ん)/.test(str.slice(o + w.length)) ? 'な' : 'だ'));   // (a noun before の / んだ / カニ / から: 安全なの, 得なんだ, 安全だカニ)
+    const good = u => { const F = u != null && ok.includes(u) && u !== A ? ckLF(E, pos, u) : FA;
+      return [CK_CH.good[k], fill2(CK_CH.why[k], why(F, k)), CK_CH.push[k]].filter(Boolean).join(' '); };
+    const ng = u0 => { const u = wrongOf(u0); let F = null; try { F = ckLF(E, pos, u); } catch (e) {}
+      const out = [CK_CH.soft[k], fill2(CK_CH.right[(k + 2) % 5], why(FA, k + 2))]; if (F) out.push(fill2(CK_CH.you[(k + 3) % 5], loss(F, u, k + 2)));
+      if (CK_CH.tail[k]) out.push(CK_CH.tail[k]); return out.filter(Boolean).join(' '); };
+    return { ask: pk(CKJ_LS.ask[id] || [''], k), hintTx: pk(CKJ_LS.hint[id] || [''], k), good, ng, own: true, ckls: true };   // (ckls: チェッカニ praises himself — no heading line)
+  }
   const CHECKERS = {
     LKEY: 'aicoding-checkers-lessons', OKEY: 'aicoding-checkers-open', data: null, I: null,
     load() {
@@ -2574,10 +2738,13 @@
       const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L((this.data.ls.rampUi || {})[k], lang), v || {});
       const ramp = s.ramp && s.ramp.length ? s.ramp.map((it, j) => { const o = Object.assign({}, it); ['t', 'body', 'g', 'h', 'y'].forEach(f => { const v = V[`ramp:${s.id}/${j}/${f}`] != null ? V[`ramp:${s.id}/${j}/${f}`] : f === 'h' && it.src === 'turn' && V['ls.' + s.id + '.hint'] != null ? V['ls.' + s.id + '.hint'] : null; if (v != null) o[f] = { ja: v, __voice: true }; }); return o; }) : null;
       const intro = String(T('intro') || '').replace(/\s*[（(][^）)]*\d[^）)]*[）)]/g, '');   // (the double corners' square numbers: not on the 3D board)
-      return { id: s.id, title: T('title'), intro, ramp, RU,
-        probs: (s.problems || []).map(P => { const good = P.ok || [P.best];
-          return { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.ok ? P.ok[0] : P.best, hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
-            good: () => T('why', { m: CKM('ok', lang), x: CKM('ng', lang) }), ng: () => P.ok ? T('ng', { m: CKM('ok', lang), x: CKM('ng', lang) }) : T('why', { m: CKM('ok', lang), x: CKM('ng', lang) }) }; }),
+      const ja = lang === 'ja' && E && CKJ_LS.intro[s.id];   // (2026-11-22 lesson loop: チェッカニ's own intro, questions, hints, why / what the miss gives up)
+      return { id: s.id, title: T('title'), intro: ja ? CKJ_LS.intro[s.id] : intro, ramp, RU,
+        probs: (s.problems || []).map((P, i) => { const good = P.ok || [P.best];
+          const o = { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.ok ? P.ok[0] : P.best, hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
+            good: () => T('why', { m: CKM('ok', lang), x: CKM('ng', lang) }), ng: () => P.ok ? T('ng', { m: CKM('ok', lang), x: CKM('ng', lang) }) : T('why', { m: CKM('ok', lang), x: CKM('ng', lang) }) };
+          if (ja) try { Object.assign(o, ckLsJa(E, s, P, i)); } catch (e) { console.warn('[lessons3d] checkers lesson', e); }
+          return o; }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
@@ -4923,7 +5090,7 @@
       }
       if ((id === 'checkers' || id === 'xiangqi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
-        say(`${right ? (p.own && id === 'morris' ? '' : line('solved') || pick(X.good)) : p.own ? (pts > 0 ? 'いい線いってる！' : 'おしい！') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
+        say(`${right ? (p.own && (id === 'morris' || p.ckls) ? '' : line('solved') || pick(X.good)) : p.own ? (pts > 0 ? 'いい線いってる！' : 'おしい！') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng']]); }, 900);
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
