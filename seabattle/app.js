@@ -620,9 +620,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeNew()
 function applyLang() {
   document.documentElement.lang = LANG;
   $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); }); $$('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
-  $('#ttlName').textContent = 'DREADNOUGHTS';   // the logo (2026-11-21 user: DREADNOUGHTS: FLEET TACTICS; the atlas lists keep 海戦ゲーム)
-  $('#ttlSub').textContent = $('#ttlSub2').textContent = 'FLEET TACTICS';
-  document.title = 'DREADNOUGHTS: FLEET TACTICS — ' + t('title') + ' | ' + t('series');
+  $('#ttlName').textContent = t('title');   // (2026-11-21 user: the 2D game is 海戦ゲーム again; DREADNOUGHTS is the separate 3D title, dreadnoughts/)
+  $('#ttlSub').textContent = $('#ttlSub2').textContent = '';
+  document.title = t('title') + ' | ' + t('series');
   $('#depText').textContent = t(PCQ.matches ? 'dep.b.pc' : 'dep.b');
   if (window.Resign) $('#btnResign span').textContent = Resign.label(LANG);
   if (HB && HB.relabel) HB.relabel();

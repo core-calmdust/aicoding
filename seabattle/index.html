@@ -543,13 +543,14 @@ body.swapping .frame canvas.sb3d{opacity:.0}
 .frame .sb3d-vig{position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:radial-gradient(120% 95% at 50% 46%,transparent 58%,rgba(2,8,14,.5) 100%),linear-gradient(180deg,rgba(255,214,150,.07),transparent 30%);transition:opacity .22s}
 .frame:not(.sb3d-on) .sb3d-vig{display:none}
 body.swapping .frame .sb3d-vig{opacity:0}
+.brand h1 .ttl-in:empty,.brand .ttl-sub:empty{display:none!important}
 </style>
 </head>
 <body class="no-online placing">
 <div class="app">
   <header class="top">
     <div class="brand">
-      <div class="brand-l"><a class="series" href="../" data-i18n="series"></a><h1><span id="ttlName">DREADNOUGHTS</span><em class="ttl-in" id="ttlSub2"></em><small data-i18n="beta"></small></h1><div class="ttl-sub" id="ttlSub"></div></div>
+      <div class="brand-l"><a class="series" href="../" data-i18n="series"></a><h1><span id="ttlName">海戦ゲーム</span><em class="ttl-in" id="ttlSub2"></em><small data-i18n="beta"></small></h1><div class="ttl-sub" id="ttlSub"></div></div>
       <span class="brand-r"><button id="btnSound" class="snd" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option></select><a href="../" class="snd home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg></a></span>
     </div>
     <div class="card controls">
@@ -636,7 +637,7 @@ body.swapping .frame .sb3d-vig{opacity:0}
 <script src="board.js?v=10"></script>
 <script>window.SEA3D_V = 1;</script><script src="board3d.js?v=1"></script>
 <script src="../shared/record.js?v=17"></script>
-<script src="app.js?v=61"></script>
+<script src="app.js?v=62"></script>
 <script src="tour.js?v=2"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
