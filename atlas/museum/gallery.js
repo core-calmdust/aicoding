@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 75;
+  const V = 76;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -24,7 +24,7 @@
     { id: 'ballinderry', game: 'tafl', cm: 1, view: [.2, .78, .95],
       spots: [[0, 1.05, 0], [-7.95, 1.05, 7.95], [10.85, 2.5, 0], [-10.85, 2.5, 8], [-16.6, 2.3, 0], [14.2, 2.2, 0], [0, 1.05, 4.3]] },
     { id: 'lewis', game: 'chess', cm: 1, view: [.12, .4, .82],
-      spots: [[-2.8, 4.6, -2.0], [2.6, 7.4, -2.4], [8.4, 9.0, -1.6], [-8.4, 5.5, .2], [-.2, 6.4, 5.9], [5.6, 2.6, 5.4], [-2.8, 4.0, -5.2]] },
+      spots: [[-2.8, 4.6, -2.0], [2.6, 7.4, -2.4], [8.4, 9.0, -1.6], [-8.4, 5.5, .2], [-.2, 6.4, 5.9], [5.6, 2.6, 5.4], [-3.6, 6.4, -5.3]] },
     // (「シャルルマーニュのチェス駒」は取り下げ中：公開できる水準に届かないため 2026-11-22。モデル ex/charlemagne.js と解説文は残してある。戻すときは museum-spec.md を参照)
     { id: 'nishapur', game: 'chess', cm: 1, view: [.9, .55, .78],
       spots: [[2.5, 5.2, 10.25], [-2.5, 4.7, 10.25], [-7.5, 5.0, 10.25], [-12.5, 4.6, 10.25], [-17.5, 3.4, 10.25], [-1.3, 3.1, 3.75], [2.5, 5.2, -10.25]] },
