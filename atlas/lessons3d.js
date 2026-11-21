@@ -5095,7 +5095,7 @@
     // the study line: one move at a time, its note when there is one
     async function study() {
       phase = 'study'; dots();
-      if (cur.si === 0) await board(cur.start);
+      if (cur.si === 0) { act(X.next, { nextOn: false }); await board(cur.start); if (stopped || phase !== 'study') return; }   // (2026-11-22 進行チェック: はじめる stayed on while the board was set — a second tap reloaded it, and taps in a row never let it get ready)
       onMoved = () => { pz().undo(1); };   // (the line is played for you: a move of your own is taken back)
       const stepOn = async () => {
         if (cur.si >= cur.steps.length) {
