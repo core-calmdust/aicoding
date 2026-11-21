@@ -13,7 +13,7 @@
   // 4 panels each, 512 × 150): alpha = the ivory figure, green / blue = where it is dyed green / red. Outlines and dye only.
   const HERE = (document.currentScript && document.currentScript.src) || location.href; let FIG = null;
   (window.AtlasEx = window.AtlasEx || {}).shosoin = {
-    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { FIG = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/shosoin-figures.webp', HERE).href; setTimeout(res, 8000); }),
+    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { FIG = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/shosoin-figures.webp?v=2', HERE).href; setTimeout(res, 8000); }),
     build(TT, X, K) {
       const G = new TT.Group();
       const S = 48.9, H = 12.7, RAIL = 1.0, BASE = 7.4,   // (measured on the Shōsōin's oblique photograph: body 5.3, openings 5.4, floor frame 1.0)
@@ -90,7 +90,7 @@
       const chain = (g, x0, y0, len, wd, vert) => { g.save(); g.translate(x0, y0); if (vert) g.rotate(Math.PI / 2);
         g.fillStyle = 'rgba(14,6,4,.35)'; g.fillRect(0, 0, len, wd); g.fillStyle = '#d8bb7c'; g.fillRect(0, 0, len, wd * .07); g.fillRect(0, wd * .93, len, wd * .07);
         // each motif is a lozenge of four small ivory squares (as on the photographed sides), a dark dot in the middle
-        const n = Math.max(1, Math.round(len / (wd * .95))), q = wd * .13;
+        const n = Math.max(1, Math.round(len / (wd * .66))), q = wd * .2;   /* (close-set: the white lozenges nearly touch — detail photographs) */
         for (let i = 0; i < n; i++) { const cx = (i + .5) * len / n, cy = wd / 2; g.save(); g.translate(cx, cy); g.rotate(Math.PI / 4); g.fillStyle = '#e4d2a2';
           [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([u, v]) => g.fillRect(u * q * 1.15 - q / 2, v * q * 1.15 - q / 2, q, q)); g.restore(); }
         g.restore(); };
@@ -128,7 +128,7 @@
       const PAL = [C.iv, C.red, C.grn, '#d8b878'];
       // the figures in ivory with their dyes, and a dark outline round each (the joint of the inlay)
       let figC = null; if (FIG) { figC = document.createElement('canvas'); figC.width = FIG.width; figC.height = FIG.height; const q = figC.getContext('2d'); q.drawImage(FIG, 0, 0); const im = q.getImageData(0, 0, figC.width, figC.height), d = im.data;
-        for (let i = 0; i < d.length; i += 4) { const gr = Math.min(1, d[i + 1] / 255 * 1.5), rd = Math.min(1, d[i + 2] / 255 * 1.4); let c = [222, 206, 168]; c = c.map((v, k) => v + ([96, 140, 108][k] - v) * gr); c = c.map((v, k) => v + ([206, 112, 78][k] - v) * rd); d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; } q.putImageData(im, 0, 0); }
+        for (let i = 0; i < d.length; i += 4) { const gr = Math.min(1, d[i + 1] / 255 * 1.5), rd = Math.min(1, d[i + 2] / 255 * 1.4); let c = [222, 206, 168]; c = c.map((v, k) => v + ([96, 140, 108][k] - v) * gr); c = c.map((v, k) => v + ([206, 112, 78][k] - v) * rd); { const ln = d[i] / 255 * .85; c = c.map((v, k) => v + ([84, 46, 28][k] - v) * ln); }   /* the engraved lines, filled dark */ d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; } q.putImageData(im, 0, 0); }
       const panelFig = (g, row, col, x, y, w2, h2) => { g.save(); g.shadowColor = 'rgba(14,6,3,.9)'; g.shadowBlur = 2.5; g.drawImage(figC, col * 512, row * 150, 512, 150, x, y, w2, h2); g.restore(); };
       const sideTex = (seed, drawerAt) => K.tex(2048, Math.round(2048 * (BODY - TOP) / S), (g, w, h) => {
         g.drawImage(shT.image, 0, 0, w, h); const s = w / S, cb = s * .85;
