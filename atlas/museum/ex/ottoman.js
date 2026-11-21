@@ -109,13 +109,13 @@
       const PS = 1024, pearlC = document.createElement('canvas'); pearlC.width = pearlC.height = PS;
       { const og = pearlC.getContext('2d'), img = og.createImageData(PS, PS), d = img.data;
         for (let j = 0; j < PS; j++) for (let i = 0; i < PS; i++) { const u = i / PS, v = j / PS, a = N(u * 22, v * 5, 3), b = N(u * 7 + 5, v * 16, 2), sh = N(u * 90, v * 14, 2), band = Math.sin((v * 9 + a * 2) * Math.PI) * .5 + .5;
-          const gr = 118 + sh * 60 + band * 22 + a * 18; const p = (j * PS + i) * 4; d[p] = gr + a * 16 - b * 14; d[p + 1] = gr + b * 12 - a * 6; d[p + 2] = gr + 10 + b * 18 + a * 6; d[p + 3] = 255; }
+          const gr = 132 + sh * 46 + band * 26 + a * 22; const p = (j * PS + i) * 4; d[p] = gr + a * 16 - b * 14; d[p + 1] = gr + b * 12 - a * 6; d[p + 2] = gr + 10 + b * 18 + a * 6; d[p + 3] = 255; }
         og.putImageData(img, 0, 0); }
       const shellC = document.createElement('canvas'); shellC.width = shellC.height = PS;
       { const og = shellC.getContext('2d'), img = og.createImageData(PS, PS), d = img.data;
-        for (let j = 0; j < PS; j++) for (let i = 0; i < PS; i++) { const u = i / PS, v = j / PS, m = N(u * 30 + 3, v * 18, 4) * .7 + N(u * 90, v * 50, 2) * .3, f = N(u * 90 + 7, v * 90, 2), t = Math.max(0, Math.min(1, (.405 - m) * 7));
+        for (let j = 0; j < PS; j++) for (let i = 0; i < PS; i++) { const u = i / PS, v = j / PS, m = N(u * 22 + 3, v * 15, 4) * .78 + N(u * 110, v * 70, 2) * .22, f = N(u * 90 + 7, v * 90, 2), t = Math.pow(Math.max(0, Math.min(1, (.41 - m) * 6)), 1.2);   // soft blotches a centimetre or two across, a little streaked
           // dark, almost black-brown ground with amber-to-orange blotches (gold leaf glowing through the thin parts)
-          const p = (j * PS + i) * 4; d[p] = 30 + t * 128 + (f - .5) * 10; d[p + 1] = 12 + t * 58 + (f - .5) * 6; d[p + 2] = 9 + t * 6; d[p + 3] = 255; }
+          const p = (j * PS + i) * 4; d[p] = 26 + t * 170 + (f - .5) * 10; d[p + 1] = 10 + t * 86 + (f - .5) * 6; d[p + 2] = 8 + t * 10; d[p + 3] = 255; }
         og.putImageData(img, 0, 0); }
       // the amber of thin turtle shell over gold leaf (for the X-shaped pieces between the plaques)
       const amberC = document.createElement('canvas'); amberC.width = amberC.height = 256;
@@ -136,8 +136,10 @@
           const lay = (fill, op) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const q = c.getContext('2d'); q.drawImage(INLAY, 0, 0, w, h); q.globalCompositeOperation = op || 'source-in'; q.fillStyle = fill; q.fillRect(0, 0, w, h); return c; };
           const dk = lay('rgba(18,8,5,.8)'); [[1.6, 0], [-1.6, 0], [0, 1.6], [0, -1.6]].forEach(([dx, dy]) => g.drawImage(dk, dx, dy));
           const pc = lay(PP); { const q = pc.getContext('2d'), nn = K.noise(57), t = document.createElement('canvas'); t.width = 256; t.height = 256; const tq = t.getContext('2d'), im = tq.createImageData(256, 256), d = im.data;   // each piece its own tone: lighter and greyer patches
-            for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) { const v = nn(x / 9, y / 22, 2), i = (y * 256 + x) * 4, wt = v > .5; d[i] = d[i + 1] = d[i + 2] = wt ? 255 : 40; d[i + 3] = Math.abs(v - .5) * (wt ? 110 : 190); } tq.putImageData(im, 0, 0);
+            for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) { const v = nn(x / 9, y / 22, 2), i = (y * 256 + x) * 4, wt = v > .5; d[i] = d[i + 1] = d[i + 2] = wt ? 255 : 40; d[i + 3] = Math.abs(v - .5) * (wt ? 150 : 260); } tq.putImageData(im, 0, 0);
             q.globalCompositeOperation = 'source-atop'; q.drawImage(t, 0, 0, w, h); }
+          { const q = pc.getContext('2d'); q.globalCompositeOperation = 'source-atop'; q.strokeStyle = 'rgba(60,50,48,.45)'; q.lineWidth = 1; let cs = 9; const cr = () => ((cs = (cs * 16807) % 2147483647) / 2147483647);   // the joints between the pieces a point is made of, and cracks
+            for (let k = 0; k < 420; k++) { const x = cr() * w, y = cr() * h, a = (cr() - .5) * .5 + (cr() < .5 ? 0 : Math.PI / 2), l = cm(.4 + cr() * 1.2); q.beginPath(); q.moveTo(x, y); q.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); q.stroke(); } }
           g.drawImage(pc, 0, 0);
           // the green-stained bone (the picture's red channel)
           { const c = document.createElement('canvas'); c.width = w; c.height = h; const q = c.getContext('2d'); q.drawImage(INLAY, 0, 0, w, h); const im = q.getImageData(0, 0, w, h), d = im.data; for (let i = 0; i < d.length; i += 4) { const a = d[i]; d[i] = 58; d[i + 1] = 122; d[i + 2] = 100; d[i + 3] = a; } q.putImageData(im, 0, 0); g.drawImage(c, 0, 0); }
@@ -234,7 +236,7 @@
         bgMask = new TT.CanvasTexture(mk); bgMask.colorSpace = TT.NoColorSpace;
       });
       // materials: shell / pearl in one picture; the pearl areas get a thin-film iridescence (mask)
-      const face = (map, mask) => K.mat({ map, color: '#ffffff', roughness: .3, metalness: .05, clearcoat: .6, clearcoatRoughness: .24, iridescence: .85, iridescenceIOR: 1.6, iridescenceThicknessRange: [180, 520], iridescenceMap: mask });
+      const face = (map, mask) => K.mat({ map, color: '#e9e6e2', roughness: .34, metalness: .05, clearcoat: .5, clearcoatRoughness: .28, iridescence: .55, iridescenceIOR: 1.6, iridescenceThicknessRange: [180, 520], iridescenceMap: mask });
       const chessMat = face(chessT, chessMask), bgMat = face(bgT, bgMask);
       const edgeT = K.tex(512, 64, (g, w, h) => { g.fillStyle = '#e8dcbc'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(90,70,40,.5)'; g.lineWidth = 2; for (let x = 0; x < w; x += 40) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 20, h / 2); g.lineTo(x, h); g.stroke(); } }, { rep: [12, 1] });
       const bone = K.mat({ map: edgeT, color: '#ffffff', roughness: .45, clearcoat: .3 });
