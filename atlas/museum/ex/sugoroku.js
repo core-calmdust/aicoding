@@ -11,19 +11,23 @@
    included), base 12.5, rail .8. Two ivory dice (双六頭, kept apart as North 17) are set on the board for reference. */
 (function () {
   'use strict';
-  /* 2026-11-22: the four sides are the Shōsōin's own frontal photographs (CO0000011755 the long side, CO0000011757 the short side),
-     straightened to the board's measure (54.3 / 31.0 × 16.7 cm, 40 px to the cm) — images/atlas/ex/sugoroku-sides.webp, the long side
-     above the short one. The field and the inner faces of the two far walls are lifted from the Shōsōin's overall photograph (CO0000000441, taken from above one
-     corner): the camera was worked out from six of the board's corners, and each plane read back through it — sugoroku-top.webp, the
-     field (52.9 × 29.6 cm) above the long wall's inner face and the short wall's. The strip of the field hidden behind the two near walls
-     is the far strip mirrored; the half-moon (a raised piece here) is taken out of the picture. The openings are traced on those photographs, in cm from the side's top left corner: each list starts at the
-     point where the rail's two hanging lobes meet. (The long side's second opening is the first mirrored; the short side's is one half.) */
+  /* 2026-11-22: the marquetry is photographs, applied as they are (drawn marquetry never matched the real thing's density or its
+     flowers). At the owner's choice the source is the sharp overall photograph he supplied (4605 × 3655, taken from above one corner;
+     it appears to show a modern reproduction — whiter ivory, darker legs — but its patterns read far more clearly than the Shōsōin's
+     small frontal photographs, which were tried first and looked blurred). The camera was worked out from seven of the board's corners
+     and each plane read back through it at 40 px to the cm:
+       sugoroku-sides.webp — the near long side above the near short side (band 0–3.4 cm, legs 3.4–15.9, floor frame 15.9–16.7);
+         the opposite sides carry the same pictures;
+       sugoroku-top.webp — the field (52.9 × 29.6 cm) above the inner faces of the far long wall and the far short wall; the strip of
+         the field hidden behind the near walls is the far strip mirrored, and the half-moons (raised pieces here) are taken out.
+     The openings are traced on the straightened sides, in cm from the side's top left corner, starting where the rail's two hanging
+     lobes meet (the long side's second opening is the first mirrored). */
   const HERE = (document.currentScript && document.currentScript.src) || location.href; let SIDE = null, TOP = null;
-  const OPEN_L = [[14.05, 3.33], [14.3, 3.5], [14.5, 3.75], [15, 4.12], [15.5, 4.33], [16, 4.46], [17, 4.52], [17.5, 4.46], [18, 4.35], [18.5, 4.2], [19, 4.08], [20, 3.98], [21, 3.97], [22, 3.95], [23, 4.08], [24, 4.46], [24.5, 4.8], [25, 5.25], [25.3, 5.75], [25.6, 6.33], [25.85, 7], [26, 8], [26.03, 9], [26.03, 10], [25.96, 11], [25.8, 12], [25.46, 13], [25, 14], [24.67, 14.5], [24, 15], [23.4, 15.3], [22.75, 15.5], [21.75, 15.65], [20.5, 15.72], [8, 15.72], [7, 15.68], [6.3, 15.55], [5.6, 15.3], [5.15, 15], [4.4, 14], [3.67, 13], [3.2, 12], [2.96, 11], [2.77, 10], [2.71, 9], [2.69, 8], [2.71, 7], [2.79, 6], [3.08, 5], [3.25, 4.7], [3.5, 4.45], [4, 4.2], [4.5, 3.98], [5, 3.87], [6, 3.82], [7, 3.8], [8, 4], [9, 4.3], [10, 4.5], [11, 4.52], [12, 4.46], [12.5, 4.33], [13, 4.12], [13.5, 3.75], [13.8, 3.46]];
-  const OPEN_S = [[15.5, 3.25], [15.3, 3.38], [15, 3.69], [14.5, 4.06], [14, 4.31], [13.5, 4.44], [13, 4.46], [12, 4.35], [11, 4.1], [10, 3.87], [9, 3.75], [8, 3.69], [7, 3.7], [6, 3.72], [5, 3.81], [4.5, 3.94], [4, 4.19], [3.5, 4.56], [3.06, 5], [2.69, 6], [2.56, 7], [2.54, 8], [2.56, 9], [2.65, 10], [2.85, 11], [3.12, 12], [3.56, 13], [4.1, 14], [4.95, 15], [5.9, 15.5], [7, 15.72]];
+  const OPEN_L = [[13.79, 3.6], [14.09, 3.75], [14.5, 4.06], [15.21, 4.38], [15.71, 4.5], [16.22, 4.54], [17.23, 4.5], [18.25, 4.35], [19.26, 4.19], [20.28, 4.09], [21.29, 4.03], [22.3, 4.12], [23.32, 4.43], [23.82, 4.68], [24.33, 5.04], [24.84, 5.5], [25.24, 6.08], [25.55, 6.67], [25.75, 7.5], [25.85, 8.33], [25.85, 9.17], [25.82, 10], [25.7, 10.83], [25.55, 11.67], [25.29, 12.5], [24.94, 13.33], [24.53, 14.17], [23.93, 14.83], [23.32, 15.33], [22.61, 15.67], [21.8, 15.85], [18.25, 15.85], [14.19, 15.85], [10.14, 15.85], [6.69, 15.85], [5.27, 15.58], [4.66, 15.33], [4.16, 15], [3.5, 14], [2.99, 13], [2.64, 12], [2.38, 11], [2.23, 10], [2.18, 9], [2.23, 8], [2.38, 7], [2.64, 6.17], [2.89, 5.67], [3.24, 5], [3.55, 4.58], [4.06, 4.3], [5.07, 4.06], [6.08, 3.9], [7.1, 3.85], [8.11, 3.98], [9.12, 4.19], [10.14, 4.38], [11.15, 4.48], [12.17, 4.4], [12.67, 4.25], [13.18, 4], [13.48, 3.75]];
+  const OPEN_S = [[15.4, 3.62], [15.6, 3.81], [16.11, 4.38], [17.37, 4.75], [18.63, 4.72], [19.89, 4.56], [21.15, 4.31], [22.42, 4.1], [23.68, 4], [24.94, 3.97], [26.2, 4.19], [26.86, 4.56], [27.47, 5.19], [27.97, 6.12], [28.27, 7.25], [28.41, 8.5], [28.41, 9.5], [28.27, 10.5], [28.07, 11.5], [27.72, 12.5], [27.26, 13.37], [26.71, 14.12], [25.95, 14.69], [25.04, 15.4], [24.18, 15.85], [20.2, 15.85], [15.45, 15.85], [10.6, 15.85], [6.56, 15.85], [5.65, 15.5], [4.95, 14.87], [4.14, 14], [3.53, 13], [3.08, 12], [2.78, 11], [2.63, 10], [2.57, 9], [2.63, 8], [2.78, 6.87], [3.13, 5.75], [3.53, 5], [4.04, 4.5], [4.54, 4.19], [5.05, 3.97], [6.06, 3.79], [7.07, 3.75], [8.08, 3.81], [9.09, 3.94], [10.1, 4.12], [11.11, 4.31], [12.12, 4.44], [13.13, 4.5], [14.14, 4.38], [14.64, 4.12], [15.05, 3.75]];
   (window.AtlasEx = window.AtlasEx || {}).sugoroku = {
     ready: () => { const get = (f, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/' + f, HERE).href; setTimeout(res, 8000); });
-      return Promise.all([get('sugoroku-sides.webp?v=1', im => { SIDE = im; }), get('sugoroku-top.webp?v=1', im => { TOP = im; })]); },
+      return Promise.all([get('sugoroku-sides.webp?v=2', im => { SIDE = im; }), get('sugoroku-top.webp?v=2', im => { TOP = im; })]); },
     build(TT, X, K) {
       const G = new TT.Group();
       const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = 1.9, RT = .7;   // (RIM: the wall round the field stands upright, about 1.9 high — the overall photograph)   // LIN: the strip of rosettes at the top of the base
@@ -32,7 +36,7 @@
       const shR = K.tex(256, 256, (g, w, h) => K.grain(g, w, h, { a: '#7a7a7a', b: '#4e4e4e', seed: 38, sy: 14 }), { data: true });
       const shitan = K.mat({ map: shT, roughnessMap: shR, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
       const inner = K.mat({ map: baseT, color: '#ffffff', roughness: .55, clearcoat: .2, clearcoatRoughness: .4 });
-      const ivory = K.mat({ color: SIDE ? '#dcc890' : '#efe4cc', roughness: .4, clearcoat: .25, clearcoatRoughness: .4 });   // (aged ivory, as on the photographs)
+      const ivory = K.mat({ color: '#efe4cc', roughness: .4, clearcoat: .25, clearcoatRoughness: .4 });   // (aged ivory, as on the photographs)
       const C = { iv: '#eadfc6', grn: '#7d8f4c', bam: '#b9814a', eb: '#1c0f0a', tan: '#b98a55' };
       /* ---------- marquetry (after the detail photographs) ---------- */
       const flower = (g, x, y, r, k = 0) => { g.save(); g.translate(x, y); g.rotate(k);
@@ -104,7 +108,7 @@
       const mk = (t, base) => K.mat({ map: t, color: '#ffffff', roughness: .48, clearcoat: .3, clearcoatRoughness: .35 });
       /* ---------- the face ---------- */
       const IL = L - RT * 2, IW = W - RT * 2, ROW = 2.0, P0 = 4.9, PS = 3.75;   // the row of points: its distance from the rim, the first point's distance from the centre, the pitch
-      const topK = TOP ? TOP.width / IL : 0, MOONX = TOP ? -.3 : 0;   // (on the photograph the half-moons sit 3 mm off the middle of the length)
+      const topK = TOP ? TOP.width / IL : 0, MOONX = TOP ? -.4 : 0;   // (on the photograph the half-moons sit 4 mm off the middle of the length)
       const faceT = K.tex(2048, Math.round(2048 * IW / IL), (g, w, h) => { const s = w / IL;
         if (TOP) { g.drawImage(TOP, 0, 0, TOP.width, IW * topK, 0, 0, w, h); return; }
         K.grain(g, w, h, { a: '#331a11', b: '#26120b', seed: 44, sx: .3, sy: 9, warp: .2, pores: .003 });   // straight grain along the length
@@ -174,7 +178,7 @@
       const traced = (pts, len, flip) => { const q = pts.map(([x, y]) => new TT.Vector2((flip ? len - x : x) - len / 2, H - y - RAIL)); q.push(q[0].clone());
         const p = new TT.Path(), c = new TT.SplineCurve(q).getPoints(q.length * 5); p.moveTo(c[0].x, c[0].y); for (let i = 1; i < c.length - 1; i++) p.lineTo(c[i].x, c[i].y); p.closePath(); return p; };
       const skirtFor = (len, n) => { const S = new TT.Shape(); S.moveTo(-len / 2, 0); S.lineTo(len / 2, 0); S.lineTo(len / 2, SK); S.lineTo(-len / 2, SK); S.closePath();
-        if (SIDE) { if (n === 2) S.holes.push(traced(OPEN_L, len, false), traced(OPEN_L, len, true)); else S.holes.push(traced(OPEN_S.concat(OPEN_S.slice(1).reverse().map(([x, y]) => [len - x, y])), len, false)); return S; }
+        if (SIDE) { if (n === 2) S.holes.push(traced(OPEN_L, len, false), traced(OPEN_L, len, true)); else S.holes.push(traced(OPEN_S, len, false)); return S; }
         const LEG = 2.3, POST = 2.5, ow = (len - 2 * LEG - (n - 1) * POST) / n;
         for (let i = 0; i < n; i++) { const x0 = -len / 2 + LEG + i * (ow + POST); S.holes.push(opening(x0, x0 + ow)); }
         return S; };
@@ -208,7 +212,7 @@
       }); };
       const baseMat = (len, n, seed) => { const t = baseTex(len, n, seed); t.repeat.set(1 / len, 1 / SK); t.offset.set(.5, 0); return mk(t); };
       const geoFor = (len, n) => new TT.ExtrudeGeometry(skirtFor(len, n), { depth: 1.3, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1, curveSegments: 14 });
-      const ivory2 = K.mat({ color: SIDE ? '#5c4428' : '#6a4c2e', roughness: .9 });   // (the openings are lined with a pale wood strip — tan, not white: the frontal photographs)
+      const ivory2 = K.mat({ color: SIDE ? '#e6dcc4' : '#6a4c2e', roughness: .9 });   // (the openings are lined with a pale wood strip — tan, not white: the frontal photographs)
       const gL = geoFor(L, 2), gW = geoFor(W, 1); gL.userData = { len: L, n: 2 }; gW.userData = { len: W, n: 1 }; const mL = baseMat(L, 2, 5), mW = baseMat(W, 1, 6);
       [[gL, mL, 0, W / 2 - 1.3, 0], [gL, mL, 0, -W / 2 + 1.3, Math.PI], [gW, mW, L / 2 - 1.3, 0, Math.PI / 2], [gW, mW, -L / 2 + 1.3, 0, -Math.PI / 2]].forEach(([geo, m, x, z, ry]) => {
         // (the openings' cut faces are a pale wood strip: the extrusion's own side material — a separate ribbon lay in the same plane and flickered)
@@ -225,6 +229,8 @@
           g.fillStyle = '#3a1e12'; g.beginPath(); g.arc(x, h / 2, r * .3, 0, 6.29); g.fill(); g.fillStyle = C.iv; g.beginPath(); g.arc(x + st / 2, h / 2, h * .09, 0, 6.29); g.fill(); } }); };
       const rL = mk(railT(L)), rW = mk(railT(W)); rW.map.repeat.x = (W - 3.6) / W; rW.map.offset.x = 1.8 / W;
       const rEnd = right => { if (!SIDE) return shitan; const m = mk(rW.map.clone()); m.map.repeat.x = 1.8 / W; m.map.offset.x = right ? 1 - 1.8 / W : 0; m.map.needsUpdate = true; return m; }, rA = rEnd(false), rB = rEnd(true);
+      // (the openings' cut faces are ivory, but along the bottom the opening ends on the dark floor frame: a thin dark strip lies over that part)
+      if (SIDE) { [[L - .1, 1.24, 0, W / 2 - .65, 0], [L - .1, 1.24, 0, -W / 2 + .65, 0], [1.24, W - 2.7, L / 2 - .65, 0], [1.24, W - 2.7, -L / 2 + .65, 0]].forEach(([w, d, x, z]) => add(new TT.BoxGeometry(w, .1, d), shitan, x, RAIL + .09, z)); }
       const railIn = SIDE ? shitan : inner;   // (the floor frame is dark wood all round: the overall photograph)
       [[L, 1.8, 0, W / 2 - .9, 0], [L, 1.8, 0, -W / 2 + .9, Math.PI]].forEach(([len, d, x, z]) => add(new TT.BoxGeometry(len, RAIL, d), [z > 0 ? rA : rB, z > 0 ? rB : rA, railIn, railIn, z > 0 ? rL : railIn, z > 0 ? railIn : rL], x, RAIL / 2, z));
       [[1.8, W - 3.6, L / 2 - .9, 0], [1.8, W - 3.6, -L / 2 + .9, 0]].forEach(([wd, d, x]) => add(new TT.BoxGeometry(wd, RAIL, d), [x > 0 ? rW : railIn, x > 0 ? railIn : rW, railIn, railIn, railIn, railIn], x, RAIL / 2, 0));
