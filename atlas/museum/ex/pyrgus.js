@@ -49,17 +49,19 @@
         for (const c of txt) { const [wd, strokes] = GL[c], sx = hh * k * (1 + jit(.08)), lean = jit(.07), lw = lw0 * (1 + jit(.16)), dy = jit(s * .03);
           strokes.forEach(st => { g.beginPath(); st.forEach(([u, v], i) => { const end = v <= 0 || v >= 1, X = x + (u + (end ? 0 : jit(.035)) + (v - .5) * lean) * sx, Y = y0 + dy + (v <= 0 ? -.12 : v >= 1 ? 1.12 : v + jit(.025)) * hh; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.lineWidth = lw * (1 + jit(.1)); g.stroke(); });
           x += (wd + gap) * hh * k; } };
-      // a square panel of the sides: a border of four-lobed holes, and inside it a rosette of pointed petals — every hole punched by hand, none quite in line
-      const panel = (g, s, cx, cy, n, nr = n) => { g.fillStyle = '#000'; const px = s * 1.26, py = s * 1.38;
-        const quat = (x, y) => { const a = s * .2 * (1 + jit(.12)), b = s * .3 * (1 + jit(.12)); g.beginPath(); g.ellipse(x, y, a * .95, b * 1.5, jit(.12), 0, 6.2832); g.fill(); g.beginPath(); g.ellipse(x, y, a * 1.75, b * .62, jit(.12), 0, 6.2832); g.fill(); };
-        for (let j = 0; j < nr; j++) for (let i = 0; i < n; i++) { if (i > 0 && i < n - 1 && j > 0 && j < nr - 1) continue; quat(cx + (i - (n - 1) / 2) * px + jit(s * .05), cy + (j - (nr - 1) / 2) * py + jit(s * .05)); }
-        const petal = (x, y, a, len, wd) => { g.save(); g.translate(x, y); g.rotate(a + jit(.06)); g.beginPath(); g.moveTo(-len / 2, 0); g.quadraticCurveTo(0, wd * (1 + jit(.15)), len / 2, 0); g.quadraticCurveTo(0, -wd * (1 + jit(.15)), -len / 2, 0); g.fill(); g.restore(); };
-        for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, r = s * (k % 2 ? 1.25 : 1.1); petal(cx + Math.cos(a) * r + jit(s * .04), cy + Math.sin(a) * r * 1.08 + jit(s * .04), a, s * 1.5, s * .52); }
-        for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; quat(cx + Math.cos(a) * s * 1.28 * 1.02 * 1.42, cy + Math.sin(a) * s * 1.38 * 1.02 * 1.42); } };
+      // a square panel of the sides (the museum's photograph and the DAI's, enlarged): a border of stepped-cross holes, five to a side; inside it
+      // pointed-oval holes set on the diagonals — four meeting in an X in each of 2 × 2 cells — so that four-petalled flowers form round the
+      // points between them; every hole cut by hand, none quite in line
+      const panel = (g, s, cx, cy) => { g.fillStyle = '#000'; const pitch = s * 1.6, c = s * 2.15;
+        const cross = (x, y) => { const a = s * .2 * (1 + jit(.12)), b = s * .3 * (1 + jit(.12)); g.beginPath(); g.ellipse(x, y, a * .95, b * 1.45, jit(.12), 0, 6.2832); g.fill(); g.beginPath(); g.ellipse(x, y, a * 1.7, b * .62, jit(.12), 0, 6.2832); g.fill(); };
+        for (let j = 0; j < 5; j++) for (let i = 0; i < 5; i++) { if (i > 0 && i < 4 && j > 0 && j < 4) continue; cross(cx + (i - 2) * pitch + jit(s * .05), cy + (j - 2) * pitch * 1.05 + jit(s * .05)); }
+        const lens = (x, y, a) => { const len = c * .27 * (1 + jit(.08)), wd = c * .11 * (1 + jit(.15)); g.save(); g.translate(x + jit(s * .04), y + jit(s * .04)); g.rotate(a + jit(.07)); g.beginPath(); g.moveTo(-len, 0); g.quadraticCurveTo(0, wd * 1.9, len, 0); g.quadraticCurveTo(0, -wd * 1.9, -len, 0); g.fill(); g.restore(); };
+        for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) { const x = cx + (i - .5) * c, y = cy + (j - .5) * c * 1.05; [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([u, v]) => lens(x + u * c * .26, y + v * c * .27, Math.atan2(v, u))); }
+        for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) { g.beginPath(); g.arc(cx + (i - 1) * c + jit(s * .03), cy + (j - 1) * c * 1.05 + jit(s * .03), s * .07, 0, 6.2832); g.fill(); } };
       const LINES = ['PICTOS', 'VICTOS', 'HOSTIS', 'DELETA', 'LVDITE', 'SECVRI'], FOOT = 4.8;   // FOOT: the front plate stops this far above the ground (the dice run out below it)
       const round = (g, w, h) => { g.filter = 'blur(2.2px)'; g.drawImage(g.canvas, 0, 0); g.filter = 'none'; };   // the corners of every cut eased, as a file leaves them
       const front = face((g, w, h, s) => { LINES.forEach((t, i) => word(g, s, s * .7, s * (.85 + i * 2.65), w - s * 1.4, s * 1.8, t)); g.fillStyle = '#000'; g.fillRect(s * 1.5, h - s * (FOOT + .75), s * 1.1, s * .22); round(g, w, h); g.fillStyle = '#000'; g.fillRect(0, h - s * FOOT, w, s * FOOT); });
-      const side = txt => face((g, w, h, s) => { word(g, s, s * .85, s * .85, w - s * 1.7, s * 1.8, txt); panel(g, s, w / 2, s * 8.4, 5, 5); panel(g, s, w / 2, s * 17.3, 5, 5); round(g, w, h); });
+      const side = txt => face((g, w, h, s) => { word(g, s, s * .85, s * .85, w - s * 1.7, s * 1.8, txt); panel(g, s, w / 2, s * 7.6); panel(g, s, w / 2, s * 16.6); round(g, w, h); });
       const dentT = K.tex(256, 256, (g, w, h) => { const n = K.noise(29), img = g.createImageData(w, h), d = img.data; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const v = 128 + (n(x / 50, y / 50, 3) - .5) * 150 + (n(x / 9, y / 9, 2) - .5) * 40, i = (y * w + x) * 4; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } g.putImageData(img, 0, 0); }, { data: true });
       const mk = (am, dark) => K.mat({ map: patT, bumpMap: dentT, bumpScale: 1.6, alphaMap: am, alphaTest: .35, alphaToCoverage: true, transparent: false, side: TT.DoubleSide, color: dark ? '#4a4c4e' : '#ffffff', roughness: .46, metalness: .65 });   // (alpha-to-coverage: the openwork's edges anti-aliased, no sparkle at a distance)
       const faces = [[front, 0], [side('VTERE'), Math.PI / 2], [side('FELIX'), Math.PI], [side('VIVAS'), -Math.PI / 2]];
