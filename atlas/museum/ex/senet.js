@@ -7,7 +7,10 @@
    stand (with sledge) 55.0 × 17.5 × 20.2; 28 high overall (Carter). The pieces kept with it: two ivory knuckle-bones and two
    pairs of casting sticks, black ebony above and white ivory below, one pair ending in fingers, one in fox heads (about 17.5 long).
    Estimates: the wording and layout of the texts (Tutankhamun's throne name in cartouches, the rest in the manner of royal
-   texts), the signs on squares 15 and 26–30, the heights within the stand, where the gold is. */
+   texts), the signs on squares 15 and 26–30.
+   Checked 2026-11-21 against photographs of the set in the Egyptian Museum (Global Egyptian Museum 15033; egypt-museum.com): brown
+   ebony, one band of text in the upper middle of the sides, legs with a heavy thigh, ribbed gold drums under the paws, runners with
+   upturned ends and cross-bars; shown as displayed, the drawer open and reels and cones on the board. */
 (function () {
   'use strict';
   (window.AtlasEx = window.AtlasEx || {}).senet = {
@@ -17,7 +20,7 @@
       const SQ = 3.5, ST = .36, ROWS = 3, COLS = 10;
       const fieldW = COLS * SQ + (COLS + 1) * ST, fieldD = ROWS * SQ + (ROWS + 1) * ST;
       /* ---------- materials ---------- */
-      const ebonyT = K.tex(512, 512, (g, w, h) => K.grain(g, w, h, { a: '#1c130d', b: '#0b0705', seed: 3, sx: 1, sy: 30, warp: 1.6, pores: .012 }), { rep: [2, 1] });
+      const ebonyT = K.tex(512, 512, (g, w, h) => K.grain(g, w, h, { a: '#3a2a20', b: '#1d130e', seed: 3, sx: 1, sy: 30, warp: 1.6, pores: .012 }), { rep: [2, 1] });
       const ebonyR = K.tex(256, 256, (g, w, h) => K.grain(g, w, h, { a: '#8a8a8a', b: '#5c5c5c', seed: 5, sy: 30 }), { data: true, rep: [2, 1] });
       const ebony = K.mat({ map: ebonyT, roughnessMap: ebonyR, color: '#ffffff', roughness: .55, metalness: 0, clearcoat: .35, clearcoatRoughness: .45 });
       const ivoryT = K.tex(512, 512, (g, w, h) => { K.grain(g, w, h, { a: '#e8dab9', b: '#d3bf96', seed: 9, sx: 1, sy: 3, warp: 1.2 });
@@ -30,15 +33,17 @@
       // Nebkheperure in cartouches, the rest in the manner of a royal text (the real wording is not reproduced here)
       const HF = '"Noto Sans Egyptian Hieroglyphs"';
       const textTex = (len, ht, glyphs) => { const PX = 1536, s = PX / len; return K.tex(PX, Math.round(ht * s), (g, w, h) => {
-        g.drawImage(ebonyT.image, 0, 0, w, h); const yel = 'rgba(226,206,150,.92)';
-        g.strokeStyle = yel; g.lineWidth = s * .12; [s * .55, h - s * .55].forEach(y => { g.beginPath(); g.moveTo(s * .4, y); g.lineTo(w - s * .4, y); g.stroke(); });
-        g.fillStyle = yel; g.textBaseline = 'middle'; const FS = Math.min(h * .34, s * 2.3); g.font = `${Math.round(FS)}px ${HF}`;
-        const cart = (x) => { const cw = s * 4.6, ch = FS * 1.25, y0 = h / 2 - ch / 2; g.lineWidth = s * .09; g.beginPath(); g.roundRect(x, y0, cw, ch, ch / 2); g.stroke(); g.beginPath(); g.moveTo(x + cw, y0 + ch * .1); g.lineTo(x + cw, y0 + ch * .9); g.stroke();
-          g.textAlign = 'center'; g.font = `${Math.round(FS * .7)}px ${HF}`; g.fillText('\u{131F3}\u{1319F}\u{133E5}\u{1339F}', x + cw / 2, h * .5); g.font = `${Math.round(FS)}px ${HF}`; g.textAlign = 'left'; return cw; };
+        g.drawImage(ebonyT.image, 0, 0, w, h); const yel = 'rgba(212,178,104,.9)';
+        // one register of text between two incised lines, in the upper middle of the side (photographs in the Egyptian Museum)
+        const cy = h * (ht > 5 ? .42 : .5), bh = Math.min(h * .3, s * 2.4);
+        g.strokeStyle = yel; g.lineWidth = s * .08; [cy - bh / 2, cy + bh / 2].forEach(y => { g.beginPath(); g.moveTo(s * .35, y); g.lineTo(w - s * .35, y); g.stroke(); });
+        g.fillStyle = yel; g.textBaseline = 'middle'; const FS = bh * .9; g.font = `${Math.round(FS)}px ${HF}`;
+        const cart = (x) => { const cw = s * 3.6, ch = bh * .92, y0 = cy - ch / 2; g.lineWidth = s * .09; g.beginPath(); g.roundRect(x, y0, cw, ch, ch / 2); g.stroke(); g.beginPath(); g.moveTo(x + cw, y0 + ch * .1); g.lineTo(x + cw, y0 + ch * .9); g.stroke();
+          g.textAlign = 'center'; g.font = `${Math.round(FS * .7)}px ${HF}`; g.fillText('\u{131F3}\u{1319F}\u{133E5}\u{1339F}', x + cw / 2, cy); g.font = `${Math.round(FS)}px ${HF}`; g.textAlign = 'left'; return cw; };
         let x = s * 1.0; g.textAlign = 'left'; let i = 0;
-        while (x < w - s * 2) { const c = glyphs[i % glyphs.length]; if (c === 'C') { x += cart(x) + s * .6; } else { g.fillText(c, x, h * .5); x += g.measureText(c).width + s * .12; } i++; }
+        while (x < w - s * 2) { const c = glyphs[i % glyphs.length]; if (c === 'C') { x += cart(x) + s * .4; } else { g.fillText(c, x, cy); x += Math.min(g.measureText(c).width, FS * 1.05) + s * .05; } i++; }
       }); };
-      const LINE = ['\u{13079}', '\u{1309D}', '\u{13190}', '\u{13000}', 'C', '\u{132F9}', '\u{13216}', '\u{1340D}', '\u{13283}', '\u{132B9}', '\u{130ED}', 'C', '\u{13290}', '\u{13000}', '\u{1309D}', '\u{13079}'];
+      const LINE = ['\u{13079}', '\u{1309D}', '\u{13190}', '\u{13000}', '\u{132F9}', '\u{13216}', '\u{1340D}', '\u{13283}', '\u{132B9}', '\u{130ED}', '\u{13290}', '\u{13000}', '\u{1309D}', '\u{1308B}', '\u{13171}', '\u{1340D}', '\u{132AA}', '\u{133CF}', '\u{13216}', '\u{1309E}', '\u{13193}', '\u{132F4}', '\u{1308B}', '\u{13000}', '\u{132B9}', 'C'];
       const sideT = textTex(L, BH, LINE), endT = textTex(W, BH, LINE.slice(4));
       const sideM = K.mat({ map: sideT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .45 }), endM = K.mat({ map: endT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .45 });
       const box = new TT.Mesh(new TT.BoxGeometry(L, BH, W), [ebony, endM, ebony, ebony, sideM, sideM]); box.position.set(0, Y0 + BH / 2, 0); G.add(box);
@@ -61,7 +66,7 @@
         }
       });
       const topMat = K.mat({ map: topT, color: '#ffffff', roughness: .42, clearcoat: .2, clearcoatRoughness: .5 });
-      const slab = new TT.Mesh(new TT.BoxGeometry(fieldW, .12, fieldD), [ivory, ivory, topMat, ivory, ivory, ivory]); slab.position.set(0, Y0 + BH + .06, 0); G.add(slab);
+      const slab = new TT.Mesh(new TT.BoxGeometry(fieldW, .12, fieldD), [ebony, ebony, topMat, ebony, ebony, ebony]); slab.position.set(0, Y0 + BH + .06, 0); G.add(slab);
       // raised strips: rows and columns (and the outer frame), ebony
       const SH = .22, strips = [];
       for (let r = 0; r <= ROWS; r++) strips.push([fieldW, ST, 0, -fieldD / 2 + ST / 2 + r * (SQ + ST)]);
@@ -69,12 +74,22 @@
       strips.forEach(([w, d, x, z]) => { const m = new TT.Mesh(new TT.BoxGeometry(w, SH, d), ebony); m.position.set(x, Y0 + BH + .12 + SH / 2, z); G.add(m); });
       // a thin ivory edge where the field meets the ebony
       const band = (w, d, y, x = 0, z = 0) => { const m = new TT.Mesh(new TT.BoxGeometry(w, .2, d), ivory); m.position.set(x, y, z); G.add(m); };
-      band(L + .04, .08, Y0 + BH - .12, 0, W / 2); band(L + .04, .08, Y0 + BH - .12, 0, -W / 2); band(.08, W + .04, Y0 + BH - .12, -L / 2, 0); band(.08, W + .04, Y0 + BH - .12, L / 2, 0);
-      // the drawer at the +x end (9.5 wide, 4 high): its front framed with a line of text; the bolts and staples are gone
+      // the drawer at the +x end (22.2 long, 9.5 wide, 4 high), shown pulled out as in the museum's photographs
+      const DL = 22.2, DWd = 9.5, DHt = 4.0, DOUT = 8.5, dg = new TT.Group(); dg.position.set(L / 2 + DOUT - DL / 2, Y0 + .9 + DHt / 2, 0); G.add(dg);
       const dT = textTex(9.5, 4.0, ['C', '\u{13079}', '\u{1309D}']);
-      const df = new TT.Mesh(new TT.BoxGeometry(.3, 4.0, 9.5), [K.mat({ map: dT, color: '#ffffff', roughness: .5, clearcoat: .35 }), ebony, ebony, ebony, ebony, ebony]); df.position.set(L / 2 + .15, Y0 + BH / 2 - .4, 0); df.rotation.y = 0; G.add(df);
-      // the scars where the bolt's staples were wrenched away
-      [-3.2, 3.2].forEach(z => { const sc = new TT.Mesh(new TT.BoxGeometry(.05, .5, .9), K.mat({ color: '#2a1a10', roughness: .9 })); sc.position.set(L / 2 + .31, Y0 + BH / 2 + 2.3, z); G.add(sc); });
+      const dpart = (w, h, d, x, y, z, m) => { const o = new TT.Mesh(new TT.BoxGeometry(w, h, d), m || ebony); o.position.set(x, y, z); dg.add(o); };
+      dpart(.35, DHt, DWd, DL / 2 - .175, 0, 0, [K.mat({ map: dT, color: '#ffffff', roughness: .5, clearcoat: .35 }), ebony, ebony, ebony, ebony, ebony]);   // front
+      dpart(DL - .35, DHt - .2, .3, -.175, -.1, DWd / 2 - .15); dpart(DL - .35, DHt - .2, .3, -.175, -.1, -DWd / 2 + .15);   // sides
+      dpart(.3, DHt - .2, DWd - .6, -DL / 2 + .15, -.1, 0); dpart(DL - .35, .25, DWd - .6, -.175, -DHt / 2 + .125, 0, K.mat({ color: '#4a3324', roughness: .85 }));   // back, rough floor
+      [-3.2, 3.2].forEach(z => { const sc = new TT.Mesh(new TT.BoxGeometry(.05, .5, .9), K.mat({ color: '#2a1a10', roughness: .9 })); sc.position.set(DL / 2 + .01, 1.2, z); dg.add(sc); });   // where the bolt's staples were wrenched away
+      const hole = new TT.Mesh(new TT.BoxGeometry(.05, DHt, DWd), K.mat({ color: '#080504', roughness: 1 })); hole.position.set(L / 2 + .03, Y0 + .9 + DHt / 2, 0); G.add(hole);   // the empty opening in the box's end
+      /* ---------- pieces on the board, as the set is shown in the museum: reels and cones (ivory; two cones blue faience) ---------- */
+      const faience = K.mat({ color: '#6fa9a0', roughness: .45, clearcoat: .3 });
+      const reelG = new TT.LatheGeometry([[0, 0], [.95, 0], [1.0, .12], [.62, .35], [.5, .9], [.62, 1.35], [.98, 1.55], [.9, 1.66], [0, 1.66]].map(([x, y]) => new TT.Vector2(x, y)), 24);
+      const coneG = new TT.LatheGeometry([[0, 0], [.95, 0], [1.0, .15], [.7, .5], [.42, 1.6], [.3, 2.4], [.34, 2.7], [.2, 2.9], [0, 2.95]].map(([x, y]) => new TT.Vector2(x, y)), 24);
+      const sqc = (c, r) => [-fieldW / 2 + ST + c * (SQ + ST) + SQ / 2, Y0 + BH + .12, -fieldD / 2 + ST + r * (SQ + ST) + SQ / 2];
+      [[0, 0], [2, 0], [3, 1], [5, 0], [1, 2]].forEach(([c, r]) => { const m = new TT.Mesh(reelG, ivory); m.position.set(...sqc(c, r)); m.scale.setScalar(.82); G.add(m); });
+      [[6, 1], [7, 2], [8, 1], [9, 2], [9, 0]].forEach(([c, r], i) => { const m = new TT.Mesh(coneG, i === 1 || i === 3 ? faience : ivory); m.position.set(...sqc(c, r)); m.scale.set(.75, .9, .75); G.add(m); });
       /* ---------- the stand: rails, four animal legs on drums, two sledge runners ---------- */
       const RL = 46.4, RW = 16.4, RH = 1.8;   // the top frame (rebated for the box)
       [[RL, RH, .9, 0, RW / 2 - .45], [RL, RH, .9, 0, -RW / 2 + .45], [.9, RH, RW, RL / 2 - .45, 0], [.9, RH, RW, -RL / 2 + .45, 0]].forEach(([w, h, d, x, z]) => { const m = new TT.Mesh(new TT.BoxGeometry(w, h, d), ebony); m.position.set(x, 20.2 - h / 2, z); G.add(m); });
@@ -84,28 +99,29 @@
       gilt(RL + .02, .92, 0, RW / 2 - .45); gilt(RL + .02, .92, 0, -RW / 2 + .45);
       // a feline leg seen from the side (paw forward to +x), extruded and rounded
       const sh = new TT.Shape();
-      sh.moveTo(-.95, 10.3); sh.quadraticCurveTo(-1.25, 8.6, -1.0, 7.2); sh.quadraticCurveTo(-.82, 6.1, -1.12, 4.9); sh.quadraticCurveTo(-1.18, 3.9, -.62, 3.0);
-      sh.quadraticCurveTo(-.48, 2.0, -.62, 1.35); sh.quadraticCurveTo(-.92, .8, -.7, .05); sh.lineTo(1.35, .05);
-      sh.quadraticCurveTo(2.05, .1, 2.0, .62); sh.quadraticCurveTo(1.9, 1.05, 1.25, 1.12); sh.quadraticCurveTo(.62, 1.25, .52, 1.9);
-      sh.quadraticCurveTo(.42, 3.0, .7, 4.2); sh.quadraticCurveTo(.92, 5.3, .66, 6.4); sh.quadraticCurveTo(.5, 7.4, .82, 8.5); sh.quadraticCurveTo(1.0, 9.4, .95, 10.3); sh.lineTo(-.95, 10.3);
+      // (after the photographs: a heavy thigh, a slender shank curving back, the knee forward, a broad paw)
+      sh.moveTo(-2.3, 10.3); sh.quadraticCurveTo(-2.5, 8.9, -1.5, 7.7); sh.quadraticCurveTo(-.6, 6.6, -.7, 5.2); sh.quadraticCurveTo(-.75, 3.9, -.75, 2.7); sh.quadraticCurveTo(-1.15, 1.6, -.9, .45); sh.lineTo(-.72, .02);
+      sh.lineTo(1.85, .02); sh.quadraticCurveTo(2.5, .05, 2.4, .62); sh.quadraticCurveTo(2.28, 1.12, 1.55, 1.2); sh.quadraticCurveTo(.62, 1.38, .55, 2.4);
+      sh.quadraticCurveTo(.5, 3.6, .95, 5.0); sh.quadraticCurveTo(1.35, 6.6, 1.0, 8.0); sh.quadraticCurveTo(.8, 9.3, 1.15, 10.3); sh.lineTo(-2.3, 10.3);
       const legG = new TT.ExtrudeGeometry(sh, { depth: 1.15, bevelEnabled: true, bevelThickness: .24, bevelSize: .22, bevelSegments: 4, curveSegments: 10 });
       legG.translate(0, 0, -.575);
       const clawG = new TT.ConeGeometry(.12, .42, 10); clawG.rotateZ(-Math.PI / 2);
-      const drumG = new TT.CylinderGeometry(.95, 1.05, .6, 28);
-      const LX = RL / 2 - 1.6, LZ = RW / 2 - .9, LS = (20.2 - RH - 2.4) / 10.3;   // (the legs stretched to the stand's height)
+      const drumG = new TT.LatheGeometry([[0, -.9], [1.15, -.9], [1.2, -.75], [1.05, -.6], [1.18, -.45], [1.05, -.3], [1.18, -.15], [1.05, 0], [1.18, .15], [1.05, .3], [1.18, .45], [1.05, .6], [1.2, .75], [1.15, .9], [0, .9]].map(([x, y]) => new TT.Vector2(x, y)), 28);
+      const LX = RL / 2 - 1.6, LZ = RW / 2 - .9, LS = (20.2 - RH - 3.3) / 10.3;   // (the legs stretched to the stand's height)
       for (const sx of [1, -1]) for (const sz of [1, -1]) {
         const x = sx * LX, z = sz * LZ;
-        const leg = new TT.Mesh(legG, ebony); leg.position.set(x, 2.4, z); leg.scale.y = LS; G.add(leg);
-        for (let k = -1; k <= 1; k++) { const c = new TT.Mesh(clawG, ivory); c.position.set(x + 2.18, 2.4 + .3, z + k * .42); G.add(c); }
-        const dr = new TT.Mesh(drumG, ebony); dr.position.set(x + .4, 2.1, z); G.add(dr);
-        const cap = new TT.Mesh(new TT.CylinderGeometry(1.0, 1.0, .1, 28), gold); cap.position.set(x + .4, 2.42, z); G.add(cap);
+        const leg = new TT.Mesh(legG, ebony); leg.position.set(x, 3.3, z); leg.scale.y = LS; leg.scale.x = sx; leg.scale.z = .9; G.add(leg);   // the paws face outwards, to the ends
+        for (let k = -1; k <= 1; k++) { const c = new TT.Mesh(clawG, ivory); c.position.set(x + sx * 2.18, 3.3 + .3, z + k * .36); c.scale.x = sx; G.add(c); }
+        const dr = new TT.Mesh(drumG, gold); dr.position.set(x + sx * .4, 1.45 + .9, z); G.add(dr);   // a gold drum, ribbed, under each paw
       }
-      // runners: long bars with rounded, slightly upturned ends
-      const rs = new TT.Shape(); const RLn = 55, RH2 = 1.8;
-      rs.moveTo(-RLn / 2 + 1.2, 0); rs.lineTo(RLn / 2 - 1.2, 0); rs.quadraticCurveTo(RLn / 2 + .2, .1, RLn / 2, RH2 * .9); rs.quadraticCurveTo(RLn / 2 - .3, RH2, RLn / 2 - 1.4, RH2);
-      rs.lineTo(-RLn / 2 + 1.4, RH2); rs.quadraticCurveTo(-RLn / 2 + .3, RH2, -RLn / 2, RH2 * .9); rs.quadraticCurveTo(-RLn / 2 - .2, .1, -RLn / 2 + 1.2, 0);
-      const runG = new TT.ExtrudeGeometry(rs, { depth: 1.5, bevelEnabled: true, bevelThickness: .15, bevelSize: .15, bevelSegments: 3, curveSegments: 10 }); runG.translate(0, 0, -.75);
+      // runners: long bars whose ends sweep up in a curl (the photographs), joined by a cross-bar near each end
+      const RLn = 55, RH2 = 1.45, rs = new TT.Shape(), E = RLn / 2;
+      rs.moveTo(-E + 5, 0); rs.lineTo(E - 5, 0); rs.bezierCurveTo(E - 1.6, 0, E, .8, E, 2.0); rs.quadraticCurveTo(E, 2.7, E - .7, 2.7); rs.quadraticCurveTo(E - 1.4, 2.7, E - 1.6, 2.1);
+      rs.bezierCurveTo(E - 1.9, 1.6, E - 3, RH2, E - 5, RH2); rs.lineTo(-E + 5, RH2); rs.bezierCurveTo(-E + 3, RH2, -E + 1.9, 1.6, -E + 1.6, 2.1);
+      rs.quadraticCurveTo(-E + 1.4, 2.7, -E + .7, 2.7); rs.quadraticCurveTo(-E, 2.7, -E, 2.0); rs.bezierCurveTo(-E, .8, -E + 1.6, 0, -E + 5, 0);
+      const runG = new TT.ExtrudeGeometry(rs, { depth: 1.5, bevelEnabled: true, bevelThickness: .12, bevelSize: .12, bevelSegments: 3, curveSegments: 16 }); runG.translate(0, 0, -.75);
       [LZ, -LZ].forEach(z => { const m = new TT.Mesh(runG, ebony); m.position.set(0, 0, z); G.add(m); });
+      [LX + 3.4, -LX - 3.4].forEach(x => { const m = new TT.Mesh(new TT.BoxGeometry(1.4, 1.1, 2 * LZ), ebony); m.position.set(x, .75, 0); G.add(m); });
       /* ---------- the pieces kept with it: two knuckle-bones and two pairs of casting sticks (black ebony over white ivory) ---------- */
       const stick = (x, z, ry, up, fox) => { const g = new TT.Group(); g.position.set(x, .35, z); g.rotation.y = ry; G.add(g);
         const half = (m, top) => { const h = new TT.Mesh(new TT.CylinderGeometry(.55, .55, 15.5, 16, 1, false, top ? 0 : Math.PI, Math.PI), m); h.rotation.z = Math.PI / 2; h.scale.set(1, 1, .6); g.add(h); };
