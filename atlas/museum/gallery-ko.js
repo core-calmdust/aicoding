@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Korean). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).ko = {
-  ui: { play: "대국 시작", play_ballinderry: "이 판으로 두기: 브란두브", p_level: "AI 강도", p_side: "내 편", p_side1_ballinderry: "공격(선수)", p_side2_ballinderry: "수비(왕)", p_stop: "대국 그만두기", p_note_ballinderry: "말은 발견되지 않아 모양은 추정입니다.", p_you: "나", p_turn: "내 차례", p_think: "생각 중…", p_win: "승리", p_lose: "패배", p_draw: "무승부", flip: '뒤집기', guideH: '안내원 뮤제후쿠', guide: '소장품을 둘러볼수록 뮤제후쿠가 조금씩 멋을 내고 찾아와요', gift: '새 아트라모가 찾아왔어요!', sub: "세계의 박물관이 지켜 온 게임 역사의 보물. 3D로 재현한 명품을 손에 든 듯 돌려 보며 자세히 살펴보세요.", collection: "소장품", special: "특별 전시", lock: "{g} 업적 {n}개 달성 시 공개", loading: "전시 케이스를 준비하는 중…", fail: "전시품을 불러오지 못했습니다",
+  ui: { p_start: "대국 시작", play_ballinderry: "이 판으로 두기: 브란두브", p_level: "AI 강도", p_side: "내 편", p_side1_ballinderry: "공격(선수)", p_side2_ballinderry: "수비(왕)", p_stop: "대국 그만두기", p_you: "나", p_turn: "내 차례", p_think: "생각 중…", p_win: "승리", p_lose: "패배", p_draw: "무승부", flip: '뒤집기', guideH: '안내원 뮤제후쿠', guide: '소장품을 둘러볼수록 뮤제후쿠가 조금씩 멋을 내고 찾아와요', gift: '새 아트라모가 찾아왔어요!', sub: "세계의 박물관이 지켜 온 게임 역사의 보물. 3D로 재현한 명품을 손에 든 듯 돌려 보며 자세히 살펴보세요.", collection: "소장품", special: "특별 전시", lock: "{g} 업적 {n}개 달성 시 공개", loading: "전시 케이스를 준비하는 중…", fail: "전시품을 불러오지 못했습니다",
     hint: "드래그로 회전 · 휠로 확대 · 번호로 볼거리", hintT: "드래그로 회전 · 핀치로 확대", spin: "천천히 돌리기", reset: "처음 방향으로", close: "닫기",
     date: "연대", where: "출토 · 전래", museum: "소장", mat: "재질", size: "크기", look: "볼거리", aboutModel: "이 3D 모델에 대하여", sources: "출처", play: "{g} 플레이" },
   ex: {
@@ -74,7 +74,7 @@
         ["사람의 머리", "테두리에서 튀어나온 머리. 1932년 보고서는 “바이킹풍의 거친 사람 머리”라고 했습니다. 아마 손잡이였을 것입니다."],
         ["반대쪽 꼭지", "반대쪽 가장자리에는 짧은 목이 달린 작고 둥근 꼭지가 있습니다. 동물 머리로 여겨지며, 이것도 손잡이로 보입니다."],
         ["깨진 자리", "판은 두 조각으로 깨진 채 발견되었습니다."]],
-      model: "형태와 배치, 테두리의 조각, 판 면의 손상은 판을 바로 위에서 찍은 사진에서 가져왔습니다. 두께는 추정입니다.",
+      model: "형태와 배치, 테두리의 조각, 판 면의 손상은 판을 바로 위에서 찍은 사진에서 가져왔습니다. 두께는 추정입니다. 말은 발견되지 않아 말의 모양은 추정입니다.",
       src: [["아일랜드 국립박물관, “The Ballinderry gaming board”", "https://museum.ie/en-IE/Collections-Research/Irish-Antiquities-Division-Collections/Collections-List-(1)/Viking/The-Ballinderry-gaming-board"], ["1932년 발견을 전한 신문 기사(Papers Past: 크기, 무늬, 머리)", "https://paperspast.natlib.govt.nz/newspapers/MS19321214.2.22"], ["Westmeath Examiner(브란두브, 동물 머리)", "https://www.westmeathexaminer.ie/?p=130666"]] },
     lewis: { name: "루이스 체스 말", alt: "바다코끼리 엄니로 조각한 중세 체스 말", date: "1150~1200년경", where: "스코틀랜드(루이스섬에서 발견) · 아마도 노르웨이에서 제작", found: "1831년 또는 그 이전에 루이스섬에서 발견. 흔히 위그만이라고 하지만, 더 남쪽의 멜리스타라는 설도 있다",
       museum: "대영박물관(런던) 82점 · 스코틀랜드 국립박물관(에든버러) 11점", no: "1831,1101.78 외", mat: "바다코끼리 엄니(일부는 고래 이빨)", size: "높이 약 4~10cm(킹 9.8cm, 폰 4cm)",

@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Traditional Chinese, Taiwan). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {})['zh-TW'] = {
-  ui: { play: "開始對局", play_ballinderry: "用這塊棋盤下棋：布蘭杜布", p_level: "AI強度", p_side: "你執", p_side1_ballinderry: "攻方（先手）", p_side2_ballinderry: "守方（王）", p_stop: "結束對局", p_note_ballinderry: "棋子沒有出土，形狀為推定。", p_you: "你", p_turn: "輪到你", p_think: "思考中…", p_win: "你贏了", p_lose: "你輸了", p_draw: "平局", flip: '翻面', guideH: '導覽員：館藏梟', guide: '逛遍館藏，館藏梟就會一次比一次打扮得更漂亮來見你', gift: '新的阿特拉莫來了！', sub: "世界各地博物館守護的遊戲史珍寶。每件名品都以3D重現——彷彿拿在手上，轉動細細端詳。", collection: "館藏", special: "特別展示", lock: "達成{n}個{g}成就後開放", loading: "正在準備展示櫃…", fail: "無法載入展品",
+  ui: { p_start: "開始對局", play_ballinderry: "用這塊棋盤下棋：布蘭杜布", p_level: "AI強度", p_side: "你執", p_side1_ballinderry: "攻方（先手）", p_side2_ballinderry: "守方（王）", p_stop: "結束對局", p_you: "你", p_turn: "輪到你", p_think: "思考中…", p_win: "你贏了", p_lose: "你輸了", p_draw: "平局", flip: '翻面', guideH: '導覽員：館藏梟', guide: '逛遍館藏，館藏梟就會一次比一次打扮得更漂亮來見你', gift: '新的阿特拉莫來了！', sub: "世界各地博物館守護的遊戲史珍寶。每件名品都以3D重現——彷彿拿在手上，轉動細細端詳。", collection: "館藏", special: "特別展示", lock: "達成{n}個{g}成就後開放", loading: "正在準備展示櫃…", fail: "無法載入展品",
     hint: "拖曳旋轉 · 滾輪縮放 · 點數字看細節", hintT: "拖曳旋轉 · 雙指縮放", spin: "緩緩旋轉", reset: "回到初始視角", close: "關閉",
     date: "年代", where: "出土 / 流傳", museum: "典藏", mat: "材質", size: "尺寸", look: "看點", aboutModel: "關於這個3D模型", sources: "參考資料", play: "玩{g}" },
   ex: {
@@ -74,7 +74,7 @@
         ["人頭", "從邊框突出的一個頭像——1932年的報告稱之為「一個維京樣式的粗糙人頭」。它大概是把手。"],
         ["對側的圓鈕", "對側邊緣有一個短頸的小圓鈕，被認為是動物頭，可能也是把手。"],
         ["斷裂處", "棋盤出土時已斷成兩半。"]],
-      model: "形狀、佈局、邊框的雕刻和盤面的損傷均取自一張俯拍照片。厚度為推定。",
+      model: "形狀、佈局、邊框的雕刻和盤面的損傷均取自一張俯拍照片。厚度為推定。 棋子沒有出土，棋子的形狀為推定。",
       src: [["愛爾蘭國家博物館，「The Ballinderry gaming board」", "https://museum.ie/en-IE/Collections-Research/Irish-Antiquities-Division-Collections/Collections-List-(1)/Viking/The-Ballinderry-gaming-board"], ["1932年發現時的報紙報導（Papers Past：尺寸、紋樣、頭像）", "https://paperspast.natlib.govt.nz/newspapers/MS19321214.2.22"], ["Westmeath Examiner（布蘭杜布、獸頭）", "https://www.westmeathexaminer.ie/?p=130666"]] },
     lewis: { name: "路易斯棋子", alt: "以海象牙雕刻的中世紀西洋棋棋子", date: "約1150–1200年", where: "蘇格蘭（出土於路易斯島）・可能製作於挪威", found: "1831年或更早發現於路易斯島——通常認為出土地點是烏伊格灣，但也有人提出是更南邊的梅利斯塔",
       museum: "大英博物館（倫敦）82枚・蘇格蘭國家博物館（愛丁堡）11枚", no: "1831,1101.78等", mat: "海象牙（少數為鯨齒）", size: "高約4–10公分（國王9.8公分，士兵4公分）",
