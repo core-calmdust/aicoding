@@ -16,7 +16,7 @@
       const G = new TT.Group();
       const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = .7, RT = .7;   // LIN: the strip of rosettes at the top of the base
       const shT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#3e2016', b: '#1f0e09', seed: 37, sx: .5, sy: 9, warp: .45, pores: .004 }));
-      const baseT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#7a4628', b: '#5a3018', seed: 41, sx: .5, sy: 12, warp: .3, pores: .004 }));
+      const baseT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#8a5a32', b: '#6a3e22', seed: 41, sx: .5, sy: 12, warp: .3, pores: .004 }));
       const shR = K.tex(256, 256, (g, w, h) => K.grain(g, w, h, { a: '#7a7a7a', b: '#4e4e4e', seed: 38, sy: 14 }), { data: true });
       const shitan = K.mat({ map: shT, roughnessMap: shR, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
       const inner = K.mat({ map: baseT, color: '#ffffff', roughness: .55, clearcoat: .2, clearcoatRoughness: .4 });
@@ -57,21 +57,21 @@
       /* ---------- the face ---------- */
       const IL = L - RT * 2, IW = W - RT * 2;
       const faceT = K.tex(2048, Math.round(2048 * IW / IL), (g, w, h) => { const s = w / IL;
-        K.grain(g, w, h, { a: '#341a11', b: '#23100a', seed: 44, sx: .25, sy: 22, warp: .1, pores: .003 });   // straight grain along the length
+        K.grain(g, w, h, { a: '#331a11', b: '#26120b', seed: 44, sx: .3, sy: 9, warp: .2, pores: .003 });   // straight grain along the length
         let y = 0, sd = 3; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;   // planks along the length, slightly different in tone
         while (y < h) { const ph = s * (4.5 + rnd() * 2.5); g.fillStyle = rnd() < .5 ? `rgba(0,0,0,${rnd() * .18})` : `rgba(120,50,30,${rnd() * .12})`; g.fillRect(0, y, w, ph); g.fillStyle = 'rgba(10,3,2,.5)'; g.fillRect(0, y, w, s * .04); y += ph; }
         // a band of scroll inside each long rim (seen on the far side in the overall photograph)
-        const band = K.tex(2048, Math.round(2048 * 1.0 / IL), (g2, w2, h2) => scroll(g2, w2, h2, w2 / IL, 9, shT, { per: 4.2, birds: false }));
-        g.globalAlpha = .75; g.drawImage(band.image, 0, 0, w, s * 1.0); g.save(); g.translate(w, h); g.rotate(Math.PI); g.drawImage(band.image, 0, 0, w, s * 1.0); g.restore(); g.globalAlpha = 1;
-        const row = s * 2.0, step = s * 3.0;
+        const band = K.tex(2048, Math.round(2048 * 2.1 / IL), (g2, w2, h2) => scroll(g2, w2, h2, w2 / IL, 9, shT, { per: 3.1, birds: false }));
+        g.globalAlpha = .8; g.drawImage(band.image, 0, 0, w, s * 2.1); g.save(); g.translate(w, h); g.rotate(Math.PI); g.drawImage(band.image, 0, 0, w, s * 2.1); g.restore(); g.globalAlpha = 1;
+        const row = s * 1.05, step = s * 3.1;
         [row, h - row].forEach((yy, side) => {
           // a thin crescent, horns towards the edge
           g.save(); g.translate(w / 2, yy); if (side) g.scale(1, -1);
-          g.beginPath(); g.arc(0, -s * 3.8, s * 4.5, .25 * Math.PI, .75 * Math.PI); g.arc(0, -s * 4.75, s * 4.5, .7 * Math.PI, .3 * Math.PI, true); g.closePath();
+          g.translate(0, s * .5); g.beginPath(); g.arc(0, -s * 4.6, s * 5.4, .27 * Math.PI, .73 * Math.PI); g.arc(0, -s * 5.15, s * 5.4, .71 * Math.PI, .29 * Math.PI, true); g.closePath();
           g.fillStyle = '#e2c47e'; g.fill(); g.strokeStyle = 'rgba(60,30,10,.45)'; g.lineWidth = s * .04; g.stroke(); g.restore();
           for (let i = 1; i <= 6; i++) [-1, 1].forEach(d => { const fx = w / 2 + d * (s * 1.6 + i * step); g.save(); g.translate(fx, yy);
-            for (let q = 0; q < 6; q++) { g.rotate(Math.PI / 3); g.beginPath(); g.ellipse(s * .42, 0, s * .4, s * .22, 0, 0, 6.29); g.fillStyle = '#d8b46e'; g.fill(); g.strokeStyle = 'rgba(40,16,8,.5)'; g.lineWidth = s * .03; g.stroke(); }
-            g.beginPath(); g.arc(0, 0, s * .16, 0, 6.29); g.fillStyle = '#efe2c2'; g.fill(); g.restore(); });
+            for (let q = 0; q < 6; q++) { g.rotate(Math.PI / 3); g.beginPath(); g.ellipse(s * .42, 0, s * .36, s * .25, 0, 0, 6.29); g.fillStyle = '#c99a4e'; g.fill(); g.strokeStyle = 'rgba(40,16,8,.5)'; g.lineWidth = s * .03; g.stroke(); }
+            g.beginPath(); g.arc(0, 0, s * .2, 0, 6.29); g.fillStyle = '#efe2c2'; g.fill(); g.restore(); });
         });
         [s * 2.2, w - s * 2.2].forEach(fx => { g.save(); g.translate(fx, h / 2); for (let q = 0; q < 6; q++) { g.rotate(Math.PI / 3); g.beginPath(); g.ellipse(s * .3, 0, s * .28, s * .16, 0, 0, 6.29); g.fillStyle = '#d8b46e'; g.fill(); } g.beginPath(); g.arc(0, 0, s * .12, 0, 6.29); g.fillStyle = '#efe2c2'; g.fill(); g.restore(); });
       });
@@ -90,7 +90,7 @@
       [[L, W / 2 - RT / 2, 0, eL], [L, W / 2 - RT / 2, Math.PI, eL], [W - RT * 2, L / 2 - RT / 2, Math.PI / 2, eW], [W - RT * 2, L / 2 - RT / 2, -Math.PI / 2, eW]].forEach(([len, off, ry, m]) => {
         const g = new TT.Group(); g.rotation.y = ry; G.add(g);
         const r = new TT.Mesh(new TT.BoxGeometry(len, RIM, RT), [shitan, shitan, shitan, shitan, m, shitan]); r.position.set(0, BASE + SL + RIM / 2, off); r.castShadow = r.receiveShadow = true; g.add(r);
-        const e = new TT.Mesh(new TT.BoxGeometry(len + .02, .12, RT + .02), ivory); e.position.set(0, H - .06, off); g.add(e); });
+        const e = new TT.Mesh(new TT.BoxGeometry(len + .02, .1, .3), ivory); e.position.set(0, H - .05, off + RT / 2 - .14); g.add(e); });
       [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([a, b]) => add(new TT.BoxGeometry(.2, EDGE, .2), ivory, a * (L / 2 - .08), BASE + EDGE / 2, b * (W / 2 - .08)));   // ivory strips on the corners
       /* ---------- the base: openings with bowed sides and two-arched tops, a waisted post on the long sides ---------- */
       const SK = BASE - RAIL, OT = SK - .35;   // skirt height, the openings' top
