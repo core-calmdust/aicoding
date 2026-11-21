@@ -21,6 +21,12 @@ const s = document.createElement('script'); s.src = '../museum/ex/' + id + '.js?
   let C;
   if (top) { C = new THREE.OrthographicCamera(-W / 2, W / 2, D / 2, -D / 2, .1, 500); C.position.set(0, 200, 0); C.up.set(0, 0, -1); C.lookAt(0, 0, 0); }
   else { C = new THREE.PerspectiveCamera(+(q.get('fov') || 30), 4 / 3, .1, 2000); C.position.set(...num('cam')); C.lookAt(...num('t')); }
-  R.render(S, C); window.done = 1; };
+  R.render(S, C);
+  // cost of the model (for the polygon rule: an exhibit is at most 80,000 triangles): window.stats = { tris, meshes, mats, texMB }
+  { let tris = 0, meshes = 0; const mats = new Set(), tex = new Set();
+    o.traverse(m => { if (!m.isMesh) return; meshes++; const g = m.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3;
+      (Array.isArray(m.material) ? m.material : [m.material]).forEach(mt => { mats.add(mt); for (const k in mt) { const v = mt[k]; if (v && v.isTexture && v.image) tex.add(v.image); } }); });
+    let px = 0; tex.forEach(i => px += (i.width || 0) * (i.height || 0)); window.stats = { tris: Math.round(tris), meshes, mats: mats.size, tex: tex.size, texMB: +(px * 4 * 1.33 / 1048576).toFixed(1), calls: R.info.render.calls }; }
+  window.done = 1; };
 document.head.appendChild(s);
 </script></body></html>
