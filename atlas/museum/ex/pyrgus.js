@@ -20,41 +20,48 @@
           d[i] = (96 + b * 34 + a * 26) * (1 - c * .35) + c * 26; d[i + 1] = (106 + b * 34 + a * 26) * (1 - c * .45) + c * 12; d[i + 2] = (114 + b * 34 + a * 24) * (1 - c * .6); d[i + 3] = 255; } g.putImageData(img, 0, 0); });
       // a face as an alpha map: white = metal, black = cut away
       const face = (fn) => K.tex(768, Math.round(768 * H / W), (g, w, h) => { g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); fn(g, w, h, w / W); }, { data: true });
-      // the openwork capitals: plain, heavy strokes of even width (drawn here stroke by stroke — the same on every device); each
-      // letter [width, strokes] in a box 1 high, y downward
+      // The letters were cut out of the plate by hand: the ground between them is pierced hole by hole, no two letters alike — heavy
+      // strokes of uneven width, leaning a little, O a small ring tied to the bars above and below, T a cross whose stem runs on up to
+      // the bar (the museum's photograph). Each letter [width, strokes] in a box 1 high, y downward; drawn with a seeded hand-wobble.
       const GL = {
-        P: [.56, g => { g.moveTo(0, 1); g.lineTo(0, 0); g.lineTo(.3, 0); g.bezierCurveTo(.66, 0, .66, .5, .3, .5); g.lineTo(0, .5); }],
-        R: [.6, g => { g.moveTo(0, 1); g.lineTo(0, 0); g.lineTo(.3, 0); g.bezierCurveTo(.66, 0, .66, .5, .3, .5); g.lineTo(0, .5); g.moveTo(.26, .5); g.lineTo(.6, 1); }],
-        I: [0, g => { g.moveTo(0, 0); g.lineTo(0, 1); }],
-        C: [.62, g => { g.moveTo(.62, .2); g.bezierCurveTo(.4, -.08, 0, .05, 0, .5); g.bezierCurveTo(0, .95, .4, 1.08, .62, .8); }],
-        T: [.66, g => { g.moveTo(0, 0); g.lineTo(.66, 0); g.moveTo(.33, 0); g.lineTo(.33, 1); }],
-        O: [.72, g => { g.ellipse(.36, .5, .36, .5, 0, 0, 6.2832); }],
-        S: [.54, g => { g.moveTo(.52, .16); g.bezierCurveTo(.4, -.06, 0, -.04, 0, .26); g.bezierCurveTo(0, .52, .54, .46, .54, .76); g.bezierCurveTo(.54, 1.05, .1, 1.05, 0, .84); }],
-        V: [.7, g => { g.moveTo(0, 0); g.lineTo(.35, 1); g.lineTo(.7, 0); }],
-        H: [.62, g => { g.moveTo(0, 0); g.lineTo(0, 1); g.moveTo(.62, 0); g.lineTo(.62, 1); g.moveTo(0, .5); g.lineTo(.62, .5); }],
-        D: [.64, g => { g.moveTo(0, 1); g.lineTo(0, 0); g.lineTo(.22, 0); g.bezierCurveTo(.78, 0, .78, 1, .22, 1); g.lineTo(0, 1); }],
-        E: [.5, g => { g.moveTo(.5, 0); g.lineTo(0, 0); g.lineTo(0, 1); g.lineTo(.5, 1); g.moveTo(0, .5); g.lineTo(.42, .5); }],
-        F: [.5, g => { g.moveTo(.5, 0); g.lineTo(0, 0); g.lineTo(0, 1); g.moveTo(0, .5); g.lineTo(.42, .5); }],
-        L: [.48, g => { g.moveTo(0, 0); g.lineTo(0, 1); g.lineTo(.48, 1); }],
-        A: [.72, g => { g.moveTo(0, 1); g.lineTo(.36, 0); g.lineTo(.72, 1); g.moveTo(.14, .64); g.lineTo(.58, .64); }],
-        X: [.66, g => { g.moveTo(0, 0); g.lineTo(.66, 1); g.moveTo(.66, 0); g.lineTo(0, 1); }],
+        P: [.5, [[[0, 1], [0, 0], [.34, 0], [.52, .14], [.52, .34], [.34, .48], [0, .48]]]],
+        R: [.56, [[[0, 1], [0, 0], [.34, 0], [.52, .14], [.52, .34], [.34, .48], [0, .48]], [[.22, .48], [.56, 1]]]],
+        I: [0, [[[0, 0], [0, 1]]]],
+        C: [.56, [[[.56, .26], [.42, .1], [.2, .1], [.03, .3], [0, .5], [.03, .7], [.2, .9], [.42, .9], [.56, .74]]]],
+        T: [.6, [[[.3, 0], [.3, 1]], [[0, .24], [.6, .24]]]],
+        O: [.6, [[[.3, 0], [.3, .2]], [[.3, .2], [.52, .29], [.6, .5], [.52, .71], [.3, .8], [.08, .71], [0, .5], [.08, .29], [.3, .2]], [[.3, .8], [.3, 1]]]],
+        S: [.5, [[[.48, .2], [.36, .06], [.14, .06], [.02, .2], [.04, .38], [.25, .5], [.46, .62], [.5, .8], [.36, .94], [.14, .94], [0, .8]]]],
+        V: [.62, [[[0, 0], [.31, 1], [.62, 0]]]],
+        H: [.56, [[[0, 0], [0, 1]], [[.56, 0], [.56, 1]], [[0, .5], [.56, .5]]]],
+        D: [.56, [[[0, 1], [0, 0], [.28, 0], [.5, .16], [.56, .5], [.5, .84], [.28, 1], [0, 1]]]],
+        E: [.46, [[[.46, 0], [0, 0], [0, 1], [.46, 1]], [[0, .5], [.4, .5]]]],
+        F: [.46, [[[.46, 0], [0, 0], [0, 1]], [[0, .5], [.4, .5]]]],
+        L: [.44, [[[0, 0], [0, 1], [.44, 1]]]],
+        A: [.64, [[[0, 1], [.32, 0], [.64, 1]], [[.12, .68], [.52, .68]]]],
+        X: [.6, [[[0, 0], [.6, 1]], [[.6, 0], [0, 1]]]],
       };
-      // a window with a word standing in it: the ground cut away, the letters left, tied to the bars above and below
-      const word = (g, s, x0, y0, ww, hh, txt) => { g.fillStyle = '#000'; g.fillRect(x0, y0, ww, hh);
-        const lw = s * .4, gap = .3, nat = [...txt].reduce((a, c) => a + GL[c][0], 0) + gap * (txt.length - 1), k = (ww - lw * 1.5) / (nat * hh);   // letters squeezed or spread to fill the window
-        let x = x0 + lw * .75; g.strokeStyle = '#fff'; g.lineWidth = lw; g.lineCap = 'butt'; g.lineJoin = 'round';
-        for (const c of txt) { g.save(); g.translate(x, y0 - lw * .2); g.scale(hh * k, hh + lw * .4); g.beginPath(); GL[c][1](g); g.restore(); g.stroke(); x += (GL[c][0] + gap) * hh * k; } };
-      // a square panel of the sides: rows of small four-lobed holes, and in the middle a rosette of eight pointed petals in a ring of round holes
-      const panel = (g, s, cx, cy, n, nr = n) => { g.fillStyle = '#000'; const pitch = s * .98, q = s * .235;
-        for (let j = 0; j < nr; j++) for (let i = 0; i < n; i++) { const x = cx + (i - (n - 1) / 2) * pitch, y = cy + (j - (nr - 1) / 2) * pitch; if (Math.hypot(x - cx, y - cy) < s * 2.6) continue;
-          g.beginPath(); [[q, 0], [-q, 0], [0, q], [0, -q]].forEach(([a, b]) => { g.moveTo(x + a + q, y + b); g.arc(x + a, y + b, q, 0, 6.2832); }); g.fill(); g.fillRect(x - q, y - q, q * 2, q * 2); }
-        for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; g.save(); g.translate(cx, cy); g.rotate(a); g.beginPath(); g.moveTo(s * .55, 0); g.quadraticCurveTo(s * 1.3, s * .42, s * 2.1, 0); g.quadraticCurveTo(s * 1.3, -s * .42, s * .55, 0); g.fill();
-          g.rotate(Math.PI / 8); g.beginPath(); g.arc(s * 2.2, 0, s * .2, 0, 6.2832); g.fill(); g.beginPath(); g.arc(s * 1.25, 0, s * .12, 0, 6.2832); g.fill(); g.restore(); }
-        g.beginPath(); g.arc(cx, cy, s * .2, 0, 6.2832); g.fill(); };
+      let sd = 41; const rr = () => ((sd = (sd * 16807) % 2147483647) / 2147483647), jit = a => (rr() - .5) * 2 * a;
+      // a row with a word in it: the ground cut away (its edges uneven), the letters left standing and tied to the bars above and below
+      const word = (g, s, x0, y0, ww, hh, txt) => { g.fillStyle = '#000'; g.beginPath(); const n = 14;
+        for (let k = 0; k <= n; k++) { const x = x0 + ww * k / n, y = y0 + jit(s * .05); k ? g.lineTo(x, y) : g.moveTo(x, y); } for (let k = n; k >= 0; k--) g.lineTo(x0 + ww * k / n + jit(s * .03), y0 + hh + jit(s * .05)); g.closePath(); g.fill();
+        const gap = .26, nat = [...txt].reduce((a, c) => a + GL[c][0], 0) + gap * (txt.length - 1), lw0 = s * .54, k = (ww - lw0 * 2.3) / (nat * hh);
+        let x = x0 + lw0 * 1.15; g.strokeStyle = '#fff'; g.lineCap = 'butt'; g.lineJoin = 'round';
+        for (const c of txt) { const [wd, strokes] = GL[c], sx = hh * k * (1 + jit(.08)), lean = jit(.07), lw = lw0 * (1 + jit(.16)), dy = jit(s * .03);
+          strokes.forEach(st => { g.beginPath(); st.forEach(([u, v], i) => { const end = v <= 0 || v >= 1, X = x + (u + (end ? 0 : jit(.035)) + (v - .5) * lean) * sx, Y = y0 + dy + (v <= 0 ? -.12 : v >= 1 ? 1.12 : v + jit(.025)) * hh; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.lineWidth = lw * (1 + jit(.1)); g.stroke(); });
+          x += (wd + gap) * hh * k; } };
+      // a square panel of the sides: a border of four-lobed holes, and inside it a rosette of pointed petals — every hole punched by hand, none quite in line
+      const panel = (g, s, cx, cy, n, nr = n) => { g.fillStyle = '#000'; const px = s * 1.26, py = s * 1.38;
+        const quat = (x, y) => { const a = s * .2 * (1 + jit(.12)), b = s * .3 * (1 + jit(.12)); g.beginPath(); g.ellipse(x, y, a * .95, b * 1.5, jit(.12), 0, 6.2832); g.fill(); g.beginPath(); g.ellipse(x, y, a * 1.75, b * .62, jit(.12), 0, 6.2832); g.fill(); };
+        for (let j = 0; j < nr; j++) for (let i = 0; i < n; i++) { if (i > 0 && i < n - 1 && j > 0 && j < nr - 1) continue; quat(cx + (i - (n - 1) / 2) * px + jit(s * .05), cy + (j - (nr - 1) / 2) * py + jit(s * .05)); }
+        const petal = (x, y, a, len, wd) => { g.save(); g.translate(x, y); g.rotate(a + jit(.06)); g.beginPath(); g.moveTo(-len / 2, 0); g.quadraticCurveTo(0, wd * (1 + jit(.15)), len / 2, 0); g.quadraticCurveTo(0, -wd * (1 + jit(.15)), -len / 2, 0); g.fill(); g.restore(); };
+        for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, r = s * (k % 2 ? 1.25 : 1.1); petal(cx + Math.cos(a) * r + jit(s * .04), cy + Math.sin(a) * r * 1.08 + jit(s * .04), a, s * 1.5, s * .52); }
+        for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; quat(cx + Math.cos(a) * s * 1.28 * 1.02 * 1.42, cy + Math.sin(a) * s * 1.38 * 1.02 * 1.42); } };
       const LINES = ['PICTOS', 'VICTOS', 'HOSTIS', 'DELETA', 'LVDITE', 'SECVRI'], FOOT = 4.8;   // FOOT: the front plate stops this far above the ground (the dice run out below it)
-      const front = face((g, w, h, s) => { LINES.forEach((t, i) => word(g, s, s * .75, s * (1.0 + i * 2.65), w - s * 1.5, s * 1.8, t)); g.fillStyle = '#000'; g.fillRect(0, h - s * FOOT, w, s * FOOT); });
-      const side = txt => face((g, w, h, s) => { word(g, s, s * .7, s * .9, w - s * 1.4, s * 1.9, txt); panel(g, s, w / 2, s * 7.5, 7, 8); panel(g, s, w / 2, s * 16.5, 7, 8); });
-      const mk = (am, dark) => K.mat({ map: patT, alphaMap: am, alphaTest: .35, alphaToCoverage: true, transparent: false, side: TT.DoubleSide, color: dark ? '#4a4c4e' : '#ffffff', roughness: .46, metalness: .65 });   // (alpha-to-coverage: the openwork's edges anti-aliased, no sparkle at a distance)
+      const round = (g, w, h) => { g.filter = 'blur(2.2px)'; g.drawImage(g.canvas, 0, 0); g.filter = 'none'; };   // the corners of every cut eased, as a file leaves them
+      const front = face((g, w, h, s) => { LINES.forEach((t, i) => word(g, s, s * .7, s * (.85 + i * 2.65), w - s * 1.4, s * 1.8, t)); g.fillStyle = '#000'; g.fillRect(s * 1.5, h - s * (FOOT + .75), s * 1.1, s * .22); round(g, w, h); g.fillStyle = '#000'; g.fillRect(0, h - s * FOOT, w, s * FOOT); });
+      const side = txt => face((g, w, h, s) => { word(g, s, s * .85, s * .85, w - s * 1.7, s * 1.8, txt); panel(g, s, w / 2, s * 8.4, 5, 5); panel(g, s, w / 2, s * 17.3, 5, 5); round(g, w, h); });
+      const dentT = K.tex(256, 256, (g, w, h) => { const n = K.noise(29), img = g.createImageData(w, h), d = img.data; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const v = 128 + (n(x / 50, y / 50, 3) - .5) * 150 + (n(x / 9, y / 9, 2) - .5) * 40, i = (y * w + x) * 4; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } g.putImageData(img, 0, 0); }, { data: true });
+      const mk = (am, dark) => K.mat({ map: patT, bumpMap: dentT, bumpScale: 1.6, alphaMap: am, alphaTest: .35, alphaToCoverage: true, transparent: false, side: TT.DoubleSide, color: dark ? '#4a4c4e' : '#ffffff', roughness: .46, metalness: .65 });   // (alpha-to-coverage: the openwork's edges anti-aliased, no sparkle at a distance)
       const faces = [[front, 0], [side('VTERE'), Math.PI / 2], [side('FELIX'), Math.PI], [side('VIVAS'), -Math.PI / 2]];
       const planeG = new TT.PlaneGeometry(W, H);
       faces.forEach(([am, ry]) => { const m = new TT.Mesh(planeG, mk(am, false)); m.rotation.y = ry; m.position.set(Math.sin(ry) * W / 2, H / 2, Math.cos(ry) * W / 2); G.add(m);

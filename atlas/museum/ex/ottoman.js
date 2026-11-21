@@ -12,8 +12,12 @@
    flecks, pearl squares of four pieces round a dark eight-pointed star, S-scroll chain, bone edging, pearl hexagons on the sides. */
 (function () {
   'use strict';
+  // the inlay's layout, taken off the V&A's photograph 2012FP3720 (set square, 2048 px across the open board): alpha = mother-of-pearl
+  // and bone stringing, red = the green-stained bone. Only where each piece lies — the shell and the pearl themselves are painted here.
+  const HERE = (document.currentScript && document.currentScript.src) || location.href; let INLAY = null;
   (window.AtlasEx = window.AtlasEx || {}).ottoman = {
     flip: true,
+    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { INLAY = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/ottoman-inlay.webp', HERE).href; setTimeout(res, 8000); }),
     build(TT, X, K) {
       const G = new TT.Group();
       const W = 56.5, D = 56.3, LD = D / 2, TH = 2.0, PX = innerWidth < 820 ? 1536 : 2048;   // width, depth open, a leaf's depth, its thickness
@@ -105,18 +109,18 @@
       const PS = 1024, pearlC = document.createElement('canvas'); pearlC.width = pearlC.height = PS;
       { const og = pearlC.getContext('2d'), img = og.createImageData(PS, PS), d = img.data;
         for (let j = 0; j < PS; j++) for (let i = 0; i < PS; i++) { const u = i / PS, v = j / PS, a = N(u * 22, v * 5, 3), b = N(u * 7 + 5, v * 16, 2), sh = N(u * 90, v * 14, 2), band = Math.sin((v * 9 + a * 2) * Math.PI) * .5 + .5;
-          const gr = 112 + sh * 70 + band * 22 + a * 18; const p = (j * PS + i) * 4; d[p] = gr + a * 16 - b * 14; d[p + 1] = gr + b * 12 - a * 6; d[p + 2] = gr + 10 + b * 18 + a * 6; d[p + 3] = 255; }
+          const gr = 118 + sh * 60 + band * 22 + a * 18; const p = (j * PS + i) * 4; d[p] = gr + a * 16 - b * 14; d[p + 1] = gr + b * 12 - a * 6; d[p + 2] = gr + 10 + b * 18 + a * 6; d[p + 3] = 255; }
         og.putImageData(img, 0, 0); }
       const shellC = document.createElement('canvas'); shellC.width = shellC.height = PS;
       { const og = shellC.getContext('2d'), img = og.createImageData(PS, PS), d = img.data;
-        for (let j = 0; j < PS; j++) for (let i = 0; i < PS; i++) { const u = i / PS, v = j / PS, m = N(u * 30 + 3, v * 18, 4) * .7 + N(u * 90, v * 50, 2) * .3, f = N(u * 90 + 7, v * 90, 2), t = Math.max(0, Math.min(1, (.425 - m) * 7));
+        for (let j = 0; j < PS; j++) for (let i = 0; i < PS; i++) { const u = i / PS, v = j / PS, m = N(u * 30 + 3, v * 18, 4) * .7 + N(u * 90, v * 50, 2) * .3, f = N(u * 90 + 7, v * 90, 2), t = Math.max(0, Math.min(1, (.405 - m) * 7));
           // dark, almost black-brown ground with amber-to-orange blotches (gold leaf glowing through the thin parts)
-          const p = (j * PS + i) * 4; d[p] = 34 + t * 176 + (f - .5) * 12; d[p + 1] = 12 + t * 92 + (f - .5) * 7; d[p + 2] = 8 + t * 10; d[p + 3] = 255; }
+          const p = (j * PS + i) * 4; d[p] = 30 + t * 128 + (f - .5) * 10; d[p + 1] = 12 + t * 58 + (f - .5) * 6; d[p + 2] = 9 + t * 6; d[p + 3] = 255; }
         og.putImageData(img, 0, 0); }
       // the amber of thin turtle shell over gold leaf (for the X-shaped pieces between the plaques)
       const amberC = document.createElement('canvas'); amberC.width = amberC.height = 256;
       { const og = amberC.getContext('2d'), img = og.createImageData(256, 256), d = img.data;
-        for (let j = 0; j < 256; j++) for (let i = 0; i < 256; i++) { const a = N(i / 256 * 14 + 11, j / 256 * 14, 3), t = Math.max(0, Math.min(1, (a - .32) * 2.4)), p = (j * 256 + i) * 4; d[p] = 84 + t * 120; d[p + 1] = 28 + t * 72; d[p + 2] = 8 + t * 12; d[p + 3] = 255; }
+        for (let j = 0; j < 256; j++) for (let i = 0; i < 256; i++) { const a = N(i / 256 * 14 + 11, j / 256 * 14, 3), t = Math.max(0, Math.min(1, (a - .32) * 2.4)), p = (j * 256 + i) * 4; d[p] = 70 + t * 96; d[p + 1] = 24 + t * 48; d[p + 2] = 8 + t * 6; d[p + 3] = 255; }
         og.putImageData(img, 0, 0); }
       const bgT = K.tex(PX, Math.round(PX * D / W), (g, w, h) => {
         const mk = document.createElement('canvas'); mk.width = w; mk.height = h; const m = mk.getContext('2d'); m.fillStyle = '#000'; m.fillRect(0, 0, w, h);
@@ -128,6 +132,17 @@
         const P = (path, line = .03) => { g.fillStyle = PP; g.fill(path); const t = pr(); g.fillStyle = t < .5 ? `rgba(70,64,74,${.08 + t * .5})` : `rgba(235,238,245,${(t - .5) * .25})`; g.fill(path); m.fillStyle = '#fff'; m.fill(path); g.strokeStyle = 'rgba(40,22,14,.55)'; g.lineWidth = cm(line); g.stroke(path); };
         const GR = (x, y, rx, ry, rot = 0) => { g.beginPath(); g.ellipse(x, y, rx, ry, rot, 0, 6.29); g.fillStyle = '#3d7a64'; g.fill(); g.strokeStyle = 'rgba(20,40,30,.6)'; g.lineWidth = 1; g.stroke(); };   // green-stained bone
         const string = (x, y, ww, hh) => { [[.0, '#e6dccb'], [.07, '#2a1208'], [.14, '#e6dccb']].forEach(([o, c]) => { g.strokeStyle = c; g.lineWidth = cm(.05); g.strokeRect(x + cm(o), y + cm(o), ww - cm(2 * o), hh - cm(2 * o)); }); };
+        if (INLAY) {   // the real layout: pearl laid where the photograph has pearl, each piece outlined by the dark joint of the inlay
+          const lay = (fill, op) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const q = c.getContext('2d'); q.drawImage(INLAY, 0, 0, w, h); q.globalCompositeOperation = op || 'source-in'; q.fillStyle = fill; q.fillRect(0, 0, w, h); return c; };
+          const dk = lay('rgba(18,8,5,.8)'); [[1.6, 0], [-1.6, 0], [0, 1.6], [0, -1.6]].forEach(([dx, dy]) => g.drawImage(dk, dx, dy));
+          const pc = lay(PP); { const q = pc.getContext('2d'), nn = K.noise(57), t = document.createElement('canvas'); t.width = 256; t.height = 256; const tq = t.getContext('2d'), im = tq.createImageData(256, 256), d = im.data;   // each piece its own tone: lighter and greyer patches
+            for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) { const v = nn(x / 9, y / 22, 2), i = (y * 256 + x) * 4, wt = v > .5; d[i] = d[i + 1] = d[i + 2] = wt ? 255 : 40; d[i + 3] = Math.abs(v - .5) * (wt ? 110 : 190); } tq.putImageData(im, 0, 0);
+            q.globalCompositeOperation = 'source-atop'; q.drawImage(t, 0, 0, w, h); }
+          g.drawImage(pc, 0, 0);
+          // the green-stained bone (the picture's red channel)
+          { const c = document.createElement('canvas'); c.width = w; c.height = h; const q = c.getContext('2d'); q.drawImage(INLAY, 0, 0, w, h); const im = q.getImageData(0, 0, w, h), d = im.data; for (let i = 0; i < d.length; i += 4) { const a = d[i]; d[i] = 58; d[i + 1] = 122; d[i + 2] = 100; d[i + 3] = a; } q.putImageData(im, 0, 0); g.drawImage(c, 0, 0); }
+          m.drawImage(lay('#fff'), 0, 0);
+          bgMask = new TT.CanvasTexture(mk); bgMask.colorSpace = TT.NoColorSpace; return; }
         // ---- traced from the V&A's colour photograph 2012FP3720 (measured on it, 30.5 px to the cm) ----
         g.lineJoin = g.lineCap = m.lineJoin = m.lineCap = 'round';
         const AP = g.createPattern(amberC, 'repeat');
@@ -198,10 +213,12 @@
                 q.bezierCurveTo(...Xs(2.0, .55), ...Xs(1.5, .8), ...Xs(1.05, .62)); q.bezierCurveTo(...Xs(.9, .2), ...Xs(.35, .5), ...Xs(0, 0)); q.closePath(); P(q); const c = Xs(1.35, 0); g.save(); g.translate(c[0], c[1]); g.rotate(sg * Math.PI / 2); GD(0, 0, cm(.17), false); g.restore(); });
             } else {   // the deep band: a fretted medallion of interlaced pearl bands, a small cartouche to either side, pearl corner-pieces with leaves cut out
               const med = new Path2D(), ring = (u, v, r) => { med.moveTo(X(u, v)[0] + cm(r), X(u, v)[1]); med.arc(...X(u, v), cm(r), 0, 6.2832); };
-              [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([a2, b2]) => { ring(a2 * 1.15, b2 * 1.05, 1.3); ring(a2 * 2.2, b2 * 1.0, .95); ring(a2 * .95, b2 * 2.05, .85);
-                med.moveTo(...X(a2 * .12, b2 * .2)); med.bezierCurveTo(...X(a2 * 1.4, b2 * .2), ...X(a2 * 3.3, b2 * 1.2), ...X(a2 * 3.55, 0));
-                med.moveTo(...X(a2 * .2, b2 * .12)); med.bezierCurveTo(...X(a2 * .2, b2 * 1.5), ...X(a2 * 1.4, b2 * 2.9), ...X(0, b2 * 3.1)); });
-              med.moveTo(...X(-3.55, 0)); med.lineTo(...X(3.55, 0)); med.moveTo(...X(0, -3.1)); med.lineTo(...X(0, 3.1)); for (let k = 0; k < 12; k++) { const a2 = k * Math.PI / 6 + Math.PI / 12, c = X(Math.cos(a2) * 3.05, Math.sin(a2) * 2.75); med.moveTo(c[0] + cm(.62), c[1]); med.arc(c[0], c[1], cm(.62), 0, 6.2832); } RIB(med, .26);
+              // (traced on the photograph, 147 px to the cm in the enlargement: in each quarter three lobes round the edge, a large ring inside
+              //  them, a heart rising from the centre, and a cusped band along the long axis out to the point)
+              [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([a2, b2]) => { ring(a2 * 1.12, b2 * 2.38, .8); ring(a2 * 2.42, b2 * 1.72, .8); ring(a2 * 2.88, b2 * .62, .6); ring(a2 * 1.45, b2 * 1.32, 1.12);
+                med.moveTo(...X(0, 0)); med.bezierCurveTo(...X(a2 * .85, b2 * .35), ...X(a2 * .95, b2 * 1.25), ...X(a2 * .12, b2 * 1.85)); med.lineTo(...X(0, b2 * 3.15));
+                med.moveTo(...X(a2 * .75, b2 * .2)); med.quadraticCurveTo(...X(a2 * 1.4, b2 * .62), ...X(a2 * 1.95, b2 * .2)); med.quadraticCurveTo(...X(a2 * 2.6, b2 * .5), ...X(a2 * 3.55, 0)); });
+              med.moveTo(...X(-3.55, 0)); med.lineTo(...X(3.55, 0)); RIB(med, .27);
               [-1, 1].forEach(b2 => GD(X(0, b2 * .85)[0], X(0, b2 * .85)[1], cm(.13), b2 > 0));
               [-1, 1].forEach(sg => { const u = sg * 6.9, q = new Path2D(); for (let k = 0; k < 8; k++) { const a2 = k * Math.PI / 4, rr = k % 2 ? [1.25, .78] : [2.0, 1.2]; const p1 = X(u + Math.cos(a2) * rr[0], Math.sin(a2) * rr[1]); k ? q.quadraticCurveTo(...X(u + Math.cos(a2 - Math.PI / 8) * rr[0] * .82, Math.sin(a2 - Math.PI / 8) * rr[1] * .82), ...p1) : q.moveTo(...p1); }
                 q.quadraticCurveTo(...X(u + Math.cos(-Math.PI / 8) * 1.6, Math.sin(-Math.PI / 8) * .95), ...X(u + 2.0, 0)); q.closePath(); P(q);
@@ -248,9 +265,11 @@
         const cx = sd * LW / 2;
         const leaf = new TT.Mesh(new TT.BoxGeometry(LW - .08, TH, D), [sdD, sdD, wood, wood, sdL, sdL]); leaf.position.set(cx + sd * .04, TH / 2, 0); G.add(leaf);
         // raised framing fillets (about 5 mm): far, near and outer sides 1.2 cm wide, the hinge side 1.5 cm
-        const fil = (w, d, x, z, m) => { const f = new TT.Mesh(new TT.BoxGeometry(w, .5, d), [wood, wood, m, wood, wood, wood]); f.position.set(x, TH + .25, z); G.add(f); };
+        // (with the photograph's layout, the raised fillets carry their own part of the same picture)
+        const part = (w, d, x, z) => { const m = bgMat.clone(); ['map', 'iridescenceMap'].forEach(k => { const t = bgMat[k].clone(); t.repeat.set(w / W, d / D); t.offset.set((x - w / 2 + W / 2) / W, (D / 2 - z - d / 2) / D); t.needsUpdate = true; m[k] = t; }); m.polygonOffset = false; return m; };
+        const fil = (w, d, x, z, m) => { const f = new TT.Mesh(new TT.BoxGeometry(w, .5, d), [wood, wood, INLAY ? part(w, d, x, z) : m, wood, wood, wood]); f.position.set(x, TH + .25, z); G.add(f); };
         fil(LW, FW, cx, -D / 2 + FW / 2, plaqMat(LW, false)); fil(LW, FW, cx, D / 2 - FW / 2, plaqMat(LW, false));
-        fil(FW, D - 2 * FW, sd * (W / 2 - FW / 2), 0, plaqMat(D, true)); fil(HG, D - 2 * FW, sd * HG / 2, 0, hingeMat);
+        fil(FW, D - 2 * FW, sd * (W / 2 - FW / 2), 0, plaqMat(D, true)); const HG2 = INLAY ? 1.45 : HG; fil(HG2, D - 2 * FW, sd * HG2 / 2, 0, hingeMat);
         // the bone lip on the three outer edges (half-round, in interlocking lengths)
         const lip = (len, x, z, ry) => { const c = new TT.Mesh(new TT.CylinderGeometry(.3, .3, len, 12, 1, false, 0, Math.PI), bone); c.rotation.set(0, ry, Math.PI / 2); c.position.set(x, TH / 2, z); G.add(c); };
         // (the bone edging is drawn on the faces: the leaves' edges carry the row of pearl hexagons)
