@@ -484,12 +484,28 @@ static TTM16 *TTB; static u32 TTM; static u32 TT_AGE = 1; static int TT_LOG;
 typedef struct { TTE e[2]; u64 pad[2]; } ETBK;
 static ETBK ETBB[ET_SIZE / 2] __attribute__((aligned(64)));
 #define ETB(i) (ETBB[(i) >> 1].e[(i) & 1])
-#if defined(SE_MAX) && !defined(MT)
-#ifndef SE_LOG
-#define SE_LOG 12
+/* (2026-11-22) the small endgame table: the solver's nodes of ET_MIN..SE_MAX empties — most of its table probes — in a
+   table of their own, one entry per slot, always replaced, that stays in the cache (384 KB; Edax keeps such a table per
+   thread). The big table then holds only the nodes above. One per thread (the entries are exact bounds of a position, valid
+   whoever wrote them). M4 Pro, exact solves at 22 empties: x0.93 (tools/variant-bench.js; 15 of the 16 sizes tried were
+   faster, 12 / 2^14 among the best and small enough for a thread's slot); the same moves and values. -DSE_MAX=0: without. */
+#ifndef SE_MAX
+#define SE_MAX 12
 #endif
+#ifndef SE_LOG
+#define SE_LOG 14
+#endif
+#if SE_MAX > 0
+#ifdef MT
+/* (engine_mt.wasm: in the thread's slot, just above its thread-local block — mt_thread; a thread-local array would put
+   its 384 KB of zeros into the file) */
+static TLS TTE *SET_;
+#define SE_OK (SET_ != 0)
+#else
 static TTE SET_[1 << SE_LOG] __attribute__((aligned(64)));
-#define SE_CLEAR() for (int i = 0; i < (1 << SE_LOG); i++) { SET_[i].k1 = 0; SET_[i].k2 = 0; SET_[i].dt = 0; }
+#define SE_OK 1
+#endif
+#define SE_CLEAR() if (SE_OK) for (int i = 0; i < (1 << SE_LOG); i++) { SET_[i].k1 = 0; SET_[i].k2 = 0; SET_[i].dt = 0; }
 #else
 #define SE_CLEAR()
 #endif
@@ -577,6 +593,7 @@ EXPORT(clear_tt) void clear_tt(void) {
   if (TTB) __builtin_memset(TTB, 0, (sizeof(TTM16) << 2) << TT_LOG);
   __builtin_memset(TTSH, 0, sizeof TTSH);
   __builtin_memset(ETBB, 0, sizeof ETBB);
+  SE_CLEAR()   /* (this thread's own; the others' entries stay — exact bounds, valid in any search) */
 }
 #endif
 static const i16 SQV[64] = {
@@ -995,15 +1012,7 @@ EXPORT(set_stab) void set_stab(int on, int mn) { STAB_ON = on; (void)mn; }
    of this solve can never be reached again and counts as free). E_V = the empties of the entry (0 = free) */
 static TLS int gRootE = 64;
 #define ET_MIN 8
-/* (a test build only, -DSE_MAX=11 -DSE_LOG=12, tools/build-variants.sh sNN_LL, one thread: the solver's nodes of ET_MIN..SE_MAX
-   empties — most of its table probes — in a small table of their own, one entry per slot, always replaced, that stays in the
-   cache (Edax keeps such a table per thread for 7-14 empties); the big table then holds only the nodes above. Without
-   SE_MAX the binary is the same as before) */
-#if defined(SE_MAX) && !defined(MT)
 #define SE_USE(e) ((e) <= SE_MAX)
-#else
-#define SE_USE(e) 0
-#endif
 static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int passed) {
   if (empties <= SMALL) return solveSmall(P, O, alpha, beta, empties, passed);
 #ifdef MT
@@ -1012,9 +1021,9 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
   if (((long long)(++nodes) & 16383) == 0) { checkTime(); if (aborted) return 0; }
 #endif
   int ti = -1, hb = -1, ttMove = -1;
-#if defined(SE_MAX) && !defined(MT)
+#if SE_MAX > 0
   TTE *se = 0;
-  if (empties >= ET_MIN && SE_USE(empties)) {
+  if (empties >= ET_MIN && SE_USE(empties) && SE_OK) {
     se = &SET_[hash(P, O) & ((1 << SE_LOG) - 1)];
     const u64 d = se->dt;
     if ((d & 0xFF) && (se->k1 ^ d) == P && (se->k2 ^ d) == O) {
@@ -1132,7 +1141,7 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
     if (aborted) return 0;
     if (v > best) { best = v; bestMove = s; if (v > alpha) { alpha = v; if (alpha >= beta) break; } }
   }
-#if defined(SE_MAX) && !defined(MT)
+#if SE_MAX > 0
   if (se) {
     const int lo = best > alpha0 ? best : -99, hi = best < beta ? best : 99;
     const u64 nd = (u64)(u8)empties | (u64)(u8)bestMove << 8 | (u64)(u32)(hi + 128) << 16 | (u64)(u32)(lo + 128) << 24;
@@ -1300,7 +1309,15 @@ extern void __wasm_init_tls(void *);
 EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
 /* every instance first: mt_stack (its own stack top; a function without a frame of its own), then mt_thread */
 EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
-EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); threadId = id; }   /* (id: the busy marks' owner; the page's own slot 999) */
+/* (the thread's own values in a function of its own, called after __wasm_init_tls: written in mt_thread itself, the
+   compiler may use the thread-local base it read before the call — seen 2026-11-22, both values stayed 0) */
+static __attribute__((noinline)) void mtThreadSet(u32 tls, int id) {
+  threadId = id;
+#if SE_MAX > 0
+  SET_ = (TTE *)((tls + (u32)__builtin_wasm_tls_size() + 63) & ~63u); SE_CLEAR()   /* (the stack comes down from the slot's top: 2 MB slots leave it about 1.5 MB) */
+#endif
+}
+EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); mtThreadSet(tls, id); }   /* (id: the busy marks' owner; the page's own slot 999) */
 EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
 EXPORT(mt_jump_reset) void mt_jump_reset(void) { __atomic_store_n(&gJump, 0, __ATOMIC_SEQ_CST); }   /* the lead: a new root */
 EXPORT(mt_jump_set) void mt_jump_set(int d) { int c = __atomic_load_n(&gJump, __ATOMIC_SEQ_CST); while (c < d && !__atomic_compare_exchange_n(&gJump, &c, d, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) {} }   /* a helper finished depth d */
