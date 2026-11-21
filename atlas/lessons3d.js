@@ -3016,11 +3016,154 @@
     sunka: { sRelay: ['s_relay', 's_chain', 's_cap'], sEnd: ['s_defend', 's_end'] } };
   const MCM = (k, lang) => lang === 'ja' ? (k === 'ok' ? '（金の丸）' : '（赤い丸）') : `<i class="ls-spot ${k}"></i>`;
   const mcFmt = (v, exact) => { const r = exact ? Math.round(v) : Math.round(v * 10) / 10; return (r > 0 ? '+' : r < 0 ? '−' : '±') + Math.abs(r); };
+  /* (2026-11-21 lesson loop) mancala in Japanese: マンカラビ's own intro / questions / hints (no pit numbers: the 3D board has none,
+     a pit is named by its distance to the store or its ring), and the feedback from the position itself — mcF: where the last seed
+     lands (the store: one more turn, and the whole turn's gain; an empty pit of yours: the capture), the seeds sown to the
+     opponent's row, what the opponent can take next (a capture / a chain of extra turns), the threats it removes, the end of the
+     game. Right → the reason; wrong → the gold-ringed pit, what yours misses, and the AI's value gap. */
+  const MC_ENG = '../mancala/engine.js?v=20261114p1';   // (= atlas/games/mancala.js: the same file and version, one cache)
+  const mcEng = () => window.MancalaEngine ? Promise.resolve(window.MancalaEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = MC_ENG; sc.onload = () => window.MancalaEngine ? res(window.MancalaEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
+  const MCJ_GRP = { sow: 'sow', extra: 'extra', chain: 'extra', n_chain: 'extra', e_chain: 'extra', s_chain: 'extra', s_relay: 'extra', capture: 'cap', k_combo: 'cap', n_cap: 'cap', s_cap: 'cap',
+    defend: 'def', n_defend: 'def', s_defend: 'def', e_block: 'blk', k_open: 'open', k_open6: 'open', n_open: 'open', e_open: 'open', endgame: 'end', k_count: 'end', n_end: 'end', e_end: 'end', s_end: 'end',
+    k_tempo: 'keep', k_hoard: 'keep', k_starve: 'keep', e_keep: 'keep', n_play: 'play' };
+  const MCJ_LS = {
+    intro: {
+      sow: '穴をえらぶと、中の種を全部つかんで<b>反時計回り</b>に1粒ずつまいていくんだ。<br>きみのストアには入れるけど、相手のストアはとばすの。<b>種の数だけ先へ進む</b>って覚えてね！',
+      extra: 'さいごの1粒が<b>きみのストア</b>に入ったら、もう一回きみの番！<br>ストアのとなりの穴なら1粒、2つ目なら2粒……<b>種の数＝ストアまでの距離</b>の穴をさがそう。種も手番も得する、いちばん大事な手なんだ〜。',
+      capture: 'さいごの1粒が<b>きみの側の空っぽの穴</b>に止まったら、向かいの相手の種を<b>まとめて横取り</b>！ 止まった1粒もいっしょにストアへ入るの。<br>相手の大きな山の向かいが空いていたら、チャンスだね。',
+      defend: '相手の番に<b>きみの山が横取りされない</b>か、いつも確かめよう。<br>守り方は3つ。ねらわれた山を動かす、相手が止まる空の穴をうめる、相手の穴に種を足して止まる場所をずらす。どれが使えるかな？',
+      chain: '「もう一回」を<b>何度もつなげる</b>と、大きく得するんだ〜。<br>コツは<b>ストアに近い穴から</b>使うこと。遠い穴を先にまくと、近い穴の種が1粒ふえて、ぴったりがくずれちゃうの。',
+      endgame: '終盤は<b>数えれば読み切れる</b>！ 全部の種の半分より多くストアに入れたら、勝ちが決まるの。<br>どちらかの列が空になると、残りの種はその列の持ち主のもの。自分の列に<b>ためておく</b>のも作戦だね。',
+      k_open: '4粒カラハの初手は、<b>ストアから4つ目の穴</b>が定石。4粒でぴったりストアに届いて、もう一回！<br>序盤の基本は、もう一回を取る、相手にぴったりの穴を作らせない、種を相手にわたしすぎない、の3つだね。',
+      k_open6: '6粒カラハでは、<b>ストアからいちばん遠い穴</b>の6粒がちょうどストアに届くの。まずはそこでもう一回！<br>種が多いぶん、1手で盤が大きく動くんだ。相手にぴったりの穴を作らせない形をえらぼうね。',
+      k_combo: 'もう一回で指し続けるあいだに、<b>きみの側に空の穴</b>を作っておくと……さいごの1粒をそこへ止めて<b>横取り</b>でしめくくれる！<br>順番しだいで取れる山が変わるから、さいごまで読んでから始めようね。',
+      k_tempo: '大きく動くのがいいとは限らないの。<b>きみの側の中だけで終わる</b>少ない種を動かすと、種はわたさず手番だけわたせるんだ。<br>相手が先に形をくずしてくれるのを<b>待つ</b>のも、強い手だね。',
+      k_hoard: 'ストアのとなりの穴には相手の種がよく流れこんで、<b>大きな山</b>になりやすいの。<br>この山は、おしまいまで持っていれば<b>きみの得点</b>！ あわててまくと、大半が相手の側へ流れちゃう。',
+      k_starve: 'どちらかの側の種がなくなると<b>対局はおしまい</b>。残った種は、それぞれの列の持ち主のものになるの。<br>きみの側に種が多くて相手が少ないなら、<b>相手に種をわたさない</b>手を続けよう！',
+      k_count: '終盤は<b>数え合い</b>！ 4粒なら全部で48粒だから、<b>25粒</b>取れば勝ち。<br>片側が空になった瞬間におしまいだから、どっちが先に空になるか、そのとき誰の側に何粒残るかを読むのがコツなんだ。',
+      n_cap: 'ノーマルルールの横取りでは、<b>止まったきみの1粒は穴に残る</b>の。カラハより1粒少なめだね。<br>残った1粒はまた使えるけど、相手から見ると<b>横取りの的</b>にもなるんだ。取ったあとの形まで考えよう！',
+      n_defend: '相手の次の手で<b>横取りされる山</b>はないかな？ 守り方は、山を動かす・止まる穴をうめる・相手の数をずらす、の3つ。<br>ノーマルでは取られても相手の1粒が穴に残るから、取り返しのねらいが生まれることもあるんだ〜。',
+      n_play: 'もう一回・横取り・守り・手番・残り種。ここまでの考え方を全部使う実戦問題！<br>迷ったら、<b>きみの得</b>と、そのあとの<b>相手の得</b>を両方数えて比べてみてね。',
+      e_chain: 'イージールールには横取りがないから、<b>もう一回</b>がいちばんの武器！<br>ストアに近い穴から順に使うと、何度も続けられるんだ。でも種を出しきると相手の側に種がたまるから、おしまいの残りも考えてね。',
+      e_keep: '横取りのないイージーでは、<b>きみの側にある種</b>は、さいごにはきみのものになりやすい財産なの。<br>相手の側へ種を流す大きな手より、<b>きみの側の中で回す手</b>が強い場面がたくさんあるんだ〜。',
+      e_end: '終盤は、<b>どちらの側が先に空になるか</b>の競争！ きみの側が空になると、相手の側の残りは全部相手のものになるの。<br>もう一回で手番を重ねるのと、相手に種をわたさないのを組み合わせて、数えきろうね。',
+      s_relay: 'スンカでは、さいごの1粒が<b>種の入った穴</b>に落ちると、その穴の種を全部つかんで<b>まき直し</b>！ これがリレー。<br>止まるのは空の穴かストアに落ちたときだけ。リレーが<b>ストアで止まれば、もう一回</b>だね。',
+      s_cap: 'リレーが<b>きみの側の空の穴</b>で止まると、向かいの山を止まった1粒ごと<b>横取り</b>できるの。カラハと同じだね。<br>リレーのあいだに相手の山が育つこともあるんだ。止まる穴と、そのときの向かいの数を読もう！',
+      s_end: '種が少なくなるとリレーも短くなって、読み切れるようになるの。<br>もう一回・横取り・おしまいのときの残り種を全部数えて、いちばん差がつく手をえらぼうね！',
+      n_open: 'ノーマルでも初手は<b>ストアから4つ目の穴</b>。4粒でぴったり届いて、もう一回！<br>ノーマルの横取りはカラハより1粒少なめ。だから序盤は<b>もう一回の数</b>と、相手にぴったりの穴を作らせないことがもっと大事なんだ〜。',
+      e_open: 'イージーでも初手は<b>ストアから4つ目の穴</b>でもう一回、続けて<b>ストアのとなりの穴</b>が深い読みでの最善なの。<br>横取りがないから、序盤の差はほとんど<b>もう一回の数</b>と<b>種のわたし方</b>で決まるんだ。',
+      n_chain: 'ストアにぴったり届く穴をまくと<b>もう一回</b>。<b>ストアに近い穴から</b>順に使うと、ぴったりがくずれずに長く続くの。<br>遠い穴を先にまくと、近い穴の数が1つふえちゃうこともあるんだ。連続手は順番が勝負だね！',
+      n_end: 'ノーマルの終盤も<b>数え合い</b>。25粒取れば勝ち！<br>横取りしても止まった1粒は穴に残るから、<b>その1粒がおしまいのときどちらの側に残るか</b>まで数えようね。',
+      e_block: '横取りのないイージーでは、相手の<b>もう一回</b>がいちばんの脅威なの。<br>相手の穴に種を1粒落とすと、ぴったりの数が<b>ずれて</b>、もう一回が消えるんだ！ どの相手の穴に種が入るか数えてみてね。',
+      s_defend: 'スンカではリレーのせいで、<b>思わぬ山が横取りされる</b>ことがあるの。<br>相手の穴からのリレーを追って、止まる空の穴と向かいの山を確かめよう。守り方は、山を動かす・止まる穴をうめる・相手の数をずらす、だね！',
+      s_chain: 'スンカでもストアで止まれば<b>もう一回</b>！ リレーで種がまき直されるから、もう一回のあとに<b>次のぴったりの穴</b>が生まれることがよくあるんだ。<br>何度も続けて指す手順を、さいごまで読みきろうね。',
+    },
+    ask: {
+      sow: ['金の点線の穴に、さいごの1粒をぴたっと止めてみて！', '目標まで、ちょうど届く穴はどれかな？', 'さあ、種の数と距離をくらべよう。どの穴をまく？', 'さいごの1粒、金の点線まで運べるかな？', 'もう一回！ ぴったり止まる穴をえらんでね。'],
+      extra: ['もう一回のチャンス！ どの穴をまく？', 'ストアにぴったり届く穴、見つけられるかな？', '「もう一回」をいちばん長くつなげる、さいしょの一手は？', 'さあ、種の数とストアまでの距離をくらべて！', '続けて打てる手順、どこから始めようか？'],
+      cap: ['横取りのチャンス！ どの穴をまく？', 'さいごの1粒を、空の穴に止められるかな？', '相手の山、どこから取ろうか？', 'いちばんたくさん取れる手はどれかな？', 'さあ、向かいの山をごっそりいただこう！'],
+      def: ['相手の横取りのねらい、かわせるかな？', 'このままだと山を取られちゃう！ どうする？', '相手の次の手を読んで、いちばんいい守りをえらんでね。', 'ねらわれた山、どうやって守ろうか？', 'さあ、相手の止まる穴を考えて！'],
+      blk: ['相手のもう一回、消せるかな？', '相手のぴったりの穴に、種を落とす手はどれ？', 'このままだと相手に続けて打たれちゃう！ どうする？', '相手の穴の数をずらせる手、どこかな？', 'さあ、相手の「もう一回」をじゃましよう！'],
+      open: ['序盤のいちばんいい手はどれかな？', 'まずは、もう一回が取れる？', '序盤の組み立て、どの穴から始める？', '相手にぴったりの穴をあげない手、わかるかな？', 'さあ、定石どおりに指せるかな？'],
+      end: ['終盤！ さいごの差がいちばん大きくなる手はどれかな？', 'ここは数えれば読みきれる！ どの穴をまく？', '勝ちまであと何粒？ いちばん得する手をえらんでね。', 'おしまいまで数えて、最善の一手を！', 'さあ、数え合いの勝負！ どの穴かな？'],
+      keep: ['あわてずに考えよう。いちばんいい手はどれかな？', '大きく動く手が、いつもいいとは限らないね。どうする？', '種を相手にわたしすぎない手、見つけられるかな？', 'さあ、きみの側の種をどう使う？', '先の形まで見て、一手をえらんでね！'],
+      play: ['実戦の局面！ いちばんいい手はどれかな？', 'きみの得と相手の得、くらべてみて！', 'さあ、ここまでの考え方を全部使おう！', '迷ったら相手の次の手まで数えてね。どの穴？', '最善手、見つけられるかな？'],
+    },
+    hint: {
+      sow: ['目標までの穴の数を数えてみて。きみのストアも1つと数えるの。', '種の数が、目標までの距離と同じ穴をさがそう！'],
+      extra: ['ストアのとなりは1粒、2つ目は2粒……種の数と距離が同じ穴はどれかな？', '候補がいくつかあるなら、ストアに近い穴から使うのがコツ！'],
+      capture: ['赤い丸は、向かいが空いている相手の種。そこへさいごの1粒を止められる穴は？', '空の穴までの距離と、同じ数の種が入った穴をさがしてね。'],
+      defend: ['赤い丸が、相手の次の手で取られちゃうきみの種。', '相手の種が止まる空の穴はどこ？ その向かいの山があぶないの。'],
+      chain: ['ストアに近い穴から順に、ぴったりの数の穴をさがしてね。', '遠い穴を先にまくと、近い穴の数が変わっちゃう！'],
+      endgame: ['それぞれの手のあと、相手がどう返すかまで数えてみて。', 'きみの列に残った種は、さいごにきみのものになるの。'],
+      k_open: ['まずストアにぴったり届く穴をさがして！', 'もう一回のあとは、相手に「もう一回」をあげない手をね。'],
+      k_open6: ['6粒なら、ストアからいちばん遠い穴がぴったりの数！', '相手の穴に1粒足すと、相手のぴったりがずれることもあるの。'],
+      k_combo: ['もう一回で穴を空けると、そこが横取りの着地点になるの。', '赤い丸は取れそうな相手の山。どの順番なら届くかな？'],
+      k_tempo: ['相手の側に種が入らない手をさがしてみて。', 'きみの側の中だけで終わる、少ない種の穴はどれかな？'],
+      k_hoard: ['ストアのとなりの山をまくと、何粒が相手の側へ行くか数えてみて。', '大きな山は、持っているだけで得点になることもあるの。'],
+      k_starve: ['相手の側に種を落とさない手はどれかな？', '相手に種をわたすと、相手を助けることになっちゃう。'],
+      k_count: ['もう一回・横取り・おしまいの残り種を、全部足してくらべよう。', 'あと何粒で半分をこえるか、まず数えてみてね。'],
+      n_cap: ['きみの側の空の穴に、さいごの1粒が止まる手をさがそう。', '赤い丸は、取れそうな相手の山。止まった1粒が残るのも忘れずに！'],
+      n_defend: ['赤い丸が、相手の次の手で取られちゃうきみの山。', '山を動かすか、相手の止まる穴をうめるか。どっちが得かな？'],
+      n_play: ['きみの得と、そのあと相手が取れる量の差でくらべよう。', '相手にもう一回や横取りを残していないかな？'],
+      e_chain: ['ストアにぴったり届く穴を、ストアに近い順にさがそう。', 'もう一回のあと、次のぴったりができるかも見てね。'],
+      e_keep: ['まいた種のうち、何粒が相手の側へ行くか数えてみて。', 'きみの側の中で回せる手はどれかな？'],
+      e_end: ['おしまいまでの手順を、もう一回もふくめて数えよう。', 'どちらの側が先に空になるかがカギ！'],
+      s_relay: ['リレーの行き先を、1回ずつ追いかけてみて。', '種の入った穴に落ちたらまき直し。どこで止まるかな？'],
+      s_cap: ['赤い丸は、今取れそうな相手の山。リレーのあとは数が変わるの。', 'リレーが空の穴で止まる手をさがそう！'],
+      s_end: ['リレーの止まる場所を1手ずつ追って、おしまいまで数えよう。', 'おしまいのとき、どちらの列に種が残るかな？'],
+      n_open: ['ストアにぴったり届く穴がいちばん大事！', 'なければ、相手にもう一回をあげない手をね。'],
+      e_open: ['ストアにぴったり届く穴が最優先！', '次に、相手にもう一回をあげない手をさがしてね。'],
+      n_chain: ['それぞれの穴の数と、ストアまでの距離をくらべてみて。', 'ストアに近い穴から順に使うのがコツ！'],
+      n_end: ['もう一回・横取り・おしまいの残り種を全部足そう。', '横取りで残る1粒が、どちらの側に残るかも数えてね。'],
+      e_block: ['赤い丸は、今ストアにぴったり届く相手の穴。そこに種を落とそう！', 'きみの種が、相手のどの穴まで届くか数えてみて。'],
+      s_defend: ['赤い丸が、相手の次の手で取られちゃうきみの山。', '相手の穴からのリレーを追って、止まる場所をさがそう。'],
+      s_chain: ['ストアで止まる手をさがして、そのあとの形も追いかけよう。', 'リレーのあと、次のぴったりができる手はどれかな？'],
+    },
+  };
+  function mcF(E, b, k, R) {   // what a lesson move does (side 0 to move; pits 0-5, store 6)
+    const tr = E.trace(Int8Array.from(b), 0, k, R), a = tr.board, Rl = E.RULES[R] || E.RULES.kalah;
+    const tm = E.turnMaxFirst(Int8Array.from(b), 0, R)[k];
+    const toOpp = Rl.relay ? Math.max(0, E.sideSum(a, 1) - E.sideSum(b, 1)) : tr.events.filter(e => e.t === 'drop' && e.at >= 7 && e.at <= 12).length;
+    let q = a; if (tr.extra && !tr.over) { const t = E.turnMax(Int8Array.from(a), 0, R); q = Int8Array.from(a); for (const x of (t.lines[0] || [])) { const r = E.trace(q, 0, x, R); q = r.board; if (r.over) break; } }   // (after the turn's best run of extra turns)
+    const oppAt = c => { let best = 0, cap = 0, ex = 0, how = ''; if (E.sideSum(c, 0) && E.sideSum(c, 1)) { const g = E.turnMaxFirst(Int8Array.from(c), 1, R); for (let j = 0; j < 6; j++) { if (g[j] == null) continue; best = Math.max(best, g[j]); const r = E.trace(Int8Array.from(c), 1, j, R); if (r.cap) cap = Math.max(cap, r.cap); if (r.extra && !r.over) ex++; }
+        const t = E.turnMax(Int8Array.from(c), 1, R), ln = t.lines[0] || []; let z = Int8Array.from(c), cp = false; for (const x of ln) { const r = E.trace(z, 1, x, R); z = r.board; if (r.cap) cp = true; } how = ln.length > 1 ? (cp ? 'both' : 'extra') : cp ? 'cap' : ''; }   // (the opponent's best turn: a capture, a run of extra turns, or both)
+      return { best, cap, ex, how }; };
+    const o0 = oppAt(b), o1 = oppAt(q), over = E.sideSum(q, 0) === 0 || E.sideSum(q, 1) === 0;
+    const n = b[k], d = 6 - k;
+    return { k, n, d, land: tr.land, extra: tr.extra && !tr.over, relays: tr.relays, cap: tr.cap || 0, gain: a[6] - b[6], turn: tm == null ? 0 : tm, toOpp,
+      over, margin: q[6] - q[13], oppBest: over ? 0 : o1.best, oppCap: over ? 0 : o1.cap, oppHow: over ? '' : o1.how, oppEx: over ? 0 : o1.ex, cap0: o0.cap, ex0: o0.ex, total: b.reduce((s, x) => s + x, 0) };
+  }
+  function mcLsJa(E, s, P, i, R, pts) {
+    const id = s.id, g = MCJ_GRP[id], A0 = MCJ_LS.ask[g]; if (!A0) return null;
+    const k0 = i + id.length, pick = L => L[k0 % L.length], pk = (L, j) => L[(k0 + j) % L.length], H = MCJ_LS.hint[id] || [];
+    const exact = P.exact === true || g === 'end', sc = P.sc, vBest = Math.max(...sc.filter(v => v !== null));
+    const right = u => sc[u] != null && pts(P, u) >= 16, wrongs = () => sc.map((v, j) => v === null || right(j) ? -1 : j).filter(j => j >= 0);
+    const FF = u => { try { return mcF(E, P.b, u, R); } catch (e) { return null; } }, A = P.best, FA = FF(A); if (!FA) return null;
+    const dist = (from, to) => { let c = 0, x = from; while (x !== to && c < 30) { x = x === 13 ? 0 : x + 1; if (x !== 13) c++; } return c; };   // (sowing steps, the opponent's store skipped)
+    const n1 = v => Math.max(1, Math.round(Math.abs(v)));
+    // the one thing the wrong move misses, against the gold one (most telling first)
+    const why = (G, u) => {
+      const W = FA, dv = vBest - sc[u];
+      if (g === 'sow') { const t = dist(G.k, P.target), dd = G.n - t; return dd < 0 ? `赤い丸の穴は${G.n}粒だから、目標の${-dd}つ手前で止まっちゃう。` : `赤い丸の穴は${G.n}粒だから、目標を${dd}つ通りすぎちゃう。`; }
+      if (W.over && W.margin > 0 && !(G.over && G.margin > 0)) return '赤い丸の穴だと、まだ勝ちが決まらないの。';
+      if (W.extra && !G.extra) return s.rules === 'sunka' || G.relays ? '赤い丸の穴だと、リレーがストアで止まらないから、もう一回がないの。' : G.n < G.d ? `赤い丸の穴は種が${G.d - G.n}粒足りなくて、ストアの手前で止まっちゃう。` : '赤い丸の穴は種が多すぎて、ストアを通りすぎちゃうの。';
+      if (W.cap > G.cap && W.cap >= 2) return G.cap ? `赤い丸の穴の横取りは${G.cap}粒だけ。` : '赤い丸の穴だと空の穴に止まらないから、横取りできないの。';
+      if (G.oppBest >= W.oppBest + 2) { const mo = G.oppBest >= 4 ? 'も' : ''; return G.oppHow === 'cap' ? `赤い丸の穴のあと、相手に横取りされて${G.oppBest}粒${mo}取られちゃう。` : G.oppHow === 'both' ? `赤い丸の穴のあと、相手にもう一回から横取りまでつながれて、${G.oppBest}粒${mo}取られちゃう。` : G.oppHow === 'extra' ? `赤い丸の穴のあと、相手にもう一回を続けられて${G.oppBest}粒${mo}入れられちゃう。` : `赤い丸の穴のあと、相手に${G.oppBest}粒${mo}入れられちゃう。`; }
+      if (g === 'blk' && G.oppEx > W.oppEx) return '赤い丸の穴だと、相手のぴったりの穴がそのまま残るの。';
+      if (W.turn >= G.turn + 2) return `赤い丸の穴だと、この番で入るのは${G.turn}粒だけ。`;
+      if (G.toOpp >= W.toOpp + 2) return `赤い丸の穴だと、種が${G.toOpp}粒も相手の列へ流れちゃう。`;
+      if (exact && vBest > 0 && sc[u] < 0) return '赤い丸の穴だと、さいごまで読むと負けになっちゃう。';
+      if (exact) return `赤い丸の穴だと、さいごまで読むと差が${n1(dv)}粒ちぢまるの。`;
+      return dv >= 1.5 ? `赤い丸の穴も悪くないけど、AIの読みだと${n1(dv)}粒くらい損なんだ。` : '赤い丸の穴もいい線！ でもAIの読みでは、ほんの少し損なの。';
+    };
+    const plus = (W, Q) => { const o = [];
+      if (W.over && W.margin > 0) o.push('そのまま勝ちが決まる');
+      if (W.extra) o.push(W.turn > W.gain + 1 ? `もう一回をつないで、この番で${W.turn}粒入る` : 'ぴったりストアに届いて、もう一回打てる');
+      if (W.cap >= 2) o.push(`相手の${W.cap}粒を横取りできる`);
+      if (W.cap0 >= 2 && W.oppCap < W.cap0 && o.length < 2) o.push('相手の横取りのねらいをはずせる');
+      if (W.ex0 > W.oppEx && W.oppEx === 0 && o.length < 2 && !W.extra) o.push('相手のもう一回を消せる');
+      if (o.length < 2 && Q && Q.oppBest >= W.oppBest + 2) o.push(!W.oppBest ? '相手に次の得をさせない' : W.oppBest <= 3 ? `相手が次に取れるのは${W.oppBest}粒だけになる` : `相手の次の得を${Q.oppBest - W.oppBest}粒へらせる`);
+      if (o.length < 2 && !W.extra && W.toOpp === 0 && (!Q || Q.toOpp > 0)) o.push('相手の列に種をわたさない');
+      return o.slice(0, 2).join('し、'); };
+    const deep = exact ? 'さいごまで読み切ると、これがいちばん差がつく手' : 'AIが深く読むと、これがいちばん得する手';
+    const PR = ['ブーン！', 'やったね！', 'おみごと！', 'ばっちり！', 'いい読み！'];
+    const alt = u => { if (u != null && !right(u) && sc[u] != null) return u; const W = wrongs().sort((x, y) => sc[y] - sc[x]); for (const x of W) { const Q = FF(x); if (Q && !/悪くない|いい線|ちぢまる/.test(why(Q, x))) return x; } return W[0]; };
+    const good = u => { const own = u != null && right(u) ? u : A, W = FF(own) || FA, p = pick(PR);
+      if (g === 'sow') { const t = dist(W.k, P.target); return W.n === t ? p + ' ' + pick(['種の数が、ちょうど目標までの距離だったね。', `${W.n}粒で、ちょうど目標に止まったね。`, '数えたとおり、目標でぴたっと止まったの。']) : `いい線！ 目標まであと${Math.abs(W.n - t)}つずれたけど、ほとんどぴったり。金の丸の穴なら、ちょうど止まったんだ。`; }
+      const a = plus(W, null), more = own !== A ? ' 金の丸の穴なら、もう少し得できたね。' : '';
+      if (!a) return `${p} 目先の得は小さいけど、${deep}なんだ。` + more;
+      return pk([`${p} その手なら、${a}から。`, `${p} ${a}んだ〜。`, `${p} ${a}のが大きいね。`], 0) + more; };
+    const ng = u0 => { const u = alt(u0); if (u == null) return `金の丸の穴が正解。${deep}なの。`; const G = FF(u) || FA;
+      if (g === 'sow') { const t = dist(FA.k, P.target); return why(G, u) + ` 金の丸の穴は${FA.n}粒で、目標までちょうど${t}つなんだ。`; }
+      const a = plus(FA, G); return why(G, u) + ' ' + (a ? pk(['金の丸の穴なら、', '金の丸の穴だと、'], 1) + a + pk(['から。', 'んだ。'], 2) : `金の丸の穴は、${deep}なの。`); };
+    return { ask: pick(A0), hintTx: H.length ? pick(H) : '', good, ng, own: true };
+  }
   const MANCALA = {
     LKEY: 'aicoding-mancala-v1-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=3'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([getJ('../mancala/lessons.json?v=3'), Promise.all(['../mancala/i18n.js?v=20261107l15', '../mancala/i18n-learn.js?v=20261107l14'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mcEng().catch(() => null)])
         .then(([ls, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] mancala texts', e); } this.I = w.I18N || {}; this.data = { ls }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
@@ -3039,8 +3182,8 @@
     lesson(key, lang) {
       const s = this.data.ls.steps[+key]; if (!s) return null;
       const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), R = this.rules(s), sp = { m: MCM('ok', lang), x: MCM('ng', lang) };
-      return { id: s.id, title: T('title'), intro: T('intro'), ramp: null,
-        probs: (s.problems || []).map(P => {
+      return { id: s.id, title: T('title'), intro: lang === 'ja' && MCJ_LS.intro[s.id] || T('intro'), ramp: null,
+        probs: (s.problems || []).map((P, pi) => {
           const base = s.id === 'sow' ? [{ at: P.target, cls: 'target' }] : [];
           const th = { extra: 'store', chain: 'store', e_chain: 'store', s_relay: 'store', capture: 'cap', k_combo: 'cap', n_cap: 'cap', s_cap: 'cap', defend: 'def', n_defend: 'def', s_defend: 'def', n_chain: 'store', s_chain: 'store', e_block: 'blk' }[s.id];
           const hintMk = () => { const b = P.b, E = window.MancalaEngine, o = [];
@@ -3050,7 +3193,7 @@
             return o; };
           return { pos: { spec: { b: P.b.slice(), rules: R, side: 0 }, me: 1, marks: base }, kind: 'best', P, base, hintMk, sow: s.id === 'sow', ans: P.best, ask: T('goal'), hintTx: T('hint'), hint: null, why: '',
             good: () => T('why', sp), ng: () => this.tx('fb.answerIs', lang, { m: MCM('ok', lang) }) + ' ' + T('why', sp) };
-        }),
+        }).map((o, i) => { if (lang === 'ja' && window.MancalaEngine) try { Object.assign(o, mcLsJa(window.MancalaEngine, s, o.P, i, R, (P, k) => this.points(P, k)) || {}); } catch (e) { console.warn('[lessons3d] mancala lesson', e); } return o; }),   // (2026-11-21 lesson loop: マンカラビ's question, hint, why / what yours misses)
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     points(P, k) {   // (= mancala/app.js problemPoints)
@@ -3785,7 +3928,7 @@
       }
       if (id === 'mancala' && typeof u === 'number') {   // (back to the problem: the answer's pit in gold, yours red, every pit's value)
         const right = pts >= 16, k = cur.k, P = p.P;
-        say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b><br>` + (right ? p.good() : p.ng()) + (p.sow ? '' : '<br><small>' + D.tx('fb.values', ctx.lang, { a: mcFmt(P.sc[u], false), b: mcFmt(P.sc[P.best], false) }) + '</small>'));
+        say(`${p.own ? (right ? '' : pts >= 10 ? 'いい線！' : 'おしい！') : right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b><br>` + (right ? p.good(u) : p.ng(u)) + (p.sow ? '' : '<br><small>' + D.tx('fb.values', ctx.lang, { a: mcFmt(P.sc[u], false), b: mcFmt(P.sc[P.best], false) }).replace('あなたの手', 'きみの手') + '</small>'));   // (p.own: マンカラビ praises / names the gold pit himself)
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().load(p.pos.spec, 1, { lock: true });
           const best = Math.max(...P.sc.filter(v => v !== null));
@@ -3918,7 +4061,7 @@
       toProb: () => { if (cur && cur.probs.length) { cur.k = 0; prob(); } },   // (test hook: straight to the problems)
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return;
         if (p.kind === 'bgplay') { const m = typeof u === 'string' ? u : p.best(), c = bgCodes(p.bgPos, m), q = bgDecP(p.bgPos); c.moves.forEach(x => BG.apply(q, 0, BG.mvFrom(x), BG.mvTo(x))); await pz().play(c.moves); return moved(p, { key: c.key, steps: c.moves, pos: q }); }   // (backgammon: a play by the json's letter pairs)
-        u = u || p.ans; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook)
+        u = u == null || u === '' ? p.ans : u; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook; pit / column 0 is an answer too)
     window.__atlasLs = dbg;
     return {
       stop() { autoCancel(); stopped = true; document.removeEventListener('keydown', onKey, true); if (window.__atlasLs === dbg) delete window.__atlasLs; clearInterval(typeT); timers.forEach(clearTimeout); if (sess) sess.stop(); sess = null; el.remove(); },
