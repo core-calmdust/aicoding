@@ -59,9 +59,15 @@ const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" i
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 20 steps, 15級 (1) … 1級 (15), 初段 (16) … 五段 (20)
-const LV_MAX = 20;
-const LV = i => 'Lv.' + i;   // levels 1 … 20 (kyu / dan names are kept for the Japanese games: shogi, go, gomoku)
-const LVD = i => t('lvd')[i <= 4 ? 0 : i <= 10 ? 1 : i <= 15 ? 2 : 3];
+const LV_MAX = 23;
+// 天上 (2026-11-22, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–20 are the levels people play; 天上Ⅰ〜Ⅲ
+// (the learned evaluation: Lv.19・20's settings and 20 s) are the AI's benchmark / research — not for people, no rewards
+const LV_HUMAN = 20;
+const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
+const tenjoName = (n, l) => (TENJO_W[l] || TENJO_W.en) + (/^(ja|zh|zh-TW)$/.test(l) ? 'ⅠⅡⅢⅣⅤⅥⅦⅧ'[n - LV_HUMAN - 1] : ' ' + ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][n - LV_HUMAN - 1]);
+const LVD_TOP = { ja: '最強：全CPUコアで長時間、深く読む', en: 'Strongest: long, deep search on every CPU core', zh: '最强：用所有CPU核心长时间深入计算', 'zh-TW': '最強：用所有CPU核心長時間深入計算', ko: '최강: 모든 CPU 코어로 오래, 깊이 읽음', es: 'Máximo: búsqueda larga y profunda con todos los núcleos', fr: 'Ultime : calcul long et profond sur tous les cœurs', pt: 'Máximo: busca longa e profunda com todos os núcleos', de: 'Höchststufe: lange, tiefe Suche auf allen CPU-Kernen', ru: 'Сильнейший: долгий глубокий расчёт на всех ядрах', tr: 'En güçlü: tüm CPU çekirdekleriyle uzun, derin arama', id: 'Terkuat: pencarian panjang dan dalam dengan semua inti CPU', hi: 'सबसे मज़बूत: सभी CPU कोर पर लंबी, गहरी खोज', ar: 'الأقوى: بحث طويل وعميق بكل أنوية المعالج' };
+const LV = i => i > LV_HUMAN ? tenjoName(i, LANG) : 'Lv.' + i;
+const LVD = i => i > LV_HUMAN ? LVD_TOP[LANG] || LVD_TOP.en : t('lvd')[i <= 4 ? 0 : i <= 10 ? 1 : i <= 15 ? 2 : 3];
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
@@ -116,7 +122,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=6';
+const ENGINE_URL = 'engine.js?v=7';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -143,7 +149,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 const MTP = window.MTEngine ? MTEngine.use({
   wasm: 'engine_mt.wasm?v=9', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=3', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
-  help: m => { const L = m.type === 'think' ? m.cfg || E.LEVELS[m.level] || {} : { s: 1 }; return { io: E.setupIO(m.start, m.moves || [], []), nn: L.s ? 1 : 0 }; },   // (the evaluation the lead uses: engine.js wNN)
+  help: m => { const L = m.type === 'think' ? m.cfg || E.LEVELS[m.level] || {} : { s: 1 }; return { io: E.setupIO(m.start, m.moves || [], []), nn: m.type === 'think' ? (E.netFor(L) ? 1 : 0) : 1 }; },   // (the evaluation the lead uses: engine.js wNN)
 }) : null;
 const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms); };   // a level with a time limit (Lv.19・20)
 function mtWants(which, msg) {
@@ -1192,7 +1198,7 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo)
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
 // rating of each AI step on the kyu / dan scale, from the calibration matches (tools/native.c match, see MODEL_CARD.md)
-const RT_LV = [0, 100, 195, 350, 475, 610, 805, 965, 1130, 1255, 1495, 1600, 1660, 1765, 1885, 2020, 2120, 2155, 2185, 2730, 2800];   // (2026-11-13, search v2: Lv.19-20 +100, an estimate from +142 Elo at 100k positions)
+const RT_LV = [0, 100, 195, 350, 475, 610, 805, 965, 1130, 1255, 1495, 1600, 1660, 1765, 1885, 2020, 2120, 2155, 2185, 2430, 2500, 2730, 2800, 2850];   // (2026-11-13, search v2: Lv.19-20 +100, an estimate from +142 Elo at 100k positions)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

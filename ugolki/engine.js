@@ -313,6 +313,9 @@ const LEVELS = [null,
   { s: 1, ms: 5000, book: 1, x: 1 },     // Lv.21   (x: search v3 + the learned evaluation, 2026-11-20 — the page's 天上 levels)
   { s: 1, ms: 10000, book: 1, x: 1 },    // Lv.22
   { s: 1, ms: 20000, book: 1, x: 1 },    // Lv.23
+  // (2026-11-22) 天上Ⅰ・Ⅱ: 四段・五段's time with search v3 + the net (天上 = the AI's benchmark / research, not for people)
+  { s: 1, ms: 1200, book: 1, x: 1 },     // Lv.24 (天上Ⅰ)
+  { s: 1, ms: 2500, book: 1, x: 1 },     // Lv.25 (天上Ⅱ)
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 // ---------------------------------------------------------------- evaluation (side to move's view, ~100 = one tempo)
