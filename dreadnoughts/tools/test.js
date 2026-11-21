@@ -26,7 +26,9 @@ let fail = 0; const ok = (c, m) => { console.log((c ? 'ok  ' : 'NG  ') + m); if 
     await p.click('#mPlay'); await p.waitForTimeout(300);
     ok(await p.evaluate(() => document.querySelector('.rc.on').dataset.r === 'tactics'), name + ': tactics is the default rule'); await shot('setup');
     await p.click('#sGo'); await p.waitForTimeout(1500);
-    ok(await p.evaluate(() => DN.G().phase === 'draft'), name + ': the draft opens'); await shot('draft');
+    ok(await p.evaluate(() => DN.G().phase === 'draft'), name + ': the draft opens'); await p.waitForTimeout(1500); await shot('draft');
+    ok(await p.evaluate(() => [...document.querySelectorAll('#drGrid .card')].every(c => c.querySelector('.art svg.reach') && c.querySelector('.desc').textContent.length > 4)), name + ': every draft card shows the reach diagram and what the ship does');
+    ok(await p.evaluate(() => new Set([...document.querySelectorAll('#drGrid .card')].map(c => c.offsetHeight)).size === 1), name + ': the draft cards are all one height');
     // tap a card to choose it, tap again to undo
     await p.waitForFunction(() => { const G = DN.G(); return G.phase !== 'draft' || (!G.busy && G.draft.turn === 0); }, null, { timeout: 30000 });
     const k0 = await p.evaluate(() => { const c = document.querySelector('#drGrid .card:not(.off)'); c.click(); return +c.dataset.k; });
@@ -45,6 +47,14 @@ let fail = 0; const ok = (c, m) => { console.log((c ? 'ok  ' : 'NG  ') + m); if 
     await p.click('#dGo'); await p.waitForTimeout(2500);
     ok(await p.evaluate(() => DN.G().phase === 'battle'), name + ': the battle starts');
     await myTurn(); await shot('battle');
+    // the fleets sheet: both sides as cards
+    await p.evaluate(() => document.querySelector('#pMine').click()); await p.waitForTimeout(300);
+    ok(await p.evaluate(() => !document.querySelector('#scrFleet').classList.contains('hide') && document.querySelectorAll('#flBody .card').length >= 6), name + ': the fleets sheet lists both sides');
+    await p.evaluate(() => document.querySelector('#scrFleet [data-close]').click());
+    // I: the 3D DEBUG panel
+    if (!touch) { await p.keyboard.press('i'); await p.waitForTimeout(800); ok(await p.evaluate(() => { const d = document.querySelector('.t3dbg'); return d && !d.hidden && /draw calls/.test(d.textContent) && /fps/.test(d.textContent); }), name + ': I shows the 3D DEBUG panel'); await shot('debug'); await p.keyboard.press('i'); }
+    // hover a skill: its card with the reach
+    if (!touch) { const sk = await p.$('#dock .sk'); if (sk) { await sk.hover(); await p.waitForTimeout(300); ok(await p.evaluate(() => !document.querySelector('#skTip').classList.contains('hide') && !!document.querySelector('#skTip svg.reach')), name + ': a skill shows its card on hover'); await shot('tip'); await p.mouse.move(5, 300); } }
     // a tap on a square of the enemy waters fires at it
     for (const cell of [0, 55, 99]) {
       await myTurn(); if (await p.evaluate(() => DN.G().phase !== 'battle')) break;
@@ -58,7 +68,10 @@ let fail = 0; const ok = (c, m) => { console.log((c ? 'ok  ' : 'NG  ') + m); if 
     const last = await p.evaluate(() => { const G = DN.G(), sd = G.st.sides[1]; const cells = []; sd.ships.forEach((s, i) => { if (!sd.sunk[i]) for (let k = 0; k < s.len; k++) cells.push(s.h ? s.r * 10 + s.c + k : (s.r + k) * 10 + s.c); }); return cells; });
     await p.evaluate(cells => { const G = DN.G(), sd = G.st.sides[1]; for (const c of cells.slice(0, -1)) { sd.shots[c] = 2; } sd.ships.forEach((s, i) => { sd.hitsOn[i] = s.len; }); }, last);
     await p.evaluate(cells => { const G = DN.G(), sd = G.st.sides[1], c = cells[cells.length - 1], i = sd.grid[c]; sd.hitsOn[i] = sd.ships[i].len - 1; sd.ships.forEach((s, j) => { if (j !== i && !sd.sunk[j]) { sd.sunk[j] = true; sd.afloat--; } }); sd.fog = 0; sd.armor = sd.armor && sd.armor.map(() => 0); }, last);
-    const pt = await p.evaluate(c => DN.World.screenOf(1, c), last[last.length - 1]); await tap(pt);
+    // (passives such as armour can turn a hit aside: keep firing at the last ship's open squares until it goes down)
+    for (let n = 0; n < 6; n++) { await myTurn(); if (await p.evaluate(() => DN.G().phase !== 'battle')) break;
+      const c = await p.evaluate(cells => { const sd = DN.G().st.sides[1]; return cells.find(c => !sd.shots[c] || sd.shots[c] === 1) ?? cells.find(c => sd.grid[c] >= 0 && !sd.sunk[sd.grid[c]]); }, last);
+      if (c == null) break; const pt = await p.evaluate(c => DN.World.screenOf(1, c), c); await tap(pt); await p.waitForTimeout(1500); }
     await p.waitForFunction(() => !document.querySelector('#scrResult').classList.contains('hide'), null, { timeout: 30000 }).catch(() => {});
     ok(await p.evaluate(() => DN.G().phase === 'over' && document.querySelector('#rsBig').textContent === 'VICTORY'), name + ': sinking the last ship wins'); await shot('result');
     await p.click('#rsTitle'); await p.waitForTimeout(500);

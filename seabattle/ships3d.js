@@ -14,6 +14,35 @@ function canvasTex(w, h, draw, rep) {
   const tx = new T.CanvasTexture(c); tx.colorSpace = T.SRGBColorSpace; tx.anisotropy = 4; if (rep) { tx.wrapS = tx.wrapT = T.RepeatWrapping; }
   return tx;
 }
+// surface detail drawn in the shader from the model-space position (no UVs needed): hull plating seams, rust runs and waterline grime;
+// panel lines and grime streaks on the superstructure; it survives clone() (tints, sunk / ghost variants)
+const DETAIL_GLSL = `
+  float dh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float dn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(dh(i), dh(i + vec2(1, 0)), f.x), mix(dh(i + vec2(0, 1)), dh(i + vec2(1, 1)), f.x), f.y); }
+  float seam(float v, float w) { float d = min(fract(v), 1. - fract(v)); return 1. - smoothstep(0., w, d); }`;
+function detail(mat, kind) {
+  if (!mat || mat.userData.detail) return mat; mat.userData.detail = kind;
+  mat.onBeforeCompile = sh => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vOP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvOP = position;');
+    let f = '';
+    if (kind === 'hull') f = `{ float y = vOP.y, x = vOP.x, row = floor(y * 36.);
+        float pl = max(seam(y * 36., .05), seam(x * 9. + row * .5, .018) * step(.004, y));
+        diffuseColor.rgb *= 1. - .085 * pl;
+        float run = smoothstep(.7, .95, dn(vec2(x * 46. + vOP.z * 3., y * 2.2))) * smoothstep(.01, .06, y) * (.5 + .5 * dn(vec2(x * 3., 1.7)));
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.29, .17, .1) * (.6 + .5 * dn(vec2(x * 300., y * 40.))), run * .26);
+        diffuseColor.rgb *= .74 + .26 * smoothstep(0., .045, y) + .05 * (dn(vec2(x * 7., y * 12.)) - .5); }`;
+    else if (kind === 'sup') f = `{ float y = vOP.y, x = vOP.x + vOP.z;
+        diffuseColor.rgb *= 1. - .07 * max(seam(x * 22., .03), seam(y * 30., .04));
+        float st = smoothstep(.55, .95, dn(vec2(x * 70., y * 3.5)));
+        diffuseColor.rgb *= 1. - .16 * st + .06 * (dn(vec2(x * 9., y * 9.)) - .5); }`;
+    else if (kind === 'metal') f = `{ diffuseColor.rgb *= .92 + .16 * dn(vOP.xz * 60. + vOP.y * 30.); }`;
+    if (!f) return;
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vOP;' + DETAIL_GLSL).replace('#include <color_fragment>', '#include <color_fragment>\n' + f);
+  };
+  mat.customProgramCacheKey = () => 'shipdetail-' + kind;
+  const oc = mat.clone.bind(mat); mat.clone = () => { const c = oc(); c.userData.detail = null; return detail(c, kind); };
+  return mat;
+}
 function materials() {
   if (M) return M;
   const S = (color, rough, metal, extra) => new T.MeshStandardMaterial(Object.assign({ color, roughness: rough, metalness: metal }, extra || {}));
@@ -56,7 +85,8 @@ function materials() {
     dazzle: S(0xffffff, .6, .15, { map: dazzle }), subhull: S(0x2c3236, .55, .35), mine: S(0x2a2d30, .5, .6), cargo: S(0xffffff, .7, .15, { vertexColors: true }),
     lampR: S(0x330000, .4, 0, { emissive: 0xff3326, emissiveIntensity: 2.2 }), lampG: S(0x003300, .4, 0, { emissive: 0x33ff6a, emissiveIntensity: 2.2 }), lampW: S(0x222222, .4, 0, { emissive: 0xfff2d0, emissiveIntensity: 2.4 }),
   };
-  for (const k in M) M[k].name = k;
+  for (const k in M) { M[k].name = k; if (!/^(hull|cargo)$/.test(k)) M[k].vertexColors = true; }   // (the baked ambient occlusion rides in the vertex colours)
+  detail(M.hull, 'hull'); for (const k of ['sup', 'sup2', 'supW', 'navy', 'white', 'red', 'green', 'rust', 'subhull', 'dazzle']) detail(M[k], 'sup'); for (const k of ['dark', 'gun', 'mine']) detail(M[k], 'metal');
   return M;
 }
 
@@ -87,7 +117,7 @@ function hullParts(L, B, o) {
       ring.push([x, y, b * wf]);
     }
     deckTop.push([ring[0][0], ring[0][1], ring[0][2]]);
-    const pushV = (p, z) => { pos.push(p[0], p[1], z); const c = p[1] < -.003 ? bc : p[1] < .006 ? wl : sc && p[1] > H * .86 ? sc : hc, f = p[1] < 0 ? .9 + .1 * (1 + p[1] / dr) : 1; col.push(c.r * f, c.g * f, c.b * f); };
+    const pushV = (p, z) => { pos.push(p[0], p[1], z); const c = p[1] < -.003 ? bc : p[1] < .011 ? wl : sc && p[1] > H * .86 ? sc : hc, f = p[1] < 0 ? .9 + .1 * (1 + p[1] / dr) : 1; col.push(c.r * f, c.g * f, c.b * f); };
     for (let j = 0; j < lv.length; j++) pushV(ring[j], ring[j][2]);
     for (let j = lv.length - 2; j >= 0; j--) pushV(ring[j], -ring[j][2]);
   }
@@ -109,6 +139,10 @@ function hullParts(L, B, o) {
   return { side, transom: tr, deck: dk, deckAt: x => deckH(clamp((x + L / 2) / L, 0, 1)), halfAt: x => { const t = clamp((x + L / 2) / L, 0, 1); return hb(t) * (1 + (o.flare || .12) * clamp((t - .5) / .4, 0, 1) - (o.tumble || 0)); } };
 }
 
+const BARRELS = new Map();
+function barrel(s, bl) { const id = s.toFixed(3) + bl.toFixed(3); if (BARRELS.has(id)) return BARRELS.get(id).clone();
+  const r0 = s * .072, r1 = s * .042, pts = [[0, -bl / 2], [r0, -bl / 2], [r0 * .96, -bl * .25], [r1 * 1.12, bl * .2], [r1, bl * .44], [r1 * 1.35, bl * .46], [r1 * 1.35, bl * .5], [r1 * .55, bl * .5], [r1 * .55, bl * .45]].map(([x, y]) => new T.Vector2(x, y));
+  const g = new T.LatheGeometry(pts, 10); BARRELS.set(id, g); return g.clone(); }
 // ---------- the builder: parts go into a scene graph, then everything is baked per material ----------
 class Ship {
   constructor(L, B) { this.L = L; this.B = B; this.root = new T.Group(); this.deckAt = () => 0; this.halfAt = () => B / 2; this.extra = []; this.fx = { funnels: [], spin: [], lights: [] }; }
@@ -120,6 +154,8 @@ class Ship {
     if (o.deckCol) { const k = 'deck_' + o.deckCol; if (!M[k]) { M[k] = M.deck.clone(); M[k].color = new T.Color(o.deckCol).multiplyScalar(1 / .115); M[k].name = k; } o.deck = k; }   // (deck colour ÷ the steel texture's own mean)
     const h = hullParts(this.L, this.B, o); this.deckAt = h.deckAt; this.halfAt = h.halfAt; this.ho = o;
     this.mesh('hull', h.side); this.mesh('hull', h.transom); this.mesh(o.deck || 'deck', h.deck);
+    if (o.rail !== false && o.deck !== 'flight' && o.fb >= .06) this.edge();
+    if (o.anchor !== false && this.L > 1.2) for (const q of [-1, 1]) { const x = this.L * .41, y = this.deckAt(x) * .8; this.mesh('black', new T.CylinderGeometry(.007, .007, .004, 10), x, y, q * (this.halfAt(x) * 1.02), Math.PI / 2, 0, 0); this.box('dark', x - .002, y - .018, q * (this.halfAt(x) * 1.02 + .001), .01, .018, .003); }
     return this;
   }
   tint(hex, sup) {
@@ -132,9 +168,11 @@ class Ship {
   // a superstructure block on the deck at x (w long, d wide, h high); windows: rows of lit windows on the sides and front
   block(x, w, h, d, o) {
     o = o || {}; const y = o.y != null ? o.y : this.deckAt(x), mat = o.mat || 'sup', z = o.z || 0;
+    (this.blocks || (this.blocks = [])).push({ x, w, h, d, y, z, top: y + h, slope: o.slope || 0, win: o.win !== false && h > .045 });
     const g = new T.BoxGeometry(w, h, d);
     if (o.slope) { const p = g.attributes.position; for (let i = 0; i < p.count; i++) if (p.getY(i) > 0 && p.getX(i) > 0) p.setX(i, p.getX(i) - o.slope * w); g.computeVertexNormals(); }
     this.mesh(mat, g, x, y + h / 2, z);
+    if (o.roof !== false) { const rw = w * (o.slope ? 1 - o.slope : 1) + .012; this.box('sup2', x - (o.slope ? o.slope * w / 2 : 0), y + h, z, rw, .005, d + .012); }
     if (o.win !== false && h > .045) {
       const rows = Math.max(1, Math.floor(h / .07)), wl = w * .8;
       for (let r = 0; r < rows; r++) { const wy = y + h * (r + .62) / (rows + .2), ww = r === rows - 1 && o.slope ? wl * (1 - o.slope) : wl;
@@ -154,7 +192,10 @@ class Ship {
     this.mesh('dark', new T.BoxGeometry(s * .5, s * .06, s * .5), -s * .3, s * .51, 0, 0, 0, 0, g);   // rangefinder roof
     if (o.rf) this.mesh('dark', new T.BoxGeometry(s * .14, s * .1, s * 1.25), -s * .45, s * .4, 0, 0, 0, 0, g);   // turret rangefinder ears
     const bl = o.len || s * 1.7, sp = n === 1 ? 0 : s * .62 / (n - 1);
-    for (let i = 0; i < n; i++) { const z = n === 1 ? 0 : -s * .31 + i * sp, b = this.mesh('gun', new T.CylinderGeometry(s * .045, s * .07, bl, 10), s * .38 + bl / 2, s * .3, z, 0, 0, -Math.PI / 2 + (o.elev || .04), g); this.mesh('dark', new T.CylinderGeometry(s * .09, s * .09, s * .16, 10), s * .36, s * .3, z, 0, 0, -Math.PI / 2, g); }
+    for (let i = 0; i < n; i++) { const z = n === 1 ? 0 : -s * .31 + i * sp, b = this.mesh('gun', barrel(s, bl), s * .38 + bl / 2, s * .3, z, 0, 0, -Math.PI / 2 + (o.elev || .04), g); this.mesh('black', new T.CylinderGeometry(s * .095, s * .1, s * .14, 10), s * .36, s * .3, z, 0, 0, -Math.PI / 2, g); }
+    if (!o.raise) this.mesh('sup2', new T.CylinderGeometry(s * .6, s * .62, s * .05, 20), 0, -s * .01, 0, 0, 0, 0, g);   // (barbette ring)
+    for (const q of [-1, 1]) this.mesh('dark', new T.BoxGeometry(s * .12, s * .07, s * .1), s * .1, s * .5, q * s * .28, 0, 0, 0, g);   // (sighting hoods)
+    this.mesh(o.mat || 'sup', new T.BoxGeometry(s * .3, s * .04, s * .8), -s * .55, s * .2, 0, 0, 0, 0, g);   // (overhang at the back)
     return g;
   }
   // a single gun behind a shield (secondary / quick-firing / AA)
@@ -167,12 +208,14 @@ class Ship {
     return g;
   }
   // light anti-aircraft gun: a ring and two thin barrels pointing up
-  aa(x, z, s, o) { o = o || {}; const y = o.y != null ? o.y : this.deckAt(x), g = this.group(x, y, z, o.ry || 0); this.mesh('dark', new T.CylinderGeometry(s * .45, s * .5, s * .22, 10), 0, s * .11, 0, 0, 0, 0, g); for (const q of [-1, 1]) this.mesh('gun', new T.CylinderGeometry(s * .035, s * .035, s * 1.1, 6), s * .3, s * .5, q * s * .14, 0, 0, -Math.PI / 2 + .75, g); return g; }
+  aa(x, z, s, o) { o = o || {}; const y = o.y != null ? o.y : this.deckAt(x), g = this.group(x, y, z, o.ry || 0); if (o.tub !== false) this.mesh('sup2', new T.LatheGeometry([[s * .72, 0], [s * .8, 0], [s * .8, s * .3], [s * .72, s * .3], [s * .72, 0]].map(([a, b]) => new T.Vector2(a, b)), 14), 0, 0, 0, 0, 0, 0, g); this.mesh('dark', new T.CylinderGeometry(s * .45, s * .5, s * .22, 10), 0, s * .11, 0, 0, 0, 0, g); for (const q of [-1, 1]) this.mesh('gun', new T.CylinderGeometry(s * .035, s * .035, s * 1.1, 6), s * .3, s * .5, q * s * .14, 0, 0, -Math.PI / 2 + .75, g); return g; }
   funnel(x, r, h, o) {
     o = o || {}; const y = o.y != null ? o.y : this.deckAt(x), g = this.group(x, y, o.z || 0);
     g.rotation.z = o.rake || 0;
     const f = this.mesh(o.mat || 'sup2', new T.CylinderGeometry(r * (o.top || .92), r, h, 18), 0, h / 2, 0, 0, 0, 0, g); f.scale.x = o.oval || 1.5;
     const c = this.mesh('black', new T.CylinderGeometry(r * .95, r * .95, h * .14, 18), 0, h * .94, 0, 0, 0, 0, g); c.scale.x = o.oval || 1.5;
+    const rim = this.mesh('dark', new T.TorusGeometry(r * .93, r * .06, 6, 24), 0, h * 1.005, 0, Math.PI / 2, 0, 0, g); rim.scale.x = o.oval || 1.5;   // (the cap's lip)
+    if (h > .06) for (const q of [-1, 1]) this.mesh('sup2', new T.CylinderGeometry(r * .07, r * .07, h * 1.06, 6), -r * (o.oval || 1.5) * .98, h * .53, q * r * .42, 0, 0, 0, g);   // (steam pipes aft)
     if (o.band) { const b = this.mesh(o.band, new T.CylinderGeometry(r * .99, r * .99, h * .1, 18), 0, h * .72, 0, 0, 0, 0, g); b.scale.x = o.oval || 1.5; }
     const top = new T.Vector3(0, h * 1.02, 0); g.updateMatrix(); top.applyMatrix4(g.matrix); this.fx.funnels.push({ x: top.x, y: top.y, z: top.z, r });
     return g;
@@ -185,6 +228,7 @@ class Ship {
     else if (kind === 'tower') { this.mesh(o.mat || 'sup', new T.CylinderGeometry(r * .9, r * 1.6, h, 6), 0, h / 2, 0, 0, 0, 0, g); }
     else this.mesh('sup2', new T.CylinderGeometry(r * .7, r, h, 8), 0, h / 2, 0, 0, 0, 0, g);
     if (o.yard !== false) this.mesh('sup2', new T.CylinderGeometry(r * .45, r * .45, h * .42, 6), 0, h * .8, 0, Math.PI / 2, 0, 0, g);
+    (this.masts || (this.masts = [])).push({ x, y: y + h * .97, z, h });
     if (o.top) this.radar(0, y + h, o.top, Object.assign({ z, x }, o));
     this.mesh('lampW', new T.SphereGeometry(.007, 6, 6), 0, h + .006, 0, 0, 0, 0, g);
     return y + h;
@@ -207,12 +251,75 @@ class Ship {
   vls(x, z, rows, cols) { const y = this.deckAt(x) + .001; this.box('dark', x, y, z, rows * .028 + .01, .006, cols * .028 + .01); for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) this.box('sup2', x + (r - (rows - 1) / 2) * .028, y + .006, z + (c - (cols - 1) / 2) * .028, .022, .002, .022); }
   plane(x, y, z, ry, s, mat) { const g = this.group(x, y, z, ry || 0); s = s || 1; const m = mat || 'sup2'; this.mesh(m, new T.CapsuleGeometry(.012 * s, .07 * s, 4, 8), 0, .012 * s, 0, 0, 0, Math.PI / 2, g); this.mesh(m, new T.BoxGeometry(.03 * s, .004 * s, .13 * s), .005 * s, .016 * s, 0, 0, 0, 0, g); this.mesh(m, new T.BoxGeometry(.02 * s, .003 * s, .05 * s), -.042 * s, .016 * s, 0, 0, 0, 0, g); this.mesh(m, new T.BoxGeometry(.016 * s, .024 * s, .003 * s), -.044 * s, .028 * s, 0, 0, 0, 0, g); this.mesh('dark', new T.CylinderGeometry(.013 * s, .013 * s, .004 * s, 10), .05 * s, .012 * s, 0, 0, 0, Math.PI / 2, g); return g; }
   float(x, y, z, s) { this.mesh('sup2', new T.CapsuleGeometry(.008 * s, .05 * s, 4, 6), x, y, z, 0, 0, Math.PI / 2); }
+  // a stepped tower (pagoda / bridge tower): levels [w, d, h, mat], each with a platform lip; windows on the top 'bridge' levels
+  tower(x, y, levels, o) {
+    o = o || {}; const br = o.bridge || 1;
+    levels.forEach(([w, d, h, mat], i) => { const last = i >= levels.length - br; this.mesh(mat || 'sup', new T.BoxGeometry(w, h, d), x, y + h / 2, 0); this.box('sup2', x + .004, y + h, 0, w + .02, .004, d + .022);
+      if (last) for (const q of [-1, 1]) this.box('win', x, y + h * .55, q * (d / 2 + .0015), w * .82, .008, .003);
+      if (last) this.box('win', x + w / 2 + .0015, y + h * .55, 0, .003, .008, d * .82); y += h + .004; });
+    (this.blocks || (this.blocks = [])).push({ x, w: levels[levels.length - 1][0], h: .01, d: levels[levels.length - 1][1], y, z: 0, top: y, slope: 0, win: false });
+    return y;
+  }
+  director(x, y, s, o) { o = o || {}; const g = this.group(x, y, o.z || 0, o.dir < 0 ? Math.PI : 0); s = s || 1; this.mesh('dark', new T.CylinderGeometry(.022 * s, .026 * s, .016 * s, 12), 0, .008 * s, 0, 0, 0, 0, g); this.mesh('sup', new T.BoxGeometry(.05 * s, .03 * s, .05 * s), 0, .03 * s, 0, 0, 0, 0, g); this.mesh('dark', new T.BoxGeometry(.016 * s, .012 * s, .13 * s), -.004 * s, .042 * s, 0, 0, 0, 0, g); for (const q of [-1, 1]) this.mesh('dark', new T.CylinderGeometry(.008 * s, .008 * s, .01 * s, 8), -.004 * s, .042 * s, q * .066 * s, Math.PI / 2, 0, 0, g); return y + .05 * s; }
+  breakwater(x) { const y = this.deckAt(x), hw = this.halfAt(x) * .8; for (const q of [-1, 1]) { const m = this.mesh('sup2', new T.BoxGeometry(.005, .022, hw * 1.18), x - .02, y + .011, q * hw * .5); m.rotation.y = q * .55; } }
+  catapult(x, z, ry, len) { const y = this.deckAt(x), g = this.group(x, y + .012, z, ry); this.mesh('dark', new T.CylinderGeometry(.02, .024, .012, 10), 0, -.006, 0, 0, 0, 0, g); this.mesh('sup2', new T.BoxGeometry(len, .008, .016), len * .3, .004, 0, 0, 0, 0, g); for (let i = 0; i < 5; i++) this.mesh('dark', new T.BoxGeometry(.003, .014, .016), len * (.3 - .45 + i * .22), .004, 0, 0, 0, 0, g); return g; }
+  racks(x, n) { const y = this.deckAt(x); for (const q of [-1, 1]) { this.box('dark', x, y, q * (this.halfAt(x) - .025), .07, .006, .022); for (let i = 0; i < n; i++) this.mesh('black', new T.CylinderGeometry(.008, .008, .018, 8), x - .03 + i * .06 / Math.max(1, n - 1), y + .016, q * (this.halfAt(x) - .025), Math.PI / 2, 0, 0); } }
+  searchlight(x, y, z) { const g = this.group(x, y, z); this.mesh('dark', new T.CylinderGeometry(.006, .008, .012, 8), 0, .006, 0, 0, 0, 0, g); this.mesh('sup2', new T.CylinderGeometry(.011, .011, .016, 12), .002, .02, 0, 0, 0, Math.PI / 2, g); this.mesh('glass', new T.CircleGeometry(.0095, 12), .0105, .02, 0, 0, Math.PI / 2, 0, g); }
+  line(mat, a, b, r) { const d = new T.Vector3().subVectors(b, a), m = this.mesh(mat, new T.CylinderGeometry(r, r, d.length(), 3), (a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize()); return m; }
+  // the finishing pass on every ship: stays from the masts, bridge wings, and the deck's small furniture (bollards, vents, hatches,
+  // capstans and chain) set wherever the deck is still free
+  finish(seed) {
+    let a = seed >>> 0; const rnd = () => ((a = (a * 1664525 + 1013904223) >>> 0) / 4294967296);
+    const L = this.L, o = this.ho || {};
+    // rigging: fore and back stays and a pair of shrouds per mast
+    for (const m of this.masts || []) { if (m.h < .1) continue; const top = new T.Vector3(m.x, m.y, m.z);
+      for (const dx of [L * .16, -L * .14]) { const x = clamp(m.x + dx, -L * .46, L * .44); this.line('dark', top, new T.Vector3(x, this.deckAt(x) + .004, 0), .0006); }
+      for (const q of [-1, 1]) this.line('black', top.clone().setY(m.y - m.h * .25), new T.Vector3(m.x - .03, this.deckAt(m.x) + .004, q * (this.halfAt(m.x) - .01)), .0006); }
+    // bridge wings on the forward-most tall windowed block
+    const br = (this.blocks || []).filter(b => b.win && b.x > -L * .25 && Math.abs(b.z) < .01).sort((p, q) => q.top - p.top)[0];
+    if (br && br.d < this.B * .9) { const wx = br.x + br.w / 2 - br.slope * br.w - .018, span = Math.min(this.B * .96, br.d + .1);
+      this.box('sup', wx, br.top - .016, br.z, .028, .012, span); this.box('sup2', wx, br.top - .004, br.z, .032, .003, span + .006);
+      for (const q of [-1, 1]) this.box('win', wx + .0145, br.top - .011, q * (br.d / 2 + (span - br.d) / 4), .002, .005, (span - br.d) / 2 - .006); }
+    if (o.deck === 'flight' || o.fb < .05) return;
+    // where the deck is taken: every part's footprint (in plan) that rises above the deck
+    this.root.updateMatrixWorld(true); const taken = [], bb = new T.Box3();
+    this.root.traverse(c => { if (!c.isMesh || /^(hull|deck|wood|flight|hpad)/.test(c.material.name)) return; bb.setFromObject(c); const x = (bb.min.x + bb.max.x) / 2; if (bb.max.y < this.deckAt(x) + .006) return; taken.push([bb.min.x - .012, bb.max.x + .012, bb.min.z - .012, bb.max.z + .012]); });
+    const free = (x, z, r) => !taken.some(t => x + r > t[0] && x - r < t[1] && z + r > t[2] && z - r < t[3]) && Math.abs(z) + r < this.halfAt(x) - .006;
+    const put = (x, z, r) => { taken.push([x - r, x + r, z - r, z + r]); };
+    // capstans and the anchor chain on the forecastle
+    for (const q of [-1, 1]) { const x = L * .37, z = q * this.halfAt(L * .37) * .38; if (!free(x, z, .016)) continue; const y = this.deckAt(x);
+      this.cyl('dark', x, y, z, .011, .013, .012, 12); this.cyl('dark', x, y + .012, z, .007, .007, .006, 10); put(x, z, .016);
+      const hx = L * .4, hz = q * (this.halfAt(hx) - .008); this.line('black', new T.Vector3(x + .01, y + .003, z), new T.Vector3(hx, this.deckAt(hx) + .003, hz), .0026); }
+    // bollards in pairs along both edges, vents and hatches along the middle
+    for (let x = -L * .44; x < L * .34; x += .07 + rnd() * .06) { const y = this.deckAt(x);
+      for (const q of [-1, 1]) { const z = q * (this.halfAt(x) - .022); if (rnd() < .55 && free(x, z, .014)) { for (const d of [-.006, .006]) this.cyl('dark', x + d, y, z, .0035, .004, .011, 8); put(x, z, .012); } }
+      const z = (rnd() - .5) * this.halfAt(x) * .9, k = rnd();
+      if (k < .28 && free(x, z, .016)) { this.cyl('sup2', x, y, z, .005, .005, .018, 8); this.cyl('sup2', x, y + .018, z, .011, .006, .006, 10); put(x, z, .014); }
+      else if (k < .55 && free(x, z, .022)) { this.box('sup2', x, y, z, .03, .005, .022); this.box('dark', x, y + .005, z, .024, .001, .016); put(x, z, .02); } }
+  }
+  // deck edge: stanchions, two rails and a toe board, following the sheer from stern to bow
+  edge() {
+    const L = this.L, n = Math.max(8, Math.round(L / .055)), x0 = -L * .47, x1 = L * .44;
+    for (const q of [-1, 1]) { let px = null, py = 0, pz = 0;
+      for (let i = 0; i <= n; i++) { const x = x0 + (x1 - x0) * i / n, y = this.deckAt(x), z = q * (this.halfAt(x) - .004);
+        this.box('sup2', x, y, z, .0028, .026, .0028);
+        if (px != null) { const dx = x - px, dz = z - pz, dy = y - py, len = Math.hypot(dx, dz, dy), a = Math.atan2(dz, dx), e = Math.atan2(dy, Math.hypot(dx, dz));
+          for (const [hy, th, tw] of [[.026, .0024, .0024], [.014, .0016, .0016], [.004, .008, .0016]]) { const m = this.mesh('sup2', new T.BoxGeometry(len, th, tw), (x + px) / 2, (y + py) / 2 + hy, (z + pz) / 2); m.rotation.set(0, -a, e, 'YZX'); } }
+        px = x; py = y; pz = z; } }
+  }
   rail(x0, x1) { for (const q of [-1, 1]) { const n = Math.max(2, Math.round((x1 - x0) / .05)); for (let i = 0; i <= n; i++) { const x = x0 + (x1 - x0) * i / n; this.box('sup2', x, this.deckAt(x), q * (this.halfAt(x) - .006), .003, .022, .003); } } }
   lights() { const L = this.L; this.mesh('lampR', new T.SphereGeometry(.006, 6, 6), L * .05, this.deckAt(L * .05) + .09, -this.halfAt(0) * .9); this.mesh('lampG', new T.SphereGeometry(.006, 6, 6), L * .05, this.deckAt(L * .05) + .09, this.halfAt(0) * .9); }
   cross(x, y, z, s, face) {   // a red cross on a white field (hospital ship): face 'side' (on the hull side) or 'top' (on the deck)
     const g = this.group(x, y, z);
     if (face === 'top') { this.mesh('white', new T.BoxGeometry(s * 1.2, .002, s * 1.2), 0, 0, 0, 0, 0, 0, g); this.mesh('red', new T.BoxGeometry(s * .9, .003, s * .28), 0, .001, 0, 0, 0, 0, g); this.mesh('red', new T.BoxGeometry(s * .28, .003, s * .9), 0, .001, 0, 0, 0, 0, g); }
     else { const q = Math.sign(z) || 1; this.mesh('red', new T.BoxGeometry(s * .9, s * .28, .002), 0, 0, q * .001, 0, 0, 0, g); this.mesh('red', new T.BoxGeometry(s * .28, s * .9, .002), 0, 0, q * .001, 0, 0, 0, g); }
+  }
+  // ambient occlusion in the vertex colours: what stands on the deck is darker at its foot; under-hangs darker than tops
+  occlude(g) {
+    const p = g.attributes.position, n = g.attributes.normal, c = new Float32Array(p.count * 3);
+    for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), h = y - this.deckAt(x), inside = Math.abs(z) < this.halfAt(x) + .03;
+      let a = inside ? .42 + .58 * sm(clamp((h + .004) / .085, 0, 1)) : 1; a *= .86 + .14 * clamp(n.getY(i) * .5 + .5, 0, 1); c[i * 3] = c[i * 3 + 1] = c[i * 3 + 2] = a; }
+    g.setAttribute('color', new T.BufferAttribute(c, 3));
   }
   // bake: one mesh per material, all transforms applied
   bake() {
@@ -221,15 +328,18 @@ class Ship {
     const keep = new Set(this.fx.spin.map(s => s.g));
     const walk = (o, insideSpin) => { for (const c of o.children.slice()) { const spin = insideSpin || keep.has(c); if (c.isMesh && !spin) { m.multiplyMatrices(inv, c.matrixWorld); const g = c.geometry.clone().applyMatrix4(m); const k = c.material.name; if (!buckets.has(k)) buckets.set(k, []); buckets.get(k).push(g); o.remove(c); c.geometry.dispose(); } if (c.children.length) walk(c, spin); } };
     walk(root, false);
-    for (const [k, list] of buckets) { const g = merge(list); list.forEach(x => x.dispose()); const mesh = new T.Mesh(g, M[k]); mesh.castShadow = true; mesh.userData.mat = k; root.add(mesh); }
+    const flat = /^(hull|cargo|deck|wood|flight|hpad|lamp|win|glass)/;
+    for (const [k, list] of buckets) { const g = merge(list); list.forEach(x => x.dispose()); if (!flat.test(k)) this.occlude(g); else if (!g.attributes.color) white(g); const mesh = new T.Mesh(g, M[k]); mesh.castShadow = true; mesh.receiveShadow = true; mesh.userData.mat = k; root.add(mesh); }
+    for (const sp of keep) sp.traverse(o => { if (o.isMesh && !o.geometry.attributes.color) white(o.geometry); });
     // drop the groups left empty
     const prune = o => { for (const c of o.children.slice()) { prune(c); if (!c.isMesh && !c.children.length && !keep.has(c)) o.remove(c); } }; prune(root);
     root.userData.fx = this.fx; root.userData.L = this.L; root.userData.B = this.B;
     return root;
   }
 }
+function white(g) { g.setAttribute('color', new T.BufferAttribute(new Float32Array(g.attributes.position.count * 3).fill(1), 3)); }
 function merge(list) {
-  let nv = 0, ni = 0; const hasCol = list.some(g => g.attributes.color);
+  let nv = 0, ni = 0; const hasCol = list.every(g => g.attributes.color);
   for (const g of list) { nv += g.attributes.position.count; ni += g.index ? g.index.count : g.attributes.position.count; }
   const P = new Float32Array(nv * 3), N = new Float32Array(nv * 3), U = new Float32Array(nv * 2), C = hasCol ? new Float32Array(nv * 3) : null, I = new Uint32Array(ni);
   let ov = 0, oi = 0;
@@ -251,12 +361,22 @@ function merge(list) {
 const HAZE = '#8e969c', BB = '#6f777e', DARKH = '#4c5359', MERCH = '#2f3c4c';
 const K = {};
 // warships of the big-gun era
-K.battleship = s => { const L = s.L; s.hull({ fb: .1, flare: .16, sheer: .45, col: BB, deck: 'wood', rake: .1, bulb: .2 });
-  s.turret(L * .3, .2, 3, 1); s.turret(L * .17, .19, 3, 1, { raise: .07 }); s.turret(-L * .33, .2, 3, -1);
-  let y = s.block(L * .02, L * .2, .09, s.B * .5, { slope: .12 }); y = s.block(L * .04, L * .12, .08, s.B * .36, { y, slope: .2 }); s.block(L * .06, L * .05, .06, s.B * .24, { y, mat: 'sup2' });
-  s.mast(L * .05, .22, 'tower', { y: y + .06, top: 'bed', r: .02 }); s.funnel(-L * .1, .055, .17, { rake: .1 }); s.mast(-L * .2, .2, 'pole', { top: 'bar' });
-  for (const q of [-1, 1]) { s.mount(L * .09, q * s.B * .34, .07, 1, { n: 2 }); s.mount(-L * .02, q * s.B * .36, .07, 1, { n: 2 }); s.mount(-L * .15, q * s.B * .34, .07, -1, { n: 2 }); s.aa(-L * .24, q * s.B * .3, .035); }
-  s.boats(-L * .08, -L * .02, 2); s.lights(); };
+K.battleship = s => { const L = s.L, B = s.B; s.hull({ fb: .11, flare: .16, sheer: .45, col: BB, deck: 'wood', rake: .1, bulb: .2 });
+  s.breakwater(L * .375);
+  s.turret(L * .29, .2, 3, 1, { rf: 1 }); s.turret(L * .175, .19, 3, 1, { raise: .075, rf: 1 }); s.turret(-L * .32, .2, 3, -1, { rf: 1 });
+  // the citadel: a long armoured deckhouse, a conning tower, the stepped tower bridge with its director and radar
+  const y0 = s.block(L * .0, L * .3, .07, B * .62, { slope: .05, win: false });
+  s.cyl('dark', L * .115, y0, 0, .036, .04, .06, 16); s.cyl('sup2', L * .115, y0 + .06, 0, .04, .04, .006, 16);
+  let y = s.tower(L * .065, y0, [[.15, B * .46, .05], [.12, B * .38, .045], [.1, B * .3, .045], [.085, B * .24, .04]], { bridge: 2 });
+  y = s.director(L * .062, y, 1.15); s.mast(L * .055, .13, 'pole', { y: y - .005, top: 'bed', r: .009 });
+  s.funnel(-L * .07, .072, .17, { y: y0, rake: .13, oval: 1.35 });
+  const ya = s.block(-L * .19, L * .08, .055, B * .38); s.director(-L * .19, ya, .9, { dir: -1 }); s.mast(-L * .155, .2, 'tripod', { y: y0, top: 'bar', r: .011 });
+  // secondary turrets, heavy AA in tubs, searchlights
+  for (const q of [-1, 1]) { s.turret(L * .07, .095, 2, 1, { y: y0, z: q * B * .25 }); s.turret(-L * .045, .095, 2, 1, { y: y0, z: q * B * .27 }); s.turret(-L * .16, .095, 2, -1, { z: q * B * .3 });
+    for (let i = 0; i < 4; i++) s.aa(-L * .11 + i * L * .07, q * B * .42, .028, { ry: q * .4 }); s.searchlight(-L * .07, y0 + .17, q * .05); }
+  // the stern: catapult, a floatplane and its crane; boats amidships
+  s.catapult(-L * .42, B * .12, .5, .16); s.plane(-L * .4, s.deckAt(-L * .4) + .026, B * .16, .5, 1.05); s.crane(-L * .46, -B * .14, .06, .14, Math.PI);
+  s.boats(-L * .14, -L * .04, 2, { y: y0 }); s.lights(); };
 K.dread = s => { const L = s.L; s.hull({ fb: .11, flare: .18, sheer: .5, col: BB, deck: 'wood', rake: .12, bulb: .25 });
   s.turret(L * .34, .21, 3, 1); s.turret(L * .23, .2, 3, 1, { raise: .08 }); s.turret(L * .12, .2, 3, 1, { raise: .15, rf: 1 }); s.turret(-L * .25, .21, 3, -1, { raise: .08 }); s.turret(-L * .36, .21, 3, -1);
   let y = s.block(-L * .01, L * .16, .1, s.B * .52, { slope: .1 }); y = s.block(0, L * .1, .1, s.B * .4, { y }); y = s.block(L * .01, L * .06, .09, s.B * .3, { y, slope: .15 }); s.block(L * .015, L * .035, .06, s.B * .2, { y, mat: 'sup2' });   // the pagoda tower
@@ -274,11 +394,16 @@ K.hcruiser = s => { const L = s.L; s.hull({ fb: .085, flare: .14, sheer: .5, col
   s.mast(L * .07, .2, 'tripod', { y, top: 'bed' }); s.funnel(-L * .06, .05, .14, { rake: .1 }); s.mast(-L * .17, .16, 'pole', { top: 'bar' });
   for (const q of [-1, 1]) { s.mount(-L * .14, q * s.B * .34, .055, -1, { n: 2 }); s.aa(-L * .02, q * s.B * .38, .03); s.aa(L * .12, q * s.B * .4, .03); }
   s.plane(-L * .23, s.deckAt(-L * .23) + .002, s.B * .18, 0, .9); s.crane(-L * .2, -s.B * .25, .1, .12, 2.5); s.boats(-L * .06, 0, 2); s.lights(); };
-K.cruiser = s => { const L = s.L; s.hull({ fb: .08, flare: .14, sheer: .5, col: HAZE, rake: .12, entry: .58 });
-  s.turret(L * .3, .13, 3, 1); s.turret(-L * .3, .13, 3, -1);
-  let y = s.block(L * .1, L * .14, .09, s.B * .52, { slope: .18 }); y = s.block(L * .12, L * .07, .07, s.B * .34, { y });
-  s.mast(L * .12, .2, 'tripod', { y, top: 'bed' }); s.funnel(-L * .02, .042, .13, { rake: .12 }); s.funnel(-L * .13, .042, .13, { rake: .12 });
-  for (const q of [-1, 1]) { s.tubes(-L * .07, q * s.B * .28, 4, .12, q * .9); s.aa(L * .02, q * s.B * .38, .03); } s.boats(-L * .2, -L * .14, 1); s.lights(); };
+K.cruiser = s => { const L = s.L, B = s.B; s.hull({ fb: .085, flare: .14, sheer: .5, col: HAZE, rake: .12, entry: .58 });
+  s.turret(L * .31, .13, 3, 1, { rf: 1 }); s.turret(L * .2, .125, 3, 1, { raise: .055 }); s.turret(-L * .22, .125, 3, -1, { raise: .05 }); s.turret(-L * .32, .13, 3, -1);
+  const y0 = s.block(L * .07, L * .12, .06, B * .56, { slope: .12, win: false });
+  let y = s.tower(L * .085, y0, [[.11, B * .44, .045], [.09, B * .34, .045]], { bridge: 1 }); y = s.director(L * .085, y, .9);
+  s.mast(L * .06, .19, 'tripod', { y: y0, top: 'bed' });
+  s.funnel(-L * .01, .044, .14, { rake: .14 }); s.funnel(-L * .1, .044, .14, { rake: .14 });
+  s.catapult(-L * .055, 0, Math.PI / 2, .12); s.plane(-L * .055, s.deckAt(-L * .055) + .024, 0, Math.PI / 2, .9); s.crane(-L * .14, B * .3, .07, .12, -.6);
+  const ya = s.block(-L * .135, L * .05, .05, B * .34, { win: false }); s.director(-L * .135, ya, .8, { dir: -1 });
+  for (const q of [-1, 1]) { s.mount(L * .01, q * B * .36, .06, 1, { n: 2 }); s.mount(-L * .155, q * B * .36, .06, -1, { n: 2 }); s.tubes(-L * .06, q * B * .3, 4, .12, q * .9); s.aa(L * .1, q * B * .4, .026); s.aa(-L * .03, q * B * .42, .026); }
+  s.boats(-L * .02, L * .02, 1, { y: s.deckAt(0) + .02 }); s.lights(); };
 K.aa = s => { const L = s.L; s.hull({ fb: .08, flare: .14, sheer: .45, col: HAZE, rake: .1 });
   s.mount(L * .32, 0, .1, 1, { n: 2 }); s.mount(L * .22, 0, .1, 1, { n: 2, y: s.deckAt(L * .22) + .05 }); s.mount(L * .12, 0, .1, 1, { n: 2, y: s.deckAt(L * .12) + .1 });
   s.mount(-L * .32, 0, .1, -1, { n: 2 }); s.mount(-L * .22, 0, .1, -1, { n: 2, y: s.deckAt(-L * .22) + .05 });
@@ -340,10 +465,15 @@ K.pursuer = s => { const L = s.L; s.hull({ fb: .085, flare: .22, sheer: .9, col:
   // a white bow wave painted on — she always looks like she is at full speed
   s.lights(); };
 // destroyers & small craft
-K.destroyer = s => { const L = s.L; s.hull({ fb: .07, flare: .18, sheer: .6, col: HAZE, rake: .13, entry: .55 });
-  s.mount(L * .3, 0, .08, 1); s.mount(-L * .32, 0, .08, -1);
-  let y = s.block(L * .12, L * .14, .07, s.B * .5, { slope: .2 }); s.mast(L * .1, .17, 'pole', { y, top: 'bar' }); s.funnel(-L * .02, .035, .1, { rake: .12 });
-  s.tubes(-L * .16, 0, 4, .12, 0); s.lights(); };
+K.destroyer = s => { const L = s.L, B = s.B; s.hull({ fb: .072, flare: .18, sheer: .6, col: HAZE, rake: .13, entry: .55 });
+  s.mount(L * .33, 0, .075, 1); const yb = s.block(L * .19, L * .09, .04, B * .5, { win: false }); s.mount(L * .19, 0, .07, 1, { y: yb });
+  let y = s.tower(L * .1, s.deckAt(L * .1), [[L * .12, B * .56, .045], [L * .08, B * .46, .04]], { bridge: 1 });
+  y = s.director(L * .085, y, .75); s.mast(L * .05, .17, 'tripod', { y: s.deckAt(L * .05) + .045, top: 'bar', r: .008 });
+  s.funnel(-L * .02, .033, .1, { rake: .14 }); s.funnel(-L * .12, .033, .1, { rake: .14 });
+  s.tubes(-L * .07, 0, 4, .12, 0); s.tubes(-L * .2, 0, 4, .12, 0);
+  const ya = s.block(-L * .29, L * .06, .035, B * .4, { win: false }); s.mount(-L * .29, 0, .07, -1, { y: ya }); s.mount(-L * .38, 0, .075, -1);
+  for (const q of [-1, 1]) s.aa(-L * .155, q * B * .36, .024); s.searchlight(-L * .07, s.deckAt(0) + .05, 0);
+  s.racks(-L * .44, 3); s.lights(); };
 K.smoke = s => { K.destroyer(s); const L = s.L;
   // smoke generators at the stern
   for (const q of [-1, 1]) { s.cyl('black', -L * .4, s.deckAt(-L * .4), q * s.B * .22, .018, .018, .05); s.cyl('dark', -L * .4, s.deckAt(-L * .4) + .05, q * s.B * .22, .012, .02, .012); }
@@ -549,7 +679,8 @@ function build(THREE, k, len, typeKey) {
   const key = typeKey || k, L = len * .9, B = (BEAM[key] || .36) * (len <= 2 ? 1.05 : 1), s = new Ship(L, B);
   s.pal = PAL[key] || null; (K[key] || K[ALIAS[key]] || K.destroyer)(s);
   if ({ missile: 1, ecm: 1, cship: 1, crosser: 1, echo: 1 }[key]) s.helipad(-L * .4);
-  const g = s.bake(); g.userData.key = key; return g;
+  let seed = 7; for (const ch of key) seed = seed * 31 + ch.charCodeAt(0); s.finish(seed + len);
+  const g = s.bake(); g.userData.key = key; g.scale.y = 1.12; return g;   // (a touch taller than true scale: from the game's high camera, real proportions read as flat)
 }
 root.SeaShips = { build, materials: () => (materials(), M), keys: Object.keys(BEAM) };
 })(typeof self !== 'undefined' ? self : this);

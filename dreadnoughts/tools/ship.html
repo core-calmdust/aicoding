@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8"><title>DREADNOUGHTS — one ship</title>
+<style>html,body{margin:0;height:100%;background:#0b1520;overflow:hidden}#c{width:100%;height:100%;display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script src="../../atlas/vendor/three-r186.min.js"></script><script src="../../seabattle/engine.js"></script><script src="../../seabattle/ships3d.js"></script>
+<script>
+// a close look at one ship in the game's light: ?k=battleship&yaw=.7&pitch=.3&zoom=1
+const Q = new URLSearchParams(location.search), E = SeaEngine, T = THREE, cv = document.getElementById('c');
+const R = new T.WebGLRenderer({ canvas: cv, antialias: true }); R.setPixelRatio(1); R.setSize(innerWidth, innerHeight); R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = +(Q.get('exp') || 1.05);
+R.shadowMap.enabled = true; R.shadowMap.type = T.PCFSoftShadowMap;
+const sc = new T.Scene(); sc.background = new T.Color('#3a4a5c');
+const sky = `varying vec3 vD; void main(){ float h = vD.y; vec3 c = mix(vec3(.95,.64,.38), vec3(.16,.24,.38), smoothstep(0.,.22,h)); c = mix(c, vec3(.03,.06,.13), smoothstep(.2,.85,h)); c += vec3(1.,.6,.3)*pow(max(dot(normalize(vD), normalize(vec3(-.42,.3,-.86))),0.),8.)*.8; c = mix(c, vec3(.04,.08,.12), smoothstep(0.,-.25,h)); gl_FragColor = vec4(c,1.); }`;
+const pm = new T.PMREMGenerator(R), env = new T.Scene(); env.add(new T.Mesh(new T.SphereGeometry(10, 32, 16), new T.ShaderMaterial({ side: T.BackSide, vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }', fragmentShader: sky })));
+sc.environment = pm.fromScene(env, .01).texture; sc.environmentIntensity = .9;
+const sun = new T.DirectionalLight(0xffd2a0, 2.5); sun.position.set(-4.2, 3, -8.6); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); const s = sun.shadow.camera; s.left = s.bottom = -4; s.right = s.top = 4; sun.shadow.bias = -.0005; sc.add(sun);
+sc.add(new T.HemisphereLight(0xb4c8dc, 0x1a2a33, 1.05)); const fill = new T.DirectionalLight(0x8fb2d6, .35); fill.position.set(6, 8, 14); sc.add(fill);
+const water = new T.Mesh(new T.PlaneGeometry(60, 60), new T.MeshStandardMaterial({ color: 0x0b3a4a, roughness: .2 })); water.rotation.x = -Math.PI / 2; water.receiveShadow = true; sc.add(water);
+const k = E.TYPES.findIndex(t => t.k === (Q.get('k') || 'battleship')), Tt = E.TYPES[k], g = SeaShips.build(T, k, Tt.len, Tt.k); g.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } }); sc.add(g);
+const L = Tt.len * .9, d = (L * 1.05 + .8) / +(Q.get('zoom') || 1), yaw = +(Q.get('yaw') || .75), pit = +(Q.get('pitch') || .32);
+const cam = new T.PerspectiveCamera(28, innerWidth / innerHeight, .02, 100); cam.position.set(Math.cos(yaw) * Math.cos(pit) * d, Math.sin(pit) * d, Math.sin(yaw) * Math.cos(pit) * d); cam.lookAt(0, .12, 0);
+R.render(sc, cam); let tri = 0, n = 0; g.traverse(o => { if (o.isMesh) { n++; tri += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; } }); window.stat = { tri, n }; window.ready = true;
+</script></body></html>
