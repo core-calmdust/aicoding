@@ -64,7 +64,7 @@
       const NAMES = T(0x132F9, 0x13143, 0x130D2, 0x130A1, [0x133CF, 0x133CF], 0x13171, 0x1311F, [0x132F4, 0x133CF], 0x13171, 0x13152, 0x13124, [0x13254, 0x132AA], 0x13171, 0x132F4, [0x133BC, 0x1308B], 0x1339B, [0x131FE, 0x131FE], 0x13149, 0x1335E, [0x1320D, 0x133E5], 0x132F4, 0x132B5, [0x133CF, 0x132AA], 0x132B9, 0x132B9, 0x132B9, 0x131D3, 0x131A4, [0x133CF, 0x133CF], 'C1');
       const SIDEB = T(0x132F9, 0x132B9, 0x13124, 0x1339F, [0x131FE, 0x131FE], 0x1339F, [0x13079, 0x133CF], [0x1340D, 0x133CF], 0x131D3, 0x131A4, [0x133CF, 0x133CF], 'C1', 0x1316D, 0x131F3, 'C2', [0x133D9, 0x132F9], 0x13193, [0x133CF, 0x131FE]);
       const ENDT = T(0x133D9, 0x132F9, 0x132BD, 0x13300, [0x133C7, 0x131F3], 0x13193, [0x133CF, 0x131FE]);
-      const sideT = textTex(L, BH, NAMES, true, true), sideT2 = textTex(L, BH, SIDEB, false), endT = textTex(W, BH, ENDT, false);
+      const sideT = textTex(L, BH, NAMES, true, true), sideT2 = textTex(L, BH, SIDEB, false, true)   /* (no photograph of the far side was found: it carries the same inscription as the near side, by the owner's decision 2026-11-22 — better than a typeface) */, endT = textTex(W, BH, ENDT, false);
       // the drawer's end of the box: a frame of text round the opening (Carter's sketch c)
       const frameT = K.tex(1024, Math.round(1024 * BH / W), (g, w, h) => { g.drawImage(ebonyT.image, 0, 0, w, h); const s = w / W, hx0 = (W - 9.5) / 2 * s, hx1 = w - hx0, hy1 = h - .9 * s, hy0 = hy1 - 4.0 * s, bh = s * 1.15;
         row(g, T('C1', 0x132B9, 0x13124, 0x1339F, [0x131FE, 0x131FE], 0x133D9, 0x132F9), hx0 - s * 1.2, hy0 - bh * .75, hx1 - hx0 + s * 2.4, bh);
