@@ -1,7 +1,7 @@
 /* 博物館「所蔵品」の文言（日本語）。ex[id]: name 名前 / alt 別名 / date 年代 / where カードの地名 / found 出土・伝来 / museum 所蔵 / no 番号 /
    mat 素材 / size 大きさ / p 解説 / spots 見どころ [見出し, 本文]（gallery.js の spots と同じ順）/ model 3Dモデルについて / src 出典 [名前, URL] */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).ja = {
-  ui: { p_start: "対局開始", play_ballinderry: "この盤で遊ぶ：ブランドゥブ", p_level: "AIの強さ", p_side: "あなた", p_side1_ballinderry: "攻め手（先手）", p_side2_ballinderry: "守り手（王）", p_stop: "対局をやめる", p_you: "あなた", p_turn: "あなたの番", p_think: "考え中…", p_win: "あなたの勝ち", p_lose: "あなたの負け", p_draw: "引き分け", flip: '裏返す', guideH: '案内役ミュゼフク', guide: '所蔵品を見てまわると、少しずつおめかしして会いに来てくれます', gift: 'アトラモがやってきた！', sub: '世界の博物館が守る、ゲームの歴史の宝物。3Dで再現した名品を、手に取るようにぐるりと眺めてみよう。', collection: '所蔵品', special: '特別展示', lock: '{g}の実績を{n}個達成で公開', loading: '展示ケースを準備しています…', fail: '展示を読み込めませんでした',
+  ui: { p_start: "あそぶ", play_ballinderry: "ブランドゥブ", p_level: "相手", p_side: "手番", p_first: "先手", p_second: "後手", p_stop: "対局をやめる", p_you: "あなた", p_turn: "あなたの番", p_think: "考え中…", p_win: "あなたの勝ち", p_lose: "あなたの負け", p_draw: "引き分け", flip: '裏返す', guideH: '案内役ミュゼフク', guide: '所蔵品を見てまわると、少しずつおめかしして会いに来てくれます', gift: 'アトラモがやってきた！', sub: '世界の博物館が守る、ゲームの歴史の宝物。3Dで再現した名品を、手に取るようにぐるりと眺めてみよう。', collection: '所蔵品', special: '特別展示', lock: '{g}の実績を{n}個達成で公開', loading: '展示ケースを準備しています…', fail: '展示を読み込めませんでした',
     hint: 'ドラッグで回転・ホイールで拡大・番号で見どころへ', hintT: 'ドラッグで回転・ピンチで拡大', spin: 'ゆっくり回す', reset: 'はじめの向きに戻す', close: '閉じる',
     date: '年代', where: '出土・伝来', museum: '所蔵', mat: '素材', size: '大きさ', look: '見どころ', aboutModel: 'この3Dモデルについて', sources: '出典', play: '{g}で遊ぶ' },
   ex: {
@@ -66,7 +66,7 @@
       src: [['Epigraphic Database Heidelberg HD018228（寸法・銘文）', 'https://edh-www.adw.uni-heidelberg.de/edh/inschrift/HD018228'], ['H. G. Horn, Bonner Jahrbücher の論文（発見と組み立て）', 'https://journals.ub.uni-heidelberg.de/index.php/bjb/article/view/66190/59071']] },
     ballinderry: { name: 'バリンダリーのゲーム盤', alt: 'ヴァイキング時代のタフル盤', date: '10世紀', where: 'アイルランド（ウェストミース州）', found: '1932年、バリンダリーのクラノーグ（湖の人工島の住居）第1号の発掘で、2つに割れた状態で見つかった',
       museum: 'アイルランド国立博物館（ダブリン）', no: 'NMI 1932:6533', mat: 'イチイ材', size: '約24cm四方（1932年の報告で9½インチ）',
-      p: ['7×7＝49の穴があいた盤で、中央と四すみの穴が円弧でしるされています。王の駒を盤のすみへ逃がすヴァイキングの戦いのゲーム「ネファタフル」の仲間に使われたと考えられています（アイルランドでは「ブランダブ」と呼ばれたゲームとする説もあります）。穴に駒をさして遊んだのでしょう。',
+      p: ['7×7＝49の穴があいた盤で、中央と四すみの穴が円弧でしるされています。王の駒を盤のすみへ逃がすヴァイキングの戦いのゲーム「ネファタフル」の仲間に使われたと考えられています（アイルランドでは「ブランドゥブ」と呼ばれたゲームとする説もあります）。穴に駒をさして遊んだのでしょう。',
         '見つかったクラノーグには9世紀末から11世紀まで人が住み、出土品の質と数から、かなり身分の高い人（王かもしれない）の屋敷だったとみられています。縁の彫刻のボッレ様式はかつてマン島のものとされ、盤もマン島で作られたと考えられていましたが、今ではアイルランド、それもダブリンで作られた可能性が高いとされています。'],
       spots: [['中央の穴', '円弧で囲まれた中央の穴。ネファタフルでは王がはじめに立つ場所です。'],
         ['四すみの穴', 'すみの穴も円弧でしるされています。ネファタフルでは、王をすみへ逃がせば守る側の勝ちです。'],
@@ -76,7 +76,7 @@
         ['反対側のつまみ', '反対側の縁には、短い首のついた小さな丸いつまみ。動物の頭とされ、これも持ち手とみられます。'],
         ['割れ目', '盤は2つに割れた状態で見つかりました。']],
       model: "形と配置、縁の彫刻、盤面の傷みは、盤を真上から撮った写真から取りました。厚さは推定です。 駒は見つかっていないので、駒の形は推定です。",
-      src: [['アイルランド国立博物館「The Ballinderry gaming board」', 'https://museum.ie/en-IE/Collections-Research/Irish-Antiquities-Division-Collections/Collections-List-(1)/Viking/The-Ballinderry-gaming-board'], ['1932年の発見を伝える新聞記事（Papers Past、大きさ・模様・頭）', 'https://paperspast.natlib.govt.nz/newspapers/MS19321214.2.22'], ['Westmeath Examiner（ブランダブ説・動物の頭）', 'https://www.westmeathexaminer.ie/?p=130666']] },
+      src: [['アイルランド国立博物館「The Ballinderry gaming board」', 'https://museum.ie/en-IE/Collections-Research/Irish-Antiquities-Division-Collections/Collections-List-(1)/Viking/The-Ballinderry-gaming-board'], ['1932年の発見を伝える新聞記事（Papers Past、大きさ・模様・頭）', 'https://paperspast.natlib.govt.nz/newspapers/MS19321214.2.22'], ['Westmeath Examiner（ブランドゥブ説・動物の頭）', 'https://www.westmeathexaminer.ie/?p=130666']] },
     lewis: { name: 'ルイス島のチェス駒', alt: 'セイウチの牙に彫られた中世のチェス駒', date: '1150〜1200年ごろ', where: 'スコットランド（ルイス島で出土）・ノルウェーで作られたと考えられる', found: '1831年（またはそれ以前）にルイス島で見つかった。ウイグ湾とされることが多いが、南のメアリスタとする説もある',
       museum: '大英博物館（ロンドン）82点・スコットランド国立博物館（エディンバラ）11点', no: '1831,1101.78 ほか', mat: 'セイウチの牙（一部はクジラの歯）', size: '高さ約4〜10cm（王9.8cm・歩兵4cm）',
       p: ['王・女王・司教・騎士・城兵（ルーク）・歩兵がそろった、中世ヨーロッパで最大のまとまったチェス駒です。ほかに、縁に円の線を刻んだだけの円盤（盤上ゲームの駒）14枚とバックル1つがいっしょに見つかりました。セイウチの牙1本から最大4つの駒が彫れたといいます。',

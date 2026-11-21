@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Simplified Chinese). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).zh = {
-  ui: { p_start: "开始对局", play_ballinderry: "用这块棋盘下棋：布兰杜布", p_level: "AI强度", p_side: "你执", p_side1_ballinderry: "攻方（先手）", p_side2_ballinderry: "守方（王）", p_stop: "结束对局", p_you: "你", p_turn: "轮到你", p_think: "思考中…", p_win: "你赢了", p_lose: "你输了", p_draw: "平局", flip: '翻面', guideH: '向导：馆藏枭', guide: '逛遍馆藏，馆藏枭就会一次比一次打扮得更漂亮来见你', gift: '新的阿特拉莫来了！', sub: "世界各地博物馆珍藏的游戏史瑰宝。每件珍品都以3D重现——仿佛拿在手中，转动细看。", collection: "馆藏", special: "特别展示", lock: "达成{n}个{g}成就后开放", loading: "正在准备展柜…", fail: "展品加载失败",
+  ui: { p_start: "开始", play_ballinderry: "布兰杜布", p_level: "对手", p_side: "先后", p_first: "先手", p_second: "后手", p_stop: "结束对局", p_you: "你", p_turn: "轮到你", p_think: "思考中…", p_win: "你赢了", p_lose: "你输了", p_draw: "平局", flip: '翻面', guideH: '向导：馆藏枭', guide: '逛遍馆藏，馆藏枭就会一次比一次打扮得更漂亮来见你', gift: '新的阿特拉莫来了！', sub: "世界各地博物馆珍藏的游戏史瑰宝。每件珍品都以3D重现——仿佛拿在手中，转动细看。", collection: "馆藏", special: "特别展示", lock: "达成{n}个{g}成就后开放", loading: "正在准备展柜…", fail: "展品加载失败",
     hint: "拖动旋转 · 滚轮缩放 · 点数字看细节", hintT: "拖动旋转 · 双指缩放", spin: "缓慢旋转", reset: "回到初始视角", close: "关闭",
     date: "年代", where: "出土 / 传承", museum: "收藏", mat: "材质", size: "尺寸", look: "看点", aboutModel: "关于此3D模型", sources: "参考资料", play: "玩{g}" },
   ex: {

@@ -155,14 +155,14 @@
       const edgeM = K.mat({ map: edgeT, color: '#ffffff', roughness: .45, clearcoat: .35 });
       add(new TT.BoxGeometry(S + .1, TOP, S + .1), [edgeM, edgeM, faceMat, shitan, edgeM, edgeM], 0, H - TOP / 2, 0);
       /* ---------- the 床脚: corner legs, a post in the middle of each side, openings with cusped tops, the floor rail ---------- */
-      const LEG = 1.45, POST = 1.9, OH = BASE - RAIL - .05;   // leg / post width; the openings' height (the cusps hang right under the body)
+      const LEG = 1.0, POST = 1.9, OH = BASE - RAIL - .05;   // leg / post width; the openings' height (the cusps hang right under the body)
       const skirt = new TT.Shape(); skirt.moveTo(-S / 2, 0); skirt.lineTo(S / 2, 0); skirt.lineTo(S / 2, BASE - RAIL); skirt.lineTo(-S / 2, BASE - RAIL); skirt.closePath();
       const open = (x0, x1) => { const p = new TT.Path(), top = OH, E = 1.55, B = 1.9, nC = 7, xa0 = x0 + E, xa1 = x1 - E, cw = (xa1 - xa0) / nC, dip = 1.45, at = .5;
         // (the Shōsōin's detail photographs CO0000000428–430) each end a full round bulge — the leg narrowest two-thirds of the way up and
         // spreading to its foot — and across the top seven arches, their points hanging down between them
-        p.moveTo(x0 + B, 0); p.lineTo(x1 - B, 0); p.bezierCurveTo(x1 + .35, .15, x1 + .45, top - 1.3, xa1, top - dip);
+        p.moveTo(x0 + B, 0); p.lineTo(x1 - B, 0); p.bezierCurveTo(x1 + .12, .15, x1 + .1, top - 1.3, xa1, top - dip);
         for (let i = nC; i > 0; i--) { const xa = xa0 + i * cw, xb = xa - cw; p.bezierCurveTo(xa - cw * .1, top - at + .15, xb + cw * .1, top - at + .15, xb, top - dip); }
-        p.bezierCurveTo(x0 - .45, top - 1.3, x0 - .35, .15, x0 + B, 0); return p; };
+        p.bezierCurveTo(x0 - .1, top - 1.3, x0 - .12, .15, x0 + B, 0); return p; };   // (2026-11-22, measured on the frontal photograph of side A: the corner leg is about 1 cm wide at its narrowest — it was 1.45 and looked heavy)
       const half = (S - 2 * LEG - POST) / 2;
       skirt.holes.push(open(-S / 2 + LEG, -S / 2 + LEG + half), open(S / 2 - LEG - half, S / 2 - LEG));
       const skG = new TT.ExtrudeGeometry(skirt, { depth: 1.2, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1, curveSegments: 10 });
@@ -173,13 +173,14 @@
         // each leg and the post: a bird in flight at the top, hills in the middle, a deer at the foot; an ivory line down the post (detail photographs)
         g.fillStyle = C.iv; g.fillRect(S / 2 * s - s * .05, s * .9, s * .1, h - s * 1.0);
         if (legC) { const Y = f => h * (1 - f);   // (placed as on the photographs: a bird under the body, a hill at mid-height, a deer at the foot — on each leg, and either side of the post's ivory line)
-          [[LEG * .52, 5, 6, 7, false], [S - LEG * .52, 5, 6, 7, true]].forEach(([x, b, hl, d, fl]) => { sprite(g, b, x * s, Y(.9), s * .4, fl); sprite(g, hl, x * s, Y(.56), s * .4, fl); sprite(g, d, x * s, Y(.14), s * .34, fl); });
+          [[LEG * .6, 5, 6, 7, false], [S - LEG * .6, 5, 6, 7, true]].forEach(([x, b, hl, d, fl]) => { sprite(g, b, x * s, Y(.9), s * .4, fl); sprite(g, hl, x * s, Y(.56), s * .4, fl); sprite(g, d, x * s, Y(.14), s * .34, fl); });
           const px = POST * .25; sprite(g, 0, (S / 2 - px) * s, Y(.9), s * .38, false); sprite(g, 1, (S / 2 + px) * s, Y(.9), s * .38, false); sprite(g, 2, (S / 2 - px * .8) * s, Y(.56), s * .4, false); sprite(g, 2, (S / 2 + px * .8) * s, Y(.56), s * .4, true);
           sprite(g, 3, (S / 2 - px * 1.5) * s, Y(.17), s * .5, false); sprite(g, 4, (S / 2 + px * 1.5) * s, Y(.17), s * .5, false); }
         else [[LEG * .62, 1], [S / 2 - POST * .28, 1], [S / 2 + POST * .28, -1], [S - LEG * .62, -1]].forEach(([x, d], i) => { [['bird', .9, .022, C.box], ['hill', .56, .02, C.grn], ['deer', .13, .022, i % 2 ? C.grn : C.red]].forEach(([kd, fy, k, col]) => { g.save(); g.translate(x * s, h * (1 - fy)); g.scale(d, 1); sil(g, kd, 0, 0, s * k, col); g.restore(); }); }); });
       legT.repeat.set(1 / S, 1 / (BASE - RAIL)); legT.offset.set(.5, 0);
       const legM = K.mat({ map: legT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
-      for (let i = 0; i < 4; i++) { const m = new TT.Mesh(skG, [legM, shitan]), a = i * Math.PI / 2; m.position.set(Math.sin(a) * (S / 2 - 1.2), RAIL, Math.cos(a) * (S / 2 - 1.2)); m.rotation.y = a; m.scale.x = .995; G.add(m); }   // (each panel a hair short: its end face lay in the same plane as the next panel's front and the two fought at the corner legs — a flicker)
+      const cutM = K.mat({ color: '#cdb27a', roughness: .6 });   // (the openings' cut faces are lined with a pale strip: on the frontal photograph the far legs show as pale posts through the openings)
+      for (let i = 0; i < 4; i++) { const m = new TT.Mesh(skG, [legM, cutM]), a = i * Math.PI / 2; m.position.set(Math.sin(a) * (S / 2 - 1.2), RAIL, Math.cos(a) * (S / 2 - 1.2)); m.rotation.y = a; m.scale.x = .995; G.add(m); }   // (each panel a hair short: its end face lay in the same plane as the next panel's front and the two fought at the corner legs — a flicker)
       add(new TT.BoxGeometry(S - 2.4, .5, S - 2.4), shitan, 0, BASE - .25, 0);   // the floor of the body
       // the floor rail: horn over red (華角), dark flowers; its outer faces with the lozenge band
       // (the floor frame's top: painting under a translucent sheet — a deep red ground clouded with black and specks of green and gold; the photographs)
@@ -187,7 +188,7 @@
         for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = n(x / 26, y / 18, 3), b = n(x / 7 + 9, y / 7, 2), k = Math.max(0, Math.min(1, (a - .42) * 4)), gsp = b > .78 ? 1 : 0, i = (y * w + x) * 4;
           d[i] = gsp ? 150 : 150 - k * 118 + b * 20; d[i + 1] = gsp ? 130 : 52 - k * 36 + b * 10; d[i + 2] = gsp ? 60 : 30 - k * 18; d[i + 3] = 255; } g.putImageData(img, 0, 0); });
       const kak = K.mat({ map: kakT, color: '#ffffff', roughness: .28, clearcoat: .85, clearcoatRoughness: .18 });
-      const railSide = K.tex(2048, Math.round(2048 * RAIL / S), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); chain(g, 0, 0, w, h, false); });
+      const railSide = K.tex(2048, Math.round(2048 * RAIL / S), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); g.fillStyle = '#d9c184'; g.fillRect(0, 0, w, h * .16); g.fillRect(0, h * .84, w, h * .16); chain(g, 0, h * .2, w, h * .6, false); });   // (the frontal photograph: a fine band of lozenges between two pale lines — the full-height band read too coarse)
       const rsM = K.mat({ map: railSide, color: '#ffffff', roughness: .45, clearcoat: .35 });
       const RW = 3.0;
       const rsEnd = rsM.clone(); rsEnd.map = railSide.clone(); rsEnd.map.repeat.set(RW / S, 1); rsEnd.map.needsUpdate = true;   // the frame's short end faces: the same band at the same scale (it was the whole length squeezed into 3 cm)
