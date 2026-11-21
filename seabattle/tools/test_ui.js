@@ -8,7 +8,7 @@ const OUT = process.argv[2] || '';
   const errs = []; let fail = 0; const ok = (c, m) => { if (!c) { fail++; console.log('NG  ' + m); } else console.log('ok  ' + m); };
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, locale: 'ja-JP' });
   await ctx.route(/fonts\.(googleapis|gstatic)|firebase|gstatic/, r => r.abort());
-  const p = await ctx.newPage(); await p.addInitScript(() => { try { if (!localStorage.getItem('aicoding-seabattle')) localStorage.setItem('aicoding-seabattle', JSON.stringify({ settings: { rule: 'classic' } })); } catch (e) {} });   // (these checks are about the classic deploy screen; the default is タクティクス since 2026-11-20)
+  const p = await ctx.newPage(); await p.addInitScript(() => { try { if (!localStorage.getItem('aicoding-seabattle')) localStorage.setItem('aicoding-seabattle', JSON.stringify({ settings: { rule: 'classic', design: 'abyss', seen3d: 1 } })); } catch (e) {} });   // (these checks are about the classic deploy screen; the default is タクティクス since 2026-11-20)
   p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/ERR_FAILED|Failed to load resource/.test(m.text())) errs.push(m.text()); });
   await p.goto('http://localhost:8765/seabattle/', { waitUntil: 'load' }); await p.waitForTimeout(500);
   const shot = n => OUT ? p.screenshot({ path: OUT + '/' + n + '.png' }) : null;

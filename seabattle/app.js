@@ -1,17 +1,21 @@
 // 海戦ゲーム (seabattle/) — page logic. The player is always side 0, the AI side 1.
 'use strict';
-const E = window.SeaEngine, SB = window.SeaBoard;
+const E = window.SeaEngine;
+// the board: the 3D sea (board3d.js) when the 「3D 外洋」 design is on and the browser has WebGL 2, else the SVG board. Same API.
+const use3d = () => S.design === 'ocean' && !!window.SeaBoard3D && SeaBoard3D.hasGL();
+const SB = new Proxy({}, { get: (_, k) => (use3d() ? window.SeaBoard3D : window.SeaBoard)[k] });
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-const STORE = 'aicoding-seabattle', SUPPORTED = ['ja', 'en'], DESIGNS = ['abyss', 'chart', 'radar', 'dawn'];
+const STORE = 'aicoding-seabattle', SUPPORTED = ['ja', 'en'], DESIGNS = ['ocean', 'abyss', 'chart', 'radar', 'dawn'];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return n.startsWith('ja') ? 'ja' : 'en'; }
-let S = { rule: 'tactics', adj: false, level: 5, first: 'you', design: 'abyss', sound: true, lang: null };
+let S = { rule: 'tactics', adj: false, level: 5, first: 'you', design: 'ocean', sound: true, lang: null };
 const tac = () => !!G && G.rule === 'tactics';
 const skillOf = s => E.TYPES[s.t].skill;
 let G = null;       // { phase: 'deploy' | 'battle' | 'over', my: ships, st, level, view: 'enemy' | 'own', hint, evals, busy, resigned, first }
 let saved = null;
 try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); if (saved && saved.settings) Object.assign(S, saved.settings); } catch (e) {}
+if (!S.seen3d) { S.design = 'ocean'; S.seen3d = 1; }   // (the 3D sea arrived on 2026-11-21: everyone sees it once; the 2D designs stay in the list)
 try { if (localStorage.getItem('atlas-sfx') === '0') S.sound = false; } catch (e) {}
 let LANG = SUPPORTED.includes(S.lang) ? S.lang : detectLang();
 window.SeaApp = { lang: () => LANG };
@@ -397,7 +401,7 @@ function deployUp() {
   else sfx('place');
   renderBoards(); save();
 }
-function shake() { const f = $('#frame'); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); }
+function shake() { if (use3d()) SeaBoard3D.shake(.9); const f = $('#frame'); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); }
 
 // ---------- battle ----------
 function newDeploy() {
@@ -412,7 +416,7 @@ function startBattle() {
   G.st = E.newGame({ rule: G.rule, adj: G.adj, fleets: [G.my, E.randomFleet(Math.random, G.adj, tac() ? (G.draft ? G.draft.picks[1] : E.PRESETS[0]) : null)], first: G.first });
   G.my = G.st.sides[0].ships; G.armed = null;
   G.phase = 'battle'; G.view = 'enemy'; G.evals = [.5]; sfx('ping');
-  render(); save();
+  render(); save(); if (use3d()) SeaBoard3D.intro();
   if (G.st.turn === 1) aiTurn();
 }
 async function doShot(cell) {
@@ -441,7 +445,7 @@ async function doSkill(a) {
   await sleep(by === 1 ? 650 : 250); if (G.st !== st) return null;
   if (noAim || blocked) await sleep(250);
   else if (pv.skill === 'sonar' || pv.skill === 'scout' || pv.skill === 'radar' || pv.skill === 'sweep' || pv.skill === 'flare' || pv.skill === 'echo' || pv.skill === 'diag' || pv.skill === 'cross') await SB.sweep($('#bsvg'), pv.area);
-  else { for (const x of pv.shots) { SB.fx($('#bsvg'), x.cell, by === 0 && st.sides[1].fog > 0 ? 'fog' : x.hit, true); setTimeout(() => sfx(x.hit ? 'hit' : 'miss'), 160); await sleep(pv.skill === 'torpedo' || pv.skill === 'rtorpedo' || pv.skill === 'dtorpedo' ? 120 : 170); } if (pv.ic >= 0) SB.fx($('#bsvg'), pv.ic, 'fog', true); await sleep(330); }
+  else { if (SB.kind) SB.kind(pv.skill); for (const x of pv.shots) { SB.fx($('#bsvg'), x.cell, by === 0 && st.sides[1].fog > 0 ? 'fog' : x.hit, true); setTimeout(() => sfx(x.hit ? 'hit' : 'miss'), 160); await sleep(pv.skill === 'torpedo' || pv.skill === 'rtorpedo' || pv.skill === 'dtorpedo' ? 120 : 170); } if (pv.ic >= 0) SB.fx($('#bsvg'), pv.ic, 'fog', true); await sleep(330); if (SB.kind) SB.kind(null); }
   if (G.st !== st) return null;
   const res = E.useSkill(st, a.ship, a.cell); if (!res) return null;
   G.armed = null; hoverCell = -1;
@@ -540,7 +544,7 @@ const RULE_ART = {
   salvo: '<svg viewBox="0 0 96 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="22" cy="40" r="9"/><circle cx="48" cy="24" r="9"/><circle cx="74" cy="40" r="9"/><circle cx="22" cy="40" r="2.3" fill="currentColor" stroke="none"/><circle cx="48" cy="24" r="2.3" fill="currentColor" stroke="none"/><circle cx="74" cy="40" r="2.3" fill="currentColor" stroke="none"/></svg>',
 };
 RULE_ART.tactics = '<svg viewBox="0 0 96 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="30" cy="32" r="4"/><path d="M20 22a14 14 0 0 0 0 20M40 22a14 14 0 0 1 0 20M11 14a26 26 0 0 0 0 36"/><rect x="62" y="14" width="12" height="12" rx="2"/><rect x="76" y="14" width="12" height="12" rx="2" opacity=".55"/><rect x="62" y="28" width="12" height="12" rx="2" opacity=".55"/><path d="M82 52V34M77 39l5-5 5 5" stroke="#ff8f6b"/></svg>';
-const THUMB = { abyss: ['#1f6484', '#0a2c44', '#a3b5bd', 'rgba(190,235,245,.25)'], chart: ['#efe7d2', '#cfe0db', '#405a76', 'rgba(40,80,105,.3)'], radar: ['#123327', '#051610', '#93ad9d', 'rgba(130,255,195,.28)'], dawn: ['#4a4674', '#b97b6c', '#b7a9ae', 'rgba(255,235,225,.28)'] };
+const THUMB = { ocean: ['#2a6e86', '#06202e', '#d8b46a', 'rgba(216,180,106,.35)'], abyss: ['#1f6484', '#0a2c44', '#a3b5bd', 'rgba(190,235,245,.25)'], chart: ['#efe7d2', '#cfe0db', '#405a76', 'rgba(40,80,105,.3)'], radar: ['#123327', '#051610', '#93ad9d', 'rgba(130,255,195,.28)'], dawn: ['#4a4674', '#b97b6c', '#b7a9ae', 'rgba(255,235,225,.28)'] };
 function thumb(k) { const c = THUMB[k]; let l = ''; for (let i = 1; i < 6; i++) l += `M${i * 10} 0V40`; for (let i = 1; i < 4; i++) l += `M0 ${i * 10}H60`; return `<svg viewBox="0 0 60 40"><defs><linearGradient id="th-${k}" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient></defs><rect width="60" height="40" fill="url(#th-${k})"/><path d="${l}" stroke="${c[3]}" stroke-width=".5"/><path d="M12 22.5h24q5 1 6.6 2.5q-1.6 1.500-6.600 2.500h-24q-1.500 0-1.500-2.500t1.500-2.500z" fill="${c[2]}"/><circle cx="45" cy="15" r="2.4" fill="#ff7a4d" stroke="#fff3e6" stroke-width=".7"/></svg>`; }
 let ND = null;      // the dialog's working copy of the settings
 function ngRender() {
@@ -557,7 +561,7 @@ $('#ruleCards').addEventListener('click', e => { const b = e.target.closest('.ng
 $('#segFirst').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { ND.first = b.dataset.v; ngRender(); } });
 $('#segAdj').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { ND.adj = b.dataset.v === '1'; ngRender(); } });
 $('#levelRange').addEventListener('input', e => { ND.level = +e.target.value; $('#levelName').innerHTML = `Lv.${ND.level}<small>${tier(ND.level)}</small>`; });
-$('#bdRow').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; ND.design = b.dataset.v; S.design = ND.design; ngRender(); DESIGNS.forEach(d => document.body.classList.toggle('bd-' + d, S.design === d)); save(); });
+$('#bdRow').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; ND.design = b.dataset.v; S.design = ND.design; ngRender(); DESIGNS.forEach(d => document.body.classList.toggle('bd-' + d, S.design === d)); if (window.SeaBoard3D) SeaBoard3D.enable(use3d()); render(); save(); });
 $('#btnCancelNew').onclick = closeNew;
 $('#btnStart').onclick = () => { Object.assign(S, ND); closeNew(); $('#resultOverlay').classList.remove('show'); newDeploy(); };
 $('#newOverlay').addEventListener('click', e => { if (e.target === $('#newOverlay')) closeNew(); });

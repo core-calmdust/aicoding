@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><title>DREADNOUGHTS — ship models</title>
+<style>html,body{margin:0;height:100%;background:#0b1520;color:#d8b46a;font:12px sans-serif;overflow:hidden}#c{width:100%;height:100%;display:block}#lbl{position:fixed;inset:0;pointer-events:none}#lbl span{position:absolute;transform:translate(-50%,0);white-space:nowrap;text-shadow:0 1px 2px #000}</style></head>
+<body><canvas id="c"></canvas><div id="lbl"></div>
+<script src="../../atlas/vendor/three-r186.min.js"></script><script src="../engine.js"></script><script src="../ships3d.js"></script>
+<script>
+// a showroom of all 50 ships: ?only=k1,k2 to pick some, ?cols=5, ?zoom=1.6
+const Q = new URLSearchParams(location.search), E = SeaEngine, cv = document.getElementById('c');
+const R = new THREE.WebGLRenderer({ canvas: cv, antialias: true }); R.setPixelRatio(Math.min(2, devicePixelRatio)); R.setSize(innerWidth, innerHeight); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.05;
+const sc = new THREE.Scene(); sc.background = new THREE.Color('#1a2a3a');
+const pm = new THREE.PMREMGenerator(R); const env = new THREE.Scene(); const sky = new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, vertexShader: 'varying vec3 v;void main(){v=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}', fragmentShader: 'varying vec3 v;void main(){float h=v.y;vec3 c=mix(vec3(.9,.7,.45),vec3(.18,.3,.5),smoothstep(-.05,.5,h));c=mix(c,vec3(.05,.08,.1),smoothstep(0.,-.4,h));c+=vec3(2.,1.4,.8)*pow(max(dot(v,normalize(vec3(-.6,.2,-.8))),0.),60.);gl_FragColor=vec4(c,1.);}' })); env.add(sky);
+sc.environment = pm.fromScene(env, .02).texture;
+const sun = new THREE.DirectionalLight('#ffd9a8', 2.4); sun.position.set(-6, 5, -8); sc.add(sun); sc.add(new THREE.HemisphereLight('#9fb6cc', '#22313d', .6));
+const only = Q.get('only') ? Q.get('only').split(',') : null, list = E.TYPES.map((T, k) => ({ T, k })).filter(o => !only || only.includes(o.T.k)), cols = +(Q.get('cols') || 5);
+const water = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: '#1d4a5e', roughness: .25, metalness: .1, transparent: true, opacity: .82 })); water.rotation.x = -Math.PI / 2; sc.add(water);
+const items = []; list.forEach((o, i) => { const g = SeaShips.build(THREE, o.k, o.T.len, o.T.k); const cx = (i % cols - (cols - 1) / 2) * 6, cz = (Math.floor(i / cols) - (Math.ceil(list.length / cols) - 1) / 2) * 1.6; g.position.set(cx, 0, cz); sc.add(g); items.push({ g, name: o.k + ' ' + o.T.k, len: o.T.len }); });
+const rows = Math.ceil(list.length / cols), z = +(Q.get('zoom') || 1);
+const cam = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, .05, 400);
+const dist = Math.max(cols * 6, rows * 1.6 * 1.6) * 1.15 / z; cam.position.set(Q.get('side') ? -dist * .9 : 0, dist * (Q.get('side') ? .35 : Q.get('top') ? .95 : .9), dist * (Q.get('side') ? .6 : Q.get('top') ? .45 : .65)); cam.lookAt(0, 0, 0);
+R.render(sc, cam);
+const lb = document.getElementById('lbl'); items.forEach(it => { const v = it.g.position.clone(); v.z += .35; v.project(cam); const s = document.createElement('span'); s.textContent = it.name; s.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; s.style.top = ((1 - v.y) / 2 * innerHeight) + 'px'; lb.appendChild(s); });
+window.ready = true;
+</script></body></html>
