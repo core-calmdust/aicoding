@@ -4,7 +4,8 @@
    a seated bishop (mitre, crozier), a knight on a small horse (spear, kite shield), a warder biting his shield (the
    "berserker") and a slab pawn. Heights follow the museum records of representative pieces (king 9.8, queen 9.6,
    bishop 9.7, knight 10.0, warder 9.2, pawn 4.0 cm); the carving on the thrones (arcades, foliage scrolls) is drawn in the
-   manner of the pieces, not copied from one throne (estimate). The red that Madden saw on a few pieces in 1831 is gone today. */
+   manner of the pieces, not copied from one throne (estimate). The red that Madden saw on a few pieces in 1831 is gone today.
+   2026-11-21: the ivory's colour (grey-tan, mottled with brown staining) checked against the British Museum's 3D scans (Sketchfab). */
 (function () {
   'use strict';
   (window.AtlasEx = window.AtlasEx || {}).lewis = {
@@ -14,23 +15,23 @@
       const V3 = (x, y, z) => new TT.Vector3(x, y, z);
       // ---- ivory: warm white with fine growth lines, a little darker / yellower piece by piece, hairline cracks
       const ivoryTex = (k) => K.tex(512, 512, (g, w, h) => {
-        K.grain(g, w, h, { a: '#f0e5cc', b: '#e0cda8', seed: 40 + k, sx: 1.2, sy: 18, warp: .9 });
+        K.grain(g, w, h, { a: '#cfc0a0', b: '#c2b190', seed: 40 + k, sx: 1.2, sy: 18, warp: .9 });   // aged walrus ivory, cream to tan (the British Museum's 3D scans)
         const n = K.noise(70 + k); const img = g.getImageData(0, 0, w, h), d = img.data;
-        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = n(x / 120, y / 120, 4), s = Math.max(0, a - .5) * 70, i = (y * w + x) * 4; d[i] -= s * .6; d[i + 1] -= s * .8; d[i + 2] -= s * 1.25; }
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = n(x / 120, y / 120, 4), s = Math.max(0, a - .42) * 150 + (n(x / 14, y / 14, 2) - .5) * 30, i = (y * w + x) * 4; d[i] -= s * .7; d[i + 1] -= s * .8; d[i + 2] -= s * .95; }   // mottled brown staining
         g.putImageData(img, 0, 0);
         g.strokeStyle = 'rgba(90,64,36,.45)'; g.lineWidth = 1;
         for (let q = 0; q < 5; q++) { let x = rnd() * w, y = rnd() * h; g.beginPath(); g.moveTo(x, y); for (let s = 0; s < 8; s++) { x += (rnd() - .5) * 18; y += 8 + rnd() * 14; g.lineTo(x, y); } g.stroke(); }
       });
-      const IV = [0, 1, 2].map(k => K.mat({ map: ivoryTex(k), color: k === 2 ? '#f0e2c4' : '#ffffff', roughness: .44, clearcoat: .18, clearcoatRoughness: .55, sheen: .25, sheenRoughness: .6, sheenColor: K.lin('#fff1d6') }));
+      const IV = [0, 1, 2].map(k => K.mat({ map: ivoryTex(k), color: k === 2 ? '#eedcb8' : '#ffffff', roughness: .5, clearcoat: .18, clearcoatRoughness: .55, sheen: .25, sheenRoughness: .6, sheenColor: K.lin('#fff1d6') }));
       // ---- carving: an ornament drawn white on black is both the relief (bump) and the grime in the cut-back ground
       const carved = (draw, rep) => {
         const W = 512, H = 512, bc = document.createElement('canvas'); bc.width = W; bc.height = H; const b = bc.getContext('2d');
         b.fillStyle = '#000'; b.fillRect(0, 0, W, H); b.strokeStyle = b.fillStyle = '#fff'; b.lineCap = b.lineJoin = 'round'; draw(b, W, H);
         b.filter = 'blur(2px)'; b.drawImage(bc, 0, 0); b.filter = 'none';
         const map = K.tex(W, H, (g, w, h) => {
-          K.grain(g, w, h, { a: '#eee2c6', b: '#dccaa4', seed: 9, sx: 1.2, sy: 18, warp: .9 });
+          K.grain(g, w, h, { a: '#cbbb9a', b: '#bfae8c', seed: 9, sx: 1.2, sy: 18, warp: .9 });
           const m = document.createElement('canvas'); m.width = w; m.height = h; const mg = m.getContext('2d');
-          mg.fillStyle = '#c4a983'; mg.fillRect(0, 0, w, h); mg.globalCompositeOperation = 'lighter'; mg.drawImage(bc, 0, 0);
+          mg.fillStyle = '#8a6a44'; mg.fillRect(0, 0, w, h); mg.globalCompositeOperation = 'lighter'; mg.drawImage(bc, 0, 0);
           g.globalCompositeOperation = 'multiply'; g.drawImage(m, 0, 0); g.globalCompositeOperation = 'source-over';
         }, rep ? { rep } : {});
         const bump = new TT.CanvasTexture(bc); bump.colorSpace = TT.NoColorSpace; if (rep) { bump.wrapS = bump.wrapT = TT.RepeatWrapping; bump.repeat.set(rep[0], rep[1]); }
