@@ -247,7 +247,15 @@
       { const p = new TT.Group(), k = 2;
         const S = new TT.Shape(); S.moveTo(-1.15, 0); S.lineTo(1.15, 0); S.lineTo(1.05, 2.8); S.absarc(0, 2.8, 1.05, 0, Math.PI, false); S.closePath();
         const g = new TT.ExtrudeGeometry(S, { depth: 1.3, bevelEnabled: true, bevelThickness: .12, bevelSize: .12, bevelSegments: 3, curveSegments: 18 }); g.translate(0, .12, -.65);
-        add(p, g, [IV[k], IV[k]], 0, 0, 0); pieces.push(p); }
+        const uvs = gg => { const uv = gg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * .22 + .5, uv.getY(i) * .22 + .1); return gg; }; uvs(g);
+        add(p, g, [IV[k], IV[k]], 0, 0, 0);
+        // after the scan: a raised border following the outline on both faces, and a small knob on the top
+        const R = new TT.Shape(); R.moveTo(-1.02, .25); R.lineTo(1.02, .25); R.lineTo(.93, 2.8); R.absarc(0, 2.8, .93, 0, Math.PI, false); R.closePath();
+        const hl = new TT.Path(); hl.moveTo(-.8, .45); hl.lineTo(.8, .45); hl.lineTo(.72, 2.8); hl.absarc(0, 2.8, .72, 0, Math.PI, false); hl.closePath(); R.holes.push(hl);
+        const rg = uvs(new TT.ExtrudeGeometry(R, { depth: .1, bevelEnabled: true, bevelThickness: .03, bevelSize: .03, bevelSegments: 2, curveSegments: 18 }));
+        [.65 + .12, -.65 - .12 - .06].forEach(z => add(p, rg, IV[k], 0, .12, z));
+        const kn = add(p, new TT.SphereGeometry(.28, 12, 8), IV[k], 0, 3.95, 0); kn.scale.set(1, .55, 1.3);
+        pieces.push(p); }
 
       // ---- the case: dark felt on a low block; back row king · queen · bishop · knight, front row warder · pawn
       const feltT = K.tex(256, 256, (g, w, h) => { const n = K.noise(5), img = g.createImageData(w, h), d = img.data; for (let i = 0; i < w * h; i++) { const v = 34 + n((i % w) / 6, (i / w | 0) / 6, 2) * 16; d[i * 4] = v * 1.05; d[i * 4 + 1] = v * .95; d[i * 4 + 2] = v * .9; d[i * 4 + 3] = 255; } g.putImageData(img, 0, 0); }, { rep: [4, 3] });
