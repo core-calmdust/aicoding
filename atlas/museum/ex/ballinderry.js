@@ -9,7 +9,11 @@
    Estimates: the thickness (2.4, the panel sunk 1.4) and the exact drawing inside each carved panel. */
 (function () {
   'use strict';
+  // the sunk panel's wear, taken off the photograph of the board seen from above (1024², the panel only): red = how light or dark the wood
+  // is there (128 = even: the grain, the stains, the incised rings), green = pale splintered wood, blue = the holes, alpha = 255 − the splits
+  const HERE = (document.currentScript && document.currentScript.src) || location.href; let WEAR = null;
   (window.AtlasEx = window.AtlasEx || {}).ballinderry = {
+    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { WEAR = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/ballinderry-panel.webp?v=2', HERE).href; setTimeout(res, 8000); }),
     build(TT, X, K) {
       const G = new TT.Group(), Pg = new TT.Group(); Pg.rotation.y = Math.PI / 2; G.add(Pg);
       const S = 24, FW = 2.3, T0 = 1.0, T1 = 2.4, IN = S - FW * 2, P = 2.65, DP = .3;
@@ -89,7 +93,13 @@
       const PX = 1024, cm = v => v / IN * PX, CX = cm(7.7 - FW);   // the split: about a third of the way across from the left
       const crack = []; { let x = CX + 6; for (let y = 0; y <= PX; y += 22) { x += (rnd() - .5) * 9 + (y > PX * .3 && y < PX * .62 ? -.9 : .5); crack.push([x, y]); } }
       const hole = (i, j) => [PX / 2 + (i - 3) * cm(P), PX / 2 + (j - 3) * cm(P)];
-      const drawPanel = (g, bump) => { if (bump) { g.fillStyle = '#909090'; g.fillRect(0, 0, PX, PX); } else g.drawImage(panelMap.image, 0, 0, PX, PX);
+      let wd = null; if (WEAR) { const c = document.createElement('canvas'); c.width = c.height = PX; const q = c.getContext('2d'); q.drawImage(WEAR, 0, 0, PX, PX); wd = q.getImageData(0, 0, PX, PX).data; }
+      const drawWorn = (g, bump) => { if (!bump) g.drawImage(panelMap.image, 0, 0, PX, PX); else { g.fillStyle = '#909090'; g.fillRect(0, 0, PX, PX); } const im = g.getImageData(0, 0, PX, PX), d = im.data;
+        for (let i = 0; i < d.length; i += 4) { const w = wd[i] / 128, pale = wd[i + 1] / 255, hole = wd[i + 2] / 255, split = (255 - wd[i + 3]) / 200;
+          if (bump) { let v = 144 + (w - 1) * 40 + pale * 14; v *= (1 - hole) * (1 - split); d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, v)); }
+          else { const k = Math.max(.45, Math.min(2.0, 1 + (w - 1) * 1.25)); let c = [d[i] * k * 1.2, d[i + 1] * k * 1.12, d[i + 2] * k * 1.04]; c = c.map((v, q) => v + ([206, 168, 108][q] - v) * pale); const dk = (1 - hole * .97) * (1 - split * .95); d[i] = c[0] * dk; d[i + 1] = c[1] * dk; d[i + 2] = c[2] * dk; } }
+        g.putImageData(im, 0, 0); };
+      const drawPanel = (g, bump) => { if (wd) return drawWorn(g, bump); if (bump) { g.fillStyle = '#909090'; g.fillRect(0, 0, PX, PX); } else g.drawImage(panelMap.image, 0, 0, PX, PX);
         const cut = bump ? '#3a3a3a' : 'rgba(150,120,84,.5)'; g.strokeStyle = cut; g.lineWidth = bump ? 4 : 2.6; g.lineCap = 'round';
         const [cx, cy] = hole(3, 3); [1.5, 1.22].forEach(r => { g.beginPath(); g.arc(cx, cy, cm(r), 0, 6.29); g.stroke(); });   // two rings round the centre hole
         [[0, 0, 0], [PX, 0, 1], [PX, PX, 2], [0, PX, 3]].forEach(([x, y, q]) => { g.beginPath(); g.arc(x, y, cm(3.3), q * Math.PI / 2, q * Math.PI / 2 + Math.PI / 2); g.stroke(); });   // a quarter-circle across each corner
