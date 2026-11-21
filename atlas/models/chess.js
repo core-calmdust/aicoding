@@ -507,7 +507,7 @@
     const m = matsOf(g.userData.color, g.userData.set), r = new (T().Group)(); r.scale.y = -1; r.userData.reflection = true;
     r.visible = mirrorOn; REFS.add(window.WeakRef ? new WeakRef(r) : r);
     let lo; LOW = true; try { lo = piece(g.userData.type, g.userData.color, { set: g.userData.set }); } finally { LOW = false; }   // same piece, coarser (it is seen dimmed and upside down)
-    lo.children.slice().forEach(ch => { const c = ch.clone(); c.traverse(o => { if (o.isMesh) { o.material = o.material === m.metal ? m.rMetal : o.material === m.resin ? m.rResin : null; o.castShadow = o.receiveShadow = false; o.renderOrder = -1; if (!o.material) o.visible = false; } }); r.add(c); });
+    lo.children.slice().forEach(ch => { const c = ch.clone(); c.traverse(o => { if (o.isMesh) { o.material = o.material === m.metal ? m.rMetal : o.material === m.resin ? m.rResin : null; o.castShadow = o.receiveShadow = false; o.renderOrder = -1; } }); const gone = []; c.traverse(o => { if (o.isMesh && !o.material) gone.push(o); }); gone.forEach(o => o.parent && o.parent.remove(o)); if (c.isMesh && !c.material) return; r.add(c); });   // (2026-11-22: a part with no mirror material is left out — a mesh with material null threw in the table's raycast on every tap)
     g.add(r); return g;
   }
 
