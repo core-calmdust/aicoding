@@ -145,7 +145,7 @@
       [[S + .3, RW, 0, S / 2 - RW / 2 + .15], [S + .3, RW, 0, -S / 2 + RW / 2 - .15]].forEach(([w, d, x, z]) => add(new TT.BoxGeometry(w, RAIL, d), [rsM, rsM, kak, shitan, z > 0 ? rsM : shitan, z > 0 ? shitan : rsM], x, RAIL / 2, z));
       [[RW, S - 2 * RW + .3, S / 2 - RW / 2 + .15, 0], [RW, S - 2 * RW + .3, -S / 2 + RW / 2 - .15, 0]].forEach(([w, d, x, z]) => { const k2 = kak.clone(); k2.map = kakT.clone(); k2.map.center.set(.5, .5); k2.map.rotation = Math.PI / 2; k2.map.needsUpdate = true; add(new TT.BoxGeometry(w, RAIL, d), [x > 0 ? rsM : shitan, x > 0 ? shitan : rsM, k2, shitan, shitan, shitan], x, RAIL / 2, z); });
       /* ---------- the drawers: at diagonally opposite ends of the two side faces (±x); the near one pulled out ---------- */
-      const DW = S / 4 - .95, DH = BODY - TOP - 1.75, OUT = 7.2, gilt = K.mat({ color: '#d6a84c', roughness: .3, metalness: 1 });
+      const DW = S / 4 - .95, DH = BODY - TOP - 1.75, OUT = 8.6, gilt = K.mat({ color: '#d6a84c', roughness: .3, metalness: 1 });
       const dark = K.mat({ color: '#2a1810', roughness: .6 });
       const DG = new TT.Group(); DG.rotation.y = 0; G.add(DG);
       const drawer = (sx, z, out) => { const g2 = new TT.Group(); g2.position.set(sx * (S / 2 + out), BASE + (BODY - TOP) / 2, z); g2.rotation.y = sx > 0 ? Math.PI / 2 : -Math.PI / 2; DG.add(g2);
@@ -159,13 +159,36 @@
         const knob = new TT.Mesh(new TT.CylinderGeometry(.2, .2, .4, 12), gilt); knob.rotation.x = Math.PI / 2; knob.position.set(0, -.15 + RR + .1, .45); g2.add(knob);
         if (out > .1) { const sd = new TT.BoxGeometry(.35, DH - .3, out + 1); [-DW / 2 + .2, DW / 2 - .2].forEach(x => { const m = new TT.Mesh(sd, dark); m.position.set(x, -.15, -(out + 1) / 2); g2.add(m); });
           const bt = new TT.Mesh(new TT.BoxGeometry(DW, .3, out + 1), dark); bt.position.set(0, -DH / 2 + .15, -(out + 1) / 2); g2.add(bt);
-          // the turtle tray: a round open bowl with a shell-segmented rim, head and feet
-          const tr = new TT.Group(); tr.position.set(0, -DH / 2 + .3, -out / 2 - .6); g2.add(tr);
-          const rimT = K.tex(512, 64, (g, w, h) => { g.fillStyle = '#3a2418'; g.fillRect(0, 0, w, h); g.strokeStyle = '#1a0c06'; g.lineWidth = 3; for (let x = 0; x < w; x += 32) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 8, h / 2); g.lineTo(x, h); g.stroke(); } });
-          const bowl = new TT.Mesh(new TT.CylinderGeometry(3.4, 3.1, 1.8, 40, 1, true), K.mat({ map: rimT, color: '#ffffff', roughness: .55, side: TT.DoubleSide })); bowl.position.y = .9; tr.add(bowl);
-          const inner = new TT.Mesh(new TT.CircleGeometry(3.1, 40), dark); inner.rotation.x = -Math.PI / 2; inner.position.y = .2; tr.add(inner);
-          const hd = new TT.Mesh(new TT.SphereGeometry(.75, 14, 10), K.mat({ color: '#4a2a18', roughness: .5 })); hd.scale.set(1, .8, 1.3); hd.position.set(0, .9, 3.8); tr.add(hd);
-          [[2.4, 2.4], [-2.4, 2.4], [2.4, -2.4], [-2.4, -2.4]].forEach(([x, z]) => { const ft = new TT.Mesh(new TT.SphereGeometry(.6, 10, 8), K.mat({ color: '#4a2a18', roughness: .5 })); ft.scale.set(1.2, .5, .9); ft.position.set(x, .3, z); tr.add(ft); }); }
+          // the turtle-shaped holder for the stones (photographs CO0000000424 / 427: a shallow oval bowl, its wide rim the edge of the
+          // shell with the plates drawn in silver lines on dark lacquer, the inside red-brown with a stippled floor, a red-brown head
+          // flecked with gold reaching to the drawer's front, the feet showing under the rim)
+          const RX = 4.3, RZ = 4.45, tr = new TT.Group(); tr.position.set(0, -DH / 2 + .3, -.45 - 2.0 - RZ); g2.add(tr);
+          const nz = K.noise(77), bowlT = K.tex(1024, 448, (g, w, h) => { const row = h / 7, Y = v => h - v * row;   // v 0…7 along the profile
+            g.fillStyle = '#3a2416'; g.fillRect(0, 0, w, h);
+            const im = g.getImageData(0, 0, w, h), d = im.data;   // the floor: brown, stippled like shagreen; the wall: red-brown
+            for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const v = (h - y) / row, i = (y * w + x) * 4, n = nz(x * .5, y * .5, 2), m = nz(x * .03, y * .05, 3);
+              let c = v < 1 ? [52 + n * 26, 36 + n * 16, 24 + n * 10] : v < 2.05 ? [78 + m * 36, 26 + m * 14, 16 + m * 8] : v < 4.1 ? [30 + m * 16, 29 + m * 15, 28 + m * 14] : [44 + m * 16, 26 + m * 10, 16 + m * 6];
+              d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; }
+            g.putImageData(im, 0, 0);
+            g.strokeStyle = 'rgba(176,174,166,.8)'; g.lineWidth = 1.8; g.lineJoin = 'round';   // the plates of the shell's edge, silver lines
+            const N = 22, pw = w / N, y0 = Y(3.05), y1 = Y(3.95), ym = Y(3.42);
+            g.beginPath(); g.moveTo(0, y0); g.lineTo(w, y0); g.moveTo(0, y1); g.lineTo(w, y1); g.stroke();
+            for (let k = 0; k < N; k++) { const x = k * pw; g.beginPath(); g.moveTo(x, y1); g.lineTo(x, ym + 4); g.lineTo(x + pw / 2, ym - 5); g.lineTo(x + pw, ym + 4); g.stroke();
+              g.beginPath(); g.moveTo(x + pw / 2, ym - 5); g.lineTo(x + pw / 2, y0); g.stroke(); }
+          });
+          const prof = [[0, .3], [2.95, .3], [3.3, 1.5], [3.42, 1.62], [4.3, 1.02], [4.24, .84], [3.2, .12], [0, .12]].map(([r, y]) => new TT.Vector2(r / 4.3, y));
+          const bowl = new TT.Mesh(new TT.LatheGeometry(prof, 44), K.mat({ map: bowlT, color: '#ffffff', roughness: .5, clearcoat: .25, clearcoatRoughness: .4, side: TT.DoubleSide })); bowl.scale.set(RX, 1, RZ); bowl.castShadow = bowl.receiveShadow = true; tr.add(bowl);
+          const skinT = K.tex(256, 256, (g, w, h) => { const im = g.createImageData(w, h), d = im.data, n2 = K.noise(78);
+            for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4, m = n2(x * .04, y * .04, 3), f = n2(x * .9, y * .9, 1), gold = f > .8 ? 1 : 0;
+              d[i] = gold ? 170 : 84 + m * 44; d[i + 1] = gold ? 120 : 34 + m * 20; d[i + 2] = gold ? 52 : 20 + m * 10; d[i + 3] = 255; } g.putImageData(im, 0, 0); });
+          const skin = K.mat({ map: skinT, color: '#ffffff', roughness: .5, clearcoat: .2, clearcoatRoughness: .5 }), eyeM = K.mat({ color: '#15100c', roughness: .3 });
+          const hp = [[.001, 2.2], [.2, 2.12], [.42, 1.75], [.6, 1.25], [.66, .85], [.56, .45], [.44, .1], [.46, -.5]].map(([r, y]) => new TT.Vector2(r, y));
+          const hd = new TT.Mesh(new TT.LatheGeometry(hp, 20), skin); hd.rotation.x = Math.PI / 2 - .12; hd.scale.set(1, 1, .8); hd.position.set(0, .95, RZ - .25); hd.castShadow = true; tr.add(hd);
+          [-1, 1].forEach(sx => { const e = new TT.Mesh(new TT.SphereGeometry(.1, 10, 8), eyeM); e.position.set(sx * .47, 1.12, RZ + .95); tr.add(e); });
+          const fs = new TT.Shape(); fs.moveTo(-.42, 0); fs.lineTo(-.6, .95); for (let k = 0; k < 4; k++) fs.quadraticCurveTo(-.6 + (k + .5) * .3, 1.5, -.6 + (k + 1) * .3, 1.0); fs.lineTo(.42, 0); fs.closePath();
+          const fg = new TT.ExtrudeGeometry(fs, { depth: .22, bevelEnabled: true, bevelThickness: .08, bevelSize: .08, bevelSegments: 2, curveSegments: 5 }); fg.rotateX(Math.PI / 2);   // lying flat, the toes toward +z
+          [[.82, .8], [-.82, .8], [2.45, .7], [-2.45, .7]].forEach(([a, sc]) => { const ft = new TT.Mesh(fg, skin); ft.rotation.y = a; ft.scale.setScalar(sc); ft.position.set(Math.sin(a) * RX * .9, .3, Math.cos(a) * RZ * .9); ft.castShadow = true; tr.add(ft); });
+        }
       };
       drawer(1, S / 2 - (.75 + S / 4) / 2, OUT); drawer(-1, -S / 2 + (.75 + S / 4) / 2, .3);
       return G;
