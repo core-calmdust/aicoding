@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 37;
+  const V = 38;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -26,7 +26,7 @@
     { id: 'lewis', game: 'chess', cm: 1, view: [.12, .4, .82],
       spots: [[-2.7, 5.3, -1.8], [2.25, 8.3, -2.9], [8.5, 9.9, -2.9], [-6.9, 4.3, .9], [-3.35, 7.3, 5.37], [4.4, 4.1, 4.0], [10.6, 2.5, -2.0]] },
     { id: 'charlemagne', game: 'chess', cm: 1, view: [.1, .42, .8],
-      spots: [[0, 11.8, -2.0], [2.9, 7.2, -2.0], [-9.5, 11.5, -2.5], [11.45, 9.9, 5.9], [14.4, 11.0, -5.2], [-11.0, 6.0, 6.4], [0, 3.0, 8.5]] },
+      spots: [[0, 11.4, -3.4], [2.3, 6.0, -3.5], [-12.2, 9.4, -3.0], [11.9, 7.6, 8.7], [11.6, 8.4, -2.4], [-11.9, 8.6, 8.3], [0, 3.6, 8.8]] },
     { id: 'nishapur', game: 'chess', cm: 1, view: [.9, .55, .78],
       spots: [[3.1, 5.0, 22.9], [-3.1, 4.2, 22.8], [-9.3, 3.4, 21.2], [-15.5, 3.6, 21.0], [-21.7, 3.9, 21.7], [-3.1, 2.4, 15.5], [3.1, 5.0, -22.9]] },
     { id: 'ottoman', game: 'backgammon', cm: 1, flip: true, view: [0, .95, .82], lock: { game: 'backgammon', ach: 3 },
@@ -369,6 +369,16 @@
         if (back) m.rotation.y = Math.PI; m.castShadow = m.receiveShadow = true; G.add(m); return m; };
       side(o.front, false); side(o.back, true);
       return G; },
+    /* brushes for kit.relief's height paintings (centimetres; amt > 0 stands out, < 0 is cut in; 1 ≈ the full relief):
+       path(g, pts, close) a smooth curve through pts · line: a soft ridge / groove · blob: a round swelling / hollow · area: a flat step */
+    ink: (() => { const sh = (g, c, a) => { g.fillStyle = g.strokeStyle = `rgba(${c},${c},${c},${a})`; };
+      const path = (g, pts, close) => { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length - 1; i++) g.quadraticCurveTo(pts[i][0], pts[i][1], (pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2); g.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]); if (close) g.closePath(); };
+      const poly = (g, pts) => { g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); };
+      return { sh, path, poly,
+        line(g, pts, w, amt) { sh(g, amt > 0 ? 255 : 0, Math.abs(amt) / 2.6); for (const k of [1, .62, .3]) { g.lineWidth = w * k; path(g, pts); g.stroke(); } },
+        blob(g, x, y, rx, ry, amt, rot = 0) { g.save(); g.translate(x, y); g.rotate(rot); g.scale(rx, ry); const c = amt > 0 ? 255 : 0, a = Math.abs(amt), gr = g.createRadialGradient(0, 0, 0, 0, 0, 1);
+          gr.addColorStop(0, `rgba(${c},${c},${c},${a})`); gr.addColorStop(.55, `rgba(${c},${c},${c},${a * .7})`); gr.addColorStop(1, `rgba(${c},${c},${c},0)`); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, 1, 0, 6.29); g.fill(); g.restore(); },
+        area(g, pts, amt, sharp) { sh(g, amt > 0 ? 255 : 0, Math.abs(amt)); if (sharp) poly(g, pts); else path(g, pts, true); g.fill(); } }; })(),
     // a value-noise field 0..1 (seeded): n(x, y)
     noise(seed) { const N = window.Table3D && Table3D.makeNoise ? Table3D.makeNoise(seed) : null; return N ? (x, y, o = 4) => N(x, y, o) : (x, y) => .5 + .25 * Math.sin(x * 3.1 + seed) * Math.cos(y * 2.7 - seed); },
     // fine grain lines for wood / ivory (pixel loop, fast enough for 512–1024²)
