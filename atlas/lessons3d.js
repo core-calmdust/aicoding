@@ -489,6 +489,8 @@
     });
     return probs;
   }
+  const SH_LI = ['k20', 'k15', 'k12', 'k10', 'k8', 'k6', 'k5', 'k4', 'k3', 'k2', 'k1', 'd1', 'd2', 'd3', 'rx'];
+  const shOrd = (gid, i) => { const k = Math.max(0, SH_LI.indexOf(gid)), st = 1 + Math.floor(k / 7); return a => a[(i * st + k) % a.length]; };   // (the praise / the soft words in a different order in each lesson)
   function shGoodJa(gid, P, u, i, o, why0, ex) {
     const T = SHJ2, at = a => a[(i + o) % a.length], acc = P.accept || [], ans = (P.sol || [])[0] || acc[0] || (P.pv || [])[0];
     if (!u || (P.kind === 'tsume' ? false : !acc.includes(u))) u = ans;
@@ -521,7 +523,7 @@
         at(['取る手でも王手でもない、静かな好手だね。', 'じっと力をためる一手、よく見えたコン。', '深く読まないと見えない手なの。', 'はでさはないけど、いちばん効く手だね。', '静かな一手で、局面が良くなったの。']),
         at(['王手から局面を有利に動かせたね。', 'その王手で、流れが変わったコン。', '王手をうまく使えたね。', '王手で相手の形を乱したの。', '王手が次の得につながるの。']),
         at([(px ? `${px}を取って、` : '') + '相手の反撃まで読めている手だね。', '駒得につながる手！ 反撃も読めているコン。', 'あとの反撃まで考えた一手なの。', 'その手で、駒の損得が良くなったね。', '目先だけじゃなく、先まで読めたの。'])][cat]; }
-    let s = at(T.cheer) + ' ' + core; const pu = at(T.push); if (pu && (s + pu).replace(/<[^>]+>/g, '').length <= 150) s += (/[！？]$/.test(s) ? ' ' : '') + pu;
+    const od = shOrd(gid, i); let s = od(T.cheer) + ' ' + core; const pu = od(T.push); if (pu && (s + pu).replace(/<[^>]+>/g, '').length <= 150) s += (/[！？]$/.test(s) ? ' ' : '') + pu;
     return s;
   }
   function shLoss(d, i) {   // how much a move gives up (the engine's win chances, best − yours) — said only as much as the value tells
@@ -535,7 +537,7 @@
     if (!u || acc.includes(u) || (P.sol && u === P.sol[0])) { const w = C.find(x => !acc.includes(x[0])); u = w ? w[0] : ''; }
     const F = u ? shLFacts(P, u) : null;
     const partial = P.kind === 'best' && u && SHOGI.points(P, u) > 0;
-    const right = partial ? '' : at(['{m}が正解の手なの。', '答えは{m}だったコン。', 'ここは{m}を指したかったね。', '正解は{m}！ ', 'いちばんは{m}なの。']);
+    const od = shOrd(gid, i), right = partial ? '' : od(['{m}が正解の手なの。', '答えは{m}だったコン。', 'ここは{m}を指したかったね。', '正解は{m}！ ', 'いちばんは{m}なの。']);
     let why = '';
     if (P.kind === 'tsume') {
       if (!F) why = at(['ほかの王手だと、玉に逃げ道が残っちゃうの。', '別の手からだと、相手に受けられて詰まないコン。', 'ほかの手では、玉をつかまえきれないの。', '最初の一手をまちがえると、玉が逃げ出しちゃうの。', 'ほかの王手だと、受けがきいちゃうから詰まないの。']);
@@ -564,7 +566,7 @@
       else if (back) why = at([`{x}で${px}は取れるけど、相手の駒が届くから取り返されちゃうの。`, `{x}の${px}取りは、相手の駒が届いているから取り返されるの。`, `{x}で${px}を取っても、相手の駒が利いているから取り返されるコン。`, `{x}で取った駒は、守りの駒がいるから、すぐ取り返されちゃうの。`, `{x}の${px}は守られていて、取っても取り返されるから損なの。`]);
       else { const d = winP(best, 600) - winP(s, 600); why = (px ? `{x}で${px}は取れるけど、` : at(['{x}だと、', '{x}を指すと、', '{x}では、', 'きみの{x}は、', '{x}の場合、'])) + shLoss(d, i + o + 2); }
     }
-    let s = right + why; const so = at(T.soft); if (so && (s + so).replace(/<[^>]+>|\{[mx]\}/g, '').length <= 140) s = /^(ドンマイ|気にしない)/.test(so) ? so + ' ' + s : s + (/[！？]$/.test(s) ? ' ' : '') + so;
+    let s = right + why; const so = od(T.soft); if (so && (s + so).replace(/<[^>]+>|\{[mx]\}/g, '').length <= 140) s = /^(ドンマイ|気にしない)/.test(so) ? so + ' ' + s : s + (/[！？]$/.test(s) ? ' ' : '') + so;
     return s;
   }
   /* (2026-11-21 lesson loop) the shogi opening practice in ショウギツネ's words, Japanese: a short intro, varied questions, a hint
