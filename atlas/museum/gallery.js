@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 94;
+  const V = 95;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -33,7 +33,7 @@
     { id: 'kofukuji', game: 'shogi', cm: 1, view: [0, .95, .78], lock: { game: 'shogi', ach: 3 } },   // (spots: from the model's userData)
   ];
   const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
-  const PLAY = { ballinderry: { game: 'tafl', levels: 20 } };   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
+  const PLAY = { ballinderry: { game: 'tafl', levels: 30 } };   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
   const ui = (l, k) => { const a = T(l).ui || {}, b = T('en').ui || {}; return a[k] != null ? a[k] : (b[k] != null ? b[k] : k); };
   const ex = (l, id) => Object.assign({}, (T('en').ex || {})[id] || {}, (T(l).ex || {})[id] || {});
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -109,6 +109,8 @@
         sdS.querySelectorAll('button').forEach(b => b.onclick = () => { if (!lock) setSd(b.dataset.v); });
         ov.addEventListener('click', shut);
         const setLv = v => setDD(lvS, v);
+        // the levels' names are the game's own (Lv.1 … and the ones above them): filled in once its adapter has loaded
+        if (window.AtlasLazy) AtlasLazy.need(P.game).then(() => { const ad = window.Atlas3D && Atlas3D[P.game]; if (!ad || !ad.levelInfo || !ov.isConnected) return; lvS.querySelectorAll('.expdd-l button').forEach(b => { try { const nm = ad.levelInfo(+b.dataset.v, lang).name; if (nm) b.textContent = nm; } catch (x) {} }); setDD(lvS, lvS.dataset.v); });
         try { const q = JSON.parse(localStorage.getItem(PK) || '{}')[id]; if (q) { setLv(q.lv); setSd(q.side); } } catch (x) {}
         const tt = k => ({ 'p.you': ui(lang, 'p_you'), 'p.ai': 'AI', 'p.turn': ui(lang, 'p_turn'), 'p.think': ui(lang, 'p_think'), 'res.win': ui(lang, 'p_win'), 'res.lose': ui(lang, 'p_lose'), 'res.draw': ui(lang, 'p_draw') })[k] || '';
         const playing = on => { ov.classList.toggle('exv-play', on); pb.hidden = on; sb.hidden = !on; lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
