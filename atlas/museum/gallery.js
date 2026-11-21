@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 36;
+  const V = 37;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -314,6 +314,61 @@
       t.colorSpace = o.data ? TT.NoColorSpace : TT.SRGBColorSpace; t.anisotropy = 8; if (o.rep) { t.wrapS = t.wrapT = TT.RepeatWrapping; t.repeat.set(o.rep[0], o.rep[1]); } return t; },
     lin: c => new (window.THREE.Color)(c).convertSRGBToLinear(),
     mat(o) { const TT = window.THREE, p = Object.assign({}, o); if (typeof p.color === 'string') p.color = kit.lin(p.color); return new TT[p.clearcoat != null || p.sheen != null ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](p); },
+    /* A carved block from two height paintings (front and back) — for figures cut from one piece of ivory, wood or stone.
+       o: { w, h (cm, the painting's size; the block stands on y = 0, centred on x), px (painting width in pixels, 320),
+            mask(g)   paints the silhouette in white on black            } all painters draw in centimetres, x from the middle,
+            thick(g)  optional: greys for the block's thickness (white = 1)  } y up from the base, on a canvas 2D context
+            front(g), back(g)  paint the carving on mid-grey #808080: lighter stands out, darker is cut in (± o.relief cm)
+            depth (cm, half the block's thickness), round (cm, how far in from the outline the surface curves away),
+            relief (cm), nx (grid columns per side, 36), tex (a canvas: the material's colour), dirt [r,g,b] (what gathers in the cuts),
+            dirtK (how much, 1), mat { roughness, … } }
+       Returns a Group (front faces +z). The mesh carries the large forms; a bump map carries what the grid is too coarse for;
+       the colour map darkens the cuts the way grime does. Triangles: about 4 · nx · nx · h / w, less outside the outline. */
+    relief(o) {
+      const TT = window.THREE, W = o.px || 320, H = Math.round(W * o.h / o.w), N = W * H, s = W / o.w;
+      const paint = (fn, fill) => { const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.fillStyle = fill; g.fillRect(0, 0, W, H);
+        if (fn) { g.save(); g.translate(W / 2, H); g.scale(s, -s); g.lineCap = g.lineJoin = 'round'; fn(g); g.restore(); }
+        const d = g.getImageData(0, 0, W, H).data, a = new Float32Array(N); for (let i = 0; i < N; i++) a[i] = d[i * 4] / 255; return a; };
+      const blur = (a, r) => { r = Math.max(1, Math.round(r)); const k = 1 / (2 * r + 1); let src = a; const tmp = new Float32Array(N);
+        for (let p = 0; p < 3; p++) { const out = new Float32Array(N);
+          for (let y = 0; y < H; y++) { const row = y * W; let acc = 0; for (let x = -r; x <= r; x++) acc += src[row + Math.min(W - 1, Math.max(0, x))];
+            for (let x = 0; x < W; x++) { tmp[row + x] = acc * k; acc += src[row + Math.min(W - 1, x + r + 1)] - src[row + Math.max(0, x - r)]; } }
+          for (let x = 0; x < W; x++) { let acc = 0; for (let y = -r; y <= r; y++) acc += tmp[Math.min(H - 1, Math.max(0, y)) * W + x];
+            for (let y = 0; y < H; y++) { out[y * W + x] = acc * k; acc += tmp[Math.min(H - 1, y + r + 1) * W + x] - tmp[Math.max(0, y - r) * W + x]; } }
+          src = out; }
+        return src; };
+      const mask = paint(o.mask, '#000'), pil = blur(mask, (o.round || .5) * s / 2.2), thick = o.thick ? blur(paint(o.thick, '#fff'), (o.round || .5) * s / 2.2) : null;
+      const depth = o.depth || 1, rel = o.relief || .3, nx = o.nx || 36, ny = Math.max(2, Math.round(nx * o.h / o.w)), dirt = o.dirt || [92, 62, 34], dk = o.dirtK == null ? 1 : o.dirtK;
+      const texD = (() => { const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); if (o.tex) g.drawImage(o.tex, 0, 0, W, H); else { g.fillStyle = '#d8c8a4'; g.fillRect(0, 0, W, H); } return g.getImageData(0, 0, W, H); })();
+      const G = new TT.Group();
+      const side = (fn, back) => {
+        const det = fn ? blur(paint(fn, '#808080'), o.soft || 1) : null, Hh = new Float32Array(N);
+        const M = i => { if (!back) return i; const x = i % W; return i - x + (W - 1 - x); };   // (the outline as seen from behind)
+        for (let i = 0; i < N; i++) { const j = M(i), p = Math.sqrt(Math.max(0, Math.min(1, pil[j] * 2 - 1))); Hh[i] = p * (depth * (thick ? thick[j] : 1) + (det ? (det[i] - .502) * 2 * rel : 0)); }
+        const lo = blur(Hh, Math.max(1, W / nx * .6)), c1 = blur(Hh, 2), c2 = blur(Hh, Math.max(3, W / 28));
+        const col = new ImageData(W, H), bmp = new ImageData(W, H), cd = col.data, bd = bmp.data, td = texD.data;
+        for (let i = 0; i < N; i++) { const j = M(i), q = i * 4;
+          const edge = Math.max(0, Math.min(1, (pil[j] - .62) * 6)), cut = Math.max(0, Math.min(1, ((c1[i] - Hh[i]) * 9 + (c2[i] - Hh[i]) * 2.2) / rel)) * dk * edge, k = Math.min(.85, cut);
+          cd[q] = td[q] + (dirt[0] - td[q]) * k; cd[q + 1] = td[q + 1] + (dirt[1] - td[q + 1]) * k; cd[q + 2] = td[q + 2] + (dirt[2] - td[q + 2]) * k;
+          cd[q + 3] = 255;
+          const b = Math.max(0, Math.min(255, 128 + (Hh[i] - lo[i]) / rel * 150)); bd[q] = bd[q + 1] = bd[q + 2] = b; bd[q + 3] = 255; }
+        // colour bleeds a little past the outline, so the mip-maps do not pull black in at the edge
+        const map = kit.tex(W, H, g => g.putImageData(col, 0, 0)), bump = kit.tex(W, H, g => g.putImageData(bmp, 0, 0), { data: true });
+        const bil = (A, x, y, mir) => { x = Math.min(W - 1.001, Math.max(0, x)); y = Math.min(H - 1.001, Math.max(0, y)); if (mir) x = W - 1 - x; const x0 = Math.min(W - 2, x | 0), y0 = y | 0, fx = x - x0, fy = y - y0, i = y0 * W + x0;
+          return (A[i] * (1 - fx) + A[i + 1] * fx) * (1 - fy) + (A[i + W] * (1 - fx) + A[i + W + 1] * fx) * fy; };
+        // the grid; a vertex outside the outline is slid onto it (down the slope of the blurred mask), so the block ends in a clean edge at z = 0
+        const pos = [], uv = [], idx = [], inside = [], cell = (W - 1) / nx;
+        for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) { let x = i / nx * (W - 1), y = (1 - j / ny) * (H - 1), mv = bil(pil, x, y, back); const was = mv >= .5;
+          if (!was) { const x0 = x, y0 = y; for (let k = 0; k < 10 && mv < .497; k++) { const gx = (bil(pil, x + 1, y, back) - bil(pil, x - 1, y, back)) / 2, gy = (bil(pil, x, y + 1, back) - bil(pil, x, y - 1, back)) / 2, g2 = gx * gx + gy * gy; if (g2 < 1e-9) break;
+              const st = Math.min(cell * .6, (.5 - mv) / Math.sqrt(g2)) / Math.sqrt(g2); x += gx * st; y += gy * st; mv = bil(pil, x, y, back); if (Math.hypot(x - x0, y - y0) > cell * 2.2) break; } }
+          const ok = was || mv >= .49, u = x / (W - 1), v = 1 - y / (H - 1);
+          pos.push((u - .5) * o.w, v * o.h, was ? Math.max(0, bil(Hh, x, y, false)) : -depth * .14); uv.push(u, v); inside.push(was ? 2 : ok ? 1 : 0); }   // (edge vertices dip past the mid-plane: the two halves overlap instead of leaving a crack)
+        for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const a = j * (nx + 1) + i, b = a + 1, c = a + nx + 1, d = c + 1; if (inside[a] > 1 || inside[b] > 1 || inside[c] > 1 || inside[d] > 1) idx.push(a, b, d, a, d, c); }
+        const geo = new TT.BufferGeometry(); geo.setAttribute('position', new TT.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new TT.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
+        const m = new TT.Mesh(geo, kit.mat(Object.assign({ map, bumpMap: bump, bumpScale: o.bump == null ? 2.2 : o.bump, color: '#ffffff', roughness: .5 }, o.mat || {})));
+        if (back) m.rotation.y = Math.PI; m.castShadow = m.receiveShadow = true; G.add(m); return m; };
+      side(o.front, false); side(o.back, true);
+      return G; },
     // a value-noise field 0..1 (seeded): n(x, y)
     noise(seed) { const N = window.Table3D && Table3D.makeNoise ? Table3D.makeNoise(seed) : null; return N ? (x, y, o = 4) => N(x, y, o) : (x, y) => .5 + .25 * Math.sin(x * 3.1 + seed) * Math.cos(y * 2.7 - seed); },
     // fine grain lines for wood / ivory (pixel loop, fast enough for 512–1024²)
