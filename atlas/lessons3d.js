@@ -3065,11 +3065,203 @@
      out). Progress = the full game's ('aicoding-morris-lessons' { '<six:|twelve:><id>': { best, clear } }). Texts: morris/i18n.js + i18n_more.js. */
   const MMV = ['nine', 'six', 'twelve'], MMPRE = v => v === 'nine' ? '' : v + ':', MF = m => m & 31, MT = m => (m >> 5) & 31, MN = 31;
   const noCoord = x => String(x || '').replace(/<p>[^<]*\b[a-g][1-7]\b[^<]*<\/p>/g, '').replace(/[^。.!！?？]*\b[a-g][1-7]\b[^。.!！?？]*[。.!！?？]?/g, '').trim();
+  const MR_ENG = '../morris/engine.js?v=20261114eg-zf1';   // (= atlas/games/morris.js: the same file and version, one cache)
+  const mrEng = () => window.MorrisEngine ? Promise.resolve(window.MorrisEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = MR_ENG; sc.onload = () => window.MorrisEngine ? res(window.MorrisEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
+  /* (2026-11-21 lesson loop) morris in Japanese: モリフク's own intro / questions / hints (short, no coordinates), and the feedback
+     from the position itself — mrF: a mill and what it takes (a piece of the opponent's pair / one blocking your own line), the
+     opponent's mill point it fills, the mill points each side has after it (yours: a fork when two), the opponent's moves left
+     (a blockade), the point it vacates (a mill opened: can the opponent step in?), the win. Right → the reason; wrong → the green
+     move, what yours misses, and (engine-scored steps) what it costs. */
+  const MRJ_LS = {
+    intro: {
+      b_place: 'ホー…むにゃ。モリスの駒は、線が交わる<b>点</b>に置くんだ。線でつながった点どうしが「となり」。<br>四隅の角はとなりが2つ、辺のまん中は3つ、中段の四角の辺のまん中は<b>4つ</b>！ となりが多い点ほど、あとで役に立つよ。',
+      b_mill: '同じ線の上に自分の駒を<b>3つ並べる</b>と「ミル」！ ミルを作るたびに、相手の駒を<b>1つ取れる</b>んだ。<br>まずは、きみの駒が2つ並んでいる線をさがしてみてね。',
+      b_take: 'ミルを作ったら、取る駒は自分でえらぶの。どれでもいいわけじゃないぞ。<br>相手が<b>2つ並べて</b>次のミルをねらっていたら、その片方を取れば一石二鳥！ ミルの中の駒は、ふつうは取れないからね。',
+      b_block: '相手の駒が2つ並んで、3つ目の点が空いていたら……次の手でミルにされちゃう！<br>自分がミルを作れないときは、<b>その3つ目の点に先に置いて</b>ふさごう。これで駒を1つ守れるね。',
+      b_move: 'おたがいに駒を置き終わったら、<b>動かす時間</b>のはじまり。駒を1つえらんで、線にそって<b>となりの空いた点</b>へ1歩だけ進めるんだ。<br>動かして3つ並べても、もちろんミル！',
+      b_reopen: 'ミルの駒を1つ外へ動かして、次の手で戻すと……<b>もう一度ミル</b>！ また相手の駒を取れるんだ。<br>ただし、空けた点に<b>相手が入ってこられない</b>か、先に確かめてから開こうね。',
+      b_fly: '駒が<b>3つ</b>まで減った側は、線に関係なく<b>好きな空き点へ飛べる</b>んだ。ホー、ぼくみたい！<br>遠くの点へもひとっ飛びだから、ミルも作りやすいよ。',
+      b_win: '勝ち方は2つ。相手の駒を<b>2つ</b>まで減らすか、相手を<b>1歩も動けなく</b>するか！<br>どちらでも、その瞬間にきみの勝ちだね。',
+      mill: 'ミルを作れる場面では、まず作れないか考えよう。駒の数は、そのまま力の差なんだ。<br>そのあと<b>どの駒を取るか</b>もだいじ。相手の2つ並びや、きみの線をふさいでいる駒をねらってね！',
+      block: '相手の2つ並びの3つ目が空いていたら、それは<b>次の手でミルになる</b>合図。<br>きみがミルを作れないなら、まず<b>そこをふさぐ</b>のが基本だね。ふさいだ駒が、きみの並びにもなればもっといい！',
+      remove: 'ミルを作ったあと、<b>どの駒を取るか</b>で形勢が変わるんだ。<br>ねらい目は、相手がミルを作りかけている駒と、きみの線をふさいでいる駒。取ったあとに相手がすぐミルを作れないかも見てね！',
+      fork: '1手で<b>ミルの点を2つ同時に</b>作れたら、相手は片方しかふさげない！ 次の手でかならずミルができるんだ。<br>線がたくさん集まる交差点は、両取りの出発点になりやすいよ。',
+      junction: '置く時間の序盤は、すぐにミルを作るより<b>あとで役立つ点</b>を押さえよう。<br>となりが4つの交差点や3つの辺のまん中は強い場所。角はとなりが2つで、あとで閉じこめられやすいんだ。',
+      counter: '相手のミルをふさぐなら、できれば<b>きみのねらい（あと1つでミル）も同時に</b>作る手がいい！<br>そうすれば、こんどは相手が守る番。主導権がきみに移るね。',
+      double: '1つの駒が<b>2つのミルのあいだを行き来</b>できる形が「往復ミル」！ 片方を開けると、もう片方が閉じるんだ。<br>動くたびに相手の駒を取れる、モリスでいちばん強い形だよ。',
+      openmill: '動かす時間は、ミルの駒を1つ動かして<b>開き</b>、次に戻して<b>閉じれば</b>また取れる。<br>だいじなのは開く<b>向き</b>。空けた点に相手が入れない開き方を見つけてね！',
+      mobility: '置く時間の最後の数手は、そのあと<b>動けるかどうか</b>を決めるんだ。<br>置き終わったとき動ける駒が少ないと、すぐ閉じこめられて負け！ きみの駒のとなりに空き点を残そうね。',
+      blockade: '動かす時間は、<b>動かせる駒がなくなった側の負け</b>。駒の数で負けていても、相手の逃げ道を全部ふさげば勝てるんだ！<br>相手の駒のとなりの空き点を数えてみてね。',
+      fly: '駒が3つになると、<b>どの空き点へも飛べる</b>。どこにでも現れて相手のねらいをふさげるけど、止められるのは一度に1つだけ。<br>ふさぎながら、きみのミルの形も作るのが基本だよ。',
+      endgame: '相手が3つになると、どこへでも飛んでふさいでくる。ねらいが1つじゃ止められちゃうんだ。<br>勝ちパターンは<b>ミルの点を2つ同時に</b>作ること！ 相手の2つ並びも放っておかないでね。',
+      defend: '相手の攻めがきびしいと、正しい受けが<b>たった1つ</b>しかないこともある。ほかの手だと駒を取られたり、閉じこめられたり！<br>相手の次の手で何が起きるか、全部数えてから指そうね。',
+      sx_nofly: 'シックスでは、駒が3つになっても<b>飛べない</b>んだ。最後まで、となりの点へ1歩ずつ。<br>少ない駒でも、動かして3つ並べればミル！',
+      sx_win: '相手の駒がぜんぶ<b>動けなくなったら</b>、その時点できみの勝ち！<br>小さな盤は逃げ道が少ないから、閉じこめがよく決まるんだ。',
+      tw_diag: 'トゥエルブには、四隅から内側へのびる<b>ななめの線</b>がある！ 外・中・内の角を結ぶななめに3つ並べても<b>ミル</b>だよ。<br>線が増えたぶん、角の点も強くなるんだ。',
+      tw_dblock: 'ななめの線は見落としやすいんだ。相手の<b>ななめの2つ並び</b>に気をつけて！<br>あと1つでミルになる点に、先にきみの駒を置いてふさごうね。',
+    },
+    ask: {
+      b_place: ['線が4本集まる交差点に置いてみて！', 'となりが4つある点、どこかな？', 'さあ、いちばん線が集まる点に置こう！', '交差点はどこだっけ？ 空いているところに置いてね！', 'もう一回！ となりの多い交差点をえらんで。'],
+      b_mill: ['3つ並べてミルを作ってみて！', 'あと1つで並ぶ線、見つけられるかな？', 'ミルのチャンス！ どこに置く？', 'きみの駒が2つ並んでいる線はどれ？', 'さあ、3つそろえて相手の駒をいただこう！'],
+      b_take: ['ミルを作って、相手の2つ並びの駒を取ってみて！', '取るならどの駒？ 相手のねらいに注目！', 'ミルを作ったあと、相手の次のミルも止められるかな？', '一石二鳥の取り方、わかるかな？', 'さあ、ミル！ そして取る駒をよく選んで。'],
+      b_block: ['相手のミルをふさいでみて！', '相手があと1つで並ぶ線、どこかな？', 'このままだとミルにされちゃう！ どこに置く？', '相手の2つ並びの3つ目はどこだろう？', 'さあ、先回りしてふさいじゃおう！'],
+      b_move: ['駒を動かしてミルを作ってみて！', 'となりへ1歩でミルになる駒、どれかな？', '動かす時間のミル！ どの駒を動かす？', 'あと1つで並ぶ線に、となりから入れる駒は？', 'さあ、1歩動かして3つそろえよう！'],
+      b_reopen: ['ミルを安全に開いてみて！ 次にまた閉じられる形でね。', 'どの駒を動かせば、相手に割りこまれないかな？', 'ミルを開くチャンス！ 空けた点、相手は入ってこない？', '開いて閉じる作戦！ 動かすのはどの駒？', 'さあ、もう一度ミルを作るための一歩！'],
+      b_fly: ['飛んでミルを作ってみて！', '3つの駒なら、どこへでも飛べる。ミルになる点はどこかな？', 'ひとっ飛びでミル！ どの駒をどこへ？', 'あと1つで並ぶ線、見つけたかな？', 'さあ、飛んで3つそろえよう！'],
+      b_win: ['この一手で勝っちゃおう！', '勝ちを決める手、見つけられるかな？', '相手を2つにするか、動けなくするか。どっち？', 'あと一手で勝負あり！ どこに指す？', 'さあ、決めの一手を！'],
+      mill: ['ミルを作って、いちばんいい駒を取ってみて！', 'ミルのチャンス！ 取る駒までよく考えてね。', 'どこでミルを作って、どの駒を取るのがいいかな？', '3つそろえたあとが勝負！ 取るならどれ？', 'さあ、ミルを作って最高の一枚を取ろう！'],
+      block: ['相手のミルを防いでみて！', '相手のねらいはどこかな？ 先にふさごう！', 'このままだとミルにされちゃう。どう守る？', 'ふさぐだけじゃなく、きみの並びにもなる手はある？', 'さあ、相手のあと1つを止めよう！'],
+      remove: ['ミルを作って、取る駒を正しくえらんでみて！', 'どの駒を取ると、いちばん得かな？', '相手のねらいを消す取り方、わかる？', 'ミルのあと、取る駒で形勢が変わるよ。どれにする？', 'さあ、ミル！ 取る一枚をよく見てね。'],
+      fork: ['ミルの点を2つ同時に作ってみて！', '相手が片方しかふさげない形、作れるかな？', '両取りのチャンス！ どこに指す？', '置いたあと「あと1つ」が2つできる点は？', 'さあ、ふさぎきれないねらいを作ろう！'],
+      junction: ['序盤のいい場所に置いてみて！', 'となりが多くて、あとで役立つ点はどこかな？', 'すぐにミルより、先を見た一手！ どこに置く？', 'きみの駒と協力できる点、わかるかな？', 'さあ、強い場所を押さえよう！'],
+      counter: ['相手のミルを防ぎながら、きみのねらいも作ってみて！', 'ふさぐと同時に攻められる手、どれかな？', '守りながら攻める一手！ どこへ行く？', 'ふさいだ駒で2つ並びもできる手はある？', 'さあ、主導権を取りかえそう！'],
+      double: ['ミルの駒を動かして、べつのミルを閉じてみて！', '往復ミルのチャンス！ どの駒を動かす？', 'となりへ動くと、べつの線が3つになる駒は？', '開けて閉じて、毎手取る形を作れるかな？', 'さあ、モリス最強の形を完成させよう！'],
+      openmill: ['ミルを開く、いちばんいい一手を見つけて！', 'どの向きに開けば、相手に割りこまれないかな？', 'ミルを開くタイミング！ 動かすのはどれ？', '空けた点に相手が届かない開き方は？', 'さあ、安全に開いて次の一枚をねらおう！'],
+      mobility: ['動かす時間のことまで考えて、いちばんいい一手を見つけて！', '置き終わったあと、きみの駒は動けるかな？', '閉じこめられない形を作る一手は？', '相手の逃げ道は減らして、きみのは残す。どこに置く？', 'さあ、このあとの戦いを見すえた一手を！'],
+      blockade: ['相手を動けなくしちゃおう！', '相手の駒の逃げ道、残りはいくつかな？', '最後の逃げ道をふさぐ手、わかる？', '駒の数より動ける場所！ どこをふさぐ？', 'さあ、相手を閉じこめて勝とう！'],
+      fly: ['飛べる駒で、いちばんいい一手を見つけて！', '相手のねらいをふさぎながら、きみの並びも作れるかな？', '3つの駒の使いどころ！ どこへ飛ぶ？', 'ふさいで、つなげる。そんな点はどこ？', 'さあ、飛んで流れを変えよう！'],
+      endgame: ['3つになった相手への、いちばんいい一手を見つけて！', '飛べる相手でも止められない形、作れるかな？', 'ミルの点を2つ同時に作れる手は？', '相手の2つ並びは大丈夫？ そのうえで攻める手を！', 'さあ、とどめの準備をしよう！'],
+      defend: ['たった1つの正しい受けを見つけて！', '相手の次の手で何が起きるかな？ よく見てね。', 'ここをしのげるのは1手だけ。どれだろう？', '取られない、閉じこめられない受けは？', 'さあ、ピンチをしのごう！'],
+      sx_nofly: ['3つの駒を動かしてミルを作ってみて！', '飛べないシックス。となりへ1歩でミルになる駒は？', 'あと1つで並ぶ線、どの駒が入れるかな？', '1歩でそろう形、見つけられる？', 'さあ、少ない駒でもミルを作ろう！'],
+      sx_win: ['1手で相手を動けなくして勝っちゃおう！', '相手の駒が動ける点、残りはどこかな？', '最後の逃げ道をふさげる？', '閉じこめの一手、わかるかな？', 'さあ、小さな盤で閉じこめ勝ち！'],
+      tw_diag: ['ななめのミルを作ってみて！', 'ななめの線で、あと1つの場所はどこかな？', '角どうしをななめに結ぶミル！ どこに置く？', 'ななめの2つ並び、見つけた？', 'さあ、ななめに3つそろえよう！'],
+      tw_dblock: ['相手のななめのミルを防いでみて！', '見落としやすいななめの2つ並び、どこかな？', 'このままだとななめのミルにされちゃう！ どこに置く？', '相手のねらいの3つ目はどこだろう？', 'さあ、ななめのすき間をふさごう！'],
+    },
+    hint: {
+      b_place: ['金の丸が交差点。まだ空いているのはどれかな？', '中段の四角の、辺のまん中を見てみて。線が4本集まっているね。'],
+      b_mill: ['金の丸が、置けばミルになる点だよ。', 'きみの駒が2つ並んでいて、3つ目が空いている線をさがしてみて。'],
+      b_take: ['金の丸がミルの点。そのあと、相手の2つ並びの駒を取ろうね。', '相手があと1つでミルになる線はどれかな？ その2つのどちらかを取るんだ。'],
+      b_block: ['金の丸が、相手が次にミルを作れる点。そこに置いてね。', '相手の駒が2つ並んで、3つ目が空いている線をさがしてみて。'],
+      b_move: ['金の丸がミルになる点。そのとなりにいる、きみの駒を動かしてね。', 'あと1つで並ぶ線の空き点に、線でつながっている駒はどれかな？'],
+      b_reopen: ['金の丸が、安全に動かせるミルの駒。', '空けた点のとなりに相手の駒がいないミルの駒をさがしてみて。'],
+      b_fly: ['金の丸が、飛べばミルになる点だよ。', 'ミルの線の駒は動かさずに、残りの1つを飛ばすんだ。'],
+      b_win: ['金の丸が、勝ちになる手で使う点。', '相手が3つなら1つ取れば勝ち。それか、最後の逃げ道をふさぐ手！'],
+      mill: ['ミルを作ったら、相手の2つ並びの駒か、きみの線をふさぐ駒を取るといいね。', '取ったあと、相手がすぐミルを作れないかも確かめてみて。'],
+      block: ['相手の駒が2つ並んで、3つ目が空いている線をさがしてね。', 'ふさいだ駒が、きみの2つ並びにもなる点があればいちばん！'],
+      remove: ['相手がミルを作りかけている駒は、どれかな？', 'きみのねらいの線をふさいでいる相手の駒にも注目してね。'],
+      fork: ['置いたあとに「あと1つでミル」の点が2つできる場所をさがしてね。', '線が交わる点なら、2本の線を同時にねらえるかも！'],
+      junction: ['となりの数が多い点や、きみの駒と協力できる点をさがしてね。', '角はとなりが2つだけ。なるべく線の集まる点を！'],
+      counter: ['相手のミルの点へ行ける駒のうち、動いたあとにきみの2つ並びができるのはどれかな？', 'ふさぐ場所が同じなら、きみの線の上にある点がおすすめ！'],
+      double: ['今ミルになっている駒のうち、となりへ動くとべつの線が3つになる駒をさがしてね。', '2つのミルのあいだを、1つの駒が行き来できる形を作るんだ。'],
+      openmill: ['ミルの駒のうち、空けた点に相手の駒が届かないのはどれかな？', '開いた駒が、相手のじゃまもできたら最高！'],
+      mobility: ['置き終わったとき、きみと相手の駒はそれぞれいくつ動けそうかな？', 'きみの駒のとなりには空き点を残して、相手の駒のとなりはふさごう！'],
+      blockade: ['相手の駒が動ける空き点を数えてみて。いくつ残ってる？', '最後の逃げ道に、きみの駒を入れるんだ。'],
+      fly: ['まず相手のねらいを確かめて。ふさぎながら、きみの並びも作れる点は？', 'ふさぐ点が、きみの2つ並びの線の上にあったら一石二鳥！'],
+      endgame: ['相手のねらいを防いだうえで、ミルの点を2つ作れるところをさがしてね。', '飛べる相手でも、一度にふさげるのは1つだけ！'],
+      defend: ['相手が次にミルを作れる点はどこかな？ 開け閉めできるミルにも気をつけて。', '動かしたあと、相手の駒がどこへ行けるか数えてみてね。'],
+      sx_nofly: ['金の丸が、動いてくればミルになる点。', 'ミルの点に、線でつながっているきみの駒はどれかな？'],
+      sx_win: ['相手の駒が動ける、最後の空き点をふさいでね。', '相手の駒のとなりの空き点は、もう1つしかないはず！'],
+      tw_diag: ['金の丸が、置けばななめのミルになる点。', '四隅から内側へのびるななめの線を見てみて。'],
+      tw_dblock: ['金の丸が、相手が置けばミルになる点。', 'ななめの線の上に、相手の駒が2つ並んでいないかな？'],
+    },
+  };
+  function mrF(E, G, pos, m) {   // what a lesson move does
+    const NO = E.NONE, f = E.mFrom(m), t = E.mTo(m), r = E.mRm(m), me = pos.side, o = 3 - me, b = pos.b;
+    const pts = (q, side) => { const c = q.clone(); c.side = side; const S = new Set(); for (const x of c.moves()) if (E.mRm(x) !== NO) S.add(E.mTo(x)); return S; };
+    const mob = (q, side) => { let n = 0, pc = 0; for (let i = 0; i < G.n; i++) if (q.b[i] === side) { const e = G.adj[i].filter(j => !q.b[j]).length; n += e; if (e) pc++; } return { n, pc }; };   // (steps to empty neighbours: the moving phase's mobility, also while placing)
+    const line2 = (q, at, who) => G.mills.some(ml => ml.includes(at) && ml.filter(i => i !== at).filter(i => q.b[i] === who).length === 1 && ml.filter(i => i !== at).some(i => !q.b[i]));   // (at + one more of who's + an empty point)
+    const opp0 = pts(pos, o), after = pos.clone(); after.play(m);
+    const R = { m, f, t, r, place: f === NO, mill: r !== NO, deg: G.adj[t].length, blocks: opp0.has(t),
+      rmThreat: r !== NO && line2(pos, r, o), rmBlock: r !== NO && G.mills.some(ml => ml.includes(r) && ml.filter(i => i !== r).every(i => b[i] === me)),
+      win: after.status() === -1, oppNow: pts(after, o).size, oppBefore: opp0.size, myNext: pts(after, me).size,
+      oppMob: mob(after, o), myMob: mob(after, me), enter: f !== NO && after.moves().some(x => E.mTo(x) === f), back: f !== NO && after.b[f] === 0 };
+    R.opened = f !== NO && pos.inMill(f) && !R.mill;
+    R.reply = () => { if (R._r) return R._r; let fork = false; if (!R.win) for (const y of after.moves()) { if (E.mRm(y) !== NO) continue; const z = after.clone(); z.play(y); if (pts(z, o).size >= 2 && !pts(z, me).size) { fork = true; break; } } return (R._r = { fork }); };   // (the opponent's answer: two mill points at once, none for you)
+    return R;
+  }
+  function mrLsJa(E, s, P, i, ck) {
+    const id = s.id, A0 = MRJ_LS.ask[id]; if (!A0) return null;
+    const k = i + id.length, pick = L => L[k % L.length], H = MRJ_LS.hint[id] || [];
+    const G = E.geom(s.v), pos = E.Pos.from(G, P.s), M = ck('ok'), X = ck('ng');
+    const f = x => x.replace(/\{m\}/g, M).replace(/\{x\}/g, X), fg = x => f(x.replace(/\{x\}/g, pos.placing() ? 'そこ' : 'その手'));
+    const ok = P.ok || [P.best], okS = new Set(ok), A = P.best != null ? P.best : ok[0];
+    const FF = u => { try { return mrF(E, G, pos, u); } catch (e) { return null; } }, FA = FF(A);
+    const V = P.sc ? new Map(P.sc) : null, vBest = V ? Math.max(...P.sc.map(e => e[1])) : 0;
+    const right = u => P.sc && !P.ok ? V.has(u) && V.get(u) >= vBest - 6 && !(vBest > E.WINT && V.get(u) < vBest) : okS.has(u);
+    const wrongs = () => pos.moves().filter(x => !right(x));
+    const alt = (u, pref) => { if (u != null && !right(u) && pos.moves().includes(u)) return u; const W = wrongs(); if (pref) for (const x of W.slice(0, 200)) { const Q = FF(x); if (Q && pref(Q)) return x; } return W[0]; };
+    const hintTx = H.length ? pick(H) : '';
+    const deg = d => d >= 4 ? '交差点' : d === 3 ? '辺のまん中' : '角';
+    const V2 = u => V && V.has(u) ? V.get(u) : null;
+    const lost = u => { const v = V2(u); return v != null && v < -E.WINT && vBest >= -E.WINT; }, missW = u => { const v = V2(u); return v != null && vBest > E.WINT && v <= E.WINT; };
+    const loss = u => lost(u) ? 'AIの読みでは、このあと負けにつながっちゃう。' : missW(u) ? 'AIの読みだと、勝ちを逃しちゃうんだ。' : '';
+    // the one thing the wrong move misses, against the right one (most telling first)
+    const why = (G2, u) => {
+      const W = FA;
+      if (W.win && !G2.win) return '{x}だと、まだ勝ちにならないの。';
+      if (G2.oppNow > 0 && W.oppNow === 0) return `{x}だと相手のミルの点が${G2.oppNow > 1 ? G2.oppNow + 'つも' : ''}空いたまま。次の手でミルにされて、駒を取られちゃう。`;
+      if (W.mill && !G2.mill) return '{x}だとミルにならないから、相手の駒を取れないね。';
+      if (W.mill && G2.mill && W.rmThreat && !G2.rmThreat) return '{x}で取った駒は、相手の2つ並びとは関係ないの。相手のねらいが残っちゃう。';
+      if (W.mill && G2.mill && W.rmBlock && !G2.rmBlock) return '{x}で取った駒より、きみの線をふさいでいる駒を取ったほうが得だったね。';
+      if (G2.oppNow > W.oppNow) return '{x}のあと、相手にミルの点が残っちゃう。';
+      if (W.myNext >= 2 && G2.myNext < 2) return `{x}だと、きみのミルの点は${G2.myNext ? '1つだけ' : 'できない'}。相手にふさがれて終わりなんだ。`;
+      if (W.oppMob.n === 0 && G2.oppMob.n > 0) return `{x}だと、相手の駒にまだ逃げ道が${G2.oppMob.n}つ残るの。`;
+      if (G2.enter && !W.enter) return '{x}で空けた点に、相手の駒が入ってこられるの。ミルを閉じなおせなくなっちゃう。';
+      if ((lost(u) || V2(u) != null && V2(u) < vBest - 150) && G2.reply().fork && !W.reply().fork) return '{x}のあと、相手にミルの点を2つ同時に作られちゃう。片方しかふさげないね。';
+      if (G2.myMob.n < W.myMob.n - 1) return `{x}だと、きみの駒が動ける道が${G2.myMob.n}本に減って、閉じこめられやすくなるの。`;
+      if (G2.oppMob.n > W.oppMob.n + 1) return `{x}だと、相手の駒の動ける道が${G2.oppMob.n}本も残るの。`;
+      if (W.myNext > G2.myNext) return '{x}だと、きみのねらいの線が1本少なくなるの。';
+      if (W.place && G2.place && W.deg > G2.deg) return `{x}は${deg(G2.deg)}で、となりが${G2.deg}つしかないの。`;
+      return lost(u) || missW(u) ? '{x}だと、相手に形を立てなおされて苦しくなるの。' : '{x}も悪くないけど、AIの読みだと少し損なんだ。';
+    };
+    const plus = (W, Q) => { const o = [];
+      if (W.win) o.push('その場で勝ちになる');
+      else if (W.mill) o.push(W.rmThreat ? 'ミルを作って、相手の2つ並びもくずせる' : W.rmBlock ? 'ミルを作って、きみの線をふさぐ駒も取れる' : 'ミルを作って駒を1つ取れる');
+      else if (W.blocks) o.push('相手のミルの点をふさげる');
+      if (!W.win && W.myNext >= 2) o.push('ミルの点が2つできて、相手は両方ふさげない');
+      else if (!W.win && W.myNext === 1 && !W.mill) o.push('次はきみがミルをねらえる');
+      if (!W.win && W.opened && !W.enter) o.push('空けた点に相手が入れない');
+      if (!W.win && W.oppMob.n === 0) o.push('相手はもう動けない');
+      else if (!W.win && Q && W.myMob.n > Q.myMob.n + 1) o.push('きみの駒の動ける道を残せる');
+      else if (!W.win && Q && W.oppMob.n < Q.oppMob.n - 1) o.push('相手の駒の動ける道をへらせる');
+      return o.slice(0, 2).join('し、') || 'AIの読みでいちばんいい形になる'; };
+    const tail = Q => '{m}なら、' + plus(FA, Q) + 'から。';
+    const say = (u0, pref) => { const u = alt(u0, pref), G2 = u != null ? FF(u) : null; const w = G2 ? why(G2, u) : ''; return f(w + (/苦しく|少し損/.test(w) ? '' : G2 ? loss(u) : '') + tail(G2)); };
+    let good, ng;
+    const own = u => (u != null && right(u) && FF(u)) || FA;
+    switch (id) {
+      case 'b_place': case 'junction': {
+        good = u => { const W = own(u); return fg(W.deg >= 4 ? pick(['ホー！ {x}はとなりが4つの交差点。いちばん線が集まる場所だね。', 'いい場所！ 交差点はとなりが4つあるから、ミルにも守りにも使えるんだ。', 'ばっちり！ {x}から4方向へ線がのびているね。'])
+          : pick([`いい一手！ {x}は${deg(W.deg)}だけど、きみの駒と協力できる点なんだ。`, `ホー、読みが深いね！ {x}は先を見た好点。`, 'ばっちり！ あとでミルにも守りにも使える場所だね。'])); };
+        ng = u => { const v = alt(u, Q => Q.deg < FA.deg), Q = FF(v); return f(FA.deg > Q.deg ? `{x}は${deg(Q.deg)}で、となりは${Q.deg}つ。{m}は${deg(FA.deg)}で、となりが${FA.deg}つもあるから強い場所なんだ。` : why(Q, v) + tail(Q)); };
+        break; }
+      case 'b_mill': case 'b_move': case 'b_fly': case 'sx_nofly': case 'tw_diag': {
+        const how = id === 'b_move' || id === 'sx_nofly' ? '1歩動かして' : id === 'b_fly' ? '飛んで' : '置いて';
+        good = () => fg(pick([`ホー！ ${how}3つ並んでミル！ 相手の駒を1つ取れたね。`, `ミル完成！ ${id === 'tw_diag' ? 'ななめの線も、ちゃんとミルになるんだ。' : '2つ並んだ線の3つ目に入れたのがよかったね。'}`, `やったね、ミル！ 目がぱっちりさめたよ。`]));
+        ng = u => { const v = alt(u, Q => !Q.mill), Q = FF(v); return f(Q.mill ? why(Q, v) + tail(Q) : pick(['{x}だと3つ並ばないから、ミルにならないの。', '{x}では線がそろわないね。']) + `{m}なら、${how}${id === 'tw_diag' ? 'ななめに' : ''}3つそろうから。`); };
+        break; }
+      case 'b_take': {
+        good = () => fg(pick(['ホー！ ミルを作りながら、相手の2つ並びもくずせたね。一石二鳥！', 'いい取り方！ これで相手は次のミルを作れないんだ。', 'ばっちり！ 相手のねらいの駒を取ったから、ひと安心だね。']));
+        ng = u => { const v = alt(u, Q => Q.mill && !Q.rmThreat), Q = FF(v); return f(!Q.mill ? '{x}だとミルにならないから、駒を取れないの。{m}でミルを作って、相手の2つ並びの駒を取るんだ。' : '{x}で取った駒は、相手の2つ並びとは関係ないの。次に相手にミルを作られちゃう。{m}なら、ミルと同時に相手のねらいも消せたから。'); };
+        break; }
+      case 'b_block': case 'tw_dblock': {
+        good = () => fg(pick(['ホー、ナイスブロック！ これで相手はミルを作れないね。', 'ふう、ひと安心！ 相手の3つ目の点に先回りできたね。', 'ばっちり！ ふさいだから、駒を取られずにすむんだ。']));
+        ng = u => { const v = alt(u, Q => Q.oppNow > 0), Q = FF(v); return f(`{x}だと相手の${id === 'tw_dblock' ? 'ななめの' : ''}2つ並びの3つ目が空いたまま。次にそこへ置かれてミル、駒を取られちゃう。{m}でその点をふさげば守れたから。`); };
+        break; }
+      case 'b_reopen': {
+        good = () => fg(pick(['ホー！ 空けた点に相手は届かないね。次に戻せば、またミルなんだ。', 'うまい開き方！ 相手が割りこめないから、次の手でまた取れるね。', 'ばっちり！ これで同じミルを何度でも使えるよ。']));
+        ng = u => { const v = alt(u, Q => Q.enter || Q.oppNow > 0), Q = FF(v); return f(Q.oppNow > 0 ? '{x}だと、相手にミルの点をわたしちゃう。開いたすきに駒を取られるんだ。{m}なら、空いた点に相手が入れないから。' : Q.enter ? '{x}で空けた点には、相手の駒がとなりから入れるの。ふさがれたら閉じなおせないね。{m}なら、相手が届かないから。' : '{x}だと、次の手でミルを閉じなおせないの。{m}なら、戻ればまたミルになるから。'); };
+        break; }
+      case 'b_win': case 'sx_win': {
+        good = () => fg(FA.mill ? pick(['ホー、おみごと！ 相手の駒が2つになって、きみの勝ち！', '勝負あり！ ミルで最後の1つを取ったね。']) : pick(['ホー、おみごと！ 相手はどの駒も動けない。きみの勝ち！', '閉じこめ成功！ 相手の逃げ道がなくなったね。', '勝負あり！ 最後の逃げ道をふさげたね。']));
+        ng = u => { const v = alt(u, Q => !Q.win), Q = FF(v); return f(FA.mill ? (Q.mill ? '{x}だと、まだ勝ちにならないの。' : '{x}だとミルにならないから、相手の駒は3つのまま。') + '{m}ならミルで1つ取って、相手の駒が2つになるから。' : `{x}だと、相手の駒にまだ逃げ道が${Q.oppMob.n || 1}つ残るの。{m}なら、最後の逃げ道がふさがって動けなくなるから。`); };
+        break; }
+      default: {   // (the engine-scored steps)
+        const G0 = { mill: ['ホー、いい取り方！', 'ばっちり！', 'うまい、ミル！'], block: ['ナイスブロック！', 'ホー、しっかり守れたね！', 'ばっちり！'], remove: ['ホー、いい一枚！', 'ばっちり！', 'うまい取り方！'], fork: ['ホー、両取り成功！', 'みごと！', 'ばっちり！'],
+          counter: ['ホー、守りながら攻めたね！', 'ばっちり！', 'うまい！'], double: ['ホー、往復ミルの完成！', 'みごと！ 行ったり来たりの形だね。', 'ばっちり！'], openmill: ['ホー、うまい開き方！', 'いい向き！', 'ばっちり！'], mobility: ['ホー、先を見た一手だね！', 'ばっちり！', 'うまい！'],
+          blockade: ['ホー、閉じこめ成功！', 'ばっちり！', 'うまい！'], fly: ['ホー、いい飛び方！', 'ばっちり！', 'うまい！'], endgame: ['ホー、とどめの形だね！', 'ばっちり！', 'うまい！'], defend: ['ホー、よくしのいだね！', 'ばっちり、ここはこの受けしかなかったんだ。', 'うまい！'] }[id] || ['ホー、ばっちり！', 'いい一手だね！', 'うまい！'];
+        good = u => { const g = pick(G0), W = own(u), oth = wrongs().slice(0, 60).map(FF).filter(Boolean), Qm = oth.length ? { myMob: { n: Math.round(oth.reduce((a, q) => a + q.myMob.n, 0) / oth.length) }, oppMob: { n: Math.round(oth.reduce((a, q) => a + q.oppMob.n, 0) / oth.length) } } : null;   // (mobility against the other moves on average)
+          return fg(g + ' この一手で、' + plus(W, Qm) + (/んだ。$/.test(g) ? '！' : 'んだ。')); };
+        ng = u => say(u, Q => Q.oppNow > 0 || (FA.mill && !Q.mill) || Q.enter);
+      }
+    }
+    return { ask: pick(A0), hintTx, good, ng, own: true };
+  }
   const MORRIS = {
     LKEY: 'aicoding-morris-lessons', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261116`))), Promise.all(['../morris/i18n.js?v=20261116', '../morris/i18n_more.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n'))])
+      return (this.p = Promise.all([Promise.all(MMV.map(v => getJ(`../morris/lessons${v === 'nine' ? '' : '-' + v}.json?v=20261116`))), Promise.all(['../morris/i18n.js?v=20261116', '../morris/i18n_more.js?v=20261116'].map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(a => a.join('\n;\n')), mrEng().catch(() => null)])
         .then(([L, T]) => { const w = {}; try { new Function('window', T)(w); } catch (e) { console.warn('[lessons3d] morris texts', e); } this.I = w.I18N || {};
           const steps = []; L.forEach((d, k) => d.steps.forEach(s => { if (s.problems && s.problems.length) steps.push(Object.assign({ v: MMV[k] }, s)); })); this.data = { steps }; return this; })
         .catch(e => { this.p = null; throw e; }));
@@ -3084,11 +3276,11 @@
     lesson(key, lang) {
       const s = this.data.steps[+key]; if (!s) return null;
       const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), sp = { m: TFM('ok', lang), x: TFM('ng', lang) };
-      return { id: s.id, title: T('title'), intro: noCoord(T('intro')), ramp: null,
+      return { id: s.id, title: T('title'), intro: lang === 'ja' && MRJ_LS.intro[s.id] || noCoord(T('intro')), ramp: null,
         probs: s.problems.map(P => { const me = P.s.side === 2 ? 2 : 1, ans = P.best != null ? P.best : P.ok[0], good = P.ok || [ans];
           const pts = [...new Set(good.map(m => s.id === 'b_reopen' || MF(m) !== MN && !P.ok ? MF(m) : MT(m)))];
           return { pos: { spec: { v: s.v, s: P.s }, me }, kind: 'best', P, me, ask: noCoord(T('goal')), ans, hintTx: noCoord(T('hint')), hint: pts,
-            why: '', good: () => noCoord(T('why', sp)), ng: () => noCoord(P.ok ? T('ng', sp) || T('why', sp) : T('why', sp)) }; }),
+            why: '', good: () => noCoord(T('why', sp)), ng: () => noCoord(P.ok ? T('ng', sp) || T('why', sp) : T('why', sp)) }; }).map((o, i) => { if (lang === 'ja' && window.MorrisEngine) try { Object.assign(o, mrLsJa(window.MorrisEngine, s, o.P, i, k => TFM(k, lang)) || {}); } catch (e) { console.warn('[lessons3d] morris lesson', e); } return o; }),   // (2026-11-21 lesson loop: モリフク's question, hint, why / what yours misses)
         save: (pts, max) => { const pr = J(this.LKEY, {}), k = MMPRE(s.v) + s.id, o = pr[k] || { best: 0, clear: false }, pass = pts >= max * .75; pr[k] = { best: Math.max(o.best || 0, Math.round(pts / max * 100)), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     points(P, m) {   // (= morris/index.html problemPoints)
@@ -3613,7 +3805,7 @@
       }
       if ((id === 'checkers' || id === 'xiangqi' || id === 'amazons' || id === 'tafl' || id === 'morris' || id === 'dots') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;   // (p.own: the guide names the green arrow herself — the heading is only 「おしい！」)
-        say(`${right ? line('solved') || pick(X.good) : p.own ? (pts > 0 ? 'いい線いってる！' : 'おしい！') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
+        say(`${right ? (p.own && id === 'morris' ? '' : line('solved') || pick(X.good)) : p.own ? (pts > 0 ? 'いい線いってる！' : 'おしい！') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
         later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || p.ans == null ? [] : [[{ m: p.ans }, 'ok']]), [{ m: u }, right ? 'ok' : 'ng']]); }, 900);
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
