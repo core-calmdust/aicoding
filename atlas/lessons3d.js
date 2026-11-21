@@ -240,7 +240,7 @@
     },
     chess: {
       ja: { hi: 'やあ、ナイトンだよ！ 今日のレッスン、いっしょにピョンピョンがんばろう！', partial: 'いい手だね！ でもいちばんは光ってる手なんだ。', wrong: 'おしい〜！ 正解は光ってる手だよ。',
-        pass: 'やったね、合格！ {p} / {m}点。ぼく、うれしくて跳ねちゃう！', fail: '{p} / {m}点。合格は{q}点だよ。もう一回いってみよう！', end: '手順はここまで！ 次は練習問題で腕だめしだ！',
+        pass: 'やったね、合格！ {p} / {m}点。この調子で、次のレッスンも行こう！', fail: '{p} / {m}点。合格は{q}点だよ。もう一回いってみよう！', end: '手順はここまで！ 次は練習問題で腕だめしだ！',
         endOnly: '基本の手順はここまで。おつかれさま！', opGoal: 'この局面、強い人がいちばん指した手はどれだと思う？', hintSay: 'こっそり教えちゃう。光ってるところに注目！', escaped: 'あらら、キングに逃げられちゃった…' },
       en: { hi: 'Hi, Knighton here! Let\'s hop through today\'s lesson together!', partial: 'Nice move! But the glowing one is the best.', wrong: 'So close! The glowing move is the answer.',
         pass: 'Hooray, you passed! {p} / {m} pts. I could hop all day!', fail: '{p} / {m} pts — {q} to pass. Let\'s hop back in!', end: 'That\'s the line! Now let\'s test it on the practice positions!',
@@ -912,6 +912,154 @@
     }
     return { ask, hintTx, good, ng };
   }
+  // (2026-11-21 23:10 user: 淡々としている・応援していない・同じセリフの繰り返し) chess lessons: ナイトン cheers the player — a word of praise
+  // (and now and then a push on) before the why, a soft word with the correction, and a hint already given in the lesson swapped for another
+  const CHC = { good: ['いいね！', 'さすが！', 'お見事！', 'ナイス！', 'ばっちり！'], push: { 1: 'この調子で次も行こう！', 3: 'どんどん行こう！' },
+    soft: [t => '大丈夫、ここで覚えよう！ ' + t, t => t + ' 次はきっと見つけられるピョン！', t => 'あと一歩だったね。' + t, t => t + ' 覚えておけば、次は迷わない！', t => 'いい線いってたよ！ ' + t],
+    hint: ['動ける駒を、ひとつずつ確かめてみて！', '相手の次の一手も想像してみようピョン。', 'あせらずに、候補の手をくらべてみて！', '指したあと、取られる駒がないかも確かめよう！', 'いちばん強い手から考えるのがコツだピョン！'] };
+  function chCheerJa(probs, lang) {
+    if (lang !== 'ja') return probs; const seen = new Set();
+    probs.forEach((o, i) => {
+      if (o.hintTx) { if (seen.has(o.hintTx)) o.hintTx = CHC.hint[i % CHC.hint.length]; seen.add(o.hintTx); }
+      const g = o.good, n = o.ng;
+      if (typeof g === 'function') o.good = u => { const t = g.call(o, u) || ''; return t ? `${/^(いいね|さすが|お見事|ナイス|ばっちり)/.test(t) ? '' : CHC.good[i % 5] + ' '}${t}${CHC.push[i] ? ' ' + CHC.push[i] : ''}` : t; };
+      if (typeof n === 'function') o.ng = u => { const t = n.call(o, u) || ''; return t ? CHC.soft[i % 5](t) : t; };
+    });
+    return probs;
+  }
+  /* (2026-11-21 lesson loop, user: 駒の動き8本にも手順から問題を作る) chess's beginner ★ drills: after the ★ stages, 3 problems from
+     the stages' shortest routes — 「次にどこへ動かす？」 at a position on a shortest route (right = every move that keeps the route
+     shortest; a 'safe' stage bars the squares a black piece attacks, as the drill does). Solved here by a breadth-first search over
+     (square, piece, black pieces left, ★ left) — the black pieces never move, a ★ is taken by landing on it (= chess/app.js drillMove). */
+  const CDQ = {
+    pk: { r: 'ルーク', b: 'ビショップ', q: 'クイーン', k: 'キング', n: 'ナイト', p: 'ポーン' },
+    how: { r: 'タテ・ヨコの線', b: 'ナナメの線', q: '長い線', k: '1マスの歩み', n: 'L字の跳び', p: 'まっすぐな前進' },
+    ask: {
+      b_rook: ['さあ、ここからは問題ピョン！ ★を最短で集めるには、ルークを次にどこへ動かす？', 'ルークの次の行き先はどこかな？ 遠回りしない道を選んでね！', '残りの★を一番少ない手数で取りたい。きみならどのマスへ進める？'],
+      b_bishop: ['ここからは問題ピョン！ ビショップの次の一手で、★への近道はどれ？', 'ナナメの道を使って、手数を少なく集めるには？', '残りの★、どの順で回る？ 最初に進むマスを選んでね！'],
+      b_queen: ['問題の時間ピョン！ クイーンを次にどこへ動かせば、最短で★が集まる？', '8方向に動けるクイーン。いちばんムダのない一手はどれかな？', '★を全部取るまで何手？ その最短コースの最初の一手を指して！'],
+      b_king: ['ここからは問題ピョン！ キングの次の一歩、どこが最短？', '1マスずつのキングでも、ムダなく歩けるかな？', 'あと何歩で★が全部集まる？ 近道の一歩を選んでね！'],
+      b_knight: ['いよいよ問題ピョン！ ナイトをどこへ跳ばせば、★に一番早く届く？', 'L字の跳び先はたくさん。最短コースに乗るのはどれかな？', 'ぼくの得意な跳び、きみも使いこなせる？ 次の跳び先を選んで！'],
+      b_pawn: ['ここからは問題ピョン！ ポーンを次にどう進める？', 'まっすぐ？ それともナナメに取る？ 一番の近道はどっちかな？', '★まで最短で行く一手、見つけられる？'],
+      b_capture: ['問題の時間ピョン！ 黒い駒を最短で取りつくすには、次にどこへ動かす？', 'どの駒から取りに行く？ 取る順番がポイントだよ！', '残りの★、少ない手数で回収できるかな？ 次の一手を選んで！'],
+      b_safety: ['ここからは問題ピョン！ しましまを避けて最短で★へ行くには、次にどこ？', '取られないマスだけで、一番の近道はどれかな？', '安全第一、でもムダは少なく！ 次の一手はどこ？'],
+    },
+    hint: {
+      r: ['ルークはタテとヨコにまっすぐ。★と同じ列か段に入れるマスはどこかな？', '次の手で★に届かなくても平気。2手目で★を取れる場所を考えてみて！', '曲がり角になるマスを決めると、道すじが見えてくるピョン！'],
+      b: ['ビショップはナナメにだけ進む。★とナナメに並ぶマスを探してみて！', '★を2つ、ナナメの線でつなげられないかな？', 'ナナメの線が交わるマスに立つと、次の★を取りやすいピョン。'],
+      q: ['クイーンはタテ・ヨコ・ナナメのどれでも行ける。2つの★の両方に届くマスはある？', '取る順番を変えると、手数がへることもあるピョン！', 'ナナメを使うと近道になるかも？ 8方向ぜんぶ見てみて！'],
+      k: ['キングは1マスずつ。★までのマス数を数えてみよう！', 'ナナメに1歩動くと、タテとヨコを同時に1つ進めるピョン。', 'どの★から回ると、行ったり来たりしないですむかな？'],
+      n: ['今いるマスから跳べる先を、全部思いうかべてみて！', '★にすぐ届かないときは、2回の跳びで届くマスを探すピョン。', '跳ぶたびにマスの色が変わる。★のマスの色から、あと何回跳ぶか考えてみて！'],
+      p2: '最初の1回だけは、2マス進めるのを覚えてる？', px: '駒を取るときだけは、ナナメ前に進めるピョン。', pf: 'ポーンは前にまっすぐ1マスずつ。後ろには戻れないから、慎重にね！',
+      cap: '取ったあとの位置からも、次の駒をねらえるかな？', safe: '赤いしましまのマスには入れないピョン。ねらわれていないマスを伝っていこう！',
+    },
+    good: [
+      (x, R) => `いいね、${x}で正解！ ${R} この調子で次も行こう！`,
+      (x, R) => `お見事！ ${x}が最短コースだピョン。${R}`,
+      (x, R) => `さすが、よく見つけたね！ ${x}、ばっちり。${R} どんどん上手になってるピョン！`,
+    ],
+    ng: [
+      (m, x, W) => `大丈夫、ここで覚えればいい！ ${m}が近道だったピョン。${x}だと、${W}`,
+      (m, x, W) => `あと少し！ 正解は${m}。${x}では、${W}`,
+      (m, x, W) => `${m}を選べたら満点だったね。${x}にすると、${W} 次はいけるはず！`,
+    ],
+  };
+  function cdBoard(fen) { const b = Array(64).fill(''); String(fen).split(' ')[0].split('/').forEach((row, i) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) f += +ch; else { b[(7 - i) * 8 + f] = ch; f++; } } }); return b; }
+  const cdName = q => 'abcdefgh'[q & 7] + ((q >> 3) + 1), cdSq = n => (+n[1] - 1) * 8 + 'abcdefgh'.indexOf(n[0]);
+  const CD_DIR = { r: [[1, 0], [-1, 0], [0, 1], [0, -1]], b: [[1, 1], [1, -1], [-1, 1], [-1, -1]], n: [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]] };
+  CD_DIR.q = CD_DIR.k = CD_DIR.r.concat(CD_DIR.b);
+  function cdAtt(occ, pc, q, black) {   // the squares a piece on q attacks (a black pawn: diagonally down)
+    const out = [], r0 = q >> 3, f0 = q & 7, ok = (r, f) => r >= 0 && r < 8 && f >= 0 && f < 8;
+    if (pc === 'p') { const dr = black ? -1 : 1; [-1, 1].forEach(df => { if (ok(r0 + dr, f0 + df)) out.push((r0 + dr) * 8 + f0 + df); }); return out; }
+    const slide = 'rbq'.includes(pc);
+    for (const [dr, df] of CD_DIR[pc]) { let r = r0 + dr, f = f0 + df; while (ok(r, f)) { out.push(r * 8 + f); if (!slide || occ[r * 8 + f]) break; r += dr; f += df; } }
+    return out;
+  }
+  function cdMoves(S, st) {   // S: { blk: [[sq, pc]…], stars: [sq…], safe }; st: { q, pc, bm (black alive bits), sm (★ left bits) }
+    const occ = Array(64).fill(0); S.blk.forEach(([q], i) => { if (st.bm >> i & 1) occ[q] = 2; });
+    const out = [], r0 = st.q >> 3, f0 = st.q & 7, ok = (r, f) => r >= 0 && r < 8 && f >= 0 && f < 8;
+    const add = (to, promo) => { if (occ[to] === 1) return; out.push({ to, promo }); };
+    if (st.pc === 'p') {
+      const one = st.q + 8; if (r0 < 7 && !occ[one]) { add(one, r0 + 1 === 7 ? 'q' : ''); if (r0 === 1 && !occ[one + 8]) add(one + 8, ''); }
+      [-1, 1].forEach(df => { if (r0 < 7 && ok(r0 + 1, f0 + df) && occ[(r0 + 1) * 8 + f0 + df] === 2) add((r0 + 1) * 8 + f0 + df, r0 + 1 === 7 ? 'q' : ''); });
+    } else cdAtt(occ, st.pc, st.q, false).forEach(to => add(to, ''));
+    return out.filter(m => {
+      if (!S.safe) return true;
+      const o2 = occ.slice(); o2[m.to] = 0;   // (= drillDanger: the moving piece and the square's own piece left out)
+      return !S.blk.some(([q, pc], i) => (st.bm >> i & 1) && q !== m.to && cdAtt(o2, pc.toLowerCase(), q, true).includes(m.to));
+    }).map(m => {
+      const n = { q: m.to, pc: m.promo || st.pc, bm: st.bm, sm: st.sm };
+      S.blk.forEach(([q], i) => { if (q === m.to) n.bm &= ~(1 << i); });
+      S.stars.forEach((q, i) => { if (q === m.to) n.sm &= ~(1 << i); });
+      return { u: cdName(st.q) + cdName(m.to) + m.promo, to: m.to, promo: m.promo, st: n, star: n.sm !== st.sm, cap: n.bm !== st.bm };
+    });
+  }
+  function cdDist(S, st, memo) {   // the fewest moves to take every ★ left (breadth first)
+    const key = s => s.q + s.pc + ':' + s.bm + ':' + s.sm, k0 = key(st); if (memo.has(k0)) return memo.get(k0);
+    if (!st.sm) { memo.set(k0, 0); return 0; }
+    let front = [st], d = 0; const seen = new Set([k0]);
+    while (front.length && d < 14) { d++; const nx = [];
+      for (const s of front) for (const m of cdMoves(S, s)) { if (!m.st.sm) { memo.set(k0, d); return d; } const k = key(m.st); if (!seen.has(k)) { seen.add(k); nx.push(m.st); } }
+      front = nx; }
+    memo.set(k0, 99); return 99;
+  }
+  function cdFen(S, st) {
+    const b = Array(64).fill(''); S.blk.forEach(([q, pc], i) => { if (st.bm >> i & 1) b[q] = pc; }); b[st.q] = st.pc.toUpperCase();
+    const rows = []; for (let r = 7; r >= 0; r--) { let s = '', e = 0; for (let f = 0; f < 8; f++) { const c = b[r * 8 + f]; if (c) { if (e) s += e; e = 0; s += c; } else e++; } if (e) s += e; rows.push(s); }
+    return rows.join('/') + ' w - - 0 1';
+  }
+  function chDrillQs(s) {
+    const cands = [];
+    (s.stages || []).forEach((g, gi) => {
+      const b = cdBoard(g.fen), blk = [], stars = (g.stars || []).map(cdSq); let st = null;
+      b.forEach((c, q) => { if (!c) return; if (c === c.toUpperCase()) st = { q, pc: c.toLowerCase() }; else blk.push([q, c]); });
+      if (!st) return; const S = { blk, stars, safe: !!g.safe }, memo = new Map();
+      st.bm = (1 << blk.length) - 1; st.sm = (1 << stars.length) - 1;
+      for (let step = 0; st.sm && step < 12; step++) {
+        const d = cdDist(S, st, memo), ms = cdMoves(S, st).map(m => Object.assign(m, { d: cdDist(S, m.st, memo) }));
+        const ok = ms.filter(m => 1 + m.d === d);
+        if (ms.length >= 3 && ok.length < ms.length && !ms.some(m => m.promo)) cands.push({ gi, step, S, st, d, ms, ok, left: stars.filter((q, i) => st.sm >> i & 1).length });
+        if (!ok.length) break; st = ok[0].st;
+      }
+    });
+    // three problems from the later (harder) stages: a position with two ★ or more first, a new position (not a stage's start) before one
+    const pickd = [], used = new Set();
+    for (const pass of [0, 1, 2]) for (let gi = (s.stages || []).length - 1; gi >= 0 && pickd.length < 3; gi--) {
+      if (pass < 2 && used.has(gi)) continue;
+      const c = cands.filter(x => x.gi === gi && !pickd.includes(x)).sort((a, b) => (b.left >= 2) - (a.left >= 2) || (b.step > 0) - (a.step > 0) || a.step - b.step)[0];
+      if (!c || (pass === 0 && c.left < 2)) continue; pickd.push(c); used.add(gi);
+    }
+    pickd.sort((a, b) => a.gi - b.gi || a.step - b.step);
+    const sid = s.id, used2 = new Set(), once = t => { if (!t || used2.has(t)) return ''; used2.add(t); return t; };
+    return pickd.map((c, i) => {
+      const pc = c.st.pc, N = CDQ.pk[pc], how = CDQ.how[pc], ans = c.ok[0].u, okU = c.ok.map(m => m.u);
+      const by = u => c.ms.find(m => m.u === u), stars = c.S.stars.filter((q, j) => c.st.sm >> j & 1).map(cdName);
+      const reach = m => cdMoves(c.S, m.st).filter(n => n.star).length;   // (★ the piece can take on its next move)
+      let hintTx = sid === 'b_pawn' && pc === 'p' ? (c.ms.some(m => m.cap) ? CDQ.hint.px : (c.st.q >> 3) === 1 ? CDQ.hint.p2 : CDQ.hint.pf) : (CDQ.hint[pc] || CDQ.hint.q)[i % 3];
+      if (sid === 'b_capture') hintTx += ' ' + (once(CDQ.hint.cap) || '');
+      if (c.S.safe) hintTx = (once(CDQ.hint.safe) || '') + (i ? ' ' + hintTx : '');
+      const V = arr => arr[i % arr.length];
+      const whyR = m => { const r = m.d, nx = reach(m), cp = CH_PN[(c.S.blk.find(([q]) => q === m.to) || [0, 'p'])[1].toLowerCase()] || '駒';
+        if (m.star && !r) return V(['最後の★までひとっ飛び、これで全部集まったね。', '残っていた★を一気に回収！ 手数もぴったり。', 'これで★はゼロ。ムダな手がひとつもなかった！']);
+        if (m.cap && r) return V([`黒い${cp}を取って、次の★へも${how}がつながる。残りあと${r}手！`, `${cp}を取ったマスが、そのまま次への近道になってる。`, `${cp}を取りつつ、次の★まで${r}手。順番がばっちり！`]);
+        if (m.star) return V([nx ? '★を取ったマスから、次の★にもすぐ届くからね。' : `★を取ったあと、残り${r}手で全部取れるから。`, nx ? '★を取りながら、次の★まで一直線につながるピョン。' : `先にこの★を取っておくと、あと${r}手で終わる。`, nx ? '取ったその場所から、次の★がもう射程に入ってる！' : `この★からなら、残りもあと${r}手で回れる。`]);
+        if (m.promo) return 'ここで成ってクイーンに！ 動ける方向がいっきに増えるピョン。';
+        return nx ? V([`★はまだ取らないけど、次の手で★に届くマス。${pc === 'k' ? 'ムダな一歩がない' : 'ちょうどいい中継地点'}！`, `いったんここへ寄ると、次の${how}で★に届くんだ。`, '寄り道に見えて、じつは次の★への近道なんだ。']) : V([`ここからなら残り${r}手で全部集まる。遠回りゼロ！`, `このマスを通ると、あと${r}手で終わる道すじになるピョン。`, `急がば回れ！ ここを通るのが、あと${r}手の最短コース。`]); };
+      const alt = u0 => { const m0 = u0 && by(u0); if (m0 && !okU.includes(u0)) return m0; return c.ms.filter(m => !okU.includes(m.u)).sort((a, b) => b.star - a.star || a.d - b.d)[0]; };
+      const whyW = (m, x) => { const e = 1 + x.d - c.d;
+        if (x.star && x.d) return V([`★は取れるけど、残りの★が遠くなって${e}手よけいにかかっちゃう。取る順番が大事なんだ。`, `目の前の★に飛びつくと、残りが遠回りで${e}手のロス。先を読むのがコツ！`, `★をひとつ取れても、そのあとが${e}手長くなる。順番を入れかえてみよう！`]);
+        if (pc === 'p' && !x.star && !x.cap && (x.d >= 99 || e >= 3)) return V(['ポーンは後ろに戻れないから、★のある段を通りすぎると取りに戻れない。', 'まっすぐ進むと、ナナメ前の★が取れなくなっちゃう。ポーンは戻れないからね。', '前に進んだポーンは戻れない。★を取るチャンスが消えちゃうんだ。']);
+        if (x.d >= 99) return 'そこへ行くと、もう全部の★は取れなくなっちゃう。';
+        if (x.cap) return V([`じゃまな駒を取っても、★まで${e}手の遠回りになる。`, `その駒を取るのは寄り道。★まで${e}手よけいにかかる。`, `駒を取っても★には近づかなくて、${e}手のムダが出る。`]);   // (a capture off the ★: a blocker taken — on a ★ it is the branch above)
+        if (!reach(x)) return V([`そのマスからは次の手で届く★がひとつもないから、${e}手遠回りになるピョン。`, `次の手で★をねらえない場所だから、${e}手ぶん損しちゃう。`, `次の手で届く★がなくて、${e}手よけいにかかるんだ。`]);
+        return V([`★はねらえるけど、道すじがずれて${e}手のロス。${m.star ? '取れる★は先に取っておこう！' : ''}`, `★には近づくけど、回る順がずれて${e}手長くなる。${m.star ? 'すぐ取れる★を見のがさないでね。' : ''}`, `届く★はあるけど、全部まわると${e}手のムダ。${m.star ? '先に取れる★があったんだ。' : ''}`]); };
+      const o = { pos: cdFen(c.S, c.st), kind: 'best', drill: { stars, safe: c.S.safe }, P: { ok: okU }, ans, hintTx,
+        ask: CDQ.ask[sid] ? CDQ.ask[sid][i % 3] : `${N}を次にどこへ動かす？`,
+        good: u => { const m = (u && okU.includes(u) && by(u)) || c.ok[0]; return CDQ.good[i % 3]('{x}', whyR(m)); },
+        ng: u0 => { const x = alt(u0); if (!x) return ''; return CDQ.ng[i % 3]('{m}', '{x}', whyW(c.ok[0], x)); } };
+      return o;
+    });
+  }
   const CHESS = {
     LKEY: 'aicoding-chess-lessons', OKEY: 'aicoding-chess-open', data: null, I: null,
     load() {
@@ -941,13 +1089,15 @@
     lesson(key, lang) {
       const s = this.data.ls.steps[+key]; if (!s) return null;
       const T = k => this.tx('ls.' + s.id + '.' + k, lang);
-      if (s.kind === 'drill') return { id: s.id, title: T('title'), intro: T('intro'), goal: T('goal'), drill: s.stages, probs: [], dx: k => this.tx(k, lang),   // ★ stages (= chess/app.js drillMove: 3 ★ within par, 2 within par + 2, else 1; always passed)
-        save: n => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }; pr[s.id] = { best: Math.max(o.best || 0, n), clear: true }; put(this.LKEY, pr); return true; } };
+      if (s.kind === 'drill') return { id: s.id, title: T('title'), intro: T('intro'), goal: T('goal'), drill: s.stages, dx: k => this.tx(k, lang),
+        probs: lang === 'ja' ? (() => { try { return chDrillQs(s); } catch (e) { console.warn('[lessons3d] chess drill problems', e); return []; } })() : [],   // (2026-11-21 lesson loop: 3 problems from the stages' shortest routes, after the ★ — ja)
+        qsave: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= 75; pr[s.id] = { best: o.best || 0, clear: o.clear || pass }; put(this.LKEY, pr); return pass; },   // ★ stages (= chess/app.js drillMove: 3 ★ within par, 2 within par + 2, else 1; always passed)
+        save: (n, max, q) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }; pr[s.id] = { best: Math.max(o.best || 0, n), clear: o.clear || !q }; put(this.LKEY, pr); return true; } };   // (q: problems follow — cleared by them)
       const V = lang === 'ja' ? (this.V || {}) : {};
       const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L((this.data.ls.rampUi || {})[k], lang), v || {});
       const ramp = s.ramp && s.ramp.length ? s.ramp.map((it, j) => { const o = Object.assign({}, it); ['t', 'b', 'g', 'h', 'y'].forEach(f => { const v = V[`ramp:${s.id}/${j}/${f}`]; if (v != null) o[f] = { ja: v, __voice: true }; }); return o; }) : null;
       return { id: s.id, title: T('title'), intro: T('intro'), ramp, RU,   // (the warm-up before the scored problems: explain / try — not scored)
-        probs: (s.problems || []).map((p, i) => { const o = { pos: p.fen, kind: 'best', P: p, ask: T('goal'), why: T('why'), ngTx: T('ng'), ans: p.best || (p.ok || [])[0] }; if (lang === 'ja' && o.ans) try { Object.assign(o, chLsJa(s.id, o, i) || {}); } catch (e) { console.warn('[lessons3d] chess lesson', e); } return o; }),   // (2026-11-21 lesson loop: ナイトン's question, hint, why / what yours misses)   // (ngTx: the wrong answer's own words where the lesson has them)
+        probs: chCheerJa((s.problems || []).map((p, i) => { const o = { pos: p.fen, kind: 'best', P: p, ask: T('goal'), why: T('why'), ngTx: T('ng'), ans: p.best || (p.ok || [])[0] }; if (lang === 'ja' && o.ans) try { Object.assign(o, chLsJa(s.id, o, i) || {}); } catch (e) { console.warn('[lessons3d] chess lesson', e); } return o; }), lang),   // (2026-11-21 lesson loop: ナイトン's question, hint, why / what yours misses)   // (ngTx: the wrong answer's own words where the lesson has them)
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
@@ -4035,6 +4185,7 @@
       };
       pz().wait();
     }
+    const DQ_GO = ['全部★3つ、すごいピョン！ 次は、いまの道すじから問題を3つ。最短の一手を選んでね！', 'よくがんばったね！ 次は、いまの道すじから問題を3つ。最短の一手を探してみよう！'];
     /* ---------- chess's beginner drills (2026-11-13): move the piece and take every ★ — the full game's stages, texts and ★ ---------- */
     const dfen = st => st.fen.split(' ').length > 1 ? st.fen : st.fen + ' w - - 0 1';
     async function drill(i) {
@@ -4060,7 +4211,15 @@
       pz().wait();
     }
     function drillDone() {
-      phase = 'done'; const n = cur.stars.reduce((a, b) => a + (b || 0), 0), max = cur.drill.length * 3; cur.save(n, max); dots();
+      const n = cur.stars.reduce((a, b) => a + (b || 0), 0), max = cur.drill.length * 3;
+      if (cur.qs && cur.qs.length) {   // (2026-11-21 lesson loop: the ★ done, problems from the routes follow — the lesson is cleared by them)
+        cur.save(n, max, true); phase = 'done'; dots(); try { chime(true); } catch (e) {}
+        say(`★集め、おつかれさま！ <b>★ ${n} / ${max}</b><br>${DQ_GO[n >= max ? 0 : 1]}`);
+        act(X.next, { again: true }); $('[data-a=again]').onclick = () => open(cur.key);
+        $('[data-a=next]').onclick = () => { cur.drill = null; cur.probs = cur.qs; cur.save = cur.qsave; cur.res = []; cur.k = 0; prob(); };
+        return;
+      }
+      phase = 'done'; cur.save(n, max); dots();
       say(`${cur.dx('ls.passed')} <b>★ ${n} / ${max}</b><br>${cur.dx('dr.more')}`);
       if (window.AtlasConfetti) try { AtlasConfetti(70); } catch (e) {}
       setTimeout(fanfare, 350);
@@ -4081,7 +4240,7 @@
       // (2026-11-14) while the introduction is read, the board shows the lesson's own picture (its diagram) for looking only — never the
       // first problem: no ★, no answer marks, nothing to move until はじめる
       const intro = () => { const ip = D.introPos && D.introPos(cur); if (!ip) return; board(ip.pos, [], ip.drill, ip.lock).then(() => { if (stopped || phase !== 'intro' || !pz()) return; if (ip.annot && pz().annot) pz().annot(ip.annot); if (ip.marks && pz().mark) pz().mark(ip.marks); }); };
-      if (cur.drill) { cur.stars = []; cur.probs = cur.drill.map(() => ({})); act(X.start); $('[data-a=next]').onclick = () => drill(0); intro(); return; }
+      if (cur.drill) { cur.stars = []; cur.qs = cur.probs || []; cur.probs = cur.drill.map(() => ({})); act(X.start); $('[data-a=next]').onclick = () => drill(0); intro(); return; }
       act(X.start); $('[data-a=next]').onclick = () => (ctx.kind === 'open' && cur.steps.length ? study() : cur.ramp ? ramp(0) : prob());
       if (ctx.kind === 'open' && cur.start) board(cur.start);   // (the opening's start position is on the table while reading)
       else intro();
@@ -4123,7 +4282,7 @@
       phase = 'prob'; const p = cur.probs[cur.k]; if (!p) return finish();
       p.hinted = false; p.used = 0; dots(); act(X.next, { nextOn: false });
       say(sideLine(p) + (id === 'reversi' && cur.k === RV_NUMS() && RV_SELF[ctx.lang] ? RV_SELF[ctx.lang] + '<br>' : '') + (p.ask || X.opGoal));
-      await board(p.pos, p.sol); if (stopped || cur.probs[cur.k] !== p) return;
+      await board(p.pos, p.sol, p.drill); if (stopped || cur.probs[cur.k] !== p) return;   // (p.drill: a chess ★ route problem — the ★ left on the table)
       onMoved = (u, info) => moved(p, u, info);
       if (p.marks && p.marks.length && pz().mark) pz().mark(p.marks);
       choices(p);
@@ -4297,7 +4456,7 @@
       const Wm = t => t && /\{[mx]\}/.test(t) ? fill(t, { m: '<b>' + (moveName(p.pos, p.ans) || SP('ok', ctx.lang)) + '</b>', x: '<b>' + (moveName(p.pos, u) || '') + '</b>' }) : t;
       const whyR = Wm((id === 'chess' || id === 'shogi') && typeof p.good === 'function' ? p.good(u) : p.why), whyW = Wm(((id === 'shogi' || id === 'chess') && p.ng ? p.ng(u) : '') || p.ngTx || (p.why || '').replace(/^\s*(正解|Correct|Right)[！!]\s*/, ''));   // (shogi: why the move played falls short, 2026-11-21)
       if (pts >= 16) say(`${(p.kind === 'tsume' ? line('solved') : okLine()) || pick(X.good)} <b>${fill(X.pts, { n })}</b>${whyR ? '<br>' + whyR : ''}`);
-      else { if (p.ans) pz().mark(p.ans); const mvN0 = p.kind !== 'tsume' && p.ans ? moveName(p.pos, p.ans) : '', nm = p.kind !== 'tsume' && p.ans && !(mvN0 && whyW && whyW.replace(/<[^>]+>|\s/g, '').includes(mvN0.replace(/\s/g, ''))), mvN = nm ? mvN0 : ''; say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSP[ctx.lang] || ANSP.en)) : ''}${whyW ? '<br>' + whyW : ''}`);
+      else { if (p.ans) { if (p.drill) pz().undo(1); pz().mark(p.ans); } const mvN0 = p.kind !== 'tsume' && p.ans ? moveName(p.pos, p.ans) : '', nm = p.kind !== 'tsume' && p.ans && !(mvN0 && whyW && whyW.replace(/<[^>]+>|\s/g, '').includes(mvN0.replace(/\s/g, ''))), mvN = nm ? mvN0 : ''; say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + (mvN ? fill(ANSW[ctx.lang] || ANSW.en, { m: '<b>' + mvN + '</b>' }) : (ANSP[ctx.lang] || ANSP.en)) : ''}${whyW ? '<br>' + whyW : ''}`);
         if (nm && !mvN) { const k = cur.k, mk = p.ans; later(async () => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz() || !pz().play) return; try { let r = await pz().play(mk); if (r === false) { pz().undo(1); await sleep(250); r = await pz().play(mk); } if (r === false) return; await sleep(1600); if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark(mk); } catch (e) { console.warn('[lessons] show move', e); } }, 1000); } }   // (the move is shown on the board, not named: no coordinates, 2026-11-14)
       try { chime(pts >= 16); } catch (e) {}
       act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
@@ -4364,6 +4523,7 @@
     Promise.all([D.load(ctx.lang), ncLoad(id), lsvLoad(ctx.lang)]).then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
     const dbg = { state: () => cur && { key: cur.key, phase, k: cur.k, si: cur.si, res: cur.res.slice(), ans: cur.probs[cur.k] && cur.probs[cur.k].ans, ramp: phase === 'ramp' && cur.ramp && cur.ramp[cur.ri] ? cur.ramp[cur.ri].ans : undefined, moves: cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.f ? Object.keys(cur.probs[cur.k].P.f).map(Number) : cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.cand ? cur.probs[cur.k].P.cand.map(c => c[0]) : null, say: $('.tx').textContent },
       toProb: () => { if (cur && cur.probs.length) { cur.k = 0; prob(); } },   // (test hook: straight to the problems)
+      drillEnd: () => { if (cur && cur.drill) drillDone(); },   // (test hook: a chess ★ drill done — on to its route problems)
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return;
         if (p.kind === 'bgplay') { const m = typeof u === 'string' ? u : p.best(), c = bgCodes(p.bgPos, m), q = bgDecP(p.bgPos); c.moves.forEach(x => BG.apply(q, 0, BG.mvFrom(x), BG.mvTo(x))); await pz().play(c.moves); return moved(p, { key: c.key, steps: c.moves, pos: q }); }   // (backgammon: a play by the json's letter pairs)
         u = u == null || u === '' ? p.ans : u; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook; pit / column 0 is an answer too)
