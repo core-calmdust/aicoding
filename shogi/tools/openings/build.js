@@ -7,6 +7,7 @@ const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];   //
 const { keepLangs } = require(path.join(__dirname, '../../../tools/keep-langs.js'));
 const book = JSON.parse(fs.readFileSync(path.join(DIR, 'book.json'), 'utf8'));
 const probs = fs.existsSync(path.join(__dirname, 'problems.json')) ? JSON.parse(fs.readFileSync(path.join(__dirname, 'problems.json'), 'utf8')) : {};
+const lineP = fs.existsSync(path.join(__dirname, 'lineprobs.json')) ? JSON.parse(fs.readFileSync(path.join(__dirname, 'lineprobs.json'), 'utf8')) : {};   // (lineprobs.js: from the line itself, the 3D lessons only)
 const CATS = ['beg', 'mid', 'adv', 'sp', 'new', 'castle'];
 // core sets (openings.json, with their Floodgate problems): category, order, strategy side
 const CORE = { furi: ['beg', 1, 'b'], yagura: ['beg', 2, 'b'], kakugawari: ['mid', 1], aigakari: ['mid', 2], ibisha: ['mid', 9], yokofu: ['adv', 1] };
@@ -51,6 +52,7 @@ for (const cat of CATS) {
     for (const m of (e.story && e.story.marks) || []) if (!/^[1-9][1-9]$/.test(m)) warn.push(`${e.id}: bad mark ${m}`);
     const pr = cat === 'castle' || e.noPractice ? [] : (probs[e.id] || []);
     const g = { id: e.id, cat, ord: e.ord || k + 10, label: e.label, title: e.title, short: e.short, study: { start, steps, notes, intro }, problems: pr, story: e.story };
+    if (pr.length < 5 && (lineP[e.id] || []).length) g.lineProbs = lineP[e.id];   // (the 3D lessons fill up with these; the 2D practice keeps the game-based ones)
     if (e.kind) g.kind = e.kind; else if (e.side) g.side = e.side;
     out.push(g);
     (index[cat] = index[cat] || []).push([e.id, pr.length >= 5 ? 1 : 0]);
