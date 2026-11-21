@@ -50,7 +50,7 @@
         ["Aves na borda", "A borda do tabuleiro: volutas traçadas em finas tiras de bambu, flores de marfim, folhas de chifre de cervo tingido de verde e aves voando com asas listradas."],
         ["A base", "A base, de madeira mais clara, é vazada com duas grandes aberturas em cada lado longo, deixando um pé central estreitado e pernas finas nos cantos, tudo com volutas."],
         ["Os dados", "O Shōsōin também guarda dados de marfim (Seção Norte 17, cerca de 1,3–1,4 cm de lado). Como hoje, as faces opostas somam sete. Dois foram colocados aqui como referência."]],
-      model: "Medidas segundo os registos do Shōsōin. A marchetaria dos lados e do campo vem das fotografias publicadas pelo Shōsōin, endireitadas e aplicadas.",
+      model: "Medidas segundo os registos do Shōsōin. A marchetaria dos lados e do campo vem de uma fotografia nítida (ao que parece de uma reprodução), endireitada e aplicada.",
       src: [["Shōsōin, “木画紫檀双六局”", "https://shosoin.kunaicho.go.jp/treasures/?id=0000010086&index=10"], ["Exposição do Shōsōin, “悠久の輝き（前編）” (as meias-luas e as flores)", "https://shosoin-ten.jp/articles/detail/000453.html"], ["Exposição do Shōsōin, “木画紫檀双六局”", "https://shosoin-ten.jp/info/treasures/000414/"], ["Nara Shimbun, “時を超えたたからもの(2)”", "https://www.nara-np.co.jp/news/20251103211942.html"]] },
     pyrgus: { name: "A torre de dados de Vettweiss-Froitzheim", alt: "Uma torre de dados romana (turricula / pyrgus)", date: "Século IV d.C.", where: "Alemanha (Germânia romana)", found: "Sítio de uma vila romana perto de Vettweiss-Froitzheim; encontrada em 1983 na forma de placas de cobre e remontada pelo museu",
       museum: "Rheinisches Landesmuseum Bonn", no: "Inv. 85.0269.00", mat: "Placa de liga de cobre", size: "A 22 cm · 9 × 9 cm",

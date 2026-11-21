@@ -50,7 +50,7 @@
         ["Burung di tepi papan", "Tepi papan: sulur dari bilah bambu tipis, bunga gading, daun dari tanduk rusa yang diwarnai hijau, dan burung terbang dengan sayap bergaris."],
         ["Kaki papan", "Kaki papan dari kayu yang lebih terang diberi dua bukaan besar di tiap sisi panjang, menyisakan tiang tengah yang ramping di pinggang dan kaki sudut yang langsing, semuanya berhias sulur."],
         ['Dadu', 'Shōsōin juga menyimpan dadu gading (Bagian Utara 17, sisi sekitar 1,3–1,4 cm). Seperti sekarang, jumlah mata pada sisi yang berhadapan adalah tujuh. Dua dadu diletakkan di sini sebagai pembanding.']],
-      model: "Ukuran mengikuti catatan Shōsōin. Hiasan tatahan di sisi dan bidang main berasal dari foto terbitan Shōsōin yang diluruskan lalu ditempelkan.",
+      model: "Ukuran mengikuti catatan Shōsōin. Hiasan tatahan di sisi dan bidang main berasal dari foto yang tajam (tampaknya foto sebuah replika), diluruskan lalu ditempelkan.",
       src: [['Shōsōin, “木画紫檀双六局”', 'https://shosoin.kunaicho.go.jp/treasures/?id=0000010086&index=10'], ['Pameran Shōsōin, “悠久の輝き（前編）” (bulan sabit dan bunga)', 'https://shosoin-ten.jp/articles/detail/000453.html'], ['Pameran Shōsōin, “木画紫檀双六局”', 'https://shosoin-ten.jp/info/treasures/000414/'], ['Nara Shimbun, “時を超えたたからもの(2)”', 'https://www.nara-np.co.jp/news/20251103211942.html']] },
     pyrgus: { name: 'Menara Dadu Vettweiss-Froitzheim', alt: 'Menara dadu Romawi (turricula / pyrgus)', date: 'Abad ke-4 M', where: 'Jerman (Germania Romawi)', found: 'Situs vila Romawi di dekat Vettweiss-Froitzheim; ditemukan pada 1983 dalam bentuk lempeng tembaga dan dirakit ulang oleh museum',
       museum: 'Rheinisches Landesmuseum Bonn', no: 'Inv. 85.0269.00', mat: 'Lempeng paduan tembaga', size: 'T 22 cm · 9 × 9 cm',

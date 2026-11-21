@@ -50,7 +50,7 @@
         ['Birds on the edge', 'The edge of the board: scrolls drawn in thin bamboo strips, ivory flowers, leaves of green-stained antler, and birds flying with striped wings spread.'],
         ['The base', 'The base, in a lighter wood, is cut away in two large openings on each long side, leaving a waisted post in the middle and slender corner legs, all set with scrolls.'],
         ['The dice', 'The Shōsōin also keeps ivory dice (North Section 17, about 1.3–1.4 cm a side). As today, opposite faces add up to seven. Two are set here for reference.']],
-      model: "Sizes follow the Shōsōin's records. The marquetry on the sides and the field is the Shōsōin's published photographs, straightened and applied.",
+      model: "Sizes follow the Shōsōin's records. The marquetry on the sides and the field comes from a sharp photograph (apparently of a reproduction), straightened and applied.",
       src: [['Shōsōin, "木画紫檀双六局"', 'https://shosoin.kunaicho.go.jp/treasures/?id=0000010086&index=10'], ['Shōsōin Exhibition, "悠久の輝き（前編）" (the crescents and flowers)', 'https://shosoin-ten.jp/articles/detail/000453.html'], ['Shōsōin Exhibition, "木画紫檀双六局"', 'https://shosoin-ten.jp/info/treasures/000414/'], ['Nara Shimbun, "時を超えたたからもの(2)"', 'https://www.nara-np.co.jp/news/20251103211942.html']] },
     pyrgus: { name: 'The Vettweiss-Froitzheim Dice Tower', alt: 'A Roman dice tower (turricula / pyrgus)', date: '4th century AD', where: 'Germany (Roman Germania)', found: 'A Roman villa site near Vettweiss-Froitzheim; found in 1983 as copper plates and reassembled by the museum',
       museum: 'Rheinisches Landesmuseum Bonn', no: 'Inv. 85.0269.00', mat: 'Copper-alloy plate', size: 'H 22 cm · 9 × 9 cm',
