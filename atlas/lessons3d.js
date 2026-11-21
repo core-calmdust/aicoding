@@ -1604,14 +1604,56 @@
     ngHead: ['正解は緑の矢印の手ワン。', 'ここは緑の矢印の手がいちばんなんだ。', '緑の矢印の手を見てみて。', '強い人は緑の矢印の手を選ぶワン。'],
     hint: { hit: '相手のブロット（1枚だけの駒）に届く目がないか、数えてみて！', hit2: '相手のブロット、1枚だけじゃないね。まとめて狙ってみて！', enter: 'まずはバーの駒からだね。',
       pt: '2枚を同じ場所にそろえれば、ポイントが作れそうだね。', anchor: '後ろの2枚を同じ場所にそろえる手もあるワン。', escape: '後ろの駒、そろそろ相手の陣地から逃がしたくない？',
-      build: 'すぐポイントにならなくても、次に作る材料を置く手があるワン。', safe0: 'ブロットを残さない、安全な形を探してみて。', def: '後ろの駒と中盤の駒、どっちを動かすか考えてみて！' },
+      build: 'すぐポイントにならなくても、次に作る材料を置く手があるワン。', safe0: 'ブロットを残さない、安全な形を探してみて。', off: '何枚上げられるか、目の組み合わせを数えてみて！', raceMove: 'レースはむだなく前へ。いちばん後ろの駒から考えてみてワン。',
+      def: '後ろの駒と中盤の駒、どっちを動かすか考えてみて！' },
     say(x) { const t = (this[x.k.slice(0, 2) === 'tv' ? 'vs' : 'plan'] || {})[x.k.slice(3)]; if (!t) return '';
       const a = Object.assign({}, x.a); if (a.P != null) a.P = '<b>' + this.pt(a.P) + '</b>'; if (a.a != null && a.b != null) a.c = a.a - a.b; return fill(t, a); },
     // join the pieces: one ワン in a row is enough (the next piece's ワン becomes ね, or んだ after a ね)
     join(...xs) { let out = ''; for (let x of xs) { if (!x) continue; if (/ワン[。！]$/.test(out.replace(/<[^>]+>/g, '').trim()) && /ワン[。！]$/.test(x)) x = x.replace(/ワン([。！])$/, (a, e) => (/ね[。！]?\s*$/.test(out) ? 'んだ' : 'ね') + e);
       else if (/ね[。！]\s*$/.test(out) && /からね。$/.test(x)) x = x.replace(/からね。$/, 'からなんだ。'); out += x; } return out; },
     hintOf(T) { const k = T && T.plan[0] ? T.plan[0].k.slice(3) : ''; return this.hint[k] || this.hint[/^pt|prime/.test(k) ? 'pt' : /^anchor/.test(k) ? 'anchor' : k === 'bold' ? 'build' : 'def']; },
+    /* (2026-11-21 lesson loop) the lessons' play problems: a varied question (the step's own goal and these, in turn), and the
+       same short reasons as the openings (bgTeachJa). The questions with choices (race / shots / cube) get a praise + the reason
+       when right, and when wrong the right answer and what the chosen one overlooks (chJa). */
+    lsAsk: ['{d}が出たワン。いちばん良い動かし方はどれかな？', '次は{d}。きみならどう動かす？', 'さあ、{d}をどう使う？', 'ここで{d}が出た！ どの駒を動かすワン？', '{d}か……。いちばん得な手を探してみて！'],
+    chGood: ['正解ワン！ ', 'そのとおり！ ', 'よく見てるね！ ', 'ばっちり！ ', 'さすがワン！ '],
   };
+  // the choice questions' words (ダイスン): right → the reason; wrong → the answer, and why the chosen one is off
+  function bgChJa(p, N, hs) {
+    const P = p.P, v = P.qv || {}, opt = i => { const o = P.opts[i]; return Array.isArray(o) ? o : [o]; }, c = '<b>' + N.c + '</b>', o2 = '<b>' + N.o + '</b>';
+    const why = () => {
+      if (P.q === 'race') { const d = Math.abs(v.a - v.b); return d ? `ピップは${c}が${v.a}、${o2}が${v.b}。${v.a < v.b ? c : o2}が${d}ピップ少ない、つまりリードしてるんだ。` : `どっちも${v.a}ピップで同じ。こういうときは、自分の番の側がちょっと有利なんだ。`; }
+      if (P.q === 'shots') return `ブロットまでの距離は${v.d}。直接の目と足し算の目を合わせて${v.n}通り、約${v.p}%で当たるんだ。`;
+      const w = P.why;
+      if (w === 'nd') return `勝てる見こみは約${v.p}%。まだダブルには早いから、待つのがいちばんなんだ。`;
+      if (w === 'dt') return `勝てる見こみは約${v.p}%。ダブルするならここ！ でも相手はまだテイクできる局面なんだ。`;
+      if (w === 'dp') return `勝てる見こみは約${v.p}%。ここまで有利なら、ダブルすれば相手はパスするしかないんだ。`;
+      if (w === 'tg') return `勝てる見こみ約${v.p}%、ギャモン${v.g}%。ダブルするとパスされて1点で終わるから、続けてギャモンを狙うんだ。`;
+      if (w === 'take') return `勝てる見こみは約${v.p}%、ギャモン負けは${v.l}%。25%をこえていれば、テイクしてがんばれるんだ。`;
+      if (w === 'pass') return `勝てる見こみは約${v.p}%、ギャモン負けが${v.l}%もある。テイクすると平均で1点より多く失うんだ。`;
+      return '';
+    };
+    const pickWrong = u => typeof u === 'number' && u !== P.ans ? u : P.opts.findIndex((x, i) => i !== P.ans);
+    p.good = () => BGJ_OP.chGood[hs % BGJ_OP.chGood.length] + why();
+    p.ng = u => {
+      const i = pickWrong(u), [k, n] = opt(i), [ka] = opt(P.ans);
+      if (P.q === 'race') {
+        const lead = v.a === v.b ? '' : v.a < v.b ? c : o2;
+        const pre = k === ka ? 'リードしてる側は合ってるワン。でも差の数がちがうね。' : lead ? `リードしてるのは${lead}のほうワン。` : '実は、どっちも同じピップなんだ。';
+        return pre + `数えると${c}が${v.a}、${o2}が${v.b}` + (v.a === v.b ? 'で同じ。' : `で、差は${Math.abs(v.a - v.b)}ピップ。`) + '見た目の駒の数だと、ゴールまでの残りの差を見落としちゃうからね。1枚ずつ足して比べるのがコツ！';
+      }
+      if (P.q === 'shots') return `正解は${v.n}通りワン。` + (n < v.n ? '数えもれがあるね。直接の目だけじゃなく、2つの目の合計やゾロ目でも届くから、そのぶん増えるんだ。' : '少し数えすぎだね。途中が相手のポイントでふさがると、足し算の目は届かないから、そのぶん減るんだ。') + `ブロットまでの距離は${v.d}。`;
+      const w = P.why, A = { nd: 'ノーダブル', dt: 'ダブル（相手はテイク）', dp: 'ダブル（相手はパス）', tg: 'ノーダブル', take: 'テイク', pass: 'パス' };
+      let x = '';
+      if (w === 'nd') x = 'ここでダブルするのは早すぎるワン。相手にキューブを渡すと、2倍の点で逆転されるチャンスをあげちゃうんだ。';
+      else if (w === 'tg') x = 'ダブルすると相手はパスして、1点で終わっちゃうワン。ギャモン勝ち（2点）を狙えるのに、もったいないんだ。';
+      else if (w === 'dt') x = k === 'nd' ? '待ちすぎワン！ 次に有利になりすぎると、相手にパスされて1点しか取れなくなるんだ。' : '相手はまだテイクできる局面ワン。パスすると決めつけるのは、ちょっと楽観しすぎなんだ。';
+      else if (w === 'dp') x = k === 'nd' ? 'ここで待つのはもったいないワン。逆転される危険を残すより、ダブルして1点を確実にもらうんだ。' : '相手がテイクすると損をする局面ワン。テイクすると見るのは、相手に甘すぎるね。';
+      else if (w === 'take') x = 'パスすると1点を確実に失うワン。テイクして戦ったほうが、平均の損は小さいんだ。';
+      else if (w === 'pass') x = +v.p >= 25 ? '勝てる見こみが25%をこえていても、ギャモン負けが多いから、テイクすると損が大きいワン。ここは1点で手を打つんだ。' : 'テイクすると、2倍の点を失う危険が大きすぎるワン。ここは1点で手を打つのが正解なんだ。';
+      return `正解は<b>${A[w] || ''}</b>（勝てる見こみ約${v.p}%` + (/take|pass/.test(w) ? `、ギャモン負け${v.l}%` : w === 'tg' ? `、ギャモン${v.g}%` : '') + '）。' + x;
+    };
+  }
   const BACKGAMMON = {
     LKEY: 'aicoding-backgammon-v2-lessons', OKEY: 'aicoding-backgammon-v2-open', data: null, I: null,
     load() {
@@ -1674,14 +1716,25 @@
       const rp = this.data.rp, ramp = rp && rp.steps && rp.steps[s.id] && rp.steps[s.id].length ? rp.steps[s.id] : null;   // (the warm-up: backgammon/ramps.json, 2026-11-15)
       const RU = (k, v) => fill(L(((rp && rp.ui) || {})[k], lang), v || {});
       return { id: s.id, title: T('title'), intro: introK, ramp, RU,
-        probs: (s.problems || []).map(P => {
+        probs: (s.problems || []).map((P, pi) => {
           const pos = bgPos(P.pos, P.side), ask = this.tx('ls.turn', lang, { c: '<b>' + N.c + '</b>' }) + ' ';
-          if (P.kind === 'play') return this.play(P, pos, ask + T('goal', { d: P.dice.join('-') }), T('hint'), lang);
+          const ja = lang === 'ja' && window.BGX && BGX.teach, hs = (+key * 5 + pi * 3 + s.id.length) | 0;
+          if (P.kind === 'play') {
+            if (!ja) return this.play(P, pos, ask + T('goal', { d: P.dice.join('-') }), T('hint'), lang);
+            const d = BGJ_OP.dice(P.dice), q1 = pi === 0 ? `きみは<b>${N.c}</b>。` : '';   // (ダイスン: the step's own goal and his own questions, in turn)
+            const o = this.play(P, pos, q1 + (pi % 2 === 0 ? String(T('goal', { d })).split(' ' + d + ' ').join(d).replace(/^サイコロは ?(.+?)。/, '$1が出た！ ').replace(/ ?が出たよ。/, 'が出た！ ') : fill(BGJ_OP.lsAsk[hs % BGJ_OP.lsAsk.length], { d })), '', lang);
+            try { this.teachJa(o, pi % 2 ? hs | 1 : hs & ~1, T('hint')); } catch (e) { o.hintTx = T('hint'); }
+            return o;
+          }
           const qv = Object.assign({}, N, P.qv || {}); if (P.q === 'shots') qv.m = this.tx('ls.why.shotsD', lang, { d: (P.qv || {}).d });
-          return { pos: { bg: { pos, dice: null } }, kind: 'choice', P, ask: this.tx('ls.q.' + P.q, lang, qv), hintTx: P.q === 'take' ? this.tx('ls.takepoint.hint', lang) : P.q === 'double' ? this.tx('ls.racecube.hint', lang) : T('hint'), ans: [],
+          const o = { pos: { bg: { pos, dice: null } }, kind: 'choice', P, ask: this.tx('ls.q.' + P.q, lang, qv), hintTx: P.q === 'take' ? this.tx('ls.takepoint.hint', lang) : P.q === 'double' ? this.tx('ls.racecube.hint', lang) : T('hint'), ans: [],
             marks: (P.mk || []).map(([sd, pt, c]) => ({ pt: (sd ^ P.side) === 0 ? pt : 25 - pt, cls: c === 'ok' ? 'ok' : 'hl' })),
             choices: P.opts.map(o => { const [ok, on] = Array.isArray(o) ? o : [o]; return this.tx('ls.opt.' + ok, lang, Object.assign({}, qv, { n: on })) || ok; }), right: P.ans,
             why: this.tx('ls.why.' + (P.why || P.q), lang, qv) };
+          if (ja) { if (P.q === 'shots' && pi > 0) o.ask = ['同じように数えてみよう。印のブロットに、相手が当てられる目は何通り？', '次のブロットはどうかな？ 36通りのうち、当たる目を数えてワン！', 'これは何通りで当たる？ 足し算の目も忘れずにね。', '最後の1問！ 印のブロットに当たる目は何通り？'][(pi - 1) % 4];
+            if (P.q === 'take' && pi > 0 && s.id === 'takepoint') o.ask = [`${'<b>' + N.o + '</b>'}がまたダブルしてきた！ テイクする？ パスする？`, 'この局面でダブルされたら、受ける？ 降りる？', `今度はどうかな。${'<b>' + N.c + '</b>'}はテイク？ それともパス？`, '最後の1問ワン！ テイクかパスか、決めてみて。'][(pi - 1) % 4];
+            bgChJa(o, N, hs); o.why = ''; }
+          return o;
         }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.LKEY, pr); return pass; } };
     },
@@ -1699,15 +1752,20 @@
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[it.id] || {}, pass = pts >= max; pr[it.id] = Object.assign({}, o, { pass: !!o.pass || pass, best: Math.max(o.best || 0, max ? pts / max : 0) }); put(this.OKEY, pr); return pass; } };
     },
     opJa(o, it, j) {   // (2026-11-21 lesson loop) the opening problem in ダイスン's words: see BGJ_OP
-      const J2 = BGJ_OP, hs = (it.id.length * 7 + it.id.charCodeAt(1) + j) | 0, q0 = bgDecP(o.bgPos), d = J2.dice(o.P.dice);
-      const mk = m => { const q = q0.slice(), mv = Array.isArray(m) ? m : bgCodes(o.bgPos, m).moves; mv.forEach(c => BG.apply(q, 0, BG.mvFrom(c), BG.mvTo(c))); return { moves: mv, pos: q }; };
-      const bestM = o.best(), bestP = mk(bestM), others = o.P.plays.map(y => y[0]).filter(m => !o.P.opOk.includes(m));
-      const T0 = (() => { try { return BGX.teach(q0, 0, bestP, null); } catch (e) { return null; } })();
+      const J2 = BGJ_OP, hs = (it.id.length * 7 + it.id.charCodeAt(1) + j) | 0, d = J2.dice(o.P.dice);
       o.ask = fill(J2.ask[hs % J2.ask.length], { d });
-      o.hintTx = J2.hintOf(T0);
-      const reasons = (T, max, pre) => { let out = pre || ''; const n0 = out.length; for (const x of (T && T.plan) || []) { let s = J2.say(x); if (!s || (out.length > n0 && (out + s).length - n0 > max)) continue; if (out.length > n0) s = 'それに、' + s.replace(/^しかも/, '').replace(/からね。$/, 'んだ。'); out = J2.join(out, s); if (out.length - n0 > max * .6) break; } return out; };
+      this.teachJa(o, hs);
+    },
+    teachJa(o, hs, hint0) {   // the hint, and the short reasons after the answer (BGJ_OP; openings and the lessons' play problems)
+      const J2 = BGJ_OP, q0 = bgDecP(o.bgPos);
+      const mk = m => { const q = q0.slice(), mv = Array.isArray(m) ? m : bgCodes(o.bgPos, m).moves; mv.forEach(c => BG.apply(q, 0, BG.mvFrom(c), BG.mvTo(c))); return { moves: mv, pos: q }; };
+      const bestM = o.best(), bestP = mk(bestM), ok = o.P.opOk || [bestM], others = o.P.plays.map(y => y[0]).filter(m => !ok.includes(m));
+      const T0 = (() => { try { return BGX.teach(q0, 0, bestP, null); } catch (e) { return null; } })();
+      const k0 = T0 && T0.plan[0] ? T0.plan[0].k.slice(3) : '';
+      o.hintTx = hint0 && (hs % 2 === 0 || !k0 || !J2.hint[k0] && !/^pt|prime|anchor|bold/.test(k0)) ? hint0 : J2.hintOf(T0);
+      const reasons = (T, max, pre) => { let out = pre || ''; const n0 = out.length; for (const x of (T && T.plan) || []) { let s = J2.say(x); if (!s || (out.length > n0 && (out + s).length - n0 > max)) continue; if (out.length > n0) s = (/[！？]$/.test(out) ? ' ' : '') + 'それに、' + s.replace(/^しかも/, '').replace(/からね。$/, 'んだ。'); out = J2.join(out, s); if (out.length - n0 > max * .6) break; } return out; };
       o.good = u => { let T = T0; try { if (u && u.steps && u.steps.length) T = BGX.teach(q0, 0, mk(u.steps), null); } catch (e) {}
-        const many = o.P.opOk.length > 1 ? (hs % 2 ? 'ほかにも同じくらい良い手があるけど、' : '同じくらいの手はほかにもあるワン。') : '';
+        const many = ok.length > 1 ? (hs % 2 ? 'ほかにも同じくらい良い手があるけど、' : '同じくらいの手はほかにもあるワン。') : '';
         return J2.join(reasons(T, 90, J2.good[hs % J2.good.length]), many && many.endsWith('、') ? many + 'どれも大きな差はないんだ。' : many); };
       o.ng = u => { let mine = null; try { mine = u && u.steps && u.steps.length ? mk(u.steps) : others.length ? mk(others[0]) : null; } catch (e) {}
         let T = T0; try { if (mine) T = BGX.teach(q0, 0, bestP, mine); } catch (e) {}
@@ -2467,7 +2525,7 @@
       box.hidden = false; box.innerHTML = p.choices.map((c, i) => `<button type="button" class="btn sm" data-ci="${i}">${c}</button>`).join('');
       box.onclick = e => { const b = e.target.closest('[data-ci]'); if (!b || p.done || cur.probs[cur.k] !== p) return; const i = +b.dataset.ci, ok = i === p.right;
         box.querySelectorAll('button').forEach((x, k) => { x.disabled = true; x.classList.toggle('ok', k === p.right); x.classList.toggle('ng', k === i && !ok); });
-        scored(p, ok ? PTS : 0); };
+        scored(p, ok ? PTS : 0, undefined, i); };
     }
     function scored(p, pts, msg, u) {
       p.done = true; const n = Math.max(0, pts - (p.hinted && pts > 0 ? HINT_PEN : 0)); cur.res[cur.k] = n; dots();
@@ -2475,13 +2533,14 @@
         const right = pts >= 16, k = cur.k;
         if (p.kind === 'bgplay' && u && u.steps) { const best = p.best(); later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().reset(); pz().mark([{ m: best, cls: 'ok' }, ...(right && pts >= 20 ? [] : [{ play: u.steps, cls: 'ng' }])]); }, 700); }
         let teach = '';   // (what the best play is for, and what yours gives up: backgammon/explain.js teach)
-        if (p.kind === 'bgplay' && typeof p.good === 'function' && u && u.steps) teach = '<br>' + (pts >= 16 ? p.good(u) : p.ng(u));   // (an opening in ja: ダイスン's short words, BGJ_OP)
+        if (p.kind === 'bgplay' && typeof p.good === 'function' && u && u.steps) teach = '<br>' + (pts >= 16 ? p.good(u) : p.ng(u));   // (in ja: ダイスン's short words, BGJ_OP)
+        else if (p.kind === 'choice' && typeof p.good === 'function') teach = '<br>' + (right ? p.good() : p.ng(u));   // (a question in ja: the reason, or the answer and what the choice overlooks — bgChJa)
         else if (p.kind === 'bgplay' && window.BGX && BGX.teach && window.AtlasBgTeach) {
           try { const q0 = bgDecP(p.bgPos), mk = mv => { const q = q0.slice(); mv.forEach(c => BG.apply(q, 0, BG.mvFrom(c), BG.mvTo(c))); return { moves: mv, pos: q }; };
             teach = AtlasBgTeach.html(BGX.teach(q0, 0, mk(bgCodes(p.bgPos, p.best()).moves), pts >= 20 ? null : mk(u.steps)), (k, v) => D.tx(k, ctx.lang, v), false, true); } catch (e) { console.warn(e); }
         }
-        const own = p.kind === 'bgplay' && typeof p.ng === 'function' && u && u.steps;   // (ダイスン names the green play himself: the head stays short)
-        say(`${right ? line('solved') || pick(X.good) : own ? String(pts > 0 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
+        const own = p.kind === 'bgplay' && typeof p.ng === 'function' && u && u.steps, chJa = p.kind === 'choice' && typeof p.ng === 'function';   // (ダイスン names the green play / the answer himself: the head stays short)
+        say(`${chJa ? (right ? '' : 'おしい！') : right ? (own && pts >= 16 ? '' : line('solved') || pick(X.good)) : own ? String(pts > 0 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
         try { chime(right); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
