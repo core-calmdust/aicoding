@@ -33,6 +33,7 @@ function statusAt(i) {
   }
   const { pos, hashes, legal } = posAt(i);
   if (!legal.length) return pos.inCheck() ? { over: true, winner: pos.side ? P1 : P2, why: 'mate' } : { over: true, winner: 0, draw: true, why: 'stalemate' };
+  if (lesson || puzzle) return { over: false };   // (2026-11-22 ユーザー：レッスンのチェックの問題（キング＋ビショップ対キング）で進行不能 — レッスン・パズルでは駒不足・50手・千日手で終わらせない)
   if (pos.half >= 100) return { over: true, winner: 0, draw: true, why: 'fifty' };
   if (pos.insufficient()) return { over: true, winner: 0, draw: true, why: 'material' };
   let c = 0; for (const h of hashes) if (h === pos.h1) c++;

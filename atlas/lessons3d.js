@@ -4700,7 +4700,7 @@
     const id = ctx.id, D = DATA[id], ad = ctx.adapter, GD = (window.AtlasPuzzles && AtlasPuzzles.G || {})[id] || {};
     const VO = (VOICE[id] || {})[ctx.lang] || {}, X = Object.assign({}, TX[ctx.lang] || TX.en, VO);
     const LN = ((window.AtlasPuzzleLines || {})[id] || {})[ctx.lang] || {}, line = k => { const a = LN[k]; return a && a.length ? a[Math.floor(Math.random() * a.length)] : ''; };
-    const okLine = () => { const a = (LN.solved || []).filter(t => !/詰|参りました|mate|メイト/i.test(t)); return a.length ? a[Math.floor(Math.random() * a.length)] : ''; };   // (2026-11-21 lesson loop: a best-move or opening problem is not praised with 「詰んだ！」)
+    const okLine = () => { const a = (LN.solved || []).filter(t => !/詰|参りました|降参|mate|メイト/i.test(t)); return a.length ? a[Math.floor(Math.random() * a.length)] : ''; };   // (2026-11-21 lesson loop: a best-move or opening problem is not praised with 「詰んだ！」)
     const lsv = h => { const m = (LSV.d || {})[id]; if (!m) return h; const ks = LSV[id] || (LSV[id] = Object.keys(m).sort((a, b) => b.length - a.length)); for (const k of ks) if (h.includes(k)) h = h.split(k).join(m[k]); return h; };   // (the problem lines in the guide's own words: atlas/lsvoice-ja.js, 2026-11-21)
     const voice = h => ctx.lang === 'ja' ? varyJa(lsv(guideJa(h, id)), id) : h;   // (each guide's own way of talking, 2026-11-15)
     let greeted = false;
@@ -5200,8 +5200,10 @@
     say(X.loading); act(X.next, { nextOn: false });
     Promise.all([D.load(ctx.lang), ncLoad(id), lsvLoad(ctx.lang)]).then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
     const dbg = { state: () => cur && { key: cur.key, phase, k: cur.k, si: cur.si, res: cur.res.slice(), ans: cur.probs[cur.k] && cur.probs[cur.k].ans, ramp: phase === 'ramp' && cur.ramp && cur.ramp[cur.ri] ? cur.ramp[cur.ri].ans : undefined, moves: cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.f ? Object.keys(cur.probs[cur.k].P.f).map(Number) : cur.probs[cur.k] && cur.probs[cur.k].P && cur.probs[cur.k].P.cand ? cur.probs[cur.k].P.cand.map(c => c[0]) : null, say: $('.tx').textContent },
+      open: (k, kind) => { if (kind) ctx.kind = kind === 'open' ? 'open' : 'lesson'; open(String(k)); }, items: kind => { const kd = kind === 'open' ? 'open' : 'lesson'; try { return (D.list(kd, ctx.lang) || []).filter(x => !x.full).map(x => ({ key: x.key, title: x.title })); } catch (e) { return null; } }, cur: () => cur, pz: () => pz(),   // (test hooks: tools/lesson-progress.js plays every problem)
       toProb: () => { if (cur && cur.probs.length) { cur.k = 0; prob(); } },   // (test hook: straight to the problems)
-      drillEnd: () => { if (cur && cur.drill) drillDone(); },   // (test hook: a chess ★ drill done — on to its route problems)
+      drillEnd: () => { if (cur && cur.drill) drillDone(); },
+      rampAnswer: async () => { const it = cur && phase === 'ramp' && cur.ramp && cur.ramp[cur.ri]; if (!it || !it.ok || !pz()) return false; const u = it.ok[0]; await pz().play(u); if (onMoved) await onMoved(u, {}); return true; },   // (test hook: a warm-up's guided move)   // (test hook: a chess ★ drill done — on to its route problems)
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return;
         if (p.kind === 'bgplay') { const m = typeof u === 'string' ? u : p.best(), c = bgCodes(p.bgPos, m), q = bgDecP(p.bgPos); c.moves.forEach(x => BG.apply(q, 0, BG.mvFrom(x), BG.mvTo(x))); await pz().play(c.moves); return moved(p, { key: c.key, steps: c.moves, pos: q }); }   // (backgammon: a play by the json's letter pairs)
         u = u == null || u === '' ? p.ans : u; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook; pit / column 0 is an answer too)

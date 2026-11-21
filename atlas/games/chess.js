@@ -204,6 +204,7 @@
       if (DR) return { over: false, legal: drillLegal(pos, DR.safe) };
       const leg = pos.legal();
       if (!leg.length) return pos.inCheck() ? { over: true, winner: pos.side ^ 1, why: 'mate' } : { over: true, draw: true, why: 'stale' };
+      if (PZ) return { over: false, legal: leg };   // (2026-11-22 ユーザー：レッスン・パズルは駒の少ない局面（キング＋ビショップ対キングなど）でも指せる。引き分けの判定は mate / stalemate だけ)
       if (pos.half >= 100) return { over: true, draw: true, why: 'fifty' };
       if (pos.insufficient()) return { over: true, draw: true, why: 'material' };
       let c = 0; for (const h of hashes) if (h === pos.h1) c++;
@@ -365,7 +366,7 @@
     // test hooks (positions on screen, state, a set-up position)
     const dbg = {
       at: n => { const sq = (n.charCodeAt(0) - 97) + ((+n[1] - 1) << 4), [x, z] = xz(sq); return T3.project(x, z, Y); },
-      state: () => ({ hint: hintMv ? E.sqName(hintMv & 127) + E.sqName((hintMv >> 7) & 127) : '', moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, sel, promo: !!promoEl, check: !!(pos && pos.inCheck()), pieces: Object.keys(pcs).length }),
+      state: () => ({ hint: hintMv ? E.sqName(hintMv & 127) + E.sqName((hintMv >> 7) & 127) : '', moves: moves.length, side: pos && pos.side, human, pvp, over, busy, thinking, sel, promo: !!promoEl, check: !!(pos && pos.inCheck()), pieces: Object.keys(pcs).length, pzOn, legal: legal.length, drill: !!DR }),
       board: () => { const o = {}; Object.entries(pcs).forEach(([sq, g]) => { o[E.sqName(+sq)] = (g.userData.color === 'w' ? g.userData.type : g.userData.type.toLowerCase()); }); return o; },
       setup: fen => begin(fen),
     };
