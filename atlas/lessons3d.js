@@ -1914,6 +1914,139 @@
       pos = pos.clone().play(m); });
     return out;
   }
+  /* (2026-11-21 lesson loop) the xiangqi lessons in ショウギツネ's words, Japanese, for the 3D table (no coordinates): a shorter intro,
+     a varied question and two hints for each step, and after the answer why the move works and what yours misses — from the board
+     (xqLF: what is taken and whether it is taken back, which of your pieces are left to be taken, check / mate, the new targets — a
+     fork —, the king's way out after a wrong check) and the engine's values in lessons.json (sc; the mate distance in the endgames). */
+  const XQJ_LS = {
+    intro: {
+      b_rook: 'わたしはショウギツネ。今日はシャンチー（中国の将棋）をいっしょにやろう！<br>真ん中に<b>川</b>があって、王さまは<b>九宮</b>という四角から出られないの。相手の王さまを詰ませたら勝ちだコン。<br>まずは<b>車</b>から。縦と横に、どこまでも進める駒なんだ。取り返されない駒を、車で取ってみよう！',
+      b_horse: '<b>馬</b>は「1つまっすぐ、それから1つななめ」に跳ぶの。<br>最初のまっすぐの点（<b>馬の足</b>）に駒があると、そっちへは跳べないんだ。将棋の桂馬とは、ちょっとちがうね。<br>馬で取れる、ただの駒を探してみて！',
+      b_cannon: '<b>炮</b>は、ふだんは車と同じ動きをするの。<br>でも取るときだけは、間にちょうど1つの駒（<b>炮台</b>）を飛び越えるんだ。炮台は敵でも味方でもいいコン。<br>炮台を見つけて、ただの駒を取ってみよう！',
+      b_pawn: '<b>兵</b>（相手は<b>卒</b>）は、1つ前へ進む駒。川を渡ると、横にも1つ動けるようになるの。<br>後ろには戻れないけど、大きな駒をただで取れることもあるんだコン。',
+      b_escape: '相手の駒が、きみの大事な駒をねらっているの！<br>取られない場所へ逃げよう。逃げた先でまたねらわれないか、確かめるのも忘れずにね。',
+      b_mate1: '王手をかけて、相手がどうしても王手をはずせなければ<b>詰み</b>。きみの勝ちだコン！<br>將（帥）は九宮から出られないから、逃げ道は少ないの。そこがねらい目だね。',
+      t_capture: '守られている駒でも、自分の駒より価値が高ければ、取る値打ちがあるの。<br>目安は、車9・炮4.5・馬4・仕と相2・兵1（川を渡ると2）くらい。<br>取り返されても得をする取り方を、探してみよう！',
+      t_fork: '1つの駒で2つの駒を同時にねらうのが<b>両取り</b>。相手は片方しか守れないの。<br>とくに馬の両取りはよく出てくるから、覚えておくと役に立つコン！',
+      t_check: '王手をかけられたら、相手は必ず受けないといけないよね。<br>だから、王手のついでに別の駒もねらえる手は、とっても強いの。相手を忙しくさせちゃおう！',
+      t_defend: '相手の次の手を、先に読んでみよう。<br>ただで取られそうな駒があったら、守る（ひもをつける）か、間に駒を入れて防ぐの。守りも攻めと同じくらい大切だコン。',
+      m_mate2: '相手がどう受けても、次の手で必ず詰む。そんな最初の1手を見つけよう！<br>王手から始まるとはかぎらないの。静かな一手が決め手になることもあるんだコン。',
+      m_hc: '將と同じ筋に馬を置いて、その後ろから炮で王手。これが<b>馬後炮</b>なの。<br>馬が炮台になって、將の逃げ道まで押さえちゃう。シャンチーでいちばん有名な詰め方のひとつだコン！',
+      m_dc: '2つの炮を將と同じ筋に縦に並べると、前の炮が後ろの炮の炮台になるの。これが<b>重炮</b>。<br>前の炮を取るのも、間に駒を入れるのも難しい、強い詰め方なんだ。',
+      m_face: '帥と將は、間に駒がないまま同じ筋で向かい合えないルールなの。<br>だから帥のいる筋には、相手の將は入れないね。帥も立派な攻めの駒だコン！',
+      e_rook: '車1つと帥だけでも、士2つに守られた將を詰ませられるの。<br>コツは、帥で筋を押さえて、車で將の動ける場所を少しずつ減らすこと。あせらずいこうね！',
+      e_pawn: '川を渡った兵は、九宮に入るとぐっと強くなるの。<br>後ろに戻れないから、奥まで進めすぎないのがコツ。帥のにらみも使ってね！',
+    },
+    ask: {
+      b_rook: ['車で、ただの駒を取ってみよう！', '取り返されない駒はどれかな？ 車で取ってみて！', '車の通り道に、ただで取れる駒はある？', 'ここでも車の出番だコン。ただの駒を取ってみて！', '車で取れる駒はいくつかありそう。でも、ただで取れるのは？'],
+      b_horse: ['馬で、ただの駒を取ってみよう！', '馬の跳び先に、ただで取れる駒はないかな？', '馬の足に気をつけて。取れるのはどの駒？', '馬で取れる駒を探してみて！', '馬の出番だコン。ただの駒を取ってみよう！'],
+      b_cannon: ['炮台を使って、ただの駒を取ってみよう！', '炮で取るには、間に駒がちょうど1つ。取れる駒はどれ？', '炮台になる駒はどこかな？ 取ってみて！', '炮の出番だコン。飛び越えて取ってみよう！', '炮で、取り返されない駒を取れるかな？'],
+      b_pawn: ['兵（卒）で、駒を取ってみよう！', '小さな兵でも、大きな駒が取れるかも。どれかな？', '兵の前と横に、取れる駒はある？', '兵の出番だコン。駒を取ってみて！', '兵（卒）で、ただの駒を取れるかな？'],
+      b_escape: ['ねらわれた駒を、安全な場所へ逃がしてあげて！', 'このままだと取られちゃう！ どこへ逃げる？', 'ねらわれている駒の、安全な逃げ先はどこかな？', '逃げた先でまたねらわれない場所、わかる？', '大事な駒がピンチだコン。安全な場所へ動かして！'],
+      b_mate1: ['1手で詰ませてみよう！', '詰みの一手はどれかな？', '將の逃げ道をなくす王手、わかる？', '1手で勝てるコン。見つけてみて！', 'どの王手なら、將はもう動けない？'],
+      t_capture: ['得になる取り方を見つけてみよう！', '取り返されても得をする取り方はどれかな？', '安い駒で高い駒を取れる？', '駒の値打ちを比べてみて。得な取り方は？', 'ここは駒得のチャンスだコン！'],
+      t_fork: ['両取りをかけてみよう！', '1手で2つの駒をねらえる手はどれかな？', '相手が片方しか守れない手、わかる？', '両取りのチャンスだコン。見つけてみて！', 'どこへ動かせば、2つ同時にねらえる？'],
+      t_check: ['王手をかけて、駒得してみよう！', '王手のついでに駒をねらえる手はどれかな？', '相手を忙しくさせる王手、わかる？', '王手で得するチャンスだコン！', 'どの王手なら、受けたあとに駒が取れる？'],
+      t_defend: ['相手のねらいを防いでみよう！', '相手は次に何をねらってる？ 先に防いで！', 'ただで取られそうな駒、守れるかな？', '守りの一手を探してみて！', 'ここは守りどころだコン。相手のねらいは？'],
+      m_mate2: ['2手で詰ませる、最初の手はどれかな？', '相手がどう受けても次で詰む。そんな一手は？', '次の詰みを用意する一手、わかる？', '2手詰めだコン。最初の手を見つけてみて！', '静かな一手かもしれないね。2手で詰ませるには？'],
+      m_hc: ['馬後炮で詰ませる、最初の手はどれかな？', '馬と炮を將の筋に並べるには？', '馬後炮の形を作る一手、わかる？', '馬を台にして炮で詰ませよう！ 最初の手は？', '馬後炮のチャンスだコン！'],
+      m_dc: ['重炮で詰ませる、最初の手はどれかな？', '2つの炮を縦に重ねるには、どう指す？', '重炮の形を作る一手、わかる？', '重炮のチャンスだコン！ 最初の手は？', '炮を台にして炮で詰ませる。どこから始める？'],
+      m_face: ['帥の力も使って、詰ませてみよう！', '帥と將のにらみ合いを使う一手はどれかな？', '帥のいる筋は、將は通れない。それを使うと？', '帥も攻めに参加させるコン！ 決め手は？', '帥のにらみを生かす詰め方、わかる？'],
+      e_rook: ['詰みに向かう、いちばん良い手はどれかな？', '將の動ける場所を減らす一手は？', '車と帥で、どう追いつめる？', 'いちばん早く詰むコースを探してみて！', 'ここが腕の見せどころだコン！'],
+      e_pawn: ['詰みに向かう、いちばん良い手はどれかな？', '兵をどこまで進める？ いちばん良い手は？', '帥と兵で、どう追いつめる？', 'いちばん早く詰むコースを探してみて！', '兵の進め方が勝負だコン！'],
+    },
+    hint: {
+      b_rook: ['光っている車の縦と横を見て。取ったあと、取り返されないかな？', 'その駒を守っている相手の駒がいないか、確かめてね。'],
+      b_horse: ['光っている馬の跳び先を、ひとつずつ数えてみて。', '馬の足に駒があると、その方向へは跳べないの。'],
+      b_cannon: ['光っている炮の縦と横に、駒をちょうど1つはさんだ相手の駒はないかな？', '炮台は、敵の駒でも味方の駒でもいいんだよ。'],
+      b_pawn: ['光っている兵の、前と横を見てみて。', '川を渡った兵は、横の駒も取れるの！'],
+      b_escape: ['光っている駒がねらわれているの。逃げ先を探してみて。', '逃げた先が、相手の車や炮の筋にないか確かめるコン。'],
+      b_mate1: ['光っている駒で、王手をかけてみて。', '將が逃げられる点を、全部ふさげるかな？'],
+      t_capture: ['光っている駒で、それより価値の高い駒を取れるの。', '取り返されたあとの駒の値打ちを、足し引きしてみるコン。'],
+      t_fork: ['光っている駒を動かすと、2つの駒をねらえるの。', '相手の大きい駒2つから、同時に届く点はどこかな？'],
+      t_check: ['光っている駒で、王手をかけてみて。', '王手を受けたあと、何が取れるようになるか考えるコン。'],
+      t_defend: ['光っている駒で守れるの。', '相手の車や炮が、次にどの駒を取れるか見てみて。'],
+      m_mate2: ['光っている駒から始めるの。', '相手の受け方を、ひとつずつ考えてみて。'],
+      m_hc: ['光っている駒から始めるの。', '將・馬・炮が同じ筋に縦に並ぶ形を思い出して！'],
+      m_dc: ['光っている駒から始めるの。', '前の炮が台になって、後ろの炮で王手する形だね。'],
+      m_face: ['光っている駒から始めるの。', '將が横へ逃げると、帥と向かい合わない？'],
+      e_rook: ['光っている駒を動かしてみて。', '帥で筋を押さえて、車で將をせばめるのがコツだコン。'],
+      e_pawn: ['光っている駒を動かしてみて。', '兵は戻れないから、進めすぎに気をつけるコン。'],
+    },
+    open: ['お見事！', 'いい手！', 'そのとおり！', 'ばっちりだコン！', 'さすが！'],
+    lead: ['{m}が正解だったの。', 'ここは{m}がいい手。', '{m}を見てみて！', '正しいのは{m}のほうだコン。', 'いちばんは{m}なんだ。'],
+  };
+  const XQ_MATE = { m_hc: '馬後炮', m_dc: '重炮', m_face: '帥のにらみ' };
+  function xqLF(E, pos, m) {   // what a lesson move does
+    const me = pos.side, o = me ^ 1, f = E.mFrom(m), t = E.mTo(m), ty = E.typeOf(pos.at(f)), cp = pos.at(t), after = pos.clone().play(m);
+    const mine = (q, S) => [...S].filter(x => q.at(x) && E.colorOf(q.at(x)) === me);
+    const hang0 = mine(pos, E.threats(pos, o)), hang = mine(after, E.threats(after, o));
+    const aims0 = new Set(E.threats(pos, me)), aims = [...E.threats(after, me)].filter(x => !aims0.has(x) || x === t);
+    const rep = after.moves(), recap = rep.some(x => E.mTo(x) === t), hits = after.pseudo(me, true, t).map(x => E.typeOf(after.at(E.mTo(x)))).filter(x => x !== 1 && x !== 7);   // (what the moved piece now attacks)
+    const F = { m, ty, cap: cp ? E.typeOf(cp) : 0, check: after.inCheck(), mate: !rep.length, recap, hang0, hang: hang.map(x => E.typeOf(after.at(x))), hangSq: hang,
+      aims: aims.map(x => E.typeOf(after.at(x))).filter(x => x !== 1), all: [...E.threats(after, me)].map(x => E.typeOf(after.at(x))), hits, saved: hang0.includes(f) && !hang.includes(t) };
+    F.lossy = F.cap ? recap && XQV[ty] > XQV[F.cap] : false;
+    F.out = () => { if (!F.check || F.mate) return ''; const k = after.k[o];   // (how the wrong check is met)
+      if (rep.some(x => E.mTo(x) === t)) return 'take'; if (rep.some(x => E.mFrom(x) === k)) return 'run'; return 'block'; };
+    return F;
+  }
+  function xqLsJa(E, s, P, i, ck) {
+    const id = s.id, A0 = XQJ_LS.ask[id]; if (!A0) return null;
+    const k = i + id.length, pick = L => L[k % L.length], H = XQJ_LS.hint[id] || [];
+    const pos = E.Pos.from(P.s), me = pos.side, M = ck('ok'), X = ck('ng'), N = t => XQN(t, me), NO = t => XQN(t, me ^ 1);
+    const f = x => x.replace(/\{m\}/g, M).replace(/\{x\}/g, X);
+    const A = P.ok ? P.ok[0] : P.best, sc = P.sc ? new Map(P.sc) : null, best = sc ? Math.max(...P.sc.map(e => e[1])) : 0, W = E.WIN, WT = E.WINT;
+    const right = u => P.ok ? P.ok.includes(u) : sc.has(u) && sc.get(u) >= best - 10 && !(best > WT && sc.get(u) < best);
+    const FF = u => { try { return xqLF(E, pos, u); } catch (e) { return null; } }, FA = FF(A);
+    const near = u => sc && best > WT && sc.has(u) && sc.get(u) > WT;   // (a slower mate: 16 points, praised as right)
+    const pickWrong = pref => { const L = P.sc ? P.sc.slice().sort((a, b) => b[1] - a[1]).map(e => e[0]) : pos.moves(); const Wr = L.filter(x => !right(x) && !near(x));
+      if (pref) for (const x of Wr.slice(0, 80)) { const Q = FF(x); if (Q && pref(Q)) return x; } return Wr[0]; };
+    // why the right move works (one short clause)
+    const plus = (Fm, u) => {
+      if (Fm.mate) return XQ_MATE[id] ? XQ_MATE[id] + 'で、將の逃げ道が全部なくなる' : '將の逃げ道が全部なくなる';
+      if (P.ok) return Fm.check ? 'どう受けても、次の手で詰みが待っている' : '王手じゃなくても、相手に詰みを防ぐ手がない';
+      const v = sc && sc.has(u) ? sc.get(u) : best;
+      if (id === 'e_rook' || id === 'e_pawn') return v > WT ? (v === best ? 'いちばん早く詰ませられる' : 'ちゃんと詰みまで行ける') : '將の動ける場所をせばめられる';
+      const two = (a, b) => a === b ? `2つの${NO(a)}` : `${NO(a)}と${NO(b)}`;
+      if (Fm.saved) return `ねらわれた${N(pos.at(E.mFrom(Fm.m)) & 7)}が、安全な場所へ逃げられる`;
+      if (Fm.cap && !Fm.recap) return `${NO(Fm.cap)}をただで取れる`;
+      if (Fm.cap && !Fm.lossy) return XQV[Fm.cap] > XQV[Fm.ty] ? `取り返されても、${NO(Fm.cap)}のぶん得をする` : `${NO(Fm.cap)}と交換して、駒の損がない`;
+      if (Fm.check && Fm.all.length) return `王手しながら、相手の${NO(Fm.all[0])}もねらえる`;
+      if (Fm.check && id === 't_check') return '相手が王手を受けているあいだに、駒得できる';
+      if (Fm.aims.length >= 2) return `${two(Fm.aims[0], Fm.aims[1])}を同時にねらえる`;
+      if (id === 't_fork' && Fm.hits.length >= 2) return `${two(Fm.hits[0], Fm.hits[1])}を同時にねらえる`;
+      if (Fm.hang0.length && !Fm.hang.length) return '相手のねらいを全部防げる';
+      if (id === 't_defend') return '相手のねらいに先回りして、駒を守れる';
+      if (id === 'b_escape') return 'ねらわれた駒が、取られずにすむ';
+      if (Fm.check) return '王手で相手の手を限定できる';
+      return 'AIの評価がいちばん高い';
+    };
+    // what the wrong move misses (most telling first)
+    const why = (Q, u) => {
+      const v = sc && sc.has(u) ? sc.get(u) : null, d = v == null ? null : best - v;
+      if (P.ok) { const o = Q.out();
+        return Q.mate ? '' : o === 'take' ? '{x}の王手は、その駒を取られて終わっちゃう。' : o === 'run' ? '{x}の王手だと、將に逃げられちゃうの。' : o === 'block' ? '{x}の王手は、間に駒を入れて受けられるの。'
+          : pick(['{x}は王手じゃないから、相手に受ける時間ができちゃう。', '{x}だと、相手に1手の余裕をあげて、詰みを防がれるの。']); }
+      if (best > WT && v != null) return v > WT ? '{x}でも詰むけど、少し遠回りになるの。' : v <= 50 && v >= -50 ? '{x}だと詰みを逃して、引き分けになりそうなの。' : pick(['{x}だと詰みを逃して、相手に粘られちゃう。', '{x}だと詰みまでの道すじが消えて、長引いちゃうの。']);
+      if (Q.lossy) return `{x}で${NO(Q.cap)}を取っても、きみの${N(Q.ty)}を取り返されて損しちゃう！`;
+      if (FA.cap && Q.cap && XQV[Q.cap] < XQV[FA.cap] && !Q.hang.length) return `{x}で取れる${NO(Q.cap)}より、${NO(FA.cap)}のほうが大きい駒なの。`;
+      if (Q.hang.length && (FA.hang.length < Q.hang.length)) return Q.hang0.length && !Q.saved && (id === 'b_escape' || id === 't_defend') ? `{x}のあとも、ねらわれた${N(Q.hang[0])}は取られたままなの。` : `{x}だと、きみの${N(Q.hang[0])}が取られちゃう。`;
+      if (FA.cap && !Q.cap) return `{x}では駒を取れないね。取れる${NO(FA.cap)}を見のがしちゃう。`;
+      if (FA.check && !Q.check && id === 't_check') return '{x}は王手じゃないから、相手に立て直す時間をあげちゃう。';
+      if (id === 't_fork' && FA.aims.length < 2 && FA.hits.length >= 2 && Q.hits.length < 2) return Q.hits.length ? `{x}だと、ねらえるのは${NO(Q.hits[0])}だけ。相手はそれを逃がせば終わりなの。` : '{x}だと、相手の駒を何もねらえないの。';
+      if (id === 't_defend' || id === 'b_escape') return d != null && d > 300 ? '{x}だと、相手のねらいが残ったままで、AIの評価が大きく下がって損なの。' : '{x}だと、相手のねらいを止めきれなくて、少し損なの。';
+      if (FA.aims.length >= 2 && Q.aims.length < 2) return Q.aims.length ? `{x}だと、ねらえるのは${NO(Q.aims[0])}だけ。相手はそれを守れば終わりなの。` : '{x}だと、相手の駒を何もねらえないの。';
+      if (d != null && d > 300) return '{x}だと、AIの評価が大きく下がって損なの。';
+      return d != null && d <= 60 ? '{x}も悪くないけど、AIの評価では少し損なの。' : '{x}だと、AIの評価で損をするの。';
+    };
+    const say = u0 => { let u = u0; if (u == null || right(u)) u = pickWrong(id === 'b_mate1' || P.ok ? Q => Q.check : FA.cap ? Q => Q.cap || Q.hang.length : null);
+      const Q = u != null ? FF(u) : null, w = Q ? why(Q, u) : '';
+      return f(w + pick(XQJ_LS.lead) + pick(['そうすれば、', 'それなら、', 'こうすると、']) + plus(FA, A) + pick(['から。', 'からね。', 'んだコン。'])); };
+    const good = u => { const U = u != null && (sc ? sc.has(u) : right(u)) ? u : A, Q = FF(U) || FA; const op = pick(XQJ_LS.open); let s0 = op + ' ' + plus(Q, U) + (/コン/.test(op) ? 'んだ。' : pick(['ね。', 'の。', 'んだコン。', 'ね。', 'の。']));
+      if (sc && U !== A && sc.get(U) < best) s0 += best > WT ? ' AIのいちばんの手より、ほんの少し遠回りだけどね。' : ' AIのいちばんの手とほとんど同じ評価だコン。';
+      return f(s0); };
+    return { ask: pick(A0), hintTx: H.length ? H[(k >> 1) % H.length] : '', good, ng: say, own: true };
+  }
   const XIANGQI = {
     LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
     load() {
@@ -1938,10 +2071,10 @@
       const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), E = window.XiangqiEngine, V = lang === 'ja' ? (this.V || {}) : {};
       const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L((this.data.ls.rampUi || {})[k], lang), v || {});
       const ramp = s.ramp && s.ramp.length ? s.ramp.map((it, j) => { const o = Object.assign({}, it); ['t', 'body', 'g', 'h', 'y'].forEach(f => { const v = V[`ramp:${s.id}/${j}/${f}`] != null ? V[`ramp:${s.id}/${j}/${f}`] : f === 'h' && it.src === 'mirror' && V['ls.' + s.id + '.hint'] != null ? V['ls.' + s.id + '.hint'] : null; if (v != null) o[f] = { ja: v, __voice: true }; }); return o; }) : null;
-      return { id: s.id, title: T('title'), intro: T('intro'), ramp, RU,
+      return { id: s.id, title: T('title'), intro: lang === 'ja' && XQJ_LS.intro[s.id] || T('intro'), ramp, RU,
         probs: (s.problems || []).map(P => { const good = P.ok || [P.best];
           return { pos: { spec: P.s, me: xqMe(P.s) }, kind: 'best', P, ask: T('goal'), ans: P.ok ? P.ok[0] : P.best, hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
-            good: () => T('why', { m: CKM('ok', lang), x: CKM('ng', lang) }), ng: () => T('ng', { m: CKM('ok', lang), x: CKM('ng', lang) }) }; }),
+            good: () => T('why', { m: CKM('ok', lang), x: CKM('ng', lang) }), ng: () => T('ng', { m: CKM('ok', lang), x: CKM('ng', lang) }) }; }).map((o, i) => { if (lang === 'ja' && E) try { Object.assign(o, xqLsJa(E, s, o.P, i, k => CKM(k, lang)) || {}); } catch (e) { console.warn('[lessons3d] xiangqi lesson', e); } return o; }),   // (2026-11-21 lesson loop: ショウギツネ's question, hint, why / what yours misses)
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
