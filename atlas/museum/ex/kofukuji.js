@@ -35,35 +35,37 @@
       const base = new TT.Mesh(new TT.BoxGeometry(CW, .8, CD), cloth); base.position.y = .4; G.add(base);
       const font = '"Yuji Boku","Yu Mincho","Hiragino Mincho ProN",serif';
       // weathered wood, a thousand years in a waterlogged well: pale grey-beige, darker at the edges, streaked and stained
-      const woodFace = (g, W, H, k, tone) => {
-        K.grain(g, W, H, { a: tone > .5 ? '#a8845a' : '#9a774e', b: tone > .5 ? '#8c6a44' : '#7e5e3a', seed: 70 + k, sx: 2.5, sy: 14 + (k % 5) * 2, warp: .08 });   // warm tan, as in the 2022 photographs
-        const n = K.noise(110 + k), img = g.getImageData(0, 0, W, H), d = img.data;
-        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const e = Math.min(x, y, W - x, H - y) / W, a = n(x / 40, y / 40, 3), b = n(x / 9 + 3, y / 9, 2), dk = Math.max(0, .14 - e) * 2.8 + Math.max(0, a - .52) * 1.3 + (b - .5) * .25, i = (y * W + x) * 4;
-          d[i] *= 1 - dk * .5; d[i + 1] *= 1 - dk * .6; d[i + 2] *= 1 - dk * .7; }
+      const woodFace = (g, W, H, k, tone) => {   // (after the 2022 photograph of the pieces: pale yellow-brown wood, fine straight grain running the length of the piece, grey soiling)
+        const n = K.noise(110 + k), img = g.createImageData(W, H), d = img.data, base = tone > .5 ? [178, 142, 86] : [164, 128, 76];
+        const col = new Float32Array(W); { let x = 0; while (x < W) { const wd = 2 + ((n(x * .7, k, 1) * 3) | 0), dk = .1 + n(x * .31 + 9, k * 3, 1) * .3; for (let q = 0; q < wd && x < W; q++, x++) col[x] = q === 0 ? dk : q === 1 ? dk * .35 : 0; } }   // the grain: a dark line every few pixels
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const xs = Math.min(W - 1, Math.max(0, Math.round(x + (n(y / 70, x / 300 + k, 2) - .5) * 5))), e = Math.min(x, y, W - x, H - y) / W, a = n(x / 46, y / 60, 3), b = n(x / 7 + 3, y / 26, 2);
+          const gr = col[xs] * (.6 + b * .8), soil = Math.max(0, a - .44) * 1.9 + Math.max(0, .1 - e) * 2.6, i = (y * W + x) * 4, k2 = (1 - gr) * (.94 + (b - .5) * .16);
+          d[i] = base[0] * k2 * (1 - soil * .5); d[i + 1] = base[1] * k2 * (1 - soil * .52); d[i + 2] = base[2] * k2 * (1 - soil * .42); d[i + 3] = 255; }
         g.putImageData(img, 0, 0);
       };
-      const ink = (g, W, H, txt, keep) => {   // two characters, top to bottom, partly worn away
-        g.save(); g.filter = 'blur(3px)'; g.fillStyle = `rgba(22,16,12,${.5 + keep * .42})`; g.textAlign = 'center'; g.textBaseline = 'middle';
-        const fs = W * (txt.length > 2 ? .34 : .5); g.font = `${Math.round(fs)}px ${font}`;
-        const ch = [...txt], y0 = H * (ch.length > 2 ? .24 : .3), dy = ch.length > 2 ? H * .2 : H * .38;
-        ch.forEach((c, i) => { g.save(); g.translate(W / 2 + (rnd() - .5) * W * .05, y0 + i * dy); g.rotate((rnd() - .5) * .08); g.fillText(c, 0, 0); g.restore(); });
+      const ink = (g, W, H, txt, keep) => {   // written large with a brush, two characters filling the face; the ink greyed, smeared and partly gone
+        const ch = [...txt], nC = ch.length, fs = Math.min(W * .9, H * .9 / nC), y0 = H * .53 - (nC - 1) * fs * .48;
+        g.save(); g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `${Math.round(fs)}px ${font}`;
+        [[7, .3], [2.4, .28 + keep * .5]].forEach(([bl, al]) => { g.filter = `blur(${bl}px)`; g.fillStyle = g.strokeStyle = `rgba(34,31,28,${al})`; g.lineWidth = fs * .05; g.lineJoin = 'round';
+          ch.forEach((c, i) => { g.save(); g.translate(W / 2 + (rnd() - .5) * W * .06, y0 + i * fs * 1.0); g.rotate((rnd() - .5) * .1); g.scale(1.06, .96); g.fillText(c, 0, 0); g.strokeText(c, 0, 0); g.restore(); }); });
+        g.filter = 'blur(4px)'; for (let q = 0; q < 5 + keep * 8; q++) { g.beginPath(); g.ellipse(W * (.2 + rnd() * .6), H * (.15 + rnd() * .7), 3 + rnd() * 9, 5 + rnd() * 16, (rnd() - .5) * .6, 0, 6.29); g.fillStyle = `rgba(34,31,28,${.12 + rnd() * .25})`; g.fill(); }   // smears
         g.restore();
-        // the wood showing through where the ink has worn
-        for (let q = 0; q < 70 * (1.3 - keep); q++) { g.beginPath(); g.ellipse(rnd() * W, rnd() * H, 2 + rnd() * 5, 6 + rnd() * 22, (rnd() - .5) * .3, 0, 6.29); g.fillStyle = `rgba(${148 + rnd() * 24 | 0},${116 + rnd() * 20 | 0},${80 + rnd() * 16 | 0},${.3 + rnd() * .45})`; g.fill(); }   // worn along the grain
+        // worn along the grain: long thin streaks where the wood shows through
+        for (let q = 0; q < 200 * (1.3 - keep); q++) { g.beginPath(); g.ellipse(rnd() * W, rnd() * H, .8 + rnd() * 2.6, 8 + rnd() * 34, 0, 0, 6.29); g.fillStyle = `rgba(${172 + rnd() * 20 | 0},${140 + rnd() * 18 | 0},${90 + rnd() * 14 | 0},${.25 + rnd() * .45})`; g.fill(); }
       };
       const mats = [];
       const pieceMat = (txt, k, w, h, keep) => {
-        const W = 192, H = Math.round(192 * h / w), tone = rnd();
+        const W = 256, H = Math.round(256 * h / w), tone = rnd();
         const T = K.tex(W, H, g => { woodFace(g, W, H, k, tone); if (txt) ink(g, W, H, txt, keep); });
         T.repeat.set(1 / w, 1 / h); T.offset.set(.5, 0);
         const sideT = K.tex(64, 64, g => woodFace(g, 64, 64, k + 50, tone * .6));
-        const m = [K.mat({ map: T, color: '#e4d2bc', roughness: .9 }), K.mat({ map: sideT, color: '#c8a878', roughness: .92 })]; mats.push(m); return m;
+        const m = [K.mat({ map: T, color: '#ffffff', roughness: .9 }), K.mat({ map: sideT, color: '#d8c4a0', roughness: .92 })]; mats.push(m); return m;
       };
       // one piece: an irregular, hand-cut pentagon, a little chipped
       const piece = (txt, k, w, h, t, keep) => {
         const j = () => (rnd() - .5) * .1, sh = h * (.08 + rnd() * .07), S = new TT.Shape();
         S.moveTo(-w / 2 + j(), j() * .4); S.lineTo(w / 2 + j(), j() * .4); S.lineTo(w / 2 * (.95 + rnd() * .04) + j(), h - sh + j());
-        S.lineTo(w * .3, h + j() * .5); S.lineTo(-w * .3, h + j() * .5); S.lineTo(-w / 2 * (.95 + rnd() * .04) + j(), h - sh + j()); S.closePath();
+        S.lineTo(j() * .6, h + j() * .4); S.lineTo(-w / 2 * (.95 + rnd() * .04) + j(), h - sh + j()); S.closePath();   // one shallow point at the head (the photograph)
         const geo = new TT.ExtrudeGeometry(S, { depth: t, bevelEnabled: true, bevelThickness: .03, bevelSize: .04, bevelSegments: 1 });
         const m = new TT.Mesh(geo, pieceMat(txt, k, w, h, keep)); m.castShadow = m.receiveShadow = true; return m;
       };

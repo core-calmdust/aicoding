@@ -931,38 +931,510 @@
      the stages' shortest routes — 「次にどこへ動かす？」 at a position on a shortest route (right = every move that keeps the route
      shortest; a 'safe' stage bars the squares a black piece attacks, as the drill does). Solved here by a breadth-first search over
      (square, piece, black pieces left, ★ left) — the black pieces never move, a ★ is taken by landing on it (= chess/app.js drillMove). */
+  // the words, per language (2026-11-22 user: ほかの言語もナイトンらしく): ask / hint by the piece, praise good(x, R) + R (why it is right),
+  // a miss ng(m, x, W) + W (what yours costs). R / W entries: a string or p => string, p = { r: moves left after, e: moves lost, cp: the black
+  // piece taken (in the form the line needs), how (ja), k: the king, t: the right move took a ★, M: n → 'n moves' }. Each list has 3 so the
+  // 3 problems of a lesson say it differently.
   const CDQ = {
-    pk: { r: 'ルーク', b: 'ビショップ', q: 'クイーン', k: 'キング', n: 'ナイト', p: 'ポーン' },
-    how: { r: 'タテ・ヨコの線', b: 'ナナメの線', q: '長い線', k: '1マスの歩み', n: 'L字の跳び', p: 'まっすぐな前進' },
-    ask: {
-      b_rook: ['さあ、ここからは問題ピョン！ ★を最短で集めるには、ルークを次にどこへ動かす？', 'ルークの次の行き先はどこかな？ 遠回りしない道を選んでね！', '残りの★を一番少ない手数で取りたい。きみならどのマスへ進める？'],
-      b_bishop: ['ここからは問題ピョン！ ビショップの次の一手で、★への近道はどれ？', 'ナナメの道を使って、手数を少なく集めるには？', '残りの★、どの順で回る？ 最初に進むマスを選んでね！'],
-      b_queen: ['問題の時間ピョン！ クイーンを次にどこへ動かせば、最短で★が集まる？', '8方向に動けるクイーン。いちばんムダのない一手はどれかな？', '★を全部取るまで何手？ その最短コースの最初の一手を指して！'],
-      b_king: ['ここからは問題ピョン！ キングの次の一歩、どこが最短？', '1マスずつのキングでも、ムダなく歩けるかな？', 'あと何歩で★が全部集まる？ 近道の一歩を選んでね！'],
-      b_knight: ['いよいよ問題ピョン！ ナイトをどこへ跳ばせば、★に一番早く届く？', 'L字の跳び先はたくさん。最短コースに乗るのはどれかな？', 'ぼくの得意な跳び、きみも使いこなせる？ 次の跳び先を選んで！'],
-      b_pawn: ['ここからは問題ピョン！ ポーンを次にどう進める？', 'まっすぐ？ それともナナメに取る？ 一番の近道はどっちかな？', '★まで最短で行く一手、見つけられる？'],
-      b_capture: ['問題の時間ピョン！ 黒い駒を最短で取りつくすには、次にどこへ動かす？', 'どの駒から取りに行く？ 取る順番がポイントだよ！', '残りの★、少ない手数で回収できるかな？ 次の一手を選んで！'],
-      b_safety: ['ここからは問題ピョン！ しましまを避けて最短で★へ行くには、次にどこ？', '取られないマスだけで、一番の近道はどれかな？', '安全第一、でもムダは少なく！ 次の一手はどこ？'],
+    ja: {
+      M: n => n + '手', cp: { p: 'ポーン', n: 'ナイト', b: 'ビショップ', r: 'ルーク', q: 'クイーン' },
+      how: { r: 'タテ・ヨコの線', b: 'ナナメの線', q: '長い線', k: '1マスの歩み', n: 'L字の跳び', p: 'まっすぐな前進' },
+      askS: {
+        b_rook: ['さあ、ここからは問題ピョン！ ★を最短で集めるには、ルークを次にどこへ動かす？', 'ルークの次の行き先はどこかな？ 遠回りしない道を選んでね！', '残りの★を一番少ない手数で取りたい。きみならどのマスへ進める？'],
+        b_bishop: ['ここからは問題ピョン！ ビショップの次の一手で、★への近道はどれ？', 'ナナメの道を使って、手数を少なく集めるには？', '残りの★、どの順で回る？ 最初に進むマスを選んでね！'],
+        b_queen: ['問題の時間ピョン！ クイーンを次にどこへ動かせば、最短で★が集まる？', '8方向に動けるクイーン。いちばんムダのない一手はどれかな？', '★を全部取るまで何手？ その最短コースの最初の一手を指して！'],
+        b_king: ['ここからは問題ピョン！ キングの次の一歩、どこが最短？', '1マスずつのキングでも、ムダなく歩けるかな？', 'あと何歩で★が全部集まる？ 近道の一歩を選んでね！'],
+        b_knight: ['いよいよ問題ピョン！ ナイトをどこへ跳ばせば、★に一番早く届く？', 'L字の跳び先はたくさん。最短コースに乗るのはどれかな？', 'ぼくの得意な跳び、きみも使いこなせる？ 次の跳び先を選んで！'],
+        b_pawn: ['ここからは問題ピョン！ ポーンを次にどう進める？', 'まっすぐ？ それともナナメに取る？ 一番の近道はどっちかな？', '★まで最短で行く一手、見つけられる？'],
+        b_capture: ['問題の時間ピョン！ 黒い駒を最短で取りつくすには、次にどこへ動かす？', 'どの駒から取りに行く？ 取る順番がポイントだよ！', '残りの★、少ない手数で回収できるかな？ 次の一手を選んで！'],
+        b_safety: ['ここからは問題ピョン！ しましまを避けて最短で★へ行くには、次にどこ？', '取られないマスだけで、一番の近道はどれかな？', '安全第一、でもムダは少なく！ 次の一手はどこ？'],
+      },
+      hint: {
+        r: ['ルークはタテとヨコにまっすぐ。★と同じ列か段に入れるマスはどこかな？', '次の手で★に届かなくても平気。2手目で★を取れる場所を考えてみて！', '曲がり角になるマスを決めると、道すじが見えてくるピョン！'],
+        b: ['ビショップはナナメにだけ進む。★とナナメに並ぶマスを探してみて！', '★を2つ、ナナメの線でつなげられないかな？', 'ナナメの線が交わるマスに立つと、次の★を取りやすいピョン。'],
+        q: ['クイーンはタテ・ヨコ・ナナメのどれでも行ける。2つの★の両方に届くマスはある？', '取る順番を変えると、手数がへることもあるピョン！', 'ナナメを使うと近道になるかも？ 8方向ぜんぶ見てみて！'],
+        k: ['キングは1マスずつ。★までのマス数を数えてみよう！', 'ナナメに1歩動くと、タテとヨコを同時に1つ進めるピョン。', 'どの★から回ると、行ったり来たりしないですむかな？'],
+        n: ['今いるマスから跳べる先を、全部思いうかべてみて！', '★にすぐ届かないときは、2回の跳びで届くマスを探すピョン。', '跳ぶたびにマスの色が変わる。★のマスの色から、あと何回跳ぶか考えてみて！'],
+        p2: '最初の1回だけは、2マス進めるのを覚えてる？', px: '駒を取るときだけは、ナナメ前に進めるピョン。', pf: 'ポーンは前にまっすぐ1マスずつ。後ろには戻れないから、慎重にね！',
+        cap: '取ったあとの位置から、次の駒もねらえる？', safe: '赤いしましまのマスには入れないピョン。ねらわれていないマスを伝っていこう！',
+      },
+      good: [(x, R) => `いいね、${x}で正解！ ${R} この調子で次も行こう！`, (x, R) => `お見事！ ${x}が最短コースだピョン。${R}`, (x, R) => `さすが、よく見つけたね！ ${x}、ばっちり。${R} どんどん上手になってるピョン！`],
+      ng: [(m, x, W) => `大丈夫、ここで覚えればいい！ ${m}が近道だったピョン。${x}だと、${W}`, (m, x, W) => `あと少し！ 正解は${m}。${x}では、${W}`, (m, x, W) => `${m}を選べたら満点だったね。${x}にすると、${W} 次はいけるはず！`],
+      R: {
+        last: ['最後の★までひとっ飛び、これで全部集まったね。', '残っていた★を一気に回収！ 手数もぴったり。', 'これで★はゼロ。ムダな手がひとつもなかった！'],
+        cap: [p => `黒い${p.cp}を取って、次の★へも${p.how}がつながる。残りあと${p.r}手！`, p => `${p.cp}を取ったマスが、そのまま次への近道になってる。`, p => `${p.cp}を取りつつ、次の★まで${p.r}手。順番がばっちり！`],
+        starNx: ['★を取ったマスから、次の★にもすぐ届くからね。', '★を取りながら、次の★まで一直線につながるんだ。', '取ったその場所から、次の★がもう射程に入ってる！'],
+        starR: [p => `★を取ったあと、残り${p.r}手で全部取れるから。`, p => `先にこの★を取っておくと、あと${p.r}手で終わる。`, p => `この★からなら、残りもあと${p.r}手で回れる。`],
+        promo: 'ここで成ってクイーンに！ 動ける方向がいっきに増えるピョン。',
+        mid: [p => `★はまだ取らないけど、次の手で★に届くマス。${p.k ? 'ムダな一歩がない' : 'ちょうどいい中継地点'}！`, p => `いったんここへ寄ると、次の${p.how}で★に届くんだ。`, '寄り道に見えて、じつは次の★への近道なんだ。'],
+        path: [p => `ここからなら残り${p.r}手で全部集まる。遠回りゼロ！`, p => `このマスを通ると、あと${p.r}手で終わる道すじになるピョン。`, p => `急がば回れ！ ここを通るのが、あと${p.r}手の最短コース。`],
+      },
+      W: {
+        greedy: [p => `★は取れるけど、残りの★が遠くなって${p.e}手よけいにかかっちゃう。取る順番が大事なんだ。`, p => `目の前の★に飛びつくと、残りが遠回りで${p.e}手のロス。先を読むのがコツ！`, p => `★をひとつ取れても、そのあとが${p.e}手長くなる。順番を入れかえてみよう！`],
+        pawn: ['ポーンは後ろに戻れないから、★のある段を通りすぎると取りに戻れない。', 'まっすぐ進むと、ナナメ前の★が取れなくなっちゃう。ポーンは戻れないからね。', '前に進んだポーンは戻れない。★を取るチャンスが消えちゃうんだ。'],
+        dead: 'そこへ行くと、もう全部の★は取れなくなっちゃう。',
+        cap: [p => `じゃまな駒を取っても、★まで${p.e}手の遠回りになる。`, p => `その駒を取るのは寄り道。★まで${p.e}手よけいにかかる。`, p => `駒を取っても★には近づかなくて、${p.e}手のムダが出る。`],
+        noReach: [p => `そのマスからは次の手で届く★がひとつもないから、${p.e}手遠回りになっちゃう。`, p => `次の手で★をねらえない場所だから、${p.e}手ぶん損しちゃう。`, p => `次の手で届く★がなくて、${p.e}手よけいにかかるんだ。`],
+        off: [p => `★はねらえるけど、道すじがずれて${p.e}手のロス。${p.t ? '取れる★は先に取っておこう！' : ''}`, p => `★には近づくけど、回る順がずれて${p.e}手長くなる。${p.t ? 'すぐ取れる★を見のがさないでね。' : ''}`, p => `届く★はあるけど、全部まわると${p.e}手のムダ。${p.t ? '先に取れる★があったんだ。' : ''}`],
+      },
+      done: '★集め、おつかれさま！', go: ['全部★3つ、すごいピョン！ 次は、いまの道すじから問題を3つ。最短の一手を選んでね！', 'よくがんばったね！ 次は、いまの道すじから問題を3つ。最短の一手を探してみよう！'],
     },
-    hint: {
-      r: ['ルークはタテとヨコにまっすぐ。★と同じ列か段に入れるマスはどこかな？', '次の手で★に届かなくても平気。2手目で★を取れる場所を考えてみて！', '曲がり角になるマスを決めると、道すじが見えてくるピョン！'],
-      b: ['ビショップはナナメにだけ進む。★とナナメに並ぶマスを探してみて！', '★を2つ、ナナメの線でつなげられないかな？', 'ナナメの線が交わるマスに立つと、次の★を取りやすいピョン。'],
-      q: ['クイーンはタテ・ヨコ・ナナメのどれでも行ける。2つの★の両方に届くマスはある？', '取る順番を変えると、手数がへることもあるピョン！', 'ナナメを使うと近道になるかも？ 8方向ぜんぶ見てみて！'],
-      k: ['キングは1マスずつ。★までのマス数を数えてみよう！', 'ナナメに1歩動くと、タテとヨコを同時に1つ進めるピョン。', 'どの★から回ると、行ったり来たりしないですむかな？'],
-      n: ['今いるマスから跳べる先を、全部思いうかべてみて！', '★にすぐ届かないときは、2回の跳びで届くマスを探すピョン。', '跳ぶたびにマスの色が変わる。★のマスの色から、あと何回跳ぶか考えてみて！'],
-      p2: '最初の1回だけは、2マス進めるのを覚えてる？', px: '駒を取るときだけは、ナナメ前に進めるピョン。', pf: 'ポーンは前にまっすぐ1マスずつ。後ろには戻れないから、慎重にね！',
-      cap: '取ったあとの位置からも、次の駒をねらえるかな？', safe: '赤いしましまのマスには入れないピョン。ねらわれていないマスを伝っていこう！',
+    en: {
+      M: n => n === 1 ? 'one move' : n + ' moves', pk: { r: 'your rook', b: 'your bishop', q: 'your queen', k: 'your king', n: 'your knight', p: 'your pawn' }, cp: { p: 'the pawn', n: 'the knight', b: 'the bishop', r: 'the rook', q: 'the queen' },
+      ask: ['Puzzle time, hop! To grab every ★ in the fewest moves, where does {p} go next?', 'Where should {p} go next? Pick the route with no detours!', 'Can you sweep up the rest in as few moves as possible? Choose the next square for {p}!'],
+      askCap: ['Puzzle time, hop! To capture them all in the fewest moves, where do you go next?', 'Which piece will you go for first? The order is the key!', 'Can you clear the last ★ in just a few moves? Pick your next move!'],
+      askSafe: ['Puzzle time, hop! Dodging the stripes, what\'s the shortest way to the ★?', 'Using only safe squares, which move is the shortcut?', 'Safety first — but no wasted moves! Where to next?'],
+      hint: {
+        r: ['The rook goes straight: up, down and sideways. Which square lines it up with a ★?', 'No ★ in reach yet? That\'s fine. Find a square that grabs one on the next move!', 'Pick the corner where your route turns, and the path appears, hop!'],
+        b: ['The bishop only moves diagonally. Look for a square on a diagonal with a ★!', 'Can two ★ be linked by a single diagonal?', 'Stand where two diagonals cross and the next ★ is easy to reach, hop!'],
+        q: ['The queen goes straight or diagonally. Is there a square that reaches both ★?', 'Changing the order can save a move, hop!', 'A diagonal might be the shortcut. Check all eight directions!'],
+        k: ['The king steps one square at a time. Count the squares to each ★!', 'One diagonal step moves you a file and a rank at once, hop!', 'Which ★ should come first so you never have to walk back?'],
+        n: ['Picture every square your knight can jump to from here!', 'If no ★ is one jump away, look for one that\'s two jumps away, hop!', 'Every jump switches the square\'s colour. Use the ★\'s colour to count the jumps!'],
+        p2: 'Remember: on its very first move, a pawn may step two squares!', px: 'Only when it captures does a pawn move diagonally forward, hop!', pf: 'Pawns go straight ahead, one square at a time, and never back. Careful!',
+        cap: 'From the square where you capture, can you reach the next piece?', safe: 'You can\'t step on the red stripes, hop! Travel along the squares nobody attacks.',
+      },
+      good: [(x, R) => `Nice, ${x} is right! ${R} Keep it up on the next one!`, (x, R) => `Brilliant! ${x} is the shortest route, hop! ${R}`, (x, R) => `Great find! ${x}, spot on. ${R} You're getting better and better!`],
+      ng: [(m, x, W) => `It's okay, now you know! ${m} was the shortcut, hop. With ${x}, ${W}`, (m, x, W) => `So close! The answer is ${m}. After ${x}, ${W}`, (m, x, W) => `${m} would have been perfect. Playing ${x}, ${W} You'll get the next one!`],
+      R: {
+        last: ['One hop to the last ★, and that\'s all of them!', 'The last ★ is yours, right on target!', 'No ★ left, and not a single wasted move!'],
+        cap: [p => `You take ${p.cp} and the road to the next ★ stays open. Only ${p.M(p.r)} to go!`, p => `The square where you take ${p.cp} is a shortcut to the next one.`, p => `Take ${p.cp}, then just ${p.M(p.r)} to the next ★. Perfect order!`],
+        starNx: ['From the ★ you just took, the next one is already in reach.', 'You grab a ★ and line up straight for the next one!', 'Right where you landed, the next ★ is already in range!'],
+        starR: [p => `After this ★, the rest takes only ${p.M(p.r)}.`, p => `Take this ★ first and you're done in ${p.M(p.r)}.`, p => `From this ★, you can sweep up the rest in ${p.M(p.r)}.`],
+        promo: 'Promote to a queen right here! Now you can go in every direction, hop!',
+        mid: [p => `No ★ yet, but from here one is in reach next move. ${p.k ? 'Not a single wasted step!' : 'The perfect stepping stone!'}`, 'Stopping here first lets you reach a ★ on the very next move.', 'It looks like a detour, but it\'s really the shortcut to the next ★.'],
+        path: [p => `From here, every ★ takes just ${p.M(p.r)} more. Zero detours!`, p => `Go through this square and you finish in ${p.M(p.r)}, hop!`, p => `Slow and steady! This square is on the shortest route, ${p.M(p.r)} to go.`],
+      },
+      W: {
+        greedy: [p => `you get a ★, but the others end up far away and it costs ${p.M(p.e)} extra. The order matters!`, p => `jumping at the nearest ★ turns the rest into a detour: ${p.M(p.e)} lost. Look ahead!`, p => `one ★ comes easy, but the rest takes ${p.M(p.e)} longer. Try another order!`],
+        pawn: ['pawns can\'t go back, so once you pass the ★\'s row you can\'t return for it.', 'marching straight on loses the ★ diagonally in front. Pawns never go back!', 'a pawn that moves forward can\'t come back, and the chance at the ★ is gone.'],
+        dead: 'you can no longer collect every ★.',
+        cap: [p => `taking that blocker sends you ${p.M(p.e)} out of your way.`, p => `that capture is a side trip: ${p.M(p.e)} extra to the ★.`, p => `the capture brings you no closer to a ★, so you waste ${p.M(p.e)}.`],
+        noReach: [p => `no ★ can be reached from there next move, so it's a detour of ${p.M(p.e)}.`, p => `from there you can't aim at a ★ next move, and you lose ${p.M(p.e)}.`, p => `no ★ is one move from that square, so it takes ${p.M(p.e)} more.`],
+        off: [p => `you can aim at a ★, but the route slips and costs ${p.M(p.e)}.${p.t ? ' Grab the ★ you can take first!' : ''}`, p => `you get closer, but the order goes wrong and it's ${p.M(p.e)} longer.${p.t ? ' Don\'t miss a ★ you can take right away!' : ''}`, p => `a ★ is in reach, but going round them all wastes ${p.M(p.e)}.${p.t ? ' There was a ★ to take first!' : ''}`],
+      },
+      done: '★ collecting done, great hopping!', go: ['Three ★ on every stage, amazing, hop! Next: 3 puzzles from the routes you just walked. Find the shortest move!', 'Well done! Next: 3 puzzles from those routes. Look for the shortest move!'],
     },
-    good: [
-      (x, R) => `いいね、${x}で正解！ ${R} この調子で次も行こう！`,
-      (x, R) => `お見事！ ${x}が最短コースだピョン。${R}`,
-      (x, R) => `さすが、よく見つけたね！ ${x}、ばっちり。${R} どんどん上手になってるピョン！`,
-    ],
-    ng: [
-      (m, x, W) => `大丈夫、ここで覚えればいい！ ${m}が近道だったピョン。${x}だと、${W}`,
-      (m, x, W) => `あと少し！ 正解は${m}。${x}では、${W}`,
-      (m, x, W) => `${m}を選べたら満点だったね。${x}にすると、${W} 次はいけるはず！`,
-    ],
+    zh: {
+      M: n => n + '步', pk: { r: '车', b: '象', q: '后', k: '王', n: '马', p: '兵' }, cp: { p: '兵', n: '马', b: '象', r: '车', q: '后' },
+      ask: ['出题啦，蹦！想用最少的步数收集所有★，{p}下一步走到哪？', '{p}下一步去哪儿好呢？选一条不绕远的路吧！', '剩下的★能用最少的步数拿完吗？给{p}选下一格吧！'],
+      askCap: ['出题啦，蹦！想用最少的步数吃光黑子，下一步走到哪？', '先去吃哪一个？顺序才是关键哦！', '剩下的★，几步就能收完吗？选出你的下一步！'],
+      askSafe: ['出题啦，蹦！避开条纹格，最快到达★的下一步是哪？', '只走安全的格子，哪一步是近路？', '安全第一，但也别浪费步数！下一步走哪？'],
+      hint: {
+        r: ['车只能横竖直走。哪一格能和★排在同一行或同一列？', '下一步碰不到★也没关系。想想哪一格能在第二步拿到★！', '先决定在哪里拐弯，路线就看清楚了，蹦！'],
+        b: ['象只能斜着走。找找和★在同一条斜线上的格子吧！', '能不能用一条斜线把两颗★连起来？', '站在两条斜线交叉的地方，下一颗★就好拿了，蹦！'],
+        q: ['后可以横、竖、斜任意走。有没有一格能同时够到两颗★？', '换个顺序，有时能省下一步哦，蹦！', '走斜线说不定是近路？八个方向都看看吧！'],
+        k: ['王一次只走一格。数一数到每颗★有几格吧！', '斜走一格，等于同时横竖各走一格，蹦！', '先去哪颗★，才不用走回头路呢？'],
+        n: ['把马从这里能跳到的格子全想一遍吧！', '一跳够不着★的时候，找找两跳能到的格子，蹦！', '每跳一次格子颜色都会变。看看★的颜色，算算还要跳几次！'],
+        p2: '还记得吗？兵第一次走的时候可以走两格！', px: '只有吃子的时候，兵才能斜着往前走，蹦！', pf: '兵只能一格一格往前走，不能后退，要小心哦！',
+        cap: '吃子之后的位置，还能瞄准下一个吗？', safe: '红色条纹的格子不能进，蹦！沿着没被攻击的格子走吧。',
+      },
+      good: [(x, R) => `不错，${x}正确！${R}下一题也保持这个势头！`, (x, R) => `漂亮！${x}就是最短路线，蹦！${R}`, (x, R) => `厉害，被你找到了！${x}，完美。${R}你越来越棒了！`],
+      ng: [(m, x, W) => `没关系，现在学会就好！${m}才是近路，蹦。走${x}的话，${W}`, (m, x, W) => `就差一点！正解是${m}。走${x}，${W}`, (m, x, W) => `选${m}就满分啦。走${x}的话，${W}下一题一定行！`],
+      R: {
+        last: ['一跳拿下最后一颗★，全部到手！', '最后一颗★也收进来了，步数刚刚好！', '★一颗不剩，而且一步都没浪费！'],
+        cap: [p => `吃掉黑${p.cp}，通往下一颗★的路也通了。只剩${p.M(p.r)}！`, p => `吃掉${p.cp}的这一格，正好是去下一颗的近路。`, p => `吃掉${p.cp}，再走${p.M(p.r)}就到下一颗★。顺序完美！`],
+        starNx: ['拿到★的这一格，下一颗★马上就够得着。', '一边拿★，一边直通下一颗！', '就在落脚的地方，下一颗★已经在射程里了！'],
+        starR: [p => `拿下这颗★之后，剩下的只要${p.M(p.r)}。`, p => `先拿这颗★，再走${p.M(p.r)}就结束了。`, p => `从这颗★出发，剩下的${p.M(p.r)}就能收完。`],
+        promo: '就在这里升变成后！能走的方向一下子变多了，蹦！',
+        mid: [p => `虽然还没拿★，但下一步就能够到。${p.k ? '一步都不浪费！' : '绝佳的中转站！'}`, '先停在这里，下一步就能拿到★。', '看起来像绕路，其实是去下一颗★的近路。'],
+        path: [p => `从这里出发，再走${p.M(p.r)}就全收齐了。零绕路！`, p => `经过这一格，${p.M(p.r)}就能走完，蹦！`, p => `欲速则不达！这一格就在最短路线上，还剩${p.M(p.r)}。`],
+      },
+      W: {
+        greedy: [p => `能拿到一颗★，可剩下的变远了，要多花${p.M(p.e)}。顺序很重要哦！`, p => `急着扑向眼前的★，剩下的就得绕路，损失${p.M(p.e)}。要往前多想一步！`, p => `拿到一颗★，后面却多了${p.M(p.e)}。换个顺序试试吧！`],
+        pawn: ['兵不能后退，走过★所在的那一行就回不去了。', '一直往前走，斜前方的★就吃不到了。兵是不能回头的！', '往前走的兵回不来，拿★的机会就没了。'],
+        dead: '就再也拿不全所有的★了。',
+        cap: [p => `吃掉挡路的棋子，反而绕了${p.M(p.e)}的远路。`, p => `吃那个子是绕道，到★要多花${p.M(p.e)}。`, p => `吃了子也没离★更近，白白浪费${p.M(p.e)}。`],
+        noReach: [p => `从那一格下一步一颗★都够不着，绕远了${p.M(p.e)}。`, p => `那里下一步瞄不到★，所以亏了${p.M(p.e)}。`, p => `那一格一步之内没有★，要多走${p.M(p.e)}。`],
+        off: [p => `虽然能瞄准★，可路线偏了，损失${p.M(p.e)}。${p.t ? '能拿的★要先拿哦！' : ''}`, p => `离★近了，但顺序乱了，多了${p.M(p.e)}。${p.t ? '别漏掉马上能拿的★！' : ''}`, p => `有够得着的★，但全部绕一圈要浪费${p.M(p.e)}。${p.t ? '其实有一颗★可以先拿！' : ''}`],
+      },
+      done: '收集★完成，辛苦啦！', go: ['每关都是3颗★，太棒了，蹦！接下来用刚才的路线出3道题，选出最短的一步吧！', '做得很好！接下来用刚才的路线出3道题，找找最短的一步吧！'],
+    },
+    'zh-TW': {
+      M: n => n + '步', pk: { r: '城堡', b: '主教', q: '皇后', k: '國王', n: '騎士', p: '士兵' }, cp: { p: '士兵', n: '騎士', b: '主教', r: '城堡', q: '皇后' },
+      ask: ['出題囉，蹦！想用最少的步數收集所有★，{p}下一步走到哪？', '{p}下一步去哪裡好呢？選一條不繞遠的路吧！', '剩下的★能用最少的步數拿完嗎？幫{p}選下一格吧！'],
+      askCap: ['出題囉，蹦！想用最少的步數吃光黑子，下一步走到哪？', '先去吃哪一個？順序才是關鍵喔！', '剩下的★，幾步就能收完嗎？選出你的下一步！'],
+      askSafe: ['出題囉，蹦！避開條紋格，最快到達★的下一步是哪？', '只走安全的格子，哪一步是捷徑？', '安全第一，但也別浪費步數！下一步走哪？'],
+      hint: {
+        r: ['城堡只能橫豎直走。哪一格能和★排在同一行或同一列？', '下一步碰不到★也沒關係。想想哪一格能在第二步拿到★！', '先決定在哪裡轉彎，路線就看清楚了，蹦！'],
+        b: ['主教只能斜著走。找找和★在同一條斜線上的格子吧！', '能不能用一條斜線把兩顆★連起來？', '站在兩條斜線交叉的地方，下一顆★就好拿了，蹦！'],
+        q: ['皇后可以橫、豎、斜任意走。有沒有一格能同時碰到兩顆★？', '換個順序，有時能省下一步喔，蹦！', '走斜線說不定是捷徑？八個方向都看看吧！'],
+        k: ['國王一次只走一格。數一數到每顆★有幾格吧！', '斜走一格，等於同時橫豎各走一格，蹦！', '先去哪顆★，才不用走回頭路呢？'],
+        n: ['把騎士從這裡能跳到的格子全想一遍吧！', '一跳碰不到★的時候，找找兩跳能到的格子，蹦！', '每跳一次格子顏色都會變。看看★的顏色，算算還要跳幾次！'],
+        p2: '還記得嗎？士兵第一次走的時候可以走兩格！', px: '只有吃子的時候，士兵才能斜著往前走，蹦！', pf: '士兵只能一格一格往前走，不能後退，要小心喔！',
+        cap: '吃子之後的位置，還能瞄準下一個嗎？', safe: '紅色條紋的格子不能進，蹦！沿著沒被攻擊的格子走吧。',
+      },
+      good: [(x, R) => `不錯，${x}正確！${R}下一題也保持這個氣勢！`, (x, R) => `漂亮！${x}就是最短路線，蹦！${R}`, (x, R) => `厲害，被你找到了！${x}，完美。${R}你越來越棒了！`],
+      ng: [(m, x, W) => `沒關係，現在學會就好！${m}才是捷徑，蹦。走${x}的話，${W}`, (m, x, W) => `就差一點！正解是${m}。走${x}，${W}`, (m, x, W) => `選${m}就滿分囉。走${x}的話，${W}下一題一定行！`],
+      R: {
+        last: ['一跳拿下最後一顆★，全部到手！', '最後一顆★也收進來了，步數剛剛好！', '★一顆不剩，而且一步都沒浪費！'],
+        cap: [p => `吃掉黑${p.cp}，通往下一顆★的路也通了。只剩${p.M(p.r)}！`, p => `吃掉${p.cp}的這一格，正好是去下一顆的捷徑。`, p => `吃掉${p.cp}，再走${p.M(p.r)}就到下一顆★。順序完美！`],
+        starNx: ['拿到★的這一格，下一顆★馬上就碰得到。', '一邊拿★，一邊直通下一顆！', '就在落腳的地方，下一顆★已經在射程裡了！'],
+        starR: [p => `拿下這顆★之後，剩下的只要${p.M(p.r)}。`, p => `先拿這顆★，再走${p.M(p.r)}就結束了。`, p => `從這顆★出發，剩下的${p.M(p.r)}就能收完。`],
+        promo: '就在這裡升變成皇后！能走的方向一下子變多了，蹦！',
+        mid: [p => `雖然還沒拿★，但下一步就能碰到。${p.k ? '一步都不浪費！' : '絕佳的中繼站！'}`, '先停在這裡，下一步就能拿到★。', '看起來像繞路，其實是去下一顆★的捷徑。'],
+        path: [p => `從這裡出發，再走${p.M(p.r)}就全收齊了。零繞路！`, p => `經過這一格，${p.M(p.r)}就能走完，蹦！`, p => `欲速則不達！這一格就在最短路線上，還剩${p.M(p.r)}。`],
+      },
+      W: {
+        greedy: [p => `能拿到一顆★，可是剩下的變遠了，要多花${p.M(p.e)}。順序很重要喔！`, p => `急著撲向眼前的★，剩下的就得繞路，損失${p.M(p.e)}。要往前多想一步！`, p => `拿到一顆★，後面卻多了${p.M(p.e)}。換個順序試試吧！`],
+        pawn: ['士兵不能後退，走過★所在的那一行就回不去了。', '一直往前走，斜前方的★就吃不到了。士兵是不能回頭的！', '往前走的士兵回不來，拿★的機會就沒了。'],
+        dead: '就再也拿不全所有的★了。',
+        cap: [p => `吃掉擋路的棋子，反而繞了${p.M(p.e)}的遠路。`, p => `吃那個子是繞道，到★要多花${p.M(p.e)}。`, p => `吃了子也沒離★更近，白白浪費${p.M(p.e)}。`],
+        noReach: [p => `從那一格下一步一顆★都碰不到，繞遠了${p.M(p.e)}。`, p => `那裡下一步瞄不到★，所以虧了${p.M(p.e)}。`, p => `那一格一步之內沒有★，要多走${p.M(p.e)}。`],
+        off: [p => `雖然能瞄準★，可是路線偏了，損失${p.M(p.e)}。${p.t ? '能拿的★要先拿喔！' : ''}`, p => `離★近了，但順序亂了，多了${p.M(p.e)}。${p.t ? '別漏掉馬上能拿的★！' : ''}`, p => `有碰得到的★，但全部繞一圈要浪費${p.M(p.e)}。${p.t ? '其實有一顆★可以先拿！' : ''}`],
+      },
+      done: '收集★完成，辛苦囉！', go: ['每關都是3顆★，太棒了，蹦！接下來用剛才的路線出3道題，選出最短的一步吧！', '做得很好！接下來用剛才的路線出3道題，找找最短的一步吧！'],
+    },
+    ko: {
+      M: n => n + '수', pk: { r: '룩', b: '비숍', q: '퀸', k: '킹', n: '나이트', p: '폰' }, cp: { p: '폰', n: '나이트', b: '비숍', r: '룩', q: '퀸' },
+      ask: ['문제 시간이야, 깡충! ★을 가장 적은 수로 모으려면, {p}의 다음 칸은 어디일까?', '{p}, 다음엔 어디로 가면 좋을까? 돌아가지 않는 길을 골라 봐!', '남은 ★을 최소한의 수로 모을 수 있을까? {p}의 다음 칸을 골라 줘!'],
+      askCap: ['문제 시간이야, 깡충! 검은 기물을 가장 빨리 다 잡으려면 다음엔 어디로?', '어느 기물부터 잡으러 갈까? 순서가 포인트야!', '남은 ★, 몇 수 만에 모을 수 있을까? 다음 수를 골라 봐!'],
+      askSafe: ['문제 시간이야, 깡충! 줄무늬를 피해서 ★까지 가장 빨리 가려면 다음은 어디?', '안전한 칸만 밟으면서, 지름길이 되는 수는 뭘까?', '안전이 먼저, 그래도 낭비는 없이! 다음 수는 어디야?'],
+      hint: {
+        r: ['룩은 가로세로로 곧게 움직여. ★과 같은 줄에 들어가는 칸이 어디일까?', '다음 수에 ★이 안 닿아도 괜찮아. 두 번째 수에 ★을 잡을 수 있는 칸을 생각해 봐!', '꺾는 칸을 먼저 정하면 길이 보이기 시작해, 깡충!'],
+        b: ['비숍은 대각선으로만 움직여. ★과 같은 대각선에 있는 칸을 찾아봐!', '★ 두 개를 하나의 대각선으로 이을 수 없을까?', '대각선 두 개가 만나는 칸에 서면 다음 ★을 잡기 쉬워, 깡충!'],
+        q: ['퀸은 가로, 세로, 대각선 어디로든 갈 수 있어. ★ 두 개에 모두 닿는 칸이 있을까?', '잡는 순서를 바꾸면 한 수를 아낄 때도 있어, 깡충!', '대각선이 지름길일지도? 여덟 방향을 다 살펴봐!'],
+        k: ['킹은 한 칸씩만 움직여. 각 ★까지 몇 칸인지 세어 보자!', '대각선으로 한 칸 가면 가로와 세로를 동시에 한 칸씩 가는 거야, 깡충!', '어느 ★부터 돌면 왔다 갔다 하지 않아도 될까?'],
+        n: ['지금 칸에서 나이트가 뛸 수 있는 곳을 전부 떠올려 봐!', '한 번에 ★에 안 닿으면, 두 번 뛰어서 닿는 칸을 찾아봐, 깡충!', '뛸 때마다 칸 색이 바뀌어. ★의 칸 색으로 몇 번 더 뛰어야 할지 생각해 봐!'],
+        p2: '기억나? 폰은 맨 처음 한 번만 두 칸 갈 수 있어!', px: '기물을 잡을 때만 폰은 대각선 앞으로 갈 수 있어, 깡충!', pf: '폰은 앞으로 한 칸씩만 가고 뒤로는 못 가. 신중하게!',
+        cap: '잡은 다음 그 자리에서도 다음 기물을 노릴 수 있을까?', safe: '빨간 줄무늬 칸에는 들어갈 수 없어, 깡충! 공격받지 않는 칸을 따라가 보자.',
+      },
+      good: [(x, R) => `좋아, ${x} 정답! ${R} 다음 문제도 이 기세로 가자!`, (x, R) => `훌륭해! 최단 코스는 바로 ${x}, 깡충! ${R}`, (x, R) => `대단해, 잘 찾았어! ${x}, 딱 맞아. ${R} 점점 실력이 늘고 있어!`],
+      ng: [(m, x, W) => `괜찮아, 지금 익히면 돼! 지름길은 바로 ${m}, 깡충. ${x} 수는 ${W}`, (m, x, W) => `아깝다! 정답은 ${m}. ${x}(으)로 가면 ${W}`, (m, x, W) => `${m} 수를 골랐다면 만점이었어. ${x} 수로 두면 ${W} 다음엔 할 수 있어!`],
+      R: {
+        last: ['마지막 ★까지 단숨에! 이제 전부 모았어.', '남은 ★을 한 번에 회수! 수도 딱 맞아.', '★이 하나도 안 남았어. 낭비한 수가 하나도 없어!'],
+        cap: [p => `검은 ${p.cp}까지 잡고, 다음 ★으로 가는 길도 열려. 이제 ${p.M(p.r)}만 남았어!`, p => `${p.cp} 잡은 칸이 그대로 다음 ★으로 가는 지름길이야.`, p => `${p.cp} 잡고 다음 ★까지 ${p.M(p.r)}. 순서가 완벽해!`],
+        starNx: ['★을 잡은 칸에서 다음 ★에도 바로 닿거든.', '★을 잡으면서 다음 ★까지 한 줄로 이어져!', '내려선 그 자리에서 다음 ★이 벌써 사정거리야!'],
+        starR: [p => `이 ★을 잡고 나면 나머지는 ${p.M(p.r)}이면 끝나.`, p => `이 ★을 먼저 잡아 두면 ${p.M(p.r)}만 더 가면 돼.`, p => `이 ★에서라면 나머지도 ${p.M(p.r)}에 돌 수 있어.`],
+        promo: '여기서 승격해서 퀸으로! 갈 수 있는 방향이 확 늘어나, 깡충!',
+        mid: [p => `아직 ★은 안 잡지만, 다음 수에 ★에 닿는 칸이야. ${p.k ? '헛걸음이 하나도 없어!' : '딱 좋은 중간 지점이야!'}`, '일단 여기에 들르면 바로 다음 수에 ★에 닿아.', '돌아가는 것 같지만, 사실은 다음 ★으로 가는 지름길이야.'],
+        path: [p => `여기서라면 ${p.M(p.r)}만 더 두면 전부 모여. 돌아가는 길 제로!`, p => `이 칸을 지나면 ${p.M(p.r)}에 끝나는 길이 돼, 깡충!`, p => `급할수록 돌아가라! 여기가 남은 ${p.M(p.r)}의 최단 코스야.`],
+      },
+      W: {
+        greedy: [p => `★은 잡지만, 남은 ★이 멀어져서 ${p.M(p.e)}가 더 들어. 잡는 순서가 중요해!`, p => `눈앞의 ★에 달려들면 나머지가 돌아가는 길이 돼서 ${p.M(p.e)} 손해야. 앞을 내다보는 게 요령!`, p => `★ 하나는 잡아도 그다음이 ${p.M(p.e)} 길어져. 순서를 바꿔 보자!`],
+        pawn: ['폰은 뒤로 못 가니까, ★이 있는 줄을 지나치면 다시 잡으러 갈 수 없어.', '앞으로 곧장 가면 대각선 앞의 ★을 못 잡게 돼. 폰은 되돌아갈 수 없거든!', '앞으로 간 폰은 돌아오지 못해. ★을 잡을 기회가 사라져 버려.'],
+        dead: '이제 ★을 전부 모을 수 없게 돼.',
+        cap: [p => `길을 막던 기물을 잡아도, ★까지 ${p.M(p.e)} 돌아가게 돼.`, p => `그 기물을 잡는 건 샛길이야. ★까지 ${p.M(p.e)}가 더 들어.`, p => `기물을 잡아도 ★에 가까워지지 않아서 ${p.M(p.e)}를 낭비해.`],
+        noReach: [p => `그 칸에서는 다음 수에 닿는 ★이 하나도 없어서 ${p.M(p.e)} 돌아가게 돼.`, p => `다음 수에 ★을 노릴 수 없는 자리라서 ${p.M(p.e)} 손해야.`, p => `그 칸에서 한 수에 닿는 ★이 없어서 ${p.M(p.e)}가 더 걸려.`],
+        off: [p => `★을 노릴 수는 있지만, 길이 어긋나서 ${p.M(p.e)} 손해야.${p.t ? ' 잡을 수 있는 ★은 먼저 잡자!' : ''}`, p => `★에 가까워지긴 해도 도는 순서가 어긋나서 ${p.M(p.e)} 길어져.${p.t ? ' 바로 잡을 수 있는 ★을 놓치지 마!' : ''}`, p => `닿는 ★은 있지만, 전부 돌면 ${p.M(p.e)}를 낭비해.${p.t ? ' 먼저 잡을 수 있는 ★이 있었거든.' : ''}`],
+      },
+      done: '★ 모으기 수고했어!', go: ['전부 ★ 3개, 굉장해, 깡충! 이제 방금 지나온 길에서 문제 3개. 가장 짧은 수를 골라 봐!', '잘했어! 이제 방금 지나온 길에서 문제 3개. 가장 짧은 수를 찾아보자!'],
+    },
+    es: {
+      M: n => n === 1 ? 'una jugada' : n + ' jugadas', pk: { r: 'tu torre', b: 'tu alfil', q: 'tu dama', k: 'tu rey', n: 'tu caballo', p: 'tu peón' }, cp: { p: 'el peón', n: 'el caballo', b: 'el alfil', r: 'la torre', q: 'la dama' },
+      ask: ['¡Hora del reto, hop! Para juntar todas las ★ en el menor número de jugadas, ¿adónde va {p}?', '¿Adónde mueves {p} ahora? ¡Elige el camino sin rodeos!', '¿Puedes recoger las que quedan con las mínimas jugadas? ¡Elige la próxima casilla para {p}!'],
+      askCap: ['¡Hora del reto, hop! Para capturarlas todas en pocas jugadas, ¿adónde vas ahora?', '¿Qué pieza vas a buscar primero? ¡El orden es la clave!', '¿Puedes recoger las ★ que quedan en pocas jugadas? ¡Elige tu siguiente jugada!'],
+      askSafe: ['¡Hora del reto, hop! Esquivando las rayas, ¿cuál es el camino más corto hacia la ★?', 'Pisando solo casillas seguras, ¿qué jugada es el atajo?', '¡Primero la seguridad, pero sin jugadas de más! ¿Adónde ahora?'],
+      hint: {
+        r: ['La torre va recta: arriba, abajo y a los lados. ¿Qué casilla la alinea con una ★?', '¿Ninguna ★ a tu alcance todavía? No pasa nada. ¡Busca una casilla desde la que la atrapes en la siguiente!', 'Decide en qué esquina gira tu ruta y verás el camino, ¡hop!'],
+        b: ['El alfil solo va en diagonal. ¡Busca una casilla en diagonal con una ★!', '¿Se pueden unir dos ★ con una sola diagonal?', 'Ponte donde se cruzan dos diagonales y la siguiente ★ quedará a mano, ¡hop!'],
+        q: ['La dama va recta o en diagonal. ¿Hay una casilla que alcance las dos ★?', 'Cambiar el orden a veces ahorra una jugada, ¡hop!', '¿Y si la diagonal es el atajo? ¡Mira las ocho direcciones!'],
+        k: ['El rey avanza de una en una. ¡Cuenta las casillas hasta cada ★!', 'Un paso en diagonal avanza una columna y una fila a la vez, ¡hop!', '¿Por qué ★ empezar para no tener que volver atrás?'],
+        n: ['¡Imagina todas las casillas a las que puede saltar tu caballo desde aquí!', 'Si ninguna ★ está a un salto, busca una que esté a dos, ¡hop!', 'Cada salto cambia el color de la casilla. ¡Usa el color de la ★ para contar los saltos!'],
+        p2: '¿Te acuerdas? ¡En su primera jugada, el peón puede avanzar dos casillas!', px: 'Solo al capturar avanza el peón en diagonal, ¡hop!', pf: 'El peón avanza recto, de casilla en casilla, y nunca retrocede. ¡Con cuidado!',
+        cap: 'Desde la casilla donde capturas, ¿alcanzas la siguiente pieza?', safe: 'No puedes pisar las rayas rojas, ¡hop! Avanza por casillas que nadie ataca.',
+      },
+      good: [(x, R) => `¡Muy bien, ${x} es correcto! ${R} ¡Sigue así en la próxima!`, (x, R) => `¡Genial! ${x} es la ruta más corta, ¡hop! ${R}`, (x, R) => `¡Qué buen ojo! ${x}, perfecto. ${R} ¡Cada vez lo haces mejor!`],
+      ng: [(m, x, W) => `¡Tranquilo, así se aprende! ${m} era el atajo, ¡hop! Con ${x}, ${W}`, (m, x, W) => `¡Casi! La respuesta es ${m}. Tras ${x}, ${W}`, (m, x, W) => `Con ${m} habría sido perfecto. Jugando ${x}, ${W} ¡La próxima te sale!`],
+      R: {
+        last: ['¡Un salto hasta la última ★ y ya están todas!', '¡La última ★ es tuya, justo en el objetivo!', '¡No queda ninguna ★ y sin una sola jugada de más!'],
+        cap: [p => `Capturas ${p.cp} y el camino a la siguiente ★ sigue abierto. ¡Solo ${p.M(p.r)} más!`, p => `La casilla donde capturas ${p.cp} es un atajo hacia la siguiente.`, p => `Capturas ${p.cp} y luego solo ${p.M(p.r)} hasta la siguiente ★. ¡Orden perfecto!`],
+        starNx: ['Desde la ★ que acabas de tomar, la siguiente ya está a tu alcance.', 'Tomas una ★ y quedas en línea con la siguiente.', '¡Justo donde caíste, la siguiente ★ ya está a tiro!'],
+        starR: [p => `Después de esta ★, el resto solo lleva ${p.M(p.r)}.`, p => `Toma esta ★ primero y terminas en ${p.M(p.r)}.`, p => `Desde esta ★ recoges el resto en ${p.M(p.r)}.`],
+        promo: '¡Corona aquí y conviértete en dama! Ahora puedes ir en todas las direcciones, ¡hop!',
+        mid: [p => `Aún no tomas ninguna ★, pero desde aquí una queda a tu alcance. ${p.k ? '¡Ni un paso de más!' : '¡El trampolín perfecto!'}`, 'Parar aquí primero te deja alcanzar una ★ en la jugada siguiente.', 'Parece un rodeo, pero en realidad es el atajo a la siguiente ★.'],
+        path: [p => `Desde aquí, todas las ★ te llevan solo ${p.M(p.r)} más. ¡Cero rodeos!`, p => `Pasa por esta casilla y terminas en ${p.M(p.r)}, ¡hop!`, p => `¡Despacio y con buena letra! Esta casilla está en la ruta más corta: quedan ${p.M(p.r)}.`],
+      },
+      W: {
+        greedy: [p => `tomas una ★, pero las demás quedan lejos y te cuesta ${p.M(p.e)} de más. ¡El orden importa!`, p => `lanzarte a la ★ más cercana convierte el resto en un rodeo: pierdes ${p.M(p.e)}. ¡Mira más allá!`, p => `una ★ sale fácil, pero el resto tarda ${p.M(p.e)} más. ¡Prueba otro orden!`],
+        pawn: ['el peón no puede retroceder, así que si pasas la fila de la ★ ya no puedes volver a por ella.', 'si sigues recto, pierdes la ★ en diagonal. ¡El peón nunca vuelve atrás!', 'un peón que avanza no puede regresar, y la ocasión de tomar la ★ se esfuma.'],
+        dead: 'ya no puedes recoger todas las ★.',
+        cap: [p => `capturar esa pieza que estorba te desvía ${p.M(p.e)}.`, p => `esa captura es un desvío: ${p.M(p.e)} de más hasta la ★.`, p => `la captura no te acerca a ninguna ★ y desperdicias ${p.M(p.e)}.`],
+        noReach: [p => `desde ahí ninguna ★ queda a una jugada, así que das un rodeo de ${p.M(p.e)}.`, p => `desde ahí no apuntas a ninguna ★ en la siguiente, y pierdes ${p.M(p.e)}.`, p => `no hay ninguna ★ a una jugada de esa casilla, así que tardas ${p.M(p.e)} más.`],
+        off: [p => `apuntas a una ★, pero la ruta se tuerce y cuesta ${p.M(p.e)}.${p.t ? ' ¡Toma primero la ★ que tienes a mano!' : ''}`, p => `te acercas, pero el orden falla y son ${p.M(p.e)} más.${p.t ? ' ¡No dejes pasar una ★ que puedes tomar ya!' : ''}`, p => `hay una ★ a tiro, pero recorrerlas todas desperdicia ${p.M(p.e)}.${p.t ? ' ¡Había una ★ para tomar primero!' : ''}`],
+      },
+      done: '¡Estrellas recogidas, qué buenos saltos!', go: ['¡Tres ★ en todas las fases, increíble, hop! Ahora, 3 retos con las rutas que acabas de recorrer. ¡Busca la jugada más corta!', '¡Bien hecho! Ahora, 3 retos con esas rutas. ¡Busca la jugada más corta!'],
+    },
+    fr: {
+      M: n => n === 1 ? 'un coup' : n + ' coups', pk: { r: 'ta tour', b: 'ton fou', q: 'ta dame', k: 'ton roi', n: 'ton cavalier', p: 'ton pion' }, cp: { p: 'le pion', n: 'le cavalier', b: 'le fou', r: 'la tour', q: 'la dame' },
+      ask: ['C\'est l\'heure du défi, hop ! Pour ramasser toutes les ★ en un minimum de coups, où va {p} ?', 'Où vas-tu poser {p} maintenant ? Choisis la route sans détour !', 'Peux-tu ramasser le reste en un minimum de coups ? Choisis la prochaine case pour {p} !'],
+      askCap: ['C\'est l\'heure du défi, hop ! Pour toutes les prendre en un minimum de coups, où vas-tu ?', 'Quelle pièce vas-tu chercher d\'abord ? L\'ordre, c\'est la clé !', 'Peux-tu ramasser les ★ restantes en quelques coups ? Choisis ton prochain coup !'],
+      askSafe: ['C\'est l\'heure du défi, hop ! En évitant les rayures, quel est le chemin le plus court vers la ★ ?', 'En ne passant que par des cases sûres, quel coup est le raccourci ?', 'La sécurité d\'abord, mais sans coup inutile ! Où vas-tu ?'],
+      hint: {
+        r: ['La tour va tout droit : en haut, en bas et sur les côtés. Quelle case l\'aligne avec une ★ ?', 'Aucune ★ à portée pour l\'instant ? Pas grave. Trouve une case d\'où tu l\'attrapes au coup suivant !', 'Choisis le coin où ta route tourne, et le chemin apparaît, hop !'],
+        b: ['Le fou ne va qu\'en diagonale. Cherche une case sur une diagonale avec une ★ !', 'Peut-on relier deux ★ par une seule diagonale ?', 'Place-toi au croisement de deux diagonales et la ★ suivante sera facile, hop !'],
+        q: ['La dame va tout droit ou en diagonale. Y a-t-il une case qui touche les deux ★ ?', 'Changer l\'ordre peut faire gagner un coup, hop !', 'Et si la diagonale était le raccourci ? Regarde les huit directions !'],
+        k: ['Le roi avance d\'une case à la fois. Compte les cases jusqu\'à chaque ★ !', 'Un pas en diagonale avance d\'une colonne et d\'une rangée à la fois, hop !', 'Par quelle ★ commencer pour ne jamais revenir sur tes pas ?'],
+        n: ['Imagine toutes les cases où ton cavalier peut sauter d\'ici !', 'Si aucune ★ n\'est à un saut, cherche-en une à deux sauts, hop !', 'Chaque saut change la couleur de la case. Sers-toi de la couleur de la ★ pour compter les sauts !'],
+        p2: 'Tu te souviens ? À son tout premier coup, le pion peut avancer de deux cases !', px: 'C\'est seulement pour prendre que le pion avance en diagonale, hop !', pf: 'Le pion avance tout droit, une case à la fois, et ne recule jamais. Prudence !',
+        cap: 'Depuis la case où tu prends, peux-tu viser la pièce suivante ?', safe: 'Tu ne peux pas marcher sur les rayures rouges, hop ! Passe par les cases que personne n\'attaque.',
+      },
+      good: [(x, R) => `Bien joué, ${x} est juste ! ${R} Continue comme ça au suivant !`, (x, R) => `Bravo ! ${x} est le chemin le plus court, hop ! ${R}`, (x, R) => `Quel coup d\'œil ! ${x}, parfait. ${R} Tu progresses à vue d\'œil !`],
+      ng: [(m, x, W) => `Pas grave, maintenant tu sais ! ${m} était le raccourci, hop. Avec ${x}, ${W}`, (m, x, W) => `Presque ! La réponse est ${m}. Après ${x}, ${W}`, (m, x, W) => `${m} aurait été parfait. En jouant ${x}, ${W} Tu auras le prochain !`],
+      R: {
+        last: ['Un bond jusqu\'à la dernière ★, et elles y sont toutes !', 'La dernière ★ est à toi, pile dans l\'objectif !', 'Plus aucune ★, et pas un seul coup perdu !'],
+        cap: [p => `Tu prends ${p.cp} et la route vers la ★ suivante reste ouverte. Plus que ${p.M(p.r)} !`, p => `La case où tu prends ${p.cp} est un raccourci vers la suivante.`, p => `Tu prends ${p.cp}, puis seulement ${p.M(p.r)} jusqu\'à la ★ suivante. Ordre parfait !`],
+        starNx: ['Depuis la ★ que tu viens de prendre, la suivante est déjà à portée.', 'Tu prends une ★ et tu t\'alignes sur la suivante !', 'Juste là où tu as atterri, la ★ suivante est déjà dans le viseur !'],
+        starR: [p => `Après cette ★, le reste ne prend que ${p.M(p.r)}.`, p => `Prends d\'abord cette ★ et tu as fini en ${p.M(p.r)}.`, p => `Depuis cette ★, tu ramasses le reste en ${p.M(p.r)}.`],
+        promo: 'Promotion en dame, juste ici ! Maintenant tu vas dans toutes les directions, hop !',
+        mid: [p => `Pas encore de ★, mais d\'ici l\'une d\'elles est à portée au coup suivant. ${p.k ? 'Pas un pas de trop !' : 'Le tremplin idéal !'}`, 'T\'arrêter ici d\'abord te permet d\'atteindre une ★ dès le coup suivant.', 'On dirait un détour, mais c\'est en fait le raccourci vers la ★ suivante.'],
+        path: [p => `D\'ici, toutes les ★ ne demandent que ${p.M(p.r)} de plus. Zéro détour !`, p => `Passe par cette case et tu finis en ${p.M(p.r)}, hop !`, p => `Doucement mais sûrement ! Cette case est sur la route la plus courte : encore ${p.M(p.r)}.`],
+      },
+      W: {
+        greedy: [p => `tu prends une ★, mais les autres s\'éloignent et ça coûte ${p.M(p.e)} de plus. L\'ordre compte !`, p => `foncer sur la ★ la plus proche transforme le reste en détour : ${p.M(p.e)} de perdus. Regarde plus loin !`, p => `une ★ vient facilement, mais le reste prend ${p.M(p.e)} de plus. Essaie un autre ordre !`],
+        pawn: ['le pion ne recule pas : une fois la rangée de la ★ dépassée, impossible d\'y revenir.', 'en avançant tout droit, tu perds la ★ en diagonale. Le pion ne revient jamais en arrière !', 'un pion qui avance ne peut pas revenir, et la chance de prendre la ★ s\'envole.'],
+        dead: 'tu ne peux plus ramasser toutes les ★.',
+        cap: [p => `prendre cette pièce gênante te fait faire un détour de ${p.M(p.e)}.`, p => `cette prise est un crochet : ${p.M(p.e)} de plus jusqu\'à la ★.`, p => `la prise ne te rapproche d\'aucune ★, et tu gâches ${p.M(p.e)}.`],
+        noReach: [p => `aucune ★ n\'est à un coup de là, donc c\'est un détour de ${p.M(p.e)}.`, p => `de là, tu ne vises aucune ★ au coup suivant, et tu perds ${p.M(p.e)}.`, p => `aucune ★ n\'est à un coup de cette case, il faut donc ${p.M(p.e)} de plus.`],
+        off: [p => `tu vises une ★, mais la route dévie et coûte ${p.M(p.e)}.${p.t ? ' Prends d\'abord la ★ qui est à portée !' : ''}`, p => `tu t\'approches, mais l\'ordre cloche et c\'est ${p.M(p.e)} de plus.${p.t ? ' Ne rate pas une ★ que tu peux prendre tout de suite !' : ''}`, p => `une ★ est à portée, mais faire le tour de toutes gâche ${p.M(p.e)}.${p.t ? ' Il y avait une ★ à prendre d\'abord !' : ''}`],
+      },
+      done: 'Étoiles ramassées, quels beaux bonds !', go: ['Trois ★ partout, incroyable, hop ! Maintenant, 3 défis tirés des routes que tu viens de parcourir. Trouve le coup le plus court !', 'Bien joué ! Maintenant, 3 défis tirés de ces routes. Cherche le coup le plus court !'],
+    },
+    pt: {
+      M: n => n === 1 ? 'um lance' : n + ' lances', pk: { r: 'sua torre', b: 'seu bispo', q: 'sua dama', k: 'seu rei', n: 'seu cavalo', p: 'seu peão' }, cp: { p: 'o peão', n: 'o cavalo', b: 'o bispo', r: 'a torre', q: 'a dama' },
+      ask: ['Hora do desafio, hop! Para pegar todas as ★ com o mínimo de lances, para onde vai {p}?', 'Para onde vai {p} agora? Escolha o caminho sem desvios!', 'Dá para pegar o resto com o mínimo de lances? Escolha a próxima casa para {p}!'],
+      askCap: ['Hora do desafio, hop! Para capturar todas com poucos lances, para onde você vai agora?', 'Qual peça você vai buscar primeiro? A ordem é o segredo!', 'Dá para recolher as ★ que faltam em poucos lances? Escolha seu próximo lance!'],
+      askSafe: ['Hora do desafio, hop! Desviando das listras, qual é o caminho mais curto até a ★?', 'Pisando só em casas seguras, qual lance é o atalho?', 'Segurança em primeiro lugar, mas sem lance à toa! Para onde agora?'],
+      hint: {
+        r: ['A torre anda reto: para cima, para baixo e para os lados. Qual casa a alinha com uma ★?', 'Nenhuma ★ ao alcance ainda? Tudo bem. Ache uma casa de onde você pega uma no lance seguinte!', 'Decida a esquina onde sua rota vira, e o caminho aparece, hop!'],
+        b: ['O bispo só anda na diagonal. Procure uma casa na mesma diagonal de uma ★!', 'Dá para ligar duas ★ com uma única diagonal?', 'Pare onde duas diagonais se cruzam e a próxima ★ fica fácil, hop!'],
+        q: ['A dama anda reto ou na diagonal. Existe uma casa que alcança as duas ★?', 'Mudar a ordem às vezes economiza um lance, hop!', 'E se a diagonal for o atalho? Olhe as oito direções!'],
+        k: ['O rei anda uma casa por vez. Conte as casas até cada ★!', 'Um passo na diagonal avança uma coluna e uma fileira ao mesmo tempo, hop!', 'Por qual ★ começar para não precisar voltar?'],
+        n: ['Imagine todas as casas para onde seu cavalo pode pular daqui!', 'Se nenhuma ★ está a um pulo, procure uma a dois pulos, hop!', 'Cada pulo troca a cor da casa. Use a cor da ★ para contar os pulos!'],
+        p2: 'Lembra? No primeiríssimo lance, o peão pode andar duas casas!', px: 'Só quando captura é que o peão anda na diagonal, hop!', pf: 'O peão anda reto, uma casa por vez, e nunca volta. Cuidado!',
+        cap: 'Da casa onde você captura, dá para mirar a próxima peça?', safe: 'Não dá para pisar nas listras vermelhas, hop! Vá pelas casas que ninguém ataca.',
+      },
+      good: [(x, R) => `Boa, ${x} está certo! ${R} Continue assim no próximo!`, (x, R) => `Mandou bem! ${x} é a rota mais curta, hop! ${R}`, (x, R) => `Que olho bom! ${x}, perfeito. ${R} Você está cada vez melhor!`],
+      ng: [(m, x, W) => `Tudo bem, agora você aprendeu! ${m} era o atalho, hop. Com ${x}, ${W}`, (m, x, W) => `Quase! A resposta é ${m}. Depois de ${x}, ${W}`, (m, x, W) => `Com ${m} teria sido perfeito. Jogando ${x}, ${W} No próximo você acerta!`],
+      R: {
+        last: ['Um pulo até a última ★, e pronto, pegou todas!', 'A última ★ é sua, bem no alvo!', 'Nenhuma ★ sobrando, e nem um lance desperdiçado!'],
+        cap: [p => `Você captura ${p.cp} e o caminho para a próxima ★ continua aberto. Só faltam ${p.M(p.r)}!`, p => `A casa onde você captura ${p.cp} é um atalho para a próxima.`, p => `Captura ${p.cp} e depois só ${p.M(p.r)} até a próxima ★. Ordem perfeita!`],
+        starNx: ['Da ★ que você acabou de pegar, a próxima já está ao alcance.', 'Pega uma ★ e já fica alinhado com a próxima!', 'Bem onde você parou, a próxima ★ já está na mira!'],
+        starR: [p => `Depois desta ★, o resto leva só ${p.M(p.r)}.`, p => `Pegue esta ★ primeiro e você termina em ${p.M(p.r)}.`, p => `A partir desta ★, você recolhe o resto em ${p.M(p.r)}.`],
+        promo: 'Promova a dama bem aqui! Agora dá para ir em todas as direções, hop!',
+        mid: [p => `Ainda sem ★, mas daqui uma fica ao alcance no próximo lance. ${p.k ? 'Nem um passo a mais!' : 'O trampolim perfeito!'}`, 'Parar aqui primeiro deixa você alcançar uma ★ logo no lance seguinte.', 'Parece desvio, mas é o atalho para a próxima ★.'],
+        path: [p => `Daqui, todas as ★ levam só mais ${p.M(p.r)}. Zero desvios!`, p => `Passe por esta casa e você termina em ${p.M(p.r)}, hop!`, p => `Devagar e sempre! Esta casa está na rota mais curta: faltam ${p.M(p.r)}.`],
+      },
+      W: {
+        greedy: [p => `você pega uma ★, mas as outras ficam longe e custa ${p.M(p.e)} a mais. A ordem importa!`, p => `pular na ★ mais próxima vira desvio para o resto: ${p.M(p.e)} perdidos. Olhe mais adiante!`, p => `uma ★ vem fácil, mas o resto demora ${p.M(p.e)} a mais. Tente outra ordem!`],
+        pawn: ['o peão não volta, então, se passar da fileira da ★, não dá para buscá-la.', 'seguindo reto, você perde a ★ na diagonal. O peão nunca volta!', 'um peão que avança não pode voltar, e a chance de pegar a ★ some.'],
+        dead: 'você não consegue mais pegar todas as ★.',
+        cap: [p => `capturar essa peça no caminho desvia você em ${p.M(p.e)}.`, p => `essa captura é um desvio: ${p.M(p.e)} a mais até a ★.`, p => `a captura não aproxima você de nenhuma ★, e desperdiça ${p.M(p.e)}.`],
+        noReach: [p => `dali nenhuma ★ fica a um lance, então é um desvio de ${p.M(p.e)}.`, p => `dali você não mira nenhuma ★ no lance seguinte, e perde ${p.M(p.e)}.`, p => `não há ★ a um lance daquela casa, então leva ${p.M(p.e)} a mais.`],
+        off: [p => `você mira uma ★, mas a rota desvia e custa ${p.M(p.e)}.${p.t ? ' Pegue primeiro a ★ que está ao alcance!' : ''}`, p => `você se aproxima, mas a ordem falha e são ${p.M(p.e)} a mais.${p.t ? ' Não deixe passar uma ★ que dá para pegar já!' : ''}`, p => `há uma ★ ao alcance, mas rodar todas desperdiça ${p.M(p.e)}.${p.t ? ' Tinha uma ★ para pegar primeiro!' : ''}`],
+      },
+      done: 'Estrelas recolhidas, que pulos bonitos!', go: ['Três ★ em todas as fases, incrível, hop! Agora, 3 desafios das rotas que você acabou de fazer. Ache o lance mais curto!', 'Muito bem! Agora, 3 desafios dessas rotas. Procure o lance mais curto!'],
+    },
+    de: {
+      M: n => n === 1 ? 'einen Zug' : n + ' Züge', MD: n => n === 1 ? 'einem Zug' : n + ' Zügen', pk: { r: 'deinen Turm', b: 'deinen Läufer', q: 'deine Dame', k: 'deinen König', n: 'deinen Springer', p: 'deinen Bauern' }, cp: { p: 'den Bauern', n: 'den Springer', b: 'den Läufer', r: 'den Turm', q: 'die Dame' },
+      ask: ['Rätselzeit, hopp! Um alle ★ mit möglichst wenigen Zügen zu holen: Wohin ziehst du {p}?', 'Wohin ziehst du {p} jetzt? Such dir den Weg ohne Umwege!', 'Schaffst du den Rest mit möglichst wenigen Zügen? Wähl das nächste Feld für {p}!'],
+      askCap: ['Rätselzeit, hopp! Um alle mit wenigen Zügen zu schlagen: Wohin geht es jetzt?', 'Welche Figur holst du dir zuerst? Die Reihenfolge ist der Schlüssel!', 'Schaffst du die restlichen ★ in wenigen Zügen? Wähl deinen nächsten Zug!'],
+      askSafe: ['Rätselzeit, hopp! An den Streifen vorbei: Welcher Weg zum ★ ist der kürzeste?', 'Nur über sichere Felder: Welcher Zug ist die Abkürzung?', 'Sicherheit zuerst, aber ohne Zug zu verschenken! Wohin jetzt?'],
+      hint: {
+        r: ['Der Turm zieht gerade: hoch, runter und zur Seite. Welches Feld bringt ihn in eine Linie mit einem ★?', 'Noch kein ★ in Reichweite? Kein Problem. Such ein Feld, von dem du im nächsten Zug eins erwischst!', 'Leg die Ecke fest, an der dein Weg abbiegt, dann siehst du den Pfad, hopp!'],
+        b: ['Der Läufer zieht nur schräg. Such ein Feld auf einer Diagonale mit einem ★!', 'Lassen sich zwei ★ mit einer einzigen Diagonale verbinden?', 'Stell dich dorthin, wo sich zwei Diagonalen kreuzen, dann ist der nächste ★ leicht zu holen, hopp!'],
+        q: ['Die Dame zieht gerade oder schräg. Gibt es ein Feld, das beide ★ erreicht?', 'Eine andere Reihenfolge spart manchmal einen Zug, hopp!', 'Vielleicht ist die Diagonale die Abkürzung? Schau in alle acht Richtungen!'],
+        k: ['Der König geht immer nur ein Feld. Zähl die Felder bis zu jedem ★!', 'Ein Schritt schräg bringt dich eine Linie und eine Reihe zugleich weiter, hopp!', 'Mit welchem ★ fängst du an, damit du nie zurücklaufen musst?'],
+        n: ['Stell dir alle Felder vor, auf die dein Springer von hier springen kann!', 'Wenn kein ★ einen Sprung entfernt ist, such eins, das zwei Sprünge entfernt ist, hopp!', 'Jeder Sprung wechselt die Feldfarbe. Zähl mit der Farbe des ★ die Sprünge!'],
+        p2: 'Weißt du noch? Bei seinem allerersten Zug darf der Bauer zwei Felder vorrücken!', px: 'Nur beim Schlagen zieht der Bauer schräg nach vorn, hopp!', pf: 'Der Bauer zieht geradeaus, ein Feld nach dem anderen, und nie zurück. Vorsicht!',
+        cap: 'Kannst du vom Feld, auf dem du schlägst, die nächste Figur anpeilen?', safe: 'Die roten Streifen darfst du nicht betreten, hopp! Nimm die Felder, die niemand angreift.',
+      },
+      good: [(x, R) => `Super, ${x} ist richtig! ${R} Mach beim nächsten genauso weiter!`, (x, R) => `Klasse! ${x} ist der kürzeste Weg, hopp! ${R}`, (x, R) => `Gut gesehen! ${x}, genau richtig. ${R} Du wirst immer besser!`],
+      ng: [(m, x, W) => `Macht nichts, jetzt weißt du es! ${m} war die Abkürzung, hopp. Mit ${x} ${W}`, (m, x, W) => `Knapp daneben! Die Lösung ist ${m}. Nach ${x} ${W}`, (m, x, W) => `Mit ${m} wäre es perfekt gewesen. Spielst du ${x}, ${W} Beim nächsten klappt's!`],
+      R: {
+        last: ['Ein Sprung zum letzten ★, und alle sind eingesammelt!', 'Der letzte ★ gehört dir, genau im Ziel!', 'Kein ★ mehr übrig, und kein einziger Zug verschenkt!'],
+        cap: [p => `Du schlägst ${p.cp}, und der Weg zum nächsten ★ bleibt frei. Nur noch ${p.M(p.r)}!`, p => `Das Feld, auf dem du ${p.cp} schlägst, ist eine Abkürzung zum nächsten.`, p => `Du schlägst ${p.cp}, dann nur noch ${p.M(p.r)} bis zum nächsten ★. Perfekte Reihenfolge!`],
+        starNx: ['Von dem ★, den du gerade geholt hast, ist der nächste schon in Reichweite.', 'Du holst einen ★ und stehst direkt in Linie mit dem nächsten!', 'Genau da, wo du gelandet bist, ist der nächste ★ schon im Visier!'],
+        starR: [p => `Nach diesem ★ braucht der Rest nur noch ${p.M(p.r)}.`, p => `Hol erst diesen ★, dann bist du in ${p.MD(p.r)} fertig.`, p => `Von diesem ★ aus sammelst du den Rest in ${p.MD(p.r)} ein.`],
+        promo: 'Hier umwandeln in eine Dame! Jetzt kannst du in alle Richtungen ziehen, hopp!',
+        mid: [p => `Noch kein ★, aber von hier ist einer im nächsten Zug erreichbar. ${p.k ? 'Kein Schritt zu viel!' : 'Das perfekte Sprungbrett!'}`, 'Erst hier anzuhalten bringt dich gleich im nächsten Zug an einen ★.', 'Sieht aus wie ein Umweg, ist aber die Abkürzung zum nächsten ★.'],
+        path: [p => `Von hier aus brauchst du für alle ★ nur noch ${p.M(p.r)}. Null Umwege!`, p => `Geh über dieses Feld, dann bist du in ${p.MD(p.r)} fertig, hopp!`, p => `Langsam, aber sicher! Dieses Feld liegt auf dem kürzesten Weg: noch ${p.M(p.r)}.`],
+      },
+      W: {
+        greedy: [p => `holst du zwar einen ★, aber die anderen liegen dann weit weg, und es kostet ${p.M(p.e)} extra. Die Reihenfolge zählt!`, p => `wird der Rest zum Umweg, wenn du dich auf den nächsten ★ stürzt: ${p.M(p.e)} verloren. Schau weiter voraus!`, p => `ist ein ★ leicht zu haben, aber der Rest dauert ${p.M(p.e)} länger. Probier eine andere Reihenfolge!`],
+        pawn: ['kommst du nicht mehr zurück: Bauern ziehen nie rückwärts, und hinter der Reihe des ★ ist er verloren.', 'verpasst du den ★ schräg vor dir, wenn du geradeaus ziehst. Bauern gehen nie zurück!', 'kann der Bauer nicht mehr zurück, und die Chance auf den ★ ist weg.'],
+        dead: 'kannst du nicht mehr alle ★ einsammeln.',
+        cap: [p => `bringt dich das Schlagen der störenden Figur ${p.M(p.e)} vom Weg ab.`, p => `ist das Schlagen ein Abstecher: ${p.M(p.e)} extra bis zum ★.`, p => `bringt dich das Schlagen keinem ★ näher, und du verschenkst ${p.M(p.e)}.`],
+        noReach: [p => `ist von dort im nächsten Zug kein ★ erreichbar, also kostet der Umweg ${p.M(p.e)}.`, p => `zielst du von dort im nächsten Zug auf keinen ★ und verlierst ${p.M(p.e)}.`, p => `liegt kein ★ einen Zug von diesem Feld entfernt, also brauchst du ${p.M(p.e)} mehr.`],
+        off: [p => `zielst du zwar auf einen ★, aber der Weg verrutscht und kostet ${p.M(p.e)}.${p.t ? ' Hol zuerst den ★, den du gleich nehmen kannst!' : ''}`, p => `kommst du näher, aber die Reihenfolge stimmt nicht, und es dauert ${p.M(p.e)} länger.${p.t ? ' Lass keinen ★ liegen, den du sofort holen kannst!' : ''}`, p => `ist ein ★ in Reichweite, aber alle abzuklappern verschenkt ${p.M(p.e)}.${p.t ? ' Da war ein ★, den du zuerst holen konntest!' : ''}`],
+      },
+      done: 'Sterne gesammelt, tolle Sprünge!', go: ['Überall drei ★, großartig, hopp! Jetzt 3 Rätsel aus den Wegen, die du gerade gegangen bist. Finde den kürzesten Zug!', 'Gut gemacht! Jetzt 3 Rätsel aus diesen Wegen. Such den kürzesten Zug!'],
+    },
+    ru: {
+      M: n => { const a = n % 10, b = n % 100; return n + (a === 1 && b !== 11 ? ' ход' : a >= 2 && a <= 4 && (b < 12 || b > 14) ? ' хода' : ' ходов'); },
+      pk: { r: 'ладьёй', b: 'слоном', q: 'ферзём', k: 'королём', n: 'конём', p: 'пешкой' }, cp: { p: 'пешку', n: 'коня', b: 'слона', r: 'ладью', q: 'ферзя' },
+      ask: ['Время задачки, прыг! Чтобы собрать все ★ за меньшее число ходов, куда пойти {p}?', 'Куда теперь пойти {p}? Выбери путь без обходов!', 'Сможешь собрать остальное за минимум ходов? Выбери следующее поле и сходи {p}!'],
+      askCap: ['Время задачки, прыг! Чтобы забрать всех за меньшее число ходов, куда пойти сейчас?', 'За какой фигурой пойдёшь сначала? Всё решает порядок!', 'Сможешь собрать оставшиеся ★ за пару ходов? Выбери следующий ход!'],
+      askSafe: ['Время задачки, прыг! В обход полосок: какой путь к ★ самый короткий?', 'Только по безопасным полям: какой ход ведёт напрямик?', 'Безопасность прежде всего, но без лишних ходов! Куда дальше?'],
+      hint: {
+        r: ['Ладья ходит прямо: вверх, вниз и вбок. Какое поле ставит её на одну линию со ★?', 'Пока ни одна ★ не достаётся? Ничего. Найди поле, откуда возьмёшь её следующим ходом!', 'Реши, где твой путь поворачивает, и дорога сразу видна, прыг!'],
+        b: ['Слон ходит только по диагонали. Ищи поле на одной диагонали со ★!', 'Можно ли связать две ★ одной диагональю?', 'Встань там, где пересекаются две диагонали, и следующую ★ легко достать, прыг!'],
+        q: ['Ферзь ходит прямо и по диагонали. Есть ли поле, откуда достаются обе ★?', 'Другой порядок иногда экономит ход, прыг!', 'А вдруг диагональ — это короткий путь? Проверь все восемь направлений!'],
+        k: ['Король шагает на одно поле. Посчитай поля до каждой ★!', 'Шаг по диагонали — это сразу и вертикаль, и горизонталь, прыг!', 'С какой ★ начать, чтобы не возвращаться назад?'],
+        n: ['Представь все поля, куда отсюда может прыгнуть твой конь!', 'Если ни одна ★ не в одном прыжке, ищи ту, что в двух, прыг!', 'Каждый прыжок меняет цвет поля. По цвету ★ посчитай, сколько ещё прыгать!'],
+        p2: 'Помнишь? Самым первым ходом пешка может пройти два поля!', px: 'Только когда бьёт, пешка идёт вперёд по диагонали, прыг!', pf: 'Пешка идёт прямо, по одному полю, и никогда назад. Осторожно!',
+        cap: 'С поля, где ты бьёшь, достанешь до следующей фигуры?', safe: 'На красные полоски вставать нельзя, прыг! Иди по полям, которые никто не бьёт.',
+      },
+      good: [(x, R) => `Отлично, ${x} — верно! ${R} Так держать и в следующей!`, (x, R) => `Здорово! ${x} — самый короткий путь, прыг! ${R}`, (x, R) => `Зоркий глаз! ${x}, точно в цель. ${R} У тебя получается всё лучше!`],
+      ng: [(m, x, W) => `Ничего, теперь ты знаешь! Короткий путь был ${m}, прыг. После ${x} ${W}`, (m, x, W) => `Почти! Ответ — ${m}. После ${x} ${W}`, (m, x, W) => `С ${m} было бы идеально. Если сыграть ${x}, ${W} В следующей получится!`],
+      R: {
+        last: ['Прыжок к последней ★ — и все собраны!', 'Последняя ★ твоя, точно в цель!', 'Ни одной ★ не осталось, и ни одного лишнего хода!'],
+        cap: [p => `Ты забираешь ${p.cp}, и путь к следующей ★ открыт. Осталось всего ${p.M(p.r)}!`, p => `Поле, где ты забираешь ${p.cp}, — короткий путь к следующей.`, p => `Забираешь ${p.cp}, а дальше всего ${p.M(p.r)} до ★. Идеальный порядок!`],
+        starNx: ['Со ★, которую ты только что взял, следующая уже достаётся.', 'Берёшь ★ и сразу встаёшь на линию со следующей!', 'Прямо там, куда ты приземлился, следующая ★ уже на прицеле!'],
+        starR: [p => `После этой ★ на остальное нужно всего ${p.M(p.r)}.`, p => `Возьми сначала эту ★ — и закончишь за ${p.M(p.r)}.`, p => `С этой ★ остальное соберёшь за ${p.M(p.r)}.`],
+        promo: 'Превращайся в ферзя прямо здесь! Теперь можно ходить во все стороны, прыг!',
+        mid: [p => `★ пока нет, но отсюда одна достаётся следующим ходом. ${p.k ? 'Ни одного лишнего шага!' : 'Идеальная пересадка!'}`, 'Сначала остановиться здесь — и следующим же ходом достанешь ★.', 'Похоже на обход, а на самом деле это короткий путь к следующей ★.'],
+        path: [p => `Отсюда на все ★ нужно всего ${p.M(p.r)}. Никаких обходов!`, p => `Пройди через это поле — и закончишь за ${p.M(p.r)}, прыг!`, p => `Тише едешь — дальше будешь! Это поле на кратчайшем пути: осталось ${p.M(p.r)}.`],
+      },
+      W: {
+        greedy: [p => `★ берётся, но остальные оказываются далеко, и это ${p.M(p.e)} лишних. Порядок важен!`, p => `бросок к ближайшей ★ превращает остальное в обход: потеряно ${p.M(p.e)}. Смотри дальше!`, p => `одна ★ даётся легко, но на остальное уходит на ${p.M(p.e)} больше. Попробуй другой порядок!`],
+        pawn: ['пешка не ходит назад: проскочив ряд со ★, за ней уже не вернуться.', 'идя прямо, теряешь ★ по диагонали впереди. Пешка никогда не возвращается!', 'пешка, ушедшая вперёд, не вернётся, и шанс взять ★ пропадает.'],
+        dead: 'собрать все ★ уже не получится.',
+        cap: [p => `взятие мешающей фигуры уводит в сторону на ${p.M(p.e)}.`, p => `это взятие — крюк: на ${p.M(p.e)} больше до ★.`, p => `взятие не приближает ни к одной ★, и ${p.M(p.e)} уходят впустую.`],
+        noReach: [p => `оттуда следующим ходом не достать ни одну ★, так что это крюк на ${p.M(p.e)}.`, p => `оттуда следующим ходом не нацелиться на ★, и ты теряешь ${p.M(p.e)}.`, p => `ни одна ★ не в одном ходе от того поля, поэтому нужно на ${p.M(p.e)} больше.`],
+        off: [p => `★ на прицеле, но путь съезжает и стоит ${p.M(p.e)}.${p.t ? ' Сначала возьми ★, которая рядом!' : ''}`, p => `ты приближаешься, но порядок сбивается, и выходит на ${p.M(p.e)} дольше.${p.t ? ' Не пропускай ★, которую можно взять сразу!' : ''}`, p => `★ достаётся, но обойти все — это ${p.M(p.e)} впустую.${p.t ? ' Была ★, которую стоило взять первой!' : ''}`],
+      },
+      done: 'Звёзды собраны, отличные прыжки!', go: ['Везде по три ★, потрясающе, прыг! Теперь 3 задачки по путям, которые ты только что прошёл. Найди самый короткий ход!', 'Молодец! Теперь 3 задачки по этим путям. Ищи самый короткий ход!'],
+    },
+    tr: {
+      M: n => n + ' hamle', pk: { r: 'kale', b: 'fil', q: 'vezir', k: 'şah', n: 'at', p: 'piyon' }, cp: { p: 'piyonu', n: 'atı', b: 'fili', r: 'kaleyi', q: 'veziri' },
+      ask: ['Bulmaca zamanı, hop! Tüm ★\'ları en az hamleyle toplamak için {p} şimdi nereye gitsin?', 'Şimdi {p} nereye gitsin? Dolambaçsız yolu seç!', 'Kalanları en az hamleyle toplayabilir misin? {p} için bir sonraki kareyi seç!'],
+      askCap: ['Bulmaca zamanı, hop! Hepsini az hamleyle almak için şimdi nereye gidiyorsun?', 'Önce hangi taşın peşine düşeceksin? İşin sırrı sıralamada!', 'Kalan ★\'ları birkaç hamlede toplayabilir misin? Sıradaki hamleni seç!'],
+      askSafe: ['Bulmaca zamanı, hop! Çizgilerden kaçarak ★\'a en kısa yol hangisi?', 'Yalnızca güvenli karelerden geçerek kestirme hamle hangisi?', 'Önce güvenlik, ama boşa hamle yok! Şimdi nereye?'],
+      hint: {
+        r: ['Kale dümdüz gider: yukarı, aşağı ve yanlara. Hangi kare onu bir ★ ile aynı hizaya getirir?', 'Henüz hiçbir ★ menzilde değil mi? Sorun yok. Bir sonraki hamlede birini alacağın kareyi bul!', 'Yolunun döneceği köşeyi belirle, yol kendiliğinden görünür, hop!'],
+        b: ['Fil yalnızca çapraz gider. Bir ★ ile aynı çaprazdaki kareyi ara!', 'İki ★ tek bir çaprazla birleştirilebilir mi?', 'İki çaprazın kesiştiği yerde dur, sonraki ★ kolayca gelir, hop!'],
+        q: ['Vezir düz ya da çapraz gider. İki ★\'a birden ulaşan bir kare var mı?', 'Sırayı değiştirmek bazen bir hamle kazandırır, hop!', 'Ya kestirme çaprazsa? Sekiz yönün hepsine bak!'],
+        k: ['Şah her seferinde bir kare gider. Her ★\'a kadar kareleri say!', 'Çapraz bir adım, aynı anda hem sütunda hem sırada ilerletir, hop!', 'Hangi ★\'dan başlarsan geri dönmek zorunda kalmazsın?'],
+        n: ['Atının buradan zıplayabileceği tüm kareleri gözünün önüne getir!', 'Hiçbir ★ bir zıplama uzakta değilse, iki zıplama uzaktakini ara, hop!', 'Her zıplamada karenin rengi değişir. ★\'ın rengine bakıp zıplamaları say!'],
+        p2: 'Hatırladın mı? İlk hamlesinde piyon iki kare ilerleyebilir!', px: 'Piyon yalnızca taş alırken çapraz ileri gider, hop!', pf: 'Piyon dümdüz, birer birer ilerler ve asla geri dönmez. Dikkat!',
+        cap: 'Taşı aldığın kareden sıradaki taşa nişan alabilir misin?', safe: 'Kırmızı çizgili karelere basamazsın, hop! Kimsenin saldırmadığı karelerden ilerle.',
+      },
+      good: [(x, R) => `Harika, ${x} doğru! ${R} Sıradakinde de böyle devam!`, (x, R) => `Müthiş! ${x} en kısa yol, hop! ${R}`, (x, R) => `Ne güzel buldun! ${x}, tam isabet. ${R} Gittikçe ustalaşıyorsun!`],
+      ng: [(m, x, W) => `Dert etme, artık biliyorsun! Kestirme ${m} idi, hop. ${x} ile ${W}`, (m, x, W) => `Az kaldı! Doğrusu ${m}. ${x} sonrasında ${W}`, (m, x, W) => `${m} olsaydı tam puandı. ${x} oynarsan ${W} Sıradakini yaparsın!`],
+      R: {
+        last: ['Son ★\'a tek zıplayış, hepsi toplandı!', 'Son ★ senin, tam hedefte!', 'Hiç ★ kalmadı, tek bir hamle bile boşa gitmedi!'],
+        cap: [p => `${p.cp} alıyorsun ve sıradaki ★\'a giden yol açık kalıyor. Sadece ${p.M(p.r)} kaldı!`, p => `${p.cp} aldığın kare, sıradakine kestirme oluyor.`, p => `${p.cp} al, sonra sıradaki ★\'a sadece ${p.M(p.r)}. Mükemmel sıra!`],
+        starNx: ['Az önce aldığın ★\'dan sıradaki zaten menzilde.', 'Bir ★ alıp hemen sıradakiyle aynı hizaya geçiyorsun!', 'Tam indiğin yerde sıradaki ★ zaten nişanda!'],
+        starR: [p => `Bu ★\'dan sonra geri kalanı sadece ${p.M(p.r)} sürer.`, p => `Önce bu ★\'ı al, ${p.M(p.r)} içinde bitirirsin.`, p => `Bu ★\'dan kalanları ${p.M(p.r)} içinde toplarsın.`],
+        promo: 'Tam burada terfi edip vezir ol! Artık her yöne gidebilirsin, hop!',
+        mid: [p => `Henüz ★ yok, ama buradan bir sonraki hamlede birine ulaşırsın. ${p.k ? 'Tek bir fazla adım yok!' : 'Mükemmel bir basamak!'}`, 'Önce burada durmak, hemen sonraki hamlede bir ★\'a ulaşmanı sağlar.', 'Dolambaç gibi görünse de aslında sıradaki ★\'a kestirme.'],
+        path: [p => `Buradan tüm ★\'lar sadece ${p.M(p.r)} daha sürer. Sıfır dolambaç!`, p => `Bu kareden geç, ${p.M(p.r)} içinde bitirirsin, hop!`, p => `Acele işe şeytan karışır! Bu kare en kısa yolun üstünde: ${p.M(p.r)} kaldı.`],
+      },
+      W: {
+        greedy: [p => `bir ★ alırsın, ama diğerleri uzakta kalır ve ${p.M(p.e)} fazlaya patlar. Sıra önemli!`, p => `en yakın ★\'a atılmak kalanını dolambaca çevirir: ${p.M(p.e)} kayıp. İleriyi düşün!`, p => `bir ★ kolay gelir, ama kalanı ${p.M(p.e)} daha uzun sürer. Başka bir sıra dene!`],
+        pawn: ['piyon geri gidemez, ★\'ın sırasını geçince onu almaya dönemezsin.', 'dümdüz ilerlersen çapraz öndeki ★\'ı kaçırırsın. Piyon asla geri dönmez!', 'ileri giden piyon geri gelemez ve ★\'ı alma şansı uçup gider.'],
+        dead: 'artık tüm ★\'ları toplayamazsın.',
+        cap: [p => `yolu kesen taşı almak seni ${p.M(p.e)} yoldan çıkarır.`, p => `bu alış bir sapma: ★\'a kadar ${p.M(p.e)} fazla.`, p => `taşı almak seni hiçbir ★\'a yaklaştırmaz ve ${p.M(p.e)} boşa gider.`],
+        noReach: [p => `oradan sonraki hamlede hiçbir ★\'a ulaşılmaz, yani ${p.M(p.e)} dolambaç.`, p => `oradan sonraki hamlede hiçbir ★\'ı hedefleyemezsin ve ${p.M(p.e)} kaybedersin.`, p => `o kareden bir hamle uzakta hiç ★ yok, bu yüzden ${p.M(p.e)} daha gerekir.`],
+        off: [p => `bir ★\'ı hedefleyebilirsin, ama yol kayar ve ${p.M(p.e)} kaybettirir.${p.t ? ' Önce yanı başındaki ★\'ı al!' : ''}`, p => `yaklaşırsın ama sıra bozulur ve ${p.M(p.e)} uzar.${p.t ? ' Hemen alabileceğin ★\'ı kaçırma!' : ''}`, p => `menzilde bir ★ var, ama hepsini dolaşmak ${p.M(p.e)} boşa harcar.${p.t ? ' Önce alınacak bir ★ vardı!' : ''}`],
+      },
+      done: 'Yıldızlar toplandı, ne güzel zıplayışlar!', go: ['Her aşamada üç ★, harika, hop! Şimdi az önce yürüdüğün yollardan 3 bulmaca. En kısa hamleyi bul!', 'Aferin! Şimdi bu yollardan 3 bulmaca. En kısa hamleyi ara!'],
+    },
+    id: {
+      M: n => n + ' langkah', pk: { r: 'bentengmu', b: 'gajahmu', q: 'menterimu', k: 'rajamu', n: 'kudamu', p: 'pionmu' }, cp: { p: 'pion', n: 'kuda', b: 'gajah', r: 'benteng', q: 'menteri' },
+      ask: ['Waktunya teka-teki, hop! Supaya semua ★ terkumpul dengan langkah paling sedikit, ke mana {p} pergi?', 'Ke mana {p} melangkah sekarang? Pilih jalan tanpa memutar!', 'Bisa kumpulkan sisanya dengan langkah sesedikit mungkin? Pilih petak berikutnya untuk {p}!'],
+      askCap: ['Waktunya teka-teki, hop! Supaya semua termakan dengan sedikit langkah, ke mana sekarang?', 'Buah mana yang mau kamu kejar duluan? Urutannya kuncinya!', 'Bisa kumpulkan ★ yang tersisa dalam beberapa langkah? Pilih langkahmu berikutnya!'],
+      askSafe: ['Waktunya teka-teki, hop! Sambil menghindari garis-garis, jalan mana yang paling pendek ke ★?', 'Hanya lewat petak aman, langkah mana yang jadi jalan pintas?', 'Utamakan aman, tapi jangan buang langkah! Ke mana sekarang?'],
+      hint: {
+        r: ['Benteng bergerak lurus: ke atas, ke bawah, dan ke samping. Petak mana yang membuatnya sejajar dengan ★?', 'Belum ada ★ yang terjangkau? Tidak apa-apa. Cari petak yang bisa mengambil ★ di langkah berikutnya!', 'Tentukan sudut tempat rutemu berbelok, jalannya akan terlihat, hop!'],
+        b: ['Gajah hanya bergerak diagonal. Cari petak yang sediagonal dengan ★!', 'Bisakah dua ★ disambung dengan satu diagonal?', 'Berdirilah di persilangan dua diagonal, ★ berikutnya jadi gampang diambil, hop!'],
+        q: ['Menteri bisa lurus atau diagonal. Adakah petak yang menjangkau kedua ★?', 'Mengubah urutan kadang menghemat satu langkah, hop!', 'Jangan-jangan diagonal itu jalan pintasnya? Lihat kedelapan arah!'],
+        k: ['Raja melangkah satu petak setiap kali. Hitung petak ke setiap ★!', 'Satu langkah diagonal maju satu lajur dan satu baris sekaligus, hop!', 'Mulai dari ★ yang mana supaya tidak perlu balik lagi?'],
+        n: ['Bayangkan semua petak yang bisa dilompati kudamu dari sini!', 'Kalau tidak ada ★ yang sejauh satu lompatan, cari yang dua lompatan, hop!', 'Setiap lompatan mengganti warna petak. Pakai warna petak ★ untuk menghitung lompatannya!'],
+        p2: 'Ingat? Di langkah pertamanya, pion boleh maju dua petak!', px: 'Hanya saat memakan, pion maju secara diagonal, hop!', pf: 'Pion maju lurus satu petak demi satu dan tidak pernah mundur. Hati-hati!',
+        cap: 'Dari petak tempatmu memakan, bisakah kamu mengincar buah berikutnya?', safe: 'Petak bergaris merah tidak boleh diinjak, hop! Lewati petak yang tidak diserang siapa pun.',
+      },
+      good: [(x, R) => `Bagus, ${x} benar! ${R} Pertahankan di soal berikutnya!`, (x, R) => `Hebat! ${x} adalah rute terpendek, hop! ${R}`, (x, R) => `Jeli sekali! ${x}, tepat sasaran. ${R} Kamu makin jago!`],
+      ng: [(m, x, W) => `Tidak apa-apa, sekarang kamu tahu! ${m} jalan pintasnya, hop. Dengan ${x}, ${W}`, (m, x, W) => `Sedikit lagi! Jawabannya ${m}. Setelah ${x}, ${W}`, (m, x, W) => `${m} pasti sempurna. Kalau main ${x}, ${W} Soal berikutnya pasti bisa!`],
+      R: {
+        last: ['Satu lompatan ke ★ terakhir, semuanya terkumpul!', '★ terakhir jadi milikmu, tepat sasaran!', 'Tidak ada ★ tersisa, dan tidak ada satu langkah pun terbuang!'],
+        cap: [p => `Kamu memakan ${p.cp} dan jalan ke ★ berikutnya tetap terbuka. Tinggal ${p.M(p.r)}!`, p => `Petak tempatmu memakan ${p.cp} jadi jalan pintas ke berikutnya.`, p => `Makan ${p.cp}, lalu cuma ${p.M(p.r)} ke ★ berikutnya. Urutan yang sempurna!`],
+        starNx: ['Dari ★ yang baru kamu ambil, yang berikutnya sudah terjangkau.', 'Ambil satu ★ dan langsung sejajar dengan yang berikutnya!', 'Tepat di tempatmu mendarat, ★ berikutnya sudah dalam bidikan!'],
+        starR: [p => `Setelah ★ ini, sisanya hanya butuh ${p.M(p.r)}.`, p => `Ambil ★ ini dulu, lalu selesai dalam ${p.M(p.r)}.`, p => `Dari ★ ini, sisanya bisa kamu kumpulkan dalam ${p.M(p.r)}.`],
+        promo: 'Promosi jadi menteri di sini! Sekarang bisa ke segala arah, hop!',
+        mid: [p => `Belum ada ★, tapi dari sini satu ★ terjangkau di langkah berikutnya. ${p.k ? 'Tidak ada langkah yang sia-sia!' : 'Batu loncatan yang pas!'}`, 'Singgah di sini dulu membuatmu bisa meraih ★ di langkah berikutnya.', 'Kelihatannya memutar, padahal ini jalan pintas ke ★ berikutnya.'],
+        path: [p => `Dari sini, semua ★ cuma butuh ${p.M(p.r)} lagi. Nol putaran!`, p => `Lewati petak ini dan kamu selesai dalam ${p.M(p.r)}, hop!`, p => `Pelan tapi pasti! Petak ini ada di rute terpendek: tinggal ${p.M(p.r)}.`],
+      },
+      W: {
+        greedy: [p => `kamu dapat satu ★, tapi yang lain jadi jauh dan butuh ${p.M(p.e)} ekstra. Urutan itu penting!`, p => `menyerbu ★ terdekat membuat sisanya memutar: rugi ${p.M(p.e)}. Lihat lebih jauh ke depan!`, p => `satu ★ gampang didapat, tapi sisanya ${p.M(p.e)} lebih lama. Coba urutan lain!`],
+        pawn: ['pion tidak bisa mundur, jadi setelah melewati baris ★ kamu tak bisa kembali mengambilnya.', 'kalau terus lurus, ★ di depan diagonal jadi terlewat. Pion tidak pernah mundur!', 'pion yang sudah maju tidak bisa kembali, dan kesempatan mengambil ★ hilang.'],
+        dead: 'kamu tidak bisa lagi mengumpulkan semua ★.',
+        cap: [p => `memakan buah penghalang itu membuatmu melenceng ${p.M(p.e)}.`, p => `makan buah itu cuma jalan memutar: ${p.M(p.e)} ekstra sampai ke ★.`, p => `memakan buah tidak membawamu lebih dekat ke ★, jadi ${p.M(p.e)} terbuang.`],
+        noReach: [p => `dari sana tidak ada ★ yang terjangkau di langkah berikutnya, jadi memutar ${p.M(p.e)}.`, p => `dari sana kamu tak bisa mengincar ★ di langkah berikutnya, dan rugi ${p.M(p.e)}.`, p => `tidak ada ★ yang sejauh satu langkah dari petak itu, jadi butuh ${p.M(p.e)} lagi.`],
+        off: [p => `kamu bisa mengincar ★, tapi rutenya meleset dan rugi ${p.M(p.e)}.${p.t ? ' Ambil dulu ★ yang sudah terjangkau!' : ''}`, p => `kamu mendekat, tapi urutannya salah dan jadi ${p.M(p.e)} lebih lama.${p.t ? ' Jangan lewatkan ★ yang bisa langsung diambil!' : ''}`, p => `ada ★ yang terjangkau, tapi mengitari semuanya membuang ${p.M(p.e)}.${p.t ? ' Ada ★ yang bisa diambil lebih dulu!' : ''}`],
+      },
+      done: 'Bintang terkumpul, lompatan yang keren!', go: ['Tiga ★ di semua tahap, luar biasa, hop! Sekarang 3 teka-teki dari rute yang baru kamu lalui. Temukan langkah terpendek!', 'Kerja bagus! Sekarang 3 teka-teki dari rute itu. Cari langkah terpendek!'],
+    },
+    hi: {
+      M: n => n === 1 ? '1 चाल' : n + ' चालें', pk: { r: 'हाथी', b: 'ऊँट', q: 'वज़ीर', k: 'राजा', n: 'घोड़ा', p: 'प्यादा' }, cp: { p: 'प्यादे', n: 'घोड़े', b: 'ऊँट', r: 'हाथी', q: 'वज़ीर' },
+      ask: ['पहेली का समय, फुदक! सारे ★ सबसे कम चालों में जुटाने हैं, तो अब {p} कहाँ जाए?', 'अब {p} कहाँ जाए? बिना चक्कर वाला रास्ता चुनो!', 'क्या बाकी ★ सबसे कम चालों में बटोर सकते हो? {p} का अगला खाना चुनो!'],
+      askCap: ['पहेली का समय, फुदक! सबको कम चालों में मारना है, तो अब कहाँ जाओगे?', 'पहले किस मोहरे के पीछे जाओगे? क्रम ही असली चाबी है!', 'क्या बचे हुए ★ कुछ ही चालों में बटोर सकते हो? अगली चाल चुनो!'],
+      askSafe: ['पहेली का समय, फुदक! धारियों से बचते हुए ★ तक सबसे छोटा रास्ता कौन-सा है?', 'सिर्फ़ सुरक्षित खानों पर चलते हुए, कौन-सी चाल शॉर्टकट है?', 'पहले सुरक्षा, पर कोई चाल बेकार नहीं! अब कहाँ?'],
+      hint: {
+        r: ['हाथी सीधा चलता है: ऊपर, नीचे और बगल में। कौन-सा खाना उसे किसी ★ की सीध में लाता है?', 'अभी कोई ★ पहुँच में नहीं? कोई बात नहीं। ऐसा खाना ढूँढो जहाँ से अगली चाल में ★ मिल जाए!', 'तय करो कि रास्ता कहाँ मुड़ेगा, फिर राह खुद दिखेगी, फुदक!'],
+        b: ['ऊँट सिर्फ़ तिरछा चलता है। किसी ★ वाले तिरछे पर खाना ढूँढो!', 'क्या दो ★ एक ही तिरछी रेखा से जुड़ सकते हैं?', 'जहाँ दो तिरछी रेखाएँ मिलती हैं, वहाँ खड़े हो तो अगला ★ आसान है, फुदक!'],
+        q: ['वज़ीर सीधा भी चलता है और तिरछा भी। क्या कोई खाना दोनों ★ तक पहुँचता है?', 'क्रम बदलने से कभी-कभी एक चाल बचती है, फुदक!', 'कहीं तिरछा ही शॉर्टकट तो नहीं? आठों दिशाएँ देखो!'],
+        k: ['राजा एक बार में एक खाना चलता है। हर ★ तक खाने गिनो!', 'एक तिरछा कदम एक साथ खड़ी और पड़ी दोनों पंक्तियों में आगे बढ़ाता है, फुदक!', 'किस ★ से शुरू करो कि वापस न लौटना पड़े?'],
+        n: ['सोचो, तुम्हारा घोड़ा यहाँ से किन-किन खानों पर कूद सकता है!', 'अगर कोई ★ एक छलाँग पर नहीं, तो दो छलाँग वाला खाना ढूँढो, फुदक!', 'हर छलाँग पर खाने का रंग बदलता है। ★ के रंग से छलाँगें गिनो!'],
+        p2: 'याद है? अपनी सबसे पहली चाल में प्यादा दो खाने चल सकता है!', px: 'सिर्फ़ मारते वक़्त प्यादा तिरछा आगे जाता है, फुदक!', pf: 'प्यादा सीधा, एक-एक खाना आगे बढ़ता है और कभी पीछे नहीं जाता। सावधान!',
+        cap: 'जिस खाने पर मारोगे, वहाँ से अगले मोहरे पर निशाना लग सकता है?', safe: 'लाल धारी वाले खानों पर पैर नहीं रख सकते, फुदक! उन खानों से चलो जिन पर कोई हमला नहीं।',
+      },
+      good: [(x, R) => `बढ़िया, ${x} सही है! ${R} अगली पहेली में भी ऐसे ही!`, (x, R) => `शाबाश! ${x} सबसे छोटा रास्ता है, फुदक! ${R}`, (x, R) => `क्या नज़र है! ${x}, बिल्कुल सही। ${R} तुम लगातार बेहतर हो रहे हो!`],
+      ng: [(m, x, W) => `कोई बात नहीं, अब तुम जान गए! ${m} शॉर्टकट था, फुदक। ${x} से ${W}`, (m, x, W) => `बस ज़रा-सा! जवाब है ${m}। ${x} के बाद ${W}`, (m, x, W) => `${m} चुनते तो पूरे अंक मिलते। ${x} खेलने पर ${W} अगली बार ज़रूर!`],
+      R: {
+        last: ['आख़िरी ★ तक एक छलाँग, और सब जुट गए!', 'आख़िरी ★ तुम्हारा, ठीक निशाने पर!', 'कोई ★ नहीं बचा, और एक भी चाल बेकार नहीं गई!'],
+        cap: [p => `तुम ${p.cp} को मारते हो और अगले ★ का रास्ता खुला रहता है। बस ${p.M(p.r)} बाकी!`, p => `जिस खाने पर ${p.cp} को मारते हो, वही अगले तक शॉर्टकट है।`, p => `${p.cp} को मारो, फिर अगले ★ तक सिर्फ़ ${p.M(p.r)}। एकदम सही क्रम!`],
+        starNx: ['अभी जो ★ लिया, वहीं से अगला भी पहुँच में है।', 'एक ★ लेते ही अगले की सीध में आ गए!', 'ठीक जहाँ उतरे, अगला ★ पहले से निशाने पर है!'],
+        starR: [p => `इस ★ के बाद बाकी में सिर्फ़ ${p.M(p.r)} लगेंगी।`, p => `पहले यह ★ लो, फिर ${p.M(p.r)} में काम पूरा।`, p => `इस ★ से बाकी सब ${p.M(p.r)} में बटोर लोगे।`],
+        promo: 'यहीं वज़ीर बन जाओ! अब हर दिशा में जा सकते हो, फुदक!',
+        mid: [p => `अभी ★ नहीं, पर यहाँ से अगली चाल में एक मिल जाएगा। ${p.k ? 'एक भी कदम फ़ालतू नहीं!' : 'एकदम सही पड़ाव!'}`, 'पहले यहाँ रुकने से अगली ही चाल में ★ तक पहुँच जाते हो।', 'चक्कर जैसा लगता है, पर असल में यही अगले ★ का शॉर्टकट है।'],
+        path: [p => `यहाँ से सारे ★ बस ${p.M(p.r)} और। एक भी चक्कर नहीं!`, p => `इस खाने से गुज़रो और ${p.M(p.r)} में ख़त्म, फुदक!`, p => `धीरे-धीरे, पर पक्का! यह खाना सबसे छोटे रास्ते पर है: ${p.M(p.r)} बाकी।`],
+      },
+      W: {
+        greedy: [p => `एक ★ तो मिलता है, पर बाकी दूर हो जाते हैं और ${p.M(p.e)} ज़्यादा लगती हैं। क्रम मायने रखता है!`, p => `सबसे पास वाले ★ पर झपटने से बाकी चक्कर बन जाता है: ${p.M(p.e)} का नुकसान। आगे की सोचो!`, p => `एक ★ आसानी से मिलता है, पर बाकी में ${p.M(p.e)} ज़्यादा लगती हैं। दूसरा क्रम आज़माओ!`],
+        pawn: ['प्यादा पीछे नहीं जा सकता, ★ वाली पंक्ति पार की तो उसे लेने लौट नहीं पाओगे।', 'सीधे बढ़ते रहे तो तिरछे सामने वाला ★ छूट जाता है। प्यादा कभी पीछे नहीं जाता!', 'आगे बढ़ा प्यादा लौट नहीं सकता, और ★ लेने का मौका चला जाता है।'],
+        dead: 'अब सारे ★ नहीं बटोर पाओगे।',
+        cap: [p => `रास्ते के मोहरे को मारना तुम्हें ${p.M(p.e)} भटका देता है।`, p => `वह मारना एक चक्कर है: ★ तक ${p.M(p.e)} ज़्यादा।`, p => `मारने से तुम किसी ★ के पास नहीं पहुँचते, और ${p.M(p.e)} बेकार जाती हैं।`],
+        noReach: [p => `वहाँ से अगली चाल में कोई ★ नहीं मिलता, यानी ${p.M(p.e)} का चक्कर।`, p => `वहाँ से अगली चाल में किसी ★ पर निशाना नहीं, और ${p.M(p.e)} का नुकसान।`, p => `उस खाने से एक चाल दूर कोई ★ नहीं, इसलिए ${p.M(p.e)} और लगती हैं।`],
+        off: [p => `★ पर निशाना तो है, पर रास्ता भटकता है और ${p.M(p.e)} लगती हैं।${p.t ? ' जो ★ पास है, पहले उसे लो!' : ''}`, p => `पास तो पहुँचते हो, पर क्रम बिगड़ता है और ${p.M(p.e)} ज़्यादा लगती हैं।${p.t ? ' तुरंत मिलने वाला ★ मत छोड़ो!' : ''}`, p => `एक ★ पहुँच में है, पर सबका चक्कर लगाने में ${p.M(p.e)} बेकार जाती हैं।${p.t ? ' पहले लेने लायक एक ★ था!' : ''}`],
+      },
+      done: '★ बटोर लिए, क्या शानदार छलाँगें!', go: ['हर चरण में तीन ★, कमाल, फुदक! अब अभी चले रास्तों से 3 पहेलियाँ। सबसे छोटी चाल ढूँढो!', 'बहुत बढ़िया! अब उन्हीं रास्तों से 3 पहेलियाँ। सबसे छोटी चाल खोजो!'],
+    },
+    ar: {
+      M: n => n === 1 ? 'نقلة واحدة' : n === 2 ? 'نقلتان' : n <= 10 ? n + ' نقلات' : n + ' نقلة', pk: { r: 'الرخ', b: 'الفيل', q: 'الوزير', k: 'الملك', n: 'الحصان', p: 'البيدق' }, cp: { p: 'البيدق', n: 'الحصان', b: 'الفيل', r: 'الرخ', q: 'الوزير' },
+      ask: ['وقت اللغز، قفزة! لتجمع كل ★ بأقل عدد من النقلات، إلى أين ينتقل {p} الآن؟', 'إلى أين ينتقل {p} الآن؟ اختر الطريق بلا التفاف!', 'هل تجمع الباقي بأقل النقلات؟ اختر المربع التالي الذي ينتقل إليه {p}!'],
+      askCap: ['وقت اللغز، قفزة! لتأسرها كلها بنقلات قليلة، إلى أين تذهب الآن؟', 'أي قطعة ستلاحق أولًا؟ الترتيب هو المفتاح!', 'هل تجمع ما تبقى من ★ في نقلات قليلة؟ اختر نقلتك التالية!'],
+      askSafe: ['وقت اللغز، قفزة! متجنبًا الخطوط، ما أقصر طريق إلى ★؟', 'بالمرور على المربعات الآمنة فقط، أي نقلة هي الطريق المختصر؟', 'الأمان أولًا، لكن بلا نقلات ضائعة! إلى أين الآن؟'],
+      hint: {
+        r: ['الرخ يتحرك مستقيمًا: للأمام وللخلف وللجانبين. أي مربع يضعه على خط واحد مع ★؟', 'لا ★ في متناولك بعد؟ لا بأس. ابحث عن مربع تلتقطها منه في النقلة التالية!', 'حدّد الزاوية التي ينعطف فيها طريقك، وسيظهر لك الدرب، قفزة!'],
+        b: ['الفيل يتحرك قطريًا فقط. ابحث عن مربع على قطر واحد مع ★!', 'هل يمكن وصل نجمتين ★ بقطر واحد؟', 'قف حيث يتقاطع قطران، وستسهل عليك ★ التالية، قفزة!'],
+        q: ['الوزير يتحرك مستقيمًا أو قطريًا. هل هناك مربع يصل إلى النجمتين ★ معًا؟', 'تغيير الترتيب يوفّر نقلة أحيانًا، قفزة!', 'ماذا لو كان القطر هو الطريق المختصر؟ انظر في الاتجاهات الثمانية!'],
+        k: ['الملك يخطو مربعًا واحدًا كل مرة. عدّ المربعات حتى كل ★!', 'خطوة قطرية واحدة تقدّمك عمودًا وصفًا في آن واحد، قفزة!', 'بأي ★ تبدأ حتى لا تضطر إلى الرجوع؟'],
+        n: ['تخيّل كل المربعات التي يقفز إليها حصانك من هنا!', 'إن لم تكن أي ★ على بعد قفزة، فابحث عن واحدة على بعد قفزتين، قفزة!', 'كل قفزة تغيّر لون المربع. استعن بلون مربع ★ لتعدّ القفزات!'],
+        p2: 'أتذكر؟ في نقلته الأولى تمامًا يستطيع البيدق التقدم مربعين!', px: 'لا يتقدم البيدق قطريًا إلا عندما يأسر، قفزة!', pf: 'البيدق يتقدم مستقيمًا مربعًا بعد مربع ولا يتراجع أبدًا. انتبه!',
+        cap: 'من المربع الذي تأسر فيه، هل تستطيع أن تصوّب نحو القطعة التالية؟', safe: 'لا يمكنك الوقوف على الخطوط الحمراء، قفزة! تنقّل عبر المربعات التي لا يهاجمها أحد.',
+      },
+      good: [(x, R) => `رائع، ${x} صحيحة! ${R} واصل هكذا في اللغز التالي!`, (x, R) => `أحسنت! ${x} هي أقصر طريق، قفزة! ${R}`, (x, R) => `يا لها من عين! ${x}، في الصميم. ${R} أنت تتحسّن أكثر فأكثر!`],
+      ng: [(m, x, W) => `لا بأس، الآن عرفت! كانت ${m} هي الطريق المختصر، قفزة. مع ${x}، ${W}`, (m, x, W) => `اقتربت كثيرًا! الجواب هو ${m}. بعد ${x}، ${W}`, (m, x, W) => `لو اخترت ${m} لكانت مثالية. إذا لعبت ${x}، ${W} ستنجح في التالي!`],
+      R: {
+        last: ['قفزة واحدة إلى آخر ★، وجمعتها كلها!', 'آخر ★ صارت لك، في الهدف تمامًا!', 'لم تبقَ أي ★، ولم تضِع نقلة واحدة!'],
+        cap: [p => `تأسر ${p.cp} ويبقى الطريق إلى ★ التالية مفتوحًا. بقيت ${p.M(p.r)} فقط!`, p => `المربع الذي تأسر فيه ${p.cp} طريق مختصر إلى التالية.`, p => `تأسر ${p.cp}، ثم ${p.M(p.r)} فقط حتى ★ التالية. ترتيب مثالي!`],
+        starNx: ['من ★ التي أخذتها للتو، صارت التالية في متناولك.', 'تأخذ ★ وتصطف مباشرة مع التالية!', 'في المكان الذي هبطت فيه تمامًا، ★ التالية في مرماك بالفعل!'],
+        starR: [p => `بعد هذه ★، لا يحتاج الباقي إلا ${p.M(p.r)}.`, p => `خذ هذه ★ أولًا وتنتهي في ${p.M(p.r)}.`, p => `من هذه ★ تجمع الباقي في ${p.M(p.r)}.`],
+        promo: 'رقِّ البيدق إلى وزير هنا! الآن تتحرك في كل الاتجاهات، قفزة!',
+        mid: [p => `لا ★ بعد، لكن من هنا تصل إلى واحدة في النقلة التالية. ${p.k ? 'ولا خطوة زائدة!' : 'محطة مثالية!'}`, 'التوقف هنا أولًا يتيح لك بلوغ ★ في النقلة التالية مباشرة.', 'تبدو كالتفاف، لكنها في الحقيقة الطريق المختصر إلى ★ التالية.'],
+        path: [p => `من هنا، لا تحتاج كل ★ إلا ${p.M(p.r)} أخرى. بلا أي التفاف!`, p => `مرّ بهذا المربع وتنتهي في ${p.M(p.r)}، قفزة!`, p => `في التأني السلامة! هذا المربع على أقصر طريق: بقيت ${p.M(p.r)}.`],
+      },
+      W: {
+        greedy: [p => `تأخذ ★، لكن البقية تبتعد ويكلّفك ذلك ${p.M(p.e)} زيادة. الترتيب مهم!`, p => `الاندفاع نحو أقرب ★ يجعل الباقي التفافًا: خسارة ${p.M(p.e)}. انظر إلى الأمام!`, p => `★ واحدة تأتي بسهولة، لكن الباقي يستغرق ${p.M(p.e)} أكثر. جرّب ترتيبًا آخر!`],
+        pawn: ['البيدق لا يتراجع، فإذا تجاوزت صف ★ لن تعود لأخذها.', 'إن مضيت مستقيمًا تفوتك ★ القطرية أمامك. البيدق لا يعود أبدًا!', 'البيدق الذي تقدّم لا يرجع، وتضيع فرصة أخذ ★.'],
+        dead: 'لن تستطيع جمع كل ★ بعد الآن.',
+        cap: [p => `أسر القطعة المعترضة يبعدك عن طريقك ${p.M(p.e)}.`, p => `هذا الأسر تحويلة: ${p.M(p.e)} زيادة حتى ★.`, p => `الأسر لا يقرّبك من أي ★، فتضيع ${p.M(p.e)}.`],
+        noReach: [p => `من هناك لا تصل إلى أي ★ في النقلة التالية، فهو التفاف بمقدار ${p.M(p.e)}.`, p => `من هناك لا تستطيع التصويب نحو ★ في النقلة التالية، فتخسر ${p.M(p.e)}.`, p => `لا توجد ★ على بعد نقلة من ذلك المربع، لذا تحتاج ${p.M(p.e)} إضافية.`],
+        off: [p => `يمكنك التصويب نحو ★، لكن الطريق ينحرف ويكلّف ${p.M(p.e)}.${p.t ? ' خذ أولًا ★ التي في متناولك!' : ''}`, p => `تقترب، لكن الترتيب يختل فيطول الأمر ${p.M(p.e)}.${p.t ? ' لا تفوّت ★ يمكنك أخذها فورًا!' : ''}`, p => `هناك ★ في المتناول، لكن الدوران على الجميع يضيّع ${p.M(p.e)}.${p.t ? ' كانت هناك ★ تؤخذ أولًا!' : ''}`],
+      },
+      done: 'جمعت النجوم، يا لها من قفزات!', go: ['ثلاث ★ في كل مرحلة، مذهل، قفزة! والآن 3 ألغاز من الطرق التي سلكتها للتو. جد أقصر نقلة!', 'أحسنت! والآن 3 ألغاز من تلك الطرق. ابحث عن أقصر نقلة!'],
+    },
   };
   function cdBoard(fen) { const b = Array(64).fill(''); String(fen).split(' ')[0].split('/').forEach((row, i) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) f += +ch; else { b[(7 - i) * 8 + f] = ch; f++; } } }); return b; }
   const cdName = q => 'abcdefgh'[q & 7] + ((q >> 3) + 1), cdSq = n => (+n[1] - 1) * 8 + 'abcdefgh'.indexOf(n[0]);
@@ -1008,7 +1480,43 @@
     const rows = []; for (let r = 7; r >= 0; r--) { let s = '', e = 0; for (let f = 0; f < 8; f++) { const c = b[r * 8 + f]; if (c) { if (e) s += e; e = 0; s += c; } else e++; } if (e) s += e; rows.push(s); }
     return rows.join('/') + ' w - - 0 1';
   }
-  function chDrillQs(s) {
+  // one new ★ position for a drill lesson (problem i): the piece the lesson teaches (the capture / safety lessons: the pieces their stages use),
+  // ★ and black pieces at random — kept when the shortest route is 2–4 moves (the king 2–5), the first move has 1–2 right answers out of
+  // 3 or more (the pawn: 2 or more), no promotion on the first move, and the position is new (not a stage's, not an earlier problem's)
+  function cdGen(s, i, seen) {
+    const stg = s.stages || [], sid = s.id, R = n => Math.floor(Math.random() * n), pcs = [...new Set(stg.map(g => (cdBoard(g.fen).find(c => c && c === c.toUpperCase()) || 'Q').toLowerCase()))];
+    const free = (occ, lo = 0, hi = 63) => { for (let k = 0; k < 50; k++) { const q = lo + R(hi - lo + 1); if (!occ.has(q)) { occ.add(q); return q; } } return -1; };
+    for (let tr = 0; tr < 400; tr++) {
+      const pc = sid === 'b_capture' || sid === 'b_safety' ? pcs[(i + tr) % pcs.length] : pcs[0], occ = new Set(), blk = [], stars = [];
+      let q0;
+      if (pc === 'p') {   // a pawn on the 2nd–4th rank, black pieces just ahead to take, ★ on them or on a square ahead
+        const f = 1 + R(6), r = 1 + R(3); q0 = r * 8 + f; occ.add(q0);
+        const nb = 1 + R(2); for (let k = 0; k < nb; k++) { const rr = r + 1 + R(2), ff = f + R(5) - 2; if (rr > 6 || ff < 0 || ff > 7 || occ.has(rr * 8 + ff)) continue; occ.add(rr * 8 + ff); blk.push([rr * 8 + ff, 'pnb'[R(3)]]); }
+        blk.forEach(([q]) => { if (R(3)) stars.push(q); }); if (!stars.length || R(2)) { const rr = Math.min(6, r + 2 + R(2)), ff = f + R(3) - 1; if (ff >= 0 && ff < 8 && !occ.has(rr * 8 + ff)) { occ.add(rr * 8 + ff); stars.push(rr * 8 + ff); } }
+      } else {
+        q0 = free(occ);
+        if (sid === 'b_capture') { const n = 2 + (R(3) === 0 ? 1 : 0); for (let k = 0; k < n; k++) { const q = free(occ, 8, 63); if (q >= 0) { blk.push([q, 'pnbr'[R(4)]]); stars.push(q); } } }
+        else {
+          if (sid === 'b_safety') blk.push([free(occ, 16, 55), 'bnr'[R(3)]]);
+          else if (sid === 'b_rook' && R(2)) blk.push([free(occ, 8, 55), 'p']);
+          const n = 2 + (R(2) && sid !== 'b_safety' ? 1 : 0); for (let k = 0; k < n; k++) stars.push(free(occ));
+        }
+      }
+      if (q0 < 0 || stars.some(q => q < 0) || blk.some(([q]) => q < 0) || !stars.length) continue;
+      const S = { blk, stars, safe: sid === 'b_safety' }, st = { q: q0, pc, bm: (1 << blk.length) - 1, sm: (1 << stars.length) - 1 };
+      if (S.safe && (blk.some(([q, c]) => cdAtt(Array(64).fill(0), c, q, true).includes(q0)) || stars.some(z => blk.some(([q, c]) => { const o = Array(64).fill(0); blk.forEach(([x]) => { o[x] = 2; }); return cdAtt(o, c, q, true).includes(z); })))) continue;   // (start and ★ squares not attacked)
+      const key = (() => { const b = Array(64).fill(''); blk.forEach(([q, c]) => { b[q] = c; }); b[q0] = pc.toUpperCase(); return b.join(',') + '|' + stars.map(cdName).sort().join(','); })();
+      if (seen.has(key)) continue;
+      const memo = new Map(), d = cdDist(S, st, memo), hi = pc === 'k' ? 5 : 4;
+      if (d < 2 || d > hi) continue;
+      const ms = cdMoves(S, st); if (ms.length < (pc === 'p' ? 2 : 3) || ms.some(m => m.promo)) continue;
+      ms.forEach(m => { m.d = cdDist(S, m.st, memo); }); const ok = ms.filter(m => 1 + m.d === d);
+      if (!ok.length || ok.length > 2 || ok.length >= ms.length) continue;
+      seen.add(key); return { gi: i, step: 0, S, st, d, ms, ok, left: stars.length };
+    }
+    return null;
+  }
+  function chDrillQs(s, lang) {
     const cands = [];
     (s.stages || []).forEach((g, gi) => {
       const b = cdBoard(g.fen), blk = [], stars = (g.stars || []).map(cdSq); let st = null;
@@ -1022,41 +1530,45 @@
         if (!ok.length) break; st = ok[0].st;
       }
     });
-    // three problems from the later (harder) stages: a position with two ★ or more first, a new position (not a stage's start) before one
-    const pickd = [], used = new Set();
-    for (const pass of [0, 1, 2]) for (let gi = (s.stages || []).length - 1; gi >= 0 && pickd.length < 3; gi--) {
-      if (pass < 2 && used.has(gi)) continue;
-      const c = cands.filter(x => x.gi === gi && !pickd.includes(x)).sort((a, b) => (b.left >= 2) - (a.left >= 2) || (b.step > 0) - (a.step > 0) || a.step - b.step)[0];
-      if (!c || (pass === 0 && c.left < 2)) continue; pickd.push(c); used.add(gi);
-    }
-    pickd.sort((a, b) => a.gi - b.gi || a.step - b.step);
-    const sid = s.id, used2 = new Set(), once = t => { if (!t || used2.has(t)) return ''; used2.add(t); return t; };
+    // (2026-11-22 user: 駒の配置まで★集めと同じ問題の繰り返し) the 3 problems are new positions each time the lesson opens — made at random
+    // in the lesson's own kind (its piece, its blockers / targets / attackers), never a stage's position, each one different; the route
+    // positions above are only the fallback
+    const pickd = [], seen = new Set((s.stages || []).map(g => cdBoard(g.fen).join(',') + '|' + (g.stars || []).slice().sort().join(',')));
+    for (let i = 0; i < 3; i++) { const c = cdGen(s, i, seen); if (c) pickd.push(c); }
+    if (pickd.length < 3) { const used = new Set();
+      for (const pass of [0, 1, 2]) for (let gi = (s.stages || []).length - 1; gi >= 0 && pickd.length < 3; gi--) {
+        if (pass < 2 && used.has(gi)) continue;
+        const c = cands.filter(x => x.gi === gi && !pickd.includes(x)).sort((a, b) => (b.left >= 2) - (a.left >= 2) || (b.step > 0) - (a.step > 0) || a.step - b.step)[0];
+        if (!c || (pass === 0 && c.left < 2)) continue; pickd.push(c); used.add(gi);
+      } }
+    const C = CDQ[lang] || CDQ.en, sid = s.id, used2 = new Set(), once = t => { if (!t || used2.has(t)) return ''; used2.add(t); return t; };
+    const sp = lang === 'ja' || /^zh/.test(lang) ? '' : ' ', T = (x, p) => typeof x === 'function' ? x(p) : x;
     return pickd.map((c, i) => {
-      const pc = c.st.pc, N = CDQ.pk[pc], how = CDQ.how[pc], ans = c.ok[0].u, okU = c.ok.map(m => m.u);
+      const pc = c.st.pc, ans = c.ok[0].u, okU = c.ok.map(m => m.u), V = arr => arr[i % arr.length];
       const by = u => c.ms.find(m => m.u === u), stars = c.S.stars.filter((q, j) => c.st.sm >> j & 1).map(cdName);
       const reach = m => cdMoves(c.S, m.st).filter(n => n.star).length;   // (★ the piece can take on its next move)
-      let hintTx = sid === 'b_pawn' && pc === 'p' ? (c.ms.some(m => m.cap) ? CDQ.hint.px : (c.st.q >> 3) === 1 ? CDQ.hint.p2 : CDQ.hint.pf) : (CDQ.hint[pc] || CDQ.hint.q)[i % 3];
-      if (sid === 'b_capture') hintTx += ' ' + (once(CDQ.hint.cap) || '');
-      if (c.S.safe) hintTx = (once(CDQ.hint.safe) || '') + (i ? ' ' + hintTx : '');
-      const V = arr => arr[i % arr.length];
-      const whyR = m => { const r = m.d, nx = reach(m), cp = CH_PN[(c.S.blk.find(([q]) => q === m.to) || [0, 'p'])[1].toLowerCase()] || '駒';
-        if (m.star && !r) return V(['最後の★までひとっ飛び、これで全部集まったね。', '残っていた★を一気に回収！ 手数もぴったり。', 'これで★はゼロ。ムダな手がひとつもなかった！']);
-        if (m.cap && r) return V([`黒い${cp}を取って、次の★へも${how}がつながる。残りあと${r}手！`, `${cp}を取ったマスが、そのまま次への近道になってる。`, `${cp}を取りつつ、次の★まで${r}手。順番がばっちり！`]);
-        if (m.star) return V([nx ? '★を取ったマスから、次の★にもすぐ届くからね。' : `★を取ったあと、残り${r}手で全部取れるから。`, nx ? '★を取りながら、次の★まで一直線につながるピョン。' : `先にこの★を取っておくと、あと${r}手で終わる。`, nx ? '取ったその場所から、次の★がもう射程に入ってる！' : `この★からなら、残りもあと${r}手で回れる。`]);
-        if (m.promo) return 'ここで成ってクイーンに！ 動ける方向がいっきに増えるピョン。';
-        return nx ? V([`★はまだ取らないけど、次の手で★に届くマス。${pc === 'k' ? 'ムダな一歩がない' : 'ちょうどいい中継地点'}！`, `いったんここへ寄ると、次の${how}で★に届くんだ。`, '寄り道に見えて、じつは次の★への近道なんだ。']) : V([`ここからなら残り${r}手で全部集まる。遠回りゼロ！`, `このマスを通ると、あと${r}手で終わる道すじになるピョン。`, `急がば回れ！ ここを通るのが、あと${r}手の最短コース。`]); };
+      let hintTx = sid === 'b_pawn' && pc === 'p' ? (() => { const rel = c.ms.some(m => m.cap) ? 'px' : (c.st.q >> 3) === 1 ? 'p2' : 'pf'; return [rel, 'px', 'pf', 'p2'].map(k => C.hint[k]).find(t => once(t)) || C.hint[rel]; })() : (C.hint[pc] || C.hint.q)[i % 3];   // (the pawn: the hint that fits, another one when it was said already)
+      if (sid === 'b_capture') { const t = once(C.hint.cap); if (t) hintTx += sp + t; }
+      if (c.S.safe) hintTx = [once(C.hint.safe), i ? hintTx : ''].filter(Boolean).join(sp);
+      const P = (m, e) => ({ r: m.d, e, k: pc === 'k', how: (C.how || {})[pc] || '', M: C.M, MD: C.MD || C.M, t: false, cp: C.cp[(c.S.blk.find(([q]) => q === m.to) || [0, 'p'])[1].toLowerCase()] || C.cp.p });
+      const whyR = m => { const p = P(m, 0), R = C.R;
+        if (m.star && !m.d) return V(R.last);
+        if (m.cap && m.d) return T(V(R.cap), p);
+        if (m.star) return T(V(reach(m) ? R.starNx : R.starR), p);
+        if (m.promo) return R.promo;
+        return T(V(reach(m) ? R.mid : R.path), p); };
       const alt = u0 => { const m0 = u0 && by(u0); if (m0 && !okU.includes(u0)) return m0; return c.ms.filter(m => !okU.includes(m.u)).sort((a, b) => b.star - a.star || a.d - b.d)[0]; };
-      const whyW = (m, x) => { const e = 1 + x.d - c.d;
-        if (x.star && x.d) return V([`★は取れるけど、残りの★が遠くなって${e}手よけいにかかっちゃう。取る順番が大事なんだ。`, `目の前の★に飛びつくと、残りが遠回りで${e}手のロス。先を読むのがコツ！`, `★をひとつ取れても、そのあとが${e}手長くなる。順番を入れかえてみよう！`]);
-        if (pc === 'p' && !x.star && !x.cap && (x.d >= 99 || e >= 3)) return V(['ポーンは後ろに戻れないから、★のある段を通りすぎると取りに戻れない。', 'まっすぐ進むと、ナナメ前の★が取れなくなっちゃう。ポーンは戻れないからね。', '前に進んだポーンは戻れない。★を取るチャンスが消えちゃうんだ。']);
-        if (x.d >= 99) return 'そこへ行くと、もう全部の★は取れなくなっちゃう。';
-        if (x.cap) return V([`じゃまな駒を取っても、★まで${e}手の遠回りになる。`, `その駒を取るのは寄り道。★まで${e}手よけいにかかる。`, `駒を取っても★には近づかなくて、${e}手のムダが出る。`]);   // (a capture off the ★: a blocker taken — on a ★ it is the branch above)
-        if (!reach(x)) return V([`そのマスからは次の手で届く★がひとつもないから、${e}手遠回りになるピョン。`, `次の手で★をねらえない場所だから、${e}手ぶん損しちゃう。`, `次の手で届く★がなくて、${e}手よけいにかかるんだ。`]);
-        return V([`★はねらえるけど、道すじがずれて${e}手のロス。${m.star ? '取れる★は先に取っておこう！' : ''}`, `★には近づくけど、回る順がずれて${e}手長くなる。${m.star ? 'すぐ取れる★を見のがさないでね。' : ''}`, `届く★はあるけど、全部まわると${e}手のムダ。${m.star ? '先に取れる★があったんだ。' : ''}`]); };
+      const whyW = (m, x) => { const p = Object.assign(P(x, 1 + x.d - c.d), { t: !!m.star }), W = C.W;
+        if (x.star && x.d) return T(V(W.greedy), p);
+        if (pc === 'p' && !x.star && !x.cap && (x.d >= 99 || p.e >= 3)) return V(W.pawn);
+        if (x.d >= 99) return W.dead;
+        if (x.cap) return T(V(W.cap), p);   // (a capture off the ★: a blocker taken — on a ★ it is the branch above)
+        if (!reach(x)) return T(V(W.noReach), p);
+        return T(V(W.off), p); };
       const o = { pos: cdFen(c.S, c.st), kind: 'best', drill: { stars, safe: c.S.safe }, P: { ok: okU }, ans, hintTx,
-        ask: CDQ.ask[sid] ? CDQ.ask[sid][i % 3] : `${N}を次にどこへ動かす？`,
-        good: u => { const m = (u && okU.includes(u) && by(u)) || c.ok[0]; return CDQ.good[i % 3]('{x}', whyR(m)); },
-        ng: u0 => { const x = alt(u0); if (!x) return ''; return CDQ.ng[i % 3]('{m}', '{x}', whyW(c.ok[0], x)); } };
+        ask: C.askS ? C.askS[sid][i % 3] : V(sid === 'b_capture' ? C.askCap : sid === 'b_safety' ? C.askSafe : C.ask).replace('{p}', C.pk[pc]),
+        good: u => { const m = (u && okU.includes(u) && by(u)) || c.ok[0]; return V(C.good)('{x}', whyR(m)); },
+        ng: u0 => { const x = alt(u0); if (!x) return ''; return V(C.ng)('{m}', '{x}', whyW(c.ok[0], x)); } };
       return o;
     });
   }
@@ -1090,7 +1602,7 @@
       const s = this.data.ls.steps[+key]; if (!s) return null;
       const T = k => this.tx('ls.' + s.id + '.' + k, lang);
       if (s.kind === 'drill') return { id: s.id, title: T('title'), intro: T('intro'), goal: T('goal'), drill: s.stages, dx: k => this.tx(k, lang),
-        probs: lang === 'ja' ? (() => { try { return chDrillQs(s); } catch (e) { console.warn('[lessons3d] chess drill problems', e); return []; } })() : [],   // (2026-11-21 lesson loop: 3 problems from the stages' shortest routes, after the ★ — ja)
+        probs: CDQ[lang] ? (() => { try { return chDrillQs(s, lang); } catch (e) { console.warn('[lessons3d] chess drill problems', e); return []; } })() : [],   // (2026-11-21 lesson loop: 3 problems from the stages' shortest routes, after the ★ — every language, 2026-11-22)
         qsave: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= 75; pr[s.id] = { best: o.best || 0, clear: o.clear || pass }; put(this.LKEY, pr); return pass; },   // ★ stages (= chess/app.js drillMove: 3 ★ within par, 2 within par + 2, else 1; always passed)
         save: (n, max, q) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }; pr[s.id] = { best: Math.max(o.best || 0, n), clear: o.clear || !q }; put(this.LKEY, pr); return true; } };   // (q: problems follow — cleared by them)
       const V = lang === 'ja' ? (this.V || {}) : {};
@@ -4352,7 +4864,6 @@
       };
       pz().wait();
     }
-    const DQ_GO = ['全部★3つ、すごいピョン！ 次は、いまの道すじから問題を3つ。最短の一手を選んでね！', 'よくがんばったね！ 次は、いまの道すじから問題を3つ。最短の一手を探してみよう！'];
     /* ---------- chess's beginner drills (2026-11-13): move the piece and take every ★ — the full game's stages, texts and ★ ---------- */
     const dfen = st => st.fen.split(' ').length > 1 ? st.fen : st.fen + ' w - - 0 1';
     async function drill(i) {
@@ -4381,7 +4892,7 @@
       const n = cur.stars.reduce((a, b) => a + (b || 0), 0), max = cur.drill.length * 3;
       if (cur.qs && cur.qs.length) {   // (2026-11-21 lesson loop: the ★ done, problems from the routes follow — the lesson is cleared by them)
         cur.save(n, max, true); phase = 'done'; dots(); try { chime(true); } catch (e) {}
-        say(`★集め、おつかれさま！ <b>★ ${n} / ${max}</b><br>${DQ_GO[n >= max ? 0 : 1]}`);
+        const C = CDQ[ctx.lang] || CDQ.en; say(`${C.done} <b>★ ${n} / ${max}</b><br>${C.go[n >= max ? 0 : 1]}`);
         act(X.next, { again: true }); $('[data-a=again]').onclick = () => open(cur.key);
         $('[data-a=next]').onclick = () => { cur.drill = null; cur.probs = cur.qs; cur.save = cur.qsave; cur.res = []; cur.k = 0; prob(); };
         return;
