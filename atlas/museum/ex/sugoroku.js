@@ -11,11 +11,7 @@
    included), base 12.5, rail .8. Two ivory dice (双六頭, kept apart as North 17) are set on the board for reference. */
 (function () {
   'use strict';
-  // the marquetry's layout, taken off the Shōsōin's frontal photographs of a long and a short side (CO0000011755 / 11757): red = the thin
-  // stems, green = the green-dyed leaves, blue = ivory. Rows: long band (2048×128), short band (1168×128), long stand (2048×512), short stand (1168×512).
-  const HERE = (document.currentScript && document.currentScript.src) || location.href; let INL = null;
   (window.AtlasEx = window.AtlasEx || {}).sugoroku = {
-    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { INL = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/sugoroku-inlay.webp', HERE).href; setTimeout(res, 8000); }),
     build(TT, X, K) {
       const G = new TT.Group();
       const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = 1.9, RT = .7;   // (RIM: the wall round the field stands upright, about 1.9 high — the overall photograph)   // LIN: the strip of rosettes at the top of the base
@@ -57,9 +53,7 @@
         }
         if (opt.edge) { g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .18); g.fillRect(0, h - s * .18, w, s * .18); }
       };
-      let inlC = null; if (INL) { inlC = document.createElement('canvas'); inlC.width = INL.width; inlC.height = INL.height; const q = inlC.getContext('2d'); q.drawImage(INL, 0, 0); const im = q.getImageData(0, 0, inlC.width, inlC.height), d = im.data;
-        for (let i = 0; i < d.length; i += 4) { const st = d[i] / 255, gn = d[i + 1] / 255, iv = d[i + 2] / 255; let c = [201, 138, 60]; if (gn > st && gn > iv) c = [118, 146, 88]; else if (iv >= st) c = [236, 226, 204]; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; } q.putImageData(im, 0, 0); }
-      const inlay = (g, long, stand, x, y, w2, h2) => { const sw = long ? 2048 : 1168, sy = stand ? (long ? 256 : 768) : (long ? 0 : 128), sh = stand ? 512 : 128; g.save(); g.shadowColor = 'rgba(14,6,3,.8)'; g.shadowBlur = 1.5; g.drawImage(inlC, 0, sy, sw, sh, x, y, w2, h2); g.restore(); };
+      const inlC = null;   // (2026-11-22: a layout lifted from the frontal photographs was tried and dropped — at their resolution it came out broken and scratchy; the marquetry is drawn)
       const mk = (t, base) => K.mat({ map: t, color: '#ffffff', roughness: .48, clearcoat: .3, clearcoatRoughness: .35 });
       /* ---------- the face ---------- */
       const IL = L - RT * 2, IW = W - RT * 2, ROW = 2.0, P0 = 4.9, PS = 3.75;   // the row of points: its distance from the rim, the first point's distance from the centre, the pitch
@@ -83,7 +77,7 @@
       const add = (geo, m, x, y, z) => { const o = new TT.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; G.add(o); return o; };
 
       /* ---------- the board's edge (the slab with its rim, one band of marquetry outside) ---------- */
-      const edgeTex = (len, seed) => { const s = 2048 / len; return K.tex(2048, Math.round(EDGE * s), (g, w, h) => { if (!inlC) return scroll(g, w, h, s, seed, shT, { edge: true, per: 5.2 }); g.drawImage(shT.image, 0, 0, w, h); inlay(g, len > 40, false, 0, 0, w, h); g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .14); g.fillRect(0, h - s * .14, w, s * .14); }); };
+      const edgeTex = (len, seed) => { const s = 2048 / len; return K.tex(2048, Math.round(EDGE * s), (g, w, h) => { if (!inlC) return scroll(g, w, h, s, seed, shT, { edge: true, per: 5.2 }); g.drawImage(shT.image, 0, 0, w, h);  g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .14); g.fillRect(0, h - s * .14, w, s * .14); }); };
       const eL = mk(edgeTex(L, 1)), eW = mk(edgeTex(W, 2));
       const SL = EDGE - RIM;   // the slab; the face is at BASE + SL
       // the half-moons: a raised ivory arc in the middle of each long side, its horns toward the rim, the hollow facing the players' edge
@@ -133,7 +127,7 @@
         const LEG = 2.3, POST = 2.5, nO = S.holes.length, ow = (len - 2 * LEG - (nO - 1) * POST) / nO, cols = [LEG * .55, len - LEG * .55];
         for (let i = 1; i < nO; i++) cols.push(LEG + i * ow + (i - .5) * POST);
         const vs = K.tex(512, Math.round(512 * 3.4 / SK), (g2, w2, h2) => scroll(g2, w2, h2, w2 / SK, seed, baseT, { per: 5.2 }));
-        if (inlC) inlay(g, len > 40, true, 0, 0, w, h); else cols.forEach(cxm => { g.save(); g.translate(cxm * s, h); g.rotate(-Math.PI / 2); g.globalAlpha = 1; g.drawImage(vs.image, 0, -s * 1.7, h, s * 3.4); g.restore(); });
+        cols.forEach(cxm => { g.save(); g.translate(cxm * s, h); g.rotate(-Math.PI / 2); g.globalAlpha = 1; g.drawImage(vs.image, 0, -s * 1.7, h, s * 3.4); g.restore(); });
         // across the top, between the openings and the edge, a running scroll
         // the strip of rosettes along the top
         g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .14);
