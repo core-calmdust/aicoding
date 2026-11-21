@@ -108,6 +108,33 @@ function scoreLesson(id, L) {
   return { score: Math.max(0, 100 - lost), pen };
 }
 
+// (2026-11-22 the user: チェッカーは100点なのに似たような問題が続く — まだ見直しが必要)
+// game-level checks a single lesson cannot see:
+//  ⑨ the same position (or one a move or two apart) as another problem of the game — e.g. checkers' 「安全に進める」4問目 =
+//     「1回ジャンプ」2問目 = 「連続ジャンプ」1問目 — each one after the first in display order loses 6 (max 18 a lesson)
+//  ⑩ the feedback stamped in the same order in every lesson (q1 always opens 「いいね！」, q2 「さすが！」…) — a lesson whose
+//     sequence of openers (first 4 chars of the praise or of the miss) matches another lesson's loses 6
+//  ⑪ five problems that all teach the same single point (the praise of every problem says the same reason, reworded) —
+//     the same 6-char run in the praise of every problem (4+ problems) loses 8
+function gameLevel(raw, ls) {
+  const tok = x => { const o = []; const walk = v => { if (v == null) return; if (typeof v === 'string') { for (const c of v) o.push(c); } else if (Array.isArray(v)) v.forEach(walk); else if (typeof v === 'object') Object.keys(v).sort().forEach(k => walk(v[k])); else o.push(String(v)); }; try { walk(JSON.parse(x)); } catch (e) {} return o; };
+  const seen = [];   // [{ t, where }]
+  raw.forEach((L, li) => { let hit = 0; const why = [];
+    (L.probs || []).forEach((p, pi) => { const t = tok(p.pos || ''); if (t.length < 9) return;
+      const m = seen.find(o => o.t.length === t.length && o.t.reduce((a, c, k) => a + (c !== t[k]), 0) <= 3);
+      if (m) { hit++; why.push(`q${pi + 1} ≈ ${m.where}`); } else seen.push({ t, where: `${L.title} q${pi + 1}` }); });
+    if (hit) { ls[li].pen.push([Math.min(18, 6 * hit), 'same position as another problem: ' + why.slice(0, 2).join(', ')]); } });
+  const plain2 = s => String(s || '').replace(/<[^>]+>/g, '').replace(/♘e2–e4/g, '').replace(/\s/g, '');   // (♘e2–e4: the tool's stand-in for a move name, not the guide's words)
+  const head = s => plain2(s).slice(0, 4);
+  ['good', 'ng'].forEach(f => { const seq = raw.map(L => (L.probs || []).length >= 4 ? (L.probs || []).map(p => head(p[f])).join('|') : null);
+    seq.forEach((q, li) => { if (q && seq.some((r, lj) => lj !== li && r === q)) ls[li].pen.push([6, `${f === 'good' ? 'praise' : 'miss'} openers in the same order as another lesson: ` + q.slice(0, 24)]); }); });
+  raw.forEach((L, li) => { const g = (L.probs || []).map(p => plain2(p.good).replace(/[、。！？!?「」（）()・…〜♪]/g, '')); if (g.length < 4) return;
+    const sets = g.map(x => { const o = new Set(); for (let k = 0; k + 6 <= x.length; k++) o.add(x.slice(k, k + 6)); return o; });
+    const common = [...sets[0]].filter(v => sets.every(S => S.has(v)) && !/^(きみ|その調子|次も)/.test(v));
+    if (common.length) ls[li].pen.push([8, 'every problem praised for the same point: ' + common[0]]); });
+  ls.forEach(l => { l.score = Math.max(0, 100 - l.pen.reduce((a, [n]) => a + n, 0)); });
+}
+
 (async () => {
   await new Promise(r => srv.listen(0, r)); const port = srv.address().port;
   const puppeteer = require(PUP);
@@ -126,7 +153,7 @@ function scoreLesson(id, L) {
     const out = {};
     for (const id of (games.length ? games : Object.keys(__LD))) { const D = __LD[id]; out[id] = [];
       try { await D.load('ja'); await __NC.load(id); for (const it of D.list('lesson', 'ja')) { let s; try { s = __NC.apply(id, await D.lesson(it.key, 'ja', __X(id))); if (window.AtlasGameIntroJa) window.AtlasGameIntroJa(id, it.key, 'lesson', s); } catch (e) { continue; } if (!s) continue;
-        out[id].push({ first: !out[id].length, key: it.key, title: it.title, intro: say(s.intro, id), ramp: (s.ramp || []).flatMap(r => ['t', 'b', 'g', 'h', 'y'].map(f => r[f] && (typeof r[f] === 'string' ? r[f] : r[f].ja || r[f].en)).filter(x => x && !/^[a-o0-9\s,]+$/.test(String(x)))).map(x => say(D.rampTx ? D.rampTx(x, 'ja') : x, id)), probs: (s.probs || []).map(p => ({ ask: say(p.ask, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id) })) }); } } catch (e) { out[id].push({ err: String(e) }); }
+        out[id].push({ first: !out[id].length, key: it.key, title: it.title, intro: say(s.intro, id), ramp: (s.ramp || []).flatMap(r => ['t', 'b', 'g', 'h', 'y'].map(f => r[f] && (typeof r[f] === 'string' ? r[f] : r[f].ja || r[f].en)).filter(x => x && !/^[a-o0-9\s,]+$/.test(String(x)))).map(x => say(D.rampTx ? D.rampTx(x, 'ja') : x, id)), probs: (s.probs || []).map(p => ({ pos: (() => { try { return JSON.stringify(p.pos && (p.pos.spec !== undefined ? p.pos.spec : p.pos)); } catch (e) { return ''; } })(), ask: say(p.ask, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id) })) }); } } catch (e) { out[id].push({ err: String(e) }); }
       // (2026-11-21 ユーザー：定跡・定石の問題もレッスンと同じく採点) the openings: intro, the study's notes, then the problems (no ask → the guide's opGoal, as the runner)
       if (!D.opening) continue; const oid = id + '/open', X = __X(id); out[oid] = [];
       try { for (const it of D.list('open', 'ja')) { let s; try { s = __NC.apply(id, await D.opening(it.key, 'ja')); } catch (e) { continue; } if (!s) continue;
@@ -137,6 +164,7 @@ function scoreLesson(id, L) {
   await b.close(); srv.close();
   const rep = {}; let sum = 0, n = 0;
   for (const id in R) { const ls = R[id].filter(l => !l.err).map(l => Object.assign({ key: l.key, title: l.title }, scoreLesson(id.split('/')[0], l)));
+    gameLevel(R[id].filter(l => !l.err), ls);
     const avg = ls.length ? ls.reduce((a, l) => a + l.score, 0) / ls.length : 0; rep[id] = { avg: Math.round(avg * 10) / 10, pass: ls.filter(l => l.score >= CFG.pass).length, n: ls.length, lessons: ls };
     sum += avg * ls.length; n += ls.length; }
   const overall = n ? Math.round(sum / n * 10) / 10 : 0;
