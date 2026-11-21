@@ -167,7 +167,7 @@
       ar: { hi: 'أنا خنفوس الجواهر! لنتعلّم المنقلة معًا.', partial: 'نقلة جيدة! لكن الأفضل هي الحفرة ذات الحلقة الذهبية.', wrong: 'قريب جدًا! الجواب هو الحفرة ذات الحلقة الذهبية.', hintSay: 'تلميح: عُدَّ البذور.' },
     },
     dots: {
-      ja: { hi: 'ハコピヨだよ！ いっしょにドット・アンド・ボックスのお勉強をしよう。', partial: 'いい線！ でもいちばんは緑の線なんだ。', wrong: 'おしい！ 正解は緑の線だよ。', hintSay: 'ヒント：金色の線を見てね。' },
+      ja: { hi: 'ハコピヨだよ！ いっしょにドット・アンド・ボックスのお勉強をしよう。', partial: 'いい線！ でも、もっといい線があるんだ。', wrong: 'おしい！', hintSay: 'ヒント：金色の線を見てね。' },
       en: { hi: "Boxchick here! Let's study dots and boxes together.", partial: 'A nice line! But the green one is the best.', wrong: 'So close! The green line is the answer.', hintSay: 'Hint: look at the gold lines.' },
       zh: { hi: '我是方块小鸡！一起来学点格棋吧。', partial: '好线！不过最好的是绿色那条。', wrong: '差一点！正解是绿色那条线。', hintSay: '提示：看看金色的线。' },
       'zh-TW': { hi: '我是方塊小雞！一起來學點格棋吧。', partial: '好線！不過最好的是綠色那條。', wrong: '差一點！正解是綠色那條線。', hintSay: '提示：看看金色的線。' },
@@ -332,7 +332,7 @@
     return h;
   }
   const LSV = {};   // (atlas/lsvoice-ja.js: the problem lines of the guides without a voice file, loaded for Japanese only)
-  const lsvLoad = lang => lang !== 'ja' ? Promise.resolve() : LSV.p || (LSV.p = fetch('lsvoice-ja.js?v=2').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} LSV.d = w.AtlasLsVoice || {}; }).catch(() => { LSV.d = {}; }));
+  const lsvLoad = lang => lang !== 'ja' ? Promise.resolve() : LSV.p || (LSV.p = fetch('lsvoice-ja.js?v=3').then(r => r.ok ? r.text() : '').then(t => { const w = {}; try { new Function('window', t)(w); } catch (e) {} LSV.d = w.AtlasLsVoice || {}; }).catch(() => { LSV.d = {}; }));
   const pick = a => Array.isArray(a) ? a[Math.floor(Math.random() * a.length)] : a;
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const J = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
@@ -2181,6 +2181,84 @@
   const dSafe = (n, edges) => { const HN = (n + 1) * n, E = HN + n * (n + 1), on = new Set(edges), be = bx => { const r = Math.floor(bx / n), c = bx % n; return [r * n + c, (r + 1) * n + c, HN + r * (n + 1) + c, HN + r * (n + 1) + c + 1]; };
     const cnt = bx => be(bx).filter(e => on.has(e)).length, eb = e => { const o = []; for (let bx = 0; bx < n * n; bx++) if (be(bx).includes(e)) o.push(bx); return o; };
     const out = []; for (let e = 0; e < E; e++) if (!on.has(e) && eb(e).every(bx => cnt(bx) < 2)) out.push(e); return out; };
+  /* (2026-11-21 lesson loop) dots in Japanese: ハコピヨ's own intro / questions / hints / tips (short, no coordinates), and the
+     feedback from the position itself — dFacts: boxes a line takes (k), boxes it hands over (m: the opponent's run of captures),
+     an end-opened 2-chain (ret: the opponent can hand it back), the safe lines left (ns). Right → the reason; wrong → the green line,
+     what the red one overlooks, and the boxes it costs ((best − v) / 2, as dots/learn.js finalAt). */
+  const dFacts = (n, edges) => { const HN = (n + 1) * n, E = HN + n * (n + 1), be = bx => { const r = Math.floor(bx / n), c = bx % n; return [r * n + c, (r + 1) * n + c, HN + r * (n + 1) + c, HN + r * (n + 1) + c + 1]; };
+    const ob = []; for (let e = 0; e < E; e++) ob.push([]); for (let bx = 0; bx < n * n; bx++) be(bx).forEach(e => ob[e].push(bx));
+    const cnt = (on, bx) => be(bx).filter(e => on.has(e)).length, cap = on => { for (let bx = 0; bx < n * n; bx++) if (cnt(on, bx) === 3) return bx; return -1; };
+    const run = on => { on = new Set(on); let t = 0, bx; while ((bx = cap(on)) >= 0) { const e = be(bx).find(x => !on.has(x)); t += ob[e].filter(b => cnt(on, b) === 3).length; on.add(e); } return t; };
+    const on0 = new Set(edges); let ns = 0; for (let e = 0; e < E; e++) if (!on0.has(e) && ob[e].every(bx => cnt(on0, bx) < 2)) ns++;
+    const hasCap = cap(on0) >= 0;
+    return { hasCap, ns, of(e) { const k = ob[e].filter(bx => cnt(on0, bx) === 3).length, on = new Set(on0); on.add(e); let three = 0; for (let bx = 0; bx < n * n; bx++) if (cnt(on, bx) === 3) three++;
+      const m = k ? 0 : run(on), cls = k ? 'take' : hasCap ? 'decline' : m ? 'give' : 'safe'; return { k, m, cls, ret: cls === 'give' && m === 2 && three === 1 }; } };
+  };
+  const DTJ = {
+    safe: { intro: '箱の<b>4本目</b>を引いた人が、その箱をもらえるんだ。だから<b>3本目</b>を引くと、次の相手に箱をプレゼントしちゃう。<br>どの箱にも3本目を作らない線が<b>安全な線</b>。2本引いてある箱の辺はキケン、と覚えておこう！',
+      q: ['相手に箱をあげない線を引いてみて！', '3本目を作らない線はどれ？'], hint: '2本引いてある箱には、さわらないこと。残りの辺から探してみて。', tip: '安全な線があるうちは、まずそれを使うのが基本。' },
+    third: { intro: '盤が大きくなると、2本引いた箱があちこちにできて、うっかり3本目を引きやすい。<br>内がわの線は<b>2つの箱</b>にまたがるから、片方が安全でも、もう片方が2本ならアウト！ 線の<b>両がわ</b>を見るクセをつけよう。',
+      q: ['箱をあげない線を引いてみて！', 'うっかり3本目にならない線は？'], hint: '線の両がわの箱を数えてみて。どっちかが2本なら、その線は3本目になる。', tip: '内がわの線は、2つの箱をいっぺんに変えるんだ。' },
+    take: { intro: '3本で囲まれた箱は、4本目を引けば取れる。取ったらもう1回引けるから、<b>先に取って</b>から次を考えれば損はないね。<br>取れる箱をほうっておくと、その箱は相手のものに。手番まで相手に行っちゃう！',
+      q: ['取れる箱があるよ！ いちばんいい線を引いてね。', '箱が取れそう。どの線を引く？'], hint: '3本で囲まれた箱の、のこり1本はどこかな？', tip: '見のがすと、相手の1箱と取りそこねた1箱で、2箱ぶんの差がつく。' },
+    chain: { intro: '安全な線がなくなると、どこに引いても箱をあげることになる。盤は、箱がつながった<b>鎖</b>と、輪になった<b>ループ</b>に分かれているんだ。<br>鎖のどこかに引くと、相手はその鎖を丸ごと取れる。だから、あげるなら<b>いちばん短い鎖</b>から！',
+      q: ['どこに引いても箱をあげちゃう…。損がいちばん少ない線は？', 'どの鎖から開く？'], hint: 'つながった箱を数えて、いちばん短い鎖を探してみて。', tip: '小さい鎖から順にあげるのが基本。' },
+    hard: { intro: '2箱の鎖を<b>端の線</b>で開くと、相手は2箱を取らずに先の線を引いて「返す」ことができる。手番を押しつけられちゃうんだ。<br><b>真ん中の線</b>で開けば、1箱ずつに分かれて相手は返せない。上手なあげ方ね。',
+      q: ['2箱の鎖をあげる場面。いちばんいい線はどれ？', 'この鎖は、どこから開く？'], hint: 'どの線で開けば、相手は「返す」ことができないかな？', tip: '2箱の鎖は、真ん中から開くのがコツ！' },
+    double: { intro: '相手が長い鎖を開いたら、全部取りたくなる。でも全部取ると、次の鎖を開くのは自分なんだ。<br>そこで<b>最後の2箱を残し</b>、その先の線を引いて手番を返す。これが<b>2つ残し</b>！ 2箱はあげても、次の長い鎖で取り返せるね。',
+      q: ['相手が開いた鎖の、さいごの2箱が残ってる。いちばんいい線は？', '全部取る？ それとも？'], hint: '全部取ったら、次に鎖を開くのはだれかな？', tip: '2つ残しは、あとに長い鎖があるときの基本ワザ！' },
+    control: { intro: '2つ残し（ループなら4つ残し）は、いつでも正しいわけじゃない。残すたびに、2箱（4箱）を相手にあげるからね。<br><b>残りの鎖が小さい</b>ときや<b>最後の鎖</b>なら、全部取るのが正解。大きな長い鎖が残っていれば、残して主導権をキープ！',
+      q: ['取れる箱がある。全部取る？ 残す？', 'さて、取り切る？ 2つ残す？'], hint: '残りの鎖の長さを数えてみて。あげた箱を取り返せるかな？', tip: '主導権の値打ちは、残りの長い鎖の大きさしだい。' },
+    parity: { intro: '安全な線がつきたとき、最初に長い鎖を開かされた側はたいてい負け。だれが開くかは、手数の偶数・奇数で決まるんだ。<br><b>長鎖ルール</b>：3×3なら先手は長い鎖を偶数本に、4×4なら奇数本にしたい（後手はその逆）。鎖をつなげたり切ったりしよう！',
+      q: ['安全な線はまだあるけど、どれでも同じじゃない。いちばんいい線は？', '長い鎖の数を考えて、1本えらんでみて！'], hint: 'その線で、鎖はつながる？ 分かれる？ 長い鎖は何本になりそう？', tip: '中盤は、長い鎖の本数を自分に合う偶数・奇数にそろえる勝負。' },
+    sacrifice: { intro: '長鎖ルールで負けている側は、安全な線が残っていても、<b>あえて1〜2箱をあげて</b>手番の偶数・奇数をひっくり返せる。<br>小さくあげて大きく取る！ 目の前の1箱より、最後の長い鎖をだれが取るかのほうが、ずっと大きいんだ。',
+      q: ['安全な線はあるけど、それだと負けちゃう…！ いちばんいい線は？', 'ここで流れを変える1本は？'], hint: '安全な線を引きあったら、最後に長い鎖を開くのはだれかな？', tip: '犠牲は、長い鎖の主導権を買うための投資。' },
+    loop: { intro: '開かれた<b>ループ</b>で主導権を保つには、<b>最後の4箱を残し</b>て、2箱ずつの組を2つあげる。ループの犠牲は4箱と大きいんだ。<br>だから主導権のない側は、<b>ループから先に開いて</b>相手に4箱をはらわせる。残りの大きさで決めよう！',
+      q: ['ループのある終盤。いちばんいい線はどれ？', 'ループと鎖、どう動く？'], hint: 'ループで残すには4箱いる。残りの鎖で取り返せるかな？', tip: 'ループは、主導権を持つ側には高くつく。' },
+    count: { intro: '安全な線がつきた盤は、鎖とループの組み合わせ。主導権を持つ側は最後の鎖以外で2つ残し（ループは4つ残し）を続け、持たない側は開く順番で損をへらすんだ。<br>小さな鎖（1〜2箱）が多いほど、主導権の値打ちは下がるね。',
+      q: ['安全な線はもうない。開く順番を計算して、いちばんいい線は？', 'どの鎖から開くのが得？'], hint: '主導権を持ってるのはどっち？ 小さな鎖は何本あるかな？', tip: '終盤は、残すと取り切るの損得を足していく計算勝負！' },
+    open3: { intro: '3×3（点16個）は完全に解かれていて、おたがい最善なら後手が6対3で勝つ。それでも序盤には、1本で結果が変わる局面がたくさんあるんだ。<br>先手は長い鎖を偶数本に、後手は奇数本にしたい。盤を分ける線が鎖の形を決めるね。',
+      q: ['3×3の序盤。いちばんいい線はどれ？', 'この盤なら、どの1本？'], hint: 'この線で、盤はどんな鎖に分かれていきそう？', tip: '序盤は、どこに長い鎖ができるか想像しながら引こう。' },
+    mid4: { intro: '4×4（点25個）は、おたがい最善なら8対8の引き分け。点が奇数だから、<b>先手は長い鎖を奇数本、後手は偶数本</b>にしたい盤なんだ。<br>中盤は1本引くたびに鎖の形が固まっていく。どの線が鎖をつなげて、どれが切るかを考えよう！',
+      q: ['4×4の中盤。いちばんいい線は？', '鎖の形を読んで、1本えらんで！'], hint: '長い鎖になりそうな所を探してみて。この線で、つながる？ 切れる？', tip: '中盤の1本は、終盤の何箱ぶんにもなる。' },
+    mid5: { intro: '5×5（点36個）はまだ解かれていない大きな盤。ここでは、安全な線が少なくなって読み切れる局面だけを出すね。<br>点が偶数だから、先手は長い鎖を偶数本、後手は奇数本にしたい。取り切り・残しの損得も大きいんだ。',
+      q: ['5×5の中盤から終盤。いちばんいい線はどれ？', '大きな盤でも落ちついて。どの線にする？'], hint: '残りの安全な線と、長い鎖・ループの数を数えてみて。', tip: '大きな盤では、長い鎖とループの数えあいで勝ち負けが決まる。' },
+    exam: { intro: '最後は総合問題！ 安全な線、取り切りと残し、長鎖ルール、犠牲、ループ、終盤の数え。どの考え方がいるか、自分で見きわめてね。<br>75点以上で卒業。がんばろう！',
+      q: ['どの考え方がいるか見きわめて、いちばんいい線を引いて！', 'つぎはどう？ いちばんいい線は？'], hint: '安全な線は残ってる？ 取れる箱は？ 長い鎖とループは何本？', tip: '迷ったら、取れる箱 → 残すか取るか → 安全な線の偶数・奇数 → あげる順番。' },
+    lead: ['', 'つぎの盤！ ', 'さあ、もう1問。', 'こんどはどう？ ', 'ラスト！ '],
+  };
+  // ハコピヨ's words for one problem (i: its number in the lesson, for some variety)
+  const dotsJa = (s, F, P, ans, i) => {
+    const V = new Map(P.values), best = Math.max(...P.values.map(x => x[1])), b = F.of(ans), w = a => a[i % a.length], tip = (DTJ[s.id] || DTJ.exam).tip, cat = (a, c) => a + (/。$/.test(a) ? '' : ' ') + c;
+    const pick2 = P.values.some(([e, v]) => v < best && F.of(e).cls === 'safe');   // (a safe line that loses: the best one is picked by the long chains)
+    const why = (x, u) => {   // the reason a best line is good
+      if (x.cls === 'take') return F.hasCap && /^(double|control|loop|count|exam)$/.test(s.id) ? w(['ここは取り切るのが正解！ 残りの鎖が小さいから、残しても取り返せない。', '全部取ってOK！ あとに大きな鎖がないから、主導権より目の前の箱。']) : w([`箱を${x.k}つ取って、もう1回引ける！`, `まずは${x.k}箱いただき！ 取ってから次を考えれば損はない。`]);
+      if (x.cls === 'decline') return w([`${x.m}箱を残して手番を返したね！ 次の長い鎖も、きみが取れる。`, `わざと${x.m}箱残す、上手な手！ 主導権はきみが持ったまま。`]);
+      if (x.cls === 'safe') return pick2 ? w(['安全な線の中でも、長い鎖の数がきみに合う1本！', 'いい読み！ この線なら、最後に長い鎖を開くのは相手になる。']) : w(['どの箱にも3本目を作らない、安全な線！', '安全な線をちゃんと見つけたね！']);
+      if (F.ns) return w([`あえて${x.m}箱あげる勇気の1手！ これで最後の長い鎖がきみに回ってくる。`, `小さな犠牲で流れを変えたね！ ${x.m}箱で主導権が買えた。`]);
+      if (x.m === 2 && !x.ret && s.id === 'hard') return w(['真ん中から開いたから、相手は返せない！', '1箱ずつに分けたから、相手は取るしかないね！']);
+      return w([`${x.m}箱だけですむ、いちばん安いあげ方！`, `${x.m}箱ですむ所から開いたね。ここがいちばん損が少ない！`]);
+    };
+    const good = u => cat(why(F.of(V.get(u) === best ? u : ans)), tip);
+    const ng = u => {
+      if (V.get(u) === undefined || V.get(u) === best) u = P.values.reduce((a, c) => c[1] < a[1] ? c : a)[0];   // (the runner never shows this for a best line: a checker's call — the worst line stands in)
+      const x = F.of(u), loss = (best - V.get(u)) / 2;
+      let t;
+      if (x.cls === 'take' && b.cls === 'decline') t = `緑の線で${b.m}箱残せば、主導権はきみのまま。赤い線で取り続けると、次の鎖を開くのはきみになっちゃう。`;
+      else if (x.cls === 'decline' && b.cls === 'take') t = /^(double|control|loop|count|exam)$/.test(s.id) && (x.m === 2 || x.m === 4) ? `ここは緑の線で取り切るのが正解。赤い線で${x.m}箱残しても、あとの鎖が小さいから取り返せない。` : `3本で囲まれた箱は、緑の線で取れたのに！ 赤い線だと、相手に${x.m}箱取られちゃう。`;
+      else if (x.cls === 'decline') t = `緑の線なら${b.m}箱残すだけ。赤い線だと${x.m}箱も相手にあげることになる。`;
+      else if (x.cls === 'give' && b.cls === 'safe') t = w([`緑の線は安全な線。赤い線は箱の3本目になって、相手に${x.m}箱取られちゃう。`, `赤い線を引くと、${x.m}箱が相手のものに。緑の線なら1箱もあげずにすむ。`]);
+      else if (x.cls === 'give' && b.cls === 'give') t = x.ret && !b.ret && b.m === 2 ? '端の赤い線で開くと、相手は2箱を返して手番を押しつけてくる。緑の真ん中の線なら、相手は返せない。'
+        : b.m < x.m ? w([`緑の線なら${b.m}箱の所から開ける。赤い線は${x.m}箱の鎖を開いて、相手に取らせてしまう。`, `赤い線は${x.m}箱の鎖を開いちゃう。緑の線なら${b.m}箱ですむのに！`])
+        : F.ns ? `どっちも箱をあげる線。でも緑の線で${b.m}箱あげると、最後の長い鎖がきみに回ってくる。赤い線だと流れが変わらない。`
+        : `どっちも${x.m}箱あげる線。でも緑の線から開いたほうが、あとの鎖の取り分が多くなる。`;
+      else if (x.cls === 'safe' && b.cls === 'give') t = `ここは緑の線で${b.m}箱あげるのが正解。安全な赤い線だと、最後に長い鎖を開くのがきみになっちゃう。`;
+      else if (x.cls === 'safe' && b.cls === 'safe') t = w(['どっちも安全な線。でも赤い線だと長い鎖の本数がきみに合わなくて、最後に長い鎖を開かされる。', '赤い線も安全だけど、鎖の形がきみに不利になる。緑の線なら、長い鎖の数がぴったり合う。']);
+      else t = '緑の線から取っていくのが正解。赤い線だと、取る順番で損が出る。';
+      return loss > 0 ? cat(t, w([`最後に${loss}箱の差がつくんだ。`, `これで${loss}箱の損。`, `結果は${loss}箱ちがってくるね。`])) : t;
+    };
+    return { good, ng };
+  };
   const DOTS = {
     LKEY: 'dots-lessons-v2', data: null, I: null, got: {},
     load(lang) {
@@ -2199,11 +2277,12 @@
     },
     lesson(key, lang) {
       const s = this.data.ls.steps[+key]; if (!s) return null;
-      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), SAFE = ['safe', 'third', 'parity', 'sacrifice', 'open3', 'mid4', 'mid5'].includes(s.id);
-      return { id: s.id, title: T('t'), intro: T('body'), ramp: null,
-        probs: s.problems.slice(1, 6).map(q => { const edges = dDecE(q.e), values = dDecV(q.v), best = Math.max(...values.map(x => x[1])), ans = values.find(x => x[1] === best)[0];
-          return { pos: { spec: { n: q.n, edges, owners: dDecO(q.o) }, me: 0 }, kind: 'best', P: { values }, ask: `<small>${q.n}×${q.n}</small> ` + T('q'), ans, hintTx: T('hint'), hint: SAFE ? dSafe(q.n, edges) : [], dHint: true,
-            why: '', good: () => T('tip'), ng: () => T('tip') }; }),
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), SAFE = ['safe', 'third', 'parity', 'sacrifice', 'open3', 'mid4', 'mid5'].includes(s.id), ja = lang === 'ja' && DTJ[s.id];
+      return { id: s.id, title: T('t'), intro: ja ? ja.intro : T('body'), ramp: null,
+        probs: s.problems.slice(1, 6).map((q, i) => { const edges = dDecE(q.e), values = dDecV(q.v), best = Math.max(...values.map(x => x[1])), ans = values.find(x => x[1] === best)[0], P = { values };
+          const fb = ja ? dotsJa(s, dFacts(q.n, edges), P, ans, i) : { good: () => T('tip'), ng: () => T('tip') };
+          return { pos: { spec: { n: q.n, edges, owners: dDecO(q.o) }, me: 0 }, kind: 'best', P, ask: `<small>${q.n}×${q.n}</small> ` + (ja ? DTJ.lead[i] + ja.q[i % 2] : T('q')), ans, hintTx: ja ? ja.hint : T('hint'), hint: SAFE ? dSafe(q.n, edges) : [], dHint: true,
+            why: '', good: fb.good, ng: fb.ng }; }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     points(P, e) { const v = new Map(P.values).get(e); return v === undefined ? 0 : dRank(P.values, v); },
