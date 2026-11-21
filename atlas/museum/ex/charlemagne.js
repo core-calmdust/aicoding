@@ -186,21 +186,35 @@
           limb(f, V3(.6, 1.6, .2), V3(.8, 1.1, .9), .2, .18, robe(6));
           limb(f, V3(.8, .6, .95), V3(.8, 3.3, .95), .08, .08, iv, 6); add(f, new TT.TorusGeometry(.28, .07, 6, 12, Math.PI * 1.3), iv, .8 - .28, 3.3, .95); });
         pieces.push(p); }
-      // QUADRIGA (Inv.55.317, H 12.6 cm, w 7.8): four horses abreast, a charioteer above with a three-thonged whip
-      { const p = new TT.Group();
-        add(p, new TT.BoxGeometry(7.8, .7, 5.4), iv, 0, .35, 0);
-        for (let i = 0; i < 4; i++) { const x = -2.85 + i * 1.9, hg = new TT.Group(); hg.position.set(x, .7, 1.0); hg.rotation.y = (i - 1.5) * .08; p.add(hg);
-          [-1, 1].forEach(s => { limb(hg, V3(s * .3, 0, 1.3), V3(s * .3, 2.7, 1.0), .22, .3, iv, 8); limb(hg, V3(s * .3, 0, -1.2), V3(s * .3, 2.7, -.9), .22, .3, iv, 8); });
-          ball(hg, .95, iv, 0, 3.3, .05, .8, .95, 1.75, 16);
-          limb(hg, V3(0, 3.8, 1.1), V3(0, 5.3, 1.7), .55, .4, iv, 10);
-          const hh = limb(hg, V3(0, 5.6, 1.65), V3(0, 4.8, 2.5), .38, .28, iv, 10);
-          [-1, 1].forEach(s => add(hg, new TT.ConeGeometry(.1, .35, 6), iv, s * .17, 5.95, 1.7)); }
-        add(p, new TT.BoxGeometry(5.6, 2.6, 1.3), arcadeM(3), 0, 4.9, -1.5);   // the chariot box
-        const { f } = figure(p, { x: 0, z: -1.6, h: 5.6 }); f.position.y = 4.4;
-        limb(f, V3(.75, 3.8, .1), V3(1.6, 5.2, .7), .26, .22, robe(6));
-        limb(f, V3(1.6, 5.2, .7), V3(1.75, 6.6, .9), .07, .06, iv, 6);
-        for (let k = -1; k <= 1; k++) { const th = new TT.CatmullRomCurve3([V3(1.75, 6.6, .9), V3(2.2 + k * .3, 6.2, 1.2), V3(2.4 + k * .5, 5.2, 1.3 + k * .2)]); add(f, new TT.TubeGeometry(th, 10, .05, 5, false), iv); }
-        limb(f, V3(-.75, 3.8, .1), V3(-1.0, 3.2, 1.0), .26, .22, robe(6));
+      // QUADRIGA (Inv.55.317, H 12.6 cm, w 7.8), after the photograph: the four horses abreast carved as one block, their four heads
+      // side by side on arched necks, a harness band with a lozenge panel on the flank; behind them the chariot's lattice side and
+      // a wheel; the charioteer standing high at the back; the base with a band of ornament
+      { const p = new TT.Group(), Q = new TT.Group(); Q.rotation.y = -Math.PI / 2; p.add(Q);
+        const baseM = carved((g, w, h) => { g.lineWidth = 8; g.strokeRect(6, 6, w - 12, h - 12); for (let x = 16; x < w - 16; x += 32) { g.beginPath(); g.moveTo(x, h * .25); g.lineTo(x, h * .75); g.stroke(); } }, 512, 96);
+        const bq = add(Q, new TT.BoxGeometry(8.6, 1.4, 5.0), [baseM, baseM, iv, iv, baseM, baseM], 0, .7, 0);
+        const body = new TT.Shape();   // the horses' bodies and legs (profile, head to +x)
+        body.moveTo(-2.9, 0); body.lineTo(-2.2, 0); body.quadraticCurveTo(-2.15, 1.6, -1.9, 3.0); body.quadraticCurveTo(.2, 2.7, 2.0, 3.0); body.quadraticCurveTo(2.25, 1.5, 2.3, 0); body.lineTo(3.0, 0);
+        body.quadraticCurveTo(3.05, 1.8, 3.15, 3.2); body.quadraticCurveTo(3.5, 4.4, 3.2, 5.2); body.quadraticCurveTo(1.0, 5.3, -2.6, 5.0); body.quadraticCurveTo(-3.3, 4.4, -3.1, 3.0); body.quadraticCurveTo(-2.9, 1.6, -2.9, 0);
+        const bg = new TT.ExtrudeGeometry(body, { depth: 3.4, bevelEnabled: true, bevelThickness: .4, bevelSize: .3, bevelSegments: 4, curveSegments: 12 }); bg.translate(0, 0, -1.7); fitUV(bg);
+        const flank = carved((g, w, h) => { g.lineWidth = 9; g.strokeRect(w * .38, h * .42, w * .2, h * .3); for (let k = -3; k < 6; k++) { g.beginPath(); g.moveTo(w * .38 + k * 24, h * .42); g.lineTo(w * .38 + k * 24 + 60, h * .72); g.stroke(); }
+          g.lineWidth = 12; g.beginPath(); g.moveTo(w * .05, h * .55); g.lineTo(w * .95, h * .55); g.stroke(); for (let y = h * .74; y < h * .95; y += 14) { g.lineWidth = 4; g.beginPath(); g.moveTo(w * .1, y); g.lineTo(w * .95, y); g.stroke(); } });
+        add(Q, bg, iv, .6, 1.4, 0);
+        [-1, 1].forEach(sd => { add(Q, new TT.BoxGeometry(5.4, .32, .1), robe(14, 1), 1.0, 1.4 + 3.95, sd * 2.16); const lz = add(Q, new TT.BoxGeometry(1.0, 1.5, .1), lozM, 1.2, 1.4 + 3.2, sd * 2.17); });   // the harness band and the lozenge panel on the flank
+        const head = new TT.Shape();   // one neck and head
+        head.moveTo(2.3, 4.4); head.quadraticCurveTo(2.7, 5.6, 3.2, 6.5); head.lineTo(3.25, 7.0); head.lineTo(3.55, 6.75); head.quadraticCurveTo(4.0, 6.5, 4.55, 5.5); head.quadraticCurveTo(4.7, 5.1, 4.4, 5.0); head.quadraticCurveTo(3.95, 5.2, 3.7, 5.0); head.quadraticCurveTo(3.5, 4.6, 3.4, 4.1); head.closePath();
+        const hg2 = new TT.ExtrudeGeometry(head, { depth: .55, bevelEnabled: true, bevelThickness: .2, bevelSize: .15, bevelSegments: 3, curveSegments: 10 }); fitUV(hg2);
+        for (let i = 0; i < 4; i++) add(Q, hg2, iv, .6, 1.4, -2.0 + i * 1.02);
+        // the chariot: a lattice side panel on each flank behind the horses, a wheel, and the floor the charioteer stands on
+        const lat = carved((g, w, h) => { g.lineWidth = 10; g.strokeRect(6, 6, w - 12, h - 12); for (let k = -6; k < 12; k++) { g.beginPath(); g.moveTo(k * 40, 0); g.lineTo(k * 40 + h, h); g.moveTo(k * 40, h); g.lineTo(k * 40 + h, 0); g.stroke(); } }, 256, 256);
+        [-1, 1].forEach(sd => { const pn = add(Q, new TT.BoxGeometry(2.8, 2.6, .25), lat, -2.4, 1.4 + 4.2, sd * 2.3); pn.rotation.z = -.15;
+          const wh = add(Q, new TT.CylinderGeometry(1.05, 1.05, .3, 24), iv, -3.0, 1.4 + 1.6, sd * 2.35); wh.rotation.x = Math.PI / 2;
+          const sp = add(Q, new TT.TorusGeometry(.65, .08, 6, 20), iv, -3.0, 1.4 + 1.6, sd * 2.52); });
+        
+        // the charioteer: tall, in a long tunic and cap, the whip in his right hand
+        const { f } = figure(Q, { x: -1.9, z: 0, h: 6.2, ry: Math.PI / 2 }); f.position.y = 1.4 + 3.0; f.scale.set(1.3, 1, 1.3);
+        ball(f, .6 * 6.2 / 6, iv, 0, 5.25 * 6.2 / 6 + .2, -.05, 1.02, .75, 1.02, 14);
+        limb(f, V3(.7, 3.8, .1), V3(1.0, 2.8, .9), .26, .22, robe(6)); limb(f, V3(1.0, 2.8, .9), V3(1.2, 4.6, 1.2), .06, .05, iv, 6);
+        for (let k = -1; k <= 1; k++) { const th = new TT.CatmullRomCurve3([V3(1.2, 4.6, 1.2), V3(1.5 + k * .25, 4.3, 1.5), V3(1.7 + k * .4, 3.5, 1.6 + k * .2)]); add(f, new TT.TubeGeometry(th, 10, .05, 5, false), iv); }
         pieces.push(p); }
       // HORSEMAN (Inv.55.319, H 12.4 cm, w 7.9), after the photographs: a sturdy horse carved in one block with its base, legs in
       // pairs, the head bowed on an arched neck, a harness band across the chest; the rider in a long mail coat and a rounded helmet,
