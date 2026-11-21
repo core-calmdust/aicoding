@@ -60,13 +60,9 @@
         K.grain(g, w, h, { a: '#331a11', b: '#26120b', seed: 44, sx: .3, sy: 9, warp: .2, pores: .003 });   // straight grain along the length
         let y = 0, sd = 3; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;   // planks along the length, slightly different in tone
         while (y < h) { const ph = s * (4.5 + rnd() * 2.5); g.fillStyle = rnd() < .5 ? `rgba(0,0,0,${rnd() * .18})` : `rgba(120,50,30,${rnd() * .12})`; g.fillRect(0, y, w, ph); g.fillStyle = 'rgba(10,3,2,.5)'; g.fillRect(0, y, w, s * .04); y += ph; }
-        // a band of scroll inside each long rim (seen on the far side in the overall photograph)
-        const band = K.tex(2048, Math.round(2048 * 2.1 / IL), (g2, w2, h2) => scroll(g2, w2, h2, w2 / IL, 9, shT, { per: 3.1, birds: false }));
-        g.globalAlpha = .8; g.drawImage(band.image, 0, 0, w, s * 2.1); g.save(); g.translate(w, h); g.rotate(Math.PI); g.drawImage(band.image, 0, 0, w, s * 2.1); g.restore(); g.globalAlpha = 1;
         // ---- the playing marks (the Shōsōin's overall photograph): along each long side twelve flower "points", six to the left and six to
         // the right of a half-moon; one flower in the middle of each short side. This is the board's layout as a game board (双六).
-        g.fillStyle = 'rgba(0,0,0,.35)'; [s * 2.1, h - s * 2.1 - s * .08].forEach(yy => g.fillRect(0, yy, w, s * .08));   // the foot of the rim's slope
-        const rosette = (fx, fy, r) => { g.save(); g.translate(fx, fy);
+                const rosette = (fx, fy, r) => { g.save(); g.translate(fx, fy);
           for (let q = 0; q < 8; q++) { g.rotate(Math.PI / 4); g.beginPath(); g.moveTo(r * .28, 0); g.quadraticCurveTo(r * .7, r * .42, r, 0); g.quadraticCurveTo(r * .7, -r * .42, r * .28, 0); g.fillStyle = q % 2 ? '#efe6d2' : '#c98a3c'; g.fill(); g.strokeStyle = 'rgba(40,16,8,.6)'; g.lineWidth = s * .03; g.stroke(); }
           g.beginPath(); g.arc(0, 0, r * .36, 0, 6.29); g.fillStyle = '#5f9a8c'; g.fill(); g.strokeStyle = '#efe6d2'; g.lineWidth = s * .06; g.stroke(); g.beginPath(); g.arc(0, 0, r * .12, 0, 6.29); g.fillStyle = '#efe6d2'; g.fill(); g.restore(); };
         const row = s * ROW;
@@ -90,6 +86,12 @@
       const eLs = mk(edgeTex(L, 1)), eWs = mk(edgeTex(W, 2));
       [eLs, eWs].forEach(m => { m.map.repeat.set(1, SL / EDGE); m.map.offset.set(0, 0); });
       add(new TT.BoxGeometry(L, SL, W), [eWs, eWs, shitan, shitan, eLs, eLs], 0, BASE + SL / 2, 0);
+      // the rim's inner face slopes down to the field (the overall photograph): the scroll of flowers runs on that slope, mitred at the corners
+      { const SLW = 2.1, yT = RIM - .02, bandT = K.tex(2048, Math.round(2048 * 2.2 / IL), (g2, w2, h2) => scroll(g2, w2, h2, w2 / IL, 9, shT, { per: 3.1, birds: false })), bm = mk(bandT);
+        const slope = (len, ry, px, pz) => { const q = new TT.BufferGeometry(), a = len / 2, b = len / 2 - SLW;
+          q.setAttribute('position', new TT.Float32BufferAttribute([-a, yT, 0, a, yT, 0, b, .012, -SLW, -b, .012, -SLW], 3)); q.setAttribute('uv', new TT.Float32BufferAttribute([0, 1, 1, 1, b / len + .5, 0, -b / len + .5, 0], 2)); q.setIndex([0, 1, 2, 0, 2, 3]); q.computeVertexNormals();
+          const m = new TT.Mesh(q, bm); m.rotation.y = ry; m.position.set(px, BASE + SL, pz); m.receiveShadow = true; G.add(m); };
+        slope(IL, 0, 0, IW / 2); slope(IL, Math.PI, 0, -IW / 2); slope(IW, Math.PI / 2, IL / 2, 0); slope(IW, -Math.PI / 2, -IL / 2, 0); }
       face.polygonOffset = true; face.polygonOffsetFactor = -2; face.polygonOffsetUnits = -2;
       add(new TT.PlaneGeometry(IL, IW), face, 0, BASE + SL + .004, 0).rotation.x = -Math.PI / 2;
       [eL, eW].forEach(m => { m.map = m.map.clone(); m.map.repeat.set(1, RIM / EDGE); m.map.offset.set(0, SL / EDGE); m.map.needsUpdate = true; });
@@ -106,6 +108,9 @@
         const fx = 6.6, fy = top * .56, tx = 4.0, ty = top * .32, bow = 0;
         p.moveTo(x0 + fx, b0); p.lineTo(x1 - fx, b0); p.bezierCurveTo(x1 - fx * .35, b0, x1 + bow, fy * .45, x1 + bow, fy);
         p.lineTo(x1 + bow, top - ty); p.bezierCurveTo(x1 + bow, top - ty * .4, x1 - tx * .4, top - .3, x1 - tx, top - .3);
+        { const cx = (x0 + x1) / 2, t0 = top - .3;   // the top's hanging bracket: two ogees meeting in a small notch
+          p.lineTo(cx + 4.6, t0); p.bezierCurveTo(cx + 3.4, t0, cx + 3.2, t0 - 1.15, cx + 1.9, t0 - 1.15); p.quadraticCurveTo(cx + .7, t0 - 1.15, cx, t0 - .55);
+          p.quadraticCurveTo(cx - .7, t0 - 1.15, cx - 1.9, t0 - 1.15); p.bezierCurveTo(cx - 3.2, t0 - 1.15, cx - 3.4, t0, cx - 4.6, t0); }
         p.lineTo(x0 + tx, top - .3); p.bezierCurveTo(x0 + tx * .4, top - .3, x0 - bow, top - ty * .4, x0 - bow, top - ty);
         p.lineTo(x0 - bow, fy); p.bezierCurveTo(x0 - bow, fy * .45, x0 + fx * .35, b0, x0 + fx, b0); return p; };
       const skirtFor = (len, n) => { const S = new TT.Shape(); S.moveTo(-len / 2, 0); S.lineTo(len / 2, 0); S.lineTo(len / 2, SK); S.lineTo(-len / 2, SK); S.closePath();
@@ -130,8 +135,13 @@
       }); };
       const baseMat = (len, n, seed) => { const t = baseTex(len, n, seed); t.repeat.set(1 / len, 1 / SK); t.offset.set(.5, 0); return mk(t); };
       const geoFor = (len, n) => new TT.ExtrudeGeometry(skirtFor(len, n), { depth: 1.3, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1, curveSegments: 14 });
-      const gL = geoFor(L, 2), gW = geoFor(W, 1), mL = baseMat(L, 2, 5), mW = baseMat(W, 1, 6);
+      const ivory2 = ivory.clone(); ivory2.side = TT.DoubleSide;
+      const gL = geoFor(L, 2), gW = geoFor(W, 1); gL.userData = { len: L, n: 2 }; gW.userData = { len: W, n: 1 }; const mL = baseMat(L, 2, 5), mW = baseMat(W, 1, 6);
       [[gL, mL, 0, W / 2 - 1.3, 0], [gL, mL, 0, -W / 2 + 1.3, Math.PI], [gW, mW, L / 2 - 1.3, 0, Math.PI / 2], [gW, mW, -L / 2 + 1.3, 0, -Math.PI / 2]].forEach(([geo, m, x, z, ry]) => {
+        // the openings' cut faces are lined with ivory (a ribbon just inside each opening)
+        const S0 = skirtFor(geo.userData.len, geo.userData.n); S0.holes.forEach(hp => { const pts = hp.getPoints(16), cxm = pts.reduce((a, p) => a + p.x, 0) / pts.length, cym = pts.reduce((a, p) => a + p.y, 0) / pts.length, pos = [], idx = [];
+          pts.forEach((p, i) => { const X = cxm + (p.x - cxm) * .985, Y = cym + (p.y - cym) * .985; pos.push(X, Y, -.07, X, Y, 1.37); if (i) { const k = i * 2; idx.push(k - 2, k - 1, k, k - 1, k + 1, k); } });
+          const rb = new TT.BufferGeometry(); rb.setAttribute('position', new TT.Float32BufferAttribute(pos, 3)); rb.setIndex(idx); rb.computeVertexNormals(); const r = new TT.Mesh(rb, ivory2); r.rotation.y = ry; r.position.set(x, RAIL, z); G.add(r); });
         const o = new TT.Mesh(geo, [m, inner]); o.rotation.y = ry; o.position.set(x, RAIL, z); o.scale.x = .9975;   /* (each panel a hair short: its end face lay in the same plane as the next panel's front and the two fought at the corner legs, a flicker at a distance) */ o.castShadow = o.receiveShadow = true; G.add(o); });
       add(new TT.BoxGeometry(L - 2.6, .5, W - 2.6), inner, 0, BASE - .25, 0);
       // the low rail: dark, with ivory edges and a row of ivory dots and little lozenges
