@@ -3452,6 +3452,172 @@
     noSwWhy: 'スワップしないのが正解。この石は、もらってもあまり得しないんだ。',
     lead: ['{ok}と比べてみよう。', 'きみの手と{ok}、何がちがうかな？', '{ok}とのちがいを見てみるペン。'],
   };
+  /* (2026-11-22 lesson loop) the hex lessons in ゴイシペン's words, Japanese, for the 3D table (no coordinates): a short intro per step
+     (the first says what the game is and how it is won), five questions and five hints per step, and after the answer the praise with
+     why or, for a miss, the green cell and what yours gives up — read from the board (hex/engine.js winCells / need): the opponent
+     connects at once (the cell marked), your connection still a cell short, your only winning cell that the opponent blocks (gold), the
+     opponent's double threat (gold), the green cell taken from you and the path it costs, a move that shortens nothing, a stone on the
+     edge itself; the strategy steps from the cell's shape (HXA) and the AI's values. Cheers the player on (HX_CH). */
+  const HXJ_LS = {
+    intro: {
+      b_connect: 'ぼくはゴイシペン！ ヘックスは、六角形のマスに赤と青が交互に石を置くゲームなんだ。<br>自分の色の2つの辺を、自分の石で途切れずにつないだら勝ち！ となりのマスの石どうしは、つながっているペン。<br>まずは、1手で勝ちを決める練習から。',
+      b_block: '今度は守る番！ 相手があと1マスでつながりそうなら、そのすき間に自分の石を置いてふさごう。<br>自分の道だけじゃなく、相手の道もときどき数えてみるクセをつけるペン。',
+      b_bridge: '2つの石のあいだに空きマスが2つあって、どっちを通ってもつながる形を<b>ブリッジ</b>っていうんだ。<br>相手が片方をふさいでも、もう片方でつながる！ となり合わせとほとんど同じくらい強いペン。',
+      b_save: '相手がブリッジの片方に割りこんできたら、すぐもう片方に打てば、つながりは切れないんだ。<br>割りこみは、よそ見をさせるための手のことが多いペン。あわてず受けよう！',
+      b_edge: '自分の辺から2段目の石は、下の2マスが空いていれば、もう辺とつながっているのと同じ！ これを<b>辺のテンプレート</b>っていうんだ。<br>辺そのものに打つのは1手のむだ。2段目を上手に使うペン。',
+      t_double: 'ここからは戦術！ 強い手は、つながる狙いを2つ同時に作るんだ。<br>相手は1手で片方しかふさげないから、狙いが2つ残れば勝ちペン。道ごとに、あと何手か数えてみよう。',
+      t_stop: '相手が2手でつながりそうなとき、片方の道をふさぐだけでは足りないんだ。<br>2つの狙いが両方通る、弱いつなぎ目を探して切ろう！ ブリッジは切れないから、そこはねらわないペン。',
+      t_ladder: '辺の近くで、相手が1段目をふさぐあいだに2段目を押して進む形を<b>ラダー</b>っていうんだ。<br>その先に自分の石（<b>ラダーエスケープ</b>）が待っていれば、ラダーは勝ち！ 進める前に、行き先を確かめるペン。',
+      t_edge3: '3段目の石も、下の決まった範囲が空いていれば辺とつながっているんだ。この形を<b>ジッグラト</b>っていうよ。<br>割りこまれたら、その範囲の中で受けよう！ 受けたあとに辺への形が残れば、まだ大丈夫ペン。',
+      s_center: 'ここからは作戦！ スワップがなければ、先手は中央か、鈍角の角どうしを結ぶ線の上から始めると強いんだ。<br>どっちの辺にも近いからね。AIのいちばんの手に近ければ満点ペン！',
+      s_swap: 'スワップありでは、青は赤の1手目を見て、その石をもらう（スワップ）か、自分で打つかを決めるんだ。<br>中央に近い手は強いからもらう、ふちの手はたいてい弱いから打つ。スワップは上のボタンで選べるペン！',
+      s_block: '相手の石のすぐとなりで止めても、ブリッジでするっと回りこまれちゃうんだ。<br>少し離れて、相手の進む先に打とう！ その石は、自分の道にも役立つペン。',
+      s_plan: '中盤は、自分と相手、両方のいちばん短い道を見くらべるんだ。<br>いい手はたいてい、自分の道を助けながら相手の道もふさぐ手！ 両方を数えてから打つペン。',
+    },
+    ask: {
+      b_connect: ['1手で、自分の2つの辺をつないでみて！', '勝ちを決める1マスはどこかな？', 'あと1手でつながる形だね。どこに打つ？', '辺から辺まで、道を完成させる点を探してみよう！', 'ここで決めちゃおうペン！ つながる1マスは？'],
+      b_block: ['相手がつながるのを止めてみて！', '相手の道の、最後のすき間はどこかな？', 'このままだと相手がつながる！ どこでふさぐ？', '相手の勝ちを消す1マスを探してみよう！', '守りの1手だペン。ふさぐ場所はわかる？'],
+      b_bridge: ['どう守られても、2手でつながる手を打ってみて！', '打ったあと、相手が止めきれない形になる点はどこかな？', 'ブリッジで辺まで届く1手を探してみよう！', '相手が片方しか止められない形、作れる？', 'ブリッジの出番だペン！ どこに打つ？'],
+      b_save: ['割りこまれたブリッジを守ってみて！', 'つながりを切らせない1手はどこかな？', '相手の割りこみに、どう受ける？', 'ブリッジを元通りにする点を探してみよう！', 'あわてず受けるペン！ 受ける場所は？'],
+      b_edge: ['2段目の石で、辺までつなぐ手を打ってみて！', '辺のテンプレートが使える点はどこかな？', '辺までの道を、1手で確保できる？', '2段目の急所を探してみよう！', '辺へのつながりを決める1手はどこだペン？'],
+      t_double: ['3手以内につながる、ただ1つの手を見つけて！', '狙いを2つ同時に作れる点はどこかな？', '相手が両方は止められない1手、わかる？', '両ねらいの急所を探してみよう！', 'ここは攻めどきペン！ 決め手はどこ？'],
+      t_stop: ['相手の2手の狙いを、1手で止めてみて！', '相手の狙いを、2つまとめて消せる点はどこかな？', 'このままだと相手の両ねらい！ どこで切る？', '相手の道の、切れやすいところを探してみよう！', '守りどころだペン。急所はどこ？'],
+      t_ladder: ['ラダーを使って、辺までつないでみて！', 'ラダーが勝ちになる進め方はどこかな？', 'ラダーを進める次の1手、わかる？', '2段目を押して進む点を探してみよう！', '行き先は確かめたペン？ さあ、どこに打つ？'],
+      t_edge3: ['辺とのつながりを守ってみて！', '割りこみに、テンプレートの中で受けるならどこかな？', '辺へのつながりを残す1手はどこ？', 'ジッグラトを守る受けを探してみよう！', '割りこまれても落ち着いてペン。受ける場所は？'],
+      s_center: ['いちばん強い最初の1手を打ってみて！', 'どこから始めると、両方の辺に近いかな？', '先手の1手目、きみならどこに打つ？', '盤全体を見て、いちばん働く点を探してみよう！', '最初の1手が大事だペン！ どこにする？'],
+      s_swap: ['スワップする？ それとも自分で打つ？', 'この1手目、もらうと得かな？', '青の番だね。いちばんいい選び方はどれ？', '赤の石の強さを見て、決めてみよう！', 'スワップか、打つか。きみの判断はどっちペン？'],
+      s_block: ['相手の道を止める、いちばんいい手を選んでみて！', '相手の道を、どこでふさぐのがいいかな？', 'くっつける？ 離れる？ 止め方を選んでみよう！', '相手の進む先を読んで、先回りできる？', '止めながら自分も得する点はどこペン？'],
+      s_plan: ['中盤のいちばんいい手を選んでみて！', '自分の道と相手の道、両方に効く点はどこかな？', '中盤の急所、わかる？', 'つなぐ手とふさぐ手を兼ねる点を探してみよう！', 'ここが勝負どころペン！ どこに打つ？'],
+    },
+    hint: {
+      b_connect: ['自分の石の列で、1マスだけ空いているところはない？', '辺から伸びた石と、反対の辺から伸びた石のあいだを見てみて。', '途切れているところは1か所だけだペン。', 'となりどうしでつながるか、1マスずつたどってみて！', '自分の2つの辺から、石をたどってみよう！'],
+      b_block: ['相手の石を辺から辺へたどってみて。切れ目はどこ？', '相手が次に打ったら勝ちになるマスを探すペン。', 'ふさげるのは1か所だけ。相手の目で見てみて！', '相手の列のすき間に、先に自分の石を置こう。', '相手の番になったつもりで考えてみて！'],
+      b_bridge: ['自分の石から1つとばした場所に、ブリッジを作れる点はない？', '間の2マスが両方空いているか、確かめてみて！', '辺までの残りも、2通りで届くかな？', 'つながり方が1通りだけだと、ふさがれちゃうペン。', '打ったあと、相手の番になったつもりで考えてみて。'],
+      b_save: ['ブリッジの間の2マス、片方がふさがれていない？', '相手の石のとなりに、もう1つの空きマスがあるはず！', '割りこまれた場所のすぐ横を見てみよう。', 'よそを打つと、そこで切られちゃうペン。', '切れそうなつながりはどこかな？ 自分の石をたどってみて。'],
+      b_edge: ['辺から2段目のマスに注目！', '下の2マスが両方空いている、2段目の点を探すペン。', '自分の石から、2段目までつながる点はある？', '辺そのものに打つ必要はないんだ。1段上を見てみて！', 'つながりを途切れさせずに2段目へ届く点はどこかな？'],
+      t_double: ['打ったあと、短い道が2本残る点を探してみて！', 'ブリッジと辺のテンプレート、組み合わせられないかな？', '狙いが1本だけだと、相手にふさがれちゃうペン。', 'それぞれの道があと何手か、数えてみよう！', '2つの道が分かれる、分かれ道の点はどこかな？'],
+      t_stop: ['相手の2本の道が、どこで重なっているか見てみて！', 'ブリッジは切れないから、ほかのつなぎ目をねらうペン。', '相手が次に打ったら2通りになる点、先に取れないかな？', '片方の道だけふさいでも、もう片方が残っちゃう。', '相手の目線で、いちばん打ちたい点を探してみよう！'],
+      t_ladder: ['2段目の石を、辺にそって進める向きはどっち？', 'ラダーの行き先に、助けてくれる自分の石はある？', '相手は1段目をふさぐしかない。次はどこを押す？', 'エスケープの石がある方へ進めるペン！', '進めたあと、1手でつながる点がいくつできるかな？'],
+      t_edge3: ['割りこまれた石のまわりを見てみて！', '受けたあとも、辺へ届く形が残るかな？', 'テンプレートの範囲の外に打つと、切られちゃうペン。', 'この問題は、受け方が2通りあることも。どっちでもOK！', '3段目の石から辺まで、道をたどってみよう！'],
+      s_center: ['盤のまん中あたりを見てみて！', '鈍角の角どうしを結ぶ線を思い浮かべてみよう。', 'ふちに近い点は、相手に止められやすいペン。', '赤の2つの辺、どっちにも近い点はどこかな？', 'まん中に近いほど、行ける方向が多いんだ。'],
+      s_swap: ['赤の石は中央に近い？ ふちに近い？', '強い石ならもらっちゃうのが得ペン。', 'ふちの石なら、自分で打つほうがいいかも！', 'もらったら、その石は青の石になるんだ。役に立ちそう？', 'スワップしないなら、中央あたりで応じるのが基本だね。'],
+      s_block: ['相手の石にくっつけず、2〜3マス先を見てみて！', '相手がブリッジで回りこめない場所はどこかな？', '止める石が、自分の道にもなる点を探すペン。', '相手の進む向きを読んでみよう！', 'すぐとなりで止めると、するっとかわされちゃう。'],
+      s_plan: ['自分の道と相手の道、両方を数えてみて！', 'つなぐ手とふさぐ手、1手で両方できる点はないかな？', '相手のいちばん短い道はどこを通る？', '自分のブリッジに割りこまれていないかも見てみるペン。', 'いちばん大事な場所は、2つの道が交わるところかも！'],
+    },
+    // why the right cell works (plain clauses: {n} = cells the opponent still needs)
+    why: {
+      b_connect: ['2つの辺が1本の道でつながる', '辺から辺まで、道が完成する', '最後のすき間がうまって勝ちが決まる', '途切れていた列が、ひとつながりになる', 'その1マスで勝ちの道が通る'],
+      b_block: ['相手の最後のすき間がふさがる', '相手は回り道で、あと{n}マス必要になる', '相手の勝ちの1マスを先に取れる', '相手の列がそこで切れる', '相手の道が、あと{n}マスまで遠のく'],
+      b_bridge: ['ふさぐ場所が2つになって、相手の守りが間に合わない', '1手でつながる点が2つできる', 'どっちをふさがれても、残りの1つで届く', 'ブリッジで、辺まで切れずに届く', '相手に止める手がなくなる'],
+      b_save: ['ブリッジのつながりが切れずに残る', '割りこみをはね返して、道がつながったまま', '切られそうな所を、しっかりうめられる', '相手の割りこみが空振りになる', '2つの石が、となり同士でつながる'],
+      b_edge: ['2段目の石が、下の2マスのどちらかで辺に届く', '辺のテンプレートで、辺とつながったも同然になる', '相手が片方をふさいでも、もう片方で辺に届く', '辺に直接打たずに、1手得できる', '2段目から、辺まで切れない形になる'],
+      t_double: ['狙いが2つできて、相手の守りが1手足りなくなる', '2本の短い道が同時に残る', '相手がどっちをふさいでも、もう片方が通る', '両ねらいの形ができる', '相手の守りが追いつかなくなる'],
+      t_stop: ['相手の2つの狙いが、まとめて止まる', '相手の道のつなぎ目が切れる', '相手は2手でつながれなくなる', '相手の両ねらいが消える', 'いちばん弱いつなぎ目を、先に切れる'],
+      t_ladder: ['ラダーが、エスケープの石まで届く', '2段目を押して、相手を1段目に追いこめる', '相手は受けるだけで手いっぱいになる', 'エスケープの石と手をつなげる', '辺にそって、切れずに進める'],
+      t_edge3: ['範囲の中で受けて、辺とつながったままになる', 'ジッグラトの形がくずれずに残る', '割りこみが空振りになる', '辺までの道が、切れない形で残る', '相手に、辺とのつながりを切らせない'],
+    },
+    // the strategy steps: why, by the best cell's shape (HXA.kind)
+    whyK: { swap: ['この1手目は強いから、もらうのがいちばん得になる', '中央に近い強い石を、そのまま自分のものにできる', '赤のいい石をもらって、有利に戦える'],
+      noswap: ['この石はもらっても得が少なく、自分で中央を争うほうがいい', 'ふちに近い石はもらう価値が小さいから、自分で打てる', 'スワップせずに、自分で中央を争える'],
+      save: ['割りこまれたブリッジに受けて、つながりが切れない', 'ブリッジを守って、道がつながったままになる'],
+      intrude: ['相手のブリッジに割りこんで、先に受けさせられる', '割りこみで、先手で形を決められる'],
+      edge: ['2段目から、辺のテンプレートで辺に届く', '辺に打たずに、2段目で辺とつながれる'],
+      bridge: ['ブリッジで、安全なまま遠くまで伸ばせる', 'ブリッジなら、どっちをふさがれてもつながる', '切れないブリッジで、一気に道がのびる'],
+      adjtouch: ['自分の石とつながりながら、相手の行く手もおさえられる', 'つなぐのと止めるのを、1手でこなせる'],
+      touch: ['相手の石にぴたっとつけて、進む向きをおさえられる', '相手の行く手を、すぐとなりでおさえられる'],
+      adj: ['となりにつないで、切られる心配がなくなる', 'しっかりつないで、すきをなくせる'],
+      center: ['まん中を取って、どの辺にも近くなる', 'どの方向にも伸びられる、まん中が取れる'],
+      far: ['少し離れて先回りして、相手が回りこみにくくなる', '相手の進路の先をふさいで、すり抜けさせない', '離れて止めた石が、自分の道にもなる'],
+      open: ['どこへでも伸びられる広い場所を、先に取れる', '広い場所を先に取って、道の選び方が増える'] },
+    lack: { bridge: 'つながりが弱いままになる', touch: '相手の行く手が空いたままになる', adjtouch: 'つなぐか止めるか、片方しかできていない', far: '相手の進路の先が空いたままで、すいすい進まれちゃう',
+      adj: '自分の石とつながらず、切られるすきが残る', center: 'まん中を相手に先に取られちゃう', open: '広い場所を相手に先に取られちゃう', edge: '辺までの道が、まだ切られやすい',
+      intrude: '相手のブリッジがそのまま残っちゃう', save: '割りこまれたブリッジが切られちゃう', swap: '強い赤石が、相手のまま残っちゃう' },
+    ai: ['AIの見立てでは、勝つ見込みが{d}%ほど下がっちゃう。', '勝つ見込みにして、{d}%くらいの差がつくんだ。', 'AIでくらべると、{d}%ぶん損している計算ペン。'],
+  };
+  const HX_CH = {
+    good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりだペン！', 'やったね！'],
+    push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次へ行こうペン！'],
+    soft: ['大丈夫！', 'ドンマイだペン！', null, '気にしない、気にしない！', null],
+    tail: [null, null, 'これで覚えちゃおう！', null, '次はきっと見つけられるペン！'],
+    right: ['{m}なら、{a}んだ。', '{m}が正解！ {a}ペン。', 'ここは{m}。そこなら{a}から！', '{m}を見て。あそこなら{a}でしょ？', '答えは{m}だった。{a}んだ。'],
+    why: ['{a}！', 'その手なら{a}ね。', '{a}ペン！', 'ほら、{a}でしょ？', 'これで{a}んだ。'],
+    you: ['{x}だと、{b}。', 'きみの{x}だと、{b}んだ。', '{x}では{b}！', '{x}に打つと、{b}。', '{x}だと{b}んだ。'],
+  };
+  function hxLF(pos, m) {   // what the side to move gets by playing m: the win, the cells each side still needs, each side's winning cells
+    const me = pos.side, o = 3 - me, q = pos.clone().play(m), w = q.winner();
+    return { q, win: w === me, needMe: q.need(me), needO: q.need(o), oWin: w ? [] : q.winCells(o), W: w ? [] : q.winCells(me) };
+  }
+  function hxDouble(q) {   // the opponent's reply that leaves it two winning cells (a connection in two moves), or -1
+    const o = q.side; for (const r of q.moves()) { if (r === 1023) continue; const t = q.clone().play(r); if (t.winCells(o).length >= 2) return r; } return -1;
+  }
+  function hxLsJa(E, s, P, i, pts) {
+    const id = s.id, H = HXJ_LS, C = HX_CH, pos = E.Pos.from(P.s), k = i % 5, me = pos.side, sp = P.s, N = sp.n * sp.n;
+    const pk = (L, j) => L[((j % L.length) + L.length) % L.length], f2 = (t, v) => fill(t, v), M = HXM('ok', 'ja'), X = HXM('ng', 'ja'), G = HXM('hl', 'ja');
+    const ask = pk(H.ask[id] || [''], k), hintTx = pk(H.hint[id] || [''], k);
+    if (P.ok) {   // one-move tactics: any cell in P.ok
+      const ok = P.ok, A = ok[0], n0 = pos.need(me), FA0 = hxLF(pos, A);
+      const near = () => { const NB = E.geo(sp.n).NB, L = []; ok.forEach(a => NB[a].forEach(q => { if (!pos.at(q) && !ok.includes(q) && !L.includes(q)) L.push(q); })); NB[A].forEach(a => NB[a].forEach(q => { if (!pos.at(q) && !ok.includes(q) && !L.includes(q)) L.push(q); })); return L; };
+      const wrongOf = u => { if (u != null && u >= 0 && u < N && !ok.includes(u) && !pos.at(u)) return u; const L = near(); return L.length ? L[(k * 3) % L.length] : pos.moves().find(q => q !== 1023 && !ok.includes(q)); };
+      const why = (F, j) => { let a = pk(H.why[id] || H.why.b_connect, j); if (id === 'b_bridge' && F.W.length < 2) a = pk(H.why.t_ladder.slice(4).concat(H.why.b_bridge.slice(2, 3)), j); return a.replace('{n}', F.needO); };
+      const loss = (u, F, j) => {   // what the miss gives up (and the cell marked gold, if any)
+        const hl = [];
+        if (F.oWin.length) { const at = F.oWin.includes(A) ? M : (hl.push(F.oWin[0]), G);
+          return [pk([`相手に${at}を打たれて、先につながられちゃう`, `${at}を相手に取られて、そのまま負けちゃう`, `相手が${at}でつながって、勝負が終わっちゃう`], j), hl]; }
+        if (id === 'b_connect') return [pk(['まだ1マス足りなくて、勝ちにならない', '道が途切れたままで、つながらない', '辺から辺まで、まだ届かない'], j), hl];
+        if (id === 'b_edge' && HXA.facts(sp, u).onEdge) return [pk(['辺そのものに打つのは、1手のむだになっちゃう', '辺に直接打っても、2段目ほどの働きがない'], j), hl];
+        if (id === 'b_block' || id === 't_stop') { const r = hxDouble(F.q); if (r >= 0) { hl.push(r);
+          return [pk([`相手は${G}に打って、つながる道を2本にできちゃう`, `${G}に打たれると、相手の両ねらいが決まっちゃう`, `相手に${G}を取られて、2手でつながれちゃう`], j), hl]; }
+          return [pk(['相手の道が、まだ切れずに残っちゃう', '相手のつなぎ目が、そのまま残る'], j), hl]; }
+        if (F.W.length === 1) { hl.push(F.W[0]); return [pk([`1手でつながる点が${G}だけで、そこをふさがれちゃう`, `${G}をふさがれたら、それで止まっちゃう`, `狙いが${G}の1つだけだから、相手に止められちゃう`], j), hl]; }
+        if (F.needMe >= n0) return [pk(['道が1マスも縮まらない', '辺までの道のりが、ちっとも短くならない', 'つながりに役立たない場所なんだ。道は短くならない'], j), hl];
+        const cut = F.q.clone().play(A).need(me);
+        if (cut > FA0.needMe && cut < 99) return [pk([`相手に${M}を取られると、道があと${cut}マス必要になっちゃう`, `${M}を相手にふさがれて、道があと${cut}マスに遠のく`, `相手が${M}に打つと、道があと${cut}マス残っちゃう`], j), hl];
+        return [pk(['まだ相手にふさぐ手が残っちゃう', '相手に守られて、つながらない'], j), hl];
+      };
+      const good = function (u) { this._hl = []; const F = ok.includes(u) ? hxLF(pos, u) : FA0; return [pk(C.good, k), f2(pk(C.why, k), { a: why(F, k) }), pk(C.push, k)].filter(Boolean).join(' '); };
+      const ng = function (u0) { const u = wrongOf(u0); this._hl = []; if (u == null) return '';
+        const F = hxLF(pos, u), [b, hl] = loss(u, F, k + 1); this._hl = hl;
+        return [pk(C.soft, k), f2(pk(C.right, k + 2), { m: M, a: why(FA0, k + 2) }), f2(pk(C.you, k + 3), { x: X, b }), pk(C.tail, k)].filter(Boolean).join(' '); };
+      return { ask, hintTx, good, ng, own: true };
+    }
+    // the strategy steps (P.sc: the AI's values; P.best may be the swap)
+    const best = P.best, val = new Map(P.sc), vb = val.has(best) ? val.get(best) : Math.max(...P.sc.map(e => e[1])), sw = !!sp.sw;
+    const fb = HXA.facts(sp, best), kb0 = HXA.kind(fb), kb = sw && kb0 !== 'swap' ? 'noswap' : kb0;
+    const whyB = j => pk(H.whyK[kb] || H.whyK.open, j);
+    const HK = { touch: ['今回は、くっつけて止めるのが急所かも。相手の進む向きを見てみて！', '相手の石が伸びたい方向は？ そこをすぐ横でおさえられないかな？', 'ここは例外かも。ぴたっとつける手もくらべてみて！'],
+      adjtouch: ['自分の石とつながりながら、相手もおさえられる点はないかな？'], bridge: ['止めるより、ブリッジで自分の道を伸ばすほうがいい場面かも！', '自分の石から1つとばして、ブリッジを組める点はある？', '守るだけじゃなく、自分の道を伸ばす手も考えてみるペン。'],
+      adj: ['自分の石のすぐとなりを見てみて。切られそうな所はない？'], save: ['自分のブリッジに、割りこまれていないかな？'], intrude: ['相手のブリッジのすき間を見てみて！'], edge: ['辺から2段目に、いい点がありそうだペン。'], center: ['まん中あたりを見てみて！'] };
+    const nth = s.problems.slice(0, i).filter(Q => Q.sc && HXA.kind(HXA.facts(Q.s, Q.best)) === kb0).length;
+    const hint2 = id === 's_block' && HK[kb0] ? pk(HK[kb0], nth) : hintTx;
+    const full = u => pts(P, u) >= 20;
+    const wrongOf = u => u != null && u !== best && !full(u) ? u : (P.sc.slice().sort((a, c) => a[1] - c[1])[k % 2] || [])[0];
+    const good = function (u) { this._hl = []; const same = u != null && u !== best;
+      return [pk(C.good, k), same ? pk(['きみの手も、いちばんの手とほとんど同じくらいいい手！', 'その手も満点、いちばんの手と変わらないくらい強いペン！'], k) : f2(pk(C.why, k), { a: whyB(k) }), pk(C.push, k)].filter(Boolean).join(' '); };
+    const ng = function (u0) { this._hl = []; const u = wrongOf(u0); if (u == null) return '';
+      const fu = HXA.facts(sp, u), ku = HXA.kind(fu), mine = val.has(u) ? val.get(u) : null, d = mine == null ? null : Math.round((HXA.wr(vb) - HXA.wr(mine)) * 100);
+      const Mb = best === 1023 ? 'スワップ' : M, Xu = u === 1023 ? 'スワップ' : X;
+      let b;
+      const stones = /[rb]/.test(String(sp.b)), hc = q => { const n = sp.n, r = Math.floor(q / n) - (n - 1) / 2, c = q % n - (n - 1) / 2; return (Math.abs(r) + Math.abs(c) + Math.abs(r + c)) / 2; };
+      if (kb === 'swap') b = pk(['強い赤石が、相手のまま残っちゃう', '中央に近いいい石を、相手に持たせたままになる', 'せっかくの強い石を、もらいそこねちゃう'], k);
+      else if (ku === 'swap') b = 'もらっても得が小さい石を取って、中央を争う手番を逃しちゃう';
+      else if (kb0 === 'save') b = 'ブリッジに受けていないから、そこで切られちゃう';
+      else if (!stones && u !== 1023 && best !== 1023 && hc(u) > hc(best)) b = pk(['まん中から遠くて、相手に止められやすい', '盤のはしに寄っていて、行ける方向が少ない', '中央から離れていて、道の選び方がせまくなる'], k);
+      else if (stones && fu.dOpp >= 4 && fu.dOwn >= 4) b = pk(['ほかの石から遠すぎて、いまの戦いに関われない', '戦いの場所から離れすぎていて、働きが小さい', 'まわりに石がなくて、つなぐのにも止めるのにも役立たない'], k);
+      else if (kb0 === 'intrude') b = '相手のブリッジに割りこむ先手を逃しちゃう';
+      else if (kb0 === 'far' && (ku === 'touch' || ku === 'adjtouch')) b = 'くっつけて止めると、すぐ横へすり抜けられちゃう';
+      else if ((kb0 === 'touch' || kb0 === 'adjtouch') && (ku === 'far' || ku === 'open')) b = '離れすぎて、そのあいだを相手に使われちゃう';
+      else if (kb0 === 'bridge' && ku === 'adj') b = '1マスずつしか進めず、もったいない';
+      else if (fu.onEdge && !fb.onEdge) b = 'ふちの1段目は辺に近すぎて、働きが小さい';
+      else if (kb0 === 'edge' && !fu.edge) b = '辺までの道が、まだ切られやすい';
+      else if (mine == null) b = 'AIが候補にも入れなかった手で、得が小さい';
+      else if (d < 3) b = 'AIの見立てでは、ほんの少しだけ損をする';
+      else b = H.lack[kb0] || H.lack.open;
+      const out = [pk(C.soft, k), f2(best === 1023 ? pk(['{m}が正解！ {a}ペン。', '答えは{m}だった。{a}んだ。', 'ここは{m}がいちばん。{a}から！'], k) : pk(C.right, k + 2), { m: Mb, a: whyB(k + 1) }), f2(pk(C.you, k + 3), { x: Xu, b })];
+      if (mine != null && d >= 3) out.push(f2(pk(H.ai, k), { d }));
+      out.push(pk(C.tail, k));
+      return out.filter(Boolean).join(' '); };
+    return { ask, hintTx: hint2, good, ng, own: true };
+  }
   const HEX = {
     LKEY: 'aicoding-hex-lessons', OKEY: 'aicoding-hex-open', data: null, I: null,
     load() {
@@ -3488,10 +3654,13 @@
         ramp = [{ k: 'explain', s: sp, marks: mk, t: W('t'), body: W('body') },
           { k: 'try', s: sr, ok: ok.map(rot), look: hxArea(sr, rot(ok[0])), g: W('g'), h: V['ls.' + s.id + '.hint'] != null ? { ja: V['ls.' + s.id + '.hint'], __voice: true } : Object.fromEntries(Object.keys(this.I || {}).map(l => [l, (this.I[l] || {})['ls.' + s.id + '.hint']]).filter(x => x[1])), y: W('y') }];
       }
-      return { id: s.id, title: T('title'), intro: T('intro'), ramp, RU,
-        probs: (s.problems || []).map(P => { const good = P.ok || [P.best];
-          return { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.ok ? P.ok[0] : P.best, hintTx: T('hint'), hint: hxArea(P.s, P.ok ? P.ok[0] : P.best),
-            good: () => T('why', { m: HXM('ok', lang), x: HXM('ng', lang) }), ng: () => { const t = T('ng', { m: HXM('ok', lang), x: HXM('ng', lang) }); return t && t !== 'undefined' ? t : T('why', { m: HXM('ok', lang), x: HXM('ng', lang) }); } }; }),
+      const ja = lang === 'ja' && window.HexEngine && HXJ_LS.intro[s.id];   // (2026-11-22 lesson loop: ゴイシペン's own intro, questions, hints, why / what the miss gives up — hxLsJa)
+      return { id: s.id, title: T('title'), intro: ja ? HXJ_LS.intro[s.id] : T('intro'), ramp, RU,
+        probs: (s.problems || []).map((P, i) => { const good = P.ok || [P.best];
+          const o = { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.ok ? P.ok[0] : P.best, hintTx: T('hint'), hint: hxArea(P.s, P.ok ? P.ok[0] : P.best),
+            good: () => T('why', { m: HXM('ok', lang), x: HXM('ng', lang) }), ng: () => { const t = T('ng', { m: HXM('ok', lang), x: HXM('ng', lang) }); return t && t !== 'undefined' ? t : T('why', { m: HXM('ok', lang), x: HXM('ng', lang) }); } };
+          if (ja) try { Object.assign(o, hxLsJa(window.HexEngine, s, P, i, (Q, m) => this.points(Q, m))); } catch (e) { console.warn('[lessons3d] hex lesson', e); }
+          return o; }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     points(P, m) {   // = hex/app.js problemPoints
@@ -5102,7 +5271,7 @@
         const head = p.own ? (right ? '' : 'おしい！') : right ? okLine() || pick(X.good) : pts > 0 ? X.partial : X.wrong;   // (p.own: ゴイシペン praises / names the green cell himself)
         say(`${head} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : '<br>' + p.ng(u)));
         try { chime(right); } catch (e) {}
-        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || !cell(p.ans) ? [] : [[p.ans, 'ok']]), ...(cell(u) ? [[u, right ? 'ok' : 'ng']] : [])]); }, 900);
+        later(() => { if (!cur || cur.k !== k || phase !== 'prob' || stopped || !pz()) return; pz().undo(1); pz().mark([...(right || !cell(p.ans) ? [] : [[p.ans, 'ok']]), ...(cell(u) ? [[u, right ? 'ok' : 'ng']] : []), ...(right ? [] : (p._hl || []).filter(q => cell(q) && q !== u && q !== p.ans).map(q => [q, 'hl']))]); }, 900);
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
         return;
