@@ -50,7 +50,7 @@
         ["Aves en el canto", "El canto del tablero: roleos trazados con finas tiras de bambú, flores de marfil, hojas de asta de ciervo teñida de verde y aves en vuelo con alas rayadas."],
         ["La base", "La base, de una madera más clara, está calada con dos grandes aberturas en cada lado largo, dejando un pie central estrangulado y finas patas en las esquinas, todo cubierto de roleos."],
         ["Los dados", "El Shōsōin conserva también dados de marfil (Sección Norte 17, de unos 1,3–1,4 cm de lado). Como hoy, las caras opuestas suman siete. Aquí se colocan dos como referencia."]],
-      model: "Medidas según los registros del Shōsōin. Forma y motivos según sus fotografías; la marquetería fina está simplificada.",
+      model: "Medidas según los registros del Shōsōin. La marquetería de los lados y del campo procede de las fotografías publicadas por el Shōsōin, enderezadas y aplicadas.",
       src: [["Shōsōin, “木画紫檀双六局”", "https://shosoin.kunaicho.go.jp/treasures/?id=0000010086&index=10"], ["Exposición del Shōsōin, “悠久の輝き（前編）” (las medias lunas y las flores)", "https://shosoin-ten.jp/articles/detail/000453.html"], ["Exposición del Shōsōin, “木画紫檀双六局”", "https://shosoin-ten.jp/info/treasures/000414/"], ["Nara Shimbun, “時を超えたたからもの(2)”", "https://www.nara-np.co.jp/news/20251103211942.html"]] },
     pyrgus: { name: "La torre de dados de Vettweiss-Froitzheim", alt: "Una torre de dados romana (turricula / pyrgus)", date: "Siglo IV d. C.", where: "Alemania (Germania romana)", found: "Restos de una villa romana cerca de Vettweiss-Froitzheim; hallada en 1983 en forma de placas de cobre y reensamblada por el museo",
       museum: "Rheinisches Landesmuseum Bonn", no: "Inv. 85.0269.00", mat: "Placa de aleación de cobre", size: "Al 22 cm · 9 × 9 cm",
