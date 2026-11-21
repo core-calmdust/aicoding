@@ -11,7 +11,19 @@
    included), base 12.5, rail .8. Two ivory dice (双六頭, kept apart as North 17) are set on the board for reference. */
 (function () {
   'use strict';
+  /* 2026-11-22: the four sides are the Shōsōin's own frontal photographs (CO0000011755 the long side, CO0000011757 the short side),
+     straightened to the board's measure (54.3 / 31.0 × 16.7 cm, 40 px to the cm) — images/atlas/ex/sugoroku-sides.webp, the long side
+     above the short one. The field and the inner faces of the two far walls are lifted from the Shōsōin's overall photograph (CO0000000441, taken from above one
+     corner): the camera was worked out from six of the board's corners, and each plane read back through it — sugoroku-top.webp, the
+     field (52.9 × 29.6 cm) above the long wall's inner face and the short wall's. The strip of the field hidden behind the two near walls
+     is the far strip mirrored; the half-moon (a raised piece here) is taken out of the picture. The openings are traced on those photographs, in cm from the side's top left corner: each list starts at the
+     point where the rail's two hanging lobes meet. (The long side's second opening is the first mirrored; the short side's is one half.) */
+  const HERE = (document.currentScript && document.currentScript.src) || location.href; let SIDE = null, TOP = null;
+  const OPEN_L = [[14.05, 3.33], [14.3, 3.5], [14.5, 3.75], [15, 4.12], [15.5, 4.33], [16, 4.46], [17, 4.52], [17.5, 4.46], [18, 4.35], [18.5, 4.2], [19, 4.08], [20, 3.98], [21, 3.97], [22, 3.95], [23, 4.08], [24, 4.46], [24.5, 4.8], [25, 5.25], [25.3, 5.75], [25.6, 6.33], [25.85, 7], [26, 8], [26.03, 9], [26.03, 10], [25.96, 11], [25.8, 12], [25.46, 13], [25, 14], [24.67, 14.5], [24, 15], [23.4, 15.3], [22.75, 15.5], [21.75, 15.65], [20.5, 15.72], [8, 15.72], [7, 15.68], [6.3, 15.55], [5.6, 15.3], [5.15, 15], [4.4, 14], [3.67, 13], [3.2, 12], [2.96, 11], [2.77, 10], [2.71, 9], [2.69, 8], [2.71, 7], [2.79, 6], [3.08, 5], [3.25, 4.7], [3.5, 4.45], [4, 4.2], [4.5, 3.98], [5, 3.87], [6, 3.82], [7, 3.8], [8, 4], [9, 4.3], [10, 4.5], [11, 4.52], [12, 4.46], [12.5, 4.33], [13, 4.12], [13.5, 3.75], [13.8, 3.46]];
+  const OPEN_S = [[15.5, 3.25], [15.3, 3.38], [15, 3.69], [14.5, 4.06], [14, 4.31], [13.5, 4.44], [13, 4.46], [12, 4.35], [11, 4.1], [10, 3.87], [9, 3.75], [8, 3.69], [7, 3.7], [6, 3.72], [5, 3.81], [4.5, 3.94], [4, 4.19], [3.5, 4.56], [3.06, 5], [2.69, 6], [2.56, 7], [2.54, 8], [2.56, 9], [2.65, 10], [2.85, 11], [3.12, 12], [3.56, 13], [4.1, 14], [4.95, 15], [5.9, 15.5], [7, 15.72]];
   (window.AtlasEx = window.AtlasEx || {}).sugoroku = {
+    ready: () => { const get = (f, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/' + f, HERE).href; setTimeout(res, 8000); });
+      return Promise.all([get('sugoroku-sides.webp?v=1', im => { SIDE = im; }), get('sugoroku-top.webp?v=1', im => { TOP = im; })]); },
     build(TT, X, K) {
       const G = new TT.Group();
       const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = 1.9, RT = .7;   // (RIM: the wall round the field stands upright, about 1.9 high — the overall photograph)   // LIN: the strip of rosettes at the top of the base
@@ -20,7 +32,7 @@
       const shR = K.tex(256, 256, (g, w, h) => K.grain(g, w, h, { a: '#7a7a7a', b: '#4e4e4e', seed: 38, sy: 14 }), { data: true });
       const shitan = K.mat({ map: shT, roughnessMap: shR, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
       const inner = K.mat({ map: baseT, color: '#ffffff', roughness: .55, clearcoat: .2, clearcoatRoughness: .4 });
-      const ivory = K.mat({ color: '#efe4cc', roughness: .4, clearcoat: .25, clearcoatRoughness: .4 });
+      const ivory = K.mat({ color: SIDE ? '#dcc890' : '#efe4cc', roughness: .4, clearcoat: .25, clearcoatRoughness: .4 });   // (aged ivory, as on the photographs)
       const C = { iv: '#eadfc6', grn: '#7d8f4c', bam: '#b9814a', eb: '#1c0f0a', tan: '#b98a55' };
       /* ---------- marquetry (after the detail photographs) ---------- */
       const flower = (g, x, y, r, k = 0) => { g.save(); g.translate(x, y); g.rotate(k);
@@ -86,11 +98,15 @@
             leaf(g, x + sd * R * 1.25, y + (i % 2 ? -1 : 1) * R * .75, R * .5, (i % 2 ? -.6 : .6) * sd + (sd < 0 ? Math.PI : 0)); leaf(g, x - sd * R * 1.2, y + (i % 2 ? 1 : -1) * R * .8, R * .42, (i % 2 ? .7 : -.7) * sd + (sd < 0 ? Math.PI : 0)); }); });
         sprig(half);
         g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .14); g.fillRect(0, h - s * .14, w, s * .14); };
+      // a strip of a side's photograph, from y0 to y1 cm below its top
+      const photo = (long, y0, y1) => (g, w, h) => { const k = SIDE.width / L; g.drawImage(SIDE, 0, (long ? 0 : SIDE.height / 2) + y0 * k, (long ? L : W) * k, (y1 - y0) * k, 0, 0, w, h); };
       const inlC = null;   // (2026-11-22: a layout lifted from the frontal photographs was tried and dropped — at their resolution it came out broken and scratchy; the marquetry is drawn)
       const mk = (t, base) => K.mat({ map: t, color: '#ffffff', roughness: .48, clearcoat: .3, clearcoatRoughness: .35 });
       /* ---------- the face ---------- */
       const IL = L - RT * 2, IW = W - RT * 2, ROW = 2.0, P0 = 4.9, PS = 3.75;   // the row of points: its distance from the rim, the first point's distance from the centre, the pitch
+      const topK = TOP ? TOP.width / IL : 0, MOONX = TOP ? -.3 : 0;   // (on the photograph the half-moons sit 3 mm off the middle of the length)
       const faceT = K.tex(2048, Math.round(2048 * IW / IL), (g, w, h) => { const s = w / IL;
+        if (TOP) { g.drawImage(TOP, 0, 0, TOP.width, IW * topK, 0, 0, w, h); return; }
         K.grain(g, w, h, { a: '#331a11', b: '#26120b', seed: 44, sx: .3, sy: 9, warp: .2, pores: .003 });   // straight grain along the length
         let y = 0, sd = 3; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;   // planks along the length, slightly different in tone
         while (y < h) { const ph = s * (4.5 + rnd() * 2.5); g.fillStyle = rnd() < .5 ? `rgba(0,0,0,${rnd() * .18})` : `rgba(120,50,30,${rnd() * .12})`; g.fillRect(0, y, w, ph); g.fillStyle = 'rgba(10,3,2,.5)'; g.fillRect(0, y, w, s * .04); y += ph; }
@@ -110,13 +126,13 @@
       const add = (geo, m, x, y, z) => { const o = new TT.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; G.add(o); return o; };
 
       /* ---------- the board's edge (the slab with its rim, one band of marquetry outside) ---------- */
-      const edgeTex = (len, seed) => { const s = 2048 / len; return K.tex(2048, Math.round(EDGE * s), (g, w, h) => { if (!inlC) return band(g, w, h, s, len > 40); g.drawImage(shT.image, 0, 0, w, h);  g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .14); g.fillRect(0, h - s * .14, w, s * .14); }); };
+      const edgeTex = (len, seed) => { const s = 2048 / len; if (SIDE) return K.tex(2048, Math.round(EDGE * s), photo(len > 40, 0, EDGE)); return K.tex(2048, Math.round(EDGE * s), (g, w, h) => { if (!inlC) return band(g, w, h, s, len > 40); g.drawImage(shT.image, 0, 0, w, h);  g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .14); g.fillRect(0, h - s * .14, w, s * .14); }); };
       const eL = mk(edgeTex(L, 1)), eW = mk(edgeTex(W, 2));
       const SL = EDGE - RIM;   // the slab; the face is at BASE + SL
       // the half-moons: a raised ivory arc in the middle of each long side, its horns toward the rim, the hollow facing the players' edge
       { const cs = new TT.Shape(); cs.moveTo(3.3, 0); cs.absarc(0, -1.07, 3.47, .314, Math.PI - .314, false); cs.absarc(0, -1.82, 3.77, Math.PI - .504, .504, true);
         const cg = new TT.ExtrudeGeometry(cs, { depth: .28, bevelEnabled: true, bevelThickness: .05, bevelSize: .04, bevelSegments: 2, curveSegments: 24 }); cg.rotateX(-Math.PI / 2);
-        [1, -1].forEach(sd => { const m = new TT.Mesh(cg, ivory); m.position.set(0, BASE + SL, sd * (IW / 2 - ROW)); if (sd < 0) m.rotation.y = Math.PI; m.castShadow = true; G.add(m); }); }
+        [1, -1].forEach(sd => { const m = new TT.Mesh(cg, ivory); m.position.set(MOONX, BASE + SL, sd * (IW / 2 - ROW)); if (sd < 0) m.rotation.y = Math.PI; m.castShadow = true; G.add(m); }); }
       const eLs = mk(edgeTex(L, 1)), eWs = mk(edgeTex(W, 2));
       [eLs, eWs].forEach(m => { m.map.repeat.set(1, SL / EDGE); m.map.offset.set(0, 0); });
       add(new TT.BoxGeometry(L, SL, W), [eWs, eWs, shitan, shitan, eLs, eLs], 0, BASE + SL / 2, 0);
@@ -128,16 +144,19 @@
       // the wall's inner face (it stands at a right angle to the field): a spare run of thin stem, a small flower and a few green leaves
       // at wide intervals — much quieter than the outside (the overall photograph)
       const wallT = len => { const s = 2048 / len; return K.tex(2048, Math.max(16, Math.round(RIM * s)), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h); g.lineCap = 'round';
+        if (TOP) { const long = len > 40, y0 = IW * topK + (long ? 0 : RIM * topK), x0 = long ? RT * s : 0; g.drawImage(TOP, 0, y0, (long ? IL : IW) * topK, RIM * topK, x0, 0, w - x0 * 2, h); return; }
         const per = s * 7.2, cy = h * .55;
         for (let x = per * .45, k = 0; x < w - per * .3; x += per, k++) { const up = k % 2 ? 1 : -1;
           g.strokeStyle = C.bam; g.lineWidth = s * .05; g.beginPath(); g.moveTo(x - per * .3, cy + up * h * .18); g.bezierCurveTo(x - per * .12, cy - up * h * .3, x + per * .1, cy + up * h * .3, x + per * .3, cy - up * h * .12); g.stroke();
           g.beginPath(); g.arc(x + per * .3, cy - up * h * .12 - h * .1, h * .1, 0, 5); g.stroke();
           flower(g, x, cy - up * h * .02, h * .16, k); leaf(g, x - per * .2, cy + up * h * .1, s * .5, up * .7); leaf(g, x + per * .17, cy - up * h * .05, s * .42, -up * .8); } }); };
       const wL = mk(wallT(L)), wW = mk(wallT(W - RT * 2));
+      // (the long walls' ends show on the short sides: each carries the end of the short side's picture, so the band runs to the corner)
+      const endOf = right => { const m = mk(eW.map.clone()); m.map.repeat.x = RT / W; m.map.offset.x = right ? 1 - RT / W : 0; m.map.needsUpdate = true; return m; }, endA = SIDE ? endOf(false) : shitan, endB = SIDE ? endOf(true) : shitan;
       [[L, W / 2 - RT / 2, 0, eL], [L, W / 2 - RT / 2, Math.PI, eL], [W - RT * 2, L / 2 - RT / 2, Math.PI / 2, eW], [W - RT * 2, L / 2 - RT / 2, -Math.PI / 2, eW]].forEach(([len, off, ry, m]) => {
         const g = new TT.Group(); g.rotation.y = ry; G.add(g);
         // (the ivory line along the rim's top is in the texture, not a sliver of geometry: a strip 3 mm wide sparkled at a distance)
-        const r = new TT.Mesh(new TT.BoxGeometry(len, RIM, RT), [shitan, shitan, rimTop, shitan, m, len === L ? wL : wW]); r.position.set(0, BASE + SL + RIM / 2, off); r.castShadow = r.receiveShadow = true; g.add(r); });
+        const r = new TT.Mesh(new TT.BoxGeometry(len, RIM, RT), [len === L ? endA : shitan, len === L ? endB : shitan, rimTop, shitan, m, len === L ? wL : wW]); r.position.set(0, BASE + SL + RIM / 2, off); r.castShadow = r.receiveShadow = true; g.add(r); });
       /* ---------- the base: openings with bowed sides and two-arched tops, a waisted post on the long sides ---------- */
       const SK = BASE - RAIL, OT = SK - .35;   // skirt height, the openings' top
       const opening = (x0, x1) => { const p = new TT.Path(), top = OT, b0 = .35;
@@ -151,11 +170,15 @@
           p.bezierCurveTo(cx - b, t0 - dp * .75, cx - b * 1.6, t0 - dp, cx - a * .52, t0 - dp); p.bezierCurveTo(cx - a * .72, t0 - dp, cx - a * .8, t0, cx - a, t0); }
         p.lineTo(x0 + tx, top - .3); p.bezierCurveTo(x0 + tx * .45, top - .3, x0 - bow, top - ty * .45, x0 - bow, top - ty);
         p.lineTo(x0 - bow, fy); p.bezierCurveTo(x0 - bow, b0 + (fy - b0) * .45, x0 + fx * .45, b0, x0 + fx, b0); return p; };
+      // an opening as traced on the photograph: a smooth curve through the points, from the rail's peak round and back to it
+      const traced = (pts, len, flip) => { const q = pts.map(([x, y]) => new TT.Vector2((flip ? len - x : x) - len / 2, H - y - RAIL)); q.push(q[0].clone());
+        const p = new TT.Path(), c = new TT.SplineCurve(q).getPoints(q.length * 5); p.moveTo(c[0].x, c[0].y); for (let i = 1; i < c.length - 1; i++) p.lineTo(c[i].x, c[i].y); p.closePath(); return p; };
       const skirtFor = (len, n) => { const S = new TT.Shape(); S.moveTo(-len / 2, 0); S.lineTo(len / 2, 0); S.lineTo(len / 2, SK); S.lineTo(-len / 2, SK); S.closePath();
+        if (SIDE) { if (n === 2) S.holes.push(traced(OPEN_L, len, false), traced(OPEN_L, len, true)); else S.holes.push(traced(OPEN_S.concat(OPEN_S.slice(1).reverse().map(([x, y]) => [len - x, y])), len, false)); return S; }
         const LEG = 2.3, POST = 2.5, ow = (len - 2 * LEG - (n - 1) * POST) / n;
         for (let i = 0; i < n; i++) { const x0 = -len / 2 + LEG + i * (ow + POST); S.holes.push(opening(x0, x0 + ow)); }
         return S; };
-      const baseTex = (len, n, seed) => { const S = skirtFor(len, n), s = 2048 / len; return K.tex(2048, Math.round(SK * s), (g, w, h) => {
+      const baseTex = (len, n, seed) => { const S = skirtFor(len, n), s = 2048 / len; if (SIDE) return K.tex(2048, Math.round(SK * s), photo(len > 40, EDGE, H - RAIL)); return K.tex(2048, Math.round(SK * s), (g, w, h) => {
         g.drawImage(baseT.image, 0, 0, w, h);
         // vertical scrolls up the corner legs and the post (where the wood stands between the openings)
         const LEG = 2.3, POST = 2.5, nO = S.holes.length, ow = (len - 2 * LEG - (nO - 1) * POST) / nO, cols = [LEG * .55, len - LEG * .55];
@@ -185,24 +208,26 @@
       }); };
       const baseMat = (len, n, seed) => { const t = baseTex(len, n, seed); t.repeat.set(1 / len, 1 / SK); t.offset.set(.5, 0); return mk(t); };
       const geoFor = (len, n) => new TT.ExtrudeGeometry(skirtFor(len, n), { depth: 1.3, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1, curveSegments: 14 });
-      const ivory2 = K.mat({ color: '#6a4c2e', roughness: .9 });   // (the openings are lined with a pale wood strip — tan, not white: the frontal photographs)
+      const ivory2 = K.mat({ color: SIDE ? '#6e5434' : '#6a4c2e', roughness: .9 });   // (the openings are lined with a pale wood strip — tan, not white: the frontal photographs)
       const gL = geoFor(L, 2), gW = geoFor(W, 1); gL.userData = { len: L, n: 2 }; gW.userData = { len: W, n: 1 }; const mL = baseMat(L, 2, 5), mW = baseMat(W, 1, 6);
       [[gL, mL, 0, W / 2 - 1.3, 0], [gL, mL, 0, -W / 2 + 1.3, Math.PI], [gW, mW, L / 2 - 1.3, 0, Math.PI / 2], [gW, mW, -L / 2 + 1.3, 0, -Math.PI / 2]].forEach(([geo, m, x, z, ry]) => {
         // (the openings' cut faces are a pale wood strip: the extrusion's own side material — a separate ribbon lay in the same plane and flickered)
         const o = new TT.Mesh(geo, [m, ivory2]); o.rotation.y = ry; o.position.set(x, RAIL, z); o.scale.x = .9975;   /* (each panel a hair short: its end face lay in the same plane as the next panel's front and the two fought at the corner legs, a flicker at a distance) */ o.castShadow = o.receiveShadow = true; G.add(o); });
-      add(new TT.BoxGeometry(L - 2.6, .5, W - 2.6), inner, 0, BASE - .25, 0);
+      if (!SIDE) add(new TT.BoxGeometry(L - 2.6, .5, W - 2.6), inner, 0, BASE - .25, 0);   // (the photographs show no underside through the openings: the board's own slab is the ceiling)
       // the low rail: dark, with ivory edges and a row of ivory dots and little lozenges
       // the floor frame's outer face (the overall photograph): an ivory line top and bottom, and between them four-petalled lozenge flowers
       // in ivory alternating with small ivory dots
-      const railT = (len) => { const s = 2048 / len; return K.tex(2048, Math.max(8, Math.round(RAIL * s)), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h);
+      const railT = (len) => { const s = 2048 / len; if (SIDE) return K.tex(2048, Math.max(8, Math.round(RAIL * s)), photo(len > 40, H - RAIL, H)); return K.tex(2048, Math.max(8, Math.round(RAIL * s)), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h);
         g.fillStyle = C.iv; g.fillRect(0, 0, w, h * .14); g.fillRect(0, h * .86, w, h * .14);
         const n = Math.round(len / 2.7), st = w / n;
         for (let i = 0; i < n; i++) { const x = (i + .5) * st, r = h * .24; g.fillStyle = C.iv;
           for (let q = 0; q < 4; q++) { const a = q * Math.PI / 2; g.beginPath(); g.ellipse(x + Math.cos(a) * r, h / 2 + Math.sin(a) * r, r * .95, r * .55, a, 0, 6.29); g.fill(); }
           g.fillStyle = '#3a1e12'; g.beginPath(); g.arc(x, h / 2, r * .3, 0, 6.29); g.fill(); g.fillStyle = C.iv; g.beginPath(); g.arc(x + st / 2, h / 2, h * .09, 0, 6.29); g.fill(); } }); };
-      const rL = mk(railT(L)), rW = mk(railT(W));
-      [[L, 1.8, 0, W / 2 - .9, 0], [L, 1.8, 0, -W / 2 + .9, Math.PI]].forEach(([len, d, x, z]) => add(new TT.BoxGeometry(len, RAIL, d), [rL, rL, inner, inner, z > 0 ? rL : inner, z > 0 ? inner : rL], x, RAIL / 2, z));
-      [[1.8, W - 3.6, L / 2 - .9, 0], [1.8, W - 3.6, -L / 2 + .9, 0]].forEach(([wd, d, x]) => add(new TT.BoxGeometry(wd, RAIL, d), [x > 0 ? rW : inner, x > 0 ? inner : rW, inner, inner, inner, inner], x, RAIL / 2, 0));
+      const rL = mk(railT(L)), rW = mk(railT(W)); rW.map.repeat.x = (W - 3.6) / W; rW.map.offset.x = 1.8 / W;
+      const rEnd = right => { if (!SIDE) return shitan; const m = mk(rW.map.clone()); m.map.repeat.x = 1.8 / W; m.map.offset.x = right ? 1 - 1.8 / W : 0; m.map.needsUpdate = true; return m; }, rA = rEnd(false), rB = rEnd(true);
+      const railIn = SIDE ? shitan : inner;   // (the floor frame is dark wood all round: the overall photograph)
+      [[L, 1.8, 0, W / 2 - .9, 0], [L, 1.8, 0, -W / 2 + .9, Math.PI]].forEach(([len, d, x, z]) => add(new TT.BoxGeometry(len, RAIL, d), [z > 0 ? rA : rB, z > 0 ? rB : rA, railIn, railIn, z > 0 ? rL : railIn, z > 0 ? railIn : rL], x, RAIL / 2, z));
+      [[1.8, W - 3.6, L / 2 - .9, 0], [1.8, W - 3.6, -L / 2 + .9, 0]].forEach(([wd, d, x]) => add(new TT.BoxGeometry(wd, RAIL, d), [x > 0 ? rW : railIn, x > 0 ? railIn : rW, railIn, railIn, railIn, railIn], x, RAIL / 2, 0));
       /* ---------- two ivory dice (双六頭, ~1.35 cm; opposite faces add up to 7) ---------- */
       const pipT = n => K.tex(128, 128, (g, w) => { g.fillStyle = '#efe3c6'; g.fillRect(0, 0, w, w); g.fillStyle = n === 1 ? '#a8322a' : '#2a1a10';
         const P = { 1: [[.5, .5]], 2: [[.28, .28], [.72, .72]], 3: [[.25, .25], [.5, .5], [.75, .75]], 4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], 5: [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], 6: [[.28, .22], [.72, .22], [.28, .5], [.72, .5], [.28, .78], [.72, .78]] }[n];
