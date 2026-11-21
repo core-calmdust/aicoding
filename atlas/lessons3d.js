@@ -2355,11 +2355,33 @@
     why(note, max) { const ss = (String(note || '').replace(/<[^>]+>/g, '').match(/[^。！？]+[。！？]/g) || []).map(x => x.trim()); let out = ''; for (const x of ss) { if (out && (out + x).length > max) break; out += x; } return out; },
     side: s => s === 1 ? '黒' : '白',
   };
+  /* (2026-11-22 lesson loop) the go lessons in ゴイシペン's words, Japanese: five questions and five hints per step and each problem's
+     own why / what the miss overlooks, written by hand without coordinates (go/voice-pen-ja.js <step>.ask0-4 / .hint0-4 / <step>/<i>.why /
+     <step>/<i>.ng — a coordinate left in them is named by its mark: the answer green, the player's move red, one other orange). Around
+     them: praise for the player, a push on, a soft word after a miss (GO_CH). */
+  const GO_CH = {
+    good: ['いい手！', 'さすが！', 'お見事！', 'ばっちりだペン！', 'やった！'],
+    near: ['その手もいい手だね！', 'それも十分いい手ペン！', 'その手でもOK！'],
+    push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次へ行こうペン！'],
+    soft: ['大丈夫！', 'ドンマイだペン！', '気にしない、気にしない！', 'あと一歩！', '平気、平気！'],
+    half: ['きみの手も悪くないね。', 'その手も一つの考え方だペン。', 'いい線いってるね！'],
+    right: ['正解は{m}。', '答えは{m}だったんだ。', 'ここは{m}が正解ペン。', 'いちばんいいのは{m}！', '{m}を見てみて。'],
+    tail: [null, 'これで覚えちゃおう！', null, '次はきっと見つけられるペン！', null],
+  };
+  function goLsJa(V, sid, i, P, N, ok, half) {   // { ask, hintTx, good, ng, own } from the hand-written lines, or null
+    const cl = t => t == null ? null : String(t).replace(/\[([A-HJ-T](?:1[0-9]|[1-9]))\]/g, '<bdi>$1</bdi>'), w = cl(V[sid + '/' + i + '.why']), n = cl(V[sid + '/' + i + '.ng']); if (w == null || n == null) return null;
+    const k = i % 5, pk = (L, j) => L[((j % L.length) + L.length) % L.length], OKM = SP('ok', 'ja');
+    const ask = V[sid + '.ask' + k] != null ? V[sid + '.ask' + k] : V[sid + '.goal'], hintTx = V[sid + '.hint' + k] != null ? V[sid + '.hint' + k] : V[sid + '.hint'];
+    return { ask, hintTx, own: true,
+      good(u) { this._hl = []; const t = goSpots(w, N, ok, u, true, 'ja', this._hl); return [ok.includes(u) ? pk(GO_CH.good, k) : pk(GO_CH.near, k), t, pk(GO_CH.push, k)].filter(Boolean).join(' '); },
+      ng(u) { this._hl = []; const t = goSpots(n, N, ok, u, false, 'ja', this._hl), part = half.includes(u);
+        return [part ? pk(GO_CH.half, k) : pk(GO_CH.soft, k), t.includes(OKM) ? null : fill(pk(GO_CH.right, k + 1), { m: OKM }), t, part ? null : pk(GO_CH.tail, k)].filter(Boolean).join(' '); } };
+  }
   const GO = {
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../go/lessons.json?v=20261115'), getJ('../go/openings.json?v=4'), goRules(), fetch('../go/voice-pen-ja.js?v=1').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=20261115'), getJ('../go/openings.json?v=4'), goRules(), fetch('../go/voice-pen-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')]).then(([ls, op, , vp]) => { this.data = { ls, op };
         try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
         return this; }).catch(e => { this.p = null; throw e; }));
     },
@@ -2382,7 +2404,8 @@
       return { id: s.id, title: L(s.title, lang), intro: SV('intro'), ramp, RU,
         probs: (s.problems || []).map(P => { const sp = goSpec(P.s), N = sp.n, ok = goPcs(P.ok, N);
           return { pos: { spec: sp, me: sp.turn || 1, view: P.view || goCrop(sp, ok) }, kind: 'best', P: { ok, good: goPcs(P.good, N), half: goPcs(P.half, N) }, ask: SV('goal'), ans: ok[0], line: goPcs(P.line, N), N,
-            good(u) { this._hl = []; return goSpots(L(P.why, lang), N, ok, u, true, lang, this._hl); }, ng(u) { this._hl = []; return goSpots(L(P.ng, lang) || L(P.why, lang), N, ok, u, false, lang, this._hl); }, hintTx: SV('hint'), hint: ok.length ? [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([dx, dy]) => { const x = ok[0] % N + dx, y = Math.floor(ok[0] / N) + dy; return x >= 0 && y >= 0 && x < N && y < N && sp.stones[y * N + x] === '.' ? y * N + x : -1; }).filter(q => q >= 0) : null }; }),
+            good(u) { this._hl = []; return goSpots(L(P.why, lang), N, ok, u, true, lang, this._hl); }, ng(u) { this._hl = []; return goSpots(L(P.ng, lang) || L(P.why, lang), N, ok, u, false, lang, this._hl); }, hintTx: SV('hint'), hint: ok.length ? [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([dx, dy]) => { const x = ok[0] % N + dx, y = Math.floor(ok[0] / N) + dy; return x >= 0 && y >= 0 && x < N && y < N && sp.stones[y * N + x] === '.' ? y * N + x : -1; }).filter(q => q >= 0) : null }; })
+          .map((o, i) => { if (lang !== 'ja') return o; const J = goLsJa(V, s.id, i, s.problems[i], o.N, o.P.ok, o.P.good.concat(o.P.half)); return J ? Object.assign(o, J) : o; }),   // (2026-11-22 lesson loop: ゴイシペン's own words per problem)
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
@@ -5292,7 +5315,7 @@
         const okA = (p.P.ok && p.P.ok.length ? p.P.ok : [p.ans]).filter(q => q >= 0);
         const said = pts >= 16 ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) });   // (no coordinates: the points are named by their marks)
         pz().mark([...okA.filter(q => q !== u).slice(0, 4).map(q => [q, 'ok']), [u, pts >= 16 ? 'ok' : 'ng'], ...(p._hl || []).filter(q => q !== u && !okA.includes(q)).map(q => [q, 'hl'])]);
-        say(`${p.own ? (pts >= 16 ? '' : 'おしい！') : pts >= 16 ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + said + (id === 'go' && pts < 20 && p.ans >= 0 && !said.includes(SP('ok', ctx.lang)) ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) }) : ''));
+        say(`${p.own ? (pts >= 16 ? '' : pts > 0 ? 'いい線！' : 'おしい！') : pts >= 16 ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + said + (id === 'go' && pts < 20 && p.ans >= 0 && !said.includes(SP('ok', ctx.lang)) ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: SP('ok', ctx.lang) }) : ''));
         if (id === 'go' && p.line && p.line.length > 1) { const k = cur.k; later(async () => { if (!cur || cur.k !== k || phase !== 'prob') return; pz().undo(9); for (const q of p.line) { await sleep(700); if (!cur || cur.k !== k || phase !== 'prob' || stopped) return; await pz().play(q); } }, 900); }   // (go: the right line played out, as the full game)
         try { chime(pts >= 16); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
@@ -5372,7 +5395,7 @@
       open: (k, kind) => { if (kind) ctx.kind = kind === 'open' ? 'open' : 'lesson'; open(String(k)); }, items: kind => { const kd = kind === 'open' ? 'open' : 'lesson'; try { return (D.list(kd, ctx.lang) || []).filter(x => !x.full).map(x => ({ key: x.key, title: x.title })); } catch (e) { return null; } }, cur: () => cur, pz: () => pz(),   // (test hooks: tools/lesson-progress.js plays every problem)
       toProb: () => { if (cur && cur.probs.length) { cur.k = 0; prob(); } },   // (test hook: straight to the problems)
       drillEnd: () => { if (cur && cur.drill) drillDone(); },
-      rampAnswer: async () => { const it = cur && phase === 'ramp' && cur.ramp && cur.ramp[cur.ri]; if (!it || !it.ok || !pz()) return false; const u = it.ok[0]; await pz().play(u); if (onMoved) await onMoved(u, {}); return true; },   // (test hook: a warm-up's guided move)   // (test hook: a chess ★ drill done — on to its route problems)
+      rampAnswer: async () => { const it = cur && phase === 'ramp' && cur.ramp && cur.ramp[cur.ri]; if (!it || !it.ok || !pz()) return false; let u = it.ok[0]; if (D.rampAns) { const a = D.rampAns(it); if (typeof a === 'number') u = a; } await pz().play(u); if (onMoved) await onMoved(u, {}); return true; },   // (test hook: a warm-up's guided move)   // (test hook: a chess ★ drill done — on to its route problems)
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return;
         if (p.kind === 'bgplay') { const m = typeof u === 'string' ? u : p.best(), c = bgCodes(p.bgPos, m), q = bgDecP(p.bgPos); c.moves.forEach(x => BG.apply(q, 0, BG.mvFrom(x), BG.mvTo(x))); await pz().play(c.moves); return moved(p, { key: c.key, steps: c.moves, pos: q }); }   // (backgammon: a play by the json's letter pairs)
         u = u == null || u === '' ? p.ans : u; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook; pit / column 0 is an answer too)
