@@ -2470,7 +2470,7 @@
       const intro = String(T('intro') || '').replace(/<p>[^<]*?[a-j](?:10|[1-9])-[a-j](?:10|[1-9])[^]*?<\/p>/g, '');   // (the notation paragraph: no coordinates on the 3D board)
       const mkc = AM_MK[s.id] || 'ok';
       const RX = it => { const o = Object.assign({}, it); ['t', 'body', 'g', 'h', 'y'].forEach(f => { if (typeof o[f] === 'string') o[f] = this.tx(o[f], lang); }); o.gm = AM_GM[s.id + '/' + s.ramp.indexOf(it)] || null; return o; };
-      return { id: s.id, title: T('title'), intro, ramp: s.ramp && s.ramp.length ? s.ramp.map(RX) : null, RU: (k, v) => this.tx('ru.' + k, lang, v || {}),   // (the warm-up: texts without coordinates from atlas/nocoord/amazons.json)
+      return { id: s.id, title: T('title'), intro: lang === 'ja' && TFJ_LS.intro[s.id] || intro, ramp: s.ramp && s.ramp.length ? s.ramp.map(RX) : null, RU: (k, v) => this.tx('ru.' + k, lang, v || {}),   // (the warm-up: texts without coordinates from atlas/nocoord/amazons.json)
         probs: (s.problems || []).map(P => { const good = P.ok || [P.best];
           return { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: T('goal'), ans: P.best != null ? P.best : good[0], marks: (P.mk || []).map(q => [q, mkc]), hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
             good: () => T('why', { m: AMM('ok', lang), x: AMM('ng', lang) }), ng: () => T('ng', { m: AMM('ok', lang), x: AMM('ng', lang) }) }; }),
@@ -2652,6 +2652,133 @@
       pos = pos.clone().play(m); });
     return out;
   }
+  /* (2026-11-21 lesson loop) the tafl lessons in タフリン's words, Japanese, for the 3D table (no coordinates): her own intros, five
+     questions a lesson, hints, and after the answer why the move works / what yours misses, read from the board (tfLF: the king at the
+     edge, the captures and what helps them — a corner, the throne, a shield wall —, the king's open lines (ライチ / トゥイチ), the
+     opponent's best reply: a capture, the king let out / caught). The engine-scored strategy lessons use the openings' words (tfOpJa). */
+  const TFJ_LS = {
+    intro: {
+      b_move: 'タフルの駒は、縦か横に<b>空いているマスならどこまでも</b>まっすぐ進めるの。王さまも同じ動き方！<br>王が盤の<b>端</b>に着けば、次は辺にそって角をねらえる。まずは王を一気に端まで走らせてみよう！',
+      b_cap: '相手の駒を<b>縦か横の両側から</b>はさむと取れるの。取れるのは<b>動かした側</b>だけ！<br>守り手は王さまもはさむ仲間になれる。でも、ななめにはさんでも取れないから気をつけてね。',
+      b_hostile: '<b>四隅</b>は、どちらの駒から見ても相手の駒と同じはたらきをするの。<b>空いた玉座</b>も同じ（攻め手にとっては、王がいても敵）！<br>角や玉座のとなりの駒は、反対側に1枚置くだけで取れちゃう。',
+      b_escape: '王が<b>四隅のどれか</b>に着けば守り手の勝ち！ でも攻め手も道をふさぎに来るの。<br><b>3手のうちに</b>、どう守られても逃げ切れる手順をさがそう。コツは、角への道を<b>2本同時に</b>作ること。相手は1本しかふさげないからね。',
+      b_kingcap: '王は<b>4方向ぜんぶ</b>を攻め手にかこまれるとつかまるの（<b>玉座のとなり</b>なら3方向＋玉座）。盤の端にいる王はつかまらない！<br>王も逃げまわるから、<b>3手のうちに</b>どう逃げられてもつかまえる手順をさがそう。先に逃げ道をふさいでから、かこみを閉じるのがコツ。',
+      b_safe: 'いま、きみの駒が相手にはさまれそう！ 逃がすか、はさまれない形にして守ろう。<br>動かした先でも、縦・横の両どなりに相手がもう1枚置けないか、確かめてね。',
+      t_shield: '盤の<b>端</b>に2枚以上並んだ駒は、<b>列の両はしをふさいで</b>、<b>1枚ずつ前にも相手の駒</b>がいれば<b>まとめて</b>取れるの。角も列のふたになる（王さまだけは取られない）！',
+      t_tuichi: '王に逃げ道が1本開くことを<b>「ライチ」</b>、2本同時に開くことを<b>「トゥイチ」</b>っていうの（リンネが記録した言葉）。<br>攻め手は1手で1本しかふさげないから、トゥイチができたらほぼ勝ち！',
+      t_block: '王に逃げ道（ライチ）が開いたら、攻め手は<b>すぐにふさがないと</b>負けちゃう。<br>ただふさぐだけじゃなくて、次に王が<b>2本の逃げ道</b>を作れないかも考えるのがコツ！',
+      t_fort: '王が<b>端</b>にいて、守り手の駒でかこった<b>こわせない砦</b>の中で動けたら、守り手の勝ち！<br>砦の駒は、どれも攻め手にはさまれない形じゃないとだめなの。',
+      t_encircle: '攻め手が<b>守り手の駒ぜんぶ</b>をかこんで、どの駒も盤の端へ出られなくしたら、攻め手の勝ち！<br>輪はななめにつながっていても、ちゃんと閉じているあつかいなの。',
+      s_corner: '攻め手のいちばん最初の仕事は、王が角へ走る前に<b>四隅のまわりを固める</b>こと。角からななめに並ぶ3つのマスに駒を置くと、王は角へ近づけないの。<br>点数は、AIの評価との差で決まるからね。',
+      s_breakout: '守り手は、攻め手の輪ができあがる前に<b>駒を外へ出して</b>すき間を作り、王の走る道を開くの。王さま自身も早めに動いて、2方向を見通せるマスをねらおう！<br>点数は、AIの評価との差で決まるからね。',
+      s_squeeze: '角を固めたら、攻め手は<b>少しずつ輪を縮めて</b>、王の動ける場所をせまくしていくの。取れる駒は取って、王のそばへ駒を寄せていこう！<br>点数は、AIの評価との差で決まるからね。',
+      v_brandubh: '小さな盤のブランドゥブでは、王は玉座とそのとなり以外なら<b>2枚ではさむだけ</b>でつかまっちゃう。角も攻め手の味方（敵のマス）になるの！',
+      v_tablut: 'タブルットでは、王は盤の<b>端のどこか</b>に着けば脱出成功！ そのかわり、玉座からはなれた王は2枚ではさまれちゃうの。',
+    },
+    ask: {
+      b_move: ['王さまを盤の端まで走らせてみて！', '王が一気に端へ出られる道、どっちかな？', 'さあ、王を端まで動かそう！ 角はまだ先でいいの。', '王から縦と横を見て、端まで走れる方向は？', 'もう一回！ 王さまを端までまっすぐ進めて。'],
+      b_cap: ['相手の駒を1つ、はさんで取ってみて！', '片側にもう味方がいる相手の駒、見つけられるかな？', 'はさみ取りのチャンス！ どの駒を動かす？', 'あと1枚ではさめる駒があるの。どれだろう？', 'さあ、相手の駒をはさんでいただこう！'],
+      b_hostile: ['角か玉座を使って、相手の駒を取ってみて！', '角や玉座のとなりにいる相手の駒、見つけたかな？', '角と玉座も味方にしちゃおう。取れる駒はどれ？', '片側は角か玉座がふさいでくれてる。もう片側に置ける駒は？', 'さあ、角や玉座ではさんで取ろう！'],
+      b_escape: ['{n}手のうちに、王を角へ逃がそう！ どう守られても逃げ切れる手順は？', '角への道を2本同時に作れるかな？ {n}手で脱出をめざして！', '王さまを角まで連れていこう。{n}手以内でね！', '攻め手のいちばんしぶとい受けまで読んで、{n}手で脱出！', 'さあ、{n}手の脱出劇！ 最初の一手はどれ？'],
+      b_kingcap: ['{n}手のうちに、どう逃げられても王をつかまえよう！', '王の逃げ道はどこかな？ 先にふさいで、{n}手でつかまえて！', '王さまを追いつめよう。{n}手以内でね！', '王がどう逃げても、{n}手でかこめる手順は？', 'さあ、王さまをつかまえる{n}手の作戦！ 最初の一手は？'],
+      b_safe: ['相手に駒を取られない手を指してみて！', 'はさまれそうな駒はどれかな？ 守ってあげよう。', '取られる前に、ひと工夫！ 安全な手はどれ？', 'このままだとはさまれちゃう。どう守る？', '動かした先も安全かな？ よく見て選んでね。'],
+      t_shield: ['端に並んだ相手の駒を、まとめて取っちゃおう！', 'シールドウォールのチャンス！ 列のふたはどこかな？', '端の列は、前がもうふさがってる。最後のふたを閉じて！', 'まとめ取りの一手、見つけられる？', 'さあ、端の駒を一気にいただこう！'],
+      t_tuichi: ['王を、逃げ道が2本できるマスへ動かしてみて！', 'トゥイチのチャンス！ 王はどこへ行く？', '角への道を2本、いっぺんに開けるかな？', '攻め手が1手でふさぎきれない場所は、どこだろう？', 'さあ、王さまの逃げ道を2本作っちゃおう！'],
+      t_block: ['王の逃げ道をふさいで、2手以内に逃げられないようにしよう！', '王から角までの道が開いてる！ どこでふさぐ？', 'ふさいだあと、王にトゥイチされないかな？ よく見て！', 'ライチ発生！ 攻め手の受けの一手は？', 'さあ、王さまの道に駒を入れて止めよう！'],
+      t_fort: ['さいごの1枚を入れて、エッジフォートを完成させよう！', '砦の壁に、穴がひとつあいてるの。どこかな？', 'あと1手で砦ができあがる！ どの駒を動かす？', '攻め手が入れない砦、作れるかな？', 'さあ、王さまのお城を完成させて！'],
+      t_encircle: ['輪のさいごのすき間を閉じて、包囲を完成させよう！', '守り手が外へ出られるすき間、どこにあるかな？', 'あと1手で包囲の完成！ どの駒で閉じる？', '輪がななめにつながってもいいのを思い出して！ 閉じる手は？', 'さあ、守り手をまるごとかこんじゃおう！'],
+      s_corner: ['この場面、攻め手のいちばんいい手はどれかな？ 角のまわりに注目！', '角のまわり、すき間はない？ いちばんの一手を指して！', '王が角へ走る前に、どこを固める？', 'AIがいちばんと考える手を当ててみて！ カギは四隅。', 'さあ、角の守りをしっかり！ どの駒を動かす？'],
+      s_breakout: ['この場面、守り手のいちばんいい手は？ 王の道に注目して！', '輪がとじる前に、すき間を作れるかな？', '王さまの通り道、どうやって広げる？', 'AIのおすすめの一手を当ててみて！', 'さあ、守り手の反撃！ どこから動く？'],
+      s_squeeze: ['この場面、攻め手のいちばんいい手は？ 王のまわりに注目！', '輪をひとまわり小さくできるかな？', '王の動けるマス、どうやったら減らせる？', 'AIがいちばんと考える一手を当ててみて！', 'さあ、じわじわ追いつめよう！ どの駒を寄せる？'],
+      v_brandubh: ['王さまをつかまえて、勝っちゃおう！', '王のとなりに攻め手がいる！ 反対側に置ける駒は？', 'ブランドゥブなら2枚でつかまえられる。どの駒を動かす？', '角も味方になるのを思い出して！ 王をはさむ手は？', 'さあ、一手で勝負を決めよう！'],
+      v_tablut: ['2手以内に、王を端へ逃がせる手を指してみて！', '王から端まで、2方向に見通せるマスはどこかな？', '攻め手が1手でふさぎきれない場所へ、王を動かそう！', '端への道を2本作れたら勝ち！ どこへ行く？', 'さあ、王さまの脱出ルートを作っちゃおう！'],
+    },
+    hint: {
+      b_move: ['金の丸が王さま。縦と横、端まで駒がない方向はどっち？', '王から4方向を順に見てみて。とちゅうに駒があると、そこで止まっちゃう。'],
+      b_cap: ['金の丸の駒を動かすと、相手の駒をはさめるの。', '相手の駒のとなりに、もう味方がいるところをさがしてみて。反対側があいていればチャンス！'],
+      b_hostile: ['角か玉座のとなりにいる相手の駒をさがしてね。金の丸が動かす駒！', '角と玉座は、相手の駒の代わりになるの。その反対側へ行ける駒は？'],
+      b_escape: ['光ってる駒から動かすの。1手で角への道を2本作れたら、相手は1本しかふさげない！', '相手が道をふさいできたら、そのあとの道も残るかな？ 2手先まで考えてみて。'],
+      b_kingcap: ['光ってる駒から動かすの。まずは王の逃げ道をよく見てね。', '王が逃げられるマスを先につぶしてから、かこみを閉じよう！'],
+      b_safe: ['金の丸の駒から動かすと、どの駒も取られなくなるの。', 'いま両どなりの片方に相手がいる駒はどれ？ その反対側に注目してね。'],
+      t_shield: ['並んだ駒の前はもう埋まってるの。残ってるのは、列のはしの「ふた」だね。', '列の両はしを見てみて。ふたがあいているのはどっち？ 角もふたになるの！'],
+      t_tuichi: ['王を、2つの辺が見通せるマス（角に近い辺の上など）へ動かしてね。金の丸が王さま！', '王が着いた先から、角へまっすぐ行ける道は何本あるかな？ 2本ならトゥイチ！'],
+      t_block: ['王から角（端）までの道の上に、攻め手を1つ入れるの。金の丸がその駒！', 'ふさいだあと、王が別のマスで2本の道を作れないかも見てね。'],
+      t_fort: ['王のまわりの壁に、1か所だけ穴があいてるの。金の丸の駒でふさいでね。', '壁の駒が、攻め手にはさまれない形になるかも確かめて！'],
+      t_encircle: ['輪に1か所だけすき間があるの。金の丸の駒で閉じてね。', '守り手の駒が端へ出られる道をたどってみて。どこで切れるかな？'],
+      v_brandubh: ['王の反対側に、もう1枚置ける攻め手をさがしてね。', '王のとなりにいる攻め手は？ その向かい側へ行ける駒が答え！'],
+      v_tablut: ['王を、2つ以上の方向へ端まで見通せるマスへ動かしてね。', '端への道が2本できれば、攻め手は1本しかふさげないの。王はどこへ行く？'],
+      s_corner: ['四隅のまわりで、王が入りこめそうなすき間はどこかな？', 'ねらわれている自分の駒がないかも、先に確かめてね。'],
+      s_breakout: ['王から見て、ふさがっている方向はどっち？ じゃまな駒をどかすのも手なの。', '輪のうすいところはどこかな？ そこへ駒を出してみて。'],
+      s_squeeze: ['王の動けるマスを数えてみて。いちばん減らせる手は？', 'はさまれそうな自分の駒、取れる相手の駒も見のがさないでね。'],
+    },
+  };
+  function tfLF(E, pos, m) {   // what a lesson move does: the king, the edge, the captures (and what helped), the king's open lines, the reply
+    const f = E.mFrom(m), t = E.mTo(m), F = pos.G.F, me = pos.turn, after = pos.clone().play(m), caps = after.lastCaps.slice();
+    const help = caps.map(q => after.nb(q).some(x => !after.at(x) && (F[x] & 2)) ? '角' : after.nb(q).some(x => !after.at(x) && (F[x] & 4)) ? '玉座' : '').find(Boolean) || '';
+    const R = { m, f, t, king: pos.at(f) === 3, edge: !!(F[t] & 1), caps: caps.length, help, win: after.res === me ? after.why || 'win' : '', routes: after.res ? 0 : after.kingLines().length, kingNearCorner: after.king >= 0 && after.nb(after.king).some(x => F[x] & 2) };
+    R.scan = () => { if (R._s) return R._s; let c = 0, w = false, tu = false;
+      if (!after.res) for (const r of after.moves()) { const z = after.clone().play(r); if (z.res && z.res !== me) w = true; c = Math.max(c, z.lastCaps.length); if (!z.res && z.kingLines().length >= 2) tu = true; }
+      return (R._s = { c, w, tu }); };
+    return R;
+  }
+  function tfLsJa(E, s, P, i, ck) {   // ck(k): the move named by its mark
+    const id = s.id, A0 = TFJ_LS.ask[id]; if (!A0) return null;
+    const k = i + id.length, pick = L => L[k % L.length], n = P.n || 1, H = TFJ_LS.hint[id];
+    const ask = pick(A0).replace(/\{n\}/g, n), M = ck('ok'), X = ck('ng'), f = x => x.replace(/\{m\}/g, M).replace(/\{x\}/g, X), fg = x => f(x.replace(/\{x\}/g, 'その手'));   // (praise: your move is the right one — no red mark to name)
+    if (P.sc && !P.ok) {   // (the engine-scored strategy lessons: the openings' words, the lesson's question; the hint alternates)
+      const o = tfOpJa(E, P, '', k, ck); return Object.assign(o, { ask, hintTx: H && i % 2 ? pick(H) : o.hintTx });
+    }
+    const hintTx = H ? pick(H) : '';
+    if ((P.n || 1) > 1) {   // (N moves with a forced escape / capture: the runner names the green / red moves)
+      const esc = id === 'b_escape';
+      const G = esc ? ['脱出成功！ 角への道を2本作ったから、攻め手は1本しかふさげなかったね。', 'みごとに逃げ切った！ どう受けられても、王は角までたどり着けたの。', 'やった、王さまが角に到着！ 道を2本ずつ残していったのが勝因だね。']
+        : ['王さまをつかまえた！ 先に逃げ道をふさいでおいたから、どこへ逃げてもむだだったの。', 'みごとな包囲！ 王の行き先を1つずつ消していったのがうまい。', 'つかまえた！ かこみを閉じる前に、逃げ道をつぶしておいたのが決め手だね。'];
+      const N = esc ? [`{x}だと攻め手に道をふさがれて、${n}手では角まで行けないの。{m}から始めれば、ふさがれても次の道が開いたから。`, `{x}は相手にしっかり受けられちゃう。{m}から入れば、どう守られても逃げ道が残ったの。`, `おしかった！ {x}だと攻め手のふさぐ手が間に合っちゃう。{m}から入れば、相手がどこをふさいでも別の道が残ったね。`]
+        : [`{x}だと王に逃げ道が残って、${n}手ではつかまえられないの。{m}なら先に道をふさげたから。`, `{x}は王にすり抜けられちゃう。{m}から入れば、どこへ逃げてもかこめたの。`, `おしかった！ {x}だとかこみにすき間ができちゃう。{m}なら逃げ道を先に消せたね。`];
+      return { ask, hintTx, good: () => f(pick(G)), ng: () => f(pick(N)) };
+    }
+    const pos = E.Pos.from(P.s), ok = P.ok || [P.best], okS = new Set(ok), A = P.best != null && okS.has(P.best) ? P.best : ok[0], FA = tfLF(E, pos, A);
+    const FF = u => { try { return tfLF(E, pos, u); } catch (e) { return null; } };
+    const wrongs = () => pos.moves().filter(x => !okS.has(x));
+    const alt = (u, pref) => { if (u != null && !okS.has(u)) return u; const W = wrongs(); let w = null; if (pref) for (const x of W.slice(0, 160)) { const G = FF(x); if (G && pref(G)) { w = x; break; } } return w != null ? w : W.find(x => E.mFrom(x) === E.mFrom(A)) != null ? W.find(x => E.mFrom(x) === E.mFrom(A)) : W[0]; };
+    const say = (u0, pref, why, tail) => { const u = alt(u0, pref), G = u != null ? FF(u) : null; return f((G ? why(G) : '') + tail); };
+    let good, ng;
+    if (id === 'b_move') {
+      good = () => fg(pick(['{x}で王が端に着いた！ ここからは辺にそって角をねらえるね。', '端まで一直線！ とちゅうに駒がないから、王は止まらずに走れたの。', 'いい走りっぷり！ 端に着いた王は、つぎに角をねらえるから攻め手はたいへん。']));
+      ng = u => say(u, G => G.king && !G.edge, G => !G.king ? '{x}は王じゃない駒を動かしてるの。' : '{x}だと王はとちゅうで止まって、端まで届かないの。', pick(['{m}なら、駒のない列を通って端まで行けるから。', '{m}の方向は、端までずっと空いていたね。']));
+    } else if (id === 'b_cap' || id === 'b_hostile') {
+      const hp = FA.help, ho = id === 'b_hostile';
+      good = () => fg(ho && hp ? pick([`{x}で、${hp}とのあいだにはさんで取れた！ ${hp}は相手の駒と同じはたらきなの。`, `${hp}を味方につけたはさみ取り！ 片側に置くだけで取れちゃうのがポイント。`, `うまい！ {x}で${hp}と自分の駒ではさんで、1つ取ったね。`])
+        : FA.caps >= 2 ? `{x}で一度に${FA.caps}つも取れた！ 両側がそろう駒がふたつあったのね。` : pick(['{x}で、はさみ取り成功！ 相手の駒が1つ減ったね。', '両側から、ぴったりはさめた！ 取れるのは動かした側だけだから、いまがチャンスだったの。', '{x}で相手の駒をいただき！ 縦か横にきちんとはさめたね。']));
+      ng = u => say(u, G => !G.caps, G => G.caps ? '' : ho ? `{x}だと、${hp || '角や玉座'}の反対側があいたままで取れないの。` : pick(['{x}だと、相手の駒の両側がそろわないから取れないの。', '{x}では、はさむ形にならないね。']) + (G.scan().c ? 'しかも、相手にぎゃくに駒をはさまれちゃう。' : ''),
+        ho ? `{m}なら、${hp || '角や玉座'}と自分の駒ではさめたから。` : pick(['{m}なら、反対側の味方といっしょにはさめたから。', '{m}で動かせば、相手の駒が両側からはさまれる形だったの。']));
+    } else if (id === 'b_safe') {
+      good = () => fg(pick(['{x}なら、どの駒もはさまれない形になった！', 'これで相手は、どの駒もはさめないの。動かした先も安全だね。', '{x}で守りはばっちり！ 両どなりに相手が置けない場所を選べたね。']));
+      ng = u => say(u, G => G.scan().c > 0, G => G.scan().c ? pick(['{x}だと、相手に駒をはさまれて取られちゃう！', '{x}のあと、相手の次の手で駒を1つ取られちゃう。']) : '{x}だと、守りが少しあまくなるの。', pick(['{m}なら、どの駒もはさまれないから。', '{m}を指せば、相手はどの駒もはさめなかったね。']));
+    } else if (id === 't_shield') {
+      const c = FA.caps;
+      good = () => fg(pick([`{x}でシールドウォール！ 端の${c}枚をまとめて取れた。`, `列のふたがぴたっと閉まった！ 前がふさがれていたから、${c}枚いっぺんに取れたの。`, `みごとなまとめ取り！ {x}で端の列がまるごと消えたね。`]));
+      ng = u => say(u, G => G.caps < c, G => G.caps >= c ? '' : G.caps ? `{x}だと${G.caps}枚しか取れないの。` : '{x}だと列のふたが閉じないから、まとめて取れないの。', `{m}なら、列の両はしがふさがって${c}枚いっぺんに取れたから。`);
+    } else if (id === 't_tuichi' || id === 'v_tablut') {
+      const r = FA.routes, tb = id === 'v_tablut', goal = tb ? '端' : '角';
+      good = () => fg(FA.win ? `王がそのまま${goal}へ！ 脱出成功だね。` : pick([`{x}でトゥイチ！ ${goal}への道が${r}本できたから、攻め手は両方はふさげないの。`, `いい場所！ 王から${goal}へまっすぐ行ける道が${r}本。1手じゃ止められないね。`, `{x}で逃げ道が${r}本！ 次の手で${goal}に出られるの。`]));
+      ng = u => say(u, G => G.king && !G.win && G.routes < 2, G => G.win ? '' : G.scan().w ? '{x}だと、王が攻め手にはさまれちゃう！' : G.routes === 1 ? `{x}だと${goal}への道は1本だけ。攻め手にすぐふさがれちゃう。` : !G.king ? '{x}は王じゃない駒を動かしてるの。' : `{x}だと、王から${goal}へまっすぐ通る道がないの。`,
+        FA.win ? `{m}なら、そのまま${goal}へ着けたから。` : `{m}なら道が${r}本できて、攻め手は1手じゃふさぎきれないから。`);
+    } else if (id === 't_block') {
+      good = () => fg(pick(['{x}で逃げ道がふさがった！ 次に王が動いても、道を2本は作れないの。', 'ナイスブロック！ 王の道に駒を入れたうえに、トゥイチの心配もない形だね。', '{x}で王の走る道がとぎれた！ これで2手のうちには逃げられないの。']));
+      ng = u => say(u, G => G.scan().w || G.scan().tu, G => G.scan().w ? '{x}だと、王にそのまま角まで逃げられちゃう！' : G.scan().tu ? '{x}だと1本はふさげても、次に王が2本の逃げ道を作れちゃう。' : '{x}だと、王に2手で逃げ切られちゃう。', pick(['{m}なら、王の道がしっかり止まるから。', '{m}で道をふさげば、王はトゥイチも作れなかったの。']));
+    } else if (id === 't_fort') {
+      good = () => fg(FA.win === 'fort' ? pick(['{x}で砦の完成！ もう攻め手は壁をこわせないから、守り手の勝ち。', 'エッジフォートのできあがり！ 王は砦の中で動けて、壁の駒もはさまれないの。', '{x}で穴がふさがった！ こわせない砦で、守り手の勝ちだね。']) : '{x}で守り手の勝ち！ 王の守りは完ぺきだね。');
+      ng = u => say(u, null, G => G.scan().c ? '{x}だと壁の駒がはさまれて、砦がくずれちゃう。' : '{x}だと壁に穴が残って、攻め手に入りこまれちゃう。', pick(['{m}なら、穴がぴったりふさがるの。', '{m}で最後の1枚を入れれば、砦が完成したから。']));
+    } else if (id === 't_encircle') {
+      good = () => fg(FA.win === 'encircle' ? pick(['{x}で包囲の完成！ 守り手はどの駒も端へ出られないから、攻め手の勝ち。', '輪がぴったり閉じた！ ななめのつながりでも、ちゃんと閉じているの。', '{x}ですき間がなくなった！ 守り手をまるごとかこんで、攻め手の勝ちだね。']) : '{x}で攻め手の勝ち！ みごとな包囲だね。');
+      ng = u => say(u, null, G => G.scan().c ? '{x}だと輪の駒がはさまれて、穴があいちゃう。' : '{x}だと輪にすき間が残って、守り手が外へ出られちゃう。', pick(['{m}なら、さいごのすき間が閉じるから。', '{m}で閉じれば、守り手の出口はひとつもなかったの。']));
+    } else if (id === 'v_brandubh') {
+      good = () => fg(FA.win ? pick(['{x}で王さまをはさんだ！ 攻め手の勝ち！', '2枚でぴたっとつかまえた！ 小さな盤のブランドゥブならではだね。', FA.kingNearCorner ? '{x}で、角と攻め手で王をはさんだ！ 角も攻め手の味方なの。' : '{x}で勝負あり！ 王の向かい側に、ちゃんと駒を置けたね。']) : '{x}で王を追いつめた！');
+      ng = u => say(u, G => !G.win, G => '{x}だと王の反対側があいたままで、つかまえられないの。' + (G.scan().w ? 'しかも王に逃げられちゃう！' : ''), pick(['{m}なら、王を2枚ではさめたから。', '{m}で向かい側に置けば、王はもう逃げられなかったの。']));
+    }
+    return { ask, hintTx, good, ng, own: true };
+  }
   const TAFL = {
     LKEY: 'aicoding-tafl-lessons', OKEY: 'aicoding-tafl-open', data: null, I: null,
     load() {
@@ -2674,10 +2801,10 @@
       const intro = String(T('intro') || '').replace(/<p>[^<]*?[a-k](?:1[01]|[1-9])-[a-k](?:1[01]|[1-9])[^]*?<\/p>/g, '');
       const sp = { m: TFM('ok', lang), x: TFM('ng', lang) };
       const RU = (k, v) => fill(L((this.data.ls.rampUi || {})[k], lang), v || {});
-      return { id: s.id, title: T('title'), intro, ramp: s.ramp && s.ramp.length ? s.ramp.slice() : null, RU,   // (the warm-up: tafl/lessons.json step.ramp — texts without coordinates from atlas/nocoord/tafl.json)
+      return { id: s.id, title: T('title'), intro: lang === 'ja' && TFJ_LS.intro[s.id] || intro, ramp: s.ramp && s.ramp.length ? s.ramp.slice() : null, RU,   // (the warm-up: tafl/lessons.json step.ramp — texts without coordinates from atlas/nocoord/tafl.json)
         probs: (s.problems || []).map(P => { const me = P.s.side === 2 ? 2 : 1, good = P.ok || [P.best], seq = (P.n || 1) > 1;
           return { pos: { spec: P.s, me }, kind: seq ? 'tfseq' : 'best', P, n: P.n || 1, me, ask: T('goal', { n: P.n || 1 }), ans: seq ? null : P.best != null ? P.best : good[0], hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
-            why: '', good: () => T('why', sp), ng: () => T(seq ? 'ng' : 'why', Object.assign({ n: P.n || 1 }, sp)) }; }),
+            why: '', good: () => T('why', sp), ng: () => T(seq ? 'ng' : 'why', Object.assign({ n: P.n || 1 }, sp)) }; }).map((o, i) => { if (lang === 'ja' && E) try { Object.assign(o, tfLsJa(E, s, o.P, i, k => TFM(k, lang)) || {}); } catch (e) { console.warn('[lessons3d] tafl lesson', e); } return o; }),   // (2026-11-21 lesson loop: タフリン's question, hint, why / what yours misses)
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     points(P, m) {   // (= tafl/app.js problemPoints)
