@@ -55,7 +55,17 @@ static inline int lsb(u64 x) { return __builtin_ctzll(x); }
 #ifdef __wasm_simd128__
 #include <wasm_simd128.h>
 #endif
-#if defined(__wasm_simd128__) && !defined(GEN)
+/* GEN: how genMoves is computed. 2 (wasm's default since 2026-11-21): eight directions on plain 64-bit integers, about 2%
+   faster than the SIMD form on an M4 Pro (tools/variant-bench.js; the same moves, values and nodes); 0: the SIMD form
+   (wasm only, the default until then; tools/build-variants.sh g0); 1: Kogge-Stone on plain integers (native builds' default) */
+#ifndef GEN
+#ifdef __wasm_simd128__
+#define GEN 2
+#else
+#define GEN 1
+#endif
+#endif
+#if defined(__wasm_simd128__) && GEN == 0
 /* the board and its vertical mirror (byte swap) in the two lanes of one vector: a left shift by 8 / 9 / 7 is the direction
    +8 / +9 / +7 in lane 0 and -8 / -7 / -9 in lane 1, so three Kogge-Stone floods cover six directions */
 #define BSWAP2(v) wasm_i8x16_swizzle(v, wasm_i8x16_const(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8))
@@ -74,9 +84,9 @@ static u64 genMoves(u64 P, u64 O) {
   KSL1(1, I) KSR1(1, I)
   return r & E;
 }
-#elif defined(GEN) && GEN == 2
-/* (a test build only, tools/build-variants.sh g2: eight directions on plain 64-bit integers, two steps and a shared pair
-   mask per axis, the +1 direction by carry propagation — T. Okuhara's notes on Edax; said to beat SIMD on Arm) */
+#elif GEN == 2
+/* eight directions on plain 64-bit integers, two steps and a shared pair mask per axis, the +1 direction by carry
+   propagation (the form in T. Okuhara's notes on Edax's optimization) */
 static u64 genMoves(u64 P, u64 O) {
   const u64 mO = O & 0x7E7E7E7E7E7E7E7EULL;
   u64 f7, f9, f8, f1, p7, p9, p8, p1, m;
