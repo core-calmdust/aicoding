@@ -3254,7 +3254,9 @@
   function renderMuseum() {
     if (!window.AtlasMuseum) return;
     const room = muRoom; muRoom = null;
-    AtlasMuseum.render($('pg-museum'), { games: A_.GAMES, lang, gname, no: gno, art: g => artImg(g), open: (id, img, o) => { if (o && o.rule) { pref[id + ':rule'] = o.rule; if (o.size) pref[id + ':size'] = o.size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} } flyOpen(id, img); }, room,
+    AtlasMuseum.render($('pg-museum'), { games: A_.GAMES, lang, gname, no: gno, art: g => artImg(g), open: (id, img, o) => { if (o && o.rule) { pref[id + ':rule'] = o.rule; if (o.size) pref[id + ':size'] = o.size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} }
+        if (o && o.board) try { if (window.Table3D && Table3D.setBoard && Table3D.BOARDS && Table3D.BOARDS[id]) Table3D.setBoard(id, o.board); else localStorage.setItem('atlas-' + id + '-look', o.board); } catch (x) {}   // (a board of the game — air hockey: table hockey's エアホッケー台; tables3d.js may not be in yet: its own key)
+        flyOpen(id, img); }, room,
       page: r => { if (window.AtlasMissions) AtlasMissions.page(r); }, achDone: gid => ACH.filter(a => a.gid === gid && a.done).length,
       // (所蔵品: the museum's own Atlamo, ミュゼフク) give the items not owned yet; returns them as { id, name, img }
       grant: ids => { W = A_.load(); const nw = ids.filter(id => !W.owned.includes(id)); if (!nw.length) return []; nw.forEach(id => W.owned.push(id)); A_.save(W); try { refresh(); } catch (e) {}

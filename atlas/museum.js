@@ -31,7 +31,7 @@
   // the rooms, in order. src: scripts loaded the first time the room opens; ready(): the room's code is there
   const ROOMS = [
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
-    { id: 'tree', src: ['museum/tree.js?v=2'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
+    { id: 'tree', src: ['museum/tree.js?v=3'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
     { id: 'gallery', src: ['museum/gallery.js?v=36'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
   ];
   const KEY = 'atlas-museum-room';
