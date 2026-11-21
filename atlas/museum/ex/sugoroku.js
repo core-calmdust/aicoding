@@ -21,7 +21,7 @@
       const shitan = K.mat({ map: shT, roughnessMap: shR, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
       const inner = K.mat({ map: baseT, color: '#ffffff', roughness: .55, clearcoat: .2, clearcoatRoughness: .4 });
       const ivory = K.mat({ color: '#efe4cc', roughness: .4, clearcoat: .25, clearcoatRoughness: .4 });
-      const C = { iv: '#efe6d2', grn: '#5f9a78', bam: '#c98a3c', eb: '#1c0f0a', tan: '#b98a55' };
+      const C = { iv: '#eadfc6', grn: '#7d8f4c', bam: '#b9814a', eb: '#1c0f0a', tan: '#b98a55' };
       /* ---------- marquetry (after the detail photographs) ---------- */
       const flower = (g, x, y, r, k = 0) => { g.save(); g.translate(x, y); g.rotate(k);
         for (let i = 0; i < 5; i++) { g.rotate(Math.PI * 2 / 5); g.beginPath(); g.arc(r * .55, 0, r * .42, 0, 6.29); g.fillStyle = C.iv; g.fill(); g.strokeStyle = 'rgba(40,16,8,.55)'; g.lineWidth = r * .07; g.stroke(); }
@@ -53,6 +53,30 @@
         }
         if (opt.edge) { g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .18); g.fillRect(0, h - s * .18, w, s * .18); }
       };
+      // the band round the board's edge, composed as on the Shōsōin's frontal photographs: symmetric about a flowering sprig in the middle;
+      // outward from it a bird flying in, then thin stems curling into rings that hold in turn a five-petalled blossom, a tulip-like
+      // flower, a large eight-petalled rosette and a pointed ivory "shield", olive leaves between; on the short sides the birds are at the ends
+      const band = (g, w, h, s, long) => { g.drawImage(shT.image, 0, 0, w, h); const cy = h * .5, R = h * .33, ol = 'rgba(30,14,8,.6)';
+        const ring = (x, y, r, dir) => { g.strokeStyle = C.bam; g.lineWidth = s * .055; g.beginPath(); g.arc(x, y, r, dir > 0 ? .6 : Math.PI + .6, dir > 0 ? .6 + 5.3 : Math.PI + .6 + 5.3); g.stroke(); g.beginPath(); g.arc(x, y, r * .8, 2.2, 5.6); g.stroke(); };
+        const rosette = (x, y, r) => { g.save(); g.translate(x, y); for (let q = 0; q < 8; q++) { g.rotate(Math.PI / 4); g.beginPath(); g.moveTo(r * .3, 0); g.quadraticCurveTo(r * .62, r * .42, r, r * .12); g.lineTo(r * .86, 0); g.lineTo(r, -r * .12); g.quadraticCurveTo(r * .62, -r * .42, r * .3, 0); g.fillStyle = C.iv; g.fill(); g.strokeStyle = ol; g.lineWidth = s * .03; g.stroke(); }
+          g.beginPath(); g.arc(0, 0, r * .34, 0, 6.29); g.fillStyle = '#2a160e'; g.fill(); for (let q = 0; q < 6; q++) { g.rotate(Math.PI / 3); g.beginPath(); g.arc(r * .2, 0, r * .07, 0, 6.29); g.fillStyle = '#c0703c'; g.fill(); } g.restore(); };
+        const shield = (x, y, r) => { g.beginPath(); g.moveTo(x, y - r); g.bezierCurveTo(x + r * .5, y - r * .5, x + r * .95, y - r * .3, x + r * .8, y + r * .35); g.quadraticCurveTo(x + r * .4, y + r * .2, x, y + r * .6); g.quadraticCurveTo(x - r * .4, y + r * .2, x - r * .8, y + r * .35); g.bezierCurveTo(x - r * .95, y - r * .3, x - r * .5, y - r * .5, x, y - r); g.fillStyle = C.iv; g.fill(); g.strokeStyle = ol; g.lineWidth = s * .03; g.stroke();
+          leaf(g, x - r * .45, y + r * .75, r * .5, .5); leaf(g, x + r * .45, y + r * .75, r * .5, Math.PI - .5); };
+        const tulip = (x, y, r, a) => { g.save(); g.translate(x, y); g.rotate(a); [-.55, 0, .55].forEach(t => { g.save(); g.rotate(t); g.beginPath(); g.moveTo(0, r * .5); g.quadraticCurveTo(r * .42, 0, 0, -r); g.quadraticCurveTo(-r * .42, 0, 0, r * .5); g.fillStyle = C.iv; g.fill(); g.strokeStyle = ol; g.lineWidth = s * .03; g.stroke(); g.restore(); }); g.beginPath(); g.arc(0, r * .5, r * .2, 0, 6.29); g.fillStyle = '#2a160e'; g.fill(); g.restore(); };
+        const sprig = (x) => { g.strokeStyle = C.bam; g.lineWidth = s * .055; g.beginPath(); g.moveTo(x, h * .9); g.lineTo(x, cy); g.moveTo(x, h * .7); g.quadraticCurveTo(x - R * .5, h * .62, x - R * .75, cy - R * .1); g.moveTo(x, h * .7); g.quadraticCurveTo(x + R * .5, h * .62, x + R * .75, cy - R * .1); g.stroke();
+          flower(g, x, cy - R * .45, R * .42); flower(g, x - R * .8, cy - R * .2, R * .38, .4); flower(g, x + R * .8, cy - R * .2, R * .38, .9); leaf(g, x - R * .55, h * .82, R * .5, -.4); leaf(g, x + R * .55, h * .82, R * .5, Math.PI + .4); leaf(g, x - R * 1.5, cy + R * .4, R * .5, .3); leaf(g, x + R * 1.5, cy + R * .4, R * .5, Math.PI - .3); };
+        const half = w / 2, items = long ? [[.115, 'bird'], [.225, 'bud'], [.33, 'blossom'], [.45, 'tulip'], [.585, 'rosette'], [.71, 'shield'], [.82, 'blossom'], [.93, 'bud']] : [[.2, 'tulip'], [.38, 'rosette'], [.56, 'shield'], [.7, 'bud'], [.87, 'bird']];
+        [-1, 1].forEach(sd => { const X = u => half + sd * u * half;
+          // the stem: a long wave from the middle to the end
+          g.strokeStyle = C.bam; g.lineWidth = s * .055; g.beginPath(); for (let u = .03; u <= .98; u += .004) { const y = cy + Math.sin(u * (long ? 26 : 15)) * h * .2; u > .031 ? g.lineTo(X(u), y) : g.moveTo(X(u), y); } g.stroke();
+          items.forEach(([u, kind], i) => { const x = X(u), y = cy + (i % 2 ? .06 : -.06) * h;
+            if (kind === 'bird') { bird(g, x, cy + h * .06, h * .017, sd > 0 ? !long : long); return; }
+            if (kind === 'bud') { [[-.3, -.2], [.3, .25]].forEach(([dx, dy]) => { g.beginPath(); g.arc(x + dx * R, y + dy * R, R * .2, 0, 6.29); g.fillStyle = C.iv; g.fill(); g.strokeStyle = ol; g.lineWidth = s * .03; g.stroke(); g.beginPath(); g.arc(x + dx * R, y + dy * R, R * .08, 0, 6.29); g.fillStyle = '#2a160e'; g.fill(); }); leaf(g, x, y - R * .7, R * .45, .2 * sd); return; }
+            ring(x, y, R * (kind === 'rosette' ? 1.02 : .86), sd * (i % 2 ? 1 : -1));
+            if (kind === 'rosette') rosette(x, y, R * .82); else if (kind === 'shield') shield(x, y - R * .1, R * .6); else if (kind === 'tulip') tulip(x, y + R * .1, R * .62, sd * .3); else flower(g, x, y, R * .55, i);
+            leaf(g, x + sd * R * 1.25, y + (i % 2 ? -1 : 1) * R * .75, R * .5, (i % 2 ? -.6 : .6) * sd + (sd < 0 ? Math.PI : 0)); leaf(g, x - sd * R * 1.2, y + (i % 2 ? 1 : -1) * R * .8, R * .42, (i % 2 ? .7 : -.7) * sd + (sd < 0 ? Math.PI : 0)); }); });
+        sprig(half);
+        g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .14); g.fillRect(0, h - s * .14, w, s * .14); };
       const inlC = null;   // (2026-11-22: a layout lifted from the frontal photographs was tried and dropped — at their resolution it came out broken and scratchy; the marquetry is drawn)
       const mk = (t, base) => K.mat({ map: t, color: '#ffffff', roughness: .48, clearcoat: .3, clearcoatRoughness: .35 });
       /* ---------- the face ---------- */
@@ -77,7 +101,7 @@
       const add = (geo, m, x, y, z) => { const o = new TT.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; G.add(o); return o; };
 
       /* ---------- the board's edge (the slab with its rim, one band of marquetry outside) ---------- */
-      const edgeTex = (len, seed) => { const s = 2048 / len; return K.tex(2048, Math.round(EDGE * s), (g, w, h) => { if (!inlC) return scroll(g, w, h, s, seed, shT, { edge: true, per: 5.2 }); g.drawImage(shT.image, 0, 0, w, h);  g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .14); g.fillRect(0, h - s * .14, w, s * .14); }); };
+      const edgeTex = (len, seed) => { const s = 2048 / len; return K.tex(2048, Math.round(EDGE * s), (g, w, h) => { if (!inlC) return band(g, w, h, s, len > 40); g.drawImage(shT.image, 0, 0, w, h);  g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .14); g.fillRect(0, h - s * .14, w, s * .14); }); };
       const eL = mk(edgeTex(L, 1)), eW = mk(edgeTex(W, 2));
       const SL = EDGE - RIM;   // the slab; the face is at BASE + SL
       // the half-moons: a raised ivory arc in the middle of each long side, its horns toward the rim, the hollow facing the players' edge
@@ -90,6 +114,7 @@
       face.polygonOffset = true; face.polygonOffsetFactor = -2; face.polygonOffsetUnits = -2;
       add(new TT.PlaneGeometry(IL, IW), face, 0, BASE + SL + .004, 0).rotation.x = -Math.PI / 2;
       [eL, eW].forEach(m => { m.map = m.map.clone(); m.map.repeat.set(1, RIM / EDGE); m.map.offset.set(0, SL / EDGE); m.map.needsUpdate = true; });
+      eW.map.repeat.x = (W - RT * 2) / W; eW.map.offset.x = RT / W;   // (the short walls stand between the long ones, so they are shorter than the slab below: the same picture, cut to match — it was stretched and the band broke at the join)
       const rimTop = K.mat({ map: K.tex(8, 64, (g, w, h) => { g.fillStyle = '#2c1810'; g.fillRect(0, 0, w, h); g.fillStyle = '#e4d3aa'; g.fillRect(0, h * .3, w, h * .4); }), color: '#ffffff', roughness: .45, clearcoat: .25 });
       // the wall's inner face (it stands at a right angle to the field): a spare run of thin stem, a small flower and a few green leaves
       // at wide intervals — much quieter than the outside (the overall photograph)
