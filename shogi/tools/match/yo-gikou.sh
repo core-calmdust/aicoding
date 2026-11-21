@@ -22,6 +22,8 @@ HERE=$(cd "$(dirname "$0")" && pwd); SHOGI=$(cd "$HERE/../.." && pwd)
 NODES=${NODES:-2200000}; FULL=${FULL:-5000}; GAMES=${GAMES:-4}; P=${P:-6}; GW=${GW:-$HOME/shogi-gikou-work/gikou}
 WORK=${WORK:-$HOME/shogi-yo-ours}; ARCH=${ARCH:-SFNN_ka2_2048_8_64_progress8}; mkdir -p "$WORK"
 OPP=${OPP:-gikou}; US=${US:-yo}; ONODES=${ONODES:-$NODES}
+[ "$OPP" = micro ] && [ -z "$MICRO" ] && { echo "OPP=micro needs MICRO=<the net's folder> on the same line"; exit 1; }
+echo "(opponent: $OPP; our side: $US${MICRO:+; net: $MICRO})"
 [ "$OPP" = micro ] || [ -x "$GW/release" ] || { echo "Gikou is not built yet: run shogi/tools/match/run-gikou.sh once"; exit 1; }
 CPU=AVX2; [ "$(uname -m)" = arm64 ] && CPU=APPLEM1
 J=$(getconf _NPROCESSORS_ONLN)
@@ -42,8 +44,8 @@ if [ -n "$MICRO" ]; then
   YO="$WORK/yo-$ARCH"; TAG=micro; WHAT="YaneuraOu + $(basename "$MICRO") ($ARCH)"
   if [ ! -x "$YO" ]; then
     [ -d "$WORK/src-new" ] || git clone -q --depth 1 https://github.com/yaneurao/YaneuraOu "$WORK/src-new"
-    make -C "$WORK/src-new/source" clean YANEURAOU_EDITION=YANEURAOU_ENGINE_$ARCH > /dev/null 2>&1 || true
-    make -C "$WORK/src-new/source" -j"$J" normal COMPILER=clang++ TARGET_CPU=$CPU YANEURAOU_EDITION=YANEURAOU_ENGINE_$ARCH > "$WORK/build-new.log" 2>&1 || { tail -20 "$WORK/build-new.log"; exit 1; }
+    make -C "$WORK/src-new/source" clean PYTHON=python3 YANEURAOU_EDITION=YANEURAOU_ENGINE_$ARCH > /dev/null 2>&1 || true
+    make -C "$WORK/src-new/source" -j"$J" normal COMPILER=clang++ TARGET_CPU=$CPU PYTHON=python3 YANEURAOU_EDITION=YANEURAOU_ENGINE_$ARCH > "$WORK/build-new.log" 2>&1 || { tail -20 "$WORK/build-new.log"; exit 1; }
     cp "$WORK/src-new/source/YaneuraOu-by-gcc" "$YO"
   fi
   UOPT="--usopt EvalDir=$ED"; [ -n "$FVS" ] && UOPT="$UOPT --usopt FV_SCALE=$FVS"
