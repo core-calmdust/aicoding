@@ -82,6 +82,28 @@ function scoreLesson(id, L) {
     if (!good) P(3, `q${i + 1}: no praise / why`);
   });
   if (asks.length >= 4 && new Set(asks).size === 1) P(4, 'every question worded the same');
+  // (2026-11-21 22:56 the user, gomoku rated 100: "淡々としている… プレイヤーを応援している感情が感じられない"
+  //  e.g. not 「5つ並んだ！ ぼく、踊っちゃう」 but 「5つ並んだよ！ そうそう、その調子！ どんどん行こう！」)
+  // the guide cheers the player on: praise speaks to the player, a miss is softened and pushes on, the same phrase is not stamped on every bubble
+  // (2026-11-21 user: the first lesson must first say what the game is and how it is won — short is fine)
+  if (L.first && !(/(ゲーム|将棋)/.test(plain(L.intro)) && /(勝ち|勝つ|負け)/.test(plain(L.intro)))) P(15, 'first lesson: no "what this game is / how to win"');
+  const goods = L.probs.map(p => plain(p.good)).filter(Boolean), ngs = L.probs.map(p => plain(p.ng)).filter(Boolean);
+  const CHEER = /(その調子|この調子|いいね|いい感じ|ナイス|さすが|やったね|やった！|すごい|上手|じょうず|ばっちり|お見事|完璧|天才|できたね|できた！|どんどん|次も|つぎも|自信|その感じ|そうそう|わかってきた|冴えて|バッチリ|すばらしい|すてき|いい目|いい手|よく見つけ|よく気づ|見事)/;
+  const PUSH = /(どんどん|次も|つぎも|この調子|その調子|行こう|いこう|進もう|続けよう|もう1問|もう一問|次は|つぎは|まだまだ|その勢い|いけるよ|いけるね|できるよ|楽しみ)/;
+  const SOFT = /(おしい|惜しい|大丈夫|だいじょうぶ|ドンマイ|気にしない|次は|つぎは|今度は|今度こそ|もう一回|もう1回|あと少し|あと一歩|いい線|いっしょに|一緒に|よくある|みんな|覚えておけば|わかれば|これで覚え|平気)/;
+  if (goods.length >= 2) {
+    const r = goods.filter(g => CHEER.test(g)).length / goods.length; if (r < 0.8) P(Math.round((0.8 - r) * 20) + 3, `praise cheers the player in only ${Math.round(r * 100)}%`);
+    if (!goods.some(g => PUSH.test(g)) && goods.length >= 3) P(3, 'praise never urges the player on (次も・その調子・どんどん…)');
+    const self = goods.filter(g => /(ぼく|わたし|あたし|おれ|オイラ|わし|ボク)[、は,]?(?!.*(きみ|君))/.test(g)).length; if (self / goods.length > 0.3) P(4, 'praise is about the guide, not the player');
+  }
+  if (ngs.length >= 2) { const r = ngs.filter(g => SOFT.test(g)).length / ngs.length; if (r < 0.5) P(Math.round((0.5 - r) * 16) + 3, `a miss is cheered up in only ${Math.round(r * 100)}%`); }
+  { const seen = new Map(); for (const t of all) for (const sn of new Set(sents(t).map(x => x.replace(/^[^、！]{1,5}(、|！ ?)/, '').trim()).filter(x => x.length >= 8))) seen.set(sn, (seen.get(sn) || 0) + 1);
+    const rep = [...seen].filter(([, n]) => n >= 2); if (rep.length) P(Math.min(15, 4 * rep.length + 2), 'the same line twice in a lesson: ' + rep[0][0].slice(0, 24));
+    // (2026-11-21 23:05 the user: 「安全な線があるうちは、まずはそれを使うのが基本」みたいな表現の繰り返しが最初からオンパレード — 同じセリフを繰り返さない)
+    // the same idea reworded a little still reads as a repeat: a 10-char run (punctuation dropped) in 3+ bubbles
+    const gram = new Map(); all.forEach(t => { const x = plain(t).replace(/[\s、。！？!?「」（）()・…〜♪]/g, ''); const g = new Set(); for (let k = 0; k + 10 <= x.length; k++) g.add(x.slice(k, k + 10)); g.forEach(v => gram.set(v, (gram.get(v) || 0) + 1)); });
+    const rg = [...gram].filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1]); if (rg.length) P(Math.min(12, 4 + Math.floor(rg.length / 3)), `the same words in ${rg[0][1]} bubbles: ` + rg[0][0]); }
+  { const flat = all.filter(t => !/[！？♪]/.test(plain(t))).length / Math.max(1, all.length); if (all.length >= 5 && flat > 0.45) P(Math.round((flat - 0.45) * 20) + 3, `${Math.round(flat * 100)}% of bubbles flat (no ！？)`); }
   const lost = pen.reduce((a, [n]) => a + n, 0);
   return { score: Math.max(0, 100 - lost), pen };
 }
@@ -103,8 +125,8 @@ function scoreLesson(id, L) {
     const f = (x, p) => { try { return typeof x === 'function' ? x.call(p, p && p.ans, p) : x; } catch (e) { return ''; } };   // (called as the runner does, p.good(u): go's use `this`)
     const out = {};
     for (const id of (games.length ? games : Object.keys(__LD))) { const D = __LD[id]; out[id] = [];
-      try { await D.load('ja'); await __NC.load(id); for (const it of D.list('lesson', 'ja')) { let s; try { s = __NC.apply(id, await D.lesson(it.key, 'ja', __X(id))); } catch (e) { continue; } if (!s) continue;
-        out[id].push({ key: it.key, title: it.title, intro: say(s.intro, id), ramp: (s.ramp || []).flatMap(r => ['t', 'b', 'g', 'h', 'y'].map(f => r[f] && (typeof r[f] === 'string' ? r[f] : r[f].ja || r[f].en)).filter(x => x && !/^[a-o0-9\s,]+$/.test(String(x)))).map(x => say(D.rampTx ? D.rampTx(x, 'ja') : x, id)), probs: (s.probs || []).map(p => ({ ask: say(p.ask, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id) })) }); } } catch (e) { out[id].push({ err: String(e) }); }
+      try { await D.load('ja'); await __NC.load(id); for (const it of D.list('lesson', 'ja')) { let s; try { s = __NC.apply(id, await D.lesson(it.key, 'ja', __X(id))); if (window.AtlasGameIntroJa) window.AtlasGameIntroJa(id, it.key, 'lesson', s); } catch (e) { continue; } if (!s) continue;
+        out[id].push({ first: !out[id].length, key: it.key, title: it.title, intro: say(s.intro, id), ramp: (s.ramp || []).flatMap(r => ['t', 'b', 'g', 'h', 'y'].map(f => r[f] && (typeof r[f] === 'string' ? r[f] : r[f].ja || r[f].en)).filter(x => x && !/^[a-o0-9\s,]+$/.test(String(x)))).map(x => say(D.rampTx ? D.rampTx(x, 'ja') : x, id)), probs: (s.probs || []).map(p => ({ ask: say(p.ask, id), hint: say(p.hintTx, id), good: say(f(p.good, p) || f(p.why, p), id), ng: say(f(p.ng, p) || p.ngTx, id) })) }); } } catch (e) { out[id].push({ err: String(e) }); }
       // (2026-11-21 ユーザー：定跡・定石の問題もレッスンと同じく採点) the openings: intro, the study's notes, then the problems (no ask → the guide's opGoal, as the runner)
       if (!D.opening) continue; const oid = id + '/open', X = __X(id); out[oid] = [];
       try { for (const it of D.list('open', 'ja')) { let s; try { s = __NC.apply(id, await D.opening(it.key, 'ja')); } catch (e) { continue; } if (!s) continue;

@@ -18,7 +18,7 @@
   const TX = {
     ja: { start: 'はじめる', next: '次へ', practice: '練習へ', hint: 'ヒント', again: 'もう一度', nextL: '次のレッスン', result: '結果を見る', loading: '準備中…',
       good: ['正解！', 'いいね！', 'おみごと！'], partial: 'いい手だね。でも一番は光っている手だよ。', wrong: 'おしい！ 正解は光っている手だよ。', pts: '{n}点',
-      pass: '合格！ {p} / {m}点', fail: '{p} / {m}点。合格は{q}点。もう一度挑戦しよう！', step: '{i} / {n}手目', end: '手順はここまで。つぎは練習問題に挑戦しよう！', endOnly: '基本の手順はここまで。おつかれさま！',
+      pass: '合格！ {p} / {m}点。よくがんばったね、この調子で次のレッスンもいこう！', fail: '{p} / {m}点。合格は{q}点、あと少し！ もう一度いってみよう！', step: '{i} / {n}手目', end: '手順はここまで。つぎは練習問題に挑戦しよう！', endOnly: '基本の手順はここまで。おつかれさま！',
       tsume: '<b>{n}手詰め</b>。王手を続けて玉を詰ませよう！', escaped: '玉に逃げられちゃった…', hintSay: '光っているところに注目してみて。', opGoal: 'この局面、強い人が一番よく指した手はどれかな？', drill: 'このレッスンはフル機能版で遊べます。', full: 'フル機能で開く' },
     en: { start: 'Start', next: 'Next', practice: 'Practice', hint: 'Hint', again: 'Retry', nextL: 'Next lesson', result: 'See result', loading: 'Setting up…',
       good: ['Correct!', 'Nice!', 'Well done!'], partial: 'A decent move — but the glowing one is best.', wrong: 'Close! The glowing move is the answer.', pts: '{n} pts',
@@ -1312,6 +1312,20 @@
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
   const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=19').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  // (2026-11-21 user: 「ドット＆ボックスの初回レッスンも、これはどういうゲームなのかの説明がない。まずは短くても良いからそこから」)
+  // the first lesson of a game opens with what the game is and how it is won, in the guide's voice (ja; the games whose first intro lacks it)
+  const GAME_JA = {
+    dots: 'ぼくはハコピヨ！ ドット・アンド・ボックスは、2人で交互に点と点を線でつないで、箱を取り合うゲームなんだ。最後に箱を多く取ったほうが勝ち！ いっしょにやってみよう！',
+    morris: 'ホー、ぼくはモリフク。ナイン・メンズ・モリスは、9個ずつの駒を交互に置いて、置き終わったら動かしていくゲームなんだ。自分の駒を線の上に3つ並べると<b>ミル</b>！ 相手の駒を1つ取れる。相手の駒を2つまで減らすか、動けなくしたら勝ち。さあ、始めよう！',
+    mancala: 'ぼくはマンカラビ！ マンカラは、種をまいて自分の<b>ストア</b>（大きな穴）に集めていくゲーム。最後に多く集めたほうが勝ちなんだ。いっしょにやってみよう！',
+    tafl: 'わたしはタフリン！ タフルは、真ん中の<b>王さま</b>を守る側と、まわりから攻める側に分かれて遊ぶゲームなの。王さまが盤の角まで逃げきれば守る側の勝ち、王さまをつかまえたら攻める側の勝ち。駒は2つではさんで取るんだ。いっしょにやってみよう！',
+    shogi: 'わたしはショウギツネ！ 将棋は、2人で交互に駒を動かして、相手の<b>玉</b>を逃げられなくしたら（<b>詰み</b>）勝ちのゲームだコン。取った駒は自分の駒として使えるのが楽しいところ！ まずは駒の動きから覚えよう。',
+    reversi: 'ぼくはリバガメ！ リバーシは、黒と白が交互に石を置いて、自分の色を広げていくゲーム。最後に自分の色の石が多いほうが勝ちなんだ。いっしょにやってみよう！',
+    backgammon: 'ワン！ ぼくはダイスン。バックギャモンは、サイコロをふって15個の駒を進め、ぜんぶ自分のゴールまで運んで盤から先に出しきったほうが勝ちのレースゲームなんだワン。相手の駒が1つだけの所に止まると、その駒をふり出しに戻せる！ さあ、始めよう！',
+    amazons: 'ケロ！ アマゾンズは、駒を動かしたあとに<b>矢</b>を放って、そのマスをふさいでいくゲームなんだ。打つたびに盤がせまくなって、先に動けなくなったほうの負け。相手を囲いこめるかな？ いっしょにやってみよう！',
+    connect4: 'ポトンウサだよ！ コネクトフォーは、2人で交互に、列の上からコマを落としていくゲーム。'
+  };
+  window.AtlasGameIntroJa = (id, key, kind, L) => { if (kind === 'open' || String(key) !== '0' || !GAME_JA[id] || !L || L.__gi) return L; L.__gi = true; L.intro = GAME_JA[id] + '<br>' + (L.intro || ''); return L; };
   function ncApply(id, L2) {
     const T = NC[id] || {}; if (!L2 || !L2.ramp) return L2;
     L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v && !(o[f] && o[f].__voice)) o[f] = v; }); return o; });   // (a guide's own line stays)
@@ -4060,7 +4074,7 @@
     function open(key) {
       const L2 = ctx.kind === 'open' ? D.opening(key, ctx.lang) : D.lesson(key, ctx.lang, X);
       if (!L2) { say(X.drill); act(X.full, {}); $('[data-a=next]').onclick = () => ctx.onFull && ctx.onFull(ctx.kind, key); return; }
-      cur = Object.assign(ncApply(id, L2), { key, k: 0, res: [], si: 0 }); head(cur.title); choices(null);
+      cur = Object.assign(ncApply(id, L2), { key, k: 0, res: [], si: 0 }); if (ctx.lang === 'ja') window.AtlasGameIntroJa(id, key, ctx.kind, cur); head(cur.title); choices(null);
       if (ctx.kind !== 'open' && (EASY2[id] || []).includes(String(key)) && cur.probs && cur.probs.length > 2) cur.probs = cur.probs.slice(0, 2);   // (2026-11-21 ユーザー：簡単すぎる初級の問題は2問でクリア)
       phase = 'intro'; dots();
       say(`${fill((TOPIC[ctx.lang] || TOPIC.en)[ctx.kind === 'open' ? 1 : 0], { t: `<b>${cur.title}</b>` })}<br>${cur.intro || ''}`);   // (「今日は『ルーク』について学ぶよ！」 — not the bare title, 2026-11-14)
@@ -4291,7 +4305,7 @@
     }
     function finish() {
       phase = 'done'; dots(); choices(null);
-      const max = cur.probs.length * PTS, pts = cur.res.reduce((a, b) => a + (b || 0), 0), q = Math.ceil(max * PASS), pass = cur.save(pts, max);
+      const max = cur.probs.length * PTS, pts = cur.res.reduce((a, b) => a + (b || 0), 0), q = Math.ceil(max * PASS), pass = cur.save(Math.round(pts * 100 / max), 100) || pts >= q;   // (2026-11-21 user: 40 / 40 read 「合格は30点。もう一度挑戦しよう！」 — some saves pass at a fixed 75 of 100, but EASY2 lessons have 2 problems = 40: scored on 100 now)
       say(pass ? fill(X.pass, { p: pts, m: max }) : fill(X.fail, { p: pts, m: max, q }));
       if (pass && window.AtlasConfetti) try { AtlasConfetti(70); } catch (e) {}
       if (pass) setTimeout(fanfare, 350);   // (2026-11-12) the lesson passed: a little fanfare
