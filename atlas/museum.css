@@ -259,3 +259,8 @@ html.exv-open{overflow:hidden}
 .gxguide>i{font-style:normal;font:700 16px var(--round);color:#9a6a32;flex:none}
 @media (max-width:819px){.gxav img{width:40px;height:40px;margin-inline-end:-12px}.gxgt small{font-size:12px}.gxguide{gap:10px;padding:8px 12px 8px 6px}}
 .exspot[hidden]{display:none}
+
+/* 所蔵品で遊ぶ (2026-11-22): the button on an exhibit's page that puts its board on the table */
+.explay{display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;margin:2px 0 16px;padding:11px 14px;border:0;border-radius:14px;background:var(--coral,#e8604a);color:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 3px 0 var(--coral2,#b9432f)}
+.explay small{font-weight:600;font-size:12px;opacity:.9}
+.explay:active{transform:translateY(2px);box-shadow:0 1px 0 var(--coral2,#b9432f)}

@@ -1,6 +1,6 @@
 /* Museum "Collection" texts (Brazilian Portuguese). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).pt = {
-  ui: { flip: 'Virar', guideH: 'Seu guia, Museoruja', guide: 'Percorra o acervo e Museoruja vem te ver, cada vez mais arrumada', gift: 'Chegou um novo Atlamo!', sub: "Tesouros da história dos jogos guardados pelos museus do mundo. Cada peça foi recriada em 3D: gire-a nas mãos e observe de perto.", collection: "Acervo", special: "Exposição especial", lock: "Abre com {n} conquistas de {g}", loading: "Preparando a vitrine…", fail: "Não foi possível carregar a peça",
+  ui: { play: 'Jogar neste tabuleiro', play_ballinderry: 'Brandubh (7×7) · contra a IA', flip: 'Virar', guideH: 'Seu guia, Museoruja', guide: 'Percorra o acervo e Museoruja vem te ver, cada vez mais arrumada', gift: 'Chegou um novo Atlamo!', sub: "Tesouros da história dos jogos guardados pelos museus do mundo. Cada peça foi recriada em 3D: gire-a nas mãos e observe de perto.", collection: "Acervo", special: "Exposição especial", lock: "Abre com {n} conquistas de {g}", loading: "Preparando a vitrine…", fail: "Não foi possível carregar a peça",
     hint: "Arraste para girar · roda para zoom · números para detalhes", hintT: "Arraste para girar · pinça para zoom", spin: "Girar devagar", reset: "Vista inicial", close: "Fechar",
     date: "Data", where: "Achado / procedência", museum: "Acervo", mat: "Materiais", size: "Tamanho", look: "Detalhes", aboutModel: "Sobre este modelo 3D", sources: "Fontes", play: "Jogar {g}" },
   ex: {

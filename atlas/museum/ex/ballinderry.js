@@ -16,6 +16,8 @@
   // the sunk panel, off the same photograph (1024², everything inside the frame): red = how light or dark the wood is there (128 = the
   // usual tone: the grain, the stains, the incised rings, the split), green = pale splintered wood, blue = the holes, alpha = the fine
   // relief only (128 = level)
+  // the 49 holes as they are on the photograph (hand-bored, not quite in line): cm from the panel's centre, x to the right, z downward, row by row
+  const HOLES = [[-7.64,-7.79],[-5.13,-7.82],[-2.54,-7.88],[0.06,-7.62],[2.81,-7.83],[5.53,-7.81],[7.72,-8.11],[-7.37,-5.62],[-5.04,-5.68],[-2.52,-5.6],[0.02,-5.28],[2.93,-5.7],[5.68,-5.69],[8.09,-5.75],[-7.48,-2.36],[-5.02,-2.46],[-2.35,-2.56],[0.2,-2.7],[2.75,-2.47],[5.57,-2.56],[8.11,-2.51],[-7.62,0.09],[-5.01,0.38],[-2.48,0.41],[0.01,0.15],[2.87,-0.01],[5.38,-0.07],[8.01,-0.1],[-7.62,2.75],[-5.1,2.96],[-2.18,3.08],[0.09,2.8],[3.27,2.69],[5.8,2.57],[7.97,2.64],[-7.55,5.51],[-5.25,5.55],[-2.59,5.47],[0.13,5.36],[3.34,5.48],[5.57,5.4],[8.07,5.1],[-7.58,7.98],[-5.16,8.07],[-2.59,8.14],[0.26,7.92],[3.02,7.98],[5.59,7.99],[8.19,8.05]];
   const HERE = (document.currentScript && document.currentScript.src) || location.href; let WEAR = null, FRAME = null;
   (window.AtlasEx = window.AtlasEx || {}).ballinderry = {
     ready: () => { const get = (f, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/' + f, HERE).href; setTimeout(res, 8000); });
@@ -92,6 +94,7 @@
       const knobM = K.mat({ map: frameMap, color: '#d8d8d8', roughness: .4 });
       const nk = add(new TT.CylinderGeometry(.62, .75, 1.3, 18), knobM, 0, T1 * .5, S / 2 + .55); nk.rotation.x = Math.PI / 2;
       const ball = add(new TT.SphereGeometry(1.35, 28, 18), knobM, 0, T1 * .5, S / 2 + 2.2); ball.scale.set(1, .82, 1);
+      G.userData.holes = HOLES.map(([u, v]) => [v, -u]);   // (for play: in the model's own axes — the head at −x)
       return G;
     },
   };
