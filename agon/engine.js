@@ -130,7 +130,7 @@ function netBytes() {
   if (NET_B) return NET_B;
   let b64 = '';
   try {
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('net.js?v=1'); b64 = self.AG_NET || ''; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('net.js?v=2'); b64 = self.AG_NET || ''; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { const f = (typeof process !== 'undefined' && process.env && process.env.AG_NETJS) || require('path').join(__dirname, 'net.js'); delete require.cache[require.resolve(f)]; require(f); b64 = g.AG_NET || ''; } finally { if (had) g.self = old; else delete g.self; } }
   } catch (e) { b64 = ''; }
   if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AG_NONET)) return null;
@@ -622,7 +622,8 @@ function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
   const L = PRO_CFG || LEVELS[level] || LEVELS[10];   // (PRO_CFG: the page's PRO mode, shared/proset.js ladder())
-  useNet(!!L.s);
+  useNet(!!(L.s && L.ms));   // (2026-11-22: the net for the levels by time and the analysis; the levels by depth / positions keep the hand-made
+                             //  evaluation their strengths were measured with — MODEL_CARD「採用したネット」)
   const { pos } = replay(start, moves), hist = histOf(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
@@ -704,8 +705,10 @@ function pvOf(start, moves, m, plies) {
 // node after the root and m.line searched to depth m.d in the window (m.a, m.b); mtKids: that node's moves in this engine's
 // order; mtFin: the job's reply from the threads' raw result (the same as the one-thread worker's).
 let mtRule = null;
+// the threads' tasks carry the job's fields (shared/mtsplit.js base): a level / setting by time and the analysis use the net
+function mtNet(m) { const L = m.cfg || (m.level ? LEVELS[m.level] : null); useNet(m.job === 'think' || L ? !!(L && L.s && L.ms) : true); }
 function mtNode(m) {
-  useNet(true);
+  mtNet(m);
   if (SH !== null) SH.salt = SALT[RK] | 0;
   else if (mtRule !== RK) { ttClear(); mtRule = RK; }
   const line = m.line || [], root = replay(m.start, m.moves).pos, { pos, hashes } = replay(m.start, m.moves.concat(line)); hashes.pop();
@@ -718,6 +721,7 @@ const lazyOf = (m, L, dflt) => SH !== null && !L.nk && (L.ms || L.dx) ? (m.lazy 
 function mtPlan(m) {
   const { pos } = replay(m.start, m.moves), all = pos.moves(), inf = WIN + 1;
   rootSide = pos.side;
+  mtNet(m);
   if (m.job === 'think') {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
     if (all.length < 2 || !L.s || (L.book && !m.start && BOOKS[RK] && BOOKS[RK].pos[m.moves.join(',')])) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
@@ -762,7 +766,7 @@ function mtLazy(m) {   // (shared/tools/mtlazy.js: one Lazy SMP thread's search 
 // a Lazy SMP helper (shared/mtsplit.js shared mode, 'mthelp'): iterative deepening of the root on the shared table — one ply
 // deeper every other helper (k), from a root order rotated by k >> 1 — until the page stops it (or m.until)
 function mtHelp(m) {
-  useNet(true);
+  mtNet(m);
   let total = 0;
   for (let d = 1; d <= (m.maxD || 60); d++) {
     const r = mtLazy(Object.assign({}, m, { d: d + (m.k & 1), rot: m.k >> 1 }));

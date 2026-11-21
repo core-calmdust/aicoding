@@ -117,7 +117,7 @@ function waRule() {   // (setRule / setW / setOpt: the rule, the weights, the op
     C.x.setup(R.rook ? 1 : 0, R.leap ? 1 : 0, R.delay ? 1 : 0, R.corner ? 1 : 0, R.tie ? 1 : 0, R.stuck === 'lose' ? 1 : 0, ADV_KOMI, TIE_W);
     C.x.setopt(NULLMOVE ? 1 : 0, QS_STANDPAT ? 1 : 0, ASP);
     C.wt.set(W); C.lmr.set(LMRT);
-    const nb = NET_ON ? NETB[RK] : null, key = nb ? RK : null;
+    const nb = NET_ON && NET_USE ? NETB[RK] : null, key = nb ? RK : null;
     if (C.netRule !== key || C.netBytes !== nb) { if (nb) { C.raw.set(nb.subarray(0, Math.min(nb.length, C.raw.length))); C.x.net_load(nb.length); } else C.x.net_load(0); C.netRule = key; C.netBytes = nb; }
   }
 }
@@ -138,9 +138,12 @@ function abBack(A) { nodes = A.x.getn(); if (A.x.stopped()) stop = true; }
 // NETS[rule] = the file name of the rule's net in nets/ (its version). Empty: the hand-made evaluation below, as before. A net
 // that has passed its checks (tools/nnue/README.md) is put in nets/ and named here — nothing else changes. The format and the
 // inputs: core.c「the net」; JS evaluates the same integers (netEvalJS) where there is no WebAssembly.
-const NETS = { seneca: '', piso: '', quintana: '' };
+const NETS = { seneca: 'lt-seneca-20261121-r1.nnue', piso: 'lt-piso-20261121-r1.nnue', quintana: 'lt-quintana-20261121-r1.nnue' };   // round 1 (2026-11-21, 20M self-play positions over the 3 rules)
 const NETB = {};          // rule → the net's bytes (loaded)
 let NET_ON = true;        // (tools: off = the hand-made evaluation even with a net)
+let NET_USE = true;       // (2026-11-22) the levels that think by time (Lv.19・20), a PRO setting by time and the analysis use the net; the levels by
+                          // depth or by positions keep the hand-made evaluation their strengths were measured with (MODEL_CARD「採用したネット」)
+function netUse(on) { on = !!on; if (on === NET_USE) return; NET_USE = on; NETJR = null; waRule(); ttClear(); }
 let NETJ = null, NETJR = null;   // the JS copy of the current rule's net
 function netParse(b) {
   if (!b || b.length < 20 || b[0] !== 76 || b[1] !== 84 || b[2] !== 78 || b[3] !== 49) return null;
@@ -151,7 +154,7 @@ function netParse(b) {
   return { H, K, FL, W1, B1, W2, B2 };
 }
 function setNet(rule, bytes) { if (bytes) NETB[rule] = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes); else delete NETB[rule]; NETJR = null; waRule(); }
-function netNow() { if (!NET_ON || !NETB[RK]) return null; if (NETJR !== NETB[RK]) { NETJ = netParse(NETB[RK]); NETJR = NETB[RK]; } return NETJ; }
+function netNow() { if (!NET_ON || !NET_USE || !NETB[RK]) return null; if (NETJR !== NETB[RK]) { NETJ = netParse(NETB[RK]); NETJR = NETB[RK]; } return NETJ; }
 // the net's value of pos for the side to move (the same integers as core.c netEval on a fresh accumulator; with FL & 1 it is added
 // to the hand-made evaluation)
 function netEvalJS(pos, N) {
@@ -767,6 +770,7 @@ function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
   const L = PRO_CFG || LEVELS[level] || LEVELS[10];
+  netUse(!!(L.s && L.ms));
   const { pos } = replay(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
@@ -796,6 +800,7 @@ function thinkFin(pos, r) {
 }
 const kindOf = v => v > WINT ? 'win' : v < -WINT ? 'loss' : 'heur';
 function analyze(start, moves, ms, onProgress, rule) {
+  netUse(true);
   if (rule) setRule(rule);
   const { pos } = replay(start, moves);
   nodes = 0; stop = false; tEnd = Date.now() + (ms || 1000); nodeLimit = Infinity; kreset();
@@ -813,6 +818,7 @@ function analyze(start, moves, ms, onProgress, rule) {
   return { list, depth };
 }
 function pvOf(start, moves, m, plies) {
+  netUse(true);
   const pv = [], line = moves.concat([m]);
   const { pos } = replay(start, line);
   for (let i = 1; i < (plies || 7); i++) {
@@ -824,6 +830,7 @@ function pvOf(start, moves, m, plies) {
   return pv;
 }
 function cands(start, moves, ms, k, plies, onProgress, rule) {
+  netUse(true);
   if (rule) setRule(rule);
   const r = analyze(start, moves, ms, onProgress);
   const list = r.list.slice().sort((a, b) => b.v - a.v).slice(0, k || 5);
@@ -836,7 +843,10 @@ function cands(start, moves, ms, k, plies, onProgress, rule) {
 // after the root and m.line searched to depth m.d in the window (m.wa, m.wb); mtKids = that node's moves in this engine's order;
 // mtFin = the job's reply from the threads' raw result (the same shape as the one-thread worker's)
 let mtRule = null;
+// the threads' tasks carry the job's fields (shared/mtsplit.js base): a level / setting by time and the analysis use the net
+function mtNet(m) { const L = m.cfg || (m.level ? LEVELS[m.level] : null); netUse(m.job === 'think' || L ? !!(L && L.s && L.ms) : true); }
 function mtNode(m) {
+  mtNet(m);
   if (SH !== null) SH.salt = SALT[RK] | 0;
   else if (mtRule !== RK) { ttClear(); mtRule = RK; }
   const line = m.line || [], { pos } = replay(m.start, m.moves.concat(line));
@@ -846,11 +856,13 @@ function mtPlan(m) {
   const { pos } = replay(m.start, m.moves), all = pos.moves(), inf = WIN + 1;
   if (m.job === 'think') {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
+    mtNet(m);
     if (all.length < 2 || !L.s || bookFind(pos) >= 0) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }   // (one move, a weak level, the book: no threads)
     kreset();
     return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99, lmr: { d: 3, i: 3 }, specRes: SH === null ? 0 : undefined, sticky: SH === null } };
   }
   if (!all.length) return { result: { list: [], depth: 0 } };
+  mtNet(m);
   const cands = m.job === 'cands';
   kreset();
   return { plan: { kind: 'all', sticky: SH === null, moves: orderMoves(pos, all, -1, 0), inf, maxD: 40, ms: m.time || (cands ? 1200 : 1000), win: WINT, stopAll: true, progress: true, pv: cands ? m.plies || 7 : 0, pvK: m.k || 5 } };
