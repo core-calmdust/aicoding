@@ -32,7 +32,7 @@
   const ROOMS = [
     { id: 'map', ready: () => !!window.AtlasMap, render: (el, c) => AtlasMap.render(el, c) },
     { id: 'tree', src: ['museum/tree.js?v=3'], ready: () => !!window.AtlasTree, render: (el, c) => AtlasTree.render(el, c) },
-    { id: 'gallery', src: ['museum/gallery.js?v=67'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
+    { id: 'gallery', src: ['museum/gallery.js?v=81'], ready: () => !!window.AtlasGallery, render: (el, c) => AtlasGallery.render(el, c) },
   ];
   const KEY = 'atlas-museum-room';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

@@ -1,5 +1,5 @@
 // Time to solve endgames on several threads (engine_mt.wasm on a shared memory, like pro/ and the main page's pool).
-//   node mt-bench.js [empties=22] [count=10] [rounds=1] [modes=1,2lazy,2split]
+//   node mt-bench.js [empties=22] [count=10] [rounds=1] [modes=1,2lazy,2split] [--wasm tools/variants/engine_mt_se0.wasm]
 // Positions: self-play (level 15, seeded random 8-ply openings) stopped at `empties`. Each mode solves every position
 // from an empty transposition table with think({ depth 60, exact: 64, mpc }) on thread 0 (the helpers run think with
 // opts.rot like the pages); modes run interleaved per position (CPU contention from other jobs evens out). The scores
@@ -31,13 +31,14 @@ if (!isMainThread) {
   return;
 }
 
-const [EMP = 22, COUNT = 10, ROUNDS = 1, MODES = '1,2lazy,2split'] = process.argv.slice(2);
+const ARGV = process.argv.slice(2), WI = ARGV.indexOf('--wasm'), WASM = WI >= 0 ? path.resolve(ARGV.splice(WI, 2)[1]) : path.join(RV, 'engine_mt.wasm');   // --wasm: another build (tools/variants/engine_mt_*.wasm)
+const [EMP = 22, COUNT = 10, ROUNDS = 1, MODES = '1,2lazy,2split'] = ARGV;
 const raw = zlib.gunzipSync(fs.readFileSync(path.join(RV, 'weights.bin.gz')));
 const W = new Int16Array(raw.buffer, raw.byteOffset, raw.length / 2);
 const SLOT = 2 << 20;
 
 async function makePool(n, split) {
-  const module = new WebAssembly.Module(fs.readFileSync(path.join(RV, 'engine_mt.wasm')));
+  const module = new WebAssembly.Module(fs.readFileSync(WASM));
   const mem = new WebAssembly.Memory({ initial: 1024, maximum: 16384, shared: true });
   const X = new WebAssembly.Instance(module, { env: { memory: mem, now: () => Date.now() } }).exports;
   const base = Math.ceil(X.mt_heap_base() / 65536) * 65536, need = base + (n + 1) * SLOT;

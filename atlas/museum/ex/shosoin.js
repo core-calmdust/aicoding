@@ -11,9 +11,9 @@
   'use strict';
   // the figures of the sixteen side panels, taken off the Shōsōin's detail photographs CO0000000428–436 (4 rows = the sides A, C, B, D,
   // 4 panels each, 512 × 150): alpha = the ivory figure, green / blue = where it is dyed green / red. Outlines and dye only.
-  const HERE = (document.currentScript && document.currentScript.src) || location.href; let FIG = null;
+  const HERE = (document.currentScript && document.currentScript.src) || location.href; let FIG = null, LEGS = null;
   (window.AtlasEx = window.AtlasEx || {}).shosoin = {
-    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { FIG = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/shosoin-figures.webp?v=2', HERE).href; setTimeout(res, 8000); }),
+    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { FIG = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/shosoin-figures.webp?v=2', HERE).href; setTimeout(res, 8000); }).then(() => new Promise(res => { const im = new Image(); im.onload = () => { LEGS = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/shosoin-legs.webp', HERE).href; setTimeout(res, 8000); })),
     build(TT, X, K) {
       const G = new TT.Group();
       const S = 48.9, H = 12.7, RAIL = 1.0, BASE = 7.4,   // (measured on the Shōsōin's oblique photograph: body 5.3, openings 5.4, floor frame 1.0)
@@ -129,6 +129,11 @@
       // the figures in ivory with their dyes, and a dark outline round each (the joint of the inlay)
       let figC = null; if (FIG) { figC = document.createElement('canvas'); figC.width = FIG.width; figC.height = FIG.height; const q = figC.getContext('2d'); q.drawImage(FIG, 0, 0); const im = q.getImageData(0, 0, figC.width, figC.height), d = im.data;
         for (let i = 0; i < d.length; i += 4) { const gr = Math.min(1, d[i + 1] / 255 * 1.5), rd = Math.min(1, d[i + 2] / 255 * 1.4); let c = [222, 206, 168]; c = c.map((v, k) => v + ([96, 140, 108][k] - v) * gr); c = c.map((v, k) => v + ([206, 112, 78][k] - v) * rd); { const ln = d[i] / 255 * .85; c = c.map((v, k) => v + ([84, 46, 28][k] - v) * ln); }   /* the engraved lines, filled dark */ d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; } q.putImageData(im, 0, 0); }
+      // the little figures on the legs and the post, from the same photographs (a strip of 8: two birds, a hill, two standing deer, a bird, a hill, a lying deer)
+      const tint = im0 => { const c = document.createElement('canvas'); c.width = im0.width; c.height = im0.height; const q = c.getContext('2d'); q.drawImage(im0, 0, 0); const im = q.getImageData(0, 0, c.width, c.height), d = im.data;
+        for (let i = 0; i < d.length; i += 4) { const gr = Math.min(1, d[i + 1] / 255 * 1.5), rd = Math.min(1, d[i + 2] / 255 * 1.4), ln = d[i] / 255 * .85; let cc = [222, 206, 168]; cc = cc.map((v, k) => v + ([96, 140, 108][k] - v) * gr); cc = cc.map((v, k) => v + ([206, 112, 78][k] - v) * rd); cc = cc.map((v, k) => v + ([84, 46, 28][k] - v) * ln); d[i] = cc[0]; d[i + 1] = cc[1]; d[i + 2] = cc[2]; } q.putImageData(im, 0, 0); return c; };
+      const legC = LEGS ? tint(LEGS) : null, LEGCM = [2.29, 2.18, 1.84, 3.1, 3.1, 2.36, 1.77, 3.35];
+      const sprite = (g, k, x, y, s, flip) => { const sz = LEGCM[k] * s; g.save(); g.translate(x, y); if (flip) g.scale(-1, 1); g.shadowColor = 'rgba(14,6,3,.9)'; g.shadowBlur = 2; g.drawImage(legC, k * 128, 0, 128, 128, -sz / 2, -sz / 2, sz, sz); g.restore(); };
       const panelFig = (g, row, col, x, y, w2, h2) => { g.save(); g.shadowColor = 'rgba(14,6,3,.9)'; g.shadowBlur = 2.5; g.drawImage(figC, col * 512, row * 150, 512, 150, x, y, w2, h2); g.restore(); };
       const sideTex = (seed, drawerAt) => K.tex(2048, Math.round(2048 * (BODY - TOP) / S), (g, w, h) => {
         g.drawImage(shT.image, 0, 0, w, h); const s = w / S, cb = s * .85;
@@ -167,7 +172,11 @@
         g.strokeStyle = '#e4cf9a'; g.lineWidth = s * .1; skirt.holes.forEach(hp => { g.beginPath(); hp.getPoints(24).forEach((p, i) => { const X = (p.x + S / 2) * s, Y = h - p.y * s; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.closePath(); g.stroke(); });
         // each leg and the post: a bird in flight at the top, hills in the middle, a deer at the foot; an ivory line down the post (detail photographs)
         g.fillStyle = C.iv; g.fillRect(S / 2 * s - s * .05, s * .9, s * .1, h - s * 1.0);
-        [[LEG * .62, 1], [S / 2 - POST * .28, 1], [S / 2 + POST * .28, -1], [S - LEG * .62, -1]].forEach(([x, d], i) => { [['bird', .9, .022, C.box], ['hill', .56, .02, C.grn], ['deer', .13, .022, i % 2 ? C.grn : C.red]].forEach(([kd, fy, k, col]) => { g.save(); g.translate(x * s, h * (1 - fy)); g.scale(d, 1); sil(g, kd, 0, 0, s * k, col); g.restore(); }); }); });
+        if (legC) { const Y = f => h * (1 - f);   // (placed as on the photographs: a bird under the body, a hill at mid-height, a deer at the foot — on each leg, and either side of the post's ivory line)
+          [[LEG * .52, 5, 6, 7, false], [S - LEG * .52, 5, 6, 7, true]].forEach(([x, b, hl, d, fl]) => { sprite(g, b, x * s, Y(.9), s * .4, fl); sprite(g, hl, x * s, Y(.56), s * .4, fl); sprite(g, d, x * s, Y(.14), s * .34, fl); });
+          const px = POST * .25; sprite(g, 0, (S / 2 - px) * s, Y(.9), s * .38, false); sprite(g, 1, (S / 2 + px) * s, Y(.9), s * .38, false); sprite(g, 2, (S / 2 - px * .8) * s, Y(.56), s * .4, false); sprite(g, 2, (S / 2 + px * .8) * s, Y(.56), s * .4, true);
+          sprite(g, 3, (S / 2 - px * 1.5) * s, Y(.17), s * .5, false); sprite(g, 4, (S / 2 + px * 1.5) * s, Y(.17), s * .5, false); }
+        else [[LEG * .62, 1], [S / 2 - POST * .28, 1], [S / 2 + POST * .28, -1], [S - LEG * .62, -1]].forEach(([x, d], i) => { [['bird', .9, .022, C.box], ['hill', .56, .02, C.grn], ['deer', .13, .022, i % 2 ? C.grn : C.red]].forEach(([kd, fy, k, col]) => { g.save(); g.translate(x * s, h * (1 - fy)); g.scale(d, 1); sil(g, kd, 0, 0, s * k, col); g.restore(); }); }); });
       legT.repeat.set(1 / S, 1 / (BASE - RAIL)); legT.offset.set(.5, 0);
       const legM = K.mat({ map: legT, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
       for (let i = 0; i < 4; i++) { const m = new TT.Mesh(skG, [legM, shitan]), a = i * Math.PI / 2; m.position.set(Math.sin(a) * (S / 2 - 1.2), RAIL, Math.cos(a) * (S / 2 - 1.2)); m.rotation.y = a; m.scale.x = .995; G.add(m); }   // (each panel a hair short: its end face lay in the same plane as the next panel's front and the two fought at the corner legs — a flicker)

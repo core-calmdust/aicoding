@@ -23,4 +23,8 @@ b lc -DLAZYCUT
 b se0 -DSE_MAX=0
 b s12_16 -DSE_MAX=12 -DSE_LOG=16
 b s13_16 -DSE_MAX=13 -DSE_LOG=16
+
+# engine_mt.wasm variants (tools/mt-bench.js --wasm): mt_se0 = without the small endgame table
+bm() { name=$1; shift; clang --target=wasm32 -O3 -msimd128 -matomics -mbulk-memory -DMT -nostdlib -fno-builtin -w -Wl,--no-entry -Wl,--export-dynamic -Wl,--shared-memory -Wl,--import-memory -Wl,--max-memory=1073741824 -Wl,--allow-undefined "$@" -o tools/variants/engine_mt_$name.wasm engine.c; }
+bm se0 -DSE_MAX=0
 ls -l tools/variants
