@@ -792,6 +792,11 @@
   // 2026-11-17 (天上): the games whose top levels became 天上 got steps added below them — the levels were renumbered
   // (each game's LV_MIG: the old level → the new one). The card's saved choice follows once.
   // 2026-11-22: 天上Ⅰ・Ⅱ (the learned evaluation at 四段・五段's time) added below the old 天上 — the card's saved 天上 moves up by two
+  if (pref.lvLt22 !== 1) {   // (2026-11-22: ラトルンクロルム renumbered — 天上)
+    const MIG = [1, 2, 4, 6, 7, 8, 9, 10, 13, 15, 16, 17, 18, 19, 20, 21, 21, 22, 23, 24];
+    ['lv', 'lv2'].forEach(k => { const n = Math.round(+pref['latrunculi:' + k]) || 0; if (n >= 1 && MIG[n - 1]) pref['latrunculi:' + k] = MIG[n - 1]; });
+    pref.lvLt22 = 1; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+  }
   if (pref.lvV22 !== 1) {
     ['agon', 'ugolki', 'amazons'].forEach(g => ['lv', 'lv2'].forEach(k => { const n = Math.round(+pref[g + ':' + k]) || 0; if (n > 23 && n <= 26) pref[g + ':' + k] = n + 2; }));
     pref.lvV22 = 1; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}

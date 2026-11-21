@@ -127,3 +127,4 @@ URL: https://core-calmdust.github.io/aicoding/latrunculi/ （cat: hist＝ヒス�
 
 ## NNUE の採用（2026-11-22）
 - 1周目のネット（3ルール、計2000万局面、`latrunculi/nets/`、`engine.js` の `NETS`）。**Lv.19・20（時間）と分析・ヒント・コーチだけ**が使い、Lv.1〜18 は手作り評価のまま（`netUse`、スレッドの仕事は `mtNet`）。`RT_LV` の Lv.19〜 を +110。トップの紹介文に NNUE搭載・約2000万局面（14言語）。キャッシュ：`engine.js?v=11`、app.js `v=21`、大百科 `rules/latrunculi.js?v=6`。詳細は `latrunculi/MODEL_CARD.md`「採用したネット」。
+- **天上（2026-11-22）**：人が遊ぶ Lv.1〜20（前の Lv.1〜15 と間の刻み5つ、〜2528）、天上Ⅰ〜Ⅵ＝前の Lv.16・18・19・20（手作り）とネットの Lv.19・20 の時間（エンジン Lv.21・22）。`LV_MAX` 26、`LVX`・`LV_MIG`（`lvV22`）、大百科 `levels: 26`・`pref.lvLt22`、`AtlasNPC.CEL.latrunculi` 20。キャッシュ `engine.js?v=12`、app.js `v=22`。詳細は `latrunculi/MODEL_CARD.md`「天上」。
