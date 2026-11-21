@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 27;
+  const V = 28;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -26,7 +26,7 @@
     { id: 'lewis', game: 'chess', cm: 1, view: [.12, .4, .82],
       spots: [[-2.7, 5.3, -1.8], [2.25, 8.3, -2.9], [8.5, 9.9, -2.9], [-6.9, 4.3, .9], [-3.35, 7.3, 5.37], [4.4, 4.1, 4.0], [10.6, 2.5, -2.0]] },
     { id: 'charlemagne', game: 'chess', cm: 1, view: [.1, .42, .8],
-      spots: [[0, 8.6, -5.0], [3.25, 4.7, -4.4], [-9.5, 12.0, -5.3], [11.45, 9.9, 5.9], [14.4, 11.0, -5.2], [-11.0, 6.0, 6.4], [0, 3.0, 8.5]] },
+      spots: [[0, 11.8, -2.0], [2.9, 7.2, -2.0], [-9.5, 11.5, -2.5], [11.45, 9.9, 5.9], [14.4, 11.0, -5.2], [-11.0, 6.0, 6.4], [0, 3.0, 8.5]] },
     { id: 'nishapur', game: 'chess', cm: 1, view: [.9, .55, .78],
       spots: [[3.1, 5.0, 22.9], [-3.1, 4.2, 22.8], [-9.3, 3.4, 21.2], [-15.5, 3.6, 21.0], [-21.7, 3.9, 21.7], [-3.1, 2.4, 15.5], [3.1, 5.0, -22.9]] },
     { id: 'ottoman', game: 'backgammon', cm: 1, flip: true, view: [0, .95, .82], lock: { game: 'backgammon', ach: 3 },

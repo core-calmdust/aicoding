@@ -8,7 +8,10 @@
    columns; elephant with two mahouts holding their hooks; quadriga driven by a charioteer with a three-thonged whip; horseman with
    a lozenge-decorated pointed shield, sword in the right hand, head turned to his left; soldier in cuirass and nasal helmet, sword
    held high behind a great pointed shield). Proportions, faces, folds and the ornament (arcades, palmettes, rosette) are drawn
-   in the manner of the pieces (estimates). */
+   in the manner of the pieces (estimates).
+   2026-11-21: rebuilt after photographs of the pieces on Wikimedia Commons: king and queen as deep ivory blocks with a framed niche
+   (beaded borders, a band of lozenges, a pleated canopy over the king's pointed opening, crenellations over the queen's arch), the
+   elephant and the horse as solid animals carved in one with their bases; warm cream ivory. */
 (function () {
   'use strict';
   (window.AtlasEx = window.AtlasEx || {}).charlemagne = {
@@ -18,7 +21,7 @@
       const V3 = (x, y, z) => new TT.Vector3(x, y, z);
       // ---- elephant ivory: creamy, polished, fine lines; old wear darker in the hollows
       const ivT = (k) => K.tex(512, 512, (g, w, h) => {
-        K.grain(g, w, h, { a: '#f2e8d2', b: '#e2d2b0', seed: 60 + k, sx: 1.2, sy: 14, warp: .6 });
+        K.grain(g, w, h, { a: '#eadab6', b: '#e0cda6', seed: 60 + k, sx: 1.2, sy: 30, warp: .25 });   // warm cream (the photographs)
         const n = K.noise(90 + k), img = g.getImageData(0, 0, w, h), d = img.data;
         for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = n(x / 100, y / 100, 4), s = Math.max(0, a - .52) * 60, i = (y * w + x) * 4; d[i] -= s * .5; d[i + 1] -= s * .75; d[i + 2] -= s * 1.2; }
         g.putImageData(img, 0, 0);
@@ -85,78 +88,103 @@
         if (o.hair) ball(f, .58 * s, curly, 0, 5.42 * s, -.12 * s, 1.02, .95, 1.0, 14);
         p.add(f); return { f, s };
       };
-      // the little building: a semicircular back with arcades, a half-dome with crenellations, a straight front on columns
-      const pavilion = (p, o) => {
-        const R = o.w / 2, H0 = .7, Hw = o.hw, D = R * .95;
-        const bs = new TT.Shape(); bs.moveTo(-R, 0); bs.lineTo(R, 0); bs.absarc(0, 0, R, 0, Math.PI, true);
-        const bg = new TT.ExtrudeGeometry(bs, { depth: H0, bevelEnabled: false, curveSegments: 24 }); bg.rotateX(-Math.PI / 2); bg.scale(1, 1, -D / R);
-        const base = add(p, bg, iv, 0, 0, 0);
-        const wall = add(p, new TT.CylinderGeometry(R - .05, R - .05, Hw, 32, 1, true, Math.PI / 2, Math.PI), [arcadeM(o.arches)][0], 0, H0 + Hw / 2, 0); wall.scale.z = D / R; wall.material.side = TT.DoubleSide;
-        const dome = add(p, new TT.SphereGeometry(R, 32, 12, Math.PI, Math.PI, 0, Math.PI / 2), domeM, 0, H0 + Hw, 0); dome.scale.set(1, o.dome / R, D / R); dome.material.side = TT.DoubleSide;
-        // the front arch: a thick slab with a round-headed opening, crenellated along the top
-        const fs = new TT.Shape(); fs.moveTo(-R, 0); fs.lineTo(R, 0); fs.lineTo(R, o.arch + .9); fs.lineTo(-R, o.arch + .9); fs.closePath();
-        const hole = new TT.Path(); hole.moveTo(-R + .9, 0); hole.lineTo(R - .9, 0); hole.lineTo(R - .9, o.arch - (R - .9)); hole.absarc(0, o.arch - (R - .9), R - .9, 0, Math.PI, false); hole.closePath(); fs.holes.push(hole);
-        const fg = new TT.ExtrudeGeometry(fs, { depth: .55, bevelEnabled: true, bevelThickness: .05, bevelSize: .05, bevelSegments: 1, curveSegments: 20 });
-        add(p, fg, iv, 0, H0, -.3);
-        for (let i = 0; i < 7; i++) add(p, new TT.BoxGeometry(o.w / 9, .55, .5), iv, -R + (i + .5) * o.w / 7, H0 + o.arch + .9 + .27, 0);
-        // columns at the front corners (paired) and capitals
-        [-1, 1].forEach(s => { [0, 1].forEach(k => { const x = s * (R - .45 - k * .5); limb(p, V3(x, H0, .1 - k * .45), V3(x, H0 + o.arch - (R - .9) - .1, .1 - k * .45), .2, .18, iv, 10);
-            add(p, new TT.BoxGeometry(.55, .3, .55), iv, x, H0 + o.arch - (R - .9), .1 - k * .45); }); });
-        // the curtains, drawn aside: gathered folds hanging from the arch
-        [-1, 1].forEach(s => { const c = add(p, lathe([[.55, 0], [.62, 2], [.5, 4], [.75, 6], [.85, o.arch - .4]], 12), robe(10, 1), s * (R - 1.55), H0, .25); c.scale.set(.8, (o.arch - .2) / (o.arch - .4) * .98, .6); });
-        return { H0, R };
+      // ---- the king and the queen are deep blocks of ivory carved like a little shrine (Commons photographs of the pieces in the
+      //      Cabinet des médailles): a niche in the front, framed by bands of ornament (beads, lozenges, rosettes), the figures in
+      //      high relief inside it; the king's niche opens between curtains drawn up into a point under a rounded, pleated canopy,
+      //      the queen's is a round arch under a crenellated top
+      const frameM = (w, h, hole) => { const PXW = 768, PXH = Math.round(768 * h / w), s = PXW / w;
+        const draw = (g, bump) => {
+          if (bump) { g.fillStyle = '#7a7a7a'; g.fillRect(0, 0, PXW, PXH); } else g.drawImage(IVT[0].image, 0, 0, PXW, PXH);
+          const lo = bump ? '#202020' : 'rgba(120,90,50,.55)', hi = bump ? '#d8d8d8' : 'rgba(255,248,230,.0)', X = x => (x + w / 2) * s, Y = y => PXH - y * s;
+          g.lineCap = 'round'; g.lineJoin = 'round';
+          // outer and inner fillets
+          g.strokeStyle = lo; g.lineWidth = s * .08; g.strokeRect(s * .12, s * .12, PXW - s * .24, PXH - s * .24); g.strokeRect(s * .95, s * .95, PXW - s * 1.9, PXH - s * 1.9);
+          // a band of beads round the frame, between the fillets
+          for (let t = 0; t < 1; t += .5 / (w + h)) { const p = t < .5 ? [t * 2 * w - w / 2, .53] : [t * 2 * w - w - w / 2, h - .53];
+            if (p[0] < -w / 2 + .53 || p[0] > w / 2 - .53) continue; g.fillStyle = hi === 'rgba(255,248,230,.0)' ? 'rgba(120,90,50,.45)' : hi; g.beginPath(); g.arc(X(p[0]), Y(p[1]), s * .2, 0, 6.29); g.fill(); g.strokeStyle = lo; g.lineWidth = s * .04; g.stroke(); }
+          for (let y = 1.2; y < h - .9; y += .5) [-w / 2 + .53, w / 2 - .53].forEach(x => { g.fillStyle = bump ? '#d8d8d8' : 'rgba(120,90,50,.45)'; g.beginPath(); g.arc(X(x), Y(y), s * .2, 0, 6.29); g.fill(); g.strokeStyle = lo; g.lineWidth = s * .04; g.stroke(); });
+          // the base band: lozenges in squares
+          const bh = 1.6; g.strokeStyle = lo; g.lineWidth = s * .07; g.strokeRect(X(-w / 2 + 1), Y(1 + bh), (w - 2) * s, bh * s);
+          for (let x = -w / 2 + 1; x + bh <= w / 2 - 1 + .01; x += (w - 2) / Math.floor((w - 2) / bh)) { g.strokeRect(X(x + .12), Y(1 + bh - .12), (bh - .24) * s, (bh - .24) * s); g.beginPath(); g.moveTo(X(x + bh / 2), Y(1 + bh - .25)); g.lineTo(X(x + bh - .25), Y(1 + bh / 2)); g.lineTo(X(x + bh / 2), Y(1.25)); g.lineTo(X(x + .25), Y(1 + bh / 2)); g.closePath(); g.stroke(); }
+          // a moulding round the niche
+          g.strokeStyle = lo; g.lineWidth = s * .1; g.beginPath(); hole.getPoints(40).forEach((p, i) => { const xx = X(p.x * 1.06), yy = Y(p.y + (p.y > 3 ? .3 : 0)); i ? g.lineTo(xx, yy) : g.moveTo(xx, yy); }); g.stroke();
+          if (!bump) { for (let q = 0; q < 220; q++) { g.fillStyle = `rgba(130,96,52,${.04 + Math.random() * .1})`; g.fillRect(Math.random() * PXW, Math.random() * PXH, 1 + Math.random() * 6, 1 + Math.random() * 2); } }
+        };
+        const map = K.tex(PXW, PXH, g => draw(g, false)), bump = K.tex(PXW, PXH, g => draw(g, true), { data: true });
+        [map, bump].forEach(t => { t.repeat.set(1 / w, 1 / h); t.offset.set(.5, 0); });
+        return K.mat({ map, bumpMap: bump, bumpScale: 2.6, color: '#ffffff', roughness: .4, clearcoat: .25, clearcoatRoughness: .45 }); };
+      const shrine = (p, o) => {
+        const { w, h, d, nd } = o, hole = new TT.Path();
+        if (o.gable) { const nw = o.nw, b = 2.6, top = o.nh; hole.moveTo(-nw / 2, b); hole.lineTo(nw / 2, b); hole.lineTo(nw / 2, top * .55); hole.quadraticCurveTo(nw * .35, top * .9, 0, top); hole.quadraticCurveTo(-nw * .35, top * .9, -nw / 2, top * .55); hole.closePath(); }
+        else { const nw = o.nw, b = 2.6, r = nw / 2; hole.moveTo(-r, b); hole.lineTo(r, b); hole.lineTo(r, o.nh - r); hole.absarc(0, o.nh - r, r, 0, Math.PI, false); hole.closePath(); }
+        const S = new TT.Shape(); S.moveTo(-w / 2, 0); S.lineTo(w / 2, 0); S.lineTo(w / 2, h); S.lineTo(-w / 2, h); S.closePath(); S.holes.push(hole);
+        const fg = new TT.ExtrudeGeometry(S, { depth: nd, bevelEnabled: true, bevelThickness: .08, bevelSize: .08, bevelSegments: 2, curveSegments: 24 });
+        add(p, fg, [frameM(w, h, hole), iv2], 0, 0, d / 2 - nd);
+        add(p, new TT.BoxGeometry(w, h, d - nd), [iv2, iv2, iv2, iv2, IV(1), iv2], 0, h / 2, -nd / 2);
+        if (o.crenel) for (let i = 0; i < o.crenel; i++) { const x = -w / 2 + .5 + i * (w - 1) / (o.crenel - 1); const m = add(p, new TT.CylinderGeometry(.42, .45, .9, 12), iv, x, h + .45, d / 2 - .5); ball(p, .42, iv, x, h + .9, d / 2 - .5, 1, .6, 1, 10); }
+        if (o.canopy) { const c = add(p, new TT.CylinderGeometry(d / 2, d / 2, w, 24, 1, false, 0, Math.PI), robe(40, 1), 0, h, 0); c.rotation.z = Math.PI / 2; c.scale.set(.6, 1, 1); }
+        // the curtains: gathered folds down the sides of the niche
+        const nb = 2.6, cz = d / 2 - nd + .5;
+        [-1, 1].forEach(s => { const c = add(p, lathe([[.4, 0], [.5, 2], [.42, 4], [.6, 6], [.7, o.nh - nb - .2]], 12), robe(10, 1), s * (o.nw / 2 - .55), nb, cz); c.scale.set(.8, 1, .6); });
+        return { floor: nb, z: cz + .4 };
       };
+      const fitUV = (g) => { g.computeBoundingBox(); const b = g.boundingBox, uv = g.attributes.uv, pos = g.attributes.position, n = g.attributes.normal; g.computeVertexNormals();
+        for (let i = 0; i < uv.count; i++) { const side = Math.abs(g.attributes.normal.getZ(i)) < .5; uv.setXY(i, side ? (pos.getZ(i) - b.min.z) / (b.max.x - b.min.x) + (pos.getX(i) - b.min.x) / (b.max.x - b.min.x) : (pos.getX(i) - b.min.x) / (b.max.x - b.min.x), (pos.getY(i) - b.min.y) / (b.max.x - b.min.x)); } uv.needsUpdate = true; return g; };
       const pieces = [];
-      // KING (Inv.55.306, H 15.8 cm, w 10.5): bearded, crowned, long robe and short cloak, sceptre; two attendants draw the curtains
-      { const p = new TT.Group(); const P = pavilion(p, { w: 10.5, hw: 10.4, dome: 4.2, arch: 10.8, arches: 6 });
-        add(p, new TT.BoxGeometry(4.2, 4.2, 3.4), iv2, 0, P.H0 + 2.1, -1.4);
-        add(p, lathe([[1.9, 0], [1.75, 1.4], [1.5, 4.6], [1.45, 5.6], [1.1, 6.3], [.55, 6.6], [0, 6.62]], 22), robe(24), 0, P.H0, -.8).scale.z = .75;
-        const hem = add(p, lathe([[1.75, 0], [1.7, .3], [1.5, 3.6], [1.3, 4.3], [0, 4.35]], 22), robe(26), 0, P.H0, .75); hem.scale.z = .45;   // the robe falling in front from the knees
-        [-1, 1].forEach(s => limb(p, V3(s * .75, P.H0 + 4.55, -1.1), V3(s * .8, P.H0 + 4.45, .95), .72, .66, robe(10), 14) && ball(p, .66, robe(10), s * .8, P.H0 + 4.45, .95, 1, 1, .7, 14));
-        add(p, lathe([[1.55, 0], [1.65, .5], [1.3, 1.3], [0, 1.4]], 20), robe(18, 1), 0, P.H0 + 5.6, -.8).scale.z = .78;   // the short cloak
-        head(p, 1.1, 0, P.H0 + 7.75, -.7, true); crown(p, .95, 0, P.H0 + 8.75, -.7);
-        limb(p, V3(1.4, P.H0 + 6.0, -.5), V3(1.55, P.H0 + 4.9, .7), .42, .36, robe(8)); ball(p, .34, iv, 1.55, P.H0 + 5.0, .95);
-        limb(p, V3(1.55, P.H0 + 4.2, .95), V3(1.5, P.H0 + 8.6, .9), .14, .12, iv, 8); ball(p, .36, iv, 1.5, P.H0 + 8.8, .9, 1, 1.3, 1, 10);   // the sceptre
-        limb(p, V3(-1.4, P.H0 + 6.0, -.5), V3(-1.3, P.H0 + 4.8, .7), .42, .36, robe(8)); ball(p, .34, iv, -1.25, P.H0 + 4.8, .95);
-        [-1, 1].forEach(s => { const { f } = figure(p, { x: s * 3.25, z: .9, h: 6.2, ry: -s * .5 }); f.position.y = P.H0;
-          limb(f, V3(-s * .1, 4.2, .3), V3(s * .7, 5.6, .8), .26, .22, robe(6)); });
+      // KING (Inv.55.306, H 15.8 cm, w 10.5): standing, bearded and crowned, a long robe, the sceptre held across the body in both
+      // hands; two small attendants hold back the curtains
+      { const p = new TT.Group(); const P = shrine(p, { w: 10.5, h: 14.6, d: 6.2, nd: 3.4, nw: 7.4, nh: 12.6, gable: true, canopy: true });
+        const y0 = P.floor, z = P.z - .4;
+        add(p, lathe([[1.6, 0], [1.55, .4], [1.3, 3.0], [1.15, 5.0], [1.25, 6.4], [.95, 7.0], [.4, 7.25], [0, 7.27]], 22), robe(26), 0, y0, z).scale.z = .65;
+        add(p, lathe([[1.45, 0], [1.5, .5], [1.25, 1.5], [0, 1.6]], 20), robe(18, 1), 0, y0 + 5.7, z).scale.z = .7;   // the mantle over the shoulders
+        head(p, .95, 0, y0 + 8.1, z + .1, true); crown(p, .82, 0, y0 + 9.0, z + .1);
+        limb(p, V3(-1.2, y0 + 6.6, z), V3(-.4, y0 + 5.4, z + .9), .36, .32, robe(8)); ball(p, .3, iv, -.3, y0 + 5.35, z + 1.05);
+        limb(p, V3(1.2, y0 + 6.6, z), V3(.45, y0 + 4.8, z + .9), .36, .32, robe(8)); ball(p, .3, iv, .4, y0 + 4.75, z + 1.05);
+        limb(p, V3(.9, y0 + 3.6, z + 1.15), V3(-.6, y0 + 7.6, z + 1.0), .14, .12, iv, 8); ball(p, .3, iv, -.65, y0 + 7.8, z + 1.0, 1, 1.4, 1, 10);   // the sceptre
+        [-1, 1].forEach(s => { const { f } = figure(p, { x: s * 2.9, z: z + .3, h: 5.6, ry: -s * .2 }); f.position.y = y0; limb(f, V3(s * .4, 3.6, .2), V3(s * .75, 4.3, .5), .2, .18, robe(6)); });
         pieces.push(p); }
-      // QUEEN (Inv.55.309, H 12.7 cm, w 9.4): seated on a stool in a gown with very wide sleeves; servants with curly hair; a guard on the façade
-      { const p = new TT.Group(); const P = pavilion(p, { w: 9.4, hw: 8.0, dome: 3.6, arch: 8.6, arches: 5 });
-        add(p, new TT.CylinderGeometry(1.5, 1.6, 3.3, 16), iv2, 0, P.H0 + 1.65, -.9);
-        add(p, lathe([[1.8, 0], [1.65, 1.4], [1.3, 3.8], [1.2, 4.7], [.9, 5.3], [.45, 5.55], [0, 5.57]], 22), robe(26), 0, P.H0, -.6).scale.z = .75;
-        [-1, 1].forEach(s => limb(p, V3(s * .65, P.H0 + 3.7, -.9), V3(s * .7, P.H0 + 3.6, .85), .62, .56, robe(10), 14) && ball(p, .56, robe(10), s * .7, P.H0 + 3.6, .85, 1, 1, .7, 14));
-        [-1, 1].forEach(s => { const sl = add(p, new TT.ConeGeometry(.95, 2.6, 14, 1, true), robe(10, 1), s * 1.45, P.H0 + 4.05, .1); sl.rotation.z = s * .25; sl.material.side = TT.DoubleSide; });   // the wide sleeves
-        head(p, .95, 0, P.H0 + 6.4, -.5, false); crown(p, .82, 0, P.H0 + 7.25, -.5);
-        ball(p, .98, curly, 0, P.H0 + 6.6, -.75, 1.02, .98, 1, 14);
-        [-1, 1].forEach(s => { const { f } = figure(p, { x: s * 2.85, z: .85, h: 5.0, ry: -s * .5, hair: true }); f.position.y = P.H0;
-          limb(f, V3(-s * .1, 3.4, .25), V3(s * .6, 4.6, .7), .22, .19, robe(6)); });
-        // the little armed guard, high on the right of the façade, hiding behind his shield
-        const gd = new TT.Group(); gd.position.set(3.0, P.H0 + 8.6 + .9 + .55, .25); p.add(gd);
-        head(gd, .42, 0, 1.25, 0, false); add(gd, new TT.ConeGeometry(.46, .55, 12), iv, 0, 1.72, 0);
-        const sh = kite(1.4, 1.9, lozM); sh.position.set(0, .55, .35); gd.add(sh);
+      // QUEEN (Inv.55.309, H 12.7 cm, w 9.4): seated in a gown with wide sleeves; two attendants at the curtains
+      { const p = new TT.Group(); const P = shrine(p, { w: 9.4, h: 11.8, d: 5.6, nd: 3.0, nw: 6.8, nh: 10.4, crenel: 5 });
+        const y0 = P.floor, z = P.z - .4;
+        add(p, lathe([[1.55, 0], [1.5, .4], [1.25, 3.0], [1.05, 4.3], [1.1, 5.1], [.8, 5.6], [.35, 5.8], [0, 5.82]], 22), robe(26), 0, y0, z).scale.z = .65;
+        [-1, 1].forEach(s => { const sl = add(p, new TT.ConeGeometry(.7, 2.2, 14, 1, true), robe(10, 1), s * 1.2, y0 + 3.6, z + .3); sl.rotation.z = s * .2; sl.material.side = TT.DoubleSide; });   // the wide sleeves
+        head(p, .82, 0, y0 + 6.55, z + .1, false); crown(p, .7, 0, y0 + 7.3, z + .1);
+        [-1, 1].forEach(s => { const { f } = figure(p, { x: s * 2.55, z: z + .3, h: 5.2, ry: -s * .2, hair: true }); f.position.y = y0; });
+        // the little armed guard high on the right of the façade, behind his shield (the BnF record)
+        const gd = new TT.Group(); gd.position.set(3.35, 9.6, 2.85); p.add(gd);
+        head(gd, .36, 0, 1.05, -.1, false); add(gd, new TT.ConeGeometry(.4, .5, 12), iv, 0, 1.45, -.1);
+        const sh = kite(1.15, 1.6, lozM); sh.position.set(0, .45, .25); gd.add(sh);
         pieces.push(p); }
-      // ELEPHANT (Inv.55.312, H 11.7 cm, w 8.6): an elephant carrying two mahouts armed with their hooks
+      // ELEPHANT (Inv.55.312, H 11.7 cm, w 8.6), after the photographs: a solid, compact animal carved in one with its base — pillar
+      // legs, the trunk falling straight to the base, a large flat ear with radiating folds, a big round eye; a saddle-cloth with a
+      // band of lozenges and a fringe; two mahouts sitting on its back; the base's edge carved with a running pattern
       { const p = new TT.Group();
-        const bs = new TT.Shape(); bs.moveTo(-3.6, -2.3); bs.lineTo(3.6, -2.3); bs.lineTo(3.6, 2.3); bs.lineTo(-3.6, 2.3); bs.closePath();
-        add(p, new TT.ExtrudeGeometry(bs, { depth: .7, bevelEnabled: true, bevelThickness: .08, bevelSize: .08, bevelSegments: 1 }), iv, 0, .7, 0).rotation.x = Math.PI / 2;
-        const skinT = K.tex(256, 256, (g, w, h) => { g.fillStyle = '#808080'; g.fillRect(0, 0, w, h); g.strokeStyle = '#a0a0a0'; g.lineWidth = 2; for (let y = 4; y < h; y += 9) { g.beginPath(); g.moveTo(0, y); for (let x = 0; x < w; x += 16) g.lineTo(x, y + Math.sin(x * .2 + y) * 2.4); g.stroke(); } }, { data: true });
-        const skin = K.mat({ map: IVT[1], bumpMap: skinT, bumpScale: 1.6, color: '#ffffff', roughness: .4, clearcoat: .25 });
-        ball(p, 2.55, skin, 0, 4.6, 0, 1.35, 1.0, .9, 24);
-        [[-1.9, 1.15], [1.9, 1.15], [-1.9, -1.15], [1.9, -1.15]].forEach(([x, z]) => limb(p, V3(x, .7, z), V3(x * .92, 4.0, z * .9), .78, .85, skin, 14));
-        const hd = ball(p, 1.55, skin, 3.4, 5.6, 0, 1.0, 1.05, .95, 20);
-        [-1, 1].forEach(s => { const e = add(p, new TT.CircleGeometry(1.45, 20), skin, 3.0, 5.7, s * 1.35); e.rotation.y = s > 0 ? 0 : Math.PI; e.scale.set(.75, 1.05, 1); e.material.side = TT.DoubleSide;
-          limb(p, V3(4.2, 4.9, s * .55), V3(5.05, 4.55, s * .7), .2, .1, iv, 8); });   // ears and tusks
-        const tr = new TT.CatmullRomCurve3([V3(4.6, 5.2, 0), V3(5.3, 4.0, 0), V3(5.3, 2.4, 0), V3(5.0, 1.2, 0), V3(5.4, .95, 0)]);
-        add(p, new TT.TubeGeometry(tr, 24, .42, 10, false), skin);   // the trunk, down to the base
-        const cl = add(p, new TT.SphereGeometry(2.62, 28, 10, 0, Math.PI * 2, 0, .8), lozM, 0, 4.6, 0); cl.scale.set(1.35, 1.0, .92);   // the saddle-cloth
-        // the two mahouts, seated astride, each holding a hook
-        [[-1.2, 0], [1.4, 0]].forEach(([x], i) => { const f = new TT.Group(); f.position.set(x, 6.95, 0); f.rotation.y = Math.PI / 2; p.add(f);
+        const baseM = carved((g, w, h) => { g.lineWidth = 8; g.strokeRect(6, 6, w - 12, h - 12); for (let x = 20; x < w - 20; x += 40) { g.beginPath(); g.arc(x + 20, h / 2, 12, Math.PI, 0); g.stroke(); g.beginPath(); g.arc(x, h / 2, 12, 0, Math.PI); g.stroke(); } }, 512, 96);
+        add(p, new TT.BoxGeometry(8.6, 1.3, 4.6), [baseM, baseM, iv, iv, baseM, baseM], 0, .65, 0);
+        const E = new TT.Shape();   // the side profile (x along the body, head to +x)
+        E.moveTo(-3.5, 0); E.lineTo(-2.2, 0); E.quadraticCurveTo(-2.25, 1.6, -1.9, 2.9); E.quadraticCurveTo(-.3, 2.5, 1.2, 2.9); E.quadraticCurveTo(1.45, 1.6, 1.4, 0); E.lineTo(2.75, 0);
+        E.quadraticCurveTo(2.75, 1.7, 3.0, 2.6); E.quadraticCurveTo(3.3, 1.6, 3.55, .6); E.quadraticCurveTo(3.4, .1, 3.75, 0); E.lineTo(4.4, 0); E.quadraticCurveTo(4.25, .9, 4.2, 1.8);
+        E.quadraticCurveTo(4.3, 3.6, 4.4, 4.6); E.quadraticCurveTo(4.3, 5.8, 3.3, 6.0); E.quadraticCurveTo(2.0, 6.35, .5, 6.2); E.quadraticCurveTo(-2.4, 6.2, -3.5, 5.0); E.quadraticCurveTo(-4.0, 3.9, -3.7, 2.6); E.quadraticCurveTo(-3.5, 1.4, -3.5, 0);
+        const eg = new TT.ExtrudeGeometry(E, { depth: 2.2, bevelEnabled: true, bevelThickness: .95, bevelSize: .45, bevelSegments: 6, curveSegments: 16 }); eg.translate(0, 0, -1.1); fitUV(eg);
+        const skinT = K.tex(256, 256, (g, w, h) => { g.fillStyle = '#808080'; g.fillRect(0, 0, w, h); g.strokeStyle = '#a8a8a8'; g.lineWidth = 2; for (let y = 4; y < h; y += 10) { g.beginPath(); g.moveTo(0, y); for (let x = 0; x < w; x += 16) g.lineTo(x, y + Math.sin(x * .2 + y) * 2); g.stroke(); } }, { data: true });
+        const skin = K.mat({ map: IVT[1], bumpMap: skinT, bumpScale: 1.4, color: '#ffffff', roughness: .4, clearcoat: .25 });
+        add(p, eg, skin, 0, 1.3, 0);
+        // the saddle-cloth: a band hanging over each flank, lozenges and a fringe
+        const clothM = carved((g, w, h) => { g.lineWidth = 7; g.strokeRect(5, 5, w - 10, h * .8); for (let k = -6; k < 14; k++) { g.beginPath(); g.moveTo(k * 40, 10); g.lineTo(k * 40 + h * .7, h * .8); g.moveTo(k * 40, h * .8); g.lineTo(k * 40 + h * .7, 10); g.stroke(); }
+          for (let x = 8; x < w; x += 14) { g.beginPath(); g.moveTo(x, h * .82); g.lineTo(x, h - 4); g.stroke(); } }, 512, 256);
+        [-1, 1].forEach(sd => { const c = add(p, new TT.BoxGeometry(4.4, 2.3, .1), clothM, -.7, 1.3 + 4.6, sd * 2.08); });
+        // the ear (a broad flat flap with radiating folds) and the eye, on both sides
+        const earM = carved((g, w, h) => { g.lineWidth = 9; g.beginPath(); g.ellipse(w / 2, h / 2, w * .44, h * .44, 0, 0, 6.29); g.stroke(); for (let k = 0; k < 9; k++) { const a = -1.3 + k * .32; g.beginPath(); g.moveTo(w * .3, h * .5); g.lineTo(w * .3 + Math.cos(a) * w * .42, h * .5 + Math.sin(a) * h * .42); g.stroke(); } }, 256, 256);
+        [-1, 1].forEach(sd => { const e = add(p, new TT.CircleGeometry(1.35, 24), earM, 2.55, 1.3 + 4.3, sd * 2.09); e.scale.set(.8, 1.3, 1); if (sd < 0) e.rotation.y = Math.PI;
+          const eye = add(p, new TT.TorusGeometry(.32, .08, 6, 16), iv, 3.85, 1.3 + 4.95, sd * 1.75); eye.rotation.y = sd > 0 ? -.4 : Math.PI + .4; ball(p, .12, iv, 3.85, 1.3 + 4.95, sd * 1.78);
+          limb(p, V3(4.3, 1.3 + 3.0, sd * .8), V3(4.95, 1.3 + 2.4, sd * .9), .2, .08, iv, 8); });   // tusks
+        // the two mahouts, sitting astride, each with his hook
+        [[-1.7, 0], [.6, 0]].forEach(([x], i) => { const f = new TT.Group(); f.position.set(x, 1.3 + 6.1, 0); f.rotation.y = Math.PI / 2; f.scale.setScalar(.85); p.add(f);
           add(f, lathe([[.75, 0], [.68, 1.0], [.55, 1.9], [.3, 2.2], [0, 2.22]], 16), robe(10), 0, 0, 0).scale.z = .8;
-          [-1, 1].forEach(s => limb(f, V3(s * .6, .3, .2), V3(s * 1.4, -1.3, .55), .3, .24, robe(6)));
-          head(f, .46, 0, 2.6, .05, i === 0, 0);
+          [-1, 1].forEach(s => limb(f, V3(s * .6, .3, .2), V3(s * 1.5, -1.4, .5), .3, .24, robe(6)));
+          head(f, .5, 0, 2.65, .05, i === 0, 0); ball(f, .52, curly, 0, 2.8, -.1, 1, .9, 1, 12);
           limb(f, V3(.6, 1.6, .2), V3(.8, 1.1, .9), .2, .18, robe(6));
-          limb(f, V3(.8, .6, .95), V3(.8, 3.3, .95), .08, .08, iv, 6); const hk = add(f, new TT.TorusGeometry(.28, .07, 6, 12, Math.PI * 1.3), iv, .8 - .28, 3.3, .95); });
+          limb(f, V3(.8, .6, .95), V3(.8, 3.3, .95), .08, .08, iv, 6); add(f, new TT.TorusGeometry(.28, .07, 6, 12, Math.PI * 1.3), iv, .8 - .28, 3.3, .95); });
         pieces.push(p); }
       // QUADRIGA (Inv.55.317, H 12.6 cm, w 7.8): four horses abreast, a charioteer above with a three-thonged whip
       { const p = new TT.Group();
@@ -174,24 +202,26 @@
         for (let k = -1; k <= 1; k++) { const th = new TT.CatmullRomCurve3([V3(1.75, 6.6, .9), V3(2.2 + k * .3, 6.2, 1.2), V3(2.4 + k * .5, 5.2, 1.3 + k * .2)]); add(f, new TT.TubeGeometry(th, 10, .05, 5, false), iv); }
         limb(f, V3(-.75, 3.8, .1), V3(-1.0, 3.2, 1.0), .26, .22, robe(6));
         pieces.push(p); }
-      // HORSEMAN (Inv.55.319, H 12.4 cm, w 7.9): pointed shield with lozenges, sword in the right hand, head turned to his left
+      // HORSEMAN (Inv.55.319, H 12.4 cm, w 7.9), after the photographs: a sturdy horse carved in one block with its base, legs in
+      // pairs, the head bowed on an arched neck, a harness band across the chest; the rider in a long mail coat and a rounded helmet,
+      // the sword upright in his right hand, the long pointed shield on his left side
       { const p = new TT.Group();
         const bs = new TT.Shape(); const c = .9; bs.moveTo(-2.6 + c, -4.0); bs.lineTo(2.6 - c, -4.0); bs.lineTo(2.6, -4.0 + c); bs.lineTo(2.6, 4.0 - c); bs.lineTo(2.6 - c, 4.0); bs.lineTo(-2.6 + c, 4.0); bs.lineTo(-2.6, 4.0 - c); bs.lineTo(-2.6, -4.0 + c); bs.closePath();
-        add(p, new TT.ExtrudeGeometry(bs, { depth: .6, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1 }), iv, 0, .6, 0).rotation.x = Math.PI / 2;   // the base with cut corners
-        ball(p, 1.45, iv, 0, 4.0, 0, .85, .95, 2.05, 20);
-        [[-.55, 1.85], [.55, 1.85], [-.55, -1.8], [.55, -1.8]].forEach(([x, z]) => limb(p, V3(x, .6, z), V3(x * .9, 3.4, z * .95), .26, .36, iv, 8));
-        limb(p, V3(0, 4.6, 2.2), V3(0, 6.6, 3.0), .75, .55, iv, 12); limb(p, V3(0, 6.9, 2.95), V3(0, 5.9, 4.0), .5, .36, iv, 10);
-        add(p, new TT.BoxGeometry(.18, 1.4, 1.9), curly, 0, 6.0, 2.55).rotation.x = .55;
-        [-1, 1].forEach(s => add(p, new TT.ConeGeometry(.12, .45, 6), iv, s * .22, 7.25, 2.9));
-        limb(p, V3(0, 4.3, -3.2), V3(0, 1.4, -3.7), .32, .18, curly, 8);
-        // the rider: legs down the flanks, body, head turned to his left, conical helmet
-        [-1, 1].forEach(s => { limb(p, V3(s * .75, 5.4, .3), V3(s * 1.45, 3.4, .6), .42, .34, robe(6)); limb(p, V3(s * 1.45, 3.4, .6), V3(s * 1.35, 1.9, .55), .34, .28, iv); });
-        add(p, lathe([[1.15, 0], [1.1, 1.2], [1.05, 2.4], [.8, 3.0], [.4, 3.2], [0, 3.22]], 20), robe(16), 0, 5.2, .1).scale.z = .8;
-        head(p, .82, 0, 9.0, .15, false, .55); const hm = add(p, new TT.ConeGeometry(.88, 1.05, 16), iv, 0, 9.75, .15);
-        // shield on the left arm (+x), sword raised in the right hand (−x)
-        const sh = kite(2.7, 4.6, lozM); sh.position.set(1.45, 6.0, .55); sh.rotation.y = Math.PI / 2 - .35; p.add(sh);
-        limb(p, V3(-1.0, 7.6, .1), V3(-1.55, 8.7, .6), .32, .28, robe(6)); ball(p, .3, iv, -1.6, 8.85, .65);
-        add(p, new TT.BoxGeometry(.28, 3.2, .09), iv, -1.62, 10.6, .7).rotation.z = .12; add(p, new TT.BoxGeometry(1.1, .16, .2), iv, -1.6, 9.05, .68);
+        add(p, new TT.ExtrudeGeometry(bs, { depth: .9, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1 }), iv, 0, .9, 0).rotation.x = Math.PI / 2;
+        const Hs = new TT.Shape();   // the horse's side profile, head to +z (drawn in x, turned below)
+        Hs.moveTo(-3.2, 0); Hs.lineTo(-2.5, 0); Hs.quadraticCurveTo(-2.45, 1.6, -2.2, 3.0); Hs.quadraticCurveTo(-.2, 2.7, 1.7, 3.0); Hs.quadraticCurveTo(1.95, 1.5, 2.0, 0); Hs.lineTo(2.7, 0);
+        Hs.quadraticCurveTo(2.75, 1.8, 2.85, 3.2); Hs.quadraticCurveTo(3.3, 4.2, 3.4, 5.0); Hs.lineTo(4.1, 4.3); Hs.quadraticCurveTo(4.6, 4.2, 4.75, 4.6); Hs.lineTo(4.55, 5.7);
+        Hs.lineTo(4.2, 6.6); Hs.lineTo(3.9, 6.15); Hs.quadraticCurveTo(3.0, 6.4, 2.4, 5.7); Hs.quadraticCurveTo(1.9, 5.2, 1.2, 5.3); Hs.quadraticCurveTo(-1.0, 5.4, -2.9, 5.1); Hs.quadraticCurveTo(-3.6, 4.6, -3.4, 3.2); Hs.quadraticCurveTo(-3.2, 1.6, -3.2, 0);
+        const hg = new TT.ExtrudeGeometry(Hs, { depth: 1.6, bevelEnabled: true, bevelThickness: .85, bevelSize: .35, bevelSegments: 6, curveSegments: 12 }); hg.translate(0, 0, -.8); fitUV(hg);
+        const horse = add(p, hg, iv, 0, .9, 0); horse.rotation.y = -Math.PI / 2;
+        limb(p, V3(-1.15, .9 + 4.4, 3.0), V3(1.15, .9 + 4.4, 3.0), .22, .22, robe(12, 1), 8);   // the breast band
+        // the rider
+        [-1, 1].forEach(sd => { limb(p, V3(sd * .75, .9 + 5.5, .2), V3(sd * 1.2, .9 + 3.6, .7), .42, .36, robe(6)); limb(p, V3(sd * 1.2, .9 + 3.6, .7), V3(sd * 1.15, .9 + 2.3, .9), .34, .28, iv); });
+        add(p, lathe([[1.2, 0], [1.15, 1.2], [1.05, 2.4], [.8, 3.0], [.4, 3.2], [0, 3.22]], 20), robe(16), 0, .9 + 5.3, 0).scale.z = .8;
+        head(p, .82, 0, .9 + 9.2, .1, false, .4); const hm = add(p, new TT.SphereGeometry(.9, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), iv, 0, .9 + 9.55, .1); hm.scale.y = 1.1;
+        const sh = kite(2.6, 5.0, lozM); sh.position.set(1.45, .9 + 6.0, .4); sh.rotation.y = Math.PI / 2 - .3; p.add(sh);
+        limb(p, V3(-1.0, .9 + 7.8, .1), V3(-1.3, .9 + 6.8, .8), .32, .28, robe(6)); ball(p, .3, iv, -1.35, .9 + 6.7, .9);
+        add(p, new TT.BoxGeometry(.3, 4.2, .09), iv, -1.38, .9 + 9.0, .95); add(p, new TT.BoxGeometry(1.0, .16, .2), iv, -1.38, .9 + 6.9, .95);
         pieces.push(p); }
       // FOOT SOLDIER (Inv.55.323, H 7.3 cm, w 4.8): cuirass, nasal helmet, sword held high behind a great pointed shield
       { const p = new TT.Group();
