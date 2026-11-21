@@ -17,7 +17,7 @@
   const HERE = (document.currentScript && document.currentScript.src) || location.href; let INLAY = null;
   (window.AtlasEx = window.AtlasEx || {}).ottoman = {
     flip: true,
-    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { INLAY = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/ottoman-inlay.webp?v=2', HERE).href; setTimeout(res, 8000); }),
+    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { INLAY = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/ottoman-inlay.webp?v=5', HERE).href; setTimeout(res, 8000); }),
     build(TT, X, K) {
       const G = new TT.Group();
       const W = 56.5, D = 56.3, LD = D / 2, TH = 2.0, PX = innerWidth < 820 ? 1536 : 2048;   // width, depth open, a leaf's depth, its thickness
@@ -234,11 +234,24 @@
         bgMask = new TT.CanvasTexture(mk); bgMask.colorSpace = TT.NoColorSpace;
       });
       // materials: shell / pearl in one picture; the pearl areas get a thin-film iridescence (mask)
-      const face = (map, mask) => K.mat({ map, color: '#e9e6e2', roughness: .34, metalness: .05, clearcoat: .5, clearcoatRoughness: .28, iridescence: 1, iridescenceIOR: 1.9, iridescenceThicknessRange: [220, 760], iridescenceMap: mask });
+      // Mother-of-pearl changes colour with the light: each piece is cut from the shell at its own angle, so as the board (or the eye)
+      // moves, a piece swings from grey-white through pink to green and blue, and its neighbour does so at another moment. Done in the
+      // shader: on the pearl (mask) the colour is tinted by a phase made of the piece's own grain (a noise picture) and the direction it
+      // is looked at from, taken in the board's own space — so turning the board changes it.
+      const face = (map, mask) => { const m = K.mat({ map, color: '#f2f0ee', roughness: .42, metalness: 0, clearcoat: .12, clearcoatRoughness: .55, specularIntensity: .45 });   // (little mirror-like shine: the lamp's reflection washed the near edge out)
+        m.onBeforeCompile = sh => { sh.uniforms.uMask = { value: mask }; sh.uniforms.uGrain = { value: thickT };
+          sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vObjView;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvObjView = (inverse(modelMatrix) * vec4(cameraPosition, 1.0)).xyz - position;');
+          sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D uMask; uniform sampler2D uGrain; varying vec3 vObjView;').replace('#include <map_fragment>', `#include <map_fragment>
+            { float pm = texture2D(uMask, vMapUv).r; float gr = texture2D(uGrain, vMapUv * .9).r; float a = gr * 4.2;
+              vec3 gdir = normalize(vec3(cos(a), sin(a), cos(a * 1.7) * .8)); float t = dot(normalize(vObjView), gdir);
+              vec3 hue = .5 + .5 * cos(6.2832 * (gr * .7 + t * .85 + vec3(0.0, .33, .67)));
+              float sheen = smoothstep(.15, .95, abs(t));
+              diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * (.5 + .5 * sheen) + hue * (.08 + .2 * sheen), pm); }`); };
+        m.customProgramCacheKey = () => 'ott-nacre'; return m; };
       const thickT = K.tex(512, 512, (g, w, h) => { const n = K.noise(91), img = g.createImageData(w, h), d = img.data;
-        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const v = n(x / 9, y / 26, 2) * .6 + n(x / 60, y / 60, 3) * .4, i = (y * w + x) * 4; d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, v * 300 - 20)); d[i + 3] = 255; } g.putImageData(img, 0, 0); }, { data: true, rep: [3, 3] });
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const v = n(x / 30, y / 70, 2) * .35 + n(x / 90, y / 90, 3) * .65, i = (y * w + x) * 4; d[i] = d[i + 1] = d[i + 2] = Math.max(0, Math.min(255, v * 300 - 20)); d[i + 3] = 255; } g.putImageData(img, 0, 0); }, { data: true, rep: [3, 3] });
       const chessMat = face(chessT, chessMask), bgMat = face(bgT, bgMask);
-      [chessMat, bgMat].forEach(m => { m.iridescenceThicknessMap = thickT; m.metalnessMap = m.iridescenceMap; m.metalness = .45; m.color.set('#ffffff'); });   // (the pearl reflects like a metal, so the film's colours show in what it mirrors and move as the board turns; the shell stays a dielectric)
+   // (the pearl reflects like a metal, so the film's colours show in what it mirrors and move as the board turns; the shell stays a dielectric)
       const edgeT = K.tex(512, 64, (g, w, h) => { g.fillStyle = '#e8dcbc'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(90,70,40,.5)'; g.lineWidth = 2; for (let x = 0; x < w; x += 40) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 20, h / 2); g.lineTo(x, h); g.stroke(); } }, { rep: [12, 1] });
       const bone = K.mat({ map: edgeT, color: '#ffffff', roughness: .45, clearcoat: .3 });
       // the frame tops: plaques of turtle shell alternating with mother-of-pearl cut as long pieces with concave ends running to a point
@@ -269,7 +282,7 @@
         const leaf = new TT.Mesh(new TT.BoxGeometry(LW - .08, TH, D), [sdD, sdD, wood, wood, sdL, sdL]); leaf.position.set(cx + sd * .04, TH / 2, 0); G.add(leaf);
         // raised framing fillets (about 5 mm): far, near and outer sides 1.2 cm wide, the hinge side 1.5 cm
         // (with the photograph's layout, the raised fillets carry their own part of the same picture)
-        const part = (w, d, x, z) => { const m = bgMat.clone(); ['map', 'iridescenceMap', 'metalnessMap'].forEach(k => { const t = bgMat[k].clone(); t.repeat.set(w / W, d / D); t.offset.set((x - w / 2 + W / 2) / W, (D / 2 - z - d / 2) / D); t.needsUpdate = true; m[k] = t; }); m.polygonOffset = false; return m; };
+        const part = (w, d, x, z) => { const m = bgMat.clone(); m.onBeforeCompile = bgMat.onBeforeCompile; m.customProgramCacheKey = bgMat.customProgramCacheKey; const t = bgMat.map.clone(); t.repeat.set(w / W, d / D); t.offset.set((x - w / 2 + W / 2) / W, (D / 2 - z - d / 2) / D); t.needsUpdate = true; m.map = t; m.polygonOffset = false; return m; };
         const fil = (w, d, x, z, m) => { const f = new TT.Mesh(new TT.BoxGeometry(w, .5, d), [wood, wood, INLAY ? part(w, d, x, z) : m, wood, wood, wood]); f.position.set(x, TH + .25, z); G.add(f); };
         fil(LW, FW, cx, -D / 2 + FW / 2, plaqMat(LW, false)); fil(LW, FW, cx, D / 2 - FW / 2, plaqMat(LW, false));
         fil(FW, D - 2 * FW, sd * (W / 2 - FW / 2), 0, plaqMat(D, true)); const HG2 = INLAY ? 1.45 : HG; fil(HG2, D - 2 * FW, sd * HG2 / 2, 0, hingeMat);

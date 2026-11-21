@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 61;
+  const V = 67;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -27,7 +27,7 @@
       spots: [[-2.8, 4.6, -2.0], [2.6, 7.4, -2.4], [8.4, 9.0, -1.6], [-8.4, 5.5, .2], [-.2, 6.4, 5.9], [5.6, 2.6, 5.4], [-2.8, 4.0, -5.2]] },
     // (「シャルルマーニュのチェス駒」は取り下げ中：公開できる水準に届かないため 2026-11-22。モデル ex/charlemagne.js と解説文は残してある。戻すときは museum-spec.md を参照)
     { id: 'nishapur', game: 'chess', cm: 1, view: [.9, .55, .78],
-      spots: [[3.1, 5.0, 22.9], [-3.1, 4.2, 22.8], [-9.3, 3.4, 21.2], [-15.5, 3.6, 21.0], [-21.7, 3.9, 21.7], [-3.1, 2.4, 15.5], [3.1, 5.0, -22.9]] },
+      spots: [[2.5, 5.2, 10.25], [-2.5, 4.7, 10.25], [-7.5, 5.0, 10.25], [-12.5, 4.6, 10.25], [-17.5, 3.4, 10.25], [-1.3, 3.1, 3.75], [2.5, 5.2, -10.25]] },
     { id: 'ottoman', game: 'backgammon', cm: 1, flip: true, view: [0, .95, .82], lock: { game: 'backgammon', ach: 3 },
       spots: [[-21.5, 2.1, -15], [-14.1, 2.1, 0], [-27.6, 2.55, 12], [-8.2, 0, 2.7], [-2.7, 0, 8.1], [-24.9, 0, 0], [-24.9, 0, -24.8], [28.3, 1.0, 12]], side: [0, 0, 0, 1, 1, 1, 1, 1] },
     { id: 'kofukuji', game: 'shogi', cm: 1, view: [0, .95, .78], lock: { game: 'shogi', ach: 3 } },   // (spots: from the model's userData)
