@@ -238,7 +238,7 @@
       // moves, a piece swings from grey-white through pink to green and blue, and its neighbour does so at another moment. Done in the
       // shader: on the pearl (mask) the colour is tinted by a phase made of the piece's own grain (a noise picture) and the direction it
       // is looked at from, taken in the board's own space — so turning the board changes it.
-      const face = (map, mask) => { const m = K.mat({ map, color: '#f2f0ee', roughness: .42, metalness: 0, clearcoat: .25, clearcoatRoughness: .45 });
+      const face = (map, mask) => { const m = K.mat({ map, color: '#f2f0ee', roughness: .42, metalness: 0, clearcoat: .12, clearcoatRoughness: .55, specularIntensity: .45 });   // (little mirror-like shine: the lamp's reflection washed the near edge out)
         m.onBeforeCompile = sh => { sh.uniforms.uMask = { value: mask }; sh.uniforms.uGrain = { value: thickT };
           sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vObjView;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvObjView = (inverse(modelMatrix) * vec4(cameraPosition, 1.0)).xyz - position;');
           sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D uMask; uniform sampler2D uGrain; varying vec3 vObjView;').replace('#include <map_fragment>', `#include <map_fragment>
