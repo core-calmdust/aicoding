@@ -16,7 +16,7 @@
       const G = new TT.Group();
       const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = .7, RT = .7;   // LIN: the strip of rosettes at the top of the base
       const shT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#3e2016', b: '#1f0e09', seed: 37, sx: .5, sy: 9, warp: .45, pores: .004 }));
-      const baseT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#8a5a32', b: '#6a3e22', seed: 41, sx: .5, sy: 12, warp: .3, pores: .004 }));
+      const baseT = K.tex(1024, 1024, (g, w, h) => K.grain(g, w, h, { a: '#6a4026', b: '#4a2a18', seed: 41, sx: .5, sy: 12, warp: .3, pores: .004 }));
       const shR = K.tex(256, 256, (g, w, h) => K.grain(g, w, h, { a: '#7a7a7a', b: '#4e4e4e', seed: 38, sy: 14 }), { data: true });
       const shitan = K.mat({ map: shT, roughnessMap: shR, color: '#ffffff', roughness: .5, clearcoat: .35, clearcoatRoughness: .35 });
       const inner = K.mat({ map: baseT, color: '#ffffff', roughness: .55, clearcoat: .2, clearcoatRoughness: .4 });
@@ -98,9 +98,7 @@
         // the bottom corners in long curves (the legs and the post flare out to their feet), the sides bowing out, the top in two arcs
         // meeting in a hanging point (photographs)
         p.moveTo(x0 + rx, .4); p.lineTo(x1 - rx, .4); p.bezierCurveTo(x1 - rx * .3, .4, x1 + bow * .4, ry * .45, x1 + bow * .55, ry); p.quadraticCurveTo(x1 + bow, (ry + top) / 2, x1 + .3, top - 2.6);
-        p.quadraticCurveTo(x1, top - .2, x1 - 2.6, top - .1);
-        p.quadraticCurveTo(cx + (x1 - cx) * .35, top + .1, cx + .6, top - .9); p.lineTo(cx, top - 1.5); p.lineTo(cx - .6, top - .9);
-        p.quadraticCurveTo(cx - (cx - x0) * .35, top + .1, x0 + 2.6, top - .1); p.quadraticCurveTo(x0, top - .2, x0 - .3, top - 2.6);
+        p.quadraticCurveTo(x1, top - .3, x1 - 2.6, top - .3); p.lineTo(x0 + 2.6, top - .3); p.quadraticCurveTo(x0, top - .3, x0 - .3, top - 2.6);   // a smooth rounded top (detail photograph CO0000011759)
         p.quadraticCurveTo(x0 - bow, (ry + top) / 2, x0 - bow * .55, ry); p.bezierCurveTo(x0 - bow * .4, ry * .45, x0 + rx * .3, .4, x0 + rx, .4); return p; };
       const skirtFor = (len, n) => { const S = new TT.Shape(); S.moveTo(-len / 2, 0); S.lineTo(len / 2, 0); S.lineTo(len / 2, SK); S.lineTo(-len / 2, SK); S.closePath();
         const LEG = 2.6, POST = 3.8, ow = (len - 2 * LEG - (n - 1) * POST) / n;
@@ -114,8 +112,6 @@
         const vs = K.tex(512, Math.round(512 * 3.4 / SK), (g2, w2, h2) => scroll(g2, w2, h2, w2 / SK, seed, baseT, { per: 5.2 }));
         cols.forEach(cxm => { g.save(); g.translate(cxm * s, h); g.rotate(-Math.PI / 2); g.globalAlpha = 1; g.drawImage(vs.image, 0, -s * 1.7, h, s * 3.4); g.restore(); });
         // across the top, between the openings and the edge, a running scroll
-        const hs = K.tex(2048, Math.round(2048 * 2.2 / len), (g2, w2, h2) => scroll(g2, w2, h2, w2 / len, seed + 3, baseT, { per: 5.5, birds: false }));
-        g.drawImage(hs.image, 0, s * .1, w, s * 2.2);
         // the strip of rosettes along the top
         g.fillStyle = C.iv; g.fillRect(0, 0, w, s * .14);
         S.holes.forEach(hp => { const xs = hp.getPoints(30).map(p => p.x), xa = (Math.min(...xs) + len / 2) * s, xb = (Math.max(...xs) + len / 2) * s;   // over each opening, a dark strip with rosettes
