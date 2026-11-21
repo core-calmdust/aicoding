@@ -50,7 +50,7 @@
         ["Kenardaki kuşlar", "Tahtanın kenarı: ince bambu şeritlerle çizilmiş kıvrımlar, fildişi çiçekler, yeşile boyanmış geyik boynuzundan yapraklar ve çizgili kanatlarıyla uçan kuşlar."],
         ["Ayaklık", "Daha açık renkli ağaçtan ayaklığın her uzun yüzünde iki büyük açıklık oyulmuştur; aralarında beli daralan bir orta direk ve ince köşe ayakları kalır, hepsi kıvrımlarla bezelidir."],
         ['Zarlar', 'Shōsōin\'de fildişi zarlar da korunur (Kuzey Bölümü 17, kenarı yaklaşık 1,3–1,4 cm). Bugün olduğu gibi karşılıklı yüzlerin toplamı yedidir. Burada referans olarak iki tane konmuştur.']],
-      model: "Ölçüler Shōsōin kayıtlarına göredir. Biçim ve desenler yayımlanmış fotoğraflara göredir; ince kakma işi sadeleştirilmiştir.",
+      model: "Ölçüler Shōsōin kayıtlarına göredir. Yanlardaki ve oyun alanındaki kakma, Shōsōin'in yayımladığı fotoğrafların düzeltilip uygulanmasıyla elde edilmiştir.",
       src: [['Shōsōin, “木画紫檀双六局”', 'https://shosoin.kunaicho.go.jp/treasures/?id=0000010086&index=10'], ['Shōsōin Sergisi, “悠久の輝き（前編）” (hilaller ve çiçekler)', 'https://shosoin-ten.jp/articles/detail/000453.html'], ['Shōsōin Sergisi, “木画紫檀双六局”', 'https://shosoin-ten.jp/info/treasures/000414/'], ['Nara Shimbun, “時を超えたたからもの(2)”', 'https://www.nara-np.co.jp/news/20251103211942.html']] },
     pyrgus: { name: 'Vettweiss-Froitzheim Zar Kulesi', alt: 'Bir Roma zar kulesi (turricula / pyrgus)', date: 'MS 4. yüzyıl', where: 'Almanya (Roma Germania\'sı)', found: 'Vettweiss-Froitzheim yakınlarında bir Roma villası alanı; 1983\'te bakır levhalar hâlinde bulundu ve müze tarafından yeniden birleştirildi',
       museum: 'Rheinisches Landesmuseum Bonn', no: 'Inv. 85.0269.00', mat: 'Bakır alaşımı levha', size: 'Y 22 cm · 9 × 9 cm',
