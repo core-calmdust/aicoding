@@ -17,7 +17,7 @@
   const HERE = (document.currentScript && document.currentScript.src) || location.href; let INLAY = null;
   (window.AtlasEx = window.AtlasEx || {}).ottoman = {
     flip: true,
-    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { INLAY = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/ottoman-inlay.webp?v=3', HERE).href; setTimeout(res, 8000); }),
+    ready: () => new Promise(res => { const im = new Image(); im.onload = () => { INLAY = im; res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/ottoman-inlay.webp?v=5', HERE).href; setTimeout(res, 8000); }),
     build(TT, X, K) {
       const G = new TT.Group();
       const W = 56.5, D = 56.3, LD = D / 2, TH = 2.0, PX = innerWidth < 820 ? 1536 : 2048;   // width, depth open, a leaf's depth, its thickness
