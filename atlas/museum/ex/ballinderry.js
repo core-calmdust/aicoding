@@ -12,10 +12,10 @@
   (window.AtlasEx = window.AtlasEx || {}).ballinderry = {
     build(TT, X, K) {
       const G = new TT.Group();
-      const S = 24, FW = 3.1, T0 = 1.0, T1 = 2.5, IN = S - FW * 2, P = 2.35;
+      const S = 24, FW = 3.1, T0 = 1.0, T1 = 2.5, IN = S - FW * 2, P = 2.35, DP = .26;   // DP: how deep the frame's carving is cut
       // ---- yew: warm orange-brown, darkened by a thousand years in the bog; the heartwood streaks
       const yew = (seed, dark) => K.tex(1024, 1024, (g, w, h) => {
-        K.grain(g, w, h, { a: dark ? '#2e261e' : '#3a3026', b: dark ? '#241d16' : '#271f17', seed, sx: 1, sy: 44, warp: .22, pores: .003 });   // grey-brown, as in the 3D scan
+        K.grain(g, w, h, { a: dark ? '#5e5038' : '#66573c', b: dark ? '#493c29' : '#4c3f2b', seed, sx: 1, sy: 44, warp: .22, pores: .003 });   // grey-brown, as in the 3D scan
         const n = K.noise(seed + 5), img = g.getImageData(0, 0, w, h), d = img.data;
         for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = n(x / 160, y / 160, 4), k = .82 + a * .3, i = (y * w + x) * 4; d[i] *= k; d[i + 1] *= k * .97; d[i + 2] *= k * .94; }
         g.putImageData(img, 0, 0);
@@ -81,9 +81,12 @@
           g.globalCompositeOperation = 'multiply'; g.drawImage(mk, 0, 0); g.globalCompositeOperation = 'source-over';
         });
         const bump = new TT.CanvasTexture(bc); bump.colorSpace = TT.NoColorSpace;
-        return K.mat({ map, bumpMap: bump, bumpScale: 4, color: '#b09a84', roughness: .72 });
+        // the carving is real relief: the top is a fine grid pushed up by the same picture (its outer edge held down, to meet the block below)
+        const dc = document.createElement('canvas'); dc.width = W; dc.height = H; const dg = dc.getContext('2d'); dg.drawImage(bc, 0, 0); dg.strokeStyle = '#000'; dg.lineWidth = 6; dg.strokeRect(0, 0, W, H);
+        const disp = new TT.CanvasTexture(dc); disp.colorSpace = TT.NoColorSpace;
+        return K.mat({ map, bumpMap: bump, bumpScale: 2.2, displacementMap: disp, displacementScale: DP, color: '#b09a84', roughness: .66 });
       };
-      const wood = K.mat({ map: frameMap, color: '#b09a84', roughness: .75 });
+      const wood = K.mat({ map: frameMap, color: '#b09a84', roughness: .68 });
       // ---- the playing panel: dark, 49 holes, arcs round the centre and corner holes, the crack across it
       const PX = 1024, crack = [];
       { let x = 0, y = PX * .56; crack.push([x, y]); while (x < PX) { x += 18 + Math.random() * 30; y += (Math.random() - .5) * 26; crack.push([x, y]); } }
@@ -102,46 +105,38 @@
         g.strokeStyle = bump ? '#000' : 'rgba(8,4,2,.9)'; g.lineWidth = bump ? 7 : 4; g.beginPath(); crack.forEach(([x, y], k) => k ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke();
       };
       const pMap = K.tex(PX, PX, g => drawPanel(g, false)), pBump = K.tex(PX, PX, g => drawPanel(g, true), { data: true });
-      const panel = K.mat({ map: pMap, bumpMap: pBump, bumpScale: 3.5, color: '#b09a84', roughness: .7 });
+      const panel = K.mat({ map: pMap, bumpMap: pBump, bumpScale: 3.5, color: '#948270', roughness: .7 });
       const add = (geo, m, x, y, z) => { const o = new TT.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; G.add(o); return o; };
       add(new TT.BoxGeometry(IN, T0, IN), [wood, wood, panel, wood, wood, wood], 0, T0 / 2, 0);
       // the four frame sides (mitred look: the top textures meet at the corners); each top carries two carved panels
-      const fs = (k, w, x, z, ry) => { const m = sideMat(SIDES[k], k), o = add(new TT.BoxGeometry(w, T1, FW), [wood, wood, m, wood, wood, wood], x, T1 / 2, z); o.rotation.y = ry; };
+      const fs = (k, w, x, z, ry) => { const m = sideMat(SIDES[k], k), o = add(new TT.BoxGeometry(w, T1 - DP, FW), wood, x, (T1 - DP) / 2, z); o.rotation.y = ry;
+        const tg = new TT.PlaneGeometry(w, FW, Math.round(w / .16), 19); tg.rotateX(-Math.PI / 2); const t = add(tg, m, x, T1 - DP, z); t.rotation.y = ry; };
       fs(0, S, 0, -(S / 2 - FW / 2), 0); fs(2, S, 0, S / 2 - FW / 2, Math.PI); fs(1, S - FW * 2, S / 2 - FW / 2, 0, -Math.PI / 2); fs(3, S - FW * 2, -(S / 2 - FW / 2), 0, Math.PI / 2);
-      // ---- the heads (handles): the human head on the west edge, the smaller animal head on the east (rough, worn carving)
-      // the heads are carved from the end grain: a softer, blotchier surface than the long grain of the frame
-      const knob = K.tex(512, 256, (g, w, h) => { const n = K.noise(77), img = g.createImageData(w, h), d = img.data;
-        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = n(x / 30, y / 30, 4), r = n(x / 6, y / 60, 2), k = .75 + a * .35 + (r - .5) * .12, i = (y * w + x) * 4;
-          d[i] = 58 * k; d[i + 1] = 46 * k; d[i + 2] = 34 * k; d[i + 3] = 255; } g.putImageData(img, 0, 0); });
-      const headM = (human) => { const draw = (g, w, h, bump) => {
-          if (bump) { g.fillStyle = '#808080'; g.fillRect(0, 0, w, h); } else g.drawImage(knob.image, 0, 0, w, h);
-          const c = w * .25, lo = bump ? '#202020' : 'rgba(26,12,5,.7)'; g.fillStyle = lo; g.strokeStyle = lo; g.lineCap = 'round';
-          if (human) {   // shallow, worn features: round eye hollows, a ridge of nose, a slit mouth over a short combed beard
-            [-1, 1].forEach(s => { g.beginPath(); g.ellipse(c + s * 22, h * .43, 9, 6, 0, 0, 6.29); g.fill(); });
-            if (bump) { g.fillStyle = '#c8c8c8'; g.beginPath(); g.moveTo(c - 4, h * .43); g.lineTo(c + 4, h * .43); g.lineTo(c + 8, h * .6); g.lineTo(c - 8, h * .6); g.closePath(); g.fill(); g.fillStyle = lo; }
-            g.lineWidth = 3.5; g.beginPath(); g.moveTo(c - 13, h * .67); g.lineTo(c + 13, h * .67); g.stroke();
-            g.lineWidth = 2; for (let x = -26; x <= 26; x += 6.5) { g.beginPath(); g.moveTo(c + x * .8, h * .72); g.lineTo(c + x * .7, h * .84); g.stroke(); }
-          } else {       // an animal's head: eyes on the sides of the snout, nostrils at its tip, the line of the jaw
-            [-1, 1].forEach(s => { g.beginPath(); g.arc(c + s * 40, h * .4, 6, 0, 6.29); g.fill(); g.lineWidth = 2; g.beginPath(); g.moveTo(c + s * 6, h * .62); g.lineTo(c + s * 46, h * .56); g.stroke(); });
-            [-1, 1].forEach(s => { g.beginPath(); g.ellipse(c + s * 6, h * .52, 3, 2.2, 0, 0, 6.29); g.fill(); });
-          }
-        };
-        return K.mat({ map: K.tex(512, 256, (g, w, h) => draw(g, w, h, false)), bumpMap: K.tex(512, 256, (g, w, h) => draw(g, w, h, true), { data: true }), bumpScale: 3, color: '#b09a84', roughness: .74 }); };
-      const knobM = K.mat({ map: knob, color: '#b09a84', roughness: .76 });
-      const mesh = (geo, m, x, y, z) => { const o = new TT.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; return o; };
-      // the human head (west edge, the larger handle)
-      { const h = new TT.Group(); h.position.set(-S / 2 - 1.2, 1.3, 0);
-        const neck = mesh(new TT.CylinderGeometry(.85, 1.0, 1.0, 18), knobM, .55, 0, 0); neck.rotation.z = Math.PI / 2; h.add(neck);
-        const hd = mesh(new TT.SphereGeometry(1.3, 28, 18), headM(true), -.25, 0, 0); hd.scale.set(.9, 1.0, .92); hd.rotation.y = -Math.PI / 2; h.add(hd);
-        const nose = mesh(new TT.SphereGeometry(.24, 10, 8), knobM, -1.3, -.05, 0); nose.scale.set(.5, 1.2, .6); h.add(nose);
-        [-1, 1].forEach(s => { const ear = mesh(new TT.SphereGeometry(.3, 10, 8), knobM, -.1, .05, s * 1.18); ear.scale.set(.55, 1, .35); h.add(ear); });
-        G.add(h); }
-      // the animal head (east edge, about half the size)
-      { const h = new TT.Group(); h.position.set(S / 2 + .75, 1.2, 0);
-        const neck = mesh(new TT.CylinderGeometry(.6, .72, .8, 16), knobM, -.4, 0, 0); neck.rotation.z = Math.PI / 2; h.add(neck);
-        const hd = mesh(new TT.SphereGeometry(.8, 24, 16), headM(false), .25, 0, 0); hd.scale.set(1.45, .85, .85); hd.rotation.y = Math.PI / 2; h.add(hd);
-        [-1, 1].forEach(s => { const e = mesh(new TT.SphereGeometry(.17, 10, 8), knobM, -.15, .6, s * .4); e.scale.set(.6, 1.15, .5); h.add(e); });
-        G.add(h); }
+      // ---- the heads (handles), each carved in one with the board and lying flat, the face upward (after the 3D scan: on the west edge a
+      // large flattened oval on a short neck — the human head; on the east a smaller rounded head on a narrow neck — the animal)
+      const I = K.ink, knob = K.tex(256, 256, (g, w, h) => { const n = K.noise(77), img = g.createImageData(w, h), d = img.data;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const a = n(x / 30, y / 30, 4), r = n(x / 6, y / 60, 2), k = .78 + a * .32 + (r - .5) * .14, i = (y * w + x) * 4;
+          d[i] = 84 * k; d[i + 1] = 71 * k; d[i + 2] = 50 * k; d[i + 3] = 255; } g.putImageData(img, 0, 0); });
+      const head = (o, x, ry) => { const r = K.relief(Object.assign({ px: 256, round: .7, relief: .22, nx: 30, tex: knob.image, dirt: [34, 24, 14], dirtK: .7, bump: 1.6, mat: { roughness: .68, color: '#b09a84' } }, o));
+        r.rotation.x = -Math.PI / 2; const h = new TT.Group(); h.add(r); h.rotation.y = ry; h.position.set(x, 1.2, 0); G.add(h); };
+      head({ w: 4.4, h: 6.4, depth: 1.05,
+        mask(g) { g.fillStyle = '#fff'; g.fillRect(-.95, -.5, 1.9, 2.4); g.beginPath(); g.ellipse(0, 3.7, 1.75, 2.3, 0, 0, 6.29); g.fill(); },
+        thick(g) { g.fillStyle = '#b0b0b0'; g.fillRect(-1.2, -.5, 2.4, 1.6); },
+        front(g) {   // worn features: a brow, round eye hollows, a ridge of nose, a slit mouth, the beard and hair combed in lines
+          I.line(g, [[-1.1, 4.25], [0, 4.45], [1.1, 4.25]], .5, .7); [-1, 1].forEach(sx => { I.blob(g, sx * .62, 3.85, .36, .26, -.9); I.blob(g, sx * .62, 3.85, .14, .1, .5); });
+          I.line(g, [[0, 4.2], [0, 3.6], [0, 3.15]], .42, .9); I.blob(g, 0, 3.1, .34, .22, .5);
+          I.line(g, [[-.5, 2.62], [0, 2.56], [.5, 2.62]], .16, -1);
+          for (let k = -4; k <= 4; k++) I.line(g, [[k * .2, 2.4], [k * .23, 1.95], [k * .2, 1.6]], .08, -.6);
+          for (let k = -5; k <= 5; k++) I.line(g, [[k * .25, 4.95], [k * .26, 5.3], [k * .23, 5.6]], .07, -.4);
+        } }, -S / 2 - .45, Math.PI / 2);
+      head({ w: 3.6, h: 4.8, depth: .95,
+        mask(g) { g.fillStyle = '#fff'; g.fillRect(-.55, -.5, 1.1, 2.0); g.beginPath(); g.ellipse(0, 2.75, 1.4, 1.55, 0, 0, 6.29); g.fill(); },
+        thick(g) { g.fillStyle = '#909090'; g.fillRect(-.9, -.5, 1.8, 1.4); },
+        front(g) {   // an animal's head, the snout outward: eyes to the sides, nostrils at the tip, small ears back by the neck
+          [-1, 1].forEach(sx => { I.blob(g, sx * .7, 2.75, .26, .22, -.9); I.blob(g, sx * .7, 2.75, .1, .08, .5); I.blob(g, sx * .78, 1.75, .3, .22, .7, sx * .5); I.blob(g, sx * .22, 3.95, .1, .08, -.8);
+            I.line(g, [[sx * .3, 3.3], [sx * .75, 3.5], [sx * 1.1, 3.2]], .1, -.5); });
+          I.line(g, [[0, 2.3], [0, 3.2], [0, 3.9]], .5, .5);
+        } }, S / 2 + .45, -Math.PI / 2);
       return G;
     },
   };
