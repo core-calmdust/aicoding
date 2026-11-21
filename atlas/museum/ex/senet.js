@@ -54,6 +54,7 @@
           g.restore(); x += wd + gap * k; }); };
       const textTex = (len, ht, toks, mirror, real) => { const PX = 2048, s = PX / len; return K.tex(PX, Math.round(ht * s), (g, w, h) => {
         g.drawImage(ebonyT.image, 0, 0, w, h);
+        if (real === 'end' && TXT) { const bh2 = s * 2.1, k = bh2 / TXT.height, len = w - s * 1.0; g.globalAlpha = .78; g.drawImage(TXT, 900, 0, len / k, TXT.height, s * .5, h * .52 - bh2 / 2, len, bh2); g.globalAlpha = 1; return; }
         if (real && TXT) { if (!mirror) { g.translate(w, 0); g.scale(-1, 1); }   /* (the far side, as the museum's small photograph of it shows: it too starts at the drawer's end and closes with the king's ring at the other — the near side's inscription, turned to read that way) */ const iw = w * .984, ih = iw * TXT.height / TXT.width; g.globalAlpha = .78; g.drawImage(TXT, w * .006, h * .52 - ih / 2, iw, ih); g.globalAlpha = 1; return; }   // the side toward the visitor: the inscription itself, lifted from a photograph of the box in its case (thin incised outlines, a few signs filled)
         const cy = h * .53, bh = s * 2.1;   // one band a little below the middle (the museum's photograph)
         if (mirror) { g.translate(w, 0); g.scale(-1, 1); }   // read from the right: the signs face the other way
@@ -64,9 +65,11 @@
       const NAMES = T(0x132F9, 0x13143, 0x130D2, 0x130A1, [0x133CF, 0x133CF], 0x13171, 0x1311F, [0x132F4, 0x133CF], 0x13171, 0x13152, 0x13124, [0x13254, 0x132AA], 0x13171, 0x132F4, [0x133BC, 0x1308B], 0x1339B, [0x131FE, 0x131FE], 0x13149, 0x1335E, [0x1320D, 0x133E5], 0x132F4, 0x132B5, [0x133CF, 0x132AA], 0x132B9, 0x132B9, 0x132B9, 0x131D3, 0x131A4, [0x133CF, 0x133CF], 'C1');
       const SIDEB = T(0x132F9, 0x132B9, 0x13124, 0x1339F, [0x131FE, 0x131FE], 0x1339F, [0x13079, 0x133CF], [0x1340D, 0x133CF], 0x131D3, 0x131A4, [0x133CF, 0x133CF], 'C1', 0x1316D, 0x131F3, 'C2', [0x133D9, 0x132F9], 0x13193, [0x133CF, 0x131FE]);
       const ENDT = T(0x133D9, 0x132F9, 0x132BD, 0x13300, [0x133C7, 0x131F3], 0x13193, [0x133CF, 0x131FE]);
-      const sideT = textTex(L, BH, NAMES, true, true), sideT2 = textTex(L, BH, SIDEB, false, true)   /* (no photograph of the far side was found: it carries the same inscription as the near side, by the owner's decision 2026-11-22 — better than a typeface) */, endT = textTex(W, BH, ENDT, false);
+      const sideT = textTex(L, BH, NAMES, true, true), sideT2 = textTex(L, BH, SIDEB, false, true)   /* (no photograph of the far side was found: it carries the same inscription as the near side, by the owner's decision 2026-11-22 — better than a typeface) */, endT = textTex(W, BH, ENDT, false, 'end');
       // the drawer's end of the box: a frame of text round the opening (Carter's sketch c)
       const frameT = K.tex(1024, Math.round(1024 * BH / W), (g, w, h) => { g.drawImage(ebonyT.image, 0, 0, w, h); const s = w / W, hx0 = (W - 9.5) / 2 * s, hx1 = w - hx0, hy1 = h - .9 * s, hy0 = hy1 - 4.0 * s, bh = s * 1.15;
+        if (TXT) { const k = bh / TXT.height, seg = (sx, len, dx, dy, rot) => { g.save(); g.translate(dx, dy); g.rotate(rot); g.globalAlpha = .78; g.drawImage(TXT, sx, 0, len / k, TXT.height, 0, -bh / 2, len, bh); g.restore(); };   // (no photograph shows this end well enough to read: the frame round the drawer's opening is filled with lengths of the long side's inscription rather than a typeface)
+          const tw = hx1 - hx0 + s * 2.6; seg(60, tw, hx0 - s * 1.3, hy0 - bh * .62, 0); const sh = hy1 - hy0 + s * .2; seg(1500, sh, hx0 - s * .68, hy0, Math.PI / 2); seg(2300, sh, hx1 + s * .68, hy0, Math.PI / 2); return; }
         row(g, T('C1', 0x132B9, 0x13124, 0x1339F, [0x131FE, 0x131FE], 0x133D9, 0x132F9), hx0 - s * 1.2, hy0 - bh * .75, hx1 - hx0 + s * 2.4, bh);
         [[hx0 - s * 1.1, T(0x132F9, 0x13143, 0x130D2, 0x130A1)], [hx1 + s * 1.1, T(0x13152, 0x13124, 0x13254, 0x132AA)]].forEach(([x, tk]) => tk.forEach((c, i) => { g.font = `${Math.round(bh * .8)}px ${HF}`; g.textAlign = 'center'; g.fillText(c, x, hy0 + (i + .5) * (hy1 - hy0) / 4); }));
         g.strokeStyle = yel; g.lineWidth = s * .05; g.strokeRect(hx0 - s * 2.0, hy0 - bh * 1.45, hx1 - hx0 + s * 4.0, hy1 - hy0 + bh * 1.55); });
