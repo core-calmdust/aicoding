@@ -148,9 +148,14 @@
         const o = new TT.Mesh(geo, [m, inner]); o.rotation.y = ry; o.position.set(x, RAIL, z); o.scale.x = .9975;   /* (each panel a hair short: its end face lay in the same plane as the next panel's front and the two fought at the corner legs, a flicker at a distance) */ o.castShadow = o.receiveShadow = true; G.add(o); });
       add(new TT.BoxGeometry(L - 2.6, .5, W - 2.6), inner, 0, BASE - .25, 0);
       // the low rail: dark, with ivory edges and a row of ivory dots and little lozenges
+      // the floor frame's outer face (the overall photograph): an ivory line top and bottom, and between them four-petalled lozenge flowers
+      // in ivory alternating with small ivory dots
       const railT = (len) => { const s = 2048 / len; return K.tex(2048, Math.max(8, Math.round(RAIL * s)), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h);
-        g.fillStyle = C.iv; g.fillRect(0, 0, w, h * .12); g.fillRect(0, h * .88, w, h * .12);
-        for (let x = s * .9, i = 0; x < w; x += s * 1.8, i++) { if (i % 2) { g.save(); g.translate(x, h / 2); g.rotate(Math.PI / 4); g.fillRect(-h * .14, -h * .14, h * .28, h * .28); g.restore(); } else { g.beginPath(); g.arc(x, h / 2, h * .2, 0, 6.29); g.strokeStyle = C.iv; g.lineWidth = h * .08; g.stroke(); } } }); };
+        g.fillStyle = C.iv; g.fillRect(0, 0, w, h * .14); g.fillRect(0, h * .86, w, h * .14);
+        const n = Math.round(len / 2.7), st = w / n;
+        for (let i = 0; i < n; i++) { const x = (i + .5) * st, r = h * .24; g.fillStyle = C.iv;
+          for (let q = 0; q < 4; q++) { const a = q * Math.PI / 2; g.beginPath(); g.ellipse(x + Math.cos(a) * r, h / 2 + Math.sin(a) * r, r * .95, r * .55, a, 0, 6.29); g.fill(); }
+          g.fillStyle = '#3a1e12'; g.beginPath(); g.arc(x, h / 2, r * .3, 0, 6.29); g.fill(); g.fillStyle = C.iv; g.beginPath(); g.arc(x + st / 2, h / 2, h * .09, 0, 6.29); g.fill(); } }); };
       const rL = mk(railT(L)), rW = mk(railT(W));
       [[L, 1.8, 0, W / 2 - .9, 0], [L, 1.8, 0, -W / 2 + .9, Math.PI]].forEach(([len, d, x, z]) => add(new TT.BoxGeometry(len, RAIL, d), [rL, rL, inner, inner, z > 0 ? rL : inner, z > 0 ? inner : rL], x, RAIL / 2, z));
       [[1.8, W - 3.6, L / 2 - .9, 0], [1.8, W - 3.6, -L / 2 + .9, 0]].forEach(([wd, d, x]) => add(new TT.BoxGeometry(wd, RAIL, d), [x > 0 ? rW : inner, x > 0 ? inner : rW, inner, inner, inner, inner], x, RAIL / 2, 0));
