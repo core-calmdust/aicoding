@@ -33,7 +33,7 @@
         LINES.forEach((t, i) => letters(g, w, s, top + i * bh + s * .12, bh - s * .24, t));
         g.fillStyle = '#000'; g.beginPath(); g.rect(s * 2.0, h - s * 2.6, w - s * 4.0, s * 2.6); g.fill(); });   // the exit at the foot, onto the steps
       const side = word => face((g, w, h, s) => { letters(g, w, s, s * .75, s * 2.3, word); lattice(g, w, s, s * 3.45, h - s * .7); });
-      const metal = am => K.mat({ map: patT, alphaMap: am, alphaTest: .5, transparent: false, side: TT.DoubleSide, color: '#ffffff', roughness: .45, metalness: .7 });
+      const metal = am => K.mat({ map: patT, alphaMap: am, alphaTest: .35, alphaToCoverage: true, transparent: false,   /* (alpha-to-coverage: the openwork's edges are anti-aliased, so the lattice does not sparkle at a distance) */ side: TT.DoubleSide, color: '#ffffff', roughness: .45, metalness: .7 });
       const faces = [[front, 0, W / 2, 0], [side('VTERE'), Math.PI / 2, 0, W / 2], [side('FELIX'), Math.PI, -W / 2, 0], [side('VIVAS'), -Math.PI / 2, 0, -W / 2]];
       // front faces +z
       const planeG = new TT.PlaneGeometry(W, H);

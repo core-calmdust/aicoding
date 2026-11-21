@@ -124,7 +124,7 @@
       const geoFor = (len, n) => new TT.ExtrudeGeometry(skirtFor(len, n), { depth: 1.3, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1, curveSegments: 14 });
       const gL = geoFor(L, 2), gW = geoFor(W, 1), mL = baseMat(L, 2, 5), mW = baseMat(W, 1, 6);
       [[gL, mL, 0, W / 2 - 1.3, 0], [gL, mL, 0, -W / 2 + 1.3, Math.PI], [gW, mW, L / 2 - 1.3, 0, Math.PI / 2], [gW, mW, -L / 2 + 1.3, 0, -Math.PI / 2]].forEach(([geo, m, x, z, ry]) => {
-        const o = new TT.Mesh(geo, [m, inner]); o.rotation.y = ry; o.position.set(x, RAIL, z); o.castShadow = o.receiveShadow = true; G.add(o); });
+        const o = new TT.Mesh(geo, [m, inner]); o.rotation.y = ry; o.position.set(x, RAIL, z); o.scale.x = .9975;   /* (each panel a hair short: its end face lay in the same plane as the next panel's front and the two fought at the corner legs, a flicker at a distance) */ o.castShadow = o.receiveShadow = true; G.add(o); });
       add(new TT.BoxGeometry(L - 2.6, .5, W - 2.6), inner, 0, BASE - .25, 0);
       // the low rail: dark, with ivory edges and a row of ivory dots and little lozenges
       const railT = (len) => { const s = 2048 / len; return K.tex(2048, Math.max(8, Math.round(RAIL * s)), (g, w, h) => { g.drawImage(shT.image, 0, 0, w, h);
