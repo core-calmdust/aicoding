@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 95;
+  const V = 96;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -318,16 +318,16 @@
   }
   function bindInput(el) {
     const pts = new Map(); let pinch = 0, d0 = 0, tap = 0;
-    const down = e => { if (V3.playing || e.target.closest('.exb,.exspot,.expcard')) return;   /* (a game on the board: the view is fixed, so a tap is always a move) */ el.setPointerCapture && el.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); V3.dragD = 0; V3.drag = true; V3.tw = null; V3.vel.yaw = V3.vel.pit = 0;
+    const down = e => { if (e.target.closest('.exb,.exspot,.expcard')) return;   /* (a game on the board: no turning — a tap is always a move — but the wheel and a pinch still zoom, as in every game) */ el.setPointerCapture && el.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); V3.dragD = 0; V3.drag = true; V3.tw = null; V3.vel.yaw = V3.vel.pit = 0;
       if (V3.spin) { V3.spin = false; V3.ov.querySelector('[data-k="spin"]').classList.remove('on'); }
       if (pts.size === 2) { const a = [...pts.values()]; pinch = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); d0 = V3.sph.d; }
       const now = performance.now(); if (pts.size === 1 && now - tap < 320 && V3.home && !V3.playing) { tween(V3.home); } tap = now; go(); };
     const move = e => { if (!pts.has(e.pointerId)) return; const p = pts.get(e.pointerId), dx = e.clientX - p[0], dy = e.clientY - p[1]; pts.set(e.pointerId, [e.clientX, e.clientY]);
       if (pts.size === 2) { const a = [...pts.values()], dd = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); V3.sph.d = clampD(d0 * pinch / Math.max(1, dd)); }
-      else { V3.dragD = (V3.dragD || 0) + Math.abs(dx) + Math.abs(dy); if (V3.dragD > 8) V3.dragEnd = performance.now(); const k = 5.5 / Math.max(300, el.clientWidth); V3.vel.yaw = -dx * k; V3.vel.pit = dy * k; V3.sph.yaw += V3.vel.yaw; V3.sph.pit += V3.vel.pit; }
+      else if (!V3.playing) { V3.dragD = (V3.dragD || 0) + Math.abs(dx) + Math.abs(dy); if (V3.dragD > 8) V3.dragEnd = performance.now(); const k = 5.5 / Math.max(300, el.clientWidth); V3.vel.yaw = -dx * k; V3.vel.pit = dy * k; V3.sph.yaw += V3.vel.yaw; V3.sph.pit += V3.vel.pit; }
       go(); };
     const up = e => { pts.delete(e.pointerId); if (!pts.size) { V3.drag = false; go(); } };
-    const wheel = e => { e.preventDefault(); if (V3.playing) return; V3.tw = null; V3.sph.d = clampD(V3.sph.d * Math.exp(e.deltaY * .0012)); go(); };
+    const wheel = e => { e.preventDefault(); V3.tw = null; V3.sph.d = clampD(V3.sph.d * Math.exp(e.deltaY * .0012)); go(); };
     const vis = () => go();
     el.addEventListener('pointerdown', down); el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('wheel', wheel, { passive: false });
     addEventListener('focus', vis); document.addEventListener('visibilitychange', vis);
