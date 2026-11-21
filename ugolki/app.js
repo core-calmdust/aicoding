@@ -41,7 +41,7 @@ const isPass = m => m === E.PASS;
 
 // ====================================================================== state
 const STORE = 'aicoding-ugolki';
-const settings = { lvV17: 1, mode: 'ai', rule: 'c33', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'gzhel', pcs: 'porcelain' };
+const settings = { lvV17: 1, lvV22: 1, mode: 'ai', rule: 'c33', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'gzhel', pcs: 'porcelain' };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -49,11 +49,11 @@ const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" i
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 20 steps, 15級 (1) … 1級 (15), 初段 (16) … 五段 (20)
-const LV_MAX = 26;   // (Lv.21〜23: the top levels on every thread, 2026-11-09)
+const LV_MAX = 28;   // (2026-11-22: 天上Ⅰ・Ⅱ added — the net at 四段・五段's time; 天上 = the AI's benchmark, not for people)   // (Lv.21〜23: the top levels on every thread, 2026-11-09)
 // 天上 (2026-11-17, common rule: claude/game-conventions-addendum.md「天上レベル」): Lv.1–23 are the levels people play (steps
 // added between the old ones), the levels above are 天上 — the old top levels, beyond what people beat (no rewards). LVX: each
 // level → the engine's own level(s): [a] = that level, [a, b, p] = between a and b (each move the AI plays as b with chance p).
-const LVX = [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [18, 19, 0.25], [18, 19, 0.5], [18, 19, 0.75], [19], [20], [21], [22], [23]], LV_HUMAN = 23, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 22, 23, 24, 25, 26];   // LV_MIG: an old level → the new one (saved settings)
+const LVX = [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [18, 19, 0.25], [18, 19, 0.5], [18, 19, 0.75], [19], [20], [24], [25], [21], [22], [23]], LV_HUMAN = 23, LV_MIG = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 22, 23, 24, 25, 26];   // LV_MIG: an old level → the new one (saved settings)
 const engLv = n => { const s = LVX[(n | 0) - 1]; return !s ? n : s.length === 1 ? s[0] : Math.random() < s[2] ? s[1] : s[0]; };
 const lvOld = n => { const s = LVX[(n | 0) - 1]; return s ? s[0] : n; };
 const TENJO_W = {"ja": "天上", "en": "Celestial", "zh": "天上", "zh-TW": "天上", "ko": "천상", "es": "Celestial", "fr": "Céleste", "pt": "Celestial", "de": "Himmlisch", "hi": "दिव्य", "ar": "سماوي", "ru": "Небесный", "id": "Surgawi", "tr": "Semavi"};
@@ -98,6 +98,10 @@ function load() {
       ['level', 'level2'].forEach(k => { if (settings[k] >= 1) settings[k] = LV_MIG[settings[k] - 1] || settings[k]; });
       settings.lvV17 = 1; try { d.settings = Object.assign({}, d.settings, { level: settings.level, level2: settings.level2, lvV17: 1 }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
     }
+    if (d.settings && !d.settings.lvV22) {   // (2026-11-22: 天上Ⅰ・Ⅱ added below the old 天上Ⅰ〜Ⅲ — those move up by two)
+      ['level', 'level2'].forEach(k => { if (settings[k] > 23 && settings[k] <= 26) settings[k] += 2; });
+      settings.lvV22 = 1; try { d.settings = Object.assign({}, d.settings, { level: settings.level, level2: settings.level2, lvV22: 1 }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {}
+    }
     if (settings.mode === 'online') settings.mode = 'pvp';
     if (!(settings.level >= 1 && settings.level <= LV_MAX)) settings.level = 6;
     if (!(settings.level2 >= 1 && settings.level2 <= LV_MAX)) settings.level2 = 6;
@@ -121,7 +125,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=12-v3nn-b3';
+const ENGINE_URL = 'engine.js?v=13-v3nn-b3';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1231,7 +1235,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step on the kyu / dan scale (100 points per kyu: 15級 = 450 … 1級 = 1850, then 200 per dan)
 // measured: adjacent levels played each other (tools/native.c lv, see MODEL_CARD.md); about +125 per step up to 3級, smaller above
-const RT_LV = [0, 100, 240, 380, 525, 665, 805, 945, 1085, 1225, 1370, 1510, 1650, 1790, 1880, 1950, 2015, 2070, 2130, 2210, 2290, 2365, 2445, 2500, 3000, 3100, 3200];   // (Lv.21〜23: measured steps, see the spec「最上位レベル」)
+const RT_LV = [0, 100, 240, 380, 525, 665, 805, 945, 1085, 1225, 1370, 1510, 1650, 1790, 1880, 1950, 2015, 2070, 2130, 2210, 2290, 2365, 2445, 2500, 2745, 2800, 3000, 3100, 3200];   // (Lv.21〜23: measured steps, see the spec「最上位レベル」)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

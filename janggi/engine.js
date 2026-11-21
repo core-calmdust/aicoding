@@ -253,6 +253,11 @@ const LEVELS = [null,
   { s: 1, nk: 480 },
   { s: 1, nk: 2500, ms: 8000, book: 1 },
   { s: 1, nk: 7000, ms: 12000, book: 1 },
+  // (2026-11-22) 天上Ⅰ〜Ⅲ: the learned evaluation (nn) — the AI's benchmark / research, not for people (no rewards); Lv.1〜20 keep the
+  // hand evaluation their ratings were measured with (MODEL_CARD「採用したネット」)
+  { s: 1, nk: 2500, ms: 8000, book: 1, nn: 1 },    // 21 (天上Ⅰ: Lv.19 with the net)
+  { s: 1, nk: 7000, ms: 12000, book: 1, nn: 1 },   // 22 (天上Ⅱ: Lv.20 with the net)
+  { s: 1, ms: 20000, book: 1, nn: 1 },             // 23 (天上Ⅲ: 20 s)
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 
@@ -274,6 +279,8 @@ function jsValues(p, depth, ms) { const tEnd = Date.now() + (ms || 2000); return
 let WX = null, wNNReady = false, wNNCur = false;
 // NNUE (engine_simd.wasm + nnue.bin.gz, tools/nnue/; only once a network is shipped — NET below): the search levels, analysis
 // and the coach; the noisy fixed-depth levels keep the hand evaluation they were tuned with
+// the net (2026-11-22): the 天上 levels (nn), a PRO setting by time, the analysis / coach; Lv.1〜20 keep the hand evaluation
+function netFor(L) { return !!(L && L.s && (L.nn || (L.ms && !LEVELS.includes(L)))); }
 function wNN(on) { on = !!(on && wNNReady); if (on !== wNNCur && WX) { WX.xq_nnue(on ? 1 : 0); WX.new_game(); wNNCur = on; } }
 const wIO = () => new Int32Array(WX.memory.buffer, WX.io_ptr(), 8192);
 const toC = m => mFrom(m) | (mTo(m) << 7), fromC = x => mv(x & 127, (x >> 7) & 127);   // (a pass: from == to on both sides)
@@ -303,7 +310,7 @@ function think(start, moves, level, rand) {
     if (L.blunder && rand() < L.blunder) return { move: vals[Math.floor(rand() * vals.length)].m };
     let best = vals[0].m, bv = -Infinity; for (const e of vals) { const x = e.v + gauss(rand) * (L.noise || 0); if (x > bv) { bv = x; best = e.m; } } return { move: best, v: vals[0].v };
   }
-  wNN(!!(L.s && L.ms));   // (2026-11-22: the net for the levels by time and the analysis; Lv.1〜18 keep the hand evaluation — MODEL_CARD)
+  wNN(netFor(L));
   if (!wSetup(start, moves, excl)) return { move: all[0] };
   if (!L.s) {
     WX.values(Math.floor(L.d) + (rand() < L.d % 1 ? 1 : 0));
@@ -408,7 +415,7 @@ function mpvLoop(start, moves, n, maxD, post) {
   post('result', { list: prev, depth: last, nodes });
 }
 
-const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROOK, CANNON, PAWN, START, SETUPS, startFen, PTS, RC, sqAt, colorOf, typeOf, mv, mFrom, mTo, isPass, Pos, name, parse, sqName, rc2, replay, judge, isChase, threats, losingRepMoves, LEVELS, think, analyze, puzzle, kindOf, NMOV, EMOV, RAYS, KMOV, palace, setWasm: x => { WX = x; }, toC, fromC, setupIO };
+const API = { netFor, P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROOK, CANNON, PAWN, START, SETUPS, startFen, PTS, RC, sqAt, colorOf, typeOf, mv, mFrom, mTo, isPass, Pos, name, parse, sqName, rc2, replay, judge, isChase, threats, losingRepMoves, LEVELS, think, analyze, puzzle, kindOf, NMOV, EMOV, RAYS, KMOV, palace, setWasm: x => { WX = x; }, toC, fromC, setupIO };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.JanggiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {

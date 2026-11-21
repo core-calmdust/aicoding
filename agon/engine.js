@@ -368,9 +368,13 @@ const LEVELS = [null,
   { s: 1, ms: 2500, book: 1 },                   // 五段
   // the top levels (2026-11-09, common rule「最上位のレベルの追加」): twice the time per step up to 20 s, every thread of the
   // page's pool (shared/mtsplit.js; the shared table on an isolated page) — one thread without the option
-  { s: 1, ms: 5000, book: 1 },                            // Lv.21
-  { s: 1, ms: 10000, book: 1 },                           // Lv.22
-  { s: 1, ms: 20000, book: 1 },                           // Lv.23
+  // (2026-11-22, nn: the learned evaluation — the 天上 levels: the AI's benchmark / research, not for people; the levels people play
+  //  keep the hand-made evaluation their ratings were measured with, MODEL_CARD「採用したネット」)
+  { s: 1, ms: 5000, book: 1, nn: 1 },                     // Lv.21 (天上Ⅲ)
+  { s: 1, ms: 10000, book: 1, nn: 1 },                    // Lv.22 (天上Ⅳ)
+  { s: 1, ms: 20000, book: 1, nn: 1 },                    // Lv.23 (天上Ⅴ)
+  { s: 1, ms: 1200, book: 1, nn: 1 },                     // Lv.24 (天上Ⅰ: 四段's time with the net)
+  { s: 1, ms: 2500, book: 1, nn: 1 },                     // Lv.25 (天上Ⅱ: 五段's time with the net)
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 // ---------------------------------------------------------------- evaluation (side to move's view, ~100 = one tempo)
@@ -622,8 +626,7 @@ function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
   const L = PRO_CFG || LEVELS[level] || LEVELS[10];   // (PRO_CFG: the page's PRO mode, shared/proset.js ladder())
-  useNet(!!(L.s && L.ms));   // (2026-11-22: the net for the levels by time and the analysis; the levels by depth / positions keep the hand-made
-                             //  evaluation their strengths were measured with — MODEL_CARD「採用したネット」)
+  useNet(netFor(L));
   const { pos } = replay(start, moves), hist = histOf(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
@@ -706,7 +709,9 @@ function pvOf(start, moves, m, plies) {
 // order; mtFin: the job's reply from the threads' raw result (the same as the one-thread worker's).
 let mtRule = null;
 // the threads' tasks carry the job's fields (shared/mtsplit.js base): a level / setting by time and the analysis use the net
-function mtNet(m) { const L = m.cfg || (m.level ? LEVELS[m.level] : null); useNet(m.job === 'think' || L ? !!(L && L.s && L.ms) : true); }
+// the net (2026-11-22): the 天上 levels (nn), a PRO setting by time, the analysis; the levels people play keep the hand-made evaluation
+function netFor(L) { return !!(L && L.s && (L.nn || (L.ms && !LEVELS.includes(L)))); }
+function mtNet(m) { const L = m.cfg || (m.level ? LEVELS[m.level] : null); useNet(m.job === 'think' || L ? netFor(L) : true); }
 function mtNode(m) {
   mtNet(m);
   if (SH !== null) SH.salt = SALT[RK] | 0;
