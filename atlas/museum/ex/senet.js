@@ -54,7 +54,7 @@
           g.restore(); x += wd + gap * k; }); };
       const textTex = (len, ht, toks, mirror, real) => { const PX = 2048, s = PX / len; return K.tex(PX, Math.round(ht * s), (g, w, h) => {
         g.drawImage(ebonyT.image, 0, 0, w, h);
-        if (real && TXT) { const iw = w * .984, ih = iw * TXT.height / TXT.width; g.globalAlpha = .78; g.drawImage(TXT, w * .006, h * .52 - ih / 2, iw, ih); g.globalAlpha = 1; return; }   // the side toward the visitor: the inscription itself, lifted from a photograph of the box in its case (thin incised outlines, a few signs filled)
+        if (real && TXT) { if (!mirror) { g.translate(w, 0); g.scale(-1, 1); }   /* (the far side, as the museum's small photograph of it shows: it too starts at the drawer's end and closes with the king's ring at the other — the near side's inscription, turned to read that way) */ const iw = w * .984, ih = iw * TXT.height / TXT.width; g.globalAlpha = .78; g.drawImage(TXT, w * .006, h * .52 - ih / 2, iw, ih); g.globalAlpha = 1; return; }   // the side toward the visitor: the inscription itself, lifted from a photograph of the box in its case (thin incised outlines, a few signs filled)
         const cy = h * .53, bh = s * 2.1;   // one band a little below the middle (the museum's photograph)
         if (mirror) { g.translate(w, 0); g.scale(-1, 1); }   // read from the right: the signs face the other way
         g.strokeStyle = yel; g.lineWidth = s * .05; [cy - bh / 2 - s * .14, cy + bh / 2 + s * .14].forEach(y => { g.beginPath(); g.moveTo(s * .3, y); g.lineTo(w - s * .3, y); g.stroke(); });
