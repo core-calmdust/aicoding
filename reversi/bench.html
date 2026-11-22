@@ -123,7 +123,7 @@ async function setup() {
   const wt = await loadWeights();
   // the same pool as the game page (index.html MTP): lead and helpers are mt-worker.js on a shared engine_mt.wasm
   pool = MTEngine.pool({
-    wasm: PREV ? 'engine_mt_v41.wasm?v=1' : 'engine_mt.wasm?v=18', lead: 'mt-worker.js?v=29', helper: 'mt-worker.js?v=29', slot: 2 << 20, initial: 1024, maximum: 16384,
+    wasm: PREV ? 'engine_mt_v41.wasm?v=1' : 'engine_mt.wasm?v=18', lead: 'mt-worker.js?v=30', helper: 'mt-worker.js?v=30', slot: 2 << 20, initial: 1024, maximum: 16384,
     imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
     after: async (X, mem, ws) => {
       if (!PX) { PX = X; if (X.w_defer) X.w_defer(); X.init(); if (!PREV && X.mt_split && (SPLIT || MTV)) { const a = (SPLIT || []).slice(0, 6); while (a.length < 6) a.push(0); X.mt_split(...a, MTV); } }   // (?split=: the split settings of every thread — shared memory)
