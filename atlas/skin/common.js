@@ -729,6 +729,21 @@ html.atlas-skin[data-skin].skdark .atlas-top .hb-menu:not(#_) > *:not(:disabled)
 html.atlas-skin[data-skin].skdark .atlas-top .hb-menu:not(#_) > :is(.on,.sel,[aria-pressed=true],[aria-selected=true]){background:var(--sk-nav)!important;color:var(--sk-navt,#1a1a2a)!important;box-shadow:0 3px 0 var(--sk-nav2)!important}
 html.atlas-skin[data-skin].skdark .atlas-top .hb-menu:not(#_) > *:disabled{opacity:.5!important}
 html.atlas-skin[data-skin].skdark .atlas-top .hb-info,html.atlas-skin[data-skin].skdark .atlas-top .hb-info b{color:rgba(255,255,255,.86)!important}
+/* (2026-11-23 the user) スマホ：下のタブ（コーチ・形勢・棋譜…）もスキンの色に。上のメニューバー（対局・待った…）はポータルのバーと同じ色でひと続きに */
+html.atlas-skin[data-skin] body:not(#_):not(#_) .mtabs:not(#_){background:var(--sk-hdr)!important;border-top:2px solid var(--sk-line)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .mtabs:not(#_) button{background:transparent!important;color:color-mix(in srgb,var(--sk-navm) 35%,#6a7088)!important}
+html.atlas-skin[data-skin].skdark body:not(#_):not(#_) .mtabs:not(#_) button{color:rgba(255,255,255,.62)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .mtabs:not(#_) button.sel{color:var(--sk-nav)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .mtabs:not(#_) button.sel .it-ic{stroke:var(--sk-nav)!important}
+html.atlas-skin[data-skin] body:not(#_):not(#_) .mtabs:not(#_) button.sel::before,html.atlas-skin[data-skin] body:not(#_):not(#_) .mtabs:not(#_) button.sel::after{background:var(--sk-nav)!important}
+@media (max-width:760px) and (orientation:portrait){
+html.atlas-skin[data-skin]:not(.atlas-land) body:not(#_):not(#_) .card.controls:not(#_){background:var(--sk-hdr)!important;border-color:var(--sk-line)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 8px 16px -10px rgba(0,0,0,.4)!important}
+html.atlas-skin[data-skin]:not(.skdark):not(.atlas-land) body:not(#_):not(#_) .card.controls:not(#_) .btn:not(.primary):not(.go){background:color-mix(in srgb,var(--sk-navm) 4%,#fff)!important;border-color:color-mix(in srgb,var(--sk-navm) 28%,#f1e9d8)!important}
+html.atlas-skin[data-skin]:not(.skdark):not(.atlas-land) body:not(#_):not(#_) .card.controls:not(#_) .btn:not(.primary):not(.go):disabled{background:color-mix(in srgb,var(--sk-navm) 6%,#fbf7ee)!important;border-color:color-mix(in srgb,var(--sk-navm) 16%,#f3ead6)!important}
+html.atlas-skin[data-skin].skdark:not(.atlas-land) body:not(#_):not(#_) .card.controls:not(#_) .btn:not(.primary):not(.go){background:rgba(255,255,255,.1)!important;border-color:rgba(255,255,255,.2)!important;color:#f4f6ff!important;box-shadow:0 3px 0 rgba(0,0,0,.28)!important}
+html.atlas-skin[data-skin].skdark:not(.atlas-land) body:not(#_):not(#_) .card.controls:not(#_) .btn:not(.primary):not(.go) *{color:inherit!important}
+html.atlas-skin[data-skin].skdark:not(.atlas-land) body:not(#_):not(#_) .card.controls:not(#_) .btn:not(.primary):not(.go):disabled{background:rgba(255,255,255,.04)!important;border-color:rgba(255,255,255,.1)!important;color:rgba(255,255,255,.4)!important;opacity:1!important;box-shadow:none!important}
+}
 html.atlas-skin.askin-bg[data-skin]{background:var(--sk-bg)!important}
 html.atlas-skin.askin-bg[data-skin] body{background:transparent!important}
 html.atlas-skin.askin-bg[data-skk=tile] body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--sk-bg) var(--sk-img) 0 0/var(--sk-size) repeat;pointer-events:none;will-change:transform}
