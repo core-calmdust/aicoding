@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 120;
+  const V = 121;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -73,7 +73,7 @@
     const t = ex(lang, id), g = ctx.games.find(x => x.id === e.game), B0 = e.flip ? { flip: true } : null;
     const ov = document.createElement('div'); ov.className = 'exv'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
     ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div><div class="exhud" aria-live="polite"></div>${PLAY[id] ? `<div class="expcard"><b>${esc(ui(lang, 'play_' + id))}</b>
-          <div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expdd" data-k="plv" data-v="1"><button type="button" class="expdd-b" aria-haspopup="listbox"><b>Lv.1</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${Array.from({ length: PLAY[id].levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}"${i ? '' : ' class="on"'}>Lv.${i + 1}</button>`).join('')}</div></div></div>
+          <div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expdd" data-k="plv" data-v="1"><button type="button" class="expdd-b" aria-haspopup="listbox"><span class="lvb"></span><b>Lv.1</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${Array.from({ length: PLAY[id].levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}"${i ? '' : ' class="on"'}>Lv.${i + 1}</button>`).join('')}</div></div></div>
           <div class="expf"><span>${esc(ui(lang, 'p_side'))}</span><div class="expseg" data-k="pside" data-v="1"><button type="button" data-v="1" class="on">${esc(ui(lang, 'p_first'))}</button><button type="button" data-v="2">${esc(ui(lang, 'p_second'))}</button></div></div>
           <button type="button" class="exprul" data-k="prules"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h9a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4z"/><path d="M9 9h5M9 13h5"/></svg>${esc(ui(lang, 'p_rules'))}</button><button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><div class="expacts" hidden>${[['pundo', 'p_undo', '<path d="M9 6 4 11l5 5"/><path d="M4 11h9.5a5.5 5.5 0 0 1 0 11H11"/>'], ['presign', 'p_resign', '<path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/>'], ['phint', 'p_hint', '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>']]
             .concat(PLAY[id].long ? [['pturn', 'p_orient', '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9a6 6 0 0 1 4-5M3 9V5.5M3 9h3.5M21 15a6 6 0 0 1-4 5M21 15v3.5M21 15h-3.5"/>', 'p_orientS']] : [])
@@ -103,17 +103,37 @@
     { const pb = ov.querySelector('[data-k="play"]'), P = PLAY[id];   // 所蔵品で遊ぶ: a game on this board, here in the museum (museum/play.js)
       if (pb && P) { const hudEl = ov.querySelector('.exhud'), PK = 'atlas-museum-play', lvS = ov.querySelector('[data-k="plv"]'), sdS = ov.querySelector('[data-k="pside"]');
         // the card's own pull-downs (the portal's rule: no system <select>): a button showing the choice, its list opening upward over the case
-        let lock = false; const setDD = (dd, v) => { const o = [...dd.querySelectorAll('.expdd-l button')], b = o.find(x => +x.dataset.v === +v) || o[0]; dd.dataset.v = b.dataset.v; dd.querySelector('.expdd-b b').textContent = b.textContent; o.forEach(x => x.classList.toggle('on', x === b)); };
-        const shut = () => ov.querySelectorAll('.expdd.open').forEach(d => d.classList.remove('open'));
-        [lvS].forEach(dd => { dd.querySelector('.expdd-b').onclick = ev => { ev.stopPropagation(); if (lock) return; const was = dd.classList.contains('open'); shut(); if (!was) { dd.classList.add('open'); const on = dd.querySelector('.expdd-l .on'); if (on) on.scrollIntoView({ block: 'nearest' }); } };
-          dd.querySelectorAll('.expdd-l button').forEach(b => b.onclick = ev => { ev.stopPropagation(); setDD(dd, b.dataset.v); shut(); }); });
+        let lock = false; const setDD = (dd, v) => { const o = [...dd.querySelectorAll('.expdd-l button')], b = o.find(x => +x.dataset.v === +v) || o.find(x => +x.dataset.v === 1) || o[0]; dd.dataset.v = b.dataset.v; dd.querySelector('.expdd-b b').textContent = b.dataset.lb || b.textContent; const im = b.querySelector('img'); dd.querySelector('.expdd-b .lvb').innerHTML = im ? `<img src="${im.getAttribute('src')}" alt="">` : ''; o.forEach(x => x.classList.toggle('on', x === b)); if (dd === lvS) sdS.classList.toggle('off', +b.dataset.v === 0); };
+        const sheetQ = matchMedia('(max-width:640px) and (orientation:portrait)');   // (phones held upright: the list as a sheet over the whole case — the card's corner is too small for it)
+        const shut = () => { ov.querySelectorAll('.expdd.open').forEach(d => d.classList.remove('open')); const l = ov.querySelector('.expdd-l.sheet'); if (l) { l.classList.remove('sheet'); l._dd.appendChild(l); } const bk = ov.querySelector('.expdd-bk'); if (bk) bk.remove(); };
+        [lvS].forEach(dd => { dd.querySelector('.expdd-b').onclick = ev => { ev.stopPropagation(); if (lock) return; const was = dd.classList.contains('open'); shut(); if (!was) { dd.classList.add('open'); const l = dd.querySelector('.expdd-l');
+            if (sheetQ.matches) { l._dd = dd; l.classList.add('sheet'); const bk = document.createElement('div'); bk.className = 'expdd-bk'; ov.appendChild(bk); ov.appendChild(l); }
+            const on = l.querySelector('.on'); if (on) on.scrollIntoView({ block: 'center' }); } };
+          dd.querySelector('.expdd-l').onclick = ev => { ev.stopPropagation(); const b = ev.target.closest('button[data-v]'); if (b) { shut(); setDD(dd, b.dataset.v); } }; });
         const setSd = v => { v = +v === 2 ? 2 : 1; sdS.dataset.v = v; sdS.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.v === v)); };   // 手番: 先手 / 後手, two buttons side by side (as on the portal's card)
-        sdS.querySelectorAll('button').forEach(b => b.onclick = () => { if (!lock) setSd(b.dataset.v); });
+        sdS.querySelectorAll('button').forEach(b => b.onclick = () => { if (!lock && !sdS.classList.contains('off')) setSd(b.dataset.v); });
         ov.addEventListener('click', shut);
         const setLv = v => setDD(lvS, v);
         // the levels' names are the game's own (Lv.1 … and the ones above them): filled in once its adapter has loaded
-        if (window.AtlasLazy) AtlasLazy.need(P.game).then(() => { const ad = window.Atlas3D && Atlas3D[P.game]; if (!ad || !ad.levelInfo || !ov.isConnected) return; lvS.querySelectorAll('.expdd-l button').forEach(b => { try { const nm = ad.levelInfo(+b.dataset.v, lang).name; if (nm) b.textContent = nm; } catch (x) {} }); setDD(lvS, lvS.dataset.v); });
-        try { const q = JSON.parse(localStorage.getItem(PK) || '{}')[id]; if (q) { setLv(q.lv); setSd(q.side); } } catch (x) {}
+        // the level list, as on the portal's level sheet: 二人で対戦 at the top, then the AI's levels under their Atlamo boss (one per three levels) with
+        // what a win there gives — the boss's N / R / SR (dimmed and ✓ once owned; the celestial levels give nothing) — 2026-11-23 user
+        const I18 = k => { const I = window.ATLAS_I18N; return (I && I[lang] && I[lang][k]) || (I && I.en && I.en[k]) || ''; };
+        const fillLv = () => { if (!ov.isConnected) return; const ad = window.Atlas3D && Atlas3D[P.game], N = window.AtlasNPC, g = P.game, B = N && N.BOSSES && N.BOSSES[g] && N.tier ? N.BOSSES[g] : null;
+          let owned = []; try { owned = (window.Atlas && Atlas.load && Atlas.load().owned) || []; } catch (x) {}
+          const TT = N && N.T && (N.T[lang] || N.T.en), ttl = TT && TT.bosses && TT.bosses[g];
+          const nm = n => { try { const x = ad && ad.levelInfo && ad.levelInfo(n, lang); return x && x.name && x.name !== 'Lv.' + n ? x.name : ''; } catch (x) { return ''; } };
+          const own = n => !!B && N.tier(g, n) >= 0 && owned.includes(`av-${N.bossId(g, N.band(g, n))}-${N.tier(g, n)}`);
+          const pvp = !!(ad && ad.modes && ad.modes.includes('pvp'));
+          let h = pvp ? `<div class="expdd-sec">${esc(I18('bv.friends'))}</div><button type="button" role="option" data-v="0" data-lb="${esc(I18('bv.m.pvp'))}" class="pvp"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.7"/><path d="M2.5 19.5c.6-3.4 3-5.3 5.5-5.3s4.9 1.9 5.5 5.3M13.8 14.6c.8-.5 1.7-.8 2.7-.8 2.2 0 4.2 1.6 4.8 4.6"/></svg><span><b>${esc(I18('bv.m.pvp'))}</b><small>${esc(I18('bv.pvpSub'))}</small></span></button><div class="expdd-sec">${esc(I18('bv.atlamo'))}</div>` : '';
+          for (let n = 1; n <= P.levels; n++) {
+            if (B && (N.isCel(g, n) ? n === N.CEL[g] + 1 : (n - 1) % 3 === 0)) { const i = N.band(g, n), b = B[i], top = N.top(g, i);
+              h += `<div class="expdd-boss${top ? ' ur' : ''}"><img src="../images/atlas/av/${N.bossId(g, i)}-${top ? 3 : 2}.webp?v=1" alt="" loading="lazy"><div><small>${esc(N.range(g, i))}${top ? ' · UR' : ''}</small><b>${esc(b.n[lang] || b.n.en)}</b>${ttl && ttl[i] ? `<small>${esc(ttl[i])}</small>` : ''}</div></div>`; }
+            const t = B ? N.tier(g, n) : -1, rw = t >= 0 ? `<i class="rw r${t}${own(n) ? ' got' : ''}">${['N', 'R', 'SR'][t]}</i>` : '', im = B ? `<img hidden src="../images/atlas/av/${N.bossId(g, N.band(g, n))}-${t < 0 ? 3 : t}.webp?v=1" alt="">` : '';
+            h += `<button type="button" role="option" data-v="${n}" data-lb="Lv.${n}">${im}<b>Lv.${n}</b><span class="nt">${esc(nm(n))}</span>${rw}${own(n) ? '<i class="ck">✓</i>' : ''}</button>`; }
+          lvS.querySelector('.expdd-l').innerHTML = h; setDD(lvS, lvS.dataset.want != null ? lvS.dataset.want : lvS.dataset.v); delete lvS.dataset.want; };
+        ov.fillLv = fillLv;
+        Promise.all([window.AtlasLazy ? AtlasLazy.need(P.game) : 0, window.AtlasNPC && AtlasNPC.ensure ? AtlasNPC.ensure(lang).catch(() => {}) : 0]).then(fillLv);
+        try { const q = JSON.parse(localStorage.getItem(PK) || '{}')[id]; if (q) { lvS.dataset.want = q.lv; setLv(q.lv); setSd(q.side); } } catch (x) {}
         const tt = k => ({ 'p.you': ui(lang, 'p_you'), 'p.ai': 'AI', 'p.turn': ui(lang, 'p_turn'), 'p.think': ui(lang, 'p_think'), 'res.win': ui(lang, 'p_win'), 'res.lose': ui(lang, 'p_lose'), 'res.draw': ui(lang, 'p_draw') })[k] || '';
         // during a game the card is the game's own buttons, as in the portal's 3D games: 待った・投了・ヒント (the board's turn on a long board) and やめる
         const acts = ov.querySelector('.expacts'), AB = k => acts.querySelector(`[data-k="${k}"]`), MP = () => window.AtlasMuseumPlay;
@@ -135,12 +155,12 @@
             const quit = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); rulesOn(false); playing(false); };
             const ok = AtlasMuseumPlay.start(id, { course: true, lang, onExit: quit, onPlay: () => { quit(); setTimeout(() => pb.click(), 60); } });
             if (!ok) return; rul.classList.remove('new'); playing(true); acts.hidden = true; clearInterval(poll); rulesOn(true); ov.quitPlay = quit; }); };
-        const playing = on => { { const rb = ov.querySelector('.exres'); if (rb) rb.remove(); } ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); ov.classList.toggle('exv-play', on); pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
+        const playing = on => { if (!on && ov.fillLv) setTimeout(ov.fillLv, 50); { const rb = ov.querySelector('.exres'); if (rb) rb.remove(); } ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); ov.classList.toggle('exv-play', on); pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
         const quitGame = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); }; ov.quitPlay = quitGame;
         pb.onclick = () => { if (!V3 || !V3.obj) return; pb.disabled = true;
           try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
           Promise.all([load('museum/play.js?v=' + V), window.AtlasLazy ? AtlasLazy.need(P.game) : 0]).then(() => { pb.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
-            const ok = AtlasMuseumPlay.start(id, { level: +lvS.dataset.v, side: +sdS.dataset.v, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { const k = res.draw ? 'draw' : res.win ? 'win' : 'lose', tx = ui(lang, 'p_' + k); hudEl.innerHTML = `<span class="hm">${esc(tx)}</span>`;
+            const lv = +lvS.dataset.v, ok = AtlasMuseumPlay.start(id, { level: lv || 1, mode: lv ? 'ai' : 'pvp', side: +sdS.dataset.v, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { const k = res.pvp ? 'win' : res.draw ? 'draw' : res.win ? 'win' : 'lose', tx = res.pvp ? (res.winnerText || ui(lang, 'p_draw')) : ui(lang, 'p_' + k); hudEl.innerHTML = `<span class="hm">${esc(tx)}</span>`;
               // the result in the middle of the case (a plaque in the museum's manner), gone at a tap or when the game is left
               const old = ov.querySelector('.exres'); if (old) old.remove(); const rb = document.createElement('div'); rb.className = 'exres ' + k; rb.innerHTML = `<b>${esc(tx)}</b>`;
               rb.onclick = () => rb.remove(); ov.querySelector('.exstage').appendChild(rb); requestAnimationFrame(() => rb.classList.add('on')); } });

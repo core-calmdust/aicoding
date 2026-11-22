@@ -168,16 +168,22 @@
     const coursePad = () => { const pe = stage.querySelector('.exrul'); return [56, (pe ? pe.offsetHeight : 180) + 22]; };
     const tgtB = V.tgt.clone(); apply(); V.playing = true;
     const hid = ((V.obj.userData.play && V.obj.userData.play.hide) || []).filter(m => m.visible); hid.forEach(m => { m.visible = false; });   // the pieces and sticks laid out for show: put away during a game
+    // the level's Atlamo boss talks now and then, and beating it gives its N / R / SR — as in the portal's AI games (npc/npc.js), here in the case
+    const npcT = !CM && (o.mode || 'ai') === 'ai' && window.AtlasNPC && AtlasNPC.portal ? AtlasNPC.portal({ game: def.game, level: o.level, host: V.ov,
+      left: () => { const r = stage.getBoundingClientRect(); return [r.left + r.width / 2, r.width]; },
+      bottom: () => { const c = V.ov.querySelector('.expcard'), r = c && c.getBoundingClientRect(); return r && r.height ? innerHeight - r.top + 4 : 90; } }) : null;
     const ses = o.course ? (V.obj.add(board), AtlasMuseumRules.run(id, { lang: o.lang, TH, board, V, T3, stage, relayout: () => { if (cur && cur.V === V) apply(); }, onPlay: o.onPlay, onExit: o.onExit }))
-      : ad.start({ el: stage, Table3D: T3, board, lang: o.lang, t: o.t, level: o.level, side: o.side, size: def.size, mode: 'ai', hud: o.hud || (() => {}), onTurn() {}, onEnd: res => { if (o.onEnd) o.onEnd(res); } });
+      : ad.start({ el: stage, Table3D: T3, board, lang: o.lang, t: o.t, level: o.level, side: o.side, size: def.size, mode: o.mode || 'ai', hud: o.hud || (() => {}),
+        onTurn: (s, info) => { if (npcT && info && info.ply != null) npcT.turn(info.ply); },
+        onEnd: res => { if (npcT && !res.pvp) npcT.end(res); if (o.onEnd) o.onEnd(res); } });
     // the case changes size (a phone: it grows when the game starts; a turned phone, a resized window): frame the board again
     let rsT = 0; const ro = new ResizeObserver(() => { clearTimeout(rsT); rsT = setTimeout(() => { if (cur && cur.V === V && V.scene) apply(); }, 120); }); ro.observe(stage);
-    cur = { V, ses, board, course: !!o.course, L0, dot, hid, ro, tgt0, turn() { if (o.course) return; const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} apply(); } };
+    cur = { V, ses, board, npcT, course: !!o.course, L0, dot, hid, ro, tgt0, turn() { if (o.course) return; const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} apply(); } };
     if (o.course) apply();
     return { stop };
   }
   function stop() {
-    const c = cur; if (!c) return; cur = null; if (c.ro) c.ro.disconnect();
+    const c = cur; if (!c) return; cur = null; if (c.ro) c.ro.disconnect(); if (c.npcT) c.npcT.stop();
     try { if (c.ses && c.ses.stop) c.ses.stop(); } catch (e) {}
     const V = c.V; if (!V || !V.scene) return;
     if (c.board.parent) c.board.parent.remove(c.board);

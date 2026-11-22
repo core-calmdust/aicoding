@@ -16,7 +16,7 @@
   const A = window.AtlasNPC = window.AtlasNPC || {};
   if (A.skin) return;
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
-  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '20';
+  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '21';
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }));
@@ -315,7 +315,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     const el = document.createElement('div'); el.className = 'npc-float'; el.setAttribute('aria-live', 'polite');
     el.innerHTML = '<div class="npc-pic"><img alt=""></div><div class="npc-bub"><div class="npc-nm"><b></b><span class="npc-tag"></span></div><div class="npc-ttl"></div><div class="npc-tx"></div></div>';
     const img = el.querySelector('img'), nm = el.querySelector('.npc-nm b'), tag = el.querySelector('.npc-tag'), tx = el.querySelector('.npc-tx'), pic = el.querySelector('.npc-pic'), ttl = el.querySelector('.npc-ttl');
-    (o.body ? document.body : document.getElementById('bv') || document.body).appendChild(el);   // (inside the portal's 3D view: over the table, under its end-of-game card)
+    (o.host || (o.body ? document.body : document.getElementById('bv') || document.body)).appendChild(el);   // (o.host: the museum's case, 2026-11-23)   // (inside the portal's 3D view: over the table, under its end-of-game card)
     let hideT = 0;
     // where it goes (the side column / centred, and the height: above the bar, or over it when the board is in the way)
     const place = () => {
@@ -323,7 +323,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       try { const b = o.bottom ? o.bottom(el) : tableBottom(el); if (b != null) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
       // a game that says where its talk goes (window.__npcPlace(el) → { cx, w, bot }: the bubble's centre x, its width, its bottom
       // above the window's bottom) — ヒット＆ブロー 2026-11-17 user: アトラモの演出はサイドに振って邪魔にならないように
-      try { const P = !o.body && window.__npcPlace && window.__npcPlace(el); el.classList.toggle('npc-line', !!(P && P.line)); if (P) { el.style.left = Math.round(P.cx) + 'px'; el.style.width = Math.round(P.w) + 'px'; el.style.setProperty('--npc-bot', Math.round(P.bot) + 'px'); } } catch (e) {}
+      try { const P = !o.body && !o.host && window.__npcPlace && window.__npcPlace(el); el.classList.toggle('npc-line', !!(P && P.line)); if (P) { el.style.left = Math.round(P.cx) + 'px'; el.style.width = Math.round(P.w) + 'px'; el.style.setProperty('--npc-bot', Math.round(P.bot) + 'px'); } } catch (e) {}
     };
     // the window resized while talking: placed again at once, and once more after the 3D view has framed the board anew (2026-11-12)
     let rzT = 0, rzF = 0;
@@ -455,7 +455,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     if (urCache.k !== k) { urCache.k = k; urCache.h = null; try { const s = G('curState')(); if (s && E && E.winProb) { const p = E.winProb(s); urCache.h = s.turn === g.human ? 2 * p - 1 : 1 - 2 * p; } } catch (e) {} }
     return { gid: g, level: st.level, ply, h: urCache.h, live: true };
   }
-  const PACE = { backgammon: 2.2, ludo: 2, ur: 1.6, senet: 1.6, dots: 1.4, go: 1.6, connect4: .8 };
+  const PACE = { backgammon: 2.2, sugoroku: 2.2, ludo: 2, ur: 1.6, senet: 1.6, dots: 1.4, go: 1.6, connect4: .8 };
   const EARLY = { chess: 14, shogi: 20, go: 30, reversi: 16, gomoku: 10, connect4: 8, dots: 12, morris: 10, mancala: 10, hex: 14 };
 
   /* ---------------- host: a portal skin page ---------------- */
@@ -498,7 +498,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     let ui = null, T = null, dead = false;
     ensure(langNow()).then(() => {
       if (dead || !A.BOSSES || !A.BOSSES[o.game]) return;
-      ui = floatUI(); T = Talk(o.game, ui, { pace: PACE[o.game], early: EARLY[o.game] });
+      ui = floatUI(o.host ? { host: o.host, left: o.left, bottom: o.bottom } : {}); T = Talk(o.game, ui, { pace: PACE[o.game], early: EARLY[o.game] });
       T.setLevel(o.level); T.newGame(0);
       // the portal's language menu mid-game: the lines in the new language (the bubble on screen too)
       const mo = new MutationObserver(() => { if (dead) { mo.disconnect(); return; } ensure(langNow()).then(() => T && T.relang()).catch(() => {}); });

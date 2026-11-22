@@ -15,7 +15,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 33, shogi: 30, go: 37, reversi: 36, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 23, tafl: 30, ur: 20, senet: 20, morris: 11,
-    connect4: 9, dots: 12, mancala: 11, backgammon: 10, hex: 20, fanorona: 20, ugolki: 28, agon: 28, konane: 26, latrunculi: 26, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 28, hitblow: 20 };
+    connect4: 9, dots: 12, mancala: 11, backgammon: 10, hex: 20, fanorona: 20, ugolki: 28, agon: 28, konane: 26, latrunculi: 26, foxgeese: 20, patolli: 20, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, botao: 20, alquerque: 20, amazons: 28, hitblow: 20, sugoroku: 20 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -341,6 +341,17 @@
       b('hothead', { a: 'frog', c: [0x3ac85a, 0xd8f8c8, 0xf5c518], hat: 'bandana', hc: [0xf5c518], held: 'piece', mouth: 'w' }, 'アテズッケロ|Ribbiguess|瞎猜呱呱|瞎猜呱呱|아테즛케로|Риббигесс|रिबीगेस|ريبيغيس'),
       b('scholar', { a: 'owl', c: [0x9a8a7a, 0xf4eadc, 0x2b3683], held: 'book', ex: ['glasses', 'longbeard'], bc: 0xe8e0d8 }, 'クヌースホー|Knuthowl|克努咕|克努咕|구누스호|Кнутоул|क्नूथाउल|كنوثاول'),
       b('king', { a: 'lion', c: [0xf0c070, 0xfff4e0, 0x2b3683], hat: 'cap', hc: [0x2b3683, 0xffd65a], held: 'scroll', ex: ['mustache', 'cape'], cape: 0x2b3683 }, 'メイロヴィオン|Meirowion|梅罗狮宝|梅羅獅寶|메이로비온|Мейровион|मेइरोवियन|ميروفيون'),
+    ],
+    // 本双六 (2026-11-23, the museum's 木画紫檀双六局): Nara and Heian Japan — the deer of Nara, the envoys who brought the game from Tang China,
+    // Sei Shōnagon (枕草子: 碁・双六 for idle hours), Emperor Shirakawa's dice he could not command, the Shōsōin's guards, the Tenpyō court.
+    sugoroku: [
+      b('sleepy', { a: 'cat', c: [0xf6ead6, 0xffffff, 0x2f6a44], hat: 'eboshi', held: 'die' }, 'ナラニャン|Narakit|奈良喵|奈良喵|나라냥|Наракит|नाराकिट|ناراكيت'),
+      b('merchant', { a: 'deer', c: [0xc8945a, 0xfff4e6, 0xb8923a], hat: 'antlers', held: 'die', ex: ['necklace'] }, 'スゴロクジカ|Sugodeer|双六鹿鹿|雙六鹿鹿|스고로쿠지카|Сугодир|सुगोडियर|سوغودير'),
+      b('scholar', { a: 'owl', c: [0x9a8070, 0xf4eadc, 0x8a3a3a], hat: 'eboshi', held: 'scroll', ex: ['robe'], rc: 0x8a3a3a }, 'ケントウホー|Kentowl|遣唐咕|遣唐咕|겐토호|Кентоул|केंटाउल|كينتاول'),
+      b('lady', { a: 'rabbit', c: [0xfbfaf4, 0xffffff, 0xd8607a], hat: 'flowers', held: 'fan', ex: ['robe'], rc: 0xd8607a }, 'ショウナゴピョン|Shonagobun|少纳兔兔|少納兔兔|쇼나고퐁|Шонагобан|शोनागोबन|شوناغوبن'),
+      b('trickster', { a: 'fox', c: [0xff9a4a, 0xfff4e6, 0x3a6ad8], hat: 'kasa', held: 'die', ex: ['scarf'], sc: 0x3a6ad8 }, 'サイノメコン|Dicefox|骰子狐狐|骰子狐狐|사이노메콘|Дайсфокс|डाइसफ़ॉक्स|دايسفوكس'),
+      b('cool', { a: 'hawk', c: [0x8a6a4a, 0xf4e6d0, 0x2a2a38], beak: 0xffc040, hat: 'eboshi', held: 'die', ex: ['robe'], rc: 0x2a2a38 }, 'ショウソウタカ|Shosohawk|正仓隼|正倉隼|쇼소타카|Шосохок|शोसोहॉक|شوسوهوك'),
+      b('king', { a: 'dragon', c: [0x2f6a44, 0xe0f4e0, 0xffd65a], hat: 'bigcrown', held: 'die', ex: ['cape'], cape: 0x6a3a8a }, 'テンピョウドラ|Tempyodra|天平龙宝|天平龍寶|덴표도라|Тэмпёдра|टेम्प्योड्रा|تيمبيودرا'),
     ],
     // peg solitaire (2026-11-14): no AI — the two Atlamo come with the goals of a game without hints (atlas/games/peg.js):
     // N 3 or fewer left · R one left · SR one left on ◎. The flat boards give the princess's, the pyramid Kepler's (UR in the gacha).
