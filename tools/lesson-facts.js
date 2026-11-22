@@ -130,6 +130,37 @@ const CHECKS = {
             if (id === 'tw_diag' && r !== NO) { const DG = [[0, 3, 6], [2, 5, 8], [21, 18, 15], [23, 20, 17]]; if (!DG.some(ml => ml.includes(t) && ml.every(q => after.b[q] === me))) bad(g, K, `${w}: the mill is not on a diagonal line`); }
           }); }); }); });
   },
+  // (2026-11-22 lesson loop) the tafl lessons ('tafl', key = the step's index in tafl/lessons.json): every accepted / scored move is legal and
+  // the best one is the top of the stored values (within 15); what the step's words say the answer does holds on the board (atlas/lessons3d.js
+  // tfLsJa): the king runs to the edge (b_move), a capture (b_cap), with a corner / the empty throne as the other side (b_hostile), no piece of
+  // yours can be taken after it (b_safe), two or more taken at once (t_shield), the king with two open lines or out (t_tuichi / v_tablut), no
+  // escape and no トゥイチ left for the king (t_block), the fort / the encirclement / the king's capture won (t_fort / t_encircle / v_brandubh),
+  // and the N-move lines (b_escape / b_kingcap) replay legally to the escape / the capture
+  'tafl'() {
+    const E = require(path.join(ROOT, 'tafl/engine.js')), L = J('tafl/lessons.json'), g = 'tafl';
+    L.steps.forEach((st, si) => { const K = String(si), id = st.id;
+      (st.problems || []).forEach((P, j) => { const w = `${id} q${j + 1}`, pos = E.Pos.from(P.s), legal = new Set(pos.moves()), me = pos.turn, F = pos.G.F;
+        const ok = P.ok || (P.best != null ? [P.best] : []);
+        ok.forEach(m => { if (!legal.has(m)) bad(g, K, `${w}: an accepted move is not legal`); });
+        if (P.best != null && !legal.has(P.best)) bad(g, K, `${w}: the best move is not legal`);
+        if (P.sc) { P.sc.forEach(([m]) => { if (!legal.has(m)) bad(g, K, `${w}: a scored move is not legal`); });
+          const top = Math.max(...P.sc.map(e => e[1])), b = P.sc.find(e => e[0] === P.best); if (b && b[1] < top - 15) bad(g, K, `${w}: the best move is not the top value`); return; }
+        if ((P.n || 1) > 1) { let q = pos.clone(); for (const m of P.line || []) { if (q.res) break; if (!q.moves().includes(m)) { bad(g, K, `${w}: the line has an illegal move`); return; } q = q.clone().play(m); }
+          const want = id === 'b_escape' ? 'escape' : 'capture'; if (q.why !== want || q.res !== me) bad(g, K, `${w}: the line does not end in the ${want} (${q.why || 'nothing'})`); return; }
+        const reply = q => { let c = 0, w2 = false, tu = false; if (q.res) return { c, w: w2, tu }; for (const r of q.moves()) { const z = q.clone().play(r); if (z.res && z.res !== me) w2 = true; c = Math.max(c, z.lastCaps.length); if (!z.res && z.kingLines().length >= 2) tu = true; } return { c, w: w2, tu }; };
+        ok.forEach(m => { if (!legal.has(m)) return; const f = E.mFrom(m), t = E.mTo(m), a = pos.clone().play(m), caps = a.lastCaps;
+          if (id === 'b_move' && !(pos.at(f) === 3 && (F[t] & 1))) bad(g, K, `${w}: the answer does not run the king to the edge`);
+          if ((id === 'b_cap' || id === 'b_hostile') && !caps.length) bad(g, K, `${w}: the answer takes nothing`);
+          if (id === 'b_hostile' && caps.length && !caps.some(q => a.nb(q).some(x => !a.at(x) && (F[x] & 6)))) bad(g, K, `${w}: no corner / empty throne helps the capture`);
+          if (id === 'b_safe' && reply(a).c) bad(g, K, `${w}: a piece can still be taken after the answer`);
+          if (id === 't_shield' && caps.length < 2) bad(g, K, `${w}: the shield wall takes ${caps.length}`);
+          if ((id === 't_tuichi' || id === 'v_tablut') && !(a.res === me || (pos.at(f) === 3 && a.kingLines().length >= 2))) bad(g, K, `${w}: the king has ${a.kingLines().length} open line(s), not 2`);
+          if (id === 't_block') { const r = reply(a); if (r.w) bad(g, K, `${w}: the king still escapes`); if (r.tu) bad(g, K, `${w}: the king can still make two open lines`); }
+          if (id === 't_fort' && !(a.res === me)) bad(g, K, `${w}: the answer does not win (fort)`);
+          if (id === 't_encircle' && !(a.res === me)) bad(g, K, `${w}: the answer does not win (encircle)`);
+          if (id === 'v_brandubh' && !(a.res === me)) bad(g, K, `${w}: the answer does not catch the king`);
+        }); }); });
+  },
   // (2026-11-22 lesson loop) the mancala lessons ('mancala', key = the step's index in mancala/lessons.json): a scored pit is exactly a
   // pit with seeds (sc null ⇔ empty), the gold pit (best) is legal and the top of the stored values; 種まき (sow): the gold pit's last seed
   // lands on the target and the count the words use (種の数 vs 目標までの距離 → 「N つ手前／先」) is what the engine's sowing does for
