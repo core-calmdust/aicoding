@@ -1116,8 +1116,8 @@
   };
   const chEnd = sn => { const b = sn.replace(/[。！？!?]+$/, '').replace(/[）)」]+$/, ''); for (const e of ['なんだ', 'んだ', 'だよ', 'だね', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね']) if (b.endsWith(e)) return e === 'だよ' ? 'よ' : e === 'なんだ' ? 'んだ' : e === 'だね' ? 'ね' : e; return /[！？]$/.test(sn) ? sn.slice(-1) : 'x'; };
   const chSents = s => (String(s).replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, '').match(/[^。！？\n]+[。！？]+|[^。！？\n]+$/gm) || []).map(x => x.trim()).filter(Boolean);
-  function chOpVoice(id) {   // one opening's voice: its own order of praise / soft words / push / leads, and what it has said so far
-    const seed = shSeed('ch' + id), P = (k, n) => shPerm(seed ^ k, n), O = CH_OPV, pc = P(0x11, O.cheer.length), ps = P(0x9e37, O.soft.length), pp = P(0x51ed, O.push.length), pl = P(0x2b7f, O.lead.length), pa = P(0x6c1d, O.ask.length), pt = P(0x3a5, O.pct.length);
+  function chOpVoice(id, O0) {   // one opening's voice: its own order of praise / soft words / push / leads, and what it has said so far (O0: another word list — the lessons' CH_LSV)
+    const seed = shSeed((O0 ? 'chl' : 'ch') + id), P = (k, n) => shPerm(seed ^ k, n), O = O0 || CH_OPV, pc = P(0x11, O.cheer.length), ps = P(0x9e37, O.soft.length), pp = P(0x51ed, O.push.length), pl = P(0x2b7f, O.lead.length), pa = P(0x6c1d, O.ask.length), pt = P(0x3a5, O.pct.length);
     const gram = new Map(), sent = new Map(); let last = '';
     const norm = t => String(t).replace(/\{[mx]\}/g, '♘e2–e4').replace(/<[^>]+>/g, '').replace(/[\s、。！？!?「」（）()・…〜♪]/g, '');
     const grams = t => { const x = norm(t), g = new Set(); for (let k = 0; k + 10 <= x.length; k++) g.add(x.slice(k, k + 10)); return g; };
@@ -1192,7 +1192,7 @@
     const w0 = chAtt(b, a, !white); F.was = !!w0 && (!chAtt(b, a, white) || CH_VAL[w0.toLowerCase()] < CH_VAL[F.pc]);   // (the piece moved stood to be taken)
     F.run = 0; if (kq >= 0) { const nb2 = nb.slice(); nb2[kq] = '';
       for (let dr = -1; dr <= 1; dr++) for (let df = -1; df <= 1; df++) { const r = (kq >> 3) + dr, f = (kq & 7) + df; if ((!dr && !df) || !ok(r, f)) continue; const c = nb2[r * 8 + f]; if (c && chW(c) !== white) continue; if (!chAtt(nb2, r * 8 + f, white)) F.run++; } }
-    const at = chAtt(nb, z, !white); F.taken = !!at && (at.toLowerCase() !== 'k' || !chAtt(nb, z, white));
+    const at = chAtt(nb, z, !white); F.taken = !!at && (at.toLowerCase() !== 'k' || !chAtt(nb, z, white)); F.def = !!chAtt(nb, z, white);
     if ('bqr'.includes(F.pc)) {
       const D = F.pc === 'b' ? [[1, 1], [1, -1], [-1, 1], [-1, -1]] : F.pc === 'r' ? [[1, 0], [-1, 0], [0, 1], [0, -1]] : [[1, 1], [1, -1], [-1, 1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]];
       for (const [dr, df] of D) { let r = (z >> 3) + dr, f = (z & 7) + df; const seen = []; while (ok(r, f) && seen.length < 2) { const ch = nb[r * 8 + f]; if (ch) { if (chW(ch) === white) break; seen.push(ch.toLowerCase()); } r += dr; f += df; }
@@ -1202,7 +1202,6 @@
     return F;
   }
   const CHJ_LS = {
-    lead: ['正解は{m}。', '{m}が正解だったピョン。', 'ここは{m}を指したかった！ ', '答えは{m}。', '{m}が決め手。'],
     ask: {
       b_check: ['黒のキングに、チェックをかけてみよう！', '{p}で、キングをねらえるマスはどこかな？', 'チェックになる手を指してみて！', '{p}を動かして、黒のキングに王手！', 'さあ、キングを取れる形を作ろう！'],
       b_escape: ['チェックされちゃった！ いちばん良い守り方は？', 'キングがねらわれてる。逃げる・置く・取る、どれにする？', 'チェックを防ぐ手はいくつかある。損しない手はどれかな？', 'さあ、キングを守ろう！ 駒も損しない手を選んでね。', 'ここはどう守る？ 3つの方法を思い出してみて！'],
@@ -1218,138 +1217,162 @@
       promote: ['ポーンを成らせる、正しい一手は？', 'どのポーンを進めたら、クイーンになれるかな？', '相手のキングは追いつける？ 数えてから指してね。', 'パスポーンの出番ピョン！ どれを進める？', 'クイーンへの道を開く手はどれかな？'],
     },
   };
-  function chLsJa(sid, o, i) {
-    const A = CHJ_LS.ask[sid]; if (!A) return null;
+  // (2026-11-23 lesson loop: the chess lessons in ナイトン's voice — each lesson its own order of praise / soft words / push (CH_LSV via chOpVoice),
+  //  every reason in 2〜4 wordings, picked so that no line, no 10 letters and no sentence ending repeat inside a lesson; the praise and the
+  //  correction never use the same sentence; the wrong move's own loss is worked out from the board (chLsF) and said once per move)
+  const CH_LSV = {
+    ask: [''], pct: [''],
+    cheer: ['いいね！', 'さすが！', 'お見事！', 'ナイス！', 'その調子！', 'ばっちりピョン！', 'すごい、正解！', 'いい手を選んだね！', 'よく見つけたね！', '上手！', '完璧ピョン！', 'やったね！'],
+    push: ['次もこの調子で行こう！', 'どんどん進もう！', 'まだまだいけるピョン！', '次の問題も楽しみだね！', 'その勢いで続けよう！', '次もいけるはず！'],
+    soft: ['おしい！', '大丈夫、', 'ドンマイ！', 'いい線いってたね。', 'ここはよくある迷いどころだね。', '気にしない、気にしない！', 'あと一歩！', '今度こそいけるピョン！', 'これで覚えちゃおう！', 'みんな一度は迷うところ。'],
+    lead: ['正解は{m}。', '答えは{m}。', 'ここは{m}を指したかった！', '{m}が決め手だったピョン。', 'いちばんの手は{m}。', '{m}が正解。'],
+    hint: ['動ける駒を、ひとつずつ確かめてみて！', '相手の次の一手も想像してみようピョン。', 'あせらずに、候補の手をくらべてみて！', '指したあと、取られる駒がないかも確かめよう！', 'いちばん強い手から考えるのがコツだピョン！', '相手の駒の利きを、1つずつなぞってみて。', 'チェック、駒取り、ねらいの順に探すと見つかりやすい！'],
+  };
+  function chLsJa(sid, o, i, V) {
+    const A = CHJ_LS.ask[sid]; if (!A || !V) return null;
     const P = o.P, pos = o.pos, ans = o.ans, FA = chLsF(pos, ans), N = CH_PN, pA = N[FA.pc], k = i + sid.length;
-    const MT = 20000, val = u => { const e = (P.sc || []).find(x => x[0] === u); return e ? e[1] : null; }, best = val(ans);
+    const val = u => { const e = (P.sc || []).find(x => x[0] === u); return e ? e[1] : null; }, best = val(ans);
     const ok = u => P.ok ? P.ok.includes(u) : CHESS.points(P, u) >= 16;
-    const alt = u => u && u !== ans && !ok(u) ? u : P.sc ? (P.sc.find(x => !ok(x[0])) || [])[0] : null;   // (the scorer asks with the right move: a wrong one from the list)
-    const lead = CHJ_LS.lead[k % CHJ_LS.lead.length];
-    const loss = u => { const v = val(u); if (best == null || v == null || best > MT || v < -MT) return ''; const d = Math.round((best - v) / 100); return ''; };   // (2026-11-22: the engine's number is no reason — the board facts say it)
+    const nm = q => String.fromCharCode(97 + (q & 7)) + ((q >> 3) + 1);
+    const wrong0 = () => {   // (no wrong move given — the scorer asks with the right one: a legal-looking wrong move, the answer's own piece first)
+      const b = chBoard(pos), wh = String(pos).split(' ')[1] !== 'b', out = [];
+      for (let q = 0; q < 64; q++) { const c = b[q]; if (!c || chW(c) !== wh) continue;
+        for (const z of chHits(b, q).concat(c.toLowerCase() === 'p' ? [q + (wh ? 8 : -8)].filter(x => x >= 0 && x < 64 && !b[x]) : [])) { const t = b[z]; if ((t && chW(t) === wh) || (t && t.toLowerCase() === 'k')) continue; if (c.toLowerCase() === 'p' && !t && (z & 7) !== (q & 7)) continue;
+          const u = nm(q) + nm(z) + (c.toLowerCase() === 'p' && (z >> 3) % 7 === 0 ? 'q' : ''); if (u === ans || ok(u)) continue;
+          try { const nb = chMove(b, u), kq = nb.findIndex(ch => ch && chW(ch) === wh && ch.toLowerCase() === 'k'); if (kq >= 0 && chAtt(nb, kq, !wh)) continue; } catch (e) { continue; }
+          out.push([u, q === chSq(ans) ? 0 : 1]); } }
+      out.sort((x, y) => x[1] - y[1]); return out.length ? out[0][0] : null; };
+    const alt = u => u && u !== ans && !ok(u) ? u : P.sc && P.sc.find(x => !ok(x[0])) ? P.sc.find(x => !ok(x[0]))[0] : wrong0();   // (the scorer asks with the right move: a wrong one from the list)
+    const F = u => { try { return chLsF(pos, u); } catch (e) { return { hits: [] }; } };
+    const rot = L => L.map((_, q) => L[(k + q) % L.length]);
+    const pick = (L, prev) => V.pick(rot(L), 0, prev);
     const tgt = FA.hits.filter(x => x !== 'p'), t1 = N[tgt[0]] || '', t2 = N[tgt[1]] || '';
     const tw0 = tgt.length >= 2 ? (t1 === t2 ? `2つの${t1}` : `${t1}と${t2}`) : '';
-    const ask = A[k % A.length].replace('{p}', pA);
-    let hintTx = '', good, ng;
-    const F = u => { try { return chLsF(pos, u); } catch (e) { return { hits: [] }; } };
-    const mateWhy = G => G.pc === 'n' && !G.near ? 'キングは自分の駒にかこまれて、逃げ場がひとつもないピョン。' : G.near ? `キングの目の前の${N[G.pc]}は守られているから、取ることもできない。` : 'キングの逃げ道は全部ふさがって、あいだに置く駒もない！';
-    const notMate = G => !G.check ? '{x}はチェックになっていないから、相手は自由に動けちゃう。' : G.run ? '{x}はチェックだけど、キングに逃げ道が残っちゃう。' : G.taken ? `{x}だと、チェックした${N[G.pc]}を取られちゃう。` : '{x}のチェックは、あいだに駒を置かれて防がれちゃう。';
+    let hints = [], goods = [], rights = [], xpart = () => [], altGood = null, ask = null;
+    const cheer = V.cheer(i), soft = V.soft(i);
     if (sid === 'b_check') {
-      hintTx = { r: 'ルークはタテとヨコに進む駒。キングと同じ列か段に入れないかな？', b: 'ビショップはナナメの駒。キングとナナメに並ぶマスを探してみて！', n: 'ナイトはL字に跳ぶピョン。キングからL字の位置にあるマスはどこ？', q: 'クイーンはタテ・ヨコ・ナナメ全部に進める。キングと一直線に並ぶマスはいくつもあるね。', p: 'ポーンが取れるのはナナメ前の1マス。一歩進めたら、キングはそこにいるかな？' }[FA.pc] || '';
       const how = { r: 'まっすぐな線', b: 'ナナメの線', n: 'L字の跳び', q: '長い線', p: 'ナナメ前の1マス' }[FA.pc] || '動き';
-      good = () => [`{x}で${pA}がキングをにらんだ！ 黒は次の手で、かならずキングを守らなきゃいけないピョン。`, `チェック成功！ {x}の${pA}の${how}が、キングにちゃんと届いてる。`][k % 2];
-      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; return lead + (G && !G.check ? (G.pc === 'k' ? '{x}はキングが動くだけで、相手のキングをねらえない。' : `{x}だと${N[G.pc] || '駒'}が相手のキングに届かないから、チェックにならない。`) : '') + `${pA}の${how}がキングに届くから、チェックになる！`; };
+      hints = [{ r: 'ルークはタテとヨコに進む駒。キングと同じ列か段に入れないかな？', b: 'ビショップはナナメの駒。キングとナナメに並ぶマスを探してみて！', n: 'ナイトはL字に跳ぶピョン。キングからL字の位置にあるマスはどこ？', q: 'クイーンはタテ・ヨコ・ナナメ全部に進める。キングと一直線に並ぶマスはいくつもあるね。', p: 'ポーンが取れるのはナナメ前の1マス。一歩進めたら、キングはそこにいるかな？' }[FA.pc] || ''].filter(Boolean);
+      goods = [`{x}で${pA}がキングをにらんだ！ 黒は次の手で、キングを守るしかないピョン。`, `チェック成功！ ${pA}の${how}が、ちゃんとキングに届いてる。`, `{x}で王手！ 黒はほかの手をあと回しにして、まずキングを助けなきゃいけない。`,
+        FA.pc === 'n' ? 'ナイトは駒を飛びこえるから、このチェックはあいだに駒を置いても防げないピョン。' : `{x}の${pA}からキングまで、じゃまな駒はひとつもない。きれいな王手だね。`];
+      rights = [`{m}なら、${pA}の${how}がキングに届いてチェックになるピョン。`, `{m}で${pA}を動かせば、キングを射程に入れて王手だった。`, `ここは{m}、${pA}の${how}が、ちょうどキングに当たるマスなんだ。`, `正しくは{m}、そこからなら${pA}がキングをねらえる！`, `{m}へ動かせば、${pA}がキングをにらむ王手になった。`];
+      xpart = G => !G || G.check ? [] : G.pc === 'k' ? ['{x}はキングが動くだけで、相手のキングをねらえない。', '{x}だと自分のキングが動いただけ。黒のキングには何も届かない。']
+        : [`{x}だと${N[G.pc] || '駒'}が相手のキングに届かないから、チェックにならない。`, `{x}のあと、黒のキングはだれにもねらわれていないピョン。`, `{x}では、キングへの線が通らない。`, '{x}では、黒のキングに王手がかからない。'];
     } else if (sid === 'b_escape') {
-      const kind = G => G.cap ? 'take' : G.pc === 'k' ? 'run' : 'block';
-      hintTx = { take: 'チェックしている駒は、だれかに守られてる？ 取れるなら、それがいちばん得ピョン。', run: '逃げられるマスはいくつかある。逃げた先で、ほかの駒がねらわれないかも見てね。', block: 'あいだに駒を置く手もある。置いた駒が取られないか、確かめよう！' }[kind(FA)];
-      const why = { take: `{m}なら、チェックしている${N[FA.cap]}を取れて駒得。`, run: '{m}でキングを逃がすのが、駒を損しない守り方ピョン。', block: '{m}で守りのついた駒を置けば、損しないで防げる！' }[kind(FA)];
-      good = u => { const G = u && u !== ans ? F(u) : FA, kd = kind(G);
-        if (u && u !== ans) return '{x}でもちゃんと守れたね！ ' + { take: 'チェックしている駒を取れて、駒得まで！', run: 'キングが安全なマスへ逃げられたピョン。', block: 'あいだに置いた駒も、ちゃんと守られている。' }[kd];
-        return { take: `{x}でチェックしている${N[G.cap]}を取った！ キングも助かって、駒得までできたピョン。`, run: '{x}でキングを安全なマスへ。ほかの駒もねらわれない、落ち着いた逃げ方！', block: '{x}であいだに駒を置いて、チェックをさえぎった！ 置いた駒もちゃんと守られている。' }[kd]; };
-      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
-        if (G && kind(G) === 'block' && G.hang) x = `{x}であいだに置いた${N[G.pc]}は、${G.hang}にただで取られちゃう。`;
-        else if (G && kind(FA) === 'take' && !G.cap) x = `{x}でも守れるけど、チェックしている${N[FA.cap]}を取るチャンスを見のがしちゃった。`;
-        else if (G && G.pc === 'k') x = '{x}に逃げると、そのあと駒を取られて損しちゃう。';
-        else if (G) x = '{x}だと守りきれずに、駒を損しちゃう。';
-        return (x ? '' : lead) + x + why; };
+      const kind = G => G.cap ? 'take' : G.pc === 'k' ? 'run' : 'block', kA = kind(FA), C = N[FA.cap];
+      hints = { take: ['チェックしている駒は、だれかに守られてる？ 取れるなら、それがいちばん得ピョン。', 'キングをねらっている駒、きみの駒で取れないかな？'], run: ['逃げられるマスはいくつかある。逃げた先で、ほかの駒がねらわれないかも見てね。', 'キングの行き先を1つずつ確かめて。相手の駒が届かないマスはどこ？'], block: ['あいだに駒を置く手もある。置いた駒が取られないか、確かめよう！', 'キングと相手の駒のあいだに、守りのついた駒を入れられないかな？'] }[kA];
+      goods = { take: [`{x}でチェックしている${C}を取った！ キングも助かって、駒得までできたピョン。`, `守りながら${C}をいただき！ {x}は、取るのがいちばん得な守り方。`, `{x}でチェックの元を取っちゃった！ ${C}がいなくなれば、もう王手はない。`],
+        run: ['{x}でキングを安全なマスへ。ほかの駒もねらわれない、落ち着いた逃げ方！', '{x}に逃げれば、もうどの駒にもねらわれない。駒も1つも損してないピョン。', 'キングの避難、成功！ {x}のマスには相手の駒が届かない。'],
+        block: ['{x}であいだに駒を置いて、チェックをさえぎった！ 置いた駒もちゃんと守られている。', '{x}の合い駒で王手をシャットアウト！ 取られても取り返せる形ピョン。', 'あいだに入った駒が盾になったね。{x}なら、駒も損しない。'] }[kA];
+      rights = { take: [`{m}なら、チェックしている${C}を取れて駒得。`, `{m}で${C}を取れば、守りと駒得がいっぺんにできた。`, `ここは{m}で${C}を取れば、いちばん得ピョン。`, `正しくは{m}、${C}を取ってしまえば王手も消える。`],
+        run: ['{m}でキングを逃がすのが、駒を損しない守り方ピョン。', '{m}に逃げれば、どの駒も取られずにすむ。', '{m}なら、キングが安全なマスへ移れる。', '正しくは{m}、そこなら相手の駒が届かないから安心。'],
+        block: ['{m}で守りのついた駒を置けば、損しないで防げる！', '{m}の合い駒なら、取られても取り返せる。', '{m}であいだをふさげば、駒も損しない。', '正しくは{m}、守りのある駒で線をさえぎる手。'] }[kA];
+      altGood = u => '{x}でもちゃんと守れたね！ ' + { take: 'チェックしている駒を取れて、駒得まで！', run: 'キングが安全なマスへ逃げられたピョン。', block: 'あいだに置いた駒も、ちゃんと守られている。' }[kind(F(u))];
+      xpart = G => !G ? [] : kind(G) === 'block' && G.hang ? [`{x}であいだに置いた${N[G.pc]}は、${G.hang}にただで取られちゃう。`, `{x}の合い駒は守りがなくて、${G.hang}に取られて損。`]
+        : kA === 'take' && !G.cap ? [`{x}でも守れるけど、チェックしている${C}を取るチャンスを見のがしちゃった。`, `{x}だと王手は防げても、${C}がそのまま残っちゃう。`]
+        : G.pc === 'k' ? ['{x}に逃げると、そのあと駒を取られて損しちゃう。', '{x}へ逃げたら、ほかの駒がねらわれて損しちゃう。', '{x}のマスに逃げると、あとで駒を損する形になる。'] : ['{x}だと守りきれずに、駒を損しちゃう。', '{x}では、駒を1つ損する形になっちゃう。', '{x}の守り方だと、駒を1つ失っちゃう。'];
     } else if (sid === 'b_mate' || sid === 'mate1') {
-      hintTx = FA.pc === 'n' ? 'キングは自分の駒にかこまれて動けないね。L字に跳ぶ駒の出番ピョン！' : FA.near ? `${pA}をキングのすぐ近くへ。取られないマスはどこかな？ 味方の守りを使おう！` : ['キングの前の段は、自分のポーンでふさがってない？ 奥の段をねらってみて！', `${pA}の長い線でチェックしたら、キングはどこへ逃げられる？`, 'キングのまわりの8マスを数えてみて。もう1つの駒が、どこをふさいでいるかな？'][k % 3];
-      good = u => u && u !== ans && val(u) != null && val(u) < (best || 0) ? '{x}でも勝ちは近い！ でも{m}なら、1手で詰んでたピョン。' : `{x}でチェックメイト！ ${mateWhy(u && u !== ans ? F(u) : FA)}`;
-      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; return lead + (G ? notMate(G) : '') + mateWhy(FA); };
+      const why = G => G.pc === 'n' && !G.near ? ['キングは自分の駒にかこまれて、逃げ場がひとつもないピョン。', '味方の駒が壁になって、キングは一歩も動けない。', 'ナイトのチェックは、あいだに駒を置いて止められないんだ。']
+        : G.near ? [`キングの目の前の${N[G.pc]}は守られているから、取ることもできない。`, `となりの${N[G.pc]}には味方の守りがついていて、キングは手を出せない。`, `${N[G.pc]}がキングにぴったりくっついた。守りがあるから取られないピョン。`]
+        : ['キングの逃げ道は全部ふさがって、あいだに置く駒もない！', '逃げるマスも、防ぐ駒も、取る手もない。完全に詰んだ！', 'キングのまわりのマスは全部、きみの駒がにらんでる。', 'チェックを止める方法が、黒にはひとつも残ってない。'];
+      hints = FA.pc === 'n' ? ['キングは自分の駒にかこまれて動けないね。L字に跳ぶ駒の出番ピョン！', 'キングのまわりは味方の駒でいっぱい。飛びこえてチェックできる駒は？'] : FA.near ? [`${pA}をキングのすぐ近くへ。取られないマスはどこかな？ 味方の守りを使おう！`, `${pA}をキングにくっつけてみて。そのマス、味方が守ってる？`]
+        : ['キングの前の段は、自分のポーンでふさがってない？ 奥の段をねらってみて！', `${pA}の長い線でチェックしたら、キングはどこへ逃げられる？`, 'キングのまわりの8マスを数えてみて。もう1つの駒が、どこをふさいでいるかな？'];
+      const heads = ['{x}でチェックメイトの完成！ ', '{x}で詰み！ ', '{x}で勝負あり！ ', '{x}でゲームセット！ ', '決まった！ {x}のチェックで、もう逃げられない。'];
+      goods = why(FA).flatMap((w, q) => heads.map((_, h) => heads[(h + q * 2) % heads.length] + w));
+      rights = ['{m}なら一発で詰みだった。逃げ場が残らない形ピョン。', '{m}が、逃げ場をなくす決め手。黒はもう受けられなかった。', '{m}を指せば、黒はもう何もできなかったんだ。', '{m}なら王手をかけたまま、キングの逃げ道がゼロになる。', '{m}なら、逃げても、取っても、合い駒しても防げない詰みだった。', '{m}を見つければ、キングの逃げるマスが1つも残らなかった。'];
+      altGood = u => val(u) != null && val(u) < (best || 0) ? '{x}でも勝ちは近い！ でも{m}なら、1手で詰んでたピョン。' : '{x}でも詰み！ 詰ませ方はひとつじゃないんだ。';
+      xpart = G => !G ? [] : !G.check ? ['{x}はチェックになっていないから、相手は自由に動けちゃう。', '{x}だと王手がかからず、黒に一手の余裕をあげちゃう。', '{x}のあと、黒のキングはねらわれていない。それじゃ詰みにならない。', '{x}では王手にならないピョン。黒は好きな手で守りを固められる。', '{x}だと黒のキングは自由なまま。詰みはまだ先になっちゃう。', '{x}はキングをねらっていない手。それじゃ黒にひと息つかせちゃう。'] : G.run ? ['{x}はチェックだけど、キングに逃げ道が残っちゃう。', '{x}の王手は、キングにすっと逃げられちゃう。', '{x}だと、キングの逃げるマスがまだ空いている。']
+        : G.taken ? [`{x}だと、チェックした${N[G.pc]}を取られちゃう。`, `{x}のチェックは、${N[G.pc]}を取られて終わり。`] : ['{x}のチェックは、あいだに駒を置かれて防がれちゃう。', '{x}だと、あいだに駒をはさまれて止められちゃう。'];
     } else if (sid === 'b_special') {
       const kd = FA.castle ? 'castle' : FA.ep ? 'ep' : 'promo', long = FA.castle && (chSq(ans.slice(2, 4)) & 7) === 2;
-      return { ask: { castle: ['特別なルールを使ってみよう！ キングを安全にする手は？', 'キングとルークを、1手でいっしょに動かせるかな？'][i % 2], ep: ['相手のポーンが2マス進んできた！ 特別な取り方、わかる？', 'いまだけできる取り方があるピョン。どれかな？'][i % 2], promo: 'ポーンが奥の段まであと1歩！ どうする？' }[kd],
-        hintTx: { castle: long ? 'キングを、ルークのいる左へ2マス。ルークがキングを飛びこえて、となりに来るよ。' : 'キングを横に2マス動かすと、ルークがとなりに来るピョン。', ep: '黒のポーンはいま、2マス進んで真横に来たところ。ナナメ前のあいたマスに注目してね！', promo: 'ポーンが奥の段に着いたら、いちばん強い駒に成れるね。' }[kd],
-        good: () => ({ castle: long ? 'クイーン側へのキャスリング！ キングは端へ、ルークは真ん中の近くへ出てきた。' : '{x}でキャスリング！ キングは端の安全な場所へ、ルークは真ん中へ出てきたピョン。', ep: '{x}でアンパッサン！ 真横のポーンを、ナナメ前に進んで取れた。', promo: '{x}でクイーンに昇格！ いちばん強い駒が、もう1つ増えたピョン。' }[kd]),
-        ng: u0 => { const G = u0 && u0 !== ans ? F(u0) : null;
-          if (kd === 'castle') return `${lead}{x}だとキングが真ん中に残って、ルークも出にくいまま。キャスリングなら1手で両方できるピョン。`.replace('{x}だと', G ? '{x}だと' : 'ほかの手だと');
-          if (kd === 'ep') return `${lead}アンパッサンは、相手のポーンが2マス進んだ直後しかできない。次の手ではもう取れないから、いまが取りどきだった！`;
-          return lead + (G && G.promo && G.promo !== 'q' ? '{x}だとクイーンより弱い駒になっちゃう。' : '') + 'ポーンを奥の段へ進めてクイーンに成れば、いちばん強い駒が増えるから。'; },
-        why: '' };
+      ask = pick({ castle: ['特別なルールを使ってみよう！ キングを安全にする手は？', 'キングとルークを、1手でいっしょに動かせるかな？'], ep: ['相手のポーンが2マス進んできた！ 特別な取り方、わかる？', 'いまだけできる取り方があるピョン。どれかな？'], promo: ['ポーンが奥の段まであと1歩！ どうする？'] }[kd]);
+      hints = { castle: [long ? 'キングを、ルークのいる左へ2マス。ルークがキングを飛びこえて、となりに来るんだ。' : 'キングを横に2マス動かすと、ルークがとなりに来るピョン。'], ep: ['黒のポーンが、いま真横に並んだところ。ナナメ前のあいたマスに注目してね！', 'となりに並んだ相手のポーン。その後ろのマスへ、ナナメに進めないかな？'], promo: ['ポーンが奥の段に着いたら、いちばん強い駒に成れるね。'] }[kd];
+      goods = { castle: long ? ['クイーン側へのキャスリング！ キングは端へ、ルークは真ん中の近くへ出てきた。', '{x}は長いほうのキャスリング！ ルークがキングを飛びこえて、真ん中で働きはじめる。'] : ['{x}でキャスリング！ キングは端の安全な場所へ、ルークは真ん中へ出てきたピョン。', '{x}で、キングとルークがいっぺんに動いた！ キングは隅で安心、ルークも戦える。'],
+        ep: ['{x}でアンパッサン！ 真横のポーンを、ナナメ前に進んで取れた。', '{x}、アンパッサン成功！ 横を通りすぎようとしたポーンをつかまえたピョン。'], promo: ['{x}でクイーンに昇格！ いちばん強い駒が、もう1つ増えたピョン。'] }[kd];
+      rights = { castle: ['{m}のキャスリングなら、キングの避難とルークの出動が1手でできるピョン。', '{m}なら、キングは隅で安全に、ルークは真ん中で戦えた。'], ep: ['{m}のアンパッサンは、ポーンが2歩で進んできた直後の一手でしかできない。いまが取りどきだった！', 'アンパッサンができるのは、いまこの一手だけ。{m}で、横のポーンを取れたんだ。'], promo: ['{m}でポーンを奥の段へ進めてクイーンに成れば、いちばん強い駒が増えるから。'] }[kd];
+      xpart = G => kd === 'castle' ? [G ? '{x}だとキングが真ん中に残って、ルークも出にくいまま。' : 'ほかの手だとキングが真ん中に残って、ルークも出にくいまま。', G ? '{x}では、キングがまだ危ない真ん中にいる。' : 'ほかの手では、キングがまだ危ない真ん中にいる。']
+        : kd === 'ep' ? (G ? ['{x}だと、次の手ではもうアンパッサンできない。', '{x}を指すと、横のポーンを取る権利が消えちゃう。'] : []) : G && G.promo && G.promo !== 'q' ? ['{x}だとクイーンより弱い駒になっちゃう。'] : [];
     } else if (sid === 'b_draw') {
       const m1 = best >= 29999;
-      hintTx = m1 ? '黒のキングの逃げ道を数えてみて。チェックしながら全部ふさげるマスがあるね。' : 'すぐには詰まない形。黒のキングに動けるマスを残しながら、せまい所へ追いこもう！';
-      good = u => { const v = u ? val(u) : best; if (u && u !== ans && v != null && v < best) return '{x}でも勝ちは変わらない！ ただ、{m}ならもっと早く詰ませられたピョン。';
-        return m1 ? '{x}でチェックメイト！ チェックをかけたから、ステイルメイトにならずに勝てたピョン。' : '{x}がいちばん！ 黒のキングに動けるマスを1つ残して、ステイルメイトをよけながら追いつめてる。'; };
-      ng = u0 => { const u = alt(u0) || (P.sc.find(x => x[1] <= 0) || [])[0], G = u ? F(u) : null;
-        const x = G && G.hang ? `{x}だと、${N[G.pc]}をキングに取られちゃう！` : G && !G.check && !G.run ? '{x}だと黒のキングは、チェックされていないのに動けない。ステイルメイトで引き分けになっちゃう！' : '{x}だと勝ちが遠のいちゃう。';
-        return lead + x + (m1 ? 'チェックをかけて詰ませれば勝ちだった。' : '逃げ道を1つ残すのが、勝ちへの近道ピョン。'); };
+      hints = m1 ? ['黒のキングの逃げ道を数えてみて。チェックしながら全部ふさげるマスがあるね。', 'チェックをかけて、逃げ道もなくせるマスは？ 王手を忘れずに！'] : ['すぐには詰まない形。黒のキングに動けるマスを残しながら、せまい所へ追いこもう！', 'あわてて詰ませなくていい。黒のキングに1マスだけ逃げ道を残してみて。'];
+      goods = m1 ? ['{x}で王手をかけて詰み！ チェックをかけたから、ステイルメイトにならずに勝てたピョン。', '{x}で詰み！ 王手をかけたまま逃げ道をなくしたから、引き分けのわなもよけられた。', '{x}で決着！ チェックしてから動けなくしたから、ちゃんと勝ちになる。']
+        : ['{x}がいちばん！ 黒のキングに動けるマスを1つ残して、ステイルメイトをよけながら追いつめてる。', '{x}でキングをすみへ追いこんだ！ 逃げ道を1つ残しているから、引き分けにはならない。', 'うまい追いこみ！ {x}のあとも黒には指せる手が残っているから、あわてず詰みへ向かえる。'];
+      rights = m1 ? ['{m}でチェックをかけて詰ませれば、勝ちだった。', '{m}なら王手で詰み。引き分けの心配もなかったんだ。', '{m}は王手で、そのまま逃げ道もゼロ。これが勝ち方ピョン。', '{m}なら、ステイルメイトのわなをよけて詰ませられた。'] : ['{m}なら逃げ道を1つ残せる。それが勝ちへの近道ピョン。', '{m}で追いこめば、ステイルメイトにならずにすむ。', '{m}なら、黒にまだ指せる手を残しながら追いつめられた。', '{m}で追いこめば、次の手で詰ませる形ができたんだ。'];
+      altGood = u => { const v = val(u); return v != null && v < best ? '{x}でも勝ちは変わらない！ ただ、{m}ならもっと早く詰ませられたピョン。' : '{x}でもばっちり！ 引き分けのわなを、ちゃんとよけたね。'; };
+      xpart = G => !G ? ['ほかの手だと勝ちが遠のいちゃう。'] : G.hang ? [`{x}だと、${N[G.pc]}をキングに取られちゃう！`, `{x}の${N[G.pc]}は、黒のキングにただで取られちゃう。`] : !G.check && !G.run ? ['{x}だと黒のキングは、チェックされていないのに動けない。これじゃ引き分けになっちゃう！', '{x}のあと、黒は指せる手がゼロ。王手じゃないから、ステイルメイト！', '{x}は黒を動けなくしすぎ。チェックなしで手がなくなると、引き分けピョン。']
+        : ['{x}だと勝ちが遠のいちゃう。', '{x}では、黒のキングをなかなか追いつめられない。', '{x}のあと、黒のキングはまだ広いところへ逃げられる。', '{x}だと、詰みまで遠回りになっちゃう。', '{x}では、黒のキングがまだ自由に動けるから、詰みが遠い。'];
     } else if (sid === 'capture') {
       const cA = N[FA.cap] || '駒', defd = FA.taken;
-      hintTx = [`相手の${cA}に注目！ それを守っている駒はいるかな？`, `取ったあと、取り返されるかを数えてみて。${cA}がねらい目ピョン。`][k % 2];
-      good = u => { if (u && u !== ans) return `{x}も悪くない手！ でも{m}なら${cA}を取れて、もっと得だった。`;
-        return defd ? `{x}で${cA}を取った！ 取り返されても、${pA}より${cA}のほうが価値が高いから得なんだ。` : `{x}で、ただの${cA}をいただき！ だれにも守られていないから、取り返されないピョン。`; };
-      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
-        if (G && G.cap && G.hang) x = `{x}で取った${N[G.cap]}は守られていて、${N[G.pc]}を取り返されちゃう。`;
-        else if (G && G.cap && CH_VAL[G.cap] < CH_VAL[FA.cap]) x = `{x}で取れる${N[G.cap]}より、${cA}のほうが価値が高い。`;
-        else if (G && G.hang) x = `{x}のあと、その${N[G.pc]}が${G.hang}に取られて損しちゃう。`;
-        else if (G) x = `{x}だと、${cA}を取るチャンスを見のがしちゃう。`;
-        return lead + x + (defd ? `${cA}は取り返されても得な駒ピョン。` : `${cA}はだれにも守られていなかった！`); };
+      hints = [`相手の${cA}に注目！ それを守っている駒はいるかな？`, `取ったあと、取り返されるかを数えてみて。${cA}がねらい目ピョン。`, `${cA}のまわりを見て。取り返しに来られる駒はいる？`];
+      goods = defd ? [`{x}で${cA}を取った！ 取り返されても、${pA}より${cA}のほうが価値が高いから得なんだ。`, `{x}は${pA}と${cA}の交換。高い駒をもらえるから、取り返されても得ピョン。`]
+        : [`{x}で、ただの${cA}をいただき！ 取り返せる駒はどこにもいないピョン。`, `{x}で${cA}をゲット！ 守っている駒がいないから、まるもうけ。`, `${cA}はすきだらけだった！ {x}で取っても、取り返す駒がいない。`, `{x}で駒得成功！ ${cA}を取ったあと、相手は何も取り返せない。`, `タダの${cA}、よく見つけた！ {x}のあと、取り返しに来る駒はいない。`];
+      rights = defd ? [`{m}なら${cA}が取れて、取り返されても得。`, `{m}で${cA}を取れば、${pA}との交換でも得なんだ。`] : [`${cA}はだれにも守られていなかった！ {m}で、ただ取りできたんだ。`, `{m}なら、守りのない${cA}をただで取れたピョン。`, `ここは{m}、${cA}を守る駒は1つもいなかった。`, `正しくは{m}、ノーガードの${cA}を取り返されずに取れた。`, `{m}で取れば、${cA}の分だけまるまる得になったピョン。`];
+      altGood = () => `{x}も悪くない手！ でも{m}なら${cA}を取れて、もっと得だった。`;
+      xpart = G => !G ? [] : G.cap && G.hang ? [`{x}で取った${N[G.cap]}は守られていて、${N[G.pc]}を取り返されちゃう。`, `{x}だと${N[G.cap]}は取れても、${N[G.pc]}を取り返されて損。`]
+        : G.cap && CH_VAL[G.cap] < CH_VAL[FA.cap] ? [`{x}で取れる${N[G.cap]}より、${cA}のほうが価値が高い。`, `{x}の${N[G.cap]}取りより、もっと大きな${cA}があった。`]
+        : G.hang ? [`{x}のあと、その${N[G.pc]}が${G.hang}に取られて損しちゃう。`, `{x}で動いた${N[G.pc]}は、${G.hang}に取られる場所。`] : [`{x}だと、${cA}を取るチャンスを見のがしちゃう。`, `{x}では、取れるはずの${cA}がそのまま。`, `{x}を指すあいだに、${cA}は逃げちゃうかも。`, `{x}のあと、${cA}はまだ盤の上。もったいないピョン。`];
     } else if (sid === 'escape') {
-      const th = FA.was;
-      hintTx = th ? [`ねらわれているのは${pA}。逃げた先が安全か、1マスずつ確かめてね。`, `${pA}の逃げ先はいくつかあるピョン。相手の駒が届かないマスはどこ？`][k % 2] : 'ただ逃げるだけじゃない手もある。相手の駒をねらい返せないかな？';
-      const why = th ? `{m}なら${pA}が、相手の駒の届かないマスへ逃げられる。` : '{m}なら、ねらわれた駒を助けながら反撃できるピョン。';
-      good = u => u && u !== ans ? '{x}でも助かったね！ ただ{m}なら、逃げた先での働きがもっといいピョン。' : (th ? `{x}で${pA}が安全なマスへ！ もう相手の駒は届かないピョン。` : '{x}で、ねらわれた駒を助けながら反撃！ 相手は自分の駒の心配で手いっぱい。') + (FA.hits.length && FA.hits[0] !== 'p' ? `しかも相手の${N[FA.hits[0]]}もねらってる。` : '');
-      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
-        if (G && th && chSq(u) !== chSq(ans)) x = `{x}だと、ねらわれていた${pA}がそのまま取られちゃう。`;
-        else if (G && G.hang) x = `{x}に逃げても、そこで${G.hang}に取られちゃう。`;
-        else if (G) x = '{x}だと駒は助かっても、形が悪くなって損しちゃう。';
-        return (x ? '' : lead) + x + why; };
+      const th = FA.was, safe = !FA.taken, H = FA.hits.length && FA.hits[0] !== 'p' ? N[FA.hits[0]] : '';
+      hints = th ? [`ねらわれているのは${pA}。逃げた先が安全か、1マスずつ確かめてね。`, `${pA}の逃げ先はいくつかあるピョン。相手の駒が届かないマスはどこ？`, `${pA}があぶない！ 相手の駒の通り道をさけて逃がそう。`] : ['ただ逃げるだけじゃない手もある。相手の駒をねらい返せないかな？', '守りながら攻める手を探してみて。相手の駒に届く場所は？'];
+      const plus = H ? [`しかも相手の${H}もねらってる。`, `おまけに${H}までにらんでる！`, `さらに相手の${H}にも圧力をかけてる。`] : [''];
+      goods = (th && !safe ? [`{x}で${pA}を、守りのあるマスへ逃がした！ 取られても取り返せるから、損はしないピョン。`, `${pA}を助けたね！ {x}のマスなら、取られても取り返せる。`, `{x}で${pA}をよけた！ 相手が取ってきても、味方の駒で取り返せる形。`] : th ? [`{x}で${pA}が安全なマスへ！ もう相手の駒は届かないピョン。`, `${pA}の避難、成功！ {x}のマスなら、どの駒にもねらわれない。`, `{x}で${pA}を逃がした！ 逃げた先も安全で、言うことなし。`, `${pA}を見捨てずに助けたね！ {x}なら、もう取られない。`] : ['{x}で、ねらわれた駒を助けながら反撃！ 相手は自分の駒の心配で手いっぱい。', '{x}は守りと攻めをいっぺんにやる手。相手は自分の駒を気にしなきゃいけない。'])
+        .flatMap(g => plus.map(p => p ? g + p : g));
+      rights = th && !safe ? [`{m}なら${pA}は守りのあるマスへ逃げられる。取られても取り返せるんだ。`, `{m}に逃げれば、${pA}を取られても取り返せた。`, `正しくは{m}、そこなら${pA}に味方の守りがつく。`] : th ? [`{m}なら${pA}が、相手の駒の届かないマスへ逃げられる。`, `{m}に逃げれば、${pA}はもうねらわれない。`, `${pA}の逃げ場所は{m}が正解。そこなら安全ピョン。`, `{m}へ動かせば、${pA}はどの駒にも取られない。`, `正しくは{m}、そこなら${pA}をねらえる駒がいない。`] : ['{m}なら、ねらわれた駒を助けながら反撃できるピョン。', '{m}で駒を守りつつ、相手にもねらいをつけられた。', '{m}なら、守りながら相手の駒をにらみ返せた。', '正しくは{m}、助けるのと攻めるのがいっぺんにできる手。'];
+      altGood = () => '{x}でも助かったね！ ただ{m}なら、逃げた先での働きがもっといいピョン。';
+      xpart = (G, u) => !G ? [] : th && chSq(u) !== chSq(ans) ? [`{x}だと、ねらわれていた${pA}がそのまま取られちゃう。`, `{x}を指しているあいだに、${pA}を取られちゃう。`, `{x}では${pA}が逃げられず、ただで取られるピョン。`] : G.hang ? [`{x}に逃げても、そこで${G.hang}に取られちゃう。`, `{x}の逃げ先は、${G.hang}の通り道。`] : ['{x}だと駒は助かっても、形が悪くなって損しちゃう。', '{x}では、あとで駒を損する形になっちゃう。', '{x}のあと、べつの駒がねらわれて損しちゃう。', '{x}だと、ねらわれた駒の心配が残ったまま。'];
     } else if (sid === 'fork') {
-      const two = tgt.length >= 2;
-      hintTx = two ? [`相手の${tw0}に注目！ その両方に届くマスはどこかな？`, `${pA}を使ってみて。${tw0}を、同時にねらえるマスがあるピョン。`][k % 2] : `${pA}で、2つの駒に同時に届くマスを探してみて！`;
-      const tw = two ? tw0 : '2つの駒';
-      good = u => { if (u && u !== ans) return `{x}もいい手！ でも{m}なら${tw}の両取りで、もっと得できたピョン。`;
-        return FA.check && two ? `{x}はチェックしながら${t2}もねらう両取り！ キングを守っているあいだに、${t2}をいただける。` : `{x}で${tw}を同時にねらった！ 相手は両方は守れないから、どちらかが取れるピョン。`; };
-      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
-        if (G && G.hang) x = `{x}だと、その${N[G.pc]}が${G.hang}に取られちゃう。`;
-        else if (G) x = '{x}ではねらえる駒が1つだけで、相手に守られちゃう。';
-        return lead + x + `{m}なら${tw}の両取り！`; };
+      const two = tgt.length >= 2, tw = two ? tw0 : '2つの駒';
+      hints = two ? [`相手の${tw0}に注目！ その両方に届くマスはどこかな？`, `${pA}を使ってみて。${tw0}、両方に届くマスがあるピョン。`, `${tw0}、どちらにも届く場所を探そう！`, `${pA}の動きで、${tw0}を一度ににらめないかな？`] : [`${pA}で、2つの駒に同時に届くマスを探してみて！`, `${pA}の行き先から、相手の駒が2つ見えるマスはどこ？`];
+      goods = FA.check && two ? [`{x}はチェックしながら${t2}もねらう両取り！ キングを守っているあいだに、${t2}をいただける。`, `王手と${t2}取りの両取り！ {x}のあと、黒はキングを守るので精一杯ピョン。`, `{x}でキングと${t2}を同時ににらんだ！ ${t2}はもう助からない。`]
+        : [`{x}で${tw}を同時にねらった！ 相手は両方は守れないから、どちらかが取れるピョン。`, `${tw}にダブルアタック！ {x}のあと、どちらかは必ず取れる。`, `{x}のフォークで${tw}がピンチ。相手は1つしか助けられない。`];
+      rights = [`{m}なら${tw}の両取り！`, `{m}に動けば、${tw}の両方に手が届いたんだ。`, `ここは{m}、${tw}のどちらにも届くマスだった。`, `{m}で両取りをかければ、相手はどちらかをあきらめるしかなかった。`, `正しくは{m}、そこから${tw}を一度ににらめるピョン。`];
+      altGood = () => `{x}もいい手！ でも{m}なら${tw}の両取りで、もっと得できたピョン。`;
+      xpart = G => !G ? [] : G.hang ? [`{x}だと、その${N[G.pc]}が${G.hang}に取られちゃう。`, `{x}の${N[G.pc]}は、${G.hang}にただで取られる場所。`, `{x}で出た${N[G.pc]}は、${G.hang}のえじきピョン。`] : ['{x}ではねらえる駒が1つだけで、相手に守られちゃう。', '{x}だと1つの駒しかねらえない。それなら相手はかんたんに守れる。', '{x}のあと、相手は1つ守るだけですむ。両取りにならないピョン。', '{x}は、2つの駒に同時には届かない。', '{x}だと、ねらいが1つにしぼられて、相手は楽に守れる。'];
     } else if (sid === 'pin') {
       const Lx = FA.line, fr = Lx ? N[Lx.fr] : '', bk = Lx ? N[Lx.bk] : '';
-      hintTx = Lx ? [`相手の${fr}と${bk}が、一直線に並んでるね。その線に入れる駒はどれかな？`, `${pA}の線を使ってみて。${fr}の後ろに、何がいる？`][k % 2] : `${pA}の長い線の先に、相手の駒が2つ並んでいないかな？`;
-      const what = !Lx ? '{x}で、線の上の相手の駒をしばった！ 前の駒はもう自由に動けないピョン。' : Lx.skewer ? `{x}で串刺し！ ${fr}が逃げたら、後ろの${bk}が取れる。` : Lx.bk === 'k' ? `{x}で${fr}をキングにピン！ ${fr}はもう動くことすらできないピョン。` : `{x}でピン！ ${fr}が動くと、後ろの${bk}が取られちゃう形。`;
-      good = u => u && u !== ans ? `{x}も悪くない！ でも{m}なら、線の上の${fr || '駒'}をしばれたピョン。` : what;
-      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
-        if (G && G.hang) x = `{x}だと、その${N[G.pc]}が${G.hang}に取られちゃう。`;
-        else if (G) x = '{x}では線の上に2つの駒が並ばないから、相手は自由に動ける。';
-        return lead + x + (Lx ? (Lx.skewer ? `{m}なら${fr}の後ろの${bk}まで取れる！` : `{m}なら${fr}が動けなくなる！`) : '{m}なら相手の駒を一直線にしばれた！'); };
+      hints = Lx ? [`相手の${fr}と${bk}が、一直線に並んでるね。その線に入れる駒はどれかな？`, `${pA}の線を使ってみて。${fr}の後ろに、何がいる？`, `${fr}の向こうに${bk}。その線を、${pA}でねらえないかな？`] : [`${pA}の長い線の先に、相手の駒が2つ並んでいないかな？`, `相手の駒の並びを、タテ・ヨコ・ナナメに見ていこう！`];
+      goods = !Lx ? ['{x}で、線の上の相手の駒をしばった！ 前の駒はもう自由に動けないピョン。', '{x}で一直線にねらった！ 前の駒は、うかつに動けない。']
+        : Lx.skewer ? [`{x}で串刺し！ ${fr}が逃げたら、後ろの${bk}が取れる。`, `${fr}の後ろに${bk}！ {x}の串刺しで、${fr}がどいたら${bk}をいただき。`]
+        : Lx.bk === 'k' ? [`{x}で${fr}をキングにピン！ ${fr}はもう動くことすらできないピョン。`, `${fr}がキングの前で固まった！ {x}のピンで、${fr}は一歩も動けない。`, `{x}のピンが決まった！ ${fr}が動くとキングがむき出しになるから、ルールで動かせない。`]
+        : [`{x}でピン！ ${fr}が動くと、後ろの${bk}が取られちゃう形。`, `{x}で${fr}をしばった！ 動けば後ろの${bk}がやられる。`];
+      rights = !Lx ? ['{m}なら相手の駒を一直線にしばれた！', '{m}で、並んだ駒を線の上でねらえたんだ。'] : Lx.skewer ? [`{m}なら${fr}の後ろの${bk}まで取れる！`, `{m}で串刺しにすれば、${fr}がどいたあと${bk}が取れたんだ。`] : [`{m}なら${fr}が動けなくなる！`, `{m}で${fr}と${bk}を一直線にねらえば、${fr}はしばられたピョン。`, `ここは{m}、${fr}の後ろの${bk}まで線が通るんだ。`, `{m}に入れば、${fr}は後ろの${bk}を守るために動けない。`, `正しくは{m}、${fr}と${bk}をまとめて線の上にとらえる手。`];
+      altGood = () => `{x}も悪くない！ でも{m}なら、線の上の${fr || '駒'}をしばれたピョン。`;
+      xpart = G => !G ? [] : G.hang ? [`{x}だと、その${N[G.pc]}が${G.hang}に取られちゃう。`, `{x}の${N[G.pc]}は、${G.hang}にただで取られる場所。`] : ['{x}では線の上に2つの駒が並ばないから、相手は自由に動ける。', '{x}だと、相手の駒は一直線にならない。しばる力が出ないんだ。', '{x}のあと、相手の駒はどれも自由に動けちゃう。', '{x}は、並んだ駒の線からはずれているピョン。', '{x}では、相手の駒をしばる線ができない。', '{x}だと、ピンも串刺しもかからないから、相手は楽になる。'];
     } else if (sid === 'mate2') {
-      hintTx = FA.hang && !FA.check ? `${pA}をわざと捨てる手もある。取ったら、どうなるかな？` : FA.check ? [`まずはチェックから。${pA}で、キングの逃げ道をしぼってみて！`, `${pA}でチェックしたら、相手の応手はいくつ残る？ 数えてみよう！`][k % 2] : '静かな手で、逃げ道を先にふさぐのもありピョン。';
-      const how = FA.check ? 'チェックで相手の手をしぼったのが決め手ピョン。' : FA.hang ? '駒を捨てて、キングをおびき出した！' : '逃げ道を先にふさいだのがうまい！';
-      good = u => u && u !== ans && val(u) != null && val(u) < best ? '{x}でも詰みまで行ける！ でも{m}なら、もっと早く決まったピョン。' : `{x}から入れば、相手がどう応じても次で詰み！ ${how}`;
-      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
-        if (G && G.check) x = '{x}はチェックだけど、キングに逃げられて詰まない。';
-        else if (G && G.hang) x = `{x}は${N[G.pc]}を取られるだけになっちゃう。`;
-        else if (G) x = '{x}だと相手に一手の余裕ができて、詰みをのがしちゃう。';
-        return lead + x + `{m}から入れば、2手で詰むんだ。${FA.check ? '' : how}`; };
+      hints = FA.hang && !FA.check ? [`${pA}をわざと捨てる手もある。取ったら、どうなるかな？`, `${pA}をただであげちゃう手、ありかも？ 取ったあとのキングを見て。`] : FA.check ? [`まずはチェックから。${pA}で、キングの逃げ道をしぼってみて！`, `${pA}でチェックしたら、相手の応手はいくつ残る？ 数えてみよう！`] : ['静かな手で、逃げ道を先にふさぐのもありピョン。', 'すぐ王手しなくてもいい。キングの逃げ道を先に消せないかな？'];
+      const how = FA.check ? ['チェックで相手の手をしぼったのが決め手ピョン。', '王手で黒の選べる手を減らしたのがうまい！'] : FA.hang ? ['駒を捨てて、キングをおびき出した！', 'わざと駒を取らせる、大胆な一手！'] : ['逃げ道を先にふさいだのがうまい！', '静かな手で、逃げ場を先に消したのがえらい！'];
+      goods = [`{x}から入れば、相手がどう応じても次で詰み！ ${how[0]}`, `{x}が詰みへの入口！ 黒の受けは、もうどれも間に合わないピョン。`, `${how[1]} {x}のあと、黒に助かる手はない。`, `{x}で黒を追いこんだ！ ${how[0]}`, `いい入り方！ {x}で、2手目の詰みが見えた。`];
+      rights = ['{m}から入れば、2手で詰むんだ。', '{m}を指せば、黒の受けはどれも次で詰みだった。', '正しい入り方は{m}、そこから2手目で詰む。', 'ここは{m}、そのあと黒に逃げる手はなかった。', '{m}なら、黒はどう受けても2手目で詰んでいた。', '{m}で黒の受けをしぼれば、次の一手で詰み。'];
+      altGood = u => val(u) != null && val(u) < best ? '{x}でも詰みまで行ける！ でも{m}なら、もっと早く決まったピョン。' : '{x}からでも2手で詰む！ 入り方はひとつじゃないんだ。';
+      xpart = G => !G ? [] : G.check ? ['{x}はチェックだけど、キングに逃げられて詰まない。', '{x}の王手は、キングに逃げ道を与えちゃう。'] : G.hang ? [`{x}は${N[G.pc]}を取られるだけになっちゃう。`, `{x}だと${N[G.pc]}をただであげて終わり。`] : ['{x}だと相手に一手の余裕ができて、詰みをのがしちゃう。', '{x}は、黒に守りを固める時間をあげちゃう。', '{x}のあと、黒のキングに逃げ道ができちゃう。', '{x}では、2手目に詰ませる形が作れないピョン。', '{x}は、詰みまでの道すじからはずれちゃう。'];
     } else if (sid === 'promote') {
       const z = chSq(ans.slice(2, 4)), white = String(pos).split(' ')[1] !== 'b', left = FA.pc === 'p' ? (white ? 7 - (z >> 3) : z >> 3) : 0;
-      hintTx = FA.pc === 'p' ? [`${left + 1}マス進めば成れるポーンがあるね。じゃまする相手の駒は届くかな？`, `相手のキングとポーンの距離をくらべてみて。成るまでいちばん近いポーンはどれピョン？`][k % 2] : 'ポーンの前をふさいでいる駒はいない？ 道を開ける手も考えよう！';
-      const rest = left ? `成るまであと${left}マス！` : 'クイーンまであと少し！';
-      good = u => u && u !== ans ? `{x}でもまだ戦える！ でも{m}なら、ポーンがもっと早く成れたピョン。` : FA.pc === 'p' ? [`{x}でポーンが一歩前へ！ ${rest} 相手は止めるのに大いそがし。`, `{x}が正解！ ${rest} 相手はもう、止めるのがたいへんピョン。`][k % 2] : '{x}でポーンの道が開いた！ クイーンへの道がはっきり見えてきた。';
-      ng = u0 => { const u = alt(u0), G = u ? F(u) : null; let x = '';
-        if (G && G.pc === 'p' && FA.pc === 'p' && chSq(u) !== chSq(ans)) x = '{x}のポーンは、成るまでまだ遠い。';
-        else if (G && G.pc !== 'p') x = '{x}だとポーンが止まったまま。相手に守りを固める時間をあげちゃう。';
-        else if (G) x = '{x}では相手のじゃまが間に合っちゃう。';
-        return lead + x + (u ? loss(u) : '') + (FA.pc === 'p' ? `{m}なら、${rest}` : '{m}でポーンの道が開くんだ。'); };
+      const rests = !left ? ['これでクイーン誕生！', 'ついにクイーンに成れた！'] : [`成るまであと${left}マス！`, `奥の段まで、残り${left}マス！`, `クイーンまであと${left}歩！`];
+      hints = FA.pc === 'p' ? [`${left + 1}マス進めば成れるポーンがあるね。じゃまする相手の駒は届くかな？`, '相手のキングとポーンの距離をくらべてみて。成るまでいちばん近いポーンはどれピョン？', 'ポーンの前のマスを見て。止めに来られる相手の駒はいる？'] : ['ポーンの前をふさいでいる駒はいない？ 道を開ける手も考えよう！', 'ポーンが進めないのは、何がじゃましているから？'];
+      goods = FA.pc === 'p' ? [`{x}でポーンが一歩前へ！ ${rests[0]} 相手は止めるのに大いそがし。`, `{x}が大正解！ ${rests[1 % rests.length]} 相手はもう、止めるのがたいへんピョン。`, `{x}でクイーンにぐっと近づいた！ ${rests[2 % rests.length]}`, `ポーン、前進！ {x}なら相手のじゃまは間に合わない。`, `{x}でパスポーンが走りだした！ もう止まらないピョン。`, `いい判断！ {x}で、相手のキングより先に奥の段へ着ける。`]
+        : ['{x}でポーンの道が開いた！ クイーンへの道がはっきり見えてきた。', '{x}でじゃま者がいなくなった！ ポーンが進めるピョン。'];
+      rights = FA.pc === 'p' ? [`{m}なら、${rests[0]}`, `正しくは{m}、${rests[1 % rests.length]}`, `ここは{m}でポーンを前へ。${rests[2 % rests.length]}`, `{m}で進めれば、相手のじゃまより先に奥の段へ着ける。`, `{m}のポーンなら、だれにも止められずに成れるピョン。`] : ['{m}でポーンの道が開くんだ。', '{m}なら、ポーンが進む道が開けた。'];
+      altGood = () => '{x}でもまだ戦える！ でも{m}なら、ポーンがもっと早く成れたピョン。';
+      xpart = (G, u) => !G ? [] : G.pc === 'p' && FA.pc === 'p' && chSq(u) !== chSq(ans) ? ['{x}のポーンは、成るまでまだ遠い。', '{x}のポーンだと、クイーンまで時間がかかりすぎる。', '{x}で進めるポーンは、奥の段までまだ距離があるから間に合わない。'] : G.pc !== 'p' ? ['{x}だとポーンが止まったまま。相手に守りを固める時間をあげちゃう。', '{x}ではポーンが進まない。そのあいだに相手が追いついちゃう。', '{x}では、クイーンへの道のりが縮まらない。', '{x}のあいだに、相手がポーンの前をふさいじゃう。', '{x}だと、ポーンを進めるチャンスを一手ムダにしちゃう。', '{x}はポーンと関係ない手だから、そのすきに相手が守りを固めちゃう。'] : ['{x}では相手のじゃまが間に合っちゃう。', '{x}だと、相手のキングが追いついちゃう。', '{x}のあと、相手に止めに来る時間をあげちゃうピョン。', '{x}だと、奥の段に着く前につかまっちゃう。'];
     }
-    return { ask, hintTx, good, ng };
+    if (!ask) ask = pick(A.map(t => t.replace('{p}', pA)));
+    V.add(ask);
+    const hintTx = V.pick([...rot(hints), ...rot(CH_LSV.hint)], 0); V.add(hintTx);
+    const push = (i + V.seed) % 2 ? V.push(i) : '';
+    const body = V.pick(rot(goods), 0, V.endOf(cheer)), goodTx = chJoin(cheer, body, push); V.add(goodTx);
+    // the correction: what the move played misses (from the board) + the right move's own reason, in a wording the praise has not used
+    const FB = ['ほかの手だと、ここでのチャンスをのがしちゃう。', 'ほかの手では、この形の得が消えちゃうピョン。', 'ほかの手を指すと、せっかくの好機がなくなる。'];
+    const memo = new Map();
+    const ng = u0 => {
+      const u = alt(u0), key = u || ''; if (memo.has(key)) return memo.get(key);
+      const G = u ? F(u) : null, xs0 = xpart(G, u) || [], xs = xs0.length ? xs0 : FB;
+      const L = rot(xs).flatMap((x, q) => rot(rights).map((_, r) => chJoin(x, rights[(r + q + k) % rights.length])));
+      const body = V.pick(L, 0, V.endOf(soft)), t = chJoin(soft, body); V.add(t); memo.set(key, t); return t; };
+    const good = u => u && u !== ans ? chJoin(V.cheer(i + 1), altGood ? altGood(u) : body) : goodTx;
+    return { ask, hintTx, good, ng, voiced: true };
   }
-  // (2026-11-21 23:10 user: 淡々としている・応援していない・同じセリフの繰り返し) chess lessons: ナイトン cheers the player — a word of praise
-  // (and now and then a push on) before the why, a soft word with the correction, and a hint already given in the lesson swapped for another
-  const CHC = { good: ['いいね！', 'さすが！', 'お見事！', 'ナイス！', 'ばっちり！'], push: { 1: 'この調子で次も行こう！', 3: 'どんどん行こう！' },
-    soft: [t => '大丈夫、ここで覚えよう！ ' + t, t => t + ' 次はきっと見つけられるピョン！', t => 'あと一歩だったね。' + t, t => t + ' 覚えておけば、次は迷わない！', t => 'いい線いってたよ！ ' + t],
-    hint: ['動ける駒を、ひとつずつ確かめてみて！', '相手の次の一手も想像してみようピョン。', 'あせらずに、候補の手をくらべてみて！', '指したあと、取られる駒がないかも確かめよう！', 'いちばん強い手から考えるのがコツだピョン！'] };
-  function chCheerJa(probs, lang) {
-    if (lang !== 'ja') return probs; const seen = new Set();
-    probs.forEach((o, i) => {
-      if (o.hintTx) { if (seen.has(o.hintTx)) o.hintTx = CHC.hint[i % CHC.hint.length]; seen.add(o.hintTx); }
-      const g = o.good, n = o.ng;
-      if (typeof g === 'function') o.good = u => { const t = g.call(o, u) || ''; return t ? `${/^(いいね|さすが|お見事|ナイス|ばっちり)/.test(t) ? '' : CHC.good[i % 5] + ' '}${t}${CHC.push[i] ? ' ' + CHC.push[i] : ''}` : t; };
-      if (typeof n === 'function') o.ng = u => { const t = n.call(o, u) || ''; return t ? CHC.soft[i % 5](t) : t; };
-    });
-    return probs;
-  }
+  // non-Japanese lessons keep their own lines; Japanese ones get ナイトン's voice from chLsJa (voiced), the rest untouched
+  function chCheerJa(probs, lang) { return probs; }
   /* (2026-11-21 lesson loop, user: 駒の動き8本にも手順から問題を作る) chess's beginner ★ drills: after the ★ stages, 3 problems from
      the stages' shortest routes — 「次にどこへ動かす？」 at a position on a shortest route (right = every move that keeps the route
      shortest; a 'safe' stage bars the squares a black piece attacks, as the drill does). Solved here by a breadth-first search over
@@ -2000,7 +2023,7 @@
     load() {
       if (this.p) return this.p;
       const txt = u => fetch(u).then(r => r.text());
-      return (this.p = Promise.all([getJ('../chess/lessons.json?v=20261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=2').catch(() => '')])
+      return (this.p = Promise.all([getJ('../chess/lessons.json?v=20261107i14'), getJ('../chess/openings.json?v=20261107i14'), txt('../chess/i18n.js?v=20261107pro2-i14'), txt('../chess/i18n_basics.js?v=20261019ol-i14'), txt('../chess/voice-knight-ja.js?v=3').catch(() => '')])
         .then(([ls, op, a, b, vk]) => {
           const w = {}; try { new Function('window', a)(w); new Function('window', b)(w); } catch (e) { console.warn('[lessons3d] chess texts', e); }   // (a sandbox: the page's own I18N stays untouched)
           try { const v = {}; new Function('window', vk)(v); this.V = ((v.I18N || {})['ja@knight']) || {}; } catch (e) { this.V = {}; }   // (ナイトン's own lines, 3D, ja)
@@ -2032,7 +2055,7 @@
       const RU = (k, v) => fill(V['ui:' + k] != null ? V['ui:' + k] : L((this.data.ls.rampUi || {})[k], lang), v || {});
       const ramp = s.ramp && s.ramp.length ? s.ramp.map((it, j) => { const o = Object.assign({}, it); ['t', 'b', 'g', 'h', 'y'].forEach(f => { const v = V[`ramp:${s.id}/${j}/${f}`]; if (v != null) o[f] = { ja: v, __voice: true }; }); return o; }) : null;
       return { id: s.id, title: T('title'), intro: T('intro'), ramp, RU,   // (the warm-up before the scored problems: explain / try — not scored)
-        probs: chCheerJa((s.problems || []).map((p, i) => { const o = { pos: p.fen, kind: 'best', P: p, ask: T('goal'), why: T('why'), ngTx: T('ng'), ans: p.best || (p.ok || [])[0] }; if (lang === 'ja' && o.ans) try { Object.assign(o, chLsJa(s.id, o, i) || {}); } catch (e) { console.warn('[lessons3d] chess lesson', e); } return o; }), lang),   // (2026-11-21 lesson loop: ナイトン's question, hint, why / what yours misses)   // (ngTx: the wrong answer's own words where the lesson has them)
+        probs: chCheerJa(((LV) => (s.problems || []).map((p, i) => { const o = { pos: p.fen, kind: 'best', P: p, ask: T('goal'), why: T('why'), ngTx: T('ng'), ans: p.best || (p.ok || [])[0] }; if (lang === 'ja' && o.ans) try { Object.assign(o, chLsJa(s.id, o, i, LV) || {}); } catch (e) { console.warn('[lessons3d] chess lesson', e); } return o; }))(lang === 'ja' ? (() => { const LV = chOpVoice(s.id, CH_LSV); LV.add(String(T('intro') || '')); (ramp || []).forEach(r => ['t', 'b', 'g', 'h', 'y'].forEach(f => { const v = r[f], t = v && (typeof v === 'string' ? v : v.ja); if (t) LV.add(t, true); })); return LV; })() : null), lang),   // (2026-11-21 lesson loop: ナイトン's question, hint, why / what yours misses)   // (ngTx: the wrong answer's own words where the lesson has them)
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
