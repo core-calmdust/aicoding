@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 101;
+  const V = 103;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -33,7 +33,7 @@
     { id: 'kofukuji', game: 'shogi', cm: 1, view: [0, .95, .78], lock: { game: 'shogi', ach: 3 } },   // (spots: from the model's userData)
   ];
   const T = l => (window.MUSEUM_GAL_T && (MUSEUM_GAL_T[l] || MUSEUM_GAL_T.en)) || {};
-  const PLAY = { ballinderry: { game: 'tafl', levels: 30 }, senet: { game: 'senet', levels: 20 }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20 } };   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
+  const PLAY = { ballinderry: { game: 'tafl', levels: 30 }, senet: { game: 'senet', levels: 20, long: true }, shosoin: { game: 'go', levels: 37 }, sugoroku: { game: 'sugoroku', levels: 20, long: true } };   // (levels: the game's own count — the names come from its adapter once it has loaded)   // 所蔵品で遊ぶ (2026-11-22): the exhibits that can be played on, and the game (and board size) that plays them
   const ui = (l, k) => { const a = T(l).ui || {}, b = T('en').ui || {}; return a[k] != null ? a[k] : (b[k] != null ? b[k] : k); };
   const ex = (l, id) => Object.assign({}, (T('en').ex || {})[id] || {}, (T(l).ex || {})[id] || {});
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -75,7 +75,7 @@
     ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div><div class="exhud" aria-live="polite"></div>${PLAY[id] ? `<div class="expcard"><b>${esc(ui(lang, 'play_' + id))}</b>
           <div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expdd" data-k="plv" data-v="1"><button type="button" class="expdd-b" aria-haspopup="listbox"><b>Lv.1</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${Array.from({ length: PLAY[id].levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}"${i ? '' : ' class="on"'}>Lv.${i + 1}</button>`).join('')}</div></div></div>
           <div class="expf"><span>${esc(ui(lang, 'p_side'))}</span><div class="expseg" data-k="pside" data-v="1"><button type="button" data-v="1" class="on">${esc(ui(lang, 'p_first'))}</button><button type="button" data-v="2">${esc(ui(lang, 'p_second'))}</button></div></div>
-          <button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><button type="button" class="explay stop" data-k="pstop" hidden>${esc(ui(lang, 'p_stop'))}</button></div>` : ''}
+          <button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><button type="button" class="explay stop" data-k="pstop" hidden>${esc(ui(lang, 'p_stop'))}</button>${PLAY[id].long ? `<button type="button" class="exturn" data-k="pturn" hidden title="${esc(ui(lang, 'p_orient'))}" aria-label="${esc(ui(lang, 'p_orient'))}"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9a6 6 0 0 1 4-5M3 9V5.5M3 9h3.5M21 15a6 6 0 0 1-4 5M21 15v3.5M21 15h-3.5"/></svg></button>` : ''}</div>` : ''}
         <div class="exscale" aria-hidden="true" dir="ltr"><i></i><span>10 cm</span></div>
         <p class="exhint">${esc(ui(lang, phone() ? 'hintT' : 'hint'))}</p>
         <div class="exbtns"><button type="button" class="exb" data-k="spin" aria-label="${esc(ui(lang, 'spin'))}" title="${esc(ui(lang, 'spin'))}"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg></button>${B0 && B0.flip ? `<button type="button" class="exb" data-k="flip" aria-label="${esc(ui(lang, 'flip'))}" title="${esc(ui(lang, 'flip'))}"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></button>` : ''}<button type="button" class="exb" data-k="reset" aria-label="${esc(ui(lang, 'reset'))}" title="${esc(ui(lang, 'reset'))}"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
@@ -113,7 +113,8 @@
         if (window.AtlasLazy) AtlasLazy.need(P.game).then(() => { const ad = window.Atlas3D && Atlas3D[P.game]; if (!ad || !ad.levelInfo || !ov.isConnected) return; lvS.querySelectorAll('.expdd-l button').forEach(b => { try { const nm = ad.levelInfo(+b.dataset.v, lang).name; if (nm) b.textContent = nm; } catch (x) {} }); setDD(lvS, lvS.dataset.v); });
         try { const q = JSON.parse(localStorage.getItem(PK) || '{}')[id]; if (q) { setLv(q.lv); setSd(q.side); } } catch (x) {}
         const tt = k => ({ 'p.you': ui(lang, 'p_you'), 'p.ai': 'AI', 'p.turn': ui(lang, 'p_turn'), 'p.think': ui(lang, 'p_think'), 'res.win': ui(lang, 'p_win'), 'res.lose': ui(lang, 'p_lose'), 'res.draw': ui(lang, 'p_draw') })[k] || '';
-        const playing = on => { ov.classList.toggle('exv-play', on); pb.hidden = on; sb.hidden = !on; lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
+        const tb = ov.querySelector('[data-k="pturn"]'); if (tb) tb.onclick = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.turn(); };   // (a long board: lengthwise / across)
+        const playing = on => { ov.classList.toggle('exv-play', on); pb.hidden = on; sb.hidden = !on; if (tb) tb.hidden = !on; lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
         sb.onclick = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); };
         pb.onclick = () => { if (!V3 || !V3.obj) return; pb.disabled = true;
           try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
