@@ -364,6 +364,53 @@ const CHECKS = {
         (P.sc || []).forEach(([m]) => { if (m !== P.best && q.moves().includes(m)) check(id, `${w} ${m}`, q, m, null); }); });
     });
   },
+  // (2026-11-23 lesson loop) the chess lessons ('chess', key = the step's id): every answer and every listed move is legal, and what
+  // ナイトン says about the answer (atlas/lessons3d.js chLsF → chLsJa) holds on the engine's board (chess/engine.js): a check gives check,
+  // a mate mates (and is a check — not a stalemate), the 2-move mate is mate in 2 against every reply, a capture takes the piece named
+  // and, when the words say it is not defended, nothing takes back; a piece led to safety cannot be taken; a pin / skewer's two pieces
+  // stand on the line; a fork hits the two pieces named; the check escaped by taking takes the checking piece.
+  chess() {
+    const E = require(path.join(ROOT, 'chess/engine.js')), LS = J('chess/lessons.json'), G = 'chess', vm = require('vm');
+    const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), a = src.indexOf('  const CH_PN = '), b = src.indexOf('  const CHJ_LS = ');
+    const X = vm.runInNewContext(src.slice(a, b) + '\n;({ chFacts, chLsF, CH_PN })', {});
+    const NAME = { 1: 'ポーン', 2: 'ナイト', 3: 'ビショップ', 4: 'ルーク', 5: 'クイーン', 6: 'キング' };
+    const ty = p => p & 7, col = p => p & 8 ? 1 : 0, at = (pos, n) => pos.b[E.sqOf(n)] || 0;
+    const after = (fen, u) => { const q = E.Pos.fromFEN(fen); q.make(q.fromUci(u)); return q; };
+    const mated = q => q.inCheck() && !q.hasLegal();
+    const takes = (q, to) => q.legal().some(m => q.uci(m).slice(2, 4) === to);
+    const pieces = (q, c, name) => { const r = []; for (let s = 0; s < 128; s++) { if (s & 0x88) { s += 7; continue; } const p = q.b[s]; if (p && col(p) === c && NAME[ty(p)] === name) r.push(s); } return r; };
+    const hitsFrom = (q, from, s) => {   // does the piece on `from` attack square s (on board q)?
+      const p = q.b[from], t = ty(p), dr = (s >> 4) - (from >> 4), df = (s & 7) - (from & 7), w = col(p) === 0;
+      if (t === 1) return dr === (w ? 1 : -1) && Math.abs(df) === 1;
+      if (t === 2) return (Math.abs(dr) === 1 && Math.abs(df) === 2) || (Math.abs(dr) === 2 && Math.abs(df) === 1);
+      if (t === 6) return Math.max(Math.abs(dr), Math.abs(df)) === 1;
+      const diag = Math.abs(dr) === Math.abs(df) && dr, orth = (!dr) !== (!df);
+      if ((t === 3 && !diag) || (t === 4 && !orth) || (t === 5 && !diag && !orth)) return false;
+      const sr = Math.sign(dr), sf = Math.sign(df); let r = (from >> 4) + sr, c = (from & 7) + sf;
+      while (r * 16 + c !== s) { if (q.b[r * 16 + c]) return false; r += sr; c += sf; } return true; };
+    LS.steps.forEach(st => { const sid = st.id; (st.problems || []).forEach((P, j) => {
+      const w = `problem ${j + 1}`, fen = P.fen, u = P.best || (P.ok || [])[0]; let pos;
+      try { pos = E.Pos.fromFEN(fen); } catch (e) { bad(G, sid, `${w}: bad fen`); return; }
+      if (!u || !pos.fromUci(u)) { bad(G, sid, `${w}: the answer ${u} is not legal`); return; }
+      [...(P.ok || []), ...(P.sc || []).map(x => x[0])].forEach(v => { if (!pos.fromUci(v)) bad(G, sid, `${w}: ${v} is not legal`); });
+      const F = X.chLsF(fen, u), q = after(fen, u), me = pos.side, to = u.slice(2, 4), victim = at(pos, to);
+      if (!!F.check !== q.inCheck()) bad(G, sid, `${w}: ${u} check ${q.inCheck()}, the words say ${!!F.check}`);
+      if (sid === 'b_check' && !q.inCheck()) bad(G, sid, `${w}: ${u} is said to check, but does not`);
+      if ((sid === 'b_mate' || sid === 'mate1') && !mated(q)) bad(G, sid, `${w}: ${u} is said to mate, but does not`);
+      if (sid === 'b_draw') { const m1 = (P.sc || []).some(x => x[0] === u && x[1] >= 29999); if (m1 && !mated(q)) bad(G, sid, `${w}: ${u} said to mate, but does not`); if (!q.hasLegal() && !q.inCheck()) bad(G, sid, `${w}: ${u} stalemates`); }
+      if (sid === 'b_escape') { if (!pos.inCheck()) bad(G, sid, `${w}: not in check`); if (F.cap && NAME[ty(victim)] !== X.CH_PN[F.cap]) bad(G, sid, `${w}: ${u} takes a ${NAME[ty(victim)]}, the words say ${X.CH_PN[F.cap]}`);
+        if (F.cap) { const pv = E.Pos.fromFEN(fen); pv.side ^= 1; if (!pv.attacked(pos.ksq[me], me ^ 1) || !hitsFrom(pos, E.sqOf(to), pos.ksq[me])) bad(G, sid, `${w}: ${u} is said to take the checking piece, but ${to} does not give the check`); } }
+      if (sid === 'capture') { if (!victim) bad(G, sid, `${w}: ${u} is said to take, but takes nothing`); else if (NAME[ty(victim)] !== X.CH_PN[F.cap]) bad(G, sid, `${w}: ${u} takes a ${NAME[ty(victim)]}, the words say ${X.CH_PN[F.cap]}`);
+        if (!F.taken && takes(q, to)) bad(G, sid, `${w}: the ${X.CH_PN[F.cap]} is said to be undefended, but ${u} can be taken back`); }
+      if (sid === 'escape' && F.was) { const pv = E.Pos.fromFEN(q.fen()); if (!F.taken && takes(q, to)) bad(G, sid, `${w}: ${u} is said to reach a safe square, but it can be taken there`); if (F.taken && !pv.attacked(E.sqOf(to), me)) bad(G, sid, `${w}: ${u} is said to be taken back, but nothing defends ${to}`);
+        const V = { 1: 1, 2: 3, 3: 3, 4: 5, 5: 9, 6: 100 }, mv = V[ty(q.b[E.sqOf(to)])]; q.legal().forEach(m => { const z = q.uci(m); if (z.slice(2, 4) === to && V[ty(q.b[E.sqOf(z.slice(0, 2))])] < mv) bad(G, sid, `${w}: ${u} is said to lose nothing, but a cheaper piece takes it (${z})`); }); }
+      if (sid === 'fork') { const tg = F.hits.filter(x => x !== 'p'); if (tg.length >= 2) { const used = new Set(); tg.slice(0, 2).forEach(t => { const s0 = pieces(q, me ^ 1, X.CH_PN[t]).find(s => !used.has(s) && hitsFrom(q, E.sqOf(to), s)); if (s0 == null) bad(G, sid, `${w}: ${u} is said to hit a ${X.CH_PN[t]}, but does not`); else used.add(s0); }); } }
+      if (sid === 'pin' && F.line) { const fr = X.CH_PN[F.line.fr], bk = X.CH_PN[F.line.bk]; const ok = pieces(q, me ^ 1, fr).some(s1 => hitsFrom(q, E.sqOf(to), s1) && pieces(q, me ^ 1, bk).some(s2 => { const d1 = [(s1 >> 4) - (E.sqOf(to) >> 4), (s1 & 7) - (E.sqOf(to) & 7)], d2 = [(s2 >> 4) - (s1 >> 4), (s2 & 7) - (s1 & 7)]; if (Math.sign(d1[0]) !== Math.sign(d2[0]) || Math.sign(d1[1]) !== Math.sign(d2[1])) return false; const qq = E.Pos.fromFEN(q.fen()); qq.b[s1] = 0; return d1[0] * d2[1] === d1[1] * d2[0] && hitsFrom(qq, E.sqOf(to), s2); }));
+        if (!ok) bad(G, sid, `${w}: ${u} is said to line up a ${fr} and a ${bk}, not on the board`); }
+      if (sid === 'mate2') { const replies = q.legal(); if (!replies.length) bad(G, sid, `${w}: ${u} leaves no reply`); replies.forEach(m => { const r = E.Pos.fromFEN(q.fen()); r.make(m); if (!r.legal().some(m2 => { const z = E.Pos.fromFEN(r.fen()); z.make(m2); return mated(z); })) bad(G, sid, `${w}: after ${u} ${q.uci(m)} there is no mate`); }); }
+      if (sid === 'promote' && F.pc === 'p' && ty(at(pos, u.slice(0, 2))) !== 1) bad(G, sid, `${w}: ${u} is said to move a pawn`);
+    }); });
+  },
   // (2026-11-22 lesson loop) the chess openings ('chess/open', key = the opening's id): every line replays legally from the start, every
   // practice position's stored moves are legal, and what the 3D guide says about a move (atlas/lessons3d.js chFacts → chKind: castling,
   // taking / taking back, a pin, a pawn chasing a piece, a piece leaving its first square, the piece a wrong move leaves to be taken)
