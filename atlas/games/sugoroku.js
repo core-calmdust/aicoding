@@ -42,7 +42,7 @@
     const X = Object.assign({}, TX.en, TX[ctx.lang] || {}), L = { you: t('p.you'), ai: t('p.ai'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') };
     const level = Math.max(1, Math.min(20, +ctx.level || 6)), first = ctx.side === 2 ? 1 : 0;
     T3.show('sugoroku', B);
-    let st = null, dice = null, used = [], seqs = [], taken = [], cs = null, phase = 'wait', over = false, stopped = false, busy = false, sel = null, msg = '';
+    let st = null, at0 = null, hintM = null, dice = null, used = [], seqs = [], taken = [], cs = null, phase = 'wait', over = false, stopped = false, busy = false, sel = null, msg = '';
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms)), sleep = ms => new Promise(r => later(r, ms));
     const anim = (dur, f) => new Promise(res => { const t0 = performance.now(); (function s(n) { if (stopped) return res(); const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
     const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -99,6 +99,7 @@
       const ops = options(), froms = [...new Set(ops.map(o => o.from))];
       froms.forEach(f => ring(f, f === sel ? MAT.sel : MAT.can));
       if (sel != null) ops.filter(o => o.from === sel).forEach(o => disc(o.to, o.hit));
+      if (hintM) { ring(hintM.from, MAT.can); const k = hintM.hit ? 0 : stacks[hintM.to].length, [x, y, z] = U.slot(hintM.to, k), m = new TH.Mesh(RING, MAT.can); m.position.set(x, U.top + .05, z); MG.add(m); }
       let pulse = true; const tick = () => { if (stopped || !MG.children.length || !pulse) return; const k = .5 + .5 * Math.sin(performance.now() / 260); MG.children.forEach(m => { if (m.geometry === RING) m.scale.setScalar(.9 + k * .16); }); T3.kick(60); requestAnimationFrame(tick); };
       requestAnimationFrame(tick);
     }
@@ -128,13 +129,13 @@
     async function doRoll() {
       if (phase !== 'roll' || busy || over || st.turn !== 0) return;
       busy = true; phase = 'anim'; say(''); dice = E.rollDice(); await throwDice(0, dice); if (stopped) return; busy = false; hud();
-      seqs = E.sequences(st, dice); cs = E.clone(st); taken = [];
+      seqs = E.sequences(st, dice); cs = E.clone(st); taken = []; at0 = E.clone(st);
       if (!seqs.length) { say(X.noMove); toast(X.noMove); later(endTurn, 1300); return; }
       phase = 'move'; sel = null; const fr = [...new Set(options().map(o => o.from))]; if (fr.length === 1) sel = fr[0];
       say(st.bar[0] ? X.enter : sel != null ? X.dest : X.pick); showMarks();
     }
     async function play(m) {
-      busy = true; phase = 'anim'; clearMarks(); const side = cs.turn;
+      hintM = null; busy = true; phase = 'anim'; clearMarks(); const side = cs.turn;
       await moveStone(side, m); if (stopped) return;
       E.step(cs, side, m); taken.push(m); markUsed(m.d); st = cs; busy = false;
       if (m.hit) toast(side ? X.cutMe : X.cut);
@@ -184,6 +185,15 @@
     const api = {
       stop() { stopped = true; timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey); if (toastEl) toastEl.remove(); B.remove(G); B.remove(MG); },
       canResign: () => !over, resign() { if (!over) end(1); },
+      // 待った: the stones played this turn go back (the same dice — the throw itself is not taken back)
+      canUndo: () => !stopped && !over && !busy && phase === 'move' && st && st.turn === 0 && taken.length > 0,
+      undo() { if (!api.canUndo()) return; st = E.clone(at0); cs = E.clone(at0); taken = []; used = []; sel = null; hintM = null; sync(st); const fr = [...new Set(options().map(o => o.from))]; if (fr.length === 1) sel = fr[0]; say(st.bar[0] ? X.enter : sel != null ? X.dest : X.pick); showMarks(); },
+      // ヒント: the strongest level's choice for the rest of this throw — its next stone and where it goes
+      canHint: () => !stopped && !over && !busy && phase === 'move' && st && st.turn === 0 && options().length > 0,
+      hint() { if (!api.canHint()) return Promise.resolve(false);
+        let best = null, bv = -Infinity; const k = taken.length;
+        for (const q of seqs) { if (q.steps.length <= k || !taken.every((t, i) => q.steps[i].from === t.from && q.steps[i].to === t.to)) continue; const v = E.evaluate(q.state, 0); if (v > bv) { bv = v; best = q.steps[k]; } }
+        if (!best) return Promise.resolve(false); hintM = best; sel = best.from; say(X.dest); showMarks(); return Promise.resolve(true); },
       _debug: { st: () => st && E.clone(st), cs: () => cs && E.clone(cs), phase: () => phase, busy: () => busy, dice: () => dice, options: () => phase === 'move' ? options() : [], sel: () => sel,
         at: (abs, k) => { const [x, y, z] = abs === 0 ? U.bar(0, k || 0) : U.slot(abs, k || 0); return T3.project(x, z, y); } },
     };

@@ -23,7 +23,7 @@
     // Tutankhamun's Senet box (1 = 1 cm): the standard game (5 pieces each) on its own ivory field — the reels and cones laid out on it in the
     // museum are the pieces (they came from the same tomb), the casting sticks two pairs like the ones kept with it (flat ivory face up = it counts),
     // thrown on the plinth in front; a piece borne off goes home into the open drawer. Kit coordinates (atlas/games/senet-kit.js): 1 = one square.
-    senet: { game: 'senet', size: 1, view: { yaw: .18, pit: 1.05, d: .74, dp: .56, long: true, dv: .57, dvw: .9, pv: 1.25 }, noContact: true,
+    senet: { game: 'senet', size: 1, area: [-22.5, 31, -8, 16.6], view: { yaw: .18, pit: 1.05, d: .74, dp: .56, long: true, dv: .57, dvw: .9, pv: 1.25 }, noContact: true,
       board(TH, obj) {
         const P = obj.userData.play, u = P.pitch, g = new TH.Group(); g.scale.setScalar(u);
         const sc = (geo, x, y, z) => { const q = geo.clone(); q.scale(x / u, y / u, z / u); return q; };
@@ -47,7 +47,7 @@
     // 木画紫檀棊局 (1 = 1 cm): go on its 19 lines. The stones after the Shōsōin's own (北倉25): ivory dyed indigo (紺牙撥鏤碁子, 120 kept; 1.6–1.7 across,
     // 0.6–0.7 thick) and dyed red with lac (紅牙撥鏤碁子, 132; 1.5–1.7, 0.7–0.8), a bird with a flowering spray in its beak cut through the dye on both
     // faces, a little green / yellow / red put in (the Shōsōin's photographs). Indigo plays first (black), red second (white). Whether they were one set is not recorded.
-    shosoin: { game: 'go', size: 19, view: { yaw: 0, pit: 1.28, d: .74, dp: .6 }, noContact: true, light: { key: .7, env: .2 },
+    shosoin: { game: 'go', size: 19, area: [-24.6, 24.6, -24.6, 24.6], view: { yaw: 0, pit: 1.28, d: .74, dp: .6 }, noContact: true, light: { key: .7, env: .2 },
       board(TH, obj, K) {
         const P = obj.userData.play, c = P.cell, n = P.n, g = new TH.Group();
         // the face: the ground, a soft darker rim, the bird cut through to the cream ivory (both stones fly to the left with a spray in the beak)
@@ -97,7 +97,7 @@
     // green glass (緑瑠璃, 1.4–1.5 across, 0.7–0.8 thick) for you and fifteen of yellow glass (黄瑠璃, 1.3–1.5, 0.6–0.7) for the AI — round, domed on
     // top (the Shōsōin's photograph). Each point is a flower on the long rim; its stones line up from the flower toward the middle; cut stones wait
     // in the middle strip; the dice are the board's two ivory dice (the pair laid out for show is put away).
-    sugoroku: { game: 'sugoroku', view: { yaw: 0, pit: 1.2, d: .8, dp: .58, long: true, dv: .62, dvw: .95, pv: 1.35 }, noContact: true, light: { key: .62, env: .35 },
+    sugoroku: { game: 'sugoroku', area: [-27.3, 27.3, -15.6, 15.6], view: { yaw: 0, pit: 1.2, d: .8, dp: .58, long: true, dv: .62, dvw: .95, pv: 1.35 }, noContact: true, light: { key: .62, env: .35 },
       board(TH, obj, K) {
         const P = obj.userData.play, g = new TH.Group(), Y = P.top, R = P.row, SP = 1.5;
         const colX = c => c <= 6 ? -(P.P0 + (6 - c) * P.PS) : P.P0 + (c - 7) * P.PS;
@@ -134,17 +134,22 @@
     const L0 = { key: V.key ? V.key.intensity : 0, env: V.scene.environmentIntensity, home: V.home, spin: V.spin };
     const LT = def.light || {}; if (V.key) V.key.intensity = L0.key * (LT.key || .62); V.scene.environmentIntensity = L0.env * (LT.env || .55);   // (light: a board's own amounts — a wide glossy face mirrors the room's light as a pale wash)
     V.spin = false; const sb = V.ov.querySelector('[data-k="spin"]'); if (sb) sb.classList.remove('on');
-    // a long board (view.long): lengthwise down the screen (yaw turned a quarter, the near side to the right) or across; the player's choice is kept,
-    // otherwise a tall case (a phone held upright) gets it lengthwise
+    // the board straight from above and as large as the case allows (as in the portal's 3D games: no turning, only zooming). A long board (view.long)
+    // can lie lengthwise down the screen (turned a quarter, your side to the right) or across; the player's choice is kept, otherwise a tall case
+    // (a phone held upright) gets it lengthwise. area: what has to be in view, [x0, x1, z0, z1] in the exhibit's cm (else the whole exhibit), at the height `top`.
     const tall = () => V.cam.aspect < .9, OK = 'atlas-museum-orient';
     const vert = () => { if (!def.view.long) return false; let o = ''; try { o = localStorage.getItem(OK) || ''; } catch (e) {} return o ? o === 'v' : tall(); };
-    const view = () => vert() ? { yaw: def.view.yaw - Math.PI / 2, pit: def.view.pv || 1.3, d: V.fitD() * (tall() ? def.view.dv : def.view.dvw || def.view.d) }
-      : { yaw: def.view.yaw, pit: def.view.pit, d: V.fitD() * (tall() && def.view.dp && !def.view.long ? def.view.dp : def.view.d) };   // (dp: a tall case framed by its width leaves the board small: come closer)   // (dp: a tall case — a phone held upright — is framed by its width, which leaves the board small: come closer) V.home = view(); G.tween(view()); V.playing = true;
+    const box = new TH.Box3().setFromObject(V.obj), A = def.area || [box.min.x, box.max.x, box.min.z, box.max.z], AY = def.top != null ? def.top : (V.obj.userData.play && V.obj.userData.play.top) || box.max.y;
+    const tgt0 = V.tgt.clone(); V.tgt.copy(V.obj.localToWorld(new TH.Vector3((A[0] + A[1]) / 2, AY, (A[2] + A[3]) / 2))); V.pitMax = 1.52;
+    const view = () => { const v = vert(), W = A[1] - A[0], Dp = A[3] - A[2], sw = v ? Dp : W, sh = v ? W : Dp, w = stage.clientWidth || 1, h = stage.clientHeight || 1, tv = Math.tan(V.cam.fov * Math.PI / 360);
+      const uh = Math.max(120, h - 2 * (w < 820 ? 100 : 96)), uw = Math.max(120, w - 28);   // (room for the bar at the top and the card at the bottom: the same on both sides, so the board stays centred)
+      return { yaw: v ? -Math.PI / 2 : 0, pit: 1.52, d: Math.max(sh / 2 / tv * h / uh, sw / 2 / (tv * V.cam.aspect) * w / uw) * 1.03 }; };
+    V.home = view(); G.tween(view()); V.playing = true;
     const hid = ((V.obj.userData.play && V.obj.userData.play.hide) || []).filter(m => m.visible); hid.forEach(m => { m.visible = false; });   // the pieces and sticks laid out for show: put away during a game
     const ses = ad.start({ el: stage, Table3D: T3, board, lang: o.lang, t: o.t, level: o.level, side: o.side, size: def.size, mode: 'ai', hud: o.hud || (() => {}), onTurn() {}, onEnd: res => { if (o.onEnd) o.onEnd(res); } });
     // the case changes size (a phone: it grows when the game starts; a turned phone, a resized window): frame the board again
     let rsT = 0; const ro = new ResizeObserver(() => { clearTimeout(rsT); rsT = setTimeout(() => { if (cur && cur.V === V && V.scene) { V.home = view(); G.tween(view()); } }, 120); }); ro.observe(stage);
-    cur = { V, ses, board, L0, dot, hid, ro, turn() { const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} V.home = view(); G.tween(view()); } };
+    cur = { V, ses, board, L0, dot, hid, ro, tgt0, turn() { const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} V.home = view(); G.tween(view()); } };
     return { stop };
   }
   function stop() {
@@ -153,8 +158,11 @@
     const V = c.V; if (!V || !V.scene) return;
     if (c.board.parent) c.board.parent.remove(c.board);
     (c.hid || []).forEach(m => { m.visible = true; });
-    if (V.key) V.key.intensity = c.L0.key; V.scene.environmentIntensity = c.L0.env; V.home = c.L0.home; V.playing = false;
+    if (V.key) V.key.intensity = c.L0.key; V.scene.environmentIntensity = c.L0.env; V.home = c.L0.home; V.playing = false; V.pitMax = 0; if (c.tgt0) V.tgt.copy(c.tgt0); if (V.home) G.tween(V.home);
     if (V.R) V.R.shadowMap.needsUpdate = true; if (window.AtlasGallery) AtlasGallery.go();
   }
-  window.AtlasMuseumPlay = { start, stop, turn: () => { if (cur && cur.turn) cur.turn(); }, has: id => !!BOARDS[id], game: id => BOARDS[id] && BOARDS[id].game };
+  const S = () => cur && cur.ses;   // the game's own actions (待った・ヒント・投了), as the portal's 3D games offer them
+  const can = a => { const s = S(); if (!s) return false; try { return a === 'undo' ? !!(s.canUndo && s.canUndo()) : a === 'hint' ? !!(s.canHint ? s.canHint() : s.hint) : a === 'resign' ? !!(s.canResign ? s.canResign() : s.resign) : false; } catch (e) { return false; } };
+  const act = a => { const s = S(); if (!s || !can(a)) return; try { if (a === 'undo') s.undo(); else if (a === 'hint') s.hint(); else if (a === 'resign') s.resign(); } catch (e) { console.warn('[museum play]', e); } };
+  window.AtlasMuseumPlay = { start, stop, can, act, turn: () => { if (cur && cur.turn) cur.turn(); }, has: id => !!BOARDS[id], game: id => BOARDS[id] && BOARDS[id].game };
 })();
