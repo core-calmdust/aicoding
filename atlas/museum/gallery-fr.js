@@ -127,7 +127,7 @@
         ["La chaîne de nacre", "Dans la bordure, des rinceaux de nacre en S alternent avec de petites étoiles sur l'écaille."],
         ["Les écus des angles", "À chaque angle, la chaîne est reliée par un motif en forme d'écu."],
         ["Le bord en os et les côtés", "Le bord extérieur est une bande d'os aux joints en chevrons ; les côtés des volets portent une rangée d'hexagones de nacre."]],
-      model: "Dimensions d'après la notice du musée. La disposition de la marqueterie suit ses photographies.",
+      model: "Dimensions d'après la notice du musée. La marqueterie est reprise de ses photographies ; le profil du cadre et l'ordre des plaques sur les chants sont des estimations.",
       src: [["Victoria and Albert Museum, « Games board » 861-1907", "https://collections.vam.ac.uk/item/O370652/games-board-unknown"]] },
     kofukuji: { name: "Pièces de shogi de l'ancienne enceinte du Kōfuku-ji", alt: "Les plus anciennes pièces de shogi du Japon, et une tablette où sont écrits leurs noms", date: "Fin du XIe–XIIe siècle", where: "Japon (Nara)", found: "Fouilles de l'ancienne enceinte du Kōfuku-ji, Noborioji-chō, Nara : secteur du Kisshōin (1992, une fosse en forme de puits) et secteur du Kanzen'in (2013, un puits et une fosse)",
       museum: "Musée de l'Institut archéologique de Kashihara, préfecture de Nara", no: "Bien culturel matériel de la préfecture de Nara (2022, 31 objets)", mat: "Bois, encre", size: "Pièces d'environ 2,5 cm de long (l'éléphant ivre : environ 2,5 × 1,5 cm, 2 mm d'épaisseur)",
@@ -141,7 +141,7 @@
         ["La tablette d'exercice", "Une planchette de bois où les noms des pièces — 酔像, 金将, 歩兵 et d'autres — sont écrits encore et encore."],
         ["La baguette « Tengi 6 »", "L'étiquette en tête d'une baguette de rouleau, datée de Tengi 6 (1058) : la clé de l'âge des pièces de 1992."],
         ["La baguette « Jōtoku 2 »", "Une baguette de rouleau datée de Jōtoku 2 (1098), provenant du puits de 2013."]],
-      model: "Les types et le nombre de pièces, le contenu de la tablette et des baguettes et les dates suivent la documentation de la préfecture de Nara ; la disposition suit la photographie du musée. La taille et le contour de chaque pièce, la quantité d'encre conservée, ainsi que la taille de la tablette et des baguettes et la position de leur écriture sont des estimations.",
+      model: "Les types et le nombre de pièces, le contenu de la tablette et des baguettes et les dates suivent la documentation de la préfecture de Nara ; la disposition suit la photographie du musée. La taille et le contour de chaque pièce, l'écriture et la quantité d'encre conservée, ainsi que la taille de la tablette et des baguettes et la position de leur écriture sont des estimations.",
       src: [["Préfecture de Nara, « 令和4年度 県指定文化財の概要 興福寺旧境内出土将棋駒・習書木簡・題箋軸 »", "https://www.pref.nara.jp/secure/292352/R4-6-shogikoma.pdf"], ["Association japonaise de shogi, « 日本将棋の歴史 »", "https://www.shogi.or.jp/history/story/"]] },
   },
 };

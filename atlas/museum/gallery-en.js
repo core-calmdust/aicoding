@@ -127,7 +127,7 @@
         ['The mother-of-pearl chain', 'Round the border, mother-of-pearl S-scrolls alternating with small stars on turtle shell.'],
         ['Corner shields', 'The chain is linked at each corner by a shield-like motif.'],
         ['The bone edge and the sides', 'The outer edge is a band of bone joined in chevrons; the sides of the leaves carry a row of mother-of-pearl hexagons.']],
-      model: "Sizes follow the museum's record. The inlay layout follows the museum's photographs.",
+      model: "Sizes follow the museum's record. The inlay is laid out from the museum's photographs; the profile of the frame and the order of the plaques on the edges are estimates.",
       src: [['Victoria and Albert Museum, “Games board” 861-1907', 'https://collections.vam.ac.uk/item/O370652/games-board-unknown']] },
     kofukuji: { name: 'Shogi Pieces from the Old Kōfuku-ji Grounds', alt: 'Japan\'s oldest shogi pieces, and a tablet written with their names', date: 'Late 11th–12th century', where: 'Japan (Nara)', found: 'Excavations in the former grounds of Kōfuku-ji, Noborioji-chō, Nara: the Kisshōin area (1992, a well-like pit) and the Kanzen\'in area (2013, a well and a pit)',
       museum: 'Nara Prefectural Kashihara Archaeological Institute Museum', no: 'Nara Prefecture Tangible Cultural Property (2022, 31 items)', mat: 'Wood, ink', size: 'Pieces about 2.5 cm long (the drunk elephant: about 2.5 × 1.5 cm, 2 mm thick)',
@@ -141,7 +141,7 @@
         ['The practice tablet', 'A wooden slip with the names of pieces — 酔像, 金将, 歩兵 and more — written over and over.'],
         ['The "Tengi 6" rod', 'The label at the head of a scroll rod, dated Tengi 6 (1058): the key to the age of the 1992 pieces.'],
         ['The "Jōtoku 2" rod', 'A scroll rod dated Jōtoku 2 (1098), from the 2013 well.']],
-      model: 'The kinds and numbers of pieces, what the tablet and rods say and the dates follow Nara Prefecture\'s record; the layout follows the museum\'s photograph. Each piece\'s size and outline, how much ink survives, and the size of the tablet and rods and the placing of their writing are estimates.',
+      model: 'The kinds and numbers of pieces, what the tablet and rods say and the dates follow Nara Prefecture\'s record; the layout follows the museum\'s photograph. Each piece\'s size and outline, the handwriting and how much ink survives, and the size of the tablet and rods and the placing of their writing are estimates.',
       src: [['Nara Prefecture, "令和4年度 県指定文化財の概要 興福寺旧境内出土将棋駒・習書木簡・題箋軸"', 'https://www.pref.nara.jp/secure/292352/R4-6-shogikoma.pdf'], ['Japan Shogi Association, "日本将棋の歴史"', 'https://www.shogi.or.jp/history/story/']] },
   },
 };
