@@ -14,6 +14,26 @@ const out = {};   // game → { lessonId: [problems found] }
 const bad = (g, id, msg) => { ((out[g] = out[g] || {})[id] = out[g][id] || []).push(msg); };
 
 const CHECKS = {
+  // (2026-11-22 lesson loop) the backgammon lessons ('backgammon', key = the step's index): every candidate play of a play problem is a
+  // legal play of the roll (backgammon/bg.js genPlays — the 3D words come from the commentary engine on the best one), the race
+  // questions' pip counts (qv.a = yours, qv.b = theirs) and their right answer (who leads, by how much) hold on the board, and the
+  // shots questions' share is the count out of 36.
+  'backgammon'() {
+    const BG = require(path.join(ROOT, 'backgammon/bg.js')), LS = J('backgammon/lessons.json'), G = 'backgammon';
+    const dec = (s0, side) => { const s1 = side === 1 ? String(s0).slice(26) + String(s0).slice(0, 26) : String(s0), q = new Int8Array(52); for (let i = 0; i < 52; i++) q[i] = parseInt(s1[i], 16) || 0; return q; };
+    LS.steps.forEach((st, si) => (st.problems || []).forEach((P, pi) => { const id = String(si), q0 = dec(P.pos, P.side || 0), w = `q${pi + 1}`;
+      if (P.kind === 'play') {
+        const legal = new Set(BG.genPlays(q0, 0, P.dice[0], P.dice[1]).map(x => BG.key(x.pos)));
+        P.plays.forEach(([m], k) => { const q = q0.slice(); for (let i = 0; i + 1 < m.length; i += 2) BG.apply(q, 0, m.charCodeAt(i) - 65, m.charCodeAt(i + 1) - 65);
+          if (!legal.has(BG.key(q))) bad(G, id, `${w}: play ${k + 1} (${m}) is not a legal play of ${P.dice.join('-')}`); });
+      } else if (P.q === 'race') {
+        const a = BG.pips(q0, 0), b = BG.pips(q0, 1), v = P.qv || {}; if (a !== v.a || b !== v.b) bad(G, id, `${w}: pips ${a}/${b}, the words say ${v.a}/${v.b}`);
+        const o = P.opts[P.ans], [k, n] = Array.isArray(o) ? o : [o]; const okA = a === b ? k === 'even' : (k === (a < b ? 'lead_c' : 'lead_o') && n === Math.abs(a - b));
+        if (!okA) bad(G, id, `${w}: the right answer ${JSON.stringify(o)} does not match pips ${a}/${b}`);
+      } else if (P.q === 'shots') { const v = P.qv || {}; if (Math.abs(Math.round(v.n / 36 * 100) - v.p) > 1) bad(G, id, `${w}: ${v.n} of 36 is not ${v.p}%`);
+        const o = P.opts[P.ans]; if ((Array.isArray(o) ? o[1] : o) !== v.n) bad(G, id, `${w}: the right answer is not ${v.n}`); }
+    }));
+  },
   // (2026-11-22 lesson loop) the reversi openings ('reversi/open', key = the line's moves): every line replays legally from the start
   // (a side with no move passes), the 3D guide's fixed words hold — the first move is f5 (「4か所どこに打っても同じ形」), the second
   // is d6 / f6 / f4 (縦取り / 斜め取り / 並び取り) — and each practice move (the line's next move) is legal where it is asked. The

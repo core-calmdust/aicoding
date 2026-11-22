@@ -2495,7 +2495,7 @@
     tafl: 'わたしはタフリン！ タフルは、真ん中の<b>王さま</b>を守る側と、まわりから攻める側に分かれて遊ぶゲームなの。王さまが盤の角まで逃げきれば守る側の勝ち、王さまをつかまえたら攻める側の勝ち。駒は2つではさんで取るんだ。いっしょにやってみよう！',
     shogi: 'わたしはショウギツネ！ 将棋は、2人で交互に駒を動かして、相手の<b>玉</b>を逃げられなくしたら（<b>詰み</b>）勝ちのゲームだコン。取った駒は自分の駒として使えるのが楽しいところ！ まずは駒の動きから覚えよう。',
     reversi: 'ぼくはリバガメ！ リバーシは、黒と白が交互に石を置いて、自分の色を広げていくゲーム。最後に自分の色の石が多いほうが勝ちなんだ。いっしょにやってみよう！',
-    backgammon: 'ワン！ ぼくはダイスン。バックギャモンは、サイコロをふって15個の駒を進め、ぜんぶ自分のゴールまで運んで盤から先に出しきったほうが勝ちのレースゲームなんだワン。相手の駒が1つだけの所に止まると、その駒をふり出しに戻せる！ さあ、始めよう！',
+    backgammon: 'ワン！ ぼくはダイスン。バックギャモンは、サイコロをふって15個の駒を進め、先に全部ゴールから出しきったほうが勝ちのゲームなんだ。',
     amazons: 'ケロ！ アマゾンズは、駒を動かして<b>矢</b>を放ち、マスをふさいでいくゲーム。先に動けなくなったほうが負けなんだ！',
     connect4: 'ポトンウサだよ！ コネクトフォーは、2人で交互に、列の上からコマを落としていくゲーム。'
   };
@@ -3965,6 +3965,179 @@
     lsAsk: ['{d}が出たワン。いちばん良い動かし方はどれかな？', '次は{d}。きみならどう動かす？', 'さあ、{d}をどう使う？', 'ここで{d}が出た！ どの駒を動かすワン？', '{d}か……。いちばん得な手を探してみて！'],
     chGood: ['正解ワン！ ', 'そのとおり！ ', 'よく見てるね！ ', 'ばっちり！ ', 'さすがワン！ '],
   };
+  /* (2026-11-22 lesson loop) the backgammon lessons in ダイスン's voice, Japanese: one voice per lesson (bgVoice — the praise / the soft
+     words / the push in an order of the lesson's own, and every wording picked in turn so a lesson never says the same sentence, or the
+     same 10-letter run in a third bubble, again — texts already said in the intro and the warm-up are marked first). The reasons are
+     the commentary engine's (backgammon/explain.js teach: tc.* = what the best play is for, tv.* = what yours gives up), each said in
+     3–4 ways (BGV.plan / BGV.vs); the hints follow the best play's plan (BGV.hint); the choice questions (race / shots / cube) get
+     their own questions, hints and reasons from the problem's values (bgChJa). */
+  const BGV = {
+    cheer: ['いいね！', 'ナイス！', 'さすが！', 'ばっちり！', 'お見事ワン！', 'その調子！', '上手！', 'やった！', '完璧！', 'そうそう、それ！', 'いい手！', 'よく見えてるね、すごい！'],
+    soft: ['おしい！', 'ドンマイ！', 'あと少しだったワン！', 'いい線いってた！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと当たる！', 'あと一歩！', '今度はいっしょに確かめよう！'],
+    push: ['次もこの調子でいこう！', 'どんどん行こうワン！', 'その勢いで次へ進もう！', 'まだまだいけるね！', 'この感じで続けよう！', '次も楽しみだね！'],
+    lead: ['正解は緑の矢印の手ワン。', '緑の矢印が、いちばん良い手。', 'ここは緑の矢印の動かし方が正解！', '緑の矢印のほうを見てみて。', '答えは緑の矢印の手だったワン。', '強い人なら緑の矢印の手を選ぶね。', 'ここは緑の矢印に動かしたかった！'],
+    ask: ['{d}が出たワン。いちばん良い動かし方はどれかな？', '次は{d}。きみならどう動かす？', 'さあ、{d}をどう使う？', 'ここで{d}が出た！ どの駒を動かすワン？', '{d}か……。いちばん得な手を探してみて！', '{d}の目、きみならどこへ進める？', 'お次は{d}！ 強い人の手を当ててみて！', '{d}が出た！ 落ち着いて考えてみよう。'],
+    last: ['最後の1問ワン！ {d}をどう使う？', 'ラストは{d}！ きみの答えを見せて！', '最後は{d}。ここまでの考え方を使ってみよう！'],
+    cn: ['それに、', 'しかも、', 'おまけに、', 'そのうえ、'],
+    plan: {
+      enter: ['まずはバーの駒を入れ直すのが先だからね。', 'バーに駒があるうちは、ほかの駒は動かせないからね。', '最初にバーの駒を盤に戻すのが決まりワン。', 'バーの駒を入れないと、ほかの駒が動かせないんだ。', 'バーの駒がもどれば、また全部の駒が使えるね。'],
+      hit: ['相手のブロットを打てば、約{n}ピップも戻せるからね。', 'ヒットで相手の駒をバーへ！ 約{n}ピップぶん戻されるワン。', '1枚だけの相手の駒を打って、約{n}ピップ後ろへ下げられるね。', '打たれた駒は、約{n}ピップの道のりをやり直しなんだ。', 'ここで打てば、相手は約{n}ピップのふり出しに逆もどり！', '相手の駒を打ち落として、約{n}ピップのリードをもらえるワン。'],
+      hit2: ['相手の駒を{k}枚まとめて打てば、相手は反撃どころじゃなくなるワン。', '{k}枚まとめてヒット！ 相手はバーから出すので手いっぱいになるね。', '一度に{k}枚を打てば、相手に攻め返す余裕がなくなるんだ。', '{k}枚ともバーへ送れば、相手は入り直すだけで精いっぱい！'],
+      dance: ['打たれた相手が入れずに休む確率も、約{d}%あるんだ。', '相手がバーから入れずにお休みする確率は約{d}%。', '約{d}%で、相手は入れずに1回お休み（ダンス）ワン。', '相手は約{d}%の確率で、バーから出られずに足止めだね。', 'ふさいだポイントが多いから、相手が入れない確率は約{d}%もあるんだ。'],
+      pt5: ['{P}は相手の後ろの駒の前をふさぐ、いちばん大事な場所だからね。', '{P}が取れたね！ 相手の後ろの駒の前に立ちはだかる急所ワン。', '{P}はインナーでいちばん価値のあるポイントなんだ。', '相手の後ろの駒の目の前にある{P}。ここをふさぐのが大きいね。'],
+      pt7: ['{P}をふさげば、相手の後ろの駒は6の目で飛び出せなくなるワン。', '{P}ができると、相手は6の目で逃げ出せないんだ。', '{P}をふさいで、相手の6の目の逃げ道を止めたね。', '{P}は壁のかなめ！ 相手の後ろの駒が飛び出しにくくなるね。'],
+      ptHome: ['{P}が増えると、打たれた相手の駒が入りにくくなるからね。', 'インナーに{P}ができて、相手の入り口が1つ減ったワン。', '{P}をふさげば、バーの相手の駒が戻りにくくなるんだ。', '{P}がふさがって、ゴール前の守りがまた1つ固くなったね。'],
+      ptDeep: ['少し奥の{P}でも、ポイントにすれば相手の入り口が1つ減るワン。', '奥の{P}でも、ふさいでおけば相手が入りにくくなるね。', '{P}はゴールに近いけど、ポイントにする価値はちゃんとあるんだ。', '{P}をふさいで、相手の入れる場所をまた1つ消したね。'],
+      ptOuter: ['{P}は相手の逃げ道をふさいで、駒を運ぶ中継にもなるからね。', '{P}ができると、相手の逃げ道が減って、自分の駒も運びやすくなるワン。', '外側の{P}は、壁にも中継地点にもなるんだ。', '{P}をふさげば、相手の逃げ道がまた1つ消えるね。'],
+      anchor20: ['{P}に足場（アンカー）があれば、打たれても戻る場所になるワン。', '相手の陣地の{P}にアンカー！ 打たれても戻る場所ができたね。', '{P}に2枚そろえておけば、相手の陣地でも安心なんだ。', 'この足場があれば、後ろの駒は閉じ込められにくいね。', '相手のいちばんほしい場所を、先にもらっちゃったワン。', 'いちばん強いアンカーだから、外側の相手の駒もにらめるんだ。', '相手はここを壁に使えなくなるから、こっちは安心して待てるね。'],
+      anchor: ['{P}に2枚の足場ができれば、閉じ込められにくくなるからね。', '{P}にアンカーを作って、閉じ込められる心配が減ったワン。', '{P}の足場があれば、後ろの駒も落ち着いて待てるんだ。', '相手の陣地に2枚の足場！ 打たれても戻る場所ができたね。'],
+      ptMid: ['{P}が中盤の足場になって、駒を安全に運べるワン。', '{P}をポイントにして、中盤の中継地点ができたね。', '{P}があると、後ろの駒を安全に運んでこられるんだ。', '中盤に休める場所ができて、駒の行き来が楽になるね。'],
+      prime: ['ポイントが{n}つ並んで、相手の駒の前に壁ができるからね。', '{n}つ続きのポイントで、相手の前に壁ができたワン。', 'ポイントが{n}つつながって、相手の駒が通りにくくなるんだ。', '{n}つ並びの壁！ 相手の後ろの駒は、そう簡単には越えられないね。'],
+      prime6: ['6つ並んだ完全な壁で、相手は一歩も出られないワン！', 'ポイントが6つ並んだ完全なプライム！ 相手は出られないね。', '6つ続きの壁ができたから、相手の後ろの駒はもう動けないんだ。'],
+      escape: ['後ろの駒が閉じ込められる前に、相手の陣地から逃げ出せるからね。', '後ろの駒を、閉じ込められる前に逃がせたワン。', '相手の陣地にいた駒が、ここで脱出できるんだ。', 'いちばん後ろの駒が動き出して、閉じ込められる心配が減ったね。', '壁ができる前に、後ろの駒を外へ出せたワン！'],
+      raceA: ['接触がなくなって、リードしたままのレースになるワン。', 'もうぶつかる駒はない！ リードを守ったままレースに入れるね。', 'すれちがいが終わって、先を行くきみのレースになるんだ。', '打ち合いはおしまい！ あとは先を行くきみが走るだけだね。'],
+      raceB: ['接触をなくして、あとはレース勝負にするからね。', '駒のすれちがいを終わらせて、レースに持ちこむワン。', 'ぶつかる駒をなくして、あとは走りっこの勝負なんだ。'],
+      off: ['駒を{n}枚上げられるからね。', 'これで{n}枚を盤の外へ！', '{n}枚上げられる、いちばん速い出し方ワン。', '{n}枚をゴールから出せるんだ。', '{n}枚出して、ゴールに一歩近づいたね。', 'むだなく{n}枚を外へ出せる手ワン。', '{n}枚を一気にベアオフ！ 残りもぐっと減ったね。', '目をむだにしないで、{n}枚とも盤の外へ出せたんだ。'],
+      raceMove: ['むだなく前へ進めて、上げやすい形に整えるワン。', 'むだのない進め方で、次に上げやすくなるね。', 'ゴールに向けて、目をむだにしない進め方なんだ。', 'インナーに入りきっていない駒を先に運ぶ、レースの基本だね。'],
+      safe0: ['ブロットを残さないから、打たれる心配がないワン。', '1枚だけの駒を残さないから、打たれる目はゼロだね。', '打たれる駒が1枚もない、安全な形なんだ。', 'どの駒も2枚以上でそろっているから、相手は打てないね。', 'すき間なく駒を並べて、相手に当たり目をあげないワン。'],
+      bold: ['わざと打たれる危険をとって、次にポイントを作る材料を置くからね。', '少し危なくても、次のポイント作りの材料を置くワン。', 'あえて1枚置いて、次の番にふさぐねらいなんだ。', '打たれる心配より、次の番に壁を作るチャンスを取ったね。'],
+      build: ['次の番にポイントを作れる目が{a}通りもあるワン。', 'これで次の番、{a}通りの目で新しくふさげるね。', '材料がそろって、{a}通りの目で次に壁ができる形なんだ。', '駒をばらしておいたから、{a}通りの目で次にふさげるワン。', '{a}通りの目で、次の番に新しい足場が作れるね。'],
+      unstack: ['重なった駒をほぐして、使える駒を増やせるからね。', '1か所に重なった駒を散らして、動かしやすくしたワン。', '重なりをほぐして、次に使える駒を増やすんだ。'],
+      quiet: ['駒の配置のバランスがいちばん良いからね。', '駒がバランスよく散らばる、落ち着いた手ワン。', 'どの駒もむりなく働ける配置になるんだ。', '次の目にも対応しやすい、バランスのいい形だね。', 'むりのない形を保って、次の番に備える手ワン。', '形をくずさずに進める、ていねいな一手だね。', 'あわてずに形を整える、じょうずな一手なんだ。', 'どこにもすきを作らない、きれいな動かし方ワン。'],
+    },
+    vs: {
+      noHit: ['きみの手は打つチャンスを見送っちゃうから、相手を自由に動かせちゃう。', 'きみの手だとヒットを見送るから、相手がのびのび動けるワン。', '打てる駒を打たないと、相手に立て直す時間をあげちゃうんだ。', 'ここで打たないと、相手の駒は無事に逃げられちゃうね。'],
+      noPoint: ['きみの手だと{P}が作れないままになるワン。', 'きみの手では{P}が空いたままだから、せっかくのチャンスを逃しちゃう。', '{P}をふさがないと、そのぶん相手が楽になるね。', 'きみの手だと{P}がふさがらないから、相手の通り道が残るんだ。'],
+      broke: ['きみの手は{P}をくずすから、せっかくの壁が弱くなるんだ。', '{P}をくずすと、作った壁にすき間ができちゃうワン。', 'きみの手だと{P}がばらけて、壁が弱くなるね。'],
+      shots: ['きみの手は打たれる目が{a}通りもあるから、緑の手の{b}通りより危ないワン。', '打たれる目は、きみの手だと{a}通り、緑の手なら{b}通り。そのぶん危ないんだ。', 'きみの手だと相手の当たり目が{a}通り。緑の手より{c}通りも多いね。', 'きみの手だと{a}通りで打たれるから、{b}通りの緑の手より危険なんだ。'],
+      shots0: ['きみの手はブロットが残って、{a}通りの目で打たれちゃう。緑の手なら打たれる目はゼロなんだ。', 'きみの手だと1枚だけの駒が残るから、{a}通りで打たれるワン。緑の手は打たれないね。', 'ブロットを残すと{a}通りの目で打たれちゃう。緑の手なら0通りなんだ。', 'きみの手だと{a}通りの当たり目ができるね。緑の手は1枚も打たれない形なんだ。', 'きみの手は1枚だけの駒ができるから、相手に{a}通りのチャンスをあげちゃうワン。'],
+      stuck: ['きみの手だと後ろの駒が残って、閉じ込められる危険が続くワン。', '後ろの駒を置いたままだと、閉じ込められる心配が消えないね。', 'きみの手では後ろの駒が取り残されるから、逃げ道がせまくなるんだ。'],
+      build: ['きみの手だと、次にポイントを作れる目が{c}通り減っちゃうから、少し損なんだ。', 'きみの手だと、次の番にふさげる目が緑の手より{c}通り少なくなるワン。', '緑の手なら次の番の材料が多いから、ふさげる目が{c}通り多いね。'],
+      stack: ['きみの手は{n}枚が1か所に重なって、駒が使いにくくなるワン。', '{n}枚も1か所に積み上がると、動かしにくくなるんだ。', 'きみの手だと駒が{n}枚重なって、次の目で使える駒が減っちゃうね。'],
+      off: ['きみの手だと、上げる駒が{n}枚少なくなるからね。', 'きみの手だと緑の手より{n}枚少なくしか上げられないワン。', '上げられる駒が{n}枚減ると、ゴールが遠くなるんだ。', 'きみの手は目をむだにしちゃうから、{n}枚ぶん上がりが遅れるね。'],
+      close: ['差はほんの少しだけど、細かい駒の置き方で緑の手がわずかに上だからね。', 'ほんの少しの差だけど、駒の置き方を比べると緑の手がわずかに上ワン。', 'どちらも悪くないけど、緑の手のほうが駒の並びがわずかに良いからね。', '悪い手じゃないよ。でも並べ方を比べると、緑の手がほんの少し上なんだ。', 'きみの手も十分だけど、細かく比べると緑の手のほうが形がいいワン。'],
+    },
+    hint: {
+      hit: ['相手のブロット（1枚だけの駒）に届く目がないか、数えてみて！', '1枚だけの相手の駒、どこかで打てないかな？', '相手の駒が1つだけの場所に、ぴったり止まれる目はある？', 'ひとりぼっちの相手の駒、ねらえそう？', 'ヒットのチャンスがかくれているかも！ 相手の駒を見てワン。'],
+      hit2: ['相手のブロット、1枚だけじゃないね。まとめて狙ってみて！', '打てそうな相手の駒、2枚あるかも？', '一度に2枚打てる動かし方、さがしてみてワン！'],
+      enter: ['まずはバーの駒からだね。', 'バーにいる駒、忘れてないかな？', 'バーの駒を入れるのが先！ どこに入れる？', 'バーの駒が先決ワン。入ったあとの残りの目も考えてね。'],
+      pt: ['2枚を同じ場所にそろえれば、ポイントが作れそうだね。', '2つの目で、同じ場所に2枚そろえられないかな？', '新しいポイントを作れる組み合わせ、あるかも！', '2枚が同じ場所に止まれる目の組み合わせを探してワン。', '壁を伸ばせる場所はどこだろう？'],
+      anchor: ['後ろの2枚を同じ場所にそろえる手もあるワン。', '相手の陣地で、2枚そろえて足場にできない？', '後ろの駒どうしで、ポイントを作れないかな？', '相手の陣地に、2枚で守れる場所はある？'],
+      escape: ['後ろの駒、そろそろ相手の陣地から逃がしたくない？', 'いちばん後ろの駒、閉じ込められる前に動かせる？', '逃げ出すなら今かも？ 後ろの駒を見て！', '相手の壁が完成する前に、できることはないかな？'],
+      build: ['すぐポイントにならなくても、次に作る材料を置く手があるワン。', '次の番にポイントを作るための駒を置けないかな？', '今すぐじゃなく、次に作る準備をする手もあるね。', '次の番を楽にする駒の置き方、考えてみて！'],
+      safe0: ['ブロットを残さない、安全な形を探してみて。', '1枚だけの駒が残らない動かし方はどれ？', '打たれる駒を残さない手、あるかな？', '全部の駒を2枚ずつそろえられる動かし方は？'],
+      off: ['何枚上げられるか、目の組み合わせを数えてみて！', 'いちばん多く駒を上げられるのは？', '目をむだにせず、何枚出せるか考えてみて！', 'どの目でどの駒を出すか、順番に考えてみてワン。', '出せる駒は出す、が基本！ でも順番も大事だね。'],
+      raceMove: ['レースはむだなく前へ。いちばん後ろの駒から考えてみてワン。', 'むだのない進め方はどれかな？', 'いちばん遠い駒から近づけてみよう！', 'インナーの外にいる駒、先に運べない？'],
+      def: ['後ろの駒と中盤の駒、どっちを動かすか考えてみて！', 'どの駒を動かすと、形がいちばん整うかな？', '打たれにくくて、次につながる形はどれだろう？', 'ひとつひとつの手を、動かしたあとの形で比べてみてワン。', 'あせらず、駒の並びがきれいになる手を探そう！'],
+    },
+  };
+  // (2026-11-22 lesson loop) the lessons' intros for the 3D table in ダイスン's words, Japanese: short (a phone bubble of 4 pages at most),
+  // the step's text and its three principles (backgammon/i18n-ls2.js keys) told in one; no point numbers (the 3D board has none)
+  const BGJ_LS_INTRO = {
+    move: "サイコロの目の1つずつが1回の移動で、ゾロ目なら4回動けるワン！<br>相手の駒が2個以上いる場所には止まれないから気をつけて。まずは最初の1手に挑戦しよう！",
+    enter: "打たれた駒は真ん中のバーへ。バーに駒があるうちは、ほかの駒は動かせないんだ。<br>まずは相手のインナー（右上）に入れ直そう。出た目の場所がふさがっていたら入れなくて、2つともだめなら1回お休み（ダンス）ワン。<br>入るついでに打てないか、入った駒が安全かも見てね！",
+    hit: "1個だけの駒をブロットっていうんだ。相手のブロットにぴったり止まればヒット！ その駒をバーへ送れるワン。<br>遠くまで来た駒ほど、打たれたときの損は大きいね。打ったあと、自分のブロットに何通り当たるかも数えよう。",
+    bearoff: "15個ぜんぶがインナーに入ったら、駒を盤の外へ出すベアオフの始まり！<br>出た目と同じ場所の駒を出せて、それより奥に駒がなければ、大きい目で奥の駒も出せるんだ。<br>相手の駒が近くにいるうちは、ブロットを作らない出し方がいちばんワン。",
+    open1: "最初の1手には、だいたい決まった指し方があるんだ。3-1・4-2・5-3・6-1は、2つの駒で新しいポイントを作れる当たりの目ワン！<br>3-1ならゴールデンポイント、6-1ならバーポイント。ポイントが並ぶほど、相手の奥の2個は逃げにくくなるね。",
+    open2: "ポイントが作れない目なら「走る」か「分ける」が基本だね。<br>6-5は、いちばん奥の駒をミッドポイントまで一気に走らせる手。2-1・4-1・5-1は、外側に1個降ろして奥の2個を分けるのが定番なんだ。<br>降ろした駒は、次にポイントを作る材料になるワン。",
+    open3: "2手目からはゾロ目も出るワン。同じ数で4回動けるから、ポイントを2つ一度に作れる大チャンス！<br>相手がブロットを残していたら、打つのも有力なんだ。まずは相手の最初の1手で、盤のどこが変わったかを見てから考えよう。",
+    prime: "駒が2個以上ある場所はポイント。相手はそこに止まれないんだ。<br>ポイントが横に並ぶとプライム、つまり壁になるワン。壁の後ろに相手の駒がいるほど強くて、6つ続けばもう一歩も出られない！<br>今あるポイントのとなりに作って、壁を伸ばしていこうね。",
+    anchor: "相手のインナーに2個以上で作ったポイントがアンカー。打たれてもそこへ戻れるから、閉じ込められにくくなるんだ。<br>いちばん強いのは、相手のゴールデンポイントのアンカーワン！<br>不利なときや攻められているときは、まず足場を作って落ちつこうね。",
+    blitz: "相手の駒がバーにいて、こっちのインナーにポイントが多いならブリッツのチャンス！<br>どんどん打って、ポイントを増やして、相手を入れなくしちゃおう。インナーを全部ふさげば、ギャモン勝ちも見えてくるワン。<br>少しのブロットより、攻めの手を止めないのがコツなんだ。",
+    escape: "まずはピップを数えて、先を行っているか確かめよう。<br>リードしているなら、後ろの駒を逃がしてレースにしちゃうのが近道ワン。<br>遅れているときは、あわてて逃げるより、アンカーを守って相手のすきを待つほうがいいこともあるんだ。",
+    safe: "ブロットを残すと、相手のサイコロで打たれるかもしれないね。すぐ近くなら36通り中11〜17通り、遠くならぐっと減るんだ。<br>でも安全がいつも正解とはかぎらないワン。大事なポイントの準備なら、少しの危険はがまんする価値がある！",
+    shots: "サイコロ2個の出方は36通り。距離が6以内なら、その数が出る11通りに、2つの目の合計で届く組み合わせを足すんだ。<br>距離7以上は合計かゾロ目だけだから、ぐんと少なくなるワン。途中がふさがっていると、合計の目は届かないね。",
+    bold: "ブロットはこわいけど、安全がいつも正解とはかぎらないんだ。<br>相手のインナーが弱くて打たれても損が小さいなら、次にポイントを作るための駒（スロット）を置くほうが得なこともあるワン。<br>何通りで打たれるか、打たれたらどれだけ困るかで決めよう！",
+    race: "おたがいの駒がすれちがったら、あとはレース！ 全部の駒をゴールさせるのに必要な目の合計をピップっていうんだ。最初はどちらも167。<br>ピップが少ないほうが有利ワン。駒をむだなく、早くインナーへ運ぼうね。",
+    bearcontact: "ベアオフ中でも、相手のアンカーが残っていたら油断は禁物！ ブロットを打たれると大逆転もあるんだ。<br>ここはたくさん出すより安全が先ワン。偶数の駒を残す、奥から片づける、が基本だね。",
+    bearopt: "相手の駒がいないベアオフは、出しきるまでの回数を少なくするのが目標ワン。<br>できるだけたくさん出す。出せないときは空いたポイントを埋めて、次の目をむだにしない。<br>高いところに積みすぎると、大きい目がむだになっちゃうんだ。",
+    cube: "サイコロを振る前、自分の番に「ダブル」と言えば、点を2倍にしようと持ちかけられるんだ。相手はテイク（受けて続ける）かパス（1点払って降りる）を選ぶワン。<br>ダブルは「かなり有利、でも相手がまだ受けられる」くらいがちょうどいい。有利すぎるなら、ダブルせずにギャモンを狙う手もあるね。",
+    racecube: "レースなら、ピップの差でキューブを決められるワン。リード率は、ピップの差 ÷ 自分の番の側のピップ。<br>目安は8%でダブル、9%でリダブル、12%をこえると相手はパス！ 100ピップと110ピップならリード10%だから、ダブル・テイクなんだ。",
+    takepoint: "ダブルされたら、勝ち目が25%くらいあればテイク、なければパスが基本ワン。テイクして負けると2点、パスなら1点ですむからね。<br>ギャモン負けの危険が大きいときは、もう少し勝ち目がほしいんだ。",
+    backgame: "ピップで大きく遅れたら、相手のインナーにアンカーを2つ持って、相手が帰ってくるときのブロットを待つ作戦があるんだ。これがバックゲーム！<br>大事なのはタイミング。前に進みすぎて形をくずさないようにしようね。打てても自分のインナーがボロボロだと勝てないワン。",
+    holding: "相手のインナーにアンカーを1つ持って、相手の駒が前を通るときに打つチャンスを待つ。これがホールディングゲームワン。<br>アンカーはかんたんに手放さないで、相手が通る外側をにらめる場所に駒を置いておこうね。",
+    gammon: "相手が1個も出さないうちに全部出しきるとギャモンで2点！ 大きくリードしているなら、ギャモンを狙うほうが得なこともあるんだ。<br>反対に負けそうなときは、ギャモン負けをさけるのが先ワン。後ろの駒を早めに帰そうね。",
+  };
+  function bgVoice(id) {
+    let h = shSeed('bg' + id); h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0; h = Math.imul(h ^ (h >>> 13), 0x45d9f3b) >>> 0; const seed = (h ^ (h >>> 16)) >>> 0;
+    const perm = (sd, n) => { const a = [...Array(n).keys()]; let x = sd >>> 0 || 1; for (let i = n - 1; i > 0; i--) { x = Math.imul(x ^ (x >>> 15), 0x2c1b3c6d) >>> 0; x = Math.imul(x ^ (x >>> 12), 0x297a2d39) >>> 0; x = (x ^ (x >>> 15)) >>> 0; const j = x % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };   // (well mixed: shPerm's low bits gave two lessons one order)
+    const O = BGV, pc = perm(seed, O.cheer.length), ps = perm((seed ^ 0x9e3779b9) >>> 0, O.soft.length), pp = perm((seed ^ 0x51ed27f1) >>> 0, O.push.length);
+    const cnt = {}, used = new Set(), gram = new Map(), sn = t => (String(t).replace(/<[^>]+>/g, '').match(/[^。！？]+[。！？]*/g) || []).map(x => x.trim()).filter(x => x.length >= 5);
+    const gr = t => { const x = String(t).replace(/<[^>]+>/g, '').replace(/[\s、。！？!?「」（）()・…〜♪]/g, ''), g = new Set(); for (let k = 0; k + 10 <= x.length; k++) g.add(x.slice(k, k + 10)); return g; };
+    const mark = t => { if (!t) return t; sn(t).forEach(x => used.add(x)); gr(t).forEach(g => gram.set(g, (gram.get(g) || 0) + 1)); return t; };
+    const free = t => !sn(t).some(x => used.has(x)) && ![...gr(t)].some(g => (gram.get(g) || 0) >= 2);
+    // v(key, list, avoidEnd): the next free wording of the list (not opening with the ending just said, when another will do)
+    const v = (key, arr, avoid) => { const c = cnt[key] = (cnt[key] || 0) + 1; let pick = null;
+      for (let pass = 0; pass < 3 && pick == null; pass++) for (let k = 0; k < arr.length; k++) { const t = arr[(seed + c - 1 + k) % arr.length];
+        if (pass < 2 ? !free(t) : sn(t).some(x => used.has(x))) continue; if (pass === 0 && avoid && rvEndOf((String(t).match(/[^。！？]+[。！？]*/) || [''])[0]) === avoid) continue; pick = t; break; }
+      return mark(pick != null ? pick : arr[(seed + c - 1) % arr.length]); };
+    const vTry = (key, arr) => { const c = cnt[key] = (cnt[key] || 0) + 1; for (let k = 0; k < arr.length; k++) { const t = arr[(seed + c - 1 + k) % arr.length]; if (free(t)) return mark(t); } return ''; };
+    let pn = 0; const ptName = (i, base) => { const L0 = i >= 1 && i <= 4 ? [base, `インナーで右から${i}つ目のポイント`, `右から${i}番目のインナーのポイント`] : i === 6 ? [base, 'インナーのいちばん左のポイント', 'バーのすぐ右のポイント'] : i === 20 ? [base, 'ゴールデンポイント（相手の陣地）', '相手の陣地の、ゴールデンポイント'] : [base]; return L0[(seed + pn++) % L0.length]; };   // (one point, said in other words in turn)
+    const tic = t => { let n = 0; return String(t).replace(/ワン([。！])/g, (a, e) => n++ ? e : a); };   // (one ワン a bubble is enough)
+    return { v, vTry, ptName, mark, free, seed, tic, cheer: i => O.cheer[pc[i % pc.length]], soft: i => O.soft[ps[i % ps.length]], push: i => O.push[pp[i % pp.length]] };
+  }
+  const bgEndLast = t => { const s = (String(t).replace(/<[^>]+>/g, '').match(/[^。！？]+[。！？]+|[^。！？]+$/g) || []).map(x => x.trim()).filter(Boolean); return s.length ? rvEndOf(s[s.length - 1]) : ''; };
+  const bgFin = (V, t, prev) => rvEnds(V.tic(t), prev || '!').t.replace(/([！？])(?=[^\s<」）！？])/g, '$1 ');
+  // the choice questions in the lesson's voice (V): a question of their own after the first, a hint that is not the same each time,
+  // right → praise + the reason from the values (+ a push), wrong → soft words + the right answer + why the chosen one is off
+  function bgChJaV(p, N, V, pi, last, sid) {
+    const P = p.P, v = P.qv || {}, opt = i => { const o = P.opts[i]; return Array.isArray(o) ? o : [o]; }, c = '<b>' + N.c + '</b>', o2 = '<b>' + N.o + '</b>', q = P.q;
+    const AQ = {
+      race: ['次の局面もピップを数えてみて！ リードしてるのはどっち？', '今度はどうかな？ どっちがどれだけ先を行ってる？', 'もう一度ピップ勝負！ 先を行ってるのはどっち？'],
+      shots: ['同じように数えてみよう。印のブロットに、相手が当てられる目は何通り？', '次のブロットはどうかな？ 36通りのうち、当たる目を数えてワン！', 'これは何通りで当たる？ 足し算の目も忘れずにね。'],
+      double: ['今度はどうかな。サイコロを振る前に、ダブルする？', `${c}の番。ダブルのタイミングかな？ それともまだ待つ？`, 'この局面、きみならキューブを使う？ 相手は受けそう？', 'もう1問！ ダブルする？ 相手はテイクする？'],
+      take: [`${o2}がまたダブルしてきた！ テイクする？ パスする？`, 'この局面でダブルされたら、受ける？ 降りる？', `さて、次はどうする？ ${c}はテイク？ それともパス？`],
+    };
+    const LQ = { race: '最後の1問ワン！ リードしてるのはどっち？', shots: '最後の1問！ 印のブロットに当たる目は何通り？', double: '最後の1問ワン！ ダブルするか、待つか、決めてみて。', take: '最後の1問ワン！ テイクかパスか、決めてみて。' };
+    if (pi > 0 && AQ[q]) p.ask = last ? LQ[q] : V.v('ask:' + q, AQ[q]); V.mark(p.ask);
+    const HQ = {
+      race: ['いちばん奥の駒から順に、ゴールまでの残りを足してみて！', 'ゴールまでの残りマス × 駒の数を、ポイントごとに足していくワン。', '差が小さいときほど、ていねいに数えよう！'],
+      shots: ['すぐ近くなら直接の目だけで11通り。そこに足し算の目を足していこう！', '2つの目の合計で届く組み合わせも数えてね。', '途中にきみのポイントがあると、相手の足し算の目は止まっちゃうワン。', 'ゾロ目は4回動けるから、遠くまで届くこともあるね。'],
+      double: ['勝つチャンスがどれくらいか、局面を見て考えてみて！', 'ダブルは「十分有利、でも相手がまだ受けられる」くらいがちょうどいいワン。', '有利すぎるなら、ダブルせずにギャモンをねらう手もあるワン。', '相手が受けたくなるか、降りたくなるか、相手の立場で考えてみよう！'],
+      take: ['ギャモン負けが多いと、テイクは危なくなるワン。', 'パスなら1点、テイクして負ければ2点。どっちの損が小さいかな？', '相手のインナーの強さや、閉じ込められた駒の数も見てみて！', '勝ち目が4回に1回より多くありそうか、考えてみて。', 'ピップの差と、相手の壁の強さを見くらべてみよう！', 'もし受けたら、どれくらい逆転のチャンスがあるかな？'],
+    };
+    const h0 = p.hintTx;
+    p.hintTx = bgFin(V, pi === 0 && h0 && V.free(h0) && (q !== 'double' || sid === 'racecube') ? V.mark(h0) : HQ[q] ? V.v('h:' + q, HQ[q], bgEndLast(p.ask)) : h0, bgEndLast(p.ask));
+    const pc = x => Math.round(+x || 0), lose = pc(v.l);
+    const why = () => {
+      if (q === 'race') { const d = Math.abs(v.a - v.b), L = v.a < v.b ? c : o2;
+        return d ? V.v('w:race', [`ピップは${c}が${v.a}、${o2}が${v.b}。${L}が${d}ピップ少ない、つまりリードしてるんだ。`, `数えると${c}は${v.a}、${o2}は${v.b}ピップ。差の${d}ピップぶん、${L}が先を行ってるワン。`, `${L}のほうがゴールまで${d}ピップ近いね。${c}${v.a}、${o2}${v.b}で比べたとおり！`])
+          : V.v('w:race0', [`どっちも${v.a}ピップで同じ。こういうときは、先にサイコロを振れる側がちょっと有利なんだ。`, `${v.a}ピップどうしの横並び！ 自分の番の側が少しだけ得ワン。`]); }
+      if (q === 'shots') return V.v('w:shots', [`ブロットまでの距離は${v.d}。直接の目と足し算の目を合わせて${v.n}通り、約${v.p}%で当たるんだ。`, `距離${v.d}のブロットに当たる目は${v.n}通り。36通りのうち約${v.p}%ワン。`, `直接の目に足し算の目も加えて、ちょうど${v.n}通り。距離${v.d}なら約${v.p}%で当たるね。`, `距離は${v.d}。数えると${v.n}通りだから、当たるのは約${v.p}%なんだ。`]);
+      const w = P.why, p0 = v.p;
+      if (w === 'nd') return V.v('w:nd', [`勝つチャンスは約${p0}%。まだダブルには早いから、待つのがいちばんなんだ。`, `約${p0}%なら、まだ様子見ワン。キューブは手元に置いておこう！`, `勝ち目は約${p0}%。もう少し有利になってからダブルしても遅くないね。`]);
+      if (w === 'dt') return V.v('w:dt', [`勝つチャンスは約${p0}%。ダブルするならここ！ でも相手はまだテイクできる局面なんだ。`, `約${p0}%まで来たら、ダブルのタイミングワン！ 相手はまだ受けて戦えるね。`, `勝ち目は約${p0}%。相手がテイクしたくなる、ちょうどいいダブルなんだ。`]);
+      if (w === 'dp') return V.v('w:dp', [`勝つチャンスは約${p0}%。ここまで有利なら、ダブルすれば相手はパスするしかないんだ。`, `約${p0}%もあれば、相手は受けられないワン。ダブルで1点を確保！`, `勝ち目は約${p0}%。相手がテイクすると損をするほどの差なんだ。`]);
+      if (w === 'tg') return V.v('w:tg', [`勝つチャンス約${p0}%、ギャモン${v.g}%。ダブルするとパスされて1点で終わるから、続けてギャモンを狙うんだ。`, `ギャモン勝ちが${v.g}%もあるから、ダブルせずに2点をねらうワン！`, `約${p0}%で勝てて、ギャモンも${v.g}%。ダブルで1点にしちゃうのはもったいないね。`]);
+      if (w === 'take') return V.v('w:take', lose >= 20 ? [`勝つチャンスは約${p0}%。ギャモン負けが${lose}%あっても、パスで1点払うより戦ったほうが損は小さいんだ。`, `ギャモン負けの心配は${lose}%あるけど、約${p0}%の勝ち目があるから受けて戦えるワン！`, `勝ち目約${p0}%。ギャモン負け${lose}%を入れても、テイクのほうが得なんだ。`]
+        : [`勝つチャンスは約${p0}%、ギャモン負けは${lose}%。25%をこえているから、テイクしてがんばれるんだ。`, `約${p0}%の勝ち目があるから、受けて戦えるワン！ ギャモン負けも${lose}%ですむね。`, `勝ち目${p0}%なら、パスで1点払うより戦ったほうが得なんだ。`]);
+      if (w === 'pass') return V.v('w:pass', +p0 >= 25 && lose >= 15 ? [`勝ち目は約${p0}%あっても、ギャモン負けが${lose}%もあるから、テイクすると損が大きいんだ。`, `ギャモン負け${lose}%は重いワン。約${p0}%の勝ち目では、受けると平均で1点より多く失うね。`, `約${p0}%勝てても、${lose}%のギャモン負けで2倍、4倍の点を失う危険があるんだ。`]
+        : [`勝ち目は約${p0}%しかないから、受けると平均で1点より多く失うんだ。`, `約${p0}%では25%に届かないワン。1点で手を打つのがいちばんだね。`, `勝つチャンスが約${p0}%だと、テイクしても取り返すのはむずかしいんだ。`]);
+      return '';
+    };
+    const pickWrong = u => typeof u === 'number' && u !== P.ans ? u : P.opts.findIndex((x, i) => i !== P.ans);
+    p.ownHead = true;
+    p.good = () => bgFin(V, V.cheer(pi) + ' ' + why() + (pi % 2 === 1 || last ? ' ' + V.push(pi) : ''), '!');
+    p.ng = u => {
+      const i = pickWrong(u), [k, n] = opt(i), [ka] = opt(P.ans), S = V.soft(pi) + ' ';
+      if (q === 'race') {
+        const lead = v.a === v.b ? '' : v.a < v.b ? c : o2;
+        const pre = k === ka ? V.v('n:race1', ['リードしてる側は合ってるワン。でも差の数がちがうね。', '先を行ってる側は正解！ 差の数だけずれちゃったね。']) : lead ? V.v('n:race2', [`正解は${lead}のリードワン。`, `先を行ってるのは${lead}のほうなんだ。`, `リードしてるのは${lead}だったね。`]) : '実は、どっちも同じピップなんだ。';
+        const why2 = V.v('n:race3', ['見た目の駒の数だと、ゴールまでの残りの差を見落としちゃうからね。1枚ずつ足して比べるのがコツ！', '駒の数より、1枚ずつの残りの道のりを足すと、差がはっきりするワン。', '奥にいる駒ほどピップが大きいから、そこを数えもらすと差が変わっちゃうんだ。']);
+        return bgFin(V, S + pre + `数えると${c}が${v.a}、${o2}が${v.b}` + (v.a === v.b ? 'で同じ。' : `で、差は${Math.abs(v.a - v.b)}ピップ。`) + why2, '!');
+      }
+      if (q === 'shots') return bgFin(V, S + `正解は${v.n}通り。` + V.v('n:shd', [`距離${v.d}のブロットだね。`, `ブロットまでは${v.d}つ。`, `相手の駒からブロットまで${v.d}つの距離ワン。`]) + (n < v.n ? V.v('n:sh1', ['直接の目だけじゃなく、2つの目の合計やゾロ目でも届くから、そのぶん増えるんだ。', '足し算の目やゾロ目も数えると、当たる目はもっと多くなるワン。', '直接の目だけだと少なくなっちゃう。合計で届く目も足すと答えになるね。', 'ゾロ目は4回動けるから、思ったより遠くまで届くんだ。', '2つの目の合計で止まれる組み合わせ、数えもれがあったかも？ そこを足すと答えになるワン。', '片方の目だけで届く目に、合計で届く目を加えると、数がそろうね。']) : V.v('n:sh2', ['途中にきみのポイントがあると、相手の足し算の目は届かないから、そのぶん減るんだ。', '少し数えすぎだね。ふさがった道を通る目は届かないから、数から引くワン。', '同じ組み合わせを二度数えていないかな？ 1通りずつ数えると答えになるね。', '合計で届く目でも、途中で止まる場所がふさがっていたら当たらないんだ。', '遠い組み合わせを入れすぎたかも？ 届かない目を引くと答えになるワン。'])), '!');
+      const w = P.why, A = { nd: 'ノーダブル', dt: 'ダブル（相手はテイク）', dp: 'ダブル（相手はパス）', tg: 'ノーダブル', take: 'テイク', pass: 'パス' };
+      let x = '';
+      if (w === 'nd') x = V.v('n:nd', ['ここでダブルするのは早すぎるワン。相手にキューブを渡すと、2倍の点で逆転されるチャンスをあげちゃうんだ。', 'まだ有利さが足りないから、ダブルすると相手は喜んで受けちゃうね。', '今ダブルすると、キューブが相手のものになって、逆転のときに痛いんだ。']);
+      else if (w === 'tg') x = V.v('n:tg', ['ダブルすると相手はパスして、1点で終わっちゃうワン。ギャモン勝ち（2点）を狙えるのに、もったいないんだ。', '有利すぎるときにダブルすると、相手はパスして1点だけ。ギャモンの2点をねらえるのに損だね。']);
+      else if (w === 'dt') x = k === 'nd' ? V.v('n:dt1', ['待ちすぎワン！ 次に有利になりすぎると、相手にパスされて1点しか取れなくなるんだ。', '今ダブルしないと、次の番には相手がパスできる差になって、1点止まりになるからね。']) : V.v('n:dt2', ['相手はまだテイクできる局面ワン。パスすると決めつけるのは、ちょっと楽観しすぎなんだ。', '相手にはまだ受けて戦う理由があるから、テイクしてくるね。']);
+      else if (w === 'dp') x = k === 'nd' ? V.v('n:dp1', ['ここで待つと、逆転される危険が残るワン。ダブルして1点を確実にもらうんだ。', 'これだけ有利なら、ダブルで相手を降ろせるから、待つと逆転の危険だけが残るね。']) : V.v('n:dp2', ['相手がテイクすると損をする局面ワン。テイクすると見るのは、相手に甘すぎるね。', 'ここまで差があると、相手は受けると損だから、パスするしかないんだ。']);
+      else if (w === 'take') x = V.v('n:take', ['パスすると1点を確実に失うワン。テイクして戦ったほうが、平均の損は小さいんだ。', 'まだ勝ち目が十分あるから、ここで降りるのはもったいないね。', 'パスで1点払うより、受けて逆転をねらうほうが損が少ないんだ。']);
+      else if (w === 'pass') x = +v.p >= 25 ? V.v('n:pass1', ['勝てる見こみが25%をこえていても、ギャモン負けが多いから、テイクすると損が大きいワン。ここは1点で手を打つんだ。', 'ギャモン負けが重いから、受けると2倍以上の点を失いやすいね。']) : V.v('n:pass2', ['テイクすると、2倍の点を失う危険が大きすぎるワン。ここは1点で手を打つのが正解なんだ。', '勝ち目が25%に届かないから、受けると損が大きくなるね。']);
+      return bgFin(V, S + `正解は<b>${A[w] || ''}</b>（勝ち目約${v.p}%` + (/take|pass/.test(w) ? `、ギャモン負け${lose}%` : w === 'tg' ? `、ギャモン${v.g}%` : '') + '）。' + x, '!');
+    };
+  }
   // the choice questions' words (ダイスン): right → the reason; wrong → the answer, and why the chosen one is off
   function bgChJa(p, N, hs) {
     const P = p.P, v = P.qv || {}, opt = i => { const o = P.opts[i]; return Array.isArray(o) ? o : [o]; }, c = '<b>' + N.c + '</b>', o2 = '<b>' + N.o + '</b>';
@@ -4059,18 +4232,22 @@
       const N = this.names(lang), T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, Object.assign({}, N, v || {}));
       const intro = String(T('intro', { fig0: '', fig1: '', fig2: '' }) || '').replace(/\{fig\d\}/g, '');
       const keys = this.tx('ls.' + s.id + '.keys', lang), kh = this.tx('ls.keysH', lang);   // (the step's three principles, backgammon/i18n-ls2.js)
-      const introK = intro + (keys && keys !== 'ls.' + s.id + '.keys' ? `<br><b>🧭 ${kh}</b>` + String(keys).split('|').map(x => { const cjk = /^(ja|zh)/.test(lang), y = cjk ? x.replace(/。(?=.)/g, '、') : x; return '<br>・' + y + (/[。！？!?.]$/.test(y) ? '' : cjk ? '。' : '.'); }).join('') : '');   // (one sentence per principle: the speech pages never cut one in two)
+      let introK = intro + (keys && keys !== 'ls.' + s.id + '.keys' ? `<br><b>🧭 ${kh}</b>` + String(keys).split('|').map(x => { const cjk = /^(ja|zh)/.test(lang), y = cjk ? x.replace(/。(?=.)/g, '、') : x; return '<br>・' + y + (/[。！？!?.]$/.test(y) ? '' : cjk ? '。' : '.'); }).join('') : '');   // (one sentence per principle: the speech pages never cut one in two)
       const rp = this.data.rp, ramp = rp && rp.steps && rp.steps[s.id] && rp.steps[s.id].length ? rp.steps[s.id] : null;   // (the warm-up: backgammon/ramps.json, 2026-11-15)
       const RU = (k, v) => fill(L(((rp && rp.ui) || {})[k], lang), v || {});
+      const V = lang === 'ja' ? bgVoice(s.id) : null;   // (the lesson's voice: what the intro and the warm-up say is not said again)
+      if (V) { introK = BGJ_LS_INTRO[s.id] || introK.replace(/勝率/g, '勝つ確率'); V.mark(introK); (ramp || []).forEach(r => ['t', 'b', 'g', 'h', 'y'].forEach(f => { if (r[f]) V.mark(L(r[f], lang)); })); }
       return { id: s.id, title: T('title'), intro: introK, ramp, RU,
         probs: (s.problems || []).map((P, pi) => {
           const pos = bgPos(P.pos, P.side), ask = this.tx('ls.turn', lang, { c: '<b>' + N.c + '</b>' }) + ' ';
-          const ja = lang === 'ja' && window.BGX && BGX.teach, hs = (+key * 5 + pi * 3 + s.id.length) | 0;
+          const ja = lang === 'ja' && window.BGX && BGX.teach, hs = (+key * 5 + pi * 3 + s.id.length) | 0, last = pi === (s.problems || []).length - 1;
           if (P.kind === 'play') {
             if (!ja) return this.play(P, pos, ask + T('goal', { d: P.dice.join('-') }), T('hint'), lang);
-            const d = BGJ_OP.dice(P.dice), q1 = pi === 0 ? `きみは<b>${N.c}</b>。` : '';   // (ダイスン: the step's own goal and his own questions, in turn)
-            const o = this.play(P, pos, q1 + (pi % 2 === 0 ? String(T('goal', { d })).split(' ' + d + ' ').join(d).replace(/^サイコロは ?(.+?)。/, '$1が出た！ ').replace(/ ?が出たよ。/, 'が出た！ ') : fill(BGJ_OP.lsAsk[hs % BGJ_OP.lsAsk.length], { d })), '', lang);
-            try { this.teachJa(o, pi % 2 ? hs | 1 : hs & ~1, T('hint')); } catch (e) { o.hintTx = T('hint'); }
+            // (ダイスン, 2026-11-22: the step's own goal once, then his own questions — none said twice in a lesson, see bgVoice)
+            const d = BGJ_OP.dice(P.dice), q1 = pi === 0 ? `きみは<b>${N.c}</b>。` : '';
+            const a0 = pi === 0 ? q1 + String(T('goal', { d })).split(' ' + d + ' ').join(d).replace(/^サイコロは ?(.+?)。/, '$1が出た！ ').replace(/ ?が出たよ。/, 'が出た！ ') : V.v(last ? 'last' : 'ask', (last ? BGV.last : BGV.ask).map(t => fill(t, { d })));
+            const o = this.play(P, pos, bgFin(V, V.mark(a0), ''), '', lang);
+            try { this.teachJaV(o, V, pi, last, pi === 0 ? T('hint') : ''); } catch (e) { o.hintTx = T('hint'); }
             return o;
           }
           const qv = Object.assign({}, N, P.qv || {}); if (P.q === 'shots') qv.m = this.tx('ls.why.shotsD', lang, { d: (P.qv || {}).d });
@@ -4078,9 +4255,7 @@
             marks: (P.mk || []).map(([sd, pt, c]) => ({ pt: (sd ^ P.side) === 0 ? pt : 25 - pt, cls: c === 'ok' ? 'ok' : 'hl' })),
             choices: P.opts.map(o => { const [ok, on] = Array.isArray(o) ? o : [o]; return this.tx('ls.opt.' + ok, lang, Object.assign({}, qv, { n: on })) || ok; }), right: P.ans,
             why: this.tx('ls.why.' + (P.why || P.q), lang, qv) };
-          if (ja) { if (P.q === 'shots' && pi > 0) o.ask = ['同じように数えてみよう。印のブロットに、相手が当てられる目は何通り？', '次のブロットはどうかな？ 36通りのうち、当たる目を数えてワン！', 'これは何通りで当たる？ 足し算の目も忘れずにね。', '最後の1問！ 印のブロットに当たる目は何通り？'][(pi - 1) % 4];
-            if (P.q === 'take' && pi > 0 && s.id === 'takepoint') o.ask = [`${'<b>' + N.o + '</b>'}がまたダブルしてきた！ テイクする？ パスする？`, 'この局面でダブルされたら、受ける？ 降りる？', `今度はどうかな。${'<b>' + N.c + '</b>'}はテイク？ それともパス？`, '最後の1問ワン！ テイクかパスか、決めてみて。'][(pi - 1) % 4];
-            bgChJa(o, N, hs); o.why = ''; }
+          if (ja) { bgChJaV(o, N, V, pi, last, s.id); o.why = ''; }
           return o;
         }),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.LKEY, pr); return pass; } };
@@ -4110,7 +4285,7 @@
       const T0 = (() => { try { return BGX.teach(q0, 0, bestP, null); } catch (e) { return null; } })();
       const k0 = T0 && T0.plan[0] ? T0.plan[0].k.slice(3) : '';
       o.hintTx = hint0 && (hs % 2 === 0 || !k0 || !J2.hint[k0] && !/^pt|prime|anchor|bold/.test(k0)) ? hint0 : J2.hintOf(T0);
-      const reasons = (T, max, pre) => { let out = pre || ''; const n0 = out.length; for (const x of (T && T.plan) || []) { let s = J2.say(x); if (!s || (out.length > n0 && (out + s).length - n0 > max)) continue; if (out.length > n0) s = (/[！？]$/.test(out) ? ' ' : '') + 'それに、' + s.replace(/^しかも/, '').replace(/からね。$/, 'んだ。'); out = J2.join(out, s); if (out.length - n0 > max * .6) break; } return out; };
+      const reasons = (T, max, pre) => { let out = pre || ''; const n0 = out.length; for (const x of (T && T.plan) || []) { let s = J2.say(x); if (!s || (out.length > n0 && (out + s).length - n0 > max)) continue; if (out.length > n0) s = (/[！？]$/.test(out) ? ' ' : '') + 'それに、' + s.replace(/^しかも/, '').replace(/だからね。$/, 'なんだ。').replace(/からね。$/, 'んだ。'); out = J2.join(out, s); if (out.length - n0 > max * .6) break; } return out; };
       o.good = u => { let T = T0; try { if (u && u.steps && u.steps.length) T = BGX.teach(q0, 0, mk(u.steps), null); } catch (e) {}
         const many = ok.length > 1 ? (hs % 2 ? 'ほかにも同じくらい良い手があるけど、' : '同じくらいの手はほかにもあるワン。') : '';
         return J2.join(reasons(T, 90, J2.good[hs % J2.good.length]), many && many.endsWith('、') ? many + 'どれも大きな差はないんだ。' : many); };
@@ -4118,6 +4293,31 @@
         let T = T0; try { if (mine) T = BGX.teach(q0, 0, bestP, mine); } catch (e) {}
         const vs = ((T && T.vs) || []).map(x => J2.say(x)).filter(Boolean)[0] || J2.vs.close;
         return J2.join(reasons(T, 60, J2.ngHead[hs % J2.ngHead.length]), vs); };
+    },
+    teachJaV(o, V, pi, last, hint0) {   // (2026-11-22) the lessons' play problems in the lesson's voice: the hint, and the reasons after the answer (BGV)
+      const J2 = BGJ_OP, q0 = bgDecP(o.bgPos);
+      const mk = m => { const q = q0.slice(), mv = Array.isArray(m) ? m : bgCodes(o.bgPos, m).moves; mv.forEach(c => BG.apply(q, 0, BG.mvFrom(c), BG.mvTo(c))); return { moves: mv, pos: q }; };
+      const bestM = o.best(), bestP = mk(bestM), ok = o.P.opOk || [bestM], others = o.P.plays.map(y => y[0]).filter(m => !ok.includes(m));
+      const T0 = (() => { try { return BGX.teach(q0, 0, bestP, null); } catch (e) { return null; } })();
+      const k0 = T0 && T0.plan[0] ? T0.plan[0].k.slice(3) : '', hk = BGV.hint[k0] ? k0 : /^pt|prime/.test(k0) ? 'pt' : /^anchor/.test(k0) ? 'anchor' : k0 === 'bold' ? 'build' : k0 === 'dance' ? 'hit' : 'def';
+      const aE = bgEndLast(o.ask); o.ownHead = true;
+      o.hintTx = bgFin(V, hint0 && V.free(hint0) ? V.mark(hint0) : V.v('h:' + hk, BGV.hint[hk], aE), aE);
+      const sayV = (x, strict) => { const grp = x.k.slice(0, 2) === 'tv' ? 'vs' : 'plan', L0 = BGV[grp][x.k.slice(3)]; if (!L0 || !L0.length) return '';
+        const a = Object.assign({}, x.a); if (a.P != null) a.P = '<b>' + V.ptName(a.P, J2.pt(a.P)) + '</b>'; if (a.a != null && a.b != null) a.c = a.a - a.b;
+        const L1 = L0.map(t => fill(t, a)), L2 = strict === 'ng' && grp === 'plan' ? L1.filter(t => !/(た|たね|たワン|たんだ)[。！]|できたね|取れたね/.test(t)) : L1;   // (after a miss the green play's reason is said as what it does, not 「〜できたね」)
+        return strict ? V.vTry(grp + ':' + x.k.slice(3), L2) : V.v(grp + ':' + x.k.slice(3), L2); };
+      // (strict: a reason already said in all its wordings is left out — the first reason of the praise is always said)
+      const reasons = (T, max, n, strict) => { const out = []; let len = 0;
+        for (const x of (T && T.plan) || []) { if (out.length >= n) break; if (out.length && len > max * .6) break; if (out.length && x.k === 'tc.enter') continue; const s = sayV(x, strict || (out.length > 0 && 1)); if (!s || (out.length && len + s.length > max)) continue; out.push(s); len += s.length; }
+        return out.map((s, i) => i ? V.v('cn', BGV.cn) + s.replace(/^(しかも|それに)、?/, '') : s).join(''); };
+      o.good = u => { let T = T0; try { if (u && u.steps && u.steps.length) T = BGX.teach(q0, 0, mk(u.steps), null); } catch (e) {}
+        const many = ok.length > 1 ? V.v('many', ['同じくらい良い手はほかにもあるワン。', 'これと並ぶ手もあるから、どれを選んでも大きな差はないね。']) : '';
+        const push = pi % 2 === 1 || last ? V.push(pi) : '';
+        return bgFin(V, V.cheer(pi) + ' ' + (reasons(T, many ? 70 : 90, 2) || V.v('plan:quiet', BGV.plan.quiet)) + (many ? ' ' + many : '') + (push ? ' ' + push : ''), '!'); };
+      o.ng = u => { let mine = null; try { mine = u && u.steps && u.steps.length ? mk(u.steps) : others.length ? mk(others[0]) : null; } catch (e) {}
+        let T = T0; try { if (mine) T = BGX.teach(q0, 0, bestP, mine); } catch (e) {}
+        let vx = ''; for (const x of (T && T.vs) || []) { vx = sayV(x); if (vx) break; } if (!vx) vx = V.v('vs:close', BGV.vs.close);
+        return bgFin(V, V.soft(pi) + ' ' + V.v('lead', BGV.lead) + reasons(T, 50, 1, 'ng') + vx, '!'); };
     },
     points(P, u, p) {   // = backgammon/app.js problemPoints (lessons) · op.js opSubmit (openings: right within the tolerance, else nothing)
       const mine = u && u.key, L = P.plays.map(([m, e]) => Object.assign(bgCodes(p.bgPos, m), { m, e }));
@@ -6278,8 +6478,8 @@
           try { const q0 = bgDecP(p.bgPos), mk = mv => { const q = q0.slice(); mv.forEach(c => BG.apply(q, 0, BG.mvFrom(c), BG.mvTo(c))); return { moves: mv, pos: q }; };
             teach = AtlasBgTeach.html(BGX.teach(q0, 0, mk(bgCodes(p.bgPos, p.best()).moves), pts >= 20 ? null : mk(u.steps)), (k, v) => D.tx(k, ctx.lang, v), false, true); } catch (e) { console.warn(e); }
         }
-        const own = p.kind === 'bgplay' && typeof p.ng === 'function' && u && u.steps, chJa = p.kind === 'choice' && typeof p.ng === 'function';   // (ダイスン names the green play / the answer himself: the head stays short)
-        say(`${chJa ? (right ? '' : 'おしい！') : right ? (own && pts >= 16 ? '' : line('solved') || pick(X.good)) : own ? String(pts > 0 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
+        const own = p.kind === 'bgplay' && typeof p.ng === 'function' && u && u.steps, chJa = p.kind === 'choice' && typeof p.ng === 'function';   // (ダイスン names the green play / the answer himself: the head stays short; p.ownHead (the lessons in bgVoice): his own praise / soft words open it, no head)
+        say(`${p.ownHead && (own || chJa) ? '' : chJa ? (right ? '' : 'おしい！') : right ? (own && pts >= 16 ? '' : line('solved') || pick(X.good)) : own ? String(pts > 0 ? X.partial : X.wrong).replace(/([！!]).*$/, '$1') : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (p.why ? '<br>' + p.why : '') + teach);
         try { chime(right); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
         if (right && cur.k + 1 < cur.probs.length) autoGo(2600, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); });
@@ -6420,12 +6620,16 @@
       open: (k, kind) => { if (kind) ctx.kind = kind === 'open' ? 'open' : 'lesson'; open(String(k)); }, items: kind => { const kd = kind === 'open' ? 'open' : 'lesson'; if (kd === 'open' && typeof D.opening !== 'function') return null; try { return (D.list(kd, ctx.lang) || []).filter(x => !x.full).map(x => ({ key: x.key, title: x.title })); } catch (e) { return null; } }, cur: () => cur, pz: () => pz(),   // (test hooks: tools/lesson-progress.js plays every problem)
       toProb: () => { if (cur && cur.probs.length) { cur.k = 0; prob(); } },   // (test hook: straight to the problems)
       drillEnd: () => { if (cur && cur.drill) drillDone(); },
-      rampAnswer: async () => { const it = cur && phase === 'ramp' && cur.ramp && cur.ramp[cur.ri]; if (!it || !pz()) return false; let u = it.ok ? it.ok[0] : D.rampAns ? D.rampAns(it) : it.ans; if (u == null) return false;   // (reversi: the warm-up's answer is it.ans, no it.ok)
+      rampAnswer: async () => { const it = cur && phase === 'ramp' && cur.ramp && cur.ramp[cur.ri]; if (!it || !pz()) return false; if (id === 'backgammon' && it.k === 'try' && window.BG) {   // (backgammon: a legal play of the roll that the warm-up's ok accepts, as the player moves — 2026-11-22: it.ok is a rule, not a move)
+          const q0 = bgDecP(it.pos), pl = BG.genPlays(q0, 0, it.dice[0], it.dice[1]).find(x => D.rampOk(it, { pos: x.pos, steps: x.moves })); if (!pl) return false;
+          await pz().play(pl.moves); if (onMoved) await onMoved({ key: BG.key(pl.pos), steps: pl.moves, pos: pl.pos }, {}); return true; }
+        let u = it.ok ? it.ok[0] : D.rampAns ? D.rampAns(it) : it.ans; if (u == null) return false;   // (reversi: the warm-up's answer is it.ans, no it.ok)
         if (it.goal === 'mate' && pz().moves && pz().moves().length && pz().mateMove) { const m = await pz().mateMove(Math.max(1, (it.n || 3) - pz().moves().length)); if (m) { await pz().play(m); if (onMoved) await onMoved(m, { mate: pz().moves().length >= (it.n || 3) }); return true; } }   // (a mate in 3+: the next mating move)
         const E = { amazons: window.AmazonsEngine, checkers: window.CheckersEngine, xiangqi: window.XiangqiEngine }[id];   // (a warm-up named by notation: the engine's move with that name)
         if (E && it.s && D.rampOk) { const ms = E.Pos.from(it.s).moves(), m = ms.find(x => D.rampOk(it, x)); if (m !== undefined) u = m; }
         else if (D.rampOk && !D.rampOk(it, u) && D.rampAns) { const a = D.rampAns(it); if (a != null && typeof a !== 'object') u = a; } await pz().play(u); if (onMoved) await onMoved(u, {}); return true; },   // (test hook: a warm-up's guided move)   // (test hook: a chess ★ drill done — on to its route problems)
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return;
+        if (p.choices) { const b = el.querySelector(`[data-ci="${typeof u === 'number' ? u : p.right}"]`); if (b) b.click(); return; }   // (a question with choices: its button — 2026-11-22, backgammon's race / shots / cube)
         if (p.kind === 'bgplay') { const m = typeof u === 'string' ? u : p.best(), c = bgCodes(p.bgPos, m), q = bgDecP(p.bgPos); c.moves.forEach(x => BG.apply(q, 0, BG.mvFrom(x), BG.mvTo(x))); await pz().play(c.moves); return moved(p, { key: c.key, steps: c.moves, pos: q }); }   // (backgammon: a play by the json's letter pairs)
         u = u == null || u === '' ? p.ans : u; await pz().play(u); let mate = false; try { mate = p.kind === 'tsume' && (p.sol || []).length > 0 && pz().moves().length >= p.sol.length && pz().moves().every((x, i) => x === p.sol[i]); } catch (e) {} moved(p, u, { mate }); } };   // (a mate problem played along its stored line to the end: mate)   // (test hook; pit / column 0 is an answer too)
     window.__atlasLs = dbg;
