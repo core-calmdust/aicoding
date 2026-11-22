@@ -160,6 +160,45 @@ const CHECKS = {
         (P.sc || []).forEach(([m]) => { if (!q.legal(m)) bad(g, K, `problem ${j}: a scored move is not legal`); }); });
     });
   },
+  // (2026-11-22 lesson loop) the chess openings ('chess/open', key = the opening's id): every line replays legally from the start, every
+  // practice position's stored moves are legal, and what the 3D guide says about a move (atlas/lessons3d.js chFacts → chKind: castling,
+  // taking / taking back, a pin, a pawn chasing a piece, a piece leaving its first square, the piece a wrong move leaves to be taken)
+  // is re-checked on the engine's board (chess/engine.js), for each move of the line and each practice answer.
+  'chess/open'() {
+    const E = require(path.join(ROOT, 'chess/engine.js')), OP = J('chess/openings.json'), G = 'chess/open', vm = require('vm');
+    const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), a = src.indexOf('  const CH_PN = '), b = src.indexOf('  const chF = ');
+    const X = vm.runInNewContext(src.slice(a, b) + '\n;({ chFacts, chKind, CH_PN })', {});
+    const NAME = { 1: 'ポーン', 2: 'ナイト', 3: 'ビショップ', 4: 'ルーク', 5: 'クイーン', 6: 'キング' }, VAL = { 1: 1, 2: 3, 3: 3, 4: 5, 5: 9, 6: 100 };
+    const at = (pos, n) => pos.b[E.sqOf(n)] || 0, ty = p => p & 7, col = p => p & 8 ? 1 : 0;
+    const mat = (pos, c) => { let s = 0; for (let q = 0; q < 128; q++) { if (q & 0x88) { q += 7; continue; } const p = pos.b[q]; if (p && col(p) === c && ty(p) !== 6) s += VAL[ty(p)]; } return s; };
+    const sameLine = (pos, from, A, B) => { const f0 = E.sqOf(from), fa = E.sqOf(A), fb = E.sqOf(B), d = [(fa >> 4) - (f0 >> 4), (fa & 7) - (f0 & 7)], st = [Math.sign(d[0]), Math.sign(d[1])];
+      if (d[0] && d[1] && Math.abs(d[0]) !== Math.abs(d[1])) return false; let r = f0 >> 4, c = f0 & 7, seen = [];
+      for (;;) { r += st[0]; c += st[1]; if (r < 0 || r > 7 || c < 0 || c > 7) return false; const q = r * 16 + c; if (pos.b[q]) { seen.push(q); if (seen.length === 2) return seen[0] === fa && seen[1] === fb; } } };
+    const check = (id, w, fen, u) => {   // the guide's words about move u in fen, against the engine
+      const pos = E.Pos.fromFEN(fen), m = pos.fromUci(u); if (!m) { bad(G, id, `${w}: ${u} is not legal`); return; }
+      const F = X.chFacts(fen, u), white = pos.side === 0, kd = X.chKind(F, u, white), from = u.slice(0, 2), to = u.slice(2, 4), mover = at(pos, from), victim = at(pos, to);
+      const castle = ty(mover) === 6 && Math.abs(from.charCodeAt(0) - to.charCodeAt(0)) === 2, ep = ty(mover) === 1 && from[0] !== to[0] && !victim;
+      if ((kd === 'castle') !== castle) bad(G, id, `${w}: ${u} castling ${castle}, the words say ${kd}`);
+      if (/^(cap|recap)$/.test(kd)) { if (!victim && !ep) bad(G, id, `${w}: ${u} said to take, but takes nothing`); else if (X.CH_PN[F.cap] !== NAME[victim ? ty(victim) : 1]) bad(G, id, `${w}: ${u} takes a ${NAME[ty(victim)]}, the words say ${X.CH_PN[F.cap]}`); }
+      if (kd === 'recap' && !(mat(pos, pos.side) < mat(pos, pos.side ^ 1))) bad(G, id, `${w}: ${u} said to take back, but the side was not behind`);
+      if (kd === 'dev' && !(/^[23]$/.test(String(ty(mover))) && from[1] === (white ? '1' : '8'))) bad(G, id, `${w}: ${u} said to bring a piece out, but it is not a knight / bishop on its first rank`);
+      const after = E.Pos.fromFEN(fen); after.make(after.fromUci(u));
+      if (kd === 'chase') { const r = +to[1] + (white ? 1 : -1), hit = [-1, 1].some(df => { const fl = String.fromCharCode(to.charCodeAt(0) + df); if (fl < 'a' || fl > 'h' || r < 1 || r > 8) return false; const p = at(after, fl + r); return p && col(p) !== pos.side && NAME[ty(p)] === F.chase; });
+        if (!hit) bad(G, id, `${w}: ${u} said to chase a ${F.chase}, but the pawn does not hit one`); }
+      if (kd === 'pin') { let ok = false; for (let q = 0; q < 128 && !ok; q++) { if (q & 0x88) { q += 7; continue; } const p = after.b[q]; if (!p || col(p) === pos.side || NAME[ty(p)] !== F.pin[0]) continue;
+          for (let q2 = 0; q2 < 128 && !ok; q2++) { if (q2 & 0x88) { q2 += 7; continue; } const p2 = after.b[q2]; if (p2 && col(p2) !== pos.side && NAME[ty(p2)] === F.pin[1] && sameLine(after, to, E.sqName(q), E.sqName(q2))) ok = true; } }
+        if (!ok) bad(G, id, `${w}: ${u} said to pin a ${F.pin[0]} to a ${F.pin[1]}, not on the board`); }
+      if (F.hang) { const by = after.legal().some(mm => after.uci(mm).slice(2, 4) === to && NAME[ty(after.b[E.sqOf(after.uci(mm).slice(0, 2))])] === F.hang); if (!by) bad(G, id, `${w}: ${u} said to leave the piece to a ${F.hang}, but it cannot take it`); }
+    };
+    OP.sets.forEach(s => { const id = s.id, steps = (s.study && s.study.steps || []).map(x => x[0]); let pos = E.Pos.fromFEN(E.START);
+      steps.forEach((u, i) => { const fen = pos.fen(); if (!pos.fromUci(u)) { bad(G, id, `step ${i + 1}: ${u} is not legal`); return; } check(id, `step ${i + 1}`, fen, u); pos.make(pos.fromUci(u)); });
+      (s.problems || []).forEach((P, j) => { const w = `problem ${j + 1}`, C = P.cand || []; if (!C.length) { bad(G, id, `${w}: no moves`); return; }
+        let q; try { q = E.Pos.fromFEN(P.fen); } catch (e) { bad(G, id, `${w}: bad fen`); return; }
+        C.forEach(([u]) => { if (!q.fromUci(u)) bad(G, id, `${w}: ${u} is not legal`); else check(id, `${w} ${u}`, P.fen, u); });
+        if (P.n && C.reduce((t, x) => t + x[1], 0) > P.n) bad(G, id, `${w}: the moves' games add up past n`);
+        for (let k = 1; k < C.length; k++) if (C[k][1] > C[k - 1][1]) bad(G, id, `${w}: the most played move is not first`); });
+    });
+  },
 };
 
 const todo = games.length ? games : Object.keys(CHECKS);
