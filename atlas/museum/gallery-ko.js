@@ -1,7 +1,7 @@
 /* Museum "Collection" texts (Korean). Same keys as gallery-ja.js. */
 (window.MUSEUM_GAL_T = window.MUSEUM_GAL_T || {}).ko = {
   ui: { p_start: "플레이", p_undo: "무르기", p_resign: "기권", p_hint: "힌트", p_quit: "그만", p_sure: "정말?", p_orientS: "방향", p_orient: "판 방향 바꾸기", play_ballinderry: "브란두브", play_senet: "투탕카멘의 세네트", play_shosoin: "목화자단기국", play_sugoroku: "목화자단쌍륙국", p_level: "상대", p_side: "차례", p_first: "선수", p_second: "후수", p_stop: "대국 그만두기", p_you: "나", p_turn: "내 차례", p_think: "생각 중…", p_win: "승리", p_lose: "패배", p_draw: "무승부", flip: '뒤집기', guideH: '안내원 뮤제후쿠', guide: '소장품을 둘러볼수록 뮤제후쿠가 조금씩 멋을 내고 찾아와요', gift: '새 아트라모가 찾아왔어요!', sub: "세계의 박물관이 지켜 온 게임 역사의 보물. 3D로 재현한 명품을 손에 든 듯 돌려 보며 자세히 살펴보세요.", collection: "소장품", special: "특별 전시", lock: "{g} 업적 {n}개 달성 시 공개", loading: "전시 케이스를 준비하는 중…", fail: "전시품을 불러오지 못했습니다",
-    hint: "드래그로 회전 · 휠로 확대 · 번호로 볼거리", hintT: "드래그로 회전 · 핀치로 확대", spin: "천천히 돌리기", reset: "처음 방향으로", close: "닫기",
+    hint: "드래그로 회전 · 휠로 확대 · 번호로 볼거리", hintT: "드래그로 회전 · 핀치로 확대", spin: "천천히 돌리기", reset: "처음 방향으로", wide: '해설 접기 / 펴기', close: "닫기",
     date: "연대", where: "출토 · 전래", museum: "소장", mat: "재질", size: "크기", look: "볼거리", aboutModel: "이 3D 모델에 대하여", sources: "출처", play: "{g} 플레이" },
   ex: {
     ur: { name: "우르의 왕족 게임", alt: "우르 왕묘에서 나온 게임판", date: "기원전 2600~2400년경", where: "메소포타미아(우르)", found: "우르 왕묘(현 이라크 남부), 레너드 울리 발굴",

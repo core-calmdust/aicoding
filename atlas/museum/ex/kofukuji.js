@@ -10,7 +10,10 @@
    2026-11-23: no typeface any more — every character is written here with a brush, stroke by stroke (SUMI below: the strokes of
    each character, drawn with a loaded brush that thins, skips over the grain and runs dry; every writing comes out a little
    different). The pieces are small thick blocks with a low rounded head, weathered so that the grain stands in ridges (bump),
-   after the same photograph. The hand itself (which strokes run together, how cursive) is an estimate. */
+   after the same photograph. The hand itself (which strokes run together, how cursive) is an estimate.
+   2026-11-23 (2): the aim is the pieces as they are now, not as they were written — most of the ink is gone, and what is left is
+   grey, broken along the grain and often unreadable. Wood and ink were tuned against the photograph's faces with
+   atlas/museum/tools/kofukuji-score.py (colour, tones, grain, cross marks, how much ink is left and how broken it is). */
 
 (function () {
   'use strict';
@@ -99,27 +102,40 @@
         const n = K.noise(110 + k), n2 = K.noise(300 + k), c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), img = g.createImageData(W, H), d = img.data;
         const b = document.createElement('canvas'); b.width = W; b.height = H; const bg = b.getContext('2d'), bim = bg.createImageData(W, H), bd = bim.data;
         const A = ink ? ink.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H).data : null;
-        // the grain: a ridge every 0.5–1.1 mm (the photograph: about 25–35 lines across a piece)
-        const ridge = new Float32Array(W + 16), hard = new Float32Array(W + 16); { let x = 0; while (x < W + 16) { const wd = Math.max(2, Math.round(pxcm * (.03 + n(x * .37, k * 1.3, 1) * .055))), hd = .45 + n(x * .21 + 5, k, 1) * .55;
-          for (let q = 0; q < wd && x < W + 16; q++, x++) { const u = q / wd; ridge[x] = Math.pow(Math.sin(u * Math.PI), .7); hard[x] = hd; } } }
-        const base = [136 + tone * 30, 99 + tone * 25, 58 + tone * 18];
-        const fade = ink && ink.fade || 0;
+        // the grain: thin dark lines on paler wood, one every 0.4–0.9 mm (the photograph: 25–35 lines across a piece), each of its own strength
+        const line = new Float32Array(W + 16); { let x = 0; while (x < W + 16) { const gap = Math.max(2, Math.round(pxcm * (.022 + n(x * .37, k * 1.3, 1) * .045))), st = .25 + n(x * .21 + 5, k, 1) * .75, wd = st > .7 ? 2 : 1;
+          for (let q = 0; q < gap && x < W + 16; q++, x++) line[x] = q < wd ? st : q === wd ? st * .35 : 0; } }
+        // slow fields on a coarse grid (they change over millimetres; read between the grid's points): wear, stain, the grain's wobble, lost ink
+        const GS = 4, gw = Math.ceil(W / GS) + 2, gh = Math.ceil(H / GS) + 2, fWear = new Float32Array(gw * gh), fStain = new Float32Array(gw * gh), fWob = new Float32Array(gw * gh), fGone = new Float32Array(gw * gh);
+        for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++) { const x = i * GS, y = j * GS, q = j * gw + i; fWear[q] = n(x / (pxcm * .45), y / (pxcm * .7), 3); fStain[q] = n(x / (pxcm * .9) + 7, y / (pxcm * 1.2), 3); fWob[q] = n(y / (pxcm * .9), x / (pxcm * 3) + k, 2); fGone[q] = n(x / (pxcm * .4) + 40, y / (pxcm * .55), 3); }
+        const rd = (F, x, y) => { const fx = x / GS, fy = y / GS, i = fx | 0, j = fy | 0, u = fx - i, v = fy - j, q = j * gw + i; return (F[q] * (1 - u) + F[q + 1] * u) * (1 - v) + (F[q + gw] * (1 - u) + F[q + gw + 1] * u) * v; };
+        // scratches and checks across the grain (the photograph: a few short dark lines running sideways, and one or two long ones)
+        const scr = new Float32Array(W * H); { const m = 1 + (n(k, 3, 1) * 4 | 0); for (let q = 0; q < m; q++) { const y0 = n(q * 3.1, k + 1, 1) * H, x0 = n(q * 1.7 + 9, k, 1) * W * .8, len = W * (.08 + n(q, k * 2 + 5, 1) * (q < 1 ? .6 : .22)), sl = (n(q * 5, k, 1) - .5) * .25, st = .2 + n(q, 7 + k, 1) * .45;
+          for (let t = 0; t < len; t++) { const x = (x0 + t) | 0, y = (y0 + t * sl + (n(t / 9, q + k, 1) - .5) * 3) | 0; if (x >= 0 && x < W && y >= 0 && y < H - 1) { scr[y * W + x] = Math.max(scr[y * W + x], st); scr[(y + 1) * W + x] = Math.max(scr[(y + 1) * W + x], st * .5); } } } }
+        const base = [130 + tone * 18, 97 + tone * 14, 72 + tone * 11];   // (a greyed tan: measured on the photograph against its white paper)
+        const fade = ink && ink.fade || 0, bare = n(k * 7.3, 2, 1) > .78 ? 1 : 0;   // (a piece or two has a patch of fresh orange wood where the grey skin has come off)
         for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-          const wob = (n(y / (pxcm * .9), x / (pxcm * 3) + k, 2) - .5) * pxcm * .05, xs = Math.min(W + 15, Math.max(0, Math.round(x + 8 + wob)));
-          const r = ridge[xs] * (.55 + hard[xs] * .45), a = n(x / (pxcm * .45), y / (pxcm * .7), 3), s2 = n2(x / (pxcm * .12), y / (pxcm * .5), 2), e = Math.min(x, y, W - x, H - y) / pxcm;
-          const worn = Math.max(0, a - .5) * 1.6;                                           // patches where the surface is more eaten away
-          let h = r * (.6 + worn * .5) + (s2 - .5) * .25;                                     // height 0..1
-          const soil = (1 - r) * (.3 + Math.max(0, a - .35) * .9) + Math.max(0, .12 - e) * 3;  // dirt in the furrows, and at the rubbed edges
-          const check = n2(x / (pxcm * .035), y / (pxcm * 2.4), 1); if (check > .86) h -= (check - .86) * 5;   // a few checks along the grain
-          const stain = Math.max(0, n(x / (pxcm * 1.1) + 7, y / (pxcm * 1.6), 3) - .52) * 1.5;
-          const lum = (.86 + r * .18 + (s2 - .5) * .14) * (1 - Math.min(.62, soil * .5)) * (1 - stain * .45) * (check > .86 ? 1 - (check - .86) * 3 : 1);
-          let R = base[0] * lum, Gc = base[1] * lum * (1 - soil * .04), B = base[2] * lum * (1 - soil * .1);
-          if (A) {   // the ink: it holds on the ridges and in the pores, is rubbed off the worn patches, and has turned grey
-            const al = A[(y * W + x) * 4 + 3] / 255; if (al > .01) { const lost = n2(x / (pxcm * .08), y / (pxcm * 1.1), 2), gone = n(x / (pxcm * .5) + 40, y / (pxcm * .8), 3);
-              let keep = al * (.5 + r * .5) * Math.max(0, Math.min(1, (lost - fade * .62) * 3.2 + .35)) * Math.max(0, Math.min(1, (gone - fade * .55) * 4 + .6));
-              keep = Math.min(.86, keep * (1 - fade * .3)); R += (44 - R) * keep; Gc += (41 - Gc) * keep; B += (39 - B) * keep; } }
+          const xs = Math.min(W + 15, Math.max(0, Math.round(x + 8 + (rd(fWob, x, y) - .5) * pxcm * .06)));
+          const brk = n2(xs * 1.7, y / (pxcm * .09), 2), ln = line[xs] * Math.max(0, Math.min(1, (brk - .3) * 2.6));   // each line broken into dashes along its length
+          const a = rd(fWear, x, y), sp = n2(x / 1.6, y / 2.1, 2), e = Math.min(x, y, W - x, H - y) / pxcm, st = Math.max(0, rd(fStain, x, y) - .5) * 2;
+          const pit = sp > .66 ? (sp - .66) * 3.4 : 0, sc = scr[y * W + x];
+          let h = .6 - ln * .5 - pit * .5 - sc * .7 + (sp - .5) * .3;                         // height 0..1: lines, pits and scratches are cut in
+          const soil = Math.max(0, a - .42) * 1.1 + Math.max(0, .1 - e) * 3.2;                  // grey dirt in the worn patches and at the rubbed edges
+          const band = n(xs / (pxcm * .05), y / (pxcm * 1.4) + k, 2);   // broader soft streaks along the grain
+          const mot = rd(fStain, y * .7 + 31, x * .7 + 11) - .5;   // paler and greyer patches
+          let lum = (1.04 + (sp - .5) * .26 + (band - .5) * .34 + mot * .42) * (1 - ln * .62) * (1 - pit * .45) * (1 - sc * .55) * (1 - Math.min(.5, soil * .4)) * (1 - st * .3);
+          const gy = Math.max(0, -mot) * .9 + soil * .06; let R = base[0] * lum * (1 - gy * .12), Gc = base[1] * lum * (1 - gy * .03), B = base[2] * lum * (1 + gy * .22);
+          if (bare) { const t = Math.max(0, Math.min(1, (rd(fStain, W - x, y) - .56) * 9)) * (x < W * .5 ? 1 : 0); R += (204 - R) * t * .7; Gc += (140 - Gc) * t * .7; B += (82 - B) * t * .7; }
+          if (A) {   // the ink: grey-black, sunk into the pores; rubbed off the worn patches, broken by the grain and by a speckle of bare wood
+            const al0 = A[(y * W + x) * 4 + 3] / 255; if (al0 > .01) { const gone = rd(fGone, x, y), spk = n2(x / 2.3 + 30, y / 3.4, 2), strk = n2(xs / 1.4 + 60, y / (pxcm * .22), 2);
+              // the strokes' edges eaten away, and strips along the grain where the ink has gone with the soft wood
+              const al = Math.max(0, Math.min(1, (al0 - .06 - spk * .2 - fade * .1) * 3)) * Math.max(0, Math.min(1, (strk - .12 - fade * .2) * 5));
+              // a grey wash where the ink has thinned, darker where it pooled; whole patches rubbed away
+              const core = Math.max(0, Math.min(1, (spk - .16 - fade * .2) * 3.4 + (band - .5) * 1.2));
+              let keep = al * Math.max(0, Math.min(1, (gone - fade * .85) * 5 + .5)) * (.5 + .5 * core) * (1 - ln * .25);
+              keep = Math.min(.93, keep * (1.45 - fade * .6)); R += (40 - R) * keep; Gc += (40 - Gc) * keep; B += (44 - B) * keep; } }
           const i = (y * W + x) * 4; d[i] = R; d[i + 1] = Gc; d[i + 2] = B; d[i + 3] = 255;
-          const hv = Math.max(0, Math.min(255, 70 + h * 170)); bd[i] = bd[i + 1] = bd[i + 2] = hv; bd[i + 3] = 255;
+          const hv = Math.max(0, Math.min(255, 60 + h * 190)); bd[i] = bd[i + 1] = bd[i + 2] = hv; bd[i + 3] = 255;
         }
         g.putImageData(img, 0, 0); bg.putImageData(bim, 0, 0);
         const map = new TT.CanvasTexture(c); map.colorSpace = TT.SRGBColorSpace; map.anisotropy = 8;
@@ -134,20 +150,20 @@
       const sideM = K.mat({ map: endT, color: '#ffffff', roughness: .95 });
       const faceMat = (W, H, w, h, k, tone, ink) => { const t = wood(W, H, k, tone, ink, W / w);
         [t.map, t.bump].forEach(x => { x.repeat.set(1 / w, 1 / h); x.offset.set(.5, 0); });
-        return K.mat({ map: t.map, bumpMap: t.bump, bumpScale: 2.4, color: '#ffffff', roughness: .93 }); };
+        return K.mat({ map: t.map, bumpMap: t.bump, bumpScale: 1.4, color: '#ffffff', roughness: .93 }); };
       /* ---------- one piece: a small thick block, the sides nearly straight, the head a low rounded gable; cut by hand, worn ---------- */
       const piece = (txt, k, w, h, t, keep) => {
-        const j = () => (rnd() - .5) * .1, sh = h * (.07 + rnd() * .09), tp = .94 + rnd() * .05, S = new TT.Shape(), r = .06 + rnd() * .07, lean = j() * .8;
+        const j = () => (rnd() - .5) * .12, sh = h * (.05 + rnd() * .1), tp = .86 + rnd() * .12, S = new TT.Shape(), r = .03 + rnd() * .04, lean = (rnd() - .5) * w * .22;
         const x0 = -w / 2 + j(), x1 = w / 2 + j(), xs0 = -w / 2 * tp + j() * .5, xs1 = w / 2 * tp + j() * .5, ys0 = h - sh + j(), ys1 = h - sh + j(), ax = lean, ay = h + j() * .3;
         S.moveTo(x0 + r, j() * .3); S.lineTo(x1 - r, j() * .3); S.quadraticCurveTo(x1, 0, x1, r);
-        const bow = rnd() * .5;   // (some heads are two straight cuts, some a low arch)
+        const bow = rnd() < .45 ? 0 : rnd() * .6;   // (some heads are two straight cuts, some a low arch)
         S.lineTo(xs1, ys1 - r); S.quadraticCurveTo(xs1, ys1, xs1 - r, ys1 + sh * 2 * r / w);          // the shoulder, its corner rubbed
         S.quadraticCurveTo((xs1 + ax) / 2 + w * .05 * bow, (ys1 + ay) / 2 + sh * .35 * bow, ax + w * .05, ay - sh * .1); S.quadraticCurveTo(ax, ay, ax - w * .05, ay - sh * .1);   // the blunt head
         S.quadraticCurveTo((xs0 + ax) / 2 - w * .05 * bow, (ys0 + ay) / 2 + sh * .35 * bow, xs0 + r, ys0 + sh * 2 * r / w); S.quadraticCurveTo(xs0, ys0, xs0, ys0 - r);
         S.lineTo(x0, r); S.quadraticCurveTo(x0, 0, x0 + r, j() * .3);
-        const geo = new TT.ExtrudeGeometry(S, { depth: t - .1, bevelEnabled: true, bevelThickness: .05, bevelSize: .06, bevelSegments: 3, curveSegments: 6 });
+        const geo = new TT.ExtrudeGeometry(S, { depth: t - .1, bevelEnabled: true, bevelThickness: .035, bevelSize: .04, bevelSegments: 2, curveSegments: 5 });
         const W = 256, H = Math.round(256 * h / w), tone = rnd();
-        const ink = txt ? sheet(W, H, g => { const nC = [...txt].length, fs = Math.min(W * .86, H * .88 / nC), o = { rnd, weight: 1.15 + rnd() * .5, slant: (rnd() - .5) * .16, wet: .55 + rnd() * .5 };
+        const ink = txt ? sheet(W, H, g => { const nC = [...txt].length, fs = Math.min(W * 1.0, H * .98 / nC), o = { rnd, weight: .85 + rnd() * .8, slant: (rnd() - .5) * .2, wet: .5 + rnd() * .5 };
           SUMI.column(g, txt, W / 2 + (rnd() - .5) * W * .08, H * .5 - fs * nC * .5 + (rnd() - .3) * H * .04, fs, o); }, 1 - keep) : null;
         const m = new TT.Mesh(geo, [faceMat(W, H, w, h, k, tone, ink), sideM]); m.castShadow = m.receiveShadow = true; return m;
       };
@@ -184,7 +200,7 @@
       const order = [0, 3, 24, 1, 14, 9, 4, 22, 15, 10, 5, 17, 2, 6, 18, 11, 7, 23, 16, 20, 8, 12, 19, 25, 21, 13, 26, 27];
       rows.forEach((n, ri) => { const z = -6.6 + ri * 3.9;
         for (let c = 0; c < n; c++, k++) { const nm = P[order[k]], [w0, h0] = SZ[nm], s = .9 + rnd() * .18, w = w0 * s * (.88 + rnd() * .22), h = h0 * s, t = nm === '酔象' ? .2 : .32 + rnd() * .16;
-          const keep = nm ? .12 + rnd() * .7 : 0;
+          const kr = rnd(), keep = nm ? (kr < .3 ? .2 + rnd() * .15 : kr < .85 ? .36 + rnd() * .2 : .6 + rnd() * .2) : 0;   // (most are nearly gone, a few still read)
           const m = piece(nm, k, w, h, t, keep), x = (c - (n - 1) / 2) * 4.2 + (rnd() - .5) * 1.1 + (ri % 2 ? .8 : -.4);
           const zz = z + (rnd() - .5) * .8; if (!SP[nm || 'none']) SP[nm || 'none'] = [x, 1.3, zz + h * .5];
           lay(m, x, zz, (rnd() - .5) * .5 + (rnd() < .2 ? Math.PI * (rnd() - .5) * .6 : 0), h); } });

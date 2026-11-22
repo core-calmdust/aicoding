@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 115;
+  const V = 116;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -80,9 +80,9 @@
             .map(([k, l, d, sl]) => `<button type="button" class="expa" data-k="${k}" title="${esc(ui(lang, l))}"><svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg><span>${esc(ui(lang, sl || l))}</span></button>`).join('')}</div></div>` : ''}
         <div class="exscale" aria-hidden="true" dir="ltr"><i></i><span>10 cm</span></div>
         <p class="exhint">${esc(ui(lang, phone() ? 'hintT' : 'hint'))}</p>
-        <div class="exbtns"><button type="button" class="exb" data-k="spin" aria-label="${esc(ui(lang, 'spin'))}" title="${esc(ui(lang, 'spin'))}"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg></button>${B0 && B0.flip ? `<button type="button" class="exb" data-k="flip" aria-label="${esc(ui(lang, 'flip'))}" title="${esc(ui(lang, 'flip'))}"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></button>` : ''}<button type="button" class="exb" data-k="reset" aria-label="${esc(ui(lang, 'reset'))}" title="${esc(ui(lang, 'reset'))}"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
+        <div class="exbtns"><button type="button" class="exb" data-k="spin" aria-label="${esc(ui(lang, 'spin'))}" title="${esc(ui(lang, 'spin'))}"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4.5h-4.5"/></svg></button>${B0 && B0.flip ? `<button type="button" class="exb" data-k="flip" aria-label="${esc(ui(lang, 'flip'))}" title="${esc(ui(lang, 'flip'))}"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></button>` : ''}<button type="button" class="exb" data-k="reset" aria-label="${esc(ui(lang, 'reset'))}" title="${esc(ui(lang, 'reset'))}"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button type="button" class="exb" data-k="wide" aria-label="${esc(ui(lang, 'wide'))}" title="${esc(ui(lang, 'wide'))}"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path class="pc" d="M14.5 4.5v15"/><path class="sp" d="M3.5 13.5h17"/></svg></button></div>
         <p class="exload">${esc(ui(lang, 'loading'))}</p></div>
-      <aside class="exinfo"><button type="button" class="exclose" aria-label="${esc(ui(lang, 'close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <aside class="exinfo"><div class="exgrab" aria-hidden="true"><i></i></div><button type="button" class="exclose" aria-label="${esc(ui(lang, 'close'))}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         <div class="exscroll"><small class="exkind">${esc(ui(lang, 'collection'))}${e.lock ? ` · ${esc(ui(lang, 'special'))}` : ''}</small><h2>${esc(t.name || id)}</h2>${t.alt ? `<p class="exalt">${esc(t.alt)}</p>` : ''}${PLAY[id] ? `<button type="button" class="excfg" data-k="pcfg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span>${esc(ui(lang, 'p_start'))}</span><small>${esc(ui(lang, 'play_' + id))}</small></button>` : ''}
         <dl class="exfacts">${[['date', t.date], ['where', t.found], ['museum', t.museum ? t.museum + (t.no ? `（${t.no}）` : '') : ''], ['mat', t.mat], ['size', t.size]].filter(r => r[1]).map(([k, v]) => `<dt>${esc(ui(lang, k))}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
         ${(t.p || []).map(p => `<p class="exp">${esc(p)}</p>`).join('')}
@@ -139,12 +139,29 @@
             playing(!!ok); }); }; } }
     const pb = ov.querySelector('.amplay'); if (pb) pb.onclick = () => { close(); setTimeout(() => ctx.open(g.id, null), 280); };
     V3 = { ov, e, close, spin: true };
-    const onKey = ev => { if (ev.key === 'Escape') { ev.preventDefault(); if (ov.quitPlay && ov.classList.contains('exv-play')) ov.quitPlay(); else close(); return; }
+    const onKey = ev => { if ((ev.key === 'w' || ev.key === 'W') && !ev.repeat && !ev.ctrlKey && !ev.metaKey && !ev.altKey && !ov.classList.contains('exv-play')) { const b = ov.querySelector('[data-k="wide"]'); if (b) b.click(); return; }
+      if (ev.key === 'Escape') { ev.preventDefault(); if (ov.quitPlay && ov.classList.contains('exv-play')) ov.quitPlay(); else close(); return; }
       // (2026-11-21) I: the 3D debug panel for the piece on show (the room's own panel — table3d.js — stays out of it: stopPropagation)
       if ((ev.key === 'i' || ev.key === 'I') && !ev.repeat && !ev.ctrlKey && !ev.metaKey && !ev.altKey && !(ev.target && ev.target.closest && ev.target.closest('input,textarea,select,[contenteditable]'))) { ev.stopPropagation(); dbgToggle(); } };
     document.addEventListener('keydown', onKey); V3.offKey = () => document.removeEventListener('keydown', onKey);
     ov.querySelectorAll('.exlook [data-n]').forEach(b => b.onclick = () => focusSpot(+b.dataset.n));
     ov.querySelector('[data-k="reset"]').onclick = () => { if (V3 && V3.home) { V3.spin = false; tween(V3.home); } };
+    /* the texts can be put away so the piece fills the case (2026-11-23): on a computer the panel folds to the side (the button at the bottom
+       right, or the W key); on a phone the sheet is dragged by its grip — down to a strip with the title, up to nearly the whole screen — or
+       toggled with the same button. The case really changes size (the layout's own rows / columns), but not while the grip is being dragged. */
+    { const info = ov.querySelector('.exinfo'), grab = ov.querySelector('.exgrab'), wb = ov.querySelector('[data-k="wide"]'), stage = ov.querySelector('.exstage');
+      const sheet = () => getComputedStyle(grab).display !== 'none';   // (the phone layout: the texts under the case)
+      const setSt = st => { ov.dataset.st = st; wb.classList.toggle('on', st === 'big'); ov.style.removeProperty('--sth'); };
+      wb.onclick = () => setSt(ov.dataset.st === 'big' ? '' : 'big');
+      let d = null;
+      grab.onpointerdown = ev => { if (!sheet()) return; grab.setPointerCapture(ev.pointerId); const cv = stage.querySelector('canvas'); d = { y: ev.clientY, h: stage.clientHeight, moved: 0 };
+        if (V3) V3.hold = true; cv.style.height = d.h + 'px'; cv.style.bottom = 'auto'; ov.classList.add('exv-drag'); };
+      grab.onpointermove = ev => { if (!d) return; const dy = ev.clientY - d.y; d.moved = Math.max(d.moved, Math.abs(dy)); ov.style.setProperty('--sth', Math.max(60, Math.min(ov.clientHeight - 84, d.h + dy)) + 'px'); };
+      const up = ev => { if (!d) return; const H = ov.clientHeight, h = stage.clientHeight, was = ov.dataset.st || '', tap = d.moved < 6; d = null; ov.classList.remove('exv-drag');
+        const cv = stage.querySelector('canvas'); cv.style.height = ''; cv.style.bottom = '';
+        setSt(tap ? (was === 'big' ? '' : was === 'text' ? '' : 'big') : h > H * .68 ? 'big' : h < H * .36 ? 'text' : '');
+        if (V3) { V3.hold = false; if (V3.resize) requestAnimationFrame(V3.resize); } };
+      grab.onpointerup = up; grab.onpointercancel = up; }
     ov.querySelector('[data-k="spin"]').onclick = () => { if (!V3) return; V3.spin = !V3.spin; ov.querySelector('[data-k="spin"]').classList.toggle('on', V3.spin); go(); };
     ov.querySelector('[data-k="spin"]').classList.add('on');
     const fb = ov.querySelector('[data-k="flip"]'); if (fb) fb.onclick = () => { if (!V3 || !V3.flip) return; V3.flip.to = V3.flip.to ? 0 : 1; fb.classList.toggle('on', !!V3.flip.to); go(); };
@@ -167,6 +184,7 @@
     R.setPixelRatio(Math.min(devicePixelRatio || 1, phone() ? 1.5 : 2));
     R.outputColorSpace = TT.SRGBColorSpace; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = .85;   // (.98 blew out ivory and pale wood on phones)
     R.shadowMap.enabled = true; R.shadowMap.type = TT.PCFSoftShadowMap; R.shadowMap.autoUpdate = false;
+    if (R.debug && !DBG.on) R.debug.checkShaderErrors = false;   // (asking the driver for each program's log waits for its compile: 0.1–0.2 s when a case opens)
     const scene = new TT.Scene(), env = envMap(R, TT); scene.environment = env.texture;
     let obj; try { obj = B.build(TT, X, kit); } catch (err) { console.warn('[gallery]', err); ov.querySelector('.exload').textContent = ui(lang, 'fail'); R.dispose(); return; }
     const aniso = R.capabilities.getMaxAnisotropy();
@@ -202,8 +220,12 @@
     const [yaw0, pit0, df] = e.view || [-.5, .6, 1];
     const fitD = () => { const a = cam.aspect, vf = cam.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * a); return r * 1.32 / Math.sin(Math.min(vf, hf) / 2); };
     Object.assign(V3, { slow: phone(), R, scene, cam, obj, pivot, py: sz.y / 2, flip: B.flip ? { t: 0, to: 0 } : null, env, tgt, r, e, sph: { yaw: yaw0, pit: pit0, d: 0 }, vel: { yaw: 0, pit: 0 }, home: null, raf: 0, need: 2, last: 0, plinth, fitD, df });
-    const resize = () => { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); if (!V3.sph.d) V3.sph.d = fitD() * df; V3.home = { yaw: yaw0, pit: pit0, d: fitD() * df }; go(); };
-    V3.ro = new ResizeObserver(resize); V3.ro.observe(stage); resize();
+    let rw = 0, rh = 0;
+    const resize = () => { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h || V3.hold || (w === rw && h === rh)) return; rw = w; rh = h; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); const nd = fitD() * df;
+      // (the case grew or shrank — the texts were put away or brought back: the piece keeps its share of the picture)
+      if (!V3.sph.d) V3.sph.d = nd; else if (V3.fit0 && !ov.classList.contains('exv-play') && !V3.fitP) { V3.tw = null; V3.sph.d *= nd / V3.fit0; }
+      V3.fit0 = nd; V3.fitP = ov.classList.contains('exv-play');   /* (a game sets its own view, and gives the old one back when it ends) */ if (!ov.classList.contains('exv-play')) V3.home = { yaw: yaw0, pit: pit0, d: nd }; go(); };
+    V3.resize = resize; V3.ro = new ResizeObserver(resize); V3.ro.observe(stage); resize();
     // spots: the numbered details (model coordinates; the piece was moved onto the plinth, so add its offset)
     V3.spots = (e.spots || obj.userData.spots || []).map(p => new TT.Vector3(p[0], p[1], p[2]));   // (model coordinates: placed through the piece's matrix each frame)
     const sl = ov.querySelector('.exspots'); sl.innerHTML = V3.spots.map((_, i) => `<button type="button" class="exspot" data-n="${i}">${i + 1}</button>`).join('');
@@ -241,6 +263,7 @@
   function teardown() {
     if (!V3) return;
     cancelAnimationFrame(V3.raf); if (V3.ro) V3.ro.disconnect(); if (V3.offKey) V3.offKey(); if (V3.offIn) V3.offIn();
+    if (V3.obj && V3.obj.userData.dispose) { try { V3.obj.userData.dispose(); } catch (x) {} }
     if (V3.scene) V3.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); const m = o.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(x => { for (const k in x) { const v = x[k]; if (v && v.isTexture) v.dispose(); } x.dispose(); }); });
     if (DBG.el) DBG.el.hidden = true;
     if (V3.env) V3.env.dispose();

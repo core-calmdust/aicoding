@@ -185,13 +185,17 @@ html.skdark .trsub,html.skdark .trlegend{color:rgba(255,255,255,.8)}
 html.skdark .gxsub{color:rgba(255,255,255,.8)}
 /* the viewer: a dark gallery case over the page */
 html.exv-open{overflow:hidden}
-.exv{position:fixed;inset:0;z-index:120;display:grid;grid-template-columns:minmax(0,1fr) 420px;background:radial-gradient(70% 90% at 38% 42%,#3b2a1d 0%,#1d140e 58%,#0f0a07 100%);opacity:0;transition:opacity .25s;color:#f5ead6}
+.exv{position:fixed;inset:0;z-index:120;display:grid;grid-template-columns:minmax(0,1fr) var(--exw,420px);transition:opacity .25s,grid-template-columns .28s;background:radial-gradient(70% 90% at 38% 42%,#3b2a1d 0%,#1d140e 58%,#0f0a07 100%);opacity:0;transition:opacity .25s;color:#f5ead6}
 .exv.on{opacity:1}
 .exstage{position:relative;overflow:hidden;touch-action:none;cursor:grab}
 .exstage:active{cursor:grabbing}
 .exstage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .exspots{position:absolute;inset:0;pointer-events:none}
-.exspot{position:absolute;left:-15px;top:-15px;width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:rgba(25,18,12,.62);color:#fff;font:700 14px/1 var(--round);display:grid;place-items:center;pointer-events:auto;cursor:pointer;
+/* (the number sits above its point, on a short stem with a dot at the point itself: the detail under it stays in view — 2026-11-23) */
+.exspot::before{content:"";position:absolute;left:50%;top:100%;width:2px;height:20px;margin-left:-1px;background:linear-gradient(rgba(255,255,255,.9),rgba(255,255,255,.55));pointer-events:none}
+.exspot::after{content:"";position:absolute;left:50%;top:calc(100% + 17px);width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(25,18,12,.55);pointer-events:none}
+.exspot.on::after{background:#ffd98a}
+.exspot{position:absolute;left:-15px;top:-52px;width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:rgba(25,18,12,.62);color:#fff;font:700 14px/1 var(--round);display:grid;place-items:center;pointer-events:auto;cursor:pointer;
   box-shadow:0 0 0 4px rgba(255,214,140,.18),0 4px 10px rgba(0,0,0,.4);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);transition:opacity .2s,background .2s}
 .exspot.on,.exspot:hover{background:#e0a440;border-color:#fff3dc}
 .exscale{position:absolute;left:24px;bottom:22px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;font:700 12px var(--round);color:rgba(245,234,214,.8);pointer-events:none}
@@ -229,10 +233,28 @@ html.exv-open{overflow:hidden}
 .exsrc a{color:#9a6a32;font-weight:700}
 .exacts{margin-top:22px}
 .exacts .amplay{width:100%}
+/* the texts put away (the button at the bottom right / W): the case takes the whole window; the close button stays at the corner */
+.exb[data-k="wide"] .sp{display:none}
+.exgrab{display:none}
+.exv[data-st="big"]:not(.exv-play){--exw:0px}
+.exv[data-st="big"]:not(.exv-play) .exinfo{background:none;box-shadow:none}
+.exv[data-st="big"]:not(.exv-play) .exscroll{visibility:hidden}
+.exv[data-st="big"]:not(.exv-play) .exclose{background:rgba(25,18,12,.6);border-color:rgba(255,255,255,.35);color:#fff;box-shadow:none}
+.exinfo{min-width:0}.exscroll{min-width:min(420px,100vw);box-sizing:border-box}
 @media (max-width:819px){
-  .exv{grid-template-columns:1fr;grid-template-rows:minmax(0,52svh) minmax(0,1fr)}
+  .exv{grid-template-columns:1fr;grid-template-rows:minmax(0,var(--sth,52svh)) minmax(0,1fr);transition:opacity .25s,grid-template-rows .28s}
+  .exv[data-st="big"]{--sth:calc(100svh - 84px)}.exv[data-st="text"]{--sth:20svh}
+  .exv.exv-drag{transition:opacity .25s}
+  .exv[data-st="big"]:not(.exv-play) .exinfo{background:#fbf4e6;box-shadow:0 -14px 30px -16px rgba(0,0,0,.6)}
+  .exv[data-st="big"]:not(.exv-play) .exscroll{visibility:visible;overflow:hidden}
+  .exscroll{min-width:0}
+  .exb[data-k="wide"] .pc{display:none}.exb[data-k="wide"] .sp{display:inline}
+  .exgrab{display:grid;place-items:center;height:22px;flex:none;touch-action:none;cursor:grab;position:relative;z-index:1}
+  .exgrab i{width:44px;height:5px;border-radius:3px;background:#d9c7a3}
+  .exgrab::after{content:"";position:absolute;inset:-8px 0 -18px}
+  .exv-play .exgrab{display:none}
   .exinfo{box-shadow:0 -14px 30px -16px rgba(0,0,0,.6);border-radius:22px 22px 0 0;margin-top:-18px}
-  .exscroll{padding:20px 18px calc(24px + env(safe-area-inset-bottom))}
+  .exscroll{padding:4px 18px calc(24px + env(safe-area-inset-bottom))}
   .exinfo h2{font-size:21px}
   .exp{font-size:14px;line-height:1.75}
   .exhint{display:none}
@@ -325,11 +347,13 @@ html.exv-open{overflow:hidden}
 .exhud button:disabled{opacity:.35;cursor:default}
 @media (max-width:819px){.exhud{left:10px;right:58px;transform:none;margin:0 auto;width:fit-content;max-width:none;gap:4px;padding:4px 5px;font-size:12.5px}.exhud .hs{padding:4px 8px;gap:4px}.exhud .hs b{font-size:13px}.exhud .hm{padding:0 3px}.exhud button{padding:0 12px!important}}   /* (phones: clear of the close button at the top right) */
 .exv-play .exspots,.exv-play .exhint{display:none!important}
-.exv-play .exbtns [data-k="spin"],.exv-play .exbtns [data-k="reset"],.exv-play .exbtns [data-k="flip"]{display:none!important}
+.exv-play .exbtns [data-k="spin"],.exv-play .exbtns [data-k="reset"],.exv-play .exbtns [data-k="flip"],.exv-play .exbtns [data-k="wide"]{display:none!important}
 /* phones held sideways (2026-11-23): the case and the texts side by side, as on a computer (a low screen leaves no room to stack them) */
 @media (max-width:1000px) and (max-height:520px) and (orientation:landscape){
   .exv:not(.exv-cfg):not(.exv-play) .expcard{display:none}.exv-cfg .exbtns,.exv-cfg .exscale,.exv-cfg .exspots{display:none}.exinfo .excfg{display:flex}
-  .exv{grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:none}
+  .exv{--exw:300px;grid-template-columns:minmax(0,1fr) var(--exw);grid-template-rows:none}
+  .exgrab{display:none}.exb[data-k="wide"] .pc{display:inline}.exb[data-k="wide"] .sp{display:none}.exscroll{min-width:300px;padding-top:20px}
+  .exv[data-st="big"]:not(.exv-play){--exw:0px}.exv[data-st="big"]:not(.exv-play) .exinfo{background:none;box-shadow:none}.exv[data-st="big"]:not(.exv-play) .exscroll{visibility:hidden}
   .exinfo{margin:0;border-radius:0;box-shadow:-20px 0 40px -20px rgba(0,0,0,.6)}
   .exv.exv-play{grid-template-columns:minmax(0,1fr) 0;grid-template-rows:none}
   .expcard{bottom:14px}.exv-play .expcard{bottom:12px}
