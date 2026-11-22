@@ -190,6 +190,41 @@ const CHECKS = {
           if (id === 'v_brandubh' && !(a.res === me)) bad(g, K, `${w}: the answer does not catch the king`);
         }); }); });
   },
+  // (2026-11-23 lesson loop) the tafl openings ('tafl/open', key = the opening's id): every line replays legally from the Copenhagen start,
+  // every practice position's best / scored moves are legal and the best is the stored top (within 15), and the kind of move the 3D guide
+  // names (atlas/lessons3d.js tfFacts → TF_WHY / TF_SHORT: a win, a capture, a piece saved, the king's own move, a corner guard, the king's
+  // room shut / widened by the counts the words give, a piece to the edge) is re-checked on the engine's board.
+  'tafl/open'() {
+    const E = require(path.join(ROOT, 'tafl/engine.js')), O = J('tafl/openings.json'), G = 'tafl/open', vm = require('vm');
+    const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), a = src.indexOf('  const TF_BLOCK'), b = src.indexOf('  const TFJ_OP');
+    const X = vm.runInNewContext(src.slice(a, b) + '\n;({ tfFacts })', {});
+    const flip = (p, s) => { const q = p.clone(); q.turn = s; q.rehash(); return q; };
+    const kingRoom = p => { if (p.king < 0) return 0; const q = flip(p, 2); return q.moves().filter(x => E.mFrom(x) === p.king).length; };
+    const anyCap = p => p.res ? 0 : Math.max(0, ...p.moves().map(r => p.clone().play(r).lastCaps.length));
+    const check = (id, w, pos, m) => {
+      if (!pos.moves().includes(m)) { bad(G, id, `${w}: not a legal move`); return; }
+      const F = X.tfFacts(E, pos, m), k = F.k, f = E.mFrom(m), t = E.mTo(m), me = pos.turn, n = pos.n, after = pos.clone().play(m), caps = after.lastCaps.length;
+      const r = Math.floor(t / n), c = t % n, cd = Math.min(...[[0, 0], [0, n - 1], [n - 1, 0], [n - 1, n - 1]].map(([y, x]) => Math.abs(r - y) + Math.abs(c - x)));
+      if (k === 'win' && after.res !== me) bad(G, id, `${w}: said to win, but the game goes on`);
+      if (k === 'cap' && !caps) bad(G, id, `${w}: said to take, but takes nothing`);
+      if (k !== 'win' && k !== 'cap' && caps) bad(G, id, `${w}: takes ${caps} but the words do not say so`);
+      if (k === 'king' && pos.at(f) !== 3) bad(G, id, `${w}: said to move the king, but moves another piece`);
+      if (k === 'block' && !(me === 1 && cd === 2)) bad(G, id, `${w}: said to guard a corner, but the square is not next to a corner's mouth`);
+      if (k === 'edge' && !(r === 0 || c === 0 || r === n - 1 || c === n - 1)) bad(G, id, `${w}: said to go to the edge, but does not`);
+      if (k === 'save' && !(anyCap(flip(pos, 3 - me)) && !anyCap(after))) bad(G, id, `${w}: said to save a threatened piece, but nothing was threatened or it still is`);
+      const k0 = kingRoom(pos), k1 = kingRoom(after);
+      if (F.km0 !== k0 || F.km1 !== k1) bad(G, id, `${w}: the king's room ${F.km0}→${F.km1} in the words, ${k0}→${k1} on the board`);
+      if (k === 'shut' && !(k1 < k0 - 1)) bad(G, id, `${w}: said to shut the king in, but its room goes ${k0}→${k1}`);
+      if (k === 'widen' && !(k1 > k0)) bad(G, id, `${w}: said to widen the king's room, but it goes ${k0}→${k1}`);
+    };
+    O.sets.forEach(st => { const K = st.id; let p = E.Pos.from({ v: 'copenhagen', b: E.START.copenhagen, side: 1 }, 'copenhagen');
+      st.study.line.forEach((m, i) => { if (!p.moves().includes(m)) { bad(G, K, `move ${i + 1}: not legal`); return; } if ((st.study.notes || [])[i]) check(K, `move ${i + 1}`, p, m); p = p.clone().play(m); });
+      (st.problems || []).forEach((P, j) => { const q = E.Pos.from(P.s), legal = new Set(q.moves()), w = `problem ${j + 1}`;
+        if (!legal.has(P.best)) { bad(G, K, `${w}: the best move is not legal`); return; }
+        (P.sc || []).forEach(([m]) => { if (!legal.has(m)) bad(G, K, `${w}: a scored move is not legal`); });
+        const top = Math.max(...(P.sc || [[0, 0]]).map(e => e[1])), bs = (P.sc || []).find(e => e[0] === P.best); if (bs && bs[1] < top - 15) bad(G, K, `${w}: the best move is not the top value`);
+        check(K, w, q, P.best); }); });
+  },
   // (2026-11-22 lesson loop) the mancala lessons ('mancala', key = the step's index in mancala/lessons.json): a scored pit is exactly a
   // pit with seeds (sc null ⇔ empty), the gold pit (best) is legal and the top of the stored values; 種まき (sow): the gold pit's last seed
   // lands on the target and the count the words use (種の数 vs 目標までの距離 → 「N つ手前／先」) is what the engine's sowing does for
