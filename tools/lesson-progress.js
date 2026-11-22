@@ -2,7 +2,7 @@
 // Progress check for the 3D lessons (2026-11-22 ユーザー：チェックの問題で進行不能 — 進行チェックは必ず全問行う).
 // Opens every lesson and opening of every game on the 3D table (atlas/lessons3d.js), plays every problem with the right answer
 // and checks that the lesson goes on to the end: the intro, the warm-up (ramp), the study line, each problem, the result.
-//   node tools/lesson-progress.js [game,game…] [--kind list|open] [--key K] [--phone] [--jobs N] [--json out.json]
+//   node tools/lesson-progress.js [game,game…] [--kind list|open] [--key K[,K…]] [--phone] [--jobs N] [--json out.json]
 // Before each problem it checks that the board takes the player's move (chess: the answer's squares are tapped on the screen
 // like a player would — the adapter must have the move among its legal moves; other games: the adapter is not over / busy).
 // A lesson that stops (no progress for 25 s), throws, or ends short of full points is a failure. Exit code 1 if any.
@@ -126,7 +126,7 @@ async function runLesson(ctx, game, kind, key) {
           const items = await ctx.pg.evaluate(k => { try { return window.__atlasLs.items ? window.__atlasLs.items(k) : null; } catch (e) { return null; } }, kind);
           if (!items) continue;
           for (const it of items) {
-            if (ONLY_KEY != null && String(it.key) !== ONLY_KEY) continue;
+            if (ONLY_KEY != null && !ONLY_KEY.split(',').includes(String(it.key))) continue;   // (--key K1,K2…: several items)
             if (FROM != null && !ctx.from) { if (String(it.key) !== FROM) continue; ctx.from = true; }   // (--from K: start at the item K)
             let r; try { r = await runLesson(ctx, game, kind, it.key); } catch (e) { r = { game, kind, key: it.key, ok: false, fail: 'exception: ' + e.message, errors: [] }; }
             r.title = it.title; results.push(r);
