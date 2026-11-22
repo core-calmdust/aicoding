@@ -29,7 +29,7 @@ const { chromium } = require('playwright');
   console.log('dock', await p.evaluate(() => { const d = document.querySelector('#dock'), cs = getComputedStyle(d); return { pe: cs.pointerEvents, ta: cs.touchAction, sw: d.scrollWidth, cw: d.clientWidth, widths: [...d.querySelectorAll('.sk')].map(x => Math.round(x.getBoundingClientRect().width)) }; }));
   const dr = await p.evaluate(() => document.querySelector('#dock').getBoundingClientRect().top + 30);
   await touch('touchStart', [[300, dr]]); for (let k = 1; k <= 8; k++) await touch('touchMove', [[300 - k * 25, dr]]); await touch('touchEnd', []);
-  await p.waitForTimeout(500); console.log('dock scrolled', await p.evaluate(() => document.querySelector('#dock').scrollLeft));
+  await p.waitForTimeout(500); console.log('dock scrolled', await p.evaluate(() => document.querySelector('#dock').scrollLeft), '(0 is right when every skill fits)');
   // a shot still fires on a tap after a pan
   const shotsBefore = await p.evaluate(() => DN.G().st.sides[1].shots.filter(Boolean).length);
   await touch('touchStart', [[60, 300]]); for (let k = 1; k <= 5; k++) await touch('touchMove', [[60 + k * 10, 300 + k * 4]]); await touch('touchEnd', []); await p.waitForTimeout(300);
