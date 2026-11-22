@@ -416,7 +416,7 @@
 "tr": "%P1%’in az önce oynadığı taşa bak. Hemen üstü neresi?"
 },
 "follow/2/h": {
-"ja": "%P1%が最後に置いた石を見よう。そのすぐ上はどこ？",
+"ja": "今度も、%P1%が置いたばかりの石に注目！ その真上に置いて大丈夫かな？",
 "en": "Look at the disc %P1% just played. What is right above it?",
 "zh": "看看%P1%刚下的那颗棋子。它正上方是哪里？",
 "zh-TW": "看看%P1%剛下的那顆棋子。它正上方是哪裡？",
