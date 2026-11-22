@@ -515,7 +515,7 @@
   (function ctlH() { const c = document.querySelector('.card.controls'); if (!c || !window.ResizeObserver) return;
     // (hidden — a puzzle or a lesson hides the menu bar: no room kept for it, or the page starts low with an empty band above the
     //  card, 2026-11-11 the user on 詰将棋)
-    const set = () => { const h = c.offsetHeight; document.documentElement.style.setProperty('--ctlh', (h || (getComputedStyle(c).display === 'none' ? 0 : 64)) + 'px'); }; new ResizeObserver(set).observe(c); set(); })();
+    const set = () => { const h = c.offsetHeight; document.documentElement.style.setProperty('--ctlh', (h || (getComputedStyle(c).display === 'none' ? 0 : 64)) + 'px'); document.documentElement.classList.toggle('ctl-on', h > 0); };   /* (ctl-on: the bar is shown — phones drop the portal bar's bottom line above it, skin.css) */ new ResizeObserver(set).observe(c); set(); })();
   /* ---------- opened from the portal with a level / side: start right away ---------- */
   (function autoStart() {
     const q = new URLSearchParams(location.search), lv = +q.get('lv'), side = +q.get('side'), mode = q.get('mode') || 'ai';
