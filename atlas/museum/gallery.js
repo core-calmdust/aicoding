@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 112;
+  const V = 114;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -127,12 +127,15 @@
         const tb = AB('pturn'); if (tb) tb.onclick = () => { if (MP()) MP().turn(); };   // (a long board: lengthwise / across)
         // phones: the card stays out of the way until the play button at the top of the texts asks for it (tapping it again puts it away)
         const cfg = ov.querySelector('[data-k="pcfg"]'); if (cfg) cfg.onclick = () => { const on = !ov.classList.contains('exv-cfg'); ov.classList.toggle('exv-cfg', on); cfg.classList.toggle('on', on); };
-        const playing = on => { ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); ov.classList.toggle('exv-play', on); pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
+        const playing = on => { { const rb = ov.querySelector('.exres'); if (rb) rb.remove(); } ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); ov.classList.toggle('exv-play', on); pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
         ov.quitPlay = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); };
         pb.onclick = () => { if (!V3 || !V3.obj) return; pb.disabled = true;
           try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
           Promise.all([load('museum/play.js?v=' + V), window.AtlasLazy ? AtlasLazy.need(P.game) : 0]).then(() => { pb.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
-            const ok = AtlasMuseumPlay.start(id, { level: +lvS.dataset.v, side: +sdS.dataset.v, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { hudEl.innerHTML = `<span class="hm">${esc(res.draw ? ui(lang, 'p_draw') : res.win ? ui(lang, 'p_win') : ui(lang, 'p_lose'))}</span>`; } });
+            const ok = AtlasMuseumPlay.start(id, { level: +lvS.dataset.v, side: +sdS.dataset.v, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { const k = res.draw ? 'draw' : res.win ? 'win' : 'lose', tx = ui(lang, 'p_' + k); hudEl.innerHTML = `<span class="hm">${esc(tx)}</span>`;
+              // the result in the middle of the case (a plaque in the museum's manner), gone at a tap or when the game is left
+              const old = ov.querySelector('.exres'); if (old) old.remove(); const rb = document.createElement('div'); rb.className = 'exres ' + k; rb.innerHTML = `<b>${esc(tx)}</b>`;
+              rb.onclick = () => rb.remove(); ov.querySelector('.exstage').appendChild(rb); requestAnimationFrame(() => rb.classList.add('on')); } });
             playing(!!ok); }); }; } }
     const pb = ov.querySelector('.amplay'); if (pb) pb.onclick = () => { close(); setTimeout(() => ctx.open(g.id, null), 280); };
     V3 = { ov, e, close, spin: true };
@@ -198,7 +201,7 @@
     // the start view: [yaw, pitch, distance factor]
     const [yaw0, pit0, df] = e.view || [-.5, .6, 1];
     const fitD = () => { const a = cam.aspect, vf = cam.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * a); return r * 1.32 / Math.sin(Math.min(vf, hf) / 2); };
-    Object.assign(V3, { R, scene, cam, obj, pivot, py: sz.y / 2, flip: B.flip ? { t: 0, to: 0 } : null, env, tgt, r, e, sph: { yaw: yaw0, pit: pit0, d: 0 }, vel: { yaw: 0, pit: 0 }, home: null, raf: 0, need: 2, last: 0, plinth, fitD, df });
+    Object.assign(V3, { slow: phone(), R, scene, cam, obj, pivot, py: sz.y / 2, flip: B.flip ? { t: 0, to: 0 } : null, env, tgt, r, e, sph: { yaw: yaw0, pit: pit0, d: 0 }, vel: { yaw: 0, pit: 0 }, home: null, raf: 0, need: 2, last: 0, plinth, fitD, df });
     const resize = () => { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); if (!V3.sph.d) V3.sph.d = fitD() * df; V3.home = { yaw: yaw0, pit: pit0, d: fitD() * df }; go(); };
     V3.ro = new ResizeObserver(resize); V3.ro.observe(stage); resize();
     // spots: the numbered details (model coordinates; the piece was moved onto the plinth, so add its offset)
@@ -303,6 +306,9 @@
       V3.pivot.rotation.z = Math.PI * k; V3.pivot.position.y = V3.py + Math.sin(Math.PI * F.t) * V3.r * .5; V3.R.shadowMap.needsUpdate = true; moving = true;
     }
     S.pit = Math.max(.08, Math.min(V3.pitMax || 1.35, S.pit));   // (pitMax: a game looks straight down on its board, museum/play.js)
+    // phones (battery): the slow things — the case turning by itself, a game's pulsing marks and moving pieces — are drawn at 30 frames a second; a finger, a zoom, a camera move stay at full rate
+    if (V3.slow && !V3.tw && !V3.drag && now - (V3.drawn || 0) < 30) { V3.raf = requestAnimationFrame(frame); return; }
+    V3.drawn = now;
     const c = V3.cam, t = V3.tgt; c.position.set(t.x + S.d * Math.cos(S.pit) * Math.sin(S.yaw), t.y + S.d * Math.sin(S.pit), t.z + S.d * Math.cos(S.pit) * Math.cos(S.yaw)); c.lookAt(t);
     V3.R.render(V3.scene, c);
     if (DBG.on) dbgTick(now);

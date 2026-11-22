@@ -86,13 +86,13 @@
     /* ---------- marks ---------- */
     const MG = new TH.Group(); B.add(MG);
     const basic = (c, op) => new TH.MeshBasicMaterial({ color: c, transparent: true, opacity: op, toneMapped: false, depthWrite: false });
-    const RING = new TH.TorusGeometry(.95, .09, 8, 36); RING.rotateX(Math.PI / 2);
-    const DISC = new TH.CircleGeometry(.8, 28); DISC.rotateX(-Math.PI / 2);
+    const RING = new TH.TorusGeometry(1.45, .11, 8, 40); RING.rotateX(Math.PI / 2);
+    const DISC = new TH.CircleGeometry(1.2, 32); DISC.rotateX(-Math.PI / 2);
     const MAT = { can: basic(0xffd65a, .95), sel: basic(0x3df59a, .95), dest: basic(0x3df59a, .55), hit: basic(0xff5d5d, .6), last: basic(0xffd65a, .35) };
     const clearMarks = () => { while (MG.children.length) MG.remove(MG.children[0]); T3.kick(120); };
     const topOf = from => { const a = from === 0 ? bars[st.turn] : stacks[from]; return a.length ? a[a.length - 1].position : null; };
-    function ring(from, mat) { const p = topOf(from); if (!p) return; const m = new TH.Mesh(RING, mat); m.position.set(p.x, p.y + .45, p.z); m.renderOrder = 3; MG.add(m); }
-    function disc(to, hit) { const k = hit ? 0 : stacks[to].length, [x, y, z] = U.slot(to, k); const m = new TH.Mesh(DISC, hit ? MAT.hit : MAT.dest); m.position.set(x, (hit ? y + .8 : U.top) + .03, z); m.renderOrder = 2; MG.add(m); }
+    function ring(from, mat) { const p = topOf(from); if (!p) return; const m = new TH.Mesh(RING, mat); m.position.set(p.x, p.y + .5, p.z); m.renderOrder = 3; MG.add(m); }
+    function disc(to, hit) { const k = hit ? 0 : stacks[to].length, [x, y, z] = U.slot(to, k); const m = new TH.Mesh(DISC, hit ? MAT.hit : MAT.dest); m.position.set(x, (hit ? y + 1.0 : U.top) + .03, z); m.renderOrder = 2; MG.add(m); }
     const options = () => { const k = taken.length, seen = new Map(); for (const q of seqs) { if (q.steps.length <= k) continue; if (!taken.every((s, i) => q.steps[i].from === s.from && q.steps[i].to === s.to)) continue; const s = q.steps[k]; seen.set(s.from + ':' + s.to, s); } return [...seen.values()]; };
     function showMarks() {
       clearMarks(); if (phase !== 'move' || st.turn !== 0) return;
