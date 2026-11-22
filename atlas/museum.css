@@ -448,3 +448,9 @@ html.exv-rot .exv .npc-float{left:160px!important;top:50%;bottom:auto!important;
 @keyframes exddUp{from{transform:translateY(30px);opacity:0}}
 .expdd-bk{position:fixed;inset:0;z-index:39;background:rgba(0,0,0,.45)}   /* (phones: the level list as a sheet from the bottom) */
 .expdd-l{text-align:start}.expdd-boss div{align-items:flex-start;text-align:start}.expdd-sec{text-align:start}
+/* 2026-11-23: during a game or a rules course the texts are put away on PC too (the case takes the whole width; the close button stays) */
+.exv.exv-play{--exw:0px}
+.exv-play .exinfo{background:none;box-shadow:none}.exv-play .exscroll{visibility:hidden}
+.exv-play .exclose{background:rgba(25,18,12,.6);border-color:rgba(255,255,255,.35);color:#fff;box-shadow:none}
+/* PC (a mouse, a wide window): no lengthwise / across button — the board lies across */
+@media (min-width:900px) and (not (pointer:coarse)){.expa[data-k="pturn"]{display:none!important}}
