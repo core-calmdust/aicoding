@@ -89,8 +89,8 @@ function cellXZ(z, cell) { return [ZC[z][0] - 5 + (cell % N) + .5, ZC[z][1] - 5 
 function init(canvas, opts) {
   T = window.THREE; opts = opts || {};
   const mobile = matchMedia('(pointer:coarse)').matches || Math.min(screen.width, screen.height) < 700;
-  const R = new T.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  const prMax = Math.min(devicePixelRatio || 1, mobile ? 1.5 : 1.75); R.setPixelRatio(prMax); R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = 1.05;
+  const R = new T.WebGLRenderer({ canvas, antialias: true, powerPreference: mobile ? 'low-power' : 'high-performance' });
+  const prMax = Math.min(devicePixelRatio || 1, mobile ? 1.3 : 1.75); R.setPixelRatio(prMax); R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = 1.05;
   R.shadowMap.enabled = true; R.shadowMap.type = T.PCFShadowMap;
   const scene = new T.Scene(), cam = new T.PerspectiveCamera(30, 1, .1, 1500);
   const sunDir = new T.Vector3(-.42, .3, -.86).normalize(), uniSky = { uSun: { value: sunDir }, uTime: { value: 0 } };
@@ -98,7 +98,7 @@ function init(canvas, opts) {
   const sky = new T.Mesh(new T.SphereGeometry(700, 48, 24), skyMat); sky.frustumCulled = false; scene.add(sky);
   const pm = new T.PMREMGenerator(R), envScene = new T.Scene(); envScene.add(new T.Mesh(new T.SphereGeometry(10, 48, 24), new T.ShaderMaterial({ uniforms: uniSky, side: T.BackSide, vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }', fragmentShader: GLSL_SKY + 'uniform float uTime; varying vec3 vD; void main(){ gl_FragColor = vec4(skyCol(normalize(vD), 0.), 1.); }' })));
   const envTex = pm.fromScene(envScene, .01).texture; scene.environment = envTex; scene.environmentIntensity = .9;
-  const sun = new T.DirectionalLight(0xffd2a0, 2.5); scene.add(sun, sun.target); sun.castShadow = true; sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
+  const sun = new T.DirectionalLight(0xffd2a0, 2.5); scene.add(sun, sun.target); sun.castShadow = !mobile; sun.shadow.mapSize.set(2048, 2048); R.shadowMap.enabled = !mobile;   // (phones: no shadow pass — the hulls' contact shade on the sea stays)
   const sc = sun.shadow.camera; sc.left = -8; sc.right = 8; sc.top = 8; sc.bottom = -8; sc.near = 5; sc.far = 70; sun.shadow.bias = -.0006; sun.shadow.normalBias = .02;
   scene.add(new T.HemisphereLight(0xb4c8dc, 0x1a2a33, 1.05));
   const fill = new T.DirectionalLight(0x8fb2d6, .35); fill.position.set(6, 8, 14); scene.add(fill);
@@ -122,6 +122,7 @@ function init(canvas, opts) {
     ships: [new Map(), new Map()], proto: new Map(), emitters: [[], []], floats: [[], []], sailing: [], rip: 0, t: 0, last: performance.now(), shake: 0, o: [null, null], kind: null,
     pose: null, anim: null, safe: opts.safe || (() => ({ x: 0, y: 0, w: innerWidth, h: innerHeight })) };
   addEventListener('resize', () => fit()); fit();
+  for (const ev of ['pointerdown', 'pointermove', 'keydown', 'wheel']) addEventListener(ev, () => { V.input = performance.now(); }, { passive: true, capture: true });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { V.last = performance.now(); loop(); } });
   loop();
   return V;
@@ -285,8 +286,15 @@ function loop() {
   if (!V || V.raf) return;
   const step = () => {
     V.raf = 0; if (document.hidden) return;
-    if (V.throttle && (V.skip = !V.skip)) { loop(); return; }   // (a full sheet covers the sea: half the frames)
-    const now = performance.now(), dt = Math.min(.05, (now - V.last) / 1000); V.last = now; V.t += dt; V.uni.uTime.value = V.t;
+    if (V.paused) return;   // (an opaque sheet covers the whole sea: draw nothing until it closes)
+    // frame pacing (battery): full rate only while something moves — a camera flight, a shot, a shake, a drag; otherwise
+    // phones draw 30 fps (20 after a while without a touch), desktops 60 (30 when idle), and half that under a sheet
+    const now = performance.now(), busy = V.anim || V.shake > 0 || now < (V.burst || 0) || now - (V.input || 0) < 1500;
+    let fps = busy ? 60 : V.mobile ? (now - (V.input || 0) > 20000 ? 20 : 30) : (now - (V.input || 0) > 30000 ? 30 : 60);
+    if (V.throttle) fps = Math.min(fps, 30); V.cap = fps;
+    if (fps < 60 && now - (V.drawn || 0) < 1000 / fps - 4) { loop(); return; }
+    V.drawn = now;
+    const dt = Math.min(.05, (now - V.last) / 1000); V.last = now; V.t += dt; V.uni.uTime.value = V.t;
     V.shake = Math.max(0, V.shake - dt * 2.2);
     stepCamera(now);
     for (let z = 0; z < 2; z++) for (const s of V.ships[z].values()) rideShip(s, dt);
@@ -299,7 +307,7 @@ function loop() {
     const r0 = performance.now(); V.R.render(V.scene, V.cam); V.cpu = (V.cpu || 0) * .9 + (performance.now() - r0) * .1; V.frameMs = (V.frameMs || 16) * .9 + dt * 1000 * .1;
     if (DBG.on) dbgTick(now);
     // keep the frame rate: every second, step the pixel ratio down when frames run long (under ~50 fps) and back up after a calm spell
-    V.fc = (V.fc || 0) + 1; V.acc = (V.acc || 0) + dt; V.n = (V.n || 0) + 1;
+    V.fc = (V.fc || 0) + 1; if (V.cap >= 60) { V.acc = (V.acc || 0) + dt; V.n = (V.n || 0) + 1; }
     if (V.acc > 1) { const ms = V.acc / V.n * 1000, pr = V.R.getPixelRatio(); V.acc = V.n = 0;
       if (ms > 20.5 && pr > .7 && !V.throttle) { V.R.setPixelRatio(Math.max(.7, pr - .15)); V.good = 0; fit(); }
       else if (ms < 17.8 && pr < V.prMax && ++V.good >= 4) { V.R.setPixelRatio(Math.min(V.prMax, pr + .1)); V.good = 0; fit(); } }
@@ -418,6 +426,7 @@ function shipUnder(z, cell) { const o = V.o[z]; if (!o || !o.ships) return false
 function ripple(x, z, strength) { V.uni.uRip.value[V.rip++ % 10].set(x, z, V.t, strength); }
 // fire at zone z: shells come from the other zone's side (we fire from the near side at theirs, they fire from beyond at ours)
 function fx(z, cell, hit, fast) {
+  V.burst = performance.now() + 3000;
   if (V.kind === 'torp') return torpedo(z, cell, hit);
   if (V.kind === 'depth') return depthCharge(z, cell, hit);
   const [x, zz] = cellXZ(z, cell), dur = fast ? .5 : .9, air = V.kind === 'air', rk = V.kind === 'rocket';
@@ -434,6 +443,7 @@ function fx(z, cell, hit, fast) {
     if (u < 1) return requestAnimationFrame(tick); impact(to, hit); res(); }; tick(); });
 }
 function impact(p, hit) {
+  V.burst = performance.now() + 3000;
   const x = p.x, z = p.z;
   if (hit === 'fog') { for (let i = 0; i < 14; i++) emit(V.smoke, { p: [x, p.y + .05, z], v: [(Math.random() - .5) * .8, .2 + Math.random() * .3, (Math.random() - .5) * .8], life: 1.6, size0: .3, size1: 1, c0: [.62, .64, .66, .55], c1: [.62, .64, .66, 0], drag: .05 }); ripple(x, z, .6); return; }
   if (hit) {
@@ -536,7 +546,7 @@ function dbgPaint() {
     ['render (cpu)', (V.cpu || 0).toFixed(2) + ' ms'],
     ['canvas', `${Math.round(sz.x)}×${Math.round(sz.y)} @${R.getPixelRatio().toFixed(2)}x (max ${V.prMax.toFixed(2)}) · exp ${R.toneMappingExposure.toFixed(2)}`],
     ['camera', c ? `fov ${c.fov.toFixed(1)} · pos ${c.position.x.toFixed(1)}, ${c.position.y.toFixed(1)}, ${c.position.z.toFixed(1)}` : '-'],
-    ['throttle', V.throttle ? 'on (a sheet covers the sea)' : 'off'],
+    ['frame cap', `${V.cap || 60} fps${V.throttle ? ' (sheet)' : ''}${V.mobile ? ' · mobile' : ''}`],
     ['gpu', gpu],
   ];
   DBG.el.innerHTML = '<div class="t3dbg-h">3D DEBUG <span>I で閉じる</span></div>' + rows.map(([k, v]) => k ? `<div><i>${k}</i><span>${v}</span></div>` : '<hr>').join('');
@@ -545,5 +555,5 @@ function dbgTick(now) { DBG.fr++; if (now - DBG.t > 500) { const f = DBG.fr * 10
 function dbgToggle(on) { DBG.on = on === undefined ? !DBG.on : !!on; try { sessionStorage.setItem('t3d-debug', DBG.on ? '1' : ''); } catch (x) {} if (!DBG.on) { if (DBG.el) DBG.el.hidden = true; return; } DBG.t = performance.now(); DBG.fr = 0; DBG.n = 0; DBG.lo = 1e9; dbgPaint(); }
 addEventListener('keydown', e => { if ((e.key === 'i' || e.key === 'I') && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target && e.target.closest && e.target.closest('input,textarea,select,[contenteditable]'))) dbgToggle(); });
 
-window.World = { camPos: () => (V ? V.cam.position.toArray() : null), zoomBy: f => V && zoomBy(f), panBy: (x, y) => V && panBy(x, y), resetView, viewScale: () => (V && V.uv ? V.uv.s : 1), dbg: dbgToggle, throttle: on => { if (V) V.throttle = !!on; }, init, setZone, grids, focus, show, pose, fx, kind, sweep, shake, sail, cellAt, pointIn, aim, screenOf, portrait, portraitIf, preview, waveAt, ZC, _v: () => V, fit, refit: () => { if (V) { V.poses = null; } } };
+window.World = { pause: on => { if (!V || V.paused === !!on) return; V.paused = !!on; if (!on) { V.last = performance.now(); loop(); } }, camPos: () => (V ? V.cam.position.toArray() : null), zoomBy: f => V && zoomBy(f), panBy: (x, y) => V && panBy(x, y), resetView, viewScale: () => (V && V.uv ? V.uv.s : 1), dbg: dbgToggle, throttle: on => { if (V) V.throttle = !!on; }, init, setZone, grids, focus, show, pose, fx, kind, sweep, shake, sail, cellAt, pointIn, aim, screenOf, portrait, portraitIf, preview, waveAt, ZC, _v: () => V, fit, refit: () => { if (V) { V.poses = null; } } };
 })();

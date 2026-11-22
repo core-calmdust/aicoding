@@ -76,7 +76,8 @@ let fail = 0; const ok = (c, m) => { console.log((c ? 'ok  ' : 'NG  ') + m); if 
       const c = await p.evaluate(cells => { const sd = DN.G().st.sides[1]; return cells.find(c => !sd.shots[c] || sd.shots[c] === 1) ?? cells.find(c => sd.grid[c] >= 0 && !sd.sunk[sd.grid[c]]); }, last);
       if (c == null) break; const pt = await p.evaluate(c => DN.World.screenOf(1, c), c); await tap(pt); await p.waitForTimeout(1500); }
     await p.waitForFunction(() => !document.querySelector('#scrResult').classList.contains('hide'), null, { timeout: 30000 }).catch(() => {});
-    ok(await p.evaluate(() => DN.G().phase === 'over' && document.querySelector('#rsBig').textContent === 'VICTORY'), name + ': sinking the last ship wins'); await shot('result');
+    const fin = await p.evaluate(() => ({ ph: DN.G().phase, big: document.querySelector('#rsBig').textContent, w: DN.G().st.winner, busy: DN.G().busy, turn: DN.G().st.turn, afloat: DN.G().st.sides[1].afloat, res: !document.querySelector('#scrResult').classList.contains('hide') }));
+    ok(fin.ph === 'over' && fin.big === 'VICTORY', name + ': sinking the last ship wins' + (fin.ph === 'over' && fin.big === 'VICTORY' ? '' : ' — ' + JSON.stringify(fin))); await shot('result');
     await p.click('#rsTitle'); await p.waitForTimeout(500);
     ok(await p.evaluate(() => DN.G().phase === 'title'), name + ': back to the title');
     ok(!errs.length, name + ': no script errors' + (errs.length ? ' — ' + errs.slice(0, 3).join(' | ') : ''));
