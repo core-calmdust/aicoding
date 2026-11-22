@@ -14,6 +14,21 @@ const out = {};   // game → { lessonId: [problems found] }
 const bad = (g, id, msg) => { ((out[g] = out[g] || {})[id] = out[g][id] || []).push(msg); };
 
 const CHECKS = {
+  // (2026-11-22 lesson loop) the reversi openings ('reversi/open', key = the line's moves): every line replays legally from the start
+  // (a side with no move passes), the 3D guide's fixed words hold — the first move is f5 (「4か所どこに打っても同じ形」), the second
+  // is d6 / f6 / f4 (縦取り / 斜め取り / 並び取り) — and each practice move (the line's next move) is legal where it is asked. The
+  // numbers in the guide (flips, the opponent's moves after, openness) are counted on the board by atlas/lessons3d.js rvOpFacts.
+  'reversi/open'() {
+    const O = J('reversi/openings.json'), G = 'reversi/open', D8 = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+    const sq = m => (+m[1] - 1) * 8 + 'abcdefgh'.indexOf(m[0]);
+    const flips = (b, q, me) => { if (b[q]) return []; const o = []; for (const [dr, dc] of D8) { let r = (q >> 3) + dr, c = (q & 7) + dc; const t = [];
+      while (r >= 0 && r < 8 && c >= 0 && c < 8 && b[r * 8 + c] === 3 - me) { t.push(r * 8 + c); r += dr; c += dc; } if (t.length && r >= 0 && r < 8 && c >= 0 && c < 8 && b[r * 8 + c] === me) o.push(...t); } return o; };
+    const any = (b, me) => b.some((_, q) => flips(b, q, me).length);
+    O.sets.forEach(st => st.lines.forEach(ln => { const K = ln.moves, mv = K.match(/../g) || []; let b = Array(64).fill(0), me = 1; b[27] = b[36] = 2; b[28] = b[35] = 1;
+      if (mv[0] !== 'f5') bad(G, K, 'the first move is not f5'); if (mv[1] && !['d6', 'f6', 'f4'].includes(mv[1])) bad(G, K, 'the second move is not d6 / f6 / f4');
+      for (let i = 0; i < mv.length; i++) { if (!any(b, me)) me = 3 - me; const q = sq(mv[i]), f = flips(b, q, me);
+        if (!f.length) { bad(G, K, `move ${i + 1}: ${mv[i]} is not legal`); return; } b[q] = me; f.forEach(z => { b[z] = me; }); me = 3 - me; } }));
+  },
   // (2026-11-22 lesson loop) the gomoku openings (珠型, 'gomoku/open'): the line replays legally under renju (no forbidden black move,
   // no stone on a stone), every practice position loads, and its best answer is a legal move — not a black forbidden point, and when
   // the opponent has a four, the answer stops it (or makes five)
