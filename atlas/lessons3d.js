@@ -6373,11 +6373,35 @@
     // (2026-11-21 user) reversi: the flip counts on the first 2 problems only (1 when the lesson has only 2: EASY2) — the rest are solved without them
     const RV_NUMS = () => cur && cur.probs && cur.probs.length <= 2 ? 1 : 2, RV_SELF = { ja: 'ここからは数字なし。自分で数えて考えてみて！', en: 'From here on, no numbers: count for yourself!' };
     // one problem
+    /* a short fade between problems (2026-11-22 user: moving on looked like the same screen going on — a quick dip to dark and back
+       makes the next problem feel new): the table dims in ~140ms, the new position and words come in under it, then it clears in ~240ms */
+    let veil = null, veilT = 0;
+    function dim(on) {
+      const host = ctx.el; if (!host) return Promise.resolve();
+      const RM = matchMedia('(prefers-reduced-motion: reduce)').matches, tx = $('.tx');
+      clearTimeout(veilT);
+      if (on) {
+        if (RM) return Promise.resolve();
+        if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+        if (!veil) { veil = document.createElement('div'); veil.className = 'ls-veil'; veil.style.cssText = 'position:absolute;inset:0;background:#0b0d14;opacity:0;pointer-events:none;z-index:5;transition:opacity 140ms ease-in'; }
+        if (veil.parentNode !== host) host.appendChild(veil);
+        void veil.offsetWidth; veil.style.transition = 'opacity 140ms ease-in'; veil.style.opacity = '.72';
+        if (tx) { tx.style.transition = 'opacity 140ms ease-in'; tx.style.opacity = '0'; }
+        veilT = setTimeout(() => dim(false), 2500);   // (never left dark: a slow board load still clears)
+        return new Promise(r => setTimeout(r, 150));
+      }
+      if (veil) { veil.style.transition = 'opacity 240ms ease-out'; veil.style.opacity = '0'; const v = veil; veilT = setTimeout(() => v.remove(), 260); }
+      if (tx) { tx.style.transition = 'opacity 240ms ease-out'; tx.style.opacity = ''; }
+      return Promise.resolve();
+    }
     async function prob() {
-      phase = 'prob'; const p = cur.probs[cur.k]; if (!p) return finish();
+      const was = phase, p = cur.probs[cur.k]; if (!p) return finish();
+      const fade = was === 'prob' || was === 'ramp' || was === 'done';
+      if (fade) { phase = 'fade'; onMoved = null; autoCancel(); act(X.next, { nextOn: false }); await dim(true); if (stopped || cur.probs[cur.k] !== p || phase !== 'fade') return dim(false); }   // (the old board takes no answers while it dims, and 次へ is off — a second tap must not skip a problem)
+      phase = 'prob';
       p.hinted = false; p.used = 0; dots(); act(X.next, { nextOn: false });
       say(sideLine(p) + (id === 'reversi' && cur.k === RV_NUMS() && RV_SELF[ctx.lang] ? RV_SELF[ctx.lang] + '<br>' : '') + (p.ask || X.opGoal));
-      await board(p.pos, p.sol, p.drill); if (stopped || cur.probs[cur.k] !== p) return;   // (p.drill: a chess ★ route problem — the ★ left on the table)
+      await board(p.pos, p.sol, p.drill); if (fade) dim(false); if (stopped || cur.probs[cur.k] !== p) return;   // (p.drill: a chess ★ route problem — the ★ left on the table)
       onMoved = (u, info) => moved(p, u, info);
       if (p.marks && p.marks.length && pz().mark) pz().mark(p.marks);
       choices(p);
@@ -6634,7 +6658,7 @@
         u = u == null || u === '' ? p.ans : u; await pz().play(u); let mate = false; try { mate = p.kind === 'tsume' && (p.sol || []).length > 0 && pz().moves().length >= p.sol.length && pz().moves().every((x, i) => x === p.sol[i]); } catch (e) {} moved(p, u, { mate }); } };   // (a mate problem played along its stored line to the end: mate)   // (test hook; pit / column 0 is an answer too)
     window.__atlasLs = dbg;
     return {
-      stop() { autoCancel(); stopped = true; document.removeEventListener('keydown', onKey, true); if (window.__atlasLs === dbg) delete window.__atlasLs; clearInterval(typeT); timers.forEach(clearTimeout); if (sess) sess.stop(); sess = null; el.remove(); },
+      stop() { autoCancel(); stopped = true; clearTimeout(veilT); if (veil) veil.remove(); document.removeEventListener('keydown', onKey, true); if (window.__atlasLs === dbg) delete window.__atlasLs; clearInterval(typeT); timers.forEach(clearTimeout); if (sess) sess.stop(); sess = null; el.remove(); },
       panel: el, _debug: dbg,
     };
   }
