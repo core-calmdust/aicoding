@@ -395,20 +395,22 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media (max-width:760px), (max-height:520px){
   /* (2026-11-23 the user) draft and archive on phones: small tiles — the ship, its name under it, its role (attack / scouting / defence);
      a tap opens the whole card (#cardPop) */
-  :is(#drGrid,#arGrid){grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-  :is(#drGrid,#arGrid) .card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px 6px;text-align:center}
-  :is(#drGrid,#arGrid) .card .top{display:contents}
-  :is(#drGrid,#arGrid) .card .cost{position:absolute;left:5px;top:5px;width:22px;height:22px;font-size:13.5px;z-index:1}
-  :is(#drGrid,#arGrid) .card .pool{position:absolute;right:6px;top:4px;font-size:11.5px}
-  :is(#drGrid,#arGrid) .card .art{display:block;order:1;width:100%;height:50px;margin:10px 0 0;padding:0;border:0;background:none}
-  :is(#drGrid,#arGrid) .card .art .reach{display:none}
-  :is(#drGrid,#arGrid) .card .art img{display:block;width:100%;height:50px;object-fit:contain;object-position:center}
-  :is(#drGrid,#arGrid) .card b{order:2;flex:none;width:100%;font-size:13.5px;letter-spacing:0;text-align:center}
-  :is(#drGrid,#arGrid) .card .rl{display:inline-flex;order:3;align-items:center;gap:4px;font-size:11px;letter-spacing:.04em;color:var(--mute)}
-  :is(#drGrid,#arGrid) .card .rl::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+  :is(#drGrid,#arGrid){grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  /* (2026-11-23 the user) two to a row so the reach map (where the ship fires) is visible right away: name · role, then the map beside the ship, the skill's name */
+  :is(#drGrid,#arGrid) .card{display:grid;grid-template-columns:58px minmax(0,1fr);grid-template-areas:"top top" "rch img" "rch skl" "ft ft";grid-template-rows:auto 34px 24px auto;column-gap:8px;padding:8px 8px 7px;text-align:left}
+  :is(#drGrid,#arGrid) .card .top{display:flex;grid-area:top;align-items:center;gap:6px;margin-bottom:6px;padding-right:20px;min-width:0}
+  :is(#drGrid,#arGrid) .card .cost{position:static;flex:none;width:24px;height:24px;font-size:14.5px}
+  :is(#drGrid,#arGrid) .card .pool{position:absolute;right:7px;top:9px;font-size:11.5px}
+  :is(#drGrid,#arGrid) .card b{flex:0 1 auto;min-width:0;font-size:14.5px;letter-spacing:0}
+  :is(#drGrid,#arGrid) .card .rl{display:inline-flex;flex:none;align-items:center;gap:3px;font-size:11px;color:var(--mute)}
+  :is(#drGrid,#arGrid) .card .rl::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
   :is(#drGrid,#arGrid) .card.r0 .rl{color:#ff9f7a}:is(#drGrid,#arGrid) .card.r1 .rl{color:#7fd8ff}:is(#drGrid,#arGrid) .card.r2 .rl{color:#9ff0c8}:is(#drGrid,#arGrid) .card.r3 .rl{color:#c9c9d6}
-  :is(#drGrid,#arGrid) .card .role,:is(#drGrid,#arGrid) .card .skl,:is(#drGrid,#arGrid) .card .desc,:is(#drGrid,#arGrid) .card .len{display:none}
-  :is(#drGrid,#arGrid) .card .foot{order:4;align-self:center;margin-top:2px;min-height:16px;height:auto;line-height:16px;font-size:11px!important;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  :is(#drGrid,#arGrid) .card .art{display:contents}
+  :is(#drGrid,#arGrid) .card .art .reach{display:block;grid-area:rch;width:58px;height:58px;align-self:start}
+  :is(#drGrid,#arGrid) .card .art img{grid-area:img;width:100%;height:34px;object-fit:contain;object-position:center}
+  :is(#drGrid,#arGrid) .card .skl{display:flex;grid-area:skl;align-self:end;margin:0;font-size:12.5px;gap:4px}:is(#drGrid,#arGrid) .card .skl svg{width:13px;height:13px;flex:none}:is(#drGrid,#arGrid) .card .skl small{display:none}
+  :is(#drGrid,#arGrid) .card .role,:is(#drGrid,#arGrid) .card .desc,:is(#drGrid,#arGrid) .card .len{display:none}
+  :is(#drGrid,#arGrid) .card .foot{grid-area:ft;align-self:start;margin-top:5px;min-height:16px;height:auto;line-height:16px;font-size:11px!important;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
   /* the picks: tiles too */
   .picks .chip{flex-direction:column;justify-content:center;gap:1px;width:74px;height:62px;padding:3px 2px;cursor:pointer}
   .picks .chip img{width:62px;height:24px}.picks .chip .nm{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;line-height:1.2}
@@ -570,7 +572,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 <script src="../seabattle/engine.js?v=34"></script>
 <script src="../atlas/vendor/three-r186.min.js?v=1"></script>
 <script src="../seabattle/ships3d.js?v=2"></script>
-<script src="world.js?v=5"></script>
+<script src="world.js?v=6"></script>
 <script src="game.js?v=10"></script>
 </body>
 </html>
