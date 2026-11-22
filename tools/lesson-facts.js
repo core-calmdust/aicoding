@@ -64,6 +64,36 @@ const CHECKS = {
       });
     });
   },
+  // (2026-11-22 lesson loop, hex/open) the opening lines and their problems: every move of the line legal, a problem's best move legal
+  // and the engine's best value (or within 3% of it), and what each stored note says the move does true on the board — a bridge with an own
+  // stone, touching the opponent, a swap, an intrusion into the opponent's bridge, the 2nd row
+  'hex/open'() {
+    const E = require(path.join(ROOT, 'hex/engine.js')), O = J('hex/openings.json'), g = 'hex/open';
+    const facts = (p, m) => { const n = p.n, NB = E.geo(n).NB, s = p.side, o = 3 - s, at = q => p.b[q], f = { adj: 0, touch: 0, bridge: 0, intrude: 0, row: 0 };
+      NB[m].forEach(q => { if (at(q) === s) f.adj++; else if (at(q) === o) f.touch++; });
+      const common = (a, q) => NB[a].filter(x => NB[q].includes(x));
+      for (let q = 0; q < n * n; q++) { if (q === m || NB[m].includes(q) || at(q) !== s) continue; const cm = common(m, q); if (cm.length === 2 && cm.every(x => !at(x))) f.bridge++; }
+      for (let a = 0; a < n * n; a++) for (let q = a + 1; q < n * n; q++) { if (at(a) !== o || at(q) !== o || NB[a].includes(q)) continue; const cm = common(a, q); if (cm.length === 2 && cm.includes(m)) f.intrude++; }
+      const r = Math.floor(m / n), c = m % n; f.row = s === 1 ? Math.min(r, n - 1 - r) : Math.min(c, n - 1 - c); return f; };
+    O.sets.forEach(st => { const K = st.id, p = E.replay({ n: st.n, swap: st.swap }, []).pos;
+      st.study.line.forEach((m, i) => {
+        if (!p.legal(m)) { bad(g, K, `move ${i + 1}: ${E.nameOf ? E.nameOf(m, st.n) : m} is not legal`); return; }
+        const t = (st.study.notes[i] || {}).ja || '';
+        if (m !== E.SWAP) { const f = facts(p, m);
+          if (/ブリッジ/.test(t) && !/割り込/.test(t) && !f.bridge) bad(g, K, `move ${i + 1}: the note says a bridge but the stone makes none`);
+          if (/つけて止める/.test(t) && !f.touch) bad(g, K, `move ${i + 1}: the note says it touches the opponent but no opponent stone is next to it`);
+          // (the stored 2D notes call some stones that also touch an opponent stone "離れてふさぐ": the 3D notes are read from the board instead — hxNoteJa)
+          if (/割り込/.test(t) && !/受ける/.test(t) && !f.intrude) bad(g, K, `move ${i + 1}: the note says an intrusion but no opponent bridge is cut into`);
+          if (/テンプレート/.test(t) && f.row !== 1) bad(g, K, `move ${i + 1}: the note says the 2nd-row edge template but the stone is not on the 2nd row`);
+        } else if (!/スワップ/.test(t) || /スワップしない/.test(t)) bad(g, K, `move ${i + 1}: a swap the note does not call one`);
+        p.play(m); });
+      (st.problems || []).forEach((P, j) => { const q = E.Pos.from(P.s);
+        if (!q.legal(P.best)) { bad(g, K, `problem ${j}: the best move is not legal`); return; }
+        const sc = new Map(P.sc || []), top = Math.max(...(P.sc || [[0, 0]]).map(e => e[1]));
+        if (sc.has(P.best) && sc.get(P.best) < top - 60) bad(g, K, `problem ${j}: the best move is not the engine's best (${sc.get(P.best)} < ${top})`);
+        (P.sc || []).forEach(([m]) => { if (!q.legal(m)) bad(g, K, `problem ${j}: a scored move is not legal`); }); });
+    });
+  },
 };
 
 const todo = games.length ? games : Object.keys(CHECKS);
