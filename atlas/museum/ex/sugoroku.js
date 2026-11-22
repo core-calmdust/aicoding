@@ -250,7 +250,10 @@
         const P = { 1: [[.5, .5]], 2: [[.28, .28], [.72, .72]], 3: [[.25, .25], [.5, .5], [.75, .75]], 4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], 5: [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], 6: [[.28, .22], [.72, .22], [.28, .5], [.72, .5], [.28, .78], [.72, .78]] }[n];
         P.forEach(([x, y]) => { g.beginPath(); g.arc(x * w, y * w, w * (n === 1 ? .14 : .09), 0, 6.29); g.fill(); }); });
       const dieM = [1, 6, 2, 5, 3, 4].map(n => K.mat({ map: pipT(n), color: '#ffffff', roughness: .38, clearcoat: .3 }));   // +x 1 / −x 6, +y 2 / −y 5, +z 3 / −z 4
-      [[4.5, -2.0, .4, .3], [7.0, -.6, -.7, 1.1]].forEach(([x, z, r1, r2]) => { const d = add(new TT.BoxGeometry(1.35, 1.35, 1.35), dieM, x, BASE + EDGE - RIM + .68, z); d.rotation.set(0, r1, 0); });
+      const dieG = new TT.BoxGeometry(1.35, 1.35, 1.35), shown = [];
+      [[4.5, -2.0, .4, .3], [7.0, -.6, -.7, 1.1]].forEach(([x, z, r1, r2]) => { const d = add(dieG, dieM, x, BASE + EDGE - RIM + .68, z); d.rotation.set(0, r1, 0); shown.push(d); });
+      // for a game on this board (所蔵品で遊ぶ, atlas/museum/play.js): the field's height, the rows of points, the dice (the two laid out for show are put away)
+      G.userData.play = { top: BASE + SL, row: IW / 2 - ROW, P0, PS, IW, dieG, dieM, hide: shown };
       return G;
     },
   };
