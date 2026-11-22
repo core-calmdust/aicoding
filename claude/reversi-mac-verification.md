@@ -264,6 +264,19 @@ EDAX=$E node tools/edax-anchor.js --levels 24 --n 150 --t 1.1 --bases "27,24,26,
 node tools/edax-anchor.js --table
 ```
 
+### Lv.29〜32 に枝刈りの強さを入れる（2026-11-22）
+- 入れた：**Lv.31＝深さ22・t=1.3**（計測済みの「22,22,24,28 t1.3」：+85 ± 16、5.25秒。前は +7 ± 16、4.87秒）。レベルごとの `t` を `engine.js` に追加。
+- 残り（Lv.29・30・32）は、今のレベルそのもの（Lv.30 は深さ20と16の混合、Lv.32 は追加の読み切りつきで、まだ直接測っていない）と候補を同じ相手で測ってから：
+```sh
+cd reversi && git pull
+E=~/edax-reversi/bin/mEdax-armv8.5-a
+EDAX=$E node tools/edax-anchor.js --levels 18 --n 150 --bases "L29;L30;L31;L32"
+EDAX=$E node tools/edax-anchor.js --levels 18 --n 150 --t 1.1 --bases "19,22,24,28;20,22,24,28;21,22,24,28"
+EDAX=$E node tools/edax-anchor.js --levels 18 --n 150 --t 1.3 --bases "20,22,24,28;24,23,24,30;26,23,24,30"
+node tools/edax-anchor.js --table
+```
+  `L29`〜`L32` はサイトのレベルそのもの（定石なし）。候補は、Lv.29・30 向けが t=1.1 の深さ19〜21 と t=1.3 の深さ20、Lv.32 向けが t=1.3 の深さ24・26（終局まで30）。約1時間の見込み。
+
 ### 計画の直し方
 1. **採否は Edax 相手の対局で決める**。`frontier.js`（自分どうし）は候補を絞る補助に下げ、プラスの設定は `edax-anchor.js --base 深さ,読み切り,勝敗読み,終局まで` で確かめる。
 2. **てこごとの線を Edax 相手に引く**（Mac、下のコマンド）。同じ時間を「深さ」に使う場合と「終盤」に使う場合を直接比べる。

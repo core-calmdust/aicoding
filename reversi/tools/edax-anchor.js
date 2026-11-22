@@ -5,6 +5,7 @@
 // the site). Guide: claude/reversi-mac-verification.md.
 //   EDAX=~/edax-reversi/bin/mEdax-… node tools/edax-anchor.js --levels 12,15,18,21 [--base lv28|lv31|lv34|d,x,w,e] [--n 100]
 //        [--openings tools/train/op10.bin] [--procs 8] [--out edax-anchor.jsonl] [--games games.jsonl]
+//   --base 20,22,24,28 (depth, exact, win/loss, to-the-end) | lv28 | lv31 | lv34 (those levels' four numbers as of 2026-11-20) | L31 (the level as it is now)
 //   [--weights w.bin.gz] (another evaluation, a v5 file of rvtrain; its name goes into the table)
 //   [--t 1.1] (how hard Multi-ProbCut cuts; today 1.5)  [--variant nn_p200] (a test build under tools/variants/, tools/build-variants.sh)
 //   … --bases "17,20,22,26;18,22,24,28" (several settings, one after another)      node tools/edax-anchor.js --table (all results so far)
@@ -36,6 +37,7 @@ if (opt('bases', '') && args[0] !== '--worker') {   // --bases "17,20,22,26;18,2
 }
 const BNAME = opt('base', 'lv28'), bv = BASES[BNAME] || BNAME.split(',').map(Number);
 const TV = opt('t', ''), VAR = opt('variant', ''), WFILE = opt('weights', ''), TAG = (TV ? ' t' + TV : '') + (VAR ? ' ' + VAR : '') + (WFILE ? ' ' + path.basename(WFILE).replace(/\.bin\.gz$/, '') : '');
+const LVN = /^L(\d+)$/.test(BNAME) ? +BNAME.slice(1) : 0;   // --base L30: the site's level 30 as it is (engine.js LEVELS: mix, extra solves, its own t), without the book
 const CFG = { depth: bv[0], exact: bv[1], wld: bv[2], end: bv[3], mpc: 1 };
 const LEVELS = opt('levels', '12,15,18,21').split(',').map(Number), N = +opt('n', 100), PROCS = +opt('procs', Math.max(1, os.cpus().length - 2));
 const OPEN = path.resolve(opt('openings', path.join(__dirname, 'train/op10.bin'))), OUT = opt('out', 'edax-anchor.jsonl'), GAMES = opt('games', '');
@@ -65,7 +67,7 @@ if (args[0] === '--worker') {   // one process: its share of the openings for on
     return { move: (m[4].toLowerCase().charCodeAt(0) - 97) + 8 * (+m[4][1] - 1), sec: +m[1] * 60 + +m[2] + +('0.' + m[3]) };
   };
   const ourMove = (P, O) => { const c = []; for (let q = 0; q < 64; q++) c.push((P >> BigInt(q)) & 1n ? 1 : (O >> BigInt(q)) & 1n ? 2 : 0);
-    const t0 = process.cpuUsage(), t = E.think(c, 1, { cfg: CFG, noBook: true, variety: false, time: 0 }), u = process.cpuUsage(t0); return { move: t.move, sec: (u.user + u.system) / 1e6 }; };
+    const t0 = process.cpuUsage(), t = E.think(c, 1, LVN ? { level: LVN, noBook: true, variety: false } : { cfg: CFG, noBook: true, variety: false, time: 0 }), u = process.cpuUsage(t0); return { move: t.move, sec: (u.user + u.system) / 1e6 }; };
   const game = (P, O, edaxFirst) => {   // the disc difference for Edax
     let side = edaxFirst ? 0 : 1, passes = 0, tE = 0, tU = 0; const log = []; E.clearTT();
     while (passes < 2) {
