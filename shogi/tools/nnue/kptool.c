@@ -22,12 +22,14 @@ static int loadKP(const char *path) {
     if (NUE_KB != 1 || hd[1] != NUE_H || hd[2] != 2534) { fprintf(stderr, "%s: a NUEQ net needs a build with NUE_KB=1 NUE_H=%d\n", path, hd[1]); return 0; }
     memset(nueKMap, 0, sizeof nueKMap);
   } else {
-    if ((hd[0] != 0x4B45554E && hd[0] != 0x4F45554E && hd[0] != 0x4D45554E) || fread(hd + 3, 4, 1, f) != 1) { fprintf(stderr, "%s: not a NUEK / NUEO / NUEM / NUEQ net\n", path); return 0; }
-    if (hd[0] == 0x4D45554E) {   /* NUEM: an MLP beside the linear output (a build with -DNUE_L1 -DNUE_L2) */
+    if ((hd[0] != 0x4B45554E && hd[0] != 0x4F45554E && hd[0] != 0x4D45554E && hd[0] != 0x5345554E) || fread(hd + 3, 4, 1, f) != 1) { fprintf(stderr, "%s: not a NUEK / NUEO / NUEM / NUEQ net\n", path); return 0; }
+    if (hd[0] == 0x4D45554E || hd[0] == 0x5345554E) {   /* NUES: the same with output buckets and an MLP per bucket (-DNUE_MB=8). NUEM: an MLP beside the linear output (a build with -DNUE_L1 -DNUE_L2) */
       int m[3]; if (fread(m, 4, 3, f) != 3) return 0;
 #ifdef NUE_L1
       if (m[0] != NUE_L1 || m[1] != NUE_L2 || m[2] != NUE_MI) { fprintf(stderr, "%s: MLP %d-%d on %d units: rebuild with -DNUE_L1=%d -DNUE_L2=%d -DNUE_MI=%d\n", path, m[0], m[1], m[2], m[0], m[1], m[2]); return 0; }
       mlp = 1;
+      if (hd[0] == 0x5345554E) { if (fread(&nb, 4, 1, f) != 1 || nb != NUE_NB || NUE_MB != NUE_NB) { fprintf(stderr, "%s: %d buckets with an MLP each: rebuild with -DNUE_MB=%d\n", path, nb, NUE_NB); return 0; } mlp = NUE_NB; }
+      else if (NUE_MB != 1) { fprintf(stderr, "%s: one MLP: rebuild without -DNUE_MB\n", path); return 0; }
 #else
       fprintf(stderr, "%s: an MLP net needs a build with -DNUE_L1=%d -DNUE_L2=%d\n", path, m[0], m[1]); return 0;
 #endif
@@ -40,9 +42,15 @@ static int loadKP(const char *path) {
 #ifdef NUE_L1
   if (mlp) {
     static i8 a8[NUE_L1 * 2 * NUE_MI], b8[NUE_L2 * NUE_L1];
-    if (fread(a8, 1, sizeof a8, f) != sizeof a8 || fread(nueMa, 4, NUE_L1, f) != NUE_L1 || fread(b8, 1, sizeof b8, f) != sizeof b8 || fread(nueMd, 4, NUE_L2, f) != NUE_L2 || fread(nueMC, 2, NUE_L2, f) != NUE_L2) { fprintf(stderr, "short net\n"); return 0; }
-    for (int i = 0; i < NUE_L1 * 2 * NUE_MI; i++) nueMA[i] = a8[i];
-    for (int i = 0; i < NUE_L2 * NUE_L1; i++) nueMB[i] = b8[i];
+    for (int k = 0; k < mlp; k++) {
+      if (NUE_MB > 1) {   /* NUES: int16 weights */
+        if (fread(nueMA + k * NUE_L1 * 2 * NUE_MI, 2, NUE_L1 * 2 * NUE_MI, f) != NUE_L1 * 2 * NUE_MI || fread(nueMa + k * NUE_L1, 4, NUE_L1, f) != NUE_L1 || fread(nueMB + k * NUE_L2 * NUE_L1, 2, NUE_L2 * NUE_L1, f) != NUE_L2 * NUE_L1 || fread(nueMd + k * NUE_L2, 4, NUE_L2, f) != NUE_L2 || fread(nueMC + k * NUE_L2, 2, NUE_L2, f) != NUE_L2) { fprintf(stderr, "short net\n"); return 0; }
+        continue;
+      }
+      if (fread(a8, 1, sizeof a8, f) != sizeof a8 || fread(nueMa + k * NUE_L1, 4, NUE_L1, f) != NUE_L1 || fread(b8, 1, sizeof b8, f) != sizeof b8 || fread(nueMd + k * NUE_L2, 4, NUE_L2, f) != NUE_L2 || fread(nueMC + k * NUE_L2, 2, NUE_L2, f) != NUE_L2) { fprintf(stderr, "short net\n"); return 0; }
+      for (int i = 0; i < NUE_L1 * 2 * NUE_MI; i++) nueMA[k * NUE_L1 * 2 * NUE_MI + i] = a8[i];
+      for (int i = 0; i < NUE_L2 * NUE_L1; i++) nueMB[k * NUE_L2 * NUE_L1 + i] = b8[i];
+    }
   } else { memset(nueMA, 0, sizeof nueMA); memset(nueMC, 0, sizeof nueMC); }
 #endif
   (void)mlp; fclose(f); nue_set_nb(nb);
