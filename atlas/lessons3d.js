@@ -958,7 +958,7 @@
       italian: 'イタリアン・ゲームは、何百年も前から指されている古典の序盤。白はビショップを斜めに出して、黒のキングの横のポーンをねらうピョン！<br>このポーンはキングしか守っていない弱点なんだ。いまは中央を支えて、キャスリングしてからじっくり駒組みするのが主流だね。',
       ruy: 'ルイ・ロペスは「スペイン」とも呼ばれる、チェスの王道の序盤。白はビショップで黒のナイトをねらって、そのナイトが守る中央のポーンにじわじわ圧力をかけるピョン。<br>黒はすぐポーンでビショップを追うのが定番。そこから長い駆け引きが始まるんだ！',
       sicilian: 'シシリアン・ディフェンスは、トップレベルでいちばん多く指される黒の応手。黒は左寄りのポーンで、中央を横から押さえるピョン！<br>左右がちがう形になるから、黒も勝ちをねらいやすい。白がポーンを交換する「オープン・シシリアン」が主流なんだ。',
-      french: 'フレンチ・ディフェンスは、守りの堅さが自慢の序盤ピョン。黒はポーンを1マス進めて支えを作り、隣のポーンを2マス進めて白の中央に挑むんだ。<br>中央が閉じたら、ポーンの鎖の根元を横から攻めるのが黒の作戦。クイーン側のビショップが出にくいのが弱点だね。',
+      french: 'フレンチ・ディフェンスは、守りの堅さが自慢の序盤ピョン。黒はポーンを1マス進めて支えを作り、隣のポーンを大きく前に出して、白の中央に挑むんだ。<br>中央が閉じたら、ポーンの鎖の根元を横から攻めるのが黒の作戦。クイーン側のビショップが出にくいのが弱点だね。',
       caro: 'カロ・カン・ディフェンスは、フレンチの仲間みたいな序盤。ポーンを2マス進めて中央に挑む前に、手前のポーンを1マス進めて支えておくピョン。<br>だからクイーン側のビショップを自由に出せるんだ。ポーンの形が崩れにくくて、手堅く戦いたい人に人気だね。',
       scandi: 'スカンジナビアン・ディフェンスでは、黒が1手目からポーンを2マス進めて、白の中央のポーンに体当たり！<br>取り合ったあと、早めにクイーンが出てくるのが特徴。クイーンは追われやすいから、安全な場所に置いて、すばやく駒を出すのがコツなんだ。',
       qgd: 'クイーンズ・ギャンビット辞退は、クイーンの前のポーンから始まる王道の形。白は隣のポーンを差し出して、黒の中央のポーンをどかそうとするピョン。<br>黒は取らずに、キングの前のポーンでがっちり守るんだ。あとは駒を自然に出して、キャスリングするのが基本の作戦だね。',
@@ -986,13 +986,15 @@
   const CH_PN = { p: 'ポーン', n: 'ナイト', b: 'ビショップ', r: 'ルーク', q: 'クイーン', k: 'キング' }, CH_VAL = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 100 };
   const chSq = s => (+s[1] - 1) * 8 + s.charCodeAt(0) - 97, chW = ch => ch === ch.toUpperCase();
   function chBoard(fen) { const b = Array(64).fill(''); String(fen).split(' ')[0].split('/').forEach((row, ri) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) f += +ch; else { b[(7 - ri) * 8 + f] = ch; f++; } } }); return b; }
-  function chAtt(b, q, white) {   // the cheapest piece of that side attacking square q ('' when none)
-    let best = ''; const take = ch => { if (!best || CH_VAL[ch.toLowerCase()] < CH_VAL[best.toLowerCase()]) best = ch; }, r = q >> 3, f = q & 7, mine = ch => ch && chW(ch) === white;
-    const at = (rr, ff) => rr >= 0 && rr < 8 && ff >= 0 && ff < 8 ? b[rr * 8 + ff] : null;
-    for (const df of [-1, 1]) { const ch = at(white ? r - 1 : r + 1, f + df); if (mine(ch) && ch.toLowerCase() === 'p') take(ch); }
-    for (const [dr, df] of [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]]) { const ch = at(r + dr, f + df); if (mine(ch) && ch.toLowerCase() === 'n') take(ch); }
-    for (let dr = -1; dr <= 1; dr++) for (let df = -1; df <= 1; df++) { if (!dr && !df) continue; const ch = at(r + dr, f + df); if (mine(ch) && ch.toLowerCase() === 'k') take(ch);
-      const kinds = dr && df ? 'bq' : 'rq'; let rr = r + dr, ff = f + df; while (at(rr, ff) === '') { rr += dr; ff += df; } const c2 = at(rr, ff); if (mine(c2) && kinds.includes(c2.toLowerCase())) take(c2); }
+  function chAtt(b, q, white, legal) {   // the cheapest piece of that side attacking square q ('' when none; legal: only one that may really take — not pinned to its king, 2026-11-22)
+    let best = ''; const r = q >> 3, f = q & 7, mine = ch => ch && chW(ch) === white;
+    const free = s => { if (!legal) return true; const nb = b.slice(); nb[q] = nb[s]; nb[s] = ''; const kq = nb.findIndex(ch => ch && chW(ch) === white && ch.toLowerCase() === 'k'); return kq < 0 || !chAtt(nb, kq, !white); };
+    const take = (ch, s) => { if ((!best || CH_VAL[ch.toLowerCase()] < CH_VAL[best.toLowerCase()]) && free(s)) best = ch; };
+    const at = (rr, ff) => rr >= 0 && rr < 8 && ff >= 0 && ff < 8 ? b[rr * 8 + ff] : null, ix = (rr, ff) => rr * 8 + ff;
+    for (const df of [-1, 1]) { const rr = white ? r - 1 : r + 1, ch = at(rr, f + df); if (mine(ch) && ch.toLowerCase() === 'p') take(ch, ix(rr, f + df)); }
+    for (const [dr, df] of [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]]) { const ch = at(r + dr, f + df); if (mine(ch) && ch.toLowerCase() === 'n') take(ch, ix(r + dr, f + df)); }
+    for (let dr = -1; dr <= 1; dr++) for (let df = -1; df <= 1; df++) { if (!dr && !df) continue; const ch = at(r + dr, f + df); if (mine(ch) && ch.toLowerCase() === 'k') take(ch, ix(r + dr, f + df));
+      const kinds = dr && df ? 'bq' : 'rq'; let rr = r + dr, ff = f + df; while (at(rr, ff) === '') { rr += dr; ff += df; } const c2 = at(rr, ff); if (mine(c2) && kinds.includes(c2.toLowerCase())) take(c2, ix(rr, ff)); }
     return best;
   }
   function chMove(b, u) {   // the board after a UCI move (castling moves the rook, en passant takes the pawn)
@@ -1006,7 +1008,7 @@
     const b = chBoard(fen), white = String(fen).split(' ')[1] !== 'b', a = chSq(u), z = chSq(u.slice(2, 4)), pc = b[a] || '', lo = pc.toLowerCase();
     const home = white ? 0 : 7, cap = b[z] ? b[z].toLowerCase() : lo === 'p' && (a & 7) !== (z & 7) ? 'p' : '';
     const mat = w => b.reduce((s, ch) => s + (ch && chW(ch) === w && ch.toLowerCase() !== 'k' ? CH_VAL[ch.toLowerCase()] : 0), 0);
-    const nb = chMove(b, u), att = lo === 'k' ? '' : chAtt(nb, z, !white), def = chAtt(nb, z, white);
+    const nb = chMove(b, u), att = lo === 'k' ? '' : chAtt(nb, z, !white, true), def = chAtt(nb, z, white, true);
     const F = { pc: lo, cap, castle: lo === 'k' && Math.abs((a & 7) - (z & 7)) === 2, king: lo === 'k', behind: mat(white) < mat(!white),
       dev: (lo === 'n' || lo === 'b') && (a >> 3) === home, centre: lo === 'p' && [3, 4].includes(a & 7), side: lo === 'p' && [2, 5].includes(a & 7), flank: lo === 'p' && [0, 1, 6, 7].includes(a & 7),
       move: +String(fen).split(' ')[5] || 1, two: lo === 'p' && Math.abs((a >> 3) - (z >> 3)) === 2 };
@@ -1022,57 +1024,151 @@
       if (chAtt(nb, q, white) && !chAtt(bb, q, white) && (!chAtt(nb, q, !white) || CH_VAL[ch.toLowerCase()] > CH_VAL[lo])) { F.aim = CH_PN[ch.toLowerCase()]; break; } }
     return F;
   }
-  function chWhyJa(F) {   // why the move is played (one or two short sentences)
-    if (F.castle) return 'キャスリングでキングを端の安全な場所へ移して、ルークも働きやすくする手なんだ。';
-    if (F.cap && F.behind) return `取られた駒をすぐ${CH_PN[F.cap]}で取り返す手。ここで取り返さないと、駒損のままになっちゃう！`;
-    if (F.cap) return `相手の${CH_PN[F.cap]}を取る手。ここで取っておくのが、この形の定跡なんだ。`;
-    if (F.pin) return `${CH_PN[F.pc]}で相手の${F.pin[0]}をピン！ ${F.pin[0]}が動くと、後ろの${F.pin[1]}が取られちゃう形なんだ。`;
-    if (F.chase) return `ポーンで相手の${F.chase}を追い払う手。追われた${F.chase}は、逃げ場所を考えなきゃいけない。`;
-    if (F.dev) return `まだ動いていない${CH_PN[F.pc]}を外へ出す手。序盤は駒を早く出すのが大事ピョン！` + (F.aim ? ` 相手の${F.aim}もねらえるおまけつき。` : '');
-    if (F.centre) return '中央のポーンを進めて、盤のまん中を押さえる手。中央を取ると、駒がぐんと動きやすくなるピョン！';
-    if (F.side) return '中央の隣のポーンで、まん中のマスを横から支える手だピョン。';
-    if (F.aim) return `${CH_PN[F.pc]}で相手の${F.aim}をねらう手。相手は守りに1手使わなきゃいけないピョン。`;
-    if (F.fian) return '端に近いポーンを1マス進めて、ビショップを長い対角線に出す準備をする手なんだ。';
-    if (F.flank && F.two) return '端のポーンを2マス進めて、相手の陣地に攻めかかる手。';
-    if (F.flank) return '端のポーンで、相手の駒が入ってくるマスを先にふさいでおく手なんだ。';
-    return 'この形で、強い人たちが本筋と考えている手だピョン。';
+  /* (2026-11-22 lesson loop) the chess openings in ナイトン's voice, Japanese, reworked: every move of the line gets a word from the
+     board (chStepNotesJa — the hand-written notes stay, the other moves are described from chFacts), and each opening takes the
+     praise / soft words / push / leads in its own order (chOpVoice). Lines are picked so that no sentence and no 10-character run
+     comes back in three bubbles of the same opening, and two bubbles in a row do not end the same way (chVPick). */
+  const chKind = (F, u, white) => { const a = chSq(u), z = chSq(u.slice(2, 4)), back = F.pc !== 'p' && !F.dev && (white ? (z >> 3) < (a >> 3) : (z >> 3) > (a >> 3));
+    return F.castle ? 'castle' : F.cap && F.behind ? 'recap' : F.cap ? 'cap' : F.pin ? 'pin' : F.chase ? 'chase' : F.dev ? 'dev' : F.centre ? (F.two ? 'centre2' : 'centre1') : F.side ? 'side'
+      : F.aim ? 'aim' : back ? 'back' : F.pc === 'q' ? 'queen' : F.pc === 'r' ? 'rook' : F.fian ? 'fian' : F.flank && F.two ? 'flank2' : F.flank ? 'flank' : F.king ? 'king' : 'other'; };
+  const chF = (s, v) => String(s).replace(/\{([A-Z])\}/g, (_, k) => v[k] != null ? v[k] : '');
+  const CH_STEP = {   // one word on a move of the line ({S} side, {P} piece, {C} taken, {T} chased / aimed at, {A} pinned, {B} behind it)
+    castle: ['{S}はキャスリング。キングが端へ移って、ひと安心ピョン！', 'ここで{S}もキャスリング。ルークが外へ出やすくなったね。', '{S}のキングが、ルークの陰に引っこんだ。守りが固まったぞ！', 'キャスリングで、{S}のキングは安全地帯へ。', '{S}は早めにキングを囲って、戦いの準備を整える。'],
+    recap: ['{S}は{C}を取り返して、駒の数をそろえる。', 'すかさず取り返し！ これで{S}も損はなしピョン。', '{S}も{P}で取り返す。交換が終わって、形が変わったね。', '取られたら取り返す。{S}は{P}で応じた！', '{S}は落ち着いて{C}を取り返す手。'],
+    cap: ['{S}が{P}で{C}を取る！ 取り合いのはじまりだ。', '{S}は{C}を取って、相手に取り返しをせまる。', 'ここで{S}が{C}を取る。中央の形が動き出すピョン！', '{S}の{P}が{C}を取った。さあ、どう取り返す？'],
+    pin: ['{S}の{P}が、相手の{A}をピン！ 後ろに{B}がいるから動けないピョン。', '{P}で{A}を縛る手。{A}が動くと、{B}が丸見えになるね。', '{A}の後ろには{B}。{S}はそこを{P}でにらむ！', '{S}は{P}で{A}を釘づけにする。後ろの{B}が困ってるピョン。'],
+    chase: ['{S}はポーンを突いて、相手の{T}を追い払う！', 'ポーンが{T}をつつく。{T}はどこへ逃げるかな？', '{S}のポーンが前へ。{T}はその場にいられないね。', '{S}はポーンで{T}に「どいて」とせまるピョン。'],
+    dev: ['{S}は{P}を外へ。まずは駒を出すのが序盤の基本！', '{P}の出番！ {S}は陣地の外へ駒を1つ出した。', '{S}の{P}が、スタートの位置から動き出すピョン。', 'ここで{S}は{P}を出す。駒がそろうほど戦いやすくなるね。', '{S}は{P}を前線へ。次の駒もすぐ続けたい！', '{S}の{P}が、働きやすいマスへ飛び出した。', '{P}を出して、{S}は陣形づくりを進める。', '眠っていた{P}が目をさます。{S}の駒組みは順調ピョン！'],
+    centre2: ['{S}は中央のポーンを2マス！ 盤のまん中に旗を立てる手。', 'まずは{S}が、中央のポーンを大きく前へ。', '{S}のポーンがど真ん中へ！ 駒の通り道も開くピョン。', '{S}も中央のポーンを2マス進めて、まん中を取り合う。', '{S}は中央へポーンを2歩。まん中の主導権を取りにいく！', '中央のポーンが大きく前進。{S}の駒たちの道が広がったね。'],
+    centre1: ['{S}は中央のポーンを1マス。控えめだけど、しっかりした支えになる。', '中央のポーンをそっと1マス。{S}は守りを固めるね。', '{S}は中央のポーンを1つだけ進めて、形を整える。'],
+    side: ['{S}は中央の隣のポーンで、まん中を横からにらむ。', '横のポーンを進めて、{S}は中央に手を伸ばす！', '{S}は脇のポーンで、中央の争いに加わるピョン。', '{S}のポーンが、中央を斜め横から支える。'],
+    aim: ['{S}の{P}が、相手の{T}をねらう位置へ！', '{P}を動かして{T}に圧力。相手は守りに手を使うね。', '{S}は{P}で{T}をにらむピョン。'],
+    back: ['{S}の{P}がいったん下がる。ねらわれる前に、安全なマスへ。', '{P}は一歩引いて、形を整え直す手。', '{S}は{P}を引いて、次の出番にそなえる。'],
+    queen: ['{S}のクイーンが動く。強い駒だけど、追われないように気をつけたいね。', 'クイーンが出てきた！ {S}は大駒で中央をにらむ。', '{S}はクイーンの位置を変えて、ほかの駒の通り道を作る。'],
+    rook: ['{S}のルークが、これから開きそうな列へ移る。', 'ルークを動かして、働く場所を先に決めておくピョン。', '{S}はルークをまん中寄りへ。'],
+    fian: ['{S}は端寄りのポーンを1マス。ビショップの通り道を作る準備！', 'ポーンを1つ上げて、{S}はビショップを長い斜めに置く準備だね。'],
+    flank2: ['{S}は端のポーンを2マス！ 陣地を広げて攻めかかる。', '端のポーンが大きく前へ。{S}は外側から仕掛けるピョン。'],
+    flank: ['{S}は端のポーンを動かして、相手の駒が来るマスを先にふさぐ。', '端のポーンで、{S}はこっそり陣地を広げるピョン。', '{S}は端のポーンを1マス。小さいけど大事な準備だね。'],
+    king: ['{S}のキングが一歩動く。', 'キングを少し動かして、{S}は守りの形を整える。'],
+    other: ['{S}は{P}を動かして、形を整える。', '{S}の{P}が位置を変える。次の作戦への準備だね。', '{P}を動かして、{S}は次の一手にそなえるピョン。'],
+  };
+  const CH_WHY = {   // why the most played move is played (problems' praise)
+    castle: ['キングを端へ移すと、守りが固まってルークも働き出すんだ。', 'キャスリングで王さまは安全地帯へ。これで安心して戦えるね。', 'キングを真ん中に残さないのが、序盤のいちばん大事な約束。', 'この一手で、キングの安全とルークの出番が両方そろうピョン！'],
+    recap: ['取られた{C}をすぐ取り返して、駒の数をそろえたね。', 'ここで取り返さないと、駒損のまま進んじゃうところだった。', '取られたら取り返す。基本中の基本を、きっちり守れたピョン！'],
+    cap: ['相手の{C}を取って、交換をしかける手なんだ。', 'ここは{C}を取るのがこの形の決まりごと。中央の形がすっきりするね。', '{C}を取って、相手に取り返しの手を使わせるピョン！'],
+    pin: ['相手の{A}をピン！ {A}が動くと、後ろの{B}が取られちゃう。', '{A}の後ろに{B}がいるのを見のがさなかったね。動けない駒ができたピョン！', 'ピンをかけて、相手の{A}を動けなくする手なんだ。'],
+    chase: ['ポーンで{T}を追い払うと、相手は逃げるのに1手使うことになる。', '{T}をつついて、居心地のいいマスから追い出す手だね。', 'ポーンで{T}を追えば、こっちは陣地を広げながら手も稼げるピョン！'],
+    dev: ['まだ動いていない{P}を外へ出す手。序盤は駒を早く出したもの勝ちピョン！', '{P}が出ると、陣地の駒がひとつ働き出すんだ。', '眠っていた{P}を起こして、戦いに参加させる手だね。', '{P}を外へ出して、キャスリングの準備も進めたね。', '{P}が働き出して、陣地がぐっとにぎやかになったピョン！', '駒を出す順番、ばっちり覚えてるね。{P}の位置もいい感じ！'],
+    centre2: ['中央のポーンを大きく進めて、盤のまん中を押さえる手。駒がぐんと動きやすくなるピョン！', 'まん中のマスを取ると、ナイトもビショップも通り道が広がるんだ。'],
+    centre1: ['中央のポーンを1マス進めて、まん中をしっかり支える手だね。', 'ポーンで中央の支えを作っておくと、あとで崩れにくいんだ。'],
+    side: ['中央の隣のポーンで、まん中のマスを横から支える手。', '脇のポーンで中央に圧力をかける。真正面だけが中央の取り方じゃないんだ。'],
+    aim: ['{P}で相手の{T}をねらう手。相手は守りに1手使わなきゃいけないピョン。', '{T}に圧力をかけて、相手の手を縛る一手なんだ。'],
+    back: ['{P}をいったん引いて、ねらわれにくいマスで次の出番を待つ手だね。', '引くのも大事な一手。{P}を安全な場所に置き直したんだ。'],
+    queen: ['クイーンを動かして、ほかの駒の通り道を作る手なんだ。', 'クイーンを働きやすいマスへ。ここなら追われにくいピョン。'],
+    rook: ['ルークを、これから開く列に先回りさせる手だね。', 'ルークの置き場所を決めて、中盤の戦いにそなえる手なんだ。'],
+    fian: ['端寄りのポーンを上げて、ビショップを長い斜めに置く準備をする手なんだ。', 'ビショップの通り道を作る下ごしらえ。あとで斜めのにらみがきくピョン！'],
+    flank2: ['端のポーンを2マス進めて、相手の陣地に攻めかかる手。', '外側から仕掛けて、相手の駒を押し返すねらいだね。'],
+    flank: ['端のポーンで、相手の駒が入ってくるマスを先にふさいでおく手なんだ。', '小さなポーンの一歩で、相手の作戦を先回りしてつぶすピョン！'],
+    king: ['キングの位置を整えて、守りを固める手なんだ。'],
+    other: ['この形で、強い人たちが本筋と考えている手だピョン。', 'この場面でいちばん多く選ばれている、手堅い一手なんだ。', '定跡の流れにぴったり乗る一手。形を覚えておくと、実戦で迷わないね。', '手順の意味がつかめてきたね。この手で形がきれいに整うんだ。'],
+  };
+  const CH_SHORT = { castle: ['キングを安全にできる', 'キングを囲ってルークも出せる'], recap: ['駒の数をすぐそろえられる', '取られた駒を取り返せる'], cap: ['相手の駒を取って交換に持ちこめる', '駒を取って形をはっきりさせられる'],
+    pin: ['相手の駒をピンで動けなくできる', 'ピンで相手の駒を縛れる'], chase: ['相手の駒を追い払える', 'ポーンで相手の駒を追い返せる'], dev: ['まだ動いていない駒を出せる', '新しい駒を戦いに加えられる'],
+    centre2: ['盤のまん中を押さえられる', '中央を大きく取れる'], centre1: ['中央をしっかり支えられる', 'まん中の支えを作れる'], side: ['まん中を横から支えられる', '中央に横から圧力をかけられる'],
+    aim: ['相手の駒をねらえる', '相手の駒に圧力をかけられる'], back: ['駒を安全な場所に戻せる', 'ねらわれる前に駒を逃がせる'], queen: ['クイーンが働きやすくなる'], rook: ['ルークの働く場所を先に作れる'],
+    fian: ['ビショップの通り道を作れる'], flank2: ['外側から仕掛けられる'], flank: ['相手の駒の入り口をふさげる'], king: ['守りの形を整えられる'], other: ['定跡どおりの形になる', 'いちばん手堅い形になる'] };
+  const CH_HINT = {
+    castle: ['キングはまだ真ん中にいるね。安全な場所へ逃がす手が光ってるピョン。', 'キングとルークの間、もう空いてないかな？', '王さまの守り、そろそろ考えたいところだね。光ってる手に注目！'],
+    recap: ['駒の数を数えてみて。いま、どっちが得をしてる？', 'さっき取られた駒、そのままでいいのかな？ 光ってる手がヒント！', '取られた分を取り返せる駒がいるピョン。'],
+    cap: ['光ってる手を見てね。取れる相手の駒がありそうだピョン！', '相手の駒に、手を伸ばせる駒はいないかな？', '取り合いのチャンス。光ってるところに注目だね！'],
+    pin: ['相手の{A}の後ろに、何がいるか見てみて！', '一直線に並んだ相手の駒、見つかるかな？ 光ってる手がヒント！'],
+    chase: ['相手の{T}のすぐ近くまでポーンを進めたら、どうなる？', '居すわっている相手の{T}、追い出せないかな？ 光ってる手に注目ピョン。'],
+    dev: ['まだ一度も動いていない駒を探してみて。光ってるところがヒント！', '序盤の基本は「駒を出す」。光ってる駒が、出番を待ってるピョン！', '陣地の奥で眠ってる駒はいないかな？', 'スタートの位置から動いていない駒、まだあるよね？ 光ってる手を見てみて！', '働いていない駒を、戦いに呼んであげよう。', 'ナイトやビショップで、まだ家にいるのはどれかな？'],
+    centre2: ['盤のまん中の4マスを、だれが押さえてるか見てみよう。光ってる手がヒント！', 'まん中のマスに、ポーンを大きく進められないかな？'],
+    centre1: ['中央のポーンを、そっと支えられないかな？ 光ってる手がヒント！', 'まん中の形、もう少し固めておきたいね。'],
+    side: ['中央のマスを、横からにらめるポーンはいないかな？', 'まん中は真正面からだけじゃなく、横からも押さえられるピョン。光ってる手を見てね。'],
+    aim: ['相手の駒で、守りがうすいのはどれかな？ 光ってる手がヒント！', 'どの駒なら、相手の駒をねらえるかな？'],
+    back: ['ねらわれそうな駒はいないかな？ 一度引くのも手だピョン。', '光ってる駒、いまの場所は安全かな？'],
+    other: ['光ってる手が、強い人がいちばん選んだ手。指したあとの形を想像してみて！', '光ってる手を指したら、盤がどう変わるか考えてみよう！', 'ヒントは光ってる手。どんな役目の手か、わかるかな？', '盤全体をながめて、いちばん自然な一手を探そう！', '光ってるところに注目ピョン。その手の役目を想像してみて。', '駒を出す・中央・キングの安全。どれに当てはまる手か考えてみよう！'],
+  };
+  const CH_OPV = {
+    ask: ['{s}の番！ 強い人がいちばん指した手はどれかな？', '『{n}』のこの場面。{s}ならどう指す？', 'さあ{s}の一手。定跡どおりに指せるかな？', 'ここで{s}がいちばんよく選ぶ手、わかるかな？', '{s}の番。手順を思い出して、本筋の手を指してみて！', '{s}の手番だね。きみならどこへ動かす？', 'この形、{s}の定番の一手は何かな？', '{s}になったつもりで考えてみよう。次の一手は？'],
+    pct: ['強い人の対局の{a}%で、この手が選ばれている。', '実戦では{a}%がこの手。いちばん人気！', '強い人の{a}%が指した、定跡の本筋の手。', 'この場面では{a}%の人がこれを選ぶ。覚えておこう！', 'たくさんの対局のうち{a}%で、この手が指されている。', '{a}%の人がこの手を選んでいる、王道の一手なんだ。'],
+    cheer: ['いいね！', 'さすが！', 'お見事！', 'ナイス！', 'その調子！', 'ばっちりピョン！', 'すごい、正解！', 'いい手を選んだね！', 'よく見つけたね！', '上手！', '完璧ピョン！', 'やったね！'],
+    push: ['次もこの調子で行こう！', 'どんどん進もう！', 'まだまだいけるピョン！', '次の問題も楽しみだね！', 'その勢いで続けよう！', '次もいけるはず！'],
+    soft: ['おしい！', '大丈夫、', 'ドンマイ！', 'いい線いってたね。', 'ここはよくある迷いどころだね。', '気にしない、気にしない！', 'あと一歩！', '今度こそいけるピョン！', 'これで覚えちゃおう！', 'みんな一度は迷うところ。'],
+    lead: ['正解は{m}。', 'ここは{m}が本筋ピョン。', '{m}が定跡の手なんだ。', '光っていたのは{m}。', '{m}を指したかったところ！', 'ここでは{m}がいちばん人気。'],
+  };
+  const CH_NG = {   // what yours gives up ({b} / {a}: % of games, {w}: what the right move does)
+    near: ['{x}も{m}と同じくらい指される手（{b}%）。{m}のほうがわずかに多いから、こっちを正解にしているピョン。', '{x}も実戦でよく見る手で、{b}%。{m}なら{w}から、ほんの少し人気が上なんだ。', '{x}も本筋のひとつ（{b}%）。{m}なら{w}から、今回はこっちを覚えよう！', '{x}もほぼ同じ数だけ指される（{b}%）。{m}なら{w}し、わずかに多いから正解にしたピョン。'],
+    half: ['{x}もよく指される手（{b}%）。でも{m}なら{a}%で、こっちがいちばんの本筋なんだ。', '{x}は{b}%の人が選ぶ手。{m}なら{a}%で、{w}。', '{x}も悪くない手で、{b}%。ただ{m}なら{w}から、選ぶ人も多い（{a}%）。', '{x}を選ぶ人も{b}%いる。それでも{m}なら{w}から、{a}%の人がこっちを選ぶんだ。'],
+    low: ['{x}は実戦で{b}%だけ。{m}なら{a}%の人が選んでいて、{w}。', '{x}を選ぶ人は{b}%しかいないんだ。{m}なら{w}から、こっちを覚えよう。', '{x}は少数派（{b}%）。{m}なら{a}%の人が選ぶし、{w}。', '{x}は{b}%と少なめ。{m}なら{w}から、強い人の多く（{a}%）がこっちを選ぶピョン。'],
+    hang: ['{x}だと、その{P}が相手の{T}に取られて損しちゃう！', '{x}では、動いた{P}が{T}のえじきになるんだ。'],
+    recap: ['{x}だと取り返しそびれて、駒損のままになっちゃう。', '{x}では取られた駒を取り返せず、損をしたままなんだ。'],
+    king: ['{x}でキングが動くと、もうキャスリングできなくなっちゃう。', '{x}のようにキングを動かすと、キャスリングの権利がなくなっちゃう。'],
+    late: ['{x}だとキャスリングが遅れて、キングが真ん中に残っちゃう。', '{x}ではキングが真ん中のまま。中央が開くとねらわれやすいんだ。'],
+    queen: ['{x}のように序盤でクイーンを動かすと、相手の駒に追い回されて手損しやすいんだ。', '{x}は早すぎるクイーンの出動。相手が駒を出しながら追いかけてくるから、手損しやすいピョン。'],
+    rook: ['ルークは序盤ではまだ働きにくい駒。先にナイトやビショップを出そう！', '{x}だとルークを動かすけど、まだ働く場所が少ないんだ。'],
+    again: ['{x}だと同じ駒をもう一度動かすことになる。まだ出ていない駒を先に出そう！', '{x}だと同じ駒で2手使っちゃう。ほかの駒が眠ったままになるね。'],
+    pawn: ['{x}だとポーンの手で1手使っちゃう。まだ出ていない駒を出すほうが先ピョン。', '{x}だとポーンの手になる。駒を出すほうが、いまは急ぎなんだ。'],
+    flank: ['{x}の端のポーンでは、中央の争いに役立たないんだ。', '{x}だと端っこの手になる。いまは中央のほうが大事なところだね。'],
+    rare: ['{x}は強い人の対局ではほとんど指されない手。{m}なら{w}から、こっちを選びたい！', '{x}を選ぶ人はめったにいないんだ。{m}なら{w}。'],
+  };
+  const chEnd = sn => { const b = sn.replace(/[。！？!?]+$/, '').replace(/[）)」]+$/, ''); for (const e of ['なんだ', 'んだ', 'だよ', 'だね', 'よね', 'かな', 'よう', 'ろう', 'よ', 'ね']) if (b.endsWith(e)) return e === 'だよ' ? 'よ' : e === 'なんだ' ? 'んだ' : e === 'だね' ? 'ね' : e; return /[！？]$/.test(sn) ? sn.slice(-1) : 'x'; };
+  const chSents = s => (String(s).replace(/<br\s*\/?>/g, '\n').replace(/<[^>]+>/g, '').match(/[^。！？\n]+[。！？]+|[^。！？\n]+$/gm) || []).map(x => x.trim()).filter(Boolean);
+  function chOpVoice(id) {   // one opening's voice: its own order of praise / soft words / push / leads, and what it has said so far
+    const seed = shSeed('ch' + id), P = (k, n) => shPerm(seed ^ k, n), O = CH_OPV, pc = P(0x11, O.cheer.length), ps = P(0x9e37, O.soft.length), pp = P(0x51ed, O.push.length), pl = P(0x2b7f, O.lead.length), pa = P(0x6c1d, O.ask.length), pt = P(0x3a5, O.pct.length);
+    const gram = new Map(), sent = new Map(); let last = '';
+    const norm = t => String(t).replace(/\{[mx]\}/g, '♘e2–e4').replace(/<[^>]+>/g, '').replace(/[\s、。！？!?「」（）()・…〜♪]/g, '');
+    const grams = t => { const x = norm(t), g = new Set(); for (let k = 0; k + 10 <= x.length; k++) g.add(x.slice(k, k + 10)); return g; };
+    const keyS = t => chSents(String(t).replace(/\{[mx]\}/g, '♘e2–e4')).map(x => x.replace(/^[^、！]{1,5}(、|！ ?)/, '').trim()).filter(x => x.length >= 8);
+    const V = { seed, cheer: i => O.cheer[pc[i % pc.length]], soft: i => O.soft[ps[i % ps.length]], push: i => O.push[pp[i % pp.length]], lead: i => O.lead[pl[i % pl.length]], ask: i => O.ask[pa[i % pa.length]], pct: i => O.pct[pt[i % pt.length]],
+      bad(t, prev) {   // how much a line would repeat (0 = fresh)
+        let n = 0; grams(t).forEach(g => { if ((gram.get(g) || 0) >= 2) n += 1; }); keyS(t).forEach(s => { if (sent.get(s)) n += 20; });
+        const E = chSents(t).map(chEnd), p0 = prev === undefined ? last : prev; E.forEach((e, k) => { const pe = k ? E[k - 1] : p0; if (e !== 'x' && e !== '！' && e !== '？' && e === pe) n += 10; });
+        return n; },
+      pick(list, start, prev) { let best = null, bn = 1e9; for (let q = 0; q < list.length; q++) { const t = list[(start + q) % list.length], n = V.bad(t, prev); if (n < bn) { bn = n; best = t; } if (!n) break; } return best; },
+      add(t, quiet) { grams(t).forEach(g => gram.set(g, (gram.get(g) || 0) + 1)); keyS(t).forEach(s => sent.set(s, 1)); const E = chSents(t).map(chEnd); if (E.length && !quiet) last = E[E.length - 1]; },
+      after(t) { const E = chSents(t).map(chEnd); if (E.length) last = E[E.length - 1]; },
+      endOf: t => { const E = chSents(t).map(chEnd); return E.length ? E[E.length - 1] : ''; } };
+    return V;
   }
-  function chShortJa(F) { return F.castle ? 'キングを安全にできる' : F.cap && F.behind ? '駒を取り返せる' : F.cap ? '駒を取れる' : F.pin ? 'ピンをかけられる' : F.chase ? '相手の駒を追い払える' : F.dev ? '新しい駒を出せる' : F.centre ? '中央を押さえられる' : F.side ? 'まん中を横から支えられる' : F.aim ? '相手の駒をねらえる' : '定跡どおりの形になる'; }
-  function chHintJa(F, k) {
-    if (F.castle) return 'キングはまだ真ん中にいるね。安全な場所へ逃がす手が光ってるピョン。';
-    if (F.cap && F.behind) return '駒の数を数えてみて。いま、どっちが得をしてる？ 光ってる手がヒント！';
-    if (F.cap) return '光ってる手を見てね。取れる相手の駒がありそうだピョン！';
-    if (F.pin) return `相手の${F.pin[0]}の後ろに、何がいるか見てみて！ 光ってる手がヒントだよ。`;
-    if (F.chase) return `相手の${F.chase}のすぐ近くまでポーンを進めたら、どうなる？`;
-    if (F.dev) return ['まだ一度も動いていない駒を探してみて。光ってるところがヒント！', '序盤の基本は「駒を出す」。光ってる駒が、出番を待ってるピョン！'][k % 2];
-    if (F.centre || F.side) return '盤のまん中の4マスを、だれが押さえてるか見てみよう。光ってる手がヒント！';
-    return '光ってる手が、強い人がいちばん選んだ手。指したあとの形を想像してみて！';
+  const chJoin = (...a) => a.filter(Boolean).reduce((s, t) => !s ? t : s + (/[！？]$/.test(s) ? ' ' : /、$/.test(s) ? '' : '') + t, '');
+  function chFen(b, white, mv) { const rows = []; for (let r = 7; r >= 0; r--) { let s = '', e = 0; for (let f = 0; f < 8; f++) { const ch = b[r * 8 + f]; if (ch) { if (e) { s += e; e = 0; } s += ch; } else e++; } if (e) s += e; rows.push(s); } return rows.join('/') + ' ' + (white ? 'w' : 'b') + ' - - 0 ' + mv; }
+  const chVars = (F, white) => ({ S: white ? '白' : '黒', P: CH_PN[F.pc] || '駒', C: CH_PN[F.cap] || '駒', T: F.chase || F.aim || '駒', A: F.pin ? F.pin[0] : '駒', B: F.pin ? F.pin[1] : '駒' });
+  function chStepNotesJa(steps, notes, V) {   // a word on every move of the line (the hand-written notes kept, the rest from the board)
+    const out = {}, own0 = i => { const o = notes[String(i)]; return o && (typeof o === 'string' ? o : o.ja); }; steps.forEach((u, i) => { if (own0(i)) V.add(own0(i), true); }); let b = chBoard('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    steps.forEach((u, i) => { const white = i % 2 === 0, fen = chFen(b, white, (i >> 1) + 1), own = notes[String(i)], ja = own && (typeof own === 'string' ? own : own.ja);
+      if (ja) V.after(ja); else { try { const F = chFacts(fen, u), kd = chKind(F, u, white), vv = chVars(F, white), t = V.pick((CH_STEP[kd] || CH_STEP.other).map(x => chF(x, vv)), (V.seed + i * 3) % 7); out[String(i)] = { ja: t }; V.add(t); } catch (e) {} }
+      b = chMove(b, u); });
+    return out;
   }
-  function chOpJa(o, name, hs, i) {
-    const P = o.P, C = P.cand || [], N = P.n || C.reduce((s, x) => s + x[1], 0) || 1, A = o.ans, side = String(o.pos).split(' ')[1] === 'b' ? '黒' : '白';
-    const pc = c => Math.max(1, Math.round(c / N * 100)), cnt = new Map(C), FA = chFacts(o.pos, A), k = hs + i;
-    const nm = /[a-h][1-8]/.test(name) ? 'この序盤' : name;
-    const ask = fill(CHJ_OP.ask[k % CHJ_OP.ask.length], { n: nm, s: side }).replace('『この序盤』', 'この序盤');
-    const good = u => { if (u && u !== A && cnt.has(u)) return `{x}も人気の手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なんだ。`;
-      const w = chWhyJa(FA); return w + (/！$/.test(w) ? ' ' : '') + fill(CHJ_OP.pct[k % CHJ_OP.pct.length], { a: pc(cnt.get(A) || 0) }); };
-    const ng = u0 => {
-      let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0]; if (!u) return CHJ_OP.lead[k % CHJ_OP.lead.length] + chWhyJa(FA);
-      const out = [CHJ_OP.lead[k % CHJ_OP.lead.length]];
-      if (cnt.has(u)) { const b = pc(cnt.get(u)), a = pc(cnt.get(A)); out.push(b >= a ? `{x}も{m}と同じくらい指される手（${b}%）。{m}のほうがわずかに多いから、こっちを正解にしているんだ。` : b * 2 >= a ? `{x}もよく指される手（${b}%）。でも{m}なら${a}%で、こっちがいちばんの本筋なんだ。` : `{x}も実戦で指される手だけど、${b}%だけ。{m}なら${a}%の人が選んでいて、${chShortJa(FA)}んだ。`); return out.join(''); }
+  function chOpJa(o, name, V, i) {   // V: the opening's voice (chOpVoice), i: the problem's number
+    const P = o.P, C = P.cand || [], N = P.n || C.reduce((s, x) => s + x[1], 0) || 1, A = o.ans, white = String(o.pos).split(' ')[1] !== 'b', side = white ? '白' : '黒';
+    const pc = c => Math.max(1, Math.round(c / N * 100)), cnt = new Map(C), FA = chFacts(o.pos, A), kd = chKind(FA, A, white), vv = chVars(FA, white), j = i + V.seed % 5;
+    const nm = /[a-h][1-8]/.test(name) ? '' : name;
+    const asks = [0, 1, 2, 3, 4, 5, 6, 7].map(q => V.ask(i + q)).filter(t => nm || !/\{n\}/.test(t)).map(t => t.replace('{n}', nm).replace('{s}', side));
+    const ask = V.pick(asks, 0); V.add(ask);
+    const hk = (CH_HINT[kd] || []).map(x => chF(x, vv)), hintTx = V.pick([...hk.map((_, q) => hk[(j + q) % hk.length]), ...CH_HINT.other], 0); V.add(hintTx);
+    const shorts = CH_SHORT[kd] || CH_SHORT.other;
+    // the praise: a cheer, why (in words the line's notes have not used), the share of games, now and then a push on
+    const ch = V.cheer(i), wk = (CH_WHY[kd] || []).map(x => chF(x, vv)), why = V.pick([...wk.map((_, q) => wk[(j + q) % wk.length]), ...CH_WHY.other], 0, V.endOf(ch)), pct = V.pick([0, 1, 2, 3, 4, 5].map(q => V.pct(i + q).replace('{a}', pc(cnt.get(A) || 0))), 0, V.endOf(why));
+    const goodTx = chJoin(ch, why, pct, i % 2 ? V.push(i) : ''); V.add(goodTx);
+    const good = u => { if (u && u !== A && cnt.has(u)) return chJoin(V.cheer(i + 1), `{x}も人気の手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なんだ。`); return goodTx; };
+    const ngOf = u0 => {
+      let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0];
+      const head = chJoin(V.soft(i), V.lead(i)), pk = (L, v) => V.pick(L.flatMap(t => shorts.map(w => chF(fl(t, w), v || {}))), j, V.endOf(head));
+      if (!u) return chJoin(head, V.pick((CH_WHY[kd] || CH_WHY.other).map(x => chF(x, vv)), j + 1));
+      const fl = (s, w) => s.replace(/\{b\}/g, cnt.has(u) ? pc(cnt.get(u)) : 0).replace(/\{a\}/g, pc(cnt.get(A) || 0)).replace(/\{w\}/g, w);
+      if (cnt.has(u)) { const b = pc(cnt.get(u)), a = pc(cnt.get(A)); return chJoin(head, pk(b >= a ? CH_NG.near : b * 2 >= a ? CH_NG.half : CH_NG.low)); }
       let F; try { F = chFacts(o.pos, u); } catch (e) { F = {}; }
-      if (F.hang) out.push(`{x}だと、その${CH_PN[F.pc]}が相手の${F.hang}に取られて損しちゃう！`);
-      else if (FA.cap && FA.behind && !F.cap) out.push('{x}だと取り返しそびれて、駒損のままになっちゃう。');
-      else if (F.king && !F.castle) out.push('{x}でキングが動くと、もうキャスリングできなくなっちゃうんだ。');
-      else if (FA.castle) out.push('{x}だとキャスリングが遅れて、キングが真ん中に残っちゃう。');
-      else if (F.pc === 'q' && F.move <= 10 && !F.cap) out.push('{x}のように序盤でクイーンを動かすと、相手の駒に追い回されて手損しやすいんだ。');
-      else if (F.pc === 'r') out.push('ルークは序盤ではまだ働きにくい駒。先にナイトやビショップを出そう！');
-      else if (FA.dev && (F.pc === 'n' || F.pc === 'b') && !F.dev) out.push('{x}は同じ駒をもう一度動かす手。まだ出ていない駒を先に出そう！');
-      else if (FA.dev && F.pc === 'p') out.push('{x}だとポーンの手で1手使っちゃう。まだ出ていない駒を出すほうが先ピョン。');
-      else if (F.flank) out.push('{x}の端のポーンは、中央の争いにはあまり役立たないんだ。');
-      else out.push(`{x}は強い人の対局ではほとんど指されない手。{m}なら${chShortJa(FA)}から、こっちを選びたい！`);
-      return out.join('');
+      const vx = chVars(F, white); vx.T = F.hang || '駒';
+      const L = F.hang ? CH_NG.hang : FA.cap && FA.behind && !F.cap ? CH_NG.recap : F.king && !F.castle ? CH_NG.king : FA.castle ? CH_NG.late : F.pc === 'q' && F.move <= 10 && !F.cap ? CH_NG.queen
+        : F.pc === 'r' ? CH_NG.rook : FA.dev && (F.pc === 'n' || F.pc === 'b') && !F.dev ? CH_NG.again : FA.dev && F.pc === 'p' ? CH_NG.pawn : F.flank ? CH_NG.flank : CH_NG.rare;
+      return chJoin(head, pk(L, vx));
     };
-    return { ask, hintTx: chHintJa(FA, k), good, ng };
+    const ngTx = ngOf(null); V.add(ngTx);
+    return { ask, hintTx, good, ng: u => (!u || u === A) ? ngTx : ngOf(u) };
   }
   /* (2026-11-21 lesson loop) the chess lesson problems (check, escape, mate, special rules, stalemate, tactics) in ナイトン's words,
      Japanese: a varied question, a hint about what to look at, and after the answer why the move works or what yours misses —
@@ -1945,9 +2041,11 @@
       const nc = NC.chess || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the texts without coordinates)
       const IN = nc['op:' + s.id + '/intro'] || s.intro, ja = lang === 'ja';
       if (ja && CHJ_OP.notes[s.id]) Object.entries(CHJ_OP.notes[s.id]).forEach(([k, v]) => { notes[k] = { ja: v }; });   // (2026-11-21 lesson loop: ナイトン's own lines)
-      return { id: s.id, title: L(s.title, lang), intro: ja && CHJ_OP.intro[s.id] ? CHJ_OP.intro[s.id] : (L(IN, lang) || []).join ? L(IN, lang).join('<br>') : L(IN, lang), start: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+      const intro = ja && CHJ_OP.intro[s.id] ? CHJ_OP.intro[s.id] : (L(IN, lang) || []).join ? L(IN, lang).join('<br>') : L(IN, lang);
+      const CV = ja ? chOpVoice(s.id) : null; if (CV) { CV.add(intro); try { Object.assign(notes, chStepNotesJa((s.study && s.study.steps || []).map(x => x[0]), notes, CV)); } catch (e) { console.warn('[lessons3d] chess step notes', e); } }   // (2026-11-22 lesson loop: a word on every move)
+      return { id: s.id, title: L(s.title, lang), intro, start: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
         steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
-        probs: probs.map((p, i) => { const o = { pos: p.fen, kind: 'best', P: p, ans: p.cand && p.cand[0][0] }; if (ja && o.ans) try { Object.assign(o, chOpJa(o, L(s.title, 'ja'), s.id.length * 3, i)); } catch (e) { console.warn('[lessons3d] chess opening', e); } return o; }),
+        probs: probs.map((p, i) => { const o = { pos: p.fen, kind: 'best', P: p, ans: p.cand && p.cand[0][0] }; if (ja && o.ans) try { Object.assign(o, chOpJa(o, L(s.title, 'ja'), CV, i)); } catch (e) { console.warn('[lessons3d] chess opening', e); } return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
     points(P, u) {   // = chess/app.js problemPoints (the stored scores)
