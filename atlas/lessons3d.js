@@ -3380,7 +3380,7 @@
     const back = me ? 7 : 0, [fr] = RC[f], [tr, tc] = RC[t], king = pos.at(f) === 2 || pos.at(f) === 4;
     const Fx = { capN, net, win: after.moves().length === 0, crown: pos.promotes(m), trade: !capN && oppMust && net === 0, shot: !capN && net > 0, hang: net < 0,
       save: thr && !capN && net >= 0 && !oppMust, back: !king && fr === back, center: tr >= 2 && tr <= 5 && tc >= 2 && tc <= 5, edge: tc === 0 || tc === 7, recap: capN > 0 && prev != null && E.mCap(prev) > 0, thrAfter, side: me };
-    Fx.k = Fx.win ? 'win' : Fx.shot ? 'shot' : Fx.recap ? 'recap' : capN && net < capN ? 'xchg' : capN ? 'cap' : Fx.crown ? 'crown' : Fx.save ? 'save' : Fx.trade ? 'trade' : Fx.back ? 'back' : Fx.center ? 'center' : Fx.edge ? 'edge' : 'dev';
+    Fx.k = Fx.win ? 'win' : Fx.shot ? 'shot' : Fx.recap ? 'recap' : capN && net < capN ? 'xchg' : capN ? 'cap' : Fx.hang ? 'gambit' : Fx.crown ? 'crown' : Fx.save ? 'save' : Fx.trade ? 'trade' : Fx.back ? 'back' : Fx.center ? 'center' : Fx.edge ? 'edge' : 'dev';
     return Fx;
   }
   const CK_SIDE = s => s ? '白' : '黒';
@@ -3406,79 +3406,102 @@
       bcross: 'ブリストルの定跡で、白の応じ方を変えた形。ブリストルの兄弟にあたるんだ。白は中央に駒を集めて受けるカニ。',
       dundee: 'ダンディーはスコットランド東部の港町。黒は1手目から、端に近い駒を前へ出していく定跡なんだ。',
     },
-    ask: ['『{n}』のこの場面、いちばんいい手はどれ？', 'さあ、きみならここはどう動かす？', 'ここで指したい一手、見つけられるかな？', 'この局面の最善手、わかるかな？', '『{n}』の続き！ 次の一手はどれだと思う？'],
-    lead: ['正解は{m}だったんだ。', 'ここは{m}がいちばん！', '{m}を見てみて！', '本筋は{m}だカニ。'],
-    so: ['{a}、それがこの手の強み！', '{a}のが、この手のいいところ。', 'この手なら{a}の。', 'これなら{a}んだ。'],
-    gap: ['{x}には、そのよさがないの。', '{x}だと、その形が作れないカニ。', '{x}だと、相手に先に良い場所を取られちゃう。'],
-    good: ['これで次の手がぐっと指しやすくなるカニ！', 'いい流れを作れたね。', '定跡の本筋どおり、ばっちりだカニ！', 'いい形になった！'],
+    ask: ['この場面、いちばんいい手はどれ？', 'さあ、きみならここはどう動かす？', 'ここで指したい一手、見つけられるかな？', 'この局面の最善手、わかるかな？', '続きはどの手で行く？', '定跡の続きだカニ。どの駒を動かす？', 'ここ、きみならどう進める？', 'いちばん働く一手を探してみて！'],
+    askN: '『{n}』の続き！ 次の一手はどれだと思う？',
+    lead: ['正解は{m}だったんだ。', 'ここは{m}がいちばん！', '{m}を見てみて！', '本筋は{m}だカニ。', '定跡では{m}を選ぶの。', 'ここで指したかったのは{m}！'],
+    so: ['{a}、それがこの手の強み！', '{a}のが、この手のいいところ。', 'この手なら{a}の。', 'これなら{a}んだ。', 'こう動かすと{a}からね。', '{a}から、こっちを選びたいカニ。'],
+    gap: ['{x}だと、そのよさが出ないの。', '{x}だと、その形が作れないの。', '{x}だと、相手に先に良い場所を取られちゃう。', '{x}では駒の働きが一歩遅れて、相手に先を越されるの。'],
+    // (2026-11-23 lesson loop) the praise, the soft words after a miss, the push on — each opening takes them in its own order (ckOpVoice)
+    cheer: ['いいね！', 'さすが！', 'お見事！', 'ばっちり！', 'その調子！', '上手！', 'ナイスだカニ！', 'よく見つけたね！', 'すばらしい！', 'そうそう、それ！', 'いい手だね！', '完璧！'],
+    soft: ['おしい！', 'ドンマイ！', 'あと少しだった！', 'いい線いってたカニ！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと指せるカニ！', 'あと一歩！', 'みんな一度は迷う場面なの。'],
+    push: ['次もこの調子でいこう！', 'どんどん行こう！', 'その勢いで次へ進もう！', 'まだまだいけるね！', 'この感じで続けよう！', '次も楽しみだカニ！'],
+    pr: ['きみの手で{a}の。', 'これで{a}ね！', '{a}のが、この手のねらいだカニ。', 'その手なら{a}。形がわかってきたね！', '{a}から、ここはこの一手なの。', 'ちゃんと{a}手を選べたね。'],
     deg: d => d <= 10 ? 'ほんの少し' : d <= 40 ? '少し' : d <= 150 ? 'はっきり' : 'かなり',
   };
-  const CK_WHY = {   // why the move is played (the praise / the line's notes)
-    win: ['これで相手は動けない！ 勝ちが決まる手だね。', '一気に決めちゃう手だカニ！'],
-    shot: ['わざと1枚取らせて、そのあと連続で跳び返す「ショット」！ 差し引きで得をするんだ。', '取らせてから跳び返す手。損に見えて、じつは得なの！'],
-    recap: ['取られた分を、すぐに取り返す手。これで駒の数は元どおり！', '取り返しの一手！ 取れるときは取らなきゃいけないルールなんだ。', 'すかさず取り返して、駒の数をそろえる手だカニ。'],
-    cap: ['相手の駒を跳び越えて取る手！ 取ったあとも取り返されない取り方を選ぶのがコツなんだ。', 'どの取り方を選ぶかが大事。これなら着地した駒が安全なの。', '取るのは義務。だからこそ、いちばん得な取り方を選ぶんだ！'],
-    xchg: ['取るのは義務だから、ここは跳び越えて取る。このあと取り返されて、1枚ずつの交換になるんだ。', '跳び越えて取る手。すぐ取り返されるけど、それも定跡のうちだカニ。', 'ルールどおり取る手！ 取り返されて、駒の数はおあいこになるの。'],
-    crown: ['いちばん奥まで進んでキングになる手！ キングは後ろにも動けるんだ。', 'キングに成る手だね。ぼくの背中の王冠とおそろいだカニ！'],
-    save: ['跳び越えられそうな駒を、先に守る手。取られる前に手当てするのが大事なの。', '相手の取るねらいを、先にかわしておく手なの。'],
-    trade: ['駒をぶつけて、1枚取らせて1枚取り返す交換をさそう手。形をすっきりさせるんだ。', '交換をしかける手！ 取り合いのあと、こっちの形がよくなるの。', '自分から駒をぶつけて交換にいく手だカニ。'],
-    back: ['後ろの段の駒を出して、前の駒を後ろから支える手。', '後ろの段から駒を出す手。ただ、後ろの段を空けすぎると相手にキングになられやすいから注意なんだ。', '控えの駒を前線へ送る手！ 前の駒に後ろ盾ができるの。'],
-    center: ['駒を盤の真ん中へ進める手。真ん中をおさえると、動ける道が広がるんだ。', '中央に駒を出す手！ 相手の駒の通り道をじゃまできるの。', '真ん中を取りにいく手。チェッカーでも中央は大事なんだカニ。'],
-    edge: ['盤の端へ寄せる手。端の駒は跳び越えられないから、安全なんだ。', '端の駒を動かして、形をくずさずに進める手。相手にすきを見せないの。'],
-    dev: ['駒を進めて、形を整える手だカニ。', '前の駒を後ろから支えられるように、駒を進める手なの。', 'すぐ後ろが空かないように、駒を進めておく手！'],
+  const CK_WHY = {   // why the move is played (the praise / the line's notes) — several wordings each, none said twice in one opening
+    win: ['これで相手は動けない！ 勝ちが決まる手だね。', '一気に決めちゃう手だカニ！', '相手の動ける駒がなくなる、とどめの一手！'],
+    gambit: ['わざと1枚を取らせる手！ 駒は1枚へるけど、定跡ではそのあとの形を大事にするの。', '1枚を差し出す、思い切った手だカニ！ 取らせたあとの陣形で勝負するんだ。', '相手に1枚あげちゃう手。損は承知で、形を先に作るのがこの定跡のやり方なの。'],
+    shot: ['わざと1枚取らせて、そのあと連続で跳び返す「ショット」！ 差し引きで得をするんだ。', '取らせてから跳び返す手。損に見えて、じつは得なの！', '1枚捨てて2枚いただく、気持ちいい一手だカニ！'],
+    recap: ['取られた分を、すぐに取り返す手。これで駒の数は元どおり！', '取り返しの一手！ 取れるときは取らなきゃいけないルールなんだ。', 'すかさず取り返して、駒の数をそろえる手だカニ。', 'やられたらやり返す！ 跳び越えて1枚取り戻すの。', 'お返しの一手だね。これで取り合いはおあいこカニ！', '相手の跳んできた駒を、こっちも跳んで取る。これで五分五分！'],
+    cap: ['相手の駒を跳び越えて取る手！ 取ったあとも取り返されない取り方を選ぶのがコツなんだ。', 'どの取り方を選ぶかが大事。これなら着地した駒が安全なの。', '取るのは義務。だからこそ、いちばん得な取り方を選ぶんだ！', '相手の駒をいただく手！ 着地したマスで、すぐには跳ばれないカニ。'],
+    xchg: ['取るのは義務だから、ここは跳び越えて取る。このあと取り返されて、1枚ずつの交換になるんだ。', '跳び越えて取る手。すぐ取り返されるけど、それも定跡のうちだカニ。', 'ルールどおり取る手！ 取り返されて、駒の数はおあいこになるの。', 'ここは取る一手！ 相手も取り返して、盤がすっきりするカニ。', '跳んで1枚いただき！ 次に取り返されるのは、はじめから計算ずみなの。'],
+    crown: ['いちばん奥まで進んでキングになる手！ キングは後ろにも動けるんだ。', 'キングに成る手だね。ぼくの背中の王冠とおそろいだカニ！', '奥の段に着いて王冠をかぶる！ ここから後ろへも戻れるの。'],
+    save: ['跳び越えられそうな駒を、先に守る手。取られる前に手当てするのが大事なの。', '相手の取るねらいを、先にかわしておく手なの。', 'ピンチの駒を助ける手！ これで相手は跳び越えられないカニ。'],
+    trade: ['駒をぶつけて、1枚取らせて1枚取り返す交換をさそう手。形をすっきりさせるんだ。', '交換をしかける手！ 取り合いのあと、こっちの形がよくなるの。', '自分から駒をぶつけて交換にいく手だカニ。', 'わざと相手の前に駒を出す手。相手は取るしかなくて、こっちもすぐ取り返せるね！', '1枚ずつの取り合いにさそう手。相手の形をくずすねらいなの。'],
+    back: ['後ろの段の駒を出して、前の駒をうしろから支える手。', '後ろの段から駒を出す手。ただ、後ろの段を空けすぎると相手にキングになられやすいから注意なんだ。', '控えの駒を前線へ送る手！ 前の駒に後ろ盾ができるの。', '最後の段の駒にも出番が来たね！ 前線に加わって、数で押せるカニ。', 'いちばん奥の駒を動かす手。1つだけ出して、残りの駒でキングを防ぐの。'],
+    center: ['駒を盤の真ん中へ進める手。真ん中をおさえると、動ける道が広がるんだ。', '中央に駒を出す手！ 相手の駒の通り道をじゃまできるの。', '真ん中を取りにいく手。チェッカーでも中央は大事なんだカニ。', 'まん中のマスへ一歩！ ここに立つ駒は、左右どちらにも進めるね。', '中央へ駒を集める手。まん中に駒が多いほうが戦いやすいカニ！', '盤のまん中に陣取る手だね。相手は前へ出にくくなるカニ。', '中央の空きマスを先に使う手！ 相手にそこを取らせないんだ。', 'まん中で仲間と並ぶ手。並んだ駒は、おたがいを守り合えるカニ。'],
+    edge: ['盤の端へ寄せる手。端の駒は跳び越えられないから、安全なんだ。', '端の駒を動かして、形をくずさずに進める手。相手にすきを見せないの。', '端のすじを進める手だカニ。横に相手がいないから、取られる心配が少ないね。', 'へりに沿って進む手！ ここなら跳び越えられる向きがないの。', '端っこを使う手。ちょっと地味だけど、守りがかたい進め方だカニ。'],
+    dev: ['駒を進めて、形を整える手だカニ。', '仲間の駒とくっつくように進める手なの。', 'すぐ後ろが空かないように、駒を進めておく手！', '駒どうしを斜めにつなげて進む手。つながった駒は取られにくいカニ！', 'あわてず一歩進める手。形がくずれないのがいちばんなの。', '次の動きにそなえて、駒の位置を整える手だカニ！'],
   };
-  const CK_SHORT = { win: '勝ちが決まる', shot: '取らせてから跳び返して得をする', recap: '駒の数をそろえられる', cap: '取ったあとも取り返されない', xchg: 'ルールどおり取って交換にできる', crown: 'キングになれる',
-    save: 'ねらわれた駒を守れる', trade: '交換で形を整えられる', back: '前の駒を後ろから支えられる', center: '中央をおさえられる', edge: '端で安全に駒を進められる', dev: '形をくずさずに進められる' };
-  function ckWhyJa(F, k) { const L = CK_WHY[F.k] || CK_WHY.dev; return L[k % L.length]; }
-  function ckHintJa(F, k) {
-    const tail = ['', '金の丸が動かす駒だカニ。', ''][k % 3];
-    const H = { win: ['相手を動けなくする手、ないかな？', '一気に決められる手がありそう！'], shot: ['1枚わざと取らせたら、そのあと連続で跳べる道はない？', '損して得とれ！ 取らせてから跳び返す手、さがしてみて。'],
-      recap: ['取られた分、取り返せる駒はどれ？', 'まずは駒の数をそろえよう！'], cap: ['取るのは義務。どの取り方なら、取り返されずにすむ？', '取り方がいくつかあるね。着地したあと安全なのはどれ？'],
-      xchg: ['取るのは義務。どの駒で取るのがいい？', '取り方を選べるときは、そのあとの形も考えてみて！'], crown: ['いちばん奥の段まで、あと一歩の駒がいるね！', 'キングになれる駒、さがしてみて！'],
-      save: ['いま、跳び越えられそうな駒はない？', '相手が取りにきそうな駒、守ってあげて！'], trade: ['駒をぶつけて交換にいく手も考えてみて。', '1枚取らせて1枚取り返す、そんな手がありそう！'],
-      back: ['後ろの段の駒にも、そろそろ出番があるかも？', '前の駒を、後ろから支えてあげよう！'], center: ['盤の真ん中、空いているマスはない？', '中央へ進める駒をさがしてみて！', '真ん中をおさえる手がありそう！'],
-      edge: ['盤の端は跳び越えられない、安全な場所なんだ。', '端の駒の使い道も考えてみて！'], dev: ['動かした先の「すぐ後ろ」が空かないか、確かめてみて。', '形をくずさない手をさがしてみよう！'] }[F.k];
-    const h = H && H[Math.floor(k / 3) % H.length];
-    const hh = h || '金の丸の駒で、いちばん働く場所を考えてみて。'; return hh + (tail && /[！？]$/.test(hh) ? ' ' : '') + tail;
+  const CK_SHORT = { gambit: ['1枚差し出して形を先に作れる', '損を承知で陣形を整えられる'], win: ['勝ちが決まる', '相手を動けなくできる'], shot: ['取らせてから跳び返して得をする', '1枚捨てて2枚取れる'], recap: ['駒の数をそろえられる', '取られた分を取り戻せる'], cap: ['取ったあとも取り返されない', '安全に1枚取れる'],
+    xchg: ['ルールどおり取って交換にできる', '取り合いをおあいこにできる'], crown: ['キングになれる', '後ろにも動ける駒が作れる'], save: ['ねらわれた駒を守れる', '取られそうな駒を助けられる'], trade: ['交換で形を整えられる', '取り合いで相手の形をくずせる', '盤をすっきりさせられる'],
+    back: ['前の味方を支えられる', '控えの駒を戦いに加えられる', '奥の駒も戦力にできる', '守りの駒を前線に回せる'], center: ['中央をおさえられる', 'まん中で動ける道が広がる', '相手が前へ進みにくくなる', '相手より先にまん中に立てる'], edge: ['端で安全に駒を進められる', '跳ばれる心配なく進める', 'へりで守りをかためられる'], dev: ['形をくずさずに進められる', '駒どうしがつながる', 'すきを作らずに前へ出られる'] };
+  const ckSh = (kd, n, V) => { const A = CK_SHORT[kd] || CK_SHORT.dev; if (!V) return A[n % A.length]; const c = V.sh || (V.sh = {}); c[kd] = (c[kd] || 0) + 1; return A[(n + c[kd]) % A.length]; };   // (V: each use moves on, so one opening does not say the same phrase three times)
+  const ckRot = (A, o) => A.map((_, q) => A[(o + q) % A.length]);
+  function ckWhyJa(F, k, V) { const L = CK_WHY[F.k] || CK_WHY.dev; return V ? xqPick(V, ckRot(L, k)) : L[k % L.length]; }
+  const CK_HINT = { gambit: ['1枚取らせてでも、形を作りにいく手があるかも？', '駒を差し出す、思い切った手も考えてみて！'], win: ['相手を動けなくする手、ないかな？', '一気に決められる手がありそう！', 'とどめを刺せる駒、さがしてみて！'], shot: ['1枚わざと取らせたら、そのあと連続で跳べる道はない？', '損して得とれ！ 取らせてから跳び返す手、さがしてみて。', '捨て駒から始まる連続ジャンプ、見えるかな？'],
+    recap: ['取られた分、取り返せる駒はどれ？', 'まずは駒の数をそろえよう！', 'さっき跳んできた相手の駒、そのままでいいかな？'], cap: ['取るのは義務。どの取り方なら、取り返されずにすむ？', '取り方がいくつかあるね。着地したあと安全なのはどれ？', '着地したマスの、まわりも見てから選んでみて！'],
+    xchg: ['取るのは義務。どの駒で取るのがいい？', '取り方を選べるときは、そのあとの形も考えてみて！', '取ったあとの取り返しまで、読んでみよう！'], crown: ['いちばん奥の段まで、あと一歩の駒がいるね！', 'キングになれる駒、さがしてみて！', '王冠に手が届きそうな駒、いないかな？'],
+    save: ['いま、跳び越えられそうな駒はない？', '相手が取りにきそうな駒、守ってあげて！', '相手の番になったら、どの駒が危ない？'], trade: ['駒をぶつけて交換にいく手も考えてみて。', '1枚取らせて1枚取り返す、そんな手がありそう！', '相手の駒の前へ出たら、取り合いはどうなる？', '取らせても、すぐ取り返せるマスはないかな？'],
+    back: ['後ろの段の駒にも、そろそろ出番があるかも？', '前の駒を、うしろから支えてあげよう！', 'いちばん奥の段で休んでいる駒、いないかな？', '控えの駒を前に出すタイミングかも！', '後ろの段のどの駒なら、出しても守りがくずれない？'],
+    center: ['盤の真ん中、空いているマスはない？', '中央へ進める駒をさがしてみて！', '真ん中をおさえる手がありそう！', 'まん中のマスに先に入れる駒はどれ？', '相手が出てきにくくなる、まん中の一歩は？'],
+    edge: ['盤の端は跳び越えられない、安全な場所なんだ。', '端の駒の使い道も考えてみて！', 'へりのすじに、進められる駒はない？', '取られる心配のない進み方、さがしてみて！'],
+    dev: ['動かした先の「すぐ後ろ」が空かないか、確かめてみて。', '形をくずさない手をさがしてみよう！', '仲間とつながったまま進める駒はどれ？', 'あわてない一歩、どの駒で指す？'] };
+  function ckHintJa(F, k, V) {
+    const H = CK_HINT[F.k] || ['金の丸の駒で、いちばん働く場所を考えてみて。'];
+    const h = V ? xqPick(V, ckRot(H, k)) : H[k % H.length], t = k % 3 === 1 ? (V ? xqPick(V, ckRot(['金の丸が動かす駒だカニ。', '金の丸がついた駒に注目！', '金の丸の駒から考えてみて。'], k)) : '金の丸が動かす駒だカニ。') : '';
+    return xqJoin(h, t);
   }
-  function ckOpJa(E, P, name, k, ck) {   // ck(k): the move named by its arrow
+  function ckOpVoice(id) {   // (2026-11-23 lesson loop) one opening's voice: praise / soft words / push / lead in an order of its own, and the lines already said
+    const seed = shSeed('ck' + id), O = CKJ_OP, pc = shPerm(seed, O.cheer.length), ps = shPerm(seed ^ 0x9e37, O.soft.length), pp = shPerm(seed ^ 0x51ed, O.push.length), pl = shPerm(seed ^ 0x2b7f, O.lead.length), pr = shPerm(seed ^ 0x6c1d, O.pr.length), pa = shPerm(seed ^ 0x1f3b, O.ask.length);
+    return { cheer: i => O.cheer[pc[i % pc.length]], soft: i => O.soft[ps[i % ps.length]], push: i => O.push[pp[i % pp.length]], lead: i => O.lead[pl[i % pl.length]], pr: i => O.pr[pr[i % pr.length]], ask: i => O.ask[pa[i % pa.length]], used: new Set(), seed };
+  }
+  function ckOpJa(E, P, name, k, ck, V, i) {   // ck(k): the move named by its arrow; V: the opening's voice (ckOpVoice), i: the problem's number
+    V = V || ckOpVoice(name); i = i || 0;
     const pos = E.Pos.from(P.s), A = P.best, sc = new Map(P.sc || []), best = sc.has(A) ? sc.get(A) : Math.max(...(P.sc || [[0, 0]]).map(x => x[1]));
     const FA = ckFacts(E, pos, A), M = ck('ok'), X = ck('ng'), f = s => s.replace(/\{m\}/g, M).replace(/\{x\}/g, X);
-    const ask = CKJ_OP.ask[k % CKJ_OP.ask.length].replace('{n}', name);
-    const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 6 ? '{x}もいい手！ {m}と同じくらいよく働く手なの。' : `{x}も悪くない手。でも{m}なら${CK_SHORT[FA.k] || '形が整う'}から、そっちが本筋なの。`);
-      const w = ckWhyJa(FA, k); let g = CKJ_OP.good[k % CKJ_OP.good.length]; if (/カニ/.test(w)) g = g.replace('だカニ！', '！'); return w + (/[！？]$/.test(w) ? ' ' : '') + g; };
+    const ask = i === 0 ? CKJ_OP.askN.replace('{n}', name) : V.ask(i), j = i + V.seed % 7, sh = ckSh(FA.k, j, V), sh2 = ckSh(FA.k, j, V);
+    // the praise: the cheer, why — in words the line's notes have not used — and now and then a push on
+    let why; { const L = CK_WHY[FA.k] || CK_WHY.dev, fresh = L.filter(x => xqSn(x).every(y => !V.used.has(y.trim())));
+      why = fresh.length ? ckWhyJa(FA, j, V) : xqPick(V, [0, 1, 2, 3, 4, 5].map(q => V.pr(i + q).replace('{a}', sh2))); }
+    if (FA.thrAfter && !FA.win) why = xqJoin(why, xqPick(V, ckRot(['しかも次に跳び越えるねらいもあるカニ！', 'おまけに、次は相手の駒を跳べる形！', 'そのうえ相手の駒をひとつ、ねらっているね。'], j)));
+    const goodTx = xqJoin(V.cheer(i), why, i % 2 ? V.push(i) : '');
+    const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 6 ? xqJoin(V.cheer(i), '{x}もいい手だカニ！ {m}と同じくらいよく働くの。') : xqJoin('悪くない手だね！', `でも{m}なら${sh2}から、そっちが本筋なの。`));
+      return goodTx; };
     const ng = u0 => {
       let u = u0; if (u == null || u === A) u = ((P.sc || []).find(x => x[0] !== A && best - x[1] > 6) || (P.sc || []).find(x => x[0] !== A) || [])[0];   // (no move given: a real miss, as the tool asks)
-      const out = [CKJ_OP.lead[k % CKJ_OP.lead.length], CKJ_OP.so[k % CKJ_OP.so.length].replace('{a}', CK_SHORT[FA.k] || '形が整う')];
-      if (u == null) return f(out.join(''));
+      const pk = A0 => xqPick(V, ckRot(A0, j));
+      const out = [V.soft(i), V.lead(i), pk(CKJ_OP.so.map(x => x.replace('{a}', sh)))];
+      if (u == null) return f(xqJoin(...out));
       let F = null; try { F = ckFacts(E, pos, u); } catch (e) {}
-      const d = sc.has(u) ? best - sc.get(u) : null;
+      const d = sc.has(u) ? best - sc.get(u) : null, n0 = out.length;
       if (F) {
         if (FA.win && !F.win) out.push('{x}だと、せっかくの勝ちを見のがしちゃう。');
-        else if (F.net < FA.net && F.capN) out.push('{x}の取り方だと、着地した駒を取り返されちゃう！');
+        else if (F.net < FA.net && F.capN) out.push(pk(['{x}の取り方だと、着地した駒を取り返されちゃう！', '{x}で取ると、着地したところをすぐ跳び返されるの。']));
         else if (F.net < FA.net && F.net <= -2) out.push(`{x}だと、相手に連続で跳ばれて${-F.net}枚も取られちゃう！`);
-        else if (F.net < FA.net && F.net < 0) out.push('{x}だと、駒をタダで跳び越えられちゃう！');
+        else if (F.net < FA.net && F.net < 0) out.push(pk(['{x}だと、駒をタダで跳び越えられちゃう！', '{x}では、動かした駒の後ろが空いて、ただで取られるの。']));
         else if (F.net < FA.net) out.push('{x}だと、取らせて跳び返すチャンスを見のがしちゃう。');
         else if (FA.crown && !F.crown) out.push('{x}だと、キングになるチャンスを逃しちゃう。');
-        else if (FA.save && F.thrAfter) out.push('{x}だと、ねらわれた駒がそのままなの。');
-        else if (F.back && !FA.back) out.push('{x}だと、後ろの段に穴があいて、相手にキングになられやすくなるんだ。');
-        else if (FA.trade && !F.trade) out.push('{x}だと、交換で形を整えるチャンスがなくなるの。');
-        else if (FA.center && !F.center && !F.capN) out.push('{x}だと、中央への進出が遅れちゃう。');
+        else if (FA.save && !F.save) out.push('{x}だと、ねらわれた駒を守れないの。');
+        else if (F.back && !FA.back) out.push(pk(['{x}だと、後ろの段に穴があいて、相手にキングになられやすくなるんだ。', '{x}は後ろの段の守りの駒を動かす手。奥にすきができるから、相手の駒が成りこみやすくなるカニ。', '{x}だと奥の段が手うすになって、キングへの道を相手に開けちゃう。']));
+        else if (FA.trade && !F.trade) out.push(pk(['{x}だと、交換で形を整えるチャンスがなくなるの。', '{x}では駒がぶつからないから、相手は自由に形を整えられちゃう。', '{x}だと取り合いが起きないまま、相手のペースで進んじゃうカニ。']));
+        else if (FA.thrAfter && !F.thrAfter) out.push(pk(['{x}だと、相手の駒をねらう形が作れないの。', '{x}では、次に跳び越えるねらいが生まれないカニ。']));
+        else if (FA.center && F.edge) out.push(pk(['{x}は端へ寄る手。安全だけど、まん中を相手に先に取られちゃう。', '{x}だと駒が端へ行って、中央が相手のものになりやすいの。']));
+        else if (FA.center && !F.center && !F.capN) out.push(pk(['{x}だと、中央への進出が遅れちゃう。', '{x}では、まん中のマスを相手にゆずることになるの。', '{x}だと、まん中が空いたままで、相手に先に入られちゃう。', '{x}では中央の駒が足りなくなって、相手に押しこまれるカニ。']));
+        else if (F.k !== FA.k && CK_SHORT[F.k]) out.push(pk([`{x}だと${ckSh(F.k, j, V)}けど、いまはそれより急ぐ手があるの。`, `{x}も${ckSh(F.k, j, V)}手。だけど、この場面では一歩おそいカニ。`, `{x}なら${ckSh(F.k, j, V)}。ただ、それだと先にやるべきことが後回しになるの。`, `{x}で${ckSh(F.k, j, V)}のは、あとからでも間に合うんだ。`, `{x}だと${ckSh(F.k, j, V)}。でも、それはもう少しあとの話だカニ。`]));
       }
-      if (out.length < 3) out.push(d != null && d <= 6 ? '{x}も悪くないけど、定跡の本筋はこっちなの。' : CKJ_OP.gap[k % CKJ_OP.gap.length].replace('{a}', CK_SHORT[FA.k] || '形を整える'));   // (2026-11-22: no "the AI says" — the right move's aim)
-      return f(out.reduce((a, b) => a + (/[！？]$/.test(a) ? ' ' : '') + b));
+      if (out.length === n0) out.push(d != null && d <= 6 ? pk(['{x}も悪くないけど、定跡の本筋はこっちなの。', '{x}もありだけど、よく指されるのはこっちだカニ。']) : pk(CKJ_OP.gap));   // (2026-11-22: no "the AI says" — the right move's aim)
+      return f(xqJoin(...out));
     };
-    return { ask, hintTx: ckHintJa(FA, k), good, ng, own: true };
+    return { ask, hintTx: ckHintJa(FA, k, V), good, ng, own: true };
   }
-  function ckNotesJa(E, g, notes) {   // the line's notes in チェッカニ's words (3D, ja); the AI's verdict kept from the stored note when it changes
-    const out = {}, cnt = {}; let pos = E.Pos.from(null), lastAi = '', prev = null;
+  function ckNotesJa(E, g, notes, V) {   // the line's notes in チェッカニ's words (3D, ja), rebuilt from the board; each line said once
+    const out = {}, cnt = {}; let pos = E.Pos.from(null), prev = null;
     g.study.line.forEach((m, i) => { const o = notes[String(i)];
-      const ai = o ? (String(o.ja || o || '').match(/\((?:AI)[:：]\s*([^)]+)\)|（AI[:：]\s*([^）]+)）/) || []).slice(1).find(Boolean) : '';
       let F = null; try { F = ckFacts(E, pos, m, prev); } catch (e) {}
       if (F) { cnt[F.k] = (cnt[F.k] || 0) + 1;
-        let s = CK_SIDE(F.side) + '：' + ckWhyJa(F, cnt[F.k] + g.id.charCodeAt(1));
+        let s = CK_SIDE(F.side) + '：' + ckWhyJa(F, cnt[F.k] + g.id.charCodeAt(1), V);
         if (i === 0) s = `『${(g.title || {}).ja || ''}』のはじまり！ ` + s;
-        lastAi = ai || lastAi;   // (2026-11-22: the AI's verdict is no longer said)
         out[String(i)] = { ja: s }; }
       else if (o) out[String(i)] = o;
       prev = m; pos = pos.clone().play(m); });
@@ -3692,10 +3715,10 @@
       const lx = ((this.data.lux || {}).openings || {})[g.id] || {}, hist = L((NC.checkers || {})['op:' + g.id + '/hist'] || lx.hist, lang);
       const probs = shuffle(g.problems || []).slice(0, 5);
       const E = window.CheckersEngine, ja = lang === 'ja' && E;
-      let nj = null; if (ja) try { nj = ckNotesJa(E, g, notes); } catch (e) { console.warn('[lessons3d] checkers notes', e); }
+      const CV = ja ? ckOpVoice(g.id) : null; let nj = null; if (ja) try { nj = ckNotesJa(E, g, notes, CV); } catch (e) { console.warn('[lessons3d] checkers notes', e); }
       return { id: g.id, title: L(g.title, lang), intro: ja && CKJ_OP.intro[g.id] ? CKJ_OP.intro[g.id] : hist, start: { spec: null, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes: nj || notes,
         probs: probs.map((P, i) => { const o = { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: E ? [E.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: CKM('ok', lang) }) };
-          if (ja) try { Object.assign(o, ckOpJa(E, P, L(g.title, 'ja'), g.id.charCodeAt(1) * 2 + i, k => CKM(k, lang))); } catch (e) { console.warn('[lessons3d] checkers opening', e); }
+          if (ja) try { Object.assign(o, ckOpJa(E, P, L(g.title, 'ja'), g.id.charCodeAt(1) * 2 + i, k => CKM(k, lang), CV, i)); } catch (e) { console.warn('[lessons3d] checkers opening', e); }
           return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= max * .75; pr[g.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
