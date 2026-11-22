@@ -156,7 +156,7 @@
       return { yaw: v ? Math.PI / 2 : 0, pit: 1.52, d: Math.max(sh / 2 / tv * h / uh, sw / 2 / (tv * V.cam.aspect) * w / uw) * 1.03 }; };
     // a slide moves the board sideways (gallery.js): along the screen's width, or its height when turned; back to the middle whenever the view is set again
     const apply = () => { const r = rot(); V.ov.classList.toggle('exv-rot', r); document.documentElement.classList.toggle('exv-rot', r);
-      const v = vert(); V.tgtBase = tgtB.clone(); V.tgt.copy(tgtB); V.panOff = 0; V.panAxis = r ? 'y' : 'x'; V.panLim = ((v ? A[3] - A[2] : A[1] - A[0]) / 2) * (r ? 1.4 : 1) * .7;
+      const v = vert(); V.tgtBase = tgtB.clone(); V.tgt.copy(tgtB); V.panXZ = [0, 0]; V.panLim = Math.max(A[1] - A[0], A[3] - A[2]) / 2;   // (a slide moves the board any way, gallery.js)
       const q = view(); V.home = q; G.tween(q); if (V.R) V.R.shadowMap.needsUpdate = true; };
     const tgtB = V.tgt.clone(); apply(); V.playing = true;
     const hid = ((V.obj.userData.play && V.obj.userData.play.hide) || []).filter(m => m.visible); hid.forEach(m => { m.visible = false; });   // the pieces and sticks laid out for show: put away during a game
