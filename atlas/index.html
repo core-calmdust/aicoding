@@ -2250,6 +2250,10 @@ html.bv-on:not(#_) .msbtn,html.rec-on:not(#_) .msbtn,html[data-pg=museum]:not(#_
 .lvs-l button .nm .rw{display:inline-block;vertical-align:2px;margin-inline-end:6px;padding:0 7px;border-radius:99px;font:800 10.5px/1.6 var(--round,system-ui);font-style:normal;color:#fff;background:linear-gradient(180deg,#b8bcc8,#8a90a0)}
 .lvs-l button .nm .rw.r1{background:linear-gradient(180deg,#5ab8ff,#2a7ad8)}.lvs-l button .nm .rw.r2{background:linear-gradient(180deg,#c07aff,#8a4ad8)}.lvs-l button .nm .rw.got{opacity:.55}
 .bvi .lvpick > .lvck{display:inline-flex!important;align-items:center;justify-content:center;flex:none;width:20px;height:20px;margin-inline-start:-2px!important;margin-inline-end:auto;font-size:12px!important;border-radius:50%;background:#2fb37a;color:#fff!important;font:900 12px/1 var(--round,system-ui);font-style:normal;box-shadow:0 1px 3px rgba(0,0,0,.18)}   /* (the closed picker: the same ✓ after Lv.N, 2026-11-11) */
+/* (the level's name may be cut short on a narrow phone, but never the beaten mark after it: the name alone takes the ellipsis) */
+.lvs-l button .nm.nmk{display:flex;align-items:center;min-width:0;overflow:visible}
+.lvs-l button .nm.nmk .nt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lvs-l button .nm.nmk .rw,.lvs-l button .nm.nmk .lvck{flex:none}
 .lvs-l button .nm .lvck{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-inline-start:8px;vertical-align:1px;border-radius:50%;background:#2fb37a;color:#fff;font:900 13px/1 var(--round,system-ui);font-style:normal;box-shadow:0 1px 3px rgba(0,0,0,.18)}   /* a cleared level (its reward owned): ✓ after the name, before the meter (2026-11-10) */
 .lvs-boss.on{border-color:#ffb27a;background:linear-gradient(100deg,#ffe4cc,#fff6ee 70%)}
 .lvs-boss.ur{background:linear-gradient(100deg,#f3e6ff,#fff6e0 55%,#e6f6ff);border-color:#e0cdfa}
@@ -2537,7 +2541,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=496"></script>
+<script src="lazy.js?v=497"></script>
 <script src="puzzle-lines.js?v=2"></script>
 <script src="puzzles.js?v=41"></script>
 <script src="lessons3d.js?v=120"></script>
@@ -2574,7 +2578,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
     if (ul && !seen.has(ul)) { seen.add(ul); mo.observe(ul, { attributes: true, attributeFilter: ['hidden'] }); } }
   mo = new MutationObserver(sync); mo.observe(document.body, { childList: true }); sync(); window.__pgState = sync; })();
 </script>
-<script src="app.js?v=481"></script>
+<script src="app.js?v=482"></script>
 <script src="../shared/praline-badge.js?v=9" data-portal defer></script>
 </body>
 </html>

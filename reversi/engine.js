@@ -1061,7 +1061,9 @@ const LEVELS = [
   // 36 is the strongest, by time on all threads (wtry / xtry / tryMs / end: MODEL_CARD.md「上位レベルの追加の読み切り」「終局まで読む」)
   { depth: 16, exact: 22, wld: 24, end: 28, time: 15000, use: 1, max: 30000, mpc: 1, bm: 0.3 },   // 29 (Lv.21 until 2026-11-13)
   { depth: 20, mix: 16, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1, bm: 0.3 },   // 30 (Lv.22 until 2026-11-13)
-  { depth: 20, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1, bm: 0.3 },   // 31 (Lv.23 until 2026-11-13)
+  // (31, 2026-11-22: depth 20 at t 1.5 until then. Against Edax level 18, 300 games each on an M4 Pro: +85 ± 16 Elo at 5.25 s a game,
+  // the former setting +7 ± 16 at 4.87 s, +40 to +48 with retrained weights — MODEL_CARD.md「天上レベルの枝刈り」)
+  { depth: 22, t: 1.3, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1, bm: 0.3 },   // 31 (Lv.23 until 2026-11-13)
   { depth: 22, exact: 23, wld: 24, wtry: 27, xtry: 25, tryMs: 4000, end: 30, time: 25000, use: 1, max: 50000, mpc: 1, bm: 0.3 },   // 32 (Lv.24 until 2026-11-13)
   { depth: 25, mix: 20, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1, bm: 0.3 },   // 33 (Lv.25 until 2026-11-13)
   { depth: 25, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1, bm: 0.3 },   // 34 (Lv.26 until 2026-11-13)
@@ -1152,7 +1154,14 @@ function mixPick(pl, ph, ol, oh) {   // one bit from a hash of the position (lv.
   return (h >>> 7) & 1;
 }
 let TRY_W = 99, TRY_X = 99;   // the most empties the timed extra solves (lv.tryMs) are tried at on this device (99: no limit yet)
+// A level (or opts.cfg) may set t, how hard Multi-ProbCut cuts for that level's searches (without it: MPC.t, 1.5). think
+// puts it in place for the one search and puts the former value back (tools set MPC.t themselves).
 function think(cells, toMove, opts, onProgress) {
+  const lv = opts.cfg || LEVELS[opts.level] || LEVELS[DEF_LEVEL], t0 = MPC.t;
+  if (lv.t) MPC.t = lv.t;
+  try { return think0(cells, toMove, opts, onProgress); } finally { MPC.t = t0; }
+}
+function think0(cells, toMove, opts, onProgress) {
   const lv = opts.cfg || LEVELS[opts.level] || LEVELS[DEF_LEVEL];
   MPC.on = !!lv.mpc; // keep the weaker levels as plain full-width searches
   const pos = toBits(cells, toMove);
