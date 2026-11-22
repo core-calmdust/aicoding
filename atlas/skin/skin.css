@@ -451,6 +451,9 @@ html.atlas-skin:not(.atlas-land) .card.controls .btn:disabled{background:#fbf7ee
   html.atlas-skin.hb-atlas:not(.atlas-land) body{padding-top:0!important}
   /* (2026-11-23) the bar in the portal bar's colour (the cream skin: #fff6e2), one block with it */
   html.atlas-skin:not([data-skin]):not(.atlas-land) body:not(#_):not(#_) .card.controls:not(#_){background:#fff6e2!important}
+  /* (2026-11-23 the user) a plain edge-to-edge strip like the bottom tabs: no rounded corners, no side lines; no top line (the portal bar's bottom line is the only one) */
+  html.atlas-skin:not(.atlas-land) body:not(#_):not(#_) .card.controls:not(#_){border-radius:0!important;border-width:0 0 2px!important;border-style:solid!important;margin:0!important}
+  html.atlas-skin:not([data-skin]):not(.atlas-land) body:not(#_):not(#_) .card.controls:not(#_){border-color:#efe3c8!important;box-shadow:0 8px 16px -10px rgba(80,40,0,.35)!important}
 }
 /* shogi, phones (portrait), the 3D board: sized so the whole board area — both komadai bars and the board — fits between the
    menu bar and the bottom tabs, as the 2D page shows it (the board sized from the width alone hid the lower komadai, 2026-11-11) */
