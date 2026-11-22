@@ -20,6 +20,9 @@
          the opposite sides carry the same pictures;
        sugoroku-top.webp — the field (52.9 × 29.6 cm) above the inner faces of the far long wall and the far short wall; the strip of
          the field hidden behind the near walls is the far strip mirrored, and the half-moons (raised pieces here) are taken out.
+         2026-11-23: the four corner flowers came out of the straightening sheared and blurred (they lie under the walls' shadow, at the
+         photograph's steepest angle); each is replaced by a clean flower of the same kind from the same row (the 4th from that end),
+         at the corner flower's own place.
      The openings are traced on the straightened sides, in cm from the side's top left corner, starting where the rail's two hanging
      lobes meet (the long side's second opening is the first mirrored). */
   const HERE = (document.currentScript && document.currentScript.src) || location.href; let SIDE = null, TOP = null;
@@ -27,7 +30,7 @@
   const OPEN_S = [[15.4, 3.62], [15.6, 3.81], [16.11, 4.38], [17.37, 4.75], [18.63, 4.72], [19.89, 4.56], [21.15, 4.31], [22.42, 4.1], [23.68, 4], [24.94, 3.97], [26.2, 4.19], [26.86, 4.56], [27.47, 5.19], [27.97, 6.12], [28.27, 7.25], [28.41, 8.5], [28.41, 9.5], [28.27, 10.5], [28.07, 11.5], [27.72, 12.5], [27.26, 13.37], [26.71, 14.12], [25.95, 14.69], [25.04, 15.4], [24.18, 15.85], [20.2, 15.85], [15.45, 15.85], [10.6, 15.85], [6.56, 15.85], [5.65, 15.5], [4.95, 14.87], [4.14, 14], [3.53, 13], [3.08, 12], [2.78, 11], [2.63, 10], [2.57, 9], [2.63, 8], [2.78, 6.87], [3.13, 5.75], [3.53, 5], [4.04, 4.5], [4.54, 4.19], [5.05, 3.97], [6.06, 3.79], [7.07, 3.75], [8.08, 3.81], [9.09, 3.94], [10.1, 4.12], [11.11, 4.31], [12.12, 4.44], [13.13, 4.5], [14.14, 4.38], [14.64, 4.12], [15.05, 3.75]];
   (window.AtlasEx = window.AtlasEx || {}).sugoroku = {
     ready: () => { const get = (f, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/' + f, HERE).href; setTimeout(res, 8000); });
-      return Promise.all([get('sugoroku-sides.webp?v=2', im => { SIDE = im; }), get('sugoroku-top.webp?v=2', im => { TOP = im; })]); },
+      return Promise.all([get('sugoroku-sides.webp?v=2', im => { SIDE = im; }), get('sugoroku-top.webp?v=3', im => { TOP = im; })]); },
     build(TT, X, K) {
       const G = new TT.Group();
       const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = 1.9, RT = .7;   // (RIM: the wall round the field stands upright, about 1.9 high — the overall photograph)   // LIN: the strip of rosettes at the top of the base
