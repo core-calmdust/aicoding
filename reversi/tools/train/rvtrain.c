@@ -10,6 +10,9 @@
 //        --frac F             transcripts: keep each remaining position with probability F (default 0.25)
 //        --max-games N        transcripts: stop after N games per source
 //      Output: 17 bytes per position (player bits, opponent bits, signed target), appended.
+//      rvtrain extract <folder>/ …: one file per ply in that folder (ply00.bin …), for training on more positions than fit
+//      in memory — rvtrain train <folder> … reads only the plies of the phase it is training.
+//      rvtrain split positions.bin <folder>/ : the same split for a flat file made earlier.
 //   2) rvtrain train positions.bin[:weight]… --out weights.bin.gz [options]
 //        --set B|C            pattern set (engine.js PATTERN_DEFS_B / _C = B + cross; default C)
 //        --phases N           phases (60 = one per ply, v5; 30 = two plies, v4; default 60)
@@ -53,7 +56,16 @@ static double wall(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t)
 // ------------------------------------------------------------------ extract
 static FILE *OUT; static long nOut;
 static double FRAC = 0.25; static int SKIP = 0, SKIP_AUTO = 0; static long MAXG = 0;
-static void put(u64 P, u64 O, int t) { Rec r = { P, O, (int8_t)(t > 64 ? 64 : t < -64 ? -64 : t) }; fwrite(&r, sizeof r, 1, OUT); nOut++; }
+static const char *OUTDIR; static FILE *OUTB[61];   // extract into a folder: one file per ply (ply00.bin … ply60.bin), for rvtrain train <folder>
+static void put(u64 P, u64 O, int t) {
+  Rec r = { P, O, (int8_t)(t > 64 ? 64 : t < -64 ? -64 : t) }; FILE *o = OUT;
+  if (OUTDIR) {
+    const int ply = rv_pc(P | O) - 4; if (ply < 0 || ply > 60) return;
+    if (!OUTB[ply]) { char fn[4200]; snprintf(fn, sizeof fn, "%s/ply%02d.bin", OUTDIR, ply); OUTB[ply] = fopen(fn, "ab"); if (!OUTB[ply]) { perror(fn); exit(1); } setvbuf(OUTB[ply], 0, _IOFBF, 1 << 20); }
+    o = OUTB[ply];
+  }
+  fwrite(&r, sizeof r, 1, o); nOut++;
+}
 static int lastNumber(const char *p) {
   int v = -1; for (const char *q = p; *q; q++) if (*q >= '0' && *q <= '9') { int n = 0; while (*q >= '0' && *q <= '9') n = n * 10 + (*q++ - '0'); v = n; q--; }
   return v;
@@ -110,7 +122,9 @@ static void walk(const char *path, int games) {
   fprintf(stderr, "\r%ld positions  %ld games   %.60s", nOut, gamesDone, path);
 }
 static int extract(int argc, char **argv) {
-  OUT = fopen(argv[2], "ab"); if (!OUT) return 1;
+  { struct stat st; const size_t L = strlen(argv[2]);
+    if ((L && argv[2][L - 1] == '/') || (!stat(argv[2], &st) && S_ISDIR(st.st_mode))) { static char d[4096]; strncpy(d, argv[2], sizeof d - 1); if (L && d[L - 1] == '/') d[L - 1] = 0; mkdir(d, 0755); OUTDIR = d; }
+    else { OUT = fopen(argv[2], "ab"); if (!OUT) return 1; } }
   int games = 0;
   for (int i = 3; i < argc; i++) {
     if (!strcmp(argv[i], "--pairs")) games = 0;
@@ -121,7 +135,18 @@ static int extract(int argc, char **argv) {
     else { walk(argv[i], games); continue; }
     if (i + 1 < argc && argv[i + 1][0] != '-') { walk(argv[++i], games); }
   }
-  fprintf(stderr, "\nwrote %ld positions\n", nOut); fclose(OUT); return 0;
+  fprintf(stderr, "\nwrote %ld positions\n", nOut); if (OUT) fclose(OUT); for (int p = 0; p <= 60; p++) if (OUTB[p]) fclose(OUTB[p]);
+  return 0;
+}
+
+// rvtrain split positions.bin <folder>/ : a flat file's positions into one file per ply (appended)
+static int split(int argc, char **argv) {
+  if (argc < 4) return 1;
+  FILE *f = fopen(argv[2], "rb"); if (!f) { perror(argv[2]); return 1; }
+  static char d[4096]; strncpy(d, argv[3], sizeof d - 1); size_t L = strlen(d); if (L > 1 && d[L - 1] == '/') d[L - 1] = 0; mkdir(d, 0755); OUTDIR = d;
+  Rec r; while (fread(&r, sizeof r, 1, f) == 1) put(r.P, r.O, r.t);
+  fclose(f); for (int p = 0; p <= 60; p++) if (OUTB[p]) fclose(OUTB[p]);
+  fprintf(stderr, "wrote %ld positions\n", nOut); return 0;
 }
 
 // ------------------------------------------------------------------ loading positions
@@ -137,6 +162,22 @@ static int loadRecs(char **files, int nfiles) {
     long got = (long)fread(R + NR, sizeof(Rec), cap - NR, f); fclose(f);
     for (long k = NR; k < NR + got; k++) { RW[k] = w; RPLY[k] = (unsigned char)(rv_pc(R[k].P | R[k].O) - 4); }
     fprintf(stderr, "%s: %ld positions (weight %g)\n", fn, got, w);
+    NR += got;
+  }
+  return 0;
+}
+
+// Positions by ply (rvtrain extract <folder>/): only the plies a phase trains on are in memory (a billion positions are
+// 17 GB as records; a phase's three plies are about 1 GB). They follow the flat files' records in R (from NR0 on).
+static char *BDIR[16]; static float BWT[16]; static int NBD; static long NR0, RCAP;
+static int loadPlies(const unsigned char *want) {
+  NR = NR0; long need = NR0;
+  for (int b = 0; b < NBD; b++) for (int p = 0; p <= 60; p++) if (want[p]) { char fn[4200]; snprintf(fn, sizeof fn, "%s/ply%02d.bin", BDIR[b], p); struct stat st; if (!stat(fn, &st)) need += st.st_size / sizeof(Rec); }
+  if (need > RCAP) { RCAP = need + need / 8; R = realloc(R, RCAP * sizeof(Rec)); RW = realloc(RW, RCAP * sizeof(float)); RPLY = realloc(RPLY, RCAP); if (!R || !RW || !RPLY) { fprintf(stderr, "out of memory (%ld positions)\n", need); return -1; } }
+  for (int b = 0; b < NBD; b++) for (int p = 0; p <= 60; p++) if (want[p]) {
+    char fn[4200]; snprintf(fn, sizeof fn, "%s/ply%02d.bin", BDIR[b], p); FILE *f = fopen(fn, "rb"); if (!f) continue;
+    const long got = (long)fread(R + NR, sizeof(Rec), need - NR, f); fclose(f);
+    for (long k = NR; k < NR + got; k++) { RW[k] = BWT[b]; RPLY[k] = (unsigned char)p; }
     NR += got;
   }
   return 0;
@@ -241,10 +282,16 @@ static int train(int argc, char **argv) {
     else if (!strcmp(argv[i], "--phases")) nphase = atoi(argv[++i]);
     else if (!strcmp(argv[i], "--ext")) next = atoi(argv[++i]);
     else if (!strcmp(argv[i], "--mpc")) { if (sscanf(argv[++i], "%f,%f,%f", mpc, mpc + 1, mpc + 2) != 3) { fprintf(stderr, "--mpc A,B,C\n"); return 1; } }
-    else if (nfiles < 64) files[nfiles++] = argv[i];
+    else {   // a folder of rvtrain extract <folder>/ (positions by ply), or a flat file; either may end in :weight
+      char fn[4096]; strncpy(fn, argv[i], sizeof fn - 1); fn[sizeof fn - 1] = 0; float w = 1; char *c = strrchr(fn, ':'); if (c && !strchr(c, '/')) { *c = 0; w = (float)atof(c + 1); }
+      size_t L = strlen(fn); if (L > 1 && fn[L - 1] == '/') fn[L - 1] = 0;
+      struct stat st;
+      if (!stat(fn, &st) && S_ISDIR(st.st_mode)) { if (NBD < 16) { BDIR[NBD] = strdup(fn); BWT[NBD++] = w; } }
+      else if (nfiles < 64) files[nfiles++] = argv[i];
+    }
   }
   T = T < 1 ? 1 : T > 256 ? 256 : T; quant = quant < 1 ? 1 : quant;
-  if (!out || !nfiles) { fprintf(stderr, "usage: rvtrain train positions.bin[:weight]… --out weights.bin.gz [--set B|C] [--phases 60] [--ext 5] [--init w.bin.gz] …\n"); return 1; }
+  if (!out || (!nfiles && !NBD)) { fprintf(stderr, "usage: rvtrain train positions.bin[:weight]… --out weights.bin.gz [--set B|C] [--phases 60] [--ext 5] [--init w.bin.gz] …\n"); return 1; }
   if (model_init(&M, set, nphase, next) || (next != 0 && next != 4 && next != 5)) { fprintf(stderr, "bad --set / --phases / --ext\n"); return 1; }
   memcpy(M.mpc, mpc, sizeof mpc);
   if (wstep <= 0) wstep = nphase >= 60 ? 2 : 1;   // (one phase per ply: the neighbours of the same parity)
@@ -252,7 +299,8 @@ static int train(int argc, char **argv) {
   NF = M.nf;
   fprintf(stderr, "model: set %c, %d phases, %d extras, %d instances, %d weights per phase (%.1fM in all); window %d plies in steps of %d, weight %g\n", set, nphase, next, M.ninst, M.phaseSize, (double)nphase * M.phaseSize / 1e6, window, wstep, side);
   if (loadRecs(files, nfiles)) return 1;
-  fprintf(stderr, "%ld positions\n", NR);
+  NR0 = RCAP = NR;
+  fprintf(stderr, "%ld positions in memory%s\n", NR, NBD ? "; the folders' positions are read phase by phase" : "");
   float *ALL = calloc((size_t)M.nphase * M.phaseSize, sizeof(float));
   if (init) {
     Model om; int16_t *ow = load_weights(init, &om); if (!ow) return 1;
@@ -268,6 +316,7 @@ static int train(int argc, char **argv) {
     if (hi < 6) continue;   // the first plies: too few positions (copied from the first phase trained, below)
     const int wlo = lo - window * wstep, whi = hi + window * wstep;
 #define IN_WIN(p) ((p) >= wlo && (p) <= whi && ((p) >= lo ? (p) <= hi || ((p) - hi) % wstep == 0 : (lo - (p)) % wstep == 0))
+    if (NBD) { unsigned char want[61]; for (int p = 0; p <= 60; p++) want[p] = IN_WIN(p) ? 1 : 0; if (loadPlies(want)) return 1; }
     nPos = 0; for (long i = 0; i < NR; i++) if (IN_WIN(RPLY[i])) nPos++;
     if (!nPos) continue;
     const double keep = maxPos && nPos > maxPos ? (double)maxPos / nPos : 1;
@@ -377,6 +426,7 @@ int main(int argc, char **argv) {
   if (argc >= 4 && !strcmp(argv[1], "bias")) return bias(argc, argv);
   if (argc >= 7 && !strcmp(argv[1], "setmpc")) return setmpc(argc, argv);
   if (argc >= 3 && !strcmp(argv[1], "extract")) return extract(argc, argv);
+  if (argc >= 4 && !strcmp(argv[1], "split")) return split(argc, argv);
   if (argc >= 3 && !strcmp(argv[1], "train")) return train(argc, argv);
   fprintf(stderr, "usage: rvtrain extract positions.bin [--pairs …] [--games [--skip N|auto] [--frac F] …]\n"
                   "       rvtrain train positions.bin[:weight]… --out weights.bin.gz [--set B|C] [--phases 60] [--ext 5] [--init w.bin.gz] [--iters 300] [--threads 8]\n"
