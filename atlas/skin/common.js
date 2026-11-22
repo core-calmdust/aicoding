@@ -513,7 +513,7 @@
   }   // let fonts, the side column fit and the first frames settle
   // phones: the fixed menu bar's height for the page's top padding (skin.css --ctlh, 2026-11-11)
   // (2026-11-23 the user) phones (portrait): the menu bar slides away under the portal bar (which stays) while the page is scrolled down,
-  // and come back as soon as it is scrolled up (or reaches the top). The scroller is .app (shared/infotabs.js) or the page.
+  // and come back after a real scroll up (70px, or at the top). The scroller is .app (shared/infotabs.js) or the page.
   (function barsAutoHide() {
     const de = document.documentElement, mq = matchMedia('(max-width:760px) and (orientation:portrait)');
     let last = 0, acc = 0;
@@ -522,11 +522,11 @@
     const onScroll = e => {
       const t = e.target === document ? (document.scrollingElement || de) : e.target;
       if (!(t === document.scrollingElement || t === de || (t.classList && t.classList.contains('app')))) return;
-      const y = t.scrollTop, d = y - last; last = y;
+      const max = t.scrollHeight - t.clientHeight, y = Math.min(Math.max(t.scrollTop, 0), max), d = y - last; last = y;   /* (clamped: the rubber band past the end is no scroll up) */
       if (!mq.matches || de.classList.contains('atlas-land') || y <= 8) { show(); return; }
       if ((acc > 0) !== (d > 0)) acc = 0; acc += d;
       if (acc > 12 && y > 72 && !popOpen()) de.classList.add('bars-hid');
-      else if (acc < -6) show();
+      else if (acc < -70) show();   /* (2026-11-23 the user: back only after a real scroll up — a flick's rebound no longer brings it back) */
     };
     document.addEventListener('scroll', onScroll, { capture: true, passive: true });
     (mq.addEventListener ? mq.addEventListener('change', show) : mq.addListener(show));
