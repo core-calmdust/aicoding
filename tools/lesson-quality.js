@@ -170,7 +170,7 @@ function gameLevel(raw, ls) {
   const rep = {}; let sum = 0, n = 0;
   // (2026-11-22) the board facts (tools/lesson-facts.js): a lesson whose marks / answers / claims do not hold on the board fails
   let FACTS = {}; try { const tmp = require('os').tmpdir() + '/lesson-facts.json'; try { require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'lesson-facts.js'), '--json', tmp], { stdio: 'ignore' }); } catch (e) {} FACTS = JSON.parse(fs.readFileSync(tmp, 'utf8')); } catch (e) {}
-  for (const id in R) { const ls = R[id].filter(l => !l.err).map(l => { const o = Object.assign({ key: l.key, title: l.title }, scoreLesson(id.split('/')[0], l)); const fx = !id.includes('/') && FACTS[id] && FACTS[id][l.key]; if (fx) { o.pen = (o.pen || []).concat(fx.map(m => [60, 'wrong board fact: ' + m])); o.score = Math.max(0, o.score - 60); } return o; });
+  for (const id in R) { const ls = R[id].filter(l => !l.err).map(l => { const o = Object.assign({ key: l.key, title: l.title }, scoreLesson(id.split('/')[0], l)); const fx = FACTS[id] && FACTS[id][l.key];   /* (2026-11-22: the openings too — lesson-facts.js 'hex/open') */ if (fx) { o.pen = (o.pen || []).concat(fx.map(m => [60, 'wrong board fact: ' + m])); o.score = Math.max(0, o.score - 60); } return o; });
     gameLevel(R[id].filter(l => !l.err), ls);
     const avg = ls.length ? ls.reduce((a, l) => a + l.score, 0) / ls.length : 0; rep[id] = { avg: Math.round(avg * 10) / 10, pass: ls.filter(l => l.score >= CFG.pass).length, n: ls.length, lessons: ls };
     sum += avg * ls.length; n += ls.length; }
