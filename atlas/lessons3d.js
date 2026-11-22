@@ -626,15 +626,19 @@
     intro: ['『{n}』をいっしょに覚えるコン！<br>{t}。', '今日は『{n}』だコン。<br>{t}。手順を追いかけてみてね！', '『{n}』の手順を見ていくコン！<br>{t}。', 'さあ、『{n}』の練習！<br>{t}。どんな形になるか、楽しみだコン。'],
     ask: ['{s}の番だコン。『{n}』で、強い人がいちばん指した手はどれかな？', '『{n}』のこの場面、{s}ならどう指す？', 'さあ{s}の一手！ 定跡どおりに指せるかな？', '{s}がここでいちばんよく選ぶ手、わかる？', '{s}の番。手順を思い出して、本筋の手を指してみて！'],
     askCp: ['{s}の番だコン。ここでいちばん良い手はどれかな？', '駒落ちのこの場面、{s}ならどう指す？', 'さあ{s}の一手！ 駒の多さを生かせる手を探してみて。', '{s}の番。いちばん良い手、わかるかな？', '{s}の一手を考えてみて！ 定跡の形を思い出してね。'],
-    pct: ['強い人の対局の{a}%が、この手を選んでいるコン。', '実戦では{a}%がこの手。いちばん人気！', '強い人の{a}%が指した、定跡の本筋の手。', 'この場面では{a}%の人がこれを選ぶの。覚えておいてね。'],
-    cp: ['駒落ちの定跡でも、この手が本筋だコン。', 'この形では、これがいちばん確かな手なの。', 'ほかの手より、駒の働きがはっきり良くなる手。'],
-    lead: ['{m}が定跡の手。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '本筋は{m}なの。'],
+    pct: ['強い人の対局の{a}%が、この手を選んでいるコン。', '実戦では{a}%がこの手。いちばん人気！', '強い人の{a}%が指した、定跡の本筋の手。', 'この場面では{a}%の人がこれを選ぶの。覚えておいてね。', '{a}%の人が選ぶ、いちばん多い手なの。', '実戦の{a}%で指されている、おなじみの手！'],
+    cp: ['駒落ちの定跡でも、この手が本筋だコン。', 'この形では、これがいちばん確かな手なの。', 'ほかの手より、駒の働きがはっきり良くなる手。', '駒の多さを生かす、まっすぐな一手！', '上手の手薄なところをつく手なの。', '下手らしい、筋のいい手コン！'],
+    lead: ['{m}が定跡の手。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '本筋は{m}なの。', 'いちばんは{m}！', '定跡は{m}だったの。', 'ここは{m}が本筋コン。', '答えは{m}！'],
+    // (2026-11-22 lesson loop) the praise, the soft words after a miss, the push on — each opening takes them in its own order (shOpVoice)
+    cheer: ['いいね！', 'さすが！', 'お見事！', 'ばっちり！', 'その調子！', '上手！', 'ナイス！', 'よく見つけたね！', 'すばらしい！', 'そうそう、それ！', 'いい手だね！', '完璧！'],
+    soft: ['おしい！', 'ドンマイ！', 'あと少しだった！', 'いい線いってたコン！', '大丈夫、ここで覚えちゃおう！', '気にしない、気にしない！', 'よくある迷いだから平気！', 'だいじょうぶ、次はきっと指せるコン！', 'あと一歩！', '今度はもう覚えたでしょ？'],
+    push: ['次もこの調子でいこう！', 'どんどん行こう！', 'その勢いで次へ進もう！', 'まだまだいけるね！', 'この感じで続けよう！', '次も楽しみだコン！'],
     // (2026-11-21) the line's next move (lineProbs: the castles, 鬼殺し, 立石流 … — problems made from the line itself)
-    askL: ['『{n}』の手順、{s}の次の一手はどれかな？', '{s}の番だコン。『{n}』の形を目指して、ここで何を指す？', 'さあ、手順を思い出して！ {s}の一手は？', '『{n}』の続きだよ。{s}ならここでどう指す？', '{s}の一手コン。『{n}』の手順どおりに指してみて！'],
-    tailL: ['手順どおりの一手コン。', '『{n}』の形に、また一歩近づいたね。', 'これで手順どおり！ 次の形も想像してみてね。', 'ばっちり、『{n}』の手順の手なの。'],
-    dubL: '少しむりのある手だけど、『{n}』はこの手で相手をゆさぶるのが持ち味なの。',
+    askL: ['手順の続き、{s}の次の一手はどれかな？', '{s}の番だコン。完成の形を目指して、ここで何を指す？', 'さあ、手順を思い出して！ {s}の一手は？', '『{n}』の続きだね。{s}ならここでどう指す？', '{s}の一手コン。手順どおりに指してみて！'],
+    tailL: ['手順どおりの一手コン。', '完成の形に、また一歩近づいたね。', 'これで手順どおり！', '組み上がりが見えてきたの！', '形がまた一つ整ったコン！', '覚えた手順が、ちゃんと生きているの。', '手順の流れにぴったり！', 'この順番で組むのがコツなの。'],
+    dubL: ['少しむりのある手だけど、『{n}』はこの手で相手をゆさぶるのが持ち味なの。', 'ちょっと強引だけど、相手をゆさぶるのがこの戦法の味なの！', '相手が正しく受けると苦しい手。でも、それがこの戦法のおもしろさコン。'],
     altL: ['{x}でも大丈夫コン！ 手順では{m}が先だけど、順番が入れかわっても同じ『{n}』の形になるの。', 'それもあり！ {x}を先に指しても、最後は同じ『{n}』の形に組めるコン。'],
-    leadL: ['『{n}』の手順は{m}。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '手順の次の手は{m}なの。'],
+    leadL: ['『{n}』の手順は{m}。', '正解は{m}だったコン。', 'ここは{m}を指したかったね。', '手順の次の手は{m}なの。', '次は{m}の番だったコン。', '手順どおりなら{m}！', '答えは{m}だったの。'],
     hintL: ['光っている手が、手順の次の一手。指したあとの形を想像してみてね。', 'ヒントは光っている手コン。『{n}』の完成した形を思い出してみて！'],
   };
   const SH_V = { p: 1, l: 3, n: 4, s: 5, g: 6, b: 8, r: 10, k: 0 };
@@ -690,45 +694,74 @@
     return F;
   }
   const SH_PN = { p: '歩', l: '香車', n: '桂馬', s: '銀', g: '金', b: '角', r: '飛車', k: '玉' };
-  function shWhyJa(F) {
-    if (F.trade && F.behind) return '角を取り返して、駒の損を取り戻す手。ここで取り返さないと、角1枚の損になっちゃう！';
-    if (F.trade) return '自分から角を交換する手コン。おたがいに角を持ち駒にして、打ち込みのスキをねらい合う形になるの。';
-    if (F.cap && F.behind) return `取られた駒を、すぐ${SH_PN[F.pc]}で取り返す手。取り返さないと駒損のままだからね。`;
-    if (F.cap) return `相手の${SH_PN[F.cap]}を取る手。この形では、ここで取っておくのが定跡なの。`;
-    if (F.drop && F.block) return `持ち駒の${SH_PN[F.pc]}を打って、相手の駒の利きを止める手。打った駒が、そのまま壁になるの。`;
-    if (F.drop) return `持ち駒の${SH_PN[F.pc]}を打つ手。手持ちの駒を、ここで働かせるの。`;
-    if (F.swing && F.swing !== 'side') return `飛車を横に動かして「${F.swing}」にする手コン！ 戦う場所を、ここで決めるの。`;
-    if (F.swing) return '飛車を横に動かして、攻める筋を変える手。飛車の働く場所を作るの。';
-    if (F.pc === 'k') return F.castle ? '玉を、囲いのほうへ一歩ずつ寄せていく手。戦いが始まる前に、玉を安全にするのが大事コン。' : '玉の位置を整える手。囲いの形に合わせて、玉の居場所を決めるの。';
-    if (F.pc === 'p') {
-      if (F.bopen) return '歩を突いて角道を開ける手。角が斜めに大きく働けるようになるコン！';
-      if (F.bshut) return '歩で角道を止める手。角交換を防いで、じっくり駒組みする合図なの。';
-      if (F.clash) return '歩を相手の歩にぶつけて、戦いを始める手コン！ 取る・取らないで、相手に決断をせまるの。';
-      if (F.rookp) return '飛車先の歩を伸ばす手。飛車の前の歩が進むほど、飛車が攻めに働きやすくなるの。';
-      if (F.edge) return '端の歩を突く手。端の歩は、あとで玉の逃げ道にも、攻めの足がかりにもなるコン。';
-      if (F.rank) return '歩を伸ばして、盤の真ん中に「位」を取る手。陣地が広くなって、駒が動きやすくなるの。';
-      return '歩を突いて、駒の通り道を作る手。次に出ていく駒の準備なの。';
-    }
-    if (F.pc === 'g' || F.pc === 's') return F.guard ? `${SH_PN[F.pc]}を玉のそばに寄せて、囲いを固める手コン。` : F.pc === 's' && F.up && F.rside ? '銀を前に出して、飛車といっしょに攻める準備をする手。' : F.up ? `${SH_PN[F.pc]}を上がって、陣形を作っていく手。` : `${SH_PN[F.pc]}の位置を整えて、形を作る手なの。`;
-    if (F.pc === 'n') return '桂馬を跳ねて、攻めに参加させる手コン！';
-    if (F.pc === 'l') return '香車を上げる手。玉が入る場所を作ったり、端の攻めに使ったりするの。';
-    if (F.pc === 'b') return '角を動かして、次の駒組みに備える手。';
-    if (F.pc === 'r') return '飛車の位置を整えて、攻めにも守りにも働くようにする手なの。';
-    return 'この形で、強い人たちが本筋と考えている手コン。';
+  /* (2026-11-22 lesson loop) each idea has several wordings: a lesson's voice (shVoice, seeded by the opening's id) hands them out
+     in turn, shared by the study line's notes and the problems, so the same line is not said twice in one opening */
+  const shVoice = seed => { const n = {}; return (key, arr) => { const c = n[key] = (n[key] || 0) + 1; return arr[(seed + c - 1) % arr.length]; }; };
+  const shSeed = id => [...String(id)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+  const shPerm = (seed, n) => { const a = [...Array(n).keys()]; let x = seed || 1; for (let i = n - 1; i > 0; i--) { x = (x * 1103515245 + 12345) >>> 0; const j = x % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const SH_P0 = (k, a) => a[0];
+  // (2026-11-22 lesson loop) the guide's words for each kind of move: a head (what the move is) and a tail (why it matters), each
+  // handed out in turn by the opening's voice, so the notes of the study line and the problems do not repeat each other
+  const SHW = {
+    pw: [['歩を突いて、駒の通り道を作る手。', '歩を一つ進めて、うしろの駒が出られるようにする手コン。', '小さな歩の一手だけど、駒組みの下ごしらえなの！', '銀や桂が上がる道を、歩で作っておく手。', '歩をちょんと突いて、陣形をととのえる手！', '次の駒組みに向けて、歩を一歩前へ出すコン。', '駒の出口を作っておく、地味な歩の一手。', '歩をすすめて、形を広げていくところ！'],
+      ['次に出ていく駒の準備なの。', 'あとで駒がのびのび動けるの！', '', '地味だけど、じわじわ効く一手コン。', 'こういう準備の手が大事！', '', 'ここから形が広がるの。', '', '一歩ずつ形を作っていくコン！', '']],
+    gd: [['{X}を玉のそばに寄せて、囲いを固める手コン。', '{X}を玉の近くへ動かして、守りを厚くする手！', '{X}が玉の守りに加わる手。', '玉のとなりへ{X}を寄せる手。', '{X}で玉のまわりをしっかりガードするコン！', '守りの{X}を玉に近づける手。', '{X}を玉の横へつける手！', '{X}を玉の守り役に回す手なの。'],
+      ['囲いがまた一段かたくなったね。', 'これで玉がぐっと安心なの。', '', '囲いの形が見えてきたコン！', '守りの駒どうしがくっつくと強いの！', '', '金銀が玉を守る、いい形なの。', '', 'すき間がひとつ減ったコン！', '']],
+    up: [['{X}を上がって、陣形を作っていく手。', '{X}を一つ上げて、形をととのえる手コン！', '{X}を前へ出して、駒どうしのつながりを作る手。', '{X}を一段上げる手！', '{X}を前へ進めて、陣地を広げるコン。', '{X}を上へ持ちあげる手。', '{X}をすっと上がるところ！', '{X}を一歩前へ出しておく手なの。'],
+      ['守りにも攻めにも使える位置なの！', '', '上がった駒が、あとで役に立つコン。', '駒が前に出ると、陣形が厚くなるの。', '', 'ここから働き場所を探すの！', '', '駒どうしが手をつなぐ形コン！', '']],
+    kc: [['玉を、囲いのほうへ一歩寄せる手。', '玉が囲いの中へお引っこし！', '玉を戦場から遠ざける手コン。', '玉を一歩、守りの駒のほうへ動かす手！', '玉をすみのほうへ寄せていく手。', '玉の引っこしを一歩進める手。', '玉を安全地帯へ向かわせるコン！', '玉を囲いの奥へ近づける手なの。'],
+      ['戦いが始まる前に、玉を安全にするのが大事コン。', 'これで攻められにくくなるの！', '', '囲いの奥がいちばん安心！', '', '玉は早めに安全な場所へ、が基本なの。', '', '「居玉は避けよ」っていうコン。', '', '戦場から一歩遠のいたの！', '']],
+    ko: [['玉の位置を整える手。', '玉の場所を少し調整する手コン！', '玉を囲いにぴったり合う場所へ動かす手。', '玉の居場所を決める一手！'], ['囲いの形に合わせて、玉の場所を決めるの。', '', 'ちょっとした差が、あとで大きいの！']],
+    rp: [['飛車先の歩を伸ばす手。', '飛車の前の歩をもう一つ進めるコン！', '飛車の筋の歩を前へ。', '飛車といっしょに攻める歩を進める手！', '飛車先の歩をずんずん進める手。', '飛車のまっすぐ前の歩を突く手。', '飛車の通る道の歩を、一歩前へ！', '飛車のための道を、歩で切り開く手コン。'],
+      ['飛車の前の歩が進むほど、飛車が攻めに働きやすくなるの。', '攻めの道が開けていくね。', '', '相手は受けを考えないといけないの！', '攻め味がふえるコン。', '', '飛車の出番が近づいてきたの！', '']],
+    bo: [['歩を突いて角道を開ける手。', '角の前の歩を一つ進めて、ななめの道を通す手！', '角の通り道をあけて、盤のまん中をにらむ手コン。', '歩をどかして角を目覚めさせる手！', '角がななめに走れるように、前の歩を突く手。', '角のななめの利きを通す歩の一手！'],
+      ['角が斜めに大きく働けるようになるコン！', '大駒は道があってこそ働くの。', '', '角が遠くまで利くようになったね。', '', 'ここから角がにらみをきかせるの！']],
+    bs: [['歩で角道を止める手。', '角のななめの道を、歩でふさぐ手コン。', 'わざと角の通り道を閉じる手！', '歩を突いて角の利きを止める手。'], ['角交換を防いで、じっくり駒組みする合図なの。', '急がずに組み上げるつもりだね。', '角を交換させない、じっくり派の作戦なの！', '']],
+    cl: [['歩を相手の歩にぶつけて、戦いを始める手コン！', '歩と歩がぶつかった！', '相手の歩の目の前へ歩を進める手。', '歩をぶつけて、相手に「取る？ 取らない？」と問いかける手！'], ['取る・取らないで、相手に決断をせまるの。', 'ここから戦いが始まるね。', '仕掛けの合図コン！', '']],
+    ed: [['端の歩を突く手。', '盤のはしっこの歩を一つ進める手！', '端歩を突いて、様子を見る手コン。', '端の歩を伸ばす手。', '一番はしの筋の歩を進める手！', '端の歩をひとつ前へ出すところ。'],
+      ['端の歩は、あとで玉の逃げ道にも、攻めの足がかりにもなるコン。', '玉の逃げ道が広くなるの。', '終盤で差がつく一手なの。', '', 'いざというとき、端から攻めることもできるの！', '']],
+    rk: [['歩を伸ばして、盤の真ん中に「位」を取る手。', '歩をぐいっと前へ！', '歩を高く進めて、相手の駒をおさえる手。', '前へ出た歩で、相手の駒の動ける場所をせまくする手！'], ['陣地が広くなって、駒が動きやすくなるの。', '自分の陣地が広がるコン。', '陣地を広げる作戦だね。', '']],
+    sa: [['銀を前に出して、飛車といっしょに攻める準備をする手。', '攻めの銀がぐいっと前進！', '銀を飛車の前のほうへ進める手。', '銀を攻めに使う手！', '銀を相手の陣地へ向かわせる手コン。'], ['飛車と組んで相手陣をねらうコン。', '', '攻めの形ができてきたの！', '飛車の応援に向かうの。', '', '銀が出ると攻めに厚みが出るコン！', '']],
+    gs: [['{X}の位置を整えて、形を作る手なの。', '{X}を動かして、陣形のすき間をうめる手コン。', '{X}の場所を変えて、囲いの形に合わせる手。', '{X}を横へずらす手！', '{X}の居場所を決める手。'], ['', '駒のつながりがよくなるの。', '']],
+    n: [['桂馬を跳ねて、攻めに参加させる手コン！', '桂馬がぴょんと前へ！', '桂を跳ねて、相手の駒をねらう手。', '桂馬を一段跳ねておく手。'], ['', '攻めの駒がふえたね。', '桂は跳ねると働きだすの！']],
+    l: [['香車を上げる手。', '香車を一つ上げる手コン！', '香車を一段持ちあげる手。'], ['玉が入る場所を作ったり、端の攻めに使ったりするの。', '端の形が変わるね。', '']],
+    b: [['角を動かして、次の駒組みに備える手。', '角の位置を変える手！', '角を動かして、働く場所を探す手コン。', '角を一つずらしておく手。'], ['', 'ななめの利きを別の場所へ向けるの。', '']],
+    r: [['飛車の位置を整えて、攻めにも守りにも働くようにする手なの。', '飛車を動かして、使いやすい場所へ置く手！', '飛車の場所を整える手コン。', '飛車を引いておく手。'], ['', '', '大駒の置き場所は大事なの！']],
+    df: [['この形で、強い人たちが本筋と考えている手コン。', 'この場面の定跡どおりの手！', '定跡の流れにそった手なの。'], ['']],
+  };
+  function shWhyJa(F, pk) {
+    const v = pk || SH_P0, X = SH_PN[F.pc], C = SH_PN[F.cap];
+    const W = key => { const [H, T] = SHW[key], h = v(key, H).replace(/\{X\}/g, X), t = v(key + '.t', T); return t ? h + (/[！？]$/.test(h) ? ' ' : '') + t : h; };
+    if (F.trade && F.behind) return v('tb', ['角を取り返して、駒の損を取り戻す手。ここで取り返さないと、角1枚の損になっちゃう！', '取られた角を取り返す手！ これで駒の数が元どおりなの。', '角を取り返しておく手コン。放っておくと角損のままだからね。']);
+    if (F.trade) return v('tr', ['自分から角を交換する手コン。おたがいに角を持ち駒にして、打ち込みのスキをねらい合う形になるの。', '角と角をぶつけて交換する手！ これで角が持ち駒になるの。', '角交換を選ぶ手。角を打ちこむすきを、おたがいに探す戦いになるコン。']);
+    if (F.cap && F.behind) return v('cb', [`取られた駒を、すぐ${X}で取り返す手。取り返さないと駒損のままだからね。`, `${X}で取り返す手！ 駒の数をそろえておくの。`, `すかさず${X}で取り返す手コン。これで損はなし！`, `${X}で取り返して、駒の数を五分にもどす手。`, `取られっぱなしにしない、${X}の取り返し！`]);
+    if (F.cap) return v('cp', [`相手の${C}を取る手。この形では、ここで取っておくのが定跡なの。`, `${C}をいただく手！ ここは取るのが本筋コン。`, `ここで相手の${C}を取っておく手だね。`]);
+    if (F.drop && F.block) return v('db', [`持ち駒の${X}を打って、相手の駒の利きを止める手。打った駒が、そのまま壁になるの。`, `${X}を打って、相手の大駒の通り道をふさぐ手コン！`, `打った${X}が壁になって、相手の利きが止まる手！`]);
+    if (F.drop) return v('dr', [`持ち駒の${X}を打つ手。手持ちの駒を、ここで働かせるの。`, `ここで${X}を打つ手コン！ 持ち駒の出番だね。`, `手持ちの${X}を盤に打って、働かせる手なの。`]);
+    if (F.swing && F.swing !== 'side') return v('sw', [`飛車を横に動かして「${F.swing}」にする手コン！ 戦う場所を、ここで決めるの。`, `飛車をスッと横へ！ 「${F.swing}」の形になったね。`, `飛車を振って「${F.swing}」に構える手。この筋から攻めるつもりなの！`]);
+    if (F.swing) return v('ss', ['飛車を横に動かして、攻める筋を変える手。飛車の働く場所を作るの。', '飛車を横にずらして、ねらう筋を変える手コン！', '飛車の場所を変える手。別の筋から攻める準備なの。']);
+    if (F.pc === 'k') return W(F.castle ? 'kc' : 'ko');
+    if (F.pc === 'p') return W(F.bopen ? 'bo' : F.bshut ? 'bs' : F.clash ? 'cl' : F.rookp ? 'rp' : F.edge ? 'ed' : F.rank ? 'rk' : 'pw');
+    if (F.pc === 'g' || F.pc === 's') return W(F.guard ? 'gd' : F.pc === 's' && F.up && F.rside ? 'sa' : F.up ? 'up' : 'gs');
+    return W(SHW[F.pc] ? F.pc : 'df');
   }
   function shShortJa(F) { return F.trade && F.behind ? '角を取り返せる' : F.trade ? '角を交換できる' : F.cap && F.behind ? '駒を取り返せる' : F.cap ? '駒を取れる' : F.drop ? '持ち駒を生かせる' : F.swing ? '飛車の働く場所が決まる' : F.pc === 'k' ? '玉を安全にできる' : F.bopen ? '角道が開く' : F.bshut ? '角道を止められる' : F.clash ? '戦いを始められる' : F.rookp ? '飛車先の歩が伸びる' : F.block ? '相手の駒の利きを止められる' : F.guard ? '囲いが固まる' : F.pc === 's' && F.up && F.rside ? '攻めの銀が前に出る' : '定跡どおりの形になる'; }
-  function shHintJa(F, k, cp) {
-    if (F.trade && F.behind) return '駒の数を数えてみて。いま、角が1枚少なくない？ 光っている手がヒントだコン。';
-    if (F.trade) return '角と角が、向かい合っているね。光っている手を見てみて！';
-    if (F.cap && F.behind) return '直前に取られた駒があるね。光っている手で、どうなるかな？';
-    if (F.cap) return '光っている手を見てね。取れる相手の駒がありそうだコン。';
-    if (F.swing) return '飛車をどこで使うか、考える場面コン。光っている手がヒント！';
-    if (F.pc === 'k') return '玉はまだ戦場の近くにいるね。光っている手で、どこへ向かうかな？';
-    if (F.bopen || F.bshut) return '角の通り道を見てみて。光っている歩が動くと、角はどうなる？';
-    if (F.clash) return '相手の歩とのにらみ合いに注目！ 光っている手がヒントだコン。';
-    if (F.guard) return '玉のまわりの守りを見てみて。光っている駒が、手伝いに来たがっているコン。';
-    if (cp) return ['光っている手がいちばんの手。指したあと、駒がどう働くか想像してみてね。', 'ヒントは光っている手コン。駒の多さを、どう生かすかな？'][k % 2];
-    return ['光っている手が、強い人がいちばん選んだ手。指したあとの形を想像してみてね。', 'ヒントは光っている手コン。手順の流れを思い出してみて！'][k % 2];
+  const SH_GLOW = ['光っている手がヒントだコン。', '光っている手を見てみて！', 'ヒントは光っている手！', '光っている駒に注目！', '答えのヒントは、光っているところ！', 'カギは光っている手コン！', '光っているマスがカギだコン！', '光っている手、どう思う？'];
+  function shHintJa(F, k, cp, pk, line) {
+    const v = pk || SH_P0, Q = (key, a) => { const q = v('h-' + key, a), g = v('glow', SH_GLOW); return q + (/[！？]$/.test(q) ? ' ' : '') + g; };
+    if (F.trade && F.behind) return Q('tb', ['駒の数を数えてみて。いま、角が1枚少なくない？', '直前に角を取られたね。どうする？', 'このままだと角損のまま…？']);
+    if (F.trade) return Q('tr', ['角と角が、向かい合っているね。', '角どうしがにらみ合ってるコン。', '角の交換、する？ しない？']);
+    if (F.cap && F.behind) return Q('cb', ['直前に取られた駒があるね。', '駒の数、減ったままじゃない？', 'さっき取られた駒、どうしよう？']);
+    if (F.cap) return Q('cp', ['取れる相手の駒がありそうだコン。', '相手の駒、取れるところにいない？', 'ただで取れる駒、ないかな？']);
+    if (F.swing) return Q('sw', ['飛車をどこで使うか、考える場面コン。', '飛車の戦う場所を決める場面！', '飛車、このままの筋でいい？']);
+    if (F.pc === 'k') return Q('k', ['玉はまだ戦場の近くにいるね。', '玉の居場所、このままで安心かな？', '戦いの前に、玉をどうしたい？', '玉を囲いに入れる準備、できてる？', '玉のまわり、まだ戦場に近くない？']);
+    if (F.bshut) return Q('bs', ['角の通り道を見てみて。', '角交換、させたい？ させたくない？', '角のななめの道、このままでいい？']);
+    if (F.bopen) return Q('b', ['角の通り道を見てみて。', '角のななめの道に注目！', '歩を動かしたら、角の利きはどう変わるかな？', '角が働くには、何が必要？']);
+    if (F.clash) return Q('cl', ['相手の歩とのにらみ合いに注目！', '歩と歩の向かい合いを見てみて。', 'そろそろ戦いを始める？']);
+    if (F.guard) return Q('gd', ['玉のまわりの守りを見てみて。', '玉のそばに、まだすき間がない？', '囲いを作るなら、どの駒が近づくといいかな？', '守りの駒、玉から遠くない？', '玉をもっと安心させる手は？']);
+    if (cp) return Q('cp2', ['駒の多さを、どう生かすかな？', '指したあと、駒がどう働くか想像してみて。', '駒落ちの定跡の形、思い出せる？']);
+    if (line) return Q('ln', ['完成した形を思い出してみて！', '指したあとの形を想像してみてね。', '手順の次の一手、思い出せる？', '囲いの形を頭に浮かべてみて！', '組み上がりまで、あと何手かな？']);
+    return Q('df', ['強い人がいちばん選んだ手を探してみて。', '手順の流れを思い出してみて！', '手順のどこまで来たか、思い出そう。', '指したあとの形を想像してみよう！', '定跡の形、頭に浮かぶかな？', 'この局面、次は何をする場面？']);
   }
   function shSfenStep(sfen, u) {   // the position after the move u (board, side, hands) as an sfen
     const { b, sente: s, H } = shBd(sfen), z = shSq(u.slice(2, 4));
@@ -742,8 +775,8 @@
      step of the study line without a note of its own gets a short guide from the board (shFacts → shWhyJa), told as whose move it is;
      the same idea answered by the other side right after is said as an answer (「後手も角道を開けて応じる」), not repeated word for word */
   const SH_SIDE = s => s ? '☗先手' : '☖後手';
-  function shStepNotesJa(start, steps, notes) {
-    const out = {}, ACT = { '角道が開く': '角道を開けて', '飛車先の歩が伸びる': '飛車先の歩を伸ばして', '玉を安全にできる': '玉を囲いのほうへ寄せて', '囲いが固まる': '囲いを固めて', '攻めの銀が前に出る': '銀を前に出して', '角道を止められる': '角道を止めて', '飛車の働く場所が決まる': '飛車を振って' };
+  function shStepNotesJa(start, steps, notes, pk) {
+    const v = pk || SH_P0, out = {}, ACT = { '角道が開く': ['角道を開けて', '角の通り道をあけて', '角のななめを通して'], '飛車先の歩が伸びる': ['飛車先の歩を伸ばして', '飛車の前の歩を進めて', '飛車の筋の歩を突いて'], '玉を安全にできる': ['玉を囲いのほうへ寄せて', '玉を守りのほうへ動かして', '玉の引っこしを進めて'], '囲いが固まる': ['囲いを固めて', '守りを厚くして', '玉のまわりを固めて'], '攻めの銀が前に出る': ['銀を前に出して', '攻めの銀を進めて', '銀を上がって'], '角道を止められる': ['角道を止めて', '角の通り道を閉じて', '角のななめをふさいで'], '飛車の働く場所が決まる': ['飛車を振って', '飛車を横へ動かして', '飛車の筋を決めて'] };
     let sf = start, prevK = '', run = 0;
     steps.forEach((u, i) => {
       let F = null; try { F = shFacts(sf, u); } catch (e) {}
@@ -752,8 +785,9 @@
       const own = notes && notes[String(i)];
       if (own) { const t = String(own.ja || own); if (typeof own === 'string' || own.ja) out[String(i)] = (/^\s*[☗☖]/.test(t) ? '' : S + '：') + varyJa(guideJa(t, 'shogi'), 'shogi'); }
       else if (F) {
-        const why = shWhyJa(F), one = (why.match(/^[^。！]*[。！]/) || [why])[0];
-        if (run && ACT[k] && !F.cap) out[String(i)] = [`${S}も同じように、${ACT[k]}応じるコン。`, `${S}も続けて、${ACT[k]}いくの。`, `おたがい、まだ${ACT[k]}いく場面だコン。`, `${S}も、もう一手${ACT[k]}いくね。`][(run - 1) % 4];
+        const why = shWhyJa(F, v), one = (why.match(/^[^。！]*[。！]/) || [why])[0];
+        const AC = ACT[k] && v('act' + k, ACT[k]);
+        if (run && AC && !F.cap) out[String(i)] = v('run', [`${S}も同じように、${AC}応じるコン。`, `${S}も負けずに、${AC}いくの！`, `おたがい、まだ${AC}いく場面だね。`, `${S}も、もう一手${AC}いくコン！`, `ここは${S}も${AC}追いかける手！`, `${S}だって${AC}おきたいところなの。`]);
         else if (run) out[String(i)] = `${S}も、${one.replace(/手(なの|コン)?([。！])$/, '手を指すコン$2')}`;
         else out[String(i)] = `${S}：${i === 0 ? 'まずは' : ''}${why}`;
       }
@@ -778,57 +812,70 @@
       return [`{x}のあと、相手の${A}で${X}を取られちゃうの。`, `{x}だと、${X}のまもりがなくなって、相手の${A}に取られるコン。`][k % 2];
     } catch (e) { return ''; }
   }
-  function shContrastJa(F, FA, k) {   // (2026-11-22) a quiet miss in an opening: what the line's move does, and what yours does instead — from the board
+  function shContrastJa(F, FA, k, ci) {   // (2026-11-22) a quiet miss in an opening: what the line's move does, and what yours does instead — from the board
     const mine = F.bshut ? '{x}は角道を止めてしまう手' : F.pc === 'k' && !F.castle ? '{x}は玉を戦いの起きる側へ動かしてしまう手' : F.edge ? '{x}の端歩は、急がなくてもいい手' : F.swing && !FA.swing ? '{x}で飛車を動かすと、作戦が変わってしまう' : F.pc === 'r' && !FA.swing ? '{x}は飛車をうろうろさせる手' : '';
     const theirs = `{m}なら${shShortJa(FA)}`;
-    return mine ? [`${mine}。${theirs}から、ここは{m}が先なの。`, `${theirs}けど、${mine}なの。`][k % 2] : [`${theirs}けど、{x}ではそうならないの。`, `{x}だと、${shShortJa(FA).replace(/る$/, 'る形')}にならないの。{m}を先に指しておきたいね。`][k % 2];
+    const c = ci != null ? ci : k, sh = shShortJa(FA);
+    return mine ? [`${mine}。${theirs}から、ここは{m}が先なの。`, `${theirs}けど、${mine}なの。`, `${mine}だから、ここは見送りたいの。${theirs}！`, `残念、${mine}なの。${theirs}からね。`][c % 4] : [`${theirs}けど、{x}ではそうならないの。`, `{x}を指しても、${sh}ことにはならないの。{m}を先に指しておきたいところ！`, `{x}ではその働きがないの。${theirs}から、こっちが先コン。`, `{x}だと${sh}チャンスをのがしちゃうの。{m}が先！`][c % 4];
   }
-  function shLineJa(o, name, k, later) {   // the line's next move (mode 'line'): {m} = the line's move, {x} = yours
+  function shOpVoice(id) {   // (2026-11-22 lesson loop) one opening's voice: the wordings in turn, and the praise / the soft words / the push in an order of its own
+    const seed = shSeed(id), O = SHJ_OP, pc = shPerm(seed, O.cheer.length), ps = shPerm(seed ^ 0x9e37, O.soft.length), pp = shPerm(seed ^ 0x51ed, O.push.length);
+    return { pk: shVoice(seed % 97), cheer: i => O.cheer[pc[i % pc.length]], soft: i => O.soft[ps[i % ps.length]], push: i => O.push[pp[i % pp.length]] };
+  }
+  const shJoin = (...a) => a.filter(Boolean).reduce((s, t) => !s ? t : s + (/[！？]$/.test(s) ? ' ' : '') + t, '');
+  const shFit = (s, t) => t && (s + t).replace(/<[^>]+>|\{[mx]\}/g, '').length <= 140 ? shJoin(s, t) : s;
+  function shLineJa(o, name, k, later, V, vi) {   // the line's next move (mode 'line'): {m} = the line's move, {x} = yours
+    V = V || shOpVoice(name); const v = V.pk, i = vi != null ? vi : k;
     const P = o.P, C = P.cand || [], A = o.ans, sente = String(o.pos).split(' ')[1] !== 'w', side = sente ? '☗先手' : '☖後手', FA = shFacts(o.pos, A), N = t => t.replace(/\{n\}/g, name);
-    const val = new Map(C), ref = Math.max(...C.filter(c => P.accept.includes(c[0])).map(c => c[1])), sp = w => /[！？]$/.test(w) ? ' ' : '';
+    const val = new Map(C), ref = Math.max(...C.filter(c => P.accept.includes(c[0])).map(c => c[1]));
     const ask = N(SHJ_OP.askL[k % 5]).replace('{s}', side);
-    let hintTx = shHintJa(FA, k, false); if (/強い人|ヒントは光っている手コン。手順/.test(hintTx)) hintTx = N(SHJ_OP.hintL[k % 2]);
+    const hintTx = N(shHintJa(FA, k, false, v, true));
+    const fb = v('fb', [0, 1, 2, 3, 4, 5]), w = shWhyJa(FA, v), t = N(P.dub ? v('dubL', SHJ_OP.dubL) : v('tailL', SHJ_OP.tailL)), alt = N(v('altL', SHJ_OP.altL)), lead = N(v('leadL', SHJ_OP.leadL)), ch = V.cheer(i), so = V.soft(i), pu = V.push(i);
     const good = u => {
-      if (u && u !== A && P.accept.includes(u)) return N(SHJ_OP.altL[k % 2]);
-      const w = shWhyJa(FA), TL = SHJ_OP.tailL.filter(x => !/コン/.test(w) || !/コン/.test(x)), t = N(P.dub ? SHJ_OP.dubL : TL[k % TL.length]); return w + sp(w) + t; };   // (one コン per bubble)
+      if (u && u !== A && P.accept.includes(u)) return shJoin(ch, alt);
+      return shFit(shJoin(ch, w, t), pu); };
     const ng = u0 => {
-      let u = u0; if (!u || u === A) u = (C.find(x => !P.accept.includes(x[0])) || [])[0]; const lead = N(SHJ_OP.leadL[k % 4]), kon = /コン/.test(lead) ? 'の。' : 'コン。';
-      if (!u) return lead + shWhyJa(FA);
+      let u = u0; if (!u || u === A) u = (C.find(x => !P.accept.includes(x[0])) || [])[0];
+      const kon = /コン/.test(lead) ? 'の。' : 'コン。', L = x => shJoin(so, shJoin(lead, x));
+      if (!u) return L(shWhyJa(FA, v));
       let F; try { F = shFacts(o.pos, u); } catch (e) { F = {}; }
       const mine = val.has(u) ? val.get(u) : P.floor != null ? P.floor : ref - 600, d = winP(ref, 600) - winP(mine, 600);
-      if (F.hang && !FA.hang && d > .05) return lead + `{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`;
-      if (FA.cap && FA.behind && !F.cap) return lead + '{x}だと取り返しそびれて、駒損のままになっちゃう。';
-      if ((later || []).includes(u)) return lead + N('{x}も『{n}』で指す手だけど、いまはまだ早いの。先に{m}を指しておかないと、形がくずれちゃう') + kon;
-      const rw = shStaticWhyJa(o.pos, u, k); if (rw) return lead + rw;
-      if (d > .12) return lead + shContrastJa(F, FA, k);
-      return lead + (/『/.test(lead) ? `{x}も悪い手じゃないけど、それだと手順からはずれちゃうの。{m}なら${shShortJa(FA)}` : N(`{x}も悪い手じゃないけど、『{n}』の形からははずれちゃうの。{m}なら${shShortJa(FA)}`)) + kon;
+      if (F.hang && !FA.hang && d > .05) return L(`{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`);
+      if (FA.cap && FA.behind && !F.cap) return L('{x}だと取り返しそびれて、駒損のままになっちゃう。');
+      if ((later || []).includes(u)) return L(N('{x}も『{n}』で指す手だけど、いまはまだ早いの。先に{m}を指しておかないと、形がくずれちゃう') + kon);
+      const rw = shStaticWhyJa(o.pos, u, k); if (rw) return L(rw);
+      if (d > .12) return L(shContrastJa(F, FA, k, fb));
+      return L([`{x}も悪い手じゃないけど、それだと手順からはずれちゃうの。{m}なら${shShortJa(FA)}`, `{x}だと、組みたい形から少しそれるの。手順の{m}なら${shShortJa(FA)}`, `{x}は形に合わない一手なの。ここで{m}なら${shShortJa(FA)}`, `{x}では組む順番がずれちゃうの。先に{m}なら${shShortJa(FA)}`, `{x}だと手順が一つ飛んじゃう。{m}を指してこそ${shShortJa(FA)}`, `{x}は今の形には早すぎるの。{m}だと${shShortJa(FA)}`][fb] + kon);
     };
     return { ask, hintTx, good, ng };
   }
-  function shOpJa(o, name, hs, i, handi) {
+  function shOpJa(o, name, hs, i, handi, V) {
+    V = V || shOpVoice(name); const v = V.pk;
     const P = o.P, C = P.cand || [], A = o.ans, sente = String(o.pos).split(' ')[1] !== 'w', cp = P.mode === 'cp', k = hs + i;
     const side = handi ? (sente ? '下手' : '上手') : sente ? '☗先手' : '☖後手', N = P.total || C.reduce((s, x) => s + x[1], 0) || 1;
-    const pc = c => Math.max(1, Math.round(c / N * 100)), cnt = new Map(C), FA = shFacts(o.pos, A), rep = (t, v) => t.replace(/\{([ns])\}/g, (_, q) => v[q]);
+    const pc = c => Math.max(1, Math.round(c / N * 100)), cnt = new Map(C), FA = shFacts(o.pos, A), rep = (t, q) => t.replace(/\{([ns])\}/g, (_, x) => q[x]);
     const ask = rep((cp ? SHJ_OP.askCp : SHJ_OP.ask)[k % 5], { n: name, s: side });
-    const why = () => shWhyJa(FA), tail = () => cp ? SHJ_OP.cp[k % SHJ_OP.cp.length] : SHJ_OP.pct[k % SHJ_OP.pct.length].replace('{a}', pc(cnt.get(A) || 0));
-    const sp = w => /[！？]$/.test(w) ? ' ' : '';
+    const w = shWhyJa(FA, v), t0 = cp ? v('cpT', SHJ_OP.cp) : v('pct', SHJ_OP.pct).replace('{a}', pc(cnt.get(A) || 0)), t = /コン/.test(w) ? t0.replace('コン。', 'の。').replace('コン！', '！') : t0;
+    const fq = v('fq', [0, 1, 2, 3]), ct = v('ct', [0, 1, 2, 3]), lead = v('lead', SHJ_OP.lead), ch = V.cheer(i), so = V.soft(i), pu = V.push(i), sh = shShortJa(FA), hint = shHintJa(FA, k, cp, v);
     const good = u => {
-      if (u && u !== A && cnt.has(u)) return cp ? `{x}も悪くない手コン。でも{m}なら${shShortJa(FA)}から、ほんの少し上なの。` : `{x}も人気の手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なの。`;
-      const w = why(), t = tail(); return w + sp(w) + (/コン/.test(w) ? t.replace('コン。', 'の。') : t); };
+      if (u && u !== A && cnt.has(u)) return shJoin(ch, cp ? `{x}も悪くない手コン。でも{m}なら${sh}から、ほんの少し上なの。` : `{x}も人気の手！ 実戦では${pc(cnt.get(u))}%、いちばん多い{m}も${pc(cnt.get(A))}%で、どっちも本筋なの。`);
+      return shFit(shJoin(ch, w, t), pu); };
     const ng = u0 => {
-      let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0]; const lead = SHJ_OP.lead[k % SHJ_OP.lead.length];
-      if (!u) return lead + why();
+      let u = u0; if (!u || u === A) u = (C.find(x => x[0] !== A) || [])[0]; const L = x => shJoin(so, shJoin(lead, x));
+      if (!u) return L(w);
       let F; try { F = shFacts(o.pos, u); } catch (e) { F = {}; }
       const best = C.length ? C[0][1] : 0, mine = cnt.has(u) ? cnt.get(u) : null;
       const dd = cp ? winP(best, 600) - winP(mine != null ? mine : P.floor != null ? P.floor : best - 600, 600) : 1;
-      if (F.hang && !FA.hang && (cp ? dd > .12 : mine == null)) return lead + `{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`;
-      if (FA.cap && FA.behind && !F.cap) return lead + '{x}だと取り返しそびれて、駒損のままになっちゃう。';
-      if (!cp && mine != null) { const b = pc(mine), a = pc(cnt.get(A)); return lead + (b * 2 >= a ? `{x}もよく指される手（${b}%）。でも{m}なら${a}%で、こっちがいちばんの本筋なの。` : `{x}も実戦で指される手だけど、${b}%だけ。{m}は${a}%の人が選んでいて、${shShortJa(FA)}からね。`); }
-      const rw = shStaticWhyJa(o.pos, u, k); if (rw) return lead + rw;
-      if (cp) return lead + shContrastJa(F, FA, k);
-      return lead + '{x}は、強い人の対局ではほとんど指されない手。' + shContrastJa(F, FA, k);
+      if (F.hang && !FA.hang && (cp ? dd > .12 : mine == null)) return L(`{x}だと、その${SH_PN[F.pc]}を相手の${SH_PN[F.hang]}にタダで取られちゃう！`);
+      if (FA.cap && FA.behind && !F.cap) return L('{x}だと取り返しそびれて、駒損のままになっちゃう。');
+      if (!cp && mine != null) { const b = pc(mine), a = pc(cnt.get(A));
+        return L((b * 2 >= a ? [`{x}もよく指される手（${b}%）。でも{m}なら${a}%で、こっちがいちばんの本筋なの。`, `{x}も${b}%ある人気の手。でも{m}なら${sh}から、${a}%の人がこっちを選ぶの。`, `{x}も悪くない（${b}%）けど、{m}は${sh}ので、${a}%の人が指しているの。`, `{x}を選ぶ人も${b}%いるコン。それでも{m}なら${sh}から、${a}%でいちばん多いの。`]
+          : [`{x}も指される手だけど、${b}%だけ。{m}は${a}%の人が選んでいて、${sh}からね。`, `{x}を選ぶ人は${b}%くらい。{m}なら${sh}から、${a}%の人がこっちなの。`, `{x}は${b}%と少数派。{m}は${sh}ので、${a}%の人が指しているの。`, `{x}は強い人の${b}%しか指さない手。{m}だと${sh}から、${a}%の人が選ぶコン。`])[fq]); }
+      const rw = shStaticWhyJa(o.pos, u, k); if (rw) return L(rw);
+      if (cp) return L(shContrastJa(F, FA, k, ct));
+      return L(['{x}は、強い人の対局ではほとんど指されない手。', '{x}を選ぶ強い人は、ほとんどいないの。', '{x}は実戦ではめったに見ない手。', '{x}は定跡では指されない手なの。'][fq] + shContrastJa(F, FA, k, ct));
     };
-    return { ask, hintTx: shHintJa(FA, k, cp), good, ng };
+    return { ask, hintTx: hint, good, ng };
   }
   const SHOGI = {
     LKEY: 'shogi-kaya-lessons-v1', OKEY: 'shogi-kaya-open-v1', CATS: ['beg', 'mid', 'adv', 'sp', 'new', 'castle', 'handi'], data: null,
@@ -880,11 +927,12 @@
       const nc = NC.shogi || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the notes without coordinates)
       const ja = lang === 'ja', nm = L(s.title, 'ja'), hs = s.id.length * 3, sh = String(L(nc['op:' + s.id + '/short'] || s.short, lang) || '');
       const intro = !ja ? sh : s.handi ? `『${nm}』の練習だコン！<br>${sh}` : SHJ_OP.intro[hs % SHJ_OP.intro.length].replace('{n}', nm).replace('{t}', sh.replace(/[。！]$/, ''));   // (2026-11-21 lesson loop: ショウギツネ introduces it)
-      if (ja && s.study && s.study.start) try { const gen = shStepNotesJa(s.study.start, s.study.steps.map(x => x[0]), notes); Object.keys(gen).forEach(k => { notes[k] = gen[k]; }); } catch (e) { console.warn('[lessons3d] shogi step notes', e); }
+      const VO = ja ? shOpVoice(s.id) : null;
+      if (ja && s.study && s.study.start) try { const gen = shStepNotesJa(s.study.start, s.study.steps.map(x => x[0]), notes, VO.pk); Object.keys(gen).forEach(k => { notes[k] = gen[k]; }); } catch (e) { console.warn('[lessons3d] shogi step notes', e); }
       return { id: s.id, title: L(s.title, lang), intro, start: s.study && s.study.start, steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
         probs: probs.map((p, i) => { const o = { pos: p.sfen, kind: 'best', P: p, ans: (p.mode === 'line' ? p.pv : p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] };
           const st = (s.study && s.study.steps || []).map(x => x[0]), later = p.mode === 'line' ? st.filter((u, j) => j > p.ply && (j - p.ply) % 2 === 0) : null;
-          if (ja && o.ans) try { Object.assign(o, p.mode === 'line' ? shLineJa(o, nm, hs + i, later) : shOpJa(o, nm, hs, i, !!s.handi)); } catch (e) { console.warn('[lessons3d] shogi opening', e); } return o; }),
+          if (ja && o.ans) try { Object.assign(o, p.mode === 'line' ? shLineJa(o, nm, hs + i, later, VO, i) : shOpJa(o, nm, hs, i, !!s.handi, VO)); } catch (e) { console.warn('[lessons3d] shogi opening', e); } return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[s.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
     introPos() { return { pos: 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1', lock: true }; },
