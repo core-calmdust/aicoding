@@ -259,20 +259,22 @@ function resetView() { V && (V.uv = { s: 1, x: 0, z: 0 }); }
 function applyPose(P) { P = userView(P); const c = V.cam; c.fov = P.fov; c.position.copy(P.p); c.lookAt(P.t); c.setViewOffset(innerWidth, innerHeight, P.off[0], P.off[1], innerWidth, innerHeight); c.updateProjectionMatrix(); V.tgt = P.t.clone(); }
 // fly the camera to a pose: a smooth arc (rises in the middle when it crosses between the zones)
 function show(name, dur) {
-  if (!V) return Promise.resolve(); const to = pose(name); if (V.pose !== name) resetView(); V.pose = name;
+  if (!V) return Promise.resolve(); const to = pose(name), was = V.pose; if (V.pose !== name) resetView(); V.pose = name;
   if (!dur || !V.cur) { V.anim = null; V.cur = { p: to.p.clone(), t: to.t.clone(), fov: to.fov, off: to.off.slice() }; applyPose(V.cur); return Promise.resolve(); }
   const from = { p: V.cur.p.clone(), t: V.cur.t.clone(), fov: V.cur.fov, off: V.cur.off.slice() }, lift = Math.min(4, from.p.distanceTo(to.p) * .18);
-  return new Promise(res => { V.anim = { from, to, t0: performance.now(), dur, lift, res }; });
+  return new Promise(res => { V.anim = { from, to, t0: performance.now(), dur, lift, res, e: 0, fromTitle: was === 'title' }; });
 }
 function stepCamera(now) {
   const a = V.anim; if (a) {
-    const u = Math.min(1, (now - a.t0) / a.dur), e = u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+    const u = Math.min(1, (now - a.t0) / a.dur), e = u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; a.e = e;
     V.cur.p.lerpVectors(a.from.p, a.to.p, e); V.cur.p.y += Math.sin(Math.PI * e) * a.lift; V.cur.t.lerpVectors(a.from.t, a.to.t, e); V.cur.fov = a.from.fov + (a.to.fov - a.from.fov) * e; V.cur.off = [a.from.off[0] + (a.to.off[0] - a.from.off[0]) * e, a.from.off[1] + (a.to.off[1] - a.from.off[1]) * e];
     if (u >= 1) { V.anim = null; const r = a.res; setTimeout(r, 0); }
   } else if (V.pose && V.cur) { const P = pose(V.pose); V.cur.p.copy(P.p); V.cur.t.copy(P.t); V.cur.fov = P.fov; V.cur.off = P.off.slice(); }
   if (!V.cur) return;
   applyPose(V.cur);
-  if (V.pose === 'title' && !V.anim) { const s = Math.sin(V.t * .12), c = Math.cos(V.t * .09); V.cam.position.x += s * .9; V.cam.position.y += c * .12; V.cam.lookAt(V.tgt.x + s * .6, V.tgt.y, V.tgt.z); }
+  // the title's slow drift fades in with the flight to the title (and out when leaving it), so the end of a flight never jumps (2026-11-23 the user)
+  const A = V.anim, sw = V.pose === 'title' ? (A ? A.e : 1) : A && A.fromTitle ? 1 - A.e : 0;
+  if (sw > 0) { const s = Math.sin(V.t * .12) * sw, c = Math.cos(V.t * .09) * sw; V.cam.position.x += s * .9; V.cam.position.y += c * .12; V.cam.lookAt(V.tgt.x + s * .6, V.tgt.y, V.tgt.z); }
   if (V.shake > 0) { const s = V.shake * .08; V.cam.position.x += (Math.random() - .5) * s; V.cam.position.y += (Math.random() - .5) * s; }
   // the sun's shadow box follows whatever we look at
   V.sun.target.position.set(V.cur.t.x, 0, V.cur.t.z); V.sun.position.copy(V.sunDir).multiplyScalar(34).add(V.sun.target.position);
@@ -543,5 +545,5 @@ function dbgTick(now) { DBG.fr++; if (now - DBG.t > 500) { const f = DBG.fr * 10
 function dbgToggle(on) { DBG.on = on === undefined ? !DBG.on : !!on; try { sessionStorage.setItem('t3d-debug', DBG.on ? '1' : ''); } catch (x) {} if (!DBG.on) { if (DBG.el) DBG.el.hidden = true; return; } DBG.t = performance.now(); DBG.fr = 0; DBG.n = 0; DBG.lo = 1e9; dbgPaint(); }
 addEventListener('keydown', e => { if ((e.key === 'i' || e.key === 'I') && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target && e.target.closest && e.target.closest('input,textarea,select,[contenteditable]'))) dbgToggle(); });
 
-window.World = { zoomBy: f => V && zoomBy(f), panBy: (x, y) => V && panBy(x, y), resetView, viewScale: () => (V && V.uv ? V.uv.s : 1), dbg: dbgToggle, throttle: on => { if (V) V.throttle = !!on; }, init, setZone, grids, focus, show, pose, fx, kind, sweep, shake, sail, cellAt, pointIn, aim, screenOf, portrait, portraitIf, preview, waveAt, ZC, _v: () => V, fit, refit: () => { if (V) { V.poses = null; } } };
+window.World = { camPos: () => (V ? V.cam.position.toArray() : null), zoomBy: f => V && zoomBy(f), panBy: (x, y) => V && panBy(x, y), resetView, viewScale: () => (V && V.uv ? V.uv.s : 1), dbg: dbgToggle, throttle: on => { if (V) V.throttle = !!on; }, init, setZone, grids, focus, show, pose, fx, kind, sweep, shake, sail, cellAt, pointIn, aim, screenOf, portrait, portraitIf, preview, waveAt, ZC, _v: () => V, fit, refit: () => { if (V) { V.poses = null; } } };
 })();
