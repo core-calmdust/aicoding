@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 111;
+  const V = 112;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -76,7 +76,7 @@
           <div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expdd" data-k="plv" data-v="1"><button type="button" class="expdd-b" aria-haspopup="listbox"><b>Lv.1</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${Array.from({ length: PLAY[id].levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}"${i ? '' : ' class="on"'}>Lv.${i + 1}</button>`).join('')}</div></div></div>
           <div class="expf"><span>${esc(ui(lang, 'p_side'))}</span><div class="expseg" data-k="pside" data-v="1"><button type="button" data-v="1" class="on">${esc(ui(lang, 'p_first'))}</button><button type="button" data-v="2">${esc(ui(lang, 'p_second'))}</button></div></div>
           <button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><div class="expacts" hidden>${[['pundo', 'p_undo', '<path d="M9 6 4 11l5 5"/><path d="M4 11h9.5a5.5 5.5 0 0 1 0 11H11"/>'], ['presign', 'p_resign', '<path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/>'], ['phint', 'p_hint', '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>']]
-            .concat(PLAY[id].long ? [['pturn', 'p_orient', '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9a6 6 0 0 1 4-5M3 9V5.5M3 9h3.5M21 15a6 6 0 0 1-4 5M21 15v3.5M21 15h-3.5"/>', 'p_orientS']] : []).concat([['pstop', 'p_quit', '<path d="M6 6l12 12M18 6 6 18"/>']])
+            .concat(PLAY[id].long ? [['pturn', 'p_orient', '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9a6 6 0 0 1 4-5M3 9V5.5M3 9h3.5M21 15a6 6 0 0 1-4 5M21 15v3.5M21 15h-3.5"/>', 'p_orientS']] : [])
             .map(([k, l, d, sl]) => `<button type="button" class="expa" data-k="${k}" title="${esc(ui(lang, l))}"><svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg><span>${esc(ui(lang, sl || l))}</span></button>`).join('')}</div></div>` : ''}
         <div class="exscale" aria-hidden="true" dir="ltr"><i></i><span>10 cm</span></div>
         <p class="exhint">${esc(ui(lang, phone() ? 'hintT' : 'hint'))}</p>
@@ -99,8 +99,8 @@
     addEventListener('popstate', onPop);
     const close = () => { if (!V3 || V3.ov !== ov) return; removeEventListener('popstate', onPop); if (hist) { hist = false; try { history.back(); } catch (x) {} }
       if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); teardown(); ov.classList.remove('on'); document.documentElement.classList.remove('exv-open'); setTimeout(() => ov.remove(), 260); };
-    ov.querySelector('.exclose').onclick = close;
-    { const pb = ov.querySelector('[data-k="play"]'), sb = ov.querySelector('[data-k="pstop"]'), P = PLAY[id];   // 所蔵品で遊ぶ: a game on this board, here in the museum (museum/play.js)
+    ov.querySelector('.exclose').onclick = () => { if (ov.quitPlay && ov.classList.contains('exv-play')) ov.quitPlay(); else close(); };   // (during a game the × at the top right ends the game — as in the portal's 3D games — and a second one closes the case)
+    { const pb = ov.querySelector('[data-k="play"]'), P = PLAY[id];   // 所蔵品で遊ぶ: a game on this board, here in the museum (museum/play.js)
       if (pb && P) { const hudEl = ov.querySelector('.exhud'), PK = 'atlas-museum-play', lvS = ov.querySelector('[data-k="plv"]'), sdS = ov.querySelector('[data-k="pside"]');
         // the card's own pull-downs (the portal's rule: no system <select>): a button showing the choice, its list opening upward over the case
         let lock = false; const setDD = (dd, v) => { const o = [...dd.querySelectorAll('.expdd-l button')], b = o.find(x => +x.dataset.v === +v) || o[0]; dd.dataset.v = b.dataset.v; dd.querySelector('.expdd-b b').textContent = b.textContent; o.forEach(x => x.classList.toggle('on', x === b)); };
@@ -128,7 +128,7 @@
         // phones: the card stays out of the way until the play button at the top of the texts asks for it (tapping it again puts it away)
         const cfg = ov.querySelector('[data-k="pcfg"]'); if (cfg) cfg.onclick = () => { const on = !ov.classList.contains('exv-cfg'); ov.classList.toggle('exv-cfg', on); cfg.classList.toggle('on', on); };
         const playing = on => { ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); ov.classList.toggle('exv-play', on); pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
-        sb.onclick = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); };
+        ov.quitPlay = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); };
         pb.onclick = () => { if (!V3 || !V3.obj) return; pb.disabled = true;
           try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
           Promise.all([load('museum/play.js?v=' + V), window.AtlasLazy ? AtlasLazy.need(P.game) : 0]).then(() => { pb.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
@@ -136,7 +136,7 @@
             playing(!!ok); }); }; } }
     const pb = ov.querySelector('.amplay'); if (pb) pb.onclick = () => { close(); setTimeout(() => ctx.open(g.id, null), 280); };
     V3 = { ov, e, close, spin: true };
-    const onKey = ev => { if (ev.key === 'Escape') { ev.preventDefault(); close(); return; }
+    const onKey = ev => { if (ev.key === 'Escape') { ev.preventDefault(); if (ov.quitPlay && ov.classList.contains('exv-play')) ov.quitPlay(); else close(); return; }
       // (2026-11-21) I: the 3D debug panel for the piece on show (the room's own panel — table3d.js — stays out of it: stopPropagation)
       if ((ev.key === 'i' || ev.key === 'I') && !ev.repeat && !ev.ctrlKey && !ev.metaKey && !ev.altKey && !(ev.target && ev.target.closest && ev.target.closest('input,textarea,select,[contenteditable]'))) { ev.stopPropagation(); dbgToggle(); } };
     document.addEventListener('keydown', onKey); V3.offKey = () => document.removeEventListener('keydown', onKey);

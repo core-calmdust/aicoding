@@ -172,7 +172,7 @@
     const V = c.V; if (!V || !V.scene) return;
     if (c.board.parent) c.board.parent.remove(c.board);
     (c.hid || []).forEach(m => { m.visible = true; });
-    if (V.key) { V.key.intensity = c.L0.key; if (c.L0.kp) V.key.position.copy(c.L0.kp); } (c.L0.hemi || []).forEach(([o, i]) => { o.intensity = i; }); V.scene.environmentIntensity = c.L0.env; V.ov.classList.remove('exv-rot'); document.documentElement.classList.remove('exv-rot'); V.tgtBase = null; V.panLim = 0; V.home = c.L0.home; V.playing = false; V.pitMax = 0; if (c.tgt0) V.tgt.copy(c.tgt0); if (V.home) G.tween(V.home);
+    if (V.key) { V.key.intensity = c.L0.key; if (c.L0.kp) V.key.position.copy(c.L0.kp); } (c.L0.hemi || []).forEach(([o, i]) => { o.intensity = i; }); V.scene.environmentIntensity = c.L0.env; V.ov.classList.remove('exv-rot'); document.documentElement.classList.remove('exv-rot'); V.tgtBase = null; V.panLim = 0; V.home = c.L0.home; V.playing = false; V.pitMax = 0; if (c.tgt0) V.tgt.copy(c.tgt0); if (V.home && window.AtlasGallery) AtlasGallery.tween(V.home);
     if (V.R) V.R.shadowMap.needsUpdate = true; if (window.AtlasGallery) AtlasGallery.go();
   }
   const S = () => cur && cur.ses;   // the game's own actions (待った・ヒント・投了), as the portal's 3D games offer them
