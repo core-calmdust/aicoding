@@ -99,6 +99,37 @@ const CHECKS = {
       });
     });
   },
+  // (2026-11-22 lesson loop) the morris lessons ('morris', key = the 3D list index: nine → six → twelve, steps with problems): every
+  // accepted / scored move is legal and the best one is the engine's best; what the step's words say the answer does holds on the board —
+  // a mill (ミル・3つ並べる), a piece of the opponent's pair taken (b_take), the opponent's mill point filled (b_block / tw_dblock), the win
+  // (b_win / sx_win), a mill piece opened with no opponent able to step into the gap (b_reopen), the side flying with 3 pieces (b_fly), the
+  // point with the most neighbours (b_place 「となりが多い点」), a diagonal line (tw_diag)
+  'morris'() {
+    const E = require(path.join(ROOT, 'morris/engine.js')), g = 'morris', NO = E.NONE; let key = 0;
+    [['nine', 'morris/lessons.json'], ['six', 'morris/lessons-six.json'], ['twelve', 'morris/lessons-twelve.json']].forEach(([v, f]) => {
+      const G = E.geom(v);
+      J(f).steps.forEach(st => { if (!(st.problems && st.problems.length)) return; const K = String(key++);
+        st.problems.forEach((P, j) => { const pos = E.Pos.from(G, P.s), legal = new Set(pos.moves()), w = `${st.id} q${j + 1}`, me = pos.side, o = 3 - me;
+          const ok = P.ok || [P.best];
+          ok.forEach(m => { if (!legal.has(m)) bad(g, K, `${w}: an accepted move is not legal`); });
+          if (P.best != null && !legal.has(P.best)) bad(g, K, `${w}: the best move is not legal`);
+          if (P.sc) { P.sc.forEach(([m]) => { if (!legal.has(m)) bad(g, K, `${w}: a scored move is not legal`); });
+            const top = Math.max(...P.sc.map(e => e[1])), b = P.sc.find(e => e[0] === P.best); if (P.best != null && b && b[1] < top - 6) bad(g, K, `${w}: the best move is not the engine's best`); }
+          const oppPts = (() => { const c = pos.clone(); c.side = o; const S = new Set(); for (const x of c.moves()) if (E.mRm(x) !== NO) S.add(E.mTo(x)); return S; })();
+          const pair = r => G.mills.some(ml => ml.includes(r) && ml.filter(i => i !== r).filter(i => pos.b[i] === o).length === 1 && ml.filter(i => i !== r).some(i => !pos.b[i]));
+          const id = st.id;
+          ok.forEach(m => { if (!legal.has(m)) return; const t = E.mTo(m), fr = E.mFrom(m), r = E.mRm(m), after = pos.clone(); after.play(m);
+            if (['b_mill', 'b_move', 'b_fly', 'sx_nofly', 'tw_diag', 'b_take'].includes(id) && r === NO) bad(g, K, `${w}: the answer makes no mill`);
+            if (id === 'b_take' && r !== NO && !pair(r)) bad(g, K, `${w}: the piece taken is not one of the opponent's pair`);
+            if ((id === 'b_block' || id === 'tw_dblock') && !oppPts.has(t)) bad(g, K, `${w}: the answer does not fill the opponent's mill point`);
+            if ((id === 'b_win' || id === 'sx_win') && after.status() !== -1) bad(g, K, `${w}: the answer does not win`);
+            if (id === 'b_move' || id === 'sx_nofly') { if (fr === NO || !G.adj[fr].includes(t)) bad(g, K, `${w}: the answer is not a step to a neighbour`); }
+            if (id === 'b_fly') { let n = 0; for (let i = 0; i < G.n; i++) if (pos.b[i] === me) n++; if (n !== 3) bad(g, K, `${w}: the side has ${n} pieces, not 3 (no flying)`); }
+            if (id === 'b_reopen') { if (fr === NO || !pos.inMill(fr)) bad(g, K, `${w}: the answer does not open a mill`); else if (after.moves().some(x => E.mTo(x) === fr)) bad(g, K, `${w}: the opponent can step into the opened point`); }
+            if (id === 'b_place') { const mx = Math.max(...[...legal].map(x => G.adj[E.mTo(x)].length)); if (G.adj[t].length < mx) bad(g, K, `${w}: the answer has ${G.adj[t].length} neighbours, another point ${mx}`); }
+            if (id === 'tw_diag' && r !== NO) { const DG = [[0, 3, 6], [2, 5, 8], [21, 18, 15], [23, 20, 17]]; if (!DG.some(ml => ml.includes(t) && ml.every(q => after.b[q] === me))) bad(g, K, `${w}: the mill is not on a diagonal line`); }
+          }); }); }); });
+  },
   // (2026-11-22 lesson loop, hex/open) the opening lines and their problems: every move of the line legal, a problem's best move legal
   // and the engine's best value (or within 3% of it), and what each stored note says the move does true on the board — a bridge with an own
   // stone, touching the opponent, a swap, an intrusion into the opponent's bridge, the 2nd row
