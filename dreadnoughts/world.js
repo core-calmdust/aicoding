@@ -385,7 +385,7 @@ function marks(z, o) {
     if (v === 3) add(glint(), i, .04, false);
     if (v === 4) { add(sprite('?', .5, { disc: 'rgba(60,66,72,.85)', ring: 'rgba(220,225,230,.9)', color: '#f2f2ee', px: 76 }), i, .45); V.emitters[z].push({ acc: 0, every: .5, fn: () => emit(V.smoke, { p: [x + (Math.random() - .5) * .5, waveAt(x, zz, V.t) + .1, zz + (Math.random() - .5) * .5], v: [.04, .05, 0], life: 3, size0: .4, size1: .8, c0: [.6, .62, .64, .35], c1: [.6, .62, .64, 0], fadeIn: .5 }) }); }
   }
-  if (o.scans) for (const sc of o.scans) { if (!sc.one || (o.shots && o.shots[sc.at])) continue; add(sprite(sc.k ? '!' : '×', .46, sc.k ? { disc: 'rgba(216,180,106,.92)', ring: '#fff2cf', color: '#1b1408', px: 80, shadow: false } : { color: '#cfe4ee', px: 90 }), sc.at, .4); }
+  if (o.scans) for (const sc of o.scans) { if (!sc.one || (o.shots && o.shots[sc.at])) continue; add(sprite(sc.k ? '!' : '×', .46, sc.k ? { disc: 'rgba(232,237,240,.92)', ring: '#ffffff', color: '#0b0f12', px: 80, shadow: false } : { color: '#cfe4ee', px: 90 }), sc.at, .4); }
   scans.forEach((sc, n) => { const cs = scanCells(sc), [x, zz] = cellXZ(z, cs[0]); const s = sprite(String(sc.k), .52, { disc: 'rgba(16,48,64,.9)', ring: n === scans.length - 1 ? '#7fe3ff' : 'rgba(127,227,255,.6)', color: '#e9fbff', px: 70 }); s.position.set(x - .5, .5, zz - .5); L.add(s); V.floats[z].push({ o: s, x: x - .5, z: zz - .5, dy: .5 }); });
   if (o.mines) for (const c of o.mines) add(mine(), c, .02, true);
 }
@@ -486,7 +486,7 @@ function preview(canvas) {
   const sc = new T.Scene(), pm = new T.PMREMGenerator(R), env = new T.Scene(); env.add(new T.Mesh(new T.SphereGeometry(10, 32, 16), new T.ShaderMaterial({ uniforms: { uSun: { value: new T.Vector3(-.4, .3, -.8).normalize() }, uTime: { value: 0 } }, side: T.BackSide, vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }', fragmentShader: GLSL_SKY + 'uniform float uTime; varying vec3 vD; void main(){ gl_FragColor = vec4(skyCol(normalize(vD), 0.), 1.); }' })));
   sc.environment = pm.fromScene(env, .01).texture; const l = new T.DirectionalLight(0xffe2c0, 2.6); l.position.set(-3, 4, 3); sc.add(l); sc.add(new T.HemisphereLight(0xc8d8e8, 0x223040, .9));
   const disc = new T.Mesh(new T.CircleGeometry(1, 64), new T.MeshBasicMaterial({ color: 0x0c2430, transparent: true, opacity: .55 })); disc.rotation.x = -Math.PI / 2; disc.position.y = -.005; sc.add(disc);
-  const ring = new T.Mesh(new T.RingGeometry(.985, 1, 96), new T.MeshBasicMaterial({ color: 0xd8b46a, transparent: true, opacity: .6 })); ring.rotation.x = -Math.PI / 2; sc.add(ring);
+  const ring = new T.Mesh(new T.RingGeometry(.985, 1, 96), new T.MeshBasicMaterial({ color: 0xe8edf0, transparent: true, opacity: .45 })); ring.rotation.x = -Math.PI / 2; sc.add(ring);
   const cam = new T.PerspectiveCamera(26, 1, .05, 50); let cur = null, ang = .6, raf = 0, L = 3;
   const size = () => { const w = canvas.clientWidth || 300, h = canvas.clientHeight || 200; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); };
   const frame = () => { raf = requestAnimationFrame(frame); if (!canvas.isConnected || !canvas.offsetParent) return; ang += .0045; const d = L * 1.3 + 1.7; cam.position.set(Math.cos(ang) * d, d * .38, Math.sin(ang) * d); cam.lookAt(0, .1, 0); if (cur) cur.position.y = Math.sin(performance.now() / 900) * .012; R.render(sc, cam); };
