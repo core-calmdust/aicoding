@@ -2,6 +2,7 @@
    room and plinth, the exhibit's own 3D model as the board. Only the game's rules and AI (the portal's table adapter,
    atlas/games/<game>.js, driven through a small stand-in for Table3D): no lessons, puzzles, ratings or records.
    AtlasMuseumPlay.start(id, { level, side, lang, t, hud, onEnd }) → { stop() }
+   AtlasMuseumPlay.start(id, { course: true, lang, onPlay, onExit }): the rules course on the same board instead (museum/rules.js)
    Pieces: where none survive with the exhibit they are an estimate, and the museum's text says so. */
 (function () {
   'use strict';
@@ -122,8 +123,8 @@
   let cur = null;
   function start(id, o) {
     const def = BOARDS[id], G = window.AtlasGallery, V = G && G._v && G._v(), TH = window.THREE, ad = window.Atlas3D && Atlas3D[def && def.game];
-    if (!def || !V || !V.obj || !TH || !ad) return null;
-    stop();
+    if (!def || !V || !V.obj || !TH || (!ad && !o.course) || (o.course && !window.AtlasMuseumRules)) return null;
+    stop(); const CM = !!o.course;
     const board = def.board(TH, V.obj, G.kit), stage = V.ov.querySelector('.exstage'), cv = stage.querySelector('canvas');
     const dot = new TH.CircleGeometry(1, 24); dot.rotateX(-Math.PI / 2);
     const T3 = { MODELS: (window.Table3D && Table3D.MODELS) || {},
@@ -148,24 +149,31 @@
     // can lie lengthwise down the screen (turned a quarter, your side to the left) or across; the player's choice is kept, otherwise a tall case
     // (a phone held upright) gets it lengthwise. area: what has to be in view, [x0, x1, z0, z1] in the exhibit's cm (else the whole exhibit), at the height `top`.
     const tall = () => V.cam.aspect < .9, OK = 'atlas-museum-orient';
-    const vert = () => { if (!def.view.long) return false; let o = ''; try { o = localStorage.getItem(OK) || ''; } catch (e) {} return o ? o === 'v' : tall(); };
+    const vert = () => { if (!def.view.long || CM) return false;   // (a rules course: always across, the guide's panel below)
+      let o = ''; try { o = localStorage.getItem(OK) || ''; } catch (e) {} return o ? o === 'v' : tall(); };
     const box = new TH.Box3().setFromObject(V.obj), A = def.area || [box.min.x, box.max.x, box.min.z, box.max.z], AY = def.top != null ? def.top : (V.obj.userData.play && V.obj.userData.play.top) || box.max.y;
     const tgt0 = V.tgt.clone(); V.tgt.copy(V.obj.localToWorld(new TH.Vector3((A[0] + A[1]) / 2, AY, (A[2] + A[3]) / 2))); V.pitMax = 1.52;
     // rot: a long board turned lengthwise on a tall screen is a sideways board for a phone held sideways — the bar and the buttons turn with it (CSS .exv-rot)
     const rot = () => vert() && tall();
     const view = () => { const v = vert(), r = rot(), W = A[1] - A[0], Dp = A[3] - A[2], sw = v ? Dp : W, sh = v ? W : Dp, w = stage.clientWidth || 1, h = stage.clientHeight || 1, tv = Math.tan(V.cam.fov * Math.PI / 360);
-      const m = w < 820 ? 100 : 96, uh = Math.max(120, h - (r ? 40 : 2 * m)), uw = Math.max(120, w - (r ? 2 * 78 : 28));   // (room for the bar and the buttons: top and bottom, or left and right when turned; the same on both sides so the board stays centred)
+      const m = w < 820 ? 100 : 96, pb = o.course ? coursePad() : 0, uh = Math.max(120, h - (r ? 40 : pb ? pb[0] + pb[1] : 2 * m)), uw = Math.max(120, w - (r ? 2 * 78 : 28));   // (room for the bar and the buttons: top and bottom, or left and right when turned; the same on both sides so the board stays centred)
       return { yaw: v ? Math.PI / 2 : 0, pit: 1.52, d: Math.max(sh / 2 / tv * h / uh, sw / 2 / (tv * V.cam.aspect) * w / uw) * 1.03 }; };
     // a slide moves the board sideways (gallery.js): along the screen's width, or its height when turned; back to the middle whenever the view is set again
     const apply = () => { const r = rot(); V.ov.classList.toggle('exv-rot', r); document.documentElement.classList.toggle('exv-rot', r);
       const v = vert(); V.tgtBase = tgtB.clone(); V.tgt.copy(tgtB); V.panXZ = [0, 0]; V.panLim = Math.max(A[1] - A[0], A[3] - A[2]) / 2;   // (a slide moves the board any way, gallery.js)
-      const q = view(); V.home = q; G.tween(q); if (V.R) V.R.shadowMap.needsUpdate = true; };
+      const q = view();
+      if (o.course) { const pb = coursePad(), h = stage.clientHeight || 1, wpp = 2 * q.d * Math.tan(V.cam.fov * Math.PI / 360) / h; V.tgtBase.z += (pb[1] - pb[0]) / 2 * wpp; V.tgt.copy(V.tgtBase); }   // (the board in the room left above the guide's panel)
+      V.home = q; G.tween(q); if (V.R) V.R.shadowMap.needsUpdate = true; };
+    // a rules course: the top bar's room above, the guide's panel below (its height as it stands)
+    const coursePad = () => { const pe = stage.querySelector('.exrul'); return [56, (pe ? pe.offsetHeight : 180) + 22]; };
     const tgtB = V.tgt.clone(); apply(); V.playing = true;
     const hid = ((V.obj.userData.play && V.obj.userData.play.hide) || []).filter(m => m.visible); hid.forEach(m => { m.visible = false; });   // the pieces and sticks laid out for show: put away during a game
-    const ses = ad.start({ el: stage, Table3D: T3, board, lang: o.lang, t: o.t, level: o.level, side: o.side, size: def.size, mode: 'ai', hud: o.hud || (() => {}), onTurn() {}, onEnd: res => { if (o.onEnd) o.onEnd(res); } });
+    const ses = o.course ? (V.obj.add(board), AtlasMuseumRules.run(id, { lang: o.lang, TH, board, V, T3, stage, relayout: () => { if (cur && cur.V === V) apply(); }, onPlay: o.onPlay, onExit: o.onExit }))
+      : ad.start({ el: stage, Table3D: T3, board, lang: o.lang, t: o.t, level: o.level, side: o.side, size: def.size, mode: 'ai', hud: o.hud || (() => {}), onTurn() {}, onEnd: res => { if (o.onEnd) o.onEnd(res); } });
     // the case changes size (a phone: it grows when the game starts; a turned phone, a resized window): frame the board again
     let rsT = 0; const ro = new ResizeObserver(() => { clearTimeout(rsT); rsT = setTimeout(() => { if (cur && cur.V === V && V.scene) apply(); }, 120); }); ro.observe(stage);
-    cur = { V, ses, board, L0, dot, hid, ro, tgt0, turn() { const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} apply(); } };
+    cur = { V, ses, board, course: !!o.course, L0, dot, hid, ro, tgt0, turn() { if (o.course) return; const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} apply(); } };
+    if (o.course) apply();
     return { stop };
   }
   function stop() {
@@ -179,8 +187,8 @@
     if (V.key) { V.key.intensity = c.L0.key; if (c.L0.kp) V.key.position.copy(c.L0.kp); } (c.L0.hemi || []).forEach(([o, i]) => { o.intensity = i; }); V.scene.environmentIntensity = c.L0.env; V.ov.classList.remove('exv-rot'); document.documentElement.classList.remove('exv-rot'); V.tgtBase = null; V.panLim = 0; V.home = c.L0.home; V.playing = false; V.pitMax = 0; if (c.tgt0) V.tgt.copy(c.tgt0); if (V.home && window.AtlasGallery) AtlasGallery.tween(V.home);
     if (V.R) V.R.shadowMap.needsUpdate = true; if (window.AtlasGallery) AtlasGallery.go();
   }
-  const S = () => cur && cur.ses;   // the game's own actions (待った・ヒント・投了), as the portal's 3D games offer them
+  const S = () => cur && !cur.course && cur.ses;   // the game's own actions (待った・ヒント・投了), as the portal's 3D games offer them
   const can = a => { const s = S(); if (!s) return false; try { return a === 'undo' ? !!(s.canUndo && s.canUndo()) : a === 'hint' ? !!(s.canHint ? s.canHint() : s.hint) : a === 'resign' ? !!(s.canResign ? s.canResign() : s.resign) : false; } catch (e) { return false; } };
   const act = a => { const s = S(); if (!s || !can(a)) return; try { if (a === 'undo') s.undo(); else if (a === 'hint') s.hint(); else if (a === 'resign') s.resign(); } catch (e) { console.warn('[museum play]', e); } };
-  window.AtlasMuseumPlay = { start, stop, can, act, turn: () => { if (cur && cur.turn) cur.turn(); }, has: id => !!BOARDS[id], game: id => BOARDS[id] && BOARDS[id].game };
+  window.AtlasMuseumPlay = { start, stop, can, act, _course: () => cur && cur.course && cur.ses, turn: () => { if (cur && cur.turn) cur.turn(); }, has: id => !!BOARDS[id], game: id => BOARDS[id] && BOARDS[id].game };
 })();
