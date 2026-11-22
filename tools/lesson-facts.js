@@ -240,6 +240,47 @@ const CHECKS = {
         (P.sc || []).forEach(([m]) => { if (!q.legal(m)) bad(g, K, `problem ${j}: a scored move is not legal`); }); });
     });
   },
+  // (2026-11-23 lesson loop) the checkers openings ('checkers/open', key = the opening's id): every line replays legally, every practice
+  // position's best and scored moves are legal and the best is the engine's top (within a little), and the kind of move the 3D guide
+  // names (atlas/lessons3d.js ckFacts → CK_WHY / CK_SHORT: a capture / the recapture / an exchange, an exchange offered, a shot, a crowning,
+  // a piece saved, a back-row piece brought out, a step to the centre / the edge, a jump threatened next) is re-checked on the engine's board.
+  'checkers/open'() {
+    const E = require(path.join(ROOT, 'checkers/engine.js')), O = J('checkers/openings.json'), G = 'checkers/open', vm = require('vm');
+    const src = fs.readFileSync(path.join(ROOT, 'atlas/lessons3d.js'), 'utf8'), a = src.indexOf('  function ckFacts('), b = src.indexOf('  const CK_SIDE');
+    const X = vm.runInNewContext(src.slice(a, b) + '\n;({ ckFacts })', {});
+    const mat = (p, s) => { const own = s ? p.w : p.b; return E.popc(own); };
+    // the material swing of the forced captures from p (side to move gains), read to the end — independent of ckFacts' own reading
+    const swing = (p, d) => { const c = p.caps(); if (!c.length || d > 12) return 0; let best = -99; for (const m of c) { const q = p.clone().play(m); best = Math.max(best, E.popc(E.mCap(m)) - swing(q, d + 1)); } return best; };
+    const check = (id, w, pos, m, prev) => {
+      if (!pos.moves().includes(m)) { bad(G, id, `${w}: not a legal move`); return; }
+      const F = X.ckFacts(E, pos, m, prev), k = F.k, f = E.mFrom(m), t = E.mTo(m), [fr] = E.RC[f], [tr, tc] = E.RC[t], me = pos.side, after = pos.clone().play(m), cap = E.popc(E.mCap(m));
+      const net = cap - swing(after, 0), man = pos.at(f) !== 2 && pos.at(f) !== 4;
+      if (/^(cap|recap|xchg)$/.test(k) && !cap) bad(G, id, `${w}: said to take, but takes nothing`);
+      if (k === 'recap' && !(prev != null && E.mCap(prev))) bad(G, id, `${w}: said to take back, but the move before took nothing`);
+      if (k === 'xchg' && !(net < cap)) bad(G, id, `${w}: said to be taken back, but the capture is kept`);
+      if (k === 'cap' && net < cap) bad(G, id, `${w}: said to take safely, but it is taken back`);
+      if (k === 'trade' && !(cap === 0 && after.caps().length && net === 0)) bad(G, id, `${w}: said to offer an even exchange, but it is not one (net ${net})`);
+      if (k === 'gambit' && !(cap === 0 && net < 0)) bad(G, id, `${w}: said to give a piece, but it does not (net ${net})`);
+      if (k === 'shot' && !(cap === 0 && net > 0)) bad(G, id, `${w}: said to be a shot, but gains ${net}`);
+      if (k === 'crown' && !pos.promotes(m)) bad(G, id, `${w}: said to crown, but does not`);
+      if (k === 'back' && !(man && fr === (me ? 7 : 0))) bad(G, id, `${w}: said to bring out a back-row piece, but it is not on the back row`);
+      if (k === 'center' && !(tr >= 2 && tr <= 5 && tc >= 2 && tc <= 5)) bad(G, id, `${w}: said to go to the centre, but lands off it`);
+      if (k === 'edge' && !(tc === 0 || tc === 7)) bad(G, id, `${w}: said to go to the edge, but does not`);
+      if (k === 'save') { const q = pos.clone(); q.side ^= 1; q.rehash(); if (!q.caps().length || after.caps().length) bad(G, id, `${w}: said to save a threatened piece, but nothing was threatened or it still is`); }
+      if (!/^(cap|recap|xchg|shot|trade|win|gambit)$/.test(k) && net < 0) bad(G, id, `${w}: words of a quiet move, but the piece is jumped for nothing`);
+      if (F.thrAfter) { const q = after.clone(); q.side ^= 1; q.rehash(); if (after.caps().length || !q.caps().length) bad(G, id, `${w}: said to threaten a jump, but there is none`); }
+    };
+    O.sets.forEach(st => { const id = st.id; let pos = E.Pos.from(null), prev = null;
+      st.study.line.forEach((m, i) => { check(id, `move ${i + 1}`, pos, m, prev); if (!pos.moves().includes(m)) return; prev = m; pos = pos.clone().play(m); });
+      (st.problems || []).forEach((P, j) => { const q = E.Pos.from(P.s), w = `problem ${j + 1}`;
+        if (!q.moves().includes(P.best)) { bad(G, id, `${w}: the best move is not legal`); return; }
+        (P.sc || []).forEach(([m]) => { if (!q.moves().includes(m)) bad(G, id, `${w}: a scored move is not legal`); });
+        const sc = new Map(P.sc || []), top = Math.max(...(P.sc || [[0, 0]]).map(e => e[1]));
+        if (sc.has(P.best) && sc.get(P.best) < top - 10) bad(G, id, `${w}: the best move is not the engine's best (${sc.get(P.best)} < ${top})`);
+        check(id, `${w} best`, q, P.best, null);
+        (P.sc || []).forEach(([m]) => { if (m !== P.best && q.moves().includes(m)) check(id, `${w} ${m}`, q, m, null); }); });
+    });
+  },
   // (2026-11-22 lesson loop) the chess openings ('chess/open', key = the opening's id): every line replays legally from the start, every
   // practice position's stored moves are legal, and what the 3D guide says about a move (atlas/lessons3d.js chFacts → chKind: castling,
   // taking / taking back, a pin, a pawn chasing a piece, a piece leaving its first square, the piece a wrong move leaves to be taken)
