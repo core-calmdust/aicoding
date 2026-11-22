@@ -2890,6 +2890,124 @@
       ng(u) { this._hl = []; const t = goSpots(n, N, ok, u, false, 'ja', this._hl), part = half.includes(u);
         return [part ? pk(GO_CH.half, k) : pk(GO_CH.soft, o8), t.includes(OKM) ? null : fill(pk(GO_CH.right, k + 1), { m: OKM }), t, part ? null : pk(GO_CH.tail, k)].filter(Boolean).join(' '); } };
   }
+  /* (2026-11-22 lesson loop) the go joseki / fuseki practice in ゴイシペン's words, Japanese, read from the board (go/rules.js): what the
+     line's move does (captures, atari, saves a stone in atari, connects, cuts in, touches, the 3-3, a jump / knight / diagonal from a
+     friend, an approach, an extension) — goOpF — and, after a miss, what the other side does with the green point (goOpF from the
+     opponent's side: takes stones, ataris, cuts in, connects, slides into the corner, touches). Never the engine's opinion. The stored
+     notes keep their sentences without the AI's judgement (GOJ_OP.clean); the move's name is taken from the note's first sentence. */
+  const GOJ_OP = {
+    ask: ['手順の続き！ {s}の次の一手はどこかな？', '{s}の番だね。手順を思い出して打ってみて！', 'ここで{s}が打つ、いちばんの手はどこだと思う？', 'この形の急所はどこかな？ 相手のねらいも考えてみるペン。', 'さあ{s}の一手！ 強い人がよく打った手を当ててみて。',
+      '{s}はここで何を打つ？ さっきの手順を思い出してみよう！', 'ここが勝負どころペン。{s}のいちばんの手は？', '{s}の手番。形を整える一手を探してみて！', '次の{s}の一手、きみならどこに打つ？', 'ちょっと考えどころだね。{s}はどこへ打つかな？'],
+    hint: {
+      cap: ['相手の石のダメ（空いている点）を数えてみて。あと1つの石はないかな？', '取れる石が盤の上にないか、じっくり見てみるペン！', 'ダメが1つしかない相手の石、見つかるかな？'],
+      save: ['自分の石のダメを数えてみて。あと1つしかない石はない？', 'アタリになっている石はないかな？ まずは助けるのが先ペン！', '取られそうな石がないか、先に確かめてみよう！'],
+      atari: ['相手の石のダメを数えてみて。2つしかない石はどれかな？', '相手の石を追いつめる手があるペン。ダメを減らしてみよう！', '相手に「逃げなきゃ！」と思わせる手はどこかな？'],
+      connect: ['自分の石のつながりを確かめてみて。切られそうなところはないかな？', '石と石のあいだに、すきが空いてないかな？ そこが急所ペン！'],
+      cut: ['相手の石のつなぎ目を探してみて。割りこめそうなところはない？', '相手の石は、ちゃんとつながってるかな？ すきを探してみよう！', '相手の石を2つに分けられたら、攻めやすくなるよね？'],
+      sansan: ['隅の奥がまだ空いてるね。そこが気にならない？', '隅のいちばん奥の、地になりやすい場所を考えてみるペン。', '隅で生きるなら、どこに入るのがいいかな？'],
+      contact: ['相手の石にくっつける手を考えてみて。どっちからおさえるかがポイント！', '相手の石のすぐとなりが急所ペン。伸びたい方向をふさごう！', '相手の石の頭はどっちかな？ そこをおさえる手を探してみて。', '相手の石が伸びたいのは、どっちの方向かな？', 'となりにつけて、相手の形を決めさせる手があるペン！'],
+      shape: ['自分の石から、軽く一歩のばす手を考えてみて！', '仲間の石と連絡しながら、形よく広がる手があるペン。', '石をくっつけすぎず、離しすぎず。ちょうどいい間かくはどこかな？', '自分の石を強くする手はどこかな？ まずは足元を固めよう！', '仲間の石とどうつながるか、形を思いうかべてみて！', 'あせらず、自分の石の弱いところを探してみるペン。'],
+      approach: ['相手の石に近づいて、地を広げさせない手を考えてみて。', '相手の隅や辺に、少し離れて近づく手があるペン！', '相手が広げたい場所はどこ？ そこへ先回りしてみよう！', 'くっつけずに、ひと間あけて相手にせまる手はどうかな？'],
+      ext: ['石が生きるには足場が要るよね。辺に広げる手を探してみて！', '辺にひらいて、自分の石の根拠を作る手はどこかな？', '自分の石から辺にそって、ほどよく離れた点を探してみるペン。'],
+      open: ['盤の空いている広い場所はどこかな？ 大きいところを先に取ろう！', 'まだだれもいない隅や辺を見てみて。先に打った方が得ペン！', '相手の石から離れた、大きく広い場所を探してみよう。'] },
+    good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりだペン！', 'やった！', 'すごい！', 'その通り！', 'よく見つけた！', 'ナイス！', 'いい手ペン！', '上手！'],
+    near: ['その手もいい手だね！', 'それも十分いい手ペン！', 'その手でもバッチリ！'],
+    push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次へ行こうペン！', null, 'まだまだ行けるね！'],
+    soft: ['大丈夫！', 'ドンマイだペン！', '気にしない、気にしない！', 'あと一歩！', '平気、平気！', 'いっしょに確認しよう！', 'よくある見落としペン！', 'だいじょうぶ、ここは難しいところ！', 'おしい！', '次は見つけられるね！', 'いい線いってたよ！'],
+    half: ['きみの手も悪くないね。', 'その手も一つの考え方だペン。', 'いい線いってるね！'],
+    right: ['正解は{m}。', '答えは{m}だったんだ。', 'ここは{m}が正解ペン。', 'いちばんの手は{m}！', '{m}を見てみて。'],
+    tail: [null, 'これで覚えちゃおう！', null, '次はきっと見つけられるペン！', null, 'もう一回並べれば、すぐ覚えられるよ。'],
+    // the role of the line's move ({n} its name from the note — 'この{n}で、' when there is one), by what it does on the board
+    why: {
+      cap: ['{n}相手の石を{k}子取った！ 形がいっぺんに軽くなるペン。', '{n}{k}子をしっかり取りきった。もう取られる心配もないね！'],
+      save: ['{n}アタリの石を助けた！ ダメが{l}つに増えて、ひと安心ペン。', '{n}あと1つだったダメが{l}つになった。取られずにすんだね！'],
+      atari: ['{n}相手の石をアタリにした！ 相手は逃げるのに手をとられるペン。', '{n}相手の石のダメがあと1つ。先手で相手に受けさせる手なんだ！'],
+      connect: ['{n}自分の石どうしをつないだ！ もう切られる心配はないペン。', '{n}離れそうだった石がつながった。しっかりした形だね！', '{n}つなぎ目をふさいで、石がひとつにまとまった！'],
+      cut: ['{n}相手の石のあいだに割りこんだ！ 相手は2つに分かれて苦しいペン。', '{n}相手の石のつなぎ目に入った。片方ずつ攻められるね！'],
+      sansan: ['{n}隅のいちばん奥、三々に入った！ 隅の地をそっくり持っていく手ペン。', '{n}三々にすべりこんで、隅で生きる足場ができた！'],
+      contact: ['{n}相手の石にぴったりつけた！ 伸びたい方向をおさえたペン。', '{n}相手の石のすぐとなりで、行く手をふさいだ！', '{n}相手の石に体をくっつけて、形を決めにいった！', '{n}相手とがっぷり組んで、強い形を作りにいったペン！'],
+      jump: ['{n}自分の石から一間とんで、軽く広がった！ 切られにくい形ペン。', '{n}一歩とびで、相手より先に広い方へ顔を出した！', '{n}ひとつあけて軽くとんだ。足の速い形だね！'],
+      diag: ['{n}ななめにつないだ。切られずに、しっかり広がる形ペン！', '{n}コスミの形で、すきなく一歩のびた！', '{n}ななめに一歩。じょうぶで、むだのない形だね！'],
+      keima: ['{n}ケイマの形で、自分の石と連絡しながら広がった！', '{n}ケイマにひらいて、足を軽くのばしたペン！', '{n}桂馬の形で、ふわっと広がった。軽くて速い一手！'],
+      approach: ['{n}相手の石に近づいて、地を広げさせない！', '{n}相手の隅に少し離れて近づいた。ここから足場を作れるペン！', '{n}ほどよく間をあけて、相手の石にせまった！', '{n}相手の陣地になりそうな所へ、先に入っていったペン！'],
+      ext: ['{n}辺にひらいて、自分の石の足場を作った！', '{n}自分の石から辺にそって広げた。これで根拠ができるペン！', '{n}ほどよく離れてひらいて、辺に陣地のもとを作った！'],
+      nobi: ['{n}自分の石からまっすぐ伸びた！ ダメが{l}つに増えて、じょうぶな形ペン。', '{n}仲間の石にくっつけて伸びた。これで石が強くなったね！', '{n}あわてずに一歩伸びて、ダメを{l}つにした！'],
+      local: ['{n}ここで形を整えた！ 次の戦いにそなえる一手ペン。', '{n}石の働きを広げる、大事な一手だね！', '{n}まわりの石と協力できる場所に打った！'],
+      open: ['{n}空いている大きな場所を先に取った！', '{n}広いところに先に石を置いたペン。あとで大きく働くね！', '{n}まだだれもいない場所へ。大場を取る手なんだ！'] },
+    // what the other side does with the green point if it is left
+    them: {
+      cap: ['そのままだと、相手に{m}を打たれて、石を{k}子取られちゃう。', '相手が{m}に打つと、きみの石が{k}子取られちゃうんだ。', 'もし{m}を後回しにすると、そこで{k}子を取られちゃうペン。'],
+      atari: ['相手に{m}を打たれると、きみの石がアタリにされちゃう。', '{m}を相手が打つと、きみの石のダメがあと1つになっちゃう。', '放っておくと、相手は{m}できみの石をアタリにできるんだ。'],
+      save: ['相手に{m}を打たれると、アタリの石に逃げられちゃう。', 'そのままだと、相手は{m}でアタリの石を助けられるんだ。', '{m}を空けておくと、取れそうな石がそこから逃げちゃうペン。'],
+      cut: ['相手に{m}を打たれると、きみの石のあいだに割りこまれちゃう。', '{m}はきみの石のつなぎ目。相手に打たれると、石が2つに分かれちゃう。', 'もし相手が{m}に来ると、きみの石は切り離されちゃうペン。'],
+      connect: ['相手に{m}を打たれると、相手の石がつながって、攻めるチャンスがなくなる。', '{m}は相手の石のつなぎ目。打たれると、もう切れなくなっちゃう。', '相手が{m}に打つと、離れていた石がひとつにまとまっちゃうんだ。'],
+      sansan: ['相手に{m}を打たれると、隅の奥に入られて、地をへらされちゃう。', 'そのままだと、相手に{m}で三々に入られて、隅で生きられちゃう。', '{m}を空けておくと、隅の地に入りこまれちゃうペン。'],
+      contact: ['相手に{m}を打たれると、きみの石にぴったりつけられて、伸びる先をおさえられちゃう。', '{m}を相手が先に打つと、きみの石の行く手がふさがれちゃう。', 'もし相手が{m}に来ると、きみの石は伸びたい方へ進めなくなるんだ。', '放っておくと、{m}で頭をおさえられて、きみの石が苦しくなっちゃう。'],
+      reduce: ['相手に{m}を打たれると、きみの石のダメが{l}つに減って、苦しくなっちゃう。', '{m}を相手が打つと、きみの石はダメが{l}つしかなくなるペン。', 'そこを取られると、きみの石のダメが{l}つまで減っちゃうんだ。'],
+      gen: ['ほかの点だと、相手に{m}を先に打たれて、この形の大事な場所を取られちゃう。', '{m}を後回しにすると、相手がそこに打って、いい形を作っちゃう。', '{m}は相手にとっても大事な点。先に打たれると、ここで一手遅れちゃうんだ。',
+        'そこを空けておくと、相手が{m}に打って、形がよくなっちゃうペン。', 'もし相手が{m}に来ると、きみはこの場所で後手にまわっちゃう。'] },
+    you: { selfAtari: ['それに、きみの石はすぐアタリになっちゃう。', 'しかも、その石はダメが1つしかないペン。'], line1: ['一線の石は、地にも厚みにもなりにくいんだ。'], far: ['それに、いま戦っている場所から遠すぎるペン。', 'その点は、この戦いから離れすぎているんだ。'],
+      half: ['手順の手のほうが、石の働きが大きいから、ここは覚えておこう。', 'でも手順の手なら、相手の形をもっと苦しくできるんだ。'] },
+    intro0: '囲碁は、石で囲んだ陣地の広さを競って、広いほうが勝ちのゲームだペン。定石は、何度も打たれてきた「おたがいに損のない手順」なんだ。',
+    introA: ['今日は「{t}」！', '「{t}」を並べてみよう！', '次は「{t}」だペン。', 'お待たせ、「{t}」の時間！', '「{t}」、いっしょに覚えよう！', 'さあ、「{t}」を見てみよう！'],
+    introZ: ['手順を見たら、問題に挑戦だよ！', 'どんな形になるか、よく見ててね！', '最後に問題も出すから、お楽しみにペン！', 'ひと手ずつ、いっしょに確かめよう！', '石の流れに注目してみて！', '覚えたら、問題で腕だめしだね！'],
+    names: [[/三々/, '三々入り'], [/ハネ/, 'ハネ'], [/ツイ|ツギ|ツグ|ツナ/, 'ツギ'], [/オサエ|押さえ/, 'オサエ'], [/ツケ/, 'ツケ'], [/ハサ/, 'ハサミ'], [/カカ/, 'カカリ'], [/ヒラ|開い|開く/, 'ヒラキ'], [/コスミ/, 'コスミ'], [/ノビ|伸び/, 'ノビ'], [/キリ|切り|切っ/, 'キリ'], [/サガ/, 'サガリ'], [/トビ|トん|一間/, 'トビ'], [/ケイマ/, 'ケイマ'], [/シマ/, 'シマリ'], [/ハイ|ハッ|ハう|ハわ/, 'ハイ'], [/オシ|押し|押す/, 'オシ'], [/アテ/, 'アテ'], [/ノゾ/, 'ノゾキ']],
+    AIR: /AI(の|が|も|で|に)|評価|見立て|形勢|勝つ見込み|勝率/,
+    clean(h) { const s = String(h || ''); const parts = s.replace(/（[^（）]*?(AI|評価)[^（）]*?）/g, '').split(/(<br>)/); return parts.map(p => p === '<br>' ? p : (p.match(/[^。！？]+[。！？]?/g) || []).filter(x => !GOJ_OP.AIR.test(x)).join('')).join('').replace(/(<br>)+$/, '').replace(/^(<br>)+/, ''); },
+    side: s => s === 1 ? '黒' : '白',
+  };
+  function goOpF(p, m) {   // what move m (by p.turn) does on the board, or null if illegal
+    const R = window.GoRules, N = p.n, nb = R.nbrs(N), c = p.turn, o = 3 - c; if (m == null || m < 0) return null;
+    const r = p.tryPlay(m); if (!r) return null; const q = r.pos, x = m % N, y = Math.floor(m / N), ln = v => Math.min(v, N - 1 - v) + 1;
+    const gid = (pp, i) => Math.min(...pp.group(i).stones), own = new Set(), opp = new Set(); let saved = false;
+    for (let k = 0; k < 4; k++) { const t = nb[m * 4 + k]; if (t < 0) continue; if (p.b[t] === c) { own.add(gid(p, t)); if (p.group(t).libs === 1) saved = true; } else if (p.b[t] === o) opp.add(gid(p, t)); }
+    const f = { adjOwn: own.size, cap: r.captured.length, line: Math.min(ln(x), ln(y)), libs: q.group(m).libs, connect: own.size >= 2, contact: opp.size > 0, sansan: ln(x) === 3 && ln(y) === 3 };
+    f.save = saved && f.libs >= 2;
+    let at = 0, red = 9; const sg = new Set(); for (let k = 0; k < 4; k++) { const t = nb[m * 4 + k]; if (t < 0 || q.b[t] !== o) continue; const g = q.group(t), id = Math.min(...g.stones); if (sg.has(id)) continue; sg.add(id); if (g.libs === 1) at += g.stones.length; red = Math.min(red, g.libs); }
+    f.atari = at; f.red = red; f.cut = sg.size >= 2;
+    let dOwn = 99, dOpp = 99, jump = false, diag = false, keima = false;
+    for (let i = 0; i < N * N; i++) { const v = p.b[i]; if (!v || i === m) continue; const dx = Math.abs(i % N - x), dy = Math.abs(Math.floor(i / N) - y), d = Math.max(dx, dy);
+      if (v === c) { dOwn = Math.min(dOwn, d); if ((dx === 2 && dy === 0) || (dx === 0 && dy === 2)) { const mid = ((Math.floor(i / N) + y) / 2) * N + (i % N + x) / 2; if (!p.b[mid]) jump = true; } if (dx === 1 && dy === 1) diag = true; if ((dx === 1 && dy === 2) || (dx === 2 && dy === 1)) keima = true; }
+      else dOpp = Math.min(dOpp, d); }
+    Object.assign(f, { dOwn, dOpp, jump: jump && !own.size, diag: diag && !own.size, keima: keima && !own.size });
+    f.kind = f.cap ? 'cap' : f.save ? 'save' : f.atari ? 'atari' : f.connect ? 'connect' : f.cut ? 'cut' : f.sansan && dOpp <= 2 ? 'sansan' : f.contact ? 'contact' : f.jump ? 'jump' : f.diag ? 'diag' : f.keima ? 'keima'
+      : own.size ? 'nobi' : dOpp <= 3 && dOwn > 3 ? 'approach' : dOwn <= 5 && dOwn >= 3 && f.line >= 3 && f.line <= 4 && dOpp >= 3 ? 'ext' : dOwn >= 4 && dOpp >= 4 ? 'open' : 'local';
+    return f;
+  }
+  const goOpNameOk = (nm, f) => {   // the note's name only where the board agrees (a contact name for a move that touches, トビ for a jump…)
+    const k = f.kind, touch = f.contact || f.cut || f.atari || f.cap || f.save;
+    return /^(ハネ|オサエ|ツケ|キリ|アテ|ハイ|オシ|ノゾキ)$/.test(nm) ? touch : /^(ノビ|サガリ)$/.test(nm) ? f.adjOwn > 0 && !/^(approach|ext|open)$/.test(k) : nm === 'ツギ' ? f.connect || f.save || f.adjOwn > 0
+      : nm === 'トビ' ? k === 'jump' : nm === 'ケイマ' ? /^(keima|approach|ext)$/.test(k) : nm === 'コスミ' ? k === 'diag' : nm === '三々入り' ? k === 'sansan'
+      : /^(カカリ|ヒラキ|ハサミ|シマリ)$/.test(nm) ? /^(approach|ext|open|keima|jump|diag)$/.test(k) : false; };
+  function goOpJa(o, g, P, st, line, LI, sd, note, self) {   // fills o.ask / hintTx / good / ng
+    const H = GOJ_OP, pk = (a, j) => a[((j % a.length) + a.length) % a.length], OKM = SP('ok', 'ja'), i = o.__i;
+    const a = LI % 11, b = 1 + Math.floor(LI / 11) % 10, oi = a + i * b;   // (the praise / soft openers in a different order in each lesson)
+    const pos = () => window.GoRules.Pos.from(self.after(st, line.slice(0, P.at))), ok = o.P.ok[0];
+    const p0 = pos(); const fb = goOpF(p0, ok) || { kind: 'open' }, first = (String(note || '').match(/[^。！？]+/) || [''])[0];
+    const nmH = H.names.find(([re]) => re.test(first)), nm = nmH && goOpNameOk(nmH[1], fb) ? nmH[1] : '', kind = /^(jump|diag|keima|nobi|local)$/.test(fb.kind) ? 'shape' : fb.kind;
+    const seen = o.__seen, uz = (key, arr) => { const c = seen[key] = (seen[key] || 0) + 1; return pk(arr, c + LI); };
+    o.ask = fill(pk(H.ask, LI * 3 + i), { s: H.side(sd) });
+    o.hintTx = uz('h' + kind, H.hint[kind] || H.hint.open);
+    const why = fill(uz('w' + fb.kind, H.why[fb.kind] || H.why.open), { n: nm && fb.kind !== 'sansan' && !(H.why[fb.kind] || []).join('').includes(nm) ? fill(uz('nm', ['この{n}で、', '{n}を打って、', '{n}がぴったり。', '', 'ここで{n}！ ']), { n: nm }) : '', k: fb.cap, l: fb.libs });
+    const themOf = u => {   // the other side's use of the green point (after the player's move u, or now)
+      let q = p0; if (u != null && u !== ok) { const r = p0.tryPlay(u); if (r) q = r.pos; else u = null; } if (u == null || u === ok) { q = p0.tryPlay(-1).pos; u = null; }
+      const t = goOpF(q, ok); if (!t) return [fill(pk(H.them.gen, i), { m: 'そこ' }), u];
+      const k = t.kind === 'cap' ? 'cap' : t.atari ? 'atari' : t.kind === 'save' ? 'save' : t.cut ? 'cut' : t.connect ? 'connect' : t.sansan && t.dOpp <= 2 ? 'sansan' : t.contact && t.red === 2 ? 'reduce' : t.contact ? 'contact' : 'gen';
+      return [fill(uz('t' + k, H.them[k]), { m: 'そこ', k: t.cap, l: t.red }).replace(/^そこは/, 'そこは、').replace('そこを先に打たれて', '先にそこを打たれて'), u]; };
+    o.good = function (u) { this._hl = []; return [u == null || u === ok ? pk(H.good, oi) : pk(H.near, i), why, pk(H.push, LI + i)].filter(Boolean).join(' '); };
+    o.ng = function (u) { this._hl = []; const part = (o.P.good || []).concat(o.P.half || []).includes(u), right = fill(pk(H.right, LI + i + 1), { m: OKM });
+      if (part) return [pk(H.half, i), right, why, pk(H.you.half, LI + i)].join(' ');
+      const [th, uu] = themOf(u); let ex = null;
+      if (uu != null) { const fu = goOpF(p0, uu); if (fu) ex = fu.libs === 1 && !fu.cap ? pk(H.you.selfAtari, i) : fu.line === 1 ? H.you.line1[0] : fu.dOwn > 4 && fu.dOpp > 4 ? pk(H.you.far, i) : null; }
+      return [pk(H.soft, oi), right, th, ex, ex ? null : pk(H.tail, LI + i)].filter(Boolean).join(' '); };
+  }
+  function goOpIntroJa(g, LI) {   // a short intro: the name, the stored one-line summary (or the story's first plain sentence), a nudge
+    const H = GOJ_OP, pk = (a, j) => a[((j % a.length) + a.length) % a.length], sh = L(g.short, 'ja');
+    const ss = (L(g.story, 'ja').replace(/<\/?p>/g, ' ').replace(/（[^（）]*）/g, '').match(/[^。！？]+[。！？]/g) || []).map(x => x.trim()).filter(x => !H.AIR.test(x) && x.length <= 70 && !/<bdi>|[A-HJ-T](1[0-9]|[1-9])/.test(x));
+    const body = sh && !H.AIR.test(sh) ? sh.replace(/[。]?$/, '。') : '', more = ss.find(x => x.length + body.length <= 100 && !x.includes(sh)) || '';
+    const lead = LI === 0 ? H.intro0 + '<br>' : '';
+    return lead + fill(pk(H.introA, LI), { t: L(g.title, 'ja').replace(H.AIR, '') }) + (body || more) + (LI === 0 ? '' : body && more ? more : '') + pk(H.introZ, LI);
+  }
   const GO = {
     LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
     load() {
@@ -2925,21 +3043,19 @@
       const g = this.data.op.sets.find(x => x.id === key); if (!g) return null;
       const N = g.n || 19, st = this.opStart(g), line = this.opLine(g), notes = {};
       line.forEach((m, i) => { const side = i % 2 ? 3 - (st.turn || 1) : st.turn || 1, ev = g.evals && g.evals[i] != null ? ` <small>(${(g.evals[i] >= 0 ? '+' : '') + g.evals[i]})</small>` : '';
-        notes[String(i)] = `<b>${i + 1}. ${side === 1 ? '●' : '○'}</b>${ev}` + ((g.notes || {})[String(i + 1)] ? '<br>' + L((NC.go || {})['op:' + g.id + '/n' + (i + 1)] || g.notes[String(i + 1)], lang) : ''); });   // (3D: the notes without coordinates)
-      const self = this, probs = shuffle(g.problems || []).slice(0, 5).sort((a, b) => a.at - b.at).map(P => { const ok = goPcs(P.ok, N);
+        let nt = (g.notes || {})[String(i + 1)] ? L((NC.go || {})['op:' + g.id + '/n' + (i + 1)] || g.notes[String(i + 1)], lang) : '';
+        if (lang === 'ja') { nt = GOJ_OP.clean(nt); if (!nt && window.GoRules) { const p = window.GoRules.Pos.from(this.after(st, line.slice(0, i))), f = goOpF(p, m); if (f) nt = GOJ_OP.side(p.turn) + '：' + fill((GOJ_OP.why[f.kind] || GOJ_OP.why.open)[i % (GOJ_OP.why[f.kind] || GOJ_OP.why.open).length], { n: '', k: f.cap, l: f.libs }); } }   // (2026-11-22 lesson loop: no AI judgement; a bare step gets its board reading)
+        if (lang === 'ja' && nt && i % 2 === 0) nt = nt.replace(/。$/, '！');   // (some life in the guide's voice)
+        notes[String(i)] = `<b>${i + 1}. ${side === 1 ? '●' : '○'}</b>${ev}` + (nt ? '<br>' + nt : ''); });   // (3D: the notes without coordinates)
+      const self = this, LI = this.data.op.sets.indexOf(g), seen = {}, probs = shuffle(g.problems || []).slice(0, 5).sort((a, b) => a.at - b.at).map((P, pi) => { const ok = goPcs(P.ok, N);
         const o = { kind: 'best', P: { ok, good: goPcs(P.good, N), half: goPcs(P.half, N) }, ask: L(self.data.op.goal || null, lang) || '', ans: ok[0], N };
-        if (lang === 'ja') {   // (2026-11-21 lesson loop: ゴイシペン asks, hints and explains — see GOJ)
-          const sd = P.at % 2 ? 3 - (st.turn || 1) : st.turn || 1, note = L((NC.go || {})['op:' + g.id + '/n' + (P.at + 1)] || (g.notes || {})[String(P.at + 1)], 'ja'), hs = (g.id.length * 7 + P.at) | 0;
-          const why = GOJ.why(note, 80), whyS = GOJ.why(note.replace(/^[^。]*?(打ちます|ます|です)。/, ''), 60) || why, hk = GOJ.hint.find(([re]) => re.test(note));
-          o.ask = fill(GOJ.ask[(hs + P.at) % GOJ.ask.length], { s: GOJ.side(sd) });
-          o.hintTx = hk ? hk[1] : GOJ.hintDef[hs % 2];
-          o.good = () => GOJ.good[hs % 3] + (why ? '<br>' + why : '');
-          o.ng = u => { const part = (o.P.good || []).concat(o.P.half || []).includes(u);
-            return SP('ok', 'ja') + 'を打つわけはね、' + (whyS || why) + '<br>' + (part ? GOJ.ngHalf[hs % 2] : GOJ.ngBad[hs % 3]); };
+        if (lang === 'ja' && window.GoRules) {   // (2026-11-22 lesson loop: ゴイシペン asks, hints and explains from the board — GOJ_OP / goOpF)
+          const sd = P.at % 2 ? 3 - (st.turn || 1) : st.turn || 1, note = L((NC.go || {})['op:' + g.id + '/n' + (P.at + 1)] || (g.notes || {})[String(P.at + 1)], 'ja');
+          o.__i = pi; o.__seen = seen; goOpJa(o, g, P, st, line, LI, sd, note, self); o.own = true;
         }
         Object.defineProperty(o, 'pos', { get() { const sp = self.after(st, line.slice(0, P.at)); return { spec: sp, me: sp.turn || 1, view: g.view || null }; } });   // (the position after `at` moves: the rules are loaded by then)
         return o; });
-      return { id: g.id, title: L(g.title, lang), intro: L((NC.go || {})['op:' + g.id + '/story'] || g.story, lang) || L(g.short, lang), start: { spec: st, me: g.side || st.turn || 1, view: g.view || null }, steps: line, notes, probs,
+      return { id: g.id, title: L(g.title, lang), intro: lang === 'ja' ? goOpIntroJa(g, LI) : L((NC.go || {})['op:' + g.id + '/story'] || g.story, lang) || L(g.short, lang), start: { spec: st, me: g.side || st.turn || 1, view: g.view || null }, steps: line, notes, probs,
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= max * .75; pr[g.id] = Object.assign(o, { best: Math.max(o.best || 0, pts), pass: o.pass || pass, seen: true }); put(this.OKEY, pr); return pass; } };
     },
     points: (P, u) => (P.ok || []).includes(u) ? 20 : (P.good || []).includes(u) ? 16 : (P.half || []).includes(u) ? 10 : 0,   // = go/learn.js problemPoints
