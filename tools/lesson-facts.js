@@ -14,6 +14,24 @@ const out = {};   // game → { lessonId: [problems found] }
 const bad = (g, id, msg) => { ((out[g] = out[g] || {})[id] = out[g][id] || []).push(msg); };
 
 const CHECKS = {
+  // (2026-11-22 lesson loop) the gomoku openings (珠型, 'gomoku/open'): the line replays legally under renju (no forbidden black move,
+  // no stone on a stone), every practice position loads, and its best answer is a legal move — not a black forbidden point, and when
+  // the opponent has a four, the answer stops it (or makes five)
+  'gomoku/open'() {
+    const E = require(path.join(ROOT, 'gomoku/engine.js')), O = J('gomoku/openings.json'), G = 'gomoku/open';
+    O.sets.forEach(g => {
+      try { E.replay('renju', g.study.map(x => E.sqOf(x[0]))); } catch (e) { bad(G, g.id, 'the line does not replay: ' + e.message); }
+      (g.problems || []).forEach((P, j) => {
+        let pos; const cells = a => String(a || '').split(/\s+/).filter(Boolean).map(E.sqOf);
+        try { pos = E.setup('renju', { b: cells(P.b), w: cells(P.w), side: P.side || 1 }); } catch (e) { bad(G, g.id, `problem ${j}: the position does not load`); return; }
+        const sc = (P.sc || []).slice().sort((a, b) => b[1] - a[1]); if (!sc.length) { bad(G, g.id, `problem ${j}: no answers`); return; }
+        const best = E.sqOf(sc[0][0]);
+        if (!pos.isLegal(best)) { bad(G, g.id, `problem ${j}: the best answer ${sc[0][0]} is not legal`); return; }
+        const s = P.side || 1, o = 3 - s, mine = pos.fives(s), theirs = pos.fives(o).map(i => E.I2M[i]);
+        if (!mine.length && theirs.length && !theirs.includes(best)) bad(G, g.id, `problem ${j}: the opponent has a four but the best answer ${sc[0][0]} does not stop it`);
+      });
+    });
+  },
   amazons() {
     const E = require(path.join(ROOT, 'amazons/engine.js')), L = J('amazons/lessons.json'), NC = J('atlas/nocoord/amazons.json');
     const N = E.N || 10, rc = i => [Math.floor(i / N), i % N];

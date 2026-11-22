@@ -2435,33 +2435,177 @@
     const kind = r => r.five ? 'win' : r.b4 ? 'b4' : r.four >= 2 || (r.four && r.three) ? 'ft' : r.four ? 'four' : r.b3 && r.three ? 'b3t' : r.b3 ? 'b3' : r.three ? 'three' : 'shape';
     return { analyse, kind, info };
   })();
-  const GOMJ = {
-    ask: ['{s}の番。いちばん良い次の一手はどこかな？', 'さあ、{s}ならどこに打つ？ 相手の狙いも見てみて！', 'ここで{s}が打つ、強い一手を探してみよう！', 'この形、{s}の急所はどこだと思う？', '{s}の一手だペン。攻めるか守るか、どっちかな？'],
-    hint: { win: ['自分の四をよく見て！ 五つ並べられる点がありそうだペン。'], b4: ['相手の石をよく見て！ あと1つで五つ並ぶところがあるペン。', '大変、相手に四ができてるね。まずどこを止める？'],
-      ft: ['四と三を、いっぺんに作れる点がありそうだね。', '攻めどき！ 四を作りながら三もできる点を探してみて。'], four: ['四を作って、相手に止めさせる手はないかな？', '先手で攻めたいね。四が作れる点を探してみるペン。'],
-      b3t: ['相手の三が気になるね。止めながら自分も得する点はどこかな？'], b3: ['相手の三が見える？ 放っておくと達四になっちゃうね。', '守りの場面かも。相手の三をどこで止める？'],
-      three: ['自分の石で、両はしのあいた三を作れないかな？', '攻めを続けたいね。三ができる点を探してみて！'],
-      shape: ['まだ急ぐ場面じゃないペン。自分の石がたくさん生きる点を探してみて。', '相手の石の並びも見てみて。じゃましながら自分の形も作れたら最高ペン！'] },
-    good: ['そう、それ！', 'ばっちりだペン！', 'いい読みだね！', 'お見事！', 'すてきな一手だね！'],
-    why: { win: '五つ並んで勝ちだね！ ぼく、踊っちゃう。', b4: 'ここを空けると、次に五つ並べられて負けちゃう。だから四を止めるのが先なんだ。', ft: '四と三が同時にできたから、相手は両方は止められないペン。',
-      four: '四を作ると、相手は止めるしかない。そのあいだに攻めの形を広げられるね。', b3t: '相手の三を止めながら、自分の三も作れたね。守りと攻めがいっぺんにできたペン。', b3: '放っておくと達四になって、もう止められなかったはず。三は早めにふさぐのが大事だね。',
-      three: '三を作ると、相手は止めに回るしかない。攻めの主導権を握れるペン。' },
-    lead: ['{ok}と比べてみよう。', 'きみの手と{ok}、何がちがうかな？', '{ok}とのちがいを見てみるペン。'],
-    miss: { win: 'そこに打てば五つ並んで勝ちだったのに、きみの手だと勝ちを逃しちゃう。', b4: 'きみの手だと相手の四が残ったまま。次に五つ並べられて負けちゃうんだ。', ft: '四三なら勝ちが決まったのに、きみの手だと相手に立て直す時間をあげちゃうね。',
-      four: 'きみの手だと攻めが止まって、相手に先手を渡しちゃう。四で押したほうが強いペン。', b3: 'きみの手だと相手の三が残るから、次に達四を作られて止められないね。', b3t: 'きみの手だと相手の三が残るから、次に達四を作られて止められないね。',
-      three: 'きみの手だと攻めが続かず、相手に反撃の時間をあげちゃうペン。' },
-    // the best move's why when it makes no threat: from its shape
-    shapeWhy(r) { return r.two >= 2 ? '二を2本いっぺんに作る手。次にどちらからでも三が作れるペン。' : r.two && r.oppNear ? '相手の石の並びをじゃましながら、自分の二も作れる点なんだ。' : r.two ? '自分の石と並んで二ができる点。次の三の足場になるペン。' : r.oppNear ? '相手の石の並びをじゃまして、相手の攻めの足場を減らせる点なんだ。' : '石のまだ少ない側に打って、先の攻めに備える手。'; },
+  /* (2026-11-22 lesson loop) the gomoku opening practice (珠型) in ゴイシペン's words, Japanese — every move of the line gets a word
+     read off the board (GOP.fx: five / four / open four / four-three, the opponent's four or three it stops, the twos it makes, the
+     opponent's line it gets in the way of, and the line's direction ヨコ・タテ・ナナメ), the shape's standing (as known from study —
+     never an engine's figure), and the problems: a varied question, a hint from what the best point does, praise that cheers the player
+     on, and for another point what the green point does and what the player's point lets the opponent do next (a five, an open four, a
+     four-three, a three left open…). The phrases are drawn without repeats inside a lesson; the openers' order differs per lesson. */
+  const GOP = {
+    DN: ['ヨコ', 'タテ', 'ナナメ', 'ナナメ'],
     side: s => s === 1 ? '黒' : '白',
-    // the line's notes
-    n: { three: ['三！ 放っておくと達四になっちゃう。', '三を作ったね。相手は止めに回るしかないペン。', '三だ！ 次は達四を狙ってるね。'],
-      block3: ['相手の三を止めたね。', 'ここで三をふさぐペン。', '三のはしをおさえて、達四を防いだんだ。', 'あわてず三を止める。大事な一手！', '相手の三にふたをしたね。', '三をふさいで、ひと安心ペン。'],
-      four: ['四！ 相手は止めるしかないね。', '四を作って先手を取ったペン。', '四だ！ これは必ず止めないといけない。'],
-      block4: ['四を止めた！ ここを空けたら負けだもんね。', 'すかさず四をふさぐペン。'],
-      win: ['ここから{c}の勝ちを読み切ったペン！', 'これで{c}の勝ちが決まり！ 読み切りだね。'],
-      two2: ['二を2本作る欲ばりな手。次はどちらでも三が作れるね。'], two: ['自分の石と並べて、二を作ったね。', '二ができた！ 三への足場ペン。', '自分の石と組んで、攻めの準備！'] },
-    ev: { bw: '研究で、黒の必勝が知られている珠型なんだ（旧RIF規定での評価）。黒を持ったら、攻めの形を覚えちゃおう！', ba: '黒が有利とされる珠型だね（旧RIF規定での評価）。',
-      bs: '黒がやや有利とされる珠型だね（旧RIF規定での評価）。', eq: '互角に近いとされる珠型なんだ（旧RIF規定での評価）。', ws: '白がやや有利とされる珠型なんだ（旧RIF規定での評価）。', ww: '白の必勝とされて、黒には不利な珠型なんだ（旧RIF規定での評価）。' },
+    // what s playing q does on the board of G (GML.mk) — G.bd is left as it was
+    fx(G, q, s) {
+      const o = 3 - s, bd = G.bd, DIR = [[1, 0], [0, 1], [1, 1], [1, -1]], at = (x, y) => x < 0 || y < 0 || x > 14 || y > 14 ? -1 : bd[y * 15 + x];
+      const nearAny = (c, r) => { const x = c % 15, y = Math.floor(c / 15); for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) { const v = at(x + a, y + b); if ((a || b) && v > 0) return true; } return false; };
+      const opens = c3 => { const L = []; for (let c = 0; c < 225; c++) if (bd[c] === 0 && nearAny(c, 2)) G.info(c, c3).open4.forEach(i => L.push(c * 4 + i)); return L; };   // (the opponent's threes: point·direction pairs that make an open four)
+      const along = (c, c3, d) => { const x = c % 15, y = Math.floor(c / 15); let n = 0; for (const g of [1, -1]) for (let k = 1; k <= 4; k++) { const v = at(x + d[0] * k * g, y + d[1] * k * g); if (v === c3) n++; else if (v !== 0) break; } return n; };
+      const r = G.info(q, s), F = { five: r.five, fours: r.fours, open4: r.open4, threes: r.threes, b4: G.fivePts(o).includes(q), near: nearAny(q, 2), twos: [], blk: [] };
+      const o3 = opens(o);
+      bd[q] = s;
+      const o3a = opens(o), gone = o3.filter(v => !o3a.includes(v));
+      F.b3 = gone.length > 0; F.b3dir = gone.length ? gone[0] % 4 : -1;
+      DIR.forEach((d, i) => { if (r.fours.includes(i) || r.threes.includes(i)) return; const x = q % 15, y = Math.floor(q / 15);
+        for (let k = -4; k <= 4; k++) { const c = (y + d[1] * k) * 15 + x + d[0] * k; if (!k || x + d[0] * k < 0 || x + d[0] * k > 14 || y + d[1] * k < 0 || y + d[1] * k > 14 || bd[c] !== 0) continue;
+          if (G.info(c, s).threes.includes(i)) { F.twos.push(i); break; } } });   // (info places c itself)
+      bd[q] = 0;
+      DIR.forEach((d, i) => { if (along(q, o, d) >= 2) F.blk.push(i); });
+      F.b3d = F.b3dir >= 0 ? F.b3dir : F.blk[0] != null ? F.blk[0] : -1;
+      const adj = (c3, d) => { const x = q % 15, y = Math.floor(q / 15); return at(x + d[0], y + d[1]) === c3 || at(x - d[0], y - d[1]) === c3; };
+      F.adjS = DIR.map((d, i) => adj(s, d) ? i : -1).filter(i => i >= 0); F.adjO = DIR.map((d, i) => adj(o, d) ? i : -1).filter(i => i >= 0);
+      return F;
+    },
+    kind(F) { return F.five >= 0 ? 'win' : F.b4 ? 'b4' : F.open4.length ? 'f4' : F.fours.length >= 2 || (F.fours.length && F.threes.length) ? 'ft' : F.fours.length ? 'four' : F.b3 && F.threes.length ? 'b3t' : F.b3 ? 'b3' : F.threes.length ? 'three' : F.twos.length >= 2 ? 'two2' : F.twos.length && F.blk.length ? 'twob' : F.twos.length ? 'two' : F.blk.length ? 'blk' : F.adjS.length ? 'own' : F.adjO.length ? 'foe' : 'none'; },
+    // the words the templates take: {c} mover {f} opponent {d} the line's direction {d2}/{dd} two directions {bd} the opponent's line
+    vars(F, s) {
+      const D = i => GOP.DN[i] || '', two = F.twos.length >= 2 ? (D(F.twos[0]) === D(F.twos[1]) ? '2本の' + D(F.twos[0]) : D(F.twos[0]) + 'と' + D(F.twos[1])) : D(F.twos[0]);
+      const d = F.five >= 0 ? D(F.five) : F.open4.length ? D(F.open4[0]) : F.fours.length ? D(F.fours[0]) : F.threes.length ? D(F.threes[0]) : F.twos.length ? D(F.twos[0]) : D(F.b3d);
+      return { c: GOP.side(s), f: GOP.side(3 - s), d, d3: D(F.threes[0]), d4: D(F.fours[0]), dd: two, bd: D(F.b3d), da: D(F.adjS[0]), do: D(F.adjO[0]) };
+    },
+    // the line's notes, by what the move does
+    n: {
+      win: ['{c}の{d}に5つ並んで勝ち！ ぼく、思わず踊っちゃう。', 'これで{d}に五つ！ 最後まできれいな攻めだったペン。', '{d}に5つそろった！ {c}の勝ちが決まったね。'],
+      b4: ['{f}の四を、すかさずふさいだ！ ここを空けたら負けだったペン。', 'あと1つで{f}が5つ並ぶ点。ここはもう止めるしかない！', '{d}の四にふたをした！ あぶないところだったね。', '{f}の四の止め場所はここだけ。迷わず打てたね！'],
+      f4: ['{d}に両はしのあいた四！ もう{f}には止められないペン。', '達四ができた！ どちらをふさいでも、もう片方で5つ並ぶね。'],
+      ft: ['{d4}の四と{d3}の三が一度にできた、四三！ {f}は両方は止められないペン。', '四三の完成！ 四を止めたら、三が達四になる。', '一手で四と三！ これが勝ちの形なんだ。'],
+      four: ['{d}に四！ {f}はここを止めるしかないね。', '四で押した！ 相手に止めさせて、手番をもらう作戦ペン。', '{c}が{d}に四を作って、先手を取った！', '止めないと負ける四で、{f}を忙しくさせる！', '{d}の四で、{f}の止める場所を決めさせたペン。', 'ここで四！ 止めてもらったあとの次の攻めに注目してみて。'],
+      b3t: ['{f}の三を止めながら、{d}に自分の三も作った！ 守りと攻めがいっぺんだね。', '守るついでに三！ 今度は{f}が止める番になったペン。', 'ふさいだ石がそのまま{d}の三になる、うまい手！', '{f}の三にふたをして、{d}の三で反撃！'],
+      three: ['{d}に三！ このままだと達四だから、{f}は止めに回る。', '両はしのあいた三を{d}に作ったペン。', '三ができた！ 次は達四をねらっている。', '{c}は{d}の三で攻めを続ける！', '{d}に三を作って、{f}に守りの手を打たせる作戦だね。', '{c}の三！ ここで止めないと、次は止められない四になっちゃう。', 'ここで{d}の三。攻めの主導権は{c}がにぎっているペン。', '三で迫る！ {f}がどこで止めるか、見ていてね。'],
+      b3: ['{f}の{bd}の三を止めた！ これで達四は作られないね。', '{bd}に並んだ{f}の三に、さっとふたをしたペン。', 'あわてず{f}の三をふさぐ。大事な守りの一手！', '三のはしをおさえた！ {f}の{bd}の並びは片方がふさがったよ。', 'ここで止めておかないと、次は止められない四になっていたペン。', '{bd}の三をふさいで、ひと安心！', '守りの急所に打った！ {f}の{bd}の三はもう伸びない。', '{c}はしっかり守った！ 三を放っておくのは危ないもんね。', '{f}の{bd}の三、ここでストップ！', 'すき間をうめて{f}の三を止めた。じょうずな受けだペン。'],
+      two2: ['{dd}に、二を2本いっぺんに作った！ 次はどちらからでも三をねらえるペン。', '欲ばりな一手！ {dd}の2つの向きで、石がつながったね。', '二が2本できた！ {f}は全部を見張るのが大変になる。', '{dd}に伸びる、よくばりな形だペン。',
+        '{c}の石が{dd}の両方でつながった！ 攻めの道が2つになったよ。', '一手で二を2本！ {dd}のどちらかから三が作れそうペン。'],
+      twob: ['{f}の{bd}の並びに割って入って、{d}に二も作った！', '守りながら{d}に石をつなげる、ちゃっかりした一手ペン。', '{bd}に並んだ{f}の石をおさえて、自分は{d}の二！', '{f}の{bd}の線をふさぎつつ、{d}の二で次の三をねらう！',
+        '{c}は{bd}で{f}を止めて、{d}では自分の石を伸ばした！', '一石二鳥ペン！ {f}の{bd}をおさえ、{d}に二ができたよ。', '{d}の二を作るついでに、{f}の{bd}の線もじゃま！', '{f}の{bd}の先をおさえた石が、{d}では二になっているペン。'],
+      two: ['{d}に二を作った！ 三への足場だね。', '自分の石と{d}に並べて、攻めの準備ペン。', '{c}は{d}の二で、次の三をねらっている！', '{d}に石がつながった！ ここから三が作れそう。', '{d}の二を作って、じわじわ攻める！', '石を{d}につなげて、形を広げたペン。', '次の三につながる{d}の二！', '{c}が{d}に並べた！ 攻めの芽が育ってきたね。'],
+      blk: ['{f}の{bd}の並びのはしに打って、伸びる先をふさいだ！', '{bd}に並んだ{f}の石に、先回りしてじゃまをしたペン。', '{f}の石が{bd}に3つ並ぶ前に、先におさえた！', '{f}の{bd}の二をおさえる、ていねいな守り！', '{f}が三を作りたい{bd}の線に、先に石を置いた。',
+        '{bd}の線は、これで{f}には使いにくくなったペン。', '{c}は{f}の{bd}の2つ並びに、そっとふたをした！', '先回りの守り！ {f}の石は{bd}にもう伸ばしにくい。', '{f}の{bd}のつながりを切る一手だペン。', '{c}が{bd}の通り道に石を置いて、{f}の三を作らせない！', '{f}の{bd}の石と石のあいだに割りこんだ！', '{bd}の先をとめて、{f}の形を小さくしたよ。'],
+      own: ['{c}は自分の石に{da}からくっつけた！ 形をかためる一手。', '{da}に自分の石と手をつないだペン。', '{c}の石が{da}でとなり合った！ ここから並びを広げていくよ。', '自分の石の{da}どなりに打って、足場をしっかりさせた！', '{c}は石を{da}に寄せて、まとまりを作ったペン。', 'となりの石と{da}にならべて、次の手の準備！', '{da}どなりにぴたっと置いた！ 石が多いほうが攻めやすいもんね。', '{c}の石がまた1つ集まった！ {da}にくっついて、形がしっかりしたよ。'],
+      foe: ['{f}の石に{do}からぴったりついた！ 相手の形をせまくする一手。', '{c}は{f}の石の{do}どなりに打って、ようすを見るペン。', '{do}で{f}の石にくっつけた！ 相手の広がりをおさえるね。', '{f}の石に寄りそうように{do}どなりに置いた。じゃまの準備ペン！', '{c}は{f}の石の{do}を先におさえた！', '{f}の石のすぐ{do}どなり！ 相手が伸びたい方向をふさいだよ。'],
+      none: ['{c}はまだ形を決めず、少し離れた点に打った！', 'じっくりした一手！ 先の攻めに備えて石を配ったペン。', '{c}は次の手のために、遠くに足場を作った！', '急がず、石の少ない側に目を向けた！', '次の攻めの準備！ どこにつながるか見ていてね。', '{c}は広いほうに石を置いて、形の幅を広げたペン。'],
+      won: ['ここから先、{w}の勝ちが読み切れているペン！', 'この形で{w}の勝ちが決まり！ あとは四と三で押し切るね。'],
+    },
+    ev: { bw: '研究では、黒の必勝が知られている珠型！ 黒を持ったら、攻めの形を覚えちゃおう。', ba: '黒がはっきり打ちやすいと言われる珠型。黒は攻めの手順を楽しめるね！',
+      bs: '黒が少し打ちやすいと言われる珠型だね。白も守り方を知っておけば戦えるペン。', eq: '黒と白、ほぼ五分と言われる珠型なんだ。どちらを持っても戦えるペン！',
+      ws: '白が少し打ちやすいと言われる珠型。黒は守りも大事になるね！', ww: '研究では白の必勝と言われていて、黒にはつらい珠型なんだ。白を持ったら、守り勝つ形を覚えよう！' },
+    // the problems
+    ask: ['{s}の番。いちばん良い次の一手はどこだろう？', 'さあ、{s}ならどこに打つ？ 相手のねらいも見てね！', 'ここで{s}が打つ、強い一手を探してみよう！', 'この形、{s}の急所はどこだと思う？', '{s}の一手だペン。攻めるか守るか、どっちかな？',
+      '問題！ {s}を持ったきみなら、どこに置く？', '{s}の手番。盤ぜんたいをながめて、いい点を探そう！', 'きみの読みの見せどころ！ {s}の次の一手は？', '{s}が打つなら、どの点がいちばん生きるかな？', 'じっくり考えてみて。{s}の最善の一手はどこ？'],
+    hint: {
+      win: ['自分の四をよく見て！ 5つ並べられる点がありそうだペン。', '4つ並んだ{s}の石、どこかにないかな？ すき間のある形もあるね。'],
+      b4: ['相手の石をよく見て！ あと1つで5つ並ぶところがあるペン。', '大変、{f}に四ができてるね。まずどこを止める？', '{f}の4つ並び、見つけられたかな？'],
+      f4: ['{s}の三を、両はしのあいた四にできないかな？', '止められない四が作れそうだペン！'],
+      ft: ['四と三を、いっぺんに作れる点がありそうだね。', '攻めどき！ 四を作りながら三もできる点を探してみて。', '{s}の石の並びが交わるところに注目！'],
+      four: ['四を作って、{f}に止めさせる手はないかな？', '先手で攻めたいね。四が作れる点を探してみるペン。', '{s}の3つ並びを、もう1つ伸ばせないかな？'],
+      b3t: ['{f}の三が気になるね。止めながら自分も得する点はどこかな？', '守りながら攻める、一石二鳥の点がありそうペン。'],
+      b3: ['{f}の三が見える？ 止めないと次に達四ができちゃう！', '守りの場面かも。{f}の三をどこで止める？', '両はしのあいた{f}の3つ並びを探してみて！'],
+      three: ['{s}の石で、両はしのあいた三を作れないかな？', '攻めを続けたいね。三ができる点を探してみて！', '{s}の2つ並びを3つにのばすと、どうなるかな？'],
+      blk: ['{f}の石の並びを見てみて。伸ばされる前に先回りしたいペン！', '{f}がこれから伸ばしたい線はどこだろう？ 先回りを考えてみて！', '光っている{f}の石に注目！ その並びのはしはどこかな？', 'まだ三はないけど、{f}の2つ並びが気になる！', '守りの目で盤を見てみて。{f}の石がつながりそうな線はある？', '{f}の石を2つ以上ふくむ線を探して、その先っぽを考えよう！'],
+      two: ['{s}の石どうしをつなげる点、さがしてみて！', '光っている石のまわりに注目してみよう！', 'まだ急ぐ場面じゃないペン。{s}の石がたくさん生きる点を探してみて。', '次に三が作れるように、自分の石を並べてみよう！'],
+      twob: ['{f}の石の並びも見てみて。じゃましながら自分の形も作れたら最高ペン！', '自分の石とつながって、{f}のじゃまにもなる点はどこ？', '守りと攻めを一度にできる点がありそうだペン。', '{f}の2つ並びと{s}の石、その両方にかかわる点はどこ？', '光っている石とつながりながら、{f}の線もじゃまできたら最高！'],
+      shape: ['あわてなくて大丈夫。石と石のあいだに、いい点がかくれているペン。', 'ここは静かな場面。{s}の石が長く働く点はどこだと思う？', '光っている石のまわりに注目してみよう！', '{f}の石と自分の石、両方を見くらべてみて！'],
+    },
+    good: ['そうそう、それ！', 'ばっちりだペン！', 'いい目をしてるね！', 'お見事！', 'すてきな一手！', 'さすが、きみ！', 'いいね、その点！', 'よく見つけたね！', '完璧だペン！', '上手だね！'],
+    push: ['この調子で次もいこう！', 'その勢いで、どんどん行こう！', '次も楽しみだペン！', 'まだまだいけるペン！'],
+    soft: ['おしい！', '大丈夫、', 'ドンマイ！', 'あと一歩！', 'いい線いってた！', '気にしないで！', '次はいけるペン！', 'よくある迷い方！', '今度は見えるはず！', 'いっしょに見てみよう。'],
+    why: {
+      win: ['{d}に5つ並んで勝ち！ 最後の一手を見逃さなかったね。', '5つそろって{c}の勝ちだペン。'],
+      b4: ['ここを空けると、{f}に5つ並べられて負けていた。だから四を止めるのが先なんだ。', '{f}の四を見落とさなかった！ 止めないと次の一手で負けだったペン。'],
+      f4: ['{d}に両はしのあいた四ができたから、{f}はどちらか片方しか止められない！', '達四の完成！ もう5つ並ぶのを止める手はないペン。'],
+      ft: ['{d4}の四と{d3}の三が同時にできたから、{f}は両方を止められない！', '四三の完成！ 四を止めたら、三が達四になるペン。'],
+      four: ['{d}に四を作ると、{f}は止めるしかない。その間に攻めの形を広げられるね。', '{d}の四で{f}の手番を使わせたペン。止め石の位置まで見えていたら完璧！', '四で押して先手をにぎった！ {f}に自由な手を打たせないね。'],
+      b3t: ['{f}の三を止めながら、{d}に自分の三も作れた！ 守りと攻めがいっぺんだペン。', '守った石がそのまま{d}の三になる。今度は{f}が止める番だね。'],
+      b3: ['{f}の{bd}の三を放っておくと達四になって、もう止められなかった。早めにふさぐのが大事だね。', '三のはしをおさえたから、{f}の{bd}の並びは片方がふさがった。これで達四はできないペン。', 'ここで止めれば、{f}の攻めはひと区切り！ 三は見つけたらすぐふさごう。'],
+      three: ['{d}に三を作ると、{f}は止めに回るしかない。攻めの主導権をにぎれるペン。', '{d}の三で{f}を守りにしばった！ 次は四三をねらえるね。', '両はしのあいた三で攻めを続けた！ 止めた石の位置もよく見ておこう。'],
+      two2: ['{dd}に二を2本作る点。次はどちらからでも三が作れるペン。', '一手で{dd}の2つの向きに石がつながる、欲ばりな点なんだ。'],
+      twob: ['{f}の{bd}に割りこみつつ、{d}に自分の二も作れる点！', '{bd}に並んだ{f}の石をおさえつつ、自分は{d}に二を作る。一石二鳥だペン。', '守りと攻めを両立！ {f}の{bd}の線をふさいで、{d}の二も手に入れたね。'],
+      two: ['{d}に二ができる点。次の三の足場になるペン。', '自分の石と{d}に並んで、攻めの芽を育てる点なんだ。', '{d}の二を作って、次に三をねらえる形にした！', '{d}に石が2つ並んで、攻めの準備がととのう点！'],
+      blk: ['{f}の{bd}の並びをじゃまして、{f}の攻めの足場を減らせる点なんだ。', '{f}が{bd}に伸ばしたい線を、先にふさいだペン。', '{bd}に並んだ{f}の石のはしをおさえる、ていねいな守り！', '{f}の{bd}の2つ並びが伸びないように、先回りする一手だペン。', 'ここをおさえれば、{f}は{bd}で三を作りにくくなる！'],
+      own: ['{da}どなりの石とまとまって、しっかりした形にできる点！', '{da}どなりの石と組んで、次の並びの足場になる点だペン。', '石を{da}に寄せておけば、あとで三を作りやすくなる。そこが急所だったんだ。'],
+      foe: ['{f}の石に{do}からついて、相手の広がりをおさえる点！', '{f}が伸びたい{do}の先を、先にふさげる点だペン。', '{f}の石のすぐ{do}どなり。相手の形をせまくする、いい場所なんだ。'],
+      none: ['石のまだ少ない側に打って、先の攻めに備える点なんだ。', 'まわりの石とつながりやすい、のびのびした点だペン。', 'ほかの石から少し離れて、広く使える点を選べたね。'],
+    },
+    role: { win: ['{d}に5つ並ぶ勝ちの点'], b4: ['{f}の四の止め場所', '{f}が5つ並べたい点'], f4: ['{d}に達四ができる点'], ft: ['四三ができる点', '四と三がいっぺんにできる点'], four: ['{d}に四ができる点', '{d}の四で先手を取る点'],
+      b3t: ['{f}の三を止めて自分の三も作る点', '守りながら{d}に三もできる点'], b3: ['{f}の{bd}の三を止める点', '{f}の三のはしをおさえる点', '{bd}の三にふたをする点'],
+      three: ['{d}に三ができる点', '{d}の三で攻めを続ける点', '両はしのあいた三が{d}にできる点'], two2: ['{dd}に二が2本できる点', '石が{dd}につながる点'],
+      twob: ['{f}の{bd}の並びをおさえて{d}に二も作る点', '守りと{d}の二を両立できる点', '{bd}の線をふさいで二も作れる点'], two: ['{d}に二ができる点', '{d}の石とつながって三の足場になる点', '{d}に並びを伸ばせる点'],
+      blk: ['{f}の{bd}の並びのじゃまをする点', '{f}が{bd}に伸ばしたい線をふさぐ点', '{bd}に並んだ{f}の石のはしの点'], own: ['自分の石と{da}にくっつく点', '{da}どなりの石と組める点'],
+      foe: ['{f}の石に{do}からつく点', '{f}の{do}の先をおさえる点'], none: ['石がのびのび働く点', '広く使える点'] },
+    rs: ['緑の点は、{r}だったペン。', '緑に光っているのが{r}！', '緑の点こそ、{r}なんだ。', '正解の緑の点は{r}。', 'いちばんの手は緑の点、{r}だペン！'],
+    miss: {
+      lose5: ['きみの手だと、{f}に次の一手で5つ並べられて負けちゃう！', 'そこだと{f}の四が残って、すぐに5つ並べられちゃうんだ。'],
+      loseW: ['きみの手だと、{f}に{how}を打たれて、もう止められない。', 'そこに打つと、{f}の{how}が決まって負けになっちゃうペン。'],
+      win: ['きみの手だと5つ並ばず、勝ちを逃しちゃう。', 'そこでは勝ちが決まらず、{f}に立て直されちゃうね。'],
+      left3: ['きみの手だと{f}の三が残るから、次に達四を作られちゃうペン。', 'そこだと{f}の三がそのまま。達四になったら止められないね。'],
+      stop: ['きみの手だと攻めがとぎれて、{f}に先手が回っちゃう。', '攻めの手を休むと、{f}が反撃の形を作り始めるペン。', 'そこだと三も四もできず、{f}に自由に打たれちゃうね。'],
+      far: ['きみの点はほかの石から離れていて、どの並びにも関われないんだ。', 'きみの石はぽつんと離れていて、{f}の形を止められないペン。'],
+      free: ['{f}の{bd}の並びを放っておくと、次に三を作られやすくなる。', 'きみの手だと{f}の{bd}の線がのびのび使えちゃう。', 'そこだと{f}の{bd}の石がつながったまま。次に三へ伸ばされちゃうペン。', '{bd}の線を空けたままだと、{f}の攻めの足場が残るんだ。'],
+      lone: ['きみの手は自分の石とつながらないから、次の三につながらないペン。', 'きみの石は並びを作れず、攻めの足場にならないね。', 'そこだと{c}の石どうしが離れたまま。三を作るのに手数がかかっちゃう。'],
+      close: ['きみの手も悪くないけど、緑の点だと石がもっとよく働くペン。', 'きみの点でも戦えるけど、緑の点なら石が2つの役目をするから一歩リード！', 'きみの石も役に立つけど、緑の点に比べると次の三が作りにくいんだ。', 'そこでもすぐには負けないよ。でも緑の点なら、先の攻めがずっと楽になるペン。', 'きみの点はちょっと控えめ。緑の点のほうが、相手のじゃまと自分の形を一度に作れるから強いんだ。'],
+    },
+    how: { open4: '達四', '44': '四四', '43': '四三', five: '五' },
+    // per lesson: draws without repeats; the openers' order is set by the lesson's index j (a start and a step, unique per lesson)
+    mk(j) {
+      const cnt = {}, a = j % 10, st = 1 + Math.floor(j / 10) % 3;
+      const used = {};
+      const pk = (arr, key, ok) => { const u = used[key] = used[key] || new Set(); cnt[key] = (cnt[key] || 0) + 1; const st0 = j * 3 + cnt[key] - 1;
+        for (let pass = 0; pass < 2; pass++) { for (let k = 0; k < arr.length; k++) { const ix = (st0 + k) % arr.length; if (u.has(ix) || (ok && !ok(arr[ix]))) continue; u.add(ix); return arr[ix]; } u.clear(); }
+        return arr[st0 % arr.length]; };
+      return { pk, open: (arr, i, off) => arr[(a + off + st * i) % arr.length] };
+    },
+  };
+  const GOMOKU_OP_JA = {
+    // every move's note: its number and colour, then what it does
+    notes(g, P) {
+      const pos = { b: [], w: [] }, out = {};
+      g.study.forEach((x, i) => { const q = GSQ(x[0]), s = i % 2 ? 2 : 1; let say;
+        if (i === 0) say = 'まずは黒が、盤のまん中（天元）に打つね。';
+        else if (i === 1) say = g.kind === 'direct' ? '白は黒のすぐとなりに打つ。これを直接打ちっていうんだ。' : '白は黒のななめとなりに打つ。これを間接打ちっていうペン。';
+        else if (i === 2) say = `3手目で、珠型『${g.kanji}』の形ができた！<br>` + GOP.ev[g.ev];
+        else { const G = GML.mk(pos, 'renju'), F = GOP.fx(G, q, s), k = GOP.kind(F); say = fill(P.pk(GOP.n[k], 'n' + k), GOP.vars(F, s)).replace(/のの/g, 'の');
+          if (x[2] === 'op.n.win') say += '<br>' + fill(P.pk(GOP.n.won, 'won'), { w: GOP.side(x[1] > 0 ? 1 : 2) }); }
+        out[String(i)] = `<b>${i + 1}. ${GOP.side(s)}</b><br>` + say; (s === 1 ? pos.b : pos.w).push(q); });
+      return out;
+    },
+    // a problem's question, hint, praise and correction
+    prob(g, o, sc, b, i, P) {
+      const start = o.pos.start, s = start.side || 1, f = GOP.side(3 - s), sd = GOP.side(s), G = GML.mk(start, 'renju'), best = b[0];
+      const FB = GOP.fx(G, best, s), kb = GOP.kind(FB), VB = Object.assign(GOP.vars(FB, s), { s: sd }), val = new Map(sc);
+      const hkey = GOP.hint[kb] ? kb : kb === 'two2' || kb === 'own' ? 'two' : kb === 'foe' ? 'blk' : 'shape', hk = GOP.hint[hkey], A = GMA.analyse(start), rb = A.of(best);
+      let ring = A.ring(best, rb);
+      if (!ring.length) { const DIR = [[1, 0], [0, 1], [1, 1], [1, -1]], d = FB.twos.length ? DIR[FB.twos[0]] : FB.blk.length ? DIR[FB.blk[0]] : null, who = FB.twos.length ? s : 3 - s;
+        if (d) { const x = best % 15, y = Math.floor(best / 15); ring = []; for (const gg of [1, -1]) for (let k = 1; k <= 4; k++) { const a = x + d[0] * k * gg, c = y + d[1] * k * gg; if (a < 0 || c < 0 || a > 14 || c > 14) break; const v = G.bd[c * 15 + a]; if (v === who) ring.push(c * 15 + a); else if (v !== 0) break; } } }
+      const whyB = fill(P.pk(GOP.why[kb], 'w' + kb), VB), roleB = fill(P.pk(GOP.role[kb], 'r' + kb), VB);
+      const pickWrong = u => u !== best && u != null && u >= 0 ? u : (sc.slice().sort((x, y) => x[1] - y[1])[0] || [])[0];
+      const goodO = P.open(GOP.good, i, 0), softO = P.open(GOP.soft, i, 5), push = i === 1 || i === 3 ? ' ' + P.pk(GOP.push, 'push') : '', rsT = P.pk(GOP.rs, 'rs');
+      const mp = k => P.pk(GOP.miss[k], 'm' + k);
+      return { ask: fill(P.pk(GOP.ask, 'ask'), { s: sd }), hintTx: fill(P.pk(hk, 'h' + hkey, t => ring.length || !/光って/.test(t)), VB), hint: ring,
+        good: u => { const other = u != null && u !== best && val.has(u) && val.get(u) >= b[1] - 25;
+          return goodO + ' ' + (other ? 'きみの手も、緑の点と同じくらい良い一手だね。緑の点は' + roleB + '。' : whyB) + push; },
+        ng: u0 => { const u = pickWrong(u0); if (u == null) return softO + ' ' + fill(rsT, { r: roleB });
+          const FU = GOP.fx(G, u, s), ku = GOP.kind(FU), V = Object.assign({}, VB);
+          G.bd[u] = s; const mine5 = G.fivePts(s).length, o5 = G.fivePts(3 - s), ow = mine5 ? [] : G.winPt(3 - s); G.bd[u] = 0;
+          let why;
+          if (kb === 'win') why = mp('win');
+          else if (!mine5 && o5.length) why = mp('lose5');
+          else if (ow.length) { V.how = GOP.how[ow[0][1]] || '四三'; why = mp('loseW'); }
+          else if ((kb === 'b3' || kb === 'b3t') && !FU.b3) why = mp('left3');
+          else if (/^(f4|ft|four|three|b3t)$/.test(kb) && !FU.fours.length && !FU.threes.length) why = mp('stop');
+          else if (!FU.near) why = mp('far');
+          else if (FB.blk.length && !FU.blk.includes(FB.blk[0])) why = mp('free');
+          else if (FB.twos.length && !FU.twos.length && ku !== 'three') why = mp('lone');
+          else why = mp('close');
+          return softO + ' ' + fill(rsT, { r: roleB }) + '<br>' + fill(why, V); } };
+    },
   };
   /* (2026-11-21 lesson loop) the gomoku lessons in ゴイシペン's words, Japanese: a varied question and two hints per step (GMJ_LS), and
      after the answer why it works / for another point what it misses, read off the board (GML: fives, fours (open or not), threes, the
@@ -2658,42 +2802,15 @@
         if (n) t += '<br>' + (String(n).startsWith('op.n.') ? this.tx(n, lang, { c: this.tx(v > 0 ? 'p1' : 'p2', lang) }) : L(n, lang));
         notes[String(i)] = t; });
       const ja = lang === 'ja', hs = g.id.length * 7 + g.no;
-      if (ja) {   // (2026-11-21 lesson loop: ゴイシペン tells the line — see GOMJ)
-        const bd = { b: [], w: [] }, cnt = {};
-        const pk = k => { const a = GOMJ.n[k]; cnt[k] = (cnt[k] || 0) + 1; return a[(hs + cnt[k]) % a.length]; };
-        g.study.forEach((x, i) => { const q = GSQ(x[0]), s = i % 2 ? 2 : 1, n = x[2]; let t = `<b>${i + 1}. ${GOMJ.side(s)}</b>`, say = '';
-          if (i === 0) say = 'まずは黒が、盤のまん中（天元）に打つね。';
-          else if (i === 1) say = g.kind === 'direct' ? '白は黒のすぐとなりに打つ。これを直接打ちっていうんだ。' : '白は黒のななめとなりに打つ。これを間接打ちっていうペン。';
-          else if (i === 2) say = `3手目で、珠型『${g.kanji}』の形ができたね！<br>` + GOMJ.ev[g.ev];
-          else if (n) say = fill(pk(String(n).replace('op.n.', '')), { c: GOMJ.side(x[1] > 0 ? 1 : 2) });
-          else { const r = GMA.info(GMA.analyse({ b: bd.b, w: bd.w, side: s }).bd, q, s); if (r.two >= 2) say = pk('two2'); else if (r.two && i % 3 === 0) say = pk('two'); }
-          if (say) t += '<br>' + say; notes[String(i)] = t; (s === 1 ? bd.b : bd.w).push(q); });
-      }
+      const PJ = ja ? GOP.mk(this.data.op.sets.indexOf(g)) : null;
+      if (ja) Object.assign(notes, GOMOKU_OP_JA.notes(g, PJ));   // (2026-11-22 lesson loop: ゴイシペン tells every move — see GOP)
       const probs = shuffle(g.problems || []).slice(0, 5);
       return { id: g.id, title: this.name(g, lang), intro: this.tx('op.read', lang, { k: g.kanji, r: g.kana, n: g.name }) + '<br>' + this.tx('op.d.' + g.id, lang) + (ja ? '<br>ぼくといっしょに、この珠型の流れを1手ずつ見ていこう！' : ''), start: { start: null, rule: 'renju', me: 1, last: -1 },
         steps, notes, probs: probs.map((P, i) => { const sc = (P.sc || []).map(([u, v]) => [GSQ(u), v]), b = sc.slice().sort((a, c) => c[1] - a[1])[0];
           const o = { pos: gPos(P, { rule: 'renju' }), kind: 'best', P: { sc }, ask: this.tx('op.goal', lang), ans: b ? b[0] : -1 };
-          if (ja && b) Object.assign(o, this.opJa(o, sc, b, hs + i, i));
+          if (ja && b) Object.assign(o, GOMOKU_OP_JA.prob(g, o, sc, b, i, PJ));
           return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= 75; pr[g.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
-    },
-    opJa(o, sc, b, hs, i) {   // (2026-11-21 lesson loop) the question, hint, praise and correction of an opening problem — see GOMJ / GMA
-      const A = GMA.analyse(o.pos.start), best = b[0], rb = A.of(best), kb = GMA.kind(rb), val = new Map(sc), side = GOMJ.side(A.s);
-      const hk = GOMJ.hint[kb], whyB = GOMJ.why[kb] || GOMJ.shapeWhy(rb);
-      const pickWrong = u => u !== best && u != null && u >= 0 ? u : (sc.slice().sort((a, c) => a[1] - c[1])[0] || [])[0];
-      return { ask: fill(GOMJ.ask[hs % GOMJ.ask.length], { s: side }), hintTx: hk[hs % hk.length], hint: A.ring(best, rb),
-        good: u => { const same = u != null && u !== best; return GOMJ.good[hs % GOMJ.good.length] + (same ? ' きみの手も、いちばんの手とほとんど同じくらい良い手なんだ。' : '') + '<br>' + (same ? '' : whyB); },
-        ng: u0 => { const u = pickWrong(u0), lead = fill(GOMJ.lead[hs % GOMJ.lead.length], { ok: SP('ok', 'ja') });
-          if (u == null) return lead + '<br>' + whyB;
-          const ru = A.of(u), ku = GMA.kind(ru), mine = val.has(u) ? val.get(u) : null, d = mine == null ? null : b[1] - mine;
-          let why;
-          if (kb === 'win' || kb === 'b4' || kb === 'ft') why = GOMJ.miss[kb];
-          else if ((kb === 'b3' || kb === 'b3t') && !ru.b3) why = ru.four ? '四で攻めても、止められたあとに相手の三が残っちゃうね。達四を作られたら止められないんだ。' : GOMJ.miss[kb];
-          else if ((kb === 'four' || kb === 'three') && !ru.four && !ru.three) why = GOMJ.miss[kb];
-          else if (mine != null && mine < -9000) why = 'きみの手だと、相手に勝ちを読み切られる形になっちゃうんだ。';
-          else if (mine != null && d < 80) why = 'きみの手も悪くないけど、緑の点は' + whyB + ' そこまでのねらいは、きみの手にはないんだ。';   // (2026-11-22: what the green point does — never "the AI says")
-          else why = '緑の点は' + whyB + ' きみの手には、そのねらいがないんだ。';
-          return lead + '<br>' + why; } };
     },
     points(P, u) {   // = gomoku/app.js problemPoints
       if (P.sc && P.sc.length) {
