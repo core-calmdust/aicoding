@@ -103,7 +103,7 @@
         const b = document.createElement('canvas'); b.width = W; b.height = H; const bg = b.getContext('2d'), bim = bg.createImageData(W, H), bd = bim.data;
         const A = ink ? ink.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H).data : null;
         // the grain: thin dark lines on paler wood, one every 0.4–0.9 mm (the photograph: 25–35 lines across a piece), each of its own strength
-        const line = new Float32Array(W + 16); { let x = 0; while (x < W + 16) { const gap = Math.max(3, Math.round(pxcm * (.05 + n(x * .37, k * 1.3, 1) * .09))), st = .25 + n(x * .21 + 5, k, 1) * .75, wd = st > .5 ? 2 : 1;
+        const line = new Float32Array(W + 16); { let x = 0; while (x < W + 16) { const gap = Math.max(3, Math.round(pxcm * (.045 + n(x * .37, k * 1.3, 1) * .07))), st = .25 + n(x * .21 + 5, k, 1) * .75, wd = st > .5 ? 2 : 1;
           for (let q = 0; q < gap && x < W + 16; q++, x++) line[x] = q < wd ? st : q === wd ? st * .35 : 0; } }
         // slow fields on a coarse grid (they change over millimetres; read between the grid's points): wear, stain, the grain's wobble, lost ink
         const GS = 4, gw = Math.ceil(W / GS) + 2, gh = Math.ceil(H / GS) + 2, fWear = new Float32Array(gw * gh), fStain = new Float32Array(gw * gh), fWob = new Float32Array(gw * gh), fGone = new Float32Array(gw * gh);
@@ -112,7 +112,7 @@
         // scratches and checks across the grain (the photograph: a few short dark lines running sideways, and one or two long ones)
         const scr = new Float32Array(W * H); { const m = 1 + (n(k, 3, 1) * 4 | 0); for (let q = 0; q < m; q++) { const y0 = n(q * 3.1, k + 1, 1) * H, x0 = n(q * 1.7 + 9, k, 1) * W * .8, len = W * (.08 + n(q, k * 2 + 5, 1) * (q < 1 ? .6 : .22)), sl = (n(q * 5, k, 1) - .5) * .25, st = .2 + n(q, 7 + k, 1) * .45;
           for (let t = 0; t < len; t++) { const x = (x0 + t) | 0, y = (y0 + t * sl + (n(t / 9, q + k, 1) - .5) * 3) | 0; if (x >= 0 && x < W && y >= 0 && y < H - 1) { scr[y * W + x] = Math.max(scr[y * W + x], st); scr[(y + 1) * W + x] = Math.max(scr[(y + 1) * W + x], st * .5); } } } }
-        const base = [125 + tone * 18, 94 + tone * 14, 70 + tone * 11];   // (a greyed tan: measured on the photograph against its white paper)
+        const base = [124 + tone * 20, 94 + tone * 16, 68 + tone * 12];   // (a greyed tan: measured on the photograph against its white paper)
         const fade = ink && ink.fade || 0, bare = n(k * 7.3, 2, 1) > .78 ? 1 : 0;   // (a piece or two has a patch of fresh orange wood where the grey skin has come off)
         for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
           const xs = Math.min(W + 15, Math.max(0, Math.round(x + 8 + (rd(fWob, x, y) - .5) * pxcm * .06)));
@@ -123,17 +123,17 @@
           const soil = Math.max(0, a - .42) * 1.1 + Math.max(0, .1 - e) * 3.2;                  // grey dirt in the worn patches and at the rubbed edges
           const band = n(xs / (pxcm * .05), y / (pxcm * 1.4) + k, 2);   // broader soft streaks along the grain
           const mot = rd(fStain, y * .7 + 31, x * .7 + 11) - .5;   // paler and greyer patches
-          let lum = (1.04 + (sp - .5) * .15 + (band - .5) * .3 + mot * .3) * (1 - ln * .62) * (1 - pit * .45) * (1 - sc * .55) * (1 - Math.min(.5, soil * .4)) * (1 - st * .3) * (1 + (n2(y / 2.6, x / 46 + 9, 2) - .5) * .16) * (1 - Math.max(0, n(x / (pxcm * .16) + 3, y / (pxcm * .1) + 8, 2) - .6) * 1.4);   // faint marks across the grain, and dark specks of dirt
+          let lum = (1.04 + (sp - .5) * .15 + (band - .5) * .22 + mot * .2 + Math.max(0, mot) * .22) * (1 - ln * .75) * (1 - pit * .45) * (1 - sc * .55) * (1 - Math.min(.5, soil * .4)) * (1 - st * .3) * (1 + (n2(y / 2.6, x / 46 + 9, 2) - .5) * .16) * (1 - Math.max(0, n(x / (pxcm * .1) + 3, y / (pxcm * .2) + 8, 2) - .6) * 1.7);   // faint marks across the grain, and dark specks of dirt
           const gy = Math.max(0, -mot) * .9 + soil * .06; let R = base[0] * lum * (1 - gy * .12), Gc = base[1] * lum * (1 - gy * .03), B = base[2] * lum * (1 + gy * .22);
-          if (bare) { const t = Math.max(0, Math.min(1, (rd(fStain, W - x, y) - .56) * 9)) * (x < W * .5 ? 1 : 0); R += (204 - R) * t * .7; Gc += (140 - Gc) * t * .7; B += (82 - B) * t * .7; }
+          if (bare) { const t = Math.max(0, Math.min(1, (rd(fStain, W - x, y) - .56) * 9)) * (x < W * .5 ? 1 : 0); R += (196 - R) * t * .6; Gc += (138 - Gc) * t * .6; B += (84 - B) * t * .6; }
           if (A) {   // the ink: grey-black, sunk into the pores; rubbed off the worn patches, broken by the grain and by a speckle of bare wood
             const al0 = A[(y * W + x) * 4 + 3] / 255; if (al0 > .01) { const gone = rd(fGone, x, y), spk = n2(x / 2.3 + 30, y / 3.4, 2), strk = n2(xs / 1.4 + 60, y / (pxcm * .22), 2);
               // the strokes' edges eaten away, and strips along the grain where the ink has gone with the soft wood
-              const al = Math.max(0, Math.min(1, (al0 - .06 - spk * .2 - fade * .1) * 3)) * Math.max(0, Math.min(1, (strk - .12 - fade * .2) * 5));
+              const al = Math.max(0, Math.min(1, (al0 - .06 - spk * .2 - fade * .1) * 3)) * Math.max(0, Math.min(1, (strk - .2 - fade * .2) * 5));
               // a grey wash where the ink has thinned, darker where it pooled; whole patches rubbed away
-              const core = Math.max(0, Math.min(1, (spk - .05 - fade * .16) * 4 + (band - .5) * 1.2));
+              const core = Math.max(0, Math.min(1, (spk - .1 - fade * .16) * 4 + (band - .5) * 1.2));
               let keep = al * Math.max(0, Math.min(1, (gone - fade * .85) * 5 + .5)) * (.5 + .5 * core) * (1 - ln * .25);
-              keep = Math.min(.86, keep * (1.38 - fade * .62)); const ic = 40 - core * 9; R += (ic - R) * keep; Gc += (ic - Gc) * keep; B += (ic + 4 - B) * keep; } }
+              keep = Math.min(.86, keep * (1.38 - fade * .62)); const ic = 38 - core * 13; R += (ic - R) * keep; Gc += (ic - Gc) * keep; B += (ic + 4 - B) * keep; } }
           const i = (y * W + x) * 4; d[i] = R; d[i + 1] = Gc; d[i + 2] = B; d[i + 3] = 255;
           const hv = Math.max(0, Math.min(255, 60 + h * 190)); bd[i] = bd[i + 1] = bd[i + 2] = hv; bd[i + 3] = 255;
         }
@@ -200,7 +200,7 @@
       const order = [0, 3, 24, 1, 14, 9, 4, 22, 15, 10, 5, 17, 2, 6, 18, 11, 7, 23, 16, 20, 8, 12, 19, 25, 21, 13, 26, 27];
       rows.forEach((n, ri) => { const z = -6.6 + ri * 3.9;
         for (let c = 0; c < n; c++, k++) { const nm = P[order[k]], [w0, h0] = SZ[nm], s = .9 + rnd() * .18, w = w0 * s * (.88 + rnd() * .22), h = h0 * s, t = nm === '酔象' ? .2 : .32 + rnd() * .16;
-          const kr = rnd(), keep = nm ? (kr < .3 ? .2 + rnd() * .12 : kr < .85 ? .35 + rnd() * .18 : .47 + rnd() * .14) : 0;   // (most are nearly gone, a few still read)
+          const kr = rnd(), keep = nm ? (kr < .3 ? .2 + rnd() * .12 : kr < .85 ? .35 + rnd() * .18 : .45 + rnd() * .12) : 0;   // (most are nearly gone, a few still read)
           const m = piece(nm, k, w, h, t, keep), x = (c - (n - 1) / 2) * 4.2 + (rnd() - .5) * 1.1 + (ri % 2 ? .8 : -.4);
           const zz = z + (rnd() - .5) * .8; if (!SP[nm || 'none']) SP[nm || 'none'] = [x, 1.3, zz + h * .5];
           lay(m, x, zz, (rnd() - .5) * .5 + (rnd() < .2 ? Math.PI * (rnd() - .5) * .6 : 0), h); } });

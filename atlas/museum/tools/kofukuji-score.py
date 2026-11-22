@@ -6,6 +6,7 @@
 # The photograph's faces: quads read off two enlargements (photoR.png 3x, photoL.png 4x), set square at 76 px/cm.
 import cv2, numpy as np, sys
 PXCM=76
+PHOTO_PXCM=24
 QUADS={'photoR.png':[[(75,112),(262,142),(213,300),(22,262)],[(325,142),(505,180),(440,355),(262,318)],[(72,385),(272,420),(215,622),(5,570)],[(350,418),(560,460),(500,672),(280,612)],[(632,497),(805,545),(760,725),(575,685)]],
        'photoL.png':[[(815,68),(993,103),(910,333),(716,292)],[(385,385),(635,440),(520,685),(252,620)],[(742,440),(990,490),(880,750),(628,690)]]}
 def lab(im, white): 
@@ -29,7 +30,11 @@ def render_faces(path, pxcm_in=80):
         cs,_=cv2.findContours((lb==i).astype(np.uint8),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE); (cx,cy),(rw,rh),ang=cv2.minAreaRect(cs[0])
         if rw>rh: rw,rh=rh,rw; ang+=90
         M=cv2.getRotationMatrix2D((cx,cy),ang,PXCM/pxcm_in); W=int(rw*PXCM/pxcm_in); H=int(rh*PXCM/pxcm_in); M[0,2]+=W/2-cx; M[1,2]+=H/2-cy
-        r=cv2.warpAffine(im,M,(W,H),flags=cv2.INTER_AREA,borderValue=(255,255,255)); mx,my=int(W*.12),int(H*.14); out.append(lab(r[my:H-my,mx:W-mx],white))
+        r=cv2.warpAffine(im,M,(W,H),flags=cv2.INTER_AREA,borderValue=(255,255,255))
+        # the photograph is small (a piece is about 60 px across; the enlargements only magnify that): the render is brought to the same
+        # fineness before it is compared — reduced to 24 px/cm, then enlarged again — or it would be marked down for detail the photograph cannot hold
+        k=PHOTO_PXCM/PXCM; r=cv2.resize(cv2.resize(r,(max(8,int(W*k)),max(8,int(H*k))),interpolation=cv2.INTER_LANCZOS4),(W,H),interpolation=cv2.INTER_CUBIC)
+        mx,my=int(W*.12),int(H*.14); out.append(lab(r[my:H-my,mx:W-mx],white))
     return out
 def stats(F):
     Ls=np.concatenate([f[...,0].ravel() for f in F]); hist=np.histogram(Ls,bins=25,range=(0,100))[0].astype(float); hist/=hist.sum()

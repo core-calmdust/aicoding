@@ -28,7 +28,12 @@
       let sd = 1932; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
       // yew, nearly black-brown with a warmer brown where it is worn; grain along the canvas's height
       const yew = (seed, lite) => K.tex(1024, 1024, (g, w, h) => { const n = K.noise(seed), img = g.createImageData(w, h), d = img.data;
-        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const wv = n(x / 300, y / 500, 3) * 60, ln = .5 + .5 * Math.sin((x + wv + n(x / 40, y / 400, 2) * 26) / 3.1), big = n(x / 120, y / 420, 3), f = n(x / 3, y / 40, 2), i = (y * w + x) * 4;
+        // (the three slow fields — the wave of the grain, its drift, the broad light and dark — are worked out on a coarse grid (every 2nd pixel
+        //  across, every 8th along the grain) and read between; only the fine streak is worked out for every pixel)
+        const GX = 2, GY = 8, gw = Math.ceil(w / GX) + 2, gh = Math.ceil(h / GY) + 2, F1 = new Float32Array(gw * gh), F2 = new Float32Array(gw * gh), F3 = new Float32Array(gw * gh);
+        for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++) { const x = i * GX, y = j * GY, q = j * gw + i; F1[q] = n(x / 300, y / 500, 3); F2[q] = n(x / 40, y / 400, 2); F3[q] = n(x / 120, y / 420, 3); }
+        const rd = (F, x, y) => { const fx = x / GX, fy = y / GY, i = fx | 0, j = fy | 0, p = fx - i, q = fy - j, k = j * gw + i; return (F[k] * (1 - p) + F[k + 1] * p) * (1 - q) + (F[k + gw] * (1 - p) + F[k + gw + 1] * p) * q; };
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const wv = rd(F1, x, y) * 60, ln = .5 + .5 * Math.sin((x + wv + rd(F2, x, y) * 26) / 3.1), big = rd(F3, x, y), f = n(x / 3, y / 40, 2), i = (y * w + x) * 4;
           const k = (lite ? .62 : .4) + ln * (lite ? .2 : .1) + big * .3 + (f - .5) * .12; d[i] = 56 * k; d[i + 1] = 39 * k; d[i + 2] = 25 * k; d[i + 3] = 255; }
         g.putImageData(img, 0, 0); });
       const frameMap = yew(31, true), panelMap = yew(47, false);
@@ -63,7 +68,7 @@
       const drawWorn = (g, bump) => { if (!bump) g.drawImage(panelMap.image, 0, 0, PX, PX); else { g.fillStyle = '#808080'; g.fillRect(0, 0, PX, PX); } const im = g.getImageData(0, 0, PX, PX), d = im.data;
         for (let i = 0; i < d.length; i += 4) { const w = wd[i] / 128, pale = wd[i + 1] / 255, hole = wd[i + 2] / 255;
           if (bump) d[i] = d[i + 1] = d[i + 2] = wd[i + 3] * (1 - hole);
-          else { const k = Math.pow(Math.max(.25, Math.min(2.6, w)), 1.2); let c = [d[i] * k * 1.2, d[i + 1] * k * 1.08, d[i + 2] * k * .98]; c = c.map((v, q) => v + ([206, 168, 108][q] - v) * pale); const dk = 1 - hole * .96; d[i] = c[0] * dk; d[i + 1] = c[1] * dk; d[i + 2] = c[2] * dk; } }
+          else { const k = Math.pow(Math.max(.25, Math.min(2.6, w)), 1.2), dk = 1 - hole * .96; let r = d[i] * k * 1.2, g2 = d[i + 1] * k * 1.08, b = d[i + 2] * k * .98; r += (206 - r) * pale; g2 += (168 - g2) * pale; b += (108 - b) * pale; d[i] = r * dk; d[i + 1] = g2 * dk; d[i + 2] = b * dk; } }
         g.putImageData(im, 0, 0); };
       const drawPanel = (g, bump) => { if (wd) return drawWorn(g, bump); if (bump) { g.fillStyle = '#909090'; g.fillRect(0, 0, PX, PX); } else g.drawImage(panelMap.image, 0, 0, PX, PX);
         const cut = bump ? '#3a3a3a' : 'rgba(150,120,84,.5)'; g.strokeStyle = cut; g.lineWidth = bump ? 4 : 2.6; g.lineCap = 'round';
