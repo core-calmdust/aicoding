@@ -325,7 +325,7 @@ function queueEval() { if (!G.st) return; const job = ++evalJob, n = G.st.log.le
 
 // ---------- screens ----------
 function sheet(id, on) { $(id).classList.toggle('hide', !on); sheetsUI(); }
-function sheetsUI() { World.throttle(!!document.querySelector('.sheet:not(.hide)')); }
+function sheetsUI() { const open = !!document.querySelector('.sheet:not(.hide)'); World.throttle(open); World.pause(open && PHONE() && !!document.querySelector('.sheet:not(.hide):not(#scrMenu):not(#scrResult)')); }   // (phones: the sheets are opaque, so the sea stops)
 function toTitle() {
   evalJob++; G = newG({ phase: 'title' }); stopPreviews();
   ['#scrSetup', '#scrMenu', '#scrResult', '#scrArchive', '#scrHelp'].forEach(s => sheet(s, false));
