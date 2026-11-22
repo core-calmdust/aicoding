@@ -5,7 +5,7 @@
 //   - every answer / accepted move is a legal move of the position, and the best one is among them
 //   - a warm-up's guided moves are legal; marks the words call reachable are reachable, "the farthest square" really is the farthest …
 //   node tools/lesson-facts.js [game,…] [--json out.json]     → exit code 1 if anything is wrong
-// tools/lesson-quality.js reads the result (a lesson with a wrong fact fails, whatever its words score).
+// tools/lesson-quality.js reads the result (a lesson with a wrong fact fails, whatever its words score; openings too: '<game>/open' → opening id).
 const fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const args = process.argv.slice(2), games = (args.find(a => !a.startsWith('--') && args[args.indexOf(a) - 1] !== '--json') || '').split(',').filter(Boolean);
