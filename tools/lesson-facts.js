@@ -130,6 +130,26 @@ const CHECKS = {
             if (id === 'tw_diag' && r !== NO) { const DG = [[0, 3, 6], [2, 5, 8], [21, 18, 15], [23, 20, 17]]; if (!DG.some(ml => ml.includes(t) && ml.every(q => after.b[q] === me))) bad(g, K, `${w}: the mill is not on a diagonal line`); }
           }); }); }); });
   },
+  // (2026-11-22 lesson loop) the mancala lessons ('mancala', key = the step's index in mancala/lessons.json): a scored pit is exactly a
+  // pit with seeds (sc null ⇔ empty), the gold pit (best) is legal and the top of the stored values; 種まき (sow): the gold pit's last seed
+  // lands on the target and the count the words use (種の数 vs 目標までの距離 → 「N つ手前／先」) is what the engine's sowing does for
+  // every pit. (The rest of the words are read from the engine's own play of each pit — atlas/lessons3d.js mcF.)
+  'mancala'() {
+    const E = require(path.join(ROOT, 'mancala/engine.js')), L = J('mancala/lessons.json'), g = 'mancala';
+    const dist = (from, to) => { let c = 0, x = from; while (x !== to && c < 30) { x = x === 13 ? 0 : x + 1; if (x !== 13) c++; } return c; };
+    L.steps.forEach((st, si) => { const K = String(si), R = st.rules || L.rules || 'kalah';
+      (st.problems || []).forEach((P, j) => { const w = `${st.id} q${j + 1}`, b = P.b;
+        if (!b || b.length !== 14) { bad(g, K, `${w}: the board is not 14 pits`); return; }
+        const legal = new Set(E.legal(Int8Array.from(b), 0, E.RULES[R] || E.RULES.kalah));
+        P.sc.forEach((v, k) => { if ((v === null) !== !legal.has(k)) bad(g, K, `${w}: pit ${k} is ${legal.has(k) ? 'legal' : 'not legal'} but its value is ${v}`); });
+        if (!legal.has(P.best)) { bad(g, K, `${w}: the gold pit is not legal`); return; }
+        const top = Math.max(...P.sc.filter(v => v !== null)); if (P.sc[P.best] < top - 1e-9) bad(g, K, `${w}: the gold pit ${P.sc[P.best]} is not the top value ${top}`);
+        if (st.id === 'sow') {
+          if (E.trace(Int8Array.from(b), 0, P.best, R).land !== P.target) bad(g, K, `${w}: the gold pit does not land on the target`);
+          for (const k of legal) { const t = E.trace(Int8Array.from(b), 0, k, R), hit = b[k] === dist(k, P.target); if ((t.land === P.target) !== hit) bad(g, K, `${w}: pit ${k}: the seed count vs the distance disagrees with the sowing`); }
+        }
+      }); });
+  },
   // (2026-11-22 lesson loop, hex/open) the opening lines and their problems: every move of the line legal, a problem's best move legal
   // and the engine's best value (or within 3% of it), and what each stored note says the move does true on the board — a bridge with an own
   // stone, touching the opponent, a swap, an intrusion into the opponent's bridge, the 2nd row
