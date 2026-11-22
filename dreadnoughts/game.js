@@ -376,8 +376,8 @@ let pkSide = 0;   // the picks row on phones shows our side (0) or theirs (1)
 function shipCard(k, o) {
   o = o || {}; const T = E.TYPES[k], cost = o.cost != null ? o.cost : T.cost;
   return `<${o.tag || 'button'} class="card r${ROLE_OF(k)}${o.cls || ''}" data-k="${k}"${o.i != null ? ` data-i="${o.i}"` : ''} ${o.attrs || ''}><span class="role"></span>
-    <span class="top"><span class="cost">${cost}</span><b>${t('ship.' + k)}</b><span class="rl">${t('dr.g' + ROLE_OF(k))}</span>${lenPips(T.len)}${o.pool > 1 ? `<em class="pool">×${o.pool}</em>` : ''}</span>
-    <span class="art">${cardArt(T)}${portraitImg(k, T.len)}</span>
+    <span class="top"><span class="cost">${cost}</span><b>${t('ship.' + k)}</b>${lenPips(T.len)}${o.pool > 1 ? `<em class="pool">×${o.pool}</em>` : ''}</span>
+    <span class="art">${cardArt(T)}${portraitImg(k, T.len)}</span><span class="meta"><span class="rl">${t('dr.g' + ROLE_OF(k))}</span><span class="sz">${lenPips(T.len)}<em>${T.len}</em></span></span>
     <span class="skl">${icon(abilityKey(T))}<span>${shipSkillName(T)}</span><small>${kindOf(T)}</small></span>
     <span class="desc">${shipSkillText(T)}</span>${o.foot || '<span class="foot"></span>'}</${o.tag || 'button'}>`;
 }

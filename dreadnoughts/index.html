@@ -391,26 +391,29 @@ button{font:inherit;color:inherit;cursor:pointer}
   .picks .chips{flex:1;min-width:0;cursor:pointer}
 }
 @media (max-width:339px){ .grid{grid-template-columns:1fr} }
-.card .rl{display:none}.chip .rl{display:none}
+.card .meta{display:none}.chip .rl{display:none}
+.card .sz{display:inline-flex;align-items:center;gap:4px}.card .sz .len{display:flex}.card .sz em{font-style:normal;font-family:var(--num);font-weight:600;font-size:12px;color:var(--mute)}
 @media (max-width:760px), (max-height:520px){
   /* (2026-11-23 the user) draft and archive on phones: small tiles — the ship, its name under it, its role (attack / scouting / defence);
      a tap opens the whole card (#cardPop) */
   :is(#drGrid,#arGrid){grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
   /* (2026-11-23 the user) two to a row so the reach map (where the ship fires) is visible right away: name · role, then the map beside the ship, the skill's name */
-  :is(#drGrid,#arGrid) .card{display:grid;grid-template-columns:58px minmax(0,1fr);grid-template-areas:"top top" "rch img" "rch skl" "ft ft";grid-template-rows:auto 34px 24px auto;column-gap:8px;padding:8px 8px 7px;text-align:left}
+  :is(#drGrid,#arGrid) .card{display:grid;grid-template-columns:74px minmax(0,1fr);grid-template-areas:"top top" "rch img" "rch meta" "rch skl" "ft ft";grid-template-rows:auto minmax(40px,1fr) auto auto auto;column-gap:8px;padding:9px 9px 8px;text-align:left}
   :is(#drGrid,#arGrid) .card .top{display:flex;grid-area:top;align-items:center;gap:6px;margin-bottom:6px;padding-right:20px;min-width:0}
-  :is(#drGrid,#arGrid) .card .cost{position:static;flex:none;width:24px;height:24px;font-size:14.5px}
+  :is(#drGrid,#arGrid) .card .cost{position:static;flex:none;width:26px;height:26px;font-size:15.5px}
   :is(#drGrid,#arGrid) .card .pool{position:absolute;right:7px;top:9px;font-size:11.5px}
-  :is(#drGrid,#arGrid) .card b{flex:0 1 auto;min-width:0;font-size:14.5px;letter-spacing:0}
-  :is(#drGrid,#arGrid) .card .rl{display:inline-flex;flex:none;align-items:center;gap:3px;font-size:11px;color:var(--mute)}
+  :is(#drGrid,#arGrid) .card b{flex:0 1 auto;min-width:0;font-size:15.5px;letter-spacing:0}
+  :is(#drGrid,#arGrid) .card .meta{display:flex;grid-area:meta;align-items:center;justify-content:space-between;gap:4px;min-width:0;margin-top:2px}
+  :is(#drGrid,#arGrid) .card .rl{display:inline-flex;flex:none;align-items:center;gap:3px;font-size:12px;color:var(--mute)}
+  :is(#drGrid,#arGrid) .card .sz .len{display:flex}:is(#drGrid,#arGrid) .card .sz .len i{width:6px;height:6px}
   :is(#drGrid,#arGrid) .card .rl::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
   :is(#drGrid,#arGrid) .card.r0 .rl{color:#ff9f7a}:is(#drGrid,#arGrid) .card.r1 .rl{color:#7fd8ff}:is(#drGrid,#arGrid) .card.r2 .rl{color:#9ff0c8}:is(#drGrid,#arGrid) .card.r3 .rl{color:#c9c9d6}
   :is(#drGrid,#arGrid) .card .art{display:contents}
-  :is(#drGrid,#arGrid) .card .art .reach{display:block;grid-area:rch;width:58px;height:58px;align-self:start}
-  :is(#drGrid,#arGrid) .card .art img{grid-area:img;width:100%;height:34px;object-fit:contain;object-position:center}
-  :is(#drGrid,#arGrid) .card .skl{display:flex;grid-area:skl;align-self:end;margin:0;font-size:12.5px;gap:4px}:is(#drGrid,#arGrid) .card .skl svg{width:13px;height:13px;flex:none}:is(#drGrid,#arGrid) .card .skl small{display:none}
+  :is(#drGrid,#arGrid) .card .art .reach{display:block;grid-area:rch;width:74px;height:74px;align-self:start}
+  :is(#drGrid,#arGrid) .card .art img{grid-area:img;width:100%;height:100%;min-height:40px;max-height:56px;align-self:center;object-fit:contain;object-position:center}
+  :is(#drGrid,#arGrid) .card .skl{display:flex;grid-area:skl;align-self:end;margin:2px 0 0;font-size:14px;gap:5px}:is(#drGrid,#arGrid) .card .skl svg{width:15px;height:15px;flex:none}:is(#drGrid,#arGrid) .card .skl small{display:none}
   :is(#drGrid,#arGrid) .card .role,:is(#drGrid,#arGrid) .card .desc,:is(#drGrid,#arGrid) .card .len{display:none}
-  :is(#drGrid,#arGrid) .card .foot{grid-area:ft;align-self:start;margin-top:5px;min-height:16px;height:auto;line-height:16px;font-size:11px!important;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  :is(#drGrid,#arGrid) .card .foot{grid-area:ft;align-self:start;margin-top:6px;min-height:18px;height:auto;line-height:18px;font-size:12px!important;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
   /* the picks: tiles too */
   .picks .chip{flex-direction:column;justify-content:center;gap:1px;width:74px;height:62px;padding:3px 2px;cursor:pointer}
   .picks .chip img{width:62px;height:24px}.picks .chip .nm{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;line-height:1.2}
@@ -427,11 +430,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* one card, large: the detail of a tile (phones) */
 #cardPop{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(2,5,8,.72)}
 #cardPop .cp-in{width:min(380px,100%)}
-#cardPop .card{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-areas:"top top" "rch img" "skl skl" "dsc dsc" "ft ft";column-gap:12px;width:100%;padding:14px 14px 12px;background:#0b141d;cursor:default;transform:none}
+#cardPop .card{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-areas:"top top" "rch img" "rch meta" "skl skl" "dsc dsc" "ft ft";column-gap:12px;width:100%;padding:14px 14px 12px;background:#0b141d;cursor:default;transform:none}
 #cardPop .card .top{grid-area:top;margin-bottom:10px;display:flex}#cardPop .card .art{display:contents}
-#cardPop .card .art .reach{grid-area:rch;width:92px;height:92px}#cardPop .card .art img{grid-area:img;width:100%;height:92px;object-fit:contain}
+#cardPop .card .art .reach{grid-area:rch;width:92px;height:92px}#cardPop .card .art img{grid-area:img;width:100%;height:68px;object-fit:contain}
 #cardPop .card b{font-size:19px}#cardPop .card .cost{width:32px;height:32px;font-size:19px}#cardPop .card .len{display:flex}
-#cardPop .card .rl{display:inline-flex;align-items:center;gap:4px;flex:none;font-size:12.5px;color:var(--mute)}#cardPop .card .rl::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}#cardPop .card .top b{flex:0 1 auto}#cardPop .card .top .len{margin-left:auto}#cardPop .card .role{display:none}
+#cardPop .card .meta{display:flex;grid-area:meta;align-items:center;justify-content:space-between;margin:6px 0 0}#cardPop .card .rl{display:inline-flex;align-items:center;gap:4px;flex:none;font-size:13px;color:var(--mute)}#cardPop .card .rl::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}#cardPop .card .top b{flex:0 1 auto}#cardPop .card .top .len{display:none}#cardPop .card .role{display:none}
 #cardPop .card.r0 .rl{color:#ff9f7a}#cardPop .card.r1 .rl{color:#7fd8ff}#cardPop .card.r2 .rl{color:#9ff0c8}#cardPop .card.r3 .rl{color:#c9c9d6}
 #cardPop .card .top{padding-right:14px}
 #cardPop .card .skl{grid-area:skl;margin-top:10px;font-size:16px}#cardPop .card .skl small{display:inline;font-size:13px}
@@ -573,6 +576,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 <script src="../atlas/vendor/three-r186.min.js?v=1"></script>
 <script src="../seabattle/ships3d.js?v=2"></script>
 <script src="world.js?v=6"></script>
-<script src="game.js?v=10"></script>
+<script src="game.js?v=11"></script>
 </body>
 </html>
