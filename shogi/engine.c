@@ -307,32 +307,37 @@ static void nueRefresh(void) {
 #ifndef NUE_MI   /* the MLP reads the first NUE_MI units of each side */
 #define NUE_MI NUE_H
 #endif
-static i16 nueMA[NUE_L1 * 2 * NUE_MI], nueMB[NUE_L2 * NUE_L1];   /* (int8 in the file, widened for the SIMD products; NUE_L1 a multiple of 8) */ static i32 nueMa[NUE_L1], nueMd[NUE_L2]; static i16 nueMC[NUE_L2];
-static i32 nueMlp(const i16 *a, const i16 *b) {
+#ifndef NUE_MB   /* sets of MLP weights: 1, or NUE_NB = one per output bucket (the NUES file) */
+#define NUE_MB 1
+#endif
+#define NUE_MS (NUE_MB > 1 ? 10 : 6)   /* the MLP's weights: x 64 (int8 in the NUEM file), or x 1024 (int16, the NUES file: x 64 lost about 10% of the evaluation's spread to rounding) */
+static i16 nueMA[NUE_MB * NUE_L1 * 2 * NUE_MI], nueMB[NUE_MB * NUE_L2 * NUE_L1];   /* (int8 in the file, widened for the SIMD products; NUE_L1 a multiple of 8) */ static i32 nueMa[NUE_MB * NUE_L1], nueMd[NUE_MB * NUE_L2]; static i16 nueMC[NUE_MB * NUE_L2];
+static i32 nueMlp(const i16 *a, const i16 *b, int mb) {
+  const i16 *const MA = nueMA + mb * NUE_L1 * 2 * NUE_MI, *const MB = nueMB + mb * NUE_L2 * NUE_L1, *const MC = nueMC + mb * NUE_L2; const i32 *const Ma = nueMa + mb * NUE_L1, *const Md = nueMd + mb * NUE_L2;
   i16 x[2 * NUE_MI] __attribute__((aligned(16))), h1[NUE_L1] __attribute__((aligned(16))); i32 m = 0;
 #if defined(NUE_NEON)
   { const int16x8_t z = vdupq_n_s16(0), q = vdupq_n_s16(NUE_QA);
     for (int i = 0; i < NUE_MI; i += 8) { vst1q_s16(x + i, vminq_s16(vmaxq_s16(vld1q_s16(a + i), z), q)); vst1q_s16(x + NUE_MI + i, vminq_s16(vmaxq_s16(vld1q_s16(b + i), z), q)); } }
   for (int j = 0; j < NUE_L1; j++) {
-    const i16 *w = nueMA + j * 2 * NUE_MI; int32x4_t s0 = vdupq_n_s32(0), s1 = vdupq_n_s32(0);
+    const i16 *w = MA + j * 2 * NUE_MI; int32x4_t s0 = vdupq_n_s32(0), s1 = vdupq_n_s32(0);
     for (int i = 0; i < 2 * NUE_MI; i += 8) { const int16x8_t xv = vld1q_s16(x + i), wv = vld1q_s16(w + i); s0 = vmlal_s16(s0, vget_low_s16(xv), vget_low_s16(wv)); s1 = vmlal_high_s16(s1, xv, wv); }
-    i32 zz = (nueMa[j] + vaddvq_s32(vaddq_s32(s0, s1))) >> 6; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz;
+    i32 zz = (Ma[j] + vaddvq_s32(vaddq_s32(s0, s1))) >> NUE_MS; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz;
   }
 #elif defined(NUE_SSE2)
   { const __m128i z = _mm_setzero_si128(), q = _mm_set1_epi16(NUE_QA);
     for (int i = 0; i < NUE_MI; i += 8) { _mm_store_si128((__m128i *)(x + i), _mm_min_epi16(_mm_max_epi16(_mm_loadu_si128((const __m128i *)(a + i)), z), q)); _mm_store_si128((__m128i *)(x + NUE_MI + i), _mm_min_epi16(_mm_max_epi16(_mm_loadu_si128((const __m128i *)(b + i)), z), q)); } }
   for (int j = 0; j < NUE_L1; j++) {
-    const i16 *w = nueMA + j * 2 * NUE_MI; __m128i s0 = _mm_setzero_si128(), s1 = _mm_setzero_si128();
+    const i16 *w = MA + j * 2 * NUE_MI; __m128i s0 = _mm_setzero_si128(), s1 = _mm_setzero_si128();
     for (int i = 0; i < 2 * NUE_MI; i += 16) { s0 = _mm_add_epi32(s0, _mm_madd_epi16(_mm_load_si128((const __m128i *)(x + i)), _mm_loadu_si128((const __m128i *)(w + i)))); s1 = _mm_add_epi32(s1, _mm_madd_epi16(_mm_load_si128((const __m128i *)(x + i + 8)), _mm_loadu_si128((const __m128i *)(w + i + 8)))); }
     i32 t[4]; _mm_storeu_si128((__m128i *)t, _mm_add_epi32(s0, s1));
-    i32 zz = (nueMa[j] + t[0] + t[1] + t[2] + t[3]) >> 6; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz;
+    i32 zz = (Ma[j] + t[0] + t[1] + t[2] + t[3]) >> NUE_MS; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz;
   }
 #else
   for (int i = 0; i < NUE_MI; i++) { x[i] = a[i] < 0 ? 0 : a[i] > NUE_QA ? NUE_QA : a[i]; x[NUE_MI + i] = b[i] < 0 ? 0 : b[i] > NUE_QA ? NUE_QA : b[i]; }
-  for (int j = 0; j < NUE_L1; j++) { const i16 *w = nueMA + j * 2 * NUE_MI; i32 zz = nueMa[j]; for (int i = 0; i < 2 * NUE_MI; i++) zz += x[i] * w[i]; zz >>= 6; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz; }
+  for (int j = 0; j < NUE_L1; j++) { const i16 *w = MA + j * 2 * NUE_MI; i32 zz = Ma[j]; for (int i = 0; i < 2 * NUE_MI; i++) zz += x[i] * w[i]; zz >>= NUE_MS; h1[j] = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz; }
 #endif
   for (int k = 0; k < NUE_L2; k++) {
-    const i16 *w = nueMB + k * NUE_L1; i32 zz = nueMd[k];
+    const i16 *w = MB + k * NUE_L1; i32 zz = Md[k];
 #if defined(NUE_NEON)
     int32x4_t s0 = vdupq_n_s32(0);
     for (int j = 0; j < NUE_L1; j += 8) { const int16x8_t hv = vld1q_s16(h1 + j), wv = vld1q_s16(w + j); s0 = vmlal_s16(s0, vget_low_s16(hv), vget_low_s16(wv)); s0 = vmlal_high_s16(s0, hv, wv); }
@@ -344,9 +349,9 @@ static i32 nueMlp(const i16 *a, const i16 *b) {
 #else
     for (int j = 0; j < NUE_L1; j++) zz += h1[j] * w[j];
 #endif
-    zz >>= 6; zz = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz; m += zz * nueMC[k];
+    zz >>= NUE_MS; zz = zz < 0 ? 0 : zz > NUE_QA ? NUE_QA : zz; m += zz * MC[k];
   }
-  return m;
+  return NUE_MB > 1 ? m >> 4 : m;   /* NUES: the last weights are x 1024 too */
 }
 #endif
 static double nueEval(void) {
@@ -425,7 +430,7 @@ static double nueEval(void) {
   }
   long long v = sum / NUE_QA + nueB2[bk];
 #ifdef NUE_L1
-  v += nueMlp(a, b);
+  v += nueMlp(a, b, NUE_MB > 1 ? bk : 0);
 #endif
   return (double)v * NN_K / (NUE_QA * NUE_QB);
 }

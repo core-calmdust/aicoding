@@ -68,8 +68,9 @@ class Net(torch.nn.Module):
         s.W1 = P(torch.randn(IN, H) * 0.05); s.B1 = P(torch.zeros(H))
         s.W2 = P(torch.randn(OB, 2 * H) * 0.5 / math.sqrt(H / 256)); s.B2 = P(torch.zeros(OB))
         if N1:
-            s.MA = P(torch.randn(N1, 2 * MI) * 0.03 * math.sqrt(256 / MI)); s.Ma = P(torch.full((N1,), 0.5))
-            s.MB = P(torch.randn(N2, N1) * 0.15); s.Md = P(torch.full((N2,), 0.5)); s.MC = P(torch.zeros(N2))
+            # with output buckets the MLP has one set of weights per bucket too (the "layer stack" of the strong programs)
+            s.MA = P(torch.randn(OB * N1, 2 * MI) * 0.03 * math.sqrt(256 / MI)); s.Ma = P(torch.full((OB * N1,), 0.5))
+            s.MB = P(torch.randn(OB, N2, N1) * 0.15); s.Md = P(torch.full((OB, N2), 0.5)); s.MC = P(torch.zeros(OB, N2))
     def forward(s, fu, ft, bk, ftmode):
         B = fu.shape[0]; idx = torch.cat([fu, ft]).long()
         if ftmode == 'dense':
@@ -81,7 +82,10 @@ class Net(torch.nn.Module):
         o = (sq * s.W2[bk]).sum(1) + s.B2[bk] if s.OB > 1 else sq @ s.W2[0] + s.B2[0]
         if s.N1:
             c = torch.cat([xu[:, :s.MI], xt[:, :s.MI]], 1)
-            h1 = (c @ s.MA.t() + s.Ma).clamp(0, 1); h2 = (h1 @ s.MB.t() + s.Md).clamp(0, 1); o = o + h2 @ s.MC
+            h1 = (c @ s.MA.t() + s.Ma).clamp(0, 1)          # every bucket's first MLP layer (OB x N1 outputs: cheap), then the position's own
+            if s.OB > 1: h1 = h1.view(B, s.OB, s.N1).gather(1, bk.view(B, 1, 1).expand(B, 1, s.N1)).squeeze(1)
+            b = bk if s.OB > 1 else torch.zeros_like(bk)
+            h2 = (torch.einsum('bkj,bj->bk', s.MB[b], h1) + s.Md[b]).clamp(0, 1); o = o + (h2 * s.MC[b]).sum(1)
         return o
     @torch.no_grad()
     def clip(s):
@@ -91,16 +95,20 @@ class Net(torch.nn.Module):
         """trainkp.c's file with one king bucket: NUEK / NUEO / NUEM"""
         g = lambda t: t.detach().cpu().double().numpy()
         rq = lambda a, sc, lim, dt: np.clip(np.rint(a * sc), -lim, lim).astype(dt).tobytes()
-        magic = 0x4D45554E if s.N1 else 0x4F45554E if s.OB > 1 else 0x4B45554E
-        hd = [magic, s.H, IN, 1] + ([s.N1, s.N2, s.MI] if s.N1 else [s.OB] if s.OB > 1 else [])
+        # NUES: output buckets AND an MLP per bucket (header: + N1, N2, MI, OB; then per bucket MA, Ma, MB, Md, MC)
+        magic = 0x5345554E if s.N1 and s.OB > 1 else 0x4D45554E if s.N1 else 0x4F45554E if s.OB > 1 else 0x4B45554E
+        hd = [magic, s.H, IN, 1] + ([s.N1, s.N2, s.MI, s.OB] if s.N1 and s.OB > 1 else [s.N1, s.N2, s.MI] if s.N1 else [s.OB] if s.OB > 1 else [])
         with open(path + '.tmp', 'wb') as f:
             f.write(struct.pack(f'<{len(hd)}i', *hd)); f.write(bytes(84))
             f.write(rq(g(s.W1), QA, 32767, '<i2')); f.write(rq(g(s.B1), QA, 32767, '<i4'))
             f.write(rq(g(s.W2), QB, 32767, '<i2')); f.write(np.rint(g(s.B2) * QA * QB).astype('<i4').tobytes())
             if s.N1:
-                f.write(rq(g(s.MA), QB, 127, 'i1')); f.write(np.rint(g(s.Ma) * QA * QB).astype('<i4').tobytes())
-                f.write(rq(g(s.MB), QB, 127, 'i1')); f.write(np.rint(g(s.Md) * QA * QB).astype('<i4').tobytes())
-                f.write(rq(g(s.MC), QB, 32767, '<i2'))
+                MA, Ma = g(s.MA).reshape(s.OB, s.N1, -1), g(s.Ma).reshape(s.OB, s.N1); MB, Md, MC = g(s.MB), g(s.Md), g(s.MC)
+                QM, lim, dt = (1024, 32767, '<i2') if s.OB > 1 else (QB, 127, 'i1')   # NUES: finer MLP weights (x 64 in int8 cost about 10% of the evaluation's spread)
+                for k in range(s.OB):
+                    f.write(rq(MA[k], QM, lim, dt)); f.write(np.rint(Ma[k] * QA * QM).astype('<i4').tobytes())
+                    f.write(rq(MB[k], QM, lim, dt)); f.write(np.rint(Md[k] * QA * QM).astype('<i4').tobytes())
+                    f.write(rq(MC[k], QM, 32767, '<i2'))
         os.replace(path + '.tmp', path)
 
 def tensors(c, dev, lam, lend, lply):
