@@ -512,7 +512,7 @@
     setTimeout(f, 250);
   }   // let fonts, the side column fit and the first frames settle
   // phones: the fixed menu bar's height for the page's top padding (skin.css --ctlh, 2026-11-11)
-  // (2026-11-23 the user) phones (portrait): the portal bar and the menu bar slide away together while the page is scrolled down,
+  // (2026-11-23 the user) phones (portrait): the menu bar slides away under the portal bar (which stays) while the page is scrolled down,
   // and come back as soon as it is scrolled up (or reaches the top). The scroller is .app (shared/infotabs.js) or the page.
   (function barsAutoHide() {
     const de = document.documentElement, mq = matchMedia('(max-width:760px) and (orientation:portrait)');
