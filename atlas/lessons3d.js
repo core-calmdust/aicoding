@@ -5564,12 +5564,96 @@
     };
     return { ask, hintTx: tfHintJa(FA, k), good, ng, own: true };
   }
-  function tfNotesJa(E, g, notes, startSpec) {   // the line's notes in タフリン's words (3D, ja); the AI's verdict kept from the stored note when it changes
+  // (2026-11-23 lesson loop) the openings in タフリン's voice: each opening takes the praise / soft words / push / lead in an order of its own
+  // (tfOpVoice), every "why" is picked so no sentence comes twice in one opening (the line's notes and the 5 problems together: xqPick)
+  const TFV_OP = {
+    askN: '『{n}』の続き！ {s}の次の一手はどれだと思う？',
+    ask: ['{s}の番！ ここはどう指す？', '{s}として、いちばん働く手を当ててみて！', 'さあ、{s}ならここで何を指す？', 'この場面、{s}の一手を考えてみよう！', '{s}になったつもりで、次の手を選んでみて！', 'ここは{s}の腕の見せどころ。どの駒をどこへ？', '{s}の作戦を思い出して。次はどこかな？', '盤をよく見て！ {s}の最善手はどれ？'],
+    cheer: ['いいね、その手！', 'さすが！', 'ばっちり！', 'お見事！', 'やった、正解！', 'ナイス！', 'すごい、大正解！', 'そうそう、それ！', 'いい目してる！', '上手！', '完璧！', 'よく見つけたね！'],
+    soft: ['おしい、あと少し！', '大丈夫！', 'ドンマイ！', 'あと一歩だったの！', 'いい線いってた！', '気にしない、気にしない！', 'よくある迷いだから平気！', '次はきっと見つけられる！', 'いっしょに確かめよう！', 'ここで覚えちゃおう！'],
+    push: ['この調子で次も行こう！', 'どんどん行こう！', 'その勢いで次へ！', '次も見せてね！', 'まだまだいける！', 'わかってきたね、続けよう！'],
+    lead: ['正解は{m}だったの。', 'ここは{m}がいちばん！', '{m}を見てみて！', '本筋は{m}なんだ。', 'ここで指したいのは{m}。', '作戦どおりなら{m}！'],
+    so: ['こっちは{a}から。', '{a}のが、この手のいいところ。', 'この手なら{a}の。', 'これで{a}んだ。', '{a}、それが決め手。', 'こう指せば{a}わけ。'],
+    gap: ['{x}には、そのよさがないの。', '{x}だと、その形が作れないね。', '{x}だと、相手に先に大事なマスを使われちゃう。', '{x}では、そのチャンスを逃しちゃう。', '{x}だと、一手おくれる形なの。'],
+    pr: ['きみの手で{a}の。', 'これで{a}ね！', '{a}のが、この手のねらい。', 'その手なら{a}。作戦がわかってきたね！', '{a}から、ここはこの一手なの。', 'ちゃんと{a}手を選べたね。'],
+  };
+  const TF_WHY_X = {   // more wordings for the openings (8 or so a kind: an opening says one kind up to 8 times)
+    win: [], cap: ['はさみ取りが決まった！ 駒の数で一歩リード。', 'ここは取れる駒をいただく場面。迷わず取るのが正解なの。', '1枚取って、相手の陣形に穴をあける手！'],
+    save: ['相手のはさみ取りを読んで、先に駒をどかす手。', '取られかけた駒の避難。損をしないのが作戦の土台なの。', 'はさまれる前にひょいとかわす、身軽な一手！'],
+    king: ['王さまのお出かけ！ じっとしているより、動いて道をさがすの。', '王が一歩外へ。攻め手は王から目がはなせなくなる！', '王さまで攻め手の輪をつつく手。角をねらう準備ね。'],
+    block: ['角の入口に門番を置く手。王はこのすじから角へ入れないの。', '角へのななめの道に駒を置く手。これで角まわりの守りが一つふえた！', '王の行き先になりそうな角を、先に閉じておく手。', '角を三つの駒で囲う形の、大事な一つ。'],
+    shut: ['王の足もとをせまくする手！ 動ける道がぐっと減ったの。', '王さまの行く手をふさいで、じわっと追いこむ手。', '王の通り道に立って、走れる距離を短くする手！'],
+    widen: ['王の前の駒がどいて、走れる道が開いた！', '道あけの一手。王が外をうかがえるようになるの。', '味方の駒を動かして、王さまの通り道を作る手。', '王の動ける場所がふえる手。攻め手は見はるマスがふえて大変！'],
+    aim: ['相手の駒の向こう側をねらう手。次ははさんで取れるかも！', 'はさみ取りの予告みたいな手。相手は守りに一手使うことになるの。', '取るための下ごしらえ！ 相手の駒の横に、もう片方の手がとどく形。', 'ひとつ先を見た手。次に1枚取れる形ができたの。'],
+    touch: ['相手のすぐ横へ。反対側に置けば取れる形！', 'ぴたっとくっついて、相手の自由をうばう手。'],
+    edge: ['盤のふちへ出て、輪の外に足場を作る手。'], corner: ['角の近くに味方を送って、王の着地点を用意する手。', '角固めがまだのうちに、角のそばへ先回りする手。'],
+    ring: ['輪の穴をふさぐ手。守り手の出口がひとつ減ったの。', '外側の壁を一枚ふやす手。'], out: ['守り手の駒を外へ。攻め手に輪を作るひまをあげないの。'],
+  };
+  const TF_SH = { win: ['勝ちが決まる', '勝負を決められる'], cap: ['相手の駒を取れる', '1枚いただける', '相手の駒が減る'], save: ['ねらわれた駒を守れる', '取られそうな駒を逃がせる', 'はさみ取りをかわせる'],
+    king: ['王の逃げ道が増える', '王が自分で道をさがせる', '王が外をうかがえる'], block: ['角を先に固められる', '角への入口をふさげる', '王が角へ入れなくなる'], shut: ['王の動ける道をせばめられる', '王の行き先を減らせる', '王を追いつめられる'],
+    widen: ['王の通り道が広がる', '王の走れる道がふえる', '王のまわりが空く'], aim: ['次に相手の駒をはさめる', '取るねらいが作れる', '相手に受けの手を使わせられる'], touch: ['相手にはさむ圧力をかけられる', '相手の駒にくっつける'],
+    edge: ['輪を外から乱せる', '盤のふちに足場ができる'], corner: ['角固めをじゃまできる', '王の着地点を用意できる'], ring: ['輪をつめられる', '出口をひとつ減らせる'], out: ['攻め手を散らせる', '盤を広く使える'] };
+  const tfSh = (kd, j, V) => { const A = TF_SH[kd] || TF_SH.ring; const c = V.sh || (V.sh = {}); c[kd] = (c[kd] || 0) + 1; return A[(j + c[kd]) % A.length]; };
+  const TF_HINTV = { win: [a => a ? '王をつかまえ切れる手がありそう！' : '王が一気に角まで行ける道、ないかな？', a => a ? 'とどめの一手、さがしてみて！' : '王さまのゴール、もう見えてない？'],
+    cap: ['はさんで取れる相手の駒をさがしてみて！', '両側から挟める駒、どこかにない？'], save: ['いま、はさまれそうな自分の駒はない？', '相手に取られそうな駒、助けてあげて！', '相手の番になったら、どの駒があぶない？'],
+    king: ['王さま自身を動かすのもアリなんだ。', '王さまをじっとさせておくのはもったいないかも？', '王が動ける道、数えてみて！'], block: ['角のまわり、だいじょうぶ？ 王が入ってこられる道をチェックしてね。', '角の入口、ふさぎ終わってる？', '王が角へ近づくすじ、まだ開いてないかな？'],
+    shut: ['王の動けるマスを数えてみて。いちばん減らせる手はどれ？', '王の通り道に立てる駒はどれ？'], widen: ['王のまわりの駒、じゃまになってない？', '王さまの前をあけてあげる手は？', '王が通れる道、どうしたら増える？'],
+    aim: ['次に相手の駒をはさめるように、準備できる手は？', '取るための下ごしらえ、できる駒はある？', '相手の駒の向こう側、ねらえないかな？'], touch: ['相手の駒のとなりに、行ける駒はある？', '相手にぴたっと寄れる駒をさがしてみて。'],
+    edge: ['盤の端まで出られる駒をさがしてみて。'], corner: ['角に近づける駒はどれ？', '角のそばへ先回りできる駒は？'], ring: ['守り手の出口はどこ？ そこを外からふさごう。', '輪のすき間、どこにある？'], out: ['駒を外へ広げて、盤を広く使ってみて。'] };
+  function tfOpVoice(id) {
+    const seed = shSeed('tf' + id), O = TFV_OP, pc = shPerm(seed, O.cheer.length), ps = shPerm(seed ^ 0x9e37, O.soft.length), pp = shPerm(seed ^ 0x51ed, O.push.length), pl = shPerm(seed ^ 0x2b7f, O.lead.length), pr = shPerm(seed ^ 0x6c1d, O.pr.length), pa = shPerm(seed ^ 0x1f3b, O.ask.length);
+    return { cheer: i => O.cheer[pc[i % pc.length]], soft: i => O.soft[ps[i % ps.length]], push: i => O.push[pp[i % pp.length]], lead: i => O.lead[pl[i % pl.length]], pr: i => O.pr[pr[i % pr.length]], ask: i => O.ask[pa[i % pa.length]], used: new Set(), seed };
+  }
+  const tfRot = (A, o) => A.map((_, q) => A[(o + q) % A.length]);
+  function tfWhyV(F, j, V) {   // the why, in words the opening has not used yet (null when every wording is used)
+    if (F.win === 'escape') return xqPick(V, ['王が角までたどり着いて、守り手の勝ち！']); if (F.win === 'capture') return xqPick(V, ['王をはさみこんで、攻め手の勝ち！']);
+    let L = (TF_WHY[F.k] || TF_WHY.ring).concat(TF_WHY_X[F.k] || []); if (F.k === 'king' && !(F.km1 > F.km0)) L = L.filter(x => !/\{[ab]\}/.test(x));
+    L = L.map(x => x.replace('{a}', F.km0).replace('{b}', F.km1));
+    const fresh = L.filter(x => xqSn(x).every(y => y.trim().length < 6 || !V.used.has(y.trim())));
+    return fresh.length ? xqPick(V, tfRot(fresh, j)) : null;
+  }
+  function tfOpJaV(E, P, name, ck, V, i) {   // one problem of an opening, in the opening's voice V (tfOpVoice); i: the problem's number
+    const pos = E.Pos.from(P.s), A = P.best, sc = new Map(P.sc || []), best = sc.has(A) ? sc.get(A) : Math.max(...(P.sc || [[0, 0]]).map(x => x[1]));
+    const FA = tfFacts(E, pos, A), M = ck('ok'), X = ck('ng'), f = s => s.replace(/\{m\}/g, M).replace(/\{x\}/g, X), side = TF_SIDE(FA.att), j = i + V.seed % 7;
+    const ask = (i === 0 ? TFV_OP.askN : V.ask(i)).replace('{n}', name).replace('{s}', side);
+    const HL = (TF_HINTV[FA.k] || ['金の丸の駒で、いちばん働く場所を考えてみて。']).map(h => typeof h === 'function' ? h(FA.att) : h);
+    const hintTx = xqJoin(xqPick(V, tfRot(HL, j)), i % 3 === 1 ? xqPick(V, tfRot(['金の丸が動かす駒だよ。', '金の丸がついた駒に注目！', '金の丸の駒から考えてみて。'], j)) : '');
+    const why = tfWhyV(FA, j, V) || xqPick(V, [0, 1, 2, 3, 4, 5].map(q => V.pr(i + q).replace('{a}', tfSh(FA.k, j, V))));
+    const goodTx = xqJoin(V.cheer(i), why, i % 2 ? V.push(i) : '');
+    const sh = tfSh(FA.k, j, V);
+    const good = u => { if (u != null && u !== A && sc.has(u)) return f(best - sc.get(u) <= 15 ? xqJoin(V.cheer(i), '{x}もいい手だね！ {m}と同じくらいよく働く手なの。') : xqJoin('悪くない手だね！', `でも{m}なら${sh}から、そっちが本筋なの。`));
+      return goodTx; };
+    const ng = u0 => {
+      let u = u0; if (u == null || u === A) u = ((P.sc || []).find(x => x[0] !== A && best - x[1] > 15) || (P.sc || []).find(x => x[0] !== A) || [])[0];
+      const pk = L => xqPick(V, tfRot(L, j));
+      const out = [V.soft(i), V.lead(i), pk(TFV_OP.so.map(x => x.replace('{a}', sh)))];
+      if (u == null) return f(xqJoin(...out));
+      let F = null; try { F = tfFacts(E, pos, u); } catch (e) {}
+      const d = sc.has(u) ? best - sc.get(u) : null, n0 = out.length;
+      if (F) {
+        if (F.oppWin && !FA.oppWin) out.push(FA.att ? pk(['{x}だと、王に角まで逃げられちゃう！', '{x}では、王の逃げ道が開いて角まで走られるの。', '{x}のすきに、王が角へ逃げこめるの。']) : pk(['{x}だと、王がつかまっちゃう！', '{x}では、王さまがかこまれて負けちゃう。', '{x}のあと、王の逃げ場がなくなっちゃう。']));
+        else if (FA.win && !F.win) out.push(pk(['{x}だと、せっかくの勝ちを見のがしちゃうね。', '{x}では、勝てる場面を逃しちゃう。']));
+        else if (F.oppCap > FA.oppCap) out.push(pk(['{x}だと、きみの駒がはさまれて取られちゃう！', '{x}のあと、相手に1枚はさみ取られるの。', '{x}では、相手の次の手で駒が減っちゃう。']));
+        else if (FA.caps > F.caps) out.push(pk(['{x}だと、取れる駒を見のがしちゃうね。', '{x}では、はさみ取りのチャンスを逃すの。', '{x}だと、取れたはずの駒が残っちゃう。']));
+        else if (FA.att && F.km1 > FA.km1 + 1) out.push(pk([`{x}だと、王の動けるマスが${F.km1}まで増えちゃう。`, `{x}では、王の動ける場所が${F.km1}マスに広がるの。`, `{x}のあと、王に${F.km1}マスも動かれちゃう。`]));
+        else if (!FA.att && F.km1 < FA.km1 - 1) out.push(pk([`{x}だと、王の動けるマスが${F.km1}しかないまま。`, `{x}では、王の行き先が${F.km1}マスだけなの。`, `{x}のあと、王さまは${F.km1}マスに閉じこめられちゃう。`]));
+        else if (FA.k === 'block' && !F.block) out.push(pk(['{x}だと、角のまわりが手うすになっちゃう。', '{x}では、角への入口があいたままなの。', '{x}だと、王が角へ近づく道が残るの。', '{x}では、角固めが一手おくれちゃう。']));
+        else if (FA.thr && !FA.oppCap && F.oppCap) out.push(pk(['{x}だと、ねらわれていた駒がそのまま取られちゃう。', '{x}では、あぶない駒を見すごしてるの。']));
+        else if (FA.aim && !F.aim && !F.caps) out.push(pk(['{x}だと、次のはさみ取りのねらいが作れないの。', '{x}では、相手の駒をねらう形にならないの。', '{x}だと、相手に受けの手を使わせられないの。']));
+        else if (FA.k === 'widen' && !(F.km1 > F.km0)) out.push(pk(['{x}だと、王の通り道は広がらないまま。', '{x}では、王のまわりがつまったままなの。']));
+        else if (FA.k === 'king' && !F.king) out.push(pk(['{x}だと、王さまが動かないぶん、攻め手に輪を作る時間をあげちゃう。', '{x}では、王が出るタイミングを逃しちゃう。']));
+      }
+      if (out.length === n0) out.push(d != null && d <= 15 ? pk(['{x}も悪くないけど、この作戦の本筋はこっちなの。', '{x}もありだけど、作戦の流れからは少しはずれるの。']) : pk(TFV_OP.gap));
+      return f(xqJoin(...out));
+    };
+    return { ask, hintTx, good, ng, own: true };
+  }
+  function tfNotesJa(E, g, notes, startSpec, V) {   // the line's notes in タフリン's words (3D, ja); the AI's verdict kept from the stored note when it changes
     const out = {}, cnt = {}; let pos = E.Pos.from(startSpec), n = 0, lastAi = '';
     g.study.line.forEach((m, i) => { const o = notes[String(i)];
       if (o) { const ai = (String(o.ja || o || '').match(/\((?:AI)[:：]\s*([^)]+)\)|（AI[:：]\s*([^）]+)）/) || []).slice(1).find(Boolean); let F = null; try { F = tfFacts(E, pos, m); } catch (e) {}
         const kd = F ? F.k : ''; cnt[kd] = (cnt[kd] || 0) + 1;
-        let s = F ? (n ? TF_SIDE(F.att) + '：' : '') + tfWhyJa(F, cnt[kd] + g.id.charCodeAt(1)) : String(o.ja || o || '');
+        let s = F ? (n ? TF_SIDE(F.att) + '：' : '') + ((V && tfWhyV(F, cnt[kd] + g.id.charCodeAt(1), V)) || tfWhyJa(F, cnt[kd] + g.id.charCodeAt(1))) : String(o.ja || o || '');
         if (n === 0) s = `『${(g.title || {}).ja || ''}』のはじまり！ ` + TF_SIDE(F ? F.att : true) + '：' + s.replace(/^[^：]*：/, '');
         lastAi = ai || lastAi;
         out[String(i)] = { ja: s }; n++; }
@@ -5794,10 +5878,10 @@
       const it = g.intro && (g.intro[lang] || g.intro.en), hist = Array.isArray(it) ? it[0] : it || '';
       const probs = shuffle(g.problems || []).slice(0, 5), E = window.TaflEngine, ja = lang === 'ja' && E;
       const start = { v: 'copenhagen', b: E && E.START && E.START.copenhagen ? E.START.copenhagen : null, side: 1 };
-      let nj = null; if (ja) try { nj = tfNotesJa(E, g, notes, start); } catch (e) { console.warn('[lessons3d] tafl notes', e); }
+      const TV = ja ? tfOpVoice(g.id) : null; let nj = null; if (ja) try { nj = tfNotesJa(E, g, notes, start, TV); } catch (e) { console.warn('[lessons3d] tafl notes', e); }
       return { id: g.id, title: L(g.title, lang), intro: ja && TFJ_OP.intro[g.id] ? TFJ_OP.intro[g.id] : hist, start: { spec: start, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes: nj || notes,
         probs: probs.map((P, i) => { const o = { pos: { spec: P.s, me: P.s.side === 2 ? 2 : 1 }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: E ? [E.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: TFM('ok', lang) }) };
-          if (ja) try { Object.assign(o, tfOpJa(E, P, L(g.title, 'ja'), g.id.charCodeAt(1) * 2 + i, k => TFM(k, lang))); } catch (e) { console.warn('[lessons3d] tafl opening', e); }
+          if (ja) try { Object.assign(o, tfOpJaV(E, P, L(g.title, 'ja'), k => TFM(k, lang), TV, i)); } catch (e) { console.warn('[lessons3d] tafl opening', e); }
           return o; }),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= max * .75; pr[g.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
