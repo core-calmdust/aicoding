@@ -206,7 +206,7 @@
   // phones: the gacha page has two tabs, ガチャ and ショップ (html[data-gs]); PC shows both, the shop below the gacha
   function gsSet(v) { document.documentElement.dataset.gs = v; document.querySelectorAll('#gsSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v)); }
   document.querySelectorAll('#gsSeg button').forEach(b => b.onclick = () => { gsSet(b.dataset.v); if (b.dataset.v === 'gacha' && !busy) renderGacha(); window.scrollTo({ top: 0 }); });
-  let muRoom = null;   // (#map / #tree: open the museum on that room)
+  let muRoom = null, muEx = null;   // (muEx: an exhibit to open in the collection room, #museum/<id>)   // (#map / #tree: open the museum on that room)
   function go(k, push = true) {
     const toShop = k === 'shop'; if (toShop) k = 'gacha';
     if (k === 'map' || k === 'tree' || k === 'gallery') { muRoom = k; k = 'museum'; }
@@ -617,7 +617,7 @@
   // shared/atlas-updates-archive.js (tools/news-archive.js), loaded only when its button is pressed; sorted newest / oldest / by game
   let arcP = null;
   const arcLoad = () => arcP || (arcP = new Promise(res => { const sc = document.createElement('script'); sc.src = '../shared/atlas-updates-archive.js?v=' + ARC_V; sc.onload = sc.onerror = () => res(window.ATLAS_UPDATES_ARCHIVE || []); document.head.appendChild(sc); }));
-  const ARC_V = 2;
+  const ARC_V = 3;
   const ARCT = {
     ja: ['過去の更新を見る', 'アーカイブ', '最近の更新', '新しい順', '古い順', 'ゲーム別'],
     en: ['See older updates', 'Archive', 'Recent updates', 'Newest', 'Oldest', 'By game'],
@@ -3264,6 +3264,7 @@
   function renderMuseum() {
     if (!window.AtlasMuseum) return;
     const room = muRoom; muRoom = null;
+    if (muEx) { const id = muEx; muEx = null; let n = 0; const tryOpen = () => { if (window.AtlasGallery && document.querySelector('#pg-museum .gxgrid .gxc')) AtlasGallery.open(id); else if (++n < 150) setTimeout(tryOpen, 100); }; setTimeout(tryOpen, 0); }
     AtlasMuseum.render($('pg-museum'), { games: A_.GAMES, lang, gname, no: gno, art: g => artImg(g), open: (id, img, o) => { if (o && o.rule) { pref[id + ':rule'] = o.rule; if (o.size) pref[id + ':size'] = o.size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} }
         if (o && o.board) try { if (window.Table3D && Table3D.setBoard && Table3D.BOARDS && Table3D.BOARDS[id]) Table3D.setBoard(id, o.board); else localStorage.setItem('atlas-' + id + '-look', o.board); } catch (x) {}   // (a board of the game — air hockey: table hockey's エアホッケー台; tables3d.js may not be in yet: its own key)
         flyOpen(id, img); }, room,
@@ -3313,8 +3314,9 @@
       addEventListener('scroll', chk, { passive: true }); addEventListener('resize', chk); } }
   applyLang(); refresh(); dsegPos();
   const [h0, h1] = (location.hash || '#home').slice(1).split('/');
-  go(h0, false);
+  if (h0 === 'museum' && h1) { muEx = h1; go('gallery', false); }   // #museum/<exhibit>: the collection room with that exhibit open (the top page's museum games, 2026-11-23)
+  else go(h0, false);
   history.replaceState(null, '', '#' + page);
-  if (h1) openBoard(h1);
+  if (h1 && h0 !== 'museum') openBoard(h1);
   welcome();
 })();
