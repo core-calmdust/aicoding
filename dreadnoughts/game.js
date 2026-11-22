@@ -581,9 +581,12 @@ function renderFleets2() {
 }
 // a skill's card above the dock (hover on PC, the armed skill on phones)
 function skillTip(i) {
-  const el = $('#skTip'); if (i == null || !G || !G.st) { el.classList.add('hide'); return; }
+  const el = $('#skTip'); el.className = ''; $('#strip').style.visibility = ''; if (i == null || !G || !G.st) { el.classList.add('hide'); return; }
   const s = G.st.sides[0].ships[i]; el.innerHTML = shipCard(s.t, { tag: 'div', foot: PHONE() ? `<span class="foot why gold">${t('u.tap2')}</span>` : '' }) + (PHONE() ? '<button id="tipX" aria-label="Close">×</button>' : ''); el.classList.remove('hide'); fillPortraits(el);
-  if (PHONE()) { el.style.bottom = (innerHeight - $('#dock').getBoundingClientRect().top + 6) + 'px'; el.querySelector('#tipX').onclick = () => { G.armed = null; hover = aimTap = -1; skillTip(null); render(); }; return; }
+  if (PHONE()) {   // phones: a compact bar in the fleet strip's place (same size), so the sea stays clear to aim
+    const T = E.TYPES[s.t], st = $('#strip'); el.className = 'arm'; el.innerHTML = `${cardArt(T)}<div class="tx"><b>${icon(abilityKey(T))}${shipSkillName(T)}<small>${t('ship.' + s.t)}</small></b><p>${shipSkillText(T)}</p></div><button id="tipX" aria-label="Close">×</button>`;
+    el.style.bottom = st.style.bottom; el.style.height = st.offsetHeight + 'px'; st.style.visibility = 'hidden';
+    el.querySelector('#tipX').onclick = e => { e.stopPropagation(); G.armed = null; hover = aimTap = -1; skillTip(null); render(); }; return; }
   const b = $(`#dock .sk[data-i="${i}"]`); if (b) { const r = b.getBoundingClientRect(), w = el.offsetWidth; el.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; el.style.bottom = (innerHeight - r.top + 10) + 'px'; }
 }
 // ---------- input on the sea ----------
@@ -682,7 +685,7 @@ function boot() {
   if (restore()) { phaseUI(); render(); World.refit(); World.sail(false); World.show(G.view ? 'z1' : 'z0'); if (G.phase === 'deploy') enterDeploy(); else if (G.phase === 'battle' && G.st.turn === 1) aiTurn(); else if (G.phase === 'over') showResult(); }
   else { G = newG({ phase: 'title' }); phaseUI(); syncWorld(); World.sail(true); World.show('title'); }
   setTimeout(() => { $('#load').classList.add('out'); setTimeout(() => $('#load').remove(), 900); }, 400);
-  window.DN = { G: () => G, S, t, World, engage, startBattle, toTitle };
+  window.DN = { G: () => G, S, t, World, engage, startBattle, toTitle, render };
 }
 boot();
 })();
