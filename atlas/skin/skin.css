@@ -455,9 +455,10 @@ html.atlas-skin:not(.atlas-land) .card.controls .btn:disabled{background:#fbf7ee
   html.atlas-skin:not(.atlas-land) body:not(#_):not(#_) .card.controls:not(#_){border-radius:0!important;border-width:0 0 2px!important;border-style:solid!important;margin:0!important}
   /* (2026-11-23 the user) no line between the portal bar and the menu bar: one block (the line comes back when a puzzle / lesson hides the bar) */
   html.atlas-skin.ctl-on:not(.atlas-land) body .atlas-top:not(#_){border-bottom-color:transparent!important}
-  /* (2026-11-23 the user) scrolling down slides the portal bar and the menu bar away together, scrolling up brings them back (common.js barsAutoHide) */
-  html.atlas-skin:not(.atlas-land) .atlas-top,html.atlas-skin:not(.atlas-land) body .card.controls{transition:translate .28s cubic-bezier(.2,.7,.2,1),box-shadow .28s}
-  html.atlas-skin.bars-hid:not(.atlas-land) .atlas-top,html.atlas-skin.bars-hid:not(.atlas-land) body .card.controls{translate:0 calc(-56px - var(--ctlh,64px) - 16px);pointer-events:none}
+  /* (2026-11-23 the user) scrolling down slides the menu bar away under the portal bar (the portal bar stays, 2026-11-23 the user), scrolling up brings them back (common.js barsAutoHide) */
+  html.atlas-skin:not(.atlas-land) body .card.controls{transition:translate .28s cubic-bezier(.2,.7,.2,1),box-shadow .28s}
+  html.atlas-skin.bars-hid:not(.atlas-land) body .card.controls{translate:0 calc(-1 * var(--ctlh,64px) - 16px);pointer-events:none}
+  html.atlas-skin.ctl-on.bars-hid:not(.atlas-land) body .atlas-top:not(#_){border-bottom-color:var(--sk-line,#efe3c8)!important}   /* (the portal bar stays: only the menu bar slides under it, and the bar's own line comes back) */
   html.atlas-skin:not([data-skin]):not(.atlas-land) body:not(#_):not(#_) .card.controls:not(#_){border-color:#efe3c8!important;box-shadow:0 8px 16px -10px rgba(80,40,0,.35)!important}
 }
 /* shogi, phones (portrait), the 3D board: sized so the whole board area — both komadai bars and the board — fits between the
