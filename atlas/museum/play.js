@@ -149,7 +149,8 @@
     // can lie lengthwise down the screen (turned a quarter, your side to the left) or across; the player's choice is kept, otherwise a tall case
     // (a phone held upright) gets it lengthwise. area: what has to be in view, [x0, x1, z0, z1] in the exhibit's cm (else the whole exhibit), at the height `top`.
     const tall = () => V.cam.aspect < .9, OK = 'atlas-museum-orient';
-    const vert = () => { if (!def.view.long || CM) return false;   // (a rules course: always across, the guide's panel below)
+    const vert = () => { if (!def.view.long || CM || matchMedia('(min-width:900px) and (not (pointer:coarse))').matches) return false;   // (PC: always across)
+        // (a rules course: always across, the guide's panel below)
       let o = ''; try { o = localStorage.getItem(OK) || ''; } catch (e) {} return o ? o === 'v' : tall(); };
     const box = new TH.Box3().setFromObject(V.obj), A = def.area || [box.min.x, box.max.x, box.min.z, box.max.z], AY = def.top != null ? def.top : (V.obj.userData.play && V.obj.userData.play.top) || box.max.y;
     const tgt0 = V.tgt.clone(); V.tgt.copy(V.obj.localToWorld(new TH.Vector3((A[0] + A[1]) / 2, AY, (A[2] + A[3]) / 2))); V.pitMax = 1.52;
