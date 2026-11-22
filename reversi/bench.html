@@ -108,7 +108,7 @@ async function isolate() {
 }
 
 async function loadWeights() {
-  const res = await fetch('weights.bin.gz?v=4'); let buf = await res.arrayBuffer();
+  const res = await fetch('weights.bin.gz?v=5'); let buf = await res.arrayBuffer();
   const u8 = new Uint8Array(buf, 0, 2);
   if (u8[0] === 0x1f && u8[1] === 0x8b) buf = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   const meta = await fetch('weights.json').then(r => r.json()).catch(() => ({ nphase: 30 }));

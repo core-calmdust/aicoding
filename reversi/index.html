@@ -1889,7 +1889,7 @@ function save() {
 // ====================================================================== engine workers
 let weights = null, weightsReady;
 const NPHASE_DEFAULT = 12;
-// (2026-11-15) weights.pk.bin.gz (tools/pack-weights.py): phase differences, zigzag, byte planes → the v4 int16 weights, same values
+// (weights.pk.bin.gz, 2026-11-15 to 2026-11-23: a packed copy of the v4 weights. The v5 file, weights.bin.gz, is packed in itself — engine.js decodeV5 — and is read as it is; rvUnpack is no longer called)
 function rvUnpack(buf) {
   const h = new DataView(buf, 0, 8);
   if (h.getUint8(0) !== 82 || h.getUint8(1) !== 86 || h.getUint8(2) !== 90 || h.getUint8(3) !== 49) return null;
@@ -1899,14 +1899,8 @@ function rvUnpack(buf) {
   return { buffer: w.buffer, nphase: nph };
 }
 weightsReady = (async () => {
-  try {   // (2026-11-15) the packed copy first (8.6MB → 6.3MB, the same values); the plain file if it fails
-    if ('DecompressionStream' in window) {
-      const r0 = await fetch('weights.pk.bin.gz?v=1').catch(() => null);
-      if (r0 && r0.ok) { const w0 = rvUnpack(await new Response(r0.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); if (w0) return (weights = w0); }
-    }
-  } catch (e) {}
   try {
-    const res = await fetch('weights.bin.gz?v=4');
+    const res = await fetch('weights.bin.gz?v=5');
     if (!res.ok) throw new Error('no weights');
     let buf = await res.arrayBuffer();
     const u8 = new Uint8Array(buf, 0, 2);

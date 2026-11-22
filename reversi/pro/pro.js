@@ -2,7 +2,7 @@
 // The page is made cross-origin isolated by coi-sw.js (SharedArrayBuffer); without it, one thread (the normal engine).
 (() => {
   'use strict';
-  const VER = '?v=31';
+  const VER = '?v=32';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { back: '← リバーシ', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -60,7 +60,7 @@
   const HC = navigator.hardwareConcurrency || 4, MAXT = Math.max(1, Math.min(32, HC));
   const MT = { X: null, mem: null, module: null, base: 0, workers: [], weights: null, ctl: null };
   const CFG = { depth: 60, exact: 22, wld: 24, mpc: 1 };   // like level 20, solving a little earlier (several threads)
-  // (2026-11-15) weights.pk.bin.gz (tools/pack-weights.py): phase differences, zigzag, byte planes → the v4 int16 weights, same values
+  // (weights.pk.bin.gz, 2026-11-15 to 2026-11-23: a packed copy of the v4 weights; the v5 weights.bin.gz is read as it is and rvUnpack is no longer called)
   function rvUnpack(buf) {
     const h = new DataView(buf, 0, 8);
     if (h.getUint8(0) !== 82 || h.getUint8(1) !== 86 || h.getUint8(2) !== 90 || h.getUint8(3) !== 49) return null;
@@ -70,8 +70,7 @@
     return { buffer: w.buffer, nphase: nph };
   }
   async function loadWeights() {
-    try { const r0 = await fetch('../weights.pk.bin.gz?v=1'); if (r0.ok) { const w0 = rvUnpack(await new Response(r0.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); if (w0) return w0; } } catch (e) {}   // (the packed copy, 2026-11-15)
-    const res = await fetch('../weights.bin.gz?v=4');
+    const res = await fetch('../weights.bin.gz?v=5');
     const buf = await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
     const meta = await fetch('../weights.json').then(r => r.json()).catch(() => ({ nphase: 12 }));
     return { buffer: buf, nphase: meta.nphase };
