@@ -127,7 +127,7 @@
         ["A corrente de madrepérola", "Na moldura, volutas de madrepérola em S alternam com pequenas estrelas sobre tartaruga."],
         ["Escudos dos cantos", "Em cada canto, a corrente se liga por um motivo em forma de escudo."],
         ["A borda de osso e as laterais", "A borda externa é uma faixa de osso unida em espinha; as laterais das folhas têm uma fileira de hexágonos de madrepérola."]],
-      model: "Medidas segundo o registo do museu. A disposição da incrustação segue as suas fotografias.",
+      model: "Medidas segundo o registo do museu. A incrustação é tirada das suas fotografias; o perfil da moldura e a ordem das placas nos cantos são estimativas.",
       src: [["Victoria and Albert Museum, \"Games board\" 861-1907", "https://collections.vam.ac.uk/item/O370652/games-board-unknown"]] },
     kofukuji: { name: "Peças de shogi do antigo recinto do Kōfuku-ji", alt: "As peças de shogi mais antigas do Japão e uma tabuleta com seus nomes escritos", date: "Fim do século XI–século XII", where: "Japão (Nara)", found: "Escavações no antigo recinto do Kōfuku-ji, Noborioji-chō, Nara: a área de Kisshōin (1992, uma cova em forma de poço) e a área de Kanzen'in (2013, um poço e uma cova)",
       museum: "Museu do Instituto Arqueológico de Kashihara, Província de Nara", no: "Bem Cultural Tangível da Província de Nara (2022, 31 itens)", mat: "Madeira, tinta nanquim", size: "Peças de cerca de 2,5 cm de comprimento (o elefante bêbado: cerca de 2,5 × 1,5 cm, 2 mm de espessura)",
@@ -141,7 +141,7 @@
         ["A tabuleta de exercício", "Uma tira de madeira com os nomes das peças — 酔像, 金将, 歩兵 e outros — escritos repetidas vezes."],
         ["A haste “Tengi 6”", "A etiqueta na cabeça de uma haste de rolo, datada de Tengi 6 (1058): a chave para a idade das peças de 1992."],
         ["A haste “Jōtoku 2”", "Uma haste de rolo datada de Jōtoku 2 (1098), do poço de 2013."]],
-      model: "Os tipos e o número de peças, o que dizem a tabuleta e as hastes e as datas seguem o registro da Província de Nara; a disposição segue a fotografia do museu. O tamanho e o contorno de cada peça, quanto da tinta sobrevive, e o tamanho da tabuleta e das hastes e a posição da escrita são estimativas.",
+      model: "Os tipos e o número de peças, o que dizem a tabuleta e as hastes e as datas seguem o registro da Província de Nara; a disposição segue a fotografia do museu. O tamanho e o contorno de cada peça, a caligrafia e quanto da tinta sobrevive, e o tamanho da tabuleta e das hastes e a posição da escrita são estimativas.",
       src: [["Província de Nara, “令和4年度 県指定文化財の概要 興福寺旧境内出土将棋駒・習書木簡・題箋軸”", "https://www.pref.nara.jp/secure/292352/R4-6-shogikoma.pdf"], ["Associação Japonesa de Shogi, “日本将棋の歴史”", "https://www.shogi.or.jp/history/story/"]] },
   },
 };

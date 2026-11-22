@@ -127,7 +127,7 @@
         ["Rantai mutiara", "Di bingkai, sulur mutiara berbentuk S bergantian dengan bintang kecil di atas kulit penyu."],
         ['Perisai sudut', 'Di setiap sudut, rantai disambung oleh motif berbentuk perisai.'],
         ["Tepi tulang dan sisi", "Tepi luar berupa pita tulang yang disambung bentuk V; sisi kedua daun papan dihiasi sederet segi enam mutiara."]],
-      model: "Ukuran mengikuti catatan museum. Tata letak tatahan mengikuti foto museum.",
+      model: "Ukuran mengikuti catatan museum. Tata letak tatahan diambil dari foto museum; profil bingkai dan urutan keping kerang di sisi papan merupakan perkiraan.",
       src: [['Victoria and Albert Museum, "Games board" 861-1907', 'https://collections.vam.ac.uk/item/O370652/games-board-unknown']] },
     kofukuji: { name: 'Bidak Shogi dari Bekas Kompleks Kōfuku-ji', alt: 'Bidak shogi tertua di Jepang, dan sebuah bilah kayu bertuliskan nama-namanya', date: 'Akhir abad ke-11–abad ke-12', where: 'Jepang (Nara)', found: 'Penggalian di bekas kompleks Kōfuku-ji, Noborioji-chō, Nara: area Kisshōin (1992, lubang menyerupai sumur) dan area Kanzen\'in (2013, sebuah sumur dan sebuah lubang)',
       museum: 'Museum Institut Arkeologi Kashihara, Prefektur Nara', no: 'Benda Budaya Berwujud Prefektur Nara (2022, 31 buah)', mat: 'Kayu, tinta', size: 'Bidak panjangnya sekitar 2,5 cm (gajah mabuk: sekitar 2,5 × 1,5 cm, tebal 2 mm)',
@@ -141,7 +141,7 @@
         ['Bilah latihan menulis', 'Bilah kayu dengan nama-nama bidak — 酔像, 金将, 歩兵, dan lainnya — yang ditulis berulang-ulang.'],
         ['Gagang “Tengi 6”', 'Label di kepala gagang gulungan, bertanggal Tengi 6 (1058): kunci untuk usia bidak tahun 1992.'],
         ['Gagang “Jōtoku 2”', 'Gagang gulungan bertanggal Jōtoku 2 (1098), dari sumur tahun 2013.']],
-      model: 'Jenis dan jumlah bidak, isi tulisan pada bilah dan gagang gulungan, serta penanggalannya mengikuti catatan Prefektur Nara; susunannya mengikuti foto museum. Ukuran dan garis luar setiap bidak, seberapa banyak tinta yang tersisa, serta ukuran bilah dan gagang dan letak tulisannya merupakan perkiraan.',
+      model: 'Jenis dan jumlah bidak, isi tulisan pada bilah dan gagang gulungan, serta penanggalannya mengikuti catatan Prefektur Nara; susunannya mengikuti foto museum. Ukuran dan garis luar setiap bidak, gaya tulisan dan seberapa banyak tinta yang tersisa, serta ukuran bilah dan gagang dan letak tulisannya merupakan perkiraan.',
       src: [['Prefektur Nara, “令和4年度 県指定文化財の概要 興福寺旧境内出土将棋駒・習書木簡・題箋軸”', 'https://www.pref.nara.jp/secure/292352/R4-6-shogikoma.pdf'], ['Asosiasi Shogi Jepang, “日本将棋の歴史”', 'https://www.shogi.or.jp/history/story/']] },
   },
 };

@@ -127,7 +127,7 @@
         ["La cadena de nácar", "En la orla, roleos de nácar en forma de S alternan con pequeñas estrellas sobre carey."],
         ["Escudos de las esquinas", "En cada esquina, la cadena se une mediante un motivo en forma de escudo."],
         ["El borde de hueso y los cantos", "El borde exterior es una banda de hueso unida en espiga; los cantos de las hojas llevan una fila de hexágonos de nácar."]],
-      model: "Medidas según el registro del museo. La disposición de la incrustación sigue sus fotografías.",
+      model: "Medidas según el registro del museo. La incrustación se toma de sus fotografías; el perfil del marco y el orden de las placas en los cantos son estimaciones.",
       src: [["Victoria and Albert Museum, «Games board» 861-1907", "https://collections.vam.ac.uk/item/O370652/games-board-unknown"]] },
     kofukuji: { name: "Piezas de shogi del antiguo recinto del Kōfuku-ji", alt: "Las piezas de shogi más antiguas de Japón y una tablilla con sus nombres escritos", date: "Finales del siglo XI–siglo XII", where: "Japón (Nara)", found: "Excavaciones en el antiguo recinto del Kōfuku-ji, Noborioji-chō, Nara: la zona de Kisshōin (1992, una fosa en forma de pozo) y la zona de Kanzen'in (2013, un pozo y una fosa)",
       museum: "Museo del Instituto Arqueológico de Kashihara, prefectura de Nara", no: "Bien Cultural Tangible de la Prefectura de Nara (2022, 31 objetos)", mat: "Madera, tinta", size: "Piezas de unos 2,5 cm de largo (el elefante borracho: unos 2,5 × 1,5 cm, 2 mm de grosor)",
@@ -141,7 +141,7 @@
         ["La tablilla de práctica", "Una tablilla de madera con los nombres de piezas —酔像, 金将, 歩兵 y otros— escritos una y otra vez."],
         ["La varilla «Tengi 6»", "La etiqueta en la cabeza de una varilla de rollo, fechada en Tengi 6 (1058): la clave de la edad de las piezas de 1992."],
         ["La varilla «Jōtoku 2»", "Una varilla de rollo fechada en Jōtoku 2 (1098), del pozo de 2013."]],
-      model: "Los tipos y el número de piezas, lo que dicen la tablilla y las varillas y las fechas siguen el registro de la prefectura de Nara; la disposición sigue la fotografía del museo. El tamaño y el contorno de cada pieza, cuánta tinta se conserva, y el tamaño de la tablilla y las varillas y la colocación de su escritura son estimaciones.",
+      model: "Los tipos y el número de piezas, lo que dicen la tablilla y las varillas y las fechas siguen el registro de la prefectura de Nara; la disposición sigue la fotografía del museo. El tamaño y el contorno de cada pieza, la caligrafía y cuánta tinta se conserva, y el tamaño de la tablilla y las varillas y la colocación de su escritura son estimaciones.",
       src: [["Prefectura de Nara, «令和4年度 県指定文化財の概要 興福寺旧境内出土将棋駒・習書木簡・題箋軸»", "https://www.pref.nara.jp/secure/292352/R4-6-shogikoma.pdf"], ["Asociación Japonesa de Shogi, «日本将棋の歴史»", "https://www.shogi.or.jp/history/story/"]] },
   },
 };
