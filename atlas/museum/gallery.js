@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 117;
+  const V = 118;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -341,9 +341,7 @@
     const S = V3.sph; let moving = false;
     if (V3.tw) { const k = Math.min(1, (now - V3.tw.t0) / V3.tw.ms), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; S.yaw = V3.tw.a.yaw + (V3.tw.b.yaw - V3.tw.a.yaw) * e; S.pit = V3.tw.a.pit + (V3.tw.b.pit - V3.tw.a.pit) * e; S.d = V3.tw.a.d + (V3.tw.b.d - V3.tw.a.d) * e; if (k >= 1) V3.tw = null; moving = true; }
     if (!V3.drag && (Math.abs(V3.vel.yaw) > 1e-4 || Math.abs(V3.vel.pit) > 1e-4)) { S.yaw += V3.vel.yaw; S.pit += V3.vel.pit; V3.vel.yaw *= .9; V3.vel.pit *= .9; moving = true; }
-    if (V3.spin && !V3.drag && !V3.tw && awake()) { S.yaw += dt * .16; moving = true;
-      // (one full turn, then it rests: a case left open no longer draws for ever — the button starts it again)
-      V3.turned = (V3.turned || 0) + dt * .16; if (V3.turned > Math.PI * 2 && !V3.playing) { V3.spin = false; V3.turned = 0; const sb = V3.ov.querySelector('[data-k="spin"]'); if (sb) sb.classList.remove('on'); } }
+    if (V3.spin && !V3.drag && !V3.tw && awake()) { S.yaw += dt * .16; moving = true; }   // (the turntable keeps turning until it is touched or switched off: 2026-11-23, the user's choice)
     if (V3.flip && V3.flip.t !== V3.flip.to) {   // turning a two-sided piece over: lift, roll half a turn, set down
       const F = V3.flip; F.t = F.to > F.t ? Math.min(F.to, F.t + dt / .9) : Math.max(F.to, F.t - dt / .9);
       const k = F.t < .5 ? 2 * F.t * F.t : 1 - Math.pow(-2 * F.t + 2, 2) / 2;
