@@ -126,7 +126,12 @@ function gameLevel(raw, ls) {
   const seen = [];   // [{ t, where }]
   raw.forEach((L, li) => { let hit = 0; const why = [];
     (L.probs || []).forEach((p, pi) => { const t = tok(p.pos || ''); if (t.length < 9) return;
-      const m = seen.find(o => o.t.length === t.length && o.t.reduce((a, c, k) => a + (c !== t[k]), 0) <= 3);
+      // (2026-11-23: on a nearly empty board the stone or two that differ are the whole position — ヘックスのスワップ「中央の石」と
+      //  「隅の石」、空の盤と石2つの盤は別の問題。似ているとみるのは、違うマスが3つ以下で、しかも同じ場所の同じ駒が1つ以上あるときだけ。
+      //  空きマス（いちばん多い記号）と、文字の駒がある局面での数字（盤の大きさ・手番などの値）は「同じ駒」に数えない)
+      const emp = (() => { const c = new Map(); t.forEach(x => c.set(x, (c.get(x) || 0) + 1)); return [...c].sort((a, b) => b[1] - a[1])[0][0]; })();
+      const letters = t.some(x => /[^\d\W]/.test(x) && x !== emp && !/[a-z]{2}/.test(x));
+      const m = seen.find(o => { if (o.t.length !== t.length) return false; let d = 0, sh = 0; t.forEach((c, k) => { if (o.t[k] !== c) d++; else if (c !== emp && !(letters && /^\d+$/.test(c))) sh++; }); return d <= 3 && sh >= 1; });
       if (m) { hit++; why.push(`q${pi + 1} ≈ ${m.where}`); } else seen.push({ t, where: `${L.title} q${pi + 1}` }); });
     if (hit) { ls[li].pen.push([Math.min(18, 6 * hit), 'same position as another problem: ' + why.slice(0, 2).join(', ')]); } });
   const plain2 = s => String(s || '').replace(/<[^>]+>/g, '').replace(/♘e2–e4/g, '').replace(/\s/g, '');   // (♘e2–e4: the tool's stand-in for a move name, not the guide's words)

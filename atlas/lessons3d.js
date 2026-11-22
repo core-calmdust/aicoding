@@ -4839,11 +4839,11 @@
       adj: '自分の石とつながらず、切られるすきが残る', center: 'まん中を相手に先に取られちゃう', open: '広い場所を相手に先に取られちゃう', edge: '辺までの道が、まだ切られやすい',
       intrude: '相手のブリッジがそのまま残っちゃう', save: '割りこまれたブリッジが切られちゃう', swap: '強い赤石が、相手のまま残っちゃう' },
   };
-  const HX_CH = {
-    good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりだペン！', 'やったね！'],
-    push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次へ行こうペン！'],
-    soft: ['大丈夫！', 'ドンマイだペン！', null, '気にしない、気にしない！', null],
-    tail: [null, null, 'これで覚えちゃおう！', null, '次はきっと見つけられるペン！'],
+  const HX_CH = {   // (2026-11-23 lesson loop: each lesson its own order of praise / soft words / push / tail — hxVoice; the same order in every lesson read as a stamp)
+    good: ['いいね！', 'さすが！', 'お見事！', 'ばっちりだペン！', 'やったね！', 'すごい、よく見つけたね！', 'いい目をしてる！', 'その感じ！', 'ナイスな一手！', '冴えてるペン！', 'いい手だね！', 'そうそう、それ！'],
+    push: [null, '次もこの調子で行こう！', null, 'どんどん行こう！', 'その勢いで次へ行こうペン！', null, 'まだまだ行けるペン！'],
+    soft: ['大丈夫！', 'ドンマイだペン！', 'おしい！', '気にしない、気にしない！', 'あと少しだった！', '平気平気、ここで覚えよう！', 'いい線いってたペン！', 'よくある見落とし、大丈夫！', 'ドンマイ！', 'いっしょに見てみよう！'],
+    tail: [null, null, 'これで覚えちゃおう！', null, '次はきっと見つけられるペン！', null, 'ここ、大事なところだペン！'],
     right: ['{m}なら、{a}んだ。', '{m}が正解！ {a}ペン。', 'ここは{m}。そこなら{a}から！', '{m}を見て。あそこなら{a}でしょ？', '答えは{m}だった。{a}んだ。'],
     why: ['{a}！', 'その手なら{a}ね。', '{a}ペン！', 'ほら、{a}でしょ？', 'これで{a}んだ。'],
     you: ['{x}だと、{b}。', 'きみの{x}だと、{b}んだ。', '{x}では{b}！', '{x}に打つと、{b}。', '{x}だと{b}んだ。'],
@@ -4858,6 +4858,8 @@
   function hxLsJa(E, s, P, i, pts) {
     const id = s.id, H = HXJ_LS, C = HX_CH, pos = E.Pos.from(P.s), k = i % 5, me = pos.side, sp = P.s, N = sp.n * sp.n;
     const pk = (L, j) => L[((j % L.length) + L.length) % L.length], f2 = (t, v) => fill(t, v), M = HXM('ok', 'ja'), X = HXM('ng', 'ja'), G = HXM('hl', 'ja');
+    const sd = shSeed('hx' + id), vo = (L, x) => { const p = shPerm(sd ^ x, L.length); return j => L[p[((j % L.length) + L.length) % L.length]]; };
+    const VC = { good: vo(C.good, 0x11), soft: vo(C.soft, 0x9e37), push: vo(C.push, 0x51ed), tail: vo(C.tail, 0x2b7f) };
     const ask = pk(H.ask[id] || [''], k), hintTx = pk(H.hint[id] || [''], k);
     if (P.ok) {   // one-move tactics: any cell in P.ok
       const ok = P.ok, A = ok[0], n0 = pos.need(me), FA0 = hxLF(pos, A);
@@ -4879,10 +4881,10 @@
         if (cut > FA0.needMe && cut < 99) return [pk([`相手に${M}を取られると、道があと${cut}マス必要になっちゃう`, `${M}を相手にふさがれて、道があと${cut}マスに遠のく`, `相手が${M}に打つと、道があと${cut}マス残っちゃう`], j), hl];
         return [pk(['まだ相手にふさぐ手が残っちゃう', '相手に守られて、つながらない'], j), hl];
       };
-      const good = function (u) { this._hl = []; const F = ok.includes(u) ? hxLF(pos, u) : FA0; return [pk(C.good, k), f2(pk(C.why, k), { a: why(F, k) }), pk(C.push, k)].filter(Boolean).join(' '); };
+      const good = function (u) { this._hl = []; const F = ok.includes(u) ? hxLF(pos, u) : FA0; return [VC.good(k), f2(pk(C.why, k), { a: why(F, k) }), VC.push(k)].filter(Boolean).join(' '); };
       const ng = function (u0) { const u = wrongOf(u0); this._hl = []; if (u == null) return '';
         const F = hxLF(pos, u), [b, hl] = loss(u, F, k + 1); this._hl = hl;
-        return [pk(C.soft, k), f2(pk(C.right, k + 2), { m: M, a: why(FA0, k + 2) }), f2(pk(C.you, k + 3), { x: X, b }), pk(C.tail, k)].filter(Boolean).join(' '); };
+        return [VC.soft(k), f2(pk(C.right, k + 2), { m: M, a: why(FA0, k + 2) }), f2(pk(C.you, k + 3), { x: X, b }), VC.tail(k)].filter(Boolean).join(' '); };
       return { ask, hintTx, good, ng, own: true };
     }
     // the strategy steps (P.sc: the AI's values; P.best may be the swap)
@@ -4897,7 +4899,7 @@
     const full = u => pts(P, u) >= 20;
     const wrongOf = u => u != null && u !== best && !full(u) ? u : (P.sc.slice().sort((a, c) => a[1] - c[1])[k % 2] || [])[0];
     const good = function (u) { this._hl = []; const same = u != null && u !== best;
-      return [pk(C.good, k), same ? pk(['きみの手も、いちばんの手とほとんど同じくらいいい手！', 'その手も満点、いちばんの手と変わらないくらい強いペン！'], k) : f2(pk(C.why, k), { a: whyB(k) }), pk(C.push, k)].filter(Boolean).join(' '); };
+      return [VC.good(k), same ? pk(['きみの手も、いちばんの手とほとんど同じくらいいい手！', 'その手も満点、いちばんの手と変わらないくらい強いペン！'], k) : f2(pk(C.why, k), { a: whyB(k) }), VC.push(k)].filter(Boolean).join(' '); };
     const ng = function (u0) { this._hl = []; const u = wrongOf(u0); if (u == null) return '';
       const fu = HXA.facts(sp, u), ku = HXA.kind(fu), mine = val.has(u) ? val.get(u) : null, d = mine == null ? null : Math.round((HXA.wr(vb) - HXA.wr(mine)) * 100);
       const Mb = best === 1023 ? 'スワップ' : M, Xu = u === 1023 ? 'スワップ' : X;
@@ -4915,8 +4917,8 @@
       else if (fu.onEdge && !fb.onEdge) b = 'ふちの1段目は辺に近すぎて、働きが小さい';
       else if (kb0 === 'edge' && !fu.edge) b = '辺までの道が、まだ切られやすい';
       else b = H.lack[kb0] || H.lack.open;   // (2026-11-22: what the move leaves undone — never "the AI says")
-      const out = [pk(C.soft, k), f2(best === 1023 ? pk(['{m}が正解！ {a}ペン。', '答えは{m}だった。{a}んだ。', 'ここは{m}がいちばん。{a}から！'], k) : pk(C.right, k + 2), { m: Mb, a: whyB(k + 1) }), f2(pk(C.you, k + 3), { x: Xu, b })];
-      out.push(pk(C.tail, k));
+      const out = [VC.soft(k), f2(best === 1023 ? pk(['{m}が正解！ {a}ペン。', '答えは{m}だった。{a}んだ。', 'ここは{m}がいちばん。{a}から！'], k) : pk(C.right, k + 2), { m: Mb, a: whyB(k + 1) }), f2(pk(C.you, k + 3), { x: Xu, b })];
+      out.push(VC.tail(k));
       return out.filter(Boolean).join(' '); };
     return { ask, hintTx: hint2, good, ng, own: true };
   }
@@ -4924,7 +4926,7 @@
     LKEY: 'aicoding-hex-lessons', OKEY: 'aicoding-hex-open', data: null, I: null,
     load() {
       if (this.p) return this.p;
-      return (this.p = Promise.all([getJ('../hex/lessons.json?v=20261115'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261115').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=1').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
+      return (this.p = Promise.all([getJ('../hex/lessons.json?v=20261123'), getJ('../hex/openings.json?v=1'), fetch('../hex/i18n.js?v=20261115').then(r => r.text()), hxEng().catch(() => null), getJ('../hex/ramps3d.json?v=1').catch(() => ({})), fetch('../hex/voice-pen-ja.js?v=2').then(r => r.ok ? r.text() : '').catch(() => '')])
         .then(([ls, op, tx, , rt, vp]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] hex texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; this.RT = rt || {};
           try { const v = {}; new Function('window', vp)(v); this.V = ((v.I18N || {})['ja@pen']) || {}; } catch (e) { this.V = {}; }   // (ゴイシペン's own lines, 3D, ja)
           return this; })
