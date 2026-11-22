@@ -515,18 +515,25 @@
   // (2026-11-23 the user) phones (portrait): the menu bar slides away under the portal bar (which stays) while the page is scrolled down,
   // and come back after a real scroll up (70px, or at the top). The scroller is .app (shared/infotabs.js) or the page.
   (function barsAutoHide() {
+    // (2026-11-23 the user) it slides away WITH the scroll (1:1, like a browser's toolbar), not on a timer; a stop half way snaps
+    // to the nearer end; --ctl-off = how far it is pushed up, html.bars-hid = all the way, html.ctl-moved = any of it
     const de = document.documentElement, mq = matchMedia('(max-width:760px) and (orientation:portrait)');
-    let last = 0, acc = 0;
+    let last = 0, acc = 0, off = 0, tm = 0;
     const popOpen = () => !!document.querySelector('.atlas-lpop:not([hidden]), .hbo-pop.on');
-    const show = () => { acc = 0; de.classList.remove('bars-hid'); };
+    const full = () => { const c = document.querySelector('.card.controls'); return c && c.offsetHeight ? c.offsetHeight + 16 : 0; };
+    const put = (v, anim) => { const H = full(); off = Math.max(0, Math.min(H, v)); de.classList.toggle('ctl-anim', !!anim);
+      de.style.setProperty('--ctl-off', off + 'px'); de.classList.toggle('ctl-moved', off > 1); de.classList.toggle('bars-hid', H > 0 && off >= H - 1); };
+    const show = () => { acc = 0; if (off) put(0, true); };
+    const settle = () => { const H = full(); if (off > 1 && off < H - 1 && last >= H) put(off > H / 2 ? H : 0, true); };   /* (near the top it stays where the page put it: it scrolls like part of the page) */
     const onScroll = e => {
       const t = e.target === document ? (document.scrollingElement || de) : e.target;
       if (!(t === document.scrollingElement || t === de || (t.classList && t.classList.contains('app')))) return;
       const max = t.scrollHeight - t.clientHeight, y = Math.min(Math.max(t.scrollTop, 0), max), d = y - last; last = y;   /* (clamped: the rubber band past the end is no scroll up) */
-      if (!mq.matches || de.classList.contains('atlas-land') || y <= 8) { show(); return; }
+      if (!mq.matches || de.classList.contains('atlas-land')) { show(); return; }
       if ((acc > 0) !== (d > 0)) acc = 0; acc += d;
-      if (acc > 12 && y > 72 && !popOpen()) de.classList.add('bars-hid');
-      else if (acc < -70) show();   /* (2026-11-23 the user: back only after a real scroll up — a flick's rebound no longer brings it back) */
+      if (d > 0 && !popOpen()) put(Math.min(off + d, y), false);   /* (follows the page; never further than the page has moved) */
+      else if (d < 0) { if (acc < -70) show(); else if (off > y) put(y, false); }   /* (back only after a real scroll up — a flick's rebound no longer brings it; near the top it comes down with the page) */
+      clearTimeout(tm); tm = setTimeout(settle, 140);
     };
     document.addEventListener('scroll', onScroll, { capture: true, passive: true });
     (mq.addEventListener ? mq.addEventListener('change', show) : mq.addListener(show));
