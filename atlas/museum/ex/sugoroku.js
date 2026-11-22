@@ -20,9 +20,9 @@
          the opposite sides carry the same pictures;
        sugoroku-top.webp — the field (52.9 × 29.6 cm) above the inner faces of the far long wall and the far short wall; the strip of
          the field hidden behind the near walls is the far strip mirrored, and the half-moons (raised pieces here) are taken out.
-         2026-11-23: the four corner flowers came out of the straightening sheared and blurred (they lie under the walls' shadow, at the
-         photograph's steepest angle); each is replaced by a clean flower of the same kind from the same row (the 4th from that end),
-         at the corner flower's own place.
+         2026-11-23: the field is now the Shōsōin's own frontal photograph (D041538, supplied by the owner), set square, the walls' cast
+         shadow at the two ends taken out (atlas/museum/tools/sugoroku-top.py). The field read off the slanting photograph looked as if it
+         sloped at the ends (baked shadow and glare, corner flowers sheared). The walls' inner faces are still from the first photograph.
      The openings are traced on the straightened sides, in cm from the side's top left corner, starting where the rail's two hanging
      lobes meet (the long side's second opening is the first mirrored). */
   const HERE = (document.currentScript && document.currentScript.src) || location.href; let SIDE = null, TOP = null;
@@ -30,7 +30,7 @@
   const OPEN_S = [[15.4, 3.62], [15.6, 3.81], [16.11, 4.38], [17.37, 4.75], [18.63, 4.72], [19.89, 4.56], [21.15, 4.31], [22.42, 4.1], [23.68, 4], [24.94, 3.97], [26.2, 4.19], [26.86, 4.56], [27.47, 5.19], [27.97, 6.12], [28.27, 7.25], [28.41, 8.5], [28.41, 9.5], [28.27, 10.5], [28.07, 11.5], [27.72, 12.5], [27.26, 13.37], [26.71, 14.12], [25.95, 14.69], [25.04, 15.4], [24.18, 15.85], [20.2, 15.85], [15.45, 15.85], [10.6, 15.85], [6.56, 15.85], [5.65, 15.5], [4.95, 14.87], [4.14, 14], [3.53, 13], [3.08, 12], [2.78, 11], [2.63, 10], [2.57, 9], [2.63, 8], [2.78, 6.87], [3.13, 5.75], [3.53, 5], [4.04, 4.5], [4.54, 4.19], [5.05, 3.97], [6.06, 3.79], [7.07, 3.75], [8.08, 3.81], [9.09, 3.94], [10.1, 4.12], [11.11, 4.31], [12.12, 4.44], [13.13, 4.5], [14.14, 4.38], [14.64, 4.12], [15.05, 3.75]];
   (window.AtlasEx = window.AtlasEx || {}).sugoroku = {
     ready: () => { const get = (f, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = new URL('../../../images/atlas/ex/' + f, HERE).href; setTimeout(res, 8000); });
-      return Promise.all([get('sugoroku-sides.webp?v=2', im => { SIDE = im; }), get('sugoroku-top.webp?v=3', im => { TOP = im; })]); },
+      return Promise.all([get('sugoroku-sides.webp?v=2', im => { SIDE = im; }), get('sugoroku-top.webp?v=4', im => { TOP = im; })]); },
     build(TT, X, K) {
       const G = new TT.Group();
       const L = 54.3, W = 31.0, H = 16.7, RAIL = .8, BASE = 13.3, LIN = .9, EDGE = H - BASE, RIM = 1.9, RT = .7;   // (RIM: the wall round the field stands upright, about 1.9 high — the overall photograph)   // LIN: the strip of rosettes at the top of the base
@@ -110,7 +110,8 @@
       const inlC = null;   // (2026-11-22: a layout lifted from the frontal photographs was tried and dropped — at their resolution it came out broken and scratchy; the marquetry is drawn)
       const mk = (t, base) => K.mat({ map: t, color: '#ffffff', roughness: .48, clearcoat: .3, clearcoatRoughness: .35 });
       /* ---------- the face ---------- */
-      const IL = L - RT * 2, IW = W - RT * 2, ROW = 2.0, P0 = 4.9, PS = 3.75;   // the row of points: its distance from the rim, the first point's distance from the centre, the pitch
+      const IL = L - RT * 2, IW = W - RT * 2, ROW = 1.5, P0 = 5.95, PS = 3.8;   // (measured on the Shōsōin's frontal photograph, 2026-11-23: the flowers lie 1.5 cm from the walls, the first 5.95 cm from the middle, 3.8 cm apart)
+      //   // the row of points: its distance from the rim, the first point's distance from the centre, the pitch
       const topK = TOP ? TOP.width / IL : 0, MOONX = TOP ? -.4 : 0;   // (on the photograph the half-moons sit 4 mm off the middle of the length)
       const faceT = K.tex(2048, Math.round(2048 * IW / IL), (g, w, h) => { const s = w / IL;
         if (TOP) { g.drawImage(TOP, 0, 0, TOP.width, IW * topK, 0, 0, w, h); return; }
@@ -137,7 +138,9 @@
       const eL = mk(edgeTex(L, 1)), eW = mk(edgeTex(W, 2));
       const SL = EDGE - RIM;   // the slab; the face is at BASE + SL
       // the half-moons: a raised ivory arc in the middle of each long side, its horns toward the rim, the hollow facing the players' edge
-      { const cs = new TT.Shape(); cs.moveTo(3.3, 0); cs.absarc(0, -1.07, 3.47, .314, Math.PI - .314, false); cs.absarc(0, -1.82, 3.77, Math.PI - .504, .504, true);
+      // (2026-11-23: on the real board the half-moons are ivory let into the field, flush with it — the frontal photograph shows the field
+      //  quite flat — so they are in the field's picture now and the raised pieces are made only when there is no photograph)
+      if (!TOP) { const cs = new TT.Shape(); cs.moveTo(3.3, 0); cs.absarc(0, -1.07, 3.47, .314, Math.PI - .314, false); cs.absarc(0, -1.82, 3.77, Math.PI - .504, .504, true);
         const cg = new TT.ExtrudeGeometry(cs, { depth: .28, bevelEnabled: true, bevelThickness: .05, bevelSize: .04, bevelSegments: 2, curveSegments: 24 }); cg.rotateX(-Math.PI / 2);
         [1, -1].forEach(sd => { const m = new TT.Mesh(cg, ivory); m.position.set(MOONX, BASE + SL, sd * (IW / 2 - ROW)); if (sd < 0) m.rotation.y = Math.PI; m.castShadow = true; G.add(m); }); }
       const eLs = mk(edgeTex(L, 1)), eWs = mk(edgeTex(W, 2));
