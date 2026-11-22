@@ -19,8 +19,10 @@
   'use strict';
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
   function make(T3, opts = {}) {
-    const TH = window.THREE, S3 = T3.senet;
-    const board = S3.board(opts.design || 'tut'), U = board.userData, Y = U.top;
+    // opts.board: a board handed in from outside (the museum's own Senet box, atlas/museum/play.js) — its userData.S3 makes the pieces and sticks,
+    // userData.kit places them (slot, stickAt; oneSet: one set of sticks, thrown from the front by both players; trayY: the height of the borne-off row)
+    const TH = window.THREE, MB = opts.board || null, S3 = (MB && MB.userData.S3) || T3.senet, KU = (MB && MB.userData.kit) || {};
+    const board = MB || S3.board(opts.design || 'tut'), U = board.userData, Y = U.top;
     T3.show('senet', board); if (T3.play) T3.play(true);
     const tall = innerHeight > innerWidth * 1.15;
     const PT = opts.top ? 1.5703 : 0;
@@ -34,9 +36,9 @@
     const spd = () => Math.max(.4, opts.speed ? opts.speed() : 1);
     const cellXZ = sq => U.pt(sq);
     // the pieces borne off: in a row on the table beside the long side of the box (Light near +z, Dark far −z), from the exit end
-    const slot = (side, k) => [U.W / 2 - .5 - k * .62, 0, side ? -(U.D / 2 + .5 + FAR) : U.D / 2 + .5];
+    const slot = KU.slot || ((side, k) => [U.W / 2 - .5 - k * .62, 0, side ? -(U.D / 2 + .5 + FAR) : U.D / 2 + .5]);
     // the sticks: on the table beside the long side, at the other end
-    const stickAt = (side, i) => [-U.W / 2 + 1.1 + i * .42, side ? -(U.D / 2 + .62 + FAR) : U.D / 2 + .62];
+    const stickAt = KU.stickAt || ((side, i) => [-U.W / 2 + 1.1 + i * .42, side ? -(U.D / 2 + .62 + FAR) : U.D / 2 + .62]);
 
     /* ---------- pieces ---------- */
     const P = [[], []];
@@ -110,11 +112,11 @@
     }
 
     /* ---------- sticks ---------- */
-    const STK = [], SK = opts.stage ? 1.15 : .85, REST = S3.STK.Th * SK / 2;
+    const STK = [], SK = KU.sk || (opts.stage ? 1.15 : .85), REST = S3.STK.Th * SK / 2;
     function ensure() {
       while (STK.length < 4) { const g = new TH.Group(), s = S3.stick(); s.scale.setScalar(SK); g.add(s); const sh = T3.contact(.3, .35); sh.scale.set(.55 * SK, 1, 2.4 * SK); sh.position.y = .002; g.add(sh); g.userData = { s, sh }; board.add(g); STK.push(g); }
     }
-    const yaw = i => ((i * 53) % 11 - 5) * .04;
+    const yaw = KU.yaw || (i => ((i * 53) % 11 - 5) * .04);
     let stickSide = 0;
     function restSticks(side, d) {
       ensure(); stickSide = side;
@@ -124,7 +126,7 @@
     async function roll(side, d) {
       ensure(); stickSide = side;
       if (opts.sfx) opts.sfx('roll');
-      const sg = side ? -1 : 1, dur = 900 / spd();
+      const sg = side && !KU.oneSet ? -1 : 1, dur = 900 / spd();
       const plan = STK.map((g, i) => {
         const [x1, z1] = stickAt(side, i), from = [x1 + (Math.random() - .5) * 1.2, z1 + sg * (1.6 + Math.random() * .6)];
         const end = d[i] ? 0 : Math.PI, spin = end + (2 + (Math.random() * 3 | 0)) * Math.PI * 2 * (Math.random() < .5 ? 1 : -1);
@@ -162,7 +164,7 @@
       path(a, b, color = 0xffe27a) { for (let i = Math.max(1, a); i <= Math.min(b, 30); i++) { const m = marks.dot(i, color); m.scale.setScalar(i === b ? 1.6 : 1); } },
       frame(color = 0xffffff, op = .85) {
         const xs = STK.map(g => g.position.x), zs = STK.map(g => g.position.z); if (!xs.length) return;
-        const r = .62 * SK, x0 = Math.min(...xs) - .2, x1 = Math.max(...xs) + .2, z0 = Math.min(...zs) - r, z1 = Math.max(...zs) + r, m = mat(color, op), wd = .045;
+        const r = .62 * SK, m = mat(color, op), wd = KU.frameW || .045, [x0, x1, z0, z1] = KU.frame ? KU.frame() : [Math.min(...xs) - .2, Math.max(...xs) + .2, Math.min(...zs) - r, Math.max(...zs) + r];
         const bar = (cx, cz, w, d) => { const q = new TH.Mesh(new TH.PlaneGeometry(w, d), m); q.rotation.x = -Math.PI / 2; q.position.set(cx, .01, cz); q.renderOrder = 3; marksG.add(q); };
         bar((x0 + x1) / 2, z0, x1 - x0, wd); bar((x0 + x1) / 2, z1, x1 - x0, wd); bar(x0, (z0 + z1) / 2, wd, z1 - z0 + wd); bar(x1, (z0 + z1) / 2, wd, z1 - z0 + wd);
         T3.kick(120);
@@ -184,7 +186,7 @@
       const p = T3.pick(ev, Y); if (!p) return null;
       const x = p.x, z = p.z, c = Math.round(x + 4.5), r = Math.round(z + 1);
       if (Math.abs(x + 4.5 - c) < .5 && Math.abs(z + 1 - r) < .5 && r >= 0 && r <= 2 && c >= 0 && c <= 9) return { sq: r * 10 + (r === 1 ? 9 - c : c) + 1 };
-      const q = T3.pick(ev, 0) || p;   // off the board: the table
+      const q = T3.pick(ev, KU.trayY || 0) || p;   // off the board: the table
       for (const side of [0, 1]) {
         for (let k = 0; k < 7; k++) { const s = slot(side, k); if (Math.hypot(s[0] - q.x, s[2] - q.z) < .5) return { tray: 'goal', side }; }
         for (let i = 0; i < 4; i++) { const [sx, sz] = stickAt(side, i); if (Math.abs(sx - q.x) < .4 && Math.abs(sz - q.z) < .7) return { sticks: true, side }; }
