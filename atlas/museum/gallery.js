@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 119;
+  const V = 120;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -75,7 +75,7 @@
     ov.innerHTML = `<div class="exstage"><canvas></canvas><div class="exspots"></div><div class="exhud" aria-live="polite"></div>${PLAY[id] ? `<div class="expcard"><b>${esc(ui(lang, 'play_' + id))}</b>
           <div class="expf"><span>${esc(ui(lang, 'p_level'))}</span><div class="expdd" data-k="plv" data-v="1"><button type="button" class="expdd-b" aria-haspopup="listbox"><b>Lv.1</b><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="expdd-l" role="listbox">${Array.from({ length: PLAY[id].levels }, (_, i) => `<button type="button" role="option" data-v="${i + 1}"${i ? '' : ' class="on"'}>Lv.${i + 1}</button>`).join('')}</div></div></div>
           <div class="expf"><span>${esc(ui(lang, 'p_side'))}</span><div class="expseg" data-k="pside" data-v="1"><button type="button" data-v="1" class="on">${esc(ui(lang, 'p_first'))}</button><button type="button" data-v="2">${esc(ui(lang, 'p_second'))}</button></div></div>
-          <button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><div class="expacts" hidden>${[['pundo', 'p_undo', '<path d="M9 6 4 11l5 5"/><path d="M4 11h9.5a5.5 5.5 0 0 1 0 11H11"/>'], ['presign', 'p_resign', '<path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/>'], ['phint', 'p_hint', '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>']]
+          <button type="button" class="exprul" data-k="prules"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h9a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4z"/><path d="M9 9h5M9 13h5"/></svg>${esc(ui(lang, 'p_rules'))}</button><button type="button" class="explay" data-k="play">${esc(ui(lang, 'p_start'))}</button><div class="expacts" hidden>${[['pundo', 'p_undo', '<path d="M9 6 4 11l5 5"/><path d="M4 11h9.5a5.5 5.5 0 0 1 0 11H11"/>'], ['presign', 'p_resign', '<path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/>'], ['phint', 'p_hint', '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>']]
             .concat(PLAY[id].long ? [['pturn', 'p_orient', '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9a6 6 0 0 1 4-5M3 9V5.5M3 9h3.5M21 15a6 6 0 0 1-4 5M21 15v3.5M21 15h-3.5"/>', 'p_orientS']] : [])
             .map(([k, l, d, sl]) => `<button type="button" class="expa" data-k="${k}" title="${esc(ui(lang, l))}"><svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg><span>${esc(ui(lang, sl || l))}</span></button>`).join('')}</div></div>` : ''}
         <div class="exscale" aria-hidden="true" dir="ltr"><i></i><span>10 cm</span></div>
@@ -127,8 +127,16 @@
         const tb = AB('pturn'); if (tb) tb.onclick = () => { if (MP()) MP().turn(); };   // (a long board: lengthwise / across)
         // phones: the card stays out of the way until the play button at the top of the texts asks for it (tapping it again puts it away)
         const cfg = ov.querySelector('[data-k="pcfg"]'); if (cfg) cfg.onclick = () => { const on = !ov.classList.contains('exv-cfg'); ov.classList.toggle('exv-cfg', on); cfg.classList.toggle('on', on); };
+        // ルール: the rules course on this board, ミュゼフク guiding (museum/rules.js); its last page's button starts a game with the card's choices
+        const rul = ov.querySelector('[data-k="prules"]'), rulesOn = on => { ov.classList.toggle('exv-rul', on); };
+        try { if (!localStorage.getItem('aicoding-museum-' + id + '-rules-seen')) rul.classList.add('new'); } catch (x) {}
+        rul.onclick = () => { if (!V3 || !V3.obj || lock) return; rul.disabled = true;
+          Promise.all([load('museum/play.js?v=' + V), load('museum/rules.js?v=' + V), load('museum/rules-tx-en.js?v=' + V), lang !== 'en' ? load('museum/rules-tx-' + lang + '.js?v=' + V) : 0]).then(() => { rul.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
+            const quit = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); rulesOn(false); playing(false); };
+            const ok = AtlasMuseumPlay.start(id, { course: true, lang, onExit: quit, onPlay: () => { quit(); setTimeout(() => pb.click(), 60); } });
+            if (!ok) return; rul.classList.remove('new'); playing(true); acts.hidden = true; clearInterval(poll); rulesOn(true); ov.quitPlay = quit; }); };
         const playing = on => { { const rb = ov.querySelector('.exres'); if (rb) rb.remove(); } ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); ov.classList.toggle('exv-play', on); pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
-        ov.quitPlay = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); };
+        const quitGame = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); }; ov.quitPlay = quitGame;
         pb.onclick = () => { if (!V3 || !V3.obj) return; pb.disabled = true;
           try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
           Promise.all([load('museum/play.js?v=' + V), window.AtlasLazy ? AtlasLazy.need(P.game) : 0]).then(() => { pb.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
@@ -136,7 +144,7 @@
               // the result in the middle of the case (a plaque in the museum's manner), gone at a tap or when the game is left
               const old = ov.querySelector('.exres'); if (old) old.remove(); const rb = document.createElement('div'); rb.className = 'exres ' + k; rb.innerHTML = `<b>${esc(tx)}</b>`;
               rb.onclick = () => rb.remove(); ov.querySelector('.exstage').appendChild(rb); requestAnimationFrame(() => rb.classList.add('on')); } });
-            playing(!!ok); }); }; } }
+            playing(!!ok); if (ok) ov.quitPlay = quitGame; }); }; } }
     const pb = ov.querySelector('.amplay'); if (pb) pb.onclick = () => { close(); setTimeout(() => ctx.open(g.id, null), 280); };
     V3 = { ov, e, close, spin: true };
     const onKey = ev => { if ((ev.key === 'w' || ev.key === 'W') && !ev.repeat && !ev.ctrlKey && !ev.metaKey && !ev.altKey && !ov.classList.contains('exv-play')) { const b = ov.querySelector('[data-k="wide"]'); if (b) b.click(); return; }
