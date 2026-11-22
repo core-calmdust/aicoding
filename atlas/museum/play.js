@@ -7,7 +7,7 @@
   'use strict';
   const BOARDS = {
     // the Ballinderry board (1 = 1 cm): Brandubh, pegs in its 7 × 7 holes (their places as on the photograph: hand-bored, not quite in line).
-    ballinderry: { game: 'tafl', size: 7, view: { yaw: 0, pit: 1.2, d: .8, dp: .62 },
+    ballinderry: { game: 'tafl', size: 7, view: { yaw: 0, pit: 1.2, d: .8, dp: .62, long: true },
       board(TH, obj, K) {
         const g = new TH.Group(), n = 7, cs = 2.65, S = cs * n, Y = 1.02, H = obj.userData.holes;
         const cell = (f, r) => { const h = H && H[r * 7 + f]; return h ? [h[0], h[1]] : [(f - 3) * cs, (r - 3) * cs]; };
@@ -47,7 +47,7 @@
     // 木画紫檀棊局 (1 = 1 cm): go on its 19 lines. The stones after the Shōsōin's own (北倉25): ivory dyed indigo (紺牙撥鏤碁子, 120 kept; 1.6–1.7 across,
     // 0.6–0.7 thick) and dyed red with lac (紅牙撥鏤碁子, 132; 1.5–1.7, 0.7–0.8), a bird with a flowering spray in its beak cut through the dye on both
     // faces, a little green / yellow / red put in (the Shōsōin's photographs). Indigo plays first (black), red second (white). Whether they were one set is not recorded.
-    shosoin: { game: 'go', size: 19, area: [-24.6, 24.6, -24.6, 24.6], view: { yaw: 0, pit: 1.28, d: .74, dp: .6 }, noContact: true, light: { key: .7, env: .2 },
+    shosoin: { game: 'go', size: 19, area: [-24.6, 24.6, -24.6, 24.6], view: { yaw: 0, pit: 1.28, d: .74, dp: .6 }, noContact: true,
       board(TH, obj, K) {
         const P = obj.userData.play, c = P.cell, n = P.n, g = new TH.Group();
         // the face: the ground, a soft darker rim, the bird cut through to the cream ivory (both stones fly to the left with a spray in the beak)
@@ -84,12 +84,12 @@
         // a thick disc, both faces domed, the edge a little rounded (the photographs); planar UVs so the bird lies on the top
         const geo = (d, t) => { const r = d / 2, q = new TH.LatheGeometry([[0, 0], [r * .62, t * .03], [r * .9, t * .12], [r, t * .3], [r, t * .62], [r * .92, t * .8], [r * .7, t * .94], [r * .38, t * .99], [0, t]].map(([a, b]) => new TH.Vector2(Math.max(.001, a), b)), 40);
           const A = q.attributes.position, U = q.attributes.uv; for (let i = 0; i < A.count; i++) U.setXY(i, .5 + A.getX(i) / (d * 1.04), .5 - A.getZ(i) / (d * 1.04)); return q; };
-        const GEO = { 1: geo(1.65, .65), 2: geo(1.6, .75) };
+        const GEO = { 1: geo(2.46, .95), 2: geo(2.46, 1.05) };   // (played at the size of today's stones, ~95% of the lines' spacing — the originals, 1.6 cm, looked lost on the 2.6 cm grid; the thickness keeps their proportion)
         const stone = (col, cc, seed) => { const m = new TH.Mesh(GEO[col], MAT[col]); m.castShadow = m.receiveShadow = true; m.rotation.y = ((seed || 0) * 2.399) % 6.283 * .35 - 1; m.userData.stone = col; return m; };
         const tb = window.Table3D && Table3D.goban;
         const NAMES = { ja: ['紺', '紅'], en: ['Indigo', 'Crimson'], zh: ['蓝', '红'], 'zh-TW': ['藍', '紅'], ko: ['남색', '붉은색'], es: ['Añil', 'Carmesí'], fr: ['Indigo', 'Carmin'], pt: ['Anil', 'Carmim'], de: ['Indigo', 'Karmin'], ru: ['Синие', 'Красные'], tr: ['Lacivert', 'Kırmızı'], id: ['Nila', 'Merah'], hi: ['नील', 'लाल'], ar: ['النيلي', 'القرمزي'] };
         g.userData = { n, cell: c, W: P.cell * (n + 1), S: c * (n + 1), top: P.top + .002, pt: (i, j) => [(i - (n - 1) / 2) * c, (j - (n - 1) / 2) * c],
-          GB: { stone, stoneMat: col => MAT[col], SH: .7 / (2 * .47 * c), tapMark: cc => tb ? tb.tapMark(cc) : new TH.Group() },
+          GB: { stone, stoneMat: col => MAT[col], SH: 1.0 / (2 * .47 * c), tapMark: cc => tb ? tb.tapMark(cc) : new TH.Group() },
           names: l => { const a = NAMES[l] || NAMES.en; return { p1: a[0], p2: a[1] }; },
           dot: ['background:radial-gradient(circle at 35% 30%,#6a6a96,#34345a 60%,#1e1e38)', 'background:radial-gradient(circle at 35% 30%,#e0607a,#9b1b2e 60%,#5e0d1a)'] };
         return g; } },
@@ -97,15 +97,18 @@
     // green glass (緑瑠璃, 1.4–1.5 across, 0.7–0.8 thick) for you and fifteen of yellow glass (黄瑠璃, 1.3–1.5, 0.6–0.7) for the AI — round, domed on
     // top (the Shōsōin's photograph). Each point is a flower on the long rim; its stones line up from the flower toward the middle; cut stones wait
     // in the middle strip; the dice are the board's two ivory dice (the pair laid out for show is put away).
-    sugoroku: { game: 'sugoroku', area: [-27.3, 27.3, -15.6, 15.6], view: { yaw: 0, pit: 1.2, d: .8, dp: .58, long: true, dv: .62, dvw: .95, pv: 1.35 }, noContact: true, light: { key: .62, env: .35 },
+    sugoroku: { game: 'sugoroku', area: [-27.3, 27.3, -15.6, 15.6], view: { yaw: 0, pit: 1.2, d: .8, dp: .58, long: true, dv: .62, dvw: .95, pv: 1.35 }, noContact: true,
       board(TH, obj, K) {
         const P = obj.userData.play, g = new TH.Group(), Y = P.top, R = P.row, SP = 1.5;
         const colX = c => c <= 6 ? -(P.P0 + (6 - c) * P.PS) : P.P0 + (c - 7) * P.PS;
         const slot = (abs, k) => { const near = abs <= 12, c = near ? abs : 25 - abs; return [colX(c), Y + Math.floor(k / 8) * .7, (near ? 1 : -1) * (R - (k % 8) * SP + (k >= 8 ? SP / 2 : 0))]; };
         const bar = (side, k) => [(side ? 1 : -1) * (2.2 + k * 1.6), Y, 0];
         const hit = (x, z) => { if (Math.abs(z) < 1.8) return 0; if (Math.abs(z) > R + 1.4) return -1; let c = 0, bd = 1e9; for (let i = 1; i <= 12; i++) { const d = Math.abs(x - colX(i)); if (d < bd) { bd = d; c = i; } } if (bd > P.PS / 2) return -1; return z > 0 ? c : 25 - c; };
-        const glass = (col, rough) => K.mat({ color: col, roughness: rough, metalness: 0, clearcoat: 1, clearcoatRoughness: .08 });
-        const MAT = [glass('#1c6a33', .14), glass('#c48d16', .16)];
+        // twelve-hundred-year-old glass: translucent and deep in colour (as in the Shōsōin's photograph — a dark bottle green, a honey yellow), the surface
+        // dulled and faintly pitted by age, no plastic gloss (a noise roughness map, a soft clearcoat)
+        const pits = K.tex(128, 128, (c, w, h) => { c.fillStyle = '#9a9a9a'; c.fillRect(0, 0, w, h); for (let i = 0; i < 700; i++) { const v = 120 + Math.random() * 120 | 0; c.fillStyle = `rgb(${v},${v},${v})`; c.globalAlpha = .5; c.beginPath(); c.arc(Math.random() * w, Math.random() * h, .6 + Math.random() * 2.2, 0, 6.3); c.fill(); } c.globalAlpha = 1; });
+        const glass = (col, deep) => K.mat({ color: col, roughness: .42, roughnessMap: pits, metalness: 0, transmission: .45, thickness: .7, ior: 1.5, attenuationColor: K.lin ? K.lin(deep) : deep, attenuationDistance: .6, clearcoat: .35, clearcoatRoughness: .45 });
+        const MAT = [glass('#2f6a44', '#123a22'), glass('#b8923a', '#6a4a10')];
         const geo = (d, t) => new TH.LatheGeometry([[0, 0], [d * .46, 0], [d / 2, t * .12], [d * .49, t * .32], [d * .43, t * .62], [d * .3, t * .87], [d * .14, t * .98], [0, t]].map(([a, b]) => new TH.Vector2(Math.max(.001, a), b)), 32);
         const GEO = [geo(1.45, .75), geo(1.4, .66)];
         const stone = side => { const m = new TH.Mesh(GEO[side], MAT[side]); m.castShadow = m.receiveShadow = true; return m; };
@@ -132,24 +135,35 @@
       project(x, z, y) {   /* (x, y, z in the board's parent's space — the table's world: senet-kit passes points through board.matrix first; the Ballinderry board sits at the parent's origin unscaled) */ const r = cv.getBoundingClientRect(), p = (board.parent || board).localToWorld(new TH.Vector3(x, y || 0, z)).project(V.cam); return { x: r.left + (p.x + 1) / 2 * r.width, y: r.top + (1 - p.y) / 2 * r.height }; } };
     // the room's light, turned down for a board looked at from above (the exhibit's own light glares on a flat top seen from there)
     const L0 = { key: V.key ? V.key.intensity : 0, env: V.scene.environmentIntensity, home: V.home, spin: V.spin };
-    const LT = def.light || {}; if (V.key) V.key.intensity = L0.key * (LT.key || .62); V.scene.environmentIntensity = L0.env * (LT.env || .55);   // (light: a board's own amounts — a wide glossy face mirrors the room's light as a pale wash)
+    // straight down, a glossy top mirrors whatever is overhead: the key comes in from the back left at ~45° (its glare lands off the board, beyond the camera's view),
+    // the room's reflections go almost away and the soft sky / ground fill rises to keep the board bright (light: a board's own amounts)
+    const LT = def.light || {}, hemi = []; V.scene.traverse(o => { if (o.isHemisphereLight) hemi.push([o, o.intensity]); });
+    L0.kp = V.key ? V.key.position.clone() : null;
+    if (V.key) { V.key.intensity = L0.key * (LT.key || .8); V.key.position.set(-V.r * 2.1, V.r * 2.6, -V.r * 1.3); }
+    V.scene.environmentIntensity = L0.env * (LT.env || .22); hemi.forEach(([o, i]) => { o.intensity = i * 1.5; }); L0.hemi = hemi;   // (light: a board's own amounts — a wide glossy face mirrors the room's light as a pale wash)
     V.spin = false; const sb = V.ov.querySelector('[data-k="spin"]'); if (sb) sb.classList.remove('on');
     // the board straight from above and as large as the case allows (as in the portal's 3D games: no turning, only zooming). A long board (view.long)
-    // can lie lengthwise down the screen (turned a quarter, your side to the right) or across; the player's choice is kept, otherwise a tall case
+    // can lie lengthwise down the screen (turned a quarter, your side to the left) or across; the player's choice is kept, otherwise a tall case
     // (a phone held upright) gets it lengthwise. area: what has to be in view, [x0, x1, z0, z1] in the exhibit's cm (else the whole exhibit), at the height `top`.
     const tall = () => V.cam.aspect < .9, OK = 'atlas-museum-orient';
     const vert = () => { if (!def.view.long) return false; let o = ''; try { o = localStorage.getItem(OK) || ''; } catch (e) {} return o ? o === 'v' : tall(); };
     const box = new TH.Box3().setFromObject(V.obj), A = def.area || [box.min.x, box.max.x, box.min.z, box.max.z], AY = def.top != null ? def.top : (V.obj.userData.play && V.obj.userData.play.top) || box.max.y;
     const tgt0 = V.tgt.clone(); V.tgt.copy(V.obj.localToWorld(new TH.Vector3((A[0] + A[1]) / 2, AY, (A[2] + A[3]) / 2))); V.pitMax = 1.52;
-    const view = () => { const v = vert(), W = A[1] - A[0], Dp = A[3] - A[2], sw = v ? Dp : W, sh = v ? W : Dp, w = stage.clientWidth || 1, h = stage.clientHeight || 1, tv = Math.tan(V.cam.fov * Math.PI / 360);
-      const uh = Math.max(120, h - 2 * (w < 820 ? 100 : 96)), uw = Math.max(120, w - 28);   // (room for the bar at the top and the card at the bottom: the same on both sides, so the board stays centred)
-      return { yaw: v ? -Math.PI / 2 : 0, pit: 1.52, d: Math.max(sh / 2 / tv * h / uh, sw / 2 / (tv * V.cam.aspect) * w / uw) * 1.03 }; };
-    V.home = view(); G.tween(view()); V.playing = true;
+    // rot: a long board turned lengthwise on a tall screen is a sideways board for a phone held sideways — the bar and the buttons turn with it (CSS .exv-rot)
+    const rot = () => vert() && tall();
+    const view = () => { const v = vert(), r = rot(), W = A[1] - A[0], Dp = A[3] - A[2], sw = v ? Dp : W, sh = v ? W : Dp, w = stage.clientWidth || 1, h = stage.clientHeight || 1, tv = Math.tan(V.cam.fov * Math.PI / 360);
+      const m = w < 820 ? 100 : 96, uh = Math.max(120, h - (r ? 40 : 2 * m)), uw = Math.max(120, w - (r ? 2 * 78 : 28));   // (room for the bar and the buttons: top and bottom, or left and right when turned; the same on both sides so the board stays centred)
+      return { yaw: v ? Math.PI / 2 : 0, pit: 1.52, d: Math.max(sh / 2 / tv * h / uh, sw / 2 / (tv * V.cam.aspect) * w / uw) * 1.03 }; };
+    // a slide moves the board sideways (gallery.js): along the screen's width, or its height when turned; back to the middle whenever the view is set again
+    const apply = () => { const r = rot(); V.ov.classList.toggle('exv-rot', r); document.documentElement.classList.toggle('exv-rot', r);
+      const v = vert(); V.tgtBase = tgtB.clone(); V.tgt.copy(tgtB); V.panOff = 0; V.panAxis = r ? 'y' : 'x'; V.panLim = ((v ? A[3] - A[2] : A[1] - A[0]) / 2) * (r ? 1.4 : 1) * .7;
+      const q = view(); V.home = q; G.tween(q); if (V.R) V.R.shadowMap.needsUpdate = true; };
+    const tgtB = V.tgt.clone(); apply(); V.playing = true;
     const hid = ((V.obj.userData.play && V.obj.userData.play.hide) || []).filter(m => m.visible); hid.forEach(m => { m.visible = false; });   // the pieces and sticks laid out for show: put away during a game
     const ses = ad.start({ el: stage, Table3D: T3, board, lang: o.lang, t: o.t, level: o.level, side: o.side, size: def.size, mode: 'ai', hud: o.hud || (() => {}), onTurn() {}, onEnd: res => { if (o.onEnd) o.onEnd(res); } });
     // the case changes size (a phone: it grows when the game starts; a turned phone, a resized window): frame the board again
-    let rsT = 0; const ro = new ResizeObserver(() => { clearTimeout(rsT); rsT = setTimeout(() => { if (cur && cur.V === V && V.scene) { V.home = view(); G.tween(view()); } }, 120); }); ro.observe(stage);
-    cur = { V, ses, board, L0, dot, hid, ro, tgt0, turn() { const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} V.home = view(); G.tween(view()); } };
+    let rsT = 0; const ro = new ResizeObserver(() => { clearTimeout(rsT); rsT = setTimeout(() => { if (cur && cur.V === V && V.scene) apply(); }, 120); }); ro.observe(stage);
+    cur = { V, ses, board, L0, dot, hid, ro, tgt0, turn() { const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} apply(); } };
     return { stop };
   }
   function stop() {
@@ -158,7 +172,7 @@
     const V = c.V; if (!V || !V.scene) return;
     if (c.board.parent) c.board.parent.remove(c.board);
     (c.hid || []).forEach(m => { m.visible = true; });
-    if (V.key) V.key.intensity = c.L0.key; V.scene.environmentIntensity = c.L0.env; V.home = c.L0.home; V.playing = false; V.pitMax = 0; if (c.tgt0) V.tgt.copy(c.tgt0); if (V.home) G.tween(V.home);
+    if (V.key) { V.key.intensity = c.L0.key; if (c.L0.kp) V.key.position.copy(c.L0.kp); } (c.L0.hemi || []).forEach(([o, i]) => { o.intensity = i; }); V.scene.environmentIntensity = c.L0.env; V.ov.classList.remove('exv-rot'); document.documentElement.classList.remove('exv-rot'); V.tgtBase = null; V.panLim = 0; V.home = c.L0.home; V.playing = false; V.pitMax = 0; if (c.tgt0) V.tgt.copy(c.tgt0); if (V.home) G.tween(V.home);
     if (V.R) V.R.shadowMap.needsUpdate = true; if (window.AtlasGallery) AtlasGallery.go();
   }
   const S = () => cur && cur.ses;   // the game's own actions (待った・ヒント・投了), as the portal's 3D games offer them
