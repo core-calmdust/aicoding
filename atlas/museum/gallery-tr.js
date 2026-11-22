@@ -127,7 +127,7 @@
         ["Sedef zincir", "Bordürde bağa zemin üzerinde S biçimli sedef kıvrımlar küçük yıldızlarla sıralanır."],
         ['Köşe kalkanları', 'Zincir her köşede kalkan biçimli bir motifle birleşir.'],
         ["Kemik kenar ve yanlar", "Dış kenar, balıksırtı eklemli bir kemik şerittir; kanatların yan yüzlerinde bir sıra sedef altıgen bulunur."]],
-      model: "Ölçüler müzenin kaydına göredir. Kakmanın düzeni müzenin fotoğraflarına göredir.",
+      model: "Ölçüler müzenin kaydına göredir. Kakmanın düzeni müzenin fotoğraflarından alınmıştır; çerçevenin kesiti ve kenarlardaki sedef parçalarının sırası tahminidir.",
       src: [['Victoria and Albert Müzesi, "Games board" 861-1907', 'https://collections.vam.ac.uk/item/O370652/games-board-unknown']] },
     kofukuji: { name: 'Eski Kōfuku-ji Arazisinden Shogi Taşları', alt: 'Japonya\'nın en eski shogi taşları ve adlarının yazılı olduğu bir tablet', date: '11. yüzyıl sonu–12. yüzyıl', where: 'Japonya (Nara)', found: 'Nara, Noborioji-chō\'da Kōfuku-ji\'nin eski arazisindeki kazılar: Kisshōin alanı (1992, kuyu benzeri bir çukur) ve Kanzen\'in alanı (2013, bir kuyu ve bir çukur)',
       museum: 'Nara İli Kashihara Arkeoloji Enstitüsü Müzesi', no: 'Nara İli Somut Kültür Varlığı (2022, 31 parça)', mat: 'Ahşap, mürekkep', size: 'Taşlar yaklaşık 2,5 cm uzunluğunda (sarhoş fil: yaklaşık 2,5 × 1,5 cm, 2 mm kalınlığında)',
@@ -141,7 +141,7 @@
         ['Alıştırma tableti', 'Taş adlarının — 酔像, 金将, 歩兵 ve diğerleri — tekrar tekrar yazıldığı tahta bir şerit.'],
         ['“Tengi 6” çubuğu', 'Bir tomar çubuğunun başındaki, Tengi 6 (1058) tarihli etiket: 1992 taşlarının yaşının anahtarı.'],
         ['“Jōtoku 2” çubuğu', '2013 kuyusundan çıkan, Jōtoku 2 (1098) tarihli bir tomar çubuğu.']],
-      model: 'Taşların türleri ve sayıları, tablet ile çubuklarda yazanlar ve tarihler Nara İli\'nin kayıtlarına, yerleşim ise müzenin fotoğrafına dayanır. Her taşın boyutu ve dış hattı, mürekkebin ne kadar korunduğu, tablet ile çubukların boyutu ve yazılarının yerleşimi tahminidir.',
+      model: 'Taşların türleri ve sayıları, tablet ile çubuklarda yazanlar ve tarihler Nara İli\'nin kayıtlarına, yerleşim ise müzenin fotoğrafına dayanır. Her taşın boyutu ve dış hattı, yazının biçimi ve mürekkebin ne kadar korunduğu, tablet ile çubukların boyutu ve yazılarının yerleşimi tahminidir.',
       src: [['Nara İli, “令和4年度 県指定文化財の概要 興福寺旧境内出土将棋駒・習書木簡・題箋軸”', 'https://www.pref.nara.jp/secure/292352/R4-6-shogikoma.pdf'], ['Japonya Shogi Derneği, “日本将棋の歴史”', 'https://www.shogi.or.jp/history/story/']] },
   },
 };

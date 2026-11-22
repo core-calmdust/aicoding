@@ -127,7 +127,7 @@
         ["Die Perlmuttkette", "In der Bordüre wechseln S-förmige Perlmuttranken mit kleinen Sternen auf Schildpatt."],
         ['Eckschilde', 'An jeder Ecke ist die Kette durch ein schildartiges Motiv verbunden.'],
         ["Knochenkante und Seiten", "Die Außenkante ist ein Knochenband mit Winkelstößen; die Seiten der Flügel tragen eine Reihe von Perlmutt-Sechsecken."]],
-      model: "Maße nach den Angaben des Museums. Die Anordnung der Einlagen folgt dessen Fotos.",
+      model: "Maße nach den Angaben des Museums. Die Einlagen sind dessen Fotos entnommen; das Profil des Rahmens und die Reihenfolge der Plättchen an den Kanten sind geschätzt.",
       src: [['Victoria and Albert Museum, „Games board“ 861-1907', 'https://collections.vam.ac.uk/item/O370652/games-board-unknown']] },
     kofukuji: { name: 'Shogi-Steine vom alten Gelände des Kōfuku-ji', alt: 'Die ältesten Shogi-Steine Japans und ein Holztäfelchen mit ihren Namen', date: 'Spätes 11.–12. Jahrhundert', where: 'Japan (Nara)', found: 'Grabungen auf dem ehemaligen Gelände des Kōfuku-ji, Noborioji-chō, Nara: Bereich Kisshōin (1992, eine brunnenartige Grube) und Bereich Kanzen\'in (2013, ein Brunnen und eine Grube)',
       museum: 'Museum des Archäologischen Instituts Kashihara, Präfektur Nara', no: 'Materielles Kulturgut der Präfektur Nara (2022, 31 Objekte)', mat: 'Holz, Tusche', size: 'Steine etwa 2,5 cm lang (der betrunkene Elefant: etwa 2,5 × 1,5 cm, 2 mm dick)',
@@ -141,7 +141,7 @@
         ['Das Übungstäfelchen', 'Ein Holztäfelchen, auf das die Namen von Steinen – 酔像, 金将, 歩兵 und weitere – immer wieder geschrieben sind.'],
         ['Der Stab „Tengi 6“', 'Das Etikett am Kopf eines Schriftrollenstabs, datiert Tengi 6 (1058): der Schlüssel zum Alter der Steine von 1992.'],
         ['Der Stab „Jōtoku 2“', 'Ein Schriftrollenstab, datiert Jōtoku 2 (1098), aus dem Brunnen von 2013.']],
-      model: 'Arten und Zahl der Steine, die Aufschriften von Täfelchen und Stäben und die Datierungen folgen den Angaben der Präfektur Nara; die Anordnung folgt dem Foto des Museums. Größe und Umriss jedes Steins, wie viel Tusche erhalten ist sowie die Größe von Täfelchen und Stäben und die Lage ihrer Schrift sind Schätzungen.',
+      model: 'Arten und Zahl der Steine, die Aufschriften von Täfelchen und Stäben und die Datierungen folgen den Angaben der Präfektur Nara; die Anordnung folgt dem Foto des Museums. Größe und Umriss jedes Steins, die Handschrift und wie viel Tusche erhalten ist sowie die Größe von Täfelchen und Stäben und die Lage ihrer Schrift sind Schätzungen.',
       src: [['Präfektur Nara, „令和4年度 県指定文化財の概要 興福寺旧境内出土将棋駒・習書木簡・題箋軸“', 'https://www.pref.nara.jp/secure/292352/R4-6-shogikoma.pdf'], ['Japanischer Shogi-Verband, „日本将棋の歴史“', 'https://www.shogi.or.jp/history/story/']] },
   },
 };
