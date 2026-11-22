@@ -148,19 +148,26 @@
     ov.querySelector('[data-k="reset"]').onclick = () => { if (V3 && V3.home) { V3.spin = false; tween(V3.home); } };
     /* the texts can be put away so the piece fills the case (2026-11-23): on a computer the panel folds to the side (the button at the bottom
        right, or the W key); on a phone the sheet is dragged by its grip — down to a strip with the title, up to nearly the whole screen — or
-       toggled with the same button. The case really changes size (the layout's own rows / columns), but not while the grip is being dragged. */
+       toggled with the same button. The case really changes size (the layout's own rows / columns) and is redrawn at every step, so the piece follows the panel. */
     { const info = ov.querySelector('.exinfo'), grab = ov.querySelector('.exgrab'), wb = ov.querySelector('[data-k="wide"]'), stage = ov.querySelector('.exstage');
       const sheet = () => getComputedStyle(grab).display !== 'none';   // (the phone layout: the texts under the case)
-      const setSt = st => { ov.dataset.st = st; wb.classList.toggle('on', st === 'big'); ov.style.removeProperty('--sth'); };
+      // the change of state is run here, step by step (the layout's own transition does not animate rows / columns made of variables): the
+      // case's size eases from where it is to where the new state puts it; each step is drawn at once (resize → render), so the piece,
+      // its numbers and the scale bar glide with the panel
+      let anim = 0;
+      const setSt = (st, ms = 320) => { cancelAnimationFrame(anim); const sh = sheet(), key = sh ? '--sth' : '--exw', cur = () => sh ? stage.clientHeight : ov.clientWidth - stage.clientWidth, from = cur();
+        ov.dataset.st = st; wb.classList.toggle('on', st === 'big'); ov.style.removeProperty('--sth'); ov.style.removeProperty('--exw'); const to = cur();
+        if (Math.abs(to - from) < 2 || !ms) return; ov.style.setProperty(key, from + 'px'); ov.classList.add('exv-anim'); const t0 = performance.now();
+        const step = now => { const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3); if (k >= 1 || !ov.isConnected) { ov.style.removeProperty(key); ov.classList.remove('exv-anim'); return; } ov.style.setProperty(key, (from + (to - from) * e).toFixed(1) + 'px'); anim = requestAnimationFrame(step); };
+        anim = requestAnimationFrame(step); };
       wb.onclick = () => setSt(ov.dataset.st === 'big' ? '' : 'big');
       let d = null;
-      grab.onpointerdown = ev => { if (!sheet()) return; grab.setPointerCapture(ev.pointerId); const cv = stage.querySelector('canvas'); d = { y: ev.clientY, h: stage.clientHeight, moved: 0 };
-        if (V3) V3.hold = true; cv.style.height = d.h + 'px'; cv.style.bottom = 'auto'; ov.classList.add('exv-drag'); };
+      grab.onpointerdown = ev => { if (!sheet()) return; cancelAnimationFrame(anim); ov.classList.remove('exv-anim'); grab.setPointerCapture(ev.pointerId); d = { y: ev.clientY, h: stage.clientHeight, moved: 0 };
+        ov.classList.add('exv-drag'); };
       grab.onpointermove = ev => { if (!d) return; const dy = ev.clientY - d.y; d.moved = Math.max(d.moved, Math.abs(dy)); ov.style.setProperty('--sth', Math.max(60, Math.min(ov.clientHeight - 84, d.h + dy)) + 'px'); };
       const up = ev => { if (!d) return; const H = ov.clientHeight, h = stage.clientHeight, was = ov.dataset.st || '', tap = d.moved < 6; d = null; ov.classList.remove('exv-drag');
-        const cv = stage.querySelector('canvas'); cv.style.height = ''; cv.style.bottom = '';
         setSt(tap ? (was === 'big' ? '' : was === 'text' ? '' : 'big') : h > H * .68 ? 'big' : h < H * .36 ? 'text' : '');
-        if (V3) { V3.hold = false; if (V3.resize) requestAnimationFrame(V3.resize); } };
+        };
       grab.onpointerup = up; grab.onpointercancel = up; }
     ov.querySelector('[data-k="spin"]').onclick = () => { if (!V3) return; V3.spin = !V3.spin; ov.querySelector('[data-k="spin"]').classList.toggle('on', V3.spin); go(); };
     ov.querySelector('[data-k="spin"]').classList.add('on');
@@ -180,13 +187,17 @@
   function build(e) {
     const TT = window.THREE, X = window.Table3D, ov = V3.ov, cv = ov.querySelector('canvas'), stage = ov.querySelector('.exstage');
     const B = window.AtlasEx && AtlasEx[e.id]; if (!TT || !B) { ov.querySelector('.exload').textContent = ui(lang, 'fail'); return; }
-    const R = new TT.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    // the case's drawing surface is kept from one piece to the next (2026-11-23): making a WebGL context and the room's reflections anew
+    // at every opening was a large part of the wait. It is let go a minute after the last case is closed.
+    clearTimeout(poolT); if (POOL) { let lost = true; try { lost = POOL.R.getContext().isContextLost(); } catch (x) {} if (lost) dropPool(); }
+    const fresh = !POOL; if (fresh) POOL = { R: new TT.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'high-performance' }) }; else cv.replaceWith(POOL.R.domElement);
+    const R = POOL.R; if (fresh) POOL.env = envMap(R, TT);
     R.setPixelRatio(Math.min(devicePixelRatio || 1, phone() ? 1.5 : 2));
     R.outputColorSpace = TT.SRGBColorSpace; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = .85;   // (.98 blew out ivory and pale wood on phones)
     R.shadowMap.enabled = true; R.shadowMap.type = TT.PCFSoftShadowMap; R.shadowMap.autoUpdate = false;
     if (R.debug && !DBG.on) R.debug.checkShaderErrors = false;   // (asking the driver for each program's log waits for its compile: 0.1–0.2 s when a case opens)
-    const scene = new TT.Scene(), env = envMap(R, TT); scene.environment = env.texture;
-    let obj; try { obj = B.build(TT, X, kit); } catch (err) { console.warn('[gallery]', err); ov.querySelector('.exload').textContent = ui(lang, 'fail'); R.dispose(); return; }
+    const scene = new TT.Scene(), env = POOL.env; scene.environment = env.texture;
+    let obj; try { obj = B.build(TT, X, kit); } catch (err) { console.warn('[gallery]', err); ov.querySelector('.exload').textContent = ui(lang, 'fail'); return; }
     const aniso = R.capabilities.getMaxAnisotropy();
     // on a phone no texture is kept longer than 1536 px (a 2048² picture is 22 MB of video memory with its mip-maps; the screen cannot show the difference)
     const small = t => { const im = t.image, cap = 1536; if (!phone() || !im || !im.getContext || Math.max(im.width, im.height) <= cap) return; const k = cap / Math.max(im.width, im.height), c = document.createElement('canvas');
@@ -224,7 +235,11 @@
     const resize = () => { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h || V3.hold || (w === rw && h === rh)) return; rw = w; rh = h; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); const nd = fitD() * df;
       // (the case grew or shrank — the texts were put away or brought back: the piece keeps its share of the picture)
       if (!V3.sph.d) V3.sph.d = nd; else if (V3.fit0 && !ov.classList.contains('exv-play') && !V3.fitP) { V3.tw = null; V3.sph.d *= nd / V3.fit0; }
-      V3.fit0 = nd; V3.fitP = ov.classList.contains('exv-play');   /* (a game sets its own view, and gives the old one back when it ends) */ if (!ov.classList.contains('exv-play')) V3.home = { yaw: yaw0, pit: pit0, d: nd }; go(); };
+      V3.fit0 = nd; V3.fitP = ov.classList.contains('exv-play');   /* (a game sets its own view, and gives the old one back when it ends) */ if (!ov.classList.contains('exv-play')) V3.home = { yaw: yaw0, pit: pit0, d: nd };
+      // drawn at once, in the same step as the new size (a canvas is blank after it is resized: waiting for the next frame made the piece
+      // blink and the numbers lag while the texts slid in or out) — so the piece and its numbers glide with the panel
+      if (V3.spots) { const S = V3.sph, t = V3.tgt; cam.position.set(t.x + S.d * Math.cos(S.pit) * Math.sin(S.yaw), t.y + S.d * Math.sin(S.pit), t.z + S.d * Math.cos(S.pit) * Math.cos(S.yaw)); cam.lookAt(t); R.render(scene, cam); place(); }
+      go(); };
     V3.resize = resize; V3.ro = new ResizeObserver(resize); V3.ro.observe(stage); resize();
     // spots: the numbered details (model coordinates; the piece was moved onto the plinth, so add its offset)
     V3.spots = (e.spots || obj.userData.spots || []).map(p => new TT.Vector3(p[0], p[1], p[2]));   // (model coordinates: placed through the piece's matrix each frame)
@@ -266,10 +281,14 @@
     if (V3.obj && V3.obj.userData.dispose) { try { V3.obj.userData.dispose(); } catch (x) {} }
     if (V3.scene) V3.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); const m = o.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(x => { for (const k in x) { const v = x[k]; if (v && v.isTexture) v.dispose(); } x.dispose(); }); });
     if (DBG.el) DBG.el.hidden = true;
-    if (V3.env) V3.env.dispose();
-    if (V3.R) { V3.R.dispose(); try { V3.R.forceContextLoss(); } catch (x) {} }
+    if (V3.scene) V3.scene.traverse(o => { if (o.isLight && o.dispose) o.dispose(); });   // (the shadow map)
+    if (V3.R) { try { V3.R.renderLists.dispose(); V3.R.setSize(2, 2, false); V3.R.clear(); } catch (x) {} }   // (the surface itself is kept — see build — but small while it waits)
     V3 = null;
+    clearTimeout(poolT); poolT = setTimeout(() => { if (!V3) dropPool(); }, 60000);
   }
+  let POOL = null, poolT = 0;
+  function dropPool() { if (!POOL) return; try { POOL.env.dispose(); POOL.R.dispose(); POOL.R.forceContextLoss(); } catch (x) {} POOL = null; }
+  addEventListener('pagehide', () => { if (!V3) dropPool(); });
 
   /* ---------- I key: the debug panel (2026-11-21; the same look as the 3D table's, atlas/table3d.js) ---------- */
   const DBG = { on: (() => { try { return !!sessionStorage.getItem('t3d-debug'); } catch (x) { return false; } })(), el: null, fr: 0, t: 0, fps: 0, last: 0 };
@@ -322,7 +341,9 @@
     const S = V3.sph; let moving = false;
     if (V3.tw) { const k = Math.min(1, (now - V3.tw.t0) / V3.tw.ms), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; S.yaw = V3.tw.a.yaw + (V3.tw.b.yaw - V3.tw.a.yaw) * e; S.pit = V3.tw.a.pit + (V3.tw.b.pit - V3.tw.a.pit) * e; S.d = V3.tw.a.d + (V3.tw.b.d - V3.tw.a.d) * e; if (k >= 1) V3.tw = null; moving = true; }
     if (!V3.drag && (Math.abs(V3.vel.yaw) > 1e-4 || Math.abs(V3.vel.pit) > 1e-4)) { S.yaw += V3.vel.yaw; S.pit += V3.vel.pit; V3.vel.yaw *= .9; V3.vel.pit *= .9; moving = true; }
-    if (V3.spin && !V3.drag && !V3.tw && awake()) { S.yaw += dt * .16; moving = true; }
+    if (V3.spin && !V3.drag && !V3.tw && awake()) { S.yaw += dt * .16; moving = true;
+      // (one full turn, then it rests: a case left open no longer draws for ever — the button starts it again)
+      V3.turned = (V3.turned || 0) + dt * .16; if (V3.turned > Math.PI * 2 && !V3.playing) { V3.spin = false; V3.turned = 0; const sb = V3.ov.querySelector('[data-k="spin"]'); if (sb) sb.classList.remove('on'); } }
     if (V3.flip && V3.flip.t !== V3.flip.to) {   // turning a two-sided piece over: lift, roll half a turn, set down
       const F = V3.flip; F.t = F.to > F.t ? Math.min(F.to, F.t + dt / .9) : Math.max(F.to, F.t - dt / .9);
       const k = F.t < .5 ? 2 * F.t * F.t : 1 - Math.pow(-2 * F.t + 2, 2) / 2;
@@ -458,12 +479,29 @@
           gr.addColorStop(0, `rgba(${c},${c},${c},${a})`); gr.addColorStop(.55, `rgba(${c},${c},${c},${a * .7})`); gr.addColorStop(1, `rgba(${c},${c},${c},0)`); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, 1, 0, 6.29); g.fill(); g.restore(); },
         area(g, pts, amt, sharp) { sh(g, amt > 0 ? 255 : 0, Math.abs(amt)); if (sharp) poly(g, pts); else path(g, pts, true); g.fill(); } }; })(),
     // a value-noise field 0..1 (seeded): n(x, y)
-    noise(seed) { const N = window.Table3D && Table3D.makeNoise ? Table3D.makeNoise(seed) : null; return N ? (x, y, o = 4) => N(x, y, o) : (x, y) => .5 + .25 * Math.sin(x * 3.1 + seed) * Math.cos(y * 2.7 - seed); },
+    // (the same numbers as Table3D.makeNoise — the portal's value noise — written out flat: the pieces' wood, shell and cloth are painted
+    //  pixel by pixel with it, and the nested calls were most of the time a case took to open)
+    noise(seed) {
+      const P = new Uint8Array(512); let x = seed * 9301 + 49297 | 0;
+      for (let i = 0; i < 256; i++) P[i] = i;
+      for (let i = 255; i > 0; i--) { x = (x * 1103515245 + 12345) & 0x7fffffff; const j = x % (i + 1), t = P[i]; P[i] = P[j]; P[j] = t; }
+      for (let i = 0; i < 256; i++) P[i + 256] = P[i];
+      const NORM = [0, 1 / .5, 1 / .75, 1 / .875, 1 / .9375, 1 / .96875, 1 / .984375];
+      return (px, py, oct = 4) => { let s = 0, a = .5, fr = 1;
+        for (let o = 0; o < oct; o++) { const X = px * fr, Y = py * fr, xi = Math.floor(X), yi = Math.floor(Y), xf = X - xi, yf = Y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+          const A = P[xi & 255], B = P[(xi + 1) & 255], j0 = yi & 255, j1 = (yi + 1) & 255;
+          s += a * ((P[A + j0] * (1 - u) + P[B + j0] * u) * (1 - v) + (P[A + j1] * (1 - u) + P[B + j1] * u) * v); a *= .5; fr *= 2.03; }
+        return s / 255 * (NORM[oct] || 1 / (1 - Math.pow(.5, oct))); }; },
     // fine grain lines for wood / ivory (pixel loop, fast enough for 512–1024²)
     grain(g, w, h, { a, b, seed = 1, sx = 1, sy = 24, warp = 2, pores = 0 }) {
       const n = kit.noise(seed), img = g.createImageData(w, h), d = img.data, A = hexRGB(a), B = hexRGB(b);
+      // (the two slow fields — the warp and the drift of the lines — change over tens of pixels: worked out on every 4th pixel and read
+      //  between; only the fine streaks and the pores are worked out for every pixel. Twice as fast, the same picture.)
+      const GS = 4, gw = Math.ceil(w / GS) + 2, gh = Math.ceil(h / GS) + 2, F1 = new Float32Array(gw * gh), F2 = new Float32Array(gw * gh);
+      for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++) { const u = i * GS / w, v = j * GS / h; F1[j * gw + i] = n(u * 3, v * 3); F2[j * gw + i] = n(u * sx * 2, v * 4); }
+      const rd = (F, x, y) => { const fx = x / GS, fy = y / GS, i = fx | 0, j = fy | 0, p = fx - i, q = fy - j, k = j * gw + i; return (F[k] * (1 - p) + F[k + 1] * p) * (1 - q) + (F[k + gw] * (1 - p) + F[k + gw + 1] * p) * q; };
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        const u = x / w, v = y / h, wv = n(u * 3, v * 3) * warp, s = .5 + .5 * Math.sin((v * sy + wv * 6 + n(u * sx * 2, v * 4) * 2) * Math.PI * 2);
+        const u = x / w, v = y / h, wv = rd(F1, x, y) * warp, s = .5 + .5 * Math.sin((v * sy + wv * 6 + rd(F2, x, y) * 2) * Math.PI * 2);
         let k = Math.pow(s, 3) * .7 + n(u * 40, v * 6) * .3; if (pores && n(u * 300, v * 60, 1) > 1 - pores) k = 1;
         const i = (y * w + x) * 4; d[i] = A[0] + (B[0] - A[0]) * k; d[i + 1] = A[1] + (B[1] - A[1]) * k; d[i + 2] = A[2] + (B[2] - A[2]) * k; d[i + 3] = 255; }
       g.putImageData(img, 0, 0);

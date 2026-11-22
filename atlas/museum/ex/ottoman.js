@@ -89,11 +89,12 @@
             // nacre: each piece is cut at its own angle, so each has its own moment. As the eye moves, a silky band of light crosses a piece
             // and its colour runs through rose, green and pale blue — soft pastel, never a rainbow; the neighbour turns at another moment.
             { vec3 oG0 = texture2D(uGrain, vMapUv * 2.6 + 0.11).rgb; float a = oG0.r * 9.0 + oG1.r * 2.0; vec3 gd = normalize(vec3(cos(a), 0.35, sin(a))); float t = dot(normalize(vObjView), gd);
-              float ph = t * 2.1 + oG0.r * 1.3 + oG1.r * 0.4 + oB.g * 0.35 + oFig * 0.25;
+              float ph = t * 3.2 + oG0.r * 1.3 + oG1.r * 0.4 + oB.g * 0.35 + oFig * 0.25;
               vec3 hue = 0.5 + 0.5 * cos(6.2832 * (ph + vec3(0.0, 0.33, 0.67)));
               float band = pow(0.5 + 0.5 * cos(6.2832 * (ph * 0.5 + 0.2 + oG3.g * 0.06)), 2.5), deep = 0.5 + 0.5 * cos(6.2832 * (ph * 0.5 + 0.7));
-              vec3 pastel = mix(vec3(1.0), 0.36 + 1.28 * hue, 0.33 + 0.17 * deep);
-              oPearl = oPearl * (0.56 + 0.8 * band) * pastel + hue * band * 0.04; }
+              vec3 pastel = mix(vec3(1.0), 0.24 + 1.52 * hue, 0.46 + 0.2 * deep);
+              float nk = 1.0 - 0.65 * oFar;   // (from afar a piece is a pixel or two: its play of colour is calmed there, or the board would twinkle)
+              oPearl = oPearl * mix(0.95, 0.5 + 0.9 * band, nk) * mix(vec3(1.0), pastel, nk) + hue * band * 0.04 * nk; }
             // bone: the lipping (chess side) and the strips over the hinges (backgammon side) — cream, a little streaked, yellowed in the joints
             vec2 oQ = abs(vMapUv - 0.5) * vec2(${W.toFixed(2)}, ${D.toFixed(2)});
             float oBone = uMode > 0.5 ? smoothstep(0.35, 0.65, oB.r) : step(oQ.x, 0.46) * step(abs(oQ.y - ${(D / 2 - 2.95).toFixed(2)}), 2.75);

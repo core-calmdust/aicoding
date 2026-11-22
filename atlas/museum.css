@@ -185,7 +185,7 @@ html.skdark .trsub,html.skdark .trlegend{color:rgba(255,255,255,.8)}
 html.skdark .gxsub{color:rgba(255,255,255,.8)}
 /* the viewer: a dark gallery case over the page */
 html.exv-open{overflow:hidden}
-.exv{position:fixed;inset:0;z-index:120;display:grid;grid-template-columns:minmax(0,1fr) var(--exw,420px);transition:opacity .25s,grid-template-columns .28s;background:radial-gradient(70% 90% at 38% 42%,#3b2a1d 0%,#1d140e 58%,#0f0a07 100%);opacity:0;transition:opacity .25s;color:#f5ead6}
+.exv{position:fixed;inset:0;z-index:120;display:grid;grid-template-columns:minmax(0,1fr) var(--exw,420px);background:radial-gradient(70% 90% at 38% 42%,#3b2a1d 0%,#1d140e 58%,#0f0a07 100%);opacity:0;transition:opacity .25s;color:#f5ead6}
 .exv.on{opacity:1}
 .exstage{position:relative;overflow:hidden;touch-action:none;cursor:grab}
 .exstage:active{cursor:grabbing}
@@ -241,10 +241,11 @@ html.exv-open{overflow:hidden}
 .exv[data-st="big"]:not(.exv-play) .exscroll{visibility:hidden}
 .exv[data-st="big"]:not(.exv-play) .exclose{background:rgba(25,18,12,.6);border-color:rgba(255,255,255,.35);color:#fff;box-shadow:none}
 .exinfo{min-width:0}.exscroll{min-width:min(420px,100vw);box-sizing:border-box}
+/* (while the panel slides: its texts keep their place and are cut at the panel's edge, the look of the open panel stays until it is away) */
+.exv.exv-anim .exinfo{overflow:hidden;background:#fbf4e6!important;box-shadow:-20px 0 40px -20px rgba(0,0,0,.6)!important}.exv.exv-anim .exscroll{visibility:visible!important}
 @media (max-width:819px){
-  .exv{grid-template-columns:1fr;grid-template-rows:minmax(0,var(--sth,52svh)) minmax(0,1fr);transition:opacity .25s,grid-template-rows .28s}
+  .exv{grid-template-columns:1fr;grid-template-rows:minmax(0,var(--sth,52svh)) minmax(0,1fr)}
   .exv[data-st="big"]{--sth:calc(100svh - 84px)}.exv[data-st="text"]{--sth:20svh}
-  .exv.exv-drag{transition:opacity .25s}
   .exv[data-st="big"]:not(.exv-play) .exinfo{background:#fbf4e6;box-shadow:0 -14px 30px -16px rgba(0,0,0,.6)}
   .exv[data-st="big"]:not(.exv-play) .exscroll{visibility:visible;overflow:hidden}
   .exscroll{min-width:0}
