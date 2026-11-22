@@ -100,23 +100,27 @@
     // in the middle strip; the dice are the board's two ivory dice (the pair laid out for show is put away).
     sugoroku: { game: 'sugoroku', area: [-27.3, 27.3, -15.6, 15.6], view: { yaw: 0, pit: 1.2, d: .8, dp: .58, long: true, dv: .62, dvw: .95, pv: 1.35 }, noContact: true,
       board(TH, obj, K) {
-        const P = obj.userData.play, g = new TH.Group(), Y = P.top, R = P.row, SP = 1.62, PER = 5, TH0 = .75;
+        const PH = matchMedia('(pointer:coarse)').matches || innerWidth < 820;   // (on a phone the stones are played larger, 2.3 cm across — the real 1.5 cm is too small to see there; a computer shows them at their real size: the owner's choice, 2026-11-23)
+        const P = obj.userData.play, g = new TH.Group(), Y = P.top, R = P.row, SZ = PH ? 2.3 / 1.5 : 1, SP = PH ? 2.4 : 1.62, PER = 5, TH0 = .75 * (PH ? 1.3 : 1);
         // the points where the board's own flowers are (measured on the photograph the face is made from: they stand a little off an even pitch)
         const XS = [-25.28, -21.7, -17.94, -14.07, -10.2, -6.03, 5.9, 9.75, 13.55, 17.4, 21.08, 24.77], colX = c => XS[c - 1];
         // a point's stones: on the flower, then in a line toward the middle, five to a line; more go on top, half a stone along
         const slot = (abs, k) => { const near = abs <= 12, c = near ? abs : 25 - abs, L = Math.floor(k / PER); return [colX(c), Y + L * TH0, (near ? 1 : -1) * (R - (k % PER) * SP - (L % 2) * SP / 2)]; };
-        const bar = (side, k) => [(side ? 1 : -1) * (2.9 + k * 1.7) - .4, Y, 0];
+        const bar = (side, k) => [(side ? 1 : -1) * (2.9 + k * (PH ? 2.4 : 1.7)) - .4, Y, 0];
         const hit = (x, z) => { if (Math.abs(z) < 1.9) return 0; if (Math.abs(z) > R + 1.6) return -1; let c = 0, bd = 1e9; for (let i = 1; i <= 12; i++) { const d = Math.abs(x - colX(i)); if (d < bd) { bd = d; c = i; } } if (bd > 2.1) return -1; return z > 0 ? c : 25 - c; };
         // twelve-hundred-year-old glass: translucent and deep in colour (as in the Shōsōin's photograph — a dark bottle green, a honey yellow), the surface
         // dulled and faintly pitted by age, no plastic gloss (a noise roughness map, a soft clearcoat)
         const pits = K.tex(128, 128, (c, w, h) => { c.fillStyle = '#9a9a9a'; c.fillRect(0, 0, w, h); for (let i = 0; i < 700; i++) { const v = 120 + Math.random() * 120 | 0; c.fillStyle = `rgb(${v},${v},${v})`; c.globalAlpha = .5; c.beginPath(); c.arc(Math.random() * w, Math.random() * h, .6 + Math.random() * 2.2, 0, 6.3); c.fill(); } c.globalAlpha = 1; });
-        const PH = matchMedia('(pointer:coarse)').matches, glass = (col, deep) => K.mat({ color: col, roughness: .42, roughnessMap: pits, metalness: 0, transmission: PH ? 0 : .45, thickness: .7, ior: 1.5, attenuationColor: K.lin ? K.lin(deep) : deep, attenuationDistance: .6, clearcoat: .35, clearcoatRoughness: .45 });
-        const MAT = [glass('#2f6a44', '#123a22'), glass('#b8923a', '#6a4a10')];
+        // translucent, as the originals are (glass and rock crystal: the Shōsōin's photograph shows the ground through them): on a computer real
+        // transmission through the stone; on a phone, where that costs a second drawing of the scene, a see-through surface instead
+        const glass = (col, deep) => { const m = K.mat({ color: col, roughness: .3, roughnessMap: pits, metalness: 0, transmission: PH ? 0 : .88, thickness: .75, ior: 1.5, attenuationColor: K.lin ? K.lin(deep) : deep, attenuationDistance: 1.1, clearcoat: .5, clearcoatRoughness: .3 });
+          if (PH) { m.transparent = true; m.opacity = .78; m.depthWrite = false; } return m; };
+        const MAT = [glass('#4f9a5c', '#1f6a34'), glass('#d9ab45', '#a8741a')];
         // the Shōsōin's 双六子 (北倉18; its record: 径1.3強〜1.5, 厚0.7〜0.8), at their real size since 2026-11-23: a flat underside, a short rounded
         // edge and a low dome that is nearly flat on top — a cabochon, not a ball (the Shōsōin's photograph CD0000000182)
         const geo = (d, t) => { const R0 = d / 2, pts = [[0, 0], [R0 * .9, 0], [R0 * .97, t * .05], [R0, t * .16]]; for (let i = 1; i <= 10; i++) { const u = i / 10, r = R0 * Math.cos(u * Math.PI / 2); pts.push([r, t * (.16 + .84 * Math.pow(Math.sin(u * Math.PI / 2), .78))]); }
           return new TH.LatheGeometry(pts.map(([a, b]) => new TH.Vector2(Math.max(.001, a), b)), 36); };
-        const GEO = [geo(1.5, .75), geo(1.45, .72)];
+        const GEO = [geo(1.5 * SZ, .75 * (PH ? 1.3 : 1)), geo(1.45 * SZ, .72 * (PH ? 1.3 : 1))];
         const stone = side => { const m = new TH.Mesh(GEO[side], MAT[side]); m.castShadow = m.receiveShadow = true; return m; };
         const die = () => { const m = new TH.Mesh(P.dieG, P.dieM); m.castShadow = m.receiveShadow = true; return m; };
         const diceAt = (side, i) => [-1.6 + i * 2.3, side ? -2.7 : 2.7];   // (in the gap between the two tables, clear of the lines of stones and the middle strip)
@@ -181,7 +185,7 @@
         onTurn: (s, info) => { if (npcT && info && info.ply != null) npcT.turn(info.ply); },
         onEnd: res => { if (npcT && !res.pvp) npcT.end(res); if (o.onEnd) o.onEnd(res); } });
     // the case changes size (a phone: it grows when the game starts; a turned phone, a resized window): frame the board again
-    let rsT = 0; const ro = new ResizeObserver(() => { clearTimeout(rsT); rsT = setTimeout(() => { if (cur && cur.V === V && V.scene) apply(); }, 120); }); ro.observe(stage);
+    let rsT = 0, szW = stage.clientWidth, szH = stage.clientHeight; const ro = new ResizeObserver(() => { clearTimeout(rsT); rsT = setTimeout(() => { if (!(cur && cur.V === V && V.scene)) return; const w = stage.clientWidth, h = stage.clientHeight; if (w === szW && h === szH) return; szW = w; szH = h; apply(); }, 120); }); ro.observe(stage);   // (only when the size really changed: framing the board twice at the start looked like two moves)
     cur = { V, ses, board, npcT, course: !!o.course, L0, dot, hid, ro, tgt0, turn() { if (o.course) return; const v = !vert(); try { localStorage.setItem(OK, v ? 'v' : 'h'); } catch (e) {} apply(); } };
     if (o.course) apply();
     return { stop };

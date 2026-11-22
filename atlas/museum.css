@@ -242,7 +242,8 @@ html.exv-open{overflow:hidden}
 .exv[data-st="big"]:not(.exv-play) .exclose{background:rgba(25,18,12,.6);border-color:rgba(255,255,255,.35);color:#fff;box-shadow:none}
 .exinfo{min-width:0}.exscroll{min-width:min(420px,100vw);box-sizing:border-box}
 /* (while the panel slides: its texts keep their place and are cut at the panel's edge, the look of the open panel stays until it is away) */
-.exv.exv-anim .exinfo{overflow:hidden;background:#fbf4e6!important;box-shadow:-20px 0 40px -20px rgba(0,0,0,.6)!important}.exv.exv-anim .exscroll{visibility:visible!important}
+.exv.exv-anim .exinfo{position:absolute;inset-block:0;inset-inline-end:0;overflow:hidden;background:#fbf4e6!important;box-shadow:-20px 0 40px -20px rgba(0,0,0,.6)!important;will-change:transform;z-index:2}.exv.exv-anim .exscroll{visibility:visible!important;display:block!important}
+@media (max-width:819px){.exv.exv-anim .exinfo{inset-block:auto 0;inset-inline:0;box-shadow:0 -14px 30px -16px rgba(0,0,0,.6)!important}}
 @media (max-width:819px){
   .exv{grid-template-columns:1fr;grid-template-rows:minmax(0,var(--sth,52svh)) minmax(0,1fr)}
   .exv[data-st="big"]{--sth:calc(100svh - 84px)}.exv[data-st="text"]{--sth:20svh}

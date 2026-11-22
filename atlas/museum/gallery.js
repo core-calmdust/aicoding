@@ -10,7 +10,7 @@
    (a turn, a zoom, the slow turntable) and never while the window is in the background. */
 (function () {
   'use strict';
-  const V = 125;
+  const V = 126;
   /* ---------- the pieces: id, the game it belongs to, its scale (cm per model unit), the camera's start, the details ----------
      lock: { game, ach } → open after that many achievements of the game. src: the files the piece needs (besides ex/<id>.js) */
   const EX = [
@@ -153,14 +153,15 @@
         rul.onclick = () => { if (!V3 || !V3.obj || lock) return; rul.disabled = true;
           Promise.all([load('museum/play.js?v=' + V), load('museum/rules.js?v=' + V), load('museum/rules-tx-en.js?v=' + V), lang !== 'en' ? load('museum/rules-tx-' + lang + '.js?v=' + V) : 0]).then(() => { rul.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
             const quit = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); rulesOn(false); playing(false); };
-            const ok = AtlasMuseumPlay.start(id, { course: true, lang, onExit: quit, onPlay: () => { quit(); setTimeout(() => pb.click(), 60); } });
+            prePlay(); const ok = AtlasMuseumPlay.start(id, { course: true, lang, onExit: quit, onPlay: () => { quit(); setTimeout(() => pb.click(), 60); } });
             if (!ok) return; rul.classList.remove('new'); playing(true); acts.hidden = true; clearInterval(poll); rulesOn(true); ov.quitPlay = quit; }); };
-        const playing = on => { if (!on && ov.fillLv) setTimeout(ov.fillLv, 50); { const rb = ov.querySelector('.exres'); if (rb) rb.remove(); } ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); if (ov.slide && innerWidth >= 820) ov.slide(() => ov.classList.toggle('exv-play', on)); else ov.classList.toggle('exv-play', on); pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
+        const prePlay = () => { if (ov.slide && !ov.classList.contains('exv-play')) ov.slide(() => ov.classList.add('exv-play'), { play: true }); };   // (first the case at its game size, then the game: it flies to the board in one move)
+        const playing = on => { if (!on && ov.fillLv) setTimeout(ov.fillLv, 50); { const rb = ov.querySelector('.exres'); if (rb) rb.remove(); } ov.classList.remove('exv-cfg'); if (cfg) cfg.classList.remove('on'); if (on !== ov.classList.contains('exv-play')) { if (ov.slide) ov.slide(() => ov.classList.toggle('exv-play', on), on ? { play: true } : { noD: true }); else ov.classList.toggle('exv-play', on); } pb.hidden = on; acts.hidden = !on; clearInterval(poll); if (on) { syncActs(); poll = setInterval(syncActs, 350); } lock = on; shut(); if (!on) hudEl.innerHTML = ''; };
         const quitGame = () => { if (window.AtlasMuseumPlay) AtlasMuseumPlay.stop(); playing(false); }; ov.quitPlay = quitGame;
         pb.onclick = () => { if (!V3 || !V3.obj) return; pb.disabled = true;
           try { const q = JSON.parse(localStorage.getItem(PK) || '{}'); q[id] = { lv: +lvS.dataset.v, side: +sdS.dataset.v }; localStorage.setItem(PK, JSON.stringify(q)); } catch (x) {}
           Promise.all([load('museum/play.js?v=' + V), window.AtlasLazy ? AtlasLazy.need(P.game) : 0]).then(() => { pb.disabled = false; if (!V3 || V3.ov !== ov || !window.AtlasMuseumPlay) return;
-            const lv = +lvS.dataset.v, ok = AtlasMuseumPlay.start(id, { level: lv || 1, mode: lv ? 'ai' : 'pvp', side: +sdS.dataset.v, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { const k = res.pvp ? 'win' : res.draw ? 'draw' : res.win ? 'win' : 'lose', tx = res.pvp ? (res.winnerText || ui(lang, 'p_draw')) : ui(lang, 'p_' + k); hudEl.innerHTML = `<span class="hm">${esc(tx)}</span>`;
+            prePlay(); const lv = +lvS.dataset.v, ok = AtlasMuseumPlay.start(id, { level: lv || 1, mode: lv ? 'ai' : 'pvp', side: +sdS.dataset.v, lang, t: tt, hud: h => { hudEl.innerHTML = h; }, onEnd: res => { const k = res.pvp ? 'win' : res.draw ? 'draw' : res.win ? 'win' : 'lose', tx = res.pvp ? (res.winnerText || ui(lang, 'p_draw')) : ui(lang, 'p_' + k); hudEl.innerHTML = `<span class="hm">${esc(tx)}</span>`;
               // the result in the middle of the case (a plaque in the museum's manner), gone at a tap or when the game is left
               const old = ov.querySelector('.exres'); if (old) old.remove(); const rb = document.createElement('div'); rb.className = 'exres ' + k; rb.innerHTML = `<b>${esc(tx)}</b>`;
               rb.onclick = () => rb.remove(); ov.querySelector('.exstage').appendChild(rb); requestAnimationFrame(() => rb.classList.add('on')); } });
@@ -179,26 +180,30 @@
        toggled with the same button. The case really changes size (the layout's own rows / columns) and is redrawn at every step, so the piece follows the panel. */
     { const info = ov.querySelector('.exinfo'), grab = ov.querySelector('.exgrab'), wb = ov.querySelector('[data-k="wide"]'), stage = ov.querySelector('.exstage');
       const sheet = () => getComputedStyle(grab).display !== 'none';   // (the phone layout: the texts under the case)
-      // the change of state is run here, step by step (the layout's own transition does not animate rows / columns made of variables): the
-      // case's size eases from where it is to where the new state puts it; each step is drawn at once (resize → render), so the piece,
-      // its numbers and the scale bar glide with the panel
-      let anim = 0;
-      // (slide(change): any change of layout — a new state, a game starting or ending — is run the same way)
-      const slide = (change, ms = 320) => { cancelAnimationFrame(anim); const sh = sheet(), key = sh ? '--sth' : '--exw', cur = () => sh ? stage.clientHeight : ov.clientWidth - stage.clientWidth, from = cur();
-        change(); ov.style.removeProperty('--sth'); ov.style.removeProperty('--exw'); const to = cur();
-        if (Math.abs(to - from) < 2 || !ms) return; ov.style.setProperty(key, from + 'px'); ov.classList.add('exv-anim'); const t0 = performance.now();
-        const step = now => { const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3); if (k >= 1 || !ov.isConnected) { ov.style.removeProperty(key); ov.classList.remove('exv-anim'); return; } ov.style.setProperty(key, (from + (to - from) * e).toFixed(1) + 'px'); anim = requestAnimationFrame(step); };
+      /* A change of layout — the texts put away or brought back, a game starting or ending, the sheet dragged — is shown like this: the case
+         takes its larger size at once, the panel lies over it at its larger size and is moved with a transform, and the camera draws what the
+         case of the moment would show (V3.frame). Nothing is laid out or made anew while it moves; at the end the real layout takes over. */
+      let anim = 0, A = null;
+      const ext = () => sheet() ? ov.clientHeight - stage.clientHeight : ov.clientWidth - stage.clientWidth;   // how much the panel takes
+      const enter = (pMin, pMax) => { const sh = sheet(); A = { sh, pMin, pMax, key: sh ? '--sth' : '--exw', left: !sh && info.getBoundingClientRect().left < stage.getBoundingClientRect().left };
+        if (V3) V3.hold = true; ov.style.setProperty(A.key, (sh ? ov.clientHeight - pMin : pMin) + 'px'); ov.classList.add('exv-anim'); info.style.setProperty(sh ? 'height' : 'width', pMax + 'px'); A.W = stage.clientWidth; A.H = stage.clientHeight; };
+      const show = (p, noD) => { if (!A) return; const k = p - A.pMin; info.style.transform = A.sh ? `translateY(${(A.pMax - p).toFixed(1)}px)` : `translateX(${((A.left ? -1 : 1) * (A.pMax - p)).toFixed(1)}px)`;
+        if (V3 && V3.frame) { if (A.play) V3.frame(A.W, A.H, A.W, A.H); else V3.frame(A.W, A.H, A.sh ? A.W : A.W - k, A.sh ? A.H - k : A.H, A.left ? -k : 0, 0, noD); } };
+      const leave = () => { if (!A) return; info.style.removeProperty('width'); info.style.removeProperty('height'); info.style.removeProperty('transform'); ov.style.removeProperty(A.key); ov.classList.remove('exv-anim'); const nd = !!A.noD; A = null; if (V3) { V3.hold = false; if (V3.resize) V3.resize(nd); } };
+      // slide(change, o): o.play — a game starts (the case is at its full size at once, so the game frames the board once); o.noD — a game ends
+      const slide = (change, o = {}) => { cancelAnimationFrame(anim); const from = A ? A.cur : ext(); leave(); change(); const to = ext();
+        if (Math.abs(to - from) < 2 || !ov.isConnected) { if (V3 && V3.resize) V3.resize(!!o.noD); return; } enter(Math.min(from, to), Math.max(from, to)); A.play = o.play; A.noD = o.noD; A.cur = from; show(from, o.noD); const t0 = performance.now(), ms = 300;
+        const step = now => { if (!A) return; const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3); A.cur = from + (to - from) * e; if (k >= 1 || !ov.isConnected) { leave(); return; } show(A.cur, o.noD); anim = requestAnimationFrame(step); };
         anim = requestAnimationFrame(step); };
-      const setSt = (st, ms) => slide(() => { ov.dataset.st = st; wb.classList.toggle('on', st === 'big'); }, ms);
-      ov.slide = slide;   // (on a computer the texts slide away when a game starts and slide back when it ends: 2026-11-23)
+      const setSt = st => slide(() => { ov.dataset.st = st; wb.classList.toggle('on', st === 'big'); });
+      ov.slide = slide;
       wb.onclick = () => setSt(ov.dataset.st === 'big' ? '' : 'big');
       let d = null;
-      grab.onpointerdown = ev => { if (!sheet()) return; cancelAnimationFrame(anim); ov.classList.remove('exv-anim'); grab.setPointerCapture(ev.pointerId); d = { y: ev.clientY, h: stage.clientHeight, moved: 0 };
-        ov.classList.add('exv-drag'); };
-      grab.onpointermove = ev => { if (!d) return; const dy = ev.clientY - d.y; d.moved = Math.max(d.moved, Math.abs(dy)); ov.style.setProperty('--sth', Math.max(60, Math.min(ov.clientHeight - 84, d.h + dy)) + 'px'); };
-      const up = ev => { if (!d) return; const H = ov.clientHeight, h = stage.clientHeight, was = ov.dataset.st || '', tap = d.moved < 6; d = null; ov.classList.remove('exv-drag');
-        setSt(tap ? (was === 'big' ? '' : was === 'text' ? '' : 'big') : h > H * .68 ? 'big' : h < H * .36 ? 'text' : '');
-        };
+      grab.onpointerdown = ev => { if (!sheet()) return; cancelAnimationFrame(anim); const p0 = A ? A.cur : ext(); leave(); grab.setPointerCapture(ev.pointerId); const H = ov.clientHeight; d = { y: ev.clientY, p: p0, moved: 0 };
+        enter(84, H - 60); A.cur = p0; show(p0); };
+      grab.onpointermove = ev => { if (!d || !A) return; const dy = ev.clientY - d.y; d.moved = Math.max(d.moved, Math.abs(dy)); A.cur = Math.max(A.pMin, Math.min(A.pMax, d.p - dy)); show(A.cur); };
+      const up = ev => { if (!d) return; const H = ov.clientHeight, h = H - (A ? A.cur : ext()), was = ov.dataset.st || '', tap = d.moved < 6; d = null;
+        setSt(tap ? (was === 'big' ? '' : was === 'text' ? '' : 'big') : h > H * .68 ? 'big' : h < H * .36 ? 'text' : ''); };
       grab.onpointerup = up; grab.onpointercancel = up; }
     ov.querySelector('[data-k="spin"]').onclick = () => { if (!V3) return; V3.spin = !V3.spin; ov.querySelector('[data-k="spin"]').classList.toggle('on', V3.spin); go(); };
     ov.querySelector('[data-k="spin"]').classList.add('on');
@@ -263,14 +268,19 @@
     const fitD = () => { const a = cam.aspect, vf = cam.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * a); return r * 1.32 / Math.sin(Math.min(vf, hf) / 2); };
     Object.assign(V3, { slow: phone(), R, scene, cam, obj, pivot, py: sz.y / 2, flip: B.flip ? { t: 0, to: 0 } : null, env, tgt, r, e, sph: { yaw: yaw0, pit: pit0, d: 0 }, vel: { yaw: 0, pit: 0 }, home: null, raf: 0, need: 2, last: 0, plinth, fitD, df });
     let rw = 0, rh = 0;
-    const resize = () => { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h || V3.hold || (w === rw && h === rh)) return; rw = w; rh = h; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); const nd = fitD() * df;
+    /* frame(W, H, w, h, ox, oy, noD): the drawing surface is W × H; the picture is what a case of w × h would show, at the surface's corner
+       (shifted by ox, oy), and goes on beyond it. So a panel can slide over the case without the surface being made anew at every step
+       (that was the stutter: 2026-11-23) — while it slides the camera alone changes, and when it has arrived the real size gives the same picture. */
+    const frame = (W, H, w, h, ox, oy, noD) => { if (W !== rw || H !== rh) { rw = W; rh = H; R.setSize(W, H, false); }
+      cam.aspect = w / h; if (w === W && h === H) cam.clearViewOffset(); else cam.setViewOffset(w, h, ox || 0, oy || 0, W, H); cam.updateProjectionMatrix(); const nd = fitD() * df, play = ov.classList.contains('exv-play');
       // (the case grew or shrank — the texts were put away or brought back: the piece keeps its share of the picture)
-      if (!V3.sph.d) V3.sph.d = nd; else if (V3.fit0 && !ov.classList.contains('exv-play') && !V3.fitP) { V3.tw = null; V3.sph.d *= nd / V3.fit0; }
-      V3.fit0 = nd; V3.fitP = ov.classList.contains('exv-play');   /* (a game sets its own view, and gives the old one back when it ends) */ if (!ov.classList.contains('exv-play')) V3.home = { yaw: yaw0, pit: pit0, d: nd };
-      // drawn at once, in the same step as the new size (a canvas is blank after it is resized: waiting for the next frame made the piece
-      // blink and the numbers lag while the texts slid in or out) — so the piece and its numbers glide with the panel
+      if (!V3.sph.d) V3.sph.d = nd; else if (V3.fit0 && !play && !V3.fitP && !noD) { V3.tw = null; V3.sph.d *= nd / V3.fit0; }
+      V3.fit0 = nd; V3.fitP = play;   /* (a game sets its own view, and gives the old one back when it ends) */ if (!play) V3.home = { yaw: yaw0, pit: pit0, d: nd };
+      // drawn at once (a canvas is blank after it is resized)
       if (V3.spots) { const S = V3.sph, t = V3.tgt; cam.position.set(t.x + S.d * Math.cos(S.pit) * Math.sin(S.yaw), t.y + S.d * Math.sin(S.pit), t.z + S.d * Math.cos(S.pit) * Math.cos(S.yaw)); cam.lookAt(t); R.render(scene, cam); place(); }
       go(); };
+    V3.frame = frame;
+    const resize = noD => { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h || V3.hold || (w === rw && h === rh && !(cam.view && cam.view.enabled))) return; frame(w, h, w, h, 0, 0, noD === true); };
     V3.resize = resize; V3.ro = new ResizeObserver(resize); V3.ro.observe(stage); resize();
     // spots: the numbered details (model coordinates; the piece was moved onto the plinth, so add its offset)
     V3.spots = (e.spots || obj.userData.spots || []).map(p => new TT.Vector3(p[0], p[1], p[2]));   // (model coordinates: placed through the piece's matrix each frame)
