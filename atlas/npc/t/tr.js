@@ -61,6 +61,7 @@
     peg: ["XIV. Louis'nin sarayında bilye atlatan prenses", "Topların nasıl istifleneceğini düşünen gökbilimci"],
     alquerque: ['Endülüs avlusunun çocuğu', 'Tahta desenli halı satıcısı', 'Şarkılar Kitabı\'nın yazarı', 'Çöl göğünün avcısı', 'Kastilyalı şövalye', 'Saray bahçesinin hanımı', 'Oyunlar Kitabı\'nı yaptıran kral'],
     hitblow: ["Büyütecini yeni almış bir çırak", "Eski kâğıt-kalem oyunu Bulls and Cows’un boğası", "Pimleri saklamakta usta", "Şifre kırıcıların kasabası Bletchley Park’tan geldi", "Önce koyar, sonra düşünür", "Her şifrenin beş tahminde çözüldüğünü gösteren bilginden esinlendi", "Mastermind’ı icat eden posta müdüründen esinlendi"],
+    sugoroku: ["Eski başkent Nara’da uyuklayan bir kedi", "Zarları getiren Nara Parkı’ndan bir geyik", "Oyunu Tang Çini’nden getiren elçilerden esinlenildi", "Go ve sugorokunun can sıkıntısına iyi geldiğini yazan Sei Shōnagon’dan esinlenildi", "İmparator Shirakawa’nın bile söz geçiremediği zarların ruhu", "Shōsōin hazine evinin bekçisi", "Tenpyō sarayının en iyi ban-sugoroku oyuncusu"],
   },
   trivia: {
     chess: ['Satrancın 6. yüzyıl civarında Hindistan\'da oynanan çaturangadan geldiği düşünülür.', 'Vezir eskiden tek kare giden zayıf bir taştı. Gücünü 15. yüzyılın sonunda kazandı.', '«Şah mat» Farsça «şâh mât» yani «şah çaresiz» sözünden gelir.', '1997\'de bilgisayar Deep Blue dünya şampiyonunu yendi — büyük haberdi.'],
@@ -96,5 +97,6 @@
     peg: ["1697 tarihli bir Fransız gravüründe Prenses de Soubise peg solitaire oynuyor.", "İngiliz tahtasının orta problemi, aynı bilyenin art arda atlayışları tek hamle sayılırsa en az 18 hamlede çözülür.", "Kepler 1611'de topları manav tezgâhı gibi dizmenin en sık istif olduğunu tahmin etti. Bu ancak 20. yüzyılın sonunda kanıtlandı!"],
     alquerque: ['Alquerque, 10. yüzyıldan Arapça «Şarkılar Kitabı»nda geçer.', '13. yüzyılda X. Alfonso için yapılan Oyunlar Kitabı\'nda da vardır.', 'Damanın atası denir — ikisi de atlayarak taş alır.', 'Tahta çizgiler ve noktalardan oluşur; taşlar çizgiler boyunca noktadan noktaya gider.'],
     hitblow: ["Bugünkü tahta, 1970’te İsrailli posta müdürü Mordecai Meirowitz’in icat ettiği Mastermind’dan geliyor.", "Çok daha önce kâğıt kalemle oynanan sayı tahmini oyunu Bulls and Cows vardı.", "1977’de Donald Knuth, 4 pimli 6 renkli her şifrenin en fazla beş tahminde çözülebileceğini gösterdi.", "6 renkten 4, tekrar serbestse 6×6×6×6 = 1296 şifre. Tekrarsız 360."],
+    sugoroku: ["Ban-sugoroku’nun Nara döneminden önce Çin’den Japonya’ya geldiği söylenir. Shōsōin’de İmparator Shōmu ile ilişkili bir tahta hâlâ durur.", "689’da İmparatoriçe Jitō sugorokuyu yasakladı — çok kişi ona tutkundu.", "Yastık Kitabı’nda Sei Shōnagon “go, sugoroku ve hikâyeleri” can sıkıntısına iyi gelenler arasında sayar.", "Tahttan çekilmiş İmparator Shirakawa’nın üç şeye söz geçiremediğini söylediği anlatılır: Kamo Nehri, sugoroku zarları ve savaşçı keşişler."],
   },
 } });

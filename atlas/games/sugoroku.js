@@ -8,20 +8,20 @@
 (function () {
   'use strict';
   const TX = {
-    ja: { n: ['緑', '黄'], roll: '振る', pick: '光る石をタップ', dest: '行き先をタップ', noMove: '動かせる石がありません', aiNoMove: 'AI：動かせる石なし', cut: '切った！', cutMe: '切られた…', enter: '切られた石を入れます', first: '先手：{p}', home: '内地' },
-    en: { n: ['Green', 'Yellow'], roll: 'Roll', pick: 'Tap a glowing stone', dest: 'Tap where to go', noMove: 'No stone can move', aiNoMove: 'AI: no move', cut: 'Cut!', cutMe: 'Cut…', enter: 'Bring the cut stone back in', first: 'First: {p}', home: 'Home' },
-    zh: { n: ['绿', '黄'], roll: '掷骰', pick: '点击发光的子', dest: '点击目的地', noMove: '没有可走的子', aiNoMove: 'AI：无子可走', cut: '打掉！', cutMe: '被打掉了…', enter: '先把被打掉的子放回', first: '先手：{p}', home: '内盘' },
-    'zh-TW': { n: ['綠', '黃'], roll: '擲骰', pick: '點擊發光的子', dest: '點擊目的地', noMove: '沒有可走的子', aiNoMove: 'AI：無子可走', cut: '打掉！', cutMe: '被打掉了…', enter: '先把被打掉的子放回', first: '先手：{p}', home: '內盤' },
-    ko: { n: ['초록', '노랑'], roll: '굴리기', pick: '빛나는 돌을 탭', dest: '갈 곳을 탭', noMove: '움직일 돌이 없어요', aiNoMove: 'AI: 움직일 수 없음', cut: '잘랐다!', cutMe: '잘렸다…', enter: '잘린 돌을 먼저 넣어요', first: '선: {p}', home: '안쪽' },
-    es: { n: ['Verde', 'Amarillo'], roll: 'Tirar', pick: 'Toca una ficha brillante', dest: 'Toca el destino', noMove: 'Ninguna ficha puede moverse', aiNoMove: 'IA: sin jugada', cut: '¡Cortada!', cutMe: 'Te han cortado…', enter: 'Entra la ficha cortada', first: 'Empieza: {p}', home: 'Casa' },
-    fr: { n: ['Vert', 'Jaune'], roll: 'Lancer', pick: 'Touchez un pion lumineux', dest: 'Touchez la destination', noMove: 'Aucun pion ne peut bouger', aiNoMove: 'IA : aucun coup', cut: 'Coupé !', cutMe: 'Coupé…', enter: 'Faites rentrer le pion coupé', first: 'Commence : {p}', home: 'Jan' },
-    pt: { n: ['Verde', 'Amarelo'], roll: 'Lançar', pick: 'Toque numa peça brilhante', dest: 'Toque no destino', noMove: 'Nenhuma peça pode mover', aiNoMove: 'IA: sem jogada', cut: 'Cortou!', cutMe: 'Cortada…', enter: 'Entre com a peça cortada', first: 'Começa: {p}', home: 'Casa' },
-    de: { n: ['Grün', 'Gelb'], roll: 'Würfeln', pick: 'Leuchtenden Stein antippen', dest: 'Ziel antippen', noMove: 'Kein Stein kann ziehen', aiNoMove: 'KI: kein Zug', cut: 'Geschlagen!', cutMe: 'Geschlagen …', enter: 'Erst den geschlagenen Stein einsetzen', first: 'Beginn: {p}', home: 'Heimfeld' },
-    ru: { n: ['Зелёные', 'Жёлтые'], roll: 'Бросить', pick: 'Коснитесь светящейся шашки', dest: 'Коснитесь цели', noMove: 'Ходов нет', aiNoMove: 'ИИ: ходов нет', cut: 'Срублена!', cutMe: 'Вас срубили…', enter: 'Сначала введите срубленную', first: 'Первыми: {p}', home: 'Дом' },
-    tr: { n: ['Yeşil', 'Sarı'], roll: 'At', pick: 'Parlayan taşa dokun', dest: 'Gideceği yere dokun', noMove: 'Oynayacak taş yok', aiNoMove: 'YZ: hamle yok', cut: 'Kırıldı!', cutMe: 'Taşın kırıldı…', enter: 'Önce kırılan taşı sok', first: 'Başlayan: {p}', home: 'Ev' },
-    id: { n: ['Hijau', 'Kuning'], roll: 'Lempar', pick: 'Ketuk batu yang menyala', dest: 'Ketuk tujuan', noMove: 'Tak ada batu yang bisa jalan', aiNoMove: 'AI: tak ada langkah', cut: 'Dipotong!', cutMe: 'Batumu dipotong…', enter: 'Masukkan dulu batu yang dipotong', first: 'Mulai: {p}', home: 'Rumah' },
-    hi: { n: ['हरा', 'पीला'], roll: 'फेंकें', pick: 'चमकती गोटी छुएँ', dest: 'जगह छुएँ', noMove: 'कोई गोटी नहीं चल सकती', aiNoMove: 'AI: चाल नहीं', cut: 'काटी!', cutMe: 'गोटी कट गई…', enter: 'पहले कटी गोटी अंदर लाएँ', first: 'पहले: {p}', home: 'घर' },
-    ar: { n: ['الأخضر', 'الأصفر'], roll: 'ارمِ', pick: 'المس حجرًا مضيئًا', dest: 'المس الوجهة', noMove: 'لا حجر يتحرك', aiNoMove: 'الذكاء: لا حركة', cut: 'قُطع!', cutMe: 'قُطع حجرك…', enter: 'أدخل الحجر المقطوع أولًا', first: 'يبدأ: {p}', home: 'البيت' },
+    ja: { n: ['緑', '黄'], roll: '振る', pick: '光る石をタップ', dest: '行き先をタップ', noMove: '動かせる石がありません', aiNoMove: 'AI：動かせる石なし', cut: '切った！', cutMe: '切られた…', enter: '切られた石を入れます', first: '先手：{p}', win: '{p}の勝ち！', home: '内地' },
+    en: { n: ['Green', 'Yellow'], roll: 'Roll', pick: 'Tap a glowing stone', dest: 'Tap where to go', noMove: 'No stone can move', aiNoMove: 'AI: no move', cut: 'Cut!', cutMe: 'Cut…', enter: 'Bring the cut stone back in', first: 'First: {p}', win: '{p} wins!', home: 'Home' },
+    zh: { n: ['绿', '黄'], roll: '掷骰', pick: '点击发光的子', dest: '点击目的地', noMove: '没有可走的子', aiNoMove: 'AI：无子可走', cut: '打掉！', cutMe: '被打掉了…', enter: '先把被打掉的子放回', first: '先手：{p}', win: '{p}获胜！', home: '内盘' },
+    'zh-TW': { n: ['綠', '黃'], roll: '擲骰', pick: '點擊發光的子', dest: '點擊目的地', noMove: '沒有可走的子', aiNoMove: 'AI：無子可走', cut: '打掉！', cutMe: '被打掉了…', enter: '先把被打掉的子放回', first: '先手：{p}', win: '{p}獲勝！', home: '內盤' },
+    ko: { n: ['초록', '노랑'], roll: '굴리기', pick: '빛나는 돌을 탭', dest: '갈 곳을 탭', noMove: '움직일 돌이 없어요', aiNoMove: 'AI: 움직일 수 없음', cut: '잘랐다!', cutMe: '잘렸다…', enter: '잘린 돌을 먼저 넣어요', first: '선: {p}', win: '{p} 승리!', home: '안쪽' },
+    es: { n: ['Verde', 'Amarillo'], roll: 'Tirar', pick: 'Toca una ficha brillante', dest: 'Toca el destino', noMove: 'Ninguna ficha puede moverse', aiNoMove: 'IA: sin jugada', cut: '¡Cortada!', cutMe: 'Te han cortado…', enter: 'Entra la ficha cortada', first: 'Empieza: {p}', win: '¡Gana {p}!', home: 'Casa' },
+    fr: { n: ['Vert', 'Jaune'], roll: 'Lancer', pick: 'Touchez un pion lumineux', dest: 'Touchez la destination', noMove: 'Aucun pion ne peut bouger', aiNoMove: 'IA : aucun coup', cut: 'Coupé !', cutMe: 'Coupé…', enter: 'Faites rentrer le pion coupé', first: 'Commence : {p}', win: '{p} gagne !', home: 'Jan' },
+    pt: { n: ['Verde', 'Amarelo'], roll: 'Lançar', pick: 'Toque numa peça brilhante', dest: 'Toque no destino', noMove: 'Nenhuma peça pode mover', aiNoMove: 'IA: sem jogada', cut: 'Cortou!', cutMe: 'Cortada…', enter: 'Entre com a peça cortada', first: 'Começa: {p}', win: '{p} vence!', home: 'Casa' },
+    de: { n: ['Grün', 'Gelb'], roll: 'Würfeln', pick: 'Leuchtenden Stein antippen', dest: 'Ziel antippen', noMove: 'Kein Stein kann ziehen', aiNoMove: 'KI: kein Zug', cut: 'Geschlagen!', cutMe: 'Geschlagen …', enter: 'Erst den geschlagenen Stein einsetzen', first: 'Beginn: {p}', win: '{p} gewinnt!', home: 'Heimfeld' },
+    ru: { n: ['Зелёные', 'Жёлтые'], roll: 'Бросить', pick: 'Коснитесь светящейся шашки', dest: 'Коснитесь цели', noMove: 'Ходов нет', aiNoMove: 'ИИ: ходов нет', cut: 'Срублена!', cutMe: 'Вас срубили…', enter: 'Сначала введите срубленную', first: 'Первыми: {p}', win: 'Победили {p}!', home: 'Дом' },
+    tr: { n: ['Yeşil', 'Sarı'], roll: 'At', pick: 'Parlayan taşa dokun', dest: 'Gideceği yere dokun', noMove: 'Oynayacak taş yok', aiNoMove: 'YZ: hamle yok', cut: 'Kırıldı!', cutMe: 'Taşın kırıldı…', enter: 'Önce kırılan taşı sok', first: 'Başlayan: {p}', win: '{p} kazandı!', home: 'Ev' },
+    id: { n: ['Hijau', 'Kuning'], roll: 'Lempar', pick: 'Ketuk batu yang menyala', dest: 'Ketuk tujuan', noMove: 'Tak ada batu yang bisa jalan', aiNoMove: 'AI: tak ada langkah', cut: 'Dipotong!', cutMe: 'Batumu dipotong…', enter: 'Masukkan dulu batu yang dipotong', first: 'Mulai: {p}', win: '{p} menang!', home: 'Rumah' },
+    hi: { n: ['हरा', 'पीला'], roll: 'फेंकें', pick: 'चमकती गोटी छुएँ', dest: 'जगह छुएँ', noMove: 'कोई गोटी नहीं चल सकती', aiNoMove: 'AI: चाल नहीं', cut: 'काटी!', cutMe: 'गोटी कट गई…', enter: 'पहले कटी गोटी अंदर लाएँ', first: 'पहले: {p}', win: '{p} जीता!', home: 'घर' },
+    ar: { n: ['الأخضر', 'الأصفر'], roll: 'ارمِ', pick: 'المس حجرًا مضيئًا', dest: 'المس الوجهة', noMove: 'لا حجر يتحرك', aiNoMove: 'الذكاء: لا حركة', cut: 'قُطع!', cutMe: 'قُطع حجرك…', enter: 'أدخل الحجر المقطوع أولًا', first: 'يبدأ: {p}', win: 'فاز {p}!', home: 'البيت' },
   };
   const levelInfo = n => ({ name: 'Lv.' + n });
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
@@ -40,7 +40,9 @@
     const T3 = ctx.Table3D, TH = window.THREE, E = window.SugorokuEngine, t = ctx.t, B = ctx.board, U = B && B.userData;
     if (!E || !U || !U.slot) { console.warn('[sugoroku] needs the museum board'); return null; }
     const X = Object.assign({}, TX.en, TX[ctx.lang] || {}), L = { you: t('p.you'), ai: t('p.ai'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') };
-    const level = Math.max(1, Math.min(20, +ctx.level || 6)), first = ctx.side === 2 ? 1 : 0;
+    const level = Math.max(1, Math.min(20, +ctx.level || 6)), pvp = ctx.mode === 'pvp', first = pvp ? 0 : ctx.side === 2 ? 1 : 0;
+    const hum = s => pvp || s === 0, nm = s => pvp ? X.n[s] : s ? L.ai : L.you;   // (二人で: both sides are people, named by their colour)
+    let ply = 0;
     T3.show('sugoroku', B);
     let st = null, at0 = null, hintM = null, dice = null, used = [], seqs = [], taken = [], cs = null, phase = 'wait', over = false, stopped = false, busy = false, sel = null, msg = '';
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms)), sleep = ms => new Promise(r => later(r, ms));
@@ -95,7 +97,7 @@
     function disc(to, hit) { const k = hit ? 0 : stacks[to].length, [x, y, z] = U.slot(to, k); const m = new TH.Mesh(DISC, hit ? MAT.hit : MAT.dest); m.position.set(x, (hit ? y + 1.0 : U.top) + .03, z); m.renderOrder = 2; MG.add(m); }
     const options = () => { const k = taken.length, seen = new Map(); for (const q of seqs) { if (q.steps.length <= k) continue; if (!taken.every((s, i) => q.steps[i].from === s.from && q.steps[i].to === s.to)) continue; const s = q.steps[k]; seen.set(s.from + ':' + s.to, s); } return [...seen.values()]; };
     function showMarks() {
-      clearMarks(); if (phase !== 'move' || st.turn !== 0) return;
+      clearMarks(); if (phase !== 'move' || !hum(st.turn)) return;
       const ops = options(), froms = [...new Set(ops.map(o => o.from))];
       froms.forEach(f => ring(f, f === sel ? MAT.sel : MAT.can));
       if (sel != null) ops.filter(o => o.from === sel).forEach(o => disc(o.to, o.hit));
@@ -109,9 +111,9 @@
     const DOT = ['background:radial-gradient(circle at 35% 30%,#7fd08f,#1f6b34 60%,#0c3418)', 'background:radial-gradient(circle at 35% 30%,#ffe59a,#c9921c 60%,#7a5208)'];
     function hud() {
       if (stopped || !st) return;
-      const side = s => `<span class="hs ${st.turn === s && !over ? 'on' : ''}"><i class="dk" style="${DOT[s]}"></i>${esc(s ? L.ai : L.you)}<b>${homeN(s)}/15</b></span>`;
+      const side = s => `<span class="hs ${st.turn === s && !over ? 'on' : ''}"><i class="dk" style="${DOT[s]}"></i>${esc(nm(s))}<b>${homeN(s)}/15</b></span>`;
       const dv = dice ? `<span class="hd" style="font-size:22px;letter-spacing:2px;white-space:nowrap">${dice.map((v, i) => `<span style="opacity:${used[i] ? .3 : 1}">${DIE[v]}</span>`).join('')}</span>` : '';
-      const mid = phase === 'roll' && st.turn === 0 && !over ? `<button type="button" data-sgr="roll">${esc(X.roll)}</button>` : msg ? `<span class="hm">${esc(msg)}</span>` : '';
+      const mid = phase === 'roll' && hum(st.turn) && !over ? `<button type="button" data-sgr="roll">${esc(X.roll)}</button>` : msg ? `<span class="hm">${esc(msg)}</span>` : '';
       ctx.hud(`${side(0)}${dv}${mid}${side(1)}`);
     }
     const say = m => { msg = m || ''; hud(); };
@@ -121,26 +123,26 @@
     /* ---------- the flow ---------- */
     function nextTurn() {
       if (stopped || over) return; dice = null; used = []; sel = null; taken = []; clearMarks();
-      if (ctx.onTurn) ctx.onTurn(st.turn, { human: st.turn === 0 });
-      if (st.turn === 1) { phase = 'ai'; say(L.think); later(aiTurn, 600); return; }
+      ply++; if (ctx.onTurn) ctx.onTurn(st.turn, { human: hum(st.turn), ply });
+      if (!pvp && st.turn === 1) { phase = 'ai'; say(L.think); later(aiTurn, 600); return; }
       phase = 'roll'; say('');
     }
     function markUsed(d) { const i = dice.findIndex((v, j) => v === d && !used[j]); if (i >= 0) used[i] = true; }
     async function doRoll() {
-      if (phase !== 'roll' || busy || over || st.turn !== 0) return;
-      busy = true; phase = 'anim'; say(''); dice = E.rollDice(); await throwDice(0, dice); if (stopped) return; busy = false; hud();
+      if (phase !== 'roll' || busy || over || !hum(st.turn)) return;
+      busy = true; phase = 'anim'; say(''); dice = E.rollDice(); await throwDice(st.turn, dice); if (stopped) return; busy = false; hud();
       seqs = E.sequences(st, dice); cs = E.clone(st); taken = []; at0 = E.clone(st);
       if (!seqs.length) { say(X.noMove); toast(X.noMove); later(endTurn, 1300); return; }
       phase = 'move'; sel = null; const fr = [...new Set(options().map(o => o.from))]; if (fr.length === 1) sel = fr[0];
-      say(st.bar[0] ? X.enter : sel != null ? X.dest : X.pick); showMarks();
+      say(st.bar[st.turn] ? X.enter : sel != null ? X.dest : X.pick); showMarks();
     }
     async function play(m) {
       hintM = null; busy = true; phase = 'anim'; clearMarks(); const side = cs.turn;
       await moveStone(side, m); if (stopped) return;
       E.step(cs, side, m); taken.push(m); markUsed(m.d); st = cs; busy = false;
-      if (m.hit) toast(side ? X.cutMe : X.cut);
+      if (m.hit) toast(side && !pvp ? X.cutMe : X.cut);
       if (cs.winner >= 0) return end(cs.winner);
-      if (side === 0) { const ops = options(); if (!ops.length) return endTurn(); phase = 'move'; sel = null; const fr = [...new Set(ops.map(o => o.from))]; if (fr.length === 1) sel = fr[0]; say(cs.bar[0] ? X.enter : sel != null ? X.dest : X.pick); showMarks(); }
+      if (hum(side)) { const ops = options(); if (!ops.length) return endTurn(); phase = 'move'; sel = null; const fr = [...new Set(ops.map(o => o.from))]; if (fr.length === 1) sel = fr[0]; say(cs.bar[side] ? X.enter : sel != null ? X.dest : X.pick); showMarks(); }
       else hud();
     }
     function endTurn() { if (over || stopped) return; st = E.finish(cs || st); cs = null; seqs = []; nextTurn(); }
@@ -156,15 +158,17 @@
     }
     function end(w) {
       over = true; phase = 'over'; clearMarks(); busy = false; if (ctx.onTurn) ctx.onTurn(-1, {});
-      SND.win(); say(w === 0 ? L.win : L.lose);
+      SND.win();
+      if (pvp) { const wt = X.win.replace('{p}', X.n[w]); say(wt); return later(() => ctx.onEnd({ win: false, draw: false, level, score: `${homeN(0)} : ${homeN(1)}`, pvp: true, winnerText: wt }), 700); }
+      say(w === 0 ? L.win : L.lose);
       later(() => ctx.onEnd({ win: w === 0, draw: false, level, score: `${homeN(0)} : ${homeN(1)}` }), 700);
     }
 
     /* ---------- taps ---------- */
     function onClick(e) {
       if (stopped || busy || over || (T3.wasDrag && T3.wasDrag())) return;
-      if (phase === 'roll' && st.turn === 0) { doRoll(); return; }
-      if (phase !== 'move' || st.turn !== 0) return;
+      if (phase === 'roll' && hum(st.turn)) { doRoll(); return; }
+      if (phase !== 'move' || !hum(st.turn)) return;
       const p = T3.pick(e, U.top); if (!p) return;
       const h = U.hit(p.x, p.z), ops = options();
       if (h < 0) { sel = null; showMarks(); say(X.pick); return; }
@@ -178,21 +182,21 @@
       sel = null; showMarks(); say(X.pick);
     }
     function onHud(e) { const b = e.target.closest && e.target.closest('[data-sgr]'); if (!b || stopped) return; e.stopPropagation(); doRoll(); }
-    const onKey = e => { if (e.key === ' ' && !e.repeat && phase === 'roll' && st && st.turn === 0) { e.preventDefault(); doRoll(); } };
+    const onKey = e => { if (e.key === ' ' && !e.repeat && phase === 'roll' && st && hum(st.turn)) { e.preventDefault(); doRoll(); } };
     ctx.el.addEventListener('click', onClick); document.addEventListener('click', onHud, true); document.addEventListener('keydown', onKey);
 
-    st = E.newGame(first); sync(st); toast(X.first.replace('{p}', first ? L.ai : L.you)); later(nextTurn, 700);
+    st = E.newGame(first); sync(st); toast(X.first.replace('{p}', nm(first))); later(nextTurn, 700);
     const api = {
       stop() { stopped = true; timers.forEach(clearTimeout); ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey); if (toastEl) toastEl.remove(); B.remove(G); B.remove(MG); },
-      canResign: () => !over, resign() { if (!over) end(1); },
+      canResign: () => !over, resign() { if (!over) end(pvp ? 1 - st.turn : 1); },
       // 待った: the stones played this turn go back (the same dice — the throw itself is not taken back)
-      canUndo: () => !stopped && !over && !busy && phase === 'move' && st && st.turn === 0 && taken.length > 0,
-      undo() { if (!api.canUndo()) return; st = E.clone(at0); cs = E.clone(at0); taken = []; used = []; sel = null; hintM = null; sync(st); const fr = [...new Set(options().map(o => o.from))]; if (fr.length === 1) sel = fr[0]; say(st.bar[0] ? X.enter : sel != null ? X.dest : X.pick); showMarks(); },
+      canUndo: () => !stopped && !over && !busy && phase === 'move' && st && hum(st.turn) && taken.length > 0,
+      undo() { if (!api.canUndo()) return; st = E.clone(at0); cs = E.clone(at0); taken = []; used = []; sel = null; hintM = null; sync(st); const fr = [...new Set(options().map(o => o.from))]; if (fr.length === 1) sel = fr[0]; say(st.bar[st.turn] ? X.enter : sel != null ? X.dest : X.pick); showMarks(); },
       // ヒント: the strongest level's choice for the rest of this throw — its next stone and where it goes
-      canHint: () => !stopped && !over && !busy && phase === 'move' && st && st.turn === 0 && options().length > 0,
+      canHint: () => !stopped && !over && !busy && phase === 'move' && st && hum(st.turn) && options().length > 0,
       hint() { if (!api.canHint()) return Promise.resolve(false);
         let best = null, bv = -Infinity; const k = taken.length;
-        for (const q of seqs) { if (q.steps.length <= k || !taken.every((t, i) => q.steps[i].from === t.from && q.steps[i].to === t.to)) continue; const v = E.evaluate(q.state, 0); if (v > bv) { bv = v; best = q.steps[k]; } }
+        for (const q of seqs) { if (q.steps.length <= k || !taken.every((t, i) => q.steps[i].from === t.from && q.steps[i].to === t.to)) continue; const v = E.evaluate(q.state, st.turn); if (v > bv) { bv = v; best = q.steps[k]; } }
         if (!best) return Promise.resolve(false); hintM = best; sel = best.from; say(X.dest); showMarks(); return Promise.resolve(true); },
       _debug: { st: () => st && E.clone(st), cs: () => cs && E.clone(cs), phase: () => phase, busy: () => busy, dice: () => dice, options: () => phase === 'move' ? options() : [], sel: () => sel,
         at: (abs, k) => { const [x, y, z] = abs === 0 ? U.bar(0, k || 0) : U.slot(abs, k || 0); return T3.project(x, z, y); } },
@@ -201,5 +205,5 @@
     return api;
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.sugoroku = { levels: 20, sides: true, modes: ['ai'], levelInfo, start };
+  window.Atlas3D.sugoroku = { levels: 20, sides: true, modes: ['ai', 'pvp'], levelInfo, start };
 })();
